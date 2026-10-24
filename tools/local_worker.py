@@ -9,6 +9,7 @@
 ジョブは専用ブランチ llm-jobs の jobs/pending/<id>.yaml。結果は jobs/done/<id>.yaml（status: ok / escalate / error、text）。
   type: ask      {task, instruction?, input | input_file?}   → llm_offload.ask（秘密の伏せ字・切り詰め・日次上限・キャッシュ）
   type: convert  {limit?, workers?, interval?, model?}        → tools/auto_convert.py を cards-data ブランチの作業ツリーで実行して push
+  どのジョブも pr: <番号> を付けると結果を PR コメントに投稿する（PC に gh が要る。docs/offload.md）。
   type: routine  {name: gaps | tests | review | status, summarize?, base?}  → 決まった定型作業だけ（任意コマンドは実行しない）
 無料モデルの許可リスト検査・課金検知は llm_offload/providers.py がそのまま効く。課金の兆候は Fatal で全体を止める。
 詳しい手順は docs/offload.md。
@@ -129,14 +130,14 @@ def run_convert(job: dict, git: Git, jobs_model: str | None) -> dict:
     env = {k: v for k, v in os.environ.items() if k != "OPENCODE_API_KEY"}
     r = subprocess.run([sys.executable, "tools/auto_convert.py", "--model", model, "--limit", str(job.get("limit", 20)),
                         "--interval", str(job.get("interval", 3)), "--workers", str(job.get("workers", 1))],
-                       cwd=d, env=env, capture_output=True, text=True)
+                       cwd=d, env=env, capture_output=True, text=True, encoding="utf-8", errors="replace")
     git.sh("reset", "-q", cwd=d)
     git.sh("add", "-f", "data/cards/converted.yaml", "data/cards/raw/rejects.jsonl", "data/cards/raw/convert_report.json",
            "data/cards/raw/convert_status.json", cwd=d, check=False)
     git.commit_push(d, DATA_BRANCH, f"cards-data: convert (local worker) {now()}", add=False)
     if r.returncode:
-        return {"status": "error", "error": lo.scrub(r.stderr[-400:])}
-    return {"status": "ok", "text": lo.scrub(r.stdout[-1500:])}
+        return {"status": "error", "error": lo.scrub((r.stderr or "")[-400:])}
+    return {"status": "ok", "text": lo.scrub((r.stdout or "")[-1500:])}
 
 
 def data_tree(git: Git) -> Path:
@@ -157,18 +158,18 @@ def run_routine(job: dict, git: Git, llm, cache: Path, daily_limit: int) -> dict
     name = job.get("name")
     if name == "gaps":
         d = data_tree(git)
-        out = subprocess.run([sys.executable, "tools/report_gaps.py"], cwd=d, capture_output=True, text=True).stdout
+        out = subprocess.run([sys.executable, "tools/report_gaps.py"], cwd=d, capture_output=True, text=True, encoding="utf-8", errors="replace").stdout or ""
     elif name == "tests":
-        r = subprocess.run([sys.executable, "-m", "pytest", "-q"], cwd=ROOT, capture_output=True, text=True)
-        out = lo.digest_pytest(r.stdout + r.stderr)
+        r = subprocess.run([sys.executable, "-m", "pytest", "-q"], cwd=ROOT, capture_output=True, text=True, encoding="utf-8", errors="replace")
+        out = lo.digest_pytest((r.stdout or "") + (r.stderr or ""))
     elif name == "status":
-        r = subprocess.run([sys.executable, "tools/gen_status.py", "--check"], cwd=ROOT, capture_output=True, text=True)
-        out = (r.stdout + r.stderr) or "STATUS.md は最新"
+        r = subprocess.run([sys.executable, "tools/gen_status.py", "--check"], cwd=ROOT, capture_output=True, text=True, encoding="utf-8", errors="replace")
+        out = ((r.stdout or "") + (r.stderr or "")) or "STATUS.md は最新"
     elif name == "review":
         base = str(job.get("base", "origin/main"))
         if not re.fullmatch(r"[\w./-]+", base) or base.startswith("-"):
             return {"status": "error", "error": "base が不正"}
-        out = subprocess.run(["git", "diff", base], cwd=ROOT, capture_output=True, text=True).stdout
+        out = subprocess.run(["git", "diff", base], cwd=ROOT, capture_output=True, text=True, encoding="utf-8", errors="replace").stdout or ""
         job = {**job, "summarize": "review-diff"}
     else:
         return {"status": "error", "error": f"未知の routine {name!r}（gaps / tests / review / status）"}
@@ -181,6 +182,31 @@ def run_routine(job: dict, git: Git, llm, cache: Path, daily_limit: int) -> dict
             return {"status": "escalate", "error": str(e), "text": lo.clip(out, 3000)}
         return {"status": "ok", "text": r2.text, "model": r2.model}
     return {"status": "ok", "text": lo.clip(out, 6000)}
+
+
+def summary_line(res: dict) -> str:
+    """結果の1行要約。Claude が全文を読まずに済むようにする。"""
+    first = next((ln.strip(" -*#") for ln in (res.get("text") or "").splitlines() if ln.strip()), "")
+    head = f"[{res['status']}]" + (f" {res['error']}" if res.get("error") else "")
+    return lo.scrub(f"{head} {first}".strip())[:160]
+
+
+def post_pr_comment(pr, jid: str, res: dict) -> str:
+    """結果を PR コメントに投稿する（PC の gh 認証を使う）。購読中のセッションにイベントとして届く。失敗してもジョブは失敗にしない。"""
+    exe = next(filter(None, (shutil.which(n) for n in ("gh.exe", "gh"))), None)
+    if not exe:
+        return "skipped: gh が無い（winget install GitHub.cli → gh auth login）"
+    try:
+        num = int(pr)
+    except (TypeError, ValueError):
+        return "skipped: pr が数値でない"
+    body = f"**ローカルワーカー結果** `{jid}` — {res['status']}\n\n{lo.clip(res.get('text') or res.get('error') or '', 6000)}\n"
+    try:
+        r = subprocess.run([exe, "pr", "comment", str(num), "--body-file", "-"], input=lo.scrub(body), cwd=ROOT,
+                           capture_output=True, text=True, encoding="utf-8", errors="replace", timeout=120)
+    except Exception as e:   # noqa: BLE001
+        return f"failed: {type(e).__name__}"
+    return "posted" if r.returncode == 0 else f"failed: {lo.scrub((r.stderr or '')[:150])}"
 
 
 def process(git: Git, llm_factory=None, max_jobs: int = 20, daily_limit: int = lo.DAILY_LIMIT) -> list[str]:
@@ -207,8 +233,12 @@ def process(git: Git, llm_factory=None, max_jobs: int = 20, daily_limit: int = l
             p.unlink()
             git.commit_push(jd, JOBS_BRANCH, f"jobs: {jid} stopped")
             raise SystemExit(f"停止: {res['error']}") from None
-        (done / f"{jid}.yaml").write_text(yaml.safe_dump({"id": jid, "finished": now(), **res}, allow_unicode=True,
-                                                         sort_keys=False), encoding="utf-8")
+        except Exception as e:     # noqa: BLE001  1件の失敗でワーカー全体を落とさない。error を残して done に移す（毎回の再実行で無料枠を使わない）
+            res = {"status": "error", "error": lo.scrub(f"{type(e).__name__}: {e}")[:400]}
+        if job.get("pr"):
+            res["pr_comment"] = post_pr_comment(job["pr"], jid, res)
+        (done / f"{jid}.yaml").write_text(yaml.safe_dump({"id": jid, "summary": summary_line(res), "finished": now(), **res},
+                                                         allow_unicode=True, sort_keys=False), encoding="utf-8")
         p.unlink()
         handled.append(f"{jid}:{res['status']}")
         git.commit_push(jd, JOBS_BRANCH, f"jobs: {jid} {res['status']}")
@@ -240,11 +270,13 @@ def main(argv=None) -> int:
     e.add_argument("--model")
     e.add_argument("--name", help="routine の名前（gaps / tests / review / status）")
     e.add_argument("--summarize", action="store_true", help="routine の結果を無料モデルで要約する")
+    e.add_argument("--pr", type=int, help="結果をこの PR にコメント投稿する（PC に gh が要る）。Claude は PR 購読で自動に受け取る")
     e.add_argument("--limit", type=int, default=100)
     e.add_argument("--workers", type=int, default=1)
     sub.add_parser("status")
     a = ap.parse_args(argv)
     # デスクトップアプリのDBと食い違うことがあるので、OpenCode CLI は専用の保存先で動かす（Windowsで動作確認済み）
+    os.environ.setdefault("PYTHONUTF8", "1")      # 子プロセス(Python)の出力もUTF-8にそろえる(Windows既定はcp932)
     os.environ.setdefault("XDG_DATA_HOME", str(Path(a.work) / "xdg"))
     os.environ.setdefault("XDG_CONFIG_HOME", str(Path(a.work) / "xdg-config"))
     git = Git(ROOT, Path(a.work))
@@ -260,6 +292,8 @@ def main(argv=None) -> int:
             job.update(name=a.name, summarize=a.summarize)
         else:
             job.update(limit=a.limit, workers=a.workers)
+        if a.pr:
+            job["pr"] = a.pr
         print(enqueue(git, job))
         return 0
     if a.cmd == "status":
