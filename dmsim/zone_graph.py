@@ -135,6 +135,8 @@ def bundles_of(rules) -> list[Bundle]:
     for cd in rules.cards.values():
         faces = cd.faces or [cd]
         for f in faces:
+            if f.free_if and f.is_creature():   # G・ゼロ: 手札にある間、コストなしでバトルゾーンへ（手札に入ったことが前提）
+                out.append(Bundle(cd.id, cd.name, "enter:hand", True, [Move("hand", "bz", True)], origin="free"))
             for ab in f.abilities:
                 if ab.get("kind") not in ("trigger", "declare"):
                     continue

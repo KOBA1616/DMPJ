@@ -91,6 +91,9 @@
   },
   "evolve_from": {
    "$ref": "#/$defs/filter"
+  },
+  "free_if": {
+   "$ref": "#/$defs/cond"
   }
  },
  "required": [
@@ -168,6 +171,9 @@
     },
     "evolve_from": {
      "$ref": "#/$defs/filter"
+    },
+    "free_if": {
+     "$ref": "#/$defs/cond"
     }
    },
    "required": [
@@ -261,7 +267,8 @@
        "player": {
         "enum": [
          "you",
-         "opp"
+         "opp",
+         "each"
         ]
        },
        "count": {
@@ -437,6 +444,9 @@
        },
        "card_only": {
         "type": "boolean"
+       },
+       "order": {
+        "type": "string"
        },
        "as": {
         "type": "string"
@@ -1103,6 +1113,9 @@
       "you",
       "opp"
      ]
+    },
+    "unpaid": {
+     "type": "boolean"
     },
     "subject": {}
    },

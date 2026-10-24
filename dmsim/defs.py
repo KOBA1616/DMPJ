@@ -58,6 +58,7 @@ class Face:
     evolve_zone: str = "bz"                               # 進化元を探すゾーン（超無限墓地進化は graveyard）
     evolve_any: bool = False                              # 進化元を1体以上選べる（超無限墓地進化）
     cost_reduce_per_evo: int = 0                          # 進化元1体につき召喚コストをいくら減らすか
+    free_if: dict | None = None                           # 条件を満たす間はコストを支払わずに召喚できる（G・ゼロ）
     resolve_to: str = "graveyard"                         # 呪文の解決後の置き場所（チャージャー等）
     after_resolve: list[dict] = field(default_factory=list)
 
@@ -86,6 +87,7 @@ class CardDef:
     evolve_zone: str = "bz"
     evolve_any: bool = False
     cost_reduce_per_evo: int = 0
+    free_if: dict | None = None
     resolve_to: str = "graveyard"
     after_resolve: list[dict] = field(default_factory=list)
     faces: list[Face] = field(default_factory=list)      # ツインパクト: [0]=クリーチャー側, [1]=呪文側
@@ -369,6 +371,7 @@ def _load_face(raw, keywords, macros, chk: Checker, where) -> dict:
         abilities += [dict(_expand_ability(a, macros, where), keyword=kw) for a in keywords[kw]["abilities"]]
         for k, v in keywords[kw].get("card", {}).items():
             props[k] = expand_ops(v, macros, where) if k == "after_resolve" else v
+    props["resolve_to"] = raw.get("resolve_to", props["resolve_to"])   # 唱えた後の置き場所を直接指定（シールドに加わる呪文など）
     chk.ops(props["after_resolve"], where)
     if props["resolve_to"] not in chk.zones:
         raise DefError(f"{where}: unknown zone '{props['resolve_to']}'")
@@ -389,11 +392,14 @@ def _load_face(raw, keywords, macros, chk: Checker, where) -> dict:
     zone = raw.get("evolve_zone", "bz")
     if zone not in chk.zones:
         raise DefError(f"{where}: unknown evolve_zone '{zone}'")
+    if "free_if" in raw:
+        chk.cond(raw["free_if"], where)
     return dict(name=raw["name"], types=raw["types"], civs=raw["civs"], cost=raw["cost"],
                 power=raw.get("power", 0), races=raw.get("races", []), keywords=names,
                 abilities=abilities, spell=spell, evolve_from=raw.get("evolve_from"),
                 evolve_zone=zone, evolve_any=bool(raw.get("evolve_any", False)),
-                cost_reduce_per_evo=int(raw.get("cost_reduce_per_evo", 0)), **props)
+                cost_reduce_per_evo=int(raw.get("cost_reduce_per_evo", 0)),
+                free_if=raw.get("free_if"), **props)
 
 
 def load_tables():
