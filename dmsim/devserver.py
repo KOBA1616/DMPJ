@@ -37,7 +37,7 @@ def _card_blocks(path: Path) -> dict[str, str]:
     """YAML ファイルの各カードの記述（書かれたままのテキスト）。"""
     text = path.read_text(encoding="utf-8")
     out = {}
-    for m in re.finditer(r"^  - id: (\S+)\n.*?(?=^  - id: |\Z)", text, re.S | re.M):
+    for m in re.finditer(r"^ *- id: (\S+)\n.*?(?=^ *- id: |\Z)", text, re.S | re.M):
         out[m.group(1)] = m.group(0).rstrip() + "\n"
     return out
 
@@ -64,16 +64,28 @@ def card_list(rules) -> list[dict]:
         out.append({"id": cid, "name": d.name, "file": fname, "types": d.types, "civs": d.civs, "cost": d.cost,
                     "text": d.text, "official": official.get(src.get("official", cid)),
                     "review": src.get("review"), "notes": src.get("notes", ""),
-                    "review_note": src.get("review_note", ""), "yaml": block})
+                    "review_note": src.get("review_note", ""), "yaml": block,
+                    "unsupported": list(src.get("unsupported") or [])})
     return out
 
 
-def set_review(card_id: str, status: str, note: str = "", path: Path = REAL):
-    """real.yaml の該当カードの source.review を書き換える（コメントや書式はそのまま残す）。"""
+def locate_card(card_id: str, root: Path | None = None) -> Path:
+    """カード定義が書かれている YAML（real.yaml / converted.yaml など）を探す。"""
+    root = root or DATA / "cards"
+    for f in sorted(root.glob("*.yaml")):
+        if card_id in _card_blocks(f):
+            return f
+    raise KeyError(f"{card_id} is not in any card file")
+
+
+def set_review(card_id: str, status: str, note: str = "", path: Path | None = None):
+    """カードの source.review を書き換える（コメントや書式はそのまま残す）。
+    path を省くと、そのカードが書かれているファイル（real.yaml, converted.yaml など）を探す。"""
     if status not in REVIEW_STATES:
         raise ValueError(f"status must be one of {REVIEW_STATES}")
+    path = path or locate_card(card_id)
     text = path.read_text(encoding="utf-8")
-    m = re.search(rf"^  - id: {re.escape(card_id)}\n.*?(?=^  - id: |\Z)", text, re.S | re.M)
+    m = re.search(rf"^ *- id: {re.escape(card_id)}\n.*?(?=^ *- id: |\Z)", text, re.S | re.M)
     if not m:
         raise KeyError(f"{card_id} is not in {path.name}")
     block = re.sub(r",? *review_note: \"(?:[^\"\\]|\\.)*\"|\n *review_note: \"(?:[^\"\\]|\\.)*\"", "", m.group(0))
@@ -331,6 +343,11 @@ class App:
             set_review(body["id"], body["status"], body.get("note", ""))
             self.rules = load_rules()
             return {"ok": True}
+        if path == "/api/review_bulk":
+            for cid in body["ids"]:
+                set_review(cid, body["status"], body.get("note", ""))
+            self.rules = load_rules()
+            return {"ok": True, "n": len(body["ids"])}
         if path == "/api/verify_all":
             # 一括検証: 「試す」シナリオを自動回しして、動かないカードを見つける
             res = verify_all(self.rules, body.get("ids"))

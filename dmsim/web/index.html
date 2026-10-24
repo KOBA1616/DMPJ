@@ -198,8 +198,12 @@ pre { margin: 0; white-space: pre-wrap; font: 12px/1.45 ui-monospace, SFMono-Reg
   <div class="panel row">
     <input type="text" id="q" placeholder="名前・IDで絞り込み" style="width:240px">
     <select id="rf"><option value="pending">pending</option><option value="">すべて</option><option value="approved">approved</option><option value="rejected">rejected</option><option value="none">検証用（source なし）</option></select>
+    <select id="ff"><option value="">全ファイル</option></select>
+    <select id="gf"><option value="">すべて</option><option value="unsupported">未対応の申告あり</option><option value="notes">変換メモあり</option><option value="clean">メモ・申告なし</option></select>
     <span id="count" class="muted"></span>
+    <span id="qstat" class="muted"></span>
     <button class="act" id="verifyall">一括検証</button>
+    <button class="act ok" id="approveclean" title="表示中のうち、メモ・申告のない pending を approve（動作は一括検証で先に確かめる）">表示中のクリーンなものを approve</button>
   </div>
   <div class="panel hidden" id="vreport"></div>
   <div id="cardlist"></div>
@@ -675,17 +679,32 @@ $("mode").onchange = () => {
 };
 
 // ---- カード ----
-async function loadCards() { cards = (await api("/api/cards")).cards; renderCards(); }
+async function loadCards() {
+  cards = (await api("/api/cards")).cards;
+  const files = [...new Set(cards.map((c) => c.file).filter(Boolean))], cur = $("ff").value;
+  $("ff").innerHTML = '<option value="">全ファイル</option>' + files.map((f) => `<option>${esc(f)}</option>`).join("");
+  $("ff").value = files.includes(cur) ? cur : "";
+  renderCards();
+}
+const isClean = (c) => !c.notes && !(c.unsupported || []).length;
+function shownCards() {
+  const q = $("q").value.trim(), rf = $("rf").value, ff = $("ff").value, gf = $("gf").value;
+  return cards.filter((c) => (!q || c.name.includes(q) || c.id.includes(q)) &&
+    (!rf || (rf === "none" ? !c.review : c.review === rf)) && (!ff || c.file === ff) &&
+    (!gf || (gf === "unsupported" ? (c.unsupported || []).length : gf === "notes" ? c.notes : isClean(c))));
+}
 function renderCards() {
-  const q = $("q").value.trim(), rf = $("rf").value;
-  const list = cards.filter((c) => (!q || c.name.includes(q) || c.id.includes(q)) &&
-    (!rf || (rf === "none" ? !c.review : c.review === rf)));
-  $("count").textContent = `${list.length}枚`;
-  $("cardlist").innerHTML = list.map((c) => `
+  const list = shownCards();
+  const st = {pending: 0, approved: 0, rejected: 0};
+  cards.forEach((c) => { if (c.review) st[c.review]++; });
+  $("qstat").textContent = `全体: pending ${st.pending} / approved ${st.approved} / rejected ${st.rejected}`;
+  $("count").textContent = list.length > 100 ? `${list.length}枚（先頭100枚を表示）` : `${list.length}枚`;
+  $("cardlist").innerHTML = list.slice(0, 100).map((c) => `
     <div class="panel" data-id="${esc(c.id)}">
       <div class="row" style="justify-content:space-between">
         <div><b>${esc(c.name)}</b><span class="muted">${esc(c.id)} ・ ${esc(c.civs.join("/"))} ・ コスト${c.cost} ・ ${esc(c.file)}</span>
-          ${c.review ? `<span class="badge ${c.review}">${c.review}</span>` : ""}</div>
+          ${c.review ? `<span class="badge ${c.review}">${c.review}</span>` : ""}
+          ${(c.unsupported || []).length ? '<span class="badge rejected">未対応あり</span>' : ""}</div>
         <div class="row">
           <button class="act" data-a="try">試す</button>
           ${c.review ? `<input type="text" placeholder="確認メモ" value="${esc(c.review_note)}" style="width:200px">
@@ -698,6 +717,7 @@ function renderCards() {
           <div class="muted" style="font-size:12px">${c.official ? "公式テキスト" : "テキスト"}</div>
           <pre>${esc(c.official ? c.official.text : c.text)}</pre>
           ${c.notes ? `<div class="muted" style="font-size:12px;margin-top:6px">変換メモ</div><pre>${esc(c.notes)}</pre>` : ""}
+          ${(c.unsupported || []).length ? `<div class="muted" style="font-size:12px;margin-top:6px">表せなかった効果（足したい語彙）</div><pre>${esc(c.unsupported.map((u) => `${u.need}: ${u.text}`).join("\n"))}</pre>` : ""}
         </div>
         <div><div class="muted" style="font-size:12px">効果データ</div><pre>${esc(c.yaml)}</pre></div>
       </div>
@@ -715,7 +735,13 @@ function renderCards() {
     }
   });
 }
-$("q").oninput = $("rf").onchange = renderCards;
+$("q").oninput = $("rf").onchange = $("ff").onchange = $("gf").onchange = renderCards;
+$("approveclean").onclick = async () => {
+  const ids = shownCards().filter((c) => c.review === "pending" && isClean(c)).map((c) => c.id);
+  if (!ids.length || !confirm(`${ids.length}枚を approve します。動作確認（一括検証）は済んでいますか？`)) return;
+  await api("/api/review_bulk", {ids, status: "approved", note: "一括 approve（メモ・申告なし）"});
+  await loadCards();
+};
 
 // ---- 一括検証 ----
 $("verifyall").onclick = async () => {

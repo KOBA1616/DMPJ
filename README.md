@@ -36,8 +36,11 @@ python -m dmsim.solitaire --deck deck.yaml --games 1000 --turns 4 --workers 4   
 ## カードを増やす手順
 
 1. `python tools/fetch_cards.py <カードID...> --out data/cards/raw/official_YYYYMMDD.jsonl`（手元のPCで）。弾ごとなら `--set DMRP1 --count 93 --skip-known`。ID は公式の形式 `dmrp01-001` に正規化して管理する（`dmsim/cardid.py`）
-2. `python tools/convert_cards.py data/cards/raw/official_YYYYMMDD.jsonl`（`data/cards/converted.yaml` に出る。
-   検査を通らなかったものは `data/cards/raw/rejects.jsonl`）
+2. （任意・API不要）`python tools/survey_text.py data/cards/raw --uncovered` 原文の文を正規化して、同じ形の文を持つカード枚数で並べる。変換前に足す語彙の見当をつける
+2. `python tools/convert_cards.py data/cards/raw`（`data/cards/converted.yaml` に出る。ディレクトリ・複数ファイル・glob 可）。
+   大量なら `--workers 4 --order short --limit 200` で少しずつ。検査を通らなかったものは `data/cards/raw/rejects.jsonl`、
+   結果（件数・トークン・失敗理由の種類別）は `data/cards/raw/convert_report.json`。語彙を足したあとは `--retry-rejects` で落ちたものだけやり直す。
+   `python tools/report_gaps.py` で足りない語彙を枚数順に集計
 3. `python -m dmsim.devserver` の「カード」タブで「試す」→ 動かして確かめ、approve / reject を付ける
    （「一括検証」ボタン: 全カードの「試す」シナリオを探索方策で自動回しし、例外・ループを報告する。`dmsim/verify.py`）
 4. 確かめたカードを `real.yaml` に移す。動作をテストに残すなら `tests/test_real_cards.py` に足す

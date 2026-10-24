@@ -184,3 +184,60 @@ def test_select_cards_excludes_plain_keeps_peaky():
                                 "自分のクリーチャーを１体破壊する。"}
     pts, why, ex = sel.score(peaky)
     assert not ex and pts >= 3 and any("複数ゾーン" in w for w in why)
+
+
+def test_set_review_finds_file_and_converted_format(tmp_path, monkeypatch):
+    """レビュー状態は、そのカードが書かれたファイル（converted.yaml のブロック形式）を自動で探して書き換える。"""
+    import dmsim.devserver as ds
+    (tmp_path / "converted.yaml").write_text(yaml.safe_dump({"cards": [
+        {"id": "x001", "name": "例", "source": {"official": "x001", "review": "pending"}}]},
+        allow_unicode=True, sort_keys=False), encoding="utf-8")
+    (tmp_path / "real.yaml").write_text("cards:\n  - id: y001\n    source: {review: pending}\n", encoding="utf-8")
+    monkeypatch.setattr(ds, "DATA", tmp_path.parent)
+    assert ds.locate_card("x001", tmp_path).name == "converted.yaml"
+    set_review("x001", "approved", "ok", path=ds.locate_card("x001", tmp_path))
+    src = yaml.safe_load((tmp_path / "converted.yaml").read_text(encoding="utf-8"))["cards"][0]["source"]
+    assert src["review"] == "approved" and src["review_note"] == "ok"
+    with pytest.raises(KeyError):
+        ds.locate_card("nope", tmp_path)
+
+
+def test_convert_run_triage_and_resume(tmp_path):
+    """バッチ変換: 成功は保存、検査落ちは rejects と種類別集計、API失敗は記録せず再実行で拾う。"""
+    import convert_cards
+    from dmsim.defs import load_tables
+    good = "```yaml\nid: {i}\nname: 例\ntypes: [creature]\ncivs: [water]\ncost: 2\npower: 1000\nkeywords: [blocker]\n```"
+    bad = "```yaml\nid: {i}\nname: 例\ntypes: [creature]\ncivs: [water]\ncost: 2\npower: 1000\nkeywords: [no_such]\n```"
+
+    class Msgs:
+        def stream(self, **kw):
+            i = kw["messages"][0]["content"].split('"id": "')[1].split('"')[0]
+            if i == "t_api":
+                raise RuntimeError("overloaded")
+            return _FakeStream((bad if i == "t_bad" else good).format(i=i))
+
+    client = type("C", (), {"messages": Msgs()})()
+    rows = [{"id": i, "text": "x"} for i in ("t_ok", "t_bad", "t_api")]
+    out, rej, rep = tmp_path / "c.yaml", tmp_path / "rej.jsonl", tmp_path / "rep.json"
+    r = convert_cards.run(rows, client, load_tables(), "SYS", "low", out, rej, workers=2, report_path=rep)
+    assert (r["ok"], r["rejected"], r["api_error"]) == (1, 1, 1)
+    assert [c["id"] for c in yaml.safe_load(out.read_text(encoding="utf-8"))["cards"]] == ["t_ok"]
+    assert [x["id"] for x in convert_cards.read_jsonl(rej)] == ["t_bad"]
+    assert any(k.startswith("keyword") or "no_such" in k for k in r["triage"]) and rep.exists()
+    # 語彙を足した想定: 再実行で t_bad が通ると rejects から消える
+    class Msgs2(Msgs):
+        def stream(self, **kw):
+            return _FakeStream(good.format(i=kw["messages"][0]["content"].split('"id": "')[1].split('"')[0]))
+    client.messages = Msgs2()
+    convert_cards.run(rows[1:], client, load_tables(), "SYS", "low", out, rej)
+    assert convert_cards.read_jsonl(rej) == [] and len(yaml.safe_load(out.read_text(encoding="utf-8"))["cards"]) == 3
+
+
+def test_survey_text_counts_forms():
+    import survey_text
+    rows = [{"id": "a", "name": "甲", "text": "ブロッカー(説明。)\n甲が出た時、カードを2枚引く。"},
+            {"id": "b", "name": "乙", "text": "乙が出た時、カードを3枚引く。"}]
+    sv = survey_text.survey(rows)
+    assert len(sv["forms"]) == 1 and len(next(iter(sv["forms"].values()))["cards"]) == 2
+    assert "ブロッカー" in sv["keywords"]
+    assert "| 2 |" in survey_text.render(sv, 5, False)
