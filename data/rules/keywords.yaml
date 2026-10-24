@@ -52,3 +52,23 @@ keywords:
         when: {event: move, to: bz, subject: self}
         effect:
           - {op: move, select: {zone: deck, owner: you, from_top: 1}, to: mana, reason: put}
+  slayer:
+    ja: スレイヤー（このクリーチャーがバトルで負けた時、相手のクリーチャーも破壊する）
+    abilities:
+      - {kind: static, affects: self, mod: {allow: [slayer]}}
+  # card: カード自体の性質を変えるキーワード（呪文の解決後の置き場所など）
+  charger:
+    ja: チャージャー（この呪文を唱えた後、墓地に置くかわりに自分のマナゾーンに置く）
+    abilities: []
+    card: {resolve_to: mana}
+  evo_charger:
+    ja: Evoチャージャー（チャージャーの後、マナのクリーチャー1体を自分の進化クリーチャーの下に重ねてもよい）
+    abilities: []
+    card:
+      resolve_to: mana
+      after_resolve:
+        - op: may
+          body:
+            - op: put_under
+              select: {zone: mana, owner: you, filter: {types: [creature]}, count: 1}
+              onto: {zone: bz, owner: you, filter: {types: [evolution]}, count: 1}

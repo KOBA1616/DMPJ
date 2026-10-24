@@ -63,7 +63,8 @@ def build() -> dict:
             "filter": {"type": "object", "properties": {k: {} for k in sorted(FILTER_KEYS)},
                        "additionalProperties": False},
             "selector": {"type": "object", "properties": {
-                "zone": {"enum": sorted(zones)}, "owner": {"enum": ["you", "opp", "any"]}, "filter": ref("filter"),
+                "zone": {"enum": sorted(zones)}, "owner": {"enum": ["you", "opp", "any"]}, "owner_of": {"type": "string"},
+                "filter": ref("filter"),
                 "count": {"anyOf": [ref("expr"), {"const": "all"}]}, "up_to": {"type": "boolean"},
                 "from_top": ref("expr"), "chooser": {"enum": ["you", "opp"]}, "ref": {"type": "string"},
                 "other": {"type": "boolean"}}, "additionalProperties": False},
@@ -79,7 +80,8 @@ def build() -> dict:
                 "power": {"type": "integer"}, "grant": {"type": "array", "items": {"enum": sorted(keywords)}},
                 "allow": {"type": "array", "items": perm}, "deny": {"type": "array", "items": perm},
                 "breaks": {"type": "integer"},
-                "ignore": {"type": "array", "items": {"enum": ["trigger", "static", "replace", "all"]}}},
+                "ignore": {"type": "array", "items": {"enum": ["trigger", "static", "replace", "all"]}},
+                "gain": {"type": "array", "items": ref("ability")}},
                 "additionalProperties": False, "propertyNames": {"enum": sorted(MOD_KEYS)}},
             "when": {"type": "object", "properties": {
                 "event": {"enum": sorted(EVENTS)}, "from": {"enum": sorted(zones)}, "to": {"enum": sorted(zones)},

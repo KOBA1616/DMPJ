@@ -185,3 +185,40 @@ def op_swap(eng, t, op, env):
                    {"t": "swap_in", "out": eng.s.ref(o), "out_gen_next": eng.s.cards[o].gen + 1,
                     "in": eng.s.ref(i), "tapped": eng.s.cards[o].tapped, "env": env}])
     return None
+
+
+@op("end_turn")
+def op_end_turn(eng, t, op, env):
+    """ターンの残りをとばす（次のプレイヤーのターンをすぐに始める）。今の効果の解決は最後まで行う。"""
+    eng.s.skip_rest = True
+
+
+@op("choose", select="selector", **{"as": "str"})
+def op_choose(eng, t, op, env):
+    """カードを選んで変数に入れるだけ（「〜を1体選ぶ。このターン、そのクリーチャーが〜」）。"""
+    cids, d = eng.select(t, op["select"], env)
+    if d:
+        return d
+    env.setdefault("vars", {})[op["as"]] = [eng.s.ref(c) for c in cids]
+    return None
+
+
+@op("put_under", select="selector", onto="selector")
+def op_put_under(eng, t, op, env):
+    """カードを、バトルゾーンのクリーチャーの下に重ねる（Evoチャージャーなど）。"""
+    os_ = t.setdefault("os", {})
+    if "card" not in os_:
+        cids, d = eng.select(t, op["select"], env)
+        if d:
+            return d
+        if not cids:
+            return None
+        os_["card"] = cids[0]
+        os_.pop("chosen", None)
+    onto, d = eng.select(t, op["onto"], env)
+    if d:
+        return d
+    if onto:
+        eng._defer(t, [{"t": "put_under", "cid": os_["card"], "gen": eng.s.cards[os_["card"]].gen,
+                        "onto": eng.s.ref(onto[0])}])
+    return None

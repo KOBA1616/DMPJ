@@ -1,0 +1,406 @@
+# 実カード（オリジナル・フォーマット）。公式カード詳細ページのテキストを効果DSLに変換したもの。
+# 原文は data/cards/raw/official_20261024.jsonl。変換は Claude（LLM）が行い、人の確認を待つ。
+# source.review: pending（未確認） / approved（開発者モードで動作を確認済み） / rejected
+# source.notes: 変換で近似した点・未対応の点
+cards:
+  - id: dm01-001
+    name: 天空の守護者グラン・ギューレ
+    types: [creature]
+    civs: [light]
+    cost: 6
+    power: 9000
+    races: [ガーディアン]
+    keywords: [blocker, cannot_attack_player]
+    text: "ブロッカー / このクリーチャーは、相手プレイヤーを攻撃できない。"
+    source: {official: dm01-001, review: pending}
+
+  - id: dm01-027
+    name: デーモン・ハンド
+    types: [spell]
+    civs: [darkness]
+    cost: 6
+    keywords: [s_trigger]
+    text: "S・トリガー / バトルゾーンにある相手のクリーチャーを１体選び、持ち主の墓地に置く。"
+    spell:
+      - op: destroy
+        select: {zone: bz, owner: opp, filter: {types: [creature]}, count: 1}
+    source: {official: dm01-027, review: pending, notes: "原文は「墓地に置く」。現行の再録は「破壊する」なので destroy にした"}
+
+  - id: dm01-080
+    name: アクア・ハルカス
+    types: [creature]
+    civs: [water]
+    cost: 3
+    power: 2000
+    races: [リキッド・ピープル]
+    text: "このクリーチャーがバトルゾーンに出たとき、カードを１枚引いてよい。"
+    abilities:
+      - kind: trigger
+        when: {event: move, to: bz, subject: self}
+        effect:
+          - op: may
+            body: [{op: draw, count: 1}]
+    source: {official: dm01-080, review: pending}
+
+  - id: dm01-086
+    name: スパイラル・ゲート
+    types: [spell]
+    civs: [water]
+    cost: 2
+    keywords: [s_trigger]
+    text: "S・トリガー / バトルゾーンにあるクリーチャーを１体選び、持ち主の手札に戻す。"
+    spell:
+      - op: bounce
+        select: {zone: bz, owner: any, filter: {types: [creature]}, count: 1}
+    source: {official: dm01-086, review: pending}
+
+  - id: dm06-110
+    name: フェアリー・ライフ
+    types: [spell]
+    civs: [nature]
+    cost: 2
+    keywords: [s_trigger]
+    text: "S・トリガー / 自分の山札の上から１枚目を、自分のマナゾーンに置く。"
+    spell:
+      - {op: mana_put, select: {zone: deck, owner: you, from_top: 1}}
+    source: {official: dm06-110, review: pending}
+
+  - id: dmd04-005
+    name: ボーンおどり・チャージャー
+    types: [spell]
+    civs: [darkness]
+    cost: 3
+    keywords: [charger]
+    text: "自分の山札の上から２枚を墓地に置く。 チャージャー"
+    spell:
+      - {op: mill, owner: you, count: 2}
+    source: {official: dmd04-005, review: pending}
+
+  - id: dmbd21-013
+    text: "終断γ ドルブロ: S・トリガー / ブロッカー / バトルに勝った時、このクリーチャーを破壊する。 ／ ボーンおどり・チャージャー: 山札の上から２枚を墓地に置く。チャージャー"
+    faces:
+      - name: 終断γ ドルブロ
+        types: [creature]
+        civs: [darkness]
+        cost: 5
+        power: 3000
+        races: [ソニック・コマンド, イニシャルズX]
+        keywords: [s_trigger, blocker]
+        abilities:
+          - kind: trigger
+            when: {event: battle_win, subject: self}
+            effect:
+              - {op: destroy, select: {ref: self}}
+      - name: ボーンおどり・チャージャー
+        types: [spell]
+        civs: [darkness]
+        cost: 3
+        keywords: [charger]
+        spell:
+          - {op: mill, owner: you, count: 2}
+    source: {official: dmbd21-013, review: pending}
+
+  - id: dm29-037
+    name: 光牙忍ハヤブサマル
+    types: [creature]
+    civs: [light]
+    cost: 3
+    power: 3000
+    races: [ガーディアン, シノビ]
+    text: "ニンジャ・ストライク４ / このクリーチャーをバトルゾーンに出した時、次の自分のターンのはじめまで、バトルゾーンにある自分のクリーチャー１体は「ブロッカー」を得る。"
+    abilities:
+      - kind: declare
+        zone: hand
+        when: {event: attack, subject: {owner: opp}}
+        if: {cmp: [{count: {zone: mana, owner: you}}, ">=", 4]}
+        effect: &ninja
+          - {op: play_free, select: {ref: self}, as: ninja}
+          - op: delayed_trigger
+            when: {event: turn_end}
+            effect:
+              - {op: move, select: {ref: ninja}, to: deck, reason: put, position: bottom}
+      - kind: declare
+        zone: hand
+        when: {event: block, subject: {owner: opp}}
+        if: {cmp: [{count: {zone: mana, owner: you}}, ">=", 4]}
+        effect: *ninja
+      - kind: trigger
+        when: {event: move, to: bz, subject: self}
+        effect:
+          - op: modify
+            select: {zone: bz, owner: you, filter: {types: [creature]}, count: 1}
+            mod: {grant: [blocker]}
+            duration: until_next_own_turn_start
+    source:
+      official: dm29-037
+      review: pending
+      notes: "「その攻撃中にニンジャ・ストライクを使っていなかった場合」の制限は未実装（1回の攻撃で複数のニンジャ・ストライクを宣言できてしまう）"
+
+  - id: dmr09-021
+    name: 終末の時計 ザ・クロック
+    types: [creature]
+    civs: [water]
+    cost: 3
+    power: 3000
+    races: [アウトレイジMAX]
+    keywords: [s_trigger]
+    text: "S・トリガー / このクリーチャーをバトルゾーンに出した時、ターンの残りをとばす。"
+    abilities:
+      - kind: trigger
+        when: {event: move, to: bz, subject: self}
+        effect:
+          - {op: end_turn}
+    source: {official: dmr09-021, review: pending, notes: "「ターンの残りをとばす」は総合ルールに条文がない。残りのステップを行わずに次のターンへ移り、ターン終了時の誘発は起こさない扱い"}
+
+  - id: dm10-036
+    name: 母なる大地
+    types: [spell]
+    civs: [nature]
+    cost: 3
+    keywords: [s_trigger]
+    text: "S・トリガー / バトルゾーンにあるクリーチャーを１体選び、持ち主のマナゾーンに置いてもよい。そうした場合、そのマナゾーンにあるカードの枚数とコストが同じかそれ以下のクリーチャーを１体、そのマナゾーンから選ぶ。そのプレイヤーはそのクリーチャーをバトルゾーンに出す。ただし、進化クリーチャーを選ぶことはできない。"
+    spell:
+      - op: may
+        body:
+          - {op: mana_put, select: {zone: bz, owner: any, filter: {types: [creature]}, count: 1}, as: sent}
+          - op: if
+            cond: {exists: {ref: sent}}
+            then:
+              - op: move
+                select:
+                  zone: mana
+                  owner_of: sent
+                  filter:
+                    types: [creature]
+                    not_types: [evolution]
+                    cost_le: {count: {zone: mana, owner_of: sent}}
+                  count: 1
+                to: bz
+                reason: put
+    source: {official: dm10-036, review: pending, notes: "マナに置いた後のカードを as: sent で追う。出す処理はマナの持ち主のバトルゾーン"}
+
+  - id: dmx03-035
+    name: 解体人形ジェニー
+    types: [creature]
+    civs: [darkness]
+    cost: 4
+    power: 1000
+    races: [デスパペット]
+    text: "このクリーチャーをバトルゾーンに出した時、相手の手札を見てその中から１枚選び、捨てさせる。"
+    abilities:
+      - kind: trigger
+        when: {event: move, to: bz, subject: self}
+        effect:
+          - {op: discard, select: {zone: hand, owner: opp, count: 1}}
+    source: {official: dmx03-035, review: pending}
+
+  - id: dmrp06-006
+    text: "マッド・デーモン閣下: 出た時、あるいは自分が名前に《ハンド》とある呪文を唱えた時、クリーチャーを１体、自分の墓地から手札に戻してもよい。 ／ デーモン・ハンド: S・トリガー 相手のクリーチャーを１体破壊する。"
+    faces:
+      - name: マッド・デーモン閣下
+        types: [creature]
+        civs: [darkness]
+        cost: 5
+        power: 5000
+        races: [マフィ・ギャング, デーモン・コマンド]
+        abilities:
+          - kind: trigger
+            when: {event: move, to: bz, subject: self}
+            effect: &mad
+              - {op: bounce, select: {zone: graveyard, owner: you, filter: {types: [creature]}, count: 1, up_to: true}}
+          - kind: trigger
+            when: {event: cast, player: you, subject: {owner: you, filter: {name_has: ハンド}}}
+            effect: *mad
+      - name: デーモン・ハンド
+        types: [spell]
+        civs: [darkness]
+        cost: 6
+        keywords: [s_trigger]
+        spell:
+          - op: destroy
+            select: {zone: bz, owner: opp, filter: {types: [creature]}, count: 1}
+    source: {official: dmrp06-006, review: pending}
+
+  - id: dm24ex4-015
+    name: ボルメテウス・レインボー・ドラゴン
+    types: [creature]
+    civs: [light, fire]
+    cost: 7
+    power: 11000
+    races: [アーマード・ドラゴン]
+    keywords: [double_breaker]
+    text: "革命チェンジ：光または火の、コスト５以上のドラゴン / W・ブレイカー / 自分の、名前に《ボルメテウス》とあるクリーチャーすべてに「スピードアタッカー」を与える。 / このクリーチャーが出た時、このクリーチャーは自分のシールドを１つブレイクしてもよい。 / 自分のシールドゾーンにあるコスト７以下のドラゴンすべてに「S・トリガー」を与える。"
+    abilities:
+      - kind: declare
+        zone: hand
+        when: {event: attack, subject: {owner: you, filter: {civs: [light, fire], cost_ge: 5, race_has: ドラゴン}}}
+        effect:
+          - {op: swap, out: {ref: event.subject}, in: {ref: self}}
+      - kind: static
+        affects: {owner: you, filter: {name_has: ボルメテウス}}
+        mod: {grant: [speed_attacker]}
+      - kind: trigger
+        when: {event: move, to: bz, subject: self}
+        effect:
+          - op: may
+            body: [{op: break, player: you, count: 1}]
+      - kind: static
+        affects: {owner: you, zone: shield, filter: {cost_le: 7, race_has: ドラゴン}}
+        mod: {grant: [s_trigger]}
+    source: {official: dm24ex4-015, review: pending}
+
+  - id: dm08-043
+    name: ブレイン・チャージャー
+    types: [spell]
+    civs: [water]
+    cost: 4
+    keywords: [charger]
+    text: "カードを１枚引く。 チャージャー"
+    spell:
+      - {op: draw, count: 1}
+    source: {official: dm08-043, review: pending}
+
+  - id: dm35-047
+    name: リボーン・EVO チャージャー
+    types: [spell]
+    civs: [darkness]
+    cost: 4
+    keywords: [evo_charger]
+    text: "クリーチャーを２体まで、自分の墓地から山札の一番上に好きな順序で置く。 Evoチャージャー"
+    spell:
+      - op: move
+        select: {zone: graveyard, owner: you, filter: {types: [creature]}, count: 2, up_to: true}
+        to: deck
+        reason: put
+        position: top
+    source: {official: dm35-047, review: pending, notes: "「好きな順序で」の順番選択は未実装（選んだ順に置く）"}
+
+  - id: dm10-048
+    name: セイレーン・コンチェルト
+    types: [spell]
+    civs: [water]
+    cost: 1
+    keywords: [s_trigger]
+    text: "S・トリガー / 自分のマナゾーンからカードを１枚、自分の手札に戻す。その後、自分の手札を１枚、自分のマナゾーンに置く。"
+    spell:
+      - {op: bounce, select: {zone: mana, owner: you, count: 1}}
+      - {op: mana_put, select: {zone: hand, owner: you, count: 1}}
+    source: {official: dm10-048, review: pending}
+
+  - id: dm16-007
+    name: ヘブンズ・ゲート
+    types: [spell]
+    civs: [light]
+    cost: 6
+    keywords: [s_trigger]
+    text: "S・トリガー / 進化クリーチャーではない光の「ブロッカー」を持つクリーチャーを２体まで、自分の手札からバトルゾーンに出す。"
+    spell:
+      - op: move
+        select: {zone: hand, owner: you, filter: {types: [creature], not_types: [evolution], civs: [light], keyword: blocker}, count: 2, up_to: true}
+        to: bz
+        reason: put
+    source: {official: dm16-007, review: pending}
+
+  - id: dm02-029
+    name: ロスト・ソウル
+    types: [spell]
+    civs: [darkness]
+    cost: 7
+    text: "相手は自分自身の手札をすべて、持ち主の墓地に置く。"
+    spell:
+      - {op: discard, select: {zone: hand, owner: opp, count: all}}
+    source: {official: dm02-029, review: pending}
+
+  - id: dm06-085
+    name: エナジー・ライト
+    types: [spell]
+    civs: [water]
+    cost: 3
+    text: "カードを２枚引く。"
+    spell:
+      - {op: draw, count: 2}
+    source: {official: dm06-085, review: pending}
+
+  - id: dm01-106
+    name: 青銅の鎧
+    types: [creature]
+    civs: [nature]
+    cost: 3
+    power: 1000
+    races: [ビーストフォーク]
+    keywords: [mana_boost_cip]
+    text: "このクリーチャーがバトルゾーンに出たとき、自分の山札の一番上のカードを表にして自分のマナゾーンに置く。"
+    source: {official: dm01-106, review: pending}
+
+  - id: dm09-032
+    name: 無限掌
+    types: [spell]
+    civs: [fire]
+    cost: 1
+    text: "バトルゾーンにある自分のクリーチャーを１体選ぶ。このターン、そのクリーチャーがバトルに勝ったとき、バトルの後でアンタップする。"
+    spell:
+      - {op: choose, select: {zone: bz, owner: you, filter: {types: [creature]}, count: 1}, as: target}
+      - op: delayed_trigger
+        when: {event: battle_win, subject: {ref: target}}
+        once: false
+        effect:
+          - {op: untap, select: {ref: target}}
+    source: {official: dm09-032, review: pending, notes: "「バトルの後で」はバトルの結果の誘発として解決（701.13b）。701.13d の「バトルの後」の窓とは分けていない"}
+
+  - id: dm02-024
+    name: クリスタル・ランサー
+    types: [creature, evolution]
+    civs: [water]
+    cost: 6
+    power: 8000
+    races: [リキッド・ピープル]
+    keywords: [double_breaker, unblockable]
+    evolve_from: {races: [リキッド・ピープル]}
+    text: "進化—自分のリキッド・ピープル１体の上に置く。 / W・ブレイカー / このクリーチャーはブロックされない。"
+    source: {official: dm02-024, review: pending}
+
+  - id: dm01-039
+    name: ナチュラル・トラップ
+    types: [spell]
+    civs: [nature]
+    cost: 6
+    keywords: [s_trigger]
+    text: "S・トリガー / バトルゾーンにある相手のクリーチャーを１体選び、持ち主のマナゾーンに置く。"
+    spell:
+      - {op: mana_put, select: {zone: bz, owner: opp, filter: {types: [creature]}, count: 1}}
+    source: {official: dm01-039, review: pending}
+
+  - id: dm01-015
+    name: ホーリー・スパーク
+    types: [spell]
+    civs: [light]
+    cost: 6
+    keywords: [s_trigger]
+    text: "S・トリガー / バトルゾーンにある相手のクリーチャーすべてをタップする。"
+    spell:
+      - {op: tap, select: {zone: bz, owner: opp, filter: {types: [creature]}, count: all}}
+    source: {official: dm01-015, review: pending}
+
+  - id: dm25-035
+    name: 鎧亜の咆哮キリュー・ジルヴェス
+    types: [creature]
+    civs: [darkness, fire, nature]
+    cost: 5
+    power: 1000
+    races: [ロスト・クルセイダー]
+    text: "マナゾーンに置く時、このカードはタップして置く。 / このクリーチャーをバトルゾーンに出した時、そのターン、自分のクリーチャーはすべて「スピードアタッカー」と「スレイヤー」を得る。そのターン中、それらのクリーチャーが破壊される時、墓地に置くかわりに自分のマナゾーンに置く。"
+    abilities:
+      - kind: trigger
+        when: {event: move, to: bz, subject: self}
+        effect:
+          - op: modify
+            select: {zone: bz, owner: you, filter: {types: [creature]}}
+            dynamic: true
+            mod:
+              grant: [speed_attacker, slayer]
+              gain:
+                - kind: replace
+                  when: {event: move, from: bz, to: graveyard, reason: destroy, subject: self}
+                  instead:
+                    - {op: mana_put, select: {ref: event.subject}}
+    source: {official: dm25-035, review: pending, notes: "多色なのでマナにはタップして置かれる（エンジンの規定）。「自分のクリーチャーはすべて」は後から出たものにも及ぶ（dynamic）と解釈した。要確認"}

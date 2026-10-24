@@ -67,6 +67,7 @@ class GameState:
     extra_turns: list[int] = field(default_factory=list)
     turn_counters: dict = field(default_factory=dict)       # 「このターン N 回目」系
     steps_this_turn: int = 0
+    skip_rest: bool = False                                 # 「ターンの残りをとばす」
 
     # ---- 参照 ----
     def ref(self, cid: int) -> list[int]:

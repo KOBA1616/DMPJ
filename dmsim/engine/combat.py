@@ -5,7 +5,7 @@ breaks で判定する。キーワードは keywords.yaml でそれらを与え�
 """
 from __future__ import annotations
 
-from ..types import AttackTask, BreakTask, DeclareTask
+from ..types import AttackTask, BreakTask, DeclareTask, SlayerTask
 from .registry import task
 
 
@@ -36,9 +36,13 @@ class CombatMixin:
         px, py = self.chars(x[0])["power"], self.chars(y[0])["power"]
         losers = ([x] if px <= py else []) + ([y] if py <= px else [])
         winners = [r for r in (x, y) if r not in losers]
+        slay = [[r, y if r == x else x] for r in losers if self.permits(r[0], "slayer")]
         evs = [{"ev": "move", "subject": r, "to": "graveyard", "reason": "destroy"} for r in losers]
         evs += [{"ev": "battle_win", "subject": r, "controller": self.s.cards[r[0]].controller} for r in winners]
-        return self._window(self.ev_task(evs))
+        out = self._window(self.ev_task(evs))
+        if slay:   # 701.13d バトルの後に誘発する「スレイヤー」
+            out += self._window({"t": "slayer", "pairs": slay})
+        return out
 
     def _declarable(self, player, rec) -> list[dict]:
         """使用宣言できる能力（603.2e/f）。手札（または ab.zone）にあり、when が rec に合い、if を満たすもの。"""
@@ -63,6 +67,16 @@ class CombatMixin:
                         if o["key"] not in [x["key"] for x in out]:
                             out.append(o)
         return out
+
+
+@task("slayer", SlayerTask)
+def h_slayer(eng, t):
+    eng._pop(t)
+    evs = [{"ev": "move", "subject": o, "to": "graveyard", "reason": "destroy"}
+           for _, o in t["pairs"] if eng.s.alive(o)]
+    if evs:
+        eng._push(eng.ev_task(evs))
+    return None
 
 
 @task("declare", DeclareTask)
@@ -103,6 +117,10 @@ def h_attack(eng, t):
     att = t["attacker"]
     a = s.active
     ph = t["phase"]
+    if s.skip_rest:                                           # ターンの残りをとばす
+        eng._expire("during_attack")
+        eng._pop(t)
+        return None
     if ph == 0:                                               # 506 攻撃クリーチャー指定
         t["phase"] = 1
         s.cards[att[0]].tapped = True

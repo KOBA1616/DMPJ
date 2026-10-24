@@ -1,7 +1,7 @@
 """効果DSLのインタプリタ。op は ops.py で registry に登録する。"""
 from __future__ import annotations
 
-from ..types import BindTask, EffectTask, SwapFixTask, SwapInTask
+from ..types import BindTask, EffectTask, PutUnderTask, SwapFixTask, SwapInTask
 from .registry import OPS, task
 
 
@@ -66,4 +66,19 @@ def h_swap_fix(eng, t):
     for t_ in s.tasks:   # 攻撃中なら攻撃クリーチャーを入れ替える（701.26a）
         if t_["t"] == "attack" and t_["attacker"] == t["out"]:
             t_["attacker"] = new
+    return None
+
+
+@task("put_under", PutUnderTask)
+def h_put_under(eng, t):
+    s = eng.s
+    eng._pop(t)
+    c = s.cards[t["cid"]]
+    if c.gen != t["gen"] or not s.alive(t["onto"]):
+        return None
+    top = t["onto"][0]
+    eng._raw_move(t["cid"], "bz", controller=s.cards[top].controller)
+    c.top_of = top
+    c.entered_turn = -1
+    s.cards[top].under.append(t["cid"])
     return None

@@ -23,16 +23,18 @@ def core_ops() -> dict[str, dict[str, str]]:
 EVENTS = {"move", "draw", "cast", "summon", "attack", "block", "break", "tap", "untap",
           "turn_start", "turn_end", "battle_win"}
 ABILITY_KINDS = {"trigger", "replace", "static", "declare"}
+ABILITY_KEYS = {"kind", "when", "if", "effect", "instead", "optional", "affects", "mod", "zone", "keyword"}
 REASONS = {"put", "destroy", "return", "discard", "charge", "summon", "cast", "break",
            "draw", "battle", "sba", "resolve", "evolve"}
 DURATIONS_FIXED = {"end_of_turn", "during_attack", "permanent", "until_next_own_turn_start"}
-MOD_KEYS = {"power", "grant", "allow", "deny", "breaks", "ignore"}
+MOD_KEYS = {"power", "grant", "allow", "deny", "breaks", "ignore", "gain"}
 POSITIONS = {"top", "bottom"}
 CARD_TYPES = {"creature", "spell", "evolution"}
 CIVS = {"light", "water", "darkness", "fire", "nature", "zero"}
-SELECTOR_KEYS = {"zone", "owner", "filter", "count", "up_to", "from_top", "chooser", "ref", "other"}
-FILTER_KEYS = {"types", "civs", "races", "name", "cost_le", "cost_ge", "power_le", "power_ge", "tapped",
-               "keyword", "not_name"}
+SELECTOR_KEYS = {"zone", "owner", "owner_of", "filter", "count", "up_to", "from_top", "chooser", "ref", "other"}
+FILTER_KEYS = {"types", "not_types", "civs", "races", "race_has", "name", "name_has", "not_name",
+               "cost_le", "cost_ge", "power_le", "power_ge", "tapped", "keyword"}
+FILTER_EXPR_KEYS = {"cost_le", "cost_ge", "power_le", "power_ge"}   # 値に式を書ける（解決時に計算）
 
 
 class DefError(ValueError):
@@ -52,6 +54,8 @@ class Face:
     abilities: list[dict] = field(default_factory=list)
     spell: list[dict] = field(default_factory=list)
     evolve_from: dict | None = None                       # 進化元の条件（801.1a）。filter 形式
+    resolve_to: str = "graveyard"                         # 呪文の解決後の置き場所（チャージャー等）
+    after_resolve: list[dict] = field(default_factory=list)
 
     def is_creature(self) -> bool:
         return "creature" in self.types
@@ -75,6 +79,8 @@ class CardDef:
     abilities: list[dict] = field(default_factory=list)  # 展開済みの能力（キーワード由来も含む）
     spell: list[dict] = field(default_factory=list)      # 呪文の解決 ops
     evolve_from: dict | None = None
+    resolve_to: str = "graveyard"
+    after_resolve: list[dict] = field(default_factory=list)
     faces: list[Face] = field(default_factory=list)      # ツインパクト: [0]=クリーチャー側, [1]=呪文側
     source: dict = field(default_factory=dict)           # 出典（公式ID・取得日・確認者など）
 
@@ -104,16 +110,18 @@ class Rules:
                             if ab["kind"] == "static" and "ignore" in ab.get("mod", {})}
 
 
-def _subst(obj, args):
+def _subst(obj, args, used=None):
     if isinstance(obj, str) and obj.startswith("$"):
         key = obj[1:]
         if key not in args:
             raise DefError(f"macro argument missing: {key}")
+        if used is not None:
+            used.add(key)
         return args[key]
     if isinstance(obj, dict):
-        return {k: _subst(v, args) for k, v in obj.items()}
+        return {k: _subst(v, args, used) for k, v in obj.items()}
     if isinstance(obj, list):
-        return [_subst(v, args) for v in obj]
+        return [_subst(v, args, used) for v in obj]
     return obj
 
 
@@ -129,12 +137,19 @@ def expand_ops(ops: list[dict], macros: dict, where: str) -> list[dict]:
             for k, ty in core[name].items():
                 if ty.rstrip("?") == "ops" and k in op:
                     op[k] = expand_ops(op[k], macros, where)
-            if name == "delayed_trigger" and "effect" in op:
-                op["effect"] = expand_ops(op["effect"], macros, where)
+                if ty.rstrip("?") == "mod" and k in op and "gain" in op[k]:
+                    op[k] = dict(op[k], gain=[_expand_ability(a, macros, where) for a in op[k]["gain"]])
             out.append(op)
         elif name in macros:
             args = {k: v for k, v in op.items() if k != "op"}
-            out.extend(expand_ops(_subst(copy.deepcopy(macros[name]), args), macros, where))
+            used: set = set()
+            body = _subst(copy.deepcopy(macros[name]), args, used)
+            rest = {k: v for k, v in args.items() if k not in used}
+            if rest:   # 1つの op に展開されるマクロなら、残りの引数（as など）はその op に渡す
+                if len(body) != 1:
+                    raise DefError(f"{where}: macro '{name}' got extra args {sorted(rest)}")
+                body[0].update(rest)
+            out.extend(expand_ops(body, macros, where))
         else:
             raise DefError(f"{where}: unknown op '{name}'")
     return out
@@ -206,6 +221,8 @@ class Checker:
         bad = set(sel) - SELECTOR_KEYS
         if bad:
             raise DefError(f"{where}: unknown selector keys {sorted(bad)}")
+        if "owner" in sel and "owner_of" in sel:
+            raise DefError(f"{where}: owner and owner_of are exclusive")
         if "ref" not in sel and "zone" not in sel:
             raise DefError(f"{where}: selector needs zone or ref")
         if "zone" in sel and sel["zone"] not in self.zones:
@@ -222,6 +239,8 @@ class Checker:
             raise DefError(f"{where}: unknown civs {f['civs']}")
         if "keyword" in f and f["keyword"] not in self.keywords:
             raise DefError(f"{where}: unknown keyword '{f['keyword']}'")
+        for k in FILTER_EXPR_KEYS & set(f):
+            self.expr(f[k], where)
 
     def expr(self, x, where):
         if isinstance(x, int):
@@ -279,6 +298,8 @@ class Checker:
         for k in m.get("ignore", []):
             if k not in ("trigger", "static", "replace", "all"):
                 raise DefError(f"{where}: bad ignore '{k}'")
+        for ab in m.get("gain", []):   # 能力を得る（「〜時、かわりに〜」などを継続的効果で与える）
+            self.ability(ab, where)
 
     def when(self, w, where):
         ev = w.get("event")
@@ -294,12 +315,20 @@ class Checker:
         kind = ab.get("kind")
         if kind not in ABILITY_KINDS:
             raise DefError(f"{where}: unknown ability kind '{kind}'")
+        bad = set(ab) - ABILITY_KEYS
+        if bad:
+            raise DefError(f"{where}: unknown ability keys {sorted(bad)}")
         if kind in ("trigger", "replace", "declare"):
             self.when(ab.get("when", {}), where)
         if kind == "static" and "mod" in ab:
             self.mod(ab["mod"], where)
         if kind == "static" and ab.get("zone", "bz") not in self.zones:
             raise DefError(f"{where}: unknown zone '{ab['zone']}'")
+        aff = ab.get("affects")
+        if isinstance(aff, dict):
+            if aff.get("zone", "bz") not in self.zones:
+                raise DefError(f"{where}: unknown zone '{aff['zone']}'")
+            self.filter(aff.get("filter", {}), where)
         if "if" in ab:
             self.cond(ab["if"], where)
         for k in ("effect", "instead"):
@@ -317,11 +346,17 @@ def _expand_ability(ab, macros, where):
 
 def _load_face(raw, keywords, macros, chk: Checker, where) -> dict:
     names, abilities = [], []
+    props = {"resolve_to": "graveyard", "after_resolve": []}
     for kw in raw.get("keywords", []):
         if kw not in keywords:
             raise DefError(f"{where}: unknown keyword '{kw}'")
         names.append(kw)
         abilities += [dict(_expand_ability(a, macros, where), keyword=kw) for a in keywords[kw]["abilities"]]
+        for k, v in keywords[kw].get("card", {}).items():
+            props[k] = expand_ops(v, macros, where) if k == "after_resolve" else v
+    chk.ops(props["after_resolve"], where)
+    if props["resolve_to"] not in chk.zones:
+        raise DefError(f"{where}: unknown zone '{props['resolve_to']}'")
     abilities += [_expand_ability(a, macros, where) for a in raw.get("abilities", [])]
     for a in abilities:
         chk.ability(a, where)
@@ -338,7 +373,7 @@ def _load_face(raw, keywords, macros, chk: Checker, where) -> dict:
         chk.filter(raw["evolve_from"], where)
     return dict(name=raw["name"], types=raw["types"], civs=raw["civs"], cost=raw["cost"],
                 power=raw.get("power", 0), races=raw.get("races", []), keywords=names,
-                abilities=abilities, spell=spell, evolve_from=raw.get("evolve_from"))
+                abilities=abilities, spell=spell, evolve_from=raw.get("evolve_from"), **props)
 
 
 def load_tables():
@@ -357,7 +392,7 @@ def parse_card(raw: dict, tables, where: str | None = None) -> CardDef:
     chk = Checker(zones, keywords, actions, steps)
     where = where or str(raw.get("id"))
     for kw in keywords.values():
-        for a in kw["abilities"]:
+        for a in kw.get("abilities", []):
             chk.ability(_expand_ability(a, macros, "keywords.yaml"), "keywords.yaml")
     if "faces" in raw:   # ツインパクト（810）。カード全体の特性は両面を合わせたもの
         faces = [Face(**_load_face(f, keywords, macros, chk, f"{where}/face{i}")) for i, f in enumerate(raw["faces"])]

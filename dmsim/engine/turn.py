@@ -125,6 +125,10 @@ class TurnMixin:
 @task("turn", TurnTask)
 def h_turn(eng, t):
     s = eng.s
+    if s.skip_rest:          # 「ターンの残りをとばす」: 残りのステップを行わずに次のターンへ（ターン終了時の誘発もなし）
+        s.skip_rest = False
+        eng._expire("end_of_turn")
+        t["i"] = len(t["steps"])
     if t["i"] < len(t["steps"]):
         name = t["steps"][t["i"]]
         s.step = name
@@ -267,6 +271,7 @@ def h_play(eng, t):
         env = {"you": p, "self": ref, "vars": {}}
         eng._push(eng.ev_task({"ev": "cast", "player": p, "subject": ref}),
                    eng._child(d.spell, env),
-                   eng.ev_task({"ev": "move", "subject": ref, "from": from_zone, "to": "graveyard",
-                                 "reason": "resolve"}))
+                   eng.ev_task({"ev": "move", "subject": ref, "from": from_zone, "to": d.resolve_to,
+                                 "reason": "resolve"}),
+                   *([eng._child(d.after_resolve, env)] if d.after_resolve else []))
     return None

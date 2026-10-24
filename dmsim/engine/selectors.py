@@ -34,13 +34,19 @@ class SelectorMixin:
 
     def filter_match(self, cid: int, f: dict, lki: dict | None = None, base: bool = False) -> bool:
         if base:   # 常在型能力の範囲判定中は自分の特性計算を再帰させない
-            d = self.cdef(cid)
+            d = self.fdef(cid)
             ch = {"power": d.power, "cost": d.cost, "civs": d.civs, "types": d.types, "races": d.races,
                   "keywords": set(d.keywords), "name": d.name}
         else:
             ch = lki["chars"] if lki else self.chars(cid)
         c = self.s.cards[cid]
         if "types" in f and not set(f["types"]) & set(ch["types"]):
+            return False
+        if "not_types" in f and set(f["not_types"]) & set(ch["types"]):
+            return False
+        if "race_has" in f and not any(f["race_has"] in r for r in ch["races"]):
+            return False
+        if "name_has" in f and f["name_has"] not in ch["name"]:
             return False
         if "civs" in f and not set(f["civs"]) & set(ch["civs"]):
             return False
@@ -71,14 +77,20 @@ class SelectorMixin:
             else:
                 refs = env.get("vars", {}).get(r, [])
             return [x[0] for x in refs if s.alive(x)]
-        owner = sel.get("owner", "you")
-        players = [0, 1] if owner == "any" else [self._rel(owner, env)]
+        if "owner_of" in sel:   # 「持ち主の〜」「そのプレイヤーの〜」: 変数のカードの持ち主
+            refs = env.get("vars", {}).get(sel["owner_of"], [])
+            players = sorted({s.cards[r[0]].owner for r in refs})
+        else:
+            owner = sel.get("owner", "you")
+            players = [0, 1] if owner == "any" else [self._rel(owner, env)]
         out = []
         for p in players:
             lst = self.bz_tops(p) if sel["zone"] == "bz" else self.zlist(sel["zone"], p)
             if "from_top" in sel:
                 lst = lst[: self.eval_expr(sel["from_top"], env)]
             f = sel.get("filter", {})
+            if any(isinstance(v, dict) for v in f.values()):   # 式の値は解決時に計算する
+                f = {k: self.eval_expr(v, env) if isinstance(v, dict) else v for k, v in f.items()}
             for cid in lst:
                 if sel.get("other") and env.get("self") and cid == env["self"][0]:
                     continue

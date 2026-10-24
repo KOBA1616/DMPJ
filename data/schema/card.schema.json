@@ -68,9 +68,12 @@
      "blocker",
      "cannot_attack",
      "cannot_attack_player",
+     "charger",
      "double_breaker",
+     "evo_charger",
      "mana_boost_cip",
      "s_trigger",
+     "slayer",
      "speed_attacker",
      "triple_breaker",
      "unblockable"
@@ -142,9 +145,12 @@
        "blocker",
        "cannot_attack",
        "cannot_attack_player",
+       "charger",
        "double_breaker",
+       "evo_charger",
        "mana_boost_cip",
        "s_trigger",
+       "slayer",
        "speed_attacker",
        "triple_breaker",
        "unblockable"
@@ -201,6 +207,26 @@
       "type": "object",
       "properties": {
        "op": {
+        "const": "choose"
+       },
+       "select": {
+        "$ref": "#/$defs/selector"
+       },
+       "as": {
+        "type": "string"
+       }
+      },
+      "required": [
+       "op",
+       "select",
+       "as"
+      ],
+      "additionalProperties": false
+     },
+     {
+      "type": "object",
+      "properties": {
+       "op": {
         "const": "delayed_trigger"
        },
        "when": {},
@@ -240,6 +266,18 @@
        },
        "count": {
         "$ref": "#/$defs/expr"
+       }
+      },
+      "required": [
+       "op"
+      ],
+      "additionalProperties": false
+     },
+     {
+      "type": "object",
+      "properties": {
+       "op": {
+        "const": "end_turn"
        }
       },
       "required": [
@@ -428,6 +466,26 @@
       "required": [
        "op",
        "select"
+      ],
+      "additionalProperties": false
+     },
+     {
+      "type": "object",
+      "properties": {
+       "op": {
+        "const": "put_under"
+       },
+       "select": {
+        "$ref": "#/$defs/selector"
+       },
+       "onto": {
+        "$ref": "#/$defs/selector"
+       }
+      },
+      "required": [
+       "op",
+       "select",
+       "onto"
       ],
       "additionalProperties": false
      },
@@ -664,9 +722,12 @@
     "cost_le": {},
     "keyword": {},
     "name": {},
+    "name_has": {},
     "not_name": {},
+    "not_types": {},
     "power_ge": {},
     "power_le": {},
+    "race_has": {},
     "races": {},
     "tapped": {},
     "types": {}
@@ -695,6 +756,9 @@
       "opp",
       "any"
      ]
+    },
+    "owner_of": {
+     "type": "string"
     },
     "filter": {
      "$ref": "#/$defs/filter"
@@ -807,9 +871,12 @@
        "blocker",
        "cannot_attack",
        "cannot_attack_player",
+       "charger",
        "double_breaker",
+       "evo_charger",
        "mana_boost_cip",
        "s_trigger",
+       "slayer",
        "speed_attacker",
        "triple_breaker",
        "unblockable"
@@ -831,6 +898,7 @@
          "block",
          "cast",
          "s_trigger",
+         "slayer",
          "summon",
          "untap_at_start"
         ]
@@ -849,6 +917,7 @@
            "block",
            "cast",
            "s_trigger",
+           "slayer",
            "summon",
            "untap_at_start"
           ]
@@ -880,6 +949,7 @@
          "block",
          "cast",
          "s_trigger",
+         "slayer",
          "summon",
          "untap_at_start"
         ]
@@ -898,6 +968,7 @@
            "block",
            "cast",
            "s_trigger",
+           "slayer",
            "summon",
            "untap_at_start"
           ]
@@ -927,6 +998,12 @@
        "all"
       ]
      }
+    },
+    "gain": {
+     "type": "array",
+     "items": {
+      "$ref": "#/$defs/ability"
+     }
     }
    },
    "additionalProperties": false,
@@ -935,6 +1012,7 @@
      "allow",
      "breaks",
      "deny",
+     "gain",
      "grant",
      "ignore",
      "power"

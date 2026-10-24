@@ -97,6 +97,7 @@ class Pending(TypedDict):
     face: NotRequired[int]
     delayed: NotRequired[int]            # 遅延誘発型能力の id
     effect: NotRequired[list[dict]]      # 遅延誘発型能力の効果
+    inline: NotRequired[dict]            # 継続的効果で得た能力（mod.gain）
 
 
 class Continuous(TypedDict):
@@ -237,6 +238,18 @@ class SwapFixTask(TypedDict):
     cid: int
     out: Ref
     tapped: bool
+
+
+class PutUnderTask(TypedDict):
+    t: Literal["put_under"]
+    cid: int
+    gen: int
+    onto: Ref
+
+
+class SlayerTask(TypedDict):
+    t: Literal["slayer"]
+    pairs: list[list[Ref]]               # [スレイヤーを持っていた負けたクリーチャー, バトル相手]
 
 
 def check_shape(d: dict, shape) -> None:

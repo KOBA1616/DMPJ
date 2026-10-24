@@ -13,4 +13,5 @@ actions:
   untap_at_start:        {default: true,  rule: "501.1",  ja: ターンのはじめにアンタップする}
   summon:                {default: true,  rule: "601",    ja: 召喚できる}
   cast:                  {default: true,  rule: "601",    ja: 唱えられる}
+  slayer:                {default: false, rule: "unverified", ja: バトルで負けた時、相手も破壊する}
   be_chosen:             {default: true,  rule: "unverified", ja: 相手に選ばれる}

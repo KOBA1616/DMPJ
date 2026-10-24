@@ -190,8 +190,17 @@ class Engine(SelectorMixin, EventMixin, InterpreterMixin, TurnMixin, CombatMixin
         return self.filter_match(cid, f["filter"], base=True)
 
     def abilities(self, cid: int, kind: str | None = None) -> list[tuple[int, dict]]:
-        """(添字, 能力) の列。無視されている能力は除く（608.4）。"""
+        """(添字, 能力) の列。無視されている能力は除く（608.4）。
+        継続的効果の mod.gain で得た能力は負の添字（-1, -2, ...）で返す。"""
         out = [(i, ab) for i, ab in enumerate(self.fdef(cid).abilities) if kind is None or ab["kind"] == kind]
+        if self.s.cards[cid].zone == "bz" and kind != "static":
+            ref = self.s.ref(cid)
+            k = 0
+            for ce in self.s.continuous:
+                for ab in ce["mod"].get("gain", []):
+                    k += 1
+                    if (kind is None or ab["kind"] == kind) and self._ce_applies(ce, cid, ref):
+                        out.append((-k, ab))
         if out and self.s.cards[cid].zone == "bz":
             ign = self._ignored().get(cid)
             if ign:
@@ -211,13 +220,13 @@ class Engine(SelectorMixin, EventMixin, InterpreterMixin, TurnMixin, CombatMixin
         mods = [ab["mod"] for _, ab in own
                 if ab["kind"] == "static" and ab.get("affects") == "self" and ab.get("zone", "bz") == c.zone and "mod" in ab]
         ref = self.s.ref(cid)
-        if c.zone == "bz":
-            for src in self.bz_tops():
-                for _, ab in self.abilities(src, "static"):
-                    if "mod" in ab and ab.get("affects") != "self":
-                        env = {"you": self.s.cards[src].controller, "self": self.s.ref(src)}
-                        if self._subject_match(ab.get("affects", {}), cid, env, None, base=True):
-                            mods.append(ab["mod"])
+        for src in self.bz_tops():   # バトルゾーンの常在型能力。affects.zone で他のゾーンのカードにも及ぶ
+            for _, ab in self.abilities(src, "static"):
+                aff = ab.get("affects", {})
+                if "mod" in ab and aff != "self" and (aff.get("zone", "bz") if isinstance(aff, dict) else "bz") == c.zone:
+                    env = {"you": self.s.cards[src].controller, "self": self.s.ref(src)}
+                    if self._subject_match(aff, cid, env, None, base=True):
+                        mods.append(ab["mod"])
         mods += [ce["mod"] for ce in self.s.continuous if self._ce_applies(ce, cid, ref)]
         granted = set()
         for m in mods:

@@ -28,6 +28,7 @@ class EventMixin:
                 for i, ab in self.abilities(src, "replace"):
                     if self._pattern_match(ab["when"], rec, src, None):
                         cands.append((src, i, ab))
+            cands_ab = [((s_, i), ab) for s_, i, ab in cands]
             if cands:
                 opts = [{"key": f"replace:{self.s.cards[s_].defn}:{i}", "cid": s_, "ab": i} for s_, i, _ in cands]
                 if all(ab.get("optional") for _, _, ab in cands):
@@ -40,7 +41,8 @@ class EventMixin:
                     src, i = o["cid"], o["ab"]
                     env = {"you": self.s.cards[src].controller, "self": self.s.ref(src), "event": rec,
                            "vars": {}, "no_replace": True}
-                    return self._child(self.fdef(src).abilities[i]["instead"], env)
+                    ab = next(a for j, a in cands_ab if j == (src, i))
+                    return self._child(ab["instead"], env)
             t["rp"] += 1
         return None
 
@@ -238,6 +240,8 @@ class EventMixin:
                      "defn": defn, "ab": i, "env": {"you": ctrl, "self": sref, "event": rec, "vars": {}}}
                 if face >= 0:
                     p["face"] = face
+                if i < 0:          # 継続的効果で得た能力は、能力そのものを持たせる
+                    p["inline"] = ab
                 s.pending.append(p)
         for dl in list(s.delayed):   # 遅延誘発型能力（603.6）
             if self._match_when(dl["when"], rec, dl["env"]):
@@ -260,6 +264,8 @@ class EventMixin:
     def pending_ability(self, p) -> dict:
         if p["kind"] == "delayed":
             return {"effect": p["effect"]}
+        if "inline" in p:
+            return p["inline"]
         return self.rules.cards[p["defn"]].face(p.get("face")).abilities[p["ab"]]
 
 
