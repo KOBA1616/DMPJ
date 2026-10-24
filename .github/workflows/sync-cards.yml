@@ -54,8 +54,14 @@ jobs:
           PY
       - name: Commit data
         if: always()
-        run: |
-          git add -f data/cards/catalog
-          if [ -d data/cards/raw/by_product ]; then git add -f data/cards/raw/by_product; fi
-          git commit -m "cards-data: $(date -u +%FT%TZ)" || echo "no changes"
-          git push origin HEAD:cards-data
+        run: bash tools/save_data.sh
+      - name: Keep a copy as artifact
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: cards-data-${{ github.run_id }}
+          path: |
+            data/cards/catalog
+            data/cards/raw/by_product
+          retention-days: 14
+          if-no-files-found: ignore
