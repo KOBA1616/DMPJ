@@ -37,11 +37,11 @@ jobs:
           OPENCODE_API_KEY: ${{ secrets.OPENCODE_API_KEY }}
         run: |
           pip install -q pyyaml
-          test -n "$OPENCODE_API_KEY" || { echo "Secret OPENCODE_API_KEY が未登録"; exit 1; }
+          npm i -g opencode-ai >/dev/null 2>&1 || echo "opencode CLI の導入に失敗"
           python - <<'PY'
           import subprocess, sys, yaml
           r = yaml.safe_load(open("/tmp/req.yaml"))
-          common = ["--provider", "opencode", "--model", str(r.get("model", "glm-5.3-flash-free")),
+          common = ["--provider", str(r.get("provider", "opencode-cli")), "--model", str(r.get("model", "glm-5.3-flash-free")),
                     "--interval", str(r.get("interval", 6)), "--limit", str(r.get("limit", 20))]
           if r.get("task") == "eval":
               cmd = ["python", "tools/eval_convert.py", "data/cards/raw"] + common
