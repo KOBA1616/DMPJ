@@ -22,6 +22,8 @@ import catalog_sets as cs  # noqa: E402
 import fetch_cards as fc  # noqa: E402
 from dmsim.cardid import normalize_id  # noqa: E402
 
+MAX_RETRIES = 3              # 1枚あたりの失敗がこの回数に達したら飛ばす（台帳の errors に残る）
+MAX_CONSECUTIVE_FAILS = 5
 OUT = ROOT / "data" / "cards" / "raw" / "by_product"
 
 
@@ -31,9 +33,10 @@ def sync_product(led: dict, value: str, interval: float, deadline: float | None)
     f = OUT / f"{value}.jsonl"
     have = {json.loads(x)["official_id"] for x in f.read_text(encoding="utf-8").splitlines() if x.strip()} if f.exists() else set()
     last = [0.0]
+    fails = 0
     with f.open("a", encoding="utf-8") as out:
         for oid in p["ids"]:
-            if oid in have:
+            if oid in have or p.get("errors", {}).get(oid, 0) >= MAX_RETRIES:
                 continue
             if deadline and time.monotonic() > deadline:
                 break
@@ -41,7 +44,15 @@ def sync_product(led: dict, value: str, interval: float, deadline: float | None)
                 row = fc.parse(oid, fc.fetch(oid, interval, last))
             except Exception as e:
                 print(f"{oid}: {e}", file=sys.stderr)
+                errs = p.setdefault("errors", {})
+                errs[oid] = errs.get(oid, 0) + 1
+                fails += 1
+                if fails >= MAX_CONSECUTIVE_FAILS:       # 弾かれている／サイト不調 → 今回は止める（再実行で続きから）
+                    print("連続失敗が多いので中断", file=sys.stderr)
+                    break
                 continue
+            fails = 0
+            p.get("errors", {}).pop(oid, None)
             row.update(official_id=oid, id=normalize_id(oid), product=value)
             out.write(json.dumps(row, ensure_ascii=False) + "\n")
             out.flush()
