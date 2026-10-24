@@ -107,12 +107,62 @@ def _label(eng, o: dict) -> str:
 def _card_view(eng, cid: int) -> dict:
     s = eng.s
     c = s.cards[cid]
-    v = {"cid": cid, "id": c.defn, "name": eng.fdef(cid).name, "tapped": c.tapped, "owner": c.owner}
+    v = {"cid": cid, "id": c.defn, "name": eng.fdef(cid).name, "tapped": c.tapped, "owner": c.owner,
+         "cost": eng.cdef(cid).cost, "civs": eng.cdef(cid).civs}
     if c.zone == "bz":
         ch = eng.chars(cid)
         v.update(power=ch["power"], keywords=ch["keywords"], controller=c.controller,
                  sick=c.entered_turn == s.turn, under=[eng.cdef(u).name for u in c.under])
     return v
+
+
+def _opt_view(eng, o: dict) -> dict:
+    """選択肢を前端が使いやすい形にする。どのカード・どの攻撃先かを構造で持たせる。"""
+    v = {"key": o["key"], "label": _label(eng, o)}
+    for k in ("cid", "face", "cids"):
+        if k in o:
+            v[k] = o[k]
+    if "target" in o:
+        v["target"] = "player" if o["target"] == "player" else o["target"][0]
+    return v
+
+
+def _hand_hints(eng, p: int) -> dict[str, str]:
+    """メインでプレイできない手札の理由（カードID → 理由）。スペースはプレイ可。"""
+    out = {}
+    for cid in eng.zlist("hand", p):
+        d = eng.cdef(cid)
+        faces = [(None, d)] if not d.faces else list(enumerate(d.faces))
+        for fi, f in faces:
+            if eng._can_play_face(cid, p, fi):
+                out[d.id] = ""
+                break
+            if not eng.permits(cid, "summon" if f.is_creature() else "cast", face=fi):
+                reason = "効果により実行できない"
+            elif "evolution" in f.types:
+                reason = "進化元のクリーチャーがいない"
+            else:
+                reason = "マナが足りない（枚数・文明が合っていない）"
+            out[d.id] = reason
+    return out
+
+
+def _attack_hints(eng, a: int) -> dict[int, str]:
+    """攻撃ステップで攻撃できないクリーチャーの理由（cid → 理由）。"""
+    out = {}
+    for cid in eng.bz_tops(a):
+        if eng._can_attack(cid):
+            continue
+        c = eng.s.cards[cid]
+        if c.tapped:
+            out[cid] = "タップ中（攻撃に使えるのはアンタップ状態）"
+        elif c.entered_turn == eng.s.turn:
+            out[cid] = "召喚酔い（このターンに出したので攻撃できない）"
+        elif not eng.permits(cid, "attack_player") and not eng.permits(cid, "attack_creature"):
+            out[cid] = "効果により攻撃できない"
+        else:
+            out[cid] = "攻撃できる先がいない"
+    return out
 
 
 def _snapshot(eng) -> dict[int, tuple]:
@@ -228,11 +278,21 @@ class Session:
             zones[p] = zs
         d = s.waiting
         dec = None
+        hints = None
         if d is not None:
             dec = {"player": d["player"], "kind": d["kind"], "min": d["min"], "max": d["max"],
                    "prompt": d.get("prompt", ""),
-                   "options": [{"i": i, "key": o["key"], "label": _label(eng, o)} for i, o in enumerate(d["options"])]}
+                   "options": [_opt_view(eng, o) for o in d["options"]]}
+            if d["kind"] == "attack":
+                for o in dec["options"]:          # プレイヤー攻撃: ブレイク枚数を表示用に出しておく
+                    if o.get("target") == "player":
+                        counts = sorted(set(eng.chars(o["cid"])["break_opts"])) or [1]
+                        o["breaks"] = max(counts)
+                hints = {"bz": _attack_hints(eng, s.active)}
+            elif d["kind"] == "main":
+                hints = {"hand": _hand_hints(eng, s.active)}
         return {"turn": s.turn, "active": s.active, "step": s.step, "result": s.result, "decision": dec,
+                "hints": hints,
                 "zones": zones, "hold": [_card_view(eng, c) for c in s.hold],
                 "continuous": [{"mod": c["mod"], "duration": c["duration"]} for c in s.continuous],
                 "delayed": [{"when": x["when"], "duration": x["duration"]} for x in s.delayed],
@@ -290,19 +350,23 @@ def make_handler(app: App):
         def log_message(self, fmt, *args):
             pass
 
-        def _send(self, code, data: bytes, ctype="application/json; charset=utf-8"):
+        def _send(self, code, data: bytes, ctype="application/json; charset=utf-8", extra=None):
             self.send_response(code)
             self.send_header("Content-Type", ctype)
             self.send_header("Content-Length", str(len(data)))
+            for k, v in (extra or {}).items():
+                self.send_header(k, v)
             self.end_headers()
             self.wfile.write(data)
 
         def do_GET(self):
             if self.path in ("/", "/index.html"):
-                return self._send(200, (WEB / "index.html").read_bytes(), "text/html; charset=utf-8")
-            if self.path.startswith("/api/"):
-                return self._api(self.path, {})
-            self._send(404, b"not found", "text/plain")
+                self._send(200, (WEB / "index.html").read_bytes(), "text/html; charset=utf-8",
+                           extra={"Cache-Control": "no-store"})
+            elif self.path.startswith("/api/"):
+                self._api(self.path, {})
+            else:
+                self._send(404, b"not found", "text/plain")
 
         def do_POST(self):
             n = int(self.headers.get("Content-Length") or 0)

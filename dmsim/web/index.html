@@ -7,43 +7,85 @@
 <style>
 :root {
   --bg: #f6f6f4; --panel: #ffffff; --ink: #1d1d1b; --muted: #6b6b66; --line: #deded8;
-  --accent: #2f5fd0; --ok: #1f8a4c; --ng: #c23b32; --warn: #a86b00; --tapped: #ecebe4;
-  --chip: #eef1fa;
+  --accent: #2f5fd0; --ok: #1f8a4c; --ng: #c23b32; --warn: #d07600; --tapped: #ecebe4;
+  --chip: #eef1fa; --src: #e8901c; --tgt: #d9382c;
 }
 @media (prefers-color-scheme: dark) {
   :root { --bg: #161615; --panel: #20201e; --ink: #ecece8; --muted: #9a9a93; --line: #34342f;
-    --accent: #7ea2ff; --ok: #4cc27f; --ng: #ff7a70; --warn: #e2a640; --tapped: #2a2a26; --chip: #262b3a; }
+    --accent: #7ea2ff; --ok: #4cc27f; --ng: #ff7a70; --warn: #e2a640; --tapped: #2a2a26; --chip: #262b3a;
+    --src: #e8a53c; --tgt: #ff6b60; }
 }
 * { box-sizing: border-box; }
+:root {
+  --civ-fire: #d33b2b; --civ-water: #1565c0; --civ-nature: #2f8f2f; --civ-light: #e0b400; --civ-darkness: #6d6d6d;
+}
+@media (prefers-color-scheme: dark) {
+  :root { --civ-fire: #ff7a6a; --civ-water: #64b5f6; --civ-nature: #66bb6a; --civ-light: #ffd54f; --civ-darkness: #9a9a9a; }
+}
 body { margin: 0; background: var(--bg); color: var(--ink); font: 14px/1.5 system-ui, "Hiragino Sans", "Noto Sans JP", sans-serif; }
 header { display: flex; gap: 16px; align-items: center; padding: 10px 16px; border-bottom: 1px solid var(--line); background: var(--panel); position: sticky; top: 0; z-index: 2; }
 header h1 { font-size: 15px; margin: 0; }
 nav button { border: 0; background: none; color: var(--muted); font: inherit; padding: 6px 10px; cursor: pointer; border-radius: 6px; }
 nav button.on { color: var(--ink); background: var(--chip); }
-main { padding: 16px; max-width: 1400px; margin: 0 auto; }
-.grid { display: grid; grid-template-columns: minmax(0, 1fr) 380px; gap: 16px; }
+main { padding: 10px 14px; max-width: 1600px; margin: 0 auto; }
+.grid { display: grid; grid-template-columns: minmax(0, 1fr) 400px; gap: 16px; }
 @media (max-width: 900px) { .grid { grid-template-columns: 1fr; } }
+/* 対戦タブは PC で縦スクロールなしの1画面に収める（はみ出た分は各列内でスクロール） */
+#game:not(.hidden) { height: calc(100vh - var(--hdr, 54px) - 20px); overflow: hidden; }
+#game .grid { height: 100%; }
+#game .grid > div { min-height: 0; overflow-y: auto; display: flex; flex-direction: column; gap: 8px; }
+#game .panel { padding: 8px 10px; margin-bottom: 0; flex: none; }
+#game .panel h2 { font-size: 12px; margin: 0 0 6px; }
+#game .hist-panel { flex: 1 1 auto; min-height: 80px; display: flex; flex-direction: column; }
+#game .hist-panel .hist { flex: 1 1 auto; max-height: none; overflow: auto; }
+#game #effects { max-height: 84px; font-size: 11px; }
+#game textarea#spec { min-height: 64px; max-height: 64px; }
+@media (max-width: 900px) {
+  #game:not(.hidden) { height: auto; overflow: visible; }
+  #game .panel { margin-bottom: 12px; }
+}
 .panel { background: var(--panel); border: 1px solid var(--line); border-radius: 10px; padding: 12px; margin-bottom: 12px; }
 .panel h2 { font-size: 13px; margin: 0 0 8px; color: var(--muted); font-weight: 600; }
-.player { margin-bottom: 4px; }
 .zone { display: flex; gap: 8px; align-items: flex-start; padding: 6px 0; border-top: 1px dashed var(--line); }
 .zone:first-of-type { border-top: 0; }
-.zname { width: 76px; flex: none; color: var(--muted); font-size: 12px; padding-top: 4px; }
+.zname { width: 76px; flex: none; color: var(--muted); font-size: 12px; padding-top: 6px; }
+.civd { display: inline-block; width: 8px; height: 8px; border-radius: 2px; margin-right: 3px; vertical-align: middle; }
 .cards { display: flex; flex-wrap: wrap; gap: 6px; min-height: 26px; }
-.card { border: 1px solid var(--line); border-radius: 6px; padding: 3px 7px; background: var(--panel); font-size: 12px; max-width: 220px; }
-.card.tapped { background: var(--tapped); color: var(--muted); }
+.card { border: 1px solid var(--line); border-radius: 6px; padding: 4px 8px; background: var(--panel); font-size: 12px; max-width: 230px; user-select: none; }
+#toast { position: fixed; bottom: 18px; left: 50%; transform: translateX(-50%); background: var(--panel); border: 1px solid var(--line); border-radius: 8px; padding: 8px 14px; font-size: 13px; box-shadow: 0 2px 10px rgba(0,0,0,.2); z-index: 20; }
+.bz .card { font-size: 13px; padding: 6px 10px; }
+.card.tapped { filter: brightness(.62) saturate(.8); }
 .card .meta { color: var(--muted); font-size: 11px; }
+.card.can { border-color: var(--accent); box-shadow: 0 0 0 1.5px var(--accent); cursor: pointer; }
+.card.can:hover { background: var(--chip); }
+.card.src { border-color: var(--src); box-shadow: 0 0 0 2px var(--src); cursor: pointer; animation: pulse 1.2s ease-in-out infinite; }
+.card.src.on { background: var(--src); color: #fff; }
+.card.tgt { border-color: var(--tgt); box-shadow: 0 0 0 2px var(--tgt); cursor: crosshair; animation: pulse 1.2s ease-in-out infinite; }
+.card.sel { border-color: var(--ok); background: var(--chip); box-shadow: 0 0 0 1.5px var(--ok); cursor: pointer; }
+.card .n { position: absolute; margin: -18px 0 0 -14px; background: var(--ok); color: #fff; border-radius: 50%; font-size: 10px; padding: 1px 5px; }
+.card.can .n { margin-top: -16px; }
+@keyframes pulse { 50% { box-shadow: 0 0 0 4px color-mix(in srgb, currentColor 35%, transparent); } }
+
+.pface { display: flex; justify-content: space-between; align-items: baseline; }
+.pface .pbtn { border: 1px dashed transparent; border-radius: 6px; padding: 1px 8px; cursor: default; font-size: 13px; }
+.pface .pbtn.tgt { border-color: var(--tgt); color: var(--tgt); cursor: crosshair; animation: pulseT 1.2s ease-in-out infinite; }
+@keyframes pulseT { 50% { background: color-mix(in srgb, var(--tgt) 15%, transparent); } }
 .status { display: flex; gap: 12px; flex-wrap: wrap; font-size: 13px; }
 .status b { font-weight: 600; }
 .opts { display: flex; flex-direction: column; gap: 6px; }
 .opt { display: flex; gap: 8px; align-items: center; padding: 6px 8px; border: 1px solid var(--line); border-radius: 6px; cursor: pointer; background: var(--panel); color: var(--ink); text-align: left; font: inherit; }
 .opt:hover { border-color: var(--accent); }
-.opt input { margin: 0; }
+.opt.on { border-color: var(--ok); background: var(--chip); }
+.opt.chip { display: inline-flex; padding: 3px 9px; border-radius: 14px; font-size: 12px; }
+.chips { display: flex; flex-wrap: wrap; gap: 6px; }
+input { margin: 0; }
 button.act { font: inherit; padding: 6px 12px; border-radius: 6px; border: 1px solid var(--line); background: var(--panel); color: var(--ink); cursor: pointer; }
 button.act.primary { background: var(--accent); border-color: var(--accent); color: #fff; }
 button.act.ok { color: var(--ok); border-color: var(--ok); }
 button.act.ng { color: var(--ng); border-color: var(--ng); }
+button.act:disabled { opacity: .5; cursor: default; }
 .row { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
+.hint { color: var(--muted); font-size: 12px; background: var(--chip); border-radius: 6px; padding: 5px 8px; margin-bottom: 8px; }
 textarea, input[type=text], input[type=number], select { font: 12px/1.4 ui-monospace, SFMono-Regular, Menlo, monospace; background: var(--bg); color: var(--ink); border: 1px solid var(--line); border-radius: 6px; padding: 6px; }
 textarea { width: 100%; min-height: 150px; }
 .hist { max-height: 520px; overflow: auto; font-size: 12px; }
@@ -59,6 +101,30 @@ pre { margin: 0; white-space: pre-wrap; font: 12px/1.45 ui-monospace, SFMono-Reg
 .muted { color: var(--muted); }
 .result { font-weight: 600; color: var(--accent); }
 .hidden { display: none; }
+
+/* プレイマット風レイアウト: バトルゾーン / （墓地・シールド・マナ・山札） / 手札 */
+.playmat { display: flex; flex-direction: column; gap: 6px; }
+#game:not(.hidden) .playmat { gap: 5px; }
+.zbox { border: 2px solid var(--ink); border-radius: 4px; padding: 6px 8px; background: var(--panel); min-height: 34px; }
+.zbox.bz { min-height: 76px; }
+.zbox.hand, .zbox.mana { min-height: 38px; }
+.zlabel { font-weight: 700; font-size: 12px; text-align: center; margin-bottom: 2px; }
+.zrow { display: flex; gap: 6px; }
+.zbox.gateicon { flex: none; width: 60px; padding: 5px 4px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 1px; }
+.zbox.gateicon .ic { line-height: 0; }
+.zbox.gateicon .ic svg { display: block; }
+.zbox.gateicon .zbign { font-weight: 700; font-size: 13px; }
+.zbox.grow { flex: 1; }
+.zbox.shieldopen .zlabel { display: flex; align-items: center; justify-content: center; gap: 5px; }
+.zbox.mana .cards { flex-wrap: nowrap; overflow-x: auto; padding-bottom: 2px; }
+.zbox.small { min-height: 48px; }
+.zbox.pop { cursor: pointer; }
+.zbox.pop:hover, .zbox.mana:hover { border-color: var(--accent); box-shadow: 0 0 0 1px var(--accent); }
+.zbox .cnt { font-weight: 400; color: var(--muted); font-size: 11px; }
+/* ポップアップ（ゾーン一覧） */
+#zonepop { position: fixed; inset: 0; background: rgba(0, 0, 0, .4); display: none; align-items: center; justify-content: center; z-index: 30; }
+#zonepop .popbox { background: var(--panel); border: 1px solid var(--line); border-radius: 10px; padding: 14px; width: min(920px, 92vw); max-height: 82vh; overflow: auto; box-shadow: 0 6px 32px rgba(0, 0, 0, .35); }
+#zonepop .popbox .cards { margin-top: 10px; }
 </style>
 </head>
 <body>
@@ -66,6 +132,13 @@ pre { margin: 0; white-space: pre-wrap; font: 12px/1.45 ui-monospace, SFMono-Reg
   <h1>dmsim 開発者モード</h1>
   <nav><button id="tab-game" class="on">対戦</button><button id="tab-cards">カード</button></nav>
   <span id="err" class="err"></span>
+  <span style="margin-left:auto;font-size:11px;color:var(--muted);white-space:nowrap">
+    <span class="civd" style="background:var(--civ-fire)"></span>火
+    <span class="civd" style="background:var(--civ-water)"></span>水
+    <span class="civd" style="background:var(--civ-nature)"></span>自然
+    <span class="civd" style="background:var(--civ-light)"></span>光
+    <span class="civd" style="background:var(--civ-darkness)"></span>闇
+  </span>
 </header>
 <main>
 <section id="game">
@@ -74,8 +147,14 @@ pre { margin: 0; white-space: pre-wrap; font: 12px/1.45 ui-monospace, SFMono-Reg
       <div class="panel">
         <div class="status" id="status"><span class="muted">「開始」で局面を作る</span></div>
       </div>
-      <div class="panel"><h2>相手（プレイヤー1）</h2><div id="p1"></div></div>
-      <div class="panel"><h2>自分（プレイヤー0）</h2><div id="p0"></div></div>
+      <div class="panel">
+        <div class="pface"><h2 style="margin:0">相手（プレイヤー1）</h2><span class="pbtn" id="pt1" data-player="1">攻撃先: 相手プレイヤー</span></div>
+        <div id="p1"></div>
+      </div>
+      <div class="panel">
+        <div class="pface"><h2 style="margin:0">自分（プレイヤー0）</h2><span class="pbtn" id="pt0" data-player="0">攻撃先: 自分</span></div>
+        <div id="p0"></div>
+      </div>
       <div class="panel" id="effects-panel"><h2>継続的効果・遅延誘発・ターン構造の変更</h2><pre id="effects">なし</pre></div>
     </div>
     <div>
@@ -104,7 +183,7 @@ pre { margin: 0; white-space: pre-wrap; font: 12px/1.45 ui-monospace, SFMono-Reg
         <textarea id="spec" spellcheck="false"></textarea>
         <div class="muted" style="font-size:12px">シナリオ: {"p0": {"hand": [...], "mana": [...], "bz": [...]}, "p1": {...}, "filler": "T001", "seed": 1}。デッキ: {"decks": [[...],[...]], "seed": 1, "first": 0}</div>
       </div>
-      <div class="panel"><h2>経過（1手ごとに動いたカード）</h2><div id="hist" class="hist"></div></div>
+      <div class="panel hist-panel"><h2>経過（1手ごとに動いたカード）</h2><div id="hist" class="hist"></div></div>
     </div>
   </div>
 </section>
@@ -120,6 +199,28 @@ pre { margin: 0; white-space: pre-wrap; font: 12px/1.45 ui-monospace, SFMono-Reg
 <script>
 const $ = (id) => document.getElementById(id);
 let gid = null, view = null, cards = [];
+// 選択状態: attack=攻撃元クリーチャー, multi=クリックした選択肢(順), mana=支払いにタップしたマナ
+let sel = {attack: null, multi: [], mana: []};
+let cidOpts = {};          // cid → [選択肢の番号]
+let nameByCid = {};        // cid → 名前
+let cardByCid = {};        // cid → カード表示データ
+let nameById = {};         // カードID → 名前
+const MULTI = new Set(["choose_shields", "choose_cards", "declare_strigger", "declare_attack", "declare_block"]);
+const KINDJA = {charge: "マナチャージ", main: "プレイするカード", attack: "攻撃", block: "ブロック",
+  pay_mana: "マナの支払い", choose_breaker: "ブレイカー能力の選択", choose_shields: "ブレイクするシールド",
+  choose_evo_source: "進化元の選択", choose_cards: "カードの選択", choose_replacement: "置換効果の選択",
+  declare_strigger: "S・トリガーの宣言", declare_attack: "使用宣言（攻撃時）", declare_block: "使用宣言（ブロック時）",
+  yes_no: "はい / いいえ", order_pending: "解決の順番"};
+const HINT = {
+  charge: "手札のカードをクリック → マナに置く",
+  main: "メインステップは1ターンに何枚でもプレイできる。手札のカードをクリック → プレイ（出せないカードの理由は下方に表示）",
+  attack: "自分の攻撃クリーチャーをクリック → 光った攻撃先をクリック（タップされた相手クリーチャー / 相手シールド / 相手プレイヤー）",
+  block: "ブロックするクリーチャーをクリック（しない場合はボタン）",
+  pay_mana: "支払いに使うマナをクリックしてタップ → 「決定」（同じ名前のマナは区別しない）",
+  choose_shields: "ブレイクするシールドをクリック → 「決定」（クリックした順に解決）",
+  choose_evo_source: "進化元のクリーチャーをクリック",
+  declare_strigger: "宣言する S・トリガーをクリック → 「決定」",
+};
 const esc = (s) => String(s ?? "").replace(/[&<>"]/g, (c) => ({"&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;"}[c]));
 
 async function api(path, body) {
@@ -132,49 +233,414 @@ async function api(path, body) {
 
 // ---- 対戦 ----
 const ZNAME = {hand: "手札", bz: "バトルゾーン", mana: "マナ", shield: "シールド", graveyard: "墓地", deck: "山札", hyper: "超次元", gr: "超GR", abyss: "深淵"};
-function cardHtml(c) {
+const ZORDER = ["hand", "bz", "shield", "mana", "deck", "graveyard", "hyper", "gr", "abyss"];
+// 色のないシンプルなゾーンアイコン（currentColor で描く線画画像）
+const ICON_SKULL = '<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3a8 8 0 0 0-8 8c0 2.6 1.2 4.3 3 5.6V20a1 1 0 0 0 1 1h8a1 1 0 0 0 1-1v-3.4c1.8-1.3 3-3 3-5.6a8 8 0 0 0-8-8z"/><circle cx="9.2" cy="11.5" r="1.5"/><circle cx="14.8" cy="11.5" r="1.5"/><path d="M10.5 18.5v1.5M13.5 18.5v1.5"/></svg>';
+const ICON_SHIELD = '<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3l7 2.6v5.2c0 4.9-3.4 8-7 10.2-3.6-2.2-7-5.3-7-10.2V5.6z"/></svg>';
+function zoneOf(cid) {
+  for (const p of [0, 1]) for (const z of ZORDER) {
+    const v = view.zones[p][z];
+    if (v === undefined) continue;
+    if ((z === "deck" ? v.top : v).some((c) => c.cid === cid)) return {p, z};
+  }
+  return null;
+}
+
+function labels() {          // 各 cid と、選択肢を表示するラベルを作る
+  const d = view.decision;
+  nameByCid = {}; cardByCid = {}; cidOpts = {}; nameById = {};
+  for (const p of [0, 1]) for (const z of ZORDER) {
+    const v = view.zones[p][z];
+    if (v === undefined) continue;
+    for (const c of (z === "deck" ? v.top : v)) {
+      nameByCid[c.cid] = c.name; cardByCid[c.cid] = c;
+      if (nameById[c.id] === undefined) nameById[c.id] = c.name;
+    }
+  }
+  if (!d) return;
+  d.options.forEach((o, i) => {
+    let cids = "cids" in o ? o.cids : ("cid" in o ? [o.cid] : []);
+    for (const cid of cids) (cidOpts[cid] = cidOpts[cid] || []).push(i);
+  });
+  // チャージ/メインは、同じ名前のどのコピーでもクリックできるようにする
+  if (d.kind === "charge" || d.kind === "main") {
+    const pref = (d.kind === "charge" ? "charge:" : "play:");
+    for (const c of view.zones[d.player].hand || []) {
+      for (let i = 0; i < d.options.length; i++) {
+        const k = d.options[i].key;
+        if ((cidOpts[c.cid] || []).includes(i)) continue;
+        if (k === pref + c.id || k.startsWith(pref + c.id + ":")) (cidOpts[c.cid] = cidOpts[c.cid] || []).push(i);
+      }
+    }
+  }
+}
+function labelFor(d, o) {
+  if (!("cid" in o)) {
+    if (o.key === "pass") return d.kind === "main" ? "メインを終える" : d.kind === "attack" ? "攻撃をやめる" : "何もしない";
+    if (o.key === "no_block") return "ブロックしない";
+    if (o.key.startsWith("breaks:")) return `ブレイク ${o.key.slice(7)}` + "枚";
+    if (o.key === "yes" || o.key === "no") return o.key === "yes" ? "はい（使う）" : "いいえ（使わない）";
+    return o.label || o.key;
+  }
+  const src = nameByCid[o.cid] || (o.name ?? "?");
+  if (d.kind === "charge") return `チャージ: ${src}`;
+  if (d.kind === "main") return `プレイ: ${o.name || src}${o.face !== undefined ? ` （面${o.face}）` : ""}`;
+  if (d.kind === "attack") {
+    const t = o.target === "player" ? `相手プレイヤー${o.breaks > 1 ? `（シールド${o.breaks}枚ブレイク）` : ""}` : nameByCid[o.target] || "?";
+    return `${src} → ${t}`;
+  }
+  if (o.name) return o.name === "?" ? "シールド（裏向き）" : o.name;
+  return o.label || o.key;
+}
+
+// 選択肢が提示しているカード or 攻撃対象か。表示に使う付与クラスを決める
+function cardCls(c, zone) {
+  const d = view.decision;
+  const cls = ["card"];
+  if (c.tapped) cls.push("tapped");
+  if (!d) return cls;
+  const opts = cidOpts[c.cid] || [];
+  if (d.kind === "attack") {
+    if (sel.attack == null && opts.some((i) => d.options[i].cid === c.cid)) cls.push("src");
+    if (c.cid === sel.attack) cls.push("src", "on");
+    if (sel.attack != null && d.options.some((o) => o.cid === sel.attack && o.target === c.cid)) cls.push("tgt");
+    // 攻撃元選択中: 相手プレイヤーに攻撃できるなら、そのシールドも直接クリックできる
+    if (sel.attack != null && zone === "shield" && c.owner !== d.player &&
+        d.options.some((o) => o.cid === sel.attack && o.target === "player")) cls.push("tgt");
+  } else if (opts.length) {
+    const chosen = (d.kind === "pay_mana") ? sel.mana.includes(c.cid)
+      : MULTI.has(d.kind) && sel.multi.some((i) => d.options[i].cid === c.cid);
+    cls.push("can"); if (chosen) cls.push("sel");
+  }
+  return cls;
+}
+
+function showToast(text, err) {
+  let el = $("toast");
+  if (!el) { el = document.createElement("div"); el.id = "toast"; document.body.appendChild(el); }
+  el.textContent = text;
+  el.style.color = err ? "var(--ng)" : "var(--ink)";
+  clearTimeout(showToast.h);
+  showToast.h = setTimeout(() => el.remove(), 3000);
+}
+function cardTitle(c, zone) {
+  let t = `${c.id} #${c.cid}${c.tapped ? " （タップ中）" : ""}`;
+  const d = view.decision;
+  if (!d) return t;
+  if ((d.kind === "charge" || d.kind === "main") && zone === "hand" && c.owner === d.player) {
+    if ((cidOpts[c.cid] || []).length) t += ` （クリックで${d.kind === "charge" ? "マナチャージ" : "プレイ"}）`;
+    else if (view.hints && view.hints.hand && view.hints.hand[c.id]) t += ` （プレイできない: ${view.hints.hand[c.id]}）`;
+  } else if (d.kind === "attack") {
+    if (view.hints && view.hints.bz && view.hints.bz[c.cid]) t += ` （攻撃に出せない: ${view.hints.bz[c.cid]}）`;
+    else if (zone === "shield" && c.owner !== d.player && sel.attack != null) t += " （クリックで攻撃＋シールドブレイク）";
+    else if (c.owner !== d.player && !c.tapped) t += " （タップしていないので攻撃対象にならない）";
+  }
+  return t;
+}
+const CIVJA = {fire: "火", water: "水", nature: "自然", light: "光", darkness: "闇"};
+const CIVCOL = {fire: "var(--civ-fire)", water: "var(--civ-water)", nature: "var(--civ-nature)",
+  light: "var(--civ-light)", darkness: "var(--civ-darkness)"};
+// 文明色でカードの背景だけを染める（多色はグラデーション）
+function civBg(civs) {
+  if (!civs || !civs.length) return "";
+  const mix = (v, w) => `color-mix(in srgb, ${CIVCOL[v] || "#999"} ${w}%, var(--panel))`;
+  const w = Math.max(12, Math.round(70 / civs.length));
+  return "background:" + (civs.length === 1 ? mix(civs[0], 18)
+    : `linear-gradient(100deg, ${civs.map((v) => mix(v, w)).join(", ")})`) + ";";
+}
+function cardHtml(c, zone) {
   const meta = [];
+  if (zone === "hand" && c.cost !== undefined) meta.push(`コスト${c.cost}`);
   if (c.power !== undefined) meta.push(c.power);
   if (c.sick) meta.push("召喚酔い");
   if (c.keywords && c.keywords.length) meta.push(c.keywords.join(","));
   if (c.under && c.under.length) meta.push("下: " + c.under.join("・"));
-  return `<div class="card ${c.tapped ? "tapped" : ""}" title="${esc(c.id)} #${c.cid}">${esc(c.name)}${c.tapped ? " (T)" : ""}${meta.length ? `<div class="meta">${esc(meta.join(" / "))}</div>` : ""}</div>`;
+  return `<div class="${cardCls(c, zone).join(" ")}" style="${civBg(c.civs)}" data-cid="${c.cid}" title="${esc(cardTitle(c, zone))}">${esc(c.name)}${meta.length ? `<div class="meta">${esc(meta.join(" / "))}</div>` : ""}</div>`;
 }
-function playerHtml(zs) {
-  const order = ["bz", "shield", "mana", "hand", "graveyard", "deck", "hyper", "gr", "abyss"];
-  return order.filter((z) => z in zs).map((z) => {
-    const v = zs[z];
-    const inner = z === "deck" ? `<span class="muted">${v.count}枚　上から:</span> ${v.top.map(cardHtml).join("")}` : v.map(cardHtml).join("");
-    return `<div class="zone"><div class="zname">${ZNAME[z] || z}${z === "deck" ? "" : ` (${v.length})`}</div><div class="cards">${inner}</div></div>`;
-  }).join("");
+function playerHtml(zs, p) {
+  const d = view.decision;
+  // シールドは通常ポップアップ。攻撃対象として選べるとき / ブレイクするシールドを選ぶときだけ並べる
+  const inlineShield = !!d && ((d.kind === "attack" && sel.attack != null &&
+      d.options.some((o) => o.cid === sel.attack && o.target === "player")) ||
+    (d.kind === "choose_shields" && d.player !== p));
+  const cards = (z) => zs[z].map((c) => cardHtml(c, z)).join("");
+  const gate = (z, label, n) => `<div class="zbox small pop grow" data-pop="${z}" data-p="${p}"><div class="zlabel">${label} <span class="cnt">${n}枚</span></div><div class="cnt" style="text-align:center">クリックで一覧</div></div>`;
+  // アイコン型の小箱（墓地・シールド）。色のないシンプルな SVG アイコン＋枚数のみ。クリックで一覧ポップアップ
+  const igate = (z, icon, name, n, cls = "") => `<div class="zbox small pop gateicon ${cls}" data-pop="${z}" data-p="${p}" title="${name}（クリックで一覧）"><div class="ic">${icon}</div><div class="zbign">${n}</div></div>`;
+  const parts = [];
+  if (zs.bz) parts.push(`<div class="zbox bz"><div class="zlabel">バトルゾーン <span class="cnt">${zs.bz.length}枚</span></div><div class="cards">${cards("bz")}</div></div>`);
+  const mid = [];
+  if (zs.graveyard) mid.push(igate("graveyard", ICON_SKULL, "墓地", zs.graveyard.length));
+  if (zs.shield) mid.push(inlineShield
+    ? `<div class="zbox small shieldopen"><div class="zlabel">${ICON_SHIELD}<span class="cnt">${zs.shield.length}枚</span></div><div class="cards">${cards("shield")}</div></div>`
+    : igate("shield", ICON_SHIELD, "シールド", zs.shield.length));
+  if (zs.deck) mid.push(gate("deck", "山札", zs.deck.count));
+  if (mid.length) parts.push(`<div class="zrow">${mid.join("")}</div>`);
+  if (zs.hand) parts.push(`<div class="zbox hand"><div class="zlabel">手札 <span class="cnt">${zs.hand.length}枚</span></div><div class="cards">${cards("hand")}</div></div>`);
+  if (zs.mana) parts.push(`<div class="zbox mana"><div class="zlabel">マナ <span class="cnt">${zs.mana.length}枚</span></div><div class="cards">${cards("mana")}</div></div>`);
+  for (const z of ["hyper", "gr", "abyss"]) {
+    if (zs[z]) parts.push(gate(z, ZNAME[z] || z, zs[z].length));
+  }
+  return parts.join("");
 }
-function render(v) {
-  view = v; gid = v.gid;
-  $("status").innerHTML = `<span><b>ターン</b> ${v.turn}</span><span><b>手番</b> P${v.active}</span><span><b>ステップ</b> ${esc(v.step)}</span><span><b>選択</b> ${v.log_len}手</span>` +
+function paintZones() {
+  $("p0").innerHTML = `<div class="playmat">${playerHtml(view.zones[0], 0)}</div>`;
+  $("p1").innerHTML = `<div class="playmat">${playerHtml(view.zones[1], 1)}</div>`;
+  const d = view.decision;
+  for (const p of [0, 1]) {
+    const el = $("pt" + p), ok = d && d.kind === "attack" && sel.attack != null && d.player !== p &&
+      d.options.some((o) => o.cid === sel.attack && o.target === "player");
+    el.classList.toggle("tgt", ok);
+    el.style.visibility = ok ? "visible" : "hidden";
+  }
+}
+function paintStatus() {
+  const v = view;
+  $("status").innerHTML = `<span><b>ターン</b> ${v.turn}</span><span><b>手番</b> ${v.active === 0 ? "P0（自分）" : "P1（相手）"}</span><span><b>ステップ</b> ${esc(v.step || "")}</span><span><b>選択</b> ${v.log_len}手</span>` +
     (v.result ? `<span class="result">終了: ${esc(JSON.stringify(v.result))}</span>` : "") + `<span class="muted">digest ${v.digest.slice(0, 8)}</span>`;
-  $("p0").innerHTML = playerHtml(v.zones[0]);
-  $("p1").innerHTML = playerHtml(v.zones[1]);
+}
+function paintHist() {
+  $("hist").innerHTML = view.history.slice().reverse().map((h) =>
+    `<div class="h ${h.auto ? "auto" : ""}"><span class="muted">T${h.turn}</span> <b>${h.p === null ? "準備" : "P" + h.p}</b> ${esc(h.kind)}${h.chosen.length ? " → " + esc(h.chosen.join(", ")) : ""}${h.auto ? " (自動)" : ""}` +
+    (h.changes.length ? `<ul>${h.changes.map((c) => `<li>${esc(c)}</li>`).join("")}</ul>` : "") + `</div>`).join("") || `<span class="muted">まだない</span>`;
+}
+function chipHtml(d, i, cls = "") {
+  const o = d.options[i];
+  const on = sel.multi.includes(i);
+  return `<button class="opt chip ${on ? "on" : ""} ${cls}" data-opt="${i}">${esc(labelFor(d, o))}</button>`;
+}
+function hintsHtml(d) {
+  if (!view.hints) return "";
+  const list = view.hints.hand
+    ? Object.entries(view.hints.hand).filter(([, r]) => r).map(([id, r]) => `${esc(nameById[id] || id)}: ${esc(r)}`)
+    : Object.entries(view.hints.bz).map(([cid, r]) => `${esc(nameByCid[+cid] || cid)}: ${esc(r)}`);
+  return list.length ? `<div class="muted" style="font-size:12px;margin-top:6px;background:var(--bg);border-radius:6px;padding:5px 8px">できない理由:<br>${list.join("<br>")}</div>` : "";
+}
+function multiCountOk(d) { return sel.multi.length >= d.min && sel.multi.length <= d.max; }
+
+function paintDecision() {
+  const box = $("decision");
+  const step = view.step;
+  const d = view.decision;
+  if (!d) {
+    box.innerHTML = `<span class="muted">${view.result ? "対戦は終わった" : "決定なし（「1手戻す」で戻れる）"}</span>`;
+    return;
+  }
+  const head = `<div><b>${d.player === 0 ? "自分" : "相手"}</b> ・ ${KINDJA[d.kind] || esc(d.kind)}${d.prompt ? ` ・ ${esc(d.prompt)}` : ""}</div>` +
+    `<div class="hint">${HINT[d.kind] || "選択肢をクリック"}</div>`;
+  const passBtn = (i) => `<button class="act" data-act="pass" data-opt="${i}">${esc(labelFor(d, d.options[i]))}</button>`;
+  const parts = [head];
+  if (d.kind === "charge" || d.kind === "main") {
+    const pass = d.options.findIndex((o) => o.key === "pass");
+    const plays = d.options.map((o, i) => [o, i]).filter(([, i]) => i !== pass);
+    parts.push(`<div class="opts">${plays.map(([, i]) => chipHtml(d, i)).join("")}</div>`);
+    if (d.kind === "main") {
+      const played = view.history.filter((h) => h.turn === view.turn && h.kind === "main" &&
+        h.chosen.some((c) => String(c).indexOf("play:") === 0)).length;
+      parts.push(`<div class="hint">このターンのプレイ済み: ${played}枚（メインはまだ続いており、出せるカードがあれば何枚でも出せる）</div>`);
+    }
+    parts.push(hintsHtml(d));
+    if (pass >= 0) parts.push(`<div class="row" style="margin-top:8px">${passBtn(pass)}</div>`);
+  } else if (d.kind === "attack") {
+    if (sel.attack == null) {
+      parts.push(`<div class="chips">${d.options.map((_, i) => chipHtml(d, i)).join("")}</div>`);
+      parts.push(hintsHtml(d));
+    } else {
+      const mine = d.options.map((o, i) => [o, i]).filter(([o]) => o.cid === sel.attack);
+      parts.push(`<div class="hint">攻撃先をクリック（タップ相手クリーチャー / 相手シールドでブレイク / 相手プレイヤー）</div>` +
+        `<div class="chips">${mine.map(([, i]) => chipHtml(d, i)).join("")}</div>` +
+        `<div class="row" style="margin-top:8px"><button class="act" data-act="cancel">選び直す</button></div>`);
+    }
+  } else if (d.kind === "block") {
+    const nb = d.options.findIndex((o) => o.key === "no_block");
+    const blocks = d.options.map((o, i) => [o, i]).filter(([, i]) => i !== nb);
+    parts.push(`<div class="opts">${blocks.map(([, i]) => chipHtml(d, i)).join("")}</div>`);
+    if (nb >= 0) parts.push(`<div class="row" style="margin-top:8px">${passBtn(nb)}</div>`);
+  } else if (d.kind === "pay_mana") {
+    const nums = sel.mana.map((c) => nameByCid[c] || c);
+    const arm = sel.mana.length ? `（選択: ${esc(nums.join("・"))}）` : "";
+    parts.push(`<div class="chips">${d.options.map((_, i) => chipHtml(d, i)).join("")}</div>` +
+      `<div class="row" style="margin-top:8px">${arm}<button class="act primary" data-act="confirm" ${manaMatch() < 0 ? "disabled" : ""}>決定</button>` +
+      (sel.mana.length ? `<button class="act" data-act="clear">クリア</button>` : "") + `</div>`);
+  } else if (MULTI.has(d.kind)) {
+    const need = d.min !== d.max ? `${d.min}〜${d.max}個` : `${d.min}個`;
+    parts.push(`<div class="chips">${d.options.map((_, i) => chipHtml(d, i)).join("")}</div>` +
+      `<div class="row" style="margin-top:8px"><span class="muted">選択 ${sel.multi.length}/${esc(need)}（クリックした順）</span>` +
+      `<button class="act primary" data-act="confirm" ${multiCountOk(d) ? "" : "disabled"}>決定</button>` +
+      (sel.multi.length ? `<button class="act" data-act="clear">クリア</button>` : "") + `</div>`);
+  } else {
+    parts.push(`<div class="opts">${d.options.map((_, i) => chipHtml(d, i)).join("")}</div>`);
+  }
+  box.innerHTML = parts.join("");
+  box.querySelectorAll("button").forEach((b) => {
+    if (b.dataset.act) b.onclick = () => actClick(b.dataset.act, b.dataset.opt);
+    else if (b.dataset.opt !== undefined) b.onclick = () => chipClick(+b.dataset.opt);
+  });
+}
+function paintEff() {
+  const v = view;
   const eff = {continuous: v.continuous, delayed: v.delayed, step_mods: v.step_mods, hold: v.hold.map((c) => c.name)};
   const any = v.continuous.length || v.delayed.length || v.step_mods.length || v.hold.length;
   $("effects").textContent = any ? JSON.stringify(eff, null, 1) : "なし";
   $("auto0").checked = v.auto[0]; $("auto1").checked = v.auto[1];
-  const d = v.decision;
-  if (!d) { $("decision").innerHTML = `<span class="muted">${v.result ? "対戦は終わった" : "決定なし"}</span>`; }
-  else {
-    const multi = d.max > 1 || d.min !== 1;
-    $("decision").innerHTML = `<div style="margin-bottom:6px"><b>P${d.player}</b> ・ <code>${esc(d.kind)}</code> ${multi ? `<span class="muted">（${d.min}〜${d.max}個）</span>` : ""} ${esc(d.prompt)}</div>` +
-      `<div class="opts">${d.options.map((o) => multi
-        ? `<label class="opt"><input type="checkbox" value="${o.i}">${esc(o.label)}</label>`
-        : `<button class="opt" data-i="${o.i}">${esc(o.label)}</button>`).join("")}</div>` +
-      (multi ? `<div style="margin-top:8px"><button class="act primary" id="send">決定</button></div>` : "");
-    if (multi) $("send").onclick = () => answer([...document.querySelectorAll("#decision input:checked")].map((x) => +x.value));
-    else document.querySelectorAll("#decision button.opt").forEach((b) => b.onclick = () => answer([+b.dataset.i]));
-  }
-  $("hist").innerHTML = v.history.slice().reverse().map((h) =>
-    `<div class="h ${h.auto ? "auto" : ""}"><span class="muted">T${h.turn}</span> <b>${h.p === null ? "準備" : "P" + h.p}</b> ${esc(h.kind)}${h.chosen.length ? " → " + esc(h.chosen.join(", ")) : ""}${h.auto ? " (自動)" : ""}` +
-    (h.changes.length ? `<ul>${h.changes.map((c) => `<li>${esc(c)}</li>`).join("")}</ul>` : "") + `</div>`).join("") || `<span class="muted">まだない</span>`;
 }
+function paintAll() { paintStatus(); paintZones(); paintDecision(); paintHist(); paintEff(); }
+
+function render(v) {
+  view = v; gid = v.gid;
+  sel = {attack: null, multi: [], mana: []};
+  closePop();
+  labels(); paintAll();
+}
+// ---- クリック操作的な回答 ----
 async function answer(choice) { render(await api("/api/answer", {gid, choice})); }
+function chipClick(i) {
+  const d = view.decision;
+  if (!d) return;
+  if (MULTI.has(d.kind)) { toggleOpt(i); return; }
+  const o = d.options[i];
+  if (d.kind === "attack" && sel.attack != null && "cid" in o && o.cid !== sel.attack) {
+    sel.attack = o.cid; paintZones(); paintDecision(); return;
+  }
+  answer([i]);
+}
+function toggleOpt(i) {
+  const d = view.decision;
+  if (sel.multi.includes(i)) sel.multi = sel.multi.filter((x) => x !== i);
+  else if (sel.multi.length < d.max) sel.multi.push(i);
+  paintZones(); paintDecision();
+}
+function cardClick(cid) {
+  const d = view.decision;
+  if (!d) return;
+  const card = cardByCid[cid] || {};
+  const why = (m) => showToast(`${card.name || "?"} は選択できません${m ? "（" + m + "）" : ""}`);
+  if (d.kind === "attack") {
+    const isCandidate = (cidOpts[cid] || []).some((j) => d.options[j].cid === cid);
+    if (sel.attack == null) {
+      if (isCandidate) { sel.attack = cid; paintZones(); paintDecision(); }
+      else why((view.hints && view.hints.bz[cid]) || "攻撃の選択肢がない");
+      return;
+    }
+    if (cid === sel.attack) { sel.attack = null; paintZones(); paintDecision(); return; }
+    // 相手シールドを直接クリック → 攻撃（プレイヤー）＋シールドブレイクまで一気に進める
+    const zm = zoneOf(cid);
+    if (zm && zm.z === "shield" && zm.p !== d.player &&
+        d.options.some((o) => o.cid === sel.attack && o.target === "player")) {
+      shieldAttack(cid);
+      return;
+    }
+    const i = d.options.findIndex((o) => o.cid === sel.attack && "target" in o && o.target === cid);
+    if (i >= 0) { answer([i]); return; }
+    if (isCandidate) { sel.attack = cid; paintZones(); paintDecision(); return; }
+    if (card.owner !== d.player && !card.tapped) why("タップしていないクリーチャーは攻撃対象にならない");
+    else why("攻撃対象にできない");
+    return;
+  }
+  if (d.kind === "pay_mana") {
+    if (!(cidOpts[cid] || []).length) why("支払いに使えるマナとして提示されていない");
+    else if (sel.mana.includes(cid)) sel.mana = sel.mana.filter((c) => c !== cid);
+    else sel.mana.push(cid);
+    paintZones(); paintDecision();
+    return;
+  }
+  const opts = cidOpts[cid] || [];
+  if (!opts.length) {
+    why((view.hints && view.hints.hand && view.hints.hand[card.id]) || "");
+    return;
+  }
+  if (MULTI.has(d.kind)) {
+    const opt = opts.find((i) => !sel.multi.includes(i));
+    if (opt !== undefined && sel.multi.length < d.max) { sel.multi.push(opt); paintZones(); paintDecision(); }
+    else if (sel.multi.length >= d.max) showToast(`選択できるのは ${d.max}個まで`);
+    return;
+  }
+  if (opts.length === 1) { answer(opts); return; }
+  // 複数の面（ツインパクト）など: 決定パネルの選択肢から選ぶ
+  showToast("複数の実行方法があるので、決定パネルの選択肢から選んでください");
+}
+// 攻撃元選択中に相手シールドをクリック: 攻撃 → （ブレイカー数は自動で最大を選ぶ）→
+// クリックしたシールドと、それに続くシールドを順にブレイクする
+async function shieldAttack(cid) {
+  const atk = sel.attack;
+  const d = view.decision;
+  const i = d.options.findIndex((o) => o.cid === atk && o.target === "player");
+  render(await api("/api/answer", {gid, choice: [i]}));
+  if (view.decision && view.decision.kind === "choose_breaker") {
+    // 複数のブレイカー能力がある場合、ジュース多くブレイクできる能力を自動選択
+    let best = 0, bestN = -1;
+    view.decision.options.forEach((o, j) => {
+      const n = +(o.key.split(":")[1] || 1);
+      if (n > bestN) { bestN = n; best = j; }
+    });
+    render(await api("/api/answer", {gid, choice: [best]}));
+  }
+  if (view.decision && view.decision.kind === "choose_shields") {
+    const dd = view.decision, n = Math.min(dd.min, dd.options.length);
+    const start = Math.max(0, dd.options.findIndex((o) => o.cid === cid));
+    const idxs = [];
+    for (let k = 0; k < n; k++) idxs.push((start + k) % dd.options.length);
+    render(await api("/api/answer", {gid, choice: idxs}));
+  }
+}
+function playerClick(p) {
+  const d = view.decision;
+  if (!d || d.kind !== "attack" || sel.attack == null || d.player === p) return;
+  const i = d.options.findIndex((o) => o.cid === sel.attack && o.target === "player");
+  if (i >= 0) answer([i]);
+}
+function actClick(act, optIdx) {
+  const d = view.decision;
+  if (!d) return;
+  if (act === "pass") { answer([+optIdx]); return; }
+  if (act === "cancel") { sel.attack = null; paintZones(); paintDecision(); return; }
+  if (act === "clear") { sel.multi = []; sel.mana = []; paintZones(); paintDecision(); return; }
+  if (act === "confirm") {
+    if (d.kind === "pay_mana") { const i = manaMatch(); if (i >= 0) answer([i]); }
+    else if (multiCountOk(d)) answer(sel.multi.slice());
+  }
+}
+function manaMatch() {
+  const d = view.decision;
+  if (!sel.mana.length) return -1;
+  const names = sel.mana.map((c) => cardByCid[c] ? cardByCid[c].id : "!").sort().join(",");
+  return d.options.findIndex((o) => o.key === `mana:${names}`);
+}
+
+// ---- クリックの委譲 ----
+document.addEventListener("click", (e) => {
+  const el = e.target.closest("[data-cid],[data-player],[data-pop]");
+  if (!el) return;
+  if (el.dataset.pop) openPop(+el.dataset.p, el.dataset.pop);
+  else if (el.dataset.player !== undefined) playerClick(+el.dataset.player);
+  else cardClick(+el.dataset.cid);
+});
+
+// ---- ゾーンのポップアップ表示（山札・シールド・墓地など） ----
+function openPop(p, z) {
+  let ov = $("zonepop");
+  if (!ov) {
+    ov = document.createElement("div");
+    ov.id = "zonepop";
+    document.body.appendChild(ov);
+    document.addEventListener("keydown", (e) => { if (e.key === "Escape") closePop(); });
+  }
+  const v = view.zones[p][z];
+  const list = z === "deck" ? v.top : v;
+  const n = z === "deck" ? v.count : list.length;
+  const title = `${ZNAME[z] || z}（${p === 0 ? "自分" : "相手"}）`;
+  ov.innerHTML = `<div class="popbox"><div class="row" style="justify-content:space-between">` +
+    `<b>${esc(title)} <span class="cnt">${n}枚</span></b><button class="act" data-close>閉じる</button></div>` +
+    `<div class="cards">${list.map((c) => cardHtml(c, z)).join("") || '<span class="muted">なし</span>'}</div></div>`;
+  ov.style.display = "flex";
+  ov.querySelector("[data-close]").onclick = closePop;
+  ov.onclick = (e) => { if (e.target === ov) closePop(); };
+}
+function closePop() {
+  const ov = $("zonepop");
+  if (ov) { ov.style.display = "none"; ov.innerHTML = ""; }
+}
+
 $("undo").onclick = async () => gid && render(await api("/api/undo", {gid}));
 $("auto0").onchange = $("auto1").onchange = async () => gid && render(await api("/api/auto", {gid, auto: [$("auto0").checked, $("auto1").checked]}));
 $("start").onclick = async () => {
@@ -209,7 +675,7 @@ function renderCards() {
   $("cardlist").innerHTML = list.map((c) => `
     <div class="panel" data-id="${esc(c.id)}">
       <div class="row" style="justify-content:space-between">
-        <div><b>${esc(c.name)}</b> <span class="muted">${esc(c.id)} ・ ${esc(c.civs.join("/"))} ・ コスト${c.cost} ・ ${esc(c.file)}</span>
+        <div><b>${esc(c.name)}</b><span class="muted">${esc(c.id)} ・ ${esc(c.civs.join("/"))} ・ コスト${c.cost} ・ ${esc(c.file)}</span>
           ${c.review ? `<span class="badge ${c.review}">${c.review}</span>` : ""}</div>
         <div class="row">
           <button class="act" data-a="try">試す</button>
@@ -248,6 +714,13 @@ function show(t) {
 }
 $("tab-game").onclick = () => show("game");
 $("tab-cards").onclick = () => { show("cards"); if (!cards.length) loadCards(); };
+// 1画面フィット用: ヘッダーの実高さを CSS 変数に反映
+(() => {
+  const h = document.querySelector("header");
+  const set = () => document.documentElement.style.setProperty("--hdr", h.offsetHeight + "px");
+  set(); addEventListener("resize", set);
+  if (window.ResizeObserver) new ResizeObserver(set).observe(h);
+})();
 $("mode").onchange();
 </script>
 </body>
