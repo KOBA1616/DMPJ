@@ -57,5 +57,5 @@ jobs:
         if: always()
         run: |
           git reset -q
-          git add data/cards/converted.yaml data/cards/raw/rejects.jsonl data/cards/raw/convert_report.json data/cards/raw/eval_report.json 2>/dev/null || true
+          git add -f data/cards/converted.yaml data/cards/raw/rejects.jsonl data/cards/raw/convert_report.json data/cards/raw/eval_report.json 2>/dev/null || true
           git diff --cached --quiet || { git commit -qm "convert-cards: 変換結果"; git push origin cards-data; }

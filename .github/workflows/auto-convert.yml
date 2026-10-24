@@ -1,0 +1,55 @@
+# 取得済みのカード原文を OpenCode の無料モデルで定期的に効果DSLへ変換する。
+# 取得系（auto-sync / sync-cards）とは別の実行枠。結果は cards-data（converted.yaml, rejects, convert_status.json）。
+# 手動で今すぐ動かす: Actions → auto-convert → Run workflow。止める: tools/auto_convert.yaml の enabled を false。
+name: auto-convert
+on:
+  schedule:
+    - cron: "47 2,8,14,20 * * *"     # auto-sync(毎6時間の17分)とずらす
+  workflow_dispatch:
+permissions:
+  contents: write
+concurrency:
+  group: convert-cards             # convert-cards と同じ枠。取得系(sync-cards)とは別
+  cancel-in-progress: false
+jobs:
+  convert:
+    runs-on: ubuntu-latest
+    timeout-minutes: 120
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Restore data branch
+        run: |
+          git config user.name "github-actions"; git config user.email "actions@users.noreply.github.com"
+          cp tools/auto_convert.yaml /tmp/auto.yaml
+          git ls-remote --exit-code --heads origin cards-data >/dev/null || { echo "cards-data がまだ無い"; exit 1; }
+          git checkout -f cards-data
+          git checkout "$GITHUB_SHA" -- tools dmsim data/rules data/cards/proto.yaml data/cards/real.yaml data/cards/real_vocab.yaml data/cards/real_zone.yaml data/cards/raw/official_*.jsonl .github
+      - name: Run
+        run: |
+          pip install -q pyyaml
+          npm i -g opencode-ai >/dev/null 2>&1 || echo "opencode CLI の導入に失敗"
+          python - <<'PY'
+          import os, subprocess, sys, yaml
+          r = yaml.safe_load(open("/tmp/auto.yaml"))
+          if not r.get("enabled", True):
+              print("auto_convert.yaml: enabled=false のため何もしない"); sys.exit(0)
+          env = {k: v for k, v in os.environ.items() if k != "OPENCODE_API_KEY"}   # CLI は匿名の無料枠
+          sys.exit(subprocess.call(["python", "tools/auto_convert.py", "--model", str(r.get("model", "glm-5.3-flash-free")),
+                                    "--limit", str(r.get("limit", 20)), "--interval", str(r.get("interval", 6))], env=env))
+          PY
+      - name: Summary
+        if: always()
+        run: |
+          if [ -f data/cards/raw/convert_status.json ]; then { echo '```json'; cat data/cards/raw/convert_status.json; echo '```'; } >> "$GITHUB_STEP_SUMMARY"; fi
+      - name: Commit data
+        if: always()
+        run: |
+          git reset -q
+          git add -f data/cards/converted.yaml data/cards/raw/rejects.jsonl data/cards/raw/convert_report.json data/cards/raw/convert_status.json 2>/dev/null || true
+          git commit -qm "cards-data: convert $(date -u +%FT%TZ)" || echo "no changes"
+          for i in 1 2 3; do git pull --rebase origin cards-data 2>/dev/null; git push origin HEAD:cards-data && break; sleep 5; done

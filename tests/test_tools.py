@@ -271,3 +271,36 @@ def test_opencode_allowlist_and_cost_guard(monkeypatch):
     monkeypatch.setattr(llm, "_post", lambda payload: {**ok, "usage": {"cost": 0.01}})
     with pytest.raises(cc.Fatal):
         llm.complete("S", [], "high", None)
+
+
+def test_auto_convert_limit_status_and_retry_only_on_vocab_change(tmp_path, monkeypatch):
+    """定期変換: 件数上限・短い順・状態ファイル。語彙が変わらない限り rejects は再試行しない。"""
+    import json
+
+    import auto_convert as ac
+    import convert_cards as cc
+    raw = tmp_path / "raw"
+    raw.mkdir()
+    ids = ["ta_a", "ta_b", "ta_c"]
+    (raw / "o.jsonl").write_text("".join(json.dumps({"id": i, "text": "x" * n}) + "\n"
+                                         for i, n in zip(ids, (3, 1, 2))), encoding="utf-8")
+    good = "```yaml\nid: {i}\nname: 例\ntypes: [creature]\ncivs: [water]\ncost: 2\npower: 1000\nkeywords: [blocker]\n```"
+    seen = []
+
+    class LLM:
+        def complete(self, sysp, messages, effort, usage):
+            i = messages[0]["content"].split('"id": "')[1].split('"')[0]
+            seen.append(i)
+            return good.format(i=i)
+
+    monkeypatch.setattr(ac, "RAW", raw)
+    monkeypatch.setattr(ac, "STATUS", raw / "convert_status.json")
+    monkeypatch.setattr(ac.cc, "make_llm", lambda *a: LLM())
+    monkeypatch.setattr(ac, "DATA", tmp_path)
+    monkeypatch.setattr(ac, "vocab_hash", lambda: "h1")
+    ac.main(["--limit", "2", "--interval", "0"])
+    assert seen == ["ta_b", "ta_c"]                      # 短い順に上限まで
+    st = json.loads((raw / "convert_status.json").read_text(encoding="utf-8"))
+    assert (st["converted"], st["pending"], st["vocab_hash"]) == (2, 1, "h1")
+    ac.main(["--limit", "2", "--interval", "0"])
+    assert seen[2:] == ["ta_a"]
