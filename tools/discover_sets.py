@@ -25,6 +25,14 @@ def main(argv=None):
     p.parent.mkdir(parents=True, exist_ok=True)
     p.write_text(page, encoding="utf-8")
     print(f"{len(page)} bytes -> {p}")
+    # 検索の仕組みを調べるための補助ファイル（検索ページが読み込むスクリプト）
+    for name in ("search.js", "ajax_pop.js"):
+        req = urllib.request.Request(f"https://dm.takaratomy.co.jp/common/js/{name}", headers={"User-Agent": UA})
+        try:
+            with urllib.request.urlopen(req, timeout=30) as r:
+                (p.parent / f"_{name}").write_text(r.read().decode("utf-8", errors="replace"), encoding="utf-8")
+        except Exception as e:   # 取れなくても続ける
+            print(name, e)
 
 
 if __name__ == "__main__":
