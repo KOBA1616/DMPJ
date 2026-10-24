@@ -110,10 +110,8 @@ schtasks /Create /SC MINUTE /MO 5 /TN "dmpj-worker" /TR C:\path\DMPJ\tools\run_w
 
 投入例: `python tools\local_worker.py enqueue routine --name gaps --summarize` / `... --name review --summarize`
 
-### 結果を Claude に自動で渡す
+### 結果を Claude に渡す
 
-- **PR に紐づく作業**（差分レビューなど）: ジョブに `--pr <番号>` を付けると、ワーカーが結果を PR コメントに投稿する。PR を購読している Claude のセッションに自動でイベントとして届く（人が貼り替える必要がない）。
+- **基本**: 結果は `llm-jobs` ブランチの `jobs/done/<id>.yaml` に残る。投入したスレッドが `send_later` で数分後に読む。先頭の `summary:`（1行要約）を先に見て、必要な時だけ `text` を読む。PC 側の追加設定は要らない。
+- **任意**: ジョブに `--pr <番号>` を付けると、結果を PR コメントにも投稿する（PC に GitHub CLI と `gh auth login` が要る）。使わなくてよい。投稿に失敗しても結果は `jobs/done` に残る（`pr_comment:` 欄に理由）。
   例: `py -3 tools\local_worker.py enqueue routine --name review --summarize --pr 33`
-  PC に GitHub CLI が必要（初回のみ）: `winget install GitHub.cli` → 新しい PowerShell で `gh auth login`。無ければ投稿は `skipped` になり、結果は `jobs/done` に残る。
-- **PR に紐づかない作業**: 投入したスレッドが `send_later` で数分後に `llm-jobs` ブランチの `jobs/done/<id>.yaml` を読む（CLAUDE.md の運用）。
-- 結果ファイルの先頭に `summary:`（1行要約）がある。まず `summary` だけ読み、必要な時だけ `text` を読む。
