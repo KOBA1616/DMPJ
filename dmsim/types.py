@@ -20,6 +20,7 @@ class Option(TypedDict, total=False):
     pid: int
     ab: int
     face: int
+    free: bool                           # コストを支払わずに実行する選択肢（G・ゼロ）
 
 
 class Decision(TypedDict):
