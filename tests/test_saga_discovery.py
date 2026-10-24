@@ -160,3 +160,19 @@ def test_ai_finds_izanagi_revived_by_saga(rules):
     res, e = play_game(rules, None, None, 1, max_turn=1, start=eng, lock_rounds=0, budget=2500)
     assert (res.kind, res.kill_turn) == ("effect", 1)
     assert not any("play:" + IZANAGI in x["keys"] for x in e.log)
+
+
+def test_stock_amount_is_searched_not_fixed(rules):
+    """山札を削るループは、上限（残り1枚）だけでなく、あと1周手前（残り2枚）もストックして探索する。"""
+    from dmsim.solitaire import TurnSearch
+
+    def stocked(offsets):
+        eng = sc.build(rules, spec(8, **{"bz": [SHAKO]}))
+        ts = TurnSearch(0, 400)
+        ts.stock_offsets = offsets
+        ts.run(eng)
+        return sorted({x["stocked"] for x in ts.stats.loops if x["kind"] == "burn"})
+
+    one, two = stocked((0,)), stocked((0, 1))
+    assert one and len(one) <= len(two)
+    assert set(one) <= set(two) and len(two) > len(one)
