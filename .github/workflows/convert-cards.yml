@@ -47,7 +47,11 @@ jobs:
               cmd = ["python", "tools/eval_convert.py", "data/cards/raw"] + common
           else:
               cmd = ["python", "tools/convert_cards.py", "data/cards/raw", "--order", "short"] + common
-          sys.exit(subprocess.call(cmd))
+          import os
+          env = dict(os.environ)
+          if "opencode-cli" in cmd:
+              env.pop("OPENCODE_API_KEY", None)   # CLI は無料枠を匿名で使う（キーを渡すとかえって 401 になるか確かめる）
+          sys.exit(subprocess.call(cmd, env=env))
           PY
       - name: Save results
         if: always()
