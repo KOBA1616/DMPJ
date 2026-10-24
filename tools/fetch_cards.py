@@ -81,7 +81,7 @@ class _Cells(HTMLParser):
 
 def _clean_name(h3: str) -> tuple[str, str]:
     """「ヘル・スラッシュ(DM6 57/110)」→ (カード名, 収録番号)。括弧が無ければ番号は空。"""
-    m = re.match(r"^(.*?)\s*[(（]([^()（）]*\S/\S[^()（）]*)[)）]\s*$", h3)
+    m = re.match(r"^(.*?)\s*[(（]([A-Z][A-Za-z0-9+\-]*\s[^()（）]*/[^()（）]*)[)）]\s*$", h3)   # 末尾の「(DM26RP3 STD9/)」「(DM6 57/110)」
     return (m.group(1).strip(), m.group(2).strip()) if m else (h3.strip(), "")
 
 

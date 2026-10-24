@@ -47,3 +47,14 @@ def test_unusual_official_numbers_are_kept():
     assert normalize_id("dm23rp4x-001X") == "dm23rp4x-001x"
     assert normalize_id("dm23rp1-1B") == "dm23rp1-1b"
     assert normalize_id("promoy21-thanxdm20yrs02") == "promoy21-thanxdm20yrs02"
+
+
+def test_detail_page_name_suffix_forms():
+    import sys
+    from pathlib import Path
+    sys.path.insert(0, str(Path(__file__).resolve().parent.parent / "tools"))
+    import fetch_cards as fc
+    assert fc._clean_name("偽りの希望 鬼丸「終斗」(DM26RP3 STD9/)") == ("偽りの希望 鬼丸「終斗」", "DM26RP3 STD9/")
+    assert fc._clean_name("∑龍(DM26RP3 OR1/OR1)") == ("∑龍", "DM26RP3 OR1/OR1")
+    assert fc._clean_name("ヘル・スラッシュ(DM6 57/110)") == ("ヘル・スラッシュ", "DM6 57/110")
+    assert fc._clean_name("ボルシャック(火)") == ("ボルシャック(火)", "")
