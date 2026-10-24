@@ -24,6 +24,7 @@ from . import scenario as sc
 from .defs import DATA, load_rules
 from .engine import Engine, IllegalAnswer
 from .play import deck_lists, make_record, passive_policy, replay
+from .verify import verify_all
 
 WEB = Path(__file__).resolve().parent / "web"
 REAL = DATA / "cards" / "real.yaml"
@@ -330,6 +331,11 @@ class App:
             set_review(body["id"], body["status"], body.get("note", ""))
             self.rules = load_rules()
             return {"ok": True}
+        if path == "/api/verify_all":
+            # 一括検証: 「試す」シナリオを自動回しして、動かないカードを見つける
+            res = verify_all(self.rules, body.get("ids"))
+            return {"results": res, "ok": sum(1 for r in res if r["status"] == "ok"),
+                    "total": len(res)}
         sess = self.sessions[int(body["gid"])]
         if path == "/api/answer":
             sess.answer(body["choice"])

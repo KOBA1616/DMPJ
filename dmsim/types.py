@@ -52,6 +52,7 @@ class Event(TypedDict, total=False):
     count: int
     replaced: bool
     stack_on: Ref                        # 進化: このクリーチャーの上に重ねて出す
+    stack_more: NotRequired[list]        # 進化元の追加（超無限墓地進化などで同時に重ねる分）
     face: int                            # ツインパクト等: 実行する面
     card_only: bool                      # カードとして動かす（109.2a, 再構築 801.4）
 
@@ -194,7 +195,7 @@ class PlayTask(TypedDict):
     phase: str
     gen: int                             # 積んだ時の世代。カードが動いていたら実行しない（400.8）
     face: NotRequired[int]
-    evo: NotRequired[Ref]                # 進化元（801）
+    evo: NotRequired[list[Ref]]          # 進化元（801）。複数可（超無限墓地進化など）
     st: NotRequired[bool]                # S・トリガーとして実行する（101.4g）
     resolve_to: NotRequired[str]         # 解決後の置き場所（play_free の resolve_to）
     answer: NotRequired[list[int]]

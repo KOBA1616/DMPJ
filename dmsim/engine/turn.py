@@ -70,28 +70,37 @@ class TurnMixin:
         return out
 
     def _can_play_face(self, cid, p, face) -> bool:
-        f = self.cdef(cid).face(face)
-        action = "summon" if f.is_creature() else "cast"
+        d = self.cdef(cid).face(face)
+        action = "summon" if d.is_creature() else "cast"
         if not self.permits(cid, action):
             return False
-        if "evolution" in f.types and not self._evo_sources(cid, p, face):
-            return False
+        if "evolution" in d.types:
+            srcs = self._evo_sources(cid, p, face)
+            if not srcs:
+                return False
+            n = len(srcs) if d.evolve_any else 1            # 最も安い組合せで払えるか（112.2b）
+            cost = max(0, d.cost - n * d.cost_reduce_per_evo) if d.cost_reduce_per_evo else None
+            return bool(self._mana_choices(cid, p, face, cost=cost, limit=1))
         return bool(self._mana_choices(cid, p, face, limit=1))
 
     def _evo_sources(self, cid, p, face=None) -> list[int]:
-        """適正な進化元（801.1a）。自分のバトルゾーンのクリーチャーで evolve_from を満たすもの。"""
+        """適正な進化元（801.1a）。evolve_zone（既定は自分のバトルゾーン）のクリーチャーで
+        evolve_from を満たすもの（超無限墓地進化は自分の墓地から選ぶ）。"""
         f = self.cdef(cid).face(face)
-        return [c for c in self.bz_tops(p)
-                if "creature" in self.chars(c)["types"] and self.filter_match(c, f.evolve_from or {})]
+        ef = {k: v for k, v in (f.evolve_from or {}).items() if k != "zone"} or {}
+        z = f.evolve_zone
+        pool = self.bz_tops(p) if z == "bz" else self.zlist(z, p)
+        return [c for c in pool if "creature" in self.chars(c)["types"] and self.filter_match(c, ef)]
 
-    def _mana_choices(self, cid, p, face=None, limit: int = 32) -> list[list[int]]:
+    def _mana_choices(self, cid, p, face=None, cost: int | None = None, limit: int = 32) -> list[list[int]]:
         """支払いに使うマナの組（112.2a）。文明は1文明につき別々の1枚で満たし、マナの数値の合計がコストに一致。
-        カード名が同じものは区別しない。コスト軽減（112.2b）は未実装。"""
+        cost: 実行時に確定したコスト（進化元数の軽減など）。指定なければカード定義のコスト。"""
         d = self.cdef(cid).face(face)
-        if d.cost == 0:
+        eff = d.cost if cost is None else cost
+        if eff == 0:
             return [[]]
         untapped = [c for c in self.zlist("mana", p) if not self.s.cards[c].tapped]
-        if len(untapped) < len(d.civs) or sum(self.cdef(c).mana for c in untapped) < d.cost:
+        if len(untapped) < len(d.civs) or sum(self.cdef(c).mana for c in untapped) < eff:
             return []
         groups: dict[str, list[int]] = {}
         for c in untapped:
@@ -110,11 +119,11 @@ class TurnMixin:
             if len(out) >= limit:
                 return
             if i == len(names):
-                if total == d.cost and civ_ok(cnt):
+                if total == eff and civ_ok(cnt):
                     out.append([c for n, k in zip(names, cnt) for c in groups[n][:k]])
                 return
             cap = len(groups[names[i]])
-            for k in range(min(cap, (d.cost - total) // mana[i] if mana[i] else len(need) - zeros), -1, -1):
+            for k in range(min(cap, (eff - total) // mana[i] if mana[i] else len(need) - zeros), -1, -1):
                 dfs(i + 1, cnt + [k], total + k * mana[i], zeros + (0 if mana[i] else k))
 
         dfs(0, [], 0, 0)
@@ -253,12 +262,15 @@ def h_play(eng, t):
             eng._pop(t)
             return None
         opts = [eng._card_option(c) for c in srcs]
-        ans, dd = eng.ask(t, p, "choose_evo_source", opts)
+        mn, mx = (1, len(srcs)) if d.evolve_any else (1, 1)
+        ans, dd = eng.ask(t, p, "choose_evo_source", opts, mn, mx)
         if dd:
             return dd
-        t["evo"] = s.ref(srcs[ans[0]])
+        t["evo"] = [s.ref(srcs[i]) for i in ans]
     if not t["free"]:
-        choices = eng._mana_choices(cid, p, face)
+        n = len(t.get("evo", []))
+        cost = max(0, d.cost - n * d.cost_reduce_per_evo) if d.cost_reduce_per_evo else None
+        choices = eng._mana_choices(cid, p, face, cost=cost)
         if not choices:
             eng._pop(t)
             return None
@@ -277,7 +289,9 @@ def h_play(eng, t):
     if d.is_creature():
         ev = {"ev": "move", "subject": ref, "from": from_zone, "to": "bz", "reason": "summon", "controller": p}
         if t.get("evo"):
-            ev["stack_on"] = t["evo"]
+            ev["stack_on"] = t["evo"][0]
+            if len(t["evo"]) > 1:
+                ev["stack_more"] = t["evo"][1:]
         eng._push(eng.ev_task(ev))
     else:   # 呪文: 唱えた → 書かれた順に解決 → 最終段階として墓地へ（605.2f）
         env = {"you": p, "self": ref, "vars": {}}

@@ -101,6 +101,13 @@ pre { margin: 0; white-space: pre-wrap; font: 12px/1.45 ui-monospace, SFMono-Reg
 .muted { color: var(--muted); }
 .result { font-weight: 600; color: var(--accent); }
 .hidden { display: none; }
+/* 一括検証の結果表 */
+.vtable { border-collapse: collapse; width: 100%; font-size: 12px; margin-top: 8px; }
+.vtable th, .vtable td { border-top: 1px solid var(--line); text-align: left; padding: 4px 8px; vertical-align: top; }
+.vtable th { color: var(--muted); font-weight: 600; font-size: 11px; border-top: 0; }
+.vtable td:nth-child(1) { width: 32px; text-align: center; }
+.vtable .ok { color: var(--ok); }
+.vtable .ng { color: var(--ng); font-weight: 600; }
 
 /* プレイマット風レイアウト: バトルゾーン / （墓地・シールド・マナ・山札） / 手札 */
 .playmat { display: flex; flex-direction: column; gap: 6px; }
@@ -192,7 +199,9 @@ pre { margin: 0; white-space: pre-wrap; font: 12px/1.45 ui-monospace, SFMono-Reg
     <input type="text" id="q" placeholder="名前・IDで絞り込み" style="width:240px">
     <select id="rf"><option value="pending">pending</option><option value="">すべて</option><option value="approved">approved</option><option value="rejected">rejected</option><option value="none">検証用（source なし）</option></select>
     <span id="count" class="muted"></span>
+    <button class="act" id="verifyall">一括検証</button>
   </div>
+  <div class="panel hidden" id="vreport"></div>
   <div id="cardlist"></div>
 </section>
 </main>
@@ -707,6 +716,26 @@ function renderCards() {
   });
 }
 $("q").oninput = $("rf").onchange = renderCards;
+
+// ---- 一括検証 ----
+$("verifyall").onclick = async () => {
+  const b = $("verifyall");
+  b.disabled = true; b.textContent = "検証中…";
+  try {
+    const r = await api("/api/verify_all", {});
+    const box = $("vreport");
+    box.classList.remove("hidden");
+    box.innerHTML = `<div class="row" style="justify-content:space-between"><b>一括検証</b>` +
+      `<span class="muted">${r.ok}/${r.total} ok</span><button class="act" data-close>閉じる</button></div>` +
+      `<table class="vtable"><tr><th>結果</th><th>カード</th><th>メモ</th></tr>` +
+      r.results.map((x) => `<tr><td class="${x.status === "ok" ? "ok" : "ng"}">${x.status === "ok" ? "✔" : "✖"}</td>` +
+        `<td>${esc(x.name)}<span class="muted"> ${esc(x.id)}</span></td>` +
+        `<td class="muted">${esc(x.detail)}</td></tr>`).join("") + `</table>`;
+    box.querySelector("[data-close]").onclick = () => box.classList.add("hidden");
+  } finally {
+    b.disabled = false; b.textContent = "一括検証";
+  }
+};
 
 function show(t) {
   $("game").classList.toggle("hidden", t !== "game"); $("cards").classList.toggle("hidden", t !== "cards");

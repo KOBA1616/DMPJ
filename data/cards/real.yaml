@@ -691,3 +691,122 @@ cards:
         instead:
           - {op: move, select: {ref: event.subject}, to: deck, reason: put, position: bottom}
     source: {official: dmbd13-010, review: pending, notes: "呪文を手札に戻すので、出し直す手段（《フォース・アゲイン》等）と組むと呪文を繰り返し使える。ツインパクトの呪文面は選べない（play_free はクリーチャー面で実行する）"}
+
+  # ---- 絶望神サガループ（3kill）関係 ----
+
+  - id: dm22ex2-021
+    name: 絶望神サガ
+    types: [creature]
+    civs: [water, darkness]
+    cost: 3
+    power: 3000
+    races: [ゴッド, オリジン]
+    text: "このクリーチャーが出た時、または自分のターンのはじめに、カードを１枚引き、自分の手札を１枚捨てる。その後、自分の墓地にクリーチャーが３体以上あれば、コスト５以下のゴッドまたはコスト５以下のオリジンを１体、自分の墓地から出してもよい。そうしたら、このクリーチャーを破壊する。"
+    abilities:
+      - kind: trigger
+        when: {event: move, to: bz, subject: self}
+        effect:
+          - {op: draw, player: you, count: 1}
+          - {op: discard, select: {zone: hand, owner: you, count: 1}}
+          - op: if
+            cond: {cmp: [{count: {zone: graveyard, owner: you, filter: {types: [creature]}}}, ">=", 3]}
+            then:
+              - op: may
+                body:
+                  - op: if
+                    cond: {exists: {zone: graveyard, owner: you, filter: {types: [creature], races: [ゴッド, オリジン], cost_le: 5}}}
+                    then:
+                      - {op: move, select: {zone: graveyard, owner: you, filter: {types: [creature], races: [ゴッド, オリジン], cost_le: 5}, count: 1}, to: bz, reason: put}
+                      - {op: destroy, select: {ref: self}}
+      - kind: trigger
+        when: {event: turn_start, player: you}
+        effect:
+          - {op: draw, player: you, count: 1}
+          - {op: discard, select: {zone: hand, owner: you, count: 1}}
+          - op: if
+            cond: {cmp: [{count: {zone: graveyard, owner: you, filter: {types: [creature]}}}, ">=", 3]}
+            then:
+              - op: may
+                body:
+                  - op: if
+                    cond: {exists: {zone: graveyard, owner: you, filter: {types: [creature], races: [ゴッド, オリジン], cost_le: 5}}}
+                    then:
+                      - {op: move, select: {zone: graveyard, owner: you, filter: {types: [creature], races: [ゴッド, オリジン], cost_le: 5}, count: 1}, to: bz, reason: put}
+                      - {op: destroy, select: {ref: self}}
+    source: {official: dm22ex2-021, review: pending, notes: "ループの核: 1ドロー1捨て＋サガ同士が墓地⇔バトルゾーンを行き来して、1回の起動で山札を1枚減らす"}
+
+  - id: dmrp03-s03
+    name: 水上第九院 シャコガイル
+    types: [creature]
+    civs: [water]
+    cost: 9
+    power: 13000
+    races: [ムートピア]
+    keywords: [triple_breaker]
+    text: "Ｔ・ブレイカー / このクリーチャーがバトルゾーンに出た時、自分の墓地にあるカードをすべて山札に加え、シャッフルする。 / 相手のターンのはじめに、カードを５枚引き、その後、自分の手札を３枚捨てる。 / 自分の山札の最後の１枚を引く時、ゲームに負けるかわりに勝つ。"
+    abilities:
+      - kind: trigger
+        when: {event: move, to: bz, subject: self}
+        effect:
+          - {op: move, select: {zone: graveyard, owner: you, count: all}, to: deck, reason: put}
+          - {op: shuffle}
+      - kind: trigger
+        when: {event: turn_start, player: opp}
+        effect:
+          - {op: draw, player: you, count: 5}
+          - {op: discard, select: {zone: hand, owner: you, count: 3, up_to: true}}
+      - kind: replace
+        when: {event: draw, player: you}
+        if: {cmp: [{count: {zone: deck, owner: you}}, "==", 1]}
+        instead:
+          - {op: win, player: you}
+    source: {official: dmrp03-s03, review: pending, notes: "破壊される時の例外なし。山札1枚時に引くドローを置換してエクストラウィン（置換の if 条件で山札枚数を判定）"}
+
+  - id: dm22ex1-007
+    name: 超神星DOOM・ドラゲリオン
+    types: [creature, evolution]
+    civs: [darkness]
+    cost: 12
+    power: 12000
+    races: [フェニックス, デーモン・コマンド, ドラゴン・ゾンビ]
+    keywords: [triple_breaker]
+    evolve_from: {zone: graveyard, types: [creature]}
+    evolve_zone: graveyard
+    evolve_any: true
+    cost_reduce_per_evo: 1
+    evolve_any: true
+    cost_reduce_per_evo: 1
+    text: "このクリーチャーの召喚コストは、進化元クリーチャー１体につき、１少なくなる。ただし、コストは０以下にはならない。 / 超無限墓地進化：クリーチャーを１体以上自分の墓地から選び、このクリーチャーをその上に重ねつつ出す。 / Ｔ・ブレイカー / メテオバーン：このクリーチャーが攻撃する時、このクリーチャーの下にあるカードを１枚、墓地に置いてもよい。そうしたら、相手のクリーチャーを１体選ぶ。このターン、その選んだクリーチャーのパワーを－９０００する。その後、進化ではないクリーチャーを１体、自分の墓地から出す。"
+    abilities:
+      - kind: trigger
+        when: {event: attack, subject: self}
+        effect:
+          - op: may
+            body:
+              - {op: move, select: {under_of: self, count: 1}, to: graveyard, reason: put}
+              - op: if
+                cond: {exists: {zone: bz, owner: opp, filter: {types: [creature]}}}
+                then:
+                  - {op: choose, select: {zone: bz, owner: opp, filter: {types: [creature]}, count: 1}, as: target}
+                  - {op: modify, select: {ref: target}, mod: {power: -9000}}
+              - {op: move, select: {zone: graveyard, owner: you, filter: {types: [creature], not_types: [evolution]}, count: 1}, to: bz, reason: put}
+    source: {official: dm22ex1-007, review: pending, notes: "メテオバーン: 下の1枚を墓地へ（選択）→相手クリーチャー1体選んで-9000（このターン）→その後墓地から進化でないクリーチャー1体を出す（表現上任意でないが、対象がいなければ行わない）。下のカードが無く置かなかったなら「そうしたら」以降は全部行わない"}
+
+  - id: dmrp03-036
+    name: 一なる部隊 イワシン
+    types: [creature]
+    civs: [water]
+    cost: 2
+    power: 1000
+    races: [ムートピア]
+    text: "このクリーチャーがどこからでも自分の墓地に置かれた時、カードを１枚引いてもよい。そうしたら、自分の手札を１枚捨てる。"
+    abilities:
+      - kind: trigger
+        zone: graveyard
+        when: {event: move, to: graveyard, subject: self}
+        effect:
+          - op: may
+            body:
+              - {op: draw, player: you, count: 1}
+              - {op: discard, select: {zone: hand, owner: you, count: 1}}
+    source: {official: dmrp03-036, review: pending, notes: "メテオバーン等で墓地に置かれた時の誘発は、その効果の解決がすべて終わった後に解決する（公式裁定）。エンジンは前景の解決窓の後で誘発を解決するので自然に一致する"}

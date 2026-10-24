@@ -32,7 +32,7 @@ POSITIONS = {"top", "bottom"}
 CARD_TYPES = {"creature", "spell", "evolution"}
 CIVS = {"light", "water", "darkness", "fire", "nature", "zero"}
 SELECTOR_KEYS = {"zone", "owner", "owner_of", "filter", "count", "up_to", "from_top", "chooser", "ref", "other",
-                 "look"}   # look: 非公開ゾーン（山札など）の中身を見て選ぶ
+                 "under_of", "look"}   # look: 非公開ゾーン（山札など）の中身を見て選ぶ
 FILTER_KEYS = {"types", "not_types", "civs", "not_civs", "races", "race_has", "name", "name_has", "not_name",
                "cost_le", "cost_ge", "power_le", "power_ge", "tapped", "keyword"}
 FILTER_EXPR_KEYS = {"cost_le", "cost_ge", "power_le", "power_ge"}   # 値に式を書ける（解決時に計算）
@@ -55,6 +55,9 @@ class Face:
     abilities: list[dict] = field(default_factory=list)
     spell: list[dict] = field(default_factory=list)
     evolve_from: dict | None = None                       # 進化元の条件（801.1a）。filter 形式
+    evolve_zone: str = "bz"                               # 進化元を探すゾーン（超無限墓地進化は graveyard）
+    evolve_any: bool = False                              # 進化元を1体以上選べる（超無限墓地進化）
+    cost_reduce_per_evo: int = 0                          # 進化元1体につき召喚コストをいくら減らすか
     resolve_to: str = "graveyard"                         # 呪文の解決後の置き場所（チャージャー等）
     after_resolve: list[dict] = field(default_factory=list)
 
@@ -80,6 +83,9 @@ class CardDef:
     abilities: list[dict] = field(default_factory=list)  # 展開済みの能力（キーワード由来も含む）
     spell: list[dict] = field(default_factory=list)      # 呪文の解決 ops
     evolve_from: dict | None = None
+    evolve_zone: str = "bz"
+    evolve_any: bool = False
+    cost_reduce_per_evo: int = 0
     resolve_to: str = "graveyard"
     after_resolve: list[dict] = field(default_factory=list)
     faces: list[Face] = field(default_factory=list)      # ツインパクト: [0]=クリーチャー側, [1]=呪文側
@@ -231,7 +237,7 @@ class Checker:
             raise DefError(f"{where}: unknown selector keys {sorted(bad)}")
         if "owner" in sel and "owner_of" in sel:
             raise DefError(f"{where}: owner and owner_of are exclusive")
-        if "ref" not in sel and "zone" not in sel:
+        if "under_of" not in sel and "ref" not in sel and "zone" not in sel:
             raise DefError(f"{where}: selector needs zone or ref")
         if "zone" in sel and sel["zone"] not in self.zones:
             raise DefError(f"{where}: unknown zone '{sel['zone']}'")
@@ -379,10 +385,15 @@ def _load_face(raw, keywords, macros, chk: Checker, where) -> dict:
     if "evolution" in raw["types"]:
         if "evolve_from" not in raw:
             raise DefError(f"{where}: evolution creature needs evolve_from")
-        chk.filter(raw["evolve_from"], where)
+        chk.filter({k: v for k, v in raw["evolve_from"].items() if k != "zone"}, where)
+    zone = raw.get("evolve_zone", "bz")
+    if zone not in chk.zones:
+        raise DefError(f"{where}: unknown evolve_zone '{zone}'")
     return dict(name=raw["name"], types=raw["types"], civs=raw["civs"], cost=raw["cost"],
                 power=raw.get("power", 0), races=raw.get("races", []), keywords=names,
-                abilities=abilities, spell=spell, evolve_from=raw.get("evolve_from"), **props)
+                abilities=abilities, spell=spell, evolve_from=raw.get("evolve_from"),
+                evolve_zone=zone, evolve_any=bool(raw.get("evolve_any", False)),
+                cost_reduce_per_evo=int(raw.get("cost_reduce_per_evo", 0)), **props)
 
 
 def load_tables():

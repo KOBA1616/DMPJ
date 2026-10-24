@@ -66,10 +66,18 @@ def try_card(rules, card_id: str, filler: str = "T001") -> dict:
     wants += [ab["when"]["subject"].get("filter", {}) for f in (d.faces or [d]) for ab in f.abilities
               if ab["kind"] == "declare" and isinstance(ab.get("when", {}).get("subject"), dict)]
     if wants:
-        probe = build(rules, {"p0": {"bz": [c for c in creatures if c != card_id]}, "filler": filler})
+        probes = {}
         for w in wants:
-            hit = next((probe.s.cards[c].defn for c in probe.bz_tops(0) if probe.filter_match(c, w)), None)
+            z = w.get("zone", "bz") if isinstance(w, dict) else "bz"
+            f = {k: v for k, v in w.items() if k != "zone"} if isinstance(w, dict) else w
+            if z not in probes:
+                probes[z] = build(rules, {"p0": {z: [c for c in creatures if c != card_id]}, "filler": filler})
+            probe = probes[z]
+            pool = probe.bz_tops(0) if z == "bz" else probe.zlist(z, 0)
+            hit = next((probe.s.cards[c].defn for c in pool if probe.filter_match(c, f)), None)
             if hit:
-                spec["p0"]["bz"] = [hit]
-                break
+                spec["p0"].setdefault(z, [])
+                if hit not in spec["p0"][z]:
+                    spec["p0"][z].append(hit)
+                continue
     return spec

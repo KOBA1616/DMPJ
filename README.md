@@ -27,6 +27,7 @@ python -m dmsim.solitaire --deck deck.yaml --games 1000 --turns 4 --workers 4   
 - `data/rules/*.yaml` ゾーン・キーワード・DSLマクロ・許可/禁止できる行為（permissions）・ターンのステップ列（turn）の定義
 - `data/cards/proto.yaml` 検証用の架空カード、`data/cards/real.yaml` 実カード（公式テキストを変換したもの。`source.review` で確認状態を持つ）
 - `data/cards/raw/*.jsonl` 公式カード詳細ページから取った原文
+- `tests/test_saga_loop.py` 【絶望神サガループ】の検証（下記のループデッキの動作試験）
 - `tools/fetch_cards.py` 公式サイトからカードテキストを取る（手元のPCで実行。3秒以上の間隔・HTMLをキャッシュ）
 - `tools/convert_cards.py` 原文を効果DSLに変換する（Claude API。`pip install anthropic`、`ANTHROPIC_API_KEY` が必要）
 - 参照ルール: 総合ゲームルール Ver.1.53（公式PDF。リポジトリには含めない）
@@ -37,4 +38,22 @@ python -m dmsim.solitaire --deck deck.yaml --games 1000 --turns 4 --workers 4   
 2. `python tools/convert_cards.py data/cards/raw/official_YYYYMMDD.jsonl`（`data/cards/converted.yaml` に出る。
    検査を通らなかったものは `data/cards/raw/rejects.jsonl`）
 3. `python -m dmsim.devserver` の「カード」タブで「試す」→ 動かして確かめ、approve / reject を付ける
+   （「一括検証」ボタン: 全カードの「試す」シナリオを探索方策で自動回しし、例外・ループを報告する。`dmsim/verify.py`）
 4. 確かめたカードを `real.yaml` に移す。動作をテストに残すなら `tests/test_real_cards.py` に足す
+
+## 【絶望神サガループ】の検証
+
+TCG 実カード4枚（`real.yaml` / `data/cards/raw/official_20261024c.jsonl`）で、デッキアウトを「かわりに勝つ」
+に置換するデッキが動く。テストは `py -m pytest tests/test_saga_loop.py`:
+
+1. シャコガイルなしでループを続ける → 山札1枚のドローで**デッキアウト敗北**（無限ループにならない）
+2. シャコガイルが場にいる → 山札1枚のドローが**置換されて勝利**
+3. 実戦3killルート: サガA/Bの CIPループ（1ドロー1捨て＋出す→壊すで山札を減らす）→
+   《超神星DOOM・ドラゲリオン》を超無限墓地進化（墓地から1体以上選べる。進化元1体につき召喚コスト1軽減）→
+   攻撃時メテオバーンで下の《一なる部隊 イワシン》を墓地へ＋《シャコガイル》を踏み倒し →
+   イワシンの誘発（メテオバーンの解決完了後に解決。公式裁定どおり）で最後の1枚を引く → 置換勝利
+
+対応したエンジン機能: 置換効果の `if` 条件（《シャコガイル》の山札1枚判定）、墓地からの進化・進化元の複数選択・
+進化元1体につき1のコスト軽減、クリーチャーの下のカードを指すセレクタ（メテオバーン）。
+DMP（デュエルマスターズプレイス）の調整・テキストは使用せず、すべて takaratomy 公式カード詳細ページの
+TCGテキストから変換している。

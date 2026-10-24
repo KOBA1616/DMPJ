@@ -26,6 +26,11 @@ class EventMixin:
         for src in self.bz_tops(p):
             for i, ab in self.abilities(src, "replace"):
                 if self._pattern_match(ab["when"], rec, src, None):
+                    if "if" in ab:   # 置換効果にも条件を書ける（《水上第九院 シャコガイル》の最後の1枚判定）
+                        env = {"you": self.s.cards[src].controller, "self": self.s.ref(src),
+                               "event": rec, "vars": {}}
+                        if not self.eval_cond(ab["if"], env):
+                            continue
                     cands.append((src, i, ab))
         cands_ab = [((s_, i), ab) for s_, i, ab in cands]
         if cands:
@@ -87,7 +92,15 @@ class EventMixin:
             new = s.ref(cid)
             stack_on = ev.get("stack_on")
             if ev["to"] == "bz" and stack_on and s.alive(stack_on):
-                self._stack(cid, stack_on[0])
+                base = stack_on[0]
+                if s.cards[base].zone != "bz":      # 超無限墓地進化など: 進化元も自分のゾーンから移す
+                    self._raw_move(base, "bz")
+                self._stack(cid, base)
+                for x in ev.get("stack_more", []):   # 進化元の残り（超無限墓地進化など: 1体以上重ねる）
+                    if s.alive(x) and s.cards[x[0]].zone == "graveyard":
+                        self._raw_move(x[0], "bz")
+                        s.cards[x[0]].top_of = cid
+                        s.cards[cid].under.append(x[0])
             out = [{"ev": "move", "subject": new, "lki": lki, "from": from_zone, "to": ev["to"],
                     "reason": ev["reason"], "controller": c.controller}]
             if ev["reason"] == "summon":

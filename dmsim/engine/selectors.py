@@ -68,8 +68,27 @@ class SelectorMixin:
             return False
         return True
 
+    def _under_base(self, v, env) -> int | None:
+        """under_of（クリーチャーの下にあるカード）で指す元クリーチャー。v は "self" / 変数名 / セレクタ。"""
+        if isinstance(v, dict):
+            cids = self.candidates(v, env)
+            return cids[0] if cids else None
+        refs = [env.get("self")] if v == "self" else env.get("vars", {}).get(v, [])
+        refs = [r for r in refs if r and self.s.alive(r)]
+        return refs[0][0] if refs else None
+
     def candidates(self, sel: dict, env: dict) -> list[int]:
         s = self.s
+        if "under_of" in sel:   # 「バトルゾーンのクリーチャーの下にあるカード」（メテオバーンなど）
+            base = self._under_base(sel["under_of"], env)
+            if base is None:
+                return []
+            out = [c for c in s.cards[base].under
+                   if not (sel.get("other") and env.get("self") and c == env["self"][0])]
+            f = sel.get("filter", {})
+            if any(isinstance(v, dict) for v in f.values()):   # 式の値は解決時に計算する
+                f = {k: self.eval_expr(v, env) if isinstance(v, dict) else v for k, v in f.items()}
+            return [c for c in out if self.filter_match(c, f)]
         if "ref" in sel:
             r = sel["ref"]
             if r == "self":
@@ -116,8 +135,8 @@ class SelectorMixin:
         if "chosen" in t.get("os", {}):
             return t["os"]["chosen"], None
         cands = self.candidates(sel, env)
-        if ("ref" in sel and "count" not in sel) or ("from_top" in sel and "count" not in sel) \
-                or sel.get("count", 1) == "all":
+        if ("ref" in sel and "count" not in sel) or ("under_of" in sel and "count" not in sel) \
+                or ("from_top" in sel and "count" not in sel) or sel.get("count", 1) == "all":
             return cands, None
         n = self.eval_expr(sel.get("count", 1), env)
         mx = min(n, len(cands))
