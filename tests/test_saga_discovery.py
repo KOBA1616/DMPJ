@@ -56,7 +56,7 @@ def test_ai_does_not_deck_itself_without_a_payoff(rules):
 
 def test_ai_finds_dragellion_route_from_the_hand(rules):
     """サガ→山札を1枚まで削る→ドラゲリオン（墓地から超無限進化）→メテオバーンでシャコガイル→イワシンで最後のドロー。"""
-    eng = sc.build(rules, spec(35, hand=[SAGA, DRAG, "T001", "T001", "T001", "T001"],
+    eng = sc.build(rules, spec(35, hand=[SAGA, DRAG, "T001", "T001", "T001", "T001"], mana=MANA + ["dm01-027"],
                                graveyard=[SAGA, IWASHIN, SHAKO] + ["T001"] * 12))
     res, e = play_game(rules, None, None, 1, max_turn=1, start=eng, lock_rounds=0, budget=2500)
     assert (res.kind, res.kill_turn) == ("effect", 1)
@@ -69,3 +69,38 @@ def test_combo_search_finds_the_missing_piece(rules):
     res = search_setup(rules, setup, "hand", pool, slots=1, turns=1, games=1, budget=400)
     assert res[0].extra == (DRAG,) and res[0].rate == 1.0
     assert all(c.rate == 0.0 for c in res[1:])
+
+
+IZANAGI = "dm22ex1-025"     # 蒼狼の大王 イザナギテラス
+KODAMA = "dmex10-020"       # コダマダンス・チャージャー
+
+
+def _izanagi_start(rules, mana):
+    eng = sc.build(rules, {"p0": {"hand": [IZANAGI, SAGA, DRAG, "T001", "T001"], "mana": mana,
+                                  "graveyard": [SAGA, IWASHIN, SHAKO] + ["T001"] * 12, "deck": [KODAMA]},
+                           "p1": {}, "deck_size": 40, "deck_left": [12, 40], "seed": 1})
+    deck = eng.s.zones["deck"][0]
+    k = next(c for c in deck if eng.s.cards[c].defn == KODAMA)
+    deck.remove(k)
+    deck.insert(2, k)            # イザナギテラスが見る上から5枚の中に置く
+    return eng
+
+
+def test_ai_finds_izanagi_kodama_saga_dragellion_route(rules):
+    """koba の工程: イザナギテラス→コダマダンス・チャージャーを踏み倒して闇マナを作る→サガループ→山札1枚→
+    ドラゲリオン（闇の支払いが要る。112.2b）→メテオバーンでイワシンを墓地へ・シャコガイルを蘇生→ドロー置換勝利。
+    闇マナは元から1枚＋コダマダンスの1枚が要る（サガとドラゲリオンで1枚ずつ）。"""
+    eng = _izanagi_start(rules, ["dm01-080"] * 7 + ["dm01-027"])
+    res, e = play_game(rules, None, None, 1, max_turn=1, start=eng, lock_rounds=0, budget=6000)
+    assert (res.kind, res.kill_turn) == ("effect", 1)
+    assert [x["keys"] for x in e.log][1] == ["play:" + IZANAGI]
+
+
+def test_dragellion_needs_a_dark_mana_even_at_cost_zero(rules):
+    """112.2b: コスト軽減で文明の数を下回っても、文明の支払いが優先される。"""
+    base = {"p0": {"hand": [DRAG], "graveyard": ["T001"] * 14, "mana": ["dm01-080"] * 2}, "p1": {}, "seed": 1}
+    e = sc.build(rules, base)
+    assert not e._can_play_face(next(iter(e.s.zones["hand"][0])), 0, None)
+    base["p0"]["mana"] = ["dm01-080", "dm01-027"]
+    e = sc.build(rules, base)
+    assert e._can_play_face(next(iter(e.s.zones["hand"][0])), 0, None)

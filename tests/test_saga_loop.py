@@ -62,6 +62,8 @@ def saga_policy(eng, d, stop_deck: int = 0):
     if d["kind"] == "order_pending":
         j = next((j for j, o in enumerate(d["options"]) if IWASHIN in o["key"]), None)
         return [j] if j is not None else [0]
+    if d["kind"] == "pay_mana":      # 闇のマナを使い切らない払い方（ドラゲリオンの闇の支払いに1枚残す）
+        return [min(range(len(keys)), key=lambda j: keys[j].count("dm01-027"))]
     if d["kind"] == "block":
         return [keys.index("no_block")]
     return list(range(d["min"]))
@@ -103,7 +105,7 @@ def test_saga_kill_dragellion_route(rules):
     """実戦ルート: サガループ → ドラゲリオン（超無限墓地進化・メテオバーン）→ シャコガイル
     踏み倒し → イワシンの誘発（メテオバーン解決後に解決）で最後の1枚を引いて置換勝利。"""
     spec = {"p0": {"hand": [SAGA, DRAG, "T001", "T001", "T001", "T001"],
-                   "mana": ["dm01-080", "dm01-080", "dm01-027"],
+                   "mana": ["dm01-080", "dm01-080", "dm01-027", "dm01-027"],   # ドラゲリオンも闇の支払いが要る(112.2b)
                    "graveyard": [SAGA, IWASHIN, SHAKO] + ["T001"] * 12},
             "p1": {}, "deck_size": 20, "deck_left": [2, 20], "seed": 1}
     eng = sc.build(rules, spec, check=True)

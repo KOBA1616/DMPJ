@@ -810,3 +810,36 @@ cards:
               - {op: draw, player: you, count: 1}
               - {op: discard, select: {zone: hand, owner: you, count: 1}}
     source: {official: dmrp03-036, review: pending, notes: "メテオバーン等で墓地に置かれた時の誘発は、その効果の解決がすべて終わった後に解決する（公式裁定）。エンジンは前景の解決窓の後で誘発を解決するので自然に一致する"}
+
+  # ---- 青黒サガループ（闇マナを作る部品）----
+
+  - id: dmex10-020
+    name: コダマダンス・チャージャー
+    types: [spell]
+    civs: [darkness]
+    cost: 3
+    keywords: [charger]
+    text: "自分のシールドを１つ手札に戻す。ただし、その「S・トリガー」は使えない。チャージャー（この呪文を唱えた後、墓地に置くかわりにマナゾーンに置く）"
+    spell:
+      - {op: move, select: {zone: shield, owner: you, count: 1}, to: hand, reason: return}
+    source: {official: dmex10-020, review: pending, notes: "シールドを手札に戻すので S・トリガーは発生しない（ブレイクではない）。チャージャーでマナ（闇）が1枚増える"}
+
+  - id: dm22ex1-025
+    name: 蒼狼の大王 イザナギテラス
+    types: [creature]
+    civs: [water]
+    cost: 4
+    power: 3000
+    races: [ナイト, オリジン, ポセイディア・ドラゴン]
+    keywords: [blocker]
+    text: "ブロッカー / このクリーチャーが出た時、自分の山札の上から５枚を見る。その中から１枚を手札に加え、残りを好きな順序で山札の下に置く。その後、コスト３以下の呪文を１枚、自分の手札からコストを支払わずに唱えてもよい。"
+    abilities:
+      - kind: trigger
+        when: {event: move, to: bz, subject: self}
+        effect:
+          - {op: choose, select: {zone: deck, owner: you, from_top: 5}, as: seen}
+          - {op: move, select: {ref: seen, count: 1, look: true}, to: hand, reason: put}
+          - {op: move, select: {ref: seen}, to: deck, reason: put, position: bottom}
+          - op: play_free
+            select: {zone: hand, owner: you, filter: {types: [spell], cost_le: 3}, count: 1, up_to: true}
+    source: {official: dm22ex1-025, review: pending, notes: "「好きな順序で」の順番選択は未実装（元の順に下へ）。5枚見る時に山札が5枚未満なら見られる分だけ"}

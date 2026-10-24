@@ -232,7 +232,9 @@ class TurnSearch:
             leaf = self._rollout(eng)
             return evaluate(leaf, self.me, self.w), leaf
         h, ctr = abstract(eng, "in_turn")
-        tkey = (h, tuple(sorted(ctr.items())))
+        # マナは枚数だけでなく何が残っているか（文明）も区別する。払い方の違いで闇マナが残るか否かが変わる
+        mana_left = tuple(sorted((c.defn, c.tapped) for c in (eng.s.cards[x] for p in (0, 1) for x in eng.s.zones["mana"][p])))
+        tkey = (h, tuple(sorted(ctr.items())), mana_left)
         cert = det.observe(eng)
         if cert is not None and _is_burn(cert, self.me):
             # 山札を削るだけのループ: 勝ちにつながるかは分からないので、山札を残り1枚まで削った線（遅く抜ける）を試す。

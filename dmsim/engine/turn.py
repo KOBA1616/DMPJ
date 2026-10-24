@@ -97,7 +97,7 @@ class TurnMixin:
         cost: 実行時に確定したコスト（進化元数の軽減など）。指定なければカード定義のコスト。"""
         d = self.cdef(cid).face(face)
         eff = d.cost if cost is None else cost
-        if eff == 0:
+        if eff == 0 and not d.civs:
             return [[]]
         untapped = [c for c in self.zlist("mana", p) if not self.s.cards[c].tapped]
         if len(untapped) < len(d.civs) or sum(self.cdef(c).mana for c in untapped) < eff:
@@ -126,7 +126,21 @@ class TurnMixin:
             for k in range(min(cap, (eff - total) // mana[i] if mana[i] else len(need) - zeros), -1, -1):
                 dfs(i + 1, cnt + [k], total + k * mana[i], zeros + (0 if mana[i] else k))
 
-        dfs(0, [], 0, 0)
+        def floor_dfs(i, cnt, left):
+            """112.2b: コストが文明の数を下回ったら文明の支払いを優先する（マナの数値の合計は問わない）。"""
+            if len(out) >= limit:
+                return
+            if i == len(names):
+                if left == 0 and civ_ok(cnt):
+                    out.append([c for n, k in zip(names, cnt) for c in groups[n][:k]])
+                return
+            for k in range(min(len(groups[names[i]]), left), -1, -1):
+                floor_dfs(i + 1, cnt + [k], left - k)
+
+        if eff < len(need):
+            floor_dfs(0, [], len(need))
+        else:
+            dfs(0, [], 0, 0)
         return out
 
     def play_task(self, cid, p, free, face=None, st=False) -> dict:
