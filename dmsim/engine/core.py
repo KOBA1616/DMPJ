@@ -216,7 +216,7 @@ class Engine(SelectorMixin, EventMixin, InterpreterMixin, TurnMixin, CombatMixin
         d = self.fdef(cid, face)
         ch = {"power": d.power, "cost": d.cost, "civs": list(d.civs), "types": list(d.types),
               "races": list(d.races), "keywords": set(d.keywords), "name": d.name,
-              "allow": [], "deny": [], "breaks": 1}
+              "allow": [], "deny": [], "breaks": 1, "break_opts": []}
         own = self.abilities(cid, "static") if face is None else list(enumerate(d.abilities))
         mods = [ab["mod"] for _, ab in own
                 if ab["kind"] == "static" and ab.get("affects") == "self" and ab.get("zone", "bz") == c.zone and "mod" in ab]
@@ -241,6 +241,8 @@ class Engine(SelectorMixin, EventMixin, InterpreterMixin, TurnMixin, CombatMixin
             ch["keywords"].update(m.get("grant", []))
             ch["allow"] += m.get("allow", [])
             ch["deny"] += m.get("deny", [])
+            if "breaks" in m:   # ブレイカー能力ごとのブレイク数（509.2b）。使う能力は攻撃時に選ぶ（509.2c）
+                ch["break_opts"].append(m["breaks"])
             ch["breaks"] = max(ch["breaks"], m.get("breaks", 1))
         ch["keywords"] = sorted(ch["keywords"])   # 状態（LKI）に入るので JSON にできる形で返す
         return ch

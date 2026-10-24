@@ -159,11 +159,18 @@ def h_attack(eng, t):
             eng._push(*eng._battle(att, t["target"]))
         return None
     if ph == 4:                                               # 509 ダイレクトアタック
+        if t["target"] == "player" and eng.zlist("shield", 1 - a):
+            # 509.2c 複数のブレイカー能力を持つなら、どの能力を使うかを選ぶ（どれも使わずに1つだけは選べない）
+            counts = sorted(set(eng.chars(att[0])["break_opts"])) or [1]
+            opts = [{"key": f"breaks:{n}"} for n in counts]
+            ans, d = eng.ask(t, a, "choose_breaker", opts)
+            if d:
+                return d
+            n = counts[ans[0]]
         t["phase"] = 5
         if t["target"] == "player":
             shields = eng.zlist("shield", 1 - a)
             if shields:
-                n = eng.chars(att[0])["breaks"]
                 eng._push({"t": "break", "victim": 1 - a, "by": a, "count": n, "phase": 0, "in_effect": False})
             else:
                 s.result = {"winner": a, "reason": "direct_attack", "turn": s.turn}   # 509.1 / 703.4a

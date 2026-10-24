@@ -332,3 +332,41 @@ def test_both_players_cards_enter_turn_player_first(rr):
     e.advance()
     first, second = sorted(e.bz_tops(), key=lambda c: e.s.cards[c].entered_seq)
     assert e.s.cards[first].owner == 1 and e.s.cards[second].owner == 0
+
+
+# ---- 509.2 ブレイク数 / 609.9 置換後のイベント ----
+
+def test_multiple_breaker_abilities_choose_one(rr):
+    """509.2c W・ブレイカーとT・ブレイカーを同時に持つなら、どちらかの能力を選ぶ。W を選べば2つブレイクする。"""
+    e = setup(rr, {"bz": ["R017"]}, {"shield": ["T001"] * 5})
+    answer(e, "attack", "attack:R017:player")
+    d = e.advance()
+    assert d["kind"] == "choose_breaker" and d["player"] == 0
+    assert keys(d) == ["breaks:2", "breaks:3"]      # 1つだけブレイクは選べない
+    e.answer([0])
+    d = e.advance()
+    assert d["kind"] == "choose_shields" and d["min"] == d["max"] == 2
+
+
+def test_single_breaker_ability_needs_no_choice(rr):
+    """509.2b W・ブレイカー1つだけなら選択なしで2つブレイクする。"""
+    e = setup(rr, {"bz": ["T005"]}, {"shield": ["T001"] * 5})
+    answer(e, "attack", "attack:T005:player")
+    d = e.advance()
+    assert d["kind"] == "choose_shields" and d["max"] == 2
+
+
+def test_replacement_events_apply_with_the_bundle(rr):
+    """609.9 置換後のイベントは、置換されなかったイベントと同時（1つの束）に適用する。"""
+    e = setup(rr, {"bz": ["T007", "T001"], "hand": ["R002"], "mana": ["T008"]})
+    batches = []
+    orig = e.apply_batch
+    e.apply_batch = lambda evs: (batches.append([(x["to"], x["subject"][0]) for x in evs if x["ev"] == "move"]),
+                                 orig(evs))[1]
+    answer(e, "charge", "pass")
+    answer(e, "main", "play:R002")
+    answer(e, "choose_replacement", "replace:T007:0")
+    e.advance()
+    both = [b for b in batches if {"mana", "graveyard"} <= {z for z, _ in b}]
+    assert len(both) == 1
+    assert names(e, "mana", 0).count("T007") == 1

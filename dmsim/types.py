@@ -136,7 +136,14 @@ class EventTask(TypedDict):
     rp: int
     skip: list[int]
     instead: list[dict]
+    captured: list[Event]
+    applying: bool
     answer: NotRequired[list[int]]
+
+
+class CaptureTask(TypedDict):
+    t: Literal["capture"]
+    evs: list[Event]
 
 
 class EffectTask(TypedDict):
@@ -189,6 +196,7 @@ class PlayTask(TypedDict):
     face: NotRequired[int]
     evo: NotRequired[Ref]                # 進化元（801）
     st: NotRequired[bool]                # S・トリガーとして実行する（101.4g）
+    resolve_to: NotRequired[str]         # 解決後の置き場所（play_free の resolve_to）
     answer: NotRequired[list[int]]
 
 
