@@ -96,10 +96,10 @@ Claude / Actions ──jobs/pending/*.yaml──▶ llm-jobs ブランチ ◀─
 
 ### 自動化（タスクスケジューラ）
 
-登録前に `tools\run_worker.bat` をダブルクリックか PowerShell で1回動かし、`%USERPROFILE%\.dmpj-worker\log.txt` にエラーが無いことを確認する。そのうえで10分ごとに実行する。PowerShell で（`C:\path\DMPJ` は clone した場所）:
+登録前に `tools\run_worker.bat` をダブルクリックか PowerShell で1回動かし、`%USERPROFILE%\.dmpj-worker\log.txt` にエラーが無いことを確認する。そのうえで10分ごとに実行する。PowerShell で（`C:\path\DMPJ` は clone した場所。パスに空白がある場合は、PowerShell では `/TR '"C:\my path\DMPJ\tools\run_worker.bat"'` と外側を単引用符にする）:
 
 ```
-schtasks /Create /SC MINUTE /MO 10 /TN "dmpj-worker" /TR "\"C:\path\DMPJ\tools\run_worker.bat\"" /F
+schtasks /Create /SC MINUTE /MO 10 /TN "dmpj-worker" /TR C:\path\DMPJ\tools\run_worker.bat /F
 ```
 
 - ログ: `%USERPROFILE%\.dmpj-worker\log.txt`。止める: `schtasks /Delete /TN "dmpj-worker" /F`。
