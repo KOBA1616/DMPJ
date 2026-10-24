@@ -73,14 +73,22 @@ def bundles_of(rules) -> list[Bundle]:
     for cd in rules.cards.values():
         faces = cd.faces or [cd]
         for f in faces:
+            if f.free_if and f.is_creature():   # G・ゼロ: 手札にある間、コストなしでバトルゾーンへ（手札に入ったことが前提）
+                out.append(Bundle(cd.id, cd.name, "enter:hand", True, [Move("hand", "bz", True)], origin="free"))
             for ab in f.abilities:
                 w = ab.get("when") or {}
-                if ab.get("kind") != "trigger" or w.get("event") != "move" or "to" not in w:
+                if ab.get("kind") != "trigger":
                     continue
                 subj = w.get("subject")
+                if w.get("event") == "summon":   # 「出した時」（召喚・踏み倒し）はバトルゾーンに入ったこと
+                    premise = "enter:bz"
+                elif w.get("event") == "move" and "to" in w:
+                    premise = f"enter:{w['to']}"
+                else:
+                    continue
                 ms = _moves_of(ab.get("effect", []))
                 if ms:
-                    out.append(Bundle(cd.id, cd.name, f"enter:{w['to']}", subj == "self", ms))
+                    out.append(Bundle(cd.id, cd.name, premise, subj == "self", ms))
             if f.spell:
                 ms = _moves_of(f.spell)
                 if ms:

@@ -1,6 +1,6 @@
 """ゾーン変換グラフ（静的な解析）が、動的に検出したループと同じ差分を出すこと。"""
 from dmsim import scenario as sc
-from dmsim.loop import LoopDetector
+from dmsim.loop import LoopDetector, verify
 from dmsim.zone_graph import find_cycles
 
 from test_saga_loop import SAGA, saga_policy
@@ -46,3 +46,39 @@ def test_dig_and_speed_metrics(rules):
     assert dig(rules.cards["dm22ex1-025"]) >= 5            # イザナギテラス: 山札の上5枚
     assert speed(rules.cards["dm22ex1-025"]) == 4
     assert dig_total(rules, ["dm22ex1-025"] * 2) == 2 * dig(rules.cards["dm22ex1-025"])
+
+
+MORSE, MAGNUM, KUZUOTOKO = "dm16-027", "dm20-013", "dm04-028"
+
+
+def test_graph_finds_morse_magnum_kuzuotoko_cycle(rules):
+    """G・ゼロ（free_if）と「出した時」（summon）の誘発も辿り、モールス＋マグナム＋屑男を循環として挙げる。"""
+    trio = sorted([MORSE, MAGNUM, KUZUOTOKO])
+    assert any(c.cards == trio for c in find_cycles(rules, max_cards=3, max_len=6))
+
+
+def test_morse_magnum_kuzuotoko_is_a_draw_loop(rules):
+    """静的に挙がった組を動かすと、1周ごとに山札-1・手札+1（無限ドロー）の骨格回帰になる。"""
+    eng = sc.build(rules, {"p0": {"bz": [MAGNUM, KUZUOTOKO], "hand": [MORSE, "T001", "T001", "T001"],
+                                  "mana": ["dm01-027"] * 4, "graveyard": ["dm01-080"] * 6},
+                           "p1": {}, "deck_size": 30, "deck_left": [30, 30], "seed": 1})
+
+    def policy(d):
+        k = [o["key"] for o in d["options"]]
+        if d["kind"] == "charge":
+            return [k.index("pass")]
+        for pref in (f"play:{MORSE}:free", f"pending:normal:{MAGNUM}", f"bz:{MORSE}", f"graveyard:{MORSE}", "yes"):
+            for i, x in enumerate(k):
+                if x.startswith(pref):
+                    return [i]
+        return [0]
+
+    det = LoopDetector(me=0, period="in_turn", report_all=True, hand_keys={MORSE})
+    cert = None
+    while cert is None:
+        d = eng.advance()
+        cert = det.observe(eng)
+        if cert is None:
+            eng.answer(policy(d))
+    assert cert.delta == {"deck:0": -1, "hand:0": 1}
+    assert verify(eng, cert, times=2).verified == 2

@@ -45,7 +45,7 @@ def build() -> dict:
         "power": {"type": "integer"}, "races": {"type": "array", "items": {"type": "string"}},
         "keywords": {"type": "array", "items": {"enum": sorted(keywords)}},
         "abilities": {"type": "array", "items": ref("ability")}, "spell": ref("ops"),
-        "evolve_from": ref("filter"),
+        "evolve_from": ref("filter"), "free_if": ref("cond"),
     }
     return {
         "$schema": "https://json-schema.org/draft/2020-12/schema",
@@ -85,7 +85,8 @@ def build() -> dict:
                 "additionalProperties": False, "propertyNames": {"enum": sorted(MOD_KEYS)}},
             "when": {"type": "object", "properties": {
                 "event": {"enum": sorted(EVENTS)}, "from": {"enum": sorted(zones)}, "to": {"enum": sorted(zones)},
-                "reason": {"enum": sorted(REASONS)}, "player": {"enum": ["you", "opp"]}, "subject": {}},
+                "reason": {"enum": sorted(REASONS)}, "player": {"enum": ["you", "opp"]}, "unpaid": {"type": "boolean"},
+                "subject": {}},
                 "required": ["event"], "additionalProperties": False},
             "ability": {"type": "object", "properties": {
                 "kind": {"enum": ["trigger", "replace", "static", "declare"]}, "when": ref("when"),

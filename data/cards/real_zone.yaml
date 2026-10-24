@@ -1,0 +1,265 @@
+# 実カード（ゾーン間移動系）。公式カード詳細ページのテキストを効果DSLに変換したもの（review: pending）。
+# 原文は data/cards/raw/official_20261024d.jsonl。選定の観点は docs/card-selection.md。
+# 追加した語彙: カード側 free_if（G・ゼロ: 条件を満たすとコストを支払わずに召喚できる）、
+#   when の unpaid（「マナゾーンのカードをタップせずに」召喚/詠唱した時）。
+cards:
+  - id: dm20-027
+    name: 封魔フォラス
+    types: [creature]
+    civs: [darkness]
+    cost: 5
+    power: 9000
+    races: [グランド・デビル]
+    keywords: [double_breaker]
+    text: "自分の他のクリーチャーをバトルゾーンに出した時、そのクリーチャーを破壊する。 / 自分のマナゾーンにカードを置いた時、そのカードを墓地に置く。 / W・ブレイカー"
+    abilities:
+      - kind: trigger
+        when: {event: move, to: bz, subject: {owner: you, other: true}}
+        effect:
+          - {op: destroy, select: {ref: event.subject}}
+      - kind: trigger
+        when: {event: move, to: mana, subject: {owner: you}}
+        effect:
+          - {op: move, select: {ref: event.subject}, to: graveyard, reason: put}
+    source: {official: dm20-027, review: pending, notes: "ゾーン変換の核: 出したクリーチャーが破壊される／マナに置いたカードが墓地へ行く（墓地肥やし）。「出した時」は召喚・踏み倒し・墓地やマナからの登場すべて（move to bz）で誘発する"}
+
+  - id: dm20-011
+    name: 黒神龍ヴァイザス
+    types: [creature]
+    civs: [darkness]
+    cost: 5
+    power: 6000
+    races: [ドラゴン・ゾンビ]
+    keywords: [double_breaker]
+    text: "このクリーチャーが攻撃する時、自分のシールドを１枚選び、手札に加える。ただし、その「S・トリガー」は使えない。 / W・ブレイカー"
+    abilities:
+      - kind: trigger
+        when: {event: attack, subject: self}
+        effect:
+          - {op: move, select: {zone: shield, owner: you, count: 1}, to: hand, reason: return}
+    source: {official: dm20-011, review: pending, notes: "シールド→手札。S・トリガーを使えない扱いは reason: return（コダマダンス・チャージャーと同じ）"}
+
+  - id: dm20-013
+    name: 百発人形マグナム
+    types: [creature]
+    civs: [darkness]
+    cost: 4
+    power: 4000
+    races: [デスパペット]
+    text: "マナゾーンのカードをタップせずに、誰かがクリーチャーまたはクロスギアをバトルゾーンに出した時または呪文を唱えた時、そのプレイヤーは自分自身のクリーチャーを１体選んで破壊する。"
+    abilities:
+      - &mag_summon_you
+        kind: trigger
+        when: {event: summon, unpaid: true, player: you}
+        effect:
+          - {op: destroy, select: {zone: bz, owner: you, filter: {types: [creature]}, count: 1}}
+      - &mag_summon_opp
+        kind: trigger
+        when: {event: summon, unpaid: true, player: opp}
+        effect:
+          - {op: destroy, select: {zone: bz, owner: opp, chooser: opp, filter: {types: [creature]}, count: 1}}
+      - &mag_cast_you
+        kind: trigger
+        when: {event: cast, unpaid: true, player: you}
+        effect:
+          - {op: destroy, select: {zone: bz, owner: you, filter: {types: [creature]}, count: 1}}
+      - &mag_cast_opp
+        kind: trigger
+        when: {event: cast, unpaid: true, player: opp}
+        effect:
+          - {op: destroy, select: {zone: bz, owner: opp, chooser: opp, filter: {types: [creature]}, count: 1}}
+    source: {official: dm20-013, review: pending, notes: "「クロスギア」は未対応（クロスギアはモデルに無い）。タップせずに=コストを支払わずに実行（unpaid）として扱う。自分が踏み倒すと自分のクリーチャーが破壊される（盗掘人形モールス等とのループ・縛りの部品）"}
+
+  - id: dm16-027
+    name: 盗掘人形モールス
+    types: [creature]
+    civs: [darkness]
+    cost: 5
+    power: 2000
+    races: [デスパペット]
+    free_if: {cmp: [{count: {zone: graveyard, owner: you, filter: {types: [creature]}}}, ">=", 6]}
+    text: "G・ゼロ-自分の墓地にクリーチャーが６体以上あれば、このクリーチャーをコストを支払わずに召喚してもよい。 このクリーチャーをバトルゾーンに出した時、クリーチャーを１体、自分の墓地から自分の手札に戻してもよい。"
+    abilities:
+      - kind: trigger
+        when: {event: move, to: bz, subject: self}
+        effect:
+          - op: may
+            body:
+              - {op: move, select: {zone: graveyard, owner: you, filter: {types: [creature]}, count: 1}, to: hand, reason: return}
+    source: {official: dm16-027, review: pending, notes: "G・ゼロはカード側の free_if で表現（メインステップの選択肢に :free が増える）。マグナムと組むと踏み倒しのたびにクリーチャーを破壊→墓地が増える"}
+
+  - id: dm20-018
+    name: 緑神龍ミルドガルムス
+    types: [creature]
+    civs: [nature]
+    cost: 7
+    power: 5000
+    races: [アース・ドラゴン]
+    text: "このクリーチャーをバトルゾーンに出した時、相手のマナゾーンからカードを１枚選び、持ち主の墓地に置く。その後、自分の山札の上から１枚目を自分のマナゾーンに置く。"
+    abilities:
+      - kind: trigger
+        when: {event: move, to: bz, subject: self}
+        effect:
+          - {op: move, select: {zone: mana, owner: opp, count: 1}, to: graveyard, reason: put}
+          - {op: mana_put, select: {zone: deck, owner: you, from_top: 1}}
+    source: {official: dm20-018, review: pending, notes: "相手マナ→墓地、自分の山札→マナ。ターンをまたぐロック（マナ破壊）と山札の消費の部品"}
+
+  - id: dm20-020
+    name: 偉大なる恵み
+    types: [spell]
+    civs: [nature]
+    cost: 4
+    keywords: [s_trigger]
+    text: "S・トリガー  クリーチャーを３体まで、自分の墓地からマナゾーンに置く。"
+    spell:
+      - op: mana_put
+        select: {zone: graveyard, owner: you, filter: {types: [creature]}, count: 3, up_to: true}
+    source: {official: dm20-020, review: pending, notes: "公式ページの文明欄が空だったが、他の表示から自然と判断（要確認）。墓地→マナ。封魔フォラスのマナ→墓地と補完関係"}
+
+  - id: dm20-033
+    name: ザッピング・ビーンズ
+    types: [creature]
+    civs: [nature]
+    cost: 5
+    power: 4000
+    races: [ワイルド・ベジーズ]
+    text: "このクリーチャーをバトルゾーンに出した時、相手はバトルゾーンにある自分自身のクリーチャーを１体選び、持ち主のマナゾーンに置く。 / このクリーチャーが破壊された時、相手は進化ではないクリーチャーを１体、自分自身のマナゾーンから選び、バトルゾーンに出す。"
+    abilities:
+      - kind: trigger
+        when: {event: move, to: bz, subject: self}
+        effect:
+          - {op: mana_put, select: {zone: bz, owner: opp, chooser: opp, filter: {types: [creature]}, count: 1}}
+      - kind: trigger
+        when: {event: move, from: bz, to: graveyard, reason: destroy, subject: self}
+        effect:
+          - {op: move, select: {zone: mana, owner: opp, chooser: opp, filter: {types: [creature], not_types: [evolution]}, count: 1}, to: bz, reason: put}
+    source: {official: dm20-033, review: pending, notes: "相手の盤面→マナ→盤面の往復を作る（相手が得をする側のデメリット付き効果）。マナに置かれたカードの数・踏み倒しの連鎖で封魔フォラス等と衝突する"}
+
+  - id: dm20-008
+    name: スローリー・チェーン
+    types: [spell]
+    civs: [light]
+    cost: 4
+    keywords: [s_trigger]
+    resolve_to: shield
+    text: "S・トリガー このターン、クリーチャーは攻撃することができない。 この呪文を裏向きにしてシールドに加える。その後、自分のシールドを１枚選び、墓地に置く。"
+    spell:
+      - op: modify
+        select: {zone: bz, owner: any, filter: {types: [creature]}, count: all}
+        dynamic: true
+        mod: {deny: [attack_player, attack_creature]}
+        duration: end_of_turn
+      - {op: move, select: {ref: self}, to: shield, reason: put}
+      - {op: move, select: {zone: shield, owner: you, count: 1}, to: graveyard, reason: put}
+    source: {official: dm20-008, review: pending, notes: "手札/シールド→シールド→墓地。呪文自身がシールドに加わった後に、シールド1枚（自分自身を含む）を墓地へ。「このターン、クリーチャーは攻撃できない」は後から出たクリーチャーにも及ぶ（dynamic）"}
+
+  - id: dm20-029
+    name: 怨念集結
+    types: [spell]
+    civs: [darkness]
+    cost: 4
+    keywords: [s_trigger]
+    text: "S・トリガー 自分の墓地にあるカードの枚数と、コストが同じかそれ以下の相手のクリーチャーを１体破壊する。"
+    spell:
+      - op: destroy
+        select: {zone: bz, owner: opp, filter: {types: [creature], cost_le: {count: {zone: graveyard, owner: you}}}, count: 1}
+    source: {official: dm20-029, review: pending, notes: "墓地の枚数を数える除去（墓地肥やしの見返り）"}
+
+  - id: dm20-043
+    name: シークレット・クロックタワー
+    types: [spell]
+    civs: [water]
+    cost: 2
+    keywords: [s_trigger]
+    text: "S・トリガー 自分の山札の上から３枚を見る。その中から１枚を手札に加え、１枚を山札の一番下に戻し、残りの１枚を山札の一番上に置く。"
+    spell:
+      - {op: move, select: {zone: deck, owner: you, from_top: 3, count: 1, look: true}, to: hand, reason: put}
+      - {op: move, select: {zone: deck, owner: you, from_top: 2, count: 1, look: true}, to: deck, reason: put, position: bottom}
+    source: {official: dm20-043, review: pending, notes: "山札の上3枚の並べ替え＋手札へ。山札が3枚未満の場合は見られる枚数だけ。山札の枚数は変わらない（-1+手札+1）"}
+
+  - id: dm20-046
+    name: 毒霧のケンプラー
+    types: [creature]
+    civs: [darkness]
+    cost: 4
+    power: 2000
+    races: [ブレイブ・スピリット]
+    text: "自分のティラノ・ドレイクがバトルに勝った時、クリーチャーを１体、自分の墓地から手札に戻してもよい。"
+    abilities:
+      - kind: trigger
+        when: {event: battle_win, subject: {owner: you, filter: {race_has: ティラノ・ドレイク}}}
+        effect:
+          - op: may
+            body:
+              - {op: move, select: {zone: graveyard, owner: you, filter: {types: [creature]}, count: 1}, to: hand, reason: return}
+    source: {official: dm20-046, review: pending}
+
+  - id: dm20-042
+    name: アクア・エスコート
+    types: [creature]
+    civs: [water]
+    cost: 4
+    power: 6000
+    races: [リキッド・ピープル]
+    keywords: [blocker, cannot_attack]
+    text: "ブロッカー / このクリーチャーは攻撃することができない。 / このクリーチャーをバトルゾーンに出した時、自分のクリーチャーを１体、バトルゾーンから手札に戻す。"
+    abilities:
+      - kind: trigger
+        when: {event: move, to: bz, subject: self}
+        effect:
+          - {op: bounce, select: {zone: bz, owner: you, filter: {types: [creature]}, count: 1}}
+    source: {official: dm20-042, review: pending, notes: "自分自身も戻せる（バウンス先を自分にすれば出し直しの部品。「出た時」の再利用）"}
+
+  - id: dm20-053
+    name: 秘護精マニトゥス
+    types: [creature]
+    civs: [nature]
+    cost: 3
+    power: 2000
+    races: [セイント・ヘッド]
+    text: "自分のアーク・セラフィムがバトルに勝った時、自分の山札の上から２枚を自分のマナゾーンに加える。"
+    abilities:
+      - kind: trigger
+        when: {event: battle_win, subject: {owner: you, filter: {race_has: アーク・セラフィム}}}
+        effect:
+          - {op: mana_put, select: {zone: deck, owner: you, from_top: 2}}
+    source: {official: dm20-053, review: pending, notes: "山札→マナの量を稼ぐ部品"}
+
+  - id: dm23-035
+    name: 曲芸メイド・リン・ララバイ
+    types: [creature]
+    civs: [nature]
+    cost: 4
+    power: 1000
+    races: [ドリームメイト]
+    text: "このクリーチャーをバトルゾーンに出した時、各プレイヤーは自分自身の山札の上から１枚目を、それぞれのマナゾーンに置く。 / L・ゲート：ドリームメイト(このクリーチャーが破壊される時、墓地に置くかわりに、ドリームメイトを１体、自分の墓地から手札に戻してもよい。そうした場合、このクリーチャーを山札の一番下に置く)"
+    abilities:
+      - kind: trigger
+        when: {event: move, to: bz, subject: self}
+        effect:
+          - {op: mana_put, select: {zone: deck, owner: you, from_top: 1}}
+          - {op: mana_put, select: {zone: deck, owner: opp, from_top: 1}}
+      - kind: replace
+        when: {event: move, from: bz, to: graveyard, reason: destroy, subject: self}
+        if: {exists: {zone: graveyard, owner: you, filter: {races: [ドリームメイト]}}}
+        optional: true
+        instead:
+          - {op: move, select: {zone: graveyard, owner: you, filter: {races: [ドリームメイト]}, count: 1}, to: hand, reason: return}
+          - {op: move, select: {ref: event.subject}, to: deck, reason: put, position: bottom}
+    source: {official: dm23-035, review: pending, notes: "両プレイヤーの山札が減る（山札切れ戦略の部品）。L・ゲートは置換で表現（墓地のドリームメイトを手札に戻し、自身を山札の底へ）。races は完全一致の種族名なのでドリームメイト単独の種族のみ対象"}
+
+  - id: dm04-028
+    name: 屑男
+    types: [creature]
+    civs: [darkness]
+    cost: 5
+    power: 2000
+    races: [ヘドリアン]
+    text: "このクリーチャーがバトルゾーンにある間、他のクリーチャーがバトルゾーンから墓地に置かれるたびに、カードを１枚引いてもよい。"
+    abilities:
+      - kind: trigger
+        when: {event: move, from: bz, to: graveyard, subject: {other: true}}
+        effect:
+          - op: may
+            body: [{op: draw, count: 1}]
+    source: {official: dm04-028, review: pending, notes: "破壊を伴う入れ替えループ（盗掘人形モールス＋百発人形マグナム等）に載せるとドローが増える資源ループになる。相手のクリーチャーが墓地に置かれた時も引ける"}

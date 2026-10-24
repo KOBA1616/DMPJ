@@ -42,6 +42,8 @@ INSTRUCTIONS = """\
 - 革命チェンジ・ニンジャ・ストライク等の宣言は kind: declare（既存カードの例に倣う）。
 - text には原文から括弧書きの注釈を除いたものを「 / 」区切りで書く。
 - 表せない・近似した点は source.notes に日本語で具体的に書く。表せない能力を黙って落とさない。
+- 語彙が足りず表せない効果は source.unsupported に [{need: <足せばよい op・語彙の案（英語の識別子）>, text: <該当する原文>}] で書く。
+  無い op を effect に書いて検査を落とすより、近似して notes に書き、足りない語彙を unsupported に残す。
 - source は {official: <id>, review: pending} とし、必要なら notes を足す。
 - 原文の表現が古い（例: 「墓地に置く」）場合も原文どおりに変換し、気づいた点は notes に書く。
 """
@@ -143,16 +145,20 @@ def main(argv=None):
     import anthropic    # 変換するときだけ必要
     client = anthropic.Anthropic()
     tables = load_tables()
+    n_rej = 0
     for r in rows:
         try:
             cards.append(convert(client, r, tables, sysp, a.effort))
         except DefError as e:
-            print(f"{r['id']}: {e}", file=sys.stderr)
+            n_rej += 1
+            print(f"✗ {r['id']} {r.get('name', '')}: {e}\n    原文: {r.get('text', '')[:80]!r}", file=sys.stderr)
             with open(a.rejects, "a", encoding="utf-8") as f:
                 f.write(json.dumps({**r, "error": str(e)}, ensure_ascii=False) + "\n")
             continue
         out.write_text("# convert_cards.py の出力（review: pending）。確認後に real.yaml へ移す。\n"
                        + yaml.safe_dump({"cards": cards}, allow_unicode=True, sort_keys=False), encoding="utf-8")
+    print(f"変換 {len(rows) - n_rej}/{len(rows)} 件、検査を通らず {n_rej} 件（{a.rejects}）。"
+          f"不足語彙の集計: python tools/report_gaps.py", file=sys.stderr)
 
 
 if __name__ == "__main__":
