@@ -25,8 +25,9 @@ python -m dmsim.solitaire --deck deck.yaml --games 1000 --turns 4 --workers 4   
 - `dmsim/scenario.py` 配置を指定した局面の作成（テストと開発者モードで共用）
 - `dmsim/devserver.py`＋`dmsim/web/` 開発者モード（標準ライブラリのHTTPサーバー）
 - `data/rules/*.yaml` ゾーン・キーワード・DSLマクロ・許可/禁止できる行為（permissions）・ターンのステップ列（turn）の定義
-- `data/cards/proto.yaml` 検証用の架空カード、`data/cards/real.yaml`・`data/cards/real_zone.yaml` 実カード（公式テキストを変換したもの。`source.review` で確認状態を持つ。
-  `real_zone.yaml` はゾーン間移動を補完し合うカード。G・ゼロは `free_if`、「マナをタップせずに」は `when.unpaid`）
+- `data/cards/proto.yaml` 検証用の架空カード、`data/cards/real.yaml`・`data/cards/real_zone.yaml`・`data/cards/real_vocab.yaml` 実カード（公式テキストを変換したもの。`source.review` で確認状態を持つ。
+  `real_zone.yaml` はゾーン間移動を補完し合うカード。G・ゼロは `free_if`、「マナをタップせずに」は `when.unpaid`。
+  `real_vocab.yaml` は語彙拡張: 「選ばれない」は mod の `deny: [be_chosen]`、「選んだ時」は event `choose`、「かわりにバトルさせてもよい」は event `battle` の置換＋`op: battle_substitute`）
 - `data/cards/raw/*.jsonl` 公式カード詳細ページから取った原文
 - `tests/test_saga_loop.py` 【絶望神サガループ】の検証（下記のループデッキの動作試験）
 - `tools/fetch_cards.py` 公式サイトからカードテキストを取る（手元のPCで実行。3秒以上の間隔・HTMLをキャッシュ）

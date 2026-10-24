@@ -144,9 +144,21 @@ class SelectorMixin:
         if mx == 0:
             return [], None
         chooser = self._rel(sel.get("chooser", "you"), env)
+        # 相手に選ばれないクリーチャーは候補から外す（be_chosen）。自分のカードを自分が選ぶ時は関係ない
+        cands = [c for c in cands if self.s.cards[c].zone != "bz" or self.s.cards[c].controller == chooser
+                 or self.permits(c, "be_chosen")]
+        n = min(n, len(cands))
+        mx = n
+        mn = 0 if sel.get("up_to") else mx
+        if mx == 0:
+            return [], None
         a, d = self.ask(t, chooser, "choose_cards", [self._card_option(c, sel.get("look", False)) for c in cands], mn, mx)
         if d:
             return None, d
         chosen = [cands[i] for i in a]
         t.setdefault("os", {})["chosen"] = chosen
+        picked = [c for c in chosen if self.s.cards[c].zone == "bz" and self.s.cards[c].controller != chooser]
+        for c in picked:   # 「相手がこのクリーチャーを選んだ時」。イベントの束は作らず、誘発だけを待機させる
+            self._collect_triggers({"ev": "choose", "subject": self.s.ref(c), "player": chooser,
+                                    "controller": self.s.cards[c].controller})
         return chosen, None

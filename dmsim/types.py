@@ -174,6 +174,7 @@ class AttackTask(TypedDict):
     cp: bool
     blocked: NotRequired[bool]
     decl: NotRequired[int]               # 使用宣言の段階（506.3b〜）
+    subbed: NotRequired[list[int]]       # 身代わりバトルの置換を済ませた側（0=攻撃側, 1=攻撃先）
     answer: NotRequired[list[int]]
 
 
