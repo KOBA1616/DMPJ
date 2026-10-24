@@ -1,0 +1,10 @@
+id: 20261024-164732-ee2b
+summary: '[ok] STATUS.md は最新'
+finished: '2026-10-24T16:52:08+00:00'
+status: ok
+text: STATUS.md は最新
+pr_comment: 'failed: HTTP 401: Bad credentials (https://api.github.com/graphql)
+
+  Try authenticating with:  gh auth login
+
+  '
