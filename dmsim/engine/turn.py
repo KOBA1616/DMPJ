@@ -80,7 +80,7 @@ class TurnMixin:
     def _can_play_face(self, cid, p, face) -> bool:
         d = self.cdef(cid).face(face)
         action = "summon" if d.is_creature() else "cast"
-        if not self.permits(cid, action):
+        if not self.permits(cid, action) or (d.is_creature() and not self.permits(cid, "enter_bz")):
             return False
         if "evolution" in d.types:
             srcs = self._evo_sources(cid, p, face)
@@ -275,7 +275,7 @@ def h_play(eng, t):
         return None
     d = eng.cdef(cid).face(face)
     action = "summon" if d.is_creature() else "cast"
-    if not eng.permits(cid, action):
+    if not eng.permits(cid, action) or (d.is_creature() and not eng.permits(cid, "enter_bz")):
         eng._pop(t)
         return None
     if "evolution" in d.types and "evo" not in t:

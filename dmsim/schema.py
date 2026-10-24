@@ -9,7 +9,7 @@ from __future__ import annotations
 
 import json
 
-from .defs import CARD_TYPES, CIVS, DURATIONS_FIXED, EVENTS, FILTER_KEYS, MOD_KEYS, POSITIONS, REASONS, \
+from .defs import CARD_TYPES, CIVS, DURATIONS_FIXED, EVENTS, FILTER_KEYS, MOD_KEYS, POSITIONS, REASONS, VIAS, \
     core_ops, load_tables
 
 
@@ -63,7 +63,8 @@ def build() -> dict:
             "filter": {"type": "object", "properties": {k: {} for k in sorted(FILTER_KEYS)},
                        "additionalProperties": False},
             "selector": {"type": "object", "properties": {
-                "zone": {"enum": sorted(zones)}, "owner": {"enum": ["you", "opp", "any"]}, "owner_of": {"type": "string"},
+                "zone": {"anyOf": [{"enum": sorted(zones) + ["any"]}, {"type": "array", "items": {"enum": sorted(zones)}}]},
+                "exlife_of": {"type": "string"}, "under_of": {}, "owner": {"enum": ["you", "opp", "any"]}, "owner_of": {"type": "string"},
                 "filter": ref("filter"),
                 "count": {"anyOf": [ref("expr"), {"const": "all"}]}, "up_to": {"type": "boolean"},
                 "from_top": ref("expr"), "chooser": {"enum": ["you", "opp"]}, "ref": {"type": "string"},
@@ -74,7 +75,8 @@ def build() -> dict:
             "cond": {"type": "object", "minProperties": 1, "maxProperties": 1, "properties": {
                 "exists": ref("selector"), "cmp": {"type": "array", "minItems": 3, "maxItems": 3},
                 "not": ref("cond"), "all": {"type": "array", "items": ref("cond")},
-                "any": {"type": "array", "items": ref("cond")}, "is_turn": {"enum": ["you", "opp"]}},
+                "any": {"type": "array", "items": ref("cond")}, "is_turn": {"enum": ["you", "opp"]},
+                "marked": {"type": "string"}},
                 "additionalProperties": False},
             "mod": {"type": "object", "properties": {
                 "power": {"type": "integer"}, "grant": {"type": "array", "items": {"enum": sorted(keywords)}},
@@ -86,7 +88,7 @@ def build() -> dict:
             "when": {"type": "object", "properties": {
                 "event": {"enum": sorted(EVENTS)}, "from": {"enum": sorted(zones)}, "to": {"enum": sorted(zones)},
                 "reason": {"enum": sorted(REASONS)}, "player": {"enum": ["you", "opp"]}, "unpaid": {"type": "boolean"},
-                "subject": {}},
+                "via": {"enum": sorted(VIAS)}, "subject": {}},
                 "required": ["event"], "additionalProperties": False},
             "ability": {"type": "object", "properties": {
                 "kind": {"enum": ["trigger", "replace", "static", "declare"]}, "when": ref("when"),

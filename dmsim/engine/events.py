@@ -78,6 +78,8 @@ class EventMixin:
                 return []   # 想定外のゾーンへ移っていたら、それ以上処理しない（400.8）
             cid = ev["subject"][0]
             c = s.cards[cid]
+            if ev["to"] == "bz" and c.zone != "hold" and not self.permits(cid, "enter_bz"):
+                return []   # 出せない（実行は h_play で先に確認している。効果で出す場合はここで止める）
             from_zone = ev.get("from") if c.zone == "hold" else c.zone
             lki = {"defn": c.defn, "face": c.face, "controller": c.controller, "zone": from_zone,
                    "tapped": c.tapped, "chars": self.chars(cid), "ref": list(ev["subject"])}   # 過去の状態を見る（603.5c）
@@ -103,6 +105,10 @@ class EventMixin:
                         s.cards[cid].under.append(x[0])
             out = [{"ev": "move", "subject": new, "lki": lki, "from": from_zone, "to": ev["to"],
                     "reason": ev["reason"], "controller": c.controller}]
+            if ev.get("via"):
+                out[0]["via"] = ev["via"]
+            if ev["to"] == "bz" and "ex_life" in self.chars(cid)["keywords"]:
+                out += self._exlife_shield(cid)
             if ev["reason"] == "summon":
                 out.append({"ev": "summon", "subject": new, "controller": c.controller, "player": c.controller,
                             "unpaid": bool(ev.get("unpaid"))})
@@ -129,12 +135,30 @@ class EventMixin:
             return [dict(ev)]
         raise ValueError(kind)
 
+    def _exlife_shield(self, cid: int) -> list[dict]:
+        """EXライフ: このクリーチャーを出す時、自分の山札の上から1枚目をシールド化し、このクリーチャーに紐付ける。
+        （総合ルール Ver.1.53 には定義がなく、公式カード・裁定に基づく。出た時の能力より先に済ませる）"""
+        s = self.s
+        p = s.cards[cid].controller
+        deck = s.zones["deck"][p]
+        if not deck:
+            return []
+        top = deck[0]
+        self._raw_move(top, "shield", "top")
+        s.cards[top].exlife_of = s.ref(cid)
+        return [{"ev": "move", "subject": s.ref(top), "lki": None, "from": "deck", "to": "shield",
+                 "reason": "put", "controller": p}]
+
     def _stack(self, top: int, base: int):
         """進化: base（とその下）を top の下に重ねる（801.1, 801.2）。同一のクリーチャーとして扱い、
         タップ状態と受けていた効果を引き継ぐ。進化クリーチャーは召喚酔いしない（801.3）。"""
         s = self.s
         t, b = s.cards[top], s.cards[base]
         old = s.ref(base)
+        for p in (0, 1):   # 進化元の EXライフシールドは進化後のクリーチャーに引き継がれる（2026-04-10 裁定）
+            for sh in s.zones["shield"][p]:
+                if s.cards[sh].exlife_of is not None and list(s.cards[sh].exlife_of) == old:
+                    s.cards[sh].exlife_of = s.ref(top)
         t.under = [base] + b.under
         for u in t.under:
             s.cards[u].top_of = top
@@ -216,7 +240,7 @@ class EventMixin:
     def _match_when(self, when, rec, env) -> bool:
         if when["event"] != rec["ev"]:
             return False
-        for k in ("from", "to", "reason"):
+        for k in ("from", "to", "reason", "via"):
             if k in when and rec.get(k) != when[k]:
                 return False
         if "unpaid" in when and bool(rec.get("unpaid")) != when["unpaid"]:   # マナをタップせずに（コストを支払わずに）

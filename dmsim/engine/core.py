@@ -184,7 +184,7 @@ class Engine(SelectorMixin, EventMixin, InterpreterMixin, TurnMixin, CombatMixin
             return ref in ce["affected"]
         f = ce["filter"]
         c = self.s.cards[cid]
-        if c.zone != f["zone"]:
+        if c.zone not in self.zones_of(f["zone"]):
             return False
         if f["owner"] != "any" and c.controller != f["owner"]:
             return False
@@ -323,6 +323,7 @@ class Engine(SelectorMixin, EventMixin, InterpreterMixin, TurnMixin, CombatMixin
             if self.cdef(cid).faces:
                 c.face = 0          # ツインパクトはクリーチャー側としてバトルゾーンにある（810.4）
         c.under, c.top_of = [], -1
+        c.exlife_of = None                          # 一度離れたシールドは紐付けが外れる
         dest = self.zlist(to, c.controller if self.zshared(to) else c.owner)
         if position == "top" and self.rules.zones[to]["ordered"]:
             dest.insert(0, cid)

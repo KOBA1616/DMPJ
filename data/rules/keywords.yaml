@@ -76,3 +76,15 @@ keywords:
             - op: put_under
               select: {zone: mana, owner: you, filter: {types: [creature]}, count: 1}
               onto: {zone: bz, owner: you, filter: {types: [evolution]}, count: 1}
+
+  # EXライフ: 出す時に山札の上1枚をシールド化して紐付け、離れる時はかわりにそのシールドを墓地に置く。
+  # シールド化は engine/events.py の _exlife_shield（出す時の状態定義。出た時の能力より先）。
+  # 公式総合ルール Ver.1.53 には定義がない（701.33b の例で名前が出るだけ）。公式カード・裁定による。
+  ex_life:
+    ja: EXライフ
+    abilities:
+      - kind: replace
+        when: {event: move, from: bz, subject: self}
+        if: {exists: {exlife_of: self}}
+        instead:
+          - {op: move, select: {exlife_of: self, count: 1}, to: graveyard, reason: put}

@@ -844,3 +844,38 @@ cards:
           - op: play_free
             select: {zone: hand, owner: you, filter: {types: [spell], cost_le: 3}, count: 1, up_to: true}
     source: {official: dm22ex1-025, review: pending, notes: "5枚見る時に山札が5枚未満なら見られる分だけ"}
+
+  - id: dm26ex4-sec015
+    name: 切札混成 ドギラダンテ刈
+    types: [creature]
+    civs: [light, water, fire, nature]
+    cost: 8
+    power: 13000
+    races: [ディスペクター, メガ・コマンド・ドラゴン, エンジェル・コマンド・ドラゴン]
+    keywords: [triple_breaker, ex_life]
+    text: "革命チェンジ：多色のコスト５以上のドラゴン / EXライフ / T・ブレイカー / 自分の多色クリーチャーすべてに「スピードアタッカー」を与える。 / このクリーチャーが出た時、このターン、相手はコスト７以下のクリーチャーを出せない。 / ファイナル革命：このクリーチャーが「革命チェンジ」によって出た時、そのターンに他の「ファイナル革命」を使っていなければ、カードを１枚引く。その後、コスト６以下の多色カードを１枚、自分の手札またはマナゾーンからコストを支払わずに実行してもよい。"
+    abilities:
+      - kind: declare
+        zone: hand
+        when: {event: attack, subject: {owner: you, filter: {multicolor: true, cost_ge: 5, race_has: ドラゴン}}}
+        effect:
+          - {op: swap, out: {ref: event.subject}, in: {ref: self}}
+      - kind: static
+        affects: {owner: you, filter: {types: [creature], multicolor: true}}
+        mod: {grant: [speed_attacker]}
+      - kind: trigger
+        when: {event: move, to: bz, subject: self}
+        effect:
+          - op: modify
+            select: {zone: any, owner: opp, filter: {types: [creature], cost_le: 7}}
+            mod: {deny: [enter_bz]}
+            dynamic: true
+      - kind: trigger
+        when: {event: move, to: bz, subject: self, via: revolution_change}
+        if: {not: {marked: final_revolution}}
+        effect:
+          - {op: mark, name: final_revolution}
+          - {op: draw, count: 1}
+          - op: play_free
+            select: {zone: [hand, mana], owner: you, filter: {multicolor: true, cost_le: 6}, count: 1, up_to: true}
+    source: {official: dm26ex4-sec015, review: pending, notes: "EXライフは総合ルール1.53に定義がなく、dmwiki の定義（出す時に山札の上1枚をシールド化して紐付け／離れる時はかわりにそのシールドを墓地へ／進化で引き継ぐ）に従った。ファイナル革命の『他のファイナル革命』は op mark final_revolution で判定（他のファイナル革命カードも同じ印を付ける）。出せない制限は enter_bz（召喚・効果・革命チェンジ）"}
