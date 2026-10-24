@@ -81,7 +81,7 @@ class _Cells(HTMLParser):
 
 def _clean_name(h3: str) -> tuple[str, str]:
     """「ヘル・スラッシュ(DM6 57/110)」→ (カード名, 収録番号)。括弧が無ければ番号は空。"""
-    m = re.match(r"^(.*?)\s*[(（]([^()（）]*\d+/\d+[^()（）]*)[)）]\s*$", h3)
+    m = re.match(r"^(.*?)\s*[(（]([^()（）]*\S/\S[^()（）]*)[)）]\s*$", h3)
     return (m.group(1).strip(), m.group(2).strip()) if m else (h3.strip(), "")
 
 
@@ -122,7 +122,21 @@ def parse(card_id: str, page: str) -> dict:
     out.update(segs[0])
     if len(segs) > 1:
         out["faces"] = [{"name": names[k][0] if k < len(names) else "", **segs[k]} for k in range(len(segs))]
-    return out
+    return repair(out)
+
+
+def repair(row: dict) -> dict:
+    """名前の末尾の収録表記（OR1/OR1 や ㊙12/㊙24 など）を外し、ツインパクトの面ごとの名前を「A / B」から分ける。"""
+    for r in [row, *row.get("faces", [])]:
+        r["name"], no = _clean_name(r.get("name", ""))
+        if no and not row.get("set_no"):
+            row["set_notation"] = no
+    faces = row.get("faces", [])
+    parts = [x.strip() for x in row["name"].split(" / ")]
+    if len(faces) == len(parts) > 1 and len({f["name"] for f in faces}) == 1:
+        for f, n in zip(faces, parts):
+            f["name"] = n
+    return row
 
 
 def missing_fields(row: dict) -> list[str]:
