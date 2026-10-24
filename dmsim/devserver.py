@@ -12,6 +12,7 @@
 from __future__ import annotations
 
 import argparse
+from dataclasses import asdict
 import json
 import re
 import threading
@@ -321,12 +322,33 @@ class App:
         self.rules = load_rules()
         self.sessions: dict[int, Session] = {}
         self.next_id = 1
+        self.playbacks: dict[int, object] = {}
 
     def _add(self, sess) -> dict:
         gid = self.next_id
         self.next_id += 1
         self.sessions[gid] = sess
         return {"gid": gid, **sess.view()}
+
+    def _pb_open(self, body: dict) -> dict:
+        """再生を開く。body は {record} / {record, cert, at, laps}（証明書の周回を記録につなげる）/
+        {deck, seed, first, turns, budget, opp_deck}（1局を回して記録にする。探索結果の勝ち筋を見る用）。"""
+        from .playback import Playback, cert_from_dict, record_with_cert
+        rec = body.get("record")
+        if rec is not None and body.get("cert"):
+            rec = record_with_cert(self.rules, rec, int(body["at"]), cert_from_dict(body["cert"]), int(body.get("laps", 1)))
+        elif rec is None:
+            from .solitaire import play_game
+            fp = int(body.get("first", 0))
+            deck = list(body["deck"])
+            opp = list(body.get("opp_deck") or ["T001"] * len(deck))
+            res, eng = play_game(self.rules, deck, opp, int(body.get("seed", 1)), first_player=fp,
+                                 max_turn=int(body.get("turns", 4)), budget=int(body.get("budget", 200)))
+            rec = make_record(eng, [deck, opp], int(body.get("seed", 1)), fp, note=json.dumps(asdict(res), ensure_ascii=False))
+        pid = self.next_id
+        self.next_id += 1
+        pb = self.playbacks[pid] = Playback(self.rules, rec)
+        return {"pid": pid, "record": rec, **pb.info}
 
     def handle(self, path: str, body: dict):
         if path == "/api/cards":
@@ -339,6 +361,10 @@ class App:
             return self._add(Session(self.rules, start))
         if path == "/api/load":
             return self._add(Session.from_record(self.rules, body["record"]))
+        if path == "/api/pb_open":
+            return self._pb_open(body)
+        if path == "/api/pb_frame":
+            return self.playbacks[int(body["pid"])].view_at(int(body["i"]))
         if path == "/api/review":
             set_review(body["id"], body["status"], body.get("note", ""))
             self.rules = load_rules()

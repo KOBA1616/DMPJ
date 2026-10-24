@@ -24,6 +24,7 @@ python -m dmsim.solitaire --deck deck.yaml --games 1000 --turns 4 --workers 4   
   シード付きの大量試行で「自分の Nターン目までのキル率」（95%信頼区間・キルの種類別）を出すハーネス
 - `dmsim/scenario.py` 配置を指定した局面の作成（テストと開発者モードで共用）
 - `dmsim/devserver.py`＋`dmsim/web/` 開発者モード（標準ライブラリのHTTPサーバー）
+- `dmsim/playback.py` 対戦記録の再生解析（ループの骨格・周回数・ストック量・勝ち筋）。開発者モードの「再生」タブが使う（読み取り専用）
 - `data/rules/*.yaml` ゾーン・キーワード・DSLマクロ・許可/禁止できる行為（permissions）・ターンのステップ列（turn）の定義
 - `data/cards/proto.yaml` 検証用の架空カード、`data/cards/real.yaml`・`data/cards/real_zone.yaml`・`data/cards/real_vocab.yaml` 実カード（公式テキストを変換したもの。`source.review` で確認状態を持つ。
   `real_zone.yaml` はゾーン間移動を補完し合うカード。G・ゼロは `free_if`、「マナをタップせずに」は `when.unpaid`。
