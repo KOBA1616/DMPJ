@@ -69,3 +69,13 @@ def test_repair_fixes_old_ids_and_marks_missing_fields():
            "cost": "2", "text": "x"}
     assert fc.repair(dict(old))["id"] == "dm23rp4x-or1" and "missing" not in fc.repair(dict(old))
     assert fc.repair(dict(old, text=""))["missing"] == ["text"]
+
+
+def test_cost_is_not_required_for_king_cells():
+    import sys
+    from pathlib import Path
+    sys.path.insert(0, str(Path(__file__).resolve().parent.parent / "tools"))
+    import fetch_cards as fc
+    row = {"name": "新世界王の権威", "card_type": "キング・セル", "civilization": "光", "cost": "", "text": "G・ストライク"}
+    assert fc.missing_fields(row) == []
+    assert fc.missing_fields(dict(row, card_type="呪文")) == ["cost"]

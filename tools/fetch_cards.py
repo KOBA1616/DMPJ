@@ -146,9 +146,14 @@ def repair(row: dict) -> dict:
     return row
 
 
+NO_COST_TYPES = {"キング・セル", "ルール・プラス", "禁断の鼓動"}   # 実データで確認した、コストの無いカードの種類
+
+
 def missing_fields(row: dict) -> list[str]:
     """取れていないはずの項目（自己点検用）。パワー・種族・マナは無いカードもあるので呪文以外のパワーだけ見る。"""
     need = ["name", "card_type", "civilization", "cost", "text"]
+    if row.get("card_type") in NO_COST_TYPES:
+        need.remove("cost")           # コストを持たないカード（キング・セルなど）
     if "クリーチャー" in row.get("card_type", ""):
         need.append("power")
     return [k for k in need if not row.get(k)]
