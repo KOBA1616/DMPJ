@@ -103,6 +103,15 @@ def candidates(eng: Engine, d: dict, w: Weights, cap: int = 6) -> list[list[int]
         return [[i] for i in order]
     keys = [o["key"] for o in d["options"]]
     out, seen = [], set()
+    if d["kind"] == "order_cards":          # 並べ替え: 元の順と次の順の2つまで（同じ意味キーの並びは1つ）
+        for perm in itertools.permutations(order):
+            sig = tuple(keys[i] for i in perm)
+            if sig not in seen:
+                seen.add(sig)
+                out.append(list(perm))
+                if len(out) >= min(cap, 2):      # 並びの違いで探索が膨らまないよう、元の順と次の順だけ試す
+                    break
+        return out
     for n in range(d["max"], d["min"] - 1, -1):
         for combo in itertools.combinations(order, n):
             sig = tuple(sorted(keys[i] for i in combo))

@@ -240,3 +240,5 @@ def test_task_shapes_are_checked(rules):
     e.s.tasks.append({"t": "effect", "ops": [], "pc": 0, "env": {}, "os": {}, "typo": 1})
     with pytest.raises(TypeError, match="extra=\\['typo'\\]"):
         e.advance()
+
+

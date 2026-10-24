@@ -104,3 +104,59 @@ def test_dragellion_needs_a_dark_mana_even_at_cost_zero(rules):
     base["p0"]["mana"] = ["dm01-080", "dm01-027"]
     e = sc.build(rules, base)
     assert e._can_play_face(next(iter(e.s.zones["hand"][0])), 0, None)
+
+
+def test_scripted_izanagi_via_saga_revival_keeps_one_card_and_makes_dark_mana(rules):
+    """koba の案: サガの効果で山札を2枚にし、最後のサガ効果で墓地のイザナギテラスを出す（4マナ払わない）。
+    イザナギが山札から1枚取って山札1枚→手札のコダマダンスを踏み倒して闇マナを作り→ドラゲリオン→置換勝利。"""
+    def policy(eng, d):
+        keys = [o["key"] for o in d["options"]]
+        if d["kind"] == "charge":
+            return [keys.index("pass")]
+        if d["kind"] == "choose_cards":
+            z = eng.s.cards[d["options"][0]["cid"]].zone
+            if z == "graveyard" and any(eng.s.cards[o["cid"]].defn == IZANAGI for o in d["options"]):
+                want = IZANAGI if len(eng.s.zones["deck"][0]) <= 2 else SAGA
+                j = next((j for j, o in enumerate(d["options"]) if eng.s.cards[o["cid"]].defn == want), None)
+                if j is not None:
+                    return [j]
+            if z == "deck":
+                return [0]
+            if z == "hand":            # 捨てるのはダミー。コダマダンスは手札に残す
+                j = next((j for j, o in enumerate(d["options"]) if eng.s.cards[o["cid"]].defn == "T001"), None)
+                if j is not None:
+                    return [j]
+        if d["kind"] == "main":
+            order = [DRAG, IZANAGI, SAGA]
+            for want in order:
+                j = next((j for j, o in enumerate(d["options"]) if o["key"] == "play:" + want), None)
+                if j is not None and (want != DRAG or len(eng.s.zones["deck"][0]) <= 1):
+                    return [j]
+            return [keys.index("pass")]
+        if d["kind"] == "yes_no" and eng.s.step == "main":
+            return [keys.index("yes")]      # 自分でループを止めない（イザナギを出した時点でサガは破壊される）
+        return saga_policy(eng, d, stop_deck=0)
+
+    eng = sc.build(rules, {"p0": {"hand": [SAGA, DRAG, KODAMA, "T001", "T001", "T001"],
+                                  "mana": ["dm01-080", "dm01-080", "dm01-027", "dm01-080"],
+                                  "graveyard": [SAGA, IZANAGI, IWASHIN, SHAKO] + ["T001"] * 8},
+                           "p1": {}, "deck_size": 20, "deck_left": [4, 20], "seed": 1}, check=True)
+    for _ in range(600):
+        d = eng.advance()
+        if d is None:
+            break
+        eng.answer(policy(eng, d))
+    keys = [k for x in eng.log for k in x["keys"]]
+    assert "play:" + IZANAGI not in keys                                  # イザナギは手札から唱えていない
+    assert any(IZANAGI in str(x["keys"]) for x in eng.log)                # サガの効果で墓地から出た
+    assert eng.s.result and eng.s.result["winner"] == 0 and eng.s.result["reason"] == "effect"
+
+
+def test_ai_finds_izanagi_revived_by_saga(rules):
+    """墓地にイザナギテラスがあれば、サガの蘇生で出して（4マナ不要）ドラゲリオンまで自力で辿り着く（山札7枚から）。"""
+    eng = sc.build(rules, {"p0": {"hand": [SAGA, DRAG, KODAMA, "T001", "T001"], "mana": ["dm01-080", "dm01-080", "dm01-027", "dm01-080"],
+                                  "graveyard": [IZANAGI, IWASHIN, SHAKO]},
+                           "p1": {}, "deck_size": 40, "deck_left": [7, 40], "seed": 1})
+    res, e = play_game(rules, None, None, 1, max_turn=1, start=eng, lock_rounds=0, budget=2500)
+    assert (res.kind, res.kill_turn) == ("effect", 1)
+    assert not any("play:" + IZANAGI in x["keys"] for x in e.log)

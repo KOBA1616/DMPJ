@@ -67,3 +67,6 @@ TCGテキストから変換している。
 - `python -m dmsim.combo_search`: 部品を固定して残りを探す。
   - 山札モード: `--fix ID:枚数` を固定し、`--slots` 種類を候補から足してキル率で並べる（1段目→上位を再測定）。
   - 配置モード: `--setup tests/saga_setup.yaml --fill-zone hand --slots 1 --turns 1`（配置を固定して足りない1枚を探す）。
+
+「好きな順序で」は move の `order: choose`（`order_cards` の決定。答えの先頭が、置いたカードの中で一番上）。
+山札の中での並べ替え（見たカードを山札の下に置く）は山札から離れないので、104.2b の「一瞬の山札0枚」に数えない。

@@ -273,7 +273,8 @@ cards:
         to: deck
         reason: put
         position: top
-    source: {official: dm35-047, review: pending, notes: "「好きな順序で」の順番選択は未実装（選んだ順に置く）"}
+        order: choose
+    source: {official: dm35-047, review: pending}
 
   - id: dm10-048
     name: セイレーン・コンチェルト
@@ -550,8 +551,8 @@ cards:
     spell:
       - {op: choose, select: {zone: deck, owner: you, from_top: 5}, as: seen}
       - {op: move, select: {ref: seen, filter: {types: [creature]}, count: 1, up_to: true, look: true}, to: hand, reason: put}
-      - {op: move, select: {ref: seen}, to: deck, reason: put, position: bottom}
-    source: {official: dmr16g-054, review: pending, notes: "「好きな順序で」の順番選択は未実装（元の順に下へ）。相手に見せる処理は扱っていない"}
+      - {op: move, select: {ref: seen}, to: deck, reason: put, position: bottom, order: choose}
+    source: {official: dmr16g-054, review: pending, notes: "相手に見せる処理は扱っていない"}
 
   - id: dmx24-028
     name: インフェルノ・サイン
@@ -839,7 +840,7 @@ cards:
         effect:
           - {op: choose, select: {zone: deck, owner: you, from_top: 5}, as: seen}
           - {op: move, select: {ref: seen, count: 1, look: true}, to: hand, reason: put}
-          - {op: move, select: {ref: seen}, to: deck, reason: put, position: bottom}
+          - {op: move, select: {ref: seen}, to: deck, reason: put, position: bottom, order: choose}
           - op: play_free
             select: {zone: hand, owner: you, filter: {types: [spell], cost_le: 3}, count: 1, up_to: true}
-    source: {official: dm22ex1-025, review: pending, notes: "「好きな順序で」の順番選択は未実装（元の順に下へ）。5枚見る時に山札が5枚未満なら見られる分だけ"}
+    source: {official: dm22ex1-025, review: pending, notes: "5枚見る時に山札が5枚未満なら見られる分だけ"}

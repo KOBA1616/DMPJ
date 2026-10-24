@@ -278,7 +278,7 @@ class Engine(SelectorMixin, EventMixin, InterpreterMixin, TurnMixin, CombatMixin
         """(answer, None) か (None, Decision) を返す。選択肢が一意なら決定を出さない。"""
         if "answer" in t:
             return t.pop("answer"), None
-        if mn == mx == len(options):
+        if mn == mx == len(options) and kind != "order_cards":
             return list(range(len(options))), None
         if self.check:
             for o in options:
@@ -308,7 +308,8 @@ class Engine(SelectorMixin, EventMixin, InterpreterMixin, TurnMixin, CombatMixin
             s.hold.remove(cid)
         else:
             self.zlist(c.zone, c.controller if self.zshared(c.zone) else c.owner).remove(cid)
-            self._note_deck(c)
+            if not (to == "deck" and c.zone == "deck"):   # 山札の中での並べ替え（見たカードを下に置く等）は山札から離れない
+                self._note_deck(c)
         c.gen += 1                                  # 新しいオブジェクトになる（400.5）
         c.zone = to
         c.tapped = to == "mana" and len(self.cdef(cid).civs) > 1   # 多色カードはタップしてマナに置かれる
