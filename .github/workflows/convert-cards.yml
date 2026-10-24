@@ -1,0 +1,56 @@
+# 取得済みのカード原文を OpenCode の無料モデルで効果DSLに変換する。
+# tools/convert_request.yaml を編集して push すると動く。キーはリポジトリ Secret の OPENCODE_API_KEY。
+# 結果は cards-data ブランチ（data/cards/converted.yaml, rejects, convert_report.json, eval_report.json）。
+name: convert-cards
+on:
+  push:
+    paths: ["tools/convert_request.yaml"]
+  workflow_dispatch:
+permissions:
+  contents: write
+concurrency:
+  group: convert-cards
+  cancel-in-progress: false
+jobs:
+  convert:
+    runs-on: ubuntu-latest
+    timeout-minutes: 120
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Restore data branch
+        run: |
+          git config user.name "github-actions"; git config user.email "actions@users.noreply.github.com"
+          cp tools/convert_request.yaml /tmp/req.yaml
+          if git ls-remote --exit-code --heads origin cards-data >/dev/null; then
+            git checkout -f cards-data
+            git checkout "$GITHUB_SHA" -- tools dmsim data/rules data/cards/proto.yaml data/cards/real.yaml data/cards/real_vocab.yaml data/cards/real_zone.yaml data/cards/raw/official_*.jsonl .github 2>/dev/null || true
+          else
+            echo "cards-data ブランチがまだ無い（先に取得系ワークフローを動かす）"; exit 1
+          fi
+      - name: Run
+        env:
+          OPENCODE_API_KEY: ${{ secrets.OPENCODE_API_KEY }}
+        run: |
+          pip install -q pyyaml
+          test -n "$OPENCODE_API_KEY" || { echo "Secret OPENCODE_API_KEY が未登録"; exit 1; }
+          python - <<'PY'
+          import subprocess, sys, yaml
+          r = yaml.safe_load(open("/tmp/req.yaml"))
+          common = ["--provider", "opencode", "--model", str(r.get("model", "glm-5.3-flash-free")),
+                    "--interval", str(r.get("interval", 6)), "--limit", str(r.get("limit", 20))]
+          if r.get("task") == "eval":
+              cmd = ["python", "tools/eval_convert.py", "data/cards/raw"] + common
+          else:
+              cmd = ["python", "tools/convert_cards.py", "data/cards/raw", "--order", "short"] + common
+          sys.exit(subprocess.call(cmd))
+          PY
+      - name: Save results
+        if: always()
+        run: |
+          git add data/cards/converted.yaml data/cards/raw/rejects.jsonl data/cards/raw/convert_report.json data/cards/raw/eval_report.json 2>/dev/null || true
+          git diff --cached --quiet || { git commit -qm "convert-cards: 変換結果"; git push origin cards-data; }

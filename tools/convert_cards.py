@@ -57,13 +57,22 @@ def _rules_text(name: str) -> str:
     return (DATA / "rules" / name).read_text(encoding="utf-8")
 
 
-def system_prompt() -> str:
+def examples_text(exclude: frozenset = frozenset()) -> str:
+    """例に載せる既存カード。exclude の ID は除く（一致率の測定で答えを見せないため）。"""
+    raw = (DATA / "cards" / "real.yaml").read_text(encoding="utf-8")
+    if not exclude:
+        return raw
+    cards = [c for c in yaml.safe_load(raw)["cards"] if c["id"] not in exclude]
+    return yaml.safe_dump({"cards": cards}, allow_unicode=True, sort_keys=False)
+
+
+def system_prompt(exclude: frozenset = frozenset()) -> str:
     """全カード共通の部分（キャッシュされる）。内容が変わらない限り同じ文字列になるようにする。"""
     parts = [INSTRUCTIONS,
              "## JSON Schema\n" + json.dumps(schema.build(), ensure_ascii=False, sort_keys=True),
              *[f"## data/rules/{n}\n{_rules_text(n)}" for n in
                ("zones.yaml", "keywords.yaml", "op_macros.yaml", "permissions.yaml", "turn.yaml")],
-             "## 変換済みカードの例（data/cards/real.yaml）\n" + (DATA / "cards" / "real.yaml").read_text(encoding="utf-8")]
+             "## 変換済みカードの例（data/cards/real.yaml）\n" + examples_text(exclude)]
     return "\n\n".join(parts)
 
 
@@ -93,34 +102,131 @@ def validate(raw: dict, row: dict, tables) -> dict:
     return raw
 
 
-def convert(client, row: dict, tables, sysp: str, effort: str, usage: dict | None = None) -> dict:
-    messages = [{"role": "user", "content": user_prompt(row)}]
-    err = None
-    for attempt in range(2):
-        with client.messages.stream(
-            model=MODEL, max_tokens=16000,
+class Fatal(Exception):
+    """続行すると課金や無駄打ちになるエラー。実行全体を止める。"""
+
+
+class AnthropicLLM:
+    name = "anthropic"
+
+    def __init__(self, model: str = MODEL, client=None):
+        if client is None:
+            import anthropic    # 変換するときだけ必要
+            client = anthropic.Anthropic()
+        self.client, self.model = client, model
+
+    def complete(self, sysp: str, messages: list[dict], effort: str, usage: dict | None) -> str:
+        with self.client.messages.stream(
+            model=self.model, max_tokens=16000,
             system=[{"type": "text", "text": sysp, "cache_control": {"type": "ephemeral"}}],
-            thinking={"type": "adaptive"},
-            output_config={"effort": effort},
-            messages=messages,
+            thinking={"type": "adaptive"}, output_config={"effort": effort}, messages=messages,
         ) as stream:
             msg = stream.get_final_message()
         if msg.stop_reason == "refusal":
             raise DefError("モデルが変換を断った")
-        text = "".join(b.text for b in msg.content if b.type == "text")
         u = msg.usage
         if usage is not None:
             usage["input"] += u.input_tokens
             usage["cache_read"] += u.cache_read_input_tokens or 0
             usage["cache_write"] += u.cache_creation_input_tokens or 0
             usage["output"] += u.output_tokens
-        print(f"  {row['id']}: in={u.input_tokens} cache_read={u.cache_read_input_tokens} "
-              f"cache_write={u.cache_creation_input_tokens} out={u.output_tokens}", file=sys.stderr)
+        return "".join(b.text for b in msg.content if b.type == "text")
+
+
+# --- OpenCode（無料モデル専用） -------------------------------------------------------------
+# 課金事故防止: この許可リストにあるモデルIDだけを、この固定URLにだけ送る。リスト外は実行前に拒否する。
+# 新しい無料モデルを使うときは、公式 https://opencode.ai/docs/zen/ で $0 と確認してここに足す。
+OPENCODE_URL = "https://opencode.ai/inference/openai/v1/chat/completions"
+OPENCODE_FREE_MODELS = frozenset({
+    "glm-5.3-flash-free", "deepseek-v4.1-flash-free", "longcat-2.5-preview-free",
+})
+OPENCODE_DEFAULT = "glm-5.3-flash-free"
+
+
+def check_free_model(model: str):
+    if model not in OPENCODE_FREE_MODELS or not model.endswith("-free"):
+        raise Fatal(f"{model!r} は無料モデルの許可リストにない（許可: {sorted(OPENCODE_FREE_MODELS)}）。課金を避けるため実行しない")
+
+
+class OpenCodeLLM:
+    name = "opencode"
+
+    def __init__(self, model: str = OPENCODE_DEFAULT, min_interval: float = 3.0, key: str | None = None):
+        import os
+        import threading
+        check_free_model(model)
+        self.key = key or os.environ.get("OPENCODE_API_KEY", "")
+        if not self.key:
+            raise Fatal("環境変数 OPENCODE_API_KEY が未設定")
+        self.model, self.min_interval = model, min_interval
+        self._last, self._lock = 0.0, threading.Lock()
+
+    def _wait(self):
+        import time
+        with self._lock:
+            time.sleep(max(0.0, self._last + self.min_interval - time.monotonic()))
+            self._last = time.monotonic()
+
+    def _post(self, payload: dict) -> dict:
+        import time
+        import urllib.error
+        import urllib.request
+        data = json.dumps(payload).encode()
+        for attempt in range(4):
+            self._wait()
+            req = urllib.request.Request(OPENCODE_URL, data, {
+                "Authorization": f"Bearer {self.key}", "Content-Type": "application/json"})
+            try:
+                with urllib.request.urlopen(req, timeout=300) as r:
+                    return json.loads(r.read())
+            except urllib.error.HTTPError as e:
+                body = e.read().decode("utf-8", "replace")[:300].replace(self.key, "***")
+                if e.code == 402 or re.search(r"(?i)billing|credit|balance|payment|insufficient|FreeTierError", body):
+                    raise Fatal(f"課金・無料枠に関するエラーなので停止する: HTTP {e.code} {body}") from None
+                if e.code in (401, 403):
+                    raise Fatal(f"認証/権限エラー: HTTP {e.code} {body}") from None
+                if e.code in (429, 500, 502, 503, 504) and attempt < 3:
+                    time.sleep(10 * 2 ** attempt)
+                    continue
+                raise RuntimeError(f"HTTP {e.code}") from None
+        raise RuntimeError("リトライ上限")
+
+    def complete(self, sysp: str, messages: list[dict], effort: str, usage: dict | None) -> str:
+        resp = self._post({"model": self.model, "max_tokens": 16000, "temperature": 0.2,
+                           "messages": [{"role": "system", "content": sysp}, *messages]})
+        # 課金の兆候: 応答に 0 でない費用が載っていたら止める
+        for k in ("cost", "total_cost"):
+            if (resp.get(k) or (resp.get("usage") or {}).get(k) or 0) > 0:
+                raise Fatal(f"応答に費用({k})が含まれている。無料でなくなった可能性があるので停止する")
+        if resp.get("model") and not str(resp["model"]).removeprefix("opencode/").endswith("-free"):
+            raise Fatal(f"応答のモデルが無料モデルでない: {resp['model']}")
+        u = resp.get("usage") or {}
+        if usage is not None:
+            usage["input"] += u.get("prompt_tokens", 0)
+            usage["output"] += u.get("completion_tokens", 0)
+        try:
+            return resp["choices"][0]["message"]["content"] or ""
+        except (KeyError, IndexError, TypeError):
+            raise DefError("応答に本文がない") from None
+
+
+def make_llm(provider: str, model: str | None, interval: float):
+    if provider == "opencode":
+        return OpenCodeLLM(model or OPENCODE_DEFAULT, interval)
+    return AnthropicLLM(model or MODEL)
+
+
+def convert(llm, row: dict, tables, sysp: str, effort: str, usage: dict | None = None) -> dict:
+    messages = [{"role": "user", "content": user_prompt(row)}]
+    err = None
+    for attempt in range(2):
+        text = llm.complete(sysp, messages, effort, usage)
+        print(f"  {row['id']}: {len(text)}文字", file=sys.stderr)
         try:
             return validate(extract(text), row, tables)
         except (DefError, yaml.YAMLError, KeyError, TypeError) as e:
             err = e
-            messages += [{"role": "assistant", "content": msg.content},
+            messages += [{"role": "assistant", "content": text},
                          {"role": "user", "content": f"検査でエラーになった。直した定義だけを出力して。\n{e}"}]
     raise DefError(f"2回とも検査を通らなかった: {err}")
 
@@ -209,6 +315,8 @@ def run(rows: list[dict], client, tables, sysp: str, effort: str, out: Path, rej
                 print(f"✗ {r['id']} {r.get('name', '')}: {e}", file=sys.stderr)
                 save()
             return
+        except Fatal:
+            raise
         except Exception as e:      # noqa: BLE001  API の一時的な失敗。カードの問題ではないので rejects には入れない
             with lock:
                 stats["api_error"] += 1
@@ -247,6 +355,10 @@ def main(argv=None):
     ap.add_argument("--limit", type=int, help="この枚数まで変換する（試運転・予算の上限用）")
     ap.add_argument("--order", choices=["file", "short"], default="file", help="short: 原文の短い順（簡単なものから）")
     ap.add_argument("--workers", type=int, default=1, help="並列数（API のレート制限に合わせる）")
+    ap.add_argument("--provider", choices=["anthropic", "opencode"], default="anthropic",
+                    help="opencode は無料モデル専用（OPENCODE_API_KEY、許可リスト外のモデルは拒否）")
+    ap.add_argument("--model", help="モデルID（既定: anthropic は claude-opus-5-5、opencode は glm-5.3-flash-free）")
+    ap.add_argument("--interval", type=float, default=3.0, help="opencode のリクエスト間隔（秒、全ワーカー合計）")
     ap.add_argument("--effort", default="high", choices=["low", "medium", "high", "xhigh", "max"])
     ap.add_argument("--dry-run", action="store_true", help="API を呼ばずにプロンプトと対象枚数を表示する")
     a = ap.parse_args(argv)
@@ -272,9 +384,12 @@ def main(argv=None):
             print("\n---\n" + user_prompt(r))
         print(f"\n対象 {len(rows)} 枚（システムプロンプト {len(sysp)} 文字）", file=sys.stderr)
         return
-    import anthropic    # 変換するときだけ必要
-    report = run(rows, anthropic.Anthropic(), load_tables(), sysp, a.effort, out, rejects_path,
-                 a.workers, Path(a.report))
+    try:
+        llm = make_llm(a.provider, a.model, a.interval)
+        report = run(rows, llm, load_tables(), sysp, a.effort, out, rejects_path,
+                     a.workers, Path(a.report))
+    except Fatal as e:
+        sys.exit(f"停止: {e}")
     print(f"変換 {report['ok']}/{report['requested']} 件、検査を通らず {report['rejected']} 件（{a.rejects}）、"
           f"API失敗 {report['api_error']} 件（再実行で続きから）。不足語彙の集計: python tools/report_gaps.py", file=sys.stderr)
 
