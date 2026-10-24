@@ -40,3 +40,10 @@ def test_fetch_parse_splits_set_notation_from_name():
 def test_ids_with_letters_in_the_number_keep_their_digits():
     assert normalize_id("dm26ex4-CHO005") == "dm26ex4-cho005" and is_official_id("dm26ex4-cho005")
     assert normalize_id("DM26-EX4 CHO5") == "dm26ex4-cho05"
+
+
+def test_unusual_official_numbers_are_kept():
+    assert normalize_id("dm26ex3-SEC001CHO") == "dm26ex3-sec001cho"
+    assert normalize_id("dm23rp4x-001X") == "dm23rp4x-001x"
+    assert normalize_id("dm23rp1-1B") == "dm23rp1-1b"
+    assert normalize_id("promoy21-thanxdm20yrs02") == "promoy21-thanxdm20yrs02"

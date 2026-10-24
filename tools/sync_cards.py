@@ -53,7 +53,11 @@ def sync_product(led: dict, value: str, interval: float, deadline: float | None)
                 continue
             fails = 0
             p.get("errors", {}).pop(oid, None)
-            row.update(official_id=oid, id=normalize_id(oid), product=value)
+            try:
+                nid = normalize_id(oid)
+            except ValueError:      # 想定外の形でも止めず、公式のまま小文字で持つ
+                nid = oid.lower()
+            row.update(official_id=oid, id=nid, product=value)
             out.write(json.dumps(row, ensure_ascii=False) + "\n")
             out.flush()
             have.add(oid)
