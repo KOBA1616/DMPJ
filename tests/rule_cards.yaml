@@ -200,3 +200,13 @@ cards:
         if: {is_turn: you}
         effect:
           - {op: draw, count: 1}
+
+  - id: R017
+    name: 三刃二刃の竜
+    types: [creature]
+    civs: [fire]
+    cost: 5
+    power: 5000
+    races: [テスト]
+    text: W・ブレイカー / T・ブレイカー
+    keywords: [double_breaker, triple_breaker]

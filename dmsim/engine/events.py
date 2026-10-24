@@ -1,7 +1,7 @@
 """イベント・パイプライン（置換→同時適用→状況起因処理→誘発）と待機・解決窓。"""
 from __future__ import annotations
 
-from ..types import CloseWinTask, EnqueueStTask, EventTask, OpenWinTask, ResolvePendingTask
+from ..types import CaptureTask, CloseWinTask, EnqueueStTask, EventTask, OpenWinTask, ResolvePendingTask
 from .registry import task
 
 
@@ -10,9 +10,11 @@ class EventMixin:
         """同時に起こるイベントの束（400.7, 609.9）。"""
         if isinstance(evs, dict):
             evs = [evs]
+        if env and env.get("capture"):   # 置換効果の中で起こすイベントは、元の束に加えて同時に適用する（609.9）
+            return {"t": "capture", "evs": [dict(e, replaced=True) for e in evs]}
         if env and env.get("no_replace"):
             evs = [dict(e, replaced=True) for e in evs]   # 置換後のイベントはそれ以上置換しない（101.5）
-        return {"t": "event", "evs": evs, "i": 0, "rp": 0, "skip": [], "instead": []}
+        return {"t": "event", "evs": evs, "i": 0, "rp": 0, "skip": [], "instead": [], "captured": [], "applying": False}
 
     def _replacement(self, t, ev, p):
         """プレイヤー p の置換効果の選択。同じプレイヤーの複数は本人が選ぶ（609.8）。
@@ -37,7 +39,7 @@ class EventMixin:
             if o["key"] != "decline":
                 src, i = o["cid"], o["ab"]
                 env = {"you": self.s.cards[src].controller, "self": self.s.ref(src), "event": rec,
-                       "vars": {}, "no_replace": True}
+                       "vars": {}, "no_replace": True, "capture": True}
                 ab = next(a for j, a in cands_ab if j == (src, i))
                 return self._child(ab["instead"], env)
         return None
@@ -296,9 +298,21 @@ def h_event(eng, t):
             t["i"] += 1
         t["i"] = 0
         t["rp"] += 1
+    if t["instead"] and not t["applying"]:   # 置換後のイベントを集めてから、束と同時に適用する（609.9）
+        t["applying"] = True
+        eng._push(*t["instead"])
+        return None
     eng._pop(t)
-    eng._push(*t["instead"])
-    eng.apply_batch([e for k, e in enumerate(t["evs"]) if k not in t["skip"]])
+    eng.apply_batch([e for k, e in enumerate(t["evs"]) if k not in t["skip"]] + t["captured"])
+    return None
+
+
+@task("capture", CaptureTask)
+def h_capture(eng, t):
+    """置換効果が起こすイベントを、適用待ちの束（直近の event タスク）に加える。"""
+    eng._pop(t)
+    host = next(x for x in reversed(eng.s.tasks) if x["t"] == "event" and x["applying"])
+    host["captured"] += t["evs"]
     return None
 
 
