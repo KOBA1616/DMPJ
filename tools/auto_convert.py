@@ -40,6 +40,7 @@ def main(argv=None):
     ap.add_argument("--provider", default="opencode-cli", choices=["opencode", "opencode-cli"])
     ap.add_argument("--model", default=cc.OPENCODE_DEFAULT)
     ap.add_argument("--interval", type=float, default=6.0)
+    ap.add_argument("--workers", type=int, default=1, help="並列数（無料枠は共有枠らしいので増やしすぎない）")
     ap.add_argument("--limit", type=int, default=20)
     ap.add_argument("--effort", default="high")
     a = ap.parse_args(argv)
@@ -57,10 +58,10 @@ def main(argv=None):
         todo = sorted((r for r in rows if r["id"] not in done and r["id"] not in failed),
                       key=lambda r: len(r.get("text", "")))[:a.limit]
         if todo:
-            ran["new"] = cc.run(todo, llm, tables, sysp, a.effort, out, rej, report_path=RAW / "convert_report.json")
+            ran["new"] = cc.run(todo, llm, tables, sysp, a.effort, out, rej, workers=a.workers, report_path=RAW / "convert_report.json")
         if vh != prev.get("vocab_hash") and failed:
             retry = [r for r in rows if r["id"] in failed][:a.limit]
-            ran["retry"] = cc.run(retry, llm, tables, sysp, a.effort, out, rej)
+            ran["retry"] = cc.run(retry, llm, tables, sysp, a.effort, out, rej, workers=a.workers)
         retried_all = vh == prev.get("vocab_hash") or len(failed) <= a.limit
     except cc.Fatal as e:
         print(f"停止: {e}", file=sys.stderr)
