@@ -393,3 +393,37 @@ def test_local_worker_routine_allowlist(tmp_path):
     assert lw.run_routine({"name": "rm -rf /"}, g, None, tmp_path, 1)["status"] == "error"
     assert lw.run_routine({"name": "review", "base": "--output=x"}, g, None, tmp_path, 1)["status"] == "error"
     assert lw.run_routine({"name": "status"}, g, None, tmp_path, 1)["status"] == "ok"
+
+
+def test_local_worker_survives_job_failure(tmp_path, monkeypatch):
+    """1件のジョブが例外で落ちても、error を done に残して次へ進む（毎回の再実行で無料枠を使わない）。scrub は None を許す。"""
+    import subprocess
+
+    import llm_offload as lo
+    import local_worker as lw
+    import yaml as _yaml
+    assert lo.scrub(None) == ""
+    bare, clone = tmp_path / "remote.git", tmp_path / "clone"
+    subprocess.run(["git", "init", "-q", "--bare", str(bare)], check=True)
+    subprocess.run(["git", "clone", "-q", str(bare), str(clone)], check=True, capture_output=True)
+    for k, v in (("user.name", "t"), ("user.email", "t@t")):
+        subprocess.run(["git", "config", k, v], cwd=clone, check=True)
+    g = lw.Git(clone, tmp_path / "work")
+    bad = lw.enqueue(g, {"type": "routine", "name": "status"})
+    good = lw.enqueue(g, {"type": "ask", "task": "summarize", "input": "x"})
+
+    def boom(*a, **k):
+        raise AttributeError("'NoneType' object has no attribute 'replace'")
+    monkeypatch.setattr(lw, "run_routine", boom)
+
+    class LLM:
+        model = "glm-5.3-flash-free"
+
+        def complete(self, *a):
+            return "ok"
+    assert lw.process(g, lambda m: LLM()) == [f"{bad}:error", f"{good}:ok"]
+    assert lw.process(g, lambda m: LLM()) == []          # 失敗したジョブは再実行されない
+    chk = tmp_path / "chk"
+    subprocess.run(["git", "clone", "-q", "-b", "llm-jobs", str(bare), str(chk)], check=True, capture_output=True)
+    res = _yaml.safe_load((chk / "jobs" / "done" / f"{bad}.yaml").read_text(encoding="utf-8"))
+    assert res["status"] == "error" and "AttributeError" in res["error"]

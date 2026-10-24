@@ -1,6 +1,7 @@
 @echo off
 rem Run the local worker once (called from Task Scheduler). Keep this file ASCII-only: cmd.exe misreads UTF-8.
 rem Log: %USERPROFILE%\.dmpj-worker\log.txt
+set "PYTHONUTF8=1"
 set "XDG_DATA_HOME=%USERPROFILE%\.dmpj-worker\xdg"
 set "XDG_CONFIG_HOME=%USERPROFILE%\.dmpj-worker\xdg-config"
 cd /d "%~dp0.."
