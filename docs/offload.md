@@ -102,7 +102,7 @@ Claude / Actions ──jobs/pending/*.yaml──▶ llm-jobs ブランチ ◀─
 schtasks /Create /SC MINUTE /MO 10 /TN "dmpj-worker" /TR C:\path\DMPJ\tools\run_worker.bat /F
 ```
 
-- ログ: `%USERPROFILE%\.dmpj-worker\log.txt`。止める: `schtasks /Delete /TN "dmpj-worker" /F`。
+- ログ: `%USERPROFILE%\.dmpj-worker\log.txt`。一時停止/再開: `schtasks /Change /TN "dmpj-worker" /DISABLE`（/ENABLE）、実行中を止める: `schtasks /End /TN "dmpj-worker"`、削除: `schtasks /Delete /TN "dmpj-worker" /F`、状態: `schtasks /Query /TN "dmpj-worker"`。
 - 二重起動はロック(`.dmpj-worker\lock`)で防ぐ。PC がスリープ中の分は、復帰後の次回にまとめて処理される。
 - 定期的にカード変換を回すなら、`python tools\local_worker.py enqueue convert --limit 100` を投入する（毎回の投入もスケジュールできる）。
 - ローカルで変換する間は、Actions と cards-data が衝突しないよう `tools/auto_convert.yaml` を `enabled: false` にして main に入れる。
