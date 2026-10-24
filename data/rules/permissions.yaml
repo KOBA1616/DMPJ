@@ -1,0 +1,16 @@
+# 許可・禁止できる行為（101.2:「できない」効果は「できる」効果に勝つ）
+# default: どの効果もない時に、その行為ができるか
+# 判定: 禁止が1つでも当てはまれば不可 → 許可が当てはまれば可 → default
+# other: 相手側のカードに条件を付ける時の、相手側の役割（攻撃先・攻撃クリーチャー・ブロッカー）
+actions:
+  attack_player:         {default: true,  rule: "506.1a", ja: プレイヤーを攻撃できる}
+  attack_creature:       {default: true,  rule: "506.1e", other: target,   ja: クリーチャーを攻撃できる}
+  attack_summoning_sick: {default: false, rule: "506.1a", ja: 出たターンに攻撃できる}
+  be_attacked:           {default: true,  rule: "506.1e", other: attacker, ja: 攻撃される}
+  block:                 {default: false, rule: "507.1a", other: attacker, ja: ブロックできる（ブロッカー）}
+  be_blocked:            {default: true,  rule: "507.1a", other: blocker,  ja: ブロックされる}
+  s_trigger:             {default: false, rule: "113.6",  ja: S・トリガーとして使える}
+  untap_at_start:        {default: true,  rule: "501.1",  ja: ターンのはじめにアンタップする}
+  summon:                {default: true,  rule: "601",    ja: 召喚できる}
+  cast:                  {default: true,  rule: "601",    ja: 唱えられる}
+  be_chosen:             {default: true,  rule: "unverified", ja: 相手に選ばれる}

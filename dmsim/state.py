@@ -41,6 +41,8 @@ class Card:
     entered_turn: int = -1
     under: list[int] = field(default_factory=list)  # 下に重なっているカード（進化元・封印など。設計判断②）
     top_of: int = -1                                  # 自分が下に重なっている場合、その一番上の cid
+    face: int = -1                                    # ツインパクト等で今使っている面（-1 = カード全体, 810）
+    entered_seq: int = 0                              # バトルゾーンに出た時刻（608.5 無視効果の優先）
 
 
 @dataclass
@@ -56,6 +58,8 @@ class GameState:
     pending: list[dict] = field(default_factory=list)      # 待機中の効果（101.4）。各要素は win（解決窓）を持つ
     windows: list[int] = field(default_factory=list)       # 開いている解決窓のスタック（バトル 701.13、効果中のS・トリガー 101.4g 等）
     continuous: list[dict] = field(default_factory=list)   # 継続的効果（タイムスタンプ順）
+    delayed: list[dict] = field(default_factory=list)      # 遅延誘発型能力（603.6）
+    step_mods: list[dict] = field(default_factory=list)    # ターン構造の変更（ステップを飛ばす・追加する）
     tasks: list[dict] = field(default_factory=list)        # 実行中の処理のスタック
     waiting: dict | None = None                            # 決定待ちの Decision（純データ）
     result: dict | None = None

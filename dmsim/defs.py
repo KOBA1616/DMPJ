@@ -1,7 +1,7 @@
 """カード・ゾーン・キーワード定義の読み込みと検証。
 
-効果DSLは閉じた語彙（設計判断④）。ここで未知の op / イベント / 能力種別を弾くことで、
-LLM が変換したカードデータの機械チェックを兼ねる。
+効果DSLは閉じた語彙（設計判断④）。ここで未知の op / 引数 / イベント / 能力種別 / mod を弾くことで、
+LLM が変換したカードデータの機械チェックを兼ねる。op の引数の型は registry の OP_ARGS が正。
 """
 from __future__ import annotations
 
@@ -14,21 +14,50 @@ import yaml
 DATA = Path(__file__).resolve().parent.parent / "data"
 
 
-def core_ops() -> set[str]:
-    """コア語彙 = エンジンに登録された op。ここに無い op はマクロ（op_macros.yaml）で定義されていなければエラー。"""
-    from .engine.registry import OPS
+def core_ops() -> dict[str, dict[str, str]]:
+    """コア語彙 = エンジンに登録された op と引数の型。ここに無い op はマクロ（op_macros.yaml）で定義されていなければエラー。"""
+    from .engine.registry import OP_ARGS
     from .engine import ops  # noqa: F401  登録を確実にする
-    return set(OPS)
+    return OP_ARGS
 
 EVENTS = {"move", "draw", "cast", "summon", "attack", "block", "break", "tap", "untap",
-          "turn_start", "turn_end"}
-ABILITY_KINDS = {"trigger", "replace", "static"}
+          "turn_start", "turn_end", "battle_win"}
+ABILITY_KINDS = {"trigger", "replace", "static", "declare"}
 REASONS = {"put", "destroy", "return", "discard", "charge", "summon", "cast", "break",
-           "draw", "battle", "sba", "resolve"}
+           "draw", "battle", "sba", "resolve", "evolve"}
+DURATIONS_FIXED = {"end_of_turn", "during_attack", "permanent", "until_next_own_turn_start"}
+MOD_KEYS = {"power", "grant", "allow", "deny", "breaks", "ignore"}
+POSITIONS = {"top", "bottom"}
+CARD_TYPES = {"creature", "spell", "evolution"}
+CIVS = {"light", "water", "darkness", "fire", "nature", "zero"}
+SELECTOR_KEYS = {"zone", "owner", "filter", "count", "up_to", "from_top", "chooser", "ref", "other"}
+FILTER_KEYS = {"types", "civs", "races", "name", "cost_le", "cost_ge", "power_le", "power_ge", "tapped",
+               "keyword", "not_name"}
 
 
 class DefError(ValueError):
     pass
+
+
+@dataclass
+class Face:
+    """カードの1つの面（ツインパクトのクリーチャー側・呪文側など。810）。"""
+    name: str
+    types: list[str]
+    civs: list[str]
+    cost: int
+    power: int = 0
+    races: list[str] = field(default_factory=list)
+    keywords: list[str] = field(default_factory=list)
+    abilities: list[dict] = field(default_factory=list)
+    spell: list[dict] = field(default_factory=list)
+    evolve_from: dict | None = None                       # 進化元の条件（801.1a）。filter 形式
+
+    def is_creature(self) -> bool:
+        return "creature" in self.types
+
+    def is_spell(self) -> bool:
+        return "spell" in self.types
 
 
 @dataclass
@@ -42,15 +71,21 @@ class CardDef:
     mana: int = 1                                         # マナゾーンでのマナの数値（112.2a）
     races: list[str] = field(default_factory=list)
     text: str = ""
-    keywords: list[str] = field(default_factory=list)   # marker 型キーワード
-    abilities: list[dict] = field(default_factory=list)  # 展開済みの能力
+    keywords: list[str] = field(default_factory=list)    # 持っているキーワード名（フィルタ用）
+    abilities: list[dict] = field(default_factory=list)  # 展開済みの能力（キーワード由来も含む）
     spell: list[dict] = field(default_factory=list)      # 呪文の解決 ops
+    evolve_from: dict | None = None
+    faces: list[Face] = field(default_factory=list)      # ツインパクト: [0]=クリーチャー側, [1]=呪文側
+    source: dict = field(default_factory=dict)           # 出典（公式ID・取得日・確認者など）
 
     def is_creature(self) -> bool:
         return "creature" in self.types
 
     def is_spell(self) -> bool:
         return "spell" in self.types
+
+    def face(self, i: int | None) -> "CardDef | Face":
+        return self if i is None or not self.faces else self.faces[i]
 
 
 @dataclass
@@ -59,6 +94,14 @@ class Rules:
     keywords: dict
     macros: dict
     cards: dict[str, CardDef]
+    actions: dict = field(default_factory=dict)
+    steps: list[str] = field(default_factory=list)
+
+    def __post_init__(self):
+        # 無視効果を持つカード（608.4）。特性計算の高速化のために先に集めておく
+        self.ignore_defs = {d.id for d in self.cards.values()
+                            for f in ([d] + d.faces) for ab in f.abilities
+                            if ab["kind"] == "static" and "ignore" in ab.get("mod", {})}
 
 
 def _subst(obj, args):
@@ -77,13 +120,17 @@ def _subst(obj, args):
 def expand_ops(ops: list[dict], macros: dict, where: str) -> list[dict]:
     out = []
     core = core_ops()
+    if not isinstance(ops, list):
+        raise DefError(f"{where}: ops must be a list, got {ops!r}")
     for op in ops:
-        name = op.get("op")
+        name = op.get("op") if isinstance(op, dict) else None
         if name in core:
             op = dict(op)
-            for k in ("body", "then", "else"):
-                if k in op:
+            for k, ty in core[name].items():
+                if ty.rstrip("?") == "ops" and k in op:
                     op[k] = expand_ops(op[k], macros, where)
+            if name == "delayed_trigger" and "effect" in op:
+                op["effect"] = expand_ops(op["effect"], macros, where)
             out.append(op)
         elif name in macros:
             args = {k: v for k, v in op.items() if k != "op"}
@@ -93,58 +140,250 @@ def expand_ops(ops: list[dict], macros: dict, where: str) -> list[dict]:
     return out
 
 
-def _check_ops(ops, zones, where):
-    for op in ops:
-        if op["op"] == "move":
-            if op.get("to") not in zones:
-                raise DefError(f"{where}: unknown zone '{op.get('to')}'")
-            if op.get("reason") not in REASONS:
-                raise DefError(f"{where}: unknown reason '{op.get('reason')}'")
-        for k in ("body", "then", "else"):
-            if k in op:
-                _check_ops(op[k], zones, where)
+class Checker:
+    """展開済みの op 列・能力・mod の型検査。"""
 
+    def __init__(self, zones, keywords, actions, steps):
+        self.zones, self.keywords, self.actions, self.steps = zones, keywords, actions, steps
 
-def _expand_ability(ab, macros, zones, where):
-    kind = ab.get("kind")
-    if kind not in ABILITY_KINDS:
-        raise DefError(f"{where}: unknown ability kind '{kind}'")
-    ab = dict(ab)
-    if kind in ("trigger", "replace"):
-        ev = ab.get("when", {}).get("event")
+    def ops(self, ops, where):
+        spec = core_ops()
+        for op in ops:
+            name = op["op"]
+            args = spec[name]
+            for k in op:
+                if k != "op" and k not in args:
+                    raise DefError(f"{where}: op '{name}' has unknown arg '{k}' (allowed: {sorted(args)})")
+            for k, ty in args.items():
+                opt = ty.endswith("?")
+                ty = ty.rstrip("?")
+                if k not in op:
+                    if not opt:
+                        raise DefError(f"{where}: op '{name}' missing arg '{k}'")
+                    continue
+                self.value(ty, op[k], f"{where}: {name}.{k}")
+
+    def value(self, ty, v, where):
+        if ty == "zone" and v not in self.zones:
+            raise DefError(f"{where}: unknown zone '{v}'")
+        if ty == "reason" and v not in REASONS:
+            raise DefError(f"{where}: unknown reason '{v}'")
+        if ty == "player" and v not in ("you", "opp"):
+            raise DefError(f"{where}: player must be you/opp, got '{v}'")
+        if ty == "position" and v not in POSITIONS:
+            raise DefError(f"{where}: unknown position '{v}'")
+        if ty == "step" and v not in self.steps:
+            raise DefError(f"{where}: unknown step '{v}'")
+        if ty == "duration":
+            self.duration(v, where)
+        if ty == "ops":
+            self.ops(v, where)
+        if ty == "selector":
+            self.selector(v, where)
+        if ty == "mod":
+            self.mod(v, where)
+        if ty == "cond":
+            self.cond(v, where)
+        if ty == "ability":
+            self.ability(v, where)
+        if ty == "int" and not isinstance(v, int):
+            raise DefError(f"{where}: expected int, got {v!r}")
+        if ty == "bool" and not isinstance(v, bool):
+            raise DefError(f"{where}: expected bool, got {v!r}")
+        if ty == "str" and not isinstance(v, str):
+            raise DefError(f"{where}: expected str, got {v!r}")
+        if ty == "expr":
+            self.expr(v, where)
+
+    def duration(self, v, where):
+        if v in DURATIONS_FIXED:
+            return
+        raise DefError(f"{where}: unknown duration '{v}'")
+
+    def selector(self, sel, where):
+        if not isinstance(sel, dict):
+            raise DefError(f"{where}: selector must be a mapping, got {sel!r}")
+        bad = set(sel) - SELECTOR_KEYS
+        if bad:
+            raise DefError(f"{where}: unknown selector keys {sorted(bad)}")
+        if "ref" not in sel and "zone" not in sel:
+            raise DefError(f"{where}: selector needs zone or ref")
+        if "zone" in sel and sel["zone"] not in self.zones:
+            raise DefError(f"{where}: unknown zone '{sel['zone']}'")
+        if sel.get("owner", "you") not in ("you", "opp", "any"):
+            raise DefError(f"{where}: bad owner '{sel['owner']}'")
+        self.filter(sel.get("filter", {}), where)
+
+    def filter(self, f, where):
+        bad = set(f) - FILTER_KEYS
+        if bad:
+            raise DefError(f"{where}: unknown filter keys {sorted(bad)}")
+        if "civs" in f and set(f["civs"]) - CIVS:
+            raise DefError(f"{where}: unknown civs {f['civs']}")
+        if "keyword" in f and f["keyword"] not in self.keywords:
+            raise DefError(f"{where}: unknown keyword '{f['keyword']}'")
+
+    def expr(self, x, where):
+        if isinstance(x, int):
+            return
+        if isinstance(x, dict) and len(x) == 1:
+            k, v = next(iter(x.items()))
+            if k == "count":
+                return self.selector(v, where)
+            if k == "var":
+                return
+            if k == "sum":
+                for e in v:
+                    self.expr(e, where)
+                return
+        raise DefError(f"{where}: bad expr {x!r}")
+
+    def cond(self, c, where):
+        if not isinstance(c, dict) or len(c) != 1:
+            raise DefError(f"{where}: bad cond {c!r}")
+        k, v = next(iter(c.items()))
+        if k == "exists":
+            return self.selector(v, where)
+        if k == "cmp":
+            if len(v) != 3 or v[1] not in ("<", "<=", "==", ">=", ">"):
+                raise DefError(f"{where}: bad cmp {v!r}")
+            self.expr(v[0], where)
+            self.expr(v[2], where)
+            return
+        if k == "not":
+            return self.cond(v, where)
+        if k in ("all", "any"):
+            for x in v:
+                self.cond(x, where)
+            return
+        if k == "is_turn":
+            if v not in ("you", "opp"):
+                raise DefError(f"{where}: is_turn must be you/opp")
+            return
+        raise DefError(f"{where}: unknown cond '{k}'")
+
+    def mod(self, m, where):
+        bad = set(m) - MOD_KEYS
+        if bad:
+            raise DefError(f"{where}: unknown mod keys {sorted(bad)}")
+        for kw in m.get("grant", []):
+            if kw not in self.keywords:
+                raise DefError(f"{where}: unknown keyword '{kw}'")
+        for k in ("allow", "deny"):
+            for e in m.get(k, []):
+                act = e if isinstance(e, str) else e.get("action")
+                if act not in self.actions:
+                    raise DefError(f"{where}: unknown action '{act}'")
+                if isinstance(e, dict):
+                    self.filter(e.get("other", {}), where)
+        for k in m.get("ignore", []):
+            if k not in ("trigger", "static", "replace", "all"):
+                raise DefError(f"{where}: bad ignore '{k}'")
+
+    def when(self, w, where):
+        ev = w.get("event")
         if ev not in EVENTS:
             raise DefError(f"{where}: unknown event '{ev}'")
+        for k in ("from", "to"):
+            if k in w and w[k] not in self.zones:
+                raise DefError(f"{where}: unknown zone '{w[k]}'")
+        if "reason" in w and w["reason"] not in REASONS:
+            raise DefError(f"{where}: unknown reason '{w['reason']}'")
+
+    def ability(self, ab, where):
+        kind = ab.get("kind")
+        if kind not in ABILITY_KINDS:
+            raise DefError(f"{where}: unknown ability kind '{kind}'")
+        if kind in ("trigger", "replace", "declare"):
+            self.when(ab.get("when", {}), where)
+        if kind == "static" and "mod" in ab:
+            self.mod(ab["mod"], where)
+        if kind == "static" and ab.get("zone", "bz") not in self.zones:
+            raise DefError(f"{where}: unknown zone '{ab['zone']}'")
+        if "if" in ab:
+            self.cond(ab["if"], where)
+        for k in ("effect", "instead"):
+            if k in ab:
+                self.ops(ab[k], where)
+
+
+def _expand_ability(ab, macros, where):
+    ab = dict(ab)
     for k in ("effect", "instead"):
         if k in ab:
             ab[k] = expand_ops(ab[k], macros, where)
-            _check_ops(ab[k], zones, where)
     return ab
 
 
+def _load_face(raw, keywords, macros, chk: Checker, where) -> dict:
+    names, abilities = [], []
+    for kw in raw.get("keywords", []):
+        if kw not in keywords:
+            raise DefError(f"{where}: unknown keyword '{kw}'")
+        names.append(kw)
+        abilities += [dict(_expand_ability(a, macros, where), keyword=kw) for a in keywords[kw]["abilities"]]
+    abilities += [_expand_ability(a, macros, where) for a in raw.get("abilities", [])]
+    for a in abilities:
+        chk.ability(a, where)
+    spell = expand_ops(raw.get("spell", []), macros, where)
+    chk.ops(spell, where)
+    for t in raw["types"]:
+        if t not in CARD_TYPES:
+            raise DefError(f"{where}: unknown type '{t}'")
+    if set(raw["civs"]) - CIVS:
+        raise DefError(f"{where}: unknown civs {raw['civs']}")
+    if "evolution" in raw["types"]:
+        if "evolve_from" not in raw:
+            raise DefError(f"{where}: evolution creature needs evolve_from")
+        chk.filter(raw["evolve_from"], where)
+    return dict(name=raw["name"], types=raw["types"], civs=raw["civs"], cost=raw["cost"],
+                power=raw.get("power", 0), races=raw.get("races", []), keywords=names,
+                abilities=abilities, spell=spell, evolve_from=raw.get("evolve_from"))
+
+
+def load_tables():
+    def y(name):
+        return yaml.safe_load((DATA / "rules" / name).read_text(encoding="utf-8"))
+    zones = y("zones.yaml")["zones"]
+    keywords = y("keywords.yaml")["keywords"]
+    macros = y("op_macros.yaml")["macros"]
+    actions = y("permissions.yaml")["actions"]
+    steps = [s["name"] for s in y("turn.yaml")["steps"]]
+    return zones, keywords, macros, actions, steps
+
+
+def parse_card(raw: dict, tables, where: str | None = None) -> CardDef:
+    zones, keywords, macros, actions, steps = tables
+    chk = Checker(zones, keywords, actions, steps)
+    where = where or str(raw.get("id"))
+    for kw in keywords.values():
+        for a in kw["abilities"]:
+            chk.ability(_expand_ability(a, macros, "keywords.yaml"), "keywords.yaml")
+    if "faces" in raw:   # ツインパクト（810）。カード全体の特性は両面を合わせたもの
+        faces = [Face(**_load_face(f, keywords, macros, chk, f"{where}/face{i}")) for i, f in enumerate(raw["faces"])]
+        if len(faces) != 2:
+            raise DefError(f"{where}: twinpact needs exactly 2 faces")
+        civs = sorted({c for f in faces for c in f.civs}, key=["light", "water", "darkness", "fire", "nature", "zero"].index)
+        return CardDef(id=raw["id"], name="／".join(f.name for f in faces),
+                       types=sorted({t for f in faces for t in f.types}), civs=civs,
+                       cost=faces[0].cost, power=faces[0].power, mana=raw.get("mana", 1),
+                       races=faces[0].races, text=raw.get("text", ""),
+                       keywords=sorted({k for f in faces for k in f.keywords}),
+                       abilities=[], spell=[], faces=faces, source=raw.get("source", {}))
+    f = _load_face(raw, keywords, macros, chk, where)
+    return CardDef(id=raw["id"], mana=raw.get("mana", 1), text=raw.get("text", ""),
+                   source=raw.get("source", {}), **f)
+
+
 def load_rules(card_files: list[Path] | None = None) -> Rules:
-    zones = yaml.safe_load((DATA / "rules/zones.yaml").read_text(encoding="utf-8"))["zones"]
-    keywords = yaml.safe_load((DATA / "rules/keywords.yaml").read_text(encoding="utf-8"))["keywords"]
-    macros = yaml.safe_load((DATA / "rules/op_macros.yaml").read_text(encoding="utf-8"))["macros"]
+    tables = load_tables()
+    zones, keywords, macros, actions, steps = tables
     card_files = card_files or sorted((DATA / "cards").glob("*.yaml"))
     cards: dict[str, CardDef] = {}
     for f in card_files:
-        for raw in yaml.safe_load(Path(f).read_text(encoding="utf-8"))["cards"]:
-            where = f"{raw.get('id')}"
-            markers, abilities = [], []
-            for kw in raw.get("keywords", []):
-                if kw not in keywords:
-                    raise DefError(f"{where}: unknown keyword '{kw}'")
-                if keywords[kw]["kind"] == "marker":
-                    markers.append(kw)
-                else:
-                    abilities += [_expand_ability(a, macros, zones, where) for a in keywords[kw]["abilities"]]
-            abilities += [_expand_ability(a, macros, zones, where) for a in raw.get("abilities", [])]
-            spell = expand_ops(raw.get("spell", []), macros, where)
-            _check_ops(spell, zones, where)
-            cd = CardDef(id=raw["id"], name=raw["name"], types=raw["types"], civs=raw["civs"],
-                         cost=raw["cost"], power=raw.get("power", 0), mana=raw.get("mana", 1), races=raw.get("races", []),
-                         text=raw.get("text", ""), keywords=markers, abilities=abilities, spell=spell)
+        for raw in yaml.safe_load(Path(f).read_text(encoding="utf-8")).get("cards") or []:
+            cd = parse_card(raw, tables)
             if cd.id in cards:
                 raise DefError(f"duplicate card id {cd.id}")
             cards[cd.id] = cd
-    return Rules(zones=zones, keywords=keywords, macros=macros, cards=cards)
+    return Rules(zones=zones, keywords=keywords, macros=macros, cards=cards, actions=actions, steps=steps)

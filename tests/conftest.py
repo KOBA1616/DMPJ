@@ -1,9 +1,11 @@
+import os
 import sys
 from pathlib import Path
 
 import pytest
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
+os.environ["DMSIM_CHECK"] = "1"   # タスク・選択肢の形を毎回検査する
 
 from dmsim import Engine, load_rules  # noqa: E402
 

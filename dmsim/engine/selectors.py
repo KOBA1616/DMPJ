@@ -26,6 +26,10 @@ class SelectorMixin:
             return not self.eval_cond(c["not"], env)
         if "all" in c:
             return all(self.eval_cond(x, env) for x in c["all"])
+        if "any" in c:
+            return any(self.eval_cond(x, env) for x in c["any"])
+        if "is_turn" in c:
+            return self.s.active == self._rel(c["is_turn"], env)
         raise ValueError(f"bad cond {c}")
 
     def filter_match(self, cid: int, f: dict, lki: dict | None = None, base: bool = False) -> bool:
@@ -43,6 +47,8 @@ class SelectorMixin:
         if "races" in f and not set(f["races"]) & set(ch["races"]):
             return False
         if "name" in f and ch["name"] != f["name"]:
+            return False
+        if "not_name" in f and ch["name"] == f["not_name"]:
             return False
         for k, key, cmp in (("cost_le", "cost", int.__le__), ("cost_ge", "cost", int.__ge__),
                             ("power_le", "power", int.__le__), ("power_ge", "power", int.__ge__)):

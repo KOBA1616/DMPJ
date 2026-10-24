@@ -1,16 +1,51 @@
 # キーワード能力の定義（設計判断④⑥）
-# marker: ルール側のフック（攻撃・ブロック・ブレイク処理など）が参照するだけの印
-# macro:  コアDSLの能力に展開されるもの。新しいキーワードはここに足す
+# どのキーワードも「能力の並び」に展開される。ルール側（攻撃・ブロック・ブレイク処理など）は
+# キーワード名を見ず、常在型能力が与える許可・禁止（permissions.yaml）と数値（breaks など）だけを見る。
+# 新しいキーワードはここに足す。エンジンのコードは変えない。
+#
+# static の mod で使えるもの:
+#   power: N            パワー修整
+#   grant: [kw...]      キーワードを与える（与えたキーワードの常在型能力も働く）
+#   allow: [act...]     行為を許可する（permissions.yaml）。要素は名前か {action, other: filter}
+#   deny:  [act...]     行為を禁止する。「できない」は「できる」に勝つ（101.2）
+#   breaks: N           ブレイクするシールドの数（大きい方を使う）
+#   ignore: [ability kinds]  能力を無視する（608.4, 608.5）
+# zone: 能力が機能するゾーン（既定 bz）。S・トリガーはシールドゾーンで機能する。
 keywords:
-  blocker:        {kind: marker, ja: ブロッカー}
-  speed_attacker: {kind: marker, ja: スピードアタッカー}
-  s_trigger:      {kind: marker, ja: S・トリガー}
-  double_breaker: {kind: marker, ja: W・ブレイカー, breaks: 2}
-  triple_breaker: {kind: marker, ja: T・ブレイカー, breaks: 3}
-  cannot_attack_player: {kind: marker, ja: このクリーチャーは相手プレイヤーを攻撃できない}
-  # 例: マクロ型。「バトルゾーンに出た時、自分の山札の上から1枚目をマナゾーンに置く」
+  blocker:
+    ja: ブロッカー
+    abilities:
+      - {kind: static, affects: self, mod: {allow: [block]}}
+  speed_attacker:
+    ja: スピードアタッカー
+    abilities:
+      - {kind: static, affects: self, mod: {allow: [attack_summoning_sick]}}
+  s_trigger:
+    ja: S・トリガー
+    abilities:
+      - {kind: static, zone: shield, affects: self, mod: {allow: [s_trigger]}}
+  double_breaker:
+    ja: W・ブレイカー
+    abilities:
+      - {kind: static, affects: self, mod: {breaks: 2}}
+  triple_breaker:
+    ja: T・ブレイカー
+    abilities:
+      - {kind: static, affects: self, mod: {breaks: 3}}
+  cannot_attack_player:
+    ja: このクリーチャーは相手プレイヤーを攻撃できない
+    abilities:
+      - {kind: static, affects: self, mod: {deny: [attack_player]}}
+  cannot_attack:
+    ja: このクリーチャーは攻撃できない
+    abilities:
+      - {kind: static, affects: self, mod: {deny: [attack_player, attack_creature]}}
+  unblockable:
+    ja: このクリーチャーはブロックされない
+    abilities:
+      - {kind: static, affects: self, mod: {deny: [be_blocked]}}
+  # 例: 誘発型を含むもの。「バトルゾーンに出た時、自分の山札の上から1枚目をマナゾーンに置く」
   mana_boost_cip:
-    kind: macro
     ja: (テスト用) 出た時マナ加速
     abilities:
       - kind: trigger

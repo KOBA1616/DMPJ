@@ -16,7 +16,9 @@ from dataclasses import dataclass, field
 from .engine import Engine
 
 
-def abstract(eng: Engine, period: str = "in_turn") -> tuple[str, dict[str, int]]:
+def abstract(eng: Engine, period: str = "in_turn", hand_keys: set[str] | None = None) -> tuple[str, dict[str, int]]:
+    """hand_keys を渡すと、手札はその名前のカードだけを骨格に入れ、残りは枚数（hand:p）だけのカウンタにする。
+    ドローを含むループ・ロックでは、引いたカードで骨格が変わらないようにこれを使う。"""
     s = eng.s
     zones = eng.rules.zones
 
@@ -32,9 +34,11 @@ def abstract(eng: Engine, period: str = "in_turn") -> tuple[str, dict[str, int]]
         "cont": sorted([json.dumps(ce["mod"], sort_keys=True), ce["duration"],
                         sorted(name(r[0]) for r in ce["affected"] if s.alive(r))] for ce in s.continuous),
         "hold": sorted(name(c) for c in s.hold),
-        "tasks": [[t["t"], t.get("phase"), t.get("pc")] for t in s.tasks],
-        "waiting": None if s.waiting is None else [s.waiting["kind"], s.waiting["player"],
-                                                   sorted(o["key"] for o in s.waiting["options"])],
+        "tasks": [[t["t"], t.get("phase"), t.get("pc"), t.get("i"), t.get("sub")] for t in s.tasks],
+        "waiting": None if s.waiting is None else [s.waiting["kind"], s.waiting["player"]] + (
+            [] if hand_keys is not None else [sorted(o["key"] for o in s.waiting["options"])]),
+        "delayed": sorted(json.dumps([d["when"], d["effect"], d["duration"]], sort_keys=True) for d in s.delayed),
+        "step_mods": sorted(json.dumps(m, sort_keys=True) for m in s.step_mods),
     }
     counters: dict[str, int] = {}
     for z, zd in zones.items():
@@ -43,6 +47,10 @@ def abstract(eng: Engine, period: str = "in_turn") -> tuple[str, dict[str, int]]
         for p in (0, 1):
             if zd["counter"]:
                 counters[f"{z}:{p}"] = len(s.zones[z][p])
+            elif z == "hand" and hand_keys is not None:
+                names = [name(c) for c in s.zones[z][p]]
+                skel[f"{z}:{p}"] = sorted(n for n in names if n in hand_keys)
+                counters[f"{z}:{p}"] = sum(1 for n in names if n not in hand_keys)
             else:
                 skel[f"{z}:{p}"] = sorted(name(c) for c in s.zones[z][p])
     for p in (0, 1):
@@ -63,6 +71,7 @@ class LoopCertificate:
     needed: int | None = None         # 勝利に必要な周回数
     verified: int = 0                 # 実際に再生して確認できた周回数
     notes: list[str] = field(default_factory=list)
+    hand_keys: set[str] | None = None
 
 
 def analyze(delta: dict[str, int], counters: dict[str, int], me: int) -> tuple[float, str | None, int | None]:
@@ -90,13 +99,14 @@ def analyze(delta: dict[str, int], counters: dict[str, int], me: int) -> tuple[f
 class LoopDetector:
     """1人回し中に呼び出し、同じ骨格への回帰を見つける。"""
 
-    def __init__(self, me: int = 0, period: str = "in_turn"):
+    def __init__(self, me: int = 0, period: str = "in_turn", hand_keys: set[str] | None = None):
         self.me = me
         self.period = period
+        self.hand_keys = hand_keys
         self.seen: dict[str, tuple[dict[str, int], int]] = {}
 
     def observe(self, eng: Engine) -> LoopCertificate | None:
-        h, ctr = abstract(eng, self.period)
+        h, ctr = abstract(eng, self.period, self.hand_keys)
         now = len(eng.log)
         if h in self.seen:
             old, at = self.seen[h]
@@ -106,7 +116,7 @@ class LoopDetector:
                 if any(v < 0 for k, v in delta.items() if k.endswith(f":{1 - self.me}")) or win_by:
                     acts = eng.log[at:now]
                     return LoopCertificate(h, [a["keys"] for a in acts], [a["p"] for a in acts], delta,
-                                           limit, self.period, win_by, needed)
+                                           limit, self.period, win_by, needed, hand_keys=self.hand_keys)
         self.seen[h] = (ctr, now)
         return None
 
@@ -115,7 +125,7 @@ def verify(eng: Engine, cert: LoopCertificate, times: int = 2) -> LoopCertificat
     """証明書の行動列を実際に再生し、同じ骨格に戻って同じ差分が出ることを確かめる。"""
     e = eng.clone()
     for _ in range(times):
-        h0, c0 = abstract(e, cert.period)
+        h0, c0 = abstract(e, cert.period, cert.hand_keys)
         for keys in cert.actions:
             d = e.advance()
             if d is None:
@@ -123,7 +133,7 @@ def verify(eng: Engine, cert: LoopCertificate, times: int = 2) -> LoopCertificat
                 return cert
             e.answer_by_keys(keys)
         e.advance()
-        h1, c1 = abstract(e, cert.period)
+        h1, c1 = abstract(e, cert.period, cert.hand_keys)
         delta = {k: c1[k] - c0[k] for k in c1 if c1[k] != c0[k]}
         if h1 != cert.start_skeleton or delta != cert.delta:
             cert.notes.append(f"diverged: delta={delta}")
