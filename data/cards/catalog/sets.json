@@ -345,7 +345,8 @@
     "dm26rp3-TR003"
    ],
    "listed": true,
-   "total": 156
+   "total": 156,
+   "fetched": 156
   },
   "26ex3": {
    "name": "DM26-EX3 キャラプレミアムパック ドラゴン娘になりたくないっ！ 文化祭だョ！全員集合!!ドラ娘100％パック",
@@ -513,7 +514,8 @@
     "dm26ex3-DCR003"
    ],
    "listed": true,
-   "total": 160
+   "total": 160,
+   "fetched": 160
   },
   "26ex2": {
    "name": "DM26-EX2 悪感謝祭 カリスマBEST",
@@ -675,7 +677,8 @@
     "dm26ex2-001"
    ],
    "listed": true,
-   "total": 154
+   "total": 154,
+   "fetched": 111
   },
   "26rp2": {
    "name": "DM26-RP2 逆札篇 第2弾 燃えろ禁断！逆転のドギラゴン革命!!",
