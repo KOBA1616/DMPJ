@@ -17,6 +17,7 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(ROOT / "tools"))
 import catalog_sets as cs  # noqa: E402
+import fetch_cards as fc  # noqa: E402
 
 SKIP = {"id", "official_id", "product", "name", "set_no", "set_notation"}
 
@@ -35,7 +36,7 @@ def build(led: dict, raw_dir: Path) -> dict:
     order = {v: i for i, v in enumerate(led["products"])}
     rows = []
     for f in raw_dir.glob("*.jsonl"):
-        rows += [json.loads(x) for x in f.read_text(encoding="utf-8").splitlines() if x.strip()]
+        rows += [fc.repair(json.loads(x)) for x in f.read_text(encoding="utf-8").splitlines() if x.strip()]
     rows.sort(key=lambda r: (order.get(r["product"], 10**6), r["official_id"]))
     groups = defaultdict(list)
     for r in rows:

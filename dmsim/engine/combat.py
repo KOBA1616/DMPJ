@@ -31,6 +31,41 @@ class CombatMixin:
                                 "target": self.s.ref(tc)})
         return out
 
+    def _battle_substitute(self, t, att, tgt):
+        """バトル相手の置換（「かわりにこのクリーチャーにバトルさせてもよい」）。ターン・プレイヤー側から順に選ぶ（609.8）。
+        置換効果 when: {event: battle, subject: <置き換えられる側>}、instead: [{op: battle_substitute}] を持つ
+        バトルゾーンのクリーチャーが、その側の代わりにバトルする。1回のバトルで同じ側は1度だけ。
+        戻り値: (att, tgt, Decision|None)。"""
+        s = self.s
+        sides = t.setdefault("subbed", [])
+        for k, (p, q) in enumerate(((att, tgt), (tgt, att))):
+            if k in sides or not s.alive(p) or not s.alive(q):
+                continue
+            ctrl = s.cards[p[0]].controller
+            rec = {"ev": "battle", "subject": p, "opponent": q, "controller": ctrl}
+            opts = []
+            for src in self.bz_tops(ctrl):
+                if src == p[0] or src == q[0]:
+                    continue
+                for i, ab in self.abilities(src, "replace"):
+                    if ab["when"]["event"] == "battle" and self._pattern_match(ab["when"], rec, src, None):
+                        opts.append({"key": f"battle_sub:{s.cards[src].defn}:{i}", "cid": src})
+            if not opts:
+                continue
+            a, d = self.ask(t, ctrl, "choose_replacement", opts + [{"key": "decline"}])
+            if d:
+                return att, tgt, d
+            sides.append(k)
+            if a[0] < len(opts):
+                new = s.ref(opts[a[0]]["cid"])
+                if k == 0:
+                    att = new
+                else:
+                    tgt = new
+                t["attacker"], t["target"] = att, tgt
+                break
+        return att, tgt, None
+
     def _battle(self, x, y):
         """バトル（701.13）。結果で誘発した効果はその場で解決してからバトルを終える。"""
         px, py = self.chars(x[0])["power"], self.chars(y[0])["power"]
@@ -156,7 +191,11 @@ def h_attack(eng, t):
     if ph == 3:                                               # 508 バトル
         t["phase"] = 4
         if t["target"] != "player":
-            eng._push(*eng._battle(att, t["target"]))
+            att, tgt, d = eng._battle_substitute(t, att, t["target"])
+            if d:
+                t["phase"] = 3
+                return d
+            eng._push(*eng._battle(att, tgt))
         return None
     if ph == 4:                                               # 509 ダイレクトアタック
         if t["target"] == "player" and eng.zlist("shield", 1 - a):

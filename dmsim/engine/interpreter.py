@@ -49,7 +49,7 @@ def h_swap_in(eng, t):
     if s.cards[o[0]].zone == "bz" or s.cards[o[0]].gen != t["out_gen_next"] or not s.alive(i):
         return None   # 701.26b 正常に離れなかったので入れ替えない
     cid = i[0]
-    eng._push(eng.ev_task({"ev": "move", "subject": i, "to": "bz", "reason": "put"}, t["env"]),
+    eng._push(eng.ev_task({"ev": "move", "subject": i, "to": "bz", "reason": "put", "via": "revolution_change"}, t["env"]),
               {"t": "swap_fix", "cid": cid, "out": o, "tapped": t["tapped"]})
     return None
 
