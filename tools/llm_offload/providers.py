@@ -118,7 +118,8 @@ class OpenCodeCLI:
         with tempfile.TemporaryDirectory() as d:
             f = Path(d) / "prompt.md"
             f.write_text(prompt, encoding="utf-8")
-            exe = shutil.which("opencode")      # Windows の npm 版は opencode.cmd なので、フルパスに解決しないと見つからない
+            # Windows の npm 版は拡張子なしの sh スクリプトと opencode.cmd が並ぶ。拡張子なしは起動できない(WinError 193)ので .cmd/.exe を先に探す
+            exe = next(filter(None, (shutil.which(n) for n in ("opencode.cmd", "opencode.exe", "opencode"))), None)
             if not exe:
                 raise FileNotFoundError("opencode コマンドが PATH にない（npm i -g opencode-ai）")
             r = subprocess.run([exe, "run", "-m", f"opencode/{self.model}", "--format", "json",
