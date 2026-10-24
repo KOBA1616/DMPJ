@@ -107,6 +107,7 @@ class OpenCodeCLI:
         self._last, self._lock = 0.0, threading.Lock()
 
     def complete(self, sysp: str, messages: list[dict], effort: str, usage: dict | None) -> str:
+        import shutil
         import subprocess
         import tempfile
         import time
@@ -117,9 +118,13 @@ class OpenCodeCLI:
         with tempfile.TemporaryDirectory() as d:
             f = Path(d) / "prompt.md"
             f.write_text(prompt, encoding="utf-8")
-            r = subprocess.run(["opencode", "run", "-m", f"opencode/{self.model}", "--format", "json",
+            exe = shutil.which("opencode")      # Windows の npm 版は opencode.cmd なので、フルパスに解決しないと見つからない
+            if not exe:
+                raise FileNotFoundError("opencode コマンドが PATH にない（npm i -g opencode-ai）")
+            r = subprocess.run([exe, "run", "-m", f"opencode/{self.model}", "--format", "json",
                                 "添付ファイルの指示に従い、最後の [user] への答えだけを出力して。", "-f", str(f)],
-                               capture_output=True, text=True, timeout=600, cwd=d)
+                               capture_output=True, text=True, encoding="utf-8", errors="replace",
+                               timeout=600, cwd=d)
         if re.search(r"(?i)FreeTierError|billing|credit balance|insufficient|payment", r.stdout + r.stderr):
             raise Fatal(f"課金・無料枠に関するエラーなので停止する: {(r.stdout + r.stderr)[:300]}")
         texts, err = [], None

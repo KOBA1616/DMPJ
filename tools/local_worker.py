@@ -49,7 +49,8 @@ class Git:
         work.mkdir(parents=True, exist_ok=True)
 
     def sh(self, *args, cwd: Path | None = None, check: bool = True, inp: str | None = None) -> str:
-        r = subprocess.run(["git", *args], cwd=cwd or self.root, capture_output=True, text=True, input=inp)
+        r = subprocess.run(["git", *args], cwd=cwd or self.root, capture_output=True, text=True, input=inp,
+                           encoding="utf-8", errors="replace")
         if check and r.returncode:
             raise RuntimeError(f"git {' '.join(args)}: {r.stderr.strip()[:300]}")
         return r.stdout.strip()
