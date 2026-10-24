@@ -160,19 +160,25 @@ class EventMixin:
                 ce["affected"].append(new)
 
     def _sba(self):
-        """状況起因処理（703.3: 条件を満たすものすべてを単一のイベントとして同時に処理）。"""
+        """状況起因処理（703.3: 条件を満たすものすべてを単一のイベントとして同時に処理）。
+        イベントの後のほか、イベントを通さずに状態が変わった時（継続的効果の生成・終了など）にも呼ぶ（111.2d）。"""
+        self._push(*self._sba_tasks())
+
+    def _sba_tasks(self) -> list[dict]:
         s = self.s
         if s.result is not None:
-            return
-        out = [p for p in (0, 1) if not s.zones["deck"][p]]   # 703.4b 山札0枚で敗北（104.2b: 効果の途中でも）
+            return []
+        # 703.4b 山札0枚で敗北。104.2b: 効果の途中で一瞬でも0枚になっていれば0枚とみなす
+        out = sorted(set(s.deck_emptied) | {p for p in (0, 1) if not s.zones["deck"][p]})
         if out:
             s.result = {"winner": None if len(out) == 2 else 1 - out[0], "reason": "deck_out", "turn": s.turn}
-            return
+            return []
         dead = [s.ref(c) for c in self.bz_tops()
                 if "creature" in self.chars(c)["types"] and self.chars(c)["power"] <= 0]   # 703.4c
         if dead:
-            self._push(self.ev_task([{"ev": "move", "subject": r, "to": "graveyard", "reason": "destroy"}
-                                     for r in dead]))
+            return [self.ev_task([{"ev": "move", "subject": r, "to": "graveyard", "reason": "destroy"}
+                                  for r in dead])]
+        return []
 
     def _subject_match(self, pat, cid, env, lki, base=False) -> bool:
         if pat == "self":
@@ -340,7 +346,7 @@ def h_resolve_pending(eng, t):
     s.pending.remove(p)
     if p["kind"] == "strigger":
         if s.alive(p["src"]):
-            eng._push(eng.play_task(p["src"][0], player, True, p.get("face")))
+            eng._push(eng.play_task(p["src"][0], player, True, p.get("face"), st=True))
     else:
         ab = eng.pending_ability(p)
         env = p["env"]

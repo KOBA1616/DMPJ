@@ -31,8 +31,9 @@ def abstract(eng: Engine, period: str = "in_turn", hand_keys: set[str] | None = 
         "bz": sorted([s.cards[c].controller, name(c), s.cards[c].tapped, s.cards[c].entered_turn == s.turn,
                       sorted(name(u) for u in s.cards[c].under)] for c in eng.bz_tops()),
         "pending": sorted([p["kind"], p["defn"], p["ab"], p["controller"], p["win"]] for p in s.pending),
-        "cont": sorted([json.dumps(ce["mod"], sort_keys=True), ce["duration"],
-                        sorted(name(r[0]) for r in ce["affected"] if s.alive(r))] for ce in s.continuous),
+        "cont": sorted([json.dumps(ce["mod"], sort_keys=True), ce["duration"],   # affected=None は filter で範囲を見る効果
+                        sorted(name(r[0]) for r in ce["affected"] or [] if s.alive(r)),
+                        json.dumps(ce.get("filter"), sort_keys=True)] for ce in s.continuous),
         "hold": sorted(name(c) for c in s.hold),
         "tasks": [[t["t"], t.get("phase"), t.get("pc"), t.get("i"), t.get("sub")] for t in s.tasks],
         "waiting": None if s.waiting is None else [s.waiting["kind"], s.waiting["player"]] + (

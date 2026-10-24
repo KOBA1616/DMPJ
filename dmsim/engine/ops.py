@@ -76,8 +76,11 @@ def op_repeat(eng, t, op, env):
 
 @op("break", player="player?", count="expr?")
 def op_break(eng, t, op, env):
+    """効果でブレイクする。出た S・トリガーは、この効果の処理が終わってから解決する（101.4d）。
+    ただし S・トリガーの解決中のブレイクなら、すでに待機している効果より先にその場で解決する（101.4g）。"""
     eng._defer(t, [{"t": "break", "victim": eng._rel(op.get("player", "opp"), env), "by": env["you"],
-                     "count": eng.eval_expr(op.get("count", 1), env), "phase": 0, "in_effect": True}])
+                     "count": eng.eval_expr(op.get("count", 1), env), "phase": 0,
+                     "in_effect": bool(env.get("in_st"))}])
 
 
 @op("modify", select="selector", mod="mod", duration="duration?", dynamic="bool?")
@@ -100,6 +103,9 @@ def op_modify(eng, t, op, env):
             return d
         ce["affected"] = [s.ref(c) for c in cids]
     s.continuous.append(ce)
+    sba = eng._sba_tasks()
+    if sba:   # パワー0以下になったら、この効果の続きより先に破壊する（703.4c, 111.2d）
+        eng._defer(t, sba)
     return None
 
 

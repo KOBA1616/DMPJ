@@ -1,0 +1,202 @@
+# 総合ルール準拠テスト（tests/test_rules.py）専用の架空カード。ID は R 始まり。
+# 条文の状況を最小の盤面で作るためのもので、実カードではない。
+cards:
+  - id: R001
+    name: 墓所の番人
+    types: [creature]
+    civs: [darkness]
+    cost: 2
+    power: 1000
+    races: [テスト]
+    text: クリーチャーが破壊された時、カードを1枚引く。
+    abilities:
+      - kind: trigger
+        when: {event: move, from: bz, to: graveyard, reason: destroy, subject: {owner: any, filter: {types: [creature]}}}
+        effect:
+          - {op: draw, count: 1}
+
+  - id: R002
+    name: 全滅の儀
+    types: [spell]
+    civs: [darkness]
+    cost: 1
+    text: すべてのクリーチャーを破壊する。
+    spell:
+      - op: destroy
+        select: {zone: bz, owner: any, filter: {types: [creature]}, count: all}
+
+  - id: R003
+    name: 身代わりの守り手
+    types: [creature]
+    civs: [nature]
+    cost: 2
+    power: 2000
+    races: [テスト]
+    text: 自分のクリーチャーが破壊される時、墓地に置くかわりに手札に戻してもよい。
+    abilities:
+      - kind: replace
+        optional: true
+        when: {event: move, from: bz, to: graveyard, reason: destroy, subject: {owner: you, filter: {types: [creature]}}}
+        instead:
+          - {op: bounce, select: {ref: event.subject}}
+
+  - id: R004
+    name: 奈落の看守
+    types: [creature]
+    civs: [darkness]
+    cost: 3
+    power: 3000
+    races: [テスト]
+    text: 相手のクリーチャーが破壊される時、墓地に置くかわりに山札の一番下に置く。
+    abilities:
+      - kind: replace
+        when: {event: move, from: bz, to: graveyard, reason: destroy, subject: {owner: opp}}
+        instead:
+          - {op: move, select: {ref: event.subject}, to: deck, reason: put, position: bottom}
+
+  - id: R006
+    name: 観測の突撃兵
+    types: [creature]
+    civs: [fire]
+    cost: 3
+    power: 3000
+    races: [テスト]
+    text: スピードアタッカー / 相手のシールドがブレイクされた時、このクリーチャーがバトルゾーンにあれば、相手の山札の上から1枚目を墓地に置く。
+    keywords: [speed_attacker]
+    abilities:
+      - kind: trigger
+        when: {event: break, player: opp}
+        if: {exists: {ref: self}}
+        effect:
+          - {op: mill, owner: opp, count: 1}
+
+  - id: R007
+    name: 打ち砕きの知恵
+    types: [spell]
+    civs: [fire]
+    cost: 1
+    text: 相手のシールドを1つブレイクする。その後、自分のクリーチャーがいれば、カードを2枚引く。
+    spell:
+      - {op: break, player: opp, count: 1}
+      - op: if
+        cond: {exists: {zone: bz, owner: you, filter: {types: [creature]}}}
+        then:
+          - {op: draw, count: 2}
+
+  - id: R008
+    name: 反撃の砲火
+    types: [spell]
+    civs: [fire]
+    cost: 3
+    text: S・トリガー / 相手のシールドを1つブレイクする。
+    keywords: [s_trigger]
+    spell:
+      - {op: break, player: opp, count: 1}
+
+  - id: R009
+    name: 備えの知恵
+    types: [spell]
+    civs: [water]
+    cost: 2
+    text: S・トリガー / カードを1枚引く。
+    keywords: [s_trigger]
+    spell:
+      - {op: draw, count: 1}
+
+  - id: R010
+    name: 伏兵の精
+    types: [creature]
+    civs: [nature]
+    cost: 3
+    power: 2000
+    races: [テスト]
+    text: S・トリガー / このクリーチャーがバトルゾーンに出た時、カードを1枚引いてもよい。
+    keywords: [s_trigger]
+    abilities:
+      - kind: trigger
+        when: {event: move, to: bz, subject: self}
+        effect:
+          - op: may
+            body:
+              - {op: draw, count: 1}
+
+  - id: R011
+    name: 寄生の芽
+    types: [creature]
+    civs: [nature]
+    cost: 1
+    power: 1000
+    races: [テスト]
+    text: このクリーチャーがバトルゾーンに出た時、自分の山札の上から1枚目をこのクリーチャーの下に置く。
+    abilities:
+      - kind: trigger
+        when: {event: move, to: bz, subject: self}
+        effect:
+          - {op: put_under, select: {zone: deck, owner: you, from_top: 1}, onto: {ref: self}}
+
+  - id: R012
+    name: 枯らしの霧
+    types: [spell]
+    civs: [water]
+    cost: 1
+    text: 各プレイヤーは自分の山札の上から1枚目を墓地に置く。
+    spell:
+      - {op: move, select: {zone: deck, owner: any, from_top: 1}, to: graveyard, reason: put}
+
+  - id: R013
+    name: 衰弱の呪い
+    types: [spell]
+    civs: [darkness]
+    cost: 1
+    text: このターン、相手のクリーチャーを1体選び、パワーを-3000する。その後、相手のクリーチャーがいなければ、カードを1枚引く。
+    spell:
+      - {op: modify, select: {zone: bz, owner: opp, filter: {types: [creature]}, count: 1}, mod: {power: -3000}}
+      - op: if
+        cond: {not: {exists: {zone: bz, owner: opp, filter: {types: [creature]}}}}
+        then:
+          - {op: draw, count: 1}
+
+  - id: R014
+    name: 弱体の刺客
+    types: [creature]
+    civs: [darkness]
+    cost: 1
+    power: 1000
+    races: [テスト]
+    text: このクリーチャーがバトルゾーンに出た時、このターン、相手のクリーチャーを1体選び、パワーを-3000する。
+    abilities:
+      - kind: trigger
+        when: {event: move, to: bz, subject: self}
+        effect:
+          - {op: modify, select: {zone: bz, owner: opp, filter: {types: [creature]}, count: 1}, mod: {power: -3000}}
+
+  - id: R015
+    name: 盗み見の使い魔
+    types: [creature]
+    civs: [water]
+    cost: 2
+    power: 1000
+    races: [テスト]
+    text: 相手がカードを引いた時、相手の山札の上から1枚目を墓地に置いてもよい。
+    abilities:
+      - kind: trigger
+        when: {event: draw, player: opp}
+        effect:
+          - op: may
+            body:
+              - {op: mill, owner: opp, count: 1}
+
+  - id: R016
+    name: 落日の兵
+    types: [creature]
+    civs: [darkness]
+    cost: 2
+    power: 2000
+    races: [テスト]
+    text: 自分のターン中にこのクリーチャーが破壊された時、カードを1枚引く。
+    abilities:
+      - kind: trigger
+        when: {event: move, from: bz, to: graveyard, reason: destroy, subject: self}
+        if: {is_turn: you}
+        effect:
+          - {op: draw, count: 1}

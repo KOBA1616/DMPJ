@@ -81,6 +81,7 @@ class Env(TypedDict, total=False):
     event: EventRecord
     vars: dict[str, list[Ref]]
     no_replace: bool
+    in_st: bool                          # S・トリガーとして解決中の呪文の効果（101.4g）
     eng: Ref
 
 
@@ -187,7 +188,7 @@ class PlayTask(TypedDict):
     gen: int                             # 積んだ時の世代。カードが動いていたら実行しない（400.8）
     face: NotRequired[int]
     evo: NotRequired[Ref]                # 進化元（801）
-    resolve_to: NotRequired[str]         # 呪文の解決後の置き場所を上書きする（play_free の resolve_to）
+    st: NotRequired[bool]                # S・トリガーとして実行する（101.4g）
     answer: NotRequired[list[int]]
 
 
