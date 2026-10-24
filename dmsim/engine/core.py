@@ -241,6 +241,7 @@ class Engine(SelectorMixin, EventMixin, InterpreterMixin, TurnMixin, CombatMixin
             ch["allow"] += m.get("allow", [])
             ch["deny"] += m.get("deny", [])
             ch["breaks"] = max(ch["breaks"], m.get("breaks", 1))
+        ch["keywords"] = sorted(ch["keywords"])   # 状態（LKI）に入るので JSON にできる形で返す
         return ch
 
     def _permits_face(self, cid: int, action: str, face: int | None) -> bool:

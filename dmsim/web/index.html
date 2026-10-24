@@ -1,0 +1,254 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>dmsim 開発者モード</title>
+<style>
+:root {
+  --bg: #f6f6f4; --panel: #ffffff; --ink: #1d1d1b; --muted: #6b6b66; --line: #deded8;
+  --accent: #2f5fd0; --ok: #1f8a4c; --ng: #c23b32; --warn: #a86b00; --tapped: #ecebe4;
+  --chip: #eef1fa;
+}
+@media (prefers-color-scheme: dark) {
+  :root { --bg: #161615; --panel: #20201e; --ink: #ecece8; --muted: #9a9a93; --line: #34342f;
+    --accent: #7ea2ff; --ok: #4cc27f; --ng: #ff7a70; --warn: #e2a640; --tapped: #2a2a26; --chip: #262b3a; }
+}
+* { box-sizing: border-box; }
+body { margin: 0; background: var(--bg); color: var(--ink); font: 14px/1.5 system-ui, "Hiragino Sans", "Noto Sans JP", sans-serif; }
+header { display: flex; gap: 16px; align-items: center; padding: 10px 16px; border-bottom: 1px solid var(--line); background: var(--panel); position: sticky; top: 0; z-index: 2; }
+header h1 { font-size: 15px; margin: 0; }
+nav button { border: 0; background: none; color: var(--muted); font: inherit; padding: 6px 10px; cursor: pointer; border-radius: 6px; }
+nav button.on { color: var(--ink); background: var(--chip); }
+main { padding: 16px; max-width: 1400px; margin: 0 auto; }
+.grid { display: grid; grid-template-columns: minmax(0, 1fr) 380px; gap: 16px; }
+@media (max-width: 900px) { .grid { grid-template-columns: 1fr; } }
+.panel { background: var(--panel); border: 1px solid var(--line); border-radius: 10px; padding: 12px; margin-bottom: 12px; }
+.panel h2 { font-size: 13px; margin: 0 0 8px; color: var(--muted); font-weight: 600; }
+.player { margin-bottom: 4px; }
+.zone { display: flex; gap: 8px; align-items: flex-start; padding: 6px 0; border-top: 1px dashed var(--line); }
+.zone:first-of-type { border-top: 0; }
+.zname { width: 76px; flex: none; color: var(--muted); font-size: 12px; padding-top: 4px; }
+.cards { display: flex; flex-wrap: wrap; gap: 6px; min-height: 26px; }
+.card { border: 1px solid var(--line); border-radius: 6px; padding: 3px 7px; background: var(--panel); font-size: 12px; max-width: 220px; }
+.card.tapped { background: var(--tapped); color: var(--muted); }
+.card .meta { color: var(--muted); font-size: 11px; }
+.status { display: flex; gap: 12px; flex-wrap: wrap; font-size: 13px; }
+.status b { font-weight: 600; }
+.opts { display: flex; flex-direction: column; gap: 6px; }
+.opt { display: flex; gap: 8px; align-items: center; padding: 6px 8px; border: 1px solid var(--line); border-radius: 6px; cursor: pointer; background: var(--panel); color: var(--ink); text-align: left; font: inherit; }
+.opt:hover { border-color: var(--accent); }
+.opt input { margin: 0; }
+button.act { font: inherit; padding: 6px 12px; border-radius: 6px; border: 1px solid var(--line); background: var(--panel); color: var(--ink); cursor: pointer; }
+button.act.primary { background: var(--accent); border-color: var(--accent); color: #fff; }
+button.act.ok { color: var(--ok); border-color: var(--ok); }
+button.act.ng { color: var(--ng); border-color: var(--ng); }
+.row { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
+textarea, input[type=text], input[type=number], select { font: 12px/1.4 ui-monospace, SFMono-Regular, Menlo, monospace; background: var(--bg); color: var(--ink); border: 1px solid var(--line); border-radius: 6px; padding: 6px; }
+textarea { width: 100%; min-height: 150px; }
+.hist { max-height: 520px; overflow: auto; font-size: 12px; }
+.hist .h { padding: 6px 0; border-top: 1px solid var(--line); }
+.hist .h.auto { color: var(--muted); }
+.hist ul { margin: 2px 0 0 16px; padding: 0; }
+.err { color: var(--ng); white-space: pre-wrap; }
+.badge { font-size: 11px; padding: 1px 6px; border-radius: 10px; border: 1px solid currentColor; }
+.badge.pending { color: var(--warn); } .badge.approved { color: var(--ok); } .badge.rejected { color: var(--ng); }
+.cardrow { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+@media (max-width: 900px) { .cardrow { grid-template-columns: 1fr; } }
+pre { margin: 0; white-space: pre-wrap; font: 12px/1.45 ui-monospace, SFMono-Regular, Menlo, monospace; background: var(--bg); border-radius: 6px; padding: 8px; max-height: 360px; overflow: auto; }
+.muted { color: var(--muted); }
+.result { font-weight: 600; color: var(--accent); }
+.hidden { display: none; }
+</style>
+</head>
+<body>
+<header>
+  <h1>dmsim 開発者モード</h1>
+  <nav><button id="tab-game" class="on">対戦</button><button id="tab-cards">カード</button></nav>
+  <span id="err" class="err"></span>
+</header>
+<main>
+<section id="game">
+  <div class="grid">
+    <div>
+      <div class="panel">
+        <div class="status" id="status"><span class="muted">「開始」で局面を作る</span></div>
+      </div>
+      <div class="panel"><h2>相手（プレイヤー1）</h2><div id="p1"></div></div>
+      <div class="panel"><h2>自分（プレイヤー0）</h2><div id="p0"></div></div>
+      <div class="panel" id="effects-panel"><h2>継続的効果・遅延誘発・ターン構造の変更</h2><pre id="effects">なし</pre></div>
+    </div>
+    <div>
+      <div class="panel">
+        <h2>決定</h2>
+        <div id="decision" class="muted">局面がない</div>
+      </div>
+      <div class="panel">
+        <h2>操作</h2>
+        <div class="row">
+          <button class="act" id="undo">1手戻す</button>
+          <button class="act" id="save">記録を保存</button>
+          <label class="act" style="cursor:pointer">記録を読む<input type="file" id="load" accept=".json" class="hidden"></label>
+        </div>
+        <div class="row" style="margin-top:8px">
+          <label><input type="checkbox" id="auto0"> 自分を自動</label>
+          <label><input type="checkbox" id="auto1" checked> 相手を自動（何もしない）</label>
+        </div>
+      </div>
+      <div class="panel">
+        <h2>開始</h2>
+        <div class="row" style="margin-bottom:6px">
+          <select id="mode"><option value="scenario">シナリオ（配置を指定）</option><option value="decks">デッキ＋シード</option></select>
+          <button class="act primary" id="start">開始</button>
+        </div>
+        <textarea id="spec" spellcheck="false"></textarea>
+        <div class="muted" style="font-size:12px">シナリオ: {"p0": {"hand": [...], "mana": [...], "bz": [...]}, "p1": {...}, "filler": "T001", "seed": 1}。デッキ: {"decks": [[...],[...]], "seed": 1, "first": 0}</div>
+      </div>
+      <div class="panel"><h2>経過（1手ごとに動いたカード）</h2><div id="hist" class="hist"></div></div>
+    </div>
+  </div>
+</section>
+<section id="cards" class="hidden">
+  <div class="panel row">
+    <input type="text" id="q" placeholder="名前・IDで絞り込み" style="width:240px">
+    <select id="rf"><option value="pending">pending</option><option value="">すべて</option><option value="approved">approved</option><option value="rejected">rejected</option><option value="none">検証用（source なし）</option></select>
+    <span id="count" class="muted"></span>
+  </div>
+  <div id="cardlist"></div>
+</section>
+</main>
+<script>
+const $ = (id) => document.getElementById(id);
+let gid = null, view = null, cards = [];
+const esc = (s) => String(s ?? "").replace(/[&<>"]/g, (c) => ({"&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;"}[c]));
+
+async function api(path, body) {
+  $("err").textContent = "";
+  const r = await fetch(path, {method: "POST", headers: {"Content-Type": "application/json"}, body: JSON.stringify(body || {})});
+  const j = await r.json();
+  if (!r.ok) { $("err").textContent = j.error; throw new Error(j.error); }
+  return j;
+}
+
+// ---- 対戦 ----
+const ZNAME = {hand: "手札", bz: "バトルゾーン", mana: "マナ", shield: "シールド", graveyard: "墓地", deck: "山札", hyper: "超次元", gr: "超GR", abyss: "深淵"};
+function cardHtml(c) {
+  const meta = [];
+  if (c.power !== undefined) meta.push(c.power);
+  if (c.sick) meta.push("召喚酔い");
+  if (c.keywords && c.keywords.length) meta.push(c.keywords.join(","));
+  if (c.under && c.under.length) meta.push("下: " + c.under.join("・"));
+  return `<div class="card ${c.tapped ? "tapped" : ""}" title="${esc(c.id)} #${c.cid}">${esc(c.name)}${c.tapped ? " (T)" : ""}${meta.length ? `<div class="meta">${esc(meta.join(" / "))}</div>` : ""}</div>`;
+}
+function playerHtml(zs) {
+  const order = ["bz", "shield", "mana", "hand", "graveyard", "deck", "hyper", "gr", "abyss"];
+  return order.filter((z) => z in zs).map((z) => {
+    const v = zs[z];
+    const inner = z === "deck" ? `<span class="muted">${v.count}枚　上から:</span> ${v.top.map(cardHtml).join("")}` : v.map(cardHtml).join("");
+    return `<div class="zone"><div class="zname">${ZNAME[z] || z}${z === "deck" ? "" : ` (${v.length})`}</div><div class="cards">${inner}</div></div>`;
+  }).join("");
+}
+function render(v) {
+  view = v; gid = v.gid;
+  $("status").innerHTML = `<span><b>ターン</b> ${v.turn}</span><span><b>手番</b> P${v.active}</span><span><b>ステップ</b> ${esc(v.step)}</span><span><b>選択</b> ${v.log_len}手</span>` +
+    (v.result ? `<span class="result">終了: ${esc(JSON.stringify(v.result))}</span>` : "") + `<span class="muted">digest ${v.digest.slice(0, 8)}</span>`;
+  $("p0").innerHTML = playerHtml(v.zones[0]);
+  $("p1").innerHTML = playerHtml(v.zones[1]);
+  const eff = {continuous: v.continuous, delayed: v.delayed, step_mods: v.step_mods, hold: v.hold.map((c) => c.name)};
+  const any = v.continuous.length || v.delayed.length || v.step_mods.length || v.hold.length;
+  $("effects").textContent = any ? JSON.stringify(eff, null, 1) : "なし";
+  $("auto0").checked = v.auto[0]; $("auto1").checked = v.auto[1];
+  const d = v.decision;
+  if (!d) { $("decision").innerHTML = `<span class="muted">${v.result ? "対戦は終わった" : "決定なし"}</span>`; }
+  else {
+    const multi = d.max > 1 || d.min !== 1;
+    $("decision").innerHTML = `<div style="margin-bottom:6px"><b>P${d.player}</b> ・ <code>${esc(d.kind)}</code> ${multi ? `<span class="muted">（${d.min}〜${d.max}個）</span>` : ""} ${esc(d.prompt)}</div>` +
+      `<div class="opts">${d.options.map((o) => multi
+        ? `<label class="opt"><input type="checkbox" value="${o.i}">${esc(o.label)}</label>`
+        : `<button class="opt" data-i="${o.i}">${esc(o.label)}</button>`).join("")}</div>` +
+      (multi ? `<div style="margin-top:8px"><button class="act primary" id="send">決定</button></div>` : "");
+    if (multi) $("send").onclick = () => answer([...document.querySelectorAll("#decision input:checked")].map((x) => +x.value));
+    else document.querySelectorAll("#decision button.opt").forEach((b) => b.onclick = () => answer([+b.dataset.i]));
+  }
+  $("hist").innerHTML = v.history.slice().reverse().map((h) =>
+    `<div class="h ${h.auto ? "auto" : ""}"><span class="muted">T${h.turn}</span> <b>${h.p === null ? "準備" : "P" + h.p}</b> ${esc(h.kind)}${h.chosen.length ? " → " + esc(h.chosen.join(", ")) : ""}${h.auto ? " (自動)" : ""}` +
+    (h.changes.length ? `<ul>${h.changes.map((c) => `<li>${esc(c)}</li>`).join("")}</ul>` : "") + `</div>`).join("") || `<span class="muted">まだない</span>`;
+}
+async function answer(choice) { render(await api("/api/answer", {gid, choice})); }
+$("undo").onclick = async () => gid && render(await api("/api/undo", {gid}));
+$("auto0").onchange = $("auto1").onchange = async () => gid && render(await api("/api/auto", {gid, auto: [$("auto0").checked, $("auto1").checked]}));
+$("start").onclick = async () => {
+  const spec = JSON.parse($("spec").value);
+  render(await api("/api/new", $("mode").value === "scenario" ? {scenario: spec} : spec));
+};
+$("save").onclick = async () => {
+  if (!gid) return;
+  const rec = await api("/api/record", {gid});
+  const a = document.createElement("a");
+  a.href = URL.createObjectURL(new Blob([JSON.stringify(rec, null, 1)], {type: "application/json"}));
+  a.download = `dmsim-record-${Date.now()}.json`; a.click();
+};
+$("load").onchange = async (e) => {
+  const f = e.target.files[0]; if (!f) return;
+  render(await api("/api/load", {record: JSON.parse(await f.text())}));
+  e.target.value = "";
+};
+$("mode").onchange = () => {
+  $("spec").value = $("mode").value === "scenario"
+    ? JSON.stringify({p0: {hand: ["dm01-080"], mana: ["dm01-080", "dm01-080", "dm01-080"]}, p1: {bz: ["dm01-001"]}, filler: "T001", seed: 1}, null, 1)
+    : JSON.stringify({decks: [Array(40).fill("dm01-080"), Array(40).fill("dm01-080")], seed: 1, first: 0}, null, 1);
+};
+
+// ---- カード ----
+async function loadCards() { cards = (await api("/api/cards")).cards; renderCards(); }
+function renderCards() {
+  const q = $("q").value.trim(), rf = $("rf").value;
+  const list = cards.filter((c) => (!q || c.name.includes(q) || c.id.includes(q)) &&
+    (!rf || (rf === "none" ? !c.review : c.review === rf)));
+  $("count").textContent = `${list.length}枚`;
+  $("cardlist").innerHTML = list.map((c) => `
+    <div class="panel" data-id="${esc(c.id)}">
+      <div class="row" style="justify-content:space-between">
+        <div><b>${esc(c.name)}</b> <span class="muted">${esc(c.id)} ・ ${esc(c.civs.join("/"))} ・ コスト${c.cost} ・ ${esc(c.file)}</span>
+          ${c.review ? `<span class="badge ${c.review}">${c.review}</span>` : ""}</div>
+        <div class="row">
+          <button class="act" data-a="try">試す</button>
+          ${c.review ? `<input type="text" placeholder="確認メモ" value="${esc(c.review_note)}" style="width:200px">
+          <button class="act ok" data-a="approved">approve</button><button class="act ng" data-a="rejected">reject</button>
+          <button class="act" data-a="pending">pending に戻す</button>` : ""}
+        </div>
+      </div>
+      <div class="cardrow" style="margin-top:8px">
+        <div>
+          <div class="muted" style="font-size:12px">${c.official ? "公式テキスト" : "テキスト"}</div>
+          <pre>${esc(c.official ? c.official.text : c.text)}</pre>
+          ${c.notes ? `<div class="muted" style="font-size:12px;margin-top:6px">変換メモ</div><pre>${esc(c.notes)}</pre>` : ""}
+        </div>
+        <div><div class="muted" style="font-size:12px">効果データ</div><pre>${esc(c.yaml)}</pre></div>
+      </div>
+    </div>`).join("");
+  document.querySelectorAll("#cardlist button.act").forEach((b) => b.onclick = async () => {
+    const box = b.closest("[data-id]"), id = box.dataset.id, a = b.dataset.a;
+    if (a === "try") {
+      const {scenario} = await api("/api/try", {id});
+      $("mode").value = "scenario"; $("spec").value = JSON.stringify(scenario, null, 1);
+      show("game"); render(await api("/api/new", {scenario}));
+    } else {
+      const note = box.querySelector("input[type=text]").value;
+      await api("/api/review", {id, status: a, note});
+      await loadCards();
+    }
+  });
+}
+$("q").oninput = $("rf").onchange = renderCards;
+
+function show(t) {
+  $("game").classList.toggle("hidden", t !== "game"); $("cards").classList.toggle("hidden", t !== "cards");
+  $("tab-game").classList.toggle("on", t === "game"); $("tab-cards").classList.toggle("on", t === "cards");
+}
+$("tab-game").onclick = () => show("game");
+$("tab-cards").onclick = () => { show("cards"); if (!cards.length) loadCards(); };
+$("mode").onchange();
+</script>
+</body>
+</html>
