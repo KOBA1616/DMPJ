@@ -31,8 +31,9 @@ MOD_KEYS = {"power", "grant", "allow", "deny", "breaks", "ignore", "gain"}
 POSITIONS = {"top", "bottom"}
 CARD_TYPES = {"creature", "spell", "evolution"}
 CIVS = {"light", "water", "darkness", "fire", "nature", "zero"}
-SELECTOR_KEYS = {"zone", "owner", "owner_of", "filter", "count", "up_to", "from_top", "chooser", "ref", "other"}
-FILTER_KEYS = {"types", "not_types", "civs", "races", "race_has", "name", "name_has", "not_name",
+SELECTOR_KEYS = {"zone", "owner", "owner_of", "filter", "count", "up_to", "from_top", "chooser", "ref", "other",
+                 "look"}   # look: 非公開ゾーン（山札など）の中身を見て選ぶ
+FILTER_KEYS = {"types", "not_types", "civs", "not_civs", "races", "race_has", "name", "name_has", "not_name",
                "cost_le", "cost_ge", "power_le", "power_ge", "tapped", "keyword"}
 FILTER_EXPR_KEYS = {"cost_le", "cost_ge", "power_le", "power_ge"}   # 値に式を書ける（解決時に計算）
 
@@ -108,6 +109,11 @@ class Rules:
         self.ignore_defs = {d.id for d in self.cards.values()
                             for f in ([d] + d.faces) for ab in f.abilities
                             if ab["kind"] == "static" and "ignore" in ab.get("mod", {})}
+        # バトルゾーン以外（墓地など）で機能する誘発型能力を持つカード。誘発チェックでそのゾーンも見る
+        self.zone_trigger_defs = {d.id: {ab.get("zone") for f in ([d] + d.faces) for ab in f.abilities
+                                         if ab["kind"] == "trigger" and ab.get("zone", "bz") != "bz"}
+                                  for d in self.cards.values()}
+        self.zone_trigger_defs = {k: v for k, v in self.zone_trigger_defs.items() if v}
 
 
 def _subst(obj, args, used=None):
@@ -235,8 +241,9 @@ class Checker:
         bad = set(f) - FILTER_KEYS
         if bad:
             raise DefError(f"{where}: unknown filter keys {sorted(bad)}")
-        if "civs" in f and set(f["civs"]) - CIVS:
-            raise DefError(f"{where}: unknown civs {f['civs']}")
+        for k in ("civs", "not_civs"):
+            if k in f and set(f[k]) - CIVS:
+                raise DefError(f"{where}: unknown civs {f[k]}")
         if "keyword" in f and f["keyword"] not in self.keywords:
             raise DefError(f"{where}: unknown keyword '{f['keyword']}'")
         for k in FILTER_EXPR_KEYS & set(f):
@@ -322,7 +329,7 @@ class Checker:
             self.when(ab.get("when", {}), where)
         if kind == "static" and "mod" in ab:
             self.mod(ab["mod"], where)
-        if kind == "static" and ab.get("zone", "bz") not in self.zones:
+        if kind in ("static", "trigger") and ab.get("zone", "bz") not in self.zones:
             raise DefError(f"{where}: unknown zone '{ab['zone']}'")
         aff = ab.get("affects")
         if isinstance(aff, dict):

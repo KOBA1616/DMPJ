@@ -404,3 +404,290 @@ cards:
                   instead:
                     - {op: mana_put, select: {ref: event.subject}}
     source: {official: dm25-035, review: pending, notes: "多色なのでマナにはタップして置かれる（エンジンの規定）。「自分のクリーチャーはすべて」は後から出たものにも及ぶ（dynamic）と解釈した。要確認"}
+
+  # ---- 2026-10-24 追加分: ゾーン間移動・ピーキー／デメリット付き・ループやストックの部品になるカード ----
+  # 原文は data/cards/raw/official_20261024b.jsonl
+  - id: dm06-057
+    name: ヘル・スラッシュ
+    types: [spell]
+    civs: [darkness]
+    cost: 8
+    text: "相手の山札を見る。その中から３枚選び、持ち主の墓地に置いてもよい。その後、相手は自分自身の山札をシャッフルする。"
+    spell:
+      - op: move
+        select: {zone: deck, owner: opp, count: 3, up_to: true, look: true}
+        to: graveyard
+        reason: put
+      - {op: shuffle, player: opp}
+    source: {official: dm06-057, review: pending, notes: "相手の山札を削る勝ち筋（山札切れ）の部品"}
+
+  - id: dmex17-w02
+    name: 無双竜機ボルバルザーク
+    types: [creature]
+    civs: [fire, nature]
+    cost: 7
+    power: 6000
+    races: [アーマード・ドラゴン, アース・ドラゴン]
+    keywords: [speed_attacker, double_breaker]
+    text: "スピードアタッカー / W・ブレイカー / 出た時、他のパワー6000のクリーチャーをすべて破壊する。その後、このターンの後に自分のターンを追加する。そのターンの終わりに、自分はゲームに負ける。"
+    abilities:
+      - kind: trigger
+        when: {event: move, to: bz, subject: self}
+        effect:
+          - op: destroy
+            select: {zone: bz, owner: any, other: true, filter: {types: [creature], power_ge: 6000, power_le: 6000}, count: all}
+          - {op: extra_turn}
+          - op: delayed_trigger            # 追加ターンが始まったら、そのターンの終わりに負ける
+            when: {event: turn_start, player: you}
+            duration: permanent
+            effect:
+              - op: delayed_trigger
+                when: {event: turn_end, player: you}
+                effect:
+                  - {op: lose}
+    source: {official: dmex17-w02, review: pending, notes: "多色なのでマナにはタップして置かれる（エンジンの規定）。「そのターンの終わりに」は、次の自分のターンの開始時に turn_end の遅延誘発を作って表した。追加ターンより前に別の自分のターンが入る効果とは組み合わせていない"}
+
+  - id: dm31-025
+    name: フォース・アゲイン
+    types: [spell]
+    civs: [water]
+    cost: 4
+    keywords: [s_trigger]
+    text: "S・トリガー / 自分のクリーチャーを１体破壊する。その後、そのクリーチャーを自分の墓地からバトルゾーンに出す。"
+    spell:
+      - {op: destroy, select: {zone: bz, owner: you, filter: {types: [creature]}, count: 1}, as: gone}
+      - {op: move, select: {ref: gone}, to: bz, reason: put}
+    source: {official: dm31-025, review: pending, notes: "出た時・破壊された時の能力を使い回す部品。as は墓地に置かれた場合だけ束縛するので、置換で墓地に行かなければ出さない"}
+
+  - id: dmr01-s03
+    name: サイバー・Ｎ・ワールド
+    types: [creature]
+    civs: [water]
+    cost: 6
+    power: 6000
+    races: [サイバー・コマンド]
+    keywords: [double_breaker]
+    text: "出た時、各プレイヤーは自身の手札と墓地のカードをすべて山札に加えてシャッフルする。その後、それぞれ、５枚カードを引く。 / W・ブレイカー"
+    abilities:
+      - kind: trigger
+        when: {event: move, to: bz, subject: self}
+        effect:
+          - {op: move, select: {zone: hand, owner: any, count: all}, to: deck, reason: put}
+          - {op: move, select: {zone: graveyard, owner: any, count: all}, to: deck, reason: put}
+          - {op: shuffle, player: you}
+          - {op: shuffle, player: opp}
+          - {op: draw, player: you, count: 5}
+          - {op: draw, player: opp, count: 5}
+    source: {official: dmr01-s03, review: pending, notes: "自分の山札切れ対策（墓地を山札に戻す）。手札と墓地は別々の移動にしたが、同時に山札へ加えるのと結果は同じ"}
+
+  - id: dm03-011
+    name: ストリーミング・シェイパー
+    types: [spell]
+    civs: [water]
+    cost: 3
+    text: "自分の山札のカードを、上から４枚表向きにする。その中の水のカードをすべて自分の手札に加え、それ以外のカードを自分の墓地に置く。"
+    spell:
+      - {op: choose, select: {zone: deck, owner: you, from_top: 4}, as: shown}
+      - {op: move, select: {ref: shown, filter: {civs: [water]}}, to: hand, reason: put}
+      - {op: move, select: {ref: shown}, to: graveyard, reason: put}
+    source: {official: dm03-011, review: pending, notes: "表向きにした4枚を変数に取り、水を手札、残りを墓地。表向きにした情報の公開は扱っていない"}
+
+  - id: dmd19-007
+    name: 黒神龍アバヨ・シャバヨ
+    types: [creature]
+    civs: [darkness]
+    cost: 4
+    power: 4000
+    races: [ドラゴン・ゾンビ, アンノイズ]
+    text: "このクリーチャーをバトルゾーンに出した時、自分のクリーチャーを１体破壊してもよい。そうした場合、相手は自身のクリーチャーを１体選び、破壊する。"
+    abilities:
+      - kind: trigger
+        when: {event: move, to: bz, subject: self}
+        effect:
+          - op: may
+            body:
+              - {op: destroy, select: {zone: bz, owner: you, filter: {types: [creature]}, count: 1}, as: gone}
+              - op: if
+                cond: {exists: {ref: gone}}
+                then:
+                  - {op: destroy, select: {zone: bz, owner: opp, filter: {types: [creature]}, count: 1, chooser: opp}}
+    source: {official: dmd19-007, review: pending, notes: "自分を破壊してもよい（自身もドラゴンなので《グールジェネレイド》が誘発する）。「そうした場合」は墓地に置かれたかで判定"}
+
+  - id: dmd08-015
+    name: エマージェンシー・タイフーン
+    types: [spell]
+    civs: [water]
+    cost: 2
+    keywords: [s_trigger]
+    text: "S・トリガー / カードを２枚まで引く。その後、自分の手札を１枚捨てる。"
+    spell:
+      - op: repeat
+        times: 2
+        body:
+          - op: may
+            body: [{op: draw, count: 1}]
+      - {op: discard, select: {zone: hand, owner: you, count: 1}}
+    source: {official: dmd08-015, review: pending, notes: "「２枚まで引く」は1枚ずつ引くかを選ぶ形にした。手札を墓地へ送る部品"}
+
+  - id: dm06-040
+    name: 神秘の宝箱
+    types: [spell]
+    civs: [nature]
+    cost: 3
+    text: "自分の山札を見る。その中から自然以外のカードを１枚選び、自分のマナゾーンに置いてもよい。その後、山札をシャッフルする。"
+    spell:
+      - {op: mana_put, select: {zone: deck, owner: you, filter: {not_civs: [nature]}, count: 1, up_to: true, look: true}}
+      - {op: shuffle}
+    source: {official: dm06-040, review: pending, notes: "自然を含む多色は「自然のカード」なので選べない（not_civs）"}
+
+  - id: dmr16g-054
+    name: ライフプラン・チャージャー
+    types: [spell]
+    civs: [nature]
+    cost: 4
+    keywords: [charger]
+    text: "自分の山札の上から５枚を見る。その中からクリーチャーを１体選び、相手に見せてから自分の手札に加えてもよい。その後、残りのカードを好きな順序で自分の山札の一番下に置く。 チャージャー"
+    spell:
+      - {op: choose, select: {zone: deck, owner: you, from_top: 5}, as: seen}
+      - {op: move, select: {ref: seen, filter: {types: [creature]}, count: 1, up_to: true, look: true}, to: hand, reason: put}
+      - {op: move, select: {ref: seen}, to: deck, reason: put, position: bottom}
+    source: {official: dmr16g-054, review: pending, notes: "「好きな順序で」の順番選択は未実装（元の順に下へ）。相手に見せる処理は扱っていない"}
+
+  - id: dmx24-028
+    name: インフェルノ・サイン
+    types: [spell]
+    civs: [darkness]
+    cost: 5
+    keywords: [s_trigger]
+    text: "S・トリガー / コスト７以下の進化ではないクリーチャーを１体、自分の墓地からバトルゾーンに出す。"
+    spell:
+      - op: move
+        select: {zone: graveyard, owner: you, filter: {types: [creature], not_types: [evolution], cost_le: 7}, count: 1}
+        to: bz
+        reason: put
+    source: {official: dmx24-028, review: pending}
+
+  - id: dm17-055
+    name: ダンディ・ナスオ
+    types: [creature]
+    civs: [nature]
+    cost: 2
+    power: 1000
+    races: [ワイルド・ベジーズ]
+    text: "このクリーチャーをバトルゾーンに出した時、自分の山札を見る。その中から１枚選んで自分のマナゾーンに置き、自分のマナゾーンから１枚選んで墓地に置く。その後、山札をシャッフルする。"
+    abilities:
+      - kind: trigger
+        when: {event: move, to: bz, subject: self}
+        effect:
+          - {op: mana_put, select: {zone: deck, owner: you, count: 1, look: true}}
+          - {op: move, select: {zone: mana, owner: you, count: 1}, to: graveyard, reason: put}
+          - {op: shuffle}
+    source: {official: dm17-055, review: pending, notes: "山札→マナ→墓地の3ゾーンをつなぐ。墓地に置くのは今置いたカードでもよい"}
+
+  - id: dm11-004
+    name: 魂と記憶の盾
+    types: [spell]
+    civs: [light, water]
+    cost: 3
+    text: "バトルゾーンにある、進化クリーチャーでないクリーチャーを１体選び、裏向きにして持ち主のシールドに加える。"
+    spell:
+      - op: move
+        select: {zone: bz, owner: any, filter: {types: [creature], not_types: [evolution]}, count: 1}
+        to: shield
+        reason: put
+    source: {official: dm11-004, review: pending, notes: "多色なのでマナにはタップして置かれる（エンジンの規定）。自分のクリーチャーをシールドに埋めてS・トリガーとして再利用する用途もある"}
+
+  - id: dmex13-002
+    name: 黒神龍グールジェネレイド
+    types: [creature]
+    civs: [darkness]
+    cost: 7
+    power: 6000
+    races: [ドラゴン・ゾンビ]
+    keywords: [double_breaker]
+    text: "Ｗ・ブレイカー / 自分の、《黒神龍グールジェネレイド》以外のドラゴンが破壊された時、このクリーチャーが自分の墓地にあれば、このクリーチャーをバトルゾーンに戻してもよい。"
+    abilities:
+      - kind: trigger
+        zone: graveyard
+        when:
+          event: move
+          from: bz
+          to: graveyard
+          reason: destroy
+          subject: {owner: you, filter: {race_has: ドラゴン, not_name: 黒神龍グールジェネレイド}}
+        effect:
+          - op: may
+            body: [{op: move, select: {ref: self}, to: bz, reason: put}]
+    source: {official: dmex13-002, review: pending, notes: "墓地で機能する誘発型能力（trigger の zone: graveyard）。パワー6000なので《ボルバルザーク》で自分も破壊される"}
+
+  - id: dm09-014
+    name: ロスト・チャージャー
+    types: [spell]
+    civs: [darkness]
+    cost: 3
+    keywords: [charger]
+    text: "自分または相手の山札を見る。その中からカードを１枚選び、持ち主の墓地に置いてもよい。その後、そのカードの持ち主は山札をシャッフルする。 チャージャー"
+    spell:
+      - {op: move, select: {zone: deck, owner: any, count: 1, up_to: true, look: true}, to: graveyard, reason: put}
+      - {op: shuffle, player: you}
+      - {op: shuffle, player: opp}
+    source: {official: dm09-014, review: pending, notes: "近似: 「自分または相手の山札を見る」の山札の選択を省き、両方の山札から1枚選べる形にした。シャッフルも両方行う（見ていない側の山札のシャッフルは結果に影響しない）"}
+
+  - id: dm36-094
+    name: ブラッディ・クロス
+    types: [spell]
+    civs: [darkness]
+    cost: 1
+    text: "自分の山札の上から２枚を墓地に置く。その後、相手は自身の山札の上から２枚を墓地に置く。"
+    spell:
+      - {op: mill, owner: you, count: 2}
+      - {op: mill, owner: opp, count: 2}
+    source: {official: dm36-094, review: pending}
+
+  - id: dmd24-016
+    name: アポカリプス・デイ
+    types: [spell]
+    civs: [light]
+    cost: 6
+    keywords: [s_trigger]
+    text: "S・トリガー / バトルゾーンにクリーチャーが６体以上あれば、それらをすべて破壊する。"
+    spell:
+      - op: if
+        cond: {cmp: [{count: {zone: bz, owner: any, filter: {types: [creature]}}}, ">=", 6]}
+        then:
+          - {op: destroy, select: {zone: bz, owner: any, filter: {types: [creature]}, count: all}}
+    source: {official: dmd24-016, review: pending}
+
+  - id: dm01-110
+    name: ディメンジョン・ゲート
+    types: [spell]
+    civs: [nature]
+    cost: 3
+    keywords: [s_trigger]
+    text: "S・トリガー / 自分の山札からクリーチャーを１枚さがして相手に見せ、自分の手札に加える。そのあと、山札をシャッフルする。"
+    spell:
+      - {op: move, select: {zone: deck, owner: you, filter: {types: [creature]}, count: 1, look: true}, to: hand, reason: put}
+      - {op: shuffle}
+    source: {official: dm01-110, review: pending, notes: "相手に見せる処理は扱っていない"}
+
+  - id: dmbd13-010
+    name: 龍素記号Sr スペルサイクリカ
+    types: [creature]
+    civs: [water]
+    cost: 7
+    power: 6000
+    races: [クリスタル・コマンド・ドラゴン]
+    keywords: [double_breaker]
+    text: "W・ブレイカー / 出た時、コスト７以下の呪文を１枚、自分の墓地からコストを支払わずに唱えてもよい。そうしたら、唱えた後、墓地に置くかわりに手札に加える。 / このクリーチャーが破壊される時、墓地に置くかわりに山札の一番下に置く。"
+    abilities:
+      - kind: trigger
+        when: {event: move, to: bz, subject: self}
+        effect:
+          - op: play_free
+            select: {zone: graveyard, owner: you, filter: {types: [spell], cost_le: 7}, count: 1, up_to: true}
+            resolve_to: hand
+      - kind: replace
+        when: {event: move, from: bz, to: graveyard, reason: destroy, subject: self}
+        instead:
+          - {op: move, select: {ref: event.subject}, to: deck, reason: put, position: bottom}
+    source: {official: dmbd13-010, review: pending, notes: "呪文を手札に戻すので、出し直す手段（《フォース・アゲイン》等）と組むと呪文を繰り返し使える。ツインパクトの呪文面は選べない（play_free はクリーチャー面で実行する）"}

@@ -459,6 +459,19 @@
        "select": {
         "$ref": "#/$defs/selector"
        },
+       "resolve_to": {
+        "enum": [
+         "abyss",
+         "bz",
+         "deck",
+         "gr",
+         "graveyard",
+         "hand",
+         "hyper",
+         "mana",
+         "shield"
+        ]
+       },
        "as": {
         "type": "string"
        }
@@ -723,6 +736,7 @@
     "keyword": {},
     "name": {},
     "name_has": {},
+    "not_civs": {},
     "not_name": {},
     "not_types": {},
     "power_ge": {},
@@ -789,6 +803,9 @@
      "type": "string"
     },
     "other": {
+     "type": "boolean"
+    },
+    "look": {
      "type": "boolean"
     }
    },

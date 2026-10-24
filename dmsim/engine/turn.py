@@ -285,7 +285,7 @@ def h_play(eng, t):
             env["in_st"] = True
         eng._push(eng.ev_task({"ev": "cast", "player": p, "subject": ref}),
                    eng._child(d.spell, env),
-                   eng.ev_task({"ev": "move", "subject": ref, "from": from_zone, "to": d.resolve_to,
+                   eng.ev_task({"ev": "move", "subject": ref, "from": from_zone, "to": t.get("resolve_to", d.resolve_to),
                                  "reason": "resolve"}),
                    *([eng._child(d.after_resolve, env)] if d.after_resolve else []))
     return None

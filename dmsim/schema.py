@@ -67,7 +67,7 @@ def build() -> dict:
                 "filter": ref("filter"),
                 "count": {"anyOf": [ref("expr"), {"const": "all"}]}, "up_to": {"type": "boolean"},
                 "from_top": ref("expr"), "chooser": {"enum": ["you", "opp"]}, "ref": {"type": "string"},
-                "other": {"type": "boolean"}}, "additionalProperties": False},
+                "other": {"type": "boolean"}, "look": {"type": "boolean"}}, "additionalProperties": False},
             "expr": {"anyOf": [{"type": "integer"}, {"type": "object", "properties": {
                 "count": ref("selector"), "var": {"type": "string"}, "sum": {"type": "array", "items": ref("expr")}},
                 "minProperties": 1, "maxProperties": 1, "additionalProperties": False}]},
