@@ -101,6 +101,24 @@ pre { margin: 0; white-space: pre-wrap; font: 12px/1.45 ui-monospace, SFMono-Reg
 .muted { color: var(--muted); }
 .result { font-weight: 600; color: var(--accent); }
 .hidden { display: none; }
+
+/* 再生タブ */
+#replay .grid { grid-template-columns: minmax(0, 1fr) 440px; }
+.pbbar { display: flex; gap: 6px; flex-wrap: wrap; align-items: center; }
+.pbbar input[type=range] { flex: 1 1 240px; }
+.pbcard { display: inline-block; border: 1px solid var(--line); border-radius: 5px; padding: 2px 6px; margin: 2px; font-size: 12px; }
+.pbcard.moved { box-shadow: 0 0 0 2px var(--accent); }
+.pbcard.chosen { box-shadow: 0 0 0 2px var(--ok); background: var(--chip); }
+.pbzone { font-size: 12px; margin: 4px 0; } .pbzone b { color: var(--muted); font-weight: 600; margin-right: 6px; }
+.tl { max-height: 300px; overflow: auto; font-size: 12px; }
+.tl div { padding: 3px 6px; border-top: 1px solid var(--line); cursor: pointer; }
+.tl div.cur { background: var(--chip); font-weight: 600; }
+.tl div.loop { color: var(--warn); } .tl div.th { cursor: default; color: var(--muted); background: var(--bg); }
+.lp { border: 1px solid var(--warn); border-radius: 8px; padding: 8px; margin-top: 6px; font-size: 12px; }
+.lp.on { background: color-mix(in srgb, var(--warn) 12%, transparent); }
+.cnt table { border-collapse: collapse; font-size: 12px; } .cnt td, .cnt th { padding: 2px 8px; text-align: right; }
+.cnt th { color: var(--muted); font-weight: 600; }
+.d-up { color: var(--ok); } .d-down { color: var(--ng); }
 /* 一括検証の結果表 */
 .vtable { border-collapse: collapse; width: 100%; font-size: 12px; margin-top: 8px; }
 .vtable th, .vtable td { border-top: 1px solid var(--line); text-align: left; padding: 4px 8px; vertical-align: top; }
@@ -137,7 +155,7 @@ pre { margin: 0; white-space: pre-wrap; font: 12px/1.45 ui-monospace, SFMono-Reg
 <body>
 <header>
   <h1>dmsim 開発者モード</h1>
-  <nav><button id="tab-game" class="on">対戦</button><button id="tab-cards">カード</button></nav>
+  <nav><button id="tab-game" class="on">対戦</button><button id="tab-cards">カード</button><button id="tab-replay">再生</button></nav>
   <span id="err" class="err"></span>
   <span style="margin-left:auto;font-size:11px;color:var(--muted);white-space:nowrap">
     <span class="civd" style="background:var(--civ-fire)"></span>火
@@ -198,11 +216,51 @@ pre { margin: 0; white-space: pre-wrap; font: 12px/1.45 ui-monospace, SFMono-Reg
   <div class="panel row">
     <input type="text" id="q" placeholder="名前・IDで絞り込み" style="width:240px">
     <select id="rf"><option value="pending">pending</option><option value="">すべて</option><option value="approved">approved</option><option value="rejected">rejected</option><option value="none">検証用（source なし）</option></select>
+    <select id="ff"><option value="">全ファイル</option></select>
+    <select id="gf"><option value="">すべて</option><option value="unsupported">未対応の申告あり</option><option value="notes">変換メモあり</option><option value="clean">メモ・申告なし</option></select>
     <span id="count" class="muted"></span>
+    <span id="qstat" class="muted"></span>
     <button class="act" id="verifyall">一括検証</button>
+    <button class="act ok" id="approveclean" title="表示中のうち、メモ・申告のない pending を approve（動作は一括検証で先に確かめる）">表示中のクリーンなものを approve</button>
   </div>
   <div class="panel hidden" id="vreport"></div>
   <div id="cardlist"></div>
+</section>
+<section id="replay" class="hidden">
+  <div class="panel">
+    <div class="row" style="margin-bottom:8px">
+      <label class="act" style="cursor:pointer">ログ・探索結果・ループ証明書を読む<input type="file" id="pbfile" accept=".json" class="hidden"></label>
+      <select id="pbcand" class="hidden"></select>
+      <input type="number" id="pbseed" value="1" style="width:70px" title="seed">
+      <button class="act hidden" id="pbrun">この構成で1局回す</button>
+      <button class="act hidden" id="pbcert">証明書を現在の手に適用</button>
+      <span class="muted" id="pbsrc">solitaire --record の記録（JSON）、combo_search --out の結果、LoopCertificate の JSON</span>
+    </div>
+    <div class="pbbar">
+      <button class="act" id="pb-first">|&lt;</button><button class="act" id="pb-prev">&lt;</button>
+      <button class="act primary" id="pb-play">再生</button>
+      <button class="act" id="pb-next">&gt;</button><button class="act" id="pb-last">&gt;|</button>
+      <button class="act" id="pb-nloop" title="次のループの先頭へ">次のループ</button>
+      <button class="act" id="pb-skip" title="いまのループを抜ける">ループを飛ばす</button>
+      <input type="range" id="pb-slider" min="0" max="0" value="0">
+      <select id="pb-speed"><option value="900">遅い</option><option value="350" selected>普通</option><option value="80">速い</option><option value="15">最速</option></select>
+      <span id="pb-pos" class="muted"></span>
+    </div>
+  </div>
+  <div class="grid">
+    <div>
+      <div class="panel"><div class="status" id="pb-status"><span class="muted">記録を読み込むと、ここに盤面が出る</span></div></div>
+      <div class="panel"><h2>相手（プレイヤー1）</h2><div id="pb-p1"></div></div>
+      <div class="panel"><h2>自分（プレイヤー0）</h2><div id="pb-p0"></div></div>
+      <div class="panel cnt"><h2>枚数の推移（影の部分がループ。縦線が現在位置）</h2><div id="pb-chart"></div><div id="pb-counts"></div></div>
+    </div>
+    <div>
+      <div class="panel"><h2>この手の選択</h2><div id="pb-dec" class="muted">なし</div></div>
+      <div class="panel"><h2>結果・ループ・ロック</h2><div id="pb-sum" class="muted">なし</div></div>
+      <div class="panel"><h2>勝ち筋（ループは周回をまとめて1行）</h2><div id="pb-route" class="tl"></div></div>
+      <div class="panel"><h2>全手順</h2><div id="pb-all" class="tl"></div></div>
+    </div>
+  </div>
 </section>
 </main>
 <script>
@@ -675,17 +733,32 @@ $("mode").onchange = () => {
 };
 
 // ---- カード ----
-async function loadCards() { cards = (await api("/api/cards")).cards; renderCards(); }
+async function loadCards() {
+  cards = (await api("/api/cards")).cards;
+  const files = [...new Set(cards.map((c) => c.file).filter(Boolean))], cur = $("ff").value;
+  $("ff").innerHTML = '<option value="">全ファイル</option>' + files.map((f) => `<option>${esc(f)}</option>`).join("");
+  $("ff").value = files.includes(cur) ? cur : "";
+  renderCards();
+}
+const isClean = (c) => !c.notes && !(c.unsupported || []).length;
+function shownCards() {
+  const q = $("q").value.trim(), rf = $("rf").value, ff = $("ff").value, gf = $("gf").value;
+  return cards.filter((c) => (!q || c.name.includes(q) || c.id.includes(q)) &&
+    (!rf || (rf === "none" ? !c.review : c.review === rf)) && (!ff || c.file === ff) &&
+    (!gf || (gf === "unsupported" ? (c.unsupported || []).length : gf === "notes" ? c.notes : isClean(c))));
+}
 function renderCards() {
-  const q = $("q").value.trim(), rf = $("rf").value;
-  const list = cards.filter((c) => (!q || c.name.includes(q) || c.id.includes(q)) &&
-    (!rf || (rf === "none" ? !c.review : c.review === rf)));
-  $("count").textContent = `${list.length}枚`;
-  $("cardlist").innerHTML = list.map((c) => `
+  const list = shownCards();
+  const st = {pending: 0, approved: 0, rejected: 0};
+  cards.forEach((c) => { if (c.review) st[c.review]++; });
+  $("qstat").textContent = `全体: pending ${st.pending} / approved ${st.approved} / rejected ${st.rejected}`;
+  $("count").textContent = list.length > 100 ? `${list.length}枚（先頭100枚を表示）` : `${list.length}枚`;
+  $("cardlist").innerHTML = list.slice(0, 100).map((c) => `
     <div class="panel" data-id="${esc(c.id)}">
       <div class="row" style="justify-content:space-between">
         <div><b>${esc(c.name)}</b><span class="muted">${esc(c.id)} ・ ${esc(c.civs.join("/"))} ・ コスト${c.cost} ・ ${esc(c.file)}</span>
-          ${c.review ? `<span class="badge ${c.review}">${c.review}</span>` : ""}</div>
+          ${c.review ? `<span class="badge ${c.review}">${c.review}</span>` : ""}
+          ${(c.unsupported || []).length ? '<span class="badge rejected">未対応あり</span>' : ""}</div>
         <div class="row">
           <button class="act" data-a="try">試す</button>
           ${c.review ? `<input type="text" placeholder="確認メモ" value="${esc(c.review_note)}" style="width:200px">
@@ -698,6 +771,7 @@ function renderCards() {
           <div class="muted" style="font-size:12px">${c.official ? "公式テキスト" : "テキスト"}</div>
           <pre>${esc(c.official ? c.official.text : c.text)}</pre>
           ${c.notes ? `<div class="muted" style="font-size:12px;margin-top:6px">変換メモ</div><pre>${esc(c.notes)}</pre>` : ""}
+          ${(c.unsupported || []).length ? `<div class="muted" style="font-size:12px;margin-top:6px">表せなかった効果（足したい語彙）</div><pre>${esc(c.unsupported.map((u) => `${u.need}: ${u.text}`).join("\n"))}</pre>` : ""}
         </div>
         <div><div class="muted" style="font-size:12px">効果データ</div><pre>${esc(c.yaml)}</pre></div>
       </div>
@@ -715,7 +789,13 @@ function renderCards() {
     }
   });
 }
-$("q").oninput = $("rf").onchange = renderCards;
+$("q").oninput = $("rf").onchange = $("ff").onchange = $("gf").onchange = renderCards;
+$("approveclean").onclick = async () => {
+  const ids = shownCards().filter((c) => c.review === "pending" && isClean(c)).map((c) => c.id);
+  if (!ids.length || !confirm(`${ids.length}枚を approve します。動作確認（一括検証）は済んでいますか？`)) return;
+  await api("/api/review_bulk", {ids, status: "approved", note: "一括 approve（メモ・申告なし）"});
+  await loadCards();
+};
 
 // ---- 一括検証 ----
 $("verifyall").onclick = async () => {
@@ -737,11 +817,170 @@ $("verifyall").onclick = async () => {
   }
 };
 
+
+// ---- 再生 ----
+let pb = null, pbView = null, pbI = 0, pbTimer = null, pbBusy = false, pbCands = null;
+const TJA = {main: "メイン", charge: "チャージ", attack: "攻撃"};
+async function pbOpen(body) {
+  const r = await api("/api/pb_open", body);
+  pb = r; pbI = 0; $("pb-slider").max = r.n; pbStop();
+  $("pbcert").classList.remove("hidden");
+  $("pbsrc").textContent = `seed ${r.seed} / ${r.n}手 / ループ ${r.loops.length}件`;
+  pbSummary(); pbLists(); await pbGo(0);
+}
+async function pbGo(i) {
+  if (!pb || pbBusy) return;
+  pbBusy = true;
+  try { pbI = Math.max(0, Math.min(i, pb.n)); pbView = await api("/api/pb_frame", {pid: pb.pid, i: pbI}); pbPaint(); }
+  finally { pbBusy = false; }
+}
+function pbStop() { clearInterval(pbTimer); pbTimer = null; $("pb-play").textContent = "再生"; }
+function pbToggle() {
+  if (pbTimer) return pbStop();
+  if (!pb) return;
+  if (pbI >= pb.n) pbGo(0);
+  $("pb-play").textContent = "停止";
+  pbTimer = setInterval(() => { if (pbI >= pb.n) pbStop(); else pbGo(pbI + 1); }, +$("pb-speed").value);
+}
+const loopAt = (i) => pb.loops.find((l) => i >= l.start && i < l.end);
+function pbCardsHtml(list, moved, chosen) {
+  return list.map((c) => `<span class="pbcard ${moved.has(c.cid) ? "moved" : ""} ${chosen.has(c.cid) ? "chosen" : ""} ${c.tapped ? "tapped" : ""}" style="${civBg(c.civs)}" title="${esc(c.id)} #${c.cid}">${esc(c.name)}${c.power !== undefined ? ` <span class="muted">${c.power}</span>` : ""}</span>`).join("") || '<span class="muted">なし</span>';
+}
+function pbBoard(zs, moved, chosen) {
+  const row = (z, label, body) => `<div class="pbzone"><b>${label}</b>${body}</div>`;
+  let h = "";
+  for (const z of ["bz", "hand", "mana"]) if (zs[z]) h += row(z, `${ZNAME[z]} ${zs[z].length}`, pbCardsHtml(zs[z], moved, chosen));
+  h += row("c", "", `シールド ${zs.shield ? zs.shield.length : 0}枚 ／ 墓地 ${zs.graveyard ? zs.graveyard.length : 0}枚 ／ 山札 ${zs.deck ? zs.deck.count : 0}枚`);
+  if (zs.graveyard && zs.graveyard.length) h += row("g", "墓地の上", pbCardsHtml(zs.graveyard.slice(-6), moved, chosen));
+  return h;
+}
+function pbPaint() {
+  const v = pbView, f = pb.frames[pbI], prev = pbI > 0 ? pb.frames[pbI - 1] : null;
+  const moved = new Set(prev ? prev.moved : []);
+  const d = v.decision, chosenCids = new Set();
+  if (d) for (const k of v.chosen) { const o = d.options[k]; if (o) (o.cids || ("cid" in o ? [o.cid] : [])).forEach((c) => chosenCids.add(c)); }
+  $("pb-p0").innerHTML = pbBoard(v.zones[0], moved, chosenCids);
+  $("pb-p1").innerHTML = pbBoard(v.zones[1], moved, chosenCids);
+  const lp = loopAt(pbI);
+  $("pb-status").innerHTML = `<span><b>ターン</b> ${v.turn}</span><span><b>手番</b> ${v.active === 0 ? "P0（自分）" : "P1（相手）"}</span><span><b>ステップ</b> ${esc(v.step || "")}</span><span><b>手</b> ${pbI}/${pb.n}</span>` +
+    (lp ? `<span class="result">ループ ${lp.id + 1}: ${Math.floor((pbI - lp.start) / lp.length) + 1}/${lp.laps}周目</span>` : "") +
+    (v.result ? `<span class="result">終了: ${esc(JSON.stringify(v.result))}</span>` : "");
+  $("pb-pos").textContent = `${pbI} / ${pb.n}`; $("pb-slider").value = pbI;
+  // 決定: 選んだ選択肢に印、直前の手で動いたカード
+  let dh = "";
+  if (d) {
+    dh = `<div><b>P${d.player}</b> ${esc(KINDJA[d.kind] || d.kind)} <span class="muted">${d.prompt ? esc(d.prompt) : ""}</span></div><div class="chips" style="margin-top:6px">` +
+      d.options.map((o, i) => `<span class="opt chip ${v.chosen.includes(i) ? "on" : ""}" style="cursor:default">${v.chosen.includes(i) ? "✓ " : ""}${esc(o.label)}</span>`).join("") + "</div>";
+  } else dh = '<span class="muted">終局</span>';
+  if (prev && prev.changes.length) dh += `<div class="muted" style="margin-top:8px">直前の手（${esc(prev.chosen.join(", "))}）で動いたカード</div><ul style="margin:2px 0 0 16px;padding:0">${prev.changes.map((c) => `<li>${esc(c)}</li>`).join("")}</ul>`;
+  $("pb-dec").innerHTML = dh;
+  pbCounts(); pbChart();
+  for (const [id, sel_] of [["pb-route", ".cur"], ["pb-all", ".cur"]]) {
+    const el = $(id); el.querySelectorAll("div").forEach((x) => x.classList.toggle("cur", +x.dataset.i === pbI || !!(x.dataset.end && pbI >= +x.dataset.i && pbI < +x.dataset.end)));
+    const c = el.querySelector(".cur"); if (c) c.scrollIntoView({block: "nearest"});
+  }
+  document.querySelectorAll(".lp").forEach((x) => x.classList.toggle("on", !!lp && +x.dataset.lp === lp.id));
+}
+const CNAME = {hand: "手札", bz: "場", mana: "マナ", shield: "シールド", deck: "山札", graveyard: "墓地", mana_untapped: "未タップマナ"};
+function pbCounts() {
+  const cur = pbI > 0 ? pb.frames[pbI - 1].counts : (pb.frames[0] ? pb.frames[0].counts : null);
+  if (!cur) { $("pb-counts").innerHTML = ""; return; }
+  const lp = loopAt(pbI);
+  const base = lp && lp.before ? lp.before : null;
+  const keys = Object.keys(cur[0]);
+  $("pb-counts").innerHTML = `<table><tr><th></th>${keys.map((k) => `<th>${CNAME[k] || k}</th>`).join("")}</tr>` +
+    [0, 1].map((p) => `<tr><th>P${p}</th>${keys.map((k) => {
+      const dlt = base ? cur[p][k] - base[p][k] : 0;
+      return `<td>${cur[p][k]}${dlt ? ` <span class="${dlt > 0 ? "d-up" : "d-down"}">(${dlt > 0 ? "+" : ""}${dlt})</span>` : ""}</td>`;
+    }).join("")}</tr>`).join("") + `</table>` + (base ? '<div class="muted">( ) はループ開始前からの増減（ストック量）</div>' : "");
+}
+function pbChart() {
+  const W = 420, H = 110, n = Math.max(1, pb.n), series = [["山札P1", 1, "deck", "var(--ng)"], ["シールドP1", 1, "shield", "var(--warn)"], ["墓地P1", 1, "graveyard", "var(--muted)"], ["山札P0", 0, "deck", "var(--accent)"], ["手札P0", 0, "hand", "var(--ok)"]];
+  let max = 1;
+  for (const f of pb.frames) for (const [, p, k] of series) max = Math.max(max, f.counts[p][k]);
+  const x = (i) => (i / n) * W, y = (v) => H - 4 - (v / max) * (H - 10);
+  let g = pb.loops.map((l) => `<rect x="${x(l.start)}" y="0" width="${Math.max(2, x(l.end) - x(l.start))}" height="${H}" fill="var(--warn)" opacity=".18"/>`).join("");
+  for (const [, p, k, col] of series) g += `<polyline fill="none" stroke="${col}" stroke-width="1.5" points="${pb.frames.map((f, i) => `${x(i + 1).toFixed(1)},${y(f.counts[p][k]).toFixed(1)}`).join(" ")}"/>`;
+  g += `<line x1="${x(pbI)}" x2="${x(pbI)}" y1="0" y2="${H}" stroke="var(--ink)" stroke-width="1.5"/>`;
+  $("pb-chart").innerHTML = `<svg viewBox="0 0 ${W} ${H}" width="100%" style="max-width:${W}px">${g}</svg><div style="font-size:11px">` +
+    series.map(([nm, , , col]) => `<span style="color:${col}">━ ${nm}</span>`).join(" ") + ` <span class="muted">縦軸 0〜${max}枚</span></div>`;
+}
+const WINJA = {opp_deck_out: "相手の山札切れ", shield_zero: "相手のシールドを0に"};
+function pbSummary() {
+  let h = "";
+  const r = pb.result;
+  h += r ? `<div><b>結果</b>: P${r.winner} の勝ち（${esc(r.reason)}、ターン${r.turn}）</div>` : `<div><b>結果</b>: 決着なし</div>`;
+  const n = pb.note || {};
+  if (n.kill_turn) h += `<div class="muted">自分の ${n.kill_turn} ターン目 / ${esc(n.kind || "")} / 由来 ${esc(n.origin || "")}</div>`;
+  h += pb.loops.map((l) => {
+    const st = Object.entries(l.stock).map(([k, v]) => `${k} ${v > 0 ? "+" : ""}${v}`).join(", ");
+    const dl = Object.entries(l.delta).map(([k, v]) => `${k} ${v > 0 ? "+" : ""}${v}`).join(", ");
+    return `<div class="lp" data-lp="${l.id}"><b>ループ ${l.id + 1}</b>（ターン${l.turn}、${esc(l.kind)}） <a href="#" data-go="${l.start}">先頭へ</a><br>` +
+      `骨格: 場 ${esc(l.skeleton.bz.map((c) => `P${c[0]} ${c[1]}${c[2] ? "(タップ)" : ""}`).join(" / ") || "なし")}<br>` +
+      `1周 ${l.length}手: ${esc(l.actions.map((a) => a.join("+")).join(" → "))}<br>` +
+      `周回 <b>${l.laps}</b> 回、1周の増減 ${esc(dl)} → ストック ${esc(st)}<br>` +
+      `勝ち条件: ${l.win_by ? esc(WINJA[l.win_by] || l.win_by) + `（必要 ${l.needed}周）` : "なし（資源のストックだけ）"}、周回上限 ${l.limit === null ? "∞" : l.limit}</div>`;
+  }).join("");
+  if (pb.lock) h += `<div class="lp"><b>ロック成立</b>${pb.lock.error ? esc(pb.lock.error) : `: 1周の増減 ${esc(JSON.stringify(pb.lock.delta))}、必要 ${pb.lock.needed} ラウンド`}</div>`;
+  $("pb-sum").innerHTML = h || '<span class="muted">ループなし</span>';
+}
+function pbLists() {
+  let last = null, h = "";
+  for (const r of pb.route) {
+    if (r.turn !== last) { last = r.turn; h += `<div class="th">ターン ${r.turn}</div>`; }
+    const lp = r.type === "loop" ? pb.loops[r.loop] : null;
+    h += `<div class="${r.type}" data-i="${r.i}" ${lp ? `data-end="${lp.end}"` : ""}>#${r.i} ${esc(r.text)}</div>`;
+  }
+  $("pb-route").innerHTML = h || '<span class="muted">なし</span>';
+  last = null; h = "";
+  for (const f of pb.frames) {
+    if (f.turn !== last) { last = f.turn; h += `<div class="th">ターン ${f.turn}</div>`; }
+    h += `<div class="${f.loop !== undefined ? "loop" : ""}" data-i="${f.i}">#${f.i} P${f.p} ${esc(KINDJA[f.kind] || f.kind)} → ${esc(f.chosen.join(", "))}${f.loop !== undefined ? ` <span class="muted">[ループ${f.loop + 1}・${f.lap}周目]</span>` : ""}</div>`;
+  }
+  $("pb-all").innerHTML = h;
+}
+for (const id of ["pb-route", "pb-all"]) $(id).onclick = (e) => { const t = e.target.closest("[data-i]"); if (t) pbGo(+t.dataset.i); };
+$("pb-sum").onclick = (e) => { const a = e.target.closest("[data-go]"); if (a) { e.preventDefault(); pbGo(+a.dataset.go); } };
+$("pb-first").onclick = () => pbGo(0); $("pb-last").onclick = () => pb && pbGo(pb.n);
+$("pb-prev").onclick = () => pbGo(pbI - 1); $("pb-next").onclick = () => pbGo(pbI + 1);
+$("pb-play").onclick = pbToggle;
+$("pb-nloop").onclick = () => { const l = pb && pb.loops.find((x) => x.start > pbI); if (l) pbGo(l.start); };
+$("pb-skip").onclick = () => { const l = pb && loopAt(pbI); if (l) pbGo(l.end); };
+$("pb-slider").oninput = (e) => pbGo(+e.target.value);
+document.addEventListener("keydown", (e) => {
+  if ($("replay").classList.contains("hidden") || /INPUT|TEXTAREA|SELECT/.test(e.target.tagName) && e.target.type !== "range") return;
+  if (e.key === "ArrowRight") pbGo(pbI + 1); else if (e.key === "ArrowLeft") pbGo(pbI - 1); else if (e.key === " ") { e.preventDefault(); pbToggle(); }
+});
+$("pbfile").onchange = async (e) => {
+  const f = e.target.files[0]; if (!f) return;
+  let j; try { j = JSON.parse(await f.text()); } catch (x) { $("err").textContent = "JSON として読めない"; return; }
+  e.target.value = "";
+  $("pbcand").classList.add("hidden"); $("pbrun").classList.add("hidden");
+  if (j && j.log && j.decks) return pbOpen({record: j});
+  if (Array.isArray(j) && j.length && j[0].deck) {           // combo_search の結果
+    pbCands = j.slice(0, 20);
+    $("pbcand").innerHTML = pbCands.map((c, i) => `<option value="${i}">${i + 1}. ${esc((c.extra || []).join("+"))}  ${(c.rate * 100).toFixed(0)}%</option>`).join("");
+    $("pbcand").classList.remove("hidden"); $("pbrun").classList.remove("hidden");
+    $("pbsrc").textContent = "候補とシードを選んで「この構成で1局回す」"; return;
+  }
+  if (j && j.actions && j.delta) { pbCertLoaded = j; $("pbsrc").textContent = "証明書を読んだ。記録を開いて「証明書を現在の手に適用」"; return; }
+  $("err").textContent = "対応していない形式（対戦記録 / combo_search の結果 / LoopCertificate）";
+};
+let pbCertLoaded = null;
+$("pbrun").onclick = async () => {
+  const c = pbCands[+$("pbcand").value]; $("pbrun").disabled = true; $("pbsrc").textContent = "回している…";
+  try { await pbOpen({deck: c.deck, seed: +$("pbseed").value || 1}); } finally { $("pbrun").disabled = false; }
+};
+$("pbcert").onclick = async () => {
+  if (!pb || !pbCertLoaded) { showToast("先に証明書の JSON を読む", true); return; }
+  await pbOpen({record: pb.record, cert: pbCertLoaded, at: pbI, laps: pbCertLoaded.needed || 2});
+};
+
 function show(t) {
-  $("game").classList.toggle("hidden", t !== "game"); $("cards").classList.toggle("hidden", t !== "cards");
-  $("tab-game").classList.toggle("on", t === "game"); $("tab-cards").classList.toggle("on", t === "cards");
+  for (const x of ["game", "cards", "replay"]) { $(x).classList.toggle("hidden", t !== x); $("tab-" + x).classList.toggle("on", t === x); }
 }
 $("tab-game").onclick = () => show("game");
+$("tab-replay").onclick = () => show("replay");
 $("tab-cards").onclick = () => { show("cards"); if (!cards.length) loadCards(); };
 // 1画面フィット用: ヘッダーの実高さを CSS 変数に反映
 (() => {

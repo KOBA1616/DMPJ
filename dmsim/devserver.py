@@ -12,6 +12,7 @@
 from __future__ import annotations
 
 import argparse
+from dataclasses import asdict
 import json
 import re
 import threading
@@ -37,7 +38,7 @@ def _card_blocks(path: Path) -> dict[str, str]:
     """YAML ファイルの各カードの記述（書かれたままのテキスト）。"""
     text = path.read_text(encoding="utf-8")
     out = {}
-    for m in re.finditer(r"^  - id: (\S+)\n.*?(?=^  - id: |\Z)", text, re.S | re.M):
+    for m in re.finditer(r"^ *- id: (\S+)\n.*?(?=^ *- id: |\Z)", text, re.S | re.M):
         out[m.group(1)] = m.group(0).rstrip() + "\n"
     return out
 
@@ -64,16 +65,28 @@ def card_list(rules) -> list[dict]:
         out.append({"id": cid, "name": d.name, "file": fname, "types": d.types, "civs": d.civs, "cost": d.cost,
                     "text": d.text, "official": official.get(src.get("official", cid)),
                     "review": src.get("review"), "notes": src.get("notes", ""),
-                    "review_note": src.get("review_note", ""), "yaml": block})
+                    "review_note": src.get("review_note", ""), "yaml": block,
+                    "unsupported": list(src.get("unsupported") or [])})
     return out
 
 
-def set_review(card_id: str, status: str, note: str = "", path: Path = REAL):
-    """real.yaml の該当カードの source.review を書き換える（コメントや書式はそのまま残す）。"""
+def locate_card(card_id: str, root: Path | None = None) -> Path:
+    """カード定義が書かれている YAML（real.yaml / converted.yaml など）を探す。"""
+    root = root or DATA / "cards"
+    for f in sorted(root.glob("*.yaml")):
+        if card_id in _card_blocks(f):
+            return f
+    raise KeyError(f"{card_id} is not in any card file")
+
+
+def set_review(card_id: str, status: str, note: str = "", path: Path | None = None):
+    """カードの source.review を書き換える（コメントや書式はそのまま残す）。
+    path を省くと、そのカードが書かれているファイル（real.yaml, converted.yaml など）を探す。"""
     if status not in REVIEW_STATES:
         raise ValueError(f"status must be one of {REVIEW_STATES}")
+    path = path or locate_card(card_id)
     text = path.read_text(encoding="utf-8")
-    m = re.search(rf"^  - id: {re.escape(card_id)}\n.*?(?=^  - id: |\Z)", text, re.S | re.M)
+    m = re.search(rf"^ *- id: {re.escape(card_id)}\n.*?(?=^ *- id: |\Z)", text, re.S | re.M)
     if not m:
         raise KeyError(f"{card_id} is not in {path.name}")
     block = re.sub(r",? *review_note: \"(?:[^\"\\]|\\.)*\"|\n *review_note: \"(?:[^\"\\]|\\.)*\"", "", m.group(0))
@@ -309,12 +322,33 @@ class App:
         self.rules = load_rules()
         self.sessions: dict[int, Session] = {}
         self.next_id = 1
+        self.playbacks: dict[int, object] = {}
 
     def _add(self, sess) -> dict:
         gid = self.next_id
         self.next_id += 1
         self.sessions[gid] = sess
         return {"gid": gid, **sess.view()}
+
+    def _pb_open(self, body: dict) -> dict:
+        """再生を開く。body は {record} / {record, cert, at, laps}（証明書の周回を記録につなげる）/
+        {deck, seed, first, turns, budget, opp_deck}（1局を回して記録にする。探索結果の勝ち筋を見る用）。"""
+        from .playback import Playback, cert_from_dict, record_with_cert
+        rec = body.get("record")
+        if rec is not None and body.get("cert"):
+            rec = record_with_cert(self.rules, rec, int(body["at"]), cert_from_dict(body["cert"]), int(body.get("laps", 1)))
+        elif rec is None:
+            from .solitaire import play_game
+            fp = int(body.get("first", 0))
+            deck = list(body["deck"])
+            opp = list(body.get("opp_deck") or ["T001"] * len(deck))
+            res, eng = play_game(self.rules, deck, opp, int(body.get("seed", 1)), first_player=fp,
+                                 max_turn=int(body.get("turns", 4)), budget=int(body.get("budget", 200)))
+            rec = make_record(eng, [deck, opp], int(body.get("seed", 1)), fp, note=json.dumps(asdict(res), ensure_ascii=False))
+        pid = self.next_id
+        self.next_id += 1
+        pb = self.playbacks[pid] = Playback(self.rules, rec)
+        return {"pid": pid, "record": rec, **pb.info}
 
     def handle(self, path: str, body: dict):
         if path == "/api/cards":
@@ -327,10 +361,19 @@ class App:
             return self._add(Session(self.rules, start))
         if path == "/api/load":
             return self._add(Session.from_record(self.rules, body["record"]))
+        if path == "/api/pb_open":
+            return self._pb_open(body)
+        if path == "/api/pb_frame":
+            return self.playbacks[int(body["pid"])].view_at(int(body["i"]))
         if path == "/api/review":
             set_review(body["id"], body["status"], body.get("note", ""))
             self.rules = load_rules()
             return {"ok": True}
+        if path == "/api/review_bulk":
+            for cid in body["ids"]:
+                set_review(cid, body["status"], body.get("note", ""))
+            self.rules = load_rules()
+            return {"ok": True, "n": len(body["ids"])}
         if path == "/api/verify_all":
             # 一括検証: 「試す」シナリオを自動回しして、動かないカードを見つける
             res = verify_all(self.rules, body.get("ids"))

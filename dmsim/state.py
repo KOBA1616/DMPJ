@@ -6,7 +6,6 @@
 """
 from __future__ import annotations
 
-import copy
 import hashlib
 import json
 from dataclasses import asdict, dataclass, field
@@ -46,6 +45,24 @@ class Card:
     exlife_of: list | None = None                     # 「EXライフ」シールドの紐付け先クリーチャーの参照 [cid, gen]。離れたら外れる
 
 
+def _jcopy(v):
+    """list / dict / スカラーだけからなる値の深いコピー。"""
+    t = type(v)
+    if t is dict:
+        return {k: _jcopy(x) for k, x in v.items()}
+    if t is list:
+        return [_jcopy(x) for x in v]
+    return v
+
+
+def _copy_card(c: "Card") -> "Card":
+    n = Card.__new__(Card)
+    d = n.__dict__
+    d.update(c.__dict__)
+    d["under"] = list(c.under)
+    return n
+
+
 @dataclass
 class GameState:
     cards: list[Card]
@@ -83,7 +100,17 @@ class GameState:
         return self.zones[name][0 if shared else player]
 
     def clone(self) -> "GameState":
-        return copy.deepcopy(self)
+        """deepcopy の代わり。state は純データ（int/str/bool/None と list/dict）だけなので手書きで複製する。"""
+        new = GameState.__new__(GameState)
+        d = new.__dict__
+        for k, v in self.__dict__.items():
+            if k == "cards":
+                d[k] = [_copy_card(c) for c in v]
+            elif k == "zones":
+                d[k] = {n: [list(z) for z in per] for n, per in v.items()}
+            else:
+                d[k] = _jcopy(v)
+        return new
 
     def to_json(self) -> str:
         return json.dumps(asdict(self), ensure_ascii=False, sort_keys=True, separators=(",", ":"))

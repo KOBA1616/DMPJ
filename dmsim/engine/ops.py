@@ -252,3 +252,9 @@ def op_put_under(eng, t, op, env):
         eng._defer(t, [{"t": "put_under", "cid": os_["card"], "gen": eng.s.cards[os_["card"]].gen,
                         "onto": eng.s.ref(onto[0])}])
     return None
+
+
+@op("battle_substitute")
+def op_battle_substitute(eng, t, op, env):
+    """バトル相手の置換（when: {event: battle}）の印。実際の入れ替えは combat の _battle_substitute が行う。"""
+    return None

@@ -37,6 +37,7 @@ class Engine(SelectorMixin, EventMixin, InterpreterMixin, TurnMixin, CombatMixin
     def __init__(self, rules: Rules, state: GameState, *, step_limit: int = 20000, turn_limit: int = 80,
                  check: bool | None = None):
         self.rules = rules
+        self._xcache = rules.__dict__.setdefault("_affects_others_cache", {})   # 定義だけで決まるので複製間で共有
         self.check = CHECK if check is None else check   # タスクの形を毎回検査する（テスト・開発者モード用）
         self.s = state
         self.step_limit = step_limit
@@ -208,6 +209,15 @@ class Engine(SelectorMixin, EventMixin, InterpreterMixin, TurnMixin, CombatMixin
                 out = [(i, ab) for i, ab in out if not ({"all", ab["kind"]} & ign)]
         return out
 
+    def _affects_others(self, cid: int) -> bool:
+        """この面が他のカードに及ぶ mod 付きの常在型能力を持つか（定義だけで決まるのでキャッシュする）。"""
+        d = self.fdef(cid)
+        r = self._xcache.get(id(d))
+        if r is None:
+            r = self._xcache[id(d)] = any(
+                ab["kind"] == "static" and "mod" in ab and ab.get("affects") != "self" for ab in d.abilities)
+        return r
+
     def chars(self, cid: int, face: int | None = None) -> dict:
         """特性の計算。複数の継続的効果は同時に適用する（608.1）。MTG のようなレイヤーはない。
         常在型能力の効果は固定されず常に範囲を見直す（608.3a）。解決で生成された効果は生成時の範囲に固定（110.2e）。
@@ -222,6 +232,8 @@ class Engine(SelectorMixin, EventMixin, InterpreterMixin, TurnMixin, CombatMixin
                 if ab["kind"] == "static" and ab.get("affects") == "self" and ab.get("zone", "bz") == c.zone and "mod" in ab]
         ref = self.s.ref(cid)
         for src in self.bz_tops():   # バトルゾーンの常在型能力。affects.zone で他のゾーンのカードにも及ぶ
+            if not self._affects_others(src):
+                continue
             for _, ab in self.abilities(src, "static"):
                 aff = ab.get("affects", {})
                 if "mod" in ab and aff != "self" and (aff.get("zone", "bz") if isinstance(aff, dict) else "bz") == c.zone:

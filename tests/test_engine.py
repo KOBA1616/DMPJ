@@ -151,3 +151,20 @@ def test_new_op_is_added_without_touching_the_engine(rules):
     e.s.tasks.append(e._child(ops, {"you": 0, "self": None, "vars": {}}))
     e.advance()
     assert len(e.zlist("mana", 0)) == 2
+
+
+def test_state_clone_matches_deepcopy_and_is_independent(rules):
+    import copy
+    from dmsim.play import default_decks
+    e = Engine.new_game(rules, [default_decks(rules, "dm")[0], ["T001"] * 40], 3, 0)
+    for _ in range(6):
+        d = e.advance()
+        if d is None:
+            break
+        e.answer([0])
+    c = e.s.clone()
+    assert c.to_json() == e.s.to_json() == copy.deepcopy(e.s).to_json()
+    c.cards[0].under.append(99)
+    c.zones["deck"][0].reverse()
+    c.tasks.append({"t": "x"})
+    assert e.s.cards[0].under == [] and e.s.digest() != c.digest()

@@ -1,6 +1,7 @@
 # dmsim（DMPJ プロトタイプ）
 
 デュエル・マスターズのルールエンジン骨格。設計の詳細は設計書（Claude Doc）を参照。
+**開発状況とTODOは [docs/STATUS.md](docs/STATUS.md)**（数字は `python tools/gen_status.py` で更新）。
 
 ```
 pip install pyyaml pytest
@@ -24,9 +25,11 @@ python -m dmsim.solitaire --deck deck.yaml --games 1000 --turns 4 --workers 4   
   シード付きの大量試行で「自分の Nターン目までのキル率」（95%信頼区間・キルの種類別）を出すハーネス
 - `dmsim/scenario.py` 配置を指定した局面の作成（テストと開発者モードで共用）
 - `dmsim/devserver.py`＋`dmsim/web/` 開発者モード（標準ライブラリのHTTPサーバー）
+- `dmsim/playback.py` 対戦記録の再生解析（ループの骨格・周回数・ストック量・勝ち筋）。開発者モードの「再生」タブが使う（読み取り専用）
 - `data/rules/*.yaml` ゾーン・キーワード・DSLマクロ・許可/禁止できる行為（permissions）・ターンのステップ列（turn）の定義
-- `data/cards/proto.yaml` 検証用の架空カード、`data/cards/real.yaml`・`data/cards/real_zone.yaml` 実カード（公式テキストを変換したもの。`source.review` で確認状態を持つ。
-  `real_zone.yaml` はゾーン間移動を補完し合うカード。G・ゼロは `free_if`、「マナをタップせずに」は `when.unpaid`）
+- `data/cards/proto.yaml` 検証用の架空カード、`data/cards/real.yaml`・`data/cards/real_zone.yaml`・`data/cards/real_vocab.yaml` 実カード（公式テキストを変換したもの。`source.review` で確認状態を持つ。
+  `real_zone.yaml` はゾーン間移動を補完し合うカード。G・ゼロは `free_if`、「マナをタップせずに」は `when.unpaid`。
+  `real_vocab.yaml` は語彙拡張: 「選ばれない」は mod の `deny: [be_chosen]`、「選んだ時」は event `choose`、「かわりにバトルさせてもよい」は event `battle` の置換＋`op: battle_substitute`）
 - `data/cards/raw/*.jsonl` 公式カード詳細ページから取った原文
 - `tests/test_saga_loop.py` 【絶望神サガループ】の検証（下記のループデッキの動作試験）
 - `tools/fetch_cards.py` 公式サイトからカードテキストを取る（手元のPCで実行。3秒以上の間隔・HTMLをキャッシュ）
@@ -36,8 +39,11 @@ python -m dmsim.solitaire --deck deck.yaml --games 1000 --turns 4 --workers 4   
 ## カードを増やす手順
 
 1. `python tools/fetch_cards.py <カードID...> --out data/cards/raw/official_YYYYMMDD.jsonl`（手元のPCで）。弾ごとなら `--set DMRP1 --count 93 --skip-known`。ID は公式の形式 `dmrp01-001` に正規化して管理する（`dmsim/cardid.py`）
-2. `python tools/convert_cards.py data/cards/raw/official_YYYYMMDD.jsonl`（`data/cards/converted.yaml` に出る。
-   検査を通らなかったものは `data/cards/raw/rejects.jsonl`）
+2. （任意・API不要）`python tools/survey_text.py data/cards/raw --uncovered` 原文の文を正規化して、同じ形の文を持つカード枚数で並べる。変換前に足す語彙の見当をつける
+2. `python tools/convert_cards.py data/cards/raw`（`data/cards/converted.yaml` に出る。ディレクトリ・複数ファイル・glob 可）。
+   大量なら `--workers 4 --order short --limit 200` で少しずつ。検査を通らなかったものは `data/cards/raw/rejects.jsonl`、
+   結果（件数・トークン・失敗理由の種類別）は `data/cards/raw/convert_report.json`。語彙を足したあとは `--retry-rejects` で落ちたものだけやり直す。
+   `python tools/report_gaps.py` で足りない語彙を枚数順に集計
 3. `python -m dmsim.devserver` の「カード」タブで「試す」→ 動かして確かめ、approve / reject を付ける
    （「一括検証」ボタン: 全カードの「試す」シナリオを探索方策で自動回しし、例外・ループを報告する。`dmsim/verify.py`）
 4. 確かめたカードを `real.yaml` に移す。動作をテストに残すなら `tests/test_real_cards.py` に足す

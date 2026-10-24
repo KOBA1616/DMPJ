@@ -93,3 +93,32 @@ def test_combat_win_is_not_counted_as_loop(rules):
     rs = measure(deck, opp, range(1, 4), rules=rules, max_turn=5, budget=60)
     s = summarize(rs, 5)
     assert "loop" not in s["origins"] and s["loop_kill_rate_by_turn"][5] == 0
+
+
+# ---- 相手の妨害モデル --------------------------------------------------------------------------
+
+def test_opp_none_matches_default(rules):
+    from dmsim.opponent import PRESETS
+    deck, opp = ["T005"] * 20 + ["T002"] * 20, ["T001"] * 40
+    a = measure(deck, opp, range(1, 4), rules=rules, max_turn=5, budget=60)
+    b = measure(deck, opp, range(1, 4), rules=rules, max_turn=5, budget=60, opp=PRESETS["none"])
+    assert [(r.kill_turn, r.kind) for r in a] == [(r.kill_turn, r.kind) for r in b]
+
+
+def test_opp_model_setup_and_blocker_policy(rules):
+    from dmsim.opponent import OppModel
+    deck, opp = ["T005"] * 40, ["T001"] * 20 + ["T004"] * 20
+    m = OppModel(shields=3, bz=("T004",), block=True, play="blockers")
+    res, eng = play_game(rules, deck, opp, 1, max_turn=1, budget=20, opp=m)
+    assert res.error is None
+    assert len(eng.s.zones["shield"][1]) == 3
+    assert any(eng.s.cards[c].defn == "T004" for c in eng.zlist("bz", 1))
+
+
+def test_opp_blockers_lower_kill_rate(rules):
+    from dmsim.opponent import PRESETS
+    deck, opp = ["T005"] * 20 + ["T002"] * 20, ["T001"] * 20 + ["T004"] * 20
+    base = summarize(measure(deck, opp, range(1, 9), rules=rules, max_turn=5, budget=60), 5)
+    blk = summarize(measure(deck, opp, range(1, 9), rules=rules, max_turn=5, budget=60, opp=PRESETS["blockers"]), 5)
+    assert not blk["errors"]
+    assert blk["kill_rate_by_turn"][5]["kills"] <= base["kill_rate_by_turn"][5]["kills"]
