@@ -1,0 +1,4 @@
+id: 20261024-161615-f65a
+finished: '2026-10-24T16:16:23+00:00'
+status: escalate
+error: 'OSError: [WinError 193] %1 は有効な Win32 アプリケーションではありません。'
