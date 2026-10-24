@@ -1,0 +1,30 @@
+# ドローを含むループの検証用の架空カード（L 始まり）。T010（還流の大精霊）と組み合わせる
+cards:
+  - id: L001
+    name: 引き戻しの使い魔
+    types: [creature]
+    civs: [water]
+    cost: 1
+    power: 1000
+    races: [テスト]
+    text: このクリーチャーがバトルゾーンに出た時、カードを1枚引く。相手の山札の上から1枚目を墓地に置く。
+    abilities:
+      - kind: trigger
+        when: {event: move, to: bz, subject: self}
+        effect:
+          - {op: draw, count: 1}
+          - {op: mill, owner: opp, count: 1}
+
+  - id: L002
+    name: 思索の使い魔
+    types: [creature]
+    civs: [water]
+    cost: 1
+    power: 1000
+    races: [テスト]
+    text: このクリーチャーがバトルゾーンに出た時、カードを1枚引く。
+    abilities:
+      - kind: trigger
+        when: {event: move, to: bz, subject: self}
+        effect:
+          - {op: draw, count: 1}

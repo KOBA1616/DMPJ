@@ -1,8 +1,13 @@
 """1人回しAI とキル率測定ハーネス（dmsim.solitaire）。"""
-from conftest import setup
+from pathlib import Path
 
+import pytest
+from conftest import find_option, setup
+
+from dmsim import load_rules
+from dmsim.defs import DATA
 from dmsim.play import make_record, replay_record
-from dmsim.solitaire import lock_probe, measure, play_game, summarize
+from dmsim.solitaire import TurnSearch, Weights, lock_probe, measure, play_game, summarize
 
 
 def test_in_turn_loop_is_found_by_search_and_stocked(rules):
@@ -50,3 +55,41 @@ def test_measure_is_reproducible_and_records_replay(rules):
     res, eng = play_game(rules, deck, opp, 2, max_turn=5, budget=60)
     rec = make_record(eng, [deck, opp], 2)
     assert replay_record(rules, rec).s.digest() == eng.s.digest()
+
+
+# ---- ドローを含むループ ------------------------------------------------------------------------
+
+@pytest.fixture(scope="module")
+def loop_rules():
+    return load_rules(sorted((DATA / "cards").glob("*.yaml")) + [Path(__file__).parent / "loop_cards.yaml"])
+
+
+def test_loop_with_draw_is_detected_and_kills(loop_rules):
+    """L001（引く＋相手の山札を1枚削る）を T010 で戻し続ける。引くたび手札の中身が変わっても同じループとして扱う。"""
+    e = setup(loop_rules, {"bz": ["T010"], "hand": ["L001"], "mana": ["T003"]}, deck_left=[30, 12])
+    res, end = play_game(loop_rules, None, None, 1, start=e, budget=50)
+    assert res.error is None
+    assert (res.kill_turn, res.kind, res.origin) == (1, "loop_deck_out", "loop")
+    lp = res.loops[0]
+    assert lp["win_by"] == "opp_deck_out" and lp["delta"]["hand:0"] == 1 and lp["delta"]["deck:0"] == -1
+    assert end.s.result["winner"] == 0
+
+
+def test_draw_loop_is_not_stocked_past_own_deck(loop_rules):
+    """相手に効かない引くだけのループは、自分の山札を deck_keep 枚より減らさない範囲でストックする。"""
+    e = setup(loop_rules, {"bz": ["T010"], "hand": ["L002"], "mana": ["T003"]}, deck_left=[20, 30])
+    w = Weights()
+    search = TurnSearch(0, budget=200, weights=w)
+    e.advance()
+    e.answer([find_option(e.s.waiting, "pass")])      # マナチャージはしない
+    end, st = search.run(e)
+    engine = [lp for lp in st.loops if lp["kind"] == "engine"]
+    assert engine and engine[0]["delta"]["hand:0"] == 1
+    assert len(end.zlist("deck", 0)) >= w.deck_keep
+
+
+def test_combat_win_is_not_counted_as_loop(rules):
+    deck, opp = ["T005"] * 20 + ["T002"] * 20, ["T001"] * 40
+    rs = measure(deck, opp, range(1, 4), rules=rules, max_turn=5, budget=60)
+    s = summarize(rs, 5)
+    assert "loop" not in s["origins"] and s["loop_kill_rate_by_turn"][5] == 0
