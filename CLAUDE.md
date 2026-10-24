@@ -7,7 +7,7 @@
   - 差分の一次レビュー: `git diff origin/main | python tools/offload.py review-diff`（終了コード3は Claude で処理してよい合図）。
 - 課金が発生する経路を作らない（無料モデルは `tools/llm_offload/providers.py` の許可リストのみ）。キーはコード・ログに出さない。
 - 取得・変換の定期ワークフロー（auto-sync / auto-convert / convert-cards）を壊さない。`tools/convert_cards.py` の公開名は維持する。
-- koba の PC のローカルワーカー（5分ごと）へ作業を回す: `llm-jobs` ブランチに `jobs/pending/<id>.yaml` を積む（形式は docs/offload.md）。結果の受け取り:
-  - PR に紐づく作業はジョブに `pr: <番号>` を付ける。ワーカーが PR コメントに投稿し、PR 購読で自動に届く。
-  - 紐づかない作業は、投入したスレッドが `send_later`（数分後）で `jobs/done/<id>.yaml` を読む。まず先頭の `summary:` だけ見る。
+- koba の PC のローカルワーカー（5分ごと）へ作業を回す: `llm-jobs` ブランチに `jobs/pending/<id>.yaml` を積む（形式は docs/offload.md）。結果は `jobs/done/<id>.yaml` に残る（これが基本。PR コメントは不要）。
+  - 投入したスレッドが `send_later`（5〜6分後）で `jobs/done/<id>.yaml` を読む。まず先頭の `summary:` だけ見る。
   - `status: escalate` / `error` は Claude が代わりに処理するか、原因を直す。
+  - `pr: <番号>` を付けると結果を PR コメントにも投稿するが、任意機能（PC に gh が要る）。koba に gh の設定は頼まない。
