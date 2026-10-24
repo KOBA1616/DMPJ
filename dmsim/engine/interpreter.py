@@ -1,6 +1,7 @@
 """効果DSLのインタプリタ。op は ops.py で registry に登録する。"""
 from __future__ import annotations
 
+from ..types import BindTask, EffectTask, PutUnderTask, SwapFixTask, SwapInTask
 from .registry import OPS, task
 
 
@@ -16,7 +17,7 @@ class InterpreterMixin:
         self._push(*children)
 
 
-@task("effect")
+@task("effect", EffectTask)
 def h_effect(eng, t):
     if t["pc"] >= len(t["ops"]) or eng.s.result is not None:
         eng._pop(t)
@@ -28,4 +29,57 @@ def h_effect(eng, t):
     if eng.s.tasks and eng.s.tasks[-1] is t:   # _defer していなければ次の op へ
         t["pc"] += 1
         t["os"] = {}
+    return None
+
+
+@task("bind", BindTask)
+def h_bind(eng, t):
+    """移動の後、移動先にあるカードの新しい参照を変数に入れる（「その〜」が移動後のカードを指せるように）。"""
+    eng._pop(t)
+    s = eng.s
+    t["env"].setdefault("vars", {})[t["name"]] = [s.ref(c) for c in t["cids"] if s.cards[c].zone == t["zone"]]
+    return None
+
+
+@task("swap_in", SwapInTask)
+def h_swap_in(eng, t):
+    s = eng.s
+    eng._pop(t)
+    o, i = t["out"], t["in"]
+    if s.cards[o[0]].zone == "bz" or s.cards[o[0]].gen != t["out_gen_next"] or not s.alive(i):
+        return None   # 701.26b 正常に離れなかったので入れ替えない
+    cid = i[0]
+    eng._push(eng.ev_task({"ev": "move", "subject": i, "to": "bz", "reason": "put"}, t["env"]),
+              {"t": "swap_fix", "cid": cid, "out": o, "tapped": t["tapped"]})
+    return None
+
+
+@task("swap_fix", SwapFixTask)
+def h_swap_fix(eng, t):
+    s = eng.s
+    eng._pop(t)
+    c = s.cards[t["cid"]]
+    if c.zone != "bz":
+        return None
+    c.tapped = t["tapped"]
+    new = s.ref(t["cid"])
+    for t_ in s.tasks:   # 攻撃中なら攻撃クリーチャーを入れ替える（701.26a）
+        if t_["t"] == "attack" and t_["attacker"] == t["out"]:
+            t_["attacker"] = new
+    return None
+
+
+@task("put_under", PutUnderTask)
+def h_put_under(eng, t):
+    s = eng.s
+    eng._pop(t)
+    c = s.cards[t["cid"]]
+    if c.gen != t["gen"] or not s.alive(t["onto"]):
+        return None
+    top = t["onto"][0]
+    eng._raw_move(t["cid"], "bz", controller=s.cards[top].controller)
+    c.top_of = top
+    c.entered_turn = -1
+    s.cards[top].under.append(t["cid"])
+    eng._sba()   # 山札の最後の1枚を重ねたら敗北（104.2b）
     return None

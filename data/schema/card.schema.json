@@ -1,0 +1,1164 @@
+{
+ "$schema": "https://json-schema.org/draft/2020-12/schema",
+ "title": "DMPJ card definition",
+ "type": "object",
+ "properties": {
+  "id": {
+   "type": "string"
+  },
+  "mana": {
+   "type": "integer"
+  },
+  "text": {
+   "type": "string"
+  },
+  "source": {
+   "type": "object"
+  },
+  "faces": {
+   "type": "array",
+   "items": {
+    "$ref": "#/$defs/face"
+   },
+   "minItems": 2,
+   "maxItems": 2
+  },
+  "name": {
+   "type": "string"
+  },
+  "types": {
+   "type": "array",
+   "items": {
+    "enum": [
+     "creature",
+     "evolution",
+     "spell"
+    ]
+   }
+  },
+  "civs": {
+   "type": "array",
+   "items": {
+    "enum": [
+     "darkness",
+     "fire",
+     "light",
+     "nature",
+     "water",
+     "zero"
+    ]
+   }
+  },
+  "cost": {
+   "type": "integer"
+  },
+  "power": {
+   "type": "integer"
+  },
+  "races": {
+   "type": "array",
+   "items": {
+    "type": "string"
+   }
+  },
+  "keywords": {
+   "type": "array",
+   "items": {
+    "enum": [
+     "blocker",
+     "cannot_attack",
+     "cannot_attack_player",
+     "charger",
+     "double_breaker",
+     "evo_charger",
+     "mana_boost_cip",
+     "s_trigger",
+     "slayer",
+     "speed_attacker",
+     "triple_breaker",
+     "unblockable"
+    ]
+   }
+  },
+  "abilities": {
+   "type": "array",
+   "items": {
+    "$ref": "#/$defs/ability"
+   }
+  },
+  "spell": {
+   "$ref": "#/$defs/ops"
+  },
+  "evolve_from": {
+   "$ref": "#/$defs/filter"
+  }
+ },
+ "required": [
+  "id"
+ ],
+ "$defs": {
+  "face": {
+   "type": "object",
+   "properties": {
+    "name": {
+     "type": "string"
+    },
+    "types": {
+     "type": "array",
+     "items": {
+      "enum": [
+       "creature",
+       "evolution",
+       "spell"
+      ]
+     }
+    },
+    "civs": {
+     "type": "array",
+     "items": {
+      "enum": [
+       "darkness",
+       "fire",
+       "light",
+       "nature",
+       "water",
+       "zero"
+      ]
+     }
+    },
+    "cost": {
+     "type": "integer"
+    },
+    "power": {
+     "type": "integer"
+    },
+    "races": {
+     "type": "array",
+     "items": {
+      "type": "string"
+     }
+    },
+    "keywords": {
+     "type": "array",
+     "items": {
+      "enum": [
+       "blocker",
+       "cannot_attack",
+       "cannot_attack_player",
+       "charger",
+       "double_breaker",
+       "evo_charger",
+       "mana_boost_cip",
+       "s_trigger",
+       "slayer",
+       "speed_attacker",
+       "triple_breaker",
+       "unblockable"
+      ]
+     }
+    },
+    "abilities": {
+     "type": "array",
+     "items": {
+      "$ref": "#/$defs/ability"
+     }
+    },
+    "spell": {
+     "$ref": "#/$defs/ops"
+    },
+    "evolve_from": {
+     "$ref": "#/$defs/filter"
+    }
+   },
+   "required": [
+    "name",
+    "types",
+    "civs",
+    "cost"
+   ],
+   "additionalProperties": false
+  },
+  "ops": {
+   "type": "array",
+   "items": {
+    "anyOf": [
+     {
+      "type": "object",
+      "properties": {
+       "op": {
+        "const": "break"
+       },
+       "player": {
+        "enum": [
+         "you",
+         "opp"
+        ]
+       },
+       "count": {
+        "$ref": "#/$defs/expr"
+       }
+      },
+      "required": [
+       "op"
+      ],
+      "additionalProperties": false
+     },
+     {
+      "type": "object",
+      "properties": {
+       "op": {
+        "const": "choose"
+       },
+       "select": {
+        "$ref": "#/$defs/selector"
+       },
+       "as": {
+        "type": "string"
+       }
+      },
+      "required": [
+       "op",
+       "select",
+       "as"
+      ],
+      "additionalProperties": false
+     },
+     {
+      "type": "object",
+      "properties": {
+       "op": {
+        "const": "delayed_trigger"
+       },
+       "when": {},
+       "effect": {
+        "$ref": "#/$defs/ops"
+       },
+       "duration": {
+        "enum": [
+         "during_attack",
+         "end_of_turn",
+         "permanent",
+         "until_next_own_turn_start"
+        ]
+       },
+       "once": {
+        "type": "boolean"
+       }
+      },
+      "required": [
+       "op",
+       "when",
+       "effect"
+      ],
+      "additionalProperties": false
+     },
+     {
+      "type": "object",
+      "properties": {
+       "op": {
+        "const": "draw"
+       },
+       "player": {
+        "enum": [
+         "you",
+         "opp"
+        ]
+       },
+       "count": {
+        "$ref": "#/$defs/expr"
+       }
+      },
+      "required": [
+       "op"
+      ],
+      "additionalProperties": false
+     },
+     {
+      "type": "object",
+      "properties": {
+       "op": {
+        "const": "end_turn"
+       }
+      },
+      "required": [
+       "op"
+      ],
+      "additionalProperties": false
+     },
+     {
+      "type": "object",
+      "properties": {
+       "op": {
+        "const": "extra_turn"
+       },
+       "player": {
+        "enum": [
+         "you",
+         "opp"
+        ]
+       }
+      },
+      "required": [
+       "op"
+      ],
+      "additionalProperties": false
+     },
+     {
+      "type": "object",
+      "properties": {
+       "op": {
+        "const": "if"
+       },
+       "cond": {
+        "$ref": "#/$defs/cond"
+       },
+       "then": {
+        "$ref": "#/$defs/ops"
+       },
+       "else": {
+        "$ref": "#/$defs/ops"
+       }
+      },
+      "required": [
+       "op",
+       "cond"
+      ],
+      "additionalProperties": false
+     },
+     {
+      "type": "object",
+      "properties": {
+       "op": {
+        "const": "lose"
+       },
+       "player": {
+        "enum": [
+         "you",
+         "opp"
+        ]
+       }
+      },
+      "required": [
+       "op"
+      ],
+      "additionalProperties": false
+     },
+     {
+      "type": "object",
+      "properties": {
+       "op": {
+        "const": "may"
+       },
+       "body": {
+        "$ref": "#/$defs/ops"
+       }
+      },
+      "required": [
+       "op",
+       "body"
+      ],
+      "additionalProperties": false
+     },
+     {
+      "type": "object",
+      "properties": {
+       "op": {
+        "const": "modify"
+       },
+       "select": {
+        "$ref": "#/$defs/selector"
+       },
+       "mod": {
+        "$ref": "#/$defs/mod"
+       },
+       "duration": {
+        "enum": [
+         "during_attack",
+         "end_of_turn",
+         "permanent",
+         "until_next_own_turn_start"
+        ]
+       },
+       "dynamic": {
+        "type": "boolean"
+       }
+      },
+      "required": [
+       "op",
+       "select",
+       "mod"
+      ],
+      "additionalProperties": false
+     },
+     {
+      "type": "object",
+      "properties": {
+       "op": {
+        "const": "move"
+       },
+       "select": {
+        "$ref": "#/$defs/selector"
+       },
+       "to": {
+        "enum": [
+         "abyss",
+         "bz",
+         "deck",
+         "gr",
+         "graveyard",
+         "hand",
+         "hyper",
+         "mana",
+         "shield"
+        ]
+       },
+       "reason": {
+        "enum": [
+         "battle",
+         "break",
+         "cast",
+         "charge",
+         "destroy",
+         "discard",
+         "draw",
+         "evolve",
+         "put",
+         "resolve",
+         "return",
+         "sba",
+         "summon"
+        ]
+       },
+       "position": {
+        "enum": [
+         "bottom",
+         "top"
+        ]
+       },
+       "card_only": {
+        "type": "boolean"
+       },
+       "as": {
+        "type": "string"
+       }
+      },
+      "required": [
+       "op",
+       "select",
+       "to",
+       "reason"
+      ],
+      "additionalProperties": false
+     },
+     {
+      "type": "object",
+      "properties": {
+       "op": {
+        "const": "play_free"
+       },
+       "select": {
+        "$ref": "#/$defs/selector"
+       },
+       "resolve_to": {
+        "enum": [
+         "abyss",
+         "bz",
+         "deck",
+         "gr",
+         "graveyard",
+         "hand",
+         "hyper",
+         "mana",
+         "shield"
+        ]
+       },
+       "as": {
+        "type": "string"
+       }
+      },
+      "required": [
+       "op",
+       "select"
+      ],
+      "additionalProperties": false
+     },
+     {
+      "type": "object",
+      "properties": {
+       "op": {
+        "const": "put_under"
+       },
+       "select": {
+        "$ref": "#/$defs/selector"
+       },
+       "onto": {
+        "$ref": "#/$defs/selector"
+       }
+      },
+      "required": [
+       "op",
+       "select",
+       "onto"
+      ],
+      "additionalProperties": false
+     },
+     {
+      "type": "object",
+      "properties": {
+       "op": {
+        "const": "repeat"
+       },
+       "times": {
+        "$ref": "#/$defs/expr"
+       },
+       "body": {
+        "$ref": "#/$defs/ops"
+       }
+      },
+      "required": [
+       "op",
+       "times",
+       "body"
+      ],
+      "additionalProperties": false
+     },
+     {
+      "type": "object",
+      "properties": {
+       "op": {
+        "const": "set_var"
+       },
+       "name": {
+        "type": "string"
+       },
+       "value": {}
+      },
+      "required": [
+       "op",
+       "name"
+      ],
+      "additionalProperties": false
+     },
+     {
+      "type": "object",
+      "properties": {
+       "op": {
+        "const": "shuffle"
+       },
+       "player": {
+        "enum": [
+         "you",
+         "opp"
+        ]
+       }
+      },
+      "required": [
+       "op"
+      ],
+      "additionalProperties": false
+     },
+     {
+      "type": "object",
+      "properties": {
+       "op": {
+        "const": "step_mod"
+       },
+       "player": {
+        "enum": [
+         "you",
+         "opp"
+        ]
+       },
+       "step": {
+        "enum": [
+         "start",
+         "draw",
+         "charge",
+         "main",
+         "attack",
+         "end"
+        ]
+       },
+       "mode": {
+        "type": "string"
+       },
+       "turns": {
+        "type": "integer"
+       }
+      },
+      "required": [
+       "op",
+       "player",
+       "step",
+       "mode"
+      ],
+      "additionalProperties": false
+     },
+     {
+      "type": "object",
+      "properties": {
+       "op": {
+        "const": "swap"
+       },
+       "out": {
+        "$ref": "#/$defs/selector"
+       },
+       "in": {
+        "$ref": "#/$defs/selector"
+       }
+      },
+      "required": [
+       "op",
+       "out",
+       "in"
+      ],
+      "additionalProperties": false
+     },
+     {
+      "type": "object",
+      "properties": {
+       "op": {
+        "const": "tap"
+       },
+       "select": {
+        "$ref": "#/$defs/selector"
+       }
+      },
+      "required": [
+       "op",
+       "select"
+      ],
+      "additionalProperties": false
+     },
+     {
+      "type": "object",
+      "properties": {
+       "op": {
+        "const": "untap"
+       },
+       "select": {
+        "$ref": "#/$defs/selector"
+       }
+      },
+      "required": [
+       "op",
+       "select"
+      ],
+      "additionalProperties": false
+     },
+     {
+      "type": "object",
+      "properties": {
+       "op": {
+        "const": "win"
+       },
+       "player": {
+        "enum": [
+         "you",
+         "opp"
+        ]
+       }
+      },
+      "required": [
+       "op"
+      ],
+      "additionalProperties": false
+     },
+     {
+      "type": "object",
+      "properties": {
+       "op": {
+        "const": "bounce"
+       }
+      },
+      "required": [
+       "op"
+      ],
+      "description": "macro: [{\"op\": \"move\", \"select\": \"$select\", \"to\": \"hand\", \"reason\": \"return\"}]"
+     },
+     {
+      "type": "object",
+      "properties": {
+       "op": {
+        "const": "destroy"
+       }
+      },
+      "required": [
+       "op"
+      ],
+      "description": "macro: [{\"op\": \"move\", \"select\": \"$select\", \"to\": \"graveyard\", \"reason\": \"destroy\"}]"
+     },
+     {
+      "type": "object",
+      "properties": {
+       "op": {
+        "const": "discard"
+       }
+      },
+      "required": [
+       "op"
+      ],
+      "description": "macro: [{\"op\": \"move\", \"select\": \"$select\", \"to\": \"graveyard\", \"reason\": \"discard\"}]"
+     },
+     {
+      "type": "object",
+      "properties": {
+       "op": {
+        "const": "mana_put"
+       }
+      },
+      "required": [
+       "op"
+      ],
+      "description": "macro: [{\"op\": \"move\", \"select\": \"$select\", \"to\": \"mana\", \"reason\": \"put\"}]"
+     },
+     {
+      "type": "object",
+      "properties": {
+       "op": {
+        "const": "mill"
+       }
+      },
+      "required": [
+       "op"
+      ],
+      "description": "macro: [{\"op\": \"move\", \"select\": {\"zone\": \"deck\", \"owner\": \"$owner\", \"from_top\": \"$count\"}, \"to\": \"graveyard\", \"reason\": \"put\"}]"
+     }
+    ]
+   }
+  },
+  "filter": {
+   "type": "object",
+   "properties": {
+    "civs": {},
+    "cost_ge": {},
+    "cost_le": {},
+    "keyword": {},
+    "name": {},
+    "name_has": {},
+    "not_civs": {},
+    "not_name": {},
+    "not_types": {},
+    "power_ge": {},
+    "power_le": {},
+    "race_has": {},
+    "races": {},
+    "tapped": {},
+    "types": {}
+   },
+   "additionalProperties": false
+  },
+  "selector": {
+   "type": "object",
+   "properties": {
+    "zone": {
+     "enum": [
+      "abyss",
+      "bz",
+      "deck",
+      "gr",
+      "graveyard",
+      "hand",
+      "hyper",
+      "mana",
+      "shield"
+     ]
+    },
+    "owner": {
+     "enum": [
+      "you",
+      "opp",
+      "any"
+     ]
+    },
+    "owner_of": {
+     "type": "string"
+    },
+    "filter": {
+     "$ref": "#/$defs/filter"
+    },
+    "count": {
+     "anyOf": [
+      {
+       "$ref": "#/$defs/expr"
+      },
+      {
+       "const": "all"
+      }
+     ]
+    },
+    "up_to": {
+     "type": "boolean"
+    },
+    "from_top": {
+     "$ref": "#/$defs/expr"
+    },
+    "chooser": {
+     "enum": [
+      "you",
+      "opp"
+     ]
+    },
+    "ref": {
+     "type": "string"
+    },
+    "other": {
+     "type": "boolean"
+    },
+    "look": {
+     "type": "boolean"
+    }
+   },
+   "additionalProperties": false
+  },
+  "expr": {
+   "anyOf": [
+    {
+     "type": "integer"
+    },
+    {
+     "type": "object",
+     "properties": {
+      "count": {
+       "$ref": "#/$defs/selector"
+      },
+      "var": {
+       "type": "string"
+      },
+      "sum": {
+       "type": "array",
+       "items": {
+        "$ref": "#/$defs/expr"
+       }
+      }
+     },
+     "minProperties": 1,
+     "maxProperties": 1,
+     "additionalProperties": false
+    }
+   ]
+  },
+  "cond": {
+   "type": "object",
+   "minProperties": 1,
+   "maxProperties": 1,
+   "properties": {
+    "exists": {
+     "$ref": "#/$defs/selector"
+    },
+    "cmp": {
+     "type": "array",
+     "minItems": 3,
+     "maxItems": 3
+    },
+    "not": {
+     "$ref": "#/$defs/cond"
+    },
+    "all": {
+     "type": "array",
+     "items": {
+      "$ref": "#/$defs/cond"
+     }
+    },
+    "any": {
+     "type": "array",
+     "items": {
+      "$ref": "#/$defs/cond"
+     }
+    },
+    "is_turn": {
+     "enum": [
+      "you",
+      "opp"
+     ]
+    }
+   },
+   "additionalProperties": false
+  },
+  "mod": {
+   "type": "object",
+   "properties": {
+    "power": {
+     "type": "integer"
+    },
+    "grant": {
+     "type": "array",
+     "items": {
+      "enum": [
+       "blocker",
+       "cannot_attack",
+       "cannot_attack_player",
+       "charger",
+       "double_breaker",
+       "evo_charger",
+       "mana_boost_cip",
+       "s_trigger",
+       "slayer",
+       "speed_attacker",
+       "triple_breaker",
+       "unblockable"
+      ]
+     }
+    },
+    "allow": {
+     "type": "array",
+     "items": {
+      "anyOf": [
+       {
+        "enum": [
+         "attack_creature",
+         "attack_player",
+         "attack_summoning_sick",
+         "be_attacked",
+         "be_blocked",
+         "be_chosen",
+         "block",
+         "cast",
+         "s_trigger",
+         "slayer",
+         "summon",
+         "untap_at_start"
+        ]
+       },
+       {
+        "type": "object",
+        "properties": {
+         "action": {
+          "enum": [
+           "attack_creature",
+           "attack_player",
+           "attack_summoning_sick",
+           "be_attacked",
+           "be_blocked",
+           "be_chosen",
+           "block",
+           "cast",
+           "s_trigger",
+           "slayer",
+           "summon",
+           "untap_at_start"
+          ]
+         },
+         "other": {
+          "$ref": "#/$defs/filter"
+         }
+        },
+        "required": [
+         "action"
+        ],
+        "additionalProperties": false
+       }
+      ]
+     }
+    },
+    "deny": {
+     "type": "array",
+     "items": {
+      "anyOf": [
+       {
+        "enum": [
+         "attack_creature",
+         "attack_player",
+         "attack_summoning_sick",
+         "be_attacked",
+         "be_blocked",
+         "be_chosen",
+         "block",
+         "cast",
+         "s_trigger",
+         "slayer",
+         "summon",
+         "untap_at_start"
+        ]
+       },
+       {
+        "type": "object",
+        "properties": {
+         "action": {
+          "enum": [
+           "attack_creature",
+           "attack_player",
+           "attack_summoning_sick",
+           "be_attacked",
+           "be_blocked",
+           "be_chosen",
+           "block",
+           "cast",
+           "s_trigger",
+           "slayer",
+           "summon",
+           "untap_at_start"
+          ]
+         },
+         "other": {
+          "$ref": "#/$defs/filter"
+         }
+        },
+        "required": [
+         "action"
+        ],
+        "additionalProperties": false
+       }
+      ]
+     }
+    },
+    "breaks": {
+     "type": "integer"
+    },
+    "ignore": {
+     "type": "array",
+     "items": {
+      "enum": [
+       "trigger",
+       "static",
+       "replace",
+       "all"
+      ]
+     }
+    },
+    "gain": {
+     "type": "array",
+     "items": {
+      "$ref": "#/$defs/ability"
+     }
+    }
+   },
+   "additionalProperties": false,
+   "propertyNames": {
+    "enum": [
+     "allow",
+     "breaks",
+     "deny",
+     "gain",
+     "grant",
+     "ignore",
+     "power"
+    ]
+   }
+  },
+  "when": {
+   "type": "object",
+   "properties": {
+    "event": {
+     "enum": [
+      "attack",
+      "battle_win",
+      "block",
+      "break",
+      "cast",
+      "draw",
+      "move",
+      "summon",
+      "tap",
+      "turn_end",
+      "turn_start",
+      "untap"
+     ]
+    },
+    "from": {
+     "enum": [
+      "abyss",
+      "bz",
+      "deck",
+      "gr",
+      "graveyard",
+      "hand",
+      "hyper",
+      "mana",
+      "shield"
+     ]
+    },
+    "to": {
+     "enum": [
+      "abyss",
+      "bz",
+      "deck",
+      "gr",
+      "graveyard",
+      "hand",
+      "hyper",
+      "mana",
+      "shield"
+     ]
+    },
+    "reason": {
+     "enum": [
+      "battle",
+      "break",
+      "cast",
+      "charge",
+      "destroy",
+      "discard",
+      "draw",
+      "evolve",
+      "put",
+      "resolve",
+      "return",
+      "sba",
+      "summon"
+     ]
+    },
+    "player": {
+     "enum": [
+      "you",
+      "opp"
+     ]
+    },
+    "subject": {}
+   },
+   "required": [
+    "event"
+   ],
+   "additionalProperties": false
+  },
+  "ability": {
+   "type": "object",
+   "properties": {
+    "kind": {
+     "enum": [
+      "trigger",
+      "replace",
+      "static",
+      "declare"
+     ]
+    },
+    "when": {
+     "$ref": "#/$defs/when"
+    },
+    "if": {
+     "$ref": "#/$defs/cond"
+    },
+    "effect": {
+     "$ref": "#/$defs/ops"
+    },
+    "instead": {
+     "$ref": "#/$defs/ops"
+    },
+    "optional": {
+     "type": "boolean"
+    },
+    "affects": {},
+    "mod": {
+     "$ref": "#/$defs/mod"
+    },
+    "zone": {
+     "enum": [
+      "abyss",
+      "bz",
+      "deck",
+      "gr",
+      "graveyard",
+      "hand",
+      "hyper",
+      "mana",
+      "shield"
+     ]
+    }
+   },
+   "required": [
+    "kind"
+   ],
+   "additionalProperties": false
+  }
+ }
+}

@@ -1,0 +1,10 @@
+# ターンの構造（500〜512）。ステップは上から順に行う。
+# 各ステップの処理は dmsim/engine/turn.py で @step("名前") として登録する。
+# 効果は state.step_mods で「このステップを飛ばす」「もう一度行う」を差し込める（op: step_mod）。
+steps:
+  - {name: start,  rule: "501", ja: ターン開始ステップ}
+  - {name: draw,   rule: "502", ja: ドローステップ}
+  - {name: charge, rule: "503", ja: マナチャージステップ}
+  - {name: main,   rule: "504", ja: メインステップ}
+  - {name: attack, rule: "505", ja: 攻撃ステップ}
+  - {name: end,    rule: "511", ja: ターン終了ステップ}

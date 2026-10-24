@@ -140,3 +140,142 @@ cards:
     text: 相手はカードを1枚引く。
     spell:
       - {op: draw, player: opp, count: 1}
+
+  # ---- ステップ3で足した処理の検証用 ----
+  - id: T013
+    name: 封鎖の結界
+    types: [spell]
+    civs: [light]
+    cost: 1
+    text: 次の自分のターンのはじめまで、相手のクリーチャーは攻撃できない。次の相手のターンのドローステップを飛ばす。
+    spell:
+      - op: modify
+        select: {zone: bz, owner: opp}
+        mod: {deny: [attack_player, attack_creature]}
+        dynamic: true
+        duration: until_next_own_turn_start
+      - {op: step_mod, player: opp, step: draw, mode: skip}
+
+  - id: T014
+    name: 解放の号令
+    types: [spell]
+    civs: [fire]
+    cost: 1
+    text: このターン、自分のクリーチャーすべてに「スピードアタッカー」を与える。
+    spell:
+      - {op: modify, select: {zone: bz, owner: you, count: all}, mod: {grant: [speed_attacker]}}
+
+  - id: T015
+    name: 沈黙の司祭
+    types: [creature]
+    civs: [light]
+    cost: 3
+    power: 2000
+    races: [テスト]
+    text: 相手のクリーチャーの能力をすべて無視する。
+    abilities:
+      - {kind: static, affects: {owner: opp}, mod: {ignore: [all]}}
+
+  - id: T016
+    name: 沈黙の反逆者
+    types: [creature]
+    civs: [darkness]
+    cost: 3
+    power: 2000
+    races: [テスト]
+    text: 相手のクリーチャーの能力をすべて無視する。
+    abilities:
+      - {kind: static, affects: {owner: opp}, mod: {ignore: [all]}}
+
+  - id: T017
+    name: 進化の守護者
+    types: [creature, evolution]
+    civs: [nature]
+    cost: 2
+    power: 6000
+    races: [テスト]
+    text: 進化—自分の自然のクリーチャー1体の上に置く。W・ブレイカー
+    keywords: [double_breaker]
+    evolve_from: {civs: [nature]}
+
+  - id: T018
+    name: 双刃の竜／双刃の呪
+    mana: 1
+    text: "クリーチャー側: パワー3000 / 呪文側: S・トリガー 相手のクリーチャーを1体手札に戻す"
+    faces:
+      - name: 双刃の竜
+        types: [creature]
+        civs: [fire]
+        cost: 4
+        power: 3000
+        races: [テスト]
+      - name: 双刃の呪
+        types: [spell]
+        civs: [water]
+        cost: 2
+        keywords: [s_trigger]
+        spell:
+          - {op: bounce, select: {zone: bz, owner: opp, filter: {types: [creature]}, count: 1}}
+
+  - id: T019
+    name: 影走りのシノビ
+    types: [creature]
+    civs: [darkness]
+    cost: 5
+    power: 4000
+    races: [テスト]
+    text: ニンジャ・ストライク 2（相手のクリーチャーが攻撃した時、自分のマナが2枚以上なら、このクリーチャーをコストを支払わずに召喚してもよい。ターンの終わりに、このクリーチャーを山札の一番下に置く）/ ブロッカー
+    keywords: [blocker]
+    abilities:
+      - kind: declare
+        zone: hand
+        when: {event: attack, subject: {owner: opp}}
+        if: {cmp: [{count: {zone: mana, owner: you}}, ">=", 2]}
+        effect:
+          - {op: play_free, select: {ref: self}, as: ninja}
+          - op: delayed_trigger
+            when: {event: turn_end}
+            effect:
+              - {op: move, select: {ref: ninja}, to: deck, reason: put, position: bottom}
+
+  - id: T020
+    name: 革命の旗手
+    types: [creature]
+    civs: [fire]
+    cost: 7
+    power: 9000
+    races: [テスト]
+    text: 革命チェンジ—火のクリーチャー（自分の火のクリーチャーが攻撃する時、そのクリーチャーと手札のこのクリーチャーを入れ替えてもよい）/ T・ブレイカー
+    keywords: [triple_breaker]
+    abilities:
+      - kind: declare
+        zone: hand
+        when: {event: attack, subject: {owner: you, filter: {civs: [fire]}}}
+        effect:
+          - {op: swap, out: {ref: event.subject}, in: {ref: self}}
+
+  - id: T021
+    name: 枯渇の監視者
+    types: [creature]
+    civs: [darkness]
+    cost: 6
+    power: 5000
+    races: [テスト]
+    text: 自分のターンのはじめに、相手のマナゾーンのカードをすべて墓地に置く。
+    abilities:
+      - kind: trigger
+        when: {event: turn_start, player: you}
+        effect:
+          - {op: move, select: {zone: mana, owner: opp, count: all}, to: graveyard, reason: put}
+
+  - id: T022
+    name: 遅れの罠
+    types: [spell]
+    civs: [darkness]
+    cost: 1
+    text: このターン、次に相手のクリーチャーが破壊された時、カードを1枚引く。
+    spell:
+      - op: delayed_trigger
+        when: {event: move, from: bz, to: graveyard, reason: destroy, subject: {owner: opp}}
+        effect:
+          - {op: draw, count: 1}
