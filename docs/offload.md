@@ -96,10 +96,10 @@ Claude / Actions ──jobs/pending/*.yaml──▶ llm-jobs ブランチ ◀─
 
 ### 自動化（タスクスケジューラ）
 
-登録前に `tools\run_worker.bat` をダブルクリックか PowerShell で1回動かし、`%USERPROFILE%\.dmpj-worker\log.txt` にエラーが無いことを確認する。そのうえで10分ごとに実行する。PowerShell で（`C:\path\DMPJ` は clone した場所。パスに空白がある場合は、PowerShell では `/TR '"C:\my path\DMPJ\tools\run_worker.bat"'` と外側を単引用符にする）:
+登録前に `tools\run_worker.bat` をダブルクリックか PowerShell で1回動かし、`%USERPROFILE%\.dmpj-worker\log.txt` にエラーが無いことを確認する。そのうえで2分ごとに実行する。PowerShell で（`C:\path\DMPJ` は clone した場所。パスに空白がある場合は、PowerShell では `/TR '"C:\my path\DMPJ\tools\run_worker.bat"'` と外側を単引用符にする）:
 
 ```
-schtasks /Create /SC MINUTE /MO 10 /TN "dmpj-worker" /TR C:\path\DMPJ\tools\run_worker.bat /F
+schtasks /Create /SC MINUTE /MO 2 /TN "dmpj-worker" /TR C:\path\DMPJ\tools\run_worker.bat /F
 ```
 
 - ログ: `%USERPROFILE%\.dmpj-worker\log.txt`。一時停止/再開: `schtasks /Change /TN "dmpj-worker" /DISABLE`（/ENABLE）、実行中を止める: `schtasks /End /TN "dmpj-worker"`、削除: `schtasks /Delete /TN "dmpj-worker" /F`、状態: `schtasks /Query /TN "dmpj-worker"`。
@@ -109,3 +109,11 @@ schtasks /Create /SC MINUTE /MO 10 /TN "dmpj-worker" /TR C:\path\DMPJ\tools\run_
 - Mac/Linux は cron: `*/10 * * * * cd ~/DMPJ && python tools/local_worker.py run --once >> ~/.dmpj-worker/log.txt 2>&1`
 
 投入例: `python tools\local_worker.py enqueue routine --name gaps --summarize` / `... --name review --summarize`
+
+### 結果を Claude に自動で渡す
+
+- **PR に紐づく作業**（差分レビューなど）: ジョブに `--pr <番号>` を付けると、ワーカーが結果を PR コメントに投稿する。PR を購読している Claude のセッションに自動でイベントとして届く（人が貼り替える必要がない）。
+  例: `py -3 tools\local_worker.py enqueue routine --name review --summarize --pr 33`
+  PC に GitHub CLI が必要（初回のみ）: `winget install GitHub.cli` → 新しい PowerShell で `gh auth login`。無ければ投稿は `skipped` になり、結果は `jobs/done` に残る。
+- **PR に紐づかない作業**: 投入したスレッドが `send_later` で数分後に `llm-jobs` ブランチの `jobs/done/<id>.yaml` を読む（CLAUDE.md の運用）。
+- 結果ファイルの先頭に `summary:`（1行要約）がある。まず `summary` だけ読み、必要な時だけ `text` を読む。

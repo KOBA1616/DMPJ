@@ -9,6 +9,7 @@
 ジョブは専用ブランチ llm-jobs の jobs/pending/<id>.yaml。結果は jobs/done/<id>.yaml（status: ok / escalate / error、text）。
   type: ask      {task, instruction?, input | input_file?}   → llm_offload.ask（秘密の伏せ字・切り詰め・日次上限・キャッシュ）
   type: convert  {limit?, workers?, interval?, model?}        → tools/auto_convert.py を cards-data ブランチの作業ツリーで実行して push
+  どのジョブも pr: <番号> を付けると結果を PR コメントに投稿する（PC に gh が要る。docs/offload.md）。
   type: routine  {name: gaps | tests | review | status, summarize?, base?}  → 決まった定型作業だけ（任意コマンドは実行しない）
 無料モデルの許可リスト検査・課金検知は llm_offload/providers.py がそのまま効く。課金の兆候は Fatal で全体を止める。
 詳しい手順は docs/offload.md。
@@ -183,6 +184,31 @@ def run_routine(job: dict, git: Git, llm, cache: Path, daily_limit: int) -> dict
     return {"status": "ok", "text": lo.clip(out, 6000)}
 
 
+def summary_line(res: dict) -> str:
+    """結果の1行要約。Claude が全文を読まずに済むようにする。"""
+    first = next((ln.strip(" -*#") for ln in (res.get("text") or "").splitlines() if ln.strip()), "")
+    head = f"[{res['status']}]" + (f" {res['error']}" if res.get("error") else "")
+    return lo.scrub(f"{head} {first}".strip())[:160]
+
+
+def post_pr_comment(pr, jid: str, res: dict) -> str:
+    """結果を PR コメントに投稿する（PC の gh 認証を使う）。購読中のセッションにイベントとして届く。失敗してもジョブは失敗にしない。"""
+    exe = next(filter(None, (shutil.which(n) for n in ("gh.exe", "gh"))), None)
+    if not exe:
+        return "skipped: gh が無い（winget install GitHub.cli → gh auth login）"
+    try:
+        num = int(pr)
+    except (TypeError, ValueError):
+        return "skipped: pr が数値でない"
+    body = f"**ローカルワーカー結果** `{jid}` — {res['status']}\n\n{lo.clip(res.get('text') or res.get('error') or '', 6000)}\n"
+    try:
+        r = subprocess.run([exe, "pr", "comment", str(num), "--body-file", "-"], input=lo.scrub(body), cwd=ROOT,
+                           capture_output=True, text=True, encoding="utf-8", errors="replace", timeout=120)
+    except Exception as e:   # noqa: BLE001
+        return f"failed: {type(e).__name__}"
+    return "posted" if r.returncode == 0 else f"failed: {lo.scrub((r.stderr or '')[:150])}"
+
+
 def process(git: Git, llm_factory=None, max_jobs: int = 20, daily_limit: int = lo.DAILY_LIMIT) -> list[str]:
     jd = git.worktree("jobs", JOBS_BRANCH, create=True)
     pending, done = jd / "jobs" / "pending", jd / "jobs" / "done"
@@ -209,8 +235,10 @@ def process(git: Git, llm_factory=None, max_jobs: int = 20, daily_limit: int = l
             raise SystemExit(f"停止: {res['error']}") from None
         except Exception as e:     # noqa: BLE001  1件の失敗でワーカー全体を落とさない。error を残して done に移す（毎回の再実行で無料枠を使わない）
             res = {"status": "error", "error": lo.scrub(f"{type(e).__name__}: {e}")[:400]}
-        (done / f"{jid}.yaml").write_text(yaml.safe_dump({"id": jid, "finished": now(), **res}, allow_unicode=True,
-                                                         sort_keys=False), encoding="utf-8")
+        if job.get("pr"):
+            res["pr_comment"] = post_pr_comment(job["pr"], jid, res)
+        (done / f"{jid}.yaml").write_text(yaml.safe_dump({"id": jid, "summary": summary_line(res), "finished": now(), **res},
+                                                         allow_unicode=True, sort_keys=False), encoding="utf-8")
         p.unlink()
         handled.append(f"{jid}:{res['status']}")
         git.commit_push(jd, JOBS_BRANCH, f"jobs: {jid} {res['status']}")
@@ -242,6 +270,7 @@ def main(argv=None) -> int:
     e.add_argument("--model")
     e.add_argument("--name", help="routine の名前（gaps / tests / review / status）")
     e.add_argument("--summarize", action="store_true", help="routine の結果を無料モデルで要約する")
+    e.add_argument("--pr", type=int, help="結果をこの PR にコメント投稿する（PC に gh が要る）。Claude は PR 購読で自動に受け取る")
     e.add_argument("--limit", type=int, default=100)
     e.add_argument("--workers", type=int, default=1)
     sub.add_parser("status")
@@ -263,6 +292,8 @@ def main(argv=None) -> int:
             job.update(name=a.name, summarize=a.summarize)
         else:
             job.update(limit=a.limit, workers=a.workers)
+        if a.pr:
+            job["pr"] = a.pr
         print(enqueue(git, job))
         return 0
     if a.cmd == "status":

@@ -427,3 +427,13 @@ def test_local_worker_survives_job_failure(tmp_path, monkeypatch):
     subprocess.run(["git", "clone", "-q", "-b", "llm-jobs", str(bare), str(chk)], check=True, capture_output=True)
     res = _yaml.safe_load((chk / "jobs" / "done" / f"{bad}.yaml").read_text(encoding="utf-8"))
     assert res["status"] == "error" and "AttributeError" in res["error"]
+
+
+def test_local_worker_summary_and_pr_comment_fallback(monkeypatch):
+    import local_worker as lw
+    s = lw.summary_line({"status": "ok", "text": "\n- 要点1\n- 要点2"})
+    assert s == "[ok] 要点1" and len(lw.summary_line({"status": "error", "error": "x" * 500})) <= 160
+    monkeypatch.setattr(lw.shutil, "which", lambda n: None)
+    assert lw.post_pr_comment(31, "j", {"status": "ok"}).startswith("skipped")
+    monkeypatch.setattr(lw.shutil, "which", lambda n: "gh")
+    assert lw.post_pr_comment("1; rm -rf", "j", {"status": "ok"}).startswith("skipped")
