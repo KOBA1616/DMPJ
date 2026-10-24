@@ -6,7 +6,7 @@
   normalize_id("DM22-EX2 21")  -> "dm22ex2-021"
   set_code("DMRP1")            -> "dmrp01"
 弾の表記: 英字+数字だけ（DM-06, DMRP1）は数字を2桁にする。途中に英字が入るもの（DM22-EX2, DMR16G）はそのまま。
-カード番号: 数字は3桁、先頭に英字が付くもの（S3, W2）は 英字+2桁。
+カード番号: 数字は3桁、先頭に英字が付くもの（S3, W2）は 英字+2桁（足りない桁だけ 0 で埋める。CHO005 は CHO005 のまま）。
 """
 from __future__ import annotations
 
@@ -14,7 +14,7 @@ import re
 
 _SET_SIMPLE = re.compile(r"^([a-z]+)(\d+)$")
 _NUM = re.compile(r"^([a-z]*)(\d+)$")
-_ID = re.compile(r"^[a-z]+\d+[a-z]*\d*-[a-z]?\d+$")
+_ID = re.compile(r"^[a-z]+\d*[a-z]*\d*-[a-z]*\d+$")
 
 
 def set_code(s: str) -> str:
@@ -31,7 +31,7 @@ def card_number(n: str) -> str:
     if not m:
         raise ValueError(f"bad card number: {n!r}")
     letters, digits = m.groups()
-    return f"{letters}{int(digits):02d}" if letters else f"{int(digits):03d}"
+    return f"{letters}{digits.zfill(2)}" if letters else digits.zfill(3)   # 桁数が足りない時だけ 0 で埋める（CHO005 は CHO005 のまま）
 
 
 def normalize_id(s: str) -> str:

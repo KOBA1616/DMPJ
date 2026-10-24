@@ -35,3 +35,8 @@ def test_fetch_parse_splits_set_notation_from_name():
             "<tr><th>文明</th><td>ゼロ</td></tr><tr><th>コスト</th><td>6</td></tr><tr><th>特殊能力</th><td>W・ブレイカー</td></tr></table>")
     row = fetch_cards.parse("dmrp01-001", page)
     assert row["name"] == "三冠王者 ドツキング" and row["set_notation"] == "DMRP01 1/93" and row["cost"] == "6"
+
+
+def test_ids_with_letters_in_the_number_keep_their_digits():
+    assert normalize_id("dm26ex4-CHO005") == "dm26ex4-cho005" and is_official_id("dm26ex4-cho005")
+    assert normalize_id("DM26-EX4 CHO5") == "dm26ex4-cho05"
