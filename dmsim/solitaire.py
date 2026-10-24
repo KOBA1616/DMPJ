@@ -345,12 +345,11 @@ def _origin(res: GameResult) -> str:
     return "combat" if res.kind == "direct_attack" else "effect"
 
 
-def lock_probe(eng: Engine, me: int, rounds: int = 2) -> LoopCertificate | None:
-    """「ここで自分が何もしなくなっても、相手は山札切れまで何もできないか」を確かめる。
-    自分は何もしない（passive）、相手はマナチャージだけして rounds+1 周回し、ラウンド周期の骨格の回帰を探す。
-    自分が動き続ける本番の対戦では骨格が毎ターン変わるので、ロックはこの別の試し回しで見る。"""
+def round_probe(eng: Engine, me: int, rounds: int = 2) -> LoopCertificate | None:
+    """自分が何もしなくなっても、ターン開始・終了の誘発などで毎ラウンド同じ骨格に戻る周期（時計）を見つける。
+    ロックかどうか（相手が動けないか）は見ない。それは lock_probe が _lock_ok で絞る。"""
     e = eng.clone()
-    det = LoopDetector(me=me, period="round", hand_keys=set())
+    det = LoopDetector(me=me, period="round", hand_keys=set(), report_all=True)
     seen_turns, last = 0, None
     while (d := e.advance()) is not None:
         if e.s.active == me and d["player"] == me and e.s.turn != last:
@@ -358,11 +357,19 @@ def lock_probe(eng: Engine, me: int, rounds: int = 2) -> LoopCertificate | None:
             seen_turns += 1
             cert = det.observe(e)
             if cert is not None:
-                return cert if _lock_ok(cert, me) and verify(e, cert, times=2).verified == 2 else None
+                return cert if verify(e, cert, times=2).verified == 2 else None
             if seen_turns > rounds:
                 return None
         e.answer(passive_policy(e, d) if d["player"] == me else charge_only_policy(e, d))
     return None
+
+
+def lock_probe(eng: Engine, me: int, rounds: int = 2) -> LoopCertificate | None:
+    """「ここで自分が何もしなくなっても、相手は山札切れまで何もできないか」を確かめる。
+    自分は何もしない（passive）、相手はマナチャージだけして rounds+1 周回し、ラウンド周期の骨格の回帰を探す。
+    自分が動き続ける本番の対戦では骨格が毎ターン変わるので、ロックはこの別の試し回しで見る。"""
+    cert = round_probe(eng, me, rounds)
+    return cert if cert is not None and _lock_ok(cert, me) else None
 
 
 def play_game(rules, deck: list[str], opp_deck: list[str], seed: int, *, first_player: int = 0,

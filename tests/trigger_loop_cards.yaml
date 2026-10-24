@@ -1,0 +1,106 @@
+# 「ゾーンに入った時」以外の誘発で回るループの検証用の架空カード（X 始まり）
+cards:
+  # 攻撃時: 攻撃するたびにアンタップして相手の山札を削る（攻撃し直せる）
+  - id: X001
+    name: 連撃の剣士
+    types: [creature]
+    civs: [fire]
+    cost: 2
+    power: 5000
+    races: [テスト]
+    text: このクリーチャーが攻撃する時、このクリーチャーをアンタップし、相手の山札の上から1枚目を墓地に置く。
+    abilities:
+      - kind: trigger
+        when: {event: attack, subject: self}
+        effect:
+          - {op: untap, select: {ref: self}}
+          - {op: mill, owner: opp, count: 1}
+
+  # 呪文: 解決後に手札へ戻る呪文
+  - id: X002
+    name: 巻き戻しの呪文
+    types: [spell]
+    civs: [water]
+    cost: 1
+    keywords: [spell_to_hand]
+    text: 相手の山札の上から1枚目を墓地に置く。この呪文を手札に戻す。
+    spell:
+      - {op: mill, owner: opp, count: 1}
+
+  # 唱えた時: 呪文を唱えるたびに墓地の呪文を手札へ戻す（X004 とで2枚のループ）
+  - id: X003
+    name: 呪文返しの精霊
+    types: [creature]
+    civs: [water]
+    cost: 2
+    power: 1000
+    races: [テスト]
+    text: 自分が呪文を唱えた時、自分の墓地から呪文を1枚手札に戻してもよい。
+    abilities:
+      - kind: trigger
+        when: {event: cast, player: you, subject: {owner: you}}
+        effect:
+          - op: may
+            body:
+              - {op: bounce, select: {zone: graveyard, owner: you, filter: {types: [spell]}, count: 1}}
+  - id: X004
+    name: 削りの呪文
+    types: [spell]
+    civs: [water]
+    cost: 1
+    text: 相手の山札の上から1枚目を墓地に置く。
+    spell:
+      - {op: mill, owner: opp, count: 1}
+
+  # 破壊された時: 場から離れるたび（離れる前の自分を）バトルゾーンへ戻し、出た時にまた自分を破壊できる
+  - id: X005
+    name: 不死の道化
+    types: [creature]
+    civs: [darkness]
+    cost: 2
+    power: 1000
+    races: [テスト]
+    text: このクリーチャーが出た時、このクリーチャーを破壊してもよい。このクリーチャーが墓地に置かれた時、相手の山札の上から1枚目を墓地に置き、このクリーチャーをバトルゾーンに出す。
+    abilities:
+      - kind: trigger
+        when: {event: move, to: bz, subject: self}
+        effect:
+          - op: may
+            body:
+              - {op: destroy, select: {ref: self}}
+      - kind: trigger
+        zone: graveyard
+        when: {event: move, to: graveyard, subject: self}
+        effect:
+          - {op: mill, owner: opp, count: 1}
+          - {op: move, select: {ref: self}, to: bz, reason: put}
+
+  # ターン開始時: 毎ターン相手の山札を削る（ターンをまたぐ周期 = round）
+  - id: X006
+    name: 時計仕掛けの番人
+    types: [creature]
+    civs: [water]
+    cost: 2
+    power: 1000
+    races: [テスト]
+    text: 自分のターンのはじめに、相手の山札の上から1枚目を墓地に置く。
+    abilities:
+      - kind: trigger
+        when: {event: turn_start, player: you}
+        effect:
+          - {op: mill, owner: opp, count: 1}
+
+  # 一見回りそうで回らない: 攻撃時に相手の山札を削るが、アンタップはしない（1回しか攻撃できない）
+  - id: X007
+    name: 一撃の剣士
+    types: [creature]
+    civs: [fire]
+    cost: 2
+    power: 5000
+    races: [テスト]
+    text: このクリーチャーが攻撃する時、相手の山札の上から1枚目を墓地に置く。
+    abilities:
+      - kind: trigger
+        when: {event: attack, subject: self}
+        effect:
+          - {op: mill, owner: opp, count: 1}
