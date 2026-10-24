@@ -37,6 +37,30 @@ python -m dmsim.solitaire --deck deck.yaml --games 1000 --turns 4 --workers 4   
 - `tools/convert_cards.py` 原文を効果DSLに変換する（Claude API: `pip install anthropic` と `ANTHROPIC_API_KEY`。無料: `--provider opencode`（`OPENCODE_API_KEY`、既定 glm-5.3-flash-free。許可リスト外のモデルは拒否）。精度測定は `tools/eval_convert.py`、定期自動変換は `tools/auto_convert.py`（設定 `tools/auto_convert.yaml`、止める時は enabled: false）。GitHub Actions は `tools/convert_request.yaml` を push）
 - 参照ルール: 総合ゲームルール Ver.1.53（公式PDF。リポジトリには含めない）
 
+## 開発者モードの起動
+
+ブラウザで開く画面です（外部ライブラリ不要、Python 3.11 以上）。
+
+```
+git clone https://github.com/KOBA1616/DMPJ.git     # 非公開リポジトリ: GitHub にログインした状態で
+cd DMPJ
+pip install pyyaml
+python -m dmsim.devserver                          # → http://127.0.0.1:8765/ をブラウザで開く
+python -m dmsim.devserver --port 9000              # ポートを変える場合
+```
+
+Docker の場合（ポートを公開し、コンテナの外から届くよう `--host 0.0.0.0` を付ける）:
+
+```
+docker build -t dmsim .
+docker run --rm -p 8765:8765 dmsim python -m dmsim.devserver --host 0.0.0.0
+# → http://localhost:8765/
+```
+
+- 「カード」タブ: カードごとの公式テキストと効果データ。「試す」でそのカードの局面ができ、approve / reject は `data/cards/real.yaml` に書き込まれる（Docker では保存されないので、確認結果を残すなら `-v "$PWD/data:/app/data"` を付ける）
+- 「対戦」タブ: 配置を指定した局面を作り、選択肢に答えて進める。1手戻す、記録（シード＋選択）の保存と読み込みもここ
+- 認証や暗号化はないので、`--host 0.0.0.0` は手元のPCや信頼できるネットワークでだけ使う
+
 ## カードを増やす手順
 
 1. `python tools/fetch_cards.py <カードID...> --out data/cards/raw/official_YYYYMMDD.jsonl`（手元のPCで）。弾ごとなら `--set DMRP1 --count 93 --skip-known`。ID は公式の形式 `dmrp01-001` に正規化して管理する（`dmsim/cardid.py`）
