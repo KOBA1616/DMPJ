@@ -118,8 +118,8 @@ def h_attack(eng, t):
     a = s.active
     ph = t["phase"]
     if s.skip_rest:                                           # ターンの残りをとばす
-        eng._expire("during_attack")
         eng._pop(t)
+        eng._expire("during_attack")
         return None
     if ph == 0:                                               # 506 攻撃クリーチャー指定
         t["phase"] = 1
@@ -168,8 +168,8 @@ def h_attack(eng, t):
             else:
                 s.result = {"winner": a, "reason": "direct_attack", "turn": s.turn}   # 509.1 / 703.4a
         return None
-    eng._expire("during_attack")                             # 510.2
     eng._pop(t)
+    eng._expire("during_attack")                             # 510.2
     return None
 
 
@@ -212,7 +212,7 @@ def h_break(eng, t):
                          for c in t["chosen"]]),
            {"t": "enqueue_st", "cids": declared, "player": victim},
            eng.ev_task({"ev": "break", "player": victim, "count": len(t["chosen"])})]
-    if t["in_effect"]:   # 効果の解決中のブレイクは、S・トリガーをその場で解決する（101.4g）
+    if t["in_effect"]:   # S・トリガーの解決中のブレイクは、新しい S・トリガーをその場で解決する（101.4g）
         seq = eng._window(*seq, only_st=True)
     eng._push(*seq)
     return None

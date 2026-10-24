@@ -68,6 +68,7 @@ class GameState:
     turn_counters: dict = field(default_factory=dict)       # 「このターン N 回目」系
     steps_this_turn: int = 0
     skip_rest: bool = False                                 # 「ターンの残りをとばす」
+    deck_emptied: list[int] = field(default_factory=list)   # 山札が一瞬でも0枚になったプレイヤー（104.2b）
 
     # ---- 参照 ----
     def ref(self, cid: int) -> list[int]:

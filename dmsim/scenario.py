@@ -43,6 +43,7 @@ def build(rules, spec: dict, **kw) -> Engine:
         if deck_left and deck_left[p] is not None:
             for c in list(s.zones["deck"][p])[deck_left[p]:]:
                 e._raw_move(c, "graveyard")
+    s.deck_emptied = [p for p in (0, 1) if not s.zones["deck"][p]]   # 組み立て途中の0枚は数えない
     return e
 
 

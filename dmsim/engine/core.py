@@ -63,6 +63,7 @@ class Engine(SelectorMixin, EventMixin, InterpreterMixin, TurnMixin, CombatMixin
                 e._raw_move(s.zones["deck"][p][0], "shield")
             for _ in range(5):
                 e._raw_move(s.zones["deck"][p][0], "hand")
+        s.deck_emptied = []
         s.tasks.append(e.turn_task())
         return e
 
@@ -305,6 +306,7 @@ class Engine(SelectorMixin, EventMixin, InterpreterMixin, TurnMixin, CombatMixin
             s.hold.remove(cid)
         else:
             self.zlist(c.zone, c.controller if self.zshared(c.zone) else c.owner).remove(cid)
+            self._note_deck(c)
         c.gen += 1                                  # 新しいオブジェクトになる（400.5）
         c.zone = to
         c.tapped = to == "mana" and len(self.cdef(cid).civs) > 1   # 多色カードはタップしてマナに置かれる
@@ -328,8 +330,14 @@ class Engine(SelectorMixin, EventMixin, InterpreterMixin, TurnMixin, CombatMixin
         """保留状態にする（409, 601.1b）。gen は変えない（まだ移動していない）。"""
         c = self.s.cards[cid]
         self.zlist(c.zone, c.owner).remove(cid)
+        self._note_deck(c)
         c.zone = "hold"
         self.s.hold.append(cid)
+
+    def _note_deck(self, c: Card):
+        """山札の最後の1枚が離れた瞬間を記録する。後で山札にカードが戻っても敗北は取り消されない（104.2b）。"""
+        if c.zone == "deck" and not self.s.zones["deck"][c.owner] and c.owner not in self.s.deck_emptied:
+            self.s.deck_emptied.append(c.owner)
 
     @staticmethod
     def _rel(who: str, env: dict) -> int:
