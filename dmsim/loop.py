@@ -14,6 +14,7 @@ import json
 from dataclasses import dataclass, field
 
 from .engine import Engine
+from .engine.core import IllegalAnswer
 
 
 def abstract(eng: Engine, period: str = "in_turn", hand_keys: set[str] | None = None) -> tuple[str, dict[str, int]]:
@@ -97,14 +98,35 @@ def analyze(delta: dict[str, int], counters: dict[str, int], me: int) -> tuple[f
     return limit, win_by, needed
 
 
+def is_engine(delta: dict[str, int], me: int) -> bool:
+    """相手には効かないが、自分の手札かアンタップのマナが周回ごとに増える（山札以外の自分の資源は減らない）ループ。
+    ドローを含むループ（引いて、使って、戻す）がここに入る。ストックして次の手を探す土台にする。"""
+    mine = {k: v for k, v in delta.items() if k.endswith(f":{me}") and not k.startswith("deck:")}
+    return (any(v > 0 for k, v in mine.items() if k.startswith(("hand:", "mana_untapped:")))
+            and all(v >= 0 for v in mine.values()))
+
+
+def draw_keys(eng: Engine, me: int) -> set[str]:
+    """ドローを含むループの検出で骨格に入れる手札のカード名。いま手札にあるカードだけを区別し、
+    ループ中に引いた別のカードは名前を見ず枚数だけ数える（引いたカードで骨格が毎回変わるのを避ける）。"""
+    return {eng.s.cards[c].defn for c in eng.s.zones["hand"][me]}
+
+
 class LoopDetector:
     """1人回し中に呼び出し、同じ骨格への回帰を見つける。"""
 
-    def __init__(self, me: int = 0, period: str = "in_turn", hand_keys: set[str] | None = None):
+    def __init__(self, me: int = 0, period: str = "in_turn", hand_keys: set[str] | None = None,
+                 engine_loops: bool = False):
         self.me = me
         self.period = period
         self.hand_keys = hand_keys
+        self.engine_loops = engine_loops
         self.seen: dict[str, tuple[dict[str, int], int]] = {}
+
+    def fork(self) -> "LoopDetector":
+        d = LoopDetector(self.me, self.period, self.hand_keys, self.engine_loops)
+        d.seen = dict(self.seen)
+        return d
 
     def observe(self, eng: Engine) -> LoopCertificate | None:
         h, ctr = abstract(eng, self.period, self.hand_keys)
@@ -114,7 +136,8 @@ class LoopDetector:
             delta = {k: ctr[k] - old[k] for k in ctr if ctr[k] != old[k]}
             if delta and now > at:
                 limit, win_by, needed = analyze(delta, ctr, self.me)
-                if any(v < 0 for k, v in delta.items() if k.endswith(f":{1 - self.me}")) or win_by:
+                if (any(v < 0 for k, v in delta.items() if k.endswith(f":{1 - self.me}")) or win_by
+                        or (self.engine_loops and is_engine(delta, self.me))):
                     acts = eng.log[at:now]
                     return LoopCertificate(h, [a["keys"] for a in acts], [a["p"] for a in acts], delta,
                                            limit, self.period, win_by, needed, hand_keys=self.hand_keys)
@@ -132,7 +155,11 @@ def verify(eng: Engine, cert: LoopCertificate, times: int = 2) -> LoopCertificat
             if d is None:
                 cert.notes.append("game ended during replay")
                 return cert
-            e.answer_by_keys(keys)
+            try:
+                e.answer_by_keys(keys)
+            except IllegalAnswer as ex:
+                cert.notes.append(f"diverged: {ex}")     # 引いたカードが違うなど、同じ選択ができなかった
+                return cert
         e.advance()
         h1, c1 = abstract(e, cert.period, cert.hand_keys)
         delta = {k: c1[k] - c0[k] for k in c1 if c1[k] != c0[k]}

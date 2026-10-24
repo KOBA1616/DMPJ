@@ -26,7 +26,8 @@ from collections import Counter
 from dataclasses import asdict, dataclass, field
 
 from .engine import Engine
-from .loop import LoopCertificate, LoopDetector, abstract, fast_forward, verify
+from .engine.core import IllegalAnswer
+from .loop import LoopCertificate, LoopDetector, abstract, draw_keys, fast_forward, verify
 from .play import passive_policy
 
 WIN = 1e9
@@ -61,6 +62,8 @@ class Weights:
     opp_deck: float = 3.0       # 相手の山札を削った枚数
     deck_danger: float = 60.0   # 自分の山札が少ない時の減点（自分の山札切れ対策）
     max_mana: int = 8           # これ以上はチャージしない（貪欲方策）
+    stock_cap: int = 8          # 相手に効かない資源ループ（ドロー等）を1度にストックする最大周回数
+    deck_keep: int = 8          # 資源ループでも自分の山札はこの枚数より減らさない
 
 
 def _rank(eng: Engine, d: dict, w: Weights) -> list[int]:
@@ -137,13 +140,39 @@ def evaluate(eng: Engine, me: int, w: Weights) -> float:
         if "creature" in ch["types"]:
             breaks += ch["breaks"]
     deck = len(eng.zlist("deck", me))
+    self_keep = w.deck_keep
     return (-w.shield * sh + w.threat * min(breaks, sh + 1) + w.mana * len(eng.zlist("mana", me))
             + w.hand * len(eng.zlist("hand", me)) + w.board * len(mine)
             + w.opp_deck * (40 - len(eng.zlist("deck", opp)))
-            - w.deck_danger * max(0, 3 - deck))
+            - w.deck_danger * max(0, self_keep - deck))
 
 
 # ---- 自分のターンの探索 -------------------------------------------------------------------------
+
+def _is_engine(cert: LoopCertificate, me: int) -> bool:
+    """相手の資源を減らさず勝ちにも直結しない（自分の資源を増やすだけの）ループ。"""
+    return not cert.win_by and not any(v < 0 for k, v in cert.delta.items() if k.endswith(f":{1 - me}"))
+
+
+class Detectors:
+    """ターン内ループの検出器の組。手札の中身まで見る厳密なものと、ドローを含むループ用に
+    手札の中身をぼかす（draw_keys 以外は枚数だけ数える）ものを並べて走らせる。"""
+
+    def __init__(self, dets: list[LoopDetector]):
+        self.dets = dets
+
+    @classmethod
+    def new(cls, eng: Engine, me: int) -> "Detectors":
+        return cls([LoopDetector(me=me, period="in_turn"),
+                    LoopDetector(me=me, period="in_turn", hand_keys=draw_keys(eng, me), engine_loops=True)])
+
+    def fork(self) -> "Detectors":
+        return Detectors([d.fork() for d in self.dets])
+
+    def observe(self, eng: Engine) -> LoopCertificate | None:
+        found = [c for c in (d.observe(eng) for d in self.dets) if c is not None]
+        return found[0] if found else None
+
 
 @dataclass
 class TurnStats:
@@ -186,11 +215,11 @@ class TurnSearch:
         self.left = self.budget
         self.seen: set = set()
         self.stats = TurnStats()
-        det = LoopDetector(me=self.me, period="in_turn")
+        det = Detectors.new(eng, self.me)
         best = self._search(eng.clone(), det)
         return best[1], self.stats
 
-    def _search(self, eng: Engine, det: LoopDetector) -> tuple[float, Engine]:
+    def _search(self, eng: Engine, det: Detectors) -> tuple[float, Engine]:
         d = self._settle(eng)
         if d is None:
             return evaluate(eng, self.me, self.w), eng
@@ -203,7 +232,9 @@ class TurnSearch:
         if cert is not None:
             ff = self._stock(eng, cert)
             if ff is not None:
-                return self._search(ff, LoopDetector(me=self.me, period="in_turn"))
+                return self._search(ff, Detectors.new(ff, self.me))
+            if _is_engine(cert, self.me):
+                return -WIN, eng      # 資源ループはストックし切った。同じ周回を1つずつ辿り直さない（山札を減らすだけ）
         if tkey in self.seen:
             return -WIN, eng          # 既に展開した局面（ループの途中で戻ってきた場合もここ）
         self.seen.add(tkey)
@@ -215,9 +246,7 @@ class TurnSearch:
             self.stats.nodes += 1
             child = eng.clone()
             child.answer(choice)
-            sub = LoopDetector(me=self.me, period="in_turn")
-            sub.seen = dict(det.seen)
-            r = self._search(child, sub)
+            r = self._search(child, det.fork())
             if best is None or r[0] > best[0]:
                 best = r
             if best[0] >= WIN - 1000:
@@ -226,13 +255,24 @@ class TurnSearch:
 
     def _stock(self, eng: Engine, cert: LoopCertificate) -> Engine | None:
         """ループを確かめてストックした局面を返す。勝ちにつながらない・確かめられないなら None。"""
-        n = cert.needed if cert.win_by else (int(cert.limit) if math.isfinite(cert.limit) else 0)
+        engine = _is_engine(cert, self.me)
+        if cert.win_by:
+            n = cert.needed
+        else:
+            n = int(min(cert.limit, self.w.stock_cap)) if engine else (int(cert.limit) if math.isfinite(cert.limit) else 0)
+        d_deck = cert.delta.get(f"deck:{self.me}", 0)
+        if engine and d_deck < 0:      # 自分の山札切れ対策: 山札を deck_keep 枚より減らさない
+            n = min(n, (len(eng.zlist("deck", self.me)) - self.w.deck_keep) // -d_deck)
         if n <= 0 or verify(eng, cert, times=1).verified < 1:
             return None
         ff = eng.clone()
-        fast_forward(ff, cert, n)
+        try:
+            fast_forward(ff, cert, n)
+        except IllegalAnswer:
+            return None
         self.stats.loops.append({"win_by": cert.win_by, "needed": cert.needed, "limit": cert.limit,
-                                 "delta": cert.delta, "length": len(cert.actions), "stocked": n})
+                                 "delta": cert.delta, "length": len(cert.actions), "stocked": n,
+                                 "kind": "engine" if engine else "kill"})
         return ff
 
 
@@ -243,6 +283,7 @@ class GameResult:
     seed: int
     first_player: int
     kill_turn: int | None = None      # 自分の何ターン目に勝ち（またはロック確立）
+    origin: str | None = None         # lock / loop（ループで山札・シールドを削った）/ engine（資源ループの後に殴った・決めた）/ combat / effect
     kind: str | None = None           # direct_attack / deck_out / loop_deck_out / effect / lock
     lost: str | None = None           # 自分が負けた理由（deck_out など）
     loops: list[dict] = field(default_factory=list)
@@ -259,6 +300,15 @@ def _lock_ok(cert: LoopCertificate, me: int) -> bool:
     grows = any(v > 0 for k, v in cert.delta.items()
                 if k.endswith(opp) and not k.startswith(("deck:", "graveyard:")))
     return cert.win_by == "opp_deck_out" and not grows
+
+
+def _origin(res: GameResult) -> str:
+    """勝ち方の由来。ループで相手の山札・シールドを削ってから決めたものを、殴り勝ちや効果だけの勝ちと分ける。"""
+    if any(lp["win_by"] for lp in res.loops):
+        return "loop"
+    if res.loops:
+        return "engine"
+    return "combat" if res.kind == "direct_attack" else "effect"
 
 
 def lock_probe(eng: Engine, me: int, rounds: int = 2) -> LoopCertificate | None:
@@ -309,12 +359,15 @@ def play_game(rules, deck: list[str], opp_deck: list[str], seed: int, *, first_p
                     res.lock = {"delta": cert.delta, "needed_rounds": cert.needed, "limit": cert.limit}
                     break
         r = eng.s.result
+        if res.kind == "lock":
+            res.origin = "lock"
         if r is not None and res.kind is None:
             if r["winner"] == me:
                 res.kill_turn = own_turn(eng, me, r["turn"])
                 res.kind = r["reason"]
                 if r["reason"] == "deck_out" and any(lp["win_by"] == "opp_deck_out" for lp in res.loops):
                     res.kind = "loop_deck_out"
+                res.origin = _origin(res)
             elif r["winner"] == 1 - me:
                 res.lost = r["reason"]
     except Exception as ex:          # 1局の失敗で全体を止めない。seed で再現できる
@@ -348,6 +401,9 @@ def summarize(results: list[GameResult], max_turn: int) -> dict:
         "games": n,
         "kill_rate_by_turn": by_turn,
         "kinds": dict(Counter(r.kind for r in counted)),
+        "origins": dict(Counter(r.origin for r in counted)),
+        "loop_kill_rate_by_turn": {t: sum(1 for r in results if r.origin in ("loop", "lock") and r.kill_turn is not None
+                                          and r.kill_turn <= t) / n if n else 0.0 for t in range(1, max_turn + 1)},
         "lost": dict(Counter(r.lost for r in results if r.lost)),
         "errors": [{"seed": r.seed, "first_player": r.first_player, "error": r.error} for r in results if r.error],
         "loop_games": sum(1 for r in results if r.loops),
@@ -435,6 +491,7 @@ def main(argv=None):
     summ["wall_seconds"] = time.perf_counter() - t0
     for t, v in summ["kill_rate_by_turn"].items():
         print(f"turn {t}: {v['rate']:.1%}  ({v['kills']}/{summ['games']}, 95%CI {v['ci95'][0]:.1%}-{v['ci95'][1]:.1%})")
+    print(f"origins={summ['origins']} loop/lock kill rate by turn={ {t: f'{v:.1%}' for t, v in summ['loop_kill_rate_by_turn'].items()} }")
     print(f"kinds={summ['kinds']} lost={summ['lost']} errors={len(summ['errors'])} "
           f"loop_games={summ['loop_games']} wall={summ['wall_seconds']:.1f}s")
     if a.out:
