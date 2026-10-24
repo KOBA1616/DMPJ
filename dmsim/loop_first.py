@@ -75,10 +75,14 @@ def seek_wins(f: Finding, me: int = 0, budget: int = 1500, stop_at_first: bool =
     return f
 
 
-def two_stage(eng: Engine, me: int = 0, discover_budget: int = 1500, seek_budget: int = 1500) -> list[Finding]:
+def two_stage(eng: Engine, me: int = 0, discover_budget: int = 1500, seek_budget: int = 1500,
+              first_win_only: bool = True) -> list[Finding]:
+    """first_win_only: 勝ちが見つかったら残りのループは調べない（全部の勝ち筋を集めたい時は False）。"""
     found = discover_loops(eng, me, discover_budget)
     for f in found:
         seek_wins(f, me, seek_budget)
+        if f.wins and first_win_only:
+            break
     return found
 
 
