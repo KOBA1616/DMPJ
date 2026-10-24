@@ -20,3 +20,9 @@
   `clone`/`advance`/`answer`/`digest` だけ公開し、探索は Python から呼ぶ）。
 - 先に clone と chars の最適化を終えるのが得策。Rust 化の主な利益は clone とハンドラの分岐で、ここがボトルネックの大半。
 - 検証: 同一 seed のログ再生で Python 版と digest が一致することを回帰基準にする（既に `play.replay` がある）。
+
+## 実カードのプロファイル再取得（clone / chars 最適化後）
+`python tools/bench.py --games 4 --profile`（既定の `--prefix dm` が実カードのデッキ）。上位は `chars` 約20%、`clone`（`_copy_card` + `_jcopy`）約20%、
+`loop.abstract` 約9%、`_collect_triggers` 約8%で、特定の一箇所が支配する状態ではなくなった（平坦）。
+試して効果がなかったもの: `Card` の `slots=True` 化＋コンストラクタ複製（8.05 → 7.87 局/秒、誤差内なので戻した）。
+これ以上は構造を変える段階: ゾーン／カード単位の copy-on-write、状態版番号つきの `chars` キャッシュ（状態の直接書き換え箇所を先に一本化する必要）、または Rust 移植。

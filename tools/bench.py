@@ -19,10 +19,11 @@ def main():
     ap.add_argument("--games", type=int, default=6)
     ap.add_argument("--budget", type=int, default=200)
     ap.add_argument("--turns", type=int, default=4)
+    ap.add_argument("--prefix", default="dm", help="デッキに使うカード ID の接頭辞（既定 dm = 実カード）")
     ap.add_argument("--profile", action="store_true")
     a = ap.parse_args()
     rules = load_rules()
-    deck = default_decks(rules, "dm")[0]
+    deck = default_decks(rules, a.prefix)[0]
     opp = ["T001"] * 40
 
     def run():
