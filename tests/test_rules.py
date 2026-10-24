@@ -370,3 +370,20 @@ def test_replacement_events_apply_with_the_bundle(rr):
     both = [b for b in batches if {"mana", "graveyard"} <= {z for z, _ in b}]
     assert len(both) == 1
     assert names(e, "mana", 0).count("T007") == 1
+
+
+def test_before_break_trigger_resolves_before_shields_break(rr):
+    """603.7 / 509.3〜509.4 「ブレイクの前に」はシールドを選んだ時に誘発し、シールドが手札に加わる前に解決する。"""
+    e = setup(rr, {"bz": ["T005", "R018"]}, {"shield": ["T001"] * 4})
+    answer(e, "attack", "attack:T005:player")
+    d = e.advance()
+    assert d["kind"] == "choose_shields"
+    hand = len(e.zlist("hand", 0))
+    seen = {}
+    orig = e.apply_batch
+    e.apply_batch = lambda evs: (seen.setdefault("n", len(e.zlist("hand", 1))) if any(
+        x["ev"] == "move" and x.get("reason") == "break" for x in evs) else None, orig(evs))[1]
+    e.answer([0, 1])
+    e.advance()
+    assert len(e.zlist("hand", 0)) == hand + 1          # 引いた
+    assert seen["n"] == len(e.zlist("hand", 1)) - 2     # ブレイク適用時、相手の手札はまだ増えていない

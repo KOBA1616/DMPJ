@@ -111,7 +111,7 @@ class EventMixin:
                 return []   # 「になる」誘発は状態が変わった時だけ（603.2c）
             c.tapped = kind == "tap"
             return [{"ev": kind, "subject": ev["subject"], "controller": c.controller}]
-        if kind in ("attack", "block", "cast", "turn_start", "turn_end", "break", "battle_win"):
+        if kind in ("attack", "block", "cast", "turn_start", "turn_end", "break", "break_before", "battle_win"):
             return [dict(ev)]
         raise ValueError(kind)
 

@@ -21,7 +21,7 @@ def core_ops() -> dict[str, dict[str, str]]:
     return OP_ARGS
 
 EVENTS = {"move", "draw", "cast", "summon", "attack", "block", "break", "tap", "untap",
-          "turn_start", "turn_end", "battle_win"}
+          "turn_start", "turn_end", "battle_win", "break_before"}
 ABILITY_KINDS = {"trigger", "replace", "static", "declare"}
 ABILITY_KEYS = {"kind", "when", "if", "effect", "instead", "optional", "affects", "mod", "zone", "keyword"}
 REASONS = {"put", "destroy", "return", "discard", "charge", "summon", "cast", "break",

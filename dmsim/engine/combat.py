@@ -194,6 +194,9 @@ def h_break(eng, t):
             return d
         t["chosen"] = [shields[i] for i in ans]
         t["phase"] = 1
+        # 603.7: 「ブレイクの前に」はシールドを選んだ時に誘発し、ブレイクより前に解決する（603.7a, b は窓の入れ子で満たす）
+        eng._push(*eng._window(eng.ev_task({"ev": "break_before", "player": victim, "count": len(t["chosen"]),
+                                            "controller": t["by"]})))
         return None
     opts = []
     for c in t["chosen"]:

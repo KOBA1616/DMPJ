@@ -210,3 +210,17 @@ cards:
     races: [テスト]
     text: W・ブレイカー / T・ブレイカー
     keywords: [double_breaker, triple_breaker]
+
+  - id: R018
+    name: 先読みの見張り
+    types: [creature]
+    civs: [water]
+    cost: 2
+    power: 2000
+    races: [テスト]
+    text: 相手のシールドがブレイクされる前に、カードを1枚引く。
+    abilities:
+      - kind: trigger
+        when: {event: break_before, player: opp}
+        effect:
+          - {op: draw, count: 1}
