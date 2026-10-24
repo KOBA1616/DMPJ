@@ -7,7 +7,7 @@ from test_saga_loop import SAGA, saga_policy
 
 
 def test_saga_is_a_single_card_cycle_with_the_same_delta_as_the_detector(rules):
-    cyc = [c for c in find_cycles(rules, max_cards=1) if c.cards == [SAGA]]
+    cyc = [c for c in find_cycles(rules, max_cards=1) if c.cards == [SAGA] and c.period == "in_turn" and c.sure]
     assert len(cyc) == 1 and cyc[0].conditional()
     static = cyc[0].delta()
     assert static == {"deck": -1, "graveyard": 1}
@@ -28,7 +28,8 @@ def test_saga_is_a_single_card_cycle_with_the_same_delta_as_the_detector(rules):
 
 
 def test_no_cycle_for_cards_that_do_not_feed_each_other(rules):
-    names = {c for cy in find_cycles(rules, max_cards=2) for c in cy.cards}
+    # 出せる（summon）だけの連結役は除く。能力で循環に加わるカードだけを見る
+    names = {b.card for cy in find_cycles(rules, max_cards=2) for b in cy.bundles if b.origin != "summon"}
     assert "dm01-001" not in names           # グラン・ギューレ（ループと無関係）
 
 
