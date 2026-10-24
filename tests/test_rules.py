@@ -9,6 +9,7 @@ import pytest
 from conftest import answer, setup
 
 from dmsim.defs import DATA, load_rules
+from dmsim.engine import Engine
 
 
 @pytest.fixture(scope="module")
@@ -370,3 +371,14 @@ def test_replacement_events_apply_with_the_bundle(rr):
     both = [b for b in batches if {"mana", "graveyard"} <= {z for z, _ in b}]
     assert len(both) == 1
     assert names(e, "mana", 0).count("T007") == 1
+
+
+def test_103_initial_setup_and_first_turn(rules):
+    """103.2/113.1/406.1/500.6: 双方の初期シールド5枚・初期手札5枚。先攻の第1ターンはドローしない。"""
+    deck = ["T001"] * 20
+    e = Engine.new_game(rules, [deck, deck], seed=3)
+    for p in (0, 1):
+        assert len(e.zlist("shield", p)) == 5 and len(e.zlist("hand", p)) == 5
+        assert len(e.zlist("deck", p)) == 10
+    e.advance()
+    assert len(e.zlist("hand", 0)) == 5          # 先攻は第1ターンのドローなし
