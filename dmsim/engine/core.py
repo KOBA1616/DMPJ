@@ -231,8 +231,9 @@ class Engine(SelectorMixin, EventMixin, InterpreterMixin, TurnMixin, CombatMixin
         mods = [ab["mod"] for _, ab in own
                 if ab["kind"] == "static" and ab.get("affects") == "self" and ab.get("zone", "bz") == c.zone and "mod" in ab]
         ref = self.s.ref(cid)
-        for src in self.bz_tops():   # バトルゾーンの常在型能力。affects.zone で他のゾーンのカードにも及ぶ
-            if not self._affects_others(src):
+        cards = self.s.cards
+        for src in self.s.zones["bz"][0]:   # バトルゾーンの常在型能力（重ねたカードの下は除く）。affects.zone で他のゾーンのカードにも及ぶ
+            if cards[src].top_of >= 0 or not self._affects_others(src):
                 continue
             for _, ab in self.abilities(src, "static"):
                 aff = ab.get("affects", {})
