@@ -125,6 +125,8 @@ def _moves_of(ops, zone: str = "bz") -> list[Move]:
 def _premise(ab) -> Premise | None:
     w = ab.get("when") or {}
     ev = w.get("event")
+    if ev == "summon":   # 「出した時」（召喚・踏み倒し）はバトルゾーンに入ったこと。相手が出した時は自分の移動では満たせない
+        return None if w.get("player") == "opp" else Premise("move", "bz", subject=w.get("subject"), zone=ab.get("zone", "bz"))
     if ev not in ("move", "cast", "draw", *TICKS) or (ev == "move" and "to" not in w):
         return None
     return Premise(ev, w.get("to"), w.get("from"), w.get("subject"), w.get("player"), ab.get("zone", "bz"))
@@ -136,7 +138,8 @@ def bundles_of(rules) -> list[Bundle]:
         faces = cd.faces or [cd]
         for f in faces:
             if f.free_if and f.is_creature():   # G・ゼロ: 手札にある間、コストなしでバトルゾーンへ（手札に入ったことが前提）
-                out.append(Bundle(cd.id, cd.name, "enter:hand", True, [Move("hand", "bz", True)], origin="free"))
+                out.append(Bundle(cd.id, cd.name, Premise("move", "hand", subject="self", zone="hand"),
+                                  [Move("hand", "bz", True)], origin="free"))
             for ab in f.abilities:
                 if ab.get("kind") not in ("trigger", "declare"):
                     continue
