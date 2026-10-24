@@ -1,0 +1,25 @@
+id: 20261024-161251-cde5
+finished: '2026-10-24T16:12:58+00:00'
+status: ok
+text: "Exception in thread Thread-3 (_readerthread):\nTraceback (most recent call\
+  \ last):\n  File \"C:\\Users\\ichirou\\AppData\\Local\\Programs\\Python\\Python312\\\
+  Lib\\threading.py\", line 1052, in _bootstrap_inner\n    self.run()\n  File \"C:\\\
+  Users\\ichirou\\AppData\\Local\\Programs\\Python\\Python312\\Lib\\threading.py\"\
+  , line 989, in run\n    self._target(*self._args, **self._kwargs)\n  File \"C:\\\
+  Users\\ichirou\\AppData\\Local\\Programs\\Python\\Python312\\Lib\\subprocess.py\"\
+  , line 1597, in _readerthread\n    buffer.append(fh.read())\n                  ^^^^^^^^^\n\
+  UnicodeDecodeError: 'cp932' codec can't decode byte 0x87 in position 53: illegal\
+  \ multibyte sequence\nTraceback (most recent call last):\n  File \"C:\\Users\\ichirou\\\
+  DMPJ\\tools\\gen_status.py\", line 99, in <module>\n    main()\n  File \"C:\\Users\\\
+  ichirou\\DMPJ\\tools\\gen_status.py\", line 91, in main\n    new = pat.sub(lambda\
+  \ _: f\"{BEGIN}\\n{build()}\\n{END}\", text)\n          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n\
+  \  File \"C:\\Users\\ichirou\\DMPJ\\tools\\gen_status.py\", line 91, in <lambda>\n\
+  \    new = pat.sub(lambda _: f\"{BEGIN}\\n{build()}\\n{END}\", text)\n         \
+  \                               ^^^^^^^\n  File \"C:\\Users\\ichirou\\DMPJ\\tools\\\
+  gen_status.py\", line 64, in build\n    sets = load_sets()\n           ^^^^^^^^^^^\n\
+  \  File \"C:\\Users\\ichirou\\DMPJ\\tools\\gen_status.py\", line 53, in load_sets\n\
+  \    return json.loads(r.stdout)[\"products\"]\n           ^^^^^^^^^^^^^^^^^^^^\n\
+  \  File \"C:\\Users\\ichirou\\AppData\\Local\\Programs\\Python\\Python312\\Lib\\\
+  json\\__init__.py\", line 339, in loads\n    raise TypeError(f'the JSON object must\
+  \ be str, bytes or bytearray, '\nTypeError: the JSON object must be str, bytes or\
+  \ bytearray, not NoneType\n"
