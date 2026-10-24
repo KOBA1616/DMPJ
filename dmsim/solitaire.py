@@ -374,18 +374,22 @@ def lock_probe(eng: Engine, me: int, rounds: int = 2) -> LoopCertificate | None:
 
 def play_game(rules, deck: list[str], opp_deck: list[str], seed: int, *, first_player: int = 0,
               max_turn: int = 4, budget: int = 200, weights: Weights | None = None,
-              lock_rounds: int = 2, start: Engine | None = None) -> tuple[GameResult, Engine]:
+              lock_rounds: int = 2, start: Engine | None = None, opp=None) -> tuple[GameResult, Engine]:
     """自分 = プレイヤー0。自分の max_turn ターン目が終わるまで回す。各ターンの後に lock_probe でロックを確かめる。
     start（dmsim.scenario.build で作った局面など）を渡すとそこから始める（deck / opp_deck / seed は使わない）。"""
     me = 0
     t0 = time.perf_counter()
     res = GameResult(seed=seed, first_player=first_player)
     eng = start.clone() if start is not None else Engine.new_game(rules, [deck, opp_deck], seed, first_player)
-    search = TurnSearch(me, budget, weights)
+    opp_pol = charge_only_policy
+    if opp is not None:                      # 妨害モデル（dmsim.opponent.OppModel）。None なら従来の何もしない相手
+        opp.setup(eng)
+        opp_pol = opp.policy
+    search = TurnSearch(me, budget, weights, opp_policy=opp_pol)
     try:
         while (d := eng.advance()) is not None:
             if eng.s.active != me or d["player"] != me:
-                eng.answer(charge_only_policy(eng, d))
+                eng.answer(opp_pol(eng, d))
                 continue
             ot = own_turn(eng, me)
             if ot > max_turn:
@@ -509,6 +513,7 @@ def main(argv=None):
     ap.add_argument("--first", choices=["first", "second", "both"], default="both")
     ap.add_argument("--turns", type=int, default=4, help="何ターン目までのキルを数えるか")
     ap.add_argument("--budget", type=int, default=200, help="1ターンの探索で展開する局面数（0 で貪欲方策のみ）")
+    ap.add_argument("--opp", default="none", help="相手の妨害モデル: none / shields3 / blockers / strigger / full（dmsim.opponent.PRESETS）")
     ap.add_argument("--workers", type=int, default=1)
     ap.add_argument("--out", help="集計と各局の結果（JSON）の保存先")
     ap.add_argument("--record", help="最初の1局の対戦記録（JSON）。python -m dmsim.play --replay で再生できる")
@@ -516,7 +521,8 @@ def main(argv=None):
     rules = load_rules()
     deck = load_deck(a.deck) if a.deck else default_decks(rules, "dm")[0]
     opp_deck = load_deck(a.opp_deck) if a.opp_deck else ["T001"] * 40
-    kw = {"max_turn": a.turns, "budget": a.budget}
+    from .opponent import PRESETS
+    kw = {"max_turn": a.turns, "budget": a.budget, "opp": PRESETS[a.opp]}
     if a.record:
         fp = 1 if a.first == "second" else 0
         res, eng = play_game(rules, deck, opp_deck, a.seed, first_player=fp, **kw)
