@@ -208,6 +208,7 @@ class TurnSearch:
         self.w = weights or Weights()
         self.opp_policy = opp_policy
         self.combo_cap = combo_cap
+        self.stock_offsets: tuple[int, ...] = (0, 1)   # ストックする周回数: 上限から何周手前までを試すか（山札の残りを1枚・2枚にする等）
         self.burn_stock = True                # 山札を削るだけのループを自動で残り1枚までストックする（2段探索の2段目では切る）
         self.collect: list | None = None      # ループ発見モード: 見つけたループ（局面の複製, 証明書）をここへ集めて、ストックはしない
 
@@ -253,19 +254,22 @@ class TurnSearch:
             return -WIN, eng              # ループの先は辿らない（ループの発見だけを行う）
         if cert is not None and _is_burn(cert, self.me) and not self.burn_stock:
             cert = None                       # 周回数は呼び出し側が決める
-        elif cert is not None and _is_burn(cert, self.me):
-            # 山札を削るだけのループ: 勝ちにつながるかは分からないので、山札を残り1枚まで削った線（遅く抜ける）を試す。
-            # ループに入った直後に抜ける線は親の局面で試されるので、ここでループの続きは辿らない
-            ff = self._stock(eng, cert)
-            if ff is not None:
-                return self._search(ff, Detectors.new(ff, self.me))
-            cert = None
-        if cert is not None:
-            ff = self._stock(eng, cert)
-            if ff is not None:
-                return self._search(ff, Detectors.new(ff, self.me))
-            if _is_engine(cert, self.me):
+        elif cert is not None:
+            # 周回数（ストック量）を選ぶ: 上限まで回す線のほか、あと数周手前で止める線（stock_offsets）も試す。
+            # 山札を削るループは勝ちにつながるか分からないので上限（残り1枚）の線を試す。ループに入った直後に抜ける線は
+            # 親の局面で試されるので、ここでループの続きは辿らない
+            best: tuple[float, Engine] | None = None
+            for ff in self._stocks(eng, cert):
+                r = self._search(ff, Detectors.new(ff, self.me))
+                if best is None or r[0] > best[0]:
+                    best = r
+                if best[0] >= WIN - 1000:
+                    break
+            if best is not None:
+                return best
+            if _is_engine(cert, self.me) and not _is_burn(cert, self.me):
                 return -WIN, eng      # 資源ループはストックし切った。同じ周回を1つずつ辿り直さない（山札を減らすだけ）
+            cert = None
         if tkey in self.seen:
             return -WIN, eng          # 既に展開した局面（ループの途中で戻ってきた場合もここ）
         self.seen.add(tkey)
@@ -284,8 +288,9 @@ class TurnSearch:
                 break                 # このターンで勝てる線が見つかった
         return best
 
-    def _stock(self, eng: Engine, cert: LoopCertificate) -> Engine | None:
-        """ループを確かめてストックした局面を返す。勝ちにつながらない・確かめられないなら None。"""
+    def _stocks(self, eng: Engine, cert: LoopCertificate) -> list[Engine]:
+        """ループを確かめてストックした局面（周回数の違うもの）を返す。勝ちにつながらない・確かめられないなら空。
+        周回数は上限 n から stock_offsets だけ手前までを試す（山札を残り1枚／2枚にする、など）。"""
         engine = _is_engine(cert, self.me)
         burn = _is_burn(cert, self.me)
         if burn:
@@ -298,16 +303,23 @@ class TurnSearch:
         if engine and not burn and d_deck < 0:      # 自分の山札切れ対策: 山札を deck_keep 枚より減らさない
             n = min(n, (len(eng.zlist("deck", self.me)) - self.w.deck_keep) // -d_deck)
         if n <= 0 or verify(eng, cert, times=1).verified < 1:
-            return None
-        ff = eng.clone()
-        try:
-            fast_forward(ff, cert, n)
-        except IllegalAnswer:
-            return None
-        self.stats.loops.append({"win_by": cert.win_by, "needed": cert.needed, "limit": cert.limit,
-                                 "delta": cert.delta, "length": len(cert.actions), "stocked": n,
-                                 "kind": "burn" if burn else "engine" if engine else "kill"})
-        return ff
+            return []
+        offsets = self.stock_offsets if (burn or (engine and not cert.win_by)) else (0,)
+        out = []
+        for k in offsets:
+            m = n - k
+            if m <= 0:
+                continue
+            ff = eng.clone()
+            try:
+                fast_forward(ff, cert, m)
+            except IllegalAnswer:
+                continue
+            self.stats.loops.append({"win_by": cert.win_by, "needed": cert.needed, "limit": cert.limit,
+                                     "delta": cert.delta, "length": len(cert.actions), "stocked": m,
+                                     "kind": "burn" if burn else "engine" if engine else "kill"})
+            out.append(ff)
+        return out
 
 
 # ---- 1局 ----------------------------------------------------------------------------------------
