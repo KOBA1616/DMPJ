@@ -55,6 +55,7 @@ jobs:
       - name: Commit data
         if: always()
         run: |
-          git add -f data/cards/catalog data/cards/raw/by_product 2>/dev/null || true
+          git add -f data/cards/catalog
+          if [ -d data/cards/raw/by_product ]; then git add -f data/cards/raw/by_product; fi
           git commit -m "cards-data: $(date -u +%FT%TZ)" || echo "no changes"
           git push origin HEAD:cards-data
