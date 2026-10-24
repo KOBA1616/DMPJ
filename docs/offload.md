@@ -70,32 +70,35 @@ Claude / Actions ──jobs/pending/*.yaml──▶ llm-jobs ブランチ ◀─
    npm i -g opencode-ai
    ```
    `git push` できるよう GitHub にログイン済みであること（Git for Windows の資格情報マネージャーで可）。
-3. OpenCode の動作確認（無料モデルが返ること）:
-   ```
-   opencode models
-   opencode run -m opencode/glm-5.3-flash-free "hello"
-   ```
-   一覧にさらに高性能な `-free` モデルがあれば、公式 https://opencode.ai/docs/zen/ で $0 と確認し、`tools/llm_offload/providers.py` の `OPENCODE_FREE_MODELS` に足してから `--model` で指定する。
-   デスクトップアプリも入れている場合、`Database is not empty and has no session table` で失敗することがある。CLI 専用の保存先を使うと通る（動作確認済み）:
+3. OpenCode CLI の動作確認（動作確認済みの流れ）。デスクトップアプリも入れている場合、CLI は専用の保存先で動かす
+   （そうしないと `Database is not empty and has no session table` で失敗する）:
    ```
    $env:XDG_DATA_HOME = "$env:USERPROFILE\.dmpj-worker\xdg"
    $env:XDG_CONFIG_HOME = "$env:USERPROFILE\.dmpj-worker\xdg-config"
+   opencode run -m opencode/glm-5.3-flash-free "hello"
    ```
-   `tools\run_worker.bat` には設定済み。手動で `local_worker.py` を動かす時は同じ PowerShell で上の2行を先に実行する。
-4. 手動で1回試す:
+   返事が返れば成功（ログイン不要）。`local_worker.py` と `tools\run_worker.bat` は同じ保存先を自動で使うので、以後は設定不要。
+   `opencode` が認識されない場合は PowerShell を開き直す。
+   一覧にさらに高性能な `-free` モデルがあれば、公式 https://opencode.ai/docs/zen/ で $0 と確認し、`tools/llm_offload/providers.py` の `OPENCODE_FREE_MODELS` に足してから `--model` で指定する。
+4. 最初の1件で通し確認（定型作業 routine の `status`。無料モデルを使わず、ワーカーの経路だけ確かめる）:
    ```
-   python tools\local_worker.py enqueue ask --task summarize --instruction "要点3行で" --file README.md
+   python tools\local_worker.py enqueue routine --name status
    python tools\local_worker.py run --once
    python tools\local_worker.py status
    ```
-   GitHub の `llm-jobs` ブランチ `jobs/done/` に結果が出れば成功。
+   `done: 1` になり、GitHub の `llm-jobs` ブランチ `jobs/done/` に結果が出れば経路は成功。続けて無料モデルも通す:
+   ```
+   python tools\local_worker.py enqueue ask --task summarize --instruction "要点3行で" --file README.md
+   python tools\local_worker.py run --once
+   ```
+   結果が `status: ok` なら完了。`escalate` は枠切れ等、`error` は `jobs/done/<id>.yaml` の `error` を見る。
 
 ### 自動化（タスクスケジューラ）
 
-10分ごとに `tools\run_worker.bat` を実行する。PowerShell で（`C:\path\DMPJ` は clone した場所）:
+登録前に `tools\run_worker.bat` をダブルクリックか PowerShell で1回動かし、`%USERPROFILE%\.dmpj-worker\log.txt` にエラーが無いことを確認する。そのうえで10分ごとに実行する。PowerShell で（`C:\path\DMPJ` は clone した場所）:
 
 ```
-schtasks /Create /SC MINUTE /MO 10 /TN "dmpj-worker" /TR "C:\path\DMPJ\tools\run_worker.bat" /F
+schtasks /Create /SC MINUTE /MO 10 /TN "dmpj-worker" /TR "\"C:\path\DMPJ\tools\run_worker.bat\"" /F
 ```
 
 - ログ: `%USERPROFILE%\.dmpj-worker\log.txt`。止める: `schtasks /Delete /TN "dmpj-worker" /F`。

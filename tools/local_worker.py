@@ -243,6 +243,9 @@ def main(argv=None) -> int:
     e.add_argument("--workers", type=int, default=1)
     sub.add_parser("status")
     a = ap.parse_args(argv)
+    # デスクトップアプリのDBと食い違うことがあるので、OpenCode CLI は専用の保存先で動かす（Windowsで動作確認済み）
+    os.environ.setdefault("XDG_DATA_HOME", str(Path(a.work) / "xdg"))
+    os.environ.setdefault("XDG_CONFIG_HOME", str(Path(a.work) / "xdg-config"))
     git = Git(ROOT, Path(a.work))
     if a.cmd == "enqueue":
         job = {"type": a.type}
