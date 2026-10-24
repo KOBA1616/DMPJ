@@ -3,4 +3,4 @@ __pycache__/
 .pytest_cache/
 .venv/
 # 公式ルールPDF等の第三者資料はリポジトリに入れない（プロジェクト共有フォルダで管理）
-rules/
+/rules/
