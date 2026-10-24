@@ -30,7 +30,7 @@ from html.parser import HTMLParser
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
-from dmsim.cardid import normalize_id, pack_ids  # noqa: E402
+from dmsim.cardid import cache_name, canonical_id, detail_url, pack_ids, resolve_id  # noqa: E402
 
 URL = "https://dm.takaratomy.co.jp/card/detail/?id={id}"
 CACHE = Path(__file__).resolve().parent.parent / ".cache" / "official"
@@ -81,7 +81,7 @@ class _Cells(HTMLParser):
 
 def _clean_name(h3: str) -> tuple[str, str]:
     """「ヘル・スラッシュ(DM6 57/110)」→ (カード名, 収録番号)。括弧が無ければ番号は空。"""
-    m = re.match(r"^(.*?)\s*[(（]([^()（）]*\S/\S[^()（）]*)[)）]\s*$", h3)
+    m = re.match(r"^(.*?)\s*[(（]([A-Z][A-Za-z0-9+\-]*\s[^()（）]*/[^()（）]*)[)）]\s*$", h3)   # 末尾の「(DM26RP3 STD9/)」「(DM6 57/110)」
     return (m.group(1).strip(), m.group(2).strip()) if m else (h3.strip(), "")
 
 
@@ -131,6 +131,13 @@ def repair(row: dict) -> dict:
         r["name"], no = _clean_name(r.get("name", ""))
         if no and not row.get("set_no"):
             row["set_notation"] = no
+    if row.get("official_id"):
+        row["id"] = canonical_id(row["official_id"])      # 古い取得分（整形したID）も正本のIDに直す
+    miss = missing_fields(row)
+    if miss:
+        row["missing"] = miss                             # 空ページ・項目欠けは行に印を付ける（後で再取得・点検）
+    else:
+        row.pop("missing", None)
     faces = row.get("faces", [])
     parts = [x.strip() for x in row["name"].split(" / ")]
     if len(faces) == len(parts) > 1 and len({f["name"] for f in faces}) == 1:
@@ -148,13 +155,13 @@ def missing_fields(row: dict) -> list[str]:
 
 
 def fetch(card_id: str, interval: float, last: list[float]) -> str:
-    f = CACHE / f"{card_id}.html"
+    f = CACHE / cache_name(card_id)
     if f.exists():
         return f.read_text(encoding="utf-8")
     wait = last[0] + interval - time.monotonic()
     if wait > 0:
         time.sleep(wait)
-    req = urllib.request.Request(URL.format(id=card_id), headers={"User-Agent": UA})
+    req = urllib.request.Request(detail_url(card_id), headers={"User-Agent": UA})
     with urllib.request.urlopen(req, timeout=30) as r:
         page = r.read().decode("utf-8", errors="replace")
     last[0] = time.monotonic()
@@ -182,7 +189,7 @@ def main(argv=None):
         return
     if a.interval < 2:
         ap.error("--interval は 2 秒以上にする")
-    ids = [normalize_id(i) for i in a.ids]
+    ids = [resolve_id(i) for i in a.ids]
     if a.set_:
         if not a.count:
             ap.error("--set には --count が要る")
@@ -190,7 +197,7 @@ def main(argv=None):
     if a.ids_file:
         ids += [s.strip() for s in Path(a.ids_file).read_text(encoding="utf-8").splitlines()
                 if s.strip() and not s.startswith("#")]
-    ids = [normalize_id(i) for i in ids]
+    ids = [resolve_id(i) for i in ids]
     if a.skip_known:
         known = set()
         for f in (Path(__file__).resolve().parent.parent / "data" / "cards" / "raw").glob("*.jsonl"):

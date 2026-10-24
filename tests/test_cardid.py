@@ -47,3 +47,25 @@ def test_unusual_official_numbers_are_kept():
     assert normalize_id("dm23rp4x-001X") == "dm23rp4x-001x"
     assert normalize_id("dm23rp1-1B") == "dm23rp1-1b"
     assert normalize_id("promoy21-thanxdm20yrs02") == "promoy21-thanxdm20yrs02"
+
+
+def test_detail_page_name_suffix_forms():
+    import sys
+    from pathlib import Path
+    sys.path.insert(0, str(Path(__file__).resolve().parent.parent / "tools"))
+    import fetch_cards as fc
+    assert fc._clean_name("偽りの希望 鬼丸「終斗」(DM26RP3 STD9/)") == ("偽りの希望 鬼丸「終斗」", "DM26RP3 STD9/")
+    assert fc._clean_name("∑龍(DM26RP3 OR1/OR1)") == ("∑龍", "DM26RP3 OR1/OR1")
+    assert fc._clean_name("ヘル・スラッシュ(DM6 57/110)") == ("ヘル・スラッシュ", "DM6 57/110")
+    assert fc._clean_name("ボルシャック(火)") == ("ボルシャック(火)", "")
+
+
+def test_repair_fixes_old_ids_and_marks_missing_fields():
+    import sys
+    from pathlib import Path
+    sys.path.insert(0, str(Path(__file__).resolve().parent.parent / "tools"))
+    import fetch_cards as fc
+    old = {"id": "dm23rp4x-or01", "official_id": "dm23rp4x-OR1", "name": "A", "card_type": "呪文", "civilization": "水",
+           "cost": "2", "text": "x"}
+    assert fc.repair(dict(old))["id"] == "dm23rp4x-or1" and "missing" not in fc.repair(dict(old))
+    assert fc.repair(dict(old, text=""))["missing"] == ["text"]
