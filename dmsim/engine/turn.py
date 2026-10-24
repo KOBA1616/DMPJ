@@ -67,6 +67,14 @@ class TurnMixin:
                 if fi is not None:
                     opt["face"] = fi
                 out.append(opt)
+            for fi, f in ([(None, d)] if not d.faces else list(enumerate(d.faces))):
+                if f.free_if and f.is_creature() and self.permits(cid, "summon") \
+                        and self.eval_cond(f.free_if, {"you": p, "self": self.s.ref(cid), "vars": {}}):
+                    opt = {"key": f"{o['key']}:free" if fi is None else f"{o['key']}:{fi}:free", "cid": cid,
+                           "name": f.name, "free": True}   # G・ゼロ: コストを支払わずに召喚
+                    if fi is not None:
+                        opt["face"] = fi
+                    out.append(opt)
         return out
 
     def _can_play_face(self, cid, p, face) -> bool:
@@ -227,7 +235,7 @@ def st_main(eng, t):                                    # 504
     if o["key"] == "pass":
         eng._step_done(t)
     else:
-        eng._push(eng.play_task(o["cid"], a, False, o.get("face")))
+        eng._push(eng.play_task(o["cid"], a, o.get("free", False), o.get("face")))
 
 
 @step("attack")
@@ -301,7 +309,8 @@ def h_play(eng, t):
         s.cards[cid].face = face
     ref = s.ref(cid)
     if d.is_creature():
-        ev = {"ev": "move", "subject": ref, "from": from_zone, "to": "bz", "reason": "summon", "controller": p}
+        ev = {"ev": "move", "subject": ref, "from": from_zone, "to": "bz", "reason": "summon", "controller": p,
+              "unpaid": bool(t["free"])}
         if t.get("evo"):
             ev["stack_on"] = t["evo"][0]
             if len(t["evo"]) > 1:
@@ -311,7 +320,7 @@ def h_play(eng, t):
         env = {"you": p, "self": ref, "vars": {}}
         if t.get("st"):
             env["in_st"] = True
-        eng._push(eng.ev_task({"ev": "cast", "player": p, "subject": ref}),
+        eng._push(eng.ev_task({"ev": "cast", "player": p, "subject": ref, "unpaid": bool(t["free"])}),
                    eng._child(d.spell, env),
                    eng.ev_task({"ev": "move", "subject": ref, "from": from_zone, "to": t.get("resolve_to", d.resolve_to),
                                  "reason": "resolve"}),

@@ -104,7 +104,8 @@ class EventMixin:
             out = [{"ev": "move", "subject": new, "lki": lki, "from": from_zone, "to": ev["to"],
                     "reason": ev["reason"], "controller": c.controller}]
             if ev["reason"] == "summon":
-                out.append({"ev": "summon", "subject": new, "controller": c.controller})
+                out.append({"ev": "summon", "subject": new, "controller": c.controller, "player": c.controller,
+                            "unpaid": bool(ev.get("unpaid"))})
             return out
         if kind == "draw":
             p = ev["player"]
@@ -218,6 +219,8 @@ class EventMixin:
         for k in ("from", "to", "reason"):
             if k in when and rec.get(k) != when[k]:
                 return False
+        if "unpaid" in when and bool(rec.get("unpaid")) != when["unpaid"]:   # マナをタップせずに（コストを支払わずに）
+            return False
         if "player" in when and rec.get("player") != self._rel(when["player"], env):
             return False
         if "subject" in when:

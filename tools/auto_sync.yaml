@@ -1,0 +1,4 @@
+# 定期自動取得（.github/workflows/auto-sync.yml）の設定。変更を main に入れると反映される。
+# enabled: false にすると、定期実行は何もせず終わる（止めたい時はこれ）。
+enabled: true
+max_minutes: 300
