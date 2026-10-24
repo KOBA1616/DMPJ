@@ -54,6 +54,7 @@ def sync_product(led: dict, value: str, interval: float, deadline: float | None)
             fails = 0
             p.get("errors", {}).pop(oid, None)
             row.update(official_id=oid, id=canonical_id(oid), product=value)
+            fc.repair(row)
             out.write(json.dumps(row, ensure_ascii=False) + "\n")
             out.flush()
             have.add(oid)

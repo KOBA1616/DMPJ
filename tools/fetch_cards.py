@@ -30,7 +30,7 @@ from html.parser import HTMLParser
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
-from dmsim.cardid import cache_name, detail_url, pack_ids, resolve_id  # noqa: E402
+from dmsim.cardid import cache_name, canonical_id, detail_url, pack_ids, resolve_id  # noqa: E402
 
 URL = "https://dm.takaratomy.co.jp/card/detail/?id={id}"
 CACHE = Path(__file__).resolve().parent.parent / ".cache" / "official"
@@ -81,7 +81,7 @@ class _Cells(HTMLParser):
 
 def _clean_name(h3: str) -> tuple[str, str]:
     """「ヘル・スラッシュ(DM6 57/110)」→ (カード名, 収録番号)。括弧が無ければ番号は空。"""
-    m = re.match(r"^(.*?)\s*[(（]([^()（）]*\S/\S[^()（）]*)[)）]\s*$", h3)
+    m = re.match(r"^(.*?)\s*[(（]([A-Z][A-Za-z0-9+\-]*\s[^()（）]*/[^()（）]*)[)）]\s*$", h3)   # 末尾の「(DM26RP3 STD9/)」「(DM6 57/110)」
     return (m.group(1).strip(), m.group(2).strip()) if m else (h3.strip(), "")
 
 
@@ -131,6 +131,13 @@ def repair(row: dict) -> dict:
         r["name"], no = _clean_name(r.get("name", ""))
         if no and not row.get("set_no"):
             row["set_notation"] = no
+    if row.get("official_id"):
+        row["id"] = canonical_id(row["official_id"])      # 古い取得分（整形したID）も正本のIDに直す
+    miss = missing_fields(row)
+    if miss:
+        row["missing"] = miss                             # 空ページ・項目欠けは行に印を付ける（後で再取得・点検）
+    else:
+        row.pop("missing", None)
     faces = row.get("faces", [])
     parts = [x.strip() for x in row["name"].split(" / ")]
     if len(faces) == len(parts) > 1 and len({f["name"] for f in faces}) == 1:
