@@ -5,4 +5,6 @@ set "XDG_DATA_HOME=%USERPROFILE%\.dmpj-worker\xdg"
 set "XDG_CONFIG_HOME=%USERPROFILE%\.dmpj-worker\xdg-config"
 cd /d "%~dp0.."
 if not exist "%USERPROFILE%\.dmpj-worker" mkdir "%USERPROFILE%\.dmpj-worker"
-python tools\local_worker.py run --once >> "%USERPROFILE%\.dmpj-worker\log.txt" 2>&1
+set "PY=python"
+where python >nul 2>nul || set "PY=py -3"
+%PY% tools\local_worker.py run --once >> "%USERPROFILE%\.dmpj-worker\log.txt" 2>&1

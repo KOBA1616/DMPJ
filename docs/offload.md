@@ -80,6 +80,7 @@ Claude / Actions ──jobs/pending/*.yaml──▶ llm-jobs ブランチ ◀─
    返事が返れば成功（ログイン不要）。`local_worker.py` と `tools\run_worker.bat` は同じ保存先を自動で使うので、以後は設定不要。
    `opencode` が認識されない場合は PowerShell を開き直す。
    一覧にさらに高性能な `-free` モデルがあれば、公式 https://opencode.ai/docs/zen/ で $0 と確認し、`tools/llm_offload/providers.py` の `OPENCODE_FREE_MODELS` に足してから `--model` で指定する。
+   `python` が認識されない場合（pip は動くのに python だけ出ない時など）は、`python` を `py -3` に読み替える（例: `py -3 tools\local_worker.py run --once`）。
 4. 最初の1件で通し確認（定型作業 routine の `status`。無料モデルを使わず、ワーカーの経路だけ確かめる）:
    ```
    python tools\local_worker.py enqueue routine --name status
