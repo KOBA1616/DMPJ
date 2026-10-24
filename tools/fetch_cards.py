@@ -2,6 +2,11 @@
 
     python tools/fetch_cards.py dm01-001 dm01-027 ... > data/cards/raw/official_YYYYMMDD.jsonl
     python tools/fetch_cards.py --ids-file ids.txt --out data/cards/raw/official_YYYYMMDD.jsonl
+    python tools/fetch_cards.py --set DMRP1 --count 93 --out data/cards/raw/dmrp01.jsonl      # 弾1つ分（dmrp01-001〜093）
+
+- カードIDは公式の形式（dmrp01-001）にそろえる（dmsim.cardid）。"DMRP1-5" "DMRP-03 S3" のような表記も受け付ける。
+- --set は通常のカード番号を 1 から --count 件。S1・W1 などの特殊番号は ID を直接渡す。
+- 取得済みのIDは --skip-known で飛ばせる（既存の data/cards/raw/*.jsonl を見る）。
 
 - サーバーに負担をかけないよう、取得は1件ずつ・既定で3秒以上の間隔を空ける（--interval）。
 - 取得した HTML は .cache/official/<id>.html に保存し、2回目以降はネットワークに出ない。
@@ -20,6 +25,9 @@ import time
 import urllib.request
 from html.parser import HTMLParser
 from pathlib import Path
+
+sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
+from dmsim.cardid import normalize_id, pack_ids  # noqa: E402
 
 URL = "https://dm.takaratomy.co.jp/card/detail/?id={id}"
 CACHE = Path(__file__).resolve().parent.parent / ".cache" / "official"
@@ -100,15 +108,31 @@ def main(argv=None):
     ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     ap.add_argument("ids", nargs="*")
     ap.add_argument("--ids-file")
+    ap.add_argument("--set", dest="set_", help="弾の表記（DMRP1, DM-06, DM22-EX2 など）")
+    ap.add_argument("--count", type=int, help="--set の通常カード番号の件数（例: 93）")
+    ap.add_argument("--first", type=int, default=1, help="--set の最初のカード番号")
+    ap.add_argument("--skip-known", action="store_true", help="data/cards/raw/*.jsonl にある ID を飛ばす")
     ap.add_argument("--out", help="jsonl の出力先（省略時は標準出力）")
     ap.add_argument("--interval", type=float, default=3.0, help="リクエストの最小間隔（秒、2未満は不可）")
     a = ap.parse_args(argv)
     if a.interval < 2:
         ap.error("--interval は 2 秒以上にする")
-    ids = list(a.ids)
+    ids = [normalize_id(i) for i in a.ids]
+    if a.set_:
+        if not a.count:
+            ap.error("--set には --count が要る")
+        ids += pack_ids(a.set_, a.count, a.first)
     if a.ids_file:
         ids += [s.strip() for s in Path(a.ids_file).read_text(encoding="utf-8").splitlines()
                 if s.strip() and not s.startswith("#")]
+    ids = [normalize_id(i) for i in ids]
+    if a.skip_known:
+        known = set()
+        for f in (Path(__file__).resolve().parent.parent / "data" / "cards" / "raw").glob("*.jsonl"):
+            for line in f.read_text(encoding="utf-8").splitlines():
+                if line.strip():
+                    known.add(json.loads(line).get("id"))
+        ids = [i for i in ids if i not in known]
     out = open(a.out, "w", encoding="utf-8") if a.out else sys.stdout
     last = [0.0]
     for cid in ids:

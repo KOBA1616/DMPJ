@@ -34,7 +34,7 @@ python -m dmsim.solitaire --deck deck.yaml --games 1000 --turns 4 --workers 4   
 
 ## カードを増やす手順
 
-1. `python tools/fetch_cards.py <カードID...> --out data/cards/raw/official_YYYYMMDD.jsonl`（手元のPCで）
+1. `python tools/fetch_cards.py <カードID...> --out data/cards/raw/official_YYYYMMDD.jsonl`（手元のPCで）。弾ごとなら `--set DMRP1 --count 93 --skip-known`。ID は公式の形式 `dmrp01-001` に正規化して管理する（`dmsim/cardid.py`）
 2. `python tools/convert_cards.py data/cards/raw/official_YYYYMMDD.jsonl`（`data/cards/converted.yaml` に出る。
    検査を通らなかったものは `data/cards/raw/rejects.jsonl`）
 3. `python -m dmsim.devserver` の「カード」タブで「試す」→ 動かして確かめ、approve / reject を付ける
