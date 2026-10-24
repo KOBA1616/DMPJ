@@ -71,6 +71,12 @@ def build():
         listed = sum(1 for p in sets.values() if p.get("listed"))
         lines.append(f"- 台帳: 商品 {len(sets)} 件（一覧取得済み {listed}）、カード {total} 枚中 ID取得 {ids}")
         lines.append(f"- 詳細取得済み: {fetched} 枚（{fetched / total:.1%}）" if total else "- 詳細取得済み: 0 枚")
+    r = _run("git", "show", "origin/cards-data:data/cards/raw/convert_status.json")
+    if r.returncode == 0:
+        c = json.loads(r.stdout)
+        lines.append(f"- 自動変換（{c.get('model')}）: 変換済み {c.get('converted')} 枚 / 検査落ち {c.get('rejected')} / "
+                     f"未変換 {c.get('pending')}（原文 {c.get('raw_total')} 枚、{c.get('at')}）"
+                     + (f" ※停止中: {c['stopped']}" if c.get("stopped") else ""))
     return "\n".join(lines)
 
 
