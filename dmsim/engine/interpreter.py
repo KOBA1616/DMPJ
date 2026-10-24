@@ -81,4 +81,5 @@ def h_put_under(eng, t):
     c.top_of = top
     c.entered_turn = -1
     s.cards[top].under.append(t["cid"])
+    eng._sba()   # 山札の最後の1枚を重ねたら敗北（104.2b）
     return None

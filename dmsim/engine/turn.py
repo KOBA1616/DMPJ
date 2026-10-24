@@ -35,8 +35,13 @@ class TurnMixin:
         t["sub"] = 0
 
     def _expire(self, duration: str):
+        """期限の切れた継続的効果を消す。修整が切れてパワー0以下になったら、その場で破壊する（703.4c）。
+        状況起因処理のタスクを積むので、呼んだ側はこの後に自分のタスクを積まないこと。"""
+        n = len(self.s.continuous)
         self.s.continuous = [c for c in self.s.continuous if c["duration"] != duration]
         self.s.delayed = [d for d in self.s.delayed if d["duration"] != duration]
+        if len(self.s.continuous) != n:
+            self._sba()
 
     def _distinct_hand_options(self, p, verb):
         """同じカード名の手札は区別しない（対称な選択肢の正規化）。"""
@@ -115,10 +120,12 @@ class TurnMixin:
         dfs(0, [], 0, 0)
         return out
 
-    def play_task(self, cid, p, free, face=None) -> dict:
+    def play_task(self, cid, p, free, face=None, st=False) -> dict:
         t = {"t": "play", "cid": cid, "player": p, "free": free, "phase": "start", "gen": self.s.cards[cid].gen}
         if face is not None:
             t["face"] = face
+        if st:
+            t["st"] = True
         return t
 
 
@@ -127,8 +134,9 @@ def h_turn(eng, t):
     s = eng.s
     if s.skip_rest:          # 「ターンの残りをとばす」: 残りのステップを行わずに次のターンへ（ターン終了時の誘発もなし）
         s.skip_rest = False
-        eng._expire("end_of_turn")
         t["i"] = len(t["steps"])
+        eng._expire("end_of_turn")
+        return None          # 状況起因処理と待機中の効果を、このターンのうちに済ませる
     if t["i"] < len(t["steps"]):
         name = t["steps"][t["i"]]
         s.step = name
@@ -150,13 +158,17 @@ def st_start(eng, t):                                   # 501
     a = s.active
     s.steps_this_turn = 0
     s.turn_counters = {}
-    eng._expire(f"until_turn_start:{a}")
+    n = len(s.continuous)
+    s.continuous = [c for c in s.continuous if c["duration"] != f"until_turn_start:{a}"]
+    s.delayed = [d for d in s.delayed if d["duration"] != f"until_turn_start:{a}"]
     untap = [{"ev": "untap", "subject": s.ref(c)}
              for c in eng.bz_tops(a) + eng.zlist("mana", a)
              if s.cards[c].tapped and eng.permits(c, "untap_at_start")]
     eng._step_done(t)
     # ターン起因処理（同時にアンタップ, 702.3a）→「ターンのはじめに」の誘発（501.2）
     eng._push(*([eng.ev_task(untap)] if untap else []), eng.ev_task({"ev": "turn_start", "player": a}))
+    if len(s.continuous) != n:
+        eng._sba()           # 期限切れでパワー0以下になったものを先に破壊（703.1）
 
 
 @step("draw")
@@ -269,6 +281,8 @@ def h_play(eng, t):
         eng._push(eng.ev_task(ev))
     else:   # 呪文: 唱えた → 書かれた順に解決 → 最終段階として墓地へ（605.2f）
         env = {"you": p, "self": ref, "vars": {}}
+        if t.get("st"):
+            env["in_st"] = True
         eng._push(eng.ev_task({"ev": "cast", "player": p, "subject": ref}),
                    eng._child(d.spell, env),
                    eng.ev_task({"ev": "move", "subject": ref, "from": from_zone, "to": d.resolve_to,
