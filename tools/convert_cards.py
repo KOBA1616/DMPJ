@@ -175,7 +175,8 @@ class OpenCodeLLM:
         for attempt in range(4):
             self._wait()
             req = urllib.request.Request(OPENCODE_URL, data, {
-                "Authorization": f"Bearer {self.key}", "Content-Type": "application/json"})
+                "Authorization": f"Bearer {self.key}", "Content-Type": "application/json",
+                "User-Agent": "dmpj-convert/1.0"})   # 既定の Python-urllib はCloudflareに403(1010)で弾かれる
             try:
                 with urllib.request.urlopen(req, timeout=300) as r:
                     return json.loads(r.read())
