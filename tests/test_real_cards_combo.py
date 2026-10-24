@@ -173,6 +173,9 @@ def test_life_plan_charger(rules):
     d = e.advance()
     assert keys(d) == ["deck:dm01-080:0"] and d["min"] == 0     # クリーチャーだけ選べる
     e.answer([0])
+    d = e.advance()
+    assert d["kind"] == "order_cards"                          # 残りの並びを決める（好きな順序で）
+    e.answer(list(range(len(d["options"]))))
     e.advance()
     assert names(e, "hand", 0) == ["dm01-080"] and "dmr16g-054" in names(e, "mana", 0)
     assert [e.s.cards[c].defn for c in e.zlist("deck", 0)[-4:]].count("dm02-029") == 1   # 残りは一番下へ
@@ -229,3 +232,19 @@ def test_emergency_typhoon_draw_up_to_two(rules):
     answer(e, "yes_no", "no")                                  # 1枚だけ引く → 捨てる1枚は一意
     e.advance()
     assert names(e, "hand", 0) == [] and names(e, "graveyard", 0) == ["dm01-080", "dmd08-015"]
+
+
+def test_evo_charger_lets_the_player_order_cards_on_the_deck(rules):
+    """「好きな順序で」: 墓地から2体を山札の上に置く時、order_cards の答えの先頭が一番上になる。"""
+    for first in (0, 1):
+        e = setup(rules, {"hand": ["dm35-047"], "mana": ["dm01-027"] * 4, "graveyard": ["dm01-001", "dmr01-s03"]}, {})
+        answer(e, "charge", "pass")
+        answer(e, "main", "play:dm35-047")
+        d = e.advance()
+        assert d["kind"] == "choose_cards"
+        e.answer([0, 1])
+        d = e.advance()
+        assert d["kind"] == "order_cards" and len(d["options"]) == 2
+        e.answer([first, 1 - first])
+        e.advance()
+        assert e.s.cards[e.zlist("deck", 0)[0]].defn == d["options"][first]["key"].split(":")[1]

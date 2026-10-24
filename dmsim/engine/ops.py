@@ -6,13 +6,22 @@ from .registry import op
 
 
 @op("move", select="selector", to="zone", reason="reason", position="position?", card_only="bool?",
-    **{"as": "str?"})
+    order="str?", **{"as": "str?"})
 def op_move(eng, t, op, env):
     """ゾーン移動。as を付けると、移動した後のカード（新しいオブジェクト）を変数に入れる（「その〜」で使う）。
-    card_only: カードとして動かす（109.2a）。進化クリーチャーの一番上だけが離れ、下は再構築される（801.4）。"""
+    card_only: カードとして動かす（109.2a）。進化クリーチャーの一番上だけが離れ、下は再構築される（801.4）。
+    order: choose なら、2枚以上を山札に置く時の並びをプレイヤーが決める（「好きな順序で」）。
+    答えの先頭が、置いたカードの中で一番上になる。"""
     cids, d = eng.select(t, op["select"], env)
     if d:
         return d
+    if op.get("order") == "choose" and op["to"] == "deck" and len({eng.s.cards[c].defn for c in cids}) > 1:
+        a, d = eng.ask(t, env["you"], "order_cards", [eng._card_option(c, True) for c in cids], len(cids), len(cids))
+        if d:
+            return d
+        cids = [cids[i] for i in a]
+        if op.get("position", "top") == "top":
+            cids = cids[::-1]        # 1枚ずつ一番上に置かれるので、最後に置いたものが一番上になる
     evs = [{"ev": "move", "subject": eng.s.ref(c), "to": op["to"], "reason": op["reason"],
             "position": op.get("position", "top")} for c in cids]
     if op.get("card_only"):

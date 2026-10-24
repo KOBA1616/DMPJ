@@ -1,0 +1,5 @@
+# このファイルを push すると .github/workflows/fetch-cards.yml が公式サイトから取得する。
+set: DMRP1
+count: 3
+first: 1
+ids: ""

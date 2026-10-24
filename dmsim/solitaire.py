@@ -27,7 +27,7 @@ from dataclasses import asdict, dataclass, field
 
 from .engine import Engine
 from .engine.core import IllegalAnswer
-from .loop import LoopCertificate, LoopDetector, abstract, draw_keys, fast_forward, verify
+from .loop import LoopCertificate, LoopDetector, abstract, draw_keys, fast_forward, is_burn, verify
 from .play import passive_policy
 
 WIN = 1e9
@@ -103,6 +103,15 @@ def candidates(eng: Engine, d: dict, w: Weights, cap: int = 6) -> list[list[int]
         return [[i] for i in order]
     keys = [o["key"] for o in d["options"]]
     out, seen = [], set()
+    if d["kind"] == "order_cards":          # 並べ替え: 元の順と次の順の2つまで（同じ意味キーの並びは1つ）
+        for perm in itertools.permutations(order):
+            sig = tuple(keys[i] for i in perm)
+            if sig not in seen:
+                seen.add(sig)
+                out.append(list(perm))
+                if len(out) >= min(cap, 2):      # 並びの違いで探索が膨らまないよう、元の順と次の順だけ試す
+                    break
+        return out
     for n in range(d["max"], d["min"] - 1, -1):
         for combo in itertools.combinations(order, n):
             sig = tuple(sorted(keys[i] for i in combo))
@@ -149,6 +158,10 @@ def evaluate(eng: Engine, me: int, w: Weights) -> float:
 
 # ---- 自分のターンの探索 -------------------------------------------------------------------------
 
+def _is_burn(cert: LoopCertificate, me: int) -> bool:
+    return not cert.win_by and is_burn(cert.delta, me)
+
+
 def _is_engine(cert: LoopCertificate, me: int) -> bool:
     """相手の資源を減らさず勝ちにも直結しない（自分の資源を増やすだけの）ループ。"""
     return not cert.win_by and not any(v < 0 for k, v in cert.delta.items() if k.endswith(f":{1 - me}"))
@@ -164,7 +177,8 @@ class Detectors:
     @classmethod
     def new(cls, eng: Engine, me: int) -> "Detectors":
         return cls([LoopDetector(me=me, period="in_turn"),
-                    LoopDetector(me=me, period="in_turn", hand_keys=draw_keys(eng, me), engine_loops=True)])
+                    LoopDetector(me=me, period="in_turn", hand_keys=draw_keys(eng, me), engine_loops=True),
+                    LoopDetector(me=me, period="in_turn", burn_loops=True)])
 
     def fork(self) -> "Detectors":
         return Detectors([d.fork() for d in self.dets])
@@ -194,6 +208,8 @@ class TurnSearch:
         self.w = weights or Weights()
         self.opp_policy = opp_policy
         self.combo_cap = combo_cap
+        self.burn_stock = True                # 山札を削るだけのループを自動で残り1枚までストックする（2段探索の2段目では切る）
+        self.collect: list | None = None      # ループ発見モード: 見つけたループ（局面の複製, 証明書）をここへ集めて、ストックはしない
 
     def _settle(self, eng: Engine) -> dict | None:
         """相手の決定を相手役に答えさせながら、自分の決定かターン終了まで進める。"""
@@ -227,8 +243,23 @@ class TurnSearch:
             leaf = self._rollout(eng)
             return evaluate(leaf, self.me, self.w), leaf
         h, ctr = abstract(eng, "in_turn")
-        tkey = (h, tuple(sorted(ctr.items())))
+        # マナは枚数だけでなく何が残っているか（文明）も区別する。払い方の違いで闇マナが残るか否かが変わる
+        mana_left = tuple(sorted((c.defn, c.tapped) for c in (eng.s.cards[x] for p in (0, 1) for x in eng.s.zones["mana"][p])))
+        tkey = (h, tuple(sorted(ctr.items())), mana_left)
         cert = det.observe(eng)
+        if cert is not None and self.collect is not None:
+            if all(c.start_skeleton != cert.start_skeleton for _, c in self.collect):
+                self.collect.append((eng.clone(), cert))
+            return -WIN, eng              # ループの先は辿らない（ループの発見だけを行う）
+        if cert is not None and _is_burn(cert, self.me) and not self.burn_stock:
+            cert = None                       # 周回数は呼び出し側が決める
+        elif cert is not None and _is_burn(cert, self.me):
+            # 山札を削るだけのループ: 勝ちにつながるかは分からないので、山札を残り1枚まで削った線（遅く抜ける）を試す。
+            # ループに入った直後に抜ける線は親の局面で試されるので、ここでループの続きは辿らない
+            ff = self._stock(eng, cert)
+            if ff is not None:
+                return self._search(ff, Detectors.new(ff, self.me))
+            cert = None
         if cert is not None:
             ff = self._stock(eng, cert)
             if ff is not None:
@@ -256,12 +287,15 @@ class TurnSearch:
     def _stock(self, eng: Engine, cert: LoopCertificate) -> Engine | None:
         """ループを確かめてストックした局面を返す。勝ちにつながらない・確かめられないなら None。"""
         engine = _is_engine(cert, self.me)
-        if cert.win_by:
+        burn = _is_burn(cert, self.me)
+        if burn:
+            n = int(cert.limit) if math.isfinite(cert.limit) else 0
+        elif cert.win_by:
             n = cert.needed
         else:
             n = int(min(cert.limit, self.w.stock_cap)) if engine else (int(cert.limit) if math.isfinite(cert.limit) else 0)
         d_deck = cert.delta.get(f"deck:{self.me}", 0)
-        if engine and d_deck < 0:      # 自分の山札切れ対策: 山札を deck_keep 枚より減らさない
+        if engine and not burn and d_deck < 0:      # 自分の山札切れ対策: 山札を deck_keep 枚より減らさない
             n = min(n, (len(eng.zlist("deck", self.me)) - self.w.deck_keep) // -d_deck)
         if n <= 0 or verify(eng, cert, times=1).verified < 1:
             return None
@@ -272,7 +306,7 @@ class TurnSearch:
             return None
         self.stats.loops.append({"win_by": cert.win_by, "needed": cert.needed, "limit": cert.limit,
                                  "delta": cert.delta, "length": len(cert.actions), "stocked": n,
-                                 "kind": "engine" if engine else "kill"})
+                                 "kind": "burn" if burn else "engine" if engine else "kill"})
         return ff
 
 

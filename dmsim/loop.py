@@ -106,6 +106,14 @@ def is_engine(delta: dict[str, int], me: int) -> bool:
             and all(v >= 0 for v in mine.values()))
 
 
+def is_burn(delta: dict[str, int], me: int) -> bool:
+    """相手に何も起きず、自分の山札だけが周回ごとに減る（自分の他の資源は減らない）ループ。
+    絶望神サガのように「山札を1枚ずつ削る」だけでは勝てないが、山札が少ない時に勝つ効果
+    （シャコガイルの置換勝利など）の前段になる。stock してから続きを探索する。"""
+    return (delta.get(f"deck:{me}", 0) < 0 and not is_engine(delta, me)      # 手札やマナが増えるものは資源ループ
+            and all(k.endswith(f":{me}") and (v >= 0 or k == f"deck:{me}") for k, v in delta.items()))
+
+
 def draw_keys(eng: Engine, me: int) -> set[str]:
     """ドローを含むループの検出で骨格に入れる手札のカード名。いま手札にあるカードだけを区別し、
     ループ中に引いた別のカードは名前を見ず枚数だけ数える（引いたカードで骨格が毎回変わるのを避ける）。"""
@@ -116,15 +124,17 @@ class LoopDetector:
     """1人回し中に呼び出し、同じ骨格への回帰を見つける。"""
 
     def __init__(self, me: int = 0, period: str = "in_turn", hand_keys: set[str] | None = None,
-                 engine_loops: bool = False):
+                 engine_loops: bool = False, report_all: bool = False, burn_loops: bool = False):
         self.me = me
+        self.report_all = report_all
+        self.burn_loops = burn_loops
         self.period = period
         self.hand_keys = hand_keys
         self.engine_loops = engine_loops
         self.seen: dict[str, tuple[dict[str, int], int]] = {}
 
     def fork(self) -> "LoopDetector":
-        d = LoopDetector(self.me, self.period, self.hand_keys, self.engine_loops)
+        d = LoopDetector(self.me, self.period, self.hand_keys, self.engine_loops, self.report_all, self.burn_loops)
         d.seen = dict(self.seen)
         return d
 
@@ -137,7 +147,8 @@ class LoopDetector:
             if delta and now > at:
                 limit, win_by, needed = analyze(delta, ctr, self.me)
                 if (any(v < 0 for k, v in delta.items() if k.endswith(f":{1 - self.me}")) or win_by
-                        or (self.engine_loops and is_engine(delta, self.me))):
+                        or (self.engine_loops and is_engine(delta, self.me)) or self.report_all
+                        or (self.burn_loops and is_burn(delta, self.me))):
                     acts = eng.log[at:now]
                     return LoopCertificate(h, [a["keys"] for a in acts], [a["p"] for a in acts], delta,
                                            limit, self.period, win_by, needed, hand_keys=self.hand_keys)
