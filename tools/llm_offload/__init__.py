@@ -55,6 +55,7 @@ _SECRET = re.compile(r"(?i)(sk-[A-Za-z0-9_\-]{16,}|gh[pousr]_[A-Za-z0-9]{20,}|gi
 
 def scrub(text: str) -> str:
     """キーや環境変数の値らしきものを伏せる（外部APIに送る前・ログに出す前）。"""
+    text = text or ""
     for name in ("OPENCODE_API_KEY", "ANTHROPIC_API_KEY", "GITHUB_TOKEN"):
         v = os.environ.get(name)
         if v and len(v) >= 8:

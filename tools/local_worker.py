@@ -129,14 +129,14 @@ def run_convert(job: dict, git: Git, jobs_model: str | None) -> dict:
     env = {k: v for k, v in os.environ.items() if k != "OPENCODE_API_KEY"}
     r = subprocess.run([sys.executable, "tools/auto_convert.py", "--model", model, "--limit", str(job.get("limit", 20)),
                         "--interval", str(job.get("interval", 3)), "--workers", str(job.get("workers", 1))],
-                       cwd=d, env=env, capture_output=True, text=True)
+                       cwd=d, env=env, capture_output=True, text=True, encoding="utf-8", errors="replace")
     git.sh("reset", "-q", cwd=d)
     git.sh("add", "-f", "data/cards/converted.yaml", "data/cards/raw/rejects.jsonl", "data/cards/raw/convert_report.json",
            "data/cards/raw/convert_status.json", cwd=d, check=False)
     git.commit_push(d, DATA_BRANCH, f"cards-data: convert (local worker) {now()}", add=False)
     if r.returncode:
-        return {"status": "error", "error": lo.scrub(r.stderr[-400:])}
-    return {"status": "ok", "text": lo.scrub(r.stdout[-1500:])}
+        return {"status": "error", "error": lo.scrub((r.stderr or "")[-400:])}
+    return {"status": "ok", "text": lo.scrub((r.stdout or "")[-1500:])}
 
 
 def data_tree(git: Git) -> Path:
@@ -157,18 +157,18 @@ def run_routine(job: dict, git: Git, llm, cache: Path, daily_limit: int) -> dict
     name = job.get("name")
     if name == "gaps":
         d = data_tree(git)
-        out = subprocess.run([sys.executable, "tools/report_gaps.py"], cwd=d, capture_output=True, text=True).stdout
+        out = subprocess.run([sys.executable, "tools/report_gaps.py"], cwd=d, capture_output=True, text=True, encoding="utf-8", errors="replace").stdout or ""
     elif name == "tests":
-        r = subprocess.run([sys.executable, "-m", "pytest", "-q"], cwd=ROOT, capture_output=True, text=True)
-        out = lo.digest_pytest(r.stdout + r.stderr)
+        r = subprocess.run([sys.executable, "-m", "pytest", "-q"], cwd=ROOT, capture_output=True, text=True, encoding="utf-8", errors="replace")
+        out = lo.digest_pytest((r.stdout or "") + (r.stderr or ""))
     elif name == "status":
-        r = subprocess.run([sys.executable, "tools/gen_status.py", "--check"], cwd=ROOT, capture_output=True, text=True)
-        out = (r.stdout + r.stderr) or "STATUS.md は最新"
+        r = subprocess.run([sys.executable, "tools/gen_status.py", "--check"], cwd=ROOT, capture_output=True, text=True, encoding="utf-8", errors="replace")
+        out = ((r.stdout or "") + (r.stderr or "")) or "STATUS.md は最新"
     elif name == "review":
         base = str(job.get("base", "origin/main"))
         if not re.fullmatch(r"[\w./-]+", base) or base.startswith("-"):
             return {"status": "error", "error": "base が不正"}
-        out = subprocess.run(["git", "diff", base], cwd=ROOT, capture_output=True, text=True).stdout
+        out = subprocess.run(["git", "diff", base], cwd=ROOT, capture_output=True, text=True, encoding="utf-8", errors="replace").stdout or ""
         job = {**job, "summarize": "review-diff"}
     else:
         return {"status": "error", "error": f"未知の routine {name!r}（gaps / tests / review / status）"}
@@ -207,6 +207,8 @@ def process(git: Git, llm_factory=None, max_jobs: int = 20, daily_limit: int = l
             p.unlink()
             git.commit_push(jd, JOBS_BRANCH, f"jobs: {jid} stopped")
             raise SystemExit(f"停止: {res['error']}") from None
+        except Exception as e:     # noqa: BLE001  1件の失敗でワーカー全体を落とさない。error を残して done に移す（毎回の再実行で無料枠を使わない）
+            res = {"status": "error", "error": lo.scrub(f"{type(e).__name__}: {e}")[:400]}
         (done / f"{jid}.yaml").write_text(yaml.safe_dump({"id": jid, "finished": now(), **res}, allow_unicode=True,
                                                          sort_keys=False), encoding="utf-8")
         p.unlink()
@@ -245,6 +247,7 @@ def main(argv=None) -> int:
     sub.add_parser("status")
     a = ap.parse_args(argv)
     # デスクトップアプリのDBと食い違うことがあるので、OpenCode CLI は専用の保存先で動かす（Windowsで動作確認済み）
+    os.environ.setdefault("PYTHONUTF8", "1")      # 子プロセス(Python)の出力もUTF-8にそろえる(Windows既定はcp932)
     os.environ.setdefault("XDG_DATA_HOME", str(Path(a.work) / "xdg"))
     os.environ.setdefault("XDG_CONFIG_HOME", str(Path(a.work) / "xdg-config"))
     git = Git(ROOT, Path(a.work))
