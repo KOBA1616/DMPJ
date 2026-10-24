@@ -61,6 +61,10 @@ keywords:
     ja: チャージャー（この呪文を唱えた後、墓地に置くかわりに自分のマナゾーンに置く）
     abilities: []
     card: {resolve_to: mana}
+  spell_to_hand:      # 試験用: この呪文を唱えた後、墓地に置くかわりに手札に戻す（回収型呪文のループ検証）
+    ja: この呪文を唱えた後、墓地に置くかわりに手札に戻す
+    abilities: []
+    card: {resolve_to: hand}
   evo_charger:
     ja: Evoチャージャー（チャージャーの後、マナのクリーチャー1体を自分の進化クリーチャーの下に重ねてもよい）
     abilities: []
