@@ -447,3 +447,47 @@ def test_local_worker_gh_env_drops_stale_tokens_and_empty_review(monkeypatch, tm
     monkeypatch.setattr(lw.subprocess, "run", lambda *a, **k: type("R", (), {"stdout": "", "stderr": "", "returncode": 0})())
     r = lw.run_routine({"name": "review"}, lw.Git(tmp_path, tmp_path / "w"), None, tmp_path, 1)
     assert r["status"] == "ok" and "差分なし" in r["text"]
+
+
+def test_local_worker_self_update(tmp_path):
+    """main への fast-forward だけを自動で行う。汚れ・別ブランチ・ff 不可・ネットワーク不通では何もしない。"""
+    import subprocess
+
+    import local_worker as lw
+
+    def sh(*a, cwd):
+        subprocess.run(["git", *a], cwd=cwd, check=True, capture_output=True)
+    bare, a, b = tmp_path / "r.git", tmp_path / "a", tmp_path / "b"
+    sh("init", "-q", "--bare", "-b", "main", str(bare), cwd=tmp_path)
+    for d in (a, b):
+        sh("clone", "-q", str(bare), str(d), cwd=tmp_path)
+        sh("config", "user.name", "t", cwd=d)
+        sh("config", "user.email", "t@t", cwd=d)
+    (a / "f.txt").write_text("1")
+    sh("add", "-A", cwd=a)
+    sh("commit", "-qm", "c1", cwd=a)
+    sh("push", "-q", "origin", "HEAD:main", cwd=a)
+    sh("pull", "-q", "origin", "main", cwd=b)
+    assert lw.self_update(b) == "最新"
+    (a / "tools").mkdir()
+    (a / "tools" / "local_worker.py").write_text("x")
+    sh("add", "-A", cwd=a)
+    sh("commit", "-qm", "c2", cwd=a)
+    sh("push", "-q", "origin", "HEAD:main", cwd=a)
+    (b / "f.txt").write_text("dirty")
+    assert "未コミット" in lw.self_update(b)
+    sh("checkout", "-q", "--", "f.txt", cwd=b)
+    sh("checkout", "-q", "-b", "other", cwd=b)
+    assert "main でない" in lw.self_update(b)
+    sh("checkout", "-q", "main", cwd=b)
+    msg = lw.self_update(b)
+    assert msg.startswith("更新した") and "次回の起動から新版" in msg and (b / "tools" / "local_worker.py").exists()
+    (b / "g.txt").write_text("local")
+    sh("add", "-A", cwd=b)
+    sh("commit", "-qm", "local", cwd=b)
+    (a / "h.txt").write_text("h")
+    sh("add", "-A", cwd=a)
+    sh("commit", "-qm", "c3", cwd=a)
+    sh("push", "-q", "origin", "HEAD:main", cwd=a)
+    assert "fast-forward できない" in lw.self_update(b)
+    assert lw.self_update(tmp_path / "nonexistent").startswith("更新しない")
