@@ -353,7 +353,11 @@ def run(rows: list[dict], client, tables, sysp: str, effort: str, out: Path, rej
                        + yaml.safe_dump({"cards": cards}, allow_unicode=True, sort_keys=False), encoding="utf-8")
         write_jsonl(rejects_path, list(rejects.values()))
 
+    streak = {"n": 0}      # 連続したAPI失敗。無料枠の制限(429)に当たったら残りを打たずに止める
+
     def one(r):
+        if streak["n"] >= 3:
+            return
         try:
             card = convert(client, r, tables, sysp, effort, usage)
         except DefError as e:
@@ -368,11 +372,13 @@ def run(rows: list[dict], client, tables, sysp: str, effort: str, out: Path, rej
         except Exception as e:      # noqa: BLE001  API の一時的な失敗。カードの問題ではないので rejects には入れない
             with lock:
                 stats["api_error"] += 1
+                streak["n"] += 1
                 api_errors.append({"id": r["id"], "error": f"{type(e).__name__}: {e}"[:300]})
                 print(f"! {r['id']} API失敗: {type(e).__name__}", file=sys.stderr)
             return
         with lock:
             stats["ok"] += 1
+            streak["n"] = 0
             cards.append(card)
             rejects.pop(r["id"], None)
             save()
