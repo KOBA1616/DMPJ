@@ -79,10 +79,11 @@ class SelectorMixin:
             return [x[0] for x in refs if s.alive(x)]
         if "owner_of" in sel:   # 「持ち主の〜」「そのプレイヤーの〜」: 変数のカードの持ち主
             refs = env.get("vars", {}).get(sel["owner_of"], [])
-            players = sorted({s.cards[r[0]].owner for r in refs})
+            players = [p for p in (s.active, 1 - s.active) if p in {s.cards[r[0]].owner for r in refs}]
         else:
             owner = sel.get("owner", "you")
-            players = [0, 1] if owner == "any" else [self._rel(owner, env)]
+            # 両プレイヤーのカードを順に処理する時はターン・プレイヤーから（114.2a, 409.1e）
+            players = [s.active, 1 - s.active] if owner == "any" else [self._rel(owner, env)]
         out = []
         for p in players:
             lst = self.bz_tops(p) if sel["zone"] == "bz" else self.zlist(sel["zone"], p)

@@ -285,3 +285,14 @@ def test_strigger_creature_etb_is_a_separate_effect(rr):
     d = e.advance()
     assert d["kind"] == "yes_no" and d["player"] == 1           # R010 の「出た時」
     assert names(e, "graveyard", 0) == ["T005"]                 # T006 はもう解決している
+
+
+def test_both_players_cards_enter_turn_player_first(rr):
+    """114.2a / 409.1e 両プレイヤーのカードを1枚ずつバトルゾーンに出す時は、ターン・プレイヤーのカードが先。"""
+    e = setup(rr, {}, {}, filler="T001")
+    e.s.active = 1
+    run_ops(e, [{"op": "move", "select": {"zone": "deck", "owner": "any", "from_top": 1}, "to": "bz",
+                 "reason": "put"}])
+    e.advance()
+    first, second = sorted(e.bz_tops(), key=lambda c: e.s.cards[c].entered_seq)
+    assert e.s.cards[first].owner == 1 and e.s.cards[second].owner == 0
