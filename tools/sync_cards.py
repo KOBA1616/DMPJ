@@ -20,7 +20,7 @@ sys.path.insert(0, str(ROOT))
 sys.path.insert(0, str(ROOT / "tools"))
 import catalog_sets as cs  # noqa: E402
 import fetch_cards as fc  # noqa: E402
-from dmsim.cardid import normalize_id  # noqa: E402
+from dmsim.cardid import canonical_id  # noqa: E402
 
 MAX_RETRIES = 3              # 1枚あたりの失敗がこの回数に達したら飛ばす（台帳の errors に残る）
 MAX_CONSECUTIVE_FAILS = 5
@@ -53,11 +53,7 @@ def sync_product(led: dict, value: str, interval: float, deadline: float | None)
                 continue
             fails = 0
             p.get("errors", {}).pop(oid, None)
-            try:
-                nid = normalize_id(oid)
-            except ValueError:      # 想定外の形でも止めず、公式のまま小文字で持つ
-                nid = oid.lower()
-            row.update(official_id=oid, id=nid, product=value)
+            row.update(official_id=oid, id=canonical_id(oid), product=value)
             out.write(json.dumps(row, ensure_ascii=False) + "\n")
             out.flush()
             have.add(oid)

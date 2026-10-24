@@ -12,6 +12,9 @@
 from __future__ import annotations
 
 import re
+from functools import lru_cache
+from pathlib import Path
+from urllib.parse import quote
 
 _SET_SIMPLE = re.compile(r"^([a-z]+)(\d+)$")
 _NUM = re.compile(r"^([a-z]*)(\d+)$")
@@ -45,6 +48,45 @@ def normalize_id(s: str) -> str:
     else:
         raise ValueError(f"cannot split card id: {s!r}")
     return f"{set_code(left)}-{card_number(right)}"
+
+
+def canonical_id(official: str) -> str:
+    """台帳の公式IDを正本のIDにする。小文字にするだけ（整形しない）。
+    normalize_id は人が打つ表記ゆれ（DMRP1-5 など）を吸収するための整形で、OR01 と OR1 のように公式で別物のIDを同じにしてしまうため、
+    台帳のIDには使わない。全台帳IDで衝突しないことはテストで保証する（tests/test_ledger_ids.py）。"""
+    return official.strip().lower()
+
+
+LEDGER_IDS = Path(__file__).resolve().parent.parent / "data" / "cards" / "ledger_ids.txt"
+
+
+@lru_cache(maxsize=1)
+def ledger_ids() -> dict[str, str]:
+    """公式サイトの台帳にある全ID（data/cards/ledger_ids.txt: 商品<TAB>ID）。小文字 → 公式のID。"""
+    out = {}
+    for line in LEDGER_IDS.read_text(encoding="utf-8").splitlines():
+        if line.strip():
+            out[line.split("\t")[1].lower()] = line.split("\t")[1]
+    return out
+
+
+def resolve_id(s: str) -> str:
+    """人が打ったIDを公式のIDにする。台帳にそのままあればそれ（大文字小文字は問わない）、なければ normalize_id で整形する。"""
+    known = ledger_ids()
+    return known.get(s.strip().lower()) or known.get(normalize_id(s)) or normalize_id(s)
+
+
+DETAIL_URL = "https://dm.takaratomy.co.jp/card/detail/?id={id}"
+
+
+def detail_url(official: str) -> str:
+    """カード詳細ページのURL。IDに + や $ が含まれるものがある（+ はそのままだと空白になる）ので、パーセントエンコードする。"""
+    return DETAIL_URL.format(id=quote(official, safe="-"))
+
+
+def cache_name(official: str) -> str:
+    """HTMLキャッシュのファイル名（ID中の記号をパーセントエンコード）。"""
+    return quote(official, safe="-") + ".html"
 
 
 def is_official_id(s: str) -> bool:
