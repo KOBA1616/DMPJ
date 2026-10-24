@@ -14,36 +14,32 @@ class EventMixin:
             evs = [dict(e, replaced=True) for e in evs]   # 置換後のイベントはそれ以上置換しない（101.5）
         return {"t": "event", "evs": evs, "i": 0, "rp": 0, "skip": [], "instead": []}
 
-    def _replacement(self, t, ev):
-        """置換効果の選択。ターン・プレイヤーの効果を優先し、同じプレイヤーの複数は本人が選ぶ（609.8）。
+    def _replacement(self, t, ev, p):
+        """プレイヤー p の置換効果の選択。同じプレイヤーの複数は本人が選ぶ（609.8）。
         戻り値: None（置換なし）/ Decision / 置換後に実行する effect タスク。"""
         rec = self._record_for(ev)
         if rec is None:
             return None
-        order = (self.s.active, 1 - self.s.active)
-        while t["rp"] < 2:
-            p = order[t["rp"]]
-            cands = []
-            for src in self.bz_tops(p):
-                for i, ab in self.abilities(src, "replace"):
-                    if self._pattern_match(ab["when"], rec, src, None):
-                        cands.append((src, i, ab))
-            cands_ab = [((s_, i), ab) for s_, i, ab in cands]
-            if cands:
-                opts = [{"key": f"replace:{self.s.cards[s_].defn}:{i}", "cid": s_, "ab": i} for s_, i, _ in cands]
-                if all(ab.get("optional") for _, _, ab in cands):
-                    opts.append({"key": "decline"})
-                a, d = self.ask(t, p, "choose_replacement", opts)
-                if d:
-                    return d
-                o = opts[a[0]]
-                if o["key"] != "decline":
-                    src, i = o["cid"], o["ab"]
-                    env = {"you": self.s.cards[src].controller, "self": self.s.ref(src), "event": rec,
-                           "vars": {}, "no_replace": True}
-                    ab = next(a for j, a in cands_ab if j == (src, i))
-                    return self._child(ab["instead"], env)
-            t["rp"] += 1
+        cands = []
+        for src in self.bz_tops(p):
+            for i, ab in self.abilities(src, "replace"):
+                if self._pattern_match(ab["when"], rec, src, None):
+                    cands.append((src, i, ab))
+        cands_ab = [((s_, i), ab) for s_, i, ab in cands]
+        if cands:
+            opts = [{"key": f"replace:{self.s.cards[s_].defn}:{i}", "cid": s_, "ab": i} for s_, i, _ in cands]
+            if all(ab.get("optional") for _, _, ab in cands):
+                opts.append({"key": "decline"})
+            a, d = self.ask(t, p, "choose_replacement", opts)
+            if d:
+                return d
+            o = opts[a[0]]
+            if o["key"] != "decline":
+                src, i = o["cid"], o["ab"]
+                env = {"you": self.s.cards[src].controller, "self": self.s.ref(src), "event": rec,
+                       "vars": {}, "no_replace": True}
+                ab = next(a for j, a in cands_ab if j == (src, i))
+                return self._child(ab["instead"], env)
         return None
 
     def _record_for(self, ev):
@@ -171,7 +167,9 @@ class EventMixin:
         # 703.4b 山札0枚で敗北。104.2b: 効果の途中で一瞬でも0枚になっていれば0枚とみなす
         out = sorted(set(s.deck_emptied) | {p for p in (0, 1) if not s.zones["deck"][p]})
         if out:
-            s.result = {"winner": None if len(out) == 2 else 1 - out[0], "reason": "deck_out", "turn": s.turn}
+            # 両者が同時に0枚ならターン・プレイヤーの敗北とする（プロジェクトの裁定。条文に明記なし）
+            loser = s.active if len(out) == 2 else out[0]
+            s.result = {"winner": 1 - loser, "reason": "deck_out", "turn": s.turn}
             return []
         dead = [s.ref(c) for c in self.bz_tops()
                 if "creature" in self.chars(c)["types"] and self.chars(c)["power"] <= 0]   # 703.4c
@@ -277,17 +275,22 @@ class EventMixin:
 
 @task("event", EventTask)
 def h_event(eng, t):
-    while t["i"] < len(t["evs"]):
-        ev = t["evs"][t["i"]]
-        if not ev.get("replaced"):
-            r = eng._replacement(t, ev)
-            if r is not None and "options" in r:
-                return r
-            if r is not None:
-                t["skip"].append(t["i"])
-                t["instead"].append(r)
-        t["i"] += 1
-        t["rp"] = 0
+    """置換効果の決定（609.9a）: まずターン・プレイヤーが束の全イベントについて自分の置換効果を決め、
+    次に非ターン・プレイヤーが、まだ置換されていないイベントについて決める。決め終えたら同時に適用する。"""
+    order = (eng.s.active, 1 - eng.s.active)
+    while t["rp"] < 2:
+        while t["i"] < len(t["evs"]):
+            ev = t["evs"][t["i"]]
+            if not ev.get("replaced") and t["i"] not in t["skip"]:
+                r = eng._replacement(t, ev, order[t["rp"]])
+                if r is not None and "options" in r:
+                    return r
+                if r is not None:
+                    t["skip"].append(t["i"])
+                    t["instead"].append(r)
+            t["i"] += 1
+        t["i"] = 0
+        t["rp"] += 1
     eng._pop(t)
     eng._push(*t["instead"])
     eng.apply_batch([e for k, e in enumerate(t["evs"]) if k not in t["skip"]])

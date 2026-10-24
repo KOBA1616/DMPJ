@@ -20,7 +20,7 @@ def build() -> dict:
     arg = {
         "selector": ref("selector"), "zone": {"enum": sorted(zones)}, "reason": {"enum": sorted(REASONS)},
         "expr": ref("expr"), "cond": ref("cond"), "ops": ref("ops"), "player": {"enum": ["you", "opp"]},
-        "mod": ref("mod"), "duration": {"enum": sorted(DURATIONS_FIXED)}, "position": {"enum": sorted(POSITIONS)},
+        "players": {"enum": ["you", "opp", "each"]}, "mod": ref("mod"), "duration": {"enum": sorted(DURATIONS_FIXED)}, "position": {"enum": sorted(POSITIONS)},
         "step": {"enum": steps}, "str": {"type": "string"}, "int": {"type": "integer"},
         "bool": {"type": "boolean"}, "any": {}, "ability": ref("ability"),
     }

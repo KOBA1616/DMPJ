@@ -30,11 +30,14 @@ def op_move(eng, t, op, env):
     return None
 
 
-@op("draw", player="player?", count="expr?")
+@op("draw", player="players?", count="expr?")
 def op_draw(eng, t, op, env):
-    p = eng._rel(op.get("player", "you"), env)
+    """カードを引く。1枚ずつ（114.2）。player: each（各プレイヤー）はターン・プレイヤーが指定枚数を引いてから
+    非ターン・プレイヤーが引く（114.2a）。"""
+    who = op.get("player", "you")
+    ps = [eng.s.active, 1 - eng.s.active] if who == "each" else [eng._rel(who, env)]
     n = eng.eval_expr(op.get("count", 1), env)
-    eng._defer(t, [eng.ev_task({"ev": "draw", "player": p}, env) for _ in range(n)])   # 1枚ずつ（114.2）
+    eng._defer(t, [eng.ev_task({"ev": "draw", "player": p}, env) for p in ps for _ in range(n)])
 
 
 @op("tap", select="selector")
