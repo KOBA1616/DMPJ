@@ -421,7 +421,7 @@ def test_local_worker_survives_job_failure(tmp_path, monkeypatch):
 
         def complete(self, *a):
             return "ok"
-    assert lw.process(g, lambda m: LLM()) == [f"{bad}:error", f"{good}:ok"]
+    assert sorted(lw.process(g, lambda m: LLM())) == sorted([f"{bad}:error", f"{good}:ok"])   # 同じ秒のIDは順序が不定
     assert lw.process(g, lambda m: LLM()) == []          # 失敗したジョブは再実行されない
     chk = tmp_path / "chk"
     subprocess.run(["git", "clone", "-q", "-b", "llm-jobs", str(bare), str(chk)], check=True, capture_output=True)
