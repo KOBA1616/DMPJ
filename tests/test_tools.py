@@ -125,7 +125,7 @@ def test_convert_retries_once_with_error():
             return _FakeStream(bad if len(calls) == 1 else good)
 
     client = type("C", (), {"messages": Msgs()})()
-    out = convert_cards.convert(client, {"id": "x001", "text": "ブロッカー"}, load_tables(), "SYS", "high")
+    out = convert_cards.convert(convert_cards.AnthropicLLM(client=client), {"id": "x001", "text": "ブロッカー"}, load_tables(), "SYS", "high")
     assert out["keywords"] == ["blocker"] and out["source"]["review"] == "pending"
     assert len(calls) == 2 and "no_such" in calls[1]["messages"][-1]["content"]
     assert calls[0]["system"][0]["cache_control"] == {"type": "ephemeral"}
@@ -219,7 +219,7 @@ def test_convert_run_triage_and_resume(tmp_path):
     client = type("C", (), {"messages": Msgs()})()
     rows = [{"id": i, "text": "x"} for i in ("t_ok", "t_bad", "t_api")]
     out, rej, rep = tmp_path / "c.yaml", tmp_path / "rej.jsonl", tmp_path / "rep.json"
-    r = convert_cards.run(rows, client, load_tables(), "SYS", "low", out, rej, workers=2, report_path=rep)
+    r = convert_cards.run(rows, convert_cards.AnthropicLLM(client=client), load_tables(), "SYS", "low", out, rej, workers=2, report_path=rep)
     assert (r["ok"], r["rejected"], r["api_error"]) == (1, 1, 1)
     assert [c["id"] for c in yaml.safe_load(out.read_text(encoding="utf-8"))["cards"]] == ["t_ok"]
     assert [x["id"] for x in convert_cards.read_jsonl(rej)] == ["t_bad"]
@@ -229,7 +229,7 @@ def test_convert_run_triage_and_resume(tmp_path):
         def stream(self, **kw):
             return _FakeStream(good.format(i=kw["messages"][0]["content"].split('"id": "')[1].split('"')[0]))
     client.messages = Msgs2()
-    convert_cards.run(rows[1:], client, load_tables(), "SYS", "low", out, rej)
+    convert_cards.run(rows[1:], convert_cards.AnthropicLLM(client=client), load_tables(), "SYS", "low", out, rej)
     assert convert_cards.read_jsonl(rej) == [] and len(yaml.safe_load(out.read_text(encoding="utf-8"))["cards"]) == 3
 
 
@@ -249,3 +249,25 @@ def test_status_numbers_are_current():
     text = gen_status.STATUS.read_text(encoding="utf-8")
     assert gen_status.BEGIN in text and gen_status.END in text
     assert "テスト:" in gen_status.build()
+
+
+def test_opencode_allowlist_and_cost_guard(monkeypatch):
+    """OpenCode は許可リストの無料モデルだけ通し、費用の兆候・課金系エラーでは止まる。キーは出力に出さない。"""
+    import convert_cards as cc
+    import pytest
+    for bad in ("glm-5.3", "claude-opus-5-5", "glm-5.3-flash", "x-free"):
+        with pytest.raises(cc.Fatal):
+            cc.OpenCodeLLM(bad, key="k")
+    monkeypatch.delenv("OPENCODE_API_KEY", raising=False)
+    with pytest.raises(cc.Fatal):
+        cc.OpenCodeLLM()
+    llm = cc.OpenCodeLLM(key="SECRET", min_interval=0)
+    ok = {"choices": [{"message": {"content": "hi"}}], "usage": {"prompt_tokens": 3, "completion_tokens": 2}}
+    monkeypatch.setattr(llm, "_post", lambda payload: (calls.append(payload), ok)[1])
+    calls = []
+    usage = {"input": 0, "cache_read": 0, "cache_write": 0, "output": 0}
+    assert llm.complete("S", [{"role": "user", "content": "u"}], "high", usage) == "hi"
+    assert calls[0]["model"] == "glm-5.3-flash-free" and usage["input"] == 3
+    monkeypatch.setattr(llm, "_post", lambda payload: {**ok, "usage": {"cost": 0.01}})
+    with pytest.raises(cc.Fatal):
+        llm.complete("S", [], "high", None)
