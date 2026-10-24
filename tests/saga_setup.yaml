@@ -1,0 +1,9 @@
+# 絶望神サガループの3killルートから《超神星DOOM・ドラゲリオン》だけを抜いた配置。
+# 手札に足す1枚を combo_search --setup で探すと、ドラゲリオンだけが勝つ。
+p0:
+  hand: [dm22ex2-021, T001, T001, T001, T001]
+  mana: [dm01-080, dm01-080, dm01-027]
+  graveyard: [dm22ex2-021, dmrp03-036, dmrp03-s03, T001, T001, T001, T001, T001, T001, T001, T001, T001, T001, T001, T001]
+p1: {}
+deck_size: 20
+deck_left: [2, 20]

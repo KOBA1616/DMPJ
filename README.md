@@ -57,3 +57,13 @@ TCG 実カード4枚（`real.yaml` / `data/cards/raw/official_20261024c.jsonl`�
 進化元1体につき1のコスト軽減、クリーチャーの下のカードを指すセレクタ（メテオバーン）。
 DMP（デュエルマスターズプレイス）の調整・テキストは使用せず、すべて takaratomy 公式カード詳細ページの
 TCGテキストから変換している。
+
+## サガループを1人回しAIが見つけられるか／部品を固定した探索
+
+`tests/test_saga_discovery.py`（`py -m pytest tests/test_saga_discovery.py`）:
+- 検出器（`LoopDetector(report_all=True)`）はサガの周回を「山札-1・墓地+1」の骨格回帰として見つけ、再生で確かめる。
+- 1人回しAIは、山札を削るだけのループ（`is_burn`）を山札1枚までストックして続きを探索する。
+  シャコガイルが場にいれば自力で置換勝利、手札に《ドラゲリオン》があれば3killルート全体を探索量 `--budget 2500` 程度で見つける。
+- `python -m dmsim.combo_search`: 部品を固定して残りを探す。
+  - 山札モード: `--fix ID:枚数` を固定し、`--slots` 種類を候補から足してキル率で並べる（1段目→上位を再測定）。
+  - 配置モード: `--setup tests/saga_setup.yaml --fill-zone hand --slots 1 --turns 1`（配置を固定して足りない1枚を探す）。
