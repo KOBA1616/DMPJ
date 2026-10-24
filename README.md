@@ -1,6 +1,7 @@
 # dmsim（DMPJ プロトタイプ）
 
 デュエル・マスターズのルールエンジン骨格。設計の詳細は設計書（Claude Doc）を参照。
+**開発状況とTODOは [docs/STATUS.md](docs/STATUS.md)**（数字は `python tools/gen_status.py` で更新）。
 
 ```
 pip install pyyaml pytest

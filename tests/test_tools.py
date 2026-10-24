@@ -241,3 +241,11 @@ def test_survey_text_counts_forms():
     assert len(sv["forms"]) == 1 and len(next(iter(sv["forms"].values()))["cards"]) == 2
     assert "ブロッカー" in sv["keywords"]
     assert "| 2 |" in survey_text.render(sv, 5, False)
+
+
+def test_status_numbers_are_current():
+    """docs/STATUS.md の自動生成部がマーカーを持ち、スクリプトが読める。"""
+    import gen_status
+    text = gen_status.STATUS.read_text(encoding="utf-8")
+    assert gen_status.BEGIN in text and gen_status.END in text
+    assert "テスト:" in gen_status.build()
