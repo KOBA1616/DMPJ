@@ -7,6 +7,7 @@ pip install pyyaml pytest
 python -m pytest -q          # 設計判断の検証テスト
 docker build -t dmsim . && docker run --rm dmsim
 python -m dmsim.devserver    # 開発者モード http://127.0.0.1:8765/
+python -m dmsim.solitaire --deck deck.yaml --games 1000 --turns 4 --workers 4   # 1人回しのキル率
 ```
 
 - `dmsim/state.py`  純データのゲーム状態（乱数状態・実行中タスク・決定待ちも含む）
@@ -19,6 +20,8 @@ python -m dmsim.devserver    # 開発者モード http://127.0.0.1:8765/
 - `dmsim/schema.py` カードDSLの JSON Schema を生成（`data/schema/card.schema.json`。LLM変換に渡す）
 - `dmsim/loop.py`   骨格＋カウンタによるループ／ロック検出とストック証明
 - `dmsim/play.py`   方策・対戦実行・シード付き記録の保存と再生（`python -m dmsim.play --seed 1 --out g.json` / `--replay g.json`）
+- `dmsim/solitaire.py` 1人回しAI（自分のターン内を探索、ループはストック、ロックは試し回しで確認）と、
+  シード付きの大量試行で「自分の Nターン目までのキル率」（95%信頼区間・キルの種類別）を出すハーネス
 - `dmsim/scenario.py` 配置を指定した局面の作成（テストと開発者モードで共用）
 - `dmsim/devserver.py`＋`dmsim/web/` 開発者モード（標準ライブラリのHTTPサーバー）
 - `data/rules/*.yaml` ゾーン・キーワード・DSLマクロ・許可/禁止できる行為（permissions）・ターンのステップ列（turn）の定義
