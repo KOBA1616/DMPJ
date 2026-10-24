@@ -58,3 +58,14 @@ def test_detail_page_name_suffix_forms():
     assert fc._clean_name("∑龍(DM26RP3 OR1/OR1)") == ("∑龍", "DM26RP3 OR1/OR1")
     assert fc._clean_name("ヘル・スラッシュ(DM6 57/110)") == ("ヘル・スラッシュ", "DM6 57/110")
     assert fc._clean_name("ボルシャック(火)") == ("ボルシャック(火)", "")
+
+
+def test_repair_fixes_old_ids_and_marks_missing_fields():
+    import sys
+    from pathlib import Path
+    sys.path.insert(0, str(Path(__file__).resolve().parent.parent / "tools"))
+    import fetch_cards as fc
+    old = {"id": "dm23rp4x-or01", "official_id": "dm23rp4x-OR1", "name": "A", "card_type": "呪文", "civilization": "水",
+           "cost": "2", "text": "x"}
+    assert fc.repair(dict(old))["id"] == "dm23rp4x-or1" and "missing" not in fc.repair(dict(old))
+    assert fc.repair(dict(old, text=""))["missing"] == ["text"]
