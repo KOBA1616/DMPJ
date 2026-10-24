@@ -210,3 +210,12 @@ cards:
     races: [テスト]
     text: W・ブレイカー / T・ブレイカー
     keywords: [double_breaker, triple_breaker]
+
+  - id: R018
+    name: 試験用ジョーカーズ
+    types: [creature]
+    civs: [zero]
+    cost: 1
+    power: 1000
+    races: [ジョーカーズ]
+    text: (バトルの身代わり試験用)
