@@ -28,6 +28,8 @@ class SelectorMixin:
             return all(self.eval_cond(x, env) for x in c["all"])
         if "any" in c:
             return any(self.eval_cond(x, env) for x in c["any"])
+        if "marked" in c:   # このターンに mark した印があるか（「そのターンに他のファイナル革命を使っていなければ」）
+            return bool(self.s.turn_counters.get(c["marked"]))
         if "is_turn" in c:
             return self.s.active == self._rel(c["is_turn"], env)
         raise ValueError(f"bad cond {c}")
@@ -62,11 +64,19 @@ class SelectorMixin:
                             ("power_le", "power", int.__le__), ("power_ge", "power", int.__ge__)):
             if k in f and not cmp(ch[key], f[k]):
                 return False
+        if "multicolor" in f and (len(ch["civs"]) > 1) != f["multicolor"]:
+            return False
         if "tapped" in f and (lki["tapped"] if lki else c.tapped) != f["tapped"]:
             return False
         if "keyword" in f and f["keyword"] not in ch["keywords"]:
             return False
         return True
+
+    def zones_of(self, z) -> list[str]:
+        """セレクタ・範囲の zone: 名前 / 名前の配列（どれか） / "any"（バトルゾーン以外を含むすべてのゾーン）。"""
+        if z == "any":
+            return [k for k in self.rules.zones]
+        return [z] if isinstance(z, str) else list(z)
 
     def _under_base(self, v, env) -> int | None:
         """under_of（クリーチャーの下にあるカード）で指す元クリーチャー。v は "self" / 変数名 / セレクタ。"""
@@ -89,6 +99,11 @@ class SelectorMixin:
             if any(isinstance(v, dict) for v in f.values()):   # 式の値は解決時に計算する
                 f = {k: self.eval_expr(v, env) if isinstance(v, dict) else v for k, v in f.items()}
             return [c for c in out if self.filter_match(c, f)]
+        if "exlife_of" in sel:   # 「EXライフ」シールド: そのクリーチャーに紐付いた、今もシールドゾーンにあるカード
+            refs = [env["self"]] if sel["exlife_of"] == "self" else env.get("vars", {}).get(sel["exlife_of"], [])
+            refs = [r for r in refs if r and s.alive(r)]
+            return [c for p in (0, 1) for c in self.zlist("shield", p)
+                    if s.cards[c].exlife_of is not None and list(s.cards[c].exlife_of) in [list(r) for r in refs]]
         if "ref" in sel:
             r = sel["ref"]
             if r == "self":
@@ -108,7 +123,9 @@ class SelectorMixin:
             players = [s.active, 1 - s.active] if owner == "any" else [self._rel(owner, env)]
         out = []
         for p in players:
-            lst = self.bz_tops(p) if sel["zone"] == "bz" else self.zlist(sel["zone"], p)
+            lst = []
+            for z in self.zones_of(sel["zone"]):
+                lst += self.bz_tops(p) if z == "bz" else self.zlist(z, p)
             if "from_top" in sel:
                 lst = lst[: self.eval_expr(sel["from_top"], env)]
             f = sel.get("filter", {})

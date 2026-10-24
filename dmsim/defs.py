@@ -26,15 +26,16 @@ ABILITY_KINDS = {"trigger", "replace", "static", "declare"}
 ABILITY_KEYS = {"kind", "when", "if", "effect", "instead", "optional", "affects", "mod", "zone", "keyword"}
 REASONS = {"put", "destroy", "return", "discard", "charge", "summon", "cast", "break",
            "draw", "battle", "sba", "resolve", "evolve"}
+VIAS = {"revolution_change"}   # 出し方の印（「革命チェンジによって出た時」など）
 DURATIONS_FIXED = {"end_of_turn", "during_attack", "permanent", "until_next_own_turn_start"}
 MOD_KEYS = {"power", "grant", "allow", "deny", "breaks", "ignore", "gain"}
 POSITIONS = {"top", "bottom"}
 CARD_TYPES = {"creature", "spell", "evolution"}
 CIVS = {"light", "water", "darkness", "fire", "nature", "zero"}
 SELECTOR_KEYS = {"zone", "owner", "owner_of", "filter", "count", "up_to", "from_top", "chooser", "ref", "other",
-                 "under_of", "look"}   # look: 非公開ゾーン（山札など）の中身を見て選ぶ
+                 "under_of", "look", "exlife_of"}   # look: 非公開ゾーン（山札など）の中身を見て選ぶ
 FILTER_KEYS = {"types", "not_types", "civs", "not_civs", "races", "race_has", "name", "name_has", "not_name",
-               "cost_le", "cost_ge", "power_le", "power_ge", "tapped", "keyword"}
+               "cost_le", "cost_ge", "power_le", "power_ge", "tapped", "keyword", "multicolor"}
 FILTER_EXPR_KEYS = {"cost_le", "cost_ge", "power_le", "power_ge"}   # 値に式を書ける（解決時に計算）
 
 
@@ -239,10 +240,11 @@ class Checker:
             raise DefError(f"{where}: unknown selector keys {sorted(bad)}")
         if "owner" in sel and "owner_of" in sel:
             raise DefError(f"{where}: owner and owner_of are exclusive")
-        if "under_of" not in sel and "ref" not in sel and "zone" not in sel:
+        if "under_of" not in sel and "exlife_of" not in sel and "ref" not in sel and "zone" not in sel:
             raise DefError(f"{where}: selector needs zone or ref")
-        if "zone" in sel and sel["zone"] not in self.zones:
-            raise DefError(f"{where}: unknown zone '{sel['zone']}'")
+        for z in ([sel["zone"]] if isinstance(sel.get("zone"), str) else sel.get("zone", [])):
+            if z != "any" and z not in self.zones:   # any = すべてのゾーン、配列 = そのうちのどれか
+                raise DefError(f"{where}: unknown zone '{z}'")
         if sel.get("owner", "you") not in ("you", "opp", "any"):
             raise DefError(f"{where}: bad owner '{sel['owner']}'")
         self.filter(sel.get("filter", {}), where)
@@ -292,6 +294,10 @@ class Checker:
             for x in v:
                 self.cond(x, where)
             return
+        if k == "marked":
+            if not isinstance(v, str):
+                raise DefError(f"{where}: marked needs a name")
+            return
         if k == "is_turn":
             if v not in ("you", "opp"):
                 raise DefError(f"{where}: is_turn must be you/opp")
@@ -327,6 +333,8 @@ class Checker:
                 raise DefError(f"{where}: unknown zone '{w[k]}'")
         if "reason" in w and w["reason"] not in REASONS:
             raise DefError(f"{where}: unknown reason '{w['reason']}'")
+        if "via" in w and w["via"] not in VIAS:
+            raise DefError(f"{where}: unknown via '{w['via']}'")
 
     def ability(self, ab, where):
         kind = ab.get("kind")

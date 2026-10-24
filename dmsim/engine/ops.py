@@ -121,6 +121,12 @@ def op_modify(eng, t, op, env):
     return None
 
 
+@op("mark", name="str")
+def op_mark(eng, t, op, env):
+    """このターンの印を付ける（cond の marked で読む）。ターンが変わると消える。「各ターン1度」「他のファイナル革命を使っていなければ」用。"""
+    eng.s.turn_counters[op["name"]] = eng.s.turn_counters.get(op["name"], 0) + 1
+
+
 @op("shuffle", player="player?")
 def op_shuffle(eng, t, op, env):
     eng._shuffle(eng._rel(op.get("player", "you"), env))
@@ -203,6 +209,8 @@ def op_swap(eng, t, op, env):
     if not outs or not ins:
         return None
     o, i = outs[0], ins[0]
+    if not eng.permits(i, "enter_bz"):   # 「コスト７以下のクリーチャーを出せない」: 入れ替えもできない
+        return None
     eng._defer(t, [eng.ev_task({"ev": "move", "subject": eng.s.ref(o), "to": "hand", "reason": "return"}, env),
                    {"t": "swap_in", "out": eng.s.ref(o), "out_gen_next": eng.s.cards[o].gen + 1,
                     "in": eng.s.ref(i), "tapped": eng.s.cards[o].tapped, "env": env}])

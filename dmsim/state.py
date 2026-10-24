@@ -42,6 +42,7 @@ class Card:
     top_of: int = -1                                  # 自分が下に重なっている場合、その一番上の cid
     face: int = -1                                    # ツインパクト等で今使っている面（-1 = カード全体, 810）
     entered_seq: int = 0                              # バトルゾーンに出た時刻（608.5 無視効果の優先）
+    exlife_of: list | None = None                     # 「EXライフ」シールドの紐付け先クリーチャーの参照 [cid, gen]。離れたら外れる
 
 
 def _jcopy(v):
