@@ -24,3 +24,14 @@ def test_all_real_cards_are_managed_by_their_official_id(rules):
             assert is_official_id(cd.id), cd.id
             assert normalize_id(cd.id) == cd.id
             assert cd.source.get("official") == cd.id, cd.id
+
+
+def test_fetch_parse_splits_set_notation_from_name():
+    import sys
+    from pathlib import Path
+    sys.path.insert(0, str(Path(__file__).resolve().parent.parent / "tools"))
+    import fetch_cards
+    page = ("<title>三冠王者 ドツキング(DMRP01 1/93) | デュエル・マスターズ</title><table><tr><th>カードの種類</th><td>クリーチャー</td></tr>"
+            "<tr><th>文明</th><td>ゼロ</td></tr><tr><th>コスト</th><td>6</td></tr><tr><th>特殊能力</th><td>W・ブレイカー</td></tr></table>")
+    row = fetch_cards.parse("dmrp01-001", page)
+    assert row["name"] == "三冠王者 ドツキング" and row["set_notation"] == "DMRP01 1/93" and row["cost"] == "6"

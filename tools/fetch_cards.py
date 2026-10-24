@@ -84,6 +84,9 @@ def parse(card_id: str, page: str) -> dict:
     # カード名は h3 か <title> の先頭（「カード名 | ...」の形）
     name = next((c for c in cells if c and c not in LABELS.values()), "")
     out["name"] = (p.title.split("|")[0].strip() or name)
+    m = re.match(r"^(.*?)\s*[(（]([^()（）]*\d+/\d+[^()（）]*)[)）]\s*$", out["name"])   # 「名前(DMRP01 1/93)」の収録表記を分ける
+    if m:
+        out["name"], out["set_notation"] = m.group(1), m.group(2)
     out["text"] = "\n".join(s.strip() for s in out["text"].splitlines() if s.strip())
     return out
 

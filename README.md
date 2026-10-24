@@ -91,3 +91,10 @@ TCGテキストから変換している。
 
 `python -m dmsim.combo_search --from-cycles 3 --slots 1`: ゾーン変換グラフのループ候補を固定部品にして残りを探索する。
 `python -m dmsim.pool_metrics --deck deck.yaml`: カードごとの dig（1回で山札から触れる枚数）・speed と、デッキの dig_total（全部絡めば掘れる上限。山札の枚数を超えれば山を掘り切れる当たり）。
+
+### 公式サイトからの取得（確立した方法）
+
+クラウド開発環境は `dm.takaratomy.co.jp` に届かない（プロキシが 403）ので、GitHub Actions のランナーで取る:
+`.github/workflows/fetch-cards.yml`（手動実行。弾の表記と件数を入れる）か、`tools/fetch_request.yaml` を編集して push する。
+結果は Artifact `cards-raw` と `cards-raw/<弾>` ブランチの `data/cards/raw/<弾>.jsonl` に出る（2026-10-24 に DMRP1 の3枚で確認済み）。
+手元のPCなら `python tools/fetch_cards.py --set DMRP1 --count 93 --skip-known`。
