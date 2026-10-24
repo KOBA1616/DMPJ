@@ -208,6 +208,8 @@ class TurnSearch:
         self.w = weights or Weights()
         self.opp_policy = opp_policy
         self.combo_cap = combo_cap
+        self.burn_stock = True                # 山札を削るだけのループを自動で残り1枚までストックする（2段探索の2段目では切る）
+        self.collect: list | None = None      # ループ発見モード: 見つけたループ（局面の複製, 証明書）をここへ集めて、ストックはしない
 
     def _settle(self, eng: Engine) -> dict | None:
         """相手の決定を相手役に答えさせながら、自分の決定かターン終了まで進める。"""
@@ -245,7 +247,13 @@ class TurnSearch:
         mana_left = tuple(sorted((c.defn, c.tapped) for c in (eng.s.cards[x] for p in (0, 1) for x in eng.s.zones["mana"][p])))
         tkey = (h, tuple(sorted(ctr.items())), mana_left)
         cert = det.observe(eng)
-        if cert is not None and _is_burn(cert, self.me):
+        if cert is not None and self.collect is not None:
+            if all(c.start_skeleton != cert.start_skeleton for _, c in self.collect):
+                self.collect.append((eng.clone(), cert))
+            return -WIN, eng              # ループの先は辿らない（ループの発見だけを行う）
+        if cert is not None and _is_burn(cert, self.me) and not self.burn_stock:
+            cert = None                       # 周回数は呼び出し側が決める
+        elif cert is not None and _is_burn(cert, self.me):
             # 山札を削るだけのループ: 勝ちにつながるかは分からないので、山札を残り1枚まで削った線（遅く抜ける）を試す。
             # ループに入った直後に抜ける線は親の局面で試されるので、ここでループの続きは辿らない
             ff = self._stock(eng, cert)
