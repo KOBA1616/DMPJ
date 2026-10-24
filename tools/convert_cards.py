@@ -175,7 +175,8 @@ class OpenCodeLLM:
         for attempt in range(4):
             self._wait()
             req = urllib.request.Request(OPENCODE_URL, data, {
-                "Authorization": f"Bearer {self.key}", "Content-Type": "application/json"})
+                "Authorization": f"Bearer {self.key}", "Content-Type": "application/json",
+                "User-Agent": "dmpj-convert/1.0"})   # 既定の Python-urllib はCloudflareに403(1010)で弾かれる
             try:
                 with urllib.request.urlopen(req, timeout=300) as r:
                     return json.loads(r.read())
@@ -210,9 +211,56 @@ class OpenCodeLLM:
             raise DefError("応答に本文がない") from None
 
 
+class OpenCodeCLI:
+    """OpenCode CLI（opencode run）経由。無料枠は「OpenCode の中からのみ」使えるため、API 直叩きが拒否されるときの経路。
+    キー不要。モデルは同じ許可リストで検査する。"""
+    name = "opencode-cli"
+
+    def __init__(self, model: str = OPENCODE_DEFAULT, min_interval: float = 3.0):
+        import threading
+        check_free_model(model)
+        self.model, self.min_interval = model, min_interval
+        self._last, self._lock = 0.0, threading.Lock()
+
+    def complete(self, sysp: str, messages: list[dict], effort: str, usage: dict | None) -> str:
+        import subprocess
+        import tempfile
+        import time
+        prompt = sysp + "\n\n" + "\n\n".join(f"[{m['role']}]\n{m['content']}" for m in messages)
+        with self._lock:
+            time.sleep(max(0.0, self._last + self.min_interval - time.monotonic()))
+            self._last = time.monotonic()
+        with tempfile.TemporaryDirectory() as d:
+            f = Path(d) / "prompt.md"
+            f.write_text(prompt, encoding="utf-8")
+            r = subprocess.run(["opencode", "run", "-m", f"opencode/{self.model}", "--format", "json",
+                                "添付ファイルの指示に従い、最後の [user] への答えだけを出力して。", "-f", str(f)],
+                               capture_output=True, text=True, timeout=600, cwd=d)
+        if re.search(r"(?i)FreeTierError|billing|credit balance|insufficient|payment", r.stdout + r.stderr):
+            raise Fatal(f"課金・無料枠に関するエラーなので停止する: {(r.stdout + r.stderr)[:300]}")
+        texts, err = [], None
+        for line in r.stdout.splitlines():
+            try:
+                ev = json.loads(line)
+            except ValueError:
+                continue
+            if ev.get("type") == "error":
+                err = json.dumps(ev.get("error"), ensure_ascii=False)[:300]
+            elif ev.get("type") == "text":
+                texts.append((ev.get("part") or {}).get("text", ""))
+        if err and not texts:
+            raise RuntimeError(f"opencode error: {err}")
+        if usage is not None:
+            usage["input"] += len(prompt) // 3
+            usage["output"] += sum(map(len, texts)) // 3
+        return "".join(texts) or r.stdout
+
+
 def make_llm(provider: str, model: str | None, interval: float):
     if provider == "opencode":
         return OpenCodeLLM(model or OPENCODE_DEFAULT, interval)
+    if provider == "opencode-cli":
+        return OpenCodeCLI(model or OPENCODE_DEFAULT, interval)
     return AnthropicLLM(model or MODEL)
 
 
@@ -305,7 +353,11 @@ def run(rows: list[dict], client, tables, sysp: str, effort: str, out: Path, rej
                        + yaml.safe_dump({"cards": cards}, allow_unicode=True, sort_keys=False), encoding="utf-8")
         write_jsonl(rejects_path, list(rejects.values()))
 
+    streak = {"n": 0}      # 連続したAPI失敗。無料枠の制限(429)に当たったら残りを打たずに止める
+
     def one(r):
+        if streak["n"] >= 3:
+            return
         try:
             card = convert(client, r, tables, sysp, effort, usage)
         except DefError as e:
@@ -320,11 +372,13 @@ def run(rows: list[dict], client, tables, sysp: str, effort: str, out: Path, rej
         except Exception as e:      # noqa: BLE001  API の一時的な失敗。カードの問題ではないので rejects には入れない
             with lock:
                 stats["api_error"] += 1
+                streak["n"] += 1
                 api_errors.append({"id": r["id"], "error": f"{type(e).__name__}: {e}"[:300]})
                 print(f"! {r['id']} API失敗: {type(e).__name__}", file=sys.stderr)
             return
         with lock:
             stats["ok"] += 1
+            streak["n"] = 0
             cards.append(card)
             rejects.pop(r["id"], None)
             save()
@@ -355,7 +409,7 @@ def main(argv=None):
     ap.add_argument("--limit", type=int, help="この枚数まで変換する（試運転・予算の上限用）")
     ap.add_argument("--order", choices=["file", "short"], default="file", help="short: 原文の短い順（簡単なものから）")
     ap.add_argument("--workers", type=int, default=1, help="並列数（API のレート制限に合わせる）")
-    ap.add_argument("--provider", choices=["anthropic", "opencode"], default="anthropic",
+    ap.add_argument("--provider", choices=["anthropic", "opencode", "opencode-cli"], default="anthropic",
                     help="opencode は無料モデル専用（OPENCODE_API_KEY、許可リスト外のモデルは拒否）")
     ap.add_argument("--model", help="モデルID（既定: anthropic は claude-opus-5-5、opencode は glm-5.3-flash-free）")
     ap.add_argument("--interval", type=float, default=3.0, help="opencode のリクエスト間隔（秒、全ワーカー合計）")

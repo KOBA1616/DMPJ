@@ -33,7 +33,7 @@ python -m dmsim.solitaire --deck deck.yaml --games 1000 --turns 4 --workers 4   
 - `data/cards/raw/*.jsonl` 公式カード詳細ページから取った原文
 - `tests/test_saga_loop.py` 【絶望神サガループ】の検証（下記のループデッキの動作試験）
 - `tools/fetch_cards.py` 公式サイトからカードテキストを取る（手元のPCで実行。3秒以上の間隔・HTMLをキャッシュ）
-- `tools/convert_cards.py` 原文を効果DSLに変換する（Claude API: `pip install anthropic` と `ANTHROPIC_API_KEY`。無料: `--provider opencode`（`OPENCODE_API_KEY`、既定 glm-5.3-flash-free。許可リスト外のモデルは拒否）。精度測定は `tools/eval_convert.py`。GitHub Actions は `tools/convert_request.yaml` を push）
+- `tools/convert_cards.py` 原文を効果DSLに変換する（Claude API: `pip install anthropic` と `ANTHROPIC_API_KEY`。無料: `--provider opencode`（`OPENCODE_API_KEY`、既定 glm-5.3-flash-free。許可リスト外のモデルは拒否）。精度測定は `tools/eval_convert.py`、定期自動変換は `tools/auto_convert.py`（設定 `tools/auto_convert.yaml`、止める時は enabled: false）。GitHub Actions は `tools/convert_request.yaml` を push）
 - 参照ルール: 総合ゲームルール Ver.1.53（公式PDF。リポジトリには含めない）
 
 ## カードを増やす手順

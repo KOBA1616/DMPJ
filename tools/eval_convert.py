@@ -39,7 +39,7 @@ def compare(pred: dict, gold: dict) -> dict[str, bool]:
 def main(argv=None):
     ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     ap.add_argument("raw", nargs="+")
-    ap.add_argument("--provider", choices=["anthropic", "opencode"], default="opencode")
+    ap.add_argument("--provider", choices=["anthropic", "opencode", "opencode-cli"], default="opencode")
     ap.add_argument("--model")
     ap.add_argument("--interval", type=float, default=3.0)
     ap.add_argument("--limit", type=int, default=20)

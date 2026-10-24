@@ -37,21 +37,25 @@ jobs:
           OPENCODE_API_KEY: ${{ secrets.OPENCODE_API_KEY }}
         run: |
           pip install -q pyyaml
-          test -n "$OPENCODE_API_KEY" || { echo "Secret OPENCODE_API_KEY が未登録"; exit 1; }
+          npm i -g opencode-ai >/dev/null 2>&1 || echo "opencode CLI の導入に失敗"
           python - <<'PY'
           import subprocess, sys, yaml
           r = yaml.safe_load(open("/tmp/req.yaml"))
-          common = ["--provider", "opencode", "--model", str(r.get("model", "glm-5.3-flash-free")),
+          common = ["--provider", str(r.get("provider", "opencode-cli")), "--model", str(r.get("model", "glm-5.3-flash-free")),
                     "--interval", str(r.get("interval", 6)), "--limit", str(r.get("limit", 20))]
           if r.get("task") == "eval":
               cmd = ["python", "tools/eval_convert.py", "data/cards/raw"] + common
           else:
               cmd = ["python", "tools/convert_cards.py", "data/cards/raw", "--order", "short"] + common
-          sys.exit(subprocess.call(cmd))
+          import os
+          env = dict(os.environ)
+          if "opencode-cli" in cmd:
+              env.pop("OPENCODE_API_KEY", None)   # CLI は無料枠を匿名で使う（キーを渡すとかえって 401 になるか確かめる）
+          sys.exit(subprocess.call(cmd, env=env))
           PY
       - name: Save results
         if: always()
         run: |
           git reset -q
-          git add data/cards/converted.yaml data/cards/raw/rejects.jsonl data/cards/raw/convert_report.json data/cards/raw/eval_report.json 2>/dev/null || true
+          git add -f data/cards/converted.yaml data/cards/raw/rejects.jsonl data/cards/raw/convert_report.json data/cards/raw/eval_report.json 2>/dev/null || true
           git diff --cached --quiet || { git commit -qm "convert-cards: 変換結果"; git push origin cards-data; }
