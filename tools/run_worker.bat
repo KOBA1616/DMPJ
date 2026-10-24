@@ -1,6 +1,6 @@
 @echo off
-rem タスクスケジューラから呼ぶ。ワーカーを1回だけ実行し、ログを %USERPROFILE%\.dmpj-worker\log.txt に追記する。
-rem デスクトップアプリのDBと食い違うため、CLI 専用の保存先を使う（無料モデルは匿名で動く）
+rem Run the local worker once (called from Task Scheduler). Keep this file ASCII-only: cmd.exe misreads UTF-8.
+rem Log: %USERPROFILE%\.dmpj-worker\log.txt
 set "XDG_DATA_HOME=%USERPROFILE%\.dmpj-worker\xdg"
 set "XDG_CONFIG_HOME=%USERPROFILE%\.dmpj-worker\xdg-config"
 cd /d "%~dp0.."
