@@ -192,6 +192,40 @@ def run_routine(job: dict, git: Git, llm, cache: Path, daily_limit: int) -> dict
     return {"status": "ok", "text": lo.clip(out, 6000)}
 
 
+SELF_FILES = ("tools/local_worker.py", "tools/run_worker.bat", "tools/llm_offload/")
+
+
+def self_update(root: Path = ROOT, log=print) -> str:
+    """実行前に main を fast-forward だけで更新する（PC での git pull の自動化）。
+    作業ツリーが汚れている・main 以外のブランチ・ff 不可・ネットワーク不通のときは何もせず理由を返す。例外は呼び出し側に出さない。
+    ワーカー自身が更新された場合、今回の実行は読み込み済みの旧版で続行し、次回の起動から新版になる。"""
+    def git(*a):
+        r = subprocess.run(["git", *a], cwd=root, capture_output=True, text=True, encoding="utf-8", errors="replace", timeout=90)
+        return r.returncode, (r.stdout or "").strip(), (r.stderr or "").strip()
+    try:
+        rc, branch, _ = git("rev-parse", "--abbrev-ref", "HEAD")
+        if rc or branch != "main":
+            return f"更新しない: ブランチが main でない({branch or '不明'})"
+        rc, dirty, _ = git("status", "--porcelain", "--untracked-files=no")
+        if rc or dirty:
+            return "更新しない: 作業ツリーに未コミットの変更がある"
+        rc, _, err = git("fetch", "-q", "origin", "main")
+        if rc:
+            return f"更新しない: fetch に失敗({lo.scrub(err)[:100]})"
+        rc, old, _ = git("rev-parse", "HEAD")
+        rc2, new, _ = git("rev-parse", "origin/main")
+        if rc or rc2 or old == new:
+            return "最新"
+        rc, _, err = git("merge", "--ff-only", "-q", "origin/main")
+        if rc:
+            return f"更新しない: fast-forward できない({lo.scrub(err)[:100]})"
+        _, changed, _ = git("diff", "--name-only", old, new)
+        self_changed = [f for f in changed.splitlines() if f.startswith(SELF_FILES)]
+        return f"更新した {old[:7]}→{new[:7]}" + ("（ワーカー自身が変わったので次回の起動から新版）" if self_changed else "")
+    except Exception as e:   # noqa: BLE001  更新の失敗でワーカー本体を止めない
+        return f"更新しない: {type(e).__name__}"
+
+
 def summary_line(res: dict) -> str:
     """結果の1行要約。Claude が全文を読まずに済むようにする。"""
     first = next((ln.strip(" -*#") for ln in (res.get("text") or "").splitlines() if ln.strip()), "")
@@ -278,6 +312,7 @@ def main(argv=None) -> int:
     r = sub.add_parser("run")
     r.add_argument("--once", action="store_true")
     r.add_argument("--loop", type=int, metavar="SEC")
+    r.add_argument("--no-update", action="store_true", help="実行前の main 更新(git fetch + merge --ff-only)をしない")
     r.add_argument("--daily-limit", type=int, default=lo.DAILY_LIMIT)
     e = sub.add_parser("enqueue")
     e.add_argument("type", choices=["ask", "convert", "routine"])
@@ -321,6 +356,8 @@ def main(argv=None) -> int:
         return 0
     with Lock(Path(a.work) / "lock"):
         while True:
+            if not a.no_update:
+                print(now(), "self-update:", self_update(), flush=True)
             try:
                 print(now(), process(git, daily_limit=a.daily_limit) or "ジョブなし", flush=True)
             except RuntimeError as ex:

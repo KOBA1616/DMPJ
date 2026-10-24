@@ -8,4 +8,5 @@ cd /d "%~dp0.."
 if not exist "%USERPROFILE%\.dmpj-worker" mkdir "%USERPROFILE%\.dmpj-worker"
 set "PY=python"
 where python >nul 2>nul || set "PY=py -3"
-%PY% tools\local_worker.py run --once >> "%USERPROFILE%\.dmpj-worker\log.txt" 2>&1
+rem One line with "& exit /b": cmd parses it fully first, so a self-update of this file mid-run is safe.
+%PY% tools\local_worker.py run --once >> "%USERPROFILE%\.dmpj-worker\log.txt" 2>&1 & exit /b
