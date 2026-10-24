@@ -678,7 +678,7 @@
    ],
    "listed": true,
    "total": 154,
-   "fetched": 111
+   "fetched": 154
   },
   "26rp2": {
    "name": "DM26-RP2 逆札篇 第2弾 燃えろ禁断！逆転のドギラゴン革命!!",
@@ -842,7 +842,8 @@
     "dm26rp2-TD001"
    ],
    "listed": true,
-   "total": 156
+   "total": 156,
+   "fetched": 156
   },
   "26ex1": {
    "name": "DM26-EX1 ますますつよいパック 25の援軍",
@@ -959,7 +960,8 @@
     "dm26ex1-008"
    ],
    "listed": true,
-   "total": 109
+   "total": 109,
+   "fetched": 109
   },
   "26rp1": {
    "name": "DM26-RP1 逆札篇 第1弾 逆転神VS切札竜",
@@ -1123,7 +1125,8 @@
     "dm26rp1-DM001SEC"
    ],
    "listed": true,
-   "total": 156
+   "total": 156,
+   "fetched": 156
   },
   "26sd1": {
    "name": "DM26-SD1 ドキドキつよいデッキ 25の王道",
@@ -1496,7 +1499,8 @@
     "dm26sd1-h006"
    ],
    "listed": true,
-   "total": 365
+   "total": 365,
+   "fetched": 365
   },
   "25ex4": {
    "name": "DM25-EX4 エピソード4 パンドラ・ウォーズ",
@@ -1671,7 +1675,8 @@
     "dm25ex4-TR04"
    ],
    "listed": true,
-   "total": 167
+   "total": 167,
+   "fetched": 167
   },
   "25ex3": {
    "name": "DM25-EX3 邪神爆発デュエナマイトパック「王道W」",
@@ -2030,7 +2035,8 @@
     "dm25ex3-STR1"
    ],
    "listed": true,
-   "total": 351
+   "total": 351,
+   "fetched": 351
   },
   "25rp4": {
    "name": "DM25-RP4 王道W 第4弾 終淵 ～LOVE＆ABYSS～",
@@ -2193,7 +2199,8 @@
     "dm25rp4-SecDM1"
    ],
    "listed": true,
-   "total": 155
+   "total": 155,
+   "fetched": 155
   },
   "25bd3": {
    "name": "DM25-BD3 ドリーム英雄譚デッキ グレンモルトの書",
@@ -2229,7 +2236,8 @@
     "dm25bd3-006"
    ],
    "listed": true,
-   "total": 28
+   "total": 28,
+   "fetched": 28
   },
   "25ex2": {
    "name": "DM25-EX2 王道vs邪道 デュエキングWDreaM 2025",
@@ -2411,7 +2419,8 @@
     "dm25ex2-001"
    ],
    "listed": true,
-   "total": 174
+   "total": 174,
+   "fetched": 174
   },
   "25rp3": {
    "name": "DM25-RP3 王道W 第3弾 邪神vs時皇 ～ビヨンド・ザ・タイム～",
@@ -2563,7 +2572,8 @@
     "dm25rp3-TR1"
    ],
    "listed": true,
-   "total": 144
+   "total": 144,
+   "fetched": 144
   },
   "25sp2": {
    "name": "DM25-SP2 キャラプレミアムデッキ ドラゴン娘になりたくないっ！ はじけろスポーツ！青春☆ワールドカップ!!",
@@ -2593,7 +2603,8 @@
     "dm25sp2-001"
    ],
    "listed": true,
-   "total": 22
+   "total": 22,
+   "fetched": 22
   },
   "25bd2": {
    "name": "DM25-BD2 ドリーム英雄譚デッキ アルカディアスの​書",
@@ -2624,7 +2635,8 @@
     "dm25bd2-SP1"
    ],
    "listed": true,
-   "total": 23
+   "total": 23,
+   "fetched": 23
   },
   "25bd1": {
    "name": "DM25-BD1 ドリーム英雄譚デッキ ボルシャックの書",
@@ -2656,7 +2668,8 @@
     "dm25bd1-SP1"
    ],
    "listed": true,
-   "total": 24
+   "total": 24,
+   "fetched": 24
   },
   "25ex1": {
    "name": "DM25-EX1 愛感謝祭 ヒロインBEST",
@@ -2783,7 +2796,8 @@
     "dm25ex1-PR1"
    ],
    "listed": true,
-   "total": 119
+   "total": 119,
+   "fetched": 119
   },
   "25rp2": {
    "name": "DM25-RP2  王道W 第2弾 邪神vs邪神Ⅱ ～ジャシン・イン・ザ・シェル～",
@@ -2935,7 +2949,8 @@
     "dm25rp2-TR02"
    ],
    "listed": true,
-   "total": 144
+   "total": 144,
+   "fetched": 144
   },
   "25rp1": {
    "name": "DM25-RP1 王道W 第1弾 邪神vs邪神 ～ソウル・オブ・ジ・アビス～",
@@ -3087,7 +3102,8 @@
     "dm25rp1-SP1"
    ],
    "listed": true,
-   "total": 144
+   "total": 144,
+   "fetched": 144
   },
   "25sp1": {
    "name": "DM25-SP1 キャラプレミアムデッキ 「ドラゴン娘になりたくないっ!」Jack-Pot-Live!! in 桜龍高校",
@@ -3116,7 +3132,8 @@
     "dm25sp1-001"
    ],
    "listed": true,
-   "total": 21
+   "total": 21,
+   "fetched": 21
   },
   "25sd2": {
    "name": "DM25-SD2 いきなりつよいデッキ 力の王道",
@@ -3135,7 +3152,8 @@
     "dm25sd2-002"
    ],
    "listed": true,
-   "total": 11
+   "total": 11,
+   "fetched": 11
   },
   "25sd1": {
    "name": "DM25-SD1 いきなりつよいデッキ 技の王道",
@@ -3156,7 +3174,8 @@
     "dm25sd1-013"
    ],
    "listed": true,
-   "total": 13
+   "total": 13,
+   "fetched": 13
   },
   "24ex4": {
    "name": "DM24-EX4 にじさんじコラボ・マスターズ「異次元の超獣使い」",
@@ -3344,7 +3363,8 @@
     "dm24ex4-002"
    ],
    "listed": true,
-   "total": 180
+   "total": 180,
+   "fetched": 180
   },
   "24bd6": {
    "name": "DM24-BD6 エキサイティング・デュエパ・デッキ ツラトゥストラは水晶と語らう",
@@ -3412,7 +3432,8 @@
     "dm24bd6-060"
    ],
    "listed": true,
-   "total": 60
+   "total": 60,
+   "fetched": 60
   },
   "24bd5": {
    "name": "DM24-BD5 エキサイティング・デュエパ・デッキ アセビと異世界フェアリーたち",
@@ -3480,7 +3501,8 @@
     "dm24bd5-011"
    ],
    "listed": true,
-   "total": 60
+   "total": 60,
+   "fetched": 60
   },
   "24ex3": {
    "name": "DM24-EX3 刺激爆発デュエナマイトパック",
@@ -3853,7 +3875,8 @@
     "dm24ex3-rp4TR1"
    ],
    "listed": true,
-   "total": 365
+   "total": 365,
+   "fetched": 365
   },
   "24rp4": {
    "name": "DM24-RP4 王道篇 第4弾 「悪魔神、復活」",
@@ -4004,7 +4027,8 @@
     "dm24rp4-TR01"
    ],
    "listed": true,
-   "total": 143
+   "total": 143,
+   "fetched": 143
   },
   "24bd4": {
    "name": "DM24-BD4 ナイトメア黙示録デッキ バロムの章",
@@ -4027,7 +4051,8 @@
     "dm24bd4-015"
    ],
    "listed": true,
-   "total": 15
+   "total": 15,
+   "fetched": 15
   },
   "24bd3": {
    "name": "DM24-BD3 ドリーム英雄譚デッキ モモキングの書",
@@ -4050,7 +4075,8 @@
     "dm24bd3-005"
    ],
    "listed": true,
-   "total": 15
+   "total": 15,
+   "fetched": 15
   },
   "24ex2": {
    "name": "DM24-EX2 天下夢双!!デュエキングDreaM 2024",
@@ -4222,7 +4248,8 @@
     "dm24ex2-Cho002"
    ],
    "listed": true,
-   "total": 164
+   "total": 164,
+   "fetched": 164
   },
   "24sp2": {
    "name": "DM24-SP2 キャラプレミアムデッキ「デュエル・マスターズLOST」誓いの水晶",
@@ -4248,7 +4275,8 @@
     "dm24sp2-013"
    ],
    "listed": true,
-   "total": 18
+   "total": 18,
+   "fetched": 18
   },
   "24rp3": {
    "name": "DM24-RP3 王道篇 第3弾 「ゴールド・オブ・ハイパーエンジェル」",
@@ -4399,7 +4427,8 @@
     "dm24rp3-SP1"
    ],
    "listed": true,
-   "total": 143
+   "total": 143,
+   "fetched": 143
   },
   "24bd2": {
    "name": "DM24-BD2 ドリーム英雄譚デッキ ジョニーの書",
@@ -4423,7 +4452,8 @@
     "dm24bd2-002"
    ],
    "listed": true,
-   "total": 16
+   "total": 16,
+   "fetched": 16
   },
   "24bd1": {
    "name": "DM24-BD1 ドリーム英雄譚デッキ ドギラゴンの書",
@@ -4452,7 +4482,8 @@
     "dm24bd1-006"
    ],
    "listed": true,
-   "total": 21
+   "total": 21,
+   "fetched": 21
   },
   "24ex1": {
    "name": "DM24-EX1 超感謝祭 ファンタジーBEST",
@@ -4567,7 +4598,8 @@
     "dm24ex1-PR1"
    ],
    "listed": true,
-   "total": 107
+   "total": 107,
+   "fetched": 107
   },
   "24rp2": {
    "name": "DM24-RP2 王道篇 第2弾 「カイザー・オブ・ハイパードラゴン」",
@@ -4715,7 +4747,8 @@
     "dm24rp2-SP1"
    ],
    "listed": true,
-   "total": 140
+   "total": 140,
+   "fetched": 140
   },
   "24rp1": {
    "name": "DM24-RP1 王道篇 第1弾 「デーモン・オブ・ハイパームーン」",
@@ -4865,7 +4898,8 @@
     "dm24rp1-TD1"
    ],
    "listed": true,
-   "total": 142
+   "total": 142,
+   "fetched": 142
   },
   "24sp1": {
    "name": "DM24-SP1  キャラプレミアムデッキ「ドラゴン娘になりたくないっ！」 イェーイめっちゃドラゴン!!",
@@ -4894,7 +4928,8 @@
     "dm24sp1-002"
    ],
    "listed": true,
-   "total": 21
+   "total": 21,
+   "fetched": 21
   },
   "24sd2": {
    "name": "DM24-SD2 いきなりつよいデッキ 守りの王道",
@@ -4913,7 +4948,8 @@
     "dm24sd2-011"
    ],
    "listed": true,
-   "total": 11
+   "total": 11,
+   "fetched": 11
   },
   "24sd1": {
    "name": "DM24-SD1 いきなりつよいデッキ 攻めの王道",
@@ -4933,7 +4969,8 @@
     "dm24sd1-003"
    ],
    "listed": true,
-   "total": 12
+   "total": 12,
+   "fetched": 12
   },
   "23ex3": {
    "name": "DM23-EX3 アビス・レボリューション外伝 「邪神と水晶の華」",
@@ -5079,7 +5116,8 @@
     "dm23ex3-TR06"
    ],
    "listed": true,
-   "total": 138
+   "total": 138,
+   "fetched": 138
   },
   "23bd7": {
    "name": "DM23-BD7 エキサイティング・デュエパ・デッキ 「ネゴシエートの偽衒学者」",
@@ -5147,7 +5185,8 @@
     "dm23bd7-011"
    ],
    "listed": true,
-   "total": 60
+   "total": 60,
+   "fetched": 60
   },
   "23bd6": {
    "name": "DM23-BD6 エキサイティング・デュエパ・デッキ 「双極のアカシックZ計画」",
@@ -5215,7 +5254,8 @@
     "dm23bd6-060"
    ],
    "listed": true,
-   "total": 60
+   "total": 60,
+   "fetched": 60
   },
   "23bd5": {
    "name": "DM23-BD5 エキサイティング・デュエパ・デッキ 「不敬なり！真邪眼騎士団」",
@@ -5283,7 +5323,8 @@
     "dm23bd5-012"
    ],
    "listed": true,
-   "total": 60
+   "total": 60,
+   "fetched": 60
   },
   "23bd4": {
    "name": "DM23-BD4 エキサイティング・デュエパ・デッキ 「ドラドラドラゴン龍幻郷」",
@@ -5351,7 +5392,8 @@
     "dm23bd4-011"
    ],
    "listed": true,
-   "total": 60
+   "total": 60,
+   "fetched": 15
   },
   "23rp4x": {
    "name": "DM23-RP4X アビス・レボリューション 第4弾 「竜皇神爆輝」 超刺激パック",
