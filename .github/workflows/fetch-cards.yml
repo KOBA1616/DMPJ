@@ -2,7 +2,10 @@
 # クラウド開発環境は dm.takaratomy.co.jp に届かないので、GitHub のランナーで取る。
 # 取得結果（jsonl）と取得した HTML は Artifact に保存し、jsonl は cards-raw/<弾> ブランチにも push する。
 name: fetch-cards
+# main に入るまでは workflow_dispatch が使えないので、tools/fetch_request.yaml を push しても動く。
 on:
+  push:
+    paths: ["tools/fetch_request.yaml"]
   workflow_dispatch:
     inputs:
       set:
@@ -28,26 +31,33 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: "3.12"
-      - name: Fetch
+      - name: Resolve request
         env:
           SET: ${{ inputs.set }}
           COUNT: ${{ inputs.count }}
           FIRST: ${{ inputs.first }}
           IDS: ${{ inputs.ids }}
         run: |
+          pip install -q pyyaml
+          python - <<'PY' >> "$GITHUB_ENV"
+          import os, yaml
+          r = yaml.safe_load(open("tools/fetch_request.yaml")) if not os.environ.get("SET") else {}
+          g = lambda k, d="": os.environ.get(k.upper()) or str(r.get(k, d))
+          print(f"SET={g('set')}"); print(f"COUNT={g('count')}"); print(f"FIRST={g('first','1')}"); print(f"IDS={g('ids')}")
+          PY
+      - name: Fetch
+        run: |
           python tools/fetch_cards.py --set "$SET" --count "$COUNT" --first "$FIRST" $IDS \
             --skip-known --interval 3 --out "out.jsonl" 2> fetch.log || true
           wc -l out.jsonl; tail -n 20 fetch.log
       - uses: actions/upload-artifact@v4
         with:
-          name: cards-${{ inputs.set }}
+          name: cards-raw
           path: |
             out.jsonl
             fetch.log
             .cache/official
       - name: Push raw cards
-        env:
-          SET: ${{ inputs.set }}
         run: |
           name=$(python -c "import sys; sys.path.insert(0,'.'); from dmsim.cardid import set_code; print(set_code(sys.argv[1]))" "$SET")
           git config user.name "github-actions"; git config user.email "actions@users.noreply.github.com"
