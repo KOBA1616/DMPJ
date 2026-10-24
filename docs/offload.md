@@ -54,7 +54,7 @@ python tools/offload.py ask --instruction "この表を civ ごとに数えて" 
 Claude / Actions ──jobs/pending/*.yaml──▶ llm-jobs ブランチ ◀──取得・結果push── PCのワーカー(OpenCode)
 ```
 
-- ジョブ: `type: ask`（`task`, `instruction`, `input`）と `type: convert`（`limit`, `workers`, `interval`, `model`）。
+- ジョブ: `type: ask`（`task`, `instruction`, `input`）、`type: routine`（決まった定型作業だけ: `gaps` 語彙ギャップ集計 / `tests` テスト結果の圧縮 / `review` 差分の一次レビュー / `status` STATUS の鮮度確認。`--summarize` で無料モデルが要約。任意のコマンドは実行しない）と `type: convert`（`limit`, `workers`, `interval`, `model`）。
 - 結果: `jobs/done/<id>.yaml`（`status: ok / escalate / error`、`text`）。`escalate` は無料枠切れ等で、Claude が代わりに処理してよい合図。
 - `convert` は cards-data ブランチの作業ツリーに現在の tools/dmsim/語彙を重ねて `auto_convert.py` を実行し、結果を cards-data へ push する（Actions の auto-convert と同じ処理）。
 - 無料モデルの許可リスト検査・課金検知はクラウドと同じ。課金の兆候が出たらワーカー全体が止まる。
@@ -97,3 +97,5 @@ schtasks /Create /SC MINUTE /MO 10 /TN "dmpj-worker" /TR "C:\path\DMPJ\tools\run
 - 定期的にカード変換を回すなら、`python tools\local_worker.py enqueue convert --limit 100` を投入する（毎回の投入もスケジュールできる）。
 - ローカルで変換する間は、Actions と cards-data が衝突しないよう `tools/auto_convert.yaml` を `enabled: false` にして main に入れる。
 - Mac/Linux は cron: `*/10 * * * * cd ~/DMPJ && python tools/local_worker.py run --once >> ~/.dmpj-worker/log.txt 2>&1`
+
+投入例: `python tools\local_worker.py enqueue routine --name gaps --summarize` / `... --name review --summarize`

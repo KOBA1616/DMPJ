@@ -9,6 +9,7 @@
 ジョブは専用ブランチ llm-jobs の jobs/pending/<id>.yaml。結果は jobs/done/<id>.yaml（status: ok / escalate / error、text）。
   type: ask      {task, instruction?, input | input_file?}   → llm_offload.ask（秘密の伏せ字・切り詰め・日次上限・キャッシュ）
   type: convert  {limit?, workers?, interval?, model?}        → tools/auto_convert.py を cards-data ブランチの作業ツリーで実行して push
+  type: routine  {name: gaps | tests | review | status, summarize?, base?}  → 決まった定型作業だけ（任意コマンドは実行しない）
 無料モデルの許可リスト検査・課金検知は llm_offload/providers.py がそのまま効く。課金の兆候は Fatal で全体を止める。
 詳しい手順は docs/offload.md。
 """
@@ -17,6 +18,7 @@ from __future__ import annotations
 import argparse
 import json
 import os
+import re
 import shutil
 import subprocess
 import sys
@@ -120,14 +122,7 @@ def run_ask(job: dict, llm, cache: Path, daily_limit: int, base: Path) -> dict:
 
 def run_convert(job: dict, git: Git, jobs_model: str | None) -> dict:
     """cards-data の作業ツリーに現在の tools/dmsim/data/rules を重ねて auto_convert を実行し、結果を push する。"""
-    d = git.worktree("cards-data", DATA_BRANCH)
-    for sub in ("tools", "dmsim", "data/rules"):
-        shutil.copytree(ROOT / sub, d / sub, dirs_exist_ok=True, ignore=shutil.ignore_patterns("__pycache__", ".cache"))
-    for f in ("data/cards/proto.yaml", "data/cards/real.yaml", "data/cards/real_vocab.yaml", "data/cards/real_zone.yaml"):
-        if (ROOT / f).exists():
-            shutil.copy(ROOT / f, d / f)
-    for f in (ROOT / "data/cards/raw").glob("official_*.jsonl"):
-        shutil.copy(f, d / "data/cards/raw" / f.name)
+    d = data_tree(git)
     model = job.get("model") or jobs_model or lo.OPENCODE_DEFAULT
     lo.make_llm("opencode-cli", model)       # 許可リスト検査（違反は Fatal）
     env = {k: v for k, v in os.environ.items() if k != "OPENCODE_API_KEY"}
@@ -143,6 +138,50 @@ def run_convert(job: dict, git: Git, jobs_model: str | None) -> dict:
     return {"status": "ok", "text": lo.scrub(r.stdout[-1500:])}
 
 
+def data_tree(git: Git) -> Path:
+    """cards-data の作業ツリーに、現在の tools/dmsim/語彙/カード定義を重ねて返す。"""
+    d = git.worktree("cards-data", DATA_BRANCH)
+    for sub in ("tools", "dmsim", "data/rules"):
+        shutil.copytree(ROOT / sub, d / sub, dirs_exist_ok=True, ignore=shutil.ignore_patterns("__pycache__", ".cache"))
+    for f in ("data/cards/proto.yaml", "data/cards/real.yaml", "data/cards/real_vocab.yaml", "data/cards/real_zone.yaml"):
+        if (ROOT / f).exists():
+            shutil.copy(ROOT / f, d / f)
+    for f in (ROOT / "data/cards/raw").glob("official_*.jsonl"):
+        shutil.copy(f, d / "data/cards/raw" / f.name)
+    return d
+
+
+def run_routine(job: dict, git: Git, llm, cache: Path, daily_limit: int) -> dict:
+    """決まった定型作業だけ。ジョブから渡された文字列をコマンドとして実行することはない。"""
+    name = job.get("name")
+    if name == "gaps":
+        d = data_tree(git)
+        out = subprocess.run([sys.executable, "tools/report_gaps.py"], cwd=d, capture_output=True, text=True).stdout
+    elif name == "tests":
+        r = subprocess.run([sys.executable, "-m", "pytest", "-q"], cwd=ROOT, capture_output=True, text=True)
+        out = lo.digest_pytest(r.stdout + r.stderr)
+    elif name == "status":
+        r = subprocess.run([sys.executable, "tools/gen_status.py", "--check"], cwd=ROOT, capture_output=True, text=True)
+        out = (r.stdout + r.stderr) or "STATUS.md は最新"
+    elif name == "review":
+        base = str(job.get("base", "origin/main"))
+        if not re.fullmatch(r"[\w./-]+", base) or base.startswith("-"):
+            return {"status": "error", "error": "base が不正"}
+        out = subprocess.run(["git", "diff", base], cwd=ROOT, capture_output=True, text=True).stdout
+        job = {**job, "summarize": "review-diff"}
+    else:
+        return {"status": "error", "error": f"未知の routine {name!r}（gaps / tests / review / status）"}
+    out = lo.scrub(out)
+    if job.get("summarize"):
+        task = job["summarize"] if job["summarize"] in lo.TASKS else "summarize"
+        try:
+            r2 = lo.ask(task, out, llm=llm, cache=cache, daily_limit=daily_limit)
+        except lo.Escalate as e:
+            return {"status": "escalate", "error": str(e), "text": lo.clip(out, 3000)}
+        return {"status": "ok", "text": r2.text, "model": r2.model}
+    return {"status": "ok", "text": lo.clip(out, 6000)}
+
+
 def process(git: Git, llm_factory=None, max_jobs: int = 20, daily_limit: int = lo.DAILY_LIMIT) -> list[str]:
     jd = git.worktree("jobs", JOBS_BRANCH, create=True)
     pending, done = jd / "jobs" / "pending", jd / "jobs" / "done"
@@ -155,6 +194,8 @@ def process(git: Git, llm_factory=None, max_jobs: int = 20, daily_limit: int = l
         try:
             if job.get("type") == "convert":
                 res = run_convert(job, git, None)
+            elif job.get("type") == "routine":
+                res = run_routine(job, git, llm_factory(job.get("model")), git.work / "cache", daily_limit)
             elif job.get("type") == "ask":
                 res = run_ask(job, llm_factory(job.get("model")), git.work / "cache", daily_limit, jd)
             else:
@@ -191,11 +232,13 @@ def main(argv=None) -> int:
     r.add_argument("--loop", type=int, metavar="SEC")
     r.add_argument("--daily-limit", type=int, default=lo.DAILY_LIMIT)
     e = sub.add_parser("enqueue")
-    e.add_argument("type", choices=["ask", "convert"])
+    e.add_argument("type", choices=["ask", "convert", "routine"])
     e.add_argument("--task", default="summarize")
     e.add_argument("--instruction")
     e.add_argument("--file", help="ask の入力ファイル（中身をジョブに埋め込む）")
     e.add_argument("--model")
+    e.add_argument("--name", help="routine の名前（gaps / tests / review / status）")
+    e.add_argument("--summarize", action="store_true", help="routine の結果を無料モデルで要約する")
     e.add_argument("--limit", type=int, default=100)
     e.add_argument("--workers", type=int, default=1)
     sub.add_parser("status")
@@ -209,6 +252,8 @@ def main(argv=None) -> int:
             job.update(task=a.task, input=lo.scrub(Path(a.file).read_text(encoding="utf-8") if a.file else sys.stdin.read()))
             if a.instruction:
                 job["instruction"] = a.instruction
+        elif a.type == "routine":
+            job.update(name=a.name, summarize=a.summarize)
         else:
             job.update(limit=a.limit, workers=a.workers)
         print(enqueue(git, job))

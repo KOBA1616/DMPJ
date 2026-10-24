@@ -384,3 +384,12 @@ def test_local_worker_ask_roundtrip(tmp_path):
     assert res["status"] == "ok" and res["text"] == "要約結果"
     assert not (chk / "jobs" / "pending" / f"{jid}.yaml").exists()
     assert lw.process(g, lambda m: LLM()) == []
+
+
+def test_local_worker_routine_allowlist(tmp_path):
+    """routine は決まった名前だけ。未知の名前・不正な base は実行せずエラーにする。"""
+    import local_worker as lw
+    g = lw.Git(tmp_path, tmp_path / "w")
+    assert lw.run_routine({"name": "rm -rf /"}, g, None, tmp_path, 1)["status"] == "error"
+    assert lw.run_routine({"name": "review", "base": "--output=x"}, g, None, tmp_path, 1)["status"] == "error"
+    assert lw.run_routine({"name": "status"}, g, None, tmp_path, 1)["status"] == "ok"
