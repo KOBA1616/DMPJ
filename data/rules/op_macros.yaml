@@ -1,0 +1,13 @@
+# 効果DSLのマクロ（設計判断④: コア語彙は閉じたまま、よく使う動詞はここで move 等に展開する）
+# $select / $to などはマクロ呼び出し側の引数で置き換わる
+macros:
+  destroy:          # 破壊する = バトルゾーンから墓地へ（理由タグ destroy）
+    - {op: move, select: $select, to: graveyard, reason: destroy}
+  mill:             # 山札の上から N 枚を墓地へ
+    - {op: move, select: {zone: deck, owner: $owner, from_top: $count}, to: graveyard, reason: put}
+  bounce:           # 手札に戻す
+    - {op: move, select: $select, to: hand, reason: return}
+  mana_put:         # マナゾーンに置く
+    - {op: move, select: $select, to: mana, reason: put}
+  discard:          # 捨てる（701.7a）
+    - {op: move, select: $select, to: graveyard, reason: discard}

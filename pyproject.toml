@@ -1,0 +1,12 @@
+[project]
+name = "dmsim"
+version = "0.0.1"
+description = "Duel Masters rules engine prototype (DMPJ)"
+requires-python = ">=3.11"
+dependencies = ["pyyaml>=6"]
+
+[project.optional-dependencies]
+dev = ["pytest>=8"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]

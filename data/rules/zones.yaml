@@ -1,0 +1,14 @@
+# ゾーン定義（設計判断⑥: ゾーンはコードに列挙せずデータで定義する）
+# public: 公開ゾーンか / ordered: 順序に意味があるか（先頭 = 一番上）
+# shared: 両プレイヤー共有か / counter: ループ検出で「枚数だけ」を見るか（骨格に中身を入れない）
+# rule: 参照した総合ルールの条文（未照合は "unverified"）
+zones:
+  deck:      {public: false, ordered: true,  shared: false, counter: true,  rule: "401"}
+  hand:      {public: false, ordered: false, shared: false, counter: false, rule: "402"}
+  bz:        {public: true,  ordered: false, shared: true,  counter: false, rule: "403"}
+  graveyard: {public: true,  ordered: false, shared: false, counter: true,  rule: "404"}
+  mana:      {public: true,  ordered: false, shared: false, counter: true,  rule: "405"}
+  shield:    {public: false, ordered: true,  shared: false, counter: true,  rule: "406"}
+  hyper:     {public: true,  ordered: false, shared: false, counter: false, rule: "407"}   # 超次元ゾーン
+  gr:        {public: false, ordered: true,  shared: false, counter: true,  rule: "408"}   # 超GRゾーン
+  abyss:     {public: true,  ordered: false, shared: false, counter: true,  rule: "410 unverified"}  # 深淵ゾーン（本文未取得）

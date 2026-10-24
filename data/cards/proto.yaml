@@ -1,0 +1,142 @@
+# プロトタイプ検証用の架空カード（実在カードではない。ID は T 始まり）
+# 実カードは公式テキスト → LLM変換 → 人の確認 を経てこの形式で追加する
+cards:
+  - id: T001
+    name: 試験用ダミー
+    types: [creature]
+    civs: [nature]
+    cost: 2
+    power: 2000
+    races: [テスト]
+    text: ""
+
+  - id: T002
+    name: マナ芽吹きの精
+    types: [creature]
+    civs: [nature]
+    cost: 2
+    power: 1000
+    races: [テスト]
+    text: このクリーチャーがバトルゾーンに出た時、自分の山札の上から1枚目をマナゾーンに置く。
+    keywords: [mana_boost_cip]
+
+  - id: T003
+    name: 知識の泉
+    types: [spell]
+    civs: [water]
+    cost: 2
+    text: カードを2枚引く。
+    spell:
+      - {op: draw, player: you, count: 2}
+
+  - id: T004
+    name: 迎撃の盾兵
+    types: [creature]
+    civs: [light]
+    cost: 3
+    power: 3000
+    races: [テスト]
+    text: ブロッカー
+    keywords: [blocker]
+
+  - id: T005
+    name: 疾風の突撃兵
+    types: [creature]
+    civs: [fire]
+    cost: 3
+    power: 3000
+    races: [テスト]
+    text: スピードアタッカー / W・ブレイカー
+    keywords: [speed_attacker, double_breaker]
+
+  - id: T006
+    name: テスト・トルネード
+    types: [spell]
+    civs: [fire]
+    cost: 3
+    text: S・トリガー / 相手のパワー4000以下のクリーチャーを1体破壊する。
+    keywords: [s_trigger]
+    spell:
+      - op: destroy
+        select: {zone: bz, owner: opp, filter: {types: [creature], power_le: 4000}, count: 1}
+
+  - id: T007
+    name: 身代わりの苗木
+    types: [creature]
+    civs: [nature]
+    cost: 2
+    power: 2000
+    races: [テスト]
+    text: このクリーチャーが破壊される時、墓地に置くかわりにマナゾーンに置いてもよい。
+    abilities:
+      - kind: replace
+        optional: true
+        when: {event: move, from: bz, to: graveyard, reason: destroy, subject: self}
+        instead:
+          - {op: mana_put, select: {ref: event.subject}}
+
+  - id: T008
+    name: 墓守のしもべ
+    types: [creature]
+    civs: [darkness]
+    cost: 2
+    power: 1000
+    races: [テスト]
+    text: このクリーチャーが破壊された時、カードを1枚引く。
+    abilities:
+      - kind: trigger
+        when: {event: move, from: bz, to: graveyard, reason: destroy, subject: self}
+        effect:
+          - {op: draw, player: you, count: 1}
+
+  # ループ検証用の2枚コンボ: T009 を出すたびに T010 がマナを戻して T009 を手札へ。1周で相手の山札 -1
+  - id: T009
+    name: 回帰のこだま
+    types: [creature]
+    civs: [water]
+    cost: 1
+    power: 1000
+    races: [テスト]
+    text: このクリーチャーがバトルゾーンに出た時、相手の山札の上から1枚目を墓地に置く。
+    abilities:
+      - kind: trigger
+        when: {event: move, to: bz, subject: self}
+        effect:
+          - {op: mill, owner: opp, count: 1}
+
+  - id: T010
+    name: 還流の大精霊
+    types: [creature]
+    civs: [water]
+    cost: 4
+    power: 4000
+    races: [テスト]
+    text: 自分の他のクリーチャーがバトルゾーンに出た時、自分のマナゾーンのカードを1枚アンタップしてもよい。そうした場合、そのクリーチャーを手札に戻す。
+    abilities:
+      - kind: trigger
+        when: {event: move, to: bz, subject: {owner: you, other: true, filter: {types: [creature]}}}
+        effect:
+          - op: may
+            body:
+              - {op: untap, select: {zone: mana, owner: you, filter: {tapped: true}, count: 1}}
+              - {op: bounce, select: {ref: event.subject}}
+
+  - id: T011
+    name: 乱打の呪文
+    types: [spell]
+    civs: [fire]
+    cost: 2
+    text: 自分のクリーチャーを1体破壊する。その後、相手のシールドを1つブレイクする。
+    spell:
+      - op: destroy
+        select: {zone: bz, owner: you, filter: {types: [creature]}, count: 1}
+      - {op: break, player: opp, count: 1}
+
+  - id: T012
+    name: 底なしの知恵
+    types: [spell]
+    civs: [water]
+    cost: 1
+    text: 相手はカードを1枚引く。
+    spell:
+      - {op: draw, player: opp, count: 1}

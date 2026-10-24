@@ -1,0 +1,19 @@
+# キーワード能力の定義（設計判断④⑥）
+# marker: ルール側のフック（攻撃・ブロック・ブレイク処理など）が参照するだけの印
+# macro:  コアDSLの能力に展開されるもの。新しいキーワードはここに足す
+keywords:
+  blocker:        {kind: marker, ja: ブロッカー}
+  speed_attacker: {kind: marker, ja: スピードアタッカー}
+  s_trigger:      {kind: marker, ja: S・トリガー}
+  double_breaker: {kind: marker, ja: W・ブレイカー, breaks: 2}
+  triple_breaker: {kind: marker, ja: T・ブレイカー, breaks: 3}
+  cannot_attack_player: {kind: marker, ja: このクリーチャーは相手プレイヤーを攻撃できない}
+  # 例: マクロ型。「バトルゾーンに出た時、自分の山札の上から1枚目をマナゾーンに置く」
+  mana_boost_cip:
+    kind: macro
+    ja: (テスト用) 出た時マナ加速
+    abilities:
+      - kind: trigger
+        when: {event: move, to: bz, subject: self}
+        effect:
+          - {op: move, select: {zone: deck, owner: you, from_top: 1}, to: mana, reason: put}

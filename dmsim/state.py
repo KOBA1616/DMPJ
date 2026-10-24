@@ -1,0 +1,85 @@
+"""ゲーム状態。純粋なデータだけで構成する（設計判断⑧）。
+
+- クロージャやオブジェクト参照を持たない。カードは整数 cid、参照は [cid, gen]。
+- 乱数の内部状態も state に入れるので、state を複製すれば乱数ごと分岐できる。
+- 実行中の処理（タスクスタック）も state に入れるので、決定待ちのどの時点でも複製・保存・再開できる。
+"""
+from __future__ import annotations
+
+import copy
+import hashlib
+import json
+from dataclasses import asdict, dataclass, field
+
+MASK64 = (1 << 64) - 1
+
+
+def rng_next(state: "GameState") -> int:
+    """splitmix64。Rust 側でも同じ数列を再現できる単純なもの。"""
+    state.rng = (state.rng + 0x9E3779B97F4A7C15) & MASK64
+    z = state.rng
+    z = ((z ^ (z >> 30)) * 0xBF58476D1CE4E5B9) & MASK64
+    z = ((z ^ (z >> 27)) * 0x94D049BB133111EB) & MASK64
+    return z ^ (z >> 31)
+
+
+def rng_below(state: "GameState", n: int) -> int:
+    return rng_next(state) % n
+
+
+@dataclass
+class Card:
+    """物理カード1枚。ゾーンを移動するたびに gen が増え、別のオブジェクトになる（400.5、設計判断①）。"""
+    cid: int
+    defn: str
+    owner: int
+    zone: str = "deck"
+    gen: int = 0
+    controller: int = 0
+    tapped: bool = False
+    face_up: bool = False
+    entered_turn: int = -1
+    under: list[int] = field(default_factory=list)  # 下に重なっているカード（進化元・封印など。設計判断②）
+    top_of: int = -1                                  # 自分が下に重なっている場合、その一番上の cid
+
+
+@dataclass
+class GameState:
+    cards: list[Card]
+    zones: dict[str, list[list[int]]]   # zones[name][player] = cid の列（先頭 = 一番上）。共有ゾーンは player 0 の列を使う
+    hold: list[int] = field(default_factory=list)  # 保留状態（409）。元のゾーンから外れ、どこにも数えない
+    turn: int = 0
+    active: int = 0
+    first_player: int = 0
+    step: str = "start"
+    rng: int = 0
+    pending: list[dict] = field(default_factory=list)      # 待機中の効果（101.4）。各要素は win（解決窓）を持つ
+    windows: list[int] = field(default_factory=list)       # 開いている解決窓のスタック（バトル 701.13、効果中のS・トリガー 101.4g 等）
+    continuous: list[dict] = field(default_factory=list)   # 継続的効果（タイムスタンプ順）
+    tasks: list[dict] = field(default_factory=list)        # 実行中の処理のスタック
+    waiting: dict | None = None                            # 決定待ちの Decision（純データ）
+    result: dict | None = None
+    seq: int = 0                                            # タイムスタンプ／待機順の採番
+    extra_turns: list[int] = field(default_factory=list)
+    turn_counters: dict = field(default_factory=dict)       # 「このターン N 回目」系
+    steps_this_turn: int = 0
+
+    # ---- 参照 ----
+    def ref(self, cid: int) -> list[int]:
+        return [cid, self.cards[cid].gen]
+
+    def alive(self, ref) -> bool:
+        """[cid, gen] がまだ同じオブジェクトを指しているか。移動していたら False（400.8）。"""
+        return ref is not None and self.cards[ref[0]].gen == ref[1]
+
+    def zone(self, name: str, player: int, shared: bool) -> list[int]:
+        return self.zones[name][0 if shared else player]
+
+    def clone(self) -> "GameState":
+        return copy.deepcopy(self)
+
+    def to_json(self) -> str:
+        return json.dumps(asdict(self), ensure_ascii=False, sort_keys=True, separators=(",", ":"))
+
+    def digest(self) -> str:
+        return hashlib.blake2b(self.to_json().encode(), digest_size=16).hexdigest()
