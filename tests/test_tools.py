@@ -437,3 +437,13 @@ def test_local_worker_summary_and_pr_comment_fallback(monkeypatch):
     assert lw.post_pr_comment(31, "j", {"status": "ok"}).startswith("skipped")
     monkeypatch.setattr(lw.shutil, "which", lambda n: "gh")
     assert lw.post_pr_comment("1; rm -rf", "j", {"status": "ok"}).startswith("skipped")
+
+
+def test_local_worker_gh_env_drops_stale_tokens_and_empty_review(monkeypatch, tmp_path):
+    import local_worker as lw
+    monkeypatch.setenv("GITHUB_TOKEN", "bad")
+    monkeypatch.setenv("GH_TOKEN", "bad")
+    assert "GITHUB_TOKEN" not in lw.gh_env() and "GH_TOKEN" not in lw.gh_env()
+    monkeypatch.setattr(lw.subprocess, "run", lambda *a, **k: type("R", (), {"stdout": "", "stderr": "", "returncode": 0})())
+    r = lw.run_routine({"name": "review"}, lw.Git(tmp_path, tmp_path / "w"), None, tmp_path, 1)
+    assert r["status"] == "ok" and "差分なし" in r["text"]

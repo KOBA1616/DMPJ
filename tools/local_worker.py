@@ -159,6 +159,7 @@ def run_routine(job: dict, git: Git, llm, cache: Path, daily_limit: int) -> dict
     if name == "gaps":
         d = data_tree(git)
         out = subprocess.run([sys.executable, "tools/report_gaps.py"], cwd=d, capture_output=True, text=True, encoding="utf-8", errors="replace").stdout or ""
+        job = {**job, "summarize": None}     # report_gaps の出力は集計済み。無料モデルで再要約すると途中で切れて不正確になるので、上位だけをそのまま返す
     elif name == "tests":
         r = subprocess.run([sys.executable, "-m", "pytest", "-q"], cwd=ROOT, capture_output=True, text=True, encoding="utf-8", errors="replace")
         out = lo.digest_pytest((r.stdout or "") + (r.stderr or ""))
@@ -169,7 +170,14 @@ def run_routine(job: dict, git: Git, llm, cache: Path, daily_limit: int) -> dict
         base = str(job.get("base", "origin/main"))
         if not re.fullmatch(r"[\w./-]+", base) or base.startswith("-"):
             return {"status": "error", "error": "base が不正"}
-        out = subprocess.run(["git", "diff", base], cwd=ROOT, capture_output=True, text=True, encoding="utf-8", errors="replace").stdout or ""
+        if job.get("pr") and gh_exe():       # PR 付きなら、その PR の差分をレビューする（PC の main は origin/main と同じで差分が空になるため）
+            out = subprocess.run([gh_exe(), "pr", "diff", str(int(job["pr"]))], cwd=ROOT, env=gh_env(), capture_output=True,
+                                 text=True, encoding="utf-8", errors="replace").stdout or ""
+        else:
+            out = subprocess.run(["git", "diff", base], cwd=ROOT, capture_output=True, text=True, encoding="utf-8",
+                                 errors="replace").stdout or ""
+        if not out.strip():
+            return {"status": "ok", "text": "差分なし（レビュー対象が空）。PR 付きで投入するか、base を指定する"}
         job = {**job, "summarize": "review-diff"}
     else:
         return {"status": "error", "error": f"未知の routine {name!r}（gaps / tests / review / status）"}
@@ -177,7 +185,7 @@ def run_routine(job: dict, git: Git, llm, cache: Path, daily_limit: int) -> dict
     if job.get("summarize"):
         task = job["summarize"] if job["summarize"] in lo.TASKS else "summarize"
         try:
-            r2 = lo.ask(task, out, llm=llm, cache=cache, daily_limit=daily_limit)
+            r2 = lo.ask(task, out, llm=llm, cache=cache, daily_limit=daily_limit, max_chars=12000)
         except lo.Escalate as e:
             return {"status": "escalate", "error": str(e), "text": lo.clip(out, 3000)}
         return {"status": "ok", "text": r2.text, "model": r2.model}
@@ -191,9 +199,18 @@ def summary_line(res: dict) -> str:
     return lo.scrub(f"{head} {first}".strip())[:160]
 
 
+def gh_exe() -> str | None:
+    return next(filter(None, (shutil.which(n) for n in ("gh.exe", "gh"))), None)
+
+
+def gh_env() -> dict:
+    """環境変数の GITHUB_TOKEN / GH_TOKEN は無効なことがあり、gh のキーリング認証より優先されて 401 になる。外して呼ぶ。"""
+    return {k: v for k, v in os.environ.items() if k not in ("GITHUB_TOKEN", "GH_TOKEN", "GH_ENTERPRISE_TOKEN")}
+
+
 def post_pr_comment(pr, jid: str, res: dict) -> str:
     """結果を PR コメントに投稿する（PC の gh 認証を使う）。購読中のセッションにイベントとして届く。失敗してもジョブは失敗にしない。"""
-    exe = next(filter(None, (shutil.which(n) for n in ("gh.exe", "gh"))), None)
+    exe = gh_exe()
     if not exe:
         return "skipped: gh が無い（winget install GitHub.cli → gh auth login）"
     try:
@@ -202,7 +219,7 @@ def post_pr_comment(pr, jid: str, res: dict) -> str:
         return "skipped: pr が数値でない"
     body = f"**ローカルワーカー結果** `{jid}` — {res['status']}\n\n{lo.clip(res.get('text') or res.get('error') or '', 6000)}\n"
     try:
-        r = subprocess.run([exe, "pr", "comment", str(num), "--body-file", "-"], input=lo.scrub(body), cwd=ROOT,
+        r = subprocess.run([exe, "pr", "comment", str(num), "--body-file", "-"], input=lo.scrub(body), cwd=ROOT, env=gh_env(),
                            capture_output=True, text=True, encoding="utf-8", errors="replace", timeout=120)
     except Exception as e:   # noqa: BLE001
         return f"failed: {type(e).__name__}"
