@@ -137,3 +137,50 @@ def test_convert_prompt_is_stable():
     import convert_cards
     a, b = convert_cards.system_prompt(), convert_cards.system_prompt()
     assert a == b and "JSON Schema" in a and "dm01-080" in a
+
+
+def test_fetch_parser_real_layout():
+    """実ページの並び: 名前は h3「名前(収録番号)」、値が空のセル、ツインパクト（表が2組）。"""
+    import fetch_cards
+    page = """<h3>ヘル・スラッシュ(DM6 57/110)</h3><table><tr><th>カードの種類</th><th>呪文</th><th>文明</th><th>闇</th></tr>
+    <tr><th>レアリティ</th><td>U</td><th>パワー</th><td></td></tr><tr><th>コスト</th><td>8</td><th>マナ</th><td>1</td></tr>
+    <tr><th>種族</th><td></td></tr></table><table><tr><th>特殊能力</th></tr><tr><td>相手の山札を見る。</td></tr></table>
+    <table><tr><th>フレーバー</th></tr><tr><td>骨を斬らせて。</td></tr></table>"""
+    row = fetch_cards.parse("dm06-057", page)
+    assert row["name"] == "ヘル・スラッシュ" and row["set_no"] == "DM6 57/110"
+    assert row["card_type"] == "呪文" and row["power"] == "" and row["race"] == "" and row["cost"] == "8"
+    assert row["text"] == "相手の山札を見る。" and fetch_cards.missing_fields(row) == []
+    twin = ("<h3>A(DM1 1/9)</h3><table><tr><th>カードの種類</th><td>クリーチャー</td><th>文明</th><td>火</td></tr>"
+            "<tr><th>パワー</th><td>1000</td></tr><tr><th>特殊能力</th><td>a</td></tr></table>"
+            "<h3>B(DM1 1/9)</h3><table><tr><th>カードの種類</th><td>呪文</td><th>文明</th><td>水</td></tr>"
+            "<tr><th>特殊能力</th><td>b</td></tr></table>")
+    row = fetch_cards.parse("x", twin)
+    assert [f["name"] for f in row["faces"]] == ["A", "B"] and row["faces"][1]["text"] == "b"
+    assert "cost" in fetch_cards.missing_fields(row)      # 取れなかった項目は自己点検で分かる
+
+
+def test_report_gaps_categorizes_errors():
+    """検査エラー文を「足すべき語彙」ごとに分類して集計する。"""
+    import report_gaps
+    c = report_gaps.categorize
+    assert c("abilities[0].effect[1]: unknown op 'reveal'") == ("op", "reveal")
+    assert c("x: op 'draw' has unknown arg 'foo' (allowed: ['count'])") == ("op引数", "draw.foo")
+    assert c("a: unknown zone 'trash'") == ("zone", "trash")
+    assert c("2回とも検査を通らなかった: a: unknown selector keys ['bar']") == ("selectorのキー", "bar")
+    gaps = report_gaps.collect([], [ROOT / "data" / "cards" / "real.yaml"])
+    assert ("注意書き", "未実装/近似") in gaps
+    assert "| 枚数 |" in report_gaps.render(gaps, 5)
+
+
+def test_select_cards_excludes_plain_keeps_peaky():
+    """バニラ・単純なドロー/除去は除外、複数ゾーンをつなぐ・デメリット付きは残る。"""
+    import select_cards as sel
+    plain = [{"id": "a", "text": "ブロッカー\nW・ブレイカー"},
+             {"id": "b", "text": "カードを２枚引く。"},
+             {"id": "c", "text": "相手のクリーチャーを１体選び、破壊する。"},
+             {"id": "d", "text": "S・トリガー（この呪文をシールドゾーンから手札に加える時、コストを支払わずにすぐ唱えてもよい）"}]
+    assert all(sel.score(r)[2] for r in plain)
+    peaky = {"id": "e", "text": "自分の山札の上から２枚を墓地に置き、墓地からクリーチャーを１体バトルゾーンに出す。"
+                                "自分のクリーチャーを１体破壊する。"}
+    pts, why, ex = sel.score(peaky)
+    assert not ex and pts >= 3 and any("複数ゾーン" in w for w in why)

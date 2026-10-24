@@ -29,12 +29,17 @@ python -m dmsim.solitaire --deck deck.yaml --games 1000 --turns 4 --workers 4   
 - `data/cards/raw/*.jsonl` 公式カード詳細ページから取った原文
 - `tools/fetch_cards.py` 公式サイトからカードテキストを取る（手元のPCで実行。3秒以上の間隔・HTMLをキャッシュ）
 - `tools/convert_cards.py` 原文を効果DSLに変換する（Claude API。`pip install anthropic`、`ANTHROPIC_API_KEY` が必要）
+- `tools/select_cards.py` 取得済みの原文から凡庸なカードを除き、ピーキーなカードを点数順に選ぶ（基準は `docs/card-selection.md`）
+- `tools/report_gaps.py` 変換できなかった理由（足りない op・語彙）を枚数順に集計する
 - 参照ルール: 総合ゲームルール Ver.1.53（公式PDF。リポジトリには含めない）
 
 ## カードを増やす手順
 
-1. `python tools/fetch_cards.py <カードID...> --out data/cards/raw/official_YYYYMMDD.jsonl`（手元のPCで）
-2. `python tools/convert_cards.py data/cards/raw/official_YYYYMMDD.jsonl`（`data/cards/converted.yaml` に出る。
-   検査を通らなかったものは `data/cards/raw/rejects.jsonl`）
-3. `python -m dmsim.devserver` の「カード」タブで「試す」→ 動かして確かめ、approve / reject を付ける
-4. 確かめたカードを `real.yaml` に移す。動作をテストに残すなら `tests/test_real_cards.py` に足す
+1. `python tools/fetch_cards.py <カードID...> --out data/cards/raw/official_YYYYMMDD.jsonl`（手元のPCで。
+   初回は1枚だけ取り、`--check .cache/official/<id>.html` で項目が拾えているか確かめる。取れていない項目は警告が出る）
+2. `python tools/select_cards.py data/cards/raw/official_YYYYMMDD.jsonl --ids > ids.txt` で変換する価値のあるものを選ぶ
+3. `python tools/convert_cards.py data/cards/raw/official_YYYYMMDD.jsonl --only $(cat ids.txt)`
+   （`data/cards/converted.yaml` に出る。検査を通らなかったものは理由つきで表示され、`data/cards/raw/rejects.jsonl` に残る）
+4. `python tools/report_gaps.py` で足りない op・語彙を確認し、多いものから語彙（`data/rules/`・`ops.py`）に足す
+5. `python -m dmsim.devserver` の「カード」タブで「試す」→ 動かして確かめ、approve / reject を付ける
+6. 確かめたカードを `real.yaml` に移す。動作をテストに残すなら `tests/test_real_cards.py` に足す

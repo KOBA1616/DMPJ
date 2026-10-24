@@ -190,6 +190,7 @@ class PlayTask(TypedDict):
     evo: NotRequired[Ref]                # 進化元（801）
     st: NotRequired[bool]                # S・トリガーとして実行する（101.4g）
     answer: NotRequired[list[int]]
+    resolve_to: NotRequired[str]         # 解決後の行き先ゾーン（呪文の再利用など）
 
 
 class EnqueueStTask(TypedDict):
