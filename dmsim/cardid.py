@@ -7,6 +7,7 @@
   set_code("DMRP1")            -> "dmrp01"
 弾の表記: 英字+数字だけ（DM-06, DMRP1）は数字を2桁にする。途中に英字が入るもの（DM22-EX2, DMR16G）はそのまま。
 カード番号: 数字は3桁、先頭に英字が付くもの（S3, W2）は 英字+2桁（足りない桁だけ 0 で埋める。CHO005 は CHO005 のまま）。
+数字の後ろにも英字が付く番号（SEC001CHO, 001X, 01B）は整形せず、小文字にして公式のまま使う。
 """
 from __future__ import annotations
 
@@ -29,7 +30,7 @@ def card_number(n: str) -> str:
     n = re.sub(r"[\s_\-]+", "", n.strip().lower())
     m = _NUM.match(n)
     if not m:
-        raise ValueError(f"bad card number: {n!r}")
+        return n        # SEC001CHO, 001X, m001STAR のように末尾にも文字がある番号は、公式のまま（小文字）で使う
     letters, digits = m.groups()
     return f"{letters}{digits.zfill(2)}" if letters else digits.zfill(3)   # 桁数が足りない時だけ 0 で埋める（CHO005 は CHO005 のまま）
 

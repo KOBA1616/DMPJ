@@ -1,0 +1,44 @@
+# 実カード（語彙拡張: 選ばれない・選ばれた時・バトル相手の置換）。原文は cards-raw/dmrp01 ブランチの data/cards/raw/dmrp01.jsonl。
+# 追加した語彙: permissions の be_chosen（相手の効果に選ばれない）、イベント choose（相手がカードを選んだ時）、
+#   イベント battle の置換（instead: [{op: battle_substitute}] = 「かわりにこのクリーチャーにバトルさせてもよい」）。
+cards:
+  - id: dmrp01-001
+    name: 三冠王者 ドツキング
+    types: [creature]
+    civs: [zero]
+    cost: 6
+    power: 6000
+    races: [ジョーカーズ]
+    keywords: [double_breaker]
+    text: "W・ブレイカー / 自分の他のジョーカーズが相手のクリーチャーとバトルする時、かわりにこのクリーチャーにバトルさせてもよい。 / このクリーチャーがバトルに勝った時、カードを１枚引く。"
+    abilities:
+      - kind: replace
+        optional: true
+        when: {event: battle, subject: {owner: you, other: true, filter: {race_has: ジョーカーズ}}}
+        instead:
+          - {op: battle_substitute}
+      - kind: trigger
+        when: {event: battle_win, subject: self}
+        effect:
+          - {op: draw, player: you, count: 1}
+    source: {official: dmrp01-001, review: pending, notes: "身代わりバトル。バトル相手を差し替えるのでスレイヤー持ちとの相打ちや、ブロッカー代わりの盾役になる。バトルに勝つと1枚ドロー"}
+
+  - id: dmrp01-003
+    name: 緑知銀 サモハン
+    types: [creature]
+    civs: [light]
+    cost: 5
+    power: 5000
+    races: [メタリカ]
+    text: "自分のクリーチャーを相手が選ぶ時、自分の他のクリーチャーは選べない。（ただし、自分の他のクリーチャーを攻撃またはブロックしてもよい） / 相手がこのクリーチャーを選んだ時、カードを２枚引いてもよい。"
+    abilities:
+      - kind: static
+        affects: {owner: you, other: true, filter: {types: [creature]}}
+        mod: {deny: [be_chosen]}
+      - kind: trigger
+        when: {event: choose, subject: self, player: opp}
+        effect:
+          - op: may
+            body:
+              - {op: draw, player: you, count: 2}
+    source: {official: dmrp01-003, review: pending, notes: "相手の効果の対象がサモハンに絞られる。選ばれるたびに2枚引ける（選ばれ続けるほど山札が減る）。攻撃・ブロックは「選ぶ」ではないので制限されない"}

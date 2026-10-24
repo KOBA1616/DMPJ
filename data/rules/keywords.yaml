@@ -61,6 +61,10 @@ keywords:
     ja: チャージャー（この呪文を唱えた後、墓地に置くかわりに自分のマナゾーンに置く）
     abilities: []
     card: {resolve_to: mana}
+  spell_to_hand:      # 試験用: この呪文を唱えた後、墓地に置くかわりに手札に戻す（回収型呪文のループ検証）
+    ja: この呪文を唱えた後、墓地に置くかわりに手札に戻す
+    abilities: []
+    card: {resolve_to: hand}
   evo_charger:
     ja: Evoチャージャー（チャージャーの後、マナのクリーチャー1体を自分の進化クリーチャーの下に重ねてもよい）
     abilities: []
@@ -72,3 +76,15 @@ keywords:
             - op: put_under
               select: {zone: mana, owner: you, filter: {types: [creature]}, count: 1}
               onto: {zone: bz, owner: you, filter: {types: [evolution]}, count: 1}
+
+  # EXライフ: 出す時に山札の上1枚をシールド化して紐付け、離れる時はかわりにそのシールドを墓地に置く。
+  # シールド化は engine/events.py の _exlife_shield（出す時の状態定義。出た時の能力より先）。
+  # 公式総合ルール Ver.1.53 には定義がない（701.33b の例で名前が出るだけ）。公式カード・裁定による。
+  ex_life:
+    ja: EXライフ
+    abilities:
+      - kind: replace
+        when: {event: move, from: bz, subject: self}
+        if: {exists: {exlife_of: self}}
+        instead:
+          - {op: move, select: {exlife_of: self, count: 1}, to: graveyard, reason: put}

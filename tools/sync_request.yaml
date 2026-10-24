@@ -6,3 +6,4 @@ task: fetch
 products: all
 max_minutes: 330
 # 再実行 2026-10-24T14:20:10Z
+# 再実行(ID正規化の修正後) 2026-10-24T14:35:25Z

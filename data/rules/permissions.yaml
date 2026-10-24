@@ -11,6 +11,7 @@ actions:
   be_blocked:            {default: true,  rule: "507.1a", other: blocker,  ja: ブロックされる}
   s_trigger:             {default: false, rule: "113.6",  ja: S・トリガーとして使える}
   untap_at_start:        {default: true,  rule: "501.1",  ja: ターンのはじめにアンタップする}
+  enter_bz:              {default: true,  rule: "unverified", ja: バトルゾーンに出せる（「コスト７以下のクリーチャーを出せない」。召喚・効果・革命チェンジすべて）}
   summon:                {default: true,  rule: "601",    ja: 召喚できる}
   cast:                  {default: true,  rule: "601",    ja: 唱えられる}
   slayer:                {default: false, rule: "unverified", ja: バトルで負けた時、相手も破壊する}
