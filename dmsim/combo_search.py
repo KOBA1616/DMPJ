@@ -130,6 +130,17 @@ def search_setup(rules, spec: dict, zone: str, pool: list[str], *, slots: int = 
     return sorted((c for c, _ in cands), key=lambda c: (-c.rate, c.mean_turn if c.mean_turn is not None else 99))
 
 
+def package_search(rules, pool: list[str], *, copies_fixed: int = 4, max_cards: int = 2, max_packages: int = 5,
+                   **kw) -> list[tuple[list[str], list[Candidate]]]:
+    """ゾーン変換グラフが出したループ候補（部品の組）を固定し、残りの枠を探索する。kw は search に渡す。"""
+    from .zone_graph import find_cycles
+    out = []
+    for cy in find_cycles(rules, max_cards=max_cards)[:max_packages]:
+        fixed = {c: copies_fixed for c in cy.cards}
+        out.append((cy.cards, search(rules, fixed, pool, **kw)))
+    return out
+
+
 def main(argv=None):
     import argparse
     from pathlib import Path
@@ -138,6 +149,8 @@ def main(argv=None):
     ap = argparse.ArgumentParser(description="部品を固定して残りのカードを探索する")
     ap.add_argument("--fix", action="append", default=[], metavar="ID:枚数", help="固定する部品（複数可）")
     ap.add_argument("--pool", help="候補プール（カードIDをカンマ区切り）。省略時は実カード全部")
+    ap.add_argument("--from-cycles", type=int, default=0, metavar="N",
+                    help="ゾーン変換グラフのループ候補の上位 N 組を固定部品にして、それぞれ残りを探索する（--fix は使わない）")
     ap.add_argument("--setup", help="配置を固定する spec（YAML。dmsim.scenario の形）。指定すると山札探索ではなく配置探索になる")
     ap.add_argument("--fill-zone", default="hand", help="--setup で候補を足すゾーン")
     ap.add_argument("--slots", type=int, default=2, help="候補から選ぶカードの種類数")
@@ -179,6 +192,15 @@ def main(argv=None):
         if a.out:
             Path(a.out).write_text(json.dumps([c.__dict__ | {"extra": list(c.extra)} for c in res],
                                               ensure_ascii=False, indent=1, default=str), encoding="utf-8")
+        return
+    if a.from_cycles:
+        for cards, res in package_search(rules, pool, max_packages=a.from_cycles, slots=a.slots, copies=a.copies,
+                                         filler=a.filler, deck_size=a.deck_size, turns=a.turns, games=a.games,
+                                         finalists=a.finalists, finalist_games=a.finalist_games,
+                                         max_decks=a.max_decks, workers=a.workers, budget=a.budget, seed=a.seed):
+            print("部品:", " + ".join(rules.cards[c].name for c in cards))
+            for c in res[:a.top]:
+                print(f"  {c.rate:5.1%} ({c.games}局) {', '.join(rules.cards[x].name for x in c.extra)}")
         return
     res = search(rules, fixed, pool, slots=a.slots, copies=a.copies, filler=a.filler, deck_size=a.deck_size,
                  turns=a.turns, games=a.games, finalists=a.finalists, finalist_games=a.finalist_games,

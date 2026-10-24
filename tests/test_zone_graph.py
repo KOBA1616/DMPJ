@@ -30,3 +30,19 @@ def test_saga_is_a_single_card_cycle_with_the_same_delta_as_the_detector(rules):
 def test_no_cycle_for_cards_that_do_not_feed_each_other(rules):
     names = {c for cy in find_cycles(rules, max_cards=2) for c in cy.cards}
     assert "dm01-001" not in names           # グラン・ギューレ（ループと無関係）
+
+
+def test_package_search_uses_cycle_cards_as_fixed_parts(rules):
+    from dmsim.combo_search import package_search
+    out = package_search(rules, ["T001", "dm01-001"], max_packages=1, slots=1, copies=2, games=1,
+                         finalists=1, finalist_games=1, turns=1, budget=20)
+    cards, res = out[0]
+    assert cards and all(c in rules.cards for c in cards)
+    assert all(all(x in c.deck for x in cards) for c in res)       # 部品はすべての構成に入っている
+
+
+def test_dig_and_speed_metrics(rules):
+    from dmsim.pool_metrics import dig, dig_total, speed
+    assert dig(rules.cards["dm22ex1-025"]) >= 5            # イザナギテラス: 山札の上5枚
+    assert speed(rules.cards["dm22ex1-025"]) == 4
+    assert dig_total(rules, ["dm22ex1-025"] * 2) == 2 * dig(rules.cards["dm22ex1-025"])
