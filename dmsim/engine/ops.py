@@ -156,13 +156,17 @@ def op_delayed_trigger(eng, t, op, env):
                       "once": op.get("once", True)})
 
 
-@op("play_free", select="selector", **{"as": "str?"})
+@op("play_free", select="selector", resolve_to="zone?", **{"as": "str?"})
 def op_play_free(eng, t, op, env):
-    """コストを支払わずに召喚する／唱える（112.3g: 召喚・詠唱したことになる）。ツインパクトはクリーチャー側。"""
+    """コストを支払わずに召喚する／唱える（112.3g: 召喚・詠唱したことになる）。ツインパクトはクリーチャー側。
+    resolve_to: 唱えた呪文を解決後に墓地ではなくそのゾーンに置く（「唱えた後、墓地に置くかわりに手札に加える」）。"""
     cids, d = eng.select(t, op["select"], env)
     if d:
         return d
     tasks = [eng.play_task(c, env["you"], True, 0 if eng.cdef(c).faces else None) for c in cids]
+    if "resolve_to" in op:
+        for x in tasks:
+            x["resolve_to"] = op["resolve_to"]
     if "as" in op:
         tasks.append({"t": "bind", "env": env, "name": op["as"], "cids": cids, "zone": "bz"})
     eng._defer(t, tasks)

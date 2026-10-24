@@ -50,6 +50,8 @@ class SelectorMixin:
             return False
         if "civs" in f and not set(f["civs"]) & set(ch["civs"]):
             return False
+        if "not_civs" in f and set(f["not_civs"]) & set(ch["civs"]):
+            return False
         if "races" in f and not set(f["races"]) & set(ch["races"]):
             return False
         if "name" in f and ch["name"] != f["name"]:
@@ -76,7 +78,8 @@ class SelectorMixin:
                 refs = [env["event"]["subject"]]
             else:
                 refs = env.get("vars", {}).get(r, [])
-            return [x[0] for x in refs if s.alive(x)]
+            f = sel.get("filter")   # 「その中の水のカード」: 変数のカードをさらに絞る
+            return [x[0] for x in refs if s.alive(x) and (not f or self.filter_match(x[0], f))]
         if "owner_of" in sel:   # 「持ち主の〜」「そのプレイヤーの〜」: 変数のカードの持ち主
             refs = env.get("vars", {}).get(sel["owner_of"], [])
             players = sorted({s.cards[r[0]].owner for r in refs})
@@ -98,9 +101,9 @@ class SelectorMixin:
                     out.append(cid)
         return out
 
-    def _card_option(self, cid: int, **extra) -> dict:
+    def _card_option(self, cid: int, look: bool = False, **extra) -> dict:
         c = self.s.cards[cid]
-        hidden = c.zone in ("shield", "deck")
+        hidden = c.zone in ("shield", "deck") and not look
         o = {"cid": cid, "key": c.zone if hidden else f"{c.zone}:{c.defn}:{int(c.tapped)}",
              "name": "?" if hidden else self.cdef(cid).name}
         o.update(extra)
@@ -112,7 +115,8 @@ class SelectorMixin:
         if "chosen" in t.get("os", {}):
             return t["os"]["chosen"], None
         cands = self.candidates(sel, env)
-        if "ref" in sel or "from_top" in sel or sel.get("count", 1) == "all":
+        if ("ref" in sel and "count" not in sel) or ("from_top" in sel and "count" not in sel) \
+                or sel.get("count", 1) == "all":
             return cands, None
         n = self.eval_expr(sel.get("count", 1), env)
         mx = min(n, len(cands))
@@ -120,7 +124,7 @@ class SelectorMixin:
         if mx == 0:
             return [], None
         chooser = self._rel(sel.get("chooser", "you"), env)
-        a, d = self.ask(t, chooser, "choose_cards", [self._card_option(c) for c in cands], mn, mx)
+        a, d = self.ask(t, chooser, "choose_cards", [self._card_option(c, sel.get("look", False)) for c in cands], mn, mx)
         if d:
             return None, d
         chosen = [cands[i] for i in a]

@@ -215,6 +215,10 @@ class EventMixin:
         """誘発チェック。離れた時の誘発で過去の状態を見るのは、その能力を持つカード自身だけ（603.5d）。"""
         s = self.s
         sources = [(c, None) for c in self.bz_tops()]
+        zt = self.rules.zone_trigger_defs
+        if zt:   # 墓地などで機能する誘発型能力（《黒神龍グールジェネレイド》など）
+            for z in sorted({z for v in zt.values() for z in v}):
+                sources += [(c, None) for p in (0, 1) for c in self.zlist(z, p) if s.cards[c].defn in zt]
         lki = rec.get("lki")
         if lki and lki["zone"] == "bz" and rec.get("to") != "bz":
             sources.append((rec["subject"][0], lki))
@@ -223,11 +227,12 @@ class EventMixin:
             if lsrc:
                 face = lsrc["face"]
                 abs_ = list(enumerate(self.rules.cards[lsrc["defn"]].face(None if face < 0 else face).abilities))
-                abs_ = [(i, ab) for i, ab in abs_ if ab["kind"] == "trigger"]
+                abs_ = [(i, ab) for i, ab in abs_ if ab["kind"] == "trigger" and ab.get("zone", "bz") == "bz"]
                 defn = lsrc["defn"]
             else:
                 face = s.cards[src].face
-                abs_ = self.abilities(src, "trigger")
+                abs_ = [(i, ab) for i, ab in self.abilities(src, "trigger")
+                        if ab.get("zone", "bz") == s.cards[src].zone]
                 defn = s.cards[src].defn
             for i, ab in abs_:
                 if not self._pattern_match(ab["when"], rec, src, lsrc):
