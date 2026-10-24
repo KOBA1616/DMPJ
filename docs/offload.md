@@ -76,6 +76,12 @@ Claude / Actions ──jobs/pending/*.yaml──▶ llm-jobs ブランチ ◀─
    opencode run -m opencode/glm-5.3-flash-free "hello"
    ```
    一覧にさらに高性能な `-free` モデルがあれば、公式 https://opencode.ai/docs/zen/ で $0 と確認し、`tools/llm_offload/providers.py` の `OPENCODE_FREE_MODELS` に足してから `--model` で指定する。
+   デスクトップアプリも入れている場合、`Database is not empty and has no session table` で失敗することがある。CLI 専用の保存先を使うと通る（動作確認済み）:
+   ```
+   $env:XDG_DATA_HOME = "$env:USERPROFILE\.dmpj-worker\xdg"
+   $env:XDG_CONFIG_HOME = "$env:USERPROFILE\.dmpj-worker\xdg-config"
+   ```
+   `tools\run_worker.bat` には設定済み。手動で `local_worker.py` を動かす時は同じ PowerShell で上の2行を先に実行する。
 4. 手動で1回試す:
    ```
    python tools\local_worker.py enqueue ask --task summarize --instruction "要点3行で" --file README.md
