@@ -18,7 +18,7 @@ OPS: dict = {}
 OP_ARGS: dict[str, dict[str, str]] = {}
 STEPS: dict = {}
 
-ARG_TYPES = {"selector", "zone", "reason", "expr", "cond", "ops", "player", "mod", "duration",
+ARG_TYPES = {"selector", "zone", "reason", "expr", "cond", "ops", "player", "players", "mod", "duration",
              "position", "step", "str", "int", "bool", "any", "ability"}
 
 

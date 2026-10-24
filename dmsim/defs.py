@@ -191,6 +191,8 @@ class Checker:
             raise DefError(f"{where}: unknown reason '{v}'")
         if ty == "player" and v not in ("you", "opp"):
             raise DefError(f"{where}: player must be you/opp, got '{v}'")
+        if ty == "players" and v not in ("you", "opp", "each"):
+            raise DefError(f"{where}: players must be you/opp/each, got '{v}'")
         if ty == "position" and v not in POSITIONS:
             raise DefError(f"{where}: unknown position '{v}'")
         if ty == "step" and v not in self.steps:

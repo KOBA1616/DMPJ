@@ -61,14 +61,33 @@ def test_own_deck_out_stops_the_effect(rr):
     assert len(e.zlist("hand", 0)) == hand - 1 + 1
 
 
-def test_both_decks_out_at_once_is_a_draw(rr):
-    """104.2b / 703.4b 両者の山札が同時に0枚 → 双方が敗北条件を満たすので引き分け（winner None）として扱う。
-    条文に明記はない。104.2c の「勝利を優先」はカードの効果による勝敗についての規定なので適用しない。"""
+def test_both_decks_out_at_once_turn_player_loses(rr):
+    """104.2b / 703.4b 両者の山札が同時に0枚になったら、ターン・プレイヤーの敗北とする。
+    条文に明記はなく、プロジェクトの裁定（2026-10-24）。"""
     e = setup(rr, {"hand": ["R012"], "mana": ["T003"]}, deck_left=[1, 1])
     answer(e, "charge", "pass")
     answer(e, "main", "play:R012")
     assert e.advance() is None
-    assert e.s.result == {"winner": None, "reason": "deck_out", "turn": 1}
+    assert e.s.result == {"winner": 1, "reason": "deck_out", "turn": 1}
+
+
+def test_each_player_draws_turn_player_first(rr):
+    """114.2a 各プレイヤーが引く時は、ターン・プレイヤーが指定枚数を引いてから非ターン・プレイヤーが引く。
+    先に引いたターン・プレイヤーの山札が尽きれば、その時点で負け（相手はまだ引いていない）。"""
+    e = setup(rr, {}, {}, deck_left=[1, 1])
+    run_ops(e, [{"op": "draw", "player": "each", "count": 1}])
+    assert e.advance() is None
+    assert e.s.result == {"winner": 1, "reason": "deck_out", "turn": 1}
+    assert len(e.zlist("deck", 1)) == 1
+
+
+def test_each_player_draws_count_each(rr):
+    """114.2 / 114.2a 「各プレイヤーは2枚引く」= ターン・プレイヤー2回 → 非ターン・プレイヤー2回。"""
+    e = setup(rr, {}, {})
+    h0, h1 = len(e.zlist("hand", 0)), len(e.zlist("hand", 1))
+    run_ops(e, [{"op": "draw", "player": "each", "count": 2}])
+    e.advance()
+    assert len(e.zlist("hand", 0)) == h0 + 2 and len(e.zlist("hand", 1)) >= h1 + 2
 
 
 def test_deck_out_by_putting_under_a_creature(rr):
@@ -181,6 +200,23 @@ def test_simultaneous_events_each_get_a_replacement(rr):
     assert names(e, "mana", 0).count("T007") == 1 and names(e, "graveyard", 0).count("T007") == 1
 
 
+def test_turn_player_decides_all_replacements_first(rr):
+    """609.9a 同時に起こる複数のイベントでは、まずターン・プレイヤーが全イベント分の置換を決め、
+    その後に非ターン・プレイヤーが決める（束の中で相手のイベントが先に並んでいても）。"""
+    e = setup(rr, {"bz": ["T007"]}, {"bz": ["T007"]})
+    mine, theirs = e.bz_tops(0)[0], e.bz_tops(1)[0]
+    e.s.tasks.append(e.ev_task([{"ev": "move", "subject": e.s.ref(c), "to": "graveyard", "reason": "destroy"}
+                                for c in (theirs, mine)]))
+    d = e.advance()
+    assert d["kind"] == "choose_replacement" and d["player"] == 0
+    e.answer([keys(d).index("replace:T007:0")])
+    d = e.advance()
+    assert d["kind"] == "choose_replacement" and d["player"] == 1
+    e.answer([keys(d).index("decline")])
+    e.advance()
+    assert names(e, "mana", 0) == ["T007"] and names(e, "graveyard", 1) == ["T007"]
+
+
 # ---- 603 誘発型能力 ----
 
 def test_leave_trigger_sees_only_itself_when_all_destroyed(rr):
@@ -285,3 +321,14 @@ def test_strigger_creature_etb_is_a_separate_effect(rr):
     d = e.advance()
     assert d["kind"] == "yes_no" and d["player"] == 1           # R010 の「出た時」
     assert names(e, "graveyard", 0) == ["T005"]                 # T006 はもう解決している
+
+
+def test_both_players_cards_enter_turn_player_first(rr):
+    """114.2a / 409.1e 両プレイヤーのカードを1枚ずつバトルゾーンに出す時は、ターン・プレイヤーのカードが先。"""
+    e = setup(rr, {}, {}, filler="T001")
+    e.s.active = 1
+    run_ops(e, [{"op": "move", "select": {"zone": "deck", "owner": "any", "from_top": 1}, "to": "bz",
+                 "reason": "put"}])
+    e.advance()
+    first, second = sorted(e.bz_tops(), key=lambda c: e.s.cards[c].entered_seq)
+    assert e.s.cards[first].owner == 1 and e.s.cards[second].owner == 0
