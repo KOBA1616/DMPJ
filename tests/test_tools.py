@@ -304,3 +304,92 @@ def test_auto_convert_limit_status_and_retry_only_on_vocab_change(tmp_path, monk
     assert (st["converted"], st["pending"], st["vocab_hash"]) == (2, 1, "h1")
     ac.main(["--limit", "2", "--interval", "0"])
     assert seen[2:] == ["ta_a"]
+
+
+def test_llm_offload_guards(tmp_path):
+    """無料モデル共通層: 秘密を伏せる・切り詰める・キャッシュ・日次上限・失敗は Escalate・課金系は Fatal。"""
+    import llm_offload as lo
+    import pytest
+    assert "SECRET123456789" not in lo.scrub("api_key=SECRET123456789 and sk-abcdefghijklmnop1234")
+    assert len(lo.clip("x" * 1000, 100)) < 200
+
+    class LLM:
+        model = "glm-5.3-flash-free"
+        n = 0
+
+        def complete(self, sysp, messages, effort, usage):
+            self.n += 1
+            return "要約"
+    llm = LLM()
+    r = lo.ask("summarize", "text", llm=llm, cache=tmp_path)
+    assert r.text == "要約" and not r.cached
+    assert lo.ask("summarize", "text", llm=llm, cache=tmp_path).cached and llm.n == 1
+    with pytest.raises(lo.Escalate):
+        lo.ask("summarize", "other", llm=llm, cache=tmp_path, daily_limit=1)
+
+    class Bad:
+        model = "m"
+
+        def complete(self, *a):
+            raise RuntimeError("HTTP 429")
+    with pytest.raises(lo.Escalate):
+        lo.ask("summarize", "t2", llm=Bad(), cache=tmp_path)
+
+    class Paid:
+        model = "m"
+
+        def complete(self, *a):
+            raise lo.Fatal("billing")
+    with pytest.raises(lo.Fatal):
+        lo.ask("summarize", "t3", llm=Paid(), cache=tmp_path)
+    for p in ("anthropic", "openai"):
+        with pytest.raises(lo.Fatal):
+            lo.make_llm(p)
+
+
+def test_llm_offload_rule_based_helpers(tmp_path):
+    import llm_offload as lo
+    d = lo.digest_pytest("....\nFAILED tests/a.py::t - assert 1\nE   assert 1 == 2\n" + "ok\n" * 100 + "1 failed, 5 passed")
+    assert "FAILED tests/a.py::t" in d and "1 failed" in d and d.count("ok") <= 15
+    assert lo.affected_tests(["dmsim/engine/core.py"]) is None
+    assert "tests/test_dedupe_cards.py" in lo.affected_tests(["tools/dedupe_cards.py"])
+
+
+def test_local_worker_ask_roundtrip(tmp_path):
+    """ジョブ投入→ワーカー処理→結果が llm-jobs ブランチに戻る（ローカルの bare リポジトリで検証）。"""
+    import subprocess
+
+    import local_worker as lw
+    import yaml as _yaml
+    bare, clone = tmp_path / "remote.git", tmp_path / "clone"
+    subprocess.run(["git", "init", "-q", "--bare", str(bare)], check=True)
+    subprocess.run(["git", "clone", "-q", str(bare), str(clone)], check=True, capture_output=True)
+    for k, v in (("user.name", "t"), ("user.email", "t@t")):
+        subprocess.run(["git", "config", k, v], cwd=clone, check=True)
+    g = lw.Git(clone, tmp_path / "work")
+    jid = lw.enqueue(g, {"type": "ask", "task": "summarize", "input": "api_key=SECRET123456789 本文"})
+
+    class LLM:
+        model = "glm-5.3-flash-free"
+        seen = ""
+
+        def complete(self, sysp, messages, effort, usage):
+            LLM.seen = messages[0]["content"]
+            return "要約結果"
+    assert lw.process(g, lambda m: LLM()) == [f"{jid}:ok"]
+    assert "SECRET123456789" not in LLM.seen
+    chk = tmp_path / "chk"
+    subprocess.run(["git", "clone", "-q", "-b", "llm-jobs", str(bare), str(chk)], check=True, capture_output=True)
+    res = _yaml.safe_load((chk / "jobs" / "done" / f"{jid}.yaml").read_text(encoding="utf-8"))
+    assert res["status"] == "ok" and res["text"] == "要約結果"
+    assert not (chk / "jobs" / "pending" / f"{jid}.yaml").exists()
+    assert lw.process(g, lambda m: LLM()) == []
+
+
+def test_local_worker_routine_allowlist(tmp_path):
+    """routine は決まった名前だけ。未知の名前・不正な base は実行せずエラーにする。"""
+    import local_worker as lw
+    g = lw.Git(tmp_path, tmp_path / "w")
+    assert lw.run_routine({"name": "rm -rf /"}, g, None, tmp_path, 1)["status"] == "error"
+    assert lw.run_routine({"name": "review", "base": "--output=x"}, g, None, tmp_path, 1)["status"] == "error"
+    assert lw.run_routine({"name": "status"}, g, None, tmp_path, 1)["status"] == "ok"
