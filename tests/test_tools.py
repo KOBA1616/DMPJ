@@ -353,3 +353,34 @@ def test_llm_offload_rule_based_helpers(tmp_path):
     assert "FAILED tests/a.py::t" in d and "1 failed" in d and d.count("ok") <= 15
     assert lo.affected_tests(["dmsim/engine/core.py"]) is None
     assert "tests/test_dedupe_cards.py" in lo.affected_tests(["tools/dedupe_cards.py"])
+
+
+def test_local_worker_ask_roundtrip(tmp_path):
+    """ジョブ投入→ワーカー処理→結果が llm-jobs ブランチに戻る（ローカルの bare リポジトリで検証）。"""
+    import subprocess
+
+    import local_worker as lw
+    import yaml as _yaml
+    bare, clone = tmp_path / "remote.git", tmp_path / "clone"
+    subprocess.run(["git", "init", "-q", "--bare", str(bare)], check=True)
+    subprocess.run(["git", "clone", "-q", str(bare), str(clone)], check=True, capture_output=True)
+    for k, v in (("user.name", "t"), ("user.email", "t@t")):
+        subprocess.run(["git", "config", k, v], cwd=clone, check=True)
+    g = lw.Git(clone, tmp_path / "work")
+    jid = lw.enqueue(g, {"type": "ask", "task": "summarize", "input": "api_key=SECRET123456789 本文"})
+
+    class LLM:
+        model = "glm-5.3-flash-free"
+        seen = ""
+
+        def complete(self, sysp, messages, effort, usage):
+            LLM.seen = messages[0]["content"]
+            return "要約結果"
+    assert lw.process(g, lambda m: LLM()) == [f"{jid}:ok"]
+    assert "SECRET123456789" not in LLM.seen
+    chk = tmp_path / "chk"
+    subprocess.run(["git", "clone", "-q", "-b", "llm-jobs", str(bare), str(chk)], check=True, capture_output=True)
+    res = _yaml.safe_load((chk / "jobs" / "done" / f"{jid}.yaml").read_text(encoding="utf-8"))
+    assert res["status"] == "ok" and res["text"] == "要約結果"
+    assert not (chk / "jobs" / "pending" / f"{jid}.yaml").exists()
+    assert lw.process(g, lambda m: LLM()) == []

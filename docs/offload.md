@@ -45,3 +45,55 @@ python tools/offload.py ask --instruction "この表を civ ごとに数えて" 
 4. 調査・機械的な修正を繰り返す前に、スクリプト化できないか考える（1回書けば以後はトークン0）。
 5. サブエージェントは頼まれた時だけ。仕様の再確認で同じファイルを読み直さない。
 6. 長い報告はファイルにして、返信は結論と1行リンクだけにする。
+
+## 手元のPCで高性能な無料モデルを動かす（ローカルワーカー）
+
+クラウドのセッションから PC には届かないので、**PC が GitHub のジョブを取りに行く**方式。ポート開放も外部へのキー受け渡しも不要。
+
+```
+Claude / Actions ──jobs/pending/*.yaml──▶ llm-jobs ブランチ ◀──取得・結果push── PCのワーカー(OpenCode)
+```
+
+- ジョブ: `type: ask`（`task`, `instruction`, `input`）と `type: convert`（`limit`, `workers`, `interval`, `model`）。
+- 結果: `jobs/done/<id>.yaml`（`status: ok / escalate / error`、`text`）。`escalate` は無料枠切れ等で、Claude が代わりに処理してよい合図。
+- `convert` は cards-data ブランチの作業ツリーに現在の tools/dmsim/語彙を重ねて `auto_convert.py` を実行し、結果を cards-data へ push する（Actions の auto-convert と同じ処理）。
+- 無料モデルの許可リスト検査・課金検知はクラウドと同じ。課金の兆候が出たらワーカー全体が止まる。
+
+### Windows のセットアップ（初回のみ）
+
+1. Git・Python 3.11 以上・Node.js を入れる（`git --version` / `python --version` / `node --version` で確認）。
+2. PowerShell で:
+   ```
+   git clone https://github.com/KOBA1616/DMPJ.git
+   cd DMPJ
+   pip install pyyaml
+   npm i -g opencode-ai
+   ```
+   `git push` できるよう GitHub にログイン済みであること（Git for Windows の資格情報マネージャーで可）。
+3. OpenCode の動作確認（無料モデルが返ること）:
+   ```
+   opencode models
+   opencode run -m opencode/glm-5.3-flash-free "hello"
+   ```
+   一覧にさらに高性能な `-free` モデルがあれば、公式 https://opencode.ai/docs/zen/ で $0 と確認し、`tools/llm_offload/providers.py` の `OPENCODE_FREE_MODELS` に足してから `--model` で指定する。
+4. 手動で1回試す:
+   ```
+   python tools\local_worker.py enqueue ask --task summarize --instruction "要点3行で" --file README.md
+   python tools\local_worker.py run --once
+   python tools\local_worker.py status
+   ```
+   GitHub の `llm-jobs` ブランチ `jobs/done/` に結果が出れば成功。
+
+### 自動化（タスクスケジューラ）
+
+10分ごとに `tools\run_worker.bat` を実行する。PowerShell で（`C:\path\DMPJ` は clone した場所）:
+
+```
+schtasks /Create /SC MINUTE /MO 10 /TN "dmpj-worker" /TR "C:\path\DMPJ\tools\run_worker.bat" /F
+```
+
+- ログ: `%USERPROFILE%\.dmpj-worker\log.txt`。止める: `schtasks /Delete /TN "dmpj-worker" /F`。
+- 二重起動はロック(`.dmpj-worker\lock`)で防ぐ。PC がスリープ中の分は、復帰後の次回にまとめて処理される。
+- 定期的にカード変換を回すなら、`python tools\local_worker.py enqueue convert --limit 100` を投入する（毎回の投入もスケジュールできる）。
+- ローカルで変換する間は、Actions と cards-data が衝突しないよう `tools/auto_convert.yaml` を `enabled: false` にして main に入れる。
+- Mac/Linux は cron: `*/10 * * * * cd ~/DMPJ && python tools/local_worker.py run --once >> ~/.dmpj-worker/log.txt 2>&1`
