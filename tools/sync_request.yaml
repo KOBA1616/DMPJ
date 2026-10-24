@@ -1,6 +1,7 @@
 # このファイルを push すると .github/workflows/sync-cards.yml が動く。
 # task: list（商品の一覧だけ） / catalog（各商品のカードID一覧を台帳へ） / fetch（カード詳細を取得）
 # products: all か、商品の値のカンマ区切り（例: 26ex4,22rp1）。max_minutes: この時間で打ち切る（再実行で続きから）
-task: catalog
+# all は台帳の並び（新しい弾が先）で、未取得の商品を順に取る。
+task: fetch
 products: all
-max_minutes: 150
+max_minutes: 330
