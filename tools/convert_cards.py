@@ -229,10 +229,10 @@ def run(rows: list[dict], client, tables, sysp: str, effort: str, out: Path, rej
                        + yaml.safe_dump({"cards": cards}, allow_unicode=True, sort_keys=False), encoding="utf-8")
         write_jsonl(rejects_path, list(rejects.values()))
 
-    streak = {"n": 0}      # 連続したAPI失敗。無料枠の制限(429)に当たったら残りを打たずに止める
+    streak = {"n": 0}      # 連続したAPI失敗（2回で打ち切り）。無料枠の制限(429)に当たったら残りを打たずに止める
 
     def one(r):
-        if streak["n"] >= 3:
+        if streak["n"] >= 2:
             return
         try:
             card = convert(client, r, tables, sysp, effort, usage)
