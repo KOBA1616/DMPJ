@@ -41,7 +41,12 @@ jobs:
           if not r.get("enabled", True):
               print("auto_sync.yaml: enabled=false のため何もしない")
           else:
-              subprocess.run(["python", "tools/auto_sync.py", "--max-minutes", str(r.get("max_minutes", 300))], check=False)
+              p = subprocess.Popen(["python", "tools/auto_sync.py", "--max-minutes", str(r.get("max_minutes", 300))])
+              while p.poll() is None:      # 20分ごとに途中経過を cards-data へ保存（最後の保存が落ちても失わない）
+                  try:
+                      p.wait(timeout=1200)
+                  except subprocess.TimeoutExpired:
+                      subprocess.run(["bash", "tools/save_data.sh"], check=False)
           PY
       - name: Summary
         if: always()
@@ -49,8 +54,14 @@ jobs:
           if [ -f data/cards/catalog/status.json ]; then { echo '```json'; cat data/cards/catalog/status.json; echo '```'; } >> "$GITHUB_STEP_SUMMARY"; fi
       - name: Commit data
         if: always()
-        run: |
-          git add -f data/cards/catalog
-          if [ -d data/cards/raw/by_product ]; then git add -f data/cards/raw/by_product; fi
-          git commit -m "cards-data: auto $(date -u +%FT%TZ)" || echo "no changes"
-          for i in 1 2 3; do git pull --rebase origin cards-data 2>/dev/null; git push origin HEAD:cards-data && break; sleep 5; done
+        run: bash tools/save_data.sh
+      - name: Keep a copy as artifact
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: cards-data-${{ github.run_id }}
+          path: |
+            data/cards/catalog
+            data/cards/raw/by_product
+          retention-days: 14
+          if-no-files-found: ignore

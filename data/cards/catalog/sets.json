@@ -10017,7 +10017,7 @@
    ],
    "listed": true,
    "total": 156,
-   "fetched": 36
+   "fetched": 156
   },
   "sd18": {
    "name": "DMSD-18 キングマスタースタートデッキ ジェンドルのディスペクター",
@@ -10039,7 +10039,8 @@
     "dmsd18-001"
    ],
    "listed": true,
-   "total": 14
+   "total": 14,
+   "fetched": 14
   },
   "sd17": {
    "name": "DMSD-17 キングマスタースタートデッキ ジョーのスター進化",
@@ -10061,7 +10062,8 @@
     "dmsd17-001"
    ],
    "listed": true,
-   "total": 14
+   "total": 14,
+   "fetched": 14
   },
   "sp02": {
    "name": "DMSP-02 超獣王来烈伝",
@@ -10081,7 +10083,8 @@
     "dmsp02-012"
    ],
    "listed": true,
-   "total": 12
+   "total": 12,
+   "fetched": 12
   },
   "ex14": {
    "name": "DMEX-14 弩闘×十王超ファイナルウォーズ!!!",
@@ -10209,7 +10212,8 @@
     "dmex14-110"
    ],
    "listed": true,
-   "total": 120
+   "total": 120,
+   "fetched": 120
   },
   "pcd01": {
    "name": "DMPCD-01デュエマプレイス・コラボデッキ 超竜の君臨＆天門の降臨",

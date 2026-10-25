@@ -57,6 +57,7 @@ jobs:
           done
           git status --short
           git commit -qm "cards-data: convert $(date -u +%FT%TZ)" || { echo "コミットするものが無い、または失敗"; exit 0; }
+          git reset -q --hard HEAD     # tools/ 等の作業ツリーの差分が rebase を止めるので、コミット済みの結果だけ残す
           for i in 1 2 3 4 5; do
             git fetch origin cards-data && git rebase origin/cards-data && git push origin HEAD:cards-data && exit 0
             echo "push 失敗($i)。再試行"; git rebase --abort 2>/dev/null; sleep $((i * 10))

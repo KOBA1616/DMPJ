@@ -2,6 +2,6 @@
 # 止めたい時: enabled を false にして main に入れる（または Actions → auto-convert → ... → Disable workflow）。
 enabled: true
 model: glm-5.3-flash-free   # 許可リスト（tools/convert_cards.py の OPENCODE_FREE_MODELS）外は拒否される
-limit: 100                  # 1回あたりの上限枚数（新規・再試行それぞれ）
+limit: 50                   # 1回あたりの上限枚数（新規・再試行それぞれ）
 interval: 1                 # リクエスト間隔（秒、全ワーカー合計）
-workers: 2                  # 並列数。上限(429)が出たら1に戻す
+workers: 1                  # 並列数。2にすると opencode CLI の並列起動で本文が返らない失敗が出た(2026-10-24)
