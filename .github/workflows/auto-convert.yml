@@ -35,6 +35,8 @@ jobs:
           git checkout -f cards-data
           git checkout "$GITHUB_SHA" -- tools dmsim data/rules data/cards/proto.yaml data/cards/real.yaml data/cards/real_vocab.yaml data/cards/real_zone.yaml data/cards/raw/official_*.jsonl .github
       - name: Run
+        env:
+          OPENCODE_API_KEY: ${{ secrets.OPENCODE_API_KEY }}   # use_key: true の時だけ CLI に渡す
         run: |
           pip install -q pyyaml
           npm i -g opencode-ai >/dev/null 2>&1 || echo "opencode CLI の導入に失敗"
@@ -43,7 +45,8 @@ jobs:
           r = yaml.safe_load(open("/tmp/auto.yaml"))
           if not r.get("enabled", True):
               print("auto_convert.yaml: enabled=false のため何もしない"); sys.exit(0)
-          env = {k: v for k, v in os.environ.items() if k != "OPENCODE_API_KEY"}   # CLI は匿名の無料枠
+          # use_key: false なら CLI は匿名の無料枠（キーを外す）。true ならリポジトリ Secret のキーを渡す
+          env = {k: v for k, v in os.environ.items() if r.get("use_key", False) or k != "OPENCODE_API_KEY"}
           sys.exit(subprocess.call(["python", "tools/auto_convert.py", "--model", str(r.get("model", "glm-5.3-flash-free")),
                                     "--limit", str(r.get("limit", 20)), "--batch", str(r.get("batch", 5)), "--interval", str(r.get("interval", 6)),
                                     "--workers", str(r.get("workers", 1)), "--timeout", str(r.get("timeout", 1200))], env=env))

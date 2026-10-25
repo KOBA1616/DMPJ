@@ -8,3 +8,4 @@ batch: 5                    # 1単位の枚数。API失敗だけの単位は飛�
 interval: 1                 # リクエスト間隔（秒、全ワーカー合計）
 workers: 1                  # 並列数。2にすると opencode CLI の並列起動で本文が返らない失敗が出た(2026-10-24)
 timeout: 1200               # 1枚の呼び出しの上限秒。超えたら reason: timeout で対象外（rejects）にして次へ
+use_key: true             # 試験運用: Secret OPENCODE_API_KEY を opencode CLI に渡す。false で匿名に戻す（許可リストの -free モデルだけ使い、課金系の応答があれば停止）
