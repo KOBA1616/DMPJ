@@ -10878,7 +10878,8 @@
     "dmex12-dr3"
    ],
    "listed": true,
-   "total": 136
+   "total": 136,
+   "fetched": 136
   },
   "rp14": {
    "name": "DMRP-14 十王篇拡張パック第2弾 爆皇×爆誕 ダイナボルト!!!",
@@ -10995,7 +10996,8 @@
     "dmrp14-km3"
    ],
    "listed": true,
-   "total": 109
+   "total": 109,
+   "fetched": 109
   },
   "ex11": {
    "name": "DMEX-11 Wチームドッキングパック チーム銀河＆チームボンバー",
@@ -11049,7 +11051,8 @@
     "dmex11-042"
    ],
    "listed": true,
-   "total": 46
+   "total": 46,
+   "fetched": 46
   },
   "ex10": {
    "name": "DMEX-10 W王国ドッキングパック 鬼札王国＆不死樹王国",
@@ -11103,7 +11106,8 @@
     "dmex10-042"
    ],
    "listed": true,
-   "total": 46
+   "total": 46,
+   "fetched": 46
   },
   "ex09": {
    "name": "DMEX-09 Wチームドッキングパック チーム切札＆チームウェイブ",
@@ -11157,7 +11161,8 @@
     "dmex09-042"
    ],
    "listed": true,
-   "total": 46
+   "total": 46,
+   "fetched": 46
   },
   "rp13": {
    "name": "DMRP-13 十王篇拡張パック第1弾 切札x鬼札 キングウォーズ!!!",
