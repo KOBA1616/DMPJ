@@ -64,18 +64,20 @@ def main():
     wins = reached = 0
     for i in range(n):
         eng = start(rules, rng)
+        t0 = eng.s.turn
         try:
             dig(eng, rng, stop)
         except Exception as ex:      # 乱数の答えが不正になった試行は捨てる
             continue
         if eng.s.result:
-            wins += eng.s.result.get("winner") == ME
+            wins += eng.s.result.get("winner") == ME and eng.s.result.get("turn") == t0
             continue
         if len(eng.s.zones["deck"][ME]) > stop:
             continue
         reached += 1
         out, _ = TurnSearch(ME, budget).run(eng)
-        if out.s.result and out.s.result.get("winner") == ME:
+        r = out.s.result
+        if r and r.get("winner") == ME and r.get("turn") == t0:      # そのターンのうちの勝ちだけ数える
             wins += 1
     print(f"試行{n}: 探索に到達{reached}, 勝ち{wins}")
 
