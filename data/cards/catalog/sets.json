@@ -14131,7 +14131,8 @@
     "dmex01-066"
    ],
    "listed": true,
-   "total": 90
+   "total": 90,
+   "fetched": 90
   },
   "rp03": {
    "name": "DMRP-03 拡張パック新3弾 気分Ｊ･O･E×２メラ冒険！！",
@@ -14243,7 +14244,8 @@
     "dmrp03-dg01"
    ],
    "listed": true,
-   "total": 104
+   "total": 104,
+   "fetched": 104
   },
   "sp01": {
    "name": "DMSP-01 ステキ！カンペキ！！ジョーデッキーBOX",
@@ -14299,7 +14301,8 @@
     "dmsp01-020"
    ],
    "listed": true,
-   "total": 48
+   "total": 48,
+   "fetched": 48
   },
   "rp02": {
    "name": "DMRP-02 拡張パック新2弾 マジでB・A・Dなラビリンス!!",
