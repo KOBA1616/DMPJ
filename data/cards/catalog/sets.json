@@ -22869,7 +22869,8 @@
     "dmsd03-008"
    ],
    "listed": true,
-   "total": 12
+   "total": 12,
+   "fetched": 12
   },
   "sd02": {
    "name": "DMSD-02 NEWヒーローデッキ キラのラビリンス",
@@ -22889,7 +22890,8 @@
     "dmsd02-008"
    ],
    "listed": true,
-   "total": 12
+   "total": 12,
+   "fetched": 12
   },
   "sd01": {
    "name": "DMSD-01 NEWヒーローデッキ ジョーのジョーカーズ",
@@ -22909,7 +22911,8 @@
     "dmsd01-008"
    ],
    "listed": true,
-   "total": 12
+   "total": 12,
+   "fetched": 12
   },
   "d35": {
    "name": "DMD-35 DXデュエガチャデッキ 禁星の壊者ドキンダム",
@@ -22929,7 +22932,8 @@
     "dmd35-008"
    ],
    "listed": true,
-   "total": 12
+   "total": 12,
+   "fetched": 12
   },
   "d34": {
    "name": "DMD-34 DXデュエガチャデッキ 銀刃の勇者ドギラゴン",
@@ -22950,7 +22954,8 @@
     "dmd34-009"
    ],
    "listed": true,
-   "total": 13
+   "total": 13,
+   "fetched": 13
   },
   "d33": {
    "name": "DMD-33 マスターズ・クロニクル・デッキ　2016　終焉の悪魔神",
@@ -22977,7 +22982,8 @@
     "dmd33-012"
    ],
    "listed": true,
-   "total": 19
+   "total": 19,
+   "fetched": 19
   },
   "d32": {
    "name": "DMD-32 マスターズ・クロニクル・デッキ　2016　聖霊王の創世",
@@ -23000,7 +23006,8 @@
     "dmd32-008"
    ],
    "listed": true,
-   "total": 15
+   "total": 15,
+   "fetched": 15
   },
   "d31": {
    "name": "DMD-31 フィールド・スタート・デッキ バサラの禁断",
@@ -23020,7 +23027,8 @@
     "dmd31-005"
    ],
    "listed": true,
-   "total": 12
+   "total": 12,
+   "fetched": 12
   },
   "d30": {
    "name": "DMD-30 革命スタート・デッキ ルシファーの時間停止",
@@ -23041,7 +23049,8 @@
     "dmd30-007"
    ],
    "listed": true,
-   "total": 13
+   "total": 13,
+   "fetched": 13
   },
   "d29": {
    "name": "DMD-29 革命スタート・デッキ 勝太の疾風速攻",
@@ -23062,7 +23071,8 @@
     "dmd29-008"
    ],
    "listed": true,
-   "total": 13
+   "total": 13,
+   "fetched": 13
   },
   "d28": {
    "name": "DMD-28 カスタム変形デッキ 革命VS侵略 龍極の光文明",
@@ -23089,7 +23099,8 @@
     "dmd28-018"
    ],
    "listed": true,
-   "total": 19
+   "total": 19,
+   "fetched": 19
   },
   "d27": {
    "name": "DMD-27 カスタム変形デッキ 革命VS侵略 爆熱の火文明",
@@ -23117,7 +23128,8 @@
     "dmd27-017"
    ],
    "listed": true,
-   "total": 20
+   "total": 20,
+   "fetched": 20
   },
   "d26": {
    "name": "DMD-26 マスターズ・クロニクル・デッキ サバイバー進化論 α to Ω",
@@ -23142,7 +23154,8 @@
     "dmd26-012"
    ],
    "listed": true,
-   "total": 17
+   "total": 17,
+   "fetched": 17
   },
   "d25": {
    "name": "DMD-25 マスターズ・クロニクル・デッキ ロマノフ 煉獄からの復活",
@@ -23167,7 +23180,8 @@
     "dmd25-009"
    ],
    "listed": true,
-   "total": 17
+   "total": 17,
+   "fetched": 17
   },
   "d24": {
    "name": "DMD-24 マスターズ・クロニクル・デッキ ボルメテウス・リターンズ",
@@ -23212,7 +23226,8 @@
     "dmd24-013"
    ],
    "listed": true,
-   "total": 37
+   "total": 37,
+   "fetched": 37
   },
   "d23": {
    "name": "DMD-23 デュエマ・スタートデッキ 奇跡の光文明",
@@ -23232,7 +23247,8 @@
     "dmd23-004"
    ],
    "listed": true,
-   "total": 12
+   "total": 12,
+   "fetched": 12
   },
   "d22": {
    "name": "DMD-22 デュエマ・スタートデッキ 破滅の闇文明",
@@ -23252,7 +23268,8 @@
     "dmd22-005"
    ],
    "listed": true,
-   "total": 12
+   "total": 12,
+   "fetched": 12
   },
   "d21": {
    "name": "DMD-21 デュエマ・スタートデッキ 無敵の火文明",
@@ -23272,7 +23289,8 @@
     "dmd21-005"
    ],
    "listed": true,
-   "total": 12
+   "total": 12,
+   "fetched": 12
   },
   "d20": {
    "name": "DMD-20 勝利の将龍剣ガイオウバーン",
