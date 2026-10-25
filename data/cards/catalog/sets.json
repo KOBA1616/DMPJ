@@ -14695,7 +14695,7 @@
    ],
    "listed": true,
    "total": 74,
-   "fetched": 42
+   "fetched": 74
   },
   "r23": {
    "name": "DMR-23 革命ファイナル 拡張パック最終章 ドギラゴールデン vs. ドルマゲドンＸ",
@@ -14789,7 +14789,8 @@
     "dmr23-l02"
    ],
    "listed": true,
-   "total": 86
+   "total": 86,
+   "fetched": 86
   },
   "x24": {
    "name": "DMX-24 革命ファイナル 輝け！デュエデミー賞パック",
@@ -14864,7 +14865,11 @@
     "dmx24-Sec5"
    ],
    "listed": true,
-   "total": 67
+   "total": 67,
+   "errors": {
+    "dmx24-004": 1
+   },
+   "fetched": 66
   },
   "r22": {
    "name": "DMR-22 革命ファイナル 第2章 世界は0だ!!ブラックアウト!!",
