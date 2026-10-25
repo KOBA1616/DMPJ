@@ -20120,7 +20120,8 @@
     "dm28-110"
    ],
    "listed": true,
-   "total": 138
+   "total": 138,
+   "fetched": 138
   },
   "c42": {
    "name": "DMC-42 コロコロ・ドリーム・パックIII",
@@ -20218,7 +20219,8 @@
     "dmc42-090"
    ],
    "listed": true,
-   "total": 90
+   "total": 90,
+   "fetched": 90
   },
   "27+1d": {
    "name": "DM-27 極神編 第4弾 完全極神(パーフェクト・ヘヴン)+1DREAM",
@@ -20229,7 +20231,8 @@
     "dm27+1d-003"
    ],
    "listed": true,
-   "total": 3
+   "total": 3,
+   "fetched": 3
   },
   "27": {
    "name": "DM-27 極神編 第4弾 完全極神(パーフェクト・ヘヴン)",
