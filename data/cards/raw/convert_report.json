@@ -1,13 +1,13 @@
 {
  "requested": 50,
  "ok": 0,
- "rejected": 19,
+ "rejected": 0,
  "api_error": 3,
  "usage": {
-  "input": 693724,
+  "input": 0,
   "cache_read": 0,
   "cache_write": 0,
-  "output": 440
+  "output": 0
  },
  "triage": {
   "その他:expected '<document start>', but found '{'": {
@@ -111,16 +111,16 @@
  },
  "api_errors": [
   {
-   "id": "dm24ex1-086",
-   "error": "TimeoutExpired: Command '['/usr/local/bin/opencode', 'run', '-m', 'opencode/glm-5.3-flash-free', '--format', 'json', '添付ファイルの指示に従い、最後の [user] への答えだけを出力して。', '-f', '/tmp/tmpwokm4rkm/prompt.md']' timed out after 600 seconds"
+   "id": "dm22ex1-105",
+   "error": "RuntimeError: opencode が600秒以内に終わらなかった（TimeoutExpired）"
   },
   {
-   "id": "dm24ex2-048",
-   "error": "TimeoutExpired: Command '['/usr/local/bin/opencode', 'run', '-m', 'opencode/glm-5.3-flash-free', '--format', 'json', '添付ファイルの指示に従い、最後の [user] への答えだけを出力して。', '-f', '/tmp/tmplfab0y_2/prompt.md']' timed out after 600 seconds"
+   "id": "dm23rp4-055",
+   "error": "RuntimeError: opencode が600秒以内に終わらなかった（TimeoutExpired）"
   },
   {
-   "id": "dm24ex2-cho043",
-   "error": "TimeoutExpired: Command '['/usr/local/bin/opencode', 'run', '-m', 'opencode/glm-5.3-flash-free', '--format', 'json', '添付ファイルの指示に従い、最後の [user] への答えだけを出力して。', '-f', '/tmp/tmp7dcvklz4/prompt.md']' timed out after 600 seconds"
+   "id": "dm23rp4-20b",
+   "error": "RuntimeError: opencode が600秒以内に終わらなかった（TimeoutExpired）"
   }
  ]
 }
