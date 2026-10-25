@@ -116,16 +116,15 @@ class OpenCodeCLI:
             time.sleep(max(0.0, self._last + self.min_interval - time.monotonic()))
             self._last = time.monotonic()
         with tempfile.TemporaryDirectory() as d:
-            f = Path(d) / "prompt.md"
-            f.write_text(prompt, encoding="utf-8")
             # Windows の npm 版は拡張子なしの sh スクリプトと opencode.cmd が並ぶ。拡張子なしは起動できない(WinError 193)ので .cmd/.exe を先に探す
             exe = next(filter(None, (shutil.which(n) for n in ("opencode.cmd", "opencode.exe", "opencode"))), None)
             if not exe:
                 raise FileNotFoundError("opencode コマンドが PATH にない（npm i -g opencode-ai）")
             try:
+                # 指示は標準入力で渡す。-f の添付だと、モデルが添付を読もうとして tool_use のJSONを本文に出すことがあった
                 r = subprocess.run([exe, "run", "-m", f"opencode/{self.model}", "--format", "json",
-                                    "添付ファイルの指示に従い、最後の [user] への答えだけを出力して。", "-f", str(f)],
-                                   capture_output=True, text=True, encoding="utf-8", errors="replace",
+                                    "標準入力で渡した指示に従い、最後の [user] への答えだけを出力して。ツールは使わない。"],
+                                   input=prompt, capture_output=True, text=True, encoding="utf-8", errors="replace",
                                    timeout=600, cwd=d)
             except subprocess.TimeoutExpired:
                 raise RuntimeError("opencode が600秒以内に終わらなかった（TimeoutExpired）")
@@ -149,4 +148,8 @@ class OpenCodeCLI:
         if not texts:
             kinds = sorted({json.loads(l).get("type", "?") for l in r.stdout.splitlines() if l.startswith("{") and l.endswith("}")} or {"出力なし"})
             raise RuntimeError(f"opencode が本文を返さなかった（イベント: {','.join(kinds)}）")
-        return "".join(texts)
+        body = "".join(texts)
+        if '"type":"tool_use"' in body or '"type": "tool_use"' in body:
+            # ツール呼び出しのJSONが本文に混ざった応答は、カードの誤りではない。検査に回さず一時的な失敗として扱う
+            raise RuntimeError("opencode の本文にツール呼び出しが混入した（tool_use）")
+        return body

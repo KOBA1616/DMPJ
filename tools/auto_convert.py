@@ -54,7 +54,8 @@ def main(argv=None):
         rows = cc.load_rows([str(RAW)])
         done = cc.known_ids(out) | ({c["id"] for c in (yaml.safe_load(out.read_text(encoding="utf-8")) or {}).get("cards") or []}
                                     if out.exists() else set())
-        failed = {r["id"] for r in cc.read_jsonl(rej)}
+        # tool_use の混入で落ちた記録(2026-10-24 の不具合による誤った rejects)は、カードの誤りではないので再度新規扱いにする
+        failed = {r["id"] for r in cc.read_jsonl(rej) if "tool_use" not in r.get("error", "")}
         todo = sorted((r for r in rows if r["id"] not in done and r["id"] not in failed),
                       key=lambda r: len(r.get("text", "")))[:a.limit]
         if todo:
