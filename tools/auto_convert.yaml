@@ -1,7 +1,8 @@
 # 定期自動変換（.github/workflows/auto-convert.yml）の設定。変更を main に入れると反映される。
 # 止めたい時: enabled を false にして main に入れる（または Actions → auto-convert → ... → Disable workflow）。
 enabled: true
-model: glm-5.3-flash-free   # 許可リスト（tools/convert_cards.py の OPENCODE_FREE_MODELS）外は拒否される
+model: deepseek-v4.1-flash-free  # 2026-10-25 glm-5.3-flash-free が150秒超で応答しない状態が続いたため切替（公式で Free・ゼロ保持）。戻すなら glm-5.3-flash-free
+#model: glm-5.3-flash-free # 許可リスト（tools/convert_cards.py の OPENCODE_FREE_MODELS）外は拒否される
 limit: 10                   # 1回あたりの上限枚数（新規・再試行それぞれ）
 batch: 5                    # 1単位の枚数。API失敗だけの単位は飛ばして次の5枚へ（2単位続けて失敗で打ち切り）
 interval: 1                 # リクエスト間隔（秒、全ワーカー合計）
