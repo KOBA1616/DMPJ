@@ -18024,7 +18024,8 @@
     "dmr04-v03"
    ],
    "listed": true,
-   "total": 66
+   "total": 66,
+   "fetched": 66
   },
   "x07": {
    "name": "DMX-07 大乱闘!ヒーローズ・ビクトリー・パック 咆えろ野生の大作戦",
@@ -18056,7 +18057,8 @@
     "dmx07-v01"
    ],
    "listed": true,
-   "total": 24
+   "total": 24,
+   "fetched": 24
   },
   "x06": {
    "name": "DMX-06 大乱闘!ヒーローズ・ビクトリー・パック 燃えるド根性大作戦",
@@ -18088,7 +18090,8 @@
     "dmx06-v01"
    ],
    "listed": true,
-   "total": 24
+   "total": 24,
+   "fetched": 24
   },
   "r03": {
    "name": "DMR-03 エピソード1 ガイアール・ビクトリー",
@@ -18162,7 +18165,8 @@
     "dmr03-v01"
    ],
    "listed": true,
-   "total": 66
+   "total": 66,
+   "fetched": 66
   },
   "x05": {
    "name": "DMX-05 フルホイルパック リバイバル・ヒーロー ザ・エイリアン",
@@ -18192,7 +18196,8 @@
     "dmx05-v01"
    ],
    "listed": true,
-   "total": 22
+   "total": 22,
+   "fetched": 22
   },
   "x04": {
    "name": "DMX-04 フルホイルパック リバイバル・ヒーロー ザ・ハンター",
@@ -18222,7 +18227,8 @@
     "dmx04-v01"
    ],
    "listed": true,
-   "total": 22
+   "total": 22,
+   "fetched": 22
   },
   "r02": {
    "name": "DMR-02 エピソード1 ダークサイド",
@@ -18298,7 +18304,8 @@
     "dmr02-v01"
    ],
    "listed": true,
-   "total": 68
+   "total": 68,
+   "fetched": 68
   },
   "r01": {
    "name": "DMR-01 エピソード1 ファースト・コンタクト",
