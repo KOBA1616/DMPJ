@@ -12439,7 +12439,8 @@
     "dmrp10-g01"
    ],
    "listed": true,
-   "total": 125
+   "total": 125,
+   "fetched": 125
   },
   "sd12": {
    "name": "DMSD-12 超GRスタートデッキ ゼーロのオレガ無月の大罪",
@@ -12466,7 +12467,8 @@
     "dmsd12-007"
    ],
    "listed": true,
-   "total": 19
+   "total": 19,
+   "fetched": 19
   },
   "sd11": {
    "name": "DMSD-11 超GRスタートデッキ キャップのWAVEガチャ・パラダイス",
@@ -12494,7 +12496,8 @@
     "dmsd11-006"
    ],
    "listed": true,
-   "total": 20
+   "total": 20,
+   "fetched": 20
   },
   "sd10": {
    "name": "DMSD-10 超GRスタートデッキ キラのギラミリオン・ギラクシー",
@@ -12521,7 +12524,8 @@
     "dmsd10-010"
    ],
    "listed": true,
-   "total": 19
+   "total": 19,
+   "fetched": 19
   },
   "ex05": {
    "name": "DMEX-05 100%新世界！超GRパック100",
@@ -12629,7 +12633,8 @@
     "dmex05-m03"
    ],
    "listed": true,
-   "total": 100
+   "total": 100,
+   "fetched": 100
   },
   "rp09": {
    "name": "DMRP-09 超天篇 拡張パック第１弾 新世界ガチ誕！超ＧＲとオレガ・オーラ!!",
