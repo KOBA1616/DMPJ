@@ -26001,7 +26001,8 @@
     "promoy20-thankyou20"
    ],
    "listed": true,
-   "total": 105
+   "total": 105,
+   "fetched": 105
   },
   "promoy19": {
    "name": "プロモ限定カード 19期",
@@ -26108,7 +26109,8 @@
     "promoy19-102"
    ],
    "listed": true,
-   "total": 99
+   "total": 99,
+   "fetched": 99
   },
   "promoy18": {
    "name": "プロモ限定カード 18期",
@@ -26204,7 +26206,8 @@
     "promoy18-csp1"
    ],
    "listed": true,
-   "total": 88
+   "total": 88,
+   "fetched": 88
   },
   "promoy17": {
    "name": "プロモ限定カード 17期",
