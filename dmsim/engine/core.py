@@ -228,9 +228,11 @@ class Engine(SelectorMixin, EventMixin, InterpreterMixin, TurnMixin, CombatMixin
               "races": list(d.races), "keywords": set(d.keywords), "name": d.name,
               "allow": [], "deny": [], "breaks": 1, "break_opts": []}
         own = self.abilities(cid, "static") if face is None else list(enumerate(d.abilities))
-        mods = [ab["mod"] for _, ab in own
-                if ab["kind"] == "static" and ab.get("affects") == "self" and ab.get("zone", "bz") == c.zone and "mod" in ab]
         ref = self.s.ref(cid)
+        env_self = {"you": c.controller, "self": ref}
+        mods = [ab["mod"] for _, ab in own
+                if ab["kind"] == "static" and ab.get("affects") == "self" and ab.get("zone", "bz") == c.zone and "mod" in ab
+                and ("if" not in ab or self.eval_cond(ab["if"], env_self))]   # 条件つきの常在型（例:「墓地が13枚より少なければ攻撃できない」）は常に見直す
         cards = self.s.cards
         for src in self.s.zones["bz"][0]:   # バトルゾーンの常在型能力（重ねたカードの下は除く）。affects.zone で他のゾーンのカードにも及ぶ
             if cards[src].top_of >= 0 or not self._affects_others(src):

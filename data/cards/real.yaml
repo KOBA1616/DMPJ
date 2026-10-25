@@ -559,6 +559,58 @@ cards:
           - {op: discard, select: {zone: hand, owner: you, count: 1}}
     source: {official: dm26ex2-071, review: pending, notes: "ツインパクト。呪文面は dmd08-015 と同じ。「２枚まで引く」は1枚ずつ引くかを選ぶ形。クリーチャー面は自分が唱えた時（自身の呪文面を唱えた時は場にないので誘発しない）"}
 
+  - id: dmpromoy22-p51
+    text: "龍装者“JET”レミング: 自分の手札を捨てた時、このターン、このクリーチャーのパワーを+4000し、「W・ブレイカー」を与える。 ／ ローレンツ・タイフーン: カードを２枚引き、自分の手札を１枚捨てる。"
+    faces:
+      - name: 龍装者“JET”レミング
+        types: [creature]
+        civs: [fire]
+        cost: 3
+        power: 2000
+        races: [ドラゴンギルド, ビートジョッキー]
+        abilities:
+          - kind: trigger
+            when: {event: move, from: hand, to: graveyard, reason: discard, subject: {owner: you}}
+            effect:
+              - {op: modify, select: {ref: self}, mod: {power: 4000, grant: [double_breaker]}, duration: end_of_turn}
+      - name: ローレンツ・タイフーン
+        types: [spell]
+        civs: [water]
+        cost: 2
+        spell:
+          - {op: draw, count: 2}
+          - {op: discard, select: {zone: hand, owner: you, count: 1}}
+    source: {official: dmpromoy22-p51, review: pending, notes: "ツインパクト。呪文面の文は画像から読み取り（カードを２枚引き、手札を１枚捨てる）で、公式原文での確認待ち。捨てる効果は reason: discard の移動で誘発する（複数枚捨てたら枚数分誘発）"}
+
+  - id: dmbd17-009
+    text: "冥界の不死帝 ブルース: T・ブレイカー / 自分の墓地にあるカードが１３枚より少なければ、このクリーチャーは攻撃できない。 / 自分のターンの終わりに、自分の山札の上から１枚目を墓地に置いてもよい。 ／ 「迷いはない。俺の成すことは決まった」: S・トリガー / コスト３以下のクリーチャーを１体、自分の墓地から出す。"
+    faces:
+      - name: 冥界の不死帝 ブルース
+        types: [creature]
+        civs: [darkness]
+        cost: 2
+        power: 13000
+        races: [アウトレイジMAX]
+        keywords: [triple_breaker]
+        abilities:
+          - kind: static
+            affects: self
+            if: {cmp: [{count: {zone: graveyard, owner: you}}, "<", 13]}
+            mod: {deny: [attack_player, attack_creature]}
+          - kind: trigger
+            when: {event: turn_end, player: you}
+            effect:
+              - op: may
+                body: [{op: mill, owner: you, count: 1}]
+      - name: 「迷いはない。俺の成すことは決まった」
+        types: [spell]
+        civs: [darkness]
+        cost: 3
+        keywords: [s_trigger]
+        spell:
+          - {op: move, select: {zone: graveyard, owner: you, filter: {types: [creature], cost_le: 3}, count: 1}, to: bz, reason: put}
+    source: {official: dmbd17-009, review: pending, notes: "ツインパクト。呪文面の文は画像から読み取り、公式原文での確認待ち。墓地13枚未満の攻撃不可は常在型の if で毎回見直す"}
+
   - id: dm06-040
     name: 神秘の宝箱
     types: [spell]
