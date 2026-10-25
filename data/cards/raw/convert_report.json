@@ -1,10 +1,10 @@
 {
  "requested": 5,
  "ok": 0,
- "rejected": 0,
+ "rejected": 2,
  "api_error": 2,
  "usage": {
-  "input": 0,
+  "input": 36926,
   "cache_read": 0,
   "cache_write": 0,
   "output": 0
@@ -102,6 +102,19 @@
     "dm26sd1-d010"
    ]
   },
+  "その他:opencode が1200.0秒以内に終わらなかった（TimeoutExpired）": {
+   "n": 8,
+   "ids": [
+    "dm22ex1-105",
+    "dm23rp4-055",
+    "dm23rp4-20b",
+    "dm23rp4-18a",
+    "dm23rp4x-055",
+    "dm23rp4x-20b",
+    "dm23rp4x-18a",
+    "dm27+1d-001"
+   ]
+  },
   "その他:出力が1枚分のカード定義（mapping）になっていない": {
    "n": 1,
    "ids": [
@@ -111,12 +124,12 @@
  },
  "api_errors": [
   {
-   "id": "dm23rp4x-20b",
-   "error": "RuntimeError: opencode が150秒以内に終わらなかった（TimeoutExpired）"
+   "id": "dm27+1d-002",
+   "error": "RuntimeError: opencode が本文を返さなかった（イベント: step_finish,step_start,tool_use）"
   },
   {
-   "id": "dm23rp4x-18a",
-   "error": "RuntimeError: opencode が150秒以内に終わらなかった（TimeoutExpired）"
+   "id": "dm27+1d-003",
+   "error": "RuntimeError: opencode が本文を返さなかった（イベント: step_finish,step_start,tool_use）"
   }
  ]
 }

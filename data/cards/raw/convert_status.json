@@ -1,39 +1,40 @@
 {
- "at": "2026-10-25T17:11:31+00:00",
- "model": "glm-5.3-flash-free",
- "raw_total": 17672,
+ "at": "2026-10-25T20:03:04+00:00",
+ "model": "deepseek-v4.1-flash-free",
+ "raw_total": 18230,
  "converted": 0,
- "rejected": 19,
- "pending": 17653,
+ "rejected": 27,
+ "pending": 18203,
  "vocab_hash": "59075f1015b9ee22",
  "vocab_gaps": {},
  "reject_reasons": {
-  "other": 19
+  "other": 19,
+  "timeout": 8
  },
  "batches": [
   {
    "ids": [
-    "dm22ex1-105",
     "dm23rp4-055",
     "dm23rp4-20b",
     "dm23rp4-18a",
-    "dm23rp4x-055"
+    "dm23rp4x-055",
+    "dm23rp4x-20b"
    ],
    "ok": 0,
-   "rejected": 0,
-   "api_error": 2,
-   "skipped": true
+   "rejected": 5,
+   "api_error": 0,
+   "skipped": false
   },
   {
    "ids": [
-    "dm23rp4x-20b",
     "dm23rp4x-18a",
-    "dm32-094",
-    "dm32-106",
-    "dm33-037"
+    "dm27+1d-001",
+    "dm27+1d-002",
+    "dm27+1d-003",
+    "dm28-073"
    ],
    "ok": 0,
-   "rejected": 0,
+   "rejected": 2,
    "api_error": 2,
    "skipped": true
   }
@@ -42,8 +43,8 @@
   "new": {
    "requested": 10,
    "ok": 0,
-   "rejected": 0,
-   "api_error": 4
+   "rejected": 7,
+   "api_error": 2
   },
   "retry": null
  }
