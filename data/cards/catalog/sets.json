@@ -16578,7 +16578,8 @@
     "dmr13-v04"
    ],
    "listed": true,
-   "total": 135
+   "total": 135,
+   "fetched": 135
   },
   "x16": {
    "name": "DMX-16 超王道戦略ファンタジスタ１２",
@@ -16670,7 +16671,8 @@
     "dmx16-008"
    ],
    "listed": true,
-   "total": 84
+   "total": 84,
+   "fetched": 84
   },
   "r12": {
    "name": "DMR-12 エピソード３ オメガ∞マックス",
@@ -16749,7 +16751,8 @@
     "dmr12-v02"
    ],
    "listed": true,
-   "total": 71
+   "total": 71,
+   "fetched": 71
   },
   "r11": {
    "name": "DMR-11 エピソード３ ウルトラＶマスター",
