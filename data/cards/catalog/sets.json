@@ -23320,7 +23320,8 @@
     "dmd20-015"
    ],
    "listed": true,
-   "total": 22
+   "total": 22,
+   "fetched": 22
   },
   "d18": {
    "name": "DMD-18 スーパーVデッキ 燃えよ龍剣 ガイアール",
@@ -23348,7 +23349,8 @@
     "dmd18-002"
    ],
    "listed": true,
-   "total": 20
+   "total": 20,
+   "fetched": 20
   },
   "d19": {
    "name": "DMD-19 スーパーVデッキ 滅びの龍刃 ディアボロス",
@@ -23378,7 +23380,8 @@
     "dmd19-002"
    ],
    "listed": true,
-   "total": 22
+   "total": 22,
+   "fetched": 22
   },
   "d15": {
    "name": "DMD-15 ビギニング・ドラゴン・デッキ「熱血の戦闘龍」",
@@ -23402,7 +23405,8 @@
     "dmd15-007"
    ],
    "listed": true,
-   "total": 16
+   "total": 16,
+   "fetched": 16
   },
   "d16": {
    "name": "DMD-16 ビギニング・ドラゴン・デッキ「正義の天聖龍」",
@@ -23423,7 +23427,8 @@
     "dmd16-006"
    ],
    "listed": true,
-   "total": 13
+   "total": 13,
+   "fetched": 13
   },
   "d17": {
    "name": "DMD-17 ビギニング・ドラゴン・デッキ「神秘の結晶龍」",
@@ -23445,7 +23450,8 @@
     "dmd17-006"
    ],
    "listed": true,
-   "total": 14
+   "total": 14,
+   "fetched": 14
   },
   "d14": {
    "name": "DMD-14 スーパーデッキOMG 逆襲のイズモと聖邪神の秘宝",
@@ -23466,7 +23472,8 @@
     "dmd14-009"
    ],
    "listed": true,
-   "total": 13
+   "total": 13,
+   "fetched": 13
   },
   "d13": {
    "name": "DMD-13 スーパーデッキMAX カツキングと伝説の秘宝",
@@ -23496,7 +23503,8 @@
     "dmd13-006"
    ],
    "listed": true,
-   "total": 22
+   "total": 22,
+   "fetched": 22
   },
   "d12": {
    "name": "DMD-12 禁断の変形デッキ オラクルの書",
@@ -23525,7 +23533,8 @@
     "dmd12-013"
    ],
    "listed": true,
-   "total": 21
+   "total": 21,
+   "fetched": 21
   },
   "d11": {
    "name": "DMD-11 禁断の変形デッキ アウトレイジの書",
@@ -23554,7 +23563,8 @@
     "dmd11-012"
    ],
    "listed": true,
-   "total": 21
+   "total": 21,
+   "fetched": 21
   },
   "d10": {
    "name": "DMD-10 1stデッキ オラクル・ダッシュ",
@@ -23576,7 +23586,8 @@
     "dmd10-007"
    ],
    "listed": true,
-   "total": 14
+   "total": 14,
+   "fetched": 14
   },
   "d09": {
    "name": "DMD-09 1stデッキ アウトレイジ・ダッシュ",
@@ -23598,7 +23609,8 @@
     "dmd09-007"
    ],
    "listed": true,
-   "total": 14
+   "total": 14,
+   "fetched": 14
   },
   "d08": {
    "name": "DMD-08 変形デッキセット DX鬼エンジェル",
@@ -23630,7 +23642,8 @@
     "dmd08-022"
    ],
    "listed": true,
-   "total": 24
+   "total": 24,
+   "fetched": 24
   },
   "d07": {
    "name": "DMD-07 変形デッキセット DX鬼ドラゴン",
@@ -23662,7 +23675,8 @@
     "dmd07-023"
    ],
    "listed": true,
-   "total": 24
+   "total": 24,
+   "fetched": 24
   },
   "x10": {
    "name": "DMX-10 デッキビルダー鬼DX キラリ！レオ編",
