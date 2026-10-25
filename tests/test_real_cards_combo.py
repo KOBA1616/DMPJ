@@ -248,3 +248,26 @@ def test_evo_charger_lets_the_player_order_cards_on_the_deck(rules):
         e.answer([first, 1 - first])
         e.advance()
         assert e.s.cards[e.zlist("deck", 0)[0]].defn == d["options"][first]["key"].split(":")[1]
+
+
+def test_emergency_typhoon_twinpact_spell_face(rules):
+    """ツインパクト dm26ex2-071 の呪文面は単体版と同じ（2枚まで引いて1枚捨てる）。"""
+    e = setup(rules, {"hand": ["dm26ex2-071"], "mana": ["dm06-085"] * 2}, filler="dm01-080")
+    answer(e, "charge", "pass")
+    answer(e, "main", "play:dm26ex2-071:1")
+    answer(e, "yes_no", "yes")
+    answer(e, "yes_no", "no")
+    e.advance()
+    assert names(e, "hand", 0) == [] and names(e, "graveyard", 0) == ["dm01-080", "dm26ex2-071"]
+
+
+def test_emergency_typhoon_twinpact_creature_draws_on_own_spell(rules):
+    """クリーチャー面（氷牙レオポル・ディーネ公）が場にいる間、自分が呪文を唱えると1枚引いてもよい。"""
+    e = setup(rules, {"bz": ["dm26ex2-071"], "hand": ["dmd08-015"], "mana": ["dm06-085"] * 2}, filler="dm01-080")
+    answer(e, "charge", "pass")
+    answer(e, "main", "play:dmd08-015")
+    d = e.advance()
+    while d is not None and d["kind"] == "yes_no":
+        e.answer([0])                                # すべて引く（誘発の1枚＋呪文の2枚）
+        d = e.advance()
+    assert len(names(e, "hand", 0)) >= 2

@@ -530,6 +530,35 @@ cards:
       - {op: discard, select: {zone: hand, owner: you, count: 1}}
     source: {official: dmd08-015, review: pending, notes: "「２枚まで引く」は1枚ずつ引くかを選ぶ形にした。手札を墓地へ送る部品"}
 
+  - id: dm26ex2-071
+    text: "氷牙レオポル・ディーネ公: 自分が呪文を唱えた時、カードを１枚引いてもよい。 ／ エマージェンシー・タイフーン: S・トリガー / カードを２枚まで引き、自分の手札を１枚捨てる。"
+    faces:
+      - name: 氷牙レオポル・ディーネ公
+        types: [creature]
+        civs: [water]
+        cost: 4
+        power: 2000
+        races: [サイバー・ウイルス, ナイト]
+        abilities:
+          - kind: trigger
+            when: {event: cast, player: you}
+            effect:
+              - op: may
+                body: [{op: draw, count: 1}]
+      - name: エマージェンシー・タイフーン
+        types: [spell]
+        civs: [water]
+        cost: 2
+        keywords: [s_trigger]
+        spell:
+          - op: repeat
+            times: 2
+            body:
+              - op: may
+                body: [{op: draw, count: 1}]
+          - {op: discard, select: {zone: hand, owner: you, count: 1}}
+    source: {official: dm26ex2-071, review: pending, notes: "ツインパクト。呪文面は dmd08-015 と同じ。「２枚まで引く」は1枚ずつ引くかを選ぶ形。クリーチャー面は自分が唱えた時（自身の呪文面を唱えた時は場にないので誘発しない）"}
+
   - id: dm06-040
     name: 神秘の宝箱
     types: [spell]
