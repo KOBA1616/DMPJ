@@ -1,8 +1,8 @@
 {
- "requested": 50,
+ "requested": 5,
  "ok": 0,
  "rejected": 0,
- "api_error": 3,
+ "api_error": 2,
  "usage": {
   "input": 0,
   "cache_read": 0,
@@ -111,16 +111,12 @@
  },
  "api_errors": [
   {
-   "id": "dm22ex1-105",
-   "error": "RuntimeError: opencode が600秒以内に終わらなかった（TimeoutExpired）"
+   "id": "dm23rp4x-20b",
+   "error": "RuntimeError: opencode が150秒以内に終わらなかった（TimeoutExpired）"
   },
   {
-   "id": "dm23rp4-055",
-   "error": "RuntimeError: opencode が600秒以内に終わらなかった（TimeoutExpired）"
-  },
-  {
-   "id": "dm23rp4-20b",
-   "error": "RuntimeError: opencode が600秒以内に終わらなかった（TimeoutExpired）"
+   "id": "dm23rp4x-18a",
+   "error": "RuntimeError: opencode が150秒以内に終わらなかった（TimeoutExpired）"
   }
  ]
 }
