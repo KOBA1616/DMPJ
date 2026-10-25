@@ -15946,7 +15946,8 @@
     "dmr17-l02"
    ],
    "listed": true,
-   "total": 106
+   "total": 106,
+   "fetched": 106
   },
   "x19": {
    "name": "DMX-19 スーパーレア100%パック",
@@ -16013,7 +16014,8 @@
     "dmx19-v03"
    ],
    "listed": true,
-   "total": 59
+   "total": 59,
+   "fetched": 59
   },
   "r16s": {
    "name": "DMR-16真 ドラゴン・サーガ 拡張パック第4章 超戦ガイネクスト×真",
@@ -16086,7 +16088,8 @@
     "dmr16s-v01"
    ],
    "listed": true,
-   "total": 65
+   "total": 65,
+   "fetched": 65
   },
   "r16g": {
    "name": "DMR-16極 ドラゴン・サーガ 拡張パック第4章 超戦ガイネクスト×極",
