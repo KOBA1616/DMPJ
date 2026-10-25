@@ -11279,7 +11279,8 @@
     "dmrp13-km3"
    ],
    "listed": true,
-   "total": 109
+   "total": 109,
+   "fetched": 109
   },
   "sd15": {
    "name": "DMSD-15 キングマスタースタートデッキ 鬼札の鬼タイム",
@@ -11301,7 +11302,8 @@
     "dmsd15-001"
    ],
    "listed": true,
-   "total": 14
+   "total": 14,
+   "fetched": 14
   },
   "sd14": {
    "name": "DMSD-14 キングマスタースタートデッキ ジョーのキリフダッシュ",
@@ -11324,7 +11326,8 @@
     "dmsd14-001"
    ],
    "listed": true,
-   "total": 15
+   "total": 15,
+   "fetched": 15
   },
   "ex08": {
    "name": "DMEX-08 謎のブラックボックスパック",
