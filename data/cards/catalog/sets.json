@@ -22531,7 +22531,8 @@
     "dm03-055"
    ],
    "listed": true,
-   "total": 60
+   "total": 60,
+   "fetched": 60
   },
   "2": {
    "name": "DM-02 進化獣降臨(マスター・オブ・エボリューション)",
@@ -22599,7 +22600,8 @@
     "dm02-055"
    ],
    "listed": true,
-   "total": 60
+   "total": 60,
+   "fetched": 60
   },
   "1": {
    "name": "DM-01",
@@ -22727,7 +22729,8 @@
     "dm01-110"
    ],
    "listed": true,
-   "total": 120
+   "total": 120,
+   "fetched": 120
   },
   "c21": {
    "name": "DMC-21 聖拳編 双龍誕生(ドラゴン・インパクト) ～ザキラエディション～",
@@ -22736,7 +22739,8 @@
     "dmc21-007"
    ],
    "listed": true,
-   "total": 1
+   "total": 1,
+   "fetched": 1
   },
   "c20": {
    "name": "DMC-20 聖拳編 双龍誕生(ドラゴン・インパクト) ～勝舞エディション～",
@@ -22746,7 +22750,8 @@
     "dmc20-089"
    ],
    "listed": true,
-   "total": 2
+   "total": 2,
+   "fetched": 2
   },
   "bd04": {
    "name": "DMBD-04 超メガ盛りプレミアム７デッキ キラめけ!! ＤＧ超動",
@@ -22769,7 +22774,8 @@
     "dmbd04-008"
    ],
    "listed": true,
-   "total": 15
+   "total": 15,
+   "fetched": 15
   },
   "bd03": {
    "name": "DMBD-03 超メガ盛りプレミアム７デッキ 集結!! 炎のＪ・Ｏ・Ｅカーズ",
@@ -22792,7 +22798,8 @@
     "dmbd03-009"
    ],
    "listed": true,
-   "total": 15
+   "total": 15,
+   "fetched": 15
   },
   "bd02": {
    "name": "DMBD-02 クロニクル・レガシー・デッキ 風雲!! 怒流牙忍法帖",
@@ -22816,7 +22823,8 @@
     "dmbd02-010"
    ],
    "listed": true,
-   "total": 16
+   "total": 16,
+   "fetched": 16
   },
   "bd01": {
    "name": "DMBD-01 クロニクル・レガシー・デッキ アルカディアス鎮魂歌",
@@ -22840,7 +22848,8 @@
     "dmbd01-008"
    ],
    "listed": true,
-   "total": 16
+   "total": 16,
+   "fetched": 16
   },
   "sd03": {
    "name": "DMSD-03 NEWヒーローデッキ ボルツのB・A・D",
