@@ -13491,7 +13491,8 @@
     "dmex02-001"
    ],
    "listed": true,
-   "total": 84
+   "total": 84,
+   "fetched": 84
   },
   "rp06": {
    "name": "DMRP-06 双極篇 拡張パック第２弾 逆襲のギャラクシー 卍・獄・殺!!",
@@ -13609,7 +13610,8 @@
     "dmrp06-g01"
    ],
    "listed": true,
-   "total": 110
+   "total": 110,
+   "fetched": 110
   },
   "sd06": {
    "name": "DMSD-06 ドルスザク・無月炸裂・スタートデッキ",
@@ -13632,7 +13634,8 @@
     "dmsd06-008"
    ],
    "listed": true,
-   "total": 15
+   "total": 15,
+   "fetched": 15
   },
   "rp05": {
    "name": "DMRP-05 双極篇 拡張パック第１弾 轟快!! ジョラゴンGo Fight!!",
