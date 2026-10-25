@@ -40,7 +40,7 @@ jobs:
               print("auto_convert.yaml: enabled=false のため何もしない"); sys.exit(0)
           env = {k: v for k, v in os.environ.items() if k != "OPENCODE_API_KEY"}   # CLI は匿名の無料枠
           sys.exit(subprocess.call(["python", "tools/auto_convert.py", "--model", str(r.get("model", "glm-5.3-flash-free")),
-                                    "--limit", str(r.get("limit", 20)), "--interval", str(r.get("interval", 6)),
+                                    "--limit", str(r.get("limit", 20)), "--batch", str(r.get("batch", 5)), "--interval", str(r.get("interval", 6)),
                                     "--workers", str(r.get("workers", 1))], env=env))
           PY
       - name: Summary
