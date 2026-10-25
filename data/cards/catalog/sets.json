@@ -26321,7 +26321,8 @@
     "promoy17-106"
    ],
    "listed": true,
-   "total": 106
+   "total": 106,
+   "fetched": 106
   },
   "promoy16": {
    "name": "プロモ限定カード 16期",
@@ -26449,7 +26450,8 @@
     "promoy16-1225"
    ],
    "listed": true,
-   "total": 120
+   "total": 120,
+   "fetched": 120
   },
   "promoy15": {
    "name": "プロモ限定カード 15期",
@@ -26537,7 +26539,8 @@
     "promoy15-0101"
    ],
    "listed": true,
-   "total": 80
+   "total": 80,
+   "fetched": 80
   },
   "promoy14": {
    "name": "プロモ限定カード 14期",
