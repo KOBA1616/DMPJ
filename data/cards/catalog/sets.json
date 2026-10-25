@@ -10641,7 +10641,8 @@
     "dmrp15-km3"
    ],
    "listed": true,
-   "total": 109
+   "total": 109,
+   "fetched": 109
   },
   "sd16": {
    "name": "DMSD-16 キングマスタースタートデッキ ゼーロJr.のムゲンクライム",
@@ -10663,7 +10664,8 @@
     "dmsd16-001"
    ],
    "listed": true,
-   "total": 14
+   "total": 14,
+   "fetched": 14
   },
   "bd14": {
    "name": "DMBD-14 クロニクル最終決戦デッキ 龍魂紅蓮譚",
@@ -10696,7 +10698,8 @@
     "dmbd14-006"
    ],
    "listed": true,
-   "total": 25
+   "total": 25,
+   "fetched": 25
   },
   "bd13": {
    "name": "DMBD-13 クロニクル最終決戦デッキ 覚醒流星譚",
@@ -10730,7 +10733,8 @@
     "dmbd13-008"
    ],
    "listed": true,
-   "total": 26
+   "total": 26,
+   "fetched": 26
   },
   "ex12": {
    "name": "DMEX-12 最強戦略!!ドラリンパック",
