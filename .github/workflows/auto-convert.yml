@@ -7,6 +7,9 @@ on:
   schedule:
     - cron: "5,20,35,50 * * * *"   # 15分ごと（auto-syncの17分と重ならないようずらす）。同じ実行枠で直列化される
   workflow_dispatch:
+  push:                            # PR #58 のマージ時に1回だけ起動する用。マージ後にこの push 節とマーカーファイルは削除してよい
+    branches: [main]
+    paths: [tools/auto_convert_kick.txt]
 permissions:
   contents: write
   actions: write                   # 完了後に自分自身を再起動するため
