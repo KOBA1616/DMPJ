@@ -180,6 +180,19 @@ def op_delayed_trigger(eng, t, op, env):
                       "once": op.get("once", True)})
 
 
+def _free_face(eng, cid, want):
+    """ツインパクトをコストを支払わず出す／唱える時の面。選択条件の types に呪文だけが指定されていれば呪文面、
+    それ以外はクリーチャー面（なければ先頭の面）。"""
+    faces = eng.cdef(cid).faces
+    if not faces:
+        return None
+    if want and "spell" in want and "creature" not in want:
+        for i, f in enumerate(faces):
+            if "spell" in f.types:
+                return i
+    return 0
+
+
 @op("play_free", select="selector", resolve_to="zone?", **{"as": "str?"})
 def op_play_free(eng, t, op, env):
     """コストを支払わずに召喚する／唱える（112.3g: 召喚・詠唱したことになる）。ツインパクトはクリーチャー側。
@@ -187,7 +200,8 @@ def op_play_free(eng, t, op, env):
     cids, d = eng.select(t, op["select"], env)
     if d:
         return d
-    tasks = [eng.play_task(c, env["you"], True, 0 if eng.cdef(c).faces else None) for c in cids]
+    want = (op["select"].get("filter") or {}).get("types") if isinstance(op["select"], dict) else None
+    tasks = [eng.play_task(c, env["you"], True, _free_face(eng, c, want)) for c in cids]
     if "resolve_to" in op:
         for x in tasks:
             x["resolve_to"] = op["resolve_to"]
