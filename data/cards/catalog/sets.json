@@ -17755,7 +17755,8 @@
     "dmr06-v01"
    ],
    "listed": true,
-   "total": 69
+   "total": 69,
+   "fetched": 69
   },
   "r05": {
    "name": "DMR-05 エピソード2 ゴールデン・エイジ",
@@ -17898,7 +17899,8 @@
     "dmr05-v03"
    ],
    "listed": true,
-   "total": 135
+   "total": 135,
+   "fetched": 135
   },
   "x08": {
    "name": "DMX-08 激熱! ガチンコBEST",
@@ -17947,7 +17949,8 @@
     "dmx08-037"
    ],
    "listed": true,
-   "total": 41
+   "total": 41,
+   "fetched": 41
   },
   "r04": {
    "name": "DMR-04 エピソード1 ライジング・ホープ",
