@@ -23740,7 +23740,8 @@
     "dmx10-013"
    ],
    "listed": true,
-   "total": 56
+   "total": 56,
+   "fetched": 56
   },
   "x09": {
    "name": "DMX-09 デッキビルダー鬼DX ガンバ！勝太編",
@@ -23803,7 +23804,8 @@
     "dmx09-012"
    ],
    "listed": true,
-   "total": 55
+   "total": 55,
+   "fetched": 55
   },
   "d06": {
    "name": "DMD-06 ライジング・ダッシュ・デッキ 反撃ブロック!!",
@@ -23825,7 +23827,8 @@
     "dmd06-006"
    ],
    "listed": true,
-   "total": 14
+   "total": 14,
+   "fetched": 14
   },
   "d05": {
    "name": "DMD-05 ライジング・ダッシュ・デッキ 無限アタック!!",
@@ -23848,7 +23851,8 @@
     "dmd05-007"
    ],
    "listed": true,
-   "total": 15
+   "total": 15,
+   "fetched": 15
   },
   "d04": {
    "name": "DMD-04 ストロング・メタル・デッキ 最強国技",
@@ -23871,7 +23875,8 @@
     "dmd04-007"
    ],
    "listed": true,
-   "total": 15
+   "total": 15,
+   "fetched": 15
   },
   "d03": {
    "name": "DMD-03 ストロング・メタル・デッキ 爆裂ダッシュ",
@@ -23894,7 +23899,8 @@
     "dmd03-007"
    ],
    "listed": true,
-   "total": 15
+   "total": 15,
+   "fetched": 15
   },
   "x03": {
    "name": "DMX-03 デッキビルダーDX エイリアン･エディション",
@@ -23944,7 +23950,8 @@
     "dmx03-002"
    ],
    "listed": true,
-   "total": 42
+   "total": 42,
+   "fetched": 42
   },
   "x02": {
    "name": "DMX-02 デッキビルダーDX ハンター･エディション",
@@ -23994,7 +24001,8 @@
     "dmx02-005"
    ],
    "listed": true,
-   "total": 42
+   "total": 42,
+   "fetched": 42
   },
   "d02": {
    "name": "DMD-02 スタートダッシュ・デッキ 水＆闇 編",
@@ -24017,7 +24025,8 @@
     "dmd02-002"
    ],
    "listed": true,
-   "total": 15
+   "total": 15,
+   "fetched": 15
   },
   "d01": {
    "name": "DMD-01 スタートダッシュ・デッキ 火＆自然 編",
@@ -24038,7 +24047,8 @@
     "dmd01-002"
    ],
    "listed": true,
-   "total": 13
+   "total": 13,
+   "fetched": 13
   },
   "c65": {
    "name": "DMC-65 ザ･ムービーデッキ･ショック ULTRA FIRE SPIRITS 炎のキズナXX",
@@ -24061,7 +24071,8 @@
     "dmc65-005"
    ],
    "listed": true,
-   "total": 15
+   "total": 15,
+   "fetched": 15
   },
   "c63": {
    "name": "DMC-63 スーパーデッキ ショック ルナティック・ゴッド",
@@ -24088,7 +24099,8 @@
     "dmc63-006"
    ],
    "listed": true,
-   "total": 19
+   "total": 19,
+   "fetched": 19
   },
   "c62": {
    "name": "DMC-62 スーパーデッキ ショック ウルトラ・NEX",
