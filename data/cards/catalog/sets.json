@@ -12107,7 +12107,8 @@
     "dmrp11-g04"
    ],
    "listed": true,
-   "total": 125
+   "total": 125,
+   "fetched": 125
   },
   "sd13": {
    "name": "DMSD-13 超GRメガスタートデッキ ジョーの超ジョーカーズ旋風",
@@ -12135,7 +12136,8 @@
     "dmsd13-010"
    ],
    "listed": true,
-   "total": 20
+   "total": 20,
+   "fetched": 20
   },
   "bd10": {
    "name": "DMBD-10 アルティメット・クロニクル・デッキ 2019 SSS!! 侵略デッドディザスター",
@@ -12161,7 +12163,8 @@
     "dmbd10-010"
    ],
    "listed": true,
-   "total": 18
+   "total": 18,
+   "fetched": 18
   },
   "bd09": {
    "name": "DMBD-09 アルティメット・クロニクル・デッキ 2019 必勝!! 闘将ブレードオーガ",
@@ -12189,7 +12192,8 @@
     "dmbd09-002"
    ],
    "listed": true,
-   "total": 20
+   "total": 20,
+   "fetched": 20
   },
   "ex06": {
    "name": "DMEX-06 絶対王者!! デュエキングパック",
@@ -12301,7 +12305,8 @@
     "dmex06-002"
    ],
    "listed": true,
-   "total": 104
+   "total": 104,
+   "fetched": 104
   },
   "rp10": {
    "name": "DMRP-10 超天篇 拡張パック第2弾 青きC.A.P.と漆黒の大卍罪",
