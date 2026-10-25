@@ -12766,7 +12766,8 @@
     "dmrp09-m03"
    ],
    "listed": true,
-   "total": 124
+   "total": 124,
+   "fetched": 124
   },
   "sd09": {
    "name": "DMSD-09 超ＧＲスタートデッキ キャップのオレガ・オーラ・デリート",
@@ -12793,7 +12794,8 @@
     "dmsd09-007"
    ],
    "listed": true,
-   "total": 19
+   "total": 19,
+   "fetched": 19
   },
   "sd08": {
    "name": "DMSD-08 超ＧＲスタートデッキ ジョーのガチャメカ・ワンダフォー",
@@ -12821,7 +12823,8 @@
     "dmsd08-007"
    ],
    "listed": true,
-   "total": 20
+   "total": 20,
+   "fetched": 20
   },
   "ex04": {
    "name": "DMEX-04 夢の最＆強!!ツインパクト超No.1パック",
@@ -12904,7 +12907,8 @@
     "dmex04-072"
    ],
    "listed": true,
-   "total": 75
+   "total": 75,
+   "fetched": 75
   },
   "rp08": {
    "name": "DMRP-08 双極篇 拡張パック第４弾 超決戦!バラギアラ!!無敵オラオラ輪廻∞",
@@ -13029,7 +13033,8 @@
     "dmrp08-mh05"
    ],
    "listed": true,
-   "total": 117
+   "total": 117,
+   "fetched": 117
   },
   "bd08": {
    "name": "DMBD-08 超誕!!ツインヒーローデッキ80 自然大暴走 VS 卍獄の虚無月",
