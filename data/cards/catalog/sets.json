@@ -16832,7 +16832,8 @@
     "dmr11-v02"
    ],
    "listed": true,
-   "total": 72
+   "total": 72,
+   "fetched": 72
   },
   "x15": {
    "name": "DMX-15 フルホイルVSパック 仁義無きロワイヤル",
@@ -16880,7 +16881,8 @@
     "dmx15-v02"
    ],
    "listed": true,
-   "total": 40
+   "total": 40,
+   "fetched": 40
   },
   "r10": {
    "name": "DMR-10 エピソード3 デッド＆ビート",
@@ -16960,7 +16962,8 @@
     "dmr10-v02"
    ],
    "listed": true,
-   "total": 72
+   "total": 72,
+   "fetched": 72
   },
   "r09": {
    "name": "DMR-09 エピソード３ レイジVSゴッド",
