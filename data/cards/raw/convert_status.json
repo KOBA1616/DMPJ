@@ -1,0 +1,18 @@
+{
+ "at": "2026-10-25T02:06:21+00:00",
+ "model": "glm-5.3-flash-free",
+ "raw_total": 4982,
+ "converted": 0,
+ "rejected": 19,
+ "pending": 4963,
+ "vocab_hash": "59075f1015b9ee22",
+ "last_run": {
+  "new": {
+   "requested": 50,
+   "ok": 0,
+   "rejected": 19,
+   "api_error": 3
+  },
+  "retry": null
+ }
+}
