@@ -1,13 +1,18 @@
 # 取得済みのカード原文を OpenCode の無料モデルで定期的に効果DSLへ変換する。
 # 取得系（auto-sync / sync-cards）とは別の実行枠。結果は cards-data（converted.yaml, rejects, convert_status.json）。
+# 完了のたびに自分自身を再起動する（未変換が残り進捗がある間）。cron は保険。
 # 手動で今すぐ動かす: Actions → auto-convert → Run workflow。止める: tools/auto_convert.yaml の enabled を false。
 name: auto-convert
 on:
   schedule:
     - cron: "5,20,35,50 * * * *"   # 15分ごと（auto-syncの17分と重ならないようずらす）。同じ実行枠で直列化される
   workflow_dispatch:
+  push:                            # PR #58 のマージ時に1回だけ起動する用。マージ後にこの push 節とマーカーファイルは削除してよい
+    branches: [main]
+    paths: [tools/auto_convert_kick.txt]
 permissions:
   contents: write
+  actions: write                   # 完了後に自分自身を再起動するため
 concurrency:
   group: convert-cards             # convert-cards と同じ枠。取得系(sync-cards)とは別
   cancel-in-progress: false
@@ -40,7 +45,7 @@ jobs:
               print("auto_convert.yaml: enabled=false のため何もしない"); sys.exit(0)
           env = {k: v for k, v in os.environ.items() if k != "OPENCODE_API_KEY"}   # CLI は匿名の無料枠
           sys.exit(subprocess.call(["python", "tools/auto_convert.py", "--model", str(r.get("model", "glm-5.3-flash-free")),
-                                    "--limit", str(r.get("limit", 20)), "--interval", str(r.get("interval", 6)),
+                                    "--limit", str(r.get("limit", 20)), "--batch", str(r.get("batch", 5)), "--interval", str(r.get("interval", 6)),
                                     "--workers", str(r.get("workers", 1))], env=env))
           PY
       - name: Summary
@@ -63,6 +68,25 @@ jobs:
             echo "push 失敗($i)。再試行"; git rebase --abort 2>/dev/null; sleep $((i * 10))
           done
           echo "push できなかった（結果は成果物 convert-result から取れる）"; exit 1
+      - name: Chain next run
+        if: always()
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          # 成功でも失敗でも、まだ変換する物があり、今回進捗があり、Fatal停止でなければ次を起こす。
+          # 止まる条件に当たれば cron(15分ごと)が再開の保険になる。
+          python - <<'PY' >/tmp/chain || true
+          import json, yaml
+          if not yaml.safe_load(open("/tmp/auto.yaml")).get("enabled", True): print("no: enabled=false"); raise SystemExit
+          s = json.load(open("data/cards/raw/convert_status.json"))
+          lr = (s.get("last_run") or {}).get("new") or {}
+          if s.get("stopped"): print("no: 停止 " + s["stopped"][:80])
+          elif not s.get("pending"): print("no: 未変換なし")
+          elif not (lr.get("ok", 0) + lr.get("rejected", 0)): print("no: 今回進捗なし")
+          else: print("yes")
+          PY
+          cat /tmp/chain
+          if grep -q '^yes' /tmp/chain; then gh workflow run auto-convert.yml --ref "${{ github.ref_name }}" -R "$GITHUB_REPOSITORY"; fi
       - name: Keep results as artifact
         if: always()
         uses: actions/upload-artifact@v4

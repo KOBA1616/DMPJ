@@ -209,6 +209,17 @@ def triage(rejects: list[dict]) -> dict:
     return dict(sorted(by_kind.items(), key=lambda kv: -kv[1]["n"]))
 
 
+def classify(error: str) -> dict:
+    """検査落ちの理由を返す。語彙が足りない(未知の op・キー・名前など)なら reason=vocab_gap と不足語彙 gaps を付ける。"""
+    from report_gaps import categorize
+    gaps = []
+    for part in filter(None, (p.strip() for p in error.split("\n"))):
+        kind, term = categorize(part)
+        if kind not in ("拒否", "id不一致", "その他"):
+            gaps.append(f"{kind}:{term}")
+    return {"reason": "vocab_gap", "gaps": gaps} if gaps else {"reason": "other", "gaps": []}
+
+
 def run(rows: list[dict], client, tables, sysp: str, effort: str, out: Path, rejects_path: Path,
         workers: int = 1, report_path: Path | None = None) -> dict:
     """rows を変換して out に追記する。1枚ごとに保存するので途中で止まっても続きから再開できる。
@@ -239,7 +250,7 @@ def run(rows: list[dict], client, tables, sysp: str, effort: str, out: Path, rej
         except DefError as e:
             with lock:
                 stats["rejected"] += 1
-                rejects[r["id"]] = {**r, "error": str(e)}
+                rejects[r["id"]] = {**r, "error": str(e), **classify(str(e))}
                 print(f"✗ {r['id']} {r.get('name', '')}: {e}", file=sys.stderr)
                 save()
             return

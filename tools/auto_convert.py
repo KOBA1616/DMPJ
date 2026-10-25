@@ -35,13 +35,32 @@ def vocab_hash() -> str:
     return h.hexdigest()[:16]
 
 
+def reasons(rejects: list[dict]) -> dict:
+    out: dict[str, int] = {}
+    for r in rejects:
+        k = r.get("reason") or cc.classify(r.get("error", ""))["reason"]
+        out[k] = out.get(k, 0) + 1
+    return out
+
+
+def vocab_gaps(rejects: list[dict]) -> dict:
+    """語彙不足(vocab_gap)で落ちたカードから、不足している語彙を {種類:語: カード数} で返す（多い順）。"""
+    n: dict[str, int] = {}
+    for r in rejects:
+        for g in (r.get("gaps") if "gaps" in r else cc.classify(r.get("error", ""))["gaps"]):
+            n[g] = n.get(g, 0) + 1
+    return dict(sorted(n.items(), key=lambda kv: -kv[1])[:30])
+
+
 def main(argv=None):
     ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     ap.add_argument("--provider", default="opencode-cli", choices=["opencode", "opencode-cli"])
     ap.add_argument("--model", default=cc.OPENCODE_DEFAULT)
     ap.add_argument("--interval", type=float, default=6.0)
     ap.add_argument("--workers", type=int, default=1, help="並列数（無料枠は共有枠らしいので増やしすぎない）")
-    ap.add_argument("--limit", type=int, default=20)
+    ap.add_argument("--limit", type=int, default=20, help="1回の実行で扱う最大枚数（--batch ごとに区切って処理する）")
+    ap.add_argument("--batch", type=int, default=5, help="1単位の枚数。単位の中がすべてAPI失敗ならその単位を飛ばして次へ")
+    ap.add_argument("--max-bad-batches", type=int, default=2, help="API失敗だけの単位がこの回数続いたら打ち切る")
     ap.add_argument("--effort", default="high")
     a = ap.parse_args(argv)
     out, rej = DATA / "cards" / "converted.yaml", RAW / "rejects.jsonl"
@@ -50,6 +69,7 @@ def main(argv=None):
     sysp, tables = cc.system_prompt(), load_tables()
     llm = cc.make_llm(a.provider, a.model, a.interval)
     ran = {"new": None, "retry": None}
+    batches: list[dict] = []
     try:
         rows = cc.load_rows([str(RAW)])
         done = cc.known_ids(out) | ({c["id"] for c in (yaml.safe_load(out.read_text(encoding="utf-8")) or {}).get("cards") or []}
@@ -57,8 +77,18 @@ def main(argv=None):
         failed = {r["id"] for r in cc.read_jsonl(rej)}
         todo = sorted((r for r in rows if r["id"] not in done and r["id"] not in failed),
                       key=lambda r: len(r.get("text", "")))[:a.limit]
-        if todo:
-            ran["new"] = cc.run(todo, llm, tables, sysp, a.effort, out, rej, workers=a.workers, report_path=RAW / "convert_report.json")
+        bad = 0
+        for i in range(0, len(todo), a.batch):
+            chunk = todo[i:i + a.batch]
+            rep = cc.run(chunk, llm, tables, sysp, a.effort, out, rej, workers=a.workers, report_path=RAW / "convert_report.json")
+            ran["new"] = {k: (ran["new"] or {}).get(k, 0) + rep[k] for k in ("requested", "ok", "rejected", "api_error")}
+            skipped = rep["ok"] == 0 and rep["api_error"] > 0       # 検査落ちは rejects に入り次回から対象外。API失敗は飛ばして次の単位へ
+            batches.append({"ids": [r["id"] for r in chunk], "ok": rep["ok"], "rejected": rep["rejected"],
+                            "api_error": rep["api_error"], "skipped": skipped})
+            bad = bad + 1 if skipped else 0
+            if bad >= a.max_bad_batches:
+                print(f"API失敗の単位が{bad}回続いたので打ち切る", file=sys.stderr)
+                break
         if vh != prev.get("vocab_hash") and failed:
             retry = [r for r in rows if r["id"] in failed][:a.limit]
             ran["retry"] = cc.run(retry, llm, tables, sysp, a.effort, out, rej, workers=a.workers)
@@ -77,6 +107,7 @@ def main(argv=None):
               "pending": max(0, len(rows) - converted - len(rejects)),
               # 語彙が変わった直後で再試行しきれなかった時は、次回も再試行するよう古いハッシュを残す
               "vocab_hash": vh if retried_all else prev.get("vocab_hash"),
+              "vocab_gaps": vocab_gaps(rejects), "reject_reasons": reasons(rejects), "batches": batches,
               "last_run": {k: (v and {x: v[x] for x in ("requested", "ok", "rejected", "api_error")}) for k, v in ran.items()}}
     STATUS.write_text(json.dumps(status, ensure_ascii=False, indent=1), encoding="utf-8")
     print(json.dumps(status, ensure_ascii=False, indent=1))
