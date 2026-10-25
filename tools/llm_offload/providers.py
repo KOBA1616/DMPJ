@@ -25,6 +25,7 @@ OPENCODE_FREE_MODELS = frozenset({
     "glm-5.3-flash-free", "deepseek-v4.1-flash-free", "longcat-2.5-preview-free",
 })
 OPENCODE_DEFAULT = "glm-5.3-flash-free"
+OPENCODE_TIMEOUT = 150   # 1回の呼び出しの上限秒。無応答時に1枚10分も待たない(2026-10-25: 600秒x3回で30分空回り)
 
 
 def check_free_model(model: str):
@@ -126,9 +127,9 @@ class OpenCodeCLI:
                 r = subprocess.run([exe, "run", "-m", f"opencode/{self.model}", "--format", "json",
                                     "添付ファイルの指示に従い、最後の [user] への答えだけを出力して。", "-f", str(f)],
                                    capture_output=True, text=True, encoding="utf-8", errors="replace",
-                                   timeout=600, cwd=d)
+                                   timeout=OPENCODE_TIMEOUT, cwd=d)
             except subprocess.TimeoutExpired:
-                raise RuntimeError("opencode が600秒以内に終わらなかった（TimeoutExpired）")
+                raise RuntimeError(f"opencode が{OPENCODE_TIMEOUT}秒以内に終わらなかった（TimeoutExpired）")
         if re.search(r"(?i)FreeTierError|billing|credit balance|insufficient|payment", r.stdout + r.stderr):
             raise Fatal(f"課金・無料枠に関するエラーなので停止する: {(r.stdout + r.stderr)[:300]}")
         texts, err = [], None
