@@ -122,10 +122,13 @@ class OpenCodeCLI:
             exe = next(filter(None, (shutil.which(n) for n in ("opencode.cmd", "opencode.exe", "opencode"))), None)
             if not exe:
                 raise FileNotFoundError("opencode コマンドが PATH にない（npm i -g opencode-ai）")
-            r = subprocess.run([exe, "run", "-m", f"opencode/{self.model}", "--format", "json",
-                                "添付ファイルの指示に従い、最後の [user] への答えだけを出力して。", "-f", str(f)],
-                               capture_output=True, text=True, encoding="utf-8", errors="replace",
-                               timeout=600, cwd=d)
+            try:
+                r = subprocess.run([exe, "run", "-m", f"opencode/{self.model}", "--format", "json",
+                                    "添付ファイルの指示に従い、最後の [user] への答えだけを出力して。", "-f", str(f)],
+                                   capture_output=True, text=True, encoding="utf-8", errors="replace",
+                                   timeout=600, cwd=d)
+            except subprocess.TimeoutExpired:
+                raise RuntimeError("opencode が600秒以内に終わらなかった（TimeoutExpired）")
         if re.search(r"(?i)FreeTierError|billing|credit balance|insufficient|payment", r.stdout + r.stderr):
             raise Fatal(f"課金・無料枠に関するエラーなので停止する: {(r.stdout + r.stderr)[:300]}")
         texts, err = [], None
@@ -143,4 +146,7 @@ class OpenCodeCLI:
         if usage is not None:
             usage["input"] += len(prompt) // 3
             usage["output"] += sum(map(len, texts)) // 3
-        return "".join(texts) or r.stdout
+        if not texts:
+            kinds = sorted({json.loads(l).get("type", "?") for l in r.stdout.splitlines() if l.startswith("{") and l.endswith("}")} or {"出力なし"})
+            raise RuntimeError(f"opencode が本文を返さなかった（イベント: {','.join(kinds)}）")
+        return "".join(texts)
