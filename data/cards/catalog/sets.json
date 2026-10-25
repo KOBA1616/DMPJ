@@ -13070,7 +13070,8 @@
     "dmbd08-b-006"
    ],
    "listed": true,
-   "total": 28
+   "total": 28,
+   "fetched": 28
   },
   "bd07": {
    "name": "DMBD-07 超誕!!ツインヒーローデッキ80 Jの超機兵 VS 聖剣神話†",
@@ -13106,7 +13107,8 @@
     "dmbd07-b-009"
    ],
    "listed": true,
-   "total": 28
+   "total": 28,
+   "fetched": 28
   },
   "ex03": {
    "name": "DMEX-03 ペリッ!! スペシャルだらけのミステリーパック",
@@ -13198,7 +13200,8 @@
     "dmex03-l01"
    ],
    "listed": true,
-   "total": 84
+   "total": 84,
+   "fetched": 84
   },
   "rp07": {
    "name": "DMRP-07 双極篇 拡張パック第３弾 †ギラギラ†煌世主と終葬のQX!!",
@@ -13318,7 +13321,8 @@
     "dmrp07-m02"
    ],
    "listed": true,
-   "total": 112
+   "total": 112,
+   "fetched": 112
   },
   "sd07": {
    "name": "DMSD-07 煌世の剣・Z炸裂・スタートデッキ",
@@ -13339,7 +13343,8 @@
     "dmsd07-006"
    ],
    "listed": true,
-   "total": 13
+   "total": 13,
+   "fetched": 13
   },
   "bd06": {
    "name": "DMBD-06 クロニクル・レガシー・デッキ2018 至高のゼニス頂神殿",
@@ -13366,7 +13371,8 @@
     "dmbd06-003"
    ],
    "listed": true,
-   "total": 19
+   "total": 19,
+   "fetched": 19
   },
   "bd05": {
    "name": "DMBD-05 クロニクル・レガシー・デッキ2018 究極のバルガ龍幻郷",
@@ -13392,7 +13398,8 @@
     "dmbd05-002"
    ],
    "listed": true,
-   "total": 18
+   "total": 18,
+   "fetched": 18
   },
   "ex02": {
    "name": "DMEX-02 デュエマクエスト・パック ～伝説の最強戦略12～",
