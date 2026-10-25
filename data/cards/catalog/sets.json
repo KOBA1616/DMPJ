@@ -11784,7 +11784,8 @@
     "dmrp12-mz5"
    ],
    "listed": true,
-   "total": 131
+   "total": 131,
+   "fetched": 131
   },
   "bd12": {
    "name": "DMBD-12 ガチヤバ4！無限改造デッキセットDX!! ゼーロのドラゴンオーラ",
@@ -11840,7 +11841,8 @@
     "dmbd12-g09"
    ],
    "listed": true,
-   "total": 48
+   "total": 48,
+   "fetched": 48
   },
   "bd11": {
    "name": "DMBD-11 ガチヤバ4！無限改造デッキセットDX!! ジョーのビッグバンGR",
@@ -11896,7 +11898,8 @@
     "dmbd11-a10"
    ],
    "listed": true,
-   "total": 48
+   "total": 48,
+   "fetched": 48
   },
   "ex07": {
    "name": "DMEX-07 必殺!!マキシマム・ザ・マスターパック",
@@ -11970,7 +11973,8 @@
     "dmex07-m12"
    ],
    "listed": true,
-   "total": 66
+   "total": 66,
+   "fetched": 66
   },
   "rp11": {
    "name": "DMRP-11 超天篇 拡張パック第3弾 零誕！魔神おこせジョルネード1059!!",
