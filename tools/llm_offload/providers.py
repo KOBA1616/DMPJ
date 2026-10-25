@@ -27,6 +27,7 @@ class Fatal(Exception):
 OPENCODE_URL = "https://opencode.ai/inference/openai/v1/chat/completions"
 OPENCODE_FREE_MODELS = frozenset({
     "glm-5.3-flash-free", "deepseek-v4.1-flash-free", "longcat-2.5-preview-free",
+    "nemotron-3-ultra-free", "mimo-v2.6-flash-free",   # 2026-10-25 公式 zen で Free(入出力$0)を確認
 })
 OPENCODE_DEFAULT = "glm-5.3-flash-free"
 OPENCODE_TIMEOUT = 150   # 1回の呼び出しの上限秒。無応答時に1枚10分も待たない(2026-10-25: 600秒x3回で30分空回り)
