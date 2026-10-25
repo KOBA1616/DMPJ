@@ -17458,7 +17458,8 @@
     "dmr08-v02"
    ],
    "listed": true,
-   "total": 71
+   "total": 71,
+   "fetched": 71
   },
   "x13": {
    "name": "DMX-13 エピソード2 ホワイト・ゼニス・パック",
@@ -17505,7 +17506,8 @@
     "dmx13-v01"
    ],
    "listed": true,
-   "total": 39
+   "total": 39,
+   "fetched": 39
   },
   "r07": {
    "name": "DMR-07 エピソード2 ゴールデン・ドラゴン",
@@ -17582,7 +17584,8 @@
     "dmr07-v02"
    ],
    "listed": true,
-   "total": 69
+   "total": 69,
+   "fetched": 69
   },
   "x11": {
    "name": "DMX-11 大決戦オールスター12",
@@ -17674,7 +17677,8 @@
     "dmx11-008"
    ],
    "listed": true,
-   "total": 84
+   "total": 84,
+   "fetched": 84
   },
   "r06": {
    "name": "DMR-06 エピソード2 ビクトリー・ラッシュ",
