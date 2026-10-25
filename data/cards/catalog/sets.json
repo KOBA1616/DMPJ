@@ -13753,7 +13753,8 @@
     "dmrp05-m02"
    ],
    "listed": true,
-   "total": 110
+   "total": 110,
+   "fetched": 110
   },
   "sd05": {
    "name": "DMSD-05 オウ禍武斗・マッハ炸裂・スタートデッキ",
@@ -13776,7 +13777,8 @@
     "dmsd05-006"
    ],
    "listed": true,
-   "total": 15
+   "total": 15,
+   "fetched": 15
   },
   "sd04": {
    "name": "DMSD-04 ジョーカーズ・弾銃炸裂・スタートデッキ",
@@ -13798,7 +13800,8 @@
     "dmsd04-009"
    ],
    "listed": true,
-   "total": 14
+   "total": 14,
+   "fetched": 14
   },
   "si": {
    "name": "特別商品限定カード",
@@ -13836,7 +13839,8 @@
     "sp-031"
    ],
    "listed": true,
-   "total": 30
+   "total": 30,
+   "fetched": 30
   },
   "rp04m": {
    "name": "DMRP-04 拡張パック新4弾 誕ジョー！マスター・ドルスザク！！～無月の魔凰～",
@@ -13914,7 +13918,8 @@
     "dmrp04m-m02"
    ],
    "listed": true,
-   "total": 70
+   "total": 70,
+   "fetched": 70
   },
   "rp04s": {
    "name": "DMRP-04 拡張パック新4弾 誕ジョー！マスタードラゴン！！～正義ノ裁キ～",
@@ -14027,7 +14032,8 @@
     "dmrp04s-m02"
    ],
    "listed": true,
-   "total": 105
+   "total": 105,
+   "fetched": 105
   },
   "ex01": {
    "name": "DMEX-01 ゴールデン・ベスト",
