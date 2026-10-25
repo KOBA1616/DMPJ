@@ -1,20 +1,25 @@
 # 取得済みのカード原文を OpenCode の無料モデルで定期的に効果DSLへ変換する。
 # 取得系（auto-sync / sync-cards）とは別の実行枠。結果は cards-data（converted.yaml, rejects, convert_status.json）。
+# 完了のたびに自分自身を再起動する（未変換が残り進捗がある間）。cron は保険。
 # 手動で今すぐ動かす: Actions → auto-convert → Run workflow。止める: tools/auto_convert.yaml の enabled を false。
 name: auto-convert
 on:
   schedule:
-    - cron: "47 */2 * * *"     # 2時間ごと。auto-sync(毎6時間の17分)とずらす
+    - cron: "5,20,35,50 * * * *"   # 15分ごと（auto-syncの17分と重ならないようずらす）。同じ実行枠で直列化される
   workflow_dispatch:
+  push:                            # PR #58 のマージ時に1回だけ起動する用。マージ後にこの push 節とマーカーファイルは削除してよい
+    branches: [main]
+    paths: [tools/auto_convert_kick.txt]
 permissions:
   contents: write
+  actions: write                   # 完了後に自分自身を再起動するため
 concurrency:
   group: convert-cards             # convert-cards と同じ枠。取得系(sync-cards)とは別
   cancel-in-progress: false
 jobs:
   convert:
     runs-on: ubuntu-latest
-    timeout-minutes: 120
+    timeout-minutes: 340
     steps:
       - uses: actions/checkout@v4
         with:
@@ -30,6 +35,8 @@ jobs:
           git checkout -f cards-data
           git checkout "$GITHUB_SHA" -- tools dmsim data/rules data/cards/proto.yaml data/cards/real.yaml data/cards/real_vocab.yaml data/cards/real_zone.yaml data/cards/raw/official_*.jsonl .github
       - name: Run
+        env:
+          OPENCODE_API_KEY: ${{ secrets.OPENCODE_API_KEY }}   # use_key: true の時だけ CLI に渡す
         run: |
           pip install -q pyyaml
           npm i -g opencode-ai >/dev/null 2>&1 || echo "opencode CLI の導入に失敗"
@@ -38,10 +45,11 @@ jobs:
           r = yaml.safe_load(open("/tmp/auto.yaml"))
           if not r.get("enabled", True):
               print("auto_convert.yaml: enabled=false のため何もしない"); sys.exit(0)
-          env = {k: v for k, v in os.environ.items() if k != "OPENCODE_API_KEY"}   # CLI は匿名の無料枠
+          # use_key: false なら CLI は匿名の無料枠（キーを外す）。true ならリポジトリ Secret のキーを渡す
+          env = {k: v for k, v in os.environ.items() if r.get("use_key", False) or k != "OPENCODE_API_KEY"}
           sys.exit(subprocess.call(["python", "tools/auto_convert.py", "--model", str(r.get("model", "glm-5.3-flash-free")),
-                                    "--limit", str(r.get("limit", 20)), "--interval", str(r.get("interval", 6)),
-                                    "--workers", str(r.get("workers", 1))], env=env))
+                                    "--limit", str(r.get("limit", 20)), "--batch", str(r.get("batch", 5)), "--interval", str(r.get("interval", 6)),
+                                    "--workers", str(r.get("workers", 1)), "--timeout", str(r.get("timeout", 1200))], env=env))
           PY
       - name: Summary
         if: always()
@@ -63,6 +71,25 @@ jobs:
             echo "push 失敗($i)。再試行"; git rebase --abort 2>/dev/null; sleep $((i * 10))
           done
           echo "push できなかった（結果は成果物 convert-result から取れる）"; exit 1
+      - name: Chain next run
+        if: always()
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          # 成功でも失敗でも、まだ変換する物があり、今回進捗があり、Fatal停止でなければ次を起こす。
+          # 止まる条件に当たれば cron(15分ごと)が再開の保険になる。
+          python - <<'PY' >/tmp/chain || true
+          import json, yaml
+          if not yaml.safe_load(open("/tmp/auto.yaml")).get("enabled", True): print("no: enabled=false"); raise SystemExit
+          s = json.load(open("data/cards/raw/convert_status.json"))
+          lr = (s.get("last_run") or {}).get("new") or {}
+          if s.get("stopped"): print("no: 停止 " + s["stopped"][:80])
+          elif not s.get("pending"): print("no: 未変換なし")
+          elif not (lr.get("ok", 0) + lr.get("rejected", 0)): print("no: 今回進捗なし")
+          else: print("yes")
+          PY
+          cat /tmp/chain
+          if grep -q '^yes' /tmp/chain; then gh workflow run auto-convert.yml --ref "${{ github.ref_name }}" -R "$GITHUB_REPOSITORY"; fi
       - name: Keep results as artifact
         if: always()
         uses: actions/upload-artifact@v4

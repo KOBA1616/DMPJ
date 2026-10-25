@@ -32,6 +32,7 @@ sys.path.insert(0, str(ROOT / "tools"))
 
 from dmsim import schema  # noqa: E402
 from dmsim.defs import DATA, DefError, load_tables, parse_card  # noqa: E402
+from llm_offload.providers import CallTimeout  # noqa: E402
 from llm_offload.providers import (  # noqa: E402,F401  無料モデル呼び出しは llm_offload に集約
     OPENCODE_DEFAULT, OPENCODE_FREE_MODELS, OPENCODE_URL, BadResponse, Fatal, OpenCodeCLI, OpenCodeLLM, check_free_model)
 
@@ -209,6 +210,17 @@ def triage(rejects: list[dict]) -> dict:
     return dict(sorted(by_kind.items(), key=lambda kv: -kv[1]["n"]))
 
 
+def classify(error: str) -> dict:
+    """検査落ちの理由を返す。語彙が足りない(未知の op・キー・名前など)なら reason=vocab_gap と不足語彙 gaps を付ける。"""
+    from report_gaps import categorize
+    gaps = []
+    for part in filter(None, (p.strip() for p in error.split("\n"))):
+        kind, term = categorize(part)
+        if kind not in ("拒否", "id不一致", "その他"):
+            gaps.append(f"{kind}:{term}")
+    return {"reason": "vocab_gap", "gaps": gaps} if gaps else {"reason": "other", "gaps": []}
+
+
 def run(rows: list[dict], client, tables, sysp: str, effort: str, out: Path, rejects_path: Path,
         workers: int = 1, report_path: Path | None = None) -> dict:
     """rows を変換して out に追記する。1枚ごとに保存するので途中で止まっても続きから再開できる。
@@ -229,22 +241,29 @@ def run(rows: list[dict], client, tables, sysp: str, effort: str, out: Path, rej
                        + yaml.safe_dump({"cards": cards}, allow_unicode=True, sort_keys=False), encoding="utf-8")
         write_jsonl(rejects_path, list(rejects.values()))
 
-    streak = {"n": 0}      # 連続したAPI失敗。無料枠の制限(429)に当たったら残りを打たずに止める
+    streak = {"n": 0}      # 連続したAPI失敗（2回で打ち切り）。無料枠の制限(429)に当たったら残りを打たずに止める
 
     def one(r):
-        if streak["n"] >= 3:
+        if streak["n"] >= 2:
             return
         try:
             card = convert(client, r, tables, sysp, effort, usage)
         except DefError as e:
             with lock:
                 stats["rejected"] += 1
-                rejects[r["id"]] = {**r, "error": str(e)}
+                rejects[r["id"]] = {**r, "error": str(e), **classify(str(e))}
                 print(f"✗ {r['id']} {r.get('name', '')}: {e}", file=sys.stderr)
                 save()
             return
         except Fatal:
             raise
+        except CallTimeout as e:    # 長い上限でも終わらない＝そのカードは今のモデルでは無理。reason: timeout で対象外にする
+            with lock:
+                stats["rejected"] += 1
+                rejects[r["id"]] = {**r, "error": str(e), "reason": "timeout", "gaps": []}
+                print(f"⏱ {r['id']} {r.get('name', '')}: {e}", file=sys.stderr)
+                save()
+            return
         except Exception as e:      # noqa: BLE001  API の一時的な失敗。カードの問題ではないので rejects には入れない
             with lock:
                 stats["api_error"] += 1
