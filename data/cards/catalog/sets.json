@@ -14415,7 +14415,8 @@
     "dmrp02-m02"
    ],
    "listed": true,
-   "total": 105
+   "total": 105,
+   "fetched": 105
   },
   "rp01": {
    "name": "DMRP-01 拡張パック新1弾 ジョーカーズ参上！！",
@@ -14527,7 +14528,8 @@
     "dmrp01-m01"
    ],
    "listed": true,
-   "total": 104
+   "total": 104,
+   "fetched": 104
   },
   "x26": {
    "name": "DMX-26 ファイナル・メモリアル・パック ～DS・Rev・RevF編～",
@@ -14609,7 +14611,8 @@
     "dmx26-v08"
    ],
    "listed": true,
-   "total": 74
+   "total": 74,
+   "fetched": 74
   },
   "x25": {
    "name": "DMX-25 ファイナル・メモリアル・パック　～Ｅ１・Ｅ２・Ｅ３編～",
@@ -14691,7 +14694,8 @@
     "dmx25-v12"
    ],
    "listed": true,
-   "total": 74
+   "total": 74,
+   "fetched": 42
   },
   "r23": {
    "name": "DMR-23 革命ファイナル 拡張パック最終章 ドギラゴールデン vs. ドルマゲドンＸ",
