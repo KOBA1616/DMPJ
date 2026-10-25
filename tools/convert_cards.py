@@ -32,6 +32,7 @@ sys.path.insert(0, str(ROOT / "tools"))
 
 from dmsim import schema  # noqa: E402
 from dmsim.defs import DATA, DefError, load_tables, parse_card  # noqa: E402
+from llm_offload.providers import CallTimeout  # noqa: E402
 from llm_offload.providers import (  # noqa: E402,F401  無料モデル呼び出しは llm_offload に集約
     OPENCODE_DEFAULT, OPENCODE_FREE_MODELS, OPENCODE_URL, BadResponse, Fatal, OpenCodeCLI, OpenCodeLLM, check_free_model)
 
@@ -256,6 +257,13 @@ def run(rows: list[dict], client, tables, sysp: str, effort: str, out: Path, rej
             return
         except Fatal:
             raise
+        except CallTimeout as e:    # 長い上限でも終わらない＝そのカードは今のモデルでは無理。reason: timeout で対象外にする
+            with lock:
+                stats["rejected"] += 1
+                rejects[r["id"]] = {**r, "error": str(e), "reason": "timeout", "gaps": []}
+                print(f"⏱ {r['id']} {r.get('name', '')}: {e}", file=sys.stderr)
+                save()
+            return
         except Exception as e:      # noqa: BLE001  API の一時的な失敗。カードの問題ではないので rejects には入れない
             with lock:
                 stats["api_error"] += 1

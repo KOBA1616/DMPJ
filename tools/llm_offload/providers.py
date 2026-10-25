@@ -13,6 +13,10 @@ class BadResponse(ValueError):
     """応答に本文がないなど、モデルの出力が使えない。"""
 
 
+class CallTimeout(RuntimeError):
+    """1回の呼び出しが上限秒内に終わらなかった。"""
+
+
 class Fatal(Exception):
     """続行すると課金や無駄打ちになるエラー。実行全体を止める。"""
 
@@ -129,7 +133,7 @@ class OpenCodeCLI:
                                    capture_output=True, text=True, encoding="utf-8", errors="replace",
                                    timeout=OPENCODE_TIMEOUT, cwd=d)
             except subprocess.TimeoutExpired:
-                raise RuntimeError(f"opencode が{OPENCODE_TIMEOUT}秒以内に終わらなかった（TimeoutExpired）")
+                raise CallTimeout(f"opencode が{OPENCODE_TIMEOUT}秒以内に終わらなかった（TimeoutExpired）")
         if re.search(r"(?i)FreeTierError|billing|credit balance|insufficient|payment", r.stdout + r.stderr):
             raise Fatal(f"課金・無料枠に関するエラーなので停止する: {(r.stdout + r.stderr)[:300]}")
         texts, err = [], None
