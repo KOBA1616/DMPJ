@@ -1,17 +1,49 @@
 {
- "at": "2026-10-25T12:29:59+00:00",
+ "at": "2026-10-25T17:11:31+00:00",
  "model": "glm-5.3-flash-free",
- "raw_total": 13535,
+ "raw_total": 17672,
  "converted": 0,
  "rejected": 19,
- "pending": 13516,
+ "pending": 17653,
  "vocab_hash": "59075f1015b9ee22",
- "last_run": {
-  "new": {
-   "requested": 50,
+ "vocab_gaps": {},
+ "reject_reasons": {
+  "other": 19
+ },
+ "batches": [
+  {
+   "ids": [
+    "dm22ex1-105",
+    "dm23rp4-055",
+    "dm23rp4-20b",
+    "dm23rp4-18a",
+    "dm23rp4x-055"
+   ],
    "ok": 0,
    "rejected": 0,
-   "api_error": 3
+   "api_error": 2,
+   "skipped": true
+  },
+  {
+   "ids": [
+    "dm23rp4x-20b",
+    "dm23rp4x-18a",
+    "dm32-094",
+    "dm32-106",
+    "dm33-037"
+   ],
+   "ok": 0,
+   "rejected": 0,
+   "api_error": 2,
+   "skipped": true
+  }
+ ],
+ "last_run": {
+  "new": {
+   "requested": 10,
+   "ok": 0,
+   "rejected": 0,
+   "api_error": 4
   },
   "retry": null
  }
