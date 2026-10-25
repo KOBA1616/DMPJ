@@ -21,6 +21,7 @@ import yaml
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 import convert_cards as cc  # noqa: E402
+from llm_offload import providers  # noqa: E402
 from dmsim import schema  # noqa: E402
 from dmsim.defs import DATA, load_tables  # noqa: E402
 
@@ -62,7 +63,9 @@ def main(argv=None):
     ap.add_argument("--batch", type=int, default=5, help="1単位の枚数。単位の中がすべてAPI失敗ならその単位を飛ばして次へ")
     ap.add_argument("--max-bad-batches", type=int, default=2, help="API失敗だけの単位がこの回数続いたら打ち切る")
     ap.add_argument("--effort", default="high")
+    ap.add_argument("--timeout", type=float, default=1200, help="1枚の呼び出しの上限秒（非常に長め）。超えたら reason: timeout で対象外")
     a = ap.parse_args(argv)
+    providers.OPENCODE_TIMEOUT = a.timeout
     out, rej = DATA / "cards" / "converted.yaml", RAW / "rejects.jsonl"
     prev = json.loads(STATUS.read_text(encoding="utf-8")) if STATUS.exists() else {}
     vh = vocab_hash()
@@ -90,7 +93,8 @@ def main(argv=None):
                 print(f"API失敗の単位が{bad}回続いたので打ち切る", file=sys.stderr)
                 break
         if vh != prev.get("vocab_hash") and failed:
-            retry = [r for r in rows if r["id"] in failed][:a.limit]
+            timed_out = {r["id"] for r in cc.read_jsonl(rej) if r.get("reason") == "timeout"}   # 語彙が変わっても直らないので再試行しない
+            retry = [r for r in rows if r["id"] in failed and r["id"] not in timed_out][:a.limit]
             ran["retry"] = cc.run(retry, llm, tables, sysp, a.effort, out, rej, workers=a.workers)
         retried_all = vh == prev.get("vocab_hash") or len(failed) <= a.limit
     except cc.Fatal as e:
