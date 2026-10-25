@@ -1,0 +1,122 @@
+{
+ "n": 10,
+ "exact": 3,
+ "exact_rate": 0.3,
+ "rejected": 0,
+ "by_key": {
+  "abilities": 0.25,
+  "civs": 1.0,
+  "cost": 1.0,
+  "id": 1.0,
+  "keywords": 0.8571428571428571,
+  "mana": 0.0,
+  "name": 0.9,
+  "power": 1.0,
+  "races": 1.0,
+  "types": 1.0,
+  "spell": 1.0,
+  "faces": 1.0
+ },
+ "cards": {
+  "dm24ex4-015": {
+   "abilities": false,
+   "civs": true,
+   "cost": true,
+   "id": true,
+   "keywords": true,
+   "mana": false,
+   "name": true,
+   "power": true,
+   "races": true,
+   "types": true
+  },
+  "dm26ex4-sec015": {
+   "abilities": false,
+   "civs": true,
+   "cost": true,
+   "id": true,
+   "keywords": false,
+   "mana": false,
+   "name": true,
+   "power": true,
+   "races": true,
+   "types": true
+  },
+  "dm01-001": {
+   "civs": true,
+   "cost": true,
+   "id": true,
+   "keywords": true,
+   "mana": false,
+   "name": true,
+   "power": true,
+   "races": true,
+   "types": true
+  },
+  "dm01-027": {
+   "civs": true,
+   "cost": true,
+   "id": true,
+   "keywords": true,
+   "name": true,
+   "spell": true,
+   "types": true
+  },
+  "dm01-080": {
+   "abilities": true,
+   "civs": true,
+   "cost": true,
+   "id": true,
+   "name": true,
+   "power": true,
+   "races": true,
+   "types": true
+  },
+  "dm01-086": {
+   "civs": true,
+   "cost": true,
+   "id": true,
+   "keywords": true,
+   "mana": false,
+   "name": true,
+   "spell": true,
+   "types": true
+  },
+  "dm06-110": {
+   "civs": true,
+   "cost": true,
+   "id": true,
+   "keywords": true,
+   "mana": false,
+   "name": true,
+   "spell": true,
+   "types": true
+  },
+  "dmd04-005": {
+   "civs": true,
+   "cost": true,
+   "id": true,
+   "keywords": true,
+   "name": true,
+   "spell": true,
+   "types": true
+  },
+  "dmbd21-013": {
+   "faces": true,
+   "id": true,
+   "mana": false,
+   "name": false
+  },
+  "dm29-037": {
+   "abilities": false,
+   "civs": true,
+   "cost": true,
+   "id": true,
+   "mana": false,
+   "name": true,
+   "power": true,
+   "races": true,
+   "types": true
+  }
+ }
+}
