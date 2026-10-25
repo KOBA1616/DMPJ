@@ -16162,7 +16162,8 @@
     "dmr16g-v01"
    ],
    "listed": true,
-   "total": 65
+   "total": 65,
+   "fetched": 65
   },
   "r15": {
    "name": "DMR-15 ドラゴン・サーガ 拡張パック第３章 双剣オウギンガ",
@@ -16243,7 +16244,8 @@
     "dmr15-v02"
    ],
    "listed": true,
-   "total": 73
+   "total": 73,
+   "fetched": 73
   },
   "x18": {
    "name": "DMX-18 三段変形！龍解オールスターズ",
@@ -16301,7 +16303,8 @@
     "dmx18-001"
    ],
    "listed": true,
-   "total": 50
+   "total": 50,
+   "fetched": 50
   },
   "r14": {
    "name": "DMR-14 ドラゴン・サーガ 拡張パック第２章 暴龍ガイグレン",
@@ -16380,7 +16383,8 @@
     "dmr14-v02"
    ],
    "listed": true,
-   "total": 71
+   "total": 71,
+   "fetched": 71
   },
   "x17": {
    "name": "DMX-17 龍の祭典！ドラゴン魂フェス！！",
@@ -16430,7 +16434,8 @@
     "dmx17-v02"
    ],
    "listed": true,
-   "total": 42
+   "total": 42,
+   "fetched": 42
   },
   "r13": {
    "name": "DMR-13 ドラゴン・サーガ 拡張パック第１章 龍解ガイギンガ",
