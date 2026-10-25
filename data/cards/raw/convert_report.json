@@ -1,10 +1,10 @@
 {
  "requested": 5,
  "ok": 0,
- "rejected": 2,
+ "rejected": 0,
  "api_error": 2,
  "usage": {
-  "input": 36926,
+  "input": 0,
   "cache_read": 0,
   "cache_write": 0,
   "output": 0
@@ -124,12 +124,12 @@
  },
  "api_errors": [
   {
-   "id": "dm27+1d-002",
-   "error": "RuntimeError: opencode が本文を返さなかった（イベント: step_finish,step_start,tool_use）"
+   "id": "dm15-036",
+   "error": "RuntimeError: opencode error: {\"name\": \"APIError\", \"data\": {\"message\": \"Upstream request failed: Invalid credential\", \"statusCode\": 401, \"isRetryable\": false, \"responseHeaders\": {\"cf-placement\": \"remote-IAD\", \"cf-ray\": \"a503d88bed1fc8ce-SJC\", \"connection\": \"keep-alive\", \"content-length\": \"89\", \"cont"
   },
   {
-   "id": "dm27+1d-003",
-   "error": "RuntimeError: opencode が本文を返さなかった（イベント: step_finish,step_start,tool_use）"
+   "id": "dm16-050",
+   "error": "RuntimeError: opencode error: {\"name\": \"APIError\", \"data\": {\"message\": \"Upstream request failed: Invalid credential\", \"statusCode\": 401, \"isRetryable\": false, \"responseHeaders\": {\"cf-placement\": \"remote-IAD\", \"cf-ray\": \"a503da62ebec7396-SJC\", \"connection\": \"keep-alive\", \"content-length\": \"89\", \"cont"
   }
  ]
 }
