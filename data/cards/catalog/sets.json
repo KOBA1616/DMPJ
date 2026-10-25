@@ -10255,7 +10255,8 @@
     "dmpcd01-t16"
    ],
    "listed": true,
-   "total": 34
+   "total": 34,
+   "fetched": 34
   },
   "rp16": {
    "name": "DMRP-16 十王篇拡張パック第4弾 百王×邪王 鬼レヴォリューション!!!",
@@ -10372,7 +10373,8 @@
     "dmrp16-km3"
    ],
    "listed": true,
-   "total": 109
+   "total": 109,
+   "fetched": 109
   },
   "bd15": {
    "name": "DMBD-15 レジェンドスーパーデッキ 蒼龍革命",
@@ -10418,7 +10420,8 @@
     "dmbd15-003"
    ],
    "listed": true,
-   "total": 38
+   "total": 38,
+   "fetched": 38
   },
   "ex13": {
    "name": "DMEX-13 四強集結→最強直結パック",
@@ -10520,7 +10523,8 @@
     "dmex13-km2"
    ],
    "listed": true,
-   "total": 94
+   "total": 94,
+   "fetched": 94
   },
   "rp15": {
    "name": "DMRP-15 十王篇拡張パック第3弾 幻龍×凶襲 ゲンムエンペラー!!!",
