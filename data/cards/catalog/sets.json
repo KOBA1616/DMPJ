@@ -17108,7 +17108,8 @@
     "dmr09-v02"
    ],
    "listed": true,
-   "total": 137
+   "total": 137,
+   "fetched": 137
   },
   "x14": {
    "name": "DMX-14 最強戦略 パーフェクト12",
@@ -17200,7 +17201,8 @@
     "dmx14-008"
    ],
    "listed": true,
-   "total": 84
+   "total": 84,
+   "fetched": 84
   },
   "r08s": {
    "name": "DMR-08S エピソード2 グレイト・ミラクル ~セブン・ヒーローVer. BOX",
@@ -17215,7 +17217,8 @@
     "dmr08s-007"
    ],
    "listed": true,
-   "total": 7
+   "total": 7,
+   "fetched": 7
   },
   "x12": {
    "name": "DMX-12 エピソード2 ブラック・ボックス・パック",
@@ -17375,7 +17378,8 @@
     "dmx12b-027"
    ],
    "listed": true,
-   "total": 152
+   "total": 152,
+   "fetched": 152
   },
   "r08": {
    "name": "DMR-08 エピソード2 グレイト・ミラクル",
