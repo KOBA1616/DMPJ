@@ -5393,7 +5393,7 @@
    ],
    "listed": true,
    "total": 60,
-   "fetched": 15
+   "fetched": 60
   },
   "23rp4x": {
    "name": "DM23-RP4X アビス・レボリューション 第4弾 「竜皇神爆輝」 超刺激パック",
@@ -5571,7 +5571,8 @@
     "dm23rp4x-TR01"
    ],
    "listed": true,
-   "total": 170
+   "total": 170,
+   "fetched": 170
   },
   "23rp4": {
    "name": "DM23-RP4 アビス・レボリューション 第4弾 「竜皇神爆輝」",
@@ -5741,7 +5742,8 @@
     "dm23rp4-TR01"
    ],
    "listed": true,
-   "total": 162
+   "total": 162,
+   "fetched": 162
   },
   "23bd3": {
    "name": "DM23-BD3 開発部セレクションデッキ 「水闇自然ハンデス」",
@@ -5765,7 +5767,8 @@
     "dm23bd3-002"
    ],
    "listed": true,
-   "total": 16
+   "total": 16,
+   "fetched": 16
   },
   "23bd2": {
    "name": "DM23-BD2 開発部セレクションデッキ 「火闇邪王門」",
@@ -5789,7 +5792,8 @@
     "dm23bd2-002"
    ],
    "listed": true,
-   "total": 16
+   "total": 16,
+   "fetched": 16
   },
   "23ex2": {
    "name": "DM23-EX2 頂上決戦!!デュエキングMAX 2023",
@@ -5959,7 +5963,8 @@
     "dm23ex2-Cho001"
    ],
    "listed": true,
-   "total": 162
+   "total": 162,
+   "fetched": 162
   },
   "23rp3": {
    "name": "DM23-RP3 アビス・レボリューション 第3弾 「魔覇革命」",
@@ -6129,7 +6134,8 @@
     "dm23rp3-TR01"
    ],
    "listed": true,
-   "total": 162
+   "total": 162,
+   "fetched": 162
   },
   "23sd3": {
    "name": "DM23-SD3 スタートWINデッキ 革命・アメイジン・マジック",
@@ -6152,7 +6158,8 @@
     "dm23sd3-015"
    ],
    "listed": true,
-   "total": 15
+   "total": 15,
+   "fetched": 15
   },
   "23bd1": {
    "name": "DM23-BD1 レジェンドスーパーデッキ 禁王創来",
@@ -6198,7 +6205,8 @@
     "dm23bd1-003"
    ],
    "listed": true,
-   "total": 38
+   "total": 38,
+   "fetched": 38
   },
   "23ex1": {
    "name": "DM23-EX1  大感謝祭 ビクトリーBEST",
@@ -6290,7 +6298,8 @@
     "dm23ex1-009"
    ],
    "listed": true,
-   "total": 84
+   "total": 84,
+   "fetched": 84
   },
   "23rp2x": {
    "name": "DM23-RP2X  アビス・レボリューション 第2弾 「忍邪乱武」 超刺激パック",
@@ -6468,7 +6477,8 @@
     "dm23rp2x-SP01"
    ],
    "listed": true,
-   "total": 170
+   "total": 170,
+   "fetched": 170
   },
   "23rp2": {
    "name": "DM23-RP2 アビス・レボリューション 第2弾 「忍邪乱武」",
@@ -6638,7 +6648,8 @@
     "dm23rp2-SP01"
    ],
    "listed": true,
-   "total": 162
+   "total": 162,
+   "fetched": 162
   },
   "23sd2": {
    "name": "DM23-SD2 スタートWINデッキ 聖沌・クノイチ・チェンジ",
@@ -6660,7 +6671,8 @@
     "dm23sd2-014"
    ],
    "listed": true,
-   "total": 14
+   "total": 14,
+   "fetched": 14
   },
   "23sp1": {
    "name": "DM23-SP1 スタートWIN・スーパーデッキ 深淵の邪襲",
@@ -6685,7 +6697,8 @@
     "dm23sp1-017"
    ],
    "listed": true,
-   "total": 17
+   "total": 17,
+   "fetched": 17
   },
   "23rp1": {
    "name": "DM23-RP1 アビス・レボリューション 第1弾 「双竜戦記」",
@@ -6855,7 +6868,8 @@
     "dm23rp1-TR1"
    ],
    "listed": true,
-   "total": 162
+   "total": 162,
+   "fetched": 162
   },
   "23sd1": {
    "name": "DM23-SD1 スタートWINデッキ 竜軍・オブ・ボルシャック",
@@ -6877,7 +6891,8 @@
     "dm23sd1-014"
    ],
    "listed": true,
-   "total": 14
+   "total": 14,
+   "fetched": 14
   },
   "22bd3": {
    "name": "DM22-BD3 開発部セレクションデッキ 「7軸ガチロボ」",
@@ -6899,7 +6914,8 @@
     "dm22bd3-001"
    ],
    "listed": true,
-   "total": 14
+   "total": 14,
+   "fetched": 14
   },
   "22bd2": {
    "name": "DM22-BD2 開発部セレクションデッキ 「光水火鬼羅.Star」",
@@ -6924,7 +6940,8 @@
     "dm22bd2-001"
    ],
    "listed": true,
-   "total": 17
+   "total": 17,
+   "fetched": 17
   },
   "22ex2": {
    "name": "DM22-EX2 ヒーローズ・ダークサイド・パック ～闇のキリフダたち～",
@@ -7046,7 +7063,8 @@
     "dm22ex2-075"
    ],
    "listed": true,
-   "total": 114
+   "total": 114,
+   "fetched": 114
   },
   "pcd03": {
    "name": "DMPCD-03 デュエマプレイス・コラボデッキ 激竜の英雄＆邪眼の始祖",
@@ -7085,7 +7103,8 @@
     "dmpcd03-a03"
    ],
    "listed": true,
-   "total": 31
+   "total": 31,
+   "fetched": 31
   },
   "22sp2": {
    "name": "DM22-SP2 「轟炎の竜皇」暴竜爵からの招待状",
@@ -7097,7 +7116,8 @@
     "dm22sp2-004"
    ],
    "listed": true,
-   "total": 4
+   "total": 4,
+   "fetched": 4
   },
   "22rp2x": {
    "name": "DM22-RP2X ゴッド・オブ・アビス 第2弾「轟炎の竜皇」超刺激パック",
@@ -7271,7 +7291,8 @@
     "dm22rp2x-SP2"
    ],
    "listed": true,
-   "total": 166
+   "total": 166,
+   "fetched": 166
   },
   "22rp2": {
    "name": "DM22-RP2 ゴッド・オブ・アビス 第2弾「轟炎の竜皇」",
@@ -7448,7 +7469,8 @@
     "dm22rp2-SP2"
    ],
    "listed": true,
-   "total": 169
+   "total": 169,
+   "fetched": 169
   },
   "22bd1": {
    "name": "DM22-BD1 レジェンドスーパーデッキ 龍覇爆炎",
@@ -7485,7 +7507,8 @@
     "dm22bd1-005"
    ],
    "listed": true,
-   "total": 29
+   "total": 29,
+   "fetched": 29
   },
   "22ex1": {
    "name": "DM22-EX1 黄金戦略!!デュエキングMAX 2022",
@@ -7683,7 +7706,8 @@
     "dm22ex1-002"
    ],
    "listed": true,
-   "total": 190
+   "total": 190,
+   "fetched": 190
   },
   "22sp1": {
    "name": "DM22-SP1 「伝説の邪神」深淵からの招待状",
@@ -7695,7 +7719,8 @@
     "dm22sp1-004"
    ],
    "listed": true,
-   "total": 4
+   "total": 4,
+   "fetched": 4
   },
   "22rp1": {
    "name": "DM22-RP1 ゴッド・オブ・アビス　第１弾「伝説の邪神」",
@@ -7872,7 +7897,8 @@
     "dm22rp1-SP1"
    ],
    "listed": true,
-   "total": 169
+   "total": 169,
+   "fetched": 169
   },
   "22sd1": {
    "name": "DM22-SD1 スタートWINデッキ 邪神・フロム・アビス",
@@ -7894,7 +7920,8 @@
     "dm22sd1-006"
    ],
    "listed": true,
-   "total": 14
+   "total": 14,
+   "fetched": 14
   },
   "bd22": {
    "name": "DMBD-22 クロニクル・ダークサイド・デッキ 「零誕」",
@@ -7927,7 +7954,8 @@
     "dmbd22-005"
    ],
    "listed": true,
-   "total": 25
+   "total": 25,
+   "fetched": 25
   },
   "bd21": {
    "name": "DMBD-21 クロニクル・ダークサイド・デッキ 「終焉」",
@@ -7958,7 +7986,8 @@
     "dmbd21-018"
    ],
    "listed": true,
-   "total": 23
+   "total": 23,
+   "fetched": 23
   },
   "ex19": {
    "name": "DMEX-19 マスター・ファイナル・メモリアル・パック",
@@ -8104,7 +8133,8 @@
     "dmex19-ms10"
    ],
    "listed": true,
-   "total": 138
+   "total": 138,
+   "fetched": 138
   },
   "rp22": {
    "name": "DMRP-22 王来MAX最終弾 切札!マスターCRYMAX!!",
@@ -8283,7 +8313,8 @@
     "dmrp22-TR3"
    ],
    "listed": true,
-   "total": 171
+   "total": 171,
+   "fetched": 171
   },
   "bd20": {
    "name": "DMBD-20 開発部セレクションデッキ 「水闇魔導具」",
@@ -8303,7 +8334,8 @@
     "dmbd20-002"
    ],
    "listed": true,
-   "total": 12
+   "total": 12,
+   "fetched": 12
   },
   "bd19": {
    "name": "DMBD-19 開発部セレクションデッキ 「火水覇道」",
@@ -8325,7 +8357,8 @@
     "dmbd19-001"
    ],
    "listed": true,
-   "total": 14
+   "total": 14,
+   "fetched": 14
   },
   "rp21": {
    "name": "DMRP-21 王来MAX第1弾 鬼ヤバ逆襲S-MAX!!",
@@ -8504,7 +8537,8 @@
     "dmrp21-TR2"
    ],
    "listed": true,
-   "total": 171
+   "total": 171,
+   "fetched": 171
   },
   "sd21": {
    "name": "DMSD-21 キングマスタースタートデッキ アバクの鬼レクスターズ",
@@ -8527,7 +8561,8 @@
     "dmsd21-001"
    ],
    "listed": true,
-   "total": 15
+   "total": 15,
+   "fetched": 15
   },
   "sd20": {
    "name": "DMSD-20 キングマスタースタートデッキ ジョーのS-MAX進化",
@@ -8552,7 +8587,8 @@
     "dmsd20-001"
    ],
    "listed": true,
-   "total": 17
+   "total": 17,
+   "fetched": 17
   },
   "ex18": {
    "name": "DMEX-18 20周年超感謝メモリアルパック 裏の章 パラレル･マスターズ",
@@ -8650,7 +8686,8 @@
     "dmex18-075"
    ],
    "listed": true,
-   "total": 90
+   "total": 90,
+   "fetched": 90
   },
   "pcd02": {
    "name": "DMPCD-02 デュエマプレイス・コラボデッキ 竜装の武者＆魔弾の騎士",
@@ -8690,7 +8727,8 @@
     "dmpcd02-a02"
    ],
    "listed": true,
-   "total": 32
+   "total": 32,
+   "fetched": 32
   },
   "rp20": {
    "name": "DMRP-20 王来篇拡張パック第4弾 終末王龍大戦",
@@ -8854,7 +8892,8 @@
     "dmrp20-b16"
    ],
    "listed": true,
-   "total": 156
+   "total": 156,
+   "fetched": 156
   },
   "bd18": {
    "name": "DMBD-18 レジェンドスーパーデッキ 神歌繚嵐",
@@ -8896,7 +8935,8 @@
     "dmbd18-008"
    ],
    "listed": true,
-   "total": 34
+   "total": 34,
+   "fetched": 34
   },
   "ex17": {
    "name": "DMEX-17 20周年超感謝メモリアルパック 究極の章 デュエキングMAX",
@@ -9102,7 +9142,8 @@
     "dmex17-w19"
    ],
    "listed": true,
-   "total": 198
+   "total": 198,
+   "fetched": 198
   },
   "rp19": {
    "name": "DMRP-19 王来篇拡張パック第3弾 禁断龍VS禁断竜",
@@ -9266,7 +9307,8 @@
     "dmrp19-b16"
    ],
    "listed": true,
-   "total": 156
+   "total": 156,
+   "fetched": 156
   },
   "sd19": {
    "name": "DMSD-19 キングマスタースタートデッキ ハイドのディスペクターN・EXT",
@@ -9289,7 +9331,8 @@
     "dmsd19-001"
    ],
    "listed": true,
-   "total": 15
+   "total": 15,
+   "fetched": 15
   },
   "bd17": {
    "name": "DMBD-17 20th クロニクルデッキ 熱血!! アウトレイジ・ビクトリー",
@@ -9321,7 +9364,8 @@
     "dmbd17-003"
    ],
    "listed": true,
-   "total": 24
+   "total": 24,
+   "fetched": 24
   },
   "bd16": {
    "name": "DMBD-16 20th クロニクルデッキ 決闘!! ボルシャック・デュエル",
@@ -9353,7 +9397,8 @@
     "dmbd16-004"
    ],
    "listed": true,
-   "total": 24
+   "total": 24,
+   "fetched": 24
   },
   "ex16": {
    "name": "DMEX-16 20周年超感謝メモリアルパック 技の章 英雄戦略パーフェクト20",
@@ -9461,7 +9506,8 @@
     "dmex16-007"
    ],
    "listed": true,
-   "total": 100
+   "total": 100,
+   "fetched": 100
   },
   "sp04": {
    "name": "DMSP-04 デュエマ・ストロング・ドリーム ジョーカーズGR",
@@ -9481,7 +9527,8 @@
     "dmsp04-003"
    ],
    "listed": true,
-   "total": 12
+   "total": 12,
+   "fetched": 12
   },
   "rp18": {
    "name": "DMRP-18 王来篇拡張パック第2弾 禁時王の凶来",
@@ -9645,7 +9692,8 @@
     "dmrp18-b19"
    ],
    "listed": true,
-   "total": 156
+   "total": 156,
+   "fetched": 156
   },
   "ex15": {
    "name": "DMEX-15 20周年超感謝メモリアルパック 魂の章 名場面BEST",
@@ -9803,7 +9851,8 @@
     "dmex15-a005"
    ],
    "listed": true,
-   "total": 150
+   "total": 150,
+   "fetched": 150
   },
   "rp17": {
    "name": "DMRP-17 王来篇拡張パック第1弾 王星伝説超動",
@@ -9967,7 +10016,8 @@
     "dmrp17-b16"
    ],
    "listed": true,
-   "total": 156
+   "total": 156,
+   "fetched": 36
   },
   "sd18": {
    "name": "DMSD-18 キングマスタースタートデッキ ジェンドルのディスペクター",

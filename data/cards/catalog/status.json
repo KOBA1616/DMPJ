@@ -1,10 +1,10 @@
 {
- "updated": "2026-10-24T21:56:08Z",
+ "updated": "2026-10-25T02:56:24Z",
  "products": 398,
  "products_listed": 398,
  "cards_total": 23671,
- "cards_fetched": 4936,
- "products_done": 45,
+ "cards_fetched": 9035,
+ "products_done": 95,
  "cards_gave_up": 0,
  "complete": false
 }
