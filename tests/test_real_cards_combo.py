@@ -271,3 +271,39 @@ def test_emergency_typhoon_twinpact_creature_draws_on_own_spell(rules):
         e.answer([0])                                # すべて引く（誘発の1枚＋呪文の2枚）
         d = e.advance()
     assert len(names(e, "hand", 0)) >= 2
+
+
+def test_remming_twinpact_gets_power_and_double_breaker_when_you_discard(rules):
+    """ローレンツ・タイフーン（dmpromoy22-p51 呪文面）で手札を捨てるとレミングが +4000・W・ブレイカー。"""
+    e = setup(rules, {"bz": ["dmpromoy22-p51"], "hand": ["dmpromoy22-p51", "dm01-080"], "mana": ["dm06-085"] * 2}, filler="dm01-080")
+    base = e.chars(e.s.zones["bz"][0][0])
+    assert (base["power"], base["breaks"]) == (2000, 1)
+    answer(e, "charge", "pass")
+    answer(e, "main", "play:dmpromoy22-p51:1")
+    d = e.advance()
+    while d is not None and d["kind"] not in ("main", "attack"):
+        e.answer([0])
+        d = e.advance()
+    ch = e.chars(e.s.zones["bz"][0][0])
+    assert (ch["power"], ch["breaks"]) == (6000, 2)
+
+
+def test_bruce_cannot_attack_until_graveyard_has_13_cards(rules):
+    few = setup(rules, {"bz": ["dmbd17-009"], "graveyard": ["dm01-080"] * 12})
+    many = setup(rules, {"bz": ["dmbd17-009"], "graveyard": ["dm01-080"] * 13})
+    cid = lambda e: e.s.zones["bz"][0][0]
+    assert "attack_player" in few.chars(cid(few))["deny"]
+    assert few.chars(cid(few))["breaks"] == 3
+    assert "attack_player" not in many.chars(cid(many))["deny"]
+
+
+def test_bruce_spell_face_reanimates_cost_3_or_less_creature(rules):
+    """呪文面: コスト3以下のクリーチャーを墓地から出す（コスト4以上は選べない）。"""
+    e = setup(rules, {"hand": ["dmbd17-009"], "mana": ["T008"] * 3, "graveyard": ["T008", "dm22ex2-021"]}, filler="dm01-080")
+    answer(e, "charge", "pass")
+    answer(e, "main", "play:dmbd17-009:1")
+    d = e.advance()
+    while d is not None and d["kind"] not in ("main", "attack"):
+        e.answer([0])
+        d = e.advance()
+    assert names(e, "bz", 0) == ["T008"]
