@@ -26925,7 +26925,8 @@
     "promoy11-083"
    ],
    "listed": true,
-   "total": 82
+   "total": 82,
+   "fetched": 82
   },
   "promoy10": {
    "name": "プロモ限定カード 10期",
@@ -26986,7 +26987,8 @@
     "promoy10-053"
    ],
    "listed": true,
-   "total": 53
+   "total": 53,
+   "fetched": 53
   },
   "promoy9": {
    "name": "プロモ限定カード 9期",
@@ -27000,7 +27002,8 @@
     "promoy9-097"
    ],
    "listed": true,
-   "total": 6
+   "total": 6,
+   "fetched": 6
   },
   "promoy8": {
    "name": "プロモ限定カード 8期",
@@ -27013,7 +27016,8 @@
     "promoy8-010"
    ],
    "listed": true,
-   "total": 5
+   "total": 5,
+   "fetched": 5
   },
   "promoy7": {
    "name": "プロモ限定カード 7期",
@@ -27028,7 +27032,8 @@
     "promoy7-059"
    ],
    "listed": true,
-   "total": 7
+   "total": 7,
+   "fetched": 7
   },
   "promoy6": {
    "name": "プロモ限定カード 6期",
@@ -27047,7 +27052,8 @@
     "promoy6-041"
    ],
    "listed": true,
-   "total": 11
+   "total": 11,
+   "fetched": 11
   },
   "promoy5": {
    "name": "プロモ限定カード 5期",
@@ -27069,7 +27075,8 @@
     "promoy5-059"
    ],
    "listed": true,
-   "total": 14
+   "total": 14,
+   "fetched": 14
   },
   "promoy4": {
    "name": "プロモ限定カード 4期",
@@ -27119,7 +27126,8 @@
     "promoy4-042"
    ],
    "listed": true,
-   "total": 42
+   "total": 42,
+   "fetched": 42
   },
   "promoy3": {
    "name": "プロモ限定カード 3期",
@@ -27166,7 +27174,8 @@
     "promoy3-039"
    ],
    "listed": true,
-   "total": 39
+   "total": 39,
+   "fetched": 39
   },
   "promoy2": {
    "name": "プロモ限定カード 2期",
@@ -27204,7 +27213,8 @@
     "promoy2-027"
    ],
    "listed": true,
-   "total": 30
+   "total": 30,
+   "fetched": 30
   },
   "promoy1": {
    "name": "プロモ限定カード 1期",
@@ -27241,7 +27251,8 @@
     "promoy1-WINNER2"
    ],
    "listed": true,
-   "total": 29
+   "total": 29,
+   "fetched": 29
   }
  }
 }
