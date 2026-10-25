@@ -4,7 +4,7 @@
 name: auto-convert
 on:
   schedule:
-    - cron: "47 */2 * * *"     # 2時間ごと。auto-sync(毎6時間の17分)とずらす
+    - cron: "5,20,35,50 * * * *"   # 15分ごと（auto-syncの17分と重ならないようずらす）。同じ実行枠で直列化される
   workflow_dispatch:
 permissions:
   contents: write
