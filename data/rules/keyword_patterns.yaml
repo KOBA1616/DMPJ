@@ -4,7 +4,14 @@
 # エンジンの既存の演算だけで書けるものだけをここに置く。足りないものは docs/offload.md の「未対応」に書く。
 # noise: 原文に出てくるが能力ではない記号。除いて照合する（{GS} は G・ストライクの印）
 # マナゾーンに置く時のタップは多色カードのルール（405.1）の注釈で、カードの能力ではない
-noise: ["{GS}", "マナゾーンに置く時、このカードはタップして置く。"]
+noise:
+  - "{GS}"
+  - マナゾーンに置く時、このカードはタップして置く。
+  # コスト軽減の下限の念押し（エンジンは常に0で止める）。モデルに渡しても情報が増えない
+  - ただし、コストは0以下にはならない。
+  - ただし、コストは0以下にならない。
+  - ただしコストは0以下にならない。
+  - ただし、コストは1より少なくならない。
 patterns:
   power_attacker:
     re: 'パワーアタッカー([+＋]\d+)'
@@ -27,3 +34,31 @@ patterns:
         when: {event: move, to: bz, subject: self}
         effect:
           - {op: modify, select: {ref: self}, mod: {deny: [be_chosen, be_attacked]}, duration: until_next_own_turn_start}
+  # ニンジャ・ストライク N: 相手のクリーチャーが攻撃またはブロックした時、マナがN枚以上なら手札からコストを支払わずに召喚（そのターンの終わりに山札の下へ）
+  ninja_strike:
+    re: 'ニンジャ・ストライク(\d+)'
+    abilities:
+      - kind: declare
+        zone: hand
+        when: {event: attack, subject: {owner: opp}}
+        if: {cmp: [{count: {zone: mana, owner: you}}, ">=", "{1}"]}
+        effect:
+          - {op: play_free, select: {ref: self}, as: ninja}
+          - op: delayed_trigger
+            when: {event: turn_end}
+            effect:
+              - {op: move, select: {ref: ninja}, to: deck, reason: put, position: bottom}
+      - kind: declare
+        zone: hand
+        when: {event: block, subject: {owner: opp}}
+        if: {cmp: [{count: {zone: mana, owner: you}}, ">=", "{1}"]}
+        effect:
+          - {op: play_free, select: {ref: self}, as: ninja}
+          - op: delayed_trigger
+            when: {event: turn_end}
+            effect:
+              - {op: move, select: {ref: ninja}, to: deck, reason: put, position: bottom}
+  # 革命チェンジ：<条件>（条件の読み取りは rule_convert の _build_revolution_change）
+  revolution_change:
+    re: '革命チェンジ[:：](.+)'
+    builder: revolution_change

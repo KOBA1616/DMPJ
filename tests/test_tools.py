@@ -949,3 +949,36 @@ def test_rule_convert_named_effects_with_notes():
     assert r and r["keywords"] == ["powered_breaker", "shield_saver", "escape"]
     kws, rest, _ = rc.split({**base, "text": "{GS} G・ストライク（…）\nこのクリーチャーが出た時、カードを1枚引く。"})
     assert kws == ["g_strike"] and rest == "このクリーチャーが出た時、カードを1枚引く。"
+
+
+def test_rule_convert_revolution_change_and_ninja_strike():
+    """革命チェンジ：<条件> とニンジャ・ストライク N（数字が空白で離れていても）をルールで変換し、検査に通る。"""
+    import rule_convert as rc
+    from dmsim.defs import load_tables, parse_card
+    base = {"card_type": "クリーチャー", "civilization": "火", "cost": "6", "power": "6000", "race": "アーマード・ドラゴン", "name": "n"}
+    r = rc.convert({**base, "id": "rc1", "text": "革命チェンジ：光または火の、コスト５以上のドラゴン（…） / W・ブレイカー"})
+    f = r["abilities"][0]["when"]["subject"]["filter"]
+    assert f == {"civs": ["light", "fire"], "cost_ge": 5, "race_has": "ドラゴン"} and r["keywords"] == ["double_breaker"]
+    parse_card(r, load_tables())
+    assert rc.convert({**base, "id": "rc2", "text": "革命チェンジ：ファイアー・バードまたはドラゴン"}) is None
+    n = rc.convert({**base, "id": "ns", "text": "ニンジャ・ストライク ４（…）"})
+    assert [a["when"]["event"] for a in n["abilities"]] == ["attack", "block"]
+    assert n["abilities"][0]["if"]["cmp"][2] == 4
+    parse_card(n, load_tables())
+
+
+def test_reuse_same_text_copies_abilities_without_model():
+    """原文が同じ変換済みクリーチャーがあれば、能力だけ写して id・名前・ステータスは新しいカードのものにする。"""
+    import rule_convert as rc
+    from dmsim.defs import load_tables, parse_card
+    base = {"card_type": "クリーチャー", "civilization": "水", "cost": "2", "power": "1000", "race": "リキッド・ピープル"}
+    donor = {"id": "d1", "name": "元", "types": ["creature"], "civs": ["water"], "cost": 4, "power": 2000, "text": "出た時、カードを1枚引く。",
+             "abilities": [{"kind": "trigger", "when": {"event": "move", "to": "bz", "subject": "self"}, "effect": [{"op": "draw", "count": 1}]}],
+             "source": {"official": "d1", "review": "approved"}}
+    row = {**base, "id": "d2", "name": "再録", "text": "出た時、カードを1枚引く。"}
+    r = rc.reuse_same_text(row, [donor])
+    assert r["id"] == "d2" and r["cost"] == 2 and r["power"] == 1000 and r["abilities"] == donor["abilities"]
+    assert r["source"]["review"] == "pending" and "d1" in r["source"]["notes"]
+    parse_card(r, load_tables())
+    assert rc.reuse_same_text({**row, "text": "別の原文"}, [donor]) is None
+    assert rc.reuse_same_text({**row, "id": "d1"}, [donor]) is None
