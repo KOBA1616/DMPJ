@@ -108,6 +108,9 @@ class SelectorMixin:
             r = sel["ref"]
             if r == "self":
                 refs = [env["self"]]
+            elif r == "self_moved":   # このカード自身が離れた後の姿（ちょうど1回ゾーンを移った時だけ）。ラスト・バースト等
+                c = s.cards[env["self"][0]]
+                return [c.cid] if c.gen == env["self"][1] + 1 and c.zone != "bz" else []
             elif r == "event.subject":
                 refs = [env["event"]["subject"]]
             else:

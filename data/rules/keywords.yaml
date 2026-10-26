@@ -156,3 +156,17 @@ keywords:
         when: {event: move, from: bz, subject: self}
         instead:
           - {op: move, select: {ref: self}, to: hand, reason: return}
+  last_burst:         # このクリーチャーが破壊された時、このカードの呪文側をコストを支払わずに唱えてもよい
+    ja: ラスト・バースト
+    abilities:
+      - kind: trigger
+        when: {event: move, from: bz, to: graveyard, reason: destroy, subject: self}
+        effect: &last_burst
+          - op: may
+            body: [{op: play_free, select: {ref: self_moved}, face: spell}]
+  mega_last_burst:    # このクリーチャーが離れて、手札、マナゾーン、または墓地に置かれた時（山札・シールドは含まない）
+    ja: メガ・ラスト・バースト
+    abilities:
+      - {kind: trigger, when: {event: move, from: bz, to: graveyard, subject: self}, effect: *last_burst}
+      - {kind: trigger, when: {event: move, from: bz, to: hand, subject: self}, effect: *last_burst}
+      - {kind: trigger, when: {event: move, from: bz, to: mana, subject: self}, effect: *last_burst}

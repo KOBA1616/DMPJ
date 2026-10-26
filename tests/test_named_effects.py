@@ -169,3 +169,42 @@ def test_modal_repeat_allows_same_mode_twice(tmp_path):
     answer(e, "choose_mode", "mode:0")
     e.advance()
     assert len(e.zlist("hand", 0)) == 2          # 同じモードを2回選んで2枚引く
+
+
+def _lb_rules(tmp_path, kw):
+    import yaml
+    f = tmp_path / "lb.yaml"
+    f.write_text(yaml.safe_dump({"cards": [{"id": "L001", "name": "ツイン", "text": "x", "faces": [
+        {"name": "クリ面", "types": ["creature"], "civs": ["fire"], "cost": 3, "power": 1000, "races": ["テスト"], "keywords": [kw]},
+        {"name": "呪文面", "types": ["spell"], "civs": ["fire"], "cost": 3, "spell": [{"op": "draw", "count": 2}]}]}]}, allow_unicode=True))
+    return load_rules(sorted((DATA / "cards").glob("*.yaml")) + [f])
+
+
+def test_last_burst_casts_spell_side_when_destroyed(tmp_path):
+    """ラスト・バースト: 破壊された時、呪文側をコストを支払わずに唱えてもよい（この例では2枚引く）。"""
+    rr = _lb_rules(tmp_path, "last_burst")
+    e = setup(rr, {"bz": ["T004"]}, {"bz": ["L001"]})
+    e.s.cards[top(e, 1, "L001")].tapped = True
+    answer(e, "attack", "attack:T004:L001")
+    answer(e, "yes_no", "yes")
+    e.advance()
+    assert len(e.zlist("hand", 1)) >= 2 and not e.bz_tops(1)
+
+
+def test_last_burst_can_be_declined(tmp_path):
+    rr = _lb_rules(tmp_path, "last_burst")
+    e = setup(rr, {"bz": ["T004"]}, {"bz": ["L001"]})
+    e.s.cards[top(e, 1, "L001")].tapped = True
+    answer(e, "attack", "attack:T004:L001")
+    answer(e, "yes_no", "no")
+    e.advance()
+    assert [e.s.cards[c].defn for c in e.zlist("graveyard", 1)] == ["L001"]
+
+
+def test_mega_last_burst_triggers_when_returned_to_hand(tmp_path):
+    rr = _lb_rules(tmp_path, "mega_last_burst")
+    e = setup(rr, {"bz": ["T004"]}, {"bz": ["L001"]})
+    cid = top(e, 1, "L001")
+    e.apply_batch([{"ev": "move", "subject": e.s.ref(cid), "to": "hand", "reason": "return"}])
+    d = e.advance()
+    assert d["kind"] == "yes_no" and d["player"] == 1

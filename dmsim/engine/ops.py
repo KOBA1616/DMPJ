@@ -215,7 +215,7 @@ def _free_face(eng, cid, want):
     return 0
 
 
-@op("play_free", select="selector", resolve_to="zone?", **{"as": "str?"})
+@op("play_free", select="selector", resolve_to="zone?", face="str?", **{"as": "str?"})
 def op_play_free(eng, t, op, env):
     """コストを支払わずに召喚する／唱える（112.3g: 召喚・詠唱したことになる）。ツインパクトはクリーチャー側。
     resolve_to: 唱えた呪文を解決後に墓地ではなくそのゾーンに置く（「唱えた後、墓地に置くかわりに手札に加える」）。"""
@@ -223,6 +223,8 @@ def op_play_free(eng, t, op, env):
     if d:
         return d
     want = (op["select"].get("filter") or {}).get("types") if isinstance(op["select"], dict) else None
+    if op.get("face") in ("spell", "creature"):   # ツインパクトの面を明示（ラスト・バーストの「呪文側」）
+        want = [op["face"]]
     tasks = [eng.play_task(c, env["you"], True, _free_face(eng, c, want)) for c in cids]
     if "resolve_to" in op:
         for x in tasks:
