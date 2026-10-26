@@ -371,6 +371,41 @@ def charge_choice(eng, d, targets=TARGET_CARDS, loop_card: str = SAGA) -> int | 
     return max(scores, key=lambda j: scores[j])
 
 
+def learn_play_shaping(records: list[dict], win_reason: str | None = None) -> dict[str, float]:
+    """報酬の自動設計: 成功した対戦（到達/勝利した軌跡）の中で、どのカードの
+    プレイがどれだけの割合の対戦に現れたかから、プレイへの報酬を決める。
+
+    人手で「必要なプレイ」を列挙する代わりに、成功軌跡への出現率を使う。
+    戻り値は最大値を1にそろえた {カードID: 報酬}。対戦の区切り（game）が
+    無いレコードだけなら空を返す。
+
+    win_reason を指定すると、その勝ち方で勝った対戦だけから学ぶ。到達した
+    対戦の多くは別の勝ち方（攻撃）で終わるため、混ぜて学ぶと狙う勝ち方と
+    無関係なプレイ（例: 打点として出したカード）まで報酬に入ってしまう。
+    """
+    games: dict = defaultdict(set)
+    game_result: dict = {}
+    for rec in records:
+        g = rec.get("game")
+        if g is None:
+            continue
+        game_result[g] = rec.get("result")
+        for k in rec["chosen"]:
+            if k.startswith("play:"):
+                games[g].add(k.split(":")[1])
+    if win_reason is not None:
+        games = {g: p for g, p in games.items() if game_result.get(g) == win_reason}
+    if not games:
+        return {}
+    n = len(games)
+    counts: Counter = Counter()
+    for played in games.values():
+        for defn in played:
+            counts[defn] += 1
+    top = max(counts.values())
+    return {defn: round(c / top, 3) for defn, c in counts.items() if c >= 2}
+
+
 def learn_preferences(records: list[dict]) -> dict:
     """決定レコードから、決定の種類ごとのキーの選好率を学ぶ。
 
@@ -457,6 +492,10 @@ class MicroPolicy:
     plan_plays: tuple = TARGET_CARDS + ("dm26ex2-071", "dmpromoy22-p51", "dmex10-020")
     # 戦略に必要なプレイ: 部品、掘る呪文（タイフーン系）、マナ加速（コダマダンス）。
     # これ以外のプレイは、成立優先の間は候補の後ろに回す（微小なペナルティ）
+    play_shaping: dict = field(default_factory=dict)
+    # 成功軌跡から学んだプレイへの報酬（learn_play_shaping の出力）。
+    # あれば人手の plan_plays より優先し、寄与するプレイを候補の前に、
+    # 寄与しないプレイを後ろに回す
 
     def prefer(self, eng, d) -> list[int] | None:
         prefs = self.preferences or {}
@@ -548,21 +587,24 @@ class MicroPolicy:
             rest = [c for c in out if list(c) != pref]
             res = [pref] + rest[: max(cap - 1, 0)]
         if (self.loop_priority and d["kind"] == "main" and self.intent != "execute"):
-            # 戦略に不要なプレイへの微小なペナルティ: 部品集めの挙動は妨げず、
-            # それ以外のプレイ（余分なクリーチャー等）を候補の後ろに回す。
-            # 場に残った余分な打点が、後のターンに攻撃の勝ち筋を作ってしまうため
+            # 戦略に不要なプレイへの微小なペナルティと、寄与するプレイへの
+            # 微小な報酬: 部品集めの挙動は妨げず、それ以外のプレイ
+            # （余分なクリーチャー等）を候補の後ろに回す。場に残った余分な
+            # 打点が、後のターンに攻撃の勝ち筋を作ってしまうため。
+            # 報酬表（play_shaping）があれば人手の列挙より優先する
             keys = [o["key"] for o in d["options"]]
 
-            def is_plan(cand):
+            def tier(cand):
                 if not cand:
-                    return True
+                    return 1
                 k = keys[cand[0]]
-                if k == "pass":
-                    return True
-                if k.startswith("play:"):
-                    return k.split(":")[1] in self.plan_plays
-                return True
-            res = [c for c in res if is_plan(c)] + [c for c in res if not is_plan(c)]
+                if not k.startswith("play:"):
+                    return 1                    # pass などは真ん中
+                defn = k.split(":")[1]
+                if self.play_shaping:
+                    return 0 if self.play_shaping.get(defn, 0.0) >= 0.5 else 2
+                return 0 if defn in self.plan_plays else 2
+            res = sorted(res, key=tier)
         return res
 
 
@@ -729,6 +771,7 @@ class Pipeline:
                 leaf = eng
             r = leaf.s.result
             won_loop = bool(r and r.get("winner") == ME and r.get("reason") == "effect")
+            result_reason = r.get("reason") if (r and r.get("winner") == ME) else None
             if not (reached or won_loop):
                 continue
             # 再生して判断を記録する
@@ -753,7 +796,7 @@ class Pipeline:
                                  for c in eng.cdef(cid).civs}
                     multi_hand = sum(1 for cid in eng.s.zones["hand"][ME]
                                      if len(eng.cdef(cid).civs) >= 2)
-                    records.append({"kind": d["kind"],
+                    records.append({"kind": d["kind"], "game": s, "result": result_reason,
                                     "options": [o["key"] for o in d["options"]],
                                     "chosen": entry["keys"],
                                     "deck": deck_n, "bucket": deck_bucket(deck_n),

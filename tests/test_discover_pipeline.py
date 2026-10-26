@@ -9,7 +9,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parent.parent / "tools"))
 
 from discover_pipeline import (MacroPlanner, MicroPolicy, charge_choice,  # noqa: E402
                                classify_win, deck_bucket, grave_bucket,
-                               learn_preferences, try_loop_first)
+                               learn_preferences, learn_play_shaping, try_loop_first)
 
 from conftest import setup  # noqa: E402
 
@@ -249,6 +249,21 @@ def test_try_loop_first_wins_from_loop_position(rules):
     leaf = try_loop_first(eng)
     assert leaf is not None
     assert leaf.s.result["winner"] == 0 and leaf.s.result["reason"] == "effect"
+
+
+def test_learn_play_shaping_from_successful_games():
+    # 成功した対戦に頻出するプレイほど報酬が高くなる（最大値を1にそろえる）
+    records = []
+    for g in range(4):
+        records.append({"kind": "main", "game": g, "options": [], "chosen": ["play:A"]})
+        records.append({"kind": "main", "game": g, "options": [], "chosen": ["play:B"]})
+    records.append({"kind": "main", "game": 0, "options": [], "chosen": ["play:C"]})
+    records.append({"kind": "main", "game": 1, "options": [], "chosen": ["play:C"]})
+    shaping = learn_play_shaping(records)
+    assert shaping["A"] == 1.0 and shaping["B"] == 1.0
+    assert shaping["C"] == 0.5
+    # 対戦の区切りが無いレコードだけでは学べない
+    assert learn_play_shaping([{"kind": "main", "options": [], "chosen": ["play:A"]}]) == {}
 
 
 def test_charge_protects_main_part_copies(rules):
