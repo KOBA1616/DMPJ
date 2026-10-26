@@ -17,3 +17,10 @@ patterns:
         when: {event: move, to: bz, subject: self}
         effect:
           - {op: modify, select: {ref: self}, mod: {allow: [{action: attack_creature, other: {tapped: false}}]}, duration: end_of_turn}
+  just_diver:
+    re: 'ジャストダイバー'
+    abilities:
+      - kind: trigger
+        when: {event: move, to: bz, subject: self}
+        effect:
+          - {op: modify, select: {ref: self}, mod: {deny: [be_chosen, be_attacked]}, duration: until_next_own_turn_start}
