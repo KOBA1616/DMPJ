@@ -266,6 +266,7 @@ def run(rows: list[dict], client, tables, sysp: str, effort: str, out: Path, rej
                        + yaml.safe_dump({"cards": cards}, allow_unicode=True, sort_keys=False), encoding="utf-8")
         write_jsonl(rejects_path, list(rejects.values()))
 
+    pending_timeouts: list[dict] = []   # 次のカードが成功したら reason: timeout で確定する（連続2回なら障害とみなして確定しない）
     streak = {"n": 0}      # 連続したAPI失敗（2回で打ち切り）。無料枠の制限(429)に当たったら残りを打たずに止める
 
     def one(r):
@@ -291,12 +292,13 @@ def run(rows: list[dict], client, tables, sysp: str, effort: str, out: Path, rej
             return
         except Fatal:
             raise
-        except CallTimeout as e:    # 長い上限でも終わらない＝そのカードは今のモデルでは無理。reason: timeout で対象外にする
+        except CallTimeout as e:    # 長い上限でも終わらない。無料枠の停止と区別するため、次のカードが成功するまで確定しない
             with lock:
-                stats["rejected"] += 1
-                rejects[r["id"]] = {**r, "error": str(e), "reason": "timeout", "gaps": []}
-                print(f"⏱ {r['id']} {r.get('name', '')}: {e}", file=sys.stderr)
-                save()
+                stats["api_error"] += 1
+                streak["n"] += 1
+                pending_timeouts.append({**r, "error": str(e), "reason": "timeout", "gaps": []})
+                api_errors.append({"id": r["id"], "error": f"CallTimeout: {e}"[:300]})
+                print(f"⏱ {r['id']} {r.get('name', '')}: {e}", file=sys.stderr, flush=True)
             return
         except Exception as e:      # noqa: BLE001  API の一時的な失敗。カードの問題ではないので rejects には入れない
             with lock:
@@ -308,6 +310,10 @@ def run(rows: list[dict], client, tables, sysp: str, effort: str, out: Path, rej
         with lock:
             stats["ok"] += 1
             streak["n"] = 0
+            for t in pending_timeouts:
+                stats["rejected"] += 1
+                rejects[t["id"]] = t
+            pending_timeouts.clear()
             print(f"✓ {r['id']} {r.get('name', '')} ({stats['ok'] + stats['rejected'] + stats['api_error']}/{len(rows)})", file=sys.stderr, flush=True)
             cards.append(card)
             rejects.pop(r["id"], None)
