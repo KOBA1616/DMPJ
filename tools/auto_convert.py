@@ -2,7 +2,7 @@
 
     python tools/auto_convert.py --limit 20 --interval 6 --model glm-5.3-flash-free
 
-1. 原文（data/cards/raw）のうち未変換のカードを --limit 枚まで変換する（短い順）。
+1. 原文（data/cards/raw）のうち未変換のカードを --limit 枚まで変換する（既定はカードID順＝弾ごと。--order short で短い順）。
 2. 語彙（スキーマ・data/rules）が前回から変わっていたら、検査落ち(rejects)を --limit 枚まで再試行する。
    変わっていなければ再試行しない（無料枠を無駄に使わないため）。
 3. 進捗を data/cards/raw/convert_status.json に書く（gen_status.py が docs/STATUS.md に出す）。
@@ -63,6 +63,8 @@ def main(argv=None):
     ap.add_argument("--batch", type=int, default=5, help="1単位の枚数。単位の中がすべてAPI失敗ならその単位を飛ばして次へ")
     ap.add_argument("--max-bad-batches", type=int, default=2, help="API失敗だけの単位がこの回数続いたら打ち切る")
     ap.add_argument("--effort", default="high")
+    ap.add_argument("--order", choices=["id", "short"], default="id",
+                    help="変換の順番。id: カードID順（弾ごとにまとまる）、short: 原文の短い順（簡単なものから）")
     ap.add_argument("--timeout", type=float, default=1200, help="1枚の呼び出しの上限秒（非常に長め）。超えたら reason: timeout で対象外")
     a = ap.parse_args(argv)
     providers.OPENCODE_TIMEOUT = a.timeout
@@ -78,8 +80,8 @@ def main(argv=None):
         done = cc.known_ids(out) | ({c["id"] for c in (yaml.safe_load(out.read_text(encoding="utf-8")) or {}).get("cards") or []}
                                     if out.exists() else set())
         failed = {r["id"] for r in cc.read_jsonl(rej)}
-        todo = sorted((r for r in rows if r["id"] not in done and r["id"] not in failed),
-                      key=lambda r: len(r.get("text", "")))[:a.limit]
+        key = (lambda r: r["id"]) if a.order == "id" else (lambda r: len(r.get("text", "")))
+        todo = sorted((r for r in rows if r["id"] not in done and r["id"] not in failed), key=key)[:a.limit]
         bad = 0
         for i in range(0, len(todo), a.batch):
             chunk = todo[i:i + a.batch]

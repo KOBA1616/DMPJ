@@ -298,12 +298,37 @@ def test_auto_convert_limit_status_and_retry_only_on_vocab_change(tmp_path, monk
     monkeypatch.setattr(ac.cc, "make_llm", lambda *a: LLM())
     monkeypatch.setattr(ac, "DATA", tmp_path)
     monkeypatch.setattr(ac, "vocab_hash", lambda: "h1")
-    ac.main(["--limit", "2", "--interval", "0"])
+    ac.main(["--limit", "2", "--interval", "0", "--order", "short"])
     assert seen == ["ta_b", "ta_c"]                      # 短い順に上限まで
     st = json.loads((raw / "convert_status.json").read_text(encoding="utf-8"))
     assert (st["converted"], st["pending"], st["vocab_hash"]) == (2, 1, "h1")
-    ac.main(["--limit", "2", "--interval", "0"])
+    ac.main(["--limit", "2", "--interval", "0", "--order", "short"])
     assert seen[2:] == ["ta_a"]
+
+
+def test_auto_convert_default_order_is_card_id(tmp_path, monkeypatch):
+    """既定はカードID順（弾ごとにまとまる）。短い順は --order short。"""
+    import json
+
+    import auto_convert as ac
+    raw = tmp_path / "raw"
+    raw.mkdir()
+    (raw / "o.jsonl").write_text("".join(json.dumps({"id": i, "text": "x" * n}) + "\n"
+                                         for i, n in (("tz02-001", 1), ("tz01-002", 9), ("tz01-001", 5))), encoding="utf-8")
+    seen = []
+
+    class LLM:
+        def complete(self, sysp, messages, effort, usage):
+            seen.append(messages[0]["content"].split('"id": "')[1].split('"')[0])
+            raise RuntimeError("stop")
+
+    monkeypatch.setattr(ac, "RAW", raw)
+    monkeypatch.setattr(ac, "STATUS", raw / "convert_status.json")
+    monkeypatch.setattr(ac.cc, "make_llm", lambda *a: LLM())
+    monkeypatch.setattr(ac, "DATA", tmp_path)
+    monkeypatch.setattr(ac, "vocab_hash", lambda: "h1")
+    ac.main(["--limit", "3", "--batch", "3", "--max-bad-batches", "1", "--interval", "0"])
+    assert seen[:2] == ["tz01-001", "tz01-002"]          # streak 2 で打ち切るまでの先頭がID順
 
 
 def test_llm_offload_guards(tmp_path):
