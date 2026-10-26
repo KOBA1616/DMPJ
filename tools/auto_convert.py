@@ -21,6 +21,7 @@ import yaml
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 import convert_cards as cc  # noqa: E402
+import rule_convert  # noqa: E402
 from llm_offload import providers  # noqa: E402
 from dmsim import schema  # noqa: E402
 from dmsim.defs import DATA, load_tables  # noqa: E402
@@ -109,7 +110,9 @@ def main(argv=None):
                                     if out.exists() else set())
         failed = {r["id"] for r in cc.read_jsonl(rej)}
         key = (lambda r: r["id"]) if a.order == "id" else (lambda r: len(r.get("text", "")))
-        todo = sorted((r for r in rows if r["id"] not in done and r["id"] not in failed), key=key)[:a.limit]
+        # 以前 no_text 等で rejects に入ったカードでも、ルールだけで変換できるものは対象に戻す（モデル不使用）
+        by_rule = {r["id"] for r in rows if r["id"] in failed and rule_convert.convert(r) is not None}
+        todo = sorted((r for r in rows if r["id"] not in done and (r["id"] not in failed or r["id"] in by_rule)), key=key)[:a.limit]
         bad = 0
         for i in range(0, len(todo), a.batch):
             chunk = todo[i:i + a.batch]

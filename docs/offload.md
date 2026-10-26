@@ -149,3 +149,8 @@ schtasks /Create /SC MINUTE /MO 5 /TN "dmpj-worker" /TR C:\path\DMPJ\tools\run_w
 - Windows ではワーカーの実行中、スリープに入らない（SetThreadExecutionState）。ただし、実行していない間のスリープ中はタスクスケジューラが動かない。スリープ解除で動かすには、PowerShell で:
   `$t = Get-ScheduledTask dmpj-worker; $t.Settings.WakeToRun = $true; Set-ScheduledTask -InputObject $t`
   （電源オプションの『スリープ解除タイマーを許可』が有効で、ふたを閉じてスリープしない設定が前提。電源に接続していないと動かない設定もある。）
+
+## ルールだけで変換（モデルを呼ばない）
+- `tools/rule_convert.py`: クリーチャーのうち、原文が (a) 能力文なし（取得時に text だけ空と印が付いたバニラ）、(b) `data/rules/keywords.yaml` のキーワードだけ、のものは、辞書のルールで効果データにする（トークン0）。注釈（カッコ内）は無視し、改行・スラッシュ・空白でキーワードを区切る。`convert_cards.run` が最初に試し、検査（parse_card）を通らなければモデルへ回す。以前 `no_text` で rejects に入ったカードも、ルールで変換できれば対象に戻る。
+- 語彙を増やすには keywords.yaml にキーワードを足す（コードは変えない）。2026-10-26 追加: Q・ブレイカー / ワールド・ブレイカー / このクリーチャーはブロックできない・アンタップしない・攻撃されない。
+- cards-data（23,671枚）での該当数は585枚（バニラ251・キーワードのみ334）。バニラは「原文の取りこぼしでないか」を人が確認する（source.notes に記載）。

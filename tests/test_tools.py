@@ -610,6 +610,35 @@ def test_local_worker_merges_conflicting_convert_results(tmp_path):
     assert cards == ["a", "b", "c"] and rejs == ['{"id": "r1"}', '{"id": "r2"}']      # 変換済みが優先、不合格は和集合
 
 
+def test_rule_convert_keyword_only_and_vanilla(tmp_path):
+    """キーワードだけ・バニラのクリーチャーは、モデルを呼ばずにルールで変換する。能力文があるものは None。"""
+    import convert_cards as cc
+    import rule_convert as rc
+    from dmsim.defs import load_tables, parse_card
+    base = {"card_type": "クリーチャー", "civilization": "光/水", "cost": "3", "power": "2000", "race": "ガーディアン/ナイト", "name": "n"}
+    r = rc.convert({**base, "id": "t1", "text": "ブロッカー（相手クリーチャーが攻撃する時、…）\nＷ・ブレイカー（…）\nこのクリーチャーは攻撃されない。 / Q・ブレイカー"})
+    assert r["keywords"] == ["blocker", "double_breaker", "cannot_be_attacked", "quad_breaker"] and r["civs"] == ["light", "water"]
+    assert r["races"] == ["ガーディアン", "ナイト"]
+    parse_card(r, load_tables())
+    van = rc.convert({**base, "id": "t2", "text": "", "missing": ["text"]})
+    assert van and "keywords" not in van and "バニラ" in van["source"]["notes"]
+    assert rc.convert({**base, "id": "t3", "text": "ブロッカー / 出た時、カードを引く。"}) is None      # 能力文あり → モデルへ
+    assert rc.convert({**base, "id": "t4", "text": "", "missing": ["text", "cost"]}) is None             # 他の欠落は取得のやり直しが先
+    assert rc.convert({**base, "id": "t5", "card_type": "呪文", "text": "ブロッカー"}) is None
+    # run(): ルール変換できるカードではモデルを呼ばない
+    called = []
+
+    class LLM:
+        def complete(self, *a):
+            called.append(1)
+            raise RuntimeError("呼ばれないはず")
+
+    out, rej = tmp_path / "c.yaml", tmp_path / "r.jsonl"
+    rep = cc.run([{**base, "id": "t1", "text": "ブロッカー"}, {**base, "id": "t2", "text": "", "missing": ["text"]}], LLM(), load_tables(),
+                 "S", "low", out, rej)
+    assert not called and rep["ok"] == 2 and [c["id"] for c in yaml.safe_load(out.read_text(encoding="utf-8"))["cards"]] == ["t1", "t2"]
+
+
 def test_convert_timeout_breaker(tmp_path):
     """タイムアウトは次のカードが成功して初めて reason: timeout で確定。連続2回は障害として打ち切り、記録しない。"""
     import convert_cards

@@ -88,3 +88,25 @@ keywords:
         if: {exists: {exlife_of: self}}
         instead:
           - {op: move, select: {exlife_of: self, count: 1}, to: graveyard, reason: put}
+
+  # ---- ルールだけで変換できるキーワード（tools/rule_convert.py が原文と照合する。モデルは呼ばない）----
+  quad_breaker:
+    ja: Q・ブレイカー
+    abilities:
+      - {kind: static, affects: self, mod: {breaks: 4}}
+  world_breaker:
+    ja: ワールド・ブレイカー（相手のシールドをすべてブレイクする。breaks は大きい方を使うので十分大きい値で表す）
+    abilities:
+      - {kind: static, affects: self, mod: {breaks: 99}}
+  cannot_block:
+    ja: このクリーチャーはブロックできない
+    abilities:
+      - {kind: static, affects: self, mod: {deny: [block]}}
+  cannot_untap:
+    ja: このクリーチャーはアンタップしない
+    abilities:
+      - {kind: static, affects: self, mod: {deny: [untap_at_start]}}
+  cannot_be_attacked:
+    ja: このクリーチャーは攻撃されない
+    abilities:
+      - {kind: static, affects: self, mod: {deny: [be_attacked]}}

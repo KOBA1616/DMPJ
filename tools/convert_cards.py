@@ -33,6 +33,7 @@ sys.path.insert(0, str(ROOT / "tools"))
 
 from dmsim import schema  # noqa: E402
 from dmsim.defs import DATA, DefError, load_tables, parse_card  # noqa: E402
+import rule_convert  # noqa: E402
 from llm_offload.providers import CallTimeout  # noqa: E402
 from llm_offload.providers import (  # noqa: E402,F401  無料モデル呼び出しは llm_offload に集約
     OPENCODE_DEFAULT, OPENCODE_FREE_MODELS, OPENCODE_URL, BadResponse, Fatal, OpenCodeCLI, OpenCodeLLM, Chain, GeminiLLM, LLM7LLM, OpenRouterLLM, check_free_model)
@@ -295,6 +296,20 @@ def run(rows: list[dict], client, tables, sysp: str, effort: str, out: Path, rej
     streak = {"n": 0}      # 連続したAPI失敗（2回で打ち切り）。無料枠の制限(429)に当たったら残りを打たずに止める
 
     def one(r):
+        rc = rule_convert.convert(r)      # キーワードだけ・バニラは、辞書のルールで作る（モデルを呼ばない＝トークン0）
+        if rc is not None:
+            try:
+                rc = validate(rc, r, tables)
+            except DefError as e:
+                print(f"  {r['id']}: ルール変換が検査を通らなかったのでモデルへ回す: {e}", file=sys.stderr)
+            else:
+                with lock:
+                    stats["ok"] += 1
+                    print(f"✓ {r['id']} {r.get('name', '')} (ルール変換・モデル不使用)", file=sys.stderr, flush=True)
+                    cards.append(rc)
+                    rejects.pop(r["id"], None)
+                    save()
+                return
         if streak["n"] >= 2:
             return
         pre = precheck(r)
