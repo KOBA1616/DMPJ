@@ -80,13 +80,15 @@ def main(argv=None):
                     help="変換の順番。id: カードID順（弾ごとにまとまる）、short: 原文の短い順（簡単なものから）")
     ap.add_argument("--timeout", type=float, default=300, help="1枚の呼び出しの上限秒。超えた1枚は次の成功で reason: timeout に確定、連続2回なら打ち切り")
     ap.add_argument("--health-timeout", type=float, default=90, help="開始前にモデルへ短い質問をして応答を確認する上限秒（0で省略）。返らなければ何も処理せず終了")
+    ap.add_argument("--examples", type=int, default=8, help="プロンプトに入れる変換例の数（原文が近い順）。0で全部（約55,000字→約25,000字に減る）")
     ap.add_argument("--fallbacks", type=int, default=2, help="タイムアウト時に切り替える別の無料モデルの数（0で切り替えなし）")
     a = ap.parse_args(argv)
     providers.OPENCODE_TIMEOUT = a.health_timeout or a.timeout
     out, rej = DATA / "cards" / "converted.yaml", RAW / "rejects.jsonl"
     prev = json.loads(STATUS.read_text(encoding="utf-8")) if STATUS.exists() else {}
     vh = vocab_hash()
-    sysp, tables = cc.system_prompt(), load_tables()
+    tables = load_tables()
+    sysp = (lambda row: cc.system_prompt(row=row, n_examples=a.examples)) if a.examples else cc.system_prompt()
     llm = cc.make_llm(a.provider, a.model, a.interval)
     if hasattr(llm, "alternates"):
         llm.alternates = llm.alternates[:max(0, a.fallbacks)]

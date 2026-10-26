@@ -70,13 +70,32 @@ def examples_text(exclude: frozenset = frozenset()) -> str:
     return yaml.safe_dump({"cards": cards}, allow_unicode=True, sort_keys=False)
 
 
-def system_prompt(exclude: frozenset = frozenset()) -> str:
-    """全カード共通の部分（キャッシュされる）。内容が変わらない限り同じ文字列になるようにする。"""
+def _bigrams(t: str) -> set:
+    t = re.sub(r"\s+", "", t or "")
+    return {t[i:i + 2] for i in range(len(t) - 1)}
+
+
+def examples_for(row: dict, n: int, exclude: frozenset = frozenset()) -> str:
+    """原文が近い既存カードを n 枚だけ選ぶ（文字2-gram の重なり）。無料モデルに渡す量を減らすため。"""
+    cards = [c for c in yaml.safe_load((DATA / "cards" / "real.yaml").read_text(encoding="utf-8"))["cards"]
+             if c["id"] not in exclude and c["id"] != row.get("id")]
+    q = _bigrams(" ".join(filter(None, [row.get("text", ""), *[f.get("text", "") for f in row.get("faces") or []]])))
+
+    def score(c):
+        b = _bigrams(c.get("text", ""))
+        return len(q & b) / (len(q | b) or 1)
+    top = sorted(cards, key=score, reverse=True)[:n]
+    return yaml.safe_dump({"cards": top}, allow_unicode=True, sort_keys=False)
+
+
+def system_prompt(exclude: frozenset = frozenset(), row: dict | None = None, n_examples: int = 0) -> str:
+    """共通の部分。row と n_examples を渡すと、例をそのカードに近い n 枚だけにする（0 なら全部。全カード同じ文字列になる）。"""
+    ex = examples_for(row, n_examples, exclude) if row is not None and n_examples else examples_text(exclude)
     parts = [INSTRUCTIONS,
-             "## JSON Schema\n" + json.dumps(schema.build(), ensure_ascii=False, sort_keys=True),
+             "## JSON Schema\n" + json.dumps(schema.build(), ensure_ascii=False, sort_keys=True, separators=(",", ":")),
              *[f"## data/rules/{n}\n{_rules_text(n)}" for n in
                ("zones.yaml", "keywords.yaml", "op_macros.yaml", "permissions.yaml", "turn.yaml")],
-             "## 変換済みカードの例（data/cards/real.yaml）\n" + examples_text(exclude)]
+             "## 変換済みカードの例（data/cards/real.yaml）\n" + ex]
     return "\n\n".join(parts)
 
 
@@ -156,7 +175,7 @@ def convert(llm, row: dict, tables, sysp: str, effort: str, usage: dict | None =
     messages = [{"role": "user", "content": user_prompt(row)}]
     err = None
     for attempt in range(2):
-        text = llm.complete(sysp, messages, effort, usage)
+        text = llm.complete(sysp(row) if callable(sysp) else sysp, messages, effort, usage)
         print(f"  {row['id']}: {len(text)}文字", file=sys.stderr)
         try:
             return validate(extract(text), row, tables)
