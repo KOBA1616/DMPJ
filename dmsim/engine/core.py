@@ -333,8 +333,6 @@ class Engine(SelectorMixin, EventMixin, InterpreterMixin, TurnMixin, CombatMixin
         c.gen += 1                                  # 新しいオブジェクトになる（400.5）
         c.zone = to
         c.tapped = to == "mana" and len(self.cdef(cid).civs) > 1   # 多色カードはタップしてマナに置かれる（405.1）
-        if to == "mana" and not c.tapped and any(ab.get("zone") == "mana" for ab in self.fdef(cid).abilities):
-            c.tapped = not self.permits(cid, "mana_untapped")     # 「マナゾーンに置く時、タップして置く」
         c.face_up = self.rules.zones[to]["public"]
         c.controller = c.owner if controller is None else controller
         c.entered_turn = s.turn if to == "bz" else -1

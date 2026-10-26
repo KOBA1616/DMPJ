@@ -17,13 +17,13 @@ def top(e, p, defn):
     return next(c for c in e.bz_tops(p) if e.s.cards[c].defn == defn)
 
 
-def test_tapped_mana_keyword_enters_tapped_even_if_monocolor(rr):
-    """405.1: 単色は通常アンタップで置く。「タップして置く」を持つものだけタップで置く。"""
-    e = setup(rr, {"hand": ["N007", "T001"]})
-    answer(e, "charge", "charge:N007")
+def test_multicolor_enters_mana_tapped_monocolor_untapped(rr):
+    """405.1: 多色はタップして置く。単色はアンタップ（テキストの注釈には頼らない）。"""
+    e = setup(rr, {"hand": ["T018", "T001"]})
+    answer(e, "charge", "charge:T018")
     e.advance()
     assert [e.s.cards[c].tapped for c in e.zlist("mana", 0)] == [True]
-    e = setup(rr, {"hand": ["N007", "T001"]})
+    e = setup(rr, {"hand": ["T018", "T001"]})
     answer(e, "charge", "charge:T001")
     e.advance()
     assert [e.s.cards[c].tapped for c in e.zlist("mana", 0)] == [False]

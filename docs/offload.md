@@ -163,5 +163,6 @@ schtasks /Create /SC MINUTE /MO 5 /TN "dmpj-worker" /TR C:\path\DMPJ\tools\run_w
 追加するときは雛形を既存の演算（modify / allow / deny 等）だけで書き、`parse_card` を通ることをテストで確かめる。
 名前つき効果（注釈つき）は `data/rules/keywords.yaml` に能力の並びで定義する（別名は `aliases`、意味のない記号は keyword_patterns.yaml の `noise`）。
 対応済み: ガードマン（507.1a 攻撃先の変更。permissions の `guardman`）、シールド・セイバー、エスケープ、G・ストライク（手札で機能する誘発）、
-パワード・ブレイカー（mod `breaks_per_power`）、マナゾーンにタップして置く（`mana_untapped` の禁止）。
+パワード・ブレイカー（mod `breaks_per_power`）。
+「マナゾーンに置く時、タップして置く」は多色カードのルール（405.1）の旧注釈なので能力にせず、`noise` で読み飛ばす。
 未対応（エンジンに演算が要る）: ハンティング（バトル中だけの動的パワー）、スーパー・S・トリガー、革命チェンジ、侵略、超魂X、シンカライズ、ハイパー化、ニンジャ・ストライク など。

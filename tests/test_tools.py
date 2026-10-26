@@ -942,7 +942,7 @@ def test_rule_convert_named_effects_with_notes():
     r = rc.convert({**base, "text": "{GS} G・ストライク（このカードを自分のシールドゾーンから手札に加える時、表向きにし、相手のクリーチャーを１体選んでもよい。このターン、そのクリーチャーは攻撃できない）\nガードマン（このクリーチャーをタップして、…）"})
     assert r and r["keywords"] == ["g_strike", "guardman"]
     r = rc.convert({**base, "text": "マナゾーンに置く時、このカードはタップして置く。 ブロッカー"})
-    assert r and r["keywords"] == ["tapped_mana", "blocker"]
+    assert r and r["keywords"] == ["blocker"]       # タップ置きは多色カードのルール。能力にしない
     r = rc.convert({**base, "text": "このクリーチャーは攻撃することができない。"})
     assert r and r["keywords"] == ["cannot_attack"]
     r = rc.convert({**base, "text": "パワード・ブレイカー（このクリーチャーは、そのパワー6000ごとにシールドをもう１つブレイクする）\nシールド・セイバー（…）\nエスケープ"})

@@ -113,10 +113,6 @@ keywords:
       - {kind: static, affects: self, mod: {deny: [be_attacked]}}
 
   # ---- 名前つき効果（注釈つき）。原文の名前と注釈つき文言を rule_convert が照合する ----
-  tapped_mana:        # 405.1: 単色でもタップして置く。permits の mana_untapped を禁止する常在型（zone: mana）
-    ja: マナゾーンに置く時、このカードはタップして置く
-    abilities:
-      - {kind: static, zone: mana, affects: self, mod: {deny: [mana_untapped]}}
   powered_breaker:    # 509.2: パワー6000ごとに1つ多くブレイクする（ブレイカー能力の1つ）
     ja: パワード・ブレイカー
     abilities:
