@@ -213,6 +213,70 @@ def grave_bucket(eng, player: int) -> str:
     return "g3p" if n >= 3 else "g02"
 
 
+# マナチャージで温存するカード（目標ループの部品）。MacroPlanner の既定と揃える
+TARGET_CARDS = (SAGA, DRAG, IWA, SHAKO, "dm22ex1-025", "dmbd17-009")
+
+
+def charge_scores(eng, d, targets=TARGET_CARDS) -> dict[int, float]:
+    """マナチャージの判断: 選択肢ごとに「置く向き」のスコアを付ける。
+
+    考え方は「手札で失う価値が小さく、マナとして困らない札から置く」。
+    - 目標の部品は温存する（同名が2枚以上ある場合だけ置く候補に戻す）
+    - 既にマナにある文明しか持たない札は、新しい文明が増えないので置きやすい。
+      特に多色で全文明が揃っている札は、手札で持つ意味が薄い
+    - 直近2ターンで使えないコストの札は、当面の手札価値が低い
+    - 逆に、マナに無い文明を持ち、手札の他の札が必要としているなら、
+      補完として置く価値がある（その文明が使えるようになる）
+    """
+    me = d["player"]
+    z = eng.s.zones
+    mana_civs = set()
+    for c in z["mana"][me]:
+        mana_civs.update(eng.cdef(c).civs)
+    mana_n = len(z["mana"][me])
+    hand_ids = list(z["hand"][me])
+    hand_names = [eng.s.cards[c].defn for c in hand_ids]
+    # 手札が必要とする文明（近く使える札の文明）
+    needs = set()
+    for c in hand_ids:
+        cd = eng.cdef(c)
+        cost = min([f.cost for f in cd.faces] or [cd.cost])
+        if cost <= mana_n + 2:
+            needs.update(cd.civs)
+    scores: dict[int, float] = {}
+    for j, o in enumerate(d["options"]):
+        if not o["key"].startswith("charge:") or o.get("cid") is None:
+            continue
+        cd = eng.cdef(o["cid"])
+        name = eng.s.cards[o["cid"]].defn
+        civs = set(cd.civs)
+        cost = min([f.cost for f in cd.faces] or [cd.cost])
+        s = 0.0
+        if name in targets and hand_names.count(name) < 2:
+            s -= 100.0                      # 部品は温存
+        new_civs = civs - mana_civs
+        if not new_civs:
+            s += 30.0                       # 新しい文明が増えない札は置きやすい
+            if len(civs) >= 2:
+                s += 10.0                   # 多色で全文明が揃っているなら尚更
+        elif new_civs & needs:
+            s += 20.0                       # 足りない文明の補完になる
+        if cost > mana_n + 2:
+            s += 15.0                       # 直近では使えない
+        elif cost <= mana_n:
+            s -= 10.0                       # すぐ使える札は手札に残す
+        scores[j] = s
+    return scores
+
+
+def charge_choice(eng, d, targets=TARGET_CARDS) -> int | None:
+    """チャージすべき選択肢の添字（pass は選ばない）。判断が付かなければ None。"""
+    scores = charge_scores(eng, d, targets)
+    if not scores:
+        return None
+    return max(scores, key=lambda j: scores[j])
+
+
 def learn_preferences(records: list[dict]) -> dict:
     """決定レコードから、決定の種類ごとのキーの選好率を学ぶ。
 
@@ -290,6 +354,7 @@ class MicroPolicy:
     preferences: dict = field(default_factory=dict)
     win_by: str = "effect"          # この方策が狙う勝ち方
     intent: str | None = None       # このターンの狙い（マクロが設定する）
+    targets: tuple = TARGET_CARDS   # マナチャージで温存する部品
 
     def prefer(self, eng, d) -> list[int] | None:
         prefs = self.preferences or {}
@@ -318,6 +383,11 @@ class MicroPolicy:
         """solitaire.candidates と同じ形。方策の答えを候補の先頭に置く。"""
         out = _base_candidates(eng, d, w, cap)
         pref = self.prefer(eng, d)
+        if d["kind"] == "charge" and eng is not None:
+            # マナチャージは学習選好より先に、文明と使用見込みの判断で並べる
+            j = charge_choice(eng, d, self.targets)
+            if j is not None:
+                pref = [j]
         if pref is None:
             return out
         rest = [c for c in out if list(c) != pref]

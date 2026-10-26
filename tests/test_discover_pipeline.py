@@ -7,8 +7,9 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent / "tools"))
 
-from discover_pipeline import (MacroPlanner, MicroPolicy, classify_win,  # noqa: E402
-                               deck_bucket, grave_bucket, learn_preferences)
+from discover_pipeline import (MacroPlanner, MicroPolicy, charge_choice,  # noqa: E402
+                               classify_win, deck_bucket, grave_bucket,
+                               learn_preferences)
 
 from conftest import setup  # noqa: E402
 
@@ -166,6 +167,29 @@ def test_macro_beatdown_and_board_lethal(rules):
                         "bz": ["T001"] * 6})
     intent = MacroPlanner().plan(eng)
     assert intent.name == "execute" and "殴り切る" in intent.note
+
+
+def _charge_decision(eng, names):
+    return {"kind": "charge", "player": 0, "min": 0, "max": 1,
+            "options": [{"key": f"charge:{n}", "cid": c}
+                        for c, n in zip(eng.s.zones["hand"][0], names)]
+                       + [{"key": "pass"}]}
+
+
+def test_charge_choice_complements_missing_civ_and_keeps_pieces(rules):
+    # マナに水だけ、手札に闇の基本カードとサガ: 闇を補完する基本カードを置き、部品は温存
+    eng = setup(rules, {"hand": ["dm01-080", SAGA], "mana": ["dm01-027"], "graveyard": []})
+    d = _charge_decision(eng, ["dm01-080", SAGA])
+    assert charge_choice(eng, d) == 0
+
+
+def test_charge_choice_prefers_redundant_civ(rules):
+    # マナに水と闇がある: どちらの基本カードも新しい文明は増えないので置ける。
+    # 部品（イザナギ）は温存される
+    eng = setup(rules, {"hand": ["dm01-027", "dm01-080", "dm22ex1-025"],
+                        "mana": ["dm01-027", "dm01-080"], "graveyard": []})
+    d = _charge_decision(eng, ["dm01-027", "dm01-080", "dm22ex1-025"])
+    assert charge_choice(eng, d) in (0, 1)
 
 
 def test_micro_candidates_without_pipeline_no_recursion():
