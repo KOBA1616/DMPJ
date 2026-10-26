@@ -125,11 +125,11 @@
  "api_errors": [
   {
    "id": "dm01-075",
-   "error": "RuntimeError: opencode error: {\"name\": \"APIError\", \"data\": {\"message\": \"Upstream request failed: Invalid credential\", \"statusCode\": 401, \"isRetryable\": false, \"responseHeaders\": {\"cf-placement\": \"remote-IAD\", \"cf-ray\": \"a505418f6ffd1080-ORD\", \"connection\": \"keep-alive\", \"content-length\": \"89\", \"cont"
+   "error": "RuntimeError: opencode error: {\"name\": \"APIError\", \"data\": {\"message\": \"Upstream request failed: Invalid credential\", \"statusCode\": 401, \"isRetryable\": false, \"responseHeaders\": {\"cf-placement\": \"remote-IAD\", \"cf-ray\": \"a5054e4acbf1f7d1-LAX\", \"connection\": \"keep-alive\", \"content-length\": \"89\", \"cont"
   },
   {
    "id": "dm01-083",
-   "error": "RuntimeError: opencode error: {\"name\": \"APIError\", \"data\": {\"message\": \"Upstream request failed: Invalid credential\", \"statusCode\": 401, \"isRetryable\": false, \"responseHeaders\": {\"cf-placement\": \"remote-IAD\", \"cf-ray\": \"a505435368d8fa1b-ORD\", \"connection\": \"keep-alive\", \"content-length\": \"89\", \"cont"
+   "error": "RuntimeError: opencode error: {\"name\": \"APIError\", \"data\": {\"message\": \"Upstream request failed: Invalid credential\", \"statusCode\": 401, \"isRetryable\": false, \"responseHeaders\": {\"cf-placement\": \"remote-IAD\", \"cf-ray\": \"a505500ff91b2f75-LAX\", \"connection\": \"keep-alive\", \"content-length\": \"89\", \"cont"
   }
  ]
 }
