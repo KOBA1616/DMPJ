@@ -19,7 +19,7 @@ import re
 from dataclasses import dataclass
 from pathlib import Path
 
-from .providers import (OPENCODE_DEFAULT, OPENCODE_FREE_MODELS, BadResponse, Fatal, OpenRouterLLM,  # noqa: F401
+from .providers import (OPENCODE_DEFAULT, OPENCODE_FREE_MODELS, BadResponse, Chain, Fatal, LLM7LLM, OpenRouterLLM,  # noqa: F401
                         OpenCodeCLI, OpenCodeLLM)
 
 ROOT = Path(__file__).resolve().parent.parent.parent
@@ -95,8 +95,9 @@ def make_llm(provider: str = "opencode-cli", model: str | None = None, interval:
         return OpenCodeLLM(model or OPENCODE_DEFAULT, interval)
     if provider == "opencode-cli":
         llm = OpenCodeCLI(model or OPENCODE_DEFAULT, interval)
-        if os.environ.get("OPENROUTER_API_KEY"):     # キーがあるときだけ、OpenCode 全滅時の切り替え先（OpenRouter の無料モデル）を付ける
-            llm.external = OpenRouterLLM(interval)
+        # OpenCode 全滅時の切り替え先。OpenRouter はキーがあるときだけ、LLM7 は匿名で（DMPJ_NO_LLM7=1 で無効）
+        llm.external = Chain(OpenRouterLLM(interval) if os.environ.get("OPENROUTER_API_KEY") else None,
+                             None if os.environ.get("DMPJ_NO_LLM7") else LLM7LLM(interval))
         return llm
     raise Fatal(f"provider {provider!r} は無料経路ではない（opencode / opencode-cli のみ）")
 

@@ -414,6 +414,19 @@ def test_openrouter_uses_only_verified_free_models(monkeypatch):
     monkeypatch.setattr(cli, "_complete_one", lambda *a: (_ for _ in ()).throw(pv.CallTimeout("t")))
     monkeypatch.setattr(lm, "_request", req)
     assert cli.complete("", [], "low", None) == "ok"           # OpenCode 全滅 → OpenRouter
+    n = []
+    monkeypatch.setattr(cli, "_complete_one", lambda *a: n.append(1) or "oc")
+    assert cli.complete("", [], "low", None) == "ok" and not n   # 直後は OpenCode を待たず別サービスを直接使う
+    cli._ext_until = 0
+    assert cli.complete("", [], "low", None) == "oc" and n      # 冷却が終われば OpenCode に戻る
+
+
+def test_llm7_uses_fixed_allowlist_and_anonymous_key():
+    from llm_offload import providers as pv
+    l = pv.LLM7LLM(0)
+    assert l.key == "unused" and l.base == pv.LLM7_URL and l.free_models() == list(pv.LLM7_FREE_MODELS)
+    c = pv.Chain(None, l)
+    assert c.llms == [l]
 
 
 def test_opencode_cli_detects_free_limit(monkeypatch):
