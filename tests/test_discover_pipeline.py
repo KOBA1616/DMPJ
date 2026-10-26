@@ -205,6 +205,26 @@ def test_charge_choice_prefers_redundant_civ(rules):
     assert charge_choice(eng, d) in (0, 1)
 
 
+def test_charge_choice_keeps_playable_multi(rules):
+    # 文明が揃っていて多色がプレイできる位置では、単色側を置いて多色を残す
+    # （単色のドローを期待して多色をプレイする方針が取れること）
+    lorenz = "dmpromoy22-p51"   # 火・水のツインパクト
+    eng = setup(rules, {"hand": ["dm01-027", lorenz],
+                        "mana": [lorenz, "dm01-027"], "graveyard": []})
+    d = _charge_decision(eng, ["dm01-027", lorenz])
+    assert charge_choice(eng, d) == 0
+
+
+def test_macro_dig_enter(rules):
+    # 部品の一部が山札にあっても、掘れる確率が高ければ導入に踏み切る
+    eng = setup(rules, {"hand": [SAGA, "dm22ex1-025"], "mana": MANA,
+                        "graveyard": [], "deck": [DRAG, SHAKO]}, deck_size=10)
+    intent = MacroPlanner().plan(eng)
+    assert intent.name == "enter_loop" and "掘りながら" in intent.note
+    # 切れば整え続ける
+    assert MacroPlanner(allow_dig_enter=False).plan(eng).name == "setup"
+
+
 def test_charge_choice_multicolor_surplus(rules):
     # 多色カードが手札に溜まっている時は、多色から先にマナへ置く
     lorenz = "dmpromoy22-p51"   # 火・水のツインパクト

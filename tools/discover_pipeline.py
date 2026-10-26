@@ -110,6 +110,8 @@ class MacroPlanner:
     bruce_card: str = "dmbd17-009"  # 墓地の起点を場に戻す呪文面を持つツインパクト
     digger_card: str = "dm22ex1-025"  # 登場時に山札の上5枚から1枚を手札に加える（起点を探せる）
     suppress_beatdown: bool = True  # 一時的にビートダウンを抑え、ループ等の発見に寄せる
+    allow_dig_enter: bool = True    # 部品の一部が山札でも、掘れる確率が高ければ導入する
+    core_pieces: tuple = (SAGA, "dm22ex1-025", DRAG, SHAKO)  # ループの最小部品
 
     def features(self, eng, me: int = ME) -> dict:
         z = eng.s.zones
@@ -127,6 +129,8 @@ class MacroPlanner:
         targets = (self.loop_card, self.digger_card, self.bruce_card) \
             + self.kill_pieces_hand + self.kill_pieces_grave
         pieces_in_deck = sum(1 for n in deck_names if n in targets)
+        here = set(hand) | set(grave) | set(names("bz")) | set(names("mana"))
+        pieces_here = sum(1 for p in self.core_pieces if p in here)
         return {
             "turn": eng.s.turn,
             "win_by": self.win_by,
@@ -136,6 +140,8 @@ class MacroPlanner:
             "hand_n": len(hand),
             "mana": len(z["mana"][me]),
             "dark_mana": dark_mana,
+            "pieces_here": pieces_here,      # 最小部品のうち手元（手札・場・墓地・マナ）にある数
+            "loop_board": pieces_here >= len(self.core_pieces),  # ループの最小盤面に到達
             "loop_available": self.loop_card in hand or self.loop_card in grave,
             "grave_prep": self.loop_card in grave or "dm26ex2-071" in grave,
             "bruce_route": (self.loop_card in hand and self.digger_card in hand
@@ -164,6 +170,10 @@ class MacroPlanner:
             return Intent("execute", weights=w,
                           note="キル部品が揃った。ループキルを取りに行く")
         if f["loop_available"] and f["grave_prep"] and f["dark_mana"] >= 1:
+            if f["loop_board"]:
+                # 最小盤面に届いたら、変換（キルへの移行）に計算を寄せる
+                return Intent("enter_loop", budget=4000, weights=sol.Weights(civ=10.0),
+                              note="最小盤面に到達。変換に計算を寄せて導入する")
             return Intent("enter_loop", weights=sol.Weights(civ=10.0),
                           note="起点と墓地の準備と闇マナがある。導入して部品を集める")
         if f["bruce_route"] and f["dark_mana"] >= 1:
@@ -171,6 +181,12 @@ class MacroPlanner:
             # 呪文面で墓地の起点を場に戻せる。墓地の準備が無くても導入に値する
             return Intent("enter_loop", weights=sol.Weights(civ=10.0),
                           note="ブルース経由: 掘る役で探し、呪文面で起点を戻して導入する")
+        if (self.allow_dig_enter and f["pieces_here"] >= 2 and f["pieces_in_deck"] >= 1
+                and f["dig_hit_prob"] >= 0.5 and f["dark_mana"] >= 1):
+            # 部品が全部手元に無くても、残りが山札にあり掘れる確率が高いなら、
+            # 整え続けるより導入しながら掘る方が勝ちに近い
+            return Intent("enter_loop", budget=3000, weights=sol.Weights(civ=10.0),
+                          note="部品の一部は山札にあるが当たる確率が高い。掘りながら導入する")
         # ループ以外の勝ち筋: 盤面で殴り切れるならそれが最速（ビートダウン）。
         # ただし抑制中は、殴りの勝ちに流れてループの手順が育たないため選ばない
         if not self.suppress_beatdown and f["my_threat"] >= f["opp_shield"] + 1:
@@ -225,12 +241,17 @@ def charge_scores(eng, d, targets=TARGET_CARDS) -> dict[int, float]:
     """マナチャージの判断: 選択肢ごとに「置く向き」のスコアを付ける。
 
     考え方は「手札で失う価値が小さく、マナとして困らない札から置く」。
+    固定の枚数条件は置かず、すべて位置に応じた連続的な損得で比べる。
     - 目標の部品は温存する（同名が2枚以上ある場合だけ置く候補に戻す）
-    - 既にマナにある文明しか持たない札は、新しい文明が増えないので置きやすい。
-      特に多色で全文明が揃っている札は、手札で持つ意味が薄い
+    - 既にマナにある文明しか持たない札は、新しい文明が増えないので置きやすい
     - 直近2ターンで使えないコストの札は、当面の手札価値が低い
     - 逆に、マナに無い文明を持ち、手札の他の札が必要としているなら、
       補完として置く価値がある（その文明が使えるようになる）
+    - 多色は「手札でプレイする価値」と「マナとしての柔軟さ」の両方がある。
+      手札に多色が多いほど1枚置く痛みは相対的に小さくなり、逆に近く
+      プレイできる多色があるなら単色側を置いて残す動きも取れる。
+      置きたい単色のプレイを残すために多色を置く動きも同様にあり得る。
+      最終的な釣り合いは、勝ち筋から収穫した選好の学習に委ねる
     """
     me = d["player"]
     z = eng.s.zones
@@ -243,12 +264,18 @@ def charge_scores(eng, d, targets=TARGET_CARDS) -> dict[int, float]:
     # 手札が必要とする文明（近く使える札の文明）と、このターン使えるようになる札
     needs = set()
     fix_civs = set()    # 1枚置けばこのターン出せる札が必要とする文明
-    multi_in_hand = 0   # 手札に多色カードが溜まっているか（将来のアンタップ不足の芽）
+    multi_in_hand = 0   # 手札の多色の枚数（置く痛みの相対的な物差し）
+    playable_multi = False  # 近くプレイできる多色があるか（残す価値がある）
+    keep_mono = False       # 近くプレイしたい単色があるか（残すために多色を置く動き）
     for c in hand_ids:
         cd = eng.cdef(c)
         cost = min([f.cost for f in cd.faces] or [cd.cost])
         if cost <= mana_n + 2:
             needs.update(cd.civs)
+            if len(cd.civs) >= 2:
+                playable_multi = True
+            else:
+                keep_mono = True
         if cost == mana_n + 1:
             fix_civs.update(cd.civs)
         if len(cd.civs) >= 2:
@@ -267,8 +294,6 @@ def charge_scores(eng, d, targets=TARGET_CARDS) -> dict[int, float]:
         new_civs = civs - mana_civs
         if not new_civs:
             s += 30.0                       # 新しい文明が増えない札は置きやすい
-            if len(civs) >= 2:
-                s += 10.0                   # 多色で全文明が揃っているなら尚更
         elif new_civs & needs:
             s += 20.0                       # 足りない文明の補完になる
             target_civs = set()
@@ -279,9 +304,13 @@ def charge_scores(eng, d, targets=TARGET_CARDS) -> dict[int, float]:
                 s += 10.0                   # 部品が使えるようになる文明は特に欲しい
             if new_civs & fix_civs:
                 s += 15.0                   # この1枚でこのターン出せる札が増える
-        if len(civs) >= 2 and multi_in_hand >= 3:
-            s += 15.0                       # 多色が手札に溜まっているなら先にマナへ
-                                            # （将来、置かざるを得ない場面で困らないように）
+        if len(civs) >= 2:
+            s += 4.0 * multi_in_hand       # 多色が多いほど1枚置く痛みは相対的に小さい
+            if keep_mono:
+                s += 6.0                    # 残したい単色のプレイのために多色を置く動き
+        elif playable_multi:
+            s += 10.0                       # 多色をプレイする方針なら単色側を置く
+                                            # （単色のドローを期待して多色を温存する）
         if cost > mana_n + 2:
             s += 15.0                       # 直近では使えない
         elif cost <= mana_n:
