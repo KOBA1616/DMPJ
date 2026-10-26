@@ -158,6 +158,16 @@ def deck_bucket(deck_n: int) -> str:
     return "thin" if deck_n <= 8 else "mid" if deck_n <= 18 else "thick"
 
 
+def grave_bucket(eng, player: int) -> str:
+    """墓地のクリーチャー数の区分。サガの蘇生条件（3体以上）で判断が切り替わるため、
+    山札の厚さとは独立の文脈として持つ。"""
+    n = 0
+    for c in eng.s.zones["graveyard"][player]:
+        if "creature" in (eng.cdef(c).face(None).types or []):
+            n += 1
+    return "g3p" if n >= 3 else "g02"
+
+
 def learn_preferences(records: list[dict]) -> dict:
     """決定レコードから、決定の種類ごとのキーの選好率を学ぶ。
 
@@ -190,13 +200,13 @@ def learn_preferences(records: list[dict]) -> dict:
         by_bucket[b] = {kind: {k: round(b_chosen[kind][k] / a, 3)
                                for k, a in counter.items() if a >= 2}
                         for kind, counter in b_avail.items()}
-    # 勝ち方×山札の厚さの文脈ごとにも集計する。勝ち方で捨てる／残す判断が
-    # 逆転しうるため、全体の選好に埋もれさせない（区分のデータが薄ければ使われない）。
+    # 文脈ごとにも集計する。文脈は 勝ち方×厚さ（v3）と、勝ち方×狙い×墓地区分×厚さ
+    # （v4）の2段。同じ厚さでも、整えるターンとループのターンでは捨てる札が違い、
+    # 墓地のクリーチャー数が蘇生条件を満たすかどうかでも判断が切り替わる。
+    # 区分のデータが薄ければ、その段は使われず下の段に落ちる。
     by_context: dict[str, dict] = {}
-    contexts = sorted({f"{r.get('win_by') or 'any'}|{r['bucket']}" for r in records if r.get("bucket")})
-    for ctx in contexts:
-        wb, b = ctx.split("|", 1)
-        sub = [r for r in records if (r.get("win_by") or "any") == wb and r.get("bucket") == b]
+
+    def aggregate(sub):
         c_avail: dict[str, Counter] = defaultdict(Counter)
         c_chosen: dict[str, Counter] = defaultdict(Counter)
         for rec in sub:
@@ -204,9 +214,22 @@ def learn_preferences(records: list[dict]) -> dict:
                 c_avail[rec["kind"]][k] += 1
             for k in rec["chosen"]:
                 c_chosen[rec["kind"]][k] += 1
-        by_context[ctx] = {kind: {k: round(c_chosen[kind][k] / a, 3)
-                                  for k, a in counter.items() if a >= 2}
-                           for kind, counter in c_avail.items()}
+        return {kind: {k: round(c_chosen[kind][k] / a, 3)
+                       for k, a in counter.items() if a >= 2}
+                for kind, counter in c_avail.items()}
+
+    for wb in sorted({r.get("win_by") or "any" for r in records}):
+        for b in sorted({r["bucket"] for r in records if r.get("bucket")}):
+            sub = [r for r in records
+                   if (r.get("win_by") or "any") == wb and r.get("bucket") == b]
+            if sub:
+                by_context[f"{wb}|{b}"] = aggregate(sub)
+            for intent in sorted({r.get("intent") or "any" for r in sub}):
+                for g in sorted({r.get("grave") or "any" for r in sub}):
+                    sub2 = [r for r in sub if (r.get("intent") or "any") == intent
+                            and (r.get("grave") or "any") == g]
+                    if sub2:
+                        by_context[f"{wb}|{intent}|{g}|{b}"] = aggregate(sub2)
     return {"global": policy, "by_bucket": by_bucket, "by_context": by_context}
 
 
@@ -214,22 +237,27 @@ def learn_preferences(records: list[dict]) -> dict:
 class MicroPolicy:
     """ターン内の決定を案内する方策。
 
-    v3: 選好の重ね順は 全体 → 山札の厚さの区分 → 勝ち方×区分（by_context）。
-    勝ち方が違えば同じ局面でも正解が逆転しうるので、目標ループの勝ち方を
-    方策側にも持たせ、文脈が一致した選好を最優先にする。
+    v4: 文脈は山札の厚さだけではない。重ね順は 全体 → 厚さ区分 → 勝ち方×厚さ →
+    勝ち方×狙い×墓地区分×厚さ。整えるターンとループのターンでは同じ決定でも
+    正解が違い、墓地のクリーチャー数が蘇生条件を満たすかでも判断が切り替わる。
+    狙い（intent）は階層版でマクロがターンごとに差し込む。
     """
     preferences: dict = field(default_factory=dict)
     win_by: str = "effect"          # この方策が狙う勝ち方
+    intent: str | None = None       # このターンの狙い（マクロが設定する）
 
     def prefer(self, eng, d) -> list[int] | None:
         prefs = self.preferences or {}
-        if "global" in prefs:   # v2/v3 形式
+        if "global" in prefs:   # v2 以降の形式
             rates = dict(prefs["global"].get(d["kind"], {}))
             if eng is not None:
                 bucket = deck_bucket(len(eng.s.zones["deck"][d["player"]]))
                 rates.update(prefs.get("by_bucket", {}).get(bucket, {}).get(d["kind"], {}))
-                ctx = prefs.get("by_context", {}).get(f"{self.win_by}|{bucket}", {})
-                rates.update(ctx.get(d["kind"], {}))
+                by_ctx = prefs.get("by_context", {})
+                rates.update(by_ctx.get(f"{self.win_by}|{bucket}", {}).get(d["kind"], {}))
+                if self.intent is not None:
+                    key = f"{self.win_by}|{self.intent}|{grave_bucket(eng, d['player'])}|{bucket}"
+                    rates.update(by_ctx.get(key, {}).get(d["kind"], {}))
         else:                    # v1 形式（kind の直下にキー選好）
             rates = prefs.get(d["kind"], {})
         if not rates:
@@ -329,11 +357,13 @@ class Pipeline:
     # 段階3
     def harvest(self, seeds: list[int]):
         wins, records = 0, []
+        planner = MacroPlanner(win_by=self.win_by)
         for s in seeds:
             won, leaf, _ = self.run_search(s, script_candidates)
             if not won:
                 continue
             eng = self.build(s)
+            intent_name = planner.plan(eng).name   # このターンの狙いを文脈として記録する
             i, ok = 0, True
             for _ in range(4000):
                 d = eng.advance()
@@ -350,7 +380,8 @@ class Pipeline:
                                     "options": [o["key"] for o in d["options"]],
                                     "chosen": entry["keys"],
                                     "deck": deck_n, "bucket": deck_bucket(deck_n),
-                                    "win_by": self.win_by})
+                                    "win_by": self.win_by, "intent": intent_name,
+                                    "grave": grave_bucket(eng, ME)})
                 try:
                     eng.answer_by_keys(entry["keys"])
                 except Exception:
@@ -369,7 +400,11 @@ class Pipeline:
         for s in seeds:
             if macro is not None:
                 intent = macro.plan(self.build(s))
-                won, _, nd = self.run_search(s, micro.candidates, intent)
+                micro.intent = intent.name   # ミクロの文脈にこのターンの狙いを渡す
+                try:
+                    won, _, nd = self.run_search(s, micro.candidates, intent)
+                finally:
+                    micro.intent = None
             else:
                 won, _, nd = self.run_search(s, micro.candidates)
             wins += won

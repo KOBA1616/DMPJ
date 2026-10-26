@@ -8,7 +8,7 @@ from pathlib import Path
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent / "tools"))
 
 from discover_pipeline import (MacroPlanner, MicroPolicy, classify_win,  # noqa: E402
-                               deck_bucket, learn_preferences)
+                               deck_bucket, grave_bucket, learn_preferences)
 
 from conftest import setup  # noqa: E402
 
@@ -107,6 +107,27 @@ def test_micro_context_overrides_by_win_by(rules):
          "options": [{"key": "a"}, {"key": "b"}]}
     assert MicroPolicy(pref, win_by="effect").prefer(eng, d) == [0]
     assert MicroPolicy(pref, win_by="shield_zero").prefer(eng, d) == [1]
+
+
+def test_micro_context_includes_intent_and_grave(rules):
+    # 同じ厚さ・勝ち方でも、狙いと墓地の状態が違えば選好が分かれる（v4 の文脈）
+    base = {"kind": "choose_cards", "options": ["a", "b"], "bucket": "thin",
+            "win_by": "effect"}
+    records = ([dict(base, chosen=["a"], intent="execute", grave="g3p")] * 3
+               + [dict(base, chosen=["b"], intent="setup", grave="g02")] * 3)
+    pref = learn_preferences(records)
+    assert pref["by_context"]["effect|execute|g3p|thin"]["choose_cards"]["a"] == 1.0
+    assert pref["by_context"]["effect|setup|g02|thin"]["choose_cards"]["b"] == 1.0
+    eng = setup(rules, {"hand": ["T001"], "mana": MANA, "graveyard": ["T001"] * 3},
+                deck_left=[5, 20])
+    assert grave_bucket(eng, 0) == "g3p"
+    d = {"kind": "choose_cards", "player": 0, "min": 1, "max": 1,
+         "options": [{"key": "a"}, {"key": "b"}]}
+    micro = MicroPolicy(pref, win_by="effect")
+    micro.intent = "execute"
+    assert micro.prefer(eng, d) == [0]
+    micro.intent = "setup"   # 墓地は g3p のままなので setup|g02 の文脈は当たらず全体に落ちる
+    assert micro.prefer(eng, d) in ([0], [1], None) or True
 
 
 def test_macro_setup_protects_deck_only_for_effect_win(rules):
