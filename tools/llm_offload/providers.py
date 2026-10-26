@@ -5,6 +5,7 @@ convert_cards.py など全ツールがこれを使う。課金が発生しうる
 from __future__ import annotations
 
 import json
+import sys
 import re
 from pathlib import Path
 
@@ -30,6 +31,8 @@ OPENCODE_FREE_MODELS = frozenset({
     "nemotron-3-ultra-free", "mimo-v2.6-flash-free",   # 2026-10-25 公式 zen で Free(入出力$0)を確認
 })
 OPENCODE_DEFAULT = "glm-5.3-flash-free"
+OPENCODE_FALLBACK_ORDER = ("deepseek-v4.1-flash-free", "glm-5.3-flash-free", "nemotron-3-ultra-free",
+                           "mimo-v2.6-flash-free", "longcat-2.5-preview-free")
 OPENCODE_TIMEOUT = 150   # 1回の呼び出しの上限秒。無応答時に1枚10分も待たない(2026-10-25: 600秒x3回で30分空回り)
 
 
@@ -136,13 +139,34 @@ class OpenCodeCLI:
     キー不要。モデルは同じ許可リストで検査する。"""
     name = "opencode-cli"
 
-    def __init__(self, model: str = OPENCODE_DEFAULT, min_interval: float = 3.0):
+    def __init__(self, model: str = OPENCODE_DEFAULT, min_interval: float = 3.0, fallbacks: int = 2):
         import threading
         check_free_model(model)
         self.model, self.min_interval = model, min_interval
+        # タイムアウト時に切り替える先（許可リスト内＝公式で $0 確認済みのものだけ）。fallbacks=0 で切り替えなし
+        self.alternates = [m for m in OPENCODE_FALLBACK_ORDER if m != model and m in OPENCODE_FREE_MODELS][:max(0, fallbacks)]
         self._last, self._lock = 0.0, threading.Lock()
 
     def complete(self, sysp: str, messages: list[dict], effort: str, usage: dict | None) -> str:
+        """今のモデルがタイムアウトしたら別の無料モデルで同じ依頼を再試行する。成功したモデルをそのまま使い続ける。
+        全部タイムアウトしたら CallTimeout を投げる（呼び出し側が保留・連続打ち切りに数える）。"""
+        order = [self.model, *self.alternates]
+        tried = []
+        for m in order:
+            try:
+                text = self._complete_one(m, sysp, messages, usage)
+            except CallTimeout as e:
+                tried.append(m)
+                print(f"  ⏱ {m} が時間内に終わらない。別の無料モデルへ切り替える", file=sys.stderr, flush=True)
+                last = e
+                continue
+            if m != self.model:
+                self.alternates = [x for x in order if x != m]
+                self.model = m
+            return text
+        raise CallTimeout(f"{'・'.join(tried)} がすべてタイムアウト（{last}）")
+
+    def _complete_one(self, model: str, sysp: str, messages: list[dict], usage: dict | None) -> str:
         import shutil
         import subprocess
         import tempfile
@@ -158,7 +182,7 @@ class OpenCodeCLI:
             exe = next(filter(None, (shutil.which(n) for n in ("opencode.cmd", "opencode.exe", "opencode"))), None)
             if not exe:
                 raise FileNotFoundError("opencode コマンドが PATH にない（npm i -g opencode-ai）")
-            r = _run_tree([exe, "run", "-m", f"opencode/{self.model}", "--format", "json",
+            r = _run_tree([exe, "run", "-m", f"opencode/{model}", "--format", "json",
                            "添付ファイルの指示に従い、最後の [user] への答えだけを出力して。", "-f", str(f)],
                           OPENCODE_TIMEOUT, d)
         if re.search(r"(?i)FreeTierError|billing|credit balance|insufficient|payment", r.stdout + r.stderr):

@@ -298,11 +298,11 @@ def test_auto_convert_limit_status_and_retry_only_on_vocab_change(tmp_path, monk
     monkeypatch.setattr(ac.cc, "make_llm", lambda *a: LLM())
     monkeypatch.setattr(ac, "DATA", tmp_path)
     monkeypatch.setattr(ac, "vocab_hash", lambda: "h1")
-    ac.main(["--limit", "2", "--interval", "0", "--order", "short"])
+    ac.main(["--limit", "2", "--interval", "0", "--health-timeout", "0", "--order", "short"])
     assert seen == ["ta_b", "ta_c"]                      # 短い順に上限まで
     st = json.loads((raw / "convert_status.json").read_text(encoding="utf-8"))
     assert (st["converted"], st["pending"], st["vocab_hash"]) == (2, 1, "h1")
-    ac.main(["--limit", "2", "--interval", "0", "--order", "short"])
+    ac.main(["--limit", "2", "--interval", "0", "--health-timeout", "0", "--order", "short"])
     assert seen[2:] == ["ta_a"]
 
 
@@ -327,8 +327,37 @@ def test_auto_convert_default_order_is_card_id(tmp_path, monkeypatch):
     monkeypatch.setattr(ac.cc, "make_llm", lambda *a: LLM())
     monkeypatch.setattr(ac, "DATA", tmp_path)
     monkeypatch.setattr(ac, "vocab_hash", lambda: "h1")
-    ac.main(["--limit", "3", "--batch", "3", "--max-bad-batches", "1", "--interval", "0"])
+    ac.main(["--limit", "3", "--batch", "3", "--max-bad-batches", "1", "--interval", "0", "--health-timeout", "0"])
     assert seen[:2] == ["tz01-001", "tz01-002"]          # streak 2 で打ち切るまでの先頭がID順
+
+
+def test_opencode_cli_switches_model_on_timeout(monkeypatch):
+    """タイムアウトしたら別の無料モデルで再試行し、成功したモデルを使い続ける。全部だめなら CallTimeout。"""
+    from llm_offload import providers as pv
+    llm = pv.OpenCodeCLI("glm-5.3-flash-free", 0, fallbacks=2)
+    assert llm.model not in llm.alternates and len(llm.alternates) == 2
+    assert all(m in pv.OPENCODE_FREE_MODELS and m.endswith("-free") for m in llm.alternates)
+    calls = []
+
+    def one(model, sysp, messages, usage):
+        calls.append(model)
+        if model == "glm-5.3-flash-free":
+            raise pv.CallTimeout("t")
+        return "ok"
+
+    monkeypatch.setattr(llm, "_complete_one", one)
+    assert llm.complete("", [], "low", None) == "ok"
+    assert calls == ["glm-5.3-flash-free", llm.model] and llm.model != "glm-5.3-flash-free"
+    calls.clear()
+    assert llm.complete("", [], "low", None) == "ok" and calls == [llm.model]   # 以後は切り替え先から始める
+
+    def hang(model, *a):
+        raise pv.CallTimeout("t")
+
+    monkeypatch.setattr(llm, "_complete_one", hang)
+    import pytest
+    with pytest.raises(pv.CallTimeout):
+        llm.complete("", [], "low", None)
 
 
 def test_convert_timeout_breaker(tmp_path):
@@ -448,7 +477,9 @@ def test_local_worker_ask_roundtrip(tmp_path):
         def complete(self, sysp, messages, effort, usage):
             LLM.seen = messages[0]["content"]
             return "要約結果"
-    assert lw.process(g, lambda m: LLM()) == [f"{jid}:ok"]
+    out = lw.process(g, lambda m: LLM(), health=lambda: "TimeoutError: hang")
+    assert len(out) == 1 and "使えない" in out[0] and "pending のまま" in out[0]     # モデル停止中はジョブに触れない
+    assert lw.process(g, lambda m: LLM(), health=lambda: None) == [f"{jid}:ok"]
     assert "SECRET123456789" not in LLM.seen
     chk = tmp_path / "chk"
     subprocess.run(["git", "clone", "-q", "-b", "llm-jobs", str(bare), str(chk)], check=True, capture_output=True)

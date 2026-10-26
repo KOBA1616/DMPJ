@@ -303,10 +303,30 @@ def post_pr_comment(pr, jid: str, res: dict) -> str:
     return "posted" if r.returncode == 0 else f"failed: {lo.scrub((r.stderr or '')[:150])}"
 
 
-def process(git: Git, llm_factory=None, max_jobs: int = 20, daily_limit: int = lo.DAILY_LIMIT) -> list[str]:
+def model_alive(timeout: float = 90) -> str | None:
+    """無料モデル（匿名枠）が応答するかを短い質問で確かめる。使えれば None、だめなら理由を返す。"""
+    from llm_offload import providers
+    old = providers.OPENCODE_TIMEOUT
+    providers.OPENCODE_TIMEOUT = timeout
+    try:
+        lo.make_llm("opencode-cli", lo.OPENCODE_DEFAULT).complete("", [{"role": "user", "content": "OKとだけ答えて"}], "low", None)
+        return None
+    except lo.Fatal:
+        raise
+    except Exception as e:      # noqa: BLE001  応答なし・CLIなし等はすべて「今は使えない」
+        return f"{type(e).__name__}: {str(e)[:150]}"
+    finally:
+        providers.OPENCODE_TIMEOUT = old
+
+
+def process(git: Git, llm_factory=None, max_jobs: int = 20, daily_limit: int = lo.DAILY_LIMIT, health=None) -> list[str]:
     jd = git.worktree("jobs", JOBS_BRANCH, create=True)
     pending, done = jd / "jobs" / "pending", jd / "jobs" / "done"
     done.mkdir(parents=True, exist_ok=True)
+    if health and any(pending.glob("*.yaml")):
+        why = health()      # ジョブがある時だけ確かめる。だめなら cards-data にも触れず、ジョブは pending のまま次回へ
+        if why:
+            return [f"モデルが使えないので今回は処理しない（ジョブは pending のまま）: {why}"]
     llm_factory = llm_factory or (lambda model: lo.make_llm("opencode-cli", model))
     handled = []
     for p in sorted(pending.glob("*.yaml"))[:max_jobs]:
@@ -413,7 +433,7 @@ def main(argv=None) -> int:
                     restart = True      # ロックを放してから新版で起動し直す（with を抜けた後）
                     break
             try:
-                print(now(), process(git, daily_limit=a.daily_limit) or "ジョブなし", flush=True)
+                print(now(), process(git, daily_limit=a.daily_limit, health=model_alive) or "ジョブなし", flush=True)
             except RuntimeError as ex:
                 print(now(), "失敗（次回やり直す）:", lo.scrub(str(ex)), file=sys.stderr, flush=True)
             if not a.loop:

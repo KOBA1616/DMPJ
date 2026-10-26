@@ -53,6 +53,19 @@ def vocab_gaps(rejects: list[dict]) -> dict:
     return dict(sorted(n.items(), key=lambda kv: -kv[1])[:30])
 
 
+def opencode_usage() -> str:
+    """手元の OpenCode の利用量（`opencode stats`：トークン・費用・モデル別）。無料枠の残量や使用割合は CLI/API に公式の手段がないので出せない。"""
+    import shutil
+    exe = next(filter(None, (shutil.which(n) for n in ("opencode.cmd", "opencode.exe", "opencode"))), None)
+    if not exe:
+        return "opencode コマンドなし（利用量は取得できない）"
+    try:
+        r = providers._run_tree([exe, "stats", "--days", "1", "--models", "5"], 30, None)
+    except Exception as e:      # noqa: BLE001  報告用なので失敗しても本処理は止めない
+        return f"opencode stats を取得できなかった: {type(e).__name__}"
+    return (r.stdout or r.stderr).strip()[:1500] or "opencode stats の出力なし"
+
+
 def main(argv=None):
     ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     ap.add_argument("--provider", default="opencode-cli", choices=["opencode", "opencode-cli"])
@@ -65,14 +78,27 @@ def main(argv=None):
     ap.add_argument("--effort", default="high")
     ap.add_argument("--order", choices=["id", "short"], default="id",
                     help="変換の順番。id: カードID順（弾ごとにまとまる）、short: 原文の短い順（簡単なものから）")
-    ap.add_argument("--timeout", type=float, default=1200, help="1枚の呼び出しの上限秒（非常に長め）。超えたら reason: timeout で対象外")
+    ap.add_argument("--timeout", type=float, default=300, help="1枚の呼び出しの上限秒。超えた1枚は次の成功で reason: timeout に確定、連続2回なら打ち切り")
+    ap.add_argument("--health-timeout", type=float, default=90, help="開始前にモデルへ短い質問をして応答を確認する上限秒（0で省略）。返らなければ何も処理せず終了")
+    ap.add_argument("--fallbacks", type=int, default=2, help="タイムアウト時に切り替える別の無料モデルの数（0で切り替えなし）")
     a = ap.parse_args(argv)
-    providers.OPENCODE_TIMEOUT = a.timeout
+    providers.OPENCODE_TIMEOUT = a.health_timeout or a.timeout
     out, rej = DATA / "cards" / "converted.yaml", RAW / "rejects.jsonl"
     prev = json.loads(STATUS.read_text(encoding="utf-8")) if STATUS.exists() else {}
     vh = vocab_hash()
     sysp, tables = cc.system_prompt(), load_tables()
     llm = cc.make_llm(a.provider, a.model, a.interval)
+    if hasattr(llm, "alternates"):
+        llm.alternates = llm.alternates[:max(0, a.fallbacks)]
+    if a.health_timeout:
+        try:
+            llm.complete("", [{"role": "user", "content": "OKとだけ答えて"}], "low", None)
+        except cc.Fatal:
+            raise
+        except Exception as e:      # noqa: BLE001  停止中のモデルに1枚ずつ待たされないよう、最初の1回で見切る
+            print(f"ヘルスチェック失敗（モデルが応答しない）: {type(e).__name__}: {str(e)[:200]}。今回は何も処理しない", file=sys.stderr)
+            sys.exit(3)
+    providers.OPENCODE_TIMEOUT = a.timeout
     ran = {"new": None, "retry": None}
     batches: list[dict] = []
     try:
@@ -115,6 +141,9 @@ def main(argv=None):
               "vocab_hash": vh if retried_all else prev.get("vocab_hash"),
               "vocab_gaps": vocab_gaps(rejects), "reject_reasons": reasons(rejects), "batches": batches,
               "last_run": {k: (v and {x: v[x] for x in ("requested", "ok", "rejected", "api_error")}) for k, v in ran.items()}}
+    if isinstance(llm, providers.OpenCodeCLI):
+        status["opencode_usage"] = "（直近1日・手元の集計。無料枠の残量・使用割合は公式に取得手段なし。Zen コンソールで確認）\n" + opencode_usage()
+        status["model_in_use"] = llm.model
     STATUS.write_text(json.dumps(status, ensure_ascii=False, indent=1), encoding="utf-8")
     print(json.dumps(status, ensure_ascii=False, indent=1))
 
