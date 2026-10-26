@@ -311,6 +311,21 @@ def run(rows: list[dict], client, tables, sysp: str, effort: str, out: Path, rej
                     rejects.pop(r["id"], None)
                     save()
                 return
+        with lock:
+            same = rule_convert.reuse_same_text(r, cards)      # 原文が同じ変換済みカードがあれば能力を写す（モデルを呼ばない）
+        if same is not None:
+            try:
+                same = validate(same, r, tables)
+            except DefError as e:
+                print(f"  {r['id']}: 同一原文の写しが検査を通らなかったのでモデルへ回す: {e}", file=sys.stderr)
+            else:
+                with lock:
+                    stats["ok"] += 1
+                    print(f"✓ {r['id']} {r.get('name', '')} (同一原文の写し・モデル不使用)", file=sys.stderr, flush=True)
+                    cards.append(same)
+                    rejects.pop(r["id"], None)
+                    save()
+                return
         if streak["n"] >= 2:
             return
         pre = precheck(r)
