@@ -92,7 +92,7 @@ def main(argv=None):
     llm = cc.make_llm(a.provider, a.model, a.interval)
     if hasattr(llm, "alternates"):
         llm.alternates = llm.alternates[:max(0, a.fallbacks)]
-    if a.health_timeout:
+    if a.health_timeout and not (hasattr(llm, "recently_ok") and llm.recently_ok()):      # 直前に応答が返っていれば省く
         try:
             llm.complete("", [{"role": "user", "content": "OKとだけ答えて"}], "low", None)
         except cc.Fatal:

@@ -418,6 +418,7 @@ def test_openrouter_uses_only_verified_free_models(monkeypatch):
     monkeypatch.setattr(cli, "_complete_one", lambda *a: n.append(1) or "oc")
     assert cli.complete("", [], "low", None) == "ok" and not n   # 直後は OpenCode を待たず別サービスを直接使う
     cli._ext_until = 0
+    cli.bad = {}
     assert cli.complete("", [], "low", None) == "oc" and n      # 冷却が終われば OpenCode に戻る
 
 
@@ -533,6 +534,80 @@ def test_opencode_cli_detects_free_limit(monkeypatch):
     assert pv.FREE_LIMIT_RE.search('{"name":"FreeUsageLimitError","message":"Free usage limit reached. Subscribe"}')
     cli.external = type("X", (), {"complete": lambda self, *a: "ext"})()
     assert cli.complete("", [], "low", None) == "ext"
+
+
+def test_opencode_cli_remembers_model_across_runs(tmp_path, monkeypatch):
+    """5枚ごとにプロセスを起動し直しても、前回使えたモデルから始め、だめだったモデルは一定時間飛ばす。"""
+    from llm_offload import providers as pv
+    st = tmp_path / "state.json"
+    monkeypatch.setenv("DMPJ_MODEL_STATE", str(st))
+    a = pv.OpenCodeCLI("glm-5.3-flash-free", 0, fallbacks=2)
+    assert not a.recently_ok()
+    calls = []
+
+    def one(model, *x):
+        calls.append(model)
+        if model == "glm-5.3-flash-free":
+            raise pv.CallTimeout("t")
+        return "ok"
+
+    monkeypatch.setattr(a, "_complete_one", one)
+    assert a.complete("", [], "low", None) == "ok" and len(calls) == 2
+    good = a.model
+    b = pv.OpenCodeCLI("glm-5.3-flash-free", 0, fallbacks=2)      # 別プロセスの想定
+    assert b.model == good and "glm-5.3-flash-free" in b.bad and b.recently_ok()
+    calls.clear()
+    monkeypatch.setattr(b, "_complete_one", one)
+    assert b.complete("", [], "low", None) == "ok" and calls == [good]      # 試し直さない
+    calls.clear()
+
+    def fail_good(model, *x):
+        calls.append(model)
+        if model == good:
+            raise pv.CallTimeout("t")
+        return "ok"
+
+    monkeypatch.setattr(b, "_complete_one", fail_good)
+    assert b.complete("", [], "low", None) == "ok" and "glm-5.3-flash-free" not in calls     # 冷却中の glm は飛ばす
+
+
+def test_local_worker_merges_conflicting_convert_results(tmp_path):
+    """別の実行が同じ converted.yaml / rejects.jsonl を先に push していても、ID ごとに合流して push できる。"""
+    import subprocess
+
+    import local_worker as lw
+    import yaml as _y
+    bare = tmp_path / "remote.git"
+    subprocess.run(["git", "init", "-q", "--bare", "-b", "cards-data", str(bare)], check=True)
+
+    def clone(n):
+        d = tmp_path / n
+        subprocess.run(["git", "clone", "-q", str(bare), str(d)], check=True, capture_output=True)
+        for k, v in (("user.name", "t"), ("user.email", "t@t")):
+            subprocess.run(["git", "config", k, v], cwd=d, check=True)
+        return d
+
+    def write(d, cards, rejects, commit=True):
+        (d / "data/cards/raw").mkdir(parents=True, exist_ok=True)
+        (d / "data/cards/converted.yaml").write_text(_y.safe_dump({"cards": [{"id": i} for i in cards]}), encoding="utf-8")
+        (d / "data/cards/raw/rejects.jsonl").write_text("".join('{"id": "%s"}\n' % i for i in rejects), encoding="utf-8")
+        subprocess.run(["git", "add", "-f", "data"], cwd=d, check=True)
+        if commit:
+            subprocess.run(["git", "commit", "-qm", "x"], cwd=d, check=True)
+
+    base = clone("base")
+    write(base, ["a"], ["r1"])
+    subprocess.run(["git", "push", "-q", "origin", "HEAD:cards-data"], cwd=base, check=True)
+    mine, other = clone("mine"), clone("other")
+    write(other, ["a", "b"], ["r1", "r2"])               # 他の実行が先に push
+    subprocess.run(["git", "push", "-q", "origin", "HEAD:cards-data"], cwd=other, check=True)
+    write(mine, ["a", "c"], ["r1", "b"], commit=False)   # 自分も同じファイルを更新（b は自分では不合格）
+    g = lw.Git(mine, tmp_path / "work")
+    g.commit_push(mine, "cards-data", "m", add=False, on_conflict=lambda: g.merge_convert_results(mine, "cards-data", "m"))
+    chk = clone("chk")
+    cards = sorted(c["id"] for c in _y.safe_load((chk / "data/cards/converted.yaml").read_text(encoding="utf-8"))["cards"])
+    rejs = sorted(l for l in (chk / "data/cards/raw/rejects.jsonl").read_text(encoding="utf-8").split("\n") if l)
+    assert cards == ["a", "b", "c"] and rejs == ['{"id": "r1"}', '{"id": "r2"}']      # 変換済みが優先、不合格は和集合
 
 
 def test_convert_timeout_breaker(tmp_path):

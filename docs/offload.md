@@ -139,3 +139,7 @@ schtasks /Create /SC MINUTE /MO 5 /TN "dmpj-worker" /TR C:\path\DMPJ\tools\run_w
 - 環境変数 `GEMINI_API_KEY` があれば、OpenCode 全滅時の切り替え先として最初に試す（OpenAI 互換: `generativelanguage.googleapis.com/v1beta/openai`）。順番は Gemini → OpenRouter → LLM7。
 - 使うのは公式の料金ページで無料枠と出ている Flash 系（3.8 / 3.6 / 3 Flash Preview / 3.5・3.1 Flash-Lite）に固定。Pro 系は使わない。
 - 注意: キーのプロジェクトに請求先を設定すると有料になりうるが、応答から費用は検知できない。**請求先のないプロジェクトで作ったキーだけ**を使う。無料枠は入力が製品改善に使われる。
+
+## 実行をまたぐ記憶と cards-data の競合
+- ワーカーは `work/model_state.json`（環境変数 `DMPJ_MODEL_STATE`）に、使えたモデル・使えなかったモデル（30分は飛ばす）・別サービスを使う期限・最後に応答が返った時刻を残す。5枚ごとに変換プロセスを起動し直しても、前回使えたモデルから始め、直近10分に応答があれば開始前チェックも省く。
+- cards-data への push: 取得系（auto-sync / sync-cards）は `data/cards/raw/by_product/` と台帳、変換は `converted.yaml` / `rejects.jsonl` / `convert_*.json` を書くので、通常は別ファイルで衝突しない。push が拒否されたら fetch → rebase で再試行し、変換結果ファイルが衝突したら ID ごとの和集合で合流（変換済みが優先、不合格は和集合から変換済みを除く）して push し直す。

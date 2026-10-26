@@ -74,7 +74,38 @@ class Git:
         self.sh("reset", "-q", "--hard", f"origin/{branch}", cwd=d)
         return d
 
-    def commit_push(self, d: Path, branch: str, msg: str, add: bool = True):
+    def merge_convert_results(self, d: Path, branch: str, msg: str):
+        """変換結果ファイルが origin 側とも変わって rebase が衝突したときの合流。converted.yaml と rejects.jsonl を ID ごとの和集合にして、
+        origin の最新の上に1コミット作り直す（作業ツリーの tools/ 等の上書きはそのまま残す）。成功扱い（変換済み）が優先。"""
+        import yaml as _y
+        conv, rej = d / "data/cards/converted.yaml", d / "data/cards/raw/rejects.jsonl"
+
+        def theirs(path: str) -> str:
+            return self.sh("show", f"origin/{branch}:{path}", cwd=d, check=False)
+
+        cards = {}
+        for text in (theirs("data/cards/converted.yaml"), conv.read_text(encoding="utf-8") if conv.exists() else ""):
+            for c in (_y.safe_load(text) or {}).get("cards") or []:      # あとから読む（自分の結果）が優先
+                cards[c["id"]] = c
+        rejects = {}
+        for text in (theirs("data/cards/raw/rejects.jsonl"), rej.read_text(encoding="utf-8") if rej.exists() else ""):
+            for line in text.splitlines():
+                if line.strip():
+                    r = json.loads(line)
+                    rejects[r["id"]] = r
+        for i in cards:
+            rejects.pop(i, None)
+        conv.write_text("# convert_cards.py の出力（review: pending）。確認後に real.yaml へ移す。\n"
+                        + _y.safe_dump({"cards": list(cards.values())}, allow_unicode=True, sort_keys=False), encoding="utf-8")
+        rej.write_text("".join(json.dumps(r, ensure_ascii=False) + "\n" for r in rejects.values()), encoding="utf-8")
+        self.sh("reset", "-q", "--mixed", f"origin/{branch}", cwd=d)
+        for f in ("data/cards/converted.yaml", "data/cards/raw/rejects.jsonl", "data/cards/raw/convert_report.json",
+                  "data/cards/raw/convert_status.json"):
+            if (d / f).exists():      # 無いパスを混ぜると git add 全体が失敗するので、あるものだけ足す
+                self.sh("add", "-f", f, cwd=d, check=False)
+        self.sh("commit", "-qm", msg + "（衝突を合流）", cwd=d, check=False)
+
+    def commit_push(self, d: Path, branch: str, msg: str, add: bool = True, on_conflict=None):
         if add:
             self.sh("add", "-A", "jobs", cwd=d, check=False)
         if not self.sh("diff", "--cached", "--name-only", cwd=d):
@@ -86,7 +117,9 @@ class Git:
             self.sh("fetch", "-q", "origin", branch)
             if subprocess.run(["git", "rebase", f"origin/{branch}"], cwd=d, capture_output=True).returncode:
                 self.sh("rebase", "--abort", cwd=d, check=False)
-                raise RuntimeError(f"{branch} への push が衝突した。次回やり直す")
+                if on_conflict is None:
+                    raise RuntimeError(f"{branch} への push が衝突した。次回やり直す")
+                on_conflict()      # 結果ファイルの合流など。そのあと push をやり直す
         raise RuntimeError(f"{branch} への push に失敗")
 
 
@@ -200,7 +233,8 @@ def run_convert(job: dict, git: Git, jobs_model: str | None) -> dict:
         git.sh("reset", "-q", cwd=d)
         git.sh("add", "-f", "data/cards/converted.yaml", "data/cards/raw/rejects.jsonl", "data/cards/raw/convert_report.json",
                "data/cards/raw/convert_status.json", cwd=d, check=False)
-        git.commit_push(d, DATA_BRANCH, f"cards-data: convert (local worker) {now()}", add=False)
+        msg = f"cards-data: convert (local worker) {now()}"
+        git.commit_push(d, DATA_BRANCH, msg, add=False, on_conflict=lambda: git.merge_convert_results(d, DATA_BRANCH, msg))
         print(now(), "保存して push した", flush=True)
         code = proc.returncode
         try:
@@ -347,6 +381,8 @@ def model_alive(timeout: float = 90) -> str | None:
     providers.OPENCODE_TIMEOUT = timeout
     try:
         llm = lo.make_llm("opencode-cli", lo.OPENCODE_DEFAULT)
+        if llm.recently_ok():
+            return None          # 直近に応答が返っている（5枚ごとの再起動でも試し直さない）
         llm.alternates = []      # 開始前の確認は1モデル＋別サービスだけ（5分ごとの起動に収める）
         llm.complete("", [{"role": "user", "content": "OKとだけ答えて"}], "low", None)
         return None
@@ -437,6 +473,7 @@ def main(argv=None) -> int:
     os.environ.setdefault("PYTHONUTF8", "1")      # 子プロセス(Python)の出力もUTF-8にそろえる(Windows既定はcp932)
     os.environ.setdefault("XDG_DATA_HOME", str(Path(a.work) / "xdg"))
     os.environ.setdefault("XDG_CONFIG_HOME", str(Path(a.work) / "xdg-config"))
+    os.environ.setdefault("DMPJ_MODEL_STATE", str(Path(a.work) / "model_state.json"))      # 使えたモデル・使えなかったモデルを実行をまたいで覚える
     git = Git(ROOT, Path(a.work))
     if a.cmd == "enqueue":
         job = {"type": a.type}
