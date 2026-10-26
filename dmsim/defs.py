@@ -60,6 +60,7 @@ class Face:
     evolve_zone: str = "bz"                               # 進化元を探すゾーン（超無限墓地進化は graveyard）
     evolve_any: bool = False                              # 進化元を1体以上選べる（超無限墓地進化）
     cost_reduce_per_evo: int = 0                          # 進化元1体につき召喚コストをいくら減らすか
+    tap_reduce: int = 0                                   # ハイパーエナジー: コストが異なる自分のクリーチャー1体をタップするごとに減るコスト
     free_if: dict | None = None                           # 条件を満たす間はコストを支払わずに召喚できる（G・ゼロ）
     resolve_to: str = "graveyard"                         # 呪文の解決後の置き場所（チャージャー等）
     after_resolve: list[dict] = field(default_factory=list)
@@ -93,6 +94,7 @@ class CardDef:
     evolve_zone: str = "bz"
     evolve_any: bool = False
     cost_reduce_per_evo: int = 0
+    tap_reduce: int = 0
     free_if: dict | None = None
     resolve_to: str = "graveyard"
     after_resolve: list[dict] = field(default_factory=list)
@@ -440,7 +442,7 @@ def _load_face(raw, keywords, macros, chk: Checker, where) -> dict:
                 abilities=abilities, spell=spell, evolve_from=raw.get("evolve_from"),
                 evolve_zone=zone, evolve_any=bool(raw.get("evolve_any", False)),
                 cost_reduce_per_evo=int(raw.get("cost_reduce_per_evo", 0)),
-                free_if=raw.get("free_if"), **props)
+                free_if=raw.get("free_if"), **{"tap_reduce": 0, **props})
 
 
 def load_tables():

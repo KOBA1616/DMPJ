@@ -75,3 +75,29 @@ def test_static_cost_reduction_for_my_race_and_increase_for_opponent_spells(buil
     assert e2.chars(e2.zlist("hand", 0)[0])["pay_cost"] == 3
     e3 = setup(rr, {"hand": ["D1"]})
     assert e3.chars(e3.zlist("hand", 0)[0])["pay_cost"] == 5
+
+
+def test_hyper_energy_taps_creatures_with_different_costs(build):
+    he = card("H1", "ハイパーエナジー（このクリーチャーを召喚する時、コストが異なる自分のクリーチャーを好きな数タップしてもよい。こうしてタップしたクリーチャー１体につき、このクリーチャーの召喚コストを２少なくする。ただし、コストは０以下にはならない）", cost="6")
+    assert r_keywords(he) == ["hyper_energy"]
+    mk = lambda i, c: {"id": i, "name": i, "types": ["creature"], "civs": ["nature"], "cost": c, "power": 1000, "races": ["テスト"], "text": "x"}
+    rr = build(he, mk("A1", 1), mk("A2", 2), mk("A3", 1))
+    e = setup(rr, {"hand": ["H1"], "bz": ["A1", "A2", "A3"], "mana": ["T001", "T001"]})
+    answer(e, "charge", "pass")
+    d = e.advance()
+    assert d["kind"] == "main"
+    e.answer([[o["key"] for o in d["options"]].index("play:H1")])
+    d = e.advance()
+    assert d["kind"] == "choose_cards" and len(d["options"]) == 3
+    e.answer([0])                                     # 1体目（コスト1）
+    d = e.advance()
+    assert len(d["options"]) == 1                     # 同じコストのもう1体は選べない
+    e.answer([0])                                     # コスト2
+    e.advance()                                       # 6 - 4 = 2: マナ2枚で払い、支払いの選択肢は1通りなので自動で進む
+    assert [e.s.cards[c].tapped for c in e.zlist("mana", 0)] == [True, True]
+    assert sum(e.s.cards[c].tapped for c in e.zlist("bz", 0) if e.s.cards[c].defn != "H1") == 2
+    assert any(e.s.cards[c].defn == "H1" for c in e.zlist("bz", 0))
+
+
+def r_keywords(r):
+    return r.get("keywords")

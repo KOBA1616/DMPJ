@@ -88,8 +88,18 @@ class TurnMixin:
                 return False
             n = len(srcs) if d.evolve_any else 1            # 最も安い組合せで払えるか（112.2b）
             cost = max(0, d.cost - n * d.cost_reduce_per_evo) if d.cost_reduce_per_evo else None
-            return bool(self._mana_choices(cid, p, face, cost=cost, limit=1))
-        return bool(self._mana_choices(cid, p, face, limit=1))
+            return bool(self._mana_choices(cid, p, face, cost=self._tap_reduced(d, p, cost, None), limit=1))
+        return bool(self._mana_choices(cid, p, face, cost=self._tap_reduced(d, p, None, None), limit=1))
+
+    def _tap_pool(self, p) -> list[int]:
+        return [c for c in self.bz_tops(p) if "creature" in self.chars(c)["types"] and not self.s.cards[c].tapped]
+
+    def _tap_reduced(self, d, p, cost, tapped):
+        """ハイパーエナジー: タップしたクリーチャー1体につきコストを減らす（床は0）。tapped=None は最大限タップした場合。"""
+        if not d.tap_reduce:
+            return cost
+        n = len({self.chars(c)["cost"] for c in self._tap_pool(p)}) if tapped is None else len(tapped)
+        return max(0, (d.cost if cost is None else cost) - n * d.tap_reduce)
 
     def _evo_sources(self, cid, p, face=None) -> list[int]:
         """適正な進化元（801.1a）。evolve_zone（既定は自分のバトルゾーン）のクリーチャーで
@@ -292,9 +302,22 @@ def h_play(eng, t):
         if dd:
             return dd
         t["evo"] = [s.ref(srcs[i]) for i in ans]
+    if d.tap_reduce and not t["free"] and not t.get("tap_done"):     # ハイパーエナジー: コストが異なるクリーチャーを好きな数タップ
+        chosen = t.setdefault("tap", [])
+        used = {eng.chars(c)["cost"] for c in chosen}
+        cands = [c for c in eng._tap_pool(p) if c not in chosen and eng.chars(c)["cost"] not in used]
+        if cands:
+            ans, dd = eng.ask(t, p, "choose_cards", [eng._card_option(c) for c in cands], 0, 1)
+            if dd:
+                return dd
+            if ans:
+                chosen.append(cands[ans[0]])
+                return None
+        t["tap_done"] = True
     if not t["free"]:
         n = len(t.get("evo", []))
         cost = max(0, d.cost - n * d.cost_reduce_per_evo) if d.cost_reduce_per_evo else None
+        cost = eng._tap_reduced(d, p, cost, t.get("tap", []))
         choices = eng._mana_choices(cid, p, face, cost=cost)
         if not choices:
             eng._pop(t)
@@ -303,7 +326,7 @@ def h_play(eng, t):
         ans, dd = eng.ask(t, p, "pay_mana", opts)
         if dd:
             return dd
-        for c in opts[ans[0]]["cids"]:
+        for c in opts[ans[0]]["cids"] + t.get("tap", []):
             s.cards[c].tapped = True
     eng._pop(t)
     from_zone = s.cards[cid].zone

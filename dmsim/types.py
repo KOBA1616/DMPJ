@@ -198,6 +198,8 @@ class PlayTask(TypedDict):
     gen: int                             # 積んだ時の世代。カードが動いていたら実行しない（400.8）
     face: NotRequired[int]
     evo: NotRequired[list[Ref]]          # 進化元（801）。複数可（超無限墓地進化など）
+    tap: NotRequired[list[int]]          # ハイパーエナジーでタップするクリーチャー
+    tap_done: NotRequired[bool]
     st: NotRequired[bool]                # S・トリガーとして実行する（101.4g）
     resolve_to: NotRequired[str]         # 解決後の置き場所（play_free の resolve_to）
     answer: NotRequired[list[int]]

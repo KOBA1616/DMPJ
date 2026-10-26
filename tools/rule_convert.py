@@ -34,7 +34,7 @@ def _table(with_card_kinds: bool = False) -> dict[str, str]:
     ks = yaml.safe_load((DATA / "rules" / "keywords.yaml").read_text(encoding="utf-8"))["keywords"]
     out = {}
     for name, d in ks.items():
-        if (d.get("card") or {}) and not with_card_kinds:       # 呪文用（チャージャー等）は全体変換の対象外。部分変換では扱う
+        if ({"resolve_to", "after_resolve"} & set(d.get("card") or {})) and not with_card_kinds:       # 呪文用（チャージャー等）は全体変換の対象外。部分変換では扱う
             continue
         for ja in [d["ja"], *d.get("aliases", [])]:
             out[norm(ja)] = name

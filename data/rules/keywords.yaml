@@ -178,3 +178,7 @@ keywords:
     ja: シンカライズ
     abilities:
       - {kind: static, affects: self, mod: {allow: [evolve_base]}}
+  hyper_energy:       # ハイパーエナジー: 実行時、コストが異なる自分のクリーチャーを好きな数タップしてもよい。1体につきコストを2少なくする
+    ja: ハイパーエナジー
+    card: {tap_reduce: 2}
+    abilities: []
