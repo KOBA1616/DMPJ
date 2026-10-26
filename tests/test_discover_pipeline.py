@@ -251,6 +251,52 @@ def test_try_loop_first_wins_from_loop_position(rules):
     assert leaf.s.result["winner"] == 0 and leaf.s.result["reason"] == "effect"
 
 
+def test_charge_protects_main_part_copies(rules):
+    from discover_pipeline import charge_scores
+    # メインパーツ（サガ）は、干渉できる同名が2枚を切るならマナに置かない
+    eng = setup(rules, {"hand": [SAGA, SAGA, "dm01-027"], "mana": ["dm01-080"],
+                        "graveyard": []})
+    d = _charge_decision(eng, [SAGA, SAGA, "dm01-027"])
+    assert charge_choice(eng, d) == 2
+    # 3枚あれば1枚は置ける
+    eng = setup(rules, {"hand": [SAGA, SAGA, SAGA, "dm01-027"], "mana": ["dm01-080"],
+                        "graveyard": []})
+    d = _charge_decision(eng, [SAGA, SAGA, SAGA, "dm01-027"])
+    assert charge_scores(eng, d)[0] > -50.0
+
+
+def test_frugal_ordering_demotes_non_plan_plays(rules):
+    # 成立優先の間、戦略に不要なプレイは候補の後ろに回る
+    from dmsim import solitaire as sol
+    eng = setup(rules, {"hand": ["T001", "T001"], "mana": MANA, "graveyard": []})
+    micro = MicroPolicy()
+    micro.loop_priority = True
+    micro.intent = "setup"
+    d = None
+    charged = False
+    for _ in range(60):
+        d = eng.advance()
+        if d is None:
+            break
+        if d["kind"] == "main" and d["player"] == 0:
+            break
+        keys = [o["key"] for o in d["options"]]
+        # チャージを pass するとターンが終わるため、最初の自分のチャージだけ実行する
+        charge_idx = next((i for i, k in enumerate(keys) if k.startswith("charge:")), None)
+        if d["player"] == 0 and charge_idx is not None and not charged:
+            eng.answer([charge_idx])
+            charged = True
+        else:
+            eng.answer([keys.index("pass")] if "pass" in keys else [0])
+    assert d is not None and d["kind"] == "main" and d["player"] == 0
+    keys = [o["key"] for o in d["options"]]
+    out = micro.candidates(eng, d, sol.Weights())
+    firsts = [keys[c[0]] for c in out if c]
+    play_idx = firsts.index(next(k for k in firsts if k.startswith("play:")))
+    pass_idx = firsts.index("pass")
+    assert pass_idx < play_idx   # 不要なプレイより pass が先に来る
+
+
 def test_board_reached_excludes_mana(rules):
     # マナに埋まった部品はループに使えないので、最小盤面に数えない
     micro = MicroPolicy()

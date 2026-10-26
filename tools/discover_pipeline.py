@@ -137,6 +137,8 @@ class MacroPlanner:
         # マナに埋まった部品はループに使えないので、最小盤面はマナを除いて数える
         playable = set(hand) | set(grave) | set(names("bz"))
         pieces_playable = sum(1 for p in self.core_pieces if p in playable)
+        grave_creatures = sum(1 for c in z["graveyard"][me]
+                              if "creature" in eng.chars(c)["types"])
         return {
             "turn": eng.s.turn,
             "win_by": self.win_by,
@@ -149,6 +151,9 @@ class MacroPlanner:
             "pieces_here": pieces_here,      # 最小部品のうち手元（手札・場・墓地・マナ）にある数
             "pieces_playable": pieces_playable,  # マナを除いた「使える場所」にある数
             "loop_board": pieces_playable >= len(self.core_pieces),  # ループの最小盤面に到達
+            "grave_creatures": grave_creatures,
+            "loop_ready": (pieces_playable >= len(self.core_pieces)
+                           and grave_creatures >= 3),  # 到達＋墓地の前提まで満たした
             "loop_available": self.loop_card in hand or self.loop_card in grave,
             "grave_prep": self.loop_card in grave or "dm26ex2-071" in grave,
             "bruce_route": (self.loop_card in hand and self.digger_card in hand
@@ -269,7 +274,7 @@ def grave_bucket(eng, player: int) -> str:
 TARGET_CARDS = (SAGA, DRAG, IWA, SHAKO, "dm22ex1-025", "dmbd17-009")
 
 
-def charge_scores(eng, d, targets=TARGET_CARDS) -> dict[int, float]:
+def charge_scores(eng, d, targets=TARGET_CARDS, loop_card: str = SAGA) -> dict[int, float]:
     """マナチャージの判断: 選択肢ごとに「置く向き」のスコアを付ける。
 
     考え方は「手札で失う価値が小さく、マナとして困らない札から置く」。
@@ -321,8 +326,15 @@ def charge_scores(eng, d, targets=TARGET_CARDS) -> dict[int, float]:
         civs = set(cd.civs)
         cost = min([f.cost for f in cd.faces] or [cd.cost])
         s = 0.0
-        if name in targets and hand_names.count(name) < 2:
-            s -= 100.0                      # 部品は温存
+        if name in targets:
+            # 部品は「干渉できるゾーン（手札・場・墓地）」に残す。マナは戻せない。
+            # 置いた後に干渉できる同名が、メインパーツは2枚、その他は1枚を
+            # 切るようなら置かない
+            accessible = sum(1 for zone in ("hand", "bz", "graveyard")
+                             for c in z[zone][me] if eng.s.cards[c].defn == name)
+            need = 2 if name == loop_card else 1
+            if accessible - 1 < need:
+                s -= 100.0
         new_civs = civs - mana_civs
         if not new_civs:
             s += 30.0                       # 新しい文明が増えない札は置きやすい
@@ -351,9 +363,9 @@ def charge_scores(eng, d, targets=TARGET_CARDS) -> dict[int, float]:
     return scores
 
 
-def charge_choice(eng, d, targets=TARGET_CARDS) -> int | None:
+def charge_choice(eng, d, targets=TARGET_CARDS, loop_card: str = SAGA) -> int | None:
     """チャージすべき選択肢の添字（pass は選ばない）。判断が付かなければ None。"""
-    scores = charge_scores(eng, d, targets)
+    scores = charge_scores(eng, d, targets, loop_card)
     if not scores:
         return None
     return max(scores, key=lambda j: scores[j])
@@ -441,6 +453,10 @@ class MicroPolicy:
                                     # ドラゲリオンの攻撃時効果など、計画に必要な攻撃は残す）
     loop_priority: bool = False     # 最小盤面に届くまでは攻撃せず、ループの成立を優先する
     core_pieces: tuple = (SAGA, "dm22ex1-025", DRAG, SHAKO)  # ループの最小部品
+    loop_card: str = SAGA           # 起点（チャージで特に守るメインパーツ）
+    plan_plays: tuple = TARGET_CARDS + ("dm26ex2-071", "dmpromoy22-p51", "dmex10-020")
+    # 戦略に必要なプレイ: 部品、掘る呪文（タイフーン系）、マナ加速（コダマダンス）。
+    # これ以外のプレイは、成立優先の間は候補の後ろに回す（微小なペナルティ）
 
     def prefer(self, eng, d) -> list[int] | None:
         prefs = self.preferences or {}
@@ -476,12 +492,21 @@ class MicroPolicy:
             here.update(eng.s.cards[c].defn for c in z[zone][me])
         return all(p in here for p in self.core_pieces)
 
+    def loop_ready(self, eng, me: int) -> bool:
+        """到達の条件: 部品が揃い、墓地の前提（クリーチャー3枚）も満たして、
+        ループが回り始められる状態か。"""
+        if not self.board_reached(eng, me):
+            return False
+        grave_creatures = sum(1 for c in eng.s.zones["graveyard"][me]
+                              if "creature" in eng.chars(c)["types"])
+        return grave_creatures >= 3
+
     def candidates(self, eng, d, w, cap: int = 6):
         """solitaire.candidates と同じ形。方策の答えを候補の先頭に置く。"""
         if (self.loop_priority and d["kind"] == "attack" and eng is not None
                 and self.intent != "execute"
-                and not self.board_reached(eng, d["player"])):
-            # ループの成立を優先する間は殴らない。最小盤面に届いた後と
+                and not self.loop_ready(eng, d["player"])):
+            # ループの成立を優先する間は殴らない。回り始められる状態になった後と
             # キルの狙いのターンでは、攻撃時効果やリーサルのために攻撃を残す
             keys = [o["key"] for o in d["options"]]
             if "pass" in keys:
@@ -514,13 +539,31 @@ class MicroPolicy:
         pref = self.prefer(eng, d)
         if d["kind"] == "charge" and eng is not None:
             # マナチャージは学習選好より先に、文明と使用見込みの判断で並べる
-            j = charge_choice(eng, d, self.targets)
+            j = charge_choice(eng, d, self.targets, self.loop_card)
             if j is not None:
                 pref = [j]
         if pref is None:
-            return out
-        rest = [c for c in out if list(c) != pref]
-        return [pref] + rest[: max(cap - 1, 0)]
+            res = out
+        else:
+            rest = [c for c in out if list(c) != pref]
+            res = [pref] + rest[: max(cap - 1, 0)]
+        if (self.loop_priority and d["kind"] == "main" and self.intent != "execute"):
+            # 戦略に不要なプレイへの微小なペナルティ: 部品集めの挙動は妨げず、
+            # それ以外のプレイ（余分なクリーチャー等）を候補の後ろに回す。
+            # 場に残った余分な打点が、後のターンに攻撃の勝ち筋を作ってしまうため
+            keys = [o["key"] for o in d["options"]]
+
+            def is_plan(cand):
+                if not cand:
+                    return True
+                k = keys[cand[0]]
+                if k == "pass":
+                    return True
+                if k.startswith("play:"):
+                    return k.split(":")[1] in self.plan_plays
+                return True
+            res = [c for c in res if is_plan(c)] + [c for c in res if not is_plan(c)]
+        return res
 
 
 def _base_candidates(eng, d, w, cap):
