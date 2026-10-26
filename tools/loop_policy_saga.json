@@ -1,0 +1,54 @@
+{
+ "charge": {
+  "charge:dm22ex2-021": 0.0,
+  "charge:dmex10-020": 0.0,
+  "charge:dm22ex1-025": 0.0,
+  "charge:T001": 0.0,
+  "pass": 1.0
+ },
+ "main": {
+  "play:dm22ex2-021": 1.0,
+  "play:dmex10-020": 0.0,
+  "pass": 0.0,
+  "play:dm22ex1-007": 1.0
+ },
+ "choose_cards": {
+  "hand:dmex10-020:0": 0.059,
+  "hand:dm22ex1-025:0": 0.722,
+  "hand:T001:0": 0.354,
+  "hand:dm22ex1-007:0": 0.0,
+  "graveyard:dm22ex2-021:0": 0.932,
+  "graveyard:dm22ex1-025:0": 0.068,
+  "hand:dmrp03-s03:0": 0.929,
+  "hand:dmrp03-036:0": 0.565,
+  "deck:T001:0": 0.409,
+  "shield": 0.2,
+  "bz:dm26ex2-071:0": 0.0,
+  "bz:T001:0": 0.0,
+  "bz:dmrp03-036:0": 1.0,
+  "bz:dm22ex2-021:0": 0.0,
+  "graveyard:dmrp03-s03:0": 1.0,
+  "graveyard:dmrp03-036:0": 0.0,
+  "deck:dm22ex1-007:0": 1.0
+ },
+ "yes_no": {
+  "yes": 0.996,
+  "no": 0.004
+ },
+ "order_pending": {
+  "pending:normal:dmrp03-036:0": 1.0,
+  "pending:normal:dm22ex2-021:0": 0.0,
+  "pending:normal:dmrp03-s03:1": 0.0
+ },
+ "choose_evo_source": {
+  "graveyard:dm26ex2-071:0": 1.0,
+  "graveyard:T001:0": 1.0,
+  "graveyard:dmrp03-s03:0": 0.0,
+  "graveyard:dmrp03-036:0": 1.0,
+  "graveyard:dm22ex2-021:0": 1.0
+ },
+ "attack": {
+  "attack:dm22ex1-007:player": 1.0,
+  "pass": 0.0
+ }
+}
