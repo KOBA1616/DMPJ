@@ -39,6 +39,8 @@ from dmsim.defs import load_rules  # noqa: E402
 from dmsim.loop_first import discover_loops  # noqa: E402
 from dmsim.zone_graph import find_cycles  # noqa: E402
 
+_SOL_CANDIDATES = sol.candidates   # 差し替え前の候補生成（モジュール読み込み時に退避）
+
 SAGA, SHAKO, DRAG, IWA = "dm22ex2-021", "dmrp03-s03", "dm22ex1-007", "dmrp03-036"
 BUDGET = 3000
 
@@ -52,12 +54,14 @@ class Intent:
     budget: int = BUDGET
     burn_stock: bool = True         # 山札を削るループを自動でストックするか
     stock_offsets: tuple = (0, 1)   # ストック量の候補（上限から何周手前まで試すか）
+    weights: object = None          # この狙い用の evaluate の重み（None なら既定）
     note: str = ""
 
 
 @dataclass
 class MacroPlanner:
-    """局面の特徴から狙いを決める。v1 はサガループを目標にした規則ベース。
+    """局面の特徴から狙いを決める。v2 はサガループを目標にした規則ベース
+    （前提として墓地の準備と闇マナを見るようにし、setup では山札を守る重みを使う）。
 
     学習版では、この「特徴 → 狙い」の対応自体を、狙いごとの勝率・到達率から学ぶ想定。
     特徴はゾーンごとの部品の有無と山札・マナ・ターンという、ループに依らない形に寄せる。
@@ -70,12 +74,17 @@ class MacroPlanner:
         z = eng.s.zones
         names = lambda zone: [eng.s.cards[c].defn for c in z[zone][me]]  # noqa: E731
         hand, grave = names("hand"), names("graveyard")
+        dark_mana = sum(1 for c in z["mana"][me]
+                        if "darkness" in eng.cdef(c).face(None).civs)
         return {
             "turn": eng.s.turn,
             "deck": len(z["deck"][me]),
             "hand_n": len(hand),
             "mana": len(z["mana"][me]),
+            "dark_mana": dark_mana,
             "loop_available": self.loop_card in hand or self.loop_card in grave,
+            "grave_prep": self.loop_card in grave or "dm26ex2-071" in grave,
+            "intro_in_hand": sum(1 for p in (SAGA, "dm22ex1-025", "dmex10-020") if p in hand),
             "kill_in_hand": all(p in hand for p in self.kill_pieces_hand),
             "kill_in_grave": all(p in grave for p in self.kill_pieces_grave),
             "opp_shield": len(z["shield"][1 - me]),
@@ -84,14 +93,22 @@ class MacroPlanner:
 
     def plan(self, eng, me: int = ME) -> Intent:
         f = self.features(eng, me)
-        if f["kill_in_hand"] and f["kill_in_grave"] and f["deck"] <= 8:
+        if f["kill_in_hand"] and f["kill_in_grave"] and f["deck"] <= 10:
             return Intent("execute", note="キル部品が揃い山札も薄い。ループキルを取りに行く")
-        if f["loop_available"]:
-            return Intent("enter_loop", note="ループの起点がある。導入して部品を集める")
-        return Intent("setup", budget=800, note="部品が不足。手札とマナを整える")
+        if f["loop_available"] and f["grave_prep"] and f["dark_mana"] >= 1:
+            return Intent("enter_loop", note="起点と墓地の準備と闇マナがある。導入して部品を集める")
+        # 整える: 山札を削らず、手札とマナの評価を優先してターンを渡す
+        w = sol.Weights(stock_cap=0, deck_keep=18)
+        return Intent("setup", budget=600, burn_stock=False, weights=w,
+                      note="部品か前提が不足。山札を守って手札とマナを整える")
 
 
 # ---- ミクロ（詳細） -----------------------------------------------------------------------------
+
+def deck_bucket(deck_n: int) -> str:
+    """文脈の粗い切り分け。山札の厚さで捨てる／残すの判断が変わるため。"""
+    return "thin" if deck_n <= 8 else "mid" if deck_n <= 18 else "thick"
+
 
 def learn_preferences(records: list[dict]) -> dict:
     """決定レコードから、決定の種類ごとのキーの選好率を学ぶ。
@@ -110,19 +127,42 @@ def learn_preferences(records: list[dict]) -> dict:
     for kind, counter in avail.items():
         policy[kind] = {k: round(chosen[kind][k] / a, 3)
                         for k, a in counter.items() if a >= 2}
-    return policy
+    # 文脈条件付き: 山札の厚さごとに同じ集計をする（データが薄い区分は使わない）
+    by_bucket: dict[str, dict] = {}
+    buckets = sorted({r.get("bucket") for r in records if r.get("bucket")})
+    for b in buckets:
+        sub = [r for r in records if r.get("bucket") == b]
+        b_avail: dict[str, Counter] = defaultdict(Counter)
+        b_chosen: dict[str, Counter] = defaultdict(Counter)
+        for rec in sub:
+            for k in rec["options"]:
+                b_avail[rec["kind"]][k] += 1
+            for k in rec["chosen"]:
+                b_chosen[rec["kind"]][k] += 1
+        by_bucket[b] = {kind: {k: round(b_chosen[kind][k] / a, 3)
+                               for k, a in counter.items() if a >= 2}
+                        for kind, counter in b_avail.items()}
+    return {"global": policy, "by_bucket": by_bucket}
 
 
 @dataclass
 class MicroPolicy:
-    """ターン内の決定を案内する方策。v1 は決定の種類ごとのキー選好率。
+    """ターン内の決定を案内する方策。
 
-    文脈（山札枚数・部品の位置）で選好を変える条件付き版が次の拡張。
+    v2: 決定の種類ごとのキー選好率に、文脈（山札の厚さの区分）ごとの選好を重ねる。
+    区分のデータが無い決定は全体の選好に落とす。
     """
     preferences: dict = field(default_factory=dict)
 
     def prefer(self, eng, d) -> list[int] | None:
-        rates = self.preferences.get(d["kind"])
+        prefs = self.preferences or {}
+        if "global" in prefs:   # v2 形式
+            rates = dict(prefs["global"].get(d["kind"], {}))
+            if eng is not None:
+                bucket = deck_bucket(len(eng.s.zones["deck"][d["player"]]))
+                rates.update(prefs.get("by_bucket", {}).get(bucket, {}).get(d["kind"], {}))
+        else:                    # v1 形式（kind の直下にキー選好）
+            rates = prefs.get(d["kind"], {})
         if not rates:
             return None
         keys = [o["key"] for o in d["options"]]
@@ -143,9 +183,12 @@ class MicroPolicy:
 
 
 def _base_candidates(eng, d, w, cap):
-    """差し替え前の solitaire.candidates。Pipeline 初期化時に退避される。"""
-    fn = getattr(sol, "_orig_candidates", None) or sol.candidates
-    return fn(eng, d, w, cap)
+    """差し替え前の solitaire.candidates。
+
+    以前は Pipeline 初期化時の退避に頼っていたため、MicroPolicy を単独で
+    sol.candidates に差し込むと自分自身を呼び続けて再帰した。読み込み時に退避する。
+    """
+    return _SOL_CANDIDATES(eng, d, w, cap)
 
 
 def script_candidates(eng, d, w, cap: int = 6):
@@ -201,7 +244,8 @@ class Pipeline:
         sol.candidates = candidates_fn
         eng = self.build(seed)
         t0 = eng.s.turn
-        ts = sol.TurnSearch(ME, (intent.budget if intent else BUDGET))
+        ts = sol.TurnSearch(ME, (intent.budget if intent else BUDGET),
+                            intent.weights if intent else None)
         if intent:
             ts.burn_stock = intent.burn_stock
             ts.stock_offsets = tuple(intent.stock_offsets)
@@ -229,9 +273,11 @@ class Pipeline:
                 entry = leaf.log[i]
                 i += 1
                 if d["player"] == ME:
+                    deck_n = len(eng.s.zones["deck"][ME])
                     records.append({"kind": d["kind"],
                                     "options": [o["key"] for o in d["options"]],
-                                    "chosen": entry["keys"]})
+                                    "chosen": entry["keys"],
+                                    "deck": deck_n, "bucket": deck_bucket(deck_n)})
                 try:
                     eng.answer_by_keys(entry["keys"])
                 except Exception:
@@ -290,7 +336,7 @@ def main(argv=None):
     micro = MicroPolicy(learn_preferences(records))
     (pipe.out / "learned_policy.json").write_text(
         json.dumps(micro.preferences, ensure_ascii=False, indent=1), encoding="utf-8")
-    catalog["stage4_learned_kinds"] = {k: len(v) for k, v in micro.preferences.items()}
+    catalog["stage4_learned_kinds"] = {k: len(v) for k, v in micro.preferences["global"].items()}
 
     print(f"段階5: 未使用シード{a.holdout}件で検証（ミクロ単独）", flush=True)
     holdout = [50_000 + i for i in range(a.holdout)]
