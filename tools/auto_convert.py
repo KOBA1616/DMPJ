@@ -89,6 +89,9 @@ def main(argv=None):
     prev = json.loads(STATUS.read_text(encoding="utf-8")) if STATUS.exists() else {}
     vh = vocab_hash()
     tables = load_tables()
+    # ルールだけで完全に変換できるカードは、モデルを呼ばず（ジョブの枚数にも数えず）先にまとめて登録する
+    rule_stats = cc.run_rules(cc.load_rows([str(RAW)]), tables, out, rej)
+    print(f"ルール変換で登録: {json.dumps(rule_stats, ensure_ascii=False)}", file=sys.stderr)
     sysp = (lambda row: cc.system_prompt(row=row, n_examples=a.examples)) if a.examples else cc.system_prompt()
     llm = cc.make_llm(a.provider, a.model, a.interval)
     if hasattr(llm, "alternates"):
@@ -145,6 +148,7 @@ def main(argv=None):
               # 語彙が変わった直後で再試行しきれなかった時は、次回も再試行するよう古いハッシュを残す
               "vocab_hash": vh if retried_all else prev.get("vocab_hash"),
               "vocab_gaps": vocab_gaps(rejects), "reject_reasons": reasons(rejects), "batches": batches,
+              "rule_registered": rule_stats,
               "last_run": {k: (v and {x: v[x] for x in ("requested", "ok", "rejected", "api_error")}) for k, v in ran.items()}}
     if isinstance(llm, providers.OpenCodeCLI):
         status["opencode_usage"] = "（直近1日・手元の集計。無料枠の残量・使用割合は公式に取得手段なし。Zen コンソールで確認）\n" + opencode_usage()

@@ -186,3 +186,8 @@ schtasks /Create /SC MINUTE /MO 5 /TN "dmpj-worker" /TR C:\path\DMPJ\tools\run_w
 - 二面でない呪文は、キーワード（S・トリガー、G・ストライク、チャージャー系）と `keyword_patterns.yaml` の `spell_effects` の定型文だけでできていれば全変換する。
 - 定型文: ドロー、マナチャージ、墓地送り、相手クリーチャーの破壊／タップ／バウンス、墓地から回収、相手の手札破棄、パワー低下。足すときは `spell_effects` に1件書くだけ。
 - 行頭に改行なしでつながったキーワード（「ブロッカーこのクリーチャーは…」）は行に分けてから照合する（`_peel_line`）。
+
+## ルールで完全に変換できるカードはジョブに積まない
+- `python tools/rule_register.py`（`--dry-run` で枚数だけ）: 原文のうちルールだけで変換できるもの（キーワードのみ・バニラ・定型の効果文・定型の呪文・同一原文の写し）を、モデルなしで `data/cards/converted.yaml` へ登録する。検査を通ったものだけ。
+- `tools/auto_convert.py`（ローカルワーカーの convert ジョブもこれを呼ぶ）は、開始時にこの登録を枚数制限なしで先に行う。モデルのヘルスチェックより前なので、モデルが止まっていても登録は進み、ジョブの `limit` にも数えない。結果は `convert_status.json` の `rule_registered` に出る。
+- 全 16,901 枚の測定では 1,525 行（重複IDを含む原文行）が該当し、検査落ちは 0。
