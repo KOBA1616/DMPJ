@@ -213,7 +213,7 @@ def _peel_line(line: str) -> list[str]:
             if not rest_n.startswith(kw):
                 continue
             tail = rest_n[len(kw):]
-            m = re.match(r"\s*[（(][^）)]*[）)]", tail)
+            m = re.match(r"\s*[（(][^）)]*[）)]。?", tail)
             after = tail[m.end():] if m else tail
             if not after.strip():
                 return out + [rest] if out else [line]

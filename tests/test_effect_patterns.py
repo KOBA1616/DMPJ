@@ -144,3 +144,13 @@ def test_keyword_glued_to_following_sentence_is_split_into_lines():
     r = rc.split({"id": "g", "text": "ブロッカーこのクリーチャーが出た時、カードを１枚引く。"})
     assert r[0] == ["blocker"] and r[2]       # 出た時のドローも続けてルールで変換される
     assert rc.split({"id": "g2", "text": "進化クリーチャー…"}) is None
+
+
+def test_peel_keeps_annotation_with_its_keyword():
+    import rule_convert as rc
+    one = "T・ブレイカー(このクリーチャーはシールドを３枚ブレイクする)。"
+    assert rc._peel_line(one) == [one]                                    # 注釈の後の句点だけを別の行にしない
+    out = rc._peel_line("S・トリガー（この呪文をシールドゾーンから手札に加える時、コストを支払わずにすぐ唱えてもよい）相手のクリーチャーを１体破壊する。")
+    assert out[0].startswith("S・トリガー(") and out[0].endswith(")") and out[1] == "相手のクリーチャーを１体破壊する。"
+    assert rc._peel_line("進化クリーチャー") == ["進化クリーチャー"]                  # 名前の一部は割らない
+    assert rc._peel_line("ブロッカーを持つクリーチャーは") == ["ブロッカーを持つクリーチャーは"]
