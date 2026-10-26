@@ -26,11 +26,12 @@ ABILITY_KINDS = {"trigger", "replace", "static", "declare"}
 ABILITY_KEYS = {"kind", "when", "if", "effect", "instead", "optional", "affects", "mod", "zone", "keyword"}
 REASONS = {"put", "destroy", "return", "discard", "charge", "summon", "cast", "break",
            "draw", "battle", "sba", "resolve", "evolve"}
-VIAS = {"revolution_change"}   # 出し方の印（「革命チェンジによって出た時」など）
+VIAS = {"revolution_change", "generate"}   # 出し方の印（「革命チェンジによって出た時」など）
 DURATIONS_FIXED = {"end_of_turn", "during_attack", "permanent", "until_next_own_turn_start"}
 MOD_KEYS = {"power", "grant", "allow", "deny", "breaks", "breaks_per_power", "battle_power", "ignore", "gain"}
 POSITIONS = {"top", "bottom"}
-CARD_TYPES = {"creature", "spell", "evolution"}
+PERMANENT_TYPES = {"tamaseed", "field", "cross_gear"}   # 手札から実行してバトルゾーンに出るクリーチャー以外のカード（315, 308, 303）
+CARD_TYPES = {"creature", "spell", "evolution"} | PERMANENT_TYPES
 CIVS = {"light", "water", "darkness", "fire", "nature", "zero"}
 SELECTOR_KEYS = {"zone", "owner", "owner_of", "filter", "count", "up_to", "from_top", "chooser", "ref", "other",
                  "under_of", "look", "exlife_of"}   # look: 非公開ゾーン（山札など）の中身を見て選ぶ
@@ -69,6 +70,10 @@ class Face:
     def is_spell(self) -> bool:
         return "spell" in self.types
 
+    def is_permanent(self) -> bool:
+        """クリーチャーでなく、実行するとバトルゾーンに出るカード（タマシード・フィールド・クロスギア）。"""
+        return not self.is_creature() and bool(PERMANENT_TYPES & set(self.types))
+
 
 @dataclass
 class CardDef:
@@ -99,6 +104,10 @@ class CardDef:
 
     def is_spell(self) -> bool:
         return "spell" in self.types
+
+    def is_permanent(self) -> bool:
+        """クリーチャーでなく、実行するとバトルゾーンに出るカード（タマシード・フィールド・クロスギア）。"""
+        return not self.is_creature() and bool(PERMANENT_TYPES & set(self.types))
 
     def face(self, i: int | None) -> "CardDef | Face":
         return self if i is None or not self.faces else self.faces[i]

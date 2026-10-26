@@ -79,7 +79,7 @@ class TurnMixin:
 
     def _can_play_face(self, cid, p, face) -> bool:
         d = self.cdef(cid).face(face)
-        action = "summon" if d.is_creature() else "cast"
+        action = "summon" if d.is_creature() else "generate" if d.is_permanent() else "cast"
         if not self.permits(cid, action) or (d.is_creature() and not self.permits(cid, "enter_bz")):
             return False
         if "evolution" in d.types:
@@ -98,7 +98,8 @@ class TurnMixin:
         ef = {k: v for k, v in (f.evolve_from or {}).items() if k != "zone"} or {}
         z = f.evolve_zone
         pool = self.bz_tops(p) if z == "bz" else self.zlist(z, p)
-        return [c for c in pool if "creature" in self.chars(c)["types"] and self.filter_match(c, ef)]
+        return [c for c in pool if ("creature" in self.chars(c)["types"] or self.permits(c, "evolve_base"))
+                and self.filter_match(c, ef)]
 
     def _mana_choices(self, cid, p, face=None, cost: int | None = None, limit: int = 32) -> list[list[int]]:
         """支払いに使うマナの組（112.2a）。文明は1文明につき別々の1枚で満たし、マナの数値の合計がコストに一致。
@@ -274,7 +275,7 @@ def h_play(eng, t):
         eng._pop(t)
         return None
     d = eng.cdef(cid).face(face)
-    action = "summon" if d.is_creature() else "cast"
+    action = "summon" if d.is_creature() else "generate" if d.is_permanent() else "cast"
     if not eng.permits(cid, action) or (d.is_creature() and not eng.permits(cid, "enter_bz")):
         eng._pop(t)
         return None
@@ -316,6 +317,9 @@ def h_play(eng, t):
             if len(t["evo"]) > 1:
                 ev["stack_more"] = t["evo"][1:]
         eng._push(eng.ev_task(ev))
+    elif d.is_permanent():      # タマシード・フィールド・クロスギア: 実行（展開・ジェネレート）したらバトルゾーンに出る（315.2, 308.2, 303.2）
+        eng._push(eng.ev_task({"ev": "move", "subject": ref, "from": from_zone, "to": "bz", "reason": "put",
+                               "controller": p, "via": "generate", "unpaid": bool(t["free"])}))
     else:   # 呪文: 唱えた → 書かれた順に解決 → 最終段階として墓地へ（605.2f）
         env = {"you": p, "self": ref, "vars": {}}
         if t.get("st"):

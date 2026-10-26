@@ -31,8 +31,11 @@
    "items": {
     "enum": [
      "creature",
+     "cross_gear",
      "evolution",
-     "spell"
+     "field",
+     "spell",
+     "tamaseed"
     ]
    }
   },
@@ -87,6 +90,7 @@
      "quad_breaker",
      "s_trigger",
      "shield_saver",
+     "shinka_rise",
      "slayer",
      "speed_attacker",
      "spell_to_hand",
@@ -127,8 +131,11 @@
      "items": {
       "enum": [
        "creature",
+       "cross_gear",
        "evolution",
-       "spell"
+       "field",
+       "spell",
+       "tamaseed"
       ]
      }
     },
@@ -183,6 +190,7 @@
        "quad_breaker",
        "s_trigger",
        "shield_saver",
+       "shinka_rise",
        "slayer",
        "speed_attacker",
        "spell_to_hand",
@@ -1035,6 +1043,7 @@
        "quad_breaker",
        "s_trigger",
        "shield_saver",
+       "shinka_rise",
        "slayer",
        "speed_attacker",
        "spell_to_hand",
@@ -1059,6 +1068,8 @@
          "block",
          "cast",
          "enter_bz",
+         "evolve_base",
+         "generate",
          "guardman",
          "s_trigger",
          "slayer",
@@ -1080,6 +1091,8 @@
            "block",
            "cast",
            "enter_bz",
+           "evolve_base",
+           "generate",
            "guardman",
            "s_trigger",
            "slayer",
@@ -1114,6 +1127,8 @@
          "block",
          "cast",
          "enter_bz",
+         "evolve_base",
+         "generate",
          "guardman",
          "s_trigger",
          "slayer",
@@ -1135,6 +1150,8 @@
            "block",
            "cast",
            "enter_bz",
+           "evolve_base",
+           "generate",
            "guardman",
            "s_trigger",
            "slayer",
@@ -1283,6 +1300,7 @@
     },
     "via": {
      "enum": [
+      "generate",
       "revolution_change"
      ]
     },

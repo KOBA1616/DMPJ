@@ -17,3 +17,5 @@ actions:
   slayer:                {default: false, rule: "unverified", ja: バトルで負けた時、相手も破壊する}
   be_chosen:             {default: true,  rule: "unverified", ja: 相手に選ばれる}
   guardman:              {default: false, rule: "507.1a", other: attacker, ja: 攻撃先を自分の他のクリーチャーからこのクリーチャーに変更できる（ガードマン）}
+  generate:              {default: true,  rule: "303.1, 308.1, 315.1", ja: タマシード・フィールド・クロスギアを実行できる}
+  evolve_base:           {default: false, rule: "315 シンカライズ", ja: "クリーチャーでなくても進化元にできる（シンカライズ。タマシードがクリーチャーであるかのように）"}

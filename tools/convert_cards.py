@@ -50,6 +50,7 @@ INSTRUCTIONS = """\
 - known_keywords があるときは、それらのキーワードはルールで処理済み（text から除いてある）。keywords に入れ直さず、残りの text だけを変換する。
 - 「〜できない」は static の mod.deny、「〜できる」は mod.allow。「〜してもよい」は op: may。
 - 進化は types に evolution を含め evolve_from に進化元の条件を書く。ツインパクトは faces に2面を書く。
+- カードの種類: クリーチャーは creature、呪文は spell、タマシードは tamaseed、フィールドは field、クロスギアは cross_gear（実行するとバトルゾーンに出る）。「タマシード/クリーチャー」は両方を types に書く。他の種類（オーラ・城・ドラグハート・サイキック・GR など）は未対応なので、近似せず source.unsupported に書く。
 - 革命チェンジ・ニンジャ・ストライク等の宣言は kind: declare（既存カードの例に倣う）。
 - text には原文から括弧書きの注釈を除いたものを「 / 」区切りで書く。
 - 表せない・近似した点は source.notes に日本語で具体的に書く。表せない能力を黙って落とさない。
