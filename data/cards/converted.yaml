@@ -1,2 +1,302 @@
 # convert_cards.py の出力（review: pending）。確認後に real.yaml へ移す。
-cards: []
+cards:
+- id: dm01-012
+  name: 粛清の伝道師ラー
+  types:
+  - creature
+  civs:
+  - light
+  cost: 5
+  power: 5500
+  races:
+  - バーサーカー
+  text: ''
+  source:
+    official: dm01-012
+    review: pending
+    notes: '取得データの text が空（missing: text）。能力なしのクリーチャーとして変換したが、原文の再確認が必要'
+- id: dm01-036
+  name: 群れを守るトライ・ホーン
+  types:
+  - creature
+  civs:
+  - nature
+  cost: 5
+  power: 5000
+  races:
+  - ホーン・ビースト
+  text: ''
+  source:
+    official: dm01-036
+    review: pending
+    notes: '入力データで text が欠損している（missing: text）。能力を推測で補わず、効果は未変換。公式カード詳細で原文を確認する必要がある'
+- id: dm01-042
+  name: 追跡の使徒ローク
+  types:
+  - creature
+  civs:
+  - light
+  cost: 4
+  power: 4000
+  races:
+  - イニシエート
+  text: ''
+  source:
+    official: dm01-042
+    review: pending
+    notes: '取得データの text が空（missing: text）のため、能力なしとして変換した。原文の確認が必要'
+- id: dm01-066
+  name: フォレスト・ホーネット
+  types:
+  - creature
+  civs:
+  - nature
+  cost: 4
+  power: 4000
+  races:
+  - ジャイアント・インセクト
+  text: ''
+  source:
+    official: dm01-066
+    review: pending
+    notes: '公式のカードテキストが取得できていない（missing: text）。原文が空のため能力・キーワードは未変換で、テキスト入手後に再変換が必要。'
+- id: dm01-072
+  name: 弾丸の使徒イーレ
+  types:
+  - creature
+  civs:
+  - light
+  cost: 3
+  power: 3000
+  races:
+  - イニシエート
+  text: ''
+  source:
+    official: dm01-072
+    review: pending
+    notes: '公式テキストが取得できておらず（missing: text）、原文が空のため能力なしとして変換した。テキスト入りで再取得したら再変換が必要'
+- id: dm01-075
+  name: 予言者リュゾル
+  types:
+  - creature
+  civs:
+  - light
+  cost: 2
+  power: 2000
+  races:
+  - ライトブリンガー
+  text: ''
+  source:
+    official: dm01-075
+    review: pending
+    notes: 公式データの text が空（未取得）のため、能力なしのクリーチャーとして変換した。原文の再確認が必要
+- id: dm01-083
+  name: アクア・ビークル
+  types:
+  - creature
+  civs:
+  - water
+  cost: 2
+  power: 1000
+  races:
+  - リキッド・ピープル
+  text: ''
+  source:
+    official: dm01-083
+    review: pending
+    notes: '原文（text）が未取得（missing: text）のため、能力なしのクリーチャーとして変換した。テキスト入手後に再確認が必要。'
+- id: dm01-087
+  name: 汚れた者スケルトンソルジャー
+  types:
+  - creature
+  civs:
+  - darkness
+  cost: 4
+  power: 3000
+  races:
+  - リビング・デッド
+  text: ''
+  source:
+    official: dm01-087
+    review: pending
+    notes: '原文のテキストが取得できていない（missing: text）。与えられたカード名・コスト・パワー・種族のみから、能力を持たないクリーチャーとして変換した。テキスト入手後に再確認が必要'
+- id: dm01-090
+  name: うごめく者ボーン・グール
+  types:
+  - creature
+  civs:
+  - darkness
+  cost: 2
+  power: 2000
+  races:
+  - リビング・デッド
+  text: ''
+  source:
+    official: dm01-090
+    review: pending
+    notes: 原文のカードテキストは空（バニラクリーチャー）。元データの missing に text が含まれる
+- id: dm01-097
+  name: 不死身男爵ボーグ
+  types:
+  - creature
+  civs:
+  - fire
+  cost: 2
+  power: 2000
+  races:
+  - ヒューマノイド
+  text: ''
+  source:
+    official: dm01-097
+    review: pending
+    notes: '原文テキストが未取得（missing: text）。能力なしのクリーチャーとして変換した。公式原文での確認待ち'
+- id: dm01-103
+  name: 白銀の牙
+  types:
+  - creature
+  civs:
+  - nature
+  cost: 3
+  power: 3000
+  races:
+  - ビーストフォーク
+  text: ''
+  source:
+    official: dm01-103
+    review: pending
+    notes: '公式テキストが未取得（missing: text）。DM1 の同名カードは能力を持たないクリーチャーなので abilities は付けていない。原文の確認が必要'
+- id: dm01-108
+  name: 炎のたてがみ
+  types:
+  - creature
+  civs:
+  - nature
+  cost: 2
+  power: 2000
+  races:
+  - ビーストフォーク
+  text: ''
+  source:
+    official: dm01-108
+    review: pending
+    notes: 公式のカードテキストが空のため、能力なしとして変換した（text は missing 扱い）
+- id: dm10-076
+  name: 予言者クルト
+  types:
+  - creature
+  civs:
+  - light
+  cost: 1
+  power: 500
+  races:
+  - ライトブリンガー
+  text: ''
+  source:
+    official: dm10-076
+    review: pending
+    notes: '原文の text が未取得（missing: text）。テキストなしのクリーチャーとして変換した。フレーバーのみ記載がある'
+- id: dm10-087
+  name: 頭刃怪人グレイブクック
+  types:
+  - creature
+  civs:
+  - darkness
+  cost: 4
+  power: 3000
+  races:
+  - デビルマスク
+  text: ''
+  source:
+    official: dm10-087
+    review: pending
+    notes: 公式カードページの特殊能力欄は空でバニラ。raw では text が missing になっていたが、公式で能力なしを確認した
+- id: dm10-098
+  name: クラッグザウルス
+  types:
+  - creature
+  civs:
+  - fire
+  cost: 3
+  power: 3000
+  races:
+  - ロック・ビースト
+  text: ''
+  source:
+    official: dm10-098
+    review: pending
+    notes: '公式データで text が欠落している（missing: text）。能力のないバニラクリーチャーとして変換した'
+- id: dm10-106
+  name: プリーチ・トマト
+  types:
+  - creature
+  civs:
+  - nature
+  cost: 2
+  power: 2000
+  races:
+  - ワイルド・ベジーズ
+  text: ''
+  source:
+    official: dm10-106
+    review: pending
+    notes: '原文データの text が空（missing: text）のため能力・キーワードは未設定。公式テキストでの確認が必要。フレーバーテキストのみ取得できている'
+- id: dm14-105
+  name: 式神ユウキ
+  types:
+  - creature
+  civs:
+  - nature
+  cost: 2
+  power: 2000
+  races:
+  - ワンダー・トリック
+  text: ''
+  source:
+    official: dm14-105
+    review: pending
+    notes: '公式テキストが未取得（missing: text）。能力なしのバニラクリーチャーとして変換した。原文取得後に再確認が必要'
+- id: dm15-036
+  name: 巡霊者ネレイズ
+  types:
+  - creature
+  civs:
+  - light
+  cost: 4
+  power: 4000
+  races:
+  - コスモ・ウォーカー
+  text: ''
+  source:
+    official: dm15-036
+    review: pending
+    notes: '公式データの text が空（missing: [text]）のため、能力は変換していない。カードテキストの再取得が必要'
+- id: dm16-050
+  name: 旋風の闘士ヴィンジャー
+  types:
+  - creature
+  civs:
+  - fire
+  cost: 2
+  power: 2000
+  races:
+  - フェザーノイド
+  text: ''
+  source:
+    official: dm16-050
+    review: pending
+    notes: '原文の text が空（missing: [text]）。能力なしのクリーチャーとして変換した。keywords や abilities は原文どおり持たせていない。flavor
+      は変換対象外'
+- id: dm17-036
+  name: 粛清者ニコラウス
+  types:
+  - creature
+  civs:
+  - light
+  cost: 3
+  power: 3000
+  races:
+  - ソルトルーパー
+  source:
+    official: dm17-036
+    review: pending
+    notes: 入力データの text は欠損（missing）だったが、公式カード詳細の特殊能力欄も空であることを確認した。能力なし（バニラ）として変換した

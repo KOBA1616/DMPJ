@@ -1,13 +1,13 @@
 {
  "requested": 5,
- "ok": 0,
+ "ok": 5,
  "rejected": 0,
- "api_error": 2,
+ "api_error": 0,
  "usage": {
-  "input": 0,
+  "input": 92366,
   "cache_read": 0,
   "cache_write": 0,
-  "output": 0
+  "output": 411
  },
  "triage": {
   "その他:expected '<document start>', but found '{'": {
@@ -122,14 +122,5 @@
    ]
   }
  },
- "api_errors": [
-  {
-   "id": "dm01-075",
-   "error": "RuntimeError: opencode error: {\"name\": \"APIError\", \"data\": {\"message\": \"Upstream request failed: Invalid credential\", \"statusCode\": 401, \"isRetryable\": false, \"responseHeaders\": {\"cf-placement\": \"remote-IAD\", \"cf-ray\": \"a5054e4acbf1f7d1-LAX\", \"connection\": \"keep-alive\", \"content-length\": \"89\", \"cont"
-  },
-  {
-   "id": "dm01-083",
-   "error": "RuntimeError: opencode error: {\"name\": \"APIError\", \"data\": {\"message\": \"Upstream request failed: Invalid credential\", \"statusCode\": 401, \"isRetryable\": false, \"responseHeaders\": {\"cf-placement\": \"remote-IAD\", \"cf-ray\": \"a505500ff91b2f75-LAX\", \"connection\": \"keep-alive\", \"content-length\": \"89\", \"cont"
-  }
- ]
+ "api_errors": []
 }

@@ -1,10 +1,10 @@
 {
- "at": "2026-10-26T00:23:30+00:00",
+ "at": "2026-10-26T01:14:32+00:00",
  "model": "deepseek-v4.1-flash-free",
  "raw_total": 23671,
- "converted": 0,
+ "converted": 20,
  "rejected": 27,
- "pending": 23644,
+ "pending": 23624,
  "vocab_hash": "59075f1015b9ee22",
  "vocab_gaps": {},
  "reject_reasons": {
@@ -20,10 +20,10 @@
     "dm01-066",
     "dm01-072"
    ],
-   "ok": 0,
+   "ok": 5,
    "rejected": 0,
-   "api_error": 2,
-   "skipped": true
+   "api_error": 0,
+   "skipped": false
   },
   {
    "ids": [
@@ -33,18 +33,44 @@
     "dm01-090",
     "dm01-097"
    ],
-   "ok": 0,
+   "ok": 5,
    "rejected": 0,
-   "api_error": 2,
-   "skipped": true
+   "api_error": 0,
+   "skipped": false
+  },
+  {
+   "ids": [
+    "dm01-103",
+    "dm01-108",
+    "dm10-076",
+    "dm10-087",
+    "dm10-098"
+   ],
+   "ok": 5,
+   "rejected": 0,
+   "api_error": 0,
+   "skipped": false
+  },
+  {
+   "ids": [
+    "dm10-106",
+    "dm14-105",
+    "dm15-036",
+    "dm16-050",
+    "dm17-036"
+   ],
+   "ok": 5,
+   "rejected": 0,
+   "api_error": 0,
+   "skipped": false
   }
  ],
  "last_run": {
   "new": {
-   "requested": 10,
-   "ok": 0,
+   "requested": 20,
+   "ok": 20,
    "rejected": 0,
-   "api_error": 4
+   "api_error": 0
   },
   "retry": null
  }
