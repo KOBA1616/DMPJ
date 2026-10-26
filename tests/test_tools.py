@@ -340,6 +340,17 @@ def test_convert_precheck_skips_model_for_unconvertible_rows():
     assert cc.precheck({"id": "d", "text": "ブロッカー"}) is None
 
 
+def test_user_prompt_omits_flavor_and_non_rule_fields():
+    """フレーバー・イラストレーター等はモデルに渡さない（効果の変換に無関係）。面ごとの項目も同様。"""
+    import convert_cards as cc
+    row = {"id": "x", "name": "n", "text": "ブロッカー", "flavor": "「わかるか。」 -ボーグ", "illustrator": "i", "rarity": "C",
+           "missing": ["text"], "faces": [{"name": "a", "text": "t", "flavor": "f2", "illustrator": "i2"}]}
+    p = cc.user_prompt(row)
+    assert "ブロッカー" in p and '"t"' in p
+    for bad in ("flavor", "わかるか", "illustrator", "rarity", "missing", "f2"):
+        assert bad not in p
+
+
 def test_llm_offload_guards(tmp_path):
     """無料モデル共通層: 秘密を伏せる・切り詰める・キャッシュ・日次上限・失敗は Escalate・課金系は Fatal。"""
     import llm_offload as lo

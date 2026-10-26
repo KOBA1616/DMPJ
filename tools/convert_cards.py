@@ -80,8 +80,19 @@ def system_prompt(exclude: frozenset = frozenset()) -> str:
     return "\n\n".join(parts)
 
 
+# モデルに渡す項目。フレーバー・イラストレーター・レアリティ・取得時の印などは効果と無関係なので渡さない
+PROMPT_FIELDS = ("id", "name", "card_type", "civilization", "cost", "power", "race", "mana", "text")
+
+
+def prompt_row(row: dict) -> dict:
+    out = {k: row[k] for k in PROMPT_FIELDS if k in row}
+    if row.get("faces"):
+        out["faces"] = [{k: f[k] for k in PROMPT_FIELDS if k in f} for f in row["faces"]]
+    return out
+
+
 def user_prompt(row: dict) -> str:
-    return "次のカードを変換してください。\n\n" + json.dumps(row, ensure_ascii=False, indent=1)
+    return "次のカードを変換してください。\n\n" + json.dumps(prompt_row(row), ensure_ascii=False, indent=1)
 
 
 def extract(text: str) -> dict:
