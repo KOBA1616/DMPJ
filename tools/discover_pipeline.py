@@ -51,6 +51,22 @@ BUDGET = 3000
 WIN_CONTEXTS = ("opp_deck_out", "shield_zero", "effect", "resource")
 
 
+def dig_prob(deck_n: int, hits: int, look: int = 5) -> float:
+    """山札の上から look 枚を見たとき、欲しいカードが少なくとも1枚ある確率。
+
+    山札の厚さそのものではなく、「残りの山札に欲しいカードが何枚残っていて、
+    それを掘れるか」で判断するための特徴。残り枚数はデッキリストから公開領域
+    （手札・墓地・マナ・場）を引いたものと等しい。
+    """
+    from math import comb
+    if deck_n <= 0 or hits <= 0:
+        return 0.0
+    look = min(look, deck_n)
+    if deck_n - hits < look:
+        return 1.0
+    return round(1.0 - comb(deck_n - hits, look) / comb(deck_n, look), 3)
+
+
 def classify_win(win_by: str | None, verified: bool = False) -> str:
     """証明書の win_by と検証結果から勝ち方の文脈を決める。
 
@@ -67,7 +83,7 @@ def classify_win(win_by: str | None, verified: bool = False) -> str:
 @dataclass
 class Intent:
     """このターンの狙いと、その狙いで探索をどう動かすか。"""
-    name: str                       # setup / enter_loop / execute / disrupt
+    name: str                       # setup / enter_loop / execute / beatdown / control / disrupt
     budget: int = BUDGET
     burn_stock: bool = True         # 山札を削るループを自動でストックするか
     stock_offsets: tuple = (0, 1)   # ストック量の候補（上限から何周手前まで試すか）
@@ -100,10 +116,22 @@ class MacroPlanner:
         hand, grave = names("hand"), names("graveyard")
         dark_mana = sum(1 for c in z["mana"][me]
                         if "darkness" in eng.cdef(c).face(None).civs)
+
+        def threat(p: int) -> int:
+            # 次に攻撃できる打点の近似（evaluate と同じ見方: 場のクリーチャーのブレイク数）
+            return sum(eng.chars(c)["breaks"] for c in eng.bz_tops(p)
+                       if "creature" in eng.chars(c)["types"])
+
+        deck_names = names("deck")
+        targets = (self.loop_card, self.digger_card, self.bruce_card) \
+            + self.kill_pieces_hand + self.kill_pieces_grave
+        pieces_in_deck = sum(1 for n in deck_names if n in targets)
         return {
             "turn": eng.s.turn,
             "win_by": self.win_by,
             "deck": len(z["deck"][me]),
+            "pieces_in_deck": pieces_in_deck,
+            "dig_hit_prob": dig_prob(len(deck_names), pieces_in_deck),
             "hand_n": len(hand),
             "mana": len(z["mana"][me]),
             "dark_mana": dark_mana,
@@ -116,12 +144,15 @@ class MacroPlanner:
             "kill_in_grave": all(p in grave for p in self.kill_pieces_grave),
             "opp_shield": len(z["shield"][1 - me]),
             "opp_deck": len(z["deck"][1 - me]),
+            "my_threat": threat(me),
+            "opp_threat": threat(1 - me),
         }
 
     def plan(self, eng, me: int = ME) -> Intent:
         f = self.features(eng, me)
-        if f["kill_in_hand"] and f["kill_in_grave"] and f["deck"] <= 10:
-            # 取りに行く時の評価は勝ち方で変える
+        if f["kill_in_hand"] and f["kill_in_grave"]:
+            # 部品が揃えば山札の厚さは条件にしない。コンボを決め切れば、
+            # 山札が尽きる前に勝てる（尽きるのは負けになる時だけ悪い）
             w = None
             if self.win_by == "shield_zero":
                 w = sol.Weights(shield=200.0, threat=80.0, board=6.0)
@@ -130,20 +161,34 @@ class MacroPlanner:
             elif self.win_by == "resource":
                 w = sol.Weights(hand=10.0, mana=20.0)
             return Intent("execute", weights=w,
-                          note="キル部品が揃い山札も薄い。ループキルを取りに行く")
+                          note="キル部品が揃った。ループキルを取りに行く")
         if f["loop_available"] and f["grave_prep"] and f["dark_mana"] >= 1:
             return Intent("enter_loop", note="起点と墓地の準備と闇マナがある。導入して部品を集める")
         if f["bruce_route"] and f["dark_mana"] >= 1:
             # 起点が1枚しかなくても、掘る役の登場時効果で山札から起点や部品を探し、
             # 呪文面で墓地の起点を場に戻せる。墓地の準備が無くても導入に値する
             return Intent("enter_loop", note="ブルース経由: 掘る役で探し、呪文面で起点を戻して導入する")
-        # 整える: 山札の扱いは勝ち方で逆転する。置換勝利では自分の山札切れが
-        # そのまま敗北に繋がるので厚く守り、相手を削る型では消耗を許す。
+        # ループ以外の勝ち筋: 盤面で殴り切れるならそれが最速（ビートダウン）
+        if f["my_threat"] >= f["opp_shield"] + 1:
+            return Intent("execute", weights=sol.Weights(shield=200.0, threat=80.0, board=6.0),
+                          note="盤面の打点でリーサルが見える。殴り切る")
+        if f["my_threat"] >= 2:
+            return Intent("beatdown", weights=sol.Weights(shield=200.0, threat=80.0, board=6.0),
+                          note="ループの筋が無く盤面の圧力がある。シールドを削りに行く")
+        if f["opp_threat"] >= 3 and f["opp_threat"] > f["my_threat"]:
+            # コントロール: 相手の圧力が高い間は盤面を捌いてターンを稼ぎ、
+            # 手札とマナを整えてコンボの確率を上げる
+            return Intent("control", budget=800,
+                          weights=sol.Weights(board=8.0, hand=6.0, shield=120.0),
+                          note="相手の圧力が高い。盤面を捌いてターンを稼ぐ")
+        # 整える: 山札は「尽きて負ける」時だけ悪いので、守るのは残りわずかの時だけ。
+        # 固定の厚さを基準にせず、山札切れの直前（deck_keep=2）まで削ることを許す。
+        # 置換勝利では、勝敗に直結しない資源ループの自動反復だけは止める。
         if self.win_by == "effect":
-            w, burn = sol.Weights(stock_cap=0, deck_keep=18), False
-            note = "部品か前提が不足。置換勝利が目標なので山札を守って整える"
+            w, burn = sol.Weights(stock_cap=0, deck_keep=2), False
+            note = "部品か前提が不足。山札切れの直前だけ守って整える"
         elif self.win_by == "resource":
-            w, burn = sol.Weights(stock_cap=4, deck_keep=10), True
+            w, burn = sol.Weights(stock_cap=4, deck_keep=2), True
             note = "部品か前提が不足。資源を貯めながら整える"
         else:
             w, burn = sol.Weights(stock_cap=8, deck_keep=2), True

@@ -131,15 +131,41 @@ def test_micro_context_includes_intent_and_grave(rules):
 
 
 def test_macro_setup_protects_deck_only_for_effect_win(rules):
-    # 置換勝利（effect）: 自分の山札が命綱なので setup で守る
+    # 置換勝利（effect）: 資源ループの自動反復は止めるが、山札を守るのは
+    # 山札切れの直前だけ（固定の厚さを基準にしない）
     eng = setup(rules, {"hand": ["T001"], "mana": MANA, "graveyard": []})
     eff = MacroPlanner(win_by="effect").plan(eng)
-    assert eff.name == "setup" and eff.burn_stock is False and eff.weights.deck_keep == 18
+    assert eff.name == "setup" and eff.burn_stock is False
+    assert eff.weights.stock_cap == 0 and eff.weights.deck_keep == 2
     # 相手を削る型: 自分の山札の消耗は許す
     opp = MacroPlanner(win_by="opp_deck_out").plan(eng)
     assert opp.name == "setup" and opp.burn_stock is True and opp.weights.deck_keep == 2
     # 特徴にも勝ち方が入る
     assert MacroPlanner(win_by="shield_zero").features(eng)["win_by"] == "shield_zero"
+
+
+def test_dig_prob_and_features(rules):
+    from discover_pipeline import dig_prob
+    assert dig_prob(20, 0) == 0.0
+    assert dig_prob(20, 4) == 0.718    # 上5枚に欲しいカードが1枚以上ある確率
+    assert dig_prob(5, 1) == 1.0
+    eng = setup(rules, {"hand": [SAGA], "mana": MANA, "graveyard": [],
+                        "deck": [DRAG, IWA]})
+    f = MacroPlanner().features(eng)
+    assert f["pieces_in_deck"] >= 2 and 0.0 < f["dig_hit_prob"] <= 1.0
+
+
+def test_macro_beatdown_and_board_lethal(rules):
+    # ループの筋が無くても、盤面の打点があれば殴りに行く（ビートダウン）
+    eng = setup(rules, {"hand": ["T001"], "mana": MANA, "graveyard": [],
+                        "bz": ["T001", "T001"]})
+    intent = MacroPlanner().plan(eng)
+    assert intent.name == "beatdown"
+    # 打点がシールド+1 に届けば盤面リーサル
+    eng = setup(rules, {"hand": ["T001"], "mana": MANA, "graveyard": [],
+                        "bz": ["T001"] * 6})
+    intent = MacroPlanner().plan(eng)
+    assert intent.name == "execute" and "殴り切る" in intent.note
 
 
 def test_micro_candidates_without_pipeline_no_recursion():
