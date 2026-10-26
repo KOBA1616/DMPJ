@@ -982,3 +982,19 @@ def test_reuse_same_text_copies_abilities_without_model():
     parse_card(r, load_tables())
     assert rc.reuse_same_text({**row, "text": "別の原文"}, [donor]) is None
     assert rc.reuse_same_text({**row, "id": "d1"}, [donor]) is None
+
+
+def test_run_rules_registers_rule_convertible_cards_without_model(tmp_path):
+    """ルールだけで変換できる行（キーワードのみ・同一原文の写し・定型呪文）はモデルなしで登録し、残りには触らない。再実行しても増えない。"""
+    import convert_cards as cc
+    from dmsim.defs import load_tables
+    base = {"card_type": "クリーチャー", "civilization": "自然", "cost": "3", "power": "2000", "race": "テスト", "mana": "1"}
+    rows = [{**base, "id": "r1", "name": "a", "text": "ブロッカー"},
+            {**base, "id": "r2", "name": "b", "text": "ブロッカー"},
+            {**base, "id": "r3", "name": "c", "text": "未知の効果を行う。"},
+            {"id": "r4", "name": "d", "card_type": "呪文", "civilization": "水", "cost": "2", "mana": "1", "text": "S・トリガー\nカードを２枚引く。"}]
+    out, rej = tmp_path / "c.yaml", tmp_path / "r.jsonl"
+    st = cc.run_rules(rows, load_tables(), out, rej)
+    ids = [c["id"] for c in yaml.safe_load(out.read_text(encoding="utf-8"))["cards"]]
+    assert ids == ["r1", "r2", "r4"] and st["ok"] == 3
+    assert cc.run_rules(rows, load_tables(), out, rej)["ok"] == 0

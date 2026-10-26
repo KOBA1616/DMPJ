@@ -274,6 +274,43 @@ def precheck(row: dict) -> dict | None:
     return None
 
 
+def run_rules(rows: list[dict], tables, out: Path, rejects_path: Path) -> dict:
+    """ルールだけで完全に変換できる行（辞書のキーワード・定型文・同一原文の写し）を、モデルを呼ばずにまとめて out へ登録する。
+    変換済み・検査落ちの行は対象にしない（検査落ちでもルール変換できるようになったものは戻す）。
+    モデルのジョブに積む前の前処理で、枚数の上限は設けない。"""
+    doc = (yaml.safe_load(out.read_text(encoding="utf-8")) if out.exists() else None) or {}
+    cards = doc.get("cards") or []
+    done = known_ids(out) | {c["id"] for c in cards}
+    rejects = {r["id"]: r for r in read_jsonl(rejects_path)}
+    stats = {"requested": 0, "ok": 0, "by_rule": 0, "by_copy": 0, "invalid": 0}
+    for r in rows:
+        if r["id"] in done:
+            continue
+        stats["requested"] += 1
+        rc, kind = rule_convert.convert(r), "by_rule"
+        if rc is None:
+            rc, kind = rule_convert.reuse_same_text(r, cards), "by_copy"
+        if rc is None:
+            continue
+        try:
+            rc = validate(rc, r, tables)
+        except DefError as e:
+            stats["invalid"] += 1
+            print(f"  {r['id']}: ルール変換が検査を通らなかったのでモデルへ回す: {e}", file=sys.stderr)
+            continue
+        cards.append(rc)
+        done.add(r["id"])
+        rejects.pop(r["id"], None)
+        stats["ok"] += 1
+        stats[kind] += 1
+    if stats["ok"]:
+        out.parent.mkdir(parents=True, exist_ok=True)
+        out.write_text("# convert_cards.py の出力（review: pending）。確認後に real.yaml へ移す。\n"
+                       + yaml.safe_dump({"cards": cards}, allow_unicode=True, sort_keys=False), encoding="utf-8")
+        write_jsonl(rejects_path, list(rejects.values()))
+    return stats
+
+
 def run(rows: list[dict], client, tables, sysp: str, effort: str, out: Path, rejects_path: Path,
         workers: int = 1, report_path: Path | None = None) -> dict:
     """rows を変換して out に追記する。1枚ごとに保存するので途中で止まっても続きから再開できる。
