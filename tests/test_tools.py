@@ -414,6 +414,89 @@ def test_openrouter_uses_only_verified_free_models(monkeypatch):
     monkeypatch.setattr(cli, "_complete_one", lambda *a: (_ for _ in ()).throw(pv.CallTimeout("t")))
     monkeypatch.setattr(lm, "_request", req)
     assert cli.complete("", [], "low", None) == "ok"           # OpenCode 全滅 → OpenRouter
+    n = []
+    monkeypatch.setattr(cli, "_complete_one", lambda *a: n.append(1) or "oc")
+    assert cli.complete("", [], "low", None) == "ok" and not n   # 直後は OpenCode を待たず別サービスを直接使う
+    cli._ext_until = 0
+    assert cli.complete("", [], "low", None) == "oc" and n      # 冷却が終われば OpenCode に戻る
+
+
+def test_gemini_uses_fixed_free_flash_models(monkeypatch):
+    from llm_offload import providers as pv
+    import pytest
+    with pytest.raises(pv.Fatal):
+        pv.GeminiLLM(0, key=None) if not __import__("os").environ.get("GEMINI_API_KEY") else (_ for _ in ()).throw(pv.Fatal("x"))
+    g = pv.GeminiLLM(0, key="k" * 20)
+    assert g.base == pv.GEMINI_URL and g.free_models() == list(pv.GEMINI_FREE_MODELS)
+    assert not any("pro" in m or "argon" in m for m in g.free_models())
+    calls = []
+
+    def req(path, payload=None, auth=True):
+        calls.append(payload["model"])
+        if len(calls) == 1:
+            raise RuntimeError("HTTP 429")
+        return {"model": "models/" + payload["model"], "choices": [{"message": {"content": "ok"}}]}
+
+    monkeypatch.setattr(g, "_request", req)
+    assert g.complete("", [], "low", None) == "ok" and calls == list(pv.GEMINI_FREE_MODELS)[:2]
+
+
+def test_external_403_model_specific_is_skipped_not_fatal(monkeypatch):
+    """特定モデルだけの 403（agentic harness 限定など）は次のモデルへ。キーの問題・課金は停止。"""
+    import io
+    import urllib.error
+    import urllib.request
+
+    from llm_offload import providers as pv
+    import pytest
+    lm = pv.OpenRouterLLM(0, key="k" * 20)
+
+    def fake(body, code=403):
+        def op(req, timeout=None):
+            raise urllib.error.HTTPError("u", code, "x", {}, io.BytesIO(body.encode()))
+        return op
+
+    monkeypatch.setattr(urllib.request, "urlopen", fake('{"error":{"message":"x:free is only available on agentic harnesses"}}'))
+    with pytest.raises(RuntimeError) as e:
+        lm._request("/chat/completions", {"a": 1})
+    assert not isinstance(e.value, pv.Fatal)
+    monkeypatch.setattr(urllib.request, "urlopen", fake('{"error":{"message":"Invalid API key"}}'))
+    with pytest.raises(pv.Fatal):
+        lm._request("/chat/completions", {"a": 1})
+    monkeypatch.setattr(urllib.request, "urlopen", fake("no", 401))
+    with pytest.raises(pv.Fatal):
+        lm._request("/chat/completions", {"a": 1})
+
+
+def test_local_worker_keeps_job_pending_on_model_outage(tmp_path, monkeypatch):
+    import subprocess
+
+    import local_worker as lw
+    bare, clone = tmp_path / "remote.git", tmp_path / "clone"
+    subprocess.run(["git", "init", "-q", "--bare", str(bare)], check=True)
+    subprocess.run(["git", "clone", "-q", str(bare), str(clone)], check=True, capture_output=True)
+    for k, v in (("user.name", "t"), ("user.email", "t@t")):
+        subprocess.run(["git", "config", k, v], cwd=clone, check=True)
+    g = lw.Git(clone, tmp_path / "work")
+    jid = lw.enqueue(g, {"type": "convert", "limit": 5})
+
+    def boom(job, git, m):
+        raise lw.ModelOutage("停止中")
+
+    monkeypatch.setattr(lw, "run_convert", boom)
+    out = lw.process(g)
+    assert len(out) == 1 and out[0].startswith(f"{jid}:pending")
+    chk = tmp_path / "chk"
+    subprocess.run(["git", "clone", "-q", "-b", "llm-jobs", str(bare), str(chk)], check=True, capture_output=True)
+    assert (chk / "jobs" / "pending" / f"{jid}.yaml").exists() and not (chk / "jobs" / "done" / f"{jid}.yaml").exists()
+
+
+def test_llm7_uses_fixed_allowlist_and_anonymous_key():
+    from llm_offload import providers as pv
+    l = pv.LLM7LLM(0)
+    assert l.key == "unused" and l.base == pv.LLM7_URL and l.free_models() == list(pv.LLM7_FREE_MODELS)
+    c = pv.Chain(None, l)
+    assert c.llms == [l]
 
 
 def test_opencode_cli_detects_free_limit(monkeypatch):

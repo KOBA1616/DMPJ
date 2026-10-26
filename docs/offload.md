@@ -129,3 +129,13 @@ schtasks /Create /SC MINUTE /MO 5 /TN "dmpj-worker" /TR C:\path\DMPJ\tools\run_w
 - 応答に費用が載っている、または無料でないモデルが返ったら停止（Fatal）。キーはログに出さない（`scrub` が伏せる）。
 - PC では、ワーカーを起動するウィンドウ（またはユーザー環境変数）に `OPENROUTER_API_KEY` を置く。ワーカーは `OPENCODE_API_KEY` だけを外す。
 - OpenCode の無料モデルの許可リストは公式 zen の料金表で Free を確認したものだけ（2026-10-26: longcat を外し、beam / flint-40b / nemotron-3.5-lightning / nemotron-3.5-super-vl を追加）。
+
+## LLM7（匿名の最後の切り替え先）
+- OpenCode の無料モデルが全滅したとき、OpenRouter（キーがあれば）の次に LLM7（`api.llm7.io`、登録・キー不要。公式の匿名キー `unused`）を試す。`DMPJ_NO_LLM7=1` で無効。
+- 匿名は毎分30回まで、IP が記録される。使うモデルは公式 `/v1/models` で `usage_based_only: false` のものに固定（gpt-oss:20b / nemotron-3-nano:30b / mistral-Nemo-Instruct-2407 / minimax-m2.7）。匿名キーには課金先がない。
+- OpenCode が全滅したあと15分は別サービスを先に使い、毎回 OpenCode の全モデルを待たない。
+
+## Gemini（Google AI Studio、キーがあるときだけ）
+- 環境変数 `GEMINI_API_KEY` があれば、OpenCode 全滅時の切り替え先として最初に試す（OpenAI 互換: `generativelanguage.googleapis.com/v1beta/openai`）。順番は Gemini → OpenRouter → LLM7。
+- 使うのは公式の料金ページで無料枠と出ている Flash 系（3.8 / 3.6 / 3 Flash Preview / 3.5・3.1 Flash-Lite）に固定。Pro 系は使わない。
+- 注意: キーのプロジェクトに請求先を設定すると有料になりうるが、応答から費用は検知できない。**請求先のないプロジェクトで作ったキーだけ**を使う。無料枠は入力が製品改善に使われる。

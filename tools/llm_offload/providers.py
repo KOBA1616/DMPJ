@@ -110,6 +110,25 @@ OPENROUTER_URL = "https://openrouter.ai/api/v1"
 OPENROUTER_PREFER = ("deepseek", "qwen", "glm", "gpt-oss", "llama", "gemma", "mistral")   # 変換向きの順（無料モデルの中での好み）
 
 
+class Chain:
+    """別サービスを順に試す（先のものが全部だめなら次へ。Fatal=課金の兆候はそのまま上げる）。"""
+
+    def __init__(self, *llms):
+        self.llms = [x for x in llms if x is not None]
+
+    def complete(self, sysp, messages, effort, usage):
+        last = None
+        for x in self.llms:
+            try:
+                return x.complete(sysp, messages, effort, usage)
+            except Fatal:
+                raise
+            except Exception as e:      # noqa: BLE001
+                last = e
+                print(f"  ⏱ {x.name} も使えない（{type(e).__name__}）", file=sys.stderr, flush=True)
+        raise last or RuntimeError("切り替え先がない")
+
+
 class FreeLimit(RuntimeError):
     """OpenCode の無料枠の上限（FreeUsageLimitError）。アカウント・ワークスペース・ネットワーク単位なので、別の OpenCode モデルに替えても直らない。"""
 
@@ -131,6 +150,8 @@ class OpenRouterLLM:
             raise Fatal("環境変数 OPENROUTER_API_KEY が未設定")
         self.min_interval = min_interval
         self.model = None
+        self.base = OPENROUTER_URL
+        self.free_suffix = ":free"       # 応答のモデル名がこれで終わらなければ無料でないとみなして停止
         self._free: list[str] | None = None
         self._last, self._lock = 0.0, threading.Lock()
 
@@ -144,7 +165,7 @@ class OpenRouterLLM:
         headers = {"Content-Type": "application/json", "User-Agent": "dmpj-convert/1.0"}
         if auth:
             headers["Authorization"] = f"Bearer {self.key}"
-        req = urllib.request.Request(OPENROUTER_URL + path, json.dumps(payload).encode() if payload else None, headers)
+        req = urllib.request.Request(self.base + path, json.dumps(payload).encode() if payload else None, headers)
         try:
             with urllib.request.urlopen(req, timeout=OPENCODE_TIMEOUT) as r:
                 return json.loads(r.read())
@@ -152,9 +173,10 @@ class OpenRouterLLM:
             body = e.read().decode("utf-8", "replace")[:300].replace(self.key, "***")
             if e.code == 402 or re.search(r"(?i)billing|credit|balance|payment|insufficient", body):
                 raise Fatal(f"課金・残高に関するエラーなので停止する: HTTP {e.code} {body}") from None
-            if e.code in (401, 403):
+            # キー自体の問題は止める。「このモデルは agentic harness 限定」等、特定モデルだけの 403 は止めずに次のモデルへ
+            if e.code == 401 or (e.code == 403 and re.search(r"(?i)api[ _-]?key|credential|unauthori[sz]ed|invalid.*(key|token)|permission denied|billing|suspended|banned", body)):
                 raise Fatal(f"認証/権限エラー: HTTP {e.code} {body}") from None
-            raise RuntimeError(f"HTTP {e.code} {body[:120]}") from None
+            raise RuntimeError(f"HTTP {e.code} {body[:160]}") from None
         except OSError as e:
             if "timed out" in str(e):
                 raise CallTimeout(f"openrouter が{OPENCODE_TIMEOUT:g}秒以内に終わらなかった") from None
@@ -184,7 +206,7 @@ class OpenRouterLLM:
                 tried.append(m)
                 last = e
                 continue
-            if not str(resp.get("model", m)).endswith(":free") or (resp.get("usage") or {}).get("cost", 0) > 0:
+            if not str(resp.get("model", m)).endswith(self.free_suffix) or (resp.get("usage") or {}).get("cost", 0) > 0:
                 raise Fatal(f"応答のモデルが無料でない、または費用が載っている: {resp.get('model')}。停止する")
             try:
                 text = resp["choices"][0]["message"]["content"] or ""
@@ -199,6 +221,49 @@ class OpenRouterLLM:
                 usage["output"] += u.get("completion_tokens", 0)
             return text
         raise RuntimeError(f"OpenRouter の無料モデル {tried or '（なし）'} がすべて失敗（最後: {last}）")
+
+
+GEMINI_URL = "https://generativelanguage.googleapis.com/v1beta/openai"
+# 公式料金ページで無料枠(Free of charge)と出ている Flash 系（2026-10-26）。Pro 系・画像・Argon は無料枠にないので入れない
+GEMINI_FREE_MODELS = ("gemini-3.8-flash", "gemini-3.6-flash", "gemini-3-flash-preview", "gemini-3.5-flash-lite", "gemini-3.1-flash-lite")
+
+
+class GeminiLLM(OpenRouterLLM):
+    """Google AI Studio の Gemini API（OpenAI 互換）。キー GEMINI_API_KEY があるときだけ使う。
+    無料枠のモデルだけを固定で使う。注意: キーのプロジェクトに請求先を設定すると有料になりうる（応答から費用は検知できない）。
+    請求先のないプロジェクトで作ったキーだけを使うこと。"""
+    name = "gemini"
+
+    def __init__(self, min_interval: float = 3.0, key: str | None = None):
+        import os
+        super().__init__(min_interval, key=key or os.environ.get("GEMINI_API_KEY", "") or "-")
+        if self.key == "-":
+            raise Fatal("環境変数 GEMINI_API_KEY が未設定")
+        self.base = GEMINI_URL
+        self.free_suffix = ""
+
+    def free_models(self) -> list[str]:
+        return list(GEMINI_FREE_MODELS)
+
+
+EXTERNAL_COOLDOWN = 900   # OpenCode 全滅のあと、この秒数は別サービスを先に使う
+LLM7_URL = "https://api.llm7.io/v1"
+# 公式 /v1/models で usage_based_only: false（匿名・無料で使える側）と出ているモデル（2026-10-26）。他は従量課金のモデルなので使わない
+LLM7_FREE_MODELS = ("gpt-oss:20b", "nemotron-3-nano:30b", "mistral-Nemo-Instruct-2407", "minimax-m2.7")
+
+
+class LLM7LLM(OpenRouterLLM):
+    """最後の切り替え先。LLM7（登録・キー不要の匿名ゲートウェイ。匿名は毎分30回まで、IP が記録される）。
+    キーは公式の匿名キー 'unused' で、課金される口座がないので、固定の許可リストの無料モデルだけを使う。"""
+    name = "llm7"
+
+    def __init__(self, min_interval: float = 3.0):
+        super().__init__(min_interval, key="unused")
+        self.base = LLM7_URL
+        self.free_suffix = ""
+
+    def free_models(self) -> list[str]:
+        return list(LLM7_FREE_MODELS)
 
 
 def _run_tree(cmd: list[str], timeout: float, cwd: str):
@@ -243,11 +308,15 @@ class OpenCodeCLI:
         # タイムアウト時に切り替える先（許可リスト内＝公式で $0 確認済みのものだけ）。fallbacks=0 で切り替えなし
         self.alternates = [m for m in OPENCODE_FALLBACK_ORDER if m != model and m in OPENCODE_FREE_MODELS][:max(0, fallbacks)]
         self._last, self._lock = 0.0, threading.Lock()
-        self.external = None      # 別サービスの切り替え先（OpenRouterLLM）。make_llm が環境変数のキーがあるときだけ付ける
+        self._ext_until = 0.0
+        self.external = None      # 別サービスの切り替え先（OpenRouterLLM / LLM7LLM、または複数をまとめた Chain）。make_llm が付ける
 
     def complete(self, sysp: str, messages: list[dict], effort: str, usage: dict | None) -> str:
         """今のモデルがタイムアウトしたら別の無料モデルで同じ依頼を再試行する。成功したモデルをそのまま使い続ける。
         全部タイムアウトしたら CallTimeout を投げる（呼び出し側が保留・連続打ち切りに数える）。"""
+        import time
+        if self.external is not None and time.monotonic() < self._ext_until:      # 直前に OpenCode が全滅したばかり。しばらくは別サービスを直接使う
+            return self.external.complete(sysp, messages, effort, usage)
         order = [self.model, *self.alternates]
         tried = []
         last: Exception | None = None
@@ -272,8 +341,10 @@ class OpenCodeCLI:
                 self.model = m
             return text
         if self.external is not None:      # OpenCode の無料モデルが全滅したら別サービス（OpenRouter の無料モデル）へ
-            print("  ⏱ OpenCode の無料モデルが全滅。OpenRouter の無料モデルへ切り替える", file=sys.stderr, flush=True)
-            return self.external.complete(sysp, messages, effort, usage)
+            print("  ⏱ OpenCode の無料モデルが全滅。別サービスの無料枠へ切り替える", file=sys.stderr, flush=True)
+            text = self.external.complete(sysp, messages, effort, usage)
+            self._ext_until = time.monotonic() + EXTERNAL_COOLDOWN       # 毎回 OpenCode の全モデルを待たずに済ませる
+            return text
         if isinstance(last, FreeLimit):
             raise last
         if isinstance(last, CallTimeout):

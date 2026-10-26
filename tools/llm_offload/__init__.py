@@ -19,7 +19,7 @@ import re
 from dataclasses import dataclass
 from pathlib import Path
 
-from .providers import (OPENCODE_DEFAULT, OPENCODE_FREE_MODELS, BadResponse, Fatal, OpenRouterLLM,  # noqa: F401
+from .providers import (OPENCODE_DEFAULT, OPENCODE_FREE_MODELS, BadResponse, Chain, Fatal, LLM7LLM, OpenRouterLLM,  # noqa: F401
                         OpenCodeCLI, OpenCodeLLM)
 
 ROOT = Path(__file__).resolve().parent.parent.parent
@@ -56,7 +56,7 @@ _SECRET = re.compile(r"(?i)(sk-[A-Za-z0-9_\-]{16,}|gh[pousr]_[A-Za-z0-9]{20,}|gi
 def scrub(text: str) -> str:
     """キーや環境変数の値らしきものを伏せる（外部APIに送る前・ログに出す前）。"""
     text = text or ""
-    for name in ("OPENCODE_API_KEY", "OPENROUTER_API_KEY", "ANTHROPIC_API_KEY", "GITHUB_TOKEN"):
+    for name in ("OPENCODE_API_KEY", "OPENROUTER_API_KEY", "GEMINI_API_KEY", "ANTHROPIC_API_KEY", "GITHUB_TOKEN"):
         v = os.environ.get(name)
         if v and len(v) >= 8:
             text = text.replace(v, "***")
@@ -95,8 +95,10 @@ def make_llm(provider: str = "opencode-cli", model: str | None = None, interval:
         return OpenCodeLLM(model or OPENCODE_DEFAULT, interval)
     if provider == "opencode-cli":
         llm = OpenCodeCLI(model or OPENCODE_DEFAULT, interval)
-        if os.environ.get("OPENROUTER_API_KEY"):     # キーがあるときだけ、OpenCode 全滅時の切り替え先（OpenRouter の無料モデル）を付ける
-            llm.external = OpenRouterLLM(interval)
+        # OpenCode 全滅時の切り替え先。Gemini・OpenRouter はキーがあるときだけ、LLM7 は匿名で（DMPJ_NO_LLM7=1 で無効）
+        llm.external = Chain(GeminiLLM(interval) if os.environ.get("GEMINI_API_KEY") else None,
+                             OpenRouterLLM(interval) if os.environ.get("OPENROUTER_API_KEY") else None,
+                             None if os.environ.get("DMPJ_NO_LLM7") else LLM7LLM(interval))
         return llm
     raise Fatal(f"provider {provider!r} は無料経路ではない（opencode / opencode-cli のみ）")
 

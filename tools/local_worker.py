@@ -171,6 +171,10 @@ def run_ask(job: dict, llm, cache: Path, daily_limit: int, base: Path) -> dict:
     return {"status": "ok", "text": r.text, "model": r.model, "cached": r.cached}
 
 
+class ModelOutage(RuntimeError):
+    """モデルが使えず進まなかった。ジョブは error にせず pending のまま残し、次回やり直す。"""
+
+
 def run_convert(job: dict, git: Git, jobs_model: str | None) -> dict:
     """cards-data の作業ツリーに現在の tools/dmsim/data/rules を重ねて auto_convert を実行し、結果を push する。"""
     d = data_tree(git)
@@ -203,8 +207,11 @@ def run_convert(job: dict, git: Git, jobs_model: str | None) -> dict:
             lr = (json.loads((d / "data/cards/raw/convert_status.json").read_text(encoding="utf-8")).get("last_run") or {}).get("new") or {}
         except (OSError, ValueError):
             lr = {}
-        progressed = lr.get("ok", 0) + lr.get("rejected", 0)
+        progressed = 0 if code else lr.get("ok", 0) + lr.get("rejected", 0)      # 異常終了のときは前回の status が残っているので数えない
         done_n += progressed
+        outage = code == 3 or (code == 0 and not progressed and lr.get("api_error", 0) > 0)    # 3=開始前ヘルスチェック失敗
+        if outage:
+            raise ModelOutage(f"モデルが使えず進まなかった（ここまで {done_n} 枚）。ジョブは pending のまま次回やり直す")
         if code or not progressed:      # 停止・API失敗だけで進まない時はここで終える（空回りしない）
             break
     r = subprocess.CompletedProcess([], code, "\n".join(tail), "\n".join(tail))
@@ -339,7 +346,9 @@ def model_alive(timeout: float = 90) -> str | None:
     old = providers.OPENCODE_TIMEOUT
     providers.OPENCODE_TIMEOUT = timeout
     try:
-        lo.make_llm("opencode-cli", lo.OPENCODE_DEFAULT).complete("", [{"role": "user", "content": "OKとだけ答えて"}], "low", None)
+        llm = lo.make_llm("opencode-cli", lo.OPENCODE_DEFAULT)
+        llm.alternates = []      # 開始前の確認は1モデル＋別サービスだけ（5分ごとの起動に収める）
+        llm.complete("", [{"role": "user", "content": "OKとだけ答えて"}], "low", None)
         return None
     except lo.Fatal:
         raise
@@ -371,6 +380,9 @@ def process(git: Git, llm_factory=None, max_jobs: int = 20, daily_limit: int = l
                 res = run_ask(job, llm_factory(job.get("model")), git.work / "cache", daily_limit, jd)
             else:
                 res = {"status": "error", "error": f"未知の type {job.get('type')!r}"}
+        except ModelOutage as e:    # ジョブは消さず、残りも今回は見送る
+            handled.append(f"{jid}:pending（{e}）")
+            break
         except lo.Fatal as e:      # 課金の兆候・許可外モデル。以降のジョブは実行しない
             res = {"status": "error", "error": lo.scrub(f"STOP: {e}")}
             (done / f"{jid}.yaml").write_text(yaml.safe_dump({"id": jid, "finished": now(), **res}, allow_unicode=True), encoding="utf-8")
