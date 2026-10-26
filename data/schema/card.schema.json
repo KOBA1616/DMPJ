@@ -79,6 +79,7 @@
      "ex_life",
      "g_strike",
      "guardman",
+     "hunting",
      "last_burst",
      "mana_boost_cip",
      "mega_last_burst",
@@ -174,6 +175,7 @@
        "ex_life",
        "g_strike",
        "guardman",
+       "hunting",
        "last_burst",
        "mana_boost_cip",
        "mega_last_burst",
@@ -1025,6 +1027,7 @@
        "ex_life",
        "g_strike",
        "guardman",
+       "hunting",
        "last_burst",
        "mana_boost_cip",
        "mega_last_burst",
@@ -1157,6 +1160,21 @@
     "breaks_per_power": {
      "type": "integer"
     },
+    "battle_power": {
+     "type": "object",
+     "properties": {
+      "amount": {
+       "type": "integer"
+      },
+      "count": {
+       "$ref": "#/$defs/selector"
+      }
+     },
+     "required": [
+      "amount"
+     ],
+     "additionalProperties": false
+    },
     "ignore": {
      "type": "array",
      "items": {
@@ -1179,6 +1197,7 @@
    "propertyNames": {
     "enum": [
      "allow",
+     "battle_power",
      "breaks",
      "breaks_per_power",
      "deny",

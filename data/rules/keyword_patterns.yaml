@@ -159,3 +159,14 @@ patterns:
     whole_line: true
     abilities:
       - {kind: static, affects: self, mod: {allow: [{action: attack_creature, other: {tapped: false}}]}}
+
+  # マジボンバーN: 攻撃する時、コストN以下のクリーチャーを1体、自分の手札または山札の上から1枚目から、バトルゾーンに出してもよい（見る手順は選択に含まれる）
+  magic_bomber:
+    re: 'マジボンバー(\d)'
+    abilities:
+      - kind: trigger
+        when: {event: attack, subject: self}
+        effect:
+          - op: may
+            body:
+              - {op: move, select: {zone: [hand, deck], from_top: 1, owner: you, filter: {types: [creature], not_types: [evolution], cost_le: "{1}"}, count: 1}, to: bz, reason: put}

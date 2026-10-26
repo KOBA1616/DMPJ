@@ -170,3 +170,7 @@ keywords:
       - {kind: trigger, when: {event: move, from: bz, to: graveyard, subject: self}, effect: *last_burst}
       - {kind: trigger, when: {event: move, from: bz, to: hand, subject: self}, effect: *last_burst}
       - {kind: trigger, when: {event: move, from: bz, to: mana, subject: self}, effect: *last_burst}
+  hunting:            # バトル中、このクリーチャーのパワーは、バトルゾーンにある自分のハンター1体につき+1000される
+    ja: ハンティング
+    abilities:
+      - {kind: static, affects: self, mod: {battle_power: {amount: 1000, count: {zone: bz, owner: you, filter: {race_has: ハンター}}}}}

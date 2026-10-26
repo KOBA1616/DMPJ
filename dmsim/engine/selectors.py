@@ -127,9 +127,13 @@ class SelectorMixin:
         out = []
         for p in players:
             lst = []
-            for z in self.zones_of(sel["zone"]):
-                lst += self.bz_tops(p) if z == "bz" else self.zlist(z, p)
-            if "from_top" in sel:
+            zs = self.zones_of(sel["zone"])
+            for z in zs:
+                part = self.bz_tops(p) if z == "bz" else self.zlist(z, p)
+                if "from_top" in sel and len(zs) > 1 and z == "deck":      # 複数ゾーン指定の from_top は山札だけに効く（手札または山札の上1枚）
+                    part = part[: self.eval_expr(sel["from_top"], env)]
+                lst += part
+            if "from_top" in sel and len(zs) == 1:
                 lst = lst[: self.eval_expr(sel["from_top"], env)]
             f = sel.get("filter", {})
             if any(isinstance(v, dict) for v in f.values()):   # 式の値は解決時に計算する

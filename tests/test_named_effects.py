@@ -208,3 +208,21 @@ def test_mega_last_burst_triggers_when_returned_to_hand(tmp_path):
     e.apply_batch([{"ev": "move", "subject": e.s.ref(cid), "to": "hand", "reason": "return"}])
     d = e.advance()
     assert d["kind"] == "yes_no" and d["player"] == 1
+
+
+def test_hunting_adds_power_only_during_battle(tmp_path):
+    """ハンティング: バトル中だけ、自分のハンター1体につきパワー+1000。バトルゾーンでの通常のパワーは変わらない。"""
+    import yaml
+    f = tmp_path / "h.yaml"
+    mk = lambda i, kw, races, p: {"id": i, "name": i, "types": ["creature"], "civs": ["fire"], "cost": 3, "power": p, "races": races,  # noqa: E731
+                                  "text": "x", **({"keywords": [kw]} if kw else {})}
+    f.write_text(yaml.safe_dump({"cards": [mk("H001", "hunting", ["ハンター"], 2000), mk("H002", None, ["ハンター"], 1000),
+                                           mk("H003", None, ["テスト"], 3000)]}, allow_unicode=True))
+    rr = load_rules(sorted((DATA / "cards").glob("*.yaml")) + [f])
+    e = setup(rr, {"bz": ["H001", "H002"]}, {"bz": ["H003"]})
+    assert e.chars(top(e, 0, "H001"))["power"] == 2000
+    e.s.cards[top(e, 1, "H003")].tapped = True
+    answer(e, "attack", "attack:H001:H003")
+    e.advance()
+    # 2000 + ハンター2体×1000 = 4000 > 3000 で勝つ（補正なしなら負け）
+    assert not e.bz_tops(1)

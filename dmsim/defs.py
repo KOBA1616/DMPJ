@@ -28,7 +28,7 @@ REASONS = {"put", "destroy", "return", "discard", "charge", "summon", "cast", "b
            "draw", "battle", "sba", "resolve", "evolve"}
 VIAS = {"revolution_change"}   # 出し方の印（「革命チェンジによって出た時」など）
 DURATIONS_FIXED = {"end_of_turn", "during_attack", "permanent", "until_next_own_turn_start"}
-MOD_KEYS = {"power", "grant", "allow", "deny", "breaks", "breaks_per_power", "ignore", "gain"}
+MOD_KEYS = {"power", "grant", "allow", "deny", "breaks", "breaks_per_power", "battle_power", "ignore", "gain"}
 POSITIONS = {"top", "bottom"}
 CARD_TYPES = {"creature", "spell", "evolution"}
 CIVS = {"light", "water", "darkness", "fire", "nature", "zero"}
@@ -325,6 +325,12 @@ class Checker:
                     raise DefError(f"{where}: unknown action '{act}'")
                 if isinstance(e, dict):
                     self.filter(e.get("other", {}), where)
+        if "battle_power" in m:   # バトル中だけのパワー修整: {amount: N, count: <selector>}（ハンティング）
+            bp = m["battle_power"]
+            if not isinstance(bp, dict) or set(bp) - {"amount", "count"} or not isinstance(bp.get("amount"), int):
+                raise DefError(f"{where}: battle_power needs amount (int) and optional count (selector)")
+            if "count" in bp:
+                self.selector(bp["count"], where)
         for k in m.get("ignore", []):
             if k not in ("trigger", "static", "replace", "all"):
                 raise DefError(f"{where}: bad ignore '{k}'")
