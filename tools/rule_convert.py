@@ -34,7 +34,7 @@ def _table(with_card_kinds: bool = False) -> dict[str, str]:
     ks = yaml.safe_load((DATA / "rules" / "keywords.yaml").read_text(encoding="utf-8"))["keywords"]
     out = {}
     for name, d in ks.items():
-        if (d.get("card") or {}) and not with_card_kinds:       # 呪文用（チャージャー等）は全体変換の対象外。部分変換では扱う
+        if ({"resolve_to", "after_resolve"} & set(d.get("card") or {})) and not with_card_kinds:       # 呪文用（チャージャー等）は全体変換の対象外。部分変換では扱う
             continue
         for ja in [d["ja"], *d.get("aliases", [])]:
             out[norm(ja)] = name
@@ -108,7 +108,74 @@ def _build_revolution_change(groups: tuple[str, ...]) -> list[dict] | None:
              "effect": [{"op": "swap", "out": {"ref": "event.subject"}, "in": {"ref": "self"}}]}]
 
 
-BUILDERS = {"revolution_change": _build_revolution_change}
+_PHRASE = re.compile(r"((?:自然|光|水|闇|火)(?:(?:または|、)?(?:自然|光|水|闇|火))*)?の?(?:コスト(\d+)(以下|以上)の)?(?:パワー(\d+)以上の)?(.+)")
+
+
+def parse_filter(phrase: str) -> dict | None:
+    """「光のコスト3以下のクリーチャー」「ドラゴン・クリーチャー」「呪文」などの言い方を filter にする。読めなければ None。"""
+    m = _PHRASE.fullmatch(phrase)
+    if not m:
+        return None
+    civs, cost, cmp_, power, noun = m.groups()
+    if re.search(r"または|および|と|、|以外", noun):
+        return None
+    f: dict = {}
+    if civs:
+        f["civs"] = [_CIV_EN[c] for c in re.findall(r"自然|光|水|闇|火", civs)]
+    if cost:
+        f["cost_le" if cmp_ == "以下" else "cost_ge"] = int(cost)
+    if power:
+        f["power_ge"] = int(power)
+    race = re.sub(r"・?クリーチャー$", "", noun)
+    if noun == "呪文":
+        f["types"] = ["spell"]
+    elif noun == "クリーチャー" or not race:
+        f["types"] = ["creature"]
+    else:
+        f["types"] = ["creature"]
+        f["race_has"] = race
+    return f
+
+
+def _build_sympathy(groups: tuple[str, ...]) -> list[dict] | None:
+    """シンパシー：<対象>:<N>（<対象>1体につきNコストが少なくなる）。前処理 _prenorm が注釈から N を取り出して付ける。"""
+    what, n = groups
+    m = re.fullmatch(r"(自分の|相手の)?(墓地にある|マナゾーンにある)?(.+)", what)
+    if not m:
+        return None
+    owner, zone, rest = m.groups()
+    sel: dict = {"zone": "bz", "owner": "opp" if owner == "相手の" else "you"}
+    if zone and rest == "カード":
+        sel["zone"] = "graveyard" if zone == "墓地にある" else "mana"
+    else:
+        f = parse_filter(rest)
+        if f is None:
+            return None
+        sel["filter"] = f
+        if zone == "墓地にある":
+            sel["zone"] = "graveyard"
+    return [{"kind": "static", "zone": "hand", "affects": "self", "mod": {"cost": {"amount": -int(n), "count": sel}}}]
+
+
+def _build_cost_static(groups: tuple[str, ...]) -> list[dict] | None:
+    """自分の<対象>の召喚コストをN少なくする／相手の<対象>のコストをN多くする などの常在型のコスト増減。"""
+    who, what, n, verb = groups
+    f = parse_filter(what)
+    if f is None:
+        return None
+    sign = -1 if verb == "少なく" else 1
+    return [{"kind": "static", "affects": {"owner": "you" if who == "自分" else "opp", "zone": "hand", "filter": f},
+             "mod": {"cost": sign * int(n)}}]
+
+
+BUILDERS = {"revolution_change": _build_revolution_change, "sympathy": _build_sympathy, "cost_static": _build_cost_static}
+
+
+def _prenorm(text: str) -> str:
+    """注釈を除く前に、注釈の中にだけある数値を本文に移す（シンパシー: 「1体につき2少なくなる」→ 「シンパシー:<対象>:2」）。"""
+    t = unicodedata.normalize("NFKC", text or "")
+    new = re.sub(r"シンパシー[:：]\s*([^\s（(:：]+)\s*[（(][^）)]*?(?<!\d)1体につき(\d+)少なく[^）)]*[）)]", r"シンパシー:\1:\2", t)
+    return new if new != t else (text or "")      # 該当がなければ原文のまま（半角全角を変えない）
 
 
 def _glue(tokens: list[str]) -> list[str]:
@@ -174,7 +241,7 @@ def convert(row: dict) -> dict | None:
         return None
     if _TABLE is None:
         _TABLE = _table()
-    text = re.sub(r"[（(][^）)]*[）)]", "", unicodedata.normalize("NFKC", row.get("text", "") or ""))   # 注釈（カッコ内）を除く
+    text = re.sub(r"[（(][^）)]*[）)]", "", _prenorm(row.get("text", "")))   # 注釈（カッコ内）を除く
     kws, extra = [], []
     for line in re.split(r"\s*[\n/／]\s*", text):      # 行（スラッシュ・改行）ごとに、空白・句点でキーワードを区切る
         clauses = [c for c in _glue(re.split(r"[\s。]+", line)) if norm(c) and norm(c) not in _noise()]
@@ -233,7 +300,7 @@ def split(row: dict) -> tuple[list[str], str, list[dict]] | None:
     kws: list[str] = []
     extra: list[dict] = []
     rest: list[str] = []
-    for line in re.split(r"\s*[\n/／]\s*", row["text"]):
+    for line in re.split(r"\s*[\n/／]\s*", _prenorm(row["text"])):
         tokens = [x for x in _glue(re.sub(r"[（(][^）)]*[）)]", "", line).split()) if norm(x) not in _noise()]
         sents = [x for t_ in tokens for x in re.split(r"(?<=。)", t_) if x]    # 句点で終わる文も1つずつ照合する
         tokens = [x for x in sents if norm(x) not in _noise()]       # 文の途中にある記号・ルールの念押し文も除く

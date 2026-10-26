@@ -99,3 +99,28 @@ def test_effect_sentence_with_followup_is_not_converted():
     t = "このクリーチャーが出た時、カードを1枚引く。 その後、手札を1枚捨てる。"
     assert rc.convert({**BASE, "id": "x", "text": t}) is None
     assert rc.split({**BASE, "id": "x", "text": t}) is None
+
+
+def test_magic_bomber_puts_creature_from_deck_top_or_hand(build):
+    """マジボンバーN: 攻撃する時、コストN以下のクリーチャーを手札または山札の上1枚から出してもよい（山札は上1枚だけが候補）。"""
+    rr = build(card("MB", "マジボンバー ４（このクリーチャーが攻撃する時、…）", cost="5", civilization="火"))
+    e = setup(rr, {"bz": ["MB"]})
+    answer(e, "attack", "attack:MB:player")
+    answer(e, "yes_no", "yes")
+    d = e.advance()
+    while d is not None and d["kind"] in ("choose_cards", "choose_shields", "choose_breaker"):
+        e.answer([0])
+        d = e.advance()
+    assert len(e.bz_tops(0)) == 2                                    # 山札の上1枚（T001, コスト2）が出た
+
+
+def test_magic_bomber_cost_limit(build):
+    rr = build(card("MB", "マジボンバー １（…）", cost="5", civilization="火"))
+    e = setup(rr, {"bz": ["MB"]})
+    answer(e, "attack", "attack:MB:player")
+    answer(e, "yes_no", "yes")
+    d = e.advance()
+    while d is not None and d["kind"] in ("choose_cards", "choose_shields", "choose_breaker"):
+        e.answer([0])
+        d = e.advance()
+    assert len(e.bz_tops(0)) == 1                                    # コスト2 > 1 なので出ない

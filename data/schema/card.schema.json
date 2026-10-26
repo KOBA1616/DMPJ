@@ -31,8 +31,11 @@
    "items": {
     "enum": [
      "creature",
+     "cross_gear",
      "evolution",
-     "spell"
+     "field",
+     "spell",
+     "tamaseed"
     ]
    }
   },
@@ -74,15 +77,21 @@
      "charger",
      "double_breaker",
      "escape",
+     "eternal_omega",
      "evo_charger",
      "ex_life",
      "g_strike",
      "guardman",
+     "hunting",
+     "hyper_energy",
+     "last_burst",
      "mana_boost_cip",
+     "mega_last_burst",
      "powered_breaker",
      "quad_breaker",
      "s_trigger",
      "shield_saver",
+     "shinka_rise",
      "slayer",
      "speed_attacker",
      "spell_to_hand",
@@ -123,8 +132,11 @@
      "items": {
       "enum": [
        "creature",
+       "cross_gear",
        "evolution",
-       "spell"
+       "field",
+       "spell",
+       "tamaseed"
       ]
      }
     },
@@ -166,15 +178,21 @@
        "charger",
        "double_breaker",
        "escape",
+       "eternal_omega",
        "evo_charger",
        "ex_life",
        "g_strike",
        "guardman",
+       "hunting",
+       "hyper_energy",
+       "last_burst",
        "mana_boost_cip",
+       "mega_last_burst",
        "powered_breaker",
        "quad_breaker",
        "s_trigger",
        "shield_saver",
+       "shinka_rise",
        "slayer",
        "speed_attacker",
        "spell_to_hand",
@@ -559,6 +577,9 @@
          "mana",
          "shield"
         ]
+       },
+       "face": {
+        "type": "string"
        },
        "as": {
         "type": "string"
@@ -1011,15 +1032,21 @@
        "charger",
        "double_breaker",
        "escape",
+       "eternal_omega",
        "evo_charger",
        "ex_life",
        "g_strike",
        "guardman",
+       "hunting",
+       "hyper_energy",
+       "last_burst",
        "mana_boost_cip",
+       "mega_last_burst",
        "powered_breaker",
        "quad_breaker",
        "s_trigger",
        "shield_saver",
+       "shinka_rise",
        "slayer",
        "speed_attacker",
        "spell_to_hand",
@@ -1044,6 +1071,8 @@
          "block",
          "cast",
          "enter_bz",
+         "evolve_base",
+         "generate",
          "guardman",
          "s_trigger",
          "slayer",
@@ -1065,6 +1094,8 @@
            "block",
            "cast",
            "enter_bz",
+           "evolve_base",
+           "generate",
            "guardman",
            "s_trigger",
            "slayer",
@@ -1099,6 +1130,8 @@
          "block",
          "cast",
          "enter_bz",
+         "evolve_base",
+         "generate",
          "guardman",
          "s_trigger",
          "slayer",
@@ -1120,6 +1153,8 @@
            "block",
            "cast",
            "enter_bz",
+           "evolve_base",
+           "generate",
            "guardman",
            "s_trigger",
            "slayer",
@@ -1145,6 +1180,46 @@
     "breaks_per_power": {
      "type": "integer"
     },
+    "cost": {
+     "anyOf": [
+      {
+       "type": "integer"
+      },
+      {
+       "type": "object",
+       "properties": {
+        "amount": {
+         "type": "integer"
+        },
+        "count": {
+         "$ref": "#/$defs/selector"
+        }
+       },
+       "required": [
+        "amount"
+       ],
+       "additionalProperties": false
+      }
+     ]
+    },
+    "cost_min": {
+     "type": "integer"
+    },
+    "battle_power": {
+     "type": "object",
+     "properties": {
+      "amount": {
+       "type": "integer"
+      },
+      "count": {
+       "$ref": "#/$defs/selector"
+      }
+     },
+     "required": [
+      "amount"
+     ],
+     "additionalProperties": false
+    },
     "ignore": {
      "type": "array",
      "items": {
@@ -1167,13 +1242,18 @@
    "propertyNames": {
     "enum": [
      "allow",
+     "battle_power",
      "breaks",
      "breaks_per_power",
+     "cost",
+     "cost_min",
      "deny",
      "gain",
      "grant",
      "ignore",
-     "power"
+     "opt_reduce",
+     "power",
+     "sac_reduce"
     ]
    }
   },
@@ -1252,6 +1332,7 @@
     },
     "via": {
      "enum": [
+      "generate",
       "revolution_change"
      ]
     },

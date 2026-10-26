@@ -108,6 +108,12 @@ class SelectorMixin:
             r = sel["ref"]
             if r == "self":
                 refs = [env["self"]]
+            elif r == "self_moved":   # このカード自身が離れた後の姿（ちょうど1回ゾーンを移った時だけ）。ラスト・バースト等
+                c = s.cards[env["self"][0]]
+                return [c.cid] if c.gen == env["self"][1] + 1 and c.zone != "bz" else []
+            elif r == "self_entered":   # 実行されてバトルゾーンに出たこのカード自身（B・A・D / J・O・E の終了時処理）
+                c = s.cards[env["self"][0]]
+                return [c.cid] if c.gen == env["self"][1] + 1 and c.zone == "bz" else []
             elif r == "event.subject":
                 refs = [env["event"]["subject"]]
             else:
@@ -124,9 +130,13 @@ class SelectorMixin:
         out = []
         for p in players:
             lst = []
-            for z in self.zones_of(sel["zone"]):
-                lst += self.bz_tops(p) if z == "bz" else self.zlist(z, p)
-            if "from_top" in sel:
+            zs = self.zones_of(sel["zone"])
+            for z in zs:
+                part = self.bz_tops(p) if z == "bz" else self.zlist(z, p)
+                if "from_top" in sel and len(zs) > 1 and z == "deck":      # 複数ゾーン指定の from_top は山札だけに効く（手札または山札の上1枚）
+                    part = part[: self.eval_expr(sel["from_top"], env)]
+                lst += part
+            if "from_top" in sel and len(zs) == 1:
                 lst = lst[: self.eval_expr(sel["from_top"], env)]
             f = sel.get("filter", {})
             if any(isinstance(v, dict) for v in f.values()):   # 式の値は解決時に計算する

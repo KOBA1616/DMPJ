@@ -159,3 +159,45 @@ patterns:
     whole_line: true
     abilities:
       - {kind: static, affects: self, mod: {allow: [{action: attack_creature, other: {tapped: false}}]}}
+
+  # マジボンバーN: 攻撃する時、コストN以下のクリーチャーを1体、自分の手札または山札の上から1枚目から、バトルゾーンに出してもよい（見る手順は選択に含まれる）
+  magic_bomber:
+    re: 'マジボンバー(\d)'
+    abilities:
+      - kind: trigger
+        when: {event: attack, subject: self}
+        effect:
+          - op: may
+            body:
+              - {op: move, select: {zone: [hand, deck], from_top: 1, owner: you, filter: {types: [creature], not_types: [evolution], cost_le: "{1}"}, count: 1}, to: bz, reason: put}
+
+  # ---- コスト ----
+  # シンパシー：<対象>（<対象>1体につきNコストが少なくなる）。N は注釈から取り出す（_prenorm）。対象の読み取りは _build_sympathy
+  sympathy:
+    re: 'シンパシー:(.+):(\d+)'
+    builder: sympathy
+  # 自分の<対象>の召喚コストをN少なくする／相手の<対象>を唱えるコストはN多くなる（常在型）
+  cost_static_reduce:
+    re: '(自分)の(.+?)の(?:召喚コスト|コスト)を(\d+)(少なく)する'
+    whole_line: true
+    builder: cost_static
+  cost_static_increase:
+    re: '(相手)の(.+?)(?:を唱えるコスト|の召喚コスト)は(\d+)(多く)なる'
+    whole_line: true
+    builder: cost_static
+
+  # ササゲールN: ディスペクターを召喚する時、このクリーチャーを破壊してコストをN少なくしてもよい（召喚側で選ぶ）
+  sasagale:
+    re: 'ササゲール(\d)'
+    abilities:
+      - {kind: static, affects: self, mod: {sac_reduce: "{1}"}}
+
+  # B・A・DN / J・O・EN: コストをN少なくして実行してもよい。そうしたら、そのターンの終わりに破壊する／山札の一番下に置き、その後カードを1枚引く
+  bad:
+    re: 'B・A・D(\d)'
+    abilities:
+      - {kind: static, affects: self, zone: hand, mod: {opt_reduce: {amount: "{1}", then: destroy}}}
+  joe:
+    re: 'J・O・E(\d)'
+    abilities:
+      - {kind: static, affects: self, zone: hand, mod: {opt_reduce: {amount: "{1}", then: deck_bottom_draw}}}

@@ -156,3 +156,29 @@ keywords:
         when: {event: move, from: bz, subject: self}
         instead:
           - {op: move, select: {ref: self}, to: hand, reason: return}
+  last_burst:         # このクリーチャーが破壊された時、このカードの呪文側をコストを支払わずに唱えてもよい
+    ja: ラスト・バースト
+    abilities:
+      - kind: trigger
+        when: {event: move, from: bz, to: graveyard, reason: destroy, subject: self}
+        effect: &last_burst
+          - op: may
+            body: [{op: play_free, select: {ref: self_moved}, face: spell}]
+  mega_last_burst:    # このクリーチャーが離れて、手札、マナゾーン、または墓地に置かれた時（山札・シールドは含まない）
+    ja: メガ・ラスト・バースト
+    abilities:
+      - {kind: trigger, when: {event: move, from: bz, to: graveyard, subject: self}, effect: *last_burst}
+      - {kind: trigger, when: {event: move, from: bz, to: hand, subject: self}, effect: *last_burst}
+      - {kind: trigger, when: {event: move, from: bz, to: mana, subject: self}, effect: *last_burst}
+  hunting:            # バトル中、このクリーチャーのパワーは、バトルゾーンにある自分のハンター1体につき+1000される
+    ja: ハンティング
+    abilities:
+      - {kind: static, affects: self, mod: {battle_power: {amount: 1000, count: {zone: bz, owner: you, filter: {race_has: ハンター}}}}}
+  shinka_rise:        # シンカライズ: このタマシードがクリーチャーであるかのように、この上に進化クリーチャーを置いてもよい
+    ja: シンカライズ
+    abilities:
+      - {kind: static, affects: self, mod: {allow: [evolve_base]}}
+  hyper_energy:       # ハイパーエナジー: 実行時、コストが異なる自分のクリーチャーを好きな数タップしてもよい。1体につきコストを2少なくする
+    ja: ハイパーエナジー
+    card: {tap_reduce: 2}
+    abilities: []
