@@ -68,15 +68,28 @@
      "blocker",
      "cannot_attack",
      "cannot_attack_player",
+     "cannot_be_attacked",
+     "cannot_block",
+     "cannot_untap",
      "charger",
      "double_breaker",
+     "escape",
      "evo_charger",
+     "ex_life",
+     "g_strike",
+     "guardman",
      "mana_boost_cip",
+     "powered_breaker",
+     "quad_breaker",
      "s_trigger",
+     "shield_saver",
      "slayer",
      "speed_attacker",
+     "spell_to_hand",
+     "tapped_mana",
      "triple_breaker",
-     "unblockable"
+     "unblockable",
+     "world_breaker"
     ]
    }
   },
@@ -148,15 +161,28 @@
        "blocker",
        "cannot_attack",
        "cannot_attack_player",
+       "cannot_be_attacked",
+       "cannot_block",
+       "cannot_untap",
        "charger",
        "double_breaker",
+       "escape",
        "evo_charger",
+       "ex_life",
+       "g_strike",
+       "guardman",
        "mana_boost_cip",
+       "powered_breaker",
+       "quad_breaker",
        "s_trigger",
+       "shield_saver",
        "slayer",
        "speed_attacker",
+       "spell_to_hand",
+       "tapped_mana",
        "triple_breaker",
-       "unblockable"
+       "unblockable",
+       "world_breaker"
       ]
      }
     },
@@ -188,6 +214,18 @@
    "type": "array",
    "items": {
     "anyOf": [
+     {
+      "type": "object",
+      "properties": {
+       "op": {
+        "const": "battle_substitute"
+       }
+      },
+      "required": [
+       "op"
+      ],
+      "additionalProperties": false
+     },
      {
       "type": "object",
       "properties": {
@@ -347,6 +385,22 @@
       },
       "required": [
        "op"
+      ],
+      "additionalProperties": false
+     },
+     {
+      "type": "object",
+      "properties": {
+       "op": {
+        "const": "mark"
+       },
+       "name": {
+        "type": "string"
+       }
+      },
+      "required": [
+       "op",
+       "name"
       ],
       "additionalProperties": false
      },
@@ -744,6 +798,7 @@
     "cost_ge": {},
     "cost_le": {},
     "keyword": {},
+    "multicolor": {},
     "name": {},
     "name_has": {},
     "not_civs": {},
@@ -762,18 +817,43 @@
    "type": "object",
    "properties": {
     "zone": {
-     "enum": [
-      "abyss",
-      "bz",
-      "deck",
-      "gr",
-      "graveyard",
-      "hand",
-      "hyper",
-      "mana",
-      "shield"
+     "anyOf": [
+      {
+       "enum": [
+        "abyss",
+        "bz",
+        "deck",
+        "gr",
+        "graveyard",
+        "hand",
+        "hyper",
+        "mana",
+        "shield",
+        "any"
+       ]
+      },
+      {
+       "type": "array",
+       "items": {
+        "enum": [
+         "abyss",
+         "bz",
+         "deck",
+         "gr",
+         "graveyard",
+         "hand",
+         "hyper",
+         "mana",
+         "shield"
+        ]
+       }
+      }
      ]
     },
+    "exlife_of": {
+     "type": "string"
+    },
+    "under_of": {},
     "owner": {
      "enum": [
       "you",
@@ -881,6 +961,9 @@
       "you",
       "opp"
      ]
+    },
+    "marked": {
+     "type": "string"
     }
    },
    "additionalProperties": false
@@ -898,15 +981,28 @@
        "blocker",
        "cannot_attack",
        "cannot_attack_player",
+       "cannot_be_attacked",
+       "cannot_block",
+       "cannot_untap",
        "charger",
        "double_breaker",
+       "escape",
        "evo_charger",
+       "ex_life",
+       "g_strike",
+       "guardman",
        "mana_boost_cip",
+       "powered_breaker",
+       "quad_breaker",
        "s_trigger",
+       "shield_saver",
        "slayer",
        "speed_attacker",
+       "spell_to_hand",
+       "tapped_mana",
        "triple_breaker",
-       "unblockable"
+       "unblockable",
+       "world_breaker"
       ]
      }
     },
@@ -924,6 +1020,9 @@
          "be_chosen",
          "block",
          "cast",
+         "enter_bz",
+         "guardman",
+         "mana_untapped",
          "s_trigger",
          "slayer",
          "summon",
@@ -943,6 +1042,9 @@
            "be_chosen",
            "block",
            "cast",
+           "enter_bz",
+           "guardman",
+           "mana_untapped",
            "s_trigger",
            "slayer",
            "summon",
@@ -975,6 +1077,9 @@
          "be_chosen",
          "block",
          "cast",
+         "enter_bz",
+         "guardman",
+         "mana_untapped",
          "s_trigger",
          "slayer",
          "summon",
@@ -994,6 +1099,9 @@
            "be_chosen",
            "block",
            "cast",
+           "enter_bz",
+           "guardman",
+           "mana_untapped",
            "s_trigger",
            "slayer",
            "summon",
@@ -1013,6 +1121,9 @@
      }
     },
     "breaks": {
+     "type": "integer"
+    },
+    "breaks_per_power": {
      "type": "integer"
     },
     "ignore": {
@@ -1038,6 +1149,7 @@
     "enum": [
      "allow",
      "breaks",
+     "breaks_per_power",
      "deny",
      "gain",
      "grant",
@@ -1052,10 +1164,12 @@
     "event": {
      "enum": [
       "attack",
+      "battle",
       "battle_win",
       "block",
       "break",
       "cast",
+      "choose",
       "draw",
       "move",
       "summon",
@@ -1116,6 +1230,11 @@
     },
     "unpaid": {
      "type": "boolean"
+    },
+    "via": {
+     "enum": [
+      "revolution_change"
+     ]
     },
     "subject": {}
    },

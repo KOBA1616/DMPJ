@@ -38,6 +38,7 @@ keywords:
       - {kind: static, affects: self, mod: {deny: [attack_player]}}
   cannot_attack:
     ja: このクリーチャーは攻撃できない
+    aliases: [このクリーチャーは攻撃することができない]
     abilities:
       - {kind: static, affects: self, mod: {deny: [attack_player, attack_creature]}}
   unblockable:
@@ -110,3 +111,45 @@ keywords:
     ja: このクリーチャーは攻撃されない
     abilities:
       - {kind: static, affects: self, mod: {deny: [be_attacked]}}
+
+  # ---- 名前つき効果（注釈つき）。原文の名前と注釈つき文言を rule_convert が照合する ----
+  tapped_mana:        # 405.1: 単色でもタップして置く。permits の mana_untapped を禁止する常在型（zone: mana）
+    ja: マナゾーンに置く時、このカードはタップして置く
+    abilities:
+      - {kind: static, zone: mana, affects: self, mod: {deny: [mana_untapped]}}
+  powered_breaker:    # 509.2: パワー6000ごとに1つ多くブレイクする（ブレイカー能力の1つ）
+    ja: パワード・ブレイカー
+    abilities:
+      - {kind: static, affects: self, mod: {breaks_per_power: 6000}}
+  guardman:           # 507.1a/507.2b: 攻撃先をこのクリーチャーに変更できる（ブロッククリーチャーにはならない）
+    ja: ガードマン
+    abilities:
+      - {kind: static, affects: self, mod: {allow: [guardman]}}
+  g_strike:           # 509.5e: シールドゾーンから手札に加える時、相手のクリーチャー1体を選んでもよい。このターン攻撃できない
+    ja: G・ストライク
+    abilities:
+      - kind: trigger
+        zone: hand
+        when: {event: move, from: shield, to: hand, subject: self}
+        effect:
+          - op: may
+            body:
+              - {op: choose, select: {zone: bz, owner: opp, filter: {types: [creature]}, count: 1}, as: gs_target}
+              - {op: modify, select: {ref: gs_target}, mod: {deny: [attack_player, attack_creature]}, duration: end_of_turn}
+  shield_saver:       # 自分のシールドがブレイクされる時、かわりにこのクリーチャーを破壊してもよい
+    ja: シールド・セイバー
+    abilities:
+      - kind: replace
+        optional: true
+        when: {event: move, from: shield, reason: break, subject: {owner: you}}
+        instead:
+          - {op: move, select: {ref: self}, to: graveyard, reason: destroy}
+  escape:             # このクリーチャーが破壊される時、墓地に置くかわりに自分のシールドを1つ手札に加えてもよい（S・トリガーは使えない）
+    ja: エスケープ
+    abilities:
+      - kind: replace
+        optional: true
+        when: {event: move, from: bz, to: graveyard, reason: destroy, subject: self}
+        if: {exists: {zone: shield, owner: you}}
+        instead:
+          - {op: move, select: {zone: shield, owner: you, count: 1}, to: hand, reason: return}

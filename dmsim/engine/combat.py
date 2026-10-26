@@ -175,7 +175,11 @@ def h_attack(eng, t):
         blockers = [c for c in eng.bz_tops(1 - a)
                     if not s.cards[c].tapped and eng.permits(c, "block", att[0])
                     and eng.permits(att[0], "be_blocked", c) and [c, s.cards[c].gen] != t["target"]]
-        opts = [eng._card_option(c) for c in blockers] + [{"key": "no_block"}]
+        guards = [] if t["target"] == "player" else [          # 507.1a ガードマン: 攻撃されている自分の他のクリーチャーがいる時だけ
+            c for c in eng.bz_tops(1 - a) if not s.cards[c].tapped and [c, s.cards[c].gen] != t["target"]
+            and eng.permits(c, "guardman", att[0])]
+        opts = [eng._card_option(c) for c in blockers] + \
+               [eng._card_option(c, key=f"guard:{s.cards[c].defn}") for c in guards] + [{"key": "no_block"}]
         ans, d = eng.ask(t, 1 - a, "block", opts)
         if d:
             return d
@@ -184,6 +188,8 @@ def h_attack(eng, t):
         if o["key"] != "no_block":
             s.cards[o["cid"]].tapped = True
             t["target"] = s.ref(o["cid"])
+            if o["key"].startswith("guard:"):      # 507.2b ガードマンで変更された場合、ブロッククリーチャーにはならない
+                return None
             t["blocked"] = True
             rec = {"ev": "block", "subject": t["target"], "attacker": att, "controller": 1 - a}
             eng._push(eng.ev_task(rec), _decl(eng, a, "block", rec), _decl(eng, 1 - a, "block", rec))
