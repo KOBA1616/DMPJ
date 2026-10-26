@@ -44,6 +44,23 @@ _SOL_CANDIDATES = sol.candidates   # 差し替え前の候補生成（モジュ�
 SAGA, SHAKO, DRAG, IWA = "dm22ex2-021", "dmrp03-s03", "dm22ex1-007", "dmrp03-036"
 BUDGET = 3000
 
+# 勝ち方の文脈。検出器の analyze が分類するのは相手山札切れとシールド0までで、
+# サガのような置換勝利（自分の山札切れを効果で勝ちに変える）は win_by=None になる。
+# 勝ち方で「何を守り、何を伸ばすか」が逆転する（例: 置換勝利では自分の山札が命綱、
+# シールド0型では相手のシールドと打点が全て）ため、マクロ・ミクロ双方の文脈に入れる。
+WIN_CONTEXTS = ("opp_deck_out", "shield_zero", "effect", "resource")
+
+
+def classify_win(win_by: str | None, verified: bool = False) -> str:
+    """証明書の win_by と検証結果から勝ち方の文脈を決める。
+
+    win_by が無いのに検証で勝てているなら、ループ中の効果で勝った（置換勝利など）。
+    勝てていないものは資源を増やすだけの循環として扱う。
+    """
+    if win_by in WIN_CONTEXTS:
+        return win_by
+    return "effect" if verified else "resource"
+
 
 # ---- マクロ（大局観） ---------------------------------------------------------------------------
 
@@ -60,8 +77,12 @@ class Intent:
 
 @dataclass
 class MacroPlanner:
-    """局面の特徴から狙いを決める。v2 はサガループを目標にした規則ベース
-    （前提として墓地の準備と闇マナを見るようにし、setup では山札を守る重みを使う）。
+    """局面の特徴から狙いを決める。v3 はサガループを目標にした規則ベース。
+
+    v2 の前提（墓地の準備・闇マナ）に加え、目標ループの勝ち方（win_by）を文脈に入れる。
+    setup の山札保護と execute の評価の重みは勝ち方で切り替わる: 置換勝利（effect）では
+    自分の山札が勝敗に直結するので厚く守り、シールド0型では相手のシールドと打点を、
+    相手山札切れ型では相手の山札の消費を優先する。
 
     学習版では、この「特徴 → 狙い」の対応自体を、狙いごとの勝率・到達率から学ぶ想定。
     特徴はゾーンごとの部品の有無と山札・マナ・ターンという、ループに依らない形に寄せる。
@@ -69,6 +90,9 @@ class MacroPlanner:
     loop_card: str = SAGA
     kill_pieces_hand: tuple = (DRAG,)
     kill_pieces_grave: tuple = (IWA, SHAKO)
+    win_by: str = "effect"          # 目標ループの勝ち方（classify_win の値）
+    bruce_card: str = "dmbd17-009"  # 墓地の起点を場に戻す呪文面を持つツインパクト
+    digger_card: str = "dm22ex1-025"  # 登場時に山札の上5枚から1枚を手札に加える（起点を探せる）
 
     def features(self, eng, me: int = ME) -> dict:
         z = eng.s.zones
@@ -78,12 +102,15 @@ class MacroPlanner:
                         if "darkness" in eng.cdef(c).face(None).civs)
         return {
             "turn": eng.s.turn,
+            "win_by": self.win_by,
             "deck": len(z["deck"][me]),
             "hand_n": len(hand),
             "mana": len(z["mana"][me]),
             "dark_mana": dark_mana,
             "loop_available": self.loop_card in hand or self.loop_card in grave,
             "grave_prep": self.loop_card in grave or "dm26ex2-071" in grave,
+            "bruce_route": (self.loop_card in hand and self.digger_card in hand
+                            and self.bruce_card in hand),
             "intro_in_hand": sum(1 for p in (SAGA, "dm22ex1-025", "dmex10-020") if p in hand),
             "kill_in_hand": all(p in hand for p in self.kill_pieces_hand),
             "kill_in_grave": all(p in grave for p in self.kill_pieces_grave),
@@ -94,13 +121,34 @@ class MacroPlanner:
     def plan(self, eng, me: int = ME) -> Intent:
         f = self.features(eng, me)
         if f["kill_in_hand"] and f["kill_in_grave"] and f["deck"] <= 10:
-            return Intent("execute", note="キル部品が揃い山札も薄い。ループキルを取りに行く")
+            # 取りに行く時の評価は勝ち方で変える
+            w = None
+            if self.win_by == "shield_zero":
+                w = sol.Weights(shield=200.0, threat=80.0, board=6.0)
+            elif self.win_by == "opp_deck_out":
+                w = sol.Weights(opp_deck=30.0, shield=50.0)
+            elif self.win_by == "resource":
+                w = sol.Weights(hand=10.0, mana=20.0)
+            return Intent("execute", weights=w,
+                          note="キル部品が揃い山札も薄い。ループキルを取りに行く")
         if f["loop_available"] and f["grave_prep"] and f["dark_mana"] >= 1:
             return Intent("enter_loop", note="起点と墓地の準備と闇マナがある。導入して部品を集める")
-        # 整える: 山札を削らず、手札とマナの評価を優先してターンを渡す
-        w = sol.Weights(stock_cap=0, deck_keep=18)
-        return Intent("setup", budget=600, burn_stock=False, weights=w,
-                      note="部品か前提が不足。山札を守って手札とマナを整える")
+        if f["bruce_route"] and f["dark_mana"] >= 1:
+            # 起点が1枚しかなくても、掘る役の登場時効果で山札から起点や部品を探し、
+            # 呪文面で墓地の起点を場に戻せる。墓地の準備が無くても導入に値する
+            return Intent("enter_loop", note="ブルース経由: 掘る役で探し、呪文面で起点を戻して導入する")
+        # 整える: 山札の扱いは勝ち方で逆転する。置換勝利では自分の山札切れが
+        # そのまま敗北に繋がるので厚く守り、相手を削る型では消耗を許す。
+        if self.win_by == "effect":
+            w, burn = sol.Weights(stock_cap=0, deck_keep=18), False
+            note = "部品か前提が不足。置換勝利が目標なので山札を守って整える"
+        elif self.win_by == "resource":
+            w, burn = sol.Weights(stock_cap=4, deck_keep=10), True
+            note = "部品か前提が不足。資源を貯めながら整える"
+        else:
+            w, burn = sol.Weights(stock_cap=8, deck_keep=2), True
+            note = "部品か前提が不足。自分の山札の消耗は許して整える"
+        return Intent("setup", budget=600, burn_stock=burn, weights=w, note=note)
 
 
 # ---- ミクロ（詳細） -----------------------------------------------------------------------------
@@ -142,25 +190,46 @@ def learn_preferences(records: list[dict]) -> dict:
         by_bucket[b] = {kind: {k: round(b_chosen[kind][k] / a, 3)
                                for k, a in counter.items() if a >= 2}
                         for kind, counter in b_avail.items()}
-    return {"global": policy, "by_bucket": by_bucket}
+    # 勝ち方×山札の厚さの文脈ごとにも集計する。勝ち方で捨てる／残す判断が
+    # 逆転しうるため、全体の選好に埋もれさせない（区分のデータが薄ければ使われない）。
+    by_context: dict[str, dict] = {}
+    contexts = sorted({f"{r.get('win_by') or 'any'}|{r['bucket']}" for r in records if r.get("bucket")})
+    for ctx in contexts:
+        wb, b = ctx.split("|", 1)
+        sub = [r for r in records if (r.get("win_by") or "any") == wb and r.get("bucket") == b]
+        c_avail: dict[str, Counter] = defaultdict(Counter)
+        c_chosen: dict[str, Counter] = defaultdict(Counter)
+        for rec in sub:
+            for k in rec["options"]:
+                c_avail[rec["kind"]][k] += 1
+            for k in rec["chosen"]:
+                c_chosen[rec["kind"]][k] += 1
+        by_context[ctx] = {kind: {k: round(c_chosen[kind][k] / a, 3)
+                                  for k, a in counter.items() if a >= 2}
+                           for kind, counter in c_avail.items()}
+    return {"global": policy, "by_bucket": by_bucket, "by_context": by_context}
 
 
 @dataclass
 class MicroPolicy:
     """ターン内の決定を案内する方策。
 
-    v2: 決定の種類ごとのキー選好率に、文脈（山札の厚さの区分）ごとの選好を重ねる。
-    区分のデータが無い決定は全体の選好に落とす。
+    v3: 選好の重ね順は 全体 → 山札の厚さの区分 → 勝ち方×区分（by_context）。
+    勝ち方が違えば同じ局面でも正解が逆転しうるので、目標ループの勝ち方を
+    方策側にも持たせ、文脈が一致した選好を最優先にする。
     """
     preferences: dict = field(default_factory=dict)
+    win_by: str = "effect"          # この方策が狙う勝ち方
 
     def prefer(self, eng, d) -> list[int] | None:
         prefs = self.preferences or {}
-        if "global" in prefs:   # v2 形式
+        if "global" in prefs:   # v2/v3 形式
             rates = dict(prefs["global"].get(d["kind"], {}))
             if eng is not None:
                 bucket = deck_bucket(len(eng.s.zones["deck"][d["player"]]))
                 rates.update(prefs.get("by_bucket", {}).get(bucket, {}).get(d["kind"], {}))
+                ctx = prefs.get("by_context", {}).get(f"{self.win_by}|{bucket}", {})
+                rates.update(ctx.get(d["kind"], {}))
         else:                    # v1 形式（kind の直下にキー選好）
             rates = prefs.get(d["kind"], {})
         if not rates:
@@ -208,8 +277,9 @@ def script_candidates(eng, d, w, cap: int = 6):
 # ---- パイプライン --------------------------------------------------------------------------------
 
 class Pipeline:
-    def __init__(self, rules, out_dir: Path):
+    def __init__(self, rules, out_dir: Path, win_by: str = "effect"):
         self.rules = rules
+        self.win_by = win_by        # 目標ループの勝ち方（マクロ・ミクロの文脈）
         self.out = out_dir
         self.out.mkdir(parents=True, exist_ok=True)
         if not hasattr(sol, "_orig_candidates"):
@@ -233,9 +303,11 @@ class Pipeline:
             for f in discover_loops(self.build(s), ME, budget=BUDGET):
                 key = json.dumps(f.cert.delta, sort_keys=True) + f"/len{len(f.cert.actions)}"
                 e = found.setdefault(key, {"delta": f.cert.delta, "length": len(f.cert.actions),
-                                            "win_by": f.cert.win_by, "verified": False, "setups": 0})
+                                            "win_by": classify_win(f.cert.win_by, f.verified),
+                                            "verified": False, "setups": 0})
                 e["setups"] += 1
                 e["verified"] = e["verified"] or f.verified
+                e["win_by"] = classify_win(f.cert.win_by, e["verified"])
         return {"distinct_loops": len(found),
                 "verified_loops": sum(1 for v in found.values() if v["verified"]),
                 "loops": sorted(found.values(), key=lambda x: -x["setups"])}
@@ -277,7 +349,8 @@ class Pipeline:
                     records.append({"kind": d["kind"],
                                     "options": [o["key"] for o in d["options"]],
                                     "chosen": entry["keys"],
-                                    "deck": deck_n, "bucket": deck_bucket(deck_n)})
+                                    "deck": deck_n, "bucket": deck_bucket(deck_n),
+                                    "win_by": self.win_by})
                 try:
                     eng.answer_by_keys(entry["keys"])
                 except Exception:
@@ -333,7 +406,7 @@ def main(argv=None):
     print(f"  勝ち {wins}/{a.train}, 決定レコード {len(records)} 件", flush=True)
 
     print("段階4: ミクロ選好の学習", flush=True)
-    micro = MicroPolicy(learn_preferences(records))
+    micro = MicroPolicy(learn_preferences(records), win_by=pipe.win_by)
     (pipe.out / "learned_policy.json").write_text(
         json.dumps(micro.preferences, ensure_ascii=False, indent=1), encoding="utf-8")
     catalog["stage4_learned_kinds"] = {k: len(v) for k, v in micro.preferences["global"].items()}
@@ -344,7 +417,7 @@ def main(argv=None):
     print(f"  {catalog['stage5_holdout_micro_only']}", flush=True)
 
     print("段階6: マクロ＋ミクロの階層版で検証", flush=True)
-    catalog["stage6_holdout_hierarchical"] = pipe.evaluate(holdout, micro, MacroPlanner())
+    catalog["stage6_holdout_hierarchical"] = pipe.evaluate(holdout, micro, MacroPlanner(win_by=pipe.win_by))
     print(f"  {catalog['stage6_holdout_hierarchical']}", flush=True)
 
     catalog["elapsed_sec"] = round(time.time() - t_all)
