@@ -173,9 +173,10 @@ class OpenRouterLLM:
             body = e.read().decode("utf-8", "replace")[:300].replace(self.key, "***")
             if e.code == 402 or re.search(r"(?i)billing|credit|balance|payment|insufficient", body):
                 raise Fatal(f"課金・残高に関するエラーなので停止する: HTTP {e.code} {body}") from None
-            if e.code in (401, 403):
+            # キー自体の問題は止める。「このモデルは agentic harness 限定」等、特定モデルだけの 403 は止めずに次のモデルへ
+            if e.code == 401 or (e.code == 403 and re.search(r"(?i)api[ _-]?key|credential|unauthori[sz]ed|invalid.*(key|token)|permission denied|billing|suspended|banned", body)):
                 raise Fatal(f"認証/権限エラー: HTTP {e.code} {body}") from None
-            raise RuntimeError(f"HTTP {e.code} {body[:120]}") from None
+            raise RuntimeError(f"HTTP {e.code} {body[:160]}") from None
         except OSError as e:
             if "timed out" in str(e):
                 raise CallTimeout(f"openrouter が{OPENCODE_TIMEOUT:g}秒以内に終わらなかった") from None

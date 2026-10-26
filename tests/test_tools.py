@@ -441,6 +441,56 @@ def test_gemini_uses_fixed_free_flash_models(monkeypatch):
     assert g.complete("", [], "low", None) == "ok" and calls == list(pv.GEMINI_FREE_MODELS)[:2]
 
 
+def test_external_403_model_specific_is_skipped_not_fatal(monkeypatch):
+    """特定モデルだけの 403（agentic harness 限定など）は次のモデルへ。キーの問題・課金は停止。"""
+    import io
+    import urllib.error
+    import urllib.request
+
+    from llm_offload import providers as pv
+    import pytest
+    lm = pv.OpenRouterLLM(0, key="k" * 20)
+
+    def fake(body, code=403):
+        def op(req, timeout=None):
+            raise urllib.error.HTTPError("u", code, "x", {}, io.BytesIO(body.encode()))
+        return op
+
+    monkeypatch.setattr(urllib.request, "urlopen", fake('{"error":{"message":"x:free is only available on agentic harnesses"}}'))
+    with pytest.raises(RuntimeError) as e:
+        lm._request("/chat/completions", {"a": 1})
+    assert not isinstance(e.value, pv.Fatal)
+    monkeypatch.setattr(urllib.request, "urlopen", fake('{"error":{"message":"Invalid API key"}}'))
+    with pytest.raises(pv.Fatal):
+        lm._request("/chat/completions", {"a": 1})
+    monkeypatch.setattr(urllib.request, "urlopen", fake("no", 401))
+    with pytest.raises(pv.Fatal):
+        lm._request("/chat/completions", {"a": 1})
+
+
+def test_local_worker_keeps_job_pending_on_model_outage(tmp_path, monkeypatch):
+    import subprocess
+
+    import local_worker as lw
+    bare, clone = tmp_path / "remote.git", tmp_path / "clone"
+    subprocess.run(["git", "init", "-q", "--bare", str(bare)], check=True)
+    subprocess.run(["git", "clone", "-q", str(bare), str(clone)], check=True, capture_output=True)
+    for k, v in (("user.name", "t"), ("user.email", "t@t")):
+        subprocess.run(["git", "config", k, v], cwd=clone, check=True)
+    g = lw.Git(clone, tmp_path / "work")
+    jid = lw.enqueue(g, {"type": "convert", "limit": 5})
+
+    def boom(job, git, m):
+        raise lw.ModelOutage("停止中")
+
+    monkeypatch.setattr(lw, "run_convert", boom)
+    out = lw.process(g)
+    assert len(out) == 1 and out[0].startswith(f"{jid}:pending")
+    chk = tmp_path / "chk"
+    subprocess.run(["git", "clone", "-q", "-b", "llm-jobs", str(bare), str(chk)], check=True, capture_output=True)
+    assert (chk / "jobs" / "pending" / f"{jid}.yaml").exists() and not (chk / "jobs" / "done" / f"{jid}.yaml").exists()
+
+
 def test_llm7_uses_fixed_allowlist_and_anonymous_key():
     from llm_offload import providers as pv
     l = pv.LLM7LLM(0)
