@@ -88,8 +88,19 @@ class TurnMixin:
                 return False
             n = len(srcs) if d.evolve_any else 1            # 最も安い組合せで払えるか（112.2b）
             cost = max(0, d.cost - n * d.cost_reduce_per_evo) if d.cost_reduce_per_evo else None
-            return bool(self._mana_choices(cid, p, face, cost=self._tap_reduced(d, p, cost, None), limit=1))
-        return bool(self._mana_choices(cid, p, face, cost=self._tap_reduced(d, p, None, None), limit=1))
+            return bool(self._mana_choices(cid, p, face, cost=self._sac_reduced(d, self._tap_reduced(d, p, cost, None), self._sac_pool(d, p)), limit=1))
+        return bool(self._mana_choices(cid, p, face, cost=self._sac_reduced(d, self._tap_reduced(d, p, None, None), self._sac_pool(d, p)), limit=1))
+
+    def _sac_pool(self, d, p) -> list[int]:
+        """ササゲール: ディスペクターを召喚する時、破壊してコストを減らせる自分のクリーチャー。"""
+        if not any("ディスペクター" in r for r in d.races):
+            return []
+        return [c for c in self.bz_tops(p) if self.chars(c)["sac_reduce"] > 0]
+
+    def _sac_reduced(self, d, cost, sacs):
+        if not sacs:
+            return cost
+        return max(0, (d.cost if cost is None else cost) - sum(self.chars(c)["sac_reduce"] for c in sacs))
 
     def _tap_pool(self, p) -> list[int]:
         return [c for c in self.bz_tops(p) if "creature" in self.chars(c)["types"] and not self.s.cards[c].tapped]
@@ -314,10 +325,21 @@ def h_play(eng, t):
                 chosen.append(cands[ans[0]])
                 return None
         t["tap_done"] = True
+    if not t["free"] and not t.get("sac_done"):                      # ササゲール: 破壊するクリーチャーを任意に選ぶ
+        chosen = t.setdefault("sac", [])
+        cands = [c for c in eng._sac_pool(d, p) if c not in chosen]
+        if cands:
+            ans, dd = eng.ask(t, p, "choose_cards", [eng._card_option(c) for c in cands], 0, 1)
+            if dd:
+                return dd
+            if ans:
+                chosen.append(cands[ans[0]])
+                return None
+        t["sac_done"] = True
     if not t["free"]:
         n = len(t.get("evo", []))
         cost = max(0, d.cost - n * d.cost_reduce_per_evo) if d.cost_reduce_per_evo else None
-        cost = eng._tap_reduced(d, p, cost, t.get("tap", []))
+        cost = eng._sac_reduced(d, eng._tap_reduced(d, p, cost, t.get("tap", [])), t.get("sac", []))
         choices = eng._mana_choices(cid, p, face, cost=cost)
         if not choices:
             eng._pop(t)
@@ -354,4 +376,7 @@ def h_play(eng, t):
                    eng.ev_task({"ev": "move", "subject": ref, "from": from_zone, "to": t.get("resolve_to", d.resolve_to),
                                  "reason": "resolve"}),
                    *([eng._child(d.after_resolve, env)] if d.after_resolve else []))
+    if t.get("sac"):       # ササゲール: 軽減したら破壊する（支払いの一部。実行の解決より先に行う）
+        eng._push(eng.ev_task([{"ev": "move", "subject": s.ref(c), "to": "graveyard", "reason": "destroy"}
+                               for c in t["sac"]]))
     return None

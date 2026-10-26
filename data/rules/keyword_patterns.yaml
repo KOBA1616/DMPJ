@@ -185,3 +185,9 @@ patterns:
     re: '(相手)の(.+?)(?:を唱えるコスト|の召喚コスト)は(\d+)(多く)なる'
     whole_line: true
     builder: cost_static
+
+  # ササゲールN: ディスペクターを召喚する時、このクリーチャーを破壊してコストをN少なくしてもよい（召喚側で選ぶ）
+  sasagale:
+    re: 'ササゲール(\d)'
+    abilities:
+      - {kind: static, affects: self, mod: {sac_reduce: "{1}"}}

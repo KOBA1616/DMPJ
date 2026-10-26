@@ -226,7 +226,7 @@ class Engine(SelectorMixin, EventMixin, InterpreterMixin, TurnMixin, CombatMixin
         d = self.fdef(cid, face)
         ch = {"power": d.power, "cost": d.cost, "civs": list(d.civs), "types": list(d.types),
               "races": list(d.races), "keywords": set(d.keywords), "name": d.name,
-              "allow": [], "deny": [], "breaks": 1, "break_opts": [], "pay_cost": d.cost}
+              "allow": [], "deny": [], "breaks": 1, "break_opts": [], "pay_cost": d.cost, "sac_reduce": 0}
         own = self.abilities(cid, "static") if face is None else list(enumerate(d.abilities))
         ref = self.s.ref(cid)
         env_self = {"you": c.controller, "self": ref}
@@ -269,6 +269,7 @@ class Engine(SelectorMixin, EventMixin, InterpreterMixin, TurnMixin, CombatMixin
                 else:
                     ch["pay_cost"] += cm
             cost_min = max(cost_min, m.get("cost_min", 0))
+            ch["sac_reduce"] += m.get("sac_reduce", 0)
         ch["pay_cost"] = max(cost_min, ch["pay_cost"])        # コストは0より小さくならない（既定）
         for m in mods:      # パワード・ブレイカー: 最終パワー N ごとに1つ多くブレイクする（ブレイカー能力の1つ）
             if m.get("breaks_per_power"):

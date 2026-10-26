@@ -101,3 +101,19 @@ def test_hyper_energy_taps_creatures_with_different_costs(build):
 
 def r_keywords(r):
     return r.get("keywords")
+
+
+def test_sasagale_destroys_to_reduce_dispector_cost(build):
+    sa = card("S1", "ササゲール２（ディスペクターを召喚する時、コストを２少なくしてもよい。そうしたら、このクリーチャーを破壊する。そのディスペクターのコストは０以下にはならない）", cost="1")
+    assert sa["abilities"][0]["mod"] == {"sac_reduce": 2}
+    dis = {"id": "S2", "name": "ディス", "types": ["creature"], "civs": ["nature"], "cost": 3, "power": 1000, "races": ["ディスペクター"], "text": "x"}
+    e = setup(build(sa, dis), {"hand": ["S2"], "bz": ["S1"], "mana": ["T001"]})
+    answer(e, "charge", "pass")
+    d = e.advance()
+    e.answer([[o["key"] for o in d["options"]].index("play:S2")])
+    d = e.advance()
+    assert d["kind"] == "choose_cards"                 # 3 - 2 = 1 でマナ1枚。S1 を破壊する
+    e.answer([0])
+    e.advance()
+    names = [e.s.cards[c].defn for c in e.zlist("bz", 0)]
+    assert names == ["S2"] and e.s.cards[e.zlist("graveyard", 0)[0]].defn == "S1"
