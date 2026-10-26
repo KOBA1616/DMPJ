@@ -65,14 +65,24 @@ def main(argv=None):
     ap.add_argument("--effort", default="high")
     ap.add_argument("--order", choices=["id", "short"], default="id",
                     help="変換の順番。id: カードID順（弾ごとにまとまる）、short: 原文の短い順（簡単なものから）")
-    ap.add_argument("--timeout", type=float, default=1200, help="1枚の呼び出しの上限秒（非常に長め）。超えたら reason: timeout で対象外")
+    ap.add_argument("--timeout", type=float, default=300, help="1枚の呼び出しの上限秒。超えた1枚は次の成功で reason: timeout に確定、連続2回なら打ち切り")
+    ap.add_argument("--health-timeout", type=float, default=90, help="開始前にモデルへ短い質問をして応答を確認する上限秒（0で省略）。返らなければ何も処理せず終了")
     a = ap.parse_args(argv)
-    providers.OPENCODE_TIMEOUT = a.timeout
+    providers.OPENCODE_TIMEOUT = a.health_timeout or a.timeout
     out, rej = DATA / "cards" / "converted.yaml", RAW / "rejects.jsonl"
     prev = json.loads(STATUS.read_text(encoding="utf-8")) if STATUS.exists() else {}
     vh = vocab_hash()
     sysp, tables = cc.system_prompt(), load_tables()
     llm = cc.make_llm(a.provider, a.model, a.interval)
+    if a.health_timeout:
+        try:
+            llm.complete("", [{"role": "user", "content": "OKとだけ答えて"}], "low", None)
+        except cc.Fatal:
+            raise
+        except Exception as e:      # noqa: BLE001  停止中のモデルに1枚ずつ待たされないよう、最初の1回で見切る
+            print(f"ヘルスチェック失敗（モデルが応答しない）: {type(e).__name__}: {str(e)[:200]}。今回は何も処理しない", file=sys.stderr)
+            sys.exit(3)
+    providers.OPENCODE_TIMEOUT = a.timeout
     ran = {"new": None, "retry": None}
     batches: list[dict] = []
     try:

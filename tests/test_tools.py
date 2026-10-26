@@ -298,11 +298,11 @@ def test_auto_convert_limit_status_and_retry_only_on_vocab_change(tmp_path, monk
     monkeypatch.setattr(ac.cc, "make_llm", lambda *a: LLM())
     monkeypatch.setattr(ac, "DATA", tmp_path)
     monkeypatch.setattr(ac, "vocab_hash", lambda: "h1")
-    ac.main(["--limit", "2", "--interval", "0", "--order", "short"])
+    ac.main(["--limit", "2", "--interval", "0", "--health-timeout", "0", "--order", "short"])
     assert seen == ["ta_b", "ta_c"]                      # 短い順に上限まで
     st = json.loads((raw / "convert_status.json").read_text(encoding="utf-8"))
     assert (st["converted"], st["pending"], st["vocab_hash"]) == (2, 1, "h1")
-    ac.main(["--limit", "2", "--interval", "0", "--order", "short"])
+    ac.main(["--limit", "2", "--interval", "0", "--health-timeout", "0", "--order", "short"])
     assert seen[2:] == ["ta_a"]
 
 
@@ -327,7 +327,7 @@ def test_auto_convert_default_order_is_card_id(tmp_path, monkeypatch):
     monkeypatch.setattr(ac.cc, "make_llm", lambda *a: LLM())
     monkeypatch.setattr(ac, "DATA", tmp_path)
     monkeypatch.setattr(ac, "vocab_hash", lambda: "h1")
-    ac.main(["--limit", "3", "--batch", "3", "--max-bad-batches", "1", "--interval", "0"])
+    ac.main(["--limit", "3", "--batch", "3", "--max-bad-batches", "1", "--interval", "0", "--health-timeout", "0"])
     assert seen[:2] == ["tz01-001", "tz01-002"]          # streak 2 で打ち切るまでの先頭がID順
 
 
