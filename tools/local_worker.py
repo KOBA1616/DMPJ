@@ -147,25 +147,40 @@ def run_convert(job: dict, git: Git, jobs_model: str | None) -> dict:
     model = job.get("model") or jobs_model or lo.OPENCODE_DEFAULT
     lo.make_llm("opencode-cli", model)       # 許可リスト検査（違反は Fatal）
     env = {k: v for k, v in os.environ.items() if k != "OPENCODE_API_KEY"}
-    cmd = [sys.executable, "-u", "tools/auto_convert.py", "--model", model, "--limit", str(job.get("limit", 20)),
-           "--interval", str(job.get("interval", 3)), "--workers", str(job.get("workers", 1))]
-    # 出力を1行ずつ画面とログへ流す（ウィンドウで途中経過が見える）。最後の出力は結果に残す
-    proc = subprocess.Popen(cmd, cwd=d, env=env, stdout=subprocess.PIPE, stderr=subprocess.STDOUT,
-                            text=True, encoding="utf-8", errors="replace", bufsize=1)
+    # 5枚ごとに auto_convert を呼び、そのたびに cards-data へ push する（途中で止めても済んだ分は残る）。
+    # 次回起動時の worktree は origin に reset されるので、push していない分は消える。だから5枚ごとに push する。
+    chunk, total = 5, int(job.get("limit", 20))
     tail: list[str] = []
-    for line in proc.stdout:
-        line = lo.scrub(line.rstrip("\n"))
-        print(now(), line, flush=True)
-        tail = (tail + [line])[-40:]
-    proc.wait()
-    r = subprocess.CompletedProcess(cmd, proc.returncode, "\n".join(tail), "\n".join(tail))
-    git.sh("reset", "-q", cwd=d)
-    git.sh("add", "-f", "data/cards/converted.yaml", "data/cards/raw/rejects.jsonl", "data/cards/raw/convert_report.json",
-           "data/cards/raw/convert_status.json", cwd=d, check=False)
-    git.commit_push(d, DATA_BRANCH, f"cards-data: convert (local worker) {now()}", add=False)
+    code, done_n = 0, 0
+    for _ in range(max(1, -(-total // chunk))):
+        cmd = [sys.executable, "-u", "tools/auto_convert.py", "--model", model, "--limit", str(chunk), "--batch", str(chunk),
+               "--interval", str(job.get("interval", 3)), "--workers", str(job.get("workers", 1))]
+        # 出力を1行ずつ画面とログへ流す（ウィンドウで途中経過が見える）。最後の出力は結果に残す
+        proc = subprocess.Popen(cmd, cwd=d, env=env, stdout=subprocess.PIPE, stderr=subprocess.STDOUT,
+                                text=True, encoding="utf-8", errors="replace", bufsize=1)
+        for line in proc.stdout:
+            line = lo.scrub(line.rstrip("\n"))
+            print(now(), line, flush=True)
+            tail = (tail + [line])[-40:]
+        proc.wait()
+        git.sh("reset", "-q", cwd=d)
+        git.sh("add", "-f", "data/cards/converted.yaml", "data/cards/raw/rejects.jsonl", "data/cards/raw/convert_report.json",
+               "data/cards/raw/convert_status.json", cwd=d, check=False)
+        git.commit_push(d, DATA_BRANCH, f"cards-data: convert (local worker) {now()}", add=False)
+        print(now(), "保存して push した", flush=True)
+        code = proc.returncode
+        try:
+            lr = (json.loads((d / "data/cards/raw/convert_status.json").read_text(encoding="utf-8")).get("last_run") or {}).get("new") or {}
+        except (OSError, ValueError):
+            lr = {}
+        progressed = lr.get("ok", 0) + lr.get("rejected", 0)
+        done_n += progressed
+        if code or not progressed:      # 停止・API失敗だけで進まない時はここで終える（空回りしない）
+            break
+    r = subprocess.CompletedProcess([], code, "\n".join(tail), "\n".join(tail))
     if r.returncode:
         return {"status": "error", "error": lo.scrub((r.stderr or "")[-400:])}
-    return {"status": "ok", "text": lo.scrub((r.stdout or "")[-1500:])}
+    return {"status": "ok", "text": lo.scrub(f"処理 {done_n} 枚（5枚ごとに保存）\n" + (r.stdout or "")[-1400:])}
 
 
 def data_tree(git: Git) -> Path:
