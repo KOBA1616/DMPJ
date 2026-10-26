@@ -19,7 +19,7 @@ import re
 from dataclasses import dataclass
 from pathlib import Path
 
-from .providers import (OPENCODE_DEFAULT, OPENCODE_FREE_MODELS, BadResponse, Chain, Fatal, LLM7LLM, OpenRouterLLM,  # noqa: F401
+from .providers import (OPENCODE_DEFAULT, OPENCODE_FREE_MODELS, BadResponse, Chain, Fatal, GeminiLLM, LLM7LLM, OpenRouterLLM,  # noqa: F401
                         OpenCodeCLI, OpenCodeLLM)
 
 ROOT = Path(__file__).resolve().parent.parent.parent

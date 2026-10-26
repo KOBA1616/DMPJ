@@ -491,6 +491,22 @@ def test_local_worker_keeps_job_pending_on_model_outage(tmp_path, monkeypatch):
     assert (chk / "jobs" / "pending" / f"{jid}.yaml").exists() and not (chk / "jobs" / "done" / f"{jid}.yaml").exists()
 
 
+def test_make_llm_attaches_all_external_chains(monkeypatch):
+    """キーの有無にかかわらず make_llm が動く（Gemini・OpenRouter・LLM7 の組み立て）。"""
+    import convert_cards as cc
+    import llm_offload as lo
+    for mk in (lo.make_llm, lambda p, m, i: cc.make_llm(p, m, i)):
+        monkeypatch.setenv("GEMINI_API_KEY", "g" * 20)
+        monkeypatch.setenv("OPENROUTER_API_KEY", "o" * 20)
+        monkeypatch.delenv("DMPJ_NO_LLM7", raising=False)
+        llm = mk("opencode-cli", None, 0)
+        assert [x.name for x in llm.external.llms] == ["gemini", "openrouter", "llm7"]
+        monkeypatch.delenv("GEMINI_API_KEY")
+        monkeypatch.delenv("OPENROUTER_API_KEY")
+        monkeypatch.setenv("DMPJ_NO_LLM7", "1")
+        assert mk("opencode-cli", None, 0).external.llms == []
+
+
 def test_llm7_uses_fixed_allowlist_and_anonymous_key():
     from llm_offload import providers as pv
     l = pv.LLM7LLM(0)
