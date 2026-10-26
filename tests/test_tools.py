@@ -477,7 +477,9 @@ def test_local_worker_ask_roundtrip(tmp_path):
         def complete(self, sysp, messages, effort, usage):
             LLM.seen = messages[0]["content"]
             return "要約結果"
-    assert lw.process(g, lambda m: LLM()) == [f"{jid}:ok"]
+    out = lw.process(g, lambda m: LLM(), health=lambda: "TimeoutError: hang")
+    assert len(out) == 1 and "使えない" in out[0] and "pending のまま" in out[0]     # モデル停止中はジョブに触れない
+    assert lw.process(g, lambda m: LLM(), health=lambda: None) == [f"{jid}:ok"]
     assert "SECRET123456789" not in LLM.seen
     chk = tmp_path / "chk"
     subprocess.run(["git", "clone", "-q", "-b", "llm-jobs", str(bare), str(chk)], check=True, capture_output=True)
