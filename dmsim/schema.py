@@ -19,7 +19,7 @@ def build() -> dict:
     ref = lambda n: {"$ref": f"#/$defs/{n}"}  # noqa: E731
     arg = {
         "selector": ref("selector"), "zone": {"enum": sorted(zones)}, "reason": {"enum": sorted(REASONS)},
-        "expr": ref("expr"), "cond": ref("cond"), "ops": ref("ops"), "player": {"enum": ["you", "opp"]},
+        "expr": ref("expr"), "cond": ref("cond"), "ops": ref("ops"), "oplists": {"type": "array", "minItems": 2, "items": ref("ops")}, "player": {"enum": ["you", "opp"]},
         "players": {"enum": ["you", "opp", "each"]}, "mod": ref("mod"), "duration": {"enum": sorted(DURATIONS_FIXED)}, "position": {"enum": sorted(POSITIONS)},
         "step": {"enum": steps}, "str": {"type": "string"}, "int": {"type": "integer"},
         "bool": {"type": "boolean"}, "any": {}, "ability": ref("ability"),
