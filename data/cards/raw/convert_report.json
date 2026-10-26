@@ -4,10 +4,10 @@
  "rejected": 0,
  "api_error": 0,
  "usage": {
-  "input": 92366,
+  "input": 48827,
   "cache_read": 0,
   "cache_write": 0,
-  "output": 411
+  "output": 1518
  },
  "triage": {
   "その他:expected '<document start>', but found '{'": {

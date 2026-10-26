@@ -1,10 +1,10 @@
 {
- "at": "2026-10-26T01:14:32+00:00",
+ "at": "2026-10-26T09:40:25+00:00",
  "model": "deepseek-v4.1-flash-free",
  "raw_total": 23671,
- "converted": 20,
+ "converted": 25,
  "rejected": 27,
- "pending": 23624,
+ "pending": 23619,
  "vocab_hash": "59075f1015b9ee22",
  "vocab_gaps": {},
  "reject_reasons": {
@@ -14,50 +14,11 @@
  "batches": [
   {
    "ids": [
-    "dm01-012",
-    "dm01-036",
-    "dm01-042",
-    "dm01-066",
-    "dm01-072"
-   ],
-   "ok": 5,
-   "rejected": 0,
-   "api_error": 0,
-   "skipped": false
-  },
-  {
-   "ids": [
-    "dm01-075",
-    "dm01-083",
-    "dm01-087",
-    "dm01-090",
-    "dm01-097"
-   ],
-   "ok": 5,
-   "rejected": 0,
-   "api_error": 0,
-   "skipped": false
-  },
-  {
-   "ids": [
-    "dm01-103",
-    "dm01-108",
-    "dm10-076",
-    "dm10-087",
-    "dm10-098"
-   ],
-   "ok": 5,
-   "rejected": 0,
-   "api_error": 0,
-   "skipped": false
-  },
-  {
-   "ids": [
-    "dm10-106",
-    "dm14-105",
-    "dm15-036",
-    "dm16-050",
-    "dm17-036"
+    "24-s010",
+    "26-s001",
+    "26-s002",
+    "26-s003",
+    "27-s004"
    ],
    "ok": 5,
    "rejected": 0,
@@ -67,11 +28,13 @@
  ],
  "last_run": {
   "new": {
-   "requested": 20,
-   "ok": 20,
+   "requested": 5,
+   "ok": 5,
    "rejected": 0,
    "api_error": 0
   },
   "retry": null
- }
+ },
+ "opencode_usage": "（直近1日・手元の集計。無料枠の残量・使用割合は公式に取得手段なし。Zen コンソールで確認）\n┌────────────────────────────────────────────────────────┐\n│                       OVERVIEW                         │\n├────────────────────────────────────────────────────────┤\n│Sessions                                            134 │\n│Messages                                            486 │\n│Days                                                  1 │\n└────────────────────────────────────────────────────────┘\n\n┌────────────────────────────────────────────────────────┐\n│                    COST & TOKENS                       │\n├────────────────────────────────────────────────────────┤\n│Total Cost                                        $0.00 │\n│Avg Cost/Day                                      $0.00 │\n│Avg Tokens/Session                                75.8K │\n│Median Tokens/Session                             56.8K │\n│Input                                              3.1M │\n│Output                                            44.3K │\n│Cache Read                                         6.7M │\n│Cache Write                                           0 │\n└────────────────────────────────────────────────────────┘\n\n┌────────────────────────────────────────────────────────┐\n│                      MODEL USAGE                       │\n├────────────────────────────────────────────────────────┤\n│ opencode/deepseek-v4.1-flash-free                      │\n│  Messages                                          330 │\n│  Input Tokens                                     3.1M │\n│  Output Tokens       ",
+ "model_in_use": "deepseek-v4.1-flash-free"
 }

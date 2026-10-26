@@ -300,3 +300,196 @@ cards:
     official: dm17-036
     review: pending
     notes: 入力データの text は欠損（missing）だったが、公式カード詳細の特殊能力欄も空であることを確認した。能力なし（バニラ）として変換した
+- id: 24-s010
+  name: ボルメテウス・武者・ドラゴン
+  types:
+  - creature
+  civs:
+  - fire
+  cost: 6
+  power: 6000
+  races:
+  - アーマード・ドラゴン
+  keywords:
+  - double_breaker
+  text: Ｗ・ブレイカー / このクリーチャーが攻撃する時、自分のシールドを１枚、墓地に置いてもよい。そうした場合、相手のパワー6000以下のクリーチャーを１体破壊する。
+  abilities:
+  - kind: trigger
+    when:
+      event: attack
+      subject: self
+    effect:
+    - op: may
+      body:
+      - op: move
+        select:
+          zone: shield
+          owner: you
+          count: 1
+        to: graveyard
+        reason: put
+        as: paid
+      - op: if
+        cond:
+          exists:
+            ref: paid
+        then:
+        - op: destroy
+          select:
+            zone: bz
+            owner: opp
+            filter:
+              types:
+              - creature
+              power_le: 6000
+            count: 1
+  source:
+    official: 24-s010
+    review: pending
+- id: 26-s001
+  name: 悪魔神バロム・エンペラー
+  types:
+  - creature
+  - evolution
+  civs:
+  - darkness
+  cost: 7
+  power: 9000
+  races:
+  - デーモン・コマンド
+  mana: 1
+  keywords:
+  - double_breaker
+  evolve_from:
+    races:
+    - デーモン・コマンド
+  text: 進化—自分のデーモン・コマンド１体の上に置く。 / このクリーチャーをバトルゾーンに出した時、闇以外のクリーチャーをすべて破壊する。 / Ｗ・ブレイカー
+  abilities:
+  - kind: trigger
+    when:
+      event: move
+      to: bz
+      subject: self
+    effect:
+    - op: destroy
+      select:
+        zone: bz
+        owner: any
+        filter:
+          types:
+          - creature
+          not_civs:
+          - darkness
+        count: all
+  source:
+    official: 26-s001
+    review: pending
+- id: 26-s002
+  name: ボルシャック・大和・ドラゴン
+  types:
+  - creature
+  civs:
+  - fire
+  cost: 6
+  power: 6000
+  races:
+  - アーマード・ドラゴン
+  keywords:
+  - speed_attacker
+  - double_breaker
+  text: スピードアタッカー / 攻撃中、このクリーチャーのパワーは、自分の墓地にある火のカード１枚につき+1000される。 / Ｗ・ブレイカー / 《ボルメテウス・武者・ドラゴン》の能力によって、相手のパワー6000以下のクリーチャーを１体破壊する時、かわりに相手のパワー12000以下のクリーチャーを１体破壊する。
+  source:
+    official: 26-s002
+    review: pending
+    notes: 墓地の火のカード数に応じた攻撃中のパワー増加能力（1枚につき+1000）はmod.powerが数値固定のためDSLで直接表現不可。《ボルメテウス・武者・ドラゴン》の能力による破壊上限を増やす置換効果はDSL未対応。
+    unsupported:
+    - need: dynamic_power_modifier
+      text: 攻撃中、このクリーチャーのパワーは、自分の墓地にある火のカード１枚につき+1000される。
+    - need: replace_effect_target_modifier
+      text: 《ボルメテウス・武者・ドラゴン》の能力によって、相手のパワー6000以下のクリーチャーを１体破壊する時、かわりに相手のパワー12000以下のクリーチャーを１体破壊する。
+- id: 26-s003
+  name: 聖鎧亜キング・アルカディアス
+  types:
+  - creature
+  - evolution
+  civs:
+  - light
+  - darkness
+  cost: 7
+  power: 9000
+  races:
+  - エンジェル・コマンド
+  - ロスト・クルセイダー
+  keywords:
+  - double_breaker
+  evolve_from:
+    multicolor: true
+  text: マナゾーンに置く時、このカードはタップして置く。 / 進化—自分の多色クリーチャー１体の上に置く。 / Ｗ・ブレイカー / 相手は多色以外のクリーチャーをバトルゾーンに出す時、バトルゾーンに出すかわりに墓地に置く。
+  abilities:
+  - kind: replace
+    when:
+      event: move
+      to: bz
+      subject:
+        owner: opp
+        filter:
+          types:
+          - creature
+          multicolor: false
+    instead:
+    - op: move
+      select:
+        ref: event.subject
+      to: graveyard
+      reason: put
+  source:
+    official: 26-s003
+    review: pending
+    notes: 多色カードのためマナゾーンにはタップして置かれる。相手の多色以外のクリーチャーが出ようとした時、置換効果でかわりに墓地に置く。
+- id: 27-s004
+  name: ボルメテウス・武者・ドラゴン
+  types:
+  - creature
+  civs:
+  - fire
+  cost: 6
+  power: 6000
+  races:
+  - アーマード・ドラゴン
+  mana: 1
+  keywords:
+  - double_breaker
+  text: Ｗ・ブレイカー / このクリーチャーが攻撃する時、自分のシールドを１枚、墓地に置いてもよい。そうした場合、相手のパワー6000以下のクリーチャーを１体破壊する。
+  abilities:
+  - kind: trigger
+    when:
+      event: attack
+      subject: self
+    effect:
+    - op: may
+      body:
+      - op: move
+        select:
+          zone: shield
+          owner: you
+          count: 1
+        to: graveyard
+        reason: put
+        as: shielded
+      - op: if
+        cond:
+          exists:
+            ref: shielded
+        then:
+        - op: destroy
+          select:
+            zone: bz
+            owner: opp
+            filter:
+              types:
+              - creature
+              power_le: 6000
+            count: 1
+  source:
+    official: 27-s004
+    review: pending
