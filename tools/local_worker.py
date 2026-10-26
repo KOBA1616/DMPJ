@@ -241,7 +241,7 @@ SELF_FILES = ("tools/local_worker.py", "tools/run_worker.bat", "tools/llm_offloa
 def self_update(root: Path = ROOT, log=print) -> str:
     """実行前に main を fast-forward だけで更新する（PC での git pull の自動化）。
     作業ツリーが汚れている・main 以外のブランチ・ff 不可・ネットワーク不通のときは何もせず理由を返す。例外は呼び出し側に出さない。
-    ワーカー自身が更新された場合、今回の実行は読み込み済みの旧版で続行し、次回の起動から新版になる。"""
+    ワーカー自身が更新された場合は、呼び出し側（main）が新版で起動し直す（旧版のまま長いジョブを走らせないため）。"""
     def git(*a):
         r = subprocess.run(["git", *a], cwd=root, capture_output=True, text=True, encoding="utf-8", errors="replace", timeout=90)
         return r.returncode, (r.stdout or "").strip(), (r.stderr or "").strip()
@@ -264,7 +264,7 @@ def self_update(root: Path = ROOT, log=print) -> str:
             return f"更新しない: fast-forward できない({lo.scrub(err)[:100]})"
         _, changed, _ = git("diff", "--name-only", old, new)
         self_changed = [f for f in changed.splitlines() if f.startswith(SELF_FILES)]
-        return f"更新した {old[:7]}→{new[:7]}" + ("（ワーカー自身が変わったので次回の起動から新版）" if self_changed else "")
+        return f"更新した {old[:7]}→{new[:7]}" + ("（ワーカー自身が変わった）" if self_changed else "")
     except Exception as e:   # noqa: BLE001  更新の失敗でワーカー本体を止めない
         return f"更新しない: {type(e).__name__}"
 
@@ -403,10 +403,15 @@ def main(argv=None) -> int:
         lf = open(a.log, "a", encoding="utf-8", errors="replace")
         sys.stdout, sys.stderr = Tee(sys.stdout, lf), Tee(sys.stderr, lf)
     print(now(), "ワーカー開始", flush=True)
+    restart = False
     with Lock(Path(a.work) / "lock"):
         while True:
             if not a.no_update:
-                print(now(), "self-update:", self_update(), flush=True)
+                msg = self_update()
+                print(now(), "self-update:", msg, flush=True)
+                if "ワーカー自身が変わった" in msg and not os.environ.get("DMPJ_WORKER_RESTARTED"):
+                    restart = True      # ロックを放してから新版で起動し直す（with を抜けた後）
+                    break
             try:
                 print(now(), process(git, daily_limit=a.daily_limit) or "ジョブなし", flush=True)
             except RuntimeError as ex:
@@ -414,6 +419,10 @@ def main(argv=None) -> int:
             if not a.loop:
                 return 0
             time.sleep(a.loop)
+    if restart:
+        print(now(), "ワーカーが更新されたので新版で起動し直す", flush=True)
+        return subprocess.call([sys.executable, *sys.argv], env={**os.environ, "DMPJ_WORKER_RESTARTED": "1"})
+    return 0
 
 
 if __name__ == "__main__":

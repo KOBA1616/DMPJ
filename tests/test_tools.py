@@ -331,6 +331,15 @@ def test_auto_convert_default_order_is_card_id(tmp_path, monkeypatch):
     assert seen[:2] == ["tz01-001", "tz01-002"]          # streak 2 で打ち切るまでの先頭がID順
 
 
+def test_convert_precheck_skips_model_for_unconvertible_rows():
+    """空ページ・能力文なしはモデルを呼ばず reason を付ける。二面カードは面の text があれば通す。"""
+    import convert_cards as cc
+    assert cc.precheck({"id": "a", "name": "", "missing": ["name", "text"]})["reason"] == "fetch_incomplete"
+    assert cc.precheck({"id": "b", "text": "", "faces": [{"text": ""}]})["reason"] == "no_text"
+    assert cc.precheck({"id": "c", "text": "", "faces": [{"text": "S・トリガー"}]}) is None
+    assert cc.precheck({"id": "d", "text": "ブロッカー"}) is None
+
+
 def test_llm_offload_guards(tmp_path):
     """無料モデル共通層: 秘密を伏せる・切り詰める・キャッシュ・日次上限・失敗は Escalate・課金系は Fatal。"""
     import llm_offload as lo
@@ -506,7 +515,7 @@ def test_local_worker_self_update(tmp_path):
     assert "main でない" in lw.self_update(b)
     sh("checkout", "-q", "main", cwd=b)
     msg = lw.self_update(b)
-    assert msg.startswith("更新した") and "次回の起動から新版" in msg and (b / "tools" / "local_worker.py").exists()
+    assert msg.startswith("更新した") and "ワーカー自身が変わった" in msg and (b / "tools" / "local_worker.py").exists()
     (b / "g.txt").write_text("local")
     sh("add", "-A", cwd=b)
     sh("commit", "-qm", "local", cwd=b)

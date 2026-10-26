@@ -113,7 +113,7 @@ schtasks /Create /SC MINUTE /MO 5 /TN "dmpj-worker" /TR C:\path\DMPJ\tools\run_w
 ### コードの自動更新（git pull の自動化）
 
 ワーカーは実行のたびに、先に `main` を更新する（`git fetch` + `git merge --ff-only origin/main`）。fast-forward できる時だけ更新し、次の場合は何もせずログ（`self-update: …`）に理由を残して続行する: main 以外のブランチにいる／未コミットの変更がある／fast-forward できない／ネットワーク不通。更新に失敗してもワーカー本体は止まらない。
-- ワーカー自身（`local_worker.py` / `llm_offload` / `run_worker.bat`）が更新された時、今回の実行は読み込み済みの旧版で続行し、次回の起動から新版になる。
+- ワーカー自身（`local_worker.py` / `llm_offload` / `run_worker.bat`）が更新された時は、ロックを放して新版で自動的に起動し直す（旧版のまま長いジョブを走らせない）。
 - 止めたい時は `local_worker.py run --once --no-update`。PC のこの clone で別ブランチを触る作業をする時は、自動更新が飛ばされるだけで害はない。
 - **最後に手動で `git pull` を1回だけ**する（この機能を取り込むため）。以後は不要。
 
