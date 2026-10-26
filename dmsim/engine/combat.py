@@ -24,9 +24,11 @@ class CombatMixin:
             dfn = self.s.cards[cid].defn
             if self.permits(cid, "attack_player"):
                 out.append({"key": f"attack:{dfn}:player", "cid": cid, "target": "player"})
+            allow = [e for e in self.chars(cid)["allow"] if isinstance(e, dict) and e["action"] == "attack_creature"]
             for tc in self.bz_tops(1 - a):
-                if self.s.cards[tc].tapped and self.permits(cid, "attack_creature", tc) \
-                        and self.permits(tc, "be_attacked", cid):          # 505.2
+                # 505.2 既定ではタップ状態のクリーチャーだけ。「タップされていないクリーチャーを攻撃できる」(マッハファイター等)は allow で広げる
+                if (self.s.cards[tc].tapped or any(e.get("other", {}).get("tapped") is False and self.filter_match(tc, e["other"]) for e in allow)) \
+                        and self.permits(cid, "attack_creature", tc) and self.permits(tc, "be_attacked", cid):
                     out.append({"key": f"attack:{dfn}:{self.s.cards[tc].defn}", "cid": cid,
                                 "target": self.s.ref(tc)})
         return out

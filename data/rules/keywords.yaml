@@ -149,3 +149,10 @@ keywords:
         if: {exists: {zone: shield, owner: you}}
         instead:
           - {op: move, select: {zone: shield, owner: you, count: 1}, to: hand, reason: return}
+  eternal_omega:      # このクリーチャーがバトルゾーンを離れる時、かわりに手札に戻す（強制の置換）
+    ja: エターナル・Ω
+    abilities:
+      - kind: replace
+        when: {event: move, from: bz, subject: self}
+        instead:
+          - {op: move, select: {ref: self}, to: hand, reason: return}

@@ -62,3 +62,100 @@ patterns:
   revolution_change:
     re: '革命チェンジ[:：](.+)'
     builder: revolution_change
+
+  # ---- 効果の1文（whole_line: その文が1行の全体の時だけ。続く文を取りこぼさないため）----
+  etb_draw:
+    re: '{ETB}カードを(\d)枚引く'
+    whole_line: true
+    abilities:
+      - kind: trigger
+        when: {event: move, to: bz, subject: self}
+        effect:
+          - {op: draw, count: "{1}"}
+  etb_draw_may:
+    re: '{ETB}カードを(\d)枚引いてもよい'
+    whole_line: true
+    abilities:
+      - kind: trigger
+        when: {event: move, to: bz, subject: self}
+        effect:
+          - op: may
+            body: [{op: draw, count: "{1}"}]
+  etb_mana_charge:
+    re: '{ETB}自分の山札の上から1枚目をマナゾーンに置く'
+    whole_line: true
+    abilities:
+      - kind: trigger
+        when: {event: move, to: bz, subject: self}
+        effect:
+          - {op: move, select: {zone: deck, owner: you, from_top: 1}, to: mana, reason: put}
+  etb_mill:
+    re: '{ETB}自分の山札の上から(\d)枚を墓地に置く'
+    whole_line: true
+    abilities:
+      - kind: trigger
+        when: {event: move, to: bz, subject: self}
+        effect:
+          - {op: mill, owner: you, count: "{1}"}
+  etb_shield_to_hand:
+    re: '{ETB}自分のシールドを(\d)つ手札に加える'
+    whole_line: true
+    abilities:
+      - kind: trigger
+        when: {event: move, to: bz, subject: self}
+        effect:
+          - {op: move, select: {zone: shield, owner: you, count: "{1}"}, to: hand, reason: return}
+  etb_destroy_power:
+    re: '{ETB}相手のパワー(\d+)以下のクリーチャーを1体破壊する'
+    whole_line: true
+    abilities:
+      - kind: trigger
+        when: {event: move, to: bz, subject: self}
+        effect:
+          - {op: destroy, select: {zone: bz, owner: opp, filter: {types: [creature], power_le: "{1}"}, count: 1}}
+  etb_destroy:
+    re: '{ETB}相手のクリーチャーを1体破壊する'
+    whole_line: true
+    abilities:
+      - kind: trigger
+        when: {event: move, to: bz, subject: self}
+        effect:
+          - {op: destroy, select: {zone: bz, owner: opp, filter: {types: [creature]}, count: 1}}
+  end_of_turn_untap:
+    re: '自分のターンの終わりにこのクリーチャーをアンタップする'
+    whole_line: true
+    abilities:
+      - kind: trigger
+        when: {event: turn_end, player: you}
+        effect:
+          - {op: untap, select: {ref: self}}
+  end_of_turn_untap_may:
+    re: '自分のターンの終わりにこのクリーチャーをアンタップしてもよい'
+    whole_line: true
+    abilities:
+      - kind: trigger
+        when: {event: turn_end, player: you}
+        effect:
+          - op: may
+            body: [{op: untap, select: {ref: self}}]
+  destroyed_to_mana:
+    re: 'このクリーチャーが破壊される時墓地に置くかわりに(?:自分の)?マナゾーンに置く'
+    whole_line: true
+    abilities:
+      - kind: replace
+        when: {event: move, from: bz, to: graveyard, reason: destroy, subject: self}
+        instead:
+          - {op: move, select: {ref: self}, to: mana, reason: put}
+  destroyed_to_hand:
+    re: 'このクリーチャーが破壊される時墓地に置くかわりに(?:自分の)?手札に戻す'
+    whole_line: true
+    abilities:
+      - kind: replace
+        when: {event: move, from: bz, to: graveyard, reason: destroy, subject: self}
+        instead:
+          - {op: move, select: {ref: self}, to: hand, reason: return}
+  attack_untapped_creatures:
+    re: 'このクリーチャーはタップされていないクリーチャーを攻撃できる'
+    whole_line: true
+    abilities:
+      - {kind: static, affects: self, mod: {allow: [{action: attack_creature, other: {tapped: false}}]}}
