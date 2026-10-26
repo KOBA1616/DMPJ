@@ -122,3 +122,10 @@ schtasks /Create /SC MINUTE /MO 5 /TN "dmpj-worker" /TR C:\path\DMPJ\tools\run_w
 - **基本**: 結果は `llm-jobs` ブランチの `jobs/done/<id>.yaml` に残る。投入したスレッドが `send_later` で数分後に読む。先頭の `summary:`（1行要約）を先に見て、必要な時だけ `text` を読む。PC 側の追加設定は要らない。
 - **任意**: ジョブに `--pr <番号>` を付けると、結果を PR コメントにも投稿する（PC に GitHub CLI と `gh auth login` が要る）。使わなくてよい。投稿に失敗しても結果は `jobs/done` に残る（`pr_comment:` 欄に理由）。
   例: `py -3 tools\local_worker.py enqueue routine --name review --summarize --pr 33`
+
+## 別サービスへの自動切り替え（OpenRouter の無料モデル）
+- OpenCode の無料モデルが（タイムアウト・Model is unavailable 等で）全部だめなとき、環境変数 `OPENROUTER_API_KEY` があれば OpenRouter の無料モデルで同じ依頼を再試行する。キーがなければ何もしない。
+- 使うのは、公式の一覧（`/api/v1/models`、認証不要）で `:free` かつ入力・出力の単価がどちらも 0 のモデルだけ。毎回その場で確かめるので、固定の許可リストは持たない。
+- 応答に費用が載っている、または無料でないモデルが返ったら停止（Fatal）。キーはログに出さない（`scrub` が伏せる）。
+- PC では、ワーカーを起動するウィンドウ（またはユーザー環境変数）に `OPENROUTER_API_KEY` を置く。ワーカーは `OPENCODE_API_KEY` だけを外す。
+- OpenCode の無料モデルの許可リストは公式 zen の料金表で Free を確認したものだけ（2026-10-26: longcat を外し、beam / flint-40b / nemotron-3.5-lightning / nemotron-3.5-super-vl を追加）。

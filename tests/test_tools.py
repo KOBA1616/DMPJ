@@ -378,6 +378,44 @@ def test_system_prompt_picks_similar_examples():
     assert len(yaml.safe_load(cc.examples_for(row, 8))["cards"]) == 8
 
 
+def test_openrouter_uses_only_verified_free_models(monkeypatch):
+    """OpenRouter は公式の一覧で ':free' かつ入出力単価0のものだけ使う。費用つきの応答は停止。全滅したら OpenCode 側の外部切替に使える。"""
+    from llm_offload import providers as pv
+    import pytest
+    with pytest.raises(pv.Fatal):
+        pv.OpenRouterLLM(key="")
+    lm = pv.OpenRouterLLM(0, key="k" * 20)
+    models = {"data": [
+        {"id": "a/paid:free", "pricing": {"prompt": "0.000001", "completion": "0"}, "context_length": 9},   # 単価が0でない→除外
+        {"id": "b/model", "pricing": {"prompt": "0", "completion": "0"}, "context_length": 9},               # :free でない→除外
+        {"id": "x/small:free", "pricing": {"prompt": "0", "completion": "0"}, "context_length": 10},
+        {"id": "deepseek/d:free", "pricing": {"prompt": "0", "completion": "0"}, "context_length": 5},
+    ]}
+    calls = []
+
+    def req(path, payload=None, auth=True):
+        if path == "/models":
+            assert not auth
+            return models
+        calls.append(payload["model"])
+        if payload["model"] == "deepseek/d:free":
+            raise RuntimeError("HTTP 500")
+        return {"model": payload["model"], "choices": [{"message": {"content": "ok"}}], "usage": {"prompt_tokens": 1, "completion_tokens": 2}}
+
+    monkeypatch.setattr(lm, "_request", req)
+    assert lm.free_models() == ["deepseek/d:free", "x/small:free"]       # 好みの順 → 文脈長の順
+    assert lm.complete("", [], "low", None) == "ok" and calls == ["deepseek/d:free", "x/small:free"] and lm.model == "x/small:free"
+    monkeypatch.setattr(lm, "_request", lambda path, payload=None, auth=True: models if path == "/models" else
+                        {"model": payload["model"], "choices": [{"message": {"content": "x"}}], "usage": {"cost": 0.5}})
+    with pytest.raises(pv.Fatal):
+        lm.complete("", [], "low", None)
+    cli = pv.OpenCodeCLI("glm-5.3-flash-free", 0)
+    cli.external = lm
+    monkeypatch.setattr(cli, "_complete_one", lambda *a: (_ for _ in ()).throw(pv.CallTimeout("t")))
+    monkeypatch.setattr(lm, "_request", req)
+    assert cli.complete("", [], "low", None) == "ok"           # OpenCode 全滅 → OpenRouter
+
+
 def test_convert_timeout_breaker(tmp_path):
     """タイムアウトは次のカードが成功して初めて reason: timeout で確定。連続2回は障害として打ち切り、記録しない。"""
     import convert_cards

@@ -20,6 +20,7 @@ from __future__ import annotations
 
 import argparse
 import json
+import os
 import re
 import sys
 from pathlib import Path
@@ -34,7 +35,7 @@ from dmsim import schema  # noqa: E402
 from dmsim.defs import DATA, DefError, load_tables, parse_card  # noqa: E402
 from llm_offload.providers import CallTimeout  # noqa: E402
 from llm_offload.providers import (  # noqa: E402,F401  無料モデル呼び出しは llm_offload に集約
-    OPENCODE_DEFAULT, OPENCODE_FREE_MODELS, OPENCODE_URL, BadResponse, Fatal, OpenCodeCLI, OpenCodeLLM, check_free_model)
+    OPENCODE_DEFAULT, OPENCODE_FREE_MODELS, OPENCODE_URL, BadResponse, Fatal, OpenCodeCLI, OpenCodeLLM, OpenRouterLLM, check_free_model)
 
 MODEL = "claude-opus-5-5"
 
@@ -167,7 +168,10 @@ def make_llm(provider: str, model: str | None, interval: float):
     if provider == "opencode":
         return OpenCodeLLM(model or OPENCODE_DEFAULT, interval)
     if provider == "opencode-cli":
-        return OpenCodeCLI(model or OPENCODE_DEFAULT, interval)
+        llm = OpenCodeCLI(model or OPENCODE_DEFAULT, interval)
+        if os.environ.get("OPENROUTER_API_KEY"):     # キーがあるときだけ、OpenCode 全滅時の切り替え先を付ける
+            llm.external = OpenRouterLLM(interval)
+        return llm
     return AnthropicLLM(model or MODEL)
 
 
