@@ -57,6 +57,7 @@ class Weights:
     shield: float = 100.0       # 相手のシールド1枚につき減点
     threat: float = 40.0        # 次のターンに攻撃できる打点（ブレイク数、シールド+1 まで）
     mana: float = 10.0
+    civ: float = 0.0            # マナゾーンで使える文明の数（多いほど使えるカードが増える動機。既定0で従来通り）
     hand: float = 4.0
     board: float = 2.0
     opp_deck: float = 3.0       # 相手の山札を削った枚数
@@ -150,7 +151,9 @@ def evaluate(eng: Engine, me: int, w: Weights) -> float:
             breaks += ch["breaks"]
     deck = len(eng.zlist("deck", me))
     self_keep = w.deck_keep
+    mana_civs = {c for c in eng.zlist("mana", me) for c in eng.cdef(c).civs}
     return (-w.shield * sh + w.threat * min(breaks, sh + 1) + w.mana * len(eng.zlist("mana", me))
+            + w.civ * len(mana_civs)
             + w.hand * len(eng.zlist("hand", me)) + w.board * len(mine)
             + w.opp_deck * (40 - len(eng.zlist("deck", opp)))
             - w.deck_danger * max(0, self_keep - deck))

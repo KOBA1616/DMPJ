@@ -109,6 +109,7 @@ class MacroPlanner:
     win_by: str = "effect"          # 目標ループの勝ち方（classify_win の値）
     bruce_card: str = "dmbd17-009"  # 墓地の起点を場に戻す呪文面を持つツインパクト
     digger_card: str = "dm22ex1-025"  # 登場時に山札の上5枚から1枚を手札に加える（起点を探せる）
+    suppress_beatdown: bool = True  # 一時的にビートダウンを抑え、ループ等の発見に寄せる
 
     def features(self, eng, me: int = ME) -> dict:
         z = eng.s.zones
@@ -163,35 +164,38 @@ class MacroPlanner:
             return Intent("execute", weights=w,
                           note="キル部品が揃った。ループキルを取りに行く")
         if f["loop_available"] and f["grave_prep"] and f["dark_mana"] >= 1:
-            return Intent("enter_loop", note="起点と墓地の準備と闇マナがある。導入して部品を集める")
+            return Intent("enter_loop", weights=sol.Weights(civ=10.0),
+                          note="起点と墓地の準備と闇マナがある。導入して部品を集める")
         if f["bruce_route"] and f["dark_mana"] >= 1:
             # 起点が1枚しかなくても、掘る役の登場時効果で山札から起点や部品を探し、
             # 呪文面で墓地の起点を場に戻せる。墓地の準備が無くても導入に値する
-            return Intent("enter_loop", note="ブルース経由: 掘る役で探し、呪文面で起点を戻して導入する")
-        # ループ以外の勝ち筋: 盤面で殴り切れるならそれが最速（ビートダウン）
-        if f["my_threat"] >= f["opp_shield"] + 1:
+            return Intent("enter_loop", weights=sol.Weights(civ=10.0),
+                          note="ブルース経由: 掘る役で探し、呪文面で起点を戻して導入する")
+        # ループ以外の勝ち筋: 盤面で殴り切れるならそれが最速（ビートダウン）。
+        # ただし抑制中は、殴りの勝ちに流れてループの手順が育たないため選ばない
+        if not self.suppress_beatdown and f["my_threat"] >= f["opp_shield"] + 1:
             return Intent("execute", weights=sol.Weights(shield=200.0, threat=80.0, board=6.0),
                           note="盤面の打点でリーサルが見える。殴り切る")
-        if f["my_threat"] >= 2:
+        if not self.suppress_beatdown and f["my_threat"] >= 2:
             return Intent("beatdown", weights=sol.Weights(shield=200.0, threat=80.0, board=6.0),
                           note="ループの筋が無く盤面の圧力がある。シールドを削りに行く")
         if f["opp_threat"] >= 3 and f["opp_threat"] > f["my_threat"]:
             # コントロール: 相手の圧力が高い間は盤面を捌いてターンを稼ぎ、
             # 手札とマナを整えてコンボの確率を上げる
             return Intent("control", budget=800,
-                          weights=sol.Weights(board=8.0, hand=6.0, shield=120.0),
+                          weights=sol.Weights(board=8.0, hand=6.0, shield=120.0, civ=10.0),
                           note="相手の圧力が高い。盤面を捌いてターンを稼ぐ")
         # 整える: 山札は「尽きて負ける」時だけ悪いので、守るのは残りわずかの時だけ。
         # 固定の厚さを基準にせず、山札切れの直前（deck_keep=2）まで削ることを許す。
         # 置換勝利では、勝敗に直結しない資源ループの自動反復だけは止める。
         if self.win_by == "effect":
-            w, burn = sol.Weights(stock_cap=0, deck_keep=2), False
+            w, burn = sol.Weights(stock_cap=0, deck_keep=2, civ=20.0), False
             note = "部品か前提が不足。山札切れの直前だけ守って整える"
         elif self.win_by == "resource":
-            w, burn = sol.Weights(stock_cap=4, deck_keep=2), True
+            w, burn = sol.Weights(stock_cap=4, deck_keep=2, civ=20.0), True
             note = "部品か前提が不足。資源を貯めながら整える"
         else:
-            w, burn = sol.Weights(stock_cap=8, deck_keep=2), True
+            w, burn = sol.Weights(stock_cap=8, deck_keep=2, civ=20.0), True
             note = "部品か前提が不足。自分の山札の消耗は許して整える"
         return Intent("setup", budget=600, burn_stock=burn, weights=w, note=note)
 
@@ -236,13 +240,19 @@ def charge_scores(eng, d, targets=TARGET_CARDS) -> dict[int, float]:
     mana_n = len(z["mana"][me])
     hand_ids = list(z["hand"][me])
     hand_names = [eng.s.cards[c].defn for c in hand_ids]
-    # 手札が必要とする文明（近く使える札の文明）
+    # 手札が必要とする文明（近く使える札の文明）と、このターン使えるようになる札
     needs = set()
+    fix_civs = set()    # 1枚置けばこのターン出せる札が必要とする文明
+    multi_in_hand = 0   # 手札に多色カードが溜まっているか（将来のアンタップ不足の芽）
     for c in hand_ids:
         cd = eng.cdef(c)
         cost = min([f.cost for f in cd.faces] or [cd.cost])
         if cost <= mana_n + 2:
             needs.update(cd.civs)
+        if cost == mana_n + 1:
+            fix_civs.update(cd.civs)
+        if len(cd.civs) >= 2:
+            multi_in_hand += 1
     scores: dict[int, float] = {}
     for j, o in enumerate(d["options"]):
         if not o["key"].startswith("charge:") or o.get("cid") is None:
@@ -261,6 +271,17 @@ def charge_scores(eng, d, targets=TARGET_CARDS) -> dict[int, float]:
                 s += 10.0                   # 多色で全文明が揃っているなら尚更
         elif new_civs & needs:
             s += 20.0                       # 足りない文明の補完になる
+            target_civs = set()
+            for c in hand_ids:
+                if eng.s.cards[c].defn in targets:
+                    target_civs.update(eng.cdef(c).civs)
+            if new_civs & target_civs:
+                s += 10.0                   # 部品が使えるようになる文明は特に欲しい
+            if new_civs & fix_civs:
+                s += 15.0                   # この1枚でこのターン出せる札が増える
+        if len(civs) >= 2 and multi_in_hand >= 3:
+            s += 15.0                       # 多色が手札に溜まっているなら先にマナへ
+                                            # （将来、置かざるを得ない場面で困らないように）
         if cost > mana_n + 2:
             s += 15.0                       # 直近では使えない
         elif cost <= mana_n:
@@ -355,6 +376,8 @@ class MicroPolicy:
     win_by: str = "effect"          # この方策が狙う勝ち方
     intent: str | None = None       # このターンの狙い（マクロが設定する）
     targets: tuple = TARGET_CARDS   # マナチャージで温存する部品
+    restrain_attack: bool = False   # 攻撃を候補の後ろに回す（禁止はしない。
+                                    # ドラゲリオンの攻撃時効果など、計画に必要な攻撃は残す）
 
     def prefer(self, eng, d) -> list[int] | None:
         prefs = self.preferences or {}
@@ -382,6 +405,15 @@ class MicroPolicy:
     def candidates(self, eng, d, w, cap: int = 6):
         """solitaire.candidates と同じ形。方策の答えを候補の先頭に置く。"""
         out = _base_candidates(eng, d, w, cap)
+        if self.restrain_attack and d["kind"] == "attack":
+            # 大局観レベルの抑制: むやみに殴らない方針として pass を先に置く。
+            # 攻撃の候補自体は残すので、リーサルや攻撃時効果（メテオバーン等）が
+            # 必要な筋は探索が拾える
+            keys = [o["key"] for o in d["options"]]
+            if "pass" in keys:
+                p = [keys.index("pass")]
+                out = [p] + [c for c in out if list(c) != p]
+            return out
         pref = self.prefer(eng, d)
         if d["kind"] == "charge" and eng is not None:
             # マナチャージは学習選好より先に、文明と使用見込みの判断で並べる
@@ -491,12 +523,18 @@ class Pipeline:
                 i += 1
                 if d["player"] == ME:
                     deck_n = len(eng.s.zones["deck"][ME])
+                    mana_civs = {c for cid in eng.s.zones["mana"][ME]
+                                 for c in eng.cdef(cid).civs}
+                    multi_hand = sum(1 for cid in eng.s.zones["hand"][ME]
+                                     if len(eng.cdef(cid).civs) >= 2)
                     records.append({"kind": d["kind"],
                                     "options": [o["key"] for o in d["options"]],
                                     "chosen": entry["keys"],
                                     "deck": deck_n, "bucket": deck_bucket(deck_n),
                                     "win_by": self.win_by, "intent": intent_name,
-                                    "grave": grave_bucket(eng, ME)})
+                                    "grave": grave_bucket(eng, ME),
+                                    "mana_civs": len(mana_civs),   # チャージ判断の学習用文脈
+                                    "multi_hand": multi_hand})
                 try:
                     eng.answer_by_keys(entry["keys"])
                 except Exception:

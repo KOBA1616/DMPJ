@@ -160,13 +160,26 @@ def test_macro_beatdown_and_board_lethal(rules):
     # ループの筋が無くても、盤面の打点があれば殴りに行く（ビートダウン）
     eng = setup(rules, {"hand": ["T001"], "mana": MANA, "graveyard": [],
                         "bz": ["T001", "T001"]})
-    intent = MacroPlanner().plan(eng)
+    intent = MacroPlanner(suppress_beatdown=False).plan(eng)
     assert intent.name == "beatdown"
     # 打点がシールド+1 に届けば盤面リーサル
     eng = setup(rules, {"hand": ["T001"], "mana": MANA, "graveyard": [],
                         "bz": ["T001"] * 6})
-    intent = MacroPlanner().plan(eng)
+    intent = MacroPlanner(suppress_beatdown=False).plan(eng)
     assert intent.name == "execute" and "殴り切る" in intent.note
+    # 既定ではビートダウンは抑制され、殴りの勝ちに流れない
+    assert MacroPlanner().plan(eng).name != "beatdown"
+
+
+def test_evaluate_values_mana_civ_diversity(rules):
+    # 使える文明を増やす動機: 重みを付けた時だけ、文明が多様なマナが高く評価される
+    import dmsim.solitaire as sol
+    e1 = setup(rules, {"hand": ["T001"], "mana": ["dm01-027"], "graveyard": []})
+    e2 = setup(rules, {"hand": ["T001"], "mana": ["dm01-027", "dm01-080"], "graveyard": []})
+    w_off = sol.Weights(mana=0.0)
+    w_on = sol.Weights(mana=0.0, civ=10.0)
+    assert sol.evaluate(e2, 0, w_off) == sol.evaluate(e1, 0, w_off)
+    assert sol.evaluate(e2, 0, w_on) > sol.evaluate(e1, 0, w_on)
 
 
 def _charge_decision(eng, names):
@@ -190,6 +203,15 @@ def test_charge_choice_prefers_redundant_civ(rules):
                         "mana": ["dm01-027", "dm01-080"], "graveyard": []})
     d = _charge_decision(eng, ["dm01-027", "dm01-080", "dm22ex1-025"])
     assert charge_choice(eng, d) in (0, 1)
+
+
+def test_charge_choice_multicolor_surplus(rules):
+    # 多色カードが手札に溜まっている時は、多色から先にマナへ置く
+    lorenz = "dmpromoy22-p51"   # 火・水のツインパクト
+    eng = setup(rules, {"hand": [lorenz, lorenz, lorenz, "dm01-027"],
+                        "mana": ["dm01-080"], "graveyard": []})
+    d = _charge_decision(eng, [lorenz, lorenz, lorenz, "dm01-027"])
+    assert charge_choice(eng, d) in (0, 1, 2)
 
 
 def test_micro_candidates_without_pipeline_no_recursion():
