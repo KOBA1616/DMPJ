@@ -221,6 +221,20 @@ def classify(error: str) -> dict:
     return {"reason": "vocab_gap", "gaps": gaps} if gaps else {"reason": "other", "gaps": []}
 
 
+def precheck(row: dict) -> dict | None:
+    """モデルを呼ぶ前に、原文がそもそも変換できる状態か見る。ダメなら理由を返す（API も時間も使わない）。
+
+    fetch_incomplete: 取得が空ページ・項目欠け（名前・種類・文明・コストが無い）→ 再取得が要る。
+    no_text: どの面にも能力文が無い → 変換の対象外（語彙不足ではない）。
+    2026-10-26 のタイムアウト8件はすべてこの状態だった（応答を待って20分ずつ無駄にした）。
+    """
+    if {"name", "card_type", "civilization", "cost"} & set(row.get("missing") or []):
+        return {"reason": "fetch_incomplete", "gaps": [], "error": "原文の取得が空ページ・項目欠け（再取得が必要）"}
+    if not row.get("text") and not any(f.get("text") for f in row.get("faces") or []):
+        return {"reason": "no_text", "gaps": [], "error": "能力文が無い（変換対象外。語彙不足ではない）"}
+    return None
+
+
 def run(rows: list[dict], client, tables, sysp: str, effort: str, out: Path, rejects_path: Path,
         workers: int = 1, report_path: Path | None = None) -> dict:
     """rows を変換して out に追記する。1枚ごとに保存するので途中で止まっても続きから再開できる。
@@ -245,6 +259,14 @@ def run(rows: list[dict], client, tables, sysp: str, effort: str, out: Path, rej
 
     def one(r):
         if streak["n"] >= 2:
+            return
+        pre = precheck(r)
+        if pre:
+            with lock:
+                stats["rejected"] += 1
+                rejects[r["id"]] = {**r, **pre}
+                print(f"- {r['id']} {r.get('name', '')}: {pre['reason']}（モデルは呼ばない）", file=sys.stderr, flush=True)
+                save()
             return
         print(f"… {r['id']} {r.get('name', '')} 変換中", file=sys.stderr, flush=True)
         try:
