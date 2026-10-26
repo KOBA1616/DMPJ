@@ -327,8 +327,12 @@ def run(rows: list[dict], client, tables, sysp: str, effort: str, out: Path, rej
             card = convert(client, {**r, "text": part[1], "known_keywords": part[0]} if part else r, tables, sysp, effort, usage)
             if part:
                 card["keywords"] = [*part[0], *[k for k in card.get("keywords") or [] if k not in part[0]]]
+                if not card["keywords"]:
+                    del card["keywords"]
+                if part[2]:
+                    card["abilities"] = [*part[2], *(card.get("abilities") or [])]
                 card["text"] = r["text"]
-                validate(card, r, tables)
+            validate(card, r, tables)
         except DefError as e:
             with lock:
                 stats["rejected"] += 1

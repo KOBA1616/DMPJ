@@ -639,14 +639,28 @@ def test_rule_convert_keyword_only_and_vanilla(tmp_path):
     assert not called and rep["ok"] == 2 and [c["id"] for c in yaml.safe_load(out.read_text(encoding="utf-8"))["cards"]] == ["t1", "t2"]
 
 
+def test_rule_convert_parameterized_keywords():
+    """数値つき・注釈つきキーワード（パワーアタッカー+N、マッハファイター）もルールで変換し、検査に通る。"""
+    import rule_convert as rc
+    from dmsim.defs import load_tables, parse_card
+    base = {"card_type": "クリーチャー", "civilization": "火", "cost": "4", "power": "3000", "race": "ドラゴン", "name": "n"}
+    r = rc.convert({**base, "id": "p1", "text": "パワーアタッカー＋２０００（攻撃中、…） / マッハファイター（…） / スピードアタッカー"})
+    assert r["keywords"] == ["speed_attacker"] and len(r["abilities"]) == 2
+    assert r["abilities"][0]["effect"][0]["mod"] == {"power": 2000}
+    parse_card(r, load_tables())
+    assert rc.convert({**base, "id": "p2", "text": "パワーアタッカー+X"}) is None
+    kws, rest, extra = rc.split({"id": "x", "text": "パワーアタッカー+1000 出た時、カードを引く。"})
+    assert kws == [] and rest == "出た時、カードを引く。" and extra[0]["kind"] == "trigger"
+
+
 def test_rule_split_keywords_and_model_gets_only_the_rest(tmp_path):
     """キーワードはルールで処理し、モデルには残りの原文と known_keywords だけを渡す。結果の keywords はルール分が先。"""
     import convert_cards as cc
     import rule_convert as rc
     from dmsim.defs import load_tables
-    assert rc.split({"id": "x", "text": "ブロッカー（…） / 出た時、カードを１枚引く。 チャージャー"}) == (["blocker", "charger"], "出た時、カードを１枚引く。")
+    assert rc.split({"id": "x", "text": "ブロッカー（…） / 出た時、カードを１枚引く。 チャージャー"}) == (["blocker", "charger"], "出た時、カードを１枚引く。", [])
     assert rc.split({"id": "x", "text": "S・トリガー ブロッカー\nＷ・ブレイカー\nこのクリーチャーが出た時、相手の手札を１枚捨てさせる。"}) == (
-        ["s_trigger", "blocker", "double_breaker"], "このクリーチャーが出た時、相手の手札を１枚捨てさせる。")
+        ["s_trigger", "blocker", "double_breaker"], "このクリーチャーが出た時、相手の手札を１枚捨てさせる。", [])
     assert rc.split({"id": "x", "text": "出た時、カードを引く。"}) is None
     seen = []
 
