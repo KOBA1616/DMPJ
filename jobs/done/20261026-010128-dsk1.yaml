@@ -1,0 +1,21 @@
+id: 20261026-010128-dsk1
+summary: '[ok] {'
+finished: '2026-10-26T01:14:38+00:00'
+status: ok
+text: "{\n \"at\": \"2026-10-26T01:14:32+00:00\",\n \"model\": \"deepseek-v4.1-flash-free\"\
+  ,\n \"raw_total\": 23671,\n \"converted\": 20,\n \"rejected\": 27,\n \"pending\"\
+  : 23624,\n \"vocab_hash\": \"59075f1015b9ee22\",\n \"vocab_gaps\": {},\n \"reject_reasons\"\
+  : {\n  \"other\": 19,\n  \"timeout\": 8\n },\n \"batches\": [\n  {\n   \"ids\":\
+  \ [\n    \"dm01-012\",\n    \"dm01-036\",\n    \"dm01-042\",\n    \"dm01-066\",\n\
+  \    \"dm01-072\"\n   ],\n   \"ok\": 5,\n   \"rejected\": 0,\n   \"api_error\":\
+  \ 0,\n   \"skipped\": false\n  },\n  {\n   \"ids\": [\n    \"dm01-075\",\n    \"\
+  dm01-083\",\n    \"dm01-087\",\n    \"dm01-090\",\n    \"dm01-097\"\n   ],\n   \"\
+  ok\": 5,\n   \"rejected\": 0,\n   \"api_error\": 0,\n   \"skipped\": false\n  },\n\
+  \  {\n   \"ids\": [\n    \"dm01-103\",\n    \"dm01-108\",\n    \"dm10-076\",\n \
+  \   \"dm10-087\",\n    \"dm10-098\"\n   ],\n   \"ok\": 5,\n   \"rejected\": 0,\n\
+  \   \"api_error\": 0,\n   \"skipped\": false\n  },\n  {\n   \"ids\": [\n    \"dm10-106\"\
+  ,\n    \"dm14-105\",\n    \"dm15-036\",\n    \"dm16-050\",\n    \"dm17-036\"\n \
+  \  ],\n   \"ok\": 5,\n   \"rejected\": 0,\n   \"api_error\": 0,\n   \"skipped\"\
+  : false\n  }\n ],\n \"last_run\": {\n  \"new\": {\n   \"requested\": 20,\n   \"\
+  ok\": 20,\n   \"rejected\": 0,\n   \"api_error\": 0\n  },\n  \"retry\": null\n }\n\
+  }\n"
