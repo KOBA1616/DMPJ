@@ -351,6 +351,14 @@ def test_opencode_cli_switches_model_on_timeout(monkeypatch):
     calls.clear()
     assert llm.complete("", [], "low", None) == "ok" and calls == [llm.model]   # 以後は切り替え先から始める
 
+    def unavailable(model, *a):
+        if model == llm.model:
+            raise RuntimeError("opencode error: Model is unavailable")
+        return "ok2"
+
+    monkeypatch.setattr(llm, "_complete_one", unavailable)
+    assert llm.complete("", [], "low", None) == "ok2"      # タイムアウト以外のモデル側エラーでも切り替える
+
     def hang(model, *a):
         raise pv.CallTimeout("t")
 
@@ -358,6 +366,74 @@ def test_opencode_cli_switches_model_on_timeout(monkeypatch):
     import pytest
     with pytest.raises(pv.CallTimeout):
         llm.complete("", [], "low", None)
+
+
+def test_system_prompt_picks_similar_examples():
+    """例は原文が近い n 枚だけ。全部入れる版より大幅に短く、近いカードが先頭に来る。"""
+    import convert_cards as cc
+    row = {"id": "zz-001", "text": "このクリーチャーをバトルゾーンに出した時、相手の手札を見てその中から１枚選び、捨てさせる。"}
+    small, full = cc.system_prompt(row=row, n_examples=8), cc.system_prompt()
+    assert len(small) < len(full) * 0.6
+    assert yaml.safe_load(cc.examples_for(row, 8))["cards"][0]["id"] == "dmx03-035"
+    assert len(yaml.safe_load(cc.examples_for(row, 8))["cards"]) == 8
+
+
+def test_openrouter_uses_only_verified_free_models(monkeypatch):
+    """OpenRouter は公式の一覧で ':free' かつ入出力単価0のものだけ使う。費用つきの応答は停止。全滅したら OpenCode 側の外部切替に使える。"""
+    from llm_offload import providers as pv
+    import pytest
+    with pytest.raises(pv.Fatal):
+        pv.OpenRouterLLM(key="")
+    lm = pv.OpenRouterLLM(0, key="k" * 20)
+    models = {"data": [
+        {"id": "a/paid:free", "pricing": {"prompt": "0.000001", "completion": "0"}, "context_length": 9},   # 単価が0でない→除外
+        {"id": "b/model", "pricing": {"prompt": "0", "completion": "0"}, "context_length": 9},               # :free でない→除外
+        {"id": "x/small:free", "pricing": {"prompt": "0", "completion": "0"}, "context_length": 10},
+        {"id": "deepseek/d:free", "pricing": {"prompt": "0", "completion": "0"}, "context_length": 5},
+    ]}
+    calls = []
+
+    def req(path, payload=None, auth=True):
+        if path == "/models":
+            assert not auth
+            return models
+        calls.append(payload["model"])
+        if payload["model"] == "deepseek/d:free":
+            raise RuntimeError("HTTP 500")
+        return {"model": payload["model"], "choices": [{"message": {"content": "ok"}}], "usage": {"prompt_tokens": 1, "completion_tokens": 2}}
+
+    monkeypatch.setattr(lm, "_request", req)
+    assert lm.free_models() == ["deepseek/d:free", "x/small:free"]       # 好みの順 → 文脈長の順
+    assert lm.complete("", [], "low", None) == "ok" and calls == ["deepseek/d:free", "x/small:free"] and lm.model == "x/small:free"
+    monkeypatch.setattr(lm, "_request", lambda path, payload=None, auth=True: models if path == "/models" else
+                        {"model": payload["model"], "choices": [{"message": {"content": "x"}}], "usage": {"cost": 0.5}})
+    with pytest.raises(pv.Fatal):
+        lm.complete("", [], "low", None)
+    cli = pv.OpenCodeCLI("glm-5.3-flash-free", 0)
+    cli.external = lm
+    monkeypatch.setattr(cli, "_complete_one", lambda *a: (_ for _ in ()).throw(pv.CallTimeout("t")))
+    monkeypatch.setattr(lm, "_request", req)
+    assert cli.complete("", [], "low", None) == "ok"           # OpenCode 全滅 → OpenRouter
+
+
+def test_opencode_cli_detects_free_limit(monkeypatch):
+    """無料枠の上限は他の OpenCode モデルを試さず止める（外部があればそちらへ）。"""
+    from llm_offload import providers as pv
+    import pytest
+    cli = pv.OpenCodeCLI("glm-5.3-flash-free", 0)
+    calls = []
+
+    def lim(model, *a):
+        calls.append(model)
+        raise pv.FreeLimit("上限")
+
+    monkeypatch.setattr(cli, "_complete_one", lim)
+    with pytest.raises(pv.FreeLimit):
+        cli.complete("", [], "low", None)
+    assert calls == ["glm-5.3-flash-free"]
+    assert pv.FREE_LIMIT_RE.search('{"name":"FreeUsageLimitError","message":"Free usage limit reached. Subscribe"}')
+    cli.external = type("X", (), {"complete": lambda self, *a: "ext"})()
+    assert cli.complete("", [], "low", None) == "ext"
 
 
 def test_convert_timeout_breaker(tmp_path):

@@ -27,12 +27,14 @@ class Fatal(Exception):
 # 新しい無料モデルを使うときは、公式 https://opencode.ai/docs/zen/ で $0 と確認してここに足す。
 OPENCODE_URL = "https://opencode.ai/inference/openai/v1/chat/completions"
 OPENCODE_FREE_MODELS = frozenset({
-    "glm-5.3-flash-free", "deepseek-v4.1-flash-free", "longcat-2.5-preview-free",
-    "nemotron-3-ultra-free", "mimo-v2.6-flash-free",   # 2026-10-25 公式 zen で Free(入出力$0)を確認
+    "glm-5.3-flash-free", "deepseek-v4.1-flash-free", "nemotron-3-ultra-free", "mimo-v2.6-flash-free",
+    "beam-free", "flint-40b-free", "nemotron-3.5-lightning-free", "nemotron-3.5-super-vl-free",
+    # 公式 zen の料金表で Free(入出力$0)を確認（2026-10-26）。longcat-2.5-preview-free は表から消え `opencode models` にもないので外した
 })
 OPENCODE_DEFAULT = "glm-5.3-flash-free"
 OPENCODE_FALLBACK_ORDER = ("deepseek-v4.1-flash-free", "glm-5.3-flash-free", "nemotron-3-ultra-free",
-                           "mimo-v2.6-flash-free", "longcat-2.5-preview-free")
+                           "mimo-v2.6-flash-free", "nemotron-3.5-super-vl-free", "flint-40b-free", "beam-free",
+                           "nemotron-3.5-lightning-free")
 OPENCODE_TIMEOUT = 150   # 1回の呼び出しの上限秒。無応答時に1枚10分も待たない(2026-10-25: 600秒x3回で30分空回り)
 
 
@@ -104,6 +106,101 @@ class OpenCodeLLM:
             raise BadResponse("応答に本文がない") from None
 
 
+OPENROUTER_URL = "https://openrouter.ai/api/v1"
+OPENROUTER_PREFER = ("deepseek", "qwen", "glm", "gpt-oss", "llama", "gemma", "mistral")   # 変換向きの順（無料モデルの中での好み）
+
+
+class FreeLimit(RuntimeError):
+    """OpenCode の無料枠の上限（FreeUsageLimitError）。アカウント・ワークスペース・ネットワーク単位なので、別の OpenCode モデルに替えても直らない。"""
+
+
+FREE_LIMIT_RE = re.compile(r"(?i)FreeUsageLimitError|Free usage limit reached|free (?:usage|message)s? limit")
+
+
+class OpenRouterLLM:
+    """別サービスへの切り替え先。OpenRouter の無料モデルだけを、毎回公式の一覧(/models・認証不要)で確かめて使う。
+    ':free' で終わり、かつ入力・出力の単価がどちらも 0 のものに限る。応答に費用が載っていたら停止する。
+    キーは環境変数 OPENROUTER_API_KEY（無ければ使わない）。"""
+    name = "openrouter"
+
+    def __init__(self, min_interval: float = 3.0, key: str | None = None):
+        import os
+        import threading
+        self.key = key or os.environ.get("OPENROUTER_API_KEY", "")
+        if not self.key:
+            raise Fatal("環境変数 OPENROUTER_API_KEY が未設定")
+        self.min_interval = min_interval
+        self.model = None
+        self._free: list[str] | None = None
+        self._last, self._lock = 0.0, threading.Lock()
+
+    def _request(self, path: str, payload: dict | None = None, auth: bool = True) -> dict:
+        import time
+        import urllib.error
+        import urllib.request
+        with self._lock:
+            time.sleep(max(0.0, self._last + self.min_interval - time.monotonic()))
+            self._last = time.monotonic()
+        headers = {"Content-Type": "application/json", "User-Agent": "dmpj-convert/1.0"}
+        if auth:
+            headers["Authorization"] = f"Bearer {self.key}"
+        req = urllib.request.Request(OPENROUTER_URL + path, json.dumps(payload).encode() if payload else None, headers)
+        try:
+            with urllib.request.urlopen(req, timeout=OPENCODE_TIMEOUT) as r:
+                return json.loads(r.read())
+        except urllib.error.HTTPError as e:
+            body = e.read().decode("utf-8", "replace")[:300].replace(self.key, "***")
+            if e.code == 402 or re.search(r"(?i)billing|credit|balance|payment|insufficient", body):
+                raise Fatal(f"課金・残高に関するエラーなので停止する: HTTP {e.code} {body}") from None
+            if e.code in (401, 403):
+                raise Fatal(f"認証/権限エラー: HTTP {e.code} {body}") from None
+            raise RuntimeError(f"HTTP {e.code} {body[:120]}") from None
+        except OSError as e:
+            if "timed out" in str(e):
+                raise CallTimeout(f"openrouter が{OPENCODE_TIMEOUT:g}秒以内に終わらなかった") from None
+            raise
+
+    def free_models(self) -> list[str]:
+        """公式の一覧から、入出力とも $0 の ':free' モデルを、好みの順→文脈長の順で返す。"""
+        if self._free is None:
+            data = self._request("/models", auth=False).get("data") or []
+            ok = [m for m in data if str(m.get("id", "")).endswith(":free")
+                  and float((m.get("pricing") or {}).get("prompt", 1)) == 0 and float((m.get("pricing") or {}).get("completion", 1)) == 0]
+            def rank(m):
+                i = next((k for k, w in enumerate(OPENROUTER_PREFER) if w in m["id"]), len(OPENROUTER_PREFER))
+                return (i, -(m.get("context_length") or 0))
+            self._free = [m["id"] for m in sorted(ok, key=rank)]
+        return self._free
+
+    def complete(self, sysp: str, messages: list[dict], effort: str, usage: dict | None, max_models: int = 3) -> str:
+        tried, last = [], None
+        for m in self.free_models()[:max_models]:
+            try:
+                resp = self._request("/chat/completions", {"model": m, "max_tokens": 16000, "temperature": 0.2,
+                                                           "messages": [{"role": "system", "content": sysp}, *messages]})
+            except Fatal:
+                raise
+            except Exception as e:      # noqa: BLE001  次の無料モデルへ
+                tried.append(m)
+                last = e
+                continue
+            if not str(resp.get("model", m)).endswith(":free") or (resp.get("usage") or {}).get("cost", 0) > 0:
+                raise Fatal(f"応答のモデルが無料でない、または費用が載っている: {resp.get('model')}。停止する")
+            try:
+                text = resp["choices"][0]["message"]["content"] or ""
+            except (KeyError, IndexError, TypeError):
+                tried.append(m)
+                last = BadResponse("応答に本文がない")
+                continue
+            self.model = m
+            u = resp.get("usage") or {}
+            if usage is not None:
+                usage["input"] += u.get("prompt_tokens", 0)
+                usage["output"] += u.get("completion_tokens", 0)
+            return text
+        raise RuntimeError(f"OpenRouter の無料モデル {tried or '（なし）'} がすべて失敗（最後: {last}）")
+
+
 def _run_tree(cmd: list[str], timeout: float, cwd: str):
     """subprocess.run の代わり。時間切れでは子孫プロセスごと止める。
 
@@ -146,25 +243,42 @@ class OpenCodeCLI:
         # タイムアウト時に切り替える先（許可リスト内＝公式で $0 確認済みのものだけ）。fallbacks=0 で切り替えなし
         self.alternates = [m for m in OPENCODE_FALLBACK_ORDER if m != model and m in OPENCODE_FREE_MODELS][:max(0, fallbacks)]
         self._last, self._lock = 0.0, threading.Lock()
+        self.external = None      # 別サービスの切り替え先（OpenRouterLLM）。make_llm が環境変数のキーがあるときだけ付ける
 
     def complete(self, sysp: str, messages: list[dict], effort: str, usage: dict | None) -> str:
         """今のモデルがタイムアウトしたら別の無料モデルで同じ依頼を再試行する。成功したモデルをそのまま使い続ける。
         全部タイムアウトしたら CallTimeout を投げる（呼び出し側が保留・連続打ち切りに数える）。"""
         order = [self.model, *self.alternates]
         tried = []
+        last: Exception | None = None
         for m in order:
             try:
                 text = self._complete_one(m, sysp, messages, usage)
-            except CallTimeout as e:
-                tried.append(m)
-                print(f"  ⏱ {m} が時間内に終わらない。別の無料モデルへ切り替える", file=sys.stderr, flush=True)
+            except Fatal:
+                raise
+            except FreeLimit as e:      # 上限は全モデル共通。OpenCode の他のモデルは試さず、別サービスがあればそちらへ
                 last = e
+                tried.append(m)
+                print(f"  ⛔ {e}", file=sys.stderr, flush=True)
+                break
+            except Exception as e:      # noqa: BLE001  タイムアウトも「Model is unavailable」等の応答エラーも、別モデルで試す
+                tried.append(m)
+                last = e
+                kind = "時間内に終わらない" if isinstance(e, CallTimeout) else f"使えない（{type(e).__name__}: {str(e)[:80]}）"
+                print(f"  ⏱ {m} が{kind}。別の無料モデルへ切り替える", file=sys.stderr, flush=True)
                 continue
             if m != self.model:
                 self.alternates = [x for x in order if x != m]
                 self.model = m
             return text
-        raise CallTimeout(f"{'・'.join(tried)} がすべてタイムアウト（{last}）")
+        if self.external is not None:      # OpenCode の無料モデルが全滅したら別サービス（OpenRouter の無料モデル）へ
+            print("  ⏱ OpenCode の無料モデルが全滅。OpenRouter の無料モデルへ切り替える", file=sys.stderr, flush=True)
+            return self.external.complete(sysp, messages, effort, usage)
+        if isinstance(last, FreeLimit):
+            raise last
+        if isinstance(last, CallTimeout):
+            raise CallTimeout(f"{'・'.join(tried)} がすべてタイムアウト（{last}）")
+        raise RuntimeError(f"{'・'.join(tried)} がすべて失敗（最後: {last}）")
 
     def _complete_one(self, model: str, sysp: str, messages: list[dict], usage: dict | None) -> str:
         import shutil
@@ -185,6 +299,8 @@ class OpenCodeCLI:
             r = _run_tree([exe, "run", "-m", f"opencode/{model}", "--format", "json",
                            "添付ファイルの指示に従い、最後の [user] への答えだけを出力して。", "-f", str(f)],
                           OPENCODE_TIMEOUT, d)
+        if FREE_LIMIT_RE.search(r.stdout + r.stderr):
+            raise FreeLimit("OpenCode の無料枠の上限に達した（リセットまで待つ。時刻は OpenCode のコンソールで確認）")
         if re.search(r"(?i)FreeTierError|billing|credit balance|insufficient|payment", r.stdout + r.stderr):
             raise Fatal(f"課金・無料枠に関するエラーなので停止する: {(r.stdout + r.stderr)[:300]}")
         texts, err = [], None
