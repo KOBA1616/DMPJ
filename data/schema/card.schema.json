@@ -1177,6 +1177,31 @@
     "breaks_per_power": {
      "type": "integer"
     },
+    "cost": {
+     "anyOf": [
+      {
+       "type": "integer"
+      },
+      {
+       "type": "object",
+       "properties": {
+        "amount": {
+         "type": "integer"
+        },
+        "count": {
+         "$ref": "#/$defs/selector"
+        }
+       },
+       "required": [
+        "amount"
+       ],
+       "additionalProperties": false
+      }
+     ]
+    },
+    "cost_min": {
+     "type": "integer"
+    },
     "battle_power": {
      "type": "object",
      "properties": {
@@ -1217,6 +1242,8 @@
      "battle_power",
      "breaks",
      "breaks_per_power",
+     "cost",
+     "cost_min",
      "deny",
      "gain",
      "grant",

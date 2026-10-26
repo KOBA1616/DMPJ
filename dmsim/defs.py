@@ -28,7 +28,7 @@ REASONS = {"put", "destroy", "return", "discard", "charge", "summon", "cast", "b
            "draw", "battle", "sba", "resolve", "evolve"}
 VIAS = {"revolution_change", "generate"}   # 出し方の印（「革命チェンジによって出た時」など）
 DURATIONS_FIXED = {"end_of_turn", "during_attack", "permanent", "until_next_own_turn_start"}
-MOD_KEYS = {"power", "grant", "allow", "deny", "breaks", "breaks_per_power", "battle_power", "ignore", "gain"}
+MOD_KEYS = {"power", "grant", "allow", "deny", "breaks", "breaks_per_power", "battle_power", "cost", "cost_min", "ignore", "gain"}
 POSITIONS = {"top", "bottom"}
 PERMANENT_TYPES = {"tamaseed", "field", "cross_gear"}   # 手札から実行してバトルゾーンに出るクリーチャー以外のカード（315, 308, 303）
 CARD_TYPES = {"creature", "spell", "evolution"} | PERMANENT_TYPES
@@ -334,6 +334,17 @@ class Checker:
                     raise DefError(f"{where}: unknown action '{act}'")
                 if isinstance(e, dict):
                     self.filter(e.get("other", {}), where)
+        if "cost" in m:   # 支払うコストの増減: 整数、または {amount: N, count: <selector>}（1体につきN。amount が負なら軽減）
+            cm = m["cost"]
+            if isinstance(cm, dict):
+                if set(cm) - {"amount", "count"} or not isinstance(cm.get("amount"), int):
+                    raise DefError(f"{where}: cost needs amount (int) and optional count (selector)")
+                if "count" in cm:
+                    self.selector(cm["count"], where)
+            elif not isinstance(cm, int):
+                raise DefError(f"{where}: cost must be int or {{amount, count}}")
+        if "cost_min" in m and not isinstance(m["cost_min"], int):
+            raise DefError(f"{where}: cost_min must be int")
         if "battle_power" in m:   # バトル中だけのパワー修整: {amount: N, count: <selector>}（ハンティング）
             bp = m["battle_power"]
             if not isinstance(bp, dict) or set(bp) - {"amount", "count"} or not isinstance(bp.get("amount"), int):

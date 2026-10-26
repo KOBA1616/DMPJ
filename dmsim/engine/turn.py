@@ -106,6 +106,8 @@ class TurnMixin:
         cost: 実行時に確定したコスト（進化元数の軽減など）。指定なければカード定義のコスト。"""
         d = self.cdef(cid).face(face)
         eff = d.cost if cost is None else cost
+        ch = self.chars(cid, face)
+        eff = max(0, eff + ch["pay_cost"] - d.cost)           # 継続的効果によるコストの増減（mod cost）
         if eff == 0 and not d.civs:
             return [[]]
         untapped = [c for c in self.zlist("mana", p) if not self.s.cards[c].tapped]
