@@ -79,7 +79,7 @@ class TurnMixin:
 
     def _can_play_face(self, cid, p, face) -> bool:
         d = self.cdef(cid).face(face)
-        action = "summon" if d.is_creature() else "cast"
+        action = "summon" if d.is_creature() else "generate" if d.is_permanent() else "cast"
         if not self.permits(cid, action) or (d.is_creature() and not self.permits(cid, "enter_bz")):
             return False
         if "evolution" in d.types:
@@ -88,8 +88,34 @@ class TurnMixin:
                 return False
             n = len(srcs) if d.evolve_any else 1            # 最も安い組合せで払えるか（112.2b）
             cost = max(0, d.cost - n * d.cost_reduce_per_evo) if d.cost_reduce_per_evo else None
-            return bool(self._mana_choices(cid, p, face, cost=cost, limit=1))
-        return bool(self._mana_choices(cid, p, face, limit=1))
+            return bool(self._mana_choices(cid, p, face, cost=self._opt_reduced(cid, face, d, self._sac_reduced(d, self._tap_reduced(d, p, cost, None), self._sac_pool(d, p))), limit=1))
+        return bool(self._mana_choices(cid, p, face, cost=self._opt_reduced(cid, face, d, self._sac_reduced(d, self._tap_reduced(d, p, None, None), self._sac_pool(d, p))), limit=1))
+
+    def _opt_reduced(self, cid, face, d, cost):
+        """B・A・D / J・O・E: 減らして実行できる場合の最安コスト（実行可能かの判定用）。"""
+        o = self.chars(cid, face)["opt_reduce"]
+        return cost if not o else max(0, (d.cost if cost is None else cost) - o["amount"])
+
+    def _sac_pool(self, d, p) -> list[int]:
+        """ササゲール: ディスペクターを召喚する時、破壊してコストを減らせる自分のクリーチャー。"""
+        if not any("ディスペクター" in r for r in d.races):
+            return []
+        return [c for c in self.bz_tops(p) if self.chars(c)["sac_reduce"] > 0]
+
+    def _sac_reduced(self, d, cost, sacs):
+        if not sacs:
+            return cost
+        return max(0, (d.cost if cost is None else cost) - sum(self.chars(c)["sac_reduce"] for c in sacs))
+
+    def _tap_pool(self, p) -> list[int]:
+        return [c for c in self.bz_tops(p) if "creature" in self.chars(c)["types"] and not self.s.cards[c].tapped]
+
+    def _tap_reduced(self, d, p, cost, tapped):
+        """ハイパーエナジー: タップしたクリーチャー1体につきコストを減らす（床は0）。tapped=None は最大限タップした場合。"""
+        if not d.tap_reduce:
+            return cost
+        n = len({self.chars(c)["cost"] for c in self._tap_pool(p)}) if tapped is None else len(tapped)
+        return max(0, (d.cost if cost is None else cost) - n * d.tap_reduce)
 
     def _evo_sources(self, cid, p, face=None) -> list[int]:
         """適正な進化元（801.1a）。evolve_zone（既定は自分のバトルゾーン）のクリーチャーで
@@ -98,13 +124,16 @@ class TurnMixin:
         ef = {k: v for k, v in (f.evolve_from or {}).items() if k != "zone"} or {}
         z = f.evolve_zone
         pool = self.bz_tops(p) if z == "bz" else self.zlist(z, p)
-        return [c for c in pool if "creature" in self.chars(c)["types"] and self.filter_match(c, ef)]
+        return [c for c in pool if ("creature" in self.chars(c)["types"] or self.permits(c, "evolve_base"))
+                and self.filter_match(c, ef)]
 
     def _mana_choices(self, cid, p, face=None, cost: int | None = None, limit: int = 32) -> list[list[int]]:
         """支払いに使うマナの組（112.2a）。文明は1文明につき別々の1枚で満たし、マナの数値の合計がコストに一致。
         cost: 実行時に確定したコスト（進化元数の軽減など）。指定なければカード定義のコスト。"""
         d = self.cdef(cid).face(face)
         eff = d.cost if cost is None else cost
+        ch = self.chars(cid, face)
+        eff = max(0, eff + ch["pay_cost"] - d.cost)           # 継続的効果によるコストの増減（mod cost）
         if eff == 0 and not d.civs:
             return [[]]
         untapped = [c for c in self.zlist("mana", p) if not self.s.cards[c].tapped]
@@ -274,7 +303,7 @@ def h_play(eng, t):
         eng._pop(t)
         return None
     d = eng.cdef(cid).face(face)
-    action = "summon" if d.is_creature() else "cast"
+    action = "summon" if d.is_creature() else "generate" if d.is_permanent() else "cast"
     if not eng.permits(cid, action) or (d.is_creature() and not eng.permits(cid, "enter_bz")):
         eng._pop(t)
         return None
@@ -289,9 +318,42 @@ def h_play(eng, t):
         if dd:
             return dd
         t["evo"] = [s.ref(srcs[i]) for i in ans]
+    if d.tap_reduce and not t["free"] and not t.get("tap_done"):     # ハイパーエナジー: コストが異なるクリーチャーを好きな数タップ
+        chosen = t.setdefault("tap", [])
+        used = {eng.chars(c)["cost"] for c in chosen}
+        cands = [c for c in eng._tap_pool(p) if c not in chosen and eng.chars(c)["cost"] not in used]
+        if cands:
+            ans, dd = eng.ask(t, p, "choose_cards", [eng._card_option(c) for c in cands], 0, 1)
+            if dd:
+                return dd
+            if ans:
+                chosen.append(cands[ans[0]])
+                return None
+        t["tap_done"] = True
+    if not t["free"] and not t.get("sac_done"):                      # ササゲール: 破壊するクリーチャーを任意に選ぶ
+        chosen = t.setdefault("sac", [])
+        cands = [c for c in eng._sac_pool(d, p) if c not in chosen]
+        if cands:
+            ans, dd = eng.ask(t, p, "choose_cards", [eng._card_option(c) for c in cands], 0, 1)
+            if dd:
+                return dd
+            if ans:
+                chosen.append(cands[ans[0]])
+                return None
+        t["sac_done"] = True
+    ch0 = eng.chars(cid, face)
+    if ch0["opt_reduce"] and not t["free"] and not t.get("reduce_done"):    # B・A・D / J・O・E: 減らして実行するか選ぶ
+        ans, dd = eng.ask(t, p, "choose_cards", [{"key": "reduce"}, {"key": "normal"}], 1, 1)
+        if dd:
+            return dd
+        t["reduced"] = ans[0] == 0
+        t["reduce_done"] = True
     if not t["free"]:
         n = len(t.get("evo", []))
         cost = max(0, d.cost - n * d.cost_reduce_per_evo) if d.cost_reduce_per_evo else None
+        cost = eng._sac_reduced(d, eng._tap_reduced(d, p, cost, t.get("tap", [])), t.get("sac", []))
+        if t.get("reduced"):
+            cost = max(0, (d.cost if cost is None else cost) - ch0["opt_reduce"]["amount"])
         choices = eng._mana_choices(cid, p, face, cost=cost)
         if not choices:
             eng._pop(t)
@@ -300,7 +362,7 @@ def h_play(eng, t):
         ans, dd = eng.ask(t, p, "pay_mana", opts)
         if dd:
             return dd
-        for c in opts[ans[0]]["cids"]:
+        for c in opts[ans[0]]["cids"] + t.get("tap", []):
             s.cards[c].tapped = True
     eng._pop(t)
     from_zone = s.cards[cid].zone
@@ -316,6 +378,9 @@ def h_play(eng, t):
             if len(t["evo"]) > 1:
                 ev["stack_more"] = t["evo"][1:]
         eng._push(eng.ev_task(ev))
+    elif d.is_permanent():      # タマシード・フィールド・クロスギア: 実行（展開・ジェネレート）したらバトルゾーンに出る（315.2, 308.2, 303.2）
+        eng._push(eng.ev_task({"ev": "move", "subject": ref, "from": from_zone, "to": "bz", "reason": "put",
+                               "controller": p, "via": "generate", "unpaid": bool(t["free"])}))
     else:   # 呪文: 唱えた → 書かれた順に解決 → 最終段階として墓地へ（605.2f）
         env = {"you": p, "self": ref, "vars": {}}
         if t.get("st"):
@@ -325,4 +390,14 @@ def h_play(eng, t):
                    eng.ev_task({"ev": "move", "subject": ref, "from": from_zone, "to": t.get("resolve_to", d.resolve_to),
                                  "reason": "resolve"}),
                    *([eng._child(d.after_resolve, env)] if d.after_resolve else []))
+    if t.get("reduced"):   # 減らして実行したら、そのターンの終わりに処理する。実行の解決より後に積む＝先に処理する
+        then = ch0["opt_reduce"]["then"]
+        end = [{"op": "move", "select": {"ref": "self_entered"}, "to": "graveyard", "reason": "destroy"}] if then == "destroy" else \
+              [{"op": "move", "select": {"ref": "self_entered"}, "to": "deck", "reason": "put", "position": "bottom"},
+               {"op": "draw", "count": 1}]
+        eng._push(eng._child([{"op": "delayed_trigger", "when": {"event": "turn_end"}, "effect": end}],
+                             {"you": p, "self": ref, "vars": {}}))
+    if t.get("sac"):       # ササゲール: 軽減したら破壊する（支払いの一部。実行の解決より先に行う）
+        eng._push(eng.ev_task([{"ev": "move", "subject": s.ref(c), "to": "graveyard", "reason": "destroy"}
+                               for c in t["sac"]]))
     return None

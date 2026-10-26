@@ -20,6 +20,7 @@ from __future__ import annotations
 
 import argparse
 import json
+import os
 import re
 import sys
 from pathlib import Path
@@ -32,9 +33,10 @@ sys.path.insert(0, str(ROOT / "tools"))
 
 from dmsim import schema  # noqa: E402
 from dmsim.defs import DATA, DefError, load_tables, parse_card  # noqa: E402
+import rule_convert  # noqa: E402
 from llm_offload.providers import CallTimeout  # noqa: E402
 from llm_offload.providers import (  # noqa: E402,F401  無料モデル呼び出しは llm_offload に集約
-    OPENCODE_DEFAULT, OPENCODE_FREE_MODELS, OPENCODE_URL, BadResponse, Fatal, OpenCodeCLI, OpenCodeLLM, check_free_model)
+    OPENCODE_DEFAULT, OPENCODE_FREE_MODELS, OPENCODE_URL, BadResponse, Fatal, OpenCodeCLI, OpenCodeLLM, Chain, GeminiLLM, LLM7LLM, OpenRouterLLM, check_free_model)
 
 MODEL = "claude-opus-5-5"
 
@@ -45,8 +47,10 @@ INSTRUCTIONS = """\
 - 出力は ```yaml で囲んだ1枚分のカード定義（`cards:` の下の1要素と同じ形。先頭の `- ` は付けない）だけ。
 - 語彙は下の JSON Schema・キーワード・マクロ・許可/禁止できる行為の一覧にあるものだけを使う。無い語を作らない。
 - キーワード能力（ブロッカー、S・トリガー、W・ブレイカー など）は keywords に書き、説明文の括弧書きは無視する。
+- known_keywords があるときは、それらのキーワードはルールで処理済み（text から除いてある）。keywords に入れ直さず、残りの text だけを変換する。
 - 「〜できない」は static の mod.deny、「〜できる」は mod.allow。「〜してもよい」は op: may。
 - 進化は types に evolution を含め evolve_from に進化元の条件を書く。ツインパクトは faces に2面を書く。
+- カードの種類: クリーチャーは creature、呪文は spell、タマシードは tamaseed、フィールドは field、クロスギアは cross_gear（実行するとバトルゾーンに出る）。「タマシード/クリーチャー」は両方を types に書く。他の種類（オーラ・城・ドラグハート・サイキック・GR など）は未対応なので、近似せず source.unsupported に書く。
 - 革命チェンジ・ニンジャ・ストライク等の宣言は kind: declare（既存カードの例に倣う）。
 - text には原文から括弧書きの注釈を除いたものを「 / 」区切りで書く。
 - 表せない・近似した点は source.notes に日本語で具体的に書く。表せない能力を黙って落とさない。
@@ -70,18 +74,48 @@ def examples_text(exclude: frozenset = frozenset()) -> str:
     return yaml.safe_dump({"cards": cards}, allow_unicode=True, sort_keys=False)
 
 
-def system_prompt(exclude: frozenset = frozenset()) -> str:
-    """全カード共通の部分（キャッシュされる）。内容が変わらない限り同じ文字列になるようにする。"""
+def _bigrams(t: str) -> set:
+    t = re.sub(r"\s+", "", t or "")
+    return {t[i:i + 2] for i in range(len(t) - 1)}
+
+
+def examples_for(row: dict, n: int, exclude: frozenset = frozenset()) -> str:
+    """原文が近い既存カードを n 枚だけ選ぶ（文字2-gram の重なり）。無料モデルに渡す量を減らすため。"""
+    cards = [c for c in yaml.safe_load((DATA / "cards" / "real.yaml").read_text(encoding="utf-8"))["cards"]
+             if c["id"] not in exclude and c["id"] != row.get("id")]
+    q = _bigrams(" ".join(filter(None, [row.get("text", ""), *[f.get("text", "") for f in row.get("faces") or []]])))
+
+    def score(c):
+        b = _bigrams(c.get("text", ""))
+        return len(q & b) / (len(q | b) or 1)
+    top = sorted(cards, key=score, reverse=True)[:n]
+    return yaml.safe_dump({"cards": top}, allow_unicode=True, sort_keys=False)
+
+
+def system_prompt(exclude: frozenset = frozenset(), row: dict | None = None, n_examples: int = 0) -> str:
+    """共通の部分。row と n_examples を渡すと、例をそのカードに近い n 枚だけにする（0 なら全部。全カード同じ文字列になる）。"""
+    ex = examples_for(row, n_examples, exclude) if row is not None and n_examples else examples_text(exclude)
     parts = [INSTRUCTIONS,
-             "## JSON Schema\n" + json.dumps(schema.build(), ensure_ascii=False, sort_keys=True),
+             "## JSON Schema\n" + json.dumps(schema.build(), ensure_ascii=False, sort_keys=True, separators=(",", ":")),
              *[f"## data/rules/{n}\n{_rules_text(n)}" for n in
                ("zones.yaml", "keywords.yaml", "op_macros.yaml", "permissions.yaml", "turn.yaml")],
-             "## 変換済みカードの例（data/cards/real.yaml）\n" + examples_text(exclude)]
+             "## 変換済みカードの例（data/cards/real.yaml）\n" + ex]
     return "\n\n".join(parts)
 
 
+# モデルに渡す項目。フレーバー・イラストレーター・レアリティ・取得時の印などは効果と無関係なので渡さない
+PROMPT_FIELDS = ("id", "name", "card_type", "civilization", "cost", "power", "race", "mana", "text", "known_keywords")
+
+
+def prompt_row(row: dict) -> dict:
+    out = {k: row[k] for k in PROMPT_FIELDS if k in row}
+    if row.get("faces"):
+        out["faces"] = [{k: f[k] for k in PROMPT_FIELDS if k in f} for f in row["faces"]]
+    return out
+
+
 def user_prompt(row: dict) -> str:
-    return "次のカードを変換してください。\n\n" + json.dumps(row, ensure_ascii=False, indent=1)
+    return "次のカードを変換してください。\n\n" + json.dumps(prompt_row(row), ensure_ascii=False, indent=1)
 
 
 def extract(text: str) -> dict:
@@ -137,7 +171,12 @@ def make_llm(provider: str, model: str | None, interval: float):
     if provider == "opencode":
         return OpenCodeLLM(model or OPENCODE_DEFAULT, interval)
     if provider == "opencode-cli":
-        return OpenCodeCLI(model or OPENCODE_DEFAULT, interval)
+        llm = OpenCodeCLI(model or OPENCODE_DEFAULT, interval)
+        # OpenCode 全滅時の切り替え先。Gemini・OpenRouter はキーがあるときだけ、LLM7 は匿名で（DMPJ_NO_LLM7=1 で無効）
+        llm.external = Chain(GeminiLLM(interval) if os.environ.get("GEMINI_API_KEY") else None,
+                             OpenRouterLLM(interval) if os.environ.get("OPENROUTER_API_KEY") else None,
+                             None if os.environ.get("DMPJ_NO_LLM7") else LLM7LLM(interval))
+        return llm
     return AnthropicLLM(model or MODEL)
 
 
@@ -145,7 +184,7 @@ def convert(llm, row: dict, tables, sysp: str, effort: str, usage: dict | None =
     messages = [{"role": "user", "content": user_prompt(row)}]
     err = None
     for attempt in range(2):
-        text = llm.complete(sysp, messages, effort, usage)
+        text = llm.complete(sysp(row) if callable(sysp) else sysp, messages, effort, usage)
         print(f"  {row['id']}: {len(text)}文字", file=sys.stderr)
         try:
             return validate(extract(text), row, tables)
@@ -221,6 +260,57 @@ def classify(error: str) -> dict:
     return {"reason": "vocab_gap", "gaps": gaps} if gaps else {"reason": "other", "gaps": []}
 
 
+def precheck(row: dict) -> dict | None:
+    """モデルを呼ぶ前に、原文がそもそも変換できる状態か見る。ダメなら理由を返す（API も時間も使わない）。
+
+    fetch_incomplete: 取得が空ページ・項目欠け（名前・種類・文明・コストが無い）→ 再取得が要る。
+    no_text: どの面にも能力文が無い → 変換の対象外（語彙不足ではない）。
+    2026-10-26 のタイムアウト8件はすべてこの状態だった（応答を待って20分ずつ無駄にした）。
+    """
+    if {"name", "card_type", "civilization", "cost"} & set(row.get("missing") or []):
+        return {"reason": "fetch_incomplete", "gaps": [], "error": "原文の取得が空ページ・項目欠け（再取得が必要）"}
+    if not row.get("text") and not any(f.get("text") for f in row.get("faces") or []):
+        return {"reason": "no_text", "gaps": [], "error": "能力文が無い（変換対象外。語彙不足ではない）"}
+    return None
+
+
+def run_rules(rows: list[dict], tables, out: Path, rejects_path: Path) -> dict:
+    """ルールだけで完全に変換できる行（辞書のキーワード・定型文・同一原文の写し）を、モデルを呼ばずにまとめて out へ登録する。
+    変換済み・検査落ちの行は対象にしない（検査落ちでもルール変換できるようになったものは戻す）。
+    モデルのジョブに積む前の前処理で、枚数の上限は設けない。"""
+    doc = (yaml.safe_load(out.read_text(encoding="utf-8")) if out.exists() else None) or {}
+    cards = doc.get("cards") or []
+    done = known_ids(out) | {c["id"] for c in cards}
+    rejects = {r["id"]: r for r in read_jsonl(rejects_path)}
+    stats = {"requested": 0, "ok": 0, "by_rule": 0, "by_copy": 0, "invalid": 0}
+    for r in rows:
+        if r["id"] in done:
+            continue
+        stats["requested"] += 1
+        rc, kind = rule_convert.convert(r), "by_rule"
+        if rc is None:
+            rc, kind = rule_convert.reuse_same_text(r, cards), "by_copy"
+        if rc is None:
+            continue
+        try:
+            rc = validate(rc, r, tables)
+        except DefError as e:
+            stats["invalid"] += 1
+            print(f"  {r['id']}: ルール変換が検査を通らなかったのでモデルへ回す: {e}", file=sys.stderr)
+            continue
+        cards.append(rc)
+        done.add(r["id"])
+        rejects.pop(r["id"], None)
+        stats["ok"] += 1
+        stats[kind] += 1
+    if stats["ok"]:
+        out.parent.mkdir(parents=True, exist_ok=True)
+        out.write_text("# convert_cards.py の出力（review: pending）。確認後に real.yaml へ移す。\n"
+                       + yaml.safe_dump({"cards": cards}, allow_unicode=True, sort_keys=False), encoding="utf-8")
+        write_jsonl(rejects_path, list(rejects.values()))
+    return stats
+
+
 def run(rows: list[dict], client, tables, sysp: str, effort: str, out: Path, rejects_path: Path,
         workers: int = 1, report_path: Path | None = None) -> dict:
     """rows を変換して out に追記する。1枚ごとに保存するので途中で止まっても続きから再開できる。
@@ -241,14 +331,61 @@ def run(rows: list[dict], client, tables, sysp: str, effort: str, out: Path, rej
                        + yaml.safe_dump({"cards": cards}, allow_unicode=True, sort_keys=False), encoding="utf-8")
         write_jsonl(rejects_path, list(rejects.values()))
 
+    pending_timeouts: list[dict] = []   # 次のカードが成功したら reason: timeout で確定する（連続2回なら障害とみなして確定しない）
     streak = {"n": 0}      # 連続したAPI失敗（2回で打ち切り）。無料枠の制限(429)に当たったら残りを打たずに止める
 
     def one(r):
+        rc = rule_convert.convert(r)      # キーワードだけ・バニラは、辞書のルールで作る（モデルを呼ばない＝トークン0）
+        if rc is not None:
+            try:
+                rc = validate(rc, r, tables)
+            except DefError as e:
+                print(f"  {r['id']}: ルール変換が検査を通らなかったのでモデルへ回す: {e}", file=sys.stderr)
+            else:
+                with lock:
+                    stats["ok"] += 1
+                    print(f"✓ {r['id']} {r.get('name', '')} (ルール変換・モデル不使用)", file=sys.stderr, flush=True)
+                    cards.append(rc)
+                    rejects.pop(r["id"], None)
+                    save()
+                return
+        with lock:
+            same = rule_convert.reuse_same_text(r, cards)      # 原文が同じ変換済みカードがあれば能力を写す（モデルを呼ばない）
+        if same is not None:
+            try:
+                same = validate(same, r, tables)
+            except DefError as e:
+                print(f"  {r['id']}: 同一原文の写しが検査を通らなかったのでモデルへ回す: {e}", file=sys.stderr)
+            else:
+                with lock:
+                    stats["ok"] += 1
+                    print(f"✓ {r['id']} {r.get('name', '')} (同一原文の写し・モデル不使用)", file=sys.stderr, flush=True)
+                    cards.append(same)
+                    rejects.pop(r["id"], None)
+                    save()
+                return
         if streak["n"] >= 2:
             return
+        pre = precheck(r)
+        if pre:
+            with lock:
+                stats["rejected"] += 1
+                rejects[r["id"]] = {**r, **pre}
+                print(f"- {r['id']} {r.get('name', '')}: {pre['reason']}（モデルは呼ばない）", file=sys.stderr, flush=True)
+                save()
+            return
         print(f"… {r['id']} {r.get('name', '')} 変換中", file=sys.stderr, flush=True)
+        part = rule_convert.split(r)      # キーワード能力はルールで処理し、残りの原文だけをモデルに渡す
         try:
-            card = convert(client, r, tables, sysp, effort, usage)
+            card = convert(client, {**r, "text": part[1], "known_keywords": part[0]} if part else r, tables, sysp, effort, usage)
+            if part:
+                card["keywords"] = [*part[0], *[k for k in card.get("keywords") or [] if k not in part[0]]]
+                if not card["keywords"]:
+                    del card["keywords"]
+                if part[2]:
+                    card["abilities"] = [*part[2], *(card.get("abilities") or [])]
+                card["text"] = r["text"]
+            validate(card, r, tables)
         except DefError as e:
             with lock:
                 stats["rejected"] += 1
@@ -258,23 +395,28 @@ def run(rows: list[dict], client, tables, sysp: str, effort: str, out: Path, rej
             return
         except Fatal:
             raise
-        except CallTimeout as e:    # 長い上限でも終わらない＝そのカードは今のモデルでは無理。reason: timeout で対象外にする
+        except CallTimeout as e:    # 長い上限でも終わらない。無料枠の停止と区別するため、次のカードが成功するまで確定しない
             with lock:
-                stats["rejected"] += 1
-                rejects[r["id"]] = {**r, "error": str(e), "reason": "timeout", "gaps": []}
-                print(f"⏱ {r['id']} {r.get('name', '')}: {e}", file=sys.stderr)
-                save()
+                stats["api_error"] += 1
+                streak["n"] += 1
+                pending_timeouts.append({**r, "error": str(e), "reason": "timeout", "gaps": []})
+                api_errors.append({"id": r["id"], "error": f"CallTimeout: {e}"[:300]})
+                print(f"⏱ {r['id']} {r.get('name', '')}: {e}", file=sys.stderr, flush=True)
             return
         except Exception as e:      # noqa: BLE001  API の一時的な失敗。カードの問題ではないので rejects には入れない
             with lock:
                 stats["api_error"] += 1
                 streak["n"] += 1
                 api_errors.append({"id": r["id"], "error": f"{type(e).__name__}: {e}"[:300]})
-                print(f"! {r['id']} API失敗: {type(e).__name__}", file=sys.stderr)
+                print(f"! {r['id']} API失敗: {type(e).__name__}" + (f"（{e}）" if type(e).__name__ == "FreeLimit" else ""), file=sys.stderr)
             return
         with lock:
             stats["ok"] += 1
             streak["n"] = 0
+            for t in pending_timeouts:
+                stats["rejected"] += 1
+                rejects[t["id"]] = t
+            pending_timeouts.clear()
             print(f"✓ {r['id']} {r.get('name', '')} ({stats['ok'] + stats['rejected'] + stats['api_error']}/{len(rows)})", file=sys.stderr, flush=True)
             cards.append(card)
             rejects.pop(r["id"], None)

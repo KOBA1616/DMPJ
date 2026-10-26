@@ -226,7 +226,7 @@ class Engine(SelectorMixin, EventMixin, InterpreterMixin, TurnMixin, CombatMixin
         d = self.fdef(cid, face)
         ch = {"power": d.power, "cost": d.cost, "civs": list(d.civs), "types": list(d.types),
               "races": list(d.races), "keywords": set(d.keywords), "name": d.name,
-              "allow": [], "deny": [], "breaks": 1, "break_opts": []}
+              "allow": [], "deny": [], "breaks": 1, "break_opts": [], "pay_cost": d.cost, "sac_reduce": 0, "opt_reduce": None}
         own = self.abilities(cid, "static") if face is None else list(enumerate(d.abilities))
         ref = self.s.ref(cid)
         env_self = {"you": c.controller, "self": ref}
@@ -259,6 +259,25 @@ class Engine(SelectorMixin, EventMixin, InterpreterMixin, TurnMixin, CombatMixin
             if "breaks" in m:   # ブレイカー能力ごとのブレイク数（509.2b）。使う能力は攻撃時に選ぶ（509.2c）
                 ch["break_opts"].append(m["breaks"])
             ch["breaks"] = max(ch["breaks"], m.get("breaks", 1))
+        cost_min = 0
+        for m in mods:      # 支払うコストの増減（コスト参照の cost は変えない: 「コスト5以下」はカードのコストで見る）
+            if "cost" in m:
+                cm = m["cost"]
+                if isinstance(cm, dict):
+                    n = self.eval_expr({"count": cm["count"]}, env_self) if "count" in cm else 1
+                    ch["pay_cost"] += cm["amount"] * n
+                else:
+                    ch["pay_cost"] += cm
+            cost_min = max(cost_min, m.get("cost_min", 0))
+            ch["sac_reduce"] += m.get("sac_reduce", 0)
+            if "opt_reduce" in m:
+                ch["opt_reduce"] = m["opt_reduce"]
+        ch["pay_cost"] = max(cost_min, ch["pay_cost"])        # コストは0より小さくならない（既定）
+        for m in mods:      # パワード・ブレイカー: 最終パワー N ごとに1つ多くブレイクする（ブレイカー能力の1つ）
+            if m.get("breaks_per_power"):
+                n = 1 + max(0, ch["power"]) // m["breaks_per_power"]
+                ch["break_opts"].append(n)
+                ch["breaks"] = max(ch["breaks"], n)
         ch["keywords"] = sorted(ch["keywords"])   # 状態（LKI）に入るので JSON にできる形で返す
         return ch
 
@@ -327,7 +346,7 @@ class Engine(SelectorMixin, EventMixin, InterpreterMixin, TurnMixin, CombatMixin
                 self._note_deck(c)
         c.gen += 1                                  # 新しいオブジェクトになる（400.5）
         c.zone = to
-        c.tapped = to == "mana" and len(self.cdef(cid).civs) > 1   # 多色カードはタップしてマナに置かれる
+        c.tapped = to == "mana" and len(self.cdef(cid).civs) > 1   # 多色カードはタップしてマナに置かれる（405.1）
         c.face_up = self.rules.zones[to]["public"]
         c.controller = c.owner if controller is None else controller
         c.entered_turn = s.turn if to == "bz" else -1

@@ -26,11 +26,12 @@ ABILITY_KINDS = {"trigger", "replace", "static", "declare"}
 ABILITY_KEYS = {"kind", "when", "if", "effect", "instead", "optional", "affects", "mod", "zone", "keyword"}
 REASONS = {"put", "destroy", "return", "discard", "charge", "summon", "cast", "break",
            "draw", "battle", "sba", "resolve", "evolve"}
-VIAS = {"revolution_change"}   # 出し方の印（「革命チェンジによって出た時」など）
+VIAS = {"revolution_change", "generate"}   # 出し方の印（「革命チェンジによって出た時」など）
 DURATIONS_FIXED = {"end_of_turn", "during_attack", "permanent", "until_next_own_turn_start"}
-MOD_KEYS = {"power", "grant", "allow", "deny", "breaks", "ignore", "gain"}
+MOD_KEYS = {"power", "grant", "allow", "deny", "breaks", "breaks_per_power", "battle_power", "cost", "cost_min", "sac_reduce", "opt_reduce", "ignore", "gain"}
 POSITIONS = {"top", "bottom"}
-CARD_TYPES = {"creature", "spell", "evolution"}
+PERMANENT_TYPES = {"tamaseed", "field", "cross_gear"}   # 手札から実行してバトルゾーンに出るクリーチャー以外のカード（315, 308, 303）
+CARD_TYPES = {"creature", "spell", "evolution"} | PERMANENT_TYPES
 CIVS = {"light", "water", "darkness", "fire", "nature", "zero"}
 SELECTOR_KEYS = {"zone", "owner", "owner_of", "filter", "count", "up_to", "from_top", "chooser", "ref", "other",
                  "under_of", "look", "exlife_of"}   # look: 非公開ゾーン（山札など）の中身を見て選ぶ
@@ -59,6 +60,7 @@ class Face:
     evolve_zone: str = "bz"                               # 進化元を探すゾーン（超無限墓地進化は graveyard）
     evolve_any: bool = False                              # 進化元を1体以上選べる（超無限墓地進化）
     cost_reduce_per_evo: int = 0                          # 進化元1体につき召喚コストをいくら減らすか
+    tap_reduce: int = 0                                   # ハイパーエナジー: コストが異なる自分のクリーチャー1体をタップするごとに減るコスト
     free_if: dict | None = None                           # 条件を満たす間はコストを支払わずに召喚できる（G・ゼロ）
     resolve_to: str = "graveyard"                         # 呪文の解決後の置き場所（チャージャー等）
     after_resolve: list[dict] = field(default_factory=list)
@@ -68,6 +70,10 @@ class Face:
 
     def is_spell(self) -> bool:
         return "spell" in self.types
+
+    def is_permanent(self) -> bool:
+        """クリーチャーでなく、実行するとバトルゾーンに出るカード（タマシード・フィールド・クロスギア）。"""
+        return not self.is_creature() and bool(PERMANENT_TYPES & set(self.types))
 
 
 @dataclass
@@ -88,6 +94,7 @@ class CardDef:
     evolve_zone: str = "bz"
     evolve_any: bool = False
     cost_reduce_per_evo: int = 0
+    tap_reduce: int = 0
     free_if: dict | None = None
     resolve_to: str = "graveyard"
     after_resolve: list[dict] = field(default_factory=list)
@@ -99,6 +106,10 @@ class CardDef:
 
     def is_spell(self) -> bool:
         return "spell" in self.types
+
+    def is_permanent(self) -> bool:
+        """クリーチャーでなく、実行するとバトルゾーンに出るカード（タマシード・フィールド・クロスギア）。"""
+        return not self.is_creature() and bool(PERMANENT_TYPES & set(self.types))
 
     def face(self, i: int | None) -> "CardDef | Face":
         return self if i is None or not self.faces else self.faces[i]
@@ -152,6 +163,8 @@ def expand_ops(ops: list[dict], macros: dict, where: str) -> list[dict]:
             for k, ty in core[name].items():
                 if ty.rstrip("?") == "ops" and k in op:
                     op[k] = expand_ops(op[k], macros, where)
+                if ty.rstrip("?") == "oplists" and k in op:
+                    op[k] = [expand_ops(m, macros, where) for m in op[k]]
                 if ty.rstrip("?") == "mod" and k in op and "gain" in op[k]:
                     op[k] = dict(op[k], gain=[_expand_ability(a, macros, where) for a in op[k]["gain"]])
             out.append(op)
@@ -210,6 +223,11 @@ class Checker:
             self.duration(v, where)
         if ty == "ops":
             self.ops(v, where)
+        if ty == "oplists":
+            if not isinstance(v, list) or len(v) < 2:
+                raise DefError(f"{where}: modes needs a list of 2 or more ops lists")
+            for m in v:
+                self.ops(m, where)
         if ty == "selector":
             self.selector(v, where)
         if ty == "mod":
@@ -318,6 +336,23 @@ class Checker:
                     raise DefError(f"{where}: unknown action '{act}'")
                 if isinstance(e, dict):
                     self.filter(e.get("other", {}), where)
+        if "cost" in m:   # 支払うコストの増減: 整数、または {amount: N, count: <selector>}（1体につきN。amount が負なら軽減）
+            cm = m["cost"]
+            if isinstance(cm, dict):
+                if set(cm) - {"amount", "count"} or not isinstance(cm.get("amount"), int):
+                    raise DefError(f"{where}: cost needs amount (int) and optional count (selector)")
+                if "count" in cm:
+                    self.selector(cm["count"], where)
+            elif not isinstance(cm, int):
+                raise DefError(f"{where}: cost must be int or {{amount, count}}")
+        if "cost_min" in m and not isinstance(m["cost_min"], int):
+            raise DefError(f"{where}: cost_min must be int")
+        if "battle_power" in m:   # バトル中だけのパワー修整: {amount: N, count: <selector>}（ハンティング）
+            bp = m["battle_power"]
+            if not isinstance(bp, dict) or set(bp) - {"amount", "count"} or not isinstance(bp.get("amount"), int):
+                raise DefError(f"{where}: battle_power needs amount (int) and optional count (selector)")
+            if "count" in bp:
+                self.selector(bp["count"], where)
         for k in m.get("ignore", []):
             if k not in ("trigger", "static", "replace", "all"):
                 raise DefError(f"{where}: bad ignore '{k}'")
@@ -407,7 +442,7 @@ def _load_face(raw, keywords, macros, chk: Checker, where) -> dict:
                 abilities=abilities, spell=spell, evolve_from=raw.get("evolve_from"),
                 evolve_zone=zone, evolve_any=bool(raw.get("evolve_any", False)),
                 cost_reduce_per_evo=int(raw.get("cost_reduce_per_evo", 0)),
-                free_if=raw.get("free_if"), **props)
+                free_if=raw.get("free_if"), **{"tap_reduce": 0, **props})
 
 
 def load_tables():

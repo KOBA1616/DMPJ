@@ -19,7 +19,7 @@ def build() -> dict:
     ref = lambda n: {"$ref": f"#/$defs/{n}"}  # noqa: E731
     arg = {
         "selector": ref("selector"), "zone": {"enum": sorted(zones)}, "reason": {"enum": sorted(REASONS)},
-        "expr": ref("expr"), "cond": ref("cond"), "ops": ref("ops"), "player": {"enum": ["you", "opp"]},
+        "expr": ref("expr"), "cond": ref("cond"), "ops": ref("ops"), "oplists": {"type": "array", "minItems": 2, "items": ref("ops")}, "player": {"enum": ["you", "opp"]},
         "players": {"enum": ["you", "opp", "each"]}, "mod": ref("mod"), "duration": {"enum": sorted(DURATIONS_FIXED)}, "position": {"enum": sorted(POSITIONS)},
         "step": {"enum": steps}, "str": {"type": "string"}, "int": {"type": "integer"},
         "bool": {"type": "boolean"}, "any": {}, "ability": ref("ability"),
@@ -81,7 +81,10 @@ def build() -> dict:
             "mod": {"type": "object", "properties": {
                 "power": {"type": "integer"}, "grant": {"type": "array", "items": {"enum": sorted(keywords)}},
                 "allow": {"type": "array", "items": perm}, "deny": {"type": "array", "items": perm},
-                "breaks": {"type": "integer"},
+                "breaks": {"type": "integer"}, "breaks_per_power": {"type": "integer"},
+                "cost": {"anyOf": [{"type": "integer"}, {"type": "object", "properties": {"amount": {"type": "integer"}, "count": ref("selector")}, "required": ["amount"], "additionalProperties": False}]},
+                "cost_min": {"type": "integer"},
+                "battle_power": {"type": "object", "properties": {"amount": {"type": "integer"}, "count": ref("selector")}, "required": ["amount"], "additionalProperties": False},
                 "ignore": {"type": "array", "items": {"enum": ["trigger", "static", "replace", "all"]}},
                 "gain": {"type": "array", "items": ref("ability")}},
                 "additionalProperties": False, "propertyNames": {"enum": sorted(MOD_KEYS)}},

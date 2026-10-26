@@ -74,7 +74,38 @@ class Git:
         self.sh("reset", "-q", "--hard", f"origin/{branch}", cwd=d)
         return d
 
-    def commit_push(self, d: Path, branch: str, msg: str, add: bool = True):
+    def merge_convert_results(self, d: Path, branch: str, msg: str):
+        """変換結果ファイルが origin 側とも変わって rebase が衝突したときの合流。converted.yaml と rejects.jsonl を ID ごとの和集合にして、
+        origin の最新の上に1コミット作り直す（作業ツリーの tools/ 等の上書きはそのまま残す）。成功扱い（変換済み）が優先。"""
+        import yaml as _y
+        conv, rej = d / "data/cards/converted.yaml", d / "data/cards/raw/rejects.jsonl"
+
+        def theirs(path: str) -> str:
+            return self.sh("show", f"origin/{branch}:{path}", cwd=d, check=False)
+
+        cards = {}
+        for text in (theirs("data/cards/converted.yaml"), conv.read_text(encoding="utf-8") if conv.exists() else ""):
+            for c in (_y.safe_load(text) or {}).get("cards") or []:      # あとから読む（自分の結果）が優先
+                cards[c["id"]] = c
+        rejects = {}
+        for text in (theirs("data/cards/raw/rejects.jsonl"), rej.read_text(encoding="utf-8") if rej.exists() else ""):
+            for line in text.splitlines():
+                if line.strip():
+                    r = json.loads(line)
+                    rejects[r["id"]] = r
+        for i in cards:
+            rejects.pop(i, None)
+        conv.write_text("# convert_cards.py の出力（review: pending）。確認後に real.yaml へ移す。\n"
+                        + _y.safe_dump({"cards": list(cards.values())}, allow_unicode=True, sort_keys=False), encoding="utf-8")
+        rej.write_text("".join(json.dumps(r, ensure_ascii=False) + "\n" for r in rejects.values()), encoding="utf-8")
+        self.sh("reset", "-q", "--mixed", f"origin/{branch}", cwd=d)
+        for f in ("data/cards/converted.yaml", "data/cards/raw/rejects.jsonl", "data/cards/raw/convert_report.json",
+                  "data/cards/raw/convert_status.json"):
+            if (d / f).exists():      # 無いパスを混ぜると git add 全体が失敗するので、あるものだけ足す
+                self.sh("add", "-f", f, cwd=d, check=False)
+        self.sh("commit", "-qm", msg + "（衝突を合流）", cwd=d, check=False)
+
+    def commit_push(self, d: Path, branch: str, msg: str, add: bool = True, on_conflict=None):
         if add:
             self.sh("add", "-A", "jobs", cwd=d, check=False)
         if not self.sh("diff", "--cached", "--name-only", cwd=d):
@@ -86,8 +117,23 @@ class Git:
             self.sh("fetch", "-q", "origin", branch)
             if subprocess.run(["git", "rebase", f"origin/{branch}"], cwd=d, capture_output=True).returncode:
                 self.sh("rebase", "--abort", cwd=d, check=False)
-                raise RuntimeError(f"{branch} への push が衝突した。次回やり直す")
+                if on_conflict is None:
+                    raise RuntimeError(f"{branch} への push が衝突した。次回やり直す")
+                on_conflict()      # 結果ファイルの合流など。そのあと push をやり直す
         raise RuntimeError(f"{branch} への push に失敗")
+
+
+def keep_awake(on: bool):
+    """Windows で、ワーカーが動いている間はスリープに入らないようにする（画面は消えてよい）。他の OS では何もしない。
+    注意: ふたを閉じた時の動作や、タスクスケジューラの『スリープ解除』は別の設定（docs/offload.md）。"""
+    if os.name != "nt":
+        return
+    try:
+        import ctypes
+        ES_CONTINUOUS, ES_SYSTEM_REQUIRED = 0x80000000, 0x00000001
+        ctypes.windll.kernel32.SetThreadExecutionState(ES_CONTINUOUS | ES_SYSTEM_REQUIRED if on else ES_CONTINUOUS)
+    except Exception:   # noqa: BLE001  設定できなくても本処理は続ける
+        pass
 
 
 class Tee:
@@ -109,18 +155,48 @@ class Tee:
         pass
 
 
+def pid_alive(pid: int) -> bool:
+    """そのPIDのプロセスが生きているか。Windows の os.kill(pid, 0) は対象を終了させてしまうので使わない。"""
+    if pid <= 0:
+        return False
+    if os.name == "nt":
+        r = subprocess.run(["tasklist", "/FI", f"PID eq {pid}", "/NH"], capture_output=True, text=True, timeout=20)
+        return str(pid) in r.stdout.split()
+    try:
+        os.kill(pid, 0)
+    except ProcessLookupError:
+        return False
+    except PermissionError:
+        return True
+    return True
+
+
 class Lock:
+    """<--work>/lock（既定 ~/.dmpj-worker/lock）。中に持ち主のPIDを書く。持ち主が死んでいれば自動で引き継ぐ（強制終了で残ったロック対策）。"""
+
     def __init__(self, path: Path):
         self.path = path
 
+    def _stale(self) -> bool:
+        if time.time() - self.path.stat().st_mtime > LOCK_STALE:
+            return True
+        try:
+            pid = int(self.path.read_text().strip())
+        except (ValueError, OSError):
+            return False      # PIDなし（旧版が作ったロック）は時間切れまで待つ
+        return not pid_alive(pid)
+
     def __enter__(self):
         self.path.parent.mkdir(parents=True, exist_ok=True)
-        if self.path.exists() and time.time() - self.path.stat().st_mtime > LOCK_STALE:
-            self.path.unlink()
+        if self.path.exists() and self._stale():
+            print("古いロックを回収した（持ち主のプロセスがいない）", flush=True)
+            self.path.unlink(missing_ok=True)
         try:
-            os.close(os.open(self.path, os.O_CREAT | os.O_EXCL | os.O_WRONLY))
+            fd = os.open(self.path, os.O_CREAT | os.O_EXCL | os.O_WRONLY)
         except FileExistsError:
-            raise SystemExit("別のワーカーが実行中（work/lock）。終了する") from None
+            raise SystemExit(f"別のワーカーが実行中（{self.path}）。終了する") from None
+        os.write(fd, str(os.getpid()).encode())
+        os.close(fd)
         return self
 
     def __exit__(self, *a):
@@ -141,19 +217,24 @@ def run_ask(job: dict, llm, cache: Path, daily_limit: int, base: Path) -> dict:
     return {"status": "ok", "text": r.text, "model": r.model, "cached": r.cached}
 
 
+class ModelOutage(RuntimeError):
+    """モデルが使えず進まなかった。ジョブは error にせず pending のまま残し、次回やり直す。"""
+
+
 def run_convert(job: dict, git: Git, jobs_model: str | None) -> dict:
     """cards-data の作業ツリーに現在の tools/dmsim/data/rules を重ねて auto_convert を実行し、結果を push する。"""
     d = data_tree(git)
     model = job.get("model") or jobs_model or lo.OPENCODE_DEFAULT
     lo.make_llm("opencode-cli", model)       # 許可リスト検査（違反は Fatal）
     env = {k: v for k, v in os.environ.items() if k != "OPENCODE_API_KEY"}
-    # 5枚ごとに auto_convert を呼び、そのたびに cards-data へ push する（途中で止めても済んだ分は残る）。
-    # 次回起動時の worktree は origin に reset されるので、push していない分は消える。だから5枚ごとに push する。
-    chunk, total = 5, int(job.get("limit", 20))
+    # chunk 枚ごとに auto_convert を呼び、そのたびに cards-data へ push する（途中で止めても済んだ分は残る）。
+    # 次回起動時の worktree は origin に reset されるので、push していない分は消える。だから chunk 枚ごとに push する。
+    # chunk は job の `chunk:` で変えられる（既定20。止まったときに失うのは最大 chunk 枚）。
+    chunk, total = max(1, int(job.get("chunk", 20))), int(job.get("limit", 20))
     tail: list[str] = []
     code, done_n = 0, 0
     for _ in range(max(1, -(-total // chunk))):
-        cmd = [sys.executable, "-u", "tools/auto_convert.py", "--model", model, "--limit", str(chunk), "--batch", str(chunk),
+        cmd = [sys.executable, "-u", "tools/auto_convert.py", "--model", model, "--limit", str(chunk), "--batch", str(min(chunk, 5)),
                "--interval", str(job.get("interval", 3)), "--workers", str(job.get("workers", 1))]
         # 出力を1行ずつ画面とログへ流す（ウィンドウで途中経過が見える）。最後の出力は結果に残す
         proc = subprocess.Popen(cmd, cwd=d, env=env, stdout=subprocess.PIPE, stderr=subprocess.STDOUT,
@@ -166,21 +247,25 @@ def run_convert(job: dict, git: Git, jobs_model: str | None) -> dict:
         git.sh("reset", "-q", cwd=d)
         git.sh("add", "-f", "data/cards/converted.yaml", "data/cards/raw/rejects.jsonl", "data/cards/raw/convert_report.json",
                "data/cards/raw/convert_status.json", cwd=d, check=False)
-        git.commit_push(d, DATA_BRANCH, f"cards-data: convert (local worker) {now()}", add=False)
+        msg = f"cards-data: convert (local worker) {now()}"
+        git.commit_push(d, DATA_BRANCH, msg, add=False, on_conflict=lambda: git.merge_convert_results(d, DATA_BRANCH, msg))
         print(now(), "保存して push した", flush=True)
         code = proc.returncode
         try:
             lr = (json.loads((d / "data/cards/raw/convert_status.json").read_text(encoding="utf-8")).get("last_run") or {}).get("new") or {}
         except (OSError, ValueError):
             lr = {}
-        progressed = lr.get("ok", 0) + lr.get("rejected", 0)
+        progressed = 0 if code else lr.get("ok", 0) + lr.get("rejected", 0)      # 異常終了のときは前回の status が残っているので数えない
         done_n += progressed
+        outage = code == 3 or (code == 0 and not progressed and lr.get("api_error", 0) > 0)    # 3=開始前ヘルスチェック失敗
+        if outage:
+            raise ModelOutage(f"モデルが使えず進まなかった（ここまで {done_n} 枚）。ジョブは pending のまま次回やり直す")
         if code or not progressed:      # 停止・API失敗だけで進まない時はここで終える（空回りしない）
             break
     r = subprocess.CompletedProcess([], code, "\n".join(tail), "\n".join(tail))
     if r.returncode:
         return {"status": "error", "error": lo.scrub((r.stderr or "")[-400:])}
-    return {"status": "ok", "text": lo.scrub(f"処理 {done_n} 枚（5枚ごとに保存）\n" + (r.stdout or "")[-1400:])}
+    return {"status": "ok", "text": lo.scrub(f"処理 {done_n} 枚（{chunk}枚ごとに保存）\n" + (r.stdout or "")[-1400:])}
 
 
 def data_tree(git: Git) -> Path:
@@ -241,7 +326,7 @@ SELF_FILES = ("tools/local_worker.py", "tools/run_worker.bat", "tools/llm_offloa
 def self_update(root: Path = ROOT, log=print) -> str:
     """実行前に main を fast-forward だけで更新する（PC での git pull の自動化）。
     作業ツリーが汚れている・main 以外のブランチ・ff 不可・ネットワーク不通のときは何もせず理由を返す。例外は呼び出し側に出さない。
-    ワーカー自身が更新された場合、今回の実行は読み込み済みの旧版で続行し、次回の起動から新版になる。"""
+    ワーカー自身が更新された場合は、呼び出し側（main）が新版で起動し直す（旧版のまま長いジョブを走らせないため）。"""
     def git(*a):
         r = subprocess.run(["git", *a], cwd=root, capture_output=True, text=True, encoding="utf-8", errors="replace", timeout=90)
         return r.returncode, (r.stdout or "").strip(), (r.stderr or "").strip()
@@ -264,7 +349,7 @@ def self_update(root: Path = ROOT, log=print) -> str:
             return f"更新しない: fast-forward できない({lo.scrub(err)[:100]})"
         _, changed, _ = git("diff", "--name-only", old, new)
         self_changed = [f for f in changed.splitlines() if f.startswith(SELF_FILES)]
-        return f"更新した {old[:7]}→{new[:7]}" + ("（ワーカー自身が変わったので次回の起動から新版）" if self_changed else "")
+        return f"更新した {old[:7]}→{new[:7]}" + ("（ワーカー自身が変わった）" if self_changed else "")
     except Exception as e:   # noqa: BLE001  更新の失敗でワーカー本体を止めない
         return f"更新しない: {type(e).__name__}"
 
@@ -303,10 +388,34 @@ def post_pr_comment(pr, jid: str, res: dict) -> str:
     return "posted" if r.returncode == 0 else f"failed: {lo.scrub((r.stderr or '')[:150])}"
 
 
-def process(git: Git, llm_factory=None, max_jobs: int = 20, daily_limit: int = lo.DAILY_LIMIT) -> list[str]:
+def model_alive(timeout: float = 90) -> str | None:
+    """無料モデル（匿名枠）が応答するかを短い質問で確かめる。使えれば None、だめなら理由を返す。"""
+    from llm_offload import providers
+    old = providers.OPENCODE_TIMEOUT
+    providers.OPENCODE_TIMEOUT = timeout
+    try:
+        llm = lo.make_llm("opencode-cli", lo.OPENCODE_DEFAULT)
+        if llm.recently_ok():
+            return None          # 直近に応答が返っている（5枚ごとの再起動でも試し直さない）
+        llm.alternates = []      # 開始前の確認は1モデル＋別サービスだけ（5分ごとの起動に収める）
+        llm.complete("", [{"role": "user", "content": "OKとだけ答えて"}], "low", None)
+        return None
+    except lo.Fatal:
+        raise
+    except Exception as e:      # noqa: BLE001  応答なし・CLIなし等はすべて「今は使えない」
+        return f"{type(e).__name__}: {str(e)[:150]}"
+    finally:
+        providers.OPENCODE_TIMEOUT = old
+
+
+def process(git: Git, llm_factory=None, max_jobs: int = 20, daily_limit: int = lo.DAILY_LIMIT, health=None) -> list[str]:
     jd = git.worktree("jobs", JOBS_BRANCH, create=True)
     pending, done = jd / "jobs" / "pending", jd / "jobs" / "done"
     done.mkdir(parents=True, exist_ok=True)
+    if health and any(pending.glob("*.yaml")):
+        why = health()      # ジョブがある時だけ確かめる。だめなら cards-data にも触れず、ジョブは pending のまま次回へ
+        if why:
+            return [f"モデルが使えないので今回は処理しない（ジョブは pending のまま）: {why}"]
     llm_factory = llm_factory or (lambda model: lo.make_llm("opencode-cli", model))
     handled = []
     for p in sorted(pending.glob("*.yaml"))[:max_jobs]:
@@ -321,6 +430,9 @@ def process(git: Git, llm_factory=None, max_jobs: int = 20, daily_limit: int = l
                 res = run_ask(job, llm_factory(job.get("model")), git.work / "cache", daily_limit, jd)
             else:
                 res = {"status": "error", "error": f"未知の type {job.get('type')!r}"}
+        except ModelOutage as e:    # ジョブは消さず、残りも今回は見送る
+            handled.append(f"{jid}:pending（{e}）")
+            break
         except lo.Fatal as e:      # 課金の兆候・許可外モデル。以降のジョブは実行しない
             res = {"status": "error", "error": lo.scrub(f"STOP: {e}")}
             (done / f"{jid}.yaml").write_text(yaml.safe_dump({"id": jid, "finished": now(), **res}, allow_unicode=True), encoding="utf-8")
@@ -375,6 +487,7 @@ def main(argv=None) -> int:
     os.environ.setdefault("PYTHONUTF8", "1")      # 子プロセス(Python)の出力もUTF-8にそろえる(Windows既定はcp932)
     os.environ.setdefault("XDG_DATA_HOME", str(Path(a.work) / "xdg"))
     os.environ.setdefault("XDG_CONFIG_HOME", str(Path(a.work) / "xdg-config"))
+    os.environ.setdefault("DMPJ_MODEL_STATE", str(Path(a.work) / "model_state.json"))      # 使えたモデル・使えなかったモデルを実行をまたいで覚える
     git = Git(ROOT, Path(a.work))
     if a.cmd == "enqueue":
         job = {"type": a.type}
@@ -403,17 +516,29 @@ def main(argv=None) -> int:
         lf = open(a.log, "a", encoding="utf-8", errors="replace")
         sys.stdout, sys.stderr = Tee(sys.stdout, lf), Tee(sys.stderr, lf)
     print(now(), "ワーカー開始", flush=True)
+    restart = False
+    keep_awake(True)
+    import atexit
+    atexit.register(keep_awake, False)
     with Lock(Path(a.work) / "lock"):
         while True:
             if not a.no_update:
-                print(now(), "self-update:", self_update(), flush=True)
+                msg = self_update()
+                print(now(), "self-update:", msg, flush=True)
+                if "ワーカー自身が変わった" in msg and not os.environ.get("DMPJ_WORKER_RESTARTED"):
+                    restart = True      # ロックを放してから新版で起動し直す（with を抜けた後）
+                    break
             try:
-                print(now(), process(git, daily_limit=a.daily_limit) or "ジョブなし", flush=True)
+                print(now(), process(git, daily_limit=a.daily_limit, health=model_alive) or "ジョブなし", flush=True)
             except RuntimeError as ex:
                 print(now(), "失敗（次回やり直す）:", lo.scrub(str(ex)), file=sys.stderr, flush=True)
             if not a.loop:
                 return 0
             time.sleep(a.loop)
+    if restart:
+        print(now(), "ワーカーが更新されたので新版で起動し直す", flush=True)
+        return subprocess.call([sys.executable, *sys.argv], env={**os.environ, "DMPJ_WORKER_RESTARTED": "1"})
+    return 0
 
 
 if __name__ == "__main__":

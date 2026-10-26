@@ -24,9 +24,11 @@ class CombatMixin:
             dfn = self.s.cards[cid].defn
             if self.permits(cid, "attack_player"):
                 out.append({"key": f"attack:{dfn}:player", "cid": cid, "target": "player"})
+            allow = [e for e in self.chars(cid)["allow"] if isinstance(e, dict) and e["action"] == "attack_creature"]
             for tc in self.bz_tops(1 - a):
-                if self.s.cards[tc].tapped and self.permits(cid, "attack_creature", tc) \
-                        and self.permits(tc, "be_attacked", cid):          # 505.2
+                # 505.2 既定ではタップ状態のクリーチャーだけ。「タップされていないクリーチャーを攻撃できる」(マッハファイター等)は allow で広げる
+                if (self.s.cards[tc].tapped or any(e.get("other", {}).get("tapped") is False and self.filter_match(tc, e["other"]) for e in allow)) \
+                        and self.permits(cid, "attack_creature", tc) and self.permits(tc, "be_attacked", cid):
                     out.append({"key": f"attack:{dfn}:{self.s.cards[tc].defn}", "cid": cid,
                                 "target": self.s.ref(tc)})
         return out
@@ -66,9 +68,21 @@ class CombatMixin:
                 break
         return att, tgt, None
 
+    def _battle_bonus(self, ref) -> int:
+        """バトル中だけのパワー修整（mod battle_power。ハンティング: 自分のハンター1体につき+1000）。"""
+        cid = ref[0]
+        env = {"you": self.s.cards[cid].controller, "self": ref}
+        total = 0
+        for _, ab in self.abilities(cid, "static"):
+            bp = ab.get("mod", {}).get("battle_power")
+            if bp and ab.get("affects") == "self" and ab.get("zone", "bz") == self.s.cards[cid].zone:
+                total += bp["amount"] * (self.eval_expr({"count": bp["count"]}, env) if "count" in bp else 1)
+        return total
+
     def _battle(self, x, y):
         """バトル（701.13）。結果で誘発した効果はその場で解決してからバトルを終える。"""
-        px, py = self.chars(x[0])["power"], self.chars(y[0])["power"]
+        px = self.chars(x[0])["power"] + self._battle_bonus(x)
+        py = self.chars(y[0])["power"] + self._battle_bonus(y)
         losers = ([x] if px <= py else []) + ([y] if py <= px else [])
         winners = [r for r in (x, y) if r not in losers]
         slay = [[r, y if r == x else x] for r in losers if self.permits(r[0], "slayer")]
@@ -175,7 +189,11 @@ def h_attack(eng, t):
         blockers = [c for c in eng.bz_tops(1 - a)
                     if not s.cards[c].tapped and eng.permits(c, "block", att[0])
                     and eng.permits(att[0], "be_blocked", c) and [c, s.cards[c].gen] != t["target"]]
-        opts = [eng._card_option(c) for c in blockers] + [{"key": "no_block"}]
+        guards = [] if t["target"] == "player" else [          # 507.1a ガードマン: 攻撃されている自分の他のクリーチャーがいる時だけ
+            c for c in eng.bz_tops(1 - a) if not s.cards[c].tapped and [c, s.cards[c].gen] != t["target"]
+            and eng.permits(c, "guardman", att[0])]
+        opts = [eng._card_option(c) for c in blockers] + \
+               [eng._card_option(c, key=f"guard:{s.cards[c].defn}") for c in guards] + [{"key": "no_block"}]
         ans, d = eng.ask(t, 1 - a, "block", opts)
         if d:
             return d
@@ -184,6 +202,8 @@ def h_attack(eng, t):
         if o["key"] != "no_block":
             s.cards[o["cid"]].tapped = True
             t["target"] = s.ref(o["cid"])
+            if o["key"].startswith("guard:"):      # 507.2b ガードマンで変更された場合、ブロッククリーチャーにはならない
+                return None
             t["blocked"] = True
             rec = {"ev": "block", "subject": t["target"], "attacker": att, "controller": 1 - a}
             eng._push(eng.ev_task(rec), _decl(eng, a, "block", rec), _decl(eng, 1 - a, "block", rec))

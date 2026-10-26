@@ -74,6 +74,28 @@ def op_may(eng, t, op, env):
     return None
 
 
+@op("modal", modes="oplists", count="int?", repeat="bool?")
+def op_modal(eng, t, op, env):
+    """「次のうちいずれか1つを選ぶ」「次の中から2回選ぶ（同じものを選んでもよい）」。選ぶのは効果の使用者。
+    repeat なしは count 個の異なるモードを選び、書かれた順に解決する。repeat ありは1つずつ count 回選び、選んだ順に解決する。"""
+    n = op.get("count", 1)
+    opts = [{"key": f"mode:{i}"} for i in range(len(op["modes"]))]
+    picked = t["os"].setdefault("picked", [])
+    if op.get("repeat"):
+        while len(picked) < n:
+            a, d = eng.ask(t, env["you"], "choose_mode", opts)
+            if d:
+                return d
+            picked.append(a[0])
+        order = picked
+    else:
+        a, d = eng.ask(t, env["you"], "choose_mode", opts, n, n)
+        if d:
+            return d
+        order = sorted(a)
+    eng._defer(t, [eng._child(op["modes"][i], env) for i in order])
+
+
 @op("if", cond="cond", then="ops?", **{"else": "ops?"})
 def op_if(eng, t, op, env):
     branch = op.get("then", []) if eng.eval_cond(op["cond"], env) else op.get("else", [])
@@ -193,7 +215,7 @@ def _free_face(eng, cid, want):
     return 0
 
 
-@op("play_free", select="selector", resolve_to="zone?", **{"as": "str?"})
+@op("play_free", select="selector", resolve_to="zone?", face="str?", **{"as": "str?"})
 def op_play_free(eng, t, op, env):
     """コストを支払わずに召喚する／唱える（112.3g: 召喚・詠唱したことになる）。ツインパクトはクリーチャー側。
     resolve_to: 唱えた呪文を解決後に墓地ではなくそのゾーンに置く（「唱えた後、墓地に置くかわりに手札に加える」）。"""
@@ -201,6 +223,8 @@ def op_play_free(eng, t, op, env):
     if d:
         return d
     want = (op["select"].get("filter") or {}).get("types") if isinstance(op["select"], dict) else None
+    if op.get("face") in ("spell", "creature"):   # ツインパクトの面を明示（ラスト・バーストの「呪文側」）
+        want = [op["face"]]
     tasks = [eng.play_task(c, env["you"], True, _free_face(eng, c, want)) for c in cids]
     if "resolve_to" in op:
         for x in tasks:

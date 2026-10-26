@@ -21,6 +21,7 @@ import yaml
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 import convert_cards as cc  # noqa: E402
+import rule_convert  # noqa: E402
 from llm_offload import providers  # noqa: E402
 from dmsim import schema  # noqa: E402
 from dmsim.defs import DATA, load_tables  # noqa: E402
@@ -53,6 +54,19 @@ def vocab_gaps(rejects: list[dict]) -> dict:
     return dict(sorted(n.items(), key=lambda kv: -kv[1])[:30])
 
 
+def opencode_usage() -> str:
+    """手元の OpenCode の利用量（`opencode stats`：トークン・費用・モデル別）。無料枠の残量や使用割合は CLI/API に公式の手段がないので出せない。"""
+    import shutil
+    exe = next(filter(None, (shutil.which(n) for n in ("opencode.cmd", "opencode.exe", "opencode"))), None)
+    if not exe:
+        return "opencode コマンドなし（利用量は取得できない）"
+    try:
+        r = providers._run_tree([exe, "stats", "--days", "1", "--models", "5"], 30, None)
+    except Exception as e:      # noqa: BLE001  報告用なので失敗しても本処理は止めない
+        return f"opencode stats を取得できなかった: {type(e).__name__}"
+    return (r.stdout or r.stderr).strip()[:1500] or "opencode stats の出力なし"
+
+
 def main(argv=None):
     ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     ap.add_argument("--provider", default="opencode-cli", choices=["opencode", "opencode-cli"])
@@ -65,14 +79,32 @@ def main(argv=None):
     ap.add_argument("--effort", default="high")
     ap.add_argument("--order", choices=["id", "short"], default="id",
                     help="変換の順番。id: カードID順（弾ごとにまとまる）、short: 原文の短い順（簡単なものから）")
-    ap.add_argument("--timeout", type=float, default=1200, help="1枚の呼び出しの上限秒（非常に長め）。超えたら reason: timeout で対象外")
+    ap.add_argument("--timeout", type=float, default=300, help="1枚の呼び出しの上限秒。超えた1枚は次の成功で reason: timeout に確定、連続2回なら打ち切り")
+    ap.add_argument("--health-timeout", type=float, default=90, help="開始前にモデルへ短い質問をして応答を確認する上限秒（0で省略）。返らなければ何も処理せず終了")
+    ap.add_argument("--examples", type=int, default=8, help="プロンプトに入れる変換例の数（原文が近い順）。0で全部（約55,000字→約25,000字に減る）")
+    ap.add_argument("--fallbacks", type=int, default=2, help="タイムアウト時に切り替える別の無料モデルの数（0で切り替えなし）")
     a = ap.parse_args(argv)
-    providers.OPENCODE_TIMEOUT = a.timeout
+    providers.OPENCODE_TIMEOUT = a.health_timeout or a.timeout
     out, rej = DATA / "cards" / "converted.yaml", RAW / "rejects.jsonl"
     prev = json.loads(STATUS.read_text(encoding="utf-8")) if STATUS.exists() else {}
     vh = vocab_hash()
-    sysp, tables = cc.system_prompt(), load_tables()
+    tables = load_tables()
+    # ルールだけで完全に変換できるカードは、モデルを呼ばず（ジョブの枚数にも数えず）先にまとめて登録する
+    rule_stats = cc.run_rules(cc.load_rows([str(RAW)]), tables, out, rej)
+    print(f"ルール変換で登録: {json.dumps(rule_stats, ensure_ascii=False)}", file=sys.stderr)
+    sysp = (lambda row: cc.system_prompt(row=row, n_examples=a.examples)) if a.examples else cc.system_prompt()
     llm = cc.make_llm(a.provider, a.model, a.interval)
+    if hasattr(llm, "alternates"):
+        llm.alternates = llm.alternates[:max(0, a.fallbacks)]
+    if a.health_timeout and not (hasattr(llm, "recently_ok") and llm.recently_ok()):      # 直前に応答が返っていれば省く
+        try:
+            llm.complete("", [{"role": "user", "content": "OKとだけ答えて"}], "low", None)
+        except cc.Fatal:
+            raise
+        except Exception as e:      # noqa: BLE001  停止中のモデルに1枚ずつ待たされないよう、最初の1回で見切る
+            print(f"ヘルスチェック失敗（モデルが応答しない）: {type(e).__name__}: {str(e)[:200]}。今回は何も処理しない", file=sys.stderr)
+            sys.exit(3)
+    providers.OPENCODE_TIMEOUT = a.timeout
     ran = {"new": None, "retry": None}
     batches: list[dict] = []
     try:
@@ -81,7 +113,9 @@ def main(argv=None):
                                     if out.exists() else set())
         failed = {r["id"] for r in cc.read_jsonl(rej)}
         key = (lambda r: r["id"]) if a.order == "id" else (lambda r: len(r.get("text", "")))
-        todo = sorted((r for r in rows if r["id"] not in done and r["id"] not in failed), key=key)[:a.limit]
+        # 以前 no_text 等で rejects に入ったカードでも、ルールだけで変換できるものは対象に戻す（モデル不使用）
+        by_rule = {r["id"] for r in rows if r["id"] in failed and rule_convert.convert(r) is not None}
+        todo = sorted((r for r in rows if r["id"] not in done and (r["id"] not in failed or r["id"] in by_rule)), key=key)[:a.limit]
         bad = 0
         for i in range(0, len(todo), a.batch):
             chunk = todo[i:i + a.batch]
@@ -114,7 +148,11 @@ def main(argv=None):
               # 語彙が変わった直後で再試行しきれなかった時は、次回も再試行するよう古いハッシュを残す
               "vocab_hash": vh if retried_all else prev.get("vocab_hash"),
               "vocab_gaps": vocab_gaps(rejects), "reject_reasons": reasons(rejects), "batches": batches,
+              "rule_registered": rule_stats,
               "last_run": {k: (v and {x: v[x] for x in ("requested", "ok", "rejected", "api_error")}) for k, v in ran.items()}}
+    if isinstance(llm, providers.OpenCodeCLI):
+        status["opencode_usage"] = "（直近1日・手元の集計。無料枠の残量・使用割合は公式に取得手段なし。Zen コンソールで確認）\n" + opencode_usage()
+        status["model_in_use"] = llm.model
     STATUS.write_text(json.dumps(status, ensure_ascii=False, indent=1), encoding="utf-8")
     print(json.dumps(status, ensure_ascii=False, indent=1))
 
