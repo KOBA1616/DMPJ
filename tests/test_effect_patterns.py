@@ -177,3 +177,17 @@ def test_grant_keyword_to_all_my_creatures():
     r = rc.convert({**base, "id": "g1", "text": "自分のクリーチャーすべてに「スピードアタッカー」を与える。"})
     assert r["abilities"][0]["mod"] == {"grant": ["speed_attacker"]}
     assert rc.convert({**base, "id": "g2", "text": "自分のクリーチャーすべてに「謎の力」を与える。"}) is None      # 辞書にないキーワードはモデルへ
+
+
+def test_twinpact_converts_when_both_faces_are_rule_convertible():
+    import rule_convert as rc
+    from dmsim.defs import load_tables, parse_card
+    row = {"id": "tw1", "name": "A／B", "mana": "1", "text": "x", "faces": [
+        {"name": "A", "card_type": "クリーチャー", "civilization": "光", "cost": "6", "power": "7500", "race": "テスト", "mana": "1", "text": "ブロッカー\nW・ブレイカー"},
+        {"name": "B", "card_type": "呪文", "civilization": "光", "cost": "6", "power": "", "race": "", "mana": "1", "text": "S・トリガー\n相手のクリーチャーをすべてタップする。"}]}
+    c = rc.convert(row)
+    assert [f["types"] for f in c["faces"]] == [["creature"], ["spell"]] and c["faces"][0]["keywords"] == ["blocker", "double_breaker"]
+    assert c["faces"][1]["spell"][0]["op"] == "tap"
+    parse_card(c, load_tables())
+    row["faces"][1]["text"] = "未知の効果を行う。"
+    assert rc.convert(row) is None          # 片面でも変換できなければ丸ごとモデルへ

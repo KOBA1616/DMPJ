@@ -391,9 +391,33 @@ def convert_spell(row: dict) -> dict | None:
     return card
 
 
+def convert_twin(row: dict) -> dict | None:
+    """ツインパクト（二面カード）。両面ともルールだけで変換できる時だけ、面ごとの変換結果を faces にまとめる。"""
+    faces = row.get("faces") or []
+    if len(faces) != 2 or set(row.get("missing") or []):
+        return None
+    out = []
+    for i, f in enumerate(faces):
+        sub = convert({**f, "id": row["id"], "mana": f.get("mana", row.get("mana"))})
+        if sub is None:
+            return None
+        out.append({k: v for k, v in sub.items() if k not in ("id", "mana", "text", "source")})
+    card = {"id": row["id"], "faces": out}
+    if row.get("mana") not in (None, ""):
+        try:
+            card["mana"] = int(row["mana"])
+        except ValueError:
+            return None
+    card["text"] = " ／ ".join(f"{f.get('name', '')}: {(f.get('text') or '').replace(chr(10), ' / ')}" for f in faces)
+    card["source"] = {"official": row["id"], "review": "pending", "notes": NOTE + "（ツインパクト）"}
+    return card
+
+
 def convert(row: dict) -> dict | None:
     """行を効果データ（dict）にする。ルールだけで決められなければ None。検査は呼び出し側（validate）が行う。"""
     global _TABLE
+    if row.get("faces"):
+        return convert_twin(row)
     if row.get("card_type") == "呪文":
         return convert_spell(row)
     # 取得時に text だけが空と印の付いた行（能力文のないバニラ）は許す。他の項目が欠けた行は取得のやり直しが先
