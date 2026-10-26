@@ -259,6 +259,11 @@ class Engine(SelectorMixin, EventMixin, InterpreterMixin, TurnMixin, CombatMixin
             if "breaks" in m:   # ブレイカー能力ごとのブレイク数（509.2b）。使う能力は攻撃時に選ぶ（509.2c）
                 ch["break_opts"].append(m["breaks"])
             ch["breaks"] = max(ch["breaks"], m.get("breaks", 1))
+        for m in mods:      # パワード・ブレイカー: 最終パワー N ごとに1つ多くブレイクする（ブレイカー能力の1つ）
+            if m.get("breaks_per_power"):
+                n = 1 + max(0, ch["power"]) // m["breaks_per_power"]
+                ch["break_opts"].append(n)
+                ch["breaks"] = max(ch["breaks"], n)
         ch["keywords"] = sorted(ch["keywords"])   # 状態（LKI）に入るので JSON にできる形で返す
         return ch
 
@@ -327,7 +332,9 @@ class Engine(SelectorMixin, EventMixin, InterpreterMixin, TurnMixin, CombatMixin
                 self._note_deck(c)
         c.gen += 1                                  # 新しいオブジェクトになる（400.5）
         c.zone = to
-        c.tapped = to == "mana" and len(self.cdef(cid).civs) > 1   # 多色カードはタップしてマナに置かれる
+        c.tapped = to == "mana" and len(self.cdef(cid).civs) > 1   # 多色カードはタップしてマナに置かれる（405.1）
+        if to == "mana" and not c.tapped and any(ab.get("zone") == "mana" for ab in self.fdef(cid).abilities):
+            c.tapped = not self.permits(cid, "mana_untapped")     # 「マナゾーンに置く時、タップして置く」
         c.face_up = self.rules.zones[to]["public"]
         c.controller = c.owner if controller is None else controller
         c.entered_turn = s.turn if to == "bz" else -1

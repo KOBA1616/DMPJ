@@ -81,7 +81,7 @@ def build() -> dict:
             "mod": {"type": "object", "properties": {
                 "power": {"type": "integer"}, "grant": {"type": "array", "items": {"enum": sorted(keywords)}},
                 "allow": {"type": "array", "items": perm}, "deny": {"type": "array", "items": perm},
-                "breaks": {"type": "integer"},
+                "breaks": {"type": "integer"}, "breaks_per_power": {"type": "integer"},
                 "ignore": {"type": "array", "items": {"enum": ["trigger", "static", "replace", "all"]}},
                 "gain": {"type": "array", "items": ref("ability")}},
                 "additionalProperties": False, "propertyNames": {"enum": sorted(MOD_KEYS)}},

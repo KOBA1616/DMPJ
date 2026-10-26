@@ -1,0 +1,9 @@
+# 名前つき効果（tests/test_named_effects.py）専用の架空カード。ID は N 始まり。
+cards:
+  - {id: N001, name: 重いパワードブレイカー, types: [creature], civs: [fire], cost: 6, power: 12000, races: [テスト], text: パワード・ブレイカー, keywords: [powered_breaker]}
+  - {id: N002, name: 小さなパワードブレイカー, types: [creature], civs: [fire], cost: 3, power: 5000, races: [テスト], text: パワード・ブレイカー, keywords: [powered_breaker]}
+  - {id: N003, name: 守護兵, types: [creature], civs: [light], cost: 3, power: 3000, races: [テスト], text: ガードマン, keywords: [guardman]}
+  - {id: N004, name: 反撃の盾, types: [creature], civs: [light], cost: 3, power: 1000, races: [テスト], text: G・ストライク, keywords: [g_strike]}
+  - {id: N005, name: 盾の守り手, types: [creature], civs: [light], cost: 4, power: 4000, races: [テスト], text: シールド・セイバー, keywords: [shield_saver]}
+  - {id: N006, name: 逃げ足の兵, types: [creature], civs: [water], cost: 2, power: 1000, races: [テスト], text: エスケープ, keywords: [escape]}
+  - {id: N007, name: 寝て置かれるマナ, types: [creature], civs: [nature], cost: 2, power: 1000, races: [テスト], text: マナゾーンに置く時、このカードはタップして置く。, keywords: [tapped_mana]}

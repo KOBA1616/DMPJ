@@ -35,12 +35,25 @@ def _table(with_card_kinds: bool = False) -> dict[str, str]:
     for name, d in ks.items():
         if (d.get("card") or {}) and not with_card_kinds:       # 呪文用（チャージャー等）は全体変換の対象外。部分変換では扱う
             continue
-        out[norm(d["ja"])] = name
+        for ja in [d["ja"], *d.get("aliases", [])]:
+            out[norm(ja)] = name
     return out
 
 
 _TABLE: dict[str, str] | None = None
 _PATTERNS: list | None = None
+
+
+def _noise() -> set[str]:
+    """原文にあっても意味を持たない記号（{GS} など）。比較用に正規化した形の集合。"""
+    global _NOISE
+    if _NOISE is None:
+        y = yaml.safe_load((DATA / "rules" / "keyword_patterns.yaml").read_text(encoding="utf-8"))
+        _NOISE = {norm(x) for x in y.get("noise", [])}
+    return _NOISE
+
+
+_NOISE: set[str] | None = None
 
 
 def _patterns() -> list:
@@ -93,7 +106,7 @@ def convert(row: dict) -> dict | None:
     if _TABLE is None:
         _TABLE = _table()
     text = re.sub(r"[（(][^）)]*[）)]", "", unicodedata.normalize("NFKC", row.get("text", "") or ""))   # 注釈（カッコ内）を除く
-    clauses = [c for c in re.split(r"[\s/／]+", text) if norm(c)]      # 改行・スラッシュ・空白でキーワードを区切る
+    clauses = [c for c in re.split(r"[\s/／。]+", text) if norm(c) and norm(c) not in _noise()]   # 改行・スラッシュ・空白・句点でキーワードを区切る
     kws, extra = [], []
     for c in clauses:
         k = _TABLE.get(norm(c))
@@ -140,7 +153,9 @@ def split(row: dict) -> tuple[list[str], str, list[dict]] | None:
     extra: list[dict] = []
     rest: list[str] = []
     for line in re.split(r"\s*[\n/／]\s*", row["text"]):
-        tokens = re.sub(r"[（(][^）)]*[）)]", "", line).split()
+        tokens = [x for x in re.sub(r"[（(][^）)]*[）)]", "", line).split() if norm(x) not in _noise()]
+        sents = [x for t_ in tokens for x in re.split(r"(?<=。)", t_) if x]    # 句点で終わる文も1つずつ照合する
+        tokens = sents
         def take(i: int) -> bool:
             k = _ALL.get(norm(tokens[i]))
             if k:

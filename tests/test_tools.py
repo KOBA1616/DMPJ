@@ -933,3 +933,19 @@ def test_local_worker_self_update(tmp_path):
     sh("push", "-q", "origin", "HEAD:main", cwd=a)
     assert "fast-forward できない" in lw.self_update(b)
     assert lw.self_update(tmp_path / "nonexistent").startswith("更新しない")
+
+
+def test_rule_convert_named_effects_with_notes():
+    """注釈つきの名前つき効果・{GS} などの記号・句点で終わる文を、ルールだけで変換する（モデル不使用）。"""
+    import rule_convert as rc
+    base = {"id": "x-001", "name": "テスト", "card_type": "クリーチャー", "civilization": "光", "cost": "3", "power": "3000", "race": "テスト"}
+    r = rc.convert({**base, "text": "{GS} G・ストライク（このカードを自分のシールドゾーンから手札に加える時、表向きにし、相手のクリーチャーを１体選んでもよい。このターン、そのクリーチャーは攻撃できない）\nガードマン（このクリーチャーをタップして、…）"})
+    assert r and r["keywords"] == ["g_strike", "guardman"]
+    r = rc.convert({**base, "text": "マナゾーンに置く時、このカードはタップして置く。 ブロッカー"})
+    assert r and r["keywords"] == ["tapped_mana", "blocker"]
+    r = rc.convert({**base, "text": "このクリーチャーは攻撃することができない。"})
+    assert r and r["keywords"] == ["cannot_attack"]
+    r = rc.convert({**base, "text": "パワード・ブレイカー（このクリーチャーは、そのパワー6000ごとにシールドをもう１つブレイクする）\nシールド・セイバー（…）\nエスケープ"})
+    assert r and r["keywords"] == ["powered_breaker", "shield_saver", "escape"]
+    kws, rest, _ = rc.split({**base, "text": "{GS} G・ストライク（…）\nこのクリーチャーが出た時、カードを1枚引く。"})
+    assert kws == ["g_strike"] and rest == "このクリーチャーが出た時、カードを1枚引く。"
