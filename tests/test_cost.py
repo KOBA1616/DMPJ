@@ -117,3 +117,31 @@ def test_sasagale_destroys_to_reduce_dispector_cost(build):
     e.advance()
     names = [e.s.cards[c].defn for c in e.zlist("bz", 0)]
     assert names == ["S2"] and e.s.cards[e.zlist("graveyard", 0)[0]].defn == "S1"
+
+
+def test_bad_reduces_cost_and_destroys_at_turn_end(build):
+    b = card("B1", "B・A・D２（このクリーチャーを、コストを２少なくして召喚してもよい。そうしたら、このターンの終わりにこのクリーチャーを破壊する）", cost="3")
+    assert b["abilities"][0]["mod"]["opt_reduce"] == {"amount": 2, "then": "destroy"}
+    e = setup(build(b), {"hand": ["B1"], "mana": ["T001"]})
+    answer(e, "charge", "pass")
+    d = e.advance()
+    e.answer([[o["key"] for o in d["options"]].index("play:B1")])
+    d = e.advance()
+    assert [o["key"] for o in d["options"]] == ["reduce", "normal"]
+    e.answer([0])
+    e.advance()                                        # 召喚→そのターンの終わりに破壊されるところまで進む
+    assert e.s.turn_counters is not None
+    assert [e.s.cards[c].defn for c in e.zlist("graveyard", 0)] == ["B1"] and not e.zlist("bz", 0)
+
+
+def test_joe_puts_bottom_of_deck_and_draws_at_turn_end(build):
+    j = card("J1", "J・O・E２(このクリーチャーを、コストを２少なくして召喚してもよい。そうしたら、このターンの終わりに、これを自分の山札の一番下に置く。下に置いたら、カードを１枚引く)", cost="3")
+    assert j["abilities"][0]["mod"]["opt_reduce"]["then"] == "deck_bottom_draw"
+    e = setup(build(j), {"hand": ["J1"], "mana": ["T001"], "deck": ["T001", "T001"]})
+    answer(e, "charge", "pass")
+    d = e.advance()
+    e.answer([[o["key"] for o in d["options"]].index("play:J1")])
+    d = e.advance()
+    e.answer([0])
+    e.advance()
+    assert not e.zlist("bz", 0) and e.s.cards[e.zlist("deck", 0)[-1]].defn == "J1"

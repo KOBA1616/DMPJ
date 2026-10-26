@@ -88,8 +88,13 @@ class TurnMixin:
                 return False
             n = len(srcs) if d.evolve_any else 1            # 最も安い組合せで払えるか（112.2b）
             cost = max(0, d.cost - n * d.cost_reduce_per_evo) if d.cost_reduce_per_evo else None
-            return bool(self._mana_choices(cid, p, face, cost=self._sac_reduced(d, self._tap_reduced(d, p, cost, None), self._sac_pool(d, p)), limit=1))
-        return bool(self._mana_choices(cid, p, face, cost=self._sac_reduced(d, self._tap_reduced(d, p, None, None), self._sac_pool(d, p)), limit=1))
+            return bool(self._mana_choices(cid, p, face, cost=self._opt_reduced(cid, face, d, self._sac_reduced(d, self._tap_reduced(d, p, cost, None), self._sac_pool(d, p))), limit=1))
+        return bool(self._mana_choices(cid, p, face, cost=self._opt_reduced(cid, face, d, self._sac_reduced(d, self._tap_reduced(d, p, None, None), self._sac_pool(d, p))), limit=1))
+
+    def _opt_reduced(self, cid, face, d, cost):
+        """B・A・D / J・O・E: 減らして実行できる場合の最安コスト（実行可能かの判定用）。"""
+        o = self.chars(cid, face)["opt_reduce"]
+        return cost if not o else max(0, (d.cost if cost is None else cost) - o["amount"])
 
     def _sac_pool(self, d, p) -> list[int]:
         """ササゲール: ディスペクターを召喚する時、破壊してコストを減らせる自分のクリーチャー。"""
@@ -336,10 +341,19 @@ def h_play(eng, t):
                 chosen.append(cands[ans[0]])
                 return None
         t["sac_done"] = True
+    ch0 = eng.chars(cid, face)
+    if ch0["opt_reduce"] and not t["free"] and not t.get("reduce_done"):    # B・A・D / J・O・E: 減らして実行するか選ぶ
+        ans, dd = eng.ask(t, p, "choose_cards", [{"key": "reduce"}, {"key": "normal"}], 1, 1)
+        if dd:
+            return dd
+        t["reduced"] = ans[0] == 0
+        t["reduce_done"] = True
     if not t["free"]:
         n = len(t.get("evo", []))
         cost = max(0, d.cost - n * d.cost_reduce_per_evo) if d.cost_reduce_per_evo else None
         cost = eng._sac_reduced(d, eng._tap_reduced(d, p, cost, t.get("tap", [])), t.get("sac", []))
+        if t.get("reduced"):
+            cost = max(0, (d.cost if cost is None else cost) - ch0["opt_reduce"]["amount"])
         choices = eng._mana_choices(cid, p, face, cost=cost)
         if not choices:
             eng._pop(t)
@@ -376,6 +390,13 @@ def h_play(eng, t):
                    eng.ev_task({"ev": "move", "subject": ref, "from": from_zone, "to": t.get("resolve_to", d.resolve_to),
                                  "reason": "resolve"}),
                    *([eng._child(d.after_resolve, env)] if d.after_resolve else []))
+    if t.get("reduced"):   # 減らして実行したら、そのターンの終わりに処理する。実行の解決より後に積む＝先に処理する
+        then = ch0["opt_reduce"]["then"]
+        end = [{"op": "move", "select": {"ref": "self_entered"}, "to": "graveyard", "reason": "destroy"}] if then == "destroy" else \
+              [{"op": "move", "select": {"ref": "self_entered"}, "to": "deck", "reason": "put", "position": "bottom"},
+               {"op": "draw", "count": 1}]
+        eng._push(eng._child([{"op": "delayed_trigger", "when": {"event": "turn_end"}, "effect": end}],
+                             {"you": p, "self": ref, "vars": {}}))
     if t.get("sac"):       # ササゲール: 軽減したら破壊する（支払いの一部。実行の解決より先に行う）
         eng._push(eng.ev_task([{"ev": "move", "subject": s.ref(c), "to": "graveyard", "reason": "destroy"}
                                for c in t["sac"]]))

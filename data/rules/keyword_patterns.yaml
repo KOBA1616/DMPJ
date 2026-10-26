@@ -191,3 +191,13 @@ patterns:
     re: 'ササゲール(\d)'
     abilities:
       - {kind: static, affects: self, mod: {sac_reduce: "{1}"}}
+
+  # B・A・DN / J・O・EN: コストをN少なくして実行してもよい。そうしたら、そのターンの終わりに破壊する／山札の一番下に置き、その後カードを1枚引く
+  bad:
+    re: 'B・A・D(\d)'
+    abilities:
+      - {kind: static, affects: self, zone: hand, mod: {opt_reduce: {amount: "{1}", then: destroy}}}
+  joe:
+    re: 'J・O・E(\d)'
+    abilities:
+      - {kind: static, affects: self, zone: hand, mod: {opt_reduce: {amount: "{1}", then: deck_bottom_draw}}}

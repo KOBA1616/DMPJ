@@ -1251,6 +1251,7 @@
      "gain",
      "grant",
      "ignore",
+     "opt_reduce",
      "power",
      "sac_reduce"
     ]

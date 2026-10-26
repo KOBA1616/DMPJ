@@ -202,6 +202,8 @@ class PlayTask(TypedDict):
     tap_done: NotRequired[bool]
     sac: NotRequired[list[int]]          # ササゲールで破壊するクリーチャー
     sac_done: NotRequired[bool]
+    reduced: NotRequired[bool]           # B・A・D / J・O・E: コストを減らして実行する
+    reduce_done: NotRequired[bool]
     st: NotRequired[bool]                # S・トリガーとして実行する（101.4g）
     resolve_to: NotRequired[str]         # 解決後の置き場所（play_free の resolve_to）
     answer: NotRequired[list[int]]
