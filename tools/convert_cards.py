@@ -328,7 +328,7 @@ def run(rows: list[dict], client, tables, sysp: str, effort: str, out: Path, rej
                 stats["api_error"] += 1
                 streak["n"] += 1
                 api_errors.append({"id": r["id"], "error": f"{type(e).__name__}: {e}"[:300]})
-                print(f"! {r['id']} API失敗: {type(e).__name__}", file=sys.stderr)
+                print(f"! {r['id']} API失敗: {type(e).__name__}" + (f"（{e}）" if type(e).__name__ == "FreeLimit" else ""), file=sys.stderr)
             return
         with lock:
             stats["ok"] += 1

@@ -110,6 +110,13 @@ OPENROUTER_URL = "https://openrouter.ai/api/v1"
 OPENROUTER_PREFER = ("deepseek", "qwen", "glm", "gpt-oss", "llama", "gemma", "mistral")   # 変換向きの順（無料モデルの中での好み）
 
 
+class FreeLimit(RuntimeError):
+    """OpenCode の無料枠の上限（FreeUsageLimitError）。アカウント・ワークスペース・ネットワーク単位なので、別の OpenCode モデルに替えても直らない。"""
+
+
+FREE_LIMIT_RE = re.compile(r"(?i)FreeUsageLimitError|Free usage limit reached|free (?:usage|message)s? limit")
+
+
 class OpenRouterLLM:
     """別サービスへの切り替え先。OpenRouter の無料モデルだけを、毎回公式の一覧(/models・認証不要)で確かめて使う。
     ':free' で終わり、かつ入力・出力の単価がどちらも 0 のものに限る。応答に費用が載っていたら停止する。
@@ -249,6 +256,11 @@ class OpenCodeCLI:
                 text = self._complete_one(m, sysp, messages, usage)
             except Fatal:
                 raise
+            except FreeLimit as e:      # 上限は全モデル共通。OpenCode の他のモデルは試さず、別サービスがあればそちらへ
+                last = e
+                tried.append(m)
+                print(f"  ⛔ {e}", file=sys.stderr, flush=True)
+                break
             except Exception as e:      # noqa: BLE001  タイムアウトも「Model is unavailable」等の応答エラーも、別モデルで試す
                 tried.append(m)
                 last = e
@@ -262,6 +274,8 @@ class OpenCodeCLI:
         if self.external is not None:      # OpenCode の無料モデルが全滅したら別サービス（OpenRouter の無料モデル）へ
             print("  ⏱ OpenCode の無料モデルが全滅。OpenRouter の無料モデルへ切り替える", file=sys.stderr, flush=True)
             return self.external.complete(sysp, messages, effort, usage)
+        if isinstance(last, FreeLimit):
+            raise last
         if isinstance(last, CallTimeout):
             raise CallTimeout(f"{'・'.join(tried)} がすべてタイムアウト（{last}）")
         raise RuntimeError(f"{'・'.join(tried)} がすべて失敗（最後: {last}）")
@@ -285,6 +299,8 @@ class OpenCodeCLI:
             r = _run_tree([exe, "run", "-m", f"opencode/{model}", "--format", "json",
                            "添付ファイルの指示に従い、最後の [user] への答えだけを出力して。", "-f", str(f)],
                           OPENCODE_TIMEOUT, d)
+        if FREE_LIMIT_RE.search(r.stdout + r.stderr):
+            raise FreeLimit("OpenCode の無料枠の上限に達した（リセットまで待つ。時刻は OpenCode のコンソールで確認）")
         if re.search(r"(?i)FreeTierError|billing|credit balance|insufficient|payment", r.stdout + r.stderr):
             raise Fatal(f"課金・無料枠に関するエラーなので停止する: {(r.stdout + r.stderr)[:300]}")
         texts, err = [], None

@@ -416,6 +416,26 @@ def test_openrouter_uses_only_verified_free_models(monkeypatch):
     assert cli.complete("", [], "low", None) == "ok"           # OpenCode 全滅 → OpenRouter
 
 
+def test_opencode_cli_detects_free_limit(monkeypatch):
+    """無料枠の上限は他の OpenCode モデルを試さず止める（外部があればそちらへ）。"""
+    from llm_offload import providers as pv
+    import pytest
+    cli = pv.OpenCodeCLI("glm-5.3-flash-free", 0)
+    calls = []
+
+    def lim(model, *a):
+        calls.append(model)
+        raise pv.FreeLimit("上限")
+
+    monkeypatch.setattr(cli, "_complete_one", lim)
+    with pytest.raises(pv.FreeLimit):
+        cli.complete("", [], "low", None)
+    assert calls == ["glm-5.3-flash-free"]
+    assert pv.FREE_LIMIT_RE.search('{"name":"FreeUsageLimitError","message":"Free usage limit reached. Subscribe"}')
+    cli.external = type("X", (), {"complete": lambda self, *a: "ext"})()
+    assert cli.complete("", [], "low", None) == "ext"
+
+
 def test_convert_timeout_breaker(tmp_path):
     """タイムアウトは次のカードが成功して初めて reason: timeout で確定。連続2回は障害として打ち切り、記録しない。"""
     import convert_cards
