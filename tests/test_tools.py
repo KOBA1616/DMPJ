@@ -421,6 +421,26 @@ def test_openrouter_uses_only_verified_free_models(monkeypatch):
     assert cli.complete("", [], "low", None) == "oc" and n      # 冷却が終われば OpenCode に戻る
 
 
+def test_gemini_uses_fixed_free_flash_models(monkeypatch):
+    from llm_offload import providers as pv
+    import pytest
+    with pytest.raises(pv.Fatal):
+        pv.GeminiLLM(0, key=None) if not __import__("os").environ.get("GEMINI_API_KEY") else (_ for _ in ()).throw(pv.Fatal("x"))
+    g = pv.GeminiLLM(0, key="k" * 20)
+    assert g.base == pv.GEMINI_URL and g.free_models() == list(pv.GEMINI_FREE_MODELS)
+    assert not any("pro" in m or "argon" in m for m in g.free_models())
+    calls = []
+
+    def req(path, payload=None, auth=True):
+        calls.append(payload["model"])
+        if len(calls) == 1:
+            raise RuntimeError("HTTP 429")
+        return {"model": "models/" + payload["model"], "choices": [{"message": {"content": "ok"}}]}
+
+    monkeypatch.setattr(g, "_request", req)
+    assert g.complete("", [], "low", None) == "ok" and calls == list(pv.GEMINI_FREE_MODELS)[:2]
+
+
 def test_llm7_uses_fixed_allowlist_and_anonymous_key():
     from llm_offload import providers as pv
     l = pv.LLM7LLM(0)

@@ -222,6 +222,29 @@ class OpenRouterLLM:
         raise RuntimeError(f"OpenRouter の無料モデル {tried or '（なし）'} がすべて失敗（最後: {last}）")
 
 
+GEMINI_URL = "https://generativelanguage.googleapis.com/v1beta/openai"
+# 公式料金ページで無料枠(Free of charge)と出ている Flash 系（2026-10-26）。Pro 系・画像・Argon は無料枠にないので入れない
+GEMINI_FREE_MODELS = ("gemini-3.8-flash", "gemini-3.6-flash", "gemini-3-flash-preview", "gemini-3.5-flash-lite", "gemini-3.1-flash-lite")
+
+
+class GeminiLLM(OpenRouterLLM):
+    """Google AI Studio の Gemini API（OpenAI 互換）。キー GEMINI_API_KEY があるときだけ使う。
+    無料枠のモデルだけを固定で使う。注意: キーのプロジェクトに請求先を設定すると有料になりうる（応答から費用は検知できない）。
+    請求先のないプロジェクトで作ったキーだけを使うこと。"""
+    name = "gemini"
+
+    def __init__(self, min_interval: float = 3.0, key: str | None = None):
+        import os
+        super().__init__(min_interval, key=key or os.environ.get("GEMINI_API_KEY", "") or "-")
+        if self.key == "-":
+            raise Fatal("環境変数 GEMINI_API_KEY が未設定")
+        self.base = GEMINI_URL
+        self.free_suffix = ""
+
+    def free_models(self) -> list[str]:
+        return list(GEMINI_FREE_MODELS)
+
+
 EXTERNAL_COOLDOWN = 900   # OpenCode 全滅のあと、この秒数は別サービスを先に使う
 LLM7_URL = "https://api.llm7.io/v1"
 # 公式 /v1/models で usage_based_only: false（匿名・無料で使える側）と出ているモデル（2026-10-26）。他は従量課金のモデルなので使わない
