@@ -65,60 +65,60 @@ patterns:
 
   # ---- 効果の1文（whole_line: その文が1行の全体の時だけ。続く文を取りこぼさないため）----
   etb_draw:
-    re: '{ETB}カードを(\d)枚引く'
+    re: '{TRG}カードを(\d)枚引く'
     whole_line: true
     abilities:
       - kind: trigger
-        when: {event: move, to: bz, subject: self}
+        when: $TRG
         effect:
           - {op: draw, count: "{1}"}
   etb_draw_may:
-    re: '{ETB}カードを(\d)枚引いてもよい'
+    re: '{TRG}カードを(\d)枚引いてもよい'
     whole_line: true
     abilities:
       - kind: trigger
-        when: {event: move, to: bz, subject: self}
+        when: $TRG
         effect:
           - op: may
             body: [{op: draw, count: "{1}"}]
   etb_mana_charge:
-    re: '{ETB}自分の山札の上から1枚目をマナゾーンに置く'
+    re: '{TRG}自分の山札の上から1枚目をマナゾーンに置く'
     whole_line: true
     abilities:
       - kind: trigger
-        when: {event: move, to: bz, subject: self}
+        when: $TRG
         effect:
           - {op: move, select: {zone: deck, owner: you, from_top: 1}, to: mana, reason: put}
   etb_mill:
-    re: '{ETB}自分の山札の上から(\d)枚を墓地に置く'
+    re: '{TRG}自分の山札の上から(\d)枚を墓地に置く'
     whole_line: true
     abilities:
       - kind: trigger
-        when: {event: move, to: bz, subject: self}
+        when: $TRG
         effect:
           - {op: mill, owner: you, count: "{1}"}
   etb_shield_to_hand:
-    re: '{ETB}自分のシールドを(\d)つ手札に加える'
+    re: '{TRG}自分のシールドを(\d)つ手札に加える'
     whole_line: true
     abilities:
       - kind: trigger
-        when: {event: move, to: bz, subject: self}
+        when: $TRG
         effect:
           - {op: move, select: {zone: shield, owner: you, count: "{1}"}, to: hand, reason: return}
   etb_destroy_power:
-    re: '{ETB}相手のパワー(\d+)以下のクリーチャーを1体破壊する'
+    re: '{TRG}相手のパワー(\d+)以下のクリーチャーを1体破壊する'
     whole_line: true
     abilities:
       - kind: trigger
-        when: {event: move, to: bz, subject: self}
+        when: $TRG
         effect:
           - {op: destroy, select: {zone: bz, owner: opp, filter: {types: [creature], power_le: "{1}"}, count: 1}}
   etb_destroy:
-    re: '{ETB}相手のクリーチャーを1体破壊する'
+    re: '{TRG}相手のクリーチャーを1体破壊する'
     whole_line: true
     abilities:
       - kind: trigger
-        when: {event: move, to: bz, subject: self}
+        when: $TRG
         effect:
           - {op: destroy, select: {zone: bz, owner: opp, filter: {types: [creature]}, count: 1}}
   end_of_turn_untap:
@@ -201,6 +201,12 @@ patterns:
     re: 'J・O・E(\d)'
     abilities:
       - {kind: static, affects: self, zone: hand, mod: {opt_reduce: {amount: "{1}", then: deck_bottom_draw}}}
+
+  # 自分のクリーチャーすべてに「スピードアタッカー」を与える（辞書にあるキーワードだけ）
+  grant_all_mine:
+    re: '自分のクリーチャーすべてに[「｢]([^」｣]+)[」｣]を与える'
+    whole_line: true
+    builder: grant_all
 
 # ---- 呪文の効果文（呪文の解決で行う ops）。1行まるごとがこの文の時だけ変換する。行は書かれた順に並べる ----
 # re は patterns と同じ正規化（NFKC・空白と読点を除く・注釈除去）に完全一致させる

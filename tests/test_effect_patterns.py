@@ -154,3 +154,26 @@ def test_peel_keeps_annotation_with_its_keyword():
     assert out[0].startswith("S・トリガー(") and out[0].endswith(")") and out[1] == "相手のクリーチャーを１体破壊する。"
     assert rc._peel_line("進化クリーチャー") == ["進化クリーチャー"]                  # 名前の一部は割らない
     assert rc._peel_line("ブロッカーを持つクリーチャーは") == ["ブロッカーを持つクリーチャーは"]
+
+
+def test_trigger_prefix_variants_and_spell_sentences_reused_for_creatures():
+    import rule_convert as rc
+    from dmsim.defs import load_tables, parse_card
+    base = {"card_type": "クリーチャー", "civilization": "水", "cost": "3", "power": "2000", "race": "テスト"}
+    both = rc.convert({**base, "id": "t1", "text": "このクリーチャーが出た時または攻撃する時、カードを１枚引く。"})
+    assert [a["when"]["event"] for a in both["abilities"]] == ["move", "attack"]
+    parse_card(both, load_tables())
+    atk = rc.convert({**base, "id": "t2", "text": "このクリーチャーが攻撃する時、相手の手札を１枚見ないで選び、捨てさせる。"})
+    assert atk["abilities"][0]["when"] == {"event": "attack", "subject": "self"}
+    assert atk["abilities"][0]["effect"][0]["op"] == "discard"
+    parse_card(atk, load_tables())
+    two = rc.convert({**base, "id": "t3", "text": "このクリーチャーが出た時、カードを１枚引く。相手のクリーチャーを１体破壊する。"})
+    assert two is None          # 1行に複数の文があるものは続きを取りこぼさないようモデルへ
+
+
+def test_grant_keyword_to_all_my_creatures():
+    import rule_convert as rc
+    base = {"card_type": "クリーチャー", "civilization": "火", "cost": "3", "power": "2000", "race": "テスト"}
+    r = rc.convert({**base, "id": "g1", "text": "自分のクリーチャーすべてに「スピードアタッカー」を与える。"})
+    assert r["abilities"][0]["mod"] == {"grant": ["speed_attacker"]}
+    assert rc.convert({**base, "id": "g2", "text": "自分のクリーチャーすべてに「謎の力」を与える。"}) is None      # 辞書にないキーワードはモデルへ
