@@ -101,6 +101,36 @@ class OpenCodeLLM:
             raise BadResponse("応答に本文がない") from None
 
 
+def _run_tree(cmd: list[str], timeout: float, cwd: str):
+    """subprocess.run の代わり。時間切れでは子孫プロセスごと止める。
+
+    Windows の opencode.cmd は node を子に持ち、run(timeout=) は親だけ kill して、子がパイプを握ったまま
+    communicate() で永久に待つ（2026-10-26 無応答で20分の上限が効かなかった）。ここではプロセスツリーを kill する。
+    """
+    import os
+    import signal
+    import subprocess
+    kw = {"start_new_session": True} if os.name != "nt" else {}
+    proc = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True, encoding="utf-8",
+                            errors="replace", cwd=cwd, **kw)
+    try:
+        out, err = proc.communicate(timeout=timeout)
+    except subprocess.TimeoutExpired:
+        try:
+            if os.name == "nt":
+                subprocess.run(["taskkill", "/F", "/T", "/PID", str(proc.pid)], capture_output=True, timeout=30)
+            else:
+                os.killpg(proc.pid, signal.SIGKILL)
+        except Exception:   # noqa: BLE001  止められなくても待ち続けない
+            proc.kill()
+        try:
+            proc.communicate(timeout=10)
+        except Exception:   # noqa: BLE001
+            pass
+        raise CallTimeout(f"opencode が{timeout:g}秒以内に終わらなかった（TimeoutExpired）") from None
+    return subprocess.CompletedProcess(cmd, proc.returncode, out, err)
+
+
 class OpenCodeCLI:
     """OpenCode CLI（opencode run）経由。無料枠は「OpenCode の中からのみ」使えるため、API 直叩きが拒否されるときの経路。
     キー不要。モデルは同じ許可リストで検査する。"""
@@ -128,13 +158,9 @@ class OpenCodeCLI:
             exe = next(filter(None, (shutil.which(n) for n in ("opencode.cmd", "opencode.exe", "opencode"))), None)
             if not exe:
                 raise FileNotFoundError("opencode コマンドが PATH にない（npm i -g opencode-ai）")
-            try:
-                r = subprocess.run([exe, "run", "-m", f"opencode/{self.model}", "--format", "json",
-                                    "添付ファイルの指示に従い、最後の [user] への答えだけを出力して。", "-f", str(f)],
-                                   capture_output=True, text=True, encoding="utf-8", errors="replace",
-                                   timeout=OPENCODE_TIMEOUT, cwd=d)
-            except subprocess.TimeoutExpired:
-                raise CallTimeout(f"opencode が{OPENCODE_TIMEOUT}秒以内に終わらなかった（TimeoutExpired）")
+            r = _run_tree([exe, "run", "-m", f"opencode/{self.model}", "--format", "json",
+                           "添付ファイルの指示に従い、最後の [user] への答えだけを出力して。", "-f", str(f)],
+                          OPENCODE_TIMEOUT, d)
         if re.search(r"(?i)FreeTierError|billing|credit balance|insufficient|payment", r.stdout + r.stderr):
             raise Fatal(f"課金・無料枠に関するエラーなので停止する: {(r.stdout + r.stderr)[:300]}")
         texts, err = [], None

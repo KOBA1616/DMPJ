@@ -90,6 +90,25 @@ class Git:
         raise RuntimeError(f"{branch} への push に失敗")
 
 
+class Tee:
+    """画面とログファイルの両方へ書く（スケジューラ起動のウィンドウに経過を出しつつ log.txt にも残す）。"""
+
+    def __init__(self, stream, f):
+        self.stream, self.f = stream, f
+
+    def write(self, text):
+        for t in (self.stream, self.f):
+            try:
+                t.write(text)
+                t.flush()
+            except Exception:   # noqa: BLE001  画面が閉じられてもログは続ける
+                pass
+        return len(text)
+
+    def flush(self):
+        pass
+
+
 class Lock:
     def __init__(self, path: Path):
         self.path = path
@@ -128,16 +147,40 @@ def run_convert(job: dict, git: Git, jobs_model: str | None) -> dict:
     model = job.get("model") or jobs_model or lo.OPENCODE_DEFAULT
     lo.make_llm("opencode-cli", model)       # 許可リスト検査（違反は Fatal）
     env = {k: v for k, v in os.environ.items() if k != "OPENCODE_API_KEY"}
-    r = subprocess.run([sys.executable, "tools/auto_convert.py", "--model", model, "--limit", str(job.get("limit", 20)),
-                        "--interval", str(job.get("interval", 3)), "--workers", str(job.get("workers", 1))],
-                       cwd=d, env=env, capture_output=True, text=True, encoding="utf-8", errors="replace")
-    git.sh("reset", "-q", cwd=d)
-    git.sh("add", "-f", "data/cards/converted.yaml", "data/cards/raw/rejects.jsonl", "data/cards/raw/convert_report.json",
-           "data/cards/raw/convert_status.json", cwd=d, check=False)
-    git.commit_push(d, DATA_BRANCH, f"cards-data: convert (local worker) {now()}", add=False)
+    # 5枚ごとに auto_convert を呼び、そのたびに cards-data へ push する（途中で止めても済んだ分は残る）。
+    # 次回起動時の worktree は origin に reset されるので、push していない分は消える。だから5枚ごとに push する。
+    chunk, total = 5, int(job.get("limit", 20))
+    tail: list[str] = []
+    code, done_n = 0, 0
+    for _ in range(max(1, -(-total // chunk))):
+        cmd = [sys.executable, "-u", "tools/auto_convert.py", "--model", model, "--limit", str(chunk), "--batch", str(chunk),
+               "--interval", str(job.get("interval", 3)), "--workers", str(job.get("workers", 1))]
+        # 出力を1行ずつ画面とログへ流す（ウィンドウで途中経過が見える）。最後の出力は結果に残す
+        proc = subprocess.Popen(cmd, cwd=d, env=env, stdout=subprocess.PIPE, stderr=subprocess.STDOUT,
+                                text=True, encoding="utf-8", errors="replace", bufsize=1)
+        for line in proc.stdout:
+            line = lo.scrub(line.rstrip("\n"))
+            print(now(), line, flush=True)
+            tail = (tail + [line])[-40:]
+        proc.wait()
+        git.sh("reset", "-q", cwd=d)
+        git.sh("add", "-f", "data/cards/converted.yaml", "data/cards/raw/rejects.jsonl", "data/cards/raw/convert_report.json",
+               "data/cards/raw/convert_status.json", cwd=d, check=False)
+        git.commit_push(d, DATA_BRANCH, f"cards-data: convert (local worker) {now()}", add=False)
+        print(now(), "保存して push した", flush=True)
+        code = proc.returncode
+        try:
+            lr = (json.loads((d / "data/cards/raw/convert_status.json").read_text(encoding="utf-8")).get("last_run") or {}).get("new") or {}
+        except (OSError, ValueError):
+            lr = {}
+        progressed = lr.get("ok", 0) + lr.get("rejected", 0)
+        done_n += progressed
+        if code or not progressed:      # 停止・API失敗だけで進まない時はここで終える（空回りしない）
+            break
+    r = subprocess.CompletedProcess([], code, "\n".join(tail), "\n".join(tail))
     if r.returncode:
         return {"status": "error", "error": lo.scrub((r.stderr or "")[-400:])}
-    return {"status": "ok", "text": lo.scrub((r.stdout or "")[-1500:])}
+    return {"status": "ok", "text": lo.scrub(f"処理 {done_n} 枚（5枚ごとに保存）\n" + (r.stdout or "")[-1400:])}
 
 
 def data_tree(git: Git) -> Path:
@@ -313,6 +356,7 @@ def main(argv=None) -> int:
     r.add_argument("--once", action="store_true")
     r.add_argument("--loop", type=int, metavar="SEC")
     r.add_argument("--no-update", action="store_true", help="実行前の main 更新(git fetch + merge --ff-only)をしない")
+    r.add_argument("--log", help="出力を追記するログファイル（画面にも出す）。省略時は画面のみ")
     r.add_argument("--daily-limit", type=int, default=lo.DAILY_LIMIT)
     e = sub.add_parser("enqueue")
     e.add_argument("type", choices=["ask", "convert", "routine"])
@@ -354,6 +398,11 @@ def main(argv=None) -> int:
             fs = sorted((jd / "jobs" / k).glob("*.yaml")) if (jd / "jobs" / k).exists() else []
             print(f"{k}: {len(fs)}", *[f.stem for f in fs[-5:]])
         return 0
+    if a.log:
+        Path(a.log).parent.mkdir(parents=True, exist_ok=True)
+        lf = open(a.log, "a", encoding="utf-8", errors="replace")
+        sys.stdout, sys.stderr = Tee(sys.stdout, lf), Tee(sys.stderr, lf)
+    print(now(), "ワーカー開始", flush=True)
     with Lock(Path(a.work) / "lock"):
         while True:
             if not a.no_update:
