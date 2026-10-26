@@ -9,7 +9,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parent.parent / "tools"))
 
 from discover_pipeline import (MacroPlanner, MicroPolicy, charge_choice,  # noqa: E402
                                classify_win, deck_bucket, grave_bucket,
-                               learn_preferences)
+                               learn_preferences, try_loop_first)
 
 from conftest import setup  # noqa: E402
 
@@ -232,6 +232,34 @@ def test_charge_choice_multicolor_surplus(rules):
                         "mana": ["dm01-080"], "graveyard": []})
     d = _charge_decision(eng, [lorenz, lorenz, lorenz, "dm01-027"])
     assert charge_choice(eng, d) in (0, 1, 2)
+
+
+def test_try_loop_first_wins_from_loop_position(rules):
+    # 最小盤面が揃った位置では、ループ手順を先に試して置換勝利を取れる
+    eng = setup(rules, {"hand": [SAGA, "dmex10-020", "dm22ex1-025", "T001"],
+                        "graveyard": ["dm26ex2-071", SAGA],
+                        "mana": ["dm01-080", "dm01-027", "dm01-080"],
+                        "deck": [DRAG, IWA, SHAKO]}, deck_size=12)
+    while True:
+        d = eng.advance()
+        if d is None or eng.s.result or d["player"] == 0:
+            break
+        from dmsim import solitaire as sol
+        eng.answer(sol.charge_only_policy(eng, d))
+    leaf = try_loop_first(eng)
+    assert leaf is not None
+    assert leaf.s.result["winner"] == 0 and leaf.s.result["reason"] == "effect"
+
+
+def test_board_reached_excludes_mana(rules):
+    # マナに埋まった部品はループに使えないので、最小盤面に数えない
+    micro = MicroPolicy()
+    eng = setup(rules, {"hand": [SAGA, "dm22ex1-025", SHAKO], "mana": [DRAG],
+                        "graveyard": []})
+    assert not micro.board_reached(eng, 0)
+    eng = setup(rules, {"hand": [SAGA, "dm22ex1-025", SHAKO, DRAG], "mana": MANA,
+                        "graveyard": []})
+    assert micro.board_reached(eng, 0)
 
 
 def test_micro_candidates_without_pipeline_no_recursion():

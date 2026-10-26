@@ -36,6 +36,9 @@ from loopcheck_full_chain import policy as script_policy  # noqa: E402
 
 import dmsim.solitaire as sol  # noqa: E402
 from dmsim.defs import load_rules  # noqa: E402
+from dmsim.engine import Engine  # noqa: E402
+from dmsim.loop import fast_forward  # noqa: E402
+from dmsim.loop_first import cycle_counts  # noqa: E402
 from dmsim.loop_first import discover_loops  # noqa: E402
 from dmsim.zone_graph import find_cycles  # noqa: E402
 
@@ -131,6 +134,9 @@ class MacroPlanner:
         pieces_in_deck = sum(1 for n in deck_names if n in targets)
         here = set(hand) | set(grave) | set(names("bz")) | set(names("mana"))
         pieces_here = sum(1 for p in self.core_pieces if p in here)
+        # マナに埋まった部品はループに使えないので、最小盤面はマナを除いて数える
+        playable = set(hand) | set(grave) | set(names("bz"))
+        pieces_playable = sum(1 for p in self.core_pieces if p in playable)
         return {
             "turn": eng.s.turn,
             "win_by": self.win_by,
@@ -141,7 +147,8 @@ class MacroPlanner:
             "mana": len(z["mana"][me]),
             "dark_mana": dark_mana,
             "pieces_here": pieces_here,      # 最小部品のうち手元（手札・場・墓地・マナ）にある数
-            "loop_board": pieces_here >= len(self.core_pieces),  # ループの最小盤面に到達
+            "pieces_playable": pieces_playable,  # マナを除いた「使える場所」にある数
+            "loop_board": pieces_playable >= len(self.core_pieces),  # ループの最小盤面に到達
             "loop_available": self.loop_card in hand or self.loop_card in grave,
             "grave_prep": self.loop_card in grave or "dm26ex2-071" in grave,
             "bruce_route": (self.loop_card in hand and self.digger_card in hand
@@ -214,6 +221,31 @@ class MacroPlanner:
             w, burn = sol.Weights(stock_cap=8, deck_keep=2, civ=20.0), True
             note = "部品か前提が不足。自分の山札の消耗は許して整える"
         return Intent("setup", budget=600, burn_stock=burn, weights=w, note=note)
+
+
+def try_loop_first(eng, me: int = ME, discover_budget: int = 2000,
+                   seek_budget: int = 2000):
+    """そのターンに検証済みループで勝てるなら、勝った局面を返す。無ければ None。
+
+    最小盤面に届いたターンでは、通常の探索は攻撃の勝ち（同じく勝ちで、より浅い）
+    に流れがちなので、ループの手順（発見→早送り→仕上げ）を先に試す。
+    """
+    for f in discover_loops(eng, me, discover_budget):
+        if not f.verified:
+            continue
+        for n in cycle_counts(f.cert, len(f.start.zlist("deck", me))):
+            e = f.start.clone()
+            try:
+                fast_forward(e, f.cert, n)
+            except Exception:
+                continue
+            ts = sol.TurnSearch(me, seek_budget)
+            ts.burn_stock = False
+            leaf, _ = ts.run(e)
+            r = leaf.s.result
+            if r is not None and r["winner"] == me:
+                return leaf
+    return None
 
 
 # ---- ミクロ（詳細） -----------------------------------------------------------------------------
@@ -407,6 +439,8 @@ class MicroPolicy:
     targets: tuple = TARGET_CARDS   # マナチャージで温存する部品
     restrain_attack: bool = False   # 攻撃を候補の後ろに回す（禁止はしない。
                                     # ドラゲリオンの攻撃時効果など、計画に必要な攻撃は残す）
+    loop_priority: bool = False     # 最小盤面に届くまでは攻撃せず、ループの成立を優先する
+    core_pieces: tuple = (SAGA, "dm22ex1-025", DRAG, SHAKO)  # ループの最小部品
 
     def prefer(self, eng, d) -> list[int] | None:
         prefs = self.preferences or {}
@@ -431,9 +465,43 @@ class MicroPolicy:
             return None
         return sorted(scored[:n])
 
+    def board_reached(self, eng, me: int) -> bool:
+        """ループの最小部品が「使える場所」（手札・場・墓地）に揃っているか。
+
+        マナに埋まった部品はループに使えないため数えない。
+        """
+        z = eng.s.zones
+        here = set()
+        for zone in ("hand", "bz", "graveyard"):
+            here.update(eng.s.cards[c].defn for c in z[zone][me])
+        return all(p in here for p in self.core_pieces)
+
     def candidates(self, eng, d, w, cap: int = 6):
         """solitaire.candidates と同じ形。方策の答えを候補の先頭に置く。"""
+        if (self.loop_priority and d["kind"] == "attack" and eng is not None
+                and self.intent != "execute"
+                and not self.board_reached(eng, d["player"])):
+            # ループの成立を優先する間は殴らない。最小盤面に届いた後と
+            # キルの狙いのターンでは、攻撃時効果やリーサルのために攻撃を残す
+            keys = [o["key"] for o in d["options"]]
+            if "pass" in keys:
+                return [[keys.index("pass")]]
         out = _base_candidates(eng, d, w, cap)
+        if (self.intent == "enter_loop" and d["kind"] == "choose_cards"
+                and eng is not None):
+            # 墓地の準備: ループの前提（墓地のクリーチャー3枚）に届いていない間は、
+            # 捨てる選択ではクリーチャーを優先して墓地に送る
+            me = d["player"]
+            grave_creatures = sum(1 for c in eng.s.zones["graveyard"][me]
+                                  if "creature" in eng.chars(c)["types"])
+            if grave_creatures < 3:
+                def picks_creature(cand):
+                    if not cand:
+                        return False
+                    cid = d["options"][cand[0]].get("cid")
+                    return cid is not None and "creature" in eng.chars(cid)["types"]
+                out = sorted(out, key=lambda c: 0 if picks_creature(c) else 1)
+                return [list(c) for c in out]
         if self.restrain_attack and d["kind"] == "attack":
             # 大局観レベルの抑制: むやみに殴らない方針として pass を先に置く。
             # 攻撃の候補自体は残すので、リーサルや攻撃時効果（メテオバーン等）が
@@ -575,6 +643,94 @@ class Pipeline:
             else:
                 print(f"  seed {s}: 再生で勝ちを再現できず、収穫に数えない", flush=True)
         return wins, records
+
+    def harvest_games(self, deck: list, opp_deck: list, seeds: list[int],
+                      micro: MicroPolicy, macro: MacroPlanner, horizon: int = 10):
+        """通し対戦から判断を収穫する（序盤〜中盤の文脈を埋めるため）。
+
+        階層版で対戦し、「最小盤面に到達した対戦」と「ループで勝った対戦」の
+        判断だけを、対戦を再生しながら記録する。狙いはターンごとに付け直す。
+        戻り値: (対象になった対戦数, レコード)。
+        """
+        kept, records = 0, []
+        for s in seeds:
+            eng = Engine.new_game(self.rules, [deck, opp_deck], s, 0)
+            start_ot = sol.own_turn(eng, ME)
+            reached = False
+            leaf = eng
+            while True:
+                d = eng.advance()
+                if d is None or eng.s.result:
+                    leaf = eng
+                    break
+                if eng.s.active != ME or d["player"] != ME:
+                    eng.answer(sol.charge_only_policy(eng, d))
+                    continue
+                if sol.own_turn(eng, ME) > start_ot + horizon - 1:
+                    leaf = eng
+                    break
+                if macro.features(eng)["loop_board"]:
+                    reached = True
+                intent = macro.plan(eng)
+                micro.intent = intent.name
+                ts = sol.TurnSearch(ME, intent.budget, intent.weights)
+                ts.burn_stock = intent.burn_stock
+                ts.stock_offsets = tuple(intent.stock_offsets)
+                old = sol.candidates
+                sol.candidates = micro.candidates
+                try:
+                    eng, _ = ts.run(eng)
+                finally:
+                    sol.candidates = old
+                    micro.intent = None
+                leaf = eng
+            r = leaf.s.result
+            won_loop = bool(r and r.get("winner") == ME and r.get("reason") == "effect")
+            if not (reached or won_loop):
+                continue
+            # 再生して判断を記録する
+            eng = Engine.new_game(self.rules, [deck, opp_deck], s, 0)
+            log = leaf.log
+            i, ok = 0, True
+            intent_name = "setup"
+            while True:
+                d = eng.advance()
+                if d is None or eng.s.result:
+                    break
+                if i >= len(log):
+                    ok = False
+                    break
+                entry = log[i]
+                i += 1
+                if d["player"] == ME and eng.s.active == ME:
+                    intent_name = macro.plan(eng).name
+                if d["player"] == ME:
+                    deck_n = len(eng.s.zones["deck"][ME])
+                    mana_civs = {c for cid in eng.s.zones["mana"][ME]
+                                 for c in eng.cdef(cid).civs}
+                    multi_hand = sum(1 for cid in eng.s.zones["hand"][ME]
+                                     if len(eng.cdef(cid).civs) >= 2)
+                    records.append({"kind": d["kind"],
+                                    "options": [o["key"] for o in d["options"]],
+                                    "chosen": entry["keys"],
+                                    "deck": deck_n, "bucket": deck_bucket(deck_n),
+                                    "win_by": self.win_by, "intent": intent_name,
+                                    "grave": grave_bucket(eng, ME),
+                                    "mana_civs": len(mana_civs),
+                                    "multi_hand": multi_hand})
+                try:
+                    # キーでは同名の選択肢（シールドなど）を区別できないため、
+                    # ログに残っている選択肢の番号で再生する
+                    if entry.get("choice") is not None:
+                        eng.answer(entry["choice"])
+                    else:
+                        eng.answer_by_keys(entry["keys"])
+                except Exception:
+                    ok = False
+                    break
+            if ok:
+                kept += 1
+        return kept, records
 
     # 段階5・6
     def evaluate(self, seeds: list[int], micro: MicroPolicy, macro: MacroPlanner | None):
