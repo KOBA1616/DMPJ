@@ -152,19 +152,25 @@ class OpenCodeCLI:
         全部タイムアウトしたら CallTimeout を投げる（呼び出し側が保留・連続打ち切りに数える）。"""
         order = [self.model, *self.alternates]
         tried = []
+        last: Exception | None = None
         for m in order:
             try:
                 text = self._complete_one(m, sysp, messages, usage)
-            except CallTimeout as e:
+            except Fatal:
+                raise
+            except Exception as e:      # noqa: BLE001  タイムアウトも「Model is unavailable」等の応答エラーも、別モデルで試す
                 tried.append(m)
-                print(f"  ⏱ {m} が時間内に終わらない。別の無料モデルへ切り替える", file=sys.stderr, flush=True)
                 last = e
+                kind = "時間内に終わらない" if isinstance(e, CallTimeout) else f"使えない（{type(e).__name__}: {str(e)[:80]}）"
+                print(f"  ⏱ {m} が{kind}。別の無料モデルへ切り替える", file=sys.stderr, flush=True)
                 continue
             if m != self.model:
                 self.alternates = [x for x in order if x != m]
                 self.model = m
             return text
-        raise CallTimeout(f"{'・'.join(tried)} がすべてタイムアウト（{last}）")
+        if isinstance(last, CallTimeout):
+            raise CallTimeout(f"{'・'.join(tried)} がすべてタイムアウト（{last}）")
+        raise RuntimeError(f"{'・'.join(tried)} がすべて失敗（最後: {last}）")
 
     def _complete_one(self, model: str, sysp: str, messages: list[dict], usage: dict | None) -> str:
         import shutil

@@ -351,6 +351,14 @@ def test_opencode_cli_switches_model_on_timeout(monkeypatch):
     calls.clear()
     assert llm.complete("", [], "low", None) == "ok" and calls == [llm.model]   # 以後は切り替え先から始める
 
+    def unavailable(model, *a):
+        if model == llm.model:
+            raise RuntimeError("opencode error: Model is unavailable")
+        return "ok2"
+
+    monkeypatch.setattr(llm, "_complete_one", unavailable)
+    assert llm.complete("", [], "low", None) == "ok2"      # タイムアウト以外のモデル側エラーでも切り替える
+
     def hang(model, *a):
         raise pv.CallTimeout("t")
 
