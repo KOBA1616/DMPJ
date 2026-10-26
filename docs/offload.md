@@ -161,7 +161,5 @@ schtasks /Create /SC MINUTE /MO 5 /TN "dmpj-worker" /TR C:\path\DMPJ\tools\run_w
 `パワーアタッカー+2000` や `マッハファイター` のように数値・注釈が付くキーワードは `data/rules/keyword_patterns.yaml` に正規表現と能力の雛形で書く（`{1}` が括弧の整数に置き換わる）。
 `rule_convert.convert`（全体変換）と `split`（部分変換）の両方で使われ、結果は card の `abilities` に入る。注釈のカッコは照合前に除く。
 追加するときは雛形を既存の演算（modify / allow / deny 等）だけで書き、`parse_card` を通ることをテストで確かめる。
-名前つき効果（注釈つき）は `data/rules/keywords.yaml` に能力の並びで定義する（別名は `aliases`、意味のない記号は keyword_patterns.yaml の `noise`）。
-対応済み: ガードマン（507.1a 攻撃先の変更。permissions の `guardman`）、シールド・セイバー、エスケープ、G・ストライク（手札で機能する誘発）、
-パワード・ブレイカー（mod `breaks_per_power`）、マナゾーンにタップして置く（`mana_untapped` の禁止）。
-未対応（エンジンに演算が要る）: ハンティング（バトル中だけの動的パワー）、スーパー・S・トリガー、革命チェンジ、侵略、超魂X、シンカライズ、ハイパー化、ニンジャ・ストライク など。
+対応済み: パワーアタッカー+N、マッハファイター、ジャストダイバー。
+未対応（エンジンに演算が要る）: ガードマン、パワード・ブレイカー、セイバー、シールド・セイバー、ハンティング、エスケープ、G・ストライク など。
