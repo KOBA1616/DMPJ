@@ -331,6 +331,35 @@ def test_auto_convert_default_order_is_card_id(tmp_path, monkeypatch):
     assert seen[:2] == ["tz01-001", "tz01-002"]          # streak 2 で打ち切るまでの先頭がID順
 
 
+def test_opencode_cli_switches_model_on_timeout(monkeypatch):
+    """タイムアウトしたら別の無料モデルで再試行し、成功したモデルを使い続ける。全部だめなら CallTimeout。"""
+    from llm_offload import providers as pv
+    llm = pv.OpenCodeCLI("glm-5.3-flash-free", 0, fallbacks=2)
+    assert llm.model not in llm.alternates and len(llm.alternates) == 2
+    assert all(m in pv.OPENCODE_FREE_MODELS and m.endswith("-free") for m in llm.alternates)
+    calls = []
+
+    def one(model, sysp, messages, usage):
+        calls.append(model)
+        if model == "glm-5.3-flash-free":
+            raise pv.CallTimeout("t")
+        return "ok"
+
+    monkeypatch.setattr(llm, "_complete_one", one)
+    assert llm.complete("", [], "low", None) == "ok"
+    assert calls == ["glm-5.3-flash-free", llm.model] and llm.model != "glm-5.3-flash-free"
+    calls.clear()
+    assert llm.complete("", [], "low", None) == "ok" and calls == [llm.model]   # 以後は切り替え先から始める
+
+    def hang(model, *a):
+        raise pv.CallTimeout("t")
+
+    monkeypatch.setattr(llm, "_complete_one", hang)
+    import pytest
+    with pytest.raises(pv.CallTimeout):
+        llm.complete("", [], "low", None)
+
+
 def test_convert_timeout_breaker(tmp_path):
     """タイムアウトは次のカードが成功して初めて reason: timeout で確定。連続2回は障害として打ち切り、記録しない。"""
     import convert_cards
