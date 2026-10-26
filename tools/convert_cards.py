@@ -246,6 +246,7 @@ def run(rows: list[dict], client, tables, sysp: str, effort: str, out: Path, rej
     def one(r):
         if streak["n"] >= 2:
             return
+        print(f"… {r['id']} {r.get('name', '')} 変換中", file=sys.stderr, flush=True)
         try:
             card = convert(client, r, tables, sysp, effort, usage)
         except DefError as e:
@@ -274,6 +275,7 @@ def run(rows: list[dict], client, tables, sysp: str, effort: str, out: Path, rej
         with lock:
             stats["ok"] += 1
             streak["n"] = 0
+            print(f"✓ {r['id']} {r.get('name', '')} ({stats['ok'] + stats['rejected'] + stats['api_error']}/{len(rows)})", file=sys.stderr, flush=True)
             cards.append(card)
             rejects.pop(r["id"], None)
             save()
