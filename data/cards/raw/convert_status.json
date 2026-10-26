@@ -1,5 +1,5 @@
 {
- "at": "2026-10-26T09:40:25+00:00",
+ "at": "2026-10-26T10:33:41+00:00",
  "model": "deepseek-v4.1-flash-free",
  "raw_total": 23671,
  "converted": 25,
@@ -36,5 +36,6 @@
   "retry": null
  },
  "opencode_usage": "（直近1日・手元の集計。無料枠の残量・使用割合は公式に取得手段なし。Zen コンソールで確認）\n┌────────────────────────────────────────────────────────┐\n│                       OVERVIEW                         │\n├────────────────────────────────────────────────────────┤\n│Sessions                                            134 │\n│Messages                                            486 │\n│Days                                                  1 │\n└────────────────────────────────────────────────────────┘\n\n┌────────────────────────────────────────────────────────┐\n│                    COST & TOKENS                       │\n├────────────────────────────────────────────────────────┤\n│Total Cost                                        $0.00 │\n│Avg Cost/Day                                      $0.00 │\n│Avg Tokens/Session                                75.8K │\n│Median Tokens/Session                             56.8K │\n│Input                                              3.1M │\n│Output                                            44.3K │\n│Cache Read                                         6.7M │\n│Cache Write                                           0 │\n└────────────────────────────────────────────────────────┘\n\n┌────────────────────────────────────────────────────────┐\n│                      MODEL USAGE                       │\n├────────────────────────────────────────────────────────┤\n│ opencode/deepseek-v4.1-flash-free                      │\n│  Messages                                          330 │\n│  Input Tokens                                     3.1M │\n│  Output Tokens       ",
- "model_in_use": "deepseek-v4.1-flash-free"
+ "model_in_use": "deepseek-v4.1-flash-free",
+ "stopped": "課金・残高に関するエラーなので停止する: HTTP 429 [{\n  \"error\": {\n    \"code\": 429,\n    \"message\": \"You exceeded your current quota, please check your plan and billing details. For more information on this error, head to: https://ai.google.dev/gemini-api/docs/rate-limits. To monitor your current usage, head to: https://"
 }
