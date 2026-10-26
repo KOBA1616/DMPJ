@@ -74,6 +74,28 @@ def op_may(eng, t, op, env):
     return None
 
 
+@op("modal", modes="oplists", count="int?", repeat="bool?")
+def op_modal(eng, t, op, env):
+    """「次のうちいずれか1つを選ぶ」「次の中から2回選ぶ（同じものを選んでもよい）」。選ぶのは効果の使用者。
+    repeat なしは count 個の異なるモードを選び、書かれた順に解決する。repeat ありは1つずつ count 回選び、選んだ順に解決する。"""
+    n = op.get("count", 1)
+    opts = [{"key": f"mode:{i}"} for i in range(len(op["modes"]))]
+    picked = t["os"].setdefault("picked", [])
+    if op.get("repeat"):
+        while len(picked) < n:
+            a, d = eng.ask(t, env["you"], "choose_mode", opts)
+            if d:
+                return d
+            picked.append(a[0])
+        order = picked
+    else:
+        a, d = eng.ask(t, env["you"], "choose_mode", opts, n, n)
+        if d:
+            return d
+        order = sorted(a)
+    eng._defer(t, [eng._child(op["modes"][i], env) for i in order])
+
+
 @op("if", cond="cond", then="ops?", **{"else": "ops?"})
 def op_if(eng, t, op, env):
     branch = op.get("then", []) if eng.eval_cond(op["cond"], env) else op.get("else", [])

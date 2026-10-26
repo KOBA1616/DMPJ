@@ -136,3 +136,36 @@ def test_escape_unavailable_without_shields(rr):
     answer(e, "attack", "attack:T004:N006")
     e.advance()
     assert not any(e.s.cards[c].defn == "N006" for c in e.bz_tops(1))
+
+
+
+def test_modal_choose_one_runs_only_chosen_mode(tmp_path):
+    """「次のうちいずれか1つを選ぶ」: 選んだモードだけを解決する。"""
+    import yaml
+    from dmsim.defs import DATA, load_rules
+    f = tmp_path / "m.yaml"
+    f.write_text(yaml.safe_dump({"cards": [{"id": "M001", "name": "選択呪文", "types": ["spell"], "civs": ["nature"], "cost": 1, "text": "x",
+                 "spell": [{"op": "modal", "modes": [[{"op": "draw", "count": 1}], [{"op": "draw", "count": 3}]]}]}]}, allow_unicode=True))
+    rr = load_rules(sorted((DATA / "cards").glob("*.yaml")) + [f])
+    e = setup(rr, {"hand": ["M001"], "mana": ["T001"]})
+    answer(e, "charge", "pass")
+    answer(e, "main", "play:M001")
+    answer(e, "choose_mode", "mode:1")
+    e.advance()
+    assert len(e.zlist("hand", 0)) == 3          # 呪文を使って0枚 → モード2で3枚引く（もう一方のモードは解決しない）
+
+
+def test_modal_repeat_allows_same_mode_twice(tmp_path):
+    import yaml
+    from dmsim.defs import DATA, load_rules
+    f = tmp_path / "m.yaml"
+    f.write_text(yaml.safe_dump({"cards": [{"id": "M002", "name": "二回選ぶ呪文", "types": ["spell"], "civs": ["nature"], "cost": 1, "text": "x",
+                 "spell": [{"op": "modal", "count": 2, "repeat": True, "modes": [[{"op": "draw", "count": 1}], [{"op": "mark", "name": "b"}]]}]}]}, allow_unicode=True))
+    rr = load_rules(sorted((DATA / "cards").glob("*.yaml")) + [f])
+    e = setup(rr, {"hand": ["M002"], "mana": ["T001"]})
+    answer(e, "charge", "pass")
+    answer(e, "main", "play:M002")
+    answer(e, "choose_mode", "mode:0")
+    answer(e, "choose_mode", "mode:0")
+    e.advance()
+    assert len(e.zlist("hand", 0)) == 2          # 同じモードを2回選んで2枚引く

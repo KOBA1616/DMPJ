@@ -422,6 +422,32 @@
       "type": "object",
       "properties": {
        "op": {
+        "const": "modal"
+       },
+       "modes": {
+        "type": "array",
+        "minItems": 2,
+        "items": {
+         "$ref": "#/$defs/ops"
+        }
+       },
+       "count": {
+        "type": "integer"
+       },
+       "repeat": {
+        "type": "boolean"
+       }
+      },
+      "required": [
+       "op",
+       "modes"
+      ],
+      "additionalProperties": false
+     },
+     {
+      "type": "object",
+      "properties": {
+       "op": {
         "const": "modify"
        },
        "select": {

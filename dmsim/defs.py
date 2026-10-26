@@ -152,6 +152,8 @@ def expand_ops(ops: list[dict], macros: dict, where: str) -> list[dict]:
             for k, ty in core[name].items():
                 if ty.rstrip("?") == "ops" and k in op:
                     op[k] = expand_ops(op[k], macros, where)
+                if ty.rstrip("?") == "oplists" and k in op:
+                    op[k] = [expand_ops(m, macros, where) for m in op[k]]
                 if ty.rstrip("?") == "mod" and k in op and "gain" in op[k]:
                     op[k] = dict(op[k], gain=[_expand_ability(a, macros, where) for a in op[k]["gain"]])
             out.append(op)
@@ -210,6 +212,11 @@ class Checker:
             self.duration(v, where)
         if ty == "ops":
             self.ops(v, where)
+        if ty == "oplists":
+            if not isinstance(v, list) or len(v) < 2:
+                raise DefError(f"{where}: modes needs a list of 2 or more ops lists")
+            for m in v:
+                self.ops(m, where)
         if ty == "selector":
             self.selector(v, where)
         if ty == "mod":
