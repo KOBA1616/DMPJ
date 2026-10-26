@@ -47,6 +47,7 @@ INSTRUCTIONS = """\
 - 出力は ```yaml で囲んだ1枚分のカード定義（`cards:` の下の1要素と同じ形。先頭の `- ` は付けない）だけ。
 - 語彙は下の JSON Schema・キーワード・マクロ・許可/禁止できる行為の一覧にあるものだけを使う。無い語を作らない。
 - キーワード能力（ブロッカー、S・トリガー、W・ブレイカー など）は keywords に書き、説明文の括弧書きは無視する。
+- known_keywords があるときは、それらのキーワードはルールで処理済み（text から除いてある）。keywords に入れ直さず、残りの text だけを変換する。
 - 「〜できない」は static の mod.deny、「〜できる」は mod.allow。「〜してもよい」は op: may。
 - 進化は types に evolution を含め evolve_from に進化元の条件を書く。ツインパクトは faces に2面を書く。
 - 革命チェンジ・ニンジャ・ストライク等の宣言は kind: declare（既存カードの例に倣う）。
@@ -102,7 +103,7 @@ def system_prompt(exclude: frozenset = frozenset(), row: dict | None = None, n_e
 
 
 # モデルに渡す項目。フレーバー・イラストレーター・レアリティ・取得時の印などは効果と無関係なので渡さない
-PROMPT_FIELDS = ("id", "name", "card_type", "civilization", "cost", "power", "race", "mana", "text")
+PROMPT_FIELDS = ("id", "name", "card_type", "civilization", "cost", "power", "race", "mana", "text", "known_keywords")
 
 
 def prompt_row(row: dict) -> dict:
@@ -321,8 +322,13 @@ def run(rows: list[dict], client, tables, sysp: str, effort: str, out: Path, rej
                 save()
             return
         print(f"… {r['id']} {r.get('name', '')} 変換中", file=sys.stderr, flush=True)
+        part = rule_convert.split(r)      # キーワード能力はルールで処理し、残りの原文だけをモデルに渡す
         try:
-            card = convert(client, r, tables, sysp, effort, usage)
+            card = convert(client, {**r, "text": part[1], "known_keywords": part[0]} if part else r, tables, sysp, effort, usage)
+            if part:
+                card["keywords"] = [*part[0], *[k for k in card.get("keywords") or [] if k not in part[0]]]
+                card["text"] = r["text"]
+                validate(card, r, tables)
         except DefError as e:
             with lock:
                 stats["rejected"] += 1

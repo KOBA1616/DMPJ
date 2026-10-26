@@ -229,8 +229,8 @@ def run_convert(job: dict, git: Git, jobs_model: str | None) -> dict:
     env = {k: v for k, v in os.environ.items() if k != "OPENCODE_API_KEY"}
     # chunk 枚ごとに auto_convert を呼び、そのたびに cards-data へ push する（途中で止めても済んだ分は残る）。
     # 次回起動時の worktree は origin に reset されるので、push していない分は消える。だから chunk 枚ごとに push する。
-    # chunk は job の `chunk:` で変えられる（既定10。止まったときに失うのは最大 chunk 枚）。
-    chunk, total = max(1, int(job.get("chunk", 10))), int(job.get("limit", 20))
+    # chunk は job の `chunk:` で変えられる（既定20。止まったときに失うのは最大 chunk 枚）。
+    chunk, total = max(1, int(job.get("chunk", 20))), int(job.get("limit", 20))
     tail: list[str] = []
     code, done_n = 0, 0
     for _ in range(max(1, -(-total // chunk))):

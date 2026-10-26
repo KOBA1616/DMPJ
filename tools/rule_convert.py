@@ -29,11 +29,11 @@ def norm(s: str) -> str:
     return re.sub(r"[、。，．\s]", "", s)
 
 
-def _table() -> dict[str, str]:
+def _table(with_card_kinds: bool = False) -> dict[str, str]:
     ks = yaml.safe_load((DATA / "rules" / "keywords.yaml").read_text(encoding="utf-8"))["keywords"]
     out = {}
     for name, d in ks.items():
-        if (d.get("card") or {}):       # 呪文用（チャージャー等）は対象外
+        if (d.get("card") or {}) and not with_card_kinds:       # 呪文用（チャージャー等）は全体変換の対象外。部分変換では扱う
             continue
         out[norm(d["ja"])] = name
     return out
@@ -83,3 +83,31 @@ def convert(row: dict) -> dict | None:
     card["source"] = {"official": row["id"], "review": "pending",
                       "notes": NOTE + ("" if kws or row.get("text") else "。取得時に原文が空だったのでバニラ扱い（原文の取りこぼしでないか確認）")}
     return card
+
+
+_ALL: dict[str, str] | None = None
+
+
+def split(row: dict) -> tuple[list[str], str] | None:
+    """原文からキーワード能力だけを取り出す（部分変換）。(キーワード名のリスト, キーワードを除いた原文) を返す。
+    キーワードが1つも見つからない・二面カード・取得が不完全な行は None。残りの原文はモデルに渡す（キーワードの分だけ短く、迷いが減る）。"""
+    global _ALL
+    if row.get("faces") or row.get("missing") or not (row.get("text") or "").strip():
+        return None
+    if _ALL is None:
+        _ALL = _table(with_card_kinds=True)
+    kws: list[str] = []
+    rest: list[str] = []
+    for line in re.split(r"\s*[\n/／]\s*", row["text"]):
+        tokens = re.sub(r"[（(][^）)]*[）)]", "", line).split()
+        while tokens and _ALL.get(norm(tokens[0])):      # 行の先頭・末尾に並んだキーワードを外す
+            k = _ALL[norm(tokens.pop(0))]
+            if k not in kws:
+                kws.append(k)
+        while tokens and _ALL.get(norm(tokens[-1])):
+            k = _ALL[norm(tokens.pop())]
+            if k not in kws:
+                kws.append(k)
+        if tokens:
+            rest.append(" ".join(tokens))
+    return (kws, " / ".join(rest)) if kws else None

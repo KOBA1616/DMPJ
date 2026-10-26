@@ -639,6 +639,31 @@ def test_rule_convert_keyword_only_and_vanilla(tmp_path):
     assert not called and rep["ok"] == 2 and [c["id"] for c in yaml.safe_load(out.read_text(encoding="utf-8"))["cards"]] == ["t1", "t2"]
 
 
+def test_rule_split_keywords_and_model_gets_only_the_rest(tmp_path):
+    """キーワードはルールで処理し、モデルには残りの原文と known_keywords だけを渡す。結果の keywords はルール分が先。"""
+    import convert_cards as cc
+    import rule_convert as rc
+    from dmsim.defs import load_tables
+    assert rc.split({"id": "x", "text": "ブロッカー（…） / 出た時、カードを１枚引く。 チャージャー"}) == (["blocker", "charger"], "出た時、カードを１枚引く。")
+    assert rc.split({"id": "x", "text": "S・トリガー ブロッカー\nＷ・ブレイカー\nこのクリーチャーが出た時、相手の手札を１枚捨てさせる。"}) == (
+        ["s_trigger", "blocker", "double_breaker"], "このクリーチャーが出た時、相手の手札を１枚捨てさせる。")
+    assert rc.split({"id": "x", "text": "出た時、カードを引く。"}) is None
+    seen = []
+
+    class LLM:
+        def complete(self, sysp, messages, effort, usage):
+            seen.append(messages[0]["content"])
+            return "```yaml\nid: t9\nname: n\ntypes: [creature]\ncivs: [water]\ncost: 2\npower: 1000\nabilities:\n- kind: trigger\n  when: {event: move, to: bz, subject: self}\n  effect: [{op: draw, count: 1}]\n```"
+
+    row = {"id": "t9", "name": "n", "card_type": "クリーチャー", "civilization": "水", "cost": "2", "power": "1000",
+           "text": "ブロッカー / このクリーチャーが出た時、カードを１枚引く。"}
+    out, rej = tmp_path / "c.yaml", tmp_path / "r.jsonl"
+    rep = cc.run([row], LLM(), load_tables(), "S", "low", out, rej)
+    assert rep["ok"] == 1 and "known_keywords" in seen[0] and "ブロッカー" not in seen[0].split("known_keywords")[0]
+    card = yaml.safe_load(out.read_text(encoding="utf-8"))["cards"][0]
+    assert card["keywords"] == ["blocker"] and card["text"] == row["text"]
+
+
 def test_convert_timeout_breaker(tmp_path):
     """タイムアウトは次のカードが成功して初めて reason: timeout で確定。連続2回は障害として打ち切り、記録しない。"""
     import convert_cards
