@@ -32,6 +32,11 @@ from .play import passive_policy
 
 WIN = 1e9
 
+# 葉の評価への追加項（任意）。(eng, me) -> float を返す関数を差し込むと、
+# 終局でない葉の評価に加算される。手順の前提条件までの距離など、
+# このモジュール自身は知らない目的を外から価格に織り込むための接続点。
+leaf_bonus = None
+
 
 def own_turn(eng: Engine, me: int, turn: int | None = None) -> int:
     """全体のターン番号 → 自分の何ターン目か（相手のターン中は直前の自分のターン）。"""
@@ -152,11 +157,14 @@ def evaluate(eng: Engine, me: int, w: Weights) -> float:
     deck = len(eng.zlist("deck", me))
     self_keep = w.deck_keep
     mana_civs = {c for c in eng.zlist("mana", me) for c in eng.cdef(c).civs}
-    return (-w.shield * sh + w.threat * min(breaks, sh + 1) + w.mana * len(eng.zlist("mana", me))
-            + w.civ * len(mana_civs)
-            + w.hand * len(eng.zlist("hand", me)) + w.board * len(mine)
-            + w.opp_deck * (40 - len(eng.zlist("deck", opp)))
-            - w.deck_danger * max(0, self_keep - deck))
+    score = (-w.shield * sh + w.threat * min(breaks, sh + 1) + w.mana * len(eng.zlist("mana", me))
+             + w.civ * len(mana_civs)
+             + w.hand * len(eng.zlist("hand", me)) + w.board * len(mine)
+             + w.opp_deck * (40 - len(eng.zlist("deck", opp)))
+             - w.deck_danger * max(0, self_keep - deck))
+    if leaf_bonus is not None:
+        score += leaf_bonus(eng, me)
+    return score
 
 
 # ---- 自分のターンの探索 -------------------------------------------------------------------------

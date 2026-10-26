@@ -339,6 +339,66 @@ def test_entry_satisfied_on_engine(rules):
     assert not entry_satisfied(eng, 0, spec)
 
 
+def test_preferences_off_purpose_penalty(rules):
+    # 目的の勝ち方でない勝ち（ループデッキのダイレクトアタック勝ち）を
+    # 生んだ選択は、選好の学習から差し引く
+    from discover_pipeline import learn_preferences
+    recs = []
+    for g in range(4):
+        recs.append({"kind": "main", "options": ["attack:x", "pass"],
+                     "chosen": ["pass"], "result": "effect",
+                     "intent": "execute", "game": g})
+    for g in range(4, 8):
+        recs.append({"kind": "main", "options": ["attack:x", "pass"],
+                     "chosen": ["attack:x"], "result": "direct_attack",
+                     "intent": "execute", "game": g})
+    plain = learn_preferences(recs)
+    assert plain["global"]["main"]["attack:x"] == 0.5
+    corr = learn_preferences(recs, off_purpose_penalty=0.5, win_by="effect")
+    assert corr["global"]["main"]["attack:x"] < 0.5
+    assert corr["global"]["main"]["pass"] > plain["global"]["main"]["pass"]
+
+
+def test_entry_distance_and_discount(rules):
+    from discover_pipeline import entry_distance, learn_preferences
+    spec = {"conditions": [{"card": SAGA, "zones": ["hand", "graveyard"], "min": 2}],
+            "grave_creatures_min": 2, "mana_min": 3}
+    # 入口を満たす局面は距離0、サガが足りない局面は正の距離
+    eng = setup(rules, {"hand": [SAGA, "dm22ex1-025"],
+                        "graveyard": ["dm26ex2-071", SAGA], "mana": MANA})
+    assert entry_distance(eng, 0, spec) == 0.0
+    eng = setup(rules, {"hand": ["dm22ex1-025"],
+                        "graveyard": ["dm26ex2-071", IWA], "mana": MANA})
+    assert entry_distance(eng, 0, spec) >= 2.0
+    # 速い勝ちの軌跡ほど強く学ぶ（時間割引）: 速い勝ちで選ばれた手は、
+    # 遅い勝ちで選ばれた手より選好率が高くなる
+    recs = []
+    for g, kt, ch in ((0, 3, "play:x"), (1, 8, "pass")):
+        for _ in range(2):
+            recs.append({"kind": "main", "options": ["play:x", "pass"],
+                         "chosen": [ch], "result": "effect",
+                         "intent": "execute", "game": g, "kill_turn": kt})
+    plain = learn_preferences(recs, discount=1.0)
+    assert plain["global"]["main"]["play:x"] == 0.5
+    prefs = learn_preferences(recs, discount=0.5)
+    assert prefs["global"]["main"]["play:x"] > 0.9
+
+
+def test_play_shaping_is_face_aware(rules):
+    # ツインパクトは面で役割が違うので、報酬は面単位でも学ぶ
+    from discover_pipeline import learn_play_shaping
+    recs = []
+    for g in range(4):
+        recs.append({"game": g, "result": "effect", "kind": "main",
+                     "chosen": ["play:dmbd17-009:1"], "options": []})
+    for g in range(4, 6):
+        recs.append({"game": g, "result": "effect", "kind": "main",
+                     "chosen": ["play:dmbd17-009:0"], "options": []})
+    sh = learn_play_shaping(recs, win_reason="effect")
+    assert sh["dmbd17-009"] == 1.0
+    assert sh["dmbd17-009:1"] > sh["dmbd17-009:0"]
+
+
 def test_loop_ready_needs_piece_placement(rules):
     # 到達は部品の「置き場所」まで見る: ドラゲリオンが墓地だけでは回り始められない
     eng = setup(rules, {"hand": [SAGA], "bz": ["dm22ex1-025"],

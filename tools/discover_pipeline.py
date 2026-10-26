@@ -307,10 +307,11 @@ def describe_public(eng, me: int, cards=None) -> dict:
     """公開情報だけの局面記述（入口パターンの学習と判定に使う）。
 
     山札とシールドの中身は含めない。手札・場・墓地・マナの枚数と、
-    墓地のクリーチャー数、マナの総数だけを見る。
+    墓地のクリーチャー数、マナの総数だけを見る。対象は部品に加えて
+    掘り札（タイフーン系とコダマ）も含む。着火には掘りが要るため。
     """
     if cards is None:
-        cards = TARGET_CARDS
+        cards = TARGET_CARDS + ("dm26ex2-071", "dmpromoy22-p51", "dmex10-020")
     z = eng.s.zones
     desc = {}
     for name in cards:
@@ -329,7 +330,8 @@ _ZONE_GROUPS = [("hand",), ("bz",), ("graveyard",), ("mana",),
 
 
 def _cond_holds(desc: dict, cond: dict) -> bool:
-    return sum(desc[cond["card"]].get(zn, 0) for zn in cond["zones"]) >= cond["min"]
+    zones = desc.get(cond["card"], {})
+    return sum(zones.get(zn, 0) for zn in cond["zones"]) >= cond["min"]
 
 
 def entry_satisfied_desc(desc: dict, spec: dict | None) -> bool:
@@ -345,6 +347,40 @@ def entry_satisfied_desc(desc: dict, spec: dict | None) -> bool:
 
 def entry_satisfied(eng, me: int, spec: dict | None) -> bool:
     return entry_satisfied_desc(describe_public(eng, me), spec)
+
+
+def entry_distance(eng, me: int, spec: dict | None) -> float:
+    """入口の条件までの距離（公開情報のみ）。満たしていない条件の不足分。
+
+    探索の評価に織り込むための物差し: 条件に近づくほど距離が縮む。
+    資源の下限（墓地・マナ）は部品の不足より軽く数える。
+    """
+    if not spec:
+        return 0.0
+    desc = describe_public(eng, me)
+    d = 0.0
+    for cond in spec["conditions"]:
+        zones = desc.get(cond["card"], {})
+        have = sum(zones.get(zn, 0) for zn in cond["zones"])
+        d += max(0, cond["min"] - have)
+    d += 0.5 * max(0, spec["grave_creatures_min"] - desc["grave_creatures"])
+    d += 0.5 * max(0, spec["mana_min"] - desc["mana"])
+    return d
+
+
+def entry_leaf_bonus(spec: dict | None, weight: float = 30.0):
+    """探索の葉の評価に「入口までの距離」を価格として織り込む関数を作る。
+
+    ループへの道は中間状態の評価が下がる谷になっている。候補の順序では
+    なく評価そのものに距離を入れることで、谷を降りる手を探索が選べる。
+    """
+    if not spec:
+        return None
+
+    def bonus(eng, me):
+        return -weight * entry_distance(eng, me, spec)
+
+    return bonus
 
 
 def learn_entry_criterion(successes: list[dict], failures: list[dict]) -> dict | None:
@@ -531,13 +567,14 @@ def charge_choice(eng, d, targets=TARGET_CARDS, loop_card: str = SAGA) -> int | 
 
 
 def learn_play_shaping(records: list[dict], win_reason: str | None = None,
-                       entry: bool = False) -> dict[str, float]:
+                       entry: bool = False, discount: float = 0.85) -> dict[str, float]:
     """報酬の自動設計: 成功した対戦（到達/勝利した軌跡）の中で、どのカードの
     プレイがどれだけの割合の対戦に現れたかから、プレイへの報酬を決める。
 
     人手で「必要なプレイ」を列挙する代わりに、成功軌跡への出現率を使う。
-    戻り値は最大値を1にそろえた {カードID: 報酬}。対戦の区切り（game）が
-    無いレコードだけなら空を返す。
+    戻り値は最大値を1にそろえた {カードID: 報酬}で、ツインパクトには
+    面単位の {カードID:面} も併せて返す（面で役割が違うため）。
+    対戦の区切り（game）が無いレコードだけなら空を返す。
 
     win_reason を指定すると、その勝ち方で勝った対戦だけから学ぶ。到達した
     対戦の多くは別の勝ち方（攻撃）で終わるため、混ぜて学ぶと狙う勝ち方と
@@ -545,83 +582,119 @@ def learn_play_shaping(records: list[dict], win_reason: str | None = None,
 
     entry=True では、最終結果ではなく「ループ開始可能な局面（途中目標）に
     届いた対戦」から学ぶ。揃えるターンのプレイに報酬を行き渡らせるため。
+    この場合、数えるのは組み立ての狙い（setup / enter_loop）のレコード
+    だけにする。到達した対戦の多くはその後別の勝ち方で終わるため、
+    仕上げや攻撃のプレイまで混ぜると、入口とは無関係な打点のプレイに
+    報酬が付いてしまう。
+
+    目的の勝ち方で勝った対戦は、勝ったターンで割り引いて数える
+    （discount ** (ターン - 3)、3が理論上の最速）。速い勝ちの軌跡ほど
+    強く学ぶ、時間割引つきの信用割り当て。
     """
     games: dict = defaultdict(set)
     game_result: dict = {}
     game_entry: dict = {}
+    game_turn: dict = {}
     for rec in records:
         g = rec.get("game")
         if g is None:
             continue
         game_result[g] = rec.get("result")
         game_entry[g] = bool(rec.get("entry"))
+        game_turn[g] = rec.get("kill_turn")
+        if entry and rec.get("intent") not in ("setup", "enter_loop"):
+            continue
         for k in rec["chosen"]:
             if k.startswith("play:"):
-                games[g].add(k.split(":")[1])
+                parts = k.split(":")
+                games[g].add(parts[1])                    # カード単位
+                if len(parts) > 2:
+                    games[g].add(f"{parts[1]}:{parts[2]}")  # 面単位も集める
     if entry:
         games = {g: p for g, p in games.items() if game_entry.get(g)}
     if win_reason is not None:
         games = {g: p for g, p in games.items() if game_result.get(g) == win_reason}
     if not games:
         return {}
-    n = len(games)
+    target = win_reason if win_reason is not None else "effect"
+
+    def factor(g) -> float:
+        kt = game_turn.get(g)
+        if game_result.get(g) == target and kt:
+            return discount ** max(0, kt - 3)
+        return 1.0
+
     counts: Counter = Counter()
-    for played in games.values():
+    raw: Counter = Counter()
+    for g, played in games.items():
+        f = factor(g)
         for defn in played:
-            counts[defn] += 1
+            counts[defn] += f
+            raw[defn] += 1
     top = max(counts.values())
-    return {defn: round(c / top, 3) for defn, c in counts.items() if c >= 2}
+    return {defn: round(c / top, 3) for defn, c in counts.items() if raw[defn] >= 2}
 
 
-def learn_preferences(records: list[dict]) -> dict:
+def learn_preferences(records: list[dict], off_purpose_penalty: float = 0.0,
+                      win_by: str = "effect", discount: float = 0.85) -> dict:
     """決定レコードから、決定の種類ごとのキーの選好率を学ぶ。
 
     records: [{"kind":..., "options":[key...], "chosen":[key...]}]
     選好率 = 選べた回数のうち選ばれた割合。出現1回だけのキーはノイズとして捨てる。
+
+    off_purpose_penalty > 0 のとき、目的の勝ち方（win_by）でない勝ちで
+    終わった対戦（例: ループで勝つのが目的のデッキが、ダイレクト
+    アタックで勝ってしまった対戦）について、その勝ち方を生んだ選択を
+    負の重みで数えるマイナス補正をかける。対象は「仕上げの狙い
+    （execute / beatdown）のレコード」と「攻撃を選んだレコード」。
+    揃える狙いの組み立ての選択は負にしない。組み立ては目的に沿った
+    途中経過で、最終結果だけで割り引くと組み立て自体が学べなくなる。
     """
-    avail: dict[str, Counter] = defaultdict(Counter)
-    chosen: dict[str, Counter] = defaultdict(Counter)
-    for rec in records:
-        for k in rec["options"]:
-            avail[rec["kind"]][k] += 1
-        for k in rec["chosen"]:
-            chosen[rec["kind"]][k] += 1
-    policy: dict[str, dict[str, float]] = {}
-    for kind, counter in avail.items():
-        policy[kind] = {k: round(chosen[kind][k] / a, 3)
-                        for k, a in counter.items() if a >= 2}
+    def weight(rec) -> float:
+        # 目的の勝ち方で勝った対戦は、勝ったターンで割り引く
+        # （速い勝ちの判断ほど強く学ぶ。3ターンが理論上の最速）
+        if rec.get("result") == win_by:
+            kt = rec.get("kill_turn")
+            return discount ** max(0, kt - 3) if kt else 1.0
+        if off_purpose_penalty <= 0 or rec.get("result") is None:
+            return 1.0
+        if rec.get("intent") in ("execute", "beatdown"):
+            return -off_purpose_penalty
+        if any(k.startswith("attack:") for k in rec.get("chosen", [])):
+            return -off_purpose_penalty
+        return 1.0
+
+    def aggregate(sub):
+        raw: dict[str, Counter] = defaultdict(Counter)
+        w_avail: dict[str, Counter] = defaultdict(Counter)
+        w_chosen: dict[str, Counter] = defaultdict(Counter)
+        for rec in sub:
+            w = weight(rec)
+            for k in rec["options"]:
+                raw[rec["kind"]][k] += 1
+                w_avail[rec["kind"]][k] += w
+            for k in rec["chosen"]:
+                w_chosen[rec["kind"]][k] += w
+        out: dict[str, dict[str, float]] = {}
+        for kind, counter in raw.items():
+            out[kind] = {}
+            for k, a in counter.items():
+                if a < 2 or w_avail[kind][k] <= 0:
+                    continue
+                rate = w_chosen[kind][k] / w_avail[kind][k]
+                out[kind][k] = round(min(1.0, max(0.0, rate)), 3)
+        return out
+
+    policy = aggregate(records)
     # 文脈条件付き: 山札の厚さごとに同じ集計をする（データが薄い区分は使わない）
     by_bucket: dict[str, dict] = {}
-    buckets = sorted({r.get("bucket") for r in records if r.get("bucket")})
-    for b in buckets:
-        sub = [r for r in records if r.get("bucket") == b]
-        b_avail: dict[str, Counter] = defaultdict(Counter)
-        b_chosen: dict[str, Counter] = defaultdict(Counter)
-        for rec in sub:
-            for k in rec["options"]:
-                b_avail[rec["kind"]][k] += 1
-            for k in rec["chosen"]:
-                b_chosen[rec["kind"]][k] += 1
-        by_bucket[b] = {kind: {k: round(b_chosen[kind][k] / a, 3)
-                               for k, a in counter.items() if a >= 2}
-                        for kind, counter in b_avail.items()}
+    for b in sorted({r.get("bucket") for r in records if r.get("bucket")}):
+        by_bucket[b] = aggregate([r for r in records if r.get("bucket") == b])
     # 文脈ごとにも集計する。文脈は 勝ち方×厚さ（v3）と、勝ち方×狙い×墓地区分×厚さ
     # （v4）の2段。同じ厚さでも、整えるターンとループのターンでは捨てる札が違い、
     # 墓地のクリーチャー数が蘇生条件を満たすかどうかでも判断が切り替わる。
     # 区分のデータが薄ければ、その段は使われず下の段に落ちる。
     by_context: dict[str, dict] = {}
-
-    def aggregate(sub):
-        c_avail: dict[str, Counter] = defaultdict(Counter)
-        c_chosen: dict[str, Counter] = defaultdict(Counter)
-        for rec in sub:
-            for k in rec["options"]:
-                c_avail[rec["kind"]][k] += 1
-            for k in rec["chosen"]:
-                c_chosen[rec["kind"]][k] += 1
-        return {kind: {k: round(c_chosen[kind][k] / a, 3)
-                       for k, a in counter.items() if a >= 2}
-                for kind, counter in c_avail.items()}
 
     for wb in sorted({r.get("win_by") or "any" for r in records}):
         for b in sorted({r["bucket"] for r in records if r.get("bucket")}):
@@ -789,9 +862,18 @@ class MicroPolicy:
                 k = keys[cand[0]]
                 if not k.startswith("play:"):
                     return 1                    # pass などは真ん中
-                defn = k.split(":")[1]
+                parts = k.split(":")
+                defn = parts[1]
                 if self.play_shaping:
-                    return 0 if self.play_shaping.get(defn, 0.0) >= 0.5 else 2
+                    # 面ごとの報酬があればそちらで見る（ツインパクトは面で
+                    # 役割が違う。例: ブルースの呪文面は入口の道具、
+                    # クリーチャー面は打点）。無ければカード単位に落とす
+                    val = None
+                    if len(parts) > 2:
+                        val = self.play_shaping.get(f"{defn}:{parts[2]}")
+                    if val is None:
+                        val = self.play_shaping.get(defn, 0.0)
+                    return 0 if val >= 0.5 else 2
                 return 0 if defn in self.plan_plays else 2
             res = sorted(res, key=tier)
         return res
@@ -928,6 +1010,10 @@ class Pipeline:
         戻り値: (対象になった対戦数, レコード)。
         """
         macro.decklist = tuple(deck)   # 確率はデッキレシピと公開情報から計算する
+        # 入口の条件があれば、探索の評価に「入口までの距離」を織り込む
+        prev_bonus = sol.leaf_bonus
+        if getattr(macro, "entry_spec", None):
+            sol.leaf_bonus = entry_leaf_bonus(macro.entry_spec)
         kept, records = 0, []
         for s in seeds:
             eng = Engine.new_game(self.rules, [deck, opp_deck], s, 0)
@@ -976,6 +1062,8 @@ class Pipeline:
             r = leaf.s.result
             won_loop = bool(r and r.get("winner") == ME and r.get("reason") == "effect")
             result_reason = r.get("reason") if (r and r.get("winner") == ME) else None
+            # 勝った場合は、自分の何ターン目に終わったか（速い勝ちほど高い信用）
+            kill_turn = (sol.own_turn(leaf, ME) - start_ot + 1) if result_reason else None
             if not (reached or won_loop):
                 continue
             # 再生して判断を記録する
@@ -1001,7 +1089,7 @@ class Pipeline:
                     multi_hand = sum(1 for cid in eng.s.zones["hand"][ME]
                                      if len(eng.cdef(cid).civs) >= 2)
                     records.append({"kind": d["kind"], "game": s, "result": result_reason,
-                                    "entry": entry_hit,
+                                    "entry": entry_hit, "kill_turn": kill_turn,
                                     "options": [o["key"] for o in d["options"]],
                                     "chosen": entry["keys"],
                                     "deck": deck_n, "bucket": deck_bucket(deck_n),
@@ -1021,6 +1109,7 @@ class Pipeline:
                     break
             if ok:
                 kept += 1
+        sol.leaf_bonus = prev_bonus
         return kept, records
 
     # 段階5・6
