@@ -418,6 +418,7 @@ def test_openrouter_uses_only_verified_free_models(monkeypatch):
     monkeypatch.setattr(cli, "_complete_one", lambda *a: n.append(1) or "oc")
     assert cli.complete("", [], "low", None) == "ok" and not n   # 直後は OpenCode を待たず別サービスを直接使う
     cli._ext_until = 0
+    cli.bad = {}
     assert cli.complete("", [], "low", None) == "oc" and n      # 冷却が終われば OpenCode に戻る
 
 
@@ -533,6 +534,148 @@ def test_opencode_cli_detects_free_limit(monkeypatch):
     assert pv.FREE_LIMIT_RE.search('{"name":"FreeUsageLimitError","message":"Free usage limit reached. Subscribe"}')
     cli.external = type("X", (), {"complete": lambda self, *a: "ext"})()
     assert cli.complete("", [], "low", None) == "ext"
+
+
+def test_opencode_cli_remembers_model_across_runs(tmp_path, monkeypatch):
+    """5枚ごとにプロセスを起動し直しても、前回使えたモデルから始め、だめだったモデルは一定時間飛ばす。"""
+    from llm_offload import providers as pv
+    st = tmp_path / "state.json"
+    monkeypatch.setenv("DMPJ_MODEL_STATE", str(st))
+    a = pv.OpenCodeCLI("glm-5.3-flash-free", 0, fallbacks=2)
+    assert not a.recently_ok()
+    calls = []
+
+    def one(model, *x):
+        calls.append(model)
+        if model == "glm-5.3-flash-free":
+            raise pv.CallTimeout("t")
+        return "ok"
+
+    monkeypatch.setattr(a, "_complete_one", one)
+    assert a.complete("", [], "low", None) == "ok" and len(calls) == 2
+    good = a.model
+    b = pv.OpenCodeCLI("glm-5.3-flash-free", 0, fallbacks=2)      # 別プロセスの想定
+    assert b.model == good and "glm-5.3-flash-free" in b.bad and b.recently_ok()
+    calls.clear()
+    monkeypatch.setattr(b, "_complete_one", one)
+    assert b.complete("", [], "low", None) == "ok" and calls == [good]      # 試し直さない
+    calls.clear()
+
+    def fail_good(model, *x):
+        calls.append(model)
+        if model == good:
+            raise pv.CallTimeout("t")
+        return "ok"
+
+    monkeypatch.setattr(b, "_complete_one", fail_good)
+    assert b.complete("", [], "low", None) == "ok" and "glm-5.3-flash-free" not in calls     # 冷却中の glm は飛ばす
+
+
+def test_local_worker_merges_conflicting_convert_results(tmp_path):
+    """別の実行が同じ converted.yaml / rejects.jsonl を先に push していても、ID ごとに合流して push できる。"""
+    import subprocess
+
+    import local_worker as lw
+    import yaml as _y
+    bare = tmp_path / "remote.git"
+    subprocess.run(["git", "init", "-q", "--bare", "-b", "cards-data", str(bare)], check=True)
+
+    def clone(n):
+        d = tmp_path / n
+        subprocess.run(["git", "clone", "-q", str(bare), str(d)], check=True, capture_output=True)
+        for k, v in (("user.name", "t"), ("user.email", "t@t")):
+            subprocess.run(["git", "config", k, v], cwd=d, check=True)
+        return d
+
+    def write(d, cards, rejects, commit=True):
+        (d / "data/cards/raw").mkdir(parents=True, exist_ok=True)
+        (d / "data/cards/converted.yaml").write_text(_y.safe_dump({"cards": [{"id": i} for i in cards]}), encoding="utf-8")
+        (d / "data/cards/raw/rejects.jsonl").write_text("".join('{"id": "%s"}\n' % i for i in rejects), encoding="utf-8")
+        subprocess.run(["git", "add", "-f", "data"], cwd=d, check=True)
+        if commit:
+            subprocess.run(["git", "commit", "-qm", "x"], cwd=d, check=True)
+
+    base = clone("base")
+    write(base, ["a"], ["r1"])
+    subprocess.run(["git", "push", "-q", "origin", "HEAD:cards-data"], cwd=base, check=True)
+    mine, other = clone("mine"), clone("other")
+    write(other, ["a", "b"], ["r1", "r2"])               # 他の実行が先に push
+    subprocess.run(["git", "push", "-q", "origin", "HEAD:cards-data"], cwd=other, check=True)
+    write(mine, ["a", "c"], ["r1", "b"], commit=False)   # 自分も同じファイルを更新（b は自分では不合格）
+    g = lw.Git(mine, tmp_path / "work")
+    g.commit_push(mine, "cards-data", "m", add=False, on_conflict=lambda: g.merge_convert_results(mine, "cards-data", "m"))
+    chk = clone("chk")
+    cards = sorted(c["id"] for c in _y.safe_load((chk / "data/cards/converted.yaml").read_text(encoding="utf-8"))["cards"])
+    rejs = sorted(l for l in (chk / "data/cards/raw/rejects.jsonl").read_text(encoding="utf-8").split("\n") if l)
+    assert cards == ["a", "b", "c"] and rejs == ['{"id": "r1"}', '{"id": "r2"}']      # 変換済みが優先、不合格は和集合
+
+
+def test_rule_convert_keyword_only_and_vanilla(tmp_path):
+    """キーワードだけ・バニラのクリーチャーは、モデルを呼ばずにルールで変換する。能力文があるものは None。"""
+    import convert_cards as cc
+    import rule_convert as rc
+    from dmsim.defs import load_tables, parse_card
+    base = {"card_type": "クリーチャー", "civilization": "光/水", "cost": "3", "power": "2000", "race": "ガーディアン/ナイト", "name": "n"}
+    r = rc.convert({**base, "id": "t1", "text": "ブロッカー（相手クリーチャーが攻撃する時、…）\nＷ・ブレイカー（…）\nこのクリーチャーは攻撃されない。 / Q・ブレイカー"})
+    assert r["keywords"] == ["blocker", "double_breaker", "cannot_be_attacked", "quad_breaker"] and r["civs"] == ["light", "water"]
+    assert r["races"] == ["ガーディアン", "ナイト"]
+    parse_card(r, load_tables())
+    van = rc.convert({**base, "id": "t2", "text": "", "missing": ["text"]})
+    assert van and "keywords" not in van and "バニラ" in van["source"]["notes"]
+    assert rc.convert({**base, "id": "t3", "text": "ブロッカー / 出た時、カードを引く。"}) is None      # 能力文あり → モデルへ
+    assert rc.convert({**base, "id": "t4", "text": "", "missing": ["text", "cost"]}) is None             # 他の欠落は取得のやり直しが先
+    assert rc.convert({**base, "id": "t5", "card_type": "呪文", "text": "ブロッカー"}) is None
+    # run(): ルール変換できるカードではモデルを呼ばない
+    called = []
+
+    class LLM:
+        def complete(self, *a):
+            called.append(1)
+            raise RuntimeError("呼ばれないはず")
+
+    out, rej = tmp_path / "c.yaml", tmp_path / "r.jsonl"
+    rep = cc.run([{**base, "id": "t1", "text": "ブロッカー"}, {**base, "id": "t2", "text": "", "missing": ["text"]}], LLM(), load_tables(),
+                 "S", "low", out, rej)
+    assert not called and rep["ok"] == 2 and [c["id"] for c in yaml.safe_load(out.read_text(encoding="utf-8"))["cards"]] == ["t1", "t2"]
+
+
+def test_rule_convert_parameterized_keywords():
+    """数値つき・注釈つきキーワード（パワーアタッカー+N、マッハファイター）もルールで変換し、検査に通る。"""
+    import rule_convert as rc
+    from dmsim.defs import load_tables, parse_card
+    base = {"card_type": "クリーチャー", "civilization": "火", "cost": "4", "power": "3000", "race": "ドラゴン", "name": "n"}
+    r = rc.convert({**base, "id": "p1", "text": "パワーアタッカー＋２０００（攻撃中、…） / マッハファイター（…） / スピードアタッカー"})
+    assert r["keywords"] == ["speed_attacker"] and len(r["abilities"]) == 2
+    assert r["abilities"][0]["effect"][0]["mod"] == {"power": 2000}
+    parse_card(r, load_tables())
+    assert rc.convert({**base, "id": "p2", "text": "パワーアタッカー+X"}) is None
+    kws, rest, extra = rc.split({"id": "x", "text": "パワーアタッカー+1000 出た時、カードを引く。"})
+    assert kws == [] and rest == "出た時、カードを引く。" and extra[0]["kind"] == "trigger"
+
+
+def test_rule_split_keywords_and_model_gets_only_the_rest(tmp_path):
+    """キーワードはルールで処理し、モデルには残りの原文と known_keywords だけを渡す。結果の keywords はルール分が先。"""
+    import convert_cards as cc
+    import rule_convert as rc
+    from dmsim.defs import load_tables
+    assert rc.split({"id": "x", "text": "ブロッカー（…） / 出た時、カードを１枚引く。 チャージャー"}) == (["blocker", "charger"], "出た時、カードを１枚引く。", [])
+    assert rc.split({"id": "x", "text": "S・トリガー ブロッカー\nＷ・ブレイカー\nこのクリーチャーが出た時、相手の手札を１枚捨てさせる。"}) == (
+        ["s_trigger", "blocker", "double_breaker"], "このクリーチャーが出た時、相手の手札を１枚捨てさせる。", [])
+    assert rc.split({"id": "x", "text": "出た時、カードを引く。"}) is None
+    seen = []
+
+    class LLM:
+        def complete(self, sysp, messages, effort, usage):
+            seen.append(messages[0]["content"])
+            return "```yaml\nid: t9\nname: n\ntypes: [creature]\ncivs: [water]\ncost: 2\npower: 1000\nabilities:\n- kind: trigger\n  when: {event: move, to: bz, subject: self}\n  effect: [{op: draw, count: 1}]\n```"
+
+    row = {"id": "t9", "name": "n", "card_type": "クリーチャー", "civilization": "水", "cost": "2", "power": "1000",
+           "text": "ブロッカー / このクリーチャーが出た時、カードを１枚引く。"}
+    out, rej = tmp_path / "c.yaml", tmp_path / "r.jsonl"
+    rep = cc.run([row], LLM(), load_tables(), "S", "low", out, rej)
+    assert rep["ok"] == 1 and "known_keywords" in seen[0] and "ブロッカー" not in seen[0].split("known_keywords")[0]
+    card = yaml.safe_load(out.read_text(encoding="utf-8"))["cards"][0]
+    assert card["keywords"] == ["blocker"] and card["text"] == row["text"]
 
 
 def test_convert_timeout_breaker(tmp_path):

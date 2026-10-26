@@ -33,6 +33,7 @@ sys.path.insert(0, str(ROOT / "tools"))
 
 from dmsim import schema  # noqa: E402
 from dmsim.defs import DATA, DefError, load_tables, parse_card  # noqa: E402
+import rule_convert  # noqa: E402
 from llm_offload.providers import CallTimeout  # noqa: E402
 from llm_offload.providers import (  # noqa: E402,F401  無料モデル呼び出しは llm_offload に集約
     OPENCODE_DEFAULT, OPENCODE_FREE_MODELS, OPENCODE_URL, BadResponse, Fatal, OpenCodeCLI, OpenCodeLLM, Chain, GeminiLLM, LLM7LLM, OpenRouterLLM, check_free_model)
@@ -46,6 +47,7 @@ INSTRUCTIONS = """\
 - 出力は ```yaml で囲んだ1枚分のカード定義（`cards:` の下の1要素と同じ形。先頭の `- ` は付けない）だけ。
 - 語彙は下の JSON Schema・キーワード・マクロ・許可/禁止できる行為の一覧にあるものだけを使う。無い語を作らない。
 - キーワード能力（ブロッカー、S・トリガー、W・ブレイカー など）は keywords に書き、説明文の括弧書きは無視する。
+- known_keywords があるときは、それらのキーワードはルールで処理済み（text から除いてある）。keywords に入れ直さず、残りの text だけを変換する。
 - 「〜できない」は static の mod.deny、「〜できる」は mod.allow。「〜してもよい」は op: may。
 - 進化は types に evolution を含め evolve_from に進化元の条件を書く。ツインパクトは faces に2面を書く。
 - 革命チェンジ・ニンジャ・ストライク等の宣言は kind: declare（既存カードの例に倣う）。
@@ -101,7 +103,7 @@ def system_prompt(exclude: frozenset = frozenset(), row: dict | None = None, n_e
 
 
 # モデルに渡す項目。フレーバー・イラストレーター・レアリティ・取得時の印などは効果と無関係なので渡さない
-PROMPT_FIELDS = ("id", "name", "card_type", "civilization", "cost", "power", "race", "mana", "text")
+PROMPT_FIELDS = ("id", "name", "card_type", "civilization", "cost", "power", "race", "mana", "text", "known_keywords")
 
 
 def prompt_row(row: dict) -> dict:
@@ -295,6 +297,20 @@ def run(rows: list[dict], client, tables, sysp: str, effort: str, out: Path, rej
     streak = {"n": 0}      # 連続したAPI失敗（2回で打ち切り）。無料枠の制限(429)に当たったら残りを打たずに止める
 
     def one(r):
+        rc = rule_convert.convert(r)      # キーワードだけ・バニラは、辞書のルールで作る（モデルを呼ばない＝トークン0）
+        if rc is not None:
+            try:
+                rc = validate(rc, r, tables)
+            except DefError as e:
+                print(f"  {r['id']}: ルール変換が検査を通らなかったのでモデルへ回す: {e}", file=sys.stderr)
+            else:
+                with lock:
+                    stats["ok"] += 1
+                    print(f"✓ {r['id']} {r.get('name', '')} (ルール変換・モデル不使用)", file=sys.stderr, flush=True)
+                    cards.append(rc)
+                    rejects.pop(r["id"], None)
+                    save()
+                return
         if streak["n"] >= 2:
             return
         pre = precheck(r)
@@ -306,8 +322,17 @@ def run(rows: list[dict], client, tables, sysp: str, effort: str, out: Path, rej
                 save()
             return
         print(f"… {r['id']} {r.get('name', '')} 変換中", file=sys.stderr, flush=True)
+        part = rule_convert.split(r)      # キーワード能力はルールで処理し、残りの原文だけをモデルに渡す
         try:
-            card = convert(client, r, tables, sysp, effort, usage)
+            card = convert(client, {**r, "text": part[1], "known_keywords": part[0]} if part else r, tables, sysp, effort, usage)
+            if part:
+                card["keywords"] = [*part[0], *[k for k in card.get("keywords") or [] if k not in part[0]]]
+                if not card["keywords"]:
+                    del card["keywords"]
+                if part[2]:
+                    card["abilities"] = [*part[2], *(card.get("abilities") or [])]
+                card["text"] = r["text"]
+            validate(card, r, tables)
         except DefError as e:
             with lock:
                 stats["rejected"] += 1

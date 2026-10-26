@@ -139,3 +139,26 @@ schtasks /Create /SC MINUTE /MO 5 /TN "dmpj-worker" /TR C:\path\DMPJ\tools\run_w
 - 環境変数 `GEMINI_API_KEY` があれば、OpenCode 全滅時の切り替え先として最初に試す（OpenAI 互換: `generativelanguage.googleapis.com/v1beta/openai`）。順番は Gemini → OpenRouter → LLM7。
 - 使うのは公式の料金ページで無料枠と出ている Flash 系（3.8 / 3.6 / 3 Flash Preview / 3.5・3.1 Flash-Lite）に固定。Pro 系は使わない。
 - 注意: キーのプロジェクトに請求先を設定すると有料になりうるが、応答から費用は検知できない。**請求先のないプロジェクトで作ったキーだけ**を使う。無料枠は入力が製品改善に使われる。
+
+## 実行をまたぐ記憶と cards-data の競合
+- ワーカーは `work/model_state.json`（環境変数 `DMPJ_MODEL_STATE`）に、使えたモデル・使えなかったモデル（24時間は飛ばす）・別サービスを使う期限・最後に応答が返った時刻を残す。5枚ごとに変換プロセスを起動し直しても、前回使えたモデルから始め、直近10分に応答があれば開始前チェックも省く。
+- cards-data への push: 取得系（auto-sync / sync-cards）は `data/cards/raw/by_product/` と台帳、変換は `converted.yaml` / `rejects.jsonl` / `convert_*.json` を書くので、通常は別ファイルで衝突しない。push が拒否されたら fetch → rebase で再試行し、変換結果ファイルが衝突したら ID ごとの和集合で合流（変換済みが優先、不合格は和集合から変換済みを除く）して push し直す。
+
+## まとめて処理する枚数・スリープ
+- ジョブの `chunk:`（既定10）で、何枚ごとに変換プロセスを起動し直して cards-data へ push するかを決める。大きいほど起動のむだが減るが、止まったときに失う枚数が増える（最大 chunk 枚）。
+- Windows ではワーカーの実行中、スリープに入らない（SetThreadExecutionState）。ただし、実行していない間のスリープ中はタスクスケジューラが動かない。スリープ解除で動かすには、PowerShell で:
+  `$t = Get-ScheduledTask dmpj-worker; $t.Settings.WakeToRun = $true; Set-ScheduledTask -InputObject $t`
+  （電源オプションの『スリープ解除タイマーを許可』が有効で、ふたを閉じてスリープしない設定が前提。電源に接続していないと動かない設定もある。）
+
+## ルールだけで変換（モデルを呼ばない）
+- `tools/rule_convert.py`: クリーチャーのうち、原文が (a) 能力文なし（取得時に text だけ空と印が付いたバニラ）、(b) `data/rules/keywords.yaml` のキーワードだけ、のものは、辞書のルールで効果データにする（トークン0）。注釈（カッコ内）は無視し、改行・スラッシュ・空白でキーワードを区切る。`convert_cards.run` が最初に試し、検査（parse_card）を通らなければモデルへ回す。以前 `no_text` で rejects に入ったカードも、ルールで変換できれば対象に戻る。
+- 語彙を増やすには keywords.yaml にキーワードを足す（コードは変えない）。2026-10-26 追加: Q・ブレイカー / ワールド・ブレイカー / このクリーチャーはブロックできない・アンタップしない・攻撃されない。
+- cards-data（23,671枚）での該当数は585枚（バニラ251・キーワードのみ334）。バニラは「原文の取りこぼしでないか」を人が確認する（source.notes に記載）。
+- 部分変換: 効果文のあるカードでも、原文からキーワード能力（ブロッカー、S・トリガー、チャージャー等。行の先頭・末尾に並んだもの）をルールで取り除き、モデルには残りの原文と `known_keywords` だけを渡す。結果の keywords はルール分が先。取り除いた分だけプロンプトが短くなり、キーワードの書き間違いも減る。
+- ワーカーの `chunk` の既定は20枚（20枚ごとに保存して push）。
+
+## 注釈・数値つきキーワード（keyword_patterns.yaml）
+`パワーアタッカー+2000` や `マッハファイター` のように数値・注釈が付くキーワードは `data/rules/keyword_patterns.yaml` に正規表現と能力の雛形で書く（`{1}` が括弧の整数に置き換わる）。
+`rule_convert.convert`（全体変換）と `split`（部分変換）の両方で使われ、結果は card の `abilities` に入る。注釈のカッコは照合前に除く。
+追加するときは雛形を既存の演算（modify / allow / deny 等）だけで書き、`parse_card` を通ることをテストで確かめる。
+未対応（エンジンに演算が要る）: ガードマン、シールド・セイバー、ハンティング、エスケープ、G・ストライク など。

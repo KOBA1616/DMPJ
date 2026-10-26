@@ -246,6 +246,7 @@ class GeminiLLM(OpenRouterLLM):
         return list(GEMINI_FREE_MODELS)
 
 
+BAD_COOLDOWN = 24 * 3600     # 使えなかった OpenCode モデルを飛ばす秒数（24時間）
 EXTERNAL_COOLDOWN = 900   # OpenCode 全滅のあと、この秒数は別サービスを先に使う
 LLM7_URL = "https://api.llm7.io/v1"
 # 公式 /v1/models で usage_based_only: false（匿名・無料で使える側）と出ているモデル（2026-10-26）。他は従量課金のモデルなので使わない
@@ -309,15 +310,60 @@ class OpenCodeCLI:
         self.alternates = [m for m in OPENCODE_FALLBACK_ORDER if m != model and m in OPENCODE_FREE_MODELS][:max(0, fallbacks)]
         self._last, self._lock = 0.0, threading.Lock()
         self._ext_until = 0.0
+        self.ok_at = 0.0
+        self.bad: dict[str, float] = {}      # 使えなかったモデル → この時刻まで飛ばす
+        self.fallbacks = max(0, fallbacks)
         self.external = None      # 別サービスの切り替え先（OpenRouterLLM / LLM7LLM、または複数をまとめた Chain）。make_llm が付ける
+        self._load_state()
+
+    # --- 実行をまたいで覚える（5枚ごとに別プロセスで起動し直しても、毎回モデルを試し直さない）。環境変数 DMPJ_MODEL_STATE のファイル ---
+    def _load_state(self):
+        import os
+        import time
+        self._state_path = os.environ.get("DMPJ_MODEL_STATE")
+        if not self._state_path:
+            return
+        try:
+            st = json.loads(Path(self._state_path).read_text(encoding="utf-8"))
+        except (OSError, ValueError):
+            return
+        now = time.time()
+        if st.get("model") in OPENCODE_FREE_MODELS and st["model"] != self.model:
+            self.model = st["model"]
+            self.alternates = [m for m in OPENCODE_FALLBACK_ORDER if m != self.model and m in OPENCODE_FREE_MODELS][:self.fallbacks]
+        self.bad = {m: float(t) for m, t in (st.get("bad") or {}).items() if float(t) > now and m in OPENCODE_FREE_MODELS}
+        self._ext_until = float(st.get("ext_until", 0)) if float(st.get("ext_until", 0)) > now else 0.0
+        self.ok_at = float(st.get("ok_at", 0))
+
+    def _save_state(self):
+        if not self._state_path:
+            return
+        try:
+            Path(self._state_path).parent.mkdir(parents=True, exist_ok=True)
+            Path(self._state_path).write_text(json.dumps({"model": self.model, "ok_at": self.ok_at, "bad": self.bad,
+                                                          "ext_until": self._ext_until}), encoding="utf-8")
+        except OSError:
+            pass      # 記録できなくても変換は続ける
+
+    def recently_ok(self, window: float = 600) -> bool:
+        """直近 window 秒以内に（OpenCode または別サービスで）応答が返っていれば True。開始前チェックを省く。"""
+        import time
+        return time.time() - self.ok_at < window
 
     def complete(self, sysp: str, messages: list[dict], effort: str, usage: dict | None) -> str:
-        """今のモデルがタイムアウトしたら別の無料モデルで同じ依頼を再試行する。成功したモデルをそのまま使い続ける。
-        全部タイムアウトしたら CallTimeout を投げる（呼び出し側が保留・連続打ち切りに数える）。"""
+        """今のモデルがだめなら別の無料モデルで同じ依頼を再試行する。成功したモデルを覚えて使い続け、だめだったモデルは一定時間飛ばす。
+        全部だめなら別サービス、それもだめなら CallTimeout / RuntimeError（呼び出し側が保留・連続打ち切りに数える）。"""
         import time
-        if self.external is not None and time.monotonic() < self._ext_until:      # 直前に OpenCode が全滅したばかり。しばらくは別サービスを直接使う
-            return self.external.complete(sysp, messages, effort, usage)
-        order = [self.model, *self.alternates]
+        now = time.time()
+        if self.external is not None and now < self._ext_until:      # 直前に OpenCode が全滅したばかり。しばらくは別サービスを直接使う
+            text = self.external.complete(sysp, messages, effort, usage)
+            self.ok_at = time.time()
+            self._save_state()
+            return text
+        full = [self.model, *self.alternates]
+        order = [m for m in full if self.bad.get(m, 0) <= now]
+        if not order and self.external is None:
+            order = full                    # 全部が冷却中でも、切り替え先がなければ試す
         tried = []
         last: Exception | None = None
         for m in order:
@@ -333,17 +379,24 @@ class OpenCodeCLI:
             except Exception as e:      # noqa: BLE001  タイムアウトも「Model is unavailable」等の応答エラーも、別モデルで試す
                 tried.append(m)
                 last = e
+                self.bad[m] = time.time() + BAD_COOLDOWN
+                self._save_state()
                 kind = "時間内に終わらない" if isinstance(e, CallTimeout) else f"使えない（{type(e).__name__}: {str(e)[:80]}）"
-                print(f"  ⏱ {m} が{kind}。別の無料モデルへ切り替える", file=sys.stderr, flush=True)
+                print(f"  ⏱ {m} が{kind}。別の無料モデルへ切り替える（{BAD_COOLDOWN // 3600}時間は飛ばす）", file=sys.stderr, flush=True)
                 continue
             if m != self.model:
-                self.alternates = [x for x in order if x != m]
+                self.alternates = [x for x in full if x != m]
                 self.model = m
+            self.bad.pop(m, None)
+            self.ok_at = time.time()
+            self._save_state()
             return text
-        if self.external is not None:      # OpenCode の無料モデルが全滅したら別サービス（OpenRouter の無料モデル）へ
+        if self.external is not None:      # OpenCode の無料モデルが全滅したら別サービス（Gemini・OpenRouter・LLM7）へ
             print("  ⏱ OpenCode の無料モデルが全滅。別サービスの無料枠へ切り替える", file=sys.stderr, flush=True)
             text = self.external.complete(sysp, messages, effort, usage)
-            self._ext_until = time.monotonic() + EXTERNAL_COOLDOWN       # 毎回 OpenCode の全モデルを待たずに済ませる
+            self._ext_until = time.time() + EXTERNAL_COOLDOWN       # 毎回 OpenCode の全モデルを待たずに済ませる
+            self.ok_at = time.time()
+            self._save_state()
             return text
         if isinstance(last, FreeLimit):
             raise last
