@@ -109,18 +109,48 @@ class Tee:
         pass
 
 
+def pid_alive(pid: int) -> bool:
+    """そのPIDのプロセスが生きているか。Windows の os.kill(pid, 0) は対象を終了させてしまうので使わない。"""
+    if pid <= 0:
+        return False
+    if os.name == "nt":
+        r = subprocess.run(["tasklist", "/FI", f"PID eq {pid}", "/NH"], capture_output=True, text=True, timeout=20)
+        return str(pid) in r.stdout.split()
+    try:
+        os.kill(pid, 0)
+    except ProcessLookupError:
+        return False
+    except PermissionError:
+        return True
+    return True
+
+
 class Lock:
+    """<--work>/lock（既定 ~/.dmpj-worker/lock）。中に持ち主のPIDを書く。持ち主が死んでいれば自動で引き継ぐ（強制終了で残ったロック対策）。"""
+
     def __init__(self, path: Path):
         self.path = path
 
+    def _stale(self) -> bool:
+        if time.time() - self.path.stat().st_mtime > LOCK_STALE:
+            return True
+        try:
+            pid = int(self.path.read_text().strip())
+        except (ValueError, OSError):
+            return False      # PIDなし（旧版が作ったロック）は時間切れまで待つ
+        return not pid_alive(pid)
+
     def __enter__(self):
         self.path.parent.mkdir(parents=True, exist_ok=True)
-        if self.path.exists() and time.time() - self.path.stat().st_mtime > LOCK_STALE:
-            self.path.unlink()
+        if self.path.exists() and self._stale():
+            print("古いロックを回収した（持ち主のプロセスがいない）", flush=True)
+            self.path.unlink(missing_ok=True)
         try:
-            os.close(os.open(self.path, os.O_CREAT | os.O_EXCL | os.O_WRONLY))
+            fd = os.open(self.path, os.O_CREAT | os.O_EXCL | os.O_WRONLY)
         except FileExistsError:
-            raise SystemExit("別のワーカーが実行中（work/lock）。終了する") from None
+            raise SystemExit(f"別のワーカーが実行中（{self.path}）。終了する") from None
+        os.write(fd, str(os.getpid()).encode())
+        os.close(fd)
         return self
 
     def __exit__(self, *a):
