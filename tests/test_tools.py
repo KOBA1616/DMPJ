@@ -331,6 +331,33 @@ def test_auto_convert_default_order_is_card_id(tmp_path, monkeypatch):
     assert seen[:2] == ["tz01-001", "tz01-002"]          # streak 2 で打ち切るまでの先頭がID順
 
 
+def test_convert_timeout_breaker(tmp_path):
+    """タイムアウトは次のカードが成功して初めて reason: timeout で確定。連続2回は障害として打ち切り、記録しない。"""
+    import convert_cards
+    from dmsim.defs import load_tables
+    from llm_offload.providers import CallTimeout
+    good = "```yaml\nid: {i}\nname: 例\ntypes: [creature]\ncivs: [water]\ncost: 2\npower: 1000\n```"
+
+    def run(ids, hang):
+        class Msgs:
+            def stream(self, **kw):
+                i = kw["messages"][0]["content"].split('"id": "')[1].split('"')[0]
+                if i in hang:
+                    raise CallTimeout("t")
+                return _FakeStream(good.format(i=i))
+        client = type("C", (), {"messages": Msgs()})()
+        d = tmp_path / str(len(ids)) / str(sorted(hang))
+        return convert_cards.run([{"id": i, "text": "x"} for i in ids], convert_cards.AnthropicLLM(client=client), load_tables(),
+                                 "SYS", "low", d / "c.yaml", d / "r.jsonl"), d / "r.jsonl"
+
+    r, rej = run(["a", "b", "c"], {"a"})            # 1回だけ → 次の成功で確定
+    assert (r["ok"], r["rejected"]) == (2, 1)
+    assert [(x["id"], x["reason"]) for x in convert_cards.read_jsonl(rej)] == [("a", "timeout")]
+    r, rej = run(["a", "b", "c", "d"], {"a", "b"})   # 連続2回 → c,d は打たず、a,b も記録しない
+    assert (r["ok"], r["rejected"], r["api_error"]) == (0, 0, 2)
+    assert not rej.exists() or not convert_cards.read_jsonl(rej)
+
+
 def test_convert_precheck_skips_model_for_unconvertible_rows():
     """空ページ・能力文なしはモデルを呼ばず reason を付ける。二面カードは面の text があれば通す。"""
     import convert_cards as cc
