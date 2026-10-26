@@ -1,0 +1,12 @@
+id: 20261026-012004-dsk2
+summary: '[error]  Fatal(f"認証/権限エラー: HTTP {e.code} {body}") from None
+
+  llm_offload.providers.Fatal: 認証/権限エラー: HTTP 403 {"error":{"message":"thinkingmachines/inkling-small:'
+finished: '2026-10-26T09:00:59+00:00'
+status: error
+error: ' Fatal(f"認証/権限エラー: HTTP {e.code} {body}") from None
+
+  llm_offload.providers.Fatal: 認証/権限エラー: HTTP 403 {"error":{"message":"thinkingmachines/inkling-small:free
+  is only available on agentic harnesses. Try plugging it into a coding agent or productivity
+  app listed on https://openrouter.ai/apps","code":403,"metadata":{"routing_funnel":[{"step":"Initial
+  Endpoints","endpoint_count":1}],"failed_routing_ste'
