@@ -552,6 +552,27 @@ def test_local_worker_gh_env_drops_stale_tokens_and_empty_review(monkeypatch, tm
     assert r["status"] == "ok" and "差分なし" in r["text"]
 
 
+def test_local_worker_lock_reclaims_dead_owner(tmp_path):
+    """ロックには PID が入り、持ち主が死んでいれば回収。生きていれば入れない。PIDなしの旧ロックは待つ。"""
+    import os
+
+    import local_worker as lw
+    import pytest
+    p = tmp_path / "lock"
+    with lw.Lock(p):
+        assert int(p.read_text()) == os.getpid()
+        with pytest.raises(SystemExit):
+            lw.Lock(p).__enter__()          # 自分(生きている)が持っている
+    assert not p.exists()
+    p.write_text("99999999")                # 存在しないPID
+    with lw.Lock(p):
+        assert int(p.read_text()) == os.getpid()
+    p.write_text("")                        # 旧版のロック（PIDなし）
+    with pytest.raises(SystemExit):
+        lw.Lock(p).__enter__()
+    p.unlink()
+
+
 def test_local_worker_self_update(tmp_path):
     """main への fast-forward だけを自動で行う。汚れ・別ブランチ・ff 不可・ネットワーク不通では何もしない。"""
     import subprocess
