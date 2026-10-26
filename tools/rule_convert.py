@@ -57,12 +57,17 @@ def _noise() -> set[str]:
 _NOISE: set[str] | None = None
 
 
+# 「このクリーチャーが出た時」の言い方（正規表現の {ETB} がこれに置き換わる）
+_ETB = r"(?:このクリーチャーが(?:バトルゾーンに)?出た時|このクリーチャーをバトルゾーンに出した時)"
+
+
 def _patterns() -> list:
     """数値つきキーワード（data/rules/keyword_patterns.yaml）。(名前, 正規表現, 能力の雛形) のリスト。"""
     global _PATTERNS
     if _PATTERNS is None:
         ps = yaml.safe_load((DATA / "rules" / "keyword_patterns.yaml").read_text(encoding="utf-8"))["patterns"]
-        _PATTERNS = [(n, re.compile(d["re"]), d.get("abilities") or d["builder"]) for n, d in ps.items()]
+        _PATTERNS = [(n, re.compile(d["re"].replace("{ETB}", _ETB)), d.get("abilities") or d["builder"], bool(d.get("whole_line")))
+                     for n, d in ps.items()]
     return _PATTERNS
 
 
@@ -118,11 +123,15 @@ def _glue(tokens: list[str]) -> list[str]:
     return out
 
 
-def match_pattern(clause: str) -> list[dict] | None:
-    """注釈・数値つきキーワード1つ分の文を能力の並びにする。当てはまらなければ None。"""
+def match_pattern(clause: str, whole_line: bool = False) -> list[dict] | None:
+    """注釈・数値つきキーワード1つ分の文を能力の並びにする。当てはまらなければ None。
+    whole_line=True は、その文が1行（1つの能力）の全体である場合。効果の文（出た時、カードを引く など）は
+    「その後」「そうしたら」で続く文を取りこぼさないよう、1行まるごとの時だけ変換する（yaml の whole_line: true）。"""
     c = unicodedata.normalize("NFKC", re.sub(r"[（(][^）)]*[）)]", "", clause))
     c = re.sub(r"[、。，．\s]", "", c).replace("\u2212", "-").replace("\uff0b", "+")
-    for _, rx, abil in _patterns():
+    for _, rx, abil, wl in _patterns():
+        if wl and not whole_line:
+            continue
         m = rx.fullmatch(c)
         if m:
             if isinstance(abil, str):        # builder 名: 正規表現のグループから能力をコードで組み立てる
@@ -166,18 +175,19 @@ def convert(row: dict) -> dict | None:
     if _TABLE is None:
         _TABLE = _table()
     text = re.sub(r"[（(][^）)]*[）)]", "", unicodedata.normalize("NFKC", row.get("text", "") or ""))   # 注釈（カッコ内）を除く
-    clauses = [c for c in _glue(re.split(r"[\s/／。]+", text)) if norm(c) and norm(c) not in _noise()]   # 改行・スラッシュ・空白・句点でキーワードを区切る
     kws, extra = [], []
-    for c in clauses:
-        k = _TABLE.get(norm(c))
-        if k is None:
-            a = match_pattern(c)
-            if a is None:
-                return None         # キーワード以外の能力文がある → モデルへ
-            extra += a
-            continue
-        if k not in kws:
-            kws.append(k)
+    for line in re.split(r"\s*[\n/／]\s*", text):      # 行（スラッシュ・改行）ごとに、空白・句点でキーワードを区切る
+        clauses = [c for c in _glue(re.split(r"[\s。]+", line)) if norm(c) and norm(c) not in _noise()]
+        for c in clauses:
+            k = _TABLE.get(norm(c))
+            if k is None:
+                a = match_pattern(c, whole_line=len(clauses) == 1)
+                if a is None:
+                    return None         # キーワード以外の能力文がある → モデルへ
+                extra += a
+                continue
+            if k not in kws:
+                kws.append(k)
     if extra:
         card["abilities"] = extra
     if kws or extra:
@@ -234,7 +244,7 @@ def split(row: dict) -> tuple[list[str], str, list[dict]] | None:
                 if k not in kws:
                     kws.append(k)
                 return True
-            a = match_pattern(tokens[i])
+            a = match_pattern(tokens[i], whole_line=len(tokens) == 1)
             if a is not None:
                 tokens.pop(i)
                 extra.extend(a)

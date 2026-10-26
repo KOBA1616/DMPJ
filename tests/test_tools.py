@@ -670,7 +670,7 @@ def test_rule_split_keywords_and_model_gets_only_the_rest(tmp_path):
             return "```yaml\nid: t9\nname: n\ntypes: [creature]\ncivs: [water]\ncost: 2\npower: 1000\nabilities:\n- kind: trigger\n  when: {event: move, to: bz, subject: self}\n  effect: [{op: draw, count: 1}]\n```"
 
     row = {"id": "t9", "name": "n", "card_type": "クリーチャー", "civilization": "水", "cost": "2", "power": "1000",
-           "text": "ブロッカー / このクリーチャーが出た時、カードを１枚引く。"}
+           "text": "ブロッカー / このクリーチャーが出た時、相手の手札を１枚見ないで選び、捨てさせる。"}
     out, rej = tmp_path / "c.yaml", tmp_path / "r.jsonl"
     rep = cc.run([row], LLM(), load_tables(), "S", "low", out, rej)
     assert rep["ok"] == 1 and "known_keywords" in seen[0] and "ブロッカー" not in seen[0].split("known_keywords")[0]
@@ -947,8 +947,8 @@ def test_rule_convert_named_effects_with_notes():
     assert r and r["keywords"] == ["cannot_attack"]
     r = rc.convert({**base, "text": "パワード・ブレイカー（このクリーチャーは、そのパワー6000ごとにシールドをもう１つブレイクする）\nシールド・セイバー（…）\nエスケープ"})
     assert r and r["keywords"] == ["powered_breaker", "shield_saver", "escape"]
-    kws, rest, _ = rc.split({**base, "text": "{GS} G・ストライク（…）\nこのクリーチャーが出た時、カードを1枚引く。"})
-    assert kws == ["g_strike"] and rest == "このクリーチャーが出た時、カードを1枚引く。"
+    kws, rest, _ = rc.split({**base, "text": "{GS} G・ストライク（…）\nこのクリーチャーが出た時、相手の手札を1枚見ないで選び、捨てさせる。"})
+    assert kws == ["g_strike"] and rest == "このクリーチャーが出た時、相手の手札を1枚見ないで選び、捨てさせる。"
 
 
 def test_rule_convert_revolution_change_and_ninja_strike():
