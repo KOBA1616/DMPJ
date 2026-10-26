@@ -116,6 +116,11 @@ class MacroPlanner:
     allow_dig_enter: bool = True    # 部品の一部が山札でも、掘れる確率が高ければ導入する
     urgency: bool = True            # 高速コンボ用: ターンが進むほど導入の条件を緩める
                                     # （長引くほど相手のクロックと自分の資源の目減りが効くため）
+    decklist: tuple = ()            # 自分のデッキレシピ（構築時点で既知の情報）。
+                                    # 山札とシールドの中身は見ず、公開ゾーンから
+                                    # 逆算した「未見の札」に対する確率で判断する
+    entry_spec: dict | None = None  # 学んだ入口の条件（learn_entry_criterion の出力）。
+                                    # あれば「回り始められる状態」の判定はこれに従う
     core_pieces: tuple = (SAGA, "dm22ex1-025", DRAG, SHAKO)  # ループの最小部品
 
     def features(self, eng, me: int = ME) -> dict:
@@ -130,10 +135,21 @@ class MacroPlanner:
             return sum(eng.chars(c)["breaks"] for c in eng.bz_tops(p)
                        if "creature" in eng.chars(c)["types"])
 
-        deck_names = names("deck")
         targets = (self.loop_card, self.digger_card, self.bruce_card) \
             + self.kill_pieces_hand + self.kill_pieces_grave
-        pieces_in_deck = sum(1 for n in deck_names if n in targets)
+        # 未見の札: デッキレシピから公開ゾーン（手札・場・墓地・マナ）を引いた残り。
+        # 山札とシールドのどちらにあるかは分からないので、確率はこの残り全体に対して計算する
+        if self.decklist:
+            from collections import Counter
+            pool = Counter(self.decklist)
+            for zone in ("hand", "bz", "graveyard", "mana"):
+                for c in z[zone][me]:
+                    pool[eng.s.cards[c].defn] -= 1
+            unseen = [n for n, k in pool.items() if k > 0 for _ in range(k)]
+        else:
+            # レシピが無い構築済みの問題局面では、山札は問題の一部として与えられている
+            unseen = names("deck")
+        pieces_unseen = sum(1 for n in unseen if n in targets)
         here = set(hand) | set(grave) | set(names("bz")) | set(names("mana"))
         pieces_here = sum(1 for p in self.core_pieces if p in here)
         # マナに埋まった部品はループに使えないので、最小盤面はマナを除いて数える
@@ -141,13 +157,21 @@ class MacroPlanner:
         pieces_playable = sum(1 for p in self.core_pieces if p in playable)
         grave_creatures = sum(1 for c in z["graveyard"][me]
                               if "creature" in eng.chars(c)["types"])
+        bz_names = names("bz")
+        # 配置まで見る: ドラゲリオンは墓地では回収できず、手札か場に要る。
+        # サガは手札か場、またはブルースで戻せる形（墓地＋ブルース手札）で要る
+        drag_ok = any(p in hand or p in bz_names for p in self.kill_pieces_hand)
+        saga_ok = (self.loop_card in hand or self.loop_card in bz_names
+                   or (self.loop_card in grave and self.bruce_card in hand))
+        # 学んだ入口の条件があれば、「回り始められる状態」はそちらで判定する
+        entry = entry_satisfied(eng, me, self.entry_spec) if self.entry_spec else None
         return {
             "turn": eng.s.turn,
             "own_turn": sol.own_turn(eng, me),
             "win_by": self.win_by,
             "deck": len(z["deck"][me]),
-            "pieces_in_deck": pieces_in_deck,
-            "dig_hit_prob": dig_prob(len(deck_names), pieces_in_deck),
+            "pieces_unseen": pieces_unseen,
+            "dig_hit_prob": dig_prob(len(unseen), pieces_unseen),
             "hand_n": len(hand),
             "mana": len(z["mana"][me]),
             "dark_mana": dark_mana,
@@ -155,8 +179,13 @@ class MacroPlanner:
             "pieces_playable": pieces_playable,  # マナを除いた「使える場所」にある数
             "loop_board": pieces_playable >= len(self.core_pieces),  # ループの最小盤面に到達
             "grave_creatures": grave_creatures,
-            "loop_ready": (pieces_playable >= len(self.core_pieces)
-                           and grave_creatures >= 3),  # 到達＋墓地の前提まで満たした
+            "loop_ready": (entry if entry is not None else
+                           (pieces_playable >= len(self.core_pieces)
+                            and grave_creatures >= 3 and drag_ok and saga_ok)),
+            # 学んだ入口の条件があればその判定、無ければ部品と配置からの近似
+            "entry": entry,
+            "drag_ok": drag_ok,
+            "saga_ok": saga_ok,
             "loop_available": self.loop_card in hand or self.loop_card in grave,
             "grave_prep": self.loop_card in grave or "dm26ex2-071" in grave,
             "bruce_route": (self.loop_card in hand and self.digger_card in hand
@@ -202,7 +231,7 @@ class MacroPlanner:
         threshold = 0.5
         if self.urgency:
             threshold = max(0.3, 0.5 - 0.05 * max(0, f["own_turn"] - 3))
-        if (self.allow_dig_enter and f["pieces_here"] >= 2 and f["pieces_in_deck"] >= 1
+        if (self.allow_dig_enter and f["pieces_here"] >= 2 and f["pieces_unseen"] >= 1
                 and f["dig_hit_prob"] >= threshold and f["dark_mana"] >= 1):
             # 部品が全部手元に無くても、残りが山札にあり掘れる確率が高いなら、
             # 整え続けるより導入しながら掘る方が勝ちに近い
@@ -238,28 +267,125 @@ class MacroPlanner:
 
 
 def try_loop_first(eng, me: int = ME, discover_budget: int = 2000,
-                   seek_budget: int = 2000):
+                   seek_budget: int = 2000, guide=None):
     """そのターンに検証済みループで勝てるなら、勝った局面を返す。無ければ None。
 
     最小盤面に届いたターンでは、通常の探索は攻撃の勝ち（同じく勝ちで、より浅い）
     に流れがちなので、ループの手順（発見→早送り→仕上げ）を先に試す。
+    guide（候補の並べ方）を渡すと、発見と仕上げの探索にも学習済み方策の
+    誘導が効く。実戦の局面では、部品を組み上げる長い手順を素の探索の
+    予算内では見つけられないため。
     """
-    for f in discover_loops(eng, me, discover_budget):
-        if not f.verified:
-            continue
-        for n in cycle_counts(f.cert, len(f.start.zlist("deck", me))):
-            e = f.start.clone()
-            try:
-                fast_forward(e, f.cert, n)
-            except Exception:
+    old = sol.candidates
+    if guide is not None:
+        sol.candidates = guide
+    try:
+        for f in discover_loops(eng, me, discover_budget):
+            if not f.verified:
                 continue
-            ts = sol.TurnSearch(me, seek_budget)
-            ts.burn_stock = False
-            leaf, _ = ts.run(e)
-            r = leaf.s.result
-            if r is not None and r["winner"] == me:
-                return leaf
-    return None
+            for n in cycle_counts(f.cert, len(f.start.zlist("deck", me))):
+                e = f.start.clone()
+                try:
+                    fast_forward(e, f.cert, n)
+                except Exception:
+                    continue
+                ts = sol.TurnSearch(me, seek_budget)
+                ts.burn_stock = False
+                leaf, _ = ts.run(e)
+                r = leaf.s.result
+                if r is not None and r["winner"] == me:
+                    return leaf
+        return None
+    finally:
+        sol.candidates = old
+
+
+PUBLIC_ZONES = ("hand", "bz", "graveyard", "mana")
+
+
+def describe_public(eng, me: int, cards=None) -> dict:
+    """公開情報だけの局面記述（入口パターンの学習と判定に使う）。
+
+    山札とシールドの中身は含めない。手札・場・墓地・マナの枚数と、
+    墓地のクリーチャー数、マナの総数だけを見る。
+    """
+    if cards is None:
+        cards = TARGET_CARDS
+    z = eng.s.zones
+    desc = {}
+    for name in cards:
+        desc[name] = {zone: sum(1 for c in z[zone][me]
+                                if eng.s.cards[c].defn == name)
+                      for zone in PUBLIC_ZONES}
+    desc["grave_creatures"] = sum(1 for c in z["graveyard"][me]
+                                  if "creature" in eng.chars(c)["types"])
+    desc["mana"] = len(z["mana"][me])
+    return desc
+
+
+_ZONE_GROUPS = [("hand",), ("bz",), ("graveyard",), ("mana",),
+                ("hand", "graveyard"), ("hand", "bz"), ("bz", "graveyard"),
+                ("hand", "bz", "graveyard")]
+
+
+def _cond_holds(desc: dict, cond: dict) -> bool:
+    return sum(desc[cond["card"]].get(zn, 0) for zn in cond["zones"]) >= cond["min"]
+
+
+def entry_satisfied_desc(desc: dict, spec: dict | None) -> bool:
+    """学んだ入口の条件を、公開記述が満たすか。"""
+    if not spec:
+        return False
+    if desc["grave_creatures"] < spec["grave_creatures_min"]:
+        return False
+    if desc["mana"] < spec["mana_min"]:
+        return False
+    return all(_cond_holds(desc, c) for c in spec["conditions"])
+
+
+def entry_satisfied(eng, me: int, spec: dict | None) -> bool:
+    return entry_satisfied_desc(describe_public(eng, me), spec)
+
+
+def learn_entry_criterion(successes: list[dict], failures: list[dict]) -> dict | None:
+    """ループが開始できた局面（成功）とできなかった局面（失敗）の公開記述から、
+    入口の条件を学ぶ。
+
+    「揃った」の基準は手で書かず、全成功に共通する条件のうち、失敗を
+    弾く力の強いものから貪欲に採る。資源の下限（墓地のクリーチャー数と
+    マナ）は成功側の最小値をそのまま使う。
+    """
+    if not successes:
+        return None
+    cards = [k for k in successes[0] if k not in ("grave_creatures", "mana")]
+    cand = []
+    for card in cards:
+        for zones in _ZONE_GROUPS:
+            for k in (1, 2):
+                cond = {"card": card, "zones": list(zones), "min": k}
+                if all(_cond_holds(d, cond) for d in successes):
+                    cand.append(cond)
+    base = {"grave_creatures_min": min(d["grave_creatures"] for d in successes),
+            "mana_min": min(d["mana"] for d in successes)}
+    chosen: list[dict] = []
+
+    def failure_pass(conds):
+        spec = {**base, "conditions": conds}
+        return sum(1 for d in failures if entry_satisfied_desc(d, spec))
+
+    current = failure_pass([])
+    for cond in sorted(cand, key=lambda c: -sum(
+            1 for d in failures if not _cond_holds(d, c))):
+        if current == 0 or len(chosen) >= 5:
+            break
+        trial = failure_pass(chosen + [cond])
+        if trial < current:
+            chosen.append(cond)
+            current = trial
+    spec = {**base, "conditions": chosen,
+            "support": {"success": len(successes), "failure": len(failures),
+                        "failure_pass": current}}
+    return spec
 
 
 def trigger_opponent_policy(eng, d):
@@ -358,10 +484,12 @@ def charge_scores(eng, d, targets=TARGET_CARDS, loop_card: str = SAGA) -> dict[i
         cost = min([f.cost for f in cd.faces] or [cd.cost])
         s = 0.0
         if name in targets:
-            # 部品は「干渉できるゾーン（手札・場・墓地）」に残す。マナは戻せない。
+            # 部品は「干渉できるゾーン」に残す。マナは戻せない。
             # 置いた後に干渉できる同名が、メインパーツは2枚、その他は1枚を
-            # 切るようなら置かない
-            accessible = sum(1 for zone in ("hand", "bz", "graveyard")
+            # 切るようなら置かない。ただしドラゲリオンは墓地から戻せないので、
+            # 墓地の同名は「干渉できる」に数えない（手札か場に要る）
+            zones = ("hand", "bz") if name == DRAG else ("hand", "bz", "graveyard")
+            accessible = sum(1 for zone in zones
                              for c in z[zone][me] if eng.s.cards[c].defn == name)
             need = 2 if name == loop_card else 1
             if accessible - 1 < need:
@@ -402,7 +530,8 @@ def charge_choice(eng, d, targets=TARGET_CARDS, loop_card: str = SAGA) -> int | 
     return max(scores, key=lambda j: scores[j])
 
 
-def learn_play_shaping(records: list[dict], win_reason: str | None = None) -> dict[str, float]:
+def learn_play_shaping(records: list[dict], win_reason: str | None = None,
+                       entry: bool = False) -> dict[str, float]:
     """報酬の自動設計: 成功した対戦（到達/勝利した軌跡）の中で、どのカードの
     プレイがどれだけの割合の対戦に現れたかから、プレイへの報酬を決める。
 
@@ -413,17 +542,24 @@ def learn_play_shaping(records: list[dict], win_reason: str | None = None) -> di
     win_reason を指定すると、その勝ち方で勝った対戦だけから学ぶ。到達した
     対戦の多くは別の勝ち方（攻撃）で終わるため、混ぜて学ぶと狙う勝ち方と
     無関係なプレイ（例: 打点として出したカード）まで報酬に入ってしまう。
+
+    entry=True では、最終結果ではなく「ループ開始可能な局面（途中目標）に
+    届いた対戦」から学ぶ。揃えるターンのプレイに報酬を行き渡らせるため。
     """
     games: dict = defaultdict(set)
     game_result: dict = {}
+    game_entry: dict = {}
     for rec in records:
         g = rec.get("game")
         if g is None:
             continue
         game_result[g] = rec.get("result")
+        game_entry[g] = bool(rec.get("entry"))
         for k in rec["chosen"]:
             if k.startswith("play:"):
                 games[g].add(k.split(":")[1])
+    if entry:
+        games = {g: p for g, p in games.items() if game_entry.get(g)}
     if win_reason is not None:
         games = {g: p for g, p in games.items() if game_result.get(g) == win_reason}
     if not games:
@@ -518,6 +654,8 @@ class MicroPolicy:
     restrain_attack: bool = False   # 攻撃を候補の後ろに回す（禁止はしない。
                                     # ドラゲリオンの攻撃時効果など、計画に必要な攻撃は残す）
     loop_priority: bool = False     # 最小盤面に届くまでは攻撃せず、ループの成立を優先する
+    restrain_until_turn: int = 7    # 攻撃の自制は自分のこのターンまで。過ぎたら、
+                                    # ループが間に合わなくても攻撃で勝ちに行く（逃げ切り）
     core_pieces: tuple = (SAGA, "dm22ex1-025", DRAG, SHAKO)  # ループの最小部品
     loop_card: str = SAGA           # 起点（チャージで特に守るメインパーツ）
     plan_plays: tuple = TARGET_CARDS + ("dm26ex2-071", "dmpromoy22-p51", "dmex10-020")
@@ -527,6 +665,7 @@ class MicroPolicy:
     # 成功軌跡から学んだプレイへの報酬（learn_play_shaping の出力）。
     # あれば人手の plan_plays より優先し、寄与するプレイを候補の前に、
     # 寄与しないプレイを後ろに回す
+    entry_spec: dict | None = None  # 学んだ入口の条件（到達の判定に使う）
 
     def prefer(self, eng, d) -> list[int] | None:
         prefs = self.preferences or {}
@@ -563,11 +702,26 @@ class MicroPolicy:
         return all(p in here for p in self.core_pieces)
 
     def loop_ready(self, eng, me: int) -> bool:
-        """到達の条件: 部品が揃い、墓地の前提（クリーチャー3枚）も満たして、
-        ループが回り始められる状態か。"""
+        """到達の条件: ループが回り始められる状態か。
+
+        学んだ入口の条件（entry_spec）があればそれで判定し、無い場合は
+        部品とその置き場所からの近似で判定する。"""
+        if self.entry_spec:
+            return entry_satisfied(eng, me, self.entry_spec)
         if not self.board_reached(eng, me):
             return False
-        grave_creatures = sum(1 for c in eng.s.zones["graveyard"][me]
+        z = eng.s.zones
+        hand = {eng.s.cards[c].defn for c in z["hand"][me]}
+        bz = {eng.s.cards[c].defn for c in z["bz"][me]}
+        grave = {eng.s.cards[c].defn for c in z["graveyard"][me]}
+        # ドラゲリオンは墓地から戻せないので手札か場に要る。サガは手札か場、
+        # またはブルースで戻せる形（墓地＋ブルース手札）で要る
+        if DRAG not in hand and DRAG not in bz:
+            return False
+        if (self.loop_card not in hand and self.loop_card not in bz
+                and not (self.loop_card in grave and "dmbd17-009" in hand)):
+            return False
+        grave_creatures = sum(1 for c in z["graveyard"][me]
                               if "creature" in eng.chars(c)["types"])
         return grave_creatures >= 3
 
@@ -575,6 +729,7 @@ class MicroPolicy:
         """solitaire.candidates と同じ形。方策の答えを候補の先頭に置く。"""
         if (self.loop_priority and d["kind"] == "attack" and eng is not None
                 and self.intent != "execute"
+                and sol.own_turn(eng, d["player"]) <= self.restrain_until_turn
                 and not self.loop_ready(eng, d["player"])):
             # ループの成立を優先する間は殴らない。回り始められる状態になった後と
             # キルの狙いのターンでは、攻撃時効果やリーサルのために攻撃を残す
@@ -594,7 +749,10 @@ class MicroPolicy:
                     if not cand:
                         return False
                     cid = d["options"][cand[0]].get("cid")
-                    return cid is not None and "creature" in eng.chars(cid)["types"]
+                    # 墓地の頭数を稼ぐための破棄でも、墓地から戻せない
+                    # ドラゲリオンは捨てない（手札か場に必要な部品）
+                    return (cid is not None and "creature" in eng.chars(cid)["types"]
+                            and eng.s.cards[cid].defn != DRAG)
                 out = sorted(out, key=lambda c: 0 if picks_creature(c) else 1)
                 return [list(c) for c in out]
         if self.restrain_attack and d["kind"] == "attack":
@@ -769,11 +927,13 @@ class Pipeline:
         判断だけを、対戦を再生しながら記録する。狙いはターンごとに付け直す。
         戻り値: (対象になった対戦数, レコード)。
         """
+        macro.decklist = tuple(deck)   # 確率はデッキレシピと公開情報から計算する
         kept, records = 0, []
         for s in seeds:
             eng = Engine.new_game(self.rules, [deck, opp_deck], s, 0)
             start_ot = sol.own_turn(eng, ME)
             reached = False
+            entry_hit = False   # 途中目標: ループ開始可能な局面に届いたか
             leaf = eng
             while True:
                 d = eng.advance()
@@ -789,11 +949,13 @@ class Pipeline:
                 feats = macro.features(eng)
                 if feats["loop_board"]:
                     reached = True
+                if feats["loop_ready"]:
+                    entry_hit = True
                 intent = macro.plan(eng)
                 micro.intent = intent.name
                 if intent.name == "enter_loop" and feats["loop_ready"]:
                     # 回り始められる状態では、ループ手順の先行で勝ち筋の軌跡を増やす
-                    leaf2 = try_loop_first(eng, ME)
+                    leaf2 = try_loop_first(eng, ME, guide=micro.candidates)
                     if leaf2 is not None:
                         eng = leaf2
                         micro.intent = None
@@ -839,6 +1001,7 @@ class Pipeline:
                     multi_hand = sum(1 for cid in eng.s.zones["hand"][ME]
                                      if len(eng.cdef(cid).civs) >= 2)
                     records.append({"kind": d["kind"], "game": s, "result": result_reason,
+                                    "entry": entry_hit,
                                     "options": [o["key"] for o in d["options"]],
                                     "chosen": entry["keys"],
                                     "deck": deck_n, "bucket": deck_bucket(deck_n),

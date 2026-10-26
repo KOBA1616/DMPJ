@@ -153,7 +153,26 @@ def test_dig_prob_and_features(rules):
     eng = setup(rules, {"hand": [SAGA], "mana": MANA, "graveyard": [],
                         "deck": [DRAG, IWA]})
     f = MacroPlanner().features(eng)
-    assert f["pieces_in_deck"] >= 2 and 0.0 < f["dig_hit_prob"] <= 1.0
+    assert f["pieces_unseen"] >= 2 and 0.0 < f["dig_hit_prob"] <= 1.0
+
+
+def test_features_use_probabilities_not_deck_contents(rules):
+    # 実戦の判断は山札・シールドの中身を見ない: レシピと公開ゾーンから逆算する。
+    # 公開ゾーンが同じで隠れた中身だけが違う2局面は、同じ特徴になる
+    spec = {"hand": [SAGA], "mana": MANA, "graveyard": [],
+            "deck": [DRAG, IWA, SHAKO]}
+    eng1 = setup(rules, spec, deck_size=12)
+    eng2 = setup(rules, spec, deck_size=12)
+    # 2つ目の局面は、山札とシールドの中身を入れ替える（公開情報は不変）
+    d2, s2 = eng2.s.zones["deck"][0], eng2.s.zones["shield"][0]
+    d2[0], s2[0] = s2[0], d2[0]
+    recipe = tuple(eng1.s.cards[c].defn
+                   for zone in ("hand", "bz", "graveyard", "mana", "deck", "shield")
+                   for c in eng1.s.zones[zone][0])
+    p = MacroPlanner(decklist=recipe)
+    f1, f2 = p.features(eng1), p.features(eng2)
+    assert f1["pieces_unseen"] == f2["pieces_unseen"]
+    assert f1["dig_hit_prob"] == f2["dig_hit_prob"]
 
 
 def test_macro_beatdown_and_board_lethal(rules):
@@ -277,6 +296,74 @@ def test_macro_urgency_lowers_dig_threshold(rules):
     assert intent.name == "enter_loop" and "掘りながら" in intent.note
     # 緊急度を切れば後半でも整え続ける
     assert MacroPlanner(urgency=False).plan(eng).name == "setup"
+
+
+def _desc(saga_hand=0, saga_grave=0, iza_hand=0, grave_creatures=2, mana=3):
+    d = {c: {"hand": 0, "bz": 0, "graveyard": 0, "mana": 0} for c in
+         ("dm22ex2-021", "dm22ex1-007", "dmrp03-036", "dmrp03-s03",
+          "dm22ex1-025", "dmbd17-009")}
+    d["dm22ex2-021"]["hand"] = saga_hand
+    d["dm22ex2-021"]["graveyard"] = saga_grave
+    d["dm22ex1-025"]["hand"] = iza_hand
+    d["grave_creatures"] = grave_creatures
+    d["mana"] = mana
+    return d
+
+
+def test_learn_entry_criterion_from_outcomes(rules):
+    # 入口の条件は、開始できた局面とできなかった局面から学ぶ（手では書かない）
+    from discover_pipeline import learn_entry_criterion, entry_satisfied_desc
+    suc = [_desc(saga_hand=1, saga_grave=1, iza_hand=1, grave_creatures=2, mana=3),
+           _desc(saga_hand=1, saga_grave=1, iza_hand=1, grave_creatures=7, mana=7)]
+    fail = [_desc(saga_hand=1, saga_grave=0, iza_hand=1),
+            _desc(saga_hand=0, saga_grave=2, iza_hand=1),
+            _desc(saga_hand=1, saga_grave=1, iza_hand=0)]
+    spec = learn_entry_criterion(suc, fail)
+    assert spec is not None
+    assert all(entry_satisfied_desc(d, spec) for d in suc)
+    assert not any(entry_satisfied_desc(d, spec) for d in fail)
+    import json
+    json.dumps(spec)   # 方策ファイルに保存できる形であること
+
+
+def test_entry_satisfied_on_engine(rules):
+    from discover_pipeline import entry_satisfied
+    spec = {"conditions": [{"card": SAGA, "zones": ["hand"], "min": 1},
+                           {"card": SAGA, "zones": ["graveyard"], "min": 1}],
+            "grave_creatures_min": 2, "mana_min": 3}
+    eng = setup(rules, {"hand": [SAGA, "dm22ex1-025"],
+                        "graveyard": ["dm26ex2-071", SAGA], "mana": MANA})
+    assert entry_satisfied(eng, 0, spec)
+    eng = setup(rules, {"hand": [SAGA, "dm22ex1-025"],
+                        "graveyard": ["dm26ex2-071", IWA], "mana": MANA})
+    assert not entry_satisfied(eng, 0, spec)
+
+
+def test_loop_ready_needs_piece_placement(rules):
+    # 到達は部品の「置き場所」まで見る: ドラゲリオンが墓地だけでは回り始められない
+    eng = setup(rules, {"hand": [SAGA], "bz": ["dm22ex1-025"],
+                        "graveyard": [DRAG, SHAKO, IWA], "mana": MANA})
+    assert MacroPlanner().features(eng)["loop_board"]
+    assert not MacroPlanner().features(eng)["loop_ready"]
+    assert not MicroPolicy().loop_ready(eng, 0)
+    eng = setup(rules, {"hand": [SAGA, DRAG], "bz": ["dm22ex1-025"],
+                        "graveyard": [SHAKO, IWA, "dm01-080"], "mana": MANA})
+    assert MacroPlanner().features(eng)["loop_ready"]
+    assert MicroPolicy().loop_ready(eng, 0)
+    # サガが墓地にしかなくても、ブルースが手札にあれば戻せる形として数える
+    eng = setup(rules, {"hand": [DRAG, "dmbd17-009"], "bz": ["dm22ex1-025"],
+                        "graveyard": [SAGA, SHAKO, IWA], "mana": MANA})
+    assert MacroPlanner().features(eng)["loop_ready"]
+    assert MicroPolicy().loop_ready(eng, 0)
+
+
+def test_charge_dragelion_in_grave_does_not_count(rules):
+    from discover_pipeline import charge_scores
+    # ドラゲリオンは墓地から戻せないので、墓地の同名は「残せる枚数」に数えない
+    eng = setup(rules, {"hand": [DRAG, "dm01-027"], "mana": ["dm01-080"],
+                        "graveyard": [DRAG]})
+    d = _charge_decision(eng, [DRAG, "dm01-027"])
+    assert charge_scores(eng, d)[0] < -50.0
 
 
 def test_trigger_opponent_declares_and_targets_piece(rules):
