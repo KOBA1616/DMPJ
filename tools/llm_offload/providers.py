@@ -246,7 +246,7 @@ class GeminiLLM(OpenRouterLLM):
         return list(GEMINI_FREE_MODELS)
 
 
-BAD_COOLDOWN = 1800        # 使えなかった OpenCode モデルを飛ばす秒数
+BAD_COOLDOWN = 24 * 3600     # 使えなかった OpenCode モデルを飛ばす秒数（24時間）
 EXTERNAL_COOLDOWN = 900   # OpenCode 全滅のあと、この秒数は別サービスを先に使う
 LLM7_URL = "https://api.llm7.io/v1"
 # 公式 /v1/models で usage_based_only: false（匿名・無料で使える側）と出ているモデル（2026-10-26）。他は従量課金のモデルなので使わない
@@ -382,7 +382,7 @@ class OpenCodeCLI:
                 self.bad[m] = time.time() + BAD_COOLDOWN
                 self._save_state()
                 kind = "時間内に終わらない" if isinstance(e, CallTimeout) else f"使えない（{type(e).__name__}: {str(e)[:80]}）"
-                print(f"  ⏱ {m} が{kind}。別の無料モデルへ切り替える（{BAD_COOLDOWN // 60}分は飛ばす）", file=sys.stderr, flush=True)
+                print(f"  ⏱ {m} が{kind}。別の無料モデルへ切り替える（{BAD_COOLDOWN // 3600}時間は飛ばす）", file=sys.stderr, flush=True)
                 continue
             if m != self.model:
                 self.alternates = [x for x in full if x != m]
