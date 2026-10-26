@@ -1,0 +1,11 @@
+id: 20261026-092000-dsk3
+summary: "[error] 032文字\n✓ 28-sec002 邪眼皇ロマノフI世 (2/5)\n… 28-sec003 ボルバルザーク・紫電・ドラゴン\
+  \ 変換中\n停止: 課金・残高に関するエラーなので停止する: HTTP 429 [{\n  \"error\": {\n    \"code\": 429,\n\
+  \    \"message\": \"You"
+finished: '2026-10-26T10:33:44+00:00'
+status: error
+error: "032文字\n✓ 28-sec002 邪眼皇ロマノフI世 (2/5)\n… 28-sec003 ボルバルザーク・紫電・ドラゴン 変換中\n停止: 課金・残高に関するエラーなので停止する:\
+  \ HTTP 429 [{\n  \"error\": {\n    \"code\": 429,\n    \"message\": \"You exceeded\
+  \ your current quota, please check your plan and billing details. For more information\
+  \ on this error, head to: https://ai.google.dev/gemini-api/docs/rate-limits. To\
+  \ monitor your current usage, head to: https://ai.dev/rate-limit. \\n* Quota e"
