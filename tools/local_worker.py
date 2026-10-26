@@ -123,6 +123,19 @@ class Git:
         raise RuntimeError(f"{branch} への push に失敗")
 
 
+def keep_awake(on: bool):
+    """Windows で、ワーカーが動いている間はスリープに入らないようにする（画面は消えてよい）。他の OS では何もしない。
+    注意: ふたを閉じた時の動作や、タスクスケジューラの『スリープ解除』は別の設定（docs/offload.md）。"""
+    if os.name != "nt":
+        return
+    try:
+        import ctypes
+        ES_CONTINUOUS, ES_SYSTEM_REQUIRED = 0x80000000, 0x00000001
+        ctypes.windll.kernel32.SetThreadExecutionState(ES_CONTINUOUS | ES_SYSTEM_REQUIRED if on else ES_CONTINUOUS)
+    except Exception:   # noqa: BLE001  設定できなくても本処理は続ける
+        pass
+
+
 class Tee:
     """画面とログファイルの両方へ書く（スケジューラ起動のウィンドウに経過を出しつつ log.txt にも残す）。"""
 
@@ -214,13 +227,14 @@ def run_convert(job: dict, git: Git, jobs_model: str | None) -> dict:
     model = job.get("model") or jobs_model or lo.OPENCODE_DEFAULT
     lo.make_llm("opencode-cli", model)       # 許可リスト検査（違反は Fatal）
     env = {k: v for k, v in os.environ.items() if k != "OPENCODE_API_KEY"}
-    # 5枚ごとに auto_convert を呼び、そのたびに cards-data へ push する（途中で止めても済んだ分は残る）。
-    # 次回起動時の worktree は origin に reset されるので、push していない分は消える。だから5枚ごとに push する。
-    chunk, total = 5, int(job.get("limit", 20))
+    # chunk 枚ごとに auto_convert を呼び、そのたびに cards-data へ push する（途中で止めても済んだ分は残る）。
+    # 次回起動時の worktree は origin に reset されるので、push していない分は消える。だから chunk 枚ごとに push する。
+    # chunk は job の `chunk:` で変えられる（既定10。止まったときに失うのは最大 chunk 枚）。
+    chunk, total = max(1, int(job.get("chunk", 10))), int(job.get("limit", 20))
     tail: list[str] = []
     code, done_n = 0, 0
     for _ in range(max(1, -(-total // chunk))):
-        cmd = [sys.executable, "-u", "tools/auto_convert.py", "--model", model, "--limit", str(chunk), "--batch", str(chunk),
+        cmd = [sys.executable, "-u", "tools/auto_convert.py", "--model", model, "--limit", str(chunk), "--batch", str(min(chunk, 5)),
                "--interval", str(job.get("interval", 3)), "--workers", str(job.get("workers", 1))]
         # 出力を1行ずつ画面とログへ流す（ウィンドウで途中経過が見える）。最後の出力は結果に残す
         proc = subprocess.Popen(cmd, cwd=d, env=env, stdout=subprocess.PIPE, stderr=subprocess.STDOUT,
@@ -251,7 +265,7 @@ def run_convert(job: dict, git: Git, jobs_model: str | None) -> dict:
     r = subprocess.CompletedProcess([], code, "\n".join(tail), "\n".join(tail))
     if r.returncode:
         return {"status": "error", "error": lo.scrub((r.stderr or "")[-400:])}
-    return {"status": "ok", "text": lo.scrub(f"処理 {done_n} 枚（5枚ごとに保存）\n" + (r.stdout or "")[-1400:])}
+    return {"status": "ok", "text": lo.scrub(f"処理 {done_n} 枚（{chunk}枚ごとに保存）\n" + (r.stdout or "")[-1400:])}
 
 
 def data_tree(git: Git) -> Path:
@@ -503,6 +517,9 @@ def main(argv=None) -> int:
         sys.stdout, sys.stderr = Tee(sys.stdout, lf), Tee(sys.stderr, lf)
     print(now(), "ワーカー開始", flush=True)
     restart = False
+    keep_awake(True)
+    import atexit
+    atexit.register(keep_awake, False)
     with Lock(Path(a.work) / "lock"):
         while True:
             if not a.no_update:

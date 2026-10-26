@@ -143,3 +143,9 @@ schtasks /Create /SC MINUTE /MO 5 /TN "dmpj-worker" /TR C:\path\DMPJ\tools\run_w
 ## 実行をまたぐ記憶と cards-data の競合
 - ワーカーは `work/model_state.json`（環境変数 `DMPJ_MODEL_STATE`）に、使えたモデル・使えなかったモデル（24時間は飛ばす）・別サービスを使う期限・最後に応答が返った時刻を残す。5枚ごとに変換プロセスを起動し直しても、前回使えたモデルから始め、直近10分に応答があれば開始前チェックも省く。
 - cards-data への push: 取得系（auto-sync / sync-cards）は `data/cards/raw/by_product/` と台帳、変換は `converted.yaml` / `rejects.jsonl` / `convert_*.json` を書くので、通常は別ファイルで衝突しない。push が拒否されたら fetch → rebase で再試行し、変換結果ファイルが衝突したら ID ごとの和集合で合流（変換済みが優先、不合格は和集合から変換済みを除く）して push し直す。
+
+## まとめて処理する枚数・スリープ
+- ジョブの `chunk:`（既定10）で、何枚ごとに変換プロセスを起動し直して cards-data へ push するかを決める。大きいほど起動のむだが減るが、止まったときに失う枚数が増える（最大 chunk 枚）。
+- Windows ではワーカーの実行中、スリープに入らない（SetThreadExecutionState）。ただし、実行していない間のスリープ中はタスクスケジューラが動かない。スリープ解除で動かすには、PowerShell で:
+  `$t = Get-ScheduledTask dmpj-worker; $t.Settings.WakeToRun = $true; Set-ScheduledTask -InputObject $t`
+  （電源オプションの『スリープ解除タイマーを許可』が有効で、ふたを閉じてスリープしない設定が前提。電源に接続していないと動かない設定もある。）
