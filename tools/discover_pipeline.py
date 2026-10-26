@@ -262,6 +262,28 @@ def try_loop_first(eng, me: int = ME, discover_budget: int = 2000,
     return None
 
 
+def trigger_opponent_policy(eng, d):
+    """S・トリガーを使う相手役。
+
+    チャージだけの相手に、壊れたシールドのトリガー宣言と、その対象選択
+    だけを足したもの。対象は「ループの主部品 → パワーの大きい順」で選ぶ。
+    相手のシールドがすべてデーモン・ハンド（dm01-027）のような環境では、
+    シールドを割りに行くたびに自軍のクリーチャーが破壊される。
+    """
+    if d["kind"] == "charge":
+        return sol.charge_only_policy(eng, d)
+    if d["kind"] == "declare_strigger":
+        return list(range(len(d["options"])))   # 使えるトリガーは全部使う
+    cids = [o.get("cid") for o in d["options"]]
+    if cids and all(c is not None for c in cids) and d.get("min", 1) >= 1:
+        def rank(i):
+            defn = eng.s.cards[cids[i]].defn
+            power = eng.chars(cids[i]).get("power") or 0
+            return (0 if defn in TARGET_CARDS else 1, -power)
+        return [min(range(len(cids)), key=rank)]
+    return sol.passive_policy(eng, d)
+
+
 # ---- ミクロ（詳細） -----------------------------------------------------------------------------
 
 def deck_bucket(deck_n: int) -> str:
@@ -739,7 +761,8 @@ class Pipeline:
         return wins, records
 
     def harvest_games(self, deck: list, opp_deck: list, seeds: list[int],
-                      micro: MicroPolicy, macro: MacroPlanner, horizon: int = 10):
+                      micro: MicroPolicy, macro: MacroPlanner, horizon: int = 10,
+                      opp_policy=None):
         """通し対戦から判断を収穫する（序盤〜中盤の文脈を埋めるため）。
 
         階層版で対戦し、「最小盤面に到達した対戦」と「ループで勝った対戦」の
@@ -758,7 +781,7 @@ class Pipeline:
                     leaf = eng
                     break
                 if eng.s.active != ME or d["player"] != ME:
-                    eng.answer(sol.charge_only_policy(eng, d))
+                    eng.answer((opp_policy or sol.charge_only_policy)(eng, d))
                     continue
                 if sol.own_turn(eng, ME) > start_ot + horizon - 1:
                     leaf = eng
@@ -776,7 +799,8 @@ class Pipeline:
                         micro.intent = None
                         leaf = eng
                         break
-                ts = sol.TurnSearch(ME, intent.budget, intent.weights)
+                ts = sol.TurnSearch(ME, intent.budget, intent.weights,
+                                    opp_policy=opp_policy or sol.charge_only_policy)
                 ts.burn_stock = intent.burn_stock
                 ts.stock_offsets = tuple(intent.stock_offsets)
                 old = sol.candidates

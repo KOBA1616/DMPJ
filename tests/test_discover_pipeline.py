@@ -279,6 +279,21 @@ def test_macro_urgency_lowers_dig_threshold(rules):
     assert MacroPlanner(urgency=False).plan(eng).name == "setup"
 
 
+def test_trigger_opponent_declares_and_targets_piece(rules):
+    # デーモン・ハンド環境の相手役: トリガーは全部使い、破壊の対象は主部品を狙う
+    from discover_pipeline import trigger_opponent_policy
+    eng = setup(rules, {"bz": [SAGA, "dm01-080"], "mana": MANA, "graveyard": []})
+    d = {"kind": "declare_strigger", "player": 1,
+         "options": [{"key": "strigger:dm01-027", "cid": 1}, {"key": "strigger:dm01-027", "cid": 2}]}
+    assert trigger_opponent_policy(eng, d) == [0, 1]
+    bz = eng.s.zones["bz"][0]
+    saga_cid = next(c for c in bz if eng.s.cards[c].defn == SAGA)
+    d2 = {"kind": "select", "player": 1, "min": 1, "max": 1,
+          "options": [{"key": f"card:{c}", "cid": c} for c in bz]}
+    ans = trigger_opponent_policy(eng, d2)
+    assert eng.s.cards[bz[ans[0]]].defn == SAGA and bz[ans[0]] == saga_cid
+
+
 def test_charge_protects_main_part_copies(rules):
     from discover_pipeline import charge_scores
     # メインパーツ（サガ）は、干渉できる同名が2枚を切るならマナに置かない
