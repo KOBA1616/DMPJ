@@ -114,6 +114,8 @@ class MacroPlanner:
     digger_card: str = "dm22ex1-025"  # 登場時に山札の上5枚から1枚を手札に加える（起点を探せる）
     suppress_beatdown: bool = True  # 一時的にビートダウンを抑え、ループ等の発見に寄せる
     allow_dig_enter: bool = True    # 部品の一部が山札でも、掘れる確率が高ければ導入する
+    urgency: bool = True            # 高速コンボ用: ターンが進むほど導入の条件を緩める
+                                    # （長引くほど相手のクロックと自分の資源の目減りが効くため）
     core_pieces: tuple = (SAGA, "dm22ex1-025", DRAG, SHAKO)  # ループの最小部品
 
     def features(self, eng, me: int = ME) -> dict:
@@ -141,6 +143,7 @@ class MacroPlanner:
                               if "creature" in eng.chars(c)["types"])
         return {
             "turn": eng.s.turn,
+            "own_turn": sol.own_turn(eng, me),
             "win_by": self.win_by,
             "deck": len(z["deck"][me]),
             "pieces_in_deck": pieces_in_deck,
@@ -193,8 +196,14 @@ class MacroPlanner:
             # 呪文面で墓地の起点を場に戻せる。墓地の準備が無くても導入に値する
             return Intent("enter_loop", weights=sol.Weights(civ=10.0),
                           note="ブルース経由: 掘る役で探し、呪文面で起点を戻して導入する")
+        # 掘りながら導入の確率の敷居は、ターンが進むほど下げる（高速コンボの
+        # 時間ペナルティ）。序盤は整える価値が高いが、長引くほど相手が整い、
+        # 自分の山札と部品も目減りするので、早めに踏み切る方が期待値が上がる
+        threshold = 0.5
+        if self.urgency:
+            threshold = max(0.3, 0.5 - 0.05 * max(0, f["own_turn"] - 3))
         if (self.allow_dig_enter and f["pieces_here"] >= 2 and f["pieces_in_deck"] >= 1
-                and f["dig_hit_prob"] >= 0.5 and f["dark_mana"] >= 1):
+                and f["dig_hit_prob"] >= threshold and f["dark_mana"] >= 1):
             # 部品が全部手元に無くても、残りが山札にあり掘れる確率が高いなら、
             # 整え続けるより導入しながら掘る方が勝ちに近い
             return Intent("enter_loop", budget=3000, weights=sol.Weights(civ=10.0),
@@ -754,10 +763,19 @@ class Pipeline:
                 if sol.own_turn(eng, ME) > start_ot + horizon - 1:
                     leaf = eng
                     break
-                if macro.features(eng)["loop_board"]:
+                feats = macro.features(eng)
+                if feats["loop_board"]:
                     reached = True
                 intent = macro.plan(eng)
                 micro.intent = intent.name
+                if intent.name == "enter_loop" and feats["loop_ready"]:
+                    # 回り始められる状態では、ループ手順の先行で勝ち筋の軌跡を増やす
+                    leaf2 = try_loop_first(eng, ME)
+                    if leaf2 is not None:
+                        eng = leaf2
+                        micro.intent = None
+                        leaf = eng
+                        break
                 ts = sol.TurnSearch(ME, intent.budget, intent.weights)
                 ts.burn_stock = intent.burn_stock
                 ts.stock_offsets = tuple(intent.stock_offsets)

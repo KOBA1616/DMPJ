@@ -266,6 +266,19 @@ def test_learn_play_shaping_from_successful_games():
     assert learn_play_shaping([{"kind": "main", "options": [], "chosen": ["play:A"]}]) == {}
 
 
+def test_macro_urgency_lowers_dig_threshold(rules):
+    # 高速コンボの時間ペナルティ: 同じ局面でも、ターンが進むと導入に踏み切る
+    eng = setup(rules, {"hand": [SAGA, "dm22ex1-025"], "mana": MANA,
+                        "graveyard": [], "deck": [DRAG, SHAKO]}, deck_size=24)
+    eng.s.turn = 1     # 自分の1ターン目: 掘れる確率が敷居に届かず整える
+    assert MacroPlanner().plan(eng).name == "setup"
+    eng.s.turn = 11    # 自分の6ターン目: 敷居が下がり、掘りながら導入する
+    intent = MacroPlanner().plan(eng)
+    assert intent.name == "enter_loop" and "掘りながら" in intent.note
+    # 緊急度を切れば後半でも整え続ける
+    assert MacroPlanner(urgency=False).plan(eng).name == "setup"
+
+
 def test_charge_protects_main_part_copies(rules):
     from discover_pipeline import charge_scores
     # メインパーツ（サガ）は、干渉できる同名が2枚を切るならマナに置かない
