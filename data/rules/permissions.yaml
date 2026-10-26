@@ -16,5 +16,4 @@ actions:
   cast:                  {default: true,  rule: "601",    ja: 唱えられる}
   slayer:                {default: false, rule: "unverified", ja: バトルで負けた時、相手も破壊する}
   be_chosen:             {default: true,  rule: "unverified", ja: 相手に選ばれる}
-  mana_untapped:         {default: true,  rule: "405.1",  ja: マナゾーンにアンタップ状態で置かれる（禁止＝タップして置く。多色カードは常にタップ）}
   guardman:              {default: false, rule: "507.1a", other: attacker, ja: 攻撃先を自分の他のクリーチャーからこのクリーチャーに変更できる（ガードマン）}
