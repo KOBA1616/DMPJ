@@ -506,7 +506,7 @@ def test_local_worker_self_update(tmp_path):
     assert "main でない" in lw.self_update(b)
     sh("checkout", "-q", "main", cwd=b)
     msg = lw.self_update(b)
-    assert msg.startswith("更新した") and "次回の起動から新版" in msg and (b / "tools" / "local_worker.py").exists()
+    assert msg.startswith("更新した") and "ワーカー自身が変わった" in msg and (b / "tools" / "local_worker.py").exists()
     (b / "g.txt").write_text("local")
     sh("add", "-A", cwd=b)
     sh("commit", "-qm", "local", cwd=b)
