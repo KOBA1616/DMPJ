@@ -124,3 +124,23 @@ def test_magic_bomber_cost_limit(build):
         e.answer([0])
         d = e.advance()
     assert len(e.bz_tops(0)) == 1                                    # コスト2 > 1 なので出ない
+
+
+def test_spell_converts_from_keywords_and_known_effect_lines():
+    import rule_convert as rc
+    from dmsim.defs import load_tables, parse_card
+    row = {"id": "sp1", "name": "試験呪文", "card_type": "呪文", "civilization": "水", "cost": "3", "mana": "1",
+           "text": "S・トリガー（この呪文をシールドゾーンから手札に加える時、コストを支払わずにすぐ唱えてもよい）\nカードを２枚引く。\n相手のクリーチャーを１体選ぶ。このターン、そのクリーチャーのパワーを－3000する。"}
+    row["text"] = row["text"].replace("\\\n", "\n")
+    c = rc.convert(row)
+    assert c["types"] == ["spell"] and c["keywords"] == ["s_trigger"]
+    assert c["spell"][0] == {"op": "draw", "count": 2} and c["spell"][2]["mod"] == {"power": -3000}
+    parse_card(c, load_tables())
+    assert rc.convert({**row, "text": "カードを２枚引く。\n何か未知の効果を行う。"}) is None
+
+
+def test_keyword_glued_to_following_sentence_is_split_into_lines():
+    import rule_convert as rc
+    r = rc.split({"id": "g", "text": "ブロッカーこのクリーチャーが出た時、カードを１枚引く。"})
+    assert r[0] == ["blocker"] and r[2]       # 出た時のドローも続けてルールで変換される
+    assert rc.split({"id": "g2", "text": "進化クリーチャー…"}) is None

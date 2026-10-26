@@ -42,6 +42,7 @@ def _table(with_card_kinds: bool = False) -> dict[str, str]:
 
 
 _TABLE: dict[str, str] | None = None
+_ALL: dict[str, str] | None = None
 _PATTERNS: list | None = None
 
 
@@ -71,15 +72,38 @@ def _patterns() -> list:
     return _PATTERNS
 
 
+_SPELL: list | None = None
+
+
+def _spell_effects() -> list:
+    """呪文の効果文（keyword_patterns.yaml の spell_effects）。(正規表現, ops の雛形) のリスト。"""
+    global _SPELL
+    if _SPELL is None:
+        ps = yaml.safe_load((DATA / "rules" / "keyword_patterns.yaml").read_text(encoding="utf-8")).get("spell_effects") or {}
+        _SPELL = [(re.compile(d["re"]), d["spell"]) for d in ps.values()]
+    return _SPELL
+
+
+def match_spell(line: str) -> list[dict] | None:
+    """呪文の効果文1行分を ops にする。当てはまらなければ None。"""
+    c = unicodedata.normalize("NFKC", re.sub(r"[（(][^）)]*[）)]", "", line))
+    c = re.sub(r"[、。，．\s]", "", c).replace("\u2212", "-")
+    for rx, ops in _spell_effects():
+        m = rx.fullmatch(c)
+        if m:
+            return _fill(ops, m.groups())
+    return None
+
+
 def _fill(x, groups: tuple[str, ...]):
     if isinstance(x, dict):
         return {k: _fill(v, groups) for k, v in x.items()}
     if isinstance(x, list):
         return [_fill(v, groups) for v in x]
     if isinstance(x, str):
-        m = re.fullmatch(r"\{(\d)\}", x)
+        m = re.fullmatch(r"(-?)\{(\d)\}", x)
         if m:
-            return int(groups[int(m.group(1)) - 1])
+            return int(groups[int(m.group(2)) - 1]) * (-1 if m.group(1) else 1)
     return x
 
 
@@ -171,8 +195,47 @@ def _build_cost_static(groups: tuple[str, ...]) -> list[dict] | None:
 BUILDERS = {"revolution_change": _build_revolution_change, "sympathy": _build_sympathy, "cost_static": _build_cost_static}
 
 
+_KW_NAMES: list[str] | None = None
+
+
+def _peel_line(line: str) -> list[str]:
+    """行頭にキーワード名が改行なしでつながっている原文（「ブロッカーこのクリーチャーは…」「S・トリガー（…）相手の…」）を、
+    キーワード1つごとの行に分ける。分けるのは直後が注釈・別のキーワード・「このクリーチャー」等の文頭の時だけ（「進化クリーチャー」を割らない）。"""
+    global _KW_NAMES
+    if _KW_NAMES is None:
+        ks = yaml.safe_load((DATA / "rules" / "keywords.yaml").read_text(encoding="utf-8"))["keywords"]
+        _KW_NAMES = sorted({unicodedata.normalize("NFKC", j) for d in ks.values() for j in [d["ja"], *d.get("aliases", [])]},
+                           key=len, reverse=True)
+    out, rest = [], line
+    while rest:
+        rest_n = unicodedata.normalize("NFKC", rest)
+        for kw in _KW_NAMES:
+            if not rest_n.startswith(kw):
+                continue
+            tail = rest_n[len(kw):]
+            m = re.match(r"\s*[（(][^）)]*[）)]", tail)
+            after = tail[m.end():] if m else tail
+            if not after.strip():
+                return out + [rest] if out else [line]
+            cut = len(rest_n) - len(after.lstrip())     # NFKC 後の位置 → 元の文字列の位置
+            starts = ("この", "自分", "相手", "バトル", "各ターン", "ターン", "次")
+            if m or after.startswith(starts) or any(after.startswith(k) for k in _KW_NAMES):
+                out.append(kw + (m.group(0) if m else ""))
+                n, i = 0, 0
+                while i < len(rest) and n < cut:
+                    n += len(unicodedata.normalize("NFKC", rest[i]))
+                    i += 1
+                rest = rest[i:]
+                break
+        else:
+            return out + [rest] if out else [line]
+    return out or [line]
+
+
 def _prenorm(text: str) -> str:
-    """注釈を除く前に、注釈の中にだけある数値を本文に移す（シンパシー: 「1体につき2少なくなる」→ 「シンパシー:<対象>:2」）。"""
+    """注釈を除く前に、注釈の中にだけある数値を本文に移す（シンパシー: 「1体につき2少なくなる」→ 「シンパシー:<対象>:2」）。
+    行頭につながったキーワードは行に分ける。"""
+    text = "\n".join("\n".join(_peel_line(l)) for l in (text or "").split("\n"))
     t = unicodedata.normalize("NFKC", text or "")
     new = re.sub(r"シンパシー[:：]\s*([^\s（(:：]+)\s*[（(][^）)]*?(?<!\d)1体につき(\d+)少なく[^）)]*[）)]", r"シンパシー:\1:\2", t)
     return new if new != t else (text or "")      # 該当がなければ原文のまま（半角全角を変えない）
@@ -228,9 +291,67 @@ def base_card(row: dict) -> dict | None:
     return card
 
 
+_SPELL_KWS: dict[str, str] | None = None
+
+
+def _spell_keywords() -> dict[str, str]:
+    """呪文に付くキーワード（S・トリガー、G・ストライク、チャージャーなど）の表。ブロッカーなどは呪文にない。"""
+    global _SPELL_KWS, _ALL
+    if _SPELL_KWS is None:
+        if _ALL is None:
+            _ALL = _table(with_card_kinds=True)
+        ks = yaml.safe_load((DATA / "rules" / "keywords.yaml").read_text(encoding="utf-8"))["keywords"]
+        ok = {k for k, d in ks.items() if k in ("s_trigger", "g_strike") or {"resolve_to", "after_resolve"} & set(d.get("card") or {})}
+        _SPELL_KWS = {n: k for n, k in _ALL.items() if k in ok}
+    return _SPELL_KWS
+
+
+def convert_spell(row: dict) -> dict | None:
+    """呪文（二面でないもの）。キーワード（S・トリガー、チャージャーなど）と、定型の効果文（spell_effects）だけでできている時に変換する。"""
+    if row.get("faces") or row.get("missing"):
+        return None
+    civs = [CIVS.get(c) for c in str(row.get("civilization", "")).split("/")]
+    if not civs or None in civs or not (row.get("text") or "").strip():
+        return None
+    try:
+        card = {"id": row["id"], "name": row.get("name", ""), "types": ["spell"], "civs": civs, "cost": int(row["cost"])}
+        if row.get("mana") not in (None, ""):
+            card["mana"] = int(row["mana"])
+    except (KeyError, ValueError, TypeError):
+        return None
+    table = _spell_keywords()
+    kws, ops = [], []
+    for line in re.split(r"\s*[\n/／]\s*", _prenorm(row["text"])):
+        stripped = re.sub(r"[（(][^）)]*[）)]", "", line)
+        clauses = [c for c in _glue(re.split(r"[\s。]+", stripped)) if norm(c) and norm(c) not in _noise()]
+        if not clauses:
+            continue
+        if all(table.get(norm(c)) for c in clauses):          # キーワードだけの行
+            for c in clauses:
+                k = table[norm(c)]
+                if k not in kws:
+                    kws.append(k)
+            continue
+        o = match_spell(line)
+        if o is None:
+            return None
+        ops += o
+    if not kws and not ops:
+        return None
+    if kws:
+        card["keywords"] = kws
+    if ops:
+        card["spell"] = ops
+    card["text"] = row["text"]
+    card["source"] = {"official": row["id"], "review": "pending", "notes": NOTE}
+    return card
+
+
 def convert(row: dict) -> dict | None:
     """行を効果データ（dict）にする。ルールだけで決められなければ None。検査は呼び出し側（validate）が行う。"""
     global _TABLE
+    if row.get("card_type") == "呪文":
+        return convert_spell(row)
     # 取得時に text だけが空と印の付いた行（能力文のないバニラ）は許す。他の項目が欠けた行は取得のやり直しが先
     if row.get("faces") or set(row.get("missing") or []) - {"text"} or row.get("card_type") != "クリーチャー":
         return None
@@ -286,7 +407,7 @@ def reuse_same_text(row: dict, cards: list[dict]) -> dict | None:
     return None
 
 
-_ALL: dict[str, str] | None = None
+
 
 
 def split(row: dict) -> tuple[list[str], str, list[dict]] | None:
@@ -321,6 +442,12 @@ def split(row: dict) -> tuple[list[str], str, list[dict]] | None:
             pass
         while tokens and take(-1):
             pass
+        for i in range(len(tokens) - 1, -1, -1):      # 文の途中に挟まったキーワード単独の語も外す
+            k = _ALL.get(norm(tokens[i]))
+            if k and len(tokens) > 1:
+                tokens.pop(i)
+                if k not in kws:
+                    kws.append(k)
         if tokens:
             rest.append(" ".join(tokens))
     return (kws, " / ".join(rest), extra) if kws or extra else None
