@@ -360,25 +360,39 @@ def exchange_certificate(snapshots):
 def assembly_candidates(eng, d, w, cap: int = 6):
     """組み立てへの操舵つき候補生成（sol.candidates と同じ形）。
 
-    交換の判断で、目標の組み立てに資する選択を前に置く。
-    - 攻撃: 交換の間は常に pass を返す（組み立てを崩さない）。
-    - 手札からの選択（捨てる場面）: 墓地目標でまだ墓地に無い
-      クリーチャーを先に捨て、ドラゲリオン（手札に残す）と、
-      到達可能性を切る最後のサガを最後尾に回す。
-    - 山札側の選択（掘る場面）: ドラゲリオン > 墓地目標 > サガ の順に拾う。
-    - main: サガ（配置が無いとき）> 掘り札（タイフーン系・コダマ）> その他。
+    交換の判断で、目標の組み立てに資する選択を前に置く。局面の揃い
+    具合で3つのモードを切り替える。
+    - 通常: 攻撃は pass。捨てる場面では墓地目標（未達）を先に送り、
+      ドラゲリオンと最後のサガを守る。掘る場面では ドラゲリオン >
+      墓地目標 > サガ。蘇生の場面ではサガ（周期の維持）> イザナギ
+      （掘り）の順。
+    - 最終周回（部品の3つ以上が揃うか山札6枚以下）: 揃えた部品を
+      崩さない。蘇生では置いた墓地目標を最後尾に回して守り、
+      サガの蘇生で残りの交換を締める。
+    - 仕上げ（組み立て目標に到達）: そのターンのうちに勝ちへ移る。
+      攻撃を解禁し、ドラゲリオンのプレイと墓地3枚の蘇生を前に置く。
     それ以外は基礎候補の順序を保つ。
     """
     me = d["player"]
     keys = [o["key"] for o in d["options"]]
-    if d["kind"] == "attack" and "pass" in keys:
-        return [[keys.index("pass")]]
     out = _base_candidates(eng, d, w, cap)
     if eng is None:
         return out
     z = eng.s.zones
     desc = describe_public(eng, me)
+    deck_n = len(z["deck"][me])
+    done = assembly_done(desc, deck_n)
+    placed = sum([desc[c]["graveyard"] >= 1 for c in ASSEMBLY_GRAVE]
+                 + [desc[DRAG]["hand"] >= 1])
+    final = done or placed >= 3 or deck_n <= 6
+    if d["kind"] == "attack":
+        if done:
+            return out                # 仕上げでは攻撃（攻撃時効果含む）を解禁
+        if "pass" in keys:
+            return [[keys.index("pass")]]
+        return out
     hand_ids = set(z["hand"][me])
+    grave_ids = set(z["graveyard"][me])
 
     def opt_defn(cand):
         if not cand:
@@ -394,8 +408,7 @@ def assembly_candidates(eng, d, w, cap: int = 6):
             defn, cid = opt_defn(cand)
             if defn is None:
                 return 5
-            in_hand = cid in hand_ids
-            if in_hand:
+            if cid in hand_ids:
                 # 捨てる場面: 墓地目標（未達のもの）を先に送る
                 if defn in ASSEMBLY_GRAVE and desc[defn]["graveyard"] == 0:
                     return 0
@@ -407,6 +420,24 @@ def assembly_candidates(eng, d, w, cap: int = 6):
                     return 9 if total <= 2 else 3   # 到達可能性を切らない
                 if defn in ASSEMBLY_GRAVE:
                     return 2            # 目標だが既に墓地にある（余り）
+                return 4
+            if cid in grave_ids:
+                # 蘇生・回収の場面
+                if done:
+                    # 仕上げ: 墓地の3枚を順に起こす
+                    if defn == SHAKO:
+                        return 0
+                    if defn == IWA:
+                        return 1
+                    if defn == IZA:
+                        return 2
+                    return 5
+                if defn == SAGA:
+                    return 0            # 周期の維持・最終周回の締め
+                if final and defn in ASSEMBLY_GRAVE:
+                    return 9            # 置いた部品は崩さない
+                if defn == IZA:
+                    return 1            # 掘り役として使う
                 return 4
             # 掘る場面: 組み立てに必要な順に拾う
             if defn == DRAG and desc[DRAG]["hand"] == 0:
@@ -427,10 +458,18 @@ def assembly_candidates(eng, d, w, cap: int = 6):
             if not k.startswith("play:"):
                 return 3
             defn = k.split(":")[1]
+            if done:
+                if defn == DRAG:
+                    return 0            # 仕上げの本体
+                if defn == SAGA:
+                    return 1            # 蘇生の連鎖を回す
+                return 4
             if defn == SAGA and not saga_config(desc):
                 return 0
             if defn in dig:
                 return 1
+            if final and defn == IZA:
+                return 1                # 最後の部品を掘る
             if defn == SAGA:
                 return 2
             return 4

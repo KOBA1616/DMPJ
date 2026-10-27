@@ -574,6 +574,35 @@ def test_assembly_candidates_discard_order(rules):
     assert last == DRAG             # ドラゲリオンは手札に残す
 
 
+def _grave_pick_decision(eng):
+    grave = eng.s.zones["graveyard"][0]
+    d = {"kind": "choose_cards", "player": 0, "min": 1, "max": 1,
+         "options": [{"key": f"graveyard:{eng.s.cards[c].defn}:0", "cid": c}
+                     for c in grave]}
+    return d, grave
+
+
+def test_assembly_candidates_revive_modes(rules):
+    """蘇生の場面: 通常はイザナギを掘り役として前に、最終周回では
+    置いた墓地目標を守って最後尾に回す。"""
+    iza = "dm22ex1-025"
+    # 通常（墓地目標が揃っていない）: イザナギを先に起こす
+    eng = setup(rules, {"hand": ["dm01-080"], "mana": MANA,
+                        "graveyard": [iza, "dm01-080"]})
+    d, grave = _grave_pick_decision(eng)
+    out = assembly_candidates(eng, d, None)
+    assert eng.s.cards[grave[out[0][0]]].defn == iza
+    # 最終周回（墓地3枚＋手札ドラゲリオンが揃っている）: イザナギを守る
+    eng = setup(rules, {"hand": [DRAG], "mana": MANA,
+                        "graveyard": [iza, IWA, SHAKO, "dm01-080"]})
+    d, grave = _grave_pick_decision(eng)
+    out = assembly_candidates(eng, d, None)
+    picked = [eng.s.cards[grave[c[0]]].defn for c in out]
+    # 置いた3枚はすべて末尾側に守られ、先頭は対象外のカードになる
+    assert picked[0] == "dm01-080"
+    assert set(picked[1:]) == {iza, IWA, SHAKO}
+
+
 def test_micro_candidates_without_pipeline_no_recursion():
     """MicroPolicy を Pipeline を経ずに差し込んでも再帰しない（v1 の不具合の回帰防止）。"""
     import dmsim.solitaire as sol
