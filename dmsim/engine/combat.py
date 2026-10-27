@@ -14,7 +14,11 @@ class CombatMixin:
         c = self.s.cards[cid]
         if c.tapped or "creature" not in self.chars(cid)["types"]:
             return False
-        return c.entered_turn != self.s.turn or self.permits(cid, "attack_summoning_sick")   # 506.1a
+        # 506.1a: 進化クリーチャーは召喚酔いしない（種を出した同じターンに
+        # 進化しても即座に攻撃できる）。種別による規定なのでここで見る
+        return (c.entered_turn != self.s.turn
+                or "evolution" in self.chars(cid)["types"]
+                or self.permits(cid, "attack_summoning_sick"))
 
     def _attack_options(self, a):
         out = []

@@ -37,6 +37,12 @@ WIN = 1e9
 # このモジュール自身は知らない目的を外から価格に織り込むための接続点。
 leaf_bonus = None
 
+# 勝ち方ごとの終局ボーナス（任意）。{"effect": 1e6} のように差し込むと、
+# その勝ち方で勝った終局の評価に加算される。同ターン数なら速さより
+# 勝ち方を優先させるための接続点: 不確定なダイレクトアタックの
+# リーサルより、ループ/コンボによる確実な勝ちを選ばせる等に使う。
+win_reason_bonus: dict = {}
+
 
 def own_turn(eng: Engine, me: int, turn: int | None = None) -> int:
     """全体のターン番号 → 自分の何ターン目か（相手のターン中は直前の自分のターン）。"""
@@ -143,7 +149,8 @@ def evaluate(eng: Engine, me: int, w: Weights) -> float:
     opp = 1 - me
     if s.result is not None:
         if s.result["winner"] == me:
-            return WIN - s.result["turn"]
+            return (WIN - s.result["turn"]
+                    + win_reason_bonus.get(s.result.get("reason"), 0))
         if s.result["winner"] == opp:
             return -WIN
         return -WIN / 2

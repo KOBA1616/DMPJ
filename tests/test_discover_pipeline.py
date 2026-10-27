@@ -651,6 +651,80 @@ def test_retention_pick_protects_dragelion_and_kodama(rules):
     assert pick_of([KODAMA, KODAMA, DRAG]) == KODAMA
 
 
+def test_retention_guard_engages_only_after_config(rules):
+    """保持ガード: 設定成立後の手札破棄だけを保持規則の選択1本に絞る。"""
+    import dmsim.solitaire as sol
+    from discover_pipeline import retention_pick
+    micro = MicroPolicy({}, win_by="effect")
+    micro.retention_guard = True
+    # 設定成立: サガが場に1枚、墓地にサガ+イワシン（墓地クリーチャー2）
+    eng = setup(rules, {"hand": [DRAG, "dm01-080"], "mana": MANA,
+                        "bz": [SAGA], "graveyard": [SAGA, IWA]})
+    assert saga_config(__import__("discover_pipeline").describe_public(eng, 0))
+    hand = eng.s.zones["hand"][0]
+    d = {"kind": "choose_cards", "player": 0, "min": 1, "max": 1,
+         "options": [{"key": f"hand:{eng.s.cards[c].defn}:0", "cid": c}
+                     for c in hand]}
+    out = micro.candidates(eng, d, sol.Weights())
+    assert out == [list(retention_pick(eng, d))]
+    assert eng.s.cards[hand[out[0][0]]].defn == "dm01-080"  # ドラゲは残る
+    # 設定が未成立なら介入しない
+    eng2 = setup(rules, {"hand": [DRAG, "dm01-080"], "mana": MANA,
+                         "graveyard": []})
+    hand2 = eng2.s.zones["hand"][0]
+    d2 = {"kind": "choose_cards", "player": 0, "min": 1, "max": 1,
+          "options": [{"key": f"hand:{eng2.s.cards[c].defn}:0", "cid": c}
+                      for c in hand2]}
+    out2 = micro.candidates(eng2, d2, sol.Weights())
+    assert out2 != [list(retention_pick(eng2, d2))] or len(out2) > 1
+    # ガード無効なら設定成立後でも介入しない
+    micro.retention_guard = False
+    out3 = micro.candidates(eng, d, sol.Weights())
+    assert len(out3) > 1 or out3 != [list(retention_pick(eng, d))]
+
+
+def test_play_shaping_turn_band_separates_early_plays():
+    """ターン帯つきプレイ評価: 序盤のプレイと仕上げのプレイを分けて学ぶ。"""
+    recs = []
+    for g in range(3):   # 出現2回未満は捨てられるため3対戦分
+        recs.append({"game": g, "result": "effect", "kill_turn": 5, "turn": 2,
+                     "chosen": ["play:dmbd17-009:0"]})
+        recs.append({"game": g, "result": "effect", "kill_turn": 5, "turn": 6,
+                     "chosen": ["play:dm22ex2-021"]})
+    early = learn_play_shaping(recs, win_reason="effect", turn_band="early")
+    late = learn_play_shaping(recs, win_reason="effect", turn_band="late")
+    assert "dmbd17-009:0" in early and "dm22ex2-021" not in early
+    assert "dm22ex2-021" in late and "dmbd17-009:0" not in late
+
+
+def test_win_reason_bonus_prefers_certain_win(rules):
+    """勝ち方の終局ボーナス: 既定では勝ち方を区別せず、差し込むと
+    その勝ち方（例: ループによる確実な勝ち）を同ターン数でも優先する。"""
+    import dmsim.solitaire as sol
+    eng = setup(rules, {"hand": ["T001"], "mana": MANA, "graveyard": []})
+    eng.s.result = {"winner": 0, "turn": 9, "reason": "direct_attack"}
+    base = sol.evaluate(eng, 0, sol.Weights())
+    eng.s.result = {"winner": 0, "turn": 9, "reason": "effect"}
+    assert sol.evaluate(eng, 0, sol.Weights()) == base
+    sol.win_reason_bonus = {"effect": 1e6}
+    try:
+        assert sol.evaluate(eng, 0, sol.Weights()) == base + 1e6
+    finally:
+        sol.win_reason_bonus = {}
+
+
+def test_evolution_creature_has_no_summoning_sickness(rules):
+    """公式ルール: 進化クリーチャーは召喚酔いしない。
+    出たターンでも攻撃でき、通常のクリーチャーはできない（回帰防止）。"""
+    eng = setup(rules, {"hand": [], "mana": MANA, "bz": [DRAG, SAGA],
+                        "graveyard": []})
+    drag, saga = eng.s.zones["bz"][0]
+    eng.s.cards[drag].entered_turn = eng.s.turn
+    eng.s.cards[saga].entered_turn = eng.s.turn
+    assert eng._can_attack(drag) is True
+    assert eng._can_attack(saga) is False
+
+
 def test_assembly_candidates_disengages_when_assembled(rules):
     """組み立て到達後は操舵しない（人手の仕上げ順序が手順を壊した実測への回帰防止）。"""
     from dmsim import scenario as sc
@@ -669,6 +743,49 @@ def test_assembly_candidates_disengages_when_assembled(rules):
           "options": [{"key": f"hand:{DRAG}:0", "cid": hand[0]},
                       {"key": "hand:dm01-080:0", "cid": hand[0]}]}
     assert assembly_candidates(eng, d2, None) == _base_candidates(eng, d2, None, 6)
+
+
+def test_charge_guard_blocks_last_accessible_copy(rules):
+    """チャージ保持ガード: 最後の到達可能コピーをマナに置く候補だけを外す。"""
+    import dmsim.solitaire as sol
+    from discover_pipeline import charge_critical
+    micro = MicroPolicy({}, win_by="effect")
+    micro.charge_guard = True
+    micro.deck_totals = {DRAG: 2, SAGA: 4, SHAKO: 2}
+    # もう1枚のドラゲリオンは墓地で数え切れている = 手札の1枚が最後
+    eng = setup(rules, {"hand": [DRAG, "dm01-080"], "mana": MANA,
+                        "graveyard": [DRAG]})
+    hand = eng.s.zones["hand"][0]
+    d = {"kind": "charge", "player": 0, "min": 0, "max": 1,
+         "options": [{"key": "pass"}]
+         + [{"key": f"charge:{eng.s.cards[c].defn}", "cid": c}
+            for c in hand]}
+    crit = charge_critical(eng, d, micro.deck_totals)
+    drag_idx = next(i for i, o in enumerate(d["options"])
+                    if o.get("cid") is not None
+                    and eng.s.cards[o["cid"]].defn == DRAG)
+    assert crit == {drag_idx}
+    out = micro.candidates(eng, d, sol.Weights())
+    assert all(drag_idx not in c for c in out)
+    assert any(len(c) == 0 or c == [0] for c in out) or len(out) >= 1
+    # 山札に残っている可能性がある（墓地が空）なら断定せず介入しない
+    eng2 = setup(rules, {"hand": [DRAG, "dm01-080"], "mana": MANA,
+                         "graveyard": []})
+    hand2 = eng2.s.zones["hand"][0]
+    d2 = {"kind": "charge", "player": 0, "min": 0, "max": 1,
+          "options": [{"key": "pass"}]
+          + [{"key": f"charge:{eng2.s.cards[c].defn}", "cid": c}
+             for c in hand2]}
+    assert charge_critical(eng2, d2, micro.deck_totals) == set()
+    out2 = micro.candidates(eng2, d2, sol.Weights())
+    drag_idx2 = next(i for i, o in enumerate(d2["options"])
+                     if o.get("cid") is not None
+                     and eng2.s.cards[o["cid"]].defn == DRAG)
+    assert any(drag_idx2 in c for c in out2)
+    # ガード無効なら介入しない
+    micro.charge_guard = False
+    out3 = micro.candidates(eng, d, sol.Weights())
+    assert any(drag_idx in c for c in out3)
 
 
 def test_micro_candidates_without_pipeline_no_recursion():

@@ -523,6 +523,47 @@ def retention_pick(eng, d, me: int = ME):
     return order[:n]
 
 
+CHARGE_PROTECTED = (DRAG, SAGA, SHAKO)
+
+
+def charge_critical(eng, d, totals, me: int = ME):
+    """チャージ判断で「最後の到達可能コピー」をマナに置いてしまう選択肢の
+    添字集合を返す。対象でない判断では None。
+
+    到達可能 = 手札 + バトルゾーン。マナも墓地も、これらのカードは
+    蘇生範囲（サガ: 神/オリジン5以下、ブルース呪文面: 3以下）では
+    取り戻せない。致命的と断定するのは、公開ゾーン（手札・場・墓地・
+    マナ）でデッキ総枚数を数え切れている場合だけにする。山札や
+    シールドに残っている可能性があれば断定しない（実測: 最後の
+    ドラゲリオン/サガのチャージがあった対戦は効果勝ち 0/50）。
+    totals は自分のデッキリストの {カードID: 枚数}。
+    """
+    if d["kind"] != "charge" or eng is None or not totals:
+        return None
+    me = d["player"]
+    desc = describe_public(eng, me)
+    crit = set()
+    for i, o in enumerate(d["options"]):
+        if o.get("key") == "pass":
+            continue
+        cid = o.get("cid")
+        if cid is not None:
+            defn = eng.s.cards[cid].defn
+        else:
+            k = o.get("key", "")
+            defn = k.split(":")[1] if ":" in k else None
+        if defn not in CHARGE_PROTECTED or defn not in totals:
+            continue
+        zc = desc.get(defn)
+        if not zc:
+            continue
+        accounted = (zc["hand"] + zc["bz"] + zc["graveyard"]
+                     + zc["mana"])
+        if zc["hand"] == 1 and zc["bz"] == 0 and accounted >= totals[defn]:
+            crit.add(i)
+    return crit
+
+
 PUBLIC_ZONES = ("hand", "bz", "graveyard", "mana")
 
 
@@ -910,7 +951,8 @@ def charge_choice(eng, d, targets=TARGET_CARDS, loop_card: str = SAGA) -> int | 
 
 
 def learn_play_shaping(records: list[dict], win_reason: str | None = None,
-                       entry: bool = False, discount: float = 0.85) -> dict[str, float]:
+                       entry: bool = False, discount: float = 0.85,
+                       turn_band: str | None = None) -> dict[str, float]:
     """報酬の自動設計: 成功した対戦（到達/勝利した軌跡）の中で、どのカードの
     プレイがどれだけの割合の対戦に現れたかから、プレイへの報酬を決める。
 
@@ -947,6 +989,13 @@ def learn_play_shaping(records: list[dict], win_reason: str | None = None,
         game_turn[g] = rec.get("kill_turn")
         if entry and rec.get("intent") not in ("setup", "enter_loop"):
             continue
+        if turn_band is not None:
+            # ターン帯で分けて学ぶ。序盤のプレイと仕上げのプレイは
+            # 役割が違う（例: ブルース上面は序盤では手札を減らすだけ、
+            # 仕上げでは打点）。混ぜると両方が同じ功績になってしまう
+            t = rec.get("turn")
+            if t is None or (turn_band == "early") != (t <= 3):
+                continue
         for k in rec["chosen"]:
             if k.startswith("play:"):
                 parts = k.split(":")
@@ -1081,7 +1130,22 @@ class MicroPolicy:
     # 成功軌跡から学んだプレイへの報酬（learn_play_shaping の出力）。
     # あれば人手の plan_plays より優先し、寄与するプレイを候補の前に、
     # 寄与しないプレイを後ろに回す
+    play_shaping_early: dict = field(default_factory=dict)
+    # 序盤（自分のターン3まで）専用のプレイ報酬。あれば序盤の判断では
+    # こちらを先に引く。序盤と仕上げで同じプレイの価値が違うため
     entry_spec: dict | None = None  # 学んだ入口の条件（到達の判定に使う）
+    retention_guard: bool = False   # 設定成立後の手札破棄に保持規則を強制する。
+                                    # 探索自身の破棄が仕上げ役（ドラゲリオン）を
+                                    # 墓地に埋めるのが山札切れ敗北の主因という
+                                    # 実測への対処（v28）。候補を保持規則の
+                                    # 選択1本に絞る
+    charge_guard: bool = False      # チャージで最後の到達可能コピーを置く
+                                    # 候補を外す（charge_critical 参照）。
+                                    # マナに置いた部品も墓地と同様に取り戻せず、
+                                    # 実測では効果勝ちが消えていた（v29）
+    deck_totals: dict = field(default_factory=dict)
+                                    # 自分のデッキリスト {カードID: 枚数}。
+                                    # charge_guard の断定に使う
 
     def prefer(self, eng, d) -> list[int] | None:
         prefs = self.preferences or {}
@@ -1143,6 +1207,30 @@ class MicroPolicy:
 
     def candidates(self, eng, d, w, cap: int = 6):
         """solitaire.candidates と同じ形。方策の答えを候補の先頭に置く。"""
+        if (self.retention_guard and eng is not None
+                and d["kind"] == "choose_cards"):
+            # 保持ガード: ループ設定が成立した後は、手札からの破棄を
+            # 保持規則の選択だけに絞る。探索の葉評価は「今使えない
+            # 高コスト札」の破棄をほぼ無償と値付けするが、墓地の
+            # ドラゲリオンは蘇生範囲（コスト5以下/3以下）から
+            # 取り戻せず、ループが仕上げ役不在で回り続けて
+            # 山札切れになる（実測: 敗北の73%で最後の1枚を破棄）
+            pick = retention_pick(eng, d, d["player"])
+            if pick is not None and saga_config(describe_public(eng, d["player"])):
+                return [list(pick)]
+        if (self.charge_guard and eng is not None
+                and d["kind"] == "charge" and self.deck_totals):
+            # チャージ保持ガード: 最後の到達可能コピー（ドラゲリオン/
+            # サガ/シャコガイル）をマナに置く候補だけを外す。代替が
+            # 無い（全候補が該当）場合は介入しない
+            crit = charge_critical(eng, d, self.deck_totals,
+                                   d["player"])
+            if crit:
+                base = _base_candidates(eng, d, w, cap)
+                kept = [c for c in base
+                        if not any(i in crit for i in c)]
+                if kept:
+                    return [list(c) for c in kept]
         if (self.loop_priority and d["kind"] == "attack" and eng is not None
                 and self.intent != "execute"
                 and sol.own_turn(eng, d["player"]) <= self.restrain_until_turn
@@ -1207,12 +1295,19 @@ class MicroPolicy:
                     return 1                    # pass などは真ん中
                 parts = k.split(":")
                 defn = parts[1]
-                if self.play_shaping:
+                if self.play_shaping or self.play_shaping_early:
                     # 面ごとの報酬があればそちらで見る（ツインパクトは面で
                     # 役割が違う。例: ブルースの呪文面は入口の道具、
-                    # クリーチャー面は打点）。無ければカード単位に落とす
+                    # クリーチャー面は打点）。無ければカード単位に落とす。
+                    # 序盤は序盤専用の表を先に引く（帯で価値が違うため）
                     val = None
-                    if len(parts) > 2:
+                    if (self.play_shaping_early and eng is not None
+                            and sol.own_turn(eng, d["player"]) <= 3):
+                        if len(parts) > 2:
+                            val = self.play_shaping_early.get(f"{defn}:{parts[2]}")
+                        if val is None:
+                            val = self.play_shaping_early.get(defn)
+                    if val is None and len(parts) > 2:
                         val = self.play_shaping.get(f"{defn}:{parts[2]}")
                     if val is None:
                         val = self.play_shaping.get(defn, 0.0)
