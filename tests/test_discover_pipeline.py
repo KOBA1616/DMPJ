@@ -627,6 +627,30 @@ def test_retention_pick_protects_last_dragelion(rules):
     assert retention_pick(eng, d2) is None
 
 
+def test_retention_pick_protects_dragelion_and_kodama(rules):
+    """ドラゲリオンとコダマダンスは最優先で手札に残す。
+    捨て札がある限りどちらも捨てず、墓地目標（未達）を先に置く。"""
+    from discover_pipeline import retention_pick, KODAMA
+
+    def pick_of(hand_defns):
+        eng = setup(rules, {"hand": hand_defns, "mana": MANA, "graveyard": []})
+        hand = eng.s.zones["hand"][0]
+        d = {"kind": "choose_cards", "player": 0, "min": 1, "max": 1,
+             "options": [{"key": f"hand:{eng.s.cards[c].defn}:0", "cid": c}
+                         for c in hand]}
+        pick = retention_pick(eng, d)
+        return eng.s.cards[hand[pick[0]]].defn
+
+    # 捨てられる札がある限り、ドラゲもコダマも捨てない
+    assert pick_of([DRAG, KODAMA, "dm01-080"]) == "dm01-080"
+    assert pick_of([DRAG, DRAG, KODAMA, "dm01-080"]) == "dm01-080"
+    # 墓地目標（未達のイワシン）は保持群より先に墓地へ置く
+    assert pick_of([KODAMA, IWA, DRAG]) == IWA
+    # 選択肢が保持群だけなら、余ったドラゲリオンから捨てる
+    assert pick_of([DRAG, DRAG, KODAMA]) == DRAG
+    assert pick_of([KODAMA, KODAMA, DRAG]) == KODAMA
+
+
 def test_assembly_candidates_disengages_when_assembled(rules):
     """組み立て到達後は操舵しない（人手の仕上げ順序が手順を壊した実測への回帰防止）。"""
     from dmsim import scenario as sc

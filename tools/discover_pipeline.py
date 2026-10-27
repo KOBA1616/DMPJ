@@ -302,6 +302,7 @@ def try_loop_first(eng, me: int = ME, discover_budget: int = 2000,
 
 IZA = "dm22ex1-025"
 BRUCE = "dmbd17-009"
+KODAMA = "dmex10-020"
 # 交換ループで墓地に揃える3枚と、手札に残すフィニッシャー
 ASSEMBLY_GRAVE = (IZA, IWA, SHAKO)
 
@@ -418,6 +419,8 @@ def assembly_candidates(eng, d, w, cap: int = 6):
                     return 0
                 if defn == DRAG:
                     return 9            # 手札に残す
+                if defn == KODAMA:
+                    return 9            # コダマダンスも手札に残す
                 if defn == SAGA:
                     total = (desc[SAGA]["bz"] + desc[SAGA]["graveyard"]
                              + desc[SAGA]["hand"])
@@ -476,8 +479,10 @@ def retention_pick(eng, d, me: int = ME):
     対象でない判断では None。
     順位（捨てやすい順）: 墓地目標（未達）> 対象外のクリーチャー >
     対象外の呪文 > 複製のある掘り札 > 既に置いた目標の余り >
-    ドラゲリオンの余り > サガの余り。最後のドラゲリオンと、到達
-    可能性を切るサガは、他に選択肢が無いときだけ捨てる。
+    サガの余り > 保持群。ドラゲリオンとコダマダンスは最優先で
+    手札に残す（保持群）: 他に選択肢が無いときだけ、余った
+    ドラゲリオン、余ったコダマ、最後のドラゲリオン、最後の
+    コダマ、到達可能性を切るサガの順に捨てる。
     """
     if d["kind"] != "choose_cards" or eng is None:
         return None
@@ -488,7 +493,7 @@ def retention_pick(eng, d, me: int = ME):
     if any(o.get("cid") is None or o["cid"] not in hand_ids for o in opts):
         return None
     desc = describe_public(eng, me)
-    dig = ("dm26ex2-071", "dmpromoy22-p51", "dmex10-020")
+    dig = ("dm26ex2-071", "dmpromoy22-p51")
     from collections import Counter
     hand_defns = Counter(eng.s.cards[c].defn for c in z["hand"][me])
 
@@ -496,20 +501,22 @@ def retention_pick(eng, d, me: int = ME):
         cid = o["cid"]
         defn = eng.s.cards[cid].defn
         if defn in ASSEMBLY_GRAVE and desc[defn]["graveyard"] == 0:
-            return 0
+            return (0, 0)       # 墓地目標（未達）: 墓地に置く
         if defn in ASSEMBLY_GRAVE:
-            return 4            # 置き済みの余り
-        if defn == DRAG:
-            return 5 if hand_defns[DRAG] >= 2 else 9
+            return (4, 0)       # 置き済みの余り
+        if defn == DRAG:        # ドラゲリオンは最優先で手札に残す
+            return (9, 0) if hand_defns[DRAG] >= 2 else (9, 3)
+        if defn == KODAMA:      # コダマダンスも最優先で手札に残す
+            return (9, 1) if hand_defns[KODAMA] >= 2 else (9, 4)
         if defn == SAGA:
             total = (desc[SAGA]["bz"] + desc[SAGA]["graveyard"]
                      + desc[SAGA]["hand"])
-            return 8 if total >= 3 else 9
+            return (8, 0) if total >= 3 else (9, 5)
         if defn in dig and hand_defns[defn] >= 2:
-            return 3
+            return (3, 0)
         if "creature" in eng.chars(cid)["types"]:
-            return 1
-        return 2
+            return (1, 0)
+        return (2, 0)
 
     n = max(1, d.get("min", 1))
     order = sorted(range(len(opts)), key=lambda i: (rank(opts[i]), i))
@@ -1338,7 +1345,7 @@ class Pipeline:
 
     def harvest_games(self, deck: list, opp_deck: list, seeds: list[int],
                       micro: MicroPolicy, macro: MacroPlanner, horizon: int = 10,
-                      opp_policy=None):
+                      opp_policy=None, summaries: list | None = None):
         """通し対戦から判断を収穫する（序盤〜中盤の文脈を埋めるため）。
 
         階層版で対戦し、「最小盤面に到達した対戦」と「ループで勝った対戦」の
@@ -1425,6 +1432,8 @@ class Pipeline:
                     multi_hand = sum(1 for cid in eng.s.zones["hand"][ME]
                                      if len(eng.cdef(cid).civs) >= 2)
                     records.append({"kind": d["kind"], "game": s, "result": result_reason,
+                                    "turn": sol.own_turn(eng, ME),
+                                    "desc": describe_public(eng, ME),
                                     "entry": entry_hit, "kill_turn": kill_turn,
                                     "options": [o["key"] for o in d["options"]],
                                     "chosen": entry["keys"],
@@ -1445,6 +1454,11 @@ class Pipeline:
                     break
             if ok:
                 kept += 1
+                if summaries is not None:
+                    summaries.append(
+                        {"game": s, "result": result_reason, "kill_turn": kill_turn,
+                         "final_desc": describe_public(leaf, ME),
+                         "final_deck": len(leaf.s.zones["deck"][ME])})
         sol.leaf_bonus = prev_bonus
         return kept, records
 
