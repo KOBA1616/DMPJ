@@ -9,7 +9,8 @@ sys.path.insert(0, str(Path(__file__).resolve().parent.parent / "tools"))
 
 from discover_pipeline import (MacroPlanner, MicroPolicy, charge_choice,  # noqa: E402
                                classify_win, deck_bucket, grave_bucket,
-                               learn_preferences, learn_play_shaping, try_loop_first)
+                               learn_preferences, learn_play_shaping, try_loop_first,
+                               fit_phi, phi_features, phi_leaf_bonus, phi_value)
 
 from conftest import setup  # noqa: E402
 
@@ -496,6 +497,33 @@ def test_board_reached_excludes_mana(rules):
     eng = setup(rules, {"hand": [SAGA, "dm22ex1-025", SHAKO, DRAG], "mana": MANA,
                         "graveyard": []})
     assert micro.board_reached(eng, 0)
+
+
+def test_phi_features_include_inheritance_products():
+    """引き継ぎの特徴: 墓地のサガ×手札のブルースが積として現れる。"""
+    desc = {"dm22ex2-021": {"hand": 0, "bz": 0, "graveyard": 1, "mana": 0},
+            "dmbd17-009": {"hand": 1, "bz": 0, "graveyard": 0, "mana": 0},
+            "grave_creatures": 2, "mana": 3}
+    f = phi_features(desc)
+    assert f["x:saga_grave*bruce_hand"] == 1.0
+    assert f["x:saga_hand*grave_cre"] == 0.0
+
+
+def test_fit_phi_learns_from_outcomes():
+    """Φ はループ勝ちに至った局面へ、それ以外より高い値を付ける。"""
+    rows = []
+    for _ in range(30):
+        rows.append({"desc": {"dm22ex2-021": {"hand": 0, "bz": 1, "graveyard": 0,
+                                              "mana": 0},
+                              "grave_creatures": 3, "mana": 5},
+                     "result": "effect", "kill_turn": 4})
+        rows.append({"desc": {"dm22ex2-021": {"hand": 1, "bz": 0, "graveyard": 0,
+                                              "mana": 0},
+                              "grave_creatures": 0, "mana": 2},
+                     "result": "direct_attack", "kill_turn": 6})
+    model = fit_phi(rows)
+    assert phi_value(model, rows[0]["desc"]) > phi_value(model, rows[1]["desc"])
+    assert phi_leaf_bonus(model) is not None
 
 
 def test_micro_candidates_without_pipeline_no_recursion():

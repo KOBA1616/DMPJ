@@ -383,6 +383,126 @@ def entry_leaf_bonus(spec: dict | None, weight: float = 30.0):
     return bonus
 
 
+# ---- 学習した局面ポテンシャル Φ（結果から学ぶ全体報酬予測） ----
+#
+# 手で採掘した入口条件と距離（v15-v18）は、発火の型が選言的だと表しきれ
+# なかった。代わりに、局面の価値 Φ を対戦結果そのものから学ぶ（Suphx の
+# 全体報酬予測と同じ発想）。価格付けは Φ の差分でのみ行うのがポテンシャル
+# 整形の原則で、一律の反復ボーナスは必ず悪用される。
+# Φ が学べば、「墓地のサガ＋手札のブルース下面」のような引き継ぎの価値は
+# 手で配らなくても自動で現れる。頻度ベースの整形（相関）と違い、Φ は
+# 結果に対する予測なので、プレイの価値は ΔΦ で測れる。
+
+PHI_CARDS = ("dm22ex2-021", "dm22ex1-007", "dmrp03-036", "dmrp03-s03",
+             "dm22ex1-025", "dmbd17-009",
+             "dm26ex2-071", "dmpromoy22-p51", "dmex10-020")
+
+
+def phi_features(desc: dict) -> dict:
+    """公開記述 → 特徴量。部品のゾーン別枚数と、引き継ぎを表す積の特徴。"""
+    f = {}
+    for name in PHI_CARDS:
+        z = desc.get(name, {})
+        for zone in PUBLIC_ZONES:
+            f[f"{name}:{zone}"] = float(z.get(zone, 0))
+        f[f"{name}:acc"] = float(z.get("hand", 0) + z.get("bz", 0)
+                                 + z.get("graveyard", 0))
+    f["grave_creatures"] = float(desc.get("grave_creatures", 0))
+    f["mana"] = float(desc.get("mana", 0))
+
+    def g(name, zone):
+        return float(desc.get(name, {}).get(zone, 0))
+
+    def acc(name):
+        return g(name, "hand") + g(name, "bz") + g(name, "graveyard")
+
+    SAGA, IZA, BRUCE, SHAKO = ("dm22ex2-021", "dm22ex1-025",
+                               "dmbd17-009", "dmrp03-s03")
+    f["x:saga_grave*bruce_hand"] = g(SAGA, "graveyard") * g(BRUCE, "hand")
+    f["x:saga_grave*bruce_spell_avail"] = g(SAGA, "graveyard") * acc(BRUCE)
+    f["x:saga_hand*grave_cre"] = (g(SAGA, "hand")
+                                  * min(3.0, float(desc.get("grave_creatures", 0))))
+    f["x:saga_bz*iza_acc"] = g(SAGA, "bz") * acc(IZA)
+    f["x:saga_acc*shako_acc"] = acc(SAGA) * acc(SHAKO)
+    f["x:iza_grave*saga_bz"] = g(IZA, "graveyard") * g(SAGA, "bz")
+    return f
+
+
+def _solve_linear(A, b):
+    """ガウス消去で A x = b を解く（小規模な正規方程式用）。"""
+    n = len(b)
+    M = [row[:] + [b[i]] for i, row in enumerate(A)]
+    for col in range(n):
+        piv = max(range(col, n), key=lambda r: abs(M[r][col]))
+        if abs(M[piv][col]) < 1e-12:
+            continue
+        M[col], M[piv] = M[piv], M[col]
+        pv = M[col][col]
+        for r in range(n):
+            if r != col and M[r][col] != 0.0:
+                factor = M[r][col] / pv
+                for c in range(col, n + 1):
+                    M[r][c] -= factor * M[col][c]
+    return [M[i][n] / M[i][i] if abs(M[i][i]) > 1e-12 else 0.0
+            for i in range(n)]
+
+
+def fit_phi(rows: list[dict], discount: float = 0.85,
+            ridge: float = 1.0) -> dict:
+    """ターン開始局面と対戦結果から Φ を学ぶ（リッジ回帰）。
+
+    rows: {"desc", "result", "kill_turn"}。目的変数は時間割引つきの
+    ループ勝ち（勝ったターンで割り引く）。それ以外は 0。
+    """
+    keys = None
+    X, y = [], []
+    for r in rows:
+        f = phi_features(r["desc"])
+        if keys is None:
+            keys = list(f.keys())
+        X.append([f[k] for k in keys])
+        if r.get("result") == "effect":
+            kt = r.get("kill_turn") or 3
+            y.append(discount ** max(0, kt - 3))
+        else:
+            y.append(0.0)
+    n, d = len(X), len(keys)
+    mx = [sum(row[j] for row in X) / n for j in range(d)]
+    my = sum(y) / n
+    A = [[0.0] * d for _ in range(d)]
+    b = [0.0] * d
+    for row, yi in zip(X, y):
+        xc = [row[j] - mx[j] for j in range(d)]
+        yc = yi - my
+        for i in range(d):
+            b[i] += xc[i] * yc
+            for j in range(d):
+                A[i][j] += xc[i] * xc[j]
+    for i in range(d):
+        A[i][i] += ridge
+    coef = _solve_linear(A, b)
+    return {"keys": keys, "coef": coef, "means": mx, "intercept": my,
+            "discount": discount, "n": n}
+
+
+def phi_value(model: dict, desc: dict) -> float:
+    f = phi_features(desc)
+    return model["intercept"] + sum(
+        c * (f[k] - m)
+        for k, c, m in zip(model["keys"], model["coef"], model["means"]))
+
+
+def phi_leaf_bonus(model: dict, scale: float = 300.0):
+    """探索の葉の評価に、学習した Φ を価格として織り込む関数を作る。"""
+    if not model:
+        return None
+
+    def bonus(eng, me):
+        return scale * phi_value(model, describe_public(eng, me))
+
+    return bonus
+
+
 def learn_entry_criterion(successes: list[dict], failures: list[dict]) -> dict | None:
     """ループが開始できた局面（成功）とできなかった局面（失敗）の公開記述から、
     入口の条件を学ぶ。
