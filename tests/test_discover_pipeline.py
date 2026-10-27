@@ -10,7 +10,9 @@ sys.path.insert(0, str(Path(__file__).resolve().parent.parent / "tools"))
 from discover_pipeline import (MacroPlanner, MicroPolicy, charge_choice,  # noqa: E402
                                classify_win, deck_bucket, grave_bucket,
                                learn_preferences, learn_play_shaping, try_loop_first,
-                               fit_phi, phi_features, phi_leaf_bonus, phi_value)
+                               fit_phi, phi_features, phi_leaf_bonus, phi_value,
+                               assembly_candidates, assembly_done, exchange_certificate,
+                               saga_config)
 
 from conftest import setup  # noqa: E402
 
@@ -524,6 +526,52 @@ def test_fit_phi_learns_from_outcomes():
     model = fit_phi(rows)
     assert phi_value(model, rows[0]["desc"]) > phi_value(model, rows[1]["desc"])
     assert phi_leaf_bonus(model) is not None
+
+
+def _xdesc(saga_bz=0, saga_gy=0, saga_hand=0, grave_cre=0, drag_hand=0,
+          iza=0, iwa=0, shako=0):
+    return {"dm22ex2-021": {"bz": saga_bz, "graveyard": saga_gy, "hand": saga_hand},
+            "dm22ex1-025": {"graveyard": iza}, "dmrp03-036": {"graveyard": iwa},
+            "dmrp03-s03": {"graveyard": shako}, "dm22ex1-007": {"hand": drag_hand},
+            "grave_creatures": grave_cre}
+
+
+def test_saga_config_and_assembly_definitions():
+    """初期盤面はサガの配置だけが条件。山札の枚数は含まない。"""
+    assert saga_config(_xdesc(saga_bz=1, saga_gy=1, grave_cre=2))
+    assert saga_config(_xdesc(saga_bz=1, saga_hand=1, grave_cre=2))
+    assert not saga_config(_xdesc(saga_bz=1, grave_cre=3))
+    assert assembly_done(_xdesc(drag_hand=1, iza=1, iwa=1, shako=1), 2)
+    assert not assembly_done(_xdesc(drag_hand=1, iza=1, iwa=1, shako=1), 3)
+    assert not assembly_done(_xdesc(drag_hand=0, iza=1, iwa=1, shako=1), 2)
+
+
+def test_exchange_certificate_needs_progressing_reestablishment():
+    snaps = [(_xdesc(saga_bz=1, saga_gy=1, grave_cre=2), 20),
+             (_xdesc(saga_bz=1, saga_hand=1, grave_cre=4, iza=1), 15),
+             (_xdesc(saga_bz=1, saga_gy=1, grave_cre=5, iza=1, iwa=1), 12)]
+    cert = exchange_certificate(snaps)
+    assert cert is not None and cert["cycles"] == 2 and not cert["assembled"]
+    # 配置が再確立されなければ証明書は出ない
+    assert exchange_certificate(snaps[:1]) is None
+    # 山札が進んでいない再確立は周期に数えない
+    stalled = [(_xdesc(saga_bz=1, saga_gy=1, grave_cre=2), 20),
+               (_xdesc(saga_bz=1, saga_gy=1, grave_cre=3), 20)]
+    assert exchange_certificate(stalled) is None
+
+
+def test_assembly_candidates_discard_order(rules):
+    """捨てる選択では墓地目標（未達）を先に送り、ドラゲリオンを最後尾に残す。"""
+    eng = setup(rules, {"hand": ["dm22ex1-025", DRAG, "dm01-080"], "mana": MANA,
+                        "graveyard": []})
+    hand = eng.s.zones["hand"][0]
+    d = {"kind": "choose_cards", "player": 0, "min": 1, "max": 1,
+         "options": [{"key": f"hand:{eng.s.cards[c].defn}:0", "cid": c} for c in hand]}
+    out = assembly_candidates(eng, d, None)
+    first = eng.s.cards[hand[out[0][0]]].defn
+    last = eng.s.cards[hand[out[-1][0]]].defn
+    assert first == "dm22ex1-025"   # 墓地目標で未達のイザナギを先に捨てる
+    assert last == DRAG             # ドラゲリオンは手札に残す
 
 
 def test_micro_candidates_without_pipeline_no_recursion():

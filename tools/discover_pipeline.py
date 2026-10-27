@@ -300,6 +300,144 @@ def try_loop_first(eng, me: int = ME, discover_budget: int = 2000,
         sol.candidates = old
 
 
+IZA = "dm22ex1-025"
+BRUCE = "dmbd17-009"
+# 交換ループで墓地に揃える3枚と、手札に残すフィニッシャー
+ASSEMBLY_GRAVE = (IZA, IWA, SHAKO)
+
+
+def saga_config(desc) -> bool:
+    """サガ配置（ループの初期盤面）: 場にサガがいて、もう1枚のサガが
+    墓地か手札にあり、墓地のクリーチャーが2枚以上あること。
+    山札の枚数は条件ではない（山札の減少はループの進行そのもの）。"""
+    return (desc[SAGA]["bz"] >= 1
+            and desc[SAGA]["graveyard"] + desc[SAGA]["hand"] >= 1
+            and desc["grave_creatures"] >= 2)
+
+
+def assembly_done(desc, deck_count: int) -> bool:
+    """組み立て目標: 山札2枚以下で、墓地にイザナギ・イワシン・
+    シャコガイルが揃い、手札にドラゲリオンがあること。"""
+    return (deck_count <= 2
+            and all(desc[c]["graveyard"] >= 1 for c in ASSEMBLY_GRAVE)
+            and desc[DRAG]["hand"] >= 1)
+
+
+def assembly_progress(desc, deck_count: int) -> tuple:
+    """単調進行のベクトル。大きいほど組み立てに近い。
+    (山札の少なさ, 墓地に揃った目標の種類数, ドラゲリオンが手札にあるか)"""
+    hits = sum(1 for c in ASSEMBLY_GRAVE if desc[c]["graveyard"] >= 1)
+    return (-deck_count, hits, 1 if desc[DRAG]["hand"] >= 1 else 0)
+
+
+def progress_geq(a: tuple, b: tuple) -> bool:
+    return all(x >= y for x, y in zip(a, b))
+
+
+def exchange_certificate(snapshots):
+    """ターン境界のスナップショット列 [(desc, deck_count), ...] から、
+    交換ループの証明書を検出する。
+
+    旧来の証明書（同一局面への完全復帰）は、反復のたびに手札と山札が
+    変わる交換ループでは原理的に成立しない。ここでは「サガ配置が
+    再確立され、その間に単調進行が後退していないこと」を1周期とし、
+    2周期以上を検出できれば証明書を返す。
+    戻り値: {"cycles": 周期数, "assembled": 組み立て到達か} または None。
+    """
+    hits = [i for i, (desc, deck) in enumerate(snapshots) if saga_config(desc)]
+    cycles = 0
+    for a, b in zip(hits, hits[1:]):
+        pa = assembly_progress(*snapshots[a])
+        pb = assembly_progress(*snapshots[b])
+        if progress_geq(pb, pa) and pb[0] > pa[0]:   # 山札が進み、他は後退なし
+            cycles += 1
+    if cycles < 1:
+        return None
+    desc, deck = snapshots[-1]
+    return {"cycles": cycles, "assembled": assembly_done(desc, deck)}
+
+
+def assembly_candidates(eng, d, w, cap: int = 6):
+    """組み立てへの操舵つき候補生成（sol.candidates と同じ形）。
+
+    交換の判断で、目標の組み立てに資する選択を前に置く。
+    - 攻撃: 交換の間は常に pass を返す（組み立てを崩さない）。
+    - 手札からの選択（捨てる場面）: 墓地目標でまだ墓地に無い
+      クリーチャーを先に捨て、ドラゲリオン（手札に残す）と、
+      到達可能性を切る最後のサガを最後尾に回す。
+    - 山札側の選択（掘る場面）: ドラゲリオン > 墓地目標 > サガ の順に拾う。
+    - main: サガ（配置が無いとき）> 掘り札（タイフーン系・コダマ）> その他。
+    それ以外は基礎候補の順序を保つ。
+    """
+    me = d["player"]
+    keys = [o["key"] for o in d["options"]]
+    if d["kind"] == "attack" and "pass" in keys:
+        return [[keys.index("pass")]]
+    out = _base_candidates(eng, d, w, cap)
+    if eng is None:
+        return out
+    z = eng.s.zones
+    desc = describe_public(eng, me)
+    hand_ids = set(z["hand"][me])
+
+    def opt_defn(cand):
+        if not cand:
+            return None, None
+        o = d["options"][cand[0]]
+        cid = o.get("cid")
+        if cid is None:
+            return None, None
+        return eng.s.cards[cid].defn, cid
+
+    if d["kind"] == "choose_cards":
+        def rank(cand):
+            defn, cid = opt_defn(cand)
+            if defn is None:
+                return 5
+            in_hand = cid in hand_ids
+            if in_hand:
+                # 捨てる場面: 墓地目標（未達のもの）を先に送る
+                if defn in ASSEMBLY_GRAVE and desc[defn]["graveyard"] == 0:
+                    return 0
+                if defn == DRAG:
+                    return 9            # 手札に残す
+                if defn == SAGA:
+                    total = (desc[SAGA]["bz"] + desc[SAGA]["graveyard"]
+                             + desc[SAGA]["hand"])
+                    return 9 if total <= 2 else 3   # 到達可能性を切らない
+                if defn in ASSEMBLY_GRAVE:
+                    return 2            # 目標だが既に墓地にある（余り）
+                return 4
+            # 掘る場面: 組み立てに必要な順に拾う
+            if defn == DRAG and desc[DRAG]["hand"] == 0:
+                return 0
+            if defn in ASSEMBLY_GRAVE and desc[defn]["graveyard"] == 0:
+                return 1
+            if defn == SAGA and (desc[SAGA]["graveyard"] + desc[SAGA]["hand"]) == 0:
+                return 2
+            return 5
+        return [list(c) for c in sorted(out, key=rank)]
+    if d["kind"] == "main":
+        dig = ("dm26ex2-071", "dmpromoy22-p51", "dmex10-020")
+
+        def tier(cand):
+            if not cand:
+                return 3
+            k = keys[cand[0]]
+            if not k.startswith("play:"):
+                return 3
+            defn = k.split(":")[1]
+            if defn == SAGA and not saga_config(desc):
+                return 0
+            if defn in dig:
+                return 1
+            if defn == SAGA:
+                return 2
+            return 4
+        return [list(c) for c in sorted(out, key=tier)]
+    return out
+
+
 PUBLIC_ZONES = ("hand", "bz", "graveyard", "mana")
 
 
