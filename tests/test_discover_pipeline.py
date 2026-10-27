@@ -908,3 +908,22 @@ def test_feasibility_v2_entry_alone_does_not_release(rules):
     micro2, eng2 = make([DRAG])
     out = micro2.candidates(eng2, d, sol.Weights())
     assert out != [[1]] and any(0 in c for c in out)
+
+
+def test_typhoon_early_fire_forces_spell_face(rules):
+    """2ターン目までのタイフーン即打ち: 呪文面だけを候補にする。"""
+    import dmsim.solitaire as sol
+    micro = MicroPolicy({}, win_by="effect")
+    micro.typhoon_early_fire = True
+    eng = setup(rules, {"hand": ["dm26ex2-071"], "mana": MANA,
+                        "graveyard": []})
+    ty = eng.s.zones["hand"][0][0]
+    d = {"player": 0, "kind": "main", "min": 1, "max": 1,
+         "options": [{"key": "pass"},
+                     {"key": "play:dm26ex2-071:0", "cid": ty},
+                     {"key": "play:dm26ex2-071:1", "cid": ty}]}
+    out = micro.candidates(eng, d, sol.Weights())
+    assert out == [[2]]
+    micro.typhoon_early_fire = False
+    out2 = micro.candidates(eng, d, sol.Weights())
+    assert len(out2) > 1

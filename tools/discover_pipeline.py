@@ -1147,6 +1147,7 @@ class MicroPolicy:
                                     # （破棄・チャージ）を、代替がある限り
                                     # 候補から落とす。設定前後を問わない
     feasibility_release: bool = False
+    typhoon_early_fire: bool = False  # 2ターン目までに引いたら打つ
                                     # True なら攻撃自制の解除を暦ではなく
                                     # 組み立ての到達可能性で決める（下記
                                     # loop_infeasible）。暦の上限は安全弁として
@@ -1297,6 +1298,18 @@ class MicroPolicy:
                 kept = [c for c in base if not zeroes_drag(c)]
                 if kept:
                     return [list(c) for c in kept]
+        if (self.typhoon_early_fire and d["kind"] == "main"
+                and eng is not None
+                and sol.own_turn(eng, d["player"]) <= 2):
+            # 分岐検証済みの規則（旧スタック、40件）: 2ターン目までに
+            # 手札にあるタイフーンは呪文面で打つ方が良い。部品が薄い
+            # 手ほど探索はクリーチャーを優先して掘りを後回しにするが、
+            # 掘りの価値はまさに薄い手にある
+            for i, o in enumerate(d["options"]):
+                p = o["key"].split(":")
+                if (len(p) == 3 and p[0] == "play" and p[2] == "1"
+                        and p[1] in ("dm26ex2-071", "dmpromoy22-p51")):
+                    return [[i]]
         restrained = (eng is not None
                       and sol.own_turn(eng, d["player"]) <= self.restrain_until_turn)
         if self.feasibility_release and eng is not None:
