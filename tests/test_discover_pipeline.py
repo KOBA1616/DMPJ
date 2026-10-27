@@ -801,3 +801,110 @@ def test_micro_candidates_without_pipeline_no_recursion():
     finally:
         sol.candidates = orig
     assert out[0] == [1]
+
+
+def _hand_decision(eng, kind="choose_cards"):
+    hand = eng.s.zones["hand"][0]
+    if kind == "charge":
+        options = [{"key": "pass"}] + [
+            {"key": f"charge:{eng.s.cards[c].defn}", "cid": c} for c in hand]
+    else:
+        options = [{"key": f"hand:{eng.s.cards[c].defn}:0", "cid": c}
+                   for c in hand]
+    return {"kind": kind, "player": 0, "min": 1, "max": 1,
+            "options": options}
+
+
+def test_drag_hand_guard_keeps_one_copy(rules):
+    """手札ドラゲリオン絶対保持: 最後の1枚を捨てる/置く候補を落とす。"""
+    import dmsim.solitaire as sol
+    micro = MicroPolicy({}, win_by="effect")
+    micro.drag_hand_guard = True
+    eng = setup(rules, {"hand": [DRAG, "dm01-080"], "mana": MANA,
+                        "graveyard": []})
+    d = _hand_decision(eng)
+    drag_idx = next(i for i, o in enumerate(d["options"])
+                    if eng.s.cards[o["cid"]].defn == DRAG)
+    out = micro.candidates(eng, d, sol.Weights())
+    assert out and all(drag_idx not in c for c in out)
+    # チャージでも同様
+    d2 = _hand_decision(eng, kind="charge")
+    drag_idx2 = next(i for i, o in enumerate(d2["options"])
+                     if o.get("cid") is not None
+                     and eng.s.cards[o["cid"]].defn == DRAG)
+    out2 = micro.candidates(eng, d2, sol.Weights())
+    assert out2 and all(drag_idx2 not in c for c in out2)
+    # 2枚あれば1枚は捨ててよい
+    eng3 = setup(rules, {"hand": [DRAG, DRAG, "dm01-080"], "mana": MANA,
+                         "graveyard": []})
+    d3 = _hand_decision(eng3)
+    out3 = micro.candidates(eng3, d3, sol.Weights())
+    assert any(eng3.s.cards[d3["options"][c[0]]["cid"]].defn == DRAG
+               for c in out3 if c)
+    # ガード無効なら介入しない
+    micro.drag_hand_guard = False
+    out4 = micro.candidates(eng, d, sol.Weights())
+    assert any(drag_idx in c for c in out4)
+
+
+def test_feasibility_release_replaces_calendar(rules):
+    """到達可能性ベースの解除: 暦を過ぎても届く間は自制し、
+    証明可能に届かなければ暦の中でも解除する。"""
+    import dmsim.solitaire as sol
+    d = {"kind": "attack", "player": 0, "min": 0, "max": 1,
+         "options": [{"key": "attack:T001:player"}, {"key": "pass"}]}
+
+    def make(grave, mana):
+        micro = MicroPolicy({}, win_by="effect")
+        micro.loop_priority = True
+        micro.intent = "setup"
+        micro.feasibility_release = True
+        micro.deck_totals = {DRAG: 2, SAGA: 4, SHAKO: 2}
+        eng = setup(rules, {"hand": [SAGA], "mana": mana,
+                            "graveyard": grave})
+        eng.s.turn = 15   # 自分のターン8（暦の上限7を過ぎている）
+        assert sol.own_turn(eng, 0) == 8
+        return micro, eng
+
+    # ドラゲリオンがまだ届く: 暦を過ぎても攻撃は pass のみ
+    micro, eng = make([], MANA)
+    assert micro.candidates(eng, d, sol.Weights()) == [[1]]
+    # 両コピーが墓地とマナで数え切れた: 到達不能なので解除される
+    micro2, eng2 = make([DRAG], [DRAG] + MANA)
+    out = micro2.candidates(eng2, d, sol.Weights())
+    assert out != [[1]] and any(0 in c for c in out)
+    # 到達可能性モードでなければ、暦を過ぎれば従来通り解除される
+    micro3, eng3 = make([], MANA)
+    micro3.feasibility_release = False
+    out3 = micro3.candidates(eng3, d, sol.Weights())
+    assert out3 != [[1]] and any(0 in c for c in out3)
+
+
+def test_feasibility_v2_entry_alone_does_not_release(rules):
+    """到達可能性 v2: 入口到達だけでは攻撃自制を解除しない。
+    解除は組み立て完了か、ドラゲリオンが場に立つときだけ。"""
+    import dmsim.solitaire as sol
+    d = {"kind": "attack", "player": 0, "min": 0, "max": 1,
+         "options": [{"key": "attack:T001:player"}, {"key": "pass"}]}
+
+    def make(bz):
+        micro = MicroPolicy({}, win_by="effect")
+        micro.loop_priority = True
+        micro.intent = "setup"
+        micro.feasibility_release = True
+        micro.deck_totals = {DRAG: 2, SAGA: 4, SHAKO: 2}
+        micro.entry_spec = {"grave_creatures_min": 0, "mana_min": 0,
+                            "conditions": []}   # 入口は常に到達扱い
+        eng = setup(rules, {"hand": [SAGA], "mana": MANA,
+                            "graveyard": [], "bz": bz})
+        eng.s.turn = 15
+        assert micro.loop_ready(eng, 0)
+        return micro, eng
+
+    # 入口到達のみ・組み立て未完・ドラゲ不在: 暦を過ぎても自制が続く
+    micro, eng = make([])
+    assert micro.candidates(eng, d, sol.Weights()) == [[1]]
+    # ドラゲリオンが場に立てば仕上げとして解除される
+    micro2, eng2 = make([DRAG])
+    out = micro2.candidates(eng2, d, sol.Weights())
+    assert out != [[1]] and any(0 in c for c in out)

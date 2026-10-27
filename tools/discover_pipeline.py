@@ -1143,6 +1143,14 @@ class MicroPolicy:
                                     # 候補を外す（charge_critical 参照）。
                                     # マナに置いた部品も墓地と同様に取り戻せず、
                                     # 実測では効果勝ちが消えていた（v29）
+    drag_hand_guard: bool = False   # 手札のドラゲリオンを0にする選択
+                                    # （破棄・チャージ）を、代替がある限り
+                                    # 候補から落とす。設定前後を問わない
+    feasibility_release: bool = False
+                                    # True なら攻撃自制の解除を暦ではなく
+                                    # 組み立ての到達可能性で決める（下記
+                                    # loop_infeasible）。暦の上限は安全弁として
+                                    # 自分のターン10まで＋山札2枚以下で解除
     deck_totals: dict = field(default_factory=dict)
                                     # 自分のデッキリスト {カードID: 枚数}。
                                     # charge_guard の断定に使う
@@ -1180,6 +1188,32 @@ class MicroPolicy:
         for zone in ("hand", "bz", "graveyard"):
             here.update(eng.s.cards[c].defn for c in z[zone][me])
         return all(p in here for p in self.core_pieces)
+
+    def loop_infeasible(self, eng, me: int) -> bool:
+        """組み立てが証明可能に到達不能か（公開情報とデッキ総数だけから）。
+
+        ドラゲリオン: 進化するコピーは手札から要り、墓地・マナからは
+        戻せない。全コピーがその2ゾーンで数え切れれば到達不能。
+        サガ: マナだけが死に場所（墓地は蘇生・進化元として生きる）。
+        マナ以外に最大でも2枚そろわなければ設定そのものが作れない。
+        総数が分からなければ断定しない（False）。"""
+        if not self.deck_totals:
+            return False
+        z = eng.s.zones
+        cards = eng.s.cards
+
+        def count(defn, zone):
+            return sum(1 for c in z[zone][me] if cards[c].defn == defn)
+
+        total_drag = self.deck_totals.get(DRAG)
+        if total_drag is not None and (
+                count(DRAG, "graveyard") + count(DRAG, "mana") >= total_drag):
+            return True
+        total_saga = self.deck_totals.get(SAGA)
+        if total_saga is not None and (
+                total_saga - count(SAGA, "mana") < 2):
+            return True
+        return False
 
     def loop_ready(self, eng, me: int) -> bool:
         """到達の条件: ループが回り始められる状態か。
@@ -1231,10 +1265,70 @@ class MicroPolicy:
                         if not any(i in crit for i in c)]
                 if kept:
                     return [list(c) for c in kept]
+        if (self.drag_hand_guard and eng is not None
+                and d["kind"] in ("choose_cards", "charge")):
+            # 手札のドラゲリオンを0にする選択を落とす。進化するコピーは
+            # 手札から要り、墓地・マナからは戻せない。代替が無い場合は
+            # 介入しない。プレイ（main）と進化元選択は対象外。
+            # choose_cards は全選択肢が手札のカードの判断（破棄等）だけ
+            me = d["player"]
+            if d["kind"] == "choose_cards":
+                hand_ids = set(eng.s.zones["hand"][me])
+                if any(o.get("cid") is None or o["cid"] not in hand_ids
+                       for o in d["options"]):
+                    hand_ids = None
+            else:
+                hand_ids = set()
+            hand_drag = 0
+            if hand_ids is not None:
+                hand_drag = sum(1 for c in eng.s.zones["hand"][me]
+                                if eng.s.cards[c].defn == DRAG)
+            if hand_drag >= 1:
+                def zeroes_drag(cand):
+                    n = 0
+                    for i in cand:
+                        cid = d["options"][i].get("cid")
+                        if (cid is not None
+                                and eng.s.cards[cid].defn == DRAG
+                                and eng.s.cards[cid].zone == "hand"):
+                            n += 1
+                    return n >= hand_drag
+                base = _base_candidates(eng, d, w, cap)
+                kept = [c for c in base if not zeroes_drag(c)]
+                if kept:
+                    return [list(c) for c in kept]
+        restrained = (eng is not None
+                      and sol.own_turn(eng, d["player"]) <= self.restrain_until_turn)
+        if self.feasibility_release and eng is not None:
+            # 解除は暦ではなく到達可能性で決める: 証明可能に届かないなら
+            # 暦の中でも解除し、届く間は暦を過ぎても自制を続ける。
+            # 安全弁: 自分のターン10まで。さらに、残り山札が4枚以下で
+            # 組み立て未完なら、組み立て+仕上げが山札切れに間に合わない
+            # ので解除する（山札予算 = 必要な掘り+仕上げのターン）
+            deck_n = len(eng.s.zones["deck"][d["player"]])
+            if self.loop_infeasible(eng, d["player"]):
+                restrained = False
+            elif (deck_n <= 4
+                    and not assembly_done(describe_public(eng, d["player"]),
+                                          deck_n)):
+                restrained = False
+            elif (not restrained and sol.own_turn(eng, d["player"]) <= 10
+                    and deck_n > 2):
+                restrained = True
+        ready = (eng is not None and self.loop_ready(eng, d["player"]))
+        if self.feasibility_release and eng is not None and ready:
+            # 入口到達（点火の予測）だけでは解除しない。解除は組み立て
+            # 完了か、仕上げ役が場に立っているときに限る。入口条件は
+            # 組み立てよりずっと弱く、ここが攻撃勝ちの主経路だった
+            desc = describe_public(eng, d["player"])
+            if not (assembly_done(desc,
+                                  len(eng.s.zones["deck"][d["player"]]))
+                    or desc[DRAG]["bz"] >= 1):
+                ready = False
         if (self.loop_priority and d["kind"] == "attack" and eng is not None
                 and self.intent != "execute"
-                and sol.own_turn(eng, d["player"]) <= self.restrain_until_turn
-                and not self.loop_ready(eng, d["player"])):
+                and restrained
+                and not ready):
             # ループの成立を優先する間は殴らない。回り始められる状態になった後と
             # キルの狙いのターンでは、攻撃時効果やリーサルのために攻撃を残す
             keys = [o["key"] for o in d["options"]]
