@@ -361,7 +361,7 @@ def assembly_candidates(eng, d, w, cap: int = 6):
     """組み立てへの操舵つき候補生成（sol.candidates と同じ形）。
 
     交換の判断で、目標の組み立てに資する選択を前に置く。局面の揃い
-    具合で3つのモードを切り替える。
+    具合でモードを切り替える。
     - 通常: 攻撃は pass。捨てる場面では墓地目標（未達）を先に送り、
       ドラゲリオンと最後のサガを守る。掘る場面では ドラゲリオン >
       墓地目標 > サガ。蘇生の場面ではサガ（周期の維持）> イザナギ
@@ -369,8 +369,13 @@ def assembly_candidates(eng, d, w, cap: int = 6):
     - 最終周回（部品の3つ以上が揃うか山札6枚以下）: 揃えた部品を
       崩さない。蘇生では置いた墓地目標を最後尾に回して守り、
       サガの蘇生で残りの交換を締める。
-    - 仕上げ（組み立て目標に到達）: そのターンのうちに勝ちへ移る。
-      攻撃を解禁し、ドラゲリオンのプレイと墓地3枚の蘇生を前に置く。
+    - 仕上げ（山札2枚以下）: 操舵は手を引く。組み立て済みの局面は
+      素の探索でも台本でも勝てることが実測で分かっており、人手の
+      仕上げ順序はかえって手順を壊した（実測 0/8）。条件を山札の
+      枚数だけにしているのは、仕上げの最中に部品が場や墓地を
+      移動して組み立て条件が点滅し、操舵が再介入するのを防ぐため。
+      山札が2枚以下なら交換は終わっており、残りはすべて仕上げの
+      判断になる。
     それ以外は基礎候補の順序を保つ。
     """
     me = d["player"]
@@ -381,13 +386,12 @@ def assembly_candidates(eng, d, w, cap: int = 6):
     z = eng.s.zones
     desc = describe_public(eng, me)
     deck_n = len(z["deck"][me])
-    done = assembly_done(desc, deck_n)
+    if deck_n <= 2:
+        return out                    # 仕上げでは操舵しない（山札でラッチ）
     placed = sum([desc[c]["graveyard"] >= 1 for c in ASSEMBLY_GRAVE]
                  + [desc[DRAG]["hand"] >= 1])
-    final = done or placed >= 3 or deck_n <= 6
+    final = placed >= 3 or deck_n <= 6
     if d["kind"] == "attack":
-        if done:
-            return out                # 仕上げでは攻撃（攻撃時効果含む）を解禁
         if "pass" in keys:
             return [[keys.index("pass")]]
         return out
@@ -423,15 +427,6 @@ def assembly_candidates(eng, d, w, cap: int = 6):
                 return 4
             if cid in grave_ids:
                 # 蘇生・回収の場面
-                if done:
-                    # 仕上げ: 墓地の3枚を順に起こす
-                    if defn == SHAKO:
-                        return 0
-                    if defn == IWA:
-                        return 1
-                    if defn == IZA:
-                        return 2
-                    return 5
                 if defn == SAGA:
                     return 0            # 周期の維持・最終周回の締め
                 if final and defn in ASSEMBLY_GRAVE:
@@ -458,12 +453,6 @@ def assembly_candidates(eng, d, w, cap: int = 6):
             if not k.startswith("play:"):
                 return 3
             defn = k.split(":")[1]
-            if done:
-                if defn == DRAG:
-                    return 0            # 仕上げの本体
-                if defn == SAGA:
-                    return 1            # 蘇生の連鎖を回す
-                return 4
             if defn == SAGA and not saga_config(desc):
                 return 0
             if defn in dig:
@@ -475,6 +464,56 @@ def assembly_candidates(eng, d, w, cap: int = 6):
             return 4
         return [list(c) for c in sorted(out, key=tier)]
     return out
+
+
+def retention_pick(eng, d, me: int = ME):
+    """手札からの選択（捨てる場面）に単一の保持優先順位を適用する。
+
+    台本や方策の分岐ごとに保持ルールがばらつくと、掘削が進んで手札が
+    キーパーツで濃くなった場面で保持が漏れる（実測: ドラゲリオンを
+    1ターンに4回捨てた）。ここでは判断の出所によらず、手札だけから
+    選ぶ判断すべてに同じ順位を強制する。戻り値は回答の添字リスト、
+    対象でない判断では None。
+    順位（捨てやすい順）: 墓地目標（未達）> 対象外のクリーチャー >
+    対象外の呪文 > 複製のある掘り札 > 既に置いた目標の余り >
+    ドラゲリオンの余り > サガの余り。最後のドラゲリオンと、到達
+    可能性を切るサガは、他に選択肢が無いときだけ捨てる。
+    """
+    if d["kind"] != "choose_cards" or eng is None:
+        return None
+    me = d["player"]
+    z = eng.s.zones
+    hand_ids = set(z["hand"][me])
+    opts = d["options"]
+    if any(o.get("cid") is None or o["cid"] not in hand_ids for o in opts):
+        return None
+    desc = describe_public(eng, me)
+    dig = ("dm26ex2-071", "dmpromoy22-p51", "dmex10-020")
+    from collections import Counter
+    hand_defns = Counter(eng.s.cards[c].defn for c in z["hand"][me])
+
+    def rank(o):
+        cid = o["cid"]
+        defn = eng.s.cards[cid].defn
+        if defn in ASSEMBLY_GRAVE and desc[defn]["graveyard"] == 0:
+            return 0
+        if defn in ASSEMBLY_GRAVE:
+            return 4            # 置き済みの余り
+        if defn == DRAG:
+            return 5 if hand_defns[DRAG] >= 2 else 9
+        if defn == SAGA:
+            total = (desc[SAGA]["bz"] + desc[SAGA]["graveyard"]
+                     + desc[SAGA]["hand"])
+            return 8 if total >= 3 else 9
+        if defn in dig and hand_defns[defn] >= 2:
+            return 3
+        if "creature" in eng.chars(cid)["types"]:
+            return 1
+        return 2
+
+    n = max(1, d.get("min", 1))
+    order = sorted(range(len(opts)), key=lambda i: (rank(opts[i]), i))
+    return order[:n]
 
 
 PUBLIC_ZONES = ("hand", "bz", "graveyard", "mana")

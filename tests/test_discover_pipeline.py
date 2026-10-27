@@ -603,6 +603,50 @@ def test_assembly_candidates_revive_modes(rules):
     assert set(picked[1:]) == {iza, IWA, SHAKO}
 
 
+def test_retention_pick_protects_last_dragelion(rules):
+    """保持の優先順位: 捨てられる札がある限り、最後のドラゲリオンは捨てない。"""
+    from discover_pipeline import retention_pick
+    # 実測で漏れた形の手札: [ドラゲ, ドラゲ, サガ, ドラゲ, 緊タイ]
+    eng = setup(rules, {"hand": [DRAG, DRAG, SAGA, DRAG, "dm26ex2-071"],
+                        "mana": MANA, "graveyard": []})
+    hand = eng.s.zones["hand"][0]
+    d = {"kind": "choose_cards", "player": 0, "min": 1, "max": 1,
+         "options": [{"key": f"hand:{eng.s.cards[c].defn}:0", "cid": c} for c in hand]}
+    pick = retention_pick(eng, d)
+    assert eng.s.cards[hand[pick[0]]].defn == "dm26ex2-071"
+    # 墓地目標（未達のイザナギ）は先に捨てる
+    eng = setup(rules, {"hand": ["dm22ex1-025", DRAG], "mana": MANA, "graveyard": []})
+    hand = eng.s.zones["hand"][0]
+    d = {"kind": "choose_cards", "player": 0, "min": 1, "max": 1,
+         "options": [{"key": f"hand:{eng.s.cards[c].defn}:0", "cid": c} for c in hand]}
+    pick = retention_pick(eng, d)
+    assert eng.s.cards[hand[pick[0]]].defn == "dm22ex1-025"
+    # 手札以外からの選択には介入しない
+    d2 = {"kind": "choose_cards", "player": 0, "min": 1, "max": 1,
+          "options": [{"key": "deck:x:0", "cid": 99999}]}
+    assert retention_pick(eng, d2) is None
+
+
+def test_assembly_candidates_disengages_when_assembled(rules):
+    """組み立て到達後は操舵しない（人手の仕上げ順序が手順を壊した実測への回帰防止）。"""
+    from dmsim import scenario as sc
+    from discover_pipeline import _base_candidates
+    spec = {"p0": {"hand": [DRAG], "bz": [SAGA], "mana": MANA,
+                   "graveyard": ["dm22ex1-025", IWA, SHAKO, SAGA],
+                   "deck": ["dm01-080", "dm01-027"]},
+            "p1": {}, "deck_size": 40, "deck_left": [2, 40], "seed": 3}
+    eng = sc.build(rules, spec)
+    assert len(eng.s.zones["deck"][0]) == 2
+    hand = eng.s.zones["hand"][0]
+    d = {"kind": "main", "player": 0, "min": 1, "max": 1,
+         "options": [{"key": f"play:{DRAG}"}, {"key": "pass"}]}
+    assert assembly_candidates(eng, d, None) == _base_candidates(eng, d, None, 6)
+    d2 = {"kind": "choose_cards", "player": 0, "min": 1, "max": 1,
+          "options": [{"key": f"hand:{DRAG}:0", "cid": hand[0]},
+                      {"key": "hand:dm01-080:0", "cid": hand[0]}]}
+    assert assembly_candidates(eng, d2, None) == _base_candidates(eng, d2, None, 6)
+
+
 def test_micro_candidates_without_pipeline_no_recursion():
     """MicroPolicy を Pipeline を経ずに差し込んでも再帰しない（v1 の不具合の回帰防止）。"""
     import dmsim.solitaire as sol
