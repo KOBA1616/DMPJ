@@ -41535,3 +41535,35 @@ cards:
   source:
     official: dm01-003
     review: pending
+- id: dm01-005
+  name: 妖姫シルフィ
+  types:
+  - creature
+  civs:
+  - darkness
+  cost: 8
+  power: 4000
+  races:
+  - ダークロード
+  mana: 1
+  text: このクリーチャーがバトルゾーンに出たとき、各プレイヤーはバトルゾーンにあるパワー3000以下のクリーチャーすべてを、それぞれの墓地に置く。
+  abilities:
+  - kind: trigger
+    when:
+      event: move
+      to: bz
+      subject: self
+    effect:
+    - op: destroy
+      select:
+        zone: bz
+        owner: any
+        filter:
+          types:
+          - creature
+          power_le: 3000
+        count: all
+  source:
+    official: dm01-005
+    review: pending
+    notes: 原文は「それぞれの墓地に置く」。dm01-027 の例に倣い、現行表記の「破壊する」として destroy にした
