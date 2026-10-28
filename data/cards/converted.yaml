@@ -84031,3 +84031,1531 @@ cards:
   keywords:
   - blocker
   - cannot_attack_player
+- id: dm24bd6-056
+  name: ロジック・Re:キューブ
+  types:
+  - spell
+  civs:
+  - light
+  cost: 2
+  mana: 1
+  text: '{GS} G・ストライク（この呪文を自分のシールドゾーンから手札に加える時、表向きにし、相手のクリーチャーを１体選んでもよい。このターン、そのクリーチャーは攻撃できない）
+
+    自分の山札の上から４枚を見る。その中から呪文を１枚表向きにし、手札に加えてもよい。残りを好きな順序で山札の下に置く。'
+  spell:
+  - op: choose
+    select:
+      zone: deck
+      owner: you
+      from_top: 4
+      look: true
+      count: all
+    as: a
+  - op: may
+    body:
+    - op: move
+      select:
+        ref: a
+        filter:
+          types:
+          - spell
+        count: 1
+      to: hand
+      reason: draw
+  - op: move
+    select:
+      ref: a
+      count: all
+    to: deck
+    reason: put
+  source:
+    official: dm24bd6-056
+    review: pending
+    aliases:
+    - dmrp17-065
+  keywords:
+  - g_strike
+- id: dm24bd6-060
+  name: 闇鎧亜ジャック・アルカディアス
+  types:
+  - creature
+  civs:
+  - darkness
+  - fire
+  cost: 4
+  power: 1000
+  races:
+  - スピリット・クォーツ
+  - ロスト・クルセイダー
+  mana: 1
+  text: 'S・トリガー（このクリーチャーをシールドゾーンから手札に加える時、コストを支払わずにすぐ召喚してもよい）
+
+    スレイヤー（このクリーチャーがバトルする時、バトルの後、相手クリーチャーを破壊する）
+
+    このクリーチャーが出た時、バトルゾーンにある相手のコスト４以下のカードを１枚選び、破壊する。'
+  abilities:
+  - kind: trigger
+    when:
+      event: move
+      to: bz
+      subject: self
+    effect:
+    - op: destroy
+      select:
+        zone: bz
+        owner: opp
+        filter:
+          cost_le: 4
+        count: 1
+  source:
+    official: dm24bd6-060
+    review: pending
+    aliases:
+    - dm24ex2-097
+    - dmbd01-008
+    - dmex06-052
+    - dmsd15-008
+    - dmsd21-006
+    - promoy19-069
+  keywords:
+  - s_trigger
+  - slayer
+- id: dm24ex1-001
+  name: マーシャル・プリンス
+  types:
+  - creature
+  civs:
+  - light
+  cost: 5
+  power: 5000
+  races:
+  - マジック・スプラッシュ・クイーン
+  mana: 1
+  text: 'S・トリガー
+
+    ブロッカー
+
+    自分のシールドゾーンにあるスプラッシュ・クイーンに「S・トリガー」を与える。
+
+    自分のスプラッシュ・クイーン・クリーチャーが出た時、相手のクリーチャーを１体選び、タップしてもよい。'
+  abilities:
+  - kind: static
+    affects:
+      owner: you
+      zone: shield
+      filter:
+        race_has: スプラッシュ・クイーン
+    mod:
+      grant:
+      - s_trigger
+  - kind: trigger
+    when:
+      event: move
+      to: bz
+      subject:
+        owner: you
+        filter:
+          race_has: スプラッシュ・クイーン
+        other: true
+    effect:
+    - op: may
+      body:
+      - op: tap
+        select:
+          zone: bz
+          owner: opp
+          filter:
+            types:
+            - creature
+          count: 1
+  source:
+    official: dm24ex1-001
+    review: pending
+    notes: 'シールドゾーンへのキーワード付与は affects の zone: shield で表した'
+  keywords:
+  - s_trigger
+  - blocker
+- id: dm24ex1-002
+  name: 海姫龍 ライベルモット・ビターズ
+  types:
+  - creature
+  - evolution
+  civs:
+  - water
+  cost: 5
+  power: 7000
+  races:
+  - スプラッシュ・クイーン・ドラゴン
+  mana: 1
+  evolve_from:
+    race_has: スプラッシュ・クイーン
+  text: 'S・トリガー
+
+    進化：スプラッシュ・クイーン・クリーチャー１体の上に置く。
+
+    W・ブレイカー
+
+    このクリーチャーが攻撃する時、自分の手札を３枚までシールド化する。その後、同じ数の自分のシールドをブレイクする。'
+  abilities:
+  - kind: trigger
+    when:
+      event: attack
+      subject: self
+    effect:
+    - op: repeat
+      times: 3
+      body:
+      - op: may
+        body:
+        - op: move
+          select:
+            zone: hand
+            owner: you
+            count: 1
+          to: shield
+          reason: charge
+          as: s
+    - op: break
+      count:
+        count:
+          ref: s
+      player: you
+  source:
+    official: dm24ex1-002
+    review: pending
+    notes: 置いた枚数は move の as で保持し、break の count 式で参照した
+    aliases:
+    - dmex12-s07
+  keywords:
+  - s_trigger
+  - double_breaker
+- id: dm24ex1-004
+  name: アリス・ルピア
+  types:
+  - creature
+  civs:
+  - fire
+  cost: 8
+  power: 8000
+  races:
+  - アーマード・ファイアー・バード
+  mana: 1
+  text: '{GS} G・ストライク
+
+    W・ブレイカー
+
+    このクリーチャーが出た時、自分の山札の上から３枚を表向きにする。その中から、名前が《アリス・ルピア》ではないファイアー・バード・クリーチャーを好きな数出し、残りを墓地に置く。それらのクリーチャーに「スピードアタッカー」を与え、このターンの終わりに破壊する。'
+  abilities:
+  - kind: trigger
+    when:
+      event: move
+      to: bz
+      subject: self
+    effect:
+    - op: choose
+      select:
+        zone: deck
+        owner: you
+        from_top: 3
+        look: true
+        count: all
+      as: a
+    - op: play_free
+      select:
+        ref: a
+        filter:
+          types:
+          - creature
+          race_has: ファイアー・バード
+          not_name: アリス・ルピア
+        count: any
+      as: p
+    - op: move
+      select:
+        ref: a
+        count: all
+      to: graveyard
+      reason: put
+    - op: modify
+      select:
+        ref: p
+        count: all
+      mod:
+        grant:
+        - speed_attacker
+      duration: end_of_turn
+    - op: delayed_trigger
+      when:
+        event: turn_end
+      effect:
+      - op: destroy
+        select:
+          ref: p
+          count: all
+  source:
+    official: dm24ex1-004
+    review: pending
+  keywords:
+  - g_strike
+  - double_breaker
+- id: dm24ex1-016
+  name: 料理猫のプワソン
+  types:
+  - creature
+  - evolution
+  civs:
+  - light
+  cost: 8
+  power: 9500
+  races:
+  - ドリームメイト
+  mana: 1
+  evolve_from:
+    races:
+    - ドリームメイト
+  text: 'シンパシー：ドリームメイト・クリーチャー（自分のドリームメイト・クリーチャー１体につき、このクリーチャーの召喚コストを１少なくする。ただしコストは０以下にはならない）
+
+    進化：ドリームメイト・クリーチャー１体の上に置く。
+
+    W・ブレイカー
+
+    このクリーチャーが出た時または攻撃する時、カードを１枚引く。その後、コスト５以下のドリームメイトを１つ、自分の手札から出してもよい。
+
+    自分のドリームメイト・クリーチャーすべてに「ブロッカー」を与える。'
+  abilities:
+  - kind: static
+    affects:
+      owner: you
+      zone: hand
+      filter:
+        types:
+        - creature
+    mod:
+      cost:
+        amount: -1
+        count:
+          zone: bz
+          owner: you
+          filter:
+            race_has: ドリームメイト
+      cost_min: 2
+  - kind: trigger
+    when:
+      event: move
+      to: bz
+      subject: self
+    effect:
+    - op: draw
+      count: 1
+    - op: may
+      body:
+      - op: play_free
+        select:
+          zone: hand
+          owner: you
+          filter:
+            race_has: ドリームメイト
+            cost_le: 5
+          count: 1
+  - kind: trigger
+    when:
+      event: attack
+      subject: self
+    effect:
+    - op: draw
+      count: 1
+    - op: may
+      body:
+      - op: play_free
+        select:
+          zone: hand
+          owner: you
+          filter:
+            race_has: ドリームメイト
+            cost_le: 5
+          count: 1
+  - kind: static
+    affects:
+      owner: you
+      zone: bz
+      filter:
+        race_has: ドリームメイト
+    mod:
+      grant:
+      - blocker
+  source:
+    official: dm24ex1-016
+    review: pending
+    notes: シンパシーは cost の count 式で表した
+  keywords:
+  - double_breaker
+- id: dm24ex1-026
+  name: 絶対華麗！マーシャル歌劇団
+  types:
+  - spell
+  civs:
+  - light
+  - water
+  cost: 8
+  races:
+  - スプラッシュ・クイーンの集い
+  mana: 1
+  text: 'S・トリガー
+
+    自分のスプラッシュ・クイーン・クリーチャー１体につき、カードを１枚引いてもよい。その後、スプラッシュ・クイーン・クリーチャーを１体、自分の手札から出してもよい。'
+  spell:
+  - op: repeat
+    times:
+      count:
+        zone: bz
+        owner: you
+        filter:
+          types:
+          - creature
+          race_has: スプラッシュ・クイーン
+    body:
+    - op: may
+      body:
+      - op: draw
+        count: 1
+  - op: may
+    body:
+    - op: play_free
+      select:
+        zone: hand
+        owner: you
+        filter:
+          types:
+          - creature
+          race_has: スプラッシュ・クイーン
+        count: 1
+  source:
+    official: dm24ex1-026
+    review: pending
+    notes: 引く枚数は repeat の times に count 式を渡した
+  keywords:
+  - s_trigger
+- id: dm24ex1-034
+  name: グランメゾン・ドゥ・メイ様の日常
+  types:
+  - spell
+  civs:
+  - light
+  - fire
+  - nature
+  cost: 5
+  races:
+  - ドリームメイトの集い
+  mana: 1
+  text: 'S・トリガー
+
+    次のうちいずれか１つを選ぶ。自分のドリームメイトがあれば、両方を選んでもよい。
+
+    ▶相手のクリーチャーをすべてタップする。
+
+    ▶自分の山札の上から１枚目をマナゾーンに置く。その後、自分のマナゾーンにあるカードの枚数以下のコストを持つ相手のクリーチャーを１体選び、破壊する。'
+  spell:
+  - op: if
+    cond:
+      exists:
+        zone: bz
+        owner: you
+        filter:
+          race_has: ドリームメイト
+    then:
+    - op: modal
+      count: 2
+      modes:
+      - - op: tap
+          select:
+            zone: bz
+            owner: opp
+            filter:
+              types:
+              - creature
+            count: all
+      - - op: mana_put
+          select:
+            zone: deck
+            owner: you
+            from_top: 1
+            count: 1
+        - op: destroy
+          select:
+            zone: bz
+            owner: opp
+            filter:
+              types:
+              - creature
+              cost_le:
+                count:
+                  zone: mana
+                  owner: you
+            count: 1
+    else:
+    - op: modal
+      count: 1
+      modes:
+      - - op: tap
+          select:
+            zone: bz
+            owner: opp
+            filter:
+              types:
+              - creature
+            count: all
+      - - op: mana_put
+          select:
+            zone: deck
+            owner: you
+            from_top: 1
+            count: 1
+        - op: destroy
+          select:
+            zone: bz
+            owner: opp
+            filter:
+              types:
+              - creature
+              cost_le:
+                count:
+                  zone: mana
+                  owner: you
+            count: 1
+  source:
+    official: dm24ex1-034
+    review: pending
+    notes: 両方選べる条件は if で modal の count を切り替えた。コスト上限は filter の cost_le に count 式を渡した
+  keywords:
+  - s_trigger
+- id: dm24ex1-037
+  name: マーシャル・クイーン
+  types:
+  - creature
+  - evolution
+  civs:
+  - water
+  cost: 3
+  power: 5000
+  races:
+  - スプラッシュ・クイーン
+  mana: 1
+  evolve_from:
+    races:
+    - スプラッシュ・クイーン
+  text: 進化：スプラッシュ・クイーン・クリーチャー１体の上に置く。このクリーチャーが出た時、自分の手札を３枚までシールド化する。その後、同じ数の自分のシールドをブレイクする。
+  abilities:
+  - kind: trigger
+    when:
+      event: move
+      to: bz
+      subject: self
+    effect:
+    - op: repeat
+      times: 3
+      body:
+      - op: may
+        body:
+        - op: move
+          select:
+            zone: hand
+            owner: you
+            count: 1
+          to: shield
+          reason: charge
+          as: s
+    - op: break
+      count:
+        count:
+          ref: s
+      player: you
+  source:
+    official: dm24ex1-037
+    review: pending
+    aliases:
+    - dm16-009
+    - dmex12-030
+    - dmex17-w12
+    - dmx12b-069
+- id: dm24ex1-040
+  name: 冥土人形アカイブ・ヤップップ
+  types:
+  - creature
+  civs:
+  - darkness
+  cost: 2
+  power: 8000
+  races:
+  - デスパペット
+  mana: 1
+  text: 'W・ブレイカー
+
+    このクリーチャーが出た時、自分のエレメントを１つ破壊する。その後、各プレイヤーは自身のエレメントを１つ選び、破壊する。'
+  abilities:
+  - kind: trigger
+    when:
+      event: move
+      to: bz
+      subject: self
+    effect:
+    - op: destroy
+      select:
+        zone: bz
+        owner: you
+        count: 1
+    - op: destroy
+      select:
+        zone: bz
+        owner: you
+        chooser: you
+        count: 1
+    - op: destroy
+      select:
+        zone: bz
+        owner: opp
+        chooser: opp
+        count: 1
+  source:
+    official: dm24ex1-040
+    review: pending
+    notes: エレメントはバトルゾーンのカード全般として types 無指定で表した
+  keywords:
+  - double_breaker
+- id: dm24ex1-042
+  name: 幻獣提督ウー・ワンダフォー
+  types:
+  - creature
+  civs:
+  - nature
+  cost: 7
+  power: 5000
+  races:
+  - ドリームメイト
+  - ビークル・ビー
+  mana: 1
+  text: このクリーチャーが出た時、自分の山札の上から３枚を表向きにする。その中から、ドリームメイトとビークル・ビーをすべて手札に加え、残りを好きな順序で山札の下に置く。相手のターン中にこのクリーチャーが自分の手札から捨てられる時、墓地に置くかわりに出してもよい。
+  abilities:
+  - kind: trigger
+    when:
+      event: move
+      to: bz
+      subject: self
+    effect:
+    - op: choose
+      select:
+        zone: deck
+        owner: you
+        from_top: 3
+        look: true
+        count: all
+      as: a
+    - op: move
+      select:
+        ref: a
+        filter:
+          races:
+          - ドリームメイト
+          - ビークル・ビー
+        count: all
+      to: hand
+      reason: draw
+    - op: move
+      select:
+        ref: a
+        count: all
+      to: deck
+      reason: put
+  - kind: replace
+    when:
+      event: move
+      from: hand
+      to: graveyard
+      subject: self
+    if:
+      is_turn: opp
+    optional: true
+    instead:
+    - op: move
+      select:
+        zone: hand
+        owner: you
+        filter:
+          name_has: ワンダフォー
+        count: 1
+      to: bz
+      reason: summon
+  source:
+    official: dm24ex1-042
+    review: pending
+    notes: 種族リストは OR のため2種族まとめて絞れた。捨てられる時の置換は instead でバトルゾーンへ出した
+    aliases:
+    - dm21-018
+    - dmx09-021
+- id: dm24ex1-043
+  name: 激烈元気モーニンジョー
+  types:
+  - creature
+  civs:
+  - nature
+  cost: 5
+  power: 1000
+  races:
+  - ドリームメイト
+  mana: 1
+  text: 'S・トリガー
+
+    このクリーチャーが出た時、ドリームメイト・クリーチャーを１体、自分の手札から出してもよい。'
+  abilities:
+  - kind: trigger
+    when:
+      event: move
+      to: bz
+      subject: self
+    effect:
+    - op: may
+      body:
+      - op: play_free
+        select:
+          zone: hand
+          owner: you
+          filter:
+            types:
+            - creature
+            race_has: ドリームメイト
+          count: 1
+  source:
+    official: dm24ex1-043
+    review: pending
+    aliases:
+    - dmex12-015
+  keywords:
+  - s_trigger
+- id: dm24ex1-049
+  name: 完璧妖精エールX
+  types:
+  - creature
+  civs:
+  - fire
+  - nature
+  cost: 5
+  power: 5000
+  races:
+  - スノーフェアリー
+  mana: 1
+  text: '{GS} G・ストライク（このクリーチャーを自分のシールドゾーンから手札に加える時、表向きにし、相手のクリーチャーを１体選んでもよい。このターン、そのクリーチャーは攻撃できない）
+
+    スピードアタッカー
+
+    このクリーチャーが出た時、相手のパワー6000以下のクリーチャーを１体選び、破壊する。その後、自分の他のスノーフェアリーがあれば、相手のパワー6000以下のクリーチャーをもう１体選び、破壊してもよい。'
+  abilities:
+  - kind: trigger
+    when:
+      event: move
+      to: bz
+      subject: self
+    effect:
+    - op: destroy
+      select:
+        zone: bz
+        owner: opp
+        filter:
+          types:
+          - creature
+          power_le: 6000
+        count: 1
+    - op: if
+      cond:
+        exists:
+          zone: bz
+          owner: you
+          filter:
+            race_has: スノーフェアリー
+          other: true
+      then:
+      - op: may
+        body:
+        - op: destroy
+          select:
+            zone: bz
+            owner: opp
+            filter:
+              types:
+              - creature
+              power_le: 6000
+            count: 1
+  source:
+    official: dm24ex1-049
+    review: pending
+  keywords:
+  - g_strike
+  - speed_attacker
+- faces:
+  - name: カシス・オレンジ
+    types:
+    - creature
+    civs:
+    - water
+    cost: 2
+    power: 2000
+    races:
+    - スプラッシュ・クイーン
+    abilities:
+    - kind: trigger
+      when:
+        event: move
+        to: bz
+        subject: self
+      effect:
+      - op: choose
+        select:
+          zone: deck
+          owner: you
+          from_top: 2
+          look: true
+          count: all
+        as: a
+      - op: move
+        select:
+          ref: a
+          count: any
+        to: deck
+        reason: put
+      - op: move
+        select:
+          ref: a
+          count: all
+        to: deck
+        reason: put
+        position: top
+  - name: ♥応援してくれるみんなが元気をくれ～る
+    types:
+    - spell
+    civs:
+    - water
+    cost: 4
+    spell:
+    - op: draw
+      count: 2
+  id: dm24ex1-053
+  mana: 1
+  text: 'カシス・オレンジ: このクリーチャーが出た時、自分の山札の上から２枚を見る。その中から好きな枚数を山札の下に置き、残りを好きな順序で山札の上に置く。／♥応援してくれるみんなが元気をくれ～る:
+    カードを２枚引く。'
+  source:
+    official: dm24ex1-053
+    review: pending
+    notes: 'ツインパクト。山札の上に戻す移動は position: top で表した'
+    aliases:
+    - dmex12-060
+- id: dm24ex1-054
+  name: ブルー・ハワイ
+  types:
+  - creature
+  civs:
+  - water
+  cost: 5
+  power: 2000
+  races:
+  - スプラッシュ・クイーン
+  mana: 1
+  text: 'S・トリガー（このクリーチャーをシールドゾーンから手札に加える時、コストを支払わずにすぐ召喚してもよい）
+
+    このクリーチャーが出た時、カードを３枚引く。その後、自分の手札を２枚、好きな順序で山札の上か下に置く。'
+  abilities:
+  - kind: trigger
+    when:
+      event: move
+      to: bz
+      subject: self
+    effect:
+    - op: draw
+      count: 3
+    - op: repeat
+      times: 2
+      body:
+      - op: choose
+        select:
+          zone: hand
+          owner: you
+          count: 1
+        as: c
+      - op: modal
+        modes:
+        - - op: move
+            select:
+              ref: c
+              count: all
+            to: deck
+            reason: put
+            position: top
+        - - op: move
+            select:
+              ref: c
+              count: all
+            to: deck
+            reason: put
+  source:
+    official: dm24ex1-054
+    review: pending
+    notes: 上か下かは1枚ごとの modal で選ばせた
+  keywords:
+  - s_trigger
+- id: dm24ex1-055
+  name: マリブ・リッキー
+  types:
+  - creature
+  civs:
+  - water
+  cost: 4
+  power: 2000
+  races:
+  - スプラッシュ・クイーン
+  mana: 1
+  text: 'ブロッカー（このクリーチャーをタップして、相手クリーチャーの攻撃先をこのクリーチャーに変更してもよい）
+
+    自分のスプラッシュ・クイーンが出た時、カードを１枚引いてもよい。'
+  abilities:
+  - kind: trigger
+    when:
+      event: move
+      to: bz
+      subject:
+        owner: you
+        filter:
+          race_has: スプラッシュ・クイーン
+        other: true
+    effect:
+    - op: may
+      body:
+      - op: draw
+        count: 1
+  source:
+    official: dm24ex1-055
+    review: pending
+    aliases:
+    - dmex12-058
+  keywords:
+  - blocker
+- id: dm24ex1-057
+  name: チェシャ・ルピア
+  types:
+  - creature
+  civs:
+  - darkness
+  cost: 5
+  power: 1000
+  races:
+  - ファイアー・バード
+  mana: 1
+  text: 'S・トリガー（このクリーチャーをシールドゾーンから手札に加える時、コストを支払わずにすぐ召喚してもよい）
+
+    ブロッカー（このクリーチャーをタップして、相手クリーチャーの攻撃先をこのクリーチャーに変更してもよい）
+
+    スレイヤー（このクリーチャーがバトルする時、バトルの後、相手クリーチャーを破壊する）
+
+    自分のドラゴンが破壊された時、このクリーチャーが自分の墓地にあれば出す。'
+  abilities:
+  - kind: trigger
+    zone: graveyard
+    when:
+      event: move
+      to: graveyard
+      subject:
+        owner: you
+        filter:
+          race_has: ドラゴン
+    effect:
+    - op: play_free
+      select:
+        zone: graveyard
+        owner: you
+        filter:
+          name_has: チェシャ
+        count: 1
+  source:
+    official: dm24ex1-057
+    review: pending
+    notes: '墓地在住の誘発は zone: graveyard で表した'
+  keywords:
+  - s_trigger
+  - blocker
+  - slayer
+- faces:
+  - name: 完璧妖精ビスカX
+    types:
+    - creature
+    civs:
+    - fire
+    cost: 2
+    power: 5000
+    races:
+    - スノーフェアリー
+    abilities:
+    - kind: trigger
+      when:
+        event: move
+        to: bz
+        subject: self
+      effect:
+      - op: move
+        select:
+          zone: mana
+          owner: you
+          count: 1
+        to: graveyard
+        reason: put
+        as: t
+      - op: if
+        cond:
+          exists:
+            ref: t
+            filter:
+              race_has: スノーフェアリー
+        then:
+        - op: move
+          select:
+            ref: t
+            count: all
+          to: hand
+          reason: return
+  - name: 「燃え燃えズッキュン！」
+    types:
+    - spell
+    civs:
+    - fire
+    cost: 1
+    spell:
+    - op: destroy
+      select:
+        zone: bz
+        owner: opp
+        filter:
+          cost_le: 2
+        count: 1
+  id: dm24ex1-061
+  mana: 1
+  text: '完璧妖精ビスカX: このクリーチャーが出た時、カードを１枚、自分のマナゾーンから墓地に置く。それがスノーフェアリーなら、自分の墓地から手札に戻す。／「燃え燃えズッキュン！」:
+    相手のコスト２以下のエレメントを１つ選び、破壊する。'
+  source:
+    official: dm24ex1-061
+    review: pending
+    notes: ツインパクト
+- id: dm24ex1-064
+  name: 完璧妖精ゴメスX
+  types:
+  - creature
+  civs:
+  - nature
+  cost: 3
+  power: 2000
+  races:
+  - スノーフェアリー
+  mana: 1
+  text: このクリーチャーが出た時、自分のクリーチャーを１体マナゾーンに置く。その後、相手は自身のクリーチャーを１体選び、マナゾーンに置く。
+  abilities:
+  - kind: trigger
+    when:
+      event: move
+      to: bz
+      subject: self
+    effect:
+    - op: move
+      select:
+        zone: bz
+        owner: you
+        filter:
+          types:
+          - creature
+        other: true
+        count: 1
+      to: mana
+      reason: put
+    - op: move
+      select:
+        zone: bz
+        owner: opp
+        filter:
+          types:
+          - creature
+        chooser: opp
+        count: 1
+      to: mana
+      reason: put
+  source:
+    official: dm24ex1-064
+    review: pending
+    notes: 自分のクリーチャーは自身を除く他のクリーチャーとして扱った
+- id: dm24ex1-073
+  name: コスモ・ポリタン
+  types:
+  - creature
+  civs:
+  - water
+  cost: 2
+  power: 1000
+  races:
+  - スプラッシュ・クイーン
+  mana: 1
+  text: 'ブロッカー（このクリーチャーをタップして、相手クリーチャーの攻撃先をこのクリーチャーに変更してもよい）
+
+    このクリーチャーがブロックする時、カードを１枚引いてもよい。
+
+    このクリーチャーは攻撃できない。'
+  abilities:
+  - kind: trigger
+    when:
+      event: block
+      subject: self
+    effect:
+    - op: may
+      body:
+      - op: draw
+        count: 1
+  source:
+    official: dm24ex1-073
+    review: pending
+    aliases:
+    - dm31-042
+    - dmex12-091
+  keywords:
+  - blocker
+  - cannot_attack
+- id: dm24ex1-074
+  name: 冥土人形パーチェス・モールス
+  types:
+  - creature
+  civs:
+  - darkness
+  cost: 3
+  power: 3000
+  races:
+  - デスパペット
+  mana: 1
+  text: '{GS} G・ストライク（このクリーチャーを自分のシールドゾーンから手札に加える時、表向きにし、相手のクリーチャーを１体選んでもよい。このターン、そのクリーチャーは攻撃できない）
+
+    革命チェンジ：デスパペット（自分のデスパペットが攻撃する時、そのクリーチャーと手札にあるこのクリーチャーを入れ替えてもよい）
+
+    このクリーチャーが出た時、自分の山札の上から２枚を墓地に置く。その後、デスパペットを１枚、自分の墓地から手札に戻してもよい。'
+  abilities:
+  - kind: declare
+    zone: hand
+    when:
+      event: attack
+      subject:
+        owner: you
+        filter:
+          race_has: デスパペット
+    effect:
+    - op: swap
+      out:
+        ref: event.subject
+      in:
+        ref: self
+  - kind: trigger
+    when:
+      event: move
+      to: bz
+      subject: self
+    effect:
+    - op: mill
+      owner: you
+      count: 2
+    - op: may
+      body:
+      - op: move
+        select:
+          zone: graveyard
+          owner: you
+          filter:
+            race_has: デスパペット
+          count: 1
+        to: hand
+        reason: return
+  source:
+    official: dm24ex1-074
+    review: pending
+  keywords:
+  - g_strike
+- id: dm24ex1-075
+  name: 麗迭人形ジェニー
+  types:
+  - creature
+  civs:
+  - darkness
+  cost: 2
+  power: 1000
+  races:
+  - デスパペット
+  mana: 1
+  text: このクリーチャーが出た時、相手は自身の手札を１枚選び、捨てる。
+  abilities:
+  - kind: trigger
+    when:
+      event: move
+      to: bz
+      subject: self
+    effect:
+    - op: discard
+      select:
+        zone: hand
+        owner: opp
+        chooser: opp
+        count: 1
+  source:
+    official: dm24ex1-075
+    review: pending
+    aliases:
+    - dm23rp2-065
+    - dm23rp2-18a
+    - dm23rp2-20b
+    - dm23rp2x-065
+    - dm23rp2x-18a
+    - dm23rp2x-20b
+- id: dm24ex1-076
+  name: 人形の裏技ペット・パペット
+  types:
+  - spell
+  civs:
+  - darkness
+  cost: 3
+  mana: 1
+  free_if:
+    exists:
+      zone: bz
+      owner: you
+      filter:
+        race_has: デスパペット
+  text: G・ゼロ：自分のデスパペットがあれば、この呪文をコストを支払わずに唱えてもよい。相手の手札を１枚見ないで選び、捨てさせる。
+  spell:
+  - op: discard
+    select:
+      zone: hand
+      owner: opp
+      count: 1
+  source:
+    official: dm24ex1-076
+    review: pending
+    notes: G・ゼロは free_if で表した。見ないで選ぶ捨て札は look なしの選択で表した
+    aliases:
+    - dm22ex2-064
+    - dmr10-042
+- id: dm24ex1-080
+  name: マジシャン・ルピア
+  types:
+  - creature
+  civs:
+  - fire
+  cost: 2
+  power: 1000
+  races:
+  - アーマード・ファイアー・バード
+  mana: 1
+  text: このクリーチャーが出た時、自分の手札を１枚捨て、カードを１枚引く。こうして捨てた手札がファイアー・バードなら、カードをもう１枚引く。
+  abilities:
+  - kind: trigger
+    when:
+      event: move
+      to: bz
+      subject: self
+    effect:
+    - op: discard
+      select:
+        zone: hand
+        owner: you
+        count: 1
+      as: d
+    - op: draw
+      count: 1
+    - op: if
+      cond:
+        exists:
+          ref: d
+          filter:
+            race_has: ファイアー・バード
+      then:
+      - op: draw
+        count: 1
+  source:
+    official: dm24ex1-080
+    review: pending
+    notes: 捨てたカードは discard の as で保持して判定した
+    aliases:
+    - promoy24-098
+- id: dm24ex1-085
+  name: 大冒犬ヤッタルワン GS
+  types:
+  - creature
+  civs:
+  - nature
+  cost: 2
+  power: 1000
+  races:
+  - ドリームメイト
+  mana: 1
+  text: '{GS} G・ストライク（このクリーチャーを自分のシールドゾーンから手札に加える時、表向きにし、相手のクリーチャーを１体選んでもよい。このターン、そのクリーチャーは攻撃できない）
+
+    このクリーチャーが出た時、自分の手札を１枚マナゾーンに置いてもよい。'
+  abilities:
+  - kind: trigger
+    when:
+      event: move
+      to: bz
+      subject: self
+    effect:
+    - op: may
+      body:
+      - op: mana_put
+        select:
+          zone: hand
+          owner: you
+          count: 1
+  source:
+    official: dm24ex1-085
+    review: pending
+    aliases:
+    - dmrp19-093
+  keywords:
+  - g_strike
+- id: dm24ex1-sp5
+  name: 英知と追撃の宝剣
+  types:
+  - spell
+  civs:
+  - water
+  - darkness
+  cost: 7
+  mana: 1
+  text: 相手のクリーチャーを２体選ぶ。相手はその中から１体選んで手札に戻し、もう１体を破壊する。その後、カードを２枚、相手のマナゾーンから選ぶ。相手はその中から１枚選んで手札に戻し、もう１枚を墓地に置く。
+  spell:
+  - op: choose
+    select:
+      zone: bz
+      owner: opp
+      filter:
+        types:
+        - creature
+      count: 2
+    as: p
+  - op: bounce
+    select:
+      ref: p
+      chooser: opp
+      count: 1
+  - op: destroy
+    select:
+      ref: p
+      count: all
+  - op: choose
+    select:
+      zone: mana
+      owner: opp
+      count: 2
+    as: q
+  - op: move
+    select:
+      ref: q
+      chooser: opp
+      count: 1
+    to: hand
+    reason: return
+  - op: move
+    select:
+      ref: q
+      count: all
+    to: graveyard
+    reason: put
+  source:
+    official: dm24ex1-sp5
+    review: pending
+    notes: '相手の選択は chooser: opp で表し、残りは変数の残余で処理した'
+    aliases:
+    - dm11-s03
+    - dm23rp4-tr04
+    - dm23rp4x-tr04
+    - dmc38-014
+    - dmc63-010
+    - dmex17-cho05
+    - dmrp11-g06
+    - dmx01-s02
+    - dmx21-065
+    - dmx24-s05
+- id: dm24ex2-004
+  name: 燃えるデット・ソード
+  types:
+  - creature
+  civs: []
+  cost: 9
+  power: 12000
+  races:
+  - ジョーカーズ
+  - スペシャルズ
+  mana: 1
+  text: 'T・ブレイカー
+
+    このクリーチャーが出た時、バトルゾーンまたはマナゾーンに自分のジョーカーズが合計４枚以上あれば、相手はバトルゾーン、マナゾーン、手札から自身のカードを１枚ずつ選び、好きな順序で山札の下に置く。その後、自分はカードを３枚引く。'
+  abilities:
+  - kind: trigger
+    when:
+      event: move
+      to: bz
+      subject: self
+    if:
+      cmp:
+      - sum:
+        - count:
+            zone: bz
+            owner: you
+            filter:
+              race_has: ジョーカーズ
+        - count:
+            zone: mana
+            owner: you
+            filter:
+              race_has: ジョーカーズ
+      - '>='
+      - 4
+    effect:
+    - op: move
+      select:
+        zone: bz
+        owner: opp
+        chooser: opp
+        count: 1
+      to: deck
+      reason: return
+    - op: move
+      select:
+        zone: mana
+        owner: opp
+        chooser: opp
+        count: 1
+      to: deck
+      reason: return
+    - op: move
+      select:
+        zone: hand
+        owner: opp
+        chooser: opp
+        count: 1
+      to: deck
+      reason: return
+    - op: draw
+      count: 3
+  source:
+    official: dm24ex2-004
+    review: pending
+    notes: 合計条件は cmp の sum 式で表した
+    aliases:
+    - dmex19-s2
+    - dmrp01-s01
+  keywords:
+  - triple_breaker
+- id: dm24ex2-007
+  name: 悪魔神バロムハデス
+  types:
+  - creature
+  - evolution
+  civs:
+  - darkness
+  cost: 9
+  power: 13000
+  races:
+  - デーモン・コマンド
+  mana: 1
+  evolve_from:
+    races:
+    - デーモン・コマンド
+  text: '進化：デーモン・コマンド・クリーチャー１体の上に置く。
+
+    T・ブレイカー
+
+    このクリーチャーが出た時、闇ではないクリーチャーをすべて破壊する。
+
+    このクリーチャーが攻撃する時、闇のクリーチャーを１体、自分の墓地から出してもよい。'
+  abilities:
+  - kind: trigger
+    when:
+      event: move
+      to: bz
+      subject: self
+    effect:
+    - op: destroy
+      select:
+        zone: bz
+        owner: any
+        filter:
+          types:
+          - creature
+          not_civs:
+          - darkness
+        count: all
+  - kind: trigger
+    when:
+      event: attack
+      subject: self
+    effect:
+    - op: may
+      body:
+      - op: play_free
+        select:
+          zone: graveyard
+          owner: you
+          filter:
+            types:
+            - creature
+            civs:
+            - darkness
+          count: 1
+  source:
+    official: dm24ex2-007
+    review: pending
+    aliases:
+    - dmex16-036
+  keywords:
+  - triple_breaker
+- id: dm24ex2-029
+  name: 悪魔神バロムスポーン
+  types:
+  - creature
+  - evolution
+  civs:
+  - darkness
+  cost: 7
+  power: 9000
+  races:
+  - デーモン・コマンド
+  mana: 1
+  evolve_from:
+    civs:
+    - darkness
+    race_has: コマンド
+  text: '{GS} G・ストライク
+
+    進化：闇のコマンド・クリーチャー１体の上に置く。
+
+    W・ブレイカー
+
+    このクリーチャーが出た時、バトルゾーンにある、闇ではないカードをすべて破壊する。'
+  abilities:
+  - kind: trigger
+    when:
+      event: move
+      to: bz
+      subject: self
+    effect:
+    - op: destroy
+      select:
+        zone: bz
+        owner: any
+        filter:
+          not_civs:
+          - darkness
+        count: all
+  source:
+    official: dm24ex2-029
+    review: pending
+    notes: 対象はクリーチャーに限らないため types 無指定で表した
+    aliases:
+    - dm22ex2-002
+  keywords:
+  - g_strike
+  - double_breaker
