@@ -1286,6 +1286,28 @@
     "cost_min": {
      "type": "integer"
     },
+    "power_when": {
+     "type": "object",
+     "properties": {
+      "amount": {
+       "type": "integer"
+      },
+      "count": {
+       "$ref": "#/$defs/selector"
+      },
+      "when": {
+       "enum": [
+        "attacking",
+        "blocking"
+       ]
+      }
+     },
+     "required": [
+      "amount",
+      "when"
+     ],
+     "additionalProperties": false
+    },
     "battle_power": {
      "type": "object",
      "properties": {
@@ -1297,8 +1319,7 @@
       },
       "only": {
        "enum": [
-        "attacking",
-        "blocking"
+        "attacking"
        ]
       }
      },
@@ -1349,6 +1370,7 @@
      "ignore",
      "opt_reduce",
      "power",
+     "power_when",
      "sac_reduce"
     ]
    }

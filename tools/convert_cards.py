@@ -58,7 +58,7 @@ INSTRUCTIONS = """\
   「ほぼ同じ」「この場面では同じ結果」と思っても代用しない（例: 他のカードの効果の対象条件を書き換える置換を、無条件の置換や別の効果で書かない）。語彙の追加は人が行い、足りない語彙は unsupported の集計から決める。unsupported があるカードは登録されず（rejects に vocab として残る）、語彙が足りるようになってから変換し直す。
 - 表せない能力を黙って落とさない。落とした能力は必ず unsupported に残す。source.notes には、原文の曖昧さや確認してほしい点だけを日本語で具体的に書く（近似の言い訳には使わない）。
 - source は {official: <id>, review: pending} とし、必要なら notes を足す。
-- 「攻撃中、パワー+N」は mod.battle_power に only: attacking を付ける（バトル中だけ・攻撃側のときだけ適用。ブロックしたときは付かない）。「バトル中」は only を付けない。
+- 「攻撃中、パワー+N」は mod.power_when（when: attacking）、「ブロック中、パワー+N」は when: blocking（プレイヤーを攻撃している間も含む。count で「1体につき」）。「バトル中」だけ上がる（ハンティング等）は mod.battle_power。
 - 原文の表現が古い（例: 「墓地に置く」）場合も原文どおりに変換し、気づいた点は notes に書く。
 """
 

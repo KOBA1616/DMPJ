@@ -14,13 +14,14 @@ sys.path.insert(0, str(Path(__file__).resolve().parent.parent / "tools"))
 import rule_convert  # noqa: E402
 
 RENTIA, TENDO, MIHAIL, STEALTH = "dm14-072", "dm10-007", "dm09-006", "dm07-012"
+TORNADO, AURA = "dm02-052", "dm01-040"   # 攻撃中パワー+N（count つき）、このターンの攻撃中（呪文）
 
 
 @pytest.fixture(scope="module")
 def rr(tmp_path_factory):
     allc = yaml.safe_load((DATA / "cards" / "converted.yaml").read_text(encoding="utf-8"))["cards"]
-    pick = [c for c in allc if c["id"] in (RENTIA, TENDO, MIHAIL, STEALTH)]
-    assert len(pick) == 4
+    pick = [c for c in allc if c["id"] in (RENTIA, TENDO, MIHAIL, STEALTH, TORNADO, AURA)]
+    assert len(pick) == 6
     f = tmp_path_factory.mktemp("q") / "q.yaml"
     f.write_text(yaml.safe_dump({"cards": pick}, allow_unicode=True), encoding="utf-8")
     return load_rules(card_yaml_files() + [f])
@@ -188,3 +189,69 @@ def test_mihail_leaving_lets_zero_power_creature_die(rr):
     ])
     e.advance()
     assert names(e, "graveyard", 0) == sorted([MIHAIL, "T001"]) and not names(e, "bz", 0)
+
+
+# ---- 「攻撃中」「ブロック中」は power_when（バトルをしていない間も含む） ----
+
+def test_power_when_attacking_applies_while_attacking_player(rr):
+    """攻撃中はプレイヤーを攻撃している間（バトルなし）も+N。攻撃が終われば戻る。"""
+    e = setup(rr, {"bz": [TORNADO, "T001"]}, {"bz": ["T004"]})
+    base = e.chars(bz(e, 0, TORNADO))["power"]
+    assert base == rr.cards[TORNADO].power                           # 攻撃していない間は付かない
+    answer(e, "attack", f"attack:{TORNADO}:player")
+    d = e.advance()
+    assert d["kind"] == "block"                                      # 相手のブロック宣言の時点で攻撃中
+    assert e.chars(bz(e, 0, TORNADO))["power"] == base + 2000        # 自分のクリーチャー2体×1000（バトルではない）
+    e.answer([[o["key"] for o in d["options"]].index("no_block")])
+    d = e.advance()
+    assert d["kind"] == "choose_shields" and e.chars(bz(e, 0, TORNADO))["power"] == base + 2000   # ブレイクの途中もまだ攻撃中
+    e.answer(list(range(d["min"])))
+    while d is not None and d["kind"] != "attack":
+        d = e.advance()
+        if d is not None and d["kind"] not in ("attack",):
+            e.answer([0])
+    assert e.chars(bz(e, 0, TORNADO))["power"] == base                # 攻撃が終われば戻る
+
+
+def test_power_when_attacking_not_for_blocker_or_attacked(rr):
+    e = setup(rr, {"bz": ["T005"]}, {"bz": [TORNADO, "T004"]})
+    answer(e, "attack", "attack:T005:player")
+    d = e.advance()
+    assert d["kind"] == "block" and e.chars(bz(e, 1, TORNADO))["power"] == rr.cards[TORNADO].power
+
+
+def test_power_when_blocking_applies_before_battle_ends(rr):
+    """ブロック中は、ブロックの宣言から攻撃の終わりまで（バトルを待たない）。"""
+    e = setup(rr, {"bz": ["T005"]}, {"bz": [RENTIA]})
+    answer(e, "attack", "attack:T005:player")
+    assert e.chars(bz(e, 1, RENTIA))["power"] == 2500                # 宣言前は付かない
+    d = e.advance()
+    e.answer([[o["key"] for o in d["options"]].index(f"bz:{RENTIA}:0")])
+    d = e.advance()
+    assert d is None or e.chars(bz(e, 1, RENTIA))["power"] == 2500   # 攻撃が終われば元に戻る
+
+
+def test_power_when_spell_lasts_for_the_turn_but_only_while_attacking(rr):
+    """「このターンの攻撃中」: 呪文の効果はターン中残るが、パワーは攻撃している間だけ上がる。"""
+    e = setup(rr, {"bz": ["T005"], "hand": [AURA], "mana": ["T001"] * 4}, {"bz": ["T004"]})
+    answer(e, "charge", "pass")
+    answer(e, "main", f"play:{AURA}")
+    base = e.chars(bz(e, 0, "T005"))["power"]
+    assert base == 3000                                              # 唱えた時点では攻撃していない
+    answer(e, "attack", "attack:T005:player")
+    d = e.advance()
+    assert d["kind"] == "block" and e.chars(bz(e, 0, "T005"))["power"] == 5000
+
+
+def test_power_when_is_validated(rr):
+    from dmsim.defs import DefError
+    for pw in ({"amount": 1}, {"amount": 1, "when": "defending"}, {"when": "attacking"}):
+        bad = {"id": "Q002", "name": "x", "types": ["creature"], "civs": ["fire"], "cost": 1, "power": 1000, "races": ["テスト"],
+               "abilities": [{"kind": "static", "affects": "self", "mod": {"power_when": pw}}]}
+        f = Path(__file__).parent / "_q_bad2.yaml"
+        f.write_text(yaml.safe_dump({"cards": [bad]}, allow_unicode=True), encoding="utf-8")
+        try:
+            with pytest.raises(DefError):
+                load_rules([f])
+        finally:
+            f.unlink()

@@ -87,9 +87,9 @@ class CombatMixin:
                 break
         return att, tgt, None
 
-    def _battle_bonus(self, ref, attacking: bool = False, blocking: bool = False) -> int:
-        """バトル中だけのパワー修整（mod battle_power。ハンティング: 自分のハンター1体につき+1000）。
-        only: attacking は攻撃側のときだけ、only: blocking はブロックしたクリーチャーとしてのバトルのときだけ。"""
+    def _battle_bonus(self, ref, attacking: bool = False) -> int:
+        """バトル中だけのパワー修整（mod battle_power。ハンティング: 自分のハンター1体につき+1000）。only: attacking は攻撃側のときだけ。
+        「攻撃中」「ブロック中」のパワー修整は mod power_when（バトルをしていない間も含む）。"""
         cid = ref[0]
         env = {"you": self.s.cards[cid].controller, "self": ref}
         total = 0
@@ -97,16 +97,14 @@ class CombatMixin:
             bp = ab.get("mod", {}).get("battle_power")
             if bp and bp.get("only") == "attacking" and not attacking:
                 continue
-            if bp and bp.get("only") == "blocking" and not blocking:
-                continue
             if bp and ab.get("affects") == "self" and ab.get("zone", "bz") == self.s.cards[cid].zone:
                 total += bp["amount"] * (self.eval_expr({"count": bp["count"]}, env) if "count" in bp else 1)
         return total
 
-    def _battle(self, x, y, blocked: bool = False):
+    def _battle(self, x, y):
         """バトル（701.13）。結果で誘発した効果はその場で解決してからバトルを終える。"""
         px = self.chars(x[0])["power"] + self._battle_bonus(x, attacking=True)      # x は攻撃側
-        py = self.chars(y[0])["power"] + self._battle_bonus(y, blocking=blocked)
+        py = self.chars(y[0])["power"] + self._battle_bonus(y)
         losers = ([x] if px <= py else []) + ([y] if py <= px else [])
         winners = [r for r in (x, y) if r not in losers]
         slay = [[r, y if r == x else x] for r in losers if self.permits(r[0], "slayer")]
@@ -235,12 +233,11 @@ def h_attack(eng, t):
     if ph == 3:                                               # 508 バトル
         t["phase"] = 4
         if t["target"] != "player":
-            blocker = t["target"] if t.get("blocked") else None   # 身代わりで相手が変わってもブロッククリーチャーかは元の対象で決まる
             att, tgt, d = eng._battle_substitute(t, att, t["target"])
             if d:
                 t["phase"] = 3
                 return d
-            eng._push(*eng._battle(att, tgt, blocked=tgt == blocker))
+            eng._push(*eng._battle(att, tgt))
         return None
     if ph == 4:                                               # 509 ダイレクトアタック
         if t["target"] == "player" and eng.zlist("shield", 1 - a):

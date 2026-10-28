@@ -40,6 +40,7 @@ class Engine(SelectorMixin, EventMixin, InterpreterMixin, TurnMixin, CombatMixin
         self._xcache = rules.__dict__.setdefault("_affects_others_cache", {})   # 定義だけで決まるので複製間で共有
         self.check = CHECK if check is None else check   # タスクの形を毎回検査する（テスト・開発者モード用）
         self.s = state
+        self._pw_busy = False
         self.step_limit = step_limit
         self.turn_limit = turn_limit
         self.log: list[dict] = []
@@ -180,6 +181,24 @@ class Engine(SelectorMixin, EventMixin, InterpreterMixin, TurnMixin, CombatMixin
                     out.setdefault(c, set()).update(kinds)
         return out
 
+    def _power_when(self, pw: dict, ref, env_self) -> int:
+        """攻撃中／ブロック中だけのパワー修整（mod power_when）。攻撃クリーチャーに指定されてから攻撃の終わりまで、
+        ブロッククリーチャーはブロックの宣言からその攻撃の終わりまでが対象（バトルをしていない間も含む）。"""
+        for t in self.s.tasks:
+            if t["t"] != "attack":
+                continue
+            if (t["attacker"] if pw["when"] == "attacking" else t["target"] if t.get("blocked") else None) == ref:
+                if "count" not in pw:
+                    return pw["amount"]
+                if self._pw_busy:   # 数える対象の特性を調べる途中で、またこの修整を計算しない（無限再帰を避ける。数え方にパワーの条件があれば修整前の値で見る）
+                    return 0
+                self._pw_busy = True
+                try:
+                    return pw["amount"] * self.eval_expr({"count": pw["count"]}, env_self)
+                finally:
+                    self._pw_busy = False
+        return 0
+
     def _ce_applies(self, ce, cid, ref) -> bool:
         if ce["affected"] is not None:
             return ref in ce["affected"]
@@ -253,6 +272,8 @@ class Engine(SelectorMixin, EventMixin, InterpreterMixin, TurnMixin, CombatMixin
                      and ab.get("zone", "bz") == c.zone]
         for m in mods:
             ch["power"] += m.get("power", 0)
+            if "power_when" in m:
+                ch["power"] += self._power_when(m["power_when"], ref, env_self)
             ch["keywords"].update(m.get("grant", []))
             ch["allow"] += m.get("allow", [])
             ch["deny"] += m.get("deny", [])
