@@ -23,7 +23,7 @@ def core_ops() -> dict[str, dict[str, str]]:
 
 EVENTS = {"move", "draw", "cast", "summon", "attack", "block", "break", "tap", "untap",
           "turn_start", "turn_end", "battle_win", "choose", "battle"}
-ABILITY_KINDS = {"trigger", "replace", "static", "declare", "activate", "state"}   # state: 状態を常に見て、満たされたら勝敗が決まる常在効果（if と effect: [win/lose]）
+ABILITY_KINDS = {"trigger", "replace", "static", "declare", "activate", "silent", "state"}   # state: 状態を常に見て、満たされたら勝敗が決まる常在効果（if と effect: [win/lose]）
 ABILITY_KEYS = {"kind", "when", "if", "effect", "instead", "optional", "affects", "mod", "zone", "keyword", "cost"}
 REASONS = {"put", "destroy", "return", "discard", "charge", "summon", "cast", "break",
            "draw", "battle", "sba", "resolve", "evolve"}
@@ -424,6 +424,8 @@ class Checker:
                 raise DefError(f"{where}: activate needs effect")
         elif "cost" in ab:
             raise DefError(f"{where}: cost is only for activate")
+        if kind == "silent" and "effect" not in ab:   # サイレントスキル（501.1a）: ターンのはじめにタップされていたら、アンタップしないかわりに使ってもよい
+            raise DefError(f"{where}: silent needs effect")
         if "if" in ab:
             self.cond(ab["if"], where)
         for k in ("effect", "instead"):
