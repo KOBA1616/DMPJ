@@ -41509,3 +41509,29 @@ cards:
     official: dm01-002
     review: pending
     notes: 相手に見せる処理は扱っていない
+- id: dm01-003
+  name: キング・ポセイドン
+  types:
+  - creature
+  civs:
+  - water
+  cost: 7
+  power: 5000
+  races:
+  - リヴァイアサン
+  mana: 1
+  text: このクリーチャーがバトルゾーンに出たとき、カードを２枚引いてよい。
+  abilities:
+  - kind: trigger
+    when:
+      event: move
+      to: bz
+      subject: self
+    effect:
+    - op: may
+      body:
+      - op: draw
+        count: 2
+  source:
+    official: dm01-003
+    review: pending
