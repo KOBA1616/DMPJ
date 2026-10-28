@@ -42450,3 +42450,643 @@ cards:
   source:
     official: dm01-077
     review: pending
+- id: dm01-099
+  name: 職人ピコラ
+  types:
+  - creature
+  civs:
+  - fire
+  cost: 1
+  power: 2000
+  races:
+  - マシン・イーター
+  mana: 1
+  text: このクリーチャーがバトルゾーンに出たとき、自分のマナゾーンからカードを１枚選び、自分の墓地に置く。
+  abilities:
+  - kind: trigger
+    when:
+      event: move
+      to: bz
+      subject: self
+    effect:
+    - op: move
+      select:
+        zone: mana
+        owner: you
+        count: 1
+      to: graveyard
+      reason: put
+  source:
+    official: dm01-099
+    review: pending
+    notes: 原文が同じ dm01-063 の変換結果を写した（モデル不使用）。能力は元カードの確認に従う
+- id: dm02-037
+  name: 預言者フィンチ
+  types:
+  - creature
+  civs:
+  - light
+  cost: 4
+  power: 2000
+  races:
+  - ライトブリンガー
+  mana: 1
+  text: このクリーチャーがバトルゾーンに出たとき、バトルゾーンにある相手のクリーチャーを１体選び、タップしてよい。
+  abilities:
+  - kind: trigger
+    when:
+      event: move
+      to: bz
+      subject: self
+    effect:
+    - op: may
+      body:
+      - op: tap
+        select:
+          zone: bz
+          owner: opp
+          filter:
+            types:
+            - creature
+          count: 1
+  source:
+    official: dm02-037
+    review: pending
+    notes: 原文が同じ dm01-073 の変換結果を写した（モデル不使用）。能力は元カードの確認に従う
+- id: dmc27-037
+  name: 預言者フィンチ
+  types:
+  - creature
+  civs:
+  - light
+  cost: 4
+  power: 2000
+  races:
+  - ライトブリンガー
+  mana: 1
+  text: このクリーチャーがバトルゾーンに出たとき、バトルゾーンにある相手のクリーチャーを１体選び、タップしてよい。
+  abilities:
+  - kind: trigger
+    when:
+      event: move
+      to: bz
+      subject: self
+    effect:
+    - op: may
+      body:
+      - op: tap
+        select:
+          zone: bz
+          owner: opp
+          filter:
+            types:
+            - creature
+          count: 1
+  source:
+    official: dmc27-037
+    review: pending
+    notes: 原文が同じ dm01-073 の変換結果を写した（モデル不使用）。能力は元カードの確認に従う
+- id: dm01-078
+  name: ソーラー・レイ
+  types:
+  - spell
+  civs:
+  - light
+  cost: 2
+  mana: 1
+  text: 'S(シールド)・トリガー(このカードをシールドゾーンから手札に戻すとき、コストを支払わずにすぐ使ってよい。)
+
+    バトルゾーンにある相手のクリーチャー１体を選び、タップする。'
+  spell:
+  - op: tap
+    select:
+      zone: bz
+      owner: opp
+      filter:
+        types:
+        - creature
+      count: 1
+  source:
+    official: dm01-078
+    review: pending
+  keywords:
+  - s_trigger
+- id: dm01-085
+  name: エレメンタル・トラップ
+  types:
+  - spell
+  civs:
+  - water
+  cost: 3
+  mana: 1
+  text: バトルゾーンにある相手のクリーチャー１体を選び、タップする。
+  spell:
+  - op: tap
+    select:
+      zone: bz
+      owner: opp
+      filter:
+        types:
+        - creature
+      count: 1
+  source:
+    official: dm01-085
+    review: pending
+- id: dm01-089
+  name: ブラッディ・イヤリング
+  types:
+  - creature
+  civs:
+  - darkness
+  cost: 2
+  power: 4000
+  races:
+  - ブレインジャッカー
+  mana: 1
+  text: 'ブロッカー(相手クリーチャーが攻撃するとき、このクリーチャーをタップして、その攻撃を阻止してよい。 そのあと、その相手クリーチャーとバトルする。
+
+    このクリーチャーは、攻撃することができない。
+
+    このクリーチャーはバトルに勝っても、バトルのあと、持ち主の墓地に置かれる。'
+  keywords:
+  - cannot_attack
+  - blocker
+  abilities:
+  - kind: trigger
+    when:
+      event: battle_win
+      subject: self
+    effect:
+    - op: destroy
+      select:
+        ref: self
+  source:
+    official: dm01-089
+    review: pending
+    notes: dm01-026 ダーク・クラウンと同じ扱い。ブロッカーは known_keywords に含まれていなかったため keywords に書いた（cannot_attack
+      は処理済み）
+- id: dm01-092
+  name: 怒りの影ブラック・フェザー
+  types:
+  - creature
+  civs:
+  - darkness
+  cost: 1
+  power: 3000
+  races:
+  - ゴースト
+  mana: 1
+  text: このクリーチャーがバトルゾーンに出たとき、バトルゾーンにある自分の他のクリーチャー１体を自分の墓地に置く。そうしなければ、このクリーチャーを自分の墓地に置く。
+  abilities:
+  - kind: trigger
+    when:
+      event: move
+      to: bz
+      subject: self
+    effect:
+    - op: if
+      cond:
+        cmp:
+        - count:
+            zone: bz
+            owner: you
+            filter:
+              types:
+              - creature
+            other: true
+        - '>='
+        - 1
+      then:
+      - op: destroy
+        select:
+          zone: bz
+          owner: you
+          filter:
+            types:
+            - creature
+          other: true
+          count: 1
+      else:
+      - op: destroy
+        select:
+          ref: self
+  source:
+    official: dm01-092
+    review: pending
+    notes: dm01-057 スティンガーワームと同じ扱い。「墓地に置く」は destroy
+- id: dm01-093
+  name: デス・スモーク
+  types:
+  - spell
+  civs:
+  - darkness
+  cost: 4
+  mana: 1
+  text: バトルゾーンにある、相手のタップされていないクリーチャーを１体選び、持ち主の墓地に置く。
+  spell:
+  - op: destroy
+    select:
+      zone: bz
+      owner: opp
+      filter:
+        types:
+        - creature
+        tapped: false
+      count: 1
+  source:
+    official: dm01-093
+    review: pending
+    notes: 「持ち主の墓地に置く」は dm01-027 の前例に倣い destroy にした
+- id: dm01-094
+  name: ゴースト・タッチ
+  types:
+  - spell
+  civs:
+  - darkness
+  cost: 2
+  mana: 1
+  text: 'S(シールド)・トリガー(このカードをシールドゾーンから手札に戻すとき、コストを支払わずにすぐ使ってよい。)
+
+    相手の手札からカードを１枚見ないで選び、相手は、それを持ち主の墓地に置く。'
+  spell:
+  - op: discard
+    select:
+      zone: hand
+      owner: opp
+      count: 1
+  source:
+    official: dm01-094
+    review: pending
+    notes: dm01-054 マスクド・ホラーと同じ扱い（見ないで選ぶ手札 discard）
+  keywords:
+  - s_trigger
+- id: dm01-096
+  name: 一撃必殺のホーバス
+  types:
+  - creature
+  civs:
+  - fire
+  cost: 3
+  power: 2000
+  races:
+  - ヒューマノイド
+  mana: 1
+  text: バトルゾーンに自分のアーマロイドがあれば、攻撃中、このクリーチャーのパワーは+2000される。
+  abilities:
+  - kind: static
+    affects: self
+    if:
+      exists:
+        zone: bz
+        owner: you
+        filter:
+          races:
+          - アーマロイド
+    mod:
+      battle_power:
+        amount: 2000
+        only: attacking
+  source:
+    official: dm01-096
+    review: pending
+- id: dm01-101
+  name: クリムゾン・ハンマー
+  types:
+  - spell
+  civs:
+  - fire
+  cost: 2
+  mana: 1
+  text: バトルゾーンにある、パワー2000以下の相手のクリーチャーを１体選び、持ち主の墓地に置く。
+  spell:
+  - op: destroy
+    select:
+      zone: bz
+      owner: opp
+      filter:
+        types:
+        - creature
+        power_le: 2000
+      count: 1
+  source:
+    official: dm01-101
+    review: pending
+    notes: 「持ち主の墓地に置く」は dm01-027 の前例に倣い destroy にした
+- id: dm01-102
+  name: バーニング・パワー
+  types:
+  - spell
+  civs:
+  - fire
+  cost: 1
+  mana: 1
+  text: バトルゾーンにある自分のクリーチャーを１体選ぶ。このターンの攻撃中、そのクリーチャーのパワーは+2000される。
+  spell:
+  - op: modify
+    select:
+      zone: bz
+      owner: you
+      filter:
+        types:
+        - creature
+      count: 1
+    mod:
+      battle_power:
+        amount: 2000
+        only: attacking
+    duration: end_of_turn
+  source:
+    official: dm01-102
+    review: pending
+- id: dm01-109
+  name: アルティメット・フォース
+  types:
+  - spell
+  civs:
+  - nature
+  cost: 5
+  mana: 1
+  text: 自分の山札の一番上のカードを２枚、表にして自分のマナゾーンに置く。
+  spell:
+  - op: mana_put
+    select:
+      zone: deck
+      owner: you
+      from_top: 2
+  source:
+    official: dm01-109
+    review: pending
+    notes: 「表にして」は公開情報としての扱いをしていない（dm01-110 ディメンジョン・ゲート等の見せる処理と同じ）
+- id: dm01-s02
+  name: 浄化の精霊ウルス
+  types:
+  - creature
+  civs:
+  - light
+  cost: 6
+  power: 6000
+  races:
+  - エンジェル・コマンド
+  mana: 1
+  text: 'W(ダブル)・ブレイカー(シールドを攻撃したとき、このクリーチャーはシールドを２枚ブレイクする。)
+
+    自分のターンの終わりに、このクリーチャーをアンタップしてよい。'
+  abilities:
+  - kind: trigger
+    when:
+      event: turn_end
+      player: you
+    effect:
+    - op: may
+      body:
+      - op: untap
+        select:
+          ref: self
+  source:
+    official: dm01-s02
+    review: pending
+  keywords:
+  - double_breaker
+- id: dm01-s03
+  name: アクア・スナイパー
+  types:
+  - creature
+  civs:
+  - water
+  cost: 8
+  power: 5000
+  races:
+  - リキッド・ピープル
+  mana: 1
+  text: このクリーチャーがバトルゾーンに出たとき、バトルゾーンからクリーチャーを２体まで選び、持ち主の手札に戻してよい。
+  abilities:
+  - kind: trigger
+    when:
+      event: move
+      to: bz
+      subject: self
+    effect:
+    - op: bounce
+      select:
+        zone: bz
+        owner: any
+        filter:
+          types:
+          - creature
+        count: 2
+        up_to: true
+  source:
+    official: dm01-s03
+    review: pending
+- id: dm01-s07
+  name: クリムゾン・ワイバーン
+  types:
+  - creature
+  civs:
+  - fire
+  cost: 8
+  power: 3000
+  races:
+  - アーマード・ワイバーン
+  mana: 1
+  text: このクリーチャーがバトルゾーンに出たとき、バトルゾーンにある「ブロッカー」を持つクリーチャーをすべて、持ち主の墓地に置く。
+  abilities:
+  - kind: trigger
+    when:
+      event: move
+      to: bz
+      subject: self
+    effect:
+    - op: destroy
+      select:
+        zone: bz
+        owner: any
+        filter:
+          types:
+          - creature
+          keyword: blocker
+        count: all
+  source:
+    official: dm01-s07
+    review: pending
+    notes: 「持ち主の墓地に置く」は dm01-005 の前例に倣い destroy にした。対象は両プレイヤーのブロッカーすべて
+- id: dm02-002
+  name: プラズマ・チェイサー
+  types:
+  - creature
+  civs:
+  - water
+  cost: 6
+  power: 4000
+  races:
+  - ゲル・フィッシュ
+  mana: 1
+  text: このクリーチャーが攻撃するとき、バトルゾーンにある相手のクリーチャーと同じ枚数のカードを引いてよい。
+  abilities:
+  - kind: trigger
+    when:
+      event: attack
+      subject: self
+    effect:
+    - op: may
+      body:
+      - op: draw
+        count:
+          count:
+            zone: bz
+            owner: opp
+            filter:
+              types:
+              - creature
+  source:
+    official: dm02-002
+    review: pending
+- id: dm02-003
+  name: 暗黒巨兵マギン
+  types:
+  - creature
+  civs:
+  - darkness
+  cost: 6
+  power: 4000
+  races:
+  - デーモン・コマンド
+  mana: 1
+  text: このクリーチャーが攻撃するとき、相手の手札からカードを１枚見ないで選び、相手はそれを持ち主の墓地に置く。
+  abilities:
+  - kind: trigger
+    when:
+      event: attack
+      subject: self
+    effect:
+    - op: discard
+      select:
+        zone: hand
+        owner: opp
+        count: 1
+  source:
+    official: dm02-003
+    review: pending
+    notes: dm01-054 と同じ扱い（見ないで選ぶ手札 discard）
+- id: dm02-004
+  name: ボルザード・ドラゴン
+  types:
+  - creature
+  civs:
+  - fire
+  cost: 6
+  power: 5000
+  races:
+  - アーマード・ドラゴン
+  mana: 1
+  text: このクリーチャーが攻撃するとき、相手のマナゾーンからカードを１枚選び、持ち主の墓地に置く。
+  abilities:
+  - kind: trigger
+    when:
+      event: attack
+      subject: self
+    effect:
+    - op: move
+      select:
+        zone: mana
+        owner: opp
+        count: 1
+      to: graveyard
+      reason: put
+  source:
+    official: dm02-004
+    review: pending
+- id: dm02-005
+  name: ゼノ・マンティス
+  types:
+  - creature
+  civs:
+  - nature
+  cost: 7
+  power: 6000
+  races:
+  - ジャイアント・インセクト
+  mana: 1
+  text: 'このクリーチャーは、パワー5000以下のクリーチャーにブロックされない。
+
+    W(ダブル)・ブレイカー(シールドを攻撃したとき、このクリーチャーはシールドを２枚ブレイクする。)'
+  abilities:
+  - kind: static
+    affects: self
+    mod:
+      deny:
+      - action: be_blocked
+        other:
+          power_le: 5000
+  source:
+    official: dm02-005
+    review: pending
+  keywords:
+  - double_breaker
+- id: dm02-006
+  name: 暁の守護者ファル・イーガ
+  types:
+  - creature
+  civs:
+  - light
+  cost: 5
+  power: 4000
+  races:
+  - ガーディアン
+  mana: 1
+  text: このクリーチャーがバトルゾーンに出たとき、自分の墓地から呪文を１枚選び、自分の手札に戻してよい。
+  abilities:
+  - kind: trigger
+    when:
+      event: move
+      to: bz
+      subject: self
+    effect:
+    - op: bounce
+      select:
+        zone: graveyard
+        owner: you
+        filter:
+          types:
+          - spell
+        count: 1
+        up_to: true
+  source:
+    official: dm02-006
+    review: pending
+- id: dm02-007
+  name: 閃光の伝道師ラグナ
+  types:
+  - creature
+  civs:
+  - light
+  cost: 5
+  power: 2500
+  races:
+  - バーサーカー
+  mana: 1
+  text: このクリーチャーが攻撃するとき、自分の山札から呪文を１枚さがして相手に見せ、自分の手札に加えてよい。そのあと、山札をシャッフルする。
+  abilities:
+  - kind: trigger
+    when:
+      event: attack
+      subject: self
+    effect:
+    - op: may
+      body:
+      - op: move
+        select:
+          zone: deck
+          owner: you
+          filter:
+            types:
+            - spell
+          count: 1
+          look: true
+        to: hand
+        reason: put
+      - op: shuffle
+  source:
+    official: dm02-007
+    review: pending
+    notes: 相手に見せる処理は扱っていない（dm01-110 等と同じ）。加えない場合は山札を見ていないのでシャッフルもしない形にした
