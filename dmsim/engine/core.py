@@ -37,9 +37,12 @@ class Engine(SelectorMixin, EventMixin, InterpreterMixin, TurnMixin, CombatMixin
     def __init__(self, rules: Rules, state: GameState, *, step_limit: int = 20000, turn_limit: int = 80,
                  check: bool | None = None):
         self.rules = rules
+        self._in_static_cond = 0
+        self._adding = set()
         self._xcache = rules.__dict__.setdefault("_affects_others_cache", {})   # 定義だけで決まるので複製間で共有
         self.check = CHECK if check is None else check   # タスクの形を毎回検査する（テスト・開発者モード用）
         self.s = state
+        self._pw_busy = False
         self.step_limit = step_limit
         self.turn_limit = turn_limit
         self.log: list[dict] = []
@@ -180,6 +183,24 @@ class Engine(SelectorMixin, EventMixin, InterpreterMixin, TurnMixin, CombatMixin
                     out.setdefault(c, set()).update(kinds)
         return out
 
+    def _power_when(self, pw: dict, ref, env_self) -> int:
+        """攻撃中／ブロック中だけのパワー修整（mod power_when）。攻撃クリーチャーに指定されてから攻撃の終わりまで、
+        ブロッククリーチャーはブロックの宣言からその攻撃の終わりまでが対象（バトルをしていない間も含む）。"""
+        for t in self.s.tasks:
+            if t["t"] != "attack":
+                continue
+            if (t["attacker"] if pw["when"] == "attacking" else t["target"] if t.get("blocked") else None) == ref:
+                if "count" not in pw:
+                    return pw["amount"]
+                if self._pw_busy:   # 数える対象の特性を調べる途中で、またこの修整を計算しない（無限再帰を避ける。数え方にパワーの条件があれば修整前の値で見る）
+                    return 0
+                self._pw_busy = True
+                try:
+                    return pw["amount"] * self.eval_expr({"count": pw["count"]}, env_self)
+                finally:
+                    self._pw_busy = False
+        return 0
+
     def _ce_applies(self, ce, cid, ref) -> bool:
         if ce["affected"] is not None:
             return ref in ce["affected"]
@@ -203,11 +224,25 @@ class Engine(SelectorMixin, EventMixin, InterpreterMixin, TurnMixin, CombatMixin
                     k += 1
                     if (kind is None or ab["kind"] == kind) and self._ce_applies(ce, cid, ref):
                         out.append((-k, ab))
+                src = ce.get("add_from")      # ダイナモ: 発生源のクリーチャーの能力（ダイナモ自身は除く）を加える
+                if src and src[0] != cid and self.s.alive(src) and kind != "static" and self._ce_applies(ce, cid, ref):
+                    for ab in self.fdef(src[0]).abilities:
+                        if ab.get("keyword") != "dynamo" and (kind is None or ab["kind"] == kind) and ab["kind"] != "static":
+                            k += 1
+                            out.append((-k, ab))
         if out and self.s.cards[cid].zone == "bz":
             ign = self._ignored().get(cid)
             if ign:
                 out = [(i, ab) for i, ab in out if not ({"all", ab["kind"]} & ign)]
         return out
+
+    def _static_cond(self, cond, env) -> bool:
+        """常在型能力の条件。条件の評価中にさらに別の常在型の条件を評価する入れ子では、カード数えを定義の特性で見る（互いの条件を参照し合って再帰しない）。"""
+        self._in_static_cond += 1
+        try:
+            return self.eval_cond(cond, env)
+        finally:
+            self._in_static_cond -= 1
 
     def _affects_others(self, cid: int) -> bool:
         """この面が他のカードに及ぶ mod 付きの常在型能力を持つか（定義だけで決まるのでキャッシュする）。"""
@@ -226,13 +261,13 @@ class Engine(SelectorMixin, EventMixin, InterpreterMixin, TurnMixin, CombatMixin
         d = self.fdef(cid, face)
         ch = {"power": d.power, "cost": d.cost, "civs": list(d.civs), "types": list(d.types),
               "races": list(d.races), "keywords": set(d.keywords), "name": d.name,
-              "allow": [], "deny": [], "breaks": 1, "break_opts": [], "pay_cost": d.cost, "sac_reduce": 0, "opt_reduce": None}
+              "allow": [], "deny": [], "require": [], "breaks": 1, "break_opts": [], "pay_cost": d.cost, "sac_reduce": 0, "opt_reduce": None}
         own = self.abilities(cid, "static") if face is None else list(enumerate(d.abilities))
         ref = self.s.ref(cid)
         env_self = {"you": c.controller, "self": ref}
         mods = [ab["mod"] for _, ab in own
                 if ab["kind"] == "static" and ab.get("affects") == "self" and ab.get("zone", "bz") == c.zone and "mod" in ab
-                and ("if" not in ab or self.eval_cond(ab["if"], env_self))]   # 条件つきの常在型（例:「墓地が13枚より少なければ攻撃できない」）は常に見直す
+                and ("if" not in ab or self._static_cond(ab["if"], env_self))]   # 条件つきの常在型（例:「墓地が13枚より少なければ攻撃できない」）は常に見直す
         cards = self.s.cards
         for src in self.s.zones["bz"][0]:   # バトルゾーンの常在型能力（重ねたカードの下は除く）。affects.zone で他のゾーンのカードにも及ぶ
             if cards[src].top_of >= 0 or not self._affects_others(src):
@@ -241,7 +276,8 @@ class Engine(SelectorMixin, EventMixin, InterpreterMixin, TurnMixin, CombatMixin
                 aff = ab.get("affects", {})
                 if "mod" in ab and aff != "self" and (aff.get("zone", "bz") if isinstance(aff, dict) else "bz") == c.zone:
                     env = {"you": self.s.cards[src].controller, "self": self.s.ref(src)}
-                    if self._subject_match(aff, cid, env, None, base=True):
+                    if self._subject_match(aff, cid, env, None, base=True) and \
+                            ("if" not in ab or self._static_cond(ab["if"], env)):
                         mods.append(ab["mod"])
         mods += [ce["mod"] for ce in self.s.continuous if self._ce_applies(ce, cid, ref)]
         granted = set()
@@ -253,12 +289,28 @@ class Engine(SelectorMixin, EventMixin, InterpreterMixin, TurnMixin, CombatMixin
                      and ab.get("zone", "bz") == c.zone]
         for m in mods:
             ch["power"] += m.get("power", 0)
+            if "power_when" in m:
+                ch["power"] += self._power_when(m["power_when"], ref, env_self)
             ch["keywords"].update(m.get("grant", []))
             ch["allow"] += m.get("allow", [])
             ch["deny"] += m.get("deny", [])
+            ch["require"] += m.get("require", [])
             if "breaks" in m:   # ブレイカー能力ごとのブレイク数（509.2b）。使う能力は攻撃時に選ぶ（509.2c）
                 ch["break_opts"].append(m["breaks"])
             ch["breaks"] = max(ch["breaks"], m.get("breaks", 1))
+        for ce in self.s.continuous:     # ダイナモ: 発生源のクリーチャーのパワーと能力（常在型の許可・禁止・ブレイク数・キーワード）を加える
+            src = ce.get("add_from")
+            if src and src[0] != cid and self.s.alive(src) and src[0] not in self._adding and self._ce_applies(ce, cid, ref):
+                self._adding.add(src[0])
+                try:
+                    sc = self.chars(src[0])
+                finally:
+                    self._adding.discard(src[0])
+                ch["power"] += sc["power"]
+                ch["keywords"].update(sc["keywords"])
+                for k in ("allow", "deny", "require", "break_opts"):
+                    ch[k] += sc[k]
+                ch["breaks"] = max(ch["breaks"], sc["breaks"])
         cost_min = 0
         for m in mods:      # 支払うコストの増減（コスト参照の cost は変えない: 「コスト5以下」はカードのコストで見る）
             if "cost" in m:
@@ -341,7 +393,9 @@ class Engine(SelectorMixin, EventMixin, InterpreterMixin, TurnMixin, CombatMixin
         if c.zone == "hold":
             s.hold.remove(cid)
         else:
-            self.zlist(c.zone, c.controller if self.zshared(c.zone) else c.owner).remove(cid)
+            lst = self.zlist(c.zone, c.controller if self.zshared(c.zone) else c.owner)
+            if cid in lst:      # シールドの束の下のカードはゾーンの並びに入っていない（113.2）
+                lst.remove(cid)
             if not (to == "deck" and c.zone == "deck"):   # 山札の中での並べ替え（見たカードを下に置く等）は山札から離れない
                 self._note_deck(c)
         c.gen += 1                                  # 新しいオブジェクトになる（400.5）

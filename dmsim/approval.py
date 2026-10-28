@@ -96,9 +96,15 @@ def save(ledger: dict, path: Path = LEDGER):
 
 def entry(raw: dict, status: str, by: str, versions: dict, **extra) -> dict:
     u = uses(raw)
+    base = {"verifier": _verifier()} if by in ("rule", "check") else {}
     return {"status": status, "by": by, "def_hash": def_hash(raw), "uses": u,
-            "vocab_ver": _h([versions.get(x) for x in u]), **extra}
+            "vocab_ver": _h([versions.get(x) for x in u]), **base, **extra}
 
+
+
+def _verifier() -> int:
+    from .effectcheck import VERIFIER
+    return VERIFIER
 
 
 def stale_reason(e: dict, raw: dict | None, versions: dict) -> str | None:
@@ -107,6 +113,8 @@ def stale_reason(e: dict, raw: dict | None, versions: dict) -> str | None:
         return "カード定義が見つからない"
     if def_hash(raw) != e.get("def_hash"):
         return "定義が変わった"
+    if e.get("by") in ("rule", "check") and e.get("verifier", 1) < _verifier():
+        return "検証が古い（再検証）"
     if _h([versions.get(x) for x in e.get("uses", [])]) != e.get("vocab_ver"):
         changed = [x for x in e.get("uses", []) if versions.get(x) is None]
         return "語彙が削除された: " + ",".join(changed) if changed else "語彙の定義が変わった"

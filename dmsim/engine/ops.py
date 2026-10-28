@@ -6,12 +6,13 @@ from .registry import op
 
 
 @op("move", select="selector", to="zone", reason="reason", position="position?", card_only="bool?",
-    order="str?", **{"as": "str?"})
+    order="str?", tapped="bool?", **{"as": "str?"})
 def op_move(eng, t, op, env):
     """ゾーン移動。as を付けると、移動した後のカード（新しいオブジェクト）を変数に入れる（「その〜」で使う）。
     card_only: カードとして動かす（109.2a）。進化クリーチャーの一番上だけが離れ、下は再構築される（801.4）。
     order: choose なら、2枚以上を山札に置く時の並びをプレイヤーが決める（「好きな順序で」）。
-    答えの先頭が、置いたカードの中で一番上になる。"""
+    答えの先頭が、置いたカードの中で一番上になる。
+    tapped: タップして置く（置かれた時点でタップ状態）。"""
     cids, d = eng.select(t, op["select"], env)
     if d:
         return d
@@ -36,6 +37,9 @@ def op_move(eng, t, op, env):
     if op.get("card_only"):
         for e in evs:
             e["card_only"] = True
+    if op.get("tapped"):
+        for e in evs:
+            e["tapped"] = True
     bind = [{"t": "bind", "env": env, "name": op["as"], "cids": cids, "zone": op["to"]}] if "as" in op else []
     if not evs and not out_tasks:
         if bind:
@@ -45,6 +49,28 @@ def op_move(eng, t, op, env):
         eng._defer(t, [eng.ev_task(e, env) for e in evs] + bind)
     else:                  # それ以外は同時（400.7）
         eng._defer(t, ([eng.ev_task(evs, env)] if evs else []) + out_tasks + bind)
+    return None
+
+
+@op("together", body="ops")
+def op_together(eng, t, op, env):
+    """body の move をすべて同時に行う（「Aを〜に戻し、同時に、Bを〜に置く」。400.7 同時の移動）。
+    対象は移動の前にすべて決める。1つのイベントの束で動くので、途中の状態を誘発や置換が見ることはない。
+    body は move だけで、対象は count: all か ref（プレイヤーの選択を挟まないもの）に限る。"""
+    evs, binds = [], []
+    for sub in op["body"]:
+        if sub.get("op") != "move" or sub.get("position") or sub.get("card_only") or sub.get("order"):
+            raise ValueError("together: body must be plain move ops")
+        sel = sub["select"]
+        if "ref" not in sel and sel.get("count") != "all":
+            raise ValueError("together: move targets must be count: all or ref")
+        cids = eng.candidates(sel, env)
+        evs += [{"ev": "move", "subject": eng.s.ref(c), "to": sub["to"], "reason": sub["reason"],
+                 "position": "top", **({"tapped": True} if sub.get("tapped") else {})} for c in cids]
+        if "as" in sub:
+            binds.append({"t": "bind", "env": env, "name": sub["as"], "cids": cids, "zone": sub["to"]})
+    if evs:
+        eng._defer(t, [eng.ev_task(evs, env)] + binds)
     return None
 
 
@@ -73,9 +99,9 @@ def op_untap(eng, t, op, env):
     return op_tap(eng, t, op, env, "untap")
 
 
-@op("may", body="ops")
+@op("may", body="ops", label="str?")
 def op_may(eng, t, op, env):
-    a, d = eng.ask(t, env["you"], "yes_no", [{"key": "yes"}, {"key": "no"}])
+    a, d = eng.ask(t, env["you"], "yes_no", [{"key": "yes"}, {"key": "no"}], prompt=op.get("label", ""))
     if d:
         return d
     if a[0] == 0:
@@ -117,13 +143,15 @@ def op_repeat(eng, t, op, env):
     eng._defer(t, [eng._child(op["body"], env) for _ in range(n)])
 
 
-@op("break", player="player?", count="expr?")
+@op("break", player="player?", count="expr?", st_first="bool?")
 def op_break(eng, t, op, env):
     """効果でブレイクする。出た S・トリガーは、この効果の処理が終わってから解決する（101.4d）。
-    ただし S・トリガーの解決中のブレイクなら、すでに待機している効果より先にその場で解決する（101.4g）。"""
+    ただし S・トリガーの解決中のブレイクなら、すでに待機している効果より先にその場で解決する（101.4g）。
+    st_first: 「ブレイクしてもよい。その後、…」のように、後続の文が S・トリガーの解決を待つ効果（エメラルーダ。koba 確認 2026-10-28）。
+    宣言された S・トリガーをその場で先に解決してから、続きを処理する。"""
     eng._defer(t, [{"t": "break", "victim": eng._rel(op.get("player", "opp"), env), "by": env["you"],
                      "count": eng.eval_expr(op.get("count", 1), env), "phase": 0,
-                     "in_effect": bool(env.get("in_st"))}])
+                     "in_effect": bool(env.get("in_st")) or bool(op.get("st_first")), **eng._breaker(env)}])
 
 
 @op("modify", select="selector", mod="mod", duration="duration?", dynamic="bool?")
@@ -134,6 +162,8 @@ def op_modify(eng, t, op, env):
     s.seq += 1
     ce = {"id": s.seq, "mod": op["mod"], "duration": eng._duration(op.get("duration", "end_of_turn"), env),
           "controller": env["you"]}
+    if "add_of" in op["mod"]:      # ダイナモ: このクリーチャー（効果の発生源）のパワーと能力を対象に加える
+        ce["add_from"] = env["self"]
     if op.get("dynamic"):
         sel = op["select"]
         ce["affected"] = None
@@ -152,10 +182,12 @@ def op_modify(eng, t, op, env):
     return None
 
 
-@op("mark", name="str")
+@op("mark", name="str", of_self="bool?")
 def op_mark(eng, t, op, env):
-    """このターンの印を付ける（cond の marked で読む）。ターンが変わると消える。「各ターン1度」「他のファイナル革命を使っていなければ」用。"""
-    eng.s.turn_counters[op["name"]] = eng.s.turn_counters.get(op["name"], 0) + 1
+    """このターンの印を付ける（cond の marked で読む）。ターンが変わると消える。「各ターン1度」「他のファイナル革命を使っていなければ」用。
+    of_self: このカード自身の印にする（cond の self_marked で読む。ターボラッシュ）。"""
+    key = op["name"] + (f":{env['self'][0]}:{env['self'][1]}" if op.get("of_self") else "")
+    eng.s.turn_counters[key] = eng.s.turn_counters.get(key, 0) + 1
 
 
 @op("shuffle", player="player?")
@@ -224,7 +256,7 @@ def _free_face(eng, cid, want):
     return 0
 
 
-@op("play_free", select="selector", resolve_to="zone?", face="str?", **{"as": "str?"})
+@op("play_free", select="selector", resolve_to="zone?", resolve_position="position?", face="str?", **{"as": "str?"})
 def op_play_free(eng, t, op, env):
     """コストを支払わずに召喚する／唱える（112.3g: 召喚・詠唱したことになる）。ツインパクトはクリーチャー側。
     resolve_to: 唱えた呪文を解決後に墓地ではなくそのゾーンに置く（「唱えた後、墓地に置くかわりに手札に加える」）。"""
@@ -238,6 +270,8 @@ def op_play_free(eng, t, op, env):
     if "resolve_to" in op:
         for x in tasks:
             x["resolve_to"] = op["resolve_to"]
+            if "resolve_position" in op:
+                x["resolve_position"] = op["resolve_position"]
     if "as" in op:
         tasks.append({"t": "bind", "env": env, "name": op["as"], "cids": cids, "zone": "bz"})
     eng._defer(t, tasks)
@@ -280,24 +314,37 @@ def op_choose(eng, t, op, env):
     return None
 
 
+@op("choose_race", **{"as": "str"})
+def op_choose_race(eng, t, op, env):
+    """「種族をひとつ選ぶ」: ゲームに出てくるカードの種族名（「/」で区切られた1種族ずつ）から1つ選び、変数に入れる。"""
+    names = sorted({r for d in {c.defn for c in eng.s.cards} for r in eng.rules.cards[d].races})
+    opts = [{"key": f"race:{r}", "name": r} for r in names]
+    a, d = eng.ask(t, env["you"], "choose_race", opts, 1, 1)
+    if d:
+        return d
+    env.setdefault("races", {})[op["as"]] = names[a[0]]
+    return None
+
+
 @op("put_under", select="selector", onto="selector")
 def op_put_under(eng, t, op, env):
-    """カードを、バトルゾーンのクリーチャーの下に重ねる（Evoチャージャーなど）。"""
+    """カードを、クリーチャーの下に重ねる（Evoチャージャーなど）。onto がシールドなら、そのシールドの束にする（113.2, 406.2）。
+    select が複数枚なら、同じ重ね先の下に順に重ねる。"""
     os_ = t.setdefault("os", {})
-    if "card" not in os_:
+    if "cards" not in os_:
         cids, d = eng.select(t, op["select"], env)
         if d:
             return d
         if not cids:
             return None
-        os_["card"] = cids[0]
+        os_["cards"] = list(cids)
         os_.pop("chosen", None)
     onto, d = eng.select(t, op["onto"], env)
     if d:
         return d
     if onto:
-        eng._defer(t, [{"t": "put_under", "cid": os_["card"], "gen": eng.s.cards[os_["card"]].gen,
-                        "onto": eng.s.ref(onto[0])}])
+        eng._defer(t, [{"t": "put_under", "cid": c, "gen": eng.s.cards[c].gen, "onto": eng.s.ref(onto[0])}
+                       for c in os_["cards"]])
     return None
 
 

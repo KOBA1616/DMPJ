@@ -11,6 +11,13 @@ class SelectorMixin:
                 return len(self.candidates(x["count"], env))
             if "var" in x:
                 return len(env.get("vars", {}).get(x["var"], []))
+            if "cost_of" in x:   # 変数に束縛したカード（複数なら最大）のコスト
+                ids = env.get("vars", {}).get(x["cost_of"], [])
+                return max((self.chars(c[0])["cost"] for c in ids), default=0)
+            if "race" in x:   # choose_race で選んだ種族名
+                return [env.get("races", {})[x["race"]]]
+            if "races_of" in x:   # 変数に束縛したカードの種族（「種族をひとつ選ぶ」の代わりに、場のカード1体を選んでその種族とする）
+                return sorted({r for c in env.get("vars", {}).get(x["races_of"], []) for r in self.chars(c[0])["races"]})
             if "sum" in x:
                 return sum(self.eval_expr(v, env) for v in x["sum"])
         raise ValueError(f"bad expr {x}")
@@ -30,12 +37,14 @@ class SelectorMixin:
             return any(self.eval_cond(x, env) for x in c["any"])
         if "marked" in c:   # このターンに mark した印があるか（「そのターンに他のファイナル革命を使っていなければ」）
             return bool(self.s.turn_counters.get(c["marked"]))
+        if "self_marked" in c:   # このカード自身がこのターンに mark した印があるか（ターボラッシュ）
+            return bool(self.s.turn_counters.get(f"{c['self_marked']}:{env['self'][0]}:{env['self'][1]}"))
         if "is_turn" in c:
             return self.s.active == self._rel(c["is_turn"], env)
         raise ValueError(f"bad cond {c}")
 
     def filter_match(self, cid: int, f: dict, lki: dict | None = None, base: bool = False) -> bool:
-        if base:   # 常在型能力の範囲判定中は自分の特性計算を再帰させない
+        if base or self._in_static_cond > 1:   # 常在型能力の範囲・入れ子の条件の判定中は特性計算を再帰させない
             d = self.fdef(cid)
             ch = {"power": d.power, "cost": d.cost, "civs": d.civs, "types": d.types, "races": d.races,
                   "keywords": set(d.keywords), "name": d.name}
@@ -114,6 +123,12 @@ class SelectorMixin:
             elif r == "self_entered":   # 実行されてバトルゾーンに出たこのカード自身（B・A・D / J・O・E の終了時処理）
                 c = s.cards[env["self"][0]]
                 return [c.cid] if c.gen == env["self"][1] + 1 and c.zone == "bz" else []
+            elif r == "crossed":   # このクロスギアをクロスしているクリーチャー（303.3a）
+                g = s.cards[env["self"][0]].crossed
+                refs = [g] if g else []
+            elif r in ("event.target", "event.attacker"):   # 攻撃された（攻撃先の）クリーチャー / ブロックされた（攻撃）クリーチャー
+                v = env["event"].get(r.split(".")[1])
+                refs = [v] if isinstance(v, list) else []
             elif r == "event.subject":
                 refs = [env["event"]["subject"]]
             else:
@@ -162,12 +177,14 @@ class SelectorMixin:
         if "chosen" in t.get("os", {}):
             return t["os"]["chosen"], None
         cands = self.candidates(sel, env)
+        # count: any = 「好きな枚数」（0枚から候補の全部まで選べる）。count: all + up_to: true と同じ
+        any_n = sel.get("count") == "any" or (sel.get("count") == "all" and sel.get("up_to"))
         if ("ref" in sel and "count" not in sel) or ("under_of" in sel and "count" not in sel) \
-                or ("from_top" in sel and "count" not in sel) or sel.get("count", 1) == "all":
+                or ("from_top" in sel and "count" not in sel) or (sel.get("count", 1) == "all" and not any_n):
             return cands, None
-        n = self.eval_expr(sel.get("count", 1), env)
+        n = len(cands) if any_n else self.eval_expr(sel.get("count", 1), env)
         mx = min(n, len(cands))
-        mn = 0 if sel.get("up_to") else mx
+        mn = 0 if sel.get("up_to") or any_n else mx
         if mx == 0:
             return [], None
         chooser = self._rel(sel.get("chooser", "you"), env)
@@ -176,7 +193,7 @@ class SelectorMixin:
                  or self.permits(c, "be_chosen")]
         n = min(n, len(cands))
         mx = n
-        mn = 0 if sel.get("up_to") else mx
+        mn = 0 if sel.get("up_to") or any_n else mx
         if mx == 0:
             return [], None
         a, d = self.ask(t, chooser, "choose_cards", [self._card_option(c, sel.get("look", False)) for c in cands], mn, mx)

@@ -1,7 +1,7 @@
 """イベント・パイプライン（置換→同時適用→状況起因処理→誘発）と待機・解決窓。"""
 from __future__ import annotations
 
-from ..types import CaptureTask, CloseWinTask, EnqueueStTask, EventTask, OpenWinTask, ResolvePendingTask
+from ..types import CaptureTask, CloseWinTask, BattleRunTask, EnqueueStTask, EventTask, OpenWinTask, ResolvePendingTask, SbackTask
 from .registry import task
 
 
@@ -63,6 +63,8 @@ class EventMixin:
         return None
 
     def apply_batch(self, evs: list[dict]):
+        if evs and not any(ev.get("sba") for ev in evs):
+            self.s.sba_held.clear()   # 状況起因処理以外で状態が動いたら、止められていた破壊をもう一度試す
         records = []
         for ev in evs:
             records += self._apply_one(ev)
@@ -88,8 +90,10 @@ class EventMixin:
                 self._rebuild(cid)
                 unders = []
             self._raw_move(cid, ev["to"], ev.get("position", "top"), ev.get("controller"))
+            if ev.get("tapped"):   # 「タップして置く」: 置かれた時点でタップ状態（別のタップ イベントにしない）
+                c.tapped = True
             for u in unders:   # クリーチャーとして離れたら下のカードも同じゾーンへ（109.2b, 316.3）
-                if s.cards[u].zone == "bz":
+                if s.cards[u].zone == "bz" or s.cards[u].top_of == cid:   # シールドの束も同時に動く（113.2）
                     self._raw_move(u, ev["to"])
             new = s.ref(cid)
             stack_on = ev.get("stack_on")
@@ -133,7 +137,7 @@ class EventMixin:
                 return []   # 「になる」誘発は状態が変わった時だけ（603.2c）
             c.tapped = kind == "tap"
             return [{"ev": kind, "subject": ev["subject"], "controller": c.controller}]
-        if kind in ("attack", "block", "cast", "turn_start", "turn_end", "break", "battle_win"):
+        if kind in ("attack", "block", "cast", "turn_start", "turn_end", "break", "battle_win", "battle_start"):
             return [dict(ev)]
         raise ValueError(kind)
 
@@ -215,16 +219,33 @@ class EventMixin:
             loser = s.active if len(out) == 2 else out[0]
             s.result = {"winner": 1 - loser, "reason": "deck_out", "turn": s.turn}
             return []
+        for c in self.bz_tops():   # 常在の勝敗条件（kind: state）。バトルゾーンで機能している間、条件を満たしたら決まる
+            for _, ab in self.abilities(c, "state"):
+                env = {"you": s.cards[c].controller, "self": s.ref(c)}
+                if self.eval_cond(ab["if"], env):
+                    for o in ab["effect"]:
+                        win = o["op"] == "win"
+                        who = self._rel(o.get("player", "you"), env)
+                        s.result = {"winner": who if win else 1 - who, "reason": "state", "turn": s.turn}
+                    return []
         dead = [s.ref(c) for c in self.bz_tops()
                 if "creature" in self.chars(c)["types"] and self.chars(c)["power"] <= 0]   # 703.4c
+        # 「墓地に置かれるかわりにとどまる」置換で破壊できなかったものは、状態が動くまで同じ処理を繰り返さない
+        # （繰り返すと無限ループになる）。パワーが0より大きくなれば対象から外れる
+        s.sba_held = [r for r in s.sba_held if r in dead]
+        dead = [r for r in dead if r not in s.sba_held]
         if dead:
-            return [self.ev_task([{"ev": "move", "subject": r, "to": "graveyard", "reason": "destroy"}
+            s.sba_held += [r for r in dead if r not in s.sba_held]
+            return [self.ev_task([{"ev": "move", "subject": r, "to": "graveyard", "reason": "destroy", "sba": True}
                                   for r in dead])]
         return []
 
     def _subject_match(self, pat, cid, env, lki, base=False) -> bool:
         if pat == "self":
             return env.get("self") is not None and cid == env["self"][0]
+        if pat == "crossed":   # 「これをクロスしたクリーチャー」（303.3a）。離れた後の誘発は離れる前の姿（lki）で見る
+            g = self.s.cards[env["self"][0]].crossed if env.get("self") else None
+            return g is not None and list(g) == (list(lki["ref"]) if lki else self.s.ref(cid))
         if not isinstance(pat, dict):
             return False
         if "refs" in pat:   # 遅延誘発型能力が「その〜」で指すカード
@@ -241,11 +262,27 @@ class EventMixin:
                "self": lki_src["ref"] if lki_src else self.s.ref(src)}
         return self._match_when(when, rec, env)
 
+    def _ref_match(self, pat, ref, env) -> bool:
+        """イベントに出てくるクリーチャー（攻撃先・攻撃クリーチャー）が、self か subject と同じ形の条件に合うか。"""
+        if pat == "self":
+            return env.get("self") is not None and ref[0] == env["self"][0]
+        return self._subject_match(pat, ref[0], env, None)
+
     def _match_when(self, when, rec, env) -> bool:
         if when["event"] != rec["ev"]:
             return False
         for k in ("from", "to", "reason", "via"):
             if k in when and rec.get(k) != when[k]:
+                return False
+        if "target" in when:   # 攻撃先: player（シールドも含む）か creature。self や {owner, filter} なら、そのクリーチャーが攻撃された時
+            tg, w = rec.get("target"), when["target"]
+            if w in ("player", "creature"):
+                if (tg == "player") != (w == "player"):
+                    return False
+            elif tg is None or tg == "player" or not self._ref_match(w, tg, env):
+                return False
+        if "attacker" in when:   # ブロックされた時などの、攻撃クリーチャーの条件（self なら「このクリーチャーがブロックされた時」）
+            if rec.get("attacker") is None or not self._ref_match(when["attacker"], rec["attacker"], env):
                 return False
         if "unpaid" in when and bool(rec.get("unpaid")) != when["unpaid"]:   # マナをタップせずに（コストを支払わずに）
             return False
@@ -289,6 +326,8 @@ class EventMixin:
                     continue
                 ctrl = lsrc["controller"] if lsrc else s.cards[src].controller
                 sref = lsrc["ref"] if lsrc else s.ref(src)
+                if "if" in ab and not lsrc and not self.eval_cond(ab["if"], {"you": ctrl, "self": sref, "event": rec, "vars": {}}):
+                    continue          # 誘発条件つき（「〜場合」）の能力は、誘発時にも条件を見る（603.4）。離れた時の誘発は解決時だけ
                 s.seq += 1
                 # 待機中の効果は発生源から独立する（110.5a）。発生源の情報は env に持つ
                 p = {"pid": s.seq, "kind": "normal", "win": win, "controller": ctrl, "src": sref,
@@ -430,4 +469,25 @@ def h_enqueue_st(eng, t):
             if face is not None:
                 p["face"] = face
             s.pending.append(p)
+    return None
+
+
+@task("sback", SbackTask)
+def h_sback(eng, t):
+    """S・バック: 手札に加わったシールドのカードを捨て、そうした場合だけ、S・バックのカードをコストを支払わずに実行する（S・トリガーと同じ待機の列に入る）。"""
+    s = eng.s
+    eng._pop(t)
+    pairs = [(h, x) for h, x in t["pairs"] if s.cards[x].zone == "hand" and s.cards[h].zone == "hand"]
+    if pairs:
+        eng._push(eng.ev_task([{"ev": "move", "subject": s.ref(x), "to": "graveyard", "reason": "discard"} for _, x in pairs]),
+                  {"t": "enqueue_st", "cids": [[h, None] for h, _ in pairs], "player": t["player"]})
+    return None
+
+
+@task("battle_run", BattleRunTask)
+def h_battle_run(eng, t):
+    """バトルの勝敗の判定。「バトルが始まる時」の誘発を解決し終えてから、その時点のパワーで行う（701.13）。"""
+    eng._pop(t)
+    if eng.s.alive(t["att"]) and eng.s.alive(t["tgt"]):
+        eng._push(*eng._battle(t["att"], t["tgt"]))
     return None

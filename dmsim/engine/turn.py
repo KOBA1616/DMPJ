@@ -7,7 +7,7 @@ from __future__ import annotations
 
 import itertools
 
-from ..types import PlayTask, TurnTask
+from ..types import CrossTask, PlayTask, TurnTask
 from .registry import STEPS, step, task
 
 
@@ -77,6 +77,21 @@ class TurnMixin:
                     out.append(opt)
         return out
 
+    def _cross_options(self, p) -> list[dict]:
+        """メインステップに、バトルゾーンのクロスギアのマナコストをもう一度支払って自分のクリーチャーにクロスする（303.3b, 504.2）。
+        すでにクロスしているクリーチャー自身にはクロスしなおせない（303.4a）。"""
+        out = []
+        for g in self.bz_tops(p):
+            if "cross_gear" not in self.chars(g)["types"]:
+                continue
+            cur = self.s.cards[g].crossed
+            if not self._mana_choices(g, p, limit=1):
+                continue
+            for c in self.bz_tops(p):
+                if "creature" in self.chars(c)["types"] and not (cur and cur == self.s.ref(c)):
+                    out.append({"key": f"cross:{self.s.cards[g].defn}:{self.s.cards[c].defn}", "cid": g, "target": self.s.ref(c)})
+        return out
+
     def _can_play_face(self, cid, p, face) -> bool:
         d = self.cdef(cid).face(face)
         action = "summon" if d.is_creature() else "generate" if d.is_permanent() else "cast"
@@ -84,9 +99,9 @@ class TurnMixin:
             return False
         if "evolution" in d.types:
             srcs = self._evo_sources(cid, p, face)
-            if not srcs:
+            if len(srcs) < d.evolve_count:
                 return False
-            n = len(srcs) if d.evolve_any else 1            # 最も安い組合せで払えるか（112.2b）
+            n = len(srcs) if d.evolve_any else d.evolve_count           # 最も安い組合せで払えるか（112.2b）
             cost = max(0, d.cost - n * d.cost_reduce_per_evo) if d.cost_reduce_per_evo else None
             return bool(self._mana_choices(cid, p, face, cost=self._opt_reduced(cid, face, d, self._sac_reduced(d, self._tap_reduced(d, p, cost, None), self._sac_pool(d, p))), limit=1))
         return bool(self._mana_choices(cid, p, face, cost=self._opt_reduced(cid, face, d, self._sac_reduced(d, self._tap_reduced(d, p, None, None), self._sac_pool(d, p))), limit=1))
@@ -221,12 +236,20 @@ def st_start(eng, t):                                   # 501
     n = len(s.continuous)
     s.continuous = [c for c in s.continuous if c["duration"] != f"until_turn_start:{a}"]
     s.delayed = [d for d in s.delayed if d["duration"] != f"until_turn_start:{a}"]
+    cands = [c for c in eng.bz_tops(a) if s.cards[c].tapped and eng.permits(c, "untap_at_start") and eng.abilities(c, "silent")]
+    skill = []
+    if cands:                          # 501.1a サイレントスキル: アンタップしないことを選び、かわりに能力を使ってもよい
+        ans, d = eng.ask(t, a, "choose_cards", [eng._card_option(c) for c in cands], 0, len(cands))
+        if d:
+            return d
+        skill = [cands[i] for i in ans]
     untap = [{"ev": "untap", "subject": s.ref(c)}
              for c in eng.bz_tops(a) + eng.zlist("mana", a)
-             if s.cards[c].tapped and eng.permits(c, "untap_at_start")]
+             if s.cards[c].tapped and eng.permits(c, "untap_at_start") and c not in skill]
     eng._step_done(t)
-    # ターン起因処理（同時にアンタップ, 702.3a）→「ターンのはじめに」の誘発（501.2）
-    eng._push(*([eng.ev_task(untap)] if untap else []), eng.ev_task({"ev": "turn_start", "player": a}))
+    # ターン起因処理（同時にアンタップ, 702.3a）→ サイレントスキルの解決（他のカードのアンタップの後, 501.1a）→「ターンのはじめに」の誘発（501.2）
+    effects = [eng._child(ab["effect"], {"you": a, "self": s.ref(c), "vars": {}}) for c in skill for _, ab in eng.abilities(c, "silent")]
+    eng._push(*([eng.ev_task(untap)] if untap else []), *effects, eng.ev_task({"ev": "turn_start", "player": a}))
     if len(s.continuous) != n:
         eng._sba()           # 期限切れでパワー0以下になったものを先に破壊（703.1）
 
@@ -256,13 +279,15 @@ def st_charge(eng, t):                                  # 503
 @step("main")
 def st_main(eng, t):                                    # 504
     a = eng.s.active
-    opts = eng._play_options(a) + [{"key": "pass"}]
+    opts = eng._play_options(a) + eng._cross_options(a) + [{"key": "pass"}]
     ans, d = eng.ask(t, a, "main", opts)
     if d:
         return d
     o = opts[ans[0]]
     if o["key"] == "pass":
         eng._step_done(t)
+    elif o["key"].startswith("cross:"):
+        eng._push({"t": "cross", "gear": eng.s.ref(o["cid"]), "target": o["target"], "player": a})
     else:
         eng._push(eng.play_task(o["cid"], a, o.get("free", False), o.get("face")))
 
@@ -271,13 +296,20 @@ def st_main(eng, t):                                    # 504
 def st_attack(eng, t):                                  # 505
     s = eng.s
     a = s.active
-    opts = eng._attack_options(a) + [{"key": "pass"}]
+    atk = eng._attack_options(a)
+    forced = {o["cid"] for o in atk if "attack" in eng.chars(o["cid"])["require"]}   # 506.1b 攻撃を強制されたクリーチャーは攻撃させなくてはいけない
+    act = [o for o in eng._activate_options(a, atk) if o["tap"] not in forced]       # タップ能力で攻撃を免れることはできない
+    opts = atk + act + ([] if forced else [{"key": "pass"}])
     ans, d = eng.ask(t, a, "attack", opts)
     if d:
         return d
     o = opts[ans[0]]
     if o["key"] == "pass":
         eng._step_done(t)
+    elif o["key"].startswith("activate:"):                  # 602 起動型能力: コスト（タップ）を払い、効果は待機状態になる
+        s.cards[o["tap"]].tapped = True
+        ab = dict(eng.abilities(o["cid"], "activate"))[o["ab"]]
+        eng._push(eng._child(ab["effect"], {"you": a, "self": s.ref(o["cid"]), "vars": {}}))
     else:
         eng._push({"t": "attack", "attacker": s.ref(o["cid"]), "target": o["target"], "phase": 0, "cp": True})
 
@@ -290,6 +322,29 @@ def st_end(eng, t):                                     # 511
         return None
     eng._expire("end_of_turn")                          # 511.2
     eng._step_done(t)
+
+
+@task("cross", CrossTask)
+def h_cross(eng, t):
+    """クロスする（303.3, 701.17）。マナコストをもう一度支払い、クロスギアをクリーチャーに付ける。"""
+    s = eng.s
+    g, tg, p = t["gear"], t["target"], t["player"]
+    if not (s.alive(g) and s.alive(tg)) or s.cards[g[0]].zone != "bz" or s.cards[tg[0]].zone != "bz":
+        eng._pop(t)
+        return None
+    choices = eng._mana_choices(g[0], p)
+    if not choices:
+        eng._pop(t)
+        return None
+    opts = [{"key": "mana:" + ",".join(sorted(s.cards[c].defn for c in ch)), "cids": ch} for ch in choices]
+    ans, dd = eng.ask(t, p, "pay_mana", opts)
+    if dd:
+        return dd
+    for c in opts[ans[0]]["cids"]:
+        s.cards[c].tapped = True
+    s.cards[g[0]].crossed = list(tg)
+    eng._pop(t)
+    return None
 
 
 @task("play", PlayTask)
@@ -309,11 +364,11 @@ def h_play(eng, t):
         return None
     if "evolution" in d.types and "evo" not in t:
         srcs = eng._evo_sources(cid, p, face)
-        if not srcs:
+        if len(srcs) < d.evolve_count:
             eng._pop(t)
             return None
         opts = [eng._card_option(c) for c in srcs]
-        mn, mx = (1, len(srcs)) if d.evolve_any else (1, 1)
+        mn, mx = (1, len(srcs)) if d.evolve_any else (d.evolve_count, d.evolve_count)
         ans, dd = eng.ask(t, p, "choose_evo_source", opts, mn, mx)
         if dd:
             return dd
@@ -342,6 +397,9 @@ def h_play(eng, t):
                 return None
         t["sac_done"] = True
     ch0 = eng.chars(cid, face)
+    flag = f"last_play_creature:{p}"
+    cyc = "cyclone" in ch0["keywords"] and bool(s.turn_counters.get(flag))   # サイクロン: 唱える直前に召喚していたか（直前の実行が召喚）
+    s.turn_counters[flag] = int(d.is_creature())
     if ch0["opt_reduce"] and not t["free"] and not t.get("reduce_done"):    # B・A・D / J・O・E: 減らして実行するか選ぶ
         ans, dd = eng.ask(t, p, "choose_cards", [{"key": "reduce"}, {"key": "normal"}], 1, 1)
         if dd:
@@ -387,8 +445,8 @@ def h_play(eng, t):
             env["in_st"] = True
         eng._push(eng.ev_task({"ev": "cast", "player": p, "subject": ref, "unpaid": bool(t["free"])}),
                    eng._child(d.spell, env),
-                   eng.ev_task({"ev": "move", "subject": ref, "from": from_zone, "to": t.get("resolve_to", d.resolve_to),
-                                 "reason": "resolve"}),
+                   eng.ev_task({"ev": "move", "subject": ref, "from": from_zone, "to": t.get("resolve_to", "hand" if cyc else d.resolve_to),
+                                 "reason": "resolve", "position": t.get("resolve_position", "top")}),
                    *([eng._child(d.after_resolve, env)] if d.after_resolve else []))
     if t.get("reduced"):   # 減らして実行したら、そのターンの終わりに処理する。実行の解決より後に積む＝先に処理する
         then = ch0["opt_reduce"]["then"]

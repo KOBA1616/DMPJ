@@ -272,11 +272,11 @@ let cidOpts = {};          // cid → [選択肢の番号]
 let nameByCid = {};        // cid → 名前
 let cardByCid = {};        // cid → カード表示データ
 let nameById = {};         // カードID → 名前
-const MULTI = new Set(["choose_shields", "choose_cards", "declare_strigger", "declare_attack", "declare_block"]);
+const MULTI = new Set(["choose_shields", "choose_cards", "declare_strigger", "declare_sback", "declare_attack", "declare_block"]);
 const KINDJA = {charge: "マナチャージ", main: "プレイするカード", attack: "攻撃", block: "ブロック",
   pay_mana: "マナの支払い", choose_breaker: "ブレイカー能力の選択", choose_shields: "ブレイクするシールド",
   choose_evo_source: "進化元の選択", choose_cards: "カードの選択", choose_replacement: "置換効果の選択", choose_mode: "モードの選択",
-  declare_strigger: "S・トリガーの宣言", declare_attack: "使用宣言（攻撃時）", declare_block: "使用宣言（ブロック時）",
+  declare_strigger: "S・トリガーの宣言", declare_sback: "S・バックの宣言", declare_attack: "使用宣言（攻撃時）", declare_block: "使用宣言（ブロック時）",
   yes_no: "はい / いいえ", order_pending: "解決の順番"};
 const HINT = {
   charge: "手札のカードをクリック → マナに置く",
@@ -286,7 +286,7 @@ const HINT = {
   pay_mana: "支払いに使うマナをクリックしてタップ → 「決定」（同じ名前のマナは区別しない）",
   choose_shields: "ブレイクするシールドをクリック → 「決定」（クリックした順に解決）",
   choose_evo_source: "進化元のクリーチャーをクリック",
-  declare_strigger: "宣言する S・トリガーをクリック → 「決定」",
+  declare_strigger: "宣言する S・トリガーをクリック → 「決定」", declare_sback: "使う S・バックをクリック → 「決定」",
 };
 const esc = (s) => String(s ?? "").replace(/[&<>"]/g, (c) => ({"&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;"}[c]));
 
