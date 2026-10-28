@@ -12,6 +12,8 @@ from pathlib import Path
 
 import yaml
 
+from .defs import DATA
+
 
 def shard_of(card_id: str) -> str:
     return card_id.split("-")[0]
@@ -54,3 +56,10 @@ def write(path: Path, cards: list[dict], header: str = ""):
     for f in path.glob("*.yaml"):
         if f.stem not in groups:
             f.unlink()
+
+
+def converted_path(root: Path | None = None) -> Path:
+    """変換結果の置き場。弾別ディレクトリ data/cards/converted/ があればそれ、無ければ従来の converted.yaml。
+    移行は tools/migrate_converted.py（ディレクトリを作って元ファイルを消す）だけで切り替わる。"""
+    cards = (root or DATA) / "cards"
+    return cards / "converted" if (cards / "converted").is_dir() else cards / "converted.yaml"

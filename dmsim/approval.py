@@ -1,4 +1,4 @@
-"""承認台帳（data/cards/approvals.json）。カード定義とは別に、承認の状態と根拠を持つ。
+"""承認台帳（data/cards/approvals/<弾>.json）。カード定義とは別に、承認の状態と根拠を持つ。
 
 - def_hash: 承認時のカード定義のハッシュ（source.review 系を除く）。定義が変わると承認は無効。
 - uses / vocab_ver: カードが使う語彙（op・キーワード）と、それらの定義のハッシュ。語彙の定義が変わると、使うカードだけ無効。
@@ -13,7 +13,7 @@ from pathlib import Path
 
 from .defs import DATA, core_ops, load_tables
 
-LEDGER = DATA / "cards" / "approvals.json"
+LEDGER = DATA / "cards" / "approvals"        # 弾ごとの <弾>.json を置くディレクトリ（単一の .json ファイルも指定できる）
 _SKIP_SRC = {"review", "review_note"}
 
 
@@ -61,12 +61,37 @@ def uses(raw: dict) -> list[str]:
                                                          if isinstance(k, (str, dict))})
 
 
+def _dump(ledger: dict) -> str:
+    return json.dumps(ledger, ensure_ascii=False, indent=0, sort_keys=True) + "\n"
+
+
 def load(path: Path = LEDGER) -> dict:
+    path = Path(path)
+    if path.is_dir():
+        out = {}
+        for f in sorted(path.glob("*.json")):
+            out.update(json.loads(f.read_text(encoding="utf-8")))
+        return out
     return json.loads(path.read_text(encoding="utf-8")) if path.exists() else {}
 
 
 def save(ledger: dict, path: Path = LEDGER):
-    path.write_text(json.dumps(ledger, ensure_ascii=False, indent=0, sort_keys=True) + "\n", encoding="utf-8")
+    """ディレクトリなら弾（IDの接頭辞）ごとに分け、内容が変わった弾だけ書く（並行ワーカーの衝突と差分を小さくする）。"""
+    path = Path(path)
+    if path.suffix == ".json":
+        path.write_text(_dump(ledger), encoding="utf-8")
+        return
+    path.mkdir(parents=True, exist_ok=True)
+    groups: dict[str, dict] = {}
+    for cid, e in ledger.items():
+        groups.setdefault(cid.split("-")[0], {})[cid] = e
+    for k, g in groups.items():
+        f, text = path / f"{k}.json", _dump(g)
+        if not f.exists() or f.read_text(encoding="utf-8") != text:
+            f.write_text(text, encoding="utf-8")
+    for f in path.glob("*.json"):
+        if f.stem not in groups:
+            f.unlink()
 
 
 def entry(raw: dict, status: str, by: str, versions: dict, **extra) -> dict:
@@ -97,3 +122,14 @@ def invalidate(ledger: dict, raws: dict[str, dict], versions: dict) -> list[str]
                 e.update(status="pending", stale=why)
                 out.append(cid)
     return out
+
+
+def is_usable(raw: dict, ledger: dict, versions: dict) -> bool:
+    """承認済みとして使ってよいか。source の無い試験用カードは常に可。台帳で承認済み（古くない）か、ファイル上で review: approved。"""
+    src = raw.get("source")
+    if not src:
+        return True
+    e = ledger.get(raw["id"])
+    if e and e.get("status") == "approved" and stale_reason(e, raw, versions) is None:
+        return True
+    return src.get("review") == "approved" and not (e and e.get("status") != "approved" and e.get("stale"))

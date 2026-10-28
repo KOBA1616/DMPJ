@@ -22,7 +22,7 @@ from dmsim import cardstore  # noqa: E402
 from dmsim.defs import DATA, load_tables  # noqa: E402
 
 RAW = DATA / "cards" / "raw"
-OUT, REJ = DATA / "cards" / "converted.yaml", RAW / "rejects.jsonl"
+OUT, REJ = cardstore.converted_path(DATA), RAW / "rejects.jsonl"
 
 
 def todo_rows(order: str) -> list[dict]:

@@ -79,15 +79,22 @@ class Git:
         """変換結果ファイルが origin 側とも変わって rebase が衝突したときの合流。converted.yaml と rejects.jsonl を ID ごとの和集合にして、
         origin の最新の上に1コミット作り直す（作業ツリーの tools/ 等の上書きはそのまま残す）。成功扱い（変換済み）が優先。"""
         import yaml as _y
-        conv, rej = d / "data/cards/converted.yaml", d / "data/cards/raw/rejects.jsonl"
+        sys.path.insert(0, str(ROOT))
+        from dmsim import cardstore
+        conv_rel = "data/cards/converted" if (d / "data/cards/converted").is_dir() else "data/cards/converted.yaml"
+        conv, rej = d / conv_rel, d / "data/cards/raw/rejects.jsonl"
 
         def theirs(path: str) -> str:
             return self.sh("show", f"origin/{branch}:{path}", cwd=d, check=False)
 
         cards = {}
-        for text in (theirs("data/cards/converted.yaml"), conv.read_text(encoding="utf-8") if conv.exists() else ""):
-            for c in (_y.safe_load(text) or {}).get("cards") or []:      # あとから読む（自分の結果）が優先
-                cards[c["id"]] = c
+        if conv.is_dir():          # 弾別ディレクトリ: origin 側の各ファイルを読む
+            texts = [theirs(f) for f in self.sh("ls-tree", "-r", "--name-only", f"origin/{branch}", "--", conv_rel, cwd=d, check=False).split()
+                     if f.endswith(".yaml")]
+        else:
+            texts = [theirs(conv_rel)]
+        for c in [c for t in texts for c in (_y.safe_load(t) or {}).get("cards") or []] + cardstore.read(conv):
+            cards[c["id"]] = c         # あとから読む（自分の結果）が優先
         rejects = {}
         for text in (theirs("data/cards/raw/rejects.jsonl"), rej.read_text(encoding="utf-8") if rej.exists() else ""):
             for line in text.splitlines():
@@ -96,11 +103,10 @@ class Git:
                     rejects[r["id"]] = r
         for i in cards:
             rejects.pop(i, None)
-        conv.write_text("# convert_cards.py の出力（review: pending）。確認後に real.yaml へ移す。\n"
-                        + _y.safe_dump({"cards": list(cards.values())}, allow_unicode=True, sort_keys=False), encoding="utf-8")
+        cardstore.write(conv, list(cards.values()), "# convert_cards.py の出力（review: pending）。確認後に real.yaml へ移す。\n")
         rej.write_text("".join(json.dumps(r, ensure_ascii=False) + "\n" for r in rejects.values()), encoding="utf-8")
         self.sh("reset", "-q", "--mixed", f"origin/{branch}", cwd=d)
-        for f in ("data/cards/converted.yaml", "data/cards/raw/rejects.jsonl", "data/cards/raw/convert_report.json",
+        for f in (conv_rel, "data/cards/raw/rejects.jsonl", "data/cards/raw/convert_report.json",
                   "data/cards/raw/convert_status.json"):
             if (d / f).exists():      # 無いパスを混ぜると git add 全体が失敗するので、あるものだけ足す
                 self.sh("add", "-f", f, cwd=d, check=False)
@@ -250,7 +256,7 @@ def run_convert(job: dict, git: Git, jobs_model: str | None) -> dict:
             tail = (tail + [line])[-40:]
         proc.wait()
         git.sh("reset", "-q", cwd=d)
-        git.sh("add", "-f", "data/cards/converted.yaml", "data/cards/raw/rejects.jsonl", "data/cards/raw/convert_report.json",
+        git.sh("add", "-f", "data/cards/converted" if (d / "data/cards/converted").is_dir() else "data/cards/converted.yaml", "data/cards/raw/rejects.jsonl", "data/cards/raw/convert_report.json",
                "data/cards/raw/convert_status.json", cwd=d, check=False)
         msg = f"cards-data: convert (local worker) {now()}"
         git.commit_push(d, DATA_BRANCH, msg, add=False, on_conflict=lambda: git.merge_convert_results(d, DATA_BRANCH, msg))
