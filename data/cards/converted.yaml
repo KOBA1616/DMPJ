@@ -41192,3 +41192,285 @@ cards:
       text: その中からアーマード・ドラゴンまたは名前に《ロマノフ》とあるクリーチャーを１体選び、バトルゾーンに出してもよい。
   keywords:
   - world_breaker
+- id: dm32-s08
+  name: ボルシャック・NEX
+  types:
+  - creature
+  civs:
+  - fire
+  cost: 6
+  power: 6000
+  races:
+  - アーマード・ドラゴン
+  mana: 1
+  text: 'このクリーチャーをバトルゾーンに出した時、自分の山札を見る。その中から、名前に《ルピア》とあるカードを１枚、バトルゾーンに出してもよい。その後、山札をシャッフルする。
+
+    このクリーチャーは、自分の墓地にあるファイアー・バード１体につき「パワーアタッカー+1000」を得る。
+
+    W・ブレイカー'
+  abilities:
+  - kind: trigger
+    when:
+      event: move
+      to: bz
+      subject: self
+    effect:
+    - op: move
+      select:
+        zone: deck
+        owner: you
+        filter:
+          name_has: ルピア
+        count: 1
+        up_to: true
+        look: true
+      to: bz
+      reason: put
+    - op: shuffle
+  - kind: static
+    affects: self
+    mod:
+      battle_power:
+        amount: 1000
+        count:
+          zone: graveyard
+          owner: you
+          filter:
+            races:
+            - ファイアー・バード
+  keywords:
+  - double_breaker
+  source:
+    official: dm32-s08
+    review: pending
+    notes: 原文が同じ 32-sec001 の変換結果を写した（モデル不使用）。能力は元カードの確認に従う
+- id: dmc62-010
+  name: ボルシャック・NEX
+  types:
+  - creature
+  civs:
+  - fire
+  cost: 6
+  power: 6000
+  races:
+  - アーマード・ドラゴン
+  mana: 1
+  text: 'このクリーチャーをバトルゾーンに出した時、自分の山札を見る。その中から、名前に《ルピア》とあるカードを１枚、バトルゾーンに出してもよい。その後、山札をシャッフルする。
+
+    このクリーチャーは、自分の墓地にあるファイアー・バード１体につき「パワーアタッカー+1000」を得る。
+
+    W・ブレイカー'
+  abilities:
+  - kind: trigger
+    when:
+      event: move
+      to: bz
+      subject: self
+    effect:
+    - op: move
+      select:
+        zone: deck
+        owner: you
+        filter:
+          name_has: ルピア
+        count: 1
+        up_to: true
+        look: true
+      to: bz
+      reason: put
+    - op: shuffle
+  - kind: static
+    affects: self
+    mod:
+      battle_power:
+        amount: 1000
+        count:
+          zone: graveyard
+          owner: you
+          filter:
+            races:
+            - ファイアー・バード
+  keywords:
+  - double_breaker
+  source:
+    official: dmc62-010
+    review: pending
+    notes: 原文が同じ 32-sec001 の変換結果を写した（モデル不使用）。能力は元カードの確認に従う
+- id: dmc67-s03
+  name: ボルシャック・NEX
+  types:
+  - creature
+  civs:
+  - fire
+  cost: 6
+  power: 6000
+  races:
+  - アーマード・ドラゴン
+  mana: 1
+  text: 'このクリーチャーをバトルゾーンに出した時、自分の山札を見る。その中から、名前に《ルピア》とあるカードを１枚、バトルゾーンに出してもよい。その後、山札をシャッフルする。
+
+    このクリーチャーは、自分の墓地にあるファイアー・バード１体につき「パワーアタッカー+1000」を得る。
+
+    W・ブレイカー'
+  abilities:
+  - kind: trigger
+    when:
+      event: move
+      to: bz
+      subject: self
+    effect:
+    - op: move
+      select:
+        zone: deck
+        owner: you
+        filter:
+          name_has: ルピア
+        count: 1
+        up_to: true
+        look: true
+      to: bz
+      reason: put
+    - op: shuffle
+  - kind: static
+    affects: self
+    mod:
+      battle_power:
+        amount: 1000
+        count:
+          zone: graveyard
+          owner: you
+          filter:
+            races:
+            - ファイアー・バード
+  keywords:
+  - double_breaker
+  source:
+    official: dmc67-s03
+    review: pending
+    notes: 原文が同じ 32-sec001 の変換結果を写した（モデル不使用）。能力は元カードの確認に従う
+- id: dmd07-009
+  name: ボルシャック・NEX
+  types:
+  - creature
+  civs:
+  - fire
+  cost: 6
+  power: 6000
+  races:
+  - アーマード・ドラゴン
+  mana: 1
+  text: 'このクリーチャーをバトルゾーンに出した時、自分の山札を見る。その中から、名前に《ルピア》とあるカードを１枚、バトルゾーンに出してもよい。その後、山札をシャッフルする。
+
+    このクリーチャーは、自分の墓地にあるファイアー・バード１体につき「パワーアタッカー+1000」を得る。
+
+    W・ブレイカー'
+  abilities:
+  - kind: trigger
+    when:
+      event: move
+      to: bz
+      subject: self
+    effect:
+    - op: move
+      select:
+        zone: deck
+        owner: you
+        filter:
+          name_has: ルピア
+        count: 1
+        up_to: true
+        look: true
+      to: bz
+      reason: put
+    - op: shuffle
+  - kind: static
+    affects: self
+    mod:
+      battle_power:
+        amount: 1000
+        count:
+          zone: graveyard
+          owner: you
+          filter:
+            races:
+            - ファイアー・バード
+  keywords:
+  - double_breaker
+  source:
+    official: dmd07-009
+    review: pending
+    notes: 原文が同じ 32-sec001 の変換結果を写した（モデル不使用）。能力は元カードの確認に従う
+- id: dmx12b-041
+  name: ボルシャック・クロス・NEX
+  types:
+  - creature
+  civs:
+  - fire
+  cost: 9
+  power: 12000
+  races:
+  - アーマード・ドラゴン
+  mana: 1
+  text: 'スピードアタッカー（このクリーチャーは召喚酔いしない）
+
+    パワーアタッカー+5000（攻撃中、このクリーチャーのパワーは+5000される）
+
+    T・ブレイカー（このクリーチャーはシールドを３枚ブレイクする）
+
+    誰もコスト４以下のクリーチャーを召喚できない。'
+  abilities:
+  - kind: trigger
+    when:
+      event: attack
+      subject: self
+    effect:
+    - op: modify
+      select:
+        ref: self
+      mod:
+        power: 5000
+      duration: end_of_turn
+  - kind: static
+    affects:
+      zone: hand
+      owner: any
+      filter:
+        types:
+        - creature
+        cost_le: 4
+    mod:
+      deny:
+      - summon
+  keywords:
+  - speed_attacker
+  - triple_breaker
+  source:
+    official: dmx12b-041
+    review: pending
+    notes: 原文が同じ 34-sec001 の変換結果を写した（モデル不使用）。能力は元カードの確認に従う
+- id: c48-sec001
+  name: 邪眼皇アレクサンドルIII世
+  types:
+  - creature
+  civs:
+  - darkness
+  cost: 7
+  power: 6000
+  races:
+  - ダークロード
+  - ドラゴン・ゾンビ
+  - ナイト
+  mana: 1
+  text: 'W・ブレイカー
+
+    自分の手札または墓地から光、水、闇の呪文を唱えた時、バトルゾーンに自分のナイトが他に１枚でもあれば、自分の山札を見る。その中から、唱えた呪文と同じ名前の呪文を１枚選び、ストを支払わずに唱えてもよい。その後、山札をシャッフルする。'
+  source:
+    official: c48-sec001
+    review: pending
+    notes: 29-sec001 と同一カードの別収録。「唱えた呪文と同じ名前の呪文」を選ぶ条件（イベントのカードの名前を参照するフィルタ）が語彙に無いため、能力全体を書かず
+      unsupported に残した。原文は「ストを支払わずに」となっている（「コスト」の「コ」欠落と思われるが原文どおり）
+    unsupported:
+    - need: filter_same_name_as_event_card
+      text: 自分の手札または墓地から光、水、闇の呪文を唱えた時、バトルゾーンに自分のナイトが他に１枚でもあれば、自分の山札を見る。その中から、唱えた呪文と同じ名前の呪文を１枚選び、ストを支払わずに唱えてもよい。その後、山札をシャッフルする。
+  keywords:
+  - double_breaker
