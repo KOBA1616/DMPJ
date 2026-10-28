@@ -237,6 +237,8 @@ def run_convert(job: dict, git: Git, jobs_model: str | None) -> dict:
     for _ in range(max(1, -(-total // chunk))):
         cmd = [sys.executable, "-u", "tools/auto_convert.py", "--model", model, "--limit", str(chunk), "--batch", str(min(chunk, 5)),
                "--interval", str(job.get("interval", 3)), "--workers", str(job.get("workers", 1))]
+        if job.get("pack"):
+            cmd += ["--pack", str(job["pack"])]
         if job.get("order"):
             cmd += ["--order", str(job["order"])]
         # 出力を1行ずつ画面とログへ流す（ウィンドウで途中経過が見える）。最後の出力は結果に残す

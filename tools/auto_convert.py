@@ -83,6 +83,7 @@ def main(argv=None):
     ap.add_argument("--model", default=cc.OPENCODE_DEFAULT)
     ap.add_argument("--interval", type=float, default=6.0)
     ap.add_argument("--workers", type=int, default=1, help="並列数（無料枠は共有枠らしいので増やしすぎない）")
+    ap.add_argument("--pack", type=int, default=1, help="1回の呼び出しでまとめて変換する枚数（既定1=1枚ずつ。検査に落ちた分は単独で直す）")
     ap.add_argument("--limit", type=int, default=20, help="1回の実行で扱う最大枚数（--batch ごとに区切って処理する）")
     ap.add_argument("--batch", type=int, default=5, help="1単位の枚数。単位の中がすべてAPI失敗ならその単位を飛ばして次へ")
     ap.add_argument("--max-bad-batches", type=int, default=2, help="API失敗だけの単位がこの回数続いたら打ち切る")
@@ -129,7 +130,7 @@ def main(argv=None):
         bad = 0
         for i in range(0, len(todo), a.batch):
             chunk = todo[i:i + a.batch]
-            rep = cc.run(chunk, llm, tables, sysp, a.effort, out, rej, workers=a.workers, report_path=RAW / "convert_report.json")
+            rep = cc.run(chunk, llm, tables, sysp, a.effort, out, rej, workers=a.workers, report_path=RAW / "convert_report.json", pack=a.pack)
             ran["new"] = {k: (ran["new"] or {}).get(k, 0) + rep[k] for k in ("requested", "ok", "rejected", "api_error")}
             skipped = rep["ok"] == 0 and rep["api_error"] > 0       # 検査落ちは rejects に入り次回から対象外。API失敗は飛ばして次の単位へ
             batches.append({"ids": [r["id"] for r in chunk], "ok": rep["ok"], "rejected": rep["rejected"],

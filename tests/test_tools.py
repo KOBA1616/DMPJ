@@ -233,6 +233,31 @@ def test_convert_run_triage_and_resume(tmp_path):
     assert convert_cards.read_jsonl(rej) == [] and len(yaml.safe_load(out.read_text(encoding="utf-8"))["cards"]) == 3
 
 
+def test_convert_pack_shares_one_call_and_falls_back_per_card(tmp_path):
+    """pack=3: 1回の呼び出しで3枚。1枚は検査落ち→単独で直す、1枚は応答に無い→単独の呼び出し。"""
+    import convert_cards
+    from dmsim.defs import load_tables
+    card = "- id: {i}\n  name: 例\n  types: [creature]\n  civs: [water]\n  cost: 2\n  power: 1000\n  keywords: [{k}]\n"
+    single = "```yaml\nid: {i}\nname: 例\ntypes: [creature]\ncivs: [water]\ncost: 2\npower: 1000\nkeywords: [blocker]\n```"
+    calls = []
+
+    class Msgs:
+        def stream(self, **kw):
+            calls.append(kw["messages"][0]["content"])
+            if "まとめて" in calls[-1]:
+                return _FakeStream("```yaml\ncards:\n" + card.format(i="p1", k="blocker") + card.format(i="p2", k="no_such") + "```")
+            i = calls[-1].split('"id": "')[1].split('"')[0]
+            return _FakeStream(single.format(i=i))
+
+    client = type("C", (), {"messages": Msgs()})()
+    rows = [{"id": i, "text": "x"} for i in ("p1", "p2", "p3")]
+    out, rej = tmp_path / "c.yaml", tmp_path / "rej.jsonl"
+    r = convert_cards.run(rows, convert_cards.AnthropicLLM(client=client), load_tables(), "SYS", "low", out, rej, pack=3)
+    assert (r["ok"], r["rejected"]) == (3, 0)
+    assert len(calls) == 1 + 2                   # まとめ1回 + p2(検査落ちの直し)・p3(応答に無い)の単独
+    assert sorted(c["id"] for c in yaml.safe_load(out.read_text(encoding="utf-8"))["cards"]) == ["p1", "p2", "p3"]
+
+
 def test_survey_text_counts_forms():
     import survey_text
     rows = [{"id": "a", "name": "甲", "text": "ブロッカー(説明。)\n甲が出た時、カードを2枚引く。"},

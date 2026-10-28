@@ -202,3 +202,5 @@ schtasks /Create /SC MINUTE /MO 5 /TN "dmpj-worker" /TR C:\path\DMPJ\tools\run_w
 - ジョブに `target: local` / `target: cloud` を書くと、`run --target <種類>` で起動したワーカーだけが拾う（省略・`any` は誰でも）。`run --worker-name` で名前を付けられる（既定はホスト名）。
 - convert ジョブは `order: newest` で新しい弾から処理できる（`auto_convert.py --order newest`）。片方は古い順、もう片方は新しい順にすると被らない。
 - `enqueue convert --target cloud --order newest` のように投入できる。
+- `pack: N`（`auto_convert.py --pack N`、`convert_cards.py --pack N`）: N枚を1回の呼び出しでまとめて変換する（既定1＝1枚ずつ）。指示文を共有してトークンを減らす。検査に落ちた分・応答に無かった分は単独で呼び直す。精度は `tools/eval_convert.py` で単独と比べてから使う。
+- クラウドのエージェントに回させる手順は docs/cloud-worker.md。
