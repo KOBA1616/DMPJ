@@ -417,3 +417,36 @@ cards:
         if: {self_marked: turbo_rush}
         effect:
           - {op: draw, count: 1}
+
+  # 攻撃された時・ブロックされた時の誘発（攻撃先 target・攻撃クリーチャー attacker の条件）
+  - id: R060
+    name: 試験用攻撃を受ける者
+    types: [creature]
+    civs: [light]
+    cost: 1
+    power: 5000
+    races: [テスト]
+    text: このクリーチャーが攻撃された時、カードを1枚引く。自分のクリーチャーが攻撃された時、そのクリーチャーのパワーを+1000する。
+    abilities:
+      - kind: trigger
+        when: {event: attack, target: self}
+        effect:
+          - {op: draw, count: 1}
+      - kind: trigger
+        when: {event: attack, target: {owner: you, other: true}}
+        effect:
+          - {op: modify, select: {ref: event.target}, mod: {power: 1000}, duration: permanent}
+
+  - id: R061
+    name: 試験用ブロックされる者
+    types: [creature]
+    civs: [fire]
+    cost: 1
+    power: 1000
+    races: [テスト]
+    text: このクリーチャーがブロックされた時、カードを1枚引く。
+    abilities:
+      - kind: trigger
+        when: {event: block, attacker: self}
+        effect:
+          - {op: draw, count: 1}

@@ -262,15 +262,27 @@ class EventMixin:
                "self": lki_src["ref"] if lki_src else self.s.ref(src)}
         return self._match_when(when, rec, env)
 
+    def _ref_match(self, pat, ref, env) -> bool:
+        """イベントに出てくるクリーチャー（攻撃先・攻撃クリーチャー）が、self か subject と同じ形の条件に合うか。"""
+        if pat == "self":
+            return env.get("self") is not None and ref[0] == env["self"][0]
+        return self._subject_match(pat, ref[0], env, None)
+
     def _match_when(self, when, rec, env) -> bool:
         if when["event"] != rec["ev"]:
             return False
         for k in ("from", "to", "reason", "via"):
             if k in when and rec.get(k) != when[k]:
                 return False
-        if "target" in when:   # 攻撃先: player（シールドも含む）か creature
-            tg = rec.get("target")
-            if (tg == "player") != (when["target"] == "player"):
+        if "target" in when:   # 攻撃先: player（シールドも含む）か creature。self や {owner, filter} なら、そのクリーチャーが攻撃された時
+            tg, w = rec.get("target"), when["target"]
+            if w in ("player", "creature"):
+                if (tg == "player") != (w == "player"):
+                    return False
+            elif tg is None or tg == "player" or not self._ref_match(w, tg, env):
+                return False
+        if "attacker" in when:   # ブロックされた時などの、攻撃クリーチャーの条件（self なら「このクリーチャーがブロックされた時」）
+            if rec.get("attacker") is None or not self._ref_match(when["attacker"], rec["attacker"], env):
                 return False
         if "unpaid" in when and bool(rec.get("unpaid")) != when["unpaid"]:   # マナをタップせずに（コストを支払わずに）
             return False

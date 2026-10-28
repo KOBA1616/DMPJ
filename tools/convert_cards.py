@@ -58,6 +58,7 @@ INSTRUCTIONS = """\
 - known_keywords に wave_striker があるときは、残りの text の能力すべてに上記の if を付ける（付け忘れると常時働く誤変換になる）。
 - サイレントスキルは keywords: [silent_skill]（印）と、続く効果文を `kind: silent, effect: [...]`（自分のターンのはじめにタップされていたら、アンタップしないかわりに使ってもよい。ルール 501.1a で処理済み）。
 - ターボラッシュは keywords: [turbo_rush]（印。ルール側が「自分の他のクリーチャーがシールドをブレイクしたあと」にそのターン中だけ印を付ける）。続く能力すべてに `if: {self_marked: turbo_rush}` を付ける（付け忘れると常時働く誤変換になる）。
+- 「攻撃された時」は `when: {event: attack, target: self}`（このクリーチャーが攻撃先）、「自分のクリーチャーが攻撃された時」は `target: {owner: you}`（他のクリーチャーだけなら other: true も）。攻撃された側は `select: {ref: event.target}`。「ブロックされた時」は `when: {event: block, attacker: self}`、攻撃クリーチャーは `ref: event.attacker`。
 - 攻撃・ブロックの強制は static の mod.require（[attack] / [block]）。「毎ターン攻撃しなければならない」「相手のクリーチャーが攻撃する時、可能であればブロックする」はルールで変換済み。条件つきの強制（次のターンだけ等）は mod.require に条件が書けないので unsupported。
 - text には原文から括弧書きの注釈を除いたものを「 / 」区切りで書く。
 - 「コストを支払わずに召喚する／唱える」は op: play_free（召喚・唱えたことになり、「召喚した時」「唱えた時」が誘発する）。「バトルゾーンに出す／置く」（ヘブンズ・ゲート型、墓地・マナ・手札から出す、置換で出す）は召喚ではないので op: move, to: bz, reason: put（play_free や reason: summon は使わない。112.3g, 603.5a）。
