@@ -255,3 +255,42 @@ def test_power_when_is_validated(rr):
                 load_rules([f])
         finally:
             f.unlink()
+
+
+# ---- パワーアタッカー: 常在型で、誘発より先に・革命チェンジの条件参照にも加算後のパワー ----
+
+def test_power_attacker_pattern_is_static():
+    assert rule_convert.match_pattern("パワーアタッカー+4000(攻撃中、このクリーチャーのパワーは+4000される)") == [
+        {"kind": "static", "affects": "self", "mod": {"power_when": {"amount": 4000, "when": "attacking"}}}]
+
+
+def test_registered_power_attacker_cards_are_static():
+    cards = yaml.safe_load((DATA / "cards" / "converted.yaml").read_text(encoding="utf-8"))["cards"]
+    n = 0
+    for c in cards:
+        if "パワーアタッカー+" not in c.get("text", ""):
+            continue
+        for ab in c.get("abilities", []):
+            assert not (ab.get("kind") == "trigger" and ab.get("when") == {"event": "attack", "subject": "self"}
+                        and any(o.get("op") == "modify" and o.get("mod", {}).get("power") for o in ab.get("effect", []))), c["id"]
+        n += 1
+    assert n >= 50
+
+
+def test_revolution_change_condition_sees_power_attacker_bonus(tmp_path):
+    """攻撃クリーチャーが+2000された後のパワー(6000)で、「パワー6000以上」の条件を満たす。"""
+    atk = {"id": "Q101", "name": "pa", "types": ["creature"], "civs": ["fire"], "cost": 3, "power": 4000, "races": ["テスト"],
+           "text": "パワーアタッカー+2000",
+           "abilities": [{"kind": "static", "affects": "self", "mod": {"power_when": {"amount": 2000, "when": "attacking"}}}]}
+    rev = {"id": "Q102", "name": "rev", "types": ["creature"], "civs": ["fire"], "cost": 5, "power": 5000, "races": ["テスト"], "text": "x",
+           "abilities": [{"kind": "declare", "zone": "hand",
+                          "when": {"event": "attack", "subject": {"owner": "you", "filter": {"power_ge": 6000}}},
+                          "effect": [{"op": "swap", "out": {"ref": "event.subject"}, "in": {"ref": "self"}}]}]}
+    f = tmp_path / "q.yaml"
+    f.write_text(yaml.safe_dump({"cards": [atk, rev]}, allow_unicode=True), encoding="utf-8")
+    rr = load_rules(card_yaml_files() + [f])
+    e = setup(rr, {"bz": ["Q101"], "hand": ["Q102"]}, {"bz": ["T004"]})
+    answer(e, "charge", "pass")
+    answer(e, "attack", "attack:Q101:player")
+    d = e.advance()
+    assert d["kind"] == "declare_attack" and "declare:Q102:0" in [o["key"] for o in d["options"]]

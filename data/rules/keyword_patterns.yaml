@@ -16,10 +16,8 @@ patterns:
   power_attacker:
     re: 'パワーアタッカー([+＋]\d+)'
     abilities:
-      - kind: trigger
-        when: {event: attack, subject: self}
-        effect:
-          - {op: modify, select: {ref: self}, mod: {power: "{1}"}, duration: end_of_turn}
+      # 常在型能力: 攻撃中だけ+N。誘発より先に反映され、革命チェンジなどの条件参照にも加算後のパワーが使われる
+      - {kind: static, affects: self, mod: {power_when: {amount: "{1}", when: attacking}}}
   mach_fighter:
     re: 'マッハファイター'
     abilities:
