@@ -1,0 +1,20 @@
+{
+"dm24bd6-018": {
+"by": "rule",
+"checks": {
+"effect": "skip",
+"text": "fail"
+},
+"def_hash": "ce06b5c2272b85de",
+"status": "pending",
+"uses": [
+"core",
+"kw:double_breaker",
+"op:choose",
+"op:move"
+],
+"verifier": 2,
+"verify_error": "キーワード double_breaker(W・ブレイカー) が原文に無い",
+"vocab_ver": "7e1f7cb9d629356a"
+}
+}

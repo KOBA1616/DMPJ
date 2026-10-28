@@ -1,17 +1,26 @@
 {
 "dm26ex2-074": {
 "by": "rule",
+"checks": {
+"effect": "skip",
+"text": "ok"
+},
 "def_hash": "11a9ce686f7e1c9b",
 "status": "approved",
 "uses": [
 "core",
 "op:draw"
 ],
+"verifier": 2,
 "verify": "43手・turn 30 まで正常に回った（result={'winner': 0, 'reason': 'deck_out', 'turn': 30}）",
 "vocab_ver": "487d38cedd709caf"
 },
 "dm26ex2-084": {
 "by": "rule",
+"checks": {
+"effect": "skip",
+"text": "ok"
+},
 "def_hash": "9556e0445a638c54",
 "status": "approved",
 "uses": [
@@ -19,27 +28,38 @@
 "kw:cannot_attack_player",
 "op:modify"
 ],
+"verifier": 2,
 "verify": "43手・turn 30 まで正常に回った（result={'winner': 0, 'reason': 'deck_out', 'turn': 30}）",
 "vocab_ver": "6de268a171a38deb"
 },
 "dm26ex2-088": {
 "by": "rule",
+"checks": {
+"effect": "skip",
+"text": "ok"
+},
 "def_hash": "2cc7f557550d047c",
 "status": "approved",
 "uses": [
 "core"
 ],
+"verifier": 2,
 "verify": "43手・turn 30 まで正常に回った（result={'winner': 0, 'reason': 'deck_out', 'turn': 30}）",
 "vocab_ver": "4231c11264f83bda"
 },
 "dm26ex2-089": {
 "by": "rule",
+"checks": {
+"effect": "skip",
+"text": "ok"
+},
 "def_hash": "73e12d00ca55fcf9",
 "status": "approved",
 "uses": [
 "core",
 "op:modify"
 ],
+"verifier": 2,
 "verify": "43手・turn 30 まで正常に回った（result={'winner': 0, 'reason': 'deck_out', 'turn': 30}）",
 "vocab_ver": "669eef2272bc9e7e"
 }

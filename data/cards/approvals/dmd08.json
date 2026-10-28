@@ -1,6 +1,30 @@
 {
+"dmd08-015": {
+"by": "check",
+"checks": {
+"effect": "ok",
+"text": "ok"
+},
+"def_hash": "699a82f6e78b6d6e",
+"status": "approved",
+"uses": [
+"core",
+"kw:s_trigger",
+"op:discard",
+"op:draw",
+"op:may",
+"op:repeat"
+],
+"verifier": 2,
+"verify": "43手・turn 30 まで正常に回った（result={'winner': 0, 'reason': 'deck_out', 'turn': 30}）",
+"vocab_ver": "c05d0234bfebb2c6"
+},
 "dmd08-022": {
 "by": "rule",
+"checks": {
+"effect": "ok",
+"text": "ok"
+},
 "def_hash": "456f089fdc0900e2",
 "status": "approved",
 "uses": [
@@ -8,11 +32,16 @@
 "kw:charger",
 "op:mill"
 ],
+"verifier": 2,
 "verify": "43手・turn 30 まで正常に回った（result={'winner': 0, 'reason': 'deck_out', 'turn': 30}）",
 "vocab_ver": "fabc2b4d3f573cd6"
 },
 "dmd08-024": {
 "by": "rule",
+"checks": {
+"effect": "ok",
+"text": "ok"
+},
 "def_hash": "340a76b12072db89",
 "status": "approved",
 "uses": [
@@ -20,6 +49,7 @@
 "kw:s_trigger",
 "op:destroy"
 ],
+"verifier": 2,
 "verify": "43手・turn 30 まで正常に回った（result={'winner': 0, 'reason': 'deck_out', 'turn': 30}）",
 "vocab_ver": "ff993b8a9d91679b"
 }

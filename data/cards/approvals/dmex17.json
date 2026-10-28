@@ -1,6 +1,10 @@
 {
 "dmex17-115": {
 "by": "rule",
+"checks": {
+"effect": "ok",
+"text": "ok"
+},
 "def_hash": "2453f1e604b5a70a",
 "status": "approved",
 "uses": [
@@ -8,11 +12,16 @@
 "kw:s_trigger",
 "op:bounce"
 ],
+"verifier": 2,
 "verify": "43手・turn 30 まで正常に回った（result={'winner': 0, 'reason': 'deck_out', 'turn': 30}）",
 "vocab_ver": "03077ea7ad245899"
 },
 "dmex17-cho04": {
 "by": "rule",
+"checks": {
+"effect": "ok",
+"text": "ok"
+},
 "def_hash": "e9b254d8734f82ad",
 "status": "approved",
 "uses": [
@@ -20,7 +29,8 @@
 "kw:s_trigger",
 "op:move"
 ],
+"verifier": 2,
 "verify": "43手・turn 30 まで正常に回った（result={'winner': 0, 'reason': 'deck_out', 'turn': 30}）",
-"vocab_ver": "b3164efc6e3d02f9"
+"vocab_ver": "c7ce923d301c12db"
 }
 }

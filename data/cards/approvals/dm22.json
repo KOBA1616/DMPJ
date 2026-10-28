@@ -1,6 +1,10 @@
 {
 "dm22-044": {
 "by": "rule",
+"checks": {
+"effect": "skip",
+"text": "ok"
+},
 "def_hash": "7a1e51a5db9b497f",
 "status": "approved",
 "uses": [
@@ -8,17 +12,23 @@
 "kw:double_breaker",
 "kw:slayer"
 ],
+"verifier": 2,
 "verify": "43手・turn 30 まで正常に回った（result={'winner': 0, 'reason': 'deck_out', 'turn': 30}）",
 "vocab_ver": "d71290f4252fa36a"
 },
 "dm22-051": {
 "by": "rule",
+"checks": {
+"effect": "skip",
+"text": "ok"
+},
 "def_hash": "9e4a23f9a4102c0a",
 "status": "approved",
 "uses": [
 "core",
 "op:destroy"
 ],
+"verifier": 2,
 "verify": "43手・turn 30 まで正常に回った（result={'winner': 0, 'reason': 'deck_out', 'turn': 30}）",
 "vocab_ver": "2643e4eaa4f5de17"
 }

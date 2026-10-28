@@ -1,6 +1,10 @@
 {
 "dm35-038": {
 "by": "rule",
+"checks": {
+"effect": "skip",
+"text": "ok"
+},
 "def_hash": "98be073d8e7bb65b",
 "status": "approved",
 "uses": [
@@ -9,27 +13,38 @@
 "kw:cannot_attack_player",
 "kw:s_trigger"
 ],
+"verifier": 2,
 "verify": "43手・turn 30 まで正常に回った（result={'winner': 0, 'reason': 'deck_out', 'turn': 30}）",
 "vocab_ver": "7d424226f6e3f9b6"
 },
 "dm35-041": {
 "by": "rule",
+"checks": {
+"effect": "skip",
+"text": "ok"
+},
 "def_hash": "b06fa2ef6cf6cb79",
 "status": "approved",
 "uses": [
 "core",
 "kw:blocker"
 ],
+"verifier": 2,
 "verify": "43手・turn 30 まで正常に回った（result={'winner': 0, 'reason': 'deck_out', 'turn': 30}）",
 "vocab_ver": "53496e62eba1d5de"
 },
 "dm35-054": {
 "by": "rule",
+"checks": {
+"effect": "skip",
+"text": "ok"
+},
 "def_hash": "fa24acfba7702359",
 "status": "approved",
 "uses": [
 "core"
 ],
+"verifier": 2,
 "verify": "43手・turn 30 まで正常に回った（result={'winner': 0, 'reason': 'deck_out', 'turn': 30}）",
 "vocab_ver": "4231c11264f83bda"
 }

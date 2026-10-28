@@ -1,6 +1,31 @@
 {
+"dm22ex1-007": {
+"by": "rule",
+"checks": {
+"effect": "skip",
+"text": "fail"
+},
+"def_hash": "1f6dd7a643401d3d",
+"status": "pending",
+"uses": [
+"core",
+"kw:triple_breaker",
+"op:choose",
+"op:if",
+"op:may",
+"op:modify",
+"op:move"
+],
+"verifier": 2,
+"verify_error": "移動先 bz が原文に無い",
+"vocab_ver": "726d85cd2a6e6637"
+},
 "dm22ex1-115": {
 "by": "rule",
+"checks": {
+"effect": "skip",
+"text": "ok"
+},
 "def_hash": "eaea409f728ca303",
 "status": "approved",
 "uses": [
@@ -8,11 +33,16 @@
 "kw:g_strike",
 "kw:speed_attacker"
 ],
+"verifier": 2,
 "verify": "43手・turn 30 まで正常に回った（result={'winner': 0, 'reason': 'deck_out', 'turn': 30}）",
 "vocab_ver": "196211771c018a3a"
 },
 "dm22ex1-122": {
 "by": "rule",
+"checks": {
+"effect": "skip",
+"text": "ok"
+},
 "def_hash": "2feb81dd4a39c057",
 "status": "approved",
 "uses": [
@@ -23,11 +53,16 @@
 "op:move",
 "op:play_free"
 ],
+"verifier": 2,
 "verify": "26手・turn 11 まで正常に回った（result={'winner': 0, 'reason': 'direct_attack', 'turn': 11}）",
-"vocab_ver": "c5a6493d5d56a9bf"
+"vocab_ver": "8b59eea787147074"
 },
 "dm22ex1-cho49": {
 "by": "rule",
+"checks": {
+"effect": "ok",
+"text": "ok"
+},
 "def_hash": "6eeb9bf472cc8846",
 "status": "approved",
 "uses": [
@@ -35,7 +70,8 @@
 "kw:g_strike",
 "op:move"
 ],
+"verifier": 2,
 "verify": "43手・turn 30 まで正常に回った（result={'winner': 0, 'reason': 'deck_out', 'turn': 30}）",
-"vocab_ver": "a545cd5e71c634fa"
+"vocab_ver": "70d2e1391e52ed33"
 }
 }

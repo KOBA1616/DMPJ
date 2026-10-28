@@ -1,6 +1,10 @@
 {
 "dmbd05-006": {
 "by": "rule",
+"checks": {
+"effect": "skip",
+"text": "ok"
+},
 "def_hash": "930e6615ce142734",
 "status": "approved",
 "uses": [
@@ -8,11 +12,16 @@
 "kw:double_breaker",
 "op:tap"
 ],
+"verifier": 2,
 "verify": "43手・turn 30 まで正常に回った（result={'winner': 0, 'reason': 'deck_out', 'turn': 30}）",
 "vocab_ver": "a8ce76062d37ac69"
 },
 "dmbd05-012": {
 "by": "rule",
+"checks": {
+"effect": "skip",
+"text": "ok"
+},
 "def_hash": "c33a6eaa2efc77f0",
 "status": "approved",
 "uses": [
@@ -21,7 +30,8 @@
 "kw:s_trigger",
 "op:move"
 ],
+"verifier": 2,
 "verify": "43手・turn 30 まで正常に回った（result={'winner': 0, 'reason': 'deck_out', 'turn': 30}）",
-"vocab_ver": "c8769271a230ec74"
+"vocab_ver": "31bfd75b11da3180"
 }
 }

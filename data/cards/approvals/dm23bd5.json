@@ -1,6 +1,10 @@
 {
 "dm23bd5-020": {
 "by": "rule",
+"checks": {
+"effect": "skip",
+"text": "ok"
+},
 "def_hash": "e283c82ff1a9f4e4",
 "status": "approved",
 "uses": [
@@ -9,11 +13,16 @@
 "kw:s_trigger",
 "op:tap"
 ],
+"verifier": 2,
 "verify": "43手・turn 30 まで正常に回った（result={'winner': 0, 'reason': 'deck_out', 'turn': 30}）",
 "vocab_ver": "8dd0053d7bfefe55"
 },
 "dm23bd5-021": {
 "by": "rule",
+"checks": {
+"effect": "skip",
+"text": "ok"
+},
 "def_hash": "30dc2ac69df4add9",
 "status": "approved",
 "uses": [
@@ -24,11 +33,16 @@
 "op:move",
 "op:play_free"
 ],
+"verifier": 2,
 "verify": "26手・turn 11 まで正常に回った（result={'winner': 0, 'reason': 'direct_attack', 'turn': 11}）",
-"vocab_ver": "45313eca8e1ed60b"
+"vocab_ver": "7828fd782a5faa7f"
 },
 "dm23bd5-028": {
 "by": "rule",
+"checks": {
+"effect": "skip",
+"text": "ok"
+},
 "def_hash": "cd155c9665180350",
 "status": "approved",
 "uses": [
@@ -38,11 +52,16 @@
 "kw:g_strike",
 "op:modify"
 ],
+"verifier": 2,
 "verify": "43手・turn 30 まで正常に回った（result={'winner': 0, 'reason': 'deck_out', 'turn': 30}）",
 "vocab_ver": "93086ecffda61fa6"
 },
 "dm23bd5-043": {
 "by": "rule",
+"checks": {
+"effect": "skip",
+"text": "ok"
+},
 "def_hash": "bdd81b07f1cea250",
 "status": "approved",
 "uses": [
@@ -51,11 +70,16 @@
 "kw:cannot_attack_player",
 "op:draw"
 ],
+"verifier": 2,
 "verify": "43手・turn 30 まで正常に回った（result={'winner': 0, 'reason': 'deck_out', 'turn': 30}）",
 "vocab_ver": "a7882711a25e0996"
 },
 "dm23bd5-050": {
 "by": "rule",
+"checks": {
+"effect": "skip",
+"text": "ok"
+},
 "def_hash": "2dcd0d77da930d05",
 "status": "approved",
 "uses": [
@@ -65,11 +89,16 @@
 "kw:slayer",
 "op:modify"
 ],
+"verifier": 2,
 "verify": "43手・turn 30 まで正常に回った（result={'winner': 0, 'reason': 'deck_out', 'turn': 30}）",
 "vocab_ver": "d2140b57b4610421"
 },
 "dm23bd5-057": {
 "by": "rule",
+"checks": {
+"effect": "ok",
+"text": "ok"
+},
 "def_hash": "3a805ce972a2703a",
 "status": "approved",
 "uses": [
@@ -77,7 +106,8 @@
 "kw:g_strike",
 "op:move"
 ],
+"verifier": 2,
 "verify": "43手・turn 30 まで正常に回った（result={'winner': 0, 'reason': 'deck_out', 'turn': 30}）",
-"vocab_ver": "a545cd5e71c634fa"
+"vocab_ver": "70d2e1391e52ed33"
 }
 }

@@ -1,0 +1,23 @@
+{
+"dm22ex2-021": {
+"by": "rule",
+"checks": {
+"effect": "skip",
+"text": "fail"
+},
+"def_hash": "2aebbe608447f3d6",
+"status": "pending",
+"uses": [
+"core",
+"op:destroy",
+"op:discard",
+"op:draw",
+"op:if",
+"op:may",
+"op:move"
+],
+"verifier": 2,
+"verify_error": "移動先 bz が原文に無い",
+"vocab_ver": "d76d8506cafce961"
+}
+}

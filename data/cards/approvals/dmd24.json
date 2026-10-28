@@ -1,12 +1,37 @@
 {
+"dmd24-024": {
+"by": "rule",
+"checks": {
+"effect": "skip",
+"text": "fail"
+},
+"def_hash": "dd5968bf559f55b4",
+"status": "pending",
+"uses": [
+"core",
+"kw:blocker",
+"kw:s_trigger",
+"op:modal",
+"op:move",
+"op:shuffle"
+],
+"verifier": 2,
+"verify_error": "原文に このクリーチャーは攻撃できない があるが cannot_attack が定義に無い",
+"vocab_ver": "38c8ad63095fc4ad"
+},
 "dmd24-032": {
 "by": "rule",
+"checks": {
+"effect": "ok",
+"text": "ok"
+},
 "def_hash": "e22e813f6b27f262",
 "status": "approved",
 "uses": [
 "core",
 "op:draw"
 ],
+"verifier": 2,
 "verify": "43手・turn 30 まで正常に回った（result={'winner': 0, 'reason': 'deck_out', 'turn': 30}）",
 "vocab_ver": "487d38cedd709caf"
 }

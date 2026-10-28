@@ -1,6 +1,10 @@
 {
 "dm13-030": {
 "by": "rule",
+"checks": {
+"effect": "skip",
+"text": "ok"
+},
 "def_hash": "4c4f3789dbb0fb5a",
 "status": "approved",
 "uses": [
@@ -9,22 +13,32 @@
 "op:draw",
 "op:may"
 ],
+"verifier": 2,
 "verify": "43手・turn 30 まで正常に回った（result={'winner': 0, 'reason': 'deck_out', 'turn': 30}）",
-"vocab_ver": "f89a3230189bded5"
+"vocab_ver": "5f7506a92a466e0f"
 },
 "dm13-048": {
 "by": "rule",
+"checks": {
+"effect": "skip",
+"text": "ok"
+},
 "def_hash": "5cfce0670d8b0605",
 "status": "approved",
 "uses": [
 "core",
 "op:modify"
 ],
+"verifier": 2,
 "verify": "43手・turn 30 まで正常に回った（result={'winner': 0, 'reason': 'deck_out', 'turn': 30}）",
 "vocab_ver": "669eef2272bc9e7e"
 },
 "dm13-051": {
 "by": "rule",
+"checks": {
+"effect": "skip",
+"text": "ok"
+},
 "def_hash": "4f53a5e32f4a4b33",
 "status": "approved",
 "uses": [
@@ -33,11 +47,16 @@
 "kw:cannot_attack_player",
 "kw:slayer"
 ],
+"verifier": 2,
 "verify": "43手・turn 30 まで正常に回った（result={'winner': 0, 'reason': 'deck_out', 'turn': 30}）",
 "vocab_ver": "96d18bb36edc53ab"
 },
 "dm13-052": {
 "by": "rule",
+"checks": {
+"effect": "skip",
+"text": "ok"
+},
 "def_hash": "8808422149fb263f",
 "status": "approved",
 "uses": [
@@ -46,11 +65,16 @@
 "kw:cannot_attack_player",
 "op:modify"
 ],
+"verifier": 2,
 "verify": "43手・turn 30 まで正常に回った（result={'winner': 0, 'reason': 'deck_out', 'turn': 30}）",
 "vocab_ver": "b1f6d8fa9f5648d8"
 },
 "dm13-054": {
 "by": "rule",
+"checks": {
+"effect": "skip",
+"text": "ok"
+},
 "def_hash": "ee0469cfafdfd8fb",
 "status": "approved",
 "uses": [
@@ -59,7 +83,8 @@
 "op:may",
 "op:move"
 ],
+"verifier": 2,
 "verify": "43手・turn 30 まで正常に回った（result={'winner': 0, 'reason': 'deck_out', 'turn': 30}）",
-"vocab_ver": "181613371005f596"
+"vocab_ver": "972f6c0b11744976"
 }
 }

@@ -1,6 +1,10 @@
 {
 "dm23rp1-066": {
 "by": "rule",
+"checks": {
+"effect": "skip",
+"text": "ok"
+},
 "def_hash": "a3369a4c54176f0d",
 "status": "approved",
 "uses": [
@@ -8,6 +12,7 @@
 "kw:double_breaker",
 "kw:speed_attacker"
 ],
+"verifier": 2,
 "verify": "43手・turn 30 まで正常に回った（result={'winner': 0, 'reason': 'deck_out', 'turn': 30}）",
 "vocab_ver": "fa94835f4a3e675c"
 }

@@ -1,6 +1,10 @@
 {
 "promoy2-010": {
 "by": "rule",
+"checks": {
+"effect": "skip",
+"text": "ok"
+},
 "def_hash": "9835cbf9afe3daf0",
 "status": "approved",
 "uses": [
@@ -9,16 +13,22 @@
 "kw:cannot_attack",
 "kw:cannot_be_attacked"
 ],
+"verifier": 2,
 "verify": "43手・turn 30 まで正常に回った（result={'winner': 0, 'reason': 'deck_out', 'turn': 30}）",
 "vocab_ver": "510ea6855b20abd7"
 },
 "promoy2-020": {
 "by": "rule",
+"checks": {
+"effect": "skip",
+"text": "ok"
+},
 "def_hash": "c8d867ddfada4621",
 "status": "approved",
 "uses": [
 "core"
 ],
+"verifier": 2,
 "verify": "43手・turn 30 まで正常に回った（result={'winner': 0, 'reason': 'deck_out', 'turn': 30}）",
 "vocab_ver": "4231c11264f83bda"
 }

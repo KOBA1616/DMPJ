@@ -1,6 +1,10 @@
 {
 "dm26ex3-095": {
 "by": "rule",
+"checks": {
+"effect": "ok",
+"text": "ok"
+},
 "def_hash": "059a9b6ce1009776",
 "status": "approved",
 "uses": [
@@ -9,6 +13,7 @@
 "kw:g_strike",
 "op:draw"
 ],
+"verifier": 2,
 "verify": "43手・turn 30 まで正常に回った（result={'winner': 0, 'reason': 'deck_out', 'turn': 30}）",
 "vocab_ver": "47c9395f763ae49d"
 }

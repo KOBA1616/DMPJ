@@ -1,6 +1,10 @@
 {
 "dm23bd3-016": {
 "by": "rule",
+"checks": {
+"effect": "skip",
+"text": "ok"
+},
 "def_hash": "38aa3615f6d6be94",
 "status": "approved",
 "uses": [
@@ -8,6 +12,7 @@
 "kw:cannot_attack_player",
 "op:modify"
 ],
+"verifier": 2,
 "verify": "43手・turn 30 まで正常に回った（result={'winner': 0, 'reason': 'deck_out', 'turn': 30}）",
 "vocab_ver": "6de268a171a38deb"
 }

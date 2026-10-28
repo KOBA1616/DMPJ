@@ -1,6 +1,10 @@
 {
 "dm23sd2-008": {
 "by": "rule",
+"checks": {
+"effect": "skip",
+"text": "ok"
+},
 "def_hash": "0d43409f64c4d036",
 "status": "approved",
 "uses": [
@@ -10,7 +14,8 @@
 "op:play_free",
 "op:tap"
 ],
+"verifier": 2,
 "verify": "26手・turn 11 まで正常に回った（result={'winner': 0, 'reason': 'direct_attack', 'turn': 11}）",
-"vocab_ver": "958864786d57a21d"
+"vocab_ver": "478ec40a4f75d749"
 }
 }

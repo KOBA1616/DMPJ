@@ -1,44 +1,84 @@
 {
+"dmbd17-009": {
+"by": "rule",
+"checks": {
+"effect": "skip",
+"text": "fail"
+},
+"def_hash": "afbab2b31106487e",
+"status": "pending",
+"uses": [
+"core",
+"kw:s_trigger",
+"kw:triple_breaker",
+"op:may",
+"op:mill",
+"op:move"
+],
+"verifier": 2,
+"verify_error": "移動先 bz が原文に無い",
+"vocab_ver": "08a256172ee20944"
+},
 "dmbd17-teki002": {
 "by": "rule",
+"checks": {
+"effect": "skip",
+"text": "ok"
+},
 "def_hash": "9f1ff41e40ccfc01",
 "status": "approved",
 "uses": [
 "core"
 ],
+"verifier": 2,
 "verify": "43手・turn 30 まで正常に回った（result={'winner': 0, 'reason': 'deck_out', 'turn': 30}）",
 "vocab_ver": "4231c11264f83bda"
 },
 "dmbd17-teki005": {
 "by": "rule",
+"checks": {
+"effect": "skip",
+"text": "ok"
+},
 "def_hash": "2ac8a3cdf27a357e",
 "status": "approved",
 "uses": [
 "core",
 "op:swap"
 ],
+"verifier": 2,
 "verify": "26手・turn 11 まで正常に回った（result={'winner': 0, 'reason': 'direct_attack', 'turn': 11}）",
 "vocab_ver": "ecde47f328a1d4b2"
 },
 "dmbd17-teki006": {
 "by": "rule",
+"checks": {
+"effect": "skip",
+"text": "ok"
+},
 "def_hash": "b922b52e1de3622f",
 "status": "approved",
 "uses": [
 "core",
 "kw:s_trigger"
 ],
+"verifier": 2,
 "verify": "43手・turn 30 まで正常に回った（result={'winner': 0, 'reason': 'deck_out', 'turn': 30}）",
 "vocab_ver": "599d86bd5899cf5e"
 },
 "dmbd17-teki009": {
 "by": "rule",
+"checks": {
+"effect": "skip",
+"text": "ok"
+},
 "def_hash": "3d52dcd42faf3369",
 "status": "approved",
 "uses": [
 "core",
 "kw:speed_attacker"
 ],
+"verifier": 2,
 "verify": "43手・turn 30 まで正常に回った（result={'winner': 0, 'reason': 'deck_out', 'turn': 30}）",
 "vocab_ver": "81b0d4471323d10f"
 }

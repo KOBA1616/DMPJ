@@ -1,12 +1,17 @@
 {
 "dmx18-048": {
 "by": "rule",
+"checks": {
+"effect": "skip",
+"text": "ok"
+},
 "def_hash": "063124f6a98f2337",
 "status": "approved",
 "uses": [
 "core",
 "kw:world_breaker"
 ],
+"verifier": 2,
 "verify": "43手・turn 30 まで正常に回った（result={'winner': 0, 'reason': 'deck_out', 'turn': 30}）",
 "vocab_ver": "3121f6c6ee4cad1c"
 }

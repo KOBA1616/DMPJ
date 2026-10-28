@@ -1,6 +1,10 @@
 {
 "dm24rp1-028": {
 "by": "rule",
+"checks": {
+"effect": "skip",
+"text": "ok"
+},
 "def_hash": "a252db77b84089ab",
 "status": "approved",
 "uses": [
@@ -9,11 +13,16 @@
 "kw:s_trigger",
 "op:tap"
 ],
+"verifier": 2,
 "verify": "43手・turn 30 まで正常に回った（result={'winner': 0, 'reason': 'deck_out', 'turn': 30}）",
 "vocab_ver": "2ee41b51f6ef330e"
 },
 "dm24rp1-052": {
 "by": "rule",
+"checks": {
+"effect": "skip",
+"text": "ok"
+},
 "def_hash": "66bbcdcbd97854d5",
 "status": "approved",
 "uses": [
@@ -21,11 +30,16 @@
 "kw:blocker",
 "kw:escape"
 ],
+"verifier": 2,
 "verify": "43手・turn 30 まで正常に回った（result={'winner': 0, 'reason': 'deck_out', 'turn': 30}）",
 "vocab_ver": "1857537fbc4cb8fe"
 },
 "dm24rp1-056": {
 "by": "rule",
+"checks": {
+"effect": "skip",
+"text": "ok"
+},
 "def_hash": "4fc2e0ff1620dc36",
 "status": "approved",
 "uses": [
@@ -34,11 +48,16 @@
 "kw:cannot_attack_player",
 "op:untap"
 ],
+"verifier": 2,
 "verify": "43手・turn 30 まで正常に回った（result={'winner': 0, 'reason': 'deck_out', 'turn': 30}）",
 "vocab_ver": "b3570554728b9ac8"
 },
 "dm24rp1-059": {
 "by": "rule",
+"checks": {
+"effect": "skip",
+"text": "ok"
+},
 "def_hash": "f2ccea8f53d9fa47",
 "status": "approved",
 "uses": [
@@ -46,7 +65,8 @@
 "kw:blocker",
 "op:move"
 ],
+"verifier": 2,
 "verify": "43手・turn 30 まで正常に回った（result={'winner': 0, 'reason': 'deck_out', 'turn': 30}）",
-"vocab_ver": "b9d858e4196f18db"
+"vocab_ver": "b403c90a2e650813"
 }
 }

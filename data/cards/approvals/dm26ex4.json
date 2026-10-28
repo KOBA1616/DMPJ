@@ -1,6 +1,10 @@
 {
 "dm26ex4-082": {
 "by": "rule",
+"checks": {
+"effect": "skip",
+"text": "ok"
+},
 "def_hash": "b0539430db32d67d",
 "status": "approved",
 "uses": [
@@ -8,11 +12,16 @@
 "kw:blocker",
 "kw:s_trigger"
 ],
+"verifier": 2,
 "verify": "43手・turn 30 まで正常に回った（result={'winner': 0, 'reason': 'deck_out', 'turn': 30}）",
 "vocab_ver": "ebc5518e3a6b95ed"
 },
 "dm26ex4-086": {
 "by": "rule",
+"checks": {
+"effect": "skip",
+"text": "ok"
+},
 "def_hash": "2d324d4b1352b950",
 "status": "approved",
 "uses": [
@@ -20,11 +29,16 @@
 "kw:s_trigger",
 "op:modify"
 ],
+"verifier": 2,
 "verify": "43手・turn 30 まで正常に回った（result={'winner': 0, 'reason': 'deck_out', 'turn': 30}）",
 "vocab_ver": "a5ddee94f26e5daf"
 },
 "dm26ex4-088": {
 "by": "rule",
+"checks": {
+"effect": "skip",
+"text": "ok"
+},
 "def_hash": "a6dd0df5fb62eb99",
 "status": "approved",
 "uses": [
@@ -32,11 +46,16 @@
 "kw:s_trigger",
 "kw:slayer"
 ],
+"verifier": 2,
 "verify": "43手・turn 30 まで正常に回った（result={'winner': 0, 'reason': 'deck_out', 'turn': 30}）",
 "vocab_ver": "92f7bbed73f7284f"
 },
 "dm26ex4-091": {
 "by": "rule",
+"checks": {
+"effect": "skip",
+"text": "ok"
+},
 "def_hash": "ba65ad6b08866665",
 "status": "approved",
 "uses": [
@@ -44,11 +63,16 @@
 "kw:s_trigger",
 "kw:speed_attacker"
 ],
+"verifier": 2,
 "verify": "43手・turn 30 まで正常に回った（result={'winner': 0, 'reason': 'deck_out', 'turn': 30}）",
 "vocab_ver": "aa309687940ff24c"
 },
 "dm26ex4-095": {
 "by": "rule",
+"checks": {
+"effect": "skip",
+"text": "ok"
+},
 "def_hash": "08ad83b2e17c6a6c",
 "status": "approved",
 "uses": [
@@ -56,11 +80,16 @@
 "kw:s_trigger",
 "op:modify"
 ],
+"verifier": 2,
 "verify": "43手・turn 30 まで正常に回った（result={'winner': 0, 'reason': 'deck_out', 'turn': 30}）",
 "vocab_ver": "a5ddee94f26e5daf"
 },
 "dm26ex4-098": {
 "by": "rule",
+"checks": {
+"effect": "skip",
+"text": "ok"
+},
 "def_hash": "605d88b052a9bd23",
 "status": "approved",
 "uses": [
@@ -69,6 +98,7 @@
 "kw:double_breaker",
 "kw:speed_attacker"
 ],
+"verifier": 2,
 "verify": "43手・turn 30 まで正常に回った（result={'winner': 0, 'reason': 'deck_out', 'turn': 30}）",
 "vocab_ver": "0cbb121046c8ad85"
 }

@@ -1,6 +1,10 @@
 {
 "dm25ex2-087": {
 "by": "rule",
+"checks": {
+"effect": "skip",
+"text": "ok"
+},
 "def_hash": "da58531bbb6dc1af",
 "status": "approved",
 "uses": [
@@ -8,11 +12,16 @@
 "kw:s_trigger",
 "op:tap"
 ],
+"verifier": 2,
 "verify": "43手・turn 30 まで正常に回った（result={'winner': 0, 'reason': 'deck_out', 'turn': 30}）",
 "vocab_ver": "6699fccaa1add661"
 },
 "dm25ex2-091": {
 "by": "rule",
+"checks": {
+"effect": "skip",
+"text": "ok"
+},
 "def_hash": "327303a6c7a71d45",
 "status": "approved",
 "uses": [
@@ -20,6 +29,7 @@
 "kw:s_trigger",
 "op:draw"
 ],
+"verifier": 2,
 "verify": "43手・turn 30 まで正常に回った（result={'winner': 0, 'reason': 'deck_out', 'turn': 30}）",
 "vocab_ver": "86915ada7b5dab96"
 }

@@ -1,6 +1,10 @@
 {
 "dmsd21-015": {
 "by": "rule",
+"checks": {
+"effect": "skip",
+"text": "ok"
+},
 "def_hash": "1065d3b2fd9cc6f2",
 "status": "approved",
 "uses": [
@@ -8,6 +12,7 @@
 "kw:slayer",
 "kw:speed_attacker"
 ],
+"verifier": 2,
 "verify": "43手・turn 30 まで正常に回った（result={'winner': 0, 'reason': 'deck_out', 'turn': 30}）",
 "vocab_ver": "d65c826fe00cf8fc"
 }

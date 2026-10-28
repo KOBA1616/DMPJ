@@ -1,6 +1,10 @@
 {
 "dmc62-012": {
 "by": "rule",
+"checks": {
+"effect": "skip",
+"text": "ok"
+},
 "def_hash": "ee24dabfdde85150",
 "status": "approved",
 "uses": [
@@ -8,6 +12,7 @@
 "kw:s_trigger",
 "op:tap"
 ],
+"verifier": 2,
 "verify": "43手・turn 30 まで正常に回った（result={'winner': 0, 'reason': 'deck_out', 'turn': 30}）",
 "vocab_ver": "6699fccaa1add661"
 }

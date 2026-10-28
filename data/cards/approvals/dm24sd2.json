@@ -1,6 +1,10 @@
 {
 "dm24sd2-005": {
 "by": "rule",
+"checks": {
+"effect": "skip",
+"text": "ok"
+},
 "def_hash": "411883855cdc2cb3",
 "status": "approved",
 "uses": [
@@ -9,6 +13,7 @@
 "kw:s_trigger",
 "op:tap"
 ],
+"verifier": 2,
 "verify": "43手・turn 30 まで正常に回った（result={'winner': 0, 'reason': 'deck_out', 'turn': 30}）",
 "vocab_ver": "8dd0053d7bfefe55"
 }

@@ -1,6 +1,10 @@
 {
 "dmbd08-b-012": {
 "by": "rule",
+"checks": {
+"effect": "ok",
+"text": "ok"
+},
 "def_hash": "7e9db424f2e88d99",
 "status": "approved",
 "uses": [
@@ -8,6 +12,7 @@
 "kw:s_trigger",
 "op:bounce"
 ],
+"verifier": 2,
 "verify": "43手・turn 30 まで正常に回った（result={'winner': 0, 'reason': 'deck_out', 'turn': 30}）",
 "vocab_ver": "03077ea7ad245899"
 }

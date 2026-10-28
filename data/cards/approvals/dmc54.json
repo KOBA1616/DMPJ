@@ -1,6 +1,10 @@
 {
 "dmc54-005": {
 "by": "rule",
+"checks": {
+"effect": "skip",
+"text": "ok"
+},
 "def_hash": "5295b299b2ecdef4",
 "status": "approved",
 "uses": [
@@ -9,7 +13,8 @@
 "op:may",
 "op:untap"
 ],
+"verifier": 2,
 "verify": "43手・turn 30 まで正常に回った（result={'winner': 0, 'reason': 'deck_out', 'turn': 30}）",
-"vocab_ver": "29798e5f7b7d7762"
+"vocab_ver": "ef53967d4b975991"
 }
 }

@@ -1,0 +1,19 @@
+{
+"37-secs002": {
+"by": "rule",
+"checks": {
+"effect": "skip",
+"text": "fail"
+},
+"def_hash": "310b0859b08da9b5",
+"status": "pending",
+"uses": [
+"core",
+"kw:double_breaker",
+"kw:quad_breaker"
+],
+"verifier": 2,
+"verify_error": "キーワード double_breaker(W・ブレイカー) が原文に無い; キーワード quad_breaker(Q・ブレイカー) が原文に無い",
+"vocab_ver": "0459784654b214f2"
+}
+}

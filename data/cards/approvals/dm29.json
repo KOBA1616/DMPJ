@@ -1,6 +1,10 @@
 {
 "dm29-006": {
 "by": "rule",
+"checks": {
+"effect": "skip",
+"text": "ok"
+},
 "def_hash": "3350243d9e1b9b65",
 "status": "approved",
 "uses": [
@@ -11,11 +15,16 @@
 "op:move",
 "op:play_free"
 ],
+"verifier": 2,
 "verify": "26手・turn 11 まで正常に回った（result={'winner': 0, 'reason': 'direct_attack', 'turn': 11}）",
-"vocab_ver": "45313eca8e1ed60b"
+"vocab_ver": "7828fd782a5faa7f"
 },
 "dm29-022": {
 "by": "rule",
+"checks": {
+"effect": "skip",
+"text": "ok"
+},
 "def_hash": "a6b7589aaf88dade",
 "status": "approved",
 "uses": [
@@ -23,13 +32,18 @@
 "kw:blocker",
 "kw:cannot_attack_player"
 ],
+"verifier": 2,
 "verify": "43手・turn 30 まで正常に回った（result={'winner': 0, 'reason': 'deck_out', 'turn': 30}）",
 "vocab_ver": "274e5c392bc96853"
 },
 "dm29-030": {
 "by": "rule",
+"checks": {
+"effect": "skip",
+"text": "fail"
+},
 "def_hash": "4643668853aa53ed",
-"status": "approved",
+"status": "pending",
 "uses": [
 "core",
 "op:delayed_trigger",
@@ -37,17 +51,42 @@
 "op:move",
 "op:play_free"
 ],
-"verify": "26手・turn 11 まで正常に回った（result={'winner': 0, 'reason': 'direct_attack', 'turn': 11}）",
-"vocab_ver": "e865441665f86071"
+"verifier": 2,
+"verify_error": "移動先 deck が原文に無い",
+"vocab_ver": "7ae49c4437e32ebc"
+},
+"dm29-037": {
+"by": "rule",
+"checks": {
+"effect": "skip",
+"text": "fail"
+},
+"def_hash": "349a1e12a03fc256",
+"status": "pending",
+"uses": [
+"core",
+"op:delayed_trigger",
+"op:modify",
+"op:move",
+"op:play_free"
+],
+"verifier": 2,
+"verify_error": "移動先 deck が原文に無い",
+"vocab_ver": "c164ecd1f14adf16"
 },
 "dm29-052": {
 "by": "rule",
+"checks": {
+"effect": "skip",
+"text": "ok"
+},
 "def_hash": "fa0a7da4233155fc",
 "status": "approved",
 "uses": [
 "core",
 "kw:s_trigger"
 ],
+"verifier": 2,
 "verify": "43手・turn 30 まで正常に回った（result={'winner': 0, 'reason': 'deck_out', 'turn': 30}）",
 "vocab_ver": "599d86bd5899cf5e"
 }
