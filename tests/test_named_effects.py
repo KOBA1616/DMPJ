@@ -6,11 +6,12 @@ import pytest
 from conftest import answer, setup
 
 from dmsim.defs import DATA, load_rules
+from dmsim.defs import card_yaml_files  # noqa: E402
 
 
 @pytest.fixture(scope="module")
 def rr():
-    return load_rules(sorted((DATA / "cards").glob("*.yaml")) + [Path(__file__).parent / "named_cards.yaml"])
+    return load_rules(card_yaml_files() + [Path(__file__).parent / "named_cards.yaml"])
 
 
 def top(e, p, defn):
@@ -146,7 +147,7 @@ def test_modal_choose_one_runs_only_chosen_mode(tmp_path):
     f = tmp_path / "m.yaml"
     f.write_text(yaml.safe_dump({"cards": [{"id": "M001", "name": "選択呪文", "types": ["spell"], "civs": ["nature"], "cost": 1, "text": "x",
                  "spell": [{"op": "modal", "modes": [[{"op": "draw", "count": 1}], [{"op": "draw", "count": 3}]]}]}]}, allow_unicode=True))
-    rr = load_rules(sorted((DATA / "cards").glob("*.yaml")) + [f])
+    rr = load_rules(card_yaml_files() + [f])
     e = setup(rr, {"hand": ["M001"], "mana": ["T001"]})
     answer(e, "charge", "pass")
     answer(e, "main", "play:M001")
@@ -161,7 +162,7 @@ def test_modal_repeat_allows_same_mode_twice(tmp_path):
     f = tmp_path / "m.yaml"
     f.write_text(yaml.safe_dump({"cards": [{"id": "M002", "name": "二回選ぶ呪文", "types": ["spell"], "civs": ["nature"], "cost": 1, "text": "x",
                  "spell": [{"op": "modal", "count": 2, "repeat": True, "modes": [[{"op": "draw", "count": 1}], [{"op": "mark", "name": "b"}]]}]}]}, allow_unicode=True))
-    rr = load_rules(sorted((DATA / "cards").glob("*.yaml")) + [f])
+    rr = load_rules(card_yaml_files() + [f])
     e = setup(rr, {"hand": ["M002"], "mana": ["T001"]})
     answer(e, "charge", "pass")
     answer(e, "main", "play:M002")
@@ -177,7 +178,7 @@ def _lb_rules(tmp_path, kw):
     f.write_text(yaml.safe_dump({"cards": [{"id": "L001", "name": "ツイン", "text": "x", "faces": [
         {"name": "クリ面", "types": ["creature"], "civs": ["fire"], "cost": 3, "power": 1000, "races": ["テスト"], "keywords": [kw]},
         {"name": "呪文面", "types": ["spell"], "civs": ["fire"], "cost": 3, "spell": [{"op": "draw", "count": 2}]}]}]}, allow_unicode=True))
-    return load_rules(sorted((DATA / "cards").glob("*.yaml")) + [f])
+    return load_rules(card_yaml_files() + [f])
 
 
 def test_last_burst_casts_spell_side_when_destroyed(tmp_path):
@@ -218,7 +219,7 @@ def test_hunting_adds_power_only_during_battle(tmp_path):
                                   "text": "x", **({"keywords": [kw]} if kw else {})}
     f.write_text(yaml.safe_dump({"cards": [mk("H001", "hunting", ["ハンター"], 2000), mk("H002", None, ["ハンター"], 1000),
                                            mk("H003", None, ["テスト"], 3000)]}, allow_unicode=True))
-    rr = load_rules(sorted((DATA / "cards").glob("*.yaml")) + [f])
+    rr = load_rules(card_yaml_files() + [f])
     e = setup(rr, {"bz": ["H001", "H002"]}, {"bz": ["H003"]})
     assert e.chars(top(e, 0, "H001"))["power"] == 2000
     e.s.cards[top(e, 1, "H003")].tapped = True
@@ -236,7 +237,7 @@ def test_battle_power_only_attacking_ignores_blocker_role(tmp_path):
     mk = lambda i, only: {"id": i, "name": i, "types": ["creature"], "civs": ["fire"], "cost": 3, "power": 2000, "races": ["x"],  # noqa: E731
                           "text": "x", "abilities": [ab(only)]}
     f.write_text(yaml.safe_dump({"cards": [mk("A001", True), mk("A002", False)]}, allow_unicode=True))
-    rr = load_rules(sorted((DATA / "cards").glob("*.yaml")) + [f])
+    rr = load_rules(card_yaml_files() + [f])
     e = setup(rr, {"bz": ["A001", "A002"]}, {"bz": []})
     a1, a2 = top(e, 0, "A001"), top(e, 0, "A002")
     assert e._battle_bonus(e.s.ref(a1), attacking=True) == 1000 and e._battle_bonus(e.s.ref(a1)) == 0

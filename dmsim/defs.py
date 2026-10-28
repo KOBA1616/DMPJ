@@ -6,6 +6,7 @@ LLM が変換したカードデータの機械チェックを兼ねる。op の�
 from __future__ import annotations
 
 import copy
+import os
 from dataclasses import dataclass, field
 from pathlib import Path
 
@@ -481,10 +482,16 @@ def parse_card(raw: dict, tables, where: str | None = None) -> CardDef:
                    source=raw.get("source", {}), **f)
 
 
+def card_yaml_files() -> list[Path]:
+    """読み込むカード定義の YAML。環境変数 DMSIM_SKIP_CONVERTED があれば、確認前の変換結果（converted.yaml）は除く（テストを軽くする）。"""
+    skip = os.environ.get("DMSIM_SKIP_CONVERTED")
+    return [f for f in sorted((DATA / "cards").glob("*.yaml")) if not (skip and f.name == "converted.yaml")]
+
+
 def load_rules(card_files: list[Path] | None = None) -> Rules:
     tables = load_tables()
     zones, keywords, macros, actions, steps = tables
-    card_files = card_files or sorted((DATA / "cards").glob("*.yaml"))
+    card_files = card_files or card_yaml_files()
     cards: dict[str, CardDef] = {}
     for f in card_files:
         for raw in yaml.safe_load(Path(f).read_text(encoding="utf-8")).get("cards") or []:
