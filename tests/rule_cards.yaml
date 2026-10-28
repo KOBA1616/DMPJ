@@ -527,3 +527,33 @@ cards:
                 cond: {exists: {ref: paid}}
                 then:
                   - {op: destroy, select: {zone: bz, owner: any, filter: {types: [creature], power_le: 4000}, count: all}}
+
+  # ダイナモ（攻撃できる時・バトルが始まる時にタップして、パワーと能力を自分の他のダイナモ1体に加える）
+  - id: R068
+    name: 試験用ダイナモ壁
+    types: [creature]
+    civs: [nature]
+    cost: 1
+    power: 3000
+    races: [テスト]
+    keywords: [dynamo, blocker]
+    text: ブロッカー / ダイナモ
+
+  - id: R069
+    name: 試験用ダイナモ戦士
+    types: [creature]
+    civs: [nature]
+    cost: 1
+    power: 2000
+    races: [テスト]
+    keywords: [dynamo]
+    text: ダイナモ
+
+  - id: R070
+    name: 試験用4000
+    types: [creature]
+    civs: [nature]
+    cost: 1
+    power: 4000
+    races: [テスト]
+    text: 試験用の相手クリーチャー

@@ -38,6 +38,7 @@ class Engine(SelectorMixin, EventMixin, InterpreterMixin, TurnMixin, CombatMixin
                  check: bool | None = None):
         self.rules = rules
         self._in_static_cond = 0
+        self._adding = set()
         self._xcache = rules.__dict__.setdefault("_affects_others_cache", {})   # 定義だけで決まるので複製間で共有
         self.check = CHECK if check is None else check   # タスクの形を毎回検査する（テスト・開発者モード用）
         self.s = state
@@ -223,6 +224,12 @@ class Engine(SelectorMixin, EventMixin, InterpreterMixin, TurnMixin, CombatMixin
                     k += 1
                     if (kind is None or ab["kind"] == kind) and self._ce_applies(ce, cid, ref):
                         out.append((-k, ab))
+                src = ce.get("add_from")      # ダイナモ: 発生源のクリーチャーの能力（ダイナモ自身は除く）を加える
+                if src and src[0] != cid and self.s.alive(src) and kind != "static" and self._ce_applies(ce, cid, ref):
+                    for ab in self.fdef(src[0]).abilities:
+                        if ab.get("keyword") != "dynamo" and (kind is None or ab["kind"] == kind) and ab["kind"] != "static":
+                            k += 1
+                            out.append((-k, ab))
         if out and self.s.cards[cid].zone == "bz":
             ign = self._ignored().get(cid)
             if ign:
@@ -291,6 +298,19 @@ class Engine(SelectorMixin, EventMixin, InterpreterMixin, TurnMixin, CombatMixin
             if "breaks" in m:   # ブレイカー能力ごとのブレイク数（509.2b）。使う能力は攻撃時に選ぶ（509.2c）
                 ch["break_opts"].append(m["breaks"])
             ch["breaks"] = max(ch["breaks"], m.get("breaks", 1))
+        for ce in self.s.continuous:     # ダイナモ: 発生源のクリーチャーのパワーと能力（常在型の許可・禁止・ブレイク数・キーワード）を加える
+            src = ce.get("add_from")
+            if src and src[0] != cid and self.s.alive(src) and src[0] not in self._adding and self._ce_applies(ce, cid, ref):
+                self._adding.add(src[0])
+                try:
+                    sc = self.chars(src[0])
+                finally:
+                    self._adding.discard(src[0])
+                ch["power"] += sc["power"]
+                ch["keywords"].update(sc["keywords"])
+                for k in ("allow", "deny", "require", "break_opts"):
+                    ch[k] += sc[k]
+                ch["breaks"] = max(ch["breaks"], sc["breaks"])
         cost_min = 0
         for m in mods:      # 支払うコストの増減（コスト参照の cost は変えない: 「コスト5以下」はカードのコストで見る）
             if "cost" in m:

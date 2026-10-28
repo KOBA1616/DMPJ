@@ -89,6 +89,26 @@ keywords:
     ja: S・バック-自然（自然のカードを自分のシールドゾーンから手札に加える時、そのカードを捨ててもよい。そうした場合、コストを支払わずにこのカードを実行する）
     abilities: []
     card: {s_back: nature}
+  dynamo:      # バトルが始まる時、あるいはこのクリーチャーで攻撃できる時、タップしてもよい。そうした場合、そのターンの終わりまで、パワーと能力（ダイナモ自身を除く）を自分の他のダイナモ1体に加える
+    ja: ダイナモ（バトルが始まる時、あるいはこのクリーチャーで攻撃できる時、このクリーチャーをタップしてもよい。そうした場合、そのターンの終わりまで、このクリーチャーのパワーと能力をバトルゾーンにある自分の他のダイナモ１体に加える）
+    abilities:
+      - kind: activate
+        cost: {tap: self}
+        if: {exists: {zone: bz, owner: you, other: true, filter: {keyword: dynamo}}}
+        effect: [{op: choose, select: {zone: bz, owner: you, other: true, filter: {keyword: dynamo}, count: 1}, as: dynamo_to},
+           {op: modify, select: {ref: dynamo_to}, mod: {add_of: self}, duration: end_of_turn}]
+      - kind: trigger
+        when: {event: battle_start}
+        if:
+          all:
+            - {exists: {ref: self, filter: {tapped: false}}}
+            - {exists: {zone: bz, owner: you, other: true, filter: {keyword: dynamo}}}
+        effect:
+          - op: may
+            body:
+              - {op: tap, select: {ref: self}}
+              - {op: choose, select: {zone: bz, owner: you, other: true, filter: {keyword: dynamo}, count: 1}, as: dynamo_to}
+              - {op: modify, select: {ref: dynamo_to}, mod: {add_of: self}, duration: end_of_turn}
   evo_charger:
     ja: Evoチャージャー（チャージャーの後、マナのクリーチャー1体を自分の進化クリーチャーの下に重ねてもよい）
     abilities: []

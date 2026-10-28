@@ -64497,3 +64497,302 @@ cards:
     official: dm19-041
     review: pending
     notes: 厳密一致。メテオバーンの「そうした場合」は変数 paid の有無で表す
+- id: dm19-012
+  name: 鋼鉄機甲ベンケロス
+  types:
+  - creature
+  civs:
+  - light
+  cost: 6
+  power: 7000
+  races:
+  - グレートメカオー
+  - ダイナモ
+  mana: 1
+  text: 'ブロッカー
+
+    ダイナモ(バトルが始まる時、あるいはこのクリーチャーで攻撃できる時、このクリーチャーをタップしてもよい。そうした場合、そのターンの終わりまで、このクリーチャーのパワーと能力をバトルゾーンにある自分の他のダイナモ１体に加える)
+
+    このクリーチャーは、相手プレイヤーを攻撃できない。'
+  keywords:
+  - blocker
+  - dynamo
+  - cannot_attack_player
+  source:
+    official: dm19-012
+    review: pending
+    notes: 厳密一致
+- id: dm19-021
+  name: 魚雷ロボ・ミサイル・オーシャン
+  types:
+  - creature
+  civs:
+  - water
+  cost: 4
+  power: 3000
+  races:
+  - グレートメカオー
+  - ダイナモ
+  mana: 1
+  text: 'ダイナモ(バトルが始まる時、あるいはこのクリーチャーで攻撃できる時、このクリーチャーをタップしてもよい。そうした場合、そのターンの終わりまで、このクリーチャーのパワーと能力をバトルゾーンにある自分の他のダイナモ１体に加える)
+
+    このクリーチャーが攻撃する時、相手の山札の上から１枚目を見る。そのカードを、持ち主の山札の一番下に戻してもよい。'
+  keywords:
+  - dynamo
+  abilities:
+  - kind: trigger
+    when:
+      event: attack
+      subject: self
+    effect:
+    - op: move
+      select:
+        zone: deck
+        owner: opp
+        from_top: 1
+        count: 1
+        up_to: true
+        look: true
+      to: deck
+      position: bottom
+      reason: put
+  source:
+    official: dm19-021
+    review: pending
+    notes: 厳密一致
+- id: dm19-032
+  name: 燃える耳のピットトン
+  types:
+  - creature
+  civs:
+  - fire
+  cost: 5
+  power: 5000
+  races:
+  - ドリームメイト
+  - ダイナモ
+  mana: 1
+  text: 'ダイナモ(バトルが始まる時、あるいはこのクリーチャーで攻撃できる時、このクリーチャーをタップしてもよい。そうした場合、そのターンの終わりまで、このクリーチャーのパワーと能力をバトルゾーンにある自分の他のダイナモ１体に加える)
+
+    このクリーチャーは、可能であれば毎ターン攻撃する。'
+  keywords:
+  - dynamo
+  abilities:
+  - kind: static
+    affects: self
+    mod:
+      require:
+      - attack
+  source:
+    official: dm19-032
+    review: pending
+    notes: 厳密一致
+- id: dm19-037
+  name: 冒険探検アミトアキ
+  types:
+  - creature
+  civs:
+  - nature
+  cost: 6
+  power: 6000
+  races:
+  - ドリームメイト
+  - ダイナモ
+  mana: 1
+  text: 'ダイナモ(バトルが始まる時、あるいはこのクリーチャーで攻撃できる時、このクリーチャーをタップしてもよい。そうした場合、そのターンの終わりまで、このクリーチャーのパワーと能力をバトルゾーンにある自分の他のダイナモ１体に加える)
+
+    W・ブレイカー(このクリーチャーはシールドを２枚ブレイクする)'
+  keywords:
+  - dynamo
+  - double_breaker
+  source:
+    official: dm19-037
+    review: pending
+    notes: 厳密一致
+- id: dm19-042
+  name: 電脳ロボ・ダイクラッシャー
+  types:
+  - creature
+  civs:
+  - light
+  cost: 5
+  power: 3000
+  races:
+  - グレートメカオー
+  - ダイナモ
+  mana: 1
+  text: 'ダイナモ(バトルが始まる時、あるいはこのクリーチャーで攻撃できる時、このクリーチャーをタップしてもよい。そうした場合、そのターンの終わりまで、このクリーチャーのパワーと能力をバトルゾーンにある自分の他のダイナモ１体に加える)
+
+    自分のターンの終わりに、このクリーチャーをアンタップしてもよい。'
+  abilities:
+  - kind: trigger
+    when:
+      event: turn_end
+      player: you
+    effect:
+    - op: may
+      body:
+      - op: untap
+        select:
+          ref: self
+  - kind: trigger
+    when:
+      event: turn_end
+      player: you
+    effect:
+    - op: may
+      body:
+      - op: untap
+        select:
+          ref: self
+  keywords:
+  - dynamo
+  source:
+    official: dm19-042
+    review: pending
+    notes: 厳密一致
+- id: dm19-076
+  name: 鋼鉄大使ジャンボ・アタッカー
+  types:
+  - creature
+  civs:
+  - light
+  cost: 2
+  power: 2000
+  races:
+  - グレートメカオー
+  - ダイナモ
+  mana: 1
+  text: ダイナモ(バトルが始まる時、あるいはこのクリーチャーで攻撃できる時、このクリーチャーをタップしてもよい。そうした場合、そのターンの終わりまで、このクリーチャーのパワーと能力をバトルゾーンにある自分の他のダイナモ１体に加える)
+  keywords:
+  - dynamo
+  source:
+    official: dm19-076
+    review: pending
+    notes: 厳密一致
+- id: dm19-083
+  name: 爆腕ロボ・リターンエース
+  types:
+  - creature
+  civs:
+  - water
+  cost: 2
+  power: 2000
+  races:
+  - グレートメカオー
+  - ダイナモ
+  mana: 1
+  text: 'ブロッカー
+
+    ダイナモ(バトルが始まる時、あるいはこのクリーチャーで攻撃できる時、このクリーチャーをタップしてもよい。そうした場合、そのターンの終わりまで、このクリーチャーのパワーと能力をバトルゾーンにある自分の他のダイナモ１体に加える)
+
+    このクリーチャーは攻撃することができない。'
+  keywords:
+  - blocker
+  - dynamo
+  - cannot_attack
+  source:
+    official: dm19-083
+    review: pending
+    notes: 厳密一致
+- id: dm19-100
+  name: 力持ちのジェロン
+  types:
+  - creature
+  civs:
+  - fire
+  cost: 2
+  power: 1000
+  races:
+  - ドリームメイト
+  - ダイナモ
+  mana: 1
+  text: 'ダイナモ(バトルが始まる時、あるいはこのクリーチャーで攻撃できる時、このクリーチャーをタップしてもよい。そうした場合、そのターンの終わりまで、このクリーチャーのパワーと能力をバトルゾーンにある自分の他のダイナモ１体に加える)
+
+    パワーアタッカー+2000(攻撃中、このクリーチャーのパワーは+2000される)'
+  abilities:
+  - kind: static
+    affects: self
+    mod:
+      power_when:
+        amount: 2000
+        when: attacking
+  - kind: static
+    affects: self
+    mod:
+      power_when:
+        amount: 2000
+        when: attacking
+  keywords:
+  - dynamo
+  source:
+    official: dm19-100
+    review: pending
+    notes: 厳密一致
+- id: dm19-103
+  name: 白銀のシュシュ
+  types:
+  - creature
+  civs:
+  - nature
+  cost: 4
+  power: 4000
+  races:
+  - ドリームメイト
+  - ダイナモ
+  mana: 1
+  text: ダイナモ(バトルが始まる時、あるいはこのクリーチャーで攻撃できる時、このクリーチャーをタップしてもよい。そうした場合、そのターンの終わりまで、このクリーチャーのパワーと能力をバトルゾーンにある自分の他のダイナモ１体に加える)
+  keywords:
+  - dynamo
+  source:
+    official: dm19-103
+    review: pending
+    notes: 厳密一致
+- id: dm20-007
+  name: 乱射砲機バルマガン
+  types:
+  - creature
+  civs:
+  - light
+  cost: 6
+  power: 4000
+  races:
+  - グレートメカオー
+  - ダイナモ
+  mana: 1
+  text: 'ダイナモ(バトルが始まる時、あるいはこのクリーチャーで攻撃できる時、このクリーチャーをタップしてもよい。そうした場合、そのターンの終わりまで、このクリーチャーのパワーと能力をバトルゾーンにある自分の他のダイナモ１体に加える)
+
+    このクリーチャーが攻撃する時、バトルゾーンにある相手のクリーチャーを１体選び、タップする。(まず何を攻撃するかを選んでから、タップするクリーチャーを選ぶ)'
+  abilities:
+  - kind: trigger
+    when:
+      event: attack
+      subject: self
+    effect:
+    - op: tap
+      select:
+        zone: bz
+        owner: opp
+        filter:
+          types:
+          - creature
+        count: 1
+  - kind: trigger
+    when:
+      event: attack
+      subject: self
+    effect:
+    - op: tap
+      select:
+        zone: bz
+        owner: opp
+        filter:
+          types:
+          - creature
+        count: 1
+  keywords:
+  - dynamo
+  source:
+    official: dm20-007
+    review: pending
+    notes: 厳密一致

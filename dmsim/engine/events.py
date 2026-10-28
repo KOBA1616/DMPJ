@@ -1,7 +1,7 @@
 """イベント・パイプライン（置換→同時適用→状況起因処理→誘発）と待機・解決窓。"""
 from __future__ import annotations
 
-from ..types import CaptureTask, CloseWinTask, EnqueueStTask, EventTask, OpenWinTask, ResolvePendingTask, SbackTask
+from ..types import CaptureTask, CloseWinTask, BattleRunTask, EnqueueStTask, EventTask, OpenWinTask, ResolvePendingTask, SbackTask
 from .registry import task
 
 
@@ -137,7 +137,7 @@ class EventMixin:
                 return []   # 「になる」誘発は状態が変わった時だけ（603.2c）
             c.tapped = kind == "tap"
             return [{"ev": kind, "subject": ev["subject"], "controller": c.controller}]
-        if kind in ("attack", "block", "cast", "turn_start", "turn_end", "break", "battle_win"):
+        if kind in ("attack", "block", "cast", "turn_start", "turn_end", "break", "battle_win", "battle_start"):
             return [dict(ev)]
         raise ValueError(kind)
 
@@ -481,4 +481,13 @@ def h_sback(eng, t):
     if pairs:
         eng._push(eng.ev_task([{"ev": "move", "subject": s.ref(x), "to": "graveyard", "reason": "discard"} for _, x in pairs]),
                   {"t": "enqueue_st", "cids": [[h, None] for h, _ in pairs], "player": t["player"]})
+    return None
+
+
+@task("battle_run", BattleRunTask)
+def h_battle_run(eng, t):
+    """バトルの勝敗の判定。「バトルが始まる時」の誘発を解決し終えてから、その時点のパワーで行う（701.13）。"""
+    eng._pop(t)
+    if eng.s.alive(t["att"]) and eng.s.alive(t["tgt"]):
+        eng._push(*eng._battle(t["att"], t["tgt"]))
     return None

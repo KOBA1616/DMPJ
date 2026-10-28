@@ -229,6 +229,12 @@ class SbackTask(TypedDict):
     player: int
 
 
+class BattleRunTask(TypedDict):
+    t: Literal["battle_run"]
+    att: list
+    tgt: list
+
+
 class EnqueueStTask(TypedDict):
     t: Literal["enqueue_st"]
     cids: list[list]                     # [cid, face | None]
