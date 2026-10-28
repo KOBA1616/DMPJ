@@ -90,3 +90,25 @@ def test_deep_checks_catch_mismatch_and_effect(tmp_path):
     assert ec.effect_check(r, "dm01-901")["status"] == "ok"
     assert ec.text_check(r, "dm01-903")["status"] == "fail"          # 原文に無いキーワード
     assert ec.text_check(r, "dm01-901")["status"] == "ok"
+
+
+def test_count_any_lets_player_choose_any_number():
+    """count: any（好きな枚数）は 0枚から候補の全部まで選べる。"""
+    from dmsim import scenario as sc
+    from dmsim.cardfiles import card_files
+    r = load_rules(card_files())
+    eng = sc.build(r, sc.try_card(r, "dm04-049"), check=True)
+    seen = None
+    for _ in range(40):
+        d = eng.advance()
+        if d is None:
+            break
+        keys = [o["key"] for o in d["options"]]
+        if "play:dm04-049" in keys:
+            eng.answer([keys.index("play:dm04-049")])
+        elif d["kind"].startswith("choose") and d["player"] == 0:
+            seen = (d["min"], d["max"], len(d["options"]))
+            break
+        else:
+            eng.answer([keys.index("pass")] if "pass" in keys else list(range(d["min"])))
+    assert seen and seen[0] == 0 and seen[1] == seen[2] > 1

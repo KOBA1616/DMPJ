@@ -25,7 +25,7 @@ def _validator(name):
 
 # 「好きな枚数」を count: any と変換したカード。検査（defs）は通るが、型にもエンジンにも無い表現（実行時に bad expr any）。
 # 語彙（up_to の上限なし等）が決まったら変換し直して、この一覧を空にする。承認は effectcheck が止める。
-KNOWN_UNSUPPORTED = {"dm03-014", "dm03-020", "dm04-017", "dm04-049", "dm06-004"}
+KNOWN_UNSUPPORTED: set = set()
 
 
 def test_card_files_match_schema():
