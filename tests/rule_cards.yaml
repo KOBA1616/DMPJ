@@ -242,3 +242,14 @@ cards:
         select: {zone: shield, owner: you, count: 1}
         to: hand
         reason: return
+
+  - id: R021
+    name: 試験用盾の束
+    types: [spell]
+    civs: [nature]
+    cost: 1
+    text: 自分の山札の上から3枚を、自分のシールドを1つ選び、その下に置く。
+    spell:
+      - op: put_under
+        select: {zone: deck, owner: you, from_top: 3}
+        onto: {zone: shield, owner: you, count: 1}

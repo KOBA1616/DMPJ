@@ -486,3 +486,52 @@ def test_113_6_effect_moving_shield_to_hand_without_declaring_just_adds_it(rr):
     e.advance()
     assert names(e, "hand", 0).count("T018") == 1 and len(e.zlist("shield", 0)) == 4
     assert names(e, "bz", 1) == ["T001"]
+
+
+# ---- 113.2 シールドの束（シールド・プラス） ----
+
+def _bundle(rr, extra_shield=("T018",) * 4):
+    """シールド5枚のうち1つの下に山札の上から3枚を重ねた状態（束は1つのシールドと数える）。"""
+    e = setup(rr, {"hand": ["R021"], "mana": ["T001"], "shield": ["T018"] * 5}, {"bz": ["T001"]})
+    answer(e, "charge", "pass")
+    answer(e, "main", "play:R021")
+    d = e.advance()
+    while d is not None and d["kind"] not in ("attack", "main"):
+        e.answer([0])
+        d = e.advance()
+    return e
+
+
+def test_113_2_bundle_counts_as_one_shield_but_cards_are_kept(rr):
+    """113.2 重ねたカードの束は1つのシールドと数える。束のカードも持ち主のものとして保たれる。"""
+    e = _bundle(rr)
+    assert len(e.zlist("shield", 0)) == 5
+    tops = [c for c in e.zlist("shield", 0) if e.s.cards[c].under]
+    assert len(tops) == 1 and len(e.s.cards[tops[0]].under) == 3
+    assert all(e.s.cards[u].zone == "shield" and e.s.cards[u].top_of == tops[0] for u in e.s.cards[tops[0]].under)
+
+
+from conftest import find_option  # noqa: E402
+
+
+def test_113_2_bundle_moves_together_to_hand_and_every_card_can_be_declared(rr):
+    """束のシールドが効果で手札に加わる時は、束のすべてのカードが同時に手札に加わり、S・トリガーはどれも宣言できる。"""
+    e = setup(rr, {"hand": ["R021", "R020"], "mana": ["T001", "T001"], "shield": ["T018"] * 3}, {"bz": ["T001"]}, filler="T018")
+    answer(e, "charge", "pass")
+    answer(e, "main", "play:R021")
+    d = e.advance()
+    while d["kind"] != "main":
+        e.answer([0])
+        d = e.advance()
+    top = next(c for c in e.zlist("shield", 0) if e.s.cards[c].under)
+    unders = list(e.s.cards[top].under)
+    e.answer([find_option(d, "play:R020")])
+    d = e.advance()
+    while d["kind"] != "declare_strigger":
+        e.answer([next((i for i, o in enumerate(d["options"]) if o["key"].startswith("shield")), 0)] if d["kind"] == "choose_shields" else [0])
+        d = e.advance()
+    assert len(d["options"]) == 4                               # 束の4枚すべてが宣言できる（T018 は S・トリガーを持つ）
+    e.answer([])
+    e.advance()
+    assert all(e.s.cards[c].zone == "hand" for c in [top] + unders)
+    assert len(e.zlist("shield", 0)) == 2

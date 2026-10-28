@@ -224,7 +224,7 @@ def _free_face(eng, cid, want):
     return 0
 
 
-@op("play_free", select="selector", resolve_to="zone?", face="str?", **{"as": "str?"})
+@op("play_free", select="selector", resolve_to="zone?", resolve_position="position?", face="str?", **{"as": "str?"})
 def op_play_free(eng, t, op, env):
     """コストを支払わずに召喚する／唱える（112.3g: 召喚・詠唱したことになる）。ツインパクトはクリーチャー側。
     resolve_to: 唱えた呪文を解決後に墓地ではなくそのゾーンに置く（「唱えた後、墓地に置くかわりに手札に加える」）。"""
@@ -238,6 +238,8 @@ def op_play_free(eng, t, op, env):
     if "resolve_to" in op:
         for x in tasks:
             x["resolve_to"] = op["resolve_to"]
+            if "resolve_position" in op:
+                x["resolve_position"] = op["resolve_position"]
     if "as" in op:
         tasks.append({"t": "bind", "env": env, "name": op["as"], "cids": cids, "zone": "bz"})
     eng._defer(t, tasks)
@@ -282,22 +284,23 @@ def op_choose(eng, t, op, env):
 
 @op("put_under", select="selector", onto="selector")
 def op_put_under(eng, t, op, env):
-    """カードを、バトルゾーンのクリーチャーの下に重ねる（Evoチャージャーなど）。"""
+    """カードを、クリーチャーの下に重ねる（Evoチャージャーなど）。onto がシールドなら、そのシールドの束にする（113.2, 406.2）。
+    select が複数枚なら、同じ重ね先の下に順に重ねる。"""
     os_ = t.setdefault("os", {})
-    if "card" not in os_:
+    if "cards" not in os_:
         cids, d = eng.select(t, op["select"], env)
         if d:
             return d
         if not cids:
             return None
-        os_["card"] = cids[0]
+        os_["cards"] = list(cids)
         os_.pop("chosen", None)
     onto, d = eng.select(t, op["onto"], env)
     if d:
         return d
     if onto:
-        eng._defer(t, [{"t": "put_under", "cid": os_["card"], "gen": eng.s.cards[os_["card"]].gen,
-                        "onto": eng.s.ref(onto[0])}])
+        eng._defer(t, [{"t": "put_under", "cid": c, "gen": eng.s.cards[c].gen, "onto": eng.s.ref(onto[0])}
+                       for c in os_["cards"]])
     return None
 
 

@@ -88,8 +88,8 @@ class EventMixin:
                 self._rebuild(cid)
                 unders = []
             self._raw_move(cid, ev["to"], ev.get("position", "top"), ev.get("controller"))
-            for u in unders:   # クリーチャーとして離れたら下のカードも同じゾーンへ（109.2b, 316.3）
-                if s.cards[u].zone == "bz":
+            for u in unders:   # クリーチャーとして離れたら下のカードも同じゾーンへ（109.2b, 316.3）。シールドの束も同時に動く（113.2）
+                if s.cards[u].top_of == cid:
                     self._raw_move(u, ev["to"])
             new = s.ref(cid)
             stack_on = ev.get("stack_on")

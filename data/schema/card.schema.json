@@ -618,6 +618,12 @@
          "shield"
         ]
        },
+       "resolve_position": {
+        "enum": [
+         "bottom",
+         "top"
+        ]
+       },
        "face": {
         "type": "string"
        },
