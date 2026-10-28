@@ -41598,3 +41598,36 @@ cards:
   source:
     official: dm01-006
     review: pending
+- id: dm01-008
+  name: ボルシャック・ドラゴン
+  types:
+  - creature
+  civs:
+  - fire
+  cost: 6
+  power: 6000
+  races:
+  - アーマード・ドラゴン
+  mana: 1
+  text: 'W(ダブル)・ブレイカー(シールドを攻撃したとき、このクリーチャーはシールドを２枚ブレイクする。)
+
+    攻撃中、このクリーチャーのパワーは、自分の墓地にある火のカード１枚につき+1000される。'
+  abilities:
+  - kind: static
+    affects: self
+    mod:
+      battle_power:
+        amount: 1000
+        count:
+          zone: graveyard
+          owner: you
+          filter:
+            civs:
+            - fire
+  source:
+    official: dm01-008
+    review: pending
+    notes: 「攻撃中」のパワー上昇を battle_power（バトル中のパワー修整）で近似した。バトルをしていない（プレイヤーを攻撃している）間にも本来は適用される点は要確認（26-s002
+      と同じ扱い）
+  keywords:
+  - double_breaker
