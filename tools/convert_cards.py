@@ -31,7 +31,7 @@ ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(ROOT))
 sys.path.insert(0, str(ROOT / "tools"))
 
-from dmsim import cardstore, schema  # noqa: E402
+from dmsim import cardstore, identity, schema  # noqa: E402
 from dmsim.defs import DATA, DefError, load_tables, parse_card  # noqa: E402
 import rule_convert  # noqa: E402
 from llm_offload.providers import CallTimeout  # noqa: E402
@@ -138,6 +138,9 @@ def validate(raw: dict, row: dict, tables) -> dict:
     src = raw.setdefault("source", {})
     src["official"] = row["id"]
     src["review"] = "pending"      # LLM の出力は必ず人の確認待ちにする
+    al = identity.aliases_for(row.get("name", ""), row["id"])
+    if al:
+        src["aliases"] = al        # 同名の古い版のID（旧IDから最新版を引くため）
     return raw
 
 
@@ -256,7 +259,7 @@ def load_rows(inputs: list[str]) -> list[dict]:
                 r = json.loads(s)
                 r.pop("error", None)
                 rows[r["id"]] = r
-    return list(rows.values())
+    return identity.canonical_rows(list(rows.values()))      # 同名の古い版は変換しない（最新版だけ）
 
 
 def known_ids(out: Path) -> set[str]:

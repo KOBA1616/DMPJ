@@ -16,3 +16,9 @@
 ワーカーは `converted.yaml` に書き続ける（変更なし）。`auto-approve`（または `tools/auto_approve.py`）が承認台帳に承認を記録し、
 `load_rules(only_approved=True)`（または環境変数 `DMSIM_ONLY_APPROVED=1`）で、承認済み（台帳で有効、またはファイル上で review: approved）のカードだけを読む。
 real.yaml へ移す作業は不要。定義や語彙が変わった承認は読み込みの時点で除かれる。
+
+## カード同一性（同名は同じカード）
+`dmsim/canonical.py` が同名カードの最新版（ID と本文）を決め、`dmsim/identity.py` がデータ変換・承認につなぐ。
+- 変換対象は最新版の ID だけ（`convert_cards.load_rows`）。変換したカードの `source.aliases` に古い ID を残す。
+- 旧 ID で `rules.cards[...]` を引いても最新版が返る（`load_rules` が `AliasDict` を使う）。
+- `tools/canonicalize.py`（auto-approve workflow が毎回先に実行）: 変換済みの旧 ID カードを最新 ID へ寄せる。本文（正規化後）が同じなら付け替えて承認を引き継ぎ（by=inherit）、違えば消して承認を取り消し再変換・再検証。弾別ディレクトリなら置き場所も移る。

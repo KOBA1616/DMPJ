@@ -100,6 +100,7 @@ def entry(raw: dict, status: str, by: str, versions: dict, **extra) -> dict:
             "vocab_ver": _h([versions.get(x) for x in u]), **extra}
 
 
+
 def stale_reason(e: dict, raw: dict | None, versions: dict) -> str | None:
     """承認済みの項目が古いとき、その理由。有効なら None。"""
     if raw is None:
