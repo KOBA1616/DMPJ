@@ -382,3 +382,67 @@ def test_103_initial_setup_and_first_turn(rules):
         assert len(e.zlist("deck", p)) == 10
     e.advance()
     assert len(e.zlist("hand", 0)) == 5          # 先攻は第1ターンのドローなし
+
+
+# ---- 801 進化クリーチャー ----
+
+def _evolve_and_rebuild(rr, base_entered_this_turn: bool):
+    """T002 の上に T017 で進化し、T017 だけを手札に戻して再構築する。(局面, 再構築後の T002 の cid, 進化したターン) を返す。"""
+    e = setup(rr, {"bz": ["T002"], "hand": ["T017"], "mana": ["T001", "T001"]})
+    base = next(c for c in e.bz_tops(0) if e.s.cards[c].defn == "T002")
+    answer(e, "charge", "pass")
+    turn0 = e.s.turn
+    if base_entered_this_turn:
+        e.s.cards[base].entered_turn = e.s.turn      # このターンに出たクリーチャーを進化元にする
+    answer(e, "main", "play:T017")
+    e.advance()
+    top = next(c for c in e.bz_tops(0) if e.s.cards[c].defn == "T017")
+    assert e._can_attack(top)                          # 801.3 進化クリーチャーは召喚酔いしない
+    e.s.waiting = None
+    run_ops(e, [{"op": "move", "select": {"ref": "self"}, "to": "hand", "reason": "return", "card_only": True}])
+    e.s.tasks[-1]["env"]["self"] = e.s.ref(top)
+    e.advance()
+    return e, base, turn0
+
+
+def test_801_4c_rebuilt_card_kept_from_turn_start_is_not_sick(rr):
+    """801.4c ターンのはじめから進化クリーチャーの下にあったクリーチャーは、再構築されても新たに召喚酔いしない。"""
+    e, base, turn0 = _evolve_and_rebuild(rr, base_entered_this_turn=False)
+    assert e.s.cards[base].zone == "bz" and e.s.cards[base].entered_turn != turn0   # 攻撃できる（召喚酔いでない）
+
+
+def test_801_4c_rebuilt_card_entered_this_turn_is_still_sick(rr):
+    """801.4c ターンのはじめから下にあったのでなければ（このターンに出たクリーチャーを進化元にした場合）召喚酔いする。"""
+    e, base, turn0 = _evolve_and_rebuild(rr, base_entered_this_turn=True)
+    assert e.s.cards[base].zone == "bz" and e.s.cards[base].entered_turn == turn0   # このターンは召喚酔い
+
+
+def _evolve_from_two(rr, tapped: tuple[bool, bool]):
+    e = setup(rr, {"bz": ["T002", "T001"], "hand": ["R019"], "mana": ["T001", "T001"]})
+    a, b = (next(c for c in e.bz_tops(0) if e.s.cards[c].defn == n) for n in ("T002", "T001"))
+    answer(e, "charge", "pass")
+    e.s.cards[a].tapped, e.s.cards[b].tapped = tapped
+    answer(e, "main", "play:R019")
+    d = e.advance()
+    assert d["kind"] == "choose_evo_source"
+    e.answer([0, 1])
+    e.advance()
+    top = next(c for c in e.bz_tops(0) if e.s.cards[c].defn == "R019")
+    return e, top, a, b
+
+
+def test_801_1b_evolution_can_stack_several_battle_zone_cards(rr):
+    """801.1b 複数のカードを進化元にして出す場合、バトルゾーンの進化元もすべて下に重ねる。"""
+    e, top, a, b = _evolve_from_two(rr, (False, False))
+    assert sorted(e.s.cards[top].under) == sorted([a, b])
+    assert [e.s.cards[c].zone for c in (a, b)] == ["bz", "bz"]
+    assert e.bz_tops(0) == [top]
+
+
+def test_801_2b_mixed_tapped_sources_make_a_tapped_evolution(rr):
+    """801.2b タップ状態とアンタップ状態の進化元から進化したクリーチャーは、タップしてバトルゾーンに置かれる。"""
+    for tapped in ((True, False), (False, True), (True, True)):
+        e, top, a, b = _evolve_from_two(rr, tapped)
+        assert e.s.cards[top].tapped, tapped
+    e, top, a, b = _evolve_from_two(rr, (False, False))
+    assert not e.s.cards[top].tapped
