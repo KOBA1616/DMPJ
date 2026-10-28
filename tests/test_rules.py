@@ -535,3 +535,16 @@ def test_113_2_bundle_moves_together_to_hand_and_every_card_can_be_declared(rr):
     e.advance()
     assert all(e.s.cards[c].zone == "hand" for c in [top] + unders)
     assert len(e.zlist("shield", 0)) == 2
+
+
+def test_loop_skeleton_distinguishes_bundle_contents_but_not_plain_shield_count(rr):
+    """束の中身が違えば骨格は別（ループの判定に効く）。単独のシールドは従来どおり枚数だけ（counter）。"""
+    from dmsim import loop
+    e = _bundle(rr)
+    h1, c1 = loop.abstract(e)
+    top = next(c for c in e.zlist("shield", 0) if e.s.cards[c].under)
+    u = e.s.cards[top].under[0]
+    e.s.cards[u].defn = "T018"            # 束の中身のカードを入れ替える（内部状態の検査用）
+    h2, _ = loop.abstract(e)
+    assert h1 != h2
+    assert c1["shield:0"] == 5            # 束は1つのシールド
