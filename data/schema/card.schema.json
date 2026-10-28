@@ -1057,7 +1057,26 @@
    "type": "object",
    "properties": {
     "power": {
-     "type": "integer"
+     "anyOf": [
+      {
+       "type": "integer"
+      },
+      {
+       "type": "object",
+       "properties": {
+        "amount": {
+         "type": "integer"
+        },
+        "count": {
+         "$ref": "#/$defs/selector"
+        }
+       },
+       "required": [
+        "amount"
+       ],
+       "additionalProperties": false
+      }
+     ]
     },
     "grant": {
      "type": "array",

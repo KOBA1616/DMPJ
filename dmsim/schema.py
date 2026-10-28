@@ -79,7 +79,7 @@ def build() -> dict:
                 "marked": {"type": "string"}},
                 "additionalProperties": False},
             "mod": {"type": "object", "properties": {
-                "power": {"type": "integer"}, "grant": {"type": "array", "items": {"enum": sorted(keywords)}},
+                "power": {"anyOf": [{"type": "integer"}, {"type": "object", "properties": {"amount": {"type": "integer"}, "count": ref("selector")}, "required": ["amount"], "additionalProperties": False}]}, "grant": {"type": "array", "items": {"enum": sorted(keywords)}},
                 "allow": {"type": "array", "items": perm}, "deny": {"type": "array", "items": perm},
                 "breaks": {"type": "integer"}, "breaks_per_power": {"type": "integer"},
                 "cost": {"anyOf": [{"type": "integer"}, {"type": "object", "properties": {"amount": {"type": "integer"}, "count": ref("selector")}, "required": ["amount"], "additionalProperties": False}]},

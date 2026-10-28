@@ -74,3 +74,19 @@ def test_old_id_resolves_at_load(monkeypatch, tmp_path):
     r = load_rules([f, DATA / "cards" / "proto.yaml"])
     assert r.cards["dm01-001"].id == "dm05-001" and "dm01-001" in r.cards and r.cards.get("zz") is None
     assert "dm01-001" not in list(r.cards)
+
+
+def test_deep_checks_catch_mismatch_and_effect(tmp_path):
+    from dmsim import effectcheck as ec
+    good = {"id": "dm01-901", "name": "デーモン", "types": ["spell"], "civs": ["darkness"], "cost": 2, "keywords": [],
+            "text": "バトルゾーンにある相手のクリーチャーを１体選び、破壊する。",
+            "spell": [{"op": "destroy", "select": {"zone": "bz", "owner": "opp", "filter": {"types": ["creature"]}, "count": 1}}],
+            "source": {"official": "dm01-901", "review": "pending"}}
+    noop = {**good, "id": "dm01-902", "text": "相手のカードを１枚引く。", "spell": [{"op": "draw", "count": 1}]}
+    kw = {**CARD, "id": "dm01-903", "text": "スピードアタッカー", "keywords": ["blocker"], "source": {"review": "pending"}}
+    f = tmp_path / "c.yaml"
+    f.write_text(yaml.safe_dump({"cards": [good, noop, kw]}, allow_unicode=True), encoding="utf-8")
+    r = load_rules([f, DATA / "cards" / "proto.yaml", DATA / "cards" / "real.yaml"])
+    assert ec.effect_check(r, "dm01-901")["status"] == "ok"
+    assert ec.text_check(r, "dm01-903")["status"] == "fail"          # 原文に無いキーワード
+    assert ec.text_check(r, "dm01-901")["status"] == "ok"
