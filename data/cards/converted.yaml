@@ -66819,3 +66819,1466 @@ cards:
     - dm36-094
     - dmex03-067
     - dmx22a-047
+- id: dmbd16-teki002
+  name: 黒神龍ゼキラ
+  types:
+  - creature
+  civs:
+  - darkness
+  cost: 3
+  power: 5000
+  races:
+  - ドラゴン・ゾンビ
+  mana: 1
+  text: このクリーチャーが出た時、自分のクリーチャーを１体破壊する。
+  abilities:
+  - kind: trigger
+    when:
+      event: move
+      to: bz
+      subject: self
+    effect:
+    - op: destroy
+      select:
+        zone: bz
+        owner: you
+        filter:
+          types:
+          - creature
+        count: 1
+  source:
+    official: dmbd16-teki002
+    review: pending
+    notes: 原文が同じ dm22ex1-cho46 の変換結果を写した（モデル不使用）。能力は元カードの確認に従う
+    aliases:
+    - dmc55-054
+    - promoy3-033
+- id: dm22ex2-028
+  name: 襲来、鬼札王国！
+  types:
+  - spell
+  civs:
+  - darkness
+  - fire
+  cost: 6
+  races:
+  - 鬼札王国
+  mana: 1
+  text: 'S・トリガー（この呪文をシールドゾーンから手札に加える時、コストを支払わずにすぐ唱えてもよい）
+
+    次のうちいずれか１つを選ぶ。
+
+    ▶︎相手のコスト８以下のクリーチャーを１体破壊する。
+
+    ▶︎コスト８以下のクリーチャーを１体、自分の墓地から出す。
+
+    鬼タイム ：自分と相手のシールドの数が合計６つ以下なら、１つのかわりに両方選んでもよい。'
+  spell:
+  - op: if
+    cond:
+      cmp:
+      - sum:
+        - count:
+            zone: shield
+            owner: you
+        - count:
+            zone: shield
+            owner: opp
+      - <=
+      - 6
+    then:
+    - op: destroy
+      select:
+        zone: bz
+        owner: opp
+        filter:
+          types:
+          - creature
+          cost_le: 8
+        count: 1
+    - op: play_free
+      select:
+        zone: graveyard
+        owner: you
+        filter:
+          types:
+          - creature
+          cost_le: 8
+        count: 1
+    else:
+    - op: modal
+      modes:
+      - - op: destroy
+          select:
+            zone: bz
+            owner: opp
+            filter:
+              types:
+              - creature
+              cost_le: 8
+            count: 1
+      - - op: play_free
+          select:
+            zone: graveyard
+            owner: you
+            filter:
+              types:
+              - creature
+              cost_le: 8
+            count: 1
+  source:
+    official: dm22ex2-028
+    review: pending
+    notes: 鬼タイム（シールド合計6つ以下）なら両方、そうでなければ modal で1つ選ぶ形にした
+    aliases:
+    - dmart01-004
+    - dmrp13-027
+    - dmrp21-sp4
+    - dmsd15-010
+    - promoy19-072
+  keywords:
+  - s_trigger
+- id: dm22ex2-039
+  name: 偽りの名 ドレッド・ブラッド
+  types:
+  - creature
+  civs:
+  - darkness
+  cost: 7
+  power: 9000
+  races:
+  - ドラゴン・ゾンビ
+  - アンノウン
+  mana: 1
+  text: 'W・ブレイカー（このクリーチャーはシールドを２つブレイクする）
+
+    自分のターンのはじめに、このクリーチャーが自分の墓地にあれば、自分のクリーチャーを２体破壊してもよい。そうしたら、このクリーチャーを自分の墓地から出す。'
+  abilities:
+  - kind: trigger
+    zone: graveyard
+    when:
+      event: turn_start
+    if:
+      is_turn: you
+    effect:
+    - op: may
+      body:
+      - op: choose
+        select:
+          zone: bz
+          owner: you
+          filter:
+            types:
+            - creature
+          count: 2
+        as: s
+      - op: destroy
+        select:
+          ref: s
+          count: all
+      - op: move
+        select:
+          ref: self
+          count: 1
+        to: bz
+        reason: summon
+  source:
+    official: dm22ex2-039
+    review: pending
+    notes: 墓地で機能するターン開始誘発。2体破壊できない場合は may の中身が成立しない
+    aliases:
+    - dmx10-006
+    - dmx16-023
+    - promoy17-026
+  keywords:
+  - double_breaker
+- id: dm22ex2-041
+  faces:
+  - name: 虚無の守護者グリ・ラ
+    types:
+    - creature
+    civs:
+    - darkness
+    cost: 3
+    power: 3000
+    races:
+    - ガーディアン
+    abilities:
+    - kind: trigger
+      when:
+        event: move
+        to: bz
+        subject: self
+      effect:
+      - op: mill
+        owner: you
+        count: 3
+      - op: may
+        body:
+        - op: move
+          select:
+            zone: graveyard
+            owner: you
+            filter:
+              keyword: s_trigger
+            count: 1
+          to: hand
+          reason: return
+  - name: 無情の光
+    types:
+    - spell
+    civs:
+    - light
+    cost: 4
+    spell:
+    - op: move
+      select:
+        zone: hand
+        owner: you
+        count: 1
+      to: shield
+      reason: charge
+  mana: 1
+  text: '虚無の守護者グリ・ラ: このクリーチャーが出た時、自分の山札の上から３枚を墓地に置く。その後、「S・トリガー」を持つカードを１枚、墓地から手札に戻してもよい。／無情の光:
+    自分の手札を１枚、シールド化する。'
+  source:
+    official: dm22ex2-041
+    review: pending
+    notes: ツインパクト
+- id: dm22ex2-046
+  name: 轟音 ザ・ブラック GS
+  types:
+  - creature
+  civs:
+  - darkness
+  - fire
+  cost: 4
+  power: 3000
+  races:
+  - ソニック・コマンド
+  - イニシャルズ
+  mana: 1
+  text: '{GS} G・ストライク（このクリーチャーを自分のシールドゾーンから手札に加える時、相手に見せ、相手のクリーチャーを１体選んでもよい。このターン、そのクリーチャーは攻撃できない）
+
+    スピードアタッカー（このクリーチャーは召喚酔いしない）
+
+    このクリーチャーが攻撃する時、相手は自身の手札を１枚選び、捨てる。'
+  abilities:
+  - kind: trigger
+    when:
+      event: attack
+      subject: self
+    effect:
+    - op: discard
+      select:
+        zone: hand
+        owner: opp
+        chooser: opp
+        count: 1
+  source:
+    official: dm22ex2-046
+    review: pending
+    notes: '捨てるカードは相手が選ぶ（chooser: opp）'
+  keywords:
+  - g_strike
+  - speed_attacker
+- id: dm22ex2-049
+  name: コオニ童子
+  types:
+  - creature
+  civs:
+  - darkness
+  - fire
+  cost: 2
+  power: 2000
+  races:
+  - デモニオ
+  - 鬼札王国
+  mana: 1
+  text: このクリーチャーが出た時、このクリーチャーを破壊してもよい。そうしたら、次のうちいずれか１つを選ぶ。相手の手札を１枚見ないで選び、捨てさせる。相手のパワー2000以下のクリーチャーを１体破壊する。
+  abilities:
+  - kind: trigger
+    when:
+      event: move
+      to: bz
+      subject: self
+    effect:
+    - op: may
+      body:
+      - op: destroy
+        select:
+          ref: self
+          count: 1
+      - op: modal
+        modes:
+        - - op: discard
+            select:
+              zone: hand
+              owner: opp
+              count: 1
+        - - op: destroy
+            select:
+              zone: bz
+              owner: opp
+              filter:
+                types:
+                - creature
+                power_le: 2000
+              count: 1
+  source:
+    official: dm22ex2-049
+    review: pending
+    notes: 自壊後に modal で1つ選ぶ形にした
+    aliases:
+    - dmrp16-056
+    - promoy22-077
+- id: dm22ex2-055
+  name: ダーク・ライフ
+  types:
+  - spell
+  civs:
+  - darkness
+  - nature
+  cost: 2
+  mana: 1
+  text: 自分の山札の上から２枚を見る。そのうちの１枚をマナゾーンに、もう１枚を墓地に置く。
+  spell:
+  - op: choose
+    select:
+      zone: deck
+      owner: you
+      from_top: 2
+      look: true
+      count: all
+    as: pile
+  - op: choose
+    select:
+      ref: pile
+      count: 1
+    as: m
+  - op: mana_put
+    select:
+      ref: m
+      count: all
+  - op: move
+    select:
+      ref: pile
+      count: all
+    to: graveyard
+    reason: put
+  source:
+    official: dm22ex2-055
+    review: pending
+    aliases:
+    - dmbd12-l04
+    - dmd25-008
+    - dmd33-012
+    - dmex10-028
+    - dmrp11-g07
+    - dmx24-037
+    - promoy17-008
+    - promoy19-100
+- id: dm22ex2-058
+  name: 伊達人形ナスロスチャ
+  types:
+  - creature
+  civs:
+  - darkness
+  cost: 3
+  power: 4000
+  races:
+  - デスパペット
+  mana: 1
+  text: このクリーチャーが出た時、自分の山札を見て、その中からカードを１枚墓地に置く。その後、自分の山札をシャッフルする。
+  abilities:
+  - kind: trigger
+    when:
+      event: move
+      to: bz
+      subject: self
+    effect:
+    - op: choose
+      select:
+        zone: deck
+        owner: you
+        look: true
+        count: 1
+      as: t
+    - op: move
+      select:
+        ref: t
+        count: all
+      to: graveyard
+      reason: put
+    - op: shuffle
+  source:
+    official: dm22ex2-058
+    review: pending
+    aliases:
+    - dmex06-037
+    - promoy21-047
+- id: dm22ex2-061
+  name: 不死 デッドエンド
+  types:
+  - creature
+  civs:
+  - darkness
+  cost: 2
+  power: 4000
+  races:
+  - デーモン・コマンド
+  - ソニック・コマンド
+  - 侵略者
+  mana: 1
+  text: 'ブロッカー（このクリーチャーをタップして、相手クリーチャーの攻撃先をこのクリーチャーに変更してもよい）
+
+    このクリーチャーが出た時、自分の手札を１枚捨てる。
+
+    自分の他のコマンドがなければ、このクリーチャーは攻撃できない。'
+  abilities:
+  - kind: trigger
+    when:
+      event: move
+      to: bz
+      subject: self
+    effect:
+    - op: discard
+      select:
+        zone: hand
+        owner: you
+        count: 1
+  - kind: static
+    if:
+      not:
+        exists:
+          zone: bz
+          owner: you
+          filter:
+            race_has: コマンド
+          other: true
+    mod:
+      deny:
+      - attack_player
+      - attack_creature
+  source:
+    official: dm22ex2-061
+    review: pending
+    notes: '「他のコマンド」は race_has: コマンド + other: true で表した'
+  keywords:
+  - blocker
+- id: dm22ex2-068
+  name: 魔獣星樹ギガゲドー
+  types:
+  - creature
+  civs:
+  - light
+  - darkness
+  cost: 3
+  power: 5000
+  races:
+  - キマイラ
+  - スターライト・ツリー
+  keywords:
+  - blocker
+  - cannot_attack_player
+  mana: 1
+  text: 'ブロッカー（このクリーチャーをタップして、相手クリーチャーの攻撃先をこのクリーチャーに変更してもよい）
+
+    このクリーチャーは、プレイヤーを攻撃できない。
+
+    自分のクリーチャーが出た時、自分のシールドを１つ手札に戻してもよい。ただし、その「S・トリガー」は使えない。
+
+    このクリーチャーが破壊された時、自分の山札の上から１枚目をシールド化してもよい。'
+  abilities:
+  - kind: trigger
+    when:
+      event: move
+      to: bz
+      subject:
+        owner: you
+        filter:
+          types:
+          - creature
+    effect:
+    - op: may
+      body:
+      - op: move
+        select:
+          zone: shield
+          owner: you
+          count: 1
+        to: hand
+        reason: return
+  - kind: trigger
+    zone: graveyard
+    when:
+      event: move
+      to: graveyard
+      subject: self
+    effect:
+    - op: may
+      body:
+      - op: move
+        select:
+          zone: deck
+          owner: you
+          from_top: 1
+        to: shield
+        reason: charge
+  source:
+    official: dm22ex2-068
+    review: pending
+    notes: シールドを手札に戻す move はブレイクではないため S・トリガーは誘発しない
+- id: dm22ex2-071
+  name: 戯具 ドゥゲンダ
+  types:
+  - creature
+  civs:
+  - water
+  - darkness
+  cost: 2
+  power: 2000
+  races:
+  - マフィ・ギャング
+  - チーム零
+  mana: 1
+  text: このクリーチャーが出た時、カードを２枚引く。その後、自分の手札を２枚捨てる。
+  abilities:
+  - kind: trigger
+    when:
+      event: move
+      to: bz
+      subject: self
+    effect:
+    - op: draw
+      count: 2
+    - op: discard
+      select:
+        zone: hand
+        owner: you
+        count: 2
+  source:
+    official: dm22ex2-071
+    review: pending
+    aliases:
+    - dmbd22-024
+    - dmrp15-091
+    - dmsd16-014
+- id: dm22ex2-072
+  faces:
+  - name: コオニ小町
+    types:
+    - creature
+    civs:
+    - darkness
+    cost: 2
+    power: 2000
+    races:
+    - デモニオ
+    abilities:
+    - kind: trigger
+      when:
+        event: move
+        to: bz
+        subject: self
+      effect:
+      - op: discard
+        select:
+          zone: hand
+          owner: you
+          chooser: you
+          count: 1
+      - op: discard
+        select:
+          zone: hand
+          owner: opp
+          chooser: opp
+          count: 1
+  - name: 「世界はジャオウガ様のモノ！」
+    types:
+    - spell
+    civs:
+    - fire
+    cost: 3
+    spell:
+    - op: discard
+      select:
+        zone: hand
+        owner: you
+        count: all
+    - op: draw
+      count: 3
+  mana: 1
+  text: 'コオニ小町: このクリーチャーが出た時、各プレイヤーは自身の手札を１枚選んで捨てる。／「世界はジャオウガ様のモノ！」: 自分の手札をすべて捨て、カードを３枚引く。'
+  source:
+    official: dm22ex2-072
+    review: pending
+    notes: ツインパクト
+- id: dm22ex2-073
+  name: 神滅翔天ザーク・ゼヴォル
+  types:
+  - creature
+  civs:
+  - darkness
+  - fire
+  cost: 4
+  power: 4000
+  races:
+  - ファイアー・バード
+  - ドラゴン・ゾンビ
+  mana: 1
+  text: 'スレイヤー（このクリーチャーがバトルする時、バトルの後、相手クリーチャーを破壊する）
+
+    このクリーチャーが出た時、自分の手札を１枚捨ててもよい。そうしたらカードを１枚引く。'
+  abilities:
+  - kind: trigger
+    when:
+      event: move
+      to: bz
+      subject: self
+    effect:
+    - op: may
+      body:
+      - op: choose
+        select:
+          zone: hand
+          owner: you
+          count: 1
+        as: d
+      - op: discard
+        select:
+          ref: d
+          count: all
+      - op: if
+        cond:
+          exists:
+            ref: d
+        then:
+        - op: draw
+          count: 1
+  source:
+    official: dm22ex2-073
+    review: pending
+    notes: 捨てたカードが変数に入った場合だけドローする
+    aliases:
+    - dmex16-057
+  keywords:
+  - slayer
+- id: dm22ex2-074
+  name: チョイワ・ルピア
+  types:
+  - creature
+  civs:
+  - darkness
+  - fire
+  cost: 2
+  power: 2000
+  races:
+  - ファイアー・バード
+  mana: 1
+  text: 'このクリーチャーが出た時、自分の山札の上から２枚を墓地に置く。
+
+    自分のドラゴンの召喚コストを１少なくしてもよい。ただし、コストは０以下にはならない。'
+  abilities:
+  - kind: trigger
+    when:
+      event: move
+      to: bz
+      subject: self
+    effect:
+    - op: mill
+      owner: you
+      count: 2
+  - kind: static
+    affects:
+      owner: you
+      zone: hand
+      filter:
+        race_has: ドラゴン
+    mod:
+      cost: -1
+  source:
+    official: dm22ex2-074
+    review: pending
+    notes: 原文に下限の記載が無いため cost_min は付けていない。任意性は常在型として登録した
+- id: dm22ex2-075
+  name: フェアリーの闇の子祭
+  types:
+  - spell
+  civs:
+  - darkness
+  - nature
+  cost: 3
+  mana: 1
+  text: 'S・トリガー（この呪文をシールドゾーンから手札に加える時、コストを支払わずにすぐ唱えてもよい）
+
+    次のうちいずれか１つを選ぶ。自分のクリーチャーまたはタマシードの中に闇と自然があれば、かわりに両方選んでもよい。
+
+    ▶自分の山札の上から１枚目を墓地に置き、その後、自分の墓地からカードを１枚手札に戻す。
+
+    ▶自分の山札の上から１枚目をマナゾーンに置く。'
+  spell:
+  - op: if
+    cond:
+      all:
+      - exists:
+          zone: bz
+          owner: you
+          filter:
+            types:
+            - creature
+            - tamaseed
+            civs:
+            - darkness
+      - exists:
+          zone: bz
+          owner: you
+          filter:
+            types:
+            - creature
+            - tamaseed
+            civs:
+            - nature
+    then:
+    - op: mill
+      owner: you
+      count: 1
+    - op: move
+      select:
+        zone: graveyard
+        owner: you
+        count: 1
+      to: hand
+      reason: return
+    - op: mana_put
+      select:
+        zone: deck
+        owner: you
+        from_top: 1
+    else:
+    - op: modal
+      modes:
+      - - op: mill
+          owner: you
+          count: 1
+        - op: move
+          select:
+            zone: graveyard
+            owner: you
+            count: 1
+          to: hand
+          reason: return
+      - - op: mana_put
+          select:
+            zone: deck
+            owner: you
+            from_top: 1
+  source:
+    official: dm22ex2-075
+    review: pending
+    notes: 闇と自然の両方が場にあれば両方、そうでなければ modal で1つ選ぶ形にした
+  keywords:
+  - s_trigger
+- id: dm22ex2-1a
+  name: 黒神龍アブライゼ・ドルバ
+  types:
+  - creature
+  civs:
+  - darkness
+  cost: 6
+  power: 5000
+  races:
+  - ドラゴン・ゾンビ
+  mana: 1
+  text: 'パワード・ブレイカー
+
+    このクリーチャーが出た時、自分のシールドを３つブレイクする。
+
+    自分の墓地にあるクリーチャー１体につき、このクリーチャーのパワーを+2000する。'
+  abilities:
+  - kind: trigger
+    when:
+      event: move
+      to: bz
+      subject: self
+    effect:
+    - op: break
+      player: you
+      count: 3
+  - kind: static
+    mod:
+      power:
+        amount: 2000
+        count:
+          zone: graveyard
+          owner: you
+          filter:
+            types:
+            - creature
+  source:
+    official: dm22ex2-1a
+    review: pending
+    aliases:
+    - dm22ex2-1b
+    - dm22ex2-s03
+  keywords:
+  - powered_breaker
+- id: dmbd22-025
+  name: 【問２】ノロン⤴
+  types:
+  - creature
+  civs:
+  - water
+  - darkness
+  cost: 2
+  power: 2000
+  races:
+  - 革命軍
+  - テック団
+  mana: 1
+  text: このクリーチャーが出た時、カードを２枚引く。その後、自分の手札を２枚捨てる。
+  abilities:
+  - kind: trigger
+    when:
+      event: move
+      to: bz
+      subject: self
+    effect:
+    - op: draw
+      count: 2
+    - op: discard
+      select:
+        zone: hand
+        owner: you
+        count: 2
+  source:
+    official: dmbd22-025
+    review: pending
+    notes: 原文が同じ dm22ex2-071 の変換結果を写した（モデル不使用）。能力は元カードの確認に従う
+    aliases:
+    - dmbd10-017
+    - dmr23-067
+- id: dm22rp1-028
+  name: アストマープル-T3
+  types:
+  - creature
+  civs:
+  - light
+  cost: 3
+  power: 3000
+  races:
+  - メカ・デル・ディネロ
+  mana: 1
+  text: このクリーチャーが出た時、コスト３以下のクリーチャー１体またはコスト３以下のタマシードを１枚、自分の手札から出してもよい。
+  abilities:
+  - kind: trigger
+    when:
+      event: move
+      to: bz
+      subject: self
+    effect:
+    - op: may
+      body:
+      - op: play_free
+        select:
+          zone: hand
+          owner: you
+          filter:
+            types:
+            - creature
+            - tamaseed
+            cost_le: 3
+          count: 1
+  source:
+    official: dm22rp1-028
+    review: pending
+    aliases:
+    - dm22rp1-15a
+    - promoy21-055
+- id: dm22rp1-031
+  name: ハイパーソニック・ゴールデンタイヤ
+  types:
+  - tamaseed
+  civs:
+  - light
+  cost: 3
+  mana: 1
+  text: 自分のクリーチャーが攻撃する時、カードを１枚引いてもよい。
+  abilities:
+  - kind: trigger
+    when:
+      event: attack
+      subject:
+        owner: you
+        filter:
+          types:
+          - creature
+    effect:
+    - op: may
+      body:
+      - op: draw
+        count: 1
+  source:
+    official: dm22rp1-031
+    review: pending
+- id: dm22rp1-032
+  name: ヨサノ・エレキハイカー
+  types:
+  - creature
+  civs:
+  - water
+  cost: 3
+  power: 2000
+  races:
+  - マジック・マーフォーク
+  mana: 1
+  text: このクリーチャーが出た時、相手の、コスト３以下のクリーチャー１体またはコスト３以下のタマシードを１枚、持ち主の手札に戻す。その後、自分のタマシードがあれば、カードを１枚引いてもよい。
+  abilities:
+  - kind: trigger
+    when:
+      event: move
+      to: bz
+      subject: self
+    effect:
+    - op: bounce
+      select:
+        zone: bz
+        owner: opp
+        filter:
+          types:
+          - creature
+          - tamaseed
+          cost_le: 3
+        count: 1
+    - op: if
+      cond:
+        exists:
+          zone: bz
+          owner: you
+          filter:
+            types:
+            - tamaseed
+      then:
+      - op: may
+        body:
+        - op: draw
+          count: 1
+  source:
+    official: dm22rp1-032
+    review: pending
+- id: dm22rp1-026
+  name: 森林と瀑布のレコード
+  types:
+  - tamaseed
+  civs:
+  - water
+  - nature
+  cost: 5
+  mana: 1
+  text: 'S・トリガー（このタマシードをシールドゾーンから手札に加える時、コストを支払わずにすぐ使ってもよい）
+
+    自分の呪文または他のタマシードを使った時、カードを１枚引いてもよい。そうしたら、自分の手札を１枚、タップしてマナゾーンに置いてもよい。'
+  abilities:
+  - kind: trigger
+    when:
+      event: cast
+      subject:
+        owner: you
+        filter:
+          types:
+          - spell
+    effect:
+    - op: may
+      body:
+      - op: draw
+        count: 1
+    - op: may
+      body:
+      - op: choose
+        select:
+          zone: hand
+          owner: you
+          count: 1
+        as: m
+      - op: mana_put
+        select:
+          ref: m
+          count: all
+      - op: tap
+        select:
+          ref: m
+          count: all
+  - kind: trigger
+    when:
+      event: move
+      to: bz
+      subject:
+        owner: you
+        filter:
+          types:
+          - tamaseed
+        other: true
+    effect:
+    - op: may
+      body:
+      - op: draw
+        count: 1
+    - op: may
+      body:
+      - op: choose
+        select:
+          zone: hand
+          owner: you
+          count: 1
+        as: m
+      - op: mana_put
+        select:
+          ref: m
+          count: all
+      - op: tap
+        select:
+          ref: m
+          count: all
+  source:
+    official: dm22rp1-026
+    review: pending
+    notes: 「そうしたら」は2つの may に分けた（ドローしなくてもマナ置きができてしまう点は要レビュー）。タマシードの「使った」はバトルゾーンに出た時として照合した
+  keywords:
+  - s_trigger
+- id: dm22rp1-036
+  name: 電脳の海を彷徨うエレキギター
+  types:
+  - tamaseed
+  civs:
+  - water
+  cost: 2
+  mana: 1
+  text: 自分の呪文または他のタマシードを使った時、カードを１枚引いてもよい。そうしたら、自分の手札を１枚捨てる。
+  abilities:
+  - kind: trigger
+    when:
+      event: cast
+      subject:
+        owner: you
+        filter:
+          types:
+          - spell
+    effect:
+    - op: may
+      body:
+      - op: draw
+        count: 1
+    - op: may
+      body:
+      - op: discard
+        select:
+          zone: hand
+          owner: you
+          count: 1
+  - kind: trigger
+    when:
+      event: move
+      to: bz
+      subject:
+        owner: you
+        filter:
+          types:
+          - tamaseed
+        other: true
+    effect:
+    - op: may
+      body:
+      - op: draw
+        count: 1
+    - op: may
+      body:
+      - op: discard
+        select:
+          zone: hand
+          owner: you
+          count: 1
+  source:
+    official: dm22rp1-036
+    review: pending
+    notes: 「そうしたら」は2つの may に分けた。タマシードの「使った」はバトルゾーンに出た時として照合した
+- id: dm22rp1-040
+  name: 闇々人形アイビー
+  types:
+  - creature
+  civs:
+  - darkness
+  cost: 1
+  power: 1000
+  races:
+  - デスパペット
+  mana: 1
+  text: 'ブロッカー（このクリーチャーをタップして、相手クリーチャーの攻撃先をこのクリーチャーに変更してもよい）このクリーチャーは攻撃できない。
+
+    このクリーチャーが破壊される時、墓地に置くかわりに、カードを２枚、自分の墓地から好きな順序で山札の下に置いてもよい。'
+  abilities:
+  - kind: replace
+    optional: true
+    when:
+      event: move
+      to: graveyard
+      subject: self
+    instead:
+    - op: move
+      select:
+        zone: graveyard
+        owner: you
+        count: 2
+      to: deck
+      reason: put
+  source:
+    official: dm22rp1-040
+    review: pending
+    notes: 置換の instead で墓地の2枚を山札の下へ送り、このクリーチャー自身は場に残る形にした（要レビュー）
+  keywords:
+  - blocker
+  - cannot_attack
+- id: dm22rp1-046
+  name: マルルの炎杖
+  types:
+  - tamaseed
+  civs:
+  - fire
+  cost: 2
+  mana: 1
+  text: このタマシードが出た時、カードを１枚引く。セイバー：ドラゴン（自分のドラゴンが破壊される時、このタマシードをかわりに破壊してもよい）
+  abilities:
+  - kind: trigger
+    when:
+      event: move
+      to: bz
+      subject: self
+    effect:
+    - op: draw
+      count: 1
+  - kind: replace
+    optional: true
+    when:
+      event: move
+      to: graveyard
+      subject:
+        owner: you
+        filter:
+          types:
+          - creature
+          race_has: ドラゴン
+    instead:
+    - op: destroy
+      select:
+        ref: self
+        count: 1
+  source:
+    official: dm22rp1-046
+    review: pending
+    notes: セイバーはタマシード自身をかわりに破壊する置換で表した
+- id: dm22rp1-047
+  name: プ・プリッチュ・タンク
+  types:
+  - creature
+  civs:
+  - nature
+  cost: 5
+  power: 6000
+  races:
+  - グランセクト
+  mana: 1
+  text: 'W・ブレイカー（このクリーチャーはシールドを２つブレイクする）
+
+    このクリーチャーが攻撃する時、相手の、コスト４以下のクリーチャー１体またはコスト４以下のタマシードを１枚選ぶ。相手はそれをマナゾーンに置く。'
+  abilities:
+  - kind: trigger
+    when:
+      event: attack
+      subject: self
+    effect:
+    - op: move
+      select:
+        zone: bz
+        owner: opp
+        chooser: opp
+        filter:
+          types:
+          - creature
+          - tamaseed
+          cost_le: 4
+        count: 1
+      to: mana
+      reason: put
+  source:
+    official: dm22rp1-047
+    review: pending
+    notes: '対象の選択は相手が行う（chooser: opp）'
+  keywords:
+  - double_breaker
+- id: dm22rp1-053
+  name: 運搬の守護者 アル・ハコブ
+  types:
+  - creature
+  civs:
+  - light
+  cost: 2
+  power: 500
+  races:
+  - ガーディアン
+  mana: 1
+  text: このクリーチャーが出た時、自分の、アンタップしている光のクリーチャー１体またはアンタップしている光のタマシードを１枚、タップしてもよい。そうしたら、カードを１枚引く。
+  abilities:
+  - kind: trigger
+    when:
+      event: move
+      to: bz
+      subject: self
+    effect:
+    - op: may
+      body:
+      - op: choose
+        select:
+          zone: bz
+          owner: you
+          filter:
+            types:
+            - creature
+            - tamaseed
+            civs:
+            - light
+            tapped: false
+          count: 1
+        as: t
+      - op: tap
+        select:
+          ref: t
+          count: all
+      - op: if
+        cond:
+          exists:
+            ref: t
+        then:
+        - op: draw
+          count: 1
+  source:
+    official: dm22rp1-053
+    review: pending
+    notes: タップ対象を変数に保持し、選んだ場合だけドローする
+    aliases:
+    - dm22rp1-18a
+- id: dm22rp1-058
+  name: 知識のコイン
+  types:
+  - tamaseed
+  civs:
+  - water
+  cost: 3
+  mana: 1
+  text: 'S・トリガー（このタマシードをシールドゾーンから手札に加える時、コストを支払わずにすぐ使ってもよい）
+
+    このタマシードまたは、名前に《知識のコイン》とある自分の他のタマシードが出た時、カードを１枚引く。'
+  abilities:
+  - kind: trigger
+    when:
+      event: move
+      to: bz
+      subject:
+        owner: you
+        filter:
+          types:
+          - tamaseed
+          name_has: 知識のコイン
+    effect:
+    - op: draw
+      count: 1
+  source:
+    official: dm22rp1-058
+    review: pending
+    notes: 同名タマシード（このカード自身を含む）の登場で誘発する
+  keywords:
+  - s_trigger
+- id: dm22rp1-063
+  name: 不幸のコイン
+  types:
+  - tamaseed
+  civs:
+  - darkness
+  cost: 4
+  mana: 1
+  text: 'S・トリガー（このタマシードをシールドゾーンから手札に加える時、コストを支払わずにすぐ使ってもよい）
+
+    このタマシードまたは、名前に《不幸のコイン》とある自分の他のタマシードが出た時、相手のクリーチャーを１体選ぶ。このターン、そのクリーチャーのパワーを-3000する。（パワー０以下のクリーチャーは破壊される）'
+  abilities:
+  - kind: trigger
+    when:
+      event: move
+      to: bz
+      subject:
+        owner: you
+        filter:
+          types:
+          - tamaseed
+          name_has: 不幸のコイン
+    effect:
+    - op: choose
+      select:
+        zone: bz
+        owner: opp
+        filter:
+          types:
+          - creature
+        count: 1
+      as: c
+    - op: modify
+      select:
+        ref: c
+        count: all
+      mod:
+        power: -3000
+      duration: end_of_turn
+  source:
+    official: dm22rp1-063
+    review: pending
+    notes: 同名タマシード（このカード自身を含む）の登場で誘発する
+  keywords:
+  - s_trigger
+- id: dm22rp1-068
+  name: 烈火のコイン
+  types:
+  - tamaseed
+  civs:
+  - fire
+  cost: 4
+  mana: 1
+  text: 'S・トリガー（このタマシードをシールドゾーンから手札に加える時、コストを支払わずにすぐ使ってもよい）
+
+    このタマシードまたは、名前に《烈火のコイン》とある自分の他のタマシードが出た時、相手のパワー6000以下のクリーチャーを１体破壊する。'
+  abilities:
+  - kind: trigger
+    when:
+      event: move
+      to: bz
+      subject:
+        owner: you
+        filter:
+          types:
+          - tamaseed
+          name_has: 烈火のコイン
+    effect:
+    - op: destroy
+      select:
+        zone: bz
+        owner: opp
+        filter:
+          types:
+          - creature
+          power_le: 6000
+        count: 1
+  source:
+    official: dm22rp1-068
+    review: pending
+  keywords:
+  - s_trigger
+- id: dm22rp1-070
+  name: アヴェルショットのリスマン
+  types:
+  - creature
+  civs:
+  - nature
+  cost: 4
+  power: 5000
+  races:
+  - ドリームメイト
+  mana: 1
+  text: このクリーチャーが出た時、自分のマナゾーンのカードを３枚までアンタップする。
+  abilities:
+  - kind: trigger
+    when:
+      event: move
+      to: bz
+      subject: self
+    effect:
+    - op: untap
+      select:
+        zone: mana
+        owner: you
+        count: 3
+        up_to: true
+  source:
+    official: dm22rp1-070
+    review: pending
+- id: dm22rp1-074
+  name: 繁茂のコイン
+  types:
+  - tamaseed
+  civs:
+  - nature
+  cost: 3
+  mana: 1
+  text: 'S・トリガー（このタマシードをシールドゾーンから手札に加える時、コストを支払わずにすぐ使ってもよい）
+
+    このタマシードまたは、名前に《繁茂のコイン》とある自分の他のタマシードが出た時、自分の山札の上から１枚目をマナゾーンに置く。'
+  abilities:
+  - kind: trigger
+    when:
+      event: move
+      to: bz
+      subject:
+        owner: you
+        filter:
+          types:
+          - tamaseed
+          name_has: 繁茂のコイン
+    effect:
+    - op: mana_put
+      select:
+        zone: deck
+        owner: you
+        from_top: 1
+  source:
+    official: dm22rp1-074
+    review: pending
+  keywords:
+  - s_trigger
+- id: dm22rp1-t14
+  name: 戯具 ヴァイモデル
+  types:
+  - creature
+  civs:
+  - darkness
+  cost: 5
+  power: 3000
+  races:
+  - マフィ・ギャング
+  - チーム零
+  mana: 1
+  text: 'S・トリガー（このクリーチャーをシールドゾーンから手札に加える時、コストを支払わずにすぐ召喚してもよい）
+
+    このクリーチャーが出た時、自分の山札の上から３枚を墓地に置く。その後、コスト３以下のクリーチャーを１体、自分の墓地から出す。'
+  abilities:
+  - kind: trigger
+    when:
+      event: move
+      to: bz
+      subject: self
+    effect:
+    - op: mill
+      owner: you
+      count: 3
+    - op: play_free
+      select:
+        zone: graveyard
+        owner: you
+        filter:
+          types:
+          - creature
+          cost_le: 3
+        count: 1
+  source:
+    official: dm22rp1-t14
+    review: pending
+    aliases:
+    - dm22rp1-tf14
+    - dmex18-040
+    - dmsd16-006
+  keywords:
+  - s_trigger
