@@ -1253,6 +1253,11 @@
       },
       "count": {
        "$ref": "#/$defs/selector"
+      },
+      "only": {
+       "enum": [
+        "attacking"
+       ]
       }
      },
      "required": [

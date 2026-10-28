@@ -5,6 +5,7 @@ import pytest
 from conftest import answer, setup
 
 from dmsim.defs import DATA, load_rules
+from dmsim.defs import card_yaml_files  # noqa: E402
 
 SAMOHAN = "dmrp01-003"
 DOTSUKING = "dmrp01-001"
@@ -12,7 +13,7 @@ DOTSUKING = "dmrp01-001"
 
 @pytest.fixture(scope="module")
 def rr():
-    return load_rules(sorted((DATA / "cards").glob("*.yaml")) + [Path(__file__).parent / "rule_cards.yaml"])
+    return load_rules(card_yaml_files() + [Path(__file__).parent / "rule_cards.yaml"])
 
 
 def names(e, z, p):

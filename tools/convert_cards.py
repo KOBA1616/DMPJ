@@ -50,13 +50,14 @@ INSTRUCTIONS = """\
 - known_keywords があるときは、それらのキーワードはルールで処理済み（text から除いてある）。keywords に入れ直さず、残りの text だけを変換する。
 - 「〜できない」は static の mod.deny、「〜できる」は mod.allow。「〜してもよい」は op: may。
 - 進化は types に evolution を含め evolve_from に進化元の条件を書く。ツインパクトは faces に2面を書く。
-- カードの種類: クリーチャーは creature、呪文は spell、タマシードは tamaseed、フィールドは field、クロスギアは cross_gear（実行するとバトルゾーンに出る）。「タマシード/クリーチャー」は両方を types に書く。他の種類（オーラ・城・ドラグハート・サイキック・GR など）は未対応なので、近似せず source.unsupported に書く。
+- カードの種類: クリーチャーは creature、呪文は spell、タマシードは tamaseed、フィールドは field、クロスギアは cross_gear（実行するとバトルゾーンに出る）。「タマシード/クリーチャー」は両方を types に書く。サイキック・GR・超次元・ドラグハートはオリジナルフォーマットでは使わないので変換しない（取り込み側で飛ばす）。他の種類（オーラ・城 など）は未対応なので、近似せず source.unsupported に書く。
 - 革命チェンジ・ニンジャ・ストライク等の宣言は kind: declare（既存カードの例に倣う）。
 - text には原文から括弧書きの注釈を除いたものを「 / 」区切りで書く。
-- 表せない・近似した点は source.notes に日本語で具体的に書く。表せない能力を黙って落とさない。
-- 語彙が足りず表せない効果は source.unsupported に [{need: <足せばよい op・語彙の案（英語の識別子）>, text: <該当する原文>}] で書く。
-  無い op を effect に書いて検査を落とすより、近似して notes に書き、足りない語彙を unsupported に残す。
+- 近似・代用はしない。語彙で原文どおりに表せない効果は、似た別の語彙（op・mod・条件）で置き換えて書かない。その能力は abilities に書かず、source.unsupported に [{need: <足せばよい op・語彙の案（英語の識別子）>, text: <該当する原文>}] で書く。表せる他の能力は通常どおり変換する。
+  「ほぼ同じ」「この場面では同じ結果」と思っても代用しない（例: 他のカードの効果の対象条件を書き換える置換を、無条件の置換や別の効果で書かない）。語彙の追加は人が行い、足りない語彙は unsupported の集計から決める。unsupported があるカードは登録されず（rejects に vocab として残る）、語彙が足りるようになってから変換し直す。
+- 表せない能力を黙って落とさない。落とした能力は必ず unsupported に残す。source.notes には、原文の曖昧さや確認してほしい点だけを日本語で具体的に書く（近似の言い訳には使わない）。
 - source は {official: <id>, review: pending} とし、必要なら notes を足す。
+- 「攻撃中、パワー+N」は mod.battle_power に only: attacking を付ける（バトル中だけ・攻撃側のときだけ適用。ブロックしたときは付かない）。「バトル中」は only を付けない。
 - 原文の表現が古い（例: 「墓地に置く」）場合も原文どおりに変換し、気づいた点は notes に書く。
 """
 
@@ -301,6 +302,18 @@ def classify(error: str) -> dict:
     return {"reason": "vocab_gap", "gaps": gaps} if gaps else {"reason": "other", "gaps": []}
 
 
+OUT_OF_FORMAT = ("サイキック", "GR", "ドラグハート", "超次元")      # オリジナルフォーマットでは使わない種類（実装しない）
+
+
+def vocab_reject(card: dict, row: dict) -> dict | None:
+    """語彙が足りず表せない効果（source.unsupported）のあるカードは、converted に登録せず rejects へ回す（定義は partial に残す）。"""
+    gaps = [str(u.get("need", "?")) for u in (card.get("source") or {}).get("unsupported") or [] if isinstance(u, dict)]
+    if not (card.get("source") or {}).get("unsupported"):
+        return None
+    return {**row, "reason": "vocab", "gaps": gaps, "partial": card,
+            "error": "\n".join(f"語彙不足: {g}" for g in gaps) or "語彙不足（unsupported の申告あり）"}
+
+
 def precheck(row: dict) -> dict | None:
     """モデルを呼ぶ前に、原文がそもそも変換できる状態か見る。ダメなら理由を返す（API も時間も使わない）。
 
@@ -310,6 +323,9 @@ def precheck(row: dict) -> dict | None:
     """
     if {"name", "card_type", "civilization", "cost"} & set(row.get("missing") or []):
         return {"reason": "fetch_incomplete", "gaps": [], "error": "原文の取得が空ページ・項目欠け（再取得が必要）"}
+    types = [row.get("card_type", ""), *[f.get("card_type", "") for f in row.get("faces") or []]]
+    if any(k in str(t) for t in types for k in OUT_OF_FORMAT):
+        return {"reason": "out_of_format", "gaps": [], "error": "オリジナルフォーマットでは使わない種類（サイキック・GR・超次元・ドラグハート）。変換しない"}
     if not row.get("text") and not any(f.get("text") for f in row.get("faces") or []):
         return {"reason": "no_text", "gaps": [], "error": "能力文が無い（変換対象外。語彙不足ではない）"}
     return None
@@ -326,6 +342,8 @@ def run_rules(rows: list[dict], tables, out: Path, rejects_path: Path) -> dict:
     stats = {"requested": 0, "ok": 0, "by_rule": 0, "by_copy": 0, "invalid": 0}
     for r in rows:
         if r["id"] in done:
+            continue
+        if (precheck(r) or {}).get("reason") == "out_of_format":
             continue
         stats["requested"] += 1
         rc, kind = rule_convert.convert(r), "by_rule"
@@ -448,6 +466,15 @@ def run(rows: list[dict], client, tables, sysp: str, effort: str, out: Path, rej
             if part:
                 merge_split(card, r, part)
             validate(card, r, tables)
+            vr = vocab_reject(card, r)
+            if vr:      # 語彙が足りないカードは登録しない（近似した定義で動かさない）。足りない語彙は gaps に出る
+                with lock:
+                    stats["rejected"] += 1
+                    streak["n"] = 0
+                    rejects[r["id"]] = vr
+                    print(f"- {r['id']} {r.get('name', '')}: {vr['error']}（登録しない）", file=sys.stderr, flush=True)
+                    save()
+                return
         except DefError as e:
             with lock:
                 stats["rejected"] += 1
