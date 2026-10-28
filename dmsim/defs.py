@@ -482,7 +482,8 @@ def parse_card(raw: dict, tables, where: str | None = None) -> CardDef:
 def load_rules(card_files: list[Path] | None = None) -> Rules:
     tables = load_tables()
     zones, keywords, macros, actions, steps = tables
-    card_files = card_files or sorted((DATA / "cards").glob("*.yaml"))
+    from .cardfiles import card_files as _all
+    card_files = card_files or _all()
     cards: dict[str, CardDef] = {}
     for f in card_files:
         for raw in yaml.safe_load(Path(f).read_text(encoding="utf-8")).get("cards") or []:

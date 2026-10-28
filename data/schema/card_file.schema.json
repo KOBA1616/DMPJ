@@ -1,0 +1,17 @@
+{
+ "$schema": "https://json-schema.org/draft/2020-12/schema",
+ "title": "カード定義ファイル（converted.yaml / real.yaml / 弾ごとの <種別>/<弾>.yaml）",
+ "type": "object",
+ "required": [
+  "cards"
+ ],
+ "properties": {
+  "cards": {
+   "type": "array",
+   "items": {
+    "$ref": "card.schema.json"
+   }
+  }
+ },
+ "additionalProperties": false
+}

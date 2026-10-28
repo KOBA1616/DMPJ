@@ -260,7 +260,8 @@ def load_rows(inputs: list[str]) -> list[dict]:
 
 def known_ids(out: Path) -> set[str]:
     ids: set[str] = set()
-    for f in (DATA / "cards").glob("*.yaml"):
+    from dmsim.cardfiles import card_files
+    for f in card_files():
         ids |= {c["id"] for c in (yaml.safe_load(f.read_text(encoding="utf-8")) or {}).get("cards") or []}
     return ids
 

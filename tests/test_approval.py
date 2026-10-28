@@ -45,3 +45,15 @@ def test_vocab_change_invalidates_only_users():
     v2 = {**v, "kw:blocker": "changed"}
     assert ap.stale_reason(e, raw, v2) == "語彙の定義が変わった"
     assert ap.stale_reason(e, raw, {**v, "kw:double_breaker": "x"}) is None
+
+
+def test_split_cards_roundtrip(tmp_path):
+    import split_cards
+    from dmsim.cardfiles import card_files
+    src = tmp_path / "converted.yaml"
+    cards = [{**CARD, "id": "dm01-s01"}, {**CARD, "id": "dm01-s02"}, {**CARD, "id": "dm02-001"}]
+    src.write_text(yaml.safe_dump({"cards": cards}, allow_unicode=True), encoding="utf-8")
+    assert split_cards.split(src) == {"dm01": 2, "dm02": 1}
+    src.unlink()
+    got = [c["id"] for f in card_files(tmp_path) for c in yaml.safe_load(f.read_text(encoding="utf-8"))["cards"]]
+    assert got == ["dm01-s01", "dm01-s02", "dm02-001"]
