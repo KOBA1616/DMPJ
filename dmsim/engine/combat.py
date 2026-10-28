@@ -247,7 +247,8 @@ def h_attack(eng, t):
             if d:
                 t["phase"] = 3
                 return d
-            eng._push(*eng._battle(att, tgt))
+            eng._push(*eng._window(eng.ev_task({"ev": "battle_start", "subject": att, "opponent": tgt, "controller": a})),
+                      {"t": "battle_run", "att": att, "tgt": tgt})
         return None
     if ph == 4:                                               # 509 ダイレクトアタック
         if t["target"] == "player" and eng.zlist("shield", 1 - a):
