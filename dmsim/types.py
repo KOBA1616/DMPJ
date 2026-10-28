@@ -189,6 +189,7 @@ class BreakTask(TypedDict):
     chosen: NotRequired[list[int]]
     answer: NotRequired[list[int]]
     reason: NotRequired[str]         # 手札へ加える理由（既定は break）。効果で加える時は効果の reason
+    breaker: NotRequired[Ref]        # ブレイクしたクリーチャー（攻撃、またはクリーチャーの効果）
     fire_break: NotRequired[bool]    # ブレイクのイベントを起こすか（効果でシールドを手札に加える時は起こさない）
 
 

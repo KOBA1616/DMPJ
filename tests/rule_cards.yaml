@@ -400,3 +400,20 @@ cards:
       - kind: silent
         effect:
           - {op: draw, count: 1}
+
+  # ターボラッシュ: 自分の他のクリーチャーがシールドをブレイクしたあと、そのターンの間だけ能力を得る
+  - id: R059
+    name: 試験用ターボラッシュ
+    types: [creature]
+    civs: [water]
+    cost: 1
+    power: 1000
+    races: [テスト]
+    keywords: [turbo_rush]
+    text: ターボラッシュ / このクリーチャーが攻撃するとき、カードを1枚引く。
+    abilities:
+      - kind: trigger
+        when: {event: attack, subject: self}
+        if: {self_marked: turbo_rush}
+        effect:
+          - {op: draw, count: 1}

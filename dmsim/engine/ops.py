@@ -151,7 +151,7 @@ def op_break(eng, t, op, env):
     宣言された S・トリガーをその場で先に解決してから、続きを処理する。"""
     eng._defer(t, [{"t": "break", "victim": eng._rel(op.get("player", "opp"), env), "by": env["you"],
                      "count": eng.eval_expr(op.get("count", 1), env), "phase": 0,
-                     "in_effect": bool(env.get("in_st")) or bool(op.get("st_first"))}])
+                     "in_effect": bool(env.get("in_st")) or bool(op.get("st_first")), **eng._breaker(env)}])
 
 
 @op("modify", select="selector", mod="mod", duration="duration?", dynamic="bool?")
@@ -180,10 +180,12 @@ def op_modify(eng, t, op, env):
     return None
 
 
-@op("mark", name="str")
+@op("mark", name="str", of_self="bool?")
 def op_mark(eng, t, op, env):
-    """このターンの印を付ける（cond の marked で読む）。ターンが変わると消える。「各ターン1度」「他のファイナル革命を使っていなければ」用。"""
-    eng.s.turn_counters[op["name"]] = eng.s.turn_counters.get(op["name"], 0) + 1
+    """このターンの印を付ける（cond の marked で読む）。ターンが変わると消える。「各ターン1度」「他のファイナル革命を使っていなければ」用。
+    of_self: このカード自身の印にする（cond の self_marked で読む。ターボラッシュ）。"""
+    key = op["name"] + (f":{env['self'][0]}:{env['self'][1]}" if op.get("of_self") else "")
+    eng.s.turn_counters[key] = eng.s.turn_counters.get(key, 0) + 1
 
 
 @op("shuffle", player="player?")

@@ -97,6 +97,7 @@
      "speed_attacker",
      "spell_to_hand",
      "triple_breaker",
+     "turbo_rush",
      "unblockable",
      "wave_striker",
      "world_breaker"
@@ -220,6 +221,7 @@
        "speed_attacker",
        "spell_to_hand",
        "triple_breaker",
+       "turbo_rush",
        "unblockable",
        "wave_striker",
        "world_breaker"
@@ -475,6 +477,9 @@
        },
        "name": {
         "type": "string"
+       },
+       "of_self": {
+        "type": "boolean"
        }
       },
       "required": [
@@ -1112,6 +1117,9 @@
     },
     "marked": {
      "type": "string"
+    },
+    "self_marked": {
+     "type": "string"
     }
    },
    "additionalProperties": false
@@ -1174,6 +1182,7 @@
        "speed_attacker",
        "spell_to_hand",
        "triple_breaker",
+       "turbo_rush",
        "unblockable",
        "wave_striker",
        "world_breaker"

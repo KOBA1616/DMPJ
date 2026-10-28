@@ -76,7 +76,7 @@ def build() -> dict:
                 "exists": ref("selector"), "cmp": {"type": "array", "minItems": 3, "maxItems": 3},
                 "not": ref("cond"), "all": {"type": "array", "items": ref("cond")},
                 "any": {"type": "array", "items": ref("cond")}, "is_turn": {"enum": ["you", "opp"]},
-                "marked": {"type": "string"}},
+                "marked": {"type": "string"}, "self_marked": {"type": "string"}},
                 "additionalProperties": False},
             "mod": {"type": "object", "properties": {
                 "power": {"anyOf": [{"type": "integer"}, {"type": "object", "properties": {"amount": {"type": "integer"}, "count": ref("selector")}, "required": ["amount"], "additionalProperties": False}]}, "grant": {"type": "array", "items": {"enum": sorted(keywords)}},

@@ -320,7 +320,7 @@ class Checker:
             for x in v:
                 self.cond(x, where)
             return
-        if k == "marked":
+        if k in ("marked", "self_marked"):
             if not isinstance(v, str):
                 raise DefError(f"{where}: marked needs a name")
             return

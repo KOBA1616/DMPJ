@@ -191,3 +191,12 @@ keywords:
   silent_skill:
     ja: サイレントスキル
     abilities: []
+  # ターボラッシュ: 自分の他のクリーチャーがシールドをブレイクしたあと、そのターンが終わるまで次の能力を得る。
+  # 印を付けるだけ。続く能力に if: {self_marked: turbo_rush} を付けて書く
+  turbo_rush:
+    ja: ターボラッシュ
+    abilities:
+      - kind: trigger
+        when: {event: break, subject: {owner: you, other: true, filter: {types: [creature]}}}
+        effect:
+          - {op: mark, name: turbo_rush, of_self: true}
