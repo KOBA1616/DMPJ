@@ -5,8 +5,10 @@ rules=load_rules()
 HG,EM,MI,FA,MK="dm16-007","dm23bd7-022","dmx19-s06","dm31-025","dmx24-017"
 OO,HC,TS,AL="dmd24-024","dmx11-082","dm23ex2-cho018","dmx12b-031"
 F="T013"
-spec={"p0":{"hand":[FA,FA,AL]+[F]*8,"bz":[EM,MI,OO],"mana":["dm01-080"]*12,"shield":[HG]*7,"deck":[FA]*4+[TS]+[FA]*6},
+W=["dm01-080"]*4+["dm06-085"]*4+["dm02-024"]*4                         # 水のマナ（4枚制限を守るため3種類）
+spec={"p0":{"hand":[FA,FA,AL]+[F]*8,"bz":[EM,MI,OO],"mana":W,"shield":[HG]*4+[MK]*3,"deck":[TS,FA,FA,HC,MK]+[F]*8},
       "p1":{},"filler":F,"seed":1,"deck_size":14,"deck_exact":[True,False]}
+assert not scenario.deck_limit_violations(rules,spec), scenario.deck_limit_violations(rules,spec)   # 同名カードは4枚まで
 e=scenario.build(rules,spec)
 dk=e.s.zones["deck"][0]
 order=sorted(dk,key=lambda c:(e.s.cards[c].defn!=TS, e.s.cards[c].defn!=FA))   # TS, FA..., 先頭がTS

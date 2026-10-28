@@ -50,6 +50,20 @@ def build(rules, spec: dict, **kw) -> Engine:
     return e
 
 
+def deck_limit_violations(rules, spec: dict, limit: int = 4) -> list[tuple[int, str, int]]:
+    """同名カードは4枚まで（デッキ構築の大原則）。spec の全ゾーンのカードを数えて、超えているもの (プレイヤー, カードID, 枚数) を返す。
+    filler と T 番台（テスト用の架空カード）は『何でもよい他のカード』の代わりなので数えない。"""
+    filler = spec.get("filler", "T001")
+    bad = []
+    for p, key in enumerate(("p0", "p1")):
+        cnt: dict[str, int] = {}
+        for ids in (spec.get(key) or {}).values():
+            for c in ids:
+                cnt[c] = cnt.get(c, 0) + 1
+        bad += [(p, c, n) for c, n in sorted(cnt.items()) if n > limit and c != filler and not c.startswith("T")]
+    return bad
+
+
 def try_card(rules, card_id: str, filler: str = "T001") -> dict:
     """カード1枚を試すためのシナリオ: 手札にそのカード、払えるだけのマナ、相手の場にクリーチャー2体。
     進化・宣言（革命チェンジ等）を持つカードは、条件に合う自分のクリーチャーを1体バトルゾーンに置く。

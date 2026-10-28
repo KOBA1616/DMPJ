@@ -572,3 +572,11 @@ def test_break_st_first_resolves_declared_s_trigger_before_following_step(rr):
         e.answer([0])
         d = e.advance()
     assert seq[:2] == ["opp_shield_broken_by_trigger", "draw"]
+
+
+def test_deck_limit_violations_counts_same_name_over_four():
+    from dmsim import scenario
+    spec = {"p0": {"hand": ["R001"] * 3, "deck": ["R001"] * 2, "mana": ["T001"] * 9}, "p1": {}, "filler": "T001"}
+    assert scenario.deck_limit_violations(None, spec) == [(0, "R001", 5)]
+    spec["p0"]["deck"] = ["R001"]
+    assert scenario.deck_limit_violations(None, spec) == []
