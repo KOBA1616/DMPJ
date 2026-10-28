@@ -182,3 +182,8 @@ keywords:
     ja: ハイパーエナジー
     card: {tap_reduce: 2}
     abilities: []
+  # ウェーブストライカー: 「バトルゾーンに「ウェーブストライカー」を持つクリーチャーが他に２体以上あれば、次の能力を得る」。
+  # キーワード自体は印だけ。続く能力に if: {cmp: [{count: {zone: bz, owner: any, other: true, filter: {keyword: wave_striker}}}, ">=", 2]} を付けて書く
+  wave_striker:
+    ja: ウェーブストライカー
+    abilities: []

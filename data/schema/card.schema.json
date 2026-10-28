@@ -97,6 +97,7 @@
      "spell_to_hand",
      "triple_breaker",
      "unblockable",
+     "wave_striker",
      "world_breaker"
     ]
    }
@@ -218,6 +219,7 @@
        "spell_to_hand",
        "triple_breaker",
        "unblockable",
+       "wave_striker",
        "world_breaker"
       ]
      }
@@ -1170,6 +1172,7 @@
        "spell_to_hand",
        "triple_breaker",
        "unblockable",
+       "wave_striker",
        "world_breaker"
       ]
      }

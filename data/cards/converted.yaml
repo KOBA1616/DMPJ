@@ -53829,7 +53829,8 @@ cards:
   source:
     official: dm10-007
     review: pending
-    notes: '「同時に」を op: together（移動対象を先にすべて決め、1つのイベントの束で同時に動かす）で書いた。手札からマナへは tapped: true でタップして置く'
+    notes: '「同時に」を op: together（移動対象を先にすべて決め、1つのイベントの束で同時に動かす）で書いた。手札からマナへは tapped:
+      true でタップして置く'
   keywords:
   - double_breaker
 - id: dm10-019
@@ -63580,3 +63581,126 @@ cards:
     notes: 厳密一致
     aliases:
     - promoy4-005
+- id: dm11-022
+  name: 予言者ラメール
+  types:
+  - creature
+  civs:
+  - light
+  cost: 2
+  power: 1500
+  races:
+  - ライトブリンガー
+  mana: 1
+  keywords:
+  - wave_striker
+  text: 'ウェーブストライカー(バトルゾーンに「ウェーブストライカー」を持つクリーチャーが他に２体以上あれば、このクリーチャーは次の能力を得る)
+
+    バトルゾーンにある自分のクリーチャーすべてのパワーは+1000される。'
+  abilities:
+  - kind: static
+    affects:
+      zone: bz
+      owner: you
+      filter:
+        types:
+        - creature
+    if:
+      cmp:
+      - count:
+          zone: bz
+          owner: any
+          other: true
+          filter:
+            keyword: wave_striker
+      - '>='
+      - 2
+    mod:
+      power: 1000
+  source:
+    official: dm11-022
+    review: pending
+    notes: '厳密一致。「他に」の数は原文に「自分の」が無いので owner: any'
+- id: dm11-016
+  name: 斬神兵グランドルメス
+  types:
+  - creature
+  civs:
+  - fire
+  cost: 3
+  power: 2000
+  races:
+  - アーマロイド
+  mana: 1
+  keywords:
+  - wave_striker
+  text: 'ウェーブストライカー(バトルゾーンに「ウェーブストライカー」を持つクリーチャーが他に２体以上あれば、このクリーチャーは次の能力を得る)
+
+    このクリーチャーをバトルゾーンに出した時、パワー2000以下のクリーチャーをすべて破壊する。'
+  abilities:
+  - kind: trigger
+    when:
+      event: move
+      to: bz
+      subject: self
+    if:
+      cmp:
+      - count:
+          zone: bz
+          owner: any
+          other: true
+          filter:
+            keyword: wave_striker
+      - '>='
+      - 2
+    effect:
+    - op: destroy
+      select:
+        zone: bz
+        owner: any
+        filter:
+          types:
+          - creature
+          power_le: 2000
+        count: all
+  source:
+    official: dm11-016
+    review: pending
+    notes: 厳密一致。自身もパワー2000以下なので対象に含まれる（原文どおり）
+- id: dm11-038
+  name: 堅防の使徒アースラ
+  types:
+  - creature
+  civs:
+  - light
+  cost: 3
+  power: 2000
+  races:
+  - イニシエート
+  mana: 1
+  keywords:
+  - wave_striker
+  text: 'ウェーブストライカー(バトルゾーンに「ウェーブストライカー」を持つクリーチャーが他に２体以上あれば、このクリーチャーは次の能力を得る)
+
+    このクリーチャーのパワーは+4000され、「ブロッカー」を得る。'
+  abilities:
+  - kind: static
+    affects: self
+    if:
+      cmp:
+      - count:
+          zone: bz
+          owner: any
+          other: true
+          filter:
+            keyword: wave_striker
+      - '>='
+      - 2
+    mod:
+      power: 4000
+      grant:
+      - blocker
+  source:
+    official: dm11-038
+    review: pending
+    notes: 厳密一致

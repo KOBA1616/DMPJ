@@ -42,7 +42,7 @@ class SelectorMixin:
         raise ValueError(f"bad cond {c}")
 
     def filter_match(self, cid: int, f: dict, lki: dict | None = None, base: bool = False) -> bool:
-        if base:   # 常在型能力の範囲判定中は自分の特性計算を再帰させない
+        if base or self._in_static_cond > 1:   # 常在型能力の範囲・入れ子の条件の判定中は特性計算を再帰させない
             d = self.fdef(cid)
             ch = {"power": d.power, "cost": d.cost, "civs": d.civs, "types": d.types, "races": d.races,
                   "keywords": set(d.keywords), "name": d.name}
