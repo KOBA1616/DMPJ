@@ -63,7 +63,8 @@ def _official_texts() -> dict[str, dict]:
 
 def card_list(rules) -> list[dict]:
     blocks = {}
-    for f in sorted((DATA / "cards").glob("*.yaml")):
+    from .cardfiles import card_files
+    for f in card_files():
         blocks.update({k: (f.name, v) for k, v in _card_blocks(f).items()})
     official = _official_texts()
     out = []
@@ -81,7 +82,8 @@ def card_list(rules) -> list[dict]:
 def locate_card(card_id: str, root: Path | None = None) -> Path:
     """カード定義が書かれている YAML（real.yaml / converted.yaml など）を探す。"""
     root = root or DATA / "cards"
-    for f in sorted(root.glob("*.yaml")):
+    from .cardfiles import card_files
+    for f in card_files(root):
         if card_id in _card_blocks(f):
             return f
     raise KeyError(f"{card_id} is not in any card file")

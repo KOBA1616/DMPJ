@@ -31,7 +31,7 @@ ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(ROOT))
 sys.path.insert(0, str(ROOT / "tools"))
 
-from dmsim import schema  # noqa: E402
+from dmsim import cardstore, schema  # noqa: E402
 from dmsim.defs import DATA, DefError, load_tables, parse_card  # noqa: E402
 import rule_convert  # noqa: E402
 from llm_offload.providers import CallTimeout  # noqa: E402
@@ -261,7 +261,8 @@ def load_rows(inputs: list[str]) -> list[dict]:
 
 def known_ids(out: Path) -> set[str]:
     ids: set[str] = set()
-    for f in (DATA / "cards").glob("*.yaml"):
+    from dmsim.cardfiles import card_files
+    for f in card_files():
         ids |= {c["id"] for c in (yaml.safe_load(f.read_text(encoding="utf-8")) or {}).get("cards") or []}
     return ids
 
@@ -330,12 +331,14 @@ def precheck(row: dict) -> dict | None:
     return None
 
 
+CONVERTED_HEADER = "# convert_cards.py の出力（review: pending）。確認後に real.yaml へ移す。\n"
+
+
 def run_rules(rows: list[dict], tables, out: Path, rejects_path: Path) -> dict:
     """ルールだけで完全に変換できる行（辞書のキーワード・定型文・同一原文の写し）を、モデルを呼ばずにまとめて out へ登録する。
     変換済み・検査落ちの行は対象にしない（検査落ちでもルール変換できるようになったものは戻す）。
     モデルのジョブに積む前の前処理で、枚数の上限は設けない。"""
-    doc = (yaml.safe_load(out.read_text(encoding="utf-8")) if out.exists() else None) or {}
-    cards = doc.get("cards") or []
+    cards = cardstore.read(out)
     done = known_ids(out) | {c["id"] for c in cards}
     rejects = {r["id"]: r for r in read_jsonl(rejects_path)}
     stats = {"requested": 0, "ok": 0, "by_rule": 0, "by_copy": 0, "invalid": 0}
@@ -362,9 +365,7 @@ def run_rules(rows: list[dict], tables, out: Path, rejects_path: Path) -> dict:
         stats["ok"] += 1
         stats[kind] += 1
     if stats["ok"]:
-        out.parent.mkdir(parents=True, exist_ok=True)
-        out.write_text("# convert_cards.py の出力（review: pending）。確認後に real.yaml へ移す。\n"
-                       + yaml.safe_dump({"cards": cards}, allow_unicode=True, sort_keys=False), encoding="utf-8")
+        cardstore.write(out, cards, CONVERTED_HEADER)
         write_jsonl(rejects_path, list(rejects.values()))
     return stats
 
@@ -376,17 +377,14 @@ def run(rows: list[dict], client, tables, sysp: str, effort: str, out: Path, rej
     import threading
     from concurrent.futures import ThreadPoolExecutor
     lock = threading.Lock()
-    doc = (yaml.safe_load(out.read_text(encoding="utf-8")) if out.exists() else None) or {}
-    cards = doc.get("cards") or []
+    cards = cardstore.read(out)
     rejects = {r["id"]: r for r in read_jsonl(rejects_path)}
     usage = {"input": 0, "cache_read": 0, "cache_write": 0, "output": 0}
     stats = {"ok": 0, "rejected": 0, "api_error": 0}
     api_errors: list[dict] = []
 
     def save():
-        out.parent.mkdir(parents=True, exist_ok=True)
-        out.write_text("# convert_cards.py の出力（review: pending）。確認後に real.yaml へ移す。\n"
-                       + yaml.safe_dump({"cards": cards}, allow_unicode=True, sort_keys=False), encoding="utf-8")
+        cardstore.write(out, cards, CONVERTED_HEADER)
         write_jsonl(rejects_path, list(rejects.values()))
 
     pending_timeouts: list[dict] = []   # 次のカードが成功したら reason: timeout で確定する（連続2回なら障害とみなして確定しない）
@@ -554,8 +552,7 @@ def main(argv=None):
         failed = {r["id"] for r in read_jsonl(rejects_path)}
         rows = [r for r in rows if r["id"] in failed]
     else:
-        done = known_ids(out) | ({c["id"] for c in (yaml.safe_load(out.read_text(encoding="utf-8")) or {}).get("cards") or []}
-                                 if out.exists() else set())
+        done = known_ids(out) | {c["id"] for c in cardstore.read(out)}
         rows = [r for r in rows if r["id"] not in done]
     if a.order == "short":
         rows.sort(key=lambda r: len(r.get("text", "")))

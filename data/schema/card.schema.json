@@ -111,7 +111,27 @@
    "$ref": "#/$defs/ops"
   },
   "evolve_from": {
-   "$ref": "#/$defs/filter"
+   "type": "object",
+   "properties": {
+    "civs": {},
+    "cost_ge": {},
+    "cost_le": {},
+    "keyword": {},
+    "multicolor": {},
+    "name": {},
+    "name_has": {},
+    "not_civs": {},
+    "not_name": {},
+    "not_types": {},
+    "power_ge": {},
+    "power_le": {},
+    "race_has": {},
+    "races": {},
+    "tapped": {},
+    "types": {},
+    "zone": {}
+   },
+   "additionalProperties": false
   },
   "free_if": {
    "$ref": "#/$defs/cond"
@@ -212,7 +232,27 @@
      "$ref": "#/$defs/ops"
     },
     "evolve_from": {
-     "$ref": "#/$defs/filter"
+     "type": "object",
+     "properties": {
+      "civs": {},
+      "cost_ge": {},
+      "cost_le": {},
+      "keyword": {},
+      "multicolor": {},
+      "name": {},
+      "name_has": {},
+      "not_civs": {},
+      "not_name": {},
+      "not_types": {},
+      "power_ge": {},
+      "power_le": {},
+      "race_has": {},
+      "races": {},
+      "tapped": {},
+      "types": {},
+      "zone": {}
+     },
+     "additionalProperties": false
     },
     "free_if": {
      "$ref": "#/$defs/cond"
@@ -1213,12 +1253,26 @@
       },
       "count": {
        "$ref": "#/$defs/selector"
+      },
+      "only": {
+       "enum": [
+        "attacking"
+       ]
       }
      },
      "required": [
       "amount"
      ],
      "additionalProperties": false
+    },
+    "sac_reduce": {
+     "type": "integer"
+    },
+    "opt_reduce": {
+     "type": "object",
+     "required": [
+      "amount"
+     ]
     },
     "ignore": {
      "type": "array",

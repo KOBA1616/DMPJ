@@ -45,3 +45,32 @@ def test_vocab_change_invalidates_only_users():
     v2 = {**v, "kw:blocker": "changed"}
     assert ap.stale_reason(e, raw, v2) == "語彙の定義が変わった"
     assert ap.stale_reason(e, raw, {**v, "kw:double_breaker": "x"}) is None
+
+
+def test_split_cards_roundtrip(tmp_path):
+    import split_cards
+    from dmsim.cardfiles import card_files
+    src = tmp_path / "converted.yaml"
+    cards = [{**CARD, "id": "dm01-s01"}, {**CARD, "id": "dm01-s02"}, {**CARD, "id": "dm02-001"}]
+    src.write_text(yaml.safe_dump({"cards": cards}, allow_unicode=True), encoding="utf-8")
+    assert split_cards.split(src) == {"dm01": 2, "dm02": 1}
+    src.unlink()
+    got = [c["id"] for f in card_files(tmp_path) for c in yaml.safe_load(f.read_text(encoding="utf-8"))["cards"]]
+    assert got == ["dm01-s01", "dm01-s02", "dm02-001"]
+
+
+def test_cardstore_file_and_sharded(tmp_path):
+    from dmsim import cardstore
+    cards = [{**CARD, "id": i} for i in ("dm02-001", "dm01-s01", "dm01-001")]
+    one = tmp_path / "converted.yaml"
+    cardstore.write(one, cards, "# h\n")
+    assert [c["id"] for c in cardstore.read(one)] == ["dm02-001", "dm01-s01", "dm01-001"]   # 1ファイルは順序を保つ
+    d = tmp_path / "converted"
+    cardstore.write(d, cards, "# h\n")
+    assert sorted(p.name for p in d.glob("*.yaml")) == ["dm01.yaml", "dm02.yaml"]
+    assert [c["id"] for c in cardstore.read(d)] == ["dm01-001", "dm01-s01", "dm02-001"]
+    m = (d / "dm02.yaml").stat().st_mtime_ns
+    cardstore.write(d, cards[1:], "# h\n")                  # 変わらない弾は書き直さない・空の弾は消す
+    assert (d / "dm02.yaml").exists() is False and (d / "dm01.yaml").exists()
+    cardstore.write(d, cards[1:], "# h\n")
+    assert m  # noqa

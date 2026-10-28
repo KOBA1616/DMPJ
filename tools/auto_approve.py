@@ -19,6 +19,7 @@ import yaml
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 from dmsim import approval as ap  # noqa: E402
+from dmsim.cardfiles import card_files  # noqa: E402
 from dmsim.defs import DATA, load_rules, load_tables  # noqa: E402
 from dmsim.verify import verify_card  # noqa: E402
 
@@ -39,7 +40,7 @@ def run(files, ledger_path=ap.LEDGER, limit=None, dry_run=False, rule_files=None
     ledger = ap.load(ledger_path)
     stats = {"cards": len(raws), "invalidated": len(ap.invalidate(ledger, raws, versions)),
              "approved": 0, "failed": 0, "skipped_not_rule": 0}
-    rules = load_rules(rule_files or sorted((DATA / "cards").glob("*.yaml")))
+    rules = load_rules(rule_files or card_files())
     todo = [cid for cid, raw in raws.items() if (ledger.get(cid) or {}).get("status") != "approved"
             and (ledger.get(cid) or {}).get("status") != "rejected"]
     for cid in todo:
@@ -65,7 +66,7 @@ def main(argv=None):
     p = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     p.add_argument("--dry-run", action="store_true")
     p.add_argument("--limit", type=int)
-    p.add_argument("files", nargs="*", type=Path, default=[DATA / "cards" / "converted.yaml", DATA / "cards" / "real.yaml"])
+    p.add_argument("files", nargs="*", type=Path, default=[f for f in card_files() if f.name != "proto.yaml"])
     a = p.parse_args(argv)
     print(json.dumps(run(a.files, limit=a.limit, dry_run=a.dry_run), ensure_ascii=False))
 

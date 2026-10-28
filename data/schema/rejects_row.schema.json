@@ -1,0 +1,62 @@
+{
+ "$schema": "https://json-schema.org/draft/2020-12/schema",
+ "title": "rejects.jsonl の1行（変換できなかったカード。原文とエラー）",
+ "type": "object",
+ "required": [
+  "id",
+  "error"
+ ],
+ "properties": {
+  "id": {
+   "type": "string"
+  },
+  "name": {
+   "type": "string"
+  },
+  "set_no": {
+   "type": "string"
+  },
+  "card_type": {
+   "type": "string"
+  },
+  "civilization": {
+   "type": "string"
+  },
+  "cost": {
+   "type": "string"
+  },
+  "power": {
+   "type": "string"
+  },
+  "race": {
+   "type": "string"
+  },
+  "text": {
+   "type": "string"
+  },
+  "product": {
+   "type": "string"
+  },
+  "official_id": {
+   "type": "string"
+  },
+  "reason": {
+   "type": "string"
+  },
+  "gaps": {
+   "type": "array",
+   "items": {
+    "type": "string"
+   }
+  },
+  "missing": {
+   "type": "array",
+   "items": {
+    "type": "string"
+   }
+  },
+  "error": {
+   "type": "string"
+  }
+ }
+}

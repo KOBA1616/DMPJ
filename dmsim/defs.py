@@ -484,8 +484,9 @@ def parse_card(raw: dict, tables, where: str | None = None) -> CardDef:
 
 def card_yaml_files() -> list[Path]:
     """読み込むカード定義の YAML。環境変数 DMSIM_SKIP_CONVERTED があれば、確認前の変換結果（converted.yaml）は除く（テストを軽くする）。"""
+    from .cardfiles import card_files
     skip = os.environ.get("DMSIM_SKIP_CONVERTED")
-    return [f for f in sorted((DATA / "cards").glob("*.yaml")) if not (skip and f.name == "converted.yaml")]
+    return [f for f in card_files() if not (skip and (f.name == "converted.yaml" or f.parent.name == "converted"))]
 
 
 def load_rules(card_files: list[Path] | None = None) -> Rules:

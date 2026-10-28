@@ -18,6 +18,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parent))
 import convert_cards as cc  # noqa: E402
 import rule_convert  # noqa: E402
 from auto_convert import newest_key  # noqa: E402
+from dmsim import cardstore  # noqa: E402
 from dmsim.defs import DATA, load_tables  # noqa: E402
 
 RAW = DATA / "cards" / "raw"
@@ -60,8 +61,7 @@ def cmd_submit(path: str) -> int:
         return 2
     rows = {r["id"]: r for r in cc.load_rows([str(RAW)])}
     tables = load_tables()
-    doc = (yaml.safe_load(OUT.read_text(encoding="utf-8")) if OUT.exists() else None) or {}
-    cards = doc.get("cards") or []
+    cards = cardstore.read(OUT)
     have = {c["id"] for c in cards}
     rejects = {x["id"]: x for x in cc.read_jsonl(REJ)}
     bad = 0
@@ -95,9 +95,7 @@ def cmd_submit(path: str) -> int:
         except (cc.DefError, KeyError, TypeError) as e:
             print(f"✗ {cid} {r.get('name', '')}: {e}", file=sys.stderr)
             bad += 1
-    OUT.parent.mkdir(parents=True, exist_ok=True)
-    OUT.write_text("# convert_cards.py の出力（review: pending）。確認後に real.yaml へ移す。\n"
-                   + yaml.safe_dump({"cards": cards}, allow_unicode=True, sort_keys=False), encoding="utf-8")
+    cardstore.write(OUT, cards, cc.CONVERTED_HEADER)
     cc.write_jsonl(REJ, list(rejects.values()))
     return 1 if bad else 0
 

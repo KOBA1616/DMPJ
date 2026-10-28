@@ -45,7 +45,7 @@ def build() -> dict:
         "power": {"type": "integer"}, "races": {"type": "array", "items": {"type": "string"}},
         "keywords": {"type": "array", "items": {"enum": sorted(keywords)}},
         "abilities": {"type": "array", "items": ref("ability")}, "spell": ref("ops"),
-        "evolve_from": ref("filter"), "free_if": ref("cond"),
+        "evolve_from": {"type": "object", "properties": {k: {} for k in sorted(FILTER_KEYS | {"zone"})}, "additionalProperties": False}, "free_if": ref("cond"),
     }
     return {
         "$schema": "https://json-schema.org/draft/2020-12/schema",
@@ -85,6 +85,7 @@ def build() -> dict:
                 "cost": {"anyOf": [{"type": "integer"}, {"type": "object", "properties": {"amount": {"type": "integer"}, "count": ref("selector")}, "required": ["amount"], "additionalProperties": False}]},
                 "cost_min": {"type": "integer"},
                 "battle_power": {"type": "object", "properties": {"amount": {"type": "integer"}, "count": ref("selector"), "only": {"enum": ["attacking"]}}, "required": ["amount"], "additionalProperties": False},
+                "sac_reduce": {"type": "integer"}, "opt_reduce": {"type": "object", "required": ["amount"]},
                 "ignore": {"type": "array", "items": {"enum": ["trigger", "static", "replace", "all"]}},
                 "gain": {"type": "array", "items": ref("ability")}},
                 "additionalProperties": False, "propertyNames": {"enum": sorted(MOD_KEYS)}},
