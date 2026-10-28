@@ -61675,3 +61675,1768 @@ cards:
     official: dm19-004
     review: pending
     notes: このクリーチャー自身はグランド・デビルなので、数とオーラの対象に自分は含まれない
+- id: dm19-005
+  name: 封魔ソウル・アヴァルス
+  types:
+  - creature
+  civs:
+  - darkness
+  cost: 8
+  power: 6000
+  races:
+  - グランド・デビル
+  mana: 1
+  text: 'このクリーチャーが相手プレイヤーを攻撃してブロックされなかった時、グランド・デビルまたはディープ・マリーンを１体、自分の墓地からバトルゾーンに出してもよい。ただし、進化クリーチャーは選べない。
+
+    W・ブレイカー(このクリーチャーはシールドを２枚ブレイクする)'
+  abilities:
+  - kind: trigger
+    when:
+      event: attack
+      subject: self
+    effect:
+    - op: delayed_trigger
+      when:
+        event: break
+        player: opp
+      duration: during_attack
+      effect:
+      - op: may
+        body:
+        - op: play_free
+          select:
+            zone: graveyard
+            owner: you
+            filter:
+              races:
+              - グランド・デビル
+              - ディープ・マリーン
+              not_types:
+              - evolution
+            count: 1
+  source:
+    official: dm19-005
+    review: pending
+    notes: 「ブロックされなかった時」は dm09-015 と同じく攻撃時に break を待つ delayed_trigger で表現した。出せるのは進化でないものだけ（not_types）
+  keywords:
+  - double_breaker
+- id: dm19-008
+  name: 北海の暴れん坊レッド・ジャッカル
+  types:
+  - creature
+  civs:
+  - fire
+  cost: 8
+  power: 9000
+  races:
+  - ドリームメイト
+  mana: 1
+  text: 'バトルゾーンにある自分のダイナモすべてのパワーは+3000される。
+
+    W・ブレイカー(このクリーチャーはシールドを２枚ブレイクする)'
+  abilities:
+  - kind: static
+    affects:
+      owner: you
+      filter:
+        races:
+        - ダイナモ
+    mod:
+      power: 3000
+  source:
+    official: dm19-008
+    review: pending
+    notes: ここでのダイナモは種族名としての指定のみで、ダイナモ能力の仕組み自体は本文に無い
+  keywords:
+  - double_breaker
+- id: dm19-010
+  name: 霊騎スピリット・サティーク
+  types:
+  - creature
+  civs:
+  - nature
+  cost: 5
+  power: 4000
+  races:
+  - アーク・セラフィム
+  mana: 1
+  text: このクリーチャーをバトルゾーンに出した時、ヒューマノイドとアーク・セラフィムをすべて、自分の墓地からマナゾーンに置いてもよい。
+  abilities:
+  - kind: trigger
+    when:
+      event: move
+      to: bz
+      subject: self
+    effect:
+    - op: may
+      body:
+      - op: mana_put
+        select:
+          zone: graveyard
+          owner: you
+          filter:
+            races:
+            - ヒューマノイド
+            - アーク・セラフィム
+          count: all
+  source:
+    official: dm19-010
+    review: pending
+- id: dm19-013
+  name: 霊騎ロウム
+  types:
+  - creature
+  civs:
+  - light
+  cost: 6
+  power: 5500
+  races:
+  - アーク・セラフィム
+  mana: 1
+  text: 自分の他のアーク・セラフィムをバトルゾーンに出した時、バトルゾーンにある相手のクリーチャーを１体選び、タップしてもよい。
+  abilities:
+  - kind: trigger
+    when:
+      event: move
+      to: bz
+      subject:
+        owner: you
+        filter:
+          races:
+          - アーク・セラフィム
+        other: true
+    effect:
+    - op: may
+      body:
+      - op: tap
+        select:
+          zone: bz
+          owner: opp
+          filter:
+            types:
+            - creature
+          count: 1
+  source:
+    official: dm19-013
+    review: pending
+- id: dm19-015
+  name: 霊騎マルディス
+  types:
+  - creature
+  civs:
+  - light
+  cost: 4
+  power: 4500
+  races:
+  - アーク・セラフィム
+  mana: 1
+  text: 'バトルゾーンにある自分のアーク・セラフィムとワイルド・ベジーズはすべて「ブロッカー」を得る。
+
+    このクリーチャーは、相手プレイヤーを攻撃できない。'
+  abilities:
+  - kind: static
+    affects:
+      owner: you
+      filter:
+        races:
+        - アーク・セラフィム
+        - ワイルド・ベジーズ
+    mod:
+      grant:
+      - blocker
+  source:
+    official: dm19-015
+    review: pending
+    notes: このクリーチャー自身もアーク・セラフィムなので対象に含まれる（原文に「他の」は無い）
+  keywords:
+  - cannot_attack_player
+- id: dm19-023
+  name: 封魔ガルプルス
+  types:
+  - creature
+  civs:
+  - darkness
+  cost: 6
+  power: 5000
+  races:
+  - グランド・デビル
+  mana: 1
+  text: グランド・デビルが攻撃する時、各プレイヤーは自分自身の手札を１枚選び、捨てる。
+  abilities:
+  - kind: trigger
+    when:
+      event: attack
+      subject:
+        owner: any
+        filter:
+          races:
+          - グランド・デビル
+    effect:
+    - op: discard
+      select:
+        zone: hand
+        owner: you
+        count: 1
+    - op: discard
+      select:
+        zone: hand
+        owner: opp
+        chooser: opp
+        count: 1
+  source:
+    official: dm19-023
+    review: pending
+    notes: このクリーチャー自身もグランド・デビルなので、その攻撃でも誘発する（原文に「他の」は無い）
+- id: dm19-024
+  name: ビトレイヤル・ドラグーン
+  types:
+  - creature
+  civs:
+  - darkness
+  cost: 6
+  power: 1000
+  races:
+  - ティラノ・ドレイク
+  mana: 1
+  text: 'S・トリガー(このクリーチャーをシールドゾーンから手札に加える時、コストを支払わずにすぐ召喚してもよい)
+
+    このクリーチャーをバトルゾーンに出した時、相手は自分自身の光または自然のクリーチャーを１体選び、破壊する。'
+  abilities:
+  - kind: trigger
+    when:
+      event: move
+      to: bz
+      subject: self
+    effect:
+    - op: destroy
+      select:
+        zone: bz
+        owner: opp
+        chooser: opp
+        filter:
+          types:
+          - creature
+          civs:
+          - light
+          - nature
+        count: 1
+  source:
+    official: dm19-024
+    review: pending
+  keywords:
+  - s_trigger
+- id: dm19-026
+  name: ソウルバイス・ドラグーン
+  types:
+  - creature
+  civs:
+  - darkness
+  cost: 5
+  power: 2000
+  races:
+  - ティラノ・ドレイク
+  mana: 1
+  text: このクリーチャーをバトルゾーンに出した時、バトルゾーンにある自分の他のティラノ・ドレイク１体につき１枚、相手は自分自身の手札を選び、捨てる。
+  abilities:
+  - kind: trigger
+    when:
+      event: move
+      to: bz
+      subject: self
+    effect:
+    - op: repeat
+      times:
+        count:
+          zone: bz
+          owner: you
+          filter:
+            races:
+            - ティラノ・ドレイク
+          other: true
+      body:
+      - op: discard
+        select:
+          zone: hand
+          owner: opp
+          chooser: opp
+          count: 1
+  source:
+    official: dm19-026
+    review: pending
+    notes: dm18-008 クエイクスの変形（捨てる選択は相手）
+- id: dm19-006
+  name: リベンギオス・ドラグーン
+  types:
+  - creature
+  civs:
+  - darkness
+  cost: 5
+  power: 5000
+  races:
+  - ティラノ・ドレイク
+  mana: 1
+  text: このクリーチャーをバトルゾーンに出した時、シールドを多く持っている方のプレイヤーは自分自身のシールドを１枚選び、墓地に置く。両プレイヤーのシールドが同じ枚数であれば、それぞれが自分自身のシールドを１枚ずつ選び、持ち主の墓地に置く。
+  abilities:
+  - kind: trigger
+    when:
+      event: move
+      to: bz
+      subject: self
+    effect:
+    - op: if
+      cond:
+        cmp:
+        - count:
+            zone: shield
+            owner: you
+        - '>'
+        - count:
+            zone: shield
+            owner: opp
+      then:
+      - op: move
+        select:
+          zone: shield
+          owner: you
+          count: 1
+        to: graveyard
+        reason: put
+    - op: if
+      cond:
+        cmp:
+        - count:
+            zone: shield
+            owner: opp
+        - '>'
+        - count:
+            zone: shield
+            owner: you
+      then:
+      - op: move
+        select:
+          zone: shield
+          owner: opp
+          chooser: opp
+          count: 1
+        to: graveyard
+        reason: put
+    - op: if
+      cond:
+        all:
+        - cmp:
+          - count:
+              zone: shield
+              owner: you
+          - '>='
+          - count:
+              zone: shield
+              owner: opp
+        - cmp:
+          - count:
+              zone: shield
+              owner: opp
+          - '>='
+          - count:
+              zone: shield
+              owner: you
+      then:
+      - op: move
+        select:
+          zone: shield
+          owner: you
+          count: 1
+        to: graveyard
+        reason: put
+      - op: move
+        select:
+          zone: shield
+          owner: opp
+          chooser: opp
+          count: 1
+        to: graveyard
+        reason: put
+  source:
+    official: dm19-006
+    review: pending
+    notes: 同数は cmp の '=' が使えないため、両方向の >= の all で表した（初回提出で '=' が bad cmp となり修正）。シールドは墓地へ置くので
+      S・トリガーは発生しない
+- id: dm19-025
+  name: 封魔ガルマジアス
+  types:
+  - creature
+  civs:
+  - darkness
+  cost: 5
+  power: 8000
+  races:
+  - グランド・デビル
+  mana: 1
+  text: 'このクリーチャーが攻撃する時、自分の他のクリーチャーはこのターン中、攻撃することができない。
+
+    W・ブレイカー(このクリーチャーはシールドを２枚ブレイクする)'
+  abilities:
+  - kind: trigger
+    when:
+      event: attack
+      subject: self
+    effect:
+    - op: modify
+      select:
+        zone: bz
+        owner: you
+        filter:
+          types:
+          - creature
+        other: true
+        count: all
+      mod:
+        deny:
+        - attack_player
+        - attack_creature
+      duration: end_of_turn
+  source:
+    official: dm19-025
+    review: pending
+    notes: 「攻撃できない」は deny の attack 単体では表せず、attack_player と attack_creature の両方を deny
+      する（初回提出で unknown action 'attack' となり修正）
+  keywords:
+  - double_breaker
+- id: dm19-033
+  name: ラプトル・ドラグーン
+  types:
+  - creature
+  civs:
+  - fire
+  cost: 5
+  power: 4000
+  races:
+  - ティラノ・ドレイク
+  mana: 1
+  text: 自分のブレイブ・スピリットが１体でもバトルゾーンにある時、自分のティラノ・ドレイクとブレイブ・スピリットは攻撃されない。
+  abilities:
+  - kind: static
+    affects:
+      owner: you
+      filter:
+        races:
+        - ティラノ・ドレイク
+    if:
+      exists:
+        zone: bz
+        owner: you
+        filter:
+          races:
+          - ブレイブ・スピリット
+    mod:
+      deny:
+      - be_attacked
+  - kind: static
+    affects:
+      owner: you
+      filter:
+        races:
+        - ブレイブ・スピリット
+    if:
+      exists:
+        zone: bz
+        owner: you
+        filter:
+          races:
+          - ブレイブ・スピリット
+    mod:
+      deny:
+      - be_attacked
+  source:
+    official: dm19-033
+    review: pending
+    notes: 対象の2種族を affects を分けて同じ条件で登録した
+- id: dm19-038
+  name: 霊騎サンダール
+  types:
+  - creature
+  civs:
+  - nature
+  cost: 6
+  power: 4000
+  races:
+  - アーク・セラフィム
+  mana: 1
+  text: 自分のクリーチャーをバトルゾーンに出した時、アーク・セラフィムまたはワイルド・ベジーズを１体、自分のマナゾーンから手札に戻してもよい。
+  abilities:
+  - kind: trigger
+    when:
+      event: move
+      to: bz
+      subject:
+        owner: you
+        filter:
+          types:
+          - creature
+    effect:
+    - op: may
+      body:
+      - op: bounce
+        select:
+          zone: mana
+          owner: you
+          filter:
+            races:
+            - アーク・セラフィム
+            - ワイルド・ベジーズ
+          count: 1
+  source:
+    official: dm19-038
+    review: pending
+    notes: このクリーチャー自身を出した時も誘発する（原文に「他の」は無い）
+- id: dm19-039
+  name: 強襲の長
+  types:
+  - creature
+  civs:
+  - nature
+  cost: 6
+  power: 4000
+  races:
+  - ビーストフォーク
+  mana: 1
+  text: このクリーチャーをバトルゾーンに出した時、そのターンの終わりまで、バトルゾーンにある自分のアーク・セラフィムと自分の他のビーストフォークすべてのパワーは+3000され、「W・ブレイカー」を得る。
+  abilities:
+  - kind: trigger
+    when:
+      event: move
+      to: bz
+      subject: self
+    effect:
+    - op: modify
+      select:
+        zone: bz
+        owner: you
+        filter:
+          races:
+          - アーク・セラフィム
+        count: all
+      mod:
+        power: 3000
+        grant:
+        - double_breaker
+      duration: end_of_turn
+    - op: modify
+      select:
+        zone: bz
+        owner: you
+        filter:
+          races:
+          - ビーストフォーク
+        other: true
+        count: all
+      mod:
+        power: 3000
+        grant:
+        - double_breaker
+      duration: end_of_turn
+  source:
+    official: dm19-039
+    review: pending
+    notes: 対象が2グループ（アーク・セラフィム全員と、他のビーストフォーク）なので modify を分けた。W・ブレイカーの説明文は text から省いた
+- id: dm19-043
+  name: 光粒の守護者バル・パース
+  types:
+  - creature
+  civs:
+  - light
+  cost: 4
+  power: 5000
+  races:
+  - ガーディアン
+  mana: 1
+  text: 'ブロッカー(相手クリーチャーが攻撃する時、このクリーチャーをタップして、その攻撃を阻止してもよい。その後、その相手クリーチャーとバトルする)
+
+    相手の闇または火のクリーチャーが破壊された時、このクリーチャーをアンタップしてもよい。
+
+    このクリーチャーは、相手プレイヤーを攻撃できない。'
+  abilities:
+  - kind: trigger
+    when:
+      event: move
+      to: graveyard
+      reason: destroy
+      subject:
+        owner: opp
+        filter:
+          types:
+          - creature
+          civs:
+          - darkness
+          - fire
+    effect:
+    - op: may
+      body:
+      - op: untap
+        select:
+          ref: self
+          count: 1
+  source:
+    official: dm19-043
+    review: pending
+  keywords:
+  - blocker
+  - cannot_attack_player
+- id: dm19-044
+  name: 霊騎レングストン
+  types:
+  - creature
+  civs:
+  - light
+  cost: 4
+  power: 2000
+  races:
+  - アーク・セラフィム
+  mana: 1
+  text: このクリーチャーをバトルゾーンに出した時、バトルゾーンにある自分のクリーチャーの数と同じ枚数のカードを自分の山札の上から表向きにする。その中から呪文をすべて手札に加え、それ以外のカードをすべて好きな順番で山札の上に戻す。
+  abilities:
+  - kind: trigger
+    when:
+      event: move
+      to: bz
+      subject: self
+    effect:
+    - op: choose
+      select:
+        zone: deck
+        owner: you
+        from_top:
+          count:
+            zone: bz
+            owner: you
+            filter:
+              types:
+              - creature
+        look: true
+      as: pile
+    - op: move
+      select:
+        ref: pile
+        filter:
+          types:
+          - spell
+        count: all
+      to: hand
+      reason: put
+    - op: move
+      select:
+        ref: pile
+        count: all
+      to: deck
+      position: top
+      reason: put
+  source:
+    official: dm19-044
+    review: pending
+    notes: 枚数は自分のクリーチャー数の count 式。呪文を手札へ移した後、変数に残るのはそれ以外のカードだけ（世代変化）
+- id: dm19-045
+  name: 渓谷の守護者クレスタ
+  types:
+  - creature
+  civs:
+  - light
+  cost: 2
+  power: 1000
+  races:
+  - ガーディアン
+  mana: 1
+  text: 'ブロッカー(相手クリーチャーが攻撃する時、このクリーチャーをタップして、その攻撃を阻止してもよい。その後、その相手クリーチャーとバトルする)
+
+    このクリーチャーのパワーは、バトルゾーンにある相手のクリーチャー１体につき+1000される。
+
+    このクリーチャーは相手プレイヤーを攻撃できない。'
+  abilities:
+  - kind: static
+    affects: self
+    mod:
+      power:
+        amount: 1000
+        count:
+          zone: bz
+          owner: opp
+          filter:
+            types:
+            - creature
+  source:
+    official: dm19-045
+    review: pending
+  keywords:
+  - blocker
+  - cannot_attack_player
+- id: dm19-047
+  name: 封魔アドラク
+  types:
+  - creature
+  civs:
+  - water
+  cost: 5
+  power: 2000
+  races:
+  - グランド・デビル
+  mana: 1
+  text: このクリーチャーをバトルゾーンに出した時、それぞれのマナゾーンからカードを１枚ずつ選び、持ち主の山札の一番上に置く。
+  abilities:
+  - kind: trigger
+    when:
+      event: move
+      to: bz
+      subject: self
+    effect:
+    - op: move
+      select:
+        zone: mana
+        owner: you
+        count: 1
+      to: deck
+      position: top
+      reason: put
+    - op: move
+      select:
+        zone: mana
+        owner: opp
+        count: 1
+      to: deck
+      position: top
+      reason: put
+  source:
+    official: dm19-047
+    review: pending
+    notes: 選ぶのはこの能力のコントローラー（原文に持ち主が選ぶとは無い）
+- id: dm19-048
+  name: デモメイト・エリダヌス
+  types:
+  - creature
+  civs:
+  - water
+  cost: 4
+  power: 2000
+  races:
+  - ディープ・マリーン
+  mana: 1
+  text: バトルゾーンにある自分のグランド・デビルすべてのパワーは+2000され、ブロックされない。
+  abilities:
+  - kind: static
+    affects:
+      owner: you
+      filter:
+        races:
+        - グランド・デビル
+    mod:
+      power: 2000
+      deny:
+      - be_blocked
+  source:
+    official: dm19-048
+    review: pending
+    notes: このクリーチャー自身はディープ・マリーンなので対象外
+- id: dm19-051
+  name: メディカル・アルナイル
+  types:
+  - creature
+  civs:
+  - water
+  cost: 2
+  power: 1000
+  races:
+  - ディープ・マリーン
+  mana: 1
+  text: 自分のグランド・デビルが破壊される時、墓地に置くかわりに自分の手札に戻してもよい。
+  abilities:
+  - kind: replace
+    optional: true
+    when:
+      event: move
+      to: graveyard
+      reason: destroy
+      subject:
+        owner: you
+        filter:
+          races:
+          - グランド・デビル
+    instead:
+    - op: move
+      select:
+        ref: subject
+        count: 1
+      to: hand
+      reason: return
+  source:
+    official: dm19-051
+    review: pending
+    notes: 置換先で subject（破壊されるはずだったグランド・デビル）を手札へ戻す形にした
+- id: dm19-054
+  name: ジェットパンチ・ドラグーン
+  types:
+  - creature
+  civs:
+  - darkness
+  cost: 6
+  power: 2000
+  races:
+  - ティラノ・ドレイク
+  mana: 1
+  text: このクリーチャーをバトルゾーンに出した時、相手のタップされているクリーチャーを１体破壊する。
+  abilities:
+  - kind: trigger
+    when:
+      event: move
+      to: bz
+      subject: self
+    effect:
+    - op: destroy
+      select:
+        zone: bz
+        owner: opp
+        filter:
+          types:
+          - creature
+          tapped: true
+        count: 1
+  source:
+    official: dm19-054
+    review: pending
+- id: dm19-056
+  name: 封魔ラウーム
+  types:
+  - creature
+  civs:
+  - darkness
+  cost: 3
+  power: 3000
+  races:
+  - グランド・デビル
+  mana: 1
+  text: 'このクリーチャーが攻撃する時、自分の他のクリーチャーはこのターン中、攻撃することができない。
+
+    スレイヤー(このクリーチャーがバトルする時、バトルの後、相手クリーチャーを破壊する)'
+  abilities:
+  - kind: trigger
+    when:
+      event: attack
+      subject: self
+    effect:
+    - op: modify
+      select:
+        zone: bz
+        owner: you
+        filter:
+          types:
+          - creature
+        other: true
+        count: all
+      mod:
+        deny:
+        - attack_player
+        - attack_creature
+      duration: end_of_turn
+  source:
+    official: dm19-056
+    review: pending
+    notes: dm19-025 ガルマジアスと同型
+  keywords:
+  - slayer
+- id: dm19-057
+  name: スナイプ・アルフェラス
+  types:
+  - creature
+  civs:
+  - darkness
+  cost: 3
+  power: 2000
+  races:
+  - ディープ・マリーン
+  mana: 1
+  text: 自分のグランド・デビルをバトルゾーンに出した時、カードを１枚引いてもよい。自分のグランド・デビルが破壊された時、自分の手札を１枚捨てる。
+  abilities:
+  - kind: trigger
+    when:
+      event: move
+      to: bz
+      subject:
+        owner: you
+        filter:
+          races:
+          - グランド・デビル
+    effect:
+    - op: may
+      body:
+      - op: draw
+        count: 1
+  - kind: trigger
+    when:
+      event: move
+      to: graveyard
+      reason: destroy
+      subject:
+        owner: you
+        filter:
+          races:
+          - グランド・デビル
+        other: true
+    effect:
+    - op: discard
+      select:
+        zone: hand
+        owner: you
+        count: 1
+  source:
+    official: dm19-057
+    review: pending
+    notes: このクリーチャー自身はディープ・マリーンなので、どちらの誘発でも自分は subject に含まれない
+- id: dm19-059
+  name: 舞空戦士メディーン
+  types:
+  - creature
+  civs:
+  - fire
+  cost: 7
+  power: 3000
+  races:
+  - ヒューマノイド
+  mana: 1
+  text: このクリーチャーをバトルゾーンに出した時、相手のマナゾーンからカードを１枚選び、持ち主の墓地に置く。
+  abilities:
+  - kind: trigger
+    when:
+      event: move
+      to: bz
+      subject: self
+    effect:
+    - op: move
+      select:
+        zone: mana
+        owner: opp
+        count: 1
+      to: graveyard
+      reason: put
+  source:
+    official: dm19-059
+    review: pending
+- id: dm19-063
+  name: ワンショット・フレーム
+  types:
+  - spell
+  civs:
+  - fire
+  cost: 7
+  mana: 1
+  text: 'S・トリガー(この呪文をシールドゾーンから手札に加える時、コストを支払わずにすぐ唱えてもよい)
+
+    パワー3000以下の、タップされていないクリーチャーをすべて破壊する。'
+  spell:
+  - op: destroy
+    select:
+      zone: bz
+      owner: any
+      filter:
+        types:
+        - creature
+        power_le: 3000
+        tapped: false
+      count: all
+  source:
+    official: dm19-063
+    review: pending
+  keywords:
+  - s_trigger
+- id: dm19-067
+  name: 霊騎クルス・タスポル
+  types:
+  - creature
+  civs:
+  - nature
+  cost: 4
+  power: 3000
+  races:
+  - アーク・セラフィム
+  mana: 1
+  text: このクリーチャーをバトルゾーンに出した時、バトルゾーンに自分の《博識の森のポルタス》と《カラテ・キャロット》があれば、自分の山札を見る。その中から《超神星ジュピター・キングエンパイア》を１体取り出して相手に見せ、自分の手札に加える。その後、山札をシャッフルする。
+  abilities:
+  - kind: trigger
+    when:
+      event: move
+      to: bz
+      subject: self
+    if:
+      all:
+      - exists:
+          zone: bz
+          owner: you
+          filter:
+            name: 博識の森のポルタス
+      - exists:
+          zone: bz
+          owner: you
+          filter:
+            name: カラテ・キャロット
+    effect:
+    - op: choose
+      select:
+        zone: deck
+        owner: you
+        filter:
+          name: 超神星ジュピター・キングエンパイア
+        count: 1
+        look: true
+      as: t
+    - op: move
+      select:
+        ref: t
+        count: 1
+      to: hand
+      reason: put
+    - op: shuffle
+  source:
+    official: dm19-067
+    review: pending
+    notes: 2枚の指定カードが両方あることは exists の all で表現した
+- id: dm19-068
+  name: カラテ・キャロット
+  types:
+  - creature
+  civs:
+  - nature
+  cost: 3
+  power: 2000
+  races:
+  - ワイルド・ベジーズ
+  mana: 1
+  text: このクリーチャーをバトルゾーンに出した時、バトルゾーンに自分の《博識の森のポルタス》と《霊騎クルス・タスポル》があれば、《超神星ジュピター・キングエンパイア》を１体、自分のマナゾーンから手札に戻してもよい。
+  abilities:
+  - kind: trigger
+    when:
+      event: move
+      to: bz
+      subject: self
+    if:
+      all:
+      - exists:
+          zone: bz
+          owner: you
+          filter:
+            name: 博識の森のポルタス
+      - exists:
+          zone: bz
+          owner: you
+          filter:
+            name: 霊騎クルス・タスポル
+    effect:
+    - op: may
+      body:
+      - op: bounce
+        select:
+          zone: mana
+          owner: you
+          filter:
+            name: 超神星ジュピター・キングエンパイア
+          count: 1
+  source:
+    official: dm19-068
+    review: pending
+    notes: dm19-067 と同じ2枚条件
+- id: dm19-070
+  name: 博識の森のポルタス
+  types:
+  - creature
+  civs:
+  - nature
+  cost: 2
+  power: 1000
+  races:
+  - ドリームメイト
+  mana: 1
+  text: このクリーチャーをバトルゾーンに出した時、バトルゾーンに自分の《カラテ・キャロット》と《霊騎クルス・タスポル》があれば、《超神星ジュピター・キングエンパイア》を１体、自分の墓地から手札に戻してもよい。
+  abilities:
+  - kind: trigger
+    when:
+      event: move
+      to: bz
+      subject: self
+    if:
+      all:
+      - exists:
+          zone: bz
+          owner: you
+          filter:
+            name: カラテ・キャロット
+      - exists:
+          zone: bz
+          owner: you
+          filter:
+            name: 霊騎クルス・タスポル
+    effect:
+    - op: may
+      body:
+      - op: move
+        select:
+          zone: graveyard
+          owner: you
+          filter:
+            name: 超神星ジュピター・キングエンパイア
+          count: 1
+        to: hand
+        reason: return
+  source:
+    official: dm19-070
+    review: pending
+    notes: 原文の名前の文字化け（博識の��のポルタス）は「博識の森のポルタス」と補った。dm19-067 と同じ2枚条件
+- id: dm19-073
+  name: 霊騎サイヤ
+  types:
+  - creature
+  civs:
+  - light
+  cost: 3
+  power: 4000
+  races:
+  - アーク・セラフィム
+  mana: 1
+  text: 'ブロッカー(相手クリーチャーが攻撃する時、このクリーチャーをタップして、その攻撃を阻止してもよい。その後、その相手クリーチャーとバトルする)
+
+    このクリーチャーは、相手プレイヤーを攻撃することができない。'
+  source:
+    official: dm19-073
+    review: pending
+    notes: 本文は cannot_attack_player キーワードそのもの
+  keywords:
+  - blocker
+- id: dm19-075
+  name: 霊都の守護者メリア・ネクス
+  types:
+  - creature
+  civs:
+  - light
+  cost: 3
+  power: 2000
+  races:
+  - ガーディアン
+  mana: 1
+  text: 自分のターンの終わりに、バトルゾーンにある自分のガーディアンまたはアーク・セラフィムを１体、アンタップしてもよい。
+  abilities:
+  - kind: trigger
+    when:
+      event: turn_end
+      subject: self
+    effect:
+    - op: may
+      body:
+      - op: untap
+        select:
+          zone: bz
+          owner: you
+          filter:
+            races:
+            - ガーディアン
+            - アーク・セラフィム
+          count: 1
+  source:
+    official: dm19-075
+    review: pending
+- id: dm19-077
+  name: 霊騎マリクス
+  types:
+  - creature
+  civs:
+  - light
+  cost: 2
+  power: 1000
+  races:
+  - アーク・セラフィム
+  mana: 1
+  text: このクリーチャーのパワーは、バトルゾーンにある自分の他のアーク・セラフィム１体につき+1000される。
+  abilities:
+  - kind: static
+    affects: self
+    mod:
+      power:
+        amount: 1000
+        count:
+          zone: bz
+          owner: you
+          filter:
+            races:
+            - アーク・セラフィム
+          other: true
+  source:
+    official: dm19-077
+    review: pending
+- id: dm19-079
+  name: 封魔マルコシャス
+  types:
+  - creature
+  civs:
+  - water
+  cost: 4
+  power: 3000
+  races:
+  - グランド・デビル
+  mana: 1
+  text: 相手のシールドが１枚もない時、このクリーチャーはブロックされない。
+  abilities:
+  - kind: static
+    affects: self
+    if:
+      cmp:
+      - count:
+          zone: shield
+          owner: opp
+      - <
+      - 1
+    mod:
+      deny:
+      - be_blocked
+  source:
+    official: dm19-079
+    review: pending
+    notes: 「1枚もない」は cmp の '<' 1 で表した（'=' は使えない）
+- id: dm19-080
+  name: 封魔ゼレス
+  types:
+  - creature
+  civs:
+  - water
+  cost: 3
+  power: 2000
+  races:
+  - グランド・デビル
+  mana: 1
+  text: このクリーチャーが破壊される時、バトルゾーンに自分のディープ・マリーンが１体でもあれば、このクリーチャーを墓地に置くかわりに自分の手札に戻す。
+  abilities:
+  - kind: replace
+    when:
+      event: move
+      to: graveyard
+      reason: destroy
+      subject: self
+    if:
+      exists:
+        zone: bz
+        owner: you
+        filter:
+          races:
+          - ディープ・マリーン
+    instead:
+    - op: move
+      select:
+        ref: self
+        count: 1
+      to: hand
+      reason: return
+  source:
+    official: dm19-080
+    review: pending
+    notes: 置換に if（ディープ・マリーンがいること）を付けた
+- id: dm19-081
+  name: アクア・スクリュー
+  types:
+  - creature
+  civs:
+  - water
+  cost: 3
+  power: 2000
+  races:
+  - リキッド・ピープル
+  mana: 1
+  text: 自分の他のリキッド・ピープルまたはグランド・デビルが進化した時、カードを１枚引いてもよい。
+  abilities:
+  - kind: trigger
+    when:
+      event: move
+      to: bz
+      reason: evolve
+      subject:
+        owner: you
+        filter:
+          races:
+          - リキッド・ピープル
+          - グランド・デビル
+        other: true
+    effect:
+    - op: may
+      body:
+      - op: draw
+        count: 1
+  source:
+    official: dm19-081
+    review: pending
+    notes: '進化で置く move は reason: evolve で照合できると判断した'
+- id: dm19-082
+  name: 封魔サブナハル
+  types:
+  - creature
+  civs:
+  - water
+  cost: 3
+  power: 1000
+  races:
+  - グランド・デビル
+  mana: 1
+  text: 'ブロッカー(相手クリーチャーが攻撃する時、このクリーチャーをタップして、その攻撃を阻止してもよい。その後、その相手クリーチャーとバトルする)
+
+    このクリーチャーは攻撃することができない。
+
+    バトルゾーンに自分のディープ・マリーンが１体でもあれば、このクリーチャーのパワーは+5000される。'
+  abilities:
+  - kind: static
+    affects: self
+    if:
+      exists:
+        zone: bz
+        owner: you
+        filter:
+          races:
+          - ディープ・マリーン
+    mod:
+      power: 5000
+  source:
+    official: dm19-082
+    review: pending
+  keywords:
+  - blocker
+  - cannot_attack
+- id: dm19-085
+  name: 封魔ウェバリス
+  types:
+  - creature
+  civs:
+  - water
+  cost: 1
+  power: 3000
+  races:
+  - グランド・デビル
+  mana: 1
+  text: 'ブロッカー(相手クリーチャーが攻撃する時、このクリーチャーをタップして、その攻撃を阻止してもよい。その後、その相手クリーチャーとバトルする)
+
+    このクリーチャーは攻撃することができない。
+
+    相手のクリーチャーが自分を攻撃してブロックされなかった時、このクリーチャーを破壊する。'
+  abilities:
+  - kind: trigger
+    when:
+      event: break
+      player: you
+    effect:
+    - op: destroy
+      select:
+        ref: self
+        count: 1
+  source:
+    official: dm19-085
+    review: pending
+    notes: '自分のシールドがブレイクされる（player: you の break）ことが「ブロックされなかった」ことと対応する'
+  keywords:
+  - blocker
+  - cannot_attack
+- id: dm19-087
+  name: ヘキサリオ・ドラグーン
+  types:
+  - creature
+  civs:
+  - darkness
+  cost: 5
+  power: 5000
+  races:
+  - ティラノ・ドレイク
+  mana: 1
+  text: 'ブロッカー(相手クリーチャーが攻撃する時、このクリーチャーをタップして、その攻撃を阻止してもよい。その後、その相手クリーチャーとバトルする)
+
+    このクリーチャーをバトルゾーンに出した時、自分のシールドを１枚選び、手札に加える。ただし、その「S・トリガー」は使えない。
+
+    このクリーチャーは攻撃することができない。'
+  abilities:
+  - kind: trigger
+    when:
+      event: move
+      to: bz
+      subject: self
+    effect:
+    - op: move
+      select:
+        zone: shield
+        owner: you
+        count: 1
+      to: hand
+      reason: return
+  source:
+    official: dm19-087
+    review: pending
+    notes: dm18-030 ギガバスターと同じ（ブレイクでない移動では S・トリガーは発動しない）
+  keywords:
+  - blocker
+  - cannot_attack
+- id: dm19-088
+  name: 封魔グラーボス
+  types:
+  - creature
+  civs:
+  - darkness
+  cost: 4
+  power: 6000
+  races:
+  - グランド・デビル
+  mana: 1
+  text: このクリーチャーをバトルゾーンに出した時、バトルゾーンに自分のディープ・マリーンが１体もなければ、自分の手札を１枚捨てる。
+  abilities:
+  - kind: trigger
+    when:
+      event: move
+      to: bz
+      subject: self
+    if:
+      not:
+        exists:
+          zone: bz
+          owner: you
+          filter:
+            races:
+            - ディープ・マリーン
+    effect:
+    - op: discard
+      select:
+        zone: hand
+        owner: you
+        count: 1
+  source:
+    official: dm19-088
+    review: pending
+    notes: 「1体もなければ」は not + exists
+- id: dm19-091
+  name: 抹殺のサグ・パニール
+  types:
+  - creature
+  civs:
+  - darkness
+  cost: 3
+  power: 2000
+  races:
+  - ブレイブ・スピリット
+  mana: 1
+  text: バトルゾーンにある自分のティラノ・ドレイクはすべて「スレイヤー」を得る。
+  abilities:
+  - kind: static
+    affects:
+      owner: you
+      filter:
+        races:
+        - ティラノ・ドレイク
+    mod:
+      grant:
+      - slayer
+  source:
+    official: dm19-091
+    review: pending
+    notes: スレイヤーの説明文は text から省いた
+- id: dm19-093
+  name: 封魔エリゴウル
+  types:
+  - creature
+  civs:
+  - darkness
+  cost: 2
+  power: 1000
+  races:
+  - グランド・デビル
+  mana: 1
+  text: バトルゾーンに自分のグランド・デビルが他に１体でもあれば、このクリーチャーのパワーは+2000される。
+  abilities:
+  - kind: static
+    affects: self
+    if:
+      exists:
+        zone: bz
+        owner: you
+        filter:
+          races:
+          - グランド・デビル
+        other: true
+    mod:
+      power: 2000
+  source:
+    official: dm19-093
+    review: pending
+- id: dm19-096
+  name: ブラストボール・ドラグーン
+  types:
+  - creature
+  civs:
+  - fire
+  cost: 3
+  power: 5000
+  races:
+  - ティラノ・ドレイク
+  mana: 1
+  text: このクリーチャーをバトルゾーンに出した時、カードを１枚、自分のマナゾーンから自分の墓地に置く。
+  abilities:
+  - kind: trigger
+    when:
+      event: move
+      to: bz
+      subject: self
+    effect:
+    - op: move
+      select:
+        zone: mana
+        owner: you
+        count: 1
+      to: graveyard
+      reason: put
+  source:
+    official: dm19-096
+    review: pending
+- id: dm19-097
+  name: アウトロー・ペッパー
+  types:
+  - creature
+  civs:
+  - fire
+  cost: 3
+  power: 4000
+  races:
+  - ワイルド・ベジーズ
+  mana: 1
+  text: このクリーチャーをバトルゾーンに出した時、バトルゾーンにある自分のパワー3000以下のクリーチャーを１体、自分のマナゾーンに置く。
+  abilities:
+  - kind: trigger
+    when:
+      event: move
+      to: bz
+      subject: self
+    effect:
+    - op: mana_put
+      select:
+        zone: bz
+        owner: you
+        filter:
+          types:
+          - creature
+          power_le: 3000
+        count: 1
+  source:
+    official: dm19-097
+    review: pending
+    notes: このクリーチャー自身はパワー4000なので対象にならない
+- id: dm19-098
+  name: 撃輪のメイズローゼン
+  types:
+  - creature
+  civs:
+  - fire
+  cost: 3
+  power: 2000
+  races:
+  - ブレイブ・スピリット
+  mana: 1
+  text: バトルゾーンにある自分のティラノ・ドレイクはすべて、「パワーアタッカー+3000」を得る。
+  abilities:
+  - kind: static
+    affects:
+      owner: you
+      filter:
+        races:
+        - ティラノ・ドレイク
+    mod:
+      battle_power:
+        amount: 3000
+        only: attacking
+  source:
+    official: dm19-098
+    review: pending
+    notes: 説明文は text から省いた
+- id: dm19-101
+  name: 疾風のスウザ
+  types:
+  - creature
+  civs:
+  - fire
+  cost: 2
+  power: 1000
+  races:
+  - ブレイブ・スピリット
+  mana: 1
+  text: バトルゾーンにある自分のティラノ・ドレイクはすべて「スピードアタッカー」を得る。
+  abilities:
+  - kind: static
+    affects:
+      owner: you
+      filter:
+        races:
+        - ティラノ・ドレイク
+    mod:
+      grant:
+      - speed_attacker
+  source:
+    official: dm19-101
+    review: pending
+    notes: 説明文は text から省いた
+- id: dm19-105
+  name: スライス・オニオン
+  types:
+  - creature
+  civs:
+  - nature
+  cost: 3
+  power: 3000
+  races:
+  - ワイルド・ベジーズ
+  mana: 1
+  text: このクリーチャーのパワーは、バトルゾーンにある自分の他の《スライス・オニオン》１体につき+1000される。
+  abilities:
+  - kind: static
+    affects: self
+    mod:
+      power:
+        amount: 1000
+        count:
+          zone: bz
+          owner: you
+          filter:
+            name: スライス・オニオン
+          other: true
+  source:
+    official: dm19-105
+    review: pending
+- id: dm19-107
+  name: 樹脈の守護者エバード・ゼノム
+  types:
+  - creature
+  civs:
+  - nature
+  cost: 3
+  power: 2500
+  races:
+  - ガーディアン
+  mana: 1
+  text: バトルゾーンに自分のガーディアンが他に１体でもあれば、このクリーチャーは「ブロッカー」を得る。
+  abilities:
+  - kind: static
+    affects: self
+    if:
+      exists:
+        zone: bz
+        owner: you
+        filter:
+          races:
+          - ガーディアン
+        other: true
+    mod:
+      grant:
+      - blocker
+  source:
+    official: dm19-107
+    review: pending
+- id: dm19-108
+  name: 霊騎シーリンズ
+  types:
+  - creature
+  civs:
+  - nature
+  cost: 3
+  power: 2000
+  races:
+  - アーク・セラフィム
+  mana: 1
+  text: バトルゾーンに相手のほうが自分より多くクリーチャーを持っている時、このクリーチャーは「パワーアタッカー+5000」を得る。
+  abilities:
+  - kind: static
+    affects: self
+    if:
+      cmp:
+      - count:
+          zone: bz
+          owner: opp
+          filter:
+            types:
+            - creature
+      - '>'
+      - count:
+          zone: bz
+          owner: you
+          filter:
+            types:
+            - creature
+    mod:
+      battle_power:
+        amount: 5000
+        only: attacking
+  source:
+    official: dm19-108
+    review: pending
+    notes: 説明文は text から省いた
+- id: dm20-001
+  name: 豪腕機兵ナックル・フィスト
+  types:
+  - creature
+  civs:
+  - light
+  cost: 6
+  power: 7000
+  races:
+  - グレートメカオー
+  mana: 1
+  text: '自分のキカイヒーローまたはグレートメカオーが破壊された時、バトルゾーンにある自分のクリーチャーをすべてアンタップする。
+
+    W・ブレイカー(このクリーチャーはシールドを２枚ブレイクする)'
+  abilities:
+  - kind: trigger
+    when:
+      event: move
+      to: graveyard
+      reason: destroy
+      subject:
+        owner: you
+        filter:
+          races:
+          - キカイヒーロー
+          - グレートメカオー
+    effect:
+    - op: untap
+      select:
+        zone: bz
+        owner: you
+        filter:
+          types:
+          - creature
+        count: all
+  source:
+    official: dm20-001
+    review: pending
+    notes: dm16-023 ソラリオの変形（対象種族が2種）
+  keywords:
+  - double_breaker
+- id: dm20-012
+  name: 黒神龍ヴァイザス
+  types:
+  - creature
+  civs:
+  - darkness
+  cost: 5
+  power: 6000
+  races:
+  - ドラゴン・ゾンビ
+  mana: 1
+  text: 'このクリーチャーが攻撃する時、自分のシールドを１枚選び、手札に加える。ただし、その「S・トリガー」は使えない。
+
+    W・ブレイカー(このクリーチャーはシールドを２枚ブレイクする)'
+  abilities:
+  - kind: trigger
+    when:
+      event: attack
+      subject: self
+    effect:
+    - op: move
+      select:
+        zone: shield
+        owner: you
+        count: 1
+      to: hand
+      reason: return
+  source:
+    official: dm20-012
+    review: pending
+    notes: dm18-030 と同じ（ブレイクでない移動では S・トリガーは発動しない）
+  keywords:
+  - double_breaker
