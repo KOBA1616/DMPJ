@@ -64,6 +64,9 @@ class Weights:
     max_mana: int = 8           # これ以上はチャージしない（貪欲方策）
     stock_cap: int = 8          # 相手に効かない資源ループ（ドロー等）を1度にストックする最大周回数
     deck_keep: int = 8          # 資源ループでも自分の山札はこの枚数より減らさない
+    goal_card: float = 200.0    # 自分の場に常在の勝利条件（kind: state）を持つカードがある
+    goal_dist: float = 40.0     # その条件（「N枚以上」）まで足りない枚数1つにつき減点
+    lookahead: int = 0          # 1以上なら、各決定の候補をその先 N 手の貪欲な評価で並べ替える（0 は従来どおり）
 
 
 def _rank(eng: Engine, d: dict, w: Weights) -> list[int]:
@@ -132,6 +135,23 @@ def greedy_policy(w: Weights | None = None):
     return pol
 
 
+def goal_distance(eng: Engine, me: int) -> tuple[int, int]:
+    """(場にある常在の勝利条件を持つカードの数, その条件「数 >= N」まで足りない枚数の最小)。条件が数の比較でなければ距離は見ない。"""
+    n_cards, best = 0, None
+    for c in eng.bz_tops(me):
+        if eng.s.cards[c].controller != me:
+            continue
+        for _, ab in eng.abilities(c, "state"):
+            if any(o.get("op") == "win" and o.get("player", "you") == "you" for o in ab["effect"]):
+                n_cards += 1
+                cm = ab["if"].get("cmp")
+                if cm and cm[1] == ">=" and isinstance(cm[2], int) and isinstance(cm[0], dict) and "count" in cm[0]:
+                    env = {"you": me, "self": eng.s.ref(c)}
+                    gap = max(0, cm[2] - eng.eval_expr(cm[0], env))
+                    best = gap if best is None else min(best, gap)
+    return n_cards, (best if best is not None else 0)
+
+
 def evaluate(eng: Engine, me: int, w: Weights) -> float:
     s = eng.s
     opp = 1 - me
@@ -150,7 +170,8 @@ def evaluate(eng: Engine, me: int, w: Weights) -> float:
             breaks += ch["breaks"]
     deck = len(eng.zlist("deck", me))
     self_keep = w.deck_keep
-    return (-w.shield * sh + w.threat * min(breaks, sh + 1) + w.mana * len(eng.zlist("mana", me))
+    gc, gd = goal_distance(eng, me)
+    return (w.goal_card * gc - w.goal_dist * gd - w.shield * sh + w.threat * min(breaks, sh + 1) + w.mana * len(eng.zlist("mana", me))
             + w.hand * len(eng.zlist("hand", me)) + w.board * len(mine)
             + w.opp_deck * (40 - len(eng.zlist("deck", opp)))
             - w.deck_danger * max(0, self_keep - deck))
@@ -274,7 +295,10 @@ class TurnSearch:
             return -WIN, eng          # 既に展開した局面（ループの途中で戻ってきた場合もここ）
         self.seen.add(tkey)
         best: tuple[float, Engine] | None = None
-        for choice in candidates(eng, d, self.w, self.combo_cap):
+        cands = candidates(eng, d, self.w, self.combo_cap)
+        if self.w.lookahead and len(cands) > 1:
+            cands = self._lookahead_order(eng, cands)
+        for choice in cands:
             if self.left <= 0 and best is not None:
                 break
             self.left -= 1
@@ -287,6 +311,21 @@ class TurnSearch:
             if best[0] >= WIN - 1000:
                 break                 # このターンで勝てる線が見つかった
         return best
+
+    def _lookahead_order(self, eng: Engine, cands: list[list[int]]) -> list[list[int]]:
+        """各候補を貪欲に先まで進めた局面の評価で並べ替える（同点は元の順）。ノード数には数えない軽い見積もり。"""
+        scored = []
+        for i, ch in enumerate(cands):
+            c = eng.clone()
+            c.answer(ch)
+            leaf = c
+            for _ in range(self.w.lookahead):
+                d2 = self._settle(leaf)
+                if d2 is None:
+                    break
+                leaf.answer(candidates(leaf, d2, self.w, cap=1)[0])
+            scored.append((-evaluate(leaf, self.me, self.w), i, ch))
+        return [ch for _, _, ch in sorted(scored)]
 
     def _stocks(self, eng: Engine, cert: LoopCertificate) -> list[Engine]:
         """ループを確かめてストックした局面（周回数の違うもの）を返す。勝ちにつながらない・確かめられないなら空。
