@@ -64078,3 +64078,163 @@ cards:
     official: dm19-110
     review: pending
     notes: 厳密一致
+- id: dm17-007
+  name: 予言者プロキオン
+  types:
+  - creature
+  civs:
+  - light
+  cost: 7
+  power: 2000
+  races:
+  - ライトブリンガー
+  mana: 1
+  text: 'S・バック-光(光のカードを自分のシールドゾーンから手札に加える時、そのカードを捨ててもよい。そうした場合、コストを支払わずにこのクリーチャーを召喚する)
+
+    ブロッカー
+
+    このクリーチャーは、相手プレイヤーを攻撃できない。
+
+    このクリーチャーが破壊される時、墓地に置くかわりに手札に戻す。'
+  keywords:
+  - s_back_light
+  - blocker
+  - cannot_attack_player
+  abilities:
+  - kind: replace
+    when:
+      event: move
+      from: bz
+      to: graveyard
+      reason: destroy
+      subject: self
+    instead:
+    - op: move
+      select:
+        ref: self
+      to: hand
+      reason: return
+  - kind: replace
+    when:
+      event: move
+      from: bz
+      to: graveyard
+      reason: destroy
+      subject: self
+    instead:
+    - op: move
+      select:
+        ref: self
+      to: hand
+      reason: return
+  source:
+    official: dm17-007
+    review: pending
+    notes: 厳密一致
+- id: dm17-011
+  name: シャロウ・オペレーション
+  types:
+  - spell
+  civs:
+  - water
+  cost: 3
+  mana: 1
+  text: 'S・バック-水(水のカードを自分のシールドゾーンから手札に加える時、そのカードを捨ててもよい。そうした場合、コストを支払わずにこの呪文を唱える)
+
+    バトルゾーンにある相手のタップされているクリーチャー１体につき１枚、カードを引く。'
+  spell:
+  - op: draw
+    count:
+      count:
+        zone: bz
+        owner: opp
+        filter:
+          types:
+          - creature
+          tapped: true
+  keywords:
+  - s_back_water
+  source:
+    official: dm17-011
+    review: pending
+    notes: 厳密一致
+- id: dm17-023
+  name: パニッシュ・ホールド
+  types:
+  - spell
+  civs:
+  - light
+  cost: 5
+  mana: 1
+  text: 'S・バック-光 (光のカードを自分のシールドゾーンから手札に加える時、そのカードを捨ててもよい。そうした場合、コストを支払わずにこの呪文を唱える)
+
+    バトルゾーンにあるクリーチャーを２体まで選び、タップする。'
+  spell:
+  - op: tap
+    select:
+      zone: bz
+      owner: any
+      filter:
+        types:
+        - creature
+      count: 2
+      up_to: true
+  keywords:
+  - s_back_light
+  source:
+    official: dm17-023
+    review: pending
+    notes: 厳密一致
+- id: dm17-024
+  name: クラック・クロウラー
+  types:
+  - creature
+  civs:
+  - water
+  cost: 6
+  power: 3000
+  races:
+  - アースイーター
+  mana: 1
+  text: 'S・バック-水(水のカードを自分のシールドゾーンから手札に加える時、そのカードを捨ててもよい。そうした場合、コストを支払わずにこのクリーチャーを召喚する)
+
+    ブロッカー
+
+    このクリーチャーは攻撃することができない。'
+  keywords:
+  - s_back_water
+  - blocker
+  - cannot_attack
+  source:
+    official: dm17-024
+    review: pending
+    notes: 厳密一致
+- id: dm17-029
+  name: 煉獄陣
+  types:
+  - spell
+  civs:
+  - darkness
+  cost: 5
+  mana: 1
+  text: S・バック-闇(闇のカードを自分のシールドゾーンから手札に加える時、そのカードを捨ててもよい。そうした場合、コストを支払わずにこの呪文を唱える) クリーチャーを２体まで、自分の墓地から手札に戻す。
+  spell:
+  - op: move
+    select:
+      zone: graveyard
+      owner: you
+      filter:
+        types:
+        - creature
+      count: 2
+      up_to: true
+    to: hand
+    reason: return
+  keywords:
+  - s_back_darkness
+  source:
+    official: dm17-029
+    review: pending
+    notes: 厳密一致
+    aliases:
+    - promoy4-036

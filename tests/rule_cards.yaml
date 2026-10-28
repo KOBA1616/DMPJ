@@ -483,3 +483,24 @@ cards:
     text: カードを1枚引く。
     spell:
       - {op: draw, count: 1}
+
+  # S・バック（シールドから手札に加わる光のカードを捨てて、無料で実行する）
+  - id: R065
+    name: 試験用S・バック獣
+    types: [creature]
+    civs: [light]
+    cost: 5
+    power: 3000
+    races: [テスト]
+    keywords: [s_back_light]
+    text: S・バック-光
+
+  - id: R066
+    name: 試験用S・バック呪文
+    types: [spell]
+    civs: [water]
+    cost: 5
+    keywords: [s_back_light]
+    text: S・バック-光。カードを2枚引く。
+    spell:
+      - {op: draw, count: 2}
