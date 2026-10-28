@@ -99,9 +99,9 @@ class TurnMixin:
             return False
         if "evolution" in d.types:
             srcs = self._evo_sources(cid, p, face)
-            if not srcs:
+            if len(srcs) < d.evolve_count:
                 return False
-            n = len(srcs) if d.evolve_any else 1            # 最も安い組合せで払えるか（112.2b）
+            n = len(srcs) if d.evolve_any else d.evolve_count           # 最も安い組合せで払えるか（112.2b）
             cost = max(0, d.cost - n * d.cost_reduce_per_evo) if d.cost_reduce_per_evo else None
             return bool(self._mana_choices(cid, p, face, cost=self._opt_reduced(cid, face, d, self._sac_reduced(d, self._tap_reduced(d, p, cost, None), self._sac_pool(d, p))), limit=1))
         return bool(self._mana_choices(cid, p, face, cost=self._opt_reduced(cid, face, d, self._sac_reduced(d, self._tap_reduced(d, p, None, None), self._sac_pool(d, p))), limit=1))
@@ -364,11 +364,11 @@ def h_play(eng, t):
         return None
     if "evolution" in d.types and "evo" not in t:
         srcs = eng._evo_sources(cid, p, face)
-        if not srcs:
+        if len(srcs) < d.evolve_count:
             eng._pop(t)
             return None
         opts = [eng._card_option(c) for c in srcs]
-        mn, mx = (1, len(srcs)) if d.evolve_any else (1, 1)
+        mn, mx = (1, len(srcs)) if d.evolve_any else (d.evolve_count, d.evolve_count)
         ans, dd = eng.ask(t, p, "choose_evo_source", opts, mn, mx)
         if dd:
             return dd
