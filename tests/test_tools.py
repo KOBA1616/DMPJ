@@ -258,6 +258,34 @@ def test_convert_pack_shares_one_call_and_falls_back_per_card(tmp_path):
     assert sorted(c["id"] for c in yaml.safe_load(out.read_text(encoding="utf-8"))["cards"]) == ["p1", "p2", "p3"]
 
 
+def test_agent_convert_next_and_submit(tmp_path, monkeypatch, capsys):
+    """AI が API なしで変換する経路: next が依頼文を出し、submit が検査して合格分だけ登録する。"""
+    import json as _json
+
+    import agent_convert as ac
+    raw = tmp_path / "raw"
+    raw.mkdir()
+    rows = [{"id": "z1", "name": "甲", "card_type": "クリーチャー", "civilization": "水", "cost": "2", "power": "1000",
+             "race": "x", "text": "甲が出た時、カードを1枚引く。この能力は独自の複雑な文。"},
+            {"id": "z2", "name": "乙", "card_type": "クリーチャー", "civilization": "水", "cost": "2", "power": "1000",
+             "race": "x", "text": "乙が出た時、相手の山札を見て、好きな順に入れ替える。独自の文。"}]
+    (raw / "a.jsonl").write_text("\n".join(_json.dumps(r, ensure_ascii=False) for r in rows), encoding="utf-8")
+    monkeypatch.setattr(ac, "RAW", raw)
+    monkeypatch.setattr(ac, "OUT", tmp_path / "converted.yaml")
+    monkeypatch.setattr(ac, "REJ", raw / "rejects.jsonl")
+    assert ac.cmd_next(2, "id") == 0
+    out = capsys.readouterr().out
+    assert "z1" in out and "z2" in out
+    ans = tmp_path / "answer.yaml"
+    ans.write_text("cards:\n- id: z1\n  name: 甲\n  types: [creature]\n  civs: [water]\n  cost: 2\n  power: 1000\n"
+                   "- id: z2\n  name: 乙\n  types: [creature]\n  civs: [water]\n  cost: 2\n  power: 1000\n  keywords: [no_such]\n"
+                   "- id: nope\n  name: 無\n", encoding="utf-8")
+    assert ac.cmd_submit(str(ans)) == 1                      # z2 と nope は不合格
+    got = yaml.safe_load((tmp_path / "converted.yaml").read_text(encoding="utf-8"))["cards"]
+    assert [c["id"] for c in got] == ["z1"] and got[0]["source"]["review"] == "pending"
+    assert ac.cmd_submit(str(ans)) == 1 and len(yaml.safe_load((tmp_path / "converted.yaml").read_text(encoding="utf-8"))["cards"]) == 1
+
+
 def test_survey_text_counts_forms():
     import survey_text
     rows = [{"id": "a", "name": "甲", "text": "ブロッカー(説明。)\n甲が出た時、カードを2枚引く。"},

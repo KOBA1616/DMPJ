@@ -224,6 +224,17 @@ def convert(llm, row: dict, tables, sysp: str, effort: str, usage: dict | None =
     raise DefError(f"2回とも検査を通らなかった: {err}")
 
 
+def merge_split(card: dict, r: dict, part) -> dict:
+    """ルールで先に処理したキーワード・能力（rule_convert.split の結果）を、モデルが返したカードに戻す。"""
+    card["keywords"] = [*part[0], *[k for k in card.get("keywords") or [] if k not in part[0]]]
+    if not card["keywords"]:
+        del card["keywords"]
+    if part[2]:
+        card["abilities"] = [*part[2], *(card.get("abilities") or [])]
+    card["text"] = r["text"]
+    return card
+
+
 def load_rows(inputs: list[str]) -> list[dict]:
     """jsonl のパス・ディレクトリ・glob から原文の行を読む（同じIDは後のものを採る）。rejects は入力に含めない。"""
     files: list[Path] = []
@@ -434,12 +445,7 @@ def run(rows: list[dict], client, tables, sysp: str, effort: str, out: Path, rej
             card = convert(client, {**r, "text": part[1], "known_keywords": part[0]} if part else r, tables, sysp, effort, usage,
                            first=packed.pop(r["id"], None))
             if part:
-                card["keywords"] = [*part[0], *[k for k in card.get("keywords") or [] if k not in part[0]]]
-                if not card["keywords"]:
-                    del card["keywords"]
-                if part[2]:
-                    card["abilities"] = [*part[2], *(card.get("abilities") or [])]
-                card["text"] = r["text"]
+                merge_split(card, r, part)
             validate(card, r, tables)
         except DefError as e:
             with lock:
