@@ -95,7 +95,7 @@ def build() -> dict:
                 "via": {"enum": sorted(VIAS)}, "subject": {}},
                 "required": ["event"], "additionalProperties": False},
             "ability": {"type": "object", "properties": {
-                "kind": {"enum": ["trigger", "replace", "static", "declare"]}, "when": ref("when"),
+                "kind": {"enum": ["trigger", "replace", "static", "declare", "state"]}, "when": ref("when"),
                 "if": ref("cond"), "effect": ref("ops"), "instead": ref("ops"), "optional": {"type": "boolean"},
                 "affects": {}, "mod": ref("mod"), "zone": {"enum": sorted(zones)}},
                 "required": ["kind"], "additionalProperties": False},

@@ -1103,9 +1103,8 @@ cards:
         if: {cmp: [{count: {zone: shield, owner: you}}, "==", 0]}
         effect:
           - {op: move, select: {zone: deck, owner: you, from_top: 1}, to: shield, reason: put}
-      - kind: trigger
-        when: {event: move, to: shield}
+      - kind: state
         if: {cmp: [{count: {zone: shield, owner: you}}, ">=", 10]}
         effect:
           - {op: win, player: you}
-    source: {official: dmx12b-031, review: pending, notes: "攻撃先がプレイヤー（シールド含む）の時だけ。盾が0枚の時の攻撃は「そのターンはじめて」になる。盾10枚以上は『盾ゾーンへ入った時』の判定で代用（常在の状況起因ではない）。要確認"}
+    source: {official: dmx12b-031, review: pending, notes: "攻撃先がプレイヤー（シールド含む）の時だけ。盾が0枚の時の攻撃は「そのターンはじめて」になる。盾10枚以上は kind: state（状況起因処理で常に判定）"}

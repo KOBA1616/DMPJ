@@ -23,7 +23,7 @@ def core_ops() -> dict[str, dict[str, str]]:
 
 EVENTS = {"move", "draw", "cast", "summon", "attack", "block", "break", "tap", "untap",
           "turn_start", "turn_end", "battle_win", "choose", "battle"}
-ABILITY_KINDS = {"trigger", "replace", "static", "declare"}
+ABILITY_KINDS = {"trigger", "replace", "static", "declare", "state"}   # state: 状態を常に見て、満たされたら勝敗が決まる常在効果（if と effect: [win/lose]）
 ABILITY_KEYS = {"kind", "when", "if", "effect", "instead", "optional", "affects", "mod", "zone", "keyword"}
 REASONS = {"put", "destroy", "return", "discard", "charge", "summon", "cast", "break",
            "draw", "battle", "sba", "resolve", "evolve"}
@@ -389,6 +389,9 @@ class Checker:
             raise DefError(f"{where}: unknown ability keys {sorted(bad)}")
         if kind in ("trigger", "replace", "declare"):
             self.when(ab.get("when", {}), where)
+        if kind == "state":
+            if "if" not in ab or not all(o.get("op") in ("win", "lose") for o in ab.get("effect", [])) or not ab.get("effect"):
+                raise DefError(f"{where}: state は if と effect（win / lose だけ）が要る")
         if kind == "static" and "mod" in ab:
             self.mod(ab["mod"], where)
         if kind in ("static", "trigger") and ab.get("zone", "bz") not in self.zones:

@@ -1445,7 +1445,8 @@
       "trigger",
       "replace",
       "static",
-      "declare"
+      "declare",
+      "state"
      ]
     },
     "when": {

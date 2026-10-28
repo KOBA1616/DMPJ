@@ -215,6 +215,15 @@ class EventMixin:
             loser = s.active if len(out) == 2 else out[0]
             s.result = {"winner": 1 - loser, "reason": "deck_out", "turn": s.turn}
             return []
+        for c in self.bz_tops():   # 常在の勝敗条件（kind: state）。バトルゾーンで機能している間、条件を満たしたら決まる
+            for _, ab in self.abilities(c, "state"):
+                env = {"you": s.cards[c].controller, "self": s.ref(c)}
+                if self.eval_cond(ab["if"], env):
+                    for o in ab["effect"]:
+                        win = o["op"] == "win"
+                        who = self._rel(o.get("player", "you"), env)
+                        s.result = {"winner": who if win else 1 - who, "reason": "state", "turn": s.turn}
+                    return []
         dead = [s.ref(c) for c in self.bz_tops()
                 if "creature" in self.chars(c)["types"] and self.chars(c)["power"] <= 0]   # 703.4c
         if dead:

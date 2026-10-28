@@ -185,3 +185,11 @@ def test_races_are_split_by_slash_into_single_races():
     from dmsim.defs import split_races
     assert split_races(["デーモン・コマンド/スチーム・ナイト/フュージョナー"]) == ["デーモン・コマンド", "スチーム・ナイト", "フュージョナー"]
     assert split_races(["オラクル", "グレートメカオー"]) == ["オラクル", "グレートメカオー"]
+
+
+def test_aleftina_wins_when_ten_or_more_shields_and_not_with_nine(rules):
+    for n, won in ((9, False), (10, True)):
+        e = setup(rules, {"bz": ["dmx12b-031"], "shield": ["dm06-085"] * n}, filler="dm06-085")
+        e.advance()
+        assert (e.s.result is not None and e.s.result["winner"] == 0) == won, n
+
