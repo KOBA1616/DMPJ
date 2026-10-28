@@ -68282,3 +68282,1391 @@ cards:
     - dmsd16-006
   keywords:
   - s_trigger
+- id: dm22rp1-tr4
+  faces:
+  - name: フェルナンド・ソシュール
+    types:
+    - creature
+    civs:
+    - darkness
+    cost: 6
+    power: 6000
+    races:
+    - マフィ・ギャング
+    abilities:
+    - kind: trigger
+      when:
+        event: move
+        to: bz
+        subject: self
+      effect: &id002
+      - op: may
+        body:
+        - op: mill
+          owner: you
+          count: 2
+      - op: may
+        body:
+        - op: play_free
+          select:
+            zone: graveyard
+            owner: you
+            filter:
+              types:
+              - creature
+              civs:
+              - darkness
+              cost_le: 3
+            count: 1
+    - kind: trigger
+      when:
+        event: attack
+        subject: self
+      effect: *id002
+  - name: プライマル・スクリーム
+    types:
+    - spell
+    civs:
+    - darkness
+    cost: 4
+    spell:
+    - op: mill
+      owner: you
+      count: 4
+    - op: may
+      body:
+      - op: move
+        select:
+          zone: graveyard
+          owner: you
+          filter:
+            types:
+            - creature
+          count: 1
+        to: hand
+        reason: return
+  mana: 1
+  text: 'フェルナンド・ソシュール: このクリーチャーが出た時または攻撃する時、自分の山札の上から２枚を墓地に置いてもよい。その後、闇のコスト３以下のクリーチャーを１体、自分の墓地から出してもよい。／プライマル・スクリーム:
+    自分の山札の上から４枚を墓地に置く。その後、クリーチャーを１体、自分の墓地から手札に戻してもよい。'
+  source:
+    official: dm22rp1-tr4
+    review: pending
+    notes: ツインパクト
+    aliases:
+    - dmex04-066
+- id: dm22rp2x-004
+  name: 死神覇王 XENARCH
+  types:
+  - creature
+  civs:
+  - darkness
+  cost: 5
+  power: 6000
+  races:
+  - デーモン・コマンド
+  - ダークロード
+  mana: 1
+  text: '{GS} G・ストライク
+
+    W・ブレイカー
+
+    このクリーチャーが出た時、自分のクリーチャーを１体破壊してもよい。そうしたら、相手は自身のクリーチャーを１体選んで破壊する。
+
+    自分の手札を捨てた時、このクリーチャーが自分の墓地にあれば、手札に戻してもよい。'
+  abilities:
+  - kind: trigger
+    when:
+      event: move
+      to: bz
+      subject: self
+    effect:
+    - op: may
+      body:
+      - op: choose
+        select:
+          zone: bz
+          owner: you
+          filter:
+            types:
+            - creature
+          count: 1
+        as: s
+      - op: destroy
+        select:
+          ref: s
+          count: all
+      - op: if
+        cond:
+          exists:
+            ref: s
+        then:
+        - op: destroy
+          select:
+            zone: bz
+            owner: opp
+            chooser: opp
+            filter:
+              types:
+              - creature
+            count: 1
+  - kind: trigger
+    zone: graveyard
+    when:
+      event: move
+      from: hand
+      to: graveyard
+      subject:
+        owner: you
+    effect:
+    - op: may
+      body:
+      - op: move
+        select:
+          ref: self
+          count: 1
+        to: hand
+        reason: return
+  source:
+    official: dm22rp2x-004
+    review: pending
+    notes: 手札から墓地への移動（＝手札を捨てた時）で墓地から誘発する形にした
+    aliases:
+    - dm22rp2-004
+    - dm22rp2x-004x
+  keywords:
+  - g_strike
+  - double_breaker
+- id: dm22rp2x-010
+  name: ウルトラクイック・マホガニーハンドル
+  types:
+  - tamaseed
+  civs:
+  - light
+  cost: 4
+  mana: 1
+  text: このタマシードが出た時、カードを１枚引く。自分のターンの終わりに、自分のシールドが相手よりも多ければ、自分の山札の上から１枚目をシールド化してもよい。
+  abilities:
+  - kind: trigger
+    when:
+      event: move
+      to: bz
+      subject: self
+    effect:
+    - op: draw
+      count: 1
+  - kind: trigger
+    when:
+      event: turn_end
+    if:
+      all:
+      - is_turn: you
+      - cmp:
+        - count:
+            zone: shield
+            owner: you
+        - '>'
+        - count:
+            zone: shield
+            owner: opp
+    effect:
+    - op: may
+      body:
+      - op: move
+        select:
+          zone: deck
+          owner: you
+          from_top: 1
+        to: shield
+        reason: charge
+  source:
+    official: dm22rp2x-010
+    review: pending
+    notes: データの文字化け（「相手よりも多ければ」）は文意から補った
+    aliases:
+    - dm22rp2-010
+- id: dm22rp2x-008
+  name: 熱線と照射の決断
+  types:
+  - spell
+  civs:
+  - light
+  - fire
+  cost: 5
+  mana: 1
+  text: 自分のターンのはじめにアンタップした自分のクリーチャー１体につき、そのターン中、この呪文を唱えるコストを１少なくする。ただし、コストは１以下にはならない。次の中から２回選ぶ。（同じものを選んでもよい）相手のクリーチャーを２体選んでタップする。カードを１枚引く。その後、光または火のコスト４以下のクリーチャーを１体、自分の手札から出す。自分のクリーチャーを１体選ぶ。そのクリーチャーはこのターン、バトル中パワーを+4000され、「スピードアタッカー」を得る。
+  abilities:
+  - kind: static
+    zone: hand
+    if:
+      is_turn: you
+    mod:
+      cost:
+        amount: -1
+        count:
+          zone: bz
+          owner: you
+          filter:
+            types:
+            - creature
+            tapped: false
+      cost_min: 1
+  spell:
+  - op: modal
+    count: 2
+    modes:
+    - - op: tap
+        select:
+          zone: bz
+          owner: opp
+          filter:
+            types:
+            - creature
+          count: 2
+    - - op: draw
+        count: 1
+      - op: play_free
+        select:
+          zone: hand
+          owner: you
+          filter:
+            types:
+            - creature
+            civs:
+            - light
+            - fire
+            cost_le: 4
+          count: 1
+    - - op: choose
+        select:
+          zone: bz
+          owner: you
+          filter:
+            types:
+            - creature
+          count: 1
+        as: c
+      - op: modify
+        select:
+          ref: c
+          count: all
+        mod:
+          battle_power:
+            amount: 4000
+          grant:
+          - speed_attacker
+        duration: end_of_turn
+  source:
+    official: dm22rp2x-008
+    review: pending
+    notes: 'コスト軽減は「自分のターンのはじめにアンタップしていた」を現在のアンタップ状態で数える形にした（要レビュー）。modal の count:
+      2 で2回選ぶ'
+    aliases:
+    - dm22rp2-008
+    - dm22rp2-11a
+    - dm22rp2x-008x
+    - dm22rp2x-11a
+- id: dm22rp2x-028
+  name: 奇石 エルバ
+  types:
+  - creature
+  civs:
+  - light
+  cost: 4
+  power: 4500
+  races:
+  - メタリカ
+  mana: 1
+  text: 'S・トリガー（このクリーチャーをシールドゾーンから手札に加える時、コストを支払わずにすぐ召喚してもよい）
+
+    ブロッカー（このクリーチャーをタップして、相手クリーチャーの攻撃先をこのクリーチャーに変更してもよい）
+
+    このクリーチャーは、相手プレイヤーを攻撃できない。
+
+    このクリーチャーが破壊された時、《奇石 エルバ》を１体、自分の手札から出してもよい。'
+  abilities:
+  - kind: trigger
+    zone: graveyard
+    when:
+      event: move
+      to: graveyard
+      subject: self
+    effect:
+    - op: may
+      body:
+      - op: play_free
+        select:
+          zone: hand
+          owner: you
+          filter:
+            name: 奇石 エルバ
+          count: 1
+  source:
+    official: dm22rp2x-028
+    review: pending
+    aliases:
+    - dm22rp2-028
+  keywords:
+  - s_trigger
+  - blocker
+  - cannot_attack_player
+- id: dm22rp2x-029
+  name: ケニグワイト-C1
+  types:
+  - creature
+  civs:
+  - light
+  cost: 3
+  power: 3500
+  races:
+  - メカ・デル・ディネロ
+  mana: 1
+  text: セイバー：タマシード（自分のタマシードが破壊される時、かわりにこのクリーチャーを破壊してもよい）このクリーチャーが破壊された時、カードを１枚引く。
+  abilities:
+  - kind: replace
+    optional: true
+    when:
+      event: move
+      to: graveyard
+      subject:
+        owner: you
+        filter:
+          types:
+          - tamaseed
+    instead:
+    - op: destroy
+      select:
+        ref: self
+        count: 1
+  - kind: trigger
+    zone: graveyard
+    when:
+      event: move
+      to: graveyard
+      subject: self
+    effect:
+    - op: draw
+      count: 1
+  source:
+    official: dm22rp2x-029
+    review: pending
+    notes: セイバー：タマシードは対象をタマシード全般にした置換で表した
+    aliases:
+    - dm22rp2-029
+- id: dm22rp2x-032
+  name: ディグル
+  types:
+  - creature
+  civs:
+  - water
+  cost: 4
+  power: 5000
+  races:
+  - マジック・サイバーロード
+  mana: 1
+  text: '{GS} G・ストライク（このクリーチャーを自分のシールドゾーンから手札に加える時、相手に見せ、相手のクリーチャーを１体選んでもよい。このターン、そのクリーチャーは攻撃できない）
+
+    ジャストダイバー（このクリーチャーが出た時、次の自分のターンのはじめまで、このクリーチャーは相手に選ばれず、攻撃されない）
+
+    自分のタマシードを使うコストを２少なくする。ただし、コストは０以下にはならない。'
+  abilities:
+  - kind: trigger
+    when:
+      event: move
+      to: bz
+      subject: self
+    effect:
+    - op: modify
+      select:
+        ref: self
+      mod:
+        deny:
+        - be_chosen
+        - be_attacked
+      duration: until_next_own_turn_start
+  - kind: static
+    affects:
+      owner: you
+      zone: hand
+      filter:
+        types:
+        - tamaseed
+    mod:
+      cost: -2
+  source:
+    official: dm22rp2x-032
+    review: pending
+    notes: 原文に下限の記載が無いため cost_min は付けていない
+    aliases:
+    - dm22rp2-032
+  keywords:
+  - g_strike
+- id: dm22rp2x-034
+  name: 竪琴魚
+  types:
+  - creature
+  civs:
+  - water
+  cost: 3
+  power: 3000
+  races:
+  - マジック・フィッシュ
+  mana: 1
+  text: 自分のタマシードまたは呪文を使った時、次の自分のターンのはじめまで、このクリーチャーは選ばれない。このクリーチャーが攻撃する時、自分の山札の上から３枚を表向きにする。その中から、タマシードと呪文をすべて手札に加え、残りを好きな順序で山札の下に置く。
+  abilities:
+  - kind: trigger
+    when:
+      event: cast
+      subject:
+        owner: you
+        filter:
+          types:
+          - spell
+    effect: &id003
+    - op: modify
+      select:
+        ref: self
+        count: 1
+      mod:
+        deny:
+        - be_chosen
+      duration: until_next_own_turn_start
+  - kind: trigger
+    when:
+      event: move
+      to: bz
+      subject:
+        owner: you
+        filter:
+          types:
+          - tamaseed
+    effect: *id003
+  - kind: trigger
+    when:
+      event: attack
+      subject: self
+    effect:
+    - op: choose
+      select:
+        zone: deck
+        owner: you
+        from_top: 3
+        look: true
+        count: all
+      as: pile
+    - op: move
+      select:
+        ref: pile
+        filter:
+          types:
+          - tamaseed
+          - spell
+        count: all
+      to: hand
+      reason: draw
+    - op: move
+      select:
+        ref: pile
+        count: all
+      to: deck
+      reason: put
+  source:
+    official: dm22rp2x-034
+    review: pending
+    notes: タマシードの「使った」はバトルゾーンに出た時として照合した
+    aliases:
+    - dm22rp2-034
+- id: dm22rp2x-035
+  name: 生きる墨・サイバー硯 電気式
+  types:
+  - tamaseed
+  civs:
+  - water
+  cost: 4
+  mana: 1
+  text: 'S・トリガー（このタマシードをシールドゾーンから手札に加える時、コストを支払わずにすぐ使ってもよい）
+
+    自分の《生きる墨・サイバー硯 電気式》が出た時、相手のクリーチャーを１体選び、持ち主の手札に戻す。'
+  abilities:
+  - kind: trigger
+    when:
+      event: move
+      to: bz
+      subject:
+        owner: you
+        filter:
+          types:
+          - tamaseed
+          name: 生きる墨・サイバー硯 電気式
+    effect:
+    - op: bounce
+      select:
+        zone: bz
+        owner: opp
+        filter:
+          types:
+          - creature
+        count: 1
+  source:
+    official: dm22rp2x-035
+    review: pending
+    aliases:
+    - dm22rp2-035
+  keywords:
+  - s_trigger
+- id: dm22rp2x-044
+  name: ブルレイザーのハサミ
+  types:
+  - tamaseed
+  civs:
+  - fire
+  cost: 2
+  mana: 1
+  text: 自分のターンの終わりに、自分の手札が１枚もなければ、カードを１枚引く。
+  abilities:
+  - kind: trigger
+    when:
+      event: turn_end
+    if:
+      all:
+      - is_turn: you
+      - cmp:
+        - count:
+            zone: hand
+            owner: you
+        - '>='
+        - 0
+      - cmp:
+        - count:
+            zone: hand
+            owner: you
+        - <=
+        - 0
+    effect:
+    - op: draw
+      count: 1
+  source:
+    official: dm22rp2x-044
+    review: pending
+    notes: 手札0枚は cmp の両方向で表した
+    aliases:
+    - dm22rp2-044
+- id: dm22rp2x-047
+  name: 推進型無重力ジャイロボール
+  types:
+  - tamaseed
+  civs:
+  - nature
+  cost: 5
+  mana: 1
+  text: '{GS} G・ストライク（このクリーチャーを自分のシールドゾーンから手札に加える時、相手に見せ、相手のクリーチャーを１体選んでもよい。このターン、そのクリーチャーは攻撃できない）
+
+    自分のクリーチャーすべてのパワーを+6000し、「パワード・ブレイカー」を与える。（「パワード・ブレイカー」を持つクリーチャーは、そのパワー6000ごとにシールドをさらに１つブレイクする）'
+  abilities:
+  - kind: static
+    affects:
+      owner: you
+      filter:
+        types:
+        - creature
+    mod:
+      power: 6000
+      grant:
+      - powered_breaker
+  source:
+    official: dm22rp2x-047
+    review: pending
+    aliases:
+    - dm22rp2-047
+  keywords:
+  - g_strike
+- id: dm22rp2x-051
+  name: 光器デュアリ・スタンド
+  types:
+  - creature
+  civs:
+  - light
+  cost: 4
+  power: 5000
+  races:
+  - メカ・デル・ソル
+  mana: 1
+  text: 'ブロッカー（このクリーチャーをタップして、相手クリーチャーの攻撃先をこのクリーチャーに変更してもよい）
+
+    自分のターンの終わりに、自分のタマシードがあれば、このクリーチャーをアンタップする。'
+  abilities:
+  - kind: trigger
+    when:
+      event: turn_end
+    if:
+      all:
+      - is_turn: you
+      - exists:
+          zone: bz
+          owner: you
+          filter:
+            types:
+            - tamaseed
+    effect:
+    - op: untap
+      select:
+        ref: self
+        count: 1
+  source:
+    official: dm22rp2x-051
+    review: pending
+    aliases:
+    - dm22rp2-051
+  keywords:
+  - blocker
+- id: dm22rp2x-055
+  name: レバレッジ・ドリフト
+  types:
+  - spell
+  civs:
+  - light
+  cost: 1
+  mana: 1
+  text: 'S・トリガー（この呪文をシールドゾーンから手札に加える時、コストを支払わずにすぐ唱えてもよい）
+
+    自分のクリーチャーを１体アンタップする。次の自分のターンのはじめまで、そのクリーチャーのパワーを+3000し、「ブロッカー」を与える。（「ブロッカー」を持つクリーチャーをタップして、相手クリーチャーの攻撃先をそのクリーチャーに変更してもよい）'
+  spell:
+  - op: choose
+    select:
+      zone: bz
+      owner: you
+      filter:
+        types:
+        - creature
+      count: 1
+    as: c
+  - op: untap
+    select:
+      ref: c
+      count: all
+  - op: modify
+    select:
+      ref: c
+      count: all
+    mod:
+      power: 3000
+      grant:
+      - blocker
+    duration: until_next_own_turn_start
+  source:
+    official: dm22rp2x-055
+    review: pending
+    aliases:
+    - dm22rp2-055
+  keywords:
+  - s_trigger
+- id: dm22rp2x-056
+  name: コバヤシ・ジアマリン
+  types:
+  - creature
+  civs:
+  - water
+  cost: 3
+  power: 1000
+  races:
+  - マジック・マーフォーク
+  mana: 1
+  text: 'このクリーチャーが出た時、カードを１枚引く。
+
+    自分のタマシードを使った時または呪文を唱えた時、このクリーチャーを手札に戻してもよい。'
+  abilities:
+  - kind: trigger
+    when:
+      event: move
+      to: bz
+      subject: self
+    effect:
+    - op: draw
+      count: 1
+  - kind: trigger
+    when:
+      event: cast
+      subject:
+        owner: you
+        filter:
+          types:
+          - spell
+    effect: &id004
+    - op: may
+      body:
+      - op: move
+        select:
+          ref: self
+          count: 1
+        to: hand
+        reason: return
+  - kind: trigger
+    when:
+      event: move
+      to: bz
+      subject:
+        owner: you
+        filter:
+          types:
+          - tamaseed
+    effect: *id004
+  source:
+    official: dm22rp2x-056
+    review: pending
+    notes: タマシードの「使った」はバトルゾーンに出た時として照合した
+    aliases:
+    - dm22rp2-056
+    - dm22rp2-19a
+    - dm22rp2x-19a
+- id: dm22rp2x-058
+  name: 粋歌のギフト
+  types:
+  - tamaseed
+  civs:
+  - water
+  cost: 2
+  mana: 1
+  text: 'このタマシードが出た時、相手のコスト６以下のクリーチャーを１体選び、持ち主の手札に戻す。
+
+    シールド・セイバー（自分のシールドがブレイクされる時、かわりにこのタマシードを破壊してもよい）'
+  abilities:
+  - kind: trigger
+    when:
+      event: move
+      to: bz
+      subject: self
+    effect:
+    - op: bounce
+      select:
+        zone: bz
+        owner: opp
+        filter:
+          types:
+          - creature
+          cost_le: 6
+        count: 1
+  source:
+    official: dm22rp2x-058
+    review: pending
+    aliases:
+    - dm22rp2-058
+  keywords:
+  - shield_saver
+- id: dm22rp2x-063
+  name: 覇王のギフト
+  types:
+  - tamaseed
+  civs:
+  - darkness
+  cost: 3
+  mana: 1
+  text: 'このタマシードが出た時、自分の山札の上から３枚を墓地に置いてもよい。そうしたら、闇のカードを１枚、自分の墓地から手札に戻す。
+
+    シールド・セイバー（自分のシールドがブレイクされる時、かわりにこのタマシードを破壊してもよい）'
+  abilities:
+  - kind: trigger
+    when:
+      event: move
+      to: bz
+      subject: self
+    effect:
+    - op: may
+      body:
+      - op: mill
+        owner: you
+        count: 3
+      - op: move
+        select:
+          zone: graveyard
+          owner: you
+          filter:
+            civs:
+            - darkness
+          count: 1
+        to: hand
+        reason: return
+  source:
+    official: dm22rp2x-063
+    review: pending
+    notes: ミルを選んだ場合のみサルベージする1つの may にまとめた
+    aliases:
+    - dm22rp2-063
+  keywords:
+  - shield_saver
+- id: dm22rp2x-069
+  name: 暴竜要塞フジヤマ・ホールド
+  types:
+  - spell
+  civs:
+  - fire
+  cost: 2
+  mana: 1
+  text: 自分のクリーチャーを１体選ぶ。このターン、そのクリーチャーのパワーを+6000し、「パワード・ブレイカー」を与える。
+  spell:
+  - op: choose
+    select:
+      zone: bz
+      owner: you
+      filter:
+        types:
+        - creature
+      count: 1
+    as: c
+  - op: modify
+    select:
+      ref: c
+      count: all
+    mod:
+      power: 6000
+      grant:
+      - powered_breaker
+    duration: end_of_turn
+  source:
+    official: dm22rp2x-069
+    review: pending
+    aliases:
+    - dm22rp2-069
+- id: dm22rp2x-071
+  name: ポッピン・マメスレー
+  types:
+  - creature
+  civs:
+  - nature
+  cost: 3
+  power: 3000
+  races:
+  - ワイルド・ベジーズ
+  mana: 1
+  text: このクリーチャーが出た時、自分の山札の上から１枚目を表向きにする。それがクリーチャーなら手札に加える。そうでなければ、マナゾーンに置く。
+  abilities:
+  - kind: trigger
+    when:
+      event: move
+      to: bz
+      subject: self
+    effect:
+    - op: choose
+      select:
+        zone: deck
+        owner: you
+        from_top: 1
+        look: true
+        count: 1
+      as: t
+    - op: if
+      cond:
+        exists:
+          ref: t
+          filter:
+            types:
+            - creature
+      then:
+      - op: move
+        select:
+          ref: t
+          count: all
+        to: hand
+        reason: draw
+      else:
+      - op: mana_put
+        select:
+          ref: t
+          count: all
+  source:
+    official: dm22rp2x-071
+    review: pending
+    aliases:
+    - dm22rp2-071
+- id: dm22rp2x-049
+  name: イデア・パラドックス
+  types:
+  - spell
+  civs:
+  - water
+  - fire
+  cost: 2
+  mana: 1
+  text: 'S・トリガー（この呪文をシールドゾーンから手札に加える時、コストを支払わずにすぐ唱えてもよい）
+
+    次のうちいずれか１つを選ぶ。
+
+    ▶バトルゾーンにある相手の、コスト４以上のカードを１枚選び、持ち主の手札に戻す。
+
+    ▶バトルゾーンにある相手の、コスト３以下のカードを１枚選んで破壊する。'
+  spell:
+  - op: modal
+    modes:
+    - - op: bounce
+        select:
+          zone: bz
+          owner: opp
+          filter:
+            cost_ge: 4
+          count: 1
+    - - op: destroy
+        select:
+          zone: bz
+          owner: opp
+          filter:
+            cost_le: 3
+          count: 1
+  source:
+    official: dm22rp2x-049
+    review: pending
+    notes: 対象はクリーチャーに限らないため filter に types を付けていない
+    aliases:
+    - dm22rp2-049
+    - dm22rp2-17a
+    - dm22rp2x-17a
+  keywords:
+  - s_trigger
+- id: dm22rp2x-073
+  name: 首領のギフト
+  types:
+  - tamaseed
+  civs:
+  - nature
+  cost: 2
+  mana: 1
+  text: 'このタマシードが出た時、自分の手札を１枚、マナゾーンに置いてもよい。
+
+    シールド・セイバー（自分のシールドがブレイクされる時、かわりにこのタマシードを破壊してもよい）'
+  abilities:
+  - kind: trigger
+    when:
+      event: move
+      to: bz
+      subject: self
+    effect:
+    - op: may
+      body:
+      - op: mana_put
+        select:
+          zone: hand
+          owner: you
+          count: 1
+  source:
+    official: dm22rp2x-073
+    review: pending
+    aliases:
+    - dm22rp2-073
+  keywords:
+  - shield_saver
+- id: dm22rp2x-074
+  name: ブレスユー・トラップ
+  types:
+  - spell
+  civs:
+  - nature
+  cost: 3
+  mana: 1
+  text: 'S・トリガー（この呪文をシールドゾーンから手札に加える時、コストを支払わずにすぐ唱えてもよい）
+
+    パワー6000以下のクリーチャーを１体選び、持ち主のマナゾーンに置く。'
+  spell:
+  - op: move
+    select:
+      zone: bz
+      owner: any
+      filter:
+        types:
+        - creature
+        power_le: 6000
+      count: 1
+    to: mana
+    reason: put
+  source:
+    official: dm22rp2x-074
+    review: pending
+    aliases:
+    - dm22rp2-074
+  keywords:
+  - s_trigger
+- id: dm22rp2x-tf1
+  faces:
+  - name: 冥界の不死帝 ブルース
+    types:
+    - creature
+    civs:
+    - darkness
+    cost: 2
+    power: 13000
+    races:
+    - アウトレイジMAX
+    abilities:
+    - kind: static
+      if:
+        cmp:
+        - count:
+            zone: graveyard
+            owner: you
+        - <
+        - 13
+      mod:
+        deny:
+        - attack_player
+        - attack_creature
+    - kind: trigger
+      when:
+        event: turn_end
+      if:
+        is_turn: you
+      effect:
+      - op: may
+        body:
+        - op: mill
+          owner: you
+          count: 1
+  - name: 「迷いはない。俺の成すことは決まった」
+    types:
+    - spell
+    civs:
+    - darkness
+    cost: 3
+    spell:
+    - op: play_free
+      select:
+        zone: graveyard
+        owner: you
+        filter:
+          types:
+          - creature
+          cost_le: 3
+        count: 1
+  mana: 1
+  text: '冥界の不死帝 ブルース: 自分の墓地にあるカードが13枚より少なければ、このクリーチャーは攻撃できない。自分のターンの終わりに、自分の山札の上から１枚目を墓地に置いてもよい。／「迷いはない。俺の成すことは決まった」:
+    コスト３以下のクリーチャーを１体、自分の墓地から出す。'
+  source:
+    official: dm22rp2x-tf1
+    review: pending
+    notes: ツインパクト。入力データの呪文面の名前がクリーチャー面と重複していたため、カード名の後半を呪文面の名前にした
+    aliases:
+    - dm22rp1-t1
+    - dm22rp1-tf1
+    - dm22rp2-t1
+    - dm22rp2-tf1
+    - dmbd17-009
+- id: dm22rp2x-tf3
+  faces:
+  - name: ラ・ズーネヨマ・パンツァー
+    types:
+    - creature
+    civs:
+    - nature
+    cost: 4
+    power: 12000
+    races:
+    - グランセクト
+    keywords:
+    - cannot_attack_player
+    abilities:
+    - kind: trigger
+      when:
+        event: move
+        from: shield
+        subject:
+          owner: you
+      effect:
+      - op: mana_put
+        select:
+          zone: deck
+          owner: you
+          from_top: 1
+  - name: 逆転のオーロラ
+    types:
+    - spell
+    civs:
+    - nature
+    cost: 5
+    spell:
+    - op: move
+      select:
+        zone: shield
+        owner: you
+        count: any
+      to: mana
+      reason: put
+  mana: 1
+  text: 'ラ・ズーネヨマ・パンツァー: このクリーチャーは、相手プレイヤーを攻撃できない。カードが自分のシールドゾーンを離れた時、自分の山札の上から１枚目をマナゾーンに置く。／逆転のオーロラ:
+    自分のシールドを好きな数、マナゾーンに置く。'
+  source:
+    official: dm22rp2x-tf3
+    review: pending
+    notes: ツインパクト。ガードマンは既知キーワードとして自動注入される想定
+    aliases:
+    - dm22rp1-t4
+    - dm22rp1-tf4
+    - dm22rp2-t3
+    - dm22rp2-tf3
+    - dmex04-047
+- id: dm22rp2x-tf6
+  name: ジャスト・ラビリンス
+  types:
+  - spell
+  civs:
+  - light
+  cost: 2
+  mana: 1
+  text: 'S・トリガー（この呪文をシールドゾーンから手札に加える時、コストを支払わずにすぐ唱えてもよい）
+
+    自分のクリーチャーを好きな数、タップしてもよい。
+
+    自分のタップしているクリーチャー１体につき１枚、カードを引く。'
+  spell:
+  - op: choose
+    select:
+      zone: bz
+      owner: you
+      filter:
+        types:
+        - creature
+        tapped: false
+      count: any
+    as: t
+  - op: tap
+    select:
+      ref: t
+      count: all
+  - op: draw
+    count:
+      count:
+        ref: t
+  source:
+    official: dm22rp2x-tf6
+    review: pending
+    notes: 引く枚数はタップした集合の枚数を count 式で参照した
+    aliases:
+    - dm22rp1-t9
+    - dm22rp1-tf9
+    - dm22rp2-t6
+    - dm22rp2-tf6
+    - dmrp01-016
+    - dmsd10-012
+  keywords:
+  - s_trigger
+- id: dm22sd1-008
+  name: ルドルフ・カルナック
+  types:
+  - creature
+  civs:
+  - darkness
+  cost: 4
+  power: 3000
+  races:
+  - マフィ・ギャング
+  mana: 1
+  text: 'ブロッカー（このクリーチャーをタップして、相手クリーチャーの攻撃先をこのクリーチャーに変更してもよい）
+
+    このクリーチャーは攻撃できない。
+
+    このクリーチャーが出た時、自分のクリーチャーを１体破壊してもよい。そうしたら、カードを２枚引く。'
+  abilities:
+  - kind: trigger
+    when:
+      event: move
+      to: bz
+      subject: self
+    effect:
+    - op: may
+      body:
+      - op: choose
+        select:
+          zone: bz
+          owner: you
+          filter:
+            types:
+            - creature
+          count: 1
+        as: s
+      - op: destroy
+        select:
+          ref: s
+          count: all
+      - op: if
+        cond:
+          exists:
+            ref: s
+        then:
+        - op: draw
+          count: 2
+  source:
+    official: dm22sd1-008
+    review: pending
+    notes: 破壊した集合が変数に入った場合だけドローする
+    aliases:
+    - dmex07-011
+    - dmrp01-020
+  keywords:
+  - blocker
+  - cannot_attack
+- id: dm22sd1-009
+  name: 学校男
+  types:
+  - creature
+  civs:
+  - darkness
+  cost: 2
+  power: 8000
+  races:
+  - ヘドリアン
+  - エイリアン
+  mana: 1
+  text: 'W・ブレイカー（このクリーチャーはシールドを２つブレイクする）
+
+    このクリーチャーが出た時、自分のクリーチャーを２体破壊する。その後、相手は自身のクリーチャーを１体選んで破壊する。'
+  abilities:
+  - kind: trigger
+    when:
+      event: move
+      to: bz
+      subject: self
+    effect:
+    - op: destroy
+      select:
+        zone: bz
+        owner: you
+        filter:
+          types:
+          - creature
+        count: 2
+    - op: destroy
+      select:
+        zone: bz
+        owner: opp
+        chooser: opp
+        filter:
+          types:
+          - creature
+        count: 1
+  source:
+    official: dm22sd1-009
+    review: pending
+    notes: '相手の破壊は相手が選ぶ（chooser: opp）'
+    aliases:
+    - dmd24-022
+    - dmr07-013
+    - dmx16-027
+    - dmx22b-081
+  keywords:
+  - double_breaker
+- id: dm22sd1-011
+  name: 魔薬医 ヘモグロ
+  types:
+  - creature
+  civs:
+  - darkness
+  cost: 3
+  power: 1000
+  races:
+  - マフィ・ギャング
+  mana: 1
+  text: このクリーチャーが出た時、相手は自身の手札を１枚選んで捨てる。自分のターン中にこのクリーチャーが破壊された時、そのターンの終わりにこのクリーチャーを自分の墓地から出す。
+  abilities:
+  - kind: trigger
+    when:
+      event: move
+      to: bz
+      subject: self
+    effect:
+    - op: discard
+      select:
+        zone: hand
+        owner: opp
+        chooser: opp
+        count: 1
+  - kind: trigger
+    zone: graveyard
+    when:
+      event: move
+      to: graveyard
+      subject: self
+    if:
+      is_turn: you
+    effect:
+    - op: delayed_trigger
+      when:
+        event: turn_end
+      effect:
+      - op: move
+        select:
+          ref: self
+          count: 1
+        to: bz
+        reason: summon
+  source:
+    official: dm22sd1-011
+    review: pending
+    notes: ターン終了時の自己蘇生は delayed_trigger で仕掛けた
+    aliases:
+    - dmex02-035
+    - dmrp01-046
+- id: dm22sp2-004
+  name: 暴竜のギフト
+  types:
+  - tamaseed
+  civs:
+  - fire
+  cost: 3
+  mana: 1
+  text: 'このタマシードが出た時、相手の「ブロッカー」を持つクリーチャーを１体破壊する。
+
+    シールド・セイバー（自分のシールドがブレイクされる時、かわりにこのタマシードを破壊してもよい）'
+  abilities:
+  - kind: trigger
+    when:
+      event: move
+      to: bz
+      subject: self
+    effect:
+    - op: destroy
+      select:
+        zone: bz
+        owner: opp
+        filter:
+          types:
+          - creature
+          keyword: blocker
+        count: 1
+  source:
+    official: dm22sp2-004
+    review: pending
+    aliases:
+    - dm22rp2-068
+    - dm22rp2x-068
+  keywords:
+  - shield_saver
+- id: dm23-004
+  name: 闘龍騎リューガライザー
+  types:
+  - creature
+  civs:
+  - fire
+  cost: 5
+  power: 6000
+  races:
+  - アーマード・ドラゴン
+  - ティラノ・ドレイク
+  mana: 1
+  text: '相手が呪文を唱えた時、このクリーチャーをバトルゾーンから自分の手札に戻す。
+
+    W・ブレイカー(このクリーチャーはシールドを２枚ブレイクする)'
+  abilities:
+  - kind: trigger
+    when:
+      event: cast
+      subject:
+        owner: opp
+        filter:
+          types:
+          - spell
+    effect:
+    - op: move
+      select:
+        ref: self
+        count: 1
+      to: hand
+      reason: return
+  source:
+    official: dm23-004
+    review: pending
+  keywords:
+  - double_breaker
