@@ -92,6 +92,7 @@ def set_review(card_id: str, status: str, note: str = "", path: Path | None = No
     path を省くと、そのカードが書かれているファイル（real.yaml, converted.yaml など）を探す。"""
     if status not in REVIEW_STATES:
         raise ValueError(f"status must be one of {REVIEW_STATES}")
+    record = path is None          # 既定の場所のときだけ承認台帳にも残す
     path = path or locate_card(card_id)
     text = path.read_text(encoding="utf-8")
     m = re.search(rf"^ *- id: {re.escape(card_id)}\n.*?(?=^ *- id: |\Z)", text, re.S | re.M)
@@ -110,8 +111,14 @@ def set_review(card_id: str, status: str, note: str = "", path: Path | None = No
         block = block[:mm.start()] + f"{mm.group(1)}review: {status}" \
             + (f"\n{mm.group(1)}review_note: {q}" if note else "") + block[mm.end():]
     new = text[:m.start()] + block + text[m.end():]
-    yaml.safe_load(new)            # 壊していないことを確かめてから書く
+    doc = yaml.safe_load(new)      # 壊していないことを確かめてから書く
     path.write_text(new, encoding="utf-8")
+    if record:
+        from . import approval
+        raw = next(c for c in doc["cards"] if c["id"] == card_id)
+        led = approval.load()
+        led[card_id] = approval.entry(raw, status, "human", approval.vocab_versions(), **({"note": note} if note else {}))
+        approval.save(led)
 
 
 # ---- 対戦セッション ---------------------------------------------------------------------------
