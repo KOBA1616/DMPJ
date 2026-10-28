@@ -51640,7 +51640,7 @@ cards:
   source:
     official: dm07-012
     review: pending
-    notes: ステルスは keyword_patterns（stealth_*）の定義どおり。相手のマナゾーンにその文明のカードが1枚でもあればブロックされない（厳密一致）
+    notes: 光ステルス（相手のマナゾーンに光のカードがあればブロックされない）はキーワード語彙に無いため、条件つき常在型能力として原文どおりに書いた（近似ではなくステルスの定義そのもの）
     aliases:
     - promoy2-018
   keywords:
@@ -51703,7 +51703,7 @@ cards:
   source:
     official: dm07-015
     review: pending
-    notes: ステルスは keyword_patterns（stealth_*）の定義どおり。相手のマナゾーンにその文明のカードが1枚でもあればブロックされない（厳密一致）
+    notes: 水ステルス（相手のマナゾーンに水のカードがあればブロックされない）を dm07-012 光ステルスと同じ形で書いた
     aliases:
     - promoy2-012
   keywords:
@@ -51757,7 +51757,7 @@ cards:
   source:
     official: dm07-018
     review: pending
-    notes: ステルスは keyword_patterns（stealth_*）の定義どおり。相手のマナゾーンにその文明のカードが1枚でもあればブロックされない（厳密一致）
+    notes: 闇ステルスを dm07-012 と同じ形で書いた。進化元は原文表記「ツリー・フォーク」だが種族名はカード自身の表記（ツリーフォーク）にそろえた
   keywords:
   - double_breaker
 - id: dm07-019
@@ -51973,7 +51973,7 @@ cards:
   source:
     official: dm07-036
     review: pending
-    notes: ステルスは keyword_patterns（stealth_*）の定義どおり。相手のマナゾーンにその文明のカードが1枚でもあればブロックされない（厳密一致）
+    notes: 闇ステルスを dm07-012 と同じ形で書いた（原文はステルスの定義文つき）
 - id: dm07-037
   name: 捕縛の使徒ローム
   types:
@@ -52062,7 +52062,7 @@ cards:
   source:
     official: dm07-045
     review: pending
-    notes: ステルスは keyword_patterns（stealth_*）の定義どおり。相手のマナゾーンにその文明のカードが1枚でもあればブロックされない（厳密一致）
+    notes: 自然ステルスを dm07-012 と同じ形で書いた
 - id: dm07-047
   name: バキューム・ジェル
   types:
@@ -52170,7 +52170,7 @@ cards:
   source:
     official: dm07-050
     review: pending
-    notes: ステルスは keyword_patterns（stealth_*）の定義どおり。相手のマナゾーンにその文明のカードが1枚でもあればブロックされない（厳密一致）
+    notes: 光ステルスを dm07-012 と同じ形で書いた
 - id: dm07-052
   name: 撃墜するスティンガー・ホーン
   types:
@@ -52212,7 +52212,7 @@ cards:
   source:
     official: dm07-052
     review: pending
-    notes: ステルスは keyword_patterns（stealth_*）の定義どおり。相手のマナゾーンにその文明のカードが1枚でもあればブロックされない（厳密一致）
+    notes: 水ステルスを dm07-015 と同じ形で書いた
 - id: dm07-054
   name: ランチャー・スパイダー
   types:
@@ -53809,27 +53809,35 @@ cards:
       to: bz
       subject: self
     effect:
-    - op: together
-      body:
-      - op: move
-        select:
-          zone: mana
-          owner: you
-          count: all
-        to: hand
-        reason: return
-      - op: move
-        select:
-          zone: hand
-          owner: you
-          count: all
-        to: mana
-        reason: put
-        tapped: true
+    - op: choose
+      select:
+        zone: mana
+        owner: you
+        count: all
+      as: m
+    - op: move
+      select:
+        zone: hand
+        owner: you
+        count: all
+      to: mana
+      reason: put
+    - op: move
+      select:
+        ref: m
+        count: all
+      to: hand
+      reason: return
+    - op: tap
+      select:
+        zone: mana
+        owner: you
+        count: all
   source:
     official: dm10-007
     review: pending
-    notes: '「同時に」を op: together（移動対象を先にすべて決め、1つのイベントの束で同時に動かす）で書いた。手札からマナへは tapped: true でタップして置く'
+    notes: 「同時に入れ替え」を、(1)元のマナを変数 m に保持 (2)手札をすべてマナへ (3)m を手札へ戻す (4)マナに残った=元の手札だけをタップ、の順で再現した。swap
+      op は革命チェンジ専用なので使っていない
   keywords:
   - double_breaker
 - id: dm10-019
@@ -57419,16 +57427,23 @@ cards:
 
     このクリーチャーは、相手プレイヤーを攻撃できない。'
   abilities:
-  - kind: static
-    affects: self
-    mod:
-      battle_power:
-        amount: 3000
-        only: blocking
+  - kind: trigger
+    when:
+      event: block
+      subject: self
+    effect:
+    - op: modify
+      select:
+        ref: self
+        count: 1
+      mod:
+        power: 3000
+      duration: end_of_turn
   source:
     official: dm14-072
     review: pending
-    notes: '「ブロック中、パワー+3000」は battle_power（only: blocking）で、ブロックしたクリーチャーとしてバトルする間だけ効く。ブロック誘発でターン終了まで上げる形にはしていない'
+    notes: battle_power（only なし）は自分が攻撃するバトルにも効いてしまうため、ブロック時の誘発でターン終了時まで上げる形にした（dm13-037
+      ドーベルと同じ）。パワーが要るのはそのバトルの間だけなので結果は一致する
   keywords:
   - blocker
   - cannot_attack_player
@@ -63425,23 +63440,880 @@ cards:
     notes: dm18-030 と同じ（ブレイクでない移動では S・トリガーは発動しない）
   keywords:
   - double_breaker
-- id: dm06-003
-  name: エウロピカ
+- id: dm20-022
+  name: キャプテン・ジャイロ
+  types:
+  - creature
+  civs:
+  - light
+  cost: 3
+  power: 2000
+  races:
+  - キカイヒーロー
+  mana: 1
+  text: 自分のグレートメカオーがバトルに勝った時、このクリーチャーをタップしてもよい。そうした場合、その勝ったグレートメカオーをアンタップする。
+  abilities:
+  - kind: trigger
+    when:
+      event: battle_win
+      subject:
+        owner: you
+        filter:
+          races:
+          - グレートメカオー
+    effect:
+    - op: may
+      body:
+      - op: tap
+        select:
+          ref: self
+          count: 1
+      - op: untap
+        select:
+          ref: subject
+          count: 1
+  source:
+    official: dm20-022
+    review: pending
+    notes: '勝ったグレートメカオーはイベントの subject を ref: subject で参照した（変換済みカードに前例あり）'
+- id: dm20-026
+  name: 深海メカ・オーシャーン
   types:
   - creature
   civs:
   - water
+  cost: 3
+  power: 3000
+  races:
+  - グレートメカオー
+  mana: 1
+  text: 'ブロッカー(相手クリーチャーが攻撃する時、このクリーチャーをタップして、その攻撃を阻止してもよい。その後、その相手クリーチャーとバトルする)
+
+    このクリーチャーは攻撃することができない。
+
+    相手のクリーチャーが自分を攻撃してブロックされなかった時、このクリーチャーをアンタップしてもよい。'
+  abilities:
+  - kind: trigger
+    when:
+      event: break
+      player: you
+    effect:
+    - op: may
+      body:
+      - op: untap
+        select:
+          ref: self
+          count: 1
+  source:
+    official: dm20-026
+    review: pending
+    notes: dm19-085 ウェバリスと同じく自分の break イベントで照合した
+  keywords:
+  - blocker
+  - cannot_attack
+- id: dm20-030
+  name: スカイチーフ・ハッチン
+  types:
+  - creature
+  civs:
+  - fire
+  cost: 6
+  power: 5000
+  races:
+  - ビークル・ビー
+  mana: 1
+  text: 自分のドリームメイトがバトルに勝った時、バトルゾーンにある自分のクリーチャー１体は、そのターンの終わりまで「スピードアタッカー」と「W・ブレイカー」を得る。
+  abilities:
+  - kind: trigger
+    when:
+      event: battle_win
+      subject:
+        owner: you
+        filter:
+          races:
+          - ドリームメイト
+    effect:
+    - op: modify
+      select:
+        zone: bz
+        owner: you
+        filter:
+          types:
+          - creature
+        count: 1
+      mod:
+        grant:
+        - speed_attacker
+        - double_breaker
+      duration: end_of_turn
+  source:
+    official: dm20-030
+    review: pending
+    notes: 勝ったドリームメイト自身も対象に選べる。説明文は text から省いた
+- id: dm20-038
+  name: キャプテン・スーパーレスキュー
+  types:
+  - creature
+  civs:
+  - light
+  cost: 3
+  power: 2000
+  races:
+  - キカイヒーロー
+  mana: 1
+  text: セイバー：グレートメカオー(自分のグレートメカオー１体が破壊される時、このクリーチャーをかわりに破壊してもよい)
+  abilities:
+  - kind: replace
+    optional: true
+    when:
+      event: move
+      to: graveyard
+      reason: destroy
+      subject:
+        owner: you
+        filter:
+          races:
+          - グレートメカオー
+        other: true
+    instead:
+    - op: destroy
+      select:
+        ref: self
+        count: 1
+  source:
+    official: dm20-038
+    review: pending
+    notes: セイバーは dm05-050 と同じ置換の形
+- id: dm20-039
+  name: 白金の守護者ラ・ブール
+  types:
+  - creature
+  civs:
+  - light
+  cost: 1
+  power: 3000
+  races:
+  - ガーディアン
+  mana: 1
+  text: 'ブロッカー(相手クリーチャーが攻撃する時、このクリーチャーをタップして、その攻撃を阻止してもよい。その後、その相手クリーチャーとバトルする)
+
+    このクリーチャーは、パワー2000以下のクリーチャーをブロックできない。
+
+    このクリーチャーは、相手プレイヤーを攻撃できない。'
+  abilities:
+  - kind: static
+    affects: self
+    mod:
+      deny:
+      - action: block
+        other:
+          types:
+          - creature
+          power_le: 2000
+  source:
+    official: dm20-039
+    review: pending
+    notes: block アクションは other に攻撃側を取る（permissions.yaml）ので、パワー2000以下の攻撃側をブロックできない形になる
+  keywords:
+  - blocker
+  - cannot_attack_player
+- id: dm20-041
+  name: ウェービング・アルゴルス
+  types:
+  - creature
+  civs:
+  - water
+  cost: 3
+  power: 2000
+  races:
+  - ディープ・マリーン
+  mana: 1
+  text: 自分のグランド・デビルがバトルに勝った時、カードを１枚引いてもよい。
+  abilities:
+  - kind: trigger
+    when:
+      event: battle_win
+      subject:
+        owner: you
+        filter:
+          races:
+          - グランド・デビル
+    effect:
+    - op: may
+      body:
+      - op: draw
+        count: 1
+  source:
+    official: dm20-041
+    review: pending
+    notes: 原文のタイプ表記の文字化け（クリー���ャー）は補った
+- id: dm20-045
+  name: 封魔ヴァルフォーグ
+  types:
+  - creature
+  civs:
+  - darkness
+  cost: 4
+  power: 2000
+  races:
+  - グランド・デビル
+  mana: 1
+  text: 'ブロッカー(相手クリーチャーが攻撃する時、このクリーチャーをタップして、その攻撃を阻止してもよい。その後、その相手クリーチャーとバトルする)
+
+    このクリーチャーは攻撃することができない。
+
+    このクリーチャーがブロックする時、相手は自分自身の手札を１枚選んで捨てる。'
+  abilities:
+  - kind: trigger
+    when:
+      event: block
+      subject: self
+    effect:
+    - op: discard
+      select:
+        zone: hand
+        owner: opp
+        chooser: opp
+        count: 1
+  source:
+    official: dm20-045
+    review: pending
+    notes: block イベントの subject はブロッカー自身
+  keywords:
+  - blocker
+  - cannot_attack
+- id: dm20-047
+  name: 封魔ジョーズジャクス
+  types:
+  - creature
+  civs:
+  - darkness
+  cost: 2
+  power: 1000
+  races:
+  - グランド・デビル
+  mana: 1
+  text: 'スレイヤー(このクリーチャーがバトルする時、バトルの後、相手クリーチャーを破壊する)
+
+    このクリーチャーが破壊された時、自分の手札を１枚捨てる。'
+  abilities:
+  - kind: trigger
+    zone: graveyard
+    when:
+      event: move
+      to: graveyard
+      reason: destroy
+      subject: self
+    effect:
+    - op: discard
+      select:
+        zone: hand
+        owner: you
+        count: 1
+  source:
+    official: dm20-047
+    review: pending
+  keywords:
+  - slayer
+- id: dm20-051
+  name: 吸炎掌
+  types:
+  - spell
+  civs:
+  - fire
+  cost: 4
+  mana: 1
+  text: 相手のパワー2000以下のクリーチャーを１体破壊する。バトルゾーンにある自分のクリーチャー１体は、このターンの終わりまで「パワーアタッカー+2000」を得る。
+  spell:
+  - op: destroy
+    select:
+      zone: bz
+      owner: opp
+      filter:
+        types:
+        - creature
+        power_le: 2000
+      count: 1
+  - op: modify
+    select:
+      zone: bz
+      owner: you
+      filter:
+        types:
+        - creature
+      count: 1
+    mod:
+      battle_power:
+        amount: 2000
+        only: attacking
+    duration: end_of_turn
+  source:
+    official: dm20-051
+    review: pending
+    notes: 説明文は text から省いた
+- id: dm20-054
+  name: バンダム・オレンジ
+  types:
+  - creature
+  civs:
+  - nature
+  cost: 2
+  power: 1000
+  races:
+  - ワイルド・ベジーズ
+  mana: 1
+  text: 自分のワイルド・ベジーズをマナゾーンに置いた時、そのターンの終わりまでこのクリーチャーのパワーは+2000される。
+  abilities:
+  - kind: trigger
+    when:
+      event: move
+      to: mana
+      subject:
+        owner: you
+        filter:
+          races:
+          - ワイルド・ベジーズ
+    effect:
+    - op: modify
+      select:
+        ref: self
+        count: 1
+      mod:
+        power: 2000
+      duration: end_of_turn
+  source:
+    official: dm20-054
+    review: pending
+- id: dm21-007
+  name: 霊騎アガジム
+  types:
+  - creature
+  civs:
+  - light
+  cost: 6
+  power: 4500
+  races:
+  - アーク・セラフィム
+  mana: 1
+  text: このクリーチャーが攻撃する時、バトルゾーンにある自分のセイント・ヘッドをすべてアンタップする。
+  abilities:
+  - kind: trigger
+    when:
+      event: attack
+      subject: self
+    effect:
+    - op: untap
+      select:
+        zone: bz
+        owner: you
+        filter:
+          races:
+          - セイント・ヘッド
+        count: all
+  source:
+    official: dm21-007
+    review: pending
+- id: dm21-013
+  name: 魔塊流ギガンドル
+  types:
+  - creature
+  civs:
+  - darkness
+  cost: 5
+  power: 7000
+  races:
+  - グランド・デビル
+  - ディープ・マリーン
+  mana: 1
+  text: 'このクリーチャーをバトルゾーンに出した時、自分の山札の上から３枚を表向きにする。その中にあるすべてのグランド・デビルとディープ・マリーンを自分の墓地に置き、残りを好きな順序で山札の一番下に戻す。表向きにしたカードの中にグランド・デビルまたはディープ・マリーンがなければ、このクリーチャーを破壊する。
+
+    W・ブレイカー(このクリーチャーはシールドを２枚ブレイクする)'
+  abilities:
+  - kind: trigger
+    when:
+      event: move
+      to: bz
+      subject: self
+    effect:
+    - op: choose
+      select:
+        zone: deck
+        owner: you
+        from_top: 3
+        look: true
+        count: all
+      as: pile
+    - op: choose
+      select:
+        ref: pile
+        filter:
+          races:
+          - グランド・デビル
+          - ディープ・マリーン
+        count: all
+      as: hit
+    - op: move
+      select:
+        ref: hit
+        count: all
+      to: graveyard
+      reason: put
+    - op: move
+      select:
+        ref: pile
+        count: all
+      to: deck
+      reason: put
+    - op: if
+      cond:
+        not:
+          exists:
+            ref: hit
+      then:
+      - op: destroy
+        select:
+          ref: self
+          count: 1
+  source:
+    official: dm21-013
+    review: pending
+    notes: 該当種族を変数 hit に分けて墓地へ送り、hit が空なら自壊する分岐にした
+  keywords:
+  - double_breaker
+- id: dm20-s02
+  name: 無敵巨兵オメガブラックZ
+  types:
+  - creature
+  - evolution
+  civs:
+  - water
+  cost: 6
+  power: 7000
+  races:
+  - グレートメカオー
+  mana: 1
+  evolve_from:
+    races:
+    - グレートメカオー
+  text: '進化-自分のグレートメカオー１体の上に置く。
+
+    このクリーチャーが攻撃する時、自分の山札の上から４枚を表向きにしてもよい。その中からグレートメカオー１体とキカイヒーロー１体を手札に加え、残りを好きな順序で山札の一番下に戻す。
+
+    W・ブレイカー'
+  abilities:
+  - kind: trigger
+    when:
+      event: attack
+      subject: self
+    effect:
+    - op: may
+      body:
+      - op: choose
+        select:
+          zone: deck
+          owner: you
+          from_top: 4
+          look: true
+          count: all
+        as: pile
+      - op: move
+        select:
+          ref: pile
+          filter:
+            races:
+            - グレートメカオー
+          count: 1
+        to: hand
+        reason: return
+      - op: move
+        select:
+          ref: pile
+          filter:
+            races:
+            - キカイヒーロー
+          count: 1
+        to: hand
+        reason: return
+      - op: move
+        select:
+          ref: pile
+          count: all
+        to: deck
+        reason: put
+  source:
+    official: dm20-s02
+    review: pending
+    notes: 表向きにした4枚を変数に保持し、種族ごとに1枚ずつ手札へ、残りは山札の一番下へ（move to deck は一番下）
+  keywords:
+  - double_breaker
+- id: dm21-006
+  name: 聖霊提督セフィア・パルテノン
+  types:
+  - creature
+  civs:
+  - light
   cost: 7
+  power: 5000
+  races:
+  - アーク・セラフィム
+  - セイント・ヘッド
+  mana: 1
+  text: このクリーチャーをバトルゾーンに出した時、自分の山札の上から３枚を表向きにする。その中にあるすべてのアーク・セラフィムとセイント・ヘッドを自分の手札に加え、残りを好きな順序で山札の一番下に戻す。相手のターン中にこのクリーチャーが手札から捨てられる時、墓地に置くかわりにバトルゾーンに出してもよい。
+  abilities:
+  - kind: trigger
+    when:
+      event: move
+      to: bz
+      subject: self
+    effect:
+    - op: choose
+      select:
+        zone: deck
+        owner: you
+        from_top: 3
+        look: true
+        count: all
+      as: pile
+    - op: move
+      select:
+        ref: pile
+        filter:
+          races:
+          - アーク・セラフィム
+          - セイント・ヘッド
+        count: all
+      to: hand
+      reason: return
+    - op: move
+      select:
+        ref: pile
+        count: all
+      to: deck
+      reason: put
+  - kind: replace
+    zone: hand
+    optional: true
+    when:
+      event: move
+      to: graveyard
+      reason: discard
+      subject: self
+    if:
+      is_turn: opp
+    instead:
+    - op: move
+      select:
+        ref: self
+        count: 1
+      to: bz
+      reason: summon
+  source:
+    official: dm21-006
+    review: pending
+    notes: '捨てられる時の置換は zone: hand の replace で、instead でバトルゾーンへ出す形にした'
+- id: dm21-015
+  name: 炎竜提督ガウスブレイザー
+  types:
+  - creature
+  civs:
+  - fire
+  cost: 7
+  power: 5000
+  races:
+  - ティラノ・ドレイク
+  - ブレイブ・スピリット
+  mana: 1
+  text: このクリーチャーをバトルゾーンに出した時、自分の山札の上から３枚を表向きにする。その中にあるすべてのティラノ・ドレイクとブレイブ・スピリットを自分の手札に加え、残りを好きな順序で山札の一番下に戻す。相手のターン中にこのクリーチャーが手札から捨てられる時、墓地に置くかわりにバトルゾーンに出してもよい。
+  abilities:
+  - kind: trigger
+    when:
+      event: move
+      to: bz
+      subject: self
+    effect:
+    - op: choose
+      select:
+        zone: deck
+        owner: you
+        from_top: 3
+        look: true
+        count: all
+      as: pile
+    - op: move
+      select:
+        ref: pile
+        filter:
+          races:
+          - ティラノ・ドレイク
+          - ブレイブ・スピリット
+        count: all
+      to: hand
+      reason: return
+    - op: move
+      select:
+        ref: pile
+        count: all
+      to: deck
+      reason: put
+  - kind: replace
+    zone: hand
+    optional: true
+    when:
+      event: move
+      to: graveyard
+      reason: discard
+      subject: self
+    if:
+      is_turn: opp
+    instead:
+    - op: move
+      select:
+        ref: self
+        count: 1
+      to: bz
+      reason: summon
+  source:
+    official: dm21-015
+    review: pending
+    notes: dm21-006 パルテノンと同じ2能力の組み合わせ
+- id: dm21-020
+  name: ドリーム・リンク・ファーム
+  types:
+  - spell
+  civs:
+  - nature
+  cost: 6
+  mana: 1
+  text: 自分の山札の上から２枚を、自分のマナゾーンに置く。
+  abilities:
+  - kind: static
+    zone: hand
+    affects: self
+    mod:
+      cost:
+        amount: -1
+        count:
+          zone: bz
+          owner: you
+          filter:
+            races:
+            - ドリームメイト
+            - ビークル・ビー
+      cost_min: 1
+  spell:
+  - op: mana_put
+    select:
+      zone: deck
+      owner: you
+      from_top: 2
+  source:
+    official: dm21-020
+    review: pending
+    notes: 'シンパシーは static（zone: hand）の cost で表した（下限は原文どおり1）'
+- id: dm21-021
+  name: 戦域の守護者リーン・イグナス
+  types:
+  - creature
+  civs:
+  - light
+  cost: 5
+  power: 6000
+  races:
+  - ガーディアン
+  mana: 1
+  text: 'ブロッカー
+
+    このクリーチャーをバトルゾーンに出した時、次の自分のターンのはじめまで、バトルゾーンにある自分の「ブロッカー」を持つクリーチャーすべてのパワーは+4000される。
+
+    このクリーチャーは、相手プレイヤーを攻撃できない。'
+  abilities:
+  - kind: trigger
+    when:
+      event: move
+      to: bz
+      subject: self
+    effect:
+    - op: modify
+      select:
+        zone: bz
+        owner: you
+        filter:
+          types:
+          - creature
+          keyword: blocker
+        count: all
+      mod:
+        power: 4000
+      duration: until_next_own_turn_start
+  source:
+    official: dm21-021
+    review: pending
+  keywords:
+  - blocker
+  - cannot_attack_player
+- id: dm21-022
+  name: 城壁の守護者パルディオ
+  types:
+  - creature
+  civs:
+  - light
+  cost: 4
+  power: 3000
+  races:
+  - ガーディアン
+  mana: 1
+  text: 相手のターン中、バトルゾーンにある自分のクリーチャーすべてのパワーは+1000される。
+  abilities:
+  - kind: static
+    affects:
+      owner: you
+      filter:
+        types:
+        - creature
+    if:
+      is_turn: opp
+    mod:
+      power: 1000
+  source:
+    official: dm21-022
+    review: pending
+- id: dm21-023
+  name: 秘護精ヴィノゴート
+  types:
+  - creature
+  civs:
+  - light
+  cost: 3
+  power: 1000
+  races:
+  - セイント・ヘッド
+  mana: 1
+  text: 'S・トリガー
+
+    このクリーチャーをバトルゾーンに出した時、バトルゾーンに自分のアーク・セラフィムが１体でもあれば、バトルゾーンにある相手のクリーチャーを１体選ぶ。次の自分のターンのはじめまで、そのクリーチャーは攻撃することができない。'
+  abilities:
+  - kind: trigger
+    when:
+      event: move
+      to: bz
+      subject: self
+    if:
+      exists:
+        zone: bz
+        owner: you
+        filter:
+          races:
+          - アーク・セラフィム
+    effect:
+    - op: modify
+      select:
+        zone: bz
+        owner: opp
+        filter:
+          types:
+          - creature
+        count: 1
+      mod:
+        deny:
+        - attack_player
+        - attack_creature
+      duration: until_next_own_turn_start
+  source:
+    official: dm21-023
+    review: pending
+  keywords:
+  - s_trigger
+- id: dm21-024
+  name: 装甲支援ガトリンガー
+  types:
+  - creature
+  civs:
+  - water
+  cost: 6
   power: 4000
   races:
-  - シー・ハッカー
+  - グレートメカオー
   mana: 1
-  text: このクリーチャーで攻撃する代わりに、タップして次の能力を使ってもよい。 / バトルゾーンにあるクリーチャーを１体選び、持ち主の手札に戻す。
+  text: このクリーチャーをバトルゾーンに出した時、バトルゾーンにある自分のキカイヒーロー１体につきカードを１枚引いてもよい。
   abilities:
-  - kind: activate
-    cost:
-      tap: self
+  - kind: trigger
+    when:
+      event: move
+      to: bz
+      subject: self
     effect:
+    - op: repeat
+      times:
+        count:
+          zone: bz
+          owner: you
+          filter:
+            races:
+            - キカイヒーロー
+      body:
+      - op: may
+        body:
+        - op: draw
+          count: 1
+  source:
+    official: dm21-024
+    review: pending
+    notes: 「1体につき1枚引いてもよい」は repeat + may で1枚ごとに任意にした
+- id: dm21-025
+  name: リリィアン・カシオス
+  types:
+  - creature
+  civs:
+  - water
+  cost: 3
+  power: 1000
+  races:
+  - ディープ・マリーン
+  mana: 1
+  text: このクリーチャーをバトルゾーンに出した時、カードを１枚引く。その後、手札を１枚自分の山札の一番上に置く。
+  abilities:
+  - kind: trigger
+    when:
+      event: move
+      to: bz
+      subject: self
+    effect:
+    - op: draw
+      count: 1
+    - op: move
+      select:
+        zone: hand
+        owner: you
+        count: 1
+      to: deck
+      reason: put
+      position: top
+  source:
+    official: dm21-025
+    review: pending
+- id: dm21-026
+  name: エナジー・スパイラル
+  types:
+  - spell
+  civs:
+  - water
+  cost: 3
+  mana: 1
+  text: 'S・トリガー
+
+    バトルゾーンに自分のグレートメカオーが１体でもあれば、バトルゾーンにあるクリーチャーを１体選び、持ち主の手札に戻す。
+
+    バトルゾーンに自分のキカイヒーローが１体でもあれば、カードを１枚引いてもよい。'
+  spell:
+  - op: if
+    cond:
+      exists:
+        zone: bz
+        owner: you
+        filter:
+          races:
+          - グレートメカオー
+    then:
     - op: bounce
       select:
         zone: bz
@@ -63450,53 +64322,751 @@ cards:
           types:
           - creature
         count: 1
+  - op: if
+    cond:
+      exists:
+        zone: bz
+        owner: you
+        filter:
+          races:
+          - キカイヒーロー
+    then:
+    - op: may
+      body:
+      - op: draw
+        count: 1
   source:
-    official: dm06-003
+    official: dm21-026
     review: pending
-    notes: '厳密一致。タップ能力は kind: activate（602.3a）'
-- id: dm06-047
-  name: シャインシェル・クラスター
+  keywords:
+  - s_trigger
+- id: dm21-028
+  name: 封魔ザレオス
   types:
   - creature
   civs:
-  - water
-  cost: 7
-  power: 4000
+  - darkness
+  cost: 5
+  power: 2000
   races:
-  - サイバー・クラスター
+  - グランド・デビル
   mana: 1
-  text: このクリーチャーで攻撃する代わりに、タップして次の能力を使ってもよい。 / カードを２枚引く。
+  text: 自分のディープ・マリーンが破壊された時、相手は自分自身のクリーチャーを１体選び、破壊する。
   abilities:
-  - kind: activate
-    cost:
-      tap: self
+  - kind: trigger
+    when:
+      event: move
+      to: graveyard
+      reason: destroy
+      subject:
+        owner: you
+        filter:
+          races:
+          - ディープ・マリーン
     effect:
-    - op: draw
-      count: 2
+    - op: destroy
+      select:
+        zone: bz
+        owner: opp
+        chooser: opp
+        filter:
+          types:
+          - creature
+        count: 1
   source:
-    official: dm06-047
+    official: dm21-028
     review: pending
-    notes: 厳密一致
-    aliases:
-    - promoy2-004
-- id: dm06-071
-  name: 鋭刃の使徒グーレ・チェーン
+    notes: '破壊する対象は相手が選ぶ（chooser: opp）'
+- id: dm21-031
+  name: 激竜凰ドランベルク
+  types:
+  - creature
+  - evolution
+  civs:
+  - fire
+  cost: 4
+  power: 3000
+  races:
+  - ティラノ・ドレイク
+  mana: 1
+  evolve_from:
+    races:
+    - ティラノ・ドレイク
+  text: '進化-自分のティラノ・ドレイク１体の上に置く。
+
+    バトルゾーンにある自分のティラノ・ドレイクとブレイブ・スピリットはすべて「パワーアタッカー+4000」を得る。
+
+    W・ブレイカー(このクリーチャーはシールドを２枚ブレイクする)'
+  abilities:
+  - kind: static
+    affects:
+      owner: you
+      filter:
+        races:
+        - ティラノ・ドレイク
+        - ブレイブ・スピリット
+    mod:
+      battle_power:
+        amount: 4000
+        only: attacking
+  source:
+    official: dm21-031
+    review: pending
+    notes: 説明文は text から省いた
+  keywords:
+  - double_breaker
+- id: dm21-032
+  name: 超獣大砲
+  types:
+  - spell
+  civs:
+  - fire
+  cost: 3
+  mana: 1
+  text: 'S・トリガー(この呪文をシールドゾーンから手札に加える時、コストを支払わずにすぐ唱えてもよい)
+
+    自分のクリーチャーを１体破壊してもよい。そうした場合、相手のパワー7000以下のクリーチャーを１体破壊する。'
+  spell:
+  - op: choose
+    select:
+      zone: bz
+      owner: you
+      filter:
+        types:
+        - creature
+      count: 1
+      up_to: true
+    as: sac
+  - op: destroy
+    select:
+      ref: sac
+      count: all
+  - op: if
+    cond:
+      exists:
+        ref: sac
+    then:
+    - op: destroy
+      select:
+        zone: bz
+        owner: opp
+        filter:
+          types:
+          - creature
+          power_le: 7000
+        count: 1
+  source:
+    official: dm21-032
+    review: pending
+    notes: 「破壊してもよい」は up_to で選び、選んだ場合だけ（変数 sac が空でない）相手側の破壊を行う
+  keywords:
+  - s_trigger
+- id: dm21-036
+  name: キャプテン・ハッスル
   types:
   - creature
   civs:
   - light
-  cost: 5
+  cost: 3
   power: 2000
   races:
-  - イニシエート
+  - キカイヒーロー
   mana: 1
-  text: このクリーチャーで攻撃する代わりに、タップして次の能力を使ってもよい。 / バトルゾーンにある相手のクリーチャーを１体選び、タップする。
+  text: バトルゾーンに自分のグレートメカオーが１体でもあれば、このクリーチャーのパワーは+2000される。
   abilities:
-  - kind: activate
-    cost:
-      tap: self
+  - kind: static
+    affects: self
+    if:
+      exists:
+        zone: bz
+        owner: you
+        filter:
+          races:
+          - グレートメカオー
+    mod:
+      power: 2000
+  source:
+    official: dm21-036
+    review: pending
+    notes: 原文の文字化け（自��）は補った
+- id: dm21-039
+  name: ウィザード・リザレクション
+  types:
+  - spell
+  civs:
+  - light
+  cost: 3
+  mana: 1
+  text: 'S・トリガー(この呪文をシールドゾーンから手札に加える時、コストを支払わずにすぐ唱えてもよい)
+
+    自分の山札の上から１枚目を自分のマナゾーンに置く。その後、呪文を１枚、自分のマナゾーンから手札に戻す。'
+  spell:
+  - op: mana_put
+    select:
+      zone: deck
+      owner: you
+      from_top: 1
+  - op: move
+    select:
+      zone: mana
+      owner: you
+      filter:
+        types:
+        - spell
+      count: 1
+    to: hand
+    reason: return
+  source:
+    official: dm21-039
+    review: pending
+  keywords:
+  - s_trigger
+- id: dm21-040
+  name: アクア・ウォリアー
+  types:
+  - creature
+  civs:
+  - water
+  cost: 4
+  power: 1000
+  races:
+  - リキッド・ピープル
+  mana: 1
+  text: このクリーチャーが破壊された時、カードを２枚まで引く。
+  abilities:
+  - kind: trigger
+    zone: graveyard
+    when:
+      event: move
+      to: graveyard
+      reason: destroy
+      subject: self
+    effect:
+    - op: repeat
+      times: 2
+      body:
+      - op: may
+        body:
+        - op: draw
+          count: 1
+  source:
+    official: dm21-040
+    review: pending
+    notes: 「2枚まで引く」は repeat 2 + may draw
+- id: dm21-041
+  name: ラディアック・ガルクス
+  types:
+  - creature
+  civs:
+  - water
+  cost: 3
+  power: 2000
+  races:
+  - ディープ・マリーン
+  mana: 1
+  text: バトルゾーンに自分のグランド・デビルが１体でもあれば、このクリーチャーのパワーは+2000される。
+  abilities:
+  - kind: static
+    affects: self
+    if:
+      exists:
+        zone: bz
+        owner: you
+        filter:
+          races:
+          - グランド・デビル
+    mod:
+      power: 2000
+  source:
+    official: dm21-041
+    review: pending
+- id: dm21-045
+  name: 恐劇人形ワラニン
+  types:
+  - creature
+  civs:
+  - darkness
+  cost: 4
+  power: 1000
+  races:
+  - デスパペット
+  mana: 1
+  text: このクリーチャーが破壊された時、相手の手札を２枚見ないで選び、捨てさせる。
+  abilities:
+  - kind: trigger
+    zone: graveyard
+    when:
+      event: move
+      to: graveyard
+      reason: destroy
+      subject: self
+    effect:
+    - op: discard
+      select:
+        zone: hand
+        owner: opp
+        count: 2
+  source:
+    official: dm21-045
+    review: pending
+    notes: 見ないで選ぶので look は付けない
+- id: dm21-046
+  name: 爆炎のゴーバウダン
+  types:
+  - creature
+  civs:
+  - darkness
+  cost: 3
+  power: 2000
+  races:
+  - ブレイブ・スピリット
+  mana: 1
+  text: バトルゾーンに自分のティラノ・ドレイクが１体でもあれば、このクリーチャーのパワーは+2000される。
+  abilities:
+  - kind: static
+    affects: self
+    if:
+      exists:
+        zone: bz
+        owner: you
+        filter:
+          races:
+          - ティラノ・ドレイク
+    mod:
+      power: 2000
+  source:
+    official: dm21-046
+    review: pending
+- id: dm21-050
+  name: テクテク・アリンコン
+  types:
+  - creature
+  civs:
+  - fire
+  cost: 3
+  power: 2000
+  races:
+  - ビークル・ビー
+  mana: 1
+  text: バトルゾーンに自分のドリームメイトが１体でもあれば、このクリーチャーのパワーは+2000される。
+  abilities:
+  - kind: static
+    affects: self
+    if:
+      exists:
+        zone: bz
+        owner: you
+        filter:
+          races:
+          - ドリームメイト
+    mod:
+      power: 2000
+  source:
+    official: dm21-050
+    review: pending
+- id: dm21-051
+  name: 竜音のキラ
+  types:
+  - creature
+  civs:
+  - fire
+  cost: 3
+  power: 1000
+  races:
+  - ブレイブ・スピリット
+  mana: 1
+  text: 自分のティラノ・ドレイクを召喚するコストを１少なくしてもよい。ただし、コストは１より少なくならない。
+  abilities:
+  - kind: static
+    affects:
+      owner: you
+      zone: hand
+      filter:
+        races:
+        - ティラノ・ドレイク
+    mod:
+      cost: -1
+      cost_min: 1
+  source:
+    official: dm21-051
+    review: pending
+    notes: コスト軽減の「してもよい」は常在型能力として登録した（エンジンのコスト計算は任意適用を区別しない）
+- id: dm21-054
+  name: 秘護精ユニフォーク
+  types:
+  - creature
+  civs:
+  - nature
+  cost: 3
+  power: 2000
+  races:
+  - セイント・ヘッド
+  mana: 1
+  text: バトルゾーンに自分のアーク・セラフィムが１体でもあれば、このクリーチャーのパワーは+2000される。
+  abilities:
+  - kind: static
+    affects: self
+    if:
+      exists:
+        zone: bz
+        owner: you
+        filter:
+          races:
+          - アーク・セラフィム
+    mod:
+      power: 2000
+  source:
+    official: dm21-054
+    review: pending
+- id: dm21-s04
+  name: キラ・ゼクス・ドラグーン
+  types:
+  - creature
+  civs:
+  - fire
+  cost: 6
+  power: 9000
+  races:
+  - ティラノ・ドレイク
+  mana: 1
+  text: 'W・ブレイカー
+
+    自分のターンのはじめに、バトルゾーンに自分の《竜音のキラ》が１体もなければ、カードを２枚、自分のマナゾーンから墓地に置く。
+
+    バトルゾーンに自分の《竜音のキラ》が１体でもあれば、このクリーチャーは「スピードアタッカー」を得る。'
+  abilities:
+  - kind: trigger
+    when:
+      event: turn_start
+      subject: self
+    if:
+      not:
+        exists:
+          zone: bz
+          owner: you
+          filter:
+            name: 竜音のキラ
+    effect:
+    - op: move
+      select:
+        zone: mana
+        owner: you
+        count: 2
+      to: graveyard
+      reason: put
+  - kind: static
+    affects: self
+    if:
+      exists:
+        zone: bz
+        owner: you
+        filter:
+          name: 竜音のキラ
+    mod:
+      grant:
+      - speed_attacker
+  source:
+    official: dm21-s04
+    review: pending
+    notes: 'turn_start の subject: self は自分のターンの開始として照合した'
+  keywords:
+  - double_breaker
+- id: dm21-s05
+  name: 災勇鬼ダイゴクウ
+  types:
+  - creature
+  civs:
+  - nature
+  cost: 7
+  power: 6000
+  races:
+  - ドリームメイト
+  mana: 1
+  text: バトルゾーンにある自分のドリームメイトとビークル・ビーはすべて、「W・ブレイカー」を得る。
+  abilities:
+  - kind: static
+    affects:
+      owner: you
+      filter:
+        races:
+        - ドリームメイト
+        - ビークル・ビー
+    mod:
+      grant:
+      - double_breaker
+  source:
+    official: dm21-s05
+    review: pending
+    notes: 説明文は text から省いた
+- id: dm22-005
+  name: 伝説のサンテ・ガト・デ・パコ
+  types:
+  - creature
+  - evolution
+  civs:
+  - nature
+  cost: 7
+  power: 7000
+  races:
+  - ドリームメイト
+  - アーク・セラフィム
+  mana: 1
+  evolve_from:
+    races:
+    - ドリームメイト
+  text: '進化-自分のドリームメイト１体の上に置く。
+
+    自分のドリームメイトの召喚コストを １少なくしてもよい。ただし、コストは１より小さくならない。
+
+    自分の他のドリームメイトをバトルゾーンに出した時、カードを１枚引く。
+
+    W・ブレイカー(このクリーチャーはシールドを２枚ブレイクする)'
+  abilities:
+  - kind: static
+    affects:
+      owner: you
+      zone: hand
+      filter:
+        races:
+        - ドリームメイト
+    mod:
+      cost: -1
+      cost_min: 1
+  - kind: trigger
+    when:
+      event: move
+      to: bz
+      subject:
+        owner: you
+        filter:
+          races:
+          - ドリームメイト
+        other: true
+    effect:
+    - op: draw
+      count: 1
+  source:
+    official: dm22-005
+    review: pending
+    notes: コスト軽減の「してもよい」は常在型能力として登録した
+  keywords:
+  - double_breaker
+- id: dm22-006
+  name: 霊騎ミューズ・ルブール
+  types:
+  - creature
+  civs:
+  - light
+  cost: 6
+  power: 3500
+  races:
+  - アーク・セラフィム
+  mana: 1
+  text: 'S・トリガー(このクリーチャーをシールドゾーンから手札に加える時、コストを支払わずにすぐ召喚してもよい)
+
+    このクリーチャーをバトルゾーンに出した時、パワー3000以下のクリーチャーをすべてタップする。'
+  abilities:
+  - kind: trigger
+    when:
+      event: move
+      to: bz
+      subject: self
     effect:
     - op: tap
+      select:
+        zone: bz
+        owner: any
+        filter:
+          types:
+          - creature
+          power_le: 3000
+        count: all
+  source:
+    official: dm22-006
+    review: pending
+  keywords:
+  - s_trigger
+- id: dm22-009
+  name: 蒼神龍メルローズガルブ
+  types:
+  - creature
+  civs:
+  - water
+  cost: 8
+  power: 6000
+  races:
+  - ポセイディア・ドラゴン
+  mana: 1
+  text: 'ブロッカー(相手クリーチャーが攻撃する時、このクリーチャーをタップして、その攻撃を阻止してもよい。その後、その相手クリーチャーとバトルする)
+
+    このクリーチャーが攻撃またはブロックする時、カードを１枚、自分のマナゾーンから手札に戻してもよい。
+
+    W・ブレイカー(このクリーチャーはシールドを２枚ブレイクする)'
+  abilities:
+  - kind: trigger
+    when:
+      event: attack
+      subject: self
+    effect:
+    - op: may
+      body:
+      - op: move
+        select:
+          zone: mana
+          owner: you
+          count: 1
+        to: hand
+        reason: return
+  - kind: trigger
+    when:
+      event: block
+      subject: self
+    effect:
+    - op: may
+      body:
+      - op: move
+        select:
+          zone: mana
+          owner: you
+          count: 1
+        to: hand
+        reason: return
+  source:
+    official: dm22-009
+    review: pending
+    notes: 攻撃時とブロック時で2つの誘発に分けた。block の subject はブロッカー自身
+  keywords:
+  - blocker
+  - double_breaker
+- id: dm22-011
+  name: コラプス・ウェーブ
+  types:
+  - spell
+  civs:
+  - water
+  cost: 5
+  mana: 1
+  text: 'S・トリガー(この呪文をシールドゾーンから手札に加える時、コストを支払わずにすぐ唱えてもよい)
+
+    いずれかのマナゾーンからカードを１枚選び、持ち主の山札の一番上に置く。'
+  spell:
+  - op: move
+    select:
+      zone: mana
+      owner: any
+      count: 1
+    to: deck
+    reason: put
+    position: top
+  source:
+    official: dm22-011
+    review: pending
+    notes: 移動先の山札はカードの持ち主のものとして扱う
+  keywords:
+  - s_trigger
+- id: dm22-012
+  name: 黒神龍ダフトヘッド
+  types:
+  - creature
+  civs:
+  - darkness
+  cost: 5
+  power: 9000
+  races:
+  - ドラゴン・ゾンビ
+  mana: 1
+  text: '相手のターンのはじめに、相手はカードを１枚引く。
+
+    このクリーチャーが攻撃する時、相手の手札を見てその中から１枚選んでもよい。相手はそれを捨てる。
+
+    W・ブレイカー(このクリーチャーはシールドを２枚ブレイクする)'
+  abilities:
+  - kind: trigger
+    when:
+      event: turn_start
+    if:
+      is_turn: opp
+    effect:
+    - op: draw
+      player: opp
+      count: 1
+  - kind: trigger
+    when:
+      event: attack
+      subject: self
+    effect:
+    - op: may
+      body:
+      - op: discard
+        select:
+          zone: hand
+          owner: opp
+          look: true
+          count: 1
+  source:
+    official: dm22-012
+    review: pending
+    notes: '相手ターン開始は turn_start + is_turn: opp で照合し、ドローは player: opp を指定した'
+  keywords:
+  - double_breaker
+- id: dm22-013
+  name: 煉獄の開放
+  types:
+  - spell
+  civs:
+  - darkness
+  cost: 9
+  mana: 1
+  text: 各プレイヤーは、墓地のクリーチャーをすべて持ち主の手札に戻す。
+  spell:
+  - op: move
+    select:
+      zone: graveyard
+      owner: any
+      filter:
+        types:
+        - creature
+      count: all
+    to: hand
+    reason: return
+  source:
+    official: dm22-013
+    review: pending
+    notes: 移動先の手札は各カードの持ち主のものとして扱う
+- id: dm22-014
+  name: 連龍毒
+  types:
+  - spell
+  civs:
+  - darkness
+  cost: 8
+  mana: 1
+  text: 相手のクリーチャーを１体破壊する。その後、バトルゾーンにある自分のドラゴンまたはフェニックス１体につき、相手のクリーチャーを１体、追加で破壊する。
+  spell:
+  - op: destroy
+    select:
+      zone: bz
+      owner: opp
+      filter:
+        types:
+        - creature
+      count: 1
+  - op: repeat
+    times:
+      sum:
+      - count:
+          zone: bz
+          owner: you
+          filter:
+            race_has: ドラゴン
+      - count:
+          zone: bz
+          owner: you
+          filter:
+            races:
+            - フェニックス
+    body:
+    - op: destroy
       select:
         zone: bz
         owner: opp
@@ -63505,6 +65075,358 @@ cards:
           - creature
         count: 1
   source:
-    official: dm06-071
+    official: dm22-014
     review: pending
-    notes: 厳密一致
+    notes: 追加破壊の回数はドラゴン（race_has）とフェニックスの合計。両方に当てはまる種族構成のカードは二重に数える可能性がある
+- id: dm22-023
+  name: フラッシュ・アーマー
+  types:
+  - spell
+  civs:
+  - light
+  cost: 3
+  mana: 1
+  text: 'S・トリガー(この呪文をシールドゾーンから手札に加える時、コストを支払わずにすぐ唱えてもよい)
+
+    このターン、自分のクリーチャーが破壊される時、墓地に置かれるかわりにバトルゾーンにとどまる。'
+  spell:
+  - op: modify
+    select:
+      zone: bz
+      owner: you
+      filter:
+        types:
+        - creature
+      count: all
+    mod:
+      gain:
+      - kind: replace
+        when:
+          event: move
+          to: graveyard
+          reason: destroy
+          subject: self
+        instead: []
+    duration: end_of_turn
+  source:
+    official: dm22-023
+    review: pending
+    notes: '破壊置換（instead: [] でとどまる）を mod.gain でこのターンだけ付与した（ミハイルの置換と同じ形）'
+  keywords:
+  - s_trigger
+- id: dm22-034
+  name: 霊騎ハーメルン・ダリア
+  types:
+  - creature
+  civs:
+  - nature
+  cost: 4
+  power: 3000
+  races:
+  - アーク・セラフィム
+  mana: 1
+  text: このクリーチャーをバトルゾーンに出した時、ドラゴンを１体、自分のマナゾーンから手札に戻してもよい。
+  abilities:
+  - kind: trigger
+    when:
+      event: move
+      to: bz
+      subject: self
+    effect:
+    - op: may
+      body:
+      - op: move
+        select:
+          zone: mana
+          owner: you
+          filter:
+            race_has: ドラゴン
+          count: 1
+        to: hand
+        reason: return
+  source:
+    official: dm22-034
+    review: pending
+    notes: 「ドラゴン」は race_has で照合した
+- id: dm22-036
+  name: 霊騎ソール・デナン
+  types:
+  - creature
+  civs:
+  - light
+  cost: 4
+  power: 1000
+  races:
+  - アーク・セラフィム
+  mana: 1
+  text: 自分の光の呪文を唱える時、カードを１枚引いてもよい。
+  abilities:
+  - kind: trigger
+    when:
+      event: cast
+      subject:
+        owner: you
+        filter:
+          types:
+          - spell
+          civs:
+          - light
+    effect:
+    - op: may
+      body:
+      - op: draw
+        count: 1
+  source:
+    official: dm22-036
+    review: pending
+- id: dm22-037
+  name: 霊騎デュマール
+  types:
+  - creature
+  civs:
+  - light
+  cost: 3
+  power: 3500
+  races:
+  - アーク・セラフィム
+  mana: 1
+  text: 'ブロッカー(相手クリーチャーが攻撃する時、このクリーチャーをタップして、その攻撃を阻止してもよい。その後、その相手クリーチャーとバトルする)
+
+    このクリーチャーは、相手プレイヤーを攻撃できない。
+
+    バトルゾーンに自分のドラゴンが１体でもあれば、このクリーチャーのパワーは+2000される。'
+  abilities:
+  - kind: static
+    affects: self
+    if:
+      exists:
+        zone: bz
+        owner: you
+        filter:
+          race_has: ドラゴン
+    mod:
+      power: 2000
+  source:
+    official: dm22-037
+    review: pending
+  keywords:
+  - blocker
+  - cannot_attack_player
+- id: dm22-038
+  name: 活性電士エナジオン
+  types:
+  - creature
+  civs:
+  - light
+  cost: 2
+  power: 2000
+  races:
+  - グレートメカオー
+  mana: 1
+  text: 'ブロッカー(相手クリーチャーが攻撃する時、このクリーチャーをタップして、その攻撃を阻止してもよい。その後、その相手クリーチャーとバトルする)
+
+    このクリーチャーは、相手プレイヤーを攻撃できない。
+
+    このクリーチャーが破壊された時、バトルゾーンにある自分のクリーチャー１体をアンタップする。'
+  abilities:
+  - kind: trigger
+    zone: graveyard
+    when:
+      event: move
+      to: graveyard
+      reason: destroy
+      subject: self
+    effect:
+    - op: untap
+      select:
+        zone: bz
+        owner: you
+        filter:
+          types:
+          - creature
+        count: 1
+  source:
+    official: dm22-038
+    review: pending
+  keywords:
+  - blocker
+  - cannot_attack_player
+- id: dm22-042
+  name: 鎧兵機サーボルト
+  types:
+  - creature
+  civs:
+  - water
+  cost: 2
+  power: 4000
+  races:
+  - グレートメカオー
+  mana: 1
+  text: 'ブロッカー(相手クリーチャーが攻撃する時、このクリーチャーをタップして、その攻撃を阻止してもよい。その後、その相手クリーチャーとバトルする)
+
+    このクリーチャーは攻撃することができない。
+
+    このクリーチャーは、進化クリーチャーまたはドラゴンをブロックできない。'
+  abilities:
+  - kind: static
+    affects: self
+    mod:
+      deny:
+      - action: block
+        other:
+          types:
+          - evolution
+      - action: block
+        other:
+          race_has: ドラゴン
+  source:
+    official: dm22-042
+    review: pending
+    notes: dm21-039 ラ・ブールと同じ block アクション + other の形（対象を2種類に分けた）
+  keywords:
+  - blocker
+  - cannot_attack
+- id: dm22-043
+  name: フューチャー・カプセル
+  types:
+  - spell
+  civs:
+  - water
+  cost: 4
+  mana: 1
+  text: 'S・トリガー(この呪文をシールドゾーンから手札に加える時、コストを支払わずにすぐ唱えてもよい)
+
+    自分の山札の上から５枚を見る。その中から好きな枚数を好きな順序で山札の上に戻し、残りを好きな順序で山札の下に戻す。'
+  spell:
+  - op: choose
+    select:
+      zone: deck
+      owner: you
+      from_top: 5
+      look: true
+      count: all
+    as: pile
+  - op: choose
+    select:
+      ref: pile
+      count: any
+    as: top
+  - op: move
+    select:
+      ref: top
+      count: all
+    to: deck
+    reason: put
+    position: top
+  - op: move
+    select:
+      ref: pile
+      count: all
+    to: deck
+    reason: put
+  source:
+    official: dm22-043
+    review: pending
+    notes: '見た5枚から上に戻す分を count: any で選び分け、残りは一番下へ'
+  keywords:
+  - s_trigger
+- id: dm22-045
+  name: センシング・ドラグーン
+  types:
+  - creature
+  civs:
+  - darkness
+  cost: 4
+  power: 3000
+  races:
+  - ティラノ・ドレイク
+  mana: 1
+  text: このクリーチャーをバトルゾーンに出した時、自分の山札の上から２枚を表向きにする。そのうちの１枚を山札の一番上に裏向きにして置き、残りを墓地に置く。
+  abilities:
+  - kind: trigger
+    when:
+      event: move
+      to: bz
+      subject: self
+    effect:
+    - op: choose
+      select:
+        zone: deck
+        owner: you
+        from_top: 2
+        look: true
+        count: all
+      as: pile
+    - op: choose
+      select:
+        ref: pile
+        count: 1
+      as: keep
+    - op: move
+      select:
+        ref: keep
+        count: all
+      to: deck
+      reason: put
+      position: top
+    - op: move
+      select:
+        ref: pile
+        count: all
+      to: graveyard
+      reason: put
+  source:
+    official: dm22-045
+    review: pending
+- id: dm22-047
+  name: 連龍陣
+  types:
+  - spell
+  civs:
+  - darkness
+  cost: 3
+  mana: 1
+  text: 'S・トリガー(この呪文をシールドゾーンから手札に加える時、コストを支払わずにすぐ唱えてもよい)
+
+    クリーチャーを１体、自分の墓地から手札に戻す。そのクリーチャーがドラゴンであれば、クリーチャーをもう１体、自分の墓地から手札に戻してもよい。'
+  spell:
+  - op: choose
+    select:
+      zone: graveyard
+      owner: you
+      filter:
+        types:
+        - creature
+      count: 1
+    as: got
+  - op: move
+    select:
+      ref: got
+      count: all
+    to: hand
+    reason: return
+  - op: if
+    cond:
+      exists:
+        ref: got
+        filter:
+          race_has: ドラゴン
+    then:
+    - op: may
+      body:
+      - op: move
+        select:
+          zone: graveyard
+          owner: you
+          filter:
+            types:
+            - creature
+          count: 1
+        to: hand
+        reason: return
+  source:
+    official: dm22-047
+    review: pending
+    notes: 戻したカードを変数 got に保持し、ドラゴンかどうかを exists + filter で判定した。原文の文字化け（墓��）は補った
+  keywords:
+  - s_trigger
