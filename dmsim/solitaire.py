@@ -103,7 +103,18 @@ def candidates(eng: Engine, d: dict, w: Weights, cap: int = 6) -> list[list[int]
     """探索で試す答えの候補（良さそうな順）。複数選ぶ決定は組み合わせを cap 個まで。同じ意味キーの組は1つにまとめる。"""
     order = _rank(eng, d, w)
     if d["max"] == 1 and d["min"] == 1:
-        return [[i] for i in order]
+        # 区別できない選択肢（同じ種類のカード、同じ下のカードを持つシールドなど）は1つにまとめる。
+        # マナの払い方は文明の組が同じなら同じとみなして、上位2通りまでにする
+        out, seen = [], set()
+        for i in order:
+            o = d["options"][i]
+            sig = (o["key"],) + ((eng.s.cards[o["cid"]].defn, tuple(sorted(eng.s.cards[u].defn for u in eng.s.cards[o["cid"]].under)))
+                                 if "cid" in o and o.get("name") == "?" else ())
+            if sig in seen:
+                continue
+            seen.add(sig)
+            out.append([i])
+        return out[:2] if d["kind"] == "pay_mana" else out
     keys = [o["key"] for o in d["options"]]
     out, seen = [], set()
     if d["kind"] == "order_cards":          # 並べ替え: 元の順と次の順の2つまで（同じ意味キーの並びは1つ）

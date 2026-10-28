@@ -58,7 +58,8 @@ def search(eng: Engine, me: int = 0, budget: int = 20000, w: Weights | None = No
         if d is None:
             continue
         h, ctr = abstract(cur, "in_turn")
-        key = (h, tuple(sorted(ctr.items())), tuple(sorted((c.defn, c.tapped) for p in (0, 1) for x in cur.s.zones["mana"][p] for c in [cur.s.cards[x]])))
+        deck_order = tuple(cur.s.cards[c].defn for c in cur.s.zones["deck"][me])   # 山札の並びは次に引く・積むカードを決める
+        key = (h, deck_order, tuple(sorted(ctr.items())), tuple(sorted((c.defn, c.tapped) for p in (0, 1) for x in cur.s.zones["mana"][p] for c in [cur.s.cards[x]])))
         if key in seen:
             continue
         seen.add(key)
@@ -66,8 +67,53 @@ def search(eng: Engine, me: int = 0, budget: int = 20000, w: Weights | None = No
             nodes += 1
             child = cur.clone()
             child.answer(ch)
+            ts._settle(child)      # 次の決定まで進めてから評価する（選んだ効果の結果を見る）
             pr = -priority(child, me, w)
             heapq.heappush(heap, (pr, next(tie), child))
             if -pr > best[0]:
                 best = (-pr, child)
+    return BFResult(False, nodes, best[1], len(best[1].log))
+
+
+def beam(eng: Engine, me: int = 0, width: int = 200, max_depth: int = 80, w: Weights | None = None, opp_policy=None) -> BFResult:
+    """ビーム探索: 決定の深さごとに、評価の高い width 個だけを残して進める。最良優先探索が「いま良く見える枝」に偏って
+    谷（盾をいったん減らしてから増やす、など）を越えられない盤面向け。同じ局面（骨格＋山札の並び＋カウンタ）は1度だけ展開する。"""
+    from ..solitaire import TurnSearch, charge_only_policy
+    w = w or Weights()
+    ts = TurnSearch(me, 1, w, opp_policy or charge_only_policy)
+    layer = [eng.clone()]
+    seen: set = set()
+    nodes = 0
+    best = (-1e18, layer[0])
+    for _ in range(max_depth):
+        nxt = []
+        for cur in layer:
+            d = ts._settle(cur)
+            if cur.s.result is not None:
+                if cur.s.result["winner"] == me:
+                    return BFResult(True, nodes, cur, len(cur.log))
+                continue
+            if d is None:
+                continue
+            h, ctr = abstract(cur, "in_turn")
+            deck_order = tuple(cur.s.cards[c].defn for c in cur.s.zones["deck"][me])
+            key = (h, deck_order, tuple(sorted(ctr.items())), tuple(sorted(cur.s.cards[x].defn + str(cur.s.cards[x].tapped) for p in (0, 1) for x in cur.s.zones["mana"][p])))
+            if key in seen:
+                continue
+            seen.add(key)
+            for ch in candidates(cur, d, w, 6):
+                nodes += 1
+                child = cur.clone()
+                child.answer(ch)
+                ts._settle(child)
+                if child.s.result is not None and child.s.result["winner"] == me:
+                    return BFResult(True, nodes, child, len(child.log))
+                pr = priority(child, me, w)
+                nxt.append((pr, nodes, child))
+                if pr > best[0]:
+                    best = (pr, child)
+        if not nxt:
+            break
+        nxt.sort(key=lambda x: (-x[0], x[1]))
+        layer = [c for _, _, c in nxt[:width]]
     return BFResult(False, nodes, best[1], len(best[1].log))

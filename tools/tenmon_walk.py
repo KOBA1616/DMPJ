@@ -9,6 +9,7 @@ W=["dm01-080"]*4+["dm06-085"]*4+["dm02-024"]*4                         # 水の�
 spec={"p0":{"hand":[FA,FA,AL]+[F]*8,"bz":[EM,MI,OO],"mana":W,"shield":[HG]*4+[MK]*3,"deck":[TS,FA,FA,HC,MK]+[F]*8},
       "p1":{},"filler":F,"seed":1,"deck_size":14,"deck_exact":[True,False]}
 assert not scenario.deck_limit_violations(rules,spec), scenario.deck_limit_violations(rules,spec)   # 同名カードは4枚まで
+STOP=globals().get('STOP')
 e=scenario.build(rules,spec)
 dk=e.s.zones["deck"][0]
 order=sorted(dk,key=lambda c:(e.s.cards[c].defn!=TS, e.s.cards[c].defn!=FA))   # TS, FA..., 先頭がTS
@@ -25,6 +26,7 @@ for step in range(200):
     sh=len(e.zlist("shield",0))
     print(step,k,keys[:5],{a:b for a,b in d.items() if a not in ("options","kind","min","max")} if k=="yes_no" else "","sh",sh,"pend",len(pend))
     if k in("attack",): break
+    if STOP is not None and step>=STOP: break
     if k=='main' and step>6: break
     ans=[0]
     if k=="charge": ans=[len(keys)-1]
