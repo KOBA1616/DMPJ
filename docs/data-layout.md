@@ -22,3 +22,11 @@ real.yaml へ移す作業は不要。定義や語彙が変わった承認は読�
 - 変換対象は最新版の ID だけ（`convert_cards.load_rows`）。変換したカードの `source.aliases` に古い ID を残す。
 - 旧 ID で `rules.cards[...]` を引いても最新版が返る（`load_rules` が `AliasDict` を使う）。
 - `tools/canonicalize.py`（auto-approve workflow が毎回先に実行）: 変換済みの旧 ID カードを最新 ID へ寄せる。本文（正規化後）が同じなら付け替えて承認を引き継ぎ（by=inherit）、違えば消して承認を取り消し再変換・再検証。弾別ディレクトリなら置き場所も移る。
+
+## 承認の検証（自動）
+`tools/auto_approve.py` は次を全部通ったカードだけ承認する（モデル不使用）。
+1. `verify.verify_card`: 落ちずに回るか（煙テスト）。
+2. `effectcheck.text_check`: 原文のキーワード名・数値・移動先ゾーン語と、変換結果の突き合わせ。
+3. `effectcheck.effect_check`: 呪文を実際に唱え、無条件の移動・ドローが起きるか（対象が無ければ skip）。
+ルール変換のカードは 1〜3 に落ちなければ by=rule、モデル変換のカードは 3 が ok（効果が実際に起きた）の時だけ by=check。
+検証を強めたら `effectcheck.VERIFIER` を上げる。古い版で承認されたカードは自動で再検証される。
