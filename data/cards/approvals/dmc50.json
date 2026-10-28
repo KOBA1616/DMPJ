@@ -1,0 +1,38 @@
+{
+"dmc50-007": {
+"by": "rule",
+"def_hash": "d7cd25a39e80402d",
+"status": "approved",
+"uses": [
+"core",
+"kw:blocker",
+"kw:triple_breaker"
+],
+"verify": "43手・turn 30 まで正常に回った（result={'winner': 0, 'reason': 'deck_out', 'turn': 30}）",
+"vocab_ver": "e42f6f2aaaffbae8"
+},
+"dmc50-014": {
+"by": "rule",
+"def_hash": "0fe643837426cdbe",
+"status": "approved",
+"uses": [
+"core",
+"kw:s_trigger",
+"op:tap"
+],
+"verify": "43手・turn 30 まで正常に回った（result={'winner': 0, 'reason': 'deck_out', 'turn': 30}）",
+"vocab_ver": "6699fccaa1add661"
+},
+"dmc50-030": {
+"by": "rule",
+"def_hash": "f8fd3a7287a4248b",
+"status": "approved",
+"uses": [
+"core",
+"kw:blocker",
+"kw:cannot_attack_player"
+],
+"verify": "43手・turn 30 まで正常に回った（result={'winner': 0, 'reason': 'deck_out', 'turn': 30}）",
+"vocab_ver": "274e5c392bc96853"
+}
+}

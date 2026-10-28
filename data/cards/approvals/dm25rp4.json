@@ -1,0 +1,15 @@
+{
+"dm25rp4-t10": {
+"by": "rule",
+"def_hash": "ccdfc28fb0f8ca9d",
+"status": "approved",
+"uses": [
+"core",
+"kw:g_strike",
+"kw:speed_attacker",
+"op:move"
+],
+"verify": "43手・turn 30 まで正常に回った（result={'winner': 0, 'reason': 'deck_out', 'turn': 30}）",
+"vocab_ver": "7299e6e35024bd3a"
+}
+}

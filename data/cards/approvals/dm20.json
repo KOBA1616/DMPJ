@@ -1,0 +1,26 @@
+{
+"dm20-040": {
+"by": "rule",
+"def_hash": "ead001cac8048942",
+"status": "approved",
+"uses": [
+"core",
+"kw:s_trigger",
+"op:draw",
+"op:may"
+],
+"verify": "43手・turn 30 まで正常に回った（result={'winner': 0, 'reason': 'deck_out', 'turn': 30}）",
+"vocab_ver": "7da46fd99e4d66fc"
+},
+"dm20-044": {
+"by": "rule",
+"def_hash": "0d0474c406391d7a",
+"status": "approved",
+"uses": [
+"core",
+"kw:s_trigger"
+],
+"verify": "43手・turn 30 まで正常に回った（result={'winner': 0, 'reason': 'deck_out', 'turn': 30}）",
+"vocab_ver": "599d86bd5899cf5e"
+}
+}

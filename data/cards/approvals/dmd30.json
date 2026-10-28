@@ -1,0 +1,25 @@
+{
+"dmd30-006": {
+"by": "rule",
+"def_hash": "2479c7e1effc95fc",
+"status": "approved",
+"uses": [
+"core",
+"op:draw"
+],
+"verify": "43手・turn 30 まで正常に回った（result={'winner': 0, 'reason': 'deck_out', 'turn': 30}）",
+"vocab_ver": "487d38cedd709caf"
+},
+"dmd30-012": {
+"by": "rule",
+"def_hash": "a44639fe6a384f86",
+"status": "approved",
+"uses": [
+"core",
+"op:draw",
+"op:may"
+],
+"verify": "43手・turn 30 まで正常に回った（result={'winner': 0, 'reason': 'deck_out', 'turn': 30}）",
+"vocab_ver": "9eaa73333352bf59"
+}
+}

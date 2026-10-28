@@ -1,0 +1,27 @@
+{
+"dm09-044": {
+"by": "rule",
+"def_hash": "a59462ef726de3ed",
+"status": "approved",
+"uses": [
+"core",
+"kw:blocker",
+"kw:cannot_attack",
+"kw:slayer"
+],
+"verify": "43手・turn 30 まで正常に回った（result={'winner': 0, 'reason': 'deck_out', 'turn': 30}）",
+"vocab_ver": "d0c8bdc3226ac223"
+},
+"dm09-053": {
+"by": "rule",
+"def_hash": "f8cf3d13cd57e3c6",
+"status": "approved",
+"uses": [
+"core",
+"kw:s_trigger",
+"op:modify"
+],
+"verify": "43手・turn 30 まで正常に回った（result={'winner': 0, 'reason': 'deck_out', 'turn': 30}）",
+"vocab_ver": "a5ddee94f26e5daf"
+}
+}

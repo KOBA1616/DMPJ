@@ -1,0 +1,37 @@
+{
+"dmx02-011": {
+"by": "rule",
+"def_hash": "16f18fbac50a56b1",
+"status": "approved",
+"uses": [
+"core",
+"kw:s_trigger",
+"op:tap"
+],
+"verify": "43手・turn 30 まで正常に回った（result={'winner': 0, 'reason': 'deck_out', 'turn': 30}）",
+"vocab_ver": "6699fccaa1add661"
+},
+"dmx02-017": {
+"by": "rule",
+"def_hash": "a66ede811e6400b1",
+"status": "approved",
+"uses": [
+"core",
+"kw:blocker",
+"kw:double_breaker"
+],
+"verify": "43手・turn 30 まで正常に回った（result={'winner': 0, 'reason': 'deck_out', 'turn': 30}）",
+"vocab_ver": "3332fd4eb298dbc7"
+},
+"dmx02-036": {
+"by": "rule",
+"def_hash": "89ee03593416bd5a",
+"status": "approved",
+"uses": [
+"core",
+"op:move"
+],
+"verify": "43手・turn 30 まで正常に回った（result={'winner': 0, 'reason': 'deck_out', 'turn': 30}）",
+"vocab_ver": "2b1f84ebcdf1a1b4"
+}
+}

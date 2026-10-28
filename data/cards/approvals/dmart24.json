@@ -1,0 +1,14 @@
+{
+"dmart24-007": {
+"by": "rule",
+"def_hash": "306ddb786d0e65e8",
+"status": "approved",
+"uses": [
+"core",
+"kw:s_trigger",
+"op:bounce"
+],
+"verify": "43手・turn 30 まで正常に回った（result={'winner': 0, 'reason': 'deck_out', 'turn': 30}）",
+"vocab_ver": "03077ea7ad245899"
+}
+}

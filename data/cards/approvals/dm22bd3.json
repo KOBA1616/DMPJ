@@ -1,0 +1,14 @@
+{
+"dm22bd3-014": {
+"by": "rule",
+"def_hash": "65777feb36e08fd3",
+"status": "approved",
+"uses": [
+"core",
+"kw:triple_breaker",
+"op:move"
+],
+"verify": "43手・turn 30 まで正常に回った（result={'winner': 0, 'reason': 'deck_out', 'turn': 30}）",
+"vocab_ver": "23aa9ef659f34860"
+}
+}

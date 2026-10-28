@@ -1,0 +1,73 @@
+{
+"dmx10-012": {
+"by": "rule",
+"def_hash": "454c01d74e22a845",
+"status": "approved",
+"uses": [
+"core",
+"kw:charger",
+"op:mill"
+],
+"verify": "43手・turn 30 まで正常に回った（result={'winner': 0, 'reason': 'deck_out', 'turn': 30}）",
+"vocab_ver": "fabc2b4d3f573cd6"
+},
+"dmx10-018": {
+"by": "rule",
+"def_hash": "6a77ba4a2636d813",
+"status": "approved",
+"uses": [
+"core",
+"kw:s_trigger",
+"op:tap"
+],
+"verify": "43手・turn 30 まで正常に回った（result={'winner': 0, 'reason': 'deck_out', 'turn': 30}）",
+"vocab_ver": "6699fccaa1add661"
+},
+"dmx10-038": {
+"by": "rule",
+"def_hash": "de5415b4603a579e",
+"status": "approved",
+"uses": [
+"core",
+"op:draw",
+"op:may"
+],
+"verify": "43手・turn 30 まで正常に回った（result={'winner': 0, 'reason': 'deck_out', 'turn': 30}）",
+"vocab_ver": "9eaa73333352bf59"
+},
+"dmx10-043": {
+"by": "rule",
+"def_hash": "acb5955e710f4d4f",
+"status": "approved",
+"uses": [
+"core",
+"op:draw",
+"op:may"
+],
+"verify": "43手・turn 30 まで正常に回った（result={'winner': 0, 'reason': 'deck_out', 'turn': 30}）",
+"vocab_ver": "9eaa73333352bf59"
+},
+"dmx10-046": {
+"by": "rule",
+"def_hash": "9bc033a71b1a30b1",
+"status": "approved",
+"uses": [
+"core",
+"op:draw"
+],
+"verify": "43手・turn 30 まで正常に回った（result={'winner': 0, 'reason': 'deck_out', 'turn': 30}）",
+"vocab_ver": "487d38cedd709caf"
+},
+"dmx10-047": {
+"by": "rule",
+"def_hash": "ec95af67c434919b",
+"status": "approved",
+"uses": [
+"core",
+"kw:s_trigger",
+"op:bounce"
+],
+"verify": "43手・turn 30 まで正常に回った（result={'winner': 0, 'reason': 'deck_out', 'turn': 30}）",
+"vocab_ver": "03077ea7ad245899"
+}
+}

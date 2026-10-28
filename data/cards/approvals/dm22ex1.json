@@ -1,0 +1,41 @@
+{
+"dm22ex1-115": {
+"by": "rule",
+"def_hash": "eaea409f728ca303",
+"status": "approved",
+"uses": [
+"core",
+"kw:g_strike",
+"kw:speed_attacker"
+],
+"verify": "43手・turn 30 まで正常に回った（result={'winner': 0, 'reason': 'deck_out', 'turn': 30}）",
+"vocab_ver": "196211771c018a3a"
+},
+"dm22ex1-122": {
+"by": "rule",
+"def_hash": "2feb81dd4a39c057",
+"status": "approved",
+"uses": [
+"core",
+"kw:guardman",
+"kw:triple_breaker",
+"op:delayed_trigger",
+"op:move",
+"op:play_free"
+],
+"verify": "26手・turn 11 まで正常に回った（result={'winner': 0, 'reason': 'direct_attack', 'turn': 11}）",
+"vocab_ver": "c5a6493d5d56a9bf"
+},
+"dm22ex1-cho49": {
+"by": "rule",
+"def_hash": "6eeb9bf472cc8846",
+"status": "approved",
+"uses": [
+"core",
+"kw:g_strike",
+"op:move"
+],
+"verify": "43手・turn 30 まで正常に回った（result={'winner': 0, 'reason': 'deck_out', 'turn': 30}）",
+"vocab_ver": "a545cd5e71c634fa"
+}
+}

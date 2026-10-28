@@ -1,0 +1,13 @@
+{
+"dmd03-013": {
+"by": "rule",
+"def_hash": "c3f6137121db506a",
+"status": "approved",
+"uses": [
+"core",
+"kw:hunting"
+],
+"verify": "43手・turn 30 まで正常に回った（result={'winner': 0, 'reason': 'deck_out', 'turn': 30}）",
+"vocab_ver": "08cd85efb7f4e4d7"
+}
+}

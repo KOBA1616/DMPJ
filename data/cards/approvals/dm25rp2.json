@@ -1,0 +1,13 @@
+{
+"dm25rp2-055": {
+"by": "rule",
+"def_hash": "34fad686c63c0262",
+"status": "approved",
+"uses": [
+"core",
+"kw:escape"
+],
+"verify": "43手・turn 30 まで正常に回った（result={'winner': 0, 'reason': 'deck_out', 'turn': 30}）",
+"vocab_ver": "c808380273427933"
+}
+}

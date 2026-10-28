@@ -1,0 +1,27 @@
+{
+"dm23bd6-058": {
+"by": "rule",
+"def_hash": "3454dad42a450db7",
+"status": "approved",
+"uses": [
+"core",
+"kw:triple_breaker",
+"op:move"
+],
+"verify": "43手・turn 30 まで正常に回った（result={'winner': 0, 'reason': 'deck_out', 'turn': 30}）",
+"vocab_ver": "23aa9ef659f34860"
+},
+"dm23bd6-060": {
+"by": "rule",
+"def_hash": "6ea1f907a0ebc315",
+"status": "approved",
+"uses": [
+"core",
+"kw:triple_breaker",
+"op:modify",
+"op:move"
+],
+"verify": "43手・turn 30 まで正常に回った（result={'winner': 0, 'reason': 'deck_out', 'turn': 30}）",
+"vocab_ver": "e9073ac385c08440"
+}
+}

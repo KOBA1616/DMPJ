@@ -1,0 +1,45 @@
+{
+"dmex16-018": {
+"by": "rule",
+"def_hash": "a061b68c84ed67b0",
+"status": "approved",
+"uses": [
+"core"
+],
+"verify": "43手・turn 30 まで正常に回った（result={'winner': 0, 'reason': 'deck_out', 'turn': 30}）",
+"vocab_ver": "4231c11264f83bda"
+},
+"dmex16-053": {
+"by": "rule",
+"def_hash": "23bc28ad295fe96c",
+"status": "approved",
+"uses": [
+"core",
+"kw:double_breaker",
+"op:draw",
+"op:swap"
+],
+"verify": "26手・turn 11 まで正常に回った（result={'winner': 0, 'reason': 'direct_attack', 'turn': 11}）",
+"vocab_ver": "180becf58efe3ed1"
+},
+"dmex16-090": {
+"by": "rule",
+"def_hash": "b7c4ed144d69b5c8",
+"status": "approved",
+"uses": [
+"core"
+],
+"verify": "43手・turn 30 まで正常に回った（result={'winner': 0, 'reason': 'deck_out', 'turn': 30}）",
+"vocab_ver": "4231c11264f83bda"
+},
+"dmex16-095": {
+"by": "rule",
+"def_hash": "11f71ce597c338a3",
+"status": "approved",
+"uses": [
+"core"
+],
+"verify": "43手・turn 30 まで正常に回った（result={'winner': 0, 'reason': 'deck_out', 'turn': 30}）",
+"vocab_ver": "4231c11264f83bda"
+}
+}

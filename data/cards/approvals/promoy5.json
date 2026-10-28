@@ -1,0 +1,26 @@
+{
+"promoy5-033": {
+"by": "rule",
+"def_hash": "6d40167a99409574",
+"status": "approved",
+"uses": [
+"core",
+"kw:speed_attacker",
+"op:modify"
+],
+"verify": "43手・turn 30 まで正常に回った（result={'winner': 0, 'reason': 'deck_out', 'turn': 30}）",
+"vocab_ver": "8a6ff3587c01e138"
+},
+"promoy5-059": {
+"by": "rule",
+"def_hash": "238cd347323528ce",
+"status": "approved",
+"uses": [
+"core",
+"kw:triple_breaker",
+"op:modify"
+],
+"verify": "43手・turn 30 まで正常に回った（result={'winner': 0, 'reason': 'deck_out', 'turn': 30}）",
+"vocab_ver": "d057cb61376a4d23"
+}
+}

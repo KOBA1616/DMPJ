@@ -1,0 +1,106 @@
+{
+"dmr16s-018": {
+"by": "rule",
+"def_hash": "bd45a82e5994564e",
+"status": "approved",
+"uses": [
+"core",
+"kw:double_breaker",
+"kw:escape"
+],
+"verify": "43手・turn 30 まで正常に回った（result={'winner': 0, 'reason': 'deck_out', 'turn': 30}）",
+"vocab_ver": "f9345123b145fae0"
+},
+"dmr16s-020d": {
+"by": "rule",
+"def_hash": "b0e122ac1aaa4eb8",
+"status": "approved",
+"uses": [
+"core",
+"kw:s_trigger",
+"op:draw",
+"op:tap"
+],
+"verify": "43手・turn 30 まで正常に回った（result={'winner': 0, 'reason': 'deck_out', 'turn': 30}）",
+"vocab_ver": "18d8fe553356a221"
+},
+"dmr16s-036": {
+"by": "rule",
+"def_hash": "305b86c154e26619",
+"status": "approved",
+"uses": [
+"core"
+],
+"verify": "43手・turn 30 まで正常に回った（result={'winner': 0, 'reason': 'deck_out', 'turn': 30}）",
+"vocab_ver": "4231c11264f83bda"
+},
+"dmr16s-038": {
+"by": "rule",
+"def_hash": "d1a87fd301113b3c",
+"status": "approved",
+"uses": [
+"core",
+"kw:blocker",
+"kw:s_trigger"
+],
+"verify": "43手・turn 30 まで正常に回った（result={'winner': 0, 'reason': 'deck_out', 'turn': 30}）",
+"vocab_ver": "ebc5518e3a6b95ed"
+},
+"dmr16s-039": {
+"by": "rule",
+"def_hash": "708d826a6c2a73e9",
+"status": "approved",
+"uses": [
+"core",
+"kw:escape",
+"kw:unblockable"
+],
+"verify": "43手・turn 30 まで正常に回った（result={'winner': 0, 'reason': 'deck_out', 'turn': 30}）",
+"vocab_ver": "0f5cf8a95d5ac003"
+},
+"dmr16s-046": {
+"by": "rule",
+"def_hash": "191a9f76851de08e",
+"status": "approved",
+"uses": [
+"core",
+"kw:escape",
+"kw:speed_attacker"
+],
+"verify": "43手・turn 30 まで正常に回った（result={'winner': 0, 'reason': 'deck_out', 'turn': 30}）",
+"vocab_ver": "6fe12129e9bc1490"
+},
+"dmr16s-046d": {
+"by": "rule",
+"def_hash": "227274dcc841316d",
+"status": "approved",
+"uses": [
+"core",
+"kw:escape",
+"kw:speed_attacker"
+],
+"verify": "43手・turn 30 まで正常に回った（result={'winner': 0, 'reason': 'deck_out', 'turn': 30}）",
+"vocab_ver": "6fe12129e9bc1490"
+},
+"dmr16s-050": {
+"by": "rule",
+"def_hash": "cf939232c0a18132",
+"status": "approved",
+"uses": [
+"core",
+"op:move"
+],
+"verify": "43手・turn 30 まで正常に回った（result={'winner': 0, 'reason': 'deck_out', 'turn': 30}）",
+"vocab_ver": "2b1f84ebcdf1a1b4"
+},
+"dmr16s-052": {
+"by": "rule",
+"def_hash": "dc6aaaeeec0766d5",
+"status": "approved",
+"uses": [
+"core"
+],
+"verify": "43手・turn 30 まで正常に回った（result={'winner': 0, 'reason': 'deck_out', 'turn': 30}）",
+"vocab_ver": "4231c11264f83bda"
+}
+}

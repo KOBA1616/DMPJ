@@ -1,0 +1,274 @@
+{
+"dmrp13-030": {
+"by": "rule",
+"def_hash": "c9325cd12914e2f3",
+"status": "approved",
+"uses": [
+"core",
+"kw:blocker",
+"op:may",
+"op:move",
+"op:untap"
+],
+"verify": "43手・turn 30 まで正常に回った（result={'winner': 0, 'reason': 'deck_out', 'turn': 30}）",
+"vocab_ver": "9e5335a73719722f"
+},
+"dmrp13-032": {
+"by": "rule",
+"def_hash": "d516892c20783d7c",
+"status": "approved",
+"uses": [
+"core",
+"kw:s_trigger",
+"op:tap"
+],
+"verify": "43手・turn 30 まで正常に回った（result={'winner': 0, 'reason': 'deck_out', 'turn': 30}）",
+"vocab_ver": "6699fccaa1add661"
+},
+"dmrp13-050": {
+"by": "rule",
+"def_hash": "30410d422421d987",
+"status": "approved",
+"uses": [
+"core",
+"kw:blocker",
+"kw:speed_attacker"
+],
+"verify": "43手・turn 30 まで正常に回った（result={'winner': 0, 'reason': 'deck_out', 'turn': 30}）",
+"vocab_ver": "a2f90e22d9b93947"
+},
+"dmrp13-051": {
+"by": "rule",
+"def_hash": "7feee0d988762d79",
+"status": "approved",
+"uses": [
+"core",
+"kw:s_trigger",
+"op:destroy",
+"op:tap"
+],
+"verify": "43手・turn 30 まで正常に回った（result={'winner': 0, 'reason': 'deck_out', 'turn': 30}）",
+"vocab_ver": "b796b46c46021969"
+},
+"dmrp13-053": {
+"by": "rule",
+"def_hash": "88040b8fd06052fc",
+"status": "approved",
+"uses": [
+"core",
+"kw:blocker",
+"kw:s_trigger",
+"op:move"
+],
+"verify": "43手・turn 30 まで正常に回った（result={'winner': 0, 'reason': 'deck_out', 'turn': 30}）",
+"vocab_ver": "c8769271a230ec74"
+},
+"dmrp13-056": {
+"by": "rule",
+"def_hash": "fe27e59ebe333bf5",
+"status": "approved",
+"uses": [
+"core",
+"kw:blocker",
+"kw:cannot_attack",
+"op:move"
+],
+"verify": "43手・turn 30 まで正常に回った（result={'winner': 0, 'reason': 'deck_out', 'turn': 30}）",
+"vocab_ver": "d10dd512ce0f3026"
+},
+"dmrp13-059": {
+"by": "rule",
+"def_hash": "0935eb5001554901",
+"status": "approved",
+"uses": [
+"core",
+"kw:blocker",
+"kw:cannot_attack_player",
+"kw:s_trigger"
+],
+"verify": "43手・turn 30 まで正常に回った（result={'winner': 0, 'reason': 'deck_out', 'turn': 30}）",
+"vocab_ver": "7d424226f6e3f9b6"
+},
+"dmrp13-060": {
+"by": "rule",
+"def_hash": "19cb9975a5692308",
+"status": "approved",
+"uses": [
+"core"
+],
+"verify": "43手・turn 30 まで正常に回った（result={'winner': 0, 'reason': 'deck_out', 'turn': 30}）",
+"vocab_ver": "4231c11264f83bda"
+},
+"dmrp13-061": {
+"by": "rule",
+"def_hash": "4a1233d3979081a0",
+"status": "approved",
+"uses": [
+"core",
+"op:may",
+"op:move"
+],
+"verify": "43手・turn 30 まで正常に回った（result={'winner': 0, 'reason': 'deck_out', 'turn': 30}）",
+"vocab_ver": "43070c7572cc0f77"
+},
+"dmrp13-063": {
+"by": "rule",
+"def_hash": "fd7a62a4072a544c",
+"status": "approved",
+"uses": [
+"core",
+"kw:blocker",
+"kw:s_trigger"
+],
+"verify": "43手・turn 30 まで正常に回った（result={'winner': 0, 'reason': 'deck_out', 'turn': 30}）",
+"vocab_ver": "ebc5518e3a6b95ed"
+},
+"dmrp13-064": {
+"by": "rule",
+"def_hash": "d37098430cb1ab3d",
+"status": "approved",
+"uses": [
+"core"
+],
+"verify": "43手・turn 30 まで正常に回った（result={'winner': 0, 'reason': 'deck_out', 'turn': 30}）",
+"vocab_ver": "4231c11264f83bda"
+},
+"dmrp13-065": {
+"by": "rule",
+"def_hash": "58d76cc4b3fd68e8",
+"status": "approved",
+"uses": [
+"core",
+"kw:blocker"
+],
+"verify": "43手・turn 30 まで正常に回った（result={'winner': 0, 'reason': 'deck_out', 'turn': 30}）",
+"vocab_ver": "53496e62eba1d5de"
+},
+"dmrp13-071": {
+"by": "rule",
+"def_hash": "7ca94a684bfece8e",
+"status": "approved",
+"uses": [
+"core"
+],
+"verify": "43手・turn 30 まで正常に回った（result={'winner': 0, 'reason': 'deck_out', 'turn': 30}）",
+"vocab_ver": "4231c11264f83bda"
+},
+"dmrp13-073": {
+"by": "rule",
+"def_hash": "6875f45f482de41d",
+"status": "approved",
+"uses": [
+"core",
+"kw:double_breaker"
+],
+"verify": "43手・turn 30 まで正常に回った（result={'winner': 0, 'reason': 'deck_out', 'turn': 30}）",
+"vocab_ver": "b85240daea39cbac"
+},
+"dmrp13-074": {
+"by": "rule",
+"def_hash": "656b7082f720be7f",
+"status": "approved",
+"uses": [
+"core",
+"op:may",
+"op:move"
+],
+"verify": "43手・turn 30 まで正常に回った（result={'winner': 0, 'reason': 'deck_out', 'turn': 30}）",
+"vocab_ver": "43070c7572cc0f77"
+},
+"dmrp13-079": {
+"by": "rule",
+"def_hash": "eed2e6f51e7f93cc",
+"status": "approved",
+"uses": [
+"core",
+"kw:s_trigger"
+],
+"verify": "43手・turn 30 まで正常に回った（result={'winner': 0, 'reason': 'deck_out', 'turn': 30}）",
+"vocab_ver": "599d86bd5899cf5e"
+},
+"dmrp13-083": {
+"by": "rule",
+"def_hash": "bb7a9be250b47edf",
+"status": "approved",
+"uses": [
+"core"
+],
+"verify": "43手・turn 30 まで正常に回った（result={'winner': 0, 'reason': 'deck_out', 'turn': 30}）",
+"vocab_ver": "4231c11264f83bda"
+},
+"dmrp13-084": {
+"by": "rule",
+"def_hash": "3eb4abebea265508",
+"status": "approved",
+"uses": [
+"core",
+"kw:blocker",
+"kw:cannot_attack_player"
+],
+"verify": "43手・turn 30 まで正常に回った（result={'winner': 0, 'reason': 'deck_out', 'turn': 30}）",
+"vocab_ver": "274e5c392bc96853"
+},
+"dmrp13-086": {
+"by": "rule",
+"def_hash": "017dcdc0c8749558",
+"status": "approved",
+"uses": [
+"core",
+"op:may",
+"op:move",
+"op:untap"
+],
+"verify": "43手・turn 30 まで正常に回った（result={'winner': 0, 'reason': 'deck_out', 'turn': 30}）",
+"vocab_ver": "143668bf089b866a"
+},
+"dmrp13-087": {
+"by": "rule",
+"def_hash": "91176e2a44e325f3",
+"status": "approved",
+"uses": [
+"core",
+"kw:blocker",
+"kw:s_trigger",
+"op:modify"
+],
+"verify": "43手・turn 30 まで正常に回った（result={'winner': 0, 'reason': 'deck_out', 'turn': 30}）",
+"vocab_ver": "35726c5057651b00"
+},
+"dmrp13-088": {
+"by": "rule",
+"def_hash": "47ee13de5f74713a",
+"status": "approved",
+"uses": [
+"core",
+"kw:unblockable",
+"op:modify"
+],
+"verify": "43手・turn 30 まで正常に回った（result={'winner': 0, 'reason': 'deck_out', 'turn': 30}）",
+"vocab_ver": "aa2019b37399173c"
+},
+"dmrp13-090": {
+"by": "rule",
+"def_hash": "73b53749ccde299d",
+"status": "approved",
+"uses": [
+"core",
+"kw:slayer",
+"kw:speed_attacker"
+],
+"verify": "43手・turn 30 まで正常に回った（result={'winner': 0, 'reason': 'deck_out', 'turn': 30}）",
+"vocab_ver": "d65c826fe00cf8fc"
+},
+"dmrp13-095": {
+"by": "rule",
+"def_hash": "a96850dfbbc5e5c9",
+"status": "approved",
+"uses": [
+"core",
+"kw:cannot_be_attacked"
+],
+"verify": "43手・turn 30 まで正常に回った（result={'winner': 0, 'reason': 'deck_out', 'turn': 30}）",
+"vocab_ver": "b8aee8747f2453a8"
+}
+}

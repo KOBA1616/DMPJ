@@ -1,0 +1,16 @@
+{
+"dmbd21-015": {
+"by": "rule",
+"def_hash": "9ea8bcb138939616",
+"status": "approved",
+"uses": [
+"core",
+"op:delayed_trigger",
+"op:destroy",
+"op:move",
+"op:play_free"
+],
+"verify": "26手・turn 11 まで正常に回った（result={'winner': 0, 'reason': 'direct_attack', 'turn': 11}）",
+"vocab_ver": "e865441665f86071"
+}
+}

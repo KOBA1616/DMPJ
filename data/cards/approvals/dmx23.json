@@ -1,0 +1,58 @@
+{
+"dmx23-018": {
+"by": "rule",
+"def_hash": "7de9782030000f6a",
+"status": "approved",
+"uses": [
+"core",
+"op:draw",
+"op:may"
+],
+"verify": "43手・turn 30 まで正常に回った（result={'winner': 0, 'reason': 'deck_out', 'turn': 30}）",
+"vocab_ver": "9eaa73333352bf59"
+},
+"dmx23-029": {
+"by": "rule",
+"def_hash": "2252b96741b04ef3",
+"status": "approved",
+"uses": [
+"core",
+"op:move"
+],
+"verify": "43手・turn 30 まで正常に回った（result={'winner': 0, 'reason': 'deck_out', 'turn': 30}）",
+"vocab_ver": "2b1f84ebcdf1a1b4"
+},
+"dmx23-042": {
+"by": "rule",
+"def_hash": "9edcc4135a280523",
+"status": "approved",
+"uses": [
+"core",
+"op:mill"
+],
+"verify": "43手・turn 30 まで正常に回った（result={'winner': 0, 'reason': 'deck_out', 'turn': 30}）",
+"vocab_ver": "e8270759cc18207d"
+},
+"dmx23-048": {
+"by": "rule",
+"def_hash": "11396793557f5fcb",
+"status": "approved",
+"uses": [
+"core",
+"kw:speed_attacker"
+],
+"verify": "43手・turn 30 まで正常に回った（result={'winner': 0, 'reason': 'deck_out', 'turn': 30}）",
+"vocab_ver": "81b0d4471323d10f"
+},
+"dmx23-054": {
+"by": "rule",
+"def_hash": "e2e27e3d4155a2ff",
+"status": "approved",
+"uses": [
+"core",
+"op:draw"
+],
+"verify": "43手・turn 30 まで正常に回った（result={'winner': 0, 'reason': 'deck_out', 'turn': 30}）",
+"vocab_ver": "487d38cedd709caf"
+}
+}

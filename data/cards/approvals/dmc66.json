@@ -1,0 +1,14 @@
+{
+"dmc66-003": {
+"by": "rule",
+"def_hash": "b0b8d46eed7b488f",
+"status": "approved",
+"uses": [
+"core",
+"kw:blocker",
+"kw:triple_breaker"
+],
+"verify": "43手・turn 30 まで正常に回った（result={'winner': 0, 'reason': 'deck_out', 'turn': 30}）",
+"vocab_ver": "e42f6f2aaaffbae8"
+}
+}

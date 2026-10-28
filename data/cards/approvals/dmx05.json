@@ -1,0 +1,14 @@
+{
+"dmx05-010": {
+"by": "rule",
+"def_hash": "969f129117110f5d",
+"status": "approved",
+"uses": [
+"core",
+"op:draw",
+"op:may"
+],
+"verify": "43手・turn 30 まで正常に回った（result={'winner': 0, 'reason': 'deck_out', 'turn': 30}）",
+"vocab_ver": "9eaa73333352bf59"
+}
+}

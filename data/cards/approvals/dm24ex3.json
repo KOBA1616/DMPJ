@@ -1,0 +1,52 @@
+{
+"dm24ex3-059": {
+"by": "rule",
+"def_hash": "3f5a96d51605edbf",
+"status": "approved",
+"uses": [
+"core",
+"kw:hyper_energy",
+"kw:s_trigger",
+"op:destroy"
+],
+"verify": "43手・turn 30 まで正常に回った（result={'winner': 0, 'reason': 'deck_out', 'turn': 30}）",
+"vocab_ver": "9d6098caa57fcb94"
+},
+"dm24ex3-td07": {
+"by": "rule",
+"def_hash": "9abfc7f4a8eaf3d9",
+"status": "approved",
+"uses": [
+"core",
+"kw:blocker",
+"kw:speed_attacker",
+"op:delayed_trigger",
+"op:move",
+"op:play_free"
+],
+"verify": "26手・turn 11 まで正常に回った（result={'winner': 0, 'reason': 'direct_attack', 'turn': 11}）",
+"vocab_ver": "b5c7b3690dacc58d"
+},
+"dm24ex3-tf39": {
+"by": "rule",
+"def_hash": "01173bbd9168d509",
+"status": "approved",
+"uses": [
+"core",
+"op:draw"
+],
+"verify": "43手・turn 30 まで正常に回った（result={'winner': 0, 'reason': 'deck_out', 'turn': 30}）",
+"vocab_ver": "487d38cedd709caf"
+},
+"dm24ex3-tf45": {
+"by": "rule",
+"def_hash": "6b08d3f7f46daf48",
+"status": "approved",
+"uses": [
+"core",
+"op:move"
+],
+"verify": "43手・turn 30 まで正常に回った（result={'winner': 0, 'reason': 'deck_out', 'turn': 30}）",
+"vocab_ver": "2b1f84ebcdf1a1b4"
+}
+}

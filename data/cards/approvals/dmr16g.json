@@ -1,0 +1,36 @@
+{
+"dmr16g-036": {
+"by": "rule",
+"def_hash": "df9921e94b4052a0",
+"status": "approved",
+"uses": [
+"core",
+"kw:blocker",
+"kw:s_trigger"
+],
+"verify": "43手・turn 30 まで正常に回った（result={'winner': 0, 'reason': 'deck_out', 'turn': 30}）",
+"vocab_ver": "ebc5518e3a6b95ed"
+},
+"dmr16g-044": {
+"by": "rule",
+"def_hash": "d71254d7898d5980",
+"status": "approved",
+"uses": [
+"core",
+"op:mill"
+],
+"verify": "43手・turn 30 まで正常に回った（result={'winner': 0, 'reason': 'deck_out', 'turn': 30}）",
+"vocab_ver": "e8270759cc18207d"
+},
+"dmr16g-044d": {
+"by": "rule",
+"def_hash": "79dec53fa96b8e12",
+"status": "approved",
+"uses": [
+"core",
+"op:mill"
+],
+"verify": "43手・turn 30 まで正常に回った（result={'winner': 0, 'reason': 'deck_out', 'turn': 30}）",
+"vocab_ver": "e8270759cc18207d"
+}
+}

@@ -1,0 +1,99 @@
+{
+"promoy23-014": {
+"by": "rule",
+"def_hash": "e0215348cc928f46",
+"status": "approved",
+"uses": [
+"core",
+"kw:g_strike",
+"op:move"
+],
+"verify": "43手・turn 30 まで正常に回った（result={'winner': 0, 'reason': 'deck_out', 'turn': 30}）",
+"vocab_ver": "a545cd5e71c634fa"
+},
+"promoy23-042": {
+"by": "rule",
+"def_hash": "9a29344aaa73f14f",
+"status": "approved",
+"uses": [
+"core"
+],
+"verify": "43手・turn 30 まで正常に回った（result={'winner': 0, 'reason': 'deck_out', 'turn': 30}）",
+"vocab_ver": "4231c11264f83bda"
+},
+"promoy23-049": {
+"by": "rule",
+"def_hash": "a6eac5f6d0a27840",
+"status": "approved",
+"uses": [
+"core",
+"kw:g_strike",
+"kw:speed_attacker",
+"op:move"
+],
+"verify": "43手・turn 30 まで正常に回った（result={'winner': 0, 'reason': 'deck_out', 'turn': 30}）",
+"vocab_ver": "7299e6e35024bd3a"
+},
+"promoy23-067": {
+"by": "rule",
+"def_hash": "d73fe7784911fc79",
+"status": "approved",
+"uses": [
+"core",
+"kw:blocker",
+"kw:double_breaker",
+"kw:hyper_energy"
+],
+"verify": "43手・turn 30 まで正常に回った（result={'winner': 0, 'reason': 'deck_out', 'turn': 30}）",
+"vocab_ver": "9e6c751ba61c5dea"
+},
+"promoy23-078": {
+"by": "rule",
+"def_hash": "ebbbb4df1c272c12",
+"status": "approved",
+"uses": [
+"core",
+"op:draw"
+],
+"verify": "43手・turn 30 まで正常に回った（result={'winner': 0, 'reason': 'deck_out', 'turn': 30}）",
+"vocab_ver": "487d38cedd709caf"
+},
+"promoy23-086": {
+"by": "rule",
+"def_hash": "572aed957874b7e6",
+"status": "approved",
+"uses": [
+"core",
+"kw:double_breaker",
+"kw:hyper_energy",
+"op:destroy"
+],
+"verify": "43手・turn 30 まで正常に回った（result={'winner': 0, 'reason': 'deck_out', 'turn': 30}）",
+"vocab_ver": "382627de78030a51"
+},
+"promoy23-099": {
+"by": "rule",
+"def_hash": "d7112764cdeda6ae",
+"status": "approved",
+"uses": [
+"core",
+"kw:hyper_energy",
+"kw:triple_breaker"
+],
+"verify": "43手・turn 30 まで正常に回った（result={'winner': 0, 'reason': 'deck_out', 'turn': 30}）",
+"vocab_ver": "04c66e98eabfded3"
+},
+"promoy23-spd1106": {
+"by": "rule",
+"def_hash": "11e2e2a9cde138fd",
+"status": "approved",
+"uses": [
+"core",
+"kw:hyper_energy",
+"kw:s_trigger",
+"op:destroy"
+],
+"verify": "43手・turn 30 まで正常に回った（result={'winner': 0, 'reason': 'deck_out', 'turn': 30}）",
+"vocab_ver": "9d6098caa57fcb94"
+}
+}

@@ -1,0 +1,48 @@
+{
+"promoy3-009": {
+"by": "rule",
+"def_hash": "2b44cfc704cee15c",
+"status": "approved",
+"uses": [
+"core",
+"kw:slayer",
+"kw:unblockable"
+],
+"verify": "43手・turn 30 まで正常に回った（result={'winner': 0, 'reason': 'deck_out', 'turn': 30}）",
+"vocab_ver": "9d4acf1307c3214f"
+},
+"promoy3-021": {
+"by": "rule",
+"def_hash": "0307d671b35d2922",
+"status": "approved",
+"uses": [
+"core"
+],
+"verify": "43手・turn 30 まで正常に回った（result={'winner': 0, 'reason': 'deck_out', 'turn': 30}）",
+"vocab_ver": "4231c11264f83bda"
+},
+"promoy3-022": {
+"by": "rule",
+"def_hash": "6d867a79f569b631",
+"status": "approved",
+"uses": [
+"core",
+"kw:double_breaker"
+],
+"verify": "43手・turn 30 まで正常に回った（result={'winner': 0, 'reason': 'deck_out', 'turn': 30}）",
+"vocab_ver": "b85240daea39cbac"
+},
+"promoy3-031": {
+"by": "rule",
+"def_hash": "06024a212573965e",
+"status": "approved",
+"uses": [
+"core",
+"kw:speed_attacker",
+"op:draw",
+"op:may"
+],
+"verify": "43手・turn 30 まで正常に回った（result={'winner': 0, 'reason': 'deck_out', 'turn': 30}）",
+"vocab_ver": "f89a3230189bded5"
+}
+}

@@ -1,0 +1,12 @@
+{
+"dm24bd2-016": {
+"by": "rule",
+"def_hash": "c234dcf107e14c77",
+"status": "approved",
+"uses": [
+"core"
+],
+"verify": "43手・turn 30 まで正常に回った（result={'winner': 0, 'reason': 'deck_out', 'turn': 30}）",
+"vocab_ver": "4231c11264f83bda"
+}
+}

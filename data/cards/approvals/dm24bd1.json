@@ -1,0 +1,26 @@
+{
+"dm24bd1-013": {
+"by": "rule",
+"def_hash": "94497b1eaedd4437",
+"status": "approved",
+"uses": [
+"core",
+"kw:speed_attacker"
+],
+"verify": "43手・turn 30 まで正常に回った（result={'winner': 0, 'reason': 'deck_out', 'turn': 30}）",
+"vocab_ver": "81b0d4471323d10f"
+},
+"dm24bd1-019": {
+"by": "rule",
+"def_hash": "a1d86dded933f83c",
+"status": "approved",
+"uses": [
+"core",
+"kw:g_strike",
+"kw:speed_attacker",
+"op:move"
+],
+"verify": "43手・turn 30 まで正常に回った（result={'winner': 0, 'reason': 'deck_out', 'turn': 30}）",
+"vocab_ver": "7299e6e35024bd3a"
+}
+}

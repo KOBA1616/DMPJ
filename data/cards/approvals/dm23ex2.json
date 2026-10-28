@@ -1,0 +1,24 @@
+{
+"dm23ex2-090": {
+"by": "rule",
+"def_hash": "de4bea9d474fa5c7",
+"status": "approved",
+"uses": [
+"core"
+],
+"verify": "43手・turn 30 まで正常に回った（result={'winner': 0, 'reason': 'deck_out', 'turn': 30}）",
+"vocab_ver": "4231c11264f83bda"
+},
+"dm23ex2-107": {
+"by": "rule",
+"def_hash": "d9276647b9112882",
+"status": "approved",
+"uses": [
+"core",
+"kw:g_strike",
+"op:move"
+],
+"verify": "43手・turn 30 まで正常に回った（result={'winner': 0, 'reason': 'deck_out', 'turn': 30}）",
+"vocab_ver": "a545cd5e71c634fa"
+}
+}

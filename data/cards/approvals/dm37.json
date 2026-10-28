@@ -1,0 +1,25 @@
+{
+"dm37-018": {
+"by": "rule",
+"def_hash": "4eb9676cc4b7acf7",
+"status": "approved",
+"uses": [
+"core",
+"kw:cannot_be_attacked",
+"kw:double_breaker"
+],
+"verify": "43手・turn 30 まで正常に回った（result={'winner': 0, 'reason': 'deck_out', 'turn': 30}）",
+"vocab_ver": "4eb4364a6fc26523"
+},
+"dm37-040": {
+"by": "rule",
+"def_hash": "227c080c425e6101",
+"status": "approved",
+"uses": [
+"core",
+"kw:unblockable"
+],
+"verify": "43手・turn 30 まで正常に回った（result={'winner': 0, 'reason': 'deck_out', 'turn': 30}）",
+"vocab_ver": "6609248a61bffd58"
+}
+}

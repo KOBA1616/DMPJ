@@ -1,0 +1,27 @@
+{
+"dm25ex1-068": {
+"by": "rule",
+"def_hash": "fd1a4989bfb085ee",
+"status": "approved",
+"uses": [
+"core",
+"kw:blocker",
+"op:draw",
+"op:modify"
+],
+"verify": "43手・turn 30 まで正常に回った（result={'winner': 0, 'reason': 'deck_out', 'turn': 30}）",
+"vocab_ver": "bc2062564d9b8e2a"
+},
+"dm25ex1-083": {
+"by": "rule",
+"def_hash": "d2e1979beaae81c0",
+"status": "approved",
+"uses": [
+"core",
+"kw:triple_breaker",
+"op:move"
+],
+"verify": "43手・turn 30 まで正常に回った（result={'winner': 0, 'reason': 'deck_out', 'turn': 30}）",
+"vocab_ver": "23aa9ef659f34860"
+}
+}

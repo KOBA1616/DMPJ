@@ -1,0 +1,35 @@
+{
+"dmbd16-teki003": {
+"by": "rule",
+"def_hash": "e44e825cb0c874e4",
+"status": "approved",
+"uses": [
+"core",
+"kw:slayer",
+"kw:unblockable"
+],
+"verify": "43手・turn 30 まで正常に回った（result={'winner': 0, 'reason': 'deck_out', 'turn': 30}）",
+"vocab_ver": "9d4acf1307c3214f"
+},
+"dmbd16-teki004": {
+"by": "rule",
+"def_hash": "af217c1efd80a3ca",
+"status": "approved",
+"uses": [
+"core"
+],
+"verify": "43手・turn 30 まで正常に回った（result={'winner': 0, 'reason': 'deck_out', 'turn': 30}）",
+"vocab_ver": "4231c11264f83bda"
+},
+"dmbd16-teki009": {
+"by": "rule",
+"def_hash": "780f859c82bd524a",
+"status": "approved",
+"uses": [
+"core",
+"kw:speed_attacker"
+],
+"verify": "43手・turn 30 まで正常に回った（result={'winner': 0, 'reason': 'deck_out', 'turn': 30}）",
+"vocab_ver": "81b0d4471323d10f"
+}
+}

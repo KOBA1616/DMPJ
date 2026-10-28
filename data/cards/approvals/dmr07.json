@@ -1,0 +1,59 @@
+{
+"dmr07-036": {
+"by": "rule",
+"def_hash": "857563d37cdd6247",
+"status": "approved",
+"uses": [
+"core",
+"kw:blocker",
+"kw:cannot_attack_player",
+"kw:s_trigger"
+],
+"verify": "43手・turn 30 まで正常に回った（result={'winner': 0, 'reason': 'deck_out', 'turn': 30}）",
+"vocab_ver": "7d424226f6e3f9b6"
+},
+"dmr07-041": {
+"by": "rule",
+"def_hash": "ac4afabeee1f3505",
+"status": "approved",
+"uses": [
+"core"
+],
+"verify": "43手・turn 30 まで正常に回った（result={'winner': 0, 'reason': 'deck_out', 'turn': 30}）",
+"vocab_ver": "4231c11264f83bda"
+},
+"dmr07-045": {
+"by": "rule",
+"def_hash": "48ac449db4d23559",
+"status": "approved",
+"uses": [
+"core",
+"kw:blocker",
+"kw:cannot_attack"
+],
+"verify": "43手・turn 30 まで正常に回った（result={'winner': 0, 'reason': 'deck_out', 'turn': 30}）",
+"vocab_ver": "65778bf3b243f1bb"
+},
+"dmr07-049": {
+"by": "rule",
+"def_hash": "494d46f0e3f9661a",
+"status": "approved",
+"uses": [
+"core",
+"kw:cannot_attack_player",
+"kw:guardman"
+],
+"verify": "43手・turn 30 まで正常に回った（result={'winner': 0, 'reason': 'deck_out', 'turn': 30}）",
+"vocab_ver": "8a48530235c670d0"
+},
+"dmr07-053": {
+"by": "rule",
+"def_hash": "e1fbc6c97d2d7373",
+"status": "approved",
+"uses": [
+"core"
+],
+"verify": "43手・turn 30 まで正常に回った（result={'winner': 0, 'reason': 'deck_out', 'turn': 30}）",
+"vocab_ver": "4231c11264f83bda"
+}
+}

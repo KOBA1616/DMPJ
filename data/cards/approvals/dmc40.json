@@ -1,0 +1,26 @@
+{
+"dmc40-011": {
+"by": "rule",
+"def_hash": "a2c01422de91b84f",
+"status": "approved",
+"uses": [
+"core",
+"kw:s_trigger",
+"op:destroy"
+],
+"verify": "43手・turn 30 まで正常に回った（result={'winner': 0, 'reason': 'deck_out', 'turn': 30}）",
+"vocab_ver": "ff993b8a9d91679b"
+},
+"dmc40-013": {
+"by": "rule",
+"def_hash": "6b4fdc5fa4dcf629",
+"status": "approved",
+"uses": [
+"core",
+"kw:charger",
+"op:destroy"
+],
+"verify": "43手・turn 30 まで正常に回った（result={'winner': 0, 'reason': 'deck_out', 'turn': 30}）",
+"vocab_ver": "c35526395af80ccc"
+}
+}

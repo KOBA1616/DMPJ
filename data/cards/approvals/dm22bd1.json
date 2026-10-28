@@ -1,0 +1,17 @@
+{
+"dm22bd1-017": {
+"by": "rule",
+"def_hash": "9157642d5b6d27c9",
+"status": "approved",
+"uses": [
+"core",
+"kw:blocker",
+"kw:speed_attacker",
+"op:delayed_trigger",
+"op:move",
+"op:play_free"
+],
+"verify": "26手・turn 11 まで正常に回った（result={'winner': 0, 'reason': 'direct_attack', 'turn': 11}）",
+"vocab_ver": "b5c7b3690dacc58d"
+}
+}

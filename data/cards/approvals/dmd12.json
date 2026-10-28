@@ -1,0 +1,14 @@
+{
+"dmd12-017": {
+"by": "rule",
+"def_hash": "8ea4bf301f2a11b5",
+"status": "approved",
+"uses": [
+"core",
+"kw:s_trigger",
+"op:destroy"
+],
+"verify": "43手・turn 30 まで正常に回った（result={'winner': 0, 'reason': 'deck_out', 'turn': 30}）",
+"vocab_ver": "ff993b8a9d91679b"
+}
+}

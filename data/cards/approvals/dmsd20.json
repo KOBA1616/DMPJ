@@ -1,0 +1,14 @@
+{
+"dmsd20-017": {
+"by": "rule",
+"def_hash": "84b411c4907ecc0f",
+"status": "approved",
+"uses": [
+"core",
+"kw:s_trigger",
+"op:move"
+],
+"verify": "43手・turn 30 まで正常に回った（result={'winner': 0, 'reason': 'deck_out', 'turn': 30}）",
+"vocab_ver": "b3164efc6e3d02f9"
+}
+}

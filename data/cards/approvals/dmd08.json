@@ -1,0 +1,26 @@
+{
+"dmd08-022": {
+"by": "rule",
+"def_hash": "456f089fdc0900e2",
+"status": "approved",
+"uses": [
+"core",
+"kw:charger",
+"op:mill"
+],
+"verify": "43手・turn 30 まで正常に回った（result={'winner': 0, 'reason': 'deck_out', 'turn': 30}）",
+"vocab_ver": "fabc2b4d3f573cd6"
+},
+"dmd08-024": {
+"by": "rule",
+"def_hash": "340a76b12072db89",
+"status": "approved",
+"uses": [
+"core",
+"kw:s_trigger",
+"op:destroy"
+],
+"verify": "43手・turn 30 まで正常に回った（result={'winner': 0, 'reason': 'deck_out', 'turn': 30}）",
+"vocab_ver": "ff993b8a9d91679b"
+}
+}

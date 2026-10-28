@@ -1,0 +1,13 @@
+{
+"dmd27-020": {
+"by": "rule",
+"def_hash": "7edb6e5675a57fb7",
+"status": "approved",
+"uses": [
+"core",
+"kw:speed_attacker"
+],
+"verify": "43手・turn 30 まで正常に回った（result={'winner': 0, 'reason': 'deck_out', 'turn': 30}）",
+"vocab_ver": "81b0d4471323d10f"
+}
+}

@@ -1,0 +1,102 @@
+{
+"dmc34-001": {
+"by": "rule",
+"def_hash": "cbc98a39cece0124",
+"status": "approved",
+"uses": [
+"core",
+"kw:unblockable"
+],
+"verify": "43手・turn 30 まで正常に回った（result={'winner': 0, 'reason': 'deck_out', 'turn': 30}）",
+"vocab_ver": "6609248a61bffd58"
+},
+"dmc34-019": {
+"by": "rule",
+"def_hash": "14dbd8d167abae5c",
+"status": "approved",
+"uses": [
+"core",
+"op:may",
+"op:modify",
+"op:untap"
+],
+"verify": "43手・turn 30 まで正常に回った（result={'winner': 0, 'reason': 'deck_out', 'turn': 30}）",
+"vocab_ver": "be12f2d57992a207"
+},
+"dmc34-022": {
+"by": "rule",
+"def_hash": "05bf454ed92bf08e",
+"status": "approved",
+"uses": [
+"core",
+"kw:blocker",
+"kw:cannot_attack_player"
+],
+"verify": "43手・turn 30 まで正常に回った（result={'winner': 0, 'reason': 'deck_out', 'turn': 30}）",
+"vocab_ver": "274e5c392bc96853"
+},
+"dmc34-035": {
+"by": "rule",
+"def_hash": "769c616b8a5d1b37",
+"status": "approved",
+"uses": [
+"core"
+],
+"verify": "43手・turn 30 まで正常に回った（result={'winner': 0, 'reason': 'deck_out', 'turn': 30}）",
+"vocab_ver": "4231c11264f83bda"
+},
+"dmc34-039": {
+"by": "rule",
+"def_hash": "75dad9e755a99c96",
+"status": "approved",
+"uses": [
+"core"
+],
+"verify": "43手・turn 30 まで正常に回った（result={'winner': 0, 'reason': 'deck_out', 'turn': 30}）",
+"vocab_ver": "4231c11264f83bda"
+},
+"dmc34-046": {
+"by": "rule",
+"def_hash": "c0317ee69a604b19",
+"status": "approved",
+"uses": [
+"core",
+"op:discard"
+],
+"verify": "43手・turn 30 まで正常に回った（result={'winner': 0, 'reason': 'deck_out', 'turn': 30}）",
+"vocab_ver": "68985ef2f408fa69"
+},
+"dmc34-049": {
+"by": "rule",
+"def_hash": "1b81e48bf26bbe73",
+"status": "approved",
+"uses": [
+"core",
+"kw:speed_attacker"
+],
+"verify": "43手・turn 30 まで正常に回った（result={'winner': 0, 'reason': 'deck_out', 'turn': 30}）",
+"vocab_ver": "81b0d4471323d10f"
+},
+"dmc34-050": {
+"by": "rule",
+"def_hash": "fb901ad435b475fc",
+"status": "approved",
+"uses": [
+"core",
+"kw:s_trigger",
+"op:destroy"
+],
+"verify": "43手・turn 30 まで正常に回った（result={'winner': 0, 'reason': 'deck_out', 'turn': 30}）",
+"vocab_ver": "ff993b8a9d91679b"
+},
+"dmc34-054": {
+"by": "rule",
+"def_hash": "b953be857ed9dfbd",
+"status": "approved",
+"uses": [
+"core"
+],
+"verify": "43手・turn 30 まで正常に回った（result={'winner': 0, 'reason': 'deck_out', 'turn': 30}）",
+"vocab_ver": "4231c11264f83bda"
+}
+}

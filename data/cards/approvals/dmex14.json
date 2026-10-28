@@ -1,0 +1,49 @@
+{
+"dmex14-086": {
+"by": "rule",
+"def_hash": "75938bea27738f06",
+"status": "approved",
+"uses": [
+"core",
+"kw:blocker",
+"kw:cannot_attack",
+"op:draw"
+],
+"verify": "43手・turn 30 まで正常に回った（result={'winner': 0, 'reason': 'deck_out', 'turn': 30}）",
+"vocab_ver": "be22761e93360ee4"
+},
+"dmex14-098": {
+"by": "rule",
+"def_hash": "0d21650192f5df82",
+"status": "approved",
+"uses": [
+"core",
+"op:modify",
+"op:move"
+],
+"verify": "43手・turn 30 まで正常に回った（result={'winner': 0, 'reason': 'deck_out', 'turn': 30}）",
+"vocab_ver": "48447531962ecbe8"
+},
+"dmex14-101": {
+"by": "rule",
+"def_hash": "3d49cdfc745550e2",
+"status": "approved",
+"uses": [
+"core",
+"kw:shield_saver"
+],
+"verify": "43手・turn 30 まで正常に回った（result={'winner': 0, 'reason': 'deck_out', 'turn': 30}）",
+"vocab_ver": "d8b931c6bb68c2dc"
+},
+"dmex14-108": {
+"by": "rule",
+"def_hash": "45971a6e2e153ff0",
+"status": "approved",
+"uses": [
+"core",
+"kw:speed_attacker"
+],
+"verify": "43手・turn 30 まで正常に回った（result={'winner': 0, 'reason': 'deck_out', 'turn': 30}）",
+"vocab_ver": "81b0d4471323d10f"
+}
+}

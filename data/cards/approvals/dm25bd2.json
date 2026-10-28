@@ -1,0 +1,14 @@
+{
+"dm25bd2-016": {
+"by": "rule",
+"def_hash": "b410d0dcd4294d7c",
+"status": "approved",
+"uses": [
+"core",
+"kw:g_strike",
+"op:move"
+],
+"verify": "43手・turn 30 まで正常に回った（result={'winner': 0, 'reason': 'deck_out', 'turn': 30}）",
+"vocab_ver": "a545cd5e71c634fa"
+}
+}

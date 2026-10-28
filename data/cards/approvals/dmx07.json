@@ -1,0 +1,15 @@
+{
+"dmx07-014": {
+"by": "rule",
+"def_hash": "1a6d68b151a4eee9",
+"status": "approved",
+"uses": [
+"core",
+"kw:speed_attacker",
+"op:draw",
+"op:may"
+],
+"verify": "43手・turn 30 まで正常に回った（result={'winner': 0, 'reason': 'deck_out', 'turn': 30}）",
+"vocab_ver": "f89a3230189bded5"
+}
+}

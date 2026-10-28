@@ -1,0 +1,38 @@
+{
+"dm22rp2x-045": {
+"by": "rule",
+"def_hash": "f3534589f2a68ee9",
+"status": "approved",
+"uses": [
+"core",
+"kw:s_trigger",
+"op:move"
+],
+"verify": "43手・turn 30 まで正常に回った（result={'winner': 0, 'reason': 'deck_out', 'turn': 30}）",
+"vocab_ver": "b3164efc6e3d02f9"
+},
+"dm22rp2x-052": {
+"by": "rule",
+"def_hash": "34f1e8cf13efc1a7",
+"status": "approved",
+"uses": [
+"core",
+"kw:blocker",
+"kw:cannot_attack_player"
+],
+"verify": "43手・turn 30 まで正常に回った（result={'winner': 0, 'reason': 'deck_out', 'turn': 30}）",
+"vocab_ver": "274e5c392bc96853"
+},
+"dm22rp2x-070": {
+"by": "rule",
+"def_hash": "854767f5f4f35b47",
+"status": "approved",
+"uses": [
+"core",
+"kw:double_breaker",
+"kw:guardman"
+],
+"verify": "43手・turn 30 まで正常に回った（result={'winner': 0, 'reason': 'deck_out', 'turn': 30}）",
+"vocab_ver": "cadf4f010bb557df"
+}
+}
