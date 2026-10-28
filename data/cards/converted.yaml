@@ -63844,3 +63844,237 @@ cards:
     official: dm13-021
     review: pending
     notes: 厳密一致。「自分のクリーチャーが攻撃された時」はこのクリーチャー自身が攻撃された場合も含む
+- id: dm19-019
+  name: 封魔ラベリーズ
+  types:
+  - creature
+  civs:
+  - water
+  cost: 6
+  power: 3000
+  races:
+  - グランド・デビル
+  mana: 1
+  text: 自分が唱える呪文はすべて「サイクロン」を得る。
+  abilities:
+  - kind: static
+    affects:
+      zone: hand
+      owner: you
+      filter:
+        types:
+        - spell
+    mod:
+      grant:
+      - cyclone
+  source:
+    official: dm19-019
+    review: pending
+    notes: 厳密一致
+- id: dm19-034
+  name: ジェット・サイクロン
+  types:
+  - spell
+  civs:
+  - fire
+  cost: 2
+  mana: 1
+  text: 'サイクロン(このターン、この呪文を唱える直前にクリーチャーを召喚していれば、この呪文を唱えた後、墓地に置くかわりに自分の手札に戻す)
+
+    バトルゾーンにある自分のクリーチャー１体は、このターンの終わりまで「スピードアタッカー」を得る。(「スピードアタッカー」を得たクリーチャーは召喚酔いしない)'
+  keywords:
+  - cyclone
+  spell:
+  - op: modify
+    select:
+      zone: bz
+      owner: you
+      count: 1
+      filter:
+        types:
+        - creature
+    mod:
+      grant:
+      - speed_attacker
+    duration: end_of_turn
+  source:
+    official: dm19-034
+    review: pending
+    notes: 厳密一致
+- id: dm19-046
+  name: リバース・サイクロン
+  types:
+  - spell
+  civs:
+  - light
+  cost: 2
+  mana: 1
+  text: 'サイクロン(このターン、この呪文を唱える直前にクリーチャーを召喚していれば、この呪文を唱えた後、墓地に置くかわりに自分の手札に戻す)
+
+    バトルゾーンにある相手のクリーチャーを１体選び、タップする。'
+  keywords:
+  - cyclone
+  spell:
+  - op: tap
+    select:
+      zone: bz
+      owner: opp
+      count: 1
+      filter:
+        types:
+        - creature
+  source:
+    official: dm19-046
+    review: pending
+    notes: 厳密一致
+- id: dm19-058
+  name: バイス・サイクロン
+  types:
+  - spell
+  civs:
+  - darkness
+  cost: 2
+  mana: 1
+  text: 'サイクロン(このターン、この呪文を唱える直前にクリーチャーを召喚していれば、この呪文を唱えた後、墓地に置くかわりに自分の手札に戻す)
+
+    相手は自分自身の手札を１枚選び、捨てる。'
+  keywords:
+  - cyclone
+  spell:
+  - op: discard
+    select:
+      zone: hand
+      owner: opp
+      count: 1
+      chooser: opp
+  source:
+    official: dm19-058
+    review: pending
+    notes: 厳密一致
+- id: dm19-078
+  name: バリアー・サイクロン
+  types:
+  - spell
+  civs:
+  - light
+  cost: 5
+  mana: 1
+  text: 'サイクロン(このターン、この呪文を唱える前にクリーチャーを召喚していれば、この呪文を唱えた後、墓地に置くかわりに自分の手札に戻す)
+
+    自分の手札を１枚、裏向きのまま自分のシールドに加える。'
+  keywords:
+  - cyclone
+  spell:
+  - op: move
+    reason: put
+    select:
+      zone: hand
+      owner: you
+      count: 1
+    to: shield
+  source:
+    official: dm19-078
+    review: pending
+    notes: 厳密一致
+- id: dm19-086
+  name: ブレイン・サイクロン
+  types:
+  - spell
+  civs:
+  - water
+  cost: 3
+  mana: 1
+  text: 'サイクロン(このターン、この呪文を唱える直前にクリーチャーを召喚していれば、この呪文を唱えた後、墓地に置くかわりに自分の手札に戻す)
+
+    カードを１枚引く。'
+  keywords:
+  - cyclone
+  spell:
+  - op: draw
+    count: 1
+  source:
+    official: dm19-086
+    review: pending
+    notes: 厳密一致
+- id: dm19-094
+  name: ブラッディ・サイクロン
+  types:
+  - spell
+  civs:
+  - darkness
+  cost: 1
+  mana: 1
+  text: 'サイクロン(このターン、この呪文を唱える直前にクリーチャーを召喚していれば、この呪文を唱えた後、墓地に置くかわりに自分の手札に戻す)
+
+    バトルゾーンにある自分のクリーチャー１体は、このターンの終わりまで「スレイヤー」を得る。(「スレイヤー」を得たクリーチャーがバトルする時、バトルの後、相手クリーチャーを破壊する)'
+  keywords:
+  - cyclone
+  spell:
+  - op: modify
+    select:
+      zone: bz
+      owner: you
+      count: 1
+      filter:
+        types:
+        - creature
+    mod:
+      grant:
+      - slayer
+    duration: end_of_turn
+  source:
+    official: dm19-094
+    review: pending
+    notes: 厳密一致
+- id: dm19-102
+  name: ガトリング・サイクロン
+  types:
+  - spell
+  civs:
+  - fire
+  cost: 3
+  mana: 1
+  text: 'サイクロン(このターン、この呪文を唱える直前にクリーチャーを召喚していれば、この呪文を唱えた後、墓地に置くかわりに自分の手札に戻す)
+
+    パワー2000以下の相手のクリーチャーを１体破壊する。'
+  keywords:
+  - cyclone
+  spell:
+  - op: destroy
+    select:
+      zone: bz
+      owner: opp
+      count: 1
+      filter:
+        types:
+        - creature
+        power_le: 2000
+  source:
+    official: dm19-102
+    review: pending
+    notes: 厳密一致
+- id: dm19-110
+  name: フェアリー・サイクロン
+  types:
+  - spell
+  civs:
+  - nature
+  cost: 3
+  mana: 1
+  text: 'サイクロン(このターン、この呪文を唱える直前にクリーチャーを召喚していれば、この呪文を唱えた後、墓地に置くかわりに自分の手札に戻す)
+
+    自分の山札の上から１枚目を、自分のマナゾーンに置く。'
+  keywords:
+  - cyclone
+  spell:
+  - op: move
+    reason: put
+    select:
+      zone: deck
+      owner: you
+      from_top: 1
+    to: mana
+  source:
+    official: dm19-110
+    review: pending
+    notes: 厳密一致

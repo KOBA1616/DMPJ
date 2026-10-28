@@ -397,6 +397,9 @@ def h_play(eng, t):
                 return None
         t["sac_done"] = True
     ch0 = eng.chars(cid, face)
+    flag = f"last_play_creature:{p}"
+    cyc = "cyclone" in ch0["keywords"] and bool(s.turn_counters.get(flag))   # サイクロン: 唱える直前に召喚していたか（直前の実行が召喚）
+    s.turn_counters[flag] = int(d.is_creature())
     if ch0["opt_reduce"] and not t["free"] and not t.get("reduce_done"):    # B・A・D / J・O・E: 減らして実行するか選ぶ
         ans, dd = eng.ask(t, p, "choose_cards", [{"key": "reduce"}, {"key": "normal"}], 1, 1)
         if dd:
@@ -442,7 +445,7 @@ def h_play(eng, t):
             env["in_st"] = True
         eng._push(eng.ev_task({"ev": "cast", "player": p, "subject": ref, "unpaid": bool(t["free"])}),
                    eng._child(d.spell, env),
-                   eng.ev_task({"ev": "move", "subject": ref, "from": from_zone, "to": t.get("resolve_to", d.resolve_to),
+                   eng.ev_task({"ev": "move", "subject": ref, "from": from_zone, "to": t.get("resolve_to", "hand" if cyc else d.resolve_to),
                                  "reason": "resolve", "position": t.get("resolve_position", "top")}),
                    *([eng._child(d.after_resolve, env)] if d.after_resolve else []))
     if t.get("reduced"):   # 減らして実行したら、そのターンの終わりに処理する。実行の解決より後に積む＝先に処理する

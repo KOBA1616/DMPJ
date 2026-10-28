@@ -450,3 +450,36 @@ cards:
         when: {event: block, attacker: self}
         effect:
           - {op: draw, count: 1}
+
+  # サイクロン（唱える直前に召喚していれば、唱えた後に手札へ戻す）
+  - id: R062
+    name: 試験用サイクロン呪文
+    types: [spell]
+    civs: [light]
+    cost: 1
+    keywords: [cyclone]
+    text: サイクロン。カードを1枚引く。
+    spell:
+      - {op: draw, count: 1}
+
+  - id: R063
+    name: 試験用呪文付与者
+    types: [creature]
+    civs: [light]
+    cost: 1
+    power: 1000
+    races: [テスト]
+    text: 自分が唱える呪文はすべて「サイクロン」を得る。
+    abilities:
+      - kind: static
+        affects: {zone: hand, owner: you, filter: {types: [spell]}}
+        mod: {grant: [cyclone]}
+
+  - id: R064
+    name: 試験用通常呪文
+    types: [spell]
+    civs: [light]
+    cost: 1
+    text: カードを1枚引く。
+    spell:
+      - {op: draw, count: 1}
