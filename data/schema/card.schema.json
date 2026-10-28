@@ -606,6 +606,9 @@
        "order": {
         "type": "string"
        },
+       "tapped": {
+        "type": "boolean"
+       },
        "as": {
         "type": "string"
        }
@@ -804,6 +807,22 @@
       "required": [
        "op",
        "select"
+      ],
+      "additionalProperties": false
+     },
+     {
+      "type": "object",
+      "properties": {
+       "op": {
+        "const": "together"
+       },
+       "body": {
+        "$ref": "#/$defs/ops"
+       }
+      },
+      "required": [
+       "op",
+       "body"
       ],
       "additionalProperties": false
      },
@@ -1315,7 +1334,8 @@
       },
       "only": {
        "enum": [
-        "attacking"
+        "attacking",
+        "blocking"
        ]
       }
      },

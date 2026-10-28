@@ -6,12 +6,13 @@ from .registry import op
 
 
 @op("move", select="selector", to="zone", reason="reason", position="position?", card_only="bool?",
-    order="str?", **{"as": "str?"})
+    order="str?", tapped="bool?", **{"as": "str?"})
 def op_move(eng, t, op, env):
     """ゾーン移動。as を付けると、移動した後のカード（新しいオブジェクト）を変数に入れる（「その〜」で使う）。
     card_only: カードとして動かす（109.2a）。進化クリーチャーの一番上だけが離れ、下は再構築される（801.4）。
     order: choose なら、2枚以上を山札に置く時の並びをプレイヤーが決める（「好きな順序で」）。
-    答えの先頭が、置いたカードの中で一番上になる。"""
+    答えの先頭が、置いたカードの中で一番上になる。
+    tapped: タップして置く（置かれた時点でタップ状態）。"""
     cids, d = eng.select(t, op["select"], env)
     if d:
         return d
@@ -36,6 +37,9 @@ def op_move(eng, t, op, env):
     if op.get("card_only"):
         for e in evs:
             e["card_only"] = True
+    if op.get("tapped"):
+        for e in evs:
+            e["tapped"] = True
     bind = [{"t": "bind", "env": env, "name": op["as"], "cids": cids, "zone": op["to"]}] if "as" in op else []
     if not evs and not out_tasks:
         if bind:
@@ -45,6 +49,28 @@ def op_move(eng, t, op, env):
         eng._defer(t, [eng.ev_task(e, env) for e in evs] + bind)
     else:                  # それ以外は同時（400.7）
         eng._defer(t, ([eng.ev_task(evs, env)] if evs else []) + out_tasks + bind)
+    return None
+
+
+@op("together", body="ops")
+def op_together(eng, t, op, env):
+    """body の move をすべて同時に行う（「Aを〜に戻し、同時に、Bを〜に置く」。400.7 同時の移動）。
+    対象は移動の前にすべて決める。1つのイベントの束で動くので、途中の状態を誘発や置換が見ることはない。
+    body は move だけで、対象は count: all か ref（プレイヤーの選択を挟まないもの）に限る。"""
+    evs, binds = [], []
+    for sub in op["body"]:
+        if sub.get("op") != "move" or sub.get("position") or sub.get("card_only") or sub.get("order"):
+            raise ValueError("together: body must be plain move ops")
+        sel = sub["select"]
+        if "ref" not in sel and sel.get("count") != "all":
+            raise ValueError("together: move targets must be count: all or ref")
+        cids = eng.candidates(sel, env)
+        evs += [{"ev": "move", "subject": eng.s.ref(c), "to": sub["to"], "reason": sub["reason"],
+                 "position": "top", **({"tapped": True} if sub.get("tapped") else {})} for c in cids]
+        if "as" in sub:
+            binds.append({"t": "bind", "env": env, "name": sub["as"], "cids": cids, "zone": sub["to"]})
+    if evs:
+        eng._defer(t, [eng.ev_task(evs, env)] + binds)
     return None
 
 
