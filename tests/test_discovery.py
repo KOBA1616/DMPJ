@@ -39,13 +39,14 @@ def test_shrink_saga_board_to_one_minimal_board(rules):
     test = sh.loop_test(rules, 0, 1500, delta)
     r = sh.shrink(spec, test)
     names = sorted(n for _, _, _, n in sh.entries(r.spec))
-    assert names == sorted([SAGA, SAGA, DRAGE, KODAMA])
+    assert DRAGE not in names and KODAMA not in names     # 勝つための出口のカードは、ループの入口には要らない
+    assert names.count(SAGA) == 2
     for pk, z, i, n in sh.entries(r.spec):                             # 1-極小: どれを外しても成立しない
         assert not test(sh.without(r.spec, pk, z, i))
     again = sh.shrink(spec, sh.loop_test(rules, 0, 1500, delta))
     assert again.spec == r.spec                                       # 同じ入力から同じ結果
     ls = sh.to_loopspec(rules, "saga", r, delta)
-    assert ls.delta == delta and sum(p.n for p in ls.minimal) == 4
+    assert ls.delta == delta and sum(p.n for p in ls.minimal) == len(sh.entries(r.spec))
     assert LoopSpec.from_json(ls.to_json()) == ls
 
 
@@ -67,8 +68,21 @@ def test_robust_shrink_does_not_let_a_creature_filler_hide_the_graveyard_require
     r = sh.robust_shrink(spec, test, ["T001", "T013"])      # T001 はクリーチャー、T013 は呪文
     assert r.holds_for_all
     only_creature = sorted(n for _, _, _, n in sh.entries(r.per_filler["T001"]))
-    assert only_creature == sorted([SAGA, SAGA, DRAGE, KODAMA])
+    assert DRAGE not in only_creature and KODAMA not in only_creature
     robust = sh.entries(r.spec)
     grave = [n for pk, z, _, n in robust if z == "graveyard"]
     assert len([n for n in grave if "creature" in rules.cards[n].types]) >= 2   # サガ以外にも墓地のクリーチャーが要る
     assert len(robust) > len(only_creature)
+
+
+def test_entrance_and_exit_are_separated(rules):
+    """入口（ループが回る）にはドラゲリオンもコダマダンスも要らない。出口（勝利）に追加で要る。"""
+    spec = yaml.safe_load(SAGA_SETUP.read_text(encoding="utf-8"))
+    spec["p0"]["hand"] = [c for c in spec["p0"]["hand"] if c != "T001"]
+    d = {"deck:0": -1, "graveyard:0": 1}
+    r = sh.split_entrance_exit(spec, sh.loop_test(rules, 0, 1500, d), sh.win_test(rules, 0, 1500, 1500, d), ["T001", "T013"])
+    assert r.wins
+    ent = sorted(n for _, _, _, n in sh.entries(r.entrance))
+    assert DRAGE not in ent and KODAMA not in ent
+    assert {n for _, _, n in r.extra} >= {DRAGE, KODAMA}
+    assert any(z == "graveyard" for _, z, _ in r.extra)           # 蘇生するシャコガイルは墓地に要る

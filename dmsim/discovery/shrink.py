@@ -80,16 +80,23 @@ class Shrunk:
     tests: int = 0
 
 
-def shrink(spec: dict, test, protect: tuple[str, ...] = ()) -> Shrunk:
+ORDER = ("hand", "bz", "mana", "shield", "graveyard")
+
+
+def shrink(spec: dict, test, protect: tuple[str, ...] = (), order: tuple[str, ...] = ORDER) -> Shrunk:
     """1つ外してもループが成立する限り外し続ける。どの1枚を外しても成立しなくなった（1-極小）盤面を返す。
-    protect のゾーン（'hand' など。例: 手札の filler）は外さない。"""
+    protect のゾーン（'hand' など。例: 手札の filler）は外さない。
+
+    1-極小は外す順で変わる。order の先頭のゾーンから外す（既定は手札から）。墓地を先に外すと、
+    手札の別のカードが代わりに墓地へ送って条件を作る盤面が残り、入口に不要なカードが紛れ込む。"""
     assert test(spec), "元の盤面でループが成立しない"
     cur = copy.deepcopy(spec)
     removed = []
     changed = True
     while changed:
         changed = False
-        for pk, z, i, n in reversed(entries(cur)):     # 後ろから外すと位置がずれない
+        rank = {z: k for k, z in enumerate(order)}
+        for pk, z, i, n in sorted(reversed(entries(cur)), key=lambda e: rank.get(e[1], len(rank))):   # 同じゾーンは後ろから外す
             if z in protect:
                 continue
             cand = without(cur, pk, z, i)
@@ -124,6 +131,71 @@ def robust_shrink(spec: dict, test, fillers: list[str]) -> Robust:
     pool = ok or list(per.values())
     best = min(pool, key=lambda c: (len(entries(c)), json.dumps(c, sort_keys=True, ensure_ascii=False)))
     return Robust({k: v for k, v in best.items()}, per, bool(ok))
+
+
+def win_test(rules, me: int = 0, budget: int = 1500, seek_budget: int = 1500, delta: dict | None = None):
+    """spec から、ループを使って（delta が指定なら一致するループで）勝ち筋が見つかるか。出口の判定。"""
+    cache: dict[str, bool] = {}
+
+    def test(spec: dict) -> bool:
+        key = json.dumps(spec, sort_keys=True, ensure_ascii=False)
+        if key not in cache:
+            try:
+                found = [f for f in lf.discover_loops(sc.build(rules, spec), me, budget)
+                         if f.verified and (delta is None or f.cert.delta == delta)]
+                cache[key] = any(lf.seek_wins(f, me, seek_budget).wins for f in found)
+            except (KeyError, StopIteration):
+                cache[key] = False
+        return cache[key]
+
+    test.cache = cache
+    return test
+
+
+@dataclass
+class EntranceExit:
+    entrance: dict                     # ループが回る最小の盤面（M）
+    exit: dict                         # M を保ったまま勝てる最小の盤面
+    extra: list[tuple[str, str, str]]  # 出口に追加で要るカード (プレイヤー鍵, ゾーン, カードID)
+    wins: bool
+
+
+def split_entrance_exit(spec: dict, enter, win, fillers: list[str] | None = None,
+                        order: tuple[str, ...] = ORDER) -> EntranceExit:
+    """入口（ループ成立）と出口（勝利）を別々に縮約し、出口に追加で要るカードを求める。
+    入口は enter（ループが検出できるか）だけで縮約する。出口は入口のカードを外さずに、win（勝てるか）で縮約する。"""
+    m = (robust_shrink(spec, enter, fillers).spec if fillers else shrink(spec, enter, order=order).spec)
+    have = [(pk, z, n) for pk, z, _, n in entries(m)]
+    if not win(spec):
+        return EntranceExit(m, spec, [], False)
+    cur = copy.deepcopy(spec)
+    rank = {z: k for k, z in enumerate(order)}
+    keep = list(have)
+    protected = set()
+    for pk, z, i, n in sorted(reversed(entries(cur)), key=lambda e: rank.get(e[1], len(rank))):
+        if (pk, z, n) in keep:
+            keep.remove((pk, z, n))
+            protected.add((pk, z, n))
+    changed = True
+    while changed:
+        changed = False
+        budget = list(have)
+        for pk, z, i, n in sorted(reversed(entries(cur)), key=lambda e: rank.get(e[1], len(rank))):
+            if (pk, z, n) in budget:
+                budget.remove((pk, z, n))
+                continue
+            cand = without(cur, pk, z, i)
+            if win(cand):
+                cur, changed = cand, True
+                break
+    left = list(have)
+    extra = []
+    for pk, z, i, n in entries(cur):
+        if (pk, z, n) in left:
+            left.remove((pk, z, n))
+        else:
+            extra.append((pk, z, n))
+    return EntranceExit(m, cur, extra, True)
 
 
 def zone_alternatives(spec: dict, test, zones=ZONES) -> dict[tuple[str, str, int], list[str]]:
