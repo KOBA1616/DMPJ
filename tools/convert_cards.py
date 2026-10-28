@@ -180,11 +180,40 @@ def make_llm(provider: str, model: str | None, interval: float):
     return AnthropicLLM(model or MODEL)
 
 
-def convert(llm, row: dict, tables, sysp: str, effort: str, usage: dict | None = None) -> dict:
+def pack_prompt(rows: list[dict]) -> str:
+    return (f"次の{len(rows)}枚のカードをまとめて変換してください。出力は ```yaml の中に cards: のリストを1つだけ書き、"
+            "各要素を1枚分のカード定義にする（id は入力と同じ。順番も同じ）。\n\n"
+            + "\n\n".join(json.dumps(prompt_row(r), ensure_ascii=False, indent=1) for r in rows))
+
+
+def convert_pack(llm, rows: list[dict], sysp, effort: str, usage: dict | None = None) -> dict[str, str]:
+    """複数枚を1回の呼び出しで変換する。返すのは {id: そのカード1枚分の YAML 文}（検査はしない。呼び出し側が1枚ずつ検査する）。
+    読み取れなかったカードは含めない（呼び出し側が単独の呼び出しにフォールバックする）。"""
+    text = llm.complete(sysp(rows[0]) if callable(sysp) else sysp, [{"role": "user", "content": pack_prompt(rows)}], effort, usage)
+    m = re.search(r"```ya?ml\s*\n(.*?)```", text, re.S)
+    try:
+        raw = yaml.safe_load(m.group(1) if m else text)
+    except yaml.YAMLError:
+        return {}
+    items = raw.get("cards") if isinstance(raw, dict) else raw
+    want = {r["id"] for r in rows}
+    out = {}
+    for it in items if isinstance(items, list) else []:
+        if isinstance(it, dict) and it.get("id") in want and it["id"] not in out:
+            out[it["id"]] = yaml.safe_dump(it, allow_unicode=True, sort_keys=False)
+    print(f"  まとめ変換 {len(rows)}枚 → {len(out)}枚読み取り", file=sys.stderr)
+    return out
+
+
+def convert(llm, row: dict, tables, sysp: str, effort: str, usage: dict | None = None, first: str | None = None) -> dict:
+    """first: まとめ変換で得た1枚分の出力。あれば最初の呼び出しの代わりに使い、検査に落ちたときだけ単独の呼び出しで直す。"""
     messages = [{"role": "user", "content": user_prompt(row)}]
     err = None
     for attempt in range(2):
-        text = llm.complete(sysp(row) if callable(sysp) else sysp, messages, effort, usage)
+        if attempt == 0 and first is not None:
+            text = first
+        else:
+            text = llm.complete(sysp(row) if callable(sysp) else sysp, messages, effort, usage)
         print(f"  {row['id']}: {len(text)}文字", file=sys.stderr)
         try:
             return validate(extract(text), row, tables)
@@ -193,6 +222,17 @@ def convert(llm, row: dict, tables, sysp: str, effort: str, usage: dict | None =
             messages += [{"role": "assistant", "content": text},
                          {"role": "user", "content": f"検査でエラーになった。直した定義だけを出力して。\n{e}"}]
     raise DefError(f"2回とも検査を通らなかった: {err}")
+
+
+def merge_split(card: dict, r: dict, part) -> dict:
+    """ルールで先に処理したキーワード・能力（rule_convert.split の結果）を、モデルが返したカードに戻す。"""
+    card["keywords"] = [*part[0], *[k for k in card.get("keywords") or [] if k not in part[0]]]
+    if not card["keywords"]:
+        del card["keywords"]
+    if part[2]:
+        card["abilities"] = [*part[2], *(card.get("abilities") or [])]
+    card["text"] = r["text"]
+    return card
 
 
 def load_rows(inputs: list[str]) -> list[dict]:
@@ -312,7 +352,7 @@ def run_rules(rows: list[dict], tables, out: Path, rejects_path: Path) -> dict:
 
 
 def run(rows: list[dict], client, tables, sysp: str, effort: str, out: Path, rejects_path: Path,
-        workers: int = 1, report_path: Path | None = None) -> dict:
+        workers: int = 1, report_path: Path | None = None, pack: int = 1) -> dict:
     """rows を変換して out に追記する。1枚ごとに保存するので途中で止まっても続きから再開できる。
     検査を通らなかったカードは rejects に（成功したIDは rejects から消す）、APIの一時的な失敗は数えるだけで記録しない。"""
     import threading
@@ -333,6 +373,31 @@ def run(rows: list[dict], client, tables, sysp: str, effort: str, out: Path, rej
 
     pending_timeouts: list[dict] = []   # 次のカードが成功したら reason: timeout で確定する（連続2回なら障害とみなして確定しない）
     streak = {"n": 0}      # 連続したAPI失敗（2回で打ち切り）。無料枠の制限(429)に当たったら残りを打たずに止める
+
+    packed: dict[str, str] = {}      # まとめ変換で得た {id: 1枚分の出力}
+
+    def model_row(r):
+        part = rule_convert.split(r)
+        return {**r, "text": part[1], "known_keywords": part[0]} if part else r
+
+    def prefetch():
+        """ルール・写し・事前検査で片づかないカードを pack 枚ずつ1回の呼び出しで変換する（失敗した分は単独の呼び出しに回る）。"""
+        todo = []
+        for r in rows:
+            if rule_convert.convert(r) is not None or precheck(r) or rule_convert.reuse_same_text(r, cards) is not None:
+                continue
+            todo.append(model_row(r))
+        for i in range(0, len(todo), pack):
+            grp = todo[i:i + pack]
+            if len(grp) < 2:
+                break
+            try:
+                packed.update(convert_pack(client, grp, sysp, effort, usage))
+            except Fatal:
+                raise
+            except Exception as e:      # noqa: BLE001  まとめが使えない時は単独に任せる（API 失敗の数え方は単独側に任せる）
+                print(f"  まとめ変換に失敗したので単独で続ける: {type(e).__name__}", file=sys.stderr)
+                return
 
     def one(r):
         rc = rule_convert.convert(r)      # キーワードだけ・バニラは、辞書のルールで作る（モデルを呼ばない＝トークン0）
@@ -377,14 +442,10 @@ def run(rows: list[dict], client, tables, sysp: str, effort: str, out: Path, rej
         print(f"… {r['id']} {r.get('name', '')} 変換中", file=sys.stderr, flush=True)
         part = rule_convert.split(r)      # キーワード能力はルールで処理し、残りの原文だけをモデルに渡す
         try:
-            card = convert(client, {**r, "text": part[1], "known_keywords": part[0]} if part else r, tables, sysp, effort, usage)
+            card = convert(client, {**r, "text": part[1], "known_keywords": part[0]} if part else r, tables, sysp, effort, usage,
+                           first=packed.pop(r["id"], None))
             if part:
-                card["keywords"] = [*part[0], *[k for k in card.get("keywords") or [] if k not in part[0]]]
-                if not card["keywords"]:
-                    del card["keywords"]
-                if part[2]:
-                    card["abilities"] = [*part[2], *(card.get("abilities") or [])]
-                card["text"] = r["text"]
+                merge_split(card, r, part)
             validate(card, r, tables)
         except DefError as e:
             with lock:
@@ -422,6 +483,8 @@ def run(rows: list[dict], client, tables, sysp: str, effort: str, out: Path, rej
             rejects.pop(r["id"], None)
             save()
 
+    if pack > 1:
+        prefetch()
     if workers > 1:
         with ThreadPoolExecutor(workers) as ex:
             list(ex.map(one, rows))
@@ -448,6 +511,7 @@ def main(argv=None):
     ap.add_argument("--limit", type=int, help="この枚数まで変換する（試運転・予算の上限用）")
     ap.add_argument("--order", choices=["file", "short"], default="file", help="short: 原文の短い順（簡単なものから）")
     ap.add_argument("--workers", type=int, default=1, help="並列数（API のレート制限に合わせる）")
+    ap.add_argument("--pack", type=int, default=1, help="1回の呼び出しでまとめて変換する枚数（1=従来どおり1枚ずつ。指示文を共有してトークンを減らす）")
     ap.add_argument("--provider", choices=["anthropic", "opencode", "opencode-cli"], default="anthropic",
                     help="opencode は無料モデル専用（OPENCODE_API_KEY、許可リスト外のモデルは拒否）")
     ap.add_argument("--model", help="モデルID（既定: anthropic は claude-opus-5-5、opencode は glm-5.3-flash-free）")
@@ -480,7 +544,7 @@ def main(argv=None):
     try:
         llm = make_llm(a.provider, a.model, a.interval)
         report = run(rows, llm, load_tables(), sysp, a.effort, out, rejects_path,
-                     a.workers, Path(a.report))
+                     a.workers, Path(a.report), pack=a.pack)
     except Fatal as e:
         sys.exit(f"停止: {e}")
     print(f"変換 {report['ok']}/{report['requested']} 件、検査を通らず {report['rejected']} 件（{a.rejects}）、"

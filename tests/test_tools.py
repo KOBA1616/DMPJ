@@ -233,6 +233,59 @@ def test_convert_run_triage_and_resume(tmp_path):
     assert convert_cards.read_jsonl(rej) == [] and len(yaml.safe_load(out.read_text(encoding="utf-8"))["cards"]) == 3
 
 
+def test_convert_pack_shares_one_call_and_falls_back_per_card(tmp_path):
+    """pack=3: 1回の呼び出しで3枚。1枚は検査落ち→単独で直す、1枚は応答に無い→単独の呼び出し。"""
+    import convert_cards
+    from dmsim.defs import load_tables
+    card = "- id: {i}\n  name: 例\n  types: [creature]\n  civs: [water]\n  cost: 2\n  power: 1000\n  keywords: [{k}]\n"
+    single = "```yaml\nid: {i}\nname: 例\ntypes: [creature]\ncivs: [water]\ncost: 2\npower: 1000\nkeywords: [blocker]\n```"
+    calls = []
+
+    class Msgs:
+        def stream(self, **kw):
+            calls.append(kw["messages"][0]["content"])
+            if "まとめて" in calls[-1]:
+                return _FakeStream("```yaml\ncards:\n" + card.format(i="p1", k="blocker") + card.format(i="p2", k="no_such") + "```")
+            i = calls[-1].split('"id": "')[1].split('"')[0]
+            return _FakeStream(single.format(i=i))
+
+    client = type("C", (), {"messages": Msgs()})()
+    rows = [{"id": i, "text": "x"} for i in ("p1", "p2", "p3")]
+    out, rej = tmp_path / "c.yaml", tmp_path / "rej.jsonl"
+    r = convert_cards.run(rows, convert_cards.AnthropicLLM(client=client), load_tables(), "SYS", "low", out, rej, pack=3)
+    assert (r["ok"], r["rejected"]) == (3, 0)
+    assert len(calls) == 1 + 2                   # まとめ1回 + p2(検査落ちの直し)・p3(応答に無い)の単独
+    assert sorted(c["id"] for c in yaml.safe_load(out.read_text(encoding="utf-8"))["cards"]) == ["p1", "p2", "p3"]
+
+
+def test_agent_convert_next_and_submit(tmp_path, monkeypatch, capsys):
+    """AI が API なしで変換する経路: next が依頼文を出し、submit が検査して合格分だけ登録する。"""
+    import json as _json
+
+    import agent_convert as ac
+    raw = tmp_path / "raw"
+    raw.mkdir()
+    rows = [{"id": "z1", "name": "甲", "card_type": "クリーチャー", "civilization": "水", "cost": "2", "power": "1000",
+             "race": "x", "text": "甲が出た時、カードを1枚引く。この能力は独自の複雑な文。"},
+            {"id": "z2", "name": "乙", "card_type": "クリーチャー", "civilization": "水", "cost": "2", "power": "1000",
+             "race": "x", "text": "乙が出た時、相手の山札を見て、好きな順に入れ替える。独自の文。"}]
+    (raw / "a.jsonl").write_text("\n".join(_json.dumps(r, ensure_ascii=False) for r in rows), encoding="utf-8")
+    monkeypatch.setattr(ac, "RAW", raw)
+    monkeypatch.setattr(ac, "OUT", tmp_path / "converted.yaml")
+    monkeypatch.setattr(ac, "REJ", raw / "rejects.jsonl")
+    assert ac.cmd_next(2, "id") == 0
+    out = capsys.readouterr().out
+    assert "z1" in out and "z2" in out
+    ans = tmp_path / "answer.yaml"
+    ans.write_text("cards:\n- id: z1\n  name: 甲\n  types: [creature]\n  civs: [water]\n  cost: 2\n  power: 1000\n"
+                   "- id: z2\n  name: 乙\n  types: [creature]\n  civs: [water]\n  cost: 2\n  power: 1000\n  keywords: [no_such]\n"
+                   "- id: nope\n  name: 無\n", encoding="utf-8")
+    assert ac.cmd_submit(str(ans)) == 1                      # z2 と nope は不合格
+    got = yaml.safe_load((tmp_path / "converted.yaml").read_text(encoding="utf-8"))["cards"]
+    assert [c["id"] for c in got] == ["z1"] and got[0]["source"]["review"] == "pending"
+    assert ac.cmd_submit(str(ans)) == 1 and len(yaml.safe_load((tmp_path / "converted.yaml").read_text(encoding="utf-8"))["cards"]) == 1
+
+
 def test_survey_text_counts_forms():
     import survey_text
     rows = [{"id": "a", "name": "甲", "text": "ブロッカー(説明。)\n甲が出た時、カードを2枚引く。"},
@@ -805,6 +858,78 @@ def test_local_worker_ask_roundtrip(tmp_path):
     assert res["status"] == "ok" and res["text"] == "要約結果"
     assert not (chk / "jobs" / "pending" / f"{jid}.yaml").exists()
     assert lw.process(g, lambda m: LLM()) == []
+
+
+def _worker_remote(tmp_path, n=2):
+    import subprocess
+
+    import local_worker as lw
+    bare = tmp_path / "remote.git"
+    subprocess.run(["git", "init", "-q", "--bare", str(bare)], check=True)
+    gits = []
+    for i in range(n):
+        clone = tmp_path / f"clone{i}"
+        subprocess.run(["git", "clone", "-q", str(bare), str(clone)], check=True, capture_output=True)
+        for k, v in (("user.name", "t"), ("user.email", "t@t")):
+            subprocess.run(["git", "config", k, v], cwd=clone, check=True)
+        gits.append(lw.Git(clone, tmp_path / f"work{i}"))
+    return gits
+
+
+class _EchoLLM:
+    model = "glm-5.3-flash-free"
+    calls = 0
+
+    def complete(self, sysp, messages, effort, usage):
+        _EchoLLM.calls += 1
+        return "ok"
+
+
+def test_local_worker_two_workers_do_not_take_the_same_job(tmp_path):
+    """2台が同じ pending を見ていても、先に claim した1台だけが処理する。"""
+    import local_worker as lw
+    a, b = _worker_remote(tmp_path)
+    jid = lw.enqueue(a, {"type": "ask", "task": "summarize", "input": "本文"})
+    b.worktree("jobs", lw.JOBS_BRANCH, create=True)          # b も pending を見た状態にしておく
+    _EchoLLM.calls = 0
+    assert lw.process(a, lambda m: _EchoLLM(), worker="A") == [f"{jid}:ok"]
+    out = lw.process(b, lambda m: _EchoLLM(), worker="B")
+    assert out == [] and _EchoLLM.calls == 1                  # b は何も拾わない（a が済ませた）
+
+
+def test_local_worker_target_and_stale_running(tmp_path):
+    """target が違うワーカーは拾わない。止まった running は pending に戻る。"""
+    import subprocess
+
+    import local_worker as lw
+    import yaml as _yaml
+    (a,) = _worker_remote(tmp_path, 1)
+    jid = lw.enqueue(a, {"type": "ask", "task": "summarize", "input": "本文", "target": "cloud"})
+    _EchoLLM.calls = 0
+    assert lw.process(a, lambda m: _EchoLLM(), target="local") == [] and _EchoLLM.calls == 0
+    jd = a.worktree("jobs", lw.JOBS_BRANCH, create=True)
+    pj = jd / "jobs" / "pending" / f"{jid}.yaml"
+    job = _yaml.safe_load(pj.read_text(encoding="utf-8"))
+    pj.unlink()
+    (jd / "jobs" / "running").mkdir(parents=True, exist_ok=True)
+    (jd / "jobs" / "running" / f"{jid}.yaml").write_text(
+        _yaml.safe_dump({**job, "worker": "X", "claimed": "2020-01-01T00:00:00+00:00"}), encoding="utf-8")
+    a.commit_push(jd, lw.JOBS_BRANCH, "stale")
+    assert lw.process(a, lambda m: _EchoLLM(), target="cloud") == [f"{jid}:ok"]      # 戻されて cloud ワーカーが処理した
+    assert not (jd / "jobs" / "running" / f"{jid}.yaml").exists()
+
+
+def test_auto_convert_newest_order(tmp_path, monkeypatch):
+    import json as _json
+
+    import auto_convert as ac
+    cat = tmp_path / "cards" / "catalog"
+    cat.mkdir(parents=True)
+    (cat / "sets.json").write_text(_json.dumps({"products": {"26ex4": {}, "1": {}}}), encoding="utf-8")
+    monkeypatch.setattr(ac, "DATA", tmp_path)
+    rows = [{"id": "dm01-001", "product": "1"}, {"id": "dm26ex4-002", "product": "26ex4"},
+            {"id": "dm26ex4-001", "product": "26ex4"}, {"id": "x", "product": "unknown"}]
+    assert [r["id"] for r in sorted(rows, key=ac.newest_key())] == ["dm26ex4-001", "dm26ex4-002", "dm01-001", "x"]
 
 
 def test_local_worker_routine_allowlist(tmp_path):
