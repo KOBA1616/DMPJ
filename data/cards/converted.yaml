@@ -54081,3 +54081,1571 @@ cards:
     notes: 自分のマナゾーンのカードすべてに untap_at_start の deny をかける常在型能力として書いた
   keywords:
   - double_breaker
+- id: dm10-042
+  name: 光器ベロチカ
+  types:
+  - creature
+  civs:
+  - light
+  cost: 5
+  power: 5000
+  races:
+  - メカ・デル・ソル
+  mana: 1
+  text: このクリーチャーをバトルゾーンに出した時、自分のシールドが５枚以上あれば、自分の山札の上から１枚目を裏向きのまま自分のシールドに加える。
+  abilities:
+  - kind: trigger
+    when:
+      event: move
+      to: bz
+      subject: self
+    if:
+      cmp:
+      - count:
+          zone: shield
+          owner: you
+      - '>='
+      - 5
+    effect:
+    - op: move
+      select:
+        zone: deck
+        owner: you
+        from_top: 1
+      to: shield
+      reason: put
+  source:
+    official: dm10-042
+    review: pending
+- id: dm10-044
+  name: 祝福の伝道師クレアル
+  types:
+  - creature
+  civs:
+  - light
+  cost: 3
+  power: 1000
+  races:
+  - バーサーカー
+  mana: 1
+  text: このクリーチャーのパワーは、バトルゾーンにある自分の他のタップされていないクリーチャー１体につき+1000される。
+  abilities:
+  - kind: static
+    affects: self
+    mod:
+      power:
+        amount: 1000
+        count:
+          zone: bz
+          owner: you
+          filter:
+            types:
+            - creature
+            tapped: false
+          other: true
+  source:
+    official: dm10-044
+    review: pending
+    notes: dm10-002 リュドミーラの+1000版
+- id: dm10-046
+  name: ハーミット・フィッシュ
+  types:
+  - creature
+  civs:
+  - water
+  cost: 5
+  power: 1000
+  races:
+  - ゲル・フィッシュ
+  mana: 1
+  text: このクリーチャーのパワーは、相手のマナゾーンでタップされているカード１枚につき+1000される。
+  abilities:
+  - kind: static
+    affects: self
+    mod:
+      power:
+        amount: 1000
+        count:
+          zone: mana
+          owner: opp
+          filter:
+            tapped: true
+  source:
+    official: dm10-046
+    review: pending
+- id: dm10-049
+  name: 衰弱秘宝デッドリーン
+  types:
+  - creature
+  civs:
+  - darkness
+  cost: 5
+  power: 4000
+  races:
+  - パンドラボックス
+  mana: 1
+  text: このクリーチャーをバトルゾーンに出した時、相手のシールドが３枚以下であれば、相手の手札を１枚見ないで選び、捨てさせる。
+  abilities:
+  - kind: trigger
+    when:
+      event: move
+      to: bz
+      subject: self
+    if:
+      cmp:
+      - count:
+          zone: shield
+          owner: opp
+      - <=
+      - 3
+    effect:
+    - op: discard
+      select:
+        zone: hand
+        owner: opp
+        count: 1
+  source:
+    official: dm10-049
+    review: pending
+- id: dm10-056
+  name: スクランブル・ブースター
+  types:
+  - spell
+  civs:
+  - fire
+  cost: 1
+  mana: 1
+  text: バトルゾーンにある自分のクリーチャー１体は、このターンの終わりまで「スピードアタッカー」を得る。
+  spell:
+  - op: modify
+    select:
+      zone: bz
+      owner: you
+      filter:
+        types:
+        - creature
+      count: 1
+    mod:
+      grant:
+      - speed_attacker
+    duration: end_of_turn
+  source:
+    official: dm10-056
+    review: pending
+    notes: スピードアタッカーの説明文は text から省いた
+- id: dm10-057
+  name: 襲撃するサベージ・ホーン
+  types:
+  - creature
+  civs:
+  - nature
+  cost: 6
+  power: 2000
+  races:
+  - ホーン・ビースト
+  mana: 1
+  text: 攻撃中、このクリーチャーのパワーは、自分のマナゾーンでタップされているカード１枚につき+2000される。
+  abilities:
+  - kind: static
+    affects: self
+    mod:
+      battle_power:
+        amount: 2000
+        only: attacking
+        count:
+          zone: mana
+          owner: you
+          filter:
+            tapped: true
+  source:
+    official: dm10-057
+    review: pending
+- id: dm10-061
+  name: 電脳聖者エストール
+  types:
+  - creature
+  civs:
+  - light
+  - water
+  cost: 5
+  power: 2000
+  races:
+  - イニシエート
+  - リキッド・ピープル
+  mana: 1
+  text: マナゾーンに置く時、このカードはタップして置く。このクリーチャーをバトルゾーンに出した時、自分の山札の上から１枚目を裏向きのまま自分のシールドに加え、相手のシールドを１枚見てから元の場所に戻す。
+  abilities:
+  - kind: trigger
+    when:
+      event: move
+      to: bz
+      subject: self
+    effect:
+    - op: move
+      select:
+        zone: deck
+        owner: you
+        from_top: 1
+      to: shield
+      reason: put
+    - op: choose
+      select:
+        zone: shield
+        owner: opp
+        count: 1
+        look: true
+      as: seen
+  source:
+    official: dm10-061
+    review: pending
+    notes: 「マナゾーンに置く時タップして置く」は keyword_patterns のルール処理側。シールドは動かさないので「元の場所に戻す」は自動的に満たす
+    aliases:
+    - promoy3-005
+- id: dm10-063
+  name: 腐敗電脳アクアポインター
+  types:
+  - creature
+  civs:
+  - water
+  - darkness
+  cost: 5
+  power: 2000
+  races:
+  - リキッド・ピープル
+  - ゴースト
+  mana: 1
+  text: マナゾーンに置く時、このカードはタップして置く。このクリーチャーをバトルゾーンに出した時、相手のシールドを１枚見てそれを元の場所に戻し、相手の手札を１枚見ないで選び、捨てさせる。
+  abilities:
+  - kind: trigger
+    when:
+      event: move
+      to: bz
+      subject: self
+    effect:
+    - op: choose
+      select:
+        zone: shield
+        owner: opp
+        count: 1
+        look: true
+      as: seen
+    - op: discard
+      select:
+        zone: hand
+        owner: opp
+        count: 1
+  source:
+    official: dm10-063
+    review: pending
+    notes: 「マナゾーンに置く時タップして置く」はルール処理側
+- id: dm10-071
+  name: 滅罪の使徒レミーラ
+  types:
+  - creature
+  civs:
+  - light
+  cost: 5
+  power: 3000
+  races:
+  - イニシエート
+  mana: 1
+  text: バトルゾーンにある自分の水と自然のクリーチャーは「ブロッカー」を得る。
+  abilities:
+  - kind: static
+    affects:
+      owner: you
+      filter:
+        types:
+        - creature
+        civs:
+        - water
+        - nature
+    mod:
+      grant:
+      - blocker
+  source:
+    official: dm10-071
+    review: pending
+    notes: 原文データの名前・本文の文字化け（滅罪の���徒）は「滅罪の使徒」と補った。ブロッカーの説明文は text から省いた。このクリーチャー自身は光なので対象に含まれない
+- id: dm10-079
+  name: エレキチューブ・マンタ
+  types:
+  - creature
+  civs:
+  - water
+  cost: 6
+  power: 1000
+  races:
+  - ゲル・フィッシュ
+  mana: 1
+  text: 自分の光と闇のクリーチャーはブロックされない。
+  abilities:
+  - kind: static
+    affects:
+      owner: you
+      filter:
+        types:
+        - creature
+        civs:
+        - light
+        - darkness
+    mod:
+      grant:
+      - unblockable
+  source:
+    official: dm10-079
+    review: pending
+    notes: このクリーチャー自身は水なので対象に含まれない
+- id: dm10-083
+  name: トーピード・クラスター
+  types:
+  - creature
+  civs:
+  - water
+  cost: 3
+  power: 3000
+  races:
+  - サイバー・クラスター
+  mana: 1
+  text: このクリーチャーをバトルゾーンに出した時、自分のマナゾーンにあるカードを１枚自分の手札に戻す。
+  abilities:
+  - kind: trigger
+    when:
+      event: move
+      to: bz
+      subject: self
+    effect:
+    - op: bounce
+      select:
+        zone: mana
+        owner: you
+        count: 1
+  source:
+    official: dm10-083
+    review: pending
+- id: dm10-086
+  name: マインド・サーチ
+  types:
+  - spell
+  civs:
+  - water
+  cost: 2
+  mana: 1
+  text: 相手のシールドを３枚まで見る。その後、そのシールドを元の場所に戻す。
+  spell:
+  - op: choose
+    select:
+      zone: shield
+      owner: opp
+      count: 3
+      up_to: true
+      look: true
+    as: seen
+  source:
+    official: dm10-086
+    review: pending
+    notes: シールドは動かさないので「元の場所に戻す」は自動的に満たす
+    aliases:
+    - dm02-043
+- id: dm10-089
+  name: 砂男
+  types:
+  - creature
+  civs:
+  - darkness
+  cost: 3
+  power: 2000
+  races:
+  - ヘドリアン
+  mana: 1
+  text: バトルゾーンにある自分の水と火のクリーチャーは「スレイヤー」を得る。
+  abilities:
+  - kind: static
+    affects:
+      owner: you
+      filter:
+        types:
+        - creature
+        civs:
+        - water
+        - fire
+    mod:
+      grant:
+      - slayer
+  source:
+    official: dm10-089
+    review: pending
+    notes: スレイヤーの説明文は text から省いた。このクリーチャー自身は闇なので対象に含まれない
+- id: dm10-097
+  name: 城神兵バガッシュ
+  types:
+  - creature
+  civs:
+  - fire
+  cost: 4
+  power: 3000
+  races:
+  - アーマロイド
+  mana: 1
+  text: 攻撃中、このクリーチャーのパワーは、バトルゾーンにある自分の他のタップされているクリーチャー１体につき+1000される。
+  abilities:
+  - kind: static
+    affects: self
+    mod:
+      battle_power:
+        amount: 1000
+        only: attacking
+        count:
+          zone: bz
+          owner: you
+          filter:
+            types:
+            - creature
+            tapped: true
+          other: true
+  source:
+    official: dm10-097
+    review: pending
+    notes: dm10-027 ガンダヴァルの+1000版
+- id: dm10-102
+  name: コロッサス・ブースター
+  types:
+  - spell
+  civs:
+  - fire
+  cost: 1
+  mana: 1
+  text: 自分のクリーチャー１体のパワーは、このターンの終わりまで+4000される。
+  spell:
+  - op: modify
+    select:
+      zone: bz
+      owner: you
+      filter:
+        types:
+        - creature
+      count: 1
+    mod:
+      power: 4000
+    duration: end_of_turn
+  source:
+    official: dm10-102
+    review: pending
+- id: dm10-103
+  name: シェル・レガシー
+  types:
+  - creature
+  civs:
+  - nature
+  cost: 5
+  power: 4000
+  races:
+  - コロニー・ビートル
+  mana: 1
+  text: 自分の光と火のクリーチャーは「パワーアタッカー+3000」を得る。
+  abilities:
+  - kind: static
+    affects:
+      owner: you
+      filter:
+        types:
+        - creature
+        civs:
+        - light
+        - fire
+    mod:
+      battle_power:
+        amount: 3000
+        only: attacking
+  source:
+    official: dm10-103
+    review: pending
+    notes: パワーアタッカーの説明文は text から省いた。このクリーチャー自身は自然なので対象に含まれない
+- id: dm10-104
+  name: セイバーマスク・ビートル
+  types:
+  - creature
+  civs:
+  - nature
+  cost: 4
+  power: 4000
+  races:
+  - ジャイアント・インセクト
+  mana: 1
+  text: このクリーチャーが攻撃する時、自分のマナゾーンからカードを１枚、自分の手札に戻す。
+  abilities:
+  - kind: trigger
+    when:
+      event: attack
+      subject: self
+    effect:
+    - op: bounce
+      select:
+        zone: mana
+        owner: you
+        count: 1
+  source:
+    official: dm10-104
+    review: pending
+- id: dm10-105
+  name: 喜びの化身
+  types:
+  - creature
+  civs:
+  - nature
+  cost: 4
+  power: 1000
+  races:
+  - ミステリー・トーテム
+  mana: 1
+  text: 攻撃中、このクリーチャーのパワーは、自分のマナゾーンでタップされているカード１枚につき+1000される。
+  abilities:
+  - kind: static
+    affects: self
+    mod:
+      battle_power:
+        amount: 1000
+        only: attacking
+        count:
+          zone: mana
+          owner: you
+          filter:
+            tapped: true
+  source:
+    official: dm10-105
+    review: pending
+    notes: dm10-057 サベージ・ホーンの+1000版
+- id: dm10-110
+  name: ナチュラル・ブースト
+  types:
+  - spell
+  civs:
+  - nature
+  cost: 1
+  mana: 1
+  text: このターンの終わりまで、自分のクリーチャーはすべて「パワーアタッカー+1000」を得る。
+  spell:
+  - op: modify
+    select:
+      zone: bz
+      owner: you
+      filter:
+        types:
+        - creature
+      count: all
+    mod:
+      battle_power:
+        amount: 1000
+        only: attacking
+    duration: end_of_turn
+  source:
+    official: dm10-110
+    review: pending
+    notes: パワーアタッカーの説明文は text から省いた
+- id: dm10-s02
+  name: ルナ・ブライトホーク
+  types:
+  - creature
+  civs:
+  - water
+  cost: 8
+  power: 6000
+  races:
+  - サイバー・ムーン
+  mana: 1
+  text: 'W・ブレイカー
+
+    このクリーチャーをバトルゾーンに出した時、自分の山札を見る。その中からカードを１枚選び、自分の手札に加えてもよい。その後、山札をシャッフルする。'
+  abilities:
+  - kind: trigger
+    when:
+      event: move
+      to: bz
+      subject: self
+    effect:
+    - op: move
+      select:
+        zone: deck
+        owner: you
+        count: 1
+        up_to: true
+      to: hand
+      reason: put
+    - op: shuffle
+  source:
+    official: dm10-s02
+    review: pending
+    notes: dm08-022 ロジック・キューブと同じ形（種類指定なし）
+  keywords:
+  - double_breaker
+- id: dmr01-079
+  name: ダイモス
+  types:
+  - creature
+  civs:
+  - water
+  cost: 6
+  power: 4000
+  races:
+  - シー・ハッカー
+  mana: 1
+  text: 自分の光と闇のクリーチャーはブロックされない。
+  abilities:
+  - kind: static
+    affects:
+      owner: you
+      filter:
+        types:
+        - creature
+        civs:
+        - light
+        - darkness
+    mod:
+      grant:
+      - unblockable
+  source:
+    official: dmr01-079
+    review: pending
+    notes: 原文が同じ dm10-079 の変換結果を写した（モデル不使用）。能力は元カードの確認に従う
+- id: dm10-s03
+  name: ハリケーン・クロウラー
+  types:
+  - creature
+  civs:
+  - water
+  cost: 5
+  power: 4000
+  races:
+  - アースイーター
+  mana: 1
+  text: このクリーチャーをバトルゾーンに出した時、自分の手札をすべて自分のマナゾーンに置く。その後、同じ枚数のカードを自分のマナゾーンから自分の手札に戻す。
+  abilities:
+  - kind: trigger
+    when:
+      event: move
+      to: bz
+      subject: self
+    effect:
+    - op: move
+      select:
+        zone: hand
+        owner: you
+        count: all
+      to: mana
+      reason: put
+      as: h
+    - op: move
+      select:
+        zone: mana
+        owner: you
+        count:
+          var: h
+      to: hand
+      reason: return
+  source:
+    official: dm10-s03
+    review: pending
+    notes: 戻すカードは今置いたカードでもよい（原文どおり自分のマナゾーンから選ぶ）
+- id: dm10-s05
+  name: コアクラッシュ・リザード
+  types:
+  - creature
+  civs:
+  - fire
+  cost: 7
+  power: 6000
+  races:
+  - メルト・ウォリアー
+  mana: 1
+  text: このクリーチャーをバトルゾーンに出した時、相手のシールドを１枚選び、持ち主の墓地に置く。(その「S・トリガー」は使えない)
+  abilities:
+  - kind: trigger
+    when:
+      event: move
+      to: bz
+      subject: self
+    effect:
+    - op: move
+      select:
+        zone: shield
+        owner: opp
+        count: 1
+      to: graveyard
+      reason: put
+  source:
+    official: dm10-s05
+    review: pending
+    notes: dm09-017 ガルバジークと同じ。墓地へ置くのでS・トリガーの使用機会自体が発生しない
+- id: dm11-007
+  name: 光器ユリアーナ
+  types:
+  - creature
+  civs:
+  - light
+  cost: 3
+  power: 3000
+  races:
+  - メカ・デル・ソル
+  mana: 1
+  text: 'ブロッカー
+
+    相手がバトルゾーンにあるクリーチャーを選ぶ時、このクリーチャーを選ぶことはできない。(ただし、このクリーチャーを攻撃またはブロックしてもよい)
+
+    このクリーチャーは、相手プレイヤーを攻撃できない。'
+  abilities:
+  - kind: static
+    affects: self
+    mod:
+      deny:
+      - be_chosen
+  source:
+    official: dm11-007
+    review: pending
+    notes: '「相手に選ばれない」は deny: [be_chosen] で表すのがこのエンジンの規約（ジャストダイバーの変換済みカード dm22rp1-056
+      と同じ）'
+  keywords:
+  - blocker
+  - cannot_attack_player
+- id: dm11-008
+  name: 宣凶師ベリックス
+  types:
+  - creature
+  civs:
+  - light
+  cost: 2
+  power: 3000
+  races:
+  - グラディエーター
+  mana: 1
+  text: 'ブロッカー
+
+    このクリーチャーをバトルゾーンに出した時、自分のマナゾーンから呪文カードを１枚、自分の手札に戻す。
+
+    このクリーチャーは、相手プレイヤーを攻撃できない。'
+  abilities:
+  - kind: trigger
+    when:
+      event: move
+      to: bz
+      subject: self
+    effect:
+    - op: bounce
+      select:
+        zone: mana
+        owner: you
+        filter:
+          types:
+          - spell
+        count: 1
+  source:
+    official: dm11-008
+    review: pending
+  keywords:
+  - blocker
+  - cannot_attack_player
+- id: dm11-017
+  name: 超爆合体ダンギルバー
+  types:
+  - creature
+  - evolution
+  civs:
+  - fire
+  cost: 5
+  power: 6000
+  races:
+  - ゼノパーツ
+  mana: 1
+  evolve_from:
+    races:
+    - ゼノパーツ
+  text: '進化-自分のゼノパーツ１体の上に置く。
+
+    パワーアタッカー +4000(攻撃中、このクリーチャーのパワーは+4000される)
+
+    W・ブレイカー(このクリーチャーはシールドを２枚ブレイクする)'
+  source:
+    official: dm11-017
+    review: pending
+    notes: 能力なし進化（W・ブレイカーは known_keywords 側）
+  keywords:
+  - double_breaker
+  abilities:
+  - kind: trigger
+    when:
+      event: attack
+      subject: self
+    effect:
+    - op: modify
+      select:
+        ref: self
+      mod:
+        power: 4000
+      duration: end_of_turn
+- id: dm11-026
+  name: デビル・メディスン
+  types:
+  - spell
+  civs:
+  - darkness
+  cost: 4
+  mana: 1
+  text: 自分の墓地からクリーチャーを２体まで、自分の手札に戻す。
+  spell:
+  - op: move
+    select:
+      zone: graveyard
+      owner: you
+      filter:
+        types:
+        - creature
+      count: 2
+      up_to: true
+    to: hand
+    reason: return
+  source:
+    official: dm11-026
+    review: pending
+- id: dm11-029
+  name: ハザード・ホッパー
+  types:
+  - creature
+  civs:
+  - nature
+  cost: 4
+  power: 5000
+  races:
+  - ジャイアント・インセクト
+  mana: 1
+  text: このクリーチャーがシールドをブレイクした時、そのターンの終わりにこのクリーチャーをバトルゾーンから自分の手札に戻す。
+  abilities:
+  - kind: trigger
+    when:
+      event: attack
+      subject: self
+    effect:
+    - op: delayed_trigger
+      when:
+        event: break
+        player: opp
+      duration: during_attack
+      effect:
+      - op: delayed_trigger
+        when:
+          event: turn_end
+        duration: end_of_turn
+        effect:
+        - op: bounce
+          select:
+            ref: self
+            count: 1
+  source:
+    official: dm11-029
+    review: pending
+    notes: break イベントにブレイクしたクリーチャーの情報が無いため、マイキー（dm09-015）と同じく攻撃時に break を待つ遅延誘発を仕掛け、その中でさらにターン終了時の遅延誘発を仕掛けて二段で表現した
+- id: dm11-033
+  name: 崩壊と灼熱の牙
+  types:
+  - spell
+  civs:
+  - darkness
+  - fire
+  cost: 4
+  mana: 1
+  text: マナゾーンに置く時、このカードはタップして置く。このターン、相手のクリーチャーが破壊された時、相手は自分自身のマナゾーンからカードを１枚選び、持ち主の墓地に置く。その後、相手は自分自身のシールドを１枚選び、持ち主の墓地に置く。(その「S・トリガー」能力は使えない)
+  spell:
+  - op: delayed_trigger
+    when:
+      event: move
+      to: graveyard
+      reason: destroy
+      subject:
+        owner: opp
+        filter:
+          types:
+          - creature
+    duration: end_of_turn
+    effect:
+    - op: move
+      select:
+        zone: mana
+        owner: opp
+        chooser: opp
+        count: 1
+      to: graveyard
+      reason: put
+    - op: move
+      select:
+        zone: shield
+        owner: opp
+        chooser: opp
+        count: 1
+      to: graveyard
+      reason: put
+  source:
+    official: dm11-033
+    review: pending
+    notes: 呪文から遅延誘発を仕掛ける形は dm04-040 ライト・ディフェンスと同じ。シールドは墓地へ置くのでS・トリガーの使用機会自体が発生しない。「マナゾーンに置く時タップして置く」はルール処理側
+- id: dm11-042
+  name: タイム・スカウト
+  types:
+  - creature
+  civs:
+  - water
+  cost: 2
+  power: 1000
+  races:
+  - マーフォーク
+  mana: 1
+  text: このクリーチャーをバトルゾーンに出した時、相手の山札の上から１枚目を見る。その後、それを元に戻す。
+  abilities:
+  - kind: trigger
+    when:
+      event: move
+      to: bz
+      subject: self
+    effect:
+    - op: choose
+      select:
+        zone: deck
+        owner: opp
+        from_top: 1
+        look: true
+      as: seen
+  source:
+    official: dm11-042
+    review: pending
+    notes: カードは動かさないので「元に戻す」は自動的に満たす
+- id: dm11-045
+  name: 玉砕秘宝バイラ
+  types:
+  - creature
+  civs:
+  - darkness
+  cost: 3
+  power: 5000
+  races:
+  - パンドラボックス
+  mana: 1
+  text: 'ブロッカー(相手クリーチャーが攻撃する時、このクリーチャーをタップして、その攻撃を阻止してもよい。その後、その相手クリーチャーとバトルする)
+
+    このクリーチャーは攻撃することができない。
+
+    このクリーチャーがバトルする時、バトルの後、このクリーチャーを破壊する。'
+  abilities:
+  - kind: trigger
+    when:
+      event: battle_win
+      subject: self
+    effect:
+    - op: destroy
+      select:
+        ref: self
+        count: 1
+  source:
+    official: dm11-045
+    review: pending
+    notes: バトルに負けた場合は通常のバトルで破壊されるため、勝った時に自壊する形で結果が同一になる（引き分けは両方破壊）
+  keywords:
+  - blocker
+  - cannot_attack
+- id: dm11-047
+  name: 髑髏怪人スピンホイール
+  types:
+  - creature
+  civs:
+  - darkness
+  cost: 2
+  power: 1000
+  races:
+  - デビルマスク
+  mana: 1
+  text: このクリーチャーのパワーは、バトルゾーンにある相手のタップされているクリーチャー１体につき+2000される。
+  abilities:
+  - kind: static
+    affects: self
+    mod:
+      power:
+        amount: 2000
+        count:
+          zone: bz
+          owner: opp
+          filter:
+            types:
+            - creature
+            tapped: true
+  source:
+    official: dm11-047
+    review: pending
+- id: dm11-031
+  name: 守護と偶然の象徴
+  types:
+  - spell
+  civs:
+  - light
+  - water
+  cost: 4
+  mana: 1
+  text: 'S・トリガー(この呪文をシールドゾーンから手札に加える時、コストを支払わずにすぐ唱えてもよい)
+
+    マナゾーンに置く時、このカードはタップして置く。
+
+    自分の山札の上から４枚を表向きにする。その中から「ブロッカー」を持つカードを自分の手札に加え、他の３枚を好きな順番で自分の山札の一番下に戻す。'
+  spell:
+  - op: choose
+    select:
+      zone: deck
+      owner: you
+      from_top: 4
+    as: pile
+  - op: move
+    select:
+      ref: pile
+      filter:
+        keyword: blocker
+      count: all
+    to: hand
+    reason: put
+  - op: move
+    select:
+      ref: pile
+      count: all
+    to: deck
+    position: bottom
+    reason: put
+  source:
+    official: dm11-031
+    review: pending
+    notes: フィルタのキーは has_keyword でなく keyword（defs.py の FILTER_KEYS に合わせた）。dm09-026
+      と同じ変数保持の形
+  keywords:
+  - s_trigger
+- id: dm18-032
+  name: ダーク・クラウン
+  types:
+  - creature
+  civs:
+  - darkness
+  cost: 4
+  power: 6000
+  races:
+  - ブレインジャッカー
+  mana: 1
+  text: 'ブロッカー(相手クリーチャーが攻撃する時、このクリーチャーをタップして、その攻撃を阻止してもよい。その後、その相手クリーチャーとバトルする)
+
+    このクリーチャーは攻撃することができない。
+
+    このクリーチャーがバトルする時、バトルの後、このクリーチャーを破壊する。'
+  abilities:
+  - kind: trigger
+    when:
+      event: battle_win
+      subject: self
+    effect:
+    - op: destroy
+      select:
+        ref: self
+        count: 1
+  keywords:
+  - blocker
+  - cannot_attack
+  source:
+    official: dm18-032
+    review: pending
+    notes: 原文が同じ dm11-045 の変換結果を写した（モデル不使用）。能力は元カードの確認に従う
+    aliases:
+    - dm01-026
+- id: dmx04-012
+  name: ドリリング・イヤリング
+  types:
+  - creature
+  civs:
+  - darkness
+  cost: 2
+  power: 4000
+  races:
+  - ブレインジャッカー
+  - ハンター
+  mana: 1
+  text: 'ブロッカー(相手クリーチャーが攻撃する時、このクリーチャーをタップして、その攻撃を阻止してもよい。その後、その相手クリーチャーとバトルする)
+
+    このクリーチャーは攻撃することができない。
+
+    このクリーチャーがバトルする時、バトルの後、このクリーチャーを破壊する。'
+  abilities:
+  - kind: trigger
+    when:
+      event: battle_win
+      subject: self
+    effect:
+    - op: destroy
+      select:
+        ref: self
+        count: 1
+  keywords:
+  - blocker
+  - cannot_attack
+  source:
+    official: dmx04-012
+    review: pending
+    notes: 原文が同じ dm11-045 の変換結果を写した（モデル不使用）。能力は元カードの確認に従う
+- id: dm11-s01
+  name: 聖皇エール・ソニアス
+  types:
+  - creature
+  - evolution
+  civs:
+  - light
+  cost: 5
+  power: 8000
+  races:
+  - グラディエーター
+  mana: 1
+  evolve_from:
+    races:
+    - グラディエーター
+  text: '進化-自分のグラディエーター１体の上に置く。
+
+    W・ブレイカー
+
+    相手がバトルゾーンにあるクリーチャーを選ぶ時、このクリーチャーを選ぶことはできない。(ただし、このクリーチャーを攻撃またはブロックしてもよい)'
+  abilities:
+  - kind: static
+    affects: self
+    mod:
+      deny:
+      - be_chosen
+  source:
+    official: dm11-s01
+    review: pending
+    notes: 'dm11-007 ユリアーナと同じ deny: [be_chosen]'
+  keywords:
+  - double_breaker
+- id: dm12-008
+  name: タイフーン・クロウラー
+  types:
+  - creature
+  civs:
+  - water
+  cost: 6
+  power: 5000
+  races:
+  - アースイーター
+  mana: 1
+  text: このクリーチャーは、火または自然のクリーチャーに攻撃されない。
+  abilities:
+  - kind: static
+    affects: self
+    mod:
+      deny:
+      - action: be_attacked
+        other:
+          types:
+          - creature
+          civs:
+          - fire
+          - nature
+  source:
+    official: dm12-008
+    review: pending
+    notes: 攻撃側を文明で絞る deny（be_attacked）で表現した
+- id: dm12-012
+  name: 独神兵ローンスピナー
+  types:
+  - creature
+  civs:
+  - fire
+  cost: 4
+  power: 6000
+  races:
+  - アーマロイド
+  mana: 1
+  text: 他のクリーチャーがバトルゾーンに出た時、このクリーチャーをタップする。
+  abilities:
+  - kind: trigger
+    when:
+      event: move
+      to: bz
+      subject:
+        owner: any
+        filter:
+          types:
+          - creature
+        other: true
+    effect:
+    - op: tap
+      select:
+        ref: self
+        count: 1
+  source:
+    official: dm12-012
+    review: pending
+    notes: 'subject の other: true で「他のクリーチャー」を表した（自分が出た時は誘発しない）'
+- id: dm12-016
+  name: 超戦攻賢者アギラ
+  types:
+  - creature
+  - evolution
+  civs:
+  - light
+  - water
+  cost: 4
+  power: 5500
+  races:
+  - グラディエーター
+  - アースイーター
+  mana: 1
+  evolve_from:
+    races:
+    - グラディエーター
+    - アースイーター
+  text: マナゾーンに置く時、このカードはタップして置く。 / 進化-自分のグラディエーターまたはアースイーター１体の上に置く。バトルゾーンにある自分の他のグラディエーターとアースイーターすべてのパワーは+2000される。自分のグラディエーターまたはアースイーターがブロックした時、カードを１枚引いてもよい。
+  abilities:
+  - kind: static
+    affects:
+      owner: you
+      filter:
+        races:
+        - グラディエーター
+        - アースイーター
+      other: true
+    mod:
+      power: 2000
+  - kind: trigger
+    when:
+      event: block
+      subject:
+        owner: you
+        filter:
+          races:
+          - グラディエーター
+          - アースイーター
+    effect:
+    - op: may
+      body:
+      - op: draw
+        count: 1
+  source:
+    official: dm12-016
+    review: pending
+    notes: block イベントの subject はブロッカー（エンジン仕様）。「マナゾーンに置く時タップして置く」はルール処理側
+- id: dm12-018
+  name: 超機動魔獣ギガランテス
+  types:
+  - creature
+  - evolution
+  civs:
+  - darkness
+  - fire
+  cost: 5
+  power: 6000
+  races:
+  - キマイラ
+  - アーマロイド
+  mana: 1
+  evolve_from:
+    races:
+    - キマイラ
+    - アーマロイド
+  text: マナゾーンに置く時、このカードはタップして置く。 / 進化-自分のキマイラまたはアースイーター１体の上に置く。バトルゾーンにある自分の他のキマイラとアーマロイドすべてのパワーは+2000される。バトルゾーンにある自分のキマイラとアーマロイドはすべて「W・ブレイカー」を得る。
+  abilities:
+  - kind: static
+    affects:
+      owner: you
+      filter:
+        races:
+        - キマイラ
+        - アーマロイド
+      other: true
+    mod:
+      power: 2000
+  - kind: static
+    affects:
+      owner: you
+      filter:
+        races:
+        - キマイラ
+        - アーマロイド
+    mod:
+      grant:
+      - double_breaker
+  source:
+    official: dm12-018
+    review: pending
+    notes: 原文の進化条件は「キマイラまたはアーマロイド」（原文データの2文目はアースイーターとあるが同カードの種族構成・後段の対象指定からアーマロイドと解した）。W・ブレイカー付与はこのクリーチャー自身も対象（「すべて」）
+- id: dm12-019
+  name: 超神機鎧冑ゼノメノン
+  types:
+  - creature
+  - evolution
+  civs:
+  - fire
+  - nature
+  cost: 6
+  power: 5000
+  races:
+  - ゼノパーツ
+  - ジャイアント・インセクト
+  mana: 1
+  evolve_from:
+    races:
+    - ゼノパーツ
+    - ジャイアント・インセクト
+  text: マナゾーンに置く時、このカードはタップして置く。 / 進化-自分のゼノパーツまたはジャイアント・インセクト１体の上に置く。バトルゾーンにある自分の他のゼノパーツとジャイアント・インセクトすべてのパワーは+2000される。自分のゼノパーツまたはジャイアント・インセクトが相手を攻撃してブロックされなかった時、相手は自分自身のマナゾーンからカードを１枚選び、持ち主の墓地に置く。
+  abilities:
+  - kind: static
+    affects:
+      owner: you
+      filter:
+        races:
+        - ゼノパーツ
+        - ジャイアント・インセクト
+      other: true
+    mod:
+      power: 2000
+  - kind: trigger
+    when:
+      event: attack
+      subject:
+        owner: you
+        filter:
+          races:
+          - ゼノパーツ
+          - ジャイアント・インセクト
+    effect:
+    - op: delayed_trigger
+      when:
+        event: break
+        player: opp
+      duration: during_attack
+      effect:
+      - op: move
+        select:
+          zone: mana
+          owner: opp
+          chooser: opp
+          count: 1
+        to: graveyard
+        reason: put
+  source:
+    official: dm12-019
+    review: pending
+    notes: '「ブロックされなかったとき」はマイキー（dm09-015）と同じ break 待ち遅延誘発で表現。マナを墓地に置くのは相手が自分で選ぶ（chooser:
+      opp）'
+    aliases:
+    - promoy3-019
+- id: dm12-022
+  name: クローン・ライトニング
+  types:
+  - spell
+  civs:
+  - light
+  cost: 3
+  mana: 1
+  text: 'S・トリガー(この呪文をシールドゾーンから手札に加える時、コストを支払わずにすぐ唱えてもよい)
+
+    バトルゾーンにある相手のクリーチャーを１体選ぶ。 その後、すべての墓地にある《クローン・ライトニング》１枚につき、バトルゾーンにある相手の他のクリーチャーを１体選んでもよい。選んだクリーチャーをすべてタップする。'
+  spell:
+  - op: choose
+    select:
+      zone: bz
+      owner: opp
+      filter:
+        types:
+        - creature
+      count: 1
+    as: t
+  - op: tap
+    select:
+      ref: t
+      count: 1
+  - op: repeat
+    times:
+      count:
+        zone: graveyard
+        owner: any
+        filter:
+          name: クローン・ライトニング
+    body:
+    - op: may
+      body:
+      - op: choose
+        select:
+          zone: bz
+          owner: opp
+          filter:
+            types:
+            - creature
+          count: 1
+        as: u
+      - op: tap
+        select:
+          ref: u
+          count: 1
+  source:
+    official: dm12-022
+    review: pending
+    notes: '「すべて選んでからタップ」を、選ぶたびにタップする逐次形で結果が等しくなるよう表現した（既にタップ済みの対象を選び直しても結果は変わらない）。数えるのは両プレイヤーの墓地（owner:
+      any）'
+  keywords:
+  - s_trigger
+- id: dm12-023
+  name: クローン・スパイラル
+  types:
+  - spell
+  civs:
+  - water
+  cost: 4
+  mana: 1
+  text: バトルゾーンにあるクリーチャーを１体選ぶ。その後、すべての墓地にある《クローン・スパイラル》１枚につき、バトルゾーンにある他のクリーチャーを１体選んでもよい。選んだクリーチャーをすべて、持ち主の手札に戻す。
+  spell:
+  - op: choose
+    select:
+      zone: bz
+      owner: any
+      filter:
+        types:
+        - creature
+      count: 1
+    as: t
+  - op: bounce
+    select:
+      ref: t
+      count: 1
+  - op: repeat
+    times:
+      count:
+        zone: graveyard
+        owner: any
+        filter:
+          name: クローン・スパイラル
+    body:
+    - op: may
+      body:
+      - op: choose
+        select:
+          zone: bz
+          owner: any
+          filter:
+            types:
+            - creature
+          count: 1
+        as: u
+      - op: bounce
+        select:
+          ref: u
+          count: 1
+  source:
+    official: dm12-023
+    review: pending
+    notes: dm12-022 と同じ逐次形
+- id: dm12-024
+  name: エニグマ・カスケード
+  types:
+  - spell
+  civs:
+  - water
+  cost: 4
+  mana: 1
+  text: 自分の手札を、好きな枚数捨てる。その後、同じ枚数のカードを引く。
+  spell:
+  - op: move
+    select:
+      zone: hand
+      owner: you
+      count: any
+    to: graveyard
+    reason: discard
+    as: d
+  - op: draw
+    count:
+      var: d
+  source:
+    official: dm12-024
+    review: pending
+    notes: 捨てた枚数は変数 d で数える
+- id: dm12-026
+  name: クローン・バイス
+  types:
+  - spell
+  civs:
+  - darkness
+  cost: 3
+  mana: 1
+  text: 相手の手札を１枚見ないで選ぶ。その後、すべての墓地にある《クローン・バイス》１枚につき、相手の手札から他の１枚を見ないで選んでもよい。選んだ手札をすべて捨てさせる。
+  spell:
+  - op: discard
+    select:
+      zone: hand
+      owner: opp
+      count: 1
+  - op: repeat
+    times:
+      count:
+        zone: graveyard
+        owner: any
+        filter:
+          name: クローン・バイス
+    body:
+    - op: may
+      body:
+      - op: discard
+        select:
+          zone: hand
+          owner: opp
+          count: 1
+  source:
+    official: dm12-026
+    review: pending
+    notes: dm12-022 と同じ逐次形
+- id: dm12-028
+  name: クローン・クラッシュ
+  types:
+  - spell
+  civs:
+  - fire
+  cost: 5
+  mana: 1
+  text: バトルゾーンにある相手のパワー3000以下のクリーチャーを１体選ぶ。その後、すべての墓地にある《クローン・クラッシュ》１枚につき、バトルゾーンにある相手の他のパワー3000以下のクリーチャーを１体選んでもよい。選んだクリーチャーをすべて破壊する。
+  spell:
+  - op: choose
+    select:
+      zone: bz
+      owner: opp
+      filter:
+        types:
+        - creature
+        power_le: 3000
+      count: 1
+    as: t
+  - op: destroy
+    select:
+      ref: t
+      count: 1
+  - op: repeat
+    times:
+      count:
+        zone: graveyard
+        owner: any
+        filter:
+          name: クローン・クラッシュ
+    body:
+    - op: may
+      body:
+      - op: choose
+        select:
+          zone: bz
+          owner: opp
+          filter:
+            types:
+            - creature
+            power_le: 3000
+          count: 1
+        as: u
+      - op: destroy
+        select:
+          ref: u
+          count: 1
+  source:
+    official: dm12-028
+    review: pending
+    notes: dm12-022 と同じ逐次形
