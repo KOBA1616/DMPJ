@@ -209,6 +209,7 @@ class PlayTask(TypedDict):
     reduce_done: NotRequired[bool]
     st: NotRequired[bool]                # S・トリガーとして実行する（101.4g）
     resolve_to: NotRequired[str]         # 解決後の置き場所（play_free の resolve_to）
+    resolve_position: NotRequired[str]   # resolve_to が山札のときの top / bottom
     answer: NotRequired[list[int]]
 
 

@@ -296,6 +296,9 @@
        },
        "count": {
         "$ref": "#/$defs/expr"
+       },
+       "st_first": {
+        "type": "boolean"
        }
       },
       "required": [
@@ -319,6 +322,22 @@
       "required": [
        "op",
        "select",
+       "as"
+      ],
+      "additionalProperties": false
+     },
+     {
+      "type": "object",
+      "properties": {
+       "op": {
+        "const": "choose_race"
+       },
+       "as": {
+        "type": "string"
+       }
+      },
+      "required": [
+       "op",
        "as"
       ],
       "additionalProperties": false
@@ -468,6 +487,9 @@
        },
        "body": {
         "$ref": "#/$defs/ops"
+       },
+       "label": {
+        "type": "string"
        }
       },
       "required": [
@@ -619,6 +641,12 @@
          "hyper",
          "mana",
          "shield"
+        ]
+       },
+       "resolve_position": {
+        "enum": [
+         "bottom",
+         "top"
         ]
        },
        "face": {
@@ -1020,6 +1048,15 @@
        "$ref": "#/$defs/selector"
       },
       "var": {
+       "type": "string"
+      },
+      "cost_of": {
+       "type": "string"
+      },
+      "races_of": {
+       "type": "string"
+      },
+      "race": {
        "type": "string"
       },
       "sum": {
@@ -1426,6 +1463,12 @@
     "unpaid": {
      "type": "boolean"
     },
+    "target": {
+     "enum": [
+      "player",
+      "creature"
+     ]
+    },
     "via": {
      "enum": [
       "generate",
@@ -1448,7 +1491,8 @@
       "replace",
       "static",
       "declare",
-      "activate"
+      "activate",
+      "state"
      ]
     },
     "when": {

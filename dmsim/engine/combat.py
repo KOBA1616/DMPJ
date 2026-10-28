@@ -282,7 +282,7 @@ def h_break(eng, t):
         t["phase"] = 1
         return None
     opts = []
-    for c in t["chosen"]:
+    for c in [x for ch in t["chosen"] for x in [ch] + list(s.cards[ch].under)]:   # シールドの束は、重なったカードのどれも宣言できる（113.2）
         d = eng.cdef(c)
         for fi in ([None] if not d.faces else range(len(d.faces))):
             if eng._permits_face(c, "s_trigger", fi):

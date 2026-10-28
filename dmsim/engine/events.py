@@ -93,7 +93,7 @@ class EventMixin:
             if ev.get("tapped"):   # 「タップして置く」: 置かれた時点でタップ状態（別のタップ イベントにしない）
                 c.tapped = True
             for u in unders:   # クリーチャーとして離れたら下のカードも同じゾーンへ（109.2b, 316.3）
-                if s.cards[u].zone == "bz":
+                if s.cards[u].zone == "bz" or s.cards[u].top_of == cid:   # シールドの束も同時に動く（113.2）
                     self._raw_move(u, ev["to"])
             new = s.ref(cid)
             stack_on = ev.get("stack_on")
@@ -219,6 +219,15 @@ class EventMixin:
             loser = s.active if len(out) == 2 else out[0]
             s.result = {"winner": 1 - loser, "reason": "deck_out", "turn": s.turn}
             return []
+        for c in self.bz_tops():   # 常在の勝敗条件（kind: state）。バトルゾーンで機能している間、条件を満たしたら決まる
+            for _, ab in self.abilities(c, "state"):
+                env = {"you": s.cards[c].controller, "self": s.ref(c)}
+                if self.eval_cond(ab["if"], env):
+                    for o in ab["effect"]:
+                        win = o["op"] == "win"
+                        who = self._rel(o.get("player", "you"), env)
+                        s.result = {"winner": who if win else 1 - who, "reason": "state", "turn": s.turn}
+                    return []
         dead = [s.ref(c) for c in self.bz_tops()
                 if "creature" in self.chars(c)["types"] and self.chars(c)["power"] <= 0]   # 703.4c
         # 「墓地に置かれるかわりにとどまる」置換で破壊できなかったものは、状態が動くまで同じ処理を繰り返さない
@@ -255,6 +264,10 @@ class EventMixin:
             return False
         for k in ("from", "to", "reason", "via"):
             if k in when and rec.get(k) != when[k]:
+                return False
+        if "target" in when:   # 攻撃先: player（シールドも含む）か creature
+            tg = rec.get("target")
+            if (tg == "player") != (when["target"] == "player"):
                 return False
         if "unpaid" in when and bool(rec.get("unpaid")) != when["unpaid"]:   # マナをタップせずに（コストを支払わずに）
             return False

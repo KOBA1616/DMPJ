@@ -341,7 +341,9 @@ class Engine(SelectorMixin, EventMixin, InterpreterMixin, TurnMixin, CombatMixin
         if c.zone == "hold":
             s.hold.remove(cid)
         else:
-            self.zlist(c.zone, c.controller if self.zshared(c.zone) else c.owner).remove(cid)
+            lst = self.zlist(c.zone, c.controller if self.zshared(c.zone) else c.owner)
+            if cid in lst:      # シールドの束の下のカードはゾーンの並びに入っていない（113.2）
+                lst.remove(cid)
             if not (to == "deck" and c.zone == "deck"):   # 山札の中での並べ替え（見たカードを下に置く等）は山札から離れない
                 self._note_deck(c)
         c.gen += 1                                  # 新しいオブジェクトになる（400.5）

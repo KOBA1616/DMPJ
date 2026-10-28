@@ -42,6 +42,11 @@ def abstract(eng: Engine, period: str = "in_turn", hand_keys: set[str] | None = 
         "delayed": sorted(json.dumps([d["when"], d["effect"], d["duration"]], sort_keys=True) for d in s.delayed),
         "step_mods": sorted(json.dumps(m, sort_keys=True) for m in s.step_mods),
     }
+    for p in (0, 1):   # シールドの束（113.2）の中身は骨格に入れる。単独のシールドは従来どおり枚数だけ（counter）。
+        # 束の中身は非公開情報（裏向き）。これはエンジン内部の骨格で、観測（相手や AI に見せる情報）には含めない。
+        # 同じカードが積み増されるだけの周回で骨格が変わらないよう、中身は種類の集合にして、枚数は counter（under:p）にする。
+        skel[f"bundles:{p}"] = sorted([name(c), sorted({name(u) for u in s.cards[c].under})]
+                                       for c in s.zones["shield"][p] if s.cards[c].under)
     counters: dict[str, int] = {}
     for z, zd in zones.items():
         if zd["shared"]:
@@ -56,6 +61,7 @@ def abstract(eng: Engine, period: str = "in_turn", hand_keys: set[str] | None = 
             else:
                 skel[f"{z}:{p}"] = sorted(name(c) for c in s.zones[z][p])
     for p in (0, 1):
+        counters[f"under:{p}"] = sum(len(s.cards[c].under) for c in s.zones["shield"][p])
         counters[f"mana_untapped:{p}"] = sum(1 for c in s.zones["mana"][p] if not s.cards[c].tapped)
     h = hashlib.blake2b(json.dumps(skel, sort_keys=True, ensure_ascii=False).encode(), digest_size=16).hexdigest()
     return h, counters

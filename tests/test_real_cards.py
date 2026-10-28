@@ -136,3 +136,60 @@ def test_infinite_palm_untaps_after_win(rules):
     e.answer([0])
     d = e.advance()
     assert d["kind"] == "attack" and "attack:dm01-001:dm01-080" in keys(d)   # 勝ってアンタップ → もう一度
+
+
+def _finish(e, d):
+    while d is not None and d["kind"] not in ("attack", "main"):
+        e.answer(list(range(d["max"])) if d["kind"] == "choose_cards" else [0])
+        d = e.advance()
+    return d
+
+
+def test_hydro_commune_bounces_same_race_then_up_to_that_many_opp(rules):
+    e = setup(rules, {"bz": ["dm01-001", "dm01-001", "dm01-080"], "hand": ["dmx11-082"], "mana": ["dm01-080"] * 3},
+              {"bz": ["dm01-080", "dm01-080", "dm01-080"]}, filler="dm06-085")
+    answer(e, "charge", "pass")
+    answer(e, "main", "play:dmx11-082")
+    d = e.advance()
+    assert d["kind"] == "choose_race"
+    e.answer([next(i for i, o in enumerate(d["options"]) if o["name"] == "ガーディアン")])
+    _finish(e, e.advance())
+    assert [n for n in names(e, "hand", 0) if n == "dm01-001"] == ["dm01-001"] * 2 
+    assert [e.s.cards[c].defn for c in e.bz_tops(0)] == ["dm01-080"]
+    assert len(e.bz_tops(1)) == 1                            # 相手は2体戻る
+
+
+def test_rebirth_switch_puts_cheaper_creature_from_hand(rules):
+    e = setup(rules, {"bz": ["dm01-001"], "hand": ["dm23ex2-cho018", "dm01-080"], "mana": ["dm01-080"] * 5},
+              filler="dm06-085")
+    answer(e, "charge", "pass")
+    answer(e, "main", "play:dm23ex2-cho018")
+    d = e.advance()
+    while d["kind"] == "yes_no":                              # 出してもよい（コスト6 → 3 のアクア・ハルカス）
+        e.answer([0])
+        d = e.advance()
+    assert [e.s.cards[c].defn for c in e.bz_tops(0)] == ["dm01-080"] and "dm01-001" in names(e, "hand", 0)
+
+
+def test_olive_oil_returns_graveyard_to_deck(rules):
+    e = setup(rules, {"hand": ["dmd24-024"], "mana": ["dm01-080"] * 5, "graveyard": ["dm31-025", "dm31-025"]}, filler="dm06-085")
+    answer(e, "charge", "pass")
+    answer(e, "main", "play:dmd24-024")
+    d = e.advance()
+    assert d is not None
+    _finish(e, d)
+    assert names(e, "graveyard", 0) == [] and names(e, "bz", 0) == ["dmd24-024"]
+
+
+def test_races_are_split_by_slash_into_single_races():
+    from dmsim.defs import split_races
+    assert split_races(["デーモン・コマンド/スチーム・ナイト/フュージョナー"]) == ["デーモン・コマンド", "スチーム・ナイト", "フュージョナー"]
+    assert split_races(["オラクル", "グレートメカオー"]) == ["オラクル", "グレートメカオー"]
+
+
+def test_aleftina_wins_when_ten_or_more_shields_and_not_with_nine(rules):
+    for n, won in ((9, False), (10, True)):
+        e = setup(rules, {"bz": ["dmx12b-031"], "shield": ["dm06-085"] * n}, filler="dm06-085")
+        e.advance()
+        assert (e.s.result is not None and e.s.result["winner"] == 0) == won, n
+

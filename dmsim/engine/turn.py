@@ -393,7 +393,7 @@ def h_play(eng, t):
         eng._push(eng.ev_task({"ev": "cast", "player": p, "subject": ref, "unpaid": bool(t["free"])}),
                    eng._child(d.spell, env),
                    eng.ev_task({"ev": "move", "subject": ref, "from": from_zone, "to": t.get("resolve_to", d.resolve_to),
-                                 "reason": "resolve"}),
+                                 "reason": "resolve", "position": t.get("resolve_position", "top")}),
                    *([eng._child(d.after_resolve, env)] if d.after_resolve else []))
     if t.get("reduced"):   # 減らして実行したら、そのターンの終わりに処理する。実行の解決より後に積む＝先に処理する
         then = ch0["opt_reduce"]["then"]

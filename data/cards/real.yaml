@@ -960,3 +960,153 @@ cards:
           - op: play_free
             select: {zone: [hand, mana], owner: you, filter: {multicolor: true, cost_le: 6}, count: 1, up_to: true}
     source: {official: dm26ex4-sec015, review: pending, notes: "EXライフは総合ルール1.53に定義がなく、dmwiki の定義（出す時に山札の上1枚をシールド化して紐付け／離れる時はかわりにそのシールドを墓地へ／進化で引き継ぐ）に従った。ファイナル革命の『他のファイナル革命』は op mark final_revolution で判定（他のファイナル革命カードも同じ印を付ける）。出せない制限は enter_bz（召喚・効果・革命チェンジ）"}
+
+
+  # ---- 天門ループ関係 ----
+
+  - id: dm23bd7-022
+    name: 音感の精霊龍 エメラルーダ
+    types: [creature]
+    civs: [light]
+    cost: 5
+    power: 5500
+    races: [エンジェル・コマンド・ドラゴン]
+    keywords: [blocker]
+    text: "ブロッカー / このクリーチャーが出た時、自分のシールドを１つブレイクしてもよい。その後、自分の手札を１枚、シールド化してもよい。"
+    abilities:
+      - kind: trigger
+        when: {event: move, to: bz, subject: self}
+        effect:
+          - op: may
+            label: 自分のシールドを1つブレイクする
+            body:
+              - {op: break, player: you, count: 1, st_first: true}
+          - op: may
+            label: 手札を1枚シールド化する
+            body:
+              - {op: move, select: {zone: hand, owner: you, count: 1}, to: shield, reason: put}
+    source: {official: dm23bd7-022, review: pending, notes: "最新版の本文（2023）に従い「ブレイク」。旧版は「手札に加える」。ブレイクした盾は S・トリガー等を宣言できる（113.6）"}
+
+  - id: dmx19-s06
+    name: 奇跡の精霊ミルザム
+    types: [creature]
+    civs: [light]
+    cost: 9
+    power: 11000
+    races: [エンジェル・コマンド]
+    keywords: [blocker, double_breaker]
+    text: "ブロッカー / ウルトラシールド・プラス - このクリーチャーをバトルゾーンに出した時、自分の山札の上から５枚まで、裏向きのまま、自分のシールドいずれかひとつの下に置いてもよい。 / W・ブレイカー"
+    abilities:
+      - kind: trigger
+        when: {event: move, to: bz, subject: self}
+        effect:
+          - op: modal
+            count: 1
+            modes:
+            - []
+            - [{op: put_under, select: {zone: deck, owner: you, from_top: 1}, onto: {zone: shield, owner: you, count: 1}}]
+            - [{op: put_under, select: {zone: deck, owner: you, from_top: 2}, onto: {zone: shield, owner: you, count: 1}}]
+            - [{op: put_under, select: {zone: deck, owner: you, from_top: 3}, onto: {zone: shield, owner: you, count: 1}}]
+            - [{op: put_under, select: {zone: deck, owner: you, from_top: 4}, onto: {zone: shield, owner: you, count: 1}}]
+            - [{op: put_under, select: {zone: deck, owner: you, from_top: 5}, onto: {zone: shield, owner: you, count: 1}}]
+    source: {official: dmx19-s06, review: pending, notes: "「5枚まで」は山札の上から0〜5枚を選ぶ（個々のカードは選べない）モードで表現。束はシールド1つと数え、手札に加わる時はすべて同時に加わり、どれも S・トリガーを宣言できる（113.2、koba 確認 2026-10-28）"}
+
+  - id: dmx24-017
+    name: 目的不明の作戦
+    types: [spell]
+    civs: [water]
+    cost: 7
+    keywords: [s_trigger]
+    text: "S・トリガー / 自分の墓地にあるコスト７以下の呪文を１枚、コストを支払わずに唱える。唱えた後、墓地に置くかわりに山札の一番下に置く。"
+    spell:
+      - op: play_free
+        select: {zone: graveyard, owner: you, filter: {types: [spell], cost_le: 7}, count: 1, up_to: true}
+        resolve_to: deck
+        resolve_position: bottom
+    source: {official: dmx24-017, review: pending}
+
+  # ---- 天門ループ（初期型）関係 ----
+
+  - id: dmd24-024
+    name: 埋没のカルマ オリーブオイル
+    types: [creature]
+    civs: [water]
+    cost: 5
+    power: 2000
+    races: [オラクル, グレートメカオー]
+    keywords: [s_trigger, blocker]
+    text: "S・トリガー / ブロッカー / このクリーチャーは攻撃できない。このクリーチャーがバトルゾーンに出た時、プレイヤーを一人選ぶ。そのプレイヤーは、自身の墓地のカードをすべて山札に加え、シャッフルする。"
+    abilities:
+      - kind: static
+        mod: {deny: [attack_player, attack_creature]}
+      - kind: trigger
+        when: {event: move, to: bz, subject: self}
+        effect:
+          - op: modal
+            count: 1
+            modes:
+              - - {op: move, select: {zone: graveyard, owner: you, count: all}, to: deck, reason: put}
+                - {op: shuffle, player: you}
+              - - {op: move, select: {zone: graveyard, owner: opp, count: all}, to: deck, reason: put}
+                - {op: shuffle, player: opp}
+    source: {official: dmd24-024, review: pending, notes: "プレイヤー選択は2つのモード（自分/相手）で表した。自分の墓地の S・トリガー呪文を山札に戻す部品"}
+
+  - id: dm23ex2-cho018
+    name: 転生スイッチ
+    types: [spell]
+    civs: [water]
+    cost: 5
+    keywords: [s_trigger]
+    text: "S・トリガー / クリーチャーを１体選び、持ち主の手札に戻す。その後、そのプレイヤーは、選ばれたクリーチャーよりコストが小さいクリーチャーを１体、自身の手札から出してもよい。"
+    spell:
+      - {op: choose, select: {zone: bz, owner: any, filter: {types: [creature]}, count: 1}, as: target}
+      - {op: bounce, select: {ref: target}}
+      - op: may
+        body:
+          - op: play_free
+            select:
+              zone: hand
+              owner_of: target
+              filter: {types: [creature], cost_le: {sum: [{cost_of: target}, -1]}}
+              count: 1
+    source: {official: dm23ex2-cho018, review: pending, notes: "出すのは選ばれたクリーチャーの持ち主（相手のクリーチャーを選んだ場合の相手側の処理は未対応: play_free は自分が出す）"}
+
+  - id: dmx11-082
+    name: ハイドロ・コミューン
+    types: [spell]
+    civs: [water]
+    cost: 3
+    keywords: [s_trigger]
+    text: "S・トリガー / 種族をひとつ選ぶ。選んだ種族の自分のクリーチャーを好きな数、バトルゾーンから自分の手札に戻す。その後、その数以下の相手のクリーチャーをバトルゾーンから選び、持ち主の手札に戻す。"
+    spell:
+      - {op: choose_race, as: kind}
+      - op: bounce
+        select: {zone: bz, owner: you, filter: {types: [creature], races: {race: kind}}, count: 99, up_to: true}
+        as: mine
+      - op: bounce
+        select: {zone: bz, owner: opp, filter: {types: [creature]}, count: {var: mine}, up_to: true}
+    source: {official: dmx11-082, review: pending, notes: "種族は「/」で区切られた1種族ずつを選ぶ（choose_race: ゲームに出てくるカードの種族名から）。好きな数は up_to で、相手は戻した数以下"}
+
+  - id: dmx12b-031
+    name: 光霊姫アレフティナ
+    types: [creature]
+    civs: [light]
+    cost: 4
+    power: 8000
+    races: [メカ・デル・ソル, アーク・セラフィム]
+    keywords: [double_breaker]
+    text: "このクリーチャーを召喚するコストは、自分のシールドひとつにつき１多くなる。 / 相手のクリーチャーが自分を攻撃する時、それがそのターンはじめての自分への攻撃で、自分のシールドが１枚もない場合、自分の山札の上から１枚目を裏向きのまま、新しいシールドとして自分のシールドゾーンに加える。 / 自分のシールドが10枚以上あれば、自分はゲームに勝利する。 / W・ブレイカー"
+    abilities:
+      - kind: static
+        affects: self
+        mod: {cost: {count: {zone: shield, owner: you}, amount: 1}}
+      - kind: trigger
+        when: {event: attack, subject: {owner: opp}, target: player}
+        if: {cmp: [{count: {zone: shield, owner: you}}, "==", 0]}
+        effect:
+          - {op: move, select: {zone: deck, owner: you, from_top: 1}, to: shield, reason: put}
+      - kind: state
+        if: {cmp: [{count: {zone: shield, owner: you}}, ">=", 10]}
+        effect:
+          - {op: win, player: you}
+    source: {official: dmx12b-031, review: pending, notes: "攻撃先がプレイヤー（シールド含む）の時だけ。盾が0枚の時の攻撃は「そのターンはじめて」になる。盾10枚以上は kind: state（状況起因処理で常に判定）"}

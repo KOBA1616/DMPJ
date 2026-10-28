@@ -243,6 +243,27 @@ cards:
         to: hand
         reason: return
 
+  - id: R021
+    name: 試験用盾の束
+    types: [spell]
+    civs: [nature]
+    cost: 1
+    text: 自分の山札の上から3枚を、自分のシールドを1つ選び、その下に置く。
+    spell:
+      - op: put_under
+        select: {zone: deck, owner: you, from_top: 3}
+        onto: {zone: shield, owner: you, count: 1}
+
+  - id: R022
+    name: 試験用先処理ブレイク
+    types: [spell]
+    civs: [nature]
+    cost: 1
+    text: 自分のシールドを1つブレイクする。S・トリガーはすぐに解決する。その後、カードを1枚引く。
+    spell:
+      - {op: break, player: you, count: 1, st_first: true}
+      - {op: draw, count: 1}
+
   # 起動型能力（602）: 攻撃する代わりにタップして使う
   - id: R050
     name: 試験用タップ能力
