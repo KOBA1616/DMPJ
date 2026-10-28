@@ -67,6 +67,16 @@ def opencode_usage() -> str:
     return (r.stdout or r.stderr).strip()[:1500] or "opencode stats の出力なし"
 
 
+def newest_key():
+    """台帳 sets.json は新しい弾が先。その並びで弾を前から、弾の中はID順。台帳に無い弾は最後。"""
+    try:
+        order = list((json.loads((DATA / "cards" / "catalog" / "sets.json").read_text(encoding="utf-8")).get("products") or {}))
+    except (OSError, ValueError):
+        order = []
+    rank = {p: i for i, p in enumerate(order)}
+    return lambda r: (rank.get(str(r.get("product", "")), len(rank)), r["id"])
+
+
 def main(argv=None):
     ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     ap.add_argument("--provider", default="opencode-cli", choices=["opencode", "opencode-cli"])
@@ -77,8 +87,8 @@ def main(argv=None):
     ap.add_argument("--batch", type=int, default=5, help="1単位の枚数。単位の中がすべてAPI失敗ならその単位を飛ばして次へ")
     ap.add_argument("--max-bad-batches", type=int, default=2, help="API失敗だけの単位がこの回数続いたら打ち切る")
     ap.add_argument("--effort", default="high")
-    ap.add_argument("--order", choices=["id", "short"], default="id",
-                    help="変換の順番。id: カードID順（弾ごとにまとまる）、short: 原文の短い順（簡単なものから）")
+    ap.add_argument("--order", choices=["id", "short", "newest"], default="id",
+                    help="変換の順番。id: カードID順（弾ごとにまとまる）、short: 原文の短い順（簡単なものから）、newest: 新しい弾から（台帳 sets.json の並び）")
     ap.add_argument("--timeout", type=float, default=300, help="1枚の呼び出しの上限秒。超えた1枚は次の成功で reason: timeout に確定、連続2回なら打ち切り")
     ap.add_argument("--health-timeout", type=float, default=90, help="開始前にモデルへ短い質問をして応答を確認する上限秒（0で省略）。返らなければ何も処理せず終了")
     ap.add_argument("--examples", type=int, default=8, help="プロンプトに入れる変換例の数（原文が近い順）。0で全部（約55,000字→約25,000字に減る）")
@@ -112,7 +122,7 @@ def main(argv=None):
         done = cc.known_ids(out) | ({c["id"] for c in (yaml.safe_load(out.read_text(encoding="utf-8")) or {}).get("cards") or []}
                                     if out.exists() else set())
         failed = {r["id"] for r in cc.read_jsonl(rej)}
-        key = (lambda r: r["id"]) if a.order == "id" else (lambda r: len(r.get("text", "")))
+        key = {"id": lambda r: r["id"], "short": lambda r: len(r.get("text", "")), "newest": newest_key()}[a.order]
         # 以前 no_text 等で rejects に入ったカードでも、ルールだけで変換できるものは対象に戻す（モデル不使用）
         by_rule = {r["id"] for r in rows if r["id"] in failed and rule_convert.convert(r) is not None}
         todo = sorted((r for r in rows if r["id"] not in done and (r["id"] not in failed or r["id"] in by_rule)), key=key)[:a.limit]

@@ -195,3 +195,10 @@ schtasks /Create /SC MINUTE /MO 5 /TN "dmpj-worker" /TR C:\path\DMPJ\tools\run_w
 ## 誘発条件つきの効果文
 - `{TRG}`（出た時／攻撃する時／出た時または攻撃する時）を前置きにした文は、`spell_effects` の定型文をそのまま誘発能力の効果として使う。定型文を1件足せば、呪文・出た時・攻撃する時の3か所で効く。
 - 「自分のクリーチャーすべてに「<辞書にあるキーワード>」を与える」は常在型能力として変換する。
+
+### 複数のワーカーを同時に動かす（PC・クラウド・エージェントアプリ）
+
+- 処理の開始時に、ジョブを `jobs/pending` から `jobs/running/<id>.yaml`（`worker`・`claimed` つき）へ移して push する。先に push できた1台だけが処理し、負けた側はそのジョブを飛ばす。3時間たっても running のままのジョブは止まったものとして pending に戻る。
+- ジョブに `target: local` / `target: cloud` を書くと、`run --target <種類>` で起動したワーカーだけが拾う（省略・`any` は誰でも）。`run --worker-name` で名前を付けられる（既定はホスト名）。
+- convert ジョブは `order: newest` で新しい弾から処理できる（`auto_convert.py --order newest`）。片方は古い順、もう片方は新しい順にすると被らない。
+- `enqueue convert --target cloud --order newest` のように投入できる。

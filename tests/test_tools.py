@@ -807,6 +807,78 @@ def test_local_worker_ask_roundtrip(tmp_path):
     assert lw.process(g, lambda m: LLM()) == []
 
 
+def _worker_remote(tmp_path, n=2):
+    import subprocess
+
+    import local_worker as lw
+    bare = tmp_path / "remote.git"
+    subprocess.run(["git", "init", "-q", "--bare", str(bare)], check=True)
+    gits = []
+    for i in range(n):
+        clone = tmp_path / f"clone{i}"
+        subprocess.run(["git", "clone", "-q", str(bare), str(clone)], check=True, capture_output=True)
+        for k, v in (("user.name", "t"), ("user.email", "t@t")):
+            subprocess.run(["git", "config", k, v], cwd=clone, check=True)
+        gits.append(lw.Git(clone, tmp_path / f"work{i}"))
+    return gits
+
+
+class _EchoLLM:
+    model = "glm-5.3-flash-free"
+    calls = 0
+
+    def complete(self, sysp, messages, effort, usage):
+        _EchoLLM.calls += 1
+        return "ok"
+
+
+def test_local_worker_two_workers_do_not_take_the_same_job(tmp_path):
+    """2台が同じ pending を見ていても、先に claim した1台だけが処理する。"""
+    import local_worker as lw
+    a, b = _worker_remote(tmp_path)
+    jid = lw.enqueue(a, {"type": "ask", "task": "summarize", "input": "本文"})
+    b.worktree("jobs", lw.JOBS_BRANCH, create=True)          # b も pending を見た状態にしておく
+    _EchoLLM.calls = 0
+    assert lw.process(a, lambda m: _EchoLLM(), worker="A") == [f"{jid}:ok"]
+    out = lw.process(b, lambda m: _EchoLLM(), worker="B")
+    assert out == [] and _EchoLLM.calls == 1                  # b は何も拾わない（a が済ませた）
+
+
+def test_local_worker_target_and_stale_running(tmp_path):
+    """target が違うワーカーは拾わない。止まった running は pending に戻る。"""
+    import subprocess
+
+    import local_worker as lw
+    import yaml as _yaml
+    (a,) = _worker_remote(tmp_path, 1)
+    jid = lw.enqueue(a, {"type": "ask", "task": "summarize", "input": "本文", "target": "cloud"})
+    _EchoLLM.calls = 0
+    assert lw.process(a, lambda m: _EchoLLM(), target="local") == [] and _EchoLLM.calls == 0
+    jd = a.worktree("jobs", lw.JOBS_BRANCH, create=True)
+    pj = jd / "jobs" / "pending" / f"{jid}.yaml"
+    job = _yaml.safe_load(pj.read_text(encoding="utf-8"))
+    pj.unlink()
+    (jd / "jobs" / "running").mkdir(parents=True, exist_ok=True)
+    (jd / "jobs" / "running" / f"{jid}.yaml").write_text(
+        _yaml.safe_dump({**job, "worker": "X", "claimed": "2020-01-01T00:00:00+00:00"}), encoding="utf-8")
+    a.commit_push(jd, lw.JOBS_BRANCH, "stale")
+    assert lw.process(a, lambda m: _EchoLLM(), target="cloud") == [f"{jid}:ok"]      # 戻されて cloud ワーカーが処理した
+    assert not (jd / "jobs" / "running" / f"{jid}.yaml").exists()
+
+
+def test_auto_convert_newest_order(tmp_path, monkeypatch):
+    import json as _json
+
+    import auto_convert as ac
+    cat = tmp_path / "cards" / "catalog"
+    cat.mkdir(parents=True)
+    (cat / "sets.json").write_text(_json.dumps({"products": {"26ex4": {}, "1": {}}}), encoding="utf-8")
+    monkeypatch.setattr(ac, "DATA", tmp_path)
+    rows = [{"id": "dm01-001", "product": "1"}, {"id": "dm26ex4-002", "product": "26ex4"},
+            {"id": "dm26ex4-001", "product": "26ex4"}, {"id": "x", "product": "unknown"}]
+    assert [r["id"] for r in sorted(rows, key=ac.newest_key())] == ["dm26ex4-001", "dm26ex4-002", "dm01-001", "x"]
+
+
 def test_local_worker_routine_allowlist(tmp_path):
     """routine は決まった名前だけ。未知の名前・不正な base は実行せずエラーにする。"""
     import local_worker as lw
