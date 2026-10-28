@@ -60,7 +60,8 @@ def keyword_names() -> list[str]:
 
 def covered_forms() -> set[str]:
     forms: set[str] = set()
-    for f in (DATA / "cards").glob("*.yaml"):
+    from dmsim.cardfiles import card_files
+    for f in card_files():
         for c in (yaml.safe_load(f.read_text(encoding="utf-8")) or {}).get("cards") or []:
             if (c.get("source") or {}).get("review") == "rejected":
                 continue

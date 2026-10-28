@@ -19,6 +19,7 @@ from __future__ import annotations
 import argparse
 import json
 import os
+import platform
 import re
 import shutil
 import subprocess
@@ -78,15 +79,22 @@ class Git:
         """変換結果ファイルが origin 側とも変わって rebase が衝突したときの合流。converted.yaml と rejects.jsonl を ID ごとの和集合にして、
         origin の最新の上に1コミット作り直す（作業ツリーの tools/ 等の上書きはそのまま残す）。成功扱い（変換済み）が優先。"""
         import yaml as _y
-        conv, rej = d / "data/cards/converted.yaml", d / "data/cards/raw/rejects.jsonl"
+        sys.path.insert(0, str(ROOT))
+        from dmsim import cardstore
+        conv_rel = "data/cards/converted" if (d / "data/cards/converted").is_dir() else "data/cards/converted.yaml"
+        conv, rej = d / conv_rel, d / "data/cards/raw/rejects.jsonl"
 
         def theirs(path: str) -> str:
             return self.sh("show", f"origin/{branch}:{path}", cwd=d, check=False)
 
         cards = {}
-        for text in (theirs("data/cards/converted.yaml"), conv.read_text(encoding="utf-8") if conv.exists() else ""):
-            for c in (_y.safe_load(text) or {}).get("cards") or []:      # あとから読む（自分の結果）が優先
-                cards[c["id"]] = c
+        if conv.is_dir():          # 弾別ディレクトリ: origin 側の各ファイルを読む
+            texts = [theirs(f) for f in self.sh("ls-tree", "-r", "--name-only", f"origin/{branch}", "--", conv_rel, cwd=d, check=False).split()
+                     if f.endswith(".yaml")]
+        else:
+            texts = [theirs(conv_rel)]
+        for c in [c for t in texts for c in (_y.safe_load(t) or {}).get("cards") or []] + cardstore.read(conv):
+            cards[c["id"]] = c         # あとから読む（自分の結果）が優先
         rejects = {}
         for text in (theirs("data/cards/raw/rejects.jsonl"), rej.read_text(encoding="utf-8") if rej.exists() else ""):
             for line in text.splitlines():
@@ -95,11 +103,10 @@ class Git:
                     rejects[r["id"]] = r
         for i in cards:
             rejects.pop(i, None)
-        conv.write_text("# convert_cards.py の出力（review: pending）。確認後に real.yaml へ移す。\n"
-                        + _y.safe_dump({"cards": list(cards.values())}, allow_unicode=True, sort_keys=False), encoding="utf-8")
+        cardstore.write(conv, list(cards.values()), "# convert_cards.py の出力（review: pending）。確認後に real.yaml へ移す。\n")
         rej.write_text("".join(json.dumps(r, ensure_ascii=False) + "\n" for r in rejects.values()), encoding="utf-8")
         self.sh("reset", "-q", "--mixed", f"origin/{branch}", cwd=d)
-        for f in ("data/cards/converted.yaml", "data/cards/raw/rejects.jsonl", "data/cards/raw/convert_report.json",
+        for f in (conv_rel, "data/cards/raw/rejects.jsonl", "data/cards/raw/convert_report.json",
                   "data/cards/raw/convert_status.json"):
             if (d / f).exists():      # 無いパスを混ぜると git add 全体が失敗するので、あるものだけ足す
                 self.sh("add", "-f", f, cwd=d, check=False)
@@ -236,6 +243,10 @@ def run_convert(job: dict, git: Git, jobs_model: str | None) -> dict:
     for _ in range(max(1, -(-total // chunk))):
         cmd = [sys.executable, "-u", "tools/auto_convert.py", "--model", model, "--limit", str(chunk), "--batch", str(min(chunk, 5)),
                "--interval", str(job.get("interval", 3)), "--workers", str(job.get("workers", 1))]
+        if job.get("pack"):
+            cmd += ["--pack", str(job["pack"])]
+        if job.get("order"):
+            cmd += ["--order", str(job["order"])]
         # 出力を1行ずつ画面とログへ流す（ウィンドウで途中経過が見える）。最後の出力は結果に残す
         proc = subprocess.Popen(cmd, cwd=d, env=env, stdout=subprocess.PIPE, stderr=subprocess.STDOUT,
                                 text=True, encoding="utf-8", errors="replace", bufsize=1)
@@ -245,7 +256,7 @@ def run_convert(job: dict, git: Git, jobs_model: str | None) -> dict:
             tail = (tail + [line])[-40:]
         proc.wait()
         git.sh("reset", "-q", cwd=d)
-        git.sh("add", "-f", "data/cards/converted.yaml", "data/cards/raw/rejects.jsonl", "data/cards/raw/convert_report.json",
+        git.sh("add", "-f", "data/cards/converted" if (d / "data/cards/converted").is_dir() else "data/cards/converted.yaml", "data/cards/raw/rejects.jsonl", "data/cards/raw/convert_report.json",
                "data/cards/raw/convert_status.json", cwd=d, check=False)
         msg = f"cards-data: convert (local worker) {now()}"
         git.commit_push(d, DATA_BRANCH, msg, add=False, on_conflict=lambda: git.merge_convert_results(d, DATA_BRANCH, msg))
@@ -408,10 +419,59 @@ def model_alive(timeout: float = 90) -> str | None:
         providers.OPENCODE_TIMEOUT = old
 
 
-def process(git: Git, llm_factory=None, max_jobs: int = 20, daily_limit: int = lo.DAILY_LIMIT, health=None) -> list[str]:
+RUNNING_STALE = 3 * 3600        # running のまま、この秒数たったジョブは止まったものとして pending に戻す
+
+
+def release_stale(git: Git, jd: Path) -> list[str]:
+    """持ち主が止まった running ジョブを pending に戻す（別のワーカーが拾えるように）。"""
+    running, pending = jd / "jobs" / "running", jd / "jobs" / "pending"
+    back = []
+    for rp in sorted(running.glob("*.yaml")) if running.exists() else []:
+        info = yaml.safe_load(rp.read_text(encoding="utf-8")) or {}
+        try:
+            age = (datetime.now(timezone.utc) - datetime.fromisoformat(info.get("claimed", ""))).total_seconds()
+        except ValueError:
+            age = RUNNING_STALE + 1
+        if age > RUNNING_STALE:
+            job = {k: v for k, v in info.items() if k not in ("claimed", "worker")}
+            pending.mkdir(parents=True, exist_ok=True)
+            (pending / rp.name).write_text(yaml.safe_dump(job, allow_unicode=True, sort_keys=False), encoding="utf-8")
+            rp.unlink()
+            back.append(rp.stem)
+    if back:
+        try:
+            git.commit_push(jd, JOBS_BRANCH, f"jobs: release stale {', '.join(back)}")
+        except RuntimeError:        # 別のワーカーが先に戻した。次回見直す
+            reset_jobs(git, jd)
+    return back
+
+
+def reset_jobs(git: Git, jd: Path):
+    git.sh("fetch", "-q", "origin", JOBS_BRANCH, cwd=jd, check=False)
+    git.sh("reset", "-q", "--hard", f"origin/{JOBS_BRANCH}", cwd=jd, check=False)
+
+
+def claim(git: Git, jd: Path, p: Path, job: dict, worker: str) -> Path | None:
+    """pending → running に移して push する。先に push できた1台だけが処理する（負けたら None）。"""
+    rp = jd / "jobs" / "running" / p.name
+    rp.parent.mkdir(parents=True, exist_ok=True)
+    rp.write_text(yaml.safe_dump({**job, "worker": worker, "claimed": now()}, allow_unicode=True, sort_keys=False), encoding="utf-8")
+    p.unlink()
+    try:
+        git.commit_push(jd, JOBS_BRANCH, f"jobs: claim {p.stem} ({worker})")
+    except RuntimeError:
+        reset_jobs(git, jd)
+        return None
+    return rp
+
+
+def process(git: Git, llm_factory=None, max_jobs: int = 20, daily_limit: int = lo.DAILY_LIMIT, health=None,
+            worker: str = "local", target: str = "local") -> list[str]:
+    """target: このワーカーの種類（local / cloud）。ジョブの `target:` が違えば拾わない（省略したジョブは誰でも拾う）。"""
     jd = git.worktree("jobs", JOBS_BRANCH, create=True)
     pending, done = jd / "jobs" / "pending", jd / "jobs" / "done"
     done.mkdir(parents=True, exist_ok=True)
+    release_stale(git, jd)
     if health and any(pending.glob("*.yaml")):
         why = health()      # ジョブがある時だけ確かめる。だめなら cards-data にも触れず、ジョブは pending のまま次回へ
         if why:
@@ -421,6 +481,12 @@ def process(git: Git, llm_factory=None, max_jobs: int = 20, daily_limit: int = l
     for p in sorted(pending.glob("*.yaml"))[:max_jobs]:
         job = yaml.safe_load(p.read_text(encoding="utf-8")) or {}
         jid = p.stem
+        if job.get("target") not in (None, "any", target):
+            continue
+        rp = claim(git, jd, p, job, worker)
+        if rp is None:
+            handled.append(f"{jid}:他のワーカーが処理中")
+            continue
         try:
             if job.get("type") == "convert":
                 res = run_convert(job, git, None)
@@ -430,13 +496,16 @@ def process(git: Git, llm_factory=None, max_jobs: int = 20, daily_limit: int = l
                 res = run_ask(job, llm_factory(job.get("model")), git.work / "cache", daily_limit, jd)
             else:
                 res = {"status": "error", "error": f"未知の type {job.get('type')!r}"}
-        except ModelOutage as e:    # ジョブは消さず、残りも今回は見送る
+        except ModelOutage as e:    # ジョブは pending に戻し、残りも今回は見送る
+            rp.unlink()
+            p.write_text(yaml.safe_dump(job, allow_unicode=True, sort_keys=False), encoding="utf-8")
+            git.commit_push(jd, JOBS_BRANCH, f"jobs: release {jid}")
             handled.append(f"{jid}:pending（{e}）")
             break
         except lo.Fatal as e:      # 課金の兆候・許可外モデル。以降のジョブは実行しない
             res = {"status": "error", "error": lo.scrub(f"STOP: {e}")}
             (done / f"{jid}.yaml").write_text(yaml.safe_dump({"id": jid, "finished": now(), **res}, allow_unicode=True), encoding="utf-8")
-            p.unlink()
+            rp.unlink()
             git.commit_push(jd, JOBS_BRANCH, f"jobs: {jid} stopped")
             raise SystemExit(f"停止: {res['error']}") from None
         except Exception as e:     # noqa: BLE001  1件の失敗でワーカー全体を落とさない。error を残して done に移す（毎回の再実行で無料枠を使わない）
@@ -445,7 +514,7 @@ def process(git: Git, llm_factory=None, max_jobs: int = 20, daily_limit: int = l
             res["pr_comment"] = post_pr_comment(job["pr"], jid, res)
         (done / f"{jid}.yaml").write_text(yaml.safe_dump({"id": jid, "summary": summary_line(res), "finished": now(), **res},
                                                          allow_unicode=True, sort_keys=False), encoding="utf-8")
-        p.unlink()
+        rp.unlink()
         handled.append(f"{jid}:{res['status']}")
         git.commit_push(jd, JOBS_BRANCH, f"jobs: {jid} {res['status']}")
     return handled
@@ -470,6 +539,8 @@ def main(argv=None) -> int:
     r.add_argument("--no-update", action="store_true", help="実行前の main 更新(git fetch + merge --ff-only)をしない")
     r.add_argument("--log", help="出力を追記するログファイル（画面にも出す）。省略時は画面のみ")
     r.add_argument("--daily-limit", type=int, default=lo.DAILY_LIMIT)
+    r.add_argument("--target", default="local", help="このワーカーの種類。ジョブの target: がこれ（または省略・any）のものだけ拾う（例 local / cloud）")
+    r.add_argument("--worker-name", default=os.environ.get("DMPJ_WORKER_NAME") or platform.node())
     e = sub.add_parser("enqueue")
     e.add_argument("type", choices=["ask", "convert", "routine"])
     e.add_argument("--task", default="summarize")
@@ -481,6 +552,8 @@ def main(argv=None) -> int:
     e.add_argument("--pr", type=int, help="結果をこの PR にコメント投稿する（PC に gh が要る）。Claude は PR 購読で自動に受け取る")
     e.add_argument("--limit", type=int, default=100)
     e.add_argument("--workers", type=int, default=1)
+    e.add_argument("--target", help="処理するワーカーの種類（local / cloud）。省略で誰でも")
+    e.add_argument("--order", choices=["id", "short", "newest"], help="convert の順番。newest: 新しい弾から")
     sub.add_parser("status")
     a = ap.parse_args(argv)
     # デスクトップアプリのDBと食い違うことがあるので、OpenCode CLI は専用の保存先で動かす（Windowsで動作確認済み）
@@ -501,13 +574,17 @@ def main(argv=None) -> int:
             job.update(name=a.name, summarize=a.summarize)
         else:
             job.update(limit=a.limit, workers=a.workers)
+            if a.order:
+                job["order"] = a.order
+        if a.target:
+            job["target"] = a.target
         if a.pr:
             job["pr"] = a.pr
         print(enqueue(git, job))
         return 0
     if a.cmd == "status":
         jd = git.worktree("jobs", JOBS_BRANCH, create=True)
-        for k in ("pending", "done"):
+        for k in ("pending", "running", "done"):
             fs = sorted((jd / "jobs" / k).glob("*.yaml")) if (jd / "jobs" / k).exists() else []
             print(f"{k}: {len(fs)}", *[f.stem for f in fs[-5:]])
         return 0
@@ -529,7 +606,8 @@ def main(argv=None) -> int:
                     restart = True      # ロックを放してから新版で起動し直す（with を抜けた後）
                     break
             try:
-                print(now(), process(git, daily_limit=a.daily_limit, health=model_alive) or "ジョブなし", flush=True)
+                print(now(), process(git, daily_limit=a.daily_limit, health=model_alive,
+                                   worker=a.worker_name, target=a.target) or "ジョブなし", flush=True)
             except RuntimeError as ex:
                 print(now(), "失敗（次回やり直す）:", lo.scrub(str(ex)), file=sys.stderr, flush=True)
             if not a.loop:

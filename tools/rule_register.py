@@ -15,6 +15,7 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 import convert_cards as cc  # noqa: E402
+from dmsim import cardstore  # noqa: E402
 from dmsim.defs import DATA, load_tables  # noqa: E402
 
 
@@ -23,7 +24,7 @@ def main(argv=None):
     ap.add_argument("--dry-run", action="store_true")
     a = ap.parse_args(argv)
     raw = DATA / "cards" / "raw"
-    out, rej = DATA / "cards" / "converted.yaml", raw / "rejects.jsonl"
+    out, rej = cardstore.converted_path(DATA), raw / "rejects.jsonl"
     rows = cc.load_rows([str(raw)])
     if a.dry_run:
         import tempfile

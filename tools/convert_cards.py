@@ -31,7 +31,7 @@ ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(ROOT))
 sys.path.insert(0, str(ROOT / "tools"))
 
-from dmsim import schema  # noqa: E402
+from dmsim import cardstore, identity, schema  # noqa: E402
 from dmsim.defs import DATA, DefError, load_tables, parse_card  # noqa: E402
 import rule_convert  # noqa: E402
 from llm_offload.providers import CallTimeout  # noqa: E402
@@ -50,13 +50,14 @@ INSTRUCTIONS = """\
 - known_keywords があるときは、それらのキーワードはルールで処理済み（text から除いてある）。keywords に入れ直さず、残りの text だけを変換する。
 - 「〜できない」は static の mod.deny、「〜できる」は mod.allow。「〜してもよい」は op: may。
 - 進化は types に evolution を含め evolve_from に進化元の条件を書く。ツインパクトは faces に2面を書く。
-- カードの種類: クリーチャーは creature、呪文は spell、タマシードは tamaseed、フィールドは field、クロスギアは cross_gear（実行するとバトルゾーンに出る）。「タマシード/クリーチャー」は両方を types に書く。他の種類（オーラ・城・ドラグハート・サイキック・GR など）は未対応なので、近似せず source.unsupported に書く。
+- カードの種類: クリーチャーは creature、呪文は spell、タマシードは tamaseed、フィールドは field、クロスギアは cross_gear（実行するとバトルゾーンに出る）。「タマシード/クリーチャー」は両方を types に書く。サイキック・GR・超次元・ドラグハートはオリジナルフォーマットでは使わないので変換しない（取り込み側で飛ばす）。他の種類（オーラ・城 など）は未対応なので、近似せず source.unsupported に書く。
 - 革命チェンジ・ニンジャ・ストライク等の宣言は kind: declare（既存カードの例に倣う）。
 - text には原文から括弧書きの注釈を除いたものを「 / 」区切りで書く。
-- 表せない・近似した点は source.notes に日本語で具体的に書く。表せない能力を黙って落とさない。
-- 語彙が足りず表せない効果は source.unsupported に [{need: <足せばよい op・語彙の案（英語の識別子）>, text: <該当する原文>}] で書く。
-  無い op を effect に書いて検査を落とすより、近似して notes に書き、足りない語彙を unsupported に残す。
+- 近似・代用はしない。語彙で原文どおりに表せない効果は、似た別の語彙（op・mod・条件）で置き換えて書かない。その能力は abilities に書かず、source.unsupported に [{need: <足せばよい op・語彙の案（英語の識別子）>, text: <該当する原文>}] で書く。表せる他の能力は通常どおり変換する。
+  「ほぼ同じ」「この場面では同じ結果」と思っても代用しない（例: 他のカードの効果の対象条件を書き換える置換を、無条件の置換や別の効果で書かない）。語彙の追加は人が行い、足りない語彙は unsupported の集計から決める。unsupported があるカードは登録されず（rejects に vocab として残る）、語彙が足りるようになってから変換し直す。
+- 表せない能力を黙って落とさない。落とした能力は必ず unsupported に残す。source.notes には、原文の曖昧さや確認してほしい点だけを日本語で具体的に書く（近似の言い訳には使わない）。
 - source は {official: <id>, review: pending} とし、必要なら notes を足す。
+- 「攻撃中、パワー+N」は mod.battle_power に only: attacking を付ける（バトル中だけ・攻撃側のときだけ適用。ブロックしたときは付かない）。「バトル中」は only を付けない。
 - 原文の表現が古い（例: 「墓地に置く」）場合も原文どおりに変換し、気づいた点は notes に書く。
 """
 
@@ -137,6 +138,9 @@ def validate(raw: dict, row: dict, tables) -> dict:
     src = raw.setdefault("source", {})
     src["official"] = row["id"]
     src["review"] = "pending"      # LLM の出力は必ず人の確認待ちにする
+    al = identity.aliases_for(row.get("name", ""), row["id"])
+    if al:
+        src["aliases"] = al        # 同名の古い版のID（旧IDから最新版を引くため）
     return raw
 
 
@@ -180,11 +184,40 @@ def make_llm(provider: str, model: str | None, interval: float):
     return AnthropicLLM(model or MODEL)
 
 
-def convert(llm, row: dict, tables, sysp: str, effort: str, usage: dict | None = None) -> dict:
+def pack_prompt(rows: list[dict]) -> str:
+    return (f"次の{len(rows)}枚のカードをまとめて変換してください。出力は ```yaml の中に cards: のリストを1つだけ書き、"
+            "各要素を1枚分のカード定義にする（id は入力と同じ。順番も同じ）。\n\n"
+            + "\n\n".join(json.dumps(prompt_row(r), ensure_ascii=False, indent=1) for r in rows))
+
+
+def convert_pack(llm, rows: list[dict], sysp, effort: str, usage: dict | None = None) -> dict[str, str]:
+    """複数枚を1回の呼び出しで変換する。返すのは {id: そのカード1枚分の YAML 文}（検査はしない。呼び出し側が1枚ずつ検査する）。
+    読み取れなかったカードは含めない（呼び出し側が単独の呼び出しにフォールバックする）。"""
+    text = llm.complete(sysp(rows[0]) if callable(sysp) else sysp, [{"role": "user", "content": pack_prompt(rows)}], effort, usage)
+    m = re.search(r"```ya?ml\s*\n(.*?)```", text, re.S)
+    try:
+        raw = yaml.safe_load(m.group(1) if m else text)
+    except yaml.YAMLError:
+        return {}
+    items = raw.get("cards") if isinstance(raw, dict) else raw
+    want = {r["id"] for r in rows}
+    out = {}
+    for it in items if isinstance(items, list) else []:
+        if isinstance(it, dict) and it.get("id") in want and it["id"] not in out:
+            out[it["id"]] = yaml.safe_dump(it, allow_unicode=True, sort_keys=False)
+    print(f"  まとめ変換 {len(rows)}枚 → {len(out)}枚読み取り", file=sys.stderr)
+    return out
+
+
+def convert(llm, row: dict, tables, sysp: str, effort: str, usage: dict | None = None, first: str | None = None) -> dict:
+    """first: まとめ変換で得た1枚分の出力。あれば最初の呼び出しの代わりに使い、検査に落ちたときだけ単独の呼び出しで直す。"""
     messages = [{"role": "user", "content": user_prompt(row)}]
     err = None
     for attempt in range(2):
-        text = llm.complete(sysp(row) if callable(sysp) else sysp, messages, effort, usage)
+        if attempt == 0 and first is not None:
+            text = first
+        else:
+            text = llm.complete(sysp(row) if callable(sysp) else sysp, messages, effort, usage)
         print(f"  {row['id']}: {len(text)}文字", file=sys.stderr)
         try:
             return validate(extract(text), row, tables)
@@ -193,6 +226,17 @@ def convert(llm, row: dict, tables, sysp: str, effort: str, usage: dict | None =
             messages += [{"role": "assistant", "content": text},
                          {"role": "user", "content": f"検査でエラーになった。直した定義だけを出力して。\n{e}"}]
     raise DefError(f"2回とも検査を通らなかった: {err}")
+
+
+def merge_split(card: dict, r: dict, part) -> dict:
+    """ルールで先に処理したキーワード・能力（rule_convert.split の結果）を、モデルが返したカードに戻す。"""
+    card["keywords"] = [*part[0], *[k for k in card.get("keywords") or [] if k not in part[0]]]
+    if not card["keywords"]:
+        del card["keywords"]
+    if part[2]:
+        card["abilities"] = [*part[2], *(card.get("abilities") or [])]
+    card["text"] = r["text"]
+    return card
 
 
 def load_rows(inputs: list[str]) -> list[dict]:
@@ -215,12 +259,13 @@ def load_rows(inputs: list[str]) -> list[dict]:
                 r = json.loads(s)
                 r.pop("error", None)
                 rows[r["id"]] = r
-    return list(rows.values())
+    return identity.canonical_rows(list(rows.values()))      # 同名の古い版は変換しない（最新版だけ）
 
 
 def known_ids(out: Path) -> set[str]:
     ids: set[str] = set()
-    for f in (DATA / "cards").glob("*.yaml"):
+    from dmsim.cardfiles import card_files
+    for f in card_files():
         ids |= {c["id"] for c in (yaml.safe_load(f.read_text(encoding="utf-8")) or {}).get("cards") or []}
     return ids
 
@@ -260,6 +305,18 @@ def classify(error: str) -> dict:
     return {"reason": "vocab_gap", "gaps": gaps} if gaps else {"reason": "other", "gaps": []}
 
 
+OUT_OF_FORMAT = ("サイキック", "GR", "ドラグハート", "超次元")      # オリジナルフォーマットでは使わない種類（実装しない）
+
+
+def vocab_reject(card: dict, row: dict) -> dict | None:
+    """語彙が足りず表せない効果（source.unsupported）のあるカードは、converted に登録せず rejects へ回す（定義は partial に残す）。"""
+    gaps = [str(u.get("need", "?")) for u in (card.get("source") or {}).get("unsupported") or [] if isinstance(u, dict)]
+    if not (card.get("source") or {}).get("unsupported"):
+        return None
+    return {**row, "reason": "vocab", "gaps": gaps, "partial": card,
+            "error": "\n".join(f"語彙不足: {g}" for g in gaps) or "語彙不足（unsupported の申告あり）"}
+
+
 def precheck(row: dict) -> dict | None:
     """モデルを呼ぶ前に、原文がそもそも変換できる状態か見る。ダメなら理由を返す（API も時間も使わない）。
 
@@ -269,22 +326,29 @@ def precheck(row: dict) -> dict | None:
     """
     if {"name", "card_type", "civilization", "cost"} & set(row.get("missing") or []):
         return {"reason": "fetch_incomplete", "gaps": [], "error": "原文の取得が空ページ・項目欠け（再取得が必要）"}
+    types = [row.get("card_type", ""), *[f.get("card_type", "") for f in row.get("faces") or []]]
+    if any(k in str(t) for t in types for k in OUT_OF_FORMAT):
+        return {"reason": "out_of_format", "gaps": [], "error": "オリジナルフォーマットでは使わない種類（サイキック・GR・超次元・ドラグハート）。変換しない"}
     if not row.get("text") and not any(f.get("text") for f in row.get("faces") or []):
         return {"reason": "no_text", "gaps": [], "error": "能力文が無い（変換対象外。語彙不足ではない）"}
     return None
+
+
+CONVERTED_HEADER = "# convert_cards.py の出力（review: pending）。確認後に real.yaml へ移す。\n"
 
 
 def run_rules(rows: list[dict], tables, out: Path, rejects_path: Path) -> dict:
     """ルールだけで完全に変換できる行（辞書のキーワード・定型文・同一原文の写し）を、モデルを呼ばずにまとめて out へ登録する。
     変換済み・検査落ちの行は対象にしない（検査落ちでもルール変換できるようになったものは戻す）。
     モデルのジョブに積む前の前処理で、枚数の上限は設けない。"""
-    doc = (yaml.safe_load(out.read_text(encoding="utf-8")) if out.exists() else None) or {}
-    cards = doc.get("cards") or []
+    cards = cardstore.read(out)
     done = known_ids(out) | {c["id"] for c in cards}
     rejects = {r["id"]: r for r in read_jsonl(rejects_path)}
     stats = {"requested": 0, "ok": 0, "by_rule": 0, "by_copy": 0, "invalid": 0}
     for r in rows:
         if r["id"] in done:
+            continue
+        if (precheck(r) or {}).get("reason") == "out_of_format":
             continue
         stats["requested"] += 1
         rc, kind = rule_convert.convert(r), "by_rule"
@@ -304,35 +368,55 @@ def run_rules(rows: list[dict], tables, out: Path, rejects_path: Path) -> dict:
         stats["ok"] += 1
         stats[kind] += 1
     if stats["ok"]:
-        out.parent.mkdir(parents=True, exist_ok=True)
-        out.write_text("# convert_cards.py の出力（review: pending）。確認後に real.yaml へ移す。\n"
-                       + yaml.safe_dump({"cards": cards}, allow_unicode=True, sort_keys=False), encoding="utf-8")
+        cardstore.write(out, cards, CONVERTED_HEADER)
         write_jsonl(rejects_path, list(rejects.values()))
     return stats
 
 
 def run(rows: list[dict], client, tables, sysp: str, effort: str, out: Path, rejects_path: Path,
-        workers: int = 1, report_path: Path | None = None) -> dict:
+        workers: int = 1, report_path: Path | None = None, pack: int = 1) -> dict:
     """rows を変換して out に追記する。1枚ごとに保存するので途中で止まっても続きから再開できる。
     検査を通らなかったカードは rejects に（成功したIDは rejects から消す）、APIの一時的な失敗は数えるだけで記録しない。"""
     import threading
     from concurrent.futures import ThreadPoolExecutor
     lock = threading.Lock()
-    doc = (yaml.safe_load(out.read_text(encoding="utf-8")) if out.exists() else None) or {}
-    cards = doc.get("cards") or []
+    cards = cardstore.read(out)
     rejects = {r["id"]: r for r in read_jsonl(rejects_path)}
     usage = {"input": 0, "cache_read": 0, "cache_write": 0, "output": 0}
     stats = {"ok": 0, "rejected": 0, "api_error": 0}
     api_errors: list[dict] = []
 
     def save():
-        out.parent.mkdir(parents=True, exist_ok=True)
-        out.write_text("# convert_cards.py の出力（review: pending）。確認後に real.yaml へ移す。\n"
-                       + yaml.safe_dump({"cards": cards}, allow_unicode=True, sort_keys=False), encoding="utf-8")
+        cardstore.write(out, cards, CONVERTED_HEADER)
         write_jsonl(rejects_path, list(rejects.values()))
 
     pending_timeouts: list[dict] = []   # 次のカードが成功したら reason: timeout で確定する（連続2回なら障害とみなして確定しない）
     streak = {"n": 0}      # 連続したAPI失敗（2回で打ち切り）。無料枠の制限(429)に当たったら残りを打たずに止める
+
+    packed: dict[str, str] = {}      # まとめ変換で得た {id: 1枚分の出力}
+
+    def model_row(r):
+        part = rule_convert.split(r)
+        return {**r, "text": part[1], "known_keywords": part[0]} if part else r
+
+    def prefetch():
+        """ルール・写し・事前検査で片づかないカードを pack 枚ずつ1回の呼び出しで変換する（失敗した分は単独の呼び出しに回る）。"""
+        todo = []
+        for r in rows:
+            if rule_convert.convert(r) is not None or precheck(r) or rule_convert.reuse_same_text(r, cards) is not None:
+                continue
+            todo.append(model_row(r))
+        for i in range(0, len(todo), pack):
+            grp = todo[i:i + pack]
+            if len(grp) < 2:
+                break
+            try:
+                packed.update(convert_pack(client, grp, sysp, effort, usage))
+            except Fatal:
+                raise
+            except Exception as e:      # noqa: BLE001  まとめが使えない時は単独に任せる（API 失敗の数え方は単独側に任せる）
+                print(f"  まとめ変換に失敗したので単独で続ける: {type(e).__name__}", file=sys.stderr)
+                return
 
     def one(r):
         rc = rule_convert.convert(r)      # キーワードだけ・バニラは、辞書のルールで作る（モデルを呼ばない＝トークン0）
@@ -377,15 +461,20 @@ def run(rows: list[dict], client, tables, sysp: str, effort: str, out: Path, rej
         print(f"… {r['id']} {r.get('name', '')} 変換中", file=sys.stderr, flush=True)
         part = rule_convert.split(r)      # キーワード能力はルールで処理し、残りの原文だけをモデルに渡す
         try:
-            card = convert(client, {**r, "text": part[1], "known_keywords": part[0]} if part else r, tables, sysp, effort, usage)
+            card = convert(client, {**r, "text": part[1], "known_keywords": part[0]} if part else r, tables, sysp, effort, usage,
+                           first=packed.pop(r["id"], None))
             if part:
-                card["keywords"] = [*part[0], *[k for k in card.get("keywords") or [] if k not in part[0]]]
-                if not card["keywords"]:
-                    del card["keywords"]
-                if part[2]:
-                    card["abilities"] = [*part[2], *(card.get("abilities") or [])]
-                card["text"] = r["text"]
+                merge_split(card, r, part)
             validate(card, r, tables)
+            vr = vocab_reject(card, r)
+            if vr:      # 語彙が足りないカードは登録しない（近似した定義で動かさない）。足りない語彙は gaps に出る
+                with lock:
+                    stats["rejected"] += 1
+                    streak["n"] = 0
+                    rejects[r["id"]] = vr
+                    print(f"- {r['id']} {r.get('name', '')}: {vr['error']}（登録しない）", file=sys.stderr, flush=True)
+                    save()
+                return
         except DefError as e:
             with lock:
                 stats["rejected"] += 1
@@ -422,6 +511,8 @@ def run(rows: list[dict], client, tables, sysp: str, effort: str, out: Path, rej
             rejects.pop(r["id"], None)
             save()
 
+    if pack > 1:
+        prefetch()
     if workers > 1:
         with ThreadPoolExecutor(workers) as ex:
             list(ex.map(one, rows))
@@ -439,7 +530,7 @@ def run(rows: list[dict], client, tables, sysp: str, effort: str, out: Path, rej
 def main(argv=None):
     ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     ap.add_argument("raw", nargs="+", help="原文の jsonl（複数・ディレクトリ・glob 可。data/cards/raw/by_product など）")
-    ap.add_argument("--out", default=str(DATA / "cards" / "converted.yaml"))
+    ap.add_argument("--out", default=str(cardstore.converted_path(DATA)))
     ap.add_argument("--rejects", default=str(DATA / "cards" / "raw" / "rejects.jsonl"))
     ap.add_argument("--report", default=str(DATA / "cards" / "raw" / "convert_report.json"),
                     help="実行結果（件数・トークン・失敗の種類別集計）の出力先")
@@ -448,6 +539,7 @@ def main(argv=None):
     ap.add_argument("--limit", type=int, help="この枚数まで変換する（試運転・予算の上限用）")
     ap.add_argument("--order", choices=["file", "short"], default="file", help="short: 原文の短い順（簡単なものから）")
     ap.add_argument("--workers", type=int, default=1, help="並列数（API のレート制限に合わせる）")
+    ap.add_argument("--pack", type=int, default=1, help="1回の呼び出しでまとめて変換する枚数（1=従来どおり1枚ずつ。指示文を共有してトークンを減らす）")
     ap.add_argument("--provider", choices=["anthropic", "opencode", "opencode-cli"], default="anthropic",
                     help="opencode は無料モデル専用（OPENCODE_API_KEY、許可リスト外のモデルは拒否）")
     ap.add_argument("--model", help="モデルID（既定: anthropic は claude-opus-5-5、opencode は glm-5.3-flash-free）")
@@ -463,8 +555,7 @@ def main(argv=None):
         failed = {r["id"] for r in read_jsonl(rejects_path)}
         rows = [r for r in rows if r["id"] in failed]
     else:
-        done = known_ids(out) | ({c["id"] for c in (yaml.safe_load(out.read_text(encoding="utf-8")) or {}).get("cards") or []}
-                                 if out.exists() else set())
+        done = known_ids(out) | {c["id"] for c in cardstore.read(out)}
         rows = [r for r in rows if r["id"] not in done]
     if a.order == "short":
         rows.sort(key=lambda r: len(r.get("text", "")))
@@ -480,7 +571,7 @@ def main(argv=None):
     try:
         llm = make_llm(a.provider, a.model, a.interval)
         report = run(rows, llm, load_tables(), sysp, a.effort, out, rejects_path,
-                     a.workers, Path(a.report))
+                     a.workers, Path(a.report), pack=a.pack)
     except Fatal as e:
         sys.exit(f"停止: {e}")
     print(f"変換 {report['ok']}/{report['requested']} 件、検査を通らず {report['rejected']} 件（{a.rejects}）、"

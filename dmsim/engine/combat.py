@@ -68,20 +68,22 @@ class CombatMixin:
                 break
         return att, tgt, None
 
-    def _battle_bonus(self, ref) -> int:
-        """バトル中だけのパワー修整（mod battle_power。ハンティング: 自分のハンター1体につき+1000）。"""
+    def _battle_bonus(self, ref, attacking: bool = False) -> int:
+        """バトル中だけのパワー修整（mod battle_power。ハンティング: 自分のハンター1体につき+1000）。only: attacking は攻撃側のときだけ。"""
         cid = ref[0]
         env = {"you": self.s.cards[cid].controller, "self": ref}
         total = 0
         for _, ab in self.abilities(cid, "static"):
             bp = ab.get("mod", {}).get("battle_power")
+            if bp and bp.get("only") == "attacking" and not attacking:
+                continue
             if bp and ab.get("affects") == "self" and ab.get("zone", "bz") == self.s.cards[cid].zone:
                 total += bp["amount"] * (self.eval_expr({"count": bp["count"]}, env) if "count" in bp else 1)
         return total
 
     def _battle(self, x, y):
         """バトル（701.13）。結果で誘発した効果はその場で解決してからバトルを終える。"""
-        px = self.chars(x[0])["power"] + self._battle_bonus(x)
+        px = self.chars(x[0])["power"] + self._battle_bonus(x, attacking=True)      # x は攻撃側
         py = self.chars(y[0])["power"] + self._battle_bonus(y)
         losers = ([x] if px <= py else []) + ([y] if py <= px else [])
         winners = [r for r in (x, y) if r not in losers]
@@ -241,7 +243,9 @@ def h_attack(eng, t):
 
 @task("break", BreakTask)
 def h_break(eng, t):
-    """ブレイク: 選ぶ → S・トリガー宣言 → 同時に手札へ → S・トリガーを解決（509.3〜509.5, 113.6）。"""
+    """ブレイク: 選ぶ → S・トリガー宣言 → 同時に手札へ → S・トリガーを解決（509.3〜509.5, 113.6）。
+    効果でシールドを手札に加える時も、宣言→移動→S・トリガーの解決は同じ（113.6）。その場合は chosen を渡して
+    phase 1 から始め、fire_break を偽にして「ブレイクした」イベントは起こさない。"""
     s = eng.s
     victim = t["victim"]
     shields = eng.zlist("shield", victim)
@@ -274,10 +278,12 @@ def h_break(eng, t):
                 seen.add(opts[i]["cid"])
                 declared.append([opts[i]["cid"], opts[i].get("face")])
     eng._pop(t)
-    seq = [eng.ev_task([{"ev": "move", "subject": s.ref(c), "to": "hand", "reason": "break"}
-                         for c in t["chosen"]]),
-           {"t": "enqueue_st", "cids": declared, "player": victim},
-           eng.ev_task({"ev": "break", "player": victim, "count": len(t["chosen"])})]
+    chosen = [c for c in t["chosen"] if s.cards[c].zone == "shield"]   # 宣言の間に別のゾーンへ移っていたら加えない
+    seq = [eng.ev_task([{"ev": "move", "subject": s.ref(c), "to": "hand", "reason": t.get("reason", "break")}
+                         for c in chosen]),
+           {"t": "enqueue_st", "cids": declared, "player": victim}]
+    if t.get("fire_break", True):
+        seq.append(eng.ev_task({"ev": "break", "player": victim, "count": len(chosen)}))
     if t["in_effect"]:   # S・トリガーの解決中のブレイクは、新しい S・トリガーをその場で解決する（101.4g）
         seq = eng._window(*seq, only_st=True)
     eng._push(*seq)

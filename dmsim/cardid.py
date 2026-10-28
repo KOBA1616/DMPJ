@@ -18,7 +18,7 @@ from urllib.parse import quote
 
 _SET_SIMPLE = re.compile(r"^([a-z]+)(\d+)$")
 _NUM = re.compile(r"^([a-z]*)(\d+)$")
-_ID = re.compile(r"^[a-z]+\d*[a-z]*\d*-[a-z]*\d+$")
+_ID = re.compile(r"^[a-z0-9]+(?:-[a-z0-9]+)+$")      # 小文字英数字を - でつないだもの（dm22rp2x-045、promoy21-sp3d01、24-s010 など公式IDの形はさまざま）
 
 
 def set_code(s: str) -> str:

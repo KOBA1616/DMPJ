@@ -1,0 +1,52 @@
+# 変換済みカードを、動作検証が通れば自動承認する（モデル不使用・無料）。承認台帳 data/cards/approvals/ を cards-data に保存する。
+# 定義・語彙が変わった承認は自動で pending に戻り、次の実行で再検証される。手動: Actions → auto-approve → Run workflow。
+name: auto-approve
+on:
+  schedule:
+    - cron: "40 */2 * * *"          # 2時間ごと（変換系の実行枠 convert-cards と直列化する）
+  workflow_dispatch:
+permissions:
+  contents: write
+concurrency:
+  group: convert-cards
+  cancel-in-progress: false
+jobs:
+  approve:
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Restore data branch
+        run: |
+          git config user.name "github-actions"; git config user.email "actions@users.noreply.github.com"
+          git ls-remote --exit-code --heads origin cards-data >/dev/null || { echo "cards-data がまだ無い"; exit 1; }
+          git checkout -f cards-data
+          git checkout "$GITHUB_SHA" -- tools dmsim data/rules data/schema data/cards/proto.yaml data/cards/real.yaml data/cards/real_vocab.yaml data/cards/real_zone.yaml .github
+      - name: Canonicalize (同名は最新版へ)
+        run: |
+          pip install -q pyyaml
+          python tools/canonicalize.py | tee /tmp/canon.json
+          { echo '```json'; cat /tmp/canon.json; echo '```'; } >> "$GITHUB_STEP_SUMMARY"
+      - name: Auto approve
+        run: |
+          pip install -q pyyaml
+          python tools/auto_approve.py --limit 3000 | tee /tmp/approve.json
+          { echo '```json'; cat /tmp/approve.json; echo '```'; } >> "$GITHUB_STEP_SUMMARY"
+      - name: Commit data
+        run: |
+          set +e
+          git reset -q
+          [ -d data/cards/approvals ] && git add -f data/cards/approvals
+          for p in data/cards/converted data/cards/converted.yaml; do [ -e "$p" ] && git add -f "$p"; done
+          git commit -qm "cards-data: approvals $(date -u +%FT%TZ)" || { echo "変更なし"; exit 0; }
+          git reset -q --hard HEAD
+          for i in 1 2 3 4 5; do
+            git fetch origin cards-data && git rebase origin/cards-data && git push origin HEAD:cards-data && exit 0
+            echo "push 失敗($i)。再試行"; git rebase --abort 2>/dev/null; sleep $((i * 10))
+          done
+          exit 1

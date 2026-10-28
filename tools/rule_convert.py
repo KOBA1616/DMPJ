@@ -62,12 +62,37 @@ _NOISE: set[str] | None = None
 _ETB = r"(?:このクリーチャーが(?:バトルゾーンに)?出た時|このクリーチャーをバトルゾーンに出した時)"
 
 
+# 「このクリーチャーが出た時／攻撃する時／出た時または攻撃する時」。正規表現の {TRG} がこれに置き換わり、
+# 能力の雛形の `when: $TRG` は実際の誘発条件（出た時または攻撃する時は2つの能力）に展開される
+_TRG = r"(?P<trg>" + _ETB + r"または攻撃する時|" + _ETB + r"|このクリーチャーが攻撃する時)"
+_WHEN = {"etb": {"event": "move", "to": "bz", "subject": "self"}, "atk": {"event": "attack", "subject": "self"}}
+
+
+def _whens(trg: str) -> list[dict]:
+    out = []
+    if re.search(r"出た時|出した時", trg):
+        out.append(_WHEN["etb"])
+    if "攻撃する時" in trg:
+        out.append(_WHEN["atk"])
+    return [dict(w) for w in out]
+
+
+def _expand_trg(abil: list[dict], trg: str) -> list[dict]:
+    out = []
+    for ab in abil:
+        if ab.get("when") == "$TRG":
+            out += [{**ab, "when": w} for w in _whens(trg)]
+        else:
+            out.append(ab)
+    return out
+
+
 def _patterns() -> list:
     """数値つきキーワード（data/rules/keyword_patterns.yaml）。(名前, 正規表現, 能力の雛形) のリスト。"""
     global _PATTERNS
     if _PATTERNS is None:
         ps = yaml.safe_load((DATA / "rules" / "keyword_patterns.yaml").read_text(encoding="utf-8"))["patterns"]
-        _PATTERNS = [(n, re.compile(d["re"].replace("{ETB}", _ETB)), d.get("abilities") or d["builder"], bool(d.get("whole_line")))
+        _PATTERNS = [(n, re.compile(d["re"].replace("{TRG}", _TRG).replace("{ETB}", _ETB)), d.get("abilities") or d["builder"], bool(d.get("whole_line")))
                      for n, d in ps.items()]
     return _PATTERNS
 
@@ -192,7 +217,18 @@ def _build_cost_static(groups: tuple[str, ...]) -> list[dict] | None:
              "mod": {"cost": sign * int(n)}}]
 
 
-BUILDERS = {"revolution_change": _build_revolution_change, "sympathy": _build_sympathy, "cost_static": _build_cost_static}
+def _build_grant_all(groups: tuple[str, ...]) -> list[dict] | None:
+    """自分のクリーチャーすべてに「<キーワード>」を与える（常在型）。キーワードは辞書にある名前だけ。"""
+    global _ALL
+    if _ALL is None:
+        _ALL = _table(with_card_kinds=True)
+    k = _ALL.get(norm(groups[0]))
+    if k is None:
+        return None
+    return [{"kind": "static", "affects": {"owner": "you", "filter": {"types": ["creature"]}}, "mod": {"grant": [k]}}]
+
+
+BUILDERS = {"grant_all": _build_grant_all, "revolution_change": _build_revolution_change, "sympathy": _build_sympathy, "cost_static": _build_cost_static}
 
 
 _KW_NAMES: list[str] | None = None
@@ -264,9 +300,17 @@ def match_pattern(clause: str, whole_line: bool = False) -> list[dict] | None:
             continue
         m = rx.fullmatch(c)
         if m:
+            gs = tuple(g for i, g in enumerate(m.groups(), 1) if i != rx.groupindex.get("trg"))   # 誘発条件の名前つきグループは番号に数えない
             if isinstance(abil, str):        # builder 名: 正規表現のグループから能力をコードで組み立てる
-                return BUILDERS[abil](m.groups())
-            return _fill(abil, m.groups())
+                return BUILDERS[abil](gs)
+            filled = _fill(abil, gs)
+            return _expand_trg(filled, m.group("trg")) if "trg" in rx.groupindex else filled
+    if whole_line:      # 呪文の定型文は、出た時・攻撃する時の誘発効果としてもそのまま使える
+        m = re.match(_TRG, c)
+        if m:
+            ops = match_spell(c[m.end():])
+            if ops is not None:
+                return [{"kind": "trigger", "when": w, "effect": ops} for w in _whens(m.group("trg"))]
     return None
 
 
@@ -347,9 +391,33 @@ def convert_spell(row: dict) -> dict | None:
     return card
 
 
+def convert_twin(row: dict) -> dict | None:
+    """ツインパクト（二面カード）。両面ともルールだけで変換できる時だけ、面ごとの変換結果を faces にまとめる。"""
+    faces = row.get("faces") or []
+    if len(faces) != 2 or set(row.get("missing") or []):
+        return None
+    out = []
+    for i, f in enumerate(faces):
+        sub = convert({**f, "id": row["id"], "mana": f.get("mana", row.get("mana"))})
+        if sub is None:
+            return None
+        out.append({k: v for k, v in sub.items() if k not in ("id", "mana", "text", "source")})
+    card = {"id": row["id"], "faces": out}
+    if row.get("mana") not in (None, ""):
+        try:
+            card["mana"] = int(row["mana"])
+        except ValueError:
+            return None
+    card["text"] = " ／ ".join(f"{f.get('name', '')}: {(f.get('text') or '').replace(chr(10), ' / ')}" for f in faces)
+    card["source"] = {"official": row["id"], "review": "pending", "notes": NOTE + "（ツインパクト）"}
+    return card
+
+
 def convert(row: dict) -> dict | None:
     """行を効果データ（dict）にする。ルールだけで決められなければ None。検査は呼び出し側（validate）が行う。"""
     global _TABLE
+    if row.get("faces"):
+        return convert_twin(row)
     if row.get("card_type") == "呪文":
         return convert_spell(row)
     # 取得時に text だけが空と印の付いた行（能力文のないバニラ）は許す。他の項目が欠けた行は取得のやり直しが先

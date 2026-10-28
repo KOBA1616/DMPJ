@@ -6,6 +6,7 @@ LLM が変換したカードデータの機械チェックを兼ねる。op の�
 from __future__ import annotations
 
 import copy
+import os
 from dataclasses import dataclass, field
 from pathlib import Path
 
@@ -347,10 +348,12 @@ class Checker:
                 raise DefError(f"{where}: cost must be int or {{amount, count}}")
         if "cost_min" in m and not isinstance(m["cost_min"], int):
             raise DefError(f"{where}: cost_min must be int")
-        if "battle_power" in m:   # バトル中だけのパワー修整: {amount: N, count: <selector>}（ハンティング）
+        if "battle_power" in m:   # バトル中だけのパワー修整: {amount: N, count: <selector>, only: attacking}（ハンティング。only: attacking は「攻撃中」＝攻撃側のときだけ）
             bp = m["battle_power"]
-            if not isinstance(bp, dict) or set(bp) - {"amount", "count"} or not isinstance(bp.get("amount"), int):
-                raise DefError(f"{where}: battle_power needs amount (int) and optional count (selector)")
+            if not isinstance(bp, dict) or set(bp) - {"amount", "count", "only"} or not isinstance(bp.get("amount"), int):
+                raise DefError(f"{where}: battle_power needs amount (int) and optional count (selector) / only: attacking")
+            if bp.get("only", "attacking") != "attacking":
+                raise DefError(f"{where}: battle_power only must be attacking")
             if "count" in bp:
                 self.selector(bp["count"], where)
         for k in m.get("ignore", []):
@@ -479,15 +482,32 @@ def parse_card(raw: dict, tables, where: str | None = None) -> CardDef:
                    source=raw.get("source", {}), **f)
 
 
-def load_rules(card_files: list[Path] | None = None) -> Rules:
+def card_yaml_files() -> list[Path]:
+    """読み込むカード定義の YAML。環境変数 DMSIM_SKIP_CONVERTED があれば、確認前の変換結果（converted.yaml）は除く（テストを軽くする）。"""
+    from .cardfiles import card_files
+    skip = os.environ.get("DMSIM_SKIP_CONVERTED")
+    return [f for f in card_files() if not (skip and (f.name == "converted.yaml" or f.parent.name == "converted"))]
+
+
+def load_rules(card_files: list[Path] | None = None, only_approved: bool | None = None) -> Rules:
+    """only_approved: 承認済みのカードだけ読む（converted.yaml の未確認分を除く）。省略時は環境変数 DMSIM_ONLY_APPROVED=1 に従う。"""
     tables = load_tables()
+    if only_approved is None:
+        only_approved = bool(os.environ.get("DMSIM_ONLY_APPROVED"))
+    if only_approved:
+        from . import approval
+        ledger, versions = approval.load(), approval.vocab_versions(tables)
     zones, keywords, macros, actions, steps = tables
-    card_files = card_files or sorted((DATA / "cards").glob("*.yaml"))
+    card_files = card_files or card_yaml_files()
     cards: dict[str, CardDef] = {}
     for f in card_files:
         for raw in yaml.safe_load(Path(f).read_text(encoding="utf-8")).get("cards") or []:
+            if only_approved and not approval.is_usable(raw, ledger, versions):
+                continue
             cd = parse_card(raw, tables)
             if cd.id in cards:
                 raise DefError(f"duplicate card id {cd.id}")
             cards[cd.id] = cd
-    return Rules(zones=zones, keywords=keywords, macros=macros, cards=cards, actions=actions, steps=steps)
+    from .identity import AliasDict
+    aliases = {a: cid for cid, cd in cards.items() for a in (cd.source or {}).get("aliases", [])}
+    return Rules(zones=zones, keywords=keywords, macros=macros, cards=AliasDict(cards, aliases), actions=actions, steps=steps)
