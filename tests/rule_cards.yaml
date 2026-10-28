@@ -325,3 +325,39 @@ cards:
         when: {event: move, from: bz, to: graveyard, reason: destroy, subject: crossed}
         effect:
           - {op: draw, count: 1}
+
+  # ウェーブストライカー: 他に2体以上いる間だけ能力を得る（条件は誘発時と解決時に見る。603.4）
+  - id: R054
+    name: 試験用ウェーブストライカー
+    types: [creature]
+    civs: [nature]
+    cost: 1
+    power: 1000
+    races: [テスト]
+    keywords: [wave_striker]
+    text: ウェーブストライカー / このクリーチャーが出た時、カードを1枚引く。
+    abilities:
+      - kind: trigger
+        when: {event: move, to: bz, subject: self}
+        if: {cmp: [{count: {zone: bz, owner: any, other: true, filter: {keyword: wave_striker}}}, ">=", 2]}
+        effect:
+          - {op: draw, count: 1}
+
+  - id: R055
+    name: 試験用ウェーブ強化
+    types: [creature]
+    civs: [light]
+    cost: 1
+    power: 1000
+    races: [テスト]
+    keywords: [wave_striker]
+    text: ウェーブストライカー / このクリーチャーのパワーは+4000され、バトルゾーンにある自分のクリーチャーすべてのパワーは+1000される。
+    abilities:
+      - kind: static
+        affects: self
+        if: {cmp: [{count: {zone: bz, owner: any, other: true, filter: {keyword: wave_striker}}}, ">=", 2]}
+        mod: {power: 4000}
+      - kind: static
+        affects: {zone: bz, owner: you, filter: {types: [creature]}}
+        if: {cmp: [{count: {zone: bz, owner: any, other: true, filter: {keyword: wave_striker}}}, ">=", 2]}
+        mod: {power: 1000}

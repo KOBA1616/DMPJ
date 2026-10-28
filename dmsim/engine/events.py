@@ -314,6 +314,8 @@ class EventMixin:
                     continue
                 ctrl = lsrc["controller"] if lsrc else s.cards[src].controller
                 sref = lsrc["ref"] if lsrc else s.ref(src)
+                if "if" in ab and not lsrc and not self.eval_cond(ab["if"], {"you": ctrl, "self": sref, "event": rec, "vars": {}}):
+                    continue          # 誘発条件つき（「〜場合」）の能力は、誘発時にも条件を見る（603.4）。離れた時の誘発は解決時だけ
                 s.seq += 1
                 # 待機中の効果は発生源から独立する（110.5a）。発生源の情報は env に持つ
                 p = {"pid": s.seq, "kind": "normal", "win": win, "controller": ctrl, "src": sref,

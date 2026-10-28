@@ -37,6 +37,7 @@ class Engine(SelectorMixin, EventMixin, InterpreterMixin, TurnMixin, CombatMixin
     def __init__(self, rules: Rules, state: GameState, *, step_limit: int = 20000, turn_limit: int = 80,
                  check: bool | None = None):
         self.rules = rules
+        self._in_static_cond = 0
         self._xcache = rules.__dict__.setdefault("_affects_others_cache", {})   # 定義だけで決まるので複製間で共有
         self.check = CHECK if check is None else check   # タスクの形を毎回検査する（テスト・開発者モード用）
         self.s = state
@@ -209,6 +210,14 @@ class Engine(SelectorMixin, EventMixin, InterpreterMixin, TurnMixin, CombatMixin
                 out = [(i, ab) for i, ab in out if not ({"all", ab["kind"]} & ign)]
         return out
 
+    def _static_cond(self, cond, env) -> bool:
+        """常在型能力の条件。条件の評価中にさらに別の常在型の条件を評価する入れ子では、カード数えを定義の特性で見る（互いの条件を参照し合って再帰しない）。"""
+        self._in_static_cond += 1
+        try:
+            return self.eval_cond(cond, env)
+        finally:
+            self._in_static_cond -= 1
+
     def _affects_others(self, cid: int) -> bool:
         """この面が他のカードに及ぶ mod 付きの常在型能力を持つか（定義だけで決まるのでキャッシュする）。"""
         d = self.fdef(cid)
@@ -232,7 +241,7 @@ class Engine(SelectorMixin, EventMixin, InterpreterMixin, TurnMixin, CombatMixin
         env_self = {"you": c.controller, "self": ref}
         mods = [ab["mod"] for _, ab in own
                 if ab["kind"] == "static" and ab.get("affects") == "self" and ab.get("zone", "bz") == c.zone and "mod" in ab
-                and ("if" not in ab or self.eval_cond(ab["if"], env_self))]   # 条件つきの常在型（例:「墓地が13枚より少なければ攻撃できない」）は常に見直す
+                and ("if" not in ab or self._static_cond(ab["if"], env_self))]   # 条件つきの常在型（例:「墓地が13枚より少なければ攻撃できない」）は常に見直す
         cards = self.s.cards
         for src in self.s.zones["bz"][0]:   # バトルゾーンの常在型能力（重ねたカードの下は除く）。affects.zone で他のゾーンのカードにも及ぶ
             if cards[src].top_of >= 0 or not self._affects_others(src):
@@ -241,7 +250,8 @@ class Engine(SelectorMixin, EventMixin, InterpreterMixin, TurnMixin, CombatMixin
                 aff = ab.get("affects", {})
                 if "mod" in ab and aff != "self" and (aff.get("zone", "bz") if isinstance(aff, dict) else "bz") == c.zone:
                     env = {"you": self.s.cards[src].controller, "self": self.s.ref(src)}
-                    if self._subject_match(aff, cid, env, None, base=True):
+                    if self._subject_match(aff, cid, env, None, base=True) and \
+                            ("if" not in ab or self._static_cond(ab["if"], env)):
                         mods.append(ab["mod"])
         mods += [ce["mod"] for ce in self.s.continuous if self._ce_applies(ce, cid, ref)]
         granted = set()
