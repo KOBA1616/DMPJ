@@ -41474,3 +41474,38 @@ cards:
       text: 自分の手札または墓地から光、水、闇の呪文を唱えた時、バトルゾーンに自分のナイトが他に１枚でもあれば、自分の山札を見る。その中から、唱えた呪文と同じ名前の呪文を１枚選び、ストを支払わずに唱えてもよい。その後、山札をシャッフルする。
   keywords:
   - double_breaker
+- id: dm01-002
+  name: 真理の伝道師レイーラ
+  types:
+  - creature
+  civs:
+  - light
+  cost: 6
+  power: 3000
+  races:
+  - バーサーカー
+  mana: 1
+  text: このクリーチャーがバトルゾーンに出たとき、自分の山札から呪文を１枚さがして相手に見せ、自分の手札に加える。そのあと、山札をシャッフルする。
+  abilities:
+  - kind: trigger
+    when:
+      event: move
+      to: bz
+      subject: self
+    effect:
+    - op: move
+      select:
+        zone: deck
+        owner: you
+        filter:
+          types:
+          - spell
+        count: 1
+        look: true
+      to: hand
+      reason: put
+    - op: shuffle
+  source:
+    official: dm01-002
+    review: pending
+    notes: 相手に見せる処理は扱っていない
