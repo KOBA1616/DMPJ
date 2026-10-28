@@ -548,3 +548,27 @@ def test_loop_skeleton_distinguishes_bundle_contents_but_not_plain_shield_count(
     h2, _ = loop.abstract(e)
     assert h1 != h2
     assert c1["shield:0"] == 5            # 束は1つのシールド
+
+
+def test_break_st_first_resolves_declared_s_trigger_before_following_step(rr):
+    """S・トリガーは宣言後すぐ解決される。「その後」の処理（ドロー）はそれが終わってから行う。"""
+    e = setup(rr, {"hand": ["R022"], "mana": ["T001"], "shield": ["R008"]}, {"bz": ["T001"], "shield": ["T018"] * 3}, filler="T018")
+    seq = []
+    orig = e._raw_move
+
+    def spy(cid, to, *a, **k):
+        c = e.s.cards[cid]
+        if (c.owner, c.zone, to) == (1, "shield", "hand"):
+            seq.append("opp_shield_broken_by_trigger")
+        if (c.owner, c.zone, to) == (0, "deck", "hand"):
+            seq.append("draw")
+        return orig(cid, to, *a, **k)
+
+    e._raw_move = spy
+    answer(e, "charge", "pass")
+    answer(e, "main", "play:R022")
+    d = e.advance()
+    while d is not None and d["kind"] not in ("attack", "main"):
+        e.answer([0])
+        d = e.advance()
+    assert seq[:2] == ["opp_shield_broken_by_trigger", "draw"]

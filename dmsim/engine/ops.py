@@ -117,13 +117,15 @@ def op_repeat(eng, t, op, env):
     eng._defer(t, [eng._child(op["body"], env) for _ in range(n)])
 
 
-@op("break", player="player?", count="expr?")
+@op("break", player="player?", count="expr?", st_first="bool?")
 def op_break(eng, t, op, env):
     """効果でブレイクする。出た S・トリガーは、この効果の処理が終わってから解決する（101.4d）。
-    ただし S・トリガーの解決中のブレイクなら、すでに待機している効果より先にその場で解決する（101.4g）。"""
+    ただし S・トリガーの解決中のブレイクなら、すでに待機している効果より先にその場で解決する（101.4g）。
+    st_first: 「ブレイクしてもよい。その後、…」のように、後続の文が S・トリガーの解決を待つ効果（エメラルーダ。koba 確認 2026-10-28）。
+    宣言された S・トリガーをその場で先に解決してから、続きを処理する。"""
     eng._defer(t, [{"t": "break", "victim": eng._rel(op.get("player", "opp"), env), "by": env["you"],
                      "count": eng.eval_expr(op.get("count", 1), env), "phase": 0,
-                     "in_effect": bool(env.get("in_st"))}])
+                     "in_effect": bool(env.get("in_st")) or bool(op.get("st_first"))}])
 
 
 @op("modify", select="selector", mod="mod", duration="duration?", dynamic="bool?")

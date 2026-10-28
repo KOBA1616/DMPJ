@@ -979,7 +979,7 @@ cards:
         effect:
           - op: may
             body:
-              - {op: break, player: you, count: 1}
+              - {op: break, player: you, count: 1, st_first: true}
           - op: may
             body:
               - {op: move, select: {zone: hand, owner: you, count: 1}, to: shield, reason: put}

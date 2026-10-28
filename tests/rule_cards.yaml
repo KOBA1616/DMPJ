@@ -253,3 +253,13 @@ cards:
       - op: put_under
         select: {zone: deck, owner: you, from_top: 3}
         onto: {zone: shield, owner: you, count: 1}
+
+  - id: R022
+    name: 試験用先処理ブレイク
+    types: [spell]
+    civs: [nature]
+    cost: 1
+    text: 自分のシールドを1つブレイクする。S・トリガーはすぐに解決する。その後、カードを1枚引く。
+    spell:
+      - {op: break, player: you, count: 1, st_first: true}
+      - {op: draw, count: 1}

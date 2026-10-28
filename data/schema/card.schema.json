@@ -296,6 +296,9 @@
        },
        "count": {
         "$ref": "#/$defs/expr"
+       },
+       "st_first": {
+        "type": "boolean"
        }
       },
       "required": [
