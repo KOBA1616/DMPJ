@@ -4,7 +4,7 @@
 |---|---|---|
 | `data/cards/real.yaml` ほか `data/cards/*.yaml` | 承認済み・手書きのカード定義 | `data/schema/card_file.schema.json`（カード1枚は `card.schema.json`） |
 | `data/cards/<converted\|real>/<弾>.yaml` | 弾ごとに分けたカード定義（`tools/split_cards.py`）。`dmsim.cardfiles.card_files()` が `*.yaml` と一緒に読む | 同上 |
-| `data/cards/approvals.json` | 承認台帳。承認の状態・根拠・定義/語彙のハッシュ（`dmsim/approval.py`） | `approvals.schema.json` |
+| `data/cards/approvals/<弾>.json` | 承認台帳（弾ごと。単一の .json も可）。承認の状態・根拠・定義/語彙のハッシュ（`dmsim/approval.py`） | `approvals.schema.json` |
 | `cards-data` ブランチの `catalog/sets.json` | 取得台帳（弾ごとのID・枚数・取得済み数） | `catalog_sets.schema.json` |
 | `cards-data` ブランチの `raw/rejects.jsonl` | 変換できなかったカードの原文とエラー（1行1枚） | `rejects_row.schema.json` |
 

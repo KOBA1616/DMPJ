@@ -1,4 +1,4 @@
-"""ルール変換で作ったカードを、動作検証が通れば自動承認する（モデル不使用・無料）。承認台帳 data/cards/approvals.json を更新する。
+"""ルール変換で作ったカードを、動作検証が通れば自動承認する（モデル不使用・無料）。承認台帳 data/cards/approvals/<弾>.json を更新する。
 
     python tools/auto_approve.py                 # converted.yaml / real.yaml の全カードを対象
     python tools/auto_approve.py --dry-run       # 台帳を書かず件数だけ

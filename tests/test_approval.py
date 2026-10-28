@@ -74,3 +74,14 @@ def test_cardstore_file_and_sharded(tmp_path):
     assert (d / "dm02.yaml").exists() is False and (d / "dm01.yaml").exists()
     cardstore.write(d, cards[1:], "# h\n")
     assert m  # noqa
+
+
+def test_ledger_sharded_roundtrip(tmp_path):
+    v = ap.vocab_versions(load_tables())
+    led = {i: ap.entry({**CARD, "id": i}, "approved", "rule", v) for i in ("dm01-s01", "dm02-001")}
+    d = tmp_path / "approvals"
+    ap.save(led, d)
+    assert sorted(p.name for p in d.glob("*.json")) == ["dm01.json", "dm02.json"]
+    assert ap.load(d) == led
+    ap.save({"dm01-s01": led["dm01-s01"]}, d)
+    assert [p.name for p in d.glob("*.json")] == ["dm01.json"]

@@ -1,6 +1,6 @@
 {
  "$schema": "https://json-schema.org/draft/2020-12/schema",
- "title": "承認台帳 data/cards/approvals.json（dmsim.approval）",
+ "title": "承認台帳 data/cards/approvals/<弾>.json（dmsim.approval）",
  "type": "object",
  "additionalProperties": {
   "type": "object",
