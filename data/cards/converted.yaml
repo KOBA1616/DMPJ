@@ -41567,3 +41567,34 @@ cards:
     official: dm01-005
     review: pending
     notes: 原文は「それぞれの墓地に置く」。dm01-027 の例に倣い、現行表記の「破壊する」として destroy にした
+- id: dm01-006
+  name: ギガルゴン
+  types:
+  - creature
+  civs:
+  - darkness
+  cost: 8
+  power: 3000
+  races:
+  - キマイラ
+  mana: 1
+  text: このクリーチャーがバトルゾーンに出たとき、自分の墓地からクリーチャー２体まで選び、自分の手札に戻してよい。
+  abilities:
+  - kind: trigger
+    when:
+      event: move
+      to: bz
+      subject: self
+    effect:
+    - op: bounce
+      select:
+        zone: graveyard
+        owner: you
+        filter:
+          types:
+          - creature
+        count: 2
+        up_to: true
+  source:
+    official: dm01-006
+    review: pending
