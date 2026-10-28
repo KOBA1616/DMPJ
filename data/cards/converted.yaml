@@ -75000,3 +75000,575 @@ cards:
     review: pending
     aliases:
     - dmrp14-078
+- id: dm23ex2-cho038
+  name: ミラクルとミステリーの扉
+  types:
+  - spell
+  civs:
+  - water
+  - nature
+  cost: 5
+  mana: 1
+  text: 'S・トリガー （この呪文をシールドゾーンから手札に加える時、コストを支払わずにすぐ唱えてもよい）
+
+    自分の山札の上から４枚を表向きにする。その中から進化ではないクリーチャーを１体、相手に選ばせる。そのクリーチャーを出し、残りを好きな順序で山札の下に置く。'
+  spell:
+  - op: choose
+    select:
+      zone: deck
+      owner: you
+      from_top: 4
+      look: true
+      count: all
+    as: pile
+  - op: choose
+    select:
+      ref: pile
+      filter:
+        types:
+        - creature
+        not_types:
+        - evolution
+      chooser: opp
+      count: 1
+    as: a
+  - op: play_free
+    select:
+      ref: a
+      count: all
+  - op: move
+    select:
+      ref: pile
+      count: all
+    to: deck
+    reason: put
+  source:
+    official: dm23ex2-cho038
+    review: pending
+    notes: '出すクリーチャーは相手が選ぶため chooser: opp を付けた'
+    aliases:
+    - dm26-049
+    - dmc61-092
+    - dmx08-036
+  keywords:
+  - s_trigger
+- id: dm23ex2-chog004
+  name: マーシャル・クロウラー
+  types:
+  - creature
+  civs:
+  - water
+  cost: 8
+  power: 8000
+  races:
+  - アースイーター
+  mana: 1
+  text: 'W・ブレイカー
+
+    このクリーチャーが出た時、自分の手札を好きな枚数シールド化してもよい。その後、このクリーチャーは同じ数の自分のシールドをブレイクする。'
+  abilities:
+  - kind: trigger
+    when:
+      event: move
+      to: bz
+      subject: self
+    effect:
+    - op: may
+      body:
+      - op: choose
+        select:
+          zone: hand
+          owner: you
+          count: any
+        as: a
+      - op: move
+        select:
+          ref: a
+          count: all
+        to: shield
+        reason: charge
+      - op: break
+        count:
+          count:
+            ref: a
+        player: you
+  source:
+    official: dm23ex2-chog004
+    review: pending
+    notes: '自分のシールドのブレイクは break op（player: you）で表した'
+    aliases:
+    - dmex06-019
+    - dmr09-s04
+  keywords:
+  - double_breaker
+- id: dm23ex3-t03
+  faces:
+  - name: 懐疑の虎狼 ミラーズホロウ
+    types:
+    - creature
+    civs:
+    - light
+    cost: 7
+    power: 7000
+    races:
+    - デーモン・コマンド
+    - アンノウン
+    abilities:
+    - kind: trigger
+      when:
+        event: move
+        to: bz
+        subject: self
+      effect:
+      - op: choose
+        select:
+          zone: deck
+          owner: you
+          from_top: 4
+          look: true
+          count: all
+        as: pile
+      - op: choose
+        select:
+          ref: pile
+          filter:
+            types:
+            - creature
+            races:
+            - アンノウン
+          count: 1
+        as: a
+      - op: move
+        select:
+          ref: a
+          count: all
+        to: hand
+        reason: draw
+      - op: choose
+        select:
+          ref: pile
+          filter:
+            types:
+            - spell
+          count: 1
+        as: b
+      - op: move
+        select:
+          ref: b
+          count: all
+        to: hand
+        reason: draw
+      - op: move
+        select:
+          ref: pile
+          count: all
+        to: deck
+        reason: put
+  - name: 「汝は偽名なりや？」
+    types:
+    - spell
+    civs:
+    - light
+    cost: 3
+    spell:
+    - op: choose
+      select:
+        zone: deck
+        owner: you
+        from_top: 2
+        look: true
+        count: all
+      as: pile
+    - op: choose
+      select:
+        ref: pile
+        filter:
+          types:
+          - creature
+          races:
+          - アンノウン
+        count: 1
+      as: a
+    - op: move
+      select:
+        ref: a
+        count: all
+      to: hand
+      reason: draw
+    - op: choose
+      select:
+        ref: pile
+        filter:
+          types:
+          - spell
+        count: 1
+      as: b
+    - op: move
+      select:
+        ref: b
+        count: all
+      to: hand
+      reason: draw
+    - op: move
+      select:
+        ref: pile
+        count: all
+      to: deck
+      reason: put
+  mana: 1
+  text: '懐疑の虎狼 ミラーズホロウ: このクリーチャーが出た時、自分の山札の上から４枚を表向きにする。その中から、アンノウン・クリーチャー１体と呪文を１枚、手札に加える。その後、残りを好きな順序で山札の下に置く。／「汝は偽名なりや？」:
+    自分の山札の上から２枚を表向きにする。その中から、アンノウン・クリーチャー１体と呪文を１枚、手札に加える。その後、残りを好きな順序で山札の下に置く。'
+  source:
+    official: dm23ex3-t03
+    review: pending
+    notes: ツインパクト
+    aliases:
+    - dmbd06-014
+- id: dm23ex3-t10
+  name: 裏切りのペッパーシウバ
+  types:
+  - creature
+  civs:
+  - water
+  - nature
+  cost: 7
+  power: 8000
+  races:
+  - ジャイアント
+  - サイバー・コマンド
+  mana: 1
+  text: 'W・ブレイカー
+
+    このクリーチャーが破壊された時、進化ではないアンノウン・クリーチャーを１体、自分の手札から出してもよい。'
+  abilities:
+  - kind: trigger
+    zone: graveyard
+    when:
+      event: move
+      to: graveyard
+      subject: self
+    effect:
+    - op: may
+      body:
+      - op: play_free
+        select:
+          zone: hand
+          owner: you
+          filter:
+            types:
+            - creature
+            not_types:
+            - evolution
+            races:
+            - アンノウン
+          count: 1
+  source:
+    official: dm23ex3-t10
+    review: pending
+    aliases:
+    - dmr07-019
+    - dmr07-019m
+    - promoy11-054
+  keywords:
+  - double_breaker
+- id: dm23ex3-t14
+  name: メッサダンジリ・ドラゴン
+  types:
+  - creature
+  civs:
+  - fire
+  cost: 5
+  power: 5000
+  races:
+  - アーマード・ドラゴン
+  - アンノイズ
+  mana: 1
+  text: 自分のアンノウン・クリーチャーの召喚コストを１、ゼニス・クリーチャーの召喚コストを１少なくしてもよい。ただし、コストは０以下にはならない。自分のアンノウンすべてに「スピードアタッカー」を与える。
+  abilities:
+  - kind: static
+    affects:
+      owner: you
+      zone: hand
+      filter:
+        types:
+        - creature
+        races:
+        - アンノウン
+    mod:
+      cost: -1
+      cost_min: 1
+  - kind: static
+    affects:
+      owner: you
+      zone: hand
+      filter:
+        types:
+        - creature
+        races:
+        - ゼニス
+    mod:
+      cost: -1
+      cost_min: 1
+  - kind: static
+    affects:
+      owner: you
+      zone: bz
+      filter:
+        types:
+        - creature
+        races:
+        - アンノウン
+    mod:
+      grant:
+      - speed_attacker
+  source:
+    official: dm23ex3-t14
+    review: pending
+    notes: 種族ごとの軽減は static を分けて重ねた
+    aliases:
+    - dmd07-024
+    - dmr05-061
+    - dmx13-024
+    - promoy11-022
+- id: dm23ex3-t15
+  name: 祭喰の超人
+  types:
+  - creature
+  civs:
+  - nature
+  cost: 5
+  power: 5000
+  races:
+  - ジャイアント
+  - アンノイズ
+  mana: 1
+  text: 自分のアンノウン・クリーチャーの召喚コストを１、ゼニス・クリーチャーの召喚コストを１少なくしてもよい。ただし、コストは０以下にはならない。自分のアンノウンがあれば、このクリーチャーのパワーを+5000し、「W・ブレイカー」を与える。
+  abilities:
+  - kind: static
+    affects:
+      owner: you
+      zone: hand
+      filter:
+        types:
+        - creature
+        races:
+        - アンノウン
+    mod:
+      cost: -1
+      cost_min: 1
+  - kind: static
+    affects:
+      owner: you
+      zone: hand
+      filter:
+        types:
+        - creature
+        races:
+        - ゼニス
+    mod:
+      cost: -1
+      cost_min: 1
+  - kind: static
+    if:
+      exists:
+        zone: bz
+        owner: you
+        filter:
+          races:
+          - アンノウン
+    mod:
+      power: 5000
+      grant:
+      - double_breaker
+  source:
+    official: dm23ex3-t15
+    review: pending
+    aliases:
+    - dmr05-067
+    - dmr05-067m
+    - dmx13-025
+- id: dm23ex3-tf04
+  name: 「創世」の頂 セーブ・ザ・デイト
+  types:
+  - creature
+  civs:
+  - light
+  cost: 10
+  power: 10500
+  races:
+  - エンジェル・コマンド
+  - アンノウン
+  - ゼニス
+  mana: 1
+  text: 'ブロッカー
+
+    W・ブレイカー
+
+    このクリーチャーが召喚によって出た時、「ブロッカー」を持つ進化ではないクリーチャーを好きな数、自分の手札から出す。
+
+    自分の「ブロッカー」を持つクリーチャーが出た時、カードを１枚引いてもよい。'
+  abilities:
+  - kind: trigger
+    when:
+      event: move
+      to: bz
+      subject: self
+    effect:
+    - op: play_free
+      select:
+        zone: hand
+        owner: you
+        filter:
+          types:
+          - creature
+          not_types:
+          - evolution
+          keyword: blocker
+        count: any
+  - kind: trigger
+    when:
+      event: move
+      to: bz
+      subject:
+        owner: you
+        filter:
+          types:
+          - creature
+          keyword: blocker
+        other: true
+    effect:
+    - op: may
+      body:
+      - op: draw
+        count: 1
+  source:
+    official: dm23ex3-tf04
+    review: pending
+    notes: 2つ目の誘発は「自分のブロッカーが出た時」全般で照合した（このクリーチャー自身の登場時は1つ目の効果に含まれる）
+    aliases:
+    - dmbd06-002
+  keywords:
+  - blocker
+  - double_breaker
+- id: dm23ex3-tr06
+  name: 「俺」の頂 ライオネル
+  types:
+  - creature
+  civs: []
+  cost: 10
+  power: 13000
+  races:
+  - アンノウン
+  - ゼニス
+  mana: 1
+  text: 'ブロッカー
+
+    T・ブレイカー
+
+    このクリーチャーが召喚によって出た時、自分の山札の上から１枚目をシールド化し、その後、自分のシールドを１つ相手に選ばせる。そのシールドをブレイクしてもよい。
+
+    自分のシールドゾーンにあるカードすべてに「S・トリガー」を与える。
+
+    エターナル・Ω（このクリーチャーが離れる時、かわりに手札に戻す）'
+  abilities:
+  - kind: trigger
+    when:
+      event: move
+      to: bz
+      subject: self
+    effect:
+    - op: move
+      select:
+        zone: deck
+        owner: you
+        from_top: 1
+      to: shield
+      reason: charge
+    - op: choose
+      select:
+        zone: shield
+        owner: you
+        chooser: opp
+        count: 1
+      as: s
+    - op: may
+      body:
+      - op: move
+        select:
+          ref: s
+          count: all
+        to: hand
+        reason: break
+  - kind: static
+    affects:
+      owner: you
+      zone: shield
+    mod:
+      grant:
+      - s_trigger
+  source:
+    official: dm23ex3-tr06
+    review: pending
+    notes: シールドへのキーワード付与は affects の zone に shield を指定した（文明はゼロ＝無色として civs を空にした）
+    aliases:
+    - dmbd06-003
+    - dmr05-v01
+    - dmx25-v04
+  keywords:
+  - blocker
+  - triple_breaker
+  - eternal_omega
+- id: dm23ex3-tr14
+  name: 「謎」の頂 Z-ファイル
+  types:
+  - creature
+  civs: []
+  cost: 10
+  power: 13000
+  races:
+  - アンノウン
+  - ゼニス
+  mana: 1
+  text: 'T・ブレイカー
+
+    このクリーチャーが召喚によって出た時、自分の他のクリーチャーをすべて破壊してもよい。そうしたら、デーモン・コマンドをすべて、自分の墓地から出す。
+
+    エターナル・Ω（このクリーチャーが離れる時、かわりに手札に戻す）'
+  abilities:
+  - kind: trigger
+    when:
+      event: move
+      to: bz
+      subject: self
+    effect:
+    - op: may
+      body:
+      - op: destroy
+        select:
+          zone: bz
+          owner: you
+          filter:
+            types:
+            - creature
+          other: true
+          count: all
+      - op: play_free
+        select:
+          zone: graveyard
+          owner: you
+          filter:
+            types:
+            - creature
+            races:
+            - デーモン・コマンド
+          count: all
+  source:
+    official: dm23ex3-tr14
+    review: pending
+    notes: 文明はゼロ＝無色として civs を空にした
+    aliases:
+    - dmex08-058
+    - dmr07-s01
+  keywords:
+  - triple_breaker
+  - eternal_omega
