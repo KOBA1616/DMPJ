@@ -1,0 +1,49 @@
+{
+ "$schema": "https://json-schema.org/draft/2020-12/schema",
+ "title": "取得台帳 data/cards/catalog/sets.json（cards-data ブランチ）",
+ "type": "object",
+ "required": [
+  "products"
+ ],
+ "properties": {
+  "products": {
+   "type": "object",
+   "additionalProperties": {
+    "type": "object",
+    "required": [
+     "name",
+     "code",
+     "ids",
+     "listed",
+     "total",
+     "fetched"
+    ],
+    "properties": {
+     "name": {
+      "type": "string"
+     },
+     "code": {
+      "type": "string"
+     },
+     "ids": {
+      "type": "array",
+      "items": {
+       "type": "string"
+      }
+     },
+     "listed": {
+      "type": "boolean"
+     },
+     "total": {
+      "type": "integer",
+      "minimum": 0
+     },
+     "fetched": {
+      "type": "integer",
+      "minimum": 0
+     }
+    }
+   }
+  }
+ }
+}

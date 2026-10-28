@@ -1,0 +1,63 @@
+{
+ "$schema": "https://json-schema.org/draft/2020-12/schema",
+ "title": "承認台帳 data/cards/approvals.json（dmsim.approval）",
+ "type": "object",
+ "additionalProperties": {
+  "type": "object",
+  "required": [
+   "status",
+   "by",
+   "def_hash",
+   "uses",
+   "vocab_ver"
+  ],
+  "properties": {
+   "status": {
+    "enum": [
+     "pending",
+     "approved",
+     "rejected"
+    ]
+   },
+   "by": {
+    "enum": [
+     "rule",
+     "human"
+    ],
+    "description": "rule=ルール変換+動作検証、human=開発者モード"
+   },
+   "def_hash": {
+    "type": "string",
+    "pattern": "^[0-9a-f]{16}$"
+   },
+   "uses": {
+    "type": "array",
+    "items": {
+     "type": "string",
+     "pattern": "^(core|op:.+|kw:.+)$"
+    }
+   },
+   "vocab_ver": {
+    "type": "string",
+    "pattern": "^[0-9a-f]{16}$"
+   },
+   "verify": {
+    "type": "string"
+   },
+   "verify_error": {
+    "type": "string"
+   },
+   "note": {
+    "type": "string"
+   },
+   "stale": {
+    "type": "string",
+    "description": "承認が無効になった理由（pending に戻した時だけ）"
+   }
+  },
+  "additionalProperties": false
+ },
+ "propertyNames": {
+  "pattern": "^[a-z0-9]+-[a-z0-9]+$"
+ }
+}

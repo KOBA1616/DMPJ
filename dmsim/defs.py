@@ -6,6 +6,7 @@ LLM が変換したカードデータの機械チェックを兼ねる。op の�
 from __future__ import annotations
 
 import copy
+import os
 from dataclasses import dataclass, field
 from pathlib import Path
 
@@ -347,10 +348,12 @@ class Checker:
                 raise DefError(f"{where}: cost must be int or {{amount, count}}")
         if "cost_min" in m and not isinstance(m["cost_min"], int):
             raise DefError(f"{where}: cost_min must be int")
-        if "battle_power" in m:   # バトル中だけのパワー修整: {amount: N, count: <selector>}（ハンティング）
+        if "battle_power" in m:   # バトル中だけのパワー修整: {amount: N, count: <selector>, only: attacking}（ハンティング。only: attacking は「攻撃中」＝攻撃側のときだけ）
             bp = m["battle_power"]
-            if not isinstance(bp, dict) or set(bp) - {"amount", "count"} or not isinstance(bp.get("amount"), int):
-                raise DefError(f"{where}: battle_power needs amount (int) and optional count (selector)")
+            if not isinstance(bp, dict) or set(bp) - {"amount", "count", "only"} or not isinstance(bp.get("amount"), int):
+                raise DefError(f"{where}: battle_power needs amount (int) and optional count (selector) / only: attacking")
+            if bp.get("only", "attacking") != "attacking":
+                raise DefError(f"{where}: battle_power only must be attacking")
             if "count" in bp:
                 self.selector(bp["count"], where)
         for k in m.get("ignore", []):
@@ -479,10 +482,17 @@ def parse_card(raw: dict, tables, where: str | None = None) -> CardDef:
                    source=raw.get("source", {}), **f)
 
 
+def card_yaml_files() -> list[Path]:
+    """読み込むカード定義の YAML。環境変数 DMSIM_SKIP_CONVERTED があれば、確認前の変換結果（converted.yaml）は除く（テストを軽くする）。"""
+    from .cardfiles import card_files
+    skip = os.environ.get("DMSIM_SKIP_CONVERTED")
+    return [f for f in card_files() if not (skip and (f.name == "converted.yaml" or f.parent.name == "converted"))]
+
+
 def load_rules(card_files: list[Path] | None = None) -> Rules:
     tables = load_tables()
     zones, keywords, macros, actions, steps = tables
-    card_files = card_files or sorted((DATA / "cards").glob("*.yaml"))
+    card_files = card_files or card_yaml_files()
     cards: dict[str, CardDef] = {}
     for f in card_files:
         for raw in yaml.safe_load(Path(f).read_text(encoding="utf-8")).get("cards") or []:

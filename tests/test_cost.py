@@ -10,6 +10,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parent.parent / "tools"))
 import rule_convert as rc  # noqa: E402
 
 from dmsim.defs import DATA, load_rules, load_tables, parse_card  # noqa: E402
+from dmsim.defs import card_yaml_files  # noqa: E402
 
 BASE = {"card_type": "クリーチャー", "civilization": "自然", "cost": "5", "power": "3000", "race": "テスト", "name": "試験"}
 
@@ -26,7 +27,7 @@ def build(tmp_path):
     def make(*cards):
         f = tmp_path / "c.yaml"
         f.write_text(yaml.safe_dump({"cards": list(cards)}, allow_unicode=True), encoding="utf-8")
-        return load_rules(sorted((DATA / "cards").glob("*.yaml")) + [f])
+        return load_rules(card_yaml_files() + [f])
     return make
 
 

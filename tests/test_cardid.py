@@ -1,7 +1,7 @@
 """カードIDの正規化と、実カードが公式の形式のIDで管理されていること。"""
 import pytest
 
-from dmsim.cardid import is_official_id, normalize_id, pack_ids, set_code
+from dmsim.cardid import is_official_id, ledger_ids, normalize_id, pack_ids, set_code
 
 
 @pytest.mark.parametrize("raw,want", [
@@ -22,7 +22,7 @@ def test_all_real_cards_are_managed_by_their_official_id(rules):
     for cd in rules.cards.values():
         if cd.source:
             assert is_official_id(cd.id), cd.id
-            assert normalize_id(cd.id) == cd.id
+            assert normalize_id(cd.id) == cd.id or cd.id in ledger_ids(), cd.id      # 公式のIDに - や数字なしの番号を含むもの（promoy20-gum1-005 など）は台帳にあればよい
             assert cd.source.get("official") == cd.id, cd.id
 
 

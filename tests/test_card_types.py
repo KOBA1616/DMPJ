@@ -4,6 +4,7 @@ import yaml
 from conftest import answer, setup
 
 from dmsim.defs import DATA, load_rules
+from dmsim.defs import card_yaml_files  # noqa: E402
 
 
 def mk(i, types, kw=None, cost=1, power=0, extra=None):
@@ -26,7 +27,7 @@ def rr(tmp_path):
         mk("G001", ["cross_gear"]),
         mk("E001", ["creature", "evolution"], cost=1, power=5000, extra={"evolve_from": {"civs": ["nature"]}}),
     ]}, allow_unicode=True))
-    return load_rules(sorted((DATA / "cards").glob("*.yaml")) + [f])
+    return load_rules(card_yaml_files() + [f])
 
 
 @pytest.mark.parametrize("cid", ["S001", "F001", "G001"])
