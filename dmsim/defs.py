@@ -508,4 +508,6 @@ def load_rules(card_files: list[Path] | None = None, only_approved: bool | None 
             if cd.id in cards:
                 raise DefError(f"duplicate card id {cd.id}")
             cards[cd.id] = cd
-    return Rules(zones=zones, keywords=keywords, macros=macros, cards=cards, actions=actions, steps=steps)
+    from .identity import AliasDict
+    aliases = {a: cid for cid, cd in cards.items() for a in (cd.source or {}).get("aliases", [])}
+    return Rules(zones=zones, keywords=keywords, macros=macros, cards=AliasDict(cards, aliases), actions=actions, steps=steps)

@@ -27,6 +27,11 @@ jobs:
           git ls-remote --exit-code --heads origin cards-data >/dev/null || { echo "cards-data がまだ無い"; exit 1; }
           git checkout -f cards-data
           git checkout "$GITHUB_SHA" -- tools dmsim data/rules data/schema data/cards/proto.yaml data/cards/real.yaml data/cards/real_vocab.yaml data/cards/real_zone.yaml .github
+      - name: Canonicalize (同名は最新版へ)
+        run: |
+          pip install -q pyyaml
+          python tools/canonicalize.py | tee /tmp/canon.json
+          { echo '```json'; cat /tmp/canon.json; echo '```'; } >> "$GITHUB_STEP_SUMMARY"
       - name: Auto approve
         run: |
           pip install -q pyyaml
@@ -37,6 +42,7 @@ jobs:
           set +e
           git reset -q
           [ -d data/cards/approvals ] && git add -f data/cards/approvals
+          for p in data/cards/converted data/cards/converted.yaml; do [ -e "$p" ] && git add -f "$p"; done
           git commit -qm "cards-data: approvals $(date -u +%FT%TZ)" || { echo "変更なし"; exit 0; }
           git reset -q --hard HEAD
           for i in 1 2 3 4 5; do
