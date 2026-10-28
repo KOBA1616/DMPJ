@@ -385,3 +385,18 @@ cards:
     text: ブロッカー / 相手のクリーチャーが攻撃する時、このクリーチャーは可能であればブロックする。
     abilities:
       - {kind: static, affects: self, mod: {require: [block]}}
+
+  # サイレントスキル（501.1a）
+  - id: R058
+    name: 試験用サイレントスキル
+    types: [creature]
+    civs: [darkness]
+    cost: 1
+    power: 1000
+    races: [テスト]
+    keywords: [silent_skill]
+    text: サイレントスキル / カードを1枚引く。
+    abilities:
+      - kind: silent
+        effect:
+          - {op: draw, count: 1}

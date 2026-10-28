@@ -92,6 +92,7 @@
      "s_trigger",
      "shield_saver",
      "shinka_rise",
+     "silent_skill",
      "slayer",
      "speed_attacker",
      "spell_to_hand",
@@ -214,6 +215,7 @@
        "s_trigger",
        "shield_saver",
        "shinka_rise",
+       "silent_skill",
        "slayer",
        "speed_attacker",
        "spell_to_hand",
@@ -1167,6 +1169,7 @@
        "s_trigger",
        "shield_saver",
        "shinka_rise",
+       "silent_skill",
        "slayer",
        "speed_attacker",
        "spell_to_hand",
@@ -1527,6 +1530,7 @@
       "static",
       "declare",
       "activate",
+      "silent",
       "state"
      ]
     },

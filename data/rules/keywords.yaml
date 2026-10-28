@@ -187,3 +187,7 @@ keywords:
   wave_striker:
     ja: ウェーブストライカー
     abilities: []
+  # サイレントスキル（501.1a）: 能力そのものは各カードの kind: silent。キーワードは「サイレントスキルを持つ」の印
+  silent_skill:
+    ja: サイレントスキル
+    abilities: []

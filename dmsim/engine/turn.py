@@ -236,12 +236,20 @@ def st_start(eng, t):                                   # 501
     n = len(s.continuous)
     s.continuous = [c for c in s.continuous if c["duration"] != f"until_turn_start:{a}"]
     s.delayed = [d for d in s.delayed if d["duration"] != f"until_turn_start:{a}"]
+    cands = [c for c in eng.bz_tops(a) if s.cards[c].tapped and eng.permits(c, "untap_at_start") and eng.abilities(c, "silent")]
+    skill = []
+    if cands:                          # 501.1a サイレントスキル: アンタップしないことを選び、かわりに能力を使ってもよい
+        ans, d = eng.ask(t, a, "choose_cards", [eng._card_option(c) for c in cands], 0, len(cands))
+        if d:
+            return d
+        skill = [cands[i] for i in ans]
     untap = [{"ev": "untap", "subject": s.ref(c)}
              for c in eng.bz_tops(a) + eng.zlist("mana", a)
-             if s.cards[c].tapped and eng.permits(c, "untap_at_start")]
+             if s.cards[c].tapped and eng.permits(c, "untap_at_start") and c not in skill]
     eng._step_done(t)
-    # ターン起因処理（同時にアンタップ, 702.3a）→「ターンのはじめに」の誘発（501.2）
-    eng._push(*([eng.ev_task(untap)] if untap else []), eng.ev_task({"ev": "turn_start", "player": a}))
+    # ターン起因処理（同時にアンタップ, 702.3a）→ サイレントスキルの解決（他のカードのアンタップの後, 501.1a）→「ターンのはじめに」の誘発（501.2）
+    effects = [eng._child(ab["effect"], {"you": a, "self": s.ref(c), "vars": {}}) for c in skill for _, ab in eng.abilities(c, "silent")]
+    eng._push(*([eng.ev_task(untap)] if untap else []), *effects, eng.ev_task({"ev": "turn_start", "player": a}))
     if len(s.continuous) != n:
         eng._sba()           # 期限切れでパワー0以下になったものを先に破壊（703.1）
 

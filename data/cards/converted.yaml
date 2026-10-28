@@ -63532,3 +63532,89 @@ cards:
     official: dm12-048
     review: pending
     notes: ルールのみで変換（モデル不使用）
+- id: dm10-080
+  name: ミルポロ
+  types:
+  - creature
+  civs:
+  - water
+  cost: 4
+  power: 3000
+  races:
+  - サイバーロード
+  mana: 1
+  keywords:
+  - silent_skill
+  text: 'サイレントスキル(自分のターンのはじめに、このクリーチャーがタップされていたら、アンタップするかわりに次の能力を使ってもよい)
+
+    カードを１枚引く。'
+  abilities:
+  - kind: silent
+    effect:
+    - op: draw
+      count: 1
+  source:
+    official: dm10-080
+    review: pending
+    notes: '厳密一致。サイレントスキルは kind: silent（501.1a）'
+- id: dm10-030
+  name: マインロード・ワイバーン
+  types:
+  - creature
+  civs:
+  - fire
+  cost: 4
+  power: 3000
+  races:
+  - アーマード・ワイバーン
+  mana: 1
+  keywords:
+  - silent_skill
+  text: 'サイレントスキル(自分のターンのはじめに、このクリーチャーがタップされていたら、アンタップするかわりに次の能力を使ってもよい)
+
+    パワー3000以下のクリーチャーをすべて破壊する。'
+  abilities:
+  - kind: silent
+    effect:
+    - op: destroy
+      select:
+        zone: bz
+        owner: any
+        filter:
+          types:
+          - creature
+          power_le: 3000
+        count: all
+  source:
+    official: dm10-030
+    review: pending
+    notes: 厳密一致。自身もパワー3000以下なので対象に含まれる（原文どおり）
+- id: dm10-004
+  name: 災厄秘宝ゲジラ
+  types:
+  - creature
+  civs:
+  - darkness
+  cost: 6
+  power: 6000
+  races:
+  - パンドラボックス
+  mana: 1
+  keywords:
+  - double_breaker
+  - silent_skill
+  text: 'W・ブレイカー
+
+    サイレントスキル(自分のターンのはじめに、このクリーチャーがタップされていたら、アンタップするかわりに次の能力を使ってもよい)
+
+    このクリーチャーは、相手のシールドを２枚ブレイクする。'
+  abilities:
+  - kind: silent
+    effect:
+    - op: break
+      count: 2
+      player: opp
+  source:
+    official: dm10-004
+    review: pending
+    notes: 厳密一致
