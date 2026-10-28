@@ -192,6 +192,13 @@ class BreakTask(TypedDict):
     fire_break: NotRequired[bool]    # ブレイクのイベントを起こすか（効果でシールドを手札に加える時は起こさない）
 
 
+class CrossTask(TypedDict):
+    t: Literal["cross"]
+    gear: Ref                            # クロスするクロスギア（バトルゾーン）
+    target: Ref                          # クロス先のクリーチャー
+    player: int
+
+
 class PlayTask(TypedDict):
     t: Literal["play"]
     cid: int

@@ -225,6 +225,9 @@ class EventMixin:
     def _subject_match(self, pat, cid, env, lki, base=False) -> bool:
         if pat == "self":
             return env.get("self") is not None and cid == env["self"][0]
+        if pat == "crossed":   # 「これをクロスしたクリーチャー」（303.3a）。離れた後の誘発は離れる前の姿（lki）で見る
+            g = self.s.cards[env["self"][0]].crossed if env.get("self") else None
+            return g is not None and list(g) == (list(lki["ref"]) if lki else self.s.ref(cid))
         if not isinstance(pat, dict):
             return False
         if "refs" in pat:   # 遅延誘発型能力が「その〜」で指すカード

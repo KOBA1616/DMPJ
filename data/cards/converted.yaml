@@ -63523,3 +63523,75 @@ cards:
     official: dm06-071
     review: pending
     notes: 厳密一致
+- id: dm14-028
+  name: デモニック・プロテクター
+  types:
+  - cross_gear
+  civs:
+  - darkness
+  cost: 1
+  mana: 1
+  text: クロスギア:このカードをバトルゾーンに置く。クリーチャーにクロスするには、このカードのコストをもう一度支払う。そのクリーチャーがバトルゾーンを離れても、このカードはバトルゾーンに残る。
+    / これをクロスしたクリーチャーが破壊された時、カードを１枚引いてもよい。
+  abilities:
+  - kind: trigger
+    when:
+      event: move
+      from: bz
+      to: graveyard
+      reason: destroy
+      subject: crossed
+    effect:
+    - op: may
+      body:
+      - op: draw
+        count: 1
+  source:
+    official: dm14-028
+    review: pending
+    notes: 厳密一致。クロス定型文は規則（303）で処理
+    aliases:
+    - promoy4-001
+- id: dm14-046
+  name: シャイニング・ディフェンス
+  types:
+  - cross_gear
+  civs:
+  - light
+  cost: 1
+  mana: 1
+  text: クロスギア:このカードをバトルゾーンに置く。クリーチャーにクロスするには、このカードのコストをもう一度支払う。そのクリーチャーがバトルゾーンを離れても、このカードはバトルゾーンに残る。
+    / これをクロスしたクリーチャーのパワーは+1500され、｢ブロッカー｣を得る。
+  abilities:
+  - kind: static
+    affects: crossed
+    mod:
+      power: 1500
+      grant:
+      - blocker
+  source:
+    official: dm14-046
+    review: pending
+    notes: 厳密一致
+- id: dm14-102
+  name: ファイアー・ブレード
+  types:
+  - cross_gear
+  civs:
+  - fire
+  cost: 2
+  mana: 1
+  text: クロスギア:このカードをバトルゾーンに置く。クリーチャーにクロスするには、このカードのコストをもう一度支払う。そのクリーチャーがバトルゾーンを離れても、このカードはバトルゾーンに残る。
+    / これをクロスしたクリーチャーは｢スピードアタッカー｣を得る。
+  abilities:
+  - kind: static
+    affects: crossed
+    mod:
+      grant:
+      - speed_attacker
+  source:
+    official: dm14-102
+    review: pending
+    notes: 厳密一致
+    aliases:
+    - promoy4-005
