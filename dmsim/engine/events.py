@@ -1,7 +1,7 @@
 """イベント・パイプライン（置換→同時適用→状況起因処理→誘発）と待機・解決窓。"""
 from __future__ import annotations
 
-from ..types import CaptureTask, CloseWinTask, EnqueueStTask, EventTask, OpenWinTask, ResolvePendingTask
+from ..types import CaptureTask, CloseWinTask, EnqueueStTask, EventTask, OpenWinTask, ResolvePendingTask, SbackTask
 from .registry import task
 
 
@@ -469,4 +469,16 @@ def h_enqueue_st(eng, t):
             if face is not None:
                 p["face"] = face
             s.pending.append(p)
+    return None
+
+
+@task("sback", SbackTask)
+def h_sback(eng, t):
+    """S・バック: 手札に加わったシールドのカードを捨て、そうした場合だけ、S・バックのカードをコストを支払わずに実行する（S・トリガーと同じ待機の列に入る）。"""
+    s = eng.s
+    eng._pop(t)
+    pairs = [(h, x) for h, x in t["pairs"] if s.cards[x].zone == "hand" and s.cards[h].zone == "hand"]
+    if pairs:
+        eng._push(eng.ev_task([{"ev": "move", "subject": s.ref(x), "to": "graveyard", "reason": "discard"} for _, x in pairs]),
+                  {"t": "enqueue_st", "cids": [[h, None] for h, _ in pairs], "player": t["player"]})
     return None

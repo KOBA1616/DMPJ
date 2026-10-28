@@ -288,30 +288,57 @@ def h_break(eng, t):
         t["chosen"] = [shields[i] for i in ans]
         t["phase"] = 1
         return None
-    opts = []
-    for c in [x for ch in t["chosen"] for x in [ch] + list(s.cards[ch].under)]:   # シールドの束は、重なったカードのどれも宣言できる（113.2）
-        d = eng.cdef(c)
-        for fi in ([None] if not d.faces else range(len(d.faces))):
-            if eng._permits_face(c, "s_trigger", fi):
-                o = {"key": f"strigger:{s.cards[c].defn}" + ("" if fi is None else f":{fi}"), "cid": c}
-                if fi is not None:
-                    o["face"] = fi
-                opts.append(o)
-    declared = []
-    if opts:
-        ans, d = eng.ask(t, victim, "declare_strigger", opts, 0, len(opts))
+    if t["phase"] == 1:
+        opts = []
+        for c in [x for ch in t["chosen"] for x in [ch] + list(s.cards[ch].under)]:   # シールドの束は、重なったカードのどれも宣言できる（113.2）
+            d = eng.cdef(c)
+            for fi in ([None] if not d.faces else range(len(d.faces))):
+                if eng._permits_face(c, "s_trigger", fi):
+                    o = {"key": f"strigger:{s.cards[c].defn}" + ("" if fi is None else f":{fi}"), "cid": c}
+                    if fi is not None:
+                        o["face"] = fi
+                    opts.append(o)
+        declared = []
+        if opts:
+            ans, d = eng.ask(t, victim, "declare_strigger", opts, 0, len(opts))
+            if d:
+                return d
+            seen = set()
+            for i in ans:   # 1枚のカードで使えるのは1つの面だけ
+                if opts[i]["cid"] not in seen:
+                    seen.add(opts[i]["cid"])
+                    declared.append([opts[i]["cid"], opts[i].get("face")])
+        t["declared"] = declared
+        t["phase"] = 2
+        return None
+    declared = t["declared"]
+    sback = []
+    # S・バック: S・トリガーの宣言と同じ機会に、手札のカードの S・バックを宣言する（112.3b）
+    used = {c for c, _ in declared}
+    pool = [x for ch in t["chosen"] for x in [ch] + list(s.cards[ch].under) if x not in used]
+    sopts = []
+    for h in eng.zlist("hand", victim):
+        hd = eng.cdef(h)
+        if hd.s_back and eng.permits(h, "summon" if hd.is_creature() else "cast"):
+            sopts += [{"key": f"sback:{s.cards[h].defn}:{s.cards[x].defn}", "cid": h, "shield": x}
+                      for x in pool if hd.s_back in eng.cdef(x).civs]
+    if sopts:
+        ans, d = eng.ask(t, victim, "declare_sback", sopts, 0, len(sopts))
         if d:
             return d
-        seen = set()
-        for i in ans:   # 1枚のカードで使えるのは1つの面だけ
-            if opts[i]["cid"] not in seen:
-                seen.add(opts[i]["cid"])
-                declared.append([opts[i]["cid"], opts[i].get("face")])
+        su, sh = set(), set()
+        for i in ans:       # 1枚のカードの S・バックは1回、捨てるカードも1枚につき1回
+            if sopts[i]["cid"] not in su and sopts[i]["shield"] not in sh:
+                su.add(sopts[i]["cid"])
+                sh.add(sopts[i]["shield"])
+                sback.append((sopts[i]["cid"], sopts[i]["shield"]))
     eng._pop(t)
     chosen = [c for c in t["chosen"] if s.cards[c].zone == "shield"]   # 宣言の間に別のゾーンへ移っていたら加えない
     seq = [eng.ev_task([{"ev": "move", "subject": s.ref(c), "to": "hand", "reason": t.get("reason", "break")}
-                         for c in chosen]),
-           {"t": "enqueue_st", "cids": declared, "player": victim}]
+                         for c in chosen])]
+    if sback:       # 手札に加わったカードを捨てる → そうした場合だけ、コストを支払わずに実行する
+        seq.append({"t": "sback", "pairs": [[h, x] for h, x in sback], "player": victim})
+    seq.append({"t": "enqueue_st", "cids": declared, "player": victim})
     if t.get("fire_break", True):
         ev = {"ev": "break", "player": victim, "count": len(chosen)}
         if t.get("breaker") and s.alive(t["breaker"]):      # ブレイクしたクリーチャー（「他のクリーチャーがシールドをブレイクした」）

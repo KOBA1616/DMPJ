@@ -20,6 +20,7 @@ class Option(TypedDict, total=False):
     pid: int
     ab: int
     face: int
+    shield: int                     # S・バック: 捨てるシールドのカード
     tap: int                             # 起動型能力のコストでタップするクリーチャー
     free: bool                           # コストを支払わずに実行する選択肢（G・ゼロ）
 
@@ -190,6 +191,7 @@ class BreakTask(TypedDict):
     answer: NotRequired[list[int]]
     reason: NotRequired[str]         # 手札へ加える理由（既定は break）。効果で加える時は効果の reason
     breaker: NotRequired[Ref]        # ブレイクしたクリーチャー（攻撃、またはクリーチャーの効果）
+    declared: NotRequired[list]      # 宣言済みの S・トリガー [[cid, face | None]]
     fire_break: NotRequired[bool]    # ブレイクのイベントを起こすか（効果でシールドを手札に加える時は起こさない）
 
 
@@ -219,6 +221,12 @@ class PlayTask(TypedDict):
     resolve_to: NotRequired[str]         # 解決後の置き場所（play_free の resolve_to）
     resolve_position: NotRequired[str]   # resolve_to が山札のときの top / bottom
     answer: NotRequired[list[int]]
+
+
+class SbackTask(TypedDict):
+    t: Literal["sback"]
+    pairs: list[list]                    # [S・バックのカード, 捨てるカード]
+    player: int
 
 
 class EnqueueStTask(TypedDict):
