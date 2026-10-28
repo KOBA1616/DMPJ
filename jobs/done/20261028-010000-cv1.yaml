@@ -1,0 +1,11 @@
+id: 20261028-010000-cv1
+summary: "[error] 五憐の精霊オソニス (同一原文の写し・モデル不使用)\n… dm25bd2-004 天海の精霊シリウス / W・チャージャー 変換中\n\
+  停止: 課金・残高に関するエラーなので停止する: HTTP 429 [{\n  \"error\": {\n    \"code\": 429,\n    \"\
+  message\": \"You"
+finished: '2026-10-28T01:53:02+00:00'
+status: error
+error: "五憐の精霊オソニス (同一原文の写し・モデル不使用)\n… dm25bd2-004 天海の精霊シリウス / W・チャージャー 変換中\n停止: 課金・残高に関するエラーなので停止する:\
+  \ HTTP 429 [{\n  \"error\": {\n    \"code\": 429,\n    \"message\": \"You exceeded\
+  \ your current quota, please check your plan and billing details. For more information\
+  \ on this error, head to: https://ai.google.dev/gemini-api/docs/rate-limits. To\
+  \ monitor your current usage, head to: https://ai.dev/rate-limit. \\n* Quota e"
