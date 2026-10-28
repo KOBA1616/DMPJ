@@ -44421,3 +44421,709 @@ cards:
   source:
     official: dm02-s02
     review: pending
+- id: dmc27-040
+  name: コーライル
+  types:
+  - creature
+  civs:
+  - water
+  cost: 5
+  power: 2000
+  races:
+  - サイバーロード
+  mana: 1
+  text: このクリーチャーがバトルゾーンに出たとき、バトルゾーンにある相手のクリーチャーを１体選び、持ち主の山札の１番上に置く。
+  abilities:
+  - kind: trigger
+    when:
+      event: move
+      to: bz
+      subject: self
+    effect:
+    - op: move
+      select:
+        zone: bz
+        owner: opp
+        filter:
+          types:
+          - creature
+        count: 1
+      to: deck
+      reason: put
+      position: top
+  source:
+    official: dmc27-040
+    review: pending
+    notes: 原文が同じ dm02-040 の変換結果を写した（モデル不使用）。能力は元カードの確認に従う
+- id: dm02-s03
+  name: 魔翼虫ジェノサイド・ワーム
+  types:
+  - creature
+  - evolution
+  civs:
+  - darkness
+  cost: 6
+  power: 11000
+  races:
+  - パラサイトワーム
+  mana: 1
+  evolve_from:
+    races:
+    - パラサイトワーム
+  text: '進化ー自分のパラサイトワーム１体の上に置く。
+
+    W(ダブル)・ブレイカー(シールドを攻撃したとき、このクリーチャーはシールドを２枚ブレイクする。)'
+  source:
+    official: dm02-s03
+    review: pending
+  keywords:
+  - double_breaker
+- id: dm02-s04
+  name: 機神装甲ヴァルディオス
+  types:
+  - creature
+  - evolution
+  civs:
+  - fire
+  cost: 4
+  power: 6000
+  races:
+  - ヒューマノイド
+  mana: 1
+  evolve_from:
+    races:
+    - ヒューマノイド
+  text: '進化ー自分のヒューマノイド１体の上に置く。
+
+    W(ダブル)・ブレイカー(シールドを攻撃したとき、このクリーチャーはシールドを２枚ブレイクする。)
+
+    このクリーチャーがバトルゾーンにある間、バトルゾーンにある自分の他のヒューマノイドすべてのパワーは、+1000される。'
+  abilities:
+  - kind: static
+    affects:
+      owner: you
+      filter:
+        races:
+        - ヒューマノイド
+      other: true
+    mod:
+      power: 1000
+  source:
+    official: dm02-s04
+    review: pending
+  keywords:
+  - double_breaker
+- id: dm02-s05
+  name: 大勇者「ふたつ牙」
+  types:
+  - creature
+  - evolution
+  civs:
+  - nature
+  cost: 6
+  power: 8000
+  races:
+  - ビーストフォーク
+  mana: 1
+  evolve_from:
+    races:
+    - ビーストフォーク
+  text: '進化ー自分のビーストフォーク１体の上に置く。
+
+    このクリーチャーがバトルゾーンに出たとき、自分の山札の一番上のカードを２枚表にして、自分のマナゾーンに置く。
+
+    W(ダブル)・ブレイカー(シールドを攻撃したとき、このクリーチャーはシールドを２枚ブレイクする。)'
+  abilities:
+  - kind: trigger
+    when:
+      event: move
+      to: bz
+      subject: self
+    effect:
+    - op: mana_put
+      select:
+        zone: deck
+        owner: you
+        from_top: 2
+  source:
+    official: dm02-s05
+    review: pending
+    notes: 「表にして」の公開は扱っていない
+  keywords:
+  - double_breaker
+- id: dm03-001
+  name: 聖天使ジーク・バリキューラ
+  types:
+  - creature
+  - evolution
+  civs:
+  - light
+  cost: 3
+  power: 5000
+  races:
+  - イニシエート
+  mana: 1
+  evolve_from:
+    races:
+    - イニシエート
+  text: 進化-自分のイニシエート１体の上に置く。 / このクリーチャーがバトルゾーンにある間、バトルゾーンにある自分の他の光のクリーチャーは「ブロッカー」を得る。
+  abilities:
+  - kind: static
+    affects:
+      owner: you
+      filter:
+        types:
+        - creature
+        civs:
+        - light
+      other: true
+    mod:
+      grant:
+      - blocker
+  source:
+    official: dm03-001
+    review: pending
+- id: dm03-002
+  name: レジェンダリー・バイロン
+  types:
+  - creature
+  - evolution
+  civs:
+  - water
+  cost: 6
+  power: 8000
+  races:
+  - リヴァイアサン
+  mana: 1
+  evolve_from:
+    races:
+    - リヴァイアサン
+  text: '進化-自分のリヴァイアサン１体の上に置く。
+
+    W(ダブル)・ブレイカー(シールドを攻撃したとき、このクリーチャーはシールドを２枚ブレイクする)
+
+    このクリーチャーがバトルゾーンにある間、バトルゾーンにある自分の他の水のクリーチャーはブロックされない。'
+  abilities:
+  - kind: static
+    affects:
+      owner: you
+      filter:
+        types:
+        - creature
+        civs:
+        - water
+      other: true
+    mod:
+      deny:
+      - be_blocked
+  source:
+    official: dm03-002
+    review: pending
+  keywords:
+  - double_breaker
+- id: dm03-003
+  name: 絶望の魔黒ジャックバイパー
+  types:
+  - creature
+  - evolution
+  civs:
+  - darkness
+  cost: 3
+  power: 4000
+  races:
+  - ゴースト
+  mana: 1
+  evolve_from:
+    races:
+    - ゴースト
+  text: 進化-自分のゴースト１体の上に置く。 / このクリーチャーがバトルゾーンにある間に、自分の他の闇のクリーチャーがバトルゾーンから墓地に置かれるとき、その闇のクリーチャーを自分の手札に戻してよい。
+  abilities:
+  - kind: replace
+    optional: true
+    when:
+      event: move
+      from: bz
+      to: graveyard
+      subject:
+        owner: you
+        filter:
+          types:
+          - creature
+          civs:
+          - darkness
+        other: true
+    instead:
+    - op: move
+      select:
+        ref: event.subject
+      to: hand
+      reason: return
+  source:
+    official: dm03-003
+    review: pending
+    notes: 移動する側はこのクリーチャーではなく自分の他の闇のクリーチャーなので、when.subject をセレクタで書いた（26-s003 の置換と同じ書き方）
+- id: dm03-004
+  name: 超竜ジャバハ
+  types:
+  - creature
+  - evolution
+  civs:
+  - fire
+  cost: 7
+  power: 11000
+  races:
+  - アーマード・ドラゴン
+  mana: 1
+  evolve_from:
+    races:
+    - アーマード・ドラゴン
+  text: '進化-自分のアーマード・ドラゴン１体の上に置く。
+
+    W(ダブル)・ブレイカー(シールドを攻撃したとき、このクリーチャーはシールドを２枚ブレイクする)
+
+    このクリーチャーがバトルゾーンにある間、攻撃中、バトルゾーンにある自分の他の火のクリーチャーのパワーは+2000される。'
+  abilities:
+  - kind: static
+    affects:
+      owner: you
+      filter:
+        types:
+        - creature
+        civs:
+        - fire
+      other: true
+    mod:
+      battle_power:
+        amount: 2000
+        only: attacking
+  source:
+    official: dm03-004
+    review: pending
+  keywords:
+  - double_breaker
+- id: dm03-005
+  name: 大昆虫ギガマンティス
+  types:
+  - creature
+  - evolution
+  civs:
+  - nature
+  cost: 4
+  power: 5000
+  races:
+  - ジャイアント・インセクト
+  mana: 1
+  evolve_from:
+    races:
+    - ジャイアント・インセクト
+  text: 進化-自分のジャイアント・インセクト１体の上に置く。 / このクリーチャーがバトルゾーンにある間に、自分の他の自然のクリーチャーがバトルゾーンから墓地に置かれるとき、その自然のクリーチャーを自分のマナゾーンに置く。
+  abilities:
+  - kind: replace
+    when:
+      event: move
+      from: bz
+      to: graveyard
+      subject:
+        owner: you
+        filter:
+          types:
+          - creature
+          civs:
+          - nature
+        other: true
+    instead:
+    - op: mana_put
+      select:
+        ref: event.subject
+  source:
+    official: dm03-005
+    review: pending
+    notes: dm03-003 と同じ置換の形で、任意ではないので optional は付けない。行き先はマナゾーン
+- id: dm03-006
+  name: 雷雲の守護者ラーザ・ベガ
+  types:
+  - creature
+  civs:
+  - light
+  cost: 10
+  power: 3000
+  races:
+  - ガーディアン
+  mana: 1
+  text: 'ブロッカー(相手クリーチャーが攻撃するとき、このクリーチャーをタップして、その攻撃を阻止してよい。そのあと、その相手クリーチャーとバトルする)
+
+    このクリーチャーがバトルゾーンから自分の墓地に置かれるとき、裏向きにして自分のシールドに加える。'
+  abilities:
+  - kind: replace
+    when:
+      event: move
+      from: bz
+      to: graveyard
+      subject: self
+    instead:
+    - op: move
+      select:
+        ref: self
+      to: shield
+      reason: put
+  source:
+    official: dm03-006
+    review: pending
+    notes: シールドは常に裏向きで置かれるので「裏向きにして」は move to shield で満たす
+  keywords:
+  - blocker
+- id: dm03-007
+  name: 堅牢の伝道師アレーク
+  types:
+  - creature
+  civs:
+  - light
+  cost: 7
+  power: 4000
+  races:
+  - バーサーカー
+  mana: 1
+  text: 'ブロッカー(相手クリーチャーが攻撃するとき、このクリーチャーをタップして、その攻撃を阻止してよい。そのあと、その相手クリーチャーとバトルする)
+
+    このクリーチャーのパワーは、バトルゾーンにある自分の他の光のクリーチャー１体につき+1000される。'
+  abilities:
+  - kind: static
+    affects: self
+    mod:
+      power:
+        amount: 1000
+        count:
+          zone: bz
+          owner: you
+          filter:
+            types:
+            - creature
+            civs:
+            - light
+          other: true
+  source:
+    official: dm03-007
+    review: pending
+  keywords:
+  - blocker
+- id: dm03-008
+  name: プロテクト・キューブ
+  types:
+  - spell
+  civs:
+  - light
+  cost: 3
+  mana: 1
+  text: 'S(シールド)・トリガー(このカードをシールドゾーンから手札に加えるとき、コストを支払わずにすぐ使ってよい)
+
+    自分のマナゾーンから呪文を１枚選び、自分の手札に戻す。'
+  spell:
+  - op: bounce
+    select:
+      zone: mana
+      owner: you
+      filter:
+        types:
+        - spell
+      count: 1
+  source:
+    official: dm03-008
+    review: pending
+  keywords:
+  - s_trigger
+- id: dm03-009
+  name: アクア・デフォーマー
+  types:
+  - creature
+  civs:
+  - water
+  cost: 8
+  power: 3000
+  races:
+  - リキッド・ピープル
+  mana: 1
+  text: このクリーチャーがバトルゾーンに出たとき、各プレイヤーは自分自身のマナゾーンからカードを２枚ずつ選び、それぞれの手札に戻す。
+  abilities:
+  - kind: trigger
+    when:
+      event: move
+      to: bz
+      subject: self
+    effect:
+    - op: bounce
+      select:
+        zone: mana
+        owner: you
+        count: 2
+    - op: bounce
+      select:
+        zone: mana
+        owner: opp
+        count: 2
+        chooser: opp
+  source:
+    official: dm03-009
+    review: pending
+    notes: '相手の選択は chooser: opp'
+- id: dm03-010
+  name: キング・ネプタス
+  types:
+  - creature
+  civs:
+  - water
+  cost: 6
+  power: 5000
+  races:
+  - リヴァイアサン
+  mana: 1
+  text: このクリーチャーが攻撃するとき、相手がブロックする前に、バトルゾーンにあるパワー2000以下のクリーチャーを１体選び、持ち主の手札に戻してよい。
+  abilities:
+  - kind: trigger
+    when:
+      event: attack
+      subject: self
+    effect:
+    - op: may
+      body:
+      - op: bounce
+        select:
+          zone: bz
+          owner: any
+          filter:
+            types:
+            - creature
+            power_le: 2000
+          count: 1
+  source:
+    official: dm03-010
+    review: pending
+    notes: 攻撃誘発はブロック宣言より前に解決するので「ブロックする前に」は自然に満たす
+- id: dm03-012
+  name: 憎悪の騎士ガミル
+  types:
+  - creature
+  civs:
+  - darkness
+  cost: 6
+  power: 4000
+  races:
+  - デーモン・コマンド
+  mana: 1
+  text: このクリーチャーが攻撃するとき、自分の墓地から闇のクリーチャーを１体選び、自分の手札に戻してよい。
+  abilities:
+  - kind: trigger
+    when:
+      event: attack
+      subject: self
+    effect:
+    - op: may
+      body:
+      - op: bounce
+        select:
+          zone: graveyard
+          owner: you
+          filter:
+            types:
+            - creature
+            civs:
+            - darkness
+          count: 1
+  source:
+    official: dm03-012
+    review: pending
+- id: dm03-013
+  name: 牙男
+  types:
+  - creature
+  civs:
+  - darkness
+  cost: 4
+  power: 1000
+  races:
+  - ヘドリアン
+  mana: 1
+  text: 'スレイヤー(このクリーチャーとバトルした相手クリーチャーは、勝っても持ち主の墓地に置かれる)
+
+    このクリーチャーのパワーは、バトルゾーンにある自分の他の闇のクリーチャー１体につき+1000される。'
+  abilities:
+  - kind: static
+    affects: self
+    mod:
+      power:
+        amount: 1000
+        count:
+          zone: bz
+          owner: you
+          filter:
+            types:
+            - creature
+            civs:
+            - darkness
+          other: true
+  source:
+    official: dm03-013
+    review: pending
+  keywords:
+  - slayer
+- id: dm03-014
+  name: デビル・ドレーン
+  types:
+  - spell
+  civs:
+  - darkness
+  cost: 3
+  mana: 1
+  text: 自分のシールドから好きな枚数を裏向きのまま選び、自分の手札に加える。ただし、その「S(シールド)・トリガー」は使えない。
+  spell:
+  - op: move
+    select:
+      zone: shield
+      owner: you
+      count: any
+    to: hand
+    reason: put
+  source:
+    official: dm03-014
+    review: pending
+    notes: '「好きな枚数」は count: any。ただし書きの「そのS・トリガーは使えない」という制限は語彙に無いため扱っていない（公開系の省略と同じ扱い）'
+- id: dm03-016
+  name: フレムトロプス
+  types:
+  - creature
+  civs:
+  - fire
+  cost: 4
+  power: 3000
+  races:
+  - ロック・ビースト
+  mana: 1
+  text: このクリーチャーが攻撃するとき、自分のマナゾーンからカードを１枚選び、自分の墓地に置いてよい。そうしたなら、このターン、このクリーチャーは「パワーアタッカー+3000」と「W(ダブル)・ブレイカー」を得る。
+  abilities:
+  - kind: trigger
+    when:
+      event: attack
+      subject: self
+    if:
+      exists:
+        zone: mana
+        owner: you
+    effect:
+    - op: may
+      body:
+      - op: move
+        select:
+          zone: mana
+          owner: you
+          count: 1
+        to: graveyard
+        reason: put
+      - op: modify
+        select:
+          ref: self
+        mod:
+          battle_power:
+            amount: 3000
+            only: attacking
+          grant:
+          - double_breaker
+        duration: end_of_turn
+  source:
+    official: dm03-016
+    review: pending
+    notes: マナを墓地に置くことを選んだ場合だけ強化されるよう、may の中に移動と強化を両方入れた。マナが無い時は if で誘発自体が起きない
+- id: dm03-018
+  name: 夜明けの超人
+  types:
+  - creature
+  civs:
+  - nature
+  cost: 7
+  power: 11000
+  races:
+  - ジャイアント
+  mana: 1
+  text: 'W(ダブル)・ブレイカー(シールドを攻撃したとき、このクリーチャーはシールドを２枚ブレイクする)
+
+    このクリーチャーは、クリーチャーを攻撃できない。'
+  abilities:
+  - kind: static
+    affects: self
+    mod:
+      deny:
+      - attack_creature
+  source:
+    official: dm03-018
+    review: pending
+  keywords:
+  - double_breaker
+- id: dm03-019
+  name: マボロシキリダケ
+  types:
+  - creature
+  civs:
+  - nature
+  cost: 4
+  power: 2000
+  races:
+  - バルーン・マッシュルーム
+  mana: 1
+  text: このクリーチャーが攻撃するとき、自分の墓地から自然のカードを１枚選び、自分のマナゾーンに置いてよい。
+  abilities:
+  - kind: trigger
+    when:
+      event: attack
+      subject: self
+    effect:
+    - op: may
+      body:
+      - op: mana_put
+        select:
+          zone: graveyard
+          owner: you
+          filter:
+            civs:
+            - nature
+          count: 1
+  source:
+    official: dm03-019
+    review: pending
+- id: dm03-017
+  name: ブレイズ・キャノン
+  types:
+  - spell
+  civs:
+  - fire
+  cost: 7
+  mana: 1
+  text: 自分のマナゾーンのカードがすべて火のカードであれば、このターン、バトルゾーンにある自分のクリーチャーはすべて「パワーアタッカー+4000」と「W(ダブル)・ブレイカー」を得る。
+  spell:
+  - op: if
+    cond:
+      not:
+        exists:
+          zone: mana
+          owner: you
+          filter:
+            not_civs:
+            - fire
+    then:
+    - op: modify
+      select:
+        zone: bz
+        owner: you
+        filter:
+          types:
+          - creature
+        count: all
+      mod:
+        battle_power:
+          amount: 4000
+          only: attacking
+        grant:
+        - double_breaker
+      duration: end_of_turn
+  source:
+    official: dm03-017
+    review: pending
+    notes: 「マナがすべて火」は「火でないマナが存在しない」で表した。op if の条件引数は cond。原文データの括弧内の一部（��撃中）は文字化けのため
+      text には含めなかった
