@@ -41690,3 +41690,763 @@ cards:
     review: pending
     notes: '「攻撃中」は battle_power に only: attacking を付け、このターンの間だけ続く効果として modify（duration:
       end_of_turn）で与えた。解決後にバトルゾーンに出たクリーチャーには及ばない'
+- id: dm01-050
+  name: アクア・ソルジャー
+  types:
+  - creature
+  civs:
+  - water
+  cost: 3
+  power: 1000
+  races:
+  - リキッド・ピープル
+  mana: 1
+  text: このクリーチャーがバトルゾーンから自分の墓地に置かれるとき、墓地に置くかわりに自分の手札に戻す。
+  abilities:
+  - kind: replace
+    when:
+      event: move
+      from: bz
+      to: graveyard
+      subject: self
+    instead:
+    - op: move
+      select:
+        ref: self
+      to: hand
+      reason: return
+  source:
+    official: dm01-050
+    review: pending
+    notes: 原文が同じ dm01-014 の変換結果を写した（モデル不使用）。能力は元カードの確認に従う
+- id: dm01-067
+  name: からみカズラ
+  types:
+  - creature
+  civs:
+  - nature
+  cost: 4
+  power: 3000
+  races:
+  - ツリーフォーク
+  mana: 1
+  text: このクリーチャーがバトルゾーンから自分の墓地に置かれるとき、墓地に置くかわりに自分のマナゾーンに置く。
+  abilities:
+  - kind: replace
+    when:
+      event: move
+      from: bz
+      to: graveyard
+      subject: self
+    instead:
+    - op: move
+      select:
+        ref: self
+      to: mana
+      reason: put
+  source:
+    official: dm01-067
+    review: pending
+    notes: 原文が同じ dm01-037 の変換結果を写した（モデル不使用）。能力は元カードの確認に従う
+- id: dm01-105
+  name: 無敵の咆哮
+  types:
+  - creature
+  civs:
+  - nature
+  cost: 3
+  power: 2000
+  races:
+  - ビーストフォーク
+  mana: 1
+  text: このクリーチャーがバトルゾーンから自分の墓地に置かれるとき、墓地に置くかわりに自分のマナゾーンに置く。
+  abilities:
+  - kind: replace
+    when:
+      event: move
+      from: bz
+      to: graveyard
+      subject: self
+    instead:
+    - op: move
+      select:
+        ref: self
+      to: mana
+      reason: put
+  source:
+    official: dm01-105
+    review: pending
+    notes: 原文が同じ dm01-037 の変換結果を写した（モデル不使用）。能力は元カードの確認に従う
+- id: dm18-046
+  name: 暴走するロング・ホーン
+  types:
+  - creature
+  civs:
+  - nature
+  cost: 5
+  power: 4000
+  races:
+  - ホーン・ビースト
+  mana: 1
+  text: このクリーチャーは、パワー3000以下のクリーチャーにブロックされない。
+  abilities:
+  - kind: static
+    affects: self
+    mod:
+      deny:
+      - action: be_blocked
+        other:
+          power_le: 3000
+  source:
+    official: dm18-046
+    review: pending
+    notes: 原文が同じ dm01-038 の変換結果を写した（モデル不使用）。能力は元カードの確認に従う
+- id: dm09-052
+  name: 警護するソリッド・ホーン
+  types:
+  - creature
+  civs:
+  - nature
+  cost: 6
+  power: 5000
+  races:
+  - ホーン・ビースト
+  mana: 1
+  text: このクリーチャーがバトルゾーンから自分の墓地に置かれるとき、墓地に置くかわりに自分のマナゾーンに置く。
+  abilities:
+  - kind: replace
+    when:
+      event: move
+      from: bz
+      to: graveyard
+      subject: self
+    instead:
+    - op: move
+      select:
+        ref: self
+      to: mana
+      reason: put
+  source:
+    official: dm09-052
+    review: pending
+    notes: 原文が同じ dm01-037 の変換結果を写した（モデル不使用）。能力は元カードの確認に従う
+- id: promoy2-026
+  name: 警護するソリッド・ホーン
+  types:
+  - creature
+  civs:
+  - nature
+  cost: 6
+  power: 5000
+  races:
+  - ホーン・ビースト
+  mana: 1
+  text: このクリーチャーがバトルゾーンから自分の墓地に置かれるとき、墓地に置くかわりに自分のマナゾーンに置く。
+  abilities:
+  - kind: replace
+    when:
+      event: move
+      from: bz
+      to: graveyard
+      subject: self
+    instead:
+    - op: move
+      select:
+        ref: self
+      to: mana
+      reason: put
+  source:
+    official: promoy2-026
+    review: pending
+    notes: 原文が同じ dm01-037 の変換結果を写した（モデル不使用）。能力は元カードの確認に従う
+- id: dm01-041
+  name: 希望の使徒トール
+  types:
+  - creature
+  civs:
+  - light
+  cost: 5
+  power: 2000
+  races:
+  - イニシエート
+  mana: 1
+  text: 自分のターンの終わりに、バトルゾーンにある自分のクリーチャーをすべてアンタップしてよい。
+  abilities:
+  - kind: trigger
+    when:
+      event: turn_end
+      player: you
+    effect:
+    - op: may
+      body:
+      - op: untap
+        select:
+          zone: bz
+          owner: you
+          filter:
+            types:
+            - creature
+          count: all
+  source:
+    official: dm01-041
+    review: pending
+- id: dm01-043
+  name: 大気の使徒フレイ
+  types:
+  - creature
+  civs:
+  - light
+  cost: 4
+  power: 3000
+  races:
+  - イニシエート
+  mana: 1
+  text: 自分のターンの終わりに、このクリーチャーをアンタップしてよい。
+  abilities:
+  - kind: trigger
+    when:
+      event: turn_end
+      player: you
+    effect:
+    - op: may
+      body:
+      - op: untap
+        select:
+          ref: self
+  source:
+    official: dm01-043
+    review: pending
+- id: dm01-044
+  name: 紅玉草
+  types:
+  - creature
+  civs:
+  - light
+  cost: 3
+  power: 3000
+  races:
+  - スターライト・ツリー
+  mana: 1
+  text: 'ブロッカー(相手クリーチャーが攻撃するとき、このクリーチャーをタップして、その攻撃を阻止してよい。 そのあと、その相手クリーチャーとバトルする。)
+
+    このクリーチャーは、相手プレイヤーを攻撃できない。
+
+    自分のターンの終わりに、このクリーチャーをアンタップしてよい。'
+  abilities:
+  - kind: trigger
+    when:
+      event: turn_end
+      player: you
+    effect:
+    - op: may
+      body:
+      - op: untap
+        select:
+          ref: self
+  source:
+    official: dm01-044
+    review: pending
+  keywords:
+  - blocker
+  - cannot_attack_player
+- id: dm01-045
+  name: 予言者カティノ
+  types:
+  - creature
+  civs:
+  - light
+  cost: 2
+  power: 2000
+  races:
+  - ライトブリンガー
+  mana: 1
+  text: 'ブロッカー(相手クリーチャーが攻撃するとき、このクリーチャーをタップして、その攻撃を阻止してよい。 そのあと、その相手クリーチャーとバトルする。)
+
+    このクリーチャーは、相手プレイヤーを攻撃できない。
+
+    バトルゾーンに自分のエンジェル・コマンドがある間、このクリーチャーのパワーは+2000される。'
+  abilities:
+  - kind: static
+    affects: self
+    if:
+      exists:
+        zone: bz
+        owner: you
+        filter:
+          races:
+          - エンジェル・コマンド
+    mod:
+      power: 2000
+  source:
+    official: dm01-045
+    review: pending
+  keywords:
+  - blocker
+  - cannot_attack_player
+- id: dm01-046
+  name: ムーンライト・フラッシュ
+  types:
+  - spell
+  civs:
+  - light
+  cost: 4
+  mana: 1
+  text: バトルゾーンにある相手のクリーチャーを２体まで選び、タップする。
+  spell:
+  - op: tap
+    select:
+      zone: bz
+      owner: opp
+      filter:
+        types:
+        - creature
+      count: 2
+      up_to: true
+  source:
+    official: dm01-046
+    review: pending
+- id: dm01-047
+  name: ミラージュ・マーメイド
+  types:
+  - creature
+  civs:
+  - water
+  cost: 5
+  power: 4000
+  races:
+  - ゲル・フィッシュ
+  mana: 1
+  text: このクリーチャーがバトルゾーンに出たとき、バトルゾーンに自分のサイバーロードがあれば、カードを３枚引いてよい。
+  abilities:
+  - kind: trigger
+    when:
+      event: move
+      to: bz
+      subject: self
+    effect:
+    - op: if
+      cond:
+        exists:
+          zone: bz
+          owner: you
+          filter:
+            races:
+            - サイバーロード
+      then:
+      - op: may
+        body:
+        - op: draw
+          count: 3
+  source:
+    official: dm01-047
+    review: pending
+- id: dm01-052
+  name: サイバー・ブレイン
+  types:
+  - spell
+  civs:
+  - water
+  cost: 4
+  mana: 1
+  text: 'S(シールド)・トリガー(このカードをシールドゾーンから手札に戻すとき、コストを支払わずにすぐ使ってよい。)
+
+    自分の山札からカードを３枚まで引く。'
+  spell:
+  - op: repeat
+    times: 3
+    body:
+    - op: may
+      body:
+      - op: draw
+        count: 1
+  source:
+    official: dm01-052
+    review: pending
+    notes: 「３枚まで引く」はエマージェンシー・タイフーン（dmd08-015）の前例どおり、1枚ずつ引くかを選ぶ形にした
+  keywords:
+  - s_trigger
+- id: dm01-053
+  name: 腐食虫スワンプワーム
+  types:
+  - creature
+  civs:
+  - darkness
+  cost: 7
+  power: 2000
+  races:
+  - パラサイトワーム
+  mana: 1
+  text: このクリーチャーがバトルゾーンに出たとき、相手はバトルゾーンから自分自身のクリーチャーを１体選び、持ち主の墓地に置く。
+  abilities:
+  - kind: trigger
+    when:
+      event: move
+      to: bz
+      subject: self
+    effect:
+    - op: destroy
+      select:
+        zone: bz
+        owner: opp
+        filter:
+          types:
+          - creature
+        count: 1
+        chooser: opp
+  source:
+    official: dm01-053
+    review: pending
+    notes: '「持ち主の墓地に置く」は dm01-005 の前例に倣い destroy にした。相手自身の選択は chooser: opp'
+- id: dm01-054
+  name: 嘲りの影マスクド・ホラー
+  types:
+  - creature
+  civs:
+  - darkness
+  cost: 5
+  power: 1000
+  races:
+  - ゴースト
+  mana: 1
+  text: このクリーチャーがバトルゾーンに出たとき、相手の手札からカードを１枚見ないで選び、相手はそれを持ち主の墓地に置く。
+  abilities:
+  - kind: trigger
+    when:
+      event: move
+      to: bz
+      subject: self
+    effect:
+    - op: discard
+      select:
+        zone: hand
+        owner: opp
+        count: 1
+  source:
+    official: dm01-054
+    review: pending
+    notes: 「見ないで選ぶ」は手札を見ない選択として、解体人形ジェニー（dmx03-035）と同じ discard の選択にした
+- id: dm01-056
+  name: 捕らえる者ボーン・スパイダー
+  types:
+  - creature
+  civs:
+  - darkness
+  cost: 3
+  power: 5000
+  races:
+  - リビング・デッド
+  mana: 1
+  text: このクリーチャーはバトルに勝っても、バトルのあと、持ち主の墓地に置かれる。
+  abilities:
+  - kind: trigger
+    when:
+      event: battle_win
+      subject: self
+    effect:
+    - op: destroy
+      select:
+        ref: self
+  source:
+    official: dm01-056
+    review: pending
+    notes: dm01-026 ダーク・クラウンと同じ扱い。バトルに負けた場合は通常どおり墓地に置かれる
+- id: dm01-057
+  name: 凶食虫スティンガーワーム
+  types:
+  - creature
+  civs:
+  - darkness
+  cost: 3
+  power: 5000
+  races:
+  - パラサイトワーム
+  mana: 1
+  text: このクリーチャーがバトルゾーンに出たとき、バトルゾーンにある自分の他のクリーチャー１体を自分の墓地に置く。そうしなければ、このクリーチャーを自分の墓地に置く。
+  abilities:
+  - kind: trigger
+    when:
+      event: move
+      to: bz
+      subject: self
+    effect:
+    - op: if
+      cond:
+        cmp:
+        - count:
+            zone: bz
+            owner: you
+            filter:
+              types:
+              - creature
+            other: true
+        - '>='
+        - 1
+      then:
+      - op: destroy
+        select:
+          zone: bz
+          owner: you
+          filter:
+            types:
+            - creature
+          other: true
+          count: 1
+      else:
+      - op: destroy
+        select:
+          ref: self
+  source:
+    official: dm01-057
+    review: pending
+    notes: dm01-024 ギガベロスと同じ扱い。「墓地に置く」は destroy
+- id: dm01-058
+  name: ダーク・リバース
+  types:
+  - spell
+  civs:
+  - darkness
+  cost: 2
+  mana: 1
+  text: 'S(シールド)・トリガー(このカードをシールドゾーンから手札に戻すとき、コストを支払わずにすぐ使ってよい。)
+
+    自分の墓地からクリーチャーを１体選び、自分の手札に戻す。'
+  spell:
+  - op: bounce
+    select:
+      zone: graveyard
+      owner: you
+      filter:
+        types:
+        - creature
+      count: 1
+  source:
+    official: dm01-058
+    review: pending
+  keywords:
+  - s_trigger
+- id: dm01-060
+  name: メテオザウルス
+  types:
+  - creature
+  civs:
+  - fire
+  cost: 5
+  power: 2000
+  races:
+  - ロック・ビースト
+  mana: 1
+  text: このクリーチャーがバトルゾーンに出たとき、バトルゾーンにあるパワー2000以下の相手のクリーチャーを１体選び、持ち主の墓地に置いてよい。
+  abilities:
+  - kind: trigger
+    when:
+      event: move
+      to: bz
+      subject: self
+    effect:
+    - op: may
+      body:
+      - op: destroy
+        select:
+          zone: bz
+          owner: opp
+          filter:
+            types:
+            - creature
+            power_le: 2000
+          count: 1
+  source:
+    official: dm01-060
+    review: pending
+    notes: 「持ち主の墓地に置く」は dm01-027 の前例に倣い destroy にした
+- id: dm01-061
+  name: 走神兵ウルヘリオン
+  types:
+  - creature
+  civs:
+  - fire
+  cost: 4
+  power: 3000
+  races:
+  - アーマロイド
+  mana: 1
+  text: バトルゾーンに自分のヒューマノイドがあれば、攻撃中、このクリーチャーのパワーは+2000される。
+  abilities:
+  - kind: static
+    affects: self
+    if:
+      exists:
+        zone: bz
+        owner: you
+        filter:
+          races:
+          - ヒューマノイド
+    mod:
+      battle_power:
+        amount: 2000
+        only: attacking
+  source:
+    official: dm01-061
+    review: pending
+- id: dm01-063
+  name: 強襲兵ギガントス
+  types:
+  - creature
+  civs:
+  - fire
+  cost: 3
+  power: 5000
+  races:
+  - ドラゴノイド
+  mana: 1
+  text: このクリーチャーがバトルゾーンに出たとき、自分のマナゾーンからカードを１枚選び、自分の墓地に置く。
+  abilities:
+  - kind: trigger
+    when:
+      event: move
+      to: bz
+      subject: self
+    effect:
+    - op: move
+      select:
+        zone: mana
+        owner: you
+        count: 1
+      to: graveyard
+      reason: put
+  source:
+    official: dm01-063
+    review: pending
+- id: dm01-064
+  name: トルネード・フレーム
+  types:
+  - spell
+  civs:
+  - fire
+  cost: 5
+  mana: 1
+  text: 'S(シールド)・トリガー(このカードをシールドゾーンから手札に戻すとき、コストを支払わずにすぐ使ってよい。)
+
+    バトルゾーンにある、パワー4000以下の相手のクリーチャーを１体選び、持ち主の墓地に置く。'
+  spell:
+  - op: destroy
+    select:
+      zone: bz
+      owner: opp
+      filter:
+        types:
+        - creature
+        power_le: 4000
+      count: 1
+  source:
+    official: dm01-064
+    review: pending
+    notes: 「持ち主の墓地に置く」は dm01-027 の前例に倣い destroy にした
+  keywords:
+  - s_trigger
+- id: dm01-069
+  name: シビレアシダケ
+  types:
+  - creature
+  civs:
+  - nature
+  cost: 2
+  power: 1000
+  races:
+  - バルーン・マッシュルーム
+  mana: 1
+  text: このクリーチャーがバトルゾーンに出たとき、自分の手札からカードを１枚選び、自分のマナゾーンに置いてよい。
+  abilities:
+  - kind: trigger
+    when:
+      event: move
+      to: bz
+      subject: self
+    effect:
+    - op: may
+      body:
+      - op: mana_put
+        select:
+          zone: hand
+          owner: you
+          count: 1
+  source:
+    official: dm01-069
+    review: pending
+- id: dm01-070
+  name: ガイアズ・ソング
+  types:
+  - spell
+  civs:
+  - nature
+  cost: 1
+  mana: 1
+  text: バトルゾーンにある自分のクリーチャーを１体選び、自分のマナゾーンに置く。
+  spell:
+  - op: mana_put
+    select:
+      zone: bz
+      owner: you
+      filter:
+        types:
+        - creature
+      count: 1
+  source:
+    official: dm01-070
+    review: pending
+- id: dm01-073
+  name: 雷光の使徒ミール
+  types:
+  - creature
+  civs:
+  - light
+  cost: 3
+  power: 1000
+  races:
+  - イニシエート
+  mana: 1
+  text: このクリーチャーがバトルゾーンに出たとき、バトルゾーンにある相手のクリーチャーを１体選び、タップしてよい。
+  abilities:
+  - kind: trigger
+    when:
+      event: move
+      to: bz
+      subject: self
+    effect:
+    - op: may
+      body:
+      - op: tap
+        select:
+          zone: bz
+          owner: opp
+          filter:
+            types:
+            - creature
+          count: 1
+  source:
+    official: dm01-073
+    review: pending
+- id: dm01-077
+  name: ソニック・ウイング
+  types:
+  - spell
+  civs:
+  - light
+  cost: 3
+  mana: 1
+  text: バトルゾーンにある自分のクリーチャーを１体選ぶ。このターン、そのクリーチャーはブロックされない。
+  spell:
+  - op: modify
+    select:
+      zone: bz
+      owner: you
+      filter:
+        types:
+        - creature
+      count: 1
+    mod:
+      deny:
+      - be_blocked
+    duration: end_of_turn
+  source:
+    official: dm01-077
+    review: pending
