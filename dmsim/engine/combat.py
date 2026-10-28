@@ -33,6 +33,25 @@ class CombatMixin:
                                 "target": self.s.ref(tc)})
         return out
 
+    def _activate_options(self, a, attack_opts):
+        """起動型能力（602）のうち「攻撃する代わりにタップして使う」もの。攻撃ができるときだけ使える（602.3a）。
+        cost.tap が self ならこのクリーチャー、フィルタなら条件に合う自分のクリーチャー1体をタップする。"""
+        can = {o["cid"] for o in attack_opts}
+        out = []
+        for cid in self.bz_tops(a):
+            for i, ab in self.abilities(cid, "activate"):
+                env = {"you": a, "self": self.s.ref(cid), "vars": {}}
+                if "if" in ab and not self.eval_cond(ab["if"], env):
+                    continue
+                dfn = self.s.cards[cid].defn
+                who = [cid] if ab["cost"]["tap"] == "self" else \
+                    [x for x in self.bz_tops(a) if self.filter_match(x, ab["cost"]["tap"])]
+                for x in who:
+                    if x in can:
+                        key = f"activate:{dfn}:{i}" + ("" if x == cid else f":{self.s.cards[x].defn}")
+                        out.append({"key": key, "cid": cid, "ab": i, "tap": x})
+        return out
+
     def _battle_substitute(self, t, att, tgt):
         """バトル相手の置換（「かわりにこのクリーチャーにバトルさせてもよい」）。ターン・プレイヤー側から順に選ぶ（609.8）。
         置換効果 when: {event: battle, subject: <置き換えられる側>}、instead: [{op: battle_substitute}] を持つ
