@@ -40930,3 +40930,181 @@ cards:
     official: dmx12b-041
     review: pending
     notes: 原文が同じ 34-sec001 の変換結果を写した（モデル不使用）。能力は元カードの確認に従う
+- id: dm01-002
+  name: 真理の伝道師レイーラ
+  types:
+  - creature
+  civs:
+  - light
+  cost: 6
+  power: 3000
+  races:
+  - バーサーカー
+  mana: 1
+  text: このクリーチャーがバトルゾーンに出たとき、自分の山札から呪文を１枚さがして相手に見せ、自分の手札に加える。そのあと、山札をシャッフルする。
+  abilities:
+  - kind: trigger
+    when:
+      event: move
+      to: bz
+      subject: self
+    effect:
+    - op: move
+      select:
+        zone: deck
+        owner: you
+        filter:
+          types:
+          - spell
+        count: 1
+        look: true
+      to: hand
+      reason: put
+    - op: shuffle
+  source:
+    official: dm01-002
+    review: pending
+    notes: 相手に見せる処理は扱っていない
+- id: dm01-003
+  name: キング・ポセイドン
+  types:
+  - creature
+  civs:
+  - water
+  cost: 7
+  power: 5000
+  races:
+  - リヴァイアサン
+  mana: 1
+  text: このクリーチャーがバトルゾーンに出たとき、カードを２枚引いてよい。
+  abilities:
+  - kind: trigger
+    when:
+      event: move
+      to: bz
+      subject: self
+    effect:
+    - op: may
+      body:
+      - op: draw
+        count: 2
+  source:
+    official: dm01-003
+    review: pending
+- id: dm01-005
+  name: 妖姫シルフィ
+  types:
+  - creature
+  civs:
+  - darkness
+  cost: 8
+  power: 4000
+  races:
+  - ダークロード
+  mana: 1
+  text: このクリーチャーがバトルゾーンに出たとき、各プレイヤーはバトルゾーンにあるパワー3000以下のクリーチャーすべてを、それぞれの墓地に置く。
+  abilities:
+  - kind: trigger
+    when:
+      event: move
+      to: bz
+      subject: self
+    effect:
+    - op: destroy
+      select:
+        zone: bz
+        owner: any
+        filter:
+          types:
+          - creature
+          power_le: 3000
+        count: all
+  source:
+    official: dm01-005
+    review: pending
+    notes: 原文は「それぞれの墓地に置く」。dm01-027 の例に倣い、現行表記の「破壊する」として destroy にした
+- id: dm01-006
+  name: ギガルゴン
+  types:
+  - creature
+  civs:
+  - darkness
+  cost: 8
+  power: 3000
+  races:
+  - キマイラ
+  mana: 1
+  text: このクリーチャーがバトルゾーンに出たとき、自分の墓地からクリーチャー２体まで選び、自分の手札に戻してよい。
+  abilities:
+  - kind: trigger
+    when:
+      event: move
+      to: bz
+      subject: self
+    effect:
+    - op: bounce
+      select:
+        zone: graveyard
+        owner: you
+        filter:
+          types:
+          - creature
+        count: 2
+        up_to: true
+  source:
+    official: dm01-006
+    review: pending
+- id: dm01-009
+  name: シェル・タワー
+  types:
+  - creature
+  civs:
+  - nature
+  cost: 6
+  power: 5000
+  races:
+  - コロニー・ビートル
+  mana: 1
+  text: このクリーチャーは、パワー4000以下のクリーチャーにブロックされない。
+  abilities:
+  - kind: static
+    affects: self
+    mod:
+      deny:
+      - action: be_blocked
+        other:
+          power_le: 4000
+  source:
+    official: dm01-009
+    review: pending
+- id: dm01-010
+  name: トゲ刺しマンドラ
+  types:
+  - creature
+  civs:
+  - nature
+  cost: 5
+  power: 4000
+  races:
+  - ツリーフォーク
+  mana: 1
+  text: このクリーチャーがバトルゾーンに出たとき、自分の墓地からクリーチャーを１体選び、自分のマナゾーンに置いてよい。
+  abilities:
+  - kind: trigger
+    when:
+      event: move
+      to: bz
+      subject: self
+    effect:
+    - op: mana_put
+      select:
+        zone: graveyard
+        owner: you
+        filter:
+          types:
+          - creature
+        count: 1
+        up_to: true
+  source:
+    official: dm01-010
+    review: pending
