@@ -5,6 +5,7 @@ import pytest
 from conftest import find_option, setup
 
 from dmsim import load_rules
+from dmsim.defs import card_yaml_files  # noqa: E402
 from dmsim.defs import DATA
 from dmsim.play import make_record, replay_record
 from dmsim.solitaire import TurnSearch, Weights, lock_probe, measure, play_game, summarize
@@ -61,7 +62,7 @@ def test_measure_is_reproducible_and_records_replay(rules):
 
 @pytest.fixture(scope="module")
 def loop_rules():
-    return load_rules(sorted((DATA / "cards").glob("*.yaml")) + [Path(__file__).parent / "loop_cards.yaml"])
+    return load_rules(card_yaml_files() + [Path(__file__).parent / "loop_cards.yaml"])
 
 
 def test_loop_with_draw_is_detected_and_kills(loop_rules):

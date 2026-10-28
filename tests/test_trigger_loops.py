@@ -7,6 +7,7 @@ import pytest
 from conftest import find_option, setup
 
 from dmsim.defs import load_rules
+from dmsim.defs import card_yaml_files  # noqa: E402
 from dmsim.loop import LoopDetector, abstract, draw_keys, verify
 from dmsim.loop_first import discover_loops
 from dmsim.play import passive_policy
@@ -21,7 +22,7 @@ DARK = "dm01-027"
 
 @pytest.fixture(scope="module")
 def xr():
-    return load_rules(sorted((DATA / "cards").glob("*.yaml")) + [Path(__file__).parent / "trigger_loop_cards.yaml"])
+    return load_rules(card_yaml_files() + [Path(__file__).parent / "trigger_loop_cards.yaml"])
 
 
 def cycles_of(rules, card, other=None, max_cards=2):
