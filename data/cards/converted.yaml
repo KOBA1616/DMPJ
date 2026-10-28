@@ -41654,3 +41654,34 @@ cards:
   source:
     official: dm01-009
     review: pending
+- id: dm01-010
+  name: トゲ刺しマンドラ
+  types:
+  - creature
+  civs:
+  - nature
+  cost: 5
+  power: 4000
+  races:
+  - ツリーフォーク
+  mana: 1
+  text: このクリーチャーがバトルゾーンに出たとき、自分の墓地からクリーチャーを１体選び、自分のマナゾーンに置いてよい。
+  abilities:
+  - kind: trigger
+    when:
+      event: move
+      to: bz
+      subject: self
+    effect:
+    - op: mana_put
+      select:
+        zone: graveyard
+        owner: you
+        filter:
+          types:
+          - creature
+        count: 1
+        up_to: true
+  source:
+    official: dm01-010
+    review: pending
