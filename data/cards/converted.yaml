@@ -45127,3 +45127,648 @@ cards:
     review: pending
     notes: 「マナがすべて火」は「火でないマナが存在しない」で表した。op if の条件引数は cond。原文データの括弧内の一部（��撃中）は文字化けのため
       text には含めなかった
+- id: dmc27-018
+  name: 夜明けの超人
+  types:
+  - creature
+  civs:
+  - nature
+  cost: 7
+  power: 11000
+  races:
+  - ジャイアント
+  mana: 1
+  text: 'W(ダブル)・ブレイカー(シールドを攻撃したとき、このクリーチャーはシールドを２枚ブレイクする)
+
+    このクリーチャーは、クリーチャーを攻撃できない。'
+  abilities:
+  - kind: static
+    affects: self
+    mod:
+      deny:
+      - attack_creature
+  keywords:
+  - double_breaker
+  source:
+    official: dmc27-018
+    review: pending
+    notes: 原文が同じ dm03-018 の変換結果を写した（モデル不使用）。能力は元カードの確認に従う
+- id: promoy1-012
+  name: キング・ネプタス
+  types:
+  - creature
+  civs:
+  - water
+  cost: 6
+  power: 5000
+  races:
+  - リヴァイアサン
+  mana: 1
+  text: このクリーチャーが攻撃するとき、相手がブロックする前に、バトルゾーンにあるパワー2000以下のクリーチャーを１体選び、持ち主の手札に戻してよい。
+  abilities:
+  - kind: trigger
+    when:
+      event: attack
+      subject: self
+    effect:
+    - op: may
+      body:
+      - op: bounce
+        select:
+          zone: bz
+          owner: any
+          filter:
+            types:
+            - creature
+            power_le: 2000
+          count: 1
+  source:
+    official: promoy1-012
+    review: pending
+    notes: 原文が同じ dm03-010 の変換結果を写した（モデル不使用）。能力は元カードの確認に従う
+- id: dm03-020
+  name: 逆転のオーロラ
+  types:
+  - spell
+  civs:
+  - nature
+  cost: 5
+  mana: 1
+  text: 自分のシールドから好きな枚数を裏向きのまま選び、表向きにして自分のマナゾーンに置く。
+  spell:
+  - op: mana_put
+    select:
+      zone: shield
+      owner: you
+      count: any
+  source:
+    official: dm03-020
+    review: pending
+    notes: '「好きな枚数」は count: any。マナゾーンのカードは表向きなので「表向きにして」は mana_put で満たす'
+- id: dm03-021
+  name: 雷電の求道者ラ・ビュー
+  types:
+  - creature
+  civs:
+  - light
+  cost: 6
+  power: 4000
+  races:
+  - メカサンダー
+  mana: 1
+  text: このクリーチャーが攻撃するとき、自分の墓地から光の呪文を１枚、自分の手札に戻してよい。
+  abilities:
+  - kind: trigger
+    when:
+      event: attack
+      subject: self
+    effect:
+    - op: may
+      body:
+      - op: bounce
+        select:
+          zone: graveyard
+          owner: you
+          filter:
+            types:
+            - spell
+            civs:
+            - light
+          count: 1
+  source:
+    official: dm03-021
+    review: pending
+- id: dm03-022
+  name: 線光花
+  types:
+  - creature
+  civs:
+  - light
+  cost: 4
+  power: 3000
+  races:
+  - スターライト・ツリー
+  mana: 1
+  text: 自分のマナゾーンにあるカードがすべて光のカードである間、このクリーチャーは「ブロッカー」を得る。
+  abilities:
+  - kind: static
+    affects: self
+    if:
+      not:
+        exists:
+          zone: mana
+          owner: you
+          filter:
+            not_civs:
+            - light
+    mod:
+      grant:
+      - blocker
+  source:
+    official: dm03-022
+    review: pending
+    notes: 「マナがすべて光」は「光でないマナが存在しない」で表した（dm03-017 と同じ）。ブロッカーの説明文は text から省いた
+- id: dm03-023
+  name: ライト・ブーメラン
+  types:
+  - spell
+  civs:
+  - light
+  cost: 6
+  mana: 1
+  keywords:
+  - s_trigger
+  - charger
+  text: 'S(シールド)・トリガー(このカードをシールドゾーンから手札に加えるとき、コストを支払わずにすぐ使ってよい)
+
+    この呪文を、自分の墓地ではなく自分のマナゾーンに置く。その後、自分のマナゾーンからカードを１枚選び、自分の手札に戻す。'
+  spell:
+  - op: bounce
+    select:
+      zone: mana
+      owner: you
+      count: 1
+  source:
+    official: dm03-023
+    review: pending
+    notes: 「墓地ではなくマナゾーンに置く」はチャージャーそのもので、原文がキーワード化前の長文表記。known_keywords には無かったが dm01-089
+      ブロッカーの扱いに倣い keywords に charger を書いた。手札に戻す対象には、この呪文自身（解決後にマナへ行く）も含まれうる
+- id: dm03-024
+  name: キング・ボニータス
+  types:
+  - creature
+  civs:
+  - water
+  cost: 8
+  power: 4000
+  races:
+  - リヴァイアサン
+  mana: 1
+  text: このクリーチャーが攻撃するとき、自分の山札を見る。その中から水のカードを１枚選び、相手に見せてから自分の手札に加えてよい。その後、山札をシャッフルする。
+  abilities:
+  - kind: trigger
+    when:
+      event: attack
+      subject: self
+    effect:
+    - op: may
+      body:
+      - op: move
+        select:
+          zone: deck
+          owner: you
+          filter:
+            civs:
+            - water
+          count: 1
+          look: true
+        to: hand
+        reason: put
+    - op: shuffle
+  source:
+    official: dm03-024
+    review: pending
+    notes: シャッフルは加えることを選ばなかった場合でも行うため may の外に置いた。山札を見る・相手に見せる処理は扱っていない
+- id: dm03-025
+  name: スティンガー・ボール
+  types:
+  - creature
+  civs:
+  - water
+  cost: 3
+  power: 1000
+  races:
+  - サイバー・ウイルス
+  mana: 1
+  text: このクリーチャーが攻撃するとき、相手のシールドを１枚見てよい。その後、そのシールドを元の場所に戻す。
+  abilities:
+  - kind: trigger
+    when:
+      event: attack
+      subject: self
+    effect:
+    - op: may
+      body:
+      - op: choose
+        select:
+          zone: shield
+          owner: opp
+          count: 1
+          look: true
+        as: seen
+  source:
+    official: dm03-025
+    review: pending
+    notes: dm02-022 予言者ウィンと同じ扱い。シールドは動かさないので「元の場所に戻す」は自動的に満たす
+- id: dm03-026
+  name: ハイパー・ウェーブ
+  types:
+  - spell
+  civs:
+  - water
+  cost: 2
+  mana: 1
+  text: 'S(シールド)・トリガー(このカードをシールドゾーンから手札に加えるとき、コストを支払わずにすぐ使ってよい)
+
+    自分のマナゾーンからカードを１枚選び、自分の手札に戻す。'
+  spell:
+  - op: bounce
+    select:
+      zone: mana
+      owner: you
+      count: 1
+  source:
+    official: dm03-026
+    review: pending
+  keywords:
+  - s_trigger
+- id: dm03-028
+  name: 邪剣バラガ
+  types:
+  - creature
+  civs:
+  - darkness
+  cost: 4
+  power: 4000
+  races:
+  - ダークロード
+  mana: 1
+  text: このクリーチャーがバトルゾーンに出たとき、自分のシールドが１枚でもあれば、その中から１枚を裏向きのまま選び、自分の手札に加える。ただし、その「S(シールド)・トリガー」は使えない。
+  abilities:
+  - kind: trigger
+    when:
+      event: move
+      to: bz
+      subject: self
+    if:
+      exists:
+        zone: shield
+        owner: you
+    effect:
+    - op: move
+      select:
+        zone: shield
+        owner: you
+        count: 1
+      to: hand
+      reason: put
+  source:
+    official: dm03-028
+    review: pending
+    notes: 「そのS・トリガーは使えない」という制限は語彙に無いため扱っていない（dm03-014 と同じ扱い）
+- id: dm03-030
+  name: 切断伯爵ムラマサ
+  types:
+  - creature
+  civs:
+  - fire
+  cost: 6
+  power: 3000
+  races:
+  - ヒューマノイド
+  mana: 1
+  text: このクリーチャーが攻撃するとき、バトルゾーンにあるパワー2000以下の相手のクリーチャーを１体選び、持ち主の墓地に置いてよい。
+  abilities:
+  - kind: trigger
+    when:
+      event: attack
+      subject: self
+    effect:
+    - op: may
+      body:
+      - op: destroy
+        select:
+          zone: bz
+          owner: opp
+          filter:
+            types:
+            - creature
+            power_le: 2000
+          count: 1
+  source:
+    official: dm03-030
+    review: pending
+    notes: 「持ち主の墓地に置く」は dm01-027 の前例に倣い destroy にした
+- id: dm03-031
+  name: 甲神兵クエロス
+  types:
+  - creature
+  civs:
+  - fire
+  cost: 5
+  power: 2000
+  races:
+  - アーマロイド
+  mana: 1
+  text: このクリーチャーが攻撃するとき、各プレイヤーは自分自身のマナゾーンから火以外のカードを１枚選び、それぞれの墓地に置く。
+  abilities:
+  - kind: trigger
+    when:
+      event: attack
+      subject: self
+    effect:
+    - op: move
+      select:
+        zone: mana
+        owner: you
+        filter:
+          not_civs:
+          - fire
+        count: 1
+      to: graveyard
+      reason: put
+    - op: move
+      select:
+        zone: mana
+        owner: opp
+        filter:
+          not_civs:
+          - fire
+        count: 1
+        chooser: opp
+      to: graveyard
+      reason: put
+  source:
+    official: dm03-031
+    review: pending
+    notes: '「火以外」は not_civs: [fire]。相手の選択は chooser: opp'
+- id: dm03-032
+  name: 灼熱波
+  types:
+  - spell
+  civs:
+  - fire
+  cost: 5
+  mana: 1
+  text: 相手は、バトルゾーンにある自分自身のパワー3000以下のクリーチャーすべてを、持ち主の墓地に置く。自分のシールドが１枚でもあれば、裏向きのまま１枚選び、自分の墓地に置く。
+  spell:
+  - op: destroy
+    select:
+      zone: bz
+      owner: opp
+      filter:
+        types:
+        - creature
+        power_le: 3000
+      count: all
+  - op: if
+    cond:
+      exists:
+        zone: shield
+        owner: you
+    then:
+    - op: move
+      select:
+        zone: shield
+        owner: you
+        count: 1
+      to: graveyard
+      reason: put
+  source:
+    official: dm03-032
+    review: pending
+    notes: 「持ち主の墓地に置く」は destroy（dm01-005 等と同じ）。2文目は自分のシールドがある場合のみ
+- id: dm03-033
+  name: 奇面ざくろ
+  types:
+  - creature
+  civs:
+  - nature
+  cost: 5
+  power: 1000
+  races:
+  - ツリーフォーク
+  mana: 1
+  text: このクリーチャーのパワーは、バトルゾーンにある自分の他の自然のクリーチャー１体につき+1000される。このクリーチャーは、パワー4000以下のクリーチャーにブロックされない。
+  abilities:
+  - kind: static
+    affects: self
+    mod:
+      power:
+        amount: 1000
+        count:
+          zone: bz
+          owner: you
+          filter:
+            types:
+            - creature
+            civs:
+            - nature
+          other: true
+  - kind: static
+    affects: self
+    mod:
+      deny:
+      - action: be_blocked
+        other:
+          power_le: 4000
+  source:
+    official: dm03-033
+    review: pending
+- id: dm03-034
+  name: シェル・ポーチ
+  types:
+  - creature
+  civs:
+  - nature
+  cost: 4
+  power: 1000
+  races:
+  - コロニー・ビートル
+  mana: 1
+  text: このクリーチャーがバトルゾーンに出たとき、バトルゾーンにある相手の進化クリーチャーを１体選び、そのクリーチャーの一番上のカードを持ち主の墓地に置いてよい。
+  abilities:
+  - kind: trigger
+    when:
+      event: move
+      to: bz
+      subject: self
+    effect:
+    - op: may
+      body:
+      - op: move
+        select:
+          zone: bz
+          owner: opp
+          filter:
+            types:
+            - creature
+            - evolution
+          count: 1
+        to: graveyard
+        reason: put
+        card_only: true
+  source:
+    official: dm03-034
+    review: pending
+    notes: '「一番上のカードだけを墓地に置く」は move の card_only: true（進化クリーチャーの一番上だけが離れ、下は再構築される）。行き先は墓地なので
+      destroy ではなく move reason: put にした'
+- id: dm03-035
+  name: 深緑の魔方陣
+  types:
+  - spell
+  civs:
+  - nature
+  cost: 4
+  mana: 1
+  text: 'S(シールド)・トリガー(このカードをシールドゾーンから手札に加えるとき、コストを支払わずにすぐ使ってよい)
+
+    自分のマナゾーンからカードを１枚選び、裏向きにしてシールドに加える。'
+  spell:
+  - op: move
+    select:
+      zone: mana
+      owner: you
+      count: 1
+    to: shield
+    reason: put
+  source:
+    official: dm03-035
+    review: pending
+    notes: シールドは常に裏向きで置かれるので「裏向きにして」は move to shield で満たす
+  keywords:
+  - s_trigger
+- id: dm03-036
+  name: 予言者アレス
+  types:
+  - creature
+  civs:
+  - light
+  cost: 6
+  power: 1000
+  races:
+  - ライトブリンガー
+  mana: 1
+  text: このクリーチャーがバトルゾーンから自分の墓地に置かれるとき、裏向きにして自分のシールドに加える。
+  abilities:
+  - kind: replace
+    when:
+      event: move
+      from: bz
+      to: graveyard
+      subject: self
+    instead:
+    - op: move
+      select:
+        ref: self
+      to: shield
+      reason: put
+  source:
+    official: dm03-036
+    review: pending
+    notes: dm03-006 ラーザ・ベガと同じ置換
+- id: dm03-037
+  name: 陽光の求道者ル・パーレ
+  types:
+  - creature
+  civs:
+  - light
+  cost: 4
+  power: 2500
+  races:
+  - メカサンダー
+  mana: 1
+  text: 自分のマナゾーンにあるカードがすべて光のカードである間、このクリーチャーのパワーは+2000される。
+  abilities:
+  - kind: static
+    affects: self
+    if:
+      not:
+        exists:
+          zone: mana
+          owner: you
+          filter:
+            not_civs:
+            - light
+    mod:
+      power: 2000
+  source:
+    official: dm03-037
+    review: pending
+    notes: 条件は dm03-022 線光花と同じ形
+- id: dm03-038
+  name: 閃光の使徒レーナ
+  types:
+  - creature
+  civs:
+  - light
+  cost: 4
+  power: 2000
+  races:
+  - イニシエート
+  mana: 1
+  text: このクリーチャーがバトルゾーンに出たとき、自分のマナゾーンから呪文を１枚選び、自分の手札に戻してよい。
+  abilities:
+  - kind: trigger
+    when:
+      event: move
+      to: bz
+      subject: self
+    effect:
+    - op: may
+      body:
+      - op: bounce
+        select:
+          zone: mana
+          owner: you
+          filter:
+            types:
+            - spell
+          count: 1
+  source:
+    official: dm03-038
+    review: pending
+- id: dm03-039
+  name: ホーリー・メール
+  types:
+  - spell
+  civs:
+  - light
+  cost: 4
+  mana: 1
+  text: 自分の手札からカードを１枚選び、裏向きにして自分のシールドに加える。
+  spell:
+  - op: move
+    select:
+      zone: hand
+      owner: you
+      count: 1
+    to: shield
+    reason: put
+  source:
+    official: dm03-039
+    review: pending
+- id: dm03-040
+  name: シュトラ
+  types:
+  - creature
+  civs:
+  - water
+  cost: 4
+  power: 2000
+  races:
+  - サイバーロード
+  mana: 1
+  text: このクリーチャーがバトルゾーンに出たとき、各プレイヤーは自分自身のマナゾーンからカードを１枚ずつ選び、それぞれの手札に戻す。
+  abilities:
+  - kind: trigger
+    when:
+      event: move
+      to: bz
+      subject: self
+    effect:
+    - op: bounce
+      select:
+        zone: mana
+        owner: you
+        count: 1
+    - op: bounce
+      select:
+        zone: mana
+        owner: opp
+        count: 1
+        chooser: opp
+  source:
+    official: dm03-040
+    review: pending
+    notes: '相手の選択は chooser: opp'
