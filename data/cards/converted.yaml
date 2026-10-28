@@ -63725,3 +63725,122 @@ cards:
     notes: ルールのみで変換（モデル不使用）
     aliases:
     - promoy14-spd09
+- id: dm13-047
+  name: ジョーのツールキット
+  types:
+  - creature
+  civs:
+  - fire
+  cost: 2
+  power: 1000
+  races:
+  - ゼノパーツ
+  mana: 1
+  text: このクリーチャーが攻撃された時、相手のパワー2000以下のクリーチャーを１体破壊してもよい。
+  abilities:
+  - kind: trigger
+    when:
+      event: attack
+      target: self
+    effect:
+    - op: may
+      body:
+      - op: destroy
+        select:
+          zone: bz
+          owner: opp
+          filter:
+            types:
+            - creature
+            power_le: 2000
+          count: 1
+  source:
+    official: dm13-047
+    review: pending
+    notes: 厳密一致
+- id: dm17-045
+  name: 反撃人形デビルモモ
+  types:
+  - creature
+  civs:
+  - darkness
+  cost: 3
+  power: 2000
+  races:
+  - デスパペット
+  mana: 1
+  text: このクリーチャーが攻撃された時、そのターンの終わりまで、このクリーチャーのパワーは+5000される。
+  abilities:
+  - kind: trigger
+    when:
+      event: attack
+      target: self
+    effect:
+    - op: modify
+      select:
+        ref: self
+      mod:
+        power: 5000
+      duration: end_of_turn
+  source:
+    official: dm17-045
+    review: pending
+    notes: 厳密一致
+- id: dm08-033
+  name: シェル・コロシアム
+  types:
+  - creature
+  civs:
+  - nature
+  cost: 4
+  power: 3000
+  races:
+  - コロニー・ビートル
+  mana: 1
+  text: このクリーチャーがブロックされたとき、自分の山札の上から１枚目を自分のマナゾーンに加えてもよい。
+  abilities:
+  - kind: trigger
+    when:
+      event: block
+      attacker: self
+    effect:
+    - op: may
+      body:
+      - op: mana_put
+        select:
+          zone: deck
+          owner: you
+          from_top: 1
+  source:
+    official: dm08-033
+    review: pending
+    notes: 厳密一致
+- id: dm13-021
+  name: 予言者ポラリス
+  types:
+  - creature
+  civs:
+  - light
+  cost: 3
+  power: 2000
+  races:
+  - ライトブリンガー
+  mana: 1
+  text: 自分のクリーチャーが攻撃された時、そのクリーチャーのパワーは+2000される。
+  abilities:
+  - kind: trigger
+    when:
+      event: attack
+      target:
+        owner: you
+    effect:
+    - op: modify
+      select:
+        ref: event.target
+      mod:
+        power: 2000
+      duration: end_of_turn
+  source:
+    official: dm13-021
+    review: pending
+    notes: 厳密一致。「自分のクリーチャーが攻撃された時」はこのクリーチャー自身が攻撃された場合も含む

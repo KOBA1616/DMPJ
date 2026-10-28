@@ -93,7 +93,7 @@ def build() -> dict:
                 "additionalProperties": False, "propertyNames": {"enum": sorted(MOD_KEYS)}},
             "when": {"type": "object", "properties": {
                 "event": {"enum": sorted(EVENTS)}, "from": {"enum": sorted(zones)}, "to": {"enum": sorted(zones)},
-                "reason": {"enum": sorted(REASONS)}, "player": {"enum": ["you", "opp"]}, "unpaid": {"type": "boolean"}, "target": {"enum": ["player", "creature"]},
+                "reason": {"enum": sorted(REASONS)}, "player": {"enum": ["you", "opp"]}, "unpaid": {"type": "boolean"}, "target": {}, "attacker": {},
                 "via": {"enum": sorted(VIAS)}, "subject": {}},
                 "required": ["event"], "additionalProperties": False},
             "ability": {"type": "object", "properties": {
