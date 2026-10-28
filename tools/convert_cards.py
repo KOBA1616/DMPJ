@@ -31,7 +31,7 @@ ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(ROOT))
 sys.path.insert(0, str(ROOT / "tools"))
 
-from dmsim import cardstore, schema  # noqa: E402
+from dmsim import cardstore, identity, schema  # noqa: E402
 from dmsim.defs import DATA, DefError, load_tables, parse_card  # noqa: E402
 import rule_convert  # noqa: E402
 from llm_offload.providers import CallTimeout  # noqa: E402
@@ -52,6 +52,7 @@ INSTRUCTIONS = """\
 - 進化は types に evolution を含め evolve_from に進化元の条件を書く。ツインパクトは faces に2面を書く。
 - カードの種類: クリーチャーは creature、呪文は spell、タマシードは tamaseed、フィールドは field、クロスギアは cross_gear（実行するとバトルゾーンに出る）。「タマシード/クリーチャー」は両方を types に書く。サイキック・GR・超次元・ドラグハートはオリジナルフォーマットでは使わないので変換しない（取り込み側で飛ばす）。他の種類（オーラ・城 など）は未対応なので、近似せず source.unsupported に書く。
 - 革命チェンジ・ニンジャ・ストライク等の宣言は kind: declare（既存カードの例に倣う）。
+- 「このクリーチャーで攻撃する代わりに、タップして次の能力を使ってもよい」（タップ能力）は kind: activate、cost: {tap: self}、effect に続く効果文の ops（攻撃ができない間は使えない。召喚酔い含む）。「バトルゾーンにある自分の光のクリーチャーをタップし、攻撃する代わりに次の能力を使ってもよい」は cost: {tap: {civs: [light]}}（条件に合う自分のクリーチャー1体をタップ）。
 - text には原文から括弧書きの注釈を除いたものを「 / 」区切りで書く。
 - 近似・代用はしない。語彙で原文どおりに表せない効果は、似た別の語彙（op・mod・条件）で置き換えて書かない。その能力は abilities に書かず、source.unsupported に [{need: <足せばよい op・語彙の案（英語の識別子）>, text: <該当する原文>}] で書く。表せる他の能力は通常どおり変換する。
   「ほぼ同じ」「この場面では同じ結果」と思っても代用しない（例: 他のカードの効果の対象条件を書き換える置換を、無条件の置換や別の効果で書かない）。語彙の追加は人が行い、足りない語彙は unsupported の集計から決める。unsupported があるカードは登録されず（rejects に vocab として残る）、語彙が足りるようになってから変換し直す。
@@ -138,6 +139,9 @@ def validate(raw: dict, row: dict, tables) -> dict:
     src = raw.setdefault("source", {})
     src["official"] = row["id"]
     src["review"] = "pending"      # LLM の出力は必ず人の確認待ちにする
+    al = identity.aliases_for(row.get("name", ""), row["id"])
+    if al:
+        src["aliases"] = al        # 同名の古い版のID（旧IDから最新版を引くため）
     return raw
 
 
@@ -256,7 +260,7 @@ def load_rows(inputs: list[str]) -> list[dict]:
                 r = json.loads(s)
                 r.pop("error", None)
                 rows[r["id"]] = r
-    return list(rows.values())
+    return identity.canonical_rows(list(rows.values()))      # 同名の古い版は変換しない（最新版だけ）
 
 
 def known_ids(out: Path) -> set[str]:
@@ -527,7 +531,7 @@ def run(rows: list[dict], client, tables, sysp: str, effort: str, out: Path, rej
 def main(argv=None):
     ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     ap.add_argument("raw", nargs="+", help="原文の jsonl（複数・ディレクトリ・glob 可。data/cards/raw/by_product など）")
-    ap.add_argument("--out", default=str(DATA / "cards" / "converted.yaml"))
+    ap.add_argument("--out", default=str(cardstore.converted_path(DATA)))
     ap.add_argument("--rejects", default=str(DATA / "cards" / "raw" / "rejects.jsonl"))
     ap.add_argument("--report", default=str(DATA / "cards" / "raw" / "convert_report.json"),
                     help="実行結果（件数・トークン・失敗の種類別集計）の出力先")

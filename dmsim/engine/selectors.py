@@ -169,12 +169,14 @@ class SelectorMixin:
         if "chosen" in t.get("os", {}):
             return t["os"]["chosen"], None
         cands = self.candidates(sel, env)
+        # count: any = 「好きな枚数」（0枚から候補の全部まで選べる）。count: all + up_to: true と同じ
+        any_n = sel.get("count") == "any" or (sel.get("count") == "all" and sel.get("up_to"))
         if ("ref" in sel and "count" not in sel) or ("under_of" in sel and "count" not in sel) \
-                or ("from_top" in sel and "count" not in sel) or sel.get("count", 1) == "all":
+                or ("from_top" in sel and "count" not in sel) or (sel.get("count", 1) == "all" and not any_n):
             return cands, None
-        n = self.eval_expr(sel.get("count", 1), env)
+        n = len(cands) if any_n else self.eval_expr(sel.get("count", 1), env)
         mx = min(n, len(cands))
-        mn = 0 if sel.get("up_to") else mx
+        mn = 0 if sel.get("up_to") or any_n else mx
         if mx == 0:
             return [], None
         chooser = self._rel(sel.get("chooser", "you"), env)
@@ -183,7 +185,7 @@ class SelectorMixin:
                  or self.permits(c, "be_chosen")]
         n = min(n, len(cands))
         mx = n
-        mn = 0 if sel.get("up_to") else mx
+        mn = 0 if sel.get("up_to") or any_n else mx
         if mx == 0:
             return [], None
         a, d = self.ask(t, chooser, "choose_cards", [self._card_option(c, sel.get("look", False)) for c in cands], mn, mx)

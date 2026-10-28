@@ -271,13 +271,18 @@ def st_main(eng, t):                                    # 504
 def st_attack(eng, t):                                  # 505
     s = eng.s
     a = s.active
-    opts = eng._attack_options(a) + [{"key": "pass"}]
+    atk = eng._attack_options(a)
+    opts = atk + eng._activate_options(a, atk) + [{"key": "pass"}]
     ans, d = eng.ask(t, a, "attack", opts)
     if d:
         return d
     o = opts[ans[0]]
     if o["key"] == "pass":
         eng._step_done(t)
+    elif o["key"].startswith("activate:"):                  # 602 起動型能力: コスト（タップ）を払い、効果は待機状態になる
+        s.cards[o["tap"]].tapped = True
+        ab = dict(eng.abilities(o["cid"], "activate"))[o["ab"]]
+        eng._push(eng._child(ab["effect"], {"you": a, "self": s.ref(o["cid"]), "vars": {}}))
     else:
         eng._push({"t": "attack", "attacker": s.ref(o["cid"]), "target": o["target"], "phase": 0, "cp": True})
 

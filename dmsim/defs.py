@@ -23,8 +23,8 @@ def core_ops() -> dict[str, dict[str, str]]:
 
 EVENTS = {"move", "draw", "cast", "summon", "attack", "block", "break", "tap", "untap",
           "turn_start", "turn_end", "battle_win", "choose", "battle"}
-ABILITY_KINDS = {"trigger", "replace", "static", "declare", "state"}   # state: 状態を常に見て、満たされたら勝敗が決まる常在効果（if と effect: [win/lose]）
-ABILITY_KEYS = {"kind", "when", "if", "effect", "instead", "optional", "affects", "mod", "zone", "keyword"}
+ABILITY_KINDS = {"trigger", "replace", "static", "declare", "activate", "state"}   # state: 状態を常に見て、満たされたら勝敗が決まる常在効果（if と effect: [win/lose]）
+ABILITY_KEYS = {"kind", "when", "if", "effect", "instead", "optional", "affects", "mod", "zone", "keyword", "cost"}
 REASONS = {"put", "destroy", "return", "discard", "charge", "summon", "cast", "break",
            "draw", "battle", "sba", "resolve", "evolve"}
 VIAS = {"revolution_change", "generate"}   # 出し方の印（「革命チェンジによって出た時」など）
@@ -401,6 +401,18 @@ class Checker:
             if aff.get("zone", "bz") not in self.zones:
                 raise DefError(f"{where}: unknown zone '{aff['zone']}'")
             self.filter(aff.get("filter", {}), where)
+        if kind == "activate":   # 起動型能力（602）。cost: {tap: self} か {tap: {filter}}（攻撃する代わりにタップして使う。602.3a）
+            c = ab.get("cost")
+            if not isinstance(c, dict) or set(c) != {"tap"}:
+                raise DefError(f"{where}: activate needs cost: {{tap: self | <filter>}}")
+            if c["tap"] != "self":
+                if not isinstance(c["tap"], dict):
+                    raise DefError(f"{where}: cost.tap must be 'self' or a filter")
+                self.filter(c["tap"], where)
+            if "effect" not in ab:
+                raise DefError(f"{where}: activate needs effect")
+        elif "cost" in ab:
+            raise DefError(f"{where}: cost is only for activate")
         if "if" in ab:
             self.cond(ab["if"], where)
         for k in ("effect", "instead"):
@@ -498,15 +510,25 @@ def card_yaml_files() -> list[Path]:
     return [f for f in card_files() if not (skip and (f.name == "converted.yaml" or f.parent.name == "converted"))]
 
 
-def load_rules(card_files: list[Path] | None = None) -> Rules:
+def load_rules(card_files: list[Path] | None = None, only_approved: bool | None = None) -> Rules:
+    """only_approved: 承認済みのカードだけ読む（converted.yaml の未確認分を除く）。省略時は環境変数 DMSIM_ONLY_APPROVED=1 に従う。"""
     tables = load_tables()
+    if only_approved is None:
+        only_approved = bool(os.environ.get("DMSIM_ONLY_APPROVED"))
+    if only_approved:
+        from . import approval
+        ledger, versions = approval.load(), approval.vocab_versions(tables)
     zones, keywords, macros, actions, steps = tables
     card_files = card_files or card_yaml_files()
     cards: dict[str, CardDef] = {}
     for f in card_files:
         for raw in yaml.safe_load(Path(f).read_text(encoding="utf-8")).get("cards") or []:
+            if only_approved and not approval.is_usable(raw, ledger, versions):
+                continue
             cd = parse_card(raw, tables)
             if cd.id in cards:
                 raise DefError(f"duplicate card id {cd.id}")
             cards[cd.id] = cd
-    return Rules(zones=zones, keywords=keywords, macros=macros, cards=cards, actions=actions, steps=steps)
+    from .identity import AliasDict
+    aliases = {a: cid for cid, cd in cards.items() for a in (cd.source or {}).get("aliases", [])}
+    return Rules(zones=zones, keywords=keywords, macros=macros, cards=AliasDict(cards, aliases), actions=actions, steps=steps)

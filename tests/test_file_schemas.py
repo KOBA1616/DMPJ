@@ -23,10 +23,17 @@ def _validator(name):
     return jsonschema.Draft202012Validator(json.loads((SCH / name).read_text(encoding="utf-8")), registry=reg)
 
 
+# 「好きな枚数」を count: any と変換したカード。検査（defs）は通るが、型にもエンジンにも無い表現（実行時に bad expr any）。
+# 語彙（up_to の上限なし等）が決まったら変換し直して、この一覧を空にする。承認は effectcheck が止める。
+KNOWN_UNSUPPORTED: set = set()
+
+
 def test_card_files_match_schema():
     v = _validator("card_file.schema.json")
     for f in card_files():
-        errs = [e.message[:200] for e in v.iter_errors(yaml.safe_load(f.read_text(encoding="utf-8")))][:3]
+        doc = yaml.safe_load(f.read_text(encoding="utf-8"))
+        doc["cards"] = [c for c in doc["cards"] if c["id"] not in KNOWN_UNSUPPORTED]
+        errs = [e.message[:200] for e in v.iter_errors(doc)][:3]
         assert not errs, (f.name, errs)
 
 

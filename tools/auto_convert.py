@@ -23,7 +23,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parent))
 import convert_cards as cc  # noqa: E402
 import rule_convert  # noqa: E402
 from llm_offload import providers  # noqa: E402
-from dmsim import schema  # noqa: E402
+from dmsim import cardstore, schema  # noqa: E402
 from dmsim.defs import DATA, load_tables  # noqa: E402
 
 RAW = DATA / "cards" / "raw"
@@ -96,7 +96,7 @@ def main(argv=None):
     ap.add_argument("--fallbacks", type=int, default=2, help="タイムアウト時に切り替える別の無料モデルの数（0で切り替えなし）")
     a = ap.parse_args(argv)
     providers.OPENCODE_TIMEOUT = a.health_timeout or a.timeout
-    out, rej = DATA / "cards" / "converted.yaml", RAW / "rejects.jsonl"
+    out, rej = cardstore.converted_path(DATA), RAW / "rejects.jsonl"
     prev = json.loads(STATUS.read_text(encoding="utf-8")) if STATUS.exists() else {}
     vh = vocab_hash()
     tables = load_tables()
@@ -151,7 +151,7 @@ def main(argv=None):
                                       "at": datetime.now(timezone.utc).isoformat(timespec="seconds")},
                                      ensure_ascii=False, indent=1), encoding="utf-8")
         sys.exit(1)
-    converted = len({c["id"] for c in (yaml.safe_load(out.read_text(encoding="utf-8")) or {}).get("cards") or []}) if out.exists() else 0
+    converted = len({c["id"] for c in cardstore.read(out)})
     rejects = cc.read_jsonl(rej)
     status = {"at": datetime.now(timezone.utc).isoformat(timespec="seconds"), "model": a.model,
               "raw_total": len(rows), "converted": converted, "rejected": len(rejects),

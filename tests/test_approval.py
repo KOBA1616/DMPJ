@@ -74,3 +74,43 @@ def test_cardstore_file_and_sharded(tmp_path):
     assert (d / "dm02.yaml").exists() is False and (d / "dm01.yaml").exists()
     cardstore.write(d, cards[1:], "# h\n")
     assert m  # noqa
+
+
+def test_ledger_sharded_roundtrip(tmp_path):
+    v = ap.vocab_versions(load_tables())
+    led = {i: ap.entry({**CARD, "id": i}, "approved", "rule", v) for i in ("dm01-s01", "dm02-001")}
+    d = tmp_path / "approvals"
+    ap.save(led, d)
+    assert sorted(p.name for p in d.glob("*.json")) == ["dm01.json", "dm02.json"]
+    assert ap.load(d) == led
+    ap.save({"dm01-s01": led["dm01-s01"]}, d)
+    assert [p.name for p in d.glob("*.json")] == ["dm01.json"]
+
+
+def test_load_rules_only_approved(tmp_path, monkeypatch):
+    from dmsim import approval
+    from dmsim.defs import load_rules
+    a, b = {**CARD, "id": "dm01-s01"}, {**CARD, "id": "dm01-s02"}
+    f = tmp_path / "c.yaml"
+    f.write_text(yaml.safe_dump({"cards": [a, b]}, allow_unicode=True), encoding="utf-8")
+    led = tmp_path / "approvals"
+    approval.save({"dm01-s01": approval.entry(a, "approved", "rule", approval.vocab_versions())}, led)
+    orig = approval.load
+    monkeypatch.setattr(approval, "load", lambda path=led: orig(led))
+    files = [f, DATA / "cards" / "proto.yaml"]
+    assert {"dm01-s01", "dm01-s02"} <= set(load_rules(files).cards)
+    got = set(load_rules(files, only_approved=True).cards)
+    assert "dm01-s01" in got and "dm01-s02" not in got and "T001" in got
+
+
+def test_migrate_converted_and_path(tmp_path):
+    import migrate_converted
+    from dmsim import cardstore
+    cards = [{**CARD, "id": i} for i in ("dm02-001", "dm01-s01")]
+    src = tmp_path / "cards" / "converted.yaml"
+    cardstore.write(src, cards, "# h\n")
+    assert cardstore.converted_path(tmp_path) == src
+    assert migrate_converted.migrate(src, tmp_path / "cards" / "converted", check_only=True) == 2 and src.exists()
+    migrate_converted.migrate(src, tmp_path / "cards" / "converted")
+    assert not src.exists() and cardstore.converted_path(tmp_path) == tmp_path / "cards" / "converted"
+    assert [c["id"] for c in cardstore.read(cardstore.converted_path(tmp_path))] == ["dm01-s01", "dm02-001"]

@@ -1,6 +1,6 @@
 {
  "$schema": "https://json-schema.org/draft/2020-12/schema",
- "title": "承認台帳 data/cards/approvals.json（dmsim.approval）",
+ "title": "承認台帳 data/cards/approvals/<弾>.json（dmsim.approval）",
  "type": "object",
  "additionalProperties": {
   "type": "object",
@@ -22,7 +22,9 @@
    "by": {
     "enum": [
      "rule",
-     "human"
+     "human",
+     "inherit",
+     "check"
     ],
     "description": "rule=ルール変換+動作検証、human=開発者モード"
    },
@@ -53,6 +55,20 @@
    "stale": {
     "type": "string",
     "description": "承認が無効になった理由（pending に戻した時だけ）"
+   },
+   "verifier": {
+    "type": "integer",
+    "description": "承認時の検証の版（dmsim.effectcheck.VERIFIER）"
+   },
+   "checks": {
+    "type": "object",
+    "additionalProperties": {
+     "enum": [
+      "ok",
+      "fail",
+      "skip"
+     ]
+    }
    }
   },
   "additionalProperties": false

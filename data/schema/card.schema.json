@@ -987,6 +987,9 @@
       },
       {
        "const": "all"
+      },
+      {
+       "const": "any"
       }
      ]
     },
@@ -1094,7 +1097,26 @@
    "type": "object",
    "properties": {
     "power": {
-     "type": "integer"
+     "anyOf": [
+      {
+       "type": "integer"
+      },
+      {
+       "type": "object",
+       "properties": {
+        "amount": {
+         "type": "integer"
+        },
+        "count": {
+         "$ref": "#/$defs/selector"
+        }
+       },
+       "required": [
+        "amount"
+       ],
+       "additionalProperties": false
+      }
+     ]
     },
     "grant": {
      "type": "array",
@@ -1449,6 +1471,7 @@
       "replace",
       "static",
       "declare",
+      "activate",
       "state"
      ]
     },
@@ -1470,6 +1493,16 @@
     "affects": {},
     "mod": {
      "$ref": "#/$defs/mod"
+    },
+    "cost": {
+     "type": "object",
+     "properties": {
+      "tap": {}
+     },
+     "required": [
+      "tap"
+     ],
+     "additionalProperties": false
     },
     "zone": {
      "enum": [

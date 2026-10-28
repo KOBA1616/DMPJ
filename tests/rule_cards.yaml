@@ -263,3 +263,49 @@ cards:
     spell:
       - {op: break, player: you, count: 1, st_first: true}
       - {op: draw, count: 1}
+
+  # 起動型能力（602）: 攻撃する代わりにタップして使う
+  - id: R050
+    name: 試験用タップ能力
+    types: [creature]
+    civs: [water]
+    cost: 2
+    power: 1000
+    races: [テスト]
+    text: このクリーチャーで攻撃する代わりに、タップして次の能力を使ってもよい。カードを1枚引く。
+    abilities:
+      - kind: activate
+        cost: {tap: self}
+        effect:
+          - {op: draw, count: 1}
+
+  - id: R051
+    name: 試験用光タップ能力
+    types: [creature]
+    civs: [light]
+    cost: 2
+    power: 1000
+    races: [テスト]
+    text: バトルゾーンにある自分の光のクリーチャーをタップし、攻撃する代わりに次の能力を使ってもよい。カードを1枚引く。
+    abilities:
+      - kind: activate
+        cost: {tap: {civs: [light]}}
+        effect:
+          - {op: draw, count: 1}
+
+  - id: R052
+    name: 試験用攻撃不能タップ能力
+    types: [creature]
+    civs: [water]
+    cost: 2
+    power: 1000
+    races: [テスト]
+    text: このクリーチャーは攻撃できない。攻撃する代わりに、タップしてカードを1枚引いてもよい。
+    abilities:
+      - kind: static
+        affects: self
+        mod: {deny: [attack_player, attack_creature]}
+      - kind: activate
+        cost: {tap: self}
+        effect:
+          - {op: draw, count: 1}

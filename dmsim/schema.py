@@ -66,7 +66,7 @@ def build() -> dict:
                 "zone": {"anyOf": [{"enum": sorted(zones) + ["any"]}, {"type": "array", "items": {"enum": sorted(zones)}}]},
                 "exlife_of": {"type": "string"}, "under_of": {}, "owner": {"enum": ["you", "opp", "any"]}, "owner_of": {"type": "string"},
                 "filter": ref("filter"),
-                "count": {"anyOf": [ref("expr"), {"const": "all"}]}, "up_to": {"type": "boolean"},
+                "count": {"anyOf": [ref("expr"), {"const": "all"}, {"const": "any"}]}, "up_to": {"type": "boolean"},
                 "from_top": ref("expr"), "chooser": {"enum": ["you", "opp"]}, "ref": {"type": "string"},
                 "other": {"type": "boolean"}, "look": {"type": "boolean"}}, "additionalProperties": False},
             "expr": {"anyOf": [{"type": "integer"}, {"type": "object", "properties": {
@@ -79,7 +79,7 @@ def build() -> dict:
                 "marked": {"type": "string"}},
                 "additionalProperties": False},
             "mod": {"type": "object", "properties": {
-                "power": {"type": "integer"}, "grant": {"type": "array", "items": {"enum": sorted(keywords)}},
+                "power": {"anyOf": [{"type": "integer"}, {"type": "object", "properties": {"amount": {"type": "integer"}, "count": ref("selector")}, "required": ["amount"], "additionalProperties": False}]}, "grant": {"type": "array", "items": {"enum": sorted(keywords)}},
                 "allow": {"type": "array", "items": perm}, "deny": {"type": "array", "items": perm},
                 "breaks": {"type": "integer"}, "breaks_per_power": {"type": "integer"},
                 "cost": {"anyOf": [{"type": "integer"}, {"type": "object", "properties": {"amount": {"type": "integer"}, "count": ref("selector")}, "required": ["amount"], "additionalProperties": False}]},
@@ -95,9 +95,9 @@ def build() -> dict:
                 "via": {"enum": sorted(VIAS)}, "subject": {}},
                 "required": ["event"], "additionalProperties": False},
             "ability": {"type": "object", "properties": {
-                "kind": {"enum": ["trigger", "replace", "static", "declare", "state"]}, "when": ref("when"),
+                "kind": {"enum": ["trigger", "replace", "static", "declare", "activate", "state"]}, "when": ref("when"),
                 "if": ref("cond"), "effect": ref("ops"), "instead": ref("ops"), "optional": {"type": "boolean"},
-                "affects": {}, "mod": ref("mod"), "zone": {"enum": sorted(zones)}},
+                "affects": {}, "mod": ref("mod"), "cost": {"type": "object", "properties": {"tap": {}}, "required": ["tap"], "additionalProperties": False}, "zone": {"enum": sorted(zones)}},
                 "required": ["kind"], "additionalProperties": False},
         },
     }
