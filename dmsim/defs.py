@@ -29,7 +29,7 @@ REASONS = {"put", "destroy", "return", "discard", "charge", "summon", "cast", "b
            "draw", "battle", "sba", "resolve", "evolve"}
 VIAS = {"revolution_change", "generate"}   # 出し方の印（「革命チェンジによって出た時」など）
 DURATIONS_FIXED = {"end_of_turn", "during_attack", "permanent", "until_next_own_turn_start"}
-MOD_KEYS = {"power", "grant", "allow", "deny", "breaks", "breaks_per_power", "battle_power", "cost", "cost_min", "sac_reduce", "opt_reduce", "ignore", "gain"}
+MOD_KEYS = {"power", "grant", "allow", "deny", "breaks", "breaks_per_power", "battle_power", "power_when", "cost", "cost_min", "sac_reduce", "opt_reduce", "ignore", "gain"}
 POSITIONS = {"top", "bottom"}
 PERMANENT_TYPES = {"tamaseed", "field", "cross_gear"}   # 手札から実行してバトルゾーンに出るクリーチャー以外のカード（315, 308, 303）
 CARD_TYPES = {"creature", "spell", "evolution"} | PERMANENT_TYPES
@@ -354,12 +354,19 @@ class Checker:
                 raise DefError(f"{where}: cost must be int or {{amount, count}}")
         if "cost_min" in m and not isinstance(m["cost_min"], int):
             raise DefError(f"{where}: cost_min must be int")
-        if "battle_power" in m:   # バトル中だけのパワー修整: {amount: N, count: <selector>, only: attacking|blocking}（ハンティング。attacking は「攻撃中」＝攻撃側のときだけ、blocking は「ブロック中」＝ブロックしたクリーチャーのときだけ）
+        if "power_when" in m:   # 攻撃中／ブロック中のパワー修整: {amount: N, count: <selector>, when: attacking|blocking}。バトルをしていない間（プレイヤーを攻撃中など）も含む
+            pw = m["power_when"]
+            if not isinstance(pw, dict) or set(pw) - {"amount", "count", "when"} or not isinstance(pw.get("amount"), int) \
+                    or pw.get("when") not in ("attacking", "blocking"):
+                raise DefError(f"{where}: power_when needs amount (int), when: attacking|blocking and optional count (selector)")
+            if "count" in pw:
+                self.selector(pw["count"], where)
+        if "battle_power" in m:   # バトル中だけのパワー修整: {amount: N, count: <selector>, only: attacking}（ハンティング。バトル中だけ。「攻撃中」「ブロック中」は power_when）
             bp = m["battle_power"]
             if not isinstance(bp, dict) or set(bp) - {"amount", "count", "only"} or not isinstance(bp.get("amount"), int):
-                raise DefError(f"{where}: battle_power needs amount (int) and optional count (selector) / only: attacking|blocking")
-            if "only" in bp and bp["only"] not in ("attacking", "blocking"):
-                raise DefError(f"{where}: battle_power only must be attacking or blocking")
+                raise DefError(f"{where}: battle_power needs amount (int) and optional count (selector) / only: attacking")
+            if bp.get("only", "attacking") != "attacking":
+                raise DefError(f"{where}: battle_power only must be attacking")
             if "count" in bp:
                 self.selector(bp["count"], where)
         for k in m.get("ignore", []):

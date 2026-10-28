@@ -41570,16 +41570,16 @@ cards:
         - creature
       count: 1
     mod:
-      battle_power:
+      power_when:
         amount: 4000
-        only: attacking
+        when: attacking
       grant:
       - double_breaker
     duration: end_of_turn
   source:
     official: dm01-033
     review: pending
-    notes: 'パワーアタッカー+4000 は「攻撃中、パワー+4000」なので battle_power に only: attacking を付けた'
+    notes: 'パワーアタッカー+4000 は「攻撃中、パワー+4000」なので power_when（when: attacking）にした。プレイヤーを攻撃している間も含む'
 - id: dm01-035
   name: シェル・ストーム
   types:
@@ -41681,14 +41681,14 @@ cards:
         - creature
       count: all
     mod:
-      battle_power:
+      power_when:
         amount: 2000
-        only: attacking
+        when: attacking
     duration: end_of_turn
   source:
     official: dm01-040
     review: pending
-    notes: '「攻撃中」は battle_power に only: attacking を付け、このターンの間だけ続く効果として modify（duration:
+    notes: '「攻撃中」は power_when（when: attacking）にし、このターンの間だけ続く効果として modify（duration:
       end_of_turn）で与えた。解決後にバトルゾーンに出たクリーチャーには及ばない'
 - id: dm01-050
   name: アクア・ソルジャー
@@ -42281,9 +42281,9 @@ cards:
           races:
           - ヒューマノイド
     mod:
-      battle_power:
+      power_when:
         amount: 2000
-        only: attacking
+        when: attacking
   source:
     official: dm01-061
     review: pending
@@ -42743,9 +42743,9 @@ cards:
           races:
           - アーマロイド
     mod:
-      battle_power:
+      power_when:
         amount: 2000
-        only: attacking
+        when: attacking
   source:
     official: dm01-096
     review: pending
@@ -42791,9 +42791,9 @@ cards:
         - creature
       count: 1
     mod:
-      battle_power:
+      power_when:
         amount: 2000
-        only: attacking
+        when: attacking
     duration: end_of_turn
   source:
     official: dm01-102
@@ -43459,9 +43459,9 @@ cards:
   - kind: static
     affects: self
     mod:
-      battle_power:
+      power_when:
         amount: 2000
-        only: attacking
+        when: attacking
         count:
           zone: bz
           owner: you
@@ -43748,9 +43748,9 @@ cards:
   - kind: static
     affects: self
     mod:
-      battle_power:
+      power_when:
         amount: 2000
-        only: attacking
+        when: attacking
         count:
           zone: bz
           owner: any
@@ -43778,9 +43778,9 @@ cards:
   - kind: static
     affects: self
     mod:
-      battle_power:
+      power_when:
         amount: 2000
-        only: attacking
+        when: attacking
         count:
           zone: bz
           owner: you
@@ -44177,9 +44177,9 @@ cards:
             - creature
           other: true
     mod:
-      battle_power:
+      power_when:
         amount: 4000
-        only: attacking
+        when: attacking
       grant:
       - double_breaker
   source:
@@ -44271,9 +44271,9 @@ cards:
   - kind: static
     affects: self
     mod:
-      battle_power:
+      power_when:
         amount: 1000
-        only: attacking
+        when: attacking
         count:
           zone: bz
           owner: you
@@ -44693,9 +44693,9 @@ cards:
         - fire
       other: true
     mod:
-      battle_power:
+      power_when:
         amount: 2000
-        only: attacking
+        when: attacking
   source:
     official: dm03-004
     review: pending
@@ -45021,9 +45021,9 @@ cards:
         select:
           ref: self
         mod:
-          battle_power:
+          power_when:
             amount: 3000
-            only: attacking
+            when: attacking
           grant:
           - double_breaker
         duration: end_of_turn
@@ -45116,9 +45116,9 @@ cards:
           - creature
         count: all
       mod:
-        battle_power:
+        power_when:
           amount: 4000
-          only: attacking
+          when: attacking
         grant:
         - double_breaker
       duration: end_of_turn
@@ -46580,9 +46580,9 @@ cards:
         races:
         - エンジェル・コマンド
     mod:
-      battle_power:
+      power_when:
         amount: 4000
-        only: attacking
+        when: attacking
   source:
     official: dm04-005
     review: pending
@@ -47032,9 +47032,9 @@ cards:
         races:
         - デーモン・コマンド
     mod:
-      battle_power:
+      power_when:
         amount: 4000
-        only: attacking
+        when: attacking
       grant:
       - double_breaker
   source:
@@ -47735,9 +47735,9 @@ cards:
         - creature
       count: all
     mod:
-      battle_power:
+      power_when:
         amount: 1000
-        only: attacking
+        when: attacking
         count:
           zone: mana
           owner: you
@@ -51353,15 +51353,15 @@ cards:
             - fire
           other: true
     mod:
-      battle_power:
+      power_when:
         amount: 3000
-        only: attacking
+        when: attacking
       grant:
       - double_breaker
   source:
     official: dm06-096
     review: pending
-    notes: 'パワーアタッカーは「攻撃中」なので battle_power に only: attacking（PR #94 の方針）。説明文は text
+    notes: 'パワーアタッカーは「攻撃中」なので power_when（when: attacking）。説明文は text
       から省いた'
 - id: dm06-070
   name: 大自然の意志
@@ -51419,9 +51419,9 @@ cards:
           - fire
         other: true
     mod:
-      battle_power:
+      power_when:
         amount: 3000
-        only: attacking
+        when: attacking
   source:
     official: dm06-099
     review: pending
@@ -51906,9 +51906,9 @@ cards:
           zone: shield
           owner: you
     mod:
-      battle_power:
+      power_when:
         amount: 3000
-        only: attacking
+        when: attacking
       allow:
       - action: attack_creature
         other:
@@ -52118,9 +52118,9 @@ cards:
             - creature
           other: true
     mod:
-      battle_power:
+      power_when:
         amount: 4000
-        only: attacking
+        when: attacking
       grant:
       - double_breaker
   source:
@@ -52229,9 +52229,9 @@ cards:
   - kind: static
     affects: self
     mod:
-      battle_power:
+      power_when:
         amount: 1000
-        only: attacking
+        when: attacking
         count:
           zone: bz
           owner: you
@@ -52242,7 +52242,7 @@ cards:
   source:
     official: dm07-054
     review: pending
-    notes: '「攻撃中」なので battle_power + only: attacking に count を付けた形'
+    notes: '「攻撃中」なので power_when（when: attacking）に count を付けた形'
 - id: dm07-055
   name: 氷結ハンマー
   types:
@@ -53979,9 +53979,9 @@ cards:
   - kind: static
     affects: self
     mod:
-      battle_power:
+      power_when:
         amount: 2000
-        only: attacking
+        when: attacking
         count:
           zone: bz
           owner: you
@@ -54241,9 +54241,9 @@ cards:
   - kind: static
     affects: self
     mod:
-      battle_power:
+      power_when:
         amount: 2000
-        only: attacking
+        when: attacking
         count:
           zone: mana
           owner: you
@@ -54484,9 +54484,9 @@ cards:
   - kind: static
     affects: self
     mod:
-      battle_power:
+      power_when:
         amount: 1000
-        only: attacking
+        when: attacking
         count:
           zone: bz
           owner: you
@@ -54546,9 +54546,9 @@ cards:
         - light
         - fire
     mod:
-      battle_power:
+      power_when:
         amount: 3000
-        only: attacking
+        when: attacking
   source:
     official: dm10-103
     review: pending
@@ -54595,9 +54595,9 @@ cards:
   - kind: static
     affects: self
     mod:
-      battle_power:
+      power_when:
         amount: 1000
-        only: attacking
+        when: attacking
         count:
           zone: mana
           owner: you
@@ -54626,9 +54626,9 @@ cards:
         - creature
       count: all
     mod:
-      battle_power:
+      power_when:
         amount: 1000
-        only: attacking
+        when: attacking
     duration: end_of_turn
   source:
     official: dm10-110
@@ -56993,9 +56993,9 @@ cards:
           filter:
             tapped: true
     mod:
-      battle_power:
+      power_when:
         amount: 3000
-        only: attacking
+        when: attacking
   - kind: static
     affects:
       owner: you
@@ -57422,13 +57422,13 @@ cards:
   - kind: static
     affects: self
     mod:
-      battle_power:
+      power_when:
         amount: 3000
-        only: blocking
+        when: blocking
   source:
     official: dm14-072
     review: pending
-    notes: '「ブロック中、パワー+3000」は battle_power（only: blocking）で、ブロックしたクリーチャーとしてバトルする間だけ効く。ブロック誘発でターン終了まで上げる形にはしていない'
+    notes: '「ブロック中、パワー+3000」は power_when（when: blocking）で、ブロックの宣言から攻撃の終わりまで効く。ブロック誘発でターン終了まで上げる形にはしていない'
   keywords:
   - blocker
   - cannot_attack_player
@@ -57944,9 +57944,9 @@ cards:
       - '>='
       - 7
     mod:
-      battle_power:
+      power_when:
         amount: 3000
-        only: attacking
+        when: attacking
   source:
     official: dm14-098
     review: pending
@@ -58008,9 +58008,9 @@ cards:
     mod:
       grant:
       - speed_attacker
-      battle_power:
+      power_when:
         amount: 3000
-        only: attacking
+        when: attacking
     duration: end_of_turn
   source:
     official: dm14-101
@@ -59339,9 +59339,9 @@ cards:
         ref: self
         count: 1
       mod:
-        battle_power:
+        power_when:
           amount: 3000
-          only: attacking
+          when: attacking
       duration: end_of_turn
   source:
     official: dm17-030
@@ -60517,9 +60517,9 @@ cards:
         - creature
       count: 1
     mod:
-      battle_power:
+      power_when:
         amount: 4000
-        only: attacking
+        when: attacking
       grant:
       - double_breaker
     duration: end_of_turn
@@ -60621,9 +60621,9 @@ cards:
         - creature
       count: all
     mod:
-      battle_power:
+      power_when:
         amount: 2000
-        only: attacking
+        when: attacking
     duration: end_of_turn
   source:
     official: dm18-050
@@ -60927,9 +60927,9 @@ cards:
   - kind: static
     affects: self
     mod:
-      battle_power:
+      power_when:
         amount: 2000
-        only: attacking
+        when: attacking
         count:
           zone: bz
           owner: any
@@ -63224,9 +63224,9 @@ cards:
         races:
         - ティラノ・ドレイク
     mod:
-      battle_power:
+      power_when:
         amount: 3000
-        only: attacking
+        when: attacking
   source:
     official: dm19-098
     review: pending
@@ -63344,9 +63344,9 @@ cards:
             types:
             - creature
     mod:
-      battle_power:
+      power_when:
         amount: 5000
-        only: attacking
+        when: attacking
   source:
     official: dm19-108
     review: pending
