@@ -286,6 +286,30 @@ def test_agent_convert_next_and_submit(tmp_path, monkeypatch, capsys):
     assert ac.cmd_submit(str(ans)) == 1 and len(yaml.safe_load((tmp_path / "converted.yaml").read_text(encoding="utf-8"))["cards"]) == 1
 
 
+def test_out_of_format_and_vocab_gap_cards_are_not_registered(tmp_path):
+    """サイキック・GR・超次元・ドラグハートは変換しない。unsupported があるカードは登録せず rejects に vocab で残す。"""
+    import convert_cards
+    from dmsim.defs import load_tables
+    base = {"name": "例", "civilization": "水", "cost": "2", "power": "1000", "text": "x"}
+    for t in ("GRクリーチャー", "サイキック・クリーチャー", "ドラグハート・ウエポン", "超次元呪文"):
+        assert convert_cards.precheck({**base, "id": "g", "card_type": t})["reason"] == "out_of_format"
+    assert convert_cards.precheck({**base, "id": "g", "card_type": "クリーチャー"}) is None
+    card = "```yaml\nid: {i}\nname: 例\ntypes: [creature]\ncivs: [water]\ncost: 2\npower: 1000\n" \
+           "source: {{official: {i}, unsupported: [{{need: some_new_op, text: 原文}}]}}\n```"
+
+    class Msgs:
+        def stream(self, **kw):
+            return _FakeStream(card.format(i=kw["messages"][0]["content"].split('"id": "')[1].split('"')[0]))
+
+    client = type("C", (), {"messages": Msgs()})()
+    out, rej = tmp_path / "c.yaml", tmp_path / "rej.jsonl"
+    r = convert_cards.run([{**base, "id": "v1", "card_type": "クリーチャー"}], convert_cards.AnthropicLLM(client=client),
+                          load_tables(), "SYS", "low", out, rej)
+    assert (r["ok"], r["rejected"]) == (0, 1) and not (yaml.safe_load(out.read_text(encoding="utf-8")) or {}).get("cards")
+    got = convert_cards.read_jsonl(rej)
+    assert got[0]["id"] == "v1" and got[0]["reason"] == "vocab" and got[0]["gaps"] == ["some_new_op"] and got[0]["partial"]["id"] == "v1"
+
+
 def test_survey_text_counts_forms():
     import survey_text
     rows = [{"id": "a", "name": "甲", "text": "ブロッカー(説明。)\n甲が出た時、カードを2枚引く。"},
