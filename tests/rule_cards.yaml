@@ -504,3 +504,26 @@ cards:
     text: S・バック-光。カードを2枚引く。
     spell:
       - {op: draw, count: 2}
+
+  # 進化GV（進化元をちょうど3体重ねる）とメテオバーン（下のカードを墓地に置いてもよい。そうした場合だけ効果）
+  - id: R067
+    name: 試験用GV進化獣
+    types: [creature, evolution]
+    civs: [nature]
+    cost: 1
+    power: 9000
+    races: [テスト]
+    evolve_from: {races: [テスト]}
+    evolve_count: 3
+    text: 進化GV。メテオバーン - このクリーチャーが攻撃する時、下にあるカードを１枚墓地に置いてもよい。そうした場合、パワー4000以下のクリーチャーをすべて破壊する。
+    abilities:
+      - kind: trigger
+        when: {event: attack, subject: self}
+        effect:
+          - op: may
+            body:
+              - {op: move, select: {under_of: self, count: 1}, to: graveyard, reason: put, as: paid}
+              - op: if
+                cond: {exists: {ref: paid}}
+                then:
+                  - {op: destroy, select: {zone: bz, owner: any, filter: {types: [creature], power_le: 4000}, count: all}}

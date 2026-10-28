@@ -64238,3 +64238,262 @@ cards:
     notes: 厳密一致
     aliases:
     - promoy4-036
+- id: dm19-007
+  name: 超神星マーズ・ディザスター
+  types:
+  - creature
+  - evolution
+  civs:
+  - fire
+  cost: 5
+  power: 13000
+  races:
+  - フェニックス
+  mana: 1
+  evolve_from:
+    races:
+    - ティラノ・ドレイク
+    - ドリームメイト
+    - ヒューマノイド
+  text: '進化GV-自分のティラノ・ドレイク、ドリームメイト、ヒューマノイドのいずれか３体を重ねた上に置く。
+
+    メテオバーン - このクリーチャーが攻撃する時、このクリーチャーの下にあるカードを１枚選び墓地に置いてもよい。そうした場合、パワー4000以下のクリーチャーをすべて破壊する。
+
+    T・ブレイカー(このクリーチャーはシールドを３枚ブレイクする)'
+  keywords:
+  - triple_breaker
+  abilities:
+  - kind: trigger
+    when:
+      event: attack
+      subject: self
+    effect:
+    - op: may
+      body:
+      - op: move
+        select:
+          under_of: self
+          count: 1
+        to: graveyard
+        reason: put
+        as: paid
+      - op: if
+        cond:
+          exists:
+            ref: paid
+        then:
+        - op: destroy
+          select:
+            zone: bz
+            owner: any
+            filter:
+              types:
+              - creature
+              power_le: 4000
+            count: all
+  evolve_count: 3
+  source:
+    official: dm19-007
+    review: pending
+    notes: '厳密一致。進化GVは evolve_count: 3。メテオバーンの「そうした場合」は変数 paid の有無で表す'
+- id: dm19-009
+  name: 超神星ジュピター・キングエンパイア
+  types:
+  - creature
+  - evolution
+  civs:
+  - nature
+  cost: 5
+  power: 14000
+  races:
+  - フェニックス
+  mana: 1
+  evolve_from:
+    races:
+    - ドリームメイト
+    - アーク・セラフィム
+    - ワイルド・ベジーズ
+  text: '進化GV-自分のドリームメイト、アーク・セラフィム、ワイルド・ベジーズのいずれか３体を重ねた上に置く。
+
+    メテオバーン - このクリーチャーが攻撃する時、このクリーチャーの下にある、進化クリーチャーではないカードを１枚選び、バトルゾーンに出してもよい。(ただし、そのクリーチャーは召喚酔いする)
+
+    T・ブレイカー(このクリーチャーはシールドを３枚ブレイクする)'
+  keywords:
+  - triple_breaker
+  abilities:
+  - kind: trigger
+    when:
+      event: attack
+      subject: self
+    effect:
+    - op: may
+      body:
+      - op: move
+        select:
+          under_of: self
+          count: 1
+          filter:
+            types:
+            - creature
+            not_types:
+            - evolution
+        to: bz
+        reason: put
+  evolve_count: 3
+  source:
+    official: dm19-009
+    review: pending
+    notes: '厳密一致。進化GVは evolve_count: 3。メテオバーンの「そうした場合」は変数 paid の有無で表す'
+- id: dm19-017
+  name: 魔皇バルパス
+  types:
+  - creature
+  - evolution
+  civs:
+  - water
+  cost: 5
+  power: 7000
+  races:
+  - グランド・デビル
+  mana: 1
+  evolve_from:
+    races:
+    - グランド・デビル
+  text: '進化-自分のグランド・デビル１体の上に置く。
+
+    メテオバーン - クリーチャーが攻撃する時、このクリーチャーの下にあるカードを１枚選び墓地に置いてもよい。そうした場合、バトルゾーンにあるコスト３以下のカードを１枚選び、持ち主の手札に戻す。
+
+    W・ブレイカー(このクリーチャーはシールドを２枚ブレイクする)'
+  keywords:
+  - double_breaker
+  abilities:
+  - kind: trigger
+    when:
+      event: attack
+      subject:
+        owner: any
+    effect:
+    - op: may
+      body:
+      - op: move
+        select:
+          under_of: self
+          count: 1
+        to: graveyard
+        reason: put
+        as: paid
+      - op: if
+        cond:
+          exists:
+            ref: paid
+        then:
+        - op: move
+          select:
+            zone: bz
+            owner: any
+            filter:
+              cost_le: 3
+            count: 1
+          to: hand
+          reason: return
+  source:
+    official: dm19-017
+    review: pending
+    notes: 厳密一致。メテオバーンの「そうした場合」は変数 paid の有無で表す
+- id: dm19-035
+  name: 大菜王ゴッド・バナナーン
+  types:
+  - creature
+  - evolution
+  civs:
+  - nature
+  cost: 5
+  power: 6000
+  races:
+  - ワイルド・ベジーズ
+  mana: 1
+  evolve_from:
+    races:
+    - ワイルド・ベジーズ
+  text: '進化-自分のワイルド・ベジーズ１体の上に置く。
+
+    メテオバーン - このクリーチャーが攻撃する時、このクリーチャーの下にあるカードを１枚、自分の手札に加えてもよい。
+
+    W・ブレイカー'
+  keywords:
+  - double_breaker
+  abilities:
+  - kind: trigger
+    when:
+      event: attack
+      subject: self
+    effect:
+    - op: may
+      body:
+      - op: move
+        select:
+          under_of: self
+          count: 1
+        to: hand
+        reason: return
+  source:
+    official: dm19-035
+    review: pending
+    notes: 厳密一致。メテオバーンの「そうした場合」は変数 paid の有無で表す
+- id: dm19-041
+  name: 聖帝ファルマハート
+  types:
+  - creature
+  - evolution
+  civs:
+  - light
+  cost: 5
+  power: 7000
+  races:
+  - アーク・セラフィム
+  mana: 1
+  evolve_from:
+    races:
+    - アーク・セラフィム
+  text: '進化-自分のアーク・セラフィム１体の上に置く。
+
+    メテオバーン -相手のクリーチャーが攻撃する時、このクリーチャーの下にあるカードを１枚選び墓地に置いてもよい。そうした場合、このクリーチャーアンタップされ、そのターンの終わりまで「ブロッカー」を得る。
+
+    W・ブレイカー(このクリーチャーはシールドを２枚ブレイクする)'
+  keywords:
+  - double_breaker
+  abilities:
+  - kind: trigger
+    when:
+      event: attack
+      subject:
+        owner: opp
+    effect:
+    - op: may
+      body:
+      - op: move
+        select:
+          under_of: self
+          count: 1
+        to: graveyard
+        reason: put
+        as: paid
+      - op: if
+        cond:
+          exists:
+            ref: paid
+        then:
+        - op: untap
+          select:
+            ref: self
+        - op: modify
+          select:
+            ref: self
+          mod:
+            grant:
+            - blocker
+          duration: end_of_turn
+  source:
+    official: dm19-041
+    review: pending
+    notes: 厳密一致。メテオバーンの「そうした場合」は変数 paid の有無で表す

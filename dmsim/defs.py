@@ -66,6 +66,7 @@ class Face:
     evolve_from: dict | None = None                       # 進化元の条件（801.1a）。filter 形式
     evolve_zone: str = "bz"                               # 進化元を探すゾーン（超無限墓地進化は graveyard）
     evolve_any: bool = False                              # 進化元を1体以上選べる（超無限墓地進化）
+    evolve_count: int = 1                                 # 進化元をちょうどこの数だけ重ねる（進化GV は3体）
     cost_reduce_per_evo: int = 0                          # 進化元1体につき召喚コストをいくら減らすか
     tap_reduce: int = 0                                   # ハイパーエナジー: コストが異なる自分のクリーチャー1体をタップするごとに減るコスト
     s_back: str | None = None                             # S・バック: この文明のカードがシールドから手札に加わる時、それを捨てて無料で実行できる
@@ -101,6 +102,7 @@ class CardDef:
     evolve_from: dict | None = None
     evolve_zone: str = "bz"
     evolve_any: bool = False
+    evolve_count: int = 1
     cost_reduce_per_evo: int = 0
     tap_reduce: int = 0
     s_back: str | None = None
@@ -484,7 +486,7 @@ def _load_face(raw, keywords, macros, chk: Checker, where) -> dict:
     return dict(name=raw["name"], types=raw["types"], civs=raw["civs"], cost=raw["cost"],
                 power=raw.get("power", 0), races=split_races(raw.get("races", [])), keywords=names,
                 abilities=abilities, spell=spell, evolve_from=raw.get("evolve_from"),
-                evolve_zone=zone, evolve_any=bool(raw.get("evolve_any", False)),
+                evolve_zone=zone, evolve_any=bool(raw.get("evolve_any", False)), evolve_count=int(raw.get("evolve_count", 1)),
                 cost_reduce_per_evo=int(raw.get("cost_reduce_per_evo", 0)),
                 free_if=raw.get("free_if"), **{"tap_reduce": 0, "s_back": None, **props})
 
