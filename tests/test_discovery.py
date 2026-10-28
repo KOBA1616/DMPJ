@@ -86,3 +86,14 @@ def test_entrance_and_exit_are_separated(rules):
     assert DRAGE not in ent and KODAMA not in ent
     assert {n for _, _, n in r.extra} >= {DRAGE, KODAMA}
     assert any(z == "graveyard" for _, z, _ in r.extra)           # 蘇生するシャコガイルは墓地に要る
+
+
+def test_entrance_needs_no_mana_when_saga_waits_on_the_field(rules):
+    """場で待機中のサガ、墓地のサガ、墓地のクリーチャー2枚があれば、マナなしでも回る（koba の定義）。"""
+    spec = yaml.safe_load(SAGA_SETUP.read_text(encoding="utf-8"))
+    spec["p0"]["hand"] = [c for c in spec["p0"]["hand"] if c != "T001"]
+    test = sh.loop_test(rules, 0, 1500, {"deck:0": -1, "graveyard:0": 1})
+    r = sh.robust_shrink(spec, test, ["T001", "T013"])
+    zones = sorted(z for _, z, _, _ in sh.entries(r.spec))
+    assert zones == ["bz", "graveyard", "graveyard", "graveyard"]
+    assert [n for _, z, _, n in sh.entries(r.spec) if z == "bz"] == [SAGA]

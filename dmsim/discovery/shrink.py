@@ -83,6 +83,18 @@ class Shrunk:
 ORDER = ("hand", "bz", "mana", "shield", "graveyard")
 
 
+def to_play(spec: dict, test) -> dict:
+    """手札のカードを、成立する限りバトルゾーンへ動かす。手札のサガは召喚にマナが要るが、場で待機中なら要らない。
+    先に動かしてから外すと、マナのように「手札のカードを出すためだけの資源」が不要だと分かる。"""
+    cur = copy.deepcopy(spec)
+    for pk, z, i, n in reversed(entries(cur)):
+        if z == "hand":
+            cand = moved(cur, pk, z, i, "bz")
+            if test(cand):
+                cur = cand
+    return cur
+
+
 def shrink(spec: dict, test, protect: tuple[str, ...] = (), order: tuple[str, ...] = ORDER) -> Shrunk:
     """1つ外してもループが成立する限り外し続ける。どの1枚を外しても成立しなくなった（1-極小）盤面を返す。
     protect のゾーン（'hand' など。例: 手札の filler）は外さない。
@@ -90,7 +102,7 @@ def shrink(spec: dict, test, protect: tuple[str, ...] = (), order: tuple[str, ..
     1-極小は外す順で変わる。order の先頭のゾーンから外す（既定は手札から）。墓地を先に外すと、
     手札の別のカードが代わりに墓地へ送って条件を作る盤面が残り、入口に不要なカードが紛れ込む。"""
     assert test(spec), "元の盤面でループが成立しない"
-    cur = copy.deepcopy(spec)
+    cur = to_play(spec, test) if "hand" not in protect else copy.deepcopy(spec)
     removed = []
     changed = True
     while changed:
