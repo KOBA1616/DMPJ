@@ -122,3 +122,14 @@ def invalidate(ledger: dict, raws: dict[str, dict], versions: dict) -> list[str]
                 e.update(status="pending", stale=why)
                 out.append(cid)
     return out
+
+
+def is_usable(raw: dict, ledger: dict, versions: dict) -> bool:
+    """承認済みとして使ってよいか。source の無い試験用カードは常に可。台帳で承認済み（古くない）か、ファイル上で review: approved。"""
+    src = raw.get("source")
+    if not src:
+        return True
+    e = ledger.get(raw["id"])
+    if e and e.get("status") == "approved" and stale_reason(e, raw, versions) is None:
+        return True
+    return src.get("review") == "approved" and not (e and e.get("status") != "approved" and e.get("stale"))

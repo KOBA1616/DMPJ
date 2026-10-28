@@ -489,13 +489,21 @@ def card_yaml_files() -> list[Path]:
     return [f for f in card_files() if not (skip and (f.name == "converted.yaml" or f.parent.name == "converted"))]
 
 
-def load_rules(card_files: list[Path] | None = None) -> Rules:
+def load_rules(card_files: list[Path] | None = None, only_approved: bool | None = None) -> Rules:
+    """only_approved: 承認済みのカードだけ読む（converted.yaml の未確認分を除く）。省略時は環境変数 DMSIM_ONLY_APPROVED=1 に従う。"""
     tables = load_tables()
+    if only_approved is None:
+        only_approved = bool(os.environ.get("DMSIM_ONLY_APPROVED"))
+    if only_approved:
+        from . import approval
+        ledger, versions = approval.load(), approval.vocab_versions(tables)
     zones, keywords, macros, actions, steps = tables
     card_files = card_files or card_yaml_files()
     cards: dict[str, CardDef] = {}
     for f in card_files:
         for raw in yaml.safe_load(Path(f).read_text(encoding="utf-8")).get("cards") or []:
+            if only_approved and not approval.is_usable(raw, ledger, versions):
+                continue
             cd = parse_card(raw, tables)
             if cd.id in cards:
                 raise DefError(f"duplicate card id {cd.id}")

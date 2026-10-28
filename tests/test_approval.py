@@ -85,3 +85,19 @@ def test_ledger_sharded_roundtrip(tmp_path):
     assert ap.load(d) == led
     ap.save({"dm01-s01": led["dm01-s01"]}, d)
     assert [p.name for p in d.glob("*.json")] == ["dm01.json"]
+
+
+def test_load_rules_only_approved(tmp_path, monkeypatch):
+    from dmsim import approval
+    from dmsim.defs import load_rules
+    a, b = {**CARD, "id": "dm01-s01"}, {**CARD, "id": "dm01-s02"}
+    f = tmp_path / "c.yaml"
+    f.write_text(yaml.safe_dump({"cards": [a, b]}, allow_unicode=True), encoding="utf-8")
+    led = tmp_path / "approvals"
+    approval.save({"dm01-s01": approval.entry(a, "approved", "rule", approval.vocab_versions())}, led)
+    orig = approval.load
+    monkeypatch.setattr(approval, "load", lambda path=led: orig(led))
+    files = [f, DATA / "cards" / "proto.yaml"]
+    assert {"dm01-s01", "dm01-s02"} <= set(load_rules(files).cards)
+    got = set(load_rules(files, only_approved=True).cards)
+    assert "dm01-s01" in got and "dm01-s02" not in got and "T001" in got

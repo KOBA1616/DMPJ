@@ -11,3 +11,8 @@
 - カード定義は不変に近く扱い、承認は台帳に持つ（`source.review` は互換のため残す）。
 - 承認は `def_hash`（定義）と `vocab_ver`（使う語彙の定義）で無効化される。`python tools/auto_approve.py` が無効化と自動承認をまとめて行う。
 - `card.schema.json` は `python -m dmsim.schema` で生成する。他の型は手書き。`tests/test_file_schemas.py` が実データを検査する。
+
+## converted.yaml から承認済みだけを使う
+ワーカーは `converted.yaml` に書き続ける（変更なし）。`auto-approve`（または `tools/auto_approve.py`）が承認台帳に承認を記録し、
+`load_rules(only_approved=True)`（または環境変数 `DMSIM_ONLY_APPROVED=1`）で、承認済み（台帳で有効、またはファイル上で review: approved）のカードだけを読む。
+real.yaml へ移す作業は不要。定義や語彙が変わった承認は読み込みの時点で除かれる。
