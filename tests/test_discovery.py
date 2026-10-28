@@ -55,3 +55,20 @@ def test_zone_alternatives_show_where_the_card_may_be(rules):
     test = sh.loop_test(rules, 0, 1500, {"deck:0": -1, "graveyard:0": 1})
     alts = sh.zone_alternatives(spec, test, zones=("bz", "hand"))
     assert "bz" in alts[("p0", "graveyard", 0)]
+
+
+def test_robust_shrink_does_not_let_a_creature_filler_hide_the_graveyard_requirement(rules):
+    """filler がクリーチャーだと、引いて捨てるだけで墓地にクリーチャーが増え、必要な条件が隠れる。
+    非クリーチャーの filler でも成立する最小盤面を採ると、墓地のクリーチャーの条件が現れる。"""
+    spec = yaml.safe_load(SAGA_SETUP.read_text(encoding="utf-8"))
+    spec["p0"]["hand"] = [c for c in spec["p0"]["hand"] if c != "T001"]   # 手札の試験用ダミー（クリーチャー）は使わない
+    delta = {"deck:0": -1, "graveyard:0": 1}
+    test = sh.loop_test(rules, 0, 1500, delta)
+    r = sh.robust_shrink(spec, test, ["T001", "T013"])      # T001 はクリーチャー、T013 は呪文
+    assert r.holds_for_all
+    only_creature = sorted(n for _, _, _, n in sh.entries(r.per_filler["T001"]))
+    assert only_creature == sorted([SAGA, SAGA, DRAGE, KODAMA])
+    robust = sh.entries(r.spec)
+    grave = [n for pk, z, _, n in robust if z == "graveyard"]
+    assert len([n for n in grave if "creature" in rules.cards[n].types]) >= 2   # サガ以外にも墓地のクリーチャーが要る
+    assert len(robust) > len(only_creature)

@@ -99,6 +99,33 @@ def shrink(spec: dict, test, protect: tuple[str, ...] = ()) -> Shrunk:
     return Shrunk(cur, removed, len(test.cache))
 
 
+@dataclass
+class Robust:
+    spec: dict                         # どの filler でも成立する最小の盤面
+    per_filler: dict[str, dict]        # filler ごとの縮約結果
+    holds_for_all: bool
+
+
+def robust_shrink(spec: dict, test, fillers: list[str]) -> Robust:
+    """山札の残りを埋める filler の違いに左右されない最小盤面を求める。
+
+    山札の中身はループの「自由な部分」だが、filler が最小盤面の条件を偶然満たすことがある
+    （例: filler がクリーチャーなら、引いて捨てるだけで「墓地のクリーチャー」が増える）。
+    filler ごとに縮約し、その結果のうち、すべての filler で成立する最小のものを採る。
+    どれもすべての filler では成立しなければ holds_for_all を偽にして、最小のものを返す。"""
+    per = {}
+    for f in fillers:
+        s = {**spec, "filler": f}
+        if test(s):
+            per[f] = shrink(s, test).spec
+    if not per:
+        raise AssertionError("どの filler でも元の盤面でループが成立しない")
+    ok = [c for c in per.values() if all(test({**c, "filler": f}) for f in fillers)]
+    pool = ok or list(per.values())
+    best = min(pool, key=lambda c: (len(entries(c)), json.dumps(c, sort_keys=True, ensure_ascii=False)))
+    return Robust({k: v for k, v in best.items()}, per, bool(ok))
+
+
 def zone_alternatives(spec: dict, test, zones=ZONES) -> dict[tuple[str, str, int], list[str]]:
     """残ったカード1枚ごとに、別のゾーンへ動かしても成立するゾーン（自分のゾーンを含む）。"""
     out = {}
