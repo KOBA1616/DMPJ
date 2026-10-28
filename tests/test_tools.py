@@ -723,11 +723,11 @@ def test_rule_convert_parameterized_keywords():
     base = {"card_type": "クリーチャー", "civilization": "火", "cost": "4", "power": "3000", "race": "ドラゴン", "name": "n"}
     r = rc.convert({**base, "id": "p1", "text": "パワーアタッカー＋２０００（攻撃中、…） / マッハファイター（…） / スピードアタッカー"})
     assert r["keywords"] == ["speed_attacker"] and len(r["abilities"]) == 2
-    assert r["abilities"][0]["effect"][0]["mod"] == {"power": 2000}
+    assert r["abilities"][0]["mod"] == {"power_when": {"amount": 2000, "when": "attacking"}}   # 常在型（誘発ではない）
     parse_card(r, load_tables())
     assert rc.convert({**base, "id": "p2", "text": "パワーアタッカー+X"}) is None
     kws, rest, extra = rc.split({"id": "x", "text": "パワーアタッカー+1000 出た時、カードを引く。"})
-    assert kws == [] and rest == "出た時、カードを引く。" and extra[0]["kind"] == "trigger"
+    assert kws == [] and rest == "出た時、カードを引く。" and extra[0]["kind"] == "static"
 
 
 def test_rule_split_keywords_and_model_gets_only_the_rest(tmp_path):
