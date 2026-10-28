@@ -71521,3 +71521,2002 @@ cards:
   - ex_life
   - blocker
   - double_breaker
+- id: dm23bd5-037
+  name: Disゾロスター
+  types:
+  - creature
+  civs:
+  - light
+  - darkness
+  - nature
+  cost: 3
+  power: 3500
+  races:
+  - オラクル
+  - ディスタス
+  mana: 1
+  text: このクリーチャーが出た時、自分の山札の上から１枚目をシールド化する。その後、自分の山札の上から１枚目を墓地に置く。その後、自分の山札の上から１枚目をマナゾーンに置く。
+  abilities:
+  - kind: trigger
+    when:
+      event: move
+      to: bz
+      subject: self
+    effect:
+    - op: move
+      select:
+        zone: deck
+        owner: you
+        from_top: 1
+      to: shield
+      reason: charge
+    - op: mill
+      owner: you
+      count: 1
+    - op: mana_put
+      select:
+        zone: deck
+        owner: you
+        from_top: 1
+  source:
+    official: dm23bd5-037
+    review: pending
+    aliases:
+    - dm22ex2-032
+    - dmrp20-028
+- id: dm23bd5-042
+  name: 再誕の社
+  types:
+  - spell
+  civs:
+  - nature
+  cost: 3
+  mana: 1
+  text: カードを２枚まで、自分の墓地からマナゾーンに置く。
+  spell:
+  - op: move
+    select:
+      zone: graveyard
+      owner: you
+      count: 2
+      up_to: true
+    to: mana
+    reason: put
+  source:
+    official: dm23bd5-042
+    review: pending
+    aliases:
+    - dm36-069
+    - dmd13-018
+    - dmd33-017
+    - dmex08-055
+    - dmx08-022
+- id: dm23bd5-044
+  name: 天龍神の翔天 ピラッキ
+  types:
+  - creature
+  civs:
+  - light
+  - darkness
+  cost: 2
+  power: 2000
+  races:
+  - ファイアー・バード
+  - ディスタス
+  mana: 1
+  text: '{GS} G・ストライク（このクリーチャーを自分のシールドゾーンから手札に加える時、表向きにし、相手のクリーチャーを１体選んでもよい。このターン、そのクリーチャーは攻撃できない）
+
+    このクリーチャーが出た時、自分の山札の上から２枚を墓地に置く。
+
+    このクリーチャーが攻撃する時、カードを１枚、自分の墓地から手札に戻してもよい。
+
+    自分のターンの終わりに、このクリーチャーをアンタップする。'
+  abilities:
+  - kind: trigger
+    when:
+      event: move
+      to: bz
+      subject: self
+    effect:
+    - op: mill
+      owner: you
+      count: 2
+  - kind: trigger
+    when:
+      event: turn_end
+      player: you
+    effect:
+    - op: untap
+      select:
+        ref: self
+  - kind: trigger
+    when:
+      event: attack
+      subject: self
+    effect:
+    - op: may
+      body:
+      - op: move
+        select:
+          zone: graveyard
+          owner: you
+          count: 1
+        to: hand
+        reason: return
+  source:
+    official: dm23bd5-044
+    review: pending
+    aliases:
+    - dmrp20-049
+  keywords:
+  - g_strike
+- id: dm23bd5-045
+  name: 神聖で新生な霊樹
+  types:
+  - spell
+  civs:
+  - light
+  - nature
+  cost: 6
+  mana: 1
+  text: 'S・トリガー（この呪文をシールドゾーンから手札に加える時、コストを支払わずにすぐ唱えてもよい）
+
+    自分の山札の上から１枚目を表向きにシールド化する。
+
+    カードを２枚まで、自分のマナゾーンから手札に戻してもよい。'
+  spell:
+  - op: move
+    select:
+      zone: deck
+      owner: you
+      from_top: 1
+    to: shield
+    reason: charge
+  - op: may
+    body:
+    - op: move
+      select:
+        zone: mana
+        owner: you
+        count: 2
+        up_to: true
+      to: hand
+      reason: return
+  source:
+    official: dm23bd5-045
+    review: pending
+    notes: シールド化は move to shield で表した（表向きの指定は語彙に無いため notes に残す）
+    aliases:
+    - dmex13-041
+    - dmr22-042
+  keywords:
+  - s_trigger
+- id: dm23bd5-046
+  name: 魂晶 リゲル-２
+  types:
+  - creature
+  civs:
+  - darkness
+  - nature
+  cost: 4
+  power: 4000
+  races:
+  - スピリット・クォーツ
+  - ディスタス
+  mana: 1
+  text: 'マッハファイター（このクリーチャーは、出たターンの間、タップまたはアンタップしているクリーチャーを攻撃できる）
+
+    このクリーチャーが出た時、カードを１枚、自分のマナゾーンまたは墓地から手札に戻してもよい。
+
+    ササゲール２（ディスペクターを召喚する時、コストを２少なくしてもよい。そうしたら、このクリーチャーを破壊する。そのディスペクターのコストは０以下にはならない）'
+  abilities:
+  - kind: trigger
+    when:
+      event: move
+      to: bz
+      subject: self
+    effect:
+    - op: modify
+      select:
+        ref: self
+      mod:
+        allow:
+        - action: attack_creature
+          other:
+            tapped: false
+      duration: end_of_turn
+  - kind: static
+    affects: self
+    mod:
+      sac_reduce: 2
+  - kind: trigger
+    when:
+      event: move
+      to: bz
+      subject: self
+    effect:
+    - op: may
+      body:
+      - op: modal
+        modes:
+        - - op: move
+            select:
+              zone: mana
+              owner: you
+              count: 1
+            to: hand
+            reason: return
+        - - op: move
+            select:
+              zone: graveyard
+              owner: you
+              count: 1
+            to: hand
+            reason: return
+  source:
+    official: dm23bd5-046
+    review: pending
+    notes: 「マナまたは墓地」は modal で選ぶ形にした
+    aliases:
+    - dm22ex2-053
+    - dmrp17-057
+- id: dm23bd5-048
+  name: 腐頼 ルマウス-２
+  types:
+  - creature
+  civs:
+  - darkness
+  - nature
+  cost: 3
+  power: 3000
+  races:
+  - ゴースト
+  - ビーストフォーク
+  - ディスタス
+  mana: 1
+  text: 'スレイヤー（このクリーチャーがバトルする時、バトルの後、相手クリーチャーを破壊する）
+
+    このクリーチャーが破壊された時、自分の山札の上からカードを２枚表向きにする。そのうちの１枚をマナゾーンに置く。もう１枚がクリーチャーなら手札に加え、それ以外なら墓地に置く。
+
+    ササゲール２（ディスペクターを召喚する時、コストを２少なくしてもよい。そうしたら、このクリーチャーを破壊する。そのディスペクターのコストは０以下にはならない）'
+  abilities:
+  - kind: static
+    affects: self
+    mod:
+      sac_reduce: 2
+  - kind: trigger
+    zone: graveyard
+    when:
+      event: move
+      to: graveyard
+      subject: self
+    effect:
+    - op: choose
+      select:
+        zone: deck
+        owner: you
+        from_top: 2
+        look: true
+        count: all
+      as: pile
+    - op: choose
+      select:
+        ref: pile
+        count: 1
+      as: a
+    - op: mana_put
+      select:
+        ref: a
+        count: all
+    - op: if
+      cond:
+        exists:
+          ref: pile
+          filter:
+            types:
+            - creature
+      then:
+      - op: move
+        select:
+          ref: pile
+          count: all
+        to: hand
+        reason: draw
+      else:
+      - op: move
+        select:
+          ref: pile
+          count: all
+        to: graveyard
+        reason: put
+  source:
+    official: dm23bd5-048
+    review: pending
+    notes: 残り１枚はクリーチャーかどうかで行き先を分けた
+    aliases:
+    - dmrp18-057
+    - promoy20-028
+  keywords:
+  - slayer
+- id: dm23bd5-052
+  name: 龍魂珠
+  types:
+  - creature
+  civs:
+  - nature
+  cost: 4
+  power: 4000
+  races:
+  - ドラゴン・オーブ
+  - ディスタス
+  mana: 1
+  text: 'このクリーチャーが出た時、自分の山札の上から５枚を見る。その中から１枚をマナゾーンに置き、残りを好きな順序で山札の下に置く。
+
+    ササゲール２（ディスペクターを召喚する時、コストを２少なくしてもよい。そうしたら、このクリーチャーを破壊する。そのディスペクターのコストは０以下にはならない）'
+  abilities:
+  - kind: static
+    affects: self
+    mod:
+      sac_reduce: 2
+  - kind: trigger
+    when:
+      event: move
+      to: bz
+      subject: self
+    effect:
+    - op: choose
+      select:
+        zone: deck
+        owner: you
+        from_top: 5
+        look: true
+        count: all
+      as: pile
+    - op: choose
+      select:
+        ref: pile
+        count: 1
+      as: a
+    - op: mana_put
+      select:
+        ref: a
+        count: all
+    - op: move
+      select:
+        ref: pile
+        count: all
+      to: deck
+      reason: put
+  source:
+    official: dm23bd5-052
+    review: pending
+    aliases:
+    - dmex17-cho40
+    - dmrp19-090
+- id: dm23bd5-054
+  name: フェアリー・ソング
+  types:
+  - spell
+  civs:
+  - nature
+  cost: 4
+  mana: 1
+  text: 自分の山札の上から２枚を、タップしてマナゾーンに置く。
+  spell:
+  - op: choose
+    select:
+      zone: deck
+      owner: you
+      from_top: 2
+      count: all
+    as: t
+  - op: mana_put
+    select:
+      ref: t
+      count: all
+  - op: tap
+    select:
+      ref: t
+      count: all
+  source:
+    official: dm23bd5-054
+    review: pending
+    notes: タップして置くのは mana_put の後に tap を続ける形
+    aliases:
+    - dmrp16-085
+    - promoy20-055
+    - promoy21-038
+- id: dm23bd5-055
+  name: ハロウィンズ・カーニバル
+  types:
+  - spell
+  civs:
+  - nature
+  cost: 4
+  mana: 1
+  text: 自分の山札の上から２枚をマナゾーンに置く。その後、カードを１枚、自分のマナゾーンから手札に戻す。
+  spell:
+  - op: mana_put
+    select:
+      zone: deck
+      owner: you
+      from_top: 2
+  - op: move
+    select:
+      zone: mana
+      owner: you
+      count: 1
+    to: hand
+    reason: return
+  source:
+    official: dm23bd5-055
+    review: pending
+    aliases:
+    - dmrp15-084
+- id: dm23bd5-056
+  name: セブンス・タワー
+  types:
+  - spell
+  civs:
+  - nature
+  cost: 3
+  mana: 1
+  text: '自分の山札の上から１枚目をマナゾーンに置く。メタモーフ: 自分のマナゾーンに７枚以上カードがあれば、この呪文は、かわりに自分の山札の上から３枚をマナゾーンに置く。'
+  spell:
+  - op: if
+    cond:
+      cmp:
+      - count:
+          zone: mana
+          owner: you
+      - '>='
+      - 7
+    then:
+    - op: mana_put
+      select:
+        zone: deck
+        owner: you
+        from_top: 3
+    else:
+    - op: mana_put
+      select:
+        zone: deck
+        owner: you
+        from_top: 1
+  source:
+    official: dm23bd5-056
+    review: pending
+    notes: メタモーフは呪文効果の if 分岐で表した
+    aliases:
+    - dm14-109
+    - dmd13-021
+    - dmx06-020
+    - dmx24-052
+- id: dm23bd5-059
+  name: 鼓動する石版
+  types:
+  - spell
+  civs:
+  - nature
+  cost: 2
+  mana: 1
+  text: 自分の山札の上から１枚目をマナゾーンに置く。そのカードがクリーチャーなら、このターン、自分のクリーチャーすべてのパワーを+2000する。
+  spell:
+  - op: choose
+    select:
+      zone: deck
+      owner: you
+      from_top: 1
+      count: 1
+    as: t
+  - op: mana_put
+    select:
+      ref: t
+      count: all
+  - op: if
+    cond:
+      exists:
+        ref: t
+        filter:
+          types:
+          - creature
+    then:
+    - op: modify
+      select:
+        zone: bz
+        owner: you
+        filter:
+          types:
+          - creature
+        count: all
+      mod:
+        power: 2000
+      duration: end_of_turn
+  source:
+    official: dm23bd5-059
+    review: pending
+    aliases:
+    - dm28-109
+    - dmc55-083
+    - dmc59-011
+    - dmpcd02-sp1
+    - dmx02-040
+- id: dm23bd6-007
+  faces:
+  - name: K・アトラン＆キング海賊団
+    types:
+    - creature
+    civs:
+    - water
+    cost: 5
+    power: 13000
+    races:
+    - サイバー・ウイルス海
+    keywords:
+    - blocker
+    - cannot_attack
+    abilities:
+    - kind: trigger
+      when:
+        event: turn_start
+      effect:
+      - op: untap
+        select:
+          ref: self
+          count: 1
+  - name: アイアイサー・チャージャー
+    types:
+    - spell
+    civs:
+    - water
+    cost: 3
+    keywords:
+    - charger
+    spell:
+    - op: move
+      select:
+        zone: graveyard
+        owner: you
+        filter:
+          types:
+          - spell
+        count: 1
+      to: hand
+      reason: return
+  mana: 1
+  text: 'K・アトラン＆キング海賊団: ブロッカー。このクリーチャーは攻撃できない。各ターンのはじめに、このクリーチャーをアンタップする。／アイアイサー・チャージャー:
+    呪文を１枚、自分の墓地から手札に戻す。チャージャー'
+  source:
+    official: dm23bd6-007
+    review: pending
+    notes: ツインパクト。各ターンのはじめは両プレイヤーのターン開始で照合した
+    aliases:
+    - promoy23-040
+- id: dm23bd6-011
+  faces:
+  - name: ハリケーン・クロウラー
+    types:
+    - creature
+    civs:
+    - water
+    cost: 5
+    power: 4000
+    races:
+    - アースイーター
+    abilities:
+    - kind: trigger
+      when:
+        event: move
+        to: bz
+        subject: self
+      effect:
+      - op: choose
+        select:
+          zone: hand
+          owner: you
+          count: all
+        as: h
+      - op: move
+        select:
+          ref: h
+          count: all
+        to: mana
+        reason: put
+      - op: move
+        select:
+          zone: mana
+          owner: you
+          count:
+            count:
+              ref: h
+        to: hand
+        reason: return
+  - name: ブレイン・チャージャー
+    types:
+    - spell
+    civs:
+    - water
+    cost: 4
+    keywords:
+    - charger
+    spell:
+    - op: draw
+      count: 1
+  mana: 1
+  text: 'ハリケーン・クロウラー: このクリーチャーが出た時、自分の手札をすべてマナゾーンに置く。その後、それと同じ枚数のカードを自分のマナゾーンから手札に戻す。／ブレイン・チャージャー:
+    カードを１枚引く。チャージャー'
+  source:
+    official: dm23bd6-011
+    review: pending
+    notes: ツインパクト。戻す枚数は手札だった集合の count 式で参照した
+    aliases:
+    - dmbd13-009
+    - dmex04-016
+- id: dm23bd6-012
+  name: サイバー・Ｎ・ワールド
+  types:
+  - creature
+  civs:
+  - water
+  cost: 6
+  power: 6000
+  races:
+  - サイバー・コマンド
+  mana: 1
+  text: 'W・ブレイカー
+
+    このクリーチャーが出た時、各プレイヤーは自身の手札と墓地のカードをすべて山札に加えてシャッフルする。その後、それぞれ５枚カードを引く。'
+  abilities:
+  - kind: trigger
+    when:
+      event: move
+      to: bz
+      subject: self
+    effect:
+    - op: move
+      select:
+        zone: hand
+        owner: you
+        count: all
+      to: deck
+      reason: put
+    - op: move
+      select:
+        zone: graveyard
+        owner: you
+        count: all
+      to: deck
+      reason: put
+    - op: shuffle
+    - op: move
+      select:
+        zone: hand
+        owner: opp
+        count: all
+      to: deck
+      reason: put
+    - op: move
+      select:
+        zone: graveyard
+        owner: opp
+        count: all
+      to: deck
+      reason: put
+    - op: shuffle
+      player: opp
+    - op: draw
+      count: 5
+    - op: draw
+      player: opp
+      count: 5
+  source:
+    official: dm23bd6-012
+    review: pending
+    aliases:
+    - dmd14-010
+    - dmd26-005
+    - dmex01-047
+    - dmr01-s03
+    - dmx19-s18
+  keywords:
+  - double_breaker
+- id: dm23bd6-014
+  faces:
+  - name: 龍罠 エスカルデン
+    types:
+    - creature
+    civs:
+    - nature
+    cost: 5
+    power: 5000
+    races:
+    - ドラゴンギルド
+    - グランセクト
+    abilities:
+    - kind: trigger
+      when:
+        event: move
+        to: bz
+        subject: self
+      effect:
+      - op: choose
+        select:
+          zone: deck
+          owner: you
+          from_top: 2
+          look: true
+          count: all
+        as: pile
+      - op: may
+        body:
+        - op: choose
+          select:
+            ref: pile
+            filter:
+              types:
+              - creature
+            count: 1
+          as: a
+        - op: move
+          select:
+            ref: a
+            count: all
+          to: hand
+          reason: draw
+      - op: mana_put
+        select:
+          ref: pile
+          count: all
+  - name: マクスカルゴ・トラップ
+    types:
+    - spell
+    civs:
+    - nature
+    cost: 7
+    spell:
+    - op: move
+      select:
+        zone: bz
+        owner: opp
+        filter:
+          types:
+          - creature
+        count: 1
+      to: mana
+      reason: put
+    - op: play_free
+      select:
+        zone: mana
+        owner: you
+        filter:
+          types:
+          - creature
+          cost_le: 6
+        count: 1
+  mana: 1
+  text: '龍罠 エスカルデン: このクリーチャーが出た時、自分の山札の上から２枚を表向きにする。その中からクリーチャーを１体、手札に加えてもよい。残りをマナゾーンに置く。／マクスカルゴ・トラップ:
+    相手のクリーチャーを１体選び、持ち主のマナゾーンに置く。コスト６以下のクリーチャーを１体、自分のマナゾーンから出す。'
+  source:
+    official: dm23bd6-014
+    review: pending
+    notes: ツインパクト
+    aliases:
+    - dmrp07-s09
+    - dmrp21-tr4
+- id: dm23bd6-033
+  faces:
+  - name: ファビュラ・スネイル
+    types:
+    - creature
+    civs:
+    - nature
+    cost: 3
+    power: 3000
+    races:
+    - グランセクト
+    abilities:
+    - kind: static
+      affects:
+        owner: you
+        zone: hand
+        filter:
+          types:
+          - creature
+          power_ge: 6000
+      mod:
+        cost: -1
+        cost_min: 1
+  - name: ゴルチョップ・トラップ
+    types:
+    - spell
+    civs:
+    - nature
+    cost: 9
+    spell:
+    - op: move
+      select:
+        zone: bz
+        owner: opp
+        filter:
+          types:
+          - creature
+          power_le: 4000
+        count: all
+      to: mana
+      reason: put
+  mana: 1
+  text: 'ファビュラ・スネイル: 自分のパワー6000以上のクリーチャーを召喚するコストは１少なくなる。ただし、コストは０以下にならない。／ゴルチョップ・トラップ:
+    S・トリガー。相手のパワー4000以下のクリーチャーをすべて、持ち主のマナゾーンに置く。'
+  source:
+    official: dm23bd6-033
+    review: pending
+    notes: ツインパクト。コスト軽減の対象絞り込みに filter の power_ge を使った
+    aliases:
+    - dmbd08-a-007
+    - dmrp06-028
+    - promoy17-028
+    - promoy17-029
+- id: dm23bd6-036
+  faces:
+  - name: キング・シビレアシダケ
+    types:
+    - creature
+    civs:
+    - nature
+    cost: 3
+    power: 2000
+    races:
+    - バルーン・マッシュルーム
+    abilities:
+    - kind: trigger
+      when:
+        event: move
+        to: bz
+        subject: self
+      effect:
+      - op: may
+        body:
+        - op: choose
+          select:
+            zone: hand
+            owner: you
+            count: any
+          as: t
+        - op: mana_put
+          select:
+            ref: t
+            count: all
+        - op: tap
+          select:
+            ref: t
+            count: all
+  - name: インビンシブル・テクノロジー
+    types:
+    - spell
+    civs:
+    - water
+    cost: 13
+    spell:
+    - op: choose
+      select:
+        zone: deck
+        owner: you
+        look: true
+        count: any
+      as: t
+    - op: move
+      select:
+        ref: t
+        count: all
+      to: hand
+      reason: draw
+    - op: shuffle
+  mana: 1
+  text: 'キング・シビレアシダケ: このクリーチャーが出た時、自分の手札を好きな数、タップしてマナゾーンに置いてもよい。／インビンシブル・テクノロジー: 自分の山札を見る。その中から好きな枚数を選び、相手に見せてから手札に加えてもよい。その後、山札をシャッフルする。'
+  source:
+    official: dm23bd6-036
+    review: pending
+    notes: ツインパクト
+    aliases:
+    - dm22ex1-066
+- id: dm23bd6-037
+  name: 呪帝電融 カーペラー・キリテム
+  types:
+  - creature
+  civs:
+  - water
+  - nature
+  cost: 8
+  power: 12000
+  races:
+  - ディスペクター
+  - サイバーロード
+  - ミステリー・トーテム
+  mana: 1
+  text: 'EXライフ（このクリーチャーを出す時、自分の山札の上から１枚目をシールド化する。このクリーチャーが離れる時、かわりにそのシールドを墓地に置く）
+
+    マッハファイター（このクリーチャーは、出たターンの間、タップまたはアンタップしているクリーチャーを攻撃できる）
+
+    T・ブレイカー
+
+    このクリーチャーがバトルに勝った時、コスト７以下のクリーチャーを
+
+    １体、自分のマナゾーンから出してもよい。'
+  abilities:
+  - kind: trigger
+    when:
+      event: move
+      to: bz
+      subject: self
+    effect:
+    - op: modify
+      select:
+        ref: self
+      mod:
+        allow:
+        - action: attack_creature
+          other:
+            tapped: false
+      duration: end_of_turn
+  - kind: trigger
+    when:
+      event: battle_win
+      subject: self
+    effect:
+    - op: may
+      body:
+      - op: play_free
+        select:
+          zone: mana
+          owner: you
+          filter:
+            types:
+            - creature
+            cost_le: 7
+          count: 1
+  source:
+    official: dm23bd6-037
+    review: pending
+    aliases:
+    - dmsd19-004
+  keywords:
+  - ex_life
+  - triple_breaker
+- id: dm23bd6-038
+  name: 飢限電融 ファタル・エレガンス
+  types:
+  - creature
+  civs:
+  - water
+  - nature
+  cost: 7
+  power: 9000
+  races:
+  - ディスペクター
+  - ポセイディア・ドラゴン
+  - ジャイアント
+  mana: 1
+  text: 'EXライフ（このクリーチャーを出す時、自分の山札の上から１枚目をシールド化する。このクリーチャーが離れる時、かわりにそのシールドを墓地に置く）
+
+    W・ブレイカー
+
+    このクリーチャーが出た時、相手のクリーチャーを２体まで選び、持ち主の手札に戻す。
+
+    相手のクリーチャーが出た時、自分の山札の上から１枚目をマナゾーンに置いてもよい。'
+  abilities:
+  - kind: trigger
+    when:
+      event: move
+      to: bz
+      subject: self
+    effect:
+    - op: bounce
+      select:
+        zone: bz
+        owner: opp
+        filter:
+          types:
+          - creature
+        count: 2
+        up_to: true
+  - kind: trigger
+    when:
+      event: move
+      to: bz
+      subject:
+        owner: opp
+        filter:
+          types:
+          - creature
+    effect:
+    - op: may
+      body:
+      - op: mana_put
+        select:
+          zone: deck
+          owner: you
+          from_top: 1
+  source:
+    official: dm23bd6-038
+    review: pending
+    aliases:
+    - dmrp19-025
+  keywords:
+  - ex_life
+  - double_breaker
+- id: dm23bd6-050
+  faces:
+  - name: 勇気と知識 テスタ・ロッサ&アリス
+    types:
+    - creature
+    civs:
+    - water
+    cost: 2
+    power: 2000
+    races:
+    - アウトレイジMAX
+    abilities:
+    - kind: trigger
+      when:
+        event: move
+        to: bz
+        subject: self
+      effect:
+      - op: draw
+        count: 1
+      - op: discard
+        select:
+          zone: hand
+          owner: you
+          count: 1
+  - name: 「行くぜアリス!」「行けるわテスタ!」
+    types:
+    - spell
+    civs:
+    - fire
+    cost: 5
+    spell:
+    - op: destroy
+      select:
+        zone: bz
+        owner: opp
+        filter:
+          types:
+          - creature
+          power_le: 7000
+        count: 1
+  mana: 1
+  text: '勇気と知識 テスタ・ロッサ&アリス: このクリーチャーが出た時、カードを１枚引き、自分の手札を１枚捨てる。／「行くぜアリス!」「行けるわテスタ!」:
+    S・トリガー。相手のパワー7000以下のクリーチャーを１体選び、破壊する。'
+  source:
+    official: dm23bd6-050
+    review: pending
+    notes: ツインパクト
+    aliases:
+    - dm23ex1-063
+    - dmex16-009
+    - dmrp22-t2
+    - dmrp22-tf2
+- id: dm23bd6-051
+  name: 飛散する斧 プロメテウス
+  types:
+  - creature
+  civs:
+  - water
+  - nature
+  cost: 5
+  power: 1000
+  races:
+  - アウトレイジ
+  mana: 1
+  text: このクリーチャーが出た時、自分の山札の上から２枚をタップしてマナゾーンに置く。その後、カードを１枚、自分のマナゾーンから手札に戻す。
+  abilities:
+  - kind: trigger
+    when:
+      event: move
+      to: bz
+      subject: self
+    effect:
+    - op: choose
+      select:
+        zone: deck
+        owner: you
+        from_top: 2
+        count: all
+      as: t
+    - op: mana_put
+      select:
+        ref: t
+        count: all
+    - op: tap
+      select:
+        ref: t
+        count: all
+    - op: move
+      select:
+        zone: mana
+        owner: you
+        count: 1
+      to: hand
+      reason: return
+  source:
+    official: dm23bd6-051
+    review: pending
+    aliases:
+    - dmbd01-013
+    - dmd11-012
+    - dmd26-012
+    - dmex06-049
+    - dmex09-025
+    - dmx24-035
+- id: dm23bd7-005
+  faces:
+  - name: 衒影の悪魔龍 トゥルトゥル
+    types:
+    - creature
+    civs:
+    - darkness
+    cost: 5
+    power: 7000
+    races:
+    - デーモン・コマンド・ドラゴン
+    - トゥルース
+    abilities:
+    - kind: trigger
+      when:
+        event: move
+        to: bz
+        subject: self
+      effect:
+      - op: move
+        select:
+          zone: graveyard
+          owner: you
+          filter:
+            types:
+            - creature
+          count: 1
+        to: hand
+        reason: return
+  - name: 封じられた真言
+    types:
+    - spell
+    civs:
+    - darkness
+    cost: 7
+    spell:
+    - op: destroy
+      select:
+        zone: bz
+        owner: you
+        chooser: you
+        filter:
+          types:
+          - creature
+        count: 2
+    - op: destroy
+      select:
+        zone: bz
+        owner: opp
+        chooser: opp
+        filter:
+          types:
+          - creature
+        count: 2
+  mana: 1
+  text: '衒影の悪魔龍 トゥルトゥル: このクリーチャーが出た時、クリーチャーを１体、自分の墓地から手札に戻す。／封じられた真言: S・トリガー。各プレイヤーは自身のクリーチャーを２体選び、破壊する。'
+  source:
+    official: dm23bd7-005
+    review: pending
+    notes: ツインパクト。クリーチャー面の「相手１人につき」は2人戦前提で1体として登録した
+- id: dm23bd7-022
+  name: 音感の精霊龍 エメラルーダ
+  types:
+  - creature
+  civs:
+  - light
+  cost: 5
+  power: 5500
+  races:
+  - エンジェル・コマンド・ドラゴン
+  mana: 1
+  text: 'ブロッカー
+
+    このクリーチャーが出た時、自分のシールドを１つブレイクしてもよい。その後、自分の手札を１枚、シールド化してもよい。'
+  abilities:
+  - kind: trigger
+    when:
+      event: move
+      to: bz
+      subject: self
+    effect:
+    - op: may
+      body:
+      - op: move
+        select:
+          zone: shield
+          owner: you
+          count: 1
+        to: hand
+        reason: break
+    - op: may
+      body:
+      - op: move
+        select:
+          zone: hand
+          owner: you
+          count: 1
+        to: shield
+        reason: charge
+  source:
+    official: dm23bd7-022
+    review: pending
+    notes: '自分のシールドのブレイクは move to hand (reason: break) で表した'
+    aliases:
+    - dmd32-011
+    - dmex01-064
+    - dmex06-055
+    - dmex13-021
+    - dmex16-055
+    - dmr19-012
+    - dmrp07-g01
+    - dmrp21-t6
+    - dmrp21-tf6
+    - dmrp22-t8
+    - dmrp22-tf8
+    - dmx18-007
+    - promoy13-096
+    - promoy25-080
+  keywords:
+  - blocker
+- id: dm23bd7-023
+  name: 天星の玉 ラ・クルスタ
+  types:
+  - creature
+  civs:
+  - light
+  cost: 4
+  power: 4000
+  races:
+  - ジャスティス・オーブ
+  - 革命軍
+  mana: 1
+  text: 'ブロッカー
+
+    このクリーチャーは、相手プレイヤーを攻撃できない。
+
+    このクリーチャーが出た時、相手のマナゾーンのカードが自分のより多ければ、自分の山札の上から２枚をマナゾーンに置く。'
+  abilities:
+  - kind: trigger
+    when:
+      event: move
+      to: bz
+      subject: self
+    effect:
+    - op: if
+      cond:
+        cmp:
+        - count:
+            zone: mana
+            owner: opp
+        - '>'
+        - count:
+            zone: mana
+            owner: you
+      then:
+      - op: mana_put
+        select:
+          zone: deck
+          owner: you
+          from_top: 2
+  source:
+    official: dm23bd7-023
+    review: pending
+    notes: マナ枚数の比較は2つの count 式の cmp で表した
+    aliases:
+    - dmr17-014
+  keywords:
+  - blocker
+  - cannot_attack_player
+- id: dm23bd7-026
+  name: グローリー・スノー
+  types:
+  - spell
+  civs:
+  - light
+  cost: 4
+  mana: 1
+  text: 'S・トリガー
+
+    相手のマナゾーンのカードが自分のより多ければ、自分の山札の上から２枚をマナゾーンに置く。'
+  spell:
+  - op: if
+    cond:
+      cmp:
+      - count:
+          zone: mana
+          owner: opp
+      - '>'
+      - count:
+          zone: mana
+          owner: you
+    then:
+    - op: mana_put
+      select:
+        zone: deck
+        owner: you
+        from_top: 2
+  source:
+    official: dm23bd7-026
+    review: pending
+    aliases:
+    - dm05-008
+    - dmbd06-019
+    - dmx18-010
+  keywords:
+  - s_trigger
+- id: dm23bd7-027
+  name: トライガード・チャージャー
+  types:
+  - spell
+  civs:
+  - light
+  cost: 4
+  mana: 1
+  text: '自分のシールドを１つ、手札に加えてもよい。ただし、その「S・トリガー」は使えない。
+
+    自分の手札を１枚、シールド化してもよい。
+
+    チャージャー（この呪文を唱えた後、墓地に置くかわりにマナゾーンに置く）'
+  spell:
+  - op: may
+    body:
+    - op: move
+      select:
+        zone: shield
+        owner: you
+        count: 1
+      to: hand
+      reason: return
+  - op: may
+    body:
+    - op: move
+      select:
+        zone: hand
+        owner: you
+        count: 1
+      to: shield
+      reason: charge
+  source:
+    official: dm23bd7-027
+    review: pending
+    aliases:
+    - dmbd06-016
+    - dmrp15-013
+    - promoy18-012
+  keywords:
+  - charger
+- id: dm23bd7-028
+  name: サイバー・I・チョイス
+  types:
+  - creature
+  civs:
+  - water
+  cost: 7
+  power: 3000
+  races:
+  - サイバー・コマンド
+  mana: 1
+  text: 'S・トリガー
+
+    このクリーチャーが出た時、「S・トリガー」を持つカードを１枚、自分の手札から選んでもよい。選んだカードをコストを支払わずに使う。'
+  abilities:
+  - kind: trigger
+    when:
+      event: move
+      to: bz
+      subject: self
+    effect:
+    - op: may
+      body:
+      - op: play_free
+        select:
+          zone: hand
+          owner: you
+          filter:
+            keyword: s_trigger
+          count: 1
+  source:
+    official: dm23bd7-028
+    review: pending
+    notes: S・トリガー持ちは filter の keyword で絞った
+    aliases:
+    - dm22bd3-011
+    - dmex06-060
+    - dmr17-017
+  keywords:
+  - s_trigger
+- id: dm23bd7-035
+  faces:
+  - name: 魔刻の斬将オルゼキア
+    types:
+    - creature
+    civs:
+    - darkness
+    cost: 7
+    power: 6000
+    races:
+    - デーモン・コマンド
+    abilities:
+    - kind: trigger
+      when:
+        event: move
+        to: bz
+        subject: self
+      effect:
+      - op: destroy
+        select:
+          zone: bz
+          owner: you
+          filter:
+            types:
+            - creature
+          count: 1
+      - op: destroy
+        select:
+          zone: bz
+          owner: opp
+          chooser: opp
+          filter:
+            types:
+            - creature
+          count: 2
+  - name: 訪れる魔の時刻
+    types:
+    - spell
+    civs:
+    - darkness
+    cost: 6
+    spell:
+    - op: move
+      select:
+        zone: graveyard
+        owner: you
+        filter:
+          types:
+          - creature
+        count: any
+      to: hand
+      reason: return
+  mana: 1
+  text: '魔刻の斬将オルゼキア: このクリーチャーが出た時、自分のクリーチャーを１体破壊する。その後、相手は自身のクリーチャーを２体選び、破壊する。／訪れる魔の時刻:
+    好きな数のクリーチャーを、自分の墓地から手札に戻す。'
+  source:
+    official: dm23bd7-035
+    review: pending
+    notes: 'ツインパクト。相手の破壊分は相手が選ぶ（chooser: opp）。'
+    aliases:
+    - dmex04-011
+- id: dm23bd7-038
+  name: 九番目の旧王
+  types:
+  - spell
+  civs:
+  - darkness
+  cost: 5
+  mana: 1
+  text: 'S・トリガー
+
+    次のうちいずれか１つを選ぶ。
+
+    ▶相手のクリーチャーを１体選ぶ。このターン、そのクリーチャーのパワーを－12000する。（パワー０以下のクリーチャーは破壊される）
+
+    ▶このターン、相手のクリーチャーすべてのパワーを－3000する。'
+  spell:
+  - op: modal
+    modes:
+    - - op: modify
+        select:
+          zone: bz
+          owner: opp
+          filter:
+            types:
+            - creature
+          count: 1
+        mod:
+          power: -12000
+        duration: end_of_turn
+    - - op: modify
+        select:
+          zone: bz
+          owner: opp
+          filter:
+            types:
+            - creature
+          count: all
+        mod:
+          power: -3000
+        duration: end_of_turn
+  source:
+    official: dm23bd7-038
+    review: pending
+    aliases:
+    - dm23rp3-t02
+    - dm23rp3-tf02
+    - dmrp12-023
+    - promoy18-060
+    - promoy18-074
+    - spdeck13-011
+  keywords:
+  - s_trigger
+- id: dm23bd7-043
+  name: 魂と記憶の盾
+  types:
+  - spell
+  civs:
+  - light
+  - water
+  cost: 3
+  mana: 1
+  text: 進化ではないクリーチャーを１体選び、シールド化する。
+  spell:
+  - op: move
+    select:
+      zone: bz
+      owner: any
+      filter:
+        types:
+        - creature
+        not_types:
+        - evolution
+      count: 1
+    to: shield
+    reason: charge
+  source:
+    official: dm23bd7-043
+    review: pending
+    aliases:
+    - dm11-004
+    - dmc57-016
+    - dmd24-008
+    - dmex15-a044
+    - dmpcd02-b07
+    - dmrp10-g04
+    - dmx01-002
+    - dmx12b-060
+    - dmx24-010
+- id: dm23bd7-044
+  faces:
+  - name: 天雷の導士アヴァラルド公
+    types:
+    - creature
+    civs:
+    - light
+    cost: 3
+    power: 1000
+    races:
+    - アーク・セラフィム
+    - ナイト
+    abilities:
+    - kind: trigger
+      when:
+        event: move
+        to: bz
+        subject: self
+      effect:
+      - op: choose
+        select:
+          zone: deck
+          owner: you
+          from_top: 3
+          look: true
+          count: all
+        as: pile
+      - op: choose
+        select:
+          ref: pile
+          filter:
+            types:
+            - spell
+          count: any
+        as: a
+      - op: move
+        select:
+          ref: a
+          count: all
+        to: hand
+        reason: draw
+      - op: move
+        select:
+          ref: pile
+          count: all
+        to: deck
+        reason: put
+  - name: 魔弾アルカディア・エッグ
+    types:
+    - spell
+    civs:
+    - darkness
+    cost: 5
+    races:
+    - ナイト
+    spell:
+    - op: destroy
+      select:
+        zone: bz
+        owner: opp
+        filter:
+          types:
+          - creature
+          tapped: false
+        count: 1
+    - op: if
+      cond:
+        exists:
+          zone: graveyard
+          owner: you
+          filter:
+            name_has: 魔弾グローリー・ゲート
+      then:
+      - op: may
+        body:
+        - op: play_free
+          select:
+            zone: hand
+            owner: you
+            filter:
+              name_has: ネロ・グリフィス
+            count: 1
+  mana: 1
+  text: '天雷の導士アヴァラルド公: このクリーチャーが出た時、自分の山札の上から３枚を表向きにする。その中から呪文を好きな枚数手札に加え、残りを好きな順序で山札の下に置く。／魔弾アルカディア・エッグ:
+    S・トリガー。相手のアンタップしているクリーチャーを１体選び、破壊する。《魔弾グローリー・ゲート》が自分の墓地にあれば、《魔光大帝ネロ・グリフィス》を１体、自分の手札から出してもよい。'
+  source:
+    official: dm23bd7-044
+    review: pending
+    notes: ツインパクト
+    aliases:
+    - dm23ex2-cho026
+    - dmex17-070
+- id: dm23bd7-045
+  name: デーモン・スパーク
+  types:
+  - spell
+  civs:
+  - light
+  - darkness
+  cost: 6
+  mana: 1
+  text: 'S・トリガー
+
+    次のうちいずれか１つを選ぶ。自分のクリーチャーまたはタマシードの中に光と闇があれば、かわりに両方選んでもよい。
+
+    ▶相手のクリーチャーをすべてタップする。
+
+    ▶相手のクリーチャーを１体選び、破壊する。'
+  spell:
+  - op: if
+    cond:
+      all:
+      - exists:
+          zone: bz
+          owner: you
+          filter:
+            civs:
+            - light
+      - exists:
+          zone: bz
+          owner: you
+          filter:
+            civs:
+            - darkness
+    then:
+    - op: tap
+      select:
+        zone: bz
+        owner: opp
+        filter:
+          types:
+          - creature
+        count: all
+    - op: destroy
+      select:
+        zone: bz
+        owner: opp
+        filter:
+          types:
+          - creature
+        count: 1
+    else:
+    - op: modal
+      modes:
+      - - op: tap
+          select:
+            zone: bz
+            owner: opp
+            filter:
+              types:
+              - creature
+            count: all
+      - - op: destroy
+          select:
+            zone: bz
+            owner: opp
+            filter:
+              types:
+              - creature
+            count: 1
+  source:
+    official: dm23bd7-045
+    review: pending
+    notes: 光と闇の両方を持つ対象の判定は自分のクリーチャー/タマシード全体への exists で近似せず、両文明の存在で分岐した（タマシードも bz のカードとして数える）
+    aliases:
+    - dm22ex2-020
+  keywords:
+  - s_trigger
+- id: dm23bd7-046
+  name: 葬磁縫合 セブ・シュテロン Λ
+  types:
+  - creature
+  civs:
+  - water
+  - darkness
+  cost: 8
+  power: 8000
+  races:
+  - ディスペクター
+  - デーモン・コマンド
+  - サイバー・コマンド
+  mana: 1
+  text: 'EXライフ（このクリーチャーを出す時、自分の山札の上から１枚目をシールド化する。このクリーチャーが離れる時、かわりにそのシールドを墓地に置く）
+
+    W・ブレイカー
+
+    相手のターンの終わりに、相手は自身の手札をすべて捨てる。その後、自分はそれと同じ枚数、カードを引いてもよい。'
+  abilities:
+  - kind: trigger
+    when:
+      event: turn_end
+    if:
+      is_turn: opp
+    effect:
+    - op: choose
+      select:
+        zone: hand
+        owner: opp
+        count: all
+      as: d
+    - op: move
+      select:
+        ref: d
+        count: all
+      to: graveyard
+      reason: discard
+    - op: may
+      body:
+      - op: draw
+        count:
+          count:
+            ref: d
+  source:
+    official: dm23bd7-046
+    review: pending
+    notes: 捨てた集合を変数で保持し、その枚数をドロー枚数に参照した
+    aliases:
+    - dmrp20-022
+  keywords:
+  - ex_life
+  - double_breaker
+- id: dm23bd7-049
+  faces:
+  - name: 聖沌忍者 シャーリーシー
+    types:
+    - creature
+    civs:
+    - light
+    cost: 7
+    power: 8500
+    races:
+    - メカ・デル・ソル
+    - シノビ
+    abilities:
+    - kind: trigger
+      when:
+        event: move
+        to: bz
+        subject: self
+      effect:
+      - op: move
+        select:
+          zone: deck
+          owner: you
+          from_top: 2
+        to: shield
+        reason: charge
+  - name: シャーリー・チャージャー
+    types:
+    - spell
+    civs:
+    - light
+    cost: 3
+    races:
+    - メカ・デル・テック
+    - シノビ
+    keywords:
+    - charger
+    spell:
+    - op: move
+      select:
+        zone: deck
+        owner: you
+        from_top: 1
+      to: shield
+      reason: charge
+  mana: 1
+  text: '聖沌忍者 シャーリーシー: このクリーチャーが出た時、自分の山札の上から２枚をシールド化する。／シャーリー・チャージャー: 自分の山札の上から１枚目をシールド化する。チャージャー'
+  source:
+    official: dm23bd7-049
+    review: pending
+    notes: ツインパクト
+    aliases:
+    - dm23rp2-027
+    - dm23rp2-15a
+    - dm23rp2-17b
+    - dm23rp2x-027
+    - dm23rp2x-15a
+    - dm23rp2x-17b
+- id: dm23bd7-050
+  faces:
+  - name: 音素記号Bm エネルジコ
+    types:
+    - creature
+    civs:
+    - water
+    cost: 7
+    power: 9000
+    races:
+    - マジック・クリスタル・コマンド・ドラゴン
+    abilities:
+    - kind: trigger
+      when:
+        event: move
+        to: bz
+        subject: self
+      effect:
+      - op: draw
+        count: 2
+  - name: ♪水面から 天掴まんと するチャージャー
+    types:
+    - spell
+    civs:
+    - water
+    cost: 3
+    races:
+    - マジック・ソング
+    keywords:
+    - charger
+    spell:
+    - op: draw
+      count: 1
+    - op: discard
+      select:
+        zone: hand
+        owner: you
+        count: 1
+  mana: 1
+  text: '音素記号Bm エネルジコ: このクリーチャーが出た時、カードを２枚引く。／♪水面から 天掴まんと するチャージャー: カードを１枚引き、その後、自分の手札を１枚捨てる。チャージャー'
+  source:
+    official: dm23bd7-050
+    review: pending
+    notes: ツインパクト
+    aliases:
+    - dm23rp2-031
+    - dm23rp2-16a
+    - dm23rp2-18b
+    - dm23rp2x-031
+    - dm23rp2x-16a
+    - dm23rp2x-18b
+- id: dm23bd7-052
+  name: ミスティック・クリエーション
+  types:
+  - spell
+  civs:
+  - water
+  cost: 4
+  mana: 1
+  text: 'S・トリガー（この呪文をシールドゾーンから手札に加える時、コストを支払わずにすぐ唱えてもよい）
+
+    カードを３枚まで、自分のマナゾーンから手札に戻す。'
+  spell:
+  - op: move
+    select:
+      zone: mana
+      owner: you
+      count: 3
+      up_to: true
+    to: hand
+    reason: return
+  source:
+    official: dm23bd7-052
+    review: pending
+    aliases:
+    - dm06-052
+    - dm18-066
+    - dmx14-069
+  keywords:
+  - s_trigger
+- id: dm23bd7-054
+  name: インフェルノ・サイン
+  types:
+  - spell
+  civs:
+  - darkness
+  cost: 5
+  mana: 1
+  text: 'S・トリガー（この呪文をシールドゾーンから手札に加える時、コストを支払わずにすぐ唱えてもよい）
+
+    コスト７以下の進化ではないクリーチャーを１体、自分の墓地から出す。'
+  spell:
+  - op: play_free
+    select:
+      zone: graveyard
+      owner: you
+      filter:
+        types:
+        - creature
+        not_types:
+        - evolution
+        cost_le: 7
+      count: 1
+  source:
+    official: dm23bd7-054
+    review: pending
+    aliases:
+    - dmc44-001
+    - dmc48-024
+    - dmc63-017
+    - dmd10-011
+    - dmd25-013
+    - dmpcd02-b11
+    - dmpcd03-b08
+    - dmx21-068
+    - dmx24-028
+  keywords:
+  - s_trigger
+- id: dm23bd7-056
+  name: デモンズ・ライト
+  types:
+  - spell
+  civs:
+  - water
+  - darkness
+  cost: 4
+  mana: 1
+  text: カードを２枚引く。相手のクリーチャーを１体選ぶ。自分の手札１枚につき、このターン、そのクリーチャーのパワーを-1000する。
+  spell:
+  - op: draw
+    count: 2
+  - op: modify
+    select:
+      zone: bz
+      owner: opp
+      filter:
+        types:
+        - creature
+      count: 1
+    mod:
+      power:
+        amount: -1000
+        count:
+          zone: hand
+          owner: you
+    duration: end_of_turn
+  source:
+    official: dm23bd7-056
+    review: pending
+    notes: パワー修正は手札枚数を count 式で参照した
+    aliases:
+    - dm23ex2-084
+    - dmr23-042
+    - dmrp10-g07
+    - promoy17-080
+    - promoy19-098
