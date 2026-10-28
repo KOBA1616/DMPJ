@@ -39,3 +39,16 @@ def test_static_abilities_follow_the_condition(rr):
     assert pw == [2000, 2000, 6000]                       # R055: 1000+4000+1000, R054 ×2: 1000+1000
     one = setup(rr, {"bz": ["R055", "R054"]})
     assert sorted(one.chars(c)["power"] for c in one.bz_tops(0)) == [1000, 1000]
+
+
+def test_rule_convert_gates_every_ability_after_wave_striker():
+    """ルール変換でも、ウェーブストライカーに続く能力は「他に2体以上」の条件つきにする（付け忘れは常時働く誤変換）。"""
+    import sys
+    sys.path.insert(0, str(Path(__file__).resolve().parent.parent / "tools"))
+    import rule_convert
+    row = {"id": "x-1", "name": "試験", "card_type": "クリーチャー", "civilization": "自然", "cost": "2", "power": "1000",
+           "race": "ワイルド・ベジーズ", "mana": "1",
+           "text": "ウェーブストライカー(バトルゾーンに「ウェーブストライカー」を持つクリーチャーが他に２体以上あれば、このクリーチャーは次の能力を得る)\nパワーアタッカー +3000(攻撃中、このクリーチャーのパワーは+3000される)"}
+    card = rule_convert.convert(row)
+    assert card["keywords"] == ["wave_striker"]
+    assert [ab["if"] for ab in card["abilities"]] == [rule_convert.WAVE_COND]

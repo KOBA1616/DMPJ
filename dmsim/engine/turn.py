@@ -289,7 +289,9 @@ def st_attack(eng, t):                                  # 505
     s = eng.s
     a = s.active
     atk = eng._attack_options(a)
-    opts = atk + eng._activate_options(a, atk) + [{"key": "pass"}]
+    forced = {o["cid"] for o in atk if "attack" in eng.chars(o["cid"])["require"]}   # 506.1b 攻撃を強制されたクリーチャーは攻撃させなくてはいけない
+    act = [o for o in eng._activate_options(a, atk) if o["tap"] not in forced]       # タップ能力で攻撃を免れることはできない
+    opts = atk + act + ([] if forced else [{"key": "pass"}])
     ans, d = eng.ask(t, a, "attack", opts)
     if d:
         return d

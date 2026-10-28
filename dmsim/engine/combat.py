@@ -214,14 +214,17 @@ def h_attack(eng, t):
         guards = [] if t["target"] == "player" else [          # 507.1a ガードマン: 攻撃されている自分の他のクリーチャーがいる時だけ
             c for c in eng.bz_tops(1 - a) if not s.cards[c].tapped and [c, s.cards[c].gen] != t["target"]
             and eng.permits(c, "guardman", att[0])]
+        forced = [c for c in blockers if "block" in eng.chars(c)["require"]]   # 507.1b ブロックを強制されたクリーチャーは必ず選ぶ
         opts = [eng._card_option(c) for c in blockers] + \
-               [eng._card_option(c, key=f"guard:{s.cards[c].defn}") for c in guards] + [{"key": "no_block"}]
+               [eng._card_option(c, key=f"guard:{s.cards[c].defn}") for c in guards] + ([] if forced else [{"key": "no_block"}])
         ans, d = eng.ask(t, 1 - a, "block", opts)
         if d:
             return d
         t["phase"] = 3
         o = opts[ans[0]]
         if o["key"] != "no_block":
+            for c in forced:      # 強制された全員が能力を使用する（タップ）。最後に解決する1体が攻撃先になる（507.2）
+                s.cards[c].tapped = True
             s.cards[o["cid"]].tapped = True
             t["target"] = s.ref(o["cid"])
             if o["key"].startswith("guard:"):      # 507.2b ガードマンで変更された場合、ブロッククリーチャーにはならない
