@@ -1295,6 +1295,15 @@
       ]
      }
     },
+    "require": {
+     "type": "array",
+     "items": {
+      "enum": [
+       "attack",
+       "block"
+      ]
+     }
+    },
     "breaks": {
      "type": "integer"
     },
@@ -1411,6 +1420,7 @@
      "opt_reduce",
      "power",
      "power_when",
+     "require",
      "sac_reduce"
     ]
    }

@@ -361,3 +361,27 @@ cards:
         affects: {zone: bz, owner: you, filter: {types: [creature]}}
         if: {cmp: [{count: {zone: bz, owner: any, other: true, filter: {keyword: wave_striker}}}, ">=", 2]}
         mod: {power: 1000}
+
+  # 強制（506.1b 攻撃しなければならない, 507.1b ブロックしなければならない）
+  - id: R056
+    name: 試験用強制攻撃
+    types: [creature]
+    civs: [fire]
+    cost: 1
+    power: 1000
+    races: [テスト]
+    text: このクリーチャーは、毎ターン攻撃しなければならない。
+    abilities:
+      - {kind: static, affects: self, mod: {require: [attack]}}
+
+  - id: R057
+    name: 試験用強制ブロック
+    types: [creature]
+    civs: [light]
+    cost: 1
+    power: 5000
+    races: [テスト]
+    keywords: [blocker]
+    text: ブロッカー / 相手のクリーチャーが攻撃する時、このクリーチャーは可能であればブロックする。
+    abilities:
+      - {kind: static, affects: self, mod: {require: [block]}}

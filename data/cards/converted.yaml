@@ -51361,8 +51361,7 @@ cards:
   source:
     official: dm06-096
     review: pending
-    notes: 'パワーアタッカーは「攻撃中」なので power_when（when: attacking）。説明文は text
-      から省いた'
+    notes: 'パワーアタッカーは「攻撃中」なので power_when（when: attacking）。説明文は text から省いた'
 - id: dm06-070
   name: 大自然の意志
   types:
@@ -63704,3 +63703,247 @@ cards:
     official: dm11-038
     review: pending
     notes: 厳密一致
+- id: dm10-047
+  name: ルナ・イーグル
+  types:
+  - creature
+  civs:
+  - water
+  cost: 3
+  power: 5000
+  races:
+  - サイバー・ムーン
+  mana: 1
+  abilities:
+  - kind: static
+    affects: self
+    mod:
+      require:
+      - block
+  keywords:
+  - blocker
+  - cannot_attack
+  text: 'ブロッカー
+
+    このクリーチャーは攻撃することができない。
+
+    相手のクリーチャーが攻撃する時、このクリーチャーは可能であればブロックする。'
+  source:
+    official: dm10-047
+    review: pending
+    notes: ルールのみで変換（モデル不使用）
+- id: dm10-052
+  name: 死劇人形ピエール
+  types:
+  - creature
+  civs:
+  - darkness
+  cost: 2
+  power: 1000
+  races:
+  - デスパペット
+  mana: 1
+  abilities:
+  - kind: static
+    affects: self
+    mod:
+      require:
+      - block
+  keywords:
+  - blocker
+  - cannot_attack
+  - slayer
+  text: 'ブロッカー
+
+    このクリーチャーは攻撃することができない。
+
+    相手のクリーチャーが攻撃する時、このクリーチャーは可能であればブロックする。
+
+    スレイヤー(このクリーチャーがバトルする時、バトルの後、相手クリーチャーを破壊する)'
+  source:
+    official: dm10-052
+    review: pending
+    notes: ルールのみで変換（モデル不使用）
+- id: dm12-038
+  name: 宣凶師ベルモーレ
+  types:
+  - creature
+  civs:
+  - light
+  cost: 2
+  power: 3500
+  races:
+  - グラディエーター
+  mana: 1
+  abilities:
+  - kind: static
+    affects: self
+    mod:
+      require:
+      - block
+  keywords:
+  - blocker
+  - cannot_attack_player
+  text: 'ブロッカー(相手クリーチャーが攻撃する時、このクリーチャーをタップして、その攻撃を阻止してもよい。その後、その相手クリーチャーとバトルする)
+
+    相手のクリーチャーが攻撃する時、このクリーチャーは可能であればブロックする。
+
+    このクリーチャーは、相手プレイヤーを攻撃できない。'
+  source:
+    official: dm12-038
+    review: pending
+    notes: ルールのみで変換（モデル不使用）
+- id: dm02-049
+  name: 小さな勇者ゲット
+  types:
+  - creature
+  civs:
+  - fire
+  cost: 2
+  power: 2000
+  races:
+  - ヒューマノイド
+  mana: 1
+  abilities:
+  - kind: trigger
+    when:
+      event: attack
+      subject: self
+    effect:
+    - op: modify
+      select:
+        ref: self
+      mod:
+        power: 1000
+      duration: end_of_turn
+  - kind: static
+    affects: self
+    mod:
+      require:
+      - attack
+  text: 'パワーアタッカー+1000(攻撃中、このクリーチャーのパワーは+1000される。)
+
+    このクリーチャーは、毎ターン攻撃しなければならない。'
+  source:
+    official: dm02-049
+    review: pending
+    notes: ルールのみで変換（モデル不使用）
+    aliases:
+    - promoy14-spd09
+- id: dm11-024
+  name: アクア・トリックスター
+  types:
+  - creature
+  civs:
+  - water
+  cost: 2
+  power: 1000
+  races:
+  - リキッド・ピープル
+  mana: 1
+  abilities:
+  - kind: trigger
+    when:
+      event: move
+      to: bz
+      subject: self
+    effect:
+    - op: tap
+      select:
+        zone: bz
+        owner: opp
+        filter:
+          types:
+          - creature
+        count: 1
+    if:
+      cmp: &id002
+      - count:
+          zone: bz
+          owner: any
+          other: true
+          filter:
+            keyword: wave_striker
+      - '>='
+      - 2
+  keywords:
+  - wave_striker
+  text: 'ウェーブストライカー(バトルゾーンに「ウェーブストライカー」を持つクリーチャーが他に２体以上あれば、このクリーチャーは次の能力を得る)
+
+    このクリーチャーをバトルゾーンに出した時、バトルゾーンにある相手のクリーチャーを１体選び、タップする。'
+  source:
+    official: dm11-024
+    review: pending
+    notes: ルールのみで変換（モデル不使用）
+- id: dm11-030
+  name: マッチョ・メロン
+  types:
+  - creature
+  civs:
+  - nature
+  cost: 2
+  power: 1000
+  races:
+  - ワイルド・ベジーズ
+  mana: 1
+  abilities:
+  - kind: trigger
+    when:
+      event: attack
+      subject: self
+    effect:
+    - op: modify
+      select:
+        ref: self
+      mod:
+        power: 3000
+      duration: end_of_turn
+    if:
+      cmp: *id002
+  keywords:
+  - wave_striker
+  text: 'ウェーブストライカー(バトルゾーンに「ウェーブストライカー」を持つクリーチャーが他に２体以上あれば、このクリーチャーは次の能力を得る)
+
+    パワーアタッカー +3000(攻撃中、このクリーチャーのパワーは+3000される)'
+  source:
+    official: dm11-030
+    review: pending
+    notes: ルールのみで変換（モデル不使用）
+- id: dm12-048
+  name: 炎神兵ゴリアック
+  types:
+  - creature
+  civs:
+  - fire
+  cost: 5
+  power: 4000
+  races:
+  - アーマロイド
+  mana: 1
+  abilities:
+  - kind: trigger
+    when:
+      event: move
+      to: bz
+      subject: self
+    effect:
+    - op: destroy
+      select:
+        zone: bz
+        owner: opp
+        filter:
+          types:
+          - creature
+          power_le: 5000
+        count: 1
+    if:
+      cmp: *id002
+  keywords:
+  - wave_striker
+  text: 'ウェーブストライカー(バトルゾーンに「ウェーブストライカー」を持つクリーチャーが他に２体以上あれば、このクリーチャーは次の能力を得る)
+
+    このクリーチャーをバトルゾーンに出した時、相手のパワー5000以下のクリーチャーを１体破壊する。'
+  source:
+    official: dm12-048
+    review: pending
+    notes: ルールのみで変換（モデル不使用）

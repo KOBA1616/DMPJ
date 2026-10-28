@@ -21,6 +21,7 @@ from dmsim.defs import DATA  # noqa: E402
 
 CIVS = {"光": "light", "水": "water", "闇": "darkness", "火": "fire", "自然": "nature", "ゼロ": "zero"}
 NOTE = "ルールのみで変換（モデル不使用）"
+WAVE_COND = {"cmp": [{"count": {"zone": "bz", "owner": "any", "other": True, "filter": {"keyword": "wave_striker"}}}, ">=", 2]}
 
 
 def norm(s: str) -> str:
@@ -444,6 +445,11 @@ def convert(row: dict) -> dict | None:
                 continue
             if k not in kws:
                 kws.append(k)
+    if "wave_striker" in kws:       # ウェーブストライカー: 続く能力はすべて「他に2体以上」の間だけ得る。他のキーワードが混ざる原文はモデルへ
+        if len(kws) > 1 or not extra:
+            return None
+        for ab in extra:
+            ab["if"] = {"all": [ab["if"], WAVE_COND]} if "if" in ab else dict(WAVE_COND)
     if extra:
         card["abilities"] = extra
     if kws or extra:

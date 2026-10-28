@@ -246,6 +246,16 @@ patterns:
 
 # ---- 呪文の効果文（呪文の解決で行う ops）。1行まるごとがこの文の時だけ変換する。行は書かれた順に並べる ----
 # re は patterns と同じ正規化（NFKC・空白と読点を除く・注釈除去）に完全一致させる
+  # 強制（506.1b, 507.1b）。mod.require は攻撃・ブロックを強制する
+  must_attack_each_turn:
+    re: 'このクリーチャーは毎ターン攻撃しなければならない'
+    abilities:
+      - {kind: static, affects: self, mod: {require: [attack]}}
+  must_block_if_able:
+    re: '相手のクリーチャーが攻撃する時このクリーチャーは可能であればブロックする'
+    abilities:
+      - {kind: static, affects: self, mod: {require: [block]}}
+
 spell_effects:
   draw:
     re: 'カードを(\d)枚引く'
