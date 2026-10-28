@@ -55649,3 +55649,1980 @@ cards:
     official: dm12-028
     review: pending
     notes: dm12-022 と同じ逐次形
+- id: dm12-051
+  name: ロンリーのホッチキス
+  types:
+  - creature
+  civs:
+  - fire
+  cost: 2
+  power: 3000
+  races:
+  - ゼノパーツ
+  mana: 1
+  text: 他のクリーチャーがバトルゾーンに出た時、このクリーチャーをタップする。
+  abilities:
+  - kind: trigger
+    when:
+      event: move
+      to: bz
+      subject:
+        owner: any
+        filter:
+          types:
+          - creature
+        other: true
+    effect:
+    - op: tap
+      select:
+        ref: self
+        count: 1
+  source:
+    official: dm12-051
+    review: pending
+    notes: 原文が同じ dm12-012 の変換結果を写した（モデル不使用）。能力は元カードの確認に従う
+- id: dm12-036
+  name: 宣凶師ビンゴレ
+  types:
+  - creature
+  civs:
+  - light
+  cost: 4
+  power: 3000
+  races:
+  - グラディエーター
+  mana: 1
+  text: 相手のターン中、このクリーチャーが自分の手札から捨てられる時、墓地に置くかわりにバトルゾーンに出す。
+  abilities:
+  - kind: replace
+    zone: hand
+    when:
+      event: move
+      from: hand
+      to: graveyard
+      reason: discard
+      subject: self
+    if:
+      is_turn: opp
+    instead:
+    - op: move
+      select:
+        ref: self
+        count: 1
+      to: bz
+      reason: summon
+  source:
+    official: dm12-036
+    review: pending
+    notes: dm06-041 ダバ・トーレと同じ手札で機能する置換。捨てられる理由は discard
+- id: dm12-037
+  name: 予言者ミズーイ
+  types:
+  - creature
+  civs:
+  - light
+  cost: 3
+  power: 2500
+  races:
+  - ライトブリンガー
+  mana: 1
+  text: このクリーチャーをバトルゾーンに出した時、バトルゾーンにある闇または火のクリーチャーを１体選び、タップしてもよい。
+  abilities:
+  - kind: trigger
+    when:
+      event: move
+      to: bz
+      subject: self
+    effect:
+    - op: may
+      body:
+      - op: tap
+        select:
+          zone: bz
+          owner: any
+          filter:
+            types:
+            - creature
+            civs:
+            - darkness
+            - fire
+          count: 1
+  source:
+    official: dm12-037
+    review: pending
+- id: dm12-040
+  name: バミューダ・クロウラー
+  types:
+  - creature
+  civs:
+  - water
+  cost: 4
+  power: 3000
+  races:
+  - アースイーター
+  mana: 1
+  text: 'ブロッカー (相手クリーチャーが攻撃する時、このクリーチャーをタップして、その攻撃を阻止してもよい。その後、その相手クリーチャーとバトルする)
+
+    このクリーチャーがブロックした時、相手はバトルゾーンから自分自身のクリーチャーを１体選び、持ち主の手札に戻す。
+
+    このクリーチャーは攻撃することができない。'
+  abilities:
+  - kind: trigger
+    when:
+      event: block
+      subject: self
+    effect:
+    - op: bounce
+      select:
+        zone: bz
+        owner: opp
+        chooser: opp
+        filter:
+          types:
+          - creature
+        count: 1
+  source:
+    official: dm12-040
+    review: pending
+    notes: '戻すクリーチャーは相手が自分のものから選ぶ（chooser: opp）'
+  keywords:
+  - blocker
+  - cannot_attack
+- id: dm12-041
+  name: ファンキー・ウィザード
+  types:
+  - creature
+  civs:
+  - water
+  cost: 4
+  power: 2000
+  races:
+  - マーフォーク
+  mana: 1
+  text: 'ブロッカー(相手クリーチャーが攻撃する時、このクリーチャーをタップして、その攻撃を阻止してもよい。その後、その相手クリーチャーとバトルする)
+
+    このクリーチャーをバトルゾーンに出した時、各プレイヤーはカードを１枚引いてもよい。'
+  abilities:
+  - kind: trigger
+    when:
+      event: move
+      to: bz
+      subject: self
+    effect:
+    - op: may
+      body:
+      - op: draw
+        count: 1
+    - op: may
+      body:
+      - op: draw
+        count: 1
+        player: opp
+  source:
+    official: dm12-041
+    review: pending
+    notes: 相手の「引いてもよい」の判断も may のプロンプト（効果のコントローラー宛）で代替している点だけ原文と異なる
+  keywords:
+  - blocker
+- id: dm12-043
+  name: パッション・マリアッチ
+  types:
+  - creature
+  civs:
+  - water
+  cost: 2
+  power: 2000
+  races:
+  - マーフォーク
+  mana: 1
+  text: このクリーチャーをバトルゾーンに出した時、自分のコスト４以下のクリーチャーを１体、バトルゾーンから自分の手札に戻す。
+  abilities:
+  - kind: trigger
+    when:
+      event: move
+      to: bz
+      subject: self
+    effect:
+    - op: bounce
+      select:
+        zone: bz
+        owner: you
+        filter:
+          types:
+          - creature
+          cost_le: 4
+        count: 1
+  source:
+    official: dm12-043
+    review: pending
+    notes: このクリーチャー自身もコスト2なので対象にできる（原文どおり）
+- id: dm12-045
+  name: ギガレイズ
+  types:
+  - creature
+  civs:
+  - darkness
+  cost: 4
+  power: 2000
+  races:
+  - キマイラ
+  mana: 1
+  text: このクリーチャーをバトルゾーンに出した時、水または火のクリーチャーを１体、自分の墓地から自分の手札に戻してもよい。
+  abilities:
+  - kind: trigger
+    when:
+      event: move
+      to: bz
+      subject: self
+    effect:
+    - op: may
+      body:
+      - op: move
+        select:
+          zone: graveyard
+          owner: you
+          filter:
+            types:
+            - creature
+            civs:
+            - water
+            - fire
+          count: 1
+        to: hand
+        reason: return
+  source:
+    official: dm12-045
+    review: pending
+- id: dm12-s01
+  name: 緑神龍アーク・デラセルナ
+  types:
+  - creature
+  civs:
+  - nature
+  cost: 8
+  power: 6000
+  races:
+  - アース・ドラゴン
+  mana: 1
+  text: 'W・ブレイカー(このクリーチャーはシールドを２枚ブレイクする)
+
+    相手のターン中、このクリーチャーが自分の手札から捨てられる時、墓地に置くかわりにバトルゾーンに置く。'
+  abilities:
+  - kind: replace
+    zone: hand
+    when:
+      event: move
+      from: hand
+      to: graveyard
+      reason: discard
+      subject: self
+    if:
+      is_turn: opp
+    instead:
+    - op: move
+      select:
+        ref: self
+        count: 1
+      to: bz
+      reason: summon
+  source:
+    official: dm12-s01
+    review: pending
+    notes: dm12-036 ビンゴレと同文の置換
+  keywords:
+  - double_breaker
+- id: dm13-003
+  name: 電磁旋竜アカシック・ファースト
+  types:
+  - creature
+  civs:
+  - water
+  - fire
+  cost: 7
+  power: 6000
+  races:
+  - サイバーロード
+  - ボルケーノ・ドラゴン
+  mana: 1
+  text: 'マナゾーンに置く時、このカードはタップして置く。
+
+    シンパシー：サイバー・ウイルスおよびドラゴノイド(このクリーチャーを召喚する時支払うコストは、バトルゾーンにある自分のサイバー・ウイルスまたはドラゴノイド１体につき１少なくなる。ただしコストは２より少なくならない)
+
+    このクリーチャーは、タップされていないクリーチャーを攻撃できる。
+
+    このクリーチャーが破壊される時、墓地に置くかわりに自分の手札に戻す。'
+  abilities:
+  - kind: static
+    affects: self
+    mod:
+      allow:
+      - action: attack_creature
+        other:
+          tapped: false
+  - kind: replace
+    when:
+      event: move
+      from: bz
+      to: graveyard
+      reason: destroy
+      subject: self
+    instead:
+    - op: move
+      select:
+        ref: self
+      to: hand
+      reason: return
+  - kind: static
+    zone: hand
+    affects: self
+    mod:
+      cost:
+        amount: -1
+        count:
+          zone: bz
+          owner: you
+          filter:
+            races:
+            - サイバー・ウイルス
+            - ドラゴノイド
+      cost_min: 2
+  source:
+    official: dm13-003
+    review: pending
+    notes: シンパシーは cost の count 形（1体につき-1）と cost_min で表現した。原文データはリマインダーを欠くため dm13-004
+      の表記で補った
+- id: dm13-004
+  name: 霊樹海嶺ガウルザガンタ
+  types:
+  - creature
+  civs:
+  - water
+  - nature
+  cost: 5
+  power: 5000
+  races:
+  - リヴァイアサン
+  - ミステリー・トーテム
+  mana: 1
+  text: マナゾーンに置く時、このカードはタップして置く。シンパシー：ゲル・フィッシュおよびスノーフェアリー(このクリーチャーを召喚する時支払うコストは、バトルゾーンにある自分のゲル・フィッシュまたはスノーフェアリー１体につき１少なくなる。ただしコストは２より少なくならない)
+    進化クリーチャーがバトルゾーンに出た時、バトルゾーンにある進化クリーチャーをすべてタップする。
+  abilities:
+  - kind: static
+    zone: hand
+    affects: self
+    mod:
+      cost:
+        amount: -1
+        count:
+          zone: bz
+          owner: you
+          filter:
+            races:
+            - ゲル・フィッシュ
+            - スノーフェアリー
+      cost_min: 2
+  - kind: trigger
+    when:
+      event: move
+      to: bz
+      subject:
+        owner: any
+        filter:
+          types:
+          - evolution
+    effect:
+    - op: tap
+      select:
+        zone: bz
+        owner: any
+        filter:
+          types:
+          - creature
+          - evolution
+        count: all
+  source:
+    official: dm13-004
+    review: pending
+    notes: 「マナゾーンに置く時タップして置く」はルール処理側。このクリーチャー自身は進化ではないので2つ目は自分の入場では誘発しない
+- id: dm13-005
+  name: 放出のゲッチェル
+  types:
+  - creature
+  civs:
+  - darkness
+  - nature
+  cost: 6
+  power: 7000
+  races:
+  - スピリット・クォーツ
+  mana: 1
+  text: 'マナゾーンに置く時、このカードはタップして置く。
+
+    このクリーチャーが攻撃する時、自分の手札を１枚、自分のマナゾーンか自分のシールドゾーンに置いてもよい。
+
+    W・ブレイカー(このクリーチャーはシールドを２枚ブレイクする)'
+  abilities:
+  - kind: trigger
+    when:
+      event: attack
+      subject: self
+    effect:
+    - op: may
+      body:
+      - op: modal
+        count: 1
+        modes:
+        - - op: move
+            select:
+              zone: hand
+              owner: you
+              count: 1
+            to: mana
+            reason: put
+        - - op: move
+            select:
+              zone: hand
+              owner: you
+              count: 1
+            to: shield
+            reason: put
+  source:
+    official: dm13-005
+    review: pending
+    notes: 置き先の選択は modal で表現した
+  keywords:
+  - double_breaker
+- id: dm13-006
+  name: 宣凶師ドロシア
+  types:
+  - creature
+  civs:
+  - light
+  cost: 4
+  power: 3000
+  races:
+  - グラディエーター
+  mana: 1
+  text: 相手のターン中、自分の手札を捨てた時、捨てた枚数と同じ数のカードを引く。
+  abilities:
+  - kind: trigger
+    when:
+      event: move
+      from: hand
+      to: graveyard
+      reason: discard
+      subject:
+        owner: you
+    if:
+      is_turn: opp
+    effect:
+    - op: draw
+      count: 1
+  source:
+    official: dm13-006
+    review: pending
+    notes: 捨てるイベントはカード1枚ごとに発生する前提で、1枚につき1枚引く形にした（合計は捨てた枚数と一致する）
+- id: dm13-010
+  name: 死皇帝ベルセバ
+  types:
+  - creature
+  - evolution
+  civs:
+  - darkness
+  cost: 6
+  power: 8000
+  races:
+  - ダークロード
+  mana: 1
+  evolve_from:
+    races:
+    - ダークロード
+  text: '進化-自分のダークロード１体の上に置く。
+
+    他のクリーチャーがバトルゾーンに出た時、そのクリーチャーの持ち主は自分自身のマナゾーンからカードを１枚選び、墓地に置く。
+
+    W・ブレイカー(このクリーチャーはシールドを２枚ブレイクする)'
+  abilities:
+  - kind: trigger
+    when:
+      event: move
+      to: bz
+      subject:
+        owner: you
+        filter:
+          types:
+          - creature
+        other: true
+    effect:
+    - op: move
+      select:
+        zone: mana
+        owner: you
+        count: 1
+      to: graveyard
+      reason: put
+  - kind: trigger
+    when:
+      event: move
+      to: bz
+      subject:
+        owner: opp
+        filter:
+          types:
+          - creature
+    effect:
+    - op: move
+      select:
+        zone: mana
+        owner: opp
+        chooser: opp
+        count: 1
+      to: graveyard
+      reason: put
+  source:
+    official: dm13-010
+    review: pending
+    notes: 「そのクリーチャーの持ち主」を自分のクリーチャーの場合と相手の場合で2つの誘発に分けた
+  keywords:
+  - double_breaker
+- id: dm13-013
+  name: メッツアーのアイロン
+  types:
+  - creature
+  civs:
+  - fire
+  cost: 3
+  power: 1000
+  races:
+  - ゼノパーツ
+  mana: 1
+  text: このクリーチャーがシールドをブレイクした時、そのターンの終わりにこのクリーチャーを破壊し、各プレイヤーは自分自身のマナゾーンからカードを１枚選んで持ち主の墓地に置く。
+  abilities:
+  - kind: trigger
+    when:
+      event: attack
+      subject: self
+    effect:
+    - op: delayed_trigger
+      when:
+        event: break
+        player: opp
+      duration: during_attack
+      effect:
+      - op: delayed_trigger
+        when:
+          event: turn_end
+        duration: end_of_turn
+        effect:
+        - op: destroy
+          select:
+            ref: self
+            count: 1
+        - op: move
+          select:
+            zone: mana
+            owner: you
+            count: 1
+          to: graveyard
+          reason: put
+        - op: move
+          select:
+            zone: mana
+            owner: opp
+            chooser: opp
+            count: 1
+          to: graveyard
+          reason: put
+  source:
+    official: dm13-013
+    review: pending
+    notes: dm11-029 ハザード・ホッパーと同じ二段の遅延誘発
+- id: dm13-017
+  name: 機動聖者ミールマックス
+  types:
+  - creature
+  civs:
+  - light
+  - fire
+  cost: 6
+  power: 3000
+  races:
+  - イニシエート
+  - アーマロイド
+  mana: 1
+  text: 'マナゾーンに置く時、このカードはタップして置く。
+
+    このクリーチャーは、タップされていないクリーチャーを攻撃できる。
+
+    このクリーチャーは、相手プレイヤーを攻撃できない。
+
+    このクリーチャーがバトルに勝った時、このクリーチャーをアンタップしてもよい。'
+  abilities:
+  - kind: static
+    affects: self
+    mod:
+      allow:
+      - action: attack_creature
+        other:
+          tapped: false
+  - kind: trigger
+    when:
+      event: battle_win
+      subject: self
+    effect:
+    - op: may
+      body:
+      - op: untap
+        select:
+          ref: self
+          count: 1
+  source:
+    official: dm13-017
+    review: pending
+  keywords:
+  - cannot_attack_player
+- id: dm13-020
+  name: 吸引のシーリゲル
+  types:
+  - creature
+  civs:
+  - darkness
+  - nature
+  cost: 6
+  power: 7000
+  races:
+  - スピリット・クォーツ
+  mana: 1
+  text: 'マナゾーンに置く時、このカードはタップして置く。
+
+    このクリーチャーが攻撃する時、カードを１枚、自分のマナゾーンまたはシールドゾーンから自分の手札に戻してもよい。
+
+    W・ブレイカー(このクリーチャーはシールドを２枚ブレイクする)'
+  abilities:
+  - kind: trigger
+    when:
+      event: attack
+      subject: self
+    effect:
+    - op: may
+      body:
+      - op: modal
+        count: 1
+        modes:
+        - - op: bounce
+            select:
+              zone: mana
+              owner: you
+              count: 1
+        - - op: bounce
+            select:
+              zone: shield
+              owner: you
+              count: 1
+  source:
+    official: dm13-020
+    review: pending
+    notes: dm13-005 ゲッチェルと同じ modal の形
+  keywords:
+  - double_breaker
+- id: dm13-023
+  name: 怒璃流男
+  types:
+  - creature
+  civs:
+  - darkness
+  cost: 4
+  power: 3000
+  races:
+  - ヘドリアン
+  mana: 1
+  text: このクリーチャーをバトルゾーンに出した時、進化クリーチャーを１体、自分の墓地から自分の手札に戻してもよい。
+  abilities:
+  - kind: trigger
+    when:
+      event: move
+      to: bz
+      subject: self
+    effect:
+    - op: may
+      body:
+      - op: move
+        select:
+          zone: graveyard
+          owner: you
+          filter:
+            types:
+            - creature
+            - evolution
+          count: 1
+        to: hand
+        reason: return
+  source:
+    official: dm13-023
+    review: pending
+- id: dm13-027
+  name: 邪脚護聖ブレイガー
+  types:
+  - creature
+  civs:
+  - light
+  - darkness
+  cost: 4
+  power: 3000
+  races:
+  - ガーディアン
+  - ブレインジャッカー
+  mana: 1
+  text: マナゾーンに置く時、このカードはタップして置く。セイバー：全種族(自分の他のクリーチャーが破壊される時、そのクリーチャー１体のかわりにこのクリーチャーを破壊してもよい)
+  abilities:
+  - kind: replace
+    optional: true
+    when:
+      event: move
+      to: graveyard
+      reason: destroy
+      subject:
+        owner: you
+        filter:
+          types:
+          - creature
+        other: true
+    instead:
+    - op: destroy
+      select:
+        ref: self
+        count: 1
+  source:
+    official: dm13-027
+    review: pending
+    notes: セイバーは dm05-050 と同じ置換の形で、対象種族を絞らない（全種族）。「マナゾーンに置く時タップして置く」はルール処理側
+- id: dm13-033
+  name: 霊鳥と水晶の楽園
+  types:
+  - spell
+  civs:
+  - water
+  - nature
+  cost: 2
+  mana: 1
+  text: マナゾーンに置く時、このカードはタップして置く。このターン、自分の多色クリーチャーはブロックされない。
+  spell:
+  - op: modify
+    select:
+      zone: bz
+      owner: you
+      filter:
+        types:
+        - creature
+        multicolor: true
+      count: all
+    mod:
+      grant:
+      - unblockable
+    duration: end_of_turn
+  source:
+    official: dm13-033
+    review: pending
+    notes: 「マナゾーンに置く時タップして置く」はルール処理側
+- id: dm13-037
+  name: 結界の守護者クレス・ドーベル
+  types:
+  - creature
+  civs:
+  - light
+  cost: 2
+  power: 2000
+  races:
+  - ガーディアン
+  mana: 1
+  text: 'ブロッカー
+
+    このクリーチャーがブロックした時、バトルゾーンに相手の進化クリーチャーが１体でもあれば、このクリーチャーのパワーは+4000される。
+
+    このクリーチャーは、相手プレイヤーを攻撃できない。'
+  abilities:
+  - kind: trigger
+    when:
+      event: block
+      subject: self
+    if:
+      exists:
+        zone: bz
+        owner: opp
+        filter:
+          types:
+          - creature
+          - evolution
+    effect:
+    - op: modify
+      select:
+        ref: self
+        count: 1
+      mod:
+        power: 4000
+      duration: end_of_turn
+  source:
+    official: dm13-037
+    review: pending
+    notes: パワーが要るのはそのバトルの間だけなので end_of_turn で結果が一致する
+  keywords:
+  - blocker
+  - cannot_attack_player
+- id: dm13-041
+  name: マジカル・ポット
+  types:
+  - spell
+  civs:
+  - water
+  cost: 1
+  mana: 1
+  text: バトルゾーンにある進化クリーチャーを１体選び、持ち主の手札に戻す。
+  spell:
+  - op: bounce
+    select:
+      zone: bz
+      owner: any
+      filter:
+        types:
+        - creature
+        - evolution
+      count: 1
+  source:
+    official: dm13-041
+    review: pending
+- id: dm13-044
+  name: ナイトメア・マシーン
+  types:
+  - spell
+  civs:
+  - darkness
+  cost: 5
+  mana: 1
+  text: 'S・トリガー(この呪文をシールドゾーンから手札に加える時、コストを支払わずにすぐ唱えてもよい)
+
+    自分のタップされていないクリーチャーを１体破壊する。その後、相手は自分自身のタップされていないクリーチャーを１体選び破壊する。'
+  spell:
+  - op: destroy
+    select:
+      zone: bz
+      owner: you
+      filter:
+        types:
+        - creature
+        tapped: false
+      count: 1
+  - op: destroy
+    select:
+      zone: bz
+      owner: opp
+      chooser: opp
+      filter:
+        types:
+        - creature
+        tapped: false
+      count: 1
+  source:
+    official: dm13-044
+    review: pending
+  keywords:
+  - s_trigger
+- id: dm13-045
+  name: 我狼兵ラングレン
+  types:
+  - creature
+  civs:
+  - fire
+  cost: 2
+  power: 4000
+  races:
+  - ドラゴノイド
+  mana: 1
+  text: バトルゾーンにタップされていないクリーチャーが他に１体でもあれば、このクリーチャーは攻撃することができない。
+  abilities:
+  - kind: static
+    affects: self
+    if:
+      exists:
+        zone: bz
+        owner: any
+        filter:
+          types:
+          - creature
+          tapped: false
+        other: true
+    mod:
+      deny:
+      - attack_creature
+      - attack_player
+  source:
+    official: dm13-045
+    review: pending
+- id: dm13-046
+  name: 剣撃士ザック・ランバー
+  types:
+  - creature
+  civs:
+  - fire
+  cost: 2
+  power: 1000
+  races:
+  - ゼノパーツ
+  mana: 1
+  text: 自分のマナゾーンのカードがすべてタップされている時、このクリーチャーのパワーは+2000される。
+  abilities:
+  - kind: static
+    affects: self
+    if:
+      not:
+        exists:
+          zone: mana
+          owner: you
+          filter:
+            tapped: false
+    mod:
+      power: 2000
+  source:
+    official: dm13-046
+    review: pending
+    notes: 「すべてタップされている」=アンタップのマナが存在しない、と not exists で表現した
+- id: dm13-055
+  name: 勇猛妖魔アニマトレイン
+  types:
+  - creature
+  civs:
+  - darkness
+  - nature
+  cost: 2
+  power: 4000
+  races:
+  - ヘドリアン
+  - ホーン・ビースト
+  mana: 1
+  text: マナゾーンに置く時、このカードはタップして置く。自分のシールドが相手のシールドより多ければ、このクリーチャーは攻撃することができない。
+  abilities:
+  - kind: static
+    affects: self
+    if:
+      cmp:
+      - count:
+          zone: shield
+          owner: you
+      - '>'
+      - count:
+          zone: shield
+          owner: opp
+    mod:
+      deny:
+      - attack_creature
+      - attack_player
+  source:
+    official: dm13-055
+    review: pending
+    notes: 「マナゾーンに置く時タップして置く」はルール処理側
+- id: dm14-002
+  name: 光器メラーニヤ
+  types:
+  - creature
+  civs:
+  - light
+  cost: 6
+  power: 6000
+  races:
+  - メカ・デル・ソル
+  mana: 1
+  text: '自分のシールドが１枚もない時、自分のクリーチャーはすべて｢ブロッカー｣を得る。(相手クリーチャーが攻撃する時、｢ブロッカー｣を得たクリーチャーをタップして、その攻撃を阻止してもよい。その後、その相手クリーチャーとバトルする)
+
+    W・ブレイカー(このクリーチャーはシールドを２枚ブレイクする)'
+  abilities:
+  - kind: static
+    affects:
+      owner: you
+      filter:
+        types:
+        - creature
+    if:
+      cmp:
+      - count:
+          zone: shield
+          owner: you
+      - ==
+      - 0
+    mod:
+      grant:
+      - blocker
+  source:
+    official: dm14-002
+    review: pending
+    notes: ブロッカーの説明文は text から省いた
+  keywords:
+  - double_breaker
+- id: dm14-003
+  name: ウェーブ・クロウラー
+  types:
+  - creature
+  civs:
+  - water
+  cost: 4
+  power: 6000
+  races:
+  - アースイーター
+  mana: 1
+  text: 'このクリーチャーをバトルゾーンに出した時、相手はバトルゾーンにある自分自身のクリーチャーを１体選び、持ち主の手札に戻してもよい。そうした場合、このクリーチャーを自分の手札に戻す。
+
+    W・ブレイカー'
+  abilities:
+  - kind: trigger
+    when:
+      event: move
+      to: bz
+      subject: self
+    effect:
+    - op: may
+      body:
+      - op: bounce
+        select:
+          zone: bz
+          owner: opp
+          chooser: opp
+          filter:
+            types:
+            - creature
+          count: 1
+        as: w
+      - op: if
+        cond:
+          exists:
+            ref: w
+        then:
+        - op: bounce
+          select:
+            ref: self
+            count: 1
+  source:
+    official: dm14-003
+    review: pending
+    notes: 'dm12-041 と同じく、相手の「戻してもよい」の判断は may のプロンプトで代替している。戻す対象の選択は chooser: opp'
+  keywords:
+  - double_breaker
+- id: dm14-008
+  name: メガアサルト・ワイバーン
+  types:
+  - creature
+  civs:
+  - fire
+  cost: 7
+  power: 6000
+  races:
+  - アーマード・ワイバーン
+  mana: 1
+  text: W・ブレイカー(このクリーチャーはシールドを２枚ブレイクする)このクリーチャーが破壊された時、パワー4000以下のクリーチャーをすべて破壊する。
+  abilities:
+  - kind: trigger
+    zone: graveyard
+    when:
+      event: move
+      to: graveyard
+      reason: destroy
+      subject: self
+    effect:
+    - op: destroy
+      select:
+        zone: bz
+        owner: any
+        filter:
+          types:
+          - creature
+          power_le: 4000
+        count: all
+  source:
+    official: dm14-008
+    review: pending
+    notes: dm07-052 キング・アルカディアスと同じ墓地ゾーン誘発
+  keywords:
+  - double_breaker
+- id: dm14-009
+  name: 緑神龍マグラグラン
+  types:
+  - creature
+  civs:
+  - nature
+  cost: 7
+  power: 1000
+  races:
+  - アース・ドラゴン
+  mana: 1
+  text: 'このクリーチャーをバトルゾーンに出した時、自分の山札の上から１枚目を自分のマナゾーンに置く。
+
+    このクリーチャーのパワーは、自分のマナゾーンにあるカード１枚につき+1000される。
+
+    W・ブレイカー(このクリーチャーはシールドを２枚ブレイクする)'
+  abilities:
+  - kind: trigger
+    when:
+      event: move
+      to: bz
+      subject: self
+    effect:
+    - op: mana_put
+      select:
+        zone: deck
+        owner: you
+        from_top: 1
+  - kind: static
+    affects: self
+    mod:
+      power:
+        amount: 1000
+        count:
+          zone: mana
+          owner: you
+  source:
+    official: dm14-009
+    review: pending
+  keywords:
+  - double_breaker
+- id: dm14-016
+  name: ゲット・レディ
+  types:
+  - spell
+  civs:
+  - light
+  cost: 5
+  mana: 1
+  text: 相手の手札が自分の手札より多ければ、相手の手札と同じ枚数になるまでカードを引く。
+  spell:
+  - op: repeat
+    times:
+      count:
+        zone: hand
+        owner: opp
+    body:
+    - op: if
+      cond:
+        cmp:
+        - count:
+            zone: hand
+            owner: you
+        - <
+        - count:
+            zone: hand
+            owner: opp
+      then:
+      - op: draw
+        count: 1
+  source:
+    official: dm14-016
+    review: pending
+    notes: 枚数の差を引く式が無いため、相手の手札枚数だけ繰り返し「まだ少なければ1枚引く」で同数まで到達させる形にした
+- id: dm14-019
+  name: ルナ・トライデントタワー
+  types:
+  - creature
+  civs:
+  - water
+  cost: 4
+  power: 4000
+  races:
+  - サイバー・ムーン
+  mana: 1
+  text: 'ブロッカー
+
+    このクリーチャーは攻撃することができない。
+
+    相手が火または自然の呪文を唱えた時、相手のマナゾーンからカードを２枚まで選び、持ち主の手札に戻す。'
+  abilities:
+  - kind: trigger
+    when:
+      event: cast
+      subject:
+        owner: opp
+        filter:
+          types:
+          - spell
+          civs:
+          - fire
+          - nature
+    effect:
+    - op: bounce
+      select:
+        zone: mana
+        owner: opp
+        count: 2
+        up_to: true
+  source:
+    official: dm14-019
+    review: pending
+  keywords:
+  - blocker
+  - cannot_attack
+- id: dm14-024
+  name: 死蝶将軍レイラ
+  types:
+  - creature
+  civs:
+  - darkness
+  cost: 5
+  power: 1000
+  races:
+  - ダークロード
+  mana: 1
+  text: メタモーフ(自分のマナゾーンに７枚以上カードがあれば、このクリーチャーは次の能力を得る) このクリーチャーのパワーは+7000され、「W・ブレイカー」を得る。
+  abilities:
+  - kind: static
+    affects: self
+    if:
+      cmp:
+      - count:
+          zone: mana
+          owner: you
+      - '>='
+      - 7
+    mod:
+      power: 7000
+  - kind: static
+    affects: self
+    if:
+      cmp:
+      - count:
+          zone: mana
+          owner: you
+      - '>='
+      - 7
+    mod:
+      grant:
+      - double_breaker
+  source:
+    official: dm14-024
+    review: pending
+    notes: メタモーフは if 付き常在型能力で表現した。W・ブレイカーの説明文は text から省いた
+- id: dm14-029
+  name: クリムゾン・バーク・ドラゴン
+  types:
+  - creature
+  civs:
+  - fire
+  cost: 7
+  power: 4000
+  races:
+  - アーマード・ドラゴン
+  mana: 1
+  text: このクリーチャーをバトルゾーンに出した時、「ブロッカー」を持つパワー3000以下のクリーチャーをすべて破壊する。
+  abilities:
+  - kind: trigger
+    when:
+      event: move
+      to: bz
+      subject: self
+    effect:
+    - op: destroy
+      select:
+        zone: bz
+        owner: any
+        filter:
+          types:
+          - creature
+          keyword: blocker
+          power_le: 3000
+        count: all
+  source:
+    official: dm14-029
+    review: pending
+    notes: フィルタのキーワードキーは keyword（defs.py の FILTER_KEYS）
+- id: dm14-030
+  name: スクリューヘッド・リザード
+  types:
+  - creature
+  civs:
+  - fire
+  cost: 6
+  power: 5000
+  races:
+  - メルト・ウォリアー
+  mana: 1
+  text: 相手が光または水の呪文を唱えた時、相手の光または水の、パワー5000以下のクリーチャーを１体破壊する。
+  abilities:
+  - kind: trigger
+    when:
+      event: cast
+      subject:
+        owner: opp
+        filter:
+          types:
+          - spell
+          civs:
+          - light
+          - water
+    effect:
+    - op: destroy
+      select:
+        zone: bz
+        owner: opp
+        filter:
+          types:
+          - creature
+          civs:
+          - light
+          - water
+          power_le: 5000
+        count: 1
+  source:
+    official: dm14-030
+    review: pending
+    notes: dm14-019 トライデントタワーと対の構造
+- id: dm14-031
+  name: ダイナマイト・ピーク
+  types:
+  - creature
+  civs:
+  - fire
+  cost: 5
+  power: 3000
+  races:
+  - ビッグマッスル
+  mana: 1
+  text: メタモーフ(自分のマナゾーンに７枚以上カードがあれば、このクリーチャーは次の能力を得る) このクリーチャーがタップされている時、バトルゾーンにある自分のクリーチャーはすべて「パワーアタッカー+3000」と「W・ブレイカー」を得る。
+  abilities:
+  - kind: static
+    affects:
+      owner: you
+      filter:
+        types:
+        - creature
+    if:
+      all:
+      - cmp:
+        - count:
+            zone: mana
+            owner: you
+        - '>='
+        - 7
+      - exists:
+          ref: self
+          filter:
+            tapped: true
+    mod:
+      battle_power:
+        amount: 3000
+        only: attacking
+  - kind: static
+    affects:
+      owner: you
+      filter:
+        types:
+        - creature
+    if:
+      all:
+      - cmp:
+        - count:
+            zone: mana
+            owner: you
+        - '>='
+        - 7
+      - exists:
+          ref: self
+          filter:
+            tapped: true
+    mod:
+      grant:
+      - double_breaker
+  source:
+    official: dm14-031
+    review: pending
+    notes: メタモーフ条件と「タップされている時」を all で重ねた。パワーアタッカーとW・ブレイカーの説明文は text から省いた
+- id: dm14-032
+  name: 爆炎料理人メタルコック
+  types:
+  - creature
+  civs:
+  - fire
+  cost: 4
+  power: 3000
+  races:
+  - ヒューマノイド
+  mana: 1
+  text: バトルゾーンにあるクリーチャーはすべて、タップされていない多色クリーチャーを攻撃できる。
+  abilities:
+  - kind: static
+    affects:
+      owner: any
+      filter:
+        types:
+        - creature
+    mod:
+      allow:
+      - action: attack_creature
+        other:
+          types:
+          - creature
+          multicolor: true
+          tapped: false
+  source:
+    official: dm14-032
+    review: pending
+    notes: 攻撃対象の許可（allow の other で対象を多色・アンタップに絞る）で表現した
+- id: dm14-033
+  name: 放浪兵エルジージョ
+  types:
+  - creature
+  civs:
+  - fire
+  cost: 2
+  power: 4000
+  races:
+  - アーマロイド
+  mana: 1
+  text: このクリーチャーが破壊された時、カードを１枚、自分のマナゾーンから自分の墓地に置く。
+  abilities:
+  - kind: trigger
+    zone: graveyard
+    when:
+      event: move
+      to: graveyard
+      reason: destroy
+      subject: self
+    effect:
+    - op: move
+      select:
+        zone: mana
+        owner: you
+        count: 1
+      to: graveyard
+      reason: put
+  source:
+    official: dm14-033
+    review: pending
+- id: dm14-035
+  name: スナイプ・バグ
+  types:
+  - creature
+  civs:
+  - nature
+  cost: 5
+  power: 4000
+  races:
+  - ジャイアント・インセクト
+  mana: 1
+  text: このクリーチャーが破壊された時、カードを１枚、自分のマナゾーンから自分の手札に戻す。その後、自分の山札の上から１枚目を自分のマナゾーンに置く。
+  abilities:
+  - kind: trigger
+    zone: graveyard
+    when:
+      event: move
+      to: graveyard
+      reason: destroy
+      subject: self
+    effect:
+    - op: bounce
+      select:
+        zone: mana
+        owner: you
+        count: 1
+    - op: mana_put
+      select:
+        zone: deck
+        owner: you
+        from_top: 1
+  source:
+    official: dm14-035
+    review: pending
+- id: dm14-036
+  name: 結界するブロークン・ホーン
+  types:
+  - creature
+  civs:
+  - nature
+  cost: 4
+  power: 3000
+  races:
+  - ホーン・ビースト
+  mana: 1
+  text: 水または闇の呪文を唱える時、支払うコストは２多くなる。
+  abilities:
+  - kind: static
+    affects:
+      owner: any
+      zone: hand
+      filter:
+        types:
+        - spell
+        civs:
+        - water
+        - darkness
+    mod:
+      cost: 2
+  source:
+    official: dm14-036
+    review: pending
+    notes: '対象プレイヤーの指定が無いので両プレイヤー（owner: any）に効く'
+    aliases:
+    - promoy4-003
+- id: dm14-043
+  name: 紫宮の守護者レギ・バエル
+  types:
+  - creature
+  civs:
+  - light
+  cost: 2
+  power: 4000
+  races:
+  - ガーディアン
+  mana: 1
+  text: 'ブロッカー
+
+    このクリーチャーのパワーは、バトルゾーンにある火または闇のクリーチャー１体につき-1000される。(パワー０以下のクリーチャーは破壊される)
+
+    このクリーチャーは、相手プレイヤーを攻撃できない。'
+  abilities:
+  - kind: static
+    affects: self
+    mod:
+      power:
+        amount: -1000
+        count:
+          zone: bz
+          owner: any
+          filter:
+            types:
+            - creature
+            civs:
+            - fire
+            - darkness
+  source:
+    official: dm14-043
+    review: pending
+    notes: このクリーチャー自身は光なので数に含まれない
+  keywords:
+  - blocker
+  - cannot_attack_player
+- id: dm14-050
+  name: パターン・エッグ
+  types:
+  - creature
+  civs:
+  - water
+  cost: 3
+  power: 3000
+  races:
+  - サイバー・ウイルス
+  mana: 1
+  text: 'このクリーチャーのパワーは、バトルゾーンにある火または自然のクリーチャー１体につき-1000される。(パワー０以下のクリーチャーは破壊される)
+
+    このクリーチャーはブロックされない。'
+  abilities:
+  - kind: static
+    affects: self
+    mod:
+      power:
+        amount: -1000
+        count:
+          zone: bz
+          owner: any
+          filter:
+            types:
+            - creature
+            civs:
+            - fire
+            - nature
+  source:
+    official: dm14-050
+    review: pending
+    notes: dm14-043 の色違い。このクリーチャー自身は水なので数に含まれない
+  keywords:
+  - unblockable
+- id: dm14-053
+  name: ギガロスター
+  types:
+  - creature
+  civs:
+  - darkness
+  cost: 4
+  power: 5000
+  races:
+  - キマイラ
+  mana: 1
+  text: このクリーチャーのパワーは、バトルゾーンにある光または自然のクリーチャー１体につき-1000される。
+  abilities:
+  - kind: static
+    affects: self
+    mod:
+      power:
+        amount: -1000
+        count:
+          zone: bz
+          owner: any
+          filter:
+            types:
+            - creature
+            civs:
+            - light
+            - nature
+  source:
+    official: dm14-053
+    review: pending
+    notes: パワー0以下で破壊されるのはルール側の処理。dm14-043 と同型
+- id: dm14-056
+  name: トラジック・スワンプ
+  types:
+  - spell
+  civs:
+  - darkness
+  cost: 4
+  mana: 1
+  text: 'S・トリガー(この呪文をシールドゾーンから手札に加える時、コストを支払わずにすぐ唱えてもよい)
+
+    バトルゾーンにある相手のタップされているクリーチャーを１体選ぶ。このターンの終わりまで、そのクリーチャーのパワーは-3000される。(パワー０以下のクリーチャーは破壊される)'
+  spell:
+  - op: modify
+    select:
+      zone: bz
+      owner: opp
+      filter:
+        types:
+        - creature
+        tapped: true
+      count: 1
+    mod:
+      power: -3000
+    duration: end_of_turn
+  source:
+    official: dm14-056
+    review: pending
+  keywords:
+  - s_trigger
+- id: dm14-057
+  name: ゴースト・パニッシュ
+  types:
+  - spell
+  civs:
+  - darkness
+  cost: 2
+  mana: 1
+  text: 相手は自分自身の手札を１枚選び、捨てる。メタモーフ(自分のマナゾーンに７枚以上カードがあれば、この呪文は次の能力を得る) 相手の手札を相手自身が選んで捨てるかわりに、自分が相手の手札を見て１枚選び、捨てさせる。
+  spell:
+  - op: if
+    cond:
+      cmp:
+      - count:
+          zone: mana
+          owner: you
+      - '>='
+      - 7
+    then:
+    - op: discard
+      select:
+        zone: hand
+        owner: opp
+        count: 1
+        look: true
+    else:
+    - op: discard
+      select:
+        zone: hand
+        owner: opp
+        chooser: opp
+        count: 1
+  source:
+    official: dm14-057
+    review: pending
+    notes: '呪文のメタモーフは op if で分岐した。通常時は相手が自分で選ぶ（chooser: opp）'
+- id: dm14-063
+  name: キャノンボール・スリング
+  types:
+  - spell
+  civs:
+  - fire
+  cost: 4
+  mana: 1
+  text: 'S・トリガー
+
+    相手のパワー2000以下のクリーチャーを１体破壊する。
+
+    メタモーフ(自分のマナゾーンに７枚以上カードがあれば、この呪文は次の能力を得る)
+
+    パワー2000以下のクリーチャーのかわりに、相手のパワー6000以下のクリーチャーを１体破壊する。'
+  spell:
+  - op: if
+    cond:
+      cmp:
+      - count:
+          zone: mana
+          owner: you
+      - '>='
+      - 7
+    then:
+    - op: destroy
+      select:
+        zone: bz
+        owner: opp
+        filter:
+          types:
+          - creature
+          power_le: 6000
+        count: 1
+    else:
+    - op: destroy
+      select:
+        zone: bz
+        owner: opp
+        filter:
+          types:
+          - creature
+          power_le: 2000
+        count: 1
+  source:
+    official: dm14-063
+    review: pending
+    notes: dm14-057 と同じく呪文のメタモーフを op if で分岐した
+  keywords:
+  - s_trigger
+- id: dm14-071
+  name: 光器グラーシャ
+  types:
+  - creature
+  civs:
+  - light
+  cost: 4
+  power: 3500
+  races:
+  - メカ・デル・ソル
+  mana: 1
+  text: このクリーチャーが攻撃する時、バトルゾーンにある闇または火のクリーチャーを１体選び、タップしてもよい。
+  abilities:
+  - kind: trigger
+    when:
+      event: attack
+      subject: self
+    effect:
+    - op: may
+      body:
+      - op: tap
+        select:
+          zone: bz
+          owner: any
+          filter:
+            types:
+            - creature
+            civs:
+            - darkness
+            - fire
+          count: 1
+  source:
+    official: dm14-071
+    review: pending
+    notes: 攻撃対象の宣言後に選ぶという手順の但し書きは text から省いた（選択自体は同じ）
+- id: dm14-072
+  name: 宣凶師レンティア
+  types:
+  - creature
+  civs:
+  - light
+  cost: 3
+  power: 2500
+  races:
+  - グラディエーター
+  mana: 1
+  text: 'ブロッカー(相手クリーチャーが攻撃する時、このクリーチャーをタップして、その攻撃を阻止してもよい。その後、その相手クリーチャーとバトルする)
+
+    ブロック中、このクリーチャーのパワーは+3000される。
+
+    このクリーチャーは、相手プレイヤーを攻撃できない。'
+  abilities:
+  - kind: trigger
+    when:
+      event: block
+      subject: self
+    effect:
+    - op: modify
+      select:
+        ref: self
+        count: 1
+      mod:
+        power: 3000
+      duration: end_of_turn
+  source:
+    official: dm14-072
+    review: pending
+    notes: battle_power（only なし）は自分が攻撃するバトルにも効いてしまうため、ブロック時の誘発でターン終了時まで上げる形にした（dm13-037
+      ドーベルと同じ）。パワーが要るのはそのバトルの間だけなので結果は一致する
+  keywords:
+  - blocker
+  - cannot_attack_player
+- id: dm14-074
+  name: 予言者マルタ
+  types:
+  - creature
+  civs:
+  - light
+  cost: 3
+  power: 1000
+  races:
+  - ライトブリンガー
+  mana: 1
+  text: このクリーチャーをバトルゾーンに出した時、バトルゾーンにある相手のクリーチャーを１体選び、タップしてもよい。
+  abilities:
+  - kind: trigger
+    when:
+      event: move
+      to: bz
+      subject: self
+    effect:
+    - op: may
+      body:
+      - op: tap
+        select:
+          zone: bz
+          owner: opp
+          filter:
+            types:
+            - creature
+          count: 1
+  source:
+    official: dm14-074
+    review: pending
+- id: dm14-080
+  name: ドルンカ
+  types:
+  - creature
+  civs:
+  - water
+  cost: 4
+  power: 2000
+  races:
+  - サイバーロード
+  mana: 1
+  text: 相手の火または自然のクリーチャーが攻撃する時、カードを１枚引いてもよい。
+  abilities:
+  - kind: trigger
+    when:
+      event: attack
+      subject:
+        owner: opp
+        filter:
+          types:
+          - creature
+          civs:
+          - fire
+          - nature
+    effect:
+    - op: may
+      body:
+      - op: draw
+        count: 1
+  source:
+    official: dm14-080
+    review: pending
+- id: dm14-082
+  name: アクア・スパイ
+  types:
+  - creature
+  civs:
+  - water
+  cost: 3
+  power: 2000
+  races:
+  - リキッド・ピープル
+  mana: 1
+  text: メタモーフ(自分のマナゾーンに７枚以上カードがあれば、このクリーチャーは次の能力を得る) このクリーチャーをバトルゾーンに出した時、プレイヤー１人のシールドをすべて見てもよい。その後、そのシールドを元に戻す。
+  abilities:
+  - kind: trigger
+    when:
+      event: move
+      to: bz
+      subject: self
+    if:
+      cmp:
+      - count:
+          zone: mana
+          owner: you
+      - '>='
+      - 7
+    effect:
+    - op: may
+      body:
+      - op: modal
+        count: 1
+        modes:
+        - - op: choose
+            select:
+              zone: shield
+              owner: you
+              count: all
+              look: true
+            as: seen
+        - - op: choose
+            select:
+              zone: shield
+              owner: opp
+              count: all
+              look: true
+            as: seen
+  source:
+    official: dm14-082
+    review: pending
+    notes: 「プレイヤー1人」は modal で自分のシールドか相手のシールドかを選ぶ形にした。シールドは動かさないので「元に戻す」は自動的に満たす。原文の文字化け（バトルゾ��ン）は補った
+- id: dm14-083
+  name: クレセント・アネモネ
+  types:
+  - creature
+  civs:
+  - water
+  cost: 2
+  power: 1000
+  races:
+  - ゲル・フィッシュ
+  mana: 1
+  text: セイバー：サイバー・ムーン(自分のサイバー・ムーン１体が破壊される時、このクリーチャーをかわりに破壊してもよい)
+  abilities:
+  - kind: replace
+    optional: true
+    when:
+      event: move
+      to: graveyard
+      reason: destroy
+      subject:
+        owner: you
+        filter:
+          races:
+          - サイバー・ムーン
+        other: true
+    instead:
+    - op: destroy
+      select:
+        ref: self
+        count: 1
+  source:
+    official: dm14-083
+    review: pending
+    notes: dm05-050 と同じセイバーの置換
+- id: dm14-085
+  name: スピリチュアル・ウォーター
+  types:
+  - spell
+  civs:
+  - water
+  cost: 3
+  mana: 1
+  text: 'S・トリガー(この呪文をシールドゾーンから手札に加える時、コストを支払わずにすぐ唱えてもよい)
+
+    バトルゾーンにある相手のタップされているクリーチャー１体につき、カードを１枚引いてもよい。'
+  spell:
+  - op: repeat
+    times:
+      count:
+        zone: bz
+        owner: opp
+        filter:
+          types:
+          - creature
+          tapped: true
+    body:
+    - op: may
+      body:
+      - op: draw
+        count: 1
+  source:
+    official: dm14-085
+    review: pending
+    notes: 「1体につき1枚まで」を repeat + may で表現した
+  keywords:
+  - s_trigger
