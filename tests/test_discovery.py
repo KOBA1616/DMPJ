@@ -97,3 +97,20 @@ def test_entrance_needs_no_mana_when_saga_waits_on_the_field(rules):
     zones = sorted(z for _, z, _, _ in sh.entries(r.spec))
     assert zones == ["bz", "graveyard", "graveyard", "graveyard"]
     assert [n for _, z, _, n in sh.entries(r.spec) if z == "bz"] == [SAGA]
+
+
+def test_route_probability_matches_brute_force():
+    """文明が揃う確率は、包含と排除の結果が全列挙と一致する。経路は LoopSpec の JSON に往復できる。"""
+    from itertools import combinations
+
+    from dmsim.discovery.loopspec import Route, all_civs_prob, route_prob
+    w, d, f = frozenset({"water"}), frozenset({"darkness"}), frozenset({"fire"})
+    deck = [w, w, d, f, f, frozenset({"water", "darkness"})]
+    need = ("water", "darkness")
+    combos = list(combinations(range(len(deck)), 3))
+    ok = sum(1 for c in combos if all(any(n in deck[i] for i in c) for n in need))
+    assert all_civs_prob(deck, need, 3) == pytest.approx(ok / len(combos))
+    r = Route("cast", {"name": SAGA}, "hand", 3, need)
+    assert 0.0 < route_prob(r, deck, 1, 4) < 1.0
+    s = LoopSpec("x", "deterministic", [Pred(0, {"name": SAGA}, 1, ">=", "bz")], routes=[r])
+    assert LoopSpec.from_json(s.to_json()) == s
