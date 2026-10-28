@@ -527,7 +527,7 @@ def run(rows: list[dict], client, tables, sysp: str, effort: str, out: Path, rej
 def main(argv=None):
     ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     ap.add_argument("raw", nargs="+", help="原文の jsonl（複数・ディレクトリ・glob 可。data/cards/raw/by_product など）")
-    ap.add_argument("--out", default=str(DATA / "cards" / "converted.yaml"))
+    ap.add_argument("--out", default=str(cardstore.converted_path(DATA)))
     ap.add_argument("--rejects", default=str(DATA / "cards" / "raw" / "rejects.jsonl"))
     ap.add_argument("--report", default=str(DATA / "cards" / "raw" / "convert_report.json"),
                     help="実行結果（件数・トークン・失敗の種類別集計）の出力先")

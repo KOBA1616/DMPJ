@@ -101,3 +101,16 @@ def test_load_rules_only_approved(tmp_path, monkeypatch):
     assert {"dm01-s01", "dm01-s02"} <= set(load_rules(files).cards)
     got = set(load_rules(files, only_approved=True).cards)
     assert "dm01-s01" in got and "dm01-s02" not in got and "T001" in got
+
+
+def test_migrate_converted_and_path(tmp_path):
+    import migrate_converted
+    from dmsim import cardstore
+    cards = [{**CARD, "id": i} for i in ("dm02-001", "dm01-s01")]
+    src = tmp_path / "cards" / "converted.yaml"
+    cardstore.write(src, cards, "# h\n")
+    assert cardstore.converted_path(tmp_path) == src
+    assert migrate_converted.migrate(src, tmp_path / "cards" / "converted", check_only=True) == 2 and src.exists()
+    migrate_converted.migrate(src, tmp_path / "cards" / "converted")
+    assert not src.exists() and cardstore.converted_path(tmp_path) == tmp_path / "cards" / "converted"
+    assert [c["id"] for c in cardstore.read(cardstore.converted_path(tmp_path))] == ["dm01-s01", "dm02-001"]
