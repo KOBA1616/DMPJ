@@ -4,24 +4,21 @@
  "rejected": 0,
  "api_error": 0,
  "usage": {
-  "input": 48827,
+  "input": 53221,
   "cache_read": 0,
   "cache_write": 0,
-  "output": 1518
+  "output": 954
  },
  "triage": {
   "その他:expected '<document start>', but found '{'": {
-   "n": 18,
+   "n": 15,
    "ids": [
     "dm24ex2-cho042",
-    "dm24ex2-083",
     "dm26sd1-d009",
-    "dm24ex1-036",
     "dm24ex2-cho017",
     "dm26ex2-mc026",
     "dm26rp1-td005",
     "dm25bd2-004",
-    "dm26sd1-p012",
     "dm24ex2-cho036",
     "dm25rp3-055",
     "dm24bd6-018",
@@ -34,17 +31,14 @@
    ]
   },
   "その他:in \"<unicode string>\", line 2, column 1:": {
-   "n": 18,
+   "n": 15,
    "ids": [
     "dm24ex2-cho042",
-    "dm24ex2-083",
     "dm26sd1-d009",
-    "dm24ex1-036",
     "dm24ex2-cho017",
     "dm26ex2-mc026",
     "dm26rp1-td005",
     "dm25bd2-004",
-    "dm26sd1-p012",
     "dm24ex2-cho036",
     "dm25rp3-055",
     "dm24bd6-018",
@@ -57,17 +51,14 @@
    ]
   },
   "その他:{\"type\":\"tool_use\",\"timestamp\":1 ...": {
-   "n": 18,
+   "n": 15,
    "ids": [
     "dm24ex2-cho042",
-    "dm24ex2-083",
     "dm26sd1-d009",
-    "dm24ex1-036",
     "dm24ex2-cho017",
     "dm26ex2-mc026",
     "dm26rp1-td005",
     "dm25bd2-004",
-    "dm26sd1-p012",
     "dm24ex2-cho036",
     "dm25rp3-055",
     "dm24bd6-018",
@@ -80,17 +71,14 @@
    ]
   },
   "その他:^": {
-   "n": 18,
+   "n": 15,
    "ids": [
     "dm24ex2-cho042",
-    "dm24ex2-083",
     "dm26sd1-d009",
-    "dm24ex1-036",
     "dm24ex2-cho017",
     "dm26ex2-mc026",
     "dm26rp1-td005",
     "dm25bd2-004",
-    "dm26sd1-p012",
     "dm24ex2-cho036",
     "dm25rp3-055",
     "dm24bd6-018",
@@ -103,15 +91,9 @@
    ]
   },
   "その他:opencode が1200.0秒以内に終わらなかった（TimeoutExpired）": {
-   "n": 8,
+   "n": 2,
    "ids": [
     "dm22ex1-105",
-    "dm23rp4-055",
-    "dm23rp4-20b",
-    "dm23rp4-18a",
-    "dm23rp4x-055",
-    "dm23rp4x-20b",
-    "dm23rp4x-18a",
     "dm27+1d-001"
    ]
   },
