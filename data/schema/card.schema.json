@@ -1009,6 +1009,12 @@
       "var": {
        "type": "string"
       },
+      "cost_of": {
+       "type": "string"
+      },
+      "races_of": {
+       "type": "string"
+      },
       "sum": {
        "type": "array",
        "items": {

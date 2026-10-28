@@ -1022,3 +1022,90 @@ cards:
         resolve_to: deck
         resolve_position: bottom
     source: {official: dmx24-017, review: pending}
+
+  # ---- 天門ループ（初期型）関係 ----
+
+  - id: dmd24-024
+    name: 埋没のカルマ オリーブオイル
+    types: [creature]
+    civs: [water]
+    cost: 5
+    power: 2000
+    races: [オラクル, グレートメカオー]
+    keywords: [s_trigger, blocker]
+    text: "S・トリガー / ブロッカー / このクリーチャーは攻撃できない。このクリーチャーがバトルゾーンに出た時、プレイヤーを一人選ぶ。そのプレイヤーは、自身の墓地のカードをすべて山札に加え、シャッフルする。"
+    abilities:
+      - kind: static
+        mod: {deny: [attack_player, attack_creature]}
+      - kind: trigger
+        when: {event: move, to: bz, subject: self}
+        effect:
+          - op: modal
+            count: 1
+            modes:
+              - - {op: move, select: {zone: graveyard, owner: you, count: all}, to: deck, reason: put}
+                - {op: shuffle, player: you}
+              - - {op: move, select: {zone: graveyard, owner: opp, count: all}, to: deck, reason: put}
+                - {op: shuffle, player: opp}
+    source: {official: dmd24-024, review: pending, notes: "プレイヤー選択は2つのモード（自分/相手）で表した。自分の墓地の S・トリガー呪文を山札に戻す部品"}
+
+  - id: dm23ex2-cho018
+    name: 転生スイッチ
+    types: [spell]
+    civs: [water]
+    cost: 5
+    keywords: [s_trigger]
+    text: "S・トリガー / クリーチャーを１体選び、持ち主の手札に戻す。その後、そのプレイヤーは、選ばれたクリーチャーよりコストが小さいクリーチャーを１体、自身の手札から出してもよい。"
+    spell:
+      - {op: choose, select: {zone: bz, owner: any, filter: {types: [creature]}, count: 1}, as: target}
+      - {op: bounce, select: {ref: target}}
+      - op: may
+        body:
+          - op: play_free
+            select:
+              zone: hand
+              owner_of: target
+              filter: {types: [creature], cost_le: {sum: [{cost_of: target}, -1]}}
+              count: 1
+    source: {official: dm23ex2-cho018, review: pending, notes: "出すのは選ばれたクリーチャーの持ち主（相手のクリーチャーを選んだ場合の相手側の処理は未対応: play_free は自分が出す）"}
+
+  - id: dmx11-082
+    name: ハイドロ・コミューン
+    types: [spell]
+    civs: [water]
+    cost: 3
+    keywords: [s_trigger]
+    text: "S・トリガー / 種族をひとつ選ぶ。選んだ種族の自分のクリーチャーを好きな数、バトルゾーンから自分の手札に戻す。その後、その数以下の相手のクリーチャーをバトルゾーンから選び、持ち主の手札に戻す。"
+    spell:
+      - {op: choose, select: {zone: bz, owner: you, filter: {types: [creature]}, count: 1, up_to: true}, as: kind}
+      - op: bounce
+        select: {zone: bz, owner: you, filter: {types: [creature], races: {races_of: kind}}, count: 99, up_to: true}
+        as: mine
+      - op: bounce
+        select: {zone: bz, owner: opp, filter: {types: [creature]}, count: {var: mine}, up_to: true}
+    source: {official: dmx11-082, review: pending, notes: "「種族をひとつ選ぶ」は、自分の場のクリーチャーを1体選んでその種族（複数種族なら どれか一致）とする近似。場にいない種族を選んでも何も起きないので結果は同じ。要確認: bounce の as と 好きな数"}
+
+  - id: dmx12b-031
+    name: 光霊姫アレフティナ
+    types: [creature]
+    civs: [light]
+    cost: 4
+    power: 8000
+    races: [メカ・デル・ソル, アーク・セラフィム]
+    keywords: [double_breaker]
+    text: "このクリーチャーを召喚するコストは、自分のシールドひとつにつき１多くなる。 / 相手のクリーチャーが自分を攻撃する時、それがそのターンはじめての自分への攻撃で、自分のシールドが１枚もない場合、自分の山札の上から１枚目を裏向きのまま、新しいシールドとして自分のシールドゾーンに加える。 / 自分のシールドが10枚以上あれば、自分はゲームに勝利する。 / W・ブレイカー"
+    abilities:
+      - kind: static
+        affects: self
+        mod: {cost: {count: {zone: shield, owner: you}, amount: 1}}
+      - kind: trigger
+        when: {event: attack, subject: {owner: opp}}
+        if: {cmp: [{count: {zone: shield, owner: you}}, "==", 0]}
+        effect:
+          - {op: move, select: {zone: deck, owner: you, from_top: 1}, to: shield, reason: put}
+      - kind: trigger
+        when: {event: move, to: shield}
+        if: {cmp: [{count: {zone: shield, owner: you}}, ">=", 10]}
+        effect:
+          - {op: win, player: you}
+    source: {official: dmx12b-031, review: pending, notes: "近似: 攻撃先が自分プレイヤーかの判定は無い（盾が0枚なら攻撃先は自分への攻撃かクリーチャーへの攻撃。後者でも盾が増える誤り）。盾10枚以上は『盾ゾーンへ入った時』の判定で代用（常在の状況起因ではない）。要確認"}

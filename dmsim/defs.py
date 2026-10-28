@@ -38,7 +38,7 @@ SELECTOR_KEYS = {"zone", "owner", "owner_of", "filter", "count", "up_to", "from_
                  "under_of", "look", "exlife_of"}   # look: 非公開ゾーン（山札など）の中身を見て選ぶ
 FILTER_KEYS = {"types", "not_types", "civs", "not_civs", "races", "race_has", "name", "name_has", "not_name",
                "cost_le", "cost_ge", "power_le", "power_ge", "tapped", "keyword", "multicolor"}
-FILTER_EXPR_KEYS = {"cost_le", "cost_ge", "power_le", "power_ge"}   # 値に式を書ける（解決時に計算）
+FILTER_EXPR_KEYS = {"cost_le", "cost_ge", "power_le", "power_ge", "races"}   # 値に式を書ける（解決時に計算）
 
 
 class DefError(ValueError):
@@ -278,7 +278,8 @@ class Checker:
         if "keyword" in f and f["keyword"] not in self.keywords:
             raise DefError(f"{where}: unknown keyword '{f['keyword']}'")
         for k in FILTER_EXPR_KEYS & set(f):
-            self.expr(f[k], where)
+            if not (k == "races" and isinstance(f[k], list)):
+                self.expr(f[k], where)
 
     def expr(self, x, where):
         if isinstance(x, int):
@@ -287,7 +288,7 @@ class Checker:
             k, v = next(iter(x.items()))
             if k == "count":
                 return self.selector(v, where)
-            if k == "var":
+            if k in ("var", "cost_of", "races_of"):
                 return
             if k == "sum":
                 for e in v:
