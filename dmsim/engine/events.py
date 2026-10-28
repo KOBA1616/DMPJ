@@ -247,6 +247,10 @@ class EventMixin:
         for k in ("from", "to", "reason", "via"):
             if k in when and rec.get(k) != when[k]:
                 return False
+        if "target" in when:   # 攻撃先: player（シールドも含む）か creature
+            tg = rec.get("target")
+            if (tg == "player") != (when["target"] == "player"):
+                return False
         if "unpaid" in when and bool(rec.get("unpaid")) != when["unpaid"]:   # マナをタップせずに（コストを支払わずに）
             return False
         if "player" in when and rec.get("player") != self._rel(when["player"], env):

@@ -151,8 +151,8 @@ def test_hydro_commune_bounces_same_race_then_up_to_that_many_opp(rules):
     answer(e, "charge", "pass")
     answer(e, "main", "play:dmx11-082")
     d = e.advance()
-    assert d["kind"] == "choose_cards"
-    e.answer([0])                                            # 種族の代わりに、自分のクリーチャーを1体選ぶ（先頭=グラン・ギューレ）
+    assert d["kind"] == "choose_race"
+    e.answer([next(i for i, o in enumerate(d["options"]) if o["name"] == "ガーディアン")])
     _finish(e, e.advance())
     assert [n for n in names(e, "hand", 0) if n == "dm01-001"] == ["dm01-001"] * 2 
     assert [e.s.cards[c].defn for c in e.bz_tops(0)] == ["dm01-080"]
@@ -179,3 +179,9 @@ def test_olive_oil_returns_graveyard_to_deck(rules):
     assert d is not None
     _finish(e, d)
     assert names(e, "graveyard", 0) == [] and names(e, "bz", 0) == ["dmd24-024"]
+
+
+def test_races_are_split_by_slash_into_single_races():
+    from dmsim.defs import split_races
+    assert split_races(["デーモン・コマンド/スチーム・ナイト/フュージョナー"]) == ["デーモン・コマンド", "スチーム・ナイト", "フュージョナー"]
+    assert split_races(["オラクル", "グレートメカオー"]) == ["オラクル", "グレートメカオー"]

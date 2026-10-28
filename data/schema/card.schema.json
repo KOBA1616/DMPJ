@@ -330,6 +330,22 @@
       "type": "object",
       "properties": {
        "op": {
+        "const": "choose_race"
+       },
+       "as": {
+        "type": "string"
+       }
+      },
+      "required": [
+       "op",
+       "as"
+      ],
+      "additionalProperties": false
+     },
+     {
+      "type": "object",
+      "properties": {
+       "op": {
         "const": "delayed_trigger"
        },
        "when": {},
@@ -1015,6 +1031,9 @@
       "races_of": {
        "type": "string"
       },
+      "race": {
+       "type": "string"
+      },
       "sum": {
        "type": "array",
        "items": {
@@ -1398,6 +1417,12 @@
     },
     "unpaid": {
      "type": "boolean"
+    },
+    "target": {
+     "enum": [
+      "player",
+      "creature"
+     ]
     },
     "via": {
      "enum": [

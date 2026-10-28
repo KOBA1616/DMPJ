@@ -14,6 +14,8 @@ class SelectorMixin:
             if "cost_of" in x:   # 変数に束縛したカード（複数なら最大）のコスト
                 ids = env.get("vars", {}).get(x["cost_of"], [])
                 return max((self.chars(c[0])["cost"] for c in ids), default=0)
+            if "race" in x:   # choose_race で選んだ種族名
+                return [env.get("races", {})[x["race"]]]
             if "races_of" in x:   # 変数に束縛したカードの種族（「種族をひとつ選ぶ」の代わりに、場のカード1体を選んでその種族とする）
                 return sorted({r for c in env.get("vars", {}).get(x["races_of"], []) for r in self.chars(c[0])["races"]})
             if "sum" in x:

@@ -41,6 +41,11 @@ FILTER_KEYS = {"types", "not_types", "civs", "not_civs", "races", "race_has", "n
 FILTER_EXPR_KEYS = {"cost_le", "cost_ge", "power_le", "power_ge", "races"}   # 値に式を書ける（解決時に計算）
 
 
+def split_races(races) -> list[str]:
+    """原本の種族は「A/B/C」のように「/」区切りの文字列。「/」で区切られた部分が1種族（・は種族名の一部）。"""
+    return [r.strip() for x in races for r in str(x).split("/") if r.strip()]
+
+
 class DefError(ValueError):
     pass
 
@@ -288,7 +293,7 @@ class Checker:
             k, v = next(iter(x.items()))
             if k == "count":
                 return self.selector(v, where)
-            if k in ("var", "cost_of", "races_of"):
+            if k in ("var", "cost_of", "races_of", "race"):
                 return
             if k == "sum":
                 for e in v:
@@ -442,7 +447,7 @@ def _load_face(raw, keywords, macros, chk: Checker, where) -> dict:
     if "free_if" in raw:
         chk.cond(raw["free_if"], where)
     return dict(name=raw["name"], types=raw["types"], civs=raw["civs"], cost=raw["cost"],
-                power=raw.get("power", 0), races=raw.get("races", []), keywords=names,
+                power=raw.get("power", 0), races=split_races(raw.get("races", [])), keywords=names,
                 abilities=abilities, spell=spell, evolve_from=raw.get("evolve_from"),
                 evolve_zone=zone, evolve_any=bool(raw.get("evolve_any", False)),
                 cost_reduce_per_evo=int(raw.get("cost_reduce_per_evo", 0)),

@@ -70,7 +70,7 @@ def build() -> dict:
                 "from_top": ref("expr"), "chooser": {"enum": ["you", "opp"]}, "ref": {"type": "string"},
                 "other": {"type": "boolean"}, "look": {"type": "boolean"}}, "additionalProperties": False},
             "expr": {"anyOf": [{"type": "integer"}, {"type": "object", "properties": {
-                "count": ref("selector"), "var": {"type": "string"}, "cost_of": {"type": "string"}, "races_of": {"type": "string"}, "sum": {"type": "array", "items": ref("expr")}},
+                "count": ref("selector"), "var": {"type": "string"}, "cost_of": {"type": "string"}, "races_of": {"type": "string"}, "race": {"type": "string"}, "sum": {"type": "array", "items": ref("expr")}},
                 "minProperties": 1, "maxProperties": 1, "additionalProperties": False}]},
             "cond": {"type": "object", "minProperties": 1, "maxProperties": 1, "properties": {
                 "exists": ref("selector"), "cmp": {"type": "array", "minItems": 3, "maxItems": 3},
@@ -91,7 +91,7 @@ def build() -> dict:
                 "additionalProperties": False, "propertyNames": {"enum": sorted(MOD_KEYS)}},
             "when": {"type": "object", "properties": {
                 "event": {"enum": sorted(EVENTS)}, "from": {"enum": sorted(zones)}, "to": {"enum": sorted(zones)},
-                "reason": {"enum": sorted(REASONS)}, "player": {"enum": ["you", "opp"]}, "unpaid": {"type": "boolean"},
+                "reason": {"enum": sorted(REASONS)}, "player": {"enum": ["you", "opp"]}, "unpaid": {"type": "boolean"}, "target": {"enum": ["player", "creature"]},
                 "via": {"enum": sorted(VIAS)}, "subject": {}},
                 "required": ["event"], "additionalProperties": False},
             "ability": {"type": "object", "properties": {

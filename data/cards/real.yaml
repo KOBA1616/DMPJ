@@ -1077,13 +1077,13 @@ cards:
     keywords: [s_trigger]
     text: "S・トリガー / 種族をひとつ選ぶ。選んだ種族の自分のクリーチャーを好きな数、バトルゾーンから自分の手札に戻す。その後、その数以下の相手のクリーチャーをバトルゾーンから選び、持ち主の手札に戻す。"
     spell:
-      - {op: choose, select: {zone: bz, owner: you, filter: {types: [creature]}, count: 1, up_to: true}, as: kind}
+      - {op: choose_race, as: kind}
       - op: bounce
-        select: {zone: bz, owner: you, filter: {types: [creature], races: {races_of: kind}}, count: 99, up_to: true}
+        select: {zone: bz, owner: you, filter: {types: [creature], races: {race: kind}}, count: 99, up_to: true}
         as: mine
       - op: bounce
         select: {zone: bz, owner: opp, filter: {types: [creature]}, count: {var: mine}, up_to: true}
-    source: {official: dmx11-082, review: pending, notes: "「種族をひとつ選ぶ」は、自分の場のクリーチャーを1体選んでその種族（複数種族なら どれか一致）とする近似。場にいない種族を選んでも何も起きないので結果は同じ。要確認: bounce の as と 好きな数"}
+    source: {official: dmx11-082, review: pending, notes: "種族は「/」で区切られた1種族ずつを選ぶ（choose_race: ゲームに出てくるカードの種族名から）。好きな数は up_to で、相手は戻した数以下"}
 
   - id: dmx12b-031
     name: 光霊姫アレフティナ
@@ -1099,7 +1099,7 @@ cards:
         affects: self
         mod: {cost: {count: {zone: shield, owner: you}, amount: 1}}
       - kind: trigger
-        when: {event: attack, subject: {owner: opp}}
+        when: {event: attack, subject: {owner: opp}, target: player}
         if: {cmp: [{count: {zone: shield, owner: you}}, "==", 0]}
         effect:
           - {op: move, select: {zone: deck, owner: you, from_top: 1}, to: shield, reason: put}
@@ -1108,4 +1108,4 @@ cards:
         if: {cmp: [{count: {zone: shield, owner: you}}, ">=", 10]}
         effect:
           - {op: win, player: you}
-    source: {official: dmx12b-031, review: pending, notes: "近似: 攻撃先が自分プレイヤーかの判定は無い（盾が0枚なら攻撃先は自分への攻撃かクリーチャーへの攻撃。後者でも盾が増える誤り）。盾10枚以上は『盾ゾーンへ入った時』の判定で代用（常在の状況起因ではない）。要確認"}
+    source: {official: dmx12b-031, review: pending, notes: "攻撃先がプレイヤー（シールド含む）の時だけ。盾が0枚の時の攻撃は「そのターンはじめて」になる。盾10枚以上は『盾ゾーンへ入った時』の判定で代用（常在の状況起因ではない）。要確認"}

@@ -284,6 +284,18 @@ def op_choose(eng, t, op, env):
     return None
 
 
+@op("choose_race", **{"as": "str"})
+def op_choose_race(eng, t, op, env):
+    """「種族をひとつ選ぶ」: ゲームに出てくるカードの種族名（「/」で区切られた1種族ずつ）から1つ選び、変数に入れる。"""
+    names = sorted({r for d in {c.defn for c in eng.s.cards} for r in eng.rules.cards[d].races})
+    opts = [{"key": f"race:{r}", "name": r} for r in names]
+    a, d = eng.ask(t, env["you"], "choose_race", opts, 1, 1)
+    if d:
+        return d
+    env.setdefault("races", {})[op["as"]] = names[a[0]]
+    return None
+
+
 @op("put_under", select="selector", onto="selector")
 def op_put_under(eng, t, op, env):
     """カードを、クリーチャーの下に重ねる（Evoチャージャーなど）。onto がシールドなら、そのシールドの束にする（113.2, 406.2）。
