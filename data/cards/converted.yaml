@@ -53332,7 +53332,7 @@ cards:
       to: bz
       subject: self
     effect:
-    - op: play_free
+    - op: move
       select:
         zone: hand
         owner: opp
@@ -53342,6 +53342,8 @@ cards:
         count: 2
         up_to: true
         chooser: opp
+      to: bz
+      reason: put
   source:
     official: dm09-s05
     review: pending
@@ -55297,7 +55299,7 @@ cards:
         ref: self
         count: 1
       to: bz
-      reason: summon
+      reason: put
   source:
     official: dm12-036
     review: pending
@@ -55511,7 +55513,7 @@ cards:
         ref: self
         count: 1
       to: bz
-      reason: summon
+      reason: put
   source:
     official: dm12-s01
     review: pending
@@ -59248,13 +59250,15 @@ cards:
     effect:
     - op: may
       body:
-      - op: play_free
+      - op: move
         select:
           zone: mana
           owner: you
           filter:
             name: 復活するバイタル・ホーン
           count: 1
+        to: bz
+        reason: put
   source:
     official: dm17-034
     review: pending
@@ -59328,7 +59332,7 @@ cards:
     effect:
     - op: may
       body:
-      - op: play_free
+      - op: move
         select:
           zone: hand
           owner: opp
@@ -59338,6 +59342,8 @@ cards:
             - creature
             cost_le: 3
           count: 1
+        to: bz
+        reason: put
   source:
     official: dm17-054
     review: pending
@@ -59593,13 +59599,15 @@ cards:
     effect:
     - op: may
       body:
-      - op: play_free
+      - op: move
         select:
           zone: mana
           owner: you
           filter:
             name: オブシディアン・ビートル
           count: 1
+        to: bz
+        reason: put
   source:
     official: dm18-014
     review: pending
@@ -60174,7 +60182,7 @@ cards:
     effect:
     - op: may
       body:
-      - op: play_free
+      - op: move
         select:
           zone: hand
           owner: opp
@@ -60183,6 +60191,8 @@ cards:
             types:
             - creature
           count: 1
+        to: bz
+        reason: put
   source:
     official: dm18-048
     review: pending
@@ -60938,13 +60948,15 @@ cards:
     effect:
     - op: may
       body:
-      - op: play_free
+      - op: move
         select:
           zone: mana
           owner: you
           filter:
             name: アンブッシュ・スコーピオン
           count: 1
+        to: bz
+        reason: put
   source:
     official: dm18-131
     review: pending
@@ -61273,7 +61285,7 @@ cards:
       effect:
       - op: may
         body:
-        - op: play_free
+        - op: move
           select:
             zone: graveyard
             owner: you
@@ -61284,6 +61296,8 @@ cards:
               not_types:
               - evolution
             count: 1
+          to: bz
+          reason: put
   source:
     official: dm19-005
     review: pending

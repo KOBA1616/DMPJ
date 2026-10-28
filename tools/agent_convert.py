@@ -10,6 +10,8 @@
 from __future__ import annotations
 
 import argparse
+import json
+import re
 import sys
 from pathlib import Path
 
@@ -52,6 +54,16 @@ def cmd_next(n: int, order: str):
     return 0
 
 
+def summon_lint(card: dict, row: dict) -> list[str]:
+    """play_free / reason: summon は「召喚する・唱える」専用。原文にその語が無ければ警告する（出す・置くは move to bz reason: put）。"""
+    txt = row.get("text") or row.get("ability") or json.dumps(row, ensure_ascii=False)
+    s = json.dumps(card.get("abilities") or [], ensure_ascii=False)
+    out = []
+    if ("play_free" in s or '"reason": "summon"' in s) and not re.search(r"召喚|唱え|実行|ジェネレート|ニンジャ・ストライク|ストライク|G・ゼロ|革命", txt):
+        out.append("play_free/reason: summon は召喚・唱えるの意味。原文に召喚・唱えるが無い。出す・置くなら move to bz reason: put")
+    return out
+
+
 def cmd_submit(path: str) -> int:
     text = Path(path).read_text(encoding="utf-8")
     m = cc.re.search(r"```ya?ml\s*\n(.*?)```", text, cc.re.S)
@@ -85,6 +97,8 @@ def cmd_submit(path: str) -> int:
             if part:
                 cc.merge_split(it, r, part)
             card = cc.validate(it, r, tables)
+            for w in summon_lint(card, r):
+                print(f"! {cid} {r.get('name', '')}: {w}")
             vr = cc.vocab_reject(card, r)
             if vr:      # 語彙が足りないカードは登録しない（rejects に vocab として残し、足りない語彙は report_gaps に出る）
                 rejects[cid] = vr
