@@ -87,6 +87,7 @@ class GameState:
     steps_this_turn: int = 0
     skip_rest: bool = False                                 # 「ターンの残りをとばす」
     deck_emptied: list[int] = field(default_factory=list)   # 山札が一瞬でも0枚になったプレイヤー（104.2b）
+    sba_held: list[list[int]] = field(default_factory=list)   # パワー0以下の破壊を置換で止められたクリーチャー（同じ処理を繰り返さない）
 
     # ---- 参照 ----
     def ref(self, cid: int) -> list[int]:

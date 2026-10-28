@@ -63,6 +63,8 @@ class EventMixin:
         return None
 
     def apply_batch(self, evs: list[dict]):
+        if evs and not any(ev.get("sba") for ev in evs):
+            self.s.sba_held.clear()   # 状況起因処理以外で状態が動いたら、止められていた破壊をもう一度試す
         records = []
         for ev in evs:
             records += self._apply_one(ev)
@@ -88,6 +90,8 @@ class EventMixin:
                 self._rebuild(cid)
                 unders = []
             self._raw_move(cid, ev["to"], ev.get("position", "top"), ev.get("controller"))
+            if ev.get("tapped"):   # 「タップして置く」: 置かれた時点でタップ状態（別のタップ イベントにしない）
+                c.tapped = True
             for u in unders:   # クリーチャーとして離れたら下のカードも同じゾーンへ（109.2b, 316.3）
                 if s.cards[u].zone == "bz":
                     self._raw_move(u, ev["to"])
@@ -217,8 +221,13 @@ class EventMixin:
             return []
         dead = [s.ref(c) for c in self.bz_tops()
                 if "creature" in self.chars(c)["types"] and self.chars(c)["power"] <= 0]   # 703.4c
+        # 「墓地に置かれるかわりにとどまる」置換で破壊できなかったものは、状態が動くまで同じ処理を繰り返さない
+        # （繰り返すと無限ループになる）。パワーが0より大きくなれば対象から外れる
+        s.sba_held = [r for r in s.sba_held if r in dead]
+        dead = [r for r in dead if r not in s.sba_held]
         if dead:
-            return [self.ev_task([{"ev": "move", "subject": r, "to": "graveyard", "reason": "destroy"}
+            s.sba_held += [r for r in dead if r not in s.sba_held]
+            return [self.ev_task([{"ev": "move", "subject": r, "to": "graveyard", "reason": "destroy", "sba": True}
                                   for r in dead])]
         return []
 

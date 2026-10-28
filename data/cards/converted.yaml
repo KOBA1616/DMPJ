@@ -51640,7 +51640,7 @@ cards:
   source:
     official: dm07-012
     review: pending
-    notes: 光ステルス（相手のマナゾーンに光のカードがあればブロックされない）はキーワード語彙に無いため、条件つき常在型能力として原文どおりに書いた（近似ではなくステルスの定義そのもの）
+    notes: ステルスは keyword_patterns（stealth_*）の定義どおり。相手のマナゾーンにその文明のカードが1枚でもあればブロックされない（厳密一致）
     aliases:
     - promoy2-018
   keywords:
@@ -51703,7 +51703,7 @@ cards:
   source:
     official: dm07-015
     review: pending
-    notes: 水ステルス（相手のマナゾーンに水のカードがあればブロックされない）を dm07-012 光ステルスと同じ形で書いた
+    notes: ステルスは keyword_patterns（stealth_*）の定義どおり。相手のマナゾーンにその文明のカードが1枚でもあればブロックされない（厳密一致）
     aliases:
     - promoy2-012
   keywords:
@@ -51757,7 +51757,7 @@ cards:
   source:
     official: dm07-018
     review: pending
-    notes: 闇ステルスを dm07-012 と同じ形で書いた。進化元は原文表記「ツリー・フォーク」だが種族名はカード自身の表記（ツリーフォーク）にそろえた
+    notes: ステルスは keyword_patterns（stealth_*）の定義どおり。相手のマナゾーンにその文明のカードが1枚でもあればブロックされない（厳密一致）
   keywords:
   - double_breaker
 - id: dm07-019
@@ -51973,7 +51973,7 @@ cards:
   source:
     official: dm07-036
     review: pending
-    notes: 闇ステルスを dm07-012 と同じ形で書いた（原文はステルスの定義文つき）
+    notes: ステルスは keyword_patterns（stealth_*）の定義どおり。相手のマナゾーンにその文明のカードが1枚でもあればブロックされない（厳密一致）
 - id: dm07-037
   name: 捕縛の使徒ローム
   types:
@@ -52062,7 +52062,7 @@ cards:
   source:
     official: dm07-045
     review: pending
-    notes: 自然ステルスを dm07-012 と同じ形で書いた
+    notes: ステルスは keyword_patterns（stealth_*）の定義どおり。相手のマナゾーンにその文明のカードが1枚でもあればブロックされない（厳密一致）
 - id: dm07-047
   name: バキューム・ジェル
   types:
@@ -52170,7 +52170,7 @@ cards:
   source:
     official: dm07-050
     review: pending
-    notes: 光ステルスを dm07-012 と同じ形で書いた
+    notes: ステルスは keyword_patterns（stealth_*）の定義どおり。相手のマナゾーンにその文明のカードが1枚でもあればブロックされない（厳密一致）
 - id: dm07-052
   name: 撃墜するスティンガー・ホーン
   types:
@@ -52212,7 +52212,7 @@ cards:
   source:
     official: dm07-052
     review: pending
-    notes: 水ステルスを dm07-015 と同じ形で書いた
+    notes: ステルスは keyword_patterns（stealth_*）の定義どおり。相手のマナゾーンにその文明のカードが1枚でもあればブロックされない（厳密一致）
 - id: dm07-054
   name: ランチャー・スパイダー
   types:
@@ -53809,35 +53809,27 @@ cards:
       to: bz
       subject: self
     effect:
-    - op: choose
-      select:
-        zone: mana
-        owner: you
-        count: all
-      as: m
-    - op: move
-      select:
-        zone: hand
-        owner: you
-        count: all
-      to: mana
-      reason: put
-    - op: move
-      select:
-        ref: m
-        count: all
-      to: hand
-      reason: return
-    - op: tap
-      select:
-        zone: mana
-        owner: you
-        count: all
+    - op: together
+      body:
+      - op: move
+        select:
+          zone: mana
+          owner: you
+          count: all
+        to: hand
+        reason: return
+      - op: move
+        select:
+          zone: hand
+          owner: you
+          count: all
+        to: mana
+        reason: put
+        tapped: true
   source:
     official: dm10-007
     review: pending
-    notes: 「同時に入れ替え」を、(1)元のマナを変数 m に保持 (2)手札をすべてマナへ (3)m を手札へ戻す (4)マナに残った=元の手札だけをタップ、の順で再現した。swap
-      op は革命チェンジ専用なので使っていない
+    notes: '「同時に」を op: together（移動対象を先にすべて決め、1つのイベントの束で同時に動かす）で書いた。手札からマナへは tapped: true でタップして置く'
   keywords:
   - double_breaker
 - id: dm10-019
@@ -57427,23 +57419,16 @@ cards:
 
     このクリーチャーは、相手プレイヤーを攻撃できない。'
   abilities:
-  - kind: trigger
-    when:
-      event: block
-      subject: self
-    effect:
-    - op: modify
-      select:
-        ref: self
-        count: 1
-      mod:
-        power: 3000
-      duration: end_of_turn
+  - kind: static
+    affects: self
+    mod:
+      battle_power:
+        amount: 3000
+        only: blocking
   source:
     official: dm14-072
     review: pending
-    notes: battle_power（only なし）は自分が攻撃するバトルにも効いてしまうため、ブロック時の誘発でターン終了時まで上げる形にした（dm13-037
-      ドーベルと同じ）。パワーが要るのはそのバトルの間だけなので結果は一致する
+    notes: '「ブロック中、パワー+3000」は battle_power（only: blocking）で、ブロックしたクリーチャーとしてバトルする間だけ効く。ブロック誘発でターン終了まで上げる形にはしていない'
   keywords:
   - blocker
   - cannot_attack_player

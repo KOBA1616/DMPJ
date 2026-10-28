@@ -58,6 +58,42 @@ patterns:
             when: {event: turn_end}
             effect:
               - {op: move, select: {ref: ninja}, to: deck, reason: put, position: bottom}
+  # ○ステルス: 相手のマナゾーンに○のカードが1枚でもあれば、このクリーチャーはブロックされない（条件つきの常在型能力。文明ごとに1種）
+  stealth_light:
+    re: '光ステルス'
+    abilities:
+      - kind: static
+        affects: self
+        if: {exists: {zone: mana, owner: opp, filter: {civs: [light]}}}
+        mod: {deny: [be_blocked]}
+  stealth_water:
+    re: '水ステルス'
+    abilities:
+      - kind: static
+        affects: self
+        if: {exists: {zone: mana, owner: opp, filter: {civs: [water]}}}
+        mod: {deny: [be_blocked]}
+  stealth_darkness:
+    re: '闇ステルス'
+    abilities:
+      - kind: static
+        affects: self
+        if: {exists: {zone: mana, owner: opp, filter: {civs: [darkness]}}}
+        mod: {deny: [be_blocked]}
+  stealth_fire:
+    re: '火ステルス'
+    abilities:
+      - kind: static
+        affects: self
+        if: {exists: {zone: mana, owner: opp, filter: {civs: [fire]}}}
+        mod: {deny: [be_blocked]}
+  stealth_nature:
+    re: '自然ステルス'
+    abilities:
+      - kind: static
+        affects: self
+        if: {exists: {zone: mana, owner: opp, filter: {civs: [nature]}}}
+        mod: {deny: [be_blocked]}
   # 革命チェンジ：<条件>（条件の読み取りは rule_convert の _build_revolution_change）
   revolution_change:
     re: '革命チェンジ[:：](.+)'

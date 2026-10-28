@@ -29,6 +29,9 @@ AI が KOBA1616/DMPJ（非公開）を読め、コマンドを実行できる場
 
 ## 守ること
 - 原文に無い効果を足さない。語彙で原文どおりに表せない効果は、近い語彙で代用せず、`source.unsupported` に残す（need: 足せばよい語彙の案、text: 該当する原文）。unsupported があるカードは `submit` が登録せず、`data/cards/raw/rejects.jsonl` に `reason: vocab` で残す（語彙が足りてから変換し直す。足りない語彙は `python tools/report_gaps.py` に出る）。
+- 近似・代用の禁止（具体例）: 「ブロック中、パワー+3000」を、ブロック時の誘発で「ターン終了まで+3000」にして代用しない。期間をずらす・対象を広げる・手順を分けて同時を順次に直す、はすべて代用。結果が厳密に同じと言えなければ unsupported にして登録しない。`source.notes` には「厳密一致」か、足りない語彙を書く。「近似」と書くカードは registered ではなく rejects 扱い。
+- 語彙の確認: 使う op・mod のキー・event・permission は `data/rules` と `dmsim/defs.py` の定数、`dmsim/engine/ops.py` で照合してから「無い」と書く（mod のキーと op は別物。例: `step_mod` は mod のキーには無いが op としてある）。バトル中のパワー修整は `mod.battle_power`（`only: attacking`＝攻撃中、`only: blocking`＝ブロック中）、同時の移動は `op: together`（move だけ、対象は count: all か ref）、タップして置くは move の `tapped: true`、ステルスなどのキーワードは `keyword_patterns.yaml` が処理する（手書きしない）。
+- 作業開始時と各 Unit の前に `git fetch origin main` して最新の main に載せ替える（ZIP から作り直さない）。PR は1 Unit（100枚）ごとに分け、前の PR がマージされてから次を作る。
 - サイキック・GR・超次元・ドラグハートはオリジナルフォーマットでは使わないので変換しない。`next` は出さず、`submit` に来ても飛ばす。
 - ルール上の判断（置換効果・同時処理など）は推測で書かない。指示文と語彙表にある書き方だけを使う。
 - キー・トークン・秘密の値を出力やコミットに含めない。
