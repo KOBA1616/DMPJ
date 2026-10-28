@@ -1,0 +1,57 @@
+"""dmsim.discovery: LoopSpec のデータ表現と、最小初期盤面の縮約（介入による特定）。"""
+from pathlib import Path
+
+import pytest
+import yaml
+
+from dmsim.discovery import shrink as sh
+from dmsim.discovery.loopspec import LoopSpec, Pred, hit_prob_within, reroll_success_prob
+
+SAGA_SETUP = Path(__file__).parent / "saga_loop_first_setup.yaml"
+SAGA, DRAGE, KODAMA = "dm22ex2-021", "dm22ex1-007", "dmex10-020"
+
+
+def test_loopspec_json_roundtrip_and_validation():
+    s = LoopSpec("exchange", "reroll", [Pred(0, {"name": SAGA}, 1, ">=", zones=("graveyard", "hand"))],
+                 {"deck:0": -1}, goal=[Pred(0, {"types": ["creature"]}, 2, ">=", "graveyard")])
+    assert LoopSpec.from_json(s.to_json()) == s
+    with pytest.raises(ValueError):
+        LoopSpec("x", "reroll", [])                                   # reroll には停止条件が要る
+    with pytest.raises(ValueError):
+        Pred(0, {"name": SAGA}, 1, ">=")                              # zone も zones も無い
+    with pytest.raises(ValueError):
+        Pred(0, {"name": SAGA}, 1, ">=", "hand", ("hand", "mana"))    # 両方は不可
+
+
+def test_reroll_success_probability_is_hypergeometric():
+    assert hit_prob_within(10, 1, 5) == pytest.approx(0.5)
+    assert hit_prob_within(10, 0, 5) == 0.0 and hit_prob_within(10, 6, 5) == 1.0
+    s = LoopSpec("x", "reroll", [], goal=[Pred(0, {"name": "a"}, 1, ">=", "hand")], deck_floor=1)
+    assert reroll_success_prob(s, deck_n=11, hits=1) == pytest.approx(10 / 11)   # 山札の下限1枚を残すので10枚まで見られる
+    assert reroll_success_prob(s, deck_n=11, hits=2) == 1.0
+
+
+def test_shrink_saga_board_to_one_minimal_board(rules):
+    """サガの盤面を縮約すると、どの1枚を外してもループが成立しない最小の盤面になる（決定的）。"""
+    spec = yaml.safe_load(SAGA_SETUP.read_text(encoding="utf-8"))
+    found = sh.lf.discover_loops(sh.sc.build(rules, spec), 0, 1500)
+    delta = next(f.cert.delta for f in found if f.verified)
+    test = sh.loop_test(rules, 0, 1500, delta)
+    r = sh.shrink(spec, test)
+    names = sorted(n for _, _, _, n in sh.entries(r.spec))
+    assert names == sorted([SAGA, SAGA, DRAGE, KODAMA])
+    for pk, z, i, n in sh.entries(r.spec):                             # 1-極小: どれを外しても成立しない
+        assert not test(sh.without(r.spec, pk, z, i))
+    again = sh.shrink(spec, sh.loop_test(rules, 0, 1500, delta))
+    assert again.spec == r.spec                                       # 同じ入力から同じ結果
+    ls = sh.to_loopspec(rules, "saga", r, delta)
+    assert ls.delta == delta and sum(p.n for p in ls.minimal) == 4
+    assert LoopSpec.from_json(ls.to_json()) == ls
+
+
+def test_zone_alternatives_show_where_the_card_may_be(rules):
+    """残ったカードが別のゾーンでも成立するか。サガは場にいても成立する。"""
+    spec = {"p0": {"hand": [SAGA, DRAGE, KODAMA], "graveyard": [SAGA]}, "p1": {}, "deck_size": 40, "deck_left": [20, 40]}
+    test = sh.loop_test(rules, 0, 1500, {"deck:0": -1, "graveyard:0": 1})
+    alts = sh.zone_alternatives(spec, test, zones=("bz", "hand"))
+    assert "bz" in alts[("p0", "graveyard", 0)]
