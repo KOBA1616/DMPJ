@@ -347,10 +347,12 @@ class Checker:
                 raise DefError(f"{where}: cost must be int or {{amount, count}}")
         if "cost_min" in m and not isinstance(m["cost_min"], int):
             raise DefError(f"{where}: cost_min must be int")
-        if "battle_power" in m:   # バトル中だけのパワー修整: {amount: N, count: <selector>}（ハンティング）
+        if "battle_power" in m:   # バトル中だけのパワー修整: {amount: N, count: <selector>, only: attacking}（ハンティング。only: attacking は「攻撃中」＝攻撃側のときだけ）
             bp = m["battle_power"]
-            if not isinstance(bp, dict) or set(bp) - {"amount", "count"} or not isinstance(bp.get("amount"), int):
-                raise DefError(f"{where}: battle_power needs amount (int) and optional count (selector)")
+            if not isinstance(bp, dict) or set(bp) - {"amount", "count", "only"} or not isinstance(bp.get("amount"), int):
+                raise DefError(f"{where}: battle_power needs amount (int) and optional count (selector) / only: attacking")
+            if bp.get("only", "attacking") != "attacking":
+                raise DefError(f"{where}: battle_power only must be attacking")
             if "count" in bp:
                 self.selector(bp["count"], where)
         for k in m.get("ignore", []):

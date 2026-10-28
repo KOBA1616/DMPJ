@@ -226,3 +226,18 @@ def test_hunting_adds_power_only_during_battle(tmp_path):
     e.advance()
     # 2000 + ハンター2体×1000 = 4000 > 3000 で勝つ（補正なしなら負け）
     assert not e.bz_tops(1)
+
+
+def test_battle_power_only_attacking_ignores_blocker_role(tmp_path):
+    """「攻撃中」のパワー+: only: attacking は攻撃側のときだけ。ブロック・攻撃された側では付かない（only なしは両方）。"""
+    import yaml
+    f = tmp_path / "a.yaml"
+    ab = lambda only: {"kind": "static", "affects": "self", "mod": {"battle_power": {"amount": 1000, **({"only": "attacking"} if only else {})}}}  # noqa: E731
+    mk = lambda i, only: {"id": i, "name": i, "types": ["creature"], "civs": ["fire"], "cost": 3, "power": 2000, "races": ["x"],  # noqa: E731
+                          "text": "x", "abilities": [ab(only)]}
+    f.write_text(yaml.safe_dump({"cards": [mk("A001", True), mk("A002", False)]}, allow_unicode=True))
+    rr = load_rules(sorted((DATA / "cards").glob("*.yaml")) + [f])
+    e = setup(rr, {"bz": ["A001", "A002"]}, {"bz": []})
+    a1, a2 = top(e, 0, "A001"), top(e, 0, "A002")
+    assert e._battle_bonus(e.s.ref(a1), attacking=True) == 1000 and e._battle_bonus(e.s.ref(a1)) == 0
+    assert e._battle_bonus(e.s.ref(a2), attacking=True) == 1000 and e._battle_bonus(e.s.ref(a2)) == 1000

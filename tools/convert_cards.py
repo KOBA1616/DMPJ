@@ -57,6 +57,7 @@ INSTRUCTIONS = """\
 - 語彙が足りず表せない効果は source.unsupported に [{need: <足せばよい op・語彙の案（英語の識別子）>, text: <該当する原文>}] で書く。
   無い op を effect に書いて検査を落とすより、近似して notes に書き、足りない語彙を unsupported に残す。
 - source は {official: <id>, review: pending} とし、必要なら notes を足す。
+- 「攻撃中、パワー+N」は mod.battle_power に only: attacking を付ける（バトル中だけ・攻撃側のときだけ適用。ブロックしたときは付かない）。「バトル中」は only を付けない。
 - 原文の表現が古い（例: 「墓地に置く」）場合も原文どおりに変換し、気づいた点は notes に書く。
 """
 

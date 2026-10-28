@@ -68,20 +68,22 @@ class CombatMixin:
                 break
         return att, tgt, None
 
-    def _battle_bonus(self, ref) -> int:
-        """バトル中だけのパワー修整（mod battle_power。ハンティング: 自分のハンター1体につき+1000）。"""
+    def _battle_bonus(self, ref, attacking: bool = False) -> int:
+        """バトル中だけのパワー修整（mod battle_power。ハンティング: 自分のハンター1体につき+1000）。only: attacking は攻撃側のときだけ。"""
         cid = ref[0]
         env = {"you": self.s.cards[cid].controller, "self": ref}
         total = 0
         for _, ab in self.abilities(cid, "static"):
             bp = ab.get("mod", {}).get("battle_power")
+            if bp and bp.get("only") == "attacking" and not attacking:
+                continue
             if bp and ab.get("affects") == "self" and ab.get("zone", "bz") == self.s.cards[cid].zone:
                 total += bp["amount"] * (self.eval_expr({"count": bp["count"]}, env) if "count" in bp else 1)
         return total
 
     def _battle(self, x, y):
         """バトル（701.13）。結果で誘発した効果はその場で解決してからバトルを終える。"""
-        px = self.chars(x[0])["power"] + self._battle_bonus(x)
+        px = self.chars(x[0])["power"] + self._battle_bonus(x, attacking=True)      # x は攻撃側
         py = self.chars(y[0])["power"] + self._battle_bonus(y)
         losers = ([x] if px <= py else []) + ([y] if py <= px else [])
         winners = [r for r in (x, y) if r not in losers]
