@@ -45772,3 +45772,858 @@ cards:
     official: dm03-040
     review: pending
     notes: '相手の選択は chooser: opp'
+- id: dm04-007
+  name: 修復の使徒オークス
+  types:
+  - creature
+  civs:
+  - light
+  cost: 5
+  power: 1000
+  races:
+  - イニシエート
+  mana: 1
+  text: このクリーチャーがバトルゾーンから自分の墓地に置かれるとき、裏向きにして自分のシールドに加える。
+  abilities:
+  - kind: replace
+    when:
+      event: move
+      from: bz
+      to: graveyard
+      subject: self
+    instead:
+    - op: move
+      select:
+        ref: self
+      to: shield
+      reason: put
+  source:
+    official: dm04-007
+    review: pending
+    notes: 原文が同じ dm03-036 の変換結果を写した（モデル不使用）。能力は元カードの確認に従う
+- id: dm07-027
+  name: 三面怪人アシュラファング
+  types:
+  - creature
+  civs:
+  - darkness
+  cost: 4
+  power: 4000
+  races:
+  - デビルマスク
+  mana: 1
+  text: このクリーチャーがバトルゾーンに出たとき、自分のシールドが１枚でもあれば、その中から１枚を裏向きのまま選び、自分の手札に加える。ただし、その「S(シールド)・トリガー」は使えない。
+  abilities:
+  - kind: trigger
+    when:
+      event: move
+      to: bz
+      subject: self
+    if:
+      exists:
+        zone: shield
+        owner: you
+    effect:
+    - op: move
+      select:
+        zone: shield
+        owner: you
+        count: 1
+      to: hand
+      reason: put
+  source:
+    official: dm07-027
+    review: pending
+    notes: 原文が同じ dm03-028 の変換結果を写した（モデル不使用）。能力は元カードの確認に従う
+- id: dmc27-024
+  name: キング・ボニータス
+  types:
+  - creature
+  civs:
+  - water
+  cost: 8
+  power: 4000
+  races:
+  - リヴァイアサン
+  mana: 1
+  text: このクリーチャーが攻撃するとき、自分の山札を見る。その中から水のカードを１枚選び、相手に見せてから自分の手札に加えてよい。その後、山札をシャッフルする。
+  abilities:
+  - kind: trigger
+    when:
+      event: attack
+      subject: self
+    effect:
+    - op: may
+      body:
+      - op: move
+        select:
+          zone: deck
+          owner: you
+          filter:
+            civs:
+            - water
+          count: 1
+          look: true
+        to: hand
+        reason: put
+    - op: shuffle
+  source:
+    official: dmc27-024
+    review: pending
+    notes: 原文が同じ dm03-024 の変換結果を写した（モデル不使用）。能力は元カードの確認に従う
+- id: dmc27-025
+  name: スティンガー・ボール
+  types:
+  - creature
+  civs:
+  - water
+  cost: 3
+  power: 1000
+  races:
+  - サイバー・ウイルス
+  mana: 1
+  text: このクリーチャーが攻撃するとき、相手のシールドを１枚見てよい。その後、そのシールドを元の場所に戻す。
+  abilities:
+  - kind: trigger
+    when:
+      event: attack
+      subject: self
+    effect:
+    - op: may
+      body:
+      - op: choose
+        select:
+          zone: shield
+          owner: opp
+          count: 1
+          look: true
+        as: seen
+  source:
+    official: dmc27-025
+    review: pending
+    notes: 原文が同じ dm03-025 の変換結果を写した（モデル不使用）。能力は元カードの確認に従う
+- id: dm03-041
+  name: アングラー・クラスター
+  types:
+  - creature
+  civs:
+  - water
+  cost: 3
+  power: 3000
+  races:
+  - サイバー・クラスター
+  mana: 1
+  text: 'ブロッカー(相手クリーチャーが攻撃するとき、このクリーチャーをタップして、その攻撃を阻止してよい。そのあと、その相手クリーチャーとバトルする)
+
+    このクリーチャーは攻撃することができない。
+
+    自分のマナゾーンにあるカードがすべて水のカードである間、このクリーチャーのパワーは+3000される。'
+  abilities:
+  - kind: static
+    affects: self
+    if:
+      not:
+        exists:
+          zone: mana
+          owner: you
+          filter:
+            not_civs:
+            - water
+    mod:
+      power: 3000
+  source:
+    official: dm03-041
+    review: pending
+    notes: 条件の表し方は dm03-022 線光花と同じ
+  keywords:
+  - blocker
+  - cannot_attack
+- id: dm03-042
+  name: エメラル
+  types:
+  - creature
+  civs:
+  - water
+  cost: 2
+  power: 1000
+  races:
+  - サイバーロード
+  mana: 1
+  text: このクリーチャーがバトルゾーンに出たとき、自分の手札からカードを１枚選び、裏向きにしてシールドに加えてよい。そうしたなら、自分のシールドを１枚裏向きのまま選び、自分の手札に加える。ただし、その「S(シールド)・トリガー」は使えない。
+  abilities:
+  - kind: trigger
+    when:
+      event: move
+      to: bz
+      subject: self
+    if:
+      exists:
+        zone: hand
+        owner: you
+    effect:
+    - op: may
+      body:
+      - op: move
+        select:
+          zone: hand
+          owner: you
+          count: 1
+        to: shield
+        reason: put
+      - op: move
+        select:
+          zone: shield
+          owner: you
+          count: 1
+        to: hand
+        reason: put
+  source:
+    official: dm03-042
+    review: pending
+    notes: 「そうしたなら」の手札交換は may の中に入れた。加えたばかりのシールドを選ぶこともできる（原文どおり）。「そのS・トリガーは使えない」の制限は語彙に無いため扱っていない（dm03-014
+      と同じ）
+- id: dm03-043
+  name: リキッド・スコープ
+  types:
+  - spell
+  civs:
+  - water
+  cost: 4
+  mana: 1
+  text: 'S(シールド)・トリガー(このカードをシールドゾーンから手札に加えるとき、コストを支払わずにすぐ使ってよい)
+
+    相手の手札とシールドを見る。その後、シールドを元の場所に戻す。'
+  spell:
+  - op: choose
+    select:
+      zone: hand
+      owner: opp
+      count: all
+      look: true
+    as: seen_hand
+  - op: choose
+    select:
+      zone: shield
+      owner: opp
+      count: all
+      look: true
+    as: seen_shield
+  source:
+    official: dm03-043
+    review: pending
+    notes: 'dm02-022 予言者ウィンと同じ扱い。手札とシールドは動かさず look: true で見るだけなので「元の場所に戻す」は自動的に満たす'
+  keywords:
+  - s_trigger
+- id: dm03-044
+  name: 泥男
+  types:
+  - creature
+  civs:
+  - darkness
+  cost: 4
+  power: 2000
+  races:
+  - ヘドリアン
+  mana: 1
+  text: 自分のマナゾーンにあるカードがすべて闇のカードである間、このクリーチャーのパワーは+2000される。
+  abilities:
+  - kind: static
+    affects: self
+    if:
+      not:
+        exists:
+          zone: mana
+          owner: you
+          filter:
+            not_civs:
+            - darkness
+    mod:
+      power: 2000
+  source:
+    official: dm03-044
+    review: pending
+- id: dm03-046
+  name: ボーン・ピアース
+  types:
+  - creature
+  civs:
+  - darkness
+  cost: 2
+  power: 1000
+  races:
+  - ブレインジャッカー
+  mana: 1
+  text: このクリーチャーがバトルゾーンから自分の墓地に置かれるとき、自分のマナゾーンからクリーチャーを１体選び、自分の手札に戻してよい。
+  abilities:
+  - kind: trigger
+    zone: graveyard
+    when:
+      event: move
+      from: bz
+      to: graveyard
+      subject: self
+    effect:
+    - op: may
+      body:
+      - op: bounce
+        select:
+          zone: mana
+          owner: you
+          filter:
+            types:
+            - creature
+          count: 1
+  source:
+    official: dm03-046
+    review: pending
+    notes: '墓地に置かれた後に解決する誘発として zone: graveyard を付けた'
+- id: dm03-047
+  name: スネークアタック
+  types:
+  - spell
+  civs:
+  - darkness
+  cost: 4
+  mana: 1
+  text: このターン、バトルゾーンにある自分のクリーチャーはすべて、「W(ダブル)・ブレイカー」を得る。自分のシールドが１枚でもあれば、裏向きのまま１枚選び、自分の墓地に置く。
+  spell:
+  - op: modify
+    select:
+      zone: bz
+      owner: you
+      filter:
+        types:
+        - creature
+      count: all
+    mod:
+      grant:
+      - double_breaker
+    duration: end_of_turn
+  - op: if
+    cond:
+      exists:
+        zone: shield
+        owner: you
+    then:
+    - op: move
+      select:
+        zone: shield
+        owner: you
+        count: 1
+      to: graveyard
+      reason: put
+  source:
+    official: dm03-047
+    review: pending
+    notes: W・ブレイカーの説明文は text から省いた。2文目は dm03-032 灼熱波と同じ形
+- id: dm03-049
+  name: チッチ・ホッピー
+  types:
+  - creature
+  civs:
+  - fire
+  cost: 3
+  power: 2000
+  races:
+  - ファイアー・バード
+  mana: 1
+  text: 自分のマナゾーンにあるカードがすべて火のカードである間、このクリーチャーのパワーは+2000される。
+  abilities:
+  - kind: static
+    affects: self
+    if:
+      not:
+        exists:
+          zone: mana
+          owner: you
+          filter:
+            not_civs:
+            - fire
+    mod:
+      power: 2000
+  source:
+    official: dm03-049
+    review: pending
+- id: dm03-050
+  name: 奇襲兵ブルレイザー
+  types:
+  - creature
+  civs:
+  - fire
+  cost: 2
+  power: 3000
+  races:
+  - ドラゴノイド
+  mana: 1
+  text: バトルゾーンにある相手のクリーチャーの数が自分のクリーチャーの数より多いとき、このクリーチャーは攻撃することができない。
+  abilities:
+  - kind: static
+    affects: self
+    if:
+      cmp:
+      - count:
+          zone: bz
+          owner: opp
+          filter:
+            types:
+            - creature
+      - '>'
+      - count:
+          zone: bz
+          owner: you
+          filter:
+            types:
+            - creature
+    mod:
+      deny:
+      - attack_player
+      - attack_creature
+  source:
+    official: dm03-050
+    review: pending
+    notes: 数の比較は cmp に count 式を入れて表した。自分のクリーチャーの数にはこのクリーチャー自身も含む（原文どおり）
+- id: dm03-051
+  name: ボルカニック・アロー
+  types:
+  - spell
+  civs:
+  - fire
+  cost: 2
+  mana: 1
+  text: 'S(シールド)・トリガー(このカードをシールドゾーンから手札に加えるとき、コストを支払わずにすぐ使ってよい)
+
+    バトルゾーンにあるパワー6000以下のクリーチャーを１体選び、持ち主の墓地に置く。
+
+    自分のシールドが１枚でもあれば、裏向きのまま１枚選び、自分の墓地に置く。'
+  spell:
+  - op: destroy
+    select:
+      zone: bz
+      owner: any
+      filter:
+        types:
+        - creature
+        power_le: 6000
+      count: 1
+  - op: if
+    cond:
+      exists:
+        zone: shield
+        owner: you
+    then:
+    - op: move
+      select:
+        zone: shield
+        owner: you
+        count: 1
+      to: graveyard
+      reason: put
+  source:
+    official: dm03-051
+    review: pending
+    notes: 「持ち主の墓地に置く」は destroy。2文目は dm03-032 灼熱波と同じ形
+  keywords:
+  - s_trigger
+- id: dm03-052
+  name: 激昂するダッシュ・ホーン
+  types:
+  - creature
+  civs:
+  - nature
+  cost: 5
+  power: 4000
+  races:
+  - ホーン・ビースト
+  mana: 1
+  text: 自分のマナゾーンにあるカードがすべて自然のカードである間、このクリーチャーのパワーは+3000され、「W(ダブル)・ブレイカー」を得る。
+  abilities:
+  - kind: static
+    affects: self
+    if:
+      not:
+        exists:
+          zone: mana
+          owner: you
+          filter:
+            not_civs:
+            - nature
+    mod:
+      power: 3000
+      grant:
+      - double_breaker
+  source:
+    official: dm03-052
+    review: pending
+    notes: W・ブレイカーの説明文は text から省いた
+- id: dm03-054
+  name: スナイプ・モスキート
+  types:
+  - creature
+  civs:
+  - nature
+  cost: 1
+  power: 2000
+  races:
+  - ジャイアント・インセクト
+  mana: 1
+  text: このクリーチャーが攻撃するとき、自分のマナゾーンにカードが１枚でもあれば、その中から１枚選び、自分の手札に戻す。
+  abilities:
+  - kind: trigger
+    when:
+      event: attack
+      subject: self
+    if:
+      exists:
+        zone: mana
+        owner: you
+    effect:
+    - op: bounce
+      select:
+        zone: mana
+        owner: you
+        count: 1
+  source:
+    official: dm03-054
+    review: pending
+- id: dm03-055
+  name: 大地の咆哮
+  types:
+  - spell
+  civs:
+  - nature
+  cost: 2
+  mana: 1
+  text: 'S(シールド)・トリガー(このカードをシールドゾーンから手札に加えるとき、コストを支払わずにすぐ使ってよい)
+
+    自分のマナゾーンから、コスト６以上のクリーチャーを１体選び、自分の手札に戻す。'
+  spell:
+  - op: bounce
+    select:
+      zone: mana
+      owner: you
+      filter:
+        types:
+        - creature
+        cost_ge: 6
+      count: 1
+  source:
+    official: dm03-055
+    review: pending
+  keywords:
+  - s_trigger
+- id: dm03-s02
+  name: 混沌魚
+  types:
+  - creature
+  civs:
+  - water
+  cost: 7
+  power: 1000
+  races:
+  - ゲル・フィッシュ
+  mana: 1
+  text: このクリーチャーのパワーは、バトルゾーンにある自分の他の水のクリーチャー１体につき+1000される。このクリーチャーが攻撃するとき、自分の山札から好きな枚数のカードを引いてよい。ただし、その枚数は、バトルゾーンにある自分の他の水のクリーチャーの数までであること。
+  abilities:
+  - kind: static
+    affects: self
+    mod:
+      power:
+        amount: 1000
+        count:
+          zone: bz
+          owner: you
+          filter:
+            types:
+            - creature
+            civs:
+            - water
+          other: true
+  - kind: trigger
+    when:
+      event: attack
+      subject: self
+    effect:
+    - op: repeat
+      times:
+        count:
+          zone: bz
+          owner: you
+          filter:
+            types:
+            - creature
+            civs:
+            - water
+          other: true
+      body:
+      - op: may
+        body:
+        - op: draw
+          count: 1
+  source:
+    official: dm03-s02
+    review: pending
+    notes: 「好きな枚数（上限まで）引く」は、上限回数まで may のドローを繰り返す形にした（「２枚まで引く」の dmd08-015 と同じ発想）
+- id: dm03-s04
+  name: ガルカーゴ・ドラゴン
+  types:
+  - creature
+  civs:
+  - fire
+  cost: 7
+  power: 6000
+  races:
+  - アーマード・ドラゴン
+  mana: 1
+  text: 'W(ダブル)・ブレイカー(シールドを攻撃したとき、このクリーチャーはシールドを２枚ブレイクする)
+
+    このクリーチャーのパワーは、バトルゾーンにある自分の他の火のクリーチャー１体につき+1000される。
+
+    このクリーチャーは、タップされていないクリーチャーを攻撃できる。'
+  abilities:
+  - kind: static
+    affects: self
+    mod:
+      allow:
+      - action: attack_creature
+        other:
+          tapped: false
+  - kind: static
+    affects: self
+    mod:
+      power:
+        amount: 1000
+        count:
+          zone: bz
+          owner: you
+          filter:
+            types:
+            - creature
+            civs:
+            - fire
+          other: true
+  source:
+    official: dm03-s04
+    review: pending
+  keywords:
+  - double_breaker
+- id: dm03-s05
+  name: 天空の超人
+  types:
+  - creature
+  civs:
+  - nature
+  cost: 5
+  power: 8000
+  races:
+  - ジャイアント
+  mana: 1
+  text: 'W(ダブル)・ブレイカー(シールドを攻撃したとき、このクリーチャーはシールドを２枚ブレイクする)
+
+    このクリーチャーが攻撃するとき、自分のマナゾーンにあるクリーチャーをすべて、自分の手札に戻す。'
+  abilities:
+  - kind: trigger
+    when:
+      event: attack
+      subject: self
+    effect:
+    - op: bounce
+      select:
+        zone: mana
+        owner: you
+        filter:
+          types:
+          - creature
+        count: all
+  source:
+    official: dm03-s05
+    review: pending
+  keywords:
+  - double_breaker
+- id: dm04-002
+  name: アストラル・リーフ
+  types:
+  - creature
+  - evolution
+  civs:
+  - water
+  cost: 2
+  power: 4000
+  races:
+  - サイバー・ウイルス
+  mana: 1
+  evolve_from:
+    races:
+    - サイバー・ウイルス
+  text: 進化-自分のサイバー・ウイルス１体の上に置く。 / このクリーチャーがバトルゾーンに出たとき、カードを３枚引いてもよい。
+  abilities:
+  - kind: trigger
+    when:
+      event: move
+      to: bz
+      subject: self
+    effect:
+    - op: repeat
+      times: 3
+      body:
+      - op: may
+        body:
+        - op: draw
+          count: 1
+  source:
+    official: dm04-002
+    review: pending
+    notes: 「３枚引いてもよい」は０〜３枚の好きな枚数を引けるものとして、may のドローを3回繰り返す形にした（「２枚まで引く」の dmd08-015
+      と同じ）
+- id: dm04-003
+  name: 凶骨の邪将クエイクス
+  types:
+  - creature
+  civs:
+  - darkness
+  cost: 7
+  power: 6000
+  races:
+  - デーモン・コマンド
+  mana: 1
+  text: 'このクリーチャーがバトルゾーンに出たとき、バトルゾーンにある自分の他の闇のクリーチャー１体につき、相手の手札から１枚見ないで選び、持ち主の墓地に置く。相手の手札の枚数がそれ以下の場合には、相手は手札すべてを持ち主の墓地に置く。
+
+    W(ダブル)・ブレイカー'
+  abilities:
+  - kind: trigger
+    when:
+      event: move
+      to: bz
+      subject: self
+    effect:
+    - op: discard
+      select:
+        zone: hand
+        owner: opp
+        count:
+          count:
+            zone: bz
+            owner: you
+            filter:
+              types:
+              - creature
+              civs:
+              - darkness
+            other: true
+  source:
+    official: dm04-003
+    review: pending
+    notes: 枚数は「自分の他の闇のクリーチャーの数」の count 式。相手の手札がそれより少ない場合は選べる分だけ（＝すべて）になるので、2文目も自動的に満たす。「見ないで選ぶ」は
+      dm01-054 と同じ discard の形
+  keywords:
+  - double_breaker
+- id: dm04-004
+  name: 超巨岩獣ドボルガイザー
+  types:
+  - creature
+  - evolution
+  civs:
+  - fire
+  cost: 6
+  power: 8000
+  races:
+  - ロック・ビースト
+  mana: 1
+  evolve_from:
+    races:
+    - ロック・ビースト
+  text: '進化-自分のロック・ビースト１体の上に置く。
+
+    W(ダブル)・ブレイカー(シールドを攻撃したとき、このクリーチャーはシールドを２枚ブレイクする)
+
+    このクリーチャーがバトルゾーンに出たとき、バトルゾーンにあるパワー3000以下の相手のクリーチャーを１体選び、持ち主の墓地に置いてもよい。'
+  abilities:
+  - kind: trigger
+    when:
+      event: move
+      to: bz
+      subject: self
+    effect:
+    - op: may
+      body:
+      - op: destroy
+        select:
+          zone: bz
+          owner: opp
+          filter:
+            types:
+            - creature
+            power_le: 3000
+          count: 1
+  source:
+    official: dm04-004
+    review: pending
+    notes: 「持ち主の墓地に置く」は destroy、任意は may
+  keywords:
+  - double_breaker
+- id: dm04-005
+  name: 応援チューリップ
+  types:
+  - creature
+  civs:
+  - nature
+  cost: 5
+  power: 4000
+  races:
+  - ツリーフォーク
+  mana: 1
+  text: このクリーチャーがバトルゾーンにある間、バトルゾーンにあるすべてのエンジェル・コマンドは「パワーアタッカー+4000」を得る。
+  abilities:
+  - kind: static
+    affects:
+      owner: any
+      filter:
+        races:
+        - エンジェル・コマンド
+    mod:
+      battle_power:
+        amount: 4000
+        only: attacking
+  source:
+    official: dm04-005
+    review: pending
+    notes: '対象は両プレイヤーのエンジェル・コマンド（owner: any）。パワーアタッカーの説明文は text から省いた'
+- id: dm04-001
+  name: 聖霊王アルカディアス
+  types:
+  - creature
+  - evolution
+  civs:
+  - light
+  cost: 6
+  power: 12500
+  races:
+  - エンジェル・コマンド
+  mana: 1
+  evolve_from:
+    races:
+    - エンジェル・コマンド
+  text: '進化―自分のエンジェル・コマンド１体の上に置く。
+
+    W(ダブル)・ブレイカー(シールドを攻撃したとき、このクリーチャーはシールドを２枚ブレイクする)
+
+    このクリーチャーがバトルゾーンにある間、誰も光以外の呪文を唱えることができない。'
+  abilities:
+  - kind: static
+    affects:
+      owner: any
+      zone: hand
+      filter:
+        types:
+        - spell
+        not_civs:
+        - light
+    mod:
+      deny:
+      - cast
+  source:
+    official: dm04-001
+    review: pending
+    notes: 禁止の対象は両プレイヤーの手札にある光以外の呪文。許可名は cast（permissions.yaml）。コスト軽減の常在型と同じく hand
+      ゾーンへの affects で表した
+  keywords:
+  - double_breaker
