@@ -1,0 +1,5 @@
+type: convert
+limit: 50
+workers: 1
+interval: 3
+model: deepseek-v4.1-flash-free
