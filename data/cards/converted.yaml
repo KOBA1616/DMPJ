@@ -41631,3 +41631,26 @@ cards:
       と同じ扱い）
   keywords:
   - double_breaker
+- id: dm01-009
+  name: シェル・タワー
+  types:
+  - creature
+  civs:
+  - nature
+  cost: 6
+  power: 5000
+  races:
+  - コロニー・ビートル
+  mana: 1
+  text: このクリーチャーは、パワー4000以下のクリーチャーにブロックされない。
+  abilities:
+  - kind: static
+    affects: self
+    mod:
+      deny:
+      - action: be_blocked
+        other:
+          power_le: 4000
+  source:
+    official: dm01-009
+    review: pending
