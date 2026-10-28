@@ -7,7 +7,7 @@ from __future__ import annotations
 
 import itertools
 
-from ..types import PlayTask, TurnTask
+from ..types import CrossTask, PlayTask, TurnTask
 from .registry import STEPS, step, task
 
 
@@ -75,6 +75,21 @@ class TurnMixin:
                     if fi is not None:
                         opt["face"] = fi
                     out.append(opt)
+        return out
+
+    def _cross_options(self, p) -> list[dict]:
+        """メインステップに、バトルゾーンのクロスギアのマナコストをもう一度支払って自分のクリーチャーにクロスする（303.3b, 504.2）。
+        すでにクロスしているクリーチャー自身にはクロスしなおせない（303.4a）。"""
+        out = []
+        for g in self.bz_tops(p):
+            if "cross_gear" not in self.chars(g)["types"]:
+                continue
+            cur = self.s.cards[g].crossed
+            if not self._mana_choices(g, p, limit=1):
+                continue
+            for c in self.bz_tops(p):
+                if "creature" in self.chars(c)["types"] and not (cur and cur == self.s.ref(c)):
+                    out.append({"key": f"cross:{self.s.cards[g].defn}:{self.s.cards[c].defn}", "cid": g, "target": self.s.ref(c)})
         return out
 
     def _can_play_face(self, cid, p, face) -> bool:
@@ -256,13 +271,15 @@ def st_charge(eng, t):                                  # 503
 @step("main")
 def st_main(eng, t):                                    # 504
     a = eng.s.active
-    opts = eng._play_options(a) + [{"key": "pass"}]
+    opts = eng._play_options(a) + eng._cross_options(a) + [{"key": "pass"}]
     ans, d = eng.ask(t, a, "main", opts)
     if d:
         return d
     o = opts[ans[0]]
     if o["key"] == "pass":
         eng._step_done(t)
+    elif o["key"].startswith("cross:"):
+        eng._push({"t": "cross", "gear": eng.s.ref(o["cid"]), "target": o["target"], "player": a})
     else:
         eng._push(eng.play_task(o["cid"], a, o.get("free", False), o.get("face")))
 
@@ -295,6 +312,29 @@ def st_end(eng, t):                                     # 511
         return None
     eng._expire("end_of_turn")                          # 511.2
     eng._step_done(t)
+
+
+@task("cross", CrossTask)
+def h_cross(eng, t):
+    """クロスする（303.3, 701.17）。マナコストをもう一度支払い、クロスギアをクリーチャーに付ける。"""
+    s = eng.s
+    g, tg, p = t["gear"], t["target"], t["player"]
+    if not (s.alive(g) and s.alive(tg)) or s.cards[g[0]].zone != "bz" or s.cards[tg[0]].zone != "bz":
+        eng._pop(t)
+        return None
+    choices = eng._mana_choices(g[0], p)
+    if not choices:
+        eng._pop(t)
+        return None
+    opts = [{"key": "mana:" + ",".join(sorted(s.cards[c].defn for c in ch)), "cids": ch} for ch in choices]
+    ans, dd = eng.ask(t, p, "pay_mana", opts)
+    if dd:
+        return dd
+    for c in opts[ans[0]]["cids"]:
+        s.cards[c].tapped = True
+    s.cards[g[0]].crossed = list(tg)
+    eng._pop(t)
+    return None
 
 
 @task("play", PlayTask)

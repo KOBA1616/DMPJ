@@ -309,3 +309,19 @@ cards:
         cost: {tap: self}
         effect:
           - {op: draw, count: 1}
+
+  # クロスギア（303）: クロスしたクリーチャーに及ぶ常在型・誘発型
+  - id: R053
+    name: 試験用クロスギア
+    types: [cross_gear]
+    civs: [nature]
+    cost: 2
+    text: これをクロスしたクリーチャーのパワーは+1500され、ブロッカーを得る。これをクロスしたクリーチャーが破壊された時、カードを1枚引く。
+    abilities:
+      - kind: static
+        affects: crossed
+        mod: {power: 1500, grant: [blocker]}
+      - kind: trigger
+        when: {event: move, from: bz, to: graveyard, reason: destroy, subject: crossed}
+        effect:
+          - {op: draw, count: 1}
