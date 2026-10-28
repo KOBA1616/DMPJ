@@ -114,3 +114,16 @@ def test_route_probability_matches_brute_force():
     assert 0.0 < route_prob(r, deck, 1, 4) < 1.0
     s = LoopSpec("x", "deterministic", [Pred(0, {"name": SAGA}, 1, ">=", "bz")], routes=[r])
     assert LoopSpec.from_json(s.to_json()) == s
+
+
+def test_full_loopspec_separates_entrance_exit_and_route(rules):
+    spec = yaml.safe_load(SAGA_SETUP.read_text(encoding="utf-8"))
+    spec["p0"]["hand"] = [c for c in spec["p0"]["hand"] if c != "T001"]
+    d = {"deck:0": -1, "graveyard:0": 1}
+    ee = sh.split_entrance_exit(spec, sh.loop_test(rules, 0, 1500, d), sh.win_test(rules, 0, 1500, 1500, d), ["T001", "T013"])
+    ls = sh.full_loopspec(rules, "saga", ee, d)
+    assert LoopSpec.from_json(ls.to_json()) == ls
+    assert not any(p.match.get("name") in (DRAGE, KODAMA) for p in ls.minimal)       # 入口に出口のカードは無い
+    assert {p.match["name"] for p in ls.goal} >= {DRAGE, KODAMA}                     # 出口に追加で要る
+    r = next(r for r in ls.routes if r.card["name"] == SAGA)
+    assert r.cost == 3 and set(r.civs) == {"water", "darkness"}                      # 手札から出す経路

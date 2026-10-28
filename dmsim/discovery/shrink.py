@@ -17,7 +17,7 @@ from pathlib import Path
 
 from .. import loop_first as lf
 from .. import scenario as sc
-from .loopspec import LoopSpec, Pred
+from .loopspec import LoopSpec, Pred, Route
 
 ZONES = ("hand", "graveyard", "mana", "bz")
 Test = "Callable[[dict], bool]"
@@ -208,6 +208,21 @@ def split_entrance_exit(spec: dict, enter, win, fillers: list[str] | None = None
         else:
             extra.append((pk, z, n))
     return EntranceExit(m, cur, extra, True)
+
+
+def full_loopspec(rules, name: str, ee: EntranceExit, delta: dict, me: int = 0, source: dict | None = None) -> LoopSpec:
+    """入口 M・出口の追加分 G・到達経路 Route をまとめた LoopSpec。
+    M は ee.entrance（ループが回る盤面）、G は出口に追加で要るカードの述語、
+    Route は M の場のカードを手札から出す経路（コストと文明はカード定義から）。"""
+    base = to_loopspec(rules, name, Shrunk(ee.entrance), delta, source=source, me=me)
+    goal: dict[tuple, int] = {}
+    for pk, z, n in ee.extra:
+        key = (int(pk[1]), json.dumps({"name": n}), z)
+        goal[key] = goal.get(key, 0) + 1
+    base.goal = [Pred(o, json.loads(m), c, ">=", zone=z) for (o, m, z), c in sorted(goal.items())]
+    base.routes = [Route(f"cast {rules.cards[n].name}", {"name": n}, "hand", rules.cards[n].cost, tuple(rules.cards[n].civs))
+                   for pk, z, _, n in entries(ee.entrance) if z == "bz" and pk == f"p{me}"]
+    return base
 
 
 def zone_alternatives(spec: dict, test, zones=ZONES) -> dict[tuple[str, str, int], list[str]]:
