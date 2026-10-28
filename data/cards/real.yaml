@@ -978,9 +978,11 @@ cards:
         when: {event: move, to: bz, subject: self}
         effect:
           - op: may
+            label: 自分のシールドを1つブレイクする
             body:
               - {op: break, player: you, count: 1, st_first: true}
           - op: may
+            label: 手札を1枚シールド化する
             body:
               - {op: move, select: {zone: hand, owner: you, count: 1}, to: shield, reason: put}
     source: {official: dm23bd7-022, review: pending, notes: "最新版の本文（2023）に従い「ブレイク」。旧版は「手札に加える」。ブレイクした盾は S・トリガー等を宣言できる（113.6）"}

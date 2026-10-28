@@ -487,6 +487,9 @@
        },
        "body": {
         "$ref": "#/$defs/ops"
+       },
+       "label": {
+        "type": "string"
        }
       },
       "required": [

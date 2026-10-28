@@ -73,9 +73,9 @@ def op_untap(eng, t, op, env):
     return op_tap(eng, t, op, env, "untap")
 
 
-@op("may", body="ops")
+@op("may", body="ops", label="str?")
 def op_may(eng, t, op, env):
-    a, d = eng.ask(t, env["you"], "yes_no", [{"key": "yes"}, {"key": "no"}])
+    a, d = eng.ask(t, env["you"], "yes_no", [{"key": "yes"}, {"key": "no"}], prompt=op.get("label", ""))
     if d:
         return d
     if a[0] == 0:
