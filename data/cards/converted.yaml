@@ -40585,3 +40585,252 @@ cards:
     review: pending
   keywords:
   - double_breaker
+- id: 28-sec001
+  name: 不滅の精霊パーフェクト・ギャラクシー
+  types:
+  - creature
+  civs:
+  - light
+  cost: 7
+  power: 9000
+  races:
+  - エンジェル・コマンド
+  mana: 1
+  text: 'シールド・フォース（このクリーチャーをバトルゾーンに出す時、自分のシールドを１枚選んでもよい。そのシールドがシールドゾーンにある間、このクリーチャーは次の
+    l 能力を得る）
+
+    l このクリーチャーは「ブロッカー」を得る。
+
+    l このクリーチャーがバトルゾーンを離れる時、バトルゾーンから離れずにとどまる。
+
+    W・ブレイカー（このクリーチャーはシールドを２枚ブレイクする）'
+  source:
+    official: 28-sec001
+    review: pending
+    notes: シールド・フォース（バトルゾーンに出た時に自分のシールドを1枚選び、そのシールドがある間だけ能力を得る仕組み）に使える語彙・エンジン対応が無いため、それで得る2つの能力（ブロッカー付与、離れる時にとどまる置換）はどちらも書かず、unsupported
+      に残した
+    unsupported:
+    - need: shield_force
+      text: シールド・フォース（このクリーチャーは「ブロッカー」を得る。このクリーチャーがバトルゾーンを離れる時、バトルゾーンから離れずにとどまる）
+  keywords:
+  - double_breaker
+- id: 28-sec002
+  name: 邪眼皇ロマノフI世
+  types:
+  - creature
+  civs:
+  - darkness
+  cost: 7
+  power: 8000
+  races:
+  - ダークロード
+  - ドラゴン・ゾンビ
+  - ナイト
+  mana: 1
+  text: 'このクリーチャーをバトルゾーンに出した時、自分の山札を見る。その中から闇のカードを１枚選び、自分の墓地に置いてもよい。その後、山札をシャッフルする。
+
+    このクリーチャーが攻撃する時、自分の墓地にある闇のコストが６以下の呪文を１枚、コストを支払わずに唱えてもよい。その後、その呪文を自分の山札の一番下に置く。
+
+    W・ブレイカー（このクリーチャーはシールドを２枚ブレイクする）'
+  abilities:
+  - kind: trigger
+    when:
+      event: move
+      to: bz
+      subject: self
+    effect:
+    - op: move
+      select:
+        zone: deck
+        owner: you
+        filter:
+          civs:
+          - darkness
+        count: 1
+        up_to: true
+        look: true
+      to: graveyard
+      reason: put
+    - op: shuffle
+  - kind: trigger
+    when:
+      event: attack
+      subject: self
+    effect:
+    - op: play_free
+      select:
+        zone: graveyard
+        owner: you
+        filter:
+          types:
+          - spell
+          civs:
+          - darkness
+          cost_le: 6
+        count: 1
+        up_to: true
+      resolve_to: deck
+  source:
+    official: 28-sec002
+    review: pending
+    notes: '唱えた呪文の置き場所は play_free の resolve_to: deck で表した。「山札の一番下」の位置指定は play_free
+      に無いため未対応（unsupported 参照）'
+    unsupported:
+    - need: play_free_resolve_position
+      text: その後、その呪文を自分の山札の一番下に置く。
+  keywords:
+  - double_breaker
+- id: 28-sec003
+  name: ボルバルザーク・紫電・ドラゴン
+  types:
+  - creature
+  civs:
+  - fire
+  cost: 7
+  power: 7000
+  races:
+  - アーマード・ドラゴン
+  - サムライ
+  mana: 1
+  text: '侍流ジェネレート（このクリーチャーをバトルゾーンに出した時、自分の手札にあるクロスギアを１枚、コストを支払わずにジェネレートしてもよい）
+
+    各ターン、このクリーチャーがはじめてタップした時、アンタップする。
+
+    W・ブレイカー（このクリーチャーはシールドを２枚ブレイクする）'
+  abilities:
+  - kind: trigger
+    when:
+      event: tap
+      subject: self
+    if:
+      not:
+        marked: shiden_first_tap
+    effect:
+    - op: mark
+      name: shiden_first_tap
+    - op: untap
+      select:
+        ref: self
+  source:
+    official: 28-sec003
+    review: pending
+    notes: 「各ターン、はじめてタップした時」は mark（ターン中だけ残る印）で判定した。侍流ジェネレートは、原文に説明文が無く対応する語彙も無いため能力として書かず
+      unsupported に残した
+    unsupported:
+    - need: samurai_generate
+      text: 侍流ジェネレート
+  keywords:
+  - double_breaker
+- id: 29-sec001
+  name: 邪眼皇アレクサンドルIII世
+  types:
+  - creature
+  civs:
+  - darkness
+  cost: 7
+  power: 6000
+  races:
+  - ダークロード
+  - ドラゴン・ゾンビ
+  - ナイト
+  mana: 1
+  text: 'W・ブレイカー
+
+    自分の手札または墓地から光、水、闇の呪文を唱えた時、バトルゾーンに自分のナイトが他に１枚でもあれば、自分の山札を見る。その中から、唱えた呪文と同じ名前の呪文を１枚選び、コストを支払わずに唱えてもよい。その後、山札をシャッフルする。'
+  source:
+    official: 29-sec001
+    review: pending
+    notes: 「唱えた呪文と同じ名前の呪文」を選ぶ条件（イベントのカードの名前を参照するフィルタ）が語彙に無いため、能力全体を書かず unsupported
+      に残した
+    unsupported:
+    - need: filter_same_name_as_event_card
+      text: 自分の手札または墓地から光、水、闇の呪文を唱えた時、バトルゾーンに自分のナイトが他に１枚でもあれば、自分の山札を見る。その中から、唱えた呪文と同じ名前の呪文を１枚選び、コストを支払わずに唱えてもよい。その後、山札をシャッフルする。
+  keywords:
+  - double_breaker
+- id: 31-sec001
+  name: 超聖竜シデン・ギャラクシー
+  types:
+  - creature
+  - evolution
+  civs:
+  - light
+  - fire
+  cost: 5
+  power: 15000
+  races:
+  - エンジェル・コマンド
+  - アーマード・ドラゴン
+  - サムライ
+  mana: 1
+  evolve_from:
+    types:
+    - creature
+  text: 'マナゾーンに置く時、このカードはタップして置く。
+
+    進化V-自分のドラゴンまたはエンジェル・コマンドのいずれか２体を重ねた上に置く。
+
+    メテオバーン - このクリーチャーがこのターンはじめて攻撃する時、このクリーチャーの下にあるカードを２枚まで選び墓地に置いてもよい。このようにしてドラゴンを墓地に置いた場合、このクリーチャーをアンタップする。このようにしてエンジェル・コマンドを墓地に置いた場合は、このクリーチャーがこのターン中破壊される時、バトルゾーンにとどまる。T・ブレイカー'
+  abilities:
+  - kind: trigger
+    when:
+      event: attack
+      subject: self
+    if:
+      not:
+        marked: shiden_meteor_burn
+    effect:
+    - op: mark
+      name: shiden_meteor_burn
+    - op: may
+      body:
+      - op: move
+        select:
+          under_of: self
+          count: 2
+          up_to: true
+        to: graveyard
+        reason: put
+        as: burned
+      - op: if
+        cond:
+          exists:
+            ref: burned
+            filter:
+              race_has: ドラゴン
+        then:
+        - op: untap
+          select:
+            ref: self
+      - op: if
+        cond:
+          exists:
+            ref: burned
+            filter:
+              races:
+              - エンジェル・コマンド
+        then:
+        - op: modify
+          select:
+            ref: self
+          duration: end_of_turn
+          mod:
+            gain:
+            - kind: replace
+              when:
+                event: move
+                from: bz
+                to: graveyard
+                reason: destroy
+                subject: self
+              instead: []
+  source:
+    official: 31-sec001
+    review: pending
+    notes: '進化V（ドラゴンまたはエンジェル・コマンドのいずれか2体を進化元にする）は、進化元の数と「または」の条件を表す語彙が無いため evolve_from
+      は制限なしの近似にし、unsupported に残した（要確認）。メテオバーンの「このターンはじめて」は mark で判定（印はカード個別ではない）。「破壊される時、バトルゾーンにとどまる」は
+      instead: []（何もしない置換）で表した。要確認'
+    unsupported:
+    - need: vortex_evolution
+      text: 進化V-自分のドラゴンまたはエンジェル・コマンドのいずれか２体を重ねた上に置く。
+  keywords:
+  - triple_breaker
