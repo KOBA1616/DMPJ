@@ -37,6 +37,8 @@ class SelectorMixin:
             return any(self.eval_cond(x, env) for x in c["any"])
         if "marked" in c:   # このターンに mark した印があるか（「そのターンに他のファイナル革命を使っていなければ」）
             return bool(self.s.turn_counters.get(c["marked"]))
+        if "self_marked" in c:   # このカード自身がこのターンに mark した印があるか（ターボラッシュ）
+            return bool(self.s.turn_counters.get(f"{c['self_marked']}:{env['self'][0]}:{env['self'][1]}"))
         if "is_turn" in c:
             return self.s.active == self._rel(c["is_turn"], env)
         raise ValueError(f"bad cond {c}")

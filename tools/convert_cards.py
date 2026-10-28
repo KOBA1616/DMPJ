@@ -57,6 +57,7 @@ INSTRUCTIONS = """\
 - ウェーブストライカーは keywords: [wave_striker]（印だけ）。続く能力は、能力ごとに `if: {cmp: [{count: {zone: bz, owner: any, other: true, filter: {keyword: wave_striker}}}, ">=", 2]}` を付けて書く（常在型・誘発型どちらも。「他に」の数は原文に「自分の」が無いので owner: any）。
 - known_keywords に wave_striker があるときは、残りの text の能力すべてに上記の if を付ける（付け忘れると常時働く誤変換になる）。
 - サイレントスキルは keywords: [silent_skill]（印）と、続く効果文を `kind: silent, effect: [...]`（自分のターンのはじめにタップされていたら、アンタップしないかわりに使ってもよい。ルール 501.1a で処理済み）。
+- ターボラッシュは keywords: [turbo_rush]（印。ルール側が「自分の他のクリーチャーがシールドをブレイクしたあと」にそのターン中だけ印を付ける）。続く能力すべてに `if: {self_marked: turbo_rush}` を付ける（付け忘れると常時働く誤変換になる）。
 - 攻撃・ブロックの強制は static の mod.require（[attack] / [block]）。「毎ターン攻撃しなければならない」「相手のクリーチャーが攻撃する時、可能であればブロックする」はルールで変換済み。条件つきの強制（次のターンだけ等）は mod.require に条件が書けないので unsupported。
 - text には原文から括弧書きの注釈を除いたものを「 / 」区切りで書く。
 - 近似・代用はしない。語彙で原文どおりに表せない効果は、似た別の語彙（op・mod・条件）で置き換えて書かない。その能力は abilities に書かず、source.unsupported に [{need: <足せばよい op・語彙の案（英語の識別子）>, text: <該当する原文>}] で書く。表せる他の能力は通常どおり変換する。

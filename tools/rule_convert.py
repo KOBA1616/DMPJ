@@ -445,6 +445,8 @@ def convert(row: dict) -> dict | None:
                 continue
             if k not in kws:
                 kws.append(k)
+    if "turbo_rush" in kws:         # ターボラッシュの能力は self_marked の条件が要る。付け忘れの誤変換を避けてモデルへ
+        return None
     if "silent_skill" in kws:       # サイレントスキルの効果文は kind: silent に入れる。ルールの能力文では置けないのでモデルへ
         return None
     if "wave_striker" in kws:       # ウェーブストライカー: 続く能力はすべて「他に2体以上」の間だけ得る。他のキーワードが混ざる原文はモデルへ

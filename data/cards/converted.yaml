@@ -63378,43 +63378,6 @@ cards:
     official: dm12-038
     review: pending
     notes: ルールのみで変換（モデル不使用）
-- id: dm02-049
-  name: 小さな勇者ゲット
-  types:
-  - creature
-  civs:
-  - fire
-  cost: 2
-  power: 2000
-  races:
-  - ヒューマノイド
-  mana: 1
-  abilities:
-  - kind: trigger
-    when:
-      event: attack
-      subject: self
-    effect:
-    - op: modify
-      select:
-        ref: self
-      mod:
-        power: 1000
-      duration: end_of_turn
-  - kind: static
-    affects: self
-    mod:
-      require:
-      - attack
-  text: 'パワーアタッカー+1000(攻撃中、このクリーチャーのパワーは+1000される。)
-
-    このクリーチャーは、毎ターン攻撃しなければならない。'
-  source:
-    official: dm02-049
-    review: pending
-    notes: ルールのみで変換（モデル不使用）
-    aliases:
-    - promoy14-spd09
 - id: dm11-024
   name: アクア・トリックスター
   types:
@@ -63458,40 +63421,6 @@ cards:
     このクリーチャーをバトルゾーンに出した時、バトルゾーンにある相手のクリーチャーを１体選び、タップする。'
   source:
     official: dm11-024
-    review: pending
-    notes: ルールのみで変換（モデル不使用）
-- id: dm11-030
-  name: マッチョ・メロン
-  types:
-  - creature
-  civs:
-  - nature
-  cost: 2
-  power: 1000
-  races:
-  - ワイルド・ベジーズ
-  mana: 1
-  abilities:
-  - kind: trigger
-    when:
-      event: attack
-      subject: self
-    effect:
-    - op: modify
-      select:
-        ref: self
-      mod:
-        power: 3000
-      duration: end_of_turn
-    if:
-      cmp: *id002
-  keywords:
-  - wave_striker
-  text: 'ウェーブストライカー(バトルゾーンに「ウェーブストライカー」を持つクリーチャーが他に２体以上あれば、このクリーチャーは次の能力を得る)
-
-    パワーアタッカー +3000(攻撃中、このクリーチャーのパワーは+3000される)'
-  source:
-    official: dm11-030
     review: pending
     notes: ルールのみで変換（モデル不使用）
 - id: dm12-048
@@ -63618,3 +63547,167 @@ cards:
     official: dm10-004
     review: pending
     notes: 厳密一致
+- id: dm08-016
+  name: 重装兵ガルバック
+  types:
+  - creature
+  civs:
+  - fire
+  cost: 4
+  power: 3000
+  races:
+  - ドラゴノイド
+  mana: 1
+  text: 'ターボラッシュ(自分の他のクリーチャーがシールドをブレイクした後、そのターンが終わるまで、このクリーチャーは次の能力を得る)
+
+    このクリーチャーが攻撃するとき、バトルゾーンにあるパワー4000以下の相手のクリーチャーを１体選び、持ち主の墓地に置いてもよい。'
+  keywords:
+  - turbo_rush
+  abilities:
+  - kind: trigger
+    when:
+      event: attack
+      subject: self
+    if: &id003
+      self_marked: turbo_rush
+    effect:
+    - op: may
+      body:
+      - op: destroy
+        select:
+          zone: bz
+          owner: opp
+          filter:
+            types:
+            - creature
+            power_le: 4000
+          count: 1
+  source:
+    official: dm08-016
+    review: pending
+    notes: 厳密一致。ターボラッシュは印（keywords.yaml）＋続く能力に self_marked の条件
+- id: dm08-053
+  name: 食獣セニア
+  types:
+  - creature
+  civs:
+  - nature
+  cost: 4
+  power: 3000
+  races:
+  - ツリーフォーク
+  mana: 1
+  text: 'ターボラッシュ(自分の他のクリーチャーがシールドをブレイクしたあと、そのターンが終わるまで、このクリーチャーは次の能力を得る)
+
+    このクリーチャーのパワーは+5000され、「W(ダブル)・ブレイカー」を得る。'
+  keywords:
+  - turbo_rush
+  abilities:
+  - kind: static
+    affects: self
+    if: *id003
+    mod:
+      power: 5000
+      grant:
+      - double_breaker
+  source:
+    official: dm08-053
+    review: pending
+    notes: 厳密一致。ターボラッシュは印（keywords.yaml）＋続く能力に self_marked の条件
+- id: dm08-040
+  name: イリュージョン・フィッシュ
+  types:
+  - creature
+  civs:
+  - water
+  cost: 4
+  power: 3000
+  races:
+  - ゲル・フィッシュ
+  mana: 1
+  text: 'ターボラッシュ(自分の他のクリーチャーがシールドをブレイクしたあと、そのターンが終わるまで、このクリーチャーは次の能力を得る)
+
+    このクリーチャーはブロックされない。'
+  keywords:
+  - turbo_rush
+  - unblockable
+  abilities:
+  - kind: static
+    affects: self
+    if: *id003
+    mod:
+      grant:
+      - unblockable
+  source:
+    official: dm08-040
+    review: pending
+    notes: 厳密一致。ターボラッシュは印（keywords.yaml）＋続く能力に self_marked の条件
+- id: dm11-030
+  name: マッチョ・メロン
+  types:
+  - creature
+  civs:
+  - nature
+  cost: 2
+  power: 1000
+  races:
+  - ワイルド・ベジーズ
+  mana: 1
+  abilities:
+  - kind: static
+    affects: self
+    mod:
+      power_when:
+        amount: 3000
+        when: attacking
+    if:
+      cmp:
+      - count:
+          zone: bz
+          owner: any
+          other: true
+          filter:
+            keyword: wave_striker
+      - '>='
+      - 2
+  keywords:
+  - wave_striker
+  text: 'ウェーブストライカー(バトルゾーンに「ウェーブストライカー」を持つクリーチャーが他に２体以上あれば、このクリーチャーは次の能力を得る)
+
+    パワーアタッカー +3000(攻撃中、このクリーチャーのパワーは+3000される)'
+  source:
+    official: dm11-030
+    review: pending
+    notes: ルールのみで変換（モデル不使用）
+- id: dm02-049
+  name: 小さな勇者ゲット
+  types:
+  - creature
+  civs:
+  - fire
+  cost: 2
+  power: 2000
+  races:
+  - ヒューマノイド
+  mana: 1
+  abilities:
+  - kind: static
+    affects: self
+    mod:
+      power_when:
+        amount: 1000
+        when: attacking
+  - kind: static
+    affects: self
+    mod:
+      require:
+      - attack
+  text: 'パワーアタッカー+1000(攻撃中、このクリーチャーのパワーは+1000される。)
+
+    このクリーチャーは、毎ターン攻撃しなければならない。'
+  source:
+    official: dm02-049
+    review: pending
+    notes: ルールのみで変換（モデル不使用）
+    aliases:
+    - promoy14-spd09

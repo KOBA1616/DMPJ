@@ -10,6 +10,13 @@ from .registry import task
 
 
 class CombatMixin:
+    def _breaker(self, env) -> dict:
+        """効果でブレイクする時の、ブレイクしたクリーチャー（効果の発生源がバトルゾーンのクリーチャーなら）。"""
+        me = env.get("self")
+        if me and self.s.alive(me) and self.s.cards[me[0]].zone == "bz" and "creature" in self.chars(me[0])["types"]:
+            return {"breaker": me}
+        return {}
+
     def _can_attack(self, cid) -> bool:
         c = self.s.cards[cid]
         if c.tapped or "creature" not in self.chars(cid)["types"]:
@@ -255,7 +262,7 @@ def h_attack(eng, t):
         if t["target"] == "player":
             shields = eng.zlist("shield", 1 - a)
             if shields:
-                eng._push({"t": "break", "victim": 1 - a, "by": a, "count": n, "phase": 0, "in_effect": False})
+                eng._push({"t": "break", "victim": 1 - a, "by": a, "count": n, "phase": 0, "in_effect": False, "breaker": att})
             else:
                 s.result = {"winner": a, "reason": "direct_attack", "turn": s.turn}   # 509.1 / 703.4a
         return None
@@ -306,7 +313,10 @@ def h_break(eng, t):
                          for c in chosen]),
            {"t": "enqueue_st", "cids": declared, "player": victim}]
     if t.get("fire_break", True):
-        seq.append(eng.ev_task({"ev": "break", "player": victim, "count": len(chosen)}))
+        ev = {"ev": "break", "player": victim, "count": len(chosen)}
+        if t.get("breaker") and s.alive(t["breaker"]):      # ブレイクしたクリーチャー（「他のクリーチャーがシールドをブレイクした」）
+            ev["subject"] = t["breaker"]
+        seq.append(eng.ev_task(ev))
     if t["in_effect"]:   # S・トリガーの解決中のブレイクは、新しい S・トリガーをその場で解決する（101.4g）
         seq = eng._window(*seq, only_st=True)
     eng._push(*seq)
