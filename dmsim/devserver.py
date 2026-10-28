@@ -43,13 +43,21 @@ def _card_blocks(path: Path) -> dict[str, str]:
     return out
 
 
+_OFFICIAL_CACHE: dict = {}
+
+
 def _official_texts() -> dict[str, dict]:
+    files = sorted((DATA / "cards" / "raw").rglob("*.jsonl"))      # by_product（取得済み全カード）も含む
+    key = tuple((str(f), f.stat().st_mtime_ns) for f in files)
+    if _OFFICIAL_CACHE.get("key") == key:
+        return _OFFICIAL_CACHE["out"]
     out = {}
-    for f in sorted((DATA / "cards" / "raw").glob("*.jsonl")):
+    for f in files:
         for line in f.read_text(encoding="utf-8").splitlines():
             if line.strip():
                 row = json.loads(line)
                 out[row["id"]] = row
+    _OFFICIAL_CACHE.update(key=key, out=out)
     return out
 
 
