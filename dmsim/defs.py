@@ -23,8 +23,8 @@ def core_ops() -> dict[str, dict[str, str]]:
 
 EVENTS = {"move", "draw", "cast", "summon", "attack", "block", "break", "tap", "untap",
           "turn_start", "turn_end", "battle_win", "choose", "battle"}
-ABILITY_KINDS = {"trigger", "replace", "static", "declare"}
-ABILITY_KEYS = {"kind", "when", "if", "effect", "instead", "optional", "affects", "mod", "zone", "keyword"}
+ABILITY_KINDS = {"trigger", "replace", "static", "declare", "activate"}
+ABILITY_KEYS = {"kind", "when", "if", "effect", "instead", "optional", "affects", "mod", "zone", "keyword", "cost"}
 REASONS = {"put", "destroy", "return", "discard", "charge", "summon", "cast", "break",
            "draw", "battle", "sba", "resolve", "evolve"}
 VIAS = {"revolution_change", "generate"}   # 出し方の印（「革命チェンジによって出た時」など）
@@ -392,6 +392,18 @@ class Checker:
             if aff.get("zone", "bz") not in self.zones:
                 raise DefError(f"{where}: unknown zone '{aff['zone']}'")
             self.filter(aff.get("filter", {}), where)
+        if kind == "activate":   # 起動型能力（602）。cost: {tap: self} か {tap: {filter}}（攻撃する代わりにタップして使う。602.3a）
+            c = ab.get("cost")
+            if not isinstance(c, dict) or set(c) != {"tap"}:
+                raise DefError(f"{where}: activate needs cost: {{tap: self | <filter>}}")
+            if c["tap"] != "self":
+                if not isinstance(c["tap"], dict):
+                    raise DefError(f"{where}: cost.tap must be 'self' or a filter")
+                self.filter(c["tap"], where)
+            if "effect" not in ab:
+                raise DefError(f"{where}: activate needs effect")
+        elif "cost" in ab:
+            raise DefError(f"{where}: cost is only for activate")
         if "if" in ab:
             self.cond(ab["if"], where)
         for k in ("effect", "instead"):

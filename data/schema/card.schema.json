@@ -1447,7 +1447,8 @@
       "trigger",
       "replace",
       "static",
-      "declare"
+      "declare",
+      "activate"
      ]
     },
     "when": {
@@ -1468,6 +1469,16 @@
     "affects": {},
     "mod": {
      "$ref": "#/$defs/mod"
+    },
+    "cost": {
+     "type": "object",
+     "properties": {
+      "tap": {}
+     },
+     "required": [
+      "tap"
+     ],
+     "additionalProperties": false
     },
     "zone": {
      "enum": [

@@ -63425,3 +63425,86 @@ cards:
     notes: dm18-030 と同じ（ブレイクでない移動では S・トリガーは発動しない）
   keywords:
   - double_breaker
+- id: dm06-003
+  name: エウロピカ
+  types:
+  - creature
+  civs:
+  - water
+  cost: 7
+  power: 4000
+  races:
+  - シー・ハッカー
+  mana: 1
+  text: このクリーチャーで攻撃する代わりに、タップして次の能力を使ってもよい。 / バトルゾーンにあるクリーチャーを１体選び、持ち主の手札に戻す。
+  abilities:
+  - kind: activate
+    cost:
+      tap: self
+    effect:
+    - op: bounce
+      select:
+        zone: bz
+        owner: any
+        filter:
+          types:
+          - creature
+        count: 1
+  source:
+    official: dm06-003
+    review: pending
+    notes: '厳密一致。タップ能力は kind: activate（602.3a）'
+- id: dm06-047
+  name: シャインシェル・クラスター
+  types:
+  - creature
+  civs:
+  - water
+  cost: 7
+  power: 4000
+  races:
+  - サイバー・クラスター
+  mana: 1
+  text: このクリーチャーで攻撃する代わりに、タップして次の能力を使ってもよい。 / カードを２枚引く。
+  abilities:
+  - kind: activate
+    cost:
+      tap: self
+    effect:
+    - op: draw
+      count: 2
+  source:
+    official: dm06-047
+    review: pending
+    notes: 厳密一致
+    aliases:
+    - promoy2-004
+- id: dm06-071
+  name: 鋭刃の使徒グーレ・チェーン
+  types:
+  - creature
+  civs:
+  - light
+  cost: 5
+  power: 2000
+  races:
+  - イニシエート
+  mana: 1
+  text: このクリーチャーで攻撃する代わりに、タップして次の能力を使ってもよい。 / バトルゾーンにある相手のクリーチャーを１体選び、タップする。
+  abilities:
+  - kind: activate
+    cost:
+      tap: self
+    effect:
+    - op: tap
+      select:
+        zone: bz
+        owner: opp
+        filter:
+          types:
+          - creature
+        count: 1
+  source:
+    official: dm06-071
+    review: pending
+    notes: 厳密一致

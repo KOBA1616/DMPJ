@@ -3,6 +3,7 @@
     python tools/agent_convert.py system               # 変換の指示文（語彙表・スキーマ・変換例つき）。1回読めばよい
     python tools/agent_convert.py next 5 [--order newest]   # 次に変換するカード5枚の依頼文（ルールで片づく分は先に登録して除く）
     python tools/agent_convert.py submit answer.yaml   # AI の答えを検査して converted.yaml に登録（合格分だけ。不合格は理由を表示）
+    python tools/agent_convert.py reopen <gap名>...    # 語彙を足したあと、その不足だけで rejects に入っていたカードを外して再変換できるようにする
 
 プロンプトは docs/prompts/convert-by-agent.md。参照先は実ファイルなので、貼り付けは要らない。
 """
@@ -91,6 +92,7 @@ def cmd_submit(path: str) -> int:
                 continue
             cards.append(card)
             have.add(cid)
+            rejects.pop(cid, None)      # 語彙が足りて登録できたら rejects から外す
             print(f"✓ {cid} {r.get('name', '')}")
         except (cc.DefError, KeyError, TypeError) as e:
             print(f"✗ {cid} {r.get('name', '')}: {e}", file=sys.stderr)
@@ -98,6 +100,23 @@ def cmd_submit(path: str) -> int:
     cardstore.write(OUT, cards, cc.CONVERTED_HEADER)
     cc.write_jsonl(REJ, list(rejects.values()))
     return 1 if bad else 0
+
+
+def cmd_reopen(gaps: list[str]) -> int:
+    """語彙を足したあと、その不足（gaps 名）だけで rejects に入っていたカードを rejects から外す（`next` がもう一度出す）。
+    他の不足も付いているカードは外さない。"""
+    rejects = cc.read_jsonl(REJ)
+    want = set(gaps)
+    keep, opened = [], []
+    for r in rejects:
+        g = set(r.get("gaps") or [])
+        if r.get("reason") == "vocab" and g and g <= want:
+            opened.append(r["id"])
+        else:
+            keep.append(r)
+    cc.write_jsonl(REJ, keep)
+    print(f"{len(opened)}枚を rejects から外した（next で再変換できる）: {' '.join(opened)}")
+    return 0
 
 
 def main(argv=None) -> int:
@@ -109,12 +128,16 @@ def main(argv=None) -> int:
     n.add_argument("--order", choices=["id", "short", "newest"], default="id")
     s = sub.add_parser("submit")
     s.add_argument("file")
+    ro = sub.add_parser("reopen", help="語彙を足した不足（gaps 名）の rejects を外して再変換できるようにする")
+    ro.add_argument("gaps", nargs="+")
     a = ap.parse_args(argv)
     if a.cmd == "system":
         print(cc.system_prompt())
         return 0
     if a.cmd == "next":
         return cmd_next(a.count, a.order)
+    if a.cmd == "reopen":
+        return cmd_reopen(a.gaps)
     return cmd_submit(a.file)
 
 
