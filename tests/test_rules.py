@@ -446,3 +446,42 @@ def test_801_2b_mixed_tapped_sources_make_a_tapped_evolution(rr):
         assert e.s.cards[top].tapped, tapped
     e, top, a, b = _evolve_from_two(rr, (False, False))
     assert not e.s.cards[top].tapped
+
+
+# ---- 113.6 効果によってシールドが手札に加えられる時の使用宣言 ----
+
+def _shield_to_hand_by_effect(rr):
+    e = setup(rr, {"hand": ["R020"], "mana": ["T001"], "shield": ["T018"] * 5}, {"bz": ["T001"]})
+    answer(e, "charge", "pass")
+    answer(e, "main", "play:R020")
+    return e
+
+
+def test_113_6_effect_moving_shield_to_hand_allows_strigger_declaration(rr):
+    """113.6 ブレイクだけでなく効果でシールドが手札に加えられる時も、S・トリガーを宣言して使える。"""
+    e = _shield_to_hand_by_effect(rr)
+    d = e.advance()
+    while d["kind"] != "declare_strigger":
+        e.answer([0])
+        d = e.advance()
+    assert d["player"] == 0 and "strigger:T018:1" in keys(d)
+    e.answer([keys(d).index("strigger:T018:1")])
+    d = e.advance()
+    while d is not None and d["kind"] != "attack" and d["kind"] != "main":
+        e.answer([0])
+        d = e.advance()
+    assert "T001" not in names(e, "bz", 1)                   # 呪文側の効果で相手のクリーチャーが手札に戻った
+    assert len(e.zlist("shield", 0)) == 4 and "T018" in names(e, "graveyard", 0)
+
+
+def test_113_6_effect_moving_shield_to_hand_without_declaring_just_adds_it(rr):
+    """113.6 宣言しなければ、シールドはそのまま手札に加わる（効果は起こらない）。"""
+    e = _shield_to_hand_by_effect(rr)
+    d = e.advance()
+    while d["kind"] != "declare_strigger":
+        e.answer([0])
+        d = e.advance()
+    e.answer([])
+    e.advance()
+    assert names(e, "hand", 0).count("T018") == 1 and len(e.zlist("shield", 0)) == 4
+    assert names(e, "bz", 1) == ["T001"]

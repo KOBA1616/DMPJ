@@ -22,20 +22,29 @@ def op_move(eng, t, op, env):
         cids = [cids[i] for i in a]
         if op.get("position", "top") == "top":
             cids = cids[::-1]        # 1枚ずつ一番上に置かれるので、最後に置いたものが一番上になる
+    shield_out = []     # 効果でシールドを手札に加える時は、S・トリガー等の使用宣言ができる（113.6）
+    if op["to"] == "hand":
+        shield_out = [c for c in cids if eng.s.cards[c].zone == "shield"]
+    by_owner = {}
+    for c in shield_out:
+        by_owner.setdefault(eng.s.cards[c].controller, []).append(c)
+    out_tasks = [{"t": "break", "victim": p, "by": env["you"], "count": len(cs), "phase": 1, "chosen": cs,
+                  "in_effect": bool(env.get("in_st")), "reason": op["reason"], "fire_break": False}
+                 for p, cs in sorted(by_owner.items(), key=lambda kv: kv[0] != eng.s.active)]   # ターン・プレイヤー側が先（111.1）
     evs = [{"ev": "move", "subject": eng.s.ref(c), "to": op["to"], "reason": op["reason"],
-            "position": op.get("position", "top")} for c in cids]
+            "position": op.get("position", "top")} for c in cids if c not in shield_out]
     if op.get("card_only"):
         for e in evs:
             e["card_only"] = True
     bind = [{"t": "bind", "env": env, "name": op["as"], "cids": cids, "zone": op["to"]}] if "as" in op else []
-    if not evs:
+    if not evs and not out_tasks:
         if bind:
             env.setdefault("vars", {})[op["as"]] = []
         return None
     if op["to"] == "bz":   # バトルゾーンへ複数枚は1枚ずつ（409.1e）
         eng._defer(t, [eng.ev_task(e, env) for e in evs] + bind)
     else:                  # それ以外は同時（400.7）
-        eng._defer(t, [eng.ev_task(evs, env)] + bind)
+        eng._defer(t, ([eng.ev_task(evs, env)] if evs else []) + out_tasks + bind)
     return None
 
 
