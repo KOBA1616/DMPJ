@@ -219,3 +219,26 @@ cards:
     power: 1000
     races: [ジョーカーズ]
     text: (バトルの身代わり試験用)
+
+  - id: R019
+    name: 試験用進化V
+    types: [creature, evolution]
+    civs: [nature]
+    cost: 2
+    power: 6000
+    races: [テスト]
+    text: (進化元を1体以上バトルゾーンから選ぶ試験用)
+    evolve_from: {types: [creature]}
+    evolve_any: true
+
+  - id: R020
+    name: 試験用シールド回収
+    types: [spell]
+    civs: [nature]
+    cost: 1
+    text: 自分のシールドを1つ手札に加える。
+    spell:
+      - op: move
+        select: {zone: shield, owner: you, count: 1}
+        to: hand
+        reason: return

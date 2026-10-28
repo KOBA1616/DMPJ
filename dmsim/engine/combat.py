@@ -241,7 +241,9 @@ def h_attack(eng, t):
 
 @task("break", BreakTask)
 def h_break(eng, t):
-    """ブレイク: 選ぶ → S・トリガー宣言 → 同時に手札へ → S・トリガーを解決（509.3〜509.5, 113.6）。"""
+    """ブレイク: 選ぶ → S・トリガー宣言 → 同時に手札へ → S・トリガーを解決（509.3〜509.5, 113.6）。
+    効果でシールドを手札に加える時も、宣言→移動→S・トリガーの解決は同じ（113.6）。その場合は chosen を渡して
+    phase 1 から始め、fire_break を偽にして「ブレイクした」イベントは起こさない。"""
     s = eng.s
     victim = t["victim"]
     shields = eng.zlist("shield", victim)
@@ -274,10 +276,12 @@ def h_break(eng, t):
                 seen.add(opts[i]["cid"])
                 declared.append([opts[i]["cid"], opts[i].get("face")])
     eng._pop(t)
-    seq = [eng.ev_task([{"ev": "move", "subject": s.ref(c), "to": "hand", "reason": "break"}
-                         for c in t["chosen"]]),
-           {"t": "enqueue_st", "cids": declared, "player": victim},
-           eng.ev_task({"ev": "break", "player": victim, "count": len(t["chosen"])})]
+    chosen = [c for c in t["chosen"] if s.cards[c].zone == "shield"]   # 宣言の間に別のゾーンへ移っていたら加えない
+    seq = [eng.ev_task([{"ev": "move", "subject": s.ref(c), "to": "hand", "reason": t.get("reason", "break")}
+                         for c in chosen]),
+           {"t": "enqueue_st", "cids": declared, "player": victim}]
+    if t.get("fire_break", True):
+        seq.append(eng.ev_task({"ev": "break", "player": victim, "count": len(chosen)}))
     if t["in_effect"]:   # S・トリガーの解決中のブレイクは、新しい S・トリガーをその場で解決する（101.4g）
         seq = eng._window(*seq, only_st=True)
     eng._push(*seq)

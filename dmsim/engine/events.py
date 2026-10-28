@@ -98,11 +98,13 @@ class EventMixin:
                 if s.cards[base].zone != "bz":      # 超無限墓地進化など: 進化元も自分のゾーンから移す
                     self._raw_move(base, "bz")
                 self._stack(cid, base)
-                for x in ev.get("stack_more", []):   # 進化元の残り（超無限墓地進化など: 1体以上重ねる）
-                    if s.alive(x) and s.cards[x[0]].zone == "graveyard":
+                for x in ev.get("stack_more", []):   # 進化元の残り（801.1b。超無限墓地進化やバトルゾーンの複数の進化元）
+                    if not s.alive(x):
+                        continue
+                    if s.cards[x[0]].zone == "graveyard":
                         self._raw_move(x[0], "bz")
-                        s.cards[x[0]].top_of = cid
-                        s.cards[cid].under.append(x[0])
+                    if s.cards[x[0]].zone == "bz":
+                        self._stack(cid, x[0], more=True)
             out = [{"ev": "move", "subject": new, "lki": lki, "from": from_zone, "to": ev["to"],
                     "reason": ev["reason"], "controller": c.controller}]
             if ev.get("via"):
@@ -149,9 +151,10 @@ class EventMixin:
         return [{"ev": "move", "subject": s.ref(top), "lki": None, "from": "deck", "to": "shield",
                  "reason": "put", "controller": p}]
 
-    def _stack(self, top: int, base: int):
+    def _stack(self, top: int, base: int, more: bool = False):
         """進化: base（とその下）を top の下に重ねる（801.1, 801.2）。同一のクリーチャーとして扱い、
-        タップ状態と受けていた効果を引き継ぐ。進化クリーチャーは召喚酔いしない（801.3）。"""
+        タップ状態と受けていた効果を引き継ぐ。進化クリーチャーは召喚酔いしない（801.3）。
+        more は2枚目以降の進化元（801.1b）。タップ状態は1枚でもタップなら進化後もタップ（801.2b）。"""
         s = self.s
         t, b = s.cards[top], s.cards[base]
         old = s.ref(base)
@@ -159,11 +162,11 @@ class EventMixin:
             for sh in s.zones["shield"][p]:
                 if s.cards[sh].exlife_of is not None and list(s.cards[sh].exlife_of) == old:
                     s.cards[sh].exlife_of = s.ref(top)
-        t.under = [base] + b.under
+        t.under = (t.under if more else []) + [base] + b.under
         for u in t.under:
             s.cards[u].top_of = top
         b.under = []
-        t.tapped = b.tapped
+        t.tapped = (t.tapped or b.tapped) if more else b.tapped
         t.entered_turn = -1
         new = s.ref(top)
         for ce in s.continuous:
@@ -189,7 +192,8 @@ class EventMixin:
         for u in nt.under:
             s.cards[u].top_of = nt.cid
         nt.tapped = c.tapped                                   # 801.4d
-        nt.entered_turn = -1 if c.entered_turn != s.turn else c.entered_turn   # 801.4c（簡略）
+        # 801.4c: 新たに出るわけではないので、そのカード自身の出たターンをそのまま使う
+        # （ターンのはじめから下にあったなら酔わず、このターンに出た進化元なら酔う）
         old, new = s.ref(top), s.ref(nt.cid)
         for ce in s.continuous:
             if ce["affected"] is not None and old in ce["affected"]:
