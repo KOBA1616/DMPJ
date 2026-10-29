@@ -63024,6 +63024,1778 @@ cards:
     notes: dm18-030 と同じ（ブレイクでない移動では S・トリガーは発動しない）
   keywords:
   - double_breaker
+- id: dm06-003
+  name: エウロピカ
+  types:
+  - creature
+  civs:
+  - water
+  cost: 7
+  power: 4000
+  races:
+  - シー・ハッカー
+  mana: 1
+  text: このクリーチャーで攻撃する代わりに、タップして次の能力を使ってもよい。 / バトルゾーンにあるクリーチャーを１体選び、持ち主の手札に戻す。
+  abilities:
+  - kind: activate
+    cost:
+      tap: self
+    effect:
+    - op: bounce
+      select:
+        zone: bz
+        owner: any
+        filter:
+          types:
+          - creature
+        count: 1
+  source:
+    official: dm06-003
+    review: pending
+    notes: '厳密一致。タップ能力は kind: activate（602.3a）'
+- id: dm06-047
+  name: シャインシェル・クラスター
+  types:
+  - creature
+  civs:
+  - water
+  cost: 7
+  power: 4000
+  races:
+  - サイバー・クラスター
+  mana: 1
+  text: このクリーチャーで攻撃する代わりに、タップして次の能力を使ってもよい。 / カードを２枚引く。
+  abilities:
+  - kind: activate
+    cost:
+      tap: self
+    effect:
+    - op: draw
+      count: 2
+  source:
+    official: dm06-047
+    review: pending
+    notes: 厳密一致
+    aliases:
+    - promoy2-004
+- id: dm06-071
+  name: 鋭刃の使徒グーレ・チェーン
+  types:
+  - creature
+  civs:
+  - light
+  cost: 5
+  power: 2000
+  races:
+  - イニシエート
+  mana: 1
+  text: このクリーチャーで攻撃する代わりに、タップして次の能力を使ってもよい。 / バトルゾーンにある相手のクリーチャーを１体選び、タップする。
+  abilities:
+  - kind: activate
+    cost:
+      tap: self
+    effect:
+    - op: tap
+      select:
+        zone: bz
+        owner: opp
+        filter:
+          types:
+          - creature
+        count: 1
+  source:
+    official: dm06-071
+    review: pending
+    notes: 厳密一致
+- id: dm14-028
+  name: デモニック・プロテクター
+  types:
+  - cross_gear
+  civs:
+  - darkness
+  cost: 1
+  mana: 1
+  text: クロスギア:このカードをバトルゾーンに置く。クリーチャーにクロスするには、このカードのコストをもう一度支払う。そのクリーチャーがバトルゾーンを離れても、このカードはバトルゾーンに残る。
+    / これをクロスしたクリーチャーが破壊された時、カードを１枚引いてもよい。
+  abilities:
+  - kind: trigger
+    when:
+      event: move
+      from: bz
+      to: graveyard
+      reason: destroy
+      subject: crossed
+    effect:
+    - op: may
+      body:
+      - op: draw
+        count: 1
+  source:
+    official: dm14-028
+    review: pending
+    notes: 厳密一致。クロス定型文は規則（303）で処理
+    aliases:
+    - promoy4-001
+- id: dm14-046
+  name: シャイニング・ディフェンス
+  types:
+  - cross_gear
+  civs:
+  - light
+  cost: 1
+  mana: 1
+  text: クロスギア:このカードをバトルゾーンに置く。クリーチャーにクロスするには、このカードのコストをもう一度支払う。そのクリーチャーがバトルゾーンを離れても、このカードはバトルゾーンに残る。
+    / これをクロスしたクリーチャーのパワーは+1500され、｢ブロッカー｣を得る。
+  abilities:
+  - kind: static
+    affects: crossed
+    mod:
+      power: 1500
+      grant:
+      - blocker
+  source:
+    official: dm14-046
+    review: pending
+    notes: 厳密一致
+- id: dm14-102
+  name: ファイアー・ブレード
+  types:
+  - cross_gear
+  civs:
+  - fire
+  cost: 2
+  mana: 1
+  text: クロスギア:このカードをバトルゾーンに置く。クリーチャーにクロスするには、このカードのコストをもう一度支払う。そのクリーチャーがバトルゾーンを離れても、このカードはバトルゾーンに残る。
+    / これをクロスしたクリーチャーは｢スピードアタッカー｣を得る。
+  abilities:
+  - kind: static
+    affects: crossed
+    mod:
+      grant:
+      - speed_attacker
+  source:
+    official: dm14-102
+    review: pending
+    notes: 厳密一致
+    aliases:
+    - promoy4-005
+- id: dm11-022
+  name: 予言者ラメール
+  types:
+  - creature
+  civs:
+  - light
+  cost: 2
+  power: 1500
+  races:
+  - ライトブリンガー
+  mana: 1
+  keywords:
+  - wave_striker
+  text: 'ウェーブストライカー(バトルゾーンに「ウェーブストライカー」を持つクリーチャーが他に２体以上あれば、このクリーチャーは次の能力を得る)
+
+    バトルゾーンにある自分のクリーチャーすべてのパワーは+1000される。'
+  abilities:
+  - kind: static
+    affects:
+      zone: bz
+      owner: you
+      filter:
+        types:
+        - creature
+    if:
+      cmp:
+      - count:
+          zone: bz
+          owner: any
+          other: true
+          filter:
+            keyword: wave_striker
+      - '>='
+      - 2
+    mod:
+      power: 1000
+  source:
+    official: dm11-022
+    review: pending
+    notes: '厳密一致。「他に」の数は原文に「自分の」が無いので owner: any'
+- id: dm11-016
+  name: 斬神兵グランドルメス
+  types:
+  - creature
+  civs:
+  - fire
+  cost: 3
+  power: 2000
+  races:
+  - アーマロイド
+  mana: 1
+  keywords:
+  - wave_striker
+  text: 'ウェーブストライカー(バトルゾーンに「ウェーブストライカー」を持つクリーチャーが他に２体以上あれば、このクリーチャーは次の能力を得る)
+
+    このクリーチャーをバトルゾーンに出した時、パワー2000以下のクリーチャーをすべて破壊する。'
+  abilities:
+  - kind: trigger
+    when:
+      event: move
+      to: bz
+      subject: self
+    if:
+      cmp:
+      - count:
+          zone: bz
+          owner: any
+          other: true
+          filter:
+            keyword: wave_striker
+      - '>='
+      - 2
+    effect:
+    - op: destroy
+      select:
+        zone: bz
+        owner: any
+        filter:
+          types:
+          - creature
+          power_le: 2000
+        count: all
+  source:
+    official: dm11-016
+    review: pending
+    notes: 厳密一致。自身もパワー2000以下なので対象に含まれる（原文どおり）
+- id: dm11-038
+  name: 堅防の使徒アースラ
+  types:
+  - creature
+  civs:
+  - light
+  cost: 3
+  power: 2000
+  races:
+  - イニシエート
+  mana: 1
+  keywords:
+  - wave_striker
+  text: 'ウェーブストライカー(バトルゾーンに「ウェーブストライカー」を持つクリーチャーが他に２体以上あれば、このクリーチャーは次の能力を得る)
+
+    このクリーチャーのパワーは+4000され、「ブロッカー」を得る。'
+  abilities:
+  - kind: static
+    affects: self
+    if:
+      cmp:
+      - count:
+          zone: bz
+          owner: any
+          other: true
+          filter:
+            keyword: wave_striker
+      - '>='
+      - 2
+    mod:
+      power: 4000
+      grant:
+      - blocker
+  source:
+    official: dm11-038
+    review: pending
+    notes: 厳密一致
+- id: dm10-047
+  name: ルナ・イーグル
+  types:
+  - creature
+  civs:
+  - water
+  cost: 3
+  power: 5000
+  races:
+  - サイバー・ムーン
+  mana: 1
+  abilities:
+  - kind: static
+    affects: self
+    mod:
+      require:
+      - block
+  keywords:
+  - blocker
+  - cannot_attack
+  text: 'ブロッカー
+
+    このクリーチャーは攻撃することができない。
+
+    相手のクリーチャーが攻撃する時、このクリーチャーは可能であればブロックする。'
+  source:
+    official: dm10-047
+    review: pending
+    notes: ルールのみで変換（モデル不使用）
+- id: dm10-052
+  name: 死劇人形ピエール
+  types:
+  - creature
+  civs:
+  - darkness
+  cost: 2
+  power: 1000
+  races:
+  - デスパペット
+  mana: 1
+  abilities:
+  - kind: static
+    affects: self
+    mod:
+      require:
+      - block
+  keywords:
+  - blocker
+  - cannot_attack
+  - slayer
+  text: 'ブロッカー
+
+    このクリーチャーは攻撃することができない。
+
+    相手のクリーチャーが攻撃する時、このクリーチャーは可能であればブロックする。
+
+    スレイヤー(このクリーチャーがバトルする時、バトルの後、相手クリーチャーを破壊する)'
+  source:
+    official: dm10-052
+    review: pending
+    notes: ルールのみで変換（モデル不使用）
+- id: dm12-038
+  name: 宣凶師ベルモーレ
+  types:
+  - creature
+  civs:
+  - light
+  cost: 2
+  power: 3500
+  races:
+  - グラディエーター
+  mana: 1
+  abilities:
+  - kind: static
+    affects: self
+    mod:
+      require:
+      - block
+  keywords:
+  - blocker
+  - cannot_attack_player
+  text: 'ブロッカー(相手クリーチャーが攻撃する時、このクリーチャーをタップして、その攻撃を阻止してもよい。その後、その相手クリーチャーとバトルする)
+
+    相手のクリーチャーが攻撃する時、このクリーチャーは可能であればブロックする。
+
+    このクリーチャーは、相手プレイヤーを攻撃できない。'
+  source:
+    official: dm12-038
+    review: pending
+    notes: ルールのみで変換（モデル不使用）
+- id: dm11-024
+  name: アクア・トリックスター
+  types:
+  - creature
+  civs:
+  - water
+  cost: 2
+  power: 1000
+  races:
+  - リキッド・ピープル
+  mana: 1
+  abilities:
+  - kind: trigger
+    when:
+      event: move
+      to: bz
+      subject: self
+    effect:
+    - op: tap
+      select:
+        zone: bz
+        owner: opp
+        filter:
+          types:
+          - creature
+        count: 1
+    if:
+      cmp: &id002
+      - count:
+          zone: bz
+          owner: any
+          other: true
+          filter:
+            keyword: wave_striker
+      - '>='
+      - 2
+  keywords:
+  - wave_striker
+  text: 'ウェーブストライカー(バトルゾーンに「ウェーブストライカー」を持つクリーチャーが他に２体以上あれば、このクリーチャーは次の能力を得る)
+
+    このクリーチャーをバトルゾーンに出した時、バトルゾーンにある相手のクリーチャーを１体選び、タップする。'
+  source:
+    official: dm11-024
+    review: pending
+    notes: ルールのみで変換（モデル不使用）
+- id: dm12-048
+  name: 炎神兵ゴリアック
+  types:
+  - creature
+  civs:
+  - fire
+  cost: 5
+  power: 4000
+  races:
+  - アーマロイド
+  mana: 1
+  abilities:
+  - kind: trigger
+    when:
+      event: move
+      to: bz
+      subject: self
+    effect:
+    - op: destroy
+      select:
+        zone: bz
+        owner: opp
+        filter:
+          types:
+          - creature
+          power_le: 5000
+        count: 1
+    if:
+      cmp: *id002
+  keywords:
+  - wave_striker
+  text: 'ウェーブストライカー(バトルゾーンに「ウェーブストライカー」を持つクリーチャーが他に２体以上あれば、このクリーチャーは次の能力を得る)
+
+    このクリーチャーをバトルゾーンに出した時、相手のパワー5000以下のクリーチャーを１体破壊する。'
+  source:
+    official: dm12-048
+    review: pending
+    notes: ルールのみで変換（モデル不使用）
+- id: dm10-080
+  name: ミルポロ
+  types:
+  - creature
+  civs:
+  - water
+  cost: 4
+  power: 3000
+  races:
+  - サイバーロード
+  mana: 1
+  keywords:
+  - silent_skill
+  text: 'サイレントスキル(自分のターンのはじめに、このクリーチャーがタップされていたら、アンタップするかわりに次の能力を使ってもよい)
+
+    カードを１枚引く。'
+  abilities:
+  - kind: silent
+    effect:
+    - op: draw
+      count: 1
+  source:
+    official: dm10-080
+    review: pending
+    notes: '厳密一致。サイレントスキルは kind: silent（501.1a）'
+- id: dm10-030
+  name: マインロード・ワイバーン
+  types:
+  - creature
+  civs:
+  - fire
+  cost: 4
+  power: 3000
+  races:
+  - アーマード・ワイバーン
+  mana: 1
+  keywords:
+  - silent_skill
+  text: 'サイレントスキル(自分のターンのはじめに、このクリーチャーがタップされていたら、アンタップするかわりに次の能力を使ってもよい)
+
+    パワー3000以下のクリーチャーをすべて破壊する。'
+  abilities:
+  - kind: silent
+    effect:
+    - op: destroy
+      select:
+        zone: bz
+        owner: any
+        filter:
+          types:
+          - creature
+          power_le: 3000
+        count: all
+  source:
+    official: dm10-030
+    review: pending
+    notes: 厳密一致。自身もパワー3000以下なので対象に含まれる（原文どおり）
+- id: dm10-004
+  name: 災厄秘宝ゲジラ
+  types:
+  - creature
+  civs:
+  - darkness
+  cost: 6
+  power: 6000
+  races:
+  - パンドラボックス
+  mana: 1
+  keywords:
+  - double_breaker
+  - silent_skill
+  text: 'W・ブレイカー
+
+    サイレントスキル(自分のターンのはじめに、このクリーチャーがタップされていたら、アンタップするかわりに次の能力を使ってもよい)
+
+    このクリーチャーは、相手のシールドを２枚ブレイクする。'
+  abilities:
+  - kind: silent
+    effect:
+    - op: break
+      count: 2
+      player: opp
+  source:
+    official: dm10-004
+    review: pending
+    notes: 厳密一致
+- id: dm08-016
+  name: 重装兵ガルバック
+  types:
+  - creature
+  civs:
+  - fire
+  cost: 4
+  power: 3000
+  races:
+  - ドラゴノイド
+  mana: 1
+  text: 'ターボラッシュ(自分の他のクリーチャーがシールドをブレイクした後、そのターンが終わるまで、このクリーチャーは次の能力を得る)
+
+    このクリーチャーが攻撃するとき、バトルゾーンにあるパワー4000以下の相手のクリーチャーを１体選び、持ち主の墓地に置いてもよい。'
+  keywords:
+  - turbo_rush
+  abilities:
+  - kind: trigger
+    when:
+      event: attack
+      subject: self
+    if: &id003
+      self_marked: turbo_rush
+    effect:
+    - op: may
+      body:
+      - op: destroy
+        select:
+          zone: bz
+          owner: opp
+          filter:
+            types:
+            - creature
+            power_le: 4000
+          count: 1
+  source:
+    official: dm08-016
+    review: pending
+    notes: 厳密一致。ターボラッシュは印（keywords.yaml）＋続く能力に self_marked の条件
+- id: dm08-053
+  name: 食獣セニア
+  types:
+  - creature
+  civs:
+  - nature
+  cost: 4
+  power: 3000
+  races:
+  - ツリーフォーク
+  mana: 1
+  text: 'ターボラッシュ(自分の他のクリーチャーがシールドをブレイクしたあと、そのターンが終わるまで、このクリーチャーは次の能力を得る)
+
+    このクリーチャーのパワーは+5000され、「W(ダブル)・ブレイカー」を得る。'
+  keywords:
+  - turbo_rush
+  abilities:
+  - kind: static
+    affects: self
+    if: *id003
+    mod:
+      power: 5000
+      grant:
+      - double_breaker
+  source:
+    official: dm08-053
+    review: pending
+    notes: 厳密一致。ターボラッシュは印（keywords.yaml）＋続く能力に self_marked の条件
+- id: dm08-040
+  name: イリュージョン・フィッシュ
+  types:
+  - creature
+  civs:
+  - water
+  cost: 4
+  power: 3000
+  races:
+  - ゲル・フィッシュ
+  mana: 1
+  text: 'ターボラッシュ(自分の他のクリーチャーがシールドをブレイクしたあと、そのターンが終わるまで、このクリーチャーは次の能力を得る)
+
+    このクリーチャーはブロックされない。'
+  keywords:
+  - turbo_rush
+  - unblockable
+  abilities:
+  - kind: static
+    affects: self
+    if: *id003
+    mod:
+      grant:
+      - unblockable
+  source:
+    official: dm08-040
+    review: pending
+    notes: 厳密一致。ターボラッシュは印（keywords.yaml）＋続く能力に self_marked の条件
+- id: dm11-030
+  name: マッチョ・メロン
+  types:
+  - creature
+  civs:
+  - nature
+  cost: 2
+  power: 1000
+  races:
+  - ワイルド・ベジーズ
+  mana: 1
+  abilities:
+  - kind: static
+    affects: self
+    mod:
+      power_when:
+        amount: 3000
+        when: attacking
+    if:
+      cmp:
+      - count:
+          zone: bz
+          owner: any
+          other: true
+          filter:
+            keyword: wave_striker
+      - '>='
+      - 2
+  keywords:
+  - wave_striker
+  text: 'ウェーブストライカー(バトルゾーンに「ウェーブストライカー」を持つクリーチャーが他に２体以上あれば、このクリーチャーは次の能力を得る)
+
+    パワーアタッカー +3000(攻撃中、このクリーチャーのパワーは+3000される)'
+  source:
+    official: dm11-030
+    review: pending
+    notes: ルールのみで変換（モデル不使用）
+- id: dm02-049
+  name: 小さな勇者ゲット
+  types:
+  - creature
+  civs:
+  - fire
+  cost: 2
+  power: 2000
+  races:
+  - ヒューマノイド
+  mana: 1
+  abilities:
+  - kind: static
+    affects: self
+    mod:
+      power_when:
+        amount: 1000
+        when: attacking
+  - kind: static
+    affects: self
+    mod:
+      require:
+      - attack
+  text: 'パワーアタッカー+1000(攻撃中、このクリーチャーのパワーは+1000される。)
+
+    このクリーチャーは、毎ターン攻撃しなければならない。'
+  source:
+    official: dm02-049
+    review: pending
+    notes: ルールのみで変換（モデル不使用）
+    aliases:
+    - promoy14-spd09
+- id: dm13-047
+  name: ジョーのツールキット
+  types:
+  - creature
+  civs:
+  - fire
+  cost: 2
+  power: 1000
+  races:
+  - ゼノパーツ
+  mana: 1
+  text: このクリーチャーが攻撃された時、相手のパワー2000以下のクリーチャーを１体破壊してもよい。
+  abilities:
+  - kind: trigger
+    when:
+      event: attack
+      target: self
+    effect:
+    - op: may
+      body:
+      - op: destroy
+        select:
+          zone: bz
+          owner: opp
+          filter:
+            types:
+            - creature
+            power_le: 2000
+          count: 1
+  source:
+    official: dm13-047
+    review: pending
+    notes: 厳密一致
+- id: dm17-045
+  name: 反撃人形デビルモモ
+  types:
+  - creature
+  civs:
+  - darkness
+  cost: 3
+  power: 2000
+  races:
+  - デスパペット
+  mana: 1
+  text: このクリーチャーが攻撃された時、そのターンの終わりまで、このクリーチャーのパワーは+5000される。
+  abilities:
+  - kind: trigger
+    when:
+      event: attack
+      target: self
+    effect:
+    - op: modify
+      select:
+        ref: self
+      mod:
+        power: 5000
+      duration: end_of_turn
+  source:
+    official: dm17-045
+    review: pending
+    notes: 厳密一致
+- id: dm08-033
+  name: シェル・コロシアム
+  types:
+  - creature
+  civs:
+  - nature
+  cost: 4
+  power: 3000
+  races:
+  - コロニー・ビートル
+  mana: 1
+  text: このクリーチャーがブロックされたとき、自分の山札の上から１枚目を自分のマナゾーンに加えてもよい。
+  abilities:
+  - kind: trigger
+    when:
+      event: block
+      attacker: self
+    effect:
+    - op: may
+      body:
+      - op: mana_put
+        select:
+          zone: deck
+          owner: you
+          from_top: 1
+  source:
+    official: dm08-033
+    review: pending
+    notes: 厳密一致
+- id: dm13-021
+  name: 予言者ポラリス
+  types:
+  - creature
+  civs:
+  - light
+  cost: 3
+  power: 2000
+  races:
+  - ライトブリンガー
+  mana: 1
+  text: 自分のクリーチャーが攻撃された時、そのクリーチャーのパワーは+2000される。
+  abilities:
+  - kind: trigger
+    when:
+      event: attack
+      target:
+        owner: you
+    effect:
+    - op: modify
+      select:
+        ref: event.target
+      mod:
+        power: 2000
+      duration: end_of_turn
+  source:
+    official: dm13-021
+    review: pending
+    notes: 厳密一致。「自分のクリーチャーが攻撃された時」はこのクリーチャー自身が攻撃された場合も含む
+- id: dm19-019
+  name: 封魔ラベリーズ
+  types:
+  - creature
+  civs:
+  - water
+  cost: 6
+  power: 3000
+  races:
+  - グランド・デビル
+  mana: 1
+  text: 自分が唱える呪文はすべて「サイクロン」を得る。
+  abilities:
+  - kind: static
+    affects:
+      zone: hand
+      owner: you
+      filter:
+        types:
+        - spell
+    mod:
+      grant:
+      - cyclone
+  source:
+    official: dm19-019
+    review: pending
+    notes: 厳密一致
+- id: dm19-034
+  name: ジェット・サイクロン
+  types:
+  - spell
+  civs:
+  - fire
+  cost: 2
+  mana: 1
+  text: 'サイクロン(このターン、この呪文を唱える直前にクリーチャーを召喚していれば、この呪文を唱えた後、墓地に置くかわりに自分の手札に戻す)
+
+    バトルゾーンにある自分のクリーチャー１体は、このターンの終わりまで「スピードアタッカー」を得る。(「スピードアタッカー」を得たクリーチャーは召喚酔いしない)'
+  keywords:
+  - cyclone
+  spell:
+  - op: modify
+    select:
+      zone: bz
+      owner: you
+      count: 1
+      filter:
+        types:
+        - creature
+    mod:
+      grant:
+      - speed_attacker
+    duration: end_of_turn
+  source:
+    official: dm19-034
+    review: pending
+    notes: 厳密一致
+- id: dm19-046
+  name: リバース・サイクロン
+  types:
+  - spell
+  civs:
+  - light
+  cost: 2
+  mana: 1
+  text: 'サイクロン(このターン、この呪文を唱える直前にクリーチャーを召喚していれば、この呪文を唱えた後、墓地に置くかわりに自分の手札に戻す)
+
+    バトルゾーンにある相手のクリーチャーを１体選び、タップする。'
+  keywords:
+  - cyclone
+  spell:
+  - op: tap
+    select:
+      zone: bz
+      owner: opp
+      count: 1
+      filter:
+        types:
+        - creature
+  source:
+    official: dm19-046
+    review: pending
+    notes: 厳密一致
+- id: dm19-058
+  name: バイス・サイクロン
+  types:
+  - spell
+  civs:
+  - darkness
+  cost: 2
+  mana: 1
+  text: 'サイクロン(このターン、この呪文を唱える直前にクリーチャーを召喚していれば、この呪文を唱えた後、墓地に置くかわりに自分の手札に戻す)
+
+    相手は自分自身の手札を１枚選び、捨てる。'
+  keywords:
+  - cyclone
+  spell:
+  - op: discard
+    select:
+      zone: hand
+      owner: opp
+      count: 1
+      chooser: opp
+  source:
+    official: dm19-058
+    review: pending
+    notes: 厳密一致
+- id: dm19-078
+  name: バリアー・サイクロン
+  types:
+  - spell
+  civs:
+  - light
+  cost: 5
+  mana: 1
+  text: 'サイクロン(このターン、この呪文を唱える前にクリーチャーを召喚していれば、この呪文を唱えた後、墓地に置くかわりに自分の手札に戻す)
+
+    自分の手札を１枚、裏向きのまま自分のシールドに加える。'
+  keywords:
+  - cyclone
+  spell:
+  - op: move
+    reason: put
+    select:
+      zone: hand
+      owner: you
+      count: 1
+    to: shield
+  source:
+    official: dm19-078
+    review: pending
+    notes: 厳密一致
+- id: dm19-086
+  name: ブレイン・サイクロン
+  types:
+  - spell
+  civs:
+  - water
+  cost: 3
+  mana: 1
+  text: 'サイクロン(このターン、この呪文を唱える直前にクリーチャーを召喚していれば、この呪文を唱えた後、墓地に置くかわりに自分の手札に戻す)
+
+    カードを１枚引く。'
+  keywords:
+  - cyclone
+  spell:
+  - op: draw
+    count: 1
+  source:
+    official: dm19-086
+    review: pending
+    notes: 厳密一致
+- id: dm19-094
+  name: ブラッディ・サイクロン
+  types:
+  - spell
+  civs:
+  - darkness
+  cost: 1
+  mana: 1
+  text: 'サイクロン(このターン、この呪文を唱える直前にクリーチャーを召喚していれば、この呪文を唱えた後、墓地に置くかわりに自分の手札に戻す)
+
+    バトルゾーンにある自分のクリーチャー１体は、このターンの終わりまで「スレイヤー」を得る。(「スレイヤー」を得たクリーチャーがバトルする時、バトルの後、相手クリーチャーを破壊する)'
+  keywords:
+  - cyclone
+  spell:
+  - op: modify
+    select:
+      zone: bz
+      owner: you
+      count: 1
+      filter:
+        types:
+        - creature
+    mod:
+      grant:
+      - slayer
+    duration: end_of_turn
+  source:
+    official: dm19-094
+    review: pending
+    notes: 厳密一致
+- id: dm19-102
+  name: ガトリング・サイクロン
+  types:
+  - spell
+  civs:
+  - fire
+  cost: 3
+  mana: 1
+  text: 'サイクロン(このターン、この呪文を唱える直前にクリーチャーを召喚していれば、この呪文を唱えた後、墓地に置くかわりに自分の手札に戻す)
+
+    パワー2000以下の相手のクリーチャーを１体破壊する。'
+  keywords:
+  - cyclone
+  spell:
+  - op: destroy
+    select:
+      zone: bz
+      owner: opp
+      count: 1
+      filter:
+        types:
+        - creature
+        power_le: 2000
+  source:
+    official: dm19-102
+    review: pending
+    notes: 厳密一致
+- id: dm19-110
+  name: フェアリー・サイクロン
+  types:
+  - spell
+  civs:
+  - nature
+  cost: 3
+  mana: 1
+  text: 'サイクロン(このターン、この呪文を唱える直前にクリーチャーを召喚していれば、この呪文を唱えた後、墓地に置くかわりに自分の手札に戻す)
+
+    自分の山札の上から１枚目を、自分のマナゾーンに置く。'
+  keywords:
+  - cyclone
+  spell:
+  - op: move
+    reason: put
+    select:
+      zone: deck
+      owner: you
+      from_top: 1
+    to: mana
+  source:
+    official: dm19-110
+    review: pending
+    notes: 厳密一致
+- id: dm17-007
+  name: 予言者プロキオン
+  types:
+  - creature
+  civs:
+  - light
+  cost: 7
+  power: 2000
+  races:
+  - ライトブリンガー
+  mana: 1
+  text: 'S・バック-光(光のカードを自分のシールドゾーンから手札に加える時、そのカードを捨ててもよい。そうした場合、コストを支払わずにこのクリーチャーを召喚する)
+
+    ブロッカー
+
+    このクリーチャーは、相手プレイヤーを攻撃できない。
+
+    このクリーチャーが破壊される時、墓地に置くかわりに手札に戻す。'
+  keywords:
+  - s_back_light
+  - blocker
+  - cannot_attack_player
+  abilities:
+  - kind: replace
+    when:
+      event: move
+      from: bz
+      to: graveyard
+      reason: destroy
+      subject: self
+    instead:
+    - op: move
+      select:
+        ref: self
+      to: hand
+      reason: return
+  - kind: replace
+    when:
+      event: move
+      from: bz
+      to: graveyard
+      reason: destroy
+      subject: self
+    instead:
+    - op: move
+      select:
+        ref: self
+      to: hand
+      reason: return
+  source:
+    official: dm17-007
+    review: pending
+    notes: 厳密一致
+- id: dm17-011
+  name: シャロウ・オペレーション
+  types:
+  - spell
+  civs:
+  - water
+  cost: 3
+  mana: 1
+  text: 'S・バック-水(水のカードを自分のシールドゾーンから手札に加える時、そのカードを捨ててもよい。そうした場合、コストを支払わずにこの呪文を唱える)
+
+    バトルゾーンにある相手のタップされているクリーチャー１体につき１枚、カードを引く。'
+  spell:
+  - op: draw
+    count:
+      count:
+        zone: bz
+        owner: opp
+        filter:
+          types:
+          - creature
+          tapped: true
+  keywords:
+  - s_back_water
+  source:
+    official: dm17-011
+    review: pending
+    notes: 厳密一致
+- id: dm17-023
+  name: パニッシュ・ホールド
+  types:
+  - spell
+  civs:
+  - light
+  cost: 5
+  mana: 1
+  text: 'S・バック-光 (光のカードを自分のシールドゾーンから手札に加える時、そのカードを捨ててもよい。そうした場合、コストを支払わずにこの呪文を唱える)
+
+    バトルゾーンにあるクリーチャーを２体まで選び、タップする。'
+  spell:
+  - op: tap
+    select:
+      zone: bz
+      owner: any
+      filter:
+        types:
+        - creature
+      count: 2
+      up_to: true
+  keywords:
+  - s_back_light
+  source:
+    official: dm17-023
+    review: pending
+    notes: 厳密一致
+- id: dm17-024
+  name: クラック・クロウラー
+  types:
+  - creature
+  civs:
+  - water
+  cost: 6
+  power: 3000
+  races:
+  - アースイーター
+  mana: 1
+  text: 'S・バック-水(水のカードを自分のシールドゾーンから手札に加える時、そのカードを捨ててもよい。そうした場合、コストを支払わずにこのクリーチャーを召喚する)
+
+    ブロッカー
+
+    このクリーチャーは攻撃することができない。'
+  keywords:
+  - s_back_water
+  - blocker
+  - cannot_attack
+  source:
+    official: dm17-024
+    review: pending
+    notes: 厳密一致
+- id: dm17-029
+  name: 煉獄陣
+  types:
+  - spell
+  civs:
+  - darkness
+  cost: 5
+  mana: 1
+  text: S・バック-闇(闇のカードを自分のシールドゾーンから手札に加える時、そのカードを捨ててもよい。そうした場合、コストを支払わずにこの呪文を唱える) クリーチャーを２体まで、自分の墓地から手札に戻す。
+  spell:
+  - op: move
+    select:
+      zone: graveyard
+      owner: you
+      filter:
+        types:
+        - creature
+      count: 2
+      up_to: true
+    to: hand
+    reason: return
+  keywords:
+  - s_back_darkness
+  source:
+    official: dm17-029
+    review: pending
+    notes: 厳密一致
+    aliases:
+    - promoy4-036
+- id: dm19-007
+  name: 超神星マーズ・ディザスター
+  types:
+  - creature
+  - evolution
+  civs:
+  - fire
+  cost: 5
+  power: 13000
+  races:
+  - フェニックス
+  mana: 1
+  evolve_from:
+    races:
+    - ティラノ・ドレイク
+    - ドリームメイト
+    - ヒューマノイド
+  text: '進化GV-自分のティラノ・ドレイク、ドリームメイト、ヒューマノイドのいずれか３体を重ねた上に置く。
+
+    メテオバーン - このクリーチャーが攻撃する時、このクリーチャーの下にあるカードを１枚選び墓地に置いてもよい。そうした場合、パワー4000以下のクリーチャーをすべて破壊する。
+
+    T・ブレイカー(このクリーチャーはシールドを３枚ブレイクする)'
+  keywords:
+  - triple_breaker
+  abilities:
+  - kind: trigger
+    when:
+      event: attack
+      subject: self
+    effect:
+    - op: may
+      body:
+      - op: move
+        select:
+          under_of: self
+          count: 1
+        to: graveyard
+        reason: put
+        as: paid
+      - op: if
+        cond:
+          exists:
+            ref: paid
+        then:
+        - op: destroy
+          select:
+            zone: bz
+            owner: any
+            filter:
+              types:
+              - creature
+              power_le: 4000
+            count: all
+  evolve_count: 3
+  source:
+    official: dm19-007
+    review: pending
+    notes: '厳密一致。進化GVは evolve_count: 3。メテオバーンの「そうした場合」は変数 paid の有無で表す'
+- id: dm19-009
+  name: 超神星ジュピター・キングエンパイア
+  types:
+  - creature
+  - evolution
+  civs:
+  - nature
+  cost: 5
+  power: 14000
+  races:
+  - フェニックス
+  mana: 1
+  evolve_from:
+    races:
+    - ドリームメイト
+    - アーク・セラフィム
+    - ワイルド・ベジーズ
+  text: '進化GV-自分のドリームメイト、アーク・セラフィム、ワイルド・ベジーズのいずれか３体を重ねた上に置く。
+
+    メテオバーン - このクリーチャーが攻撃する時、このクリーチャーの下にある、進化クリーチャーではないカードを１枚選び、バトルゾーンに出してもよい。(ただし、そのクリーチャーは召喚酔いする)
+
+    T・ブレイカー(このクリーチャーはシールドを３枚ブレイクする)'
+  keywords:
+  - triple_breaker
+  abilities:
+  - kind: trigger
+    when:
+      event: attack
+      subject: self
+    effect:
+    - op: may
+      body:
+      - op: move
+        select:
+          under_of: self
+          count: 1
+          filter:
+            types:
+            - creature
+            not_types:
+            - evolution
+        to: bz
+        reason: put
+  evolve_count: 3
+  source:
+    official: dm19-009
+    review: pending
+    notes: '厳密一致。進化GVは evolve_count: 3。メテオバーンの「そうした場合」は変数 paid の有無で表す'
+- id: dm19-017
+  name: 魔皇バルパス
+  types:
+  - creature
+  - evolution
+  civs:
+  - water
+  cost: 5
+  power: 7000
+  races:
+  - グランド・デビル
+  mana: 1
+  evolve_from:
+    races:
+    - グランド・デビル
+  text: '進化-自分のグランド・デビル１体の上に置く。
+
+    メテオバーン - クリーチャーが攻撃する時、このクリーチャーの下にあるカードを１枚選び墓地に置いてもよい。そうした場合、バトルゾーンにあるコスト３以下のカードを１枚選び、持ち主の手札に戻す。
+
+    W・ブレイカー(このクリーチャーはシールドを２枚ブレイクする)'
+  keywords:
+  - double_breaker
+  abilities:
+  - kind: trigger
+    when:
+      event: attack
+      subject:
+        owner: any
+    effect:
+    - op: may
+      body:
+      - op: move
+        select:
+          under_of: self
+          count: 1
+        to: graveyard
+        reason: put
+        as: paid
+      - op: if
+        cond:
+          exists:
+            ref: paid
+        then:
+        - op: move
+          select:
+            zone: bz
+            owner: any
+            filter:
+              cost_le: 3
+            count: 1
+          to: hand
+          reason: return
+  source:
+    official: dm19-017
+    review: pending
+    notes: 厳密一致。メテオバーンの「そうした場合」は変数 paid の有無で表す
+- id: dm19-035
+  name: 大菜王ゴッド・バナナーン
+  types:
+  - creature
+  - evolution
+  civs:
+  - nature
+  cost: 5
+  power: 6000
+  races:
+  - ワイルド・ベジーズ
+  mana: 1
+  evolve_from:
+    races:
+    - ワイルド・ベジーズ
+  text: '進化-自分のワイルド・ベジーズ１体の上に置く。
+
+    メテオバーン - このクリーチャーが攻撃する時、このクリーチャーの下にあるカードを１枚、自分の手札に加えてもよい。
+
+    W・ブレイカー'
+  keywords:
+  - double_breaker
+  abilities:
+  - kind: trigger
+    when:
+      event: attack
+      subject: self
+    effect:
+    - op: may
+      body:
+      - op: move
+        select:
+          under_of: self
+          count: 1
+        to: hand
+        reason: return
+  source:
+    official: dm19-035
+    review: pending
+    notes: 厳密一致。メテオバーンの「そうした場合」は変数 paid の有無で表す
+- id: dm19-041
+  name: 聖帝ファルマハート
+  types:
+  - creature
+  - evolution
+  civs:
+  - light
+  cost: 5
+  power: 7000
+  races:
+  - アーク・セラフィム
+  mana: 1
+  evolve_from:
+    races:
+    - アーク・セラフィム
+  text: '進化-自分のアーク・セラフィム１体の上に置く。
+
+    メテオバーン -相手のクリーチャーが攻撃する時、このクリーチャーの下にあるカードを１枚選び墓地に置いてもよい。そうした場合、このクリーチャーアンタップされ、そのターンの終わりまで「ブロッカー」を得る。
+
+    W・ブレイカー(このクリーチャーはシールドを２枚ブレイクする)'
+  keywords:
+  - double_breaker
+  abilities:
+  - kind: trigger
+    when:
+      event: attack
+      subject:
+        owner: opp
+    effect:
+    - op: may
+      body:
+      - op: move
+        select:
+          under_of: self
+          count: 1
+        to: graveyard
+        reason: put
+        as: paid
+      - op: if
+        cond:
+          exists:
+            ref: paid
+        then:
+        - op: untap
+          select:
+            ref: self
+        - op: modify
+          select:
+            ref: self
+          mod:
+            grant:
+            - blocker
+          duration: end_of_turn
+  source:
+    official: dm19-041
+    review: pending
+    notes: 厳密一致。メテオバーンの「そうした場合」は変数 paid の有無で表す
+- id: dm19-012
+  name: 鋼鉄機甲ベンケロス
+  types:
+  - creature
+  civs:
+  - light
+  cost: 6
+  power: 7000
+  races:
+  - グレートメカオー
+  - ダイナモ
+  mana: 1
+  text: 'ブロッカー
+
+    ダイナモ(バトルが始まる時、あるいはこのクリーチャーで攻撃できる時、このクリーチャーをタップしてもよい。そうした場合、そのターンの終わりまで、このクリーチャーのパワーと能力をバトルゾーンにある自分の他のダイナモ１体に加える)
+
+    このクリーチャーは、相手プレイヤーを攻撃できない。'
+  keywords:
+  - blocker
+  - dynamo
+  - cannot_attack_player
+  source:
+    official: dm19-012
+    review: pending
+    notes: 厳密一致
+- id: dm19-021
+  name: 魚雷ロボ・ミサイル・オーシャン
+  types:
+  - creature
+  civs:
+  - water
+  cost: 4
+  power: 3000
+  races:
+  - グレートメカオー
+  - ダイナモ
+  mana: 1
+  text: 'ダイナモ(バトルが始まる時、あるいはこのクリーチャーで攻撃できる時、このクリーチャーをタップしてもよい。そうした場合、そのターンの終わりまで、このクリーチャーのパワーと能力をバトルゾーンにある自分の他のダイナモ１体に加える)
+
+    このクリーチャーが攻撃する時、相手の山札の上から１枚目を見る。そのカードを、持ち主の山札の一番下に戻してもよい。'
+  keywords:
+  - dynamo
+  abilities:
+  - kind: trigger
+    when:
+      event: attack
+      subject: self
+    effect:
+    - op: move
+      select:
+        zone: deck
+        owner: opp
+        from_top: 1
+        count: 1
+        up_to: true
+        look: true
+      to: deck
+      position: bottom
+      reason: put
+  source:
+    official: dm19-021
+    review: pending
+    notes: 厳密一致
+- id: dm19-032
+  name: 燃える耳のピットトン
+  types:
+  - creature
+  civs:
+  - fire
+  cost: 5
+  power: 5000
+  races:
+  - ドリームメイト
+  - ダイナモ
+  mana: 1
+  text: 'ダイナモ(バトルが始まる時、あるいはこのクリーチャーで攻撃できる時、このクリーチャーをタップしてもよい。そうした場合、そのターンの終わりまで、このクリーチャーのパワーと能力をバトルゾーンにある自分の他のダイナモ１体に加える)
+
+    このクリーチャーは、可能であれば毎ターン攻撃する。'
+  keywords:
+  - dynamo
+  abilities:
+  - kind: static
+    affects: self
+    mod:
+      require:
+      - attack
+  source:
+    official: dm19-032
+    review: pending
+    notes: 厳密一致
+- id: dm19-037
+  name: 冒険探検アミトアキ
+  types:
+  - creature
+  civs:
+  - nature
+  cost: 6
+  power: 6000
+  races:
+  - ドリームメイト
+  - ダイナモ
+  mana: 1
+  text: 'ダイナモ(バトルが始まる時、あるいはこのクリーチャーで攻撃できる時、このクリーチャーをタップしてもよい。そうした場合、そのターンの終わりまで、このクリーチャーのパワーと能力をバトルゾーンにある自分の他のダイナモ１体に加える)
+
+    W・ブレイカー(このクリーチャーはシールドを２枚ブレイクする)'
+  keywords:
+  - dynamo
+  - double_breaker
+  source:
+    official: dm19-037
+    review: pending
+    notes: 厳密一致
+- id: dm19-042
+  name: 電脳ロボ・ダイクラッシャー
+  types:
+  - creature
+  civs:
+  - light
+  cost: 5
+  power: 3000
+  races:
+  - グレートメカオー
+  - ダイナモ
+  mana: 1
+  text: 'ダイナモ(バトルが始まる時、あるいはこのクリーチャーで攻撃できる時、このクリーチャーをタップしてもよい。そうした場合、そのターンの終わりまで、このクリーチャーのパワーと能力をバトルゾーンにある自分の他のダイナモ１体に加える)
+
+    自分のターンの終わりに、このクリーチャーをアンタップしてもよい。'
+  abilities:
+  - kind: trigger
+    when:
+      event: turn_end
+      player: you
+    effect:
+    - op: may
+      body:
+      - op: untap
+        select:
+          ref: self
+  - kind: trigger
+    when:
+      event: turn_end
+      player: you
+    effect:
+    - op: may
+      body:
+      - op: untap
+        select:
+          ref: self
+  keywords:
+  - dynamo
+  source:
+    official: dm19-042
+    review: pending
+    notes: 厳密一致
+- id: dm19-076
+  name: 鋼鉄大使ジャンボ・アタッカー
+  types:
+  - creature
+  civs:
+  - light
+  cost: 2
+  power: 2000
+  races:
+  - グレートメカオー
+  - ダイナモ
+  mana: 1
+  text: ダイナモ(バトルが始まる時、あるいはこのクリーチャーで攻撃できる時、このクリーチャーをタップしてもよい。そうした場合、そのターンの終わりまで、このクリーチャーのパワーと能力をバトルゾーンにある自分の他のダイナモ１体に加える)
+  keywords:
+  - dynamo
+  source:
+    official: dm19-076
+    review: pending
+    notes: 厳密一致
+- id: dm19-083
+  name: 爆腕ロボ・リターンエース
+  types:
+  - creature
+  civs:
+  - water
+  cost: 2
+  power: 2000
+  races:
+  - グレートメカオー
+  - ダイナモ
+  mana: 1
+  text: 'ブロッカー
+
+    ダイナモ(バトルが始まる時、あるいはこのクリーチャーで攻撃できる時、このクリーチャーをタップしてもよい。そうした場合、そのターンの終わりまで、このクリーチャーのパワーと能力をバトルゾーンにある自分の他のダイナモ１体に加える)
+
+    このクリーチャーは攻撃することができない。'
+  keywords:
+  - blocker
+  - dynamo
+  - cannot_attack
+  source:
+    official: dm19-083
+    review: pending
+    notes: 厳密一致
+- id: dm19-100
+  name: 力持ちのジェロン
+  types:
+  - creature
+  civs:
+  - fire
+  cost: 2
+  power: 1000
+  races:
+  - ドリームメイト
+  - ダイナモ
+  mana: 1
+  text: 'ダイナモ(バトルが始まる時、あるいはこのクリーチャーで攻撃できる時、このクリーチャーをタップしてもよい。そうした場合、そのターンの終わりまで、このクリーチャーのパワーと能力をバトルゾーンにある自分の他のダイナモ１体に加える)
+
+    パワーアタッカー+2000(攻撃中、このクリーチャーのパワーは+2000される)'
+  abilities:
+  - kind: static
+    affects: self
+    mod:
+      power_when:
+        amount: 2000
+        when: attacking
+  - kind: static
+    affects: self
+    mod:
+      power_when:
+        amount: 2000
+        when: attacking
+  keywords:
+  - dynamo
+  source:
+    official: dm19-100
+    review: pending
+    notes: 厳密一致
+- id: dm19-103
+  name: 白銀のシュシュ
+  types:
+  - creature
+  civs:
+  - nature
+  cost: 4
+  power: 4000
+  races:
+  - ドリームメイト
+  - ダイナモ
+  mana: 1
+  text: ダイナモ(バトルが始まる時、あるいはこのクリーチャーで攻撃できる時、このクリーチャーをタップしてもよい。そうした場合、そのターンの終わりまで、このクリーチャーのパワーと能力をバトルゾーンにある自分の他のダイナモ１体に加える)
+  keywords:
+  - dynamo
+  source:
+    official: dm19-103
+    review: pending
+    notes: 厳密一致
+- id: dm20-007
+  name: 乱射砲機バルマガン
+  types:
+  - creature
+  civs:
+  - light
+  cost: 6
+  power: 4000
+  races:
+  - グレートメカオー
+  - ダイナモ
+  mana: 1
+  text: 'ダイナモ(バトルが始まる時、あるいはこのクリーチャーで攻撃できる時、このクリーチャーをタップしてもよい。そうした場合、そのターンの終わりまで、このクリーチャーのパワーと能力をバトルゾーンにある自分の他のダイナモ１体に加える)
+
+    このクリーチャーが攻撃する時、バトルゾーンにある相手のクリーチャーを１体選び、タップする。(まず何を攻撃するかを選んでから、タップするクリーチャーを選ぶ)'
+  abilities:
+  - kind: trigger
+    when:
+      event: attack
+      subject: self
+    effect:
+    - op: tap
+      select:
+        zone: bz
+        owner: opp
+        filter:
+          types:
+          - creature
+        count: 1
+  - kind: trigger
+    when:
+      event: attack
+      subject: self
+    effect:
+    - op: tap
+      select:
+        zone: bz
+        owner: opp
+        filter:
+          types:
+          - creature
+        count: 1
+  keywords:
+  - dynamo
+  source:
+    official: dm20-007
+    review: pending
+    notes: 厳密一致
 - id: dm20-022
   name: キャプテン・ジャイロ
   types:
@@ -67883,7 +69655,7 @@ cards:
         event: move
         to: bz
         subject: self
-      effect: &id002
+      effect: &id004
       - op: may
         body:
         - op: mill
@@ -67906,7 +69678,7 @@ cards:
       when:
         event: attack
         subject: self
-      effect: *id002
+      effect: *id004
   - name: プライマル・スクリーム
     types:
     - spell
@@ -68305,7 +70077,7 @@ cards:
         filter:
           types:
           - spell
-    effect: &id003
+    effect: &id005
     - op: modify
       select:
         ref: self
@@ -68323,7 +70095,7 @@ cards:
         filter:
           types:
           - tamaseed
-    effect: *id003
+    effect: *id005
   - kind: trigger
     when:
       event: attack
@@ -68574,7 +70346,7 @@ cards:
         filter:
           types:
           - spell
-    effect: &id004
+    effect: &id006
     - op: may
       body:
       - op: move
@@ -68592,7 +70364,7 @@ cards:
         filter:
           types:
           - tamaseed
-    effect: *id004
+    effect: *id006
   source:
     official: dm22rp2x-056
     review: pending
@@ -75495,7 +77267,7 @@ cards:
       event: move
       to: bz
       subject: self
-    effect: &id005
+    effect: &id007
     - op: may
       body:
       - op: choose
@@ -75521,7 +77293,7 @@ cards:
     when:
       event: attack
       subject: self
-    effect: *id005
+    effect: *id007
   source:
     official: dm23rp1-043
     review: pending
@@ -76435,7 +78207,7 @@ cards:
       event: move
       to: bz
       subject: self
-    effect: &id006
+    effect: &id008
     - op: may
       body:
       - op: play_free
@@ -76452,7 +78224,7 @@ cards:
     when:
       event: attack
       subject: self
-    effect: *id006
+    effect: *id008
   source:
     official: dm23rp2x-062
     review: pending
@@ -78435,7 +80207,7 @@ cards:
       event: move
       to: bz
       subject: self
-    effect: &id007
+    effect: &id009
     - op: may
       body:
       - op: draw
@@ -78447,7 +80219,7 @@ cards:
         filter:
           types:
           - creature
-    effect: *id007
+    effect: *id009
   source:
     official: dm23rp4x-043
     review: pending
@@ -81326,7 +83098,7 @@ cards:
           types:
           - spell
           multicolor: true
-    effect: &id008
+    effect: &id010
     - op: may
       body:
       - op: draw
@@ -81341,7 +83113,7 @@ cards:
           types:
           - creature
           multicolor: true
-    effect: *id008
+    effect: *id010
   source:
     official: dm24-s02
     review: pending
@@ -82879,18 +84651,18 @@ cards:
       subject: self
     effect:
     - op: choose
-      select: &id009
+      select: &id011
         zone: deck
         owner: you
         from_top: 1
         count: 1
       as: m
     - op: mana_put
-      select: &id010
+      select: &id012
         ref: m
         count: all
     - op: tap
-      select: &id011
+      select: &id013
         ref: m
         count: all
   - kind: trigger
@@ -82900,12 +84672,12 @@ cards:
       subject: self
     effect:
     - op: choose
-      select: *id009
+      select: *id011
       as: m
     - op: mana_put
-      select: *id010
+      select: *id012
     - op: tap
-      select: *id011
+      select: *id013
   source:
     official: dm24bd5-041
     review: pending
@@ -89917,7 +91689,7 @@ cards:
     if:
       all:
       - is_turn: you
-      - &id012
+      - &id014
         cmp:
         - count:
             zone: bz
@@ -89992,7 +91764,7 @@ cards:
     if:
       all:
       - is_turn: you
-      - *id012
+      - *id014
     effect:
     - op: destroy
       select:
@@ -90072,7 +91844,7 @@ cards:
     if:
       all:
       - is_turn: you
-      - *id012
+      - *id014
     effect:
     - op: may
       body:
@@ -90103,7 +91875,7 @@ cards:
       filter:
         types:
         - creature
-    if: *id012
+    if: *id014
     mod:
       deny:
       - attack_player
@@ -90267,7 +92039,7 @@ cards:
   abilities:
   - kind: static
     affects: self
-    if: &id013
+    if: &id015
       exists:
         zone: bz
         owner: you
@@ -90411,7 +92183,7 @@ cards:
   abilities:
   - kind: static
     affects: self
-    if: *id013
+    if: *id015
     mod:
       grant:
       - speed_attacker
@@ -90604,7 +92376,7 @@ cards:
       duration: end_of_turn
   - kind: static
     affects: self
-    if: *id013
+    if: *id015
     mod:
       power: 3000
   source:
@@ -91860,7 +93632,7 @@ cards:
       subject: self
     effect:
     - op: modal
-      modes: &id014
+      modes: &id016
       - - op: destroy
           select:
             zone: bz
@@ -91903,7 +93675,7 @@ cards:
           - creature
     effect:
     - op: modal
-      modes: *id014
+      modes: *id016
   source:
     official: dm24sd1-004
     review: pending
@@ -98839,7 +100611,7 @@ cards:
     effect:
     - op: modal
       modes:
-      - &id015
+      - &id017
         - op: tap
           select:
             zone: bz
@@ -98848,7 +100620,7 @@ cards:
               types:
               - creature
             count: 1
-      - &id016
+      - &id018
         - op: move
           select:
             zone: graveyard
@@ -98885,7 +100657,7 @@ cards:
     effect:
     - op: modal
       modes:
-      - *id015
+      - *id017
       - - op: discard
           select:
             zone: hand
@@ -99010,7 +100782,7 @@ cards:
               types:
               - creature
             count: 1
-      - &id017
+      - &id019
         - op: choose
           select:
             zone: deck
@@ -99105,8 +100877,8 @@ cards:
     effect:
     - op: modal
       modes:
-      - *id016
-      - *id017
+      - *id018
+      - *id019
   source:
     official: dm26-052
     review: pending
@@ -112381,7 +114153,7 @@ cards:
       count: 1
     to: shield
     reason: charge
-  - &id018
+  - &id020
     op: if
     cond:
       exists:
@@ -112418,7 +114190,7 @@ cards:
         - creature
         tapped: false
       count: 1
-  - *id018
+  - *id020
   source:
     official: dm33-048
     review: pending
@@ -112441,7 +114213,7 @@ cards:
         - creature
         keyword: blocker
       count: 1
-  - *id018
+  - *id020
   source:
     official: dm33-052
     review: pending
@@ -112464,7 +114236,7 @@ cards:
         - creature
         power_le: 5000
       count: 1
-  - *id018
+  - *id020
   source:
     official: dm33-055
     review: pending
@@ -114738,7 +116510,7 @@ cards:
       event: move
       to: bz
       subject: self
-    effect: &id019
+    effect: &id021
     - op: may
       body:
       - op: modify
@@ -114762,7 +116534,7 @@ cards:
       event: move
       from: bz
       subject: self
-    effect: *id019
+    effect: *id021
   source:
     official: dm38-035
     review: pending
@@ -115986,7 +117758,7 @@ cards:
     - op: modal
       count: 2
       modes:
-      - - &id020
+      - - &id022
           op: mana_put
           select:
             zone: bz
@@ -115995,7 +117767,7 @@ cards:
               types:
               - creature
             count: 1
-      - - &id021
+      - - &id023
           op: tap
           select:
             zone: bz
@@ -116008,8 +117780,8 @@ cards:
     - op: modal
       count: 1
       modes:
-      - - *id020
-      - - *id021
+      - - *id022
+      - - *id023
   source:
     official: dmbd05-013
     review: pending
@@ -116482,7 +118254,7 @@ cards:
       - op: modal
         count: 1
         modes:
-        - &id022
+        - &id024
           - op: mana_put
             select:
               zone: deck
@@ -116539,7 +118311,7 @@ cards:
       - op: modal
         count: 1
         modes:
-        - *id022
+        - *id024
         - - op: destroy
             select:
               zone: bz
@@ -128093,7 +129865,7 @@ cards:
       event: move
       to: bz
       subject: self
-    effect: &id023
+    effect: &id025
     - op: choose
       select:
         zone: deck
@@ -128119,7 +129891,7 @@ cards:
       from: hand
       to: graveyard
       subject: self
-    effect: *id023
+    effect: *id025
   source:
     official: dmex06-023
     review: pending
@@ -129046,7 +130818,7 @@ cards:
       name: ガンマスター・超天・マキシマム
     if:
       cmp:
-      - &id024
+      - &id026
         sum:
         - count:
             zone: bz
@@ -129077,7 +130849,7 @@ cards:
   - op: if
     cond:
       cmp:
-      - *id024
+      - *id026
       - '>='
       - 10
     then:
@@ -129959,7 +131731,7 @@ cards:
   mana: 1
   text: このクリーチャーが破壊された時、自分のマナゾーンに置く。サバイバー（自分のサバイバーすべてに、上の能力を与える）
   abilities:
-  - &id025
+  - &id027
     kind: trigger
     zone: graveyard
     when:
@@ -129981,7 +131753,7 @@ cards:
         race_has: サバイバー
     mod:
       gain:
-      - *id025
+      - *id027
   source:
     official: dmex08-095
     review: pending
@@ -130991,7 +132763,7 @@ cards:
     when:
       event: turn_start
       subject: self
-    if: &id026
+    if: &id028
       cmp:
       - count:
           zone: bz
@@ -131010,7 +132782,7 @@ cards:
     when:
       event: turn_end
       subject: self
-    if: *id026
+    if: *id028
     effect:
     - op: win
       player: you
@@ -132197,7 +133969,7 @@ cards:
   mana: 1
   text: このクリーチャーがバトルゾーンに出た時、自分のシールドを１つ手札に戻す。ただし、その「S・トリガー」は使えない。
   abilities:
-  - &id027
+  - &id029
     kind: trigger
     when:
       event: move
@@ -132270,7 +134042,7 @@ cards:
   mana: 1
   text: このクリーチャーがバトルゾーンに出た時、自分のシールドを１つ手札に戻す。ただし、その「S・トリガー」は使えない。
   abilities:
-  - *id027
+  - *id029
   source:
     official: dmex10-034
     review: pending
@@ -134348,7 +136120,7 @@ cards:
       event: move
       to: bz
       subject: self
-    effect: &id028
+    effect: &id030
     - op: move
       select:
         zone: deck
@@ -134364,7 +136136,7 @@ cards:
     when:
       event: attack
       subject: self
-    effect: *id028
+    effect: *id030
   source:
     official: dmex12-s17
     review: pending
@@ -135887,7 +137659,7 @@ cards:
             civs:
             - water
     then:
-    - &id029
+    - &id031
       op: move
       select:
         zone: hand
@@ -135895,7 +137667,7 @@ cards:
         count: 1
       to: shield
       reason: charge
-    - &id030
+    - &id032
       op: bounce
       select:
         zone: bz
@@ -135908,8 +137680,8 @@ cards:
     - op: modal
       count: 1
       modes:
-      - - *id029
-      - - *id030
+      - - *id031
+      - - *id032
   source:
     official: dmex14-022
     review: pending
@@ -135956,7 +137728,7 @@ cards:
             civs:
             - darkness
     then:
-    - &id031
+    - &id033
       op: move
       select:
         zone: deck
@@ -135965,7 +137737,7 @@ cards:
         count: 1
       to: shield
       reason: charge
-    - &id032
+    - &id034
       op: destroy
       select:
         zone: bz
@@ -135974,7 +137746,7 @@ cards:
           types:
           - creature
         count: 1
-    - &id033
+    - &id035
       op: move
       select:
         zone: shield
@@ -135986,9 +137758,9 @@ cards:
     - op: modal
       count: 1
       modes:
-      - - *id031
-      - - *id032
-        - *id033
+      - - *id033
+      - - *id034
+        - *id035
   source:
     official: dmex14-024
     review: pending
@@ -136062,7 +137834,7 @@ cards:
             civs:
             - fire
     then:
-    - &id034
+    - &id036
       op: tap
       select:
         zone: bz
@@ -136072,22 +137844,22 @@ cards:
           - creature
         count: 3
         up_to: true
-    - &id035
+    - &id037
       op: discard
       select:
         zone: hand
         owner: you
         count: 1
-    - &id036
+    - &id038
       op: draw
       count: 3
     else:
     - op: modal
       count: 1
       modes:
-      - - *id034
-      - - *id035
-        - *id036
+      - - *id036
+      - - *id037
+        - *id038
   source:
     official: dmex14-026
     review: pending
@@ -136134,7 +137906,7 @@ cards:
             civs:
             - fire
     then:
-    - &id037
+    - &id039
       op: destroy
       select:
         zone: bz
@@ -136144,7 +137916,7 @@ cards:
           - creature
           power_le: 3000
         count: 1
-    - &id038
+    - &id040
       op: discard
       select:
         zone: hand
@@ -136154,8 +137926,8 @@ cards:
     - op: modal
       count: 1
       modes:
-      - - *id037
-      - - *id038
+      - - *id039
+      - - *id040
   source:
     official: dmex14-036
     review: pending
@@ -136200,7 +137972,7 @@ cards:
             civs:
             - nature
     then:
-    - &id039
+    - &id041
       op: choose
       select:
         zone: deck
@@ -136208,11 +137980,11 @@ cards:
         from_top: 3
         count: 1
       as: m
-    - &id040
+    - &id042
       op: mana_put
       select:
         ref: m
-    - &id041
+    - &id043
       op: choose
       select:
         zone: deck
@@ -136220,13 +137992,13 @@ cards:
         from_top: 3
         count: all
       as: rest
-    - &id042
+    - &id044
       op: move
       select:
         ref: rest
       to: graveyard
       reason: destroy
-    - &id043
+    - &id045
       op: modify
       select:
         zone: bz
@@ -136242,11 +138014,11 @@ cards:
     - op: modal
       count: 1
       modes:
-      - - *id039
-        - *id040
-        - *id041
+      - - *id041
         - *id042
-      - - *id043
+        - *id043
+        - *id044
+      - - *id045
   source:
     official: dmex14-038
     review: pending
@@ -136317,7 +138089,7 @@ cards:
         - creature
       count: 1
   - op: if
-    cond: &id044
+    cond: &id046
       exists:
         zone: bz
         owner: you
@@ -136445,7 +138217,7 @@ cards:
       power: -4000
     duration: end_of_turn
   - op: if
-    cond: *id044
+    cond: *id046
     then:
     - op: mill
       owner: you
@@ -136488,7 +138260,7 @@ cards:
     to: graveyard
     reason: destroy
   - op: if
-    cond: *id044
+    cond: *id046
     then:
     - op: move
       select:
@@ -136530,7 +138302,7 @@ cards:
         power_le: 3000
       count: 1
   - op: if
-    cond: *id044
+    cond: *id046
     then:
     - op: destroy
       select:
@@ -137275,7 +139047,7 @@ cards:
     if:
       all:
       - is_turn: you
-      - &id045
+      - &id047
         exists:
           zone: bz
           owner: you
@@ -137312,7 +139084,7 @@ cards:
       event: move
       to: bz
       subject: self
-    if: *id045
+    if: *id047
     effect:
     - op: may
       body:
@@ -137374,7 +139146,7 @@ cards:
       event: move
       to: bz
       subject: self
-    if: &id046
+    if: &id048
       exists:
         zone: bz
         owner: you
@@ -137424,7 +139196,7 @@ cards:
         cond:
           all:
           - is_turn: you
-          - *id046
+          - *id048
         then:
         - op: move
           select:
@@ -137518,7 +139290,7 @@ cards:
   abilities:
   - kind: static
     affects: self
-    if: *id046
+    if: *id048
     mod:
       grant:
       - speed_attacker
@@ -137588,7 +139360,7 @@ cards:
     when:
       event: attack
       subject: self
-    if: *id046
+    if: *id048
     effect:
     - op: untap
       select:
@@ -137616,7 +139388,7 @@ cards:
   abilities:
   - kind: static
     affects: self
-    if: *id046
+    if: *id048
     mod:
       power: 4000
       grant:
@@ -139700,7 +141472,7 @@ cards:
     when:
       event: attack
       subject: self
-    effect: &id047
+    effect: &id049
     - op: may
       body:
       - op: draw
@@ -139718,7 +141490,7 @@ cards:
         when:
           event: attack
           subject: self
-        effect: *id047
+        effect: *id049
   source:
     official: dmex18-056
     review: pending
@@ -140039,7 +141811,7 @@ cards:
     when:
       event: attack
       subject: self
-    effect: &id048
+    effect: &id050
     - op: move
       select:
         zone: hand
@@ -140061,7 +141833,7 @@ cards:
         when:
           event: attack
           subject: self
-        effect: *id048
+        effect: *id050
   source:
     official: dmex18-061
     review: pending
@@ -140086,7 +141858,7 @@ cards:
     when:
       event: attack
       subject: self
-    effect: &id049
+    effect: &id051
     - op: may
       body:
       - op: move
@@ -140110,7 +141882,7 @@ cards:
         when:
           event: attack
           subject: self
-        effect: *id049
+        effect: *id051
   source:
     official: dmex18-070
     review: pending
@@ -140353,7 +142125,7 @@ cards:
     T・ブレイカー
 
     このクリーチャーがバトルゾーンに出た時または攻撃する時、相手のクリーチャーを１体選び、持ち主のマナゾーンに置く。'
-  evolve_from: &id050
+  evolve_from: &id052
     race_has: ドラゴン
   abilities:
   - kind: trigger
@@ -140451,7 +142223,7 @@ cards:
         zone: bz
         owner: you
         other: true
-        filter: *id050
+        filter: *id052
     effect:
     - op: may
       body:
@@ -140555,7 +142327,7 @@ cards:
       select:
         zone: graveyard
         owner: you
-        filter: *id050
+        filter: *id052
         count: 1
       to: hand
       reason: return
@@ -140637,7 +142409,7 @@ cards:
     affects:
       owner: you
       zone: hand
-      filter: *id050
+      filter: *id052
     mod:
       cost: -2
       cost_min: 1
@@ -141908,7 +143680,7 @@ cards:
       subject:
         zone: bz
         owner: you
-        filter: &id051
+        filter: &id053
           races:
           - ハンター
     effect:
@@ -141968,7 +143740,7 @@ cards:
     このクリーチャーが攻撃する時、自分のマナゾーンにあるカードの枚数以下のコストを持つ、進化ではないハンター・クリーチャーを１体、自分のマナゾーンから選んでもよい。それをバトルゾーンに出す。
 
     W・ブレイカー(このクリーチャーはシールドを２枚ブレイクする)'
-  evolve_from: *id051
+  evolve_from: *id053
   abilities:
   - kind: trigger
     when:
@@ -142445,7 +144217,7 @@ cards:
           - light
     body:
     - op: tap
-      select: &id052
+      select: &id054
         zone: bz
         owner: opp
         filter:
@@ -142508,7 +144280,7 @@ cards:
     - op: may
       body:
       - op: tap
-        select: *id052
+        select: *id054
   source:
     official: dmr01-042
     review: pending
@@ -143249,7 +145021,7 @@ cards:
         filter:
           name: アクア・カスケード
         count: 1
-    - &id053
+    - &id055
       op: choose
       select:
         zone: deck
@@ -143257,7 +145029,7 @@ cards:
         from_top: 5
         count: all
       as: rest
-    - &id054
+    - &id056
       op: move
       select:
         ref: rest
@@ -143302,8 +145074,8 @@ cards:
         filter:
           name: アクア・カスケード
         count: 1
-    - *id053
-    - *id054
+    - *id055
+    - *id056
   source:
     official: dmr02-007m
     review: pending
@@ -143490,7 +145262,7 @@ cards:
       body:
       - op: draw
         count:
-          count: &id055
+          count: &id057
             zone: bz
             owner: you
             filter:
@@ -143580,7 +145352,7 @@ cards:
     effect:
     - op: repeat
       times:
-        count: *id055
+        count: *id057
       body:
       - op: move
         select:
@@ -143642,7 +145414,7 @@ cards:
     effect:
     - op: repeat
       times:
-        count: *id055
+        count: *id057
       body:
       - op: may
         body:
@@ -143814,7 +145586,7 @@ cards:
       mod:
         power:
           amount: -1000
-          count: *id055
+          count: *id057
       duration: end_of_turn
   source:
     official: dmr02-041
@@ -144033,7 +145805,7 @@ cards:
       event: move
       to: bz
       subject: self
-    effect: &id056
+    effect: &id058
     - op: choose
       select:
         zone: bz
@@ -144068,7 +145840,7 @@ cards:
     when:
       event: attack
       subject: self
-    effect: *id056
+    effect: *id058
   source:
     official: dmr03-012
     review: pending
@@ -144756,8 +146528,8 @@ cards:
           - ハンター
           civs:
           - light
-    then: &id058
-    - &id057
+    then: &id060
+    - &id059
       op: tap
       select:
         zone: bz
@@ -144792,8 +146564,8 @@ cards:
           - creature
           multicolor: true
     then:
-    - *id057
-    - &id059
+    - *id059
+    - &id061
       op: bounce
       select:
         zone: bz
@@ -144805,8 +146577,8 @@ cards:
     else:
     - op: modal
       modes:
-      - *id058
-      - - *id059
+      - *id060
+      - - *id061
   source:
     official: dmr04-027
     review: pending
@@ -144968,7 +146740,7 @@ cards:
   text: 次のうちいずれかひとつを選ぶ。バトルゾーンに自分の多色カードがある場合は、両方を選んでもよい。
   spell:
   - op: if
-    cond: &id062
+    cond: &id064
       exists:
         zone: bz
         owner: you
@@ -144977,7 +146749,7 @@ cards:
           - creature
           multicolor: true
     then:
-    - &id060
+    - &id062
       op: modify
       select:
         zone: bz
@@ -144989,7 +146761,7 @@ cards:
       mod:
         breaks: 1
       duration: end_of_turn
-    - &id061
+    - &id063
       op: move
       select:
         zone: deck
@@ -145001,8 +146773,8 @@ cards:
     else:
     - op: modal
       modes:
-      - - *id060
-      - - *id061
+      - - *id062
+      - - *id063
   source:
     official: dmr04-029
     review: pending
@@ -145018,9 +146790,9 @@ cards:
   text: 次のうちいずれかひとつを選ぶ。バトルゾーンに自分の多色クリーチャーがある場合は、両方を選んでもよい。
   spell:
   - op: if
-    cond: *id062
+    cond: *id064
     then:
-    - &id063
+    - &id065
       op: repeat
       times: 2
       body:
@@ -145028,17 +146800,17 @@ cards:
         body:
         - op: draw
           count: 1
-    - &id064
+    - &id066
       op: discard
       select:
         zone: hand
         owner: you
         count: 1
-    - &id065
+    - &id067
       op: draw
       count: 1
       player: opp
-    - &id066
+    - &id068
       op: discard
       select:
         zone: hand
@@ -145048,10 +146820,10 @@ cards:
     else:
     - op: modal
       modes:
-      - - *id063
-        - *id064
       - - *id065
         - *id066
+      - - *id067
+        - *id068
   source:
     official: dmr04-030
     review: pending
@@ -145067,9 +146839,9 @@ cards:
   text: 次のうちいずれかひとつを選ぶ。バトルゾーンに自分の多色クリーチャーがある場合は、両方を選んでもよい。
   spell:
   - op: if
-    cond: *id062
+    cond: *id064
     then:
-    - &id067
+    - &id069
       op: move
       select:
         zone: graveyard
@@ -145080,7 +146852,7 @@ cards:
         count: 1
       to: hand
       reason: return
-    - &id068
+    - &id070
       op: destroy
       select:
         zone: bz
@@ -145093,8 +146865,8 @@ cards:
     else:
     - op: modal
       modes:
-      - - *id067
-      - - *id068
+      - - *id069
+      - - *id070
   source:
     official: dmr04-033
     review: pending
@@ -146786,7 +148558,7 @@ cards:
       event: move
       to: bz
       subject: self
-    effect: &id069
+    effect: &id071
     - op: may
       body:
       - op: tap
@@ -146809,7 +148581,7 @@ cards:
           types:
           - creature
           cost_ge: 7
-    effect: *id069
+    effect: *id071
   source:
     official: dmr06-021
     review: pending
@@ -146835,7 +148607,7 @@ cards:
       event: move
       to: bz
       subject: self
-    effect: &id070
+    effect: &id072
     - op: may
       body:
       - op: draw
@@ -146852,7 +148624,7 @@ cards:
           types:
           - creature
           cost_ge: 7
-    effect: *id070
+    effect: *id072
   source:
     official: dmr06-024
     review: pending
@@ -146924,7 +148696,7 @@ cards:
       event: move
       to: bz
       subject: self
-    effect: &id071
+    effect: &id073
     - op: modify
       select:
         zone: bz
@@ -146948,7 +148720,7 @@ cards:
           types:
           - creature
           cost_ge: 7
-    effect: *id071
+    effect: *id073
   source:
     official: dmr06-026
     review: pending
@@ -147044,7 +148816,7 @@ cards:
     when:
       event: move
       to: bz
-      subject: &id072
+      subject: &id074
         zone: bz
         owner: you
         filter:
@@ -147117,7 +148889,7 @@ cards:
     when:
       event: move
       to: bz
-      subject: *id072
+      subject: *id074
     effect:
     - op: choose
       select:
@@ -147192,7 +148964,7 @@ cards:
     when:
       event: move
       to: bz
-      subject: *id072
+      subject: *id074
     effect:
     - op: destroy
       select:
@@ -147224,7 +148996,7 @@ cards:
     when:
       event: move
       to: bz
-      subject: *id072
+      subject: *id074
     effect:
     - op: move
       select:
@@ -149860,7 +151632,7 @@ cards:
     when:
       event: move
       to: bz
-      subject: &id073
+      subject: &id075
         zone: bz
         owner: you
         filter:
@@ -150037,7 +151809,7 @@ cards:
     when:
       event: move
       to: bz
-      subject: *id073
+      subject: *id075
     effect:
     - op: choose
       select:
@@ -150685,7 +152457,7 @@ cards:
     mod:
       power:
         amount: 5000
-        count: &id074
+        count: &id076
           zone: bz
           owner: you
           other: true
@@ -150694,7 +152466,7 @@ cards:
             - オラクル
       breaks:
         amount: 1
-        count: *id074
+        count: *id076
   - kind: replace
     when:
       event: move
@@ -154349,7 +156121,7 @@ cards:
   text: このターン、自分のマナゾーンにあるドラゴン１体につき、バトルゾーンにある相手のクリーチャー１体のパワーは-1000される。
   spell:
   - op: repeat
-    times: &id075
+    times: &id077
       count:
         zone: mana
         owner: you
@@ -154428,7 +156200,7 @@ cards:
   text: 自分のマナゾーンにあるドラゴン１体につき、自分の山札の上から１枚目を見る。その中から好きな数のドラゴンを自分のマナゾーンに置く。残りを好きな順序で山札の一番下に置く。
   spell:
   - op: repeat
-    times: *id075
+    times: *id077
     body:
     - op: choose
       select:
@@ -154496,7 +156268,7 @@ cards:
   text: 自分のマナゾーンにあるドラゴン１体につき、自分の山札の上から１枚目を見る。その中からカードを１枚裏向きのまま、新しいシールドとして自分のシールドゾーンに加える。残りを好きな順序で自分の山札の一番下に置く。
   spell:
   - op: repeat
-    times: *id075
+    times: *id077
     body:
     - op: choose
       select:
@@ -154595,7 +156367,7 @@ cards:
   text: 自分のマナゾーンにあるドラゴン１体につき、カードを１枚引く。
   spell:
   - op: draw
-    count: *id075
+    count: *id077
   source:
     official: dmr15-024
     review: pending
@@ -154680,7 +156452,7 @@ cards:
       subject:
         zone: bz
         owner: you
-        filter: &id076
+        filter: &id078
           race_has: コマンド・ドラゴン
     instead:
     - op: move
@@ -154855,7 +156627,7 @@ cards:
     affects:
       owner: you
       zone: bz
-      filter: *id076
+      filter: *id078
     mod:
       deny:
       - be_blocked
@@ -154924,7 +156696,7 @@ cards:
     affects:
       owner: you
       zone: bz
-      filter: *id076
+      filter: *id078
     mod:
       grant:
       - slayer
@@ -154976,7 +156748,7 @@ cards:
     affects:
       owner: you
       zone: bz
-      filter: *id076
+      filter: *id078
     mod:
       grant:
       - speed_attacker
@@ -157614,7 +159386,7 @@ cards:
     select:
       zone: bz
       owner: opp
-      filter: &id077
+      filter: &id079
         types:
         - creature
         power_le: 5000
@@ -157623,7 +159395,7 @@ cards:
     select:
       zone: bz
       owner: you
-      filter: *id077
+      filter: *id079
       count: 1
   source:
     official: dmr16s-048
@@ -158409,7 +160181,7 @@ cards:
       subject: self
     effect:
     - op: if
-      cond: &id078
+      cond: &id080
         cmp:
         - count:
             zone: shield
@@ -158492,7 +160264,7 @@ cards:
       subject: self
     effect:
     - op: if
-      cond: *id078
+      cond: *id080
       then:
       - op: discard
         select:
@@ -158590,7 +160362,7 @@ cards:
       subject: self
     effect:
     - op: if
-      cond: *id078
+      cond: *id080
       then:
       - op: destroy
         select:
@@ -158740,7 +160512,7 @@ cards:
       subject: self
     effect:
     - op: if
-      cond: *id078
+      cond: *id080
       then:
       - op: choose
         select:
@@ -159897,7 +161669,7 @@ cards:
   text: 自分の進化クリーチャーを他のクリーチャーの上に置いた時、カードを１枚引く。
   abilities:
   - kind: trigger
-    when: &id079
+    when: &id081
       event: move
       to: bz
       subject:
@@ -159970,7 +161742,7 @@ cards:
   text: 自分の進化クリーチャーを他のクリーチャーの上に置いた時、相手は自身の手札を１枚選んで捨てる。
   abilities:
   - kind: trigger
-    when: *id079
+    when: *id081
     effect:
     - op: discard
       select:
@@ -160090,7 +161862,7 @@ cards:
   text: 自分の進化クリーチャーを他のクリーチャーの上に置いた時、相手の「ブロッカー」を持つクリーチャーを１体破壊する。
   abilities:
   - kind: trigger
-    when: *id079
+    when: *id081
     effect:
     - op: destroy
       select:
@@ -160151,7 +161923,7 @@ cards:
   text: 自分の進化クリーチャーを他のクリーチャーの上に置いた時、自分の山札の上から１枚目をマナゾーンに置く。
   abilities:
   - kind: trigger
-    when: *id079
+    when: *id081
     effect:
     - op: mana_put
       select:
@@ -163669,7 +165441,7 @@ cards:
       select:
         zone: hand
         owner: you
-        filter: &id080
+        filter: &id082
           types:
           - field
           cost_le: 5
@@ -163746,7 +165518,7 @@ cards:
       select:
         zone: hand
         owner: you
-        filter: *id080
+        filter: *id082
         count: 0
         up_to: true
   source:
@@ -163782,14 +165554,14 @@ cards:
           select:
             zone: hand
             owner: you
-            filter: *id080
+            filter: *id082
             count: 0
             up_to: true
       - - op: play_free
           select:
             zone: mana
             owner: you
-            filter: *id080
+            filter: *id082
             count: 0
             up_to: true
   source:
@@ -172217,7 +173989,7 @@ cards:
       event: move
       to: bz
       subject: self
-    effect: &id081
+    effect: &id083
     - op: mana_put
       select:
         zone: deck
@@ -172243,7 +174015,7 @@ cards:
           - creature
           civs:
           - darkness
-    effect: *id081
+    effect: *id083
   source:
     official: dmrp13-080
     review: pending
@@ -175477,7 +177249,7 @@ cards:
       count: 2
       up_to: true
   - op: if
-    cond: &id082
+    cond: &id084
       exists:
         zone: bz
         owner: you
@@ -175567,7 +177339,7 @@ cards:
       count: 2
       up_to: true
   - op: if
-    cond: *id082
+    cond: *id084
     then:
     - op: draw
       count: 1
@@ -175639,7 +177411,7 @@ cards:
         tapped: false
       count: 1
   - op: if
-    cond: *id082
+    cond: *id084
     then:
     - op: draw
       count: 1
@@ -176817,7 +178589,7 @@ cards:
         select:
           zone: bz
           owner: you
-          filter: &id083
+          filter: &id085
             race_has: ディスタス
           count: 1
       - op: modal
@@ -176827,13 +178599,13 @@ cards:
             select:
               zone: graveyard
               owner: you
-              filter: *id083
+              filter: *id085
               count: 1
         - - op: play_free
             select:
               zone: mana
               owner: you
-              filter: *id083
+              filter: *id085
               count: 1
   - kind: trigger
     when:
@@ -176846,7 +178618,7 @@ cards:
         select:
           zone: bz
           owner: you
-          filter: *id083
+          filter: *id085
           count: 1
       - op: modal
         count: 1
@@ -176855,13 +178627,13 @@ cards:
             select:
               zone: graveyard
               owner: you
-              filter: *id083
+              filter: *id085
               count: 1
         - - op: play_free
             select:
               zone: mana
               owner: you
-              filter: *id083
+              filter: *id085
               count: 1
   source:
     official: dmrp19-026
@@ -177066,7 +178838,7 @@ cards:
     affects:
       zone: bz
       owner: you
-      filter: *id083
+      filter: *id085
     mod:
       grant:
       - slayer
@@ -177146,7 +178918,7 @@ cards:
       cond:
         exists:
           ref: t
-          filter: *id083
+          filter: *id085
       then:
       - op: play_free
         select:
@@ -178192,7 +179964,7 @@ cards:
     - op: draw
       count: 2
     - op: if
-      cond: &id084
+      cond: &id086
         not:
           exists:
             zone: bz
@@ -178371,7 +180143,7 @@ cards:
   abilities:
   - kind: static
     affects: self
-    if: *id084
+    if: *id086
     mod:
       deny:
       - attack_player
@@ -178457,7 +180229,7 @@ cards:
       event: move
       to: bz
       subject: self
-    if: &id085
+    if: &id087
       cmp:
       - count:
           zone: mana
@@ -178631,7 +180403,7 @@ cards:
       event: move
       to: bz
       subject: self
-    if: *id085
+    if: *id087
     effect:
     - op: move
       select:
@@ -178741,7 +180513,7 @@ cards:
       event: move
       to: bz
       subject: self
-    if: *id085
+    if: *id087
     effect:
     - op: draw
       count: 2
@@ -179044,7 +180816,7 @@ cards:
     when:
       event: move
       to: bz
-      subject: &id086
+      subject: &id088
         zone: bz
         owner: you
         other: true
@@ -179086,7 +180858,7 @@ cards:
     when:
       event: move
       to: bz
-      subject: *id086
+      subject: *id088
     effect:
     - op: may
       body:
@@ -179246,7 +181018,7 @@ cards:
         zone: bz
         owner: you
         other: true
-        filter: &id087
+        filter: &id089
           types:
           - creature
           - tamaseed
@@ -179274,7 +181046,7 @@ cards:
     select:
       zone: bz
       owner: you
-      filter: *id087
+      filter: *id089
       count: 0
       up_to: true
     as: d
@@ -179290,7 +181062,7 @@ cards:
       select:
         zone: bz
         owner: opp
-        filter: *id087
+        filter: *id089
         count: 1
   source:
     official: dmrp21-038
@@ -179900,7 +181672,7 @@ cards:
       reason: return
   - kind: static
     affects: self
-    if: &id088
+    if: &id090
       exists:
         zone: bz
         owner: you
@@ -180002,7 +181774,7 @@ cards:
   abilities:
   - kind: static
     affects: self
-    if: *id088
+    if: *id090
     mod:
       battle_power:
         amount: 7000
@@ -183884,7 +185656,7 @@ cards:
   abilities:
   - kind: static
     affects: self
-    if: &id089
+    if: &id091
       not:
         is_turn: you
     mod:
@@ -184084,7 +185856,7 @@ cards:
       filter:
         types:
         - creature
-    if: *id089
+    if: *id091
     mod:
       power: 2000
   source:
@@ -186396,7 +188168,7 @@ cards:
         filter:
           types:
           - creature
-          not_civs: &id090
+          not_civs: &id092
           - zero
         count: 1
       to: mana
@@ -186409,7 +188181,7 @@ cards:
         filter:
           types:
           - creature
-          not_civs: *id090
+          not_civs: *id092
         count: 1
       to: mana
       reason: put
@@ -186460,7 +188232,7 @@ cards:
         filter:
           types:
           - creature
-          not_civs: *id090
+          not_civs: *id092
     effect:
     - op: move
       select:
@@ -190296,7 +192068,7 @@ cards:
       event: move
       to: bz
       subject: self
-    effect: &id091
+    effect: &id093
     - op: move
       select:
         zone: shield
@@ -190323,7 +192095,7 @@ cards:
     when:
       event: attack
       subject: self
-    effect: *id091
+    effect: *id093
   source:
     official: dmx22a-003
     review: pending
@@ -192617,7 +194389,7 @@ cards:
   mana: 1
   text: このクリーチャーが攻撃するとき、自分の山札の上から１枚目を表向きにする。そのカードがサバイバーであれば自分の手札に加え、サバイバーでなければ自分の墓地に置く。サバイバー（このクリーチャーがバトルゾーンにある間、自分の他のサバイバーもこの能力を得る）
   abilities:
-  - &id092
+  - &id094
     kind: trigger
     when:
       event: attack
@@ -192658,7 +194430,7 @@ cards:
         race_has: サバイバー
     mod:
       gain:
-      - *id092
+      - *id094
   source:
     official: promoy1-022
     review: pending
@@ -194719,1775 +196491,3 @@ cards:
   source:
     official: sp-035
     review: pending
-- id: dm06-003
-  name: エウロピカ
-  types:
-  - creature
-  civs:
-  - water
-  cost: 7
-  power: 4000
-  races:
-  - シー・ハッカー
-  mana: 1
-  text: このクリーチャーで攻撃する代わりに、タップして次の能力を使ってもよい。 / バトルゾーンにあるクリーチャーを１体選び、持ち主の手札に戻す。
-  abilities:
-  - kind: activate
-    cost:
-      tap: self
-    effect:
-    - op: bounce
-      select:
-        zone: bz
-        owner: any
-        filter:
-          types:
-          - creature
-        count: 1
-  source:
-    official: dm06-003
-    review: pending
-    notes: '厳密一致。タップ能力は kind: activate（602.3a）'
-- id: dm06-047
-  name: シャインシェル・クラスター
-  types:
-  - creature
-  civs:
-  - water
-  cost: 7
-  power: 4000
-  races:
-  - サイバー・クラスター
-  mana: 1
-  text: このクリーチャーで攻撃する代わりに、タップして次の能力を使ってもよい。 / カードを２枚引く。
-  abilities:
-  - kind: activate
-    cost:
-      tap: self
-    effect:
-    - op: draw
-      count: 2
-  source:
-    official: dm06-047
-    review: pending
-    notes: 厳密一致
-    aliases:
-    - promoy2-004
-- id: dm06-071
-  name: 鋭刃の使徒グーレ・チェーン
-  types:
-  - creature
-  civs:
-  - light
-  cost: 5
-  power: 2000
-  races:
-  - イニシエート
-  mana: 1
-  text: このクリーチャーで攻撃する代わりに、タップして次の能力を使ってもよい。 / バトルゾーンにある相手のクリーチャーを１体選び、タップする。
-  abilities:
-  - kind: activate
-    cost:
-      tap: self
-    effect:
-    - op: tap
-      select:
-        zone: bz
-        owner: opp
-        filter:
-          types:
-          - creature
-        count: 1
-  source:
-    official: dm06-071
-    review: pending
-    notes: 厳密一致
-- id: dm14-028
-  name: デモニック・プロテクター
-  types:
-  - cross_gear
-  civs:
-  - darkness
-  cost: 1
-  mana: 1
-  text: クロスギア:このカードをバトルゾーンに置く。クリーチャーにクロスするには、このカードのコストをもう一度支払う。そのクリーチャーがバトルゾーンを離れても、このカードはバトルゾーンに残る。
-    / これをクロスしたクリーチャーが破壊された時、カードを１枚引いてもよい。
-  abilities:
-  - kind: trigger
-    when:
-      event: move
-      from: bz
-      to: graveyard
-      reason: destroy
-      subject: crossed
-    effect:
-    - op: may
-      body:
-      - op: draw
-        count: 1
-  source:
-    official: dm14-028
-    review: pending
-    notes: 厳密一致。クロス定型文は規則（303）で処理
-    aliases:
-    - promoy4-001
-- id: dm14-046
-  name: シャイニング・ディフェンス
-  types:
-  - cross_gear
-  civs:
-  - light
-  cost: 1
-  mana: 1
-  text: クロスギア:このカードをバトルゾーンに置く。クリーチャーにクロスするには、このカードのコストをもう一度支払う。そのクリーチャーがバトルゾーンを離れても、このカードはバトルゾーンに残る。
-    / これをクロスしたクリーチャーのパワーは+1500され、｢ブロッカー｣を得る。
-  abilities:
-  - kind: static
-    affects: crossed
-    mod:
-      power: 1500
-      grant:
-      - blocker
-  source:
-    official: dm14-046
-    review: pending
-    notes: 厳密一致
-- id: dm14-102
-  name: ファイアー・ブレード
-  types:
-  - cross_gear
-  civs:
-  - fire
-  cost: 2
-  mana: 1
-  text: クロスギア:このカードをバトルゾーンに置く。クリーチャーにクロスするには、このカードのコストをもう一度支払う。そのクリーチャーがバトルゾーンを離れても、このカードはバトルゾーンに残る。
-    / これをクロスしたクリーチャーは｢スピードアタッカー｣を得る。
-  abilities:
-  - kind: static
-    affects: crossed
-    mod:
-      grant:
-      - speed_attacker
-  source:
-    official: dm14-102
-    review: pending
-    notes: 厳密一致
-    aliases:
-    - promoy4-005
-- id: dm11-022
-  name: 予言者ラメール
-  types:
-  - creature
-  civs:
-  - light
-  cost: 2
-  power: 1500
-  races:
-  - ライトブリンガー
-  mana: 1
-  keywords:
-  - wave_striker
-  text: 'ウェーブストライカー(バトルゾーンに「ウェーブストライカー」を持つクリーチャーが他に２体以上あれば、このクリーチャーは次の能力を得る)
-
-    バトルゾーンにある自分のクリーチャーすべてのパワーは+1000される。'
-  abilities:
-  - kind: static
-    affects:
-      zone: bz
-      owner: you
-      filter:
-        types:
-        - creature
-    if:
-      cmp:
-      - count:
-          zone: bz
-          owner: any
-          other: true
-          filter:
-            keyword: wave_striker
-      - '>='
-      - 2
-    mod:
-      power: 1000
-  source:
-    official: dm11-022
-    review: pending
-    notes: '厳密一致。「他に」の数は原文に「自分の」が無いので owner: any'
-- id: dm11-016
-  name: 斬神兵グランドルメス
-  types:
-  - creature
-  civs:
-  - fire
-  cost: 3
-  power: 2000
-  races:
-  - アーマロイド
-  mana: 1
-  keywords:
-  - wave_striker
-  text: 'ウェーブストライカー(バトルゾーンに「ウェーブストライカー」を持つクリーチャーが他に２体以上あれば、このクリーチャーは次の能力を得る)
-
-    このクリーチャーをバトルゾーンに出した時、パワー2000以下のクリーチャーをすべて破壊する。'
-  abilities:
-  - kind: trigger
-    when:
-      event: move
-      to: bz
-      subject: self
-    if:
-      cmp:
-      - count:
-          zone: bz
-          owner: any
-          other: true
-          filter:
-            keyword: wave_striker
-      - '>='
-      - 2
-    effect:
-    - op: destroy
-      select:
-        zone: bz
-        owner: any
-        filter:
-          types:
-          - creature
-          power_le: 2000
-        count: all
-  source:
-    official: dm11-016
-    review: pending
-    notes: 厳密一致。自身もパワー2000以下なので対象に含まれる（原文どおり）
-- id: dm11-038
-  name: 堅防の使徒アースラ
-  types:
-  - creature
-  civs:
-  - light
-  cost: 3
-  power: 2000
-  races:
-  - イニシエート
-  mana: 1
-  keywords:
-  - wave_striker
-  text: 'ウェーブストライカー(バトルゾーンに「ウェーブストライカー」を持つクリーチャーが他に２体以上あれば、このクリーチャーは次の能力を得る)
-
-    このクリーチャーのパワーは+4000され、「ブロッカー」を得る。'
-  abilities:
-  - kind: static
-    affects: self
-    if:
-      cmp:
-      - count:
-          zone: bz
-          owner: any
-          other: true
-          filter:
-            keyword: wave_striker
-      - '>='
-      - 2
-    mod:
-      power: 4000
-      grant:
-      - blocker
-  source:
-    official: dm11-038
-    review: pending
-    notes: 厳密一致
-- id: dm10-047
-  name: ルナ・イーグル
-  types:
-  - creature
-  civs:
-  - water
-  cost: 3
-  power: 5000
-  races:
-  - サイバー・ムーン
-  mana: 1
-  abilities:
-  - kind: static
-    affects: self
-    mod:
-      require:
-      - block
-  keywords:
-  - blocker
-  - cannot_attack
-  text: 'ブロッカー
-
-    このクリーチャーは攻撃することができない。
-
-    相手のクリーチャーが攻撃する時、このクリーチャーは可能であればブロックする。'
-  source:
-    official: dm10-047
-    review: pending
-    notes: ルールのみで変換（モデル不使用）
-- id: dm10-052
-  name: 死劇人形ピエール
-  types:
-  - creature
-  civs:
-  - darkness
-  cost: 2
-  power: 1000
-  races:
-  - デスパペット
-  mana: 1
-  abilities:
-  - kind: static
-    affects: self
-    mod:
-      require:
-      - block
-  keywords:
-  - blocker
-  - cannot_attack
-  - slayer
-  text: 'ブロッカー
-
-    このクリーチャーは攻撃することができない。
-
-    相手のクリーチャーが攻撃する時、このクリーチャーは可能であればブロックする。
-
-    スレイヤー(このクリーチャーがバトルする時、バトルの後、相手クリーチャーを破壊する)'
-  source:
-    official: dm10-052
-    review: pending
-    notes: ルールのみで変換（モデル不使用）
-- id: dm12-038
-  name: 宣凶師ベルモーレ
-  types:
-  - creature
-  civs:
-  - light
-  cost: 2
-  power: 3500
-  races:
-  - グラディエーター
-  mana: 1
-  abilities:
-  - kind: static
-    affects: self
-    mod:
-      require:
-      - block
-  keywords:
-  - blocker
-  - cannot_attack_player
-  text: 'ブロッカー(相手クリーチャーが攻撃する時、このクリーチャーをタップして、その攻撃を阻止してもよい。その後、その相手クリーチャーとバトルする)
-
-    相手のクリーチャーが攻撃する時、このクリーチャーは可能であればブロックする。
-
-    このクリーチャーは、相手プレイヤーを攻撃できない。'
-  source:
-    official: dm12-038
-    review: pending
-    notes: ルールのみで変換（モデル不使用）
-- id: dm11-024
-  name: アクア・トリックスター
-  types:
-  - creature
-  civs:
-  - water
-  cost: 2
-  power: 1000
-  races:
-  - リキッド・ピープル
-  mana: 1
-  abilities:
-  - kind: trigger
-    when:
-      event: move
-      to: bz
-      subject: self
-    effect:
-    - op: tap
-      select:
-        zone: bz
-        owner: opp
-        filter:
-          types:
-          - creature
-        count: 1
-    if:
-      cmp: &id093
-      - count:
-          zone: bz
-          owner: any
-          other: true
-          filter:
-            keyword: wave_striker
-      - '>='
-      - 2
-  keywords:
-  - wave_striker
-  text: 'ウェーブストライカー(バトルゾーンに「ウェーブストライカー」を持つクリーチャーが他に２体以上あれば、このクリーチャーは次の能力を得る)
-
-    このクリーチャーをバトルゾーンに出した時、バトルゾーンにある相手のクリーチャーを１体選び、タップする。'
-  source:
-    official: dm11-024
-    review: pending
-    notes: ルールのみで変換（モデル不使用）
-- id: dm12-048
-  name: 炎神兵ゴリアック
-  types:
-  - creature
-  civs:
-  - fire
-  cost: 5
-  power: 4000
-  races:
-  - アーマロイド
-  mana: 1
-  abilities:
-  - kind: trigger
-    when:
-      event: move
-      to: bz
-      subject: self
-    effect:
-    - op: destroy
-      select:
-        zone: bz
-        owner: opp
-        filter:
-          types:
-          - creature
-          power_le: 5000
-        count: 1
-    if:
-      cmp: *id093
-  keywords:
-  - wave_striker
-  text: 'ウェーブストライカー(バトルゾーンに「ウェーブストライカー」を持つクリーチャーが他に２体以上あれば、このクリーチャーは次の能力を得る)
-
-    このクリーチャーをバトルゾーンに出した時、相手のパワー5000以下のクリーチャーを１体破壊する。'
-  source:
-    official: dm12-048
-    review: pending
-    notes: ルールのみで変換（モデル不使用）
-- id: dm10-080
-  name: ミルポロ
-  types:
-  - creature
-  civs:
-  - water
-  cost: 4
-  power: 3000
-  races:
-  - サイバーロード
-  mana: 1
-  keywords:
-  - silent_skill
-  text: 'サイレントスキル(自分のターンのはじめに、このクリーチャーがタップされていたら、アンタップするかわりに次の能力を使ってもよい)
-
-    カードを１枚引く。'
-  abilities:
-  - kind: silent
-    effect:
-    - op: draw
-      count: 1
-  source:
-    official: dm10-080
-    review: pending
-    notes: '厳密一致。サイレントスキルは kind: silent（501.1a）'
-- id: dm10-030
-  name: マインロード・ワイバーン
-  types:
-  - creature
-  civs:
-  - fire
-  cost: 4
-  power: 3000
-  races:
-  - アーマード・ワイバーン
-  mana: 1
-  keywords:
-  - silent_skill
-  text: 'サイレントスキル(自分のターンのはじめに、このクリーチャーがタップされていたら、アンタップするかわりに次の能力を使ってもよい)
-
-    パワー3000以下のクリーチャーをすべて破壊する。'
-  abilities:
-  - kind: silent
-    effect:
-    - op: destroy
-      select:
-        zone: bz
-        owner: any
-        filter:
-          types:
-          - creature
-          power_le: 3000
-        count: all
-  source:
-    official: dm10-030
-    review: pending
-    notes: 厳密一致。自身もパワー3000以下なので対象に含まれる（原文どおり）
-- id: dm10-004
-  name: 災厄秘宝ゲジラ
-  types:
-  - creature
-  civs:
-  - darkness
-  cost: 6
-  power: 6000
-  races:
-  - パンドラボックス
-  mana: 1
-  keywords:
-  - double_breaker
-  - silent_skill
-  text: 'W・ブレイカー
-
-    サイレントスキル(自分のターンのはじめに、このクリーチャーがタップされていたら、アンタップするかわりに次の能力を使ってもよい)
-
-    このクリーチャーは、相手のシールドを２枚ブレイクする。'
-  abilities:
-  - kind: silent
-    effect:
-    - op: break
-      count: 2
-      player: opp
-  source:
-    official: dm10-004
-    review: pending
-    notes: 厳密一致
-- id: dm08-016
-  name: 重装兵ガルバック
-  types:
-  - creature
-  civs:
-  - fire
-  cost: 4
-  power: 3000
-  races:
-  - ドラゴノイド
-  mana: 1
-  text: 'ターボラッシュ(自分の他のクリーチャーがシールドをブレイクした後、そのターンが終わるまで、このクリーチャーは次の能力を得る)
-
-    このクリーチャーが攻撃するとき、バトルゾーンにあるパワー4000以下の相手のクリーチャーを１体選び、持ち主の墓地に置いてもよい。'
-  keywords:
-  - turbo_rush
-  abilities:
-  - kind: trigger
-    when:
-      event: attack
-      subject: self
-    if: &id094
-      self_marked: turbo_rush
-    effect:
-    - op: may
-      body:
-      - op: destroy
-        select:
-          zone: bz
-          owner: opp
-          filter:
-            types:
-            - creature
-            power_le: 4000
-          count: 1
-  source:
-    official: dm08-016
-    review: pending
-    notes: 厳密一致。ターボラッシュは印（keywords.yaml）＋続く能力に self_marked の条件
-- id: dm08-053
-  name: 食獣セニア
-  types:
-  - creature
-  civs:
-  - nature
-  cost: 4
-  power: 3000
-  races:
-  - ツリーフォーク
-  mana: 1
-  text: 'ターボラッシュ(自分の他のクリーチャーがシールドをブレイクしたあと、そのターンが終わるまで、このクリーチャーは次の能力を得る)
-
-    このクリーチャーのパワーは+5000され、「W(ダブル)・ブレイカー」を得る。'
-  keywords:
-  - turbo_rush
-  abilities:
-  - kind: static
-    affects: self
-    if: *id094
-    mod:
-      power: 5000
-      grant:
-      - double_breaker
-  source:
-    official: dm08-053
-    review: pending
-    notes: 厳密一致。ターボラッシュは印（keywords.yaml）＋続く能力に self_marked の条件
-- id: dm08-040
-  name: イリュージョン・フィッシュ
-  types:
-  - creature
-  civs:
-  - water
-  cost: 4
-  power: 3000
-  races:
-  - ゲル・フィッシュ
-  mana: 1
-  text: 'ターボラッシュ(自分の他のクリーチャーがシールドをブレイクしたあと、そのターンが終わるまで、このクリーチャーは次の能力を得る)
-
-    このクリーチャーはブロックされない。'
-  keywords:
-  - turbo_rush
-  - unblockable
-  abilities:
-  - kind: static
-    affects: self
-    if: *id094
-    mod:
-      grant:
-      - unblockable
-  source:
-    official: dm08-040
-    review: pending
-    notes: 厳密一致。ターボラッシュは印（keywords.yaml）＋続く能力に self_marked の条件
-- id: dm11-030
-  name: マッチョ・メロン
-  types:
-  - creature
-  civs:
-  - nature
-  cost: 2
-  power: 1000
-  races:
-  - ワイルド・ベジーズ
-  mana: 1
-  abilities:
-  - kind: static
-    affects: self
-    mod:
-      power_when:
-        amount: 3000
-        when: attacking
-    if:
-      cmp:
-      - count:
-          zone: bz
-          owner: any
-          other: true
-          filter:
-            keyword: wave_striker
-      - '>='
-      - 2
-  keywords:
-  - wave_striker
-  text: 'ウェーブストライカー(バトルゾーンに「ウェーブストライカー」を持つクリーチャーが他に２体以上あれば、このクリーチャーは次の能力を得る)
-
-    パワーアタッカー +3000(攻撃中、このクリーチャーのパワーは+3000される)'
-  source:
-    official: dm11-030
-    review: pending
-    notes: ルールのみで変換（モデル不使用）
-- id: dm02-049
-  name: 小さな勇者ゲット
-  types:
-  - creature
-  civs:
-  - fire
-  cost: 2
-  power: 2000
-  races:
-  - ヒューマノイド
-  mana: 1
-  abilities:
-  - kind: static
-    affects: self
-    mod:
-      power_when:
-        amount: 1000
-        when: attacking
-  - kind: static
-    affects: self
-    mod:
-      require:
-      - attack
-  text: 'パワーアタッカー+1000(攻撃中、このクリーチャーのパワーは+1000される。)
-
-    このクリーチャーは、毎ターン攻撃しなければならない。'
-  source:
-    official: dm02-049
-    review: pending
-    notes: ルールのみで変換（モデル不使用）
-    aliases:
-    - promoy14-spd09
-- id: dm13-047
-  name: ジョーのツールキット
-  types:
-  - creature
-  civs:
-  - fire
-  cost: 2
-  power: 1000
-  races:
-  - ゼノパーツ
-  mana: 1
-  text: このクリーチャーが攻撃された時、相手のパワー2000以下のクリーチャーを１体破壊してもよい。
-  abilities:
-  - kind: trigger
-    when:
-      event: attack
-      target: self
-    effect:
-    - op: may
-      body:
-      - op: destroy
-        select:
-          zone: bz
-          owner: opp
-          filter:
-            types:
-            - creature
-            power_le: 2000
-          count: 1
-  source:
-    official: dm13-047
-    review: pending
-    notes: 厳密一致
-- id: dm17-045
-  name: 反撃人形デビルモモ
-  types:
-  - creature
-  civs:
-  - darkness
-  cost: 3
-  power: 2000
-  races:
-  - デスパペット
-  mana: 1
-  text: このクリーチャーが攻撃された時、そのターンの終わりまで、このクリーチャーのパワーは+5000される。
-  abilities:
-  - kind: trigger
-    when:
-      event: attack
-      target: self
-    effect:
-    - op: modify
-      select:
-        ref: self
-      mod:
-        power: 5000
-      duration: end_of_turn
-  source:
-    official: dm17-045
-    review: pending
-    notes: 厳密一致
-- id: dm08-033
-  name: シェル・コロシアム
-  types:
-  - creature
-  civs:
-  - nature
-  cost: 4
-  power: 3000
-  races:
-  - コロニー・ビートル
-  mana: 1
-  text: このクリーチャーがブロックされたとき、自分の山札の上から１枚目を自分のマナゾーンに加えてもよい。
-  abilities:
-  - kind: trigger
-    when:
-      event: block
-      attacker: self
-    effect:
-    - op: may
-      body:
-      - op: mana_put
-        select:
-          zone: deck
-          owner: you
-          from_top: 1
-  source:
-    official: dm08-033
-    review: pending
-    notes: 厳密一致
-- id: dm13-021
-  name: 予言者ポラリス
-  types:
-  - creature
-  civs:
-  - light
-  cost: 3
-  power: 2000
-  races:
-  - ライトブリンガー
-  mana: 1
-  text: 自分のクリーチャーが攻撃された時、そのクリーチャーのパワーは+2000される。
-  abilities:
-  - kind: trigger
-    when:
-      event: attack
-      target:
-        owner: you
-    effect:
-    - op: modify
-      select:
-        ref: event.target
-      mod:
-        power: 2000
-      duration: end_of_turn
-  source:
-    official: dm13-021
-    review: pending
-    notes: 厳密一致。「自分のクリーチャーが攻撃された時」はこのクリーチャー自身が攻撃された場合も含む
-- id: dm19-019
-  name: 封魔ラベリーズ
-  types:
-  - creature
-  civs:
-  - water
-  cost: 6
-  power: 3000
-  races:
-  - グランド・デビル
-  mana: 1
-  text: 自分が唱える呪文はすべて「サイクロン」を得る。
-  abilities:
-  - kind: static
-    affects:
-      zone: hand
-      owner: you
-      filter:
-        types:
-        - spell
-    mod:
-      grant:
-      - cyclone
-  source:
-    official: dm19-019
-    review: pending
-    notes: 厳密一致
-- id: dm19-034
-  name: ジェット・サイクロン
-  types:
-  - spell
-  civs:
-  - fire
-  cost: 2
-  mana: 1
-  text: 'サイクロン(このターン、この呪文を唱える直前にクリーチャーを召喚していれば、この呪文を唱えた後、墓地に置くかわりに自分の手札に戻す)
-
-    バトルゾーンにある自分のクリーチャー１体は、このターンの終わりまで「スピードアタッカー」を得る。(「スピードアタッカー」を得たクリーチャーは召喚酔いしない)'
-  keywords:
-  - cyclone
-  spell:
-  - op: modify
-    select:
-      zone: bz
-      owner: you
-      count: 1
-      filter:
-        types:
-        - creature
-    mod:
-      grant:
-      - speed_attacker
-    duration: end_of_turn
-  source:
-    official: dm19-034
-    review: pending
-    notes: 厳密一致
-- id: dm19-046
-  name: リバース・サイクロン
-  types:
-  - spell
-  civs:
-  - light
-  cost: 2
-  mana: 1
-  text: 'サイクロン(このターン、この呪文を唱える直前にクリーチャーを召喚していれば、この呪文を唱えた後、墓地に置くかわりに自分の手札に戻す)
-
-    バトルゾーンにある相手のクリーチャーを１体選び、タップする。'
-  keywords:
-  - cyclone
-  spell:
-  - op: tap
-    select:
-      zone: bz
-      owner: opp
-      count: 1
-      filter:
-        types:
-        - creature
-  source:
-    official: dm19-046
-    review: pending
-    notes: 厳密一致
-- id: dm19-058
-  name: バイス・サイクロン
-  types:
-  - spell
-  civs:
-  - darkness
-  cost: 2
-  mana: 1
-  text: 'サイクロン(このターン、この呪文を唱える直前にクリーチャーを召喚していれば、この呪文を唱えた後、墓地に置くかわりに自分の手札に戻す)
-
-    相手は自分自身の手札を１枚選び、捨てる。'
-  keywords:
-  - cyclone
-  spell:
-  - op: discard
-    select:
-      zone: hand
-      owner: opp
-      count: 1
-      chooser: opp
-  source:
-    official: dm19-058
-    review: pending
-    notes: 厳密一致
-- id: dm19-078
-  name: バリアー・サイクロン
-  types:
-  - spell
-  civs:
-  - light
-  cost: 5
-  mana: 1
-  text: 'サイクロン(このターン、この呪文を唱える前にクリーチャーを召喚していれば、この呪文を唱えた後、墓地に置くかわりに自分の手札に戻す)
-
-    自分の手札を１枚、裏向きのまま自分のシールドに加える。'
-  keywords:
-  - cyclone
-  spell:
-  - op: move
-    reason: put
-    select:
-      zone: hand
-      owner: you
-      count: 1
-    to: shield
-  source:
-    official: dm19-078
-    review: pending
-    notes: 厳密一致
-- id: dm19-086
-  name: ブレイン・サイクロン
-  types:
-  - spell
-  civs:
-  - water
-  cost: 3
-  mana: 1
-  text: 'サイクロン(このターン、この呪文を唱える直前にクリーチャーを召喚していれば、この呪文を唱えた後、墓地に置くかわりに自分の手札に戻す)
-
-    カードを１枚引く。'
-  keywords:
-  - cyclone
-  spell:
-  - op: draw
-    count: 1
-  source:
-    official: dm19-086
-    review: pending
-    notes: 厳密一致
-- id: dm19-094
-  name: ブラッディ・サイクロン
-  types:
-  - spell
-  civs:
-  - darkness
-  cost: 1
-  mana: 1
-  text: 'サイクロン(このターン、この呪文を唱える直前にクリーチャーを召喚していれば、この呪文を唱えた後、墓地に置くかわりに自分の手札に戻す)
-
-    バトルゾーンにある自分のクリーチャー１体は、このターンの終わりまで「スレイヤー」を得る。(「スレイヤー」を得たクリーチャーがバトルする時、バトルの後、相手クリーチャーを破壊する)'
-  keywords:
-  - cyclone
-  spell:
-  - op: modify
-    select:
-      zone: bz
-      owner: you
-      count: 1
-      filter:
-        types:
-        - creature
-    mod:
-      grant:
-      - slayer
-    duration: end_of_turn
-  source:
-    official: dm19-094
-    review: pending
-    notes: 厳密一致
-- id: dm19-102
-  name: ガトリング・サイクロン
-  types:
-  - spell
-  civs:
-  - fire
-  cost: 3
-  mana: 1
-  text: 'サイクロン(このターン、この呪文を唱える直前にクリーチャーを召喚していれば、この呪文を唱えた後、墓地に置くかわりに自分の手札に戻す)
-
-    パワー2000以下の相手のクリーチャーを１体破壊する。'
-  keywords:
-  - cyclone
-  spell:
-  - op: destroy
-    select:
-      zone: bz
-      owner: opp
-      count: 1
-      filter:
-        types:
-        - creature
-        power_le: 2000
-  source:
-    official: dm19-102
-    review: pending
-    notes: 厳密一致
-- id: dm19-110
-  name: フェアリー・サイクロン
-  types:
-  - spell
-  civs:
-  - nature
-  cost: 3
-  mana: 1
-  text: 'サイクロン(このターン、この呪文を唱える直前にクリーチャーを召喚していれば、この呪文を唱えた後、墓地に置くかわりに自分の手札に戻す)
-
-    自分の山札の上から１枚目を、自分のマナゾーンに置く。'
-  keywords:
-  - cyclone
-  spell:
-  - op: move
-    reason: put
-    select:
-      zone: deck
-      owner: you
-      from_top: 1
-    to: mana
-  source:
-    official: dm19-110
-    review: pending
-    notes: 厳密一致
-- id: dm17-007
-  name: 予言者プロキオン
-  types:
-  - creature
-  civs:
-  - light
-  cost: 7
-  power: 2000
-  races:
-  - ライトブリンガー
-  mana: 1
-  text: 'S・バック-光(光のカードを自分のシールドゾーンから手札に加える時、そのカードを捨ててもよい。そうした場合、コストを支払わずにこのクリーチャーを召喚する)
-
-    ブロッカー
-
-    このクリーチャーは、相手プレイヤーを攻撃できない。
-
-    このクリーチャーが破壊される時、墓地に置くかわりに手札に戻す。'
-  keywords:
-  - s_back_light
-  - blocker
-  - cannot_attack_player
-  abilities:
-  - kind: replace
-    when:
-      event: move
-      from: bz
-      to: graveyard
-      reason: destroy
-      subject: self
-    instead:
-    - op: move
-      select:
-        ref: self
-      to: hand
-      reason: return
-  - kind: replace
-    when:
-      event: move
-      from: bz
-      to: graveyard
-      reason: destroy
-      subject: self
-    instead:
-    - op: move
-      select:
-        ref: self
-      to: hand
-      reason: return
-  source:
-    official: dm17-007
-    review: pending
-    notes: 厳密一致
-- id: dm17-011
-  name: シャロウ・オペレーション
-  types:
-  - spell
-  civs:
-  - water
-  cost: 3
-  mana: 1
-  text: 'S・バック-水(水のカードを自分のシールドゾーンから手札に加える時、そのカードを捨ててもよい。そうした場合、コストを支払わずにこの呪文を唱える)
-
-    バトルゾーンにある相手のタップされているクリーチャー１体につき１枚、カードを引く。'
-  spell:
-  - op: draw
-    count:
-      count:
-        zone: bz
-        owner: opp
-        filter:
-          types:
-          - creature
-          tapped: true
-  keywords:
-  - s_back_water
-  source:
-    official: dm17-011
-    review: pending
-    notes: 厳密一致
-- id: dm17-023
-  name: パニッシュ・ホールド
-  types:
-  - spell
-  civs:
-  - light
-  cost: 5
-  mana: 1
-  text: 'S・バック-光 (光のカードを自分のシールドゾーンから手札に加える時、そのカードを捨ててもよい。そうした場合、コストを支払わずにこの呪文を唱える)
-
-    バトルゾーンにあるクリーチャーを２体まで選び、タップする。'
-  spell:
-  - op: tap
-    select:
-      zone: bz
-      owner: any
-      filter:
-        types:
-        - creature
-      count: 2
-      up_to: true
-  keywords:
-  - s_back_light
-  source:
-    official: dm17-023
-    review: pending
-    notes: 厳密一致
-- id: dm17-024
-  name: クラック・クロウラー
-  types:
-  - creature
-  civs:
-  - water
-  cost: 6
-  power: 3000
-  races:
-  - アースイーター
-  mana: 1
-  text: 'S・バック-水(水のカードを自分のシールドゾーンから手札に加える時、そのカードを捨ててもよい。そうした場合、コストを支払わずにこのクリーチャーを召喚する)
-
-    ブロッカー
-
-    このクリーチャーは攻撃することができない。'
-  keywords:
-  - s_back_water
-  - blocker
-  - cannot_attack
-  source:
-    official: dm17-024
-    review: pending
-    notes: 厳密一致
-- id: dm17-029
-  name: 煉獄陣
-  types:
-  - spell
-  civs:
-  - darkness
-  cost: 5
-  mana: 1
-  text: S・バック-闇(闇のカードを自分のシールドゾーンから手札に加える時、そのカードを捨ててもよい。そうした場合、コストを支払わずにこの呪文を唱える) クリーチャーを２体まで、自分の墓地から手札に戻す。
-  spell:
-  - op: move
-    select:
-      zone: graveyard
-      owner: you
-      filter:
-        types:
-        - creature
-      count: 2
-      up_to: true
-    to: hand
-    reason: return
-  keywords:
-  - s_back_darkness
-  source:
-    official: dm17-029
-    review: pending
-    notes: 厳密一致
-    aliases:
-    - promoy4-036
-- id: dm19-007
-  name: 超神星マーズ・ディザスター
-  types:
-  - creature
-  - evolution
-  civs:
-  - fire
-  cost: 5
-  power: 13000
-  races:
-  - フェニックス
-  mana: 1
-  evolve_from:
-    races:
-    - ティラノ・ドレイク
-    - ドリームメイト
-    - ヒューマノイド
-  text: '進化GV-自分のティラノ・ドレイク、ドリームメイト、ヒューマノイドのいずれか３体を重ねた上に置く。
-
-    メテオバーン - このクリーチャーが攻撃する時、このクリーチャーの下にあるカードを１枚選び墓地に置いてもよい。そうした場合、パワー4000以下のクリーチャーをすべて破壊する。
-
-    T・ブレイカー(このクリーチャーはシールドを３枚ブレイクする)'
-  keywords:
-  - triple_breaker
-  abilities:
-  - kind: trigger
-    when:
-      event: attack
-      subject: self
-    effect:
-    - op: may
-      body:
-      - op: move
-        select:
-          under_of: self
-          count: 1
-        to: graveyard
-        reason: put
-        as: paid
-      - op: if
-        cond:
-          exists:
-            ref: paid
-        then:
-        - op: destroy
-          select:
-            zone: bz
-            owner: any
-            filter:
-              types:
-              - creature
-              power_le: 4000
-            count: all
-  evolve_count: 3
-  source:
-    official: dm19-007
-    review: pending
-    notes: '厳密一致。進化GVは evolve_count: 3。メテオバーンの「そうした場合」は変数 paid の有無で表す'
-- id: dm19-009
-  name: 超神星ジュピター・キングエンパイア
-  types:
-  - creature
-  - evolution
-  civs:
-  - nature
-  cost: 5
-  power: 14000
-  races:
-  - フェニックス
-  mana: 1
-  evolve_from:
-    races:
-    - ドリームメイト
-    - アーク・セラフィム
-    - ワイルド・ベジーズ
-  text: '進化GV-自分のドリームメイト、アーク・セラフィム、ワイルド・ベジーズのいずれか３体を重ねた上に置く。
-
-    メテオバーン - このクリーチャーが攻撃する時、このクリーチャーの下にある、進化クリーチャーではないカードを１枚選び、バトルゾーンに出してもよい。(ただし、そのクリーチャーは召喚酔いする)
-
-    T・ブレイカー(このクリーチャーはシールドを３枚ブレイクする)'
-  keywords:
-  - triple_breaker
-  abilities:
-  - kind: trigger
-    when:
-      event: attack
-      subject: self
-    effect:
-    - op: may
-      body:
-      - op: move
-        select:
-          under_of: self
-          count: 1
-          filter:
-            types:
-            - creature
-            not_types:
-            - evolution
-        to: bz
-        reason: put
-  evolve_count: 3
-  source:
-    official: dm19-009
-    review: pending
-    notes: '厳密一致。進化GVは evolve_count: 3。メテオバーンの「そうした場合」は変数 paid の有無で表す'
-- id: dm19-017
-  name: 魔皇バルパス
-  types:
-  - creature
-  - evolution
-  civs:
-  - water
-  cost: 5
-  power: 7000
-  races:
-  - グランド・デビル
-  mana: 1
-  evolve_from:
-    races:
-    - グランド・デビル
-  text: '進化-自分のグランド・デビル１体の上に置く。
-
-    メテオバーン - クリーチャーが攻撃する時、このクリーチャーの下にあるカードを１枚選び墓地に置いてもよい。そうした場合、バトルゾーンにあるコスト３以下のカードを１枚選び、持ち主の手札に戻す。
-
-    W・ブレイカー(このクリーチャーはシールドを２枚ブレイクする)'
-  keywords:
-  - double_breaker
-  abilities:
-  - kind: trigger
-    when:
-      event: attack
-      subject:
-        owner: any
-    effect:
-    - op: may
-      body:
-      - op: move
-        select:
-          under_of: self
-          count: 1
-        to: graveyard
-        reason: put
-        as: paid
-      - op: if
-        cond:
-          exists:
-            ref: paid
-        then:
-        - op: move
-          select:
-            zone: bz
-            owner: any
-            filter:
-              cost_le: 3
-            count: 1
-          to: hand
-          reason: return
-  source:
-    official: dm19-017
-    review: pending
-    notes: 厳密一致。メテオバーンの「そうした場合」は変数 paid の有無で表す
-- id: dm19-035
-  name: 大菜王ゴッド・バナナーン
-  types:
-  - creature
-  - evolution
-  civs:
-  - nature
-  cost: 5
-  power: 6000
-  races:
-  - ワイルド・ベジーズ
-  mana: 1
-  evolve_from:
-    races:
-    - ワイルド・ベジーズ
-  text: '進化-自分のワイルド・ベジーズ１体の上に置く。
-
-    メテオバーン - このクリーチャーが攻撃する時、このクリーチャーの下にあるカードを１枚、自分の手札に加えてもよい。
-
-    W・ブレイカー'
-  keywords:
-  - double_breaker
-  abilities:
-  - kind: trigger
-    when:
-      event: attack
-      subject: self
-    effect:
-    - op: may
-      body:
-      - op: move
-        select:
-          under_of: self
-          count: 1
-        to: hand
-        reason: return
-  source:
-    official: dm19-035
-    review: pending
-    notes: 厳密一致。メテオバーンの「そうした場合」は変数 paid の有無で表す
-- id: dm19-041
-  name: 聖帝ファルマハート
-  types:
-  - creature
-  - evolution
-  civs:
-  - light
-  cost: 5
-  power: 7000
-  races:
-  - アーク・セラフィム
-  mana: 1
-  evolve_from:
-    races:
-    - アーク・セラフィム
-  text: '進化-自分のアーク・セラフィム１体の上に置く。
-
-    メテオバーン -相手のクリーチャーが攻撃する時、このクリーチャーの下にあるカードを１枚選び墓地に置いてもよい。そうした場合、このクリーチャーアンタップされ、そのターンの終わりまで「ブロッカー」を得る。
-
-    W・ブレイカー(このクリーチャーはシールドを２枚ブレイクする)'
-  keywords:
-  - double_breaker
-  abilities:
-  - kind: trigger
-    when:
-      event: attack
-      subject:
-        owner: opp
-    effect:
-    - op: may
-      body:
-      - op: move
-        select:
-          under_of: self
-          count: 1
-        to: graveyard
-        reason: put
-        as: paid
-      - op: if
-        cond:
-          exists:
-            ref: paid
-        then:
-        - op: untap
-          select:
-            ref: self
-        - op: modify
-          select:
-            ref: self
-          mod:
-            grant:
-            - blocker
-          duration: end_of_turn
-  source:
-    official: dm19-041
-    review: pending
-    notes: 厳密一致。メテオバーンの「そうした場合」は変数 paid の有無で表す
-- id: dm19-012
-  name: 鋼鉄機甲ベンケロス
-  types:
-  - creature
-  civs:
-  - light
-  cost: 6
-  power: 7000
-  races:
-  - グレートメカオー
-  - ダイナモ
-  mana: 1
-  text: 'ブロッカー
-
-    ダイナモ(バトルが始まる時、あるいはこのクリーチャーで攻撃できる時、このクリーチャーをタップしてもよい。そうした場合、そのターンの終わりまで、このクリーチャーのパワーと能力をバトルゾーンにある自分の他のダイナモ１体に加える)
-
-    このクリーチャーは、相手プレイヤーを攻撃できない。'
-  keywords:
-  - blocker
-  - dynamo
-  - cannot_attack_player
-  source:
-    official: dm19-012
-    review: pending
-    notes: 厳密一致
-- id: dm19-021
-  name: 魚雷ロボ・ミサイル・オーシャン
-  types:
-  - creature
-  civs:
-  - water
-  cost: 4
-  power: 3000
-  races:
-  - グレートメカオー
-  - ダイナモ
-  mana: 1
-  text: 'ダイナモ(バトルが始まる時、あるいはこのクリーチャーで攻撃できる時、このクリーチャーをタップしてもよい。そうした場合、そのターンの終わりまで、このクリーチャーのパワーと能力をバトルゾーンにある自分の他のダイナモ１体に加える)
-
-    このクリーチャーが攻撃する時、相手の山札の上から１枚目を見る。そのカードを、持ち主の山札の一番下に戻してもよい。'
-  keywords:
-  - dynamo
-  abilities:
-  - kind: trigger
-    when:
-      event: attack
-      subject: self
-    effect:
-    - op: move
-      select:
-        zone: deck
-        owner: opp
-        from_top: 1
-        count: 1
-        up_to: true
-        look: true
-      to: deck
-      position: bottom
-      reason: put
-  source:
-    official: dm19-021
-    review: pending
-    notes: 厳密一致
-- id: dm19-032
-  name: 燃える耳のピットトン
-  types:
-  - creature
-  civs:
-  - fire
-  cost: 5
-  power: 5000
-  races:
-  - ドリームメイト
-  - ダイナモ
-  mana: 1
-  text: 'ダイナモ(バトルが始まる時、あるいはこのクリーチャーで攻撃できる時、このクリーチャーをタップしてもよい。そうした場合、そのターンの終わりまで、このクリーチャーのパワーと能力をバトルゾーンにある自分の他のダイナモ１体に加える)
-
-    このクリーチャーは、可能であれば毎ターン攻撃する。'
-  keywords:
-  - dynamo
-  abilities:
-  - kind: static
-    affects: self
-    mod:
-      require:
-      - attack
-  source:
-    official: dm19-032
-    review: pending
-    notes: 厳密一致
-- id: dm19-037
-  name: 冒険探検アミトアキ
-  types:
-  - creature
-  civs:
-  - nature
-  cost: 6
-  power: 6000
-  races:
-  - ドリームメイト
-  - ダイナモ
-  mana: 1
-  text: 'ダイナモ(バトルが始まる時、あるいはこのクリーチャーで攻撃できる時、このクリーチャーをタップしてもよい。そうした場合、そのターンの終わりまで、このクリーチャーのパワーと能力をバトルゾーンにある自分の他のダイナモ１体に加える)
-
-    W・ブレイカー(このクリーチャーはシールドを２枚ブレイクする)'
-  keywords:
-  - dynamo
-  - double_breaker
-  source:
-    official: dm19-037
-    review: pending
-    notes: 厳密一致
-- id: dm19-042
-  name: 電脳ロボ・ダイクラッシャー
-  types:
-  - creature
-  civs:
-  - light
-  cost: 5
-  power: 3000
-  races:
-  - グレートメカオー
-  - ダイナモ
-  mana: 1
-  text: 'ダイナモ(バトルが始まる時、あるいはこのクリーチャーで攻撃できる時、このクリーチャーをタップしてもよい。そうした場合、そのターンの終わりまで、このクリーチャーのパワーと能力をバトルゾーンにある自分の他のダイナモ１体に加える)
-
-    自分のターンの終わりに、このクリーチャーをアンタップしてもよい。'
-  abilities:
-  - kind: trigger
-    when:
-      event: turn_end
-      player: you
-    effect:
-    - op: may
-      body:
-      - op: untap
-        select:
-          ref: self
-  - kind: trigger
-    when:
-      event: turn_end
-      player: you
-    effect:
-    - op: may
-      body:
-      - op: untap
-        select:
-          ref: self
-  keywords:
-  - dynamo
-  source:
-    official: dm19-042
-    review: pending
-    notes: 厳密一致
-- id: dm19-076
-  name: 鋼鉄大使ジャンボ・アタッカー
-  types:
-  - creature
-  civs:
-  - light
-  cost: 2
-  power: 2000
-  races:
-  - グレートメカオー
-  - ダイナモ
-  mana: 1
-  text: ダイナモ(バトルが始まる時、あるいはこのクリーチャーで攻撃できる時、このクリーチャーをタップしてもよい。そうした場合、そのターンの終わりまで、このクリーチャーのパワーと能力をバトルゾーンにある自分の他のダイナモ１体に加える)
-  keywords:
-  - dynamo
-  source:
-    official: dm19-076
-    review: pending
-    notes: 厳密一致
-- id: dm19-083
-  name: 爆腕ロボ・リターンエース
-  types:
-  - creature
-  civs:
-  - water
-  cost: 2
-  power: 2000
-  races:
-  - グレートメカオー
-  - ダイナモ
-  mana: 1
-  text: 'ブロッカー
-
-    ダイナモ(バトルが始まる時、あるいはこのクリーチャーで攻撃できる時、このクリーチャーをタップしてもよい。そうした場合、そのターンの終わりまで、このクリーチャーのパワーと能力をバトルゾーンにある自分の他のダイナモ１体に加える)
-
-    このクリーチャーは攻撃することができない。'
-  keywords:
-  - blocker
-  - dynamo
-  - cannot_attack
-  source:
-    official: dm19-083
-    review: pending
-    notes: 厳密一致
-- id: dm19-100
-  name: 力持ちのジェロン
-  types:
-  - creature
-  civs:
-  - fire
-  cost: 2
-  power: 1000
-  races:
-  - ドリームメイト
-  - ダイナモ
-  mana: 1
-  text: 'ダイナモ(バトルが始まる時、あるいはこのクリーチャーで攻撃できる時、このクリーチャーをタップしてもよい。そうした場合、そのターンの終わりまで、このクリーチャーのパワーと能力をバトルゾーンにある自分の他のダイナモ１体に加える)
-
-    パワーアタッカー+2000(攻撃中、このクリーチャーのパワーは+2000される)'
-  abilities:
-  - kind: static
-    affects: self
-    mod:
-      power_when:
-        amount: 2000
-        when: attacking
-  - kind: static
-    affects: self
-    mod:
-      power_when:
-        amount: 2000
-        when: attacking
-  keywords:
-  - dynamo
-  source:
-    official: dm19-100
-    review: pending
-    notes: 厳密一致
-- id: dm19-103
-  name: 白銀のシュシュ
-  types:
-  - creature
-  civs:
-  - nature
-  cost: 4
-  power: 4000
-  races:
-  - ドリームメイト
-  - ダイナモ
-  mana: 1
-  text: ダイナモ(バトルが始まる時、あるいはこのクリーチャーで攻撃できる時、このクリーチャーをタップしてもよい。そうした場合、そのターンの終わりまで、このクリーチャーのパワーと能力をバトルゾーンにある自分の他のダイナモ１体に加える)
-  keywords:
-  - dynamo
-  source:
-    official: dm19-103
-    review: pending
-    notes: 厳密一致
-- id: dm20-007
-  name: 乱射砲機バルマガン
-  types:
-  - creature
-  civs:
-  - light
-  cost: 6
-  power: 4000
-  races:
-  - グレートメカオー
-  - ダイナモ
-  mana: 1
-  text: 'ダイナモ(バトルが始まる時、あるいはこのクリーチャーで攻撃できる時、このクリーチャーをタップしてもよい。そうした場合、そのターンの終わりまで、このクリーチャーのパワーと能力をバトルゾーンにある自分の他のダイナモ１体に加える)
-
-    このクリーチャーが攻撃する時、バトルゾーンにある相手のクリーチャーを１体選び、タップする。(まず何を攻撃するかを選んでから、タップするクリーチャーを選ぶ)'
-  abilities:
-  - kind: trigger
-    when:
-      event: attack
-      subject: self
-    effect:
-    - op: tap
-      select:
-        zone: bz
-        owner: opp
-        filter:
-          types:
-          - creature
-        count: 1
-  - kind: trigger
-    when:
-      event: attack
-      subject: self
-    effect:
-    - op: tap
-      select:
-        zone: bz
-        owner: opp
-        filter:
-          types:
-          - creature
-        count: 1
-  keywords:
-  - dynamo
-  source:
-    official: dm20-007
-    review: pending
-    notes: 厳密一致
