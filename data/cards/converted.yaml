@@ -87,17 +87,12 @@ cards:
   - アーマード・ドラゴン
   mana: 1
   abilities:
-  - kind: trigger
-    when:
-      event: attack
-      subject: self
-    effect:
-    - op: modify
-      select:
-        ref: self
-      mod:
-        power: 4000
-      duration: end_of_turn
+  - kind: static
+    affects: self
+    mod:
+      power_when:
+        amount: 4000
+        when: attacking
   keywords:
   - double_breaker
   text: 'パワーアタッカー+4000(攻撃中、このクリーチャーのパワーは+4000される。)
@@ -119,17 +114,12 @@ cards:
   - ホーン・ビースト
   mana: 1
   abilities:
-  - kind: trigger
-    when:
-      event: attack
-      subject: self
-    effect:
-    - op: modify
-      select:
-        ref: self
-      mod:
-        power: 2000
-      duration: end_of_turn
+  - kind: static
+    affects: self
+    mod:
+      power_when:
+        amount: 2000
+        when: attacking
   keywords:
   - double_breaker
   text: 'パワーアタッカー+2000(攻撃中、このクリーチャーのパワーは+2000される。)
@@ -151,17 +141,12 @@ cards:
   - ジャイアント・インセクト
   mana: 1
   abilities:
-  - kind: trigger
-    when:
-      event: attack
-      subject: self
-    effect:
-    - op: modify
-      select:
-        ref: self
-      mod:
-        power: 4000
-      duration: end_of_turn
+  - kind: static
+    affects: self
+    mod:
+      power_when:
+        amount: 4000
+        when: attacking
   keywords:
   - double_breaker
   text: 'パワーアタッカー+4000(攻撃中、このクリーチャーのパワーは+4000される。)
@@ -451,17 +436,12 @@ cards:
   - ロック・ビースト
   mana: 1
   abilities:
-  - kind: trigger
-    when:
-      event: attack
-      subject: self
-    effect:
-    - op: modify
-      select:
-        ref: self
-      mod:
-        power: 2000
-      duration: end_of_turn
+  - kind: static
+    affects: self
+    mod:
+      power_when:
+        amount: 2000
+        when: attacking
   text: パワーアタッカー+2000(攻撃中、このクリーチャーのパワーは+2000される。)
   source:
     official: dm01-059
@@ -479,17 +459,12 @@ cards:
   - ドラゴノイド
   mana: 1
   abilities:
-  - kind: trigger
-    when:
-      event: attack
-      subject: self
-    effect:
-    - op: modify
-      select:
-        ref: self
-      mod:
-        power: 4000
-      duration: end_of_turn
+  - kind: static
+    affects: self
+    mod:
+      power_when:
+        amount: 4000
+        when: attacking
   text: パワーアタッカー+4000(攻撃中、このクリーチャーのパワーは+4000される。)
   source:
     official: dm01-062
@@ -540,17 +515,12 @@ cards:
   - コロニー・ビートル
   mana: 1
   abilities:
-  - kind: trigger
-    when:
-      event: attack
-      subject: self
-    effect:
-    - op: modify
-      select:
-        ref: self
-      mod:
-        power: 2000
-      duration: end_of_turn
+  - kind: static
+    affects: self
+    mod:
+      power_when:
+        amount: 2000
+        when: attacking
   text: パワーアタッカー+2000(攻撃中、このクリーチャーのパワーは+2000される。)
   source:
     official: dm01-068
@@ -826,17 +796,12 @@ cards:
   - ドラゴノイド
   mana: 1
   abilities:
-  - kind: trigger
-    when:
-      event: attack
-      subject: self
-    effect:
-    - op: modify
-      select:
-        ref: self
-      mod:
-        power: 2000
-      duration: end_of_turn
+  - kind: static
+    affects: self
+    mod:
+      power_when:
+        amount: 2000
+        when: attacking
   text: パワーアタッカー+2000(攻撃中、このクリーチャーのパワーは+2000される。)
   source:
     official: dm01-095
@@ -869,17 +834,12 @@ cards:
   - ヒューマノイド
   mana: 1
   abilities:
-  - kind: trigger
-    when:
-      event: attack
-      subject: self
-    effect:
-    - op: modify
-      select:
-        ref: self
-      mod:
-        power: 2000
-      duration: end_of_turn
+  - kind: static
+    affects: self
+    mod:
+      power_when:
+        amount: 2000
+        when: attacking
   text: パワーアタッカー+2000(攻撃中、このクリーチャーのパワーは+2000される。)
   source:
     official: dm01-098
@@ -912,17 +872,12 @@ cards:
   - ビーストフォーク
   mana: 1
   abilities:
-  - kind: trigger
-    when:
-      event: attack
-      subject: self
-    effect:
-    - op: modify
-      select:
-        ref: self
-      mod:
-        power: 2000
-      duration: end_of_turn
+  - kind: static
+    affects: self
+    mod:
+      power_when:
+        amount: 2000
+        when: attacking
   text: パワーアタッカー+2000(攻撃中、このクリーチャーのパワーは+2000される。)
   source:
     official: dm01-104
@@ -1110,17 +1065,12 @@ cards:
   - ガーディアン
   mana: 1
   abilities:
-  - kind: trigger
-    when:
-      event: attack
-      subject: self
-    effect:
-    - op: modify
-      select:
-        ref: self
-      mod:
-        power: 3000
-      duration: end_of_turn
+  - kind: static
+    affects: self
+    mod:
+      power_when:
+        amount: 3000
+        when: attacking
   - kind: trigger
     when:
       event: turn_end
@@ -1405,17 +1355,12 @@ cards:
   - ビーストフォーク
   mana: 1
   abilities:
-  - kind: trigger
-    when:
-      event: attack
-      subject: self
-    effect:
-    - op: modify
-      select:
-        ref: self
-      mod:
-        power: 2000
-      duration: end_of_turn
+  - kind: static
+    affects: self
+    mod:
+      power_when:
+        amount: 2000
+        when: attacking
   text: パワーアタッカー +2000(攻撃中、このクリーチャーのパワーは+2000される)
   source:
     official: dm10-108
@@ -1836,17 +1781,12 @@ cards:
   - アーマロイド
   mana: 1
   abilities:
-  - kind: trigger
-    when:
-      event: attack
-      subject: self
-    effect:
-    - op: modify
-      select:
-        ref: self
-      mod:
-        power: 4000
-      duration: end_of_turn
+  - kind: static
+    affects: self
+    mod:
+      power_when:
+        amount: 4000
+        when: attacking
   keywords:
   - speed_attacker
   text: 'スピードアタッカー(このクリーチャーは召喚酔いしない)
@@ -1868,17 +1808,12 @@ cards:
   - ファイアー・バード
   mana: 1
   abilities:
-  - kind: trigger
-    when:
-      event: attack
-      subject: self
-    effect:
-    - op: modify
-      select:
-        ref: self
-      mod:
-        power: 3000
-      duration: end_of_turn
+  - kind: static
+    affects: self
+    mod:
+      power_when:
+        amount: 3000
+        when: attacking
   text: パワーアタッカー +3000(攻撃中、このクリーチャーのパワーは+3000される)
   source:
     official: dm12-050
@@ -1930,17 +1865,12 @@ cards:
   - ジャイアント・インセクト
   mana: 1
   abilities:
-  - kind: trigger
-    when:
-      event: attack
-      subject: self
-    effect:
-    - op: modify
-      select:
-        ref: self
-      mod:
-        power: 3000
-      duration: end_of_turn
+  - kind: static
+    affects: self
+    mod:
+      power_when:
+        amount: 3000
+        when: attacking
   text: パワーアタッカー +3000(攻撃中、このクリーチャーのパワーは+3000される)
   source:
     official: dm13-048
@@ -1988,17 +1918,12 @@ cards:
   - アーマロイド
   mana: 1
   abilities:
-  - kind: trigger
-    when:
-      event: attack
-      subject: self
-    effect:
-    - op: modify
-      select:
-        ref: self
-      mod:
-        power: 2500
-      duration: end_of_turn
+  - kind: static
+    affects: self
+    mod:
+      power_when:
+        amount: 2500
+        when: attacking
   keywords:
   - blocker
   - cannot_attack_player
@@ -2071,17 +1996,12 @@ cards:
   - ボルケーノ・ドラゴン
   mana: 1
   abilities:
-  - kind: trigger
-    when:
-      event: attack
-      subject: self
-    effect:
-    - op: modify
-      select:
-        ref: self
-      mod:
-        power: 2000
-      duration: end_of_turn
+  - kind: static
+    affects: self
+    mod:
+      power_when:
+        amount: 2000
+        when: attacking
   keywords:
   - double_breaker
   text: 'パワーアタッカー+2000(攻撃中、このクリーチャーのパワーは+2000される)
@@ -2181,17 +2101,12 @@ cards:
   - メルト・ウォリアー
   mana: 1
   abilities:
-  - kind: trigger
-    when:
-      event: attack
-      subject: self
-    effect:
-    - op: modify
-      select:
-        ref: self
-      mod:
-        power: 4000
-      duration: end_of_turn
+  - kind: static
+    affects: self
+    mod:
+      power_when:
+        amount: 4000
+        when: attacking
   keywords:
   - s_trigger
   text: 'S・トリガー(このクリーチャーをシールドゾーンから手札に加える時、コストを支払わずにすぐ召喚してもよい)
@@ -2282,17 +2197,12 @@ cards:
   - ビッグマッスル
   mana: 1
   abilities:
-  - kind: trigger
-    when:
-      event: attack
-      subject: self
-    effect:
-    - op: modify
-      select:
-        ref: self
-      mod:
-        power: 5000
-      duration: end_of_turn
+  - kind: static
+    affects: self
+    mod:
+      power_when:
+        amount: 5000
+        when: attacking
   keywords:
   - double_breaker
   text: 'パワーアタッカー+5000(攻撃中、このクリーチャーのパワーは+5000される)
@@ -2389,17 +2299,12 @@ cards:
   - ホーン・ビースト
   mana: 1
   abilities:
-  - kind: trigger
-    when:
-      event: attack
-      subject: self
-    effect:
-    - op: modify
-      select:
-        ref: self
-      mod:
-        power: 5000
-      duration: end_of_turn
+  - kind: static
+    affects: self
+    mod:
+      power_when:
+        amount: 5000
+        when: attacking
   text: パワーアタッカー+5000(攻撃中、このクリーチャーのパワーは+5000される)
   source:
     official: dm15-053
@@ -2510,17 +2415,12 @@ cards:
   - アーマード・ドラゴン
   mana: 1
   abilities:
-  - kind: trigger
-    when:
-      event: attack
-      subject: self
-    effect:
-    - op: modify
-      select:
-        ref: self
-      mod:
-        power: 4000
-      duration: end_of_turn
+  - kind: static
+    affects: self
+    mod:
+      power_when:
+        amount: 4000
+        when: attacking
   keywords:
   - double_breaker
   text: 'パワーアタッカー+4000(攻撃中、このクリーチャーのパワーは+4000される)
@@ -2652,17 +2552,12 @@ cards:
   - アーマード・ドラゴン
   mana: 1
   abilities:
-  - kind: trigger
-    when:
-      event: attack
-      subject: self
-    effect:
-    - op: modify
-      select:
-        ref: self
-      mod:
-        power: 1000
-      duration: end_of_turn
+  - kind: static
+    affects: self
+    mod:
+      power_when:
+        amount: 1000
+        when: attacking
   keywords:
   - double_breaker
   text: 'パワーアタッカー+1000(攻撃中、このクリーチャーのパワーは+1000される)
@@ -3038,17 +2933,12 @@ cards:
   - ドラゴノイド
   mana: 1
   abilities:
-  - kind: trigger
-    when:
-      event: attack
-      subject: self
-    effect:
-    - op: modify
-      select:
-        ref: self
-      mod:
-        power: 4000
-      duration: end_of_turn
+  - kind: static
+    affects: self
+    mod:
+      power_when:
+        amount: 4000
+        when: attacking
   text: パワーアタッカー+4000(攻撃中、このクリーチャーのパワーは+4000される)
   source:
     official: dm18-078
@@ -3105,17 +2995,12 @@ cards:
   - ホーン・ビースト
   mana: 1
   abilities:
-  - kind: trigger
-    when:
-      event: attack
-      subject: self
-    effect:
-    - op: modify
-      select:
-        ref: self
-      mod:
-        power: 2000
-      duration: end_of_turn
+  - kind: static
+    affects: self
+    mod:
+      power_when:
+        amount: 2000
+        when: attacking
   text: パワーアタッカー+2000(攻撃中、このクリーチャーのパワーは+2000される)
   source:
     official: dm18-085
@@ -3133,17 +3018,12 @@ cards:
   - ジャイアント・インセクト
   mana: 1
   abilities:
-  - kind: trigger
-    when:
-      event: attack
-      subject: self
-    effect:
-    - op: modify
-      select:
-        ref: self
-      mod:
-        power: 4000
-      duration: end_of_turn
+  - kind: static
+    affects: self
+    mod:
+      power_when:
+        amount: 4000
+        when: attacking
   keywords:
   - cannot_attack_player
   text: 'このクリーチャーは、相手プレイヤーを攻撃できない。
@@ -3559,17 +3439,12 @@ cards:
   - ドラゴノイド
   mana: 1
   abilities:
-  - kind: trigger
-    when:
-      event: attack
-      subject: self
-    effect:
-    - op: modify
-      select:
-        ref: self
-      mod:
-        power: 2000
-      duration: end_of_turn
+  - kind: static
+    affects: self
+    mod:
+      power_when:
+        amount: 2000
+        when: attacking
   text: パワーアタッカー+2000(攻撃中、このクリーチャーのパワーは+2000される)
   source:
     official: dm18-121
@@ -3635,17 +3510,12 @@ cards:
   - ヒューマノイド
   mana: 1
   abilities:
-  - kind: trigger
-    when:
-      event: attack
-      subject: self
-    effect:
-    - op: modify
-      select:
-        ref: self
-      mod:
-        power: 2000
-      duration: end_of_turn
+  - kind: static
+    affects: self
+    mod:
+      power_when:
+        amount: 2000
+        when: attacking
   text: パワーアタッカー+2000(攻撃中、このクリーチャーのパワーは+2000される)
   source:
     official: dm18-125
@@ -3699,17 +3569,12 @@ cards:
   - ジャイアント・インセクト
   mana: 1
   abilities:
-  - kind: trigger
-    when:
-      event: attack
-      subject: self
-    effect:
-    - op: modify
-      select:
-        ref: self
-      mod:
-        power: 3000
-      duration: end_of_turn
+  - kind: static
+    affects: self
+    mod:
+      power_when:
+        amount: 3000
+        when: attacking
   keywords:
   - s_trigger
   text: 'S・トリガー(このクリーチャーをシールドゾーンから手札に加える時、コストを支払わずにすぐ召喚してもよい)
@@ -3746,17 +3611,12 @@ cards:
   - ジャイアント・インセクト
   mana: 1
   abilities:
-  - kind: trigger
-    when:
-      event: attack
-      subject: self
-    effect:
-    - op: modify
-      select:
-        ref: self
-      mod:
-        power: 3000
-      duration: end_of_turn
+  - kind: static
+    affects: self
+    mod:
+      power_when:
+        amount: 3000
+        when: attacking
   text: パワーアタッカー+3000(攻撃中、このクリーチャーのパワーは+3000される)
   source:
     official: dm18-134
@@ -4080,17 +3940,12 @@ cards:
   - ビーストフォーク
   mana: 1
   abilities:
-  - kind: trigger
-    when:
-      event: attack
-      subject: self
-    effect:
-    - op: modify
-      select:
-        ref: self
-      mod:
-        power: 2000
-      duration: end_of_turn
+  - kind: static
+    affects: self
+    mod:
+      power_when:
+        amount: 2000
+        when: attacking
   text: パワーアタッカー+2000(攻撃中、このクリーチャーのパワーは+2000される。)
   source:
     official: dm02-034
@@ -5107,17 +4962,12 @@ cards:
     races:
     - アーマード・ドラゴン
     abilities:
-    - kind: trigger
-      when:
-        event: attack
-        subject: self
-      effect:
-      - op: modify
-        select:
-          ref: self
-        mod:
-          power: 4000
-        duration: end_of_turn
+    - kind: static
+      affects: self
+      mod:
+        power_when:
+          amount: 4000
+          when: attacking
     keywords:
     - triple_breaker
   - name: ボルシャックゾーン
@@ -5459,17 +5309,12 @@ cards:
     races:
     - アーマード・ドラゴン
     abilities:
-    - kind: trigger
-      when:
-        event: attack
-        subject: self
-      effect:
-      - op: modify
-        select:
-          ref: self
-        mod:
-          power: 4000
-        duration: end_of_turn
+    - kind: static
+      affects: self
+      mod:
+        power_when:
+          amount: 4000
+          when: attacking
     keywords:
     - triple_breaker
   - name: ボルシャックゾーン
@@ -6189,17 +6034,12 @@ cards:
   - アーマード・ドラゴン
   mana: 1
   abilities:
-  - kind: trigger
-    when:
-      event: attack
-      subject: self
-    effect:
-    - op: modify
-      select:
-        ref: self
-      mod:
-        power: 4000
-      duration: end_of_turn
+  - kind: static
+    affects: self
+    mod:
+      power_when:
+        amount: 4000
+        when: attacking
   keywords:
   - double_breaker
   text: 'パワーアタッカー+4000（攻撃中、このクリーチャーのパワーを+4000する）
@@ -6899,17 +6739,12 @@ cards:
   - ヒューマノイド
   mana: 1
   abilities:
-  - kind: trigger
-    when:
-      event: attack
-      subject: self
-    effect:
-    - op: modify
-      select:
-        ref: self
-      mod:
-        power: 3000
-      duration: end_of_turn
+  - kind: static
+    affects: self
+    mod:
+      power_when:
+        amount: 3000
+        when: attacking
   text: パワーアタッカー+3000(攻撃中、このクリーチャーのパワーは+3000される)
   source:
     official: dm24-096
@@ -8619,17 +8454,12 @@ cards:
   - スピリット・クォーツ
   mana: 1
   abilities:
-  - kind: trigger
-    when:
-      event: attack
-      subject: self
-    effect:
-    - op: modify
-      select:
-        ref: self
-      mod:
-        power: 4000
-      duration: end_of_turn
+  - kind: static
+    affects: self
+    mod:
+      power_when:
+        amount: 4000
+        when: attacking
   - kind: trigger
     when:
       event: turn_end
@@ -9045,17 +8875,12 @@ cards:
   - アーク・セラフィム
   mana: 1
   abilities:
-  - kind: trigger
-    when:
-      event: attack
-      subject: self
-    effect:
-    - op: modify
-      select:
-        ref: self
-      mod:
-        power: 3000
-      duration: end_of_turn
+  - kind: static
+    affects: self
+    mod:
+      power_when:
+        amount: 3000
+        when: attacking
   - kind: trigger
     when:
       event: turn_end
@@ -10551,17 +10376,12 @@ cards:
   - ヒューマノイド
   mana: 1
   abilities:
-  - kind: trigger
-    when:
-      event: attack
-      subject: self
-    effect:
-    - op: modify
-      select:
-        ref: self
-      mod:
-        power: 3000
-      duration: end_of_turn
+  - kind: static
+    affects: self
+    mod:
+      power_when:
+        amount: 3000
+        when: attacking
   text: パワーアタッカー+3000(攻撃中、このクリーチャーのパワーは+3000される)
   source:
     official: dm28-098
@@ -10938,17 +10758,12 @@ cards:
   - ジャイアント・インセクト
   mana: 1
   abilities:
-  - kind: trigger
-    when:
-      event: attack
-      subject: self
-    effect:
-    - op: modify
-      select:
-        ref: self
-      mod:
-        power: 3000
-      duration: end_of_turn
+  - kind: static
+    affects: self
+    mod:
+      power_when:
+        amount: 3000
+        when: attacking
   text: パワーアタッカー+3000(攻撃中、このクリーチャーのパワーは+3000される)
   source:
     official: dm03-053
@@ -12420,17 +12235,12 @@ cards:
   - アーマード・ドラゴン
   mana: 1
   abilities:
-  - kind: trigger
-    when:
-      event: attack
-      subject: self
-    effect:
-    - op: modify
-      select:
-        ref: self
-      mod:
-        power: 8000
-      duration: end_of_turn
+  - kind: static
+    affects: self
+    mod:
+      power_when:
+        amount: 8000
+        when: attacking
   keywords:
   - triple_breaker
   text: 'パワーアタッカー+8000(攻撃中、このクリーチャーのパワーは+8000される)
@@ -12495,17 +12305,12 @@ cards:
       - action: attack_creature
         other:
           tapped: false
-  - kind: trigger
-    when:
-      event: attack
-      subject: self
-    effect:
-    - op: modify
-      select:
-        ref: self
-      mod:
-        power: 3000
-      duration: end_of_turn
+  - kind: static
+    affects: self
+    mod:
+      power_when:
+        amount: 3000
+        when: attacking
   text: 'このクリーチャーは、タップされていないクリーチャーを攻撃できる。
 
     パワーアタッカー +3000(攻撃中、このクリーチャーのパワーは+3000される)'
@@ -12603,17 +12408,12 @@ cards:
   - ホーン・ビースト
   mana: 1
   abilities:
-  - kind: trigger
-    when:
-      event: attack
-      subject: self
-    effect:
-    - op: modify
-      select:
-        ref: self
-      mod:
-        power: 2000
-      duration: end_of_turn
+  - kind: static
+    affects: self
+    mod:
+      power_when:
+        amount: 2000
+        when: attacking
   text: パワーアタッカー　+2000 (攻撃中、このクリーチャーのパワーは+2000される)
   source:
     official: dm06-068
@@ -12868,17 +12668,12 @@ cards:
   - ジャイアント・インセクト
   mana: 1
   abilities:
-  - kind: trigger
-    when:
-      event: attack
-      subject: self
-    effect:
-    - op: modify
-      select:
-        ref: self
-      mod:
-        power: 4000
-      duration: end_of_turn
+  - kind: static
+    affects: self
+    mod:
+      power_when:
+        amount: 4000
+        when: attacking
   keywords:
   - cannot_attack_player
   text: 'このクリーチャーは、相手プレイヤーを攻撃できない。
@@ -12915,17 +12710,12 @@ cards:
   - コロニー・ビートル
   mana: 1
   abilities:
-  - kind: trigger
-    when:
-      event: attack
-      subject: self
-    effect:
-    - op: modify
-      select:
-        ref: self
-      mod:
-        power: 3000
-      duration: end_of_turn
+  - kind: static
+    affects: self
+    mod:
+      power_when:
+        amount: 3000
+        when: attacking
   text: パワーアタッカー +3000(攻撃中、このクリーチャーのパワーは+3000される)
   source:
     official: dm06-105
@@ -12958,17 +12748,12 @@ cards:
   - スノーフェアリー
   mana: 1
   abilities:
-  - kind: trigger
-    when:
-      event: attack
-      subject: self
-    effect:
-    - op: modify
-      select:
-        ref: self
-      mod:
-        power: 2000
-      duration: end_of_turn
+  - kind: static
+    affects: self
+    mod:
+      power_when:
+        amount: 2000
+        when: attacking
   text: パワーアタッカー +2000(攻撃中、このクリーチャーのパワーは+2000される)
   source:
     official: dm06-108
@@ -13038,17 +12823,12 @@ cards:
   - アーマロイド
   mana: 1
   abilities:
-  - kind: trigger
-    when:
-      event: attack
-      subject: self
-    effect:
-    - op: modify
-      select:
-        ref: self
-      mod:
-        power: 3000
-      duration: end_of_turn
+  - kind: static
+    affects: self
+    mod:
+      power_when:
+        amount: 3000
+        when: attacking
   keywords:
   - double_breaker
   - cannot_be_attacked
@@ -13133,17 +12913,12 @@ cards:
   - アーマード・ワイバーン
   mana: 1
   abilities:
-  - kind: trigger
-    when:
-      event: attack
-      subject: self
-    effect:
-    - op: modify
-      select:
-        ref: self
-      mod:
-        power: 1000
-      duration: end_of_turn
+  - kind: static
+    affects: self
+    mod:
+      power_when:
+        amount: 1000
+        when: attacking
   keywords:
   - cannot_be_attacked
   - cannot_attack_player
@@ -13201,17 +12976,12 @@ cards:
   - アース・ドラゴン
   mana: 1
   abilities:
-  - kind: trigger
-    when:
-      event: attack
-      subject: self
-    effect:
-    - op: modify
-      select:
-        ref: self
-      mod:
-        power: 3000
-      duration: end_of_turn
+  - kind: static
+    affects: self
+    mod:
+      power_when:
+        amount: 3000
+        when: attacking
   keywords:
   - double_breaker
   text: 'パワーアタッカー+3000(攻撃中、このクリーチャーのパワーは+3000される)
@@ -13257,17 +13027,12 @@ cards:
   - ジャイアント・インセクト
   mana: 1
   abilities:
-  - kind: trigger
-    when:
-      event: attack
-      subject: self
-    effect:
-    - op: modify
-      select:
-        ref: self
-      mod:
-        power: 3000
-      duration: end_of_turn
+  - kind: static
+    affects: self
+    mod:
+      power_when:
+        amount: 3000
+        when: attacking
   keywords:
   - s_trigger
   text: 'S・トリガー(このクリーチャーをシールドゾーンから手札に加えるとき、コストを支払わずにすぐ召喚してよい)
@@ -14627,17 +14392,12 @@ cards:
   - アース・ドラゴン
   mana: 1
   abilities:
-  - kind: trigger
-    when:
-      event: attack
-      subject: self
-    effect:
-    - op: modify
-      select:
-        ref: self
-      mod:
-        power: 3000
-      duration: end_of_turn
+  - kind: static
+    affects: self
+    mod:
+      power_when:
+        amount: 3000
+        when: attacking
   keywords:
   - double_breaker
   text: 'パワーアタッカー+3000(攻撃中、このクリーチャーのパワーは+3000される)
@@ -14678,17 +14438,12 @@ cards:
   - ガーディアン
   mana: 1
   abilities:
-  - kind: trigger
-    when:
-      event: attack
-      subject: self
-    effect:
-    - op: modify
-      select:
-        ref: self
-      mod:
-        power: 3000
-      duration: end_of_turn
+  - kind: static
+    affects: self
+    mod:
+      power_when:
+        amount: 3000
+        when: attacking
   - kind: trigger
     when:
       event: turn_end
@@ -16605,17 +16360,12 @@ cards:
   - ヒューマノイド
   mana: 1
   abilities:
-  - kind: trigger
-    when:
-      event: attack
-      subject: self
-    effect:
-    - op: modify
-      select:
-        ref: self
-      mod:
-        power: 3000
-      duration: end_of_turn
+  - kind: static
+    affects: self
+    mod:
+      power_when:
+        amount: 3000
+        when: attacking
   text: パワーアタッカー+3000(攻撃中、このクリーチャーのパワーは+3000される)
   source:
     official: dmc61-079
@@ -16687,17 +16437,12 @@ cards:
   - アース・ドラゴン
   mana: 1
   abilities:
-  - kind: trigger
-    when:
-      event: attack
-      subject: self
-    effect:
-    - op: modify
-      select:
-        ref: self
-      mod:
-        power: 3000
-      duration: end_of_turn
+  - kind: static
+    affects: self
+    mod:
+      power_when:
+        amount: 3000
+        when: attacking
   keywords:
   - double_breaker
   text: 'パワーアタッカー+3000(攻撃中、このクリーチャーのパワーは+3000される)
@@ -18202,17 +17947,12 @@ cards:
   - アウトレイジ
   mana: 1
   abilities:
-  - kind: trigger
-    when:
-      event: attack
-      subject: self
-    effect:
-    - op: modify
-      select:
-        ref: self
-      mod:
-        power: 2000
-      duration: end_of_turn
+  - kind: static
+    affects: self
+    mod:
+      power_when:
+        amount: 2000
+        when: attacking
   text: パワーアタッカー+2000（攻撃中、このクリーチャーのパワーは+2000される）
   source:
     official: dmd09-005
@@ -24773,17 +24513,12 @@ cards:
   - ティラノ・ドレイク
   mana: 1
   abilities:
-  - kind: trigger
-    when:
-      event: attack
-      subject: self
-    effect:
-    - op: modify
-      select:
-        ref: self
-      mod:
-        power: 4000
-      duration: end_of_turn
+  - kind: static
+    affects: self
+    mod:
+      power_when:
+        amount: 4000
+        when: attacking
   keywords:
   - speed_attacker
   text: スピードアタッカー（このクリーチャーは召喚酔いしない）パワーアタッカー+4000（攻撃中、このクリーチャーのパワーは+4000される）
@@ -24804,17 +24539,12 @@ cards:
   - ティラノ・ドレイク
   mana: 1
   abilities:
-  - kind: trigger
-    when:
-      event: attack
-      subject: self
-    effect:
-    - op: modify
-      select:
-        ref: self
-      mod:
-        power: 5000
-      duration: end_of_turn
+  - kind: static
+    affects: self
+    mod:
+      power_when:
+        amount: 5000
+        when: attacking
   keywords:
   - triple_breaker
   text: パワーアタッカー+5000 （攻撃中、このクリーチャーのパワーは+5000される）Ｔ・ブレイカー（このクリーチャーはシールドを３枚ブレイクする）
@@ -24906,17 +24636,12 @@ cards:
   - ワンダー・トリック
   mana: 1
   abilities:
-  - kind: trigger
-    when:
-      event: attack
-      subject: self
-    effect:
-    - op: modify
-      select:
-        ref: self
-      mod:
-        power: 4000
-      duration: end_of_turn
+  - kind: static
+    affects: self
+    mod:
+      power_when:
+        amount: 4000
+        when: attacking
   keywords:
   - s_trigger
   text: 'S・トリガー(このクリーチャーをシールドゾーンから手札に加える時、コストを支払わずにすぐ召喚してもよい)
@@ -25067,17 +24792,12 @@ cards:
   - ジャイアント・インセクト
   mana: 1
   abilities:
-  - kind: trigger
-    when:
-      event: attack
-      subject: self
-    effect:
-    - op: modify
-      select:
-        ref: self
-      mod:
-        power: 2000
-      duration: end_of_turn
+  - kind: static
+    affects: self
+    mod:
+      power_when:
+        amount: 2000
+        when: attacking
   text: パワーアタッカー+2000(攻撃中、このクリーチャーのパワーは+2000される)
   source:
     official: dmr01-106
@@ -25546,17 +25266,12 @@ cards:
   - ファイアー・バード
   mana: 1
   abilities:
-  - kind: trigger
-    when:
-      event: attack
-      subject: self
-    effect:
-    - op: modify
-      select:
-        ref: self
-      mod:
-        power: 3000
-      duration: end_of_turn
+  - kind: static
+    affects: self
+    mod:
+      power_when:
+        amount: 3000
+        when: attacking
   - kind: replace
     when:
       event: move
@@ -26020,17 +25735,12 @@ cards:
   - ハンター
   mana: 1
   abilities:
-  - kind: trigger
-    when:
-      event: attack
-      subject: self
-    effect:
-    - op: modify
-      select:
-        ref: self
-      mod:
-        power: 7000
-      duration: end_of_turn
+  - kind: static
+    affects: self
+    mod:
+      power_when:
+        amount: 7000
+        when: attacking
   keywords:
   - double_breaker
   text: 'パワーアタッカー+7000(攻撃中、このクリーチャーのパワーは+7000される)
@@ -26093,17 +25803,12 @@ cards:
   - エイリアン
   mana: 1
   abilities:
-  - kind: trigger
-    when:
-      event: attack
-      subject: self
-    effect:
-    - op: modify
-      select:
-        ref: self
-      mod:
-        power: 2000
-      duration: end_of_turn
+  - kind: static
+    affects: self
+    mod:
+      power_when:
+        amount: 2000
+        when: attacking
   text: パワーアタッカー+2000(攻撃中、このクリーチャーのパワーは+2000される)
   source:
     official: dmr05-101
@@ -26524,17 +26229,12 @@ cards:
   - ツリーフォーク
   mana: 1
   abilities:
-  - kind: trigger
-    when:
-      event: attack
-      subject: self
-    effect:
-    - op: modify
-      select:
-        ref: self
-      mod:
-        power: 2000
-      duration: end_of_turn
+  - kind: static
+    affects: self
+    mod:
+      power_when:
+        amount: 2000
+        when: attacking
   text: パワーアタッカー+2000(攻撃中、このクリーチャーのパワーは+2000される)
   source:
     official: dmr08-053
@@ -28835,17 +28535,12 @@ cards:
   - メガ・ドラゴン
   mana: 1
   abilities:
-  - kind: trigger
-    when:
-      event: attack
-      subject: self
-    effect:
-    - op: modify
-      select:
-        ref: self
-      mod:
-        power: 2000
-      duration: end_of_turn
+  - kind: static
+    affects: self
+    mod:
+      power_when:
+        amount: 2000
+        when: attacking
   keywords:
   - s_trigger
   text: S・トリガー（このクリーチャーをシールドゾーンから手札に加える時、コストを支払わずにすぐ召喚してもよい）パワーアタッカー+2000（攻撃中、このクリーチャーのパワーを+2000する）
@@ -30289,17 +29984,12 @@ cards:
   - ビートジョッキー
   mana: 1
   abilities:
-  - kind: trigger
-    when:
-      event: attack
-      subject: self
-    effect:
-    - op: modify
-      select:
-        ref: self
-      mod:
-        power: 2000
-      duration: end_of_turn
+  - kind: static
+    affects: self
+    mod:
+      power_when:
+        amount: 2000
+        when: attacking
   text: パワーアタッカー+2000（攻撃中、このクリーチャーのパワーを+2000する）
   source:
     official: dmrp05-084
@@ -30658,17 +30348,12 @@ cards:
   - メルト・ウォリアー
   mana: 1
   abilities:
-  - kind: trigger
-    when:
-      event: attack
-      subject: self
-    effect:
-    - op: modify
-      select:
-        ref: self
-      mod:
-        power: 6000
-      duration: end_of_turn
+  - kind: static
+    affects: self
+    mod:
+      power_when:
+        amount: 6000
+        when: attacking
   keywords:
   - double_breaker
   text: 'パワーアタッカー+6000（攻撃中、このクリーチャーのパワーを+6000する）
@@ -31297,17 +30982,12 @@ cards:
   - グランセクト
   mana: 1
   abilities:
-  - kind: trigger
-    when:
-      event: attack
-      subject: self
-    effect:
-    - op: modify
-      select:
-        ref: self
-      mod:
-        power: 2000
-      duration: end_of_turn
+  - kind: static
+    affects: self
+    mod:
+      power_when:
+        amount: 2000
+        when: attacking
   keywords:
   - s_trigger
   text: 'S・トリガー（このクリーチャーをシールドゾーンから手札に加える時、コストを支払わずにすぐ召喚してもよい）
@@ -31430,17 +31110,12 @@ cards:
   - フェザーノイド
   mana: 1
   abilities:
-  - kind: trigger
-    when:
-      event: attack
-      subject: self
-    effect:
-    - op: modify
-      select:
-        ref: self
-      mod:
-        power: 2000
-      duration: end_of_turn
+  - kind: static
+    affects: self
+    mod:
+      power_when:
+        amount: 2000
+        when: attacking
   text: パワーアタッカー+2000（攻撃中、このクリーチャーのパワーを+2000する）
   source:
     official: dmrp09-090
@@ -32935,17 +32610,12 @@ cards:
   - チームボンバー
   mana: 1
   abilities:
-  - kind: trigger
-    when:
-      event: attack
-      subject: self
-    effect:
-    - op: modify
-      select:
-        ref: self
-      mod:
-        power: 2000
-      duration: end_of_turn
+  - kind: static
+    affects: self
+    mod:
+      power_when:
+        amount: 2000
+        when: attacking
   keywords:
   - s_trigger
   - blocker
@@ -37017,17 +36687,12 @@ cards:
   - アーマード・ドラゴン
   mana: 1
   abilities:
-  - kind: trigger
-    when:
-      event: attack
-      subject: self
-    effect:
-    - op: modify
-      select:
-        ref: self
-      mod:
-        power: 1000
-      duration: end_of_turn
+  - kind: static
+    affects: self
+    mod:
+      power_when:
+        amount: 1000
+        when: attacking
   keywords:
   - double_breaker
   text: 'パワーアタッカー+1000(攻撃中、このクリーチャーのパワーは+1000される)
@@ -37432,17 +37097,12 @@ cards:
   - コロニー・ビートル
   mana: 1
   abilities:
-  - kind: trigger
-    when:
-      event: attack
-      subject: self
-    effect:
-    - op: modify
-      select:
-        ref: self
-      mod:
-        power: 3000
-      duration: end_of_turn
+  - kind: static
+    affects: self
+    mod:
+      power_when:
+        amount: 3000
+        when: attacking
   text: パワーアタッカー +3000（攻撃中、このクリーチャーのパワーを+3000する）
   source:
     official: promoy19-spd709
@@ -38871,17 +38531,12 @@ cards:
   - ゼニス
   mana: 1
   abilities:
-  - kind: trigger
-    when:
-      event: attack
-      subject: self
-    effect:
-    - op: modify
-      select:
-        ref: self
-      mod:
-        power: 12000
-      duration: end_of_turn
+  - kind: static
+    affects: self
+    mod:
+      power_when:
+        amount: 12000
+        when: attacking
   keywords:
   - world_breaker
   - eternal_omega
@@ -40644,17 +40299,12 @@ cards:
 
     誰もコスト４以下のクリーチャーを召喚できない。'
   abilities:
-  - kind: trigger
-    when:
-      event: attack
-      subject: self
-    effect:
-    - op: modify
-      select:
-        ref: self
-      mod:
-        power: 5000
-      duration: end_of_turn
+  - kind: static
+    affects: self
+    mod:
+      power_when:
+        amount: 5000
+        when: attacking
   - kind: static
     affects:
       zone: hand
@@ -40901,17 +40551,12 @@ cards:
 
     誰もコスト４以下のクリーチャーを召喚できない。'
   abilities:
-  - kind: trigger
-    when:
-      event: attack
-      subject: self
-    effect:
-    - op: modify
-      select:
-        ref: self
-      mod:
-        power: 5000
-      duration: end_of_turn
+  - kind: static
+    affects: self
+    mod:
+      power_when:
+        amount: 5000
+        when: attacking
   - kind: static
     affects:
       zone: hand
@@ -41570,16 +41215,16 @@ cards:
         - creature
       count: 1
     mod:
-      battle_power:
+      power_when:
         amount: 4000
-        only: attacking
+        when: attacking
       grant:
       - double_breaker
     duration: end_of_turn
   source:
     official: dm01-033
     review: pending
-    notes: 'パワーアタッカー+4000 は「攻撃中、パワー+4000」なので battle_power に only: attacking を付けた'
+    notes: 'パワーアタッカー+4000 は「攻撃中、パワー+4000」なので power_when（when: attacking）にした。プレイヤーを攻撃している間も含む'
 - id: dm01-035
   name: シェル・ストーム
   types:
@@ -41681,14 +41326,14 @@ cards:
         - creature
       count: all
     mod:
-      battle_power:
+      power_when:
         amount: 2000
-        only: attacking
+        when: attacking
     duration: end_of_turn
   source:
     official: dm01-040
     review: pending
-    notes: '「攻撃中」は battle_power に only: attacking を付け、このターンの間だけ続く効果として modify（duration:
+    notes: '「攻撃中」は power_when（when: attacking）にし、このターンの間だけ続く効果として modify（duration:
       end_of_turn）で与えた。解決後にバトルゾーンに出たクリーチャーには及ばない'
 - id: dm01-050
   name: アクア・ソルジャー
@@ -42281,9 +41926,9 @@ cards:
           races:
           - ヒューマノイド
     mod:
-      battle_power:
+      power_when:
         amount: 2000
-        only: attacking
+        when: attacking
   source:
     official: dm01-061
     review: pending
@@ -42743,9 +42388,9 @@ cards:
           races:
           - アーマロイド
     mod:
-      battle_power:
+      power_when:
         amount: 2000
-        only: attacking
+        when: attacking
   source:
     official: dm01-096
     review: pending
@@ -42791,9 +42436,9 @@ cards:
         - creature
       count: 1
     mod:
-      battle_power:
+      power_when:
         amount: 2000
-        only: attacking
+        when: attacking
     duration: end_of_turn
   source:
     official: dm01-102
@@ -43459,9 +43104,9 @@ cards:
   - kind: static
     affects: self
     mod:
-      battle_power:
+      power_when:
         amount: 2000
-        only: attacking
+        when: attacking
         count:
           zone: bz
           owner: you
@@ -43748,9 +43393,9 @@ cards:
   - kind: static
     affects: self
     mod:
-      battle_power:
+      power_when:
         amount: 2000
-        only: attacking
+        when: attacking
         count:
           zone: bz
           owner: any
@@ -43778,9 +43423,9 @@ cards:
   - kind: static
     affects: self
     mod:
-      battle_power:
+      power_when:
         amount: 2000
-        only: attacking
+        when: attacking
         count:
           zone: bz
           owner: you
@@ -44177,9 +43822,9 @@ cards:
             - creature
           other: true
     mod:
-      battle_power:
+      power_when:
         amount: 4000
-        only: attacking
+        when: attacking
       grant:
       - double_breaker
   source:
@@ -44271,9 +43916,9 @@ cards:
   - kind: static
     affects: self
     mod:
-      battle_power:
+      power_when:
         amount: 1000
-        only: attacking
+        when: attacking
         count:
           zone: bz
           owner: you
@@ -44693,9 +44338,9 @@ cards:
         - fire
       other: true
     mod:
-      battle_power:
+      power_when:
         amount: 2000
-        only: attacking
+        when: attacking
   source:
     official: dm03-004
     review: pending
@@ -45021,9 +44666,9 @@ cards:
         select:
           ref: self
         mod:
-          battle_power:
+          power_when:
             amount: 3000
-            only: attacking
+            when: attacking
           grant:
           - double_breaker
         duration: end_of_turn
@@ -45116,9 +44761,9 @@ cards:
           - creature
         count: all
       mod:
-        battle_power:
+        power_when:
           amount: 4000
-          only: attacking
+          when: attacking
         grant:
         - double_breaker
       duration: end_of_turn
@@ -46580,9 +46225,9 @@ cards:
         races:
         - エンジェル・コマンド
     mod:
-      battle_power:
+      power_when:
         amount: 4000
-        only: attacking
+        when: attacking
   source:
     official: dm04-005
     review: pending
@@ -47032,9 +46677,9 @@ cards:
         races:
         - デーモン・コマンド
     mod:
-      battle_power:
+      power_when:
         amount: 4000
-        only: attacking
+        when: attacking
       grant:
       - double_breaker
   source:
@@ -47735,9 +47380,9 @@ cards:
         - creature
       count: all
     mod:
-      battle_power:
+      power_when:
         amount: 1000
-        only: attacking
+        when: attacking
         count:
           zone: mana
           owner: you
@@ -48564,17 +48209,12 @@ cards:
 
     このクリーチャーがバトルゾーンから自分の墓地に置かれたとき、自分のマナゾーンからオブシディアン・ビートルを１体選び、バトルゾーンに置いてもよい。'
   abilities:
-  - kind: trigger
-    when:
-      event: attack
-      subject: self
-    effect:
-    - op: modify
-      select:
-        ref: self
-      mod:
-        power: 3000
-      duration: end_of_turn
+  - kind: static
+    affects: self
+    mod:
+      power_when:
+        amount: 3000
+        when: attacking
   - kind: trigger
     zone: graveyard
     when:
@@ -48773,17 +48413,12 @@ cards:
 
     このクリーチャーは、クリーチャーを攻撃できない。'
   abilities:
-  - kind: trigger
-    when:
-      event: attack
-      subject: self
-    effect:
-    - op: modify
-      select:
-        ref: self
-      mod:
-        power: 7000
-      duration: end_of_turn
+  - kind: static
+    affects: self
+    mod:
+      power_when:
+        amount: 7000
+        when: attacking
   - kind: static
     affects: self
     mod:
@@ -49757,17 +49392,12 @@ cards:
     review: pending
     notes: dm05-004 と同じく、このカード自身は共有する能力を持たない
   abilities:
-  - kind: trigger
-    when:
-      event: attack
-      subject: self
-    effect:
-    - op: modify
-      select:
-        ref: self
-      mod:
-        power: 1000
-      duration: end_of_turn
+  - kind: static
+    affects: self
+    mod:
+      power_when:
+        amount: 1000
+        when: attacking
 - id: dm05-052
   name: シザーズ・ビートル
   types:
@@ -49820,17 +49450,12 @@ cards:
 
     このクリーチャーがバトルゾーンから自分の墓地に置かれたとき、自分のマナゾーンからアンブッシュ・スコーピオンを１体選び、バトルゾーンに置いてもよい。'
   abilities:
-  - kind: trigger
-    when:
-      event: attack
-      subject: self
-    effect:
-    - op: modify
-      select:
-        ref: self
-      mod:
-        power: 3000
-      duration: end_of_turn
+  - kind: static
+    affects: self
+    mod:
+      power_when:
+        amount: 3000
+        when: attacking
   - kind: trigger
     zone: graveyard
     when:
@@ -50814,17 +50439,12 @@ cards:
 
     W(ダブル)・ブレイカー(シールドを攻撃したとき、このクリーチャーはシールドを２枚ブレイクする)'
   abilities:
-  - kind: trigger
-    when:
-      event: attack
-      subject: self
-    effect:
-    - op: modify
-      select:
-        ref: self
-      mod:
-        power: 2000
-      duration: end_of_turn
+  - kind: static
+    affects: self
+    mod:
+      power_when:
+        amount: 2000
+        when: attacking
   - kind: static
     affects: self
     mod:
@@ -51353,16 +50973,15 @@ cards:
             - fire
           other: true
     mod:
-      battle_power:
+      power_when:
         amount: 3000
-        only: attacking
+        when: attacking
       grant:
       - double_breaker
   source:
     official: dm06-096
     review: pending
-    notes: 'パワーアタッカーは「攻撃中」なので battle_power に only: attacking（PR #94 の方針）。説明文は text
-      から省いた'
+    notes: 'パワーアタッカーは「攻撃中」なので power_when（when: attacking）。説明文は text から省いた'
 - id: dm06-070
   name: 大自然の意志
   types:
@@ -51419,9 +51038,9 @@ cards:
           - fire
         other: true
     mod:
-      battle_power:
+      power_when:
         amount: 3000
-        only: attacking
+        when: attacking
   source:
     official: dm06-099
     review: pending
@@ -51640,7 +51259,7 @@ cards:
   source:
     official: dm07-012
     review: pending
-    notes: 光ステルス（相手のマナゾーンに光のカードがあればブロックされない）はキーワード語彙に無いため、条件つき常在型能力として原文どおりに書いた（近似ではなくステルスの定義そのもの）
+    notes: ステルスは keyword_patterns（stealth_*）の定義どおり。相手のマナゾーンにその文明のカードが1枚でもあればブロックされない（厳密一致）
     aliases:
     - promoy2-018
   keywords:
@@ -51703,7 +51322,7 @@ cards:
   source:
     official: dm07-015
     review: pending
-    notes: 水ステルス（相手のマナゾーンに水のカードがあればブロックされない）を dm07-012 光ステルスと同じ形で書いた
+    notes: ステルスは keyword_patterns（stealth_*）の定義どおり。相手のマナゾーンにその文明のカードが1枚でもあればブロックされない（厳密一致）
     aliases:
     - promoy2-012
   keywords:
@@ -51731,17 +51350,12 @@ cards:
 
     W(ダブル)・ブレイカー'
   abilities:
-  - kind: trigger
-    when:
-      event: attack
-      subject: self
-    effect:
-    - op: modify
-      select:
-        ref: self
-      mod:
-        power: 2000
-      duration: end_of_turn
+  - kind: static
+    affects: self
+    mod:
+      power_when:
+        amount: 2000
+        when: attacking
   - kind: static
     affects: self
     if:
@@ -51757,7 +51371,7 @@ cards:
   source:
     official: dm07-018
     review: pending
-    notes: 闇ステルスを dm07-012 と同じ形で書いた。進化元は原文表記「ツリー・フォーク」だが種族名はカード自身の表記（ツリーフォーク）にそろえた
+    notes: ステルスは keyword_patterns（stealth_*）の定義どおり。相手のマナゾーンにその文明のカードが1枚でもあればブロックされない（厳密一致）
   keywords:
   - double_breaker
 - id: dm07-019
@@ -51906,9 +51520,9 @@ cards:
           zone: shield
           owner: you
     mod:
-      battle_power:
+      power_when:
         amount: 3000
-        only: attacking
+        when: attacking
       allow:
       - action: attack_creature
         other:
@@ -51973,7 +51587,7 @@ cards:
   source:
     official: dm07-036
     review: pending
-    notes: 闇ステルスを dm07-012 と同じ形で書いた（原文はステルスの定義文つき）
+    notes: ステルスは keyword_patterns（stealth_*）の定義どおり。相手のマナゾーンにその文明のカードが1枚でもあればブロックされない（厳密一致）
 - id: dm07-037
   name: 捕縛の使徒ローム
   types:
@@ -52062,7 +51676,7 @@ cards:
   source:
     official: dm07-045
     review: pending
-    notes: 自然ステルスを dm07-012 と同じ形で書いた
+    notes: ステルスは keyword_patterns（stealth_*）の定義どおり。相手のマナゾーンにその文明のカードが1枚でもあればブロックされない（厳密一致）
 - id: dm07-047
   name: バキューム・ジェル
   types:
@@ -52118,9 +51732,9 @@ cards:
             - creature
           other: true
     mod:
-      battle_power:
+      power_when:
         amount: 4000
-        only: attacking
+        when: attacking
       grant:
       - double_breaker
   source:
@@ -52144,17 +51758,12 @@ cards:
 
     光ステルス(相手のマナゾーンに光のカードが１枚でもあれば、このクリーチャーはブロックされない)'
   abilities:
-  - kind: trigger
-    when:
-      event: attack
-      subject: self
-    effect:
-    - op: modify
-      select:
-        ref: self
-      mod:
-        power: 1000
-      duration: end_of_turn
+  - kind: static
+    affects: self
+    mod:
+      power_when:
+        amount: 1000
+        when: attacking
   - kind: static
     affects: self
     if:
@@ -52170,7 +51779,7 @@ cards:
   source:
     official: dm07-050
     review: pending
-    notes: 光ステルスを dm07-012 と同じ形で書いた
+    notes: ステルスは keyword_patterns（stealth_*）の定義どおり。相手のマナゾーンにその文明のカードが1枚でもあればブロックされない（厳密一致）
 - id: dm07-052
   name: 撃墜するスティンガー・ホーン
   types:
@@ -52186,17 +51795,12 @@ cards:
 
     水ステルス(相手のマナゾーンに水のカードが１枚でもあれば、このクリーチャーはブロックされない)'
   abilities:
-  - kind: trigger
-    when:
-      event: attack
-      subject: self
-    effect:
-    - op: modify
-      select:
-        ref: self
-      mod:
-        power: 1000
-      duration: end_of_turn
+  - kind: static
+    affects: self
+    mod:
+      power_when:
+        amount: 1000
+        when: attacking
   - kind: static
     affects: self
     if:
@@ -52212,7 +51816,7 @@ cards:
   source:
     official: dm07-052
     review: pending
-    notes: 水ステルスを dm07-015 と同じ形で書いた
+    notes: ステルスは keyword_patterns（stealth_*）の定義どおり。相手のマナゾーンにその文明のカードが1枚でもあればブロックされない（厳密一致）
 - id: dm07-054
   name: ランチャー・スパイダー
   types:
@@ -52229,9 +51833,9 @@ cards:
   - kind: static
     affects: self
     mod:
-      battle_power:
+      power_when:
         amount: 1000
-        only: attacking
+        when: attacking
         count:
           zone: bz
           owner: you
@@ -52242,7 +51846,7 @@ cards:
   source:
     official: dm07-054
     review: pending
-    notes: '「攻撃中」なので battle_power + only: attacking に count を付けた形'
+    notes: '「攻撃中」なので power_when（when: attacking）に count を付けた形'
 - id: dm07-055
   name: 氷結ハンマー
   types:
@@ -53728,7 +53332,7 @@ cards:
       to: bz
       subject: self
     effect:
-    - op: play_free
+    - op: move
       select:
         zone: hand
         owner: opp
@@ -53738,6 +53342,8 @@ cards:
         count: 2
         up_to: true
         chooser: opp
+      to: bz
+      reason: put
   source:
     official: dm09-s05
     review: pending
@@ -53809,35 +53415,28 @@ cards:
       to: bz
       subject: self
     effect:
-    - op: choose
-      select:
-        zone: mana
-        owner: you
-        count: all
-      as: m
-    - op: move
-      select:
-        zone: hand
-        owner: you
-        count: all
-      to: mana
-      reason: put
-    - op: move
-      select:
-        ref: m
-        count: all
-      to: hand
-      reason: return
-    - op: tap
-      select:
-        zone: mana
-        owner: you
-        count: all
+    - op: together
+      body:
+      - op: move
+        select:
+          zone: mana
+          owner: you
+          count: all
+        to: hand
+        reason: return
+      - op: move
+        select:
+          zone: hand
+          owner: you
+          count: all
+        to: mana
+        reason: put
+        tapped: true
   source:
     official: dm10-007
     review: pending
-    notes: 「同時に入れ替え」を、(1)元のマナを変数 m に保持 (2)手札をすべてマナへ (3)m を手札へ戻す (4)マナに残った=元の手札だけをタップ、の順で再現した。swap
-      op は革命チェンジ専用なので使っていない
+    notes: '「同時に」を op: together（移動対象を先にすべて決め、1つのイベントの束で同時に動かす）で書いた。手札からマナへは tapped:
+      true でタップして置く'
   keywords:
   - double_breaker
 - id: dm10-019
@@ -53987,9 +53586,9 @@ cards:
   - kind: static
     affects: self
     mod:
-      battle_power:
+      power_when:
         amount: 2000
-        only: attacking
+        when: attacking
         count:
           zone: bz
           owner: you
@@ -54057,17 +53656,12 @@ cards:
 
     自分のターンのはじめに、自分のマナゾーンにあるカードをアンタップできない。'
   abilities:
-  - kind: trigger
-    when:
-      event: attack
-      subject: self
-    effect:
-    - op: modify
-      select:
-        ref: self
-      mod:
-        power: 4000
-      duration: end_of_turn
+  - kind: static
+    affects: self
+    mod:
+      power_when:
+        amount: 4000
+        when: attacking
   - kind: static
     affects:
       owner: you
@@ -54249,9 +53843,9 @@ cards:
   - kind: static
     affects: self
     mod:
-      battle_power:
+      power_when:
         amount: 2000
-        only: attacking
+        when: attacking
         count:
           zone: mana
           owner: you
@@ -54492,9 +54086,9 @@ cards:
   - kind: static
     affects: self
     mod:
-      battle_power:
+      power_when:
         amount: 1000
-        only: attacking
+        when: attacking
         count:
           zone: bz
           owner: you
@@ -54554,9 +54148,9 @@ cards:
         - light
         - fire
     mod:
-      battle_power:
+      power_when:
         amount: 3000
-        only: attacking
+        when: attacking
   source:
     official: dm10-103
     review: pending
@@ -54603,9 +54197,9 @@ cards:
   - kind: static
     affects: self
     mod:
-      battle_power:
+      power_when:
         amount: 1000
-        only: attacking
+        when: attacking
         count:
           zone: mana
           owner: you
@@ -54634,9 +54228,9 @@ cards:
         - creature
       count: all
     mod:
-      battle_power:
+      power_when:
         amount: 1000
-        only: attacking
+        when: attacking
     duration: end_of_turn
   source:
     official: dm10-110
@@ -54870,17 +54464,12 @@ cards:
   keywords:
   - double_breaker
   abilities:
-  - kind: trigger
-    when:
-      event: attack
-      subject: self
-    effect:
-    - op: modify
-      select:
-        ref: self
-      mod:
-        power: 4000
-      duration: end_of_turn
+  - kind: static
+    affects: self
+    mod:
+      power_when:
+        amount: 4000
+        when: attacking
 - id: dm11-026
   name: デビル・メディスン
   types:
@@ -55710,7 +55299,7 @@ cards:
         ref: self
         count: 1
       to: bz
-      reason: summon
+      reason: put
   source:
     official: dm12-036
     review: pending
@@ -55924,7 +55513,7 @@ cards:
         ref: self
         count: 1
       to: bz
-      reason: summon
+      reason: put
   source:
     official: dm12-s01
     review: pending
@@ -57001,9 +56590,9 @@ cards:
           filter:
             tapped: true
     mod:
-      battle_power:
+      power_when:
         amount: 3000
-        only: attacking
+        when: attacking
   - kind: static
     affects:
       owner: you
@@ -57427,23 +57016,16 @@ cards:
 
     このクリーチャーは、相手プレイヤーを攻撃できない。'
   abilities:
-  - kind: trigger
-    when:
-      event: block
-      subject: self
-    effect:
-    - op: modify
-      select:
-        ref: self
-        count: 1
-      mod:
-        power: 3000
-      duration: end_of_turn
+  - kind: static
+    affects: self
+    mod:
+      power_when:
+        amount: 3000
+        when: blocking
   source:
     official: dm14-072
     review: pending
-    notes: battle_power（only なし）は自分が攻撃するバトルにも効いてしまうため、ブロック時の誘発でターン終了時まで上げる形にした（dm13-037
-      ドーベルと同じ）。パワーが要るのはそのバトルの間だけなので結果は一致する
+    notes: '「ブロック中、パワー+3000」は power_when（when: blocking）で、ブロックの宣言から攻撃の終わりまで効く。ブロック誘発でターン終了まで上げる形にはしていない'
   keywords:
   - blocker
   - cannot_attack_player
@@ -57959,9 +57541,9 @@ cards:
       - '>='
       - 7
     mod:
-      battle_power:
+      power_when:
         amount: 3000
-        only: attacking
+        when: attacking
   source:
     official: dm14-098
     review: pending
@@ -58023,9 +57605,9 @@ cards:
     mod:
       grant:
       - speed_attacker
-      battle_power:
+      power_when:
         amount: 3000
-        only: attacking
+        when: attacking
     duration: end_of_turn
   source:
     official: dm14-101
@@ -59354,9 +58936,9 @@ cards:
         ref: self
         count: 1
       mod:
-        battle_power:
+        power_when:
           amount: 3000
-          only: attacking
+          when: attacking
       duration: end_of_turn
   source:
     official: dm17-030
@@ -59668,13 +59250,15 @@ cards:
     effect:
     - op: may
       body:
-      - op: play_free
+      - op: move
         select:
           zone: mana
           owner: you
           filter:
             name: 復活するバイタル・ホーン
           count: 1
+        to: bz
+        reason: put
   source:
     official: dm17-034
     review: pending
@@ -59748,7 +59332,7 @@ cards:
     effect:
     - op: may
       body:
-      - op: play_free
+      - op: move
         select:
           zone: hand
           owner: opp
@@ -59758,6 +59342,8 @@ cards:
             - creature
             cost_le: 3
           count: 1
+        to: bz
+        reason: put
   source:
     official: dm17-054
     review: pending
@@ -59997,17 +59583,12 @@ cards:
 
     このクリーチャーが破壊された時、《オブシディアン・ビートル》を１体、自分のマナゾーンからバトルゾーンに置いてもよい。'
   abilities:
-  - kind: trigger
-    when:
-      event: attack
-      subject: self
-    effect:
-    - op: modify
-      select:
-        ref: self
-      mod:
-        power: 3000
-      duration: end_of_turn
+  - kind: static
+    affects: self
+    mod:
+      power_when:
+        amount: 3000
+        when: attacking
   - kind: trigger
     zone: graveyard
     when:
@@ -60018,13 +59599,15 @@ cards:
     effect:
     - op: may
       body:
-      - op: play_free
+      - op: move
         select:
           zone: mana
           owner: you
           filter:
             name: オブシディアン・ビートル
           count: 1
+        to: bz
+        reason: put
   source:
     official: dm18-014
     review: pending
@@ -60532,9 +60115,9 @@ cards:
         - creature
       count: 1
     mod:
-      battle_power:
+      power_when:
         amount: 4000
-        only: attacking
+        when: attacking
       grant:
       - double_breaker
     duration: end_of_turn
@@ -60599,7 +60182,7 @@ cards:
     effect:
     - op: may
       body:
-      - op: play_free
+      - op: move
         select:
           zone: hand
           owner: opp
@@ -60608,6 +60191,8 @@ cards:
             types:
             - creature
           count: 1
+        to: bz
+        reason: put
   source:
     official: dm18-048
     review: pending
@@ -60636,9 +60221,9 @@ cards:
         - creature
       count: all
     mod:
-      battle_power:
+      power_when:
         amount: 2000
-        only: attacking
+        when: attacking
     duration: end_of_turn
   source:
     official: dm18-050
@@ -60942,9 +60527,9 @@ cards:
   - kind: static
     affects: self
     mod:
-      battle_power:
+      power_when:
         amount: 2000
-        only: attacking
+        when: attacking
         count:
           zone: bz
           owner: any
@@ -61347,17 +60932,12 @@ cards:
 
     このクリーチャーが破壊された時、《アンブッシュ・スコーピオン》を１体、自分のマナゾーンからバトルゾーンに置いてもよい。'
   abilities:
-  - kind: trigger
-    when:
-      event: attack
-      subject: self
-    effect:
-    - op: modify
-      select:
-        ref: self
-      mod:
-        power: 3000
-      duration: end_of_turn
+  - kind: static
+    affects: self
+    mod:
+      power_when:
+        amount: 3000
+        when: attacking
   - kind: trigger
     zone: graveyard
     when:
@@ -61368,13 +60948,15 @@ cards:
     effect:
     - op: may
       body:
-      - op: play_free
+      - op: move
         select:
           zone: mana
           owner: you
           filter:
             name: アンブッシュ・スコーピオン
           count: 1
+        to: bz
+        reason: put
   source:
     official: dm18-131
     review: pending
@@ -61703,7 +61285,7 @@ cards:
       effect:
       - op: may
         body:
-        - op: play_free
+        - op: move
           select:
             zone: graveyard
             owner: you
@@ -61714,6 +61296,8 @@ cards:
               not_types:
               - evolution
             count: 1
+          to: bz
+          reason: put
   source:
     official: dm19-005
     review: pending
@@ -63239,9 +62823,9 @@ cards:
         races:
         - ティラノ・ドレイク
     mod:
-      battle_power:
+      power_when:
         amount: 3000
-        only: attacking
+        when: attacking
   source:
     official: dm19-098
     review: pending
@@ -63359,9 +62943,9 @@ cards:
             types:
             - creature
     mod:
-      battle_power:
+      power_when:
         amount: 5000
-        only: attacking
+        when: attacking
   source:
     official: dm19-108
     review: pending
@@ -195135,3 +194719,1775 @@ cards:
   source:
     official: sp-035
     review: pending
+- id: dm06-003
+  name: エウロピカ
+  types:
+  - creature
+  civs:
+  - water
+  cost: 7
+  power: 4000
+  races:
+  - シー・ハッカー
+  mana: 1
+  text: このクリーチャーで攻撃する代わりに、タップして次の能力を使ってもよい。 / バトルゾーンにあるクリーチャーを１体選び、持ち主の手札に戻す。
+  abilities:
+  - kind: activate
+    cost:
+      tap: self
+    effect:
+    - op: bounce
+      select:
+        zone: bz
+        owner: any
+        filter:
+          types:
+          - creature
+        count: 1
+  source:
+    official: dm06-003
+    review: pending
+    notes: '厳密一致。タップ能力は kind: activate（602.3a）'
+- id: dm06-047
+  name: シャインシェル・クラスター
+  types:
+  - creature
+  civs:
+  - water
+  cost: 7
+  power: 4000
+  races:
+  - サイバー・クラスター
+  mana: 1
+  text: このクリーチャーで攻撃する代わりに、タップして次の能力を使ってもよい。 / カードを２枚引く。
+  abilities:
+  - kind: activate
+    cost:
+      tap: self
+    effect:
+    - op: draw
+      count: 2
+  source:
+    official: dm06-047
+    review: pending
+    notes: 厳密一致
+    aliases:
+    - promoy2-004
+- id: dm06-071
+  name: 鋭刃の使徒グーレ・チェーン
+  types:
+  - creature
+  civs:
+  - light
+  cost: 5
+  power: 2000
+  races:
+  - イニシエート
+  mana: 1
+  text: このクリーチャーで攻撃する代わりに、タップして次の能力を使ってもよい。 / バトルゾーンにある相手のクリーチャーを１体選び、タップする。
+  abilities:
+  - kind: activate
+    cost:
+      tap: self
+    effect:
+    - op: tap
+      select:
+        zone: bz
+        owner: opp
+        filter:
+          types:
+          - creature
+        count: 1
+  source:
+    official: dm06-071
+    review: pending
+    notes: 厳密一致
+- id: dm14-028
+  name: デモニック・プロテクター
+  types:
+  - cross_gear
+  civs:
+  - darkness
+  cost: 1
+  mana: 1
+  text: クロスギア:このカードをバトルゾーンに置く。クリーチャーにクロスするには、このカードのコストをもう一度支払う。そのクリーチャーがバトルゾーンを離れても、このカードはバトルゾーンに残る。
+    / これをクロスしたクリーチャーが破壊された時、カードを１枚引いてもよい。
+  abilities:
+  - kind: trigger
+    when:
+      event: move
+      from: bz
+      to: graveyard
+      reason: destroy
+      subject: crossed
+    effect:
+    - op: may
+      body:
+      - op: draw
+        count: 1
+  source:
+    official: dm14-028
+    review: pending
+    notes: 厳密一致。クロス定型文は規則（303）で処理
+    aliases:
+    - promoy4-001
+- id: dm14-046
+  name: シャイニング・ディフェンス
+  types:
+  - cross_gear
+  civs:
+  - light
+  cost: 1
+  mana: 1
+  text: クロスギア:このカードをバトルゾーンに置く。クリーチャーにクロスするには、このカードのコストをもう一度支払う。そのクリーチャーがバトルゾーンを離れても、このカードはバトルゾーンに残る。
+    / これをクロスしたクリーチャーのパワーは+1500され、｢ブロッカー｣を得る。
+  abilities:
+  - kind: static
+    affects: crossed
+    mod:
+      power: 1500
+      grant:
+      - blocker
+  source:
+    official: dm14-046
+    review: pending
+    notes: 厳密一致
+- id: dm14-102
+  name: ファイアー・ブレード
+  types:
+  - cross_gear
+  civs:
+  - fire
+  cost: 2
+  mana: 1
+  text: クロスギア:このカードをバトルゾーンに置く。クリーチャーにクロスするには、このカードのコストをもう一度支払う。そのクリーチャーがバトルゾーンを離れても、このカードはバトルゾーンに残る。
+    / これをクロスしたクリーチャーは｢スピードアタッカー｣を得る。
+  abilities:
+  - kind: static
+    affects: crossed
+    mod:
+      grant:
+      - speed_attacker
+  source:
+    official: dm14-102
+    review: pending
+    notes: 厳密一致
+    aliases:
+    - promoy4-005
+- id: dm11-022
+  name: 予言者ラメール
+  types:
+  - creature
+  civs:
+  - light
+  cost: 2
+  power: 1500
+  races:
+  - ライトブリンガー
+  mana: 1
+  keywords:
+  - wave_striker
+  text: 'ウェーブストライカー(バトルゾーンに「ウェーブストライカー」を持つクリーチャーが他に２体以上あれば、このクリーチャーは次の能力を得る)
+
+    バトルゾーンにある自分のクリーチャーすべてのパワーは+1000される。'
+  abilities:
+  - kind: static
+    affects:
+      zone: bz
+      owner: you
+      filter:
+        types:
+        - creature
+    if:
+      cmp:
+      - count:
+          zone: bz
+          owner: any
+          other: true
+          filter:
+            keyword: wave_striker
+      - '>='
+      - 2
+    mod:
+      power: 1000
+  source:
+    official: dm11-022
+    review: pending
+    notes: '厳密一致。「他に」の数は原文に「自分の」が無いので owner: any'
+- id: dm11-016
+  name: 斬神兵グランドルメス
+  types:
+  - creature
+  civs:
+  - fire
+  cost: 3
+  power: 2000
+  races:
+  - アーマロイド
+  mana: 1
+  keywords:
+  - wave_striker
+  text: 'ウェーブストライカー(バトルゾーンに「ウェーブストライカー」を持つクリーチャーが他に２体以上あれば、このクリーチャーは次の能力を得る)
+
+    このクリーチャーをバトルゾーンに出した時、パワー2000以下のクリーチャーをすべて破壊する。'
+  abilities:
+  - kind: trigger
+    when:
+      event: move
+      to: bz
+      subject: self
+    if:
+      cmp:
+      - count:
+          zone: bz
+          owner: any
+          other: true
+          filter:
+            keyword: wave_striker
+      - '>='
+      - 2
+    effect:
+    - op: destroy
+      select:
+        zone: bz
+        owner: any
+        filter:
+          types:
+          - creature
+          power_le: 2000
+        count: all
+  source:
+    official: dm11-016
+    review: pending
+    notes: 厳密一致。自身もパワー2000以下なので対象に含まれる（原文どおり）
+- id: dm11-038
+  name: 堅防の使徒アースラ
+  types:
+  - creature
+  civs:
+  - light
+  cost: 3
+  power: 2000
+  races:
+  - イニシエート
+  mana: 1
+  keywords:
+  - wave_striker
+  text: 'ウェーブストライカー(バトルゾーンに「ウェーブストライカー」を持つクリーチャーが他に２体以上あれば、このクリーチャーは次の能力を得る)
+
+    このクリーチャーのパワーは+4000され、「ブロッカー」を得る。'
+  abilities:
+  - kind: static
+    affects: self
+    if:
+      cmp:
+      - count:
+          zone: bz
+          owner: any
+          other: true
+          filter:
+            keyword: wave_striker
+      - '>='
+      - 2
+    mod:
+      power: 4000
+      grant:
+      - blocker
+  source:
+    official: dm11-038
+    review: pending
+    notes: 厳密一致
+- id: dm10-047
+  name: ルナ・イーグル
+  types:
+  - creature
+  civs:
+  - water
+  cost: 3
+  power: 5000
+  races:
+  - サイバー・ムーン
+  mana: 1
+  abilities:
+  - kind: static
+    affects: self
+    mod:
+      require:
+      - block
+  keywords:
+  - blocker
+  - cannot_attack
+  text: 'ブロッカー
+
+    このクリーチャーは攻撃することができない。
+
+    相手のクリーチャーが攻撃する時、このクリーチャーは可能であればブロックする。'
+  source:
+    official: dm10-047
+    review: pending
+    notes: ルールのみで変換（モデル不使用）
+- id: dm10-052
+  name: 死劇人形ピエール
+  types:
+  - creature
+  civs:
+  - darkness
+  cost: 2
+  power: 1000
+  races:
+  - デスパペット
+  mana: 1
+  abilities:
+  - kind: static
+    affects: self
+    mod:
+      require:
+      - block
+  keywords:
+  - blocker
+  - cannot_attack
+  - slayer
+  text: 'ブロッカー
+
+    このクリーチャーは攻撃することができない。
+
+    相手のクリーチャーが攻撃する時、このクリーチャーは可能であればブロックする。
+
+    スレイヤー(このクリーチャーがバトルする時、バトルの後、相手クリーチャーを破壊する)'
+  source:
+    official: dm10-052
+    review: pending
+    notes: ルールのみで変換（モデル不使用）
+- id: dm12-038
+  name: 宣凶師ベルモーレ
+  types:
+  - creature
+  civs:
+  - light
+  cost: 2
+  power: 3500
+  races:
+  - グラディエーター
+  mana: 1
+  abilities:
+  - kind: static
+    affects: self
+    mod:
+      require:
+      - block
+  keywords:
+  - blocker
+  - cannot_attack_player
+  text: 'ブロッカー(相手クリーチャーが攻撃する時、このクリーチャーをタップして、その攻撃を阻止してもよい。その後、その相手クリーチャーとバトルする)
+
+    相手のクリーチャーが攻撃する時、このクリーチャーは可能であればブロックする。
+
+    このクリーチャーは、相手プレイヤーを攻撃できない。'
+  source:
+    official: dm12-038
+    review: pending
+    notes: ルールのみで変換（モデル不使用）
+- id: dm11-024
+  name: アクア・トリックスター
+  types:
+  - creature
+  civs:
+  - water
+  cost: 2
+  power: 1000
+  races:
+  - リキッド・ピープル
+  mana: 1
+  abilities:
+  - kind: trigger
+    when:
+      event: move
+      to: bz
+      subject: self
+    effect:
+    - op: tap
+      select:
+        zone: bz
+        owner: opp
+        filter:
+          types:
+          - creature
+        count: 1
+    if:
+      cmp: &id093
+      - count:
+          zone: bz
+          owner: any
+          other: true
+          filter:
+            keyword: wave_striker
+      - '>='
+      - 2
+  keywords:
+  - wave_striker
+  text: 'ウェーブストライカー(バトルゾーンに「ウェーブストライカー」を持つクリーチャーが他に２体以上あれば、このクリーチャーは次の能力を得る)
+
+    このクリーチャーをバトルゾーンに出した時、バトルゾーンにある相手のクリーチャーを１体選び、タップする。'
+  source:
+    official: dm11-024
+    review: pending
+    notes: ルールのみで変換（モデル不使用）
+- id: dm12-048
+  name: 炎神兵ゴリアック
+  types:
+  - creature
+  civs:
+  - fire
+  cost: 5
+  power: 4000
+  races:
+  - アーマロイド
+  mana: 1
+  abilities:
+  - kind: trigger
+    when:
+      event: move
+      to: bz
+      subject: self
+    effect:
+    - op: destroy
+      select:
+        zone: bz
+        owner: opp
+        filter:
+          types:
+          - creature
+          power_le: 5000
+        count: 1
+    if:
+      cmp: *id093
+  keywords:
+  - wave_striker
+  text: 'ウェーブストライカー(バトルゾーンに「ウェーブストライカー」を持つクリーチャーが他に２体以上あれば、このクリーチャーは次の能力を得る)
+
+    このクリーチャーをバトルゾーンに出した時、相手のパワー5000以下のクリーチャーを１体破壊する。'
+  source:
+    official: dm12-048
+    review: pending
+    notes: ルールのみで変換（モデル不使用）
+- id: dm10-080
+  name: ミルポロ
+  types:
+  - creature
+  civs:
+  - water
+  cost: 4
+  power: 3000
+  races:
+  - サイバーロード
+  mana: 1
+  keywords:
+  - silent_skill
+  text: 'サイレントスキル(自分のターンのはじめに、このクリーチャーがタップされていたら、アンタップするかわりに次の能力を使ってもよい)
+
+    カードを１枚引く。'
+  abilities:
+  - kind: silent
+    effect:
+    - op: draw
+      count: 1
+  source:
+    official: dm10-080
+    review: pending
+    notes: '厳密一致。サイレントスキルは kind: silent（501.1a）'
+- id: dm10-030
+  name: マインロード・ワイバーン
+  types:
+  - creature
+  civs:
+  - fire
+  cost: 4
+  power: 3000
+  races:
+  - アーマード・ワイバーン
+  mana: 1
+  keywords:
+  - silent_skill
+  text: 'サイレントスキル(自分のターンのはじめに、このクリーチャーがタップされていたら、アンタップするかわりに次の能力を使ってもよい)
+
+    パワー3000以下のクリーチャーをすべて破壊する。'
+  abilities:
+  - kind: silent
+    effect:
+    - op: destroy
+      select:
+        zone: bz
+        owner: any
+        filter:
+          types:
+          - creature
+          power_le: 3000
+        count: all
+  source:
+    official: dm10-030
+    review: pending
+    notes: 厳密一致。自身もパワー3000以下なので対象に含まれる（原文どおり）
+- id: dm10-004
+  name: 災厄秘宝ゲジラ
+  types:
+  - creature
+  civs:
+  - darkness
+  cost: 6
+  power: 6000
+  races:
+  - パンドラボックス
+  mana: 1
+  keywords:
+  - double_breaker
+  - silent_skill
+  text: 'W・ブレイカー
+
+    サイレントスキル(自分のターンのはじめに、このクリーチャーがタップされていたら、アンタップするかわりに次の能力を使ってもよい)
+
+    このクリーチャーは、相手のシールドを２枚ブレイクする。'
+  abilities:
+  - kind: silent
+    effect:
+    - op: break
+      count: 2
+      player: opp
+  source:
+    official: dm10-004
+    review: pending
+    notes: 厳密一致
+- id: dm08-016
+  name: 重装兵ガルバック
+  types:
+  - creature
+  civs:
+  - fire
+  cost: 4
+  power: 3000
+  races:
+  - ドラゴノイド
+  mana: 1
+  text: 'ターボラッシュ(自分の他のクリーチャーがシールドをブレイクした後、そのターンが終わるまで、このクリーチャーは次の能力を得る)
+
+    このクリーチャーが攻撃するとき、バトルゾーンにあるパワー4000以下の相手のクリーチャーを１体選び、持ち主の墓地に置いてもよい。'
+  keywords:
+  - turbo_rush
+  abilities:
+  - kind: trigger
+    when:
+      event: attack
+      subject: self
+    if: &id094
+      self_marked: turbo_rush
+    effect:
+    - op: may
+      body:
+      - op: destroy
+        select:
+          zone: bz
+          owner: opp
+          filter:
+            types:
+            - creature
+            power_le: 4000
+          count: 1
+  source:
+    official: dm08-016
+    review: pending
+    notes: 厳密一致。ターボラッシュは印（keywords.yaml）＋続く能力に self_marked の条件
+- id: dm08-053
+  name: 食獣セニア
+  types:
+  - creature
+  civs:
+  - nature
+  cost: 4
+  power: 3000
+  races:
+  - ツリーフォーク
+  mana: 1
+  text: 'ターボラッシュ(自分の他のクリーチャーがシールドをブレイクしたあと、そのターンが終わるまで、このクリーチャーは次の能力を得る)
+
+    このクリーチャーのパワーは+5000され、「W(ダブル)・ブレイカー」を得る。'
+  keywords:
+  - turbo_rush
+  abilities:
+  - kind: static
+    affects: self
+    if: *id094
+    mod:
+      power: 5000
+      grant:
+      - double_breaker
+  source:
+    official: dm08-053
+    review: pending
+    notes: 厳密一致。ターボラッシュは印（keywords.yaml）＋続く能力に self_marked の条件
+- id: dm08-040
+  name: イリュージョン・フィッシュ
+  types:
+  - creature
+  civs:
+  - water
+  cost: 4
+  power: 3000
+  races:
+  - ゲル・フィッシュ
+  mana: 1
+  text: 'ターボラッシュ(自分の他のクリーチャーがシールドをブレイクしたあと、そのターンが終わるまで、このクリーチャーは次の能力を得る)
+
+    このクリーチャーはブロックされない。'
+  keywords:
+  - turbo_rush
+  - unblockable
+  abilities:
+  - kind: static
+    affects: self
+    if: *id094
+    mod:
+      grant:
+      - unblockable
+  source:
+    official: dm08-040
+    review: pending
+    notes: 厳密一致。ターボラッシュは印（keywords.yaml）＋続く能力に self_marked の条件
+- id: dm11-030
+  name: マッチョ・メロン
+  types:
+  - creature
+  civs:
+  - nature
+  cost: 2
+  power: 1000
+  races:
+  - ワイルド・ベジーズ
+  mana: 1
+  abilities:
+  - kind: static
+    affects: self
+    mod:
+      power_when:
+        amount: 3000
+        when: attacking
+    if:
+      cmp:
+      - count:
+          zone: bz
+          owner: any
+          other: true
+          filter:
+            keyword: wave_striker
+      - '>='
+      - 2
+  keywords:
+  - wave_striker
+  text: 'ウェーブストライカー(バトルゾーンに「ウェーブストライカー」を持つクリーチャーが他に２体以上あれば、このクリーチャーは次の能力を得る)
+
+    パワーアタッカー +3000(攻撃中、このクリーチャーのパワーは+3000される)'
+  source:
+    official: dm11-030
+    review: pending
+    notes: ルールのみで変換（モデル不使用）
+- id: dm02-049
+  name: 小さな勇者ゲット
+  types:
+  - creature
+  civs:
+  - fire
+  cost: 2
+  power: 2000
+  races:
+  - ヒューマノイド
+  mana: 1
+  abilities:
+  - kind: static
+    affects: self
+    mod:
+      power_when:
+        amount: 1000
+        when: attacking
+  - kind: static
+    affects: self
+    mod:
+      require:
+      - attack
+  text: 'パワーアタッカー+1000(攻撃中、このクリーチャーのパワーは+1000される。)
+
+    このクリーチャーは、毎ターン攻撃しなければならない。'
+  source:
+    official: dm02-049
+    review: pending
+    notes: ルールのみで変換（モデル不使用）
+    aliases:
+    - promoy14-spd09
+- id: dm13-047
+  name: ジョーのツールキット
+  types:
+  - creature
+  civs:
+  - fire
+  cost: 2
+  power: 1000
+  races:
+  - ゼノパーツ
+  mana: 1
+  text: このクリーチャーが攻撃された時、相手のパワー2000以下のクリーチャーを１体破壊してもよい。
+  abilities:
+  - kind: trigger
+    when:
+      event: attack
+      target: self
+    effect:
+    - op: may
+      body:
+      - op: destroy
+        select:
+          zone: bz
+          owner: opp
+          filter:
+            types:
+            - creature
+            power_le: 2000
+          count: 1
+  source:
+    official: dm13-047
+    review: pending
+    notes: 厳密一致
+- id: dm17-045
+  name: 反撃人形デビルモモ
+  types:
+  - creature
+  civs:
+  - darkness
+  cost: 3
+  power: 2000
+  races:
+  - デスパペット
+  mana: 1
+  text: このクリーチャーが攻撃された時、そのターンの終わりまで、このクリーチャーのパワーは+5000される。
+  abilities:
+  - kind: trigger
+    when:
+      event: attack
+      target: self
+    effect:
+    - op: modify
+      select:
+        ref: self
+      mod:
+        power: 5000
+      duration: end_of_turn
+  source:
+    official: dm17-045
+    review: pending
+    notes: 厳密一致
+- id: dm08-033
+  name: シェル・コロシアム
+  types:
+  - creature
+  civs:
+  - nature
+  cost: 4
+  power: 3000
+  races:
+  - コロニー・ビートル
+  mana: 1
+  text: このクリーチャーがブロックされたとき、自分の山札の上から１枚目を自分のマナゾーンに加えてもよい。
+  abilities:
+  - kind: trigger
+    when:
+      event: block
+      attacker: self
+    effect:
+    - op: may
+      body:
+      - op: mana_put
+        select:
+          zone: deck
+          owner: you
+          from_top: 1
+  source:
+    official: dm08-033
+    review: pending
+    notes: 厳密一致
+- id: dm13-021
+  name: 予言者ポラリス
+  types:
+  - creature
+  civs:
+  - light
+  cost: 3
+  power: 2000
+  races:
+  - ライトブリンガー
+  mana: 1
+  text: 自分のクリーチャーが攻撃された時、そのクリーチャーのパワーは+2000される。
+  abilities:
+  - kind: trigger
+    when:
+      event: attack
+      target:
+        owner: you
+    effect:
+    - op: modify
+      select:
+        ref: event.target
+      mod:
+        power: 2000
+      duration: end_of_turn
+  source:
+    official: dm13-021
+    review: pending
+    notes: 厳密一致。「自分のクリーチャーが攻撃された時」はこのクリーチャー自身が攻撃された場合も含む
+- id: dm19-019
+  name: 封魔ラベリーズ
+  types:
+  - creature
+  civs:
+  - water
+  cost: 6
+  power: 3000
+  races:
+  - グランド・デビル
+  mana: 1
+  text: 自分が唱える呪文はすべて「サイクロン」を得る。
+  abilities:
+  - kind: static
+    affects:
+      zone: hand
+      owner: you
+      filter:
+        types:
+        - spell
+    mod:
+      grant:
+      - cyclone
+  source:
+    official: dm19-019
+    review: pending
+    notes: 厳密一致
+- id: dm19-034
+  name: ジェット・サイクロン
+  types:
+  - spell
+  civs:
+  - fire
+  cost: 2
+  mana: 1
+  text: 'サイクロン(このターン、この呪文を唱える直前にクリーチャーを召喚していれば、この呪文を唱えた後、墓地に置くかわりに自分の手札に戻す)
+
+    バトルゾーンにある自分のクリーチャー１体は、このターンの終わりまで「スピードアタッカー」を得る。(「スピードアタッカー」を得たクリーチャーは召喚酔いしない)'
+  keywords:
+  - cyclone
+  spell:
+  - op: modify
+    select:
+      zone: bz
+      owner: you
+      count: 1
+      filter:
+        types:
+        - creature
+    mod:
+      grant:
+      - speed_attacker
+    duration: end_of_turn
+  source:
+    official: dm19-034
+    review: pending
+    notes: 厳密一致
+- id: dm19-046
+  name: リバース・サイクロン
+  types:
+  - spell
+  civs:
+  - light
+  cost: 2
+  mana: 1
+  text: 'サイクロン(このターン、この呪文を唱える直前にクリーチャーを召喚していれば、この呪文を唱えた後、墓地に置くかわりに自分の手札に戻す)
+
+    バトルゾーンにある相手のクリーチャーを１体選び、タップする。'
+  keywords:
+  - cyclone
+  spell:
+  - op: tap
+    select:
+      zone: bz
+      owner: opp
+      count: 1
+      filter:
+        types:
+        - creature
+  source:
+    official: dm19-046
+    review: pending
+    notes: 厳密一致
+- id: dm19-058
+  name: バイス・サイクロン
+  types:
+  - spell
+  civs:
+  - darkness
+  cost: 2
+  mana: 1
+  text: 'サイクロン(このターン、この呪文を唱える直前にクリーチャーを召喚していれば、この呪文を唱えた後、墓地に置くかわりに自分の手札に戻す)
+
+    相手は自分自身の手札を１枚選び、捨てる。'
+  keywords:
+  - cyclone
+  spell:
+  - op: discard
+    select:
+      zone: hand
+      owner: opp
+      count: 1
+      chooser: opp
+  source:
+    official: dm19-058
+    review: pending
+    notes: 厳密一致
+- id: dm19-078
+  name: バリアー・サイクロン
+  types:
+  - spell
+  civs:
+  - light
+  cost: 5
+  mana: 1
+  text: 'サイクロン(このターン、この呪文を唱える前にクリーチャーを召喚していれば、この呪文を唱えた後、墓地に置くかわりに自分の手札に戻す)
+
+    自分の手札を１枚、裏向きのまま自分のシールドに加える。'
+  keywords:
+  - cyclone
+  spell:
+  - op: move
+    reason: put
+    select:
+      zone: hand
+      owner: you
+      count: 1
+    to: shield
+  source:
+    official: dm19-078
+    review: pending
+    notes: 厳密一致
+- id: dm19-086
+  name: ブレイン・サイクロン
+  types:
+  - spell
+  civs:
+  - water
+  cost: 3
+  mana: 1
+  text: 'サイクロン(このターン、この呪文を唱える直前にクリーチャーを召喚していれば、この呪文を唱えた後、墓地に置くかわりに自分の手札に戻す)
+
+    カードを１枚引く。'
+  keywords:
+  - cyclone
+  spell:
+  - op: draw
+    count: 1
+  source:
+    official: dm19-086
+    review: pending
+    notes: 厳密一致
+- id: dm19-094
+  name: ブラッディ・サイクロン
+  types:
+  - spell
+  civs:
+  - darkness
+  cost: 1
+  mana: 1
+  text: 'サイクロン(このターン、この呪文を唱える直前にクリーチャーを召喚していれば、この呪文を唱えた後、墓地に置くかわりに自分の手札に戻す)
+
+    バトルゾーンにある自分のクリーチャー１体は、このターンの終わりまで「スレイヤー」を得る。(「スレイヤー」を得たクリーチャーがバトルする時、バトルの後、相手クリーチャーを破壊する)'
+  keywords:
+  - cyclone
+  spell:
+  - op: modify
+    select:
+      zone: bz
+      owner: you
+      count: 1
+      filter:
+        types:
+        - creature
+    mod:
+      grant:
+      - slayer
+    duration: end_of_turn
+  source:
+    official: dm19-094
+    review: pending
+    notes: 厳密一致
+- id: dm19-102
+  name: ガトリング・サイクロン
+  types:
+  - spell
+  civs:
+  - fire
+  cost: 3
+  mana: 1
+  text: 'サイクロン(このターン、この呪文を唱える直前にクリーチャーを召喚していれば、この呪文を唱えた後、墓地に置くかわりに自分の手札に戻す)
+
+    パワー2000以下の相手のクリーチャーを１体破壊する。'
+  keywords:
+  - cyclone
+  spell:
+  - op: destroy
+    select:
+      zone: bz
+      owner: opp
+      count: 1
+      filter:
+        types:
+        - creature
+        power_le: 2000
+  source:
+    official: dm19-102
+    review: pending
+    notes: 厳密一致
+- id: dm19-110
+  name: フェアリー・サイクロン
+  types:
+  - spell
+  civs:
+  - nature
+  cost: 3
+  mana: 1
+  text: 'サイクロン(このターン、この呪文を唱える直前にクリーチャーを召喚していれば、この呪文を唱えた後、墓地に置くかわりに自分の手札に戻す)
+
+    自分の山札の上から１枚目を、自分のマナゾーンに置く。'
+  keywords:
+  - cyclone
+  spell:
+  - op: move
+    reason: put
+    select:
+      zone: deck
+      owner: you
+      from_top: 1
+    to: mana
+  source:
+    official: dm19-110
+    review: pending
+    notes: 厳密一致
+- id: dm17-007
+  name: 予言者プロキオン
+  types:
+  - creature
+  civs:
+  - light
+  cost: 7
+  power: 2000
+  races:
+  - ライトブリンガー
+  mana: 1
+  text: 'S・バック-光(光のカードを自分のシールドゾーンから手札に加える時、そのカードを捨ててもよい。そうした場合、コストを支払わずにこのクリーチャーを召喚する)
+
+    ブロッカー
+
+    このクリーチャーは、相手プレイヤーを攻撃できない。
+
+    このクリーチャーが破壊される時、墓地に置くかわりに手札に戻す。'
+  keywords:
+  - s_back_light
+  - blocker
+  - cannot_attack_player
+  abilities:
+  - kind: replace
+    when:
+      event: move
+      from: bz
+      to: graveyard
+      reason: destroy
+      subject: self
+    instead:
+    - op: move
+      select:
+        ref: self
+      to: hand
+      reason: return
+  - kind: replace
+    when:
+      event: move
+      from: bz
+      to: graveyard
+      reason: destroy
+      subject: self
+    instead:
+    - op: move
+      select:
+        ref: self
+      to: hand
+      reason: return
+  source:
+    official: dm17-007
+    review: pending
+    notes: 厳密一致
+- id: dm17-011
+  name: シャロウ・オペレーション
+  types:
+  - spell
+  civs:
+  - water
+  cost: 3
+  mana: 1
+  text: 'S・バック-水(水のカードを自分のシールドゾーンから手札に加える時、そのカードを捨ててもよい。そうした場合、コストを支払わずにこの呪文を唱える)
+
+    バトルゾーンにある相手のタップされているクリーチャー１体につき１枚、カードを引く。'
+  spell:
+  - op: draw
+    count:
+      count:
+        zone: bz
+        owner: opp
+        filter:
+          types:
+          - creature
+          tapped: true
+  keywords:
+  - s_back_water
+  source:
+    official: dm17-011
+    review: pending
+    notes: 厳密一致
+- id: dm17-023
+  name: パニッシュ・ホールド
+  types:
+  - spell
+  civs:
+  - light
+  cost: 5
+  mana: 1
+  text: 'S・バック-光 (光のカードを自分のシールドゾーンから手札に加える時、そのカードを捨ててもよい。そうした場合、コストを支払わずにこの呪文を唱える)
+
+    バトルゾーンにあるクリーチャーを２体まで選び、タップする。'
+  spell:
+  - op: tap
+    select:
+      zone: bz
+      owner: any
+      filter:
+        types:
+        - creature
+      count: 2
+      up_to: true
+  keywords:
+  - s_back_light
+  source:
+    official: dm17-023
+    review: pending
+    notes: 厳密一致
+- id: dm17-024
+  name: クラック・クロウラー
+  types:
+  - creature
+  civs:
+  - water
+  cost: 6
+  power: 3000
+  races:
+  - アースイーター
+  mana: 1
+  text: 'S・バック-水(水のカードを自分のシールドゾーンから手札に加える時、そのカードを捨ててもよい。そうした場合、コストを支払わずにこのクリーチャーを召喚する)
+
+    ブロッカー
+
+    このクリーチャーは攻撃することができない。'
+  keywords:
+  - s_back_water
+  - blocker
+  - cannot_attack
+  source:
+    official: dm17-024
+    review: pending
+    notes: 厳密一致
+- id: dm17-029
+  name: 煉獄陣
+  types:
+  - spell
+  civs:
+  - darkness
+  cost: 5
+  mana: 1
+  text: S・バック-闇(闇のカードを自分のシールドゾーンから手札に加える時、そのカードを捨ててもよい。そうした場合、コストを支払わずにこの呪文を唱える) クリーチャーを２体まで、自分の墓地から手札に戻す。
+  spell:
+  - op: move
+    select:
+      zone: graveyard
+      owner: you
+      filter:
+        types:
+        - creature
+      count: 2
+      up_to: true
+    to: hand
+    reason: return
+  keywords:
+  - s_back_darkness
+  source:
+    official: dm17-029
+    review: pending
+    notes: 厳密一致
+    aliases:
+    - promoy4-036
+- id: dm19-007
+  name: 超神星マーズ・ディザスター
+  types:
+  - creature
+  - evolution
+  civs:
+  - fire
+  cost: 5
+  power: 13000
+  races:
+  - フェニックス
+  mana: 1
+  evolve_from:
+    races:
+    - ティラノ・ドレイク
+    - ドリームメイト
+    - ヒューマノイド
+  text: '進化GV-自分のティラノ・ドレイク、ドリームメイト、ヒューマノイドのいずれか３体を重ねた上に置く。
+
+    メテオバーン - このクリーチャーが攻撃する時、このクリーチャーの下にあるカードを１枚選び墓地に置いてもよい。そうした場合、パワー4000以下のクリーチャーをすべて破壊する。
+
+    T・ブレイカー(このクリーチャーはシールドを３枚ブレイクする)'
+  keywords:
+  - triple_breaker
+  abilities:
+  - kind: trigger
+    when:
+      event: attack
+      subject: self
+    effect:
+    - op: may
+      body:
+      - op: move
+        select:
+          under_of: self
+          count: 1
+        to: graveyard
+        reason: put
+        as: paid
+      - op: if
+        cond:
+          exists:
+            ref: paid
+        then:
+        - op: destroy
+          select:
+            zone: bz
+            owner: any
+            filter:
+              types:
+              - creature
+              power_le: 4000
+            count: all
+  evolve_count: 3
+  source:
+    official: dm19-007
+    review: pending
+    notes: '厳密一致。進化GVは evolve_count: 3。メテオバーンの「そうした場合」は変数 paid の有無で表す'
+- id: dm19-009
+  name: 超神星ジュピター・キングエンパイア
+  types:
+  - creature
+  - evolution
+  civs:
+  - nature
+  cost: 5
+  power: 14000
+  races:
+  - フェニックス
+  mana: 1
+  evolve_from:
+    races:
+    - ドリームメイト
+    - アーク・セラフィム
+    - ワイルド・ベジーズ
+  text: '進化GV-自分のドリームメイト、アーク・セラフィム、ワイルド・ベジーズのいずれか３体を重ねた上に置く。
+
+    メテオバーン - このクリーチャーが攻撃する時、このクリーチャーの下にある、進化クリーチャーではないカードを１枚選び、バトルゾーンに出してもよい。(ただし、そのクリーチャーは召喚酔いする)
+
+    T・ブレイカー(このクリーチャーはシールドを３枚ブレイクする)'
+  keywords:
+  - triple_breaker
+  abilities:
+  - kind: trigger
+    when:
+      event: attack
+      subject: self
+    effect:
+    - op: may
+      body:
+      - op: move
+        select:
+          under_of: self
+          count: 1
+          filter:
+            types:
+            - creature
+            not_types:
+            - evolution
+        to: bz
+        reason: put
+  evolve_count: 3
+  source:
+    official: dm19-009
+    review: pending
+    notes: '厳密一致。進化GVは evolve_count: 3。メテオバーンの「そうした場合」は変数 paid の有無で表す'
+- id: dm19-017
+  name: 魔皇バルパス
+  types:
+  - creature
+  - evolution
+  civs:
+  - water
+  cost: 5
+  power: 7000
+  races:
+  - グランド・デビル
+  mana: 1
+  evolve_from:
+    races:
+    - グランド・デビル
+  text: '進化-自分のグランド・デビル１体の上に置く。
+
+    メテオバーン - クリーチャーが攻撃する時、このクリーチャーの下にあるカードを１枚選び墓地に置いてもよい。そうした場合、バトルゾーンにあるコスト３以下のカードを１枚選び、持ち主の手札に戻す。
+
+    W・ブレイカー(このクリーチャーはシールドを２枚ブレイクする)'
+  keywords:
+  - double_breaker
+  abilities:
+  - kind: trigger
+    when:
+      event: attack
+      subject:
+        owner: any
+    effect:
+    - op: may
+      body:
+      - op: move
+        select:
+          under_of: self
+          count: 1
+        to: graveyard
+        reason: put
+        as: paid
+      - op: if
+        cond:
+          exists:
+            ref: paid
+        then:
+        - op: move
+          select:
+            zone: bz
+            owner: any
+            filter:
+              cost_le: 3
+            count: 1
+          to: hand
+          reason: return
+  source:
+    official: dm19-017
+    review: pending
+    notes: 厳密一致。メテオバーンの「そうした場合」は変数 paid の有無で表す
+- id: dm19-035
+  name: 大菜王ゴッド・バナナーン
+  types:
+  - creature
+  - evolution
+  civs:
+  - nature
+  cost: 5
+  power: 6000
+  races:
+  - ワイルド・ベジーズ
+  mana: 1
+  evolve_from:
+    races:
+    - ワイルド・ベジーズ
+  text: '進化-自分のワイルド・ベジーズ１体の上に置く。
+
+    メテオバーン - このクリーチャーが攻撃する時、このクリーチャーの下にあるカードを１枚、自分の手札に加えてもよい。
+
+    W・ブレイカー'
+  keywords:
+  - double_breaker
+  abilities:
+  - kind: trigger
+    when:
+      event: attack
+      subject: self
+    effect:
+    - op: may
+      body:
+      - op: move
+        select:
+          under_of: self
+          count: 1
+        to: hand
+        reason: return
+  source:
+    official: dm19-035
+    review: pending
+    notes: 厳密一致。メテオバーンの「そうした場合」は変数 paid の有無で表す
+- id: dm19-041
+  name: 聖帝ファルマハート
+  types:
+  - creature
+  - evolution
+  civs:
+  - light
+  cost: 5
+  power: 7000
+  races:
+  - アーク・セラフィム
+  mana: 1
+  evolve_from:
+    races:
+    - アーク・セラフィム
+  text: '進化-自分のアーク・セラフィム１体の上に置く。
+
+    メテオバーン -相手のクリーチャーが攻撃する時、このクリーチャーの下にあるカードを１枚選び墓地に置いてもよい。そうした場合、このクリーチャーアンタップされ、そのターンの終わりまで「ブロッカー」を得る。
+
+    W・ブレイカー(このクリーチャーはシールドを２枚ブレイクする)'
+  keywords:
+  - double_breaker
+  abilities:
+  - kind: trigger
+    when:
+      event: attack
+      subject:
+        owner: opp
+    effect:
+    - op: may
+      body:
+      - op: move
+        select:
+          under_of: self
+          count: 1
+        to: graveyard
+        reason: put
+        as: paid
+      - op: if
+        cond:
+          exists:
+            ref: paid
+        then:
+        - op: untap
+          select:
+            ref: self
+        - op: modify
+          select:
+            ref: self
+          mod:
+            grant:
+            - blocker
+          duration: end_of_turn
+  source:
+    official: dm19-041
+    review: pending
+    notes: 厳密一致。メテオバーンの「そうした場合」は変数 paid の有無で表す
+- id: dm19-012
+  name: 鋼鉄機甲ベンケロス
+  types:
+  - creature
+  civs:
+  - light
+  cost: 6
+  power: 7000
+  races:
+  - グレートメカオー
+  - ダイナモ
+  mana: 1
+  text: 'ブロッカー
+
+    ダイナモ(バトルが始まる時、あるいはこのクリーチャーで攻撃できる時、このクリーチャーをタップしてもよい。そうした場合、そのターンの終わりまで、このクリーチャーのパワーと能力をバトルゾーンにある自分の他のダイナモ１体に加える)
+
+    このクリーチャーは、相手プレイヤーを攻撃できない。'
+  keywords:
+  - blocker
+  - dynamo
+  - cannot_attack_player
+  source:
+    official: dm19-012
+    review: pending
+    notes: 厳密一致
+- id: dm19-021
+  name: 魚雷ロボ・ミサイル・オーシャン
+  types:
+  - creature
+  civs:
+  - water
+  cost: 4
+  power: 3000
+  races:
+  - グレートメカオー
+  - ダイナモ
+  mana: 1
+  text: 'ダイナモ(バトルが始まる時、あるいはこのクリーチャーで攻撃できる時、このクリーチャーをタップしてもよい。そうした場合、そのターンの終わりまで、このクリーチャーのパワーと能力をバトルゾーンにある自分の他のダイナモ１体に加える)
+
+    このクリーチャーが攻撃する時、相手の山札の上から１枚目を見る。そのカードを、持ち主の山札の一番下に戻してもよい。'
+  keywords:
+  - dynamo
+  abilities:
+  - kind: trigger
+    when:
+      event: attack
+      subject: self
+    effect:
+    - op: move
+      select:
+        zone: deck
+        owner: opp
+        from_top: 1
+        count: 1
+        up_to: true
+        look: true
+      to: deck
+      position: bottom
+      reason: put
+  source:
+    official: dm19-021
+    review: pending
+    notes: 厳密一致
+- id: dm19-032
+  name: 燃える耳のピットトン
+  types:
+  - creature
+  civs:
+  - fire
+  cost: 5
+  power: 5000
+  races:
+  - ドリームメイト
+  - ダイナモ
+  mana: 1
+  text: 'ダイナモ(バトルが始まる時、あるいはこのクリーチャーで攻撃できる時、このクリーチャーをタップしてもよい。そうした場合、そのターンの終わりまで、このクリーチャーのパワーと能力をバトルゾーンにある自分の他のダイナモ１体に加える)
+
+    このクリーチャーは、可能であれば毎ターン攻撃する。'
+  keywords:
+  - dynamo
+  abilities:
+  - kind: static
+    affects: self
+    mod:
+      require:
+      - attack
+  source:
+    official: dm19-032
+    review: pending
+    notes: 厳密一致
+- id: dm19-037
+  name: 冒険探検アミトアキ
+  types:
+  - creature
+  civs:
+  - nature
+  cost: 6
+  power: 6000
+  races:
+  - ドリームメイト
+  - ダイナモ
+  mana: 1
+  text: 'ダイナモ(バトルが始まる時、あるいはこのクリーチャーで攻撃できる時、このクリーチャーをタップしてもよい。そうした場合、そのターンの終わりまで、このクリーチャーのパワーと能力をバトルゾーンにある自分の他のダイナモ１体に加える)
+
+    W・ブレイカー(このクリーチャーはシールドを２枚ブレイクする)'
+  keywords:
+  - dynamo
+  - double_breaker
+  source:
+    official: dm19-037
+    review: pending
+    notes: 厳密一致
+- id: dm19-042
+  name: 電脳ロボ・ダイクラッシャー
+  types:
+  - creature
+  civs:
+  - light
+  cost: 5
+  power: 3000
+  races:
+  - グレートメカオー
+  - ダイナモ
+  mana: 1
+  text: 'ダイナモ(バトルが始まる時、あるいはこのクリーチャーで攻撃できる時、このクリーチャーをタップしてもよい。そうした場合、そのターンの終わりまで、このクリーチャーのパワーと能力をバトルゾーンにある自分の他のダイナモ１体に加える)
+
+    自分のターンの終わりに、このクリーチャーをアンタップしてもよい。'
+  abilities:
+  - kind: trigger
+    when:
+      event: turn_end
+      player: you
+    effect:
+    - op: may
+      body:
+      - op: untap
+        select:
+          ref: self
+  - kind: trigger
+    when:
+      event: turn_end
+      player: you
+    effect:
+    - op: may
+      body:
+      - op: untap
+        select:
+          ref: self
+  keywords:
+  - dynamo
+  source:
+    official: dm19-042
+    review: pending
+    notes: 厳密一致
+- id: dm19-076
+  name: 鋼鉄大使ジャンボ・アタッカー
+  types:
+  - creature
+  civs:
+  - light
+  cost: 2
+  power: 2000
+  races:
+  - グレートメカオー
+  - ダイナモ
+  mana: 1
+  text: ダイナモ(バトルが始まる時、あるいはこのクリーチャーで攻撃できる時、このクリーチャーをタップしてもよい。そうした場合、そのターンの終わりまで、このクリーチャーのパワーと能力をバトルゾーンにある自分の他のダイナモ１体に加える)
+  keywords:
+  - dynamo
+  source:
+    official: dm19-076
+    review: pending
+    notes: 厳密一致
+- id: dm19-083
+  name: 爆腕ロボ・リターンエース
+  types:
+  - creature
+  civs:
+  - water
+  cost: 2
+  power: 2000
+  races:
+  - グレートメカオー
+  - ダイナモ
+  mana: 1
+  text: 'ブロッカー
+
+    ダイナモ(バトルが始まる時、あるいはこのクリーチャーで攻撃できる時、このクリーチャーをタップしてもよい。そうした場合、そのターンの終わりまで、このクリーチャーのパワーと能力をバトルゾーンにある自分の他のダイナモ１体に加える)
+
+    このクリーチャーは攻撃することができない。'
+  keywords:
+  - blocker
+  - dynamo
+  - cannot_attack
+  source:
+    official: dm19-083
+    review: pending
+    notes: 厳密一致
+- id: dm19-100
+  name: 力持ちのジェロン
+  types:
+  - creature
+  civs:
+  - fire
+  cost: 2
+  power: 1000
+  races:
+  - ドリームメイト
+  - ダイナモ
+  mana: 1
+  text: 'ダイナモ(バトルが始まる時、あるいはこのクリーチャーで攻撃できる時、このクリーチャーをタップしてもよい。そうした場合、そのターンの終わりまで、このクリーチャーのパワーと能力をバトルゾーンにある自分の他のダイナモ１体に加える)
+
+    パワーアタッカー+2000(攻撃中、このクリーチャーのパワーは+2000される)'
+  abilities:
+  - kind: static
+    affects: self
+    mod:
+      power_when:
+        amount: 2000
+        when: attacking
+  - kind: static
+    affects: self
+    mod:
+      power_when:
+        amount: 2000
+        when: attacking
+  keywords:
+  - dynamo
+  source:
+    official: dm19-100
+    review: pending
+    notes: 厳密一致
+- id: dm19-103
+  name: 白銀のシュシュ
+  types:
+  - creature
+  civs:
+  - nature
+  cost: 4
+  power: 4000
+  races:
+  - ドリームメイト
+  - ダイナモ
+  mana: 1
+  text: ダイナモ(バトルが始まる時、あるいはこのクリーチャーで攻撃できる時、このクリーチャーをタップしてもよい。そうした場合、そのターンの終わりまで、このクリーチャーのパワーと能力をバトルゾーンにある自分の他のダイナモ１体に加える)
+  keywords:
+  - dynamo
+  source:
+    official: dm19-103
+    review: pending
+    notes: 厳密一致
+- id: dm20-007
+  name: 乱射砲機バルマガン
+  types:
+  - creature
+  civs:
+  - light
+  cost: 6
+  power: 4000
+  races:
+  - グレートメカオー
+  - ダイナモ
+  mana: 1
+  text: 'ダイナモ(バトルが始まる時、あるいはこのクリーチャーで攻撃できる時、このクリーチャーをタップしてもよい。そうした場合、そのターンの終わりまで、このクリーチャーのパワーと能力をバトルゾーンにある自分の他のダイナモ１体に加える)
+
+    このクリーチャーが攻撃する時、バトルゾーンにある相手のクリーチャーを１体選び、タップする。(まず何を攻撃するかを選んでから、タップするクリーチャーを選ぶ)'
+  abilities:
+  - kind: trigger
+    when:
+      event: attack
+      subject: self
+    effect:
+    - op: tap
+      select:
+        zone: bz
+        owner: opp
+        filter:
+          types:
+          - creature
+        count: 1
+  - kind: trigger
+    when:
+      event: attack
+      subject: self
+    effect:
+    - op: tap
+      select:
+        zone: bz
+        owner: opp
+        filter:
+          types:
+          - creature
+        count: 1
+  keywords:
+  - dynamo
+  source:
+    official: dm20-007
+    review: pending
+    notes: 厳密一致
