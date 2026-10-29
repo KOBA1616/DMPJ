@@ -44,6 +44,7 @@ class Card:
     entered_seq: int = 0                              # バトルゾーンに出た時刻（608.5 無視効果の優先）
     crossed: list | None = None                       # クロスギアがクロスしているクリーチャーの参照 [cid, gen]（303.3）。離れていれば無効
     exlife_of: list | None = None                     # 「EXライフ」シールドの紐付け先クリーチャーの参照 [cid, gen]。離れたら外れる
+    no_untap_next: bool = False                       # フリーズ等: 次の持ち主のターン開始時にアンタップしない（1回だけ。開始時に消費）
 
 
 def _jcopy(v):

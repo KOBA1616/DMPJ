@@ -154,6 +154,9 @@ keywords:
     ja: このクリーチャーは攻撃されない
     abilities:
       - {kind: static, affects: self, mod: {deny: [be_attacked]}}
+  enters_tapped:      # 適用は events の move 処理（EXライフと同じくキーワード名を見て処理する）
+    ja: このクリーチャーは、タップしてバトルゾーンに出る
+    abilities: []
 
   # ---- 名前つき効果（注釈つき）。原文の名前と注釈つき文言を rule_convert が照合する ----
   powered_breaker:    # 509.2: パワー6000ごとに1つ多くブレイクする（ブレイカー能力の1つ）

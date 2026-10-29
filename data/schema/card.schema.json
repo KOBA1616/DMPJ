@@ -78,6 +78,7 @@
      "cyclone",
      "double_breaker",
      "dynamo",
+     "enters_tapped",
      "escape",
      "eternal_omega",
      "evo_charger",
@@ -209,6 +210,7 @@
        "cyclone",
        "double_breaker",
        "dynamo",
+       "enters_tapped",
        "escape",
        "eternal_omega",
        "evo_charger",
@@ -440,6 +442,25 @@
       },
       "required": [
        "op"
+      ],
+      "additionalProperties": false
+     },
+     {
+      "type": "object",
+      "properties": {
+       "op": {
+        "const": "force_battle"
+       },
+       "a": {
+        "$ref": "#/$defs/selector"
+       },
+       "b": {
+        "$ref": "#/$defs/selector"
+       }
+      },
+      "required": [
+       "op",
+       "a"
       ],
       "additionalProperties": false
      },
@@ -825,6 +846,9 @@
        },
        "select": {
         "$ref": "#/$defs/selector"
+       },
+       "no_untap_next": {
+        "type": "boolean"
        }
       },
       "required": [
@@ -1177,6 +1201,7 @@
        "cyclone",
        "double_breaker",
        "dynamo",
+       "enters_tapped",
        "escape",
        "eternal_omega",
        "evo_charger",

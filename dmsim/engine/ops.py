@@ -84,11 +84,15 @@ def op_draw(eng, t, op, env):
     eng._defer(t, [eng.ev_task({"ev": "draw", "player": p}, env) for p in ps for _ in range(n)])
 
 
-@op("tap", select="selector")
+@op("tap", select="selector", no_untap_next="bool?")
 def op_tap(eng, t, op, env, kind="tap"):
+    """no_untap_next: フリーズ等。そのクリーチャーは、次の持ち主のターンのはじめにアンタップしない。"""
     cids, d = eng.select(t, op["select"], env)
     if d:
         return d
+    if kind == "tap" and op.get("no_untap_next"):
+        for c in cids:
+            eng.s.cards[c].no_untap_next = True
     if cids:
         eng._defer(t, [eng.ev_task([{"ev": kind, "subject": eng.s.ref(c)} for c in cids], env)])
     return None
@@ -351,4 +355,24 @@ def op_put_under(eng, t, op, env):
 @op("battle_substitute")
 def op_battle_substitute(eng, t, op, env):
     """バトル相手の置換（when: {event: battle}）の印。実際の入れ替えは combat の _battle_substitute が行う。"""
+    return None
+
+
+@op("force_battle", a="selector", b="selector?")
+def op_force_battle(eng, t, op, env):
+    """選んだクリーチャー同士をバトルさせる（「その2体をバトルさせる」）。
+    a が攻撃側。b を省略すると a の先頭2体同士。対象は choose で変数に入れてから ref で指すのが基本。
+    バトル相手の置換（battle_substitute）は攻撃時のフローでのみ判定しており、ここでは未判定。"""
+    aa = eng.candidates(op["a"], env)
+    if op.get("b"):
+        bb = eng.candidates(op["b"], env)
+        pairs = [(aa[0], bb[0])] if aa and bb else []
+    else:
+        pairs = [(aa[0], aa[1])] if len(aa) >= 2 else []
+    tasks = []
+    for x, y in pairs:
+        if eng.s.cards[x].zone == "bz" and eng.s.cards[y].zone == "bz" and x != y:
+            tasks.extend(eng._battle(eng.s.ref(x), eng.s.ref(y)))
+    if tasks:
+        eng._defer(t, tasks)
     return None

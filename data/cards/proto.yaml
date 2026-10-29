@@ -279,3 +279,49 @@ cards:
         when: {event: move, from: bz, to: graveyard, reason: destroy, subject: {owner: opp}}
         effect:
           - {op: draw, count: 1}
+
+  # ---- 語彙パイロット（2026-10-30）: move tapped / tap no_untap_next / enters_tapped / force_battle ----
+  - id: T023
+    name: 試験用タップマナ呪文
+    types: [spell]
+    civs: [nature]
+    cost: 1
+    text: 自分の山札の上から2枚を、タップしてマナゾーンに置く。
+    spell:
+      - {op: move, select: {zone: deck, owner: you, from_top: 2}, to: mana, reason: put, tapped: true}
+
+  - id: T024
+    name: 試験用凍結呪文
+    types: [spell]
+    civs: [water]
+    cost: 1
+    text: 相手のクリーチャーを1体選び、タップする。そのクリーチャーは、次の相手のターンのはじめにアンタップしない。
+    spell:
+      - {op: tap, select: {zone: bz, owner: opp, filter: {types: [creature]}, count: 1}, no_untap_next: true}
+
+  - id: T025
+    name: 試験用タップ出動兵
+    types: [creature]
+    civs: [fire]
+    cost: 2
+    power: 3000
+    races: [テスト]
+    text: このクリーチャーは、タップしてバトルゾーンに出る。
+    keywords: [enters_tapped]
+
+  - id: T026
+    name: 試験用決闘兵
+    types: [creature]
+    civs: [fire]
+    cost: 3
+    power: 5000
+    races: [テスト]
+    text: このクリーチャーが出た時、相手のクリーチャーを1体選んでもよい。その選んだクリーチャーとこのクリーチャーをバトルさせる。
+    abilities:
+      - kind: trigger
+        when: {event: move, to: bz, subject: self}
+        effect:
+          - op: may
+            body:
+              - {op: choose, select: {zone: bz, owner: opp, filter: {types: [creature]}, count: 1}, as: tgt}
+              - {op: force_battle, a: {ref: self}, b: {ref: tgt}}
