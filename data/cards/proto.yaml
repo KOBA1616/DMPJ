@@ -564,3 +564,17 @@ cards:
         when: {event: summon, subject: self}
         effect:
           - {op: draw, count: 1}
+
+  # ---- 語彙パイロット第9弾（2026-10-31）: mod cost_may（任意・ターン1回のコスト軽減） ----
+  - id: T044
+    name: 試験用妖精
+    types: [creature]
+    civs: [nature]
+    cost: 2
+    power: 1000
+    races: [テスト]
+    text: 各ターンに１度、自分の光、水、または自然のクリーチャーの召喚コストを１少なくしてもよい。ただし、コストは０以下にはならない。
+    abilities:
+      - kind: static
+        affects: {zone: hand, owner: you, filter: {types: [creature], civs: [light, water, nature]}}
+        mod: {cost_may: {amount: 1, once: true, min: 0}}

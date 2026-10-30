@@ -284,7 +284,7 @@ class Engine(SelectorMixin, EventMixin, InterpreterMixin, TurnMixin, CombatMixin
         d = self.fdef(cid, face)
         ch = {"power": d.power, "cost": d.cost, "civs": list(d.civs), "types": list(d.types),
               "races": list(d.races), "keywords": set(d.keywords), "name": d.name,
-              "allow": [], "deny": [], "require": [], "breaks": 1, "break_opts": [], "pay_cost": d.cost, "sac_reduce": 0, "opt_reduce": None}
+              "allow": [], "deny": [], "require": [], "breaks": 1, "break_opts": [], "pay_cost": d.cost, "sac_reduce": 0, "opt_reduce": None, "cost_may": []}
         own = self.abilities(cid, "static") if face is None else list(enumerate(d.abilities))
         ref = self.s.ref(cid)
         env_self = {"you": c.controller, "self": ref}
@@ -338,6 +338,20 @@ class Engine(SelectorMixin, EventMixin, InterpreterMixin, TurnMixin, CombatMixin
                 for k in ("allow", "deny", "require", "break_opts"):
                     ch[k] += sc[k]
                 ch["breaks"] = max(ch["breaks"], sc["breaks"])
+        if any("cost_may" in m for m in mods):   # 任意のコスト軽減（cost_may）の発生源を引く（once の使用記録用）
+            src_of = {}
+            for _, ab in own:
+                if ab["kind"] == "static" and ab.get("affects") == "self" and ab.get("zone", "bz") == c.zone and "mod" in ab:
+                    src_of[id(ab["mod"])] = cid
+            for src in self.s.zones["bz"][0]:
+                if cards[src].top_of >= 0 or not self._affects_others(src):
+                    continue
+                for _, ab in self.abilities(src, "static"):
+                    if "mod" in ab:
+                        src_of[id(ab["mod"])] = src
+            for m in mods:
+                if "cost_may" in m:
+                    ch["cost_may"].append({**m["cost_may"], "src": src_of.get(id(m), cid)})
         cost_min = 0
         for m in mods:      # 支払うコストの増減（コスト参照の cost は変えない: 「コスト5以下」はカードのコストで見る）
             if "cost" in m:
