@@ -357,6 +357,21 @@ class Checker:
                 raise DefError(f"{where}: power needs amount (int) and optional count")
             if "count" in pm:
                 self.count_spec(pm["count"], where)
+        if "opt_reduce" in m:
+            o = m["opt_reduce"]
+            if not isinstance(o, dict) or not isinstance(o.get("amount"), int):
+                raise DefError(f"{where}: opt_reduce needs amount (int)")
+            if set(o) - {"amount", "then", "floor", "per", "do"}:
+                raise DefError(f"{where}: opt_reduce has unknown keys {sorted(set(o) - {'amount', 'then', 'floor', 'per', 'do'})}")
+            if "then" in o and o["then"] not in ("destroy", "deck_bottom_draw"):
+                raise DefError(f"{where}: opt_reduce.then must be destroy / deck_bottom_draw")
+            if "do" in o:
+                do = o["do"]
+                if not isinstance(do, dict) or "select" not in do or set(do) - {"select", "move_to", "shuffle", "min", "max"}:
+                    raise DefError(f"{where}: opt_reduce.do needs select and optional move_to/shuffle/min/max")
+                self.selector(do["select"], where)
+                if "move_to" in do and do["move_to"] not in self.zones:
+                    raise DefError(f"{where}: opt_reduce.do.move_to must be a zone")
         for kw in m.get("grant", []):
             if kw not in self.keywords:
                 raise DefError(f"{where}: unknown keyword '{kw}'")

@@ -147,6 +147,32 @@ oni = {cmp: [{sum: [{count: {zone: shield, owner: you}}, {count: {zone: shield, 
 
 ## 次の候補
 
-- summon_time_cost（8件）: opt_reduce の支払い時アクション拡張
+- summon_time_cost（8件）: opt_reduce の支払い時アクション拡張 → 第6弾で対応（下記）
 - 鬼タイムの残り（「真上の能力を無視する」系 約8件）: mod の ignore で届くか精査
 - data_incomplete 以外で残る中規模: g_link（37件）、soul（キーワード複合）など
+
+# 第6弾（2026-10-30）
+
+検証は `tests/test_vocab_pilot6.py`（動作）と `tests/test_vocab_pilot6_cards.py`（代表カードの parse）。
+
+## 実装したもの（新規）
+
+`opt_reduce` に支払い時の行動 `do` を追加した（rejects: summon_time_cost 8件）。
+
+```
+opt_reduce: {amount: 2, floor: 0,
+             do: {select: <selector>, min: 1, max: 1, move_to: graveyard?, shuffle: true?},
+             per: true?}
+```
+
+- 「減らして実行する」を選ぶと、支払いの前に `select` で燃料を選ぶ。`move_to` があれば選んだカードをそこへ動かしてから支払う（手札を見せるだけなら `move_to` なし＝カードは残る。捨てる＝graveyard、シールドを手札に加える＝hand、墓地から山札へ＝deck＋shuffle）
+- `per: true` なら軽減量は `amount × 燃料の件数`（「１枚につき」）。`floor` が下限（「コストは１より少なくならない」→ floor: 1）
+- 燃料の候補から実行中のカード自身は常に除く（「他のカード」と明記がなくても自分は対象にできない）
+- 行動できない（候補が無い）場合は軽減自体が得られない
+- 従来の `then`（B・A・D / J・O・E のターン終了時処理）とは併用・単独どちらでもよい
+
+## 次の候補
+
+- 鬼タイムの残り（「真上の能力を無視する」系 約8件）: mod の ignore で届くか精査
+- g_link（37件）: G・リンクの精査
+- コスト参照系: paid_cost_reference など小粒の残り

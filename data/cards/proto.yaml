@@ -476,3 +476,44 @@ cards:
         affects: self
         if: {cmp: [{entered: {owner: you}}, "<", 2]}
         mod: {deny: [attack_player, attack_creature]}
+
+  # ---- 語彙パイロット第6弾（2026-10-30）: opt_reduce の支払い時アクション（summon_time_cost） ----
+  - id: T038
+    name: 試験用披露兵
+    types: [creature]
+    civs: [fire]
+    cost: 5
+    power: 4000
+    races: [テスト]
+    text: このクリーチャーを召喚する時、自分の手札から進化クリーチャーを１体相手に見せてもよい。そうしたら、このクリーチャーの召喚コストを２少なくする。ただし、コストは０以下にならない。
+    abilities:
+      - kind: static
+        affects: self
+        zone: hand
+        mod: {opt_reduce: {amount: 2, floor: 0, do: {select: {zone: hand, owner: you, filter: {types: [evolution]}, other: true}, min: 1, max: 1}}}
+  - id: T039
+    name: 試験用献納兵
+    types: [creature]
+    civs: [nature]
+    cost: 6
+    power: 5000
+    races: [テスト]
+    text: このクリーチャーを召喚する時、自分の手札を１枚捨ててもよい。そうしたら、このクリーチャーの召喚コストを３少なくする。
+    abilities:
+      - kind: static
+        affects: self
+        zone: hand
+        mod: {opt_reduce: {amount: 3, floor: 0, do: {select: {zone: hand, owner: you, other: true}, min: 1, max: 1, move_to: graveyard}}}
+  - id: T040
+    name: 試験用回収兵
+    types: [creature]
+    civs: [water]
+    cost: 7
+    power: 6000
+    races: [テスト]
+    text: このクリーチャーを召喚する時、自分の墓地にある呪文を好きな数、山札に加えてシャッフルしてもよい。こうして山札に加えた呪文１枚につき、このクリーチャーの召喚コストを１少なくする。ただし、コストは１より少なくならない。
+    abilities:
+      - kind: static
+        affects: self
+        zone: hand
+        mod: {opt_reduce: {amount: 1, per: true, floor: 1, do: {select: {zone: graveyard, owner: you, filter: {types: [spell]}}, min: 0, max: 99, move_to: deck, shuffle: true}}}
