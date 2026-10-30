@@ -430,3 +430,18 @@ cards:
     races: [テスト]
     text: フリーズ（このクリーチャーが相手プレイヤーを攻撃してブロックされなかった時、バトルゾーンにある相手のクリーチャーを１体選び、タップしてもよい。そのクリーチャーは、次の相手のターンのはじめにアンタップしない）
     keywords: [freeze]
+
+  # ---- 語彙パイロット第4弾（2026-10-30）: 鬼タイム条件（既存の if 条件で表現） ----
+  - id: T035
+    name: 試験用鬼兵
+    types: [creature]
+    civs: [darkness]
+    cost: 3
+    power: 2000
+    races: [テスト]
+    text: 鬼タイム：自分と相手のシールドの数が合計６つ以下なら、このクリーチャーのパワーを+3000する。
+    abilities:
+      - kind: static
+        affects: self
+        if: {cmp: [{sum: [{count: {zone: shield, owner: you}}, {count: {zone: shield, owner: opp}}]}, "<=", 6]}
+        mod: {power: 3000}
