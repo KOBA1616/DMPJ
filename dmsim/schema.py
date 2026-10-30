@@ -22,7 +22,7 @@ def build() -> dict:
         "expr": ref("expr"), "cond": ref("cond"), "ops": ref("ops"), "oplists": {"type": "array", "minItems": 2, "items": ref("ops")}, "player": {"enum": ["you", "opp"]},
         "players": {"enum": ["you", "opp", "each"]}, "mod": ref("mod"), "duration": {"enum": sorted(DURATIONS_FIXED)}, "position": {"enum": sorted(POSITIONS)},
         "step": {"enum": steps}, "str": {"type": "string"}, "int": {"type": "integer"},
-        "bool": {"type": "boolean"}, "any": {}, "ability": ref("ability"),
+        "bool": {"type": "boolean"}, "any": {}, "ability": ref("ability"), "filter": ref("filter"),
     }
     op_schemas = []
     for name, args in sorted(ops.items()):

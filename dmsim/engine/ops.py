@@ -282,6 +282,40 @@ def op_play_free(eng, t, op, env):
     return None
 
 
+@op("mekurade", filter="filter?", cost_le="int?", look="int?")
+def op_mekurade(eng, t, op, env):
+    """メクレイド: 自分の山札の上からN枚（既定3）を見て、条件に合う1枚をコストを支払わずに使ってもよい。
+    残りは好きな順序で山札の下に置く。条件は filter と cost_le（「コストN以下」）。"""
+    s = eng.s
+    p = env["you"]
+    os_ = t.setdefault("os", {})
+    if "looked" not in os_:
+        os_["looked"] = list(s.zones["deck"][p][:op.get("look", 3)])
+    looked = os_["looked"]
+    f = dict(op.get("filter") or {})
+    if "cost_le" in op:
+        f["cost_le"] = op["cost_le"]
+    cands = [c for c in looked if s.cards[c].zone == "deck" and eng.filter_match(c, f)]
+    if cands and "picked" not in os_:
+        ans, d = eng.ask(t, p, "choose_cards", [eng._card_option(c, True) for c in cands], 0, 1)
+        if d:
+            return d
+        os_["picked"] = cands[ans[0]] if ans else None
+    pick = os_.get("picked")
+    rest = [c for c in looked if c != pick and s.cards[c].zone == "deck"]
+    tasks = []
+    if pick is not None:
+        want = (op.get("filter") or {}).get("types")
+        tasks.append(eng.play_task(pick, p, True, _free_face(eng, pick, want)))
+    if rest:
+        env.setdefault("vars", {})["mek_rest"] = [s.ref(c) for c in rest]
+        tasks.append(eng._child([{"op": "move", "select": {"ref": "mek_rest"}, "to": "deck", "reason": "put",
+                                  "position": "bottom", "order": "choose"}], env))
+    if tasks:
+        eng._defer(t, tasks)
+    return None
+
+
 @op("swap", out="selector", **{"in": "selector"})
 def op_swap(eng, t, op, env):
     """入れ替える（701.26）。out をバトルゾーンから手札へ、in をバトルゾーンへ。

@@ -219,6 +219,8 @@ class Checker:
                 self.value(ty, op[k], f"{where}: {name}.{k}")
 
     def value(self, ty, v, where):
+        if ty == "filter":
+            return self.filter(v, where)
         if ty == "zone" and v not in self.zones:
             raise DefError(f"{where}: unknown zone '{v}'")
         if ty == "reason" and v not in REASONS:
