@@ -92,6 +92,35 @@ B型は rejects では grant_until_next_turn_start と申告されていたも�
 
 ## 次の候補
 
-- oni_time（43件）: 鬼タイム条件（自分のシールドが相手より少ない等＋専用処理）の精査
+- oni_time（43件）: 鬼タイム条件（自分のシールドが相手より少ない等＋専用処理）の精査 → 第4弾で確認（下記）
 - summon_time_cost 系（34＋8件）: 召喚時のコスト条件・代替コスト
 - entered_this_turn_condition（8件）／total_count_condition（6件）: 小粒の条件系
+
+# 第4弾（2026-10-30）
+
+検証は `tests/test_vocab_pilot4.py`（動作）と `tests/test_vocab_pilot4_cards.py`（代表カードの parse）。**新規実装は無し**。
+
+## 鬼タイムは既存語彙で表せた
+
+鬼タイムの条件は全カード共通で「自分と相手のシールドの数が合計6つ以下」:
+
+```
+oni = {cmp: [{sum: [{count: {zone: shield, owner: you}}, {count: {zone: shield, owner: opp}}]}, "<=", 6]}
+```
+
+| 形（43件中の内訳） | 件数 | 表し方 |
+|---|---:|---|
+| 常在型の付与（パワー+N、ブレイカー/ブロッカー/SA/スレイヤー付与、全体付与、破壊されない deny、召喚コスト-N） | 約21 | `static` ＋ `if: oni` ＋ `mod`（自分への付与は `affects: self`、コスト軽減は手札で効く常在型＝シンパシーと同じ） |
+| 誘発に埋め込まれた形（「出た時／攻撃する時…、合計6つ以下なら追加効果」） | 7 | 誘発の effect 内に `if: oni` の分岐 |
+| 残り（「真上の能力を無視する」系、勝敗の置換、選択の置換、無償召喚など） | 約15 | 個別対応が必要 |
+
+ついでに確認した点:
+
+- 「自分のシールドを手札に加える。ただし、そのS・トリガーは使えない」は、通常の move（shield→hand、reason: return）で足りる。S・トリガーの宣言はブレイクの流れでしか起きないため、「使えない」は自動的に満たされる（逆に「使ってもよい」形は現エンジンでは未対応）
+- 自分への常在型は `affects: {self: true}` ではなく `affects: self` と書く
+
+## 次の候補
+
+- summon_time_cost 系（34＋8件）: 召喚時のコスト条件・代替コスト
+- entered_this_turn_condition（8件）／total_count_condition（6件）: 小粒の条件系
+- 鬼タイムの残り（「真上の能力を無視する」系 約8件）: mod の ignore で届くか精査
