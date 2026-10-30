@@ -11,9 +11,10 @@ TABLES = load_tables()
 
 
 def sc(civs, effect):
+    # 「使ってもよい」は効果側の may で表す（誘発の optional はエンジンでは効かない）
     return {"kind": "trigger", "optional": True,
             "when": {"event": "move", "to": "mana", "subject": {"owner": "you", "filter": {"civs": civs}}},
-            "effect": effect}
+            "effect": [{"op": "may", "body": effect}]}
 
 
 CARDS = [

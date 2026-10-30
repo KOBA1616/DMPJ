@@ -316,6 +316,18 @@ def op_mekurade(eng, t, op, env):
     return None
 
 
+@op("play_self", cost="int", civs="any?")
+def op_play_self(eng, t, op, env):
+    """このカード自身を代替コストで実行する（キリフダッシュ: 攻撃の終わりに [コスト] を支払って召喚する）。
+    civs は代替コストで必要な文明（省略時はカード自身の文明）。"""
+    task = eng.play_task(env["self"][0], env["you"], False)
+    task["cost_override"] = op["cost"]
+    if "civs" in op:
+        task["cost_civs"] = op["civs"]
+    eng._defer(t, [task])
+    return None
+
+
 @op("swap", out="selector", **{"in": "selector"})
 def op_swap(eng, t, op, env):
     """入れ替える（701.26）。out をバトルゾーンから手札へ、in をバトルゾーンへ。
