@@ -18,7 +18,7 @@
 ],
 "verifier": 2,
 "verify_error": "移動先 bz が原文に無い",
-"vocab_ver": "726d85cd2a6e6637"
+"vocab_ver": "776b7b425a3ac653"
 },
 "dm22ex1-115": {
 "by": "rule",
@@ -35,7 +35,7 @@
 ],
 "verifier": 2,
 "verify": "43手・turn 30 まで正常に回った（result={'winner': 0, 'reason': 'deck_out', 'turn': 30}）",
-"vocab_ver": "196211771c018a3a"
+"vocab_ver": "a84b07efd76ff7dc"
 },
 "dm22ex1-122": {
 "by": "rule",
@@ -55,7 +55,7 @@
 ],
 "verifier": 2,
 "verify": "26手・turn 11 まで正常に回った（result={'winner': 0, 'reason': 'direct_attack', 'turn': 11}）",
-"vocab_ver": "8b59eea787147074"
+"vocab_ver": "efcc058777509ce0"
 },
 "dm22ex1-cho49": {
 "by": "rule",
@@ -72,6 +72,6 @@
 ],
 "verifier": 2,
 "verify": "43手・turn 30 まで正常に回った（result={'winner': 0, 'reason': 'deck_out', 'turn': 30}）",
-"vocab_ver": "70d2e1391e52ed33"
+"vocab_ver": "f9e5af472e6da76b"
 }
 }
