@@ -247,12 +247,30 @@ mod `cost_may {amount, once?, min?}`（rejects: optional_cost_reduction の常�
 
 ## 既存の語彙で表せたもの（新規実装なし）
 
-space_charge（単独42件）: スペース・チャージは、文明ごとの行を optional な誘発に分けて書ける。
+space_charge（単独42件）: スペース・チャージは、文明ごとの行を誘発に分けて書ける。
 
-- 型: `{kind: trigger, optional: true, when: {event: move, to: mana, subject: {owner: you, filter: {civs: [<文明>]}}}, effect: [...]}`
+- 型: `{kind: trigger, when: {event: move, to: mana, subject: {owner: you, filter: {civs: [<文明>]}}}, effect: [{op: may, body: [...]}]}`
 - 置かれたカードがイベントの subject になるため、その文明で絞れる。多色のカードを置いた時は合う行がそれぞれ誘発する。通常のチャージでも、効果でマナゾーンに置いた時でも発火する
+- 注意（第11弾で判明）: 誘発能力の `optional` はエンジンでは効かない（置換候補でのみ効く）。「使ってもよい」は効果の先頭に `may` を置いて表すのが正しい型
 
 ## 次の候補
 
 - abyss_rush（36件）／kirifudash（49件）
+- g_link（120件）: 専用弾として設計から
+
+# 第11弾（2026-10-31）
+
+検証は `tests/test_vocab_pilot11.py`（動作）と `tests/test_vocab_pilot11_cards.py`（代表カードの parse）。あわせて第10弾の検証に「断れる」ケースを追加し、代表カードの型を効果側 may に直した。
+
+## 実装したもの（新規）
+
+キリフダッシュ（rejects: kirifudash、単独49件）。
+
+- イベント `attack_end` を追加。攻撃タスクの終了時に、攻撃クリーチャーを subject として発火する。攻撃開始時に通し番号を振り、ブレイク側が「どの攻撃でブレイクしたか」を記録することで、「その攻撃中にシールドをブレイクしていれば」を when の `broke: true` で指定できるようにした
+- op `play_self {cost, civs?}`: このカード自身を代替コストで実行する。支払いは通常の play の流れ（コスト mod は上乗せ、他の軽減は代替コストが優先）
+- 変換の型: `{kind: trigger, zone: hand, when: {event: attack_end, broke: true, subject: {owner: you}}, effect: [{op: may, body: [{op: play_self, cost: N, civs: [...]}]}]}`。[XYnn] の nn が総額、XY が必要な文明（[cc00] は cost: 0, civs: []）
+
+## 次の候補
+
+- abyss_rush（36件）
 - g_link（120件）: 専用弾として設計から

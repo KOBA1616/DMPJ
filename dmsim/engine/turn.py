@@ -165,14 +165,15 @@ class TurnMixin:
         return [c for c in pool if ("creature" in self.chars(c)["types"] or self.permits(c, "evolve_base"))
                 and self.filter_match(c, ef)]
 
-    def _mana_choices(self, cid, p, face=None, cost: int | None = None, limit: int = 32) -> list[list[int]]:
+    def _mana_choices(self, cid, p, face=None, cost: int | None = None, limit: int = 32, civs=None) -> list[list[int]]:
         """支払いに使うマナの組（112.2a）。文明は1文明につき別々の1枚で満たし、マナの数値の合計がコストに一致。
-        cost: 実行時に確定したコスト（進化元数の軽減など）。指定なければカード定義のコスト。"""
+        cost: 実行時に確定したコスト（進化元数の軽減など）。指定なければカード定義のコスト。
+        civs: 必要な文明の上書き（代替コスト用）。"""
         d = self.cdef(cid).face(face)
         eff = d.cost if cost is None else cost
         ch = self.chars(cid, face)
         eff = max(0, eff + ch["pay_cost"] - d.cost)           # 継続的効果によるコストの増減（mod cost）
-        if eff == 0 and not d.civs:
+        if eff == 0 and not (civs if civs is not None else d.civs):
             return [[]]
         untapped = [c for c in self.zlist("mana", p) if not self.s.cards[c].tapped]
         if len(untapped) < len(d.civs) or sum(self.cdef(c).mana for c in untapped) < eff:
@@ -181,7 +182,7 @@ class TurnMixin:
         for c in untapped:
             groups.setdefault(self.s.cards[c].defn, []).append(c)
         names = sorted(groups)
-        need = list(d.civs)
+        need = list(civs) if civs is not None else list(d.civs)
         mana = [self.rules.cards[n].mana for n in names]
         out: list[list[int]] = []
 
@@ -481,7 +482,9 @@ def h_play(eng, t):
             cost = max(o.get("floor", 0), (d.cost if cost is None else cost) - eng._opt_amount(o, t.get("fuel", [])))
         if t.get("cost_may_total"):
             cost = max(t.get("cost_may_min", 0), (d.cost if cost is None else cost) - t["cost_may_total"])
-        choices = eng._mana_choices(cid, p, face, cost=cost)
+        if t.get("cost_override") is not None:   # 代替コスト（キリフダッシュ等）は他の軽減より優先して総額を置き換える
+            cost = t["cost_override"]
+        choices = eng._mana_choices(cid, p, face, cost=cost, civs=t.get("cost_civs"))
         if not choices:
             eng._pop(t)
             return None

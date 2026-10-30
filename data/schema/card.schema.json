@@ -733,6 +733,23 @@
       "type": "object",
       "properties": {
        "op": {
+        "const": "play_self"
+       },
+       "cost": {
+        "type": "integer"
+       },
+       "civs": {}
+      },
+      "required": [
+       "op",
+       "cost"
+      ],
+      "additionalProperties": false
+     },
+     {
+      "type": "object",
+      "properties": {
+       "op": {
         "const": "put_under"
        },
        "select": {
@@ -1632,6 +1649,7 @@
     "event": {
      "enum": [
       "attack",
+      "attack_end",
       "battle",
       "battle_start",
       "battle_win",

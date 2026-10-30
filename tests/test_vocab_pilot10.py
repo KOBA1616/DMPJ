@@ -27,6 +27,25 @@ def test_space_charge_light_shieldify(rules):
     assert len(e.s.zones["shield"][0]) == sh0 + 1
 
 
+def test_space_charge_decline(rules):
+    """「使ってもよい」なので、効果側の may で断れる（誘発自体は任意にできない）。"""
+    e = setup(rules, {"bz": ["T045"], "hand": ["T004", "T003"]}, {"hand": ["T001"]})
+    sh0 = len(e.s.zones["shield"][0])
+    answer(e, "charge", "charge:T004")
+    for _ in range(10):
+        d = e.advance()
+        if d is None or d["kind"] in ("main", "attack"):
+            break
+        keys = [o["key"] for o in d["options"]]
+        if "no" in keys:
+            e.answer([keys.index("no")])
+        elif "pass" in keys:
+            e.answer([keys.index("pass")])
+        else:
+            e.answer(list(range(d["min"])))
+    assert len(e.s.zones["shield"][0]) == sh0
+
+
 def test_space_charge_no_matching_civ_no_trigger(rules):
     e = setup(rules, {"bz": ["T045"], "hand": ["T003"]}, {"hand": ["T001"]})
     sh0 = len(e.s.zones["shield"][0])
