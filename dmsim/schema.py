@@ -70,7 +70,7 @@ def build() -> dict:
                 "from_top": ref("expr"), "chooser": {"enum": ["you", "opp"]}, "ref": {"type": "string"},
                 "other": {"type": "boolean"}, "look": {"type": "boolean"}}, "additionalProperties": False},
             "expr": {"anyOf": [{"type": "integer"}, {"type": "object", "properties": {
-                "count": ref("selector"), "civ_count": ref("selector"), "var": {"type": "string"}, "cost_of": {"type": "string"}, "races_of": {"type": "string"}, "race": {"type": "string"}, "sum": {"type": "array", "items": ref("expr")}},
+                "count": ref("selector"), "civ_count": ref("selector"), "entered": {"type": "object", "properties": {"owner": {"type": "string"}, "other": {"type": "boolean"}}, "additionalProperties": False}, "var": {"type": "string"}, "cost_of": {"type": "string"}, "races_of": {"type": "string"}, "race": {"type": "string"}, "sum": {"type": "array", "items": ref("expr")}},
                 "minProperties": 1, "maxProperties": 1, "additionalProperties": False}]},
             "cond": {"type": "object", "minProperties": 1, "maxProperties": 1, "properties": {
                 "exists": ref("selector"), "cmp": {"type": "array", "minItems": 3, "maxItems": 3},

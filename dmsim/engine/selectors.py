@@ -11,6 +11,12 @@ class SelectorMixin:
                 return len(self.candidates(x["count"], env))
             if "civ_count" in x:   # 対象カード群にある文明の種類数（多色カードは持つ文明をすべて数える）
                 return len({cv for c in self.candidates(x["civ_count"], env) for cv in self.chars(c)["civs"]})
+            if "entered" in x:   # このターン、そのプレイヤーがバトルゾーンに出したクリーチャーの数
+                spec = x["entered"]
+                lst = self.s.turn_counters.get(f"entered:{self._rel(spec.get('owner', 'you'), env)}", [])
+                if spec.get("other") and env.get("self"):   # 「自分の他のクリーチャー」: 自分自身は数えない
+                    lst = [c for c in lst if c != env["self"][0]]
+                return len(lst)
             if "var" in x:
                 return len(env.get("vars", {}).get(x["var"], []))
             if "cost_of" in x:   # 変数に束縛したカード（複数なら最大）のコスト

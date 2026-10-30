@@ -445,3 +445,34 @@ cards:
         affects: self
         if: {cmp: [{sum: [{count: {zone: shield, owner: you}}, {count: {zone: shield, owner: opp}}]}, "<=", 6]}
         mod: {power: 3000}
+
+  # ---- 語彙パイロット第5弾（2026-10-30）: 式 entered（このターンに出したクリーチャー数） ----
+  - id: T036
+    name: 試験用追随兵
+    types: [creature]
+    civs: [darkness]
+    cost: 2
+    power: 2000
+    races: [テスト]
+    text: このクリーチャーがバトルゾーンに出た時、そのターン中、すでに自分の他のクリーチャーがバトルゾーンに出ていれば、このターン、このクリーチャーに「スピードアタッカー」を与える。
+    abilities:
+      - kind: trigger
+        when: {event: move, to: bz, subject: self}
+        effect:
+          - op: if
+            cond: {cmp: [{entered: {owner: you, other: true}}, ">=", 1]}
+            then:
+              - {op: modify, select: {ref: self}, mod: {grant: [speed_attacker]}, duration: end_of_turn}
+  - id: T037
+    name: 試験用慎重兵
+    types: [creature]
+    civs: [nature]
+    cost: 2
+    power: 2000
+    races: [テスト]
+    text: このターン中に自分のクリーチャーが２体以上バトルゾーンに出ていなければ、このクリーチャーは攻撃できない。
+    abilities:
+      - kind: static
+        affects: self
+        if: {cmp: [{entered: {owner: you}}, "<", 2]}
+        mod: {deny: [attack_player, attack_creature]}

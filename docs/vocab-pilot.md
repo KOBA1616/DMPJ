@@ -121,6 +121,32 @@ oni = {cmp: [{sum: [{count: {zone: shield, owner: you}}, {count: {zone: shield, 
 
 ## 次の候補
 
-- summon_time_cost 系（34＋8件）: 召喚時のコスト条件・代替コスト
-- entered_this_turn_condition（8件）／total_count_condition（6件）: 小粒の条件系
+- summon_time_cost 系（34＋8件）: 召喚時のコスト条件・代替コスト → 第5弾で精査（下記）
+- entered_this_turn_condition（8件）／total_count_condition（6件）: 小粒の条件系 → 第5弾で対応
 - 鬼タイムの残り（「真上の能力を無視する」系 約8件）: mod の ignore で届くか精査
+
+# 第5弾（2026-10-30）
+
+検証は `tests/test_vocab_pilot5.py`（動作）と `tests/test_vocab_pilot5_cards.py`（代表カードの parse）。
+
+## 実装したもの（新規）
+
+| 語彙 | 旧 need | 件数 | 実装 |
+|---|---|---:|---|
+| 式 `entered: {owner, other?}` | entered_this_turn_condition | 8（うち約5がこの式で届く形） | このターン、そのプレイヤーがバトルゾーンに出したクリーチャーの数。move の適用時に `turn_counters` へ記録し、ターン開始でリセット。`other: true` で自分自身を除く（「すでに自分の他のクリーチャーが」）。「２体目」は cmp に `=` が無いので `>= 2` と `< 3` の `all` で挟む |
+
+## 実は既存語彙で表せたもの
+
+| 旧 need | 件数 | 表し方 |
+|---|---:|---|
+| total_count_condition | 6 | 「場とマナにあるジョーカーズが合計N以上」は `sum` に2つの `count`。G・ゼロはカード欄外の `free_if` に同じ条件を書く。シールドゾーンでキーワードを得る形は `static` の `zone: shield` ＋ `grant`（サンダイテイオーで確認） |
+
+## summon_time_cost（8件）は見送り
+
+全件が「召喚する時に〜してもよい。そうしたら/につき コストをN少なくする（下限あり）」で、支払い時に任意の行動（手札を見せる・捨てる、シールドを手札に加える、墓地の呪文を山札に戻す）を伴う。既存の `opt_reduce` は「減らす代わりにターン終了時に処理」という別タイミングの仕組みなので流用できず、支払いフローへの組み込みが要る（中規模）。次弾で扱う。
+
+## 次の候補
+
+- summon_time_cost（8件）: opt_reduce の支払い時アクション拡張
+- 鬼タイムの残り（「真上の能力を無視する」系 約8件）: mod の ignore で届くか精査
+- data_incomplete 以外で残る中規模: g_link（37件）、soul（キーワード複合）など
