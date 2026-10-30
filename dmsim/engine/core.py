@@ -412,6 +412,7 @@ class Engine(SelectorMixin, EventMixin, InterpreterMixin, TurnMixin, CombatMixin
                 c.face = 0          # ツインパクトはクリーチャー側としてバトルゾーンにある（810.4）
         c.under, c.top_of = [], -1
         c.exlife_of = None                          # 一度離れたシールドは紐付けが外れる
+        c.no_untap_next = False                     # ゾーン移動で新しいオブジェクトになるので凍結の印も消える
         dest = self.zlist(to, c.controller if self.zshared(to) else c.owner)
         if position == "top" and self.rules.zones[to]["ordered"]:
             dest.insert(0, cid)
