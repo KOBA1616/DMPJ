@@ -468,7 +468,7 @@
 ],
 "verifier": 2,
 "verify": "43手・turn 30 まで正常に回った（result={'winner': 0, 'reason': 'deck_out', 'turn': 30}）",
-"vocab_ver": "8dd0053d7bfefe55"
+"vocab_ver": "6eb3145d700c545d"
 },
 "dmrp17-b05": {
 "by": "rule",
@@ -520,6 +520,6 @@
 ],
 "verifier": 2,
 "verify": "43手・turn 30 まで正常に回った（result={'winner': 0, 'reason': 'deck_out', 'turn': 30}）",
-"vocab_ver": "8dd0053d7bfefe55"
+"vocab_ver": "6eb3145d700c545d"
 }
 }
