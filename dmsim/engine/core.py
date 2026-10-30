@@ -234,6 +234,29 @@ class Engine(SelectorMixin, EventMixin, InterpreterMixin, TurnMixin, CombatMixin
             ign = self._ignored().get(cid)
             if ign:
                 out = [(i, ab) for i, ab in out if not ({"all", ab["kind"]} & ign)]
+            iids = self._ignored_ids(cid)
+            if iids:
+                out = [(i, ab) for i, ab in out if ab.get("id") not in iids]
+        return out
+
+    def _ignored_ids(self, cid: int) -> set[str]:
+        """id で指定して無視されている能力（「真上の▪️能力を無視する」など）。
+        発生源は自身の常在型（条件つき含む）と、このクリーチャーに及ぶ継続的効果。"""
+        s = self.s
+        c = s.cards[cid]
+        if c.zone != "bz":
+            return set()
+        out: set[str] = set()
+        env_self = {"you": c.controller, "self": s.ref(cid)}
+        for ab in self.fdef(cid).abilities:
+            if ab["kind"] == "static" and ab.get("affects") == "self" and ab.get("zone", "bz") == c.zone \
+                    and ab.get("mod", {}).get("ignore_ids") \
+                    and ("if" not in ab or self._static_cond(ab["if"], env_self)):
+                out.update(ab["mod"]["ignore_ids"])
+        ref = s.ref(cid)
+        for ce in s.continuous:
+            if ce["mod"].get("ignore_ids") and self._ce_applies(ce, cid, ref):
+                out.update(ce["mod"]["ignore_ids"])
         return out
 
     def _static_cond(self, cond, env) -> bool:
@@ -261,7 +284,7 @@ class Engine(SelectorMixin, EventMixin, InterpreterMixin, TurnMixin, CombatMixin
         d = self.fdef(cid, face)
         ch = {"power": d.power, "cost": d.cost, "civs": list(d.civs), "types": list(d.types),
               "races": list(d.races), "keywords": set(d.keywords), "name": d.name,
-              "allow": [], "deny": [], "require": [], "breaks": 1, "break_opts": [], "pay_cost": d.cost, "sac_reduce": 0, "opt_reduce": None}
+              "allow": [], "deny": [], "require": [], "breaks": 1, "break_opts": [], "pay_cost": d.cost, "sac_reduce": 0, "opt_reduce": None, "cost_may": []}
         own = self.abilities(cid, "static") if face is None else list(enumerate(d.abilities))
         ref = self.s.ref(cid)
         env_self = {"you": c.controller, "self": ref}
@@ -315,6 +338,20 @@ class Engine(SelectorMixin, EventMixin, InterpreterMixin, TurnMixin, CombatMixin
                 for k in ("allow", "deny", "require", "break_opts"):
                     ch[k] += sc[k]
                 ch["breaks"] = max(ch["breaks"], sc["breaks"])
+        if any("cost_may" in m for m in mods):   # 任意のコスト軽減（cost_may）の発生源を引く（once の使用記録用）
+            src_of = {}
+            for _, ab in own:
+                if ab["kind"] == "static" and ab.get("affects") == "self" and ab.get("zone", "bz") == c.zone and "mod" in ab:
+                    src_of[id(ab["mod"])] = cid
+            for src in self.s.zones["bz"][0]:
+                if cards[src].top_of >= 0 or not self._affects_others(src):
+                    continue
+                for _, ab in self.abilities(src, "static"):
+                    if "mod" in ab:
+                        src_of[id(ab["mod"])] = src
+            for m in mods:
+                if "cost_may" in m:
+                    ch["cost_may"].append({**m["cost_may"], "src": src_of.get(id(m), cid)})
         cost_min = 0
         for m in mods:      # 支払うコストの増減（コスト参照の cost は変えない: 「コスト5以下」はカードのコストで見る）
             if "cost" in m:

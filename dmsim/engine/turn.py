@@ -75,6 +75,20 @@ class TurnMixin:
                     if fi is not None:
                         opt["face"] = fi
                     out.append(opt)
+        seen = set()   # アビスラッシュ: 墓地から召喚できるカードも選択肢に出す
+        for cid in self.zlist("graveyard", p):
+            dn = self.s.cards[cid].defn
+            if dn in seen or not self.permits(cid, "summon_from_graveyard"):
+                continue
+            seen.add(dn)
+            d = self.cdef(cid)
+            for fi, f in ([(None, d)] if not d.faces else list(enumerate(d.faces))):
+                if self._can_play_face(cid, p, fi):
+                    opt = {"key": f"play:{dn}:rush" if fi is None else f"play:{dn}:{fi}:rush",
+                           "cid": cid, "name": f.name, "rush": True}
+                    if fi is not None:
+                        opt["face"] = fi
+                    out.append(opt)
         return out
 
     def _cross_options(self, p) -> list[dict]:
@@ -107,9 +121,32 @@ class TurnMixin:
         return bool(self._mana_choices(cid, p, face, cost=self._opt_reduced(cid, face, d, self._sac_reduced(d, self._tap_reduced(d, p, None, None), self._sac_pool(d, p))), limit=1))
 
     def _opt_reduced(self, cid, face, d, cost):
-        """B・A・D / J・O・E: 減らして実行できる場合の最安コスト（実行可能かの判定用）。"""
+        """任意の軽減（opt_reduce / cost_may）をすべて使った場合の最安コスト（実行可能かの判定用）。"""
+        base = d.cost if cost is None else cost
         o = self.chars(cid, face)["opt_reduce"]
-        return cost if not o else max(0, (d.cost if cost is None else cost) - o["amount"])
+        if o:
+            n = 1
+            if o.get("do") and o.get("per"):   # 支払い時の行動1件につき軽減: 選べる最大数で見積もる
+                env = {"you": self.s.cards[cid].controller, "self": self.s.ref(cid)}
+                n = min(o["do"].get("max", 99), len([c for c in self.candidates(o["do"]["select"], env) if c != cid]))
+            base = max(o.get("floor", 0), base - o["amount"] * n)
+        cm = self._cost_may_avail(cid, face)
+        if cm:
+            base = max(max(e.get("min", 0) for e in cm), base - sum(e["amount"] for e in cm))
+        return base if (o or cm) else cost
+
+    def _opt_amount(self, o, fuel) -> int:
+        """実際に得る軽減量: per なら支払い時の行動の件数 × amount。"""
+        return o["amount"] * (len(fuel) if o.get("per") else 1)
+
+    def _cost_may_avail(self, cid, face=None) -> list[dict]:
+        """今使える任意のコスト軽減（mod cost_may）。once のものは発生源ごとにターン中1回まで。"""
+        out = []
+        for e in self.chars(cid, face)["cost_may"]:
+            if e.get("once") and self.s.turn_counters.get(f"cost_may:{e['src']}"):
+                continue
+            out.append(e)
+        return out
 
     def _sac_pool(self, d, p) -> list[int]:
         """ササゲール: ディスペクターを召喚する時、破壊してコストを減らせる自分のクリーチャー。"""
@@ -142,14 +179,15 @@ class TurnMixin:
         return [c for c in pool if ("creature" in self.chars(c)["types"] or self.permits(c, "evolve_base"))
                 and self.filter_match(c, ef)]
 
-    def _mana_choices(self, cid, p, face=None, cost: int | None = None, limit: int = 32) -> list[list[int]]:
+    def _mana_choices(self, cid, p, face=None, cost: int | None = None, limit: int = 32, civs=None) -> list[list[int]]:
         """支払いに使うマナの組（112.2a）。文明は1文明につき別々の1枚で満たし、マナの数値の合計がコストに一致。
-        cost: 実行時に確定したコスト（進化元数の軽減など）。指定なければカード定義のコスト。"""
+        cost: 実行時に確定したコスト（進化元数の軽減など）。指定なければカード定義のコスト。
+        civs: 必要な文明の上書き（代替コスト用）。"""
         d = self.cdef(cid).face(face)
         eff = d.cost if cost is None else cost
         ch = self.chars(cid, face)
         eff = max(0, eff + ch["pay_cost"] - d.cost)           # 継続的効果によるコストの増減（mod cost）
-        if eff == 0 and not d.civs:
+        if eff == 0 and not (civs if civs is not None else d.civs):
             return [[]]
         untapped = [c for c in self.zlist("mana", p) if not self.s.cards[c].tapped]
         if len(untapped) < len(d.civs) or sum(self.cdef(c).mana for c in untapped) < eff:
@@ -158,7 +196,7 @@ class TurnMixin:
         for c in untapped:
             groups.setdefault(self.s.cards[c].defn, []).append(c)
         names = sorted(groups)
-        need = list(d.civs)
+        need = list(civs) if civs is not None else list(d.civs)
         mana = [self.rules.cards[n].mana for n in names]
         out: list[list[int]] = []
 
@@ -292,7 +330,10 @@ def st_main(eng, t):                                    # 504
     elif o["key"].startswith("cross:"):
         eng._push({"t": "cross", "gear": eng.s.ref(o["cid"]), "target": o["target"], "player": a})
     else:
-        eng._push(eng.play_task(o["cid"], a, o.get("free", False), o.get("face")))
+        task = eng.play_task(o["cid"], a, o.get("free", False), o.get("face"))
+        if o.get("rush"):
+            task["rush"] = True
+        eng._push(task)
 
 
 @step("attack")
@@ -409,13 +450,58 @@ def h_play(eng, t):
             return dd
         t["reduced"] = ans[0] == 0
         t["reduce_done"] = True
+    if t.get("reduced") and ch0["opt_reduce"].get("do") and not t.get("fuel_done"):
+        # 支払い時の行動（手札を見せる・捨てる、シールドを手札に加える、墓地の呪文を山札に戻す等）を先に行う
+        spec = ch0["opt_reduce"]["do"]
+        env = {"you": p, "self": s.ref(cid)}
+        cands = [c for c in eng.candidates(spec["select"], env) if c != cid]   # 実行中のカード自身は対象にしない
+        mx = min(spec.get("max", len(cands)), len(cands))
+        if mx <= 0:
+            t["reduced"] = False          # 行動できないなら軽減も得られない
+            t["fuel_done"] = True
+        else:
+            ans, dd = eng.ask(t, p, "choose_cards", [eng._card_option(c) for c in cands],
+                              min(spec.get("min", 0), mx), mx)
+            if dd:
+                return dd
+            t["fuel"] = [cands[i] for i in ans]
+            t["fuel_done"] = True
+            if spec.get("move_to"):
+                reason = {"graveyard": "discard", "hand": "return", "deck": "put"}.get(spec["move_to"], "put")
+                seq = [eng.ev_task([{"ev": "move", "subject": s.ref(c), "to": spec["move_to"],
+                                     "reason": reason} for c in t["fuel"]])]
+                if spec.get("shuffle"):
+                    seq.append(eng._child([{"op": "shuffle"}], {"you": p, "self": s.ref(cid), "vars": {}}))
+                eng._push(*seq)
+                return None               # 行動の適用を終えてから支払いに進む
+    if not t["free"] and not t.get("cost_may_done"):    # 任意のコスト軽減（cost_may）: 発生源ごとに使うか選ぶ
+        avail = eng._cost_may_avail(cid, face)
+        i = t.get("cost_may_i", 0)
+        while i < len(avail):
+            e = avail[i]
+            ans, dd = eng.ask(t, p, "choose_cards", [{"key": "reduce"}, {"key": "normal"}], 1, 1)
+            if dd:
+                t["cost_may_i"] = i
+                return dd
+            if ans[0] == 0:
+                t["cost_may_total"] = t.get("cost_may_total", 0) + e["amount"]
+                t["cost_may_min"] = max(t.get("cost_may_min", 0), e.get("min", 0))
+                if e.get("once"):
+                    s.turn_counters[f"cost_may:{e['src']}"] = 1
+            i += 1
+        t["cost_may_done"] = True
     if not t["free"]:
         n = len(t.get("evo", []))
         cost = max(0, d.cost - n * d.cost_reduce_per_evo) if d.cost_reduce_per_evo else None
         cost = eng._sac_reduced(d, eng._tap_reduced(d, p, cost, t.get("tap", [])), t.get("sac", []))
         if t.get("reduced"):
-            cost = max(0, (d.cost if cost is None else cost) - ch0["opt_reduce"]["amount"])
-        choices = eng._mana_choices(cid, p, face, cost=cost)
+            o = ch0["opt_reduce"]
+            cost = max(o.get("floor", 0), (d.cost if cost is None else cost) - eng._opt_amount(o, t.get("fuel", [])))
+        if t.get("cost_may_total"):
+            cost = max(t.get("cost_may_min", 0), (d.cost if cost is None else cost) - t["cost_may_total"])
+        if t.get("cost_override") is not None:   # 代替コスト（キリフダッシュ等）は他の軽減より優先して総額を置き換える
+            cost = t["cost_override"]
+        choices = eng._mana_choices(cid, p, face, cost=cost, civs=t.get("cost_civs"))
         if not choices:
             eng._pop(t)
             return None
@@ -451,13 +537,19 @@ def h_play(eng, t):
                    eng.ev_task({"ev": "move", "subject": ref, "from": from_zone, "to": t.get("resolve_to", "hand" if cyc else d.resolve_to),
                                  "reason": "resolve", "position": t.get("resolve_position", "top")}),
                    *([eng._child(d.after_resolve, env)] if d.after_resolve else []))
-    if t.get("reduced"):   # 減らして実行したら、そのターンの終わりに処理する。実行の解決より後に積む＝先に処理する
+    if t.get("reduced") and ch0["opt_reduce"].get("then"):   # 減らして実行したら、そのターンの終わりに処理する。実行の解決より後に積む＝先に処理する
         then = ch0["opt_reduce"]["then"]
         end = [{"op": "move", "select": {"ref": "self_entered"}, "to": "graveyard", "reason": "destroy"}] if then == "destroy" else \
               [{"op": "move", "select": {"ref": "self_entered"}, "to": "deck", "reason": "put", "position": "bottom"},
                {"op": "draw", "count": 1}]
         eng._push(eng._child([{"op": "delayed_trigger", "when": {"event": "turn_end"}, "effect": end}],
                              {"you": p, "self": ref, "vars": {}}))
+    if t.get("rush") and from_zone == "graveyard" and d.is_creature():   # アビスラッシュの付随処理
+        s.turn_counters[f"rush:{cid}"] = s.turn      # このターン、召喚酔いでもプレイヤーを攻撃できる
+        eng._push(eng._child([{"op": "delayed_trigger", "when": {"event": "turn_end"},
+                               "effect": [{"op": "move", "select": {"ref": "self_entered"},
+                                           "to": "deck", "reason": "put", "position": "bottom"}]}],
+                             {"you": p, "self": ref, "vars": {}}))   # ターンの終わりに山札の下へ
     if t.get("sac"):       # ササゲール: 軽減したら破壊する（支払いの一部。実行の解決より先に行う）
         eng._push(eng.ev_task([{"ev": "move", "subject": s.ref(c), "to": "graveyard", "reason": "destroy"}
                                for c in t["sac"]]))

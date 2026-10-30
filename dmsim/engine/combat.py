@@ -26,9 +26,13 @@ class CombatMixin:
     def _attack_options(self, a):
         out = []
         for cid in self.bz_tops(a):
-            if not self._can_attack(cid):
-                continue
             dfn = self.s.cards[cid].defn
+            if not self._can_attack(cid):
+                # アビスラッシュで出たターンだけ、召喚酔いでもプレイヤーへの攻撃はできる（クリーチャーは不可）
+                if self.s.turn_counters.get(f"rush:{cid}") == self.s.turn and not self.s.cards[cid].tapped \
+                        and "creature" in self.chars(cid)["types"] and self.permits(cid, "attack_player"):
+                    out.append({"key": f"attack:{dfn}:player", "cid": cid, "target": "player"})
+                continue
             if self.permits(cid, "attack_player"):
                 out.append({"key": f"attack:{dfn}:player", "cid": cid, "target": "player"})
             allow = [e for e in self.chars(cid)["allow"] if isinstance(e, dict) and e["action"] == "attack_creature"]
@@ -201,6 +205,9 @@ def h_attack(eng, t):
         return None
     if ph == 0:                                               # 506 攻撃クリーチャー指定
         t["phase"] = 1
+        s.turn_counters["attack_no"] = s.turn_counters.get("attack_no", 0) + 1
+        t["ano"] = s.turn_counters["attack_no"]
+        s.turn_counters["current_attack"] = t["ano"]
         s.cards[att[0]].tapped = True
         rec = {"ev": "attack", "subject": att, "target": t["target"], "controller": a}
         eng._push(eng.ev_task(rec), _decl(eng, a, "attack", rec))
@@ -266,6 +273,12 @@ def h_attack(eng, t):
                 eng._push({"t": "break", "victim": 1 - a, "by": a, "count": n, "phase": 0, "in_effect": False, "breaker": att})
             else:
                 s.result = {"winner": a, "reason": "direct_attack", "turn": s.turn}   # 509.1 / 703.4a
+        return None
+    if not t.get("end_fired") and not s.result:               # 510 攻撃の終わり（キリフダッシュ等の誘発点）
+        t["end_fired"] = True
+        broke = s.turn_counters.get(f"broke_in:{att[0]}") == t.get("ano")
+        eng._push(eng.ev_task({"ev": "attack_end", "subject": att, "target": t["target"],
+                               "controller": a, "broke": broke}))
         return None
     eng._pop(t)
     eng._expire("during_attack")                             # 510.2
@@ -344,6 +357,7 @@ def h_break(eng, t):
         ev = {"ev": "break", "player": victim, "count": len(chosen)}
         if t.get("breaker") and s.alive(t["breaker"]):      # ブレイクしたクリーチャー（「他のクリーチャーがシールドをブレイクした」）
             ev["subject"] = t["breaker"]
+            s.turn_counters[f"broke_in:{t['breaker'][0]}"] = s.turn_counters.get("current_attack", 0)
         seq.append(eng.ev_task(ev))
     if t["in_effect"]:   # S・トリガーの解決中のブレイクは、新しい S・トリガーをその場で解決する（101.4g）
         seq = eng._window(*seq, only_st=True)

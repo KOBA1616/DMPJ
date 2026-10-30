@@ -120,6 +120,8 @@ class EventMixin:
             if ev["reason"] == "summon":
                 out.append({"ev": "summon", "subject": new, "controller": c.controller, "player": c.controller,
                             "unpaid": bool(ev.get("unpaid"))})
+            if ev["to"] == "bz" and "creature" in self.chars(cid)["types"]:   # 「このターンに出たクリーチャー」の記録（式 entered が数える）
+                s.turn_counters.setdefault(f"entered:{c.controller}", []).append(cid)
             return out
         if kind == "draw":
             p = ev["player"]
@@ -139,7 +141,7 @@ class EventMixin:
                 return []   # 「になる」誘発は状態が変わった時だけ（603.2c）
             c.tapped = kind == "tap"
             return [{"ev": kind, "subject": ev["subject"], "controller": c.controller}]
-        if kind in ("attack", "block", "cast", "turn_start", "turn_end", "break", "battle_win", "battle_start"):
+        if kind in ("attack", "block", "cast", "turn_start", "turn_end", "break", "battle_win", "battle_start", "attack_end"):
             return [dict(ev)]
         raise ValueError(kind)
 
@@ -290,6 +292,8 @@ class EventMixin:
             if rec.get("attacker") is None or not self._ref_match(when["attacker"], rec["attacker"], env):
                 return False
         if "unpaid" in when and bool(rec.get("unpaid")) != when["unpaid"]:   # マナをタップせずに（コストを支払わずに）
+            return False
+        if "broke" in when and bool(rec.get("broke")) != when["broke"]:   # 攻撃の終わりに、その攻撃でシールドをブレイクしたか（キリフダッシュ）
             return False
         if "player" in when and rec.get("player") != self._rel(when["player"], env):
             return False

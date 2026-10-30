@@ -22,15 +22,15 @@ def core_ops() -> dict[str, dict[str, str]]:
     return OP_ARGS
 
 EVENTS = {"move", "draw", "cast", "summon", "attack", "block", "break", "tap", "untap",
-          "turn_start", "turn_end", "battle_win", "choose", "battle", "battle_start"}
+          "turn_start", "turn_end", "battle_win", "choose", "battle", "battle_start", "attack_end"}
 ABILITY_KINDS = {"trigger", "replace", "static", "declare", "activate", "silent", "state"}   # state: 状態を常に見て、満たされたら勝敗が決まる常在効果（if と effect: [win/lose]）
-ABILITY_KEYS = {"kind", "when", "if", "effect", "instead", "optional", "affects", "mod", "zone", "keyword", "cost",
+ABILITY_KEYS = {"kind", "when", "if", "effect", "instead", "optional", "affects", "mod", "zone", "keyword", "cost", "id",
                 "once_per_turn", "first_time"}
 REASONS = {"put", "destroy", "return", "discard", "charge", "summon", "cast", "break",
            "draw", "battle", "sba", "resolve", "evolve"}
 VIAS = {"revolution_change", "generate"}   # 出し方の印（「革命チェンジによって出た時」など）
 DURATIONS_FIXED = {"end_of_turn", "during_attack", "permanent", "until_next_own_turn_start"}
-MOD_KEYS = {"power", "grant", "allow", "deny", "breaks", "breaks_per_power", "battle_power", "power_when", "cost", "cost_min", "sac_reduce", "opt_reduce", "ignore", "gain", "require", "add_of"}
+MOD_KEYS = {"power", "grant", "allow", "deny", "breaks", "breaks_per_power", "battle_power", "power_when", "cost", "cost_min", "cost_may", "sac_reduce", "opt_reduce", "ignore", "ignore_ids", "gain", "require", "add_of"}
 REQUIRES = {"attack", "block"}   # 強制（506.1b 攻撃しなければならない, 507.1b ブロックしなければならない）
 POSITIONS = {"top", "bottom"}
 PERMANENT_TYPES = {"tamaseed", "field", "cross_gear"}   # 手札から実行してバトルゾーンに出るクリーチャー以外のカード（315, 308, 303）
@@ -219,6 +219,8 @@ class Checker:
                 self.value(ty, op[k], f"{where}: {name}.{k}")
 
     def value(self, ty, v, where):
+        if ty == "filter":
+            return self.filter(v, where)
         if ty == "zone" and v not in self.zones:
             raise DefError(f"{where}: unknown zone '{v}'")
         if ty == "reason" and v not in REASONS:
@@ -301,6 +303,10 @@ class Checker:
                 return self.selector(v, where)
             if k == "civ_count":   # 対象カード群にある文明の種類数（多色はそれぞれ数える）
                 return self.selector(v, where)
+            if k == "entered":   # このターンに出したクリーチャーの数 {owner, other?}
+                if not isinstance(v, dict) or set(v) - {"owner", "other"} or v.get("owner", "you") not in ("you", "opp"):
+                    raise DefError(f"{where}: entered needs {{owner: you/opp, other?: bool}}")
+                return
             if k in ("var", "cost_of", "races_of", "race"):
                 return
             if k == "sum":
@@ -353,6 +359,29 @@ class Checker:
                 raise DefError(f"{where}: power needs amount (int) and optional count")
             if "count" in pm:
                 self.count_spec(pm["count"], where)
+        if "cost_may" in m:
+            cm = m["cost_may"]
+            if not isinstance(cm, dict) or set(cm) - {"amount", "once", "min"} or not isinstance(cm.get("amount"), int) \
+                    or ("once" in cm and not isinstance(cm["once"], bool)) or ("min" in cm and not isinstance(cm["min"], int)):
+                raise DefError(f"{where}: cost_may must be {{amount: int, once?: bool, min?: int}}")
+        if "ignore_ids" in m:
+            if not isinstance(m["ignore_ids"], list) or not all(isinstance(x, str) for x in m["ignore_ids"]):
+                raise DefError(f"{where}: ignore_ids must be a list of ability id strings")
+        if "opt_reduce" in m:
+            o = m["opt_reduce"]
+            if not isinstance(o, dict) or not isinstance(o.get("amount"), int):
+                raise DefError(f"{where}: opt_reduce needs amount (int)")
+            if set(o) - {"amount", "then", "floor", "per", "do"}:
+                raise DefError(f"{where}: opt_reduce has unknown keys {sorted(set(o) - {'amount', 'then', 'floor', 'per', 'do'})}")
+            if "then" in o and o["then"] not in ("destroy", "deck_bottom_draw"):
+                raise DefError(f"{where}: opt_reduce.then must be destroy / deck_bottom_draw")
+            if "do" in o:
+                do = o["do"]
+                if not isinstance(do, dict) or "select" not in do or set(do) - {"select", "move_to", "shuffle", "min", "max"}:
+                    raise DefError(f"{where}: opt_reduce.do needs select and optional move_to/shuffle/min/max")
+                self.selector(do["select"], where)
+                if "move_to" in do and do["move_to"] not in self.zones:
+                    raise DefError(f"{where}: opt_reduce.do.move_to must be a zone")
         for kw in m.get("grant", []):
             if kw not in self.keywords:
                 raise DefError(f"{where}: unknown keyword '{kw}'")
@@ -424,6 +453,8 @@ class Checker:
         bad = set(ab) - ABILITY_KEYS
         if bad:
             raise DefError(f"{where}: unknown ability keys {sorted(bad)}")
+        if "id" in ab and not isinstance(ab["id"], str):
+            raise DefError(f"{where}: ability id must be a string")
         if kind in ("trigger", "replace", "declare"):
             self.when(ab.get("when", {}), where)
         if kind == "state":
