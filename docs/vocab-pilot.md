@@ -274,3 +274,20 @@ space_charge（単独42件）: スペース・チャージは、文明ごとの�
 
 - abyss_rush（36件）
 - g_link（120件）: 専用弾として設計から
+
+# 第12弾（2026-10-31）
+
+検証は `tests/test_vocab_pilot12.py`（動作）と `tests/test_vocab_pilot12_cards.py`（代表カードの parse）。
+
+## 実装したもの（新規）
+
+アビスラッシュ（rejects: abyss_rush、単独36件）。エンジンの流儀（ルール側はキーワード名を見ない）に合わせ、許可ベースで組んだ。
+
+- 許可 `summon_from_graveyard` を permissions.yaml に追加。キーワード `abyss_rush` は墓地で機能する常在型（allow: summon_from_graveyard）に展開される
+- メインステップの選択肢に、墓地のアビスラッシュ持ちが `play:<カード>:rush` として出る（通常コストを払う）
+- ラッシュで召喚すると: そのターンは召喚酔いでもプレイヤーだけは攻撃できる（turn_counters に印。クリーチャーへの攻撃は不可）、ターンの終わりに山札の下に置かれる（delayed_trigger を登録）
+
+## 次の候補
+
+- 小粒の残ギャップの棚卸し（単独20件以下の層）
+- g_link（120件）: 専用弾として設計から

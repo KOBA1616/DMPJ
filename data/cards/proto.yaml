@@ -616,3 +616,14 @@ cards:
         when: {event: attack_end, broke: true, subject: {owner: you}}
         effect:
           - {op: may, body: [{op: play_self, cost: 1, civs: [fire]}]}
+
+  # ---- 語彙パイロット第12弾（2026-10-31）: アビスラッシュ ----
+  - id: T047
+    name: 試験用アビス
+    types: [creature]
+    civs: [darkness]
+    cost: 3
+    power: 3000
+    races: [アビス, テスト]
+    keywords: [abyss_rush, double_breaker]
+    text: アビスラッシュ（このクリーチャーを自分の墓地から召喚してもよい。そうしたら、このターン、このクリーチャーはプレイヤーを攻撃でき、ターンの終わりに山札の下に置かれる）W・ブレイカー

@@ -26,9 +26,13 @@ class CombatMixin:
     def _attack_options(self, a):
         out = []
         for cid in self.bz_tops(a):
-            if not self._can_attack(cid):
-                continue
             dfn = self.s.cards[cid].defn
+            if not self._can_attack(cid):
+                # アビスラッシュで出たターンだけ、召喚酔いでもプレイヤーへの攻撃はできる（クリーチャーは不可）
+                if self.s.turn_counters.get(f"rush:{cid}") == self.s.turn and not self.s.cards[cid].tapped \
+                        and "creature" in self.chars(cid)["types"] and self.permits(cid, "attack_player"):
+                    out.append({"key": f"attack:{dfn}:player", "cid": cid, "target": "player"})
+                continue
             if self.permits(cid, "attack_player"):
                 out.append({"key": f"attack:{dfn}:player", "cid": cid, "target": "player"})
             allow = [e for e in self.chars(cid)["allow"] if isinstance(e, dict) and e["action"] == "attack_creature"]

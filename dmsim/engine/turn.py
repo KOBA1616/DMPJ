@@ -75,6 +75,20 @@ class TurnMixin:
                     if fi is not None:
                         opt["face"] = fi
                     out.append(opt)
+        seen = set()   # アビスラッシュ: 墓地から召喚できるカードも選択肢に出す
+        for cid in self.zlist("graveyard", p):
+            dn = self.s.cards[cid].defn
+            if dn in seen or not self.permits(cid, "summon_from_graveyard"):
+                continue
+            seen.add(dn)
+            d = self.cdef(cid)
+            for fi, f in ([(None, d)] if not d.faces else list(enumerate(d.faces))):
+                if self._can_play_face(cid, p, fi):
+                    opt = {"key": f"play:{dn}:rush" if fi is None else f"play:{dn}:{fi}:rush",
+                           "cid": cid, "name": f.name, "rush": True}
+                    if fi is not None:
+                        opt["face"] = fi
+                    out.append(opt)
         return out
 
     def _cross_options(self, p) -> list[dict]:
@@ -316,7 +330,10 @@ def st_main(eng, t):                                    # 504
     elif o["key"].startswith("cross:"):
         eng._push({"t": "cross", "gear": eng.s.ref(o["cid"]), "target": o["target"], "player": a})
     else:
-        eng._push(eng.play_task(o["cid"], a, o.get("free", False), o.get("face")))
+        task = eng.play_task(o["cid"], a, o.get("free", False), o.get("face"))
+        if o.get("rush"):
+            task["rush"] = True
+        eng._push(task)
 
 
 @step("attack")
@@ -527,6 +544,12 @@ def h_play(eng, t):
                {"op": "draw", "count": 1}]
         eng._push(eng._child([{"op": "delayed_trigger", "when": {"event": "turn_end"}, "effect": end}],
                              {"you": p, "self": ref, "vars": {}}))
+    if t.get("rush") and from_zone == "graveyard" and d.is_creature():   # アビスラッシュの付随処理
+        s.turn_counters[f"rush:{cid}"] = s.turn      # このターン、召喚酔いでもプレイヤーを攻撃できる
+        eng._push(eng._child([{"op": "delayed_trigger", "when": {"event": "turn_end"},
+                               "effect": [{"op": "move", "select": {"ref": "self_entered"},
+                                           "to": "deck", "reason": "put", "position": "bottom"}]}],
+                             {"you": p, "self": ref, "vars": {}}))   # ターンの終わりに山札の下へ
     if t.get("sac"):       # ササゲール: 軽減したら破壊する（支払いの一部。実行の解決より先に行う）
         eng._push(eng.ev_task([{"ev": "move", "subject": s.ref(c), "to": "graveyard", "reason": "destroy"}
                                for c in t["sac"]]))

@@ -16,6 +16,10 @@ keywords:
     ja: ブロッカー
     abilities:
       - {kind: static, affects: self, mod: {allow: [block]}}
+  abyss_rush:
+    ja: アビスラッシュ
+    abilities:
+      - {kind: static, zone: graveyard, affects: self, mod: {allow: [summon_from_graveyard]}}
   speed_attacker:
     ja: スピードアタッカー
     abilities:
