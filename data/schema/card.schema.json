@@ -1508,6 +1508,25 @@
     "sac_reduce": {
      "type": "integer"
     },
+    "cost_may": {
+     "type": "object",
+     "properties": {
+      "amount": {
+       "type": "integer"
+      },
+      "once": {
+       "type": "boolean"
+      },
+      "min": {
+       "type": "integer",
+       "minimum": 0
+      }
+     },
+     "required": [
+      "amount"
+     ],
+     "additionalProperties": false
+    },
     "opt_reduce": {
      "type": "object",
      "properties": {
@@ -1592,6 +1611,7 @@
      "breaks",
      "breaks_per_power",
      "cost",
+     "cost_may",
      "cost_min",
      "deny",
      "gain",

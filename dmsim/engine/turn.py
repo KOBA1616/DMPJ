@@ -107,20 +107,32 @@ class TurnMixin:
         return bool(self._mana_choices(cid, p, face, cost=self._opt_reduced(cid, face, d, self._sac_reduced(d, self._tap_reduced(d, p, None, None), self._sac_pool(d, p))), limit=1))
 
     def _opt_reduced(self, cid, face, d, cost):
-        """B・A・D / J・O・E: 減らして実行できる場合の最安コスト（実行可能かの判定用）。"""
-        o = self.chars(cid, face)["opt_reduce"]
-        if not o:
-            return cost
+        """任意の軽減（opt_reduce / cost_may）をすべて使った場合の最安コスト（実行可能かの判定用）。"""
         base = d.cost if cost is None else cost
-        n = 1
-        if o.get("do") and o.get("per"):   # 支払い時の行動1件につき軽減: 選べる最大数で見積もる
-            env = {"you": self.s.cards[cid].controller, "self": self.s.ref(cid)}
-            n = min(o["do"].get("max", 99), len([c for c in self.candidates(o["do"]["select"], env) if c != cid]))
-        return max(o.get("floor", 0), base - o["amount"] * n)
+        o = self.chars(cid, face)["opt_reduce"]
+        if o:
+            n = 1
+            if o.get("do") and o.get("per"):   # 支払い時の行動1件につき軽減: 選べる最大数で見積もる
+                env = {"you": self.s.cards[cid].controller, "self": self.s.ref(cid)}
+                n = min(o["do"].get("max", 99), len([c for c in self.candidates(o["do"]["select"], env) if c != cid]))
+            base = max(o.get("floor", 0), base - o["amount"] * n)
+        cm = self._cost_may_avail(cid, face)
+        if cm:
+            base = max(max(e.get("min", 0) for e in cm), base - sum(e["amount"] for e in cm))
+        return base if (o or cm) else cost
 
     def _opt_amount(self, o, fuel) -> int:
         """実際に得る軽減量: per なら支払い時の行動の件数 × amount。"""
         return o["amount"] * (len(fuel) if o.get("per") else 1)
+
+    def _cost_may_avail(self, cid, face=None) -> list[dict]:
+        """今使える任意のコスト軽減（mod cost_may）。once のものは発生源ごとにターン中1回まで。"""
+        out = []
+        for e in self.chars(cid, face)["cost_may"]:
+            if e.get("once") and self.s.turn_counters.get(f"cost_may:{e['src']}"):
+                continue
+            out.append(e)
+        return out
 
     def _sac_pool(self, d, p) -> list[int]:
         """ササゲール: ディスペクターを召喚する時、破壊してコストを減らせる自分のクリーチャー。"""
@@ -444,6 +456,22 @@ def h_play(eng, t):
                     seq.append(eng._child([{"op": "shuffle"}], {"you": p, "self": s.ref(cid), "vars": {}}))
                 eng._push(*seq)
                 return None               # 行動の適用を終えてから支払いに進む
+    if not t["free"] and not t.get("cost_may_done"):    # 任意のコスト軽減（cost_may）: 発生源ごとに使うか選ぶ
+        avail = eng._cost_may_avail(cid, face)
+        i = t.get("cost_may_i", 0)
+        while i < len(avail):
+            e = avail[i]
+            ans, dd = eng.ask(t, p, "choose_cards", [{"key": "reduce"}, {"key": "normal"}], 1, 1)
+            if dd:
+                t["cost_may_i"] = i
+                return dd
+            if ans[0] == 0:
+                t["cost_may_total"] = t.get("cost_may_total", 0) + e["amount"]
+                t["cost_may_min"] = max(t.get("cost_may_min", 0), e.get("min", 0))
+                if e.get("once"):
+                    s.turn_counters[f"cost_may:{e['src']}"] = 1
+            i += 1
+        t["cost_may_done"] = True
     if not t["free"]:
         n = len(t.get("evo", []))
         cost = max(0, d.cost - n * d.cost_reduce_per_evo) if d.cost_reduce_per_evo else None
@@ -451,6 +479,8 @@ def h_play(eng, t):
         if t.get("reduced"):
             o = ch0["opt_reduce"]
             cost = max(o.get("floor", 0), (d.cost if cost is None else cost) - eng._opt_amount(o, t.get("fuel", [])))
+        if t.get("cost_may_total"):
+            cost = max(t.get("cost_may_min", 0), (d.cost if cost is None else cost) - t["cost_may_total"])
         choices = eng._mana_choices(cid, p, face, cost=cost)
         if not choices:
             eng._pop(t)

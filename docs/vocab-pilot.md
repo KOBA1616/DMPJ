@@ -216,6 +216,27 @@ op `mekurade`（rejects: mekurade、単独49件）。
 
 ## 次の候補
 
-- optional_cost_reduction（78件）: 「してもよい」の常在型コスト軽減
+- optional_cost_reduction（78件）: 「してもよい」の常在型コスト軽減 → 第9弾で一部対応（下記）
+- space_charge（42件）／abyss_rush（36件）／kirifudash（49件）
+- g_link（120件）: 専用弾として設計から
+
+# 第9弾（2026-10-31）
+
+検証は `tests/test_vocab_pilot9.py`（動作）と `tests/test_vocab_pilot9_cards.py`（代表カードの parse）。
+
+## 実装したもの（新規）
+
+mod `cost_may {amount, once?, min?}`（rejects: optional_cost_reduction の常在型分）。
+
+- 「自分の〜の召喚／詠唱コストをN少なくしてもよい」を、発生源の常在型の `mod: {cost_may: {...}}` で表す。対象は affects（zone: hand ＋ filter）で指定する
+- プレイ時に発生源ごとに「減らす／通常」を選び、`once: true` なら発生源ごとにターン中1回まで（使用記録は turn_counters）。実行可否の判定（_opt_reduced）にも織り込み済み
+- 制限: 継続的効果（modify）由来の cost_may は発生源を引けないため未対応
+
+## optional_cost_reduction の残り
+
+この語彙名の申告は混成で、残りは別機構: 自分の召喚時の任意軽減（第6弾の opt_reduce の do / per で表せるものを含む。例:「墓地の呪文1枚につき」は do なしの per 型で要精査）、相手のカードへの任意軽減など。
+
+## 次の候補
+
 - space_charge（42件）／abyss_rush（36件）／kirifudash（49件）
 - g_link（120件）: 専用弾として設計から
