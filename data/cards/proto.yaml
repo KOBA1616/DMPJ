@@ -578,3 +578,24 @@ cards:
       - kind: static
         affects: {zone: hand, owner: you, filter: {types: [creature], civs: [light, water, nature]}}
         mod: {cost_may: {amount: 1, once: true, min: 0}}
+
+  # ---- 語彙パイロット第10弾（2026-10-31）: スペース・チャージ（既存の誘発で表現） ----
+  - id: T045
+    name: 試験用宇宙亜
+    types: [creature]
+    civs: [darkness]
+    cost: 4
+    power: 4000
+    races: [テスト]
+    text: スペース・チャージ（自分のマナゾーンにカードが置かれた時、そのカードの文明に合う能力を使ってもよい）光：自分の山札の上から１枚をシールド化する。闇：相手は自身の手札を１枚選び、捨てる。
+    abilities:
+      - kind: trigger
+        optional: true
+        when: {event: move, to: mana, subject: {owner: you, filter: {civs: [light]}}}
+        effect:
+          - {op: move, select: {zone: deck, owner: you, from_top: 1}, to: shield, reason: put}
+      - kind: trigger
+        optional: true
+        when: {event: move, to: mana, subject: {owner: you, filter: {civs: [darkness]}}}
+        effect:
+          - {op: discard, select: {zone: hand, owner: opp, chooser: opp, count: 1}}

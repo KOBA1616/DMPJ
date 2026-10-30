@@ -240,3 +240,19 @@ mod `cost_may {amount, once?, min?}`（rejects: optional_cost_reduction の常�
 
 - space_charge（42件）／abyss_rush（36件）／kirifudash（49件）
 - g_link（120件）: 専用弾として設計から
+
+# 第10弾（2026-10-31）
+
+検証は `tests/test_vocab_pilot10.py`（動作）と `tests/test_vocab_pilot10_cards.py`（代表カードの parse）。
+
+## 既存の語彙で表せたもの（新規実装なし）
+
+space_charge（単独42件）: スペース・チャージは、文明ごとの行を optional な誘発に分けて書ける。
+
+- 型: `{kind: trigger, optional: true, when: {event: move, to: mana, subject: {owner: you, filter: {civs: [<文明>]}}}, effect: [...]}`
+- 置かれたカードがイベントの subject になるため、その文明で絞れる。多色のカードを置いた時は合う行がそれぞれ誘発する。通常のチャージでも、効果でマナゾーンに置いた時でも発火する
+
+## 次の候補
+
+- abyss_rush（36件）／kirifudash（49件）
+- g_link（120件）: 専用弾として設計から
