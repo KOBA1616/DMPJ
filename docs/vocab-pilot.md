@@ -67,6 +67,31 @@ B型は rejects では grant_until_next_turn_start と申告されていたも�
 
 ## 次の候補
 
-- freeze キーワード本体（攻撃してブロックされなかった時の誘発）: 「ブロックされなかった」イベントが無いので中規模
-- first_attack_of_turn（18件）: first_time の攻撃版パターンで表せる可能性（要精査）
-- zone_count_comparison（15件）／cost_gt_count（14件）: 式の拡張で届くか精査
+- freeze キーワード本体（攻撃してブロックされなかった時の誘発）: 「ブロックされなかった」イベントが無いので中規模 → 第3弾で対応（下記）
+- first_attack_of_turn（18件）: first_time の攻撃版パターンで表せる可能性（要精査） → 第3弾で確認
+- zone_count_comparison（15件）／cost_gt_count（14件）: 式の拡張で届くか精査 → 第3弾で確認
+
+# 第3弾（2026-10-30）
+
+検証は `tests/test_vocab_pilot3.py`（動作）と `tests/test_vocab_pilot3_cards.py`（代表カードの parse）。
+
+## 実装したもの（新規）
+
+| 語彙 | 旧 need | 件数 | 実装 |
+|---|---|---:|---|
+| キーワード `freeze` | freeze | 39 | `keywords.yaml` に定義。「ブロックされなかった」は break イベントの発生源が自分であることで判定する（ターボラッシュと同じ仕組み）。効果は may で選び、`tap` の `no_untap_next` で凍結する。制限: シールドが0枚の相手への攻撃はゲームが終わるので対象外。ブレイクを置換・軽減された場合は誘発しない |
+| subject フィルタの式評価 | cost_gt_count（14）＋ cost_lt_count（9）の対象条件側 | 23 | 誘発・置換の subject 照合でも filter の式値を計算するようにした（従来は choose 等の selector 側だけ）。「マナの枚数よりコストが大きい」は `cost_ge: {sum: [{count: ...}, 1]}`、「墓地の枚数より小さい」は `cost_le: {sum: [{count: ...}, -1]}` |
+
+## 実は既存語彙で表せたもの
+
+| 旧 need | 件数 | 表し方 |
+|---|---:|---|
+| first_attack_of_turn | 18 | 「そのターンはじめての攻撃」は第2弾の `first_time` を攻撃誘発に付けるだけ（ピッケスで確認） |
+| zone_count_comparison | 15 | 「自分のXが相手より多い/少ない」は `cmp` の両辺に `count` 式を置く（プロテクション・サークルで確認） |
+| cost_gt_count の効果内 choose 側 | （上記と重複） | choose のフィルタは元々式が使えた（ペナルティフリートで確認） |
+
+## 次の候補
+
+- oni_time（43件）: 鬼タイム条件（自分のシールドが相手より少ない等＋専用処理）の精査
+- summon_time_cost 系（34＋8件）: 召喚時のコスト条件・代替コスト
+- entered_this_turn_condition（8件）／total_count_condition（6件）: 小粒の条件系

@@ -419,3 +419,14 @@ cards:
         select: {ref: tgt}
         mod: {deny: [untap_at_start]}
         duration: until_next_own_turn_start
+
+  # ---- 語彙パイロット第3弾（2026-10-30）: freeze キーワード ----
+  - id: T034
+    name: 試験用凍結兵
+    types: [creature]
+    civs: [fire]
+    cost: 3
+    power: 3000
+    races: [テスト]
+    text: フリーズ（このクリーチャーが相手プレイヤーを攻撃してブロックされなかった時、バトルゾーンにある相手のクリーチャーを１体選び、タップしてもよい。そのクリーチャーは、次の相手のターンのはじめにアンタップしない）
+    keywords: [freeze]

@@ -246,3 +246,13 @@ keywords:
         when: {event: break, subject: {owner: you, other: true, filter: {types: [creature]}}}
         effect:
           - {op: mark, name: turbo_rush, of_self: true}
+  freeze:      # 「ブロックされなかった」ことは、シールドがブレイクされたこと（break イベントの発生源がこのクリーチャー）で判定する
+    ja: フリーズ（このクリーチャーが相手プレイヤーを攻撃してブロックされなかった時、バトルゾーンにある相手のクリーチャーを１体選び、タップしてもよい。そのクリーチャーは、次の相手のターンのはじめにアンタップしない）
+    abilities:
+      - kind: trigger
+        when: {event: break, subject: self}
+        effect:
+          - op: may
+            body:
+              - {op: choose, select: {zone: bz, owner: opp, filter: {types: [creature]}, count: 1}, as: frozen}
+              - {op: tap, select: {ref: frozen}, no_untap_next: true}

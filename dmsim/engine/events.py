@@ -257,7 +257,10 @@ class EventMixin:
             return False
         if pat.get("other") and env.get("self") and cid == env["self"][0]:
             return False
-        return self.filter_match(cid, pat.get("filter", {}), lki, base)
+        f = pat.get("filter", {})
+        if any(isinstance(v, dict) for v in f.values()):   # 式の値は照合時に計算する（「マナの枚数よりコストが大きい」など）
+            f = {k: self.eval_expr(v, env) if isinstance(v, dict) else v for k, v in f.items()}
+        return self.filter_match(cid, f, lki, base)
 
     def _pattern_match(self, when, rec, src, lki_src) -> bool:
         env = {"you": lki_src["controller"] if lki_src else self.s.cards[src].controller,
