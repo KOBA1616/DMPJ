@@ -1549,6 +1549,12 @@
       ]
      }
     },
+    "ignore_ids": {
+     "type": "array",
+     "items": {
+      "type": "string"
+     }
+    },
     "gain": {
      "type": "array",
      "items": {
@@ -1570,6 +1576,7 @@
      "gain",
      "grant",
      "ignore",
+     "ignore_ids",
      "opt_reduce",
      "power",
      "power_when",
@@ -1701,6 +1708,9 @@
     },
     "first_time": {
      "type": "boolean"
+    },
+    "id": {
+     "type": "string"
     },
     "affects": {},
     "mod": {
