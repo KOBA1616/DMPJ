@@ -234,6 +234,29 @@ class Engine(SelectorMixin, EventMixin, InterpreterMixin, TurnMixin, CombatMixin
             ign = self._ignored().get(cid)
             if ign:
                 out = [(i, ab) for i, ab in out if not ({"all", ab["kind"]} & ign)]
+            iids = self._ignored_ids(cid)
+            if iids:
+                out = [(i, ab) for i, ab in out if ab.get("id") not in iids]
+        return out
+
+    def _ignored_ids(self, cid: int) -> set[str]:
+        """id で指定して無視されている能力（「真上の▪️能力を無視する」など）。
+        発生源は自身の常在型（条件つき含む）と、このクリーチャーに及ぶ継続的効果。"""
+        s = self.s
+        c = s.cards[cid]
+        if c.zone != "bz":
+            return set()
+        out: set[str] = set()
+        env_self = {"you": c.controller, "self": s.ref(cid)}
+        for ab in self.fdef(cid).abilities:
+            if ab["kind"] == "static" and ab.get("affects") == "self" and ab.get("zone", "bz") == c.zone \
+                    and ab.get("mod", {}).get("ignore_ids") \
+                    and ("if" not in ab or self._static_cond(ab["if"], env_self)):
+                out.update(ab["mod"]["ignore_ids"])
+        ref = s.ref(cid)
+        for ce in s.continuous:
+            if ce["mod"].get("ignore_ids") and self._ce_applies(ce, cid, ref):
+                out.update(ce["mod"]["ignore_ids"])
         return out
 
     def _static_cond(self, cond, env) -> bool:

@@ -89,6 +89,7 @@ def build() -> dict:
                 "battle_power": {"type": "object", "properties": {"amount": {"type": "integer"}, "count": {"anyOf": [ref("selector"), ref("expr")]}, "only": {"enum": ["attacking"]}}, "required": ["amount"], "additionalProperties": False},
                 "sac_reduce": {"type": "integer"}, "opt_reduce": {"type": "object", "properties": {"amount": {"type": "integer"}, "then": {"enum": ["destroy", "deck_bottom_draw"]}, "floor": {"type": "integer", "minimum": 0}, "per": {"type": "boolean"}, "do": {"type": "object", "properties": {"select": ref("selector"), "move_to": {"type": "string"}, "shuffle": {"type": "boolean"}, "min": {"type": "integer", "minimum": 0}, "max": {"type": "integer", "minimum": 0}}, "required": ["select"], "additionalProperties": False}}, "required": ["amount"], "additionalProperties": False},
                 "ignore": {"type": "array", "items": {"enum": ["trigger", "static", "replace", "all"]}},
+                "ignore_ids": {"type": "array", "items": {"type": "string"}},
                 "gain": {"type": "array", "items": ref("ability")}},
                 "additionalProperties": False, "propertyNames": {"enum": sorted(MOD_KEYS)}},
             "when": {"type": "object", "properties": {
@@ -99,7 +100,7 @@ def build() -> dict:
             "ability": {"type": "object", "properties": {
                 "kind": {"enum": ["trigger", "replace", "static", "declare", "activate", "silent", "state"]}, "when": ref("when"),
                 "if": ref("cond"), "effect": ref("ops"), "instead": ref("ops"), "optional": {"type": "boolean"},
-                "once_per_turn": {"type": "boolean"}, "first_time": {"type": "boolean"},
+                "once_per_turn": {"type": "boolean"}, "first_time": {"type": "boolean"}, "id": {"type": "string"},
                 "affects": {}, "mod": ref("mod"), "cost": {"type": "object", "properties": {"tap": {}}, "required": ["tap"], "additionalProperties": False}, "zone": {"enum": sorted(zones)}},
                 "required": ["kind"], "additionalProperties": False},
         },

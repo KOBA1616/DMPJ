@@ -24,13 +24,13 @@ def core_ops() -> dict[str, dict[str, str]]:
 EVENTS = {"move", "draw", "cast", "summon", "attack", "block", "break", "tap", "untap",
           "turn_start", "turn_end", "battle_win", "choose", "battle", "battle_start"}
 ABILITY_KINDS = {"trigger", "replace", "static", "declare", "activate", "silent", "state"}   # state: 状態を常に見て、満たされたら勝敗が決まる常在効果（if と effect: [win/lose]）
-ABILITY_KEYS = {"kind", "when", "if", "effect", "instead", "optional", "affects", "mod", "zone", "keyword", "cost",
+ABILITY_KEYS = {"kind", "when", "if", "effect", "instead", "optional", "affects", "mod", "zone", "keyword", "cost", "id",
                 "once_per_turn", "first_time"}
 REASONS = {"put", "destroy", "return", "discard", "charge", "summon", "cast", "break",
            "draw", "battle", "sba", "resolve", "evolve"}
 VIAS = {"revolution_change", "generate"}   # 出し方の印（「革命チェンジによって出た時」など）
 DURATIONS_FIXED = {"end_of_turn", "during_attack", "permanent", "until_next_own_turn_start"}
-MOD_KEYS = {"power", "grant", "allow", "deny", "breaks", "breaks_per_power", "battle_power", "power_when", "cost", "cost_min", "sac_reduce", "opt_reduce", "ignore", "gain", "require", "add_of"}
+MOD_KEYS = {"power", "grant", "allow", "deny", "breaks", "breaks_per_power", "battle_power", "power_when", "cost", "cost_min", "sac_reduce", "opt_reduce", "ignore", "ignore_ids", "gain", "require", "add_of"}
 REQUIRES = {"attack", "block"}   # 強制（506.1b 攻撃しなければならない, 507.1b ブロックしなければならない）
 POSITIONS = {"top", "bottom"}
 PERMANENT_TYPES = {"tamaseed", "field", "cross_gear"}   # 手札から実行してバトルゾーンに出るクリーチャー以外のカード（315, 308, 303）
@@ -357,6 +357,9 @@ class Checker:
                 raise DefError(f"{where}: power needs amount (int) and optional count")
             if "count" in pm:
                 self.count_spec(pm["count"], where)
+        if "ignore_ids" in m:
+            if not isinstance(m["ignore_ids"], list) or not all(isinstance(x, str) for x in m["ignore_ids"]):
+                raise DefError(f"{where}: ignore_ids must be a list of ability id strings")
         if "opt_reduce" in m:
             o = m["opt_reduce"]
             if not isinstance(o, dict) or not isinstance(o.get("amount"), int):
@@ -443,6 +446,8 @@ class Checker:
         bad = set(ab) - ABILITY_KEYS
         if bad:
             raise DefError(f"{where}: unknown ability keys {sorted(bad)}")
+        if "id" in ab and not isinstance(ab["id"], str):
+            raise DefError(f"{where}: ability id must be a string")
         if kind in ("trigger", "replace", "declare"):
             self.when(ab.get("when", {}), where)
         if kind == "state":
