@@ -325,3 +325,97 @@ cards:
             body:
               - {op: choose, select: {zone: bz, owner: opp, filter: {types: [creature]}, count: 1}, as: tgt}
               - {op: force_battle, a: {ref: self}, b: {ref: tgt}}
+
+  # ---- 語彙パイロット第2弾（2026-10-30）: once_per_turn / first_time / civ_count / アンタップB型 ----
+  - id: T027
+    name: 試験用見張り兵
+    types: [creature]
+    civs: [fire]
+    cost: 2
+    power: 1000
+    races: [テスト]
+    text: 各ターンに一度、自分の他のクリーチャーが出た時、カードを1枚引く。
+    abilities:
+      - kind: trigger
+        when: {event: move, to: bz, subject: {owner: you, other: true, filter: {types: [creature]}}}
+        once_per_turn: true
+        effect:
+          - {op: draw, count: 1}
+
+  - id: T028
+    name: 試験用烽火兵
+    types: [creature]
+    civs: [fire]
+    cost: 2
+    power: 1000
+    races: [テスト]
+    text: 各ターン、はじめて自分のクリーチャーが攻撃する時、カードを1枚引く。
+    abilities:
+      - kind: trigger
+        when: {event: attack, subject: {owner: you, filter: {types: [creature]}}}
+        first_time: true
+        effect:
+          - {op: draw, count: 1}
+
+  - id: T029
+    name: 試験用文明観測呪文
+    types: [spell]
+    civs: [water]
+    cost: 1
+    text: 自分のマナゾーンにある文明の数だけ、カードを引く。
+    spell:
+      - {op: draw, count: {civ_count: {zone: mana, owner: you}}}
+
+  - id: T030
+    name: 試験用双色兵
+    types: [creature]
+    civs: [light, water]
+    cost: 2
+    power: 2000
+    races: [テスト]
+    text: ""
+
+  - id: T031
+    name: 試験用文明蓄積兵
+    types: [creature]
+    civs: [nature]
+    cost: 3
+    power: 1000
+    races: [テスト]
+    text: このクリーチャーのパワーは、自分のマナゾーンにある文明ひとつにつき+4000される。
+    abilities:
+      - kind: static
+        affects: self
+        mod: {power: {amount: 4000, count: {civ_count: {zone: mana, owner: you}}}}
+
+  - id: T032
+    name: 試験用期限凍結呪文
+    types: [spell]
+    civs: [water]
+    cost: 1
+    text: 相手のクリーチャーを1体選び、タップする。次の自分のターンのはじめまで、そのクリーチャーはアンタップしない。
+    spell:
+      - op: choose
+        select: {zone: bz, owner: opp, filter: {types: [creature]}, count: 1}
+        as: tgt
+      - {op: tap, select: {ref: tgt}}
+      - op: modify
+        select: {ref: tgt}
+        mod: {deny: [untap_at_start]}
+        duration: until_next_own_turn_start
+
+  - id: T033
+    name: 試験用自軍期限凍結呪文
+    types: [spell]
+    civs: [water]
+    cost: 1
+    text: 自分のクリーチャーを1体選び、タップする。次の自分のターンのはじめまで、そのクリーチャーはアンタップしない。
+    spell:
+      - op: choose
+        select: {zone: bz, owner: you, filter: {types: [creature]}, count: 1}
+        as: tgt
+      - {op: tap, select: {ref: tgt}}
+      - op: modify
+        select: {ref: tgt}
+        mod: {deny: [untap_at_start]}
+        duration: until_next_own_turn_start

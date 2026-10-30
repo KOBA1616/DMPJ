@@ -105,7 +105,7 @@ class CombatMixin:
             if bp and bp.get("only") == "attacking" and not attacking:
                 continue
             if bp and ab.get("affects") == "self" and ab.get("zone", "bz") == self.s.cards[cid].zone:
-                total += bp["amount"] * (self.eval_expr({"count": bp["count"]}, env) if "count" in bp else 1)
+                total += bp["amount"] * (self.count_of(bp["count"], env) if "count" in bp else 1)
         return total
 
     def _battle(self, x, y):

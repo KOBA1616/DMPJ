@@ -86,6 +86,7 @@ class GameState:
     seq: int = 0                                            # タイムスタンプ／待機順の採番
     extra_turns: list[int] = field(default_factory=list)
     turn_counters: dict = field(default_factory=dict)       # 「このターン N 回目」系
+    ev_seq: int = 0                                             # イベントの通し番号（「各ターン、はじめて」の同一イベント判定）
     steps_this_turn: int = 0
     skip_rest: bool = False                                 # 「ターンの残りをとばす」
     deck_emptied: list[int] = field(default_factory=list)   # 山札が一瞬でも0枚になったプレイヤー（104.2b）

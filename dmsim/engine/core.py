@@ -196,7 +196,7 @@ class Engine(SelectorMixin, EventMixin, InterpreterMixin, TurnMixin, CombatMixin
                     return 0
                 self._pw_busy = True
                 try:
-                    return pw["amount"] * self.eval_expr({"count": pw["count"]}, env_self)
+                    return pw["amount"] * self.count_of(pw["count"], env_self)
                 finally:
                     self._pw_busy = False
         return 0
@@ -288,7 +288,11 @@ class Engine(SelectorMixin, EventMixin, InterpreterMixin, TurnMixin, CombatMixin
                      if ab["kind"] == "static" and ab.get("affects") == "self" and "mod" in ab
                      and ab.get("zone", "bz") == c.zone]
         for m in mods:
-            ch["power"] += m.get("power", 0)
+            pw = m.get("power", 0)
+            if isinstance(pw, dict):   # {amount, count}: 「〜ひとつにつき +N」
+                ch["power"] += pw["amount"] * (self.count_of(pw["count"], env_self) if "count" in pw else 1)
+            else:
+                ch["power"] += pw
             if "power_when" in m:
                 ch["power"] += self._power_when(m["power_when"], ref, env_self)
             ch["keywords"].update(m.get("grant", []))
@@ -316,7 +320,7 @@ class Engine(SelectorMixin, EventMixin, InterpreterMixin, TurnMixin, CombatMixin
             if "cost" in m:
                 cm = m["cost"]
                 if isinstance(cm, dict):
-                    n = self.eval_expr({"count": cm["count"]}, env_self) if "count" in cm else 1
+                    n = self.count_of(cm["count"], env_self) if "count" in cm else 1
                     ch["pay_cost"] += cm["amount"] * n
                 else:
                     ch["pay_cost"] += cm

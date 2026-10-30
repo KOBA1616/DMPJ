@@ -24,7 +24,8 @@ def core_ops() -> dict[str, dict[str, str]]:
 EVENTS = {"move", "draw", "cast", "summon", "attack", "block", "break", "tap", "untap",
           "turn_start", "turn_end", "battle_win", "choose", "battle", "battle_start"}
 ABILITY_KINDS = {"trigger", "replace", "static", "declare", "activate", "silent", "state"}   # state: 状態を常に見て、満たされたら勝敗が決まる常在効果（if と effect: [win/lose]）
-ABILITY_KEYS = {"kind", "when", "if", "effect", "instead", "optional", "affects", "mod", "zone", "keyword", "cost"}
+ABILITY_KEYS = {"kind", "when", "if", "effect", "instead", "optional", "affects", "mod", "zone", "keyword", "cost",
+                "once_per_turn", "first_time"}
 REASONS = {"put", "destroy", "return", "discard", "charge", "summon", "cast", "break",
            "draw", "battle", "sba", "resolve", "evolve"}
 VIAS = {"revolution_change", "generate"}   # 出し方の印（「革命チェンジによって出た時」など）
@@ -298,6 +299,8 @@ class Checker:
             k, v = next(iter(x.items()))
             if k == "count":
                 return self.selector(v, where)
+            if k == "civ_count":   # 対象カード群にある文明の種類数（多色はそれぞれ数える）
+                return self.selector(v, where)
             if k in ("var", "cost_of", "races_of", "race"):
                 return
             if k == "sum":
@@ -334,10 +337,22 @@ class Checker:
             return
         raise DefError(f"{where}: unknown cond '{k}'")
 
+    def count_spec(self, v, where):
+        """mod の count: セレクタ（体数）か、civ_count / sum を含む式（文明の種類数など）。"""
+        if isinstance(v, dict) and ("civ_count" in v or "sum" in v):
+            return self.expr(v, where)
+        return self.selector(v, where)
+
     def mod(self, m, where):
         bad = set(m) - MOD_KEYS
         if bad:
             raise DefError(f"{where}: unknown mod keys {sorted(bad)}")
+        if "power" in m and isinstance(m["power"], dict):
+            pm = m["power"]
+            if set(pm) - {"amount", "count"} or not isinstance(pm.get("amount"), int):
+                raise DefError(f"{where}: power needs amount (int) and optional count")
+            if "count" in pm:
+                self.count_spec(pm["count"], where)
         for kw in m.get("grant", []):
             if kw not in self.keywords:
                 raise DefError(f"{where}: unknown keyword '{kw}'")
@@ -356,7 +371,7 @@ class Checker:
                 if set(cm) - {"amount", "count"} or not isinstance(cm.get("amount"), int):
                     raise DefError(f"{where}: cost needs amount (int) and optional count (selector)")
                 if "count" in cm:
-                    self.selector(cm["count"], where)
+                    self.count_spec(cm["count"], where)
             elif not isinstance(cm, int):
                 raise DefError(f"{where}: cost must be int or {{amount, count}}")
         if "cost_min" in m and not isinstance(m["cost_min"], int):
@@ -367,7 +382,7 @@ class Checker:
                     or pw.get("when") not in ("attacking", "blocking"):
                 raise DefError(f"{where}: power_when needs amount (int), when: attacking|blocking and optional count (selector)")
             if "count" in pw:
-                self.selector(pw["count"], where)
+                self.count_spec(pw["count"], where)
         if "battle_power" in m:   # バトル中だけのパワー修整: {amount: N, count: <selector>, only: attacking}（ハンティング。バトル中だけ。「攻撃中」「ブロック中」は power_when）
             bp = m["battle_power"]
             if not isinstance(bp, dict) or set(bp) - {"amount", "count", "only"} or not isinstance(bp.get("amount"), int):
@@ -375,7 +390,7 @@ class Checker:
             if bp.get("only", "attacking") != "attacking":
                 raise DefError(f"{where}: battle_power only must be attacking")
             if "count" in bp:
-                self.selector(bp["count"], where)
+                self.count_spec(bp["count"], where)
         for k in m.get("require", []):
             if k not in REQUIRES:
                 raise DefError(f"{where}: bad require '{k}' (allowed: {sorted(REQUIRES)})")
