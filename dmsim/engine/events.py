@@ -92,6 +92,8 @@ class EventMixin:
             self._raw_move(cid, ev["to"], ev.get("position", "top"), ev.get("controller"))
             if ev.get("tapped"):   # 「タップして置く」: 置かれた時点でタップ状態（別のタップ イベントにしない）
                 c.tapped = True
+            if ev["to"] == "bz" and "enters_tapped" in self.chars(cid)["keywords"]:   # 「タップしてバトルゾーンに出る」
+                c.tapped = True
             for u in unders:   # クリーチャーとして離れたら下のカードも同じゾーンへ（109.2b, 316.3）
                 if s.cards[u].zone == "bz" or s.cards[u].top_of == cid:   # シールドの束も同時に動く（113.2）
                     self._raw_move(u, ev["to"])
@@ -301,6 +303,9 @@ class EventMixin:
     def _collect_triggers(self, rec):
         """誘発チェック。離れた時の誘発で過去の状態を見るのは、その能力を持つカード自身だけ（603.5d）。"""
         s = self.s
+        if "_eid" not in rec:      # このイベントの通し番号（first_time の「同じイベント」判定に使う）
+            s.ev_seq += 1
+            rec["_eid"] = s.ev_seq
         sources = [(c, None) for c in self.bz_tops()]
         zt = self.rules.zone_trigger_defs
         if zt:   # 墓地などで機能する誘発型能力（《黒神龍グールジェネレイド》など）
@@ -328,6 +333,17 @@ class EventMixin:
                 sref = lsrc["ref"] if lsrc else s.ref(src)
                 if "if" in ab and not lsrc and not self.eval_cond(ab["if"], {"you": ctrl, "self": sref, "event": rec, "vars": {}}):
                     continue          # 誘発条件つき（「〜場合」）の能力は、誘発時にも条件を見る（603.4）。離れた時の誘発は解決時だけ
+                if ab.get("once_per_turn"):   # 「各ターンに一度」: このカード（オブジェクト）のこの能力は1ターンに1回だけ誘発する
+                    key = f"once:{sref[0]}:{sref[1]}:{i}"
+                    if s.turn_counters.get(key):
+                        continue
+                    s.turn_counters[key] = 1
+                if ab.get("first_time"):      # 「各ターン、はじめて〜した時」: その出来事がこのターン最初に起きた時だけ誘発する
+                    key = f"first:{ctrl}:{defn}:{i}"   # 同名カード・同能力で共有する（最初の出来事では全コピーが誘発する）
+                    seen = s.turn_counters.get(key)
+                    if seen is not None and seen != rec["_eid"]:
+                        continue
+                    s.turn_counters[key] = rec["_eid"]
                 s.seq += 1
                 # 待機中の効果は発生源から独立する（110.5a）。発生源の情報は env に持つ
                 p = {"pid": s.seq, "kind": "normal", "win": win, "controller": ctrl, "src": sref,

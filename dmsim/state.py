@@ -44,6 +44,7 @@ class Card:
     entered_seq: int = 0                              # バトルゾーンに出た時刻（608.5 無視効果の優先）
     crossed: list | None = None                       # クロスギアがクロスしているクリーチャーの参照 [cid, gen]（303.3）。離れていれば無効
     exlife_of: list | None = None                     # 「EXライフ」シールドの紐付け先クリーチャーの参照 [cid, gen]。離れたら外れる
+    no_untap_next: bool = False                       # フリーズ等: 次の持ち主のターン開始時にアンタップしない（1回だけ。開始時に消費）
 
 
 def _jcopy(v):
@@ -85,6 +86,7 @@ class GameState:
     seq: int = 0                                            # タイムスタンプ／待機順の採番
     extra_turns: list[int] = field(default_factory=list)
     turn_counters: dict = field(default_factory=dict)       # 「このターン N 回目」系
+    ev_seq: int = 0                                             # イベントの通し番号（「各ターン、はじめて」の同一イベント判定）
     steps_this_turn: int = 0
     skip_rest: bool = False                                 # 「ターンの残りをとばす」
     deck_emptied: list[int] = field(default_factory=list)   # 山札が一瞬でも0枚になったプレイヤー（104.2b）
