@@ -1099,6 +1099,18 @@
       "civ_count": {
        "$ref": "#/$defs/selector"
       },
+      "entered": {
+       "type": "object",
+       "properties": {
+        "owner": {
+         "type": "string"
+        },
+        "other": {
+         "type": "boolean"
+        }
+       },
+       "additionalProperties": false
+      },
       "var": {
        "type": "string"
       },

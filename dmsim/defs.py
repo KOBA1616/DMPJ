@@ -301,6 +301,10 @@ class Checker:
                 return self.selector(v, where)
             if k == "civ_count":   # 対象カード群にある文明の種類数（多色はそれぞれ数える）
                 return self.selector(v, where)
+            if k == "entered":   # このターンに出したクリーチャーの数 {owner, other?}
+                if not isinstance(v, dict) or set(v) - {"owner", "other"} or v.get("owner", "you") not in ("you", "opp"):
+                    raise DefError(f"{where}: entered needs {{owner: you/opp, other?: bool}}")
+                return
             if k in ("var", "cost_of", "races_of", "race"):
                 return
             if k == "sum":

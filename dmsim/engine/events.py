@@ -120,6 +120,8 @@ class EventMixin:
             if ev["reason"] == "summon":
                 out.append({"ev": "summon", "subject": new, "controller": c.controller, "player": c.controller,
                             "unpaid": bool(ev.get("unpaid"))})
+            if ev["to"] == "bz" and "creature" in self.chars(cid)["types"]:   # 「このターンに出たクリーチャー」の記録（式 entered が数える）
+                s.turn_counters.setdefault(f"entered:{c.controller}", []).append(cid)
             return out
         if kind == "draw":
             p = ev["player"]
