@@ -1094,6 +1094,9 @@
       "count": {
        "$ref": "#/$defs/selector"
       },
+      "civ_count": {
+       "$ref": "#/$defs/selector"
+      },
       "var": {
        "type": "string"
       },
@@ -1177,7 +1180,14 @@
          "type": "integer"
         },
         "count": {
-         "$ref": "#/$defs/selector"
+         "anyOf": [
+          {
+           "$ref": "#/$defs/selector"
+          },
+          {
+           "$ref": "#/$defs/expr"
+          }
+         ]
         }
        },
        "required": [
@@ -1383,7 +1393,14 @@
          "type": "integer"
         },
         "count": {
-         "$ref": "#/$defs/selector"
+         "anyOf": [
+          {
+           "$ref": "#/$defs/selector"
+          },
+          {
+           "$ref": "#/$defs/expr"
+          }
+         ]
         }
        },
        "required": [
@@ -1403,7 +1420,14 @@
        "type": "integer"
       },
       "count": {
-       "$ref": "#/$defs/selector"
+       "anyOf": [
+        {
+         "$ref": "#/$defs/selector"
+        },
+        {
+         "$ref": "#/$defs/expr"
+        }
+       ]
       },
       "when": {
        "enum": [
@@ -1425,7 +1449,14 @@
        "type": "integer"
       },
       "count": {
-       "$ref": "#/$defs/selector"
+       "anyOf": [
+        {
+         "$ref": "#/$defs/selector"
+        },
+        {
+         "$ref": "#/$defs/expr"
+        }
+       ]
       },
       "only": {
        "enum": [
@@ -1603,6 +1634,12 @@
      "$ref": "#/$defs/ops"
     },
     "optional": {
+     "type": "boolean"
+    },
+    "once_per_turn": {
+     "type": "boolean"
+    },
+    "first_time": {
      "type": "boolean"
     },
     "affects": {},

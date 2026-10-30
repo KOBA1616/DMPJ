@@ -9,6 +9,8 @@ class SelectorMixin:
         if isinstance(x, dict):
             if "count" in x:
                 return len(self.candidates(x["count"], env))
+            if "civ_count" in x:   # 対象カード群にある文明の種類数（多色カードは持つ文明をすべて数える）
+                return len({cv for c in self.candidates(x["civ_count"], env) for cv in self.chars(c)["civs"]})
             if "var" in x:
                 return len(env.get("vars", {}).get(x["var"], []))
             if "cost_of" in x:   # 変数に束縛したカード（複数なら最大）のコスト
@@ -21,6 +23,12 @@ class SelectorMixin:
             if "sum" in x:
                 return sum(self.eval_expr(v, env) for v in x["sum"])
         raise ValueError(f"bad expr {x}")
+
+    def count_of(self, v, env):
+        """mod の count の評価: セレクタなら体数、式（civ_count / sum 等）ならその値。"""
+        if isinstance(v, dict) and ("civ_count" in v or "sum" in v or "var" in v):
+            return self.eval_expr(v, env)
+        return len(self.candidates(v, env))
 
     def eval_cond(self, c, env) -> bool:
         if "exists" in c:

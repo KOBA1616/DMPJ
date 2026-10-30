@@ -70,7 +70,7 @@ def build() -> dict:
                 "from_top": ref("expr"), "chooser": {"enum": ["you", "opp"]}, "ref": {"type": "string"},
                 "other": {"type": "boolean"}, "look": {"type": "boolean"}}, "additionalProperties": False},
             "expr": {"anyOf": [{"type": "integer"}, {"type": "object", "properties": {
-                "count": ref("selector"), "var": {"type": "string"}, "cost_of": {"type": "string"}, "races_of": {"type": "string"}, "race": {"type": "string"}, "sum": {"type": "array", "items": ref("expr")}},
+                "count": ref("selector"), "civ_count": ref("selector"), "var": {"type": "string"}, "cost_of": {"type": "string"}, "races_of": {"type": "string"}, "race": {"type": "string"}, "sum": {"type": "array", "items": ref("expr")}},
                 "minProperties": 1, "maxProperties": 1, "additionalProperties": False}]},
             "cond": {"type": "object", "minProperties": 1, "maxProperties": 1, "properties": {
                 "exists": ref("selector"), "cmp": {"type": "array", "minItems": 3, "maxItems": 3},
@@ -79,14 +79,14 @@ def build() -> dict:
                 "marked": {"type": "string"}, "self_marked": {"type": "string"}},
                 "additionalProperties": False},
             "mod": {"type": "object", "properties": {
-                "power": {"anyOf": [{"type": "integer"}, {"type": "object", "properties": {"amount": {"type": "integer"}, "count": ref("selector")}, "required": ["amount"], "additionalProperties": False}]}, "grant": {"type": "array", "items": {"enum": sorted(keywords)}},
+                "power": {"anyOf": [{"type": "integer"}, {"type": "object", "properties": {"amount": {"type": "integer"}, "count": {"anyOf": [ref("selector"), ref("expr")]}}, "required": ["amount"], "additionalProperties": False}]}, "grant": {"type": "array", "items": {"enum": sorted(keywords)}},
                 "allow": {"type": "array", "items": perm}, "deny": {"type": "array", "items": perm},
                 "require": {"type": "array", "items": {"enum": ["attack", "block"]}}, "add_of": {"const": "self"},
                 "breaks": {"type": "integer"}, "breaks_per_power": {"type": "integer"},
-                "cost": {"anyOf": [{"type": "integer"}, {"type": "object", "properties": {"amount": {"type": "integer"}, "count": ref("selector")}, "required": ["amount"], "additionalProperties": False}]},
+                "cost": {"anyOf": [{"type": "integer"}, {"type": "object", "properties": {"amount": {"type": "integer"}, "count": {"anyOf": [ref("selector"), ref("expr")]}}, "required": ["amount"], "additionalProperties": False}]},
                 "cost_min": {"type": "integer"},
-                "power_when": {"type": "object", "properties": {"amount": {"type": "integer"}, "count": ref("selector"), "when": {"enum": ["attacking", "blocking"]}}, "required": ["amount", "when"], "additionalProperties": False},
-                "battle_power": {"type": "object", "properties": {"amount": {"type": "integer"}, "count": ref("selector"), "only": {"enum": ["attacking"]}}, "required": ["amount"], "additionalProperties": False},
+                "power_when": {"type": "object", "properties": {"amount": {"type": "integer"}, "count": {"anyOf": [ref("selector"), ref("expr")]}, "when": {"enum": ["attacking", "blocking"]}}, "required": ["amount", "when"], "additionalProperties": False},
+                "battle_power": {"type": "object", "properties": {"amount": {"type": "integer"}, "count": {"anyOf": [ref("selector"), ref("expr")]}, "only": {"enum": ["attacking"]}}, "required": ["amount"], "additionalProperties": False},
                 "sac_reduce": {"type": "integer"}, "opt_reduce": {"type": "object", "required": ["amount"]},
                 "ignore": {"type": "array", "items": {"enum": ["trigger", "static", "replace", "all"]}},
                 "gain": {"type": "array", "items": ref("ability")}},
@@ -99,6 +99,7 @@ def build() -> dict:
             "ability": {"type": "object", "properties": {
                 "kind": {"enum": ["trigger", "replace", "static", "declare", "activate", "silent", "state"]}, "when": ref("when"),
                 "if": ref("cond"), "effect": ref("ops"), "instead": ref("ops"), "optional": {"type": "boolean"},
+                "once_per_turn": {"type": "boolean"}, "first_time": {"type": "boolean"},
                 "affects": {}, "mod": ref("mod"), "cost": {"type": "object", "properties": {"tap": {}}, "required": ["tap"], "additionalProperties": False}, "zone": {"enum": sorted(zones)}},
                 "required": ["kind"], "additionalProperties": False},
         },

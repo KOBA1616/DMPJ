@@ -36,8 +36,37 @@ rejects 6,965件（gap 1,191種類）のうち、小さな実装で解けるも�
 
 合計 325件。代表カード9枚の手変換が `defs.parse_card` を通ることをテストで固定した。
 
+## アンタップしない、の2文型（区別すること）
+
+| 文型 | 意味 | 表し方 |
+|---|---|---|
+| A型「次の相手のターンのはじめにアンタップしない」（対象は相手のカード） | 対象の次のアンタップ機会を必ず1回飛ばす | `tap` の `no_untap_next: true` |
+| B型「次の自分のターンのはじめまでアンタップしない」（対象は相手のカード） | 自分の次のターン開始で切れる期限型。相手対象では間の相手のアンタップを1回飛ばすが、相手のターン中に適用すると相手の次のアンタップより先に期限が切れることがある。自分対象では次の自分のターン開始で切れているのでアンタップする | `tap` ＋ `modify {select, mod: {deny: [untap_at_start]}, duration: until_next_own_turn_start}` |
+
+「次の自分のターンのはじめにアンタップしない」（自分対象。こたつむり等）は A型と同じ1回スキップで、`no_untap_next` でよい。
+B型は rejects では grant_until_next_turn_start と申告されていたものが多い（Disエビンビー等）。動作の違いは `tests/test_vocab_pilot2.py` で固定した。
+
+# 第2弾（2026-10-30）
+
+検証は `tests/test_vocab_pilot2.py`（動作）と `tests/test_vocab_pilot2_cards.py`（代表カードの parse）。
+
+## 実装した語彙（新規）
+
+| 語彙 | 旧 need | 件数 | 実装 |
+|---|---|---:|---|
+| 誘発の `once_per_turn: true` | once_per_turn_trigger | 47 | 収集時に `turn_counters` へ印（カードのオブジェクト＋能力番号）。「各ターンに一度」はその能力がそのターンに誘発済みかをゲートする。使用を断っても誘発自体は消費される |
+| 誘発の `first_time: true` | first_time_per_turn_trigger | 53 | ゲートはコントローラー＋カード定義＋能力番号で共有し、印にはイベントの通し番号（`ev_seq`）を入れる。最初の出来事では場の全コピーが誘発し、次の出来事からは誘発しない。制限: そのカードが場に出る前に起きた出来事は数えない |
+| 式 `civ_count: <selector>` | civ_count（11）＋ civilization_count（5） | 16 | 対象カード群にある文明の種類数（多色は持つ文明をすべて数える）。あわせて mod の `power` に `{amount, count}` 形式（「〜ひとつにつき+N」）を対応し、`power_when`／`battle_power`／`cost` の count でも式が使えるようにした |
+
+## 実は既存語彙で表せたもの
+
+| 旧 need | 件数 | 表し方 |
+|---|---:|---|
+| civil_count の大半（シビルカウント） | 51 | シビルカウントは「自分の（文明）のクリーチャーまたはタマシードの合計Nつ以上」で、文明の種類数ではない。`cmp` ＋ `count {zone: bz, filter: {types: [creature, tamaseed], civs: [...]}}` で表せる（ヴニースで確認）。真に種類数が要るのは civ_count 系の16件だけ |
+| B型フリーズ（上記） | 15 | `modify` の deny ＋ duration（新規実装なし） |
+
 ## 次の候補
 
 - freeze キーワード本体（攻撃してブロックされなかった時の誘発）: 「ブロックされなかった」イベントが無いので中規模
-- once_per_turn / first_time_per_turn（計約100件）: `mark` の応用か、誘発ゲートの仕組み化
-- civil_count（52件）: 文明数を数える式の追加
+- first_attack_of_turn（18件）: first_time の攻撃版パターンで表せる可能性（要精査）
+- zone_count_comparison（15件）／cost_gt_count（14件）: 式の拡張で届くか精査
