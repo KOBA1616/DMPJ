@@ -517,3 +517,50 @@ cards:
         affects: self
         zone: hand
         mod: {opt_reduce: {amount: 1, per: true, floor: 1, do: {select: {zone: graveyard, owner: you, filter: {types: [spell]}}, min: 0, max: 99, move_to: deck, shuffle: true}}}
+
+  # ---- 語彙パイロット第7弾（2026-10-31）: 能力の id と ignore_ids（鬼タイム「真上の能力を無視する」） ----
+  - id: T041
+    name: 試験用変怪
+    types: [creature]
+    civs: [darkness]
+    cost: 2
+    power: 3000
+    races: [テスト]
+    text: このクリーチャーは攻撃できない。鬼タイム：自分と相手のシールドの数が合計６つ以下なら、真上の能力を無視する。
+    abilities:
+      - kind: static
+        id: above
+        affects: self
+        mod: {deny: [attack_player, attack_creature]}
+      - kind: static
+        affects: self
+        if: {cmp: [{sum: [{count: {zone: shield, owner: you}}, {count: {zone: shield, owner: opp}}]}, "<=", 6]}
+        mod: {ignore_ids: [above]}
+
+  # ---- 語彙パイロット第8弾（2026-10-31）: op mekurade ----
+  - id: T042
+    name: 試験用捲り手
+    types: [creature]
+    civs: [nature]
+    cost: 3
+    power: 2000
+    races: [テスト]
+    text: このクリーチャーが出た時、メクレイド５する。（自分の山札の上から３枚を見る。その中から、コスト５以下のクリーチャーを１体、コストを支払わずに使ってもよい。残りを好きな順序で山札の下に置く）
+    abilities:
+      - kind: trigger
+        when: {event: move, to: bz, subject: self}
+        effect:
+          - {op: mekurade, filter: {types: [creature]}, cost_le: 5}
+  - id: T043
+    name: 試験用召喚獣
+    types: [creature]
+    civs: [nature]
+    cost: 4
+    power: 3000
+    races: [テスト]
+    text: このクリーチャーが召喚によって出た時、カードを１枚引く。
+    abilities:
+      - kind: trigger
+        when: {event: summon, subject: self}
+        effect:
+          - {op: draw, count: 1}

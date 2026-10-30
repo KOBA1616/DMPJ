@@ -197,3 +197,25 @@ g_link の単独ギャップは **120件**と最大級だが、G・リンクは�
 
 - 小粒の残り: paid_cost_reference、entered 系の派生など、単独ギャップの棚卸しから
 - g_link（120件）: 専用弾として設計から
+
+# 第8弾（2026-10-31）
+
+検証は `tests/test_vocab_pilot8.py`（動作）と `tests/test_vocab_pilot8_cards.py`（代表カードの parse）。
+
+## 実装したもの（新規）
+
+op `mekurade`（rejects: mekurade、単独49件）。
+
+- `{op: mekurade, filter: {...}, cost_le: N, look?: 3}`: 自分の山札の上から look 枚（既定3）を見て、filter と cost_le に合う1枚をコストを支払わずに使ってもよい（0枚も選べる）。残りは好きな順序で山札の下に置く
+- 「ゴッド・メクレイド5」「マジック・メクレイド5」など、対象は種族（race_has）・タイプ・文明いずれも filter で表す。コスト上限なしの「メクレイド∞」は cost_le を付けない
+- op 引数の型に `filter` を追加した（registry / defs / schema の3か所）
+
+## 棚卸しメモ（g_link・data_incomplete を除く単独ギャップ上位）
+
+大きいものは軒並みゾーンやカード種別に触れる機構（neo_evolution 251、star_evolution 153、gr_summon 141、aura 108、shinkaraizu 94、hyper_mode 94、hyperdimensional_zone 94、crystal_arms 76、d2_field 64、cross_gear 60、dragheart 40）。小さい語彙の枠で次に狙えるのは optional_cost_reduction 78（「各ターンに1度、〜の召喚コストを1少なくしてもよい」系。opt-in の常在型コスト軽減で、サンプルはヴェヌス等の奇跡妖精）、space_charge 42（マナに置かれた時の文明別誘発）、abyss_rush 36（墓地からの召喚＋攻撃可＋終了時に山札の下）、kirifudash 49（攻撃終了時の条件つき召喚）あたり。
+
+## 次の候補
+
+- optional_cost_reduction（78件）: 「してもよい」の常在型コスト軽減
+- space_charge（42件）／abyss_rush（36件）／kirifudash（49件）
+- g_link（120件）: 専用弾として設計から

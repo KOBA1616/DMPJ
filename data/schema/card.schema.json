@@ -548,6 +548,27 @@
       "type": "object",
       "properties": {
        "op": {
+        "const": "mekurade"
+       },
+       "filter": {
+        "$ref": "#/$defs/filter"
+       },
+       "cost_le": {
+        "type": "integer"
+       },
+       "look": {
+        "type": "integer"
+       }
+      },
+      "required": [
+       "op"
+      ],
+      "additionalProperties": false
+     },
+     {
+      "type": "object",
+      "properties": {
+       "op": {
         "const": "modal"
        },
        "modes": {
