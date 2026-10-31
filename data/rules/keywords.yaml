@@ -38,6 +38,10 @@ keywords:
     ja: S・トリガー
     abilities:
       - {kind: static, zone: shield, affects: self, mod: {allow: [s_trigger]}}
+  super_s_trigger:
+    ja: スーパー・S・トリガー（このカードをシールドゾーンから手札に加える時、コストを支払わずにすぐ使ってもよい。その時自分のシールドが1つもなければ、このカードに記された追加能力を得る）
+    abilities:
+      - {kind: static, zone: shield, affects: self, mod: {allow: [s_trigger]}}
   double_breaker:
     ja: W・ブレイカー
     abilities:

@@ -100,6 +100,10 @@ class EventMixin:
                 self._rebuild(cid)
                 unders = []
             self._raw_move(cid, ev["to"], ev.get("position", "top"), ev.get("controller"))
+            if ev.get("sst"):
+                c.sst = True         # スーパー・S・トリガーの印は移動した先で付ける（移動で消えるため）
+            if ev.get("bazurenda"):
+                c.bazurenda = ev["bazurenda"]
             if ev.get("tapped"):   # 「タップして置く」: 置かれた時点でタップ状態（別のタップ イベントにしない）
                 c.tapped = True
             if ev.get("face_up") and ev["to"] == "shield":   # 「表向きでシールドゾーンに置く」（ギャラクシールド）
@@ -607,7 +611,10 @@ def h_resolve_pending(eng, t):
         env = p["env"]
         if "if" in ab and not eng.eval_cond(ab["if"], env):   # 条件は解決時に確認（603.4, 605.2a）
             return None
-        eng._push(eng._child(ab["effect"], env))
+        n = 1
+        if ab.get("bazurenda") and p.get("src") and s.alive(p["src"]):
+            n += s.cards[p["src"][0]].bazurenda   # バズレンダ: [OL]能力を1回+追加で支払った回数使う
+        eng._push(*[eng._child(ab["effect"], env) for _ in range(n)])
     return None
 
 

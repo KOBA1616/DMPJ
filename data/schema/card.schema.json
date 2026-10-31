@@ -109,6 +109,7 @@
      "slayer",
      "speed_attacker",
      "spell_to_hand",
+     "super_s_trigger",
      "triple_breaker",
      "turbo_rush",
      "unblockable",
@@ -132,6 +133,7 @@
    "properties": {
     "any_of": {},
     "civs": {},
+    "civs_all": {},
     "cost_ge": {},
     "cost_le": {},
     "face_down": {},
@@ -284,6 +286,7 @@
        "slayer",
        "speed_attacker",
        "spell_to_hand",
+       "super_s_trigger",
        "triple_breaker",
        "turbo_rush",
        "unblockable",
@@ -307,6 +310,7 @@
      "properties": {
       "any_of": {},
       "civs": {},
+      "civs_all": {},
       "cost_ge": {},
       "cost_le": {},
       "face_down": {},
@@ -579,6 +583,30 @@
       "required": [
        "op",
        "a"
+      ],
+      "additionalProperties": false
+     },
+     {
+      "type": "object",
+      "properties": {
+       "op": {
+        "const": "gachinko"
+       },
+       "times": {
+        "$ref": "#/$defs/expr"
+       },
+       "until_lose": {
+        "type": "boolean"
+       },
+       "stoppable": {
+        "type": "boolean"
+       },
+       "as": {
+        "type": "string"
+       }
+      },
+      "required": [
+       "op"
       ],
       "additionalProperties": false
      },
@@ -1175,6 +1203,7 @@
    "properties": {
     "any_of": {},
     "civs": {},
+    "civs_all": {},
     "cost_ge": {},
     "cost_le": {},
     "face_down": {},
@@ -1465,6 +1494,7 @@
        "slayer",
        "speed_attacker",
        "spell_to_hand",
+       "super_s_trigger",
        "triple_breaker",
        "turbo_rush",
        "unblockable",
