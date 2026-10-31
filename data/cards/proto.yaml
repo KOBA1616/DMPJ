@@ -794,3 +794,20 @@ cards:
     star: true
     evolve_from: {civs: [fire]}
     text: スター進化：自分の火のクリーチャー１体の上に置く。（このクリーチャーが離れる時、かわりに一番上のカードだけが離れる）W・ブレイカー
+
+  # ---- 語彙パイロット第19弾（2026-10-31）: ハイパーモード ----
+  - id: T059
+    name: 試験用ハイパー犬
+    types: [creature]
+    civs: [fire]
+    cost: 3
+    power: 3000
+    races: [テスト]
+    hyper: true
+    text: ハイパー化：自分の他のクリーチャーを１体タップする。このクリーチャーが攻撃する時、ハイパーモードなら、カードを１枚引く。
+    abilities:
+      - kind: trigger
+        when: {event: attack, subject: self}
+        if: {hyper: true}
+        effect:
+          - {op: draw, count: 1}

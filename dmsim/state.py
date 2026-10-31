@@ -45,7 +45,8 @@ class Card:
     crossed: list | None = None                       # クロスギアがクロスしているクリーチャーの参照 [cid, gen]（303.3）。離れていれば無効
     exlife_of: list | None = None                     # 「EXライフ」シールドの紐付け先クリーチャーの参照 [cid, gen]。離れたら外れる
     no_untap_next: bool = False                       # フリーズ等: 次の持ち主のターン開始時にアンタップしない（1回だけ。開始時に消費）
-    link: int = 0                                     # G・リンクのグループID（0=リンクしていない）。同じIDのカード同士がリンクしている
+    link: int = 0
+    hyper: bool = False                                     # G・リンクのグループID（0=リンクしていない）。同じIDのカード同士がリンクしている
 
 
 def _jcopy(v):

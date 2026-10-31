@@ -75,6 +75,7 @@ class Face:
     galaxy_shield: dict | None = None                     # ギャラクシールド: {cost, civs} 代替コストで表向きにシールド化する
     neo: bool = False                                     # NEO進化: 通常召喚も、evolve_from の上に重ねることもできる
     star: bool = False                                    # スター進化: 離れる時は一番上のカードだけが離れ、下は残る
+    hyper: bool = False                                   # ハイパー化（他の自分のクリーチャー1体をタップしてハイパーモードを解放できる）
     resolve_to: str = "graveyard"                         # 呪文の解決後の置き場所（チャージャー等）
     after_resolve: list[dict] = field(default_factory=list)
 
@@ -114,6 +115,7 @@ class CardDef:
     galaxy_shield: dict | None = None
     neo: bool = False
     star: bool = False
+    hyper: bool = False
     resolve_to: str = "graveyard"
     after_resolve: list[dict] = field(default_factory=list)
     faces: list[Face] = field(default_factory=list)      # ツインパクト: [0]=クリーチャー側, [1]=呪文側
@@ -358,6 +360,10 @@ class Checker:
             if not isinstance(v, bool):
                 raise DefError(f"{where}: face_up must be bool")
             return
+        if k == "hyper":
+            if not isinstance(v, bool):
+                raise DefError(f"{where}: hyper must be bool")
+            return
         raise DefError(f"{where}: unknown cond '{k}'")
 
     def count_spec(self, v, where):
@@ -560,7 +566,7 @@ def _load_face(raw, keywords, macros, chk: Checker, where) -> dict:
                 abilities=abilities, spell=spell, evolve_from=raw.get("evolve_from"),
                 evolve_zone=zone, evolve_any=bool(raw.get("evolve_any", False)), evolve_count=int(raw.get("evolve_count", 1)),
                 cost_reduce_per_evo=int(raw.get("cost_reduce_per_evo", 0)),
-                free_if=raw.get("free_if"), galaxy_shield=raw.get("galaxy_shield"), neo=bool(raw.get("neo", False)), star=bool(raw.get("star", False)), **{"tap_reduce": 0, "s_back": None, **props})
+                free_if=raw.get("free_if"), galaxy_shield=raw.get("galaxy_shield"), neo=bool(raw.get("neo", False)), star=bool(raw.get("star", False)), hyper=bool(raw.get("hyper", False)), **{"tap_reduce": 0, "s_back": None, **props})
 
 
 def load_tables():

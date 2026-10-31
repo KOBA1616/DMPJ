@@ -522,6 +522,7 @@ class Engine(SelectorMixin, EventMixin, InterpreterMixin, TurnMixin, CombatMixin
         c.under, c.top_of = [], -1
         c.exlife_of = None                          # 一度離れたシールドは紐付けが外れる
         c.no_untap_next = False                     # ゾーン移動で新しいオブジェクトになるので凍結の印も消える
+        c.hyper = False                             # ハイパーモードも新しいオブジェクトでは解ける
         dest = self.zlist(to, c.controller if self.zshared(to) else c.owner)
         if position == "top" and self.rules.zones[to]["ordered"]:
             dest.insert(0, cid)

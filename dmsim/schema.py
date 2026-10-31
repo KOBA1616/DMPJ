@@ -46,7 +46,7 @@ def build() -> dict:
         "keywords": {"type": "array", "items": {"enum": sorted(keywords)}},
         "abilities": {"type": "array", "items": ref("ability")}, "spell": ref("ops"),
         "evolve_from": {"type": "object", "properties": {k: {} for k in sorted(FILTER_KEYS | {"zone"})}, "additionalProperties": False}, "free_if": ref("cond"),
-        "galaxy_shield": {"type": "object", "properties": {"cost": {"type": "integer"}, "civs": {"type": "array", "items": {"enum": sorted(CIVS)}}}, "required": ["cost", "civs"], "additionalProperties": False}, "neo": {"type": "boolean"}, "star": {"type": "boolean"},
+        "galaxy_shield": {"type": "object", "properties": {"cost": {"type": "integer"}, "civs": {"type": "array", "items": {"enum": sorted(CIVS)}}}, "required": ["cost", "civs"], "additionalProperties": False}, "neo": {"type": "boolean"}, "star": {"type": "boolean"}, "hyper": {"type": "boolean"},
     }
     return {
         "$schema": "https://json-schema.org/draft/2020-12/schema",
@@ -77,7 +77,7 @@ def build() -> dict:
                 "exists": ref("selector"), "cmp": {"type": "array", "minItems": 3, "maxItems": 3},
                 "not": ref("cond"), "all": {"type": "array", "items": ref("cond")},
                 "any": {"type": "array", "items": ref("cond")}, "is_turn": {"enum": ["you", "opp"]},
-                "marked": {"type": "string"}, "self_marked": {"type": "string"}, "face_up": {"type": "boolean"}},
+                "marked": {"type": "string"}, "self_marked": {"type": "string"}, "face_up": {"type": "boolean"}, "hyper": {"type": "boolean"}},
                 "additionalProperties": False},
             "mod": {"type": "object", "properties": {
                 "power": {"anyOf": [{"type": "integer"}, {"type": "object", "properties": {"amount": {"type": "integer"}, "count": {"anyOf": [ref("selector"), ref("expr")]}}, "required": ["amount"], "additionalProperties": False}]}, "grant": {"type": "array", "items": {"enum": sorted(keywords)}},

@@ -184,6 +184,9 @@
   },
   "star": {
    "type": "boolean"
+  },
+  "hyper": {
+   "type": "boolean"
   }
  },
  "required": [
@@ -353,6 +356,9 @@
      "type": "boolean"
     },
     "star": {
+     "type": "boolean"
+    },
+    "hyper": {
      "type": "boolean"
     }
    },
@@ -1324,6 +1330,9 @@
      "type": "string"
     },
     "face_up": {
+     "type": "boolean"
+    },
+    "hyper": {
      "type": "boolean"
     }
    },
