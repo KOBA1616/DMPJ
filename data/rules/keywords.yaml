@@ -270,3 +270,10 @@ keywords:
             body:
               - {op: choose, select: {zone: bz, owner: opp, filter: {types: [creature]}, count: 1}, as: frozen}
               - {op: tap, select: {ref: frozen}, no_untap_next: true}
+  z_rush:      # Zラッシュ: 自分のシールドが離れたらハイパーモードを解放する（期限はターン開始処理）
+    ja: Zラッシュ（シールドが離れたら、次の自分のターンのはじめまで、このクリーチャーのハイパーモードを解放する）
+    abilities:
+      - kind: trigger
+        when: {event: move, from: shield, subject: {owner: you}}
+        effect:
+          - {op: hyper_mode}

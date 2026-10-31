@@ -295,8 +295,8 @@ def h_turn(eng, t):
 @step("start")
 def st_start(eng, t):                                   # 501
     s = eng.s
-    for c in eng.zlist("bz", s.active):                 # ハイパーモードは次の自分のターンのはじめまで
-        if s.cards[c].hyper:
+    for c in eng.zlist("bz", s.active):                 # ハイパーモードは次の自分のターンのはじめまで。
+        if s.cards[c].hyper and s.cards[c].hyper_turn < s.turn - 1:   # 相手ターンに解放された場合は、来る自分のターンを丸ごと含む
             s.cards[c].hyper = False
     a = s.active
     s.steps_this_turn = 0
@@ -393,6 +393,7 @@ def h_hyper(eng, t):
         return d
     target = cands[ans[0]]
     c.hyper = True
+    c.hyper_turn = s.turn
     eng._pop(t)
     eng._push(eng.ev_task([{"ev": "tap", "subject": s.ref(target)}]))
     return None
