@@ -331,6 +331,42 @@ def op_mekurade(eng, t, op, env):
     return None
 
 
+@op("gachinko", times="expr?", until_lose="bool?", stoppable="bool?", **{"as": "str?"})
+def op_gachinko(eng, t, op, env):
+    """ガチンコ・ジャッジ: 各プレイヤーは自身の山札の上から1枚を見せ、それを一番下に置く。
+    そのカードのコストが相手以上であれば自分の勝ち。times 回（式可）繰り返すか、
+    until_lose（自分が負けるまで）/ stoppable（自分が中止するまで）の組み合わせ。
+    勝った回数を env の変数（既定 wins）に書き、後続の op が {var: wins} で参照する。"""
+    s = eng.s
+    me, opp = env["you"], 1 - env["you"]
+    os_ = t.setdefault("os", {})
+    st = os_.setdefault("gj", {"done": 0, "wins": 0, "stopped": False})
+    times = eng.eval_expr(op["times"], env) if "times" in op else None
+    while not st["stopped"] and (times is None or st["done"] < times):
+        if op.get("stoppable") and st.get("stop_for") != st["done"]:
+            ans, d = eng.ask(t, me, "yes_no", [{"key": "yes"}, {"key": "no"}], prompt="ガチンコ・ジャッジを続ける")
+            if d:
+                return d
+            st["stop_for"] = st["done"]
+            if ans[0] == 1:
+                st["stopped"] = True
+                break
+        mine, theirs = s.zones["deck"][me], s.zones["deck"][opp]
+        if not mine or not theirs:
+            break
+        a, b = mine[0], theirs[0]
+        win = eng.chars(a)["cost"] >= eng.chars(b)["cost"]
+        eng._raw_move(a, "deck", "bottom")
+        eng._raw_move(b, "deck", "bottom")
+        st["done"] += 1
+        if win:
+            st["wins"] += 1
+        elif op.get("until_lose"):
+            break
+    env.setdefault("vars", {})[op.get("as", "wins")] = st["wins"]
+    return None
+
+
 @op("cast_face", face="int")
 def op_cast_face(eng, t, op, env):
     """ツインパクトの呪文面を、カードをバトルゾーンに置いたまま唱える（スマッシュ・バースト）。

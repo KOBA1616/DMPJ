@@ -38,6 +38,27 @@ keywords:
     ja: S・トリガー
     abilities:
       - {kind: static, zone: shield, affects: self, mod: {allow: [s_trigger]}}
+  super_s_trigger:
+    ja: スーパー・S・トリガー（このカードをシールドゾーンから手札に加える時、コストを支払わずにすぐ使ってもよい。その時自分のシールドが1つもなければ、このカードに記された追加能力を得る）
+    abilities:
+      - {kind: static, zone: shield, affects: self, mod: {allow: [s_trigger]}}
+  s_trigger_plus:
+    ja: S・トリガー・プラス（このカードをシールドゾーンから手札に加える時、コストを支払わずにすぐ使ってもよい。それが相手のターンで、そのターン中に自分のシールドが2つ以上ブレイクされていれば、このカードに記された追加能力を得る）
+    abilities:
+      - {kind: static, zone: shield, affects: self, mod: {allow: [s_trigger]}}
+  shield_go:
+    ja: シールド・ゴー（このクリーチャーが破壊された時、表向きにシールド化する。このクリーチャーが表向きで、シールドゾーンを離れる時、かわりに自分の墓地に置く）
+    abilities:
+      - kind: replace
+        when: {event: move, from: bz, to: graveyard, reason: destroy, subject: self}
+        instead:
+          - {op: move, select: {ref: self}, to: shield, reason: put, face_up: true}
+      - kind: replace
+        zone: shield
+        when: {event: move, from: shield, subject: self}
+        if: {face_up: true}
+        instead:
+          - {op: move, select: {ref: self}, to: graveyard, reason: put}
   double_breaker:
     ja: W・ブレイカー
     abilities:

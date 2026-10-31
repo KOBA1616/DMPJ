@@ -1007,3 +1007,150 @@ cards:
         if: {face_up: true}
         instead:
           - {op: move, select: {ref: self}, to: graveyard, reason: put}
+
+  # ---- 語彙パイロット第26弾（2026-11-01）: フェーズ4（ガチンコ/SST/超魂X/バズレンダ） ----
+  - id: T073
+    name: 試験用ガチンコ獣
+    types: [creature]
+    civs: [light]
+    cost: 4
+    power: 3000
+    races: [テスト]
+    text: このクリーチャーが出た時、相手とガチンコ・ジャッジを2回する。その後、勝った回数、自分の山札の上からマナゾーンに置く。
+    abilities:
+      - kind: trigger
+        when: {event: move, to: bz, subject: self}
+        effect:
+          - {op: gachinko, times: 2, as: wins}
+          - {op: move, select: {zone: deck, owner: you, count: {var: wins}}, to: mana, reason: charge}
+  - id: T074
+    name: 試験用ガチンコ呪文獣
+    types: [creature]
+    civs: [fire]
+    cost: 3
+    power: 2000
+    races: [テスト]
+    text: このクリーチャーが出た時、自分が負けるか中止するまで、相手とガチンコ・ジャッジする。その後、勝った回数、カードを引く。
+    abilities:
+      - kind: trigger
+        when: {event: move, to: bz, subject: self}
+        effect:
+          - {op: gachinko, until_lose: true, stoppable: true, as: wins}
+          - {op: draw, count: {var: wins}}
+  - id: T075
+    name: 試験用スーパーST獣
+    types: [creature]
+    civs: [darkness]
+    cost: 9
+    power: 2000
+    races: [テスト]
+    text: スーパー・S・トリガー。このクリーチャーが出た時、カードを1枚引く。■（シールド0枚で使った時）このクリーチャーが出た時、さらにカードを2枚引く。
+    keywords: [super_s_trigger]
+    abilities:
+      - kind: trigger
+        when: {event: move, to: bz, subject: self}
+        effect:
+          - {op: draw, count: 1}
+      - kind: trigger
+        sst: true
+        when: {event: move, to: bz, subject: self}
+        effect:
+          - {op: draw, count: 2}
+  - id: T076
+    name: 試験用超魂
+    types: [creature]
+    civs: [water]
+    cost: 1
+    power: 1000
+    races: [テスト]
+    text: 超魂X（これがクリーチャーの下にあれば、そのクリーチャーにも以下の能力を与える）そのクリーチャーのパワーは+1500され、攻撃する時、カードを1枚引いてもよい。
+    abilities:
+      - kind: static
+        choukon: true
+        affects: self
+        mod: {power: 1500}
+      - kind: trigger
+        choukon: true
+        when: {event: attack, subject: self}
+        effect:
+          - {op: draw, count: 1}
+  - id: T077
+    name: 試験用進化獣
+    types: [creature, evolution]
+    civs: [water]
+    cost: 3
+    power: 3000
+    races: [テスト]
+    evolve_from: {civs: [water]}
+    text: 進化-自分の水のクリーチャー1体の上に置く。
+  - id: T078
+    name: 試験用バズレンダ獣
+    types: [creature]
+    civs: [nature]
+    cost: 5
+    power: 2000
+    races: [テスト]
+    text: バズレンダ [3]（このクリーチャーのコストを支払う時、追加で[3]を好きな回数支払ってもよい。このクリーチャーが出た時、その能力を1回と、追加で支払った回数、使う）■自分の山札の上から1枚をマナゾーンに置く。
+    bazurenda: {cost: 3, civs: []}
+    abilities:
+      - kind: trigger
+        bazurenda: true
+        when: {event: move, to: bz, subject: self}
+        effect:
+          - {op: move, select: {zone: deck, owner: you, count: 1}, to: mana, reason: charge}
+
+  # ---- 語彙パイロット第27弾（2026-11-01）: フェーズ5（ロングテール） ----
+  - id: T079
+    name: 試験用ムゲンクライム獣
+    types: [creature]
+    civs: [water]
+    cost: 6
+    power: 3000
+    races: [テスト]
+    text: ムゲンクライム2（自分のクリーチャーを2体タップし、[水2]支払って、このクリーチャーを自分の手札または墓地から召喚してもよい）
+    mugen_climb: {tap: 2, cost: 2, civs: [water]}
+  - id: T080
+    name: 試験用STP呪文
+    types: [spell]
+    civs: [light]
+    cost: 5
+    text: S・トリガー・プラス（相手のターンで、そのターン中に自分のシールドが2つ以上ブレイクされていれば追加能力を得る）カードを1枚引く。■相手のクリーチャーをすべてタップする。
+    keywords: [s_trigger_plus]
+    spell:
+      - {op: draw, count: 1}
+    stp_spell:
+      - {op: tap, select: {zone: bz, owner: opp, filter: {types: [creature]}, count: all}}
+  - id: T081
+    name: 試験用Oドライブ獣
+    types: [creature]
+    civs: [light]
+    cost: 5
+    power: 4500
+    races: [テスト]
+    text: このクリーチャーが出た時、相手のクリーチャーを1体タップする。O・ドライブ 光x2（召喚する時、自分のマナゾーンで光のカードをさらに2枚タップしてもよい。そうしたら、このクリーチャーが出た時、クリーチャーを1体手札に戻す）
+    o_drive: {civ: light, count: 2}
+    abilities:
+      - kind: trigger
+        when: {event: move, to: bz, subject: self}
+        effect:
+          - {op: tap, select: {zone: bz, owner: opp, filter: {types: [creature]}, count: 1}}
+      - kind: trigger
+        odrive: true
+        when: {event: move, to: bz, subject: self}
+        effect:
+          - {op: move, select: {zone: bz, owner: any, filter: {types: [creature]}, count: 1}, to: hand, reason: return}
+  - id: T082
+    name: 試験用シールドゴー獣
+    types: [creature]
+    civs: [darkness]
+    cost: 3
+    power: 1000
+    races: [テスト]
+    text: ブロッカー シールド・ゴー このカードが自分のシールドゾーンに表向きであれば、相手のクリーチャーすべてのパワーは-1000される。
+    keywords: [blocker, shield_go]
+    abilities:
+      - kind: static
+        zone: shield
+        if: {face_up: true}
+        affects: {zone: bz, owner: opp, filter: {types: [creature]}}
+        mod: {power: -1000}

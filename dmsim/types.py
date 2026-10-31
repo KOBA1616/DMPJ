@@ -27,6 +27,7 @@ class Option(TypedDict, total=False):
     gshield: bool                        # ギャラクシールド（表向きにシールド化する選択肢）
     neo: bool                            # NEO進化（進化元に重ねて出す選択肢）
     hyper_act: NotRequired[bool]         # ハイパーモード解放（メインステップの行動）
+    climb: NotRequired[bool]             # ムゲンクライム（タップ+代替コストで実行する選択肢）
 
 
 class Decision(TypedDict):
@@ -253,6 +254,17 @@ class PlayTask(TypedDict):
     cost_override: NotRequired[int]      # 代替コスト（キリフダッシュ等）: 通常コストの代わりに払う総額
     cost_civs: NotRequired[list]         # 代替コストで必要な文明（省略時はカードの文明）
     st: NotRequired[bool]                # S・トリガーとして実行する（101.4g）
+    paid_done: NotRequired[bool]         # 本体のコストを支払い済み（後段の決定での再入対策）
+    bz_done: NotRequired[bool]           # バズレンダ: 追加支払いの確認が終わった
+    bz_count: NotRequired[int]           # バズレンダ: 追加で支払った回数
+    bz_yn_for: NotRequired[int]          # バズレンダ: 「追加で支払うか」を確認済みの回数
+    bz_pay: NotRequired[bool]            # バズレンダ: その回は追加で支払う
+    bz_paid_for: NotRequired[int]        # バズレンダ: 追加支払いが済んだ回数
+    od_yn: NotRequired[bool]             # O・ドライブ: 追加でタップするか
+    od_done: NotRequired[bool]           # O・ドライブ: 確認済み
+    odrive: NotRequired[bool]            # O・ドライブ: 追加でタップして召喚した
+    climb: NotRequired[bool]             # ムゲンクライムとして実行する
+    climb_done: NotRequired[bool]        # ムゲンクライム: クリーチャーのタップが済んだ
     resolve_to: NotRequired[str]         # 解決後の置き場所（play_free の resolve_to）
     resolve_position: NotRequired[str]   # resolve_to が山札のときの top / bottom
     answer: NotRequired[list[int]]

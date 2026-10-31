@@ -20,7 +20,8 @@ class SelectorMixin:
                     lst = [c for c in lst if c != env["self"][0]]
                 return len(lst)
             if "var" in x:
-                return len(env.get("vars", {}).get(x["var"], []))
+                v = env.get("vars", {}).get(x["var"], [])
+                return v if isinstance(v, int) else len(v)   # 数を数えた変数（ガチンコの勝ち数など）はそのまま
             if "cost_of" in x:   # 変数に束縛したカード（複数なら最大）のコスト
                 ids = env.get("vars", {}).get(x["cost_of"], [])
                 return max((self.chars(c[0])["cost"] for c in ids), default=0)
