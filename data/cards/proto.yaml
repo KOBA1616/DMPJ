@@ -718,3 +718,47 @@ cards:
           - op: may
             body:
               - {op: draw, count: 3}
+
+  # ---- 語彙パイロット第16弾（2026-10-31）: ゴッドリンク ----
+  - id: T053
+    name: 試験用左ゴッド
+    types: [creature]
+    civs: [darkness]
+    cost: 3
+    power: 2000
+    races: [ゴッド, テスト]
+    keywords: [left_g_link]
+    text: 左G・リンク
+  - id: T054
+    name: 試験用中央ゴッド
+    types: [creature]
+    civs: [darkness]
+    cost: 4
+    power: 3000
+    races: [ゴッド, テスト]
+    keywords: [center_g_link, double_breaker]
+    text: 中央G・リンク W・ブレイカー このクリーチャーが出た時、カード３枚でリンクしていれば、カードを１枚引く。
+    abilities:
+      - kind: trigger
+        when: {event: move, to: bz, subject: self}
+        if: {cmp: [{link_count: self}, ">=", 3]}
+        effect:
+          - {op: draw, count: 1}
+  - id: T055
+    name: 試験用右ゴッド
+    types: [creature]
+    civs: [darkness]
+    cost: 3
+    power: 2500
+    races: [ゴッド, テスト]
+    keywords: [right_g_link]
+    text: 右G・リンク
+  - id: T056
+    name: 試験用破壊呪文
+    types: [spell]
+    civs: [darkness]
+    cost: 3
+    text: 相手のクリーチャーを１体選び、破壊する。
+    spell:
+      - op: destroy
+        select: {zone: bz, owner: opp, filter: {types: [creature]}, count: 1}

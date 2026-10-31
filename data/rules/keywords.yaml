@@ -20,6 +20,16 @@ keywords:
     ja: アビスラッシュ
     abilities:
       - {kind: static, zone: graveyard, affects: self, mod: {allow: [summon_from_graveyard]}}
+  # G・リンク: キーワード自体は「どの位置のゴッドか」の印。リンク手順・特性統合・離脱置換はエンジン側（docs/g-link-plan.md）
+  left_g_link:
+    ja: 左G・リンク
+    abilities: []
+  center_g_link:
+    ja: 中央G・リンク
+    abilities: []
+  right_g_link:
+    ja: 右G・リンク
+    abilities: []
   speed_attacker:
     ja: スピードアタッカー
     abilities:

@@ -11,6 +11,8 @@ class SelectorMixin:
                 return len(self.candidates(x["count"], env))
             if "civ_count" in x:   # 対象カード群にある文明の種類数（多色カードは持つ文明をすべて数える）
                 return len({cv for c in self.candidates(x["civ_count"], env) for cv in self.chars(c)["civs"]})
+            if "link_count" in x:   # このカードがリンクしているカードの枚数（リンクしていなければ1）
+                return len(self.link_members(env["self"][0])) if env.get("self") else 0
             if "entered" in x:   # このターン、そのプレイヤーがバトルゾーンに出したクリーチャーの数
                 spec = x["entered"]
                 lst = self.s.turn_counters.get(f"entered:{self._rel(spec.get('owner', 'you'), env)}", [])
