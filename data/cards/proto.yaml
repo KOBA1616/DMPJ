@@ -762,3 +762,22 @@ cards:
     spell:
       - op: destroy
         select: {zone: bz, owner: opp, filter: {types: [creature]}, count: 1}
+
+  # ---- 語彙パイロット第17弾（2026-10-31）: NEO進化 ----
+  - id: T057
+    name: 試験用NEO明王
+    types: [creature]
+    civs: [darkness]
+    cost: 5
+    power: 6000
+    races: [テスト]
+    keywords: [triple_breaker]
+    neo: true
+    evolve_from: {civs: [darkness]}
+    text: NEO進化：闇のクリーチャー１体の上に置いてもよい。（クリーチャーが下にあれば、これをNEO進化クリーチャーとして扱う）T・ブレイカー このクリーチャーが出た時、それがNEO進化クリーチャーなら、闇ではない相手のクリーチャーをすべて破壊する。
+    abilities:
+      - kind: trigger
+        when: {event: move, to: bz, subject: self}
+        if: {exists: {ref: self, filter: {types: [evolution]}}}
+        effect:
+          - {op: destroy, select: {zone: bz, owner: opp, filter: {types: [creature], not_civs: [darkness]}, count: all}}

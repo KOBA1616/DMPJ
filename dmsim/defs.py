@@ -73,6 +73,7 @@ class Face:
     s_back: str | None = None                             # S・バック: この文明のカードがシールドから手札に加わる時、それを捨てて無料で実行できる
     free_if: dict | None = None                           # 条件を満たす間はコストを支払わずに召喚できる（G・ゼロ）
     galaxy_shield: dict | None = None                     # ギャラクシールド: {cost, civs} 代替コストで表向きにシールド化する
+    neo: bool = False                                     # NEO進化: 通常召喚も、evolve_from の上に重ねることもできる
     resolve_to: str = "graveyard"                         # 呪文の解決後の置き場所（チャージャー等）
     after_resolve: list[dict] = field(default_factory=list)
 
@@ -110,6 +111,7 @@ class CardDef:
     s_back: str | None = None
     free_if: dict | None = None
     galaxy_shield: dict | None = None
+    neo: bool = False
     resolve_to: str = "graveyard"
     after_resolve: list[dict] = field(default_factory=list)
     faces: list[Face] = field(default_factory=list)      # ツインパクト: [0]=クリーチャー側, [1]=呪文側
@@ -551,7 +553,7 @@ def _load_face(raw, keywords, macros, chk: Checker, where) -> dict:
                 abilities=abilities, spell=spell, evolve_from=raw.get("evolve_from"),
                 evolve_zone=zone, evolve_any=bool(raw.get("evolve_any", False)), evolve_count=int(raw.get("evolve_count", 1)),
                 cost_reduce_per_evo=int(raw.get("cost_reduce_per_evo", 0)),
-                free_if=raw.get("free_if"), galaxy_shield=raw.get("galaxy_shield"), **{"tap_reduce": 0, "s_back": None, **props})
+                free_if=raw.get("free_if"), galaxy_shield=raw.get("galaxy_shield"), neo=bool(raw.get("neo", False)), **{"tap_reduce": 0, "s_back": None, **props})
 
 
 def load_tables():
