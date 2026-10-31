@@ -16,7 +16,7 @@
 ],
 "verifier": 2,
 "verify_error": "移動先 deck が原文に無い",
-"vocab_ver": "f169feafc5e12539"
+"vocab_ver": "a50952f68781e1a0"
 },
 "dm30-024": {
 "by": "rule",
