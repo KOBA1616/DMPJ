@@ -781,3 +781,16 @@ cards:
         if: {exists: {ref: self, filter: {types: [evolution]}}}
         effect:
           - {op: destroy, select: {zone: bz, owner: opp, filter: {types: [creature], not_civs: [darkness]}, count: all}}
+
+  # ---- 語彙パイロット第18弾（2026-10-31）: スター進化 ----
+  - id: T058
+    name: 試験用スター進化龍
+    types: [creature, evolution]
+    civs: [fire]
+    cost: 6
+    power: 7000
+    races: [テスト]
+    keywords: [double_breaker]
+    star: true
+    evolve_from: {civs: [fire]}
+    text: スター進化：自分の火のクリーチャー１体の上に置く。（このクリーチャーが離れる時、かわりに一番上のカードだけが離れる）W・ブレイカー

@@ -129,6 +129,7 @@
   "evolve_from": {
    "type": "object",
    "properties": {
+    "any_of": {},
     "civs": {},
     "cost_ge": {},
     "cost_le": {},
@@ -179,6 +180,9 @@
    "additionalProperties": false
   },
   "neo": {
+   "type": "boolean"
+  },
+  "star": {
    "type": "boolean"
   }
  },
@@ -295,6 +299,7 @@
     "evolve_from": {
      "type": "object",
      "properties": {
+      "any_of": {},
       "civs": {},
       "cost_ge": {},
       "cost_le": {},
@@ -345,6 +350,9 @@
      "additionalProperties": false
     },
     "neo": {
+     "type": "boolean"
+    },
+    "star": {
      "type": "boolean"
     }
    },
@@ -1110,6 +1118,7 @@
   "filter": {
    "type": "object",
    "properties": {
+    "any_of": {},
     "civs": {},
     "cost_ge": {},
     "cost_le": {},

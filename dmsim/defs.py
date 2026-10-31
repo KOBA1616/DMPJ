@@ -38,7 +38,7 @@ CARD_TYPES = {"creature", "spell", "evolution"} | PERMANENT_TYPES
 CIVS = {"light", "water", "darkness", "fire", "nature", "zero"}
 SELECTOR_KEYS = {"zone", "owner", "owner_of", "filter", "count", "up_to", "from_top", "chooser", "ref", "other",
                  "under_of", "look", "exlife_of"}   # look: 非公開ゾーン（山札など）の中身を見て選ぶ
-FILTER_KEYS = {"types", "not_types", "civs", "not_civs", "races", "race_has", "name", "name_has", "not_name",
+FILTER_KEYS = {"any_of", "types", "not_types", "civs", "not_civs", "races", "race_has", "name", "name_has", "not_name",
                "cost_le", "cost_ge", "power_le", "power_ge", "tapped", "keyword", "multicolor"}
 FILTER_EXPR_KEYS = {"cost_le", "cost_ge", "power_le", "power_ge", "races"}   # 値に式を書ける（解決時に計算）
 
@@ -74,6 +74,7 @@ class Face:
     free_if: dict | None = None                           # 条件を満たす間はコストを支払わずに召喚できる（G・ゼロ）
     galaxy_shield: dict | None = None                     # ギャラクシールド: {cost, civs} 代替コストで表向きにシールド化する
     neo: bool = False                                     # NEO進化: 通常召喚も、evolve_from の上に重ねることもできる
+    star: bool = False                                    # スター進化: 離れる時は一番上のカードだけが離れ、下は残る
     resolve_to: str = "graveyard"                         # 呪文の解決後の置き場所（チャージャー等）
     after_resolve: list[dict] = field(default_factory=list)
 
@@ -112,6 +113,7 @@ class CardDef:
     free_if: dict | None = None
     galaxy_shield: dict | None = None
     neo: bool = False
+    star: bool = False
     resolve_to: str = "graveyard"
     after_resolve: list[dict] = field(default_factory=list)
     faces: list[Face] = field(default_factory=list)      # ツインパクト: [0]=クリーチャー側, [1]=呪文側
@@ -289,6 +291,11 @@ class Checker:
         bad = set(f) - FILTER_KEYS
         if bad:
             raise DefError(f"{where}: unknown filter keys {sorted(bad)}")
+        if "any_of" in f:
+            if not isinstance(f["any_of"], list) or not f["any_of"]:
+                raise DefError(f"{where}: any_of must be a non-empty list of filters")
+            for sub in f["any_of"]:
+                self.filter(sub, where)
         for k in ("civs", "not_civs"):
             if k in f and set(f[k]) - CIVS:
                 raise DefError(f"{where}: unknown civs {f[k]}")
@@ -553,7 +560,7 @@ def _load_face(raw, keywords, macros, chk: Checker, where) -> dict:
                 abilities=abilities, spell=spell, evolve_from=raw.get("evolve_from"),
                 evolve_zone=zone, evolve_any=bool(raw.get("evolve_any", False)), evolve_count=int(raw.get("evolve_count", 1)),
                 cost_reduce_per_evo=int(raw.get("cost_reduce_per_evo", 0)),
-                free_if=raw.get("free_if"), galaxy_shield=raw.get("galaxy_shield"), neo=bool(raw.get("neo", False)), **{"tap_reduce": 0, "s_back": None, **props})
+                free_if=raw.get("free_if"), galaxy_shield=raw.get("galaxy_shield"), neo=bool(raw.get("neo", False)), star=bool(raw.get("star", False)), **{"tap_reduce": 0, "s_back": None, **props})
 
 
 def load_tables():
