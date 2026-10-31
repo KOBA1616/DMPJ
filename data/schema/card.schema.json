@@ -568,18 +568,6 @@
       "type": "object",
       "properties": {
        "op": {
-        "const": "hyper_mode"
-       }
-      },
-      "required": [
-       "op"
-      ],
-      "additionalProperties": false
-     },
-     {
-      "type": "object",
-      "properties": {
-       "op": {
         "const": "if"
        },
        "cond": {
