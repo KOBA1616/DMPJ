@@ -83,6 +83,8 @@ class SelectorMixin:
             return False
         if "civs" in f and not set(f["civs"]) & set(ch["civs"]):
             return False
+        if "civs_all" in f and not set(f["civs_all"]) <= set(ch["civs"]):
+            return False
         if "not_civs" in f and set(f["not_civs"]) & set(ch["civs"]):
             return False
         if "races" in f and not set(f["races"]) & set(ch["races"]):
