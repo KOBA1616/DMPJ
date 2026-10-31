@@ -83,6 +83,8 @@ class SelectorMixin:
             return False
         if "civs" in f and not set(f["civs"]) & set(ch["civs"]):
             return False
+        if "civs_all" in f and not set(f["civs_all"]) <= set(ch["civs"]):
+            return False
         if "not_civs" in f and set(f["not_civs"]) & set(ch["civs"]):
             return False
         if "races" in f and not set(f["races"]) & set(ch["races"]):
@@ -98,6 +100,8 @@ class SelectorMixin:
         if "multicolor" in f and (len(ch["civs"]) > 1) != f["multicolor"]:
             return False
         if "tapped" in f and (lki["tapped"] if lki else c.tapped) != f["tapped"]:
+            return False
+        if "face_down" in f and c.face_down != f["face_down"]:
             return False
         if "keyword" in f and f["keyword"] not in ch["keywords"]:
             return False

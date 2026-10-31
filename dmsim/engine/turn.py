@@ -219,16 +219,16 @@ class TurnMixin:
         untapped = [c for c in self.zlist("mana", p) if not self.s.cards[c].tapped]
         if len(untapped) < len(d.civs) or sum(self.cdef(c).mana for c in untapped) < eff:
             return []
-        groups: dict[str, list[int]] = {}
-        for c in untapped:
-            groups.setdefault(self.s.cards[c].defn, []).append(c)
+        groups: dict = {}
+        for c in untapped:   # 裏向きマナは無色として別グループに分ける（水晶武装）
+            groups.setdefault((self.s.cards[c].defn, self.s.cards[c].face_down), []).append(c)
         names = sorted(groups)
         need = list(civs) if civs is not None else list(d.civs)
-        mana = [self.rules.cards[n].mana for n in names]
+        mana = [self.rules.cards[n[0]].mana for n in names]
         out: list[list[int]] = []
 
         def civ_ok(cnt):
-            civsets = [set(self.rules.cards[n].civs) for n, k in zip(names, cnt) for _ in range(k)]
+            civsets = [set() if n[1] else set(self.rules.cards[n[0]].civs) for n, k in zip(names, cnt) for _ in range(k)]
             return any(all(need[j] in civsets[perm[j]] for j in range(len(need)))
                        for perm in itertools.permutations(range(len(civsets)), len(need)))
 

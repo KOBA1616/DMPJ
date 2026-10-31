@@ -106,6 +106,18 @@ def op_untap(eng, t, op, env):
     return op_tap(eng, t, op, env, "untap")
 
 
+@op("flip_down", select="selector")
+def op_flip_down(eng, t, op, env):
+    """水晶武装: マナゾーンのカードを裏向きにする。裏向きのマナは無色として扱う（支払いの文明に数えない）。"""
+    cids, d = eng.select(t, op["select"], env)
+    if d:
+        return d
+    for c in cids:
+        if eng.s.cards[c].zone == "mana":
+            eng.s.cards[c].face_down = True
+    return None
+
+
 @op("may", body="ops", label="str?")
 def op_may(eng, t, op, env):
     a, d = eng.ask(t, env["you"], "yes_no", [{"key": "yes"}, {"key": "no"}], prompt=op.get("label", ""))
@@ -361,23 +373,46 @@ def op_play_self(eng, t, op, env):
     return None
 
 
-@op("swap", out="selector", **{"in": "selector"})
+@op("swap", out="selector", out_to="zone?", **{"in": "selector"})
 def op_swap(eng, t, op, env):
-    """入れ替える（701.26）。out をバトルゾーンから手札へ、in をバトルゾーンへ。
+    """入れ替える（701.26）。out をバトルゾーンから out_to（既定は手札）へ、in をバトルゾーンへ。
     入ったクリーチャーは出たクリーチャーのタップ状態と攻撃中の状態を引き継ぐ（701.26a: 革命チェンジ）。
-    out が正常に離れなければ入れ替えは行わない（701.26b）。"""
+    out が正常に離れなければ入れ替えは行わない（701.26b）。out_to: mana が J・チェンジ。"""
     outs, d = eng.select(t, op["out"], env)
     if d:
         return d
-    ins = eng.candidates(op["in"], env)
+    if "ref" in op["in"]:
+        ins = eng.candidates(op["in"], env)
+    else:                                   # 入る側も選べる（J・チェンジのマナゾーンから等）
+        ins, d = eng.select(t, op["in"], env)
+        if d:
+            return d
     if not outs or not ins:
         return None
     o, i = outs[0], ins[0]
     if not eng.permits(i, "enter_bz"):   # 「コスト７以下のクリーチャーを出せない」: 入れ替えもできない
         return None
-    eng._defer(t, [eng.ev_task({"ev": "move", "subject": eng.s.ref(o), "to": "hand", "reason": "return"}, env),
+    eng._defer(t, [eng.ev_task({"ev": "move", "subject": eng.s.ref(o), "to": op.get("out_to", "hand"), "reason": "return"}, env),
                    {"t": "swap_in", "out": eng.s.ref(o), "out_gen_next": eng.s.cards[o].gen + 1,
                     "in": eng.s.ref(i), "tapped": eng.s.cards[o].tapped, "env": env}])
+    return None
+
+
+@op("invade", onto="selector")
+def op_invade(eng, t, op, env):
+    """侵略: 手札にあるこのクリーチャーを、攻撃中のクリーチャーの上に重ねて出す。
+    下になったクリーチャーのタップ状態と攻撃中の状態を引き継ぐ。"""
+    ontos, d = eng.select(t, op["onto"], env)
+    if d:
+        return d
+    if not ontos:
+        return None
+    me = env["self"][0]
+    if not eng.permits(me, "enter_bz"):
+        return None
+    a = ontos[0]
+    eng._defer(t, [eng.ev_task({"ev": "move", "subject": eng.s.ref(me), "to": "bz", "reason": "put", "via": "invasion"}, env),
+                   {"t": "invade_fix", "cid": me, "onto": eng.s.ref(a), "tapped": eng.s.cards[a].tapped}])
     return None
 
 

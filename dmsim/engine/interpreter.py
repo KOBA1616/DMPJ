@@ -1,7 +1,7 @@
 """効果DSLのインタプリタ。op は ops.py で registry に登録する。"""
 from __future__ import annotations
 
-from ..types import BindTask, EffectTask, PutUnderTask, SwapFixTask, SwapInTask
+from ..types import BindTask, EffectTask, InvadeFixTask, PutUnderTask, SwapFixTask, SwapInTask
 from .registry import OPS, task
 
 
@@ -66,6 +66,18 @@ def h_swap_fix(eng, t):
     for t_ in s.tasks:   # 攻撃中なら攻撃クリーチャーを入れ替える（701.26a）
         if t_["t"] == "attack" and t_["attacker"] == t["out"]:
             t_["attacker"] = new
+    return None
+
+
+@task("invade_fix", InvadeFixTask)
+def h_invade_fix(eng, t):
+    """侵略: 出たクリーチャーを攻撃中のクリーチャーの上に重ねる（進化と同じ重ね処理）。"""
+    s = eng.s
+    eng._pop(t)
+    cid, onto = t["cid"], t["onto"]
+    if s.cards[cid].zone != "bz" or not s.alive(onto) or s.cards[onto[0]].zone != "bz":
+        return None
+    eng._stack(cid, onto[0])
     return None
 
 

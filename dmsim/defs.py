@@ -38,8 +38,8 @@ CARD_TYPES = {"creature", "spell", "evolution"} | PERMANENT_TYPES
 CIVS = {"light", "water", "darkness", "fire", "nature", "zero"}
 SELECTOR_KEYS = {"zone", "owner", "owner_of", "filter", "count", "up_to", "from_top", "chooser", "ref", "other",
                  "under_of", "look", "exlife_of"}   # look: 非公開ゾーン（山札など）の中身を見て選ぶ
-FILTER_KEYS = {"any_of", "types", "not_types", "civs", "not_civs", "races", "race_has", "name", "name_has", "not_name",
-               "cost_le", "cost_ge", "power_le", "power_ge", "tapped", "keyword", "multicolor"}
+FILTER_KEYS = {"any_of", "types", "not_types", "civs", "civs_all", "not_civs", "races", "race_has", "name", "name_has", "not_name",
+               "cost_le", "cost_ge", "power_le", "power_ge", "tapped", "keyword", "multicolor", "face_down"}
 FILTER_EXPR_KEYS = {"cost_le", "cost_ge", "power_le", "power_ge", "races"}   # 値に式を書ける（解決時に計算）
 
 

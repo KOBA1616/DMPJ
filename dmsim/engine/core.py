@@ -347,6 +347,20 @@ class Engine(SelectorMixin, EventMixin, InterpreterMixin, TurnMixin, CombatMixin
                     if self._subject_match(aff, cid, env, None, base=True) and \
                             ("if" not in ab or self._static_cond(ab["if"], env)):
                         mods.append(ab["mod"])
+        for p in (0, 1):   # シールドゾーンから働く常在型（G・城など。zone: shield を宣言した能力だけ）
+            for src in self.s.zones["shield"][p]:
+                if not self._affects_others(src):
+                    continue
+                for _, ab in self.abilities(src, "static"):
+                    aff = ab.get("affects", {})
+                    if ab.get("zone") != "shield" or "mod" not in ab or aff == "self":
+                        continue
+                    if (aff.get("zone", "bz") if isinstance(aff, dict) else "bz") != c.zone:
+                        continue
+                    env = {"you": self.s.cards[src].controller, "self": self.s.ref(src)}
+                    if self._subject_match(aff, cid, env, None, base=True) and \
+                            ("if" not in ab or self._static_cond(ab["if"], env)):
+                        mods.append(ab["mod"])
         mods += [ce["mod"] for ce in self.s.continuous if self._ce_applies(ce, cid, ref)]
         granted = set()
         for m in mods:
@@ -512,6 +526,8 @@ class Engine(SelectorMixin, EventMixin, InterpreterMixin, TurnMixin, CombatMixin
         if c.link and to != "bz":                   # G・リンク: バトルゾーンを離れたらリンクから外れる
             self.unlink(cid)
         c.gen += 1                                  # 新しいオブジェクトになる（400.5）
+        if to != "mana":
+            c.face_down = False                     # 裏向きはマナゾーンにある間だけの状態（水晶武装）
         c.zone = to
         c.tapped = to == "mana" and len(self.cdef(cid).civs) > 1   # 多色カードはタップしてマナに置かれる（405.1）
         c.face_up = self.rules.zones[to]["public"]

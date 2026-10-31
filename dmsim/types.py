@@ -320,6 +320,13 @@ class SwapFixTask(TypedDict):
     tapped: bool
 
 
+class InvadeFixTask(TypedDict):
+    t: Literal["invade_fix"]
+    cid: int
+    onto: Ref
+    tapped: bool
+
+
 class PutUnderTask(TypedDict):
     t: Literal["put_under"]
     cid: int
