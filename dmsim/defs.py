@@ -311,6 +311,8 @@ class Checker:
                 return
             if k in ("var", "cost_of", "races_of", "race"):
                 return
+            if k == "link_count":   # リンクしているカードの枚数（値は self 固定で無視される）
+                return
             if k == "sum":
                 for e in v:
                     self.expr(e, where)

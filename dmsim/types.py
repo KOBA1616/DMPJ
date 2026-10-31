@@ -145,6 +145,16 @@ class EventTask(TypedDict):
     captured: list[Event]
     applying: bool
     answer: NotRequired[list[int]]
+    link_i: NotRequired[int]             # G・リンクの離脱置換: 処理済みのイベント位置
+    link_chosen: NotRequired[list[int]]  # G・リンクの離脱置換: 離れることが決まったカード
+
+
+class GLinkTask(TypedDict):
+    t: Literal["g_link"]
+    cid: int
+    player: int
+    step: str
+    answer: NotRequired[list[int]]
 
 
 class CaptureTask(TypedDict):

@@ -1,7 +1,7 @@
 """イベント・パイプライン（置換→同時適用→状況起因処理→誘発）と待機・解決窓。"""
 from __future__ import annotations
 
-from ..types import CaptureTask, CloseWinTask, BattleRunTask, EnqueueStTask, EventTask, OpenWinTask, ResolvePendingTask, SbackTask
+from ..types import CaptureTask, CloseWinTask, BattleRunTask, EnqueueStTask, EventTask, GLinkTask, OpenWinTask, ResolvePendingTask, SbackTask
 from .registry import task
 
 
@@ -100,6 +100,8 @@ class EventMixin:
                 if s.cards[u].zone == "bz" or s.cards[u].top_of == cid:   # シールドの束も同時に動く（113.2）
                     self._raw_move(u, ev["to"])
             new = s.ref(cid)
+            if ev["to"] == "bz" and self.link_side(cid) is not None:   # ゴッドが出たらリンク手順を行う
+                self._push({"t": "g_link", "cid": cid, "player": c.controller, "step": "start"})
             stack_on = ev.get("stack_on")
             if ev["to"] == "bz" and stack_on and s.alive(stack_on):
                 base = stack_on[0]
@@ -144,6 +146,9 @@ class EventMixin:
             if c.tapped == (kind == "tap"):
                 return []   # 「になる」誘発は状態が変わった時だけ（603.2c）
             c.tapped = kind == "tap"
+            if c.link:   # G・リンク: グループは1体なので、タップ状態は全員で共有する
+                for m in self.link_members(ev["subject"][0]):
+                    s.cards[m].tapped = c.tapped
             return [{"ev": kind, "subject": ev["subject"], "controller": c.controller}]
         if kind in ("attack", "block", "cast", "turn_start", "turn_end", "break", "battle_win", "battle_start", "attack_end"):
             return [dict(ev)]
@@ -269,8 +274,11 @@ class EventMixin:
         return self.filter_match(cid, f, lki, base)
 
     def _pattern_match(self, when, rec, src, lki_src) -> bool:
+        self_ref = lki_src["ref"] if lki_src else self.s.ref(src)
+        if lki_src is None and self.s.cards[src].link:   # G・リンク: 「このクリーチャー」はグループ（代表）を指す
+            self_ref = self.s.ref(self.link_rep(src))
         env = {"you": lki_src["controller"] if lki_src else self.s.cards[src].controller,
-               "self": lki_src["ref"] if lki_src else self.s.ref(src)}
+               "self": self_ref}
         return self._match_when(when, rec, env)
 
     def _ref_match(self, pat, ref, env) -> bool:
@@ -320,6 +328,9 @@ class EventMixin:
             s.ev_seq += 1
             rec["_eid"] = s.ev_seq
         sources = [(c, None) for c in self.bz_tops()]
+        for c in list(sources):   # G・リンク: グループの全員の誘発型能力が、グループ（1体）として誘発する
+            if self.s.cards[c[0]].link:
+                sources += [(m, None) for m in self.link_members(c[0]) if m != c[0]]
         zt = self.rules.zone_trigger_defs
         if zt:   # 墓地などで機能する誘発型能力（《黒神龍グールジェネレイド》など）
             for z in sorted({z for v in zt.values() for z in v}):
@@ -344,6 +355,8 @@ class EventMixin:
                     continue
                 ctrl = lsrc["controller"] if lsrc else s.cards[src].controller
                 sref = lsrc["ref"] if lsrc else s.ref(src)
+                if lsrc is None and s.cards[src].link:   # G・リンク: 発生源はグループの代表として扱う
+                    sref = s.ref(self.link_rep(src))
                 if "if" in ab and not lsrc and not self.eval_cond(ab["if"], {"you": ctrl, "self": sref, "event": rec, "vars": {}}):
                     continue          # 誘発条件つき（「〜場合」）の能力は、誘発時にも条件を見る（603.4）。離れた時の誘発は解決時だけ
                 if ab.get("once_per_turn"):   # 「各ターンに一度」: このカード（オブジェクト）のこの能力は1ターンに1回だけ誘発する
@@ -396,6 +409,38 @@ class EventMixin:
 def h_event(eng, t):
     """置換効果の決定（609.9a）: まずターン・プレイヤーが束の全イベントについて自分の置換効果を決め、
     次に非ターン・プレイヤーが、まだ置換されていないイベントについて決める。決め終えたら同時に適用する。"""
+    # G・リンクの離脱置換: リンクしたゴッドが離れる時は、グループの中から1枚だけを選んで離す
+    li = t.get("link_i", 0)
+    chosen = t.setdefault("link_chosen", [])
+    while li < len(t["evs"]):
+        ev = t["evs"][li]
+        t["link_i"] = li + 1
+        if ev.get("ev") != "move" or ev.get("to") == "bz" or ev.get("replaced"):
+            li += 1
+            continue
+        cid = ev["subject"][0]
+        c = eng.s.cards[cid]
+        if not c.link or c.zone != "bz":
+            li += 1
+            continue
+        members = [m for m in eng.link_members(cid) if m not in chosen]
+        if len(members) <= 1:
+            if members:
+                ev["subject"] = eng.s.ref(members[0])
+                chosen.append(members[0])
+            else:
+                t["skip"].append(li)
+            li += 1
+            continue
+        opts = [eng._card_option(m, True) for m in members]
+        a, d = eng.ask(t, c.controller, "choose_link_leave", opts)
+        if d:
+            t["link_i"] = li   # 選び直しのために戻す
+            return d
+        pick = members[a[0]]
+        ev["subject"] = eng.s.ref(pick)
+        chosen.append(pick)
+        li += 1
     order = (eng.s.active, 1 - eng.s.active)
     while t["rp"] < 2:
         while t["i"] < len(t["evs"]):
@@ -416,6 +461,63 @@ def h_event(eng, t):
         return None
     eng._pop(t)
     eng.apply_batch([e for k, e in enumerate(t["evs"]) if k not in t["skip"]] + t["captured"])
+    return None
+
+
+@task("g_link", GLinkTask)
+def h_g_link(eng, t):
+    """G・リンクの手順: ゴッドが出た時に行う。（中央）まず自分のゴッドから好きな数だけ
+    リンクを外し、その後リンクできるゴッドにリンクする。（左/右）リンク先を選ぶだけ。"""
+    s = eng.s
+    cid, p = t["cid"], t["player"]
+    if s.cards[cid].zone != "bz":
+        eng._pop(t)
+        return None
+    side = eng.link_side(cid)
+    if t["step"] == "start":
+        t["step"] = "unlink" if side == 1 else "link"
+    if t["step"] == "unlink":   # 中央のみ: リンクを外すカードを1枚ずつ選ぶ（終えたら link へ）
+        members = [m for c in eng.bz_tops(p) if s.cards[c].link for m in eng.link_members(c)]
+        members = sorted(set(members))
+        if members:
+            opts = [eng._card_option(m, True) for m in members] + [{"key": "done"}]
+            a, d = eng.ask(t, p, "choose_unlink", opts)
+            if d:
+                return d
+            if opts[a[0]]["key"] != "done":
+                eng.unlink(members[a[0]])
+                return None   # 続けてまた選べる
+        t["step"] = "link"
+    # リンク先の選択
+    targets = []
+    for c in eng.bz_tops(p):
+        if c == cid or eng.link_side(c) is None:
+            continue
+        group = eng.link_members(c)
+        sides = {eng.link_side(m) for m in group}
+        if side in sides:
+            continue   # その位置は埋まっている
+        if side == 1 and not (sides & {0, 2}):
+            continue   # 中央は左か右のゴッドにリンクする
+        if side != 1 and 1 not in sides and not ((side == 0 and 2 in sides) or (side == 2 and 0 in sides)):
+            continue   # 左は中央か右、右は中央か左のゴッドの隣にリンクする
+        targets.append(c)
+    if not targets:
+        eng._pop(t)
+        return None
+    opts = [eng._card_option(c, True) for c in targets] + [{"key": "pass"}]
+    a, d = eng.ask(t, p, "choose_link_target", opts)
+    if d:
+        return d
+    if opts[a[0]]["key"] != "pass":
+        tgt = targets[a[0]]
+        gid = s.cards[tgt].link
+        if not gid:
+            s.seq += 1
+            gid = s.seq
+            s.cards[tgt].link = gid
+        s.cards[cid].link = gid
+    eng._pop(t)
     return None
 
 
