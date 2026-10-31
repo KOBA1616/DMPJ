@@ -197579,3 +197579,176 @@ cards:
     official: dm07-s04
     review: pending
     notes: 再変換
+- id: dm08-019
+  name: カーボナイト・ビートル
+  types:
+  - creature
+  civs:
+  - nature
+  cost: 4
+  power: 3000
+  races:
+  - ジャイアント・インセクト
+  mana: 1
+  text: 'ターボラッシュ(自分の他のクリーチャーがシールドをブレイクしたあと、そのターンが終わるまで、このクリーチャーは次の能力を得る)
+
+    このクリーチャーが相手プレイヤーを攻撃してブロックされたとき、相手のシールドが１枚でもあれば、そのうちの１枚をブレイクする。'
+  keywords:
+  - turbo_rush
+  abilities:
+  - kind: trigger
+    when:
+      event: block
+      attacker: self
+    effect:
+    - op: if
+      cond:
+        cmp:
+        - count:
+            zone: shield
+            owner: opp
+        - '>='
+        - 1
+      then:
+      - op: break
+        player: opp
+        count: 1
+  source:
+    official: dm08-019
+    review: pending
+    notes: 再変換
+- id: dm08-021
+  name: 日向草
+  types:
+  - creature
+  civs:
+  - light
+  cost: 5
+  power: 3000
+  races:
+  - スターライト・ツリー
+  mana: 1
+  text: 'ターボラッシュ(自分の他のクリーチャーがシールドをブレイクした後、そのターンが終わるまで、このクリーチャーは次の能力を得る)
+
+    このクリーチャーが相手プレイヤーを攻撃してブロックされなかったとき、バトルゾーンにある、日向草以外の自分のクリーチャーをすべてアンタップする。'
+  keywords:
+  - turbo_rush
+  abilities:
+  - kind: trigger
+    when:
+      event: break
+      subject: self
+    effect:
+    - op: untap
+      select:
+        zone: bz
+        owner: you
+        other: true
+        filter:
+          types:
+          - creature
+        count: all
+  source:
+    official: dm08-021
+    review: pending
+    notes: 再変換
+- id: dm08-028
+  name: 機怪人形ガチャック
+  types:
+  - creature
+  civs:
+  - darkness
+  cost: 3
+  power: 2000
+  races:
+  - デスパペット
+  mana: 1
+  text: 'ターボラッシュ(自分の他のクリーチャーがシールドをブレイクした後、そのターンが終わるまで、このクリーチャーは次の能力を得る)
+
+    このクリーチャーが相手プレイヤーを攻撃してブロックされなかったとき、バトルゾーンにあるクリーチャーを１体選び、持ち主の墓地に置いてもよい。'
+  keywords:
+  - turbo_rush
+  abilities:
+  - kind: trigger
+    when:
+      event: break
+      subject: self
+    effect:
+    - op: may
+      body:
+      - op: move
+        select:
+          zone: bz
+          owner: any
+          filter:
+            types:
+            - creature
+          count: 1
+        to: graveyard
+        reason: put
+  source:
+    official: dm08-028
+    review: pending
+    notes: 再変換
+- id: dm08-044
+  name: ギガクローズ
+  types:
+  - creature
+  civs:
+  - darkness
+  cost: 5
+  power: 2000
+  races:
+  - キマイラ
+  mana: 1
+  text: 'ターボラッシュ(自分の他のクリーチャーがシールドをブレイクした後、そのターンが終わるまで、このクリーチャーは次の能力を得る)
+
+    このクリーチャーが攻撃するとき、相手は自分自身の手札をすべて、持ち主の墓地に置く。'
+  keywords:
+  - turbo_rush
+  abilities:
+  - kind: trigger
+    when:
+      event: attack
+      subject: self
+    effect:
+    - op: move
+      select:
+        zone: hand
+        owner: opp
+        count: all
+      to: graveyard
+      reason: discard
+  source:
+    official: dm08-044
+    review: pending
+    notes: 再変換。ターボラッシュは既知キーワードとして提示された分（攻撃時効果は本文側）
+    aliases:
+    - promoy25-091
+- id: dm09-012
+  name: 闘将バグザグール
+  types:
+  - creature
+  civs:
+  - darkness
+  cost: 6
+  power: 5000
+  races:
+  - ダークロード
+  mana: 1
+  text: このクリーチャーがバトルゾーンにある間、すべてのクリーチャーは、可能なら毎ターン攻撃する。
+  abilities:
+  - kind: static
+    affects:
+      zone: bz
+      owner: any
+      filter:
+        types:
+        - creature
+    mod:
+      require:
+      - attack
+  source:
+    official: dm09-012
+    review: pending
+    notes: 再変換
