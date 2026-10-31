@@ -86,7 +86,8 @@ class EventMixin:
             lki = {"defn": c.defn, "face": c.face, "controller": c.controller, "zone": from_zone,
                    "tapped": c.tapped, "chars": self.chars(cid), "ref": list(ev["subject"])}   # 過去の状態を見る（603.5c）
             unders = list(c.under)
-            if ev.get("card_only") and unders:   # カードとして離れる: 下のカードを再構築（801.4, 703.4h）
+            if unders and ev["to"] != "bz" and (ev.get("card_only") or self.fdef(cid, c.face if c.face >= 0 else None).star):
+                # カードとして離れる（801.4）/ スター進化（離れる時は一番上のカードだけ）: 下のカードを再構築して残す
                 self._rebuild(cid)
                 unders = []
             self._raw_move(cid, ev["to"], ev.get("position", "top"), ev.get("controller"))

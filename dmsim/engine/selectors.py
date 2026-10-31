@@ -69,6 +69,8 @@ class SelectorMixin:
         else:
             ch = lki["chars"] if lki else self.chars(cid)
         c = self.s.cards[cid]
+        if "any_of" in f and not any(self.filter_match(cid, sub, lki, base) for sub in f["any_of"]):
+            return False
         if "types" in f and not set(f["types"]) & set(ch["types"]):
             return False
         if "not_types" in f and set(f["not_types"]) & set(ch["types"]):
