@@ -177,6 +177,9 @@
     "civs"
    ],
    "additionalProperties": false
+  },
+  "neo": {
+   "type": "boolean"
   }
  },
  "required": [
@@ -340,6 +343,9 @@
       "civs"
      ],
      "additionalProperties": false
+    },
+    "neo": {
+     "type": "boolean"
     }
    },
    "required": [

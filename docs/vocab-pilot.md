@@ -364,3 +364,15 @@ space_charge（単独42件）: スペース・チャージは、文明ごとの�
 - 進化系: NEO進化（251件、二択の出し方＋重なっている時の性質変化）、スター進化（153件、離れる時は一番上だけ）
 - シンカライズ（94件）は実装済み（キーワード shinka_rise）なので、変換側の精査で解ける見込み
 - 多重ギャップ側の棚卸し
+
+# 第17弾（2026-10-31）: NEO進化
+
+検証は `tests/test_vocab_pilot17.py`（動作）と `tests/test_vocab_pilot17_cards.py`（代表カードの parse）。rejects: neo_evolution、単独251件。
+
+- 面に `neo: true` と evolve_from を宣言する（types に evolution は入れない）。通常召喚の選択肢に加えて「:neo」の重ねて出す選択肢が出る
+- 重ねて出た時だけ chars の types に evolution が加わる（「NEO進化クリーチャーとして扱う」）。「それがNEO進化クリーチャーなら」は、自身を types: [evolution] で見る exists 条件で書く
+
+## 次の候補
+
+- スター進化（153件）: 離れる時は一番上のカードだけが離れる（スタックの分離を常時化する印が要る）
+- 多重ギャップ側の棚卸し

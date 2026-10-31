@@ -76,6 +76,13 @@ class TurnMixin:
                         opt["face"] = fi
                     out.append(opt)
             for fi, f in ([(None, d)] if not d.faces else list(enumerate(d.faces))):
+                if f.neo and f.evolve_from and self._evo_sources(cid, p, fi):   # NEO進化: 重ねて出す選択肢
+                    opt = {"key": f"{o['key']}:neo" if fi is None else f"{o['key']}:{fi}:neo", "cid": cid,
+                           "name": f.name, "neo": True}
+                    if fi is not None:
+                        opt["face"] = fi
+                    out.append(opt)
+            for fi, f in ([(None, d)] if not d.faces else list(enumerate(d.faces))):
                 gs = f.galaxy_shield   # ギャラクシールド: 代替コストで表向きにシールド化する選択肢
                 if gs and self._mana_choices(cid, p, fi, cost=gs["cost"], limit=1, civs=gs["civs"]):
                     opt = {"key": f"{o['key']}:gshield" if fi is None else f"{o['key']}:{fi}:gshield", "cid": cid,
@@ -346,6 +353,8 @@ def st_main(eng, t):                                    # 504
             task["to_shield"] = True
             task["cost_override"] = fd.galaxy_shield["cost"]
             task["cost_civs"] = fd.galaxy_shield["civs"]
+        if o.get("neo"):
+            task["evo_mode"] = True
         eng._push(task)
 
 
@@ -419,7 +428,7 @@ def h_play(eng, t):
     if not eng.permits(cid, action) or (d.is_creature() and not eng.permits(cid, "enter_bz")):
         eng._pop(t)
         return None
-    if "evolution" in d.types and "evo" not in t:
+    if ("evolution" in d.types or t.get("evo_mode")) and "evo" not in t:
         srcs = eng._evo_sources(cid, p, face)
         if len(srcs) < d.evolve_count:
             eng._pop(t)
