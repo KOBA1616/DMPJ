@@ -1435,6 +1435,12 @@
     "add_of": {
      "const": "self"
     },
+    "add_races": {
+     "type": "array",
+     "items": {
+      "type": "string"
+     }
+    },
     "breaks": {
      "type": "integer"
     },
@@ -1582,6 +1588,9 @@
         "shuffle": {
          "type": "boolean"
         },
+        "tap": {
+         "type": "boolean"
+        },
         "min": {
          "type": "integer",
          "minimum": 0
@@ -1630,6 +1639,7 @@
    "propertyNames": {
     "enum": [
      "add_of",
+     "add_races",
      "allow",
      "battle_power",
      "breaks",

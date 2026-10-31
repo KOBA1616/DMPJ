@@ -322,6 +322,9 @@ class Engine(SelectorMixin, EventMixin, InterpreterMixin, TurnMixin, CombatMixin
             ch["allow"] += m.get("allow", [])
             ch["deny"] += m.get("deny", [])
             ch["require"] += m.get("require", [])
+            for r in m.get("add_races", []):   # 種族追加（「種族に〜を追加する」）
+                if r not in ch["races"]:
+                    ch["races"].append(r)
             if "breaks" in m:   # ブレイカー能力ごとのブレイク数（509.2b）。使う能力は攻撃時に選ぶ（509.2c）
                 ch["break_opts"].append(m["breaks"])
             ch["breaks"] = max(ch["breaks"], m.get("breaks", 1))

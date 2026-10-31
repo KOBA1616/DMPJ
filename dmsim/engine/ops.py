@@ -316,6 +316,27 @@ def op_mekurade(eng, t, op, env):
     return None
 
 
+@op("cast_face", face="int")
+def op_cast_face(eng, t, op, env):
+    """ツインパクトの呪文面を、カードをバトルゾーンに置いたまま唱える（スマッシュ・バースト）。
+    唱えたことにはなる（cast イベント、コストは支払わない）が、カード自体は動かず、
+    解決後に墓地へも行かない。"""
+    s = eng.s
+    if not s.alive(env["self"]):
+        return
+    cid = env["self"][0]
+    d = eng.cdef(cid)
+    if op["face"] >= len(d.faces):
+        return
+    f = d.faces[op["face"]]
+    ref = s.ref(cid)
+    tasks = [eng.ev_task({"ev": "cast", "player": env["you"], "subject": ref, "unpaid": True}),
+             eng._child(f.spell, {"you": env["you"], "self": ref, "vars": dict(env.get("vars", {}))})]
+    if f.after_resolve:
+        tasks.append(eng._child(f.after_resolve, {"you": env["you"], "self": ref, "vars": dict(env.get("vars", {}))}))
+    eng._defer(t, tasks)
+
+
 @op("play_self", cost="int", civs="any?")
 def op_play_self(eng, t, op, env):
     """このカード自身を代替コストで実行する（キリフダッシュ: 攻撃の終わりに [コスト] を支払って召喚する）。

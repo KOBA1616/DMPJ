@@ -466,6 +466,9 @@ def h_play(eng, t):
                 return dd
             t["fuel"] = [cands[i] for i in ans]
             t["fuel_done"] = True
+            if spec.get("tap"):   # 燃料としてタップする（コストの支払い。ゾーンは動かない）
+                for c in t["fuel"]:
+                    s.cards[c].tapped = True
             if spec.get("move_to"):
                 reason = {"graveyard": "discard", "hand": "return", "deck": "put"}.get(spec["move_to"], "put")
                 seq = [eng.ev_task([{"ev": "move", "subject": s.ref(c), "to": spec["move_to"],
