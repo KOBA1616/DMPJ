@@ -6,7 +6,7 @@ from .registry import op
 
 
 @op("move", select="selector", to="zone", reason="reason", position="position?", card_only="bool?",
-    order="str?", tapped="bool?", **{"as": "str?"})
+    order="str?", tapped="bool?", face_up="bool?", **{"as": "str?"})
 def op_move(eng, t, op, env):
     """ゾーン移動。as を付けると、移動した後のカード（新しいオブジェクト）を変数に入れる（「その〜」で使う）。
     card_only: カードとして動かす（109.2a）。進化クリーチャーの一番上だけが離れ、下は再構築される（801.4）。
@@ -40,6 +40,9 @@ def op_move(eng, t, op, env):
     if op.get("tapped"):
         for e in evs:
             e["tapped"] = True
+    if op.get("face_up"):
+        for e in evs:
+            e["face_up"] = True
     bind = [{"t": "bind", "env": env, "name": op["as"], "cids": cids, "zone": op["to"]}] if "as" in op else []
     if not evs and not out_tasks:
         if bind:
@@ -335,6 +338,15 @@ def op_cast_face(eng, t, op, env):
     if f.after_resolve:
         tasks.append(eng._child(f.after_resolve, {"you": env["you"], "self": ref, "vars": dict(env.get("vars", {}))}))
     eng._defer(t, tasks)
+
+
+@op("summon_self")
+def op_summon_self(eng, t, op, env):
+    """このカード自身をコストを支払ったものとして召喚する（ギャラクシールドのターン開始時召喚）。
+    支払いはしないが、召喚イベントでは「コストを支払わずに召喚した」扱いにならない。"""
+    task = eng.play_task(env["self"][0], env["you"], True)
+    task["as_paid"] = True
+    eng._defer(t, [task])
 
 
 @op("play_self", cost="int", civs="any?")

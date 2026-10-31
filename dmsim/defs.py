@@ -72,6 +72,7 @@ class Face:
     tap_reduce: int = 0                                   # ハイパーエナジー: コストが異なる自分のクリーチャー1体をタップするごとに減るコスト
     s_back: str | None = None                             # S・バック: この文明のカードがシールドから手札に加わる時、それを捨てて無料で実行できる
     free_if: dict | None = None                           # 条件を満たす間はコストを支払わずに召喚できる（G・ゼロ）
+    galaxy_shield: dict | None = None                     # ギャラクシールド: {cost, civs} 代替コストで表向きにシールド化する
     resolve_to: str = "graveyard"                         # 呪文の解決後の置き場所（チャージャー等）
     after_resolve: list[dict] = field(default_factory=list)
 
@@ -108,6 +109,7 @@ class CardDef:
     tap_reduce: int = 0
     s_back: str | None = None
     free_if: dict | None = None
+    galaxy_shield: dict | None = None
     resolve_to: str = "graveyard"
     after_resolve: list[dict] = field(default_factory=list)
     faces: list[Face] = field(default_factory=list)      # ツインパクト: [0]=クリーチャー側, [1]=呪文側
@@ -341,6 +343,10 @@ class Checker:
             if v not in ("you", "opp"):
                 raise DefError(f"{where}: is_turn must be you/opp")
             return
+        if k == "face_up":
+            if not isinstance(v, bool):
+                raise DefError(f"{where}: face_up must be bool")
+            return
         raise DefError(f"{where}: unknown cond '{k}'")
 
     def count_spec(self, v, where):
@@ -534,12 +540,16 @@ def _load_face(raw, keywords, macros, chk: Checker, where) -> dict:
         raise DefError(f"{where}: unknown evolve_zone '{zone}'")
     if "free_if" in raw:
         chk.cond(raw["free_if"], where)
+    if "galaxy_shield" in raw:
+        gs = raw["galaxy_shield"]
+        if not isinstance(gs, dict) or not isinstance(gs.get("cost"), int) or set(gs.get("civs", [])) - CIVS:
+            raise DefError(f"{where}: galaxy_shield needs {{cost: int, civs: [...]}}")
     return dict(name=raw["name"], types=raw["types"], civs=raw["civs"], cost=raw["cost"],
                 power=raw.get("power", 0), races=split_races(raw.get("races", [])), keywords=names,
                 abilities=abilities, spell=spell, evolve_from=raw.get("evolve_from"),
                 evolve_zone=zone, evolve_any=bool(raw.get("evolve_any", False)), evolve_count=int(raw.get("evolve_count", 1)),
                 cost_reduce_per_evo=int(raw.get("cost_reduce_per_evo", 0)),
-                free_if=raw.get("free_if"), **{"tap_reduce": 0, "s_back": None, **props})
+                free_if=raw.get("free_if"), galaxy_shield=raw.get("galaxy_shield"), **{"tap_reduce": 0, "s_back": None, **props})
 
 
 def load_tables():

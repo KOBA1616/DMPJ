@@ -692,3 +692,29 @@ cards:
         cost: 3
         spell:
           - {op: draw, count: 1}
+
+  # ---- 語彙パイロット第15弾（2026-10-31）: ギャラクシールド ----
+  - id: T052
+    name: 試験用全帝
+    types: [creature]
+    civs: [light, water]
+    cost: 8
+    power: 9000
+    races: [テスト]
+    keywords: [triple_breaker]
+    galaxy_shield: {cost: 6, civs: [light, water]}
+    text: ギャラクシールド [lw06]（このカードを使うコストの代わりに、[lw06]を支払ってもよい。そうしたら、このカードを表向きにシールド化する）このクリーチャーを表向きでシールドゾーンに置いた時、カードを３枚引いてもよい。自分のターンのはじめに、このクリーチャーが表向きでシールドゾーンにあれば、コストを支払ったものとして召喚する。T・ブレイカー
+    abilities:
+      - kind: trigger
+        zone: shield
+        when: {event: turn_start, player: you}
+        if: {face_up: true}
+        effect:
+          - {op: summon_self}
+      - kind: trigger
+        zone: shield
+        when: {event: move, to: shield, subject: self, face_up: true}
+        effect:
+          - op: may
+            body:
+              - {op: draw, count: 3}
