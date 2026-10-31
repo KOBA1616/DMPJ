@@ -148,6 +148,32 @@
   },
   "free_if": {
    "$ref": "#/$defs/cond"
+  },
+  "galaxy_shield": {
+   "type": "object",
+   "properties": {
+    "cost": {
+     "type": "integer"
+    },
+    "civs": {
+     "type": "array",
+     "items": {
+      "enum": [
+       "darkness",
+       "fire",
+       "light",
+       "nature",
+       "water",
+       "zero"
+      ]
+     }
+    }
+   },
+   "required": [
+    "cost",
+    "civs"
+   ],
+   "additionalProperties": false
   }
  },
  "required": [
@@ -282,6 +308,32 @@
     },
     "free_if": {
      "$ref": "#/$defs/cond"
+    },
+    "galaxy_shield": {
+     "type": "object",
+     "properties": {
+      "cost": {
+       "type": "integer"
+      },
+      "civs": {
+       "type": "array",
+       "items": {
+        "enum": [
+         "darkness",
+         "fire",
+         "light",
+         "nature",
+         "water",
+         "zero"
+        ]
+       }
+      }
+     },
+     "required": [
+      "cost",
+      "civs"
+     ],
+     "additionalProperties": false
     }
    },
    "required": [
@@ -329,6 +381,22 @@
       },
       "required": [
        "op"
+      ],
+      "additionalProperties": false
+     },
+     {
+      "type": "object",
+      "properties": {
+       "op": {
+        "const": "cast_face"
+       },
+       "face": {
+        "type": "integer"
+       }
+      },
+      "required": [
+       "op",
+       "face"
       ],
       "additionalProperties": false
      },
@@ -678,6 +746,9 @@
        "tapped": {
         "type": "boolean"
        },
+       "face_up": {
+        "type": "boolean"
+       },
        "as": {
         "type": "string"
        }
@@ -857,6 +928,18 @@
        "player",
        "step",
        "mode"
+      ],
+      "additionalProperties": false
+     },
+     {
+      "type": "object",
+      "properties": {
+       "op": {
+        "const": "summon_self"
+       }
+      },
+      "required": [
+       "op"
       ],
       "additionalProperties": false
      },
@@ -1215,6 +1298,9 @@
     },
     "self_marked": {
      "type": "string"
+    },
+    "face_up": {
+     "type": "boolean"
     }
    },
    "additionalProperties": false

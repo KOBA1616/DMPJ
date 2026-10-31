@@ -75,6 +75,14 @@ class TurnMixin:
                     if fi is not None:
                         opt["face"] = fi
                     out.append(opt)
+            for fi, f in ([(None, d)] if not d.faces else list(enumerate(d.faces))):
+                gs = f.galaxy_shield   # ギャラクシールド: 代替コストで表向きにシールド化する選択肢
+                if gs and self._mana_choices(cid, p, fi, cost=gs["cost"], limit=1, civs=gs["civs"]):
+                    opt = {"key": f"{o['key']}:gshield" if fi is None else f"{o['key']}:{fi}:gshield", "cid": cid,
+                           "name": f.name, "gshield": True}
+                    if fi is not None:
+                        opt["face"] = fi
+                    out.append(opt)
         seen = set()   # アビスラッシュ: 墓地から召喚できるカードも選択肢に出す
         for cid in self.zlist("graveyard", p):
             dn = self.s.cards[cid].defn
@@ -333,6 +341,11 @@ def st_main(eng, t):                                    # 504
         task = eng.play_task(o["cid"], a, o.get("free", False), o.get("face"))
         if o.get("rush"):
             task["rush"] = True
+        if o.get("gshield"):
+            fd = eng.cdef(o["cid"]).face(o.get("face"))
+            task["to_shield"] = True
+            task["cost_override"] = fd.galaxy_shield["cost"]
+            task["cost_civs"] = fd.galaxy_shield["civs"]
         eng._push(task)
 
 
@@ -520,9 +533,13 @@ def h_play(eng, t):
     if face is not None:
         s.cards[cid].face = face
     ref = s.ref(cid)
+    if t.get("to_shield"):   # ギャラクシールド: 代替コストを払って表向きにシールド化する（召喚ではない）
+        eng._push(eng.ev_task({"ev": "move", "subject": ref, "from": from_zone, "to": "shield", "reason": "put",
+                               "controller": p, "face_up": True}))
+        return None
     if d.is_creature():
         ev = {"ev": "move", "subject": ref, "from": from_zone, "to": "bz", "reason": "summon", "controller": p,
-              "unpaid": bool(t["free"])}
+              "unpaid": bool(t["free"]) and not t.get("as_paid")}
         if t.get("evo"):
             ev["stack_on"] = t["evo"][0]
             if len(t["evo"]) > 1:
