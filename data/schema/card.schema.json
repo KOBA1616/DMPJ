@@ -134,6 +134,7 @@
     "civs": {},
     "cost_ge": {},
     "cost_le": {},
+    "face_down": {},
     "keyword": {},
     "multicolor": {},
     "name": {},
@@ -308,6 +309,7 @@
       "civs": {},
       "cost_ge": {},
       "cost_le": {},
+      "face_down": {},
       "keyword": {},
       "multicolor": {},
       "name": {},
@@ -599,6 +601,22 @@
       "required": [
        "op",
        "cond"
+      ],
+      "additionalProperties": false
+     },
+     {
+      "type": "object",
+      "properties": {
+       "op": {
+        "const": "invade"
+       },
+       "onto": {
+        "$ref": "#/$defs/selector"
+       }
+      },
+      "required": [
+       "op",
+       "onto"
       ],
       "additionalProperties": false
      },
@@ -996,6 +1014,19 @@
        "out": {
         "$ref": "#/$defs/selector"
        },
+       "out_to": {
+        "enum": [
+         "abyss",
+         "bz",
+         "deck",
+         "gr",
+         "graveyard",
+         "hand",
+         "hyper",
+         "mana",
+         "shield"
+        ]
+       },
        "in": {
         "$ref": "#/$defs/selector"
        }
@@ -1146,6 +1177,7 @@
     "civs": {},
     "cost_ge": {},
     "cost_le": {},
+    "face_down": {},
     "keyword": {},
     "multicolor": {},
     "name": {},

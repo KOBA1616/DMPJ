@@ -870,3 +870,80 @@ cards:
         affects: self
         if: {cmp: [{count: {zone: mana, owner: you, filter: {face_down: true}}}, ">=", 2]}
         mod: {power: 3000}
+
+  # ---- 語彙パイロット第24弾（2026-10-31）: フェーズ2（革命チェンジ/侵略/アタック・チャンス/J・チェンジ） ----
+  - id: T064
+    name: 試験用革命チェンジ獣
+    types: [creature]
+    civs: [fire]
+    cost: 4
+    power: 4000
+    races: [テスト・ドラゴン]
+    text: 革命チェンジ：テスト・ドラゴン（自分のテスト・ドラゴンが攻撃する時、そのクリーチャーと手札にあるこのクリーチャーを入れ替えてもよい）
+    abilities:
+      - kind: declare
+        zone: hand
+        when: {event: attack, subject: {owner: you, filter: {race_has: テスト}}}
+        effect:
+          - op: may
+            body:
+              - {op: swap, out: {ref: event.subject}, in: {ref: self}}
+  - id: T065
+    name: 試験用侵略獣
+    types: [creature]
+    civs: [nature]
+    cost: 3
+    power: 3000
+    races: [テスト・ドラゴン]
+    text: 侵略：テスト・ドラゴン（自分のテスト・ドラゴンが攻撃する時、自分の手札にあるこのクリーチャーをその上に重ねてもよい）このクリーチャーが出た時、カードを1枚引く。
+    abilities:
+      - kind: declare
+        zone: hand
+        when: {event: attack, subject: {owner: you, filter: {race_has: テスト}}}
+        effect:
+          - op: may
+            body:
+              - {op: invade, onto: {ref: event.subject}}
+      - kind: trigger
+        when: {event: move, to: bz, subject: self}
+        effect:
+          - {op: draw, count: 1}
+  - id: T066
+    name: 試験用アタック・チャンス呪文
+    types: [spell]
+    civs: [water]
+    cost: 2
+    text: アタック・チャンス：テスト・ドラゴン（自分のテスト・ドラゴンが攻撃する時、この呪文をコストを支払わずに唱えてもよい）カードを1枚引く。
+    abilities:
+      - kind: declare
+        zone: hand
+        when: {event: attack, subject: {owner: you, filter: {race_has: テスト}}}
+        effect:
+          - op: may
+            body:
+              - {op: play_free, select: {ref: self}}
+    spell:
+      - {op: draw, count: 1}
+  - id: T067
+    name: 試験用J・チェンジ獣
+    types: [creature]
+    civs: [nature]
+    cost: 2
+    power: 2000
+    races: [ジョーカーズ・テスト]
+    text: J・チェンジ4（このクリーチャーが攻撃する時、このクリーチャーと自分のマナゾーンにあるコスト4以下のジョーカーズ・クリーチャー1体を入れ替えてもよい）
+    abilities:
+      - kind: trigger
+        when: {event: attack, subject: self}
+        effect:
+          - op: may
+            body:
+              - {op: swap, out: {ref: self}, out_to: mana, in: {zone: mana, owner: you, filter: {types: [creature], cost_le: 4, race_has: ジョーカーズ}, count: 1}}
+  - id: T068
+    name: 試験用ジョーカーズ獣
+    types: [creature]
+    civs: [nature]
+    cost: 3
+    power: 5000
+    races: [ジョーカーズ・テスト]
+    text: バニラ（J・チェンジ先）。
