@@ -127,7 +127,7 @@ class TurnMixin:
         out = []
         allies = [c for c in self.bz_tops(p) if not s.cards[c].tapped]
         for c in self.bz_tops(p):
-            if s.cards[c].hyper or not self.fdef(c).hyper:
+            if self.is_hyper(c) or not self.fdef(c).hyper:
                 continue
             if any(a != c for a in allies):
                 out.append({"key": f"hyper:{s.cards[c].defn}", "cid": c, "hyper_act": True})
@@ -295,9 +295,8 @@ def h_turn(eng, t):
 @step("start")
 def st_start(eng, t):                                   # 501
     s = eng.s
-    for c in eng.zlist("bz", s.active):                 # ハイパーモードは次の自分のターンのはじめまで。
-        if s.cards[c].hyper and s.cards[c].hyper_turn < s.turn - 1:   # 相手ターンに解放された場合は、来る自分のターンを丸ごと含む
-            s.cards[c].hyper = False
+    for c in eng.zlist("bz", s.active):                 # ハイパーモードは次の自分のターンのはじめまで（文字通り。相手ターンに解放されても自分のターンのはじめに戻る）
+        s.cards[c].hyper = False
     a = s.active
     s.steps_this_turn = 0
     s.turn_counters = {}
@@ -381,7 +380,7 @@ def h_hyper(eng, t):
     s = eng.s
     cid, p = t["cid"], t["player"]
     c = s.cards[cid]
-    if c.zone != "bz" or c.hyper:
+    if c.zone != "bz" or eng.is_hyper(cid):
         eng._pop(t)
         return None
     cands = [x for x in eng.bz_tops(p) if x != cid and not s.cards[x].tapped]
@@ -393,7 +392,6 @@ def h_hyper(eng, t):
         return d
     target = cands[ans[0]]
     c.hyper = True
-    c.hyper_turn = s.turn
     eng._pop(t)
     eng._push(eng.ev_task([{"ev": "tap", "subject": s.ref(target)}]))
     return None

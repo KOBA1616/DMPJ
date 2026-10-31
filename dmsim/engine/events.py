@@ -100,6 +100,13 @@ class EventMixin:
             for u in unders:   # クリーチャーとして離れたら下のカードも同じゾーンへ（109.2b, 316.3）
                 if s.cards[u].zone == "bz" or s.cards[u].top_of == cid:   # シールドの束も同時に動く（113.2）
                     self._raw_move(u, ev["to"])
+            if from_zone == "shield" and ev["to"] != "shield":
+                # Zラッシュ（常在型）: シールドが離れた際、その時点でバトルゾーンにいる Zラッシュ持ち全員の
+                # ハイパーモードを即座に解放する（S・トリガーの使用より前。後から出たクリーチャーには適用されない）
+                for p in (0, 1):
+                    for x in self.bz_tops(p):
+                        if "z_rush" in self.fdef(x).keywords:
+                            s.cards[x].hyper = True
             new = s.ref(cid)
             if ev["to"] == "bz" and self.link_side(cid) is not None:   # ゴッドが出たらリンク手順を行う
                 self._push({"t": "g_link", "cid": cid, "player": c.controller, "step": "start"})

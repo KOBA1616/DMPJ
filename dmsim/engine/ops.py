@@ -77,17 +77,6 @@ def op_together(eng, t, op, env):
     return None
 
 
-@op("hyper_mode")
-def op_hyper_mode(eng, t, op, env):
-    """自分自身をハイパーモードにする（Zラッシュ等の解放）。期限（次の自分のターンのはじめ）はターン開始処理が処理する。"""
-    if eng.s.alive(env.get("self")):
-        c = eng.s.cards[env["self"][0]]
-        if c.zone == "bz":
-            c.hyper = True
-            c.hyper_turn = eng.s.turn
-    return None
-
-
 @op("draw", player="players?", count="expr?")
 def op_draw(eng, t, op, env):
     """カードを引く。1枚ずつ（114.2）。player: each（各プレイヤー）はターン・プレイヤーが指定枚数を引いてから
