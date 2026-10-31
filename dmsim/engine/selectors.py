@@ -99,6 +99,8 @@ class SelectorMixin:
             return False
         if "tapped" in f and (lki["tapped"] if lki else c.tapped) != f["tapped"]:
             return False
+        if "face_down" in f and c.face_down != f["face_down"]:
+            return False
         if "keyword" in f and f["keyword"] not in ch["keywords"]:
             return False
         return True

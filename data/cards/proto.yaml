@@ -836,3 +836,37 @@ cards:
     text: 自分のシールドを１つ、手札に加える。ただし、その「S・トリガー」は使えない。
     spell:
       - {op: move, select: {zone: shield, owner: you, count: 1}, to: hand, reason: return}
+
+  # ---- 語彙パイロット第22弾（2026-10-31）: クロスギア（既存実装の確認用） ----
+  - id: T062
+    name: 試験用クロスギア
+    types: [cross_gear]
+    civs: [nature]
+    cost: 2
+    races: [テスト]
+    text: クロスギア（自分のターン中、このクロスギアのコストを支払ってクリーチャー１体にクロスしてもよい）これをクロスしたクリーチャーのパワーは+1500され、「ブロッカー」を得る。
+    abilities:
+      - kind: static
+        affects: crossed
+        mod: {power: 1500, grant: [blocker]}
+
+  # ---- 語彙パイロット第23弾（2026-10-31）: クリスタルアームズ（水晶武装） ----
+  - id: T063
+    name: 試験用水晶武装ドラゴン
+    types: [creature]
+    civs: [water]
+    cost: 3
+    power: 3000
+    races: [テスト・ドラゴン]
+    text: このクリーチャーが出た時、自分のマナゾーンにあるカードを1枚、裏向きにしてもよい。水晶武装2：自分のマナゾーンに裏向きのカードが2枚以上あれば、このクリーチャーのパワーは+3000される。
+    abilities:
+      - kind: trigger
+        when: {event: move, to: bz, subject: self}
+        effect:
+          - op: may
+            body:
+              - {op: flip_down, select: {zone: mana, owner: you, count: 1}}
+      - kind: static
+        affects: self
+        if: {cmp: [{count: {zone: mana, owner: you, filter: {face_down: true}}}, ">=", 2]}
+        mod: {power: 3000}
