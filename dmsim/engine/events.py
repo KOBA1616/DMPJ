@@ -23,8 +23,17 @@ class EventMixin:
         if rec is None:
             return None
         cands = []
-        for src in self.bz_tops(p):
+        srcs = list(self.bz_tops(p))
+        subj = ev.get("subject")
+        if subj and self.s.alive(subj) and self.s.cards[subj[0]].controller == p and subj[0] not in srcs:
+            srcs.append(subj[0])   # 動くカード自身の置換（シールドゾーンの G・城など）
+        for x in self.s.zones["shield"][p]:
+            if x not in srcs:
+                srcs.append(x)
+        for src in srcs:
             for i, ab in self.abilities(src, "replace"):
+                if self.s.cards[src].zone != "bz" and ab.get("zone") != self.s.cards[src].zone:
+                    continue   # バトルゾーン外の発生源は、そのゾーンを宣言した置換だけ
                 if self._pattern_match(ab["when"], rec, src, None):
                     if "if" in ab:   # 置換効果にも条件を書ける（《水上第九院 シャコガイル》の最後の1枚判定）
                         env = {"you": self.s.cards[src].controller, "self": self.s.ref(src),
@@ -110,6 +119,13 @@ class EventMixin:
             new = s.ref(cid)
             if ev["to"] == "bz" and self.link_side(cid) is not None:   # ゴッドが出たらリンク手順を行う
                 self._push({"t": "g_link", "cid": cid, "player": c.controller, "step": "start"})
+            if ev["to"] == "bz" and "field" in self.fdef(cid).types:
+                # フィールドはバトルゾーンに1枚だけ: 新しいフィールドが出たら、他のフィールドはすべて破壊される（308.4）
+                others = [x for p in (0, 1) for x in self.bz_tops(p)
+                          if x != cid and "field" in self.fdef(x).types]
+                if others:
+                    self._push(self.ev_task([{"ev": "move", "subject": s.ref(x), "to": "graveyard",
+                                              "reason": "destroy"} for x in others]))
             stack_on = ev.get("stack_on")
             if ev["to"] == "bz" and stack_on and s.alive(stack_on):
                 base = stack_on[0]
