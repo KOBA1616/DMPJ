@@ -25,6 +25,8 @@ class Option(TypedDict, total=False):
     free: bool                           # コストを支払わずに実行する選択肢（G・ゼロ）
     rush: bool                           # アビスラッシュ（墓地から召喚する選択肢）
     gshield: bool                        # ギャラクシールド（表向きにシールド化する選択肢）
+    neo: bool                            # NEO進化（進化元に重ねて出す選択肢）
+    hyper_act: NotRequired[bool]         # ハイパーモード解放（メインステップの行動）
 
 
 class Decision(TypedDict):
@@ -145,6 +147,23 @@ class EventTask(TypedDict):
     captured: list[Event]
     applying: bool
     answer: NotRequired[list[int]]
+    link_i: NotRequired[int]             # G・リンクの離脱置換: 処理済みのイベント位置
+    link_chosen: NotRequired[list[int]]  # G・リンクの離脱置換: 離れることが決まったカード
+
+
+class GLinkTask(TypedDict):
+    t: Literal["g_link"]
+    cid: int
+    player: int
+    step: str
+    answer: NotRequired[list[int]]
+
+
+class HyperTask(TypedDict):
+    t: Literal["hyper"]
+    cid: int
+    player: int
+    answer: NotRequired[list[int]]
 
 
 class CaptureTask(TypedDict):
@@ -228,6 +247,7 @@ class PlayTask(TypedDict):
     cost_may_min: NotRequired[int]       # cost_may の下限（使った発生源の最大）
     cost_may_done: NotRequired[bool]
     rush: NotRequired[bool]              # アビスラッシュ（墓地からの召喚）
+    evo_mode: NotRequired[bool]          # NEO進化として重ねて出す
     to_shield: NotRequired[bool]         # ギャラクシールド（代替コストで表向きにシールド化する）
     as_paid: NotRequired[bool]           # コストを支払ったものとして実行する（ギャラクシールドのターン開始時召喚）
     cost_override: NotRequired[int]      # 代替コスト（キリフダッシュ等）: 通常コストの代わりに払う総額

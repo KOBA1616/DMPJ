@@ -39,6 +39,7 @@ class Engine(SelectorMixin, EventMixin, InterpreterMixin, TurnMixin, CombatMixin
         self.rules = rules
         self._in_static_cond = 0
         self._adding = set()
+        self._link_merging = False
         self._xcache = rules.__dict__.setdefault("_affects_others_cache", {})   # 定義だけで決まるので複製間で共有
         self.check = CHECK if check is None else check   # タスクの形を毎回検査する（テスト・開発者モード用）
         self.s = state
@@ -146,9 +147,51 @@ class Engine(SelectorMixin, EventMixin, InterpreterMixin, TurnMixin, CombatMixin
     def zlist(self, z: str, p: int) -> list[int]:
         return self.s.zones[z][0 if self.zshared(z) else p]
 
+    def is_hyper(self, cid: int) -> bool:
+        """ハイパーモードか（ハイパー化、または Zラッシュで解放された旗）。"""
+        return self.s.cards[cid].hyper
+
     def bz_tops(self, controller: int | None = None) -> list[int]:
         return [c for c in self.s.zones["bz"][0]
-                if self.s.cards[c].top_of < 0 and (controller is None or self.s.cards[c].controller == controller)]
+                if self.s.cards[c].top_of < 0 and (controller is None or self.s.cards[c].controller == controller)
+                and (not self.s.cards[c].link or self.link_rep(c) == c)]
+
+    # ---- G・リンク ----
+    LINK_SIDES = {"left_g_link": 0, "center_g_link": 1, "right_g_link": 2}
+
+    def link_side(self, cid: int) -> int | None:
+        """ゴッドのリンク位置（左0・中央1・右2）。ゴッドでなければ None。"""
+        for kw, side in self.LINK_SIDES.items():
+            if kw in self.fdef(cid).keywords:
+                return side
+        return None
+
+    def link_members(self, cid: int) -> list[int]:
+        """cid がリンクしているグループの全カード（左→中央→右の順）。リンクしていなければ [cid]。"""
+        c = self.s.cards[cid]
+        if not c.link:
+            return [cid]
+        ms = [m for m in self.s.zones["bz"][0] if self.s.cards[m].link == c.link]
+        return sorted(ms, key=lambda m: (self.link_side(m) is None, self.link_side(m) or 0))
+
+    def link_rep(self, cid: int) -> int:
+        """グループの代表（中央がいれば中央、なければ一番左）。グループはこの1体として扱う。"""
+        ms = self.link_members(cid)
+        for m in ms:
+            if self.link_side(m) == 1:
+                return m
+        return ms[0]
+
+    def unlink(self, cid: int):
+        """1枚のリンクを外す。残りが1枚だけになれば、その1枚のリンクも解消する。"""
+        c = self.s.cards[cid]
+        gid = c.link
+        c.link = 0
+        if gid:
+            rest = [m for m in self.s.zones["bz"][0] if self.s.cards[m].link == gid]
+            if len(rest) <= 1:
+                for m in rest:
+                    self.s.cards[m].link = 0
 
     # ---- 特性・許可 ----
     def _ignored(self) -> dict[int, set[str]]:
@@ -285,6 +328,8 @@ class Engine(SelectorMixin, EventMixin, InterpreterMixin, TurnMixin, CombatMixin
         ch = {"power": d.power, "cost": d.cost, "civs": list(d.civs), "types": list(d.types),
               "races": list(d.races), "keywords": set(d.keywords), "name": d.name,
               "allow": [], "deny": [], "require": [], "breaks": 1, "break_opts": [], "pay_cost": d.cost, "sac_reduce": 0, "opt_reduce": None, "cost_may": []}
+        if d.neo and c.zone == "bz" and c.under and "evolution" not in ch["types"]:
+            ch["types"].append("evolution")   # NEO進化: カードが下にあればNEO進化クリーチャーとして扱う
         own = self.abilities(cid, "static") if face is None else list(enumerate(d.abilities))
         ref = self.s.ref(cid)
         env_self = {"you": c.controller, "self": ref}
@@ -374,6 +419,28 @@ class Engine(SelectorMixin, EventMixin, InterpreterMixin, TurnMixin, CombatMixin
                 n = 1 + max(0, ch["power"]) // m["breaks_per_power"]
                 ch["break_opts"].append(n)
                 ch["breaks"] = max(ch["breaks"], n)
+        if c.link and c.zone == "bz" and not self._link_merging:   # G・リンク: グループ全員の特性を統合する
+            members = [m for m in self.link_members(cid) if m != cid]
+            if members:
+                self._link_merging = True
+                try:
+                    parts = [self.chars(m) for m in members]
+                finally:
+                    self._link_merging = False
+                for p in parts:
+                    ch["power"] += p["power"]
+                    ch["cost"] += p["cost"]
+                    ch["pay_cost"] += p["pay_cost"]
+                    ch["civs"] += [x for x in p["civs"] if x not in ch["civs"]]
+                    ch["types"] += [x for x in p["types"] if x not in ch["types"]]
+                    ch["races"] += [x for x in p["races"] if x not in ch["races"]]
+                    ch["keywords"].update(p["keywords"])
+                    ch["allow"] += p["allow"]
+                    ch["deny"] += p["deny"]
+                    ch["require"] += p["require"]
+                    ch["break_opts"] += p["break_opts"]
+                    ch["breaks"] = max(ch["breaks"], p["breaks"])
+                    ch["sac_reduce"] += p["sac_reduce"]
         ch["keywords"] = sorted(ch["keywords"])   # 状態（LKI）に入るので JSON にできる形で返す
         return ch
 
@@ -442,6 +509,8 @@ class Engine(SelectorMixin, EventMixin, InterpreterMixin, TurnMixin, CombatMixin
                 lst.remove(cid)
             if not (to == "deck" and c.zone == "deck"):   # 山札の中での並べ替え（見たカードを下に置く等）は山札から離れない
                 self._note_deck(c)
+        if c.link and to != "bz":                   # G・リンク: バトルゾーンを離れたらリンクから外れる
+            self.unlink(cid)
         c.gen += 1                                  # 新しいオブジェクトになる（400.5）
         c.zone = to
         c.tapped = to == "mana" and len(self.cdef(cid).civs) > 1   # 多色カードはタップしてマナに置かれる（405.1）
@@ -457,6 +526,7 @@ class Engine(SelectorMixin, EventMixin, InterpreterMixin, TurnMixin, CombatMixin
         c.under, c.top_of = [], -1
         c.exlife_of = None                          # 一度離れたシールドは紐付けが外れる
         c.no_untap_next = False                     # ゾーン移動で新しいオブジェクトになるので凍結の印も消える
+        c.hyper = False                             # ハイパーモードも新しいオブジェクトでは解ける
         dest = self.zlist(to, c.controller if self.zshared(to) else c.owner)
         if position == "top" and self.rules.zones[to]["ordered"]:
             dest.insert(0, cid)

@@ -11,6 +11,8 @@ class SelectorMixin:
                 return len(self.candidates(x["count"], env))
             if "civ_count" in x:   # 対象カード群にある文明の種類数（多色カードは持つ文明をすべて数える）
                 return len({cv for c in self.candidates(x["civ_count"], env) for cv in self.chars(c)["civs"]})
+            if "link_count" in x:   # このカードがリンクしているカードの枚数（リンクしていなければ1）
+                return len(self.link_members(env["self"][0])) if env.get("self") else 0
             if "entered" in x:   # このターン、そのプレイヤーがバトルゾーンに出したクリーチャーの数
                 spec = x["entered"]
                 lst = self.s.turn_counters.get(f"entered:{self._rel(spec.get('owner', 'you'), env)}", [])
@@ -57,6 +59,8 @@ class SelectorMixin:
             return self.s.active == self._rel(c["is_turn"], env)
         if "face_up" in c:   # このカード自身が表向きか（表向きシールドのギャラクシールド等）
             return bool(env.get("self")) and self.s.alive(env["self"]) and self.s.cards[env["self"][0]].face_up == c["face_up"]
+        if "hyper" in c:   # このカード自身がハイパーモードか（ハイパー化の旗と Zラッシュの窓の両方を見る）
+            return bool(env.get("self")) and self.s.alive(env["self"]) and self.is_hyper(env["self"][0]) == c["hyper"]
         raise ValueError(f"bad cond {c}")
 
     def filter_match(self, cid: int, f: dict, lki: dict | None = None, base: bool = False) -> bool:
@@ -67,6 +71,8 @@ class SelectorMixin:
         else:
             ch = lki["chars"] if lki else self.chars(cid)
         c = self.s.cards[cid]
+        if "any_of" in f and not any(self.filter_match(cid, sub, lki, base) for sub in f["any_of"]):
+            return False
         if "types" in f and not set(f["types"]) & set(ch["types"]):
             return False
         if "not_types" in f and set(f["not_types"]) & set(ch["types"]):
