@@ -26,6 +26,7 @@ class Option(TypedDict, total=False):
     rush: bool                           # アビスラッシュ（墓地から召喚する選択肢）
     gshield: bool                        # ギャラクシールド（表向きにシールド化する選択肢）
     neo: bool                            # NEO進化（進化元に重ねて出す選択肢）
+    hyper_act: NotRequired[bool]         # ハイパーモード解放（メインステップの行動）
 
 
 class Decision(TypedDict):
@@ -155,6 +156,13 @@ class GLinkTask(TypedDict):
     cid: int
     player: int
     step: str
+    answer: NotRequired[list[int]]
+
+
+class HyperTask(TypedDict):
+    t: Literal["hyper"]
+    cid: int
+    player: int
     answer: NotRequired[list[int]]
 
 

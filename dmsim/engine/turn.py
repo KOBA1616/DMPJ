@@ -7,7 +7,7 @@ from __future__ import annotations
 
 import itertools
 
-from ..types import CrossTask, PlayTask, TurnTask
+from ..types import CrossTask, HyperTask, PlayTask, TurnTask
 from .registry import STEPS, step, task
 
 
@@ -119,6 +119,18 @@ class TurnMixin:
             for c in self.bz_tops(p):
                 if "creature" in self.chars(c)["types"] and not (cur and cur == self.s.ref(c)):
                     out.append({"key": f"cross:{self.s.cards[g].defn}:{self.s.cards[c].defn}", "cid": g, "target": self.s.ref(c)})
+        return out
+
+    def _hyper_options(self, p: int) -> list[dict]:
+        """ハイパー化: ハイパーモードでない自分のクリーチャーで、タップできる他の自分のクリーチャーがいるもの。"""
+        s = self.s
+        out = []
+        allies = [c for c in self.bz_tops(p) if not s.cards[c].tapped]
+        for c in self.bz_tops(p):
+            if s.cards[c].hyper or not self.fdef(c).hyper:
+                continue
+            if any(a != c for a in allies):
+                out.append({"key": f"hyper:{s.cards[c].defn}", "cid": c, "hyper_act": True})
         return out
 
     def _can_play_face(self, cid, p, face) -> bool:
@@ -283,6 +295,9 @@ def h_turn(eng, t):
 @step("start")
 def st_start(eng, t):                                   # 501
     s = eng.s
+    for c in eng.zlist("bz", s.active):                 # ハイパーモードは次の自分のターンのはじめまで
+        if s.cards[c].hyper:
+            s.cards[c].hyper = False
     a = s.active
     s.steps_this_turn = 0
     s.turn_counters = {}
@@ -335,13 +350,15 @@ def st_charge(eng, t):                                  # 503
 @step("main")
 def st_main(eng, t):                                    # 504
     a = eng.s.active
-    opts = eng._play_options(a) + eng._cross_options(a) + [{"key": "pass"}]
+    opts = eng._play_options(a) + eng._cross_options(a) + eng._hyper_options(a) + [{"key": "pass"}]
     ans, d = eng.ask(t, a, "main", opts)
     if d:
         return d
     o = opts[ans[0]]
     if o["key"] == "pass":
         eng._step_done(t)
+    elif o.get("hyper_act"):
+        eng._push({"t": "hyper", "cid": o["cid"], "player": a})
     elif o["key"].startswith("cross:"):
         eng._push({"t": "cross", "gear": eng.s.ref(o["cid"]), "target": o["target"], "player": a})
     else:
@@ -356,6 +373,29 @@ def st_main(eng, t):                                    # 504
         if o.get("neo"):
             task["evo_mode"] = True
         eng._push(task)
+
+
+@task("hyper", HyperTask)
+def h_hyper(eng, t):
+    """ハイパーモードの解放: 自分の他のクリーチャーを1体タップし、このクリーチャーをハイパーモードにする。"""
+    s = eng.s
+    cid, p = t["cid"], t["player"]
+    c = s.cards[cid]
+    if c.zone != "bz" or c.hyper:
+        eng._pop(t)
+        return None
+    cands = [x for x in eng.bz_tops(p) if x != cid and not s.cards[x].tapped]
+    if not cands:
+        eng._pop(t)
+        return None
+    ans, d = eng.ask(t, p, "choose_cards", [eng._card_option(x) for x in cands], 1, 1)
+    if d:
+        return d
+    target = cands[ans[0]]
+    c.hyper = True
+    eng._pop(t)
+    eng._push(eng.ev_task([{"ev": "tap", "subject": s.ref(target)}]))
+    return None
 
 
 @step("attack")
