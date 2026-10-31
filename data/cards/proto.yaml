@@ -811,3 +811,20 @@ cards:
         if: {hyper: true}
         effect:
           - {op: draw, count: 1}
+
+  # ---- 語彙パイロット第20弾（2026-10-31）: Zラッシュ ----
+  - id: T060
+    name: 試験用Zラッシュ獣
+    types: [creature]
+    civs: [fire]
+    cost: 3
+    power: 3000
+    races: [テスト]
+    keywords: [z_rush]
+    text: Zラッシュ（シールドが離れたら、次の自分のターンのはじめまで、このクリーチャーのハイパーモードを解放する）このクリーチャーが攻撃する時、ハイパーモードなら、カードを１枚引く。
+    abilities:
+      - kind: trigger
+        when: {event: attack, subject: self}
+        if: {hyper: true}
+        effect:
+          - {op: draw, count: 1}

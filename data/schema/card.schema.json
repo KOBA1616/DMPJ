@@ -113,7 +113,8 @@
      "turbo_rush",
      "unblockable",
      "wave_striker",
-     "world_breaker"
+     "world_breaker",
+     "z_rush"
     ]
    }
   },
@@ -286,7 +287,8 @@
        "turbo_rush",
        "unblockable",
        "wave_striker",
-       "world_breaker"
+       "world_breaker",
+       "z_rush"
       ]
      }
     },
@@ -559,6 +561,18 @@
       "required": [
        "op",
        "a"
+      ],
+      "additionalProperties": false
+     },
+     {
+      "type": "object",
+      "properties": {
+       "op": {
+        "const": "hyper_mode"
+       }
+      },
+      "required": [
+       "op"
       ],
       "additionalProperties": false
      },
@@ -1419,7 +1433,8 @@
        "turbo_rush",
        "unblockable",
        "wave_striker",
-       "world_breaker"
+       "world_breaker",
+       "z_rush"
       ]
      }
     },
