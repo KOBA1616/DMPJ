@@ -30,7 +30,7 @@ REASONS = {"put", "destroy", "return", "discard", "charge", "summon", "cast", "b
            "draw", "battle", "sba", "resolve", "evolve"}
 VIAS = {"revolution_change", "generate"}   # 出し方の印（「革命チェンジによって出た時」など）
 DURATIONS_FIXED = {"end_of_turn", "during_attack", "permanent", "until_next_own_turn_start"}
-MOD_KEYS = {"power", "grant", "allow", "deny", "breaks", "breaks_per_power", "battle_power", "power_when", "cost", "cost_min", "cost_may", "sac_reduce", "opt_reduce", "ignore", "ignore_ids", "gain", "require", "add_of"}
+MOD_KEYS = {"power", "grant", "allow", "deny", "breaks", "breaks_per_power", "battle_power", "power_when", "cost", "cost_min", "cost_may", "sac_reduce", "opt_reduce", "ignore", "ignore_ids", "gain", "require", "add_of", "add_races"}
 REQUIRES = {"attack", "block"}   # 強制（506.1b 攻撃しなければならない, 507.1b ブロックしなければならない）
 POSITIONS = {"top", "bottom"}
 PERMANENT_TYPES = {"tamaseed", "field", "cross_gear"}   # 手札から実行してバトルゾーンに出るクリーチャー以外のカード（315, 308, 303）
@@ -359,6 +359,9 @@ class Checker:
                 raise DefError(f"{where}: power needs amount (int) and optional count")
             if "count" in pm:
                 self.count_spec(pm["count"], where)
+        if "add_races" in m:
+            if not isinstance(m["add_races"], list) or not all(isinstance(x, str) for x in m["add_races"]):
+                raise DefError(f"{where}: add_races must be a list of race names")
         if "cost_may" in m:
             cm = m["cost_may"]
             if not isinstance(cm, dict) or set(cm) - {"amount", "once", "min"} or not isinstance(cm.get("amount"), int) \
@@ -377,8 +380,8 @@ class Checker:
                 raise DefError(f"{where}: opt_reduce.then must be destroy / deck_bottom_draw")
             if "do" in o:
                 do = o["do"]
-                if not isinstance(do, dict) or "select" not in do or set(do) - {"select", "move_to", "shuffle", "min", "max"}:
-                    raise DefError(f"{where}: opt_reduce.do needs select and optional move_to/shuffle/min/max")
+                if not isinstance(do, dict) or "select" not in do or set(do) - {"select", "move_to", "shuffle", "min", "max", "tap"}:
+                    raise DefError(f"{where}: opt_reduce.do needs select and optional move_to/shuffle/min/max/tap")
                 self.selector(do["select"], where)
                 if "move_to" in do and do["move_to"] not in self.zones:
                     raise DefError(f"{where}: opt_reduce.do.move_to must be a zone")

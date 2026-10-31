@@ -627,3 +627,68 @@ cards:
     races: [アビス, テスト]
     keywords: [abyss_rush, double_breaker]
     text: アビスラッシュ（このクリーチャーを自分の墓地から召喚してもよい。そうしたら、このターン、このクリーチャーはプレイヤーを攻撃でき、ターンの終わりに山札の下に置かれる）W・ブレイカー
+
+  # ---- 語彙パイロット第13弾（2026-10-31）: opt_reduce の tap 燃料／革命条件／種族追加 ----
+  - id: T048
+    name: 試験用助招獣
+    types: [creature]
+    civs: [nature]
+    cost: 5
+    power: 5000
+    races: [テスト]
+    text: このクリーチャーを召喚する時、自分のクリーチャーを１体タップしてもよい。そうしたら、このクリーチャーの召喚コストを２少なくする。
+    abilities:
+      - kind: static
+        affects: self
+        zone: hand
+        mod: {opt_reduce: {amount: 2, do: {select: {zone: bz, owner: you, filter: {types: [creature], tapped: false}}, min: 1, max: 1, tap: true}}}
+  - id: T049
+    name: 試験用革命獣
+    types: [creature]
+    civs: [nature]
+    cost: 4
+    power: 3000
+    races: [テスト]
+    text: 革命２―自分のシールドが２つ以下なら、このクリーチャーのパワーを+9000し、「Q・ブレイカー」を得る。
+    abilities:
+      - kind: static
+        affects: self
+        if: {cmp: [{count: {zone: shield, owner: you}}, "<=", 2]}
+        mod: {power: 9000, breaks: 4}
+  - id: T050
+    name: 試験用鎧
+    types: [creature]
+    civs: [darkness]
+    cost: 3
+    power: 2000
+    races: [テスト]
+    text: 自分の闇のクリーチャーはすべて、種族にサバイバーを追加する。
+    abilities:
+      - kind: static
+        affects: {owner: you, filter: {types: [creature], civs: [darkness]}}
+        mod: {add_races: [サバイバー]}
+
+  # ---- 語彙パイロット第14弾（2026-10-31）: スマッシュ・バースト ----
+  - id: T051
+    name: 試験用双撃獣 / 試験用呪文
+    text: スマッシュ・バースト（このクリーチャーが攻撃する時、このカードの呪文側を、バトルゾーンに置いたままコストを支払わずに唱えてもよい）
+    faces:
+      - name: 試験用双撃獣
+        types: [creature]
+        civs: [fire]
+        cost: 4
+        power: 3000
+        races: [テスト]
+        abilities:
+          - kind: trigger
+            when: {event: attack, subject: self}
+            effect:
+              - op: may
+                body:
+                  - {op: cast_face, face: 1}
+      - name: 試験用呪文
+        types: [spell]
+        civs: [fire]
+        cost: 3
+        spell:
+          - {op: draw, count: 1}
