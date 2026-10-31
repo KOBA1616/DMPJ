@@ -106,6 +106,18 @@ def op_untap(eng, t, op, env):
     return op_tap(eng, t, op, env, "untap")
 
 
+@op("flip_down", select="selector")
+def op_flip_down(eng, t, op, env):
+    """水晶武装: マナゾーンのカードを裏向きにする。裏向きのマナは無色として扱う（支払いの文明に数えない）。"""
+    cids, d = eng.select(t, op["select"], env)
+    if d:
+        return d
+    for c in cids:
+        if eng.s.cards[c].zone == "mana":
+            eng.s.cards[c].face_down = True
+    return None
+
+
 @op("may", body="ops", label="str?")
 def op_may(eng, t, op, env):
     a, d = eng.ask(t, env["you"], "yes_no", [{"key": "yes"}, {"key": "no"}], prompt=op.get("label", ""))

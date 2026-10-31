@@ -512,6 +512,8 @@ class Engine(SelectorMixin, EventMixin, InterpreterMixin, TurnMixin, CombatMixin
         if c.link and to != "bz":                   # G・リンク: バトルゾーンを離れたらリンクから外れる
             self.unlink(cid)
         c.gen += 1                                  # 新しいオブジェクトになる（400.5）
+        if to != "mana":
+            c.face_down = False                     # 裏向きはマナゾーンにある間だけの状態（水晶武装）
         c.zone = to
         c.tapped = to == "mana" and len(self.cdef(cid).civs) > 1   # 多色カードはタップしてマナに置かれる（405.1）
         c.face_up = self.rules.zones[to]["public"]

@@ -37,6 +37,7 @@ class Card:
     controller: int = 0
     tapped: bool = False
     face_up: bool = False
+    face_down: bool = False                            # マナゾーンで裏向き（水晶武装）。マナとしては無色扱い
     entered_turn: int = -1
     under: list[int] = field(default_factory=list)  # 下に重なっているカード（進化元・封印など。設計判断②）
     top_of: int = -1                                  # 自分が下に重なっている場合、その一番上の cid

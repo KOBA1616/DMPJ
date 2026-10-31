@@ -549,6 +549,22 @@
       "type": "object",
       "properties": {
        "op": {
+        "const": "flip_down"
+       },
+       "select": {
+        "$ref": "#/$defs/selector"
+       }
+      },
+      "required": [
+       "op",
+       "select"
+      ],
+      "additionalProperties": false
+     },
+     {
+      "type": "object",
+      "properties": {
+       "op": {
         "const": "force_battle"
        },
        "a": {
