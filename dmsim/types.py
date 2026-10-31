@@ -24,6 +24,7 @@ class Option(TypedDict, total=False):
     tap: int                             # 起動型能力のコストでタップするクリーチャー
     free: bool                           # コストを支払わずに実行する選択肢（G・ゼロ）
     rush: bool                           # アビスラッシュ（墓地から召喚する選択肢）
+    gshield: bool                        # ギャラクシールド（表向きにシールド化する選択肢）
 
 
 class Decision(TypedDict):
@@ -227,6 +228,8 @@ class PlayTask(TypedDict):
     cost_may_min: NotRequired[int]       # cost_may の下限（使った発生源の最大）
     cost_may_done: NotRequired[bool]
     rush: NotRequired[bool]              # アビスラッシュ（墓地からの召喚）
+    to_shield: NotRequired[bool]         # ギャラクシールド（代替コストで表向きにシールド化する）
+    as_paid: NotRequired[bool]           # コストを支払ったものとして実行する（ギャラクシールドのターン開始時召喚）
     cost_override: NotRequired[int]      # 代替コスト（キリフダッシュ等）: 通常コストの代わりに払う総額
     cost_civs: NotRequired[list]         # 代替コストで必要な文明（省略時はカードの文明）
     st: NotRequired[bool]                # S・トリガーとして実行する（101.4g）

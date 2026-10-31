@@ -55,6 +55,8 @@ class SelectorMixin:
             return bool(self.s.turn_counters.get(f"{c['self_marked']}:{env['self'][0]}:{env['self'][1]}"))
         if "is_turn" in c:
             return self.s.active == self._rel(c["is_turn"], env)
+        if "face_up" in c:   # このカード自身が表向きか（表向きシールドのギャラクシールド等）
+            return bool(env.get("self")) and self.s.alive(env["self"]) and self.s.cards[env["self"][0]].face_up == c["face_up"]
         raise ValueError(f"bad cond {c}")
 
     def filter_match(self, cid: int, f: dict, lki: dict | None = None, base: bool = False) -> bool:

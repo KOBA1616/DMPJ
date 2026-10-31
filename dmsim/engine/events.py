@@ -92,6 +92,8 @@ class EventMixin:
             self._raw_move(cid, ev["to"], ev.get("position", "top"), ev.get("controller"))
             if ev.get("tapped"):   # 「タップして置く」: 置かれた時点でタップ状態（別のタップ イベントにしない）
                 c.tapped = True
+            if ev.get("face_up") and ev["to"] == "shield":   # 「表向きでシールドゾーンに置く」（ギャラクシールド）
+                c.face_up = True
             if ev["to"] == "bz" and "enters_tapped" in self.chars(cid)["keywords"]:   # 「タップしてバトルゾーンに出る」
                 c.tapped = True
             for u in unders:   # クリーチャーとして離れたら下のカードも同じゾーンへ（109.2b, 316.3）
@@ -115,6 +117,8 @@ class EventMixin:
                     "reason": ev["reason"], "controller": c.controller}]
             if ev.get("via"):
                 out[0]["via"] = ev["via"]
+            if ev.get("face_up"):
+                out[0]["face_up"] = True
             if ev["to"] == "bz" and "ex_life" in self.chars(cid)["keywords"]:
                 out += self._exlife_shield(cid)
             if ev["reason"] == "summon":
@@ -294,6 +298,8 @@ class EventMixin:
         if "unpaid" in when and bool(rec.get("unpaid")) != when["unpaid"]:   # マナをタップせずに（コストを支払わずに）
             return False
         if "broke" in when and bool(rec.get("broke")) != when["broke"]:   # 攻撃の終わりに、その攻撃でシールドをブレイクしたか（キリフダッシュ）
+            return False
+        if "face_up" in when and bool(rec.get("face_up")) != when["face_up"]:   # 表向きで置かれたか（ギャラクシールド）
             return False
         if "player" in when and rec.get("player") != self._rel(when["player"], env):
             return False

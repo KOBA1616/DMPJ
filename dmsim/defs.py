@@ -30,7 +30,7 @@ REASONS = {"put", "destroy", "return", "discard", "charge", "summon", "cast", "b
            "draw", "battle", "sba", "resolve", "evolve"}
 VIAS = {"revolution_change", "generate"}   # 出し方の印（「革命チェンジによって出た時」など）
 DURATIONS_FIXED = {"end_of_turn", "during_attack", "permanent", "until_next_own_turn_start"}
-MOD_KEYS = {"power", "grant", "allow", "deny", "breaks", "breaks_per_power", "battle_power", "power_when", "cost", "cost_min", "cost_may", "sac_reduce", "opt_reduce", "ignore", "ignore_ids", "gain", "require", "add_of"}
+MOD_KEYS = {"power", "grant", "allow", "deny", "breaks", "breaks_per_power", "battle_power", "power_when", "cost", "cost_min", "cost_may", "sac_reduce", "opt_reduce", "ignore", "ignore_ids", "gain", "require", "add_of", "add_races"}
 REQUIRES = {"attack", "block"}   # 強制（506.1b 攻撃しなければならない, 507.1b ブロックしなければならない）
 POSITIONS = {"top", "bottom"}
 PERMANENT_TYPES = {"tamaseed", "field", "cross_gear"}   # 手札から実行してバトルゾーンに出るクリーチャー以外のカード（315, 308, 303）
@@ -72,6 +72,7 @@ class Face:
     tap_reduce: int = 0                                   # ハイパーエナジー: コストが異なる自分のクリーチャー1体をタップするごとに減るコスト
     s_back: str | None = None                             # S・バック: この文明のカードがシールドから手札に加わる時、それを捨てて無料で実行できる
     free_if: dict | None = None                           # 条件を満たす間はコストを支払わずに召喚できる（G・ゼロ）
+    galaxy_shield: dict | None = None                     # ギャラクシールド: {cost, civs} 代替コストで表向きにシールド化する
     resolve_to: str = "graveyard"                         # 呪文の解決後の置き場所（チャージャー等）
     after_resolve: list[dict] = field(default_factory=list)
 
@@ -108,6 +109,7 @@ class CardDef:
     tap_reduce: int = 0
     s_back: str | None = None
     free_if: dict | None = None
+    galaxy_shield: dict | None = None
     resolve_to: str = "graveyard"
     after_resolve: list[dict] = field(default_factory=list)
     faces: list[Face] = field(default_factory=list)      # ツインパクト: [0]=クリーチャー側, [1]=呪文側
@@ -341,6 +343,10 @@ class Checker:
             if v not in ("you", "opp"):
                 raise DefError(f"{where}: is_turn must be you/opp")
             return
+        if k == "face_up":
+            if not isinstance(v, bool):
+                raise DefError(f"{where}: face_up must be bool")
+            return
         raise DefError(f"{where}: unknown cond '{k}'")
 
     def count_spec(self, v, where):
@@ -359,6 +365,9 @@ class Checker:
                 raise DefError(f"{where}: power needs amount (int) and optional count")
             if "count" in pm:
                 self.count_spec(pm["count"], where)
+        if "add_races" in m:
+            if not isinstance(m["add_races"], list) or not all(isinstance(x, str) for x in m["add_races"]):
+                raise DefError(f"{where}: add_races must be a list of race names")
         if "cost_may" in m:
             cm = m["cost_may"]
             if not isinstance(cm, dict) or set(cm) - {"amount", "once", "min"} or not isinstance(cm.get("amount"), int) \
@@ -377,8 +386,8 @@ class Checker:
                 raise DefError(f"{where}: opt_reduce.then must be destroy / deck_bottom_draw")
             if "do" in o:
                 do = o["do"]
-                if not isinstance(do, dict) or "select" not in do or set(do) - {"select", "move_to", "shuffle", "min", "max"}:
-                    raise DefError(f"{where}: opt_reduce.do needs select and optional move_to/shuffle/min/max")
+                if not isinstance(do, dict) or "select" not in do or set(do) - {"select", "move_to", "shuffle", "min", "max", "tap"}:
+                    raise DefError(f"{where}: opt_reduce.do needs select and optional move_to/shuffle/min/max/tap")
                 self.selector(do["select"], where)
                 if "move_to" in do and do["move_to"] not in self.zones:
                     raise DefError(f"{where}: opt_reduce.do.move_to must be a zone")
@@ -531,12 +540,16 @@ def _load_face(raw, keywords, macros, chk: Checker, where) -> dict:
         raise DefError(f"{where}: unknown evolve_zone '{zone}'")
     if "free_if" in raw:
         chk.cond(raw["free_if"], where)
+    if "galaxy_shield" in raw:
+        gs = raw["galaxy_shield"]
+        if not isinstance(gs, dict) or not isinstance(gs.get("cost"), int) or set(gs.get("civs", [])) - CIVS:
+            raise DefError(f"{where}: galaxy_shield needs {{cost: int, civs: [...]}}")
     return dict(name=raw["name"], types=raw["types"], civs=raw["civs"], cost=raw["cost"],
                 power=raw.get("power", 0), races=split_races(raw.get("races", [])), keywords=names,
                 abilities=abilities, spell=spell, evolve_from=raw.get("evolve_from"),
                 evolve_zone=zone, evolve_any=bool(raw.get("evolve_any", False)), evolve_count=int(raw.get("evolve_count", 1)),
                 cost_reduce_per_evo=int(raw.get("cost_reduce_per_evo", 0)),
-                free_if=raw.get("free_if"), **{"tap_reduce": 0, "s_back": None, **props})
+                free_if=raw.get("free_if"), galaxy_shield=raw.get("galaxy_shield"), **{"tap_reduce": 0, "s_back": None, **props})
 
 
 def load_tables():
