@@ -514,3 +514,13 @@ space_charge（単独42件）: スペース・チャージは、文明ごとの�
 - ビビッドロー: 面の宣言 `vividraw {cost, civs}`。ドローしたカードに drawn_turn を記録し、自分のターンのメインステップ（攻撃前のみ）に「reveal」選択肢で表向きにすると、そのターンは「:vivid」選択肢で代替コスト実行できる
 - 強制攻撃: キーワード `must_attack`（mod の require: [attack]。強制の仕組み自体は既存）
 - 究極進化: evolve_from {types: [evolution]} で既存表現可（申告切れ）
+
+# 第31弾（2026-11-01）: フェーズ9（ロングテール3）
+
+検証は `tests/test_vocab_pilot31.py`（動作5件）と `tests/test_vocab_pilot31_cards.py`（代表5枚）。対象: fushigibirth 23件、last_burst 21件、meteor_burn 21件、shield_plus 19件、janken 18件。out_of_game 23件はブースターパック開封という外部要素のため対象外とした。
+
+- フシギバース: 面の宣言 `fushigi {cost, civs, min}`。墓地からの「:fushigi」選択肢で、自分のクリーチャー1体をタップしてマナに置き、差額（宣言コスト−そのクリーチャーのコスト、下限 min）を払って召喚する
+- ラスト・バースト: キーワード（破壊時誘発 + op cast_face の呪文面解決。cast_face の face: -1 で呪文面を探すよう拡張）
+- メテオバーン: キーワード（離脱の置換。条件は下のカードの count、代わりは under_of の move）
+- ジャンケン: op `janken {win, lose, draw}`（両プレイヤーが手を選ぶ）
+- シールド・プラス: op `shield_plus`（山札の上をシールドの束の下へ。束は1つと数える）

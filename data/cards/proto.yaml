@@ -1277,3 +1277,61 @@ cards:
     types: [creature, evolution]
     evolve_from: {types: [evolution]}
     keywords: [double_breaker]
+
+# 語彙パイロット第31弾（フェーズ9）: フシギバース/ラストバースト/メテオバーン/ジャンケン/シールドプラス
+  - id: T095
+    name: フシギバース獣
+    civs: [nature]
+    cost: 9
+    power: 9000
+    types: [creature]
+    fushigi: {cost: 9, civs: [nature], min: 1}
+    keywords: [double_breaker]
+  - id: T096
+    name: ラストバースト獣／試験呪文
+    text: ラスト・バースト
+    faces:
+      - name: ラストバースト獣
+        types: [creature]
+        civs: [darkness]
+        cost: 5
+        power: 4000
+        keywords: [last_burst]
+      - name: 試験呪文
+        types: [spell]
+        civs: [darkness]
+        cost: 3
+        spell:
+          - {op: draw, count: 2}
+  - id: T097
+    name: メテオバーン進化獣
+    civs: [fire]
+    cost: 6
+    power: 7000
+    types: [creature, evolution]
+    evolve_from: {types: [creature]}
+    keywords: [meteor_burn, double_breaker]
+  - id: T098
+    name: ジャンケン獣
+    civs: [fire]
+    cost: 3
+    power: 3000
+    types: [creature]
+    abilities:
+      - kind: trigger
+        when: {event: move, to: bz, subject: self}
+        effect:
+          - op: janken
+            win: [{op: draw, count: 2}]
+            lose: [{op: discard, select: {zone: hand, owner: you, count: 1}}]
+  - id: T099
+    name: シールドプラス獣
+    civs: [light]
+    cost: 4
+    power: 4000
+    types: [creature]
+    abilities:
+      - kind: trigger
+        when: {event: move, to: bz, subject: self}
+        effect:
+          - {op: may, body: [{op: shield_plus}]}

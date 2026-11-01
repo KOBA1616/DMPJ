@@ -291,6 +291,22 @@ keywords:
             body:
               - {op: choose, select: {zone: bz, owner: opp, filter: {types: [creature]}, count: 1}, as: frozen}
               - {op: tap, select: {ref: frozen}, no_untap_next: true}
+  last_burst:
+    ja: ラスト・バースト（このクリーチャーが破壊された時、このカードの呪文側をコストを支払わずに唱えてもよい）
+    abilities:
+      - kind: trigger
+        when: {event: move, from: bz, to: graveyard, reason: destroy, subject: self}
+        effect:
+          - {op: may, body: [{op: cast_face, face: -1}]}
+  meteor_burn:
+    ja: メテオバーン（このクリーチャーがバトルゾーンを離れる時、かわりにこのクリーチャーの下にあるカードを1枚選び墓地に置いてもよい。そうした場合、このクリーチャーはバトルゾーンに留まる）
+    abilities:
+      - kind: replace
+        optional: true
+        when: {event: move, from: bz, subject: self}
+        if: {cmp: [{count: {under_of: self}}, ">=", 1]}
+        instead:
+          - {op: move, select: {under_of: self, count: 1}, to: graveyard, reason: put}
   must_attack:
     ja: このクリーチャーは、可能なら毎ターン攻撃する
     abilities:
