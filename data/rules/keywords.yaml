@@ -291,6 +291,19 @@ keywords:
             body:
               - {op: choose, select: {zone: bz, owner: opp, filter: {types: [creature]}, count: 1}, as: frozen}
               - {op: tap, select: {ref: frozen}, no_untap_next: true}
+  summon_from_mana:
+    ja: このクリーチャーを自分のマナゾーンから召喚してもよい
+    abilities:
+      - {kind: static, zone: mana, affects: self, mod: {allow: [summon_from_mana]}}
+  yobinion:
+    ja: ヨビニオン（このクリーチャーが召喚によって出た時、自分の山札の上から、これよりコストが小さいクリーチャーが出るまで表向きにしてもよい。そのクリーチャーを出す。残りをシャッフルし、山札の下に置く）
+    abilities:
+      - kind: trigger
+        when: {event: move, to: bz, subject: self, reason: summon}
+        effect:
+          - op: may
+            body:
+              - {op: yobinion}
   z_rush:      # Zラッシュ: 常在型。シールドが離れた際、その時点でバトルゾーンにいる Zラッシュ持ちのハイパーモードを即座に解放する（適用はイベント適用側。公式Q&A 48466）
     ja: Zラッシュ（シールドが離れたら、次の自分のターンのはじめまで、このクリーチャーのハイパーモードを解放する）
     abilities: []

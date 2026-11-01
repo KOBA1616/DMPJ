@@ -486,3 +486,14 @@ space_charge（単独42件）: スペース・チャージは、文明ごとの�
 - タップしてマナに置く: move の `tapped: true` で既存表現可（申告切れ）
 - ドロン・ゴー: 破壊時誘発 + name_has フィルタの move で本体は表現可。ただし「他の同名エグザイルを出せない」の常在型は、入る側のゾーンと affects のゾーンが合わず未対応（制限）
 - ついでに修正: バトルゾーンの発生源から別ゾーン宣言（zone: shield 等）の常在型が漏れて働いていた問題（chars の bz 走査に発生源ゾーンの確認を追加）
+
+# 第28弾（2026-11-01）: フェーズ6（ロングテール2）
+
+検証は `tests/test_vocab_pilot28.py`（動作5件）と `tests/test_vocab_pilot28_cards.py`（代表6枚）。対象: not_evolution_filter 54件、shinka_power 32件、abare_chain 28件、summon_from_mana 27件、yobinion 26件、oshioki_moon 25件。
+
+- アバレチェーン: first_time 誘発 + op `may` に `else`（「そうしなければ」）を追加して表現
+- ヨビニオン: キーワード + op `yobinion`（山札の上から条件のクリーチャーが出るまで公開し、それを出す。残りはシャッフルして山札の下へ）
+- マナゾーンから召喚: 許可 `summon_from_mana` + キーワード（マナゾーンの常在型）。メインに「:msum」選択肢
+- シンカパワー: 移動レコードに `stacked` を追加し、when で照合可能に（「進化元になる時」側は未対応）
+- 進化ではない: フィルタの `not_types: [evolution]` で既存表現可（申告切れ）
+- オシオキムーン: when の from: shield + subject {owner: you} で既存表現可（申告切れ）
