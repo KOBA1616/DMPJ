@@ -197752,3 +197752,285 @@ cards:
     official: dm09-012
     review: pending
     notes: 再変換
+- id: dm10-020
+  name: トリック・クラッカー
+  types:
+  - creature
+  civs:
+  - water
+  cost: 3
+  power: 2000
+  races:
+  - サイバー・ウイルス
+  mana: 1
+  text: 'サイレントスキル(自分のターンのはじめに、このクリーチャーがタップされていたら、アンタップするかわりに次の能力を使ってもよい)
+
+    自分の手札を１枚選び、裏向きにして自分のシールドに加えてもよい。そうした場合、自分のシールドを１枚選び、自分の手札に加える。(その「S・トリガー」能力は使えない)'
+  keywords:
+  - silent_skill
+  abilities:
+  - kind: silent
+    effect:
+    - op: may
+      body:
+      - op: move
+        select:
+          zone: hand
+          owner: you
+          count: 1
+        to: shield
+        reason: charge
+        as: added
+    - op: if
+      cond:
+        exists:
+          ref: added
+      then:
+      - op: move
+        select:
+          zone: shield
+          owner: you
+          count: 1
+        to: hand
+        reason: return
+  source:
+    official: dm10-020
+    review: pending
+    notes: 再変換
+- id: dm10-029
+  name: バーンメルト・リザード
+  types:
+  - creature
+  civs:
+  - fire
+  cost: 5
+  power: 4000
+  races:
+  - メルト・ウォリアー
+  mana: 1
+  text: バトルゾーンにある自分の「サイレントスキル」を持つクリーチャーは、「スピードアタッカー」を得る。(「スピードアタッカー」を持つクリーチャーは召喚酔いしない)
+  abilities:
+  - kind: static
+    affects:
+      zone: bz
+      owner: you
+      filter:
+        keyword: silent_skill
+        types:
+        - creature
+    mod:
+      grant:
+      - speed_attacker
+  source:
+    official: dm10-029
+    review: pending
+    notes: 再変換
+- id: dm10-034
+  name: エコロバルーン・ビートル
+  types:
+  - creature
+  civs:
+  - nature
+  cost: 5
+  power: 4000
+  races:
+  - ジャイアント・インセクト
+  mana: 1
+  text: 自分のクリーチャーが攻撃された時、自分の手札を１枚捨ててもよい。そうした場合、そのターンの終わりまで、そのクリーチャーのパワーは+3000される。
+  abilities:
+  - kind: trigger
+    when:
+      event: attack
+      target:
+        owner: you
+        filter:
+          types:
+          - creature
+    effect:
+    - op: may
+      body:
+      - op: move
+        select:
+          zone: hand
+          owner: you
+          count: 1
+        to: graveyard
+        reason: discard
+        as: dumped
+    - op: if
+      cond:
+        exists:
+          ref: dumped
+      then:
+      - op: modify
+        select:
+          ref: event.target
+        mod:
+          power: 3000
+        duration: end_of_turn
+  source:
+    official: dm10-034
+    review: pending
+    notes: 再変換
+- id: dm10-038
+  name: 冷徹のソーダライト
+  types:
+  - creature
+  civs:
+  - water
+  - darkness
+  cost: 4
+  power: 4000
+  races:
+  - スピリット・クォーツ
+  mana: 1
+  text: 'マナゾーンに置く時、このカードはタップして置く。
+
+    このクリーチャーはブロックされない。
+
+    サイレントスキル(自分のターンのはじめに、このクリーチャーがタップされていたら、アンタップするかわりに次の能力を使ってもよい)
+
+    相手は自分自身のクリーチャーを１体選び、破壊する。'
+  keywords:
+  - unblockable
+  - silent_skill
+  abilities:
+  - kind: silent
+    effect:
+    - op: move
+      select:
+        zone: bz
+        owner: opp
+        chooser: opp
+        count: 1
+      to: graveyard
+      reason: destroy
+  source:
+    official: dm10-038
+    review: pending
+    notes: 再変換
+- id: dm10-043
+  name: 粛清者ブルグラフ
+  types:
+  - creature
+  civs:
+  - light
+  cost: 6
+  power: 4000
+  races:
+  - ソルトルーパー
+  mana: 1
+  text: 'サイレントスキル(自分のターンのはじめに、このクリーチャーがタップされていたら、アンタップするかわりに次の能力を使ってもよい)
+
+    自分の山札の上から１枚目を、裏向きのまま自分のシールドに加える。'
+  keywords:
+  - silent_skill
+  abilities:
+  - kind: silent
+    effect:
+    - op: move
+      select:
+        zone: deck
+        owner: you
+        count: 1
+      to: shield
+      reason: charge
+  source:
+    official: dm10-043
+    review: pending
+    notes: 再変換
+- id: dm10-045
+  name: ルナ・ウイング
+  types:
+  - creature
+  civs:
+  - water
+  cost: 6
+  power: 2000
+  races:
+  - サイバー・ムーン
+  mana: 1
+  text: 'サイレントスキル(自分のターンのはじめに、このクリーチャーがタップされていたら、アンタップするかわりに次の能力を使ってもよい)
+
+    バトルゾーンか、どちらかのプレイヤーのマナゾーンからカードを１枚選び、持ち主の手札に戻す。'
+  keywords:
+  - silent_skill
+  abilities:
+  - kind: silent
+    effect:
+    - op: move
+      select:
+        zone:
+        - bz
+        - mana
+        owner: any
+        count: 1
+      to: hand
+      reason: return
+  source:
+    official: dm10-045
+    review: pending
+    notes: 再変換
+- id: dm10-073
+  name: 予言者カエミラ
+  types:
+  - creature
+  civs:
+  - light
+  cost: 4
+  power: 1000
+  races:
+  - ライトブリンガー
+  mana: 1
+  text: 'サイレントスキル(自分のターンのはじめに、このクリーチャーがタップされていたら、アンタップするかわりに次の能力を使ってもよい)
+
+    自分の山札の上から１枚目を、裏向きのまま自分のシールドに加える。'
+  keywords:
+  - silent_skill
+  abilities:
+  - kind: silent
+    effect:
+    - op: move
+      select:
+        zone: deck
+        owner: you
+        count: 1
+      to: shield
+      reason: charge
+  source:
+    official: dm10-073
+    review: pending
+    notes: 原文が同じ dm10-043 の変換結果を写した（モデル不使用）。能力は元カードの確認に従う
+- id: dm10-051
+  name: ギガメンテ
+  types:
+  - creature
+  civs:
+  - darkness
+  cost: 4
+  power: 3000
+  races:
+  - キマイラ
+  mana: 1
+  text: 'サイレントスキル(自分のターンのはじめに、このクリーチャーがタップされていたら、アンタップするかわりに次の能力を使ってもよい)
+
+    自分の墓地からクリーチャーを１体、自分の手札に戻す。'
+  keywords:
+  - silent_skill
+  abilities:
+  - kind: silent
+    effect:
+    - op: move
+      select:
+        zone: graveyard
+        owner: you
+        filter:
+          types:
+          - creature
+        count: 1
+      to: hand
+      reason: return
+  source:
+    official: dm10-051
+    review: pending
+    notes: 再変換
