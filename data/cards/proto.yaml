@@ -1335,3 +1335,15 @@ cards:
         when: {event: move, to: bz, subject: self}
         effect:
           - {op: may, body: [{op: shield_plus}]}
+  - id: T100
+    name: 試験用クロスギア・改
+    civs: [nature]
+    cost: 2
+    types: [cross_gear]
+    races: [テスト]
+    text: クロスギア。これをクロスしたクリーチャーがブロックされた時、カードを1枚引く。
+    abilities:
+      - kind: trigger
+        when: {event: block, attacker: crossed}
+        effect:
+          - {op: draw, count: 1}

@@ -43,10 +43,12 @@ def test_fushigibirth(rules):
 def test_last_burst(rules):
     """ラスト・バースト: 破壊された時、呪文側を無料で唱えて2ドローする。"""
     e = setup(rules, {"bz": ["T096"]}, {"hand": ["T006"], "mana": ["T005", "T005", "T005"]})
-    h1 = len(e.zlist("hand", 1))
+    seen = {}
 
     def drive(e, d, keys):
         if d["kind"] == "yes_no" and d["player"] == 0:
+            if "hand_at_ask" not in seen:
+                seen["hand_at_ask"] = len(e.zlist("hand", 0))
             e.answer([keys.index("yes")])
             return True
         if d["kind"] not in ("pay_mana", "charge") and d["player"] == 1:
@@ -57,8 +59,17 @@ def test_last_burst(rules):
         return False
 
     assert _settle(e, lambda: any(e.s.cards[c].defn == "T096" for c in e.zlist("graveyard", 0)), drive, 250)
-    # 呪文側（2ドロー）が解決され、持ち主の手札が2枚増える
-    assert _settle(e, lambda: len(e.zlist("hand", 0)) >= 2, None, 120)
+    # 呪文側（2ドロー）は同じ窓の中で解決される。次の自分のターン開始（charge が出る）時点では
+    # バーストの2枚＋ターン開始の1枚で +3 になっているはず（バーストが不発なら +1 しか増えない）
+    assert "hand_at_ask" in seen
+    for _ in range(20):
+        d = e.advance()
+        assert d is not None
+        if d["kind"] == "charge" and d["player"] == 0:
+            break
+        keys = [o["key"] for o in d["options"]]
+        e.answer([keys.index("pass")] if "pass" in keys else list(range(d["min"])))
+    assert len(e.zlist("hand", 0)) == seen["hand_at_ask"] + 3
 
 
 def test_meteor_burn_replacement(rules):
