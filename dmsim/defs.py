@@ -487,7 +487,7 @@ class Checker:
         tg = w.get("target")
         if tg is not None and tg not in ("player", "creature", "self") and not isinstance(tg, dict):
             raise DefError(f"{where}: bad target '{tg}'")
-        if w.get("attacker") is not None and w["attacker"] != "self" and not isinstance(w["attacker"], dict):
+        if w.get("attacker") is not None and w["attacker"] not in ("self", "crossed") and not isinstance(w["attacker"], dict):
             raise DefError(f"{where}: bad attacker '{w['attacker']}'")
         if "via" in w and w["via"] not in VIAS:
             raise DefError(f"{where}: unknown via '{w['via']}'")
