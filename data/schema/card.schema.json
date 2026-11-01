@@ -94,6 +94,7 @@
      "left_g_link",
      "mana_boost_cip",
      "mega_last_burst",
+     "meteor_burn",
      "must_attack",
      "powered_breaker",
      "quad_breaker",
@@ -276,6 +277,7 @@
        "left_g_link",
        "mana_boost_cip",
        "mega_last_burst",
+       "meteor_burn",
        "must_attack",
        "powered_breaker",
        "quad_breaker",
@@ -435,7 +437,7 @@
         "const": "cast_face"
        },
        "face": {
-        "type": "integer"
+        "$ref": "#/$defs/expr"
        }
       },
       "required": [
@@ -655,6 +657,27 @@
       "required": [
        "op",
        "onto"
+      ],
+      "additionalProperties": false
+     },
+     {
+      "type": "object",
+      "properties": {
+       "op": {
+        "const": "janken"
+       },
+       "win": {
+        "$ref": "#/$defs/ops"
+       },
+       "lose": {
+        "$ref": "#/$defs/ops"
+       },
+       "draw": {
+        "$ref": "#/$defs/ops"
+       }
+      },
+      "required": [
+       "op"
       ],
       "additionalProperties": false
      },
@@ -995,6 +1018,18 @@
       "required": [
        "op",
        "name"
+      ],
+      "additionalProperties": false
+     },
+     {
+      "type": "object",
+      "properties": {
+       "op": {
+        "const": "shield_plus"
+       }
+      },
+      "required": [
+       "op"
       ],
       "additionalProperties": false
      },
@@ -1523,6 +1558,7 @@
        "left_g_link",
        "mana_boost_cip",
        "mega_last_burst",
+       "meteor_burn",
        "must_attack",
        "powered_breaker",
        "quad_breaker",

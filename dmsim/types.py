@@ -31,6 +31,7 @@ class Option(TypedDict, total=False):
     alt: NotRequired[bool]               # 代替コストで実行する選択肢
     vivid: NotRequired[bool]             # ビビッドロー（代替コストで実行する選択肢）
     reveal: NotRequired[bool]            # ビビッドロー（表向きにする選択肢）
+    fushigi: NotRequired[bool]           # フシギバース（墓地から召喚する選択肢）
 
 
 class Decision(TypedDict):
@@ -263,6 +264,8 @@ class PlayTask(TypedDict):
     alt: NotRequired[bool]               # 代替コストで実行する
     alt_step: NotRequired[int]           # 代替コスト（行動形式）で済んだ段階
     evo_v: NotRequired[list]             # 進化V: フィルタごとに選んだ進化元
+    fushigi: NotRequired[bool]           # フシギバースとして実行する
+    fushigi_done: NotRequired[bool]      # フシギバース: 進化元代わりのクリーチャーをマナに置いた
     alt_done: NotRequired[bool]          # 代替コスト（行動形式）の支払いが終わった
     bz_yn_for: NotRequired[int]          # バズレンダ: 「追加で支払うか」を確認済みの回数
     bz_pay: NotRequired[bool]            # バズレンダ: その回は追加で支払う

@@ -145,6 +145,27 @@ class TurnMixin:
                     if fi is not None:
                         opt["face"] = fi
                     out.append(opt)
+        seen_f = set()   # フシギバース: 墓地から、自分のクリーチャー1体をマナに置いて差額で召喚
+        for cid in self.zlist("graveyard", p):
+            dn = self.s.cards[cid].defn
+            if dn in seen_f:
+                continue
+            d = self.cdef(cid)
+            for fi, f in ([(None, d)] if not d.faces else list(enumerate(d.faces))):
+                fg = f.fushigi
+                if not fg:
+                    continue
+                bases = [c for c in self.bz_tops(p) if not self.s.cards[c].tapped]
+                if not bases:
+                    continue
+                cheapest = max(fg.get("min", 1), fg["cost"] - max(self.chars(b)["cost"] for b in bases))
+                if self._mana_choices(cid, p, fi, cost=cheapest, limit=1, civs=fg["civs"]):
+                    seen_f.add(dn)
+                    opt = {"key": f"play:{dn}:fushigi" if fi is None else f"play:{dn}:{fi}:fushigi",
+                           "cid": cid, "name": f.name, "fushigi": True}
+                    if fi is not None:
+                        opt["face"] = fi
+                    out.append(opt)
         seen_m = set()   # マナゾーンから召喚できるカードも選択肢に出す（通常コスト）
         for cid in self.zlist("mana", p):
             dn = self.s.cards[cid].defn
@@ -491,6 +512,8 @@ def st_main(eng, t):                                    # 504
             fd = eng.cdef(o["cid"]).face(o.get("face"))
             task["cost_override"] = fd.vividraw["cost"]
             task["cost_civs"] = fd.vividraw["civs"]
+        if o.get("fushigi"):
+            task["fushigi"] = True
         if o.get("neo"):
             task["evo_mode"] = True
         eng._push(task)
@@ -596,6 +619,26 @@ def h_play(eng, t):
     # S・トリガー・プラス: 相手のターンで、そのターンに自分のシールドが2つ以上ブレイクされていれば追加能力を得る
     stp_bonus = bool(t.get("st") and "s_trigger_plus" in eng.chars(cid, face)["keywords"]
                      and s.active != p and s.turn_counters.get(f"broken:{p}", 0) >= 2)
+    if t.get("fushigi") and not t.get("fushigi_done"):   # フシギバース: 自分のクリーチャー1体をタップしてマナに置き、差額を払う
+        fg = d.fushigi
+        cands = [c for c in eng.bz_tops(p) if not s.cards[c].tapped]
+        if not cands:
+            eng._pop(t)
+            return None
+        ans, dd = eng.ask(t, p, "choose_cards", [eng._card_option(c) for c in cands], 1, 1)
+        if dd:
+            return dd
+        base = cands[ans[0]]
+        override = max(fg.get("min", 1), fg["cost"] - eng.chars(base)["cost"])
+        if not eng._mana_choices(cid, p, face, cost=override, limit=1, civs=fg["civs"]):
+            eng._pop(t)   # 差額が払えない組み合わせでは始められない
+            return None
+        t["cost_override"] = override
+        t["cost_civs"] = fg["civs"]
+        t["fushigi_done"] = True
+        eng._push(eng.ev_task([{"ev": "move", "subject": s.ref(base), "to": "mana", "reason": "charge",
+                                "tapped": True}]))
+        return None
     ac = d.alt_cost
     if t.get("alt") and ac and "do" in ac and not t.get("alt_done"):   # 代替コスト（行動形式）: 段階ごとに選んで支払う
         step_i = t.get("alt_step", 0)

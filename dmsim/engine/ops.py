@@ -333,6 +333,55 @@ def op_mekurade(eng, t, op, env):
     return None
 
 
+@op("janken", win="ops?", lose="ops?", draw="ops?")
+def op_janken(eng, t, op, env):
+    """ジャンケン: 両プレイヤーが グー/チョキ/パー を選び、勝敗で分岐する。"""
+    if "jk" not in t["os"]:
+        a, d = eng.ask(t, env["you"], "choose_one",
+                       [{"key": "rock", "name": "グー"}, {"key": "scissors", "name": "チョキ"}, {"key": "paper", "name": "パー"}])
+        if d:
+            return d
+        t["os"]["jk"] = a[0]
+        return None
+    a, d = eng.ask(t, 1 - env["you"], "choose_one",
+                   [{"key": "rock", "name": "グー"}, {"key": "scissors", "name": "チョキ"}, {"key": "paper", "name": "パー"}])
+    if d:
+        return d
+    me, op_hand = t["os"].pop("jk"), a[0]   # 0=グー, 1=チョキ, 2=パー
+    if me == op_hand:
+        branch = op.get("draw")
+    elif (me - op_hand) % 3 == 2:   # グー>チョキ, チョキ>パー, パー>グー
+        branch = op.get("win")
+    else:
+        branch = op.get("lose")
+    if branch:
+        eng._defer(t, [eng._child(branch, env)])
+    return None
+
+
+@op("shield_plus")
+def op_shield_plus(eng, t, op, env):
+    """シールド・プラス: 自分の山札の上から1枚を、自分のシールド1つの下に置く（束は1つと数える）。"""
+    s = eng.s
+    p = env["you"]
+    shields = eng.zlist("shield", p)
+    deck = s.zones["deck"][p]
+    if not shields or not deck:
+        return None
+    a, d = eng.ask(t, p, "choose_cards", [eng._card_option(c) for c in shields], 1, 1)
+    if d:
+        return d
+    target = shields[a[0]]
+    tucked = deck[0]
+    eng._raw_move(tucked, "shield")
+    lst = s.zones["shield"][p if not eng.zshared("shield") else 0]
+    if tucked in lst:
+        lst.remove(tucked)   # 束の下のカードはゾーンの並びに入らない（113.2）
+    s.cards[target].under.append(tucked)
+    s.cards[tucked].top_of = target
+    return None
+
+
 @op("opp_may", body="ops", label="str?")
 def op_opp_may(eng, t, op, env):
     """「相手は〜してもよい」: 相手が yes/no を選び、yes なら body を相手の視点で実行する。"""
@@ -410,19 +459,24 @@ def op_gachinko(eng, t, op, env):
     return None
 
 
-@op("cast_face", face="int")
+@op("cast_face", face="expr")
 def op_cast_face(eng, t, op, env):
     """ツインパクトの呪文面を、カードをバトルゾーンに置いたまま唱える（スマッシュ・バースト）。
     唱えたことにはなる（cast イベント、コストは支払わない）が、カード自体は動かず、
-    解決後に墓地へも行かない。"""
+    解決後に墓地へも行かない。face: "spell" なら呪文面を探す（ラスト・バースト）。"""
     s = eng.s
     if not s.alive(env["self"]):
         return
     cid = env["self"][0]
     d = eng.cdef(cid)
-    if op["face"] >= len(d.faces):
+    fi = op["face"]
+    if fi == -1:   # 呪文面を探す（ラスト・バースト）
+        fi = next((i for i, f in enumerate(d.faces) if f.spell), None)
+        if fi is None:
+            return
+    if fi >= len(d.faces):
         return
-    f = d.faces[op["face"]]
+    f = d.faces[fi]
     ref = s.ref(cid)
     tasks = [eng.ev_task({"ev": "cast", "player": env["you"], "subject": ref, "unpaid": True}),
              eng._child(f.spell, {"you": env["you"], "self": ref, "vars": dict(env.get("vars", {}))})]
