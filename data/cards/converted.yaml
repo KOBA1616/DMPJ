@@ -208561,3 +208561,1020 @@ cards:
     - dmex16-052
     - dmr22-012
     - promoy20-037
+- id: dmrp16-031
+  name: 暴投の針棺
+  types:
+  - creature
+  civs:
+  - light
+  cost: 4
+  power: 1000
+  races:
+  - グレートメカオー
+  - 暴拳王国
+  mana: 1
+  text: このクリーチャーがバトルゾーンを離れる時、そのパワーが０より大きければ、離れるかわりにとどまる。
+  abilities:
+  - kind: replace
+    when:
+      event: move
+      from: bz
+      subject: self
+    if:
+      exists:
+        ref: self
+        filter:
+          power_ge: 1
+    instead: []
+  source:
+    official: dmrp16-031
+    review: pending
+- id: dm26sd1-i011
+  name: 単騎連射 マグナム
+  types:
+  - creature
+  civs:
+  - fire
+  cost: 3
+  power: 3000
+  races:
+  - アウトレイジ
+  mana: 1
+  text: 自分のターンに相手のクリーチャーが出る時、かわりにそのクリーチャーを墓地に置く。
+  abilities:
+  - kind: replace
+    when:
+      event: move
+      to: bz
+      subject:
+        owner: opp
+        filter:
+          types:
+          - creature
+    if:
+      is_turn: you
+    instead:
+    - op: move
+      select:
+        ref: subject
+        count: 1
+      to: graveyard
+      reason: put
+  source:
+    official: dm26sd1-i011
+    review: pending
+    aliases:
+    - dm22bd2-002
+    - dm24ex2-cho029
+    - dmbd15-009
+    - dmd27-003
+    - dmx26-003
+- id: dm29-028
+  name: 威牙忍ジンナイ
+  types:
+  - creature
+  civs:
+  - darkness
+  cost: 4
+  power: 3000
+  races:
+  - ダークロード
+  - シノビ
+  mana: 1
+  keywords:
+  - blocker
+  - cannot_attack
+  text: 'ブロッカー
+
+    このクリーチャーは攻撃することができない。
+
+    自分の他のシノビがバトルゾーンを離れる時、かわりに自分のクリーチャーを１体破壊してもよい。'
+  abilities:
+  - kind: static
+    affects: self
+    mod:
+      deny:
+      - attack_player
+      - attack_creature
+  - kind: replace
+    optional: true
+    when:
+      event: move
+      from: bz
+      subject:
+        owner: you
+        filter:
+          race_has: シノビ
+        other: true
+    instead:
+    - op: destroy
+      select:
+        zone: bz
+        owner: you
+        count: 1
+  source:
+    official: dm29-028
+    review: pending
+- id: dm26ex3-dcr004
+  name: 「修羅」の頂 VAN・ベートーベン
+  types:
+  - creature
+  civs:
+  - zero
+  cost: 11
+  power: 14000
+  races:
+  - キング・コマンド・ドラゴン
+  - アンノウン
+  - ゼニス
+  mana: 1
+  keywords:
+  - triple_breaker
+  - eternal_omega
+  text: 'T・ブレイカー
+
+    このクリーチャーが召喚によって出た時、相手のクリーチャーをすべて持ち主の手札に戻す。
+
+    相手の、コマンドまたはドラゴンのクリーチャーが出る時、かわりに墓地に置く。
+
+    エターナル・Ω'
+  abilities:
+  - kind: trigger
+    when:
+      event: move
+      to: bz
+      subject: self
+      reason: summon
+    effect:
+    - op: bounce
+      select:
+        zone: bz
+        owner: opp
+        filter:
+          types:
+          - creature
+        count: all
+  - kind: replace
+    when:
+      event: move
+      to: bz
+      subject:
+        owner: opp
+        filter:
+          types:
+          - creature
+          any_of:
+          - race_has: コマンド
+          - race_has: ドラゴン
+    instead:
+    - op: move
+      select:
+        ref: subject
+        count: 1
+      to: graveyard
+      reason: put
+  source:
+    official: dm26ex3-dcr004
+    review: pending
+    aliases:
+    - dm23ex3-tr11
+    - dm26ex1-009
+    - dmart23-001
+    - dmbd06-006
+    - dmbd18-be07
+    - dmbd18-se03
+    - dmex12-s01
+    - dmx13-s02
+    - dmx22a-s01
+    - promoy18-062
+    - promoy18-065
+- id: dm25ex2-025
+  name: ブラック・ホーク
+  types:
+  - creature
+  civs:
+  - darkness
+  cost: 9
+  power: 13000
+  races:
+  - スプリガン
+  - マフィ・ギャング
+  mana: 1
+  keywords:
+  - triple_breaker
+  text: 'T・ブレイカー
+
+    各ターンの終わりに、各プレイヤーは自身の手札をすべて捨てる。
+
+    自分のターン中、自分の墓地からクリーチャーを召喚してもよい。
+
+    自分のクリーチャーが離れる時、かわりに山札の下に置く。'
+  abilities:
+  - kind: trigger
+    when:
+      event: turn_end
+    effect:
+    - op: discard
+      select:
+        zone: hand
+        owner: you
+        count: all
+    - op: discard
+      select:
+        zone: hand
+        owner: opp
+        count: all
+  - kind: static
+    affects:
+      zone: graveyard
+      owner: you
+      filter:
+        types:
+        - creature
+    if:
+      is_turn: you
+    mod:
+      allow:
+      - summon_from_graveyard
+  - kind: replace
+    when:
+      event: move
+      from: bz
+      subject:
+        owner: you
+        filter:
+          types:
+          - creature
+    instead:
+    - op: move
+      select:
+        ref: subject
+        count: 1
+      to: deck
+      position: bottom
+      reason: put
+  source:
+    official: dm25ex2-025
+    review: pending
+- id: dm36-031
+  name: ダブル・リボルバードラゴン
+  types:
+  - creature
+  civs:
+  - fire
+  cost: 6
+  power: 7000
+  races:
+  - アーマード・ドラゴン
+  mana: 1
+  keywords:
+  - double_breaker
+  text: 'W・ブレイカー(このクリーチャーはシールドを２枚ブレイクする)
+
+    自分のターン中に、このクリーチャーがタップされていた場合、相手のクリーチャーがバトルゾーンに出る時、そのクリーチャーはバトルゾーンに出るかわりに持ち主の墓地に置かれる。'
+  abilities:
+  - kind: replace
+    when:
+      event: move
+      to: bz
+      subject:
+        owner: opp
+        filter:
+          types:
+          - creature
+    if:
+      all:
+      - is_turn: you
+      - exists:
+          ref: self
+          filter:
+            tapped: true
+    instead:
+    - op: move
+      select:
+        ref: subject
+        count: 1
+      to: graveyard
+      reason: put
+  source:
+    official: dm36-031
+    review: pending
+- id: dm26rp2-std005
+  name: 「鎮魂」の頂 ベートーベン・ソレムニス
+  types:
+  - creature
+  civs:
+  - darkness
+  - fire
+  - nature
+  cost: 10
+  power: 17000
+  races:
+  - キング・コマンド・ドラゴン
+  - アンノウン
+  - ゼニス
+  mana: 1
+  keywords:
+  - speed_attacker
+  - triple_breaker
+  text: 'スピードアタッカー
+
+    T・ブレイカー
+
+    このクリーチャーが出た時、相手のドラゴンをすべて破壊する。こうして破壊したドラゴン１つにつき、相手のシールドを１つ、持ち主の墓地に置く。
+
+    相手がドラゴンを出す時、相手はかわりにそれを墓地に置く。'
+  abilities:
+  - kind: trigger
+    when:
+      event: move
+      to: bz
+      subject: self
+    effect:
+    - op: move
+      select:
+        zone: bz
+        owner: opp
+        filter:
+          types:
+          - creature
+          race_has: ドラゴン
+        count: all
+      to: graveyard
+      reason: destroy
+      as: killed
+    - op: move
+      select:
+        zone: shield
+        owner: opp
+        count:
+          var: killed
+      to: graveyard
+      reason: put
+  - kind: replace
+    when:
+      event: move
+      to: bz
+      subject:
+        owner: opp
+        filter:
+          types:
+          - creature
+          race_has: ドラゴン
+    instead:
+    - op: move
+      select:
+        ref: subject
+        count: 1
+      to: graveyard
+      reason: put
+  source:
+    official: dm26rp2-std005
+    review: pending
+    aliases:
+    - dm22ex2-7a
+    - dm22ex2-7b
+    - dm22ex2-s13
+    - dm23ex3-tf07
+    - dm26rp2-stdchosec005
+    - dm26rp2-stdsec005
+- id: dmr10-009
+  name: 純潔の信者 パーフェクト・リリィ
+  types:
+  - creature
+  civs:
+  - light
+  cost: 5
+  power: 2500
+  races:
+  - オラクル
+  - メカ・デル・ソル
+  mana: 1
+  text: このクリーチャーが攻撃する時、バトルゾーンにある相手のクリーチャーを１体選び、タップしてもよい。 / このクリーチャーがバトルゾーンを離れる時、そのパワーが０より大きければ、離れるかわりにとどまる。
+  abilities:
+  - kind: trigger
+    when:
+      event: attack
+      subject: self
+    effect:
+    - op: may
+      body:
+      - op: tap
+        select:
+          zone: bz
+          owner: opp
+          filter:
+            types:
+            - creature
+          count: 1
+  - kind: replace
+    when:
+      event: move
+      from: bz
+      subject: self
+    if:
+      exists:
+        ref: self
+        filter:
+          power_ge: 1
+    instead: []
+  source:
+    official: dmr10-009
+    review: pending
+    aliases:
+    - dmr10-009m
+- id: dmr15-008
+  name: 純潔の翼 メダロス
+  types:
+  - creature
+  civs:
+  - light
+  cost: 2
+  power: 2000
+  races:
+  - ジャスティス・ウイング
+  mana: 1
+  text: マナ武装 ３：このクリーチャーが攻撃する時、自分のマナゾーンに光のカードが３枚以上あれば、バトルゾーンにある相手のクリーチャーを１体選び、タップしてもよい。
+    / マナ武装 ５：このクリーチャーがバトルゾーンを離れる時、そのパワーが０より大きく、自分のマナゾーンに光のカードが５枚以上あれば、このクリーチャーはバトルゾーンを離れるかわりにとどまる。
+  abilities:
+  - kind: trigger
+    when:
+      event: attack
+      subject: self
+    if:
+      cmp:
+      - count:
+          zone: mana
+          owner: you
+          filter:
+            civs:
+            - light
+      - '>='
+      - 3
+    effect:
+    - op: may
+      body:
+      - op: tap
+        select:
+          zone: bz
+          owner: opp
+          filter:
+            types:
+            - creature
+          count: 1
+  - kind: replace
+    when:
+      event: move
+      from: bz
+      subject: self
+    if:
+      all:
+      - exists:
+          ref: self
+          filter:
+            power_ge: 1
+      - cmp:
+        - count:
+            zone: mana
+            owner: you
+            filter:
+              civs:
+              - light
+        - '>='
+        - 5
+    instead: []
+  source:
+    official: dmr15-008
+    review: pending
+    aliases:
+    - promoy13-063
+- id: dmr21-001
+  name: 光器 パーフェクト・マリア
+  types:
+  - creature
+  civs:
+  - light
+  cost: 7
+  power: 7000
+  races:
+  - メカ・デル・ソル
+  mana: 1
+  keywords:
+  - blocker
+  - double_breaker
+  text: ブロッカーW・ブレイカーこのクリーチャーが攻撃する時、光以外のクリーチャーをすべてタップする。このクリーチャーがバトルゾーンを離れる時にアンタップしていたら、離れるかわりにとどまる。
+  abilities:
+  - kind: trigger
+    when:
+      event: attack
+      subject: self
+    effect:
+    - op: tap
+      select:
+        zone: bz
+        owner: any
+        filter:
+          types:
+          - creature
+          not_civs:
+          - light
+        count: all
+  - kind: replace
+    when:
+      event: move
+      from: bz
+      subject: self
+    if:
+      exists:
+        ref: self
+        filter:
+          tapped: false
+    instead: []
+  source:
+    official: dmr21-001
+    review: pending
+- id: dmx19-s09
+  name: 高貴の精霊龍 プレミアム・マドンナ
+  types:
+  - creature
+  civs:
+  - light
+  cost: 7
+  power: 7500
+  races:
+  - エンジェル・コマンド・ドラゴン
+  mana: 1
+  keywords:
+  - blocker
+  - double_breaker
+  text: ブロッカーW・ブレイカー相手のターン中にこのクリーチャーがバトルゾーンを離れる時、そのパワーが０より大きければ、離れるかわりにバトルゾーンにとどまる。
+  abilities:
+  - kind: replace
+    when:
+      event: move
+      from: bz
+      subject: self
+    if:
+      all:
+      - is_turn: opp
+      - exists:
+          ref: self
+          filter:
+            power_ge: 1
+    instead: []
+  source:
+    official: dmx19-s09
+    review: pending
+- id: dmr19-s02
+  name: 侵略者 フェイスレス
+  types:
+  - creature
+  civs:
+  - light
+  cost: 6
+  power: 6500
+  races:
+  - エンジェル・コマンド
+  - 侵略者
+  mana: 1
+  keywords:
+  - double_breaker
+  text: W・ブレイカー自分のターン中に自分のクリーチャーがバトルゾーンを離れる時、そのクリーチャーのパワーが０より大きく、相手のシールドが２つ以下なら、離れるかわりにとどまる。
+  abilities:
+  - kind: replace
+    when:
+      event: move
+      from: bz
+      subject:
+        owner: you
+        filter:
+          types:
+          - creature
+    if:
+      all:
+      - is_turn: you
+      - exists:
+          ref: subject
+          filter:
+            power_ge: 1
+      - cmp:
+        - count:
+            zone: shield
+            owner: opp
+        - <=
+        - 2
+    instead: []
+  source:
+    official: dmr19-s02
+    review: pending
+- id: dmr12-s01
+  name: 新聖綺神 クロスオーバー・ヨミ
+  types:
+  - creature
+  civs:
+  - zero
+  cost: 9
+  power: 12000
+  races:
+  - オラクリオン
+  mana: 1
+  keywords:
+  - blocker
+  - triple_breaker
+  text: ブロッカー　T・ブレイカーバトルゾーンにある自分のクリーチャーがこのクリーチャーだけであれば、このクリーチャーはブロックされず、バトルゾーンを離れる時、離れるかわりにとどまる。自分のターンの終わりに、このクリーチャーをアンタップする。
+  abilities:
+  - kind: static
+    affects: self
+    if:
+      cmp:
+      - count:
+          zone: bz
+          owner: you
+          filter:
+            types:
+            - creature
+      - ==
+      - 1
+    mod:
+      deny:
+      - be_blocked
+  - kind: replace
+    when:
+      event: move
+      from: bz
+      subject: self
+    if:
+      cmp:
+      - count:
+          zone: bz
+          owner: you
+          filter:
+            types:
+            - creature
+      - ==
+      - 1
+    instead: []
+  - kind: trigger
+    when:
+      event: turn_end
+      player: you
+    effect:
+    - op: untap
+      select:
+        ref: self
+  source:
+    official: dmr12-s01
+    review: pending
+- id: dmr14-s03
+  name: 暴君の悪魔龍 デストロキール
+  types:
+  - creature
+  civs:
+  - darkness
+  cost: 9
+  power: 12000
+  races:
+  - デーモン・コマンド・ドラゴン
+  mana: 1
+  keywords:
+  - triple_breaker
+  text: このクリーチャーをバトルゾーンに出した時またはこのクリーチャーが攻撃する時、闇のクリーチャーを１体、自分の墓地から手札に戻してもよい。そうした場合、相手のクリーチャーを１体破壊する。
+    / T・ブレイカー / このクリーチャーがバトルゾーンを離れる時、バトルゾーンに自分のクリーチャーが他に１体もなければ、かわりにクリーチャーを２体、自分の手札から捨ててもよい。
+  abilities:
+  - kind: trigger
+    when:
+      event: move
+      to: bz
+      subject: self
+    effect:
+    - op: may
+      body:
+      - op: move
+        select:
+          zone: graveyard
+          owner: you
+          filter:
+            types:
+            - creature
+            civs:
+            - darkness
+          count: 1
+        to: hand
+        reason: return
+        as: paid
+      - op: if
+        cond:
+          exists:
+            ref: paid
+        then:
+        - op: destroy
+          select:
+            zone: bz
+            owner: opp
+            filter:
+              types:
+              - creature
+            count: 1
+  - kind: trigger
+    when:
+      event: attack
+      subject: self
+    effect:
+    - op: may
+      body:
+      - op: move
+        select:
+          zone: graveyard
+          owner: you
+          filter:
+            types:
+            - creature
+            civs:
+            - darkness
+          count: 1
+        to: hand
+        reason: return
+        as: paid
+      - op: if
+        cond:
+          exists:
+            ref: paid
+        then:
+        - op: destroy
+          select:
+            zone: bz
+            owner: opp
+            filter:
+              types:
+              - creature
+            count: 1
+  - kind: replace
+    optional: true
+    when:
+      event: move
+      from: bz
+      subject: self
+    if:
+      cmp:
+      - count:
+          zone: bz
+          owner: you
+          other: true
+          filter:
+            types:
+            - creature
+      - ==
+      - 0
+    instead:
+    - op: discard
+      select:
+        zone: hand
+        owner: you
+        filter:
+          types:
+          - creature
+        count: 2
+  source:
+    official: dmr14-s03
+    review: pending
+- id: dmr16g-s01
+  name: 罪英雄 クロノパギャラ
+  types:
+  - creature
+  civs:
+  - darkness
+  cost: 7
+  power: 9000
+  races:
+  - デーモン・コマンド・ドラゴン
+  mana: 1
+  keywords:
+  - blocker
+  - double_breaker
+  text: ブロッカー相手のターンのはじめに、バトルゾーンにある相手のクリーチャーを１体選ぶ。そのクリーチャーは、そのターン、可能であれば攻撃する。W・ブレイカーマナ武装
+    ７：このクリーチャーがバトルゾーンを離れる時、自分のマナゾーンに闇のカードが７枚以上あれば、離れるかわりにカードを５枚、自分の墓地から山札の一番下に置いてもよい。
+  abilities:
+  - kind: trigger
+    when:
+      event: turn_start
+      player: opp
+    effect:
+    - op: choose
+      select:
+        zone: bz
+        owner: opp
+        filter:
+          types:
+          - creature
+        count: 1
+      as: forced
+    - op: modify
+      select:
+        ref: forced
+      mod:
+        require:
+        - attack
+      duration: end_of_turn
+  - kind: replace
+    optional: true
+    when:
+      event: move
+      from: bz
+      subject: self
+    if:
+      cmp:
+      - count:
+          zone: mana
+          owner: you
+          filter:
+            civs:
+            - darkness
+      - '>='
+      - 7
+    instead:
+    - op: move
+      select:
+        zone: graveyard
+        owner: you
+        count: 5
+      to: deck
+      position: bottom
+      reason: put
+  source:
+    official: dmr16g-s01
+    review: pending
+- id: dmrp08-027
+  name: アークティック・ハッチャー
+  types:
+  - creature
+  civs:
+  - nature
+  cost: 4
+  power: 8000
+  races:
+  - グランセクト
+  mana: 1
+  keywords:
+  - guardman
+  - cannot_attack_player
+  text: 'ガードマン（このクリーチャーをタップして、相手クリーチャーの攻撃先を、自分の他のクリーチャーからこのクリーチャーに変更してもよい）
+
+    このクリーチャーは、相手プレイヤーを攻撃できない。
+
+    自分の他のグランセクトがバトルゾーンを離れる時、かわりにこのクリーチャーをタップしてもよい。'
+  abilities:
+  - kind: replace
+    optional: true
+    when:
+      event: move
+      from: bz
+      subject:
+        owner: you
+        filter:
+          race_has: グランセクト
+        other: true
+    instead:
+    - op: tap
+      select:
+        ref: self
+  source:
+    official: dmrp08-027
+    review: pending
+- id: dmx22b-118
+  name: 聖鎧亜キング・アルカディアス
+  types:
+  - creature
+  - evolution
+  civs:
+  - light
+  - darkness
+  cost: 7
+  power: 9000
+  races:
+  - エンジェル・コマンド
+  - ロスト・クルセイダー
+  mana: 1
+  keywords:
+  - double_breaker
+  evolve_from:
+    multicolor: true
+  text: 進化：自分の多色クリーチャー１体の上に置く。 / Ｗ・ブレイカー / 相手の、多色ではないクリーチャーがバトルゾーンに出る時、かわりに墓地に置かれる。
+  abilities:
+  - kind: replace
+    when:
+      event: move
+      to: bz
+      subject:
+        owner: opp
+        filter:
+          types:
+          - creature
+          multicolor: false
+    instead:
+    - op: move
+      select:
+        ref: subject
+        count: 1
+      to: graveyard
+      reason: put
+  source:
+    official: dmx22b-118
+    review: pending
+    aliases:
+    - 26-s003
+    - dm26-s03
+    - dmc46-020
+- id: promoy9-040
+  name: 爆竜パーフェクトストーム・XX
+  types:
+  - creature
+  civs:
+  - fire
+  cost: 6
+  power: 6000
+  races:
+  - アーマード・ドラゴン
+  - フレイム・コマンド
+  mana: 1
+  keywords:
+  - double_breaker
+  text: W・ブレイカー（このクリーチャーはシールドを２枚ブレイクする）このクリーチャーがバトルゾーンを離れる時、かわりに、名前に《超次元》とある呪文を１枚、自分の墓地から山札の一番下に置いてもよい。
+  abilities:
+  - kind: replace
+    optional: true
+    when:
+      event: move
+      from: bz
+      subject: self
+    instead:
+    - op: move
+      select:
+        zone: graveyard
+        owner: you
+        filter:
+          types:
+          - spell
+          name_has: 超次元
+        count: 1
+      to: deck
+      position: bottom
+      reason: put
+  source:
+    official: promoy9-040
+    review: pending
+- id: dmrp13-s03
+  name: 「非道」の鬼 ゴウケン齋
+  types:
+  - creature
+  civs:
+  - darkness
+  cost: 5
+  power: 6000
+  races:
+  - デモニオ
+  - 鬼札王国
+  mana: 1
+  keywords:
+  - double_breaker
+  text: 'W・ブレイカー
+
+    このクリーチャーがバトルゾーンを離れる時、かわりに自分の手札を１枚捨ててもよい。
+
+    鬼タイム ：自分と相手のシールドの数が合計６つ以下なら、相手のクリーチャーはタップしてバトルゾーンに出る。'
+  abilities:
+  - kind: replace
+    optional: true
+    when:
+      event: move
+      from: bz
+      subject: self
+    instead:
+    - op: discard
+      select:
+        zone: hand
+        owner: you
+        count: 1
+  - kind: static
+    affects:
+      zone: bz
+      owner: opp
+      filter:
+        types:
+        - creature
+    if:
+      cmp:
+      - sum:
+        - count:
+            zone: shield
+            owner: you
+        - count:
+            zone: shield
+            owner: opp
+      - <=
+      - 6
+    mod:
+      grant:
+      - enters_tapped
+  source:
+    official: dmrp13-s03
+    review: pending
