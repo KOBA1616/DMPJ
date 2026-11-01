@@ -1441,3 +1441,27 @@ cards:
         when: {event: move, from: bz, subject: {owner: you, filter: {types: [creature]}}}
         instead:
           - {op: move, select: {ref: subject, count: 1}, to: deck, position: bottom, reason: put}
+  - id: T109
+    name: 複合タップ獣
+    civs: [fire]
+    cost: 3
+    power: 2500
+    types: [creature]
+    text: このクリーチャーで攻撃するかわりに、このクリーチャーと自分のマナゾーンのタップされていないカードを２枚タップして、次の能力を使ってもよい。カードを１枚引く。
+    abilities:
+      - kind: activate
+        cost: {tap: self, tap_mana: 2}
+        effect:
+          - {op: draw, count: 1}
+  - id: T110
+    name: 単独タップ獣
+    civs: [nature]
+    cost: 3
+    power: 2000
+    types: [creature]
+    text: このクリーチャーで攻撃するかわりに、タップして次の能力を使ってもよい。カードを１枚引く。
+    abilities:
+      - kind: activate
+        cost: {tap: self}
+        effect:
+          - {op: draw, count: 1}
