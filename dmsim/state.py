@@ -48,6 +48,12 @@ class Card:
     no_untap_next: bool = False                       # フリーズ等: 次の持ち主のターン開始時にアンタップしない（1回だけ。開始時に消費）
     link: int = 0
     hyper: bool = False                                     # G・リンクのグループID（0=リンクしていない）。同じIDのカード同士がリンクしている
+    sst: bool = False                                       # スーパー・S・トリガー: シールド0枚で使った時に追加能力（sst印つき）を得た
+    stp: bool = False                                       # S・トリガー・プラス: 条件を満たして使った時に追加能力（stp印つき）を得た
+    odrive: bool = False                                    # O・ドライブ: 追加のマナタップをして召喚した
+    bazurenda: int = 0                                      # バズレンダ: 追加で支払った回数
+    drawn_turn: int = -1                                    # このターンにドローしたか（ビビッドロー）
+    vivid: bool = False                                     # ビビッドロー: 表向きにした
 
 
 def _jcopy(v):

@@ -83,10 +83,51 @@ class TurnMixin:
                         opt["face"] = fi
                     out.append(opt)
             for fi, f in ([(None, d)] if not d.faces else list(enumerate(d.faces))):
+                ac = f.alt_cost   # 代替コスト: 別額を払う / 行動で払う
+                if ac:
+                    ok = bool(self._mana_choices(cid, p, fi, cost=ac["cost"], limit=1, civs=ac.get("civs"))) if "cost" in ac else \
+                        all(sum(1 for c in self.zlist(st["zone"], p) if self.filter_match(c, st.get("filter", {}))) >= st["count"]
+                            for st in ac["do"])
+                    if ok:
+                        opt = {"key": f"{o['key']}:alt" if fi is None else f"{o['key']}:{fi}:alt",
+                               "cid": cid, "name": f.name, "alt": True}
+                        if fi is not None:
+                            opt["face"] = fi
+                        out.append(opt)
+                vd = f.vividraw   # ビビッドロー: 表向きにしたカードは代替コストで実行できる
+                if vd and self.s.cards[cid].vivid and self._mana_choices(cid, p, fi, cost=vd["cost"], limit=1, civs=vd["civs"]):
+                    opt = {"key": f"{o['key']}:vivid" if fi is None else f"{o['key']}:{fi}:vivid",
+                           "cid": cid, "name": f.name, "vivid": True}
+                    if fi is not None:
+                        opt["face"] = fi
+                    out.append(opt)
                 gs = f.galaxy_shield   # ギャラクシールド: 代替コストで表向きにシールド化する選択肢
                 if gs and self._mana_choices(cid, p, fi, cost=gs["cost"], limit=1, civs=gs["civs"]):
                     opt = {"key": f"{o['key']}:gshield" if fi is None else f"{o['key']}:{fi}:gshield", "cid": cid,
                            "name": f.name, "gshield": True}
+                    if fi is not None:
+                        opt["face"] = fi
+                    out.append(opt)
+            for fi, f in ([(None, d)] if not d.faces else list(enumerate(d.faces))):
+                mc = f.mugen_climb   # ムゲンクライム: 自分のクリーチャーをタップし代替コストを払って手札/墓地から実行
+                if mc and self._climb_ready(cid, p, fi, mc):
+                    opt = {"key": f"{o['key']}:climb" if fi is None else f"{o['key']}:{fi}:climb", "cid": cid,
+                           "name": f.name, "climb": True}
+                    if fi is not None:
+                        opt["face"] = fi
+                    out.append(opt)
+        seen_mc = set()   # ムゲンクライム: 墓地からも実行できる
+        for cid in self.zlist("graveyard", p):
+            dn = self.s.cards[cid].defn
+            if dn in seen_mc:
+                continue
+            d = self.cdef(cid)
+            for fi, f in ([(None, d)] if not d.faces else list(enumerate(d.faces))):
+                mc = f.mugen_climb
+                if mc and self._climb_ready(cid, p, fi, mc):
+                    seen_mc.add(dn)
+                    opt = {"key": f"play:{dn}:climb" if fi is None else f"play:{dn}:{fi}:climb",
+                           "cid": cid, "name": f.name, "climb": True}
                     if fi is not None:
                         opt["face"] = fi
                     out.append(opt)
@@ -104,7 +145,52 @@ class TurnMixin:
                     if fi is not None:
                         opt["face"] = fi
                     out.append(opt)
+        seen_f = set()   # フシギバース: 墓地から、自分のクリーチャー1体をマナに置いて差額で召喚
+        for cid in self.zlist("graveyard", p):
+            dn = self.s.cards[cid].defn
+            if dn in seen_f:
+                continue
+            d = self.cdef(cid)
+            for fi, f in ([(None, d)] if not d.faces else list(enumerate(d.faces))):
+                fg = f.fushigi
+                if not fg:
+                    continue
+                bases = [c for c in self.bz_tops(p) if not self.s.cards[c].tapped]
+                if not bases:
+                    continue
+                cheapest = max(fg.get("min", 1), fg["cost"] - max(self.chars(b)["cost"] for b in bases))
+                if self._mana_choices(cid, p, fi, cost=cheapest, limit=1, civs=fg["civs"]):
+                    seen_f.add(dn)
+                    opt = {"key": f"play:{dn}:fushigi" if fi is None else f"play:{dn}:{fi}:fushigi",
+                           "cid": cid, "name": f.name, "fushigi": True}
+                    if fi is not None:
+                        opt["face"] = fi
+                    out.append(opt)
+        seen_m = set()   # マナゾーンから召喚できるカードも選択肢に出す（通常コスト）
+        for cid in self.zlist("mana", p):
+            dn = self.s.cards[cid].defn
+            if dn in seen_m or not self.permits(cid, "summon_from_mana"):
+                continue
+            seen_m.add(dn)
+            d = self.cdef(cid)
+            for fi, f in ([(None, d)] if not d.faces else list(enumerate(d.faces))):
+                if self._can_play_face(cid, p, fi):
+                    opt = {"key": f"play:{dn}:msum" if fi is None else f"play:{dn}:{fi}:msum",
+                           "cid": cid, "name": f.name, "rush": True}
+                    if fi is not None:
+                        opt["face"] = fi
+                    out.append(opt)
         return out
+
+    def _climb_ready(self, cid, p, fi, mc) -> bool:
+        """ムゲンクライムの前提: 代替コストが払えて、タップできる自分のクリーチャーが足りる。"""
+        f = self.cdef(cid).face(fi)
+        action = "summon" if f.is_creature() else "generate" if f.is_permanent() else "cast"
+        if not self.permits(cid, action):
+            return False
+        pool = [c for c in self.bz_tops(p) if not self.s.cards[c].tapped
+                and "creature" in self.chars(c)["types"]]
+        return len(pool) >= mc["tap"] and bool(self._mana_choices(cid, p, fi, cost=mc["cost"], limit=1, civs=mc["civs"]))
 
     def _cross_options(self, p) -> list[dict]:
         """メインステップに、バトルゾーンのクロスギアのマナコストをもう一度支払って自分のクリーチャーにクロスする（303.3b, 504.2）。
@@ -119,6 +205,20 @@ class TurnMixin:
             for c in self.bz_tops(p):
                 if "creature" in self.chars(c)["types"] and not (cur and cur == self.s.ref(c)):
                     out.append({"key": f"cross:{self.s.cards[g].defn}:{self.s.cards[c].defn}", "cid": g, "target": self.s.ref(c)})
+        return out
+
+    def _reveal_options(self, p: int) -> list[dict]:
+        """ビビッドロー: このターンにドローして、まだ攻撃していないなら表向きにできる。"""
+        s = self.s
+        if s.turn_counters.get("attacked"):
+            return []
+        out = []
+        for c in self.zlist("hand", p):
+            card = s.cards[c]
+            if card.vivid or card.drawn_turn != s.turn:
+                continue
+            if self.cdef(c).vividraw or any(f.vividraw for f in self.cdef(c).faces):
+                out.append({"key": f"reveal:{card.defn}", "cid": c, "reveal": True})
         return out
 
     def _hyper_options(self, p: int) -> list[dict]:
@@ -139,9 +239,14 @@ class TurnMixin:
         if not self.permits(cid, action) or (d.is_creature() and not self.permits(cid, "enter_bz")):
             return False
         if "evolution" in d.types:
-            srcs = self._evo_sources(cid, p, face)
-            if len(srcs) < d.evolve_count:
-                return False
+            if isinstance(d.evolve_from, list):   # 進化V: フィルタごとに進化元が要る
+                if not self._evo_v_ready(cid, p, face):
+                    return False
+                srcs = self._evo_sources(cid, p, face)
+            else:
+                srcs = self._evo_sources(cid, p, face)
+                if len(srcs) < d.evolve_count:
+                    return False
             n = len(srcs) if d.evolve_any else d.evolve_count           # 最も安い組合せで払えるか（112.2b）
             cost = max(0, d.cost - n * d.cost_reduce_per_evo) if d.cost_reduce_per_evo else None
             return bool(self._mana_choices(cid, p, face, cost=self._opt_reduced(cid, face, d, self._sac_reduced(d, self._tap_reduced(d, p, cost, None), self._sac_pool(d, p))), limit=1))
@@ -200,11 +305,32 @@ class TurnMixin:
         """適正な進化元（801.1a）。evolve_zone（既定は自分のバトルゾーン）のクリーチャーで
         evolve_from を満たすもの（超無限墓地進化は自分の墓地から選ぶ）。"""
         f = self.cdef(cid).face(face)
+        if isinstance(f.evolve_from, list):   # 進化V: どのフィルタか1つでも満たせば候補（選択は h_play がフィルタごとに進める）
+            pool = self._evo_pool(cid, p, face)
+            return [c for c in pool if any(self.filter_match(c, {k: v for k, v in ef.items() if k != "zone"})
+                                            for ef in f.evolve_from)]
         ef = {k: v for k, v in (f.evolve_from or {}).items() if k != "zone"} or {}
+        pool = self._evo_pool(cid, p, face)
+        return [c for c in pool if self.filter_match(c, ef)]
+
+    def _evo_pool(self, cid, p, face=None) -> list[int]:
+        f = self.cdef(cid).face(face)
         z = f.evolve_zone
         pool = self.bz_tops(p) if z == "bz" else self.zlist(z, p)
-        return [c for c in pool if ("creature" in self.chars(c)["types"] or self.permits(c, "evolve_base"))
-                and self.filter_match(c, ef)]
+        return [c for c in pool if ("creature" in self.chars(c)["types"] or self.permits(c, "evolve_base"))]
+
+    def _evo_v_ready(self, cid, p, face=None) -> bool:
+        """進化V: フィルタごとに別々の進化元が確保できるか（貪欲に照合）。"""
+        f = self.cdef(cid).face(face)
+        pool = self._evo_pool(cid, p, face)
+        used = set()
+        for ef in f.evolve_from:
+            ef = {k: v for k, v in ef.items() if k != "zone"}
+            hit = next((c for c in pool if c not in used and self.filter_match(c, ef)), None)
+            if hit is None:
+                return False
+            used.add(hit)
+        return True
 
     def _mana_choices(self, cid, p, face=None, cost: int | None = None, limit: int = 32, civs=None) -> list[list[int]]:
         """支払いに使うマナの組（112.2a）。文明は1文明につき別々の1枚で満たし、マナの数値の合計がコストに一致。
@@ -349,13 +475,15 @@ def st_charge(eng, t):                                  # 503
 @step("main")
 def st_main(eng, t):                                    # 504
     a = eng.s.active
-    opts = eng._play_options(a) + eng._cross_options(a) + eng._hyper_options(a) + [{"key": "pass"}]
+    opts = eng._play_options(a) + eng._cross_options(a) + eng._hyper_options(a) + eng._reveal_options(a) + [{"key": "pass"}]
     ans, d = eng.ask(t, a, "main", opts)
     if d:
         return d
     o = opts[ans[0]]
     if o["key"] == "pass":
         eng._step_done(t)
+    elif o.get("reveal"):   # ビビッドロー: 表向きにする（ステップは終わらない）
+        eng.s.cards[o["cid"]].vivid = True
     elif o.get("hyper_act"):
         eng._push({"t": "hyper", "cid": o["cid"], "player": a})
     elif o["key"].startswith("cross:"):
@@ -369,6 +497,23 @@ def st_main(eng, t):                                    # 504
             task["to_shield"] = True
             task["cost_override"] = fd.galaxy_shield["cost"]
             task["cost_civs"] = fd.galaxy_shield["civs"]
+        if o.get("climb"):
+            fd = eng.cdef(o["cid"]).face(o.get("face"))
+            task["climb"] = True
+            task["cost_override"] = fd.mugen_climb["cost"]
+            task["cost_civs"] = fd.mugen_climb["civs"]
+        if o.get("alt"):
+            fd = eng.cdef(o["cid"]).face(o.get("face"))
+            task["alt"] = True
+            if fd.alt_cost and "cost" in fd.alt_cost:
+                task["cost_override"] = fd.alt_cost["cost"]
+                task["cost_civs"] = fd.alt_cost.get("civs", fd.civs)
+        if o.get("vivid"):
+            fd = eng.cdef(o["cid"]).face(o.get("face"))
+            task["cost_override"] = fd.vividraw["cost"]
+            task["cost_civs"] = fd.vividraw["civs"]
+        if o.get("fushigi"):
+            task["fushigi"] = True
         if o.get("neo"):
             task["evo_mode"] = True
         eng._push(task)
@@ -416,6 +561,7 @@ def st_attack(eng, t):                                  # 505
         ab = dict(eng.abilities(o["cid"], "activate"))[o["ab"]]
         eng._push(eng._child(ab["effect"], {"you": a, "self": s.ref(o["cid"]), "vars": {}}))
     else:
+        s.turn_counters["attacked"] = True   # ビビッドロー: 「攻撃の前に」の判定
         eng._push({"t": "attack", "attacker": s.ref(o["cid"]), "target": o["target"], "phase": 0, "cp": True})
 
 
@@ -467,7 +613,71 @@ def h_play(eng, t):
     if not eng.permits(cid, action) or (d.is_creature() and not eng.permits(cid, "enter_bz")):
         eng._pop(t)
         return None
+    # スーパー・S・トリガー: シールドが1つもない時に使ったら追加能力を得る（印は移動後に付ける）
+    sst_bonus = bool(t.get("st") and "super_s_trigger" in eng.chars(cid, face)["keywords"]
+                     and not eng.zlist("shield", p))
+    # S・トリガー・プラス: 相手のターンで、そのターンに自分のシールドが2つ以上ブレイクされていれば追加能力を得る
+    stp_bonus = bool(t.get("st") and "s_trigger_plus" in eng.chars(cid, face)["keywords"]
+                     and s.active != p and s.turn_counters.get(f"broken:{p}", 0) >= 2)
+    if t.get("fushigi") and not t.get("fushigi_done"):   # フシギバース: 自分のクリーチャー1体をタップしてマナに置き、差額を払う
+        fg = d.fushigi
+        cands = [c for c in eng.bz_tops(p) if not s.cards[c].tapped]
+        if not cands:
+            eng._pop(t)
+            return None
+        ans, dd = eng.ask(t, p, "choose_cards", [eng._card_option(c) for c in cands], 1, 1)
+        if dd:
+            return dd
+        base = cands[ans[0]]
+        override = max(fg.get("min", 1), fg["cost"] - eng.chars(base)["cost"])
+        if not eng._mana_choices(cid, p, face, cost=override, limit=1, civs=fg["civs"]):
+            eng._pop(t)   # 差額が払えない組み合わせでは始められない
+            return None
+        t["cost_override"] = override
+        t["cost_civs"] = fg["civs"]
+        t["fushigi_done"] = True
+        eng._push(eng.ev_task([{"ev": "move", "subject": s.ref(base), "to": "mana", "reason": "charge",
+                                "tapped": True}]))
+        return None
+    ac = d.alt_cost
+    if t.get("alt") and ac and "do" in ac and not t.get("alt_done"):   # 代替コスト（行動形式）: 段階ごとに選んで支払う
+        step_i = t.get("alt_step", 0)
+        if step_i < len(ac["do"]):
+            st = ac["do"][step_i]
+            cands = [c for c in eng.zlist(st["zone"], p) if c != cid and eng.filter_match(c, st.get("filter", {}))]
+            if len(cands) < st["count"]:
+                eng._pop(t)
+                return None
+            ans, dd = eng.ask(t, p, "choose_cards", [eng._card_option(c) for c in cands], st["count"], st["count"])
+            if dd:
+                return dd
+            evs = [{"ev": "move", "subject": s.ref(cands[i]), "to": st["to"], "reason": st.get("reason", "pay")}
+                   for i in ans]
+            t["alt_step"] = step_i + 1
+            if evs:
+                eng._push(eng.ev_task(evs))
+            return None
+        t["alt_done"] = True
+        t["free"] = True        # コストは行動で払い切った
+        t["as_paid"] = True
     if ("evolution" in d.types or t.get("evo_mode")) and "evo" not in t:
+        face_def = eng.cdef(cid).face(face)
+        if isinstance(face_def.evolve_from, list):   # 進化V: フィルタごとに1体ずつ選ぶ
+            chosen = t.setdefault("evo_v", [])
+            if len(chosen) < len(face_def.evolve_from):
+                ef = {k: v for k, v in face_def.evolve_from[len(chosen)].items() if k != "zone"}
+                used = {r[0] for r in chosen}
+                cands = [c for c in eng._evo_pool(cid, p, face) if c not in used and eng.filter_match(c, ef)]
+                if not cands:
+                    eng._pop(t)
+                    return None
+                ans, dd = eng.ask(t, p, "choose_evo_source", [eng._card_option(c) for c in cands], 1, 1)
+                if dd:
+                    return dd
+                chosen.append(s.ref(cands[ans[0]]))
+                if len(chosen) == len(face_def.evolve_from):
+                    t["evo"] = list(chosen)
+                return None
         srcs = eng._evo_sources(cid, p, face)
         if len(srcs) < d.evolve_count:
             eng._pop(t)
@@ -501,6 +711,18 @@ def h_play(eng, t):
                 chosen.append(cands[ans[0]])
                 return None
         t["sac_done"] = True
+    if t.get("climb") and not t.get("climb_done"):   # ムゲンクライム: 自分のクリーチャーを指定数タップする
+        mc = d.mugen_climb
+        pool = [c for c in eng.bz_tops(p) if not s.cards[c].tapped and "creature" in eng.chars(c)["types"]]
+        if len(pool) < mc["tap"]:
+            eng._pop(t)
+            return None
+        ans, dd = eng.ask(t, p, "choose_cards", [eng._card_option(c) for c in pool], mc["tap"], mc["tap"])
+        if dd:
+            return dd
+        for i in ans:
+            s.cards[pool[i]].tapped = True
+        t["climb_done"] = True
     ch0 = eng.chars(cid, face)
     flag = f"last_play_creature:{p}"
     cyc = "cyclone" in ch0["keywords"] and bool(s.turn_counters.get(flag))   # サイクロン: 唱える直前に召喚していたか（直前の実行が召喚）
@@ -554,7 +776,7 @@ def h_play(eng, t):
                     s.turn_counters[f"cost_may:{e['src']}"] = 1
             i += 1
         t["cost_may_done"] = True
-    if not t["free"]:
+    if not t["free"] and not t.get("paid_done"):
         n = len(t.get("evo", []))
         cost = max(0, d.cost - n * d.cost_reduce_per_evo) if d.cost_reduce_per_evo else None
         cost = eng._sac_reduced(d, eng._tap_reduced(d, p, cost, t.get("tap", [])), t.get("sac", []))
@@ -575,9 +797,64 @@ def h_play(eng, t):
             return dd
         for c in opts[ans[0]]["cids"] + t.get("tap", []):
             s.cards[c].tapped = True
+        t["paid_done"] = True   # 後段（バズレンダ等）の決定で再入しても二重に支払わない
+    if d.bazurenda and not t["free"]:   # バズレンダ: 追加でこのコストを好きな回数支払ってもよい
+        while not t.get("bz_done"):
+            cnt = t.get("bz_count", 0)
+            if t.get("bz_yn_for") != cnt:
+                ans, dd = eng.ask(t, p, "yes_no", [{"key": "yes"}, {"key": "no"}], prompt="バズレンダ: 追加で支払う")
+                if dd:
+                    return dd
+                t["bz_yn_for"] = cnt
+                t["bz_pay"] = ans[0] == 0
+            if not t["bz_pay"]:
+                t["bz_done"] = True
+                break
+            if t.get("bz_paid_for") != cnt:
+                choices = eng._mana_choices(cid, p, face, cost=d.bazurenda["cost"],
+                                            civs=d.bazurenda.get("civs") or None)
+                if not choices:
+                    t["bz_done"] = True
+                    break
+                opts = [{"key": "mana:" + ",".join(sorted(s.cards[c].defn for c in ch)), "cids": ch} for ch in choices]
+                ans, dd = eng.ask(t, p, "pay_mana", opts)
+                if dd:
+                    return dd
+                for c in opts[ans[0]]["cids"]:
+                    s.cards[c].tapped = True
+                t["bz_paid_for"] = cnt
+            t["bz_count"] = cnt + 1
+    if d.o_drive and not t["free"] and not t.get("od_done"):   # O・ドライブ: 追加で指定文明のマナをタップしてもよい
+        if t.get("od_yn") is None:
+            pool = [c for c in eng.zlist("mana", p) if not s.cards[c].tapped
+                    and d.o_drive["civ"] in eng.chars(c)["civs"]]
+            if len(pool) < d.o_drive["count"]:
+                t["od_yn"] = False
+            else:
+                ans, dd = eng.ask(t, p, "yes_no", [{"key": "yes"}, {"key": "no"}], prompt="O・ドライブ: 追加でタップする")
+                if dd:
+                    return dd
+                t["od_yn"] = ans[0] == 0
+        if t.get("od_yn"):
+            pool = [c for c in eng.zlist("mana", p) if not s.cards[c].tapped
+                    and d.o_drive["civ"] in eng.chars(c)["civs"]]
+            ans, dd = eng.ask(t, p, "choose_cards", [eng._card_option(c) for c in pool],
+                              d.o_drive["count"], d.o_drive["count"])
+            if dd:
+                return dd
+            for i in ans:
+                s.cards[pool[i]].tapped = True
+            t["odrive"] = True
+        t["od_done"] = True
     eng._pop(t)
     from_zone = s.cards[cid].zone
     eng._to_hold(cid)
+    if sst_bonus:
+        s.cards[cid].sst = True
+    if stp_bonus:
+        s.cards[cid].stp = True
+    if d.bazurenda:
+        s.cards[cid].bazurenda = t.get("bz_count", 0)
     if face is not None:
         s.cards[cid].face = face
     ref = s.ref(cid)
@@ -588,20 +865,40 @@ def h_play(eng, t):
     if d.is_creature():
         ev = {"ev": "move", "subject": ref, "from": from_zone, "to": "bz", "reason": "summon", "controller": p,
               "unpaid": bool(t["free"]) and not t.get("as_paid")}
+        if sst_bonus:
+            ev["sst"] = True
+        if stp_bonus:
+            ev["stp"] = True
+        if t.get("odrive"):
+            ev["odrive"] = True
+        if t.get("alt"):
+            ev["alt"] = True
+        if d.bazurenda:
+            ev["bazurenda"] = t.get("bz_count", 0)
         if t.get("evo"):
             ev["stack_on"] = t["evo"][0]
             if len(t["evo"]) > 1:
                 ev["stack_more"] = t["evo"][1:]
         eng._push(eng.ev_task(ev))
     elif d.is_permanent():      # タマシード・フィールド・クロスギア: 実行（展開・ジェネレート）したらバトルゾーンに出る（315.2, 308.2, 303.2）
-        eng._push(eng.ev_task({"ev": "move", "subject": ref, "from": from_zone, "to": "bz", "reason": "put",
-                               "controller": p, "via": "generate", "unpaid": bool(t["free"])}))
+        ev = {"ev": "move", "subject": ref, "from": from_zone, "to": "bz", "reason": "put",
+              "controller": p, "via": "generate", "unpaid": bool(t["free"])}
+        if sst_bonus:
+            ev["sst"] = True
+        if d.bazurenda:
+            ev["bazurenda"] = t.get("bz_count", 0)
+        eng._push(eng.ev_task(ev))
     else:   # 呪文: 唱えた → 書かれた順に解決 → 最終段階として墓地へ（605.2f）
         env = {"you": p, "self": ref, "vars": {}}
         if t.get("st"):
             env["in_st"] = True
+        if t.get("alt"):
+            env["alt_paid"] = True
+        spell_ops = list(d.spell) + (list(d.sst_spell) if s.cards[cid].sst else []) \
+            + (list(d.stp_spell) if s.cards[cid].stp else [])
+        reps = 1 + (s.cards[cid].bazurenda if d.bazurenda else 0)   # バズレンダ呪文は能力を1+追加回数使う
         eng._push(eng.ev_task({"ev": "cast", "player": p, "subject": ref, "unpaid": bool(t["free"])}),
-                   eng._child(d.spell, env),
+                   *([eng._child(spell_ops, env)] * reps),
                    eng.ev_task({"ev": "move", "subject": ref, "from": from_zone, "to": t.get("resolve_to", "hand" if cyc else d.resolve_to),
                                  "reason": "resolve", "position": t.get("resolve_position", "top")}),
                    *([eng._child(d.after_resolve, env)] if d.after_resolve else []))

@@ -118,13 +118,15 @@ def op_flip_down(eng, t, op, env):
     return None
 
 
-@op("may", body="ops", label="str?")
+@op("may", body="ops", label="str?", **{"else": "ops?"})
 def op_may(eng, t, op, env):
     a, d = eng.ask(t, env["you"], "yes_no", [{"key": "yes"}, {"key": "no"}], prompt=op.get("label", ""))
     if d:
         return d
     if a[0] == 0:
         eng._defer(t, [eng._child(op["body"], env)])
+    elif op.get("else"):   # 「そうしなければ」（アバレチェーンなど）
+        eng._defer(t, [eng._child(op["else"], env)])
     return None
 
 
@@ -331,19 +333,150 @@ def op_mekurade(eng, t, op, env):
     return None
 
 
-@op("cast_face", face="int")
+@op("janken", win="ops?", lose="ops?", draw="ops?")
+def op_janken(eng, t, op, env):
+    """ジャンケン: 両プレイヤーが グー/チョキ/パー を選び、勝敗で分岐する。"""
+    if "jk" not in t["os"]:
+        a, d = eng.ask(t, env["you"], "choose_one",
+                       [{"key": "rock", "name": "グー"}, {"key": "scissors", "name": "チョキ"}, {"key": "paper", "name": "パー"}])
+        if d:
+            return d
+        t["os"]["jk"] = a[0]
+        return None
+    a, d = eng.ask(t, 1 - env["you"], "choose_one",
+                   [{"key": "rock", "name": "グー"}, {"key": "scissors", "name": "チョキ"}, {"key": "paper", "name": "パー"}])
+    if d:
+        return d
+    me, op_hand = t["os"].pop("jk"), a[0]   # 0=グー, 1=チョキ, 2=パー
+    if me == op_hand:
+        branch = op.get("draw")
+    elif (me - op_hand) % 3 == 2:   # グー>チョキ, チョキ>パー, パー>グー
+        branch = op.get("win")
+    else:
+        branch = op.get("lose")
+    if branch:
+        eng._defer(t, [eng._child(branch, env)])
+    return None
+
+
+@op("shield_plus")
+def op_shield_plus(eng, t, op, env):
+    """シールド・プラス: 自分の山札の上から1枚を、自分のシールド1つの下に置く（束は1つと数える）。"""
+    s = eng.s
+    p = env["you"]
+    shields = eng.zlist("shield", p)
+    deck = s.zones["deck"][p]
+    if not shields or not deck:
+        return None
+    a, d = eng.ask(t, p, "choose_cards", [eng._card_option(c) for c in shields], 1, 1)
+    if d:
+        return d
+    target = shields[a[0]]
+    tucked = deck[0]
+    eng._raw_move(tucked, "shield")
+    lst = s.zones["shield"][p if not eng.zshared("shield") else 0]
+    if tucked in lst:
+        lst.remove(tucked)   # 束の下のカードはゾーンの並びに入らない（113.2）
+    s.cards[target].under.append(tucked)
+    s.cards[tucked].top_of = target
+    return None
+
+
+@op("opp_may", body="ops", label="str?")
+def op_opp_may(eng, t, op, env):
+    """「相手は〜してもよい」: 相手が yes/no を選び、yes なら body を相手の視点で実行する。"""
+    opp = 1 - env["you"]
+    a, d = eng.ask(t, opp, "yes_no", [{"key": "yes"}, {"key": "no"}], prompt=op.get("label", ""))
+    if d:
+        return d
+    if a[0] == 0:
+        env2 = dict(env)
+        env2["you"] = opp
+        eng._defer(t, [eng._child(op["body"], env2)])
+    return None
+
+
+@op("yobinion")
+def op_yobinion(eng, t, op, env):
+    """ヨビニオン: 自分の山札の上から、これ（発生源）よりコストが小さいクリーチャーが出るまで
+    表向きにする。そのクリーチャーを出す。残りはシャッフルし、山札の下に置く。"""
+    from ..state import rng_below
+    s = eng.s
+    p = env["you"]
+    threshold = eng.chars(env["self"][0])["cost"]
+    revealed, found = [], None
+    for c in list(s.zones["deck"][p]):
+        revealed.append(c)
+        ch = eng.chars(c)
+        if "creature" in ch["types"] and ch["cost"] < threshold:
+            found = c
+            break
+    rest = [c for c in revealed if c != found]
+    for i in range(len(rest) - 1, 0, -1):   # 残りをシャッフル（Fisher-Yates）
+        j = rng_below(s, i + 1)
+        rest[i], rest[j] = rest[j], rest[i]
+    for c in rest:
+        eng._raw_move(c, "deck", "bottom")
+    if found is not None:
+        eng._defer(t, [eng.ev_task({"ev": "move", "subject": s.ref(found), "to": "bz",
+                                     "reason": "put", "controller": p}, env)])
+    return None
+
+
+@op("gachinko", times="expr?", until_lose="bool?", stoppable="bool?", **{"as": "str?"})
+def op_gachinko(eng, t, op, env):
+    """ガチンコ・ジャッジ: 各プレイヤーは自身の山札の上から1枚を見せ、それを一番下に置く。
+    そのカードのコストが相手以上であれば自分の勝ち。times 回（式可）繰り返すか、
+    until_lose（自分が負けるまで）/ stoppable（自分が中止するまで）の組み合わせ。
+    勝った回数を env の変数（既定 wins）に書き、後続の op が {var: wins} で参照する。"""
+    s = eng.s
+    me, opp = env["you"], 1 - env["you"]
+    os_ = t.setdefault("os", {})
+    st = os_.setdefault("gj", {"done": 0, "wins": 0, "stopped": False})
+    times = eng.eval_expr(op["times"], env) if "times" in op else None
+    while not st["stopped"] and (times is None or st["done"] < times):
+        if op.get("stoppable") and st.get("stop_for") != st["done"]:
+            ans, d = eng.ask(t, me, "yes_no", [{"key": "yes"}, {"key": "no"}], prompt="ガチンコ・ジャッジを続ける")
+            if d:
+                return d
+            st["stop_for"] = st["done"]
+            if ans[0] == 1:
+                st["stopped"] = True
+                break
+        mine, theirs = s.zones["deck"][me], s.zones["deck"][opp]
+        if not mine or not theirs:
+            break
+        a, b = mine[0], theirs[0]
+        win = eng.chars(a)["cost"] >= eng.chars(b)["cost"]
+        eng._raw_move(a, "deck", "bottom")
+        eng._raw_move(b, "deck", "bottom")
+        st["done"] += 1
+        if win:
+            st["wins"] += 1
+        elif op.get("until_lose"):
+            break
+    env.setdefault("vars", {})[op.get("as", "wins")] = st["wins"]
+    return None
+
+
+@op("cast_face", face="expr")
 def op_cast_face(eng, t, op, env):
     """ツインパクトの呪文面を、カードをバトルゾーンに置いたまま唱える（スマッシュ・バースト）。
     唱えたことにはなる（cast イベント、コストは支払わない）が、カード自体は動かず、
-    解決後に墓地へも行かない。"""
+    解決後に墓地へも行かない。face: "spell" なら呪文面を探す（ラスト・バースト）。"""
     s = eng.s
     if not s.alive(env["self"]):
         return
     cid = env["self"][0]
     d = eng.cdef(cid)
-    if op["face"] >= len(d.faces):
+    fi = op["face"]
+    if fi == -1:   # 呪文面を探す（ラスト・バースト）
+        fi = next((i for i, f in enumerate(d.faces) if f.spell), None)
+        if fi is None:
+            return
+    if fi >= len(d.faces):
         return
-    f = d.faces[op["face"]]
+    f = d.faces[fi]
     ref = s.ref(cid)
     tasks = [eng.ev_task({"ev": "cast", "player": env["you"], "subject": ref, "unpaid": True}),
              eng._child(f.spell, {"you": env["you"], "self": ref, "vars": dict(env.get("vars", {}))})]

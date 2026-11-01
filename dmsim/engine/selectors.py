@@ -20,7 +20,8 @@ class SelectorMixin:
                     lst = [c for c in lst if c != env["self"][0]]
                 return len(lst)
             if "var" in x:
-                return len(env.get("vars", {}).get(x["var"], []))
+                v = env.get("vars", {}).get(x["var"], [])
+                return v if isinstance(v, int) else len(v)   # 数を数えた変数（ガチンコの勝ち数など）はそのまま
             if "cost_of" in x:   # 変数に束縛したカード（複数なら最大）のコスト
                 ids = env.get("vars", {}).get(x["cost_of"], [])
                 return max((self.chars(c[0])["cost"] for c in ids), default=0)
@@ -61,6 +62,9 @@ class SelectorMixin:
             return bool(env.get("self")) and self.s.alive(env["self"]) and self.s.cards[env["self"][0]].face_up == c["face_up"]
         if "hyper" in c:   # このカード自身がハイパーモードか（ハイパー化の旗と Zラッシュの窓の両方を見る）
             return bool(env.get("self")) and self.s.alive(env["self"]) and self.is_hyper(env["self"][0]) == c["hyper"]
+        if "alt_paid" in c:   # 代替コストで実行した（「この呪文を[代替]支払って唱えたら」）
+            paid = bool(env.get("alt_paid")) or bool((env.get("event") or {}).get("alt"))
+            return paid == bool(c["alt_paid"])
         raise ValueError(f"bad cond {c}")
 
     def filter_match(self, cid: int, f: dict, lki: dict | None = None, base: bool = False) -> bool:
