@@ -200119,3 +200119,419 @@ cards:
     official: dm13-040
     review: pending
     notes: 再変換
+- id: dm09-028
+  name: 毒牙虫ベノム・ワーム
+  types:
+  - creature
+  civs:
+  - darkness
+  cost: 3
+  power: 1000
+  races:
+  - パラサイトワーム
+  mana: 1
+  abilities:
+  - kind: activate
+    cost:
+      tap: self
+    effect:
+    - op: choose_race
+      as: kind
+    - op: modify
+      select:
+        zone: bz
+        owner: any
+        filter:
+          types:
+          - creature
+          races:
+            race: kind
+        count: all
+      mod:
+        grant:
+        - slayer
+      duration: end_of_turn
+  text: このクリーチャーで攻撃するかわりに、タップして次の能力を使ってもよい。 / 種族を1つ選ぶ。このターンが終わるまで、その種族のクリーチャーは「スレイヤー」を得る。
+  source:
+    official: dm09-028
+    review: pending
+- id: dm09-031
+  name: ジージョのトンカチ
+  types:
+  - creature
+  civs:
+  - fire
+  cost: 3
+  power: 2000
+  races:
+  - ゼノパーツ
+  mana: 1
+  abilities:
+  - kind: activate
+    cost:
+      tap: self
+    effect:
+    - op: choose_race
+      as: kind
+    - op: modify
+      select:
+        zone: bz
+        owner: any
+        filter:
+          types:
+          - creature
+          races:
+            race: kind
+        count: all
+      mod:
+        require:
+        - attack
+        power_when:
+          amount: 4000
+          when: attacking
+      duration: end_of_turn
+  text: このクリーチャーで攻撃するかわりに、タップして次の能力を使ってもよい。 / 種族を1つ選ぶ。このターン、その種族のクリーチャーは、可能であれば攻撃し、「パワーアタッカー+4000」を得る。
+  source:
+    official: dm09-031
+    review: pending
+- id: dm09-033
+  name: 夢蒼の剛剣
+  types:
+  - creature
+  civs:
+  - nature
+  cost: 4
+  power: 3000
+  races:
+  - ビーストフォーク
+  mana: 1
+  abilities:
+  - kind: activate
+    cost:
+      tap: self
+    effect:
+    - op: choose_race
+      as: kind
+    - op: modify
+      select:
+        zone: bz
+        owner: any
+        filter:
+          types:
+          - creature
+          races:
+            race: kind
+        count: all
+      mod:
+        deny:
+        - action: be_blocked
+          other:
+            power_le: 3000
+      duration: end_of_turn
+  text: このクリーチャーで攻撃するかわりに、タップして次の能力を使ってもよい。 / 種族を1つ選ぶ。このターン、その種族のクリーチャーは、パワー3000以下のクリーチャーにブロックされない。
+  source:
+    official: dm09-033
+    review: pending
+- id: dm14-078
+  name: リバース・アーマー
+  types:
+  - cross_gear
+  civs:
+  - light
+  cost: 1
+  mana: 1
+  abilities:
+  - kind: trigger
+    when:
+      event: turn_end
+      player: you
+    effect:
+    - op: may
+      body:
+      - op: untap
+        select:
+          ref: crossed
+  text: クロスギア:このカードをバトルゾーンに置く。クリーチャーにクロスするには、このカードのコストをもう一度支払う。そのクリーチャーがバトルゾーンを離れても、このカードはバトルゾーンに残る。
+    / 自分のターンの終わりに、これをクロスしたクリーチャーをアンタップしてもよい。
+  source:
+    official: dm14-078
+    review: pending
+- id: dm14-099
+  name: 南風の貴公子ピュゼロ
+  types:
+  - creature
+  civs:
+  - fire
+  cost: 2
+  power: 2000
+  races:
+  - フェザーノイド
+  mana: 1
+  keywords:
+  - must_attack
+  text: 'このクリーチャーは、可能であれば毎ターン攻撃する。
+
+    パワーアタッカー+1000(攻撃中、このクリーチャーのパワーは+1000される)'
+  source:
+    official: dm14-099
+    review: pending
+    aliases:
+    - promoy4-004
+  abilities:
+  - kind: static
+    affects: self
+    mod:
+      power_when:
+        amount: 1000
+        when: attacking
+- id: dm14-s02
+  name: グロリアス・ヘブンズアーム
+  types:
+  - cross_gear
+  civs:
+  - light
+  cost: 3
+  mana: 1
+  abilities:
+  - kind: static
+    affects: crossed
+    mod:
+      power: 3000
+  - kind: trigger
+    when:
+      event: break
+      subject: crossed
+    effect:
+    - op: move
+      select:
+        zone: deck
+        owner: you
+        from_top: 1
+      to: shield
+      reason: put
+      face_up: false
+  text: クロスギア:このカードをバトルゾーンに置く。クリーチャーにクロスするには、このカードのコストをもう一度支払う。そのクリーチャーがバトルゾーンを離れても、このカードはバトルゾーンに残る。
+    / これをクロスしたクリーチャーのパワーは+3000される。 / これをクロスしたクリーチャーが相手プレイヤーを攻撃してブロックされなかった時、自分の山札の上から1枚目を裏向きのまま自分のシールドに加える。
+  source:
+    official: dm14-s02
+    review: pending
+- id: dm14-s04
+  name: エメラルド・ミスト
+  types:
+  - creature
+  civs:
+  - water
+  cost: 6
+  power: 4000
+  races:
+  - スプラッシュ・クイーン
+  mana: 1
+  abilities:
+  - kind: activate
+    cost:
+      tap: self
+    effect:
+    - op: bounce
+      select:
+        zone: bz
+        owner: any
+        filter:
+          types:
+          - creature
+        count: all
+  text: このクリーチャーで攻撃するかわりに、タップして次の能力を使ってもよい。 / クリーチャーをすべて、バトルゾーンから持ち主の手札に戻す。
+  source:
+    official: dm14-s04
+    review: pending
+- id: dm15-006
+  name: 巡霊者シリアス
+  types:
+  - creature
+  civs:
+  - light
+  cost: 4
+  power: 3500
+  races:
+  - コスモ・ウォーカー
+  mana: 1
+  abilities:
+  - kind: trigger
+    when:
+      event: move
+      to: bz
+      via: generate
+      subject:
+        owner: you
+        filter:
+          types:
+          - cross_gear
+    effect:
+    - op: may
+      body:
+      - op: draw
+        count: 1
+  text: 'ブロッカー(相手クリーチャーが攻撃する時、このクリーチャーをタップして、その攻撃を阻止してもよい。その後、その相手クリーチャーとバトルする)
+
+    自分のクロスギアをジェネレートした時、カードを１枚引いてもよい。
+
+    このクリーチャーは、相手プレイヤーを攻撃できない。'
+  source:
+    official: dm15-006
+    review: pending
+  keywords:
+  - blocker
+  - cannot_attack_player
+- id: dm15-034
+  name: 式神ハンター
+  types:
+  - creature
+  civs:
+  - nature
+  cost: 3
+  power: 2000
+  races:
+  - ワンダー・トリック
+  mana: 1
+  abilities:
+  - kind: trigger
+    when:
+      event: move
+      to: bz
+      subject: self
+    effect:
+    - op: may
+      body:
+      - op: bounce
+        select:
+          zone: mana
+          owner: you
+          filter:
+            types:
+            - cross_gear
+          count: 1
+  text: このクリーチャーをバトルゾーンに出した時、クロスギアを1枚、自分のマナゾーンから自分の手札に戻してもよい。
+  source:
+    official: dm15-034
+    review: pending
+- id: dm15-043
+  name: スパイラル・ランス
+  types:
+  - spell
+  civs:
+  - water
+  cost: 2
+  mana: 1
+  spell:
+  - op: bounce
+    select:
+      zone: bz
+      owner: any
+      filter:
+        types:
+        - cross_gear
+      count: 1
+  text: 'S・トリガー(この呪文をシールドゾーンから手札に加える時、コストを支払わずにすぐ唱えてもよい)
+
+    バトルゾーンにあるクロスギアを１枚選び、持ち主の手札に戻す。'
+  source:
+    official: dm15-043
+    review: pending
+  keywords:
+  - s_trigger
+- id: dm15-048
+  name: マグマ・コロッサス
+  types:
+  - creature
+  civs:
+  - fire
+  cost: 3
+  power: 3000
+  races:
+  - ビッグマッスル
+  mana: 1
+  keywords:
+  - must_attack
+  text: 'パワーアタッカー+2000(攻撃中、このクリーチャーのパワーは+2000される)
+
+    このクリーチャーは、可能であれば毎ターン攻撃する。'
+  source:
+    official: dm15-048
+    review: pending
+  abilities:
+  - kind: static
+    affects: self
+    mod:
+      power_when:
+        amount: 2000
+        when: attacking
+- id: dm15-051
+  name: スクリュー・ロケット
+  types:
+  - spell
+  civs:
+  - fire
+  cost: 4
+  mana: 1
+  spell:
+  - op: if
+    cond:
+      cmp:
+      - count:
+          zone: mana
+          owner: you
+      - '>='
+      - 7
+    then:
+    - op: destroy
+      select:
+        zone: bz
+        owner: opp
+        filter:
+          types:
+          - cross_gear
+        count: 2
+        up_to: true
+    else:
+    - op: destroy
+      select:
+        zone: bz
+        owner: opp
+        filter:
+          types:
+          - cross_gear
+        count: 1
+  text: バトルゾーンにある相手のクロスギアを1枚選び、持ち主の墓地に置く。 / メタモーフ / バトルゾーンにある相手のクロスギアを、1枚のかわりに2枚まで選び、持ち主の墓地に置く。
+  source:
+    official: dm15-051
+    review: pending
+    notes: メタモーフ（自分のマナゾーンに7枚以上カードがあれば、この呪文は次の能力を得る）は if で条件分岐した
+- id: dm15-055
+  name: フェアリー・スコップ
+  types:
+  - cross_gear
+  civs:
+  - nature
+  cost: 1
+  mana: 1
+  abilities:
+  - kind: trigger
+    when:
+      event: attack
+      subject: crossed
+    effect:
+    - op: may
+      body:
+      - op: move
+        select:
+          zone: graveyard
+          owner: you
+          count: 1
+        to: mana
+        reason: put
+  text: クロスギア:このカードをバトルゾーンに置く。クリーチャーにクロスするには、このカードのコストをもう一度支払う。そのクリーチャーがバトルゾーンを離れても、このカードはバトルゾーンに残る。
+    / これをクロスしたクリーチャーが攻撃する時、カードを1枚、自分の墓地から自分のマナゾーンに置いてもよい。
+  source:
+    official: dm15-055
+    review: pending
+    aliases:
+    - promoy4-013
