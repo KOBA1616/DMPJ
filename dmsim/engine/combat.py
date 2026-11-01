@@ -60,7 +60,13 @@ class CombatMixin:
                 for x in who:
                     if x in can:
                         key = f"activate:{dfn}:{i}" + ("" if x == cid else f":{self.s.cards[x].defn}")
-                        out.append({"key": key, "cid": cid, "ab": i, "tap": x})
+                        o = {"key": key, "cid": cid, "ab": i, "tap": x}
+                        n = ab["cost"].get("tap_mana")
+                        if n:   # 複合コスト: タップされていないマナが足りる時だけ使える
+                            if sum(1 for m in self.zlist("mana", a) if not self.s.cards[m].tapped) < n:
+                                continue
+                            o["tap_mana"] = n
+                        out.append(o)
         return out
 
     def _battle_substitute(self, t, att, tgt):

@@ -39,7 +39,7 @@ CIVS = {"light", "water", "darkness", "fire", "nature", "zero"}
 SELECTOR_KEYS = {"zone", "owner", "owner_of", "filter", "count", "up_to", "from_top", "chooser", "ref", "other",
                  "under_of", "look", "exlife_of"}   # look: 非公開ゾーン（山札など）の中身を見て選ぶ
 FILTER_KEYS = {"any_of", "types", "not_types", "civs", "civs_all", "not_civs", "races", "race_has", "name", "name_has", "not_name",
-               "cost_le", "cost_ge", "power_le", "power_ge", "tapped", "keyword", "multicolor", "face_down"}
+               "cost_le", "cost_ge", "power_le", "power_ge", "tapped", "keyword", "multicolor", "face_down", "neo"}
 FILTER_EXPR_KEYS = {"cost_le", "cost_ge", "power_le", "power_ge", "races"}   # 値に式を書ける（解決時に計算）
 
 
@@ -487,7 +487,7 @@ class Checker:
         tg = w.get("target")
         if tg is not None and tg not in ("player", "creature", "self") and not isinstance(tg, dict):
             raise DefError(f"{where}: bad target '{tg}'")
-        if w.get("attacker") is not None and w["attacker"] != "self" and not isinstance(w["attacker"], dict):
+        if w.get("attacker") is not None and w["attacker"] not in ("self", "crossed") and not isinstance(w["attacker"], dict):
             raise DefError(f"{where}: bad attacker '{w['attacker']}'")
         if "via" in w and w["via"] not in VIAS:
             raise DefError(f"{where}: unknown via '{w['via']}'")
@@ -516,9 +516,11 @@ class Checker:
                 raise DefError(f"{where}: unknown zone '{aff['zone']}'")
             self.filter(aff.get("filter", {}), where)
         if kind == "activate":   # 起動型能力（602）。cost: {tap: self} か {tap: {filter}}（攻撃する代わりにタップして使う。602.3a）
-            c = ab.get("cost")
-            if not isinstance(c, dict) or set(c) != {"tap"}:
-                raise DefError(f"{where}: activate needs cost: {{tap: self | <filter>}}")
+            c = ab.get("cost")   # tap_mana: 自分のマナゾーンのタップされていないカードをその枚数追加でタップする（DM24系の複合コスト）
+            if not isinstance(c, dict) or not set(c) <= {"tap", "tap_mana"} or "tap" not in c:
+                raise DefError(f"{where}: activate needs cost: {{tap: self | <filter>, tap_mana?: int}}")
+            if "tap_mana" in c and not (isinstance(c["tap_mana"], int) and c["tap_mana"] >= 1):
+                raise DefError(f"{where}: cost.tap_mana must be a positive int")
             if c["tap"] != "self":
                 if not isinstance(c["tap"], dict):
                     raise DefError(f"{where}: cost.tap must be 'self' or a filter")

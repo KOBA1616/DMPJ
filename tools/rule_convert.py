@@ -528,4 +528,8 @@ def split(row: dict) -> tuple[list[str], str, list[dict]] | None:
                     kws.append(k)
         if tokens:
             rest.append(" ".join(tokens))
+    if "meteor_burn" in kws and re.search(r"メテオバーン\s*[-―ー－]?\s*(?:このクリーチャー|自分のクリーチャー)が攻撃", row.get("text") or ""):
+        # 攻撃時型メテオバーン（「攻撃する時／攻撃できる時」に下のカードを墓地に置く誘発能力）は
+        # 離脱置換キーワードではない。本文は rest に残るので、キーワードとして付けずモデルに誘発として変換させる
+        kws.remove("meteor_burn")
     return (kws, " / ".join(rest), extra) if kws or extra else None

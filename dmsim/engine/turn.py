@@ -7,7 +7,7 @@ from __future__ import annotations
 
 import itertools
 
-from ..types import CrossTask, HyperTask, PlayTask, TurnTask
+from ..types import ActivateTask, CrossTask, HyperTask, PlayTask, TurnTask
 from .registry import STEPS, step, task
 
 
@@ -542,6 +542,31 @@ def h_hyper(eng, t):
     return None
 
 
+@task("activate", ActivateTask)
+def h_activate(eng, t):
+    """起動型能力の複合コスト（DM24系）: 自分のマナゾーンのタップされていないカードを tap_mana 枚タップし、効果を解決する。
+    クリーチャー自身のタップは st_attack 側で支払い済み。"""
+    s = eng.s
+    cid, p = t["cid"], t["player"]
+    if s.cards[cid].zone != "bz":
+        eng._pop(t)
+        return None
+    ab = dict(eng.abilities(cid, "activate"))[t["ab"]]
+    n = ab["cost"].get("tap_mana", 0)
+    untapped = [m for m in eng.zlist("mana", p) if not s.cards[m].tapped]
+    if len(untapped) < n:
+        eng._pop(t)
+        return None
+    ans, d = eng.ask(t, p, "choose_cards", [eng._card_option(m) for m in untapped], n, n)
+    if d:
+        return d
+    for i in ans:
+        s.cards[untapped[i]].tapped = True
+    eng._pop(t)
+    eng._push(eng._child(ab["effect"], {"you": p, "self": s.ref(cid), "vars": {}}))
+    return None
+
+
 @step("attack")
 def st_attack(eng, t):                                  # 505
     s = eng.s
@@ -558,8 +583,11 @@ def st_attack(eng, t):                                  # 505
         eng._step_done(t)
     elif o["key"].startswith("activate:"):                  # 602 起動型能力: コスト（タップ）を払い、効果は待機状態になる
         s.cards[o["tap"]].tapped = True
-        ab = dict(eng.abilities(o["cid"], "activate"))[o["ab"]]
-        eng._push(eng._child(ab["effect"], {"you": a, "self": s.ref(o["cid"]), "vars": {}}))
+        if o.get("tap_mana"):   # 複合コスト（マナもタップする）は activate タスクで残りを払ってから効果へ
+            eng._push({"t": "activate", "cid": o["cid"], "player": a, "ab": o["ab"]})
+        else:
+            ab = dict(eng.abilities(o["cid"], "activate"))[o["ab"]]
+            eng._push(eng._child(ab["effect"], {"you": a, "self": s.ref(o["cid"]), "vars": {}}))
     else:
         s.turn_counters["attacked"] = True   # ビビッドロー: 「攻撃の前に」の判定
         eng._push({"t": "attack", "attacker": s.ref(o["cid"]), "target": o["target"], "phase": 0, "cp": True})
