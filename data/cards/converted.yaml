@@ -198376,3 +198376,1746 @@ cards:
     official: dm10-090
     review: pending
     notes: 再変換
+- id: dm10-094
+  name: 魂縛
+  types:
+  - spell
+  civs:
+  - darkness
+  cost: 1
+  mana: 1
+  keywords:
+  - s_trigger
+  text: 'S・トリガー
+
+    バトルゾーンにある相手のクリーチャーを１体選ぶ。そのクリーチャーは、自分の次のターンのはじめまで「このクリーチャーは、可能なら攻撃する」を得る。'
+  spell:
+  - op: modify
+    select:
+      zone: bz
+      owner: opp
+      filter:
+        types:
+        - creature
+      count: 1
+    mod:
+      require:
+      - attack
+    duration: until_next_own_turn_start
+  source:
+    official: dm10-094
+    review: pending
+    notes: 再変換
+- id: dm10-099
+  name: 烈脚戦士ブラッド
+  types:
+  - creature
+  civs:
+  - fire
+  cost: 3
+  power: 2000
+  races:
+  - ヒューマノイド
+  mana: 1
+  keywords:
+  - silent_skill
+  text: 'サイレントスキル(自分のターンのはじめに、このクリーチャーがタップされていたら、アンタップするかわりに次の能力を使ってもよい)
+
+    相手の「ブロッカー」を持つクリーチャーを１体破壊する。'
+  abilities:
+  - kind: silent
+    effect:
+    - op: destroy
+      select:
+        zone: bz
+        owner: opp
+        filter:
+          types:
+          - creature
+          keyword: blocker
+        count: 1
+  source:
+    official: dm10-099
+    review: pending
+    notes: 再変換
+    aliases:
+    - promoy3-004
+- id: dm10-100
+  name: 強制突撃
+  types:
+  - spell
+  civs:
+  - fire
+  cost: 3
+  mana: 1
+  keywords:
+  - s_trigger
+  text: 'S・トリガー(この呪文をシールドゾーンから手札に加える時、コストを支払わずにすぐ唱えてもよい)
+
+    自分の次のターンのはじめまで、相手のクリーチャーは「このクリーチャーは可能であれば攻撃する」を得る。'
+  spell:
+  - op: modify
+    select:
+      zone: bz
+      owner: opp
+      filter:
+        types:
+        - creature
+      count: all
+    mod:
+      require:
+      - attack
+    duration: until_next_own_turn_start
+  source:
+    official: dm10-100
+    review: pending
+    notes: 再変換
+- id: dm10-107
+  name: ハッスル・ベリー
+  types:
+  - creature
+  civs:
+  - nature
+  cost: 2
+  power: 1000
+  races:
+  - ワイルド・ベジーズ
+  mana: 1
+  keywords:
+  - silent_skill
+  text: 'サイレントスキル(自分のターンのはじめに、このクリーチャーがタップされていたら、アンタップするかわりに次の能力を使ってもよい)
+
+    自分の山札の上から１枚目を、自分のマナゾーンに加える。'
+  abilities:
+  - kind: silent
+    effect:
+    - op: move
+      select:
+        zone: deck
+        owner: you
+        count: 1
+      to: mana
+      reason: charge
+  source:
+    official: dm10-107
+    review: pending
+    notes: 再変換
+    aliases:
+    - promoy3-007
+- id: dm10-s10
+  name: 根絶のデクロワゾー
+  types:
+  - creature
+  civs:
+  - darkness
+  - fire
+  cost: 6
+  power: 5000
+  races:
+  - スピリット・クォーツ
+  mana: 1
+  text: 'マナゾーンに置く時、このカードはタップして置く。
+
+    このクリーチャーで攻撃するかわりに、タップして次の能力を使ってもよい。
+
+    パワー3000以下のクリーチャーをすべて破壊する。その後、相手の手札を見る。相手は自分自身の手札からパワー3000以下のクリーチャーをすべて捨てる。'
+  abilities:
+  - kind: activate
+    cost:
+      tap: self
+    effect:
+    - op: destroy
+      select:
+        zone: bz
+        owner: any
+        filter:
+          types:
+          - creature
+          power_le: 3000
+        count: all
+    - op: discard
+      select:
+        zone: hand
+        owner: opp
+        filter:
+          types:
+          - creature
+          power_le: 3000
+        count: all
+  source:
+    official: dm10-s10
+    review: pending
+    notes: 再変換
+- id: dm11-006
+  name: 命運の伝道師ラミエル
+  types:
+  - creature
+  civs:
+  - light
+  cost: 5
+  power: 3000
+  races:
+  - バーサーカー
+  mana: 1
+  keywords:
+  - wave_striker
+  text: 'ウェーブストライカー(バトルゾーンに「ウェーブストライカー」を持つクリーチャーが他に２体以上あれば、このクリーチャーは次の能力を得る)
+
+    相手のターン中に自分のクリーチャーが破壊された時、カードを１枚引いてもよい。'
+  abilities:
+  - kind: trigger
+    when:
+      event: move
+      from: bz
+      to: graveyard
+      reason: destroy
+      subject:
+        owner: you
+        filter:
+          types:
+          - creature
+    if:
+      all:
+      - cmp:
+        - count:
+            zone: bz
+            owner: any
+            other: true
+            filter:
+              keyword: wave_striker
+        - '>='
+        - 2
+      - is_turn: opp
+    effect:
+    - op: may
+      body:
+      - op: draw
+        count: 1
+  source:
+    official: dm11-006
+    review: pending
+    notes: 再変換
+- id: dm11-011
+  name: ルナ・レーザーコブラ
+  types:
+  - creature
+  civs:
+  - water
+  cost: 5
+  power: 4000
+  races:
+  - サイバー・ムーン
+  mana: 1
+  keywords:
+  - silent_skill
+  text: 'サイレントスキル(自分のターンのはじめに、このクリーチャーがタップされていたら、アンタップするかわりに次の能力を使ってもよい)
+
+    自分のマナゾーンからカードを３枚まで、自分の手札に戻す。'
+  abilities:
+  - kind: silent
+    effect:
+    - op: move
+      select:
+        zone: mana
+        owner: you
+        count: 3
+        up_to: true
+      to: hand
+      reason: return
+  source:
+    official: dm11-011
+    review: pending
+    notes: 再変換
+- id: dm11-012
+  name: 邪凶の影ゲイザー・アイズ
+  types:
+  - creature
+  civs:
+  - darkness
+  cost: 4
+  power: 3000
+  races:
+  - ゴースト
+  mana: 1
+  keywords:
+  - silent_skill
+  text: 'サイレントスキル(自分のターンのはじめに、このクリーチャーがタップされていたら、アンタップするかわりに次の能力を使ってもよい)
+
+    相手の手札を見てその中から１枚選び、捨てさせる。'
+  abilities:
+  - kind: silent
+    effect:
+    - op: discard
+      select:
+        zone: hand
+        owner: opp
+        look: true
+        count: 1
+  source:
+    official: dm11-012
+    review: pending
+    notes: 再変換
+- id: dm11-013
+  name: 薔薇公爵ハザリア
+  types:
+  - creature
+  civs:
+  - darkness
+  cost: 4
+  power: 2000
+  races:
+  - ダークロード
+  mana: 1
+  keywords:
+  - wave_striker
+  text: 'ウェーブストライカー(バトルゾーンに「ウェーブストライカー」を持つクリーチャーが他に２体以上あれば、このクリーチャーは次の能力を得る)
+
+    このクリーチャーをバトルゾーンに出した時、相手は自分自身のクリーチャーを１体破壊する。'
+  abilities:
+  - kind: trigger
+    when:
+      event: move
+      to: bz
+      subject: self
+    if:
+      cmp:
+      - count:
+          zone: bz
+          owner: any
+          other: true
+          filter:
+            keyword: wave_striker
+      - '>='
+      - 2
+    effect:
+    - op: destroy
+      select:
+        zone: bz
+        owner: opp
+        filter:
+          types:
+          - creature
+        count: 1
+        chooser: opp
+  source:
+    official: dm11-013
+    review: pending
+    notes: 再変換
+    aliases:
+    - promoy3-016
+- id: dm11-018
+  name: 地龍の化身
+  types:
+  - creature
+  civs:
+  - nature
+  cost: 5
+  power: 4000
+  races:
+  - ミステリー・トーテム
+  mana: 1
+  keywords:
+  - silent_skill
+  text: 'サイレントスキル(自分のターンのはじめに、このクリーチャーがタップされていたら、アンタップするかわりに次の能力を使ってもよい)
+
+    自分のマナゾーンからドラゴンを１体、バトルゾーンに出す。'
+  abilities:
+  - kind: silent
+    effect:
+    - op: move
+      select:
+        zone: mana
+        owner: you
+        filter:
+          race_has: ドラゴン
+        count: 1
+      to: bz
+      reason: put
+  source:
+    official: dm11-018
+    review: pending
+    notes: 再変換
+- id: dm11-020
+  name: シェル・チャーチ
+  types:
+  - creature
+  civs:
+  - nature
+  cost: 4
+  power: 2000
+  races:
+  - コロニー・ビートル
+  mana: 1
+  keywords:
+  - wave_striker
+  text: 'ウェーブストライカー(バトルゾーンに「ウェーブストライカー」を持つクリーチャーが他に２体以上あれば、このクリーチャーは次の能力を得る)
+
+    このクリーチャーをバトルゾーンに出した時、相手はバトルゾーンにある自分自身のクリーチャーを１体選び、持ち主のマナゾーンに置く。'
+  abilities:
+  - kind: trigger
+    when:
+      event: move
+      to: bz
+      subject: self
+    if:
+      cmp:
+      - count:
+          zone: bz
+          owner: any
+          other: true
+          filter:
+            keyword: wave_striker
+      - '>='
+      - 2
+    effect:
+    - op: move
+      select:
+        zone: bz
+        owner: opp
+        filter:
+          types:
+          - creature
+        count: 1
+        chooser: opp
+      to: mana
+      reason: charge
+  source:
+    official: dm11-020
+    review: pending
+    notes: 再変換
+- id: dm11-021
+  name: 宣凶師バレイド
+  types:
+  - creature
+  civs:
+  - light
+  cost: 5
+  power: 5000
+  races:
+  - グラディエーター
+  mana: 1
+  keywords:
+  - silent_skill
+  text: 'サイレントスキル(自分のターンのはじめに、このクリーチャーがタップされていたら、アンタップするかわりに次の能力を使ってもよい)
+
+    このターン、自分の光のクリーチャーはブロックされない。'
+  abilities:
+  - kind: silent
+    effect:
+    - op: modify
+      select:
+        zone: bz
+        owner: you
+        filter:
+          civs:
+          - light
+          types:
+          - creature
+        count: all
+      mod:
+        deny:
+        - be_blocked
+      duration: end_of_turn
+  source:
+    official: dm11-021
+    review: pending
+    notes: 再変換
+- id: dm11-027
+  name: スカイフレーム・リザード
+  types:
+  - creature
+  civs:
+  - fire
+  cost: 6
+  power: 4000
+  races:
+  - メルト・ウォリアー
+  mana: 1
+  keywords:
+  - wave_striker
+  text: 'ウェーブストライカー(バトルゾーンに「ウェーブストライカー」を持つクリーチャーが他に２体以上あれば、このクリーチャーは次の能力を得る)
+
+    このクリーチャーをバトルゾーンに出した時、「ブロッカー」を持つ相手のクリーチャーを２体まで破壊する。'
+  abilities:
+  - kind: trigger
+    when:
+      event: move
+      to: bz
+      subject: self
+    if:
+      cmp:
+      - count:
+          zone: bz
+          owner: any
+          other: true
+          filter:
+            keyword: wave_striker
+      - '>='
+      - 2
+    effect:
+    - op: destroy
+      select:
+        zone: bz
+        owner: opp
+        filter:
+          types:
+          - creature
+          keyword: blocker
+        count: 2
+        up_to: true
+  source:
+    official: dm11-027
+    review: pending
+    notes: 再変換
+- id: dm11-028
+  name: ジェット・リザード
+  types:
+  - creature
+  civs:
+  - fire
+  cost: 4
+  power: 3000
+  races:
+  - メルト・ウォリアー
+  mana: 1
+  text: 'このクリーチャーは、可能であれば毎ターン攻撃する。
+
+    パワーアタッカー+3000(攻撃中、このクリーチャーのパワーは+3000される)'
+  abilities:
+  - kind: static
+    affects: self
+    mod:
+      power_when:
+        amount: 3000
+        when: attacking
+  - kind: static
+    affects: self
+    mod:
+      require:
+      - attack
+  - kind: static
+    affects: self
+    mod:
+      power_when:
+        amount: 3000
+        when: attacking
+  source:
+    official: dm11-028
+    review: pending
+    notes: 再変換
+- id: dm11-041
+  name: リバイバル・ソルジャー
+  types:
+  - creature
+  civs:
+  - water
+  cost: 3
+  power: 2000
+  races:
+  - マーフォーク
+  mana: 1
+  keywords:
+  - wave_striker
+  text: 'ウェーブストライカー(バトルゾーンに「ウェーブストライカー」を持つクリーチャーが他に２体以上あれば、このクリーチャーは次の能力を得る)
+
+    このクリーチャーのパワーは、+4000される。このクリーチャーが破壊される時、墓地に置くかわりに自分の手札に戻す。'
+  abilities:
+  - kind: static
+    affects: self
+    if:
+      cmp:
+      - count:
+          zone: bz
+          owner: any
+          other: true
+          filter:
+            keyword: wave_striker
+      - '>='
+      - 2
+    mod:
+      power: 4000
+  - kind: replace
+    when:
+      event: move
+      from: bz
+      to: graveyard
+      reason: destroy
+      subject: self
+    if:
+      cmp:
+      - count:
+          zone: bz
+          owner: any
+          other: true
+          filter:
+            keyword: wave_striker
+      - '>='
+      - 2
+    instead:
+    - op: move
+      select:
+        ref: self
+      to: hand
+      reason: return
+  source:
+    official: dm11-041
+    review: pending
+    notes: 再変換
+- id: dm11-048
+  name: 支援団長ガンクローク
+  types:
+  - creature
+  civs:
+  - fire
+  cost: 3
+  power: 2000
+  races:
+  - ヒューマノイド
+  mana: 1
+  keywords:
+  - silent_skill
+  text: 'サイレントスキル(自分のターンのはじめに、このクリーチャーがタップされていたら、アンタップするかわりに次の能力を使ってもよい)
+
+    このターンの終わりまで、自分の火のクリーチャーはすべて「W・ブレイカー」を得る。'
+  abilities:
+  - kind: silent
+    effect:
+    - op: modify
+      select:
+        zone: bz
+        owner: you
+        filter:
+          civs:
+          - fire
+          types:
+          - creature
+        count: all
+      mod:
+        grant:
+        - double_breaker
+      duration: end_of_turn
+  source:
+    official: dm11-048
+    review: pending
+    notes: 再変換
+- id: dm11-049
+  name: 炎舞闘士サピエント・アーク
+  types:
+  - creature
+  civs:
+  - fire
+  cost: 3
+  power: 2000
+  races:
+  - ドラゴノイド
+  mana: 1
+  keywords:
+  - wave_striker
+  text: 'ウェーブストライカー(バトルゾーンに「ウェーブストライカー」を持つクリーチャーが他に２体以上あれば、このクリーチャーは次の能力を得る)
+
+    このクリーチャーのパワーは+4000され、タップされていないクリーチャーを攻撃できる。'
+  abilities:
+  - kind: static
+    affects: self
+    if:
+      cmp:
+      - count:
+          zone: bz
+          owner: any
+          other: true
+          filter:
+            keyword: wave_striker
+      - '>='
+      - 2
+    mod:
+      power: 4000
+      allow:
+      - action: attack_creature
+        other:
+          tapped: false
+  source:
+    official: dm11-049
+    review: pending
+    notes: 再変換
+- id: dm11-053
+  name: ニンジャ・パンプキン
+  types:
+  - creature
+  civs:
+  - nature
+  cost: 3
+  power: 2000
+  races:
+  - ワイルド・ベジーズ
+  mana: 1
+  keywords:
+  - wave_striker
+  text: 'ウェーブストライカー(バトルゾーンに「ウェーブストライカー」を持つクリーチャーが他に２体以上あれば、このクリーチャーは次の能力を得る)
+
+    このクリーチャーのパワーは+4000され、パワー5000以下のクリーチャーにブロックされない。'
+  abilities:
+  - kind: static
+    affects: self
+    if:
+      cmp:
+      - count:
+          zone: bz
+          owner: any
+          other: true
+          filter:
+            keyword: wave_striker
+      - '>='
+      - 2
+    mod:
+      power: 4000
+      deny:
+      - action: be_blocked
+        other:
+          power_le: 5000
+  source:
+    official: dm11-053
+    review: pending
+    notes: 再変換
+- id: dm11-046
+  name: 邪口虫ラフレシア・ワーム
+  types:
+  - creature
+  civs:
+  - darkness
+  cost: 3
+  power: 2000
+  races:
+  - パラサイトワーム
+  mana: 1
+  keywords:
+  - wave_striker
+  text: 'ウェーブストライカー(バトルゾーンに「ウェーブストライカー」を持つクリーチャーが他に２体以上あれば、このクリーチャーは次の能力を得る)
+
+    このクリーチャーのパワーは+4000され、「闇ステルス」を得る。(相手のマナゾーンに闇のカードが１枚でもあれば、「闇ステルス」を持つクリーチャーはブロックされない)'
+  abilities:
+  - kind: static
+    affects: self
+    if:
+      cmp:
+      - count:
+          zone: bz
+          owner: any
+          other: true
+          filter:
+            keyword: wave_striker
+      - '>='
+      - 2
+    mod:
+      power: 4000
+  - kind: static
+    affects: self
+    if:
+      all:
+      - cmp:
+        - count:
+            zone: bz
+            owner: any
+            other: true
+            filter:
+              keyword: wave_striker
+        - '>='
+        - 2
+      - exists:
+          zone: mana
+          owner: opp
+          filter:
+            civs:
+            - darkness
+    mod:
+      deny:
+      - be_blocked
+  source:
+    official: dm11-046
+    review: pending
+    notes: 再変換
+- id: dm11-s02
+  name: アドラス
+  types:
+  - creature
+  civs:
+  - water
+  cost: 7
+  power: 4000
+  races:
+  - シー・ハッカー
+  mana: 1
+  keywords:
+  - wave_striker
+  text: 'ウェーブストライカー(バトルゾーンに「ウェーブストライカー」を持つクリーチャーが他に２体以上あれば、このクリーチャーは次の能力を得る)
+
+    このクリーチャーをバトルゾーンに出した時、各プレイヤーは、バトルゾーンにある自分自身の「ウェーブストライカー」を持つクリーチャー１体につき１枚カードを引く。'
+  abilities:
+  - kind: trigger
+    when:
+      event: move
+      to: bz
+      subject: self
+    if:
+      cmp:
+      - count:
+          zone: bz
+          owner: any
+          other: true
+          filter:
+            keyword: wave_striker
+      - '>='
+      - 2
+    effect:
+    - op: draw
+      player: you
+      count:
+        count:
+          zone: bz
+          owner: you
+          filter:
+            keyword: wave_striker
+    - op: draw
+      player: opp
+      count:
+        count:
+          zone: bz
+          owner: opp
+          filter:
+            keyword: wave_striker
+  source:
+    official: dm11-s02
+    review: pending
+    notes: 再変換
+- id: dm12-001
+  name: 星雲の精霊キルスティン
+  types:
+  - creature
+  civs:
+  - light
+  cost: 7
+  power: 5000
+  races:
+  - エンジェル・コマンド
+  mana: 1
+  keywords:
+  - wave_striker
+  text: 'ウェーブストライカー(バトルゾーンに「ウェーブストライカー」を持つクリーチャーが他に２体以上あれば、このクリーチャーは次の能力を得る)
+
+    バトルゾーンにある自分のクリーチャーすべてのパワーは+5000され、「ブロッカー」と「W・ブレイカー」を得る。'
+  abilities:
+  - kind: static
+    affects:
+      zone: bz
+      owner: you
+      filter:
+        types:
+        - creature
+    if:
+      cmp:
+      - count:
+          zone: bz
+          owner: any
+          other: true
+          filter:
+            keyword: wave_striker
+      - '>='
+      - 2
+    mod:
+      power: 5000
+      grant:
+      - blocker
+      - double_breaker
+  source:
+    official: dm12-001
+    review: pending
+    notes: 再変換
+- id: dm12-011
+  name: 爆輪男
+  types:
+  - creature
+  civs:
+  - darkness
+  cost: 4
+  power: 3000
+  races:
+  - ヘドリアン
+  mana: 1
+  keywords:
+  - wave_striker
+  text: 'ウェーブストライカー(バトルゾーンに「ウェーブストライカー」を持つクリーチャーが他に２体以上あれば、このクリーチャーは次の能力を得る)
+
+    このクリーチャーをバトルゾーンに出した時、クリーチャーをすべて破壊する。'
+  abilities:
+  - kind: trigger
+    when:
+      event: move
+      to: bz
+      subject: self
+    if:
+      cmp:
+      - count:
+          zone: bz
+          owner: any
+          other: true
+          filter:
+            keyword: wave_striker
+      - '>='
+      - 2
+    effect:
+    - op: destroy
+      select:
+        zone: bz
+        owner: any
+        filter:
+          types:
+          - creature
+        count: all
+  source:
+    official: dm12-011
+    review: pending
+    notes: 再変換
+- id: dm12-055
+  name: アラーム・ラディッシュ
+  types:
+  - creature
+  civs:
+  - nature
+  cost: 2
+  power: 1000
+  races:
+  - ワイルド・ベジーズ
+  mana: 1
+  keywords:
+  - wave_striker
+  text: 'ウェーブストライカー(バトルゾーンに「ウェーブストライカー」を持つクリーチャーが他に２体以上あれば、このクリーチャーは次の能力を得る)
+
+    このクリーチャーをバトルゾーンに出した時、自分の山札の上から１枚目を自分のマナゾーンに置く。その後、クリーチャーを１体、自分のマナゾーンから自分の手札に戻す。'
+  abilities:
+  - kind: trigger
+    when:
+      event: move
+      to: bz
+      subject: self
+    if:
+      cmp:
+      - count:
+          zone: bz
+          owner: any
+          other: true
+          filter:
+            keyword: wave_striker
+      - '>='
+      - 2
+    effect:
+    - op: move
+      select:
+        zone: deck
+        owner: you
+        count: 1
+      to: mana
+      reason: charge
+    - op: move
+      select:
+        zone: mana
+        owner: you
+        filter:
+          types:
+          - creature
+        count: 1
+      to: hand
+      reason: return
+  source:
+    official: dm12-055
+    review: pending
+    notes: 再変換
+- id: dm13-008
+  name: インスペクト・シード
+  types:
+  - creature
+  civs:
+  - water
+  cost: 4
+  power: 3000
+  races:
+  - ゲル・フィッシュ
+  mana: 1
+  keywords:
+  - silent_skill
+  text: 'サイレントスキル(自分のターンのはじめに、このクリーチャーがタップされていたら、アンタップするかわりに次の能力を使ってもよい)
+
+    このターン、自分のクリーチャーが攻撃する時、カードを１枚引いてもよい。'
+  abilities:
+  - kind: silent
+    effect:
+    - op: delayed_trigger
+      when:
+        event: attack
+        subject:
+          owner: you
+          filter:
+            types:
+            - creature
+      duration: end_of_turn
+      effect:
+      - op: may
+        body:
+        - op: draw
+          count: 1
+  source:
+    official: dm13-008
+    review: pending
+    notes: 再変換
+- id: dm13-011
+  name: 骨折人形トロンボ
+  types:
+  - creature
+  civs:
+  - darkness
+  cost: 2
+  power: 1000
+  races:
+  - デスパペット
+  mana: 1
+  keywords:
+  - wave_striker
+  text: 'ウェーブストライカー(バトルゾーンに｢ウェーブストライカー｣を持つクリーチャーが他に２体以上あれば、このクリーチャーは次の能力を得る)
+
+    このクリーチャーをバトルゾーンに出した時、クリーチャーを１体、自分の墓地から自分の手札に戻してもよい。'
+  abilities:
+  - kind: trigger
+    when:
+      event: move
+      to: bz
+      subject: self
+    if:
+      cmp:
+      - count:
+          zone: bz
+          owner: any
+          other: true
+          filter:
+            keyword: wave_striker
+      - '>='
+      - 2
+    effect:
+    - op: may
+      body:
+      - op: move
+        select:
+          zone: graveyard
+          owner: you
+          filter:
+            types:
+            - creature
+          count: 1
+        to: hand
+        reason: return
+  source:
+    official: dm13-011
+    review: pending
+    notes: 再変換
+- id: dm13-024
+  name: 照準野郎ジルバ
+  types:
+  - creature
+  civs:
+  - fire
+  cost: 3
+  power: 2000
+  races:
+  - ヒューマノイド
+  mana: 1
+  keywords:
+  - silent_skill
+  text: 'サイレントスキル(自分のターンのはじめに、このクリーチャーがタップされていたら、アンタップするかわりに次の能力を使ってもよい)
+
+    このターン、バトルゾーンにある自分の他のクリーチャーは、タップされていないクリーチャーを攻撃できる。'
+  abilities:
+  - kind: silent
+    effect:
+    - op: modify
+      select:
+        zone: bz
+        owner: you
+        other: true
+        filter:
+          types:
+          - creature
+        count: all
+      mod:
+        allow:
+        - action: attack_creature
+          other:
+            tapped: false
+      duration: end_of_turn
+  source:
+    official: dm13-024
+    review: pending
+    notes: 再変換
+- id: dm13-038
+  name: 予言者リエーレ
+  types:
+  - creature
+  civs:
+  - light
+  cost: 2
+  power: 1000
+  races:
+  - ライトブリンガー
+  mana: 1
+  text: このクリーチャーが攻撃された時、バトルゾーンにある相手のクリーチャーを１体選び、タップしてもよい。
+  abilities:
+  - kind: trigger
+    when:
+      event: attack
+      target: self
+    effect:
+    - op: may
+      body:
+      - op: tap
+        select:
+          zone: bz
+          owner: opp
+          filter:
+            types:
+            - creature
+          count: 1
+  source:
+    official: dm13-038
+    review: pending
+    notes: 再変換
+- id: dm13-043
+  name: 爆弾人形ニヤーリ
+  types:
+  - creature
+  civs:
+  - darkness
+  cost: 2
+  power: 1000
+  races:
+  - デスパペット
+  mana: 1
+  text: このクリーチャーが攻撃された時、そのターンの終わりまで、このクリーチャーは｢スレイヤー｣を得る。(｢スレイヤー｣を得たクリーチャーがバトルする時、バトルの後、相手クリーチャーを破壊する)
+  abilities:
+  - kind: trigger
+    when:
+      event: attack
+      target: self
+    effect:
+    - op: modify
+      select:
+        ref: self
+      mod:
+        grant:
+        - slayer
+      duration: end_of_turn
+  source:
+    official: dm13-043
+    review: pending
+    notes: 再変換
+- id: dm13-049
+  name: 反撃妖精ポコペン
+  types:
+  - creature
+  civs:
+  - nature
+  cost: 2
+  power: 2000
+  races:
+  - スノーフェアリー
+  mana: 1
+  text: このクリーチャーが攻撃された時、相手は自分自身のマナゾーンからカードを１枚選び、持ち主の墓地に置く。
+  abilities:
+  - kind: trigger
+    when:
+      event: attack
+      target: self
+    effect:
+    - op: move
+      select:
+        zone: mana
+        owner: opp
+        chooser: opp
+        count: 1
+      to: graveyard
+      reason: put
+  source:
+    official: dm13-049
+    review: pending
+    notes: 再変換
+- id: dm13-053
+  name: 一徹のジャスパー
+  types:
+  - creature
+  civs:
+  - water
+  - fire
+  cost: 2
+  power: 1000
+  races:
+  - スピリット・クォーツ
+  mana: 1
+  text: 'マナゾーンに置く時、このカードはタップして置く。
+
+    このクリーチャーは、可能であれば毎ターン攻撃する。
+
+    このクリーチャーが破壊される時、墓地に置くかわりに自分の手札に戻す。'
+  abilities:
+  - kind: replace
+    when:
+      event: move
+      from: bz
+      to: graveyard
+      reason: destroy
+      subject: self
+    instead:
+    - op: move
+      select:
+        ref: self
+      to: hand
+      reason: return
+  - kind: static
+    affects: self
+    mod:
+      require:
+      - attack
+  - kind: replace
+    when:
+      event: move
+      from: bz
+      to: graveyard
+      reason: destroy
+      subject: self
+    instead:
+    - op: move
+      select:
+        ref: self
+      to: hand
+      reason: return
+  source:
+    official: dm13-053
+    review: pending
+    notes: 再変換
+    aliases:
+    - promoy3-039
+- id: dm14-007
+  name: 巨大神ハウルスク
+  types:
+  - creature
+  - evolution
+  civs:
+  - fire
+  cost: 6
+  power: 5000
+  races:
+  - メルト・ウォリアー
+  mana: 1
+  evolve_from:
+    races:
+    - メルト・ウォリアー
+  text: '進化-自分のメルト・ウォリアー１体の上に置く。
+
+    このクリーチャーで攻撃するかわりに、タップして次の能力を使ってもよい。
+
+    相手のパワー3000以下のクリーチャーをすべて破壊する。'
+  abilities:
+  - kind: activate
+    cost:
+      tap: self
+    effect:
+    - op: destroy
+      select:
+        zone: bz
+        owner: opp
+        filter:
+          types:
+          - creature
+          power_le: 3000
+        count: all
+  source:
+    official: dm14-007
+    review: pending
+    notes: 再変換
+- id: dm14-022
+  name: タイフーン・バズーカ
+  types:
+  - cross_gear
+  civs:
+  - water
+  cost: 3
+  mana: 1
+  text: 'クロスギア:このカードをバトルゾーンに置く。クリーチャーにクロスするには、このカードのコストをもう一度支払う。そのクリーチャーがバトルゾーンを離れても、このカードはバトルゾーンに残る。
+
+    これをクロスしたクリーチャーが相手プレイヤーを攻撃してブロックされなかった時、クリーチャーを１体、バトルゾーンから持ち主の手札に戻してもよい。'
+  abilities:
+  - kind: trigger
+    when:
+      event: break
+      subject: crossed
+    effect:
+    - op: may
+      body:
+      - op: move
+        select:
+          zone: bz
+          owner: any
+          filter:
+            types:
+            - creature
+          count: 1
+        to: hand
+        reason: return
+  source:
+    official: dm14-022
+    review: pending
+    notes: 再変換
+- id: dm14-026
+  name: 暗殺人形ガマー
+  types:
+  - creature
+  civs:
+  - darkness
+  cost: 4
+  power: 1000
+  races:
+  - デスパペット
+  mana: 1
+  text: 'このクリーチャーで攻撃するかわりに、タップして次の能力を使ってもよい。
+
+    相手のタップされているクリーチャーを１体破壊する。'
+  abilities:
+  - kind: activate
+    cost:
+      tap: self
+    effect:
+    - op: destroy
+      select:
+        zone: bz
+        owner: opp
+        filter:
+          types:
+          - creature
+          tapped: true
+        count: 1
+  source:
+    official: dm14-026
+    review: pending
+    notes: 再変換
+- id: dm14-044
+  name: 聖騎士ミルキーウェイ
+  types:
+  - creature
+  civs:
+  - light
+  cost: 2
+  power: 1000
+  races:
+  - レインボー・ファントム
+  mana: 1
+  text: 'このクリーチャーで攻撃するかわりに、タップして次の能力を使ってもよい。
+
+    相手のマナゾーンのカードが自分のマナゾーンのカードより多ければ、自分の山札の上から１枚目を自分のマナゾーンに置く。'
+  abilities:
+  - kind: activate
+    cost:
+      tap: self
+    effect:
+    - op: if
+      cond:
+        cmp:
+        - count:
+            zone: mana
+            owner: opp
+        - '>'
+        - count:
+            zone: mana
+            owner: you
+      then:
+      - op: move
+        select:
+          zone: deck
+          owner: you
+          count: 1
+        to: mana
+        reason: charge
+  source:
+    official: dm14-044
+    review: pending
+    notes: 再変換
+- id: dm14-052
+  name: スパイラル・オーラ
+  types:
+  - cross_gear
+  civs:
+  - water
+  cost: 2
+  mana: 1
+  text: 'クロスギア:このカードをバトルゾーンに置く。クリーチャーにクロスするには、このカードのコストをもう一度支払う。そのクリーチャーがバトルゾーンを離れても、このカードはバトルゾーンに残る。
+
+    これをクロスしたクリーチャーが破壊される時、墓地に置くかわりに自分の手札に戻す。'
+  abilities:
+  - kind: replace
+    when:
+      event: move
+      from: bz
+      to: graveyard
+      reason: destroy
+      subject: crossed
+    instead:
+    - op: move
+      select:
+        ref: event.subject
+      to: hand
+      reason: return
+  source:
+    official: dm14-052
+    review: pending
+    notes: 再変換
+- id: dm14-058
+  name: ヘル・ダブルクロー
+  types:
+  - cross_gear
+  civs:
+  - darkness
+  cost: 2
+  mana: 1
+  text: 'クロスギア:このカードをバトルゾーンに置く。クリーチャーにクロスするには、このカードのコストをもう一度支払う。そのクリーチャーがバトルゾーンを離れても、このカードはバトルゾーンに残る。
+
+    これをクロスしたクリーチャーがバトルに勝った時、そのクリーチャーを破壊する。
+
+    これをクロスしたクリーチャーは｢W・ブレイカー｣を得る。'
+  abilities:
+  - kind: static
+    affects: crossed
+    mod:
+      grant:
+      - double_breaker
+  - kind: trigger
+    when:
+      event: battle_win
+      subject: crossed
+    effect:
+    - op: destroy
+      select:
+        ref: event.subject
+  source:
+    official: dm14-058
+    review: pending
+    notes: 再変換
+- id: dm14-066
+  name: 奮迅の化身
+  types:
+  - creature
+  civs:
+  - nature
+  cost: 4
+  power: 3000
+  races:
+  - ミステリー・トーテム
+  mana: 1
+  text: このクリーチャーがブロックされた時、自分の山札の上から１枚目を自分のマナゾーンに置いてもよい。
+  abilities:
+  - kind: trigger
+    when:
+      event: block
+      attacker: self
+    effect:
+    - op: may
+      body:
+      - op: move
+        select:
+          zone: deck
+          owner: you
+          count: 1
+        to: mana
+        reason: charge
+  source:
+    official: dm14-066
+    review: pending
+    notes: 再変換
+- id: dm24ex4-094
+  name: 凶戦士ブレイズ・クロー
+  types:
+  - creature
+  civs:
+  - fire
+  cost: 1
+  power: 1000
+  races:
+  - ドラゴノイド
+  mana: 1
+  keywords:
+  - must_attack
+  text: このクリーチャーは、可能なら毎ターン攻撃する。
+  source:
+    official: dm24ex4-094
+    review: pending
+    notes: ルールのみで変換（モデル不使用）
+    aliases:
+    - dm01-100
+    - dm18-128
+    - dm24ex4-pr054
+    - dm24sd1-012
+    - dmbd16-teki010
+    - dmc42-082
+    - dmc55-079
+    - dmc61-082
+    - dmd01-008
+    - dmd21-012
+    - dmex02-056
+    - dmex08-002
+    - dmex15-b095
+    - dmrp06-g03
+    - dmsd14-013
+    - dmx14-034
+    - dmx24-047
+    - promoy14-spd12
+    - promoy15-sp2d07
+    - promoy16-103
+    - promoy16-sp3d13
+    - promoy18-sp6d11
+    - promoy19-spd706
+    - promoy20-gum1-010
+    - promoy4-038
+    - spdeck13-002
+- id: dmbd17-teki001
+  name: 闇戦士ザビ・クロー
+  types:
+  - creature
+  civs:
+  - darkness
+  cost: 1
+  power: 1000
+  races:
+  - ドラゴノイド
+  - エイリアン
+  mana: 1
+  keywords:
+  - must_attack
+  text: このクリーチャーは、可能なら毎ターン攻撃する。
+  source:
+    official: dmbd17-teki001
+    review: pending
+    notes: ルールのみで変換（モデル不使用）
+    aliases:
+    - dmsd15-011
+    - dmx05-012
+    - dmx12a-031
+    - promoy11-016
+    - promoy20-gum2-010
+    - promoy21-902
+- id: dmc20-089
+  name: ゲットのノコギリ
+  types:
+  - creature
+  civs:
+  - fire
+  cost: 2
+  power: 2000
+  races:
+  - ゼノパーツ
+  mana: 1
+  abilities:
+  - kind: static
+    affects: self
+    mod:
+      power_when:
+        amount: 1000
+        when: attacking
+  keywords:
+  - must_attack
+  text: 'このクリーチャーは、可能なら毎ターン攻撃する。
+
+    パワーアタッカー +1000（攻撃中、このクリーチャーのパワーは+1000される）'
+  source:
+    official: dmc20-089
+    review: pending
+    notes: ルールのみで変換（モデル不使用）
+- id: dmrp13-076
+  name: 強戦士フレイム・クロー
+  types:
+  - creature
+  civs:
+  - fire
+  cost: 2
+  power: 4000
+  races:
+  - ドラゴノイド
+  mana: 1
+  keywords:
+  - must_attack
+  text: このクリーチャーは、可能なら毎ターン攻撃する。
+  source:
+    official: dmrp13-076
+    review: pending
+    notes: ルールのみで変換（モデル不使用）
+- id: dmx23-047
+  name: 音速 タルボ
+  types:
+  - creature
+  civs:
+  - fire
+  cost: 5
+  power: 5000
+  races:
+  - ソニック・コマンド
+  - 侵略者
+  mana: 1
+  keywords:
+  - s_trigger
+  - must_attack
+  text: S・トリガー（このクリーチャーをシールドゾーンから手札に加える時、コストを支払わずにすぐ召喚してもよい）このクリーチャーは、可能なら毎ターン攻撃する。
+  source:
+    official: dmx23-047
+    review: pending
+    notes: ルールのみで変換（モデル不使用）
+    aliases:
+    - dmr17-080
+    - dmx20-060
+- id: dm09-009
+  name: エンペラー・マロル
+  types:
+  - creature
+  - evolution
+  civs:
+  - water
+  cost: 3
+  power: 5000
+  races:
+  - サイバーロード
+  mana: 1
+  evolve_from:
+    races:
+    - サイバーロード
+  text: 進化ー自分のサイバーロード１体の上に置く。 / このクリーチャーがバトルゾーンにある間、自分の他のクリーチャーがバトルゾーンに出たとき、このクリーチャーを自分の手札に戻す。
+    / このクリーチャーがブロックされたとき、バトルは行われない。ブロックしたクリーチャーを持ち主の手札に戻す。
+  abilities:
+  - kind: trigger
+    when:
+      event: move
+      to: bz
+      subject:
+        owner: you
+        other: true
+        filter:
+          types:
+          - creature
+    effect:
+    - op: move
+      select:
+        ref: self
+      to: hand
+      reason: return
+  - kind: trigger
+    when:
+      event: block
+      attacker: self
+    effect:
+    - op: move
+      select:
+        ref: event.subject
+      to: hand
+      reason: return
+  source:
+    official: dm09-009
+    review: pending
+    notes: 再変換
+- id: dm10-010
+  name: 霊光の化身
+  types:
+  - creature
+  civs:
+  - light
+  - nature
+  cost: 4
+  power: 5000
+  races:
+  - ミステリー・トーテム
+  mana: 1
+  text: マナゾーンに置く時、このカードはタップして置く。 / このクリーチャーがタップされている間、自分の他のクリーチャーは「パワーアタッカー+1500」を得る。
+    / このクリーチャーで攻撃するかわりに、タップして次の能力を使ってもよい。バトルゾーンにある相手のクリーチャーを１体タップする。
+  abilities:
+  - kind: static
+    affects:
+      owner: you
+      other: true
+      filter:
+        types:
+        - creature
+    if:
+      exists:
+        ref: self
+        filter:
+          tapped: true
+    mod:
+      power_when:
+        amount: 1500
+        when: attacking
+  - kind: activate
+    cost:
+      tap: self
+    effect:
+    - op: tap
+      select:
+        zone: bz
+        owner: opp
+        filter:
+          types:
+          - creature
+        count: 1
+  source:
+    official: dm10-010
+    review: pending
+    notes: 再変換
+- id: dm10-092
+  name: ベノム・カプセル
+  types:
+  - creature
+  civs:
+  - darkness
+  cost: 2
+  power: 1000
+  races:
+  - ブレインジャッカー
+  mana: 1
+  keywords:
+  - silent_skill
+  text: 'サイレントスキル(自分のターンのはじめに、このクリーチャーがタップされていたら、アンタップするかわりに次の能力を使ってもよい)
+
+    このクリーチャーは、相手のシールドを１枚ブレイクする。'
+  abilities:
+  - kind: silent
+    effect:
+    - op: break
+      count: 1
+  source:
+    official: dm10-092
+    review: pending
+    notes: 再変換
+- id: dm13-040
+  name: バイバイ・アメーバ
+  types:
+  - creature
+  civs:
+  - water
+  cost: 3
+  power: 1000
+  races:
+  - サイバー・ウイルス
+  mana: 1
+  text: このクリーチャーが攻撃された時、バトルの後、攻撃クリーチャーを持ち主の手札に戻す。
+  abilities:
+  - kind: trigger
+    when:
+      event: attack_end
+      target: self
+    effect:
+    - op: move
+      select:
+        ref: event.subject
+      to: hand
+      reason: return
+  source:
+    official: dm13-040
+    review: pending
+    notes: 再変換
