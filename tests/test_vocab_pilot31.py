@@ -116,6 +116,8 @@ def test_meteor_burn_replacement(rules):
     assert _settle(e, lambda: bool(seen.get("replaced")), drive2, 300)
     assert any(e.s.cards[c].defn == "T097" for c in e.zlist("bz", 0))
     assert _settle(e, lambda: any(e.s.cards[c].defn == "T001" for c in e.zlist("graveyard", 0)), None, 60)
+    cid97 = next(c for c in e.zlist("bz", 0) if e.s.cards[c].defn == "T097")
+    assert not e.s.cards[cid97].under   # 離れた下のカードは under から外れる（第33弾で修正したエンジンの潜在バグ）
 
 
 def test_janken_win_draws(rules):
