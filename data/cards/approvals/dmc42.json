@@ -14,7 +14,7 @@
 ],
 "verifier": 2,
 "verify": "43手・turn 30 まで正常に回った（result={'winner': 0, 'reason': 'deck_out', 'turn': 30}）",
-"vocab_ver": "6a45f96abdae929e"
+"vocab_ver": "f08ac2323dcf02b4"
 },
 "dmc42-029": {
 "by": "rule",
@@ -31,7 +31,7 @@
 ],
 "verifier": 2,
 "verify": "43手・turn 30 まで正常に回った（result={'winner': 0, 'reason': 'deck_out', 'turn': 30}）",
-"vocab_ver": "be4760d417b60874"
+"vocab_ver": "61ad367549e57432"
 },
 "dmc42-045": {
 "by": "rule",
@@ -48,7 +48,7 @@
 ],
 "verifier": 2,
 "verify": "43手・turn 30 まで正常に回った（result={'winner': 0, 'reason': 'deck_out', 'turn': 30}）",
-"vocab_ver": "9de3169a1849417c"
+"vocab_ver": "125f3996cc3c2b18"
 },
 "dmc42-055": {
 "by": "rule",
@@ -66,7 +66,7 @@
 ],
 "verifier": 2,
 "verify": "43手・turn 30 まで正常に回った（result={'winner': 0, 'reason': 'deck_out', 'turn': 30}）",
-"vocab_ver": "506e521dd17fa278"
+"vocab_ver": "13f037ccc6833e8c"
 },
 "dmc42-058": {
 "by": "rule",
@@ -83,7 +83,7 @@
 ],
 "verifier": 2,
 "verify": "43手・turn 30 まで正常に回った（result={'winner': 0, 'reason': 'deck_out', 'turn': 30}）",
-"vocab_ver": "9f883d2717dd507d"
+"vocab_ver": "562599d8e4e5b6c4"
 },
 "dmc42-061": {
 "by": "rule",
@@ -100,7 +100,7 @@
 ],
 "verifier": 2,
 "verify": "43手・turn 30 まで正常に回った（result={'winner': 0, 'reason': 'deck_out', 'turn': 30}）",
-"vocab_ver": "75f429004714f040"
+"vocab_ver": "f93cf5245b8b9dad"
 },
 "dmc42-062": {
 "by": "rule",
@@ -117,7 +117,7 @@
 ],
 "verifier": 2,
 "verify": "43手・turn 30 まで正常に回った（result={'winner': 0, 'reason': 'deck_out', 'turn': 30}）",
-"vocab_ver": "75f429004714f040"
+"vocab_ver": "f93cf5245b8b9dad"
 },
 "dmc42-063": {
 "by": "rule",
@@ -133,7 +133,7 @@
 ],
 "verifier": 2,
 "verify": "43手・turn 30 まで正常に回った（result={'winner': 0, 'reason': 'deck_out', 'turn': 30}）",
-"vocab_ver": "dd7d96a775c3c34b"
+"vocab_ver": "f187b2a6635983e0"
 },
 "dmc42-065": {
 "by": "rule",
@@ -149,7 +149,7 @@
 ],
 "verifier": 2,
 "verify": "43手・turn 30 まで正常に回った（result={'winner': 0, 'reason': 'deck_out', 'turn': 30}）",
-"vocab_ver": "07f44018b778320c"
+"vocab_ver": "ee3cc99a8c4ed18c"
 },
 "dmc42-066": {
 "by": "rule",
@@ -166,7 +166,7 @@
 ],
 "verifier": 2,
 "verify": "43手・turn 30 まで正常に回った（result={'winner': 0, 'reason': 'deck_out', 'turn': 30}）",
-"vocab_ver": "14660b302a374596"
+"vocab_ver": "231189c9463254ce"
 },
 "dmc42-067": {
 "by": "rule",
@@ -183,7 +183,7 @@
 ],
 "verifier": 2,
 "verify": "43手・turn 30 まで正常に回った（result={'winner': 0, 'reason': 'deck_out', 'turn': 30}）",
-"vocab_ver": "a72f32e3c7571257"
+"vocab_ver": "d4f93ad6941ad18c"
 },
 "dmc42-068": {
 "by": "rule",
@@ -199,7 +199,7 @@
 ],
 "verifier": 2,
 "verify": "43手・turn 30 まで正常に回った（result={'winner': 0, 'reason': 'deck_out', 'turn': 30}）",
-"vocab_ver": "842de100e9c22a29"
+"vocab_ver": "437a45d55b5c92a5"
 },
 "dmc42-074": {
 "by": "rule",
@@ -216,7 +216,7 @@
 ],
 "verifier": 2,
 "verify": "43手・turn 30 まで正常に回った（result={'winner': 0, 'reason': 'deck_out', 'turn': 30}）",
-"vocab_ver": "c6e19e203a68bacf"
+"vocab_ver": "05dea21d5ebf3cd7"
 },
 "dmc42-079": {
 "by": "rule",
@@ -232,7 +232,7 @@
 ],
 "verifier": 2,
 "verify": "43手・turn 30 まで正常に回った（result={'winner': 0, 'reason': 'deck_out', 'turn': 30}）",
-"vocab_ver": "28dfbdd426e874ba"
+"vocab_ver": "fdd291fff4de4c87"
 },
 "dmc42-080": {
 "by": "rule",
@@ -248,7 +248,7 @@
 ],
 "verifier": 2,
 "verify": "43手・turn 30 まで正常に回った（result={'winner': 0, 'reason': 'deck_out', 'turn': 30}）",
-"vocab_ver": "22715817200b2f42"
+"vocab_ver": "7491d8db75cc702d"
 },
 "dmc42-081": {
 "by": "rule",
@@ -264,7 +264,7 @@
 ],
 "verifier": 2,
 "verify": "43手・turn 30 まで正常に回った（result={'winner': 0, 'reason': 'deck_out', 'turn': 30}）",
-"vocab_ver": "ef6a94fb76f72b37"
+"vocab_ver": "3aa83ed37745e745"
 },
 "dmc42-083": {
 "by": "rule",
@@ -280,7 +280,7 @@
 ],
 "verifier": 2,
 "verify": "43手・turn 30 まで正常に回った（result={'winner': 0, 'reason': 'deck_out', 'turn': 30}）",
-"vocab_ver": "67d8c1b92787b6f7"
+"vocab_ver": "ec679394ccbb684b"
 },
 "dmc42-085": {
 "by": "rule",
@@ -296,6 +296,6 @@
 ],
 "verifier": 2,
 "verify": "43手・turn 30 まで正常に回った（result={'winner': 0, 'reason': 'deck_out', 'turn': 30}）",
-"vocab_ver": "ae344ebf9fc2dc13"
+"vocab_ver": "24c2c566acd8b938"
 }
 }

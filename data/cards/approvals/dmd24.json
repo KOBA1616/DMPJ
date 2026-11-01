@@ -17,7 +17,7 @@
 ],
 "verifier": 2,
 "verify_error": "原文に このクリーチャーは攻撃できない があるが cannot_attack が定義に無い",
-"vocab_ver": "f871ca0ffcbf40bd"
+"vocab_ver": "1a2df8f76f379cf9"
 },
 "dmd24-032": {
 "by": "rule",
@@ -33,6 +33,6 @@
 ],
 "verifier": 2,
 "verify": "43手・turn 30 まで正常に回った（result={'winner': 0, 'reason': 'deck_out', 'turn': 30}）",
-"vocab_ver": "842de100e9c22a29"
+"vocab_ver": "437a45d55b5c92a5"
 }
 }

@@ -1,0 +1,21 @@
+{
+"39-secs003": {
+"by": "rule",
+"checks": {
+"effect": "skip",
+"text": "fail"
+},
+"def_hash": "7c01edbac620ac20",
+"status": "pending",
+"uses": [
+"core",
+"kw:quad_breaker",
+"kw:world_breaker",
+"op:may",
+"op:move"
+],
+"verifier": 2,
+"verify_error": "原文に メテオバーン があるが meteor_burn が定義に無い",
+"vocab_ver": "d601e94e14c42184"
+}
+}
