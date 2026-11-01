@@ -552,6 +552,10 @@ class Engine(SelectorMixin, EventMixin, InterpreterMixin, TurnMixin, CombatMixin
             c.entered_seq = s.seq
             if self.cdef(cid).faces:
                 c.face = 0          # ツインパクトはクリーチャー側としてバトルゾーンにある（810.4）
+        if c.top_of >= 0:   # 下のカードだけが動く時は、上のカードの under から外す（メテオバーン等で下だけが離れる場合）
+            t = s.cards[c.top_of]
+            if cid in t.under:
+                t.under.remove(cid)
         c.under, c.top_of = [], -1
         c.exlife_of = None                          # 一度離れたシールドは紐付けが外れる
         c.no_untap_next = False                     # ゾーン移動で新しいオブジェクトになるので凍結の印も消える

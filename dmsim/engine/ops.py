@@ -359,6 +359,27 @@ def op_janken(eng, t, op, env):
     return None
 
 
+@op("move_under_to_event")
+def op_move_under_to_event(eng, t, op, env):
+    """G-NEO進化の離脱置換の代わり: 発生源の下のカードすべてを、置換されたイベントの行き先へ移動する。"""
+    ev = env.get("event") or {}
+    to = ev.get("to")
+    if not to or to == "bz":
+        return None
+    cid = env["self"][0]
+    unders = list(eng.s.cards[cid].under)
+    if not unders:
+        return None
+    evs = []
+    for u in unders:
+        e = {"ev": "move", "subject": eng.s.ref(u), "to": to, "reason": ev.get("reason", "put")}
+        if ev.get("position"):
+            e["position"] = ev["position"]
+        evs.append(e)
+    eng._defer(t, [eng.ev_task(evs)])
+    return None
+
+
 @op("shield_plus")
 def op_shield_plus(eng, t, op, env):
     """シールド・プラス: 自分の山札の上から1枚を、自分のシールド1つの下に置く（束は1つと数える）。"""
@@ -465,11 +486,9 @@ def op_cast_face(eng, t, op, env):
     唱えたことにはなる（cast イベント、コストは支払わない）が、カード自体は動かず、
     解決後に墓地へも行かない。face: "spell" なら呪文面を探す（ラスト・バースト）。"""
     s = eng.s
-    cid, gen = env["self"]
-    if not s.alive(env["self"]) and s.cards[cid].gen != gen + 1:
+    if not s.alive(env["self"]):
         return
-    # ラスト・バーストは、破壊されて墓地へ移動した発生源（世代が1つ進んだ姿）の呪文面を唱える。
-    # それ以外の移動済み発生源は従来どおり不発（400.8）
+    cid = env["self"][0]
     d = eng.cdef(cid)
     fi = op["face"]
     if fi == -1:   # 呪文面を探す（ラスト・バースト）

@@ -86,6 +86,7 @@
      "evo_charger",
      "ex_life",
      "freeze",
+     "g_neo",
      "g_strike",
      "guardman",
      "hunting",
@@ -269,6 +270,7 @@
        "evo_charger",
        "ex_life",
        "freeze",
+       "g_neo",
        "g_strike",
        "guardman",
        "hunting",
@@ -884,6 +886,18 @@
        "select",
        "to",
        "reason"
+      ],
+      "additionalProperties": false
+     },
+     {
+      "type": "object",
+      "properties": {
+       "op": {
+        "const": "move_under_to_event"
+       }
+      },
+      "required": [
+       "op"
       ],
       "additionalProperties": false
      },
@@ -1550,6 +1564,7 @@
        "evo_charger",
        "ex_life",
        "freeze",
+       "g_neo",
        "g_strike",
        "guardman",
        "hunting",

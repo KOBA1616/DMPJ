@@ -1347,3 +1347,44 @@ cards:
         when: {event: block, attacker: crossed}
         effect:
           - {op: draw, count: 1}
+  - id: T101
+    name: G-NEO試験獣
+    civs: [fire]
+    cost: 5
+    power: 3000
+    types: [creature]
+    neo: true
+    evolve_from: {types: [creature]}
+    keywords: [g_neo, double_breaker]
+    text: G-NEO進化：クリーチャー1体の上に置いてもよい。（カードが下にあれば、NEO進化クリーチャーとして扱い、離れる時、かわりに下のカードすべてが離れる）
+  - id: T102
+    name: 試験用召喚まがい呪文
+    civs: [water]
+    cost: 2
+    types: [spell]
+    text: 自分の手札からクリーチャーを1体、バトルゾーンに出す。
+    spell:
+      - {op: move, select: {zone: hand, owner: you, filter: {types: [creature]}, count: 1}, to: bz, reason: put}
+  - id: T103
+    name: 詠唱封じ獣
+    civs: [light]
+    cost: 3
+    power: 2000
+    types: [creature]
+    text: 相手は呪文を唱えられない。
+    abilities:
+      - kind: static
+        affects: {owner: opp, zone: hand, filter: {types: [spell]}}
+        mod: {deny: [cast]}
+  - id: T104
+    name: 召喚時ドロー獣
+    civs: [nature]
+    cost: 3
+    power: 2000
+    types: [creature]
+    text: このクリーチャーが召喚によって出た時、カードを1枚引く。
+    abilities:
+      - kind: trigger
+        when: {event: move, to: bz, reason: summon, subject: self}
+        effect:
+          - {op: draw, count: 1}
