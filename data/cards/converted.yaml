@@ -200535,3 +200535,2049 @@ cards:
     review: pending
     aliases:
     - promoy4-013
+- id: dm23-001
+  name: 無敵巨兵スパルタンJ
+  types:
+  - creature
+  - evolution
+  civs:
+  - light
+  cost: 7
+  power: 6500
+  races:
+  - グレートメカオー
+  evolve_from:
+    races:
+    - グレートメカオー
+  mana: 1
+  keywords:
+  - blocker
+  - double_breaker
+  - meteor_burn
+  text: '進化-自分のグレートメカオー１体の上に置く。
+
+    ブロッカー
+
+    このクリーチャーがブロックする時、バトルの後、このクリーチャーをアンタップする。
+
+    メテオバーン-このクリーチャーがバトルゾーンを離れる時、かわりにこのクリーチャーの下にあるカードを１枚選び墓地に置いてもよい。そうした場合、このクリーチャーはバトルゾーンに留まる。
+
+    W・ブレイカー'
+  abilities:
+  - kind: trigger
+    when:
+      event: block
+      subject: self
+    effect:
+    - op: delayed_trigger
+      when:
+        event: attack_end
+      effect:
+      - op: untap
+        select:
+          ref: self
+  source:
+    official: dm23-001
+    review: pending
+    notes: 「バトルの後」は attack_end への遅延誘発で表現（バイバイ・アメーバの型）
+- id: dm23bd6-030
+  text: 'エイトビートルズ: W・ブレイカー / このクリーチャーが出た時、カードを２枚、自分の墓地からマナゾーンに置く。 / ラスト・バースト ／ R.C.4.:
+    自然のコスト４以下のクリーチャーを１体、自分のマナゾーンからバトルゾーンに出す。'
+  faces:
+  - name: エイトビートルズ
+    types:
+    - creature
+    civs:
+    - nature
+    cost: 6
+    power: 6000
+    races:
+    - グランセクト
+    keywords:
+    - double_breaker
+    - last_burst
+    abilities:
+    - kind: trigger
+      when:
+        event: move
+        to: bz
+        subject: self
+      effect:
+      - op: move
+        select:
+          zone: graveyard
+          owner: you
+          count: 2
+        to: mana
+        reason: put
+  - name: R.C.4.
+    types:
+    - spell
+    civs:
+    - nature
+    cost: 4
+    spell:
+    - op: move
+      select:
+        zone: mana
+        owner: you
+        filter:
+          types:
+          - creature
+          civs:
+          - nature
+          cost_le: 4
+        count: 1
+      to: bz
+      reason: put
+  source:
+    official: dm23bd6-030
+    review: pending
+    aliases:
+    - dmrp07-025
+- id: dm23ex2-006
+  name: 神羅サンダー・ムーン
+  types:
+  - creature
+  - evolution
+  civs:
+  - light
+  cost: 10
+  power: 17500
+  races:
+  - ルナティック・エンペラー
+  - エンジェル・コマンド
+  evolve_from:
+    types:
+    - evolution
+  mana: 1
+  keywords:
+  - triple_breaker
+  text: '究極進化：進化クリーチャー１体の上に置く。
+
+    T・ブレイカー
+
+    このクリーチャーが出た時、呪文を１枚、コストを支払わずに自分のマナゾーンから唱えてもよい。'
+  abilities:
+  - kind: trigger
+    when:
+      event: move
+      to: bz
+      subject: self
+    effect:
+    - op: may
+      body:
+      - op: play_free
+        select:
+          zone: mana
+          owner: you
+          filter:
+            types:
+            - spell
+          count: 1
+  source:
+    official: dm23ex2-006
+    review: pending
+    aliases:
+    - dm32-s01
+    - dmx12b-028
+- id: dm23ex2-049
+  name: 神羅ダークネス・ロマノフ
+  types:
+  - creature
+  - evolution
+  civs:
+  - darkness
+  cost: 6
+  power: 11000
+  races:
+  - ダークロード
+  - ルナティック・エンペラー
+  - ナイト
+  evolve_from:
+    types:
+    - evolution
+  mana: 1
+  keywords:
+  - double_breaker
+  text: '究極進化：進化クリーチャー１体の上に置く。
+
+    W・ブレイカー（このクリーチャーはシールドを２つブレイクする）
+
+    このクリーチャーが出た時、相手の手札を見て２枚まで選び、捨てさせる。'
+  abilities:
+  - kind: trigger
+    when:
+      event: move
+      to: bz
+      subject: self
+    effect:
+    - op: discard
+      select:
+        zone: hand
+        owner: opp
+        count: 2
+        up_to: true
+  source:
+    official: dm23ex2-049
+    review: pending
+    aliases:
+    - dm35-012
+    - dm35-012hc
+    - dmc66-035
+- id: dm24ex1-071
+  text: 'カシス・ソーダ: ブロッカー / このクリーチャーは攻撃できない。 / ラスト・バースト ／ ♥あたしたちがみんなに元気を届け～る: S・トリガー
+    / 自分のクリーチャーを１体、手札に戻す。その後、相手のクリーチャーを１体選び、持ち主の手札に戻す。'
+  faces:
+  - name: カシス・ソーダ
+    types:
+    - creature
+    civs:
+    - water
+    cost: 3
+    power: 3000
+    races:
+    - スプラッシュ・クイーン
+    keywords:
+    - blocker
+    - cannot_attack
+    - last_burst
+  - name: ♥あたしたちがみんなに元気を届け～る
+    types:
+    - spell
+    civs:
+    - water
+    cost: 4
+    keywords:
+    - s_trigger
+    spell:
+    - op: bounce
+      select:
+        zone: bz
+        owner: you
+        filter:
+          types:
+          - creature
+        count: 1
+    - op: bounce
+      select:
+        zone: bz
+        owner: opp
+        filter:
+          types:
+          - creature
+        count: 1
+  source:
+    official: dm24ex1-071
+    review: pending
+    aliases:
+    - dmex12-090
+- id: dm24ex3-tf30
+  name: お騒がせチューザ
+  types:
+  - creature
+  civs:
+  - fire
+  cost: 4
+  power: 2000
+  races:
+  - ドリームメイト
+  mana: 1
+  keywords:
+  - must_attack
+  text: 'このクリーチャーは、可能なら毎ターン攻撃する。
+
+    このクリーチャーがタップしていれば、すべてのプレイヤーは呪文を唱えられない。'
+  abilities:
+  - kind: static
+    if:
+      exists:
+        ref: self
+        filter:
+          tapped: true
+    affects:
+      owner: any
+      zone: hand
+      filter:
+        types:
+        - spell
+    mod:
+      deny:
+      - cast
+  source:
+    official: dm24ex3-tf30
+    review: pending
+    aliases:
+    - dm20-031
+    - dm24rp1-t07
+    - dmex12-066
+    - dmex17-w05
+    - dmx12a-020
+- id: dm24ex4-097
+  text: '分析妖精レモングラス: このクリーチャーが出た時、自分の手札からスノーフェアリーを１枚マナゾーンに置いてもよい。 / ラスト・バースト ／ グラス・トラップ:
+    相手のコスト５以下のエレメントを１つ選び、持ち主のマナゾーンに置く。'
+  faces:
+  - name: 分析妖精レモングラス
+    types:
+    - creature
+    civs:
+    - nature
+    cost: 2
+    power: 1000
+    races:
+    - スノーフェアリー
+    keywords:
+    - last_burst
+    abilities:
+    - kind: trigger
+      when:
+        event: move
+        to: bz
+        subject: self
+      effect:
+      - op: may
+        body:
+        - op: mana_put
+          select:
+            zone: hand
+            owner: you
+            filter:
+              races:
+              - スノーフェアリー
+            count: 1
+  - name: グラス・トラップ
+    types:
+    - spell
+    civs:
+    - nature
+    cost: 3
+    spell:
+    - op: move
+      select:
+        zone: bz
+        owner: opp
+        filter:
+          cost_le: 5
+        count: 1
+      to: mana
+      reason: put
+  source:
+    official: dm24ex4-097
+    review: pending
+    aliases:
+    - dm24ex4-pr057
+    - promoy23-121
+- id: dm25ex1-mc003
+  name: 究極銀河ユニバース
+  types:
+  - creature
+  - evolution
+  civs:
+  - light
+  cost: 5
+  power: 17000
+  races:
+  - フェニックス
+  evolve_from:
+    races:
+    - フェニックス
+  mana: 1
+  keywords:
+  - triple_breaker
+  - meteor_burn
+  text: '進化：フェニックス・クリーチャー１体の上に置く。
+
+    Ｔ・ブレイカー
+
+    メテオバーン ：このクリーチャーが攻撃する時、このクリーチャーの下にあるカードを１枚墓地に置いてもよい。それがこのクリーチャーの下にあった最後の１枚でフェニックス・カードなら、自分はゲームに勝つ。'
+  abilities:
+  - kind: trigger
+    when:
+      event: attack
+      subject: self
+    effect:
+    - op: may
+      body:
+      - op: move
+        select:
+          under_of: self
+          count: 1
+        to: graveyard
+        reason: put
+        as: paid
+      - op: if
+        cond:
+          all:
+          - exists:
+              ref: paid
+              filter:
+                races:
+                - フェニックス
+          - cmp:
+            - count:
+                under_of: self
+            - ==
+            - 0
+        then:
+        - op: win
+          player: you
+  source:
+    official: dm25ex1-mc003
+    review: pending
+    aliases:
+    - dm22-s01
+    - dmc55-016
+    - dmex17-cho09
+    - dmx21-057
+    - promoy25-122
+- id: dm25sd2-003
+  name: 超神羅星アポロヌス・ドラゲリオン
+  types:
+  - creature
+  - evolution
+  civs:
+  - fire
+  cost: 6
+  power: 15000
+  races:
+  - フェニックス
+  evolve_from:
+    types:
+    - evolution
+  mana: 1
+  keywords:
+  - triple_breaker
+  text: '究極進化：進化クリーチャー１体の上に置く。
+
+    侵略：火の進化ドラゴン（自分の火の進化ドラゴンが攻撃する時、自分の手札にあるこのクリーチャーをその上に置いてもよい）
+
+    T・ブレイカー
+
+    相手がこのクリーチャーを選んだ時、カードを２枚相手のマナゾーンから選び、持ち主の墓地に置く。
+
+    メテオバーン：このクリーチャーが出た時、このクリーチャーの下にあるカードを３枚墓地に置いてもよい。そうしたら、このクリーチャーは相手のシールドをすべてブレイクする。'
+  abilities:
+  - kind: declare
+    zone: hand
+    when:
+      event: attack
+      subject:
+        owner: you
+        filter:
+          civs:
+          - fire
+          types:
+          - evolution
+          race_has: ドラゴン
+    effect:
+    - op: may
+      body:
+      - op: invade
+        onto:
+          ref: event.subject
+  - kind: trigger
+    when:
+      event: choose
+      subject: self
+    effect:
+    - op: move
+      select:
+        zone: mana
+        owner: opp
+        count: 2
+      to: graveyard
+      reason: put
+  - kind: trigger
+    when:
+      event: move
+      to: bz
+      subject: self
+    effect:
+    - op: may
+      body:
+      - op: move
+        select:
+          under_of: self
+          count: 3
+        to: graveyard
+        reason: put
+        as: paid
+      - op: if
+        cond:
+          cmp:
+          - count:
+              ref: paid
+          - ==
+          - 3
+        then:
+        - op: break
+          player: opp
+          count:
+            count:
+              zone: shield
+              owner: opp
+  source:
+    official: dm25sd2-003
+    review: pending
+    aliases:
+    - dm23ex2-cho004
+    - dm23rp1-tr6
+    - dm23rp3-tr03
+    - dmex17-013
+- id: dm26-019
+  name: 鎧亜の魔術師グッチョッパ
+  types:
+  - creature
+  civs:
+  - water
+  - darkness
+  - fire
+  cost: 5
+  power: 1000
+  races:
+  - ロスト・クルセイダー
+  mana: 1
+  text: マナゾーンに置く時、このカードはタップして置く。 / このクリーチャーをバトルゾーンに出した時、相手とジャンケンして勝敗を決める。自分が勝った場合、３枚までカードを引いてもよい。自分が負けた場合、自分の手札を１枚捨てる。
+  abilities:
+  - kind: trigger
+    when:
+      event: move
+      to: bz
+      subject: self
+    effect:
+    - op: janken
+      win:
+      - op: repeat
+        times: 3
+        body:
+        - op: may
+          body:
+          - op: draw
+            count: 1
+      lose:
+      - op: discard
+        select:
+          zone: hand
+          owner: you
+          count: 1
+  source:
+    official: dm26-019
+    review: pending
+    notes: 「３枚まで引いてもよい」は1枚ずつ引くかを選ぶ形（repeat + may）で表現
+- id: dm26ex1-n003
+  text: '大地無双 カイザー「勝」: ブロッカー / このクリーチャーが出た時、自分の山札の上から２枚をタップしてマナゾーンに置く。その後、カードを１枚、自分のマナゾーンから手札に戻す。
+    / ラスト・バースト ／ 勝利の大地: S・トリガー / ハンター・メクレイド10する。'
+  faces:
+  - name: 大地無双 カイザー「勝」
+    types:
+    - creature
+    civs:
+    - water
+    - nature
+    cost: 4
+    power: 4000
+    races:
+    - ブルー・コマンド・ドラゴン
+    - グリーン・コマンド・ドラゴン
+    - ハンター
+    keywords:
+    - blocker
+    - last_burst
+    abilities:
+    - kind: trigger
+      when:
+        event: move
+        to: bz
+        subject: self
+      effect:
+      - op: move
+        select:
+          zone: deck
+          owner: you
+          from_top: 2
+        to: mana
+        reason: put
+        tapped: true
+      - op: bounce
+        select:
+          zone: mana
+          owner: you
+          count: 1
+  - name: 勝利の大地
+    types:
+    - spell
+    civs:
+    - water
+    - nature
+    cost: 8
+    keywords:
+    - s_trigger
+    spell:
+    - op: mekurade
+      filter:
+        race_has: ハンター
+      cost_le: 10
+  source:
+    official: dm26ex1-n003
+    review: pending
+    aliases:
+    - dm26ex1-secn003
+    - dm26ex1-secn003cho
+- id: dm26rp1-053
+  name: 幸せの精霊ミルザム・キッド
+  types:
+  - creature
+  civs:
+  - light
+  cost: 3
+  power: 4000
+  races:
+  - エンジェル・コマンド
+  mana: 1
+  text: シールド・プラス：このクリーチャーが出た時、自分の山札の上から１枚を裏向きで自分のシールド１つの下に置いてもよい。
+  abilities:
+  - kind: trigger
+    when:
+      event: move
+      to: bz
+      subject: self
+    effect:
+    - op: may
+      body:
+      - op: shield_plus
+  source:
+    official: dm26rp1-053
+    review: pending
+- id: dm26sd1-y005
+  name: 神羅ケンジ・キングダム
+  types:
+  - creature
+  - evolution
+  civs:
+  - darkness
+  - nature
+  cost: 4
+  power: 6000
+  races:
+  - デーモン・コマンド
+  - ドリームメイト
+  - ルナティック・エンペラー
+  evolve_from:
+    types:
+    - evolution
+  mana: 1
+  keywords:
+  - double_breaker
+  text: 'このクリーチャーを自分の墓地から召喚してもよい。
+
+    究極進化：進化クリーチャー１体の上に置く。
+
+    W・ブレイカー（このクリーチャーはシールドを２つブレイクする）
+
+    このクリーチャーが出た時、自分の山札の上から３枚を墓地に置く。その後、その中からクリーチャーを１体出す。'
+  abilities:
+  - kind: static
+    zone: graveyard
+    affects: self
+    mod:
+      allow:
+      - summon_from_graveyard
+  - kind: trigger
+    when:
+      event: move
+      to: bz
+      subject: self
+    effect:
+    - op: move
+      select:
+        zone: deck
+        owner: you
+        from_top: 3
+      to: graveyard
+      reason: put
+      as: milled
+    - op: move
+      select:
+        ref: milled
+        filter:
+          types:
+          - creature
+        count: 1
+      to: bz
+      reason: put
+  source:
+    official: dm26sd1-y005
+    review: pending
+    aliases:
+    - dm23ex2-cho013
+    - dmex16-077
+- id: dm27-049
+  name: 突撃勇者アーニー
+  types:
+  - creature
+  civs:
+  - fire
+  cost: 3
+  power: 3000
+  races:
+  - ヒューマノイド
+  mana: 1
+  keywords:
+  - must_attack
+  text: 'パワーアタッカー+2000(攻撃中、このクリーチャーのパワーは+2000される)
+
+    このクリーチャーは、可能であれば毎ターン攻撃する。'
+  abilities:
+  - kind: static
+    affects: self
+    mod:
+      power_when:
+        amount: 2000
+        when: attacking
+  - kind: static
+    affects: self
+    mod:
+      power_when:
+        amount: 2000
+        when: attacking
+  source:
+    official: dm27-049
+    review: pending
+- id: dm28-011
+  name: 光神龍ザ・イエス
+  types:
+  - creature
+  civs:
+  - light
+  cost: 6
+  power: 6000
+  races:
+  - アポロニア・ドラゴン
+  mana: 1
+  keywords:
+  - double_breaker
+  text: 'シールド・プラス-このクリーチャーが攻撃する時、自分の山札の上から１枚目を裏向きのまま、自分のシールドいずれかの下に置いてもよい。(こうして重ねたカードの束を１枚のシールドとみなす)
+
+    W・ブレイカー(このクリーチャーはシールドを２枚ブレイクする)'
+  abilities:
+  - kind: trigger
+    when:
+      event: attack
+      subject: self
+    effect:
+    - op: may
+      body:
+      - op: shield_plus
+  source:
+    official: dm28-011
+    review: pending
+    aliases:
+    - dm28-011hc
+- id: dm28-016
+  name: 魔弾プラス・ワン
+  types:
+  - spell
+  civs:
+  - light
+  cost: 2
+  races:
+  - ナイト
+  mana: 1
+  text: シールド・プラスー自分の山札の上から１枚目を裏向きのまま、自分のシールドいずれかの下に置く。 / ナイト・マジック
+  spell:
+  - op: shield_plus
+  - op: if
+    cond:
+      exists:
+        zone: bz
+        owner: you
+        filter:
+          race_has: ナイト
+    then:
+    - op: may
+      body:
+      - op: shield_plus
+  source:
+    official: dm28-016
+    review: pending
+    notes: ナイト・マジックは「自分のナイトがいれば、この呪文の能力（シールド・プラス）をもう一度使ってもよい」として if + may で表現
+- id: dm28-055
+  name: ガルデス・ドラグーン
+  types:
+  - creature
+  civs:
+  - darkness
+  cost: 3
+  power: 5000
+  races:
+  - ティラノ・ドレイク
+  mana: 1
+  text: このクリーチャーをバトルゾーンに出した時、自分のシールドを１枚墓地に置く。 / シールド・プラス-このクリーチャーをバトルゾーンに出した時、自分の山札の上から１枚目を裏向きのまま、自分のシールドいずれかの下に置いてもよい。
+  abilities:
+  - kind: trigger
+    when:
+      event: move
+      to: bz
+      subject: self
+    effect:
+    - op: move
+      select:
+        zone: shield
+        owner: you
+        count: 1
+      to: graveyard
+      reason: put
+  - kind: trigger
+    when:
+      event: move
+      to: bz
+      subject: self
+    effect:
+    - op: may
+      body:
+      - op: shield_plus
+  source:
+    official: dm28-055
+    review: pending
+- id: dm28-061
+  name: トランス・ドラグーン
+  types:
+  - creature
+  civs:
+  - fire
+  cost: 3
+  power: 5000
+  races:
+  - ティラノ・ドレイク
+  mana: 1
+  text: このクリーチャーをバトルゾーンに出した時、カードを１枚、自分のマナゾーンから墓地に置く。 / シールド・プラス-このクリーチャーをバトルゾーンに出した時、自分の山札の上から１枚目を裏向きのまま、自分のシールドいずれかの下に置いてもよい。
+  abilities:
+  - kind: trigger
+    when:
+      event: move
+      to: bz
+      subject: self
+    effect:
+    - op: move
+      select:
+        zone: mana
+        owner: you
+        count: 1
+      to: graveyard
+      reason: put
+  - kind: trigger
+    when:
+      event: move
+      to: bz
+      subject: self
+    effect:
+    - op: may
+      body:
+      - op: shield_plus
+  source:
+    official: dm28-061
+    review: pending
+- id: dm28-067
+  name: 青銅の鎖鎌
+  types:
+  - creature
+  civs:
+  - nature
+  cost: 4
+  power: 2000
+  races:
+  - ビーストフォーク
+  mana: 1
+  text: 'このクリーチャーをバトルゾーンに出した時、自分の山札の上から１枚目をマナゾーンに置く。
+
+    シールド・プラス-このクリーチャーが破壊された時、自分の山札の上から１枚目を裏向きのまま、自分のシールドいずれかの下に置いてもよい。(こうして重ねたカードの束を１枚のシールドとみなす)'
+  abilities:
+  - kind: trigger
+    when:
+      event: move
+      to: bz
+      subject: self
+    effect:
+    - op: move
+      select:
+        zone: deck
+        owner: you
+        from_top: 1
+      to: mana
+      reason: put
+  - kind: trigger
+    when:
+      event: move
+      to: bz
+      subject: self
+    effect:
+    - op: mana_put
+      select:
+        zone: deck
+        owner: you
+        from_top: 1
+  - kind: trigger
+    when:
+      event: move
+      from: bz
+      to: graveyard
+      reason: destroy
+      subject: self
+    effect:
+    - op: may
+      body:
+      - op: shield_plus
+  source:
+    official: dm28-067
+    review: pending
+- id: dm28-072
+  name: 予言者ヒョウ
+  types:
+  - creature
+  civs:
+  - light
+  cost: 3
+  power: 4000
+  races:
+  - ライトブリンガー
+  mana: 1
+  keywords:
+  - blocker
+  - cannot_attack_player
+  text: 'ブロッカー
+
+    このクリーチャーは、相手プレイヤーを攻撃できない。
+
+    シールド・プラス-このクリーチャーが破壊された時、自分の山札の上から１枚目を裏向きのまま、自分のシールドいずれかの下に置いてもよい。(こうして重ねたカードの束を１枚のシールドとみなす)'
+  abilities:
+  - kind: trigger
+    when:
+      event: move
+      from: bz
+      to: graveyard
+      reason: destroy
+      subject: self
+    effect:
+    - op: may
+      body:
+      - op: shield_plus
+  source:
+    official: dm28-072
+    review: pending
+- id: dm28-074
+  name: ピュアランダース
+  types:
+  - creature
+  civs:
+  - light
+  cost: 3
+  power: 2000
+  races:
+  - シャイン・モンスター
+  mana: 1
+  text: シールド・プラス-このクリーチャーをバトルゾーンに出した時、自分の山札の上から１枚目を裏向きのまま、自分のシールドいずれかの下に置いてもよい。
+  abilities:
+  - kind: trigger
+    when:
+      event: move
+      to: bz
+      subject: self
+    effect:
+    - op: may
+      body:
+      - op: shield_plus
+  source:
+    official: dm28-074
+    review: pending
+- id: dm28-087
+  name: 封魔ズルメル
+  types:
+  - creature
+  civs:
+  - darkness
+  cost: 5
+  power: 5000
+  races:
+  - グランド・デビル
+  mana: 1
+  text: シールド・プラス-このクリーチャーをバトルゾーンに出した時、自分の山札の上から１枚目を裏向きのまま、自分のシールドいずれかの下に置いてもよい。
+  abilities:
+  - kind: trigger
+    when:
+      event: move
+      to: bz
+      subject: self
+    effect:
+    - op: may
+      body:
+      - op: shield_plus
+  source:
+    official: dm28-087
+    review: pending
+- id: dm28-104
+  name: 鋭翼の化身
+  types:
+  - creature
+  civs:
+  - nature
+  cost: 4
+  power: 4000
+  races:
+  - ミステリー・トーテム
+  mana: 1
+  text: シールド・プラス-このクリーチャーをバトルゾーンに出した時、自分の山札の上から１枚目を裏向きのまま、自分のシールドいずれかの下に置いてもよい。
+  abilities:
+  - kind: trigger
+    when:
+      event: move
+      to: bz
+      subject: self
+    effect:
+    - op: may
+      body:
+      - op: shield_plus
+  source:
+    official: dm28-104
+    review: pending
+- id: dm29-041
+  name: シンカイバビロデム
+  types:
+  - creature
+  civs:
+  - water
+  cost: 4
+  power: 4000
+  races:
+  - ブルー・モンスター
+  mana: 1
+  text: シールド・プラス-このクリーチャーが相手プレイヤーを攻撃してブロックされなかった時、自分の山札の上から１枚目を裏向きのまま、自分のシールドいずれかの下に置いてもよい。
+  abilities:
+  - kind: trigger
+    when:
+      event: attack_end
+      subject: self
+      target: player
+    effect:
+    - op: may
+      body:
+      - op: shield_plus
+  source:
+    official: dm29-041
+    review: pending
+- id: dm32-047
+  name: 神羅スパイラル・ムーン
+  types:
+  - creature
+  - evolution
+  civs:
+  - water
+  cost: 6
+  power: 7000
+  races:
+  - ルナティック・エンペラー
+  - サイバー・コマンド
+  evolve_from:
+    types:
+    - evolution
+  mana: 1
+  keywords:
+  - double_breaker
+  text: '究極進化-自分の進化クリーチャー１体の上に置く。
+
+    このクリーチャーが攻撃する時、バトルゾーンにあるクリーチャーを１体選び、持ち主の手札に戻してもよい。
+
+    W・ブレイカー(このクリーチャーはシールドを２枚ブレイクする)'
+  abilities:
+  - kind: trigger
+    when:
+      event: attack
+      subject: self
+    effect:
+    - op: may
+      body:
+      - op: bounce
+        select:
+          zone: bz
+          owner: any
+          filter:
+            types:
+            - creature
+          count: 1
+  source:
+    official: dm32-047
+    review: pending
+- id: dm32-s04
+  name: 神羅ブリザード・ムーン
+  types:
+  - creature
+  - evolution
+  civs:
+  - water
+  cost: 6
+  power: 9000
+  races:
+  - ルナティック・エンペラー
+  - サイバー・コマンド
+  evolve_from:
+    types:
+    - evolution
+  mana: 1
+  keywords:
+  - double_breaker
+  text: '究極進化-自分の進化クリーチャー１体の上に置く。
+
+    このクリーチャーが攻撃する時、カードを３枚まで引いてもよい。
+
+    W・ブレイカー(このクリーチャーはシールドを２枚ブレイクする)'
+  abilities:
+  - kind: trigger
+    when:
+      event: attack
+      subject: self
+    effect:
+    - op: repeat
+      times: 3
+      body:
+      - op: may
+        body:
+        - op: draw
+          count: 1
+  source:
+    official: dm32-s04
+    review: pending
+    notes: 「３枚まで引いてもよい」は1枚ずつ引くかを選ぶ形（repeat + may）で表現
+- id: dm33-003
+  name: 神羅ヘルゲート・ムーン
+  types:
+  - creature
+  - evolution
+  civs:
+  - darkness
+  cost: 10
+  power: 13000
+  races:
+  - ルナティック・エンペラー
+  - デビルマスク
+  evolve_from:
+    types:
+    - evolution
+  mana: 1
+  keywords:
+  - triple_breaker
+  text: '究極進化-自分の進化クリーチャー１体の上に置く。
+
+    このクリーチャーをバトルゾーンに出した時、クリーチャーをすべて、自分の墓地からバトルゾーンに出す。その後、相手は自身のクリーチャーをすべて、墓地からバトルゾーンに出す。
+
+    T・ブレイカー(このクリーチャーはシールドを３枚ブレイクする)'
+  abilities:
+  - kind: trigger
+    when:
+      event: move
+      to: bz
+      subject: self
+    effect:
+    - op: move
+      select:
+        zone: graveyard
+        owner: you
+        filter:
+          types:
+          - creature
+        count: all
+      to: bz
+      reason: put
+    - op: move
+      select:
+        zone: graveyard
+        owner: opp
+        filter:
+          types:
+          - creature
+        count: all
+      to: bz
+      reason: put
+  source:
+    official: dm33-003
+    review: pending
+- id: dm33-s02
+  name: 神羅カリビアン・ムーン
+  types:
+  - creature
+  - evolution
+  civs:
+  - water
+  cost: 7
+  power: 6000
+  races:
+  - ルナティック・エンペラー
+  - サイバー・コマンド
+  evolve_from:
+    types:
+    - evolution
+  mana: 1
+  keywords:
+  - double_breaker
+  text: '究極進化-自分の進化クリーチャー１体の上に置く。
+
+    このクリーチャーをバトルゾーンに出した時、またはこのクリーチャーが攻撃する時、またはこのクリーチャーがバトルゾーンを離れた時、相手の墓地にある呪文を１枚コストを支払わずに唱えてもよい。その後、そのカードを持ち主の山札の一番下に置く。
+
+    W・ブレイカー(このクリーチャーはシールドを２枚ブレイクする)'
+  abilities:
+  - kind: trigger
+    when:
+      event: move
+      to: bz
+      subject: self
+    effect: &id095
+    - op: may
+      body:
+      - op: play_free
+        select:
+          zone: graveyard
+          owner: opp
+          filter:
+            types:
+            - spell
+          count: 1
+        resolve_to: deck
+        resolve_position: bottom
+  - kind: trigger
+    when:
+      event: attack
+      subject: self
+    effect: *id095
+  - kind: trigger
+    when:
+      event: move
+      from: bz
+      subject: self
+    effect: *id095
+  source:
+    official: dm33-s02
+    review: pending
+- id: dm34-018
+  name: 大作家ゴー・ダイゴ
+  types:
+  - creature
+  - evolution
+  civs:
+  - nature
+  cost: 5
+  power: 5000
+  races:
+  - ドリームメイト
+  - オリジン
+  evolve_from:
+    races:
+    - ドリームメイト
+    - オリジン
+  mana: 1
+  text: '進化 - 自分のドリームメイトまたはオリジン１体の上に置く。
+
+    自分のターンの終わりに、クリーチャーを１体、自分のマナゾーンからこのクリーチャーの下に置いてもよい。
+
+    メテオバーン - このクリーチャーが攻撃する時、このクリーチャーの下にあるカードを３枚選び墓地に置いてもよい。そうした場合、そのターン、バトルゾーンにある自分のクリーチャーすべてのパワーは+12000され、「T・ブレイカー」を得る。'
+  abilities:
+  - kind: trigger
+    when:
+      event: turn_end
+      player: you
+    effect:
+    - op: may
+      body:
+      - op: put_under
+        select:
+          zone: mana
+          owner: you
+          filter:
+            types:
+            - creature
+          count: 1
+        onto:
+          ref: self
+  - kind: trigger
+    when:
+      event: attack
+      subject: self
+    effect:
+    - op: may
+      body:
+      - op: move
+        select:
+          under_of: self
+          count: 3
+        to: graveyard
+        reason: put
+        as: paid
+      - op: if
+        cond:
+          exists:
+            ref: paid
+        then:
+        - op: modify
+          select:
+            zone: bz
+            owner: you
+            filter:
+              types:
+              - creature
+            count: all
+          mod:
+            power: 12000
+            grant:
+            - triple_breaker
+          duration: end_of_turn
+  source:
+    official: dm34-018
+    review: pending
+  keywords:
+  - meteor_burn
+- id: dm34-021
+  name: 英知メフィスター
+  types:
+  - creature
+  - evolution
+  civs:
+  - light
+  cost: 3
+  power: 5500
+  races:
+  - ライトブリンガー
+  - オリジン
+  evolve_from:
+    races:
+    - ライトブリンガー
+    - オリジン
+  mana: 1
+  text: '進化 - 自分のライトブリンガーまたはオリジン１体の上に置く。
+
+    メテオバーン - このクリーチャーが攻撃する時、このクリーチャーの下にあるカードを１枚選び墓地に置いてもよい。そうした場合、自分の次のターンのはじめまで、バトルゾーンにある自分のクリーチャーはすべて「ブロッカー」を得、このターンの終わりにバトルゾーンにある自分のクリーチャーをすべてアンタップする。'
+  abilities:
+  - kind: trigger
+    when:
+      event: attack
+      subject: self
+    effect:
+    - op: may
+      body:
+      - op: move
+        select:
+          under_of: self
+          count: 1
+        to: graveyard
+        reason: put
+        as: paid
+      - op: if
+        cond:
+          exists:
+            ref: paid
+        then:
+        - op: modify
+          select:
+            zone: bz
+            owner: you
+            filter:
+              types:
+              - creature
+            count: all
+          mod:
+            grant:
+            - blocker
+          duration: until_next_own_turn_start
+        - op: delayed_trigger
+          when:
+            event: turn_end
+          effect:
+          - op: untap
+            select:
+              zone: bz
+              owner: you
+              filter:
+                types:
+                - creature
+              count: all
+  source:
+    official: dm34-021
+    review: pending
+  keywords:
+  - meteor_burn
+- id: dm34-027
+  name: 魔星蟲オルディオン
+  types:
+  - creature
+  - evolution
+  civs:
+  - darkness
+  cost: 4
+  power: 5000
+  races:
+  - パラサイトワーム
+  - オリジン
+  evolve_from:
+    races:
+    - パラサイトワーム
+    - オリジン
+  mana: 1
+  text: '進化 - 自分のパラサイトワームまたはオリジン１体の上に置く。
+
+    メテオバーン - このクリーチャーが攻撃する時、このクリーチャーの下にあるカードを１枚選び墓地に置いてもよい。そうした場合、相手の「ブロッカー」を持つクリーチャーを１体破壊する。'
+  abilities:
+  - kind: trigger
+    when:
+      event: attack
+      subject: self
+    effect:
+    - op: may
+      body:
+      - op: move
+        select:
+          under_of: self
+          count: 1
+        to: graveyard
+        reason: put
+        as: paid
+      - op: if
+        cond:
+          exists:
+            ref: paid
+        then:
+        - op: destroy
+          select:
+            zone: bz
+            owner: opp
+            filter:
+              types:
+              - creature
+              keyword: blocker
+            count: 1
+  source:
+    official: dm34-027
+    review: pending
+  keywords:
+  - meteor_burn
+- id: dm34-033
+  name: 大作家エドガー・オーライオン
+  types:
+  - creature
+  - evolution
+  civs:
+  - nature
+  cost: 3
+  power: 4000
+  races:
+  - ドリームメイト
+  - オリジン
+  evolve_from:
+    races:
+    - ドリームメイト
+    - オリジン
+  mana: 1
+  text: '進化 - 自分のドリームメイトまたはオリジン１体の上に置く。
+
+    メテオバーン - このクリーチャーが攻撃する時、このクリーチャーの下にあるカードを１枚選び墓地に置いてもよい。そうした場合、自分の山札の上から１枚目をマナゾーンに置く。'
+  abilities:
+  - kind: trigger
+    when:
+      event: attack
+      subject: self
+    effect:
+    - op: may
+      body:
+      - op: move
+        select:
+          under_of: self
+          count: 1
+        to: graveyard
+        reason: put
+        as: paid
+      - op: if
+        cond:
+          exists:
+            ref: paid
+        then:
+        - op: mana_put
+          select:
+            zone: deck
+            owner: you
+            from_top: 1
+  source:
+    official: dm34-033
+    review: pending
+  keywords:
+  - meteor_burn
+- id: dm35-030
+  name: 神羅サンシャイン・NEX
+  types:
+  - creature
+  - evolution
+  civs:
+  - fire
+  cost: 5
+  power: 11000
+  races:
+  - アーマード・ドラゴン
+  - ルナティック・エンペラー
+  - サムライ
+  evolve_from:
+    types:
+    - evolution
+  mana: 1
+  keywords:
+  - double_breaker
+  text: '究極進化-自分の進化クリーチャー１体の上に置く。
+
+    W・ブレイカー(このクリーチャーはシールドを２枚ブレイクする)
+
+    このクリーチャーがバトルゾーンを離れる時、かわりにクリーチャーではないカードを１枚、手札から捨ててもよい。'
+  abilities:
+  - kind: replace
+    optional: true
+    when:
+      event: move
+      from: bz
+      subject: self
+    if:
+      exists:
+        zone: hand
+        owner: you
+        filter:
+          not_types:
+          - creature
+    instead:
+    - op: discard
+      select:
+        zone: hand
+        owner: you
+        filter:
+          not_types:
+          - creature
+        count: 1
+  source:
+    official: dm35-030
+    review: pending
+    aliases:
+    - dm35-030hc
+- id: dm35-050
+  name: 喧嘩伯爵ボーグ
+  types:
+  - creature
+  civs:
+  - fire
+  cost: 1
+  power: 3000
+  races:
+  - ヒューマノイド
+  mana: 1
+  keywords:
+  - cannot_attack_player
+  - must_attack
+  text: 'このクリーチャーは、可能であれば毎ターン、クリーチャーを攻撃する。
+
+    このクリーチャーは、相手プレイヤーを攻撃できない。'
+  source:
+    official: dm35-050
+    review: pending
+    notes: 「クリーチャーを攻撃する」は must_attack（攻撃の強制）と cannot_attack_player（プレイヤー攻撃不可）の組み合わせで表現
+- id: dmbd17-teki007
+  name: 轟速 S
+  types:
+  - creature
+  civs:
+  - fire
+  cost: 3
+  power: 5000
+  races:
+  - ソニック・コマンド
+  - 侵略者
+  mana: 1
+  keywords:
+  - must_attack
+  text: 'このクリーチャーは、可能なら毎ターン攻撃する。
+
+    このクリーチャーは、クリーチャーを攻撃できない。'
+  abilities:
+  - kind: static
+    affects: self
+    mod:
+      deny:
+      - attack_creature
+  source:
+    official: dmbd17-teki007
+    review: pending
+    aliases:
+    - dmx20-018
+- id: dmc61-025
+  name: 衝撃のロウバンレイ
+  types:
+  - creature
+  civs:
+  - fire
+  cost: 5
+  power: 1000
+  races:
+  - ブレイブ・スピリット
+  mana: 1
+  keywords:
+  - speed_attacker
+  - must_attack
+  text: 'スピードアタッカー(このクリーチャーは召喚酔いしない)
+
+    このクリーチャーは、可能であれば毎ターン攻撃する。
+
+    自分のティラノ・ドレイクまたはブレイブ・スピリットが攻撃する時、相手の「ブロッカー」を持つクリーチャーを１体破壊する。'
+  abilities:
+  - kind: trigger
+    when:
+      event: attack
+      subject:
+        owner: you
+        filter:
+          any_of:
+          - races:
+            - ティラノ・ドレイク
+          - races:
+            - ブレイブ・スピリット
+    effect:
+    - op: destroy
+      select:
+        zone: bz
+        owner: opp
+        filter:
+          types:
+          - creature
+          keyword: blocker
+        count: 1
+  source:
+    official: dmc61-025
+    review: pending
+    aliases:
+    - dm20-017
+    - dmc41-004
+- id: dmc62-009
+  name: 神羅ドラグ・ムーン
+  types:
+  - creature
+  - evolution
+  civs:
+  - fire
+  cost: 7
+  power: 15000
+  races:
+  - ルナティック・エンペラー
+  - アーマード・ドラゴン
+  evolve_from:
+    types:
+    - evolution
+  mana: 1
+  keywords:
+  - triple_breaker
+  text: '究極進化-自分の進化クリーチャー１体の上に置く。
+
+    このクリーチャーが攻撃する時、パワー6000以下の相手のクリーチャーを２体まで破壊する。
+
+    T・ブレイカー(このクリーチャーはシールドを３枚ブレイクする)'
+  abilities:
+  - kind: trigger
+    when:
+      event: attack
+      subject: self
+    effect:
+    - op: destroy
+      select:
+        zone: bz
+        owner: opp
+        filter:
+          types:
+          - creature
+          power_le: 6000
+        count: 2
+        up_to: true
+  source:
+    official: dmc62-009
+    review: pending
+    aliases:
+    - dm32-s07
+- id: dmc66-007
+  name: 神羅スカル・ムーン
+  types:
+  - creature
+  - evolution
+  civs:
+  - darkness
+  cost: 8
+  power: 12000
+  races:
+  - ルナティック・エンペラー
+  - ダークロード
+  evolve_from:
+    types:
+    - evolution
+  mana: 1
+  keywords:
+  - triple_breaker
+  text: '究極進化-自分の進化クリーチャー１体の上に置く。
+
+    T・ブレイカー（このクリーチャーはシールドを３枚ブレイクする）
+
+    このクリーチャーが破壊される時、かわりに相手のクリーチャーを１体破壊してもよい。'
+  abilities:
+  - kind: replace
+    optional: true
+    when:
+      event: move
+      from: bz
+      to: graveyard
+      reason: destroy
+      subject: self
+    if:
+      exists:
+        zone: bz
+        owner: opp
+        filter:
+          types:
+          - creature
+    instead:
+    - op: destroy
+      select:
+        zone: bz
+        owner: opp
+        filter:
+          types:
+          - creature
+        count: 1
+  source:
+    official: dmc66-007
+    review: pending
+    aliases:
+    - dm32-s05
+    - dmc64-006
+- id: dmd05-013
+  name: GENJI・ボーイ
+  types:
+  - creature
+  civs:
+  - fire
+  cost: 5
+  power: 1000
+  races:
+  - ヒューマノイド
+  - ハンター
+  mana: 1
+  keywords:
+  - speed_attacker
+  - must_attack
+  text: 'スピードアタッカー(このクリーチャーは召喚酔いしない)
+
+    このクリーチャーは、可能であれば毎ターン攻撃する。
+
+    自分のハンターが攻撃する時、相手の「ブロッカー」を持つクリーチャーを１体破壊する。'
+  abilities:
+  - kind: trigger
+    when:
+      event: attack
+      subject:
+        owner: you
+        filter:
+          races:
+          - ハンター
+    effect:
+    - op: destroy
+      select:
+        zone: bz
+        owner: opp
+        filter:
+          types:
+          - creature
+          keyword: blocker
+        count: 1
+  source:
+    official: dmd05-013
+    review: pending
+    aliases:
+    - dmx04-007
+    - promoy10-028
+- id: dmex07-006
+  name: 不吉の悪魔龍 テンザン
+  types:
+  - creature
+  civs:
+  - darkness
+  cost: 4
+  power: 13000
+  races:
+  - デーモン・コマンド・ドラゴン
+  mana: 1
+  keywords:
+  - triple_breaker
+  - must_attack
+  text: 'T・ブレイカー
+
+    このクリーチャーは、可能なら毎ターン攻撃する。
+
+    このクリーチャーが攻撃する時、自分の山札の上から13枚を墓地に置く。'
+  abilities:
+  - kind: trigger
+    when:
+      event: attack
+      subject: self
+    effect:
+    - op: move
+      select:
+        zone: deck
+        owner: you
+        from_top: 13
+      to: graveyard
+      reason: put
+  source:
+    official: dmex07-006
+    review: pending
+    aliases:
+    - dmr17-007
+- id: dmex08-114
+  name: 鎧亜の凄技ジョゼ・ウィルバート
+  types:
+  - creature
+  civs:
+  - light
+  - water
+  - fire
+  cost: 6
+  power: 5000
+  races:
+  - ロスト・クルセイダー
+  mana: 1
+  text: このクリーチャーが攻撃する時、相手プレイヤーとジャンケンする。自分が勝ったら、そのターン、このクリーチャーに「T・ブレイカー」を与える。 / このクリーチャーが破壊される時、相手プレイヤーとジャンケンする。自分が勝ったら、このクリーチャーを墓地に置くかわりに手札に戻す。
+  abilities:
+  - kind: trigger
+    when:
+      event: attack
+      subject: self
+    effect:
+    - op: janken
+      win:
+      - op: modify
+        select:
+          ref: self
+        mod:
+          grant:
+          - triple_breaker
+        duration: end_of_turn
+  - kind: replace
+    when:
+      event: move
+      from: bz
+      to: graveyard
+      reason: destroy
+      subject: self
+    instead:
+    - op: janken
+      win:
+      - op: move
+        select:
+          ref: self
+        to: hand
+        reason: return
+  source:
+    official: dmex08-114
+    review: pending
+    aliases:
+    - dm25-s02
+- id: dmex08-180
+  name: ウルトラ・ミラクルッピー
+  types:
+  - creature
+  civs:
+  - light
+  - water
+  - darkness
+  - fire
+  - nature
+  cost: 9
+  power: 12000
+  races:
+  - ワールド・バード
+  mana: 1
+  keywords:
+  - triple_breaker
+  text: 'T・ブレイカー
+
+    このクリーチャーが攻撃する時、相手プレイヤーとジャンケンしてもよい。自分が勝ったら、自分の山札の上から１枚目を裏向きのまま、新しいシールドとしてシールドゾーンに置き、カードを１枚引き、相手のクリーチャーを１体破壊し、相手のマナゾーンからカードを１枚選んで持ち主の墓地に置き、その後、自分の山札の上から１枚目をマナゾーンに置く。'
+  abilities:
+  - kind: trigger
+    when:
+      event: attack
+      subject: self
+    effect:
+    - op: may
+      body:
+      - op: janken
+        win:
+        - op: move
+          select:
+            zone: deck
+            owner: you
+            from_top: 1
+          to: shield
+          reason: put
+        - op: draw
+          count: 1
+        - op: destroy
+          select:
+            zone: bz
+            owner: opp
+            filter:
+              types:
+              - creature
+            count: 1
+        - op: move
+          select:
+            zone: mana
+            owner: opp
+            count: 1
+          to: graveyard
+          reason: put
+        - op: mana_put
+          select:
+            zone: deck
+            owner: you
+            from_top: 1
+  source:
+    official: dmex08-180
+    review: pending
+- id: dmex10-026
+  name: 爆死男
+  types:
+  - creature
+  civs:
+  - darkness
+  - nature
+  cost: 4
+  power: 1000
+  races:
+  - ヘドリアン
+  - 不死樹王国
+  fushigi:
+    cost: 6
+    civs:
+    - darkness
+    - nature
+    min: 2
+  mana: 1
+  keywords:
+  - powered_breaker
+  text: 'パワード・ブレイカー（このクリーチャーは、そのパワー6000ごとにシールドをさらに１つブレイクする）
+
+    このクリーチャーがバトルゾーンに出た時、自分の山札の上から２枚を墓地に置く。
+
+    自分の墓地にあるカード１枚につき、このクリーチャーのパワーを+1000する。
+
+    フシギバース [dn06]（自分のクリーチャーを１体タップしてマナゾーンに置き、 [dn06] からそのクリーチャーのコストを引いた数のコストを支払って、このクリーチャーを自分の墓地から召喚してもよい。ただし、コストは[dn02]より少なくならない）'
+  abilities:
+  - kind: trigger
+    when:
+      event: move
+      to: bz
+      subject: self
+    effect:
+    - op: mill
+      owner: you
+      count: 2
+  - kind: trigger
+    when:
+      event: move
+      to: bz
+      subject: self
+    effect:
+    - op: move
+      select:
+        zone: deck
+        owner: you
+        from_top: 2
+      to: graveyard
+      reason: put
+  - kind: static
+    affects: self
+    mod:
+      power:
+        amount: 1000
+        count:
+          zone: graveyard
+          owner: you
+  source:
+    official: dmex10-026
+    review: pending
+- id: dmex10-029
+  name: ライマー・トール
+  types:
+  - creature
+  civs:
+  - darkness
+  cost: 6
+  power: 12000
+  races:
+  - グランセクト
+  - 不死樹王国
+  fushigi:
+    cost: 9
+    civs:
+    - darkness
+    min: 1
+  mana: 1
+  keywords:
+  - triple_breaker
+  text: 'T・ブレイカー（このクリーチャーはシールドを３つブレイクする）
+
+    このクリーチャーが攻撃する時、攻撃の後、このクリーチャーを破壊する。
+
+    フシギバース [dd09]（自分のクリーチャーを１体タップしてマナゾーンに置き、 [dd09]からそのクリーチャーのコストを引いた数のコストを支払って、このクリーチャーを自分の墓地から召喚してもよい。ただし、コストは[dd01]より少なくはならない）'
+  abilities:
+  - kind: trigger
+    when:
+      event: attack_end
+      subject: self
+    effect:
+    - op: destroy
+      select:
+        ref: self
+  source:
+    official: dmex10-029
+    review: pending
+- id: dmbd08-a-011
+  text: 'ラ・トビ・トール: ラスト・バースト ／ ケンドリック・ハーヴェスト: 自分の山札の上から２枚をマナゾーンに置く。その後、カードを１枚、自分のマナゾーンから手札に戻してもよい。'
+  faces:
+  - name: ラ・トビ・トール
+    types:
+    - creature
+    civs:
+    - nature
+    cost: 3
+    power: 3000
+    races:
+    - グランセクト
+    keywords:
+    - last_burst
+  - name: ケンドリック・ハーヴェスト
+    types:
+    - spell
+    civs:
+    - nature
+    cost: 6
+    spell:
+    - op: mana_put
+      select:
+        zone: deck
+        owner: you
+        from_top: 2
+    - op: may
+      body:
+      - op: bounce
+        select:
+          zone: mana
+          owner: you
+          count: 1
+  source:
+    official: dmbd08-a-011
+    review: pending
+    notes: 原文データでは両面とも合体名で、呪文面の文明が空欄。カード全体の文明（自然）から呪文面も自然とした
+    aliases:
+    - dmrp07-050
