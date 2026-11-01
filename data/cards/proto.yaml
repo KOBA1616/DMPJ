@@ -1098,3 +1098,59 @@ cards:
         when: {event: move, to: bz, subject: self}
         effect:
           - {op: move, select: {zone: deck, owner: you, count: 1}, to: mana, reason: charge}
+
+  # ---- 語彙パイロット第27弾（2026-11-01）: フェーズ5（ロングテール） ----
+  - id: T079
+    name: 試験用ムゲンクライム獣
+    types: [creature]
+    civs: [water]
+    cost: 6
+    power: 3000
+    races: [テスト]
+    text: ムゲンクライム2（自分のクリーチャーを2体タップし、[水2]支払って、このクリーチャーを自分の手札または墓地から召喚してもよい）
+    mugen_climb: {tap: 2, cost: 2, civs: [water]}
+  - id: T080
+    name: 試験用STP呪文
+    types: [spell]
+    civs: [light]
+    cost: 5
+    text: S・トリガー・プラス（相手のターンで、そのターン中に自分のシールドが2つ以上ブレイクされていれば追加能力を得る）カードを1枚引く。■相手のクリーチャーをすべてタップする。
+    keywords: [s_trigger_plus]
+    spell:
+      - {op: draw, count: 1}
+    stp_spell:
+      - {op: tap, select: {zone: bz, owner: opp, filter: {types: [creature]}, count: all}}
+  - id: T081
+    name: 試験用Oドライブ獣
+    types: [creature]
+    civs: [light]
+    cost: 5
+    power: 4500
+    races: [テスト]
+    text: このクリーチャーが出た時、相手のクリーチャーを1体タップする。O・ドライブ 光x2（召喚する時、自分のマナゾーンで光のカードをさらに2枚タップしてもよい。そうしたら、このクリーチャーが出た時、クリーチャーを1体手札に戻す）
+    o_drive: {civ: light, count: 2}
+    abilities:
+      - kind: trigger
+        when: {event: move, to: bz, subject: self}
+        effect:
+          - {op: tap, select: {zone: bz, owner: opp, filter: {types: [creature]}, count: 1}}
+      - kind: trigger
+        odrive: true
+        when: {event: move, to: bz, subject: self}
+        effect:
+          - {op: move, select: {zone: bz, owner: any, filter: {types: [creature]}, count: 1}, to: hand, reason: return}
+  - id: T082
+    name: 試験用シールドゴー獣
+    types: [creature]
+    civs: [darkness]
+    cost: 3
+    power: 1000
+    races: [テスト]
+    text: ブロッカー シールド・ゴー このカードが自分のシールドゾーンに表向きであれば、相手のクリーチャーすべてのパワーは-1000される。
+    keywords: [blocker, shield_go]
+    abilities:
+      - kind: static
+        zone: shield
+        if: {face_up: true}
+        affects: {zone: bz, owner: opp, filter: {types: [creature]}}
+        mod: {power: -1000}

@@ -25,7 +25,7 @@ EVENTS = {"move", "draw", "cast", "summon", "attack", "block", "break", "tap", "
           "turn_start", "turn_end", "battle_win", "choose", "battle", "battle_start", "attack_end"}
 ABILITY_KINDS = {"trigger", "replace", "static", "declare", "activate", "silent", "state"}   # state: 状態を常に見て、満たされたら勝敗が決まる常在効果（if と effect: [win/lose]）
 ABILITY_KEYS = {"kind", "when", "if", "effect", "instead", "optional", "affects", "mod", "zone", "keyword", "cost", "id",
-                "once_per_turn", "first_time", "sst", "choukon", "bazurenda"}
+                "once_per_turn", "first_time", "sst", "stp", "odrive", "choukon", "bazurenda"}
 REASONS = {"put", "destroy", "return", "discard", "charge", "summon", "cast", "break",
            "draw", "battle", "sba", "resolve", "evolve"}
 VIAS = {"revolution_change", "generate"}   # 出し方の印（「革命チェンジによって出た時」など）
@@ -65,6 +65,9 @@ class Face:
     abilities: list[dict] = field(default_factory=list)
     spell: list[dict] = field(default_factory=list)
     sst_spell: list[dict] = field(default_factory=list)   # スーパー・S・トリガーで得る追加の解決 ops
+    stp_spell: list[dict] = field(default_factory=list)   # S・トリガー・プラスで得る追加の解決 ops
+    o_drive: dict | None = None                           # O・ドライブ: {civ, count} 召喚時に追加でタップできるマナ
+    mugen_climb: dict | None = None                       # ムゲンクライム: {tap, cost, civs} 自分のクリーチャーをタップして手札/墓地から実行
     evolve_from: dict | None = None                       # 進化元の条件（801.1a）。filter 形式
     evolve_zone: str = "bz"                               # 進化元を探すゾーン（超無限墓地進化は graveyard）
     evolve_any: bool = False                              # 進化元を1体以上選べる（超無限墓地進化）
@@ -107,6 +110,9 @@ class CardDef:
     abilities: list[dict] = field(default_factory=list)  # 展開済みの能力（キーワード由来も含む）
     spell: list[dict] = field(default_factory=list)      # 呪文の解決 ops
     sst_spell: list[dict] = field(default_factory=list)  # スーパー・S・トリガーで得る追加の解決 ops
+    stp_spell: list[dict] = field(default_factory=list)  # S・トリガー・プラスで得る追加の解決 ops
+    o_drive: dict | None = None                         # O・ドライブ: {civ, count}
+    mugen_climb: dict | None = None                     # ムゲンクライム: {tap, cost, civs}
     evolve_from: dict | None = None
     evolve_zone: str = "bz"
     evolve_any: bool = False
@@ -549,6 +555,17 @@ def _load_face(raw, keywords, macros, chk: Checker, where) -> dict:
     chk.ops(spell, where)
     sst_spell = expand_ops(raw.get("sst_spell", []), macros, where)
     chk.ops(sst_spell, where)
+    stp_spell = expand_ops(raw.get("stp_spell", []), macros, where)
+    chk.ops(stp_spell, where)
+    if "o_drive" in raw:
+        od = raw["o_drive"]
+        if not isinstance(od, dict) or od.get("civ") not in CIVS or not isinstance(od.get("count"), int):
+            raise DefError(f"{where}: o_drive needs {{civ: <civ>, count: int}}")
+    if "mugen_climb" in raw:
+        mc = raw["mugen_climb"]
+        if not isinstance(mc, dict) or not isinstance(mc.get("tap"), int) or not isinstance(mc.get("cost"), int) \
+                or set(mc.get("civs", [])) - CIVS:
+            raise DefError(f"{where}: mugen_climb needs {{tap: int, cost: int, civs: [...]}}")
     for t in raw["types"]:
         if t not in CARD_TYPES:
             raise DefError(f"{where}: unknown type '{t}'")
@@ -573,7 +590,7 @@ def _load_face(raw, keywords, macros, chk: Checker, where) -> dict:
             raise DefError(f"{where}: bazurenda needs {{cost: int, civs: [...]}}")
     return dict(name=raw["name"], types=raw["types"], civs=raw["civs"], cost=raw["cost"],
                 power=raw.get("power", 0), races=split_races(raw.get("races", [])), keywords=names,
-                abilities=abilities, spell=spell, sst_spell=sst_spell, evolve_from=raw.get("evolve_from"),
+                abilities=abilities, spell=spell, sst_spell=sst_spell, stp_spell=stp_spell, o_drive=raw.get("o_drive"), mugen_climb=raw.get("mugen_climb"), evolve_from=raw.get("evolve_from"),
                 evolve_zone=zone, evolve_any=bool(raw.get("evolve_any", False)), evolve_count=int(raw.get("evolve_count", 1)),
                 cost_reduce_per_evo=int(raw.get("cost_reduce_per_evo", 0)),
                 free_if=raw.get("free_if"), galaxy_shield=raw.get("galaxy_shield"), bazurenda=raw.get("bazurenda"), neo=bool(raw.get("neo", False)), star=bool(raw.get("star", False)), hyper=bool(raw.get("hyper", False)), **{"tap_reduce": 0, "s_back": None, **props})

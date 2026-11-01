@@ -77,6 +77,10 @@ class EventMixin:
         records = []
         for ev in evs:
             records += self._apply_one(ev)
+        for r in records:   # S・トリガー・プラスの条件用: このターンにブレイクされたシールドの数
+            if r.get("ev") == "break":
+                k = f"broken:{r['player']}"
+                self.s.turn_counters[k] = self.s.turn_counters.get(k, 0) + r.get("count", 0)
         self._sba()
         for r in records:
             self._collect_triggers(r)
@@ -102,6 +106,10 @@ class EventMixin:
             self._raw_move(cid, ev["to"], ev.get("position", "top"), ev.get("controller"))
             if ev.get("sst"):
                 c.sst = True         # スーパー・S・トリガーの印は移動した先で付ける（移動で消えるため）
+            if ev.get("stp"):
+                c.stp = True
+            if ev.get("odrive"):
+                c.odrive = True
             if ev.get("bazurenda"):
                 c.bazurenda = ev["bazurenda"]
             if ev.get("tapped"):   # 「タップして置く」: 置かれた時点でタップ状態（別のタップ イベントにしない）

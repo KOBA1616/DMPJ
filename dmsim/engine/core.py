@@ -260,7 +260,9 @@ class Engine(SelectorMixin, EventMixin, InterpreterMixin, TurnMixin, CombatMixin
         継続的効果の mod.gain で得た能力は負の添字（-1, -2, ...）で返す。"""
         out = [(i, ab) for i, ab in enumerate(self.fdef(cid).abilities)
                if (kind is None or ab["kind"] == kind)
-               and (not ab.get("sst") or self.s.cards[cid].sst)]   # スーパー・S・トリガーの追加能力は印がある時だけ
+               and (not ab.get("sst") or self.s.cards[cid].sst)   # スーパー・S・トリガーの追加能力は印がある時だけ
+               and (not ab.get("stp") or self.s.cards[cid].stp)   # S・トリガー・プラスも同様
+               and (not ab.get("odrive") or self.s.cards[cid].odrive)]   # O・ドライブで得る能力も同様
         if self.s.cards[cid].zone == "bz" and kind != "static":
             ref = self.s.ref(cid)
             k = 0
@@ -351,6 +353,8 @@ class Engine(SelectorMixin, EventMixin, InterpreterMixin, TurnMixin, CombatMixin
                 continue
             for _, ab in self.abilities(src, "static"):
                 aff = ab.get("affects", {})
+                if ab.get("zone", "bz") != "bz":
+                    continue   # 別のゾーンで働く常在型（シールド・ゴーの静的など）は、バトルゾーンの発生源からは働かない
                 if "mod" in ab and aff != "self" and (aff.get("zone", "bz") if isinstance(aff, dict) else "bz") == c.zone:
                     env = {"you": self.s.cards[src].controller, "self": self.s.ref(src)}
                     if self._subject_match(aff, cid, env, None, base=True) and \
@@ -553,6 +557,8 @@ class Engine(SelectorMixin, EventMixin, InterpreterMixin, TurnMixin, CombatMixin
         c.no_untap_next = False                     # ゾーン移動で新しいオブジェクトになるので凍結の印も消える
         c.hyper = False                             # ハイパーモードも新しいオブジェクトでは解ける
         c.sst = False                               # スーパー・S・トリガーの追加能力の印も消える
+        c.stp = False                               # S・トリガー・プラスの印も消える
+        c.odrive = False                            # O・ドライブの印も消える
         c.bazurenda = 0                             # バズレンダの追加支払い回数も消える
         dest = self.zlist(to, c.controller if self.zshared(to) else c.owner)
         if position == "top" and self.rules.zones[to]["ordered"]:

@@ -49,6 +49,8 @@ class Card:
     link: int = 0
     hyper: bool = False                                     # G・リンクのグループID（0=リンクしていない）。同じIDのカード同士がリンクしている
     sst: bool = False                                       # スーパー・S・トリガー: シールド0枚で使った時に追加能力（sst印つき）を得た
+    stp: bool = False                                       # S・トリガー・プラス: 条件を満たして使った時に追加能力（stp印つき）を得た
+    odrive: bool = False                                    # O・ドライブ: 追加のマナタップをして召喚した
     bazurenda: int = 0                                      # バズレンダ: 追加で支払った回数
 
 
