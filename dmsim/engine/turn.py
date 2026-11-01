@@ -467,6 +467,9 @@ def h_play(eng, t):
     if not eng.permits(cid, action) or (d.is_creature() and not eng.permits(cid, "enter_bz")):
         eng._pop(t)
         return None
+    # スーパー・S・トリガー: シールドが1つもない時に使ったら追加能力を得る（印は移動後に付ける）
+    sst_bonus = bool(t.get("st") and "super_s_trigger" in eng.chars(cid, face)["keywords"]
+                     and not eng.zlist("shield", p))
     if ("evolution" in d.types or t.get("evo_mode")) and "evo" not in t:
         srcs = eng._evo_sources(cid, p, face)
         if len(srcs) < d.evolve_count:
@@ -554,7 +557,7 @@ def h_play(eng, t):
                     s.turn_counters[f"cost_may:{e['src']}"] = 1
             i += 1
         t["cost_may_done"] = True
-    if not t["free"]:
+    if not t["free"] and not t.get("paid_done"):
         n = len(t.get("evo", []))
         cost = max(0, d.cost - n * d.cost_reduce_per_evo) if d.cost_reduce_per_evo else None
         cost = eng._sac_reduced(d, eng._tap_reduced(d, p, cost, t.get("tap", [])), t.get("sac", []))
@@ -575,9 +578,40 @@ def h_play(eng, t):
             return dd
         for c in opts[ans[0]]["cids"] + t.get("tap", []):
             s.cards[c].tapped = True
+        t["paid_done"] = True   # 後段（バズレンダ等）の決定で再入しても二重に支払わない
+    if d.bazurenda and not t["free"]:   # バズレンダ: 追加でこのコストを好きな回数支払ってもよい
+        while not t.get("bz_done"):
+            cnt = t.get("bz_count", 0)
+            if t.get("bz_yn_for") != cnt:
+                ans, dd = eng.ask(t, p, "yes_no", [{"key": "yes"}, {"key": "no"}], prompt="バズレンダ: 追加で支払う")
+                if dd:
+                    return dd
+                t["bz_yn_for"] = cnt
+                t["bz_pay"] = ans[0] == 0
+            if not t["bz_pay"]:
+                t["bz_done"] = True
+                break
+            if t.get("bz_paid_for") != cnt:
+                choices = eng._mana_choices(cid, p, face, cost=d.bazurenda["cost"],
+                                            civs=d.bazurenda.get("civs") or None)
+                if not choices:
+                    t["bz_done"] = True
+                    break
+                opts = [{"key": "mana:" + ",".join(sorted(s.cards[c].defn for c in ch)), "cids": ch} for ch in choices]
+                ans, dd = eng.ask(t, p, "pay_mana", opts)
+                if dd:
+                    return dd
+                for c in opts[ans[0]]["cids"]:
+                    s.cards[c].tapped = True
+                t["bz_paid_for"] = cnt
+            t["bz_count"] = cnt + 1
     eng._pop(t)
     from_zone = s.cards[cid].zone
     eng._to_hold(cid)
+    if sst_bonus:
+        s.cards[cid].sst = True
+    if d.bazurenda:
+        s.cards[cid].bazurenda = t.get("bz_count", 0)
     if face is not None:
         s.cards[cid].face = face
     ref = s.ref(cid)
@@ -588,20 +622,31 @@ def h_play(eng, t):
     if d.is_creature():
         ev = {"ev": "move", "subject": ref, "from": from_zone, "to": "bz", "reason": "summon", "controller": p,
               "unpaid": bool(t["free"]) and not t.get("as_paid")}
+        if sst_bonus:
+            ev["sst"] = True
+        if d.bazurenda:
+            ev["bazurenda"] = t.get("bz_count", 0)
         if t.get("evo"):
             ev["stack_on"] = t["evo"][0]
             if len(t["evo"]) > 1:
                 ev["stack_more"] = t["evo"][1:]
         eng._push(eng.ev_task(ev))
     elif d.is_permanent():      # タマシード・フィールド・クロスギア: 実行（展開・ジェネレート）したらバトルゾーンに出る（315.2, 308.2, 303.2）
-        eng._push(eng.ev_task({"ev": "move", "subject": ref, "from": from_zone, "to": "bz", "reason": "put",
-                               "controller": p, "via": "generate", "unpaid": bool(t["free"])}))
+        ev = {"ev": "move", "subject": ref, "from": from_zone, "to": "bz", "reason": "put",
+              "controller": p, "via": "generate", "unpaid": bool(t["free"])}
+        if sst_bonus:
+            ev["sst"] = True
+        if d.bazurenda:
+            ev["bazurenda"] = t.get("bz_count", 0)
+        eng._push(eng.ev_task(ev))
     else:   # 呪文: 唱えた → 書かれた順に解決 → 最終段階として墓地へ（605.2f）
         env = {"you": p, "self": ref, "vars": {}}
         if t.get("st"):
             env["in_st"] = True
+        spell_ops = list(d.spell) + (list(d.sst_spell) if s.cards[cid].sst else [])
+        reps = 1 + (s.cards[cid].bazurenda if d.bazurenda else 0)   # バズレンダ呪文は能力を1+追加回数使う
         eng._push(eng.ev_task({"ev": "cast", "player": p, "subject": ref, "unpaid": bool(t["free"])}),
-                   eng._child(d.spell, env),
+                   *([eng._child(spell_ops, env)] * reps),
                    eng.ev_task({"ev": "move", "subject": ref, "from": from_zone, "to": t.get("resolve_to", "hand" if cyc else d.resolve_to),
                                  "reason": "resolve", "position": t.get("resolve_position", "top")}),
                    *([eng._child(d.after_resolve, env)] if d.after_resolve else []))

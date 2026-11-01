@@ -48,6 +48,8 @@ class Card:
     no_untap_next: bool = False                       # フリーズ等: 次の持ち主のターン開始時にアンタップしない（1回だけ。開始時に消費）
     link: int = 0
     hyper: bool = False                                     # G・リンクのグループID（0=リンクしていない）。同じIDのカード同士がリンクしている
+    sst: bool = False                                       # スーパー・S・トリガー: シールド0枚で使った時に追加能力（sst印つき）を得た
+    bazurenda: int = 0                                      # バズレンダ: 追加で支払った回数
 
 
 def _jcopy(v):
