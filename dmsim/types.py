@@ -27,6 +27,7 @@ class Option(TypedDict, total=False):
     gshield: bool                        # ギャラクシールド（表向きにシールド化する選択肢）
     neo: bool                            # NEO進化（進化元に重ねて出す選択肢）
     hyper_act: NotRequired[bool]         # ハイパーモード解放（メインステップの行動）
+    climb: NotRequired[bool]             # ムゲンクライム（タップ+代替コストで実行する選択肢）
 
 
 class Decision(TypedDict):
@@ -259,6 +260,11 @@ class PlayTask(TypedDict):
     bz_yn_for: NotRequired[int]          # バズレンダ: 「追加で支払うか」を確認済みの回数
     bz_pay: NotRequired[bool]            # バズレンダ: その回は追加で支払う
     bz_paid_for: NotRequired[int]        # バズレンダ: 追加支払いが済んだ回数
+    od_yn: NotRequired[bool]             # O・ドライブ: 追加でタップするか
+    od_done: NotRequired[bool]           # O・ドライブ: 確認済み
+    odrive: NotRequired[bool]            # O・ドライブ: 追加でタップして召喚した
+    climb: NotRequired[bool]             # ムゲンクライムとして実行する
+    climb_done: NotRequired[bool]        # ムゲンクライム: クリーチャーのタップが済んだ
     resolve_to: NotRequired[str]         # 解決後の置き場所（play_free の resolve_to）
     resolve_position: NotRequired[str]   # resolve_to が山札のときの top / bottom
     answer: NotRequired[list[int]]
