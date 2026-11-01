@@ -118,13 +118,15 @@ def op_flip_down(eng, t, op, env):
     return None
 
 
-@op("may", body="ops", label="str?")
+@op("may", body="ops", label="str?", **{"else": "ops?"})
 def op_may(eng, t, op, env):
     a, d = eng.ask(t, env["you"], "yes_no", [{"key": "yes"}, {"key": "no"}], prompt=op.get("label", ""))
     if d:
         return d
     if a[0] == 0:
         eng._defer(t, [eng._child(op["body"], env)])
+    elif op.get("else"):   # 「そうしなければ」（アバレチェーンなど）
+        eng._defer(t, [eng._child(op["else"], env)])
     return None
 
 
@@ -328,6 +330,33 @@ def op_mekurade(eng, t, op, env):
                                   "position": "bottom", "order": "choose"}], env))
     if tasks:
         eng._defer(t, tasks)
+    return None
+
+
+@op("yobinion")
+def op_yobinion(eng, t, op, env):
+    """ヨビニオン: 自分の山札の上から、これ（発生源）よりコストが小さいクリーチャーが出るまで
+    表向きにする。そのクリーチャーを出す。残りはシャッフルし、山札の下に置く。"""
+    from ..state import rng_below
+    s = eng.s
+    p = env["you"]
+    threshold = eng.chars(env["self"][0])["cost"]
+    revealed, found = [], None
+    for c in list(s.zones["deck"][p]):
+        revealed.append(c)
+        ch = eng.chars(c)
+        if "creature" in ch["types"] and ch["cost"] < threshold:
+            found = c
+            break
+    rest = [c for c in revealed if c != found]
+    for i in range(len(rest) - 1, 0, -1):   # 残りをシャッフル（Fisher-Yates）
+        j = rng_below(s, i + 1)
+        rest[i], rest[j] = rest[j], rest[i]
+    for c in rest:
+        eng._raw_move(c, "deck", "bottom")
+    if found is not None:
+        eng._defer(t, [eng.ev_task({"ev": "move", "subject": s.ref(found), "to": "bz",
+                                     "reason": "put", "controller": p}, env)])
     return None
 
 

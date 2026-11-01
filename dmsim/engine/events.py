@@ -65,8 +65,11 @@ class EventMixin:
             if not s.alive(ev["subject"]):
                 return None
             c = s.cards[ev["subject"][0]]
-            return {"ev": "move", "subject": ev["subject"], "from": ev.get("from") if c.zone == "hold" else c.zone,
-                    "to": ev["to"], "reason": ev["reason"], "controller": c.controller}
+            rec = {"ev": "move", "subject": ev["subject"], "from": ev.get("from") if c.zone == "hold" else c.zone,
+                   "to": ev["to"], "reason": ev["reason"], "controller": c.controller}
+            if ev.get("stack_on"):   # 進化として重ねて出た（シンカパワーの照合用）
+                rec["stacked"] = True
+            return rec
         if ev["ev"] == "draw":
             return {"ev": "draw", "player": ev["player"]}
         return None

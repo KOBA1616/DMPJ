@@ -111,12 +111,14 @@
      "slayer",
      "speed_attacker",
      "spell_to_hand",
+     "summon_from_mana",
      "super_s_trigger",
      "triple_breaker",
      "turbo_rush",
      "unblockable",
      "wave_striker",
      "world_breaker",
+     "yobinion",
      "z_rush"
     ]
    }
@@ -290,12 +292,14 @@
        "slayer",
        "speed_attacker",
        "spell_to_hand",
+       "summon_from_mana",
        "super_s_trigger",
        "triple_breaker",
        "turbo_rush",
        "unblockable",
        "wave_striker",
        "world_breaker",
+       "yobinion",
        "z_rush"
       ]
      }
@@ -700,6 +704,9 @@
        },
        "label": {
         "type": "string"
+       },
+       "else": {
+        "$ref": "#/$defs/ops"
        }
       },
       "required": [
@@ -1143,6 +1150,18 @@
       "type": "object",
       "properties": {
        "op": {
+        "const": "yobinion"
+       }
+      },
+      "required": [
+       "op"
+      ],
+      "additionalProperties": false
+     },
+     {
+      "type": "object",
+      "properties": {
+       "op": {
         "const": "bounce"
        }
       },
@@ -1500,12 +1519,14 @@
        "slayer",
        "speed_attacker",
        "spell_to_hand",
+       "summon_from_mana",
        "super_s_trigger",
        "triple_breaker",
        "turbo_rush",
        "unblockable",
        "wave_striker",
        "world_breaker",
+       "yobinion",
        "z_rush"
       ]
      }
@@ -1532,6 +1553,7 @@
          "slayer",
          "summon",
          "summon_from_graveyard",
+         "summon_from_mana",
          "untap_at_start"
         ]
        },
@@ -1556,6 +1578,7 @@
            "slayer",
            "summon",
            "summon_from_graveyard",
+           "summon_from_mana",
            "untap_at_start"
           ]
          },
@@ -1593,6 +1616,7 @@
          "slayer",
          "summon",
          "summon_from_graveyard",
+         "summon_from_mana",
          "untap_at_start"
         ]
        },
@@ -1617,6 +1641,7 @@
            "slayer",
            "summon",
            "summon_from_graveyard",
+           "summon_from_mana",
            "untap_at_start"
           ]
          },

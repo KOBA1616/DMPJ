@@ -127,6 +127,20 @@ class TurnMixin:
                     if fi is not None:
                         opt["face"] = fi
                     out.append(opt)
+        seen_m = set()   # マナゾーンから召喚できるカードも選択肢に出す（通常コスト）
+        for cid in self.zlist("mana", p):
+            dn = self.s.cards[cid].defn
+            if dn in seen_m or not self.permits(cid, "summon_from_mana"):
+                continue
+            seen_m.add(dn)
+            d = self.cdef(cid)
+            for fi, f in ([(None, d)] if not d.faces else list(enumerate(d.faces))):
+                if self._can_play_face(cid, p, fi):
+                    opt = {"key": f"play:{dn}:msum" if fi is None else f"play:{dn}:{fi}:msum",
+                           "cid": cid, "name": f.name, "rush": True}
+                    if fi is not None:
+                        opt["face"] = fi
+                    out.append(opt)
         return out
 
     def _climb_ready(self, cid, p, fi, mc) -> bool:

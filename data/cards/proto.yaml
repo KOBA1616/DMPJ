@@ -1154,3 +1154,72 @@ cards:
         if: {face_up: true}
         affects: {zone: bz, owner: opp, filter: {types: [creature]}}
         mod: {power: -1000}
+
+# 語彙パイロット第28弾（フェーズ6）: アバレチェーン/ヨビニオン/オシオキムーン/マナ召喚/シンカパワー/進化でないフィルタ
+  - id: T083
+    name: アバレチェーン獣
+    civs: [light]
+    cost: 3
+    power: 3000
+    types: [creature]
+    abilities:
+      - kind: trigger
+        first_time: true
+        when: {event: attack, subject: {owner: you, filter: {types: [creature]}}}
+        effect:
+          - op: may
+            body:
+              - {op: draw, count: 2}
+            else:
+              - {op: draw, count: 1}
+  - id: T084
+    name: ヨビニオン獣
+    civs: [nature]
+    cost: 4
+    power: 5000
+    types: [creature]
+    keywords: [yobinion]
+  - id: T085
+    name: オシオキムーン獣
+    civs: [light]
+    cost: 5
+    power: 4000
+    types: [creature]
+    abilities:
+      - kind: trigger
+        when: {event: move, from: shield, subject: {owner: you}}
+        effect:
+          - {op: draw, count: 1}
+  - id: T086
+    name: マナ召喚獣
+    civs: [nature]
+    cost: 2
+    power: 2000
+    types: [creature]
+    keywords: [summon_from_mana]
+  - id: T087
+    name: シンカパワー進化獣
+    civs: [water]
+    cost: 5
+    power: 6000
+    types: [creature, evolution]
+    evolve_from: {types: [creature]}
+    abilities:
+      - kind: trigger
+        when: {event: move, to: bz, subject: self, stacked: true}
+        effect:
+          - {op: draw, count: 1}
+  - id: T088
+    name: 進化でないを出す獣
+    civs: [light]
+    cost: 6
+    power: 6000
+    types: [creature]
+    abilities:
+      - kind: trigger
+        when: {event: move, to: bz, subject: self}
+        effect:
+          - op: move
+            select: {zone: hand, owner: you, count: 1, filter: {types: [creature], not_types: [evolution], cost_le: 5, civs: [light]}}
+            to: bz
+            reason: put

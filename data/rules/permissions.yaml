@@ -14,6 +14,7 @@ actions:
   enter_bz:              {default: true,  rule: "unverified", ja: バトルゾーンに出せる（「コスト７以下のクリーチャーを出せない」。召喚・効果・革命チェンジすべて）}
   summon:                {default: true,  rule: "601",    ja: 召喚できる}
   summon_from_graveyard: {default: false, rule: "unverified", ja: 墓地から召喚できる（アビスラッシュ）}
+  summon_from_mana:      {default: false, rule: "unverified", ja: マナゾーンから召喚できる}
   cast:                  {default: true,  rule: "601",    ja: 唱えられる}
   slayer:                {default: false, rule: "unverified", ja: バトルで負けた時、相手も破壊する}
   be_chosen:             {default: true,  rule: "unverified", ja: 相手に選ばれる}
