@@ -198034,3 +198034,345 @@ cards:
     official: dm10-051
     review: pending
     notes: 再変換
+- id: dm10-053
+  name: バトルトラップ・ワイバーン
+  types:
+  - creature
+  civs:
+  - fire
+  cost: 5
+  power: 3000
+  races:
+  - アーマード・ワイバーン
+  mana: 1
+  text: 相手のターン中、このクリーチャーがタップされていたら、相手のクリーチャーはすべて、可能なら攻撃する。
+  abilities:
+  - kind: static
+    affects:
+      zone: bz
+      owner: opp
+      filter:
+        types:
+        - creature
+    mod:
+      require:
+      - attack
+    if:
+      all:
+      - is_turn: opp
+      - exists:
+          ref: self
+          filter:
+            tapped: true
+  source:
+    official: dm10-053
+    review: pending
+    notes: 再変換
+- id: dm10-055
+  name: ボーグのリボルバー
+  types:
+  - creature
+  civs:
+  - fire
+  cost: 2
+  power: 2000
+  races:
+  - ゼノパーツ
+  mana: 1
+  text: 'サイレントスキル(自分のターンのはじめに、このクリーチャーがタップされていたら、アンタップするかわりに次の能力を使ってもよい)
+
+    パワー2000以下のクリーチャーをすべて破壊する。'
+  keywords:
+  - silent_skill
+  abilities:
+  - kind: silent
+    effect:
+    - op: destroy
+      select:
+        zone: bz
+        owner: any
+        filter:
+          types:
+          - creature
+          power_le: 2000
+        count: all
+  source:
+    official: dm10-055
+    review: pending
+    notes: 再変換
+- id: dm24bd2-012
+  name: 八卦ヨーイ
+  types:
+  - creature
+  civs:
+  - zero
+  cost: 4
+  power: 5000
+  races:
+  - ジョーカーズ
+  mana: 1
+  keywords:
+  - yobinion
+  text: ヨビニオン（このクリーチャーが召喚によって出た時、自分の山札の上から、これよりコストが小さいクリーチャーが出るまで表向きにしてもよい。そのクリーチャーを出す。残りをシャッフルし、山札の下に置く）
+  source:
+    official: dm24bd2-012
+    review: pending
+    notes: ルールのみで変換（モデル不使用）
+- id: dm24ex2-061
+  name: スゴ腕プロミキサー
+  types:
+  - creature
+  civs:
+  - zero
+  cost: 6
+  power: 1000
+  races:
+  - ジョーカーズ
+  - ワンダフォース
+  mana: 1
+  keywords:
+  - s_trigger
+  - yobinion
+  text: 'S・トリガー（このクリーチャーをシールドゾーンから手札に加える時、コストを支払わずにすぐ召喚してもよい）
+
+    ヨビニオン（このクリーチャーが召喚によって出た時、自分の山札の上から、これよりコストが小さいクリーチャーが出るまで表向きにしてもよい。そのクリーチャーを出す。残りをシャッフルし、山札の下に置く）'
+  source:
+    official: dm24ex2-061
+    review: pending
+    notes: ルールのみで変換（モデル不使用）
+- id: dm24ex3-026
+  name: 爆紅月 ボルカノドン
+  types:
+  - creature
+  civs:
+  - fire
+  cost: 8
+  power: 10000
+  races:
+  - ドラゴノイド
+  mana: 1
+  keywords:
+  - hyper_energy
+  - double_breaker
+  - yobinion
+  text: 'ハイパーエナジー（このクリーチャーを召喚する時、コストが異なる自分のクリーチャーを好きな数タップしてもよい。こうしてタップしたクリーチャー１体につき、このクリーチャーの召喚コストを２少なくする。ただし、コストは０以下にはならない）
+
+    W・ブレイカー
+
+    ヨビニオン（このクリーチャーが召喚によって出た時、自分の山札の上から、これよりコストが小さいクリーチャーが出るまで表向きにしてもよい。そのクリーチャーを出す。残りをシャッフルし、山札の下に置く）'
+  source:
+    official: dm24ex3-026
+    review: pending
+    notes: ルールのみで変換（モデル不使用）
+    aliases:
+    - dm24rp3-023
+    - promoy23-057
+- id: dm24ex3-044
+  name: ドリーム・ザ・シルバー
+  types:
+  - creature
+  civs:
+  - zero
+  cost: 5
+  power: 5000
+  races:
+  - ジョーカーズ
+  mana: 1
+  keywords:
+  - s_trigger
+  - yobinion
+  text: 'S・トリガー（このクリーチャーをシールドゾーンから手札に加える時、コストを支払わずにすぐ召喚してもよい）
+
+    ヨビニオン（このクリーチャーが召喚によって出た時、自分の山札の上から、これよりコストが小さいクリーチャーが出るまで表向きにしてもよい。そのクリーチャーを出す。残りをシャッフルし、山札の下に置く）'
+  source:
+    official: dm24ex3-044
+    review: pending
+    notes: ルールのみで変換（モデル不使用）
+    aliases:
+    - dm24rp3-028
+- id: dm24ex3-060
+  name: ホルン＝ストロン
+  types:
+  - creature
+  civs:
+  - darkness
+  cost: 5
+  power: 5000
+  races:
+  - アビスロイヤル
+  mana: 1
+  abilities:
+  - kind: trigger
+    when:
+      event: move
+      to: bz
+      subject: self
+    effect:
+    - op: discard
+      select:
+        zone: hand
+        owner: opp
+        count: 1
+  keywords:
+  - slayer
+  - yobinion
+  text: 'スレイヤー（このクリーチャーがバトルする時、バトルの後、相手クリーチャーを破壊する）
+
+    ヨビニオン（このクリーチャーが召喚によって出た時、自分の山札の上から、これよりコストが小さいクリーチャーが出るまで表向きにしてもよい。そのクリーチャーを出す。残りをシャッフルし、山札の下に置く）
+
+    このクリーチャーが出た時、相手の手札を１枚見ないで選び、捨てさせる。'
+  source:
+    official: dm24ex3-060
+    review: pending
+    notes: ルールのみで変換（モデル不使用）
+    aliases:
+    - dm24rp3-040
+    - promoy23-058
+- id: dm24rp3-048
+  name: ヨビニオン・トーテム
+  types:
+  - creature
+  civs:
+  - nature
+  cost: 7
+  power: 6000
+  races:
+  - ミステリー・トーテム
+  mana: 1
+  keywords:
+  - double_breaker
+  - yobinion
+  text: 'W・ブレイカー（このクリーチャーはシールドを２つブレイクする）
+
+    ヨビニオン（このクリーチャーが召喚によって出た時、自分の山札の上から、これよりコストが小さいクリーチャーが出るまで表向きにしてもよい。そのクリーチャーを出す。残りをシャッフルし、山札の下に置く）'
+  source:
+    official: dm24rp3-048
+    review: pending
+    notes: ルールのみで変換（モデル不使用）
+- id: promoy23-083
+  name: 邪道の王道 ジャシン帝
+  types:
+  - creature
+  civs:
+  - darkness
+  cost: 7
+  power: 10000
+  races:
+  - アビスロイヤル
+  mana: 1
+  keywords:
+  - double_breaker
+  - yobinion
+  text: 'W・ブレイカー（このクリーチャーはシールドを２つブレイクする）
+
+    ヨビニオン（このクリーチャーが召喚によって出た時、自分の山札の上から、これよりコストが小さいクリーチャーが出るまで表向きにしてもよい。そのクリーチャーを出す。残りをシャッフルし、山札の下に置く）'
+  source:
+    official: promoy23-083
+    review: pending
+    notes: ルールのみで変換（モデル不使用）
+    aliases:
+    - promoy23-sec083
+- id: dmr17-056
+  name: 獣軍隊 ランキー
+  types:
+  - creature
+  civs:
+  - nature
+  cost: 2
+  power: 1000
+  races:
+  - ビーストフォーク號
+  - 侵略者
+  mana: 1
+  keywords:
+  - summon_from_mana
+  text: このクリーチャーを自分のマナゾーンから召喚してもよい。
+  source:
+    official: dmr17-056
+    review: pending
+    notes: ルールのみで変換（モデル不使用）
+- id: dmrp17-091
+  name: かぐやば姫
+  types:
+  - creature
+  civs:
+  - nature
+  cost: 3
+  power: 3000
+  races:
+  - ジョーカーズ
+  - レクスターズ
+  mana: 1
+  keywords:
+  - summon_from_mana
+  text: このクリーチャーを自分のマナゾーンから召喚してもよい。
+  source:
+    official: dmrp17-091
+    review: pending
+    notes: ルールのみで変換（モデル不使用）
+- id: dm10-072
+  name: 粛清者リンダホフ
+  types:
+  - creature
+  civs:
+  - light
+  cost: 4
+  power: 4000
+  races:
+  - ソルトルーパー
+  mana: 1
+  text: 'サイレントスキル(自分のターンのはじめに、このクリーチャーがタップされていたら、アンタップするかわりに次の能力を使ってもよい)
+
+    バトルゾーンにある相手のクリーチャーを２体まで選び、タップする。'
+  keywords:
+  - silent_skill
+  abilities:
+  - kind: silent
+    effect:
+    - op: tap
+      select:
+        zone: bz
+        owner: opp
+        filter:
+          types:
+          - creature
+        count: 2
+        up_to: true
+  source:
+    official: dm10-072
+    review: pending
+    notes: 再変換
+- id: dm10-090
+  name: 憔悴の影ブロークン・ヘッド
+  types:
+  - creature
+  civs:
+  - darkness
+  cost: 3
+  power: 1000
+  races:
+  - ゴースト
+  mana: 1
+  text: 'このクリーチャーで攻撃するかわりに、タップして次の能力を使ってもよい。
+
+    各プレイヤーは、相手の手札を１枚見ないで選び、捨てさせる。'
+  abilities:
+  - kind: activate
+    cost:
+      tap: self
+    effect:
+    - op: discard
+      select:
+        zone: hand
+        owner: opp
+        count: 1
+    - op: discard
+      select:
+        zone: hand
+        owner: you
+        chooser: opp
+        count: 1
+  source:
+    official: dm10-090
+    review: pending
+    notes: 再変換
