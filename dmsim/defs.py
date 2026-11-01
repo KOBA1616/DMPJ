@@ -516,9 +516,11 @@ class Checker:
                 raise DefError(f"{where}: unknown zone '{aff['zone']}'")
             self.filter(aff.get("filter", {}), where)
         if kind == "activate":   # 起動型能力（602）。cost: {tap: self} か {tap: {filter}}（攻撃する代わりにタップして使う。602.3a）
-            c = ab.get("cost")
-            if not isinstance(c, dict) or set(c) != {"tap"}:
-                raise DefError(f"{where}: activate needs cost: {{tap: self | <filter>}}")
+            c = ab.get("cost")   # tap_mana: 自分のマナゾーンのタップされていないカードをその枚数追加でタップする（DM24系の複合コスト）
+            if not isinstance(c, dict) or not set(c) <= {"tap", "tap_mana"} or "tap" not in c:
+                raise DefError(f"{where}: activate needs cost: {{tap: self | <filter>, tap_mana?: int}}")
+            if "tap_mana" in c and not (isinstance(c["tap_mana"], int) and c["tap_mana"] >= 1):
+                raise DefError(f"{where}: cost.tap_mana must be a positive int")
             if c["tap"] != "self":
                 if not isinstance(c["tap"], dict):
                     raise DefError(f"{where}: cost.tap must be 'self' or a filter")

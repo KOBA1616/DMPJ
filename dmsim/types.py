@@ -22,6 +22,7 @@ class Option(TypedDict, total=False):
     face: int
     shield: int                     # S・バック: 捨てるシールドのカード
     tap: int                             # 起動型能力のコストでタップするクリーチャー
+    tap_mana: int                        # 起動型能力の複合コストで追加でタップするマナの枚数
     free: bool                           # コストを支払わずに実行する選択肢（G・ゼロ）
     rush: bool                           # アビスラッシュ（墓地から召喚する選択肢）
     gshield: bool                        # ギャラクシールド（表向きにシールド化する選択肢）
@@ -168,6 +169,14 @@ class HyperTask(TypedDict):
     t: Literal["hyper"]
     cid: int
     player: int
+    answer: NotRequired[list[int]]
+
+
+class ActivateTask(TypedDict):
+    t: Literal["activate"]
+    cid: int
+    player: int
+    ab: int
     answer: NotRequired[list[int]]
 
 
