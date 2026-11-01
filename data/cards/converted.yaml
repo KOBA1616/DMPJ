@@ -205519,3 +205519,36 @@ cards:
   source:
     official: sp-029
     review: pending
+- id: dm14-070
+  name: ネオ・スレッジハンマー
+  types:
+  - cross_gear
+  civs:
+  - nature
+  cost: 2
+  mana: 1
+  text: 'クロスギア:このカードをバトルゾーンに置く。クリーチャーにクロスするには、このカードのコストをもう一度支払う。そのクリーチャーがバトルゾーンを離れても、このカードはバトルゾーンに残る。
+
+    これをクロスしたクリーチャーは「パワーアタッカー+3000」を得る。
+
+    これをクロスしたクリーチャーがブロックされた時、相手のシールドを1枚ブレイクする。'
+  abilities:
+  - kind: static
+    affects: crossed
+    mod:
+      power_when:
+        amount: 3000
+        when: attacking
+  - kind: trigger
+    when:
+      event: block
+      attacker: crossed
+    effect:
+    - op: break
+      player: opp
+      count: 1
+  source:
+    official: dm14-070
+    review: pending
+    aliases:
+    - promoy4-010
