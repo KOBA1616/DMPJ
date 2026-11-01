@@ -68,6 +68,7 @@ class Face:
     stp_spell: list[dict] = field(default_factory=list)   # S・トリガー・プラスで得る追加の解決 ops
     o_drive: dict | None = None                           # O・ドライブ: {civ, count} 召喚時に追加でタップできるマナ
     mugen_climb: dict | None = None                       # ムゲンクライム: {tap, cost, civs} 自分のクリーチャーをタップして手札/墓地から実行
+    alt_cost: dict | None = None                          # 代替コスト: {cost, civs} または {do: [{zone, filter?, count, to, reason}...]}
     evolve_from: dict | None = None                       # 進化元の条件（801.1a）。filter 形式
     evolve_zone: str = "bz"                               # 進化元を探すゾーン（超無限墓地進化は graveyard）
     evolve_any: bool = False                              # 進化元を1体以上選べる（超無限墓地進化）
@@ -113,6 +114,7 @@ class CardDef:
     stp_spell: list[dict] = field(default_factory=list)  # S・トリガー・プラスで得る追加の解決 ops
     o_drive: dict | None = None                         # O・ドライブ: {civ, count}
     mugen_climb: dict | None = None                     # ムゲンクライム: {tap, cost, civs}
+    alt_cost: dict | None = None                        # 代替コスト
     evolve_from: dict | None = None
     evolve_zone: str = "bz"
     evolve_any: bool = False
@@ -374,6 +376,10 @@ class Checker:
             if not isinstance(v, bool):
                 raise DefError(f"{where}: hyper must be bool")
             return
+        if k == "alt_paid":
+            if not isinstance(v, bool):
+                raise DefError(f"{where}: alt_paid must be bool")
+            return
         raise DefError(f"{where}: unknown cond '{k}'")
 
     def count_spec(self, v, where):
@@ -574,7 +580,9 @@ def _load_face(raw, keywords, macros, chk: Checker, where) -> dict:
     if "evolution" in raw["types"]:
         if "evolve_from" not in raw:
             raise DefError(f"{where}: evolution creature needs evolve_from")
-        chk.filter({k: v for k, v in raw["evolve_from"].items() if k != "zone"}, where)
+        ef = raw["evolve_from"]
+        for f in (ef if isinstance(ef, list) else [ef]):   # 進化V: フィルタのリスト（1つずつ重ねる）
+            chk.filter({k: v for k, v in f.items() if k != "zone"}, where)
     zone = raw.get("evolve_zone", "bz")
     if zone not in chk.zones:
         raise DefError(f"{where}: unknown evolve_zone '{zone}'")
@@ -588,10 +596,23 @@ def _load_face(raw, keywords, macros, chk: Checker, where) -> dict:
         bz = raw["bazurenda"]
         if not isinstance(bz, dict) or not isinstance(bz.get("cost"), int) or set(bz.get("civs", [])) - CIVS:
             raise DefError(f"{where}: bazurenda needs {{cost: int, civs: [...]}}")
+    if "alt_cost" in raw:
+        ac = raw["alt_cost"]
+        if not isinstance(ac, dict) or not ({"cost", "do"} & set(ac)):
+            raise DefError(f"{where}: alt_cost needs {{cost, civs}} or {{do: [...]}}")
+        if "cost" in ac and (not isinstance(ac["cost"], int) or set(ac.get("civs", [])) - CIVS):
+            raise DefError(f"{where}: alt_cost needs {{cost: int, civs: [...]}}")
+        for step in ac.get("do", []):
+            if step.get("zone") not in chk.zones or step.get("to") not in chk.zones or not isinstance(step.get("count"), int):
+                raise DefError(f"{where}: alt_cost do step needs {{zone, count: int, to, reason}}")
+            if "filter" in step:
+                chk.filter(step["filter"], where)
     return dict(name=raw["name"], types=raw["types"], civs=raw["civs"], cost=raw["cost"],
                 power=raw.get("power", 0), races=split_races(raw.get("races", [])), keywords=names,
-                abilities=abilities, spell=spell, sst_spell=sst_spell, stp_spell=stp_spell, o_drive=raw.get("o_drive"), mugen_climb=raw.get("mugen_climb"), evolve_from=raw.get("evolve_from"),
-                evolve_zone=zone, evolve_any=bool(raw.get("evolve_any", False)), evolve_count=int(raw.get("evolve_count", 1)),
+                abilities=abilities, spell=spell, sst_spell=sst_spell, stp_spell=stp_spell, o_drive=raw.get("o_drive"), mugen_climb=raw.get("mugen_climb"), alt_cost=raw.get("alt_cost"), evolve_from=raw.get("evolve_from"),
+                evolve_zone=zone, evolve_any=bool(raw.get("evolve_any", False)),
+                evolve_count=(len(raw["evolve_from"]) if isinstance(raw.get("evolve_from"), list)
+                              else int(raw.get("evolve_count", 1))),
                 cost_reduce_per_evo=int(raw.get("cost_reduce_per_evo", 0)),
                 free_if=raw.get("free_if"), galaxy_shield=raw.get("galaxy_shield"), bazurenda=raw.get("bazurenda"), neo=bool(raw.get("neo", False)), star=bool(raw.get("star", False)), hyper=bool(raw.get("hyper", False)), **{"tap_reduce": 0, "s_back": None, **props})
 

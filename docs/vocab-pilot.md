@@ -497,3 +497,12 @@ space_charge（単独42件）: スペース・チャージは、文明ごとの�
 - シンカパワー: 移動レコードに `stacked` を追加し、when で照合可能に（「進化元になる時」側は未対応）
 - 進化ではない: フィルタの `not_types: [evolution]` で既存表現可（申告切れ）
 - オシオキムーン: when の from: shield + subject {owner: you} で既存表現可（申告切れ）
+
+# 第29弾（2026-11-01）: フェーズ7（進化V / 代替コスト）
+
+検証は `tests/test_vocab_pilot29.py`（動作4件）と `tests/test_vocab_pilot29_cards.py`（代表5枚）。対象: evolution_filter 26件、evolution_v 25件、alternative_cost 25件。
+
+- 進化V: `evolve_from` をフィルタのリストにできるようにした。選択はフィルタごとに1体ずつ進み、重ね方は既存の複数進化元（stack_more）を再利用
+- 代替コスト: 面の宣言 `alt_cost`。別額形式 `{cost, civs}` は「:alt」選択肢、行動形式 `{do: [{zone, filter, count, to, reason}...]}` は段階ごとに選んで支払い、払い切ったらコストを支払ったものとして実行する。条件式に `{alt_paid: true}` を追加（「[代替]支払って唱えたら」）
+- ついでに op `opp_may`（「相手は〜してもよい」）を追加。代替コストの「そうしたら、相手は〜してもよい」で必要になった
+- 進化クリーチャーの参照（「1体につき」「なければ」）: count 式とフィルタで既存表現可（申告切れ）

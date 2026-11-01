@@ -333,6 +333,20 @@ def op_mekurade(eng, t, op, env):
     return None
 
 
+@op("opp_may", body="ops", label="str?")
+def op_opp_may(eng, t, op, env):
+    """「相手は〜してもよい」: 相手が yes/no を選び、yes なら body を相手の視点で実行する。"""
+    opp = 1 - env["you"]
+    a, d = eng.ask(t, opp, "yes_no", [{"key": "yes"}, {"key": "no"}], prompt=op.get("label", ""))
+    if d:
+        return d
+    if a[0] == 0:
+        env2 = dict(env)
+        env2["you"] = opp
+        eng._defer(t, [eng._child(op["body"], env2)])
+    return None
+
+
 @op("yobinion")
 def op_yobinion(eng, t, op, env):
     """ヨビニオン: 自分の山札の上から、これ（発生源）よりコストが小さいクリーチャーが出るまで

@@ -83,6 +83,17 @@ class TurnMixin:
                         opt["face"] = fi
                     out.append(opt)
             for fi, f in ([(None, d)] if not d.faces else list(enumerate(d.faces))):
+                ac = f.alt_cost   # 代替コスト: 別額を払う / 行動で払う
+                if ac:
+                    ok = bool(self._mana_choices(cid, p, fi, cost=ac["cost"], limit=1, civs=ac.get("civs"))) if "cost" in ac else \
+                        all(sum(1 for c in self.zlist(st["zone"], p) if self.filter_match(c, st.get("filter", {}))) >= st["count"]
+                            for st in ac["do"])
+                    if ok:
+                        opt = {"key": f"{o['key']}:alt" if fi is None else f"{o['key']}:{fi}:alt",
+                               "cid": cid, "name": f.name, "alt": True}
+                        if fi is not None:
+                            opt["face"] = fi
+                        out.append(opt)
                 gs = f.galaxy_shield   # ギャラクシールド: 代替コストで表向きにシールド化する選択肢
                 if gs and self._mana_choices(cid, p, fi, cost=gs["cost"], limit=1, civs=gs["civs"]):
                     opt = {"key": f"{o['key']}:gshield" if fi is None else f"{o['key']}:{fi}:gshield", "cid": cid,
@@ -186,9 +197,14 @@ class TurnMixin:
         if not self.permits(cid, action) or (d.is_creature() and not self.permits(cid, "enter_bz")):
             return False
         if "evolution" in d.types:
-            srcs = self._evo_sources(cid, p, face)
-            if len(srcs) < d.evolve_count:
-                return False
+            if isinstance(d.evolve_from, list):   # 進化V: フィルタごとに進化元が要る
+                if not self._evo_v_ready(cid, p, face):
+                    return False
+                srcs = self._evo_sources(cid, p, face)
+            else:
+                srcs = self._evo_sources(cid, p, face)
+                if len(srcs) < d.evolve_count:
+                    return False
             n = len(srcs) if d.evolve_any else d.evolve_count           # 最も安い組合せで払えるか（112.2b）
             cost = max(0, d.cost - n * d.cost_reduce_per_evo) if d.cost_reduce_per_evo else None
             return bool(self._mana_choices(cid, p, face, cost=self._opt_reduced(cid, face, d, self._sac_reduced(d, self._tap_reduced(d, p, cost, None), self._sac_pool(d, p))), limit=1))
@@ -247,11 +263,32 @@ class TurnMixin:
         """適正な進化元（801.1a）。evolve_zone（既定は自分のバトルゾーン）のクリーチャーで
         evolve_from を満たすもの（超無限墓地進化は自分の墓地から選ぶ）。"""
         f = self.cdef(cid).face(face)
+        if isinstance(f.evolve_from, list):   # 進化V: どのフィルタか1つでも満たせば候補（選択は h_play がフィルタごとに進める）
+            pool = self._evo_pool(cid, p, face)
+            return [c for c in pool if any(self.filter_match(c, {k: v for k, v in ef.items() if k != "zone"})
+                                            for ef in f.evolve_from)]
         ef = {k: v for k, v in (f.evolve_from or {}).items() if k != "zone"} or {}
+        pool = self._evo_pool(cid, p, face)
+        return [c for c in pool if self.filter_match(c, ef)]
+
+    def _evo_pool(self, cid, p, face=None) -> list[int]:
+        f = self.cdef(cid).face(face)
         z = f.evolve_zone
         pool = self.bz_tops(p) if z == "bz" else self.zlist(z, p)
-        return [c for c in pool if ("creature" in self.chars(c)["types"] or self.permits(c, "evolve_base"))
-                and self.filter_match(c, ef)]
+        return [c for c in pool if ("creature" in self.chars(c)["types"] or self.permits(c, "evolve_base"))]
+
+    def _evo_v_ready(self, cid, p, face=None) -> bool:
+        """進化V: フィルタごとに別々の進化元が確保できるか（貪欲に照合）。"""
+        f = self.cdef(cid).face(face)
+        pool = self._evo_pool(cid, p, face)
+        used = set()
+        for ef in f.evolve_from:
+            ef = {k: v for k, v in ef.items() if k != "zone"}
+            hit = next((c for c in pool if c not in used and self.filter_match(c, ef)), None)
+            if hit is None:
+                return False
+            used.add(hit)
+        return True
 
     def _mana_choices(self, cid, p, face=None, cost: int | None = None, limit: int = 32, civs=None) -> list[list[int]]:
         """支払いに使うマナの組（112.2a）。文明は1文明につき別々の1枚で満たし、マナの数値の合計がコストに一致。
@@ -421,6 +458,12 @@ def st_main(eng, t):                                    # 504
             task["climb"] = True
             task["cost_override"] = fd.mugen_climb["cost"]
             task["cost_civs"] = fd.mugen_climb["civs"]
+        if o.get("alt"):
+            fd = eng.cdef(o["cid"]).face(o.get("face"))
+            task["alt"] = True
+            if fd.alt_cost and "cost" in fd.alt_cost:
+                task["cost_override"] = fd.alt_cost["cost"]
+                task["cost_civs"] = fd.alt_cost.get("civs", fd.civs)
         if o.get("neo"):
             task["evo_mode"] = True
         eng._push(task)
@@ -525,7 +568,45 @@ def h_play(eng, t):
     # S・トリガー・プラス: 相手のターンで、そのターンに自分のシールドが2つ以上ブレイクされていれば追加能力を得る
     stp_bonus = bool(t.get("st") and "s_trigger_plus" in eng.chars(cid, face)["keywords"]
                      and s.active != p and s.turn_counters.get(f"broken:{p}", 0) >= 2)
+    ac = d.alt_cost
+    if t.get("alt") and ac and "do" in ac and not t.get("alt_done"):   # 代替コスト（行動形式）: 段階ごとに選んで支払う
+        step_i = t.get("alt_step", 0)
+        if step_i < len(ac["do"]):
+            st = ac["do"][step_i]
+            cands = [c for c in eng.zlist(st["zone"], p) if c != cid and eng.filter_match(c, st.get("filter", {}))]
+            if len(cands) < st["count"]:
+                eng._pop(t)
+                return None
+            ans, dd = eng.ask(t, p, "choose_cards", [eng._card_option(c) for c in cands], st["count"], st["count"])
+            if dd:
+                return dd
+            evs = [{"ev": "move", "subject": s.ref(cands[i]), "to": st["to"], "reason": st.get("reason", "pay")}
+                   for i in ans]
+            t["alt_step"] = step_i + 1
+            if evs:
+                eng._push(eng.ev_task(evs))
+            return None
+        t["alt_done"] = True
+        t["free"] = True        # コストは行動で払い切った
+        t["as_paid"] = True
     if ("evolution" in d.types or t.get("evo_mode")) and "evo" not in t:
+        face_def = eng.cdef(cid).face(face)
+        if isinstance(face_def.evolve_from, list):   # 進化V: フィルタごとに1体ずつ選ぶ
+            chosen = t.setdefault("evo_v", [])
+            if len(chosen) < len(face_def.evolve_from):
+                ef = {k: v for k, v in face_def.evolve_from[len(chosen)].items() if k != "zone"}
+                used = {r[0] for r in chosen}
+                cands = [c for c in eng._evo_pool(cid, p, face) if c not in used and eng.filter_match(c, ef)]
+                if not cands:
+                    eng._pop(t)
+                    return None
+                ans, dd = eng.ask(t, p, "choose_evo_source", [eng._card_option(c) for c in cands], 1, 1)
+                if dd:
+                    return dd
+                chosen.append(s.ref(cands[ans[0]]))
+                if len(chosen) == len(face_def.evolve_from):
+                    t["evo"] = list(chosen)
+                return None
         srcs = eng._evo_sources(cid, p, face)
         if len(srcs) < d.evolve_count:
             eng._pop(t)
@@ -719,6 +800,8 @@ def h_play(eng, t):
             ev["stp"] = True
         if t.get("odrive"):
             ev["odrive"] = True
+        if t.get("alt"):
+            ev["alt"] = True
         if d.bazurenda:
             ev["bazurenda"] = t.get("bz_count", 0)
         if t.get("evo"):
@@ -738,6 +821,8 @@ def h_play(eng, t):
         env = {"you": p, "self": ref, "vars": {}}
         if t.get("st"):
             env["in_st"] = True
+        if t.get("alt"):
+            env["alt_paid"] = True
         spell_ops = list(d.spell) + (list(d.sst_spell) if s.cards[cid].sst else []) \
             + (list(d.stp_spell) if s.cards[cid].stp else [])
         reps = 1 + (s.cards[cid].bazurenda if d.bazurenda else 0)   # バズレンダ呪文は能力を1+追加回数使う
