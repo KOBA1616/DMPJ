@@ -544,3 +544,14 @@ space_charge（単独42件）: スペース・チャージは、文明ごとの�
 - **根治1: last_burst の重複定義を除去**: 第31弾で keywords.yaml に last_burst を追加した際、既存の正規定義（play_free＋self_moved）が既にあり、YAML の後勝ちで覆われていたのが、第31弾以降 test_named_effects が落ちていた真因だった。第32弾の cast_face 側の緩和（世代+1 を許可）は不要になるため元に戻し、重複定義を削除して正規実装に一本化した。
 - **根治2: under リストの残留バグ**: 下のカードだけが移動した時、上のカードの under リストに残り続けていた（メテオバーンで確認。under_of の数え・選択に幽霊カードが混ざる）。_raw_move で top_of を持つカードが動く時は上の under から外すよう修正。G-NEO の「下が空になったら進化クリーチャーでなくなる」判定もこれで正しくなる。
 - 検証: tests/test_vocab_pilot33.py（動作3件: G-NEOの離脱置換、召喚/put の誘発の切り分け、詠唱封じ）＋test_vocab_pilot33_cards.py（代表3枚: ラギルップ＝ラギバーン、応援者 オシヤバミ、九極 デュエンジェル）。proto に T101〜T104 を追加。
+
+## 第34弾（フェーズ12）: 離脱置換・出現置換は既存可＋filter に neo 追加＋{ref: subject} の潜在バグ修正
+
+- **離脱置換（leave_replacement 単独21件）は既存の replace で表せる**。型は3種:
+  - とどまる型: replace（when: move from bz, subject: self）＋条件 if＋`instead: []`（イベント自体が置換で消える）。
+  - 行き先変更型: instead で `{op: move, select: {ref: subject, count: 1}, to: <ゾーン>}`（置換されたイベントの対象を別の行き先へ）。
+  - 身代わり型: optional: true の replace＋instead で別のクリーチャーを破壊する等。
+- **出現置換（entry_replacement 単独18件）も既存で表せる**: replace（when: move to: bz, subject: {owner: opp, ...}）＋instead で {ref: subject} を墓地等へ。ターン条件は if の `is_turn` で付ける。
+- **filter に `neo` を追加**（neo_creature_filter）: 面の `neo: true` を持つカードにマッチする（G-NEO も neo: true を持つため両方を指す）。
+- **潜在バグ修正**: セレクタ `{ref: subject}` が vars を引いて常に空になっていた（正しくは `event.subject`）。登録済みカード39枚がこの形で instead を書いており、置換は発火しても対象を動かせていなかった（例: アクア鳥人 ロココのバウンス）。selectors で `subject` を `event.subject` の別名として受理するよう修正し、全39枚が一括で回復する。
+- 検証: tests/test_vocab_pilot34.py（動作5件: とどまる／行き先変更／身代わり／出現置換／neo フィルタ）＋test_vocab_pilot34_cards.py（代表3枚: 暴投の針棺、単騎連射 マグナム、威牙忍ジンナイ）。proto に T105〜T108 を追加。
