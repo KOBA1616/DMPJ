@@ -28,6 +28,7 @@ class Option(TypedDict, total=False):
     neo: bool                            # NEO進化（進化元に重ねて出す選択肢）
     hyper_act: NotRequired[bool]         # ハイパーモード解放（メインステップの行動）
     climb: NotRequired[bool]             # ムゲンクライム（タップ+代替コストで実行する選択肢）
+    alt: NotRequired[bool]               # 代替コストで実行する選択肢
 
 
 class Decision(TypedDict):
@@ -257,6 +258,10 @@ class PlayTask(TypedDict):
     paid_done: NotRequired[bool]         # 本体のコストを支払い済み（後段の決定での再入対策）
     bz_done: NotRequired[bool]           # バズレンダ: 追加支払いの確認が終わった
     bz_count: NotRequired[int]           # バズレンダ: 追加で支払った回数
+    alt: NotRequired[bool]               # 代替コストで実行する
+    alt_step: NotRequired[int]           # 代替コスト（行動形式）で済んだ段階
+    evo_v: NotRequired[list]             # 進化V: フィルタごとに選んだ進化元
+    alt_done: NotRequired[bool]          # 代替コスト（行動形式）の支払いが終わった
     bz_yn_for: NotRequired[int]          # バズレンダ: 「追加で支払うか」を確認済みの回数
     bz_pay: NotRequired[bool]            # バズレンダ: その回は追加で支払う
     bz_paid_for: NotRequired[int]        # バズレンダ: 追加支払いが済んだ回数

@@ -62,6 +62,9 @@ class SelectorMixin:
             return bool(env.get("self")) and self.s.alive(env["self"]) and self.s.cards[env["self"][0]].face_up == c["face_up"]
         if "hyper" in c:   # このカード自身がハイパーモードか（ハイパー化の旗と Zラッシュの窓の両方を見る）
             return bool(env.get("self")) and self.s.alive(env["self"]) and self.is_hyper(env["self"][0]) == c["hyper"]
+        if "alt_paid" in c:   # 代替コストで実行した（「この呪文を[代替]支払って唱えたら」）
+            paid = bool(env.get("alt_paid")) or bool((env.get("event") or {}).get("alt"))
+            return paid == bool(c["alt_paid"])
         raise ValueError(f"bad cond {c}")
 
     def filter_match(self, cid: int, f: dict, lki: dict | None = None, base: bool = False) -> bool:

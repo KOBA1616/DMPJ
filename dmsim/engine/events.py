@@ -69,6 +69,8 @@ class EventMixin:
                    "to": ev["to"], "reason": ev["reason"], "controller": c.controller}
             if ev.get("stack_on"):   # 進化として重ねて出た（シンカパワーの照合用）
                 rec["stacked"] = True
+            if ev.get("alt"):        # 代替コストで実行された（「そうしたら」の照合用）
+                rec["alt"] = True
             return rec
         if ev["ev"] == "draw":
             return {"ev": "draw", "player": ev["player"]}

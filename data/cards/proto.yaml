@@ -1223,3 +1223,33 @@ cards:
             select: {zone: hand, owner: you, count: 1, filter: {types: [creature], not_types: [evolution], cost_le: 5, civs: [light]}}
             to: bz
             reason: put
+
+# 語彙パイロット第29弾（フェーズ7）: 進化V / 代替コスト
+  - id: T089
+    name: 進化V獣
+    civs: [light, nature]
+    cost: 6
+    power: 8000
+    types: [creature, evolution]
+    evolve_from: [{civs: [light]}, {civs: [nature]}]
+    keywords: [double_breaker]
+  - id: T090
+    name: 代替コスト呪文
+    civs: [light]
+    cost: 5
+    types: [spell]
+    alt_cost: {cost: 4, civs: [light, light]}
+    spell:
+      - {op: if, cond: {alt_paid: true}, then: [{op: draw, count: 1}]}
+      - {op: draw, count: 2}
+  - id: T091
+    name: 行動代替コスト呪文
+    civs: [darkness]
+    cost: 8
+    types: [spell]
+    alt_cost:
+      do:
+        - {zone: hand, filter: {civs: [darkness]}, count: 2, to: graveyard, reason: discard}
+        - {zone: bz, filter: {types: [creature], civs: [darkness]}, count: 1, to: graveyard, reason: destroy}
+    spell:
+      - {op: draw, count: 3}
