@@ -177,6 +177,7 @@ class EventMixin:
                 return []   # 山札が無ければ何もしない。「引いた時」も誘発しない（114.6a）
             cid = deck[0]
             self._raw_move(cid, "hand")
+            s.cards[cid].drawn_turn = s.turn   # ビビッドロー: このターンにドローした記録
             return [{"ev": "draw", "player": p, "subject": s.ref(cid)},
                     {"ev": "move", "subject": s.ref(cid), "lki": None, "from": "deck", "to": "hand",
                      "reason": "draw", "controller": p}]

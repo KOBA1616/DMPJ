@@ -94,6 +94,7 @@
      "left_g_link",
      "mana_boost_cip",
      "mega_last_burst",
+     "must_attack",
      "powered_breaker",
      "quad_breaker",
      "right_g_link",
@@ -275,6 +276,7 @@
        "left_g_link",
        "mana_boost_cip",
        "mega_last_burst",
+       "must_attack",
        "powered_breaker",
        "quad_breaker",
        "right_g_link",
@@ -859,6 +861,25 @@
        "select",
        "to",
        "reason"
+      ],
+      "additionalProperties": false
+     },
+     {
+      "type": "object",
+      "properties": {
+       "op": {
+        "const": "opp_may"
+       },
+       "body": {
+        "$ref": "#/$defs/ops"
+       },
+       "label": {
+        "type": "string"
+       }
+      },
+      "required": [
+       "op",
+       "body"
       ],
       "additionalProperties": false
      },
@@ -1502,6 +1523,7 @@
        "left_g_link",
        "mana_boost_cip",
        "mega_last_burst",
+       "must_attack",
        "powered_breaker",
        "quad_breaker",
        "right_g_link",

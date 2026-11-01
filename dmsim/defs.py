@@ -69,6 +69,7 @@ class Face:
     o_drive: dict | None = None                           # O・ドライブ: {civ, count} 召喚時に追加でタップできるマナ
     mugen_climb: dict | None = None                       # ムゲンクライム: {tap, cost, civs} 自分のクリーチャーをタップして手札/墓地から実行
     alt_cost: dict | None = None                          # 代替コスト: {cost, civs} または {do: [{zone, filter?, count, to, reason}...]}
+    vividraw: dict | None = None                          # ビビッドロー: {cost, civs} 引いたターンに表向きにすると代替コストで実行できる
     evolve_from: dict | None = None                       # 進化元の条件（801.1a）。filter 形式
     evolve_zone: str = "bz"                               # 進化元を探すゾーン（超無限墓地進化は graveyard）
     evolve_any: bool = False                              # 進化元を1体以上選べる（超無限墓地進化）
@@ -115,6 +116,7 @@ class CardDef:
     o_drive: dict | None = None                         # O・ドライブ: {civ, count}
     mugen_climb: dict | None = None                     # ムゲンクライム: {tap, cost, civs}
     alt_cost: dict | None = None                        # 代替コスト
+    vividraw: dict | None = None                        # ビビッドロー: {cost, civs}
     evolve_from: dict | None = None
     evolve_zone: str = "bz"
     evolve_any: bool = False
@@ -607,9 +609,13 @@ def _load_face(raw, keywords, macros, chk: Checker, where) -> dict:
                 raise DefError(f"{where}: alt_cost do step needs {{zone, count: int, to, reason}}")
             if "filter" in step:
                 chk.filter(step["filter"], where)
+    if "vividraw" in raw:
+        vd = raw["vividraw"]
+        if not isinstance(vd, dict) or not isinstance(vd.get("cost"), int) or set(vd.get("civs", [])) - CIVS:
+            raise DefError(f"{where}: vividraw needs {{cost: int, civs: [...]}}")
     return dict(name=raw["name"], types=raw["types"], civs=raw["civs"], cost=raw["cost"],
                 power=raw.get("power", 0), races=split_races(raw.get("races", [])), keywords=names,
-                abilities=abilities, spell=spell, sst_spell=sst_spell, stp_spell=stp_spell, o_drive=raw.get("o_drive"), mugen_climb=raw.get("mugen_climb"), alt_cost=raw.get("alt_cost"), evolve_from=raw.get("evolve_from"),
+                abilities=abilities, spell=spell, sst_spell=sst_spell, stp_spell=stp_spell, o_drive=raw.get("o_drive"), mugen_climb=raw.get("mugen_climb"), alt_cost=raw.get("alt_cost"), vividraw=raw.get("vividraw"), evolve_from=raw.get("evolve_from"),
                 evolve_zone=zone, evolve_any=bool(raw.get("evolve_any", False)),
                 evolve_count=(len(raw["evolve_from"]) if isinstance(raw.get("evolve_from"), list)
                               else int(raw.get("evolve_count", 1))),

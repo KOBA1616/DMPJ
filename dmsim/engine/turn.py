@@ -94,6 +94,13 @@ class TurnMixin:
                         if fi is not None:
                             opt["face"] = fi
                         out.append(opt)
+                vd = f.vividraw   # ビビッドロー: 表向きにしたカードは代替コストで実行できる
+                if vd and self.s.cards[cid].vivid and self._mana_choices(cid, p, fi, cost=vd["cost"], limit=1, civs=vd["civs"]):
+                    opt = {"key": f"{o['key']}:vivid" if fi is None else f"{o['key']}:{fi}:vivid",
+                           "cid": cid, "name": f.name, "vivid": True}
+                    if fi is not None:
+                        opt["face"] = fi
+                    out.append(opt)
                 gs = f.galaxy_shield   # ギャラクシールド: 代替コストで表向きにシールド化する選択肢
                 if gs and self._mana_choices(cid, p, fi, cost=gs["cost"], limit=1, civs=gs["civs"]):
                     opt = {"key": f"{o['key']}:gshield" if fi is None else f"{o['key']}:{fi}:gshield", "cid": cid,
@@ -177,6 +184,20 @@ class TurnMixin:
             for c in self.bz_tops(p):
                 if "creature" in self.chars(c)["types"] and not (cur and cur == self.s.ref(c)):
                     out.append({"key": f"cross:{self.s.cards[g].defn}:{self.s.cards[c].defn}", "cid": g, "target": self.s.ref(c)})
+        return out
+
+    def _reveal_options(self, p: int) -> list[dict]:
+        """ビビッドロー: このターンにドローして、まだ攻撃していないなら表向きにできる。"""
+        s = self.s
+        if s.turn_counters.get("attacked"):
+            return []
+        out = []
+        for c in self.zlist("hand", p):
+            card = s.cards[c]
+            if card.vivid or card.drawn_turn != s.turn:
+                continue
+            if self.cdef(c).vividraw or any(f.vividraw for f in self.cdef(c).faces):
+                out.append({"key": f"reveal:{card.defn}", "cid": c, "reveal": True})
         return out
 
     def _hyper_options(self, p: int) -> list[dict]:
@@ -433,13 +454,15 @@ def st_charge(eng, t):                                  # 503
 @step("main")
 def st_main(eng, t):                                    # 504
     a = eng.s.active
-    opts = eng._play_options(a) + eng._cross_options(a) + eng._hyper_options(a) + [{"key": "pass"}]
+    opts = eng._play_options(a) + eng._cross_options(a) + eng._hyper_options(a) + eng._reveal_options(a) + [{"key": "pass"}]
     ans, d = eng.ask(t, a, "main", opts)
     if d:
         return d
     o = opts[ans[0]]
     if o["key"] == "pass":
         eng._step_done(t)
+    elif o.get("reveal"):   # ビビッドロー: 表向きにする（ステップは終わらない）
+        eng.s.cards[o["cid"]].vivid = True
     elif o.get("hyper_act"):
         eng._push({"t": "hyper", "cid": o["cid"], "player": a})
     elif o["key"].startswith("cross:"):
@@ -464,6 +487,10 @@ def st_main(eng, t):                                    # 504
             if fd.alt_cost and "cost" in fd.alt_cost:
                 task["cost_override"] = fd.alt_cost["cost"]
                 task["cost_civs"] = fd.alt_cost.get("civs", fd.civs)
+        if o.get("vivid"):
+            fd = eng.cdef(o["cid"]).face(o.get("face"))
+            task["cost_override"] = fd.vividraw["cost"]
+            task["cost_civs"] = fd.vividraw["civs"]
         if o.get("neo"):
             task["evo_mode"] = True
         eng._push(task)
@@ -511,6 +538,7 @@ def st_attack(eng, t):                                  # 505
         ab = dict(eng.abilities(o["cid"], "activate"))[o["ab"]]
         eng._push(eng._child(ab["effect"], {"you": a, "self": s.ref(o["cid"]), "vars": {}}))
     else:
+        s.turn_counters["attacked"] = True   # ビビッドロー: 「攻撃の前に」の判定
         eng._push({"t": "attack", "attacker": s.ref(o["cid"]), "target": o["target"], "phase": 0, "cp": True})
 
 
