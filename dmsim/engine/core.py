@@ -560,6 +560,7 @@ class Engine(SelectorMixin, EventMixin, InterpreterMixin, TurnMixin, CombatMixin
         c.stp = False                               # S・トリガー・プラスの印も消える
         c.odrive = False                            # O・ドライブの印も消える
         c.bazurenda = 0                             # バズレンダの追加支払い回数も消える
+        c.vivid = False                             # ビビッドローの表向きも消える（引いたターンの記録 drawn_turn は残す）
         dest = self.zlist(to, c.controller if self.zshared(to) else c.owner)
         if position == "top" and self.rules.zones[to]["ordered"]:
             dest.insert(0, cid)

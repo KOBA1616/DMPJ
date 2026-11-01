@@ -1253,3 +1253,27 @@ cards:
         - {zone: bz, filter: {types: [creature], civs: [darkness]}, count: 1, to: graveyard, reason: destroy}
     spell:
       - {op: draw, count: 3}
+
+# 語彙パイロット第30弾（フェーズ8）: ビビッドロー / 強制攻撃 / 究極進化
+  - id: T092
+    name: ビビッドロー獣
+    civs: [water, fire]
+    cost: 4
+    power: 4000
+    types: [creature]
+    vividraw: {cost: 2, civs: [water, fire]}
+  - id: T093
+    name: 強制攻撃獣
+    civs: [fire]
+    cost: 2
+    power: 3000
+    types: [creature]
+    keywords: [must_attack]
+  - id: T094
+    name: 究極進化獣
+    civs: [darkness]
+    cost: 7
+    power: 9000
+    types: [creature, evolution]
+    evolve_from: {types: [evolution]}
+    keywords: [double_breaker]

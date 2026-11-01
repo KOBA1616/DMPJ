@@ -291,6 +291,10 @@ keywords:
             body:
               - {op: choose, select: {zone: bz, owner: opp, filter: {types: [creature]}, count: 1}, as: frozen}
               - {op: tap, select: {ref: frozen}, no_untap_next: true}
+  must_attack:
+    ja: このクリーチャーは、可能なら毎ターン攻撃する
+    abilities:
+      - {kind: static, affects: self, mod: {require: [attack]}}
   summon_from_mana:
     ja: このクリーチャーを自分のマナゾーンから召喚してもよい
     abilities:

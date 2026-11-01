@@ -506,3 +506,11 @@ space_charge（単独42件）: スペース・チャージは、文明ごとの�
 - 代替コスト: 面の宣言 `alt_cost`。別額形式 `{cost, civs}` は「:alt」選択肢、行動形式 `{do: [{zone, filter, count, to, reason}...]}` は段階ごとに選んで支払い、払い切ったらコストを支払ったものとして実行する。条件式に `{alt_paid: true}` を追加（「[代替]支払って唱えたら」）
 - ついでに op `opp_may`（「相手は〜してもよい」）を追加。代替コストの「そうしたら、相手は〜してもよい」で必要になった
 - 進化クリーチャーの参照（「1体につき」「なければ」）: count 式とフィルタで既存表現可（申告切れ）
+
+# 第30弾（2026-11-01）: フェーズ8（ビビッドロー / 強制攻撃 / 究極進化）
+
+検証は `tests/test_vocab_pilot30.py`（動作3件）と `tests/test_vocab_pilot30_cards.py`（代表3枚）。対象: vividraw 27件、ultimate_evolution 23件、must_attack 23件。
+
+- ビビッドロー: 面の宣言 `vividraw {cost, civs}`。ドローしたカードに drawn_turn を記録し、自分のターンのメインステップ（攻撃前のみ）に「reveal」選択肢で表向きにすると、そのターンは「:vivid」選択肢で代替コスト実行できる
+- 強制攻撃: キーワード `must_attack`（mod の require: [attack]。強制の仕組み自体は既存）
+- 究極進化: evolve_from {types: [evolution]} で既存表現可（申告切れ）

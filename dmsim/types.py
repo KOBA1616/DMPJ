@@ -29,6 +29,8 @@ class Option(TypedDict, total=False):
     hyper_act: NotRequired[bool]         # ハイパーモード解放（メインステップの行動）
     climb: NotRequired[bool]             # ムゲンクライム（タップ+代替コストで実行する選択肢）
     alt: NotRequired[bool]               # 代替コストで実行する選択肢
+    vivid: NotRequired[bool]             # ビビッドロー（代替コストで実行する選択肢）
+    reveal: NotRequired[bool]            # ビビッドロー（表向きにする選択肢）
 
 
 class Decision(TypedDict):
