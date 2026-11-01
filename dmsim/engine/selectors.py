@@ -107,6 +107,8 @@ class SelectorMixin:
             return False
         if "face_down" in f and c.face_down != f["face_down"]:
             return False
+        if "neo" in f and bool(self.fdef(cid).neo) != f["neo"]:
+            return False
         if "keyword" in f and f["keyword"] not in ch["keywords"]:
             return False
         return True
@@ -159,7 +161,7 @@ class SelectorMixin:
             elif r in ("event.target", "event.attacker"):   # 攻撃された（攻撃先の）クリーチャー / ブロックされた（攻撃）クリーチャー
                 v = env["event"].get(r.split(".")[1])
                 refs = [v] if isinstance(v, list) else []
-            elif r == "event.subject":
+            elif r in ("event.subject", "subject"):   # subject は event.subject の別名（変換データが両形を使う）
                 refs = [env["event"]["subject"]]
             else:
                 refs = env.get("vars", {}).get(r, [])

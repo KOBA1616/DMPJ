@@ -1388,3 +1388,56 @@ cards:
         when: {event: move, to: bz, reason: summon, subject: self}
         effect:
           - {op: draw, count: 1}
+  - id: T105
+    name: 離脱とどまり獣
+    civs: [light]
+    cost: 4
+    power: 1000
+    types: [creature]
+    text: このクリーチャーがバトルゾーンを離れる時、そのパワーが０より大きければ、離れるかわりにとどまる。
+    abilities:
+      - kind: replace
+        when: {event: move, from: bz, subject: self}
+        if: {exists: {ref: self, filter: {power_ge: 1}}}
+        instead: []
+  - id: T106
+    name: 登場封じ獣
+    civs: [fire]
+    cost: 3
+    power: 3000
+    types: [creature]
+    text: 相手のクリーチャーが出る時、かわりにそのクリーチャーを墓地に置く。
+    abilities:
+      - kind: replace
+        when: {event: move, to: bz, subject: {owner: opp, filter: {types: [creature]}}}
+        instead:
+          - {op: move, select: {ref: subject, count: 1}, to: graveyard, reason: put}
+  - id: T107
+    name: 身代わり獣
+    civs: [darkness]
+    cost: 4
+    power: 3000
+    types: [creature]
+    keywords: [blocker]
+    text: ブロッカー。このクリーチャーは攻撃できない。自分の他のクリーチャーがバトルゾーンを離れる時、かわりに自分のクリーチャーを１体破壊してもよい。
+    abilities:
+      - kind: static
+        affects: self
+        mod: {deny: [attack_player, attack_creature]}
+      - kind: replace
+        optional: true
+        when: {event: move, from: bz, subject: {owner: you, filter: {types: [creature]}, other: true}}
+        instead:
+          - {op: destroy, select: {zone: bz, owner: you, count: 1}}
+  - id: T108
+    name: 山札送り獣
+    civs: [nature]
+    cost: 4
+    power: 3000
+    types: [creature]
+    text: 自分のクリーチャーがバトルゾーンを離れる時、かわりに山札の下に置く。
+    abilities:
+      - kind: replace
+        when: {event: move, from: bz, subject: {owner: you, filter: {types: [creature]}}}
+        instead:
+          - {op: move, select: {ref: subject, count: 1}, to: deck, position: bottom, reason: put}
