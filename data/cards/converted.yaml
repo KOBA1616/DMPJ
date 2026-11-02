@@ -215194,3 +215194,777 @@ cards:
       as と exists で表した。唱えた後の戻し先は resolve_to: deck で表した。 「唱えた後、墓地に置くかわりに山札に加えてシャッフルする」は
       kind: replace（zone: hold、reason: resolve の墓地送りを置換して山札に戻しシャッフル）で表した（dmc64-011
       先例、バッチIで実挙動確認済みの形式に統一）。'
+- id: dm24rp2-sp3
+  name: ブランド-MAX
+  types:
+  - creature
+  - evolution
+  civs:
+  - fire
+  cost: 4
+  power: 5000
+  races:
+  - ビートジョッキー
+  - レクスターズ
+  mana: 1
+  s_max: true
+  text: S-MAX進化：自分がゲームに負ける時、かわりにこのクリーチャーを破壊するか、自分の手札から《ブランド-MAX》を１枚捨てる。（このクリーチャーは進化元を必要としない。自分のS-MAX進化クリーチャーが２体以上あれば、そのうちの１体を残し、残りをすべて手札に戻す）
+    / このクリーチャーが攻撃する時、自分の他のクリーチャーを１体アンタップする。このターン、そのクリーチャーはシールドをさらに１つブレイクする。 / 相手がこのクリーチャーを選んだ時、相手のシールドを１つ、持ち主の墓地に置く。
+  abilities:
+  - kind: replace
+    optional: true
+    when:
+      event: lose
+    instead:
+    - op: if
+      cond:
+        exists:
+          zone: hand
+          owner: you
+          filter:
+            name: ブランド-MAX
+      then:
+      - op: modal
+        modes:
+        - - op: move
+            select:
+              ref: self
+              count: 1
+            to: graveyard
+            reason: destroy
+        - - op: discard
+            select:
+              zone: hand
+              owner: you
+              chooser: you
+              filter:
+                name: ブランド-MAX
+              count: 1
+      else:
+      - op: move
+        select:
+          ref: self
+          count: 1
+        to: graveyard
+        reason: destroy
+  - kind: trigger
+    when:
+      event: attack
+      subject: self
+    effect:
+    - op: choose
+      select:
+        zone: bz
+        owner: you
+        chooser: you
+        filter:
+          types:
+          - creature
+        other: true
+        count: 1
+      as: tgt
+    - op: untap
+      select:
+        ref: tgt
+        count: 1
+    - op: modify
+      select:
+        ref: tgt
+        count: 1
+      mod:
+        breaks: 1
+      duration: end_of_turn
+  - kind: trigger
+    when:
+      event: choose
+      subject: self
+    effect:
+    - op: move
+      select:
+        zone: shield
+        owner: opp
+        chooser: you
+        count: 1
+      to: graveyard
+      reason: put
+  source:
+    official: dm24rp2-sp3
+    review: pending
+    notes: 'S-MAX進化は s_max: true＋第43弾の標準形。攻撃時のアンタップ＋追加ブレイクは mod breaks、選ばれた時は event:
+      choose（アポロヌス先例どおり）。再変換ラウンド18。'
+    aliases:
+    - dm22bd2-007
+    - dmrp21-6a
+    - dmrp21-8b
+    - dmrp21-s6
+- id: dm26ex4-028
+  name: 切札接続 MAXAM ザ・オウガ
+  types:
+  - creature
+  - evolution
+  civs:
+  - light
+  - darkness
+  cost: 7
+  power: 13000
+  races:
+  - ディスペクター
+  - ジョーカーズ
+  - デモニオ
+  - レクスターズ
+  mana: 1
+  s_max: true
+  keywords:
+  - ex_life
+  - triple_breaker
+  text: 'S-MAX進化：自分がゲームに負ける時、かわりにこのクリーチャーを破壊するか、自分の手札から《切札接続 MAXAM ザ・オウガ》を１枚捨てる。（このクリーチャーは進化元を必要としない。自分のS-MAX進化クリーチャーが２体以上あれば、１体を残し、残りをすべて手札に戻す）
+
+    EXライフ（このクリーチャーを出す時、自分の山札の上から１枚をシールド化する。このクリーチャーが離れる時、かわりにそのシールドを墓地に置く）
+
+    T・ブレイカー
+
+    このクリーチャーが攻撃する時、相手のクリーチャーを２体選んで破壊し、相手の手札を２枚見ないで選び、捨てさせる。その後、自分の山札の上から１枚をシールド化してもよい。'
+  abilities:
+  - kind: replace
+    optional: true
+    when:
+      event: lose
+    instead:
+    - op: if
+      cond:
+        exists:
+          zone: hand
+          owner: you
+          filter:
+            name: 切札接続 MAXAM ザ・オウガ
+      then:
+      - op: modal
+        modes:
+        - - op: move
+            select:
+              ref: self
+              count: 1
+            to: graveyard
+            reason: destroy
+        - - op: discard
+            select:
+              zone: hand
+              owner: you
+              chooser: you
+              filter:
+                name: 切札接続 MAXAM ザ・オウガ
+              count: 1
+      else:
+      - op: move
+        select:
+          ref: self
+          count: 1
+        to: graveyard
+        reason: destroy
+  - kind: trigger
+    when:
+      event: attack
+      subject: self
+    effect:
+    - op: destroy
+      select:
+        zone: bz
+        owner: opp
+        chooser: you
+        count: 2
+    - op: discard
+      select:
+        zone: hand
+        owner: opp
+        count: 2
+    - op: may
+      body:
+      - op: move
+        select:
+          zone: deck
+          owner: you
+          from_top: 1
+        to: shield
+        reason: charge
+  source:
+    official: dm26ex4-028
+    review: pending
+    notes: 'S-MAX進化は s_max: true＋第43弾の標準形。EXライフはキーワード。攻撃時は2体破壊＋見ないで2枚捨て＋任意のシールド化（move
+      to shield、ギガゲドー先例）。再変換ラウンド18。'
+- id: dm26ex4-sec021
+  name: 切札接続 MAXAM ザ・オウガ
+  types:
+  - creature
+  - evolution
+  civs:
+  - light
+  - darkness
+  cost: 7
+  power: 13000
+  races:
+  - ディスペクター
+  - ジョーカーズ
+  - デモニオ
+  - レクスターズ
+  mana: 1
+  s_max: true
+  keywords:
+  - ex_life
+  - triple_breaker
+  text: 'S-MAX進化：自分がゲームに負ける時、かわりにこのクリーチャーを破壊するか、自分の手札から《切札接続 MAXAM ザ・オウガ》を１枚捨てる。
+
+    EXライフ
+
+    T・ブレイカー
+
+    このクリーチャーが攻撃する時、相手のクリーチャーを２体選んで破壊し、相手の手札を２枚見ないで選び、捨てさせる。その後、自分の山札の上から１枚をシールド化してもよい。'
+  abilities:
+  - kind: replace
+    optional: true
+    when:
+      event: lose
+    instead:
+    - op: if
+      cond:
+        exists:
+          zone: hand
+          owner: you
+          filter:
+            name: 切札接続 MAXAM ザ・オウガ
+      then:
+      - op: modal
+        modes:
+        - - op: move
+            select:
+              ref: self
+              count: 1
+            to: graveyard
+            reason: destroy
+        - - op: discard
+            select:
+              zone: hand
+              owner: you
+              chooser: you
+              filter:
+                name: 切札接続 MAXAM ザ・オウガ
+              count: 1
+      else:
+      - op: move
+        select:
+          ref: self
+          count: 1
+        to: graveyard
+        reason: destroy
+  - kind: trigger
+    when:
+      event: attack
+      subject: self
+    effect:
+    - op: destroy
+      select:
+        zone: bz
+        owner: opp
+        chooser: you
+        count: 2
+    - op: discard
+      select:
+        zone: hand
+        owner: opp
+        count: 2
+    - op: may
+      body:
+      - op: move
+        select:
+          zone: deck
+          owner: you
+          from_top: 1
+        to: shield
+        reason: charge
+  source:
+    official: dm26ex4-sec021
+    review: pending
+    notes: 'dm26ex4-028 と同文（シークレット版）。S-MAX進化は s_max: true＋第43弾の標準形。EXライフはキーワード。再変換ラウンド18。'
+- id: dmrp21-2a
+  name: Code:-MAX
+  types:
+  - creature
+  - evolution
+  civs:
+  - water
+  cost: 6
+  power: 7000
+  races:
+  - ドラゴン・コード
+  - トリックス
+  - レクスターズ
+  mana: 1
+  s_max: true
+  keywords:
+  - double_breaker
+  text: 'S-MAX進化：自分がゲームに負ける時、かわりにこのクリーチャーを破壊するか、自分の手札から《Code:-MAX》を１枚捨てる。（このクリーチャーは進化元を必要としない。自分のS-MAX進化クリーチャーが２体以上あれば、そのうちの１体を残し、残りをすべて手札に戻す）
+
+    W・ブレイカー
+
+    このクリーチャーが出た時、カードを２枚引いてもよい。
+
+    このクリーチャーが攻撃する時、自分の手札からコストを支払わずに、コスト４以下のタマシードを１枚使うか、コスト４以下の呪文を１枚唱えてもよい。'
+  abilities:
+  - kind: trigger
+    when:
+      event: move
+      to: bz
+      subject: self
+    effect:
+    - op: may
+      body:
+      - op: draw
+        count: 2
+  - kind: replace
+    optional: true
+    when:
+      event: lose
+    instead:
+    - op: if
+      cond:
+        exists:
+          zone: hand
+          owner: you
+          filter:
+            name: Code:-MAX
+      then:
+      - op: modal
+        modes:
+        - - op: move
+            select:
+              ref: self
+              count: 1
+            to: graveyard
+            reason: destroy
+        - - op: discard
+            select:
+              zone: hand
+              owner: you
+              chooser: you
+              filter:
+                name: Code:-MAX
+              count: 1
+      else:
+      - op: move
+        select:
+          ref: self
+          count: 1
+        to: graveyard
+        reason: destroy
+  - kind: trigger
+    when:
+      event: move
+      to: bz
+      subject: self
+    effect:
+    - op: may
+      body:
+      - op: draw
+        count: 2
+  - kind: trigger
+    when:
+      event: attack
+      subject: self
+    effect:
+    - op: may
+      body:
+      - op: play_free
+        select:
+          zone: hand
+          owner: you
+          filter:
+            any_of:
+            - types:
+              - tamaseed
+              cost_le: 4
+            - types:
+              - spell
+              cost_le: 4
+          count: 1
+  source:
+    official: dmrp21-2a
+    review: pending
+    notes: 'S-MAX進化は s_max: true と第43弾の標準形（lose 置換）で表現。攻撃時の無料使用は play_free に any_of
+      フィルタ（タマシード／呪文、いずれもコスト4以下）を組み合わせた。再変換ラウンド18。'
+    aliases:
+    - dmrp21-4b
+    - dmrp21-s2
+- id: dmrp21-4a
+  name: ゲンム-MAX
+  types:
+  - creature
+  - evolution
+  civs:
+  - darkness
+  cost: 6
+  power: 15000
+  races:
+  - ∞・ドラゴン
+  - レクスターズ
+  mana: 1
+  s_max: true
+  keywords:
+  - powered_breaker
+  - slayer
+  text: 'S-MAX進化：自分がゲームに負ける時、かわりにこのクリーチャーを破壊するか、自分の手札から《ゲンム-MAX》を１枚捨てる。（このクリーチャーは進化元を必要としない。自分のS-MAX進化クリーチャーが２体以上あれば、そのうちの１体を残し、残りをすべて手札に戻す）
+
+    パワード・ブレイカー
+
+    スレイヤー
+
+    自分のシールド１つにつき、このクリーチャーのパワーを-2000する。
+
+    このクリーチャーが出た時または攻撃する時、自分のシールドを１つブレイクしてもよい。
+
+    自分のシールドが１つシールドゾーンを離れるたび、相手のクリーチャーを１体選ぶ。このターン、そのクリーチャーのパワーを－4000する。'
+  abilities:
+  - kind: replace
+    optional: true
+    when:
+      event: lose
+    instead:
+    - op: if
+      cond:
+        exists:
+          zone: hand
+          owner: you
+          filter:
+            name: ゲンム-MAX
+      then:
+      - op: modal
+        modes:
+        - - op: move
+            select:
+              ref: self
+              count: 1
+            to: graveyard
+            reason: destroy
+        - - op: discard
+            select:
+              zone: hand
+              owner: you
+              chooser: you
+              filter:
+                name: ゲンム-MAX
+              count: 1
+      else:
+      - op: move
+        select:
+          ref: self
+          count: 1
+        to: graveyard
+        reason: destroy
+  - kind: static
+    mod:
+      power:
+        amount: -2000
+        count:
+          zone: shield
+          owner: you
+  - kind: trigger
+    when:
+      event: move
+      to: bz
+      subject: self
+    effect:
+    - op: may
+      body:
+      - op: break
+        player: you
+        count: 1
+  - kind: trigger
+    when:
+      event: attack
+      subject: self
+    effect:
+    - op: may
+      body:
+      - op: break
+        player: you
+        count: 1
+  - kind: trigger
+    when:
+      event: move
+      from: shield
+      subject:
+        owner: you
+    effect:
+    - op: modify
+      select:
+        zone: bz
+        owner: opp
+        filter:
+          types:
+          - creature
+        count: 1
+      mod:
+        power: -4000
+      duration: end_of_turn
+  source:
+    official: dmrp21-4a
+    review: pending
+    notes: 'S-MAX進化は s_max: true と第43弾の標準形（lose 置換）で表現。パワーの数え下げは static の power amount/count
+      式、自分のシールドのブレイクは op: break（アブライゼ・ドルバ先例）、シールドが離れる誘発は move from: shield（dm23rp3-017
+      先例）で表現。再変換ラウンド18。'
+    aliases:
+    - dmrp21-6b
+    - dmrp21-s4
+- id: dmrp22-6a
+  name: EVE-鬼MAX
+  types:
+  - creature
+  - evolution
+  civs:
+  - fire
+  cost: 5
+  power: 9000
+  races:
+  - イブユニット
+  - デモニオ
+  - 鬼レクスターズ
+  mana: 1
+  s_max: true
+  keywords:
+  - double_breaker
+  text: '鬼S-MAX進化：自分がゲームに負ける時、またはこのクリーチャーが離れる時、かわりに自分の表向きのカードを３枚破壊してもよい。（このクリーチャーは進化元を必要としない。自分のS-MAX進化クリーチャーが２体以上あれば、そのうちの１体を残し、残りをすべて手札に戻す）
+
+    W・ブレイカー
+
+    自分のクリーチャーが相手を攻撃する時、相手のクリーチャーを１体選んでもよい。その２体をバトルさせる。
+
+    自分のクリーチャーがバトルに勝った時、相手の、クリーチャーではないカードを１枚破壊してもよい。'
+  abilities:
+  - kind: replace
+    optional: true
+    when:
+      event: lose
+    if:
+      cmp:
+      - count:
+          zone: bz
+          owner: you
+      - '>='
+      - 3
+    instead:
+    - op: move
+      select:
+        zone: bz
+        owner: you
+        chooser: you
+        count: 3
+      to: graveyard
+      reason: destroy
+  - kind: replace
+    optional: true
+    when:
+      event: move
+      from: bz
+      subject: self
+    if:
+      cmp:
+      - count:
+          zone: bz
+          owner: you
+      - '>='
+      - 3
+    instead:
+    - op: move
+      select:
+        zone: bz
+        owner: you
+        chooser: you
+        count: 3
+      to: graveyard
+      reason: destroy
+  - kind: trigger
+    when:
+      event: attack
+      target: player
+      subject:
+        owner: you
+    effect:
+    - op: may
+      body:
+      - op: force_battle
+        a:
+          ref: subject
+        b:
+          zone: bz
+          owner: opp
+          filter:
+            types:
+            - creature
+          count: 1
+  - kind: trigger
+    when:
+      event: battle_win
+      subject:
+        owner: you
+    effect:
+    - op: destroy
+      select:
+        zone: bz
+        owner: opp
+        chooser: you
+        filter:
+          not_types:
+          - creature
+        count: 1
+        up_to: true
+  source:
+    official: dmrp22-6a
+    review: pending
+    notes: '鬼S-MAX進化は第43弾の型（敗北時と離れる時の2つの置換）。攻撃時のバトルは force_battle（攻撃クリーチャーは ref: subject）、バトル勝利時の破壊は
+      not_types: [creature]＋up_to で『選んでもよい』を表した。完全変換。'
+    aliases:
+    - dmrp22-8b
+    - dmrp22-s6
+- id: dmsd20-001
+  name: モモキングｰMAX
+  types:
+  - creature
+  - evolution
+  civs:
+  - light
+  cost: 6
+  power: 9000
+  races:
+  - ジョーカーズ
+  - ヒーロー・ドラゴン
+  - レクスターズ
+  mana: 1
+  s_max: true
+  keywords:
+  - double_breaker
+  text: 'S-MAX進化：自分がゲームに負ける時、かわりにこのクリーチャーを破壊するか、自分の手札から《モモキングｰMAX》を１枚捨てる。（このクリーチャーは進化元を必要としない。自分のS-MAX進化クリーチャーが２体以上あれば、そのうちの１体を残し、残りをすべて手札に戻す）
+
+    W・ブレイカー（このクリーチャーはシールドを２つブレイクする）
+
+    このクリーチャーが攻撃する時、カードを１枚引く。その後、コスト６以下のタマシードを１枚、自分の手札から出してもよい。'
+  abilities:
+  - kind: replace
+    optional: true
+    when:
+      event: lose
+    instead:
+    - op: if
+      cond:
+        exists:
+          zone: hand
+          owner: you
+          filter:
+            name: モモキングｰMAX
+      then:
+      - op: modal
+        modes:
+        - - op: move
+            select:
+              ref: self
+              count: 1
+            to: graveyard
+            reason: destroy
+        - - op: discard
+            select:
+              zone: hand
+              owner: you
+              chooser: you
+              filter:
+                name: モモキングｰMAX
+              count: 1
+      else:
+      - op: move
+        select:
+          ref: self
+          count: 1
+        to: graveyard
+        reason: destroy
+  - kind: trigger
+    when:
+      event: attack
+      subject: self
+    effect:
+    - op: draw
+      player: you
+      count: 1
+    - op: may
+      body:
+      - op: play_free
+        select:
+          zone: hand
+          owner: you
+          filter:
+            types:
+            - tamaseed
+            cost_le: 6
+          count: 1
+  source:
+    official: dmsd20-001
+    review: pending
+    notes: 'S-MAX進化は第43弾の s_max: true＋敗北置換（proto T121 と同型）。攻撃時はドロー後に may＋play_free
+      でコスト6以下のタマシードを出す形にした。完全変換。'
+    aliases:
+    - promoy21-010
+- id: promoy21-001
+  name: ジョニーｰMAX
+  types:
+  - creature
+  - evolution
+  civs:
+  - light
+  cost: 5
+  power: 9000
+  races:
+  - ジョーカーズ
+  - レクスターズ
+  mana: 1
+  s_max: true
+  keywords:
+  - double_breaker
+  text: 'S-MAX進化：自分がゲームに負ける時、かわりにこのクリーチャーを破壊するか、自分の手札から《ジョニーｰMAX》を１枚捨てる。（このクリーチャーは進化元を必要としない。自分のS-MAX進化クリーチャーが２体以上あれば、そのうちの１体を残し、残りをすべて手札に戻す）
+
+    W・ブレイカー（このクリーチャーはシールドを２つブレイクする）'
+  abilities:
+  - kind: replace
+    optional: true
+    when:
+      event: lose
+    instead:
+    - op: if
+      cond:
+        exists:
+          zone: hand
+          owner: you
+          filter:
+            name: ジョニーｰMAX
+      then:
+      - op: modal
+        modes:
+        - - op: move
+            select:
+              ref: self
+              count: 1
+            to: graveyard
+            reason: destroy
+        - - op: discard
+            select:
+              zone: hand
+              owner: you
+              chooser: you
+              filter:
+                name: ジョニーｰMAX
+              count: 1
+      else:
+      - op: move
+        select:
+          ref: self
+          count: 1
+        to: graveyard
+        reason: destroy
+  source:
+    official: promoy21-001
+    review: pending
+    notes: 'S-MAX進化は第43弾の s_max: true＋敗北置換（proto T121 と同型）。残りの原文は W・ブレイカー（キーワード処理済み）のみ。完全変換。'
