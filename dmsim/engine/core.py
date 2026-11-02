@@ -258,6 +258,8 @@ class Engine(SelectorMixin, EventMixin, InterpreterMixin, TurnMixin, CombatMixin
     def abilities(self, cid: int, kind: str | None = None) -> list[tuple[int, dict]]:
         """(添字, 能力) の列。無視されている能力は除く（608.4）。
         継続的効果の mod.gain で得た能力は負の添字（-1, -2, ...）で返す。"""
+        if self.s.cards[cid].zone == "bz" and self.s.cards[cid].seals:
+            return []   # 封印されているクリーチャーの能力は機能しない（封印が外れた時点から見える）
         out = [(i, ab) for i, ab in enumerate(self.fdef(cid).abilities)
                if (kind is None or ab["kind"] == kind)
                and (not ab.get("sst") or self.s.cards[cid].sst)   # スーパー・S・トリガーの追加能力は印がある時だけ
@@ -336,6 +338,13 @@ class Engine(SelectorMixin, EventMixin, InterpreterMixin, TurnMixin, CombatMixin
         許可・禁止（allow / deny）と breaks もここで集める。ルール側はキーワード名を見ない。"""
         c = self.s.cards[cid]
         d = self.fdef(cid, face)
+        if face is None and c.zone == "bz" and c.seals:
+            # 封印されているクリーチャーは無視される: 種族・タイプ・キーワードを持たず、能力も機能しない
+            # （パワーは印刷どおり返し、パワー0の状況起因処理で破壊されないようにする）
+            return {"power": d.power, "cost": d.cost, "civs": list(d.civs), "types": [], "races": [],
+                    "keywords": set(), "name": d.name, "allow": [], "deny": [], "require": [],
+                    "breaks": 0, "break_opts": [], "pay_cost": d.cost, "sac_reduce": 0,
+                    "opt_reduce": None, "cost_may": []}
         ch = {"power": d.power, "cost": d.cost, "civs": list(d.civs), "types": list(d.types),
               "races": list(d.races), "keywords": set(d.keywords), "name": d.name,
               "allow": [], "deny": [], "require": [], "breaks": 1, "break_opts": [], "pay_cost": d.cost, "sac_reduce": 0, "opt_reduce": None, "cost_may": []}

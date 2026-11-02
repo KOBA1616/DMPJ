@@ -22,12 +22,12 @@ def core_ops() -> dict[str, dict[str, str]]:
     return OP_ARGS
 
 EVENTS = {"move", "draw", "cast", "summon", "attack", "block", "break", "tap", "untap",
-          "turn_start", "turn_end", "battle_win", "choose", "battle", "battle_start", "attack_end"}
-ABILITY_KINDS = {"trigger", "replace", "static", "declare", "activate", "silent", "state"}   # state: 状態を常に見て、満たされたら勝敗が決まる常在効果（if と effect: [win/lose]）
+          "turn_start", "turn_end", "battle_win", "choose", "battle", "battle_start", "attack_end", "lose", "mugon_used"}
+ABILITY_KINDS = {"trigger", "replace", "static", "declare", "activate", "silent", "state", "partner"}   # state: 状態を常に見て、満たされたら勝敗が決まる常在効果（if と effect: [win/lose]）。partner: [P]能力（単独では機能せず、キズナ等で「使う」ことで解決する）
 ABILITY_KEYS = {"kind", "when", "if", "effect", "instead", "optional", "affects", "mod", "zone", "keyword", "cost", "id",
                 "once_per_turn", "first_time", "sst", "stp", "odrive", "choukon", "bazurenda"}
 REASONS = {"put", "destroy", "return", "discard", "charge", "summon", "cast", "break",
-           "draw", "battle", "sba", "resolve", "evolve"}
+           "draw", "battle", "sba", "resolve", "evolve", "seal"}
 VIAS = {"revolution_change", "generate"}   # 出し方の印（「革命チェンジによって出た時」など）
 DURATIONS_FIXED = {"end_of_turn", "during_attack", "permanent", "until_next_own_turn_start"}
 MOD_KEYS = {"power", "grant", "allow", "deny", "breaks", "breaks_per_power", "battle_power", "power_when", "cost", "cost_min", "cost_may", "sac_reduce", "opt_reduce", "ignore", "ignore_ids", "gain", "require", "add_of", "add_races"}
@@ -39,7 +39,7 @@ CIVS = {"light", "water", "darkness", "fire", "nature", "zero"}
 SELECTOR_KEYS = {"zone", "owner", "owner_of", "filter", "count", "up_to", "from_top", "chooser", "ref", "other",
                  "under_of", "look", "exlife_of", "total_cost_le", "total_cost_ge"}   # look: 非公開ゾーン（山札など）の中身を見て選ぶ。total_cost_*: コストの合計が上限以下／下限以上になるように好きな数選ぶ
 FILTER_KEYS = {"any_of", "types", "not_types", "civs", "civs_all", "not_civs", "races", "race_has", "name", "name_has", "not_name",
-               "cost_le", "cost_ge", "power_le", "power_ge", "tapped", "keyword", "multicolor", "face_down", "neo", "vanilla"}
+               "cost_le", "cost_ge", "power_le", "power_ge", "tapped", "keyword", "multicolor", "face_down", "neo", "vanilla", "sealed", "evolution"}
 FILTER_EXPR_KEYS = {"cost_le", "cost_ge", "power_le", "power_ge", "races"}   # 値に式を書ける（解決時に計算）
 
 
@@ -84,6 +84,7 @@ class Face:
     neo: bool = False                                     # NEO進化: 通常召喚も、evolve_from の上に重ねることもできる
     grave_evo: bool = False                               # 墓地進化: 通常召喚も、自分の墓地のクリーチャーの上に重ねて出すこともできる（evolve_zone: graveyard と併用）
     star: bool = False                                    # スター進化: 離れる時は一番上のカードだけが離れ、下は残る
+    s_max: bool = False                                   # S-MAX進化: 進化元を必要とせず、通常のクリーチャーとして召喚できる
     hyper: bool = False                                   # ハイパー化（他の自分のクリーチャー1体をタップしてハイパーモードを解放できる）
     resolve_to: str = "graveyard"                         # 呪文の解決後の置き場所（チャージャー等）
     after_resolve: list[dict] = field(default_factory=list)
@@ -133,6 +134,7 @@ class CardDef:
     neo: bool = False
     grave_evo: bool = False
     star: bool = False
+    s_max: bool = False
     hyper: bool = False
     resolve_to: str = "graveyard"
     after_resolve: list[dict] = field(default_factory=list)
@@ -345,6 +347,12 @@ class Checker:
                 return
             if k == "link_count":   # リンクしているカードの枚数（値は self 固定で無視される）
                 return
+            if k == "seals":   # そのプレイヤーの封印の総数 {owner: you/opp}
+                if not isinstance(v, dict) or set(v) - {"owner"} or v.get("owner", "you") not in ("you", "opp"):
+                    raise DefError(f"{where}: seals needs {{owner: you/opp}}")
+                return
+            if k == "seals_on":   # self に付いている封印の数（値は self 固定で無視される）
+                return
             if k == "sum":
                 for e in v:
                     self.expr(e, where)
@@ -500,6 +508,8 @@ class Checker:
             raise DefError(f"{where}: unknown via '{w['via']}'")
         if "by" in w and w["by"] not in ("you", "opp"):
             raise DefError(f"{where}: bad by '{w['by']}'")
+        if w.get("sealed_from") is not None and w["sealed_from"] not in ("self",) and not isinstance(w["sealed_from"], dict):
+            raise DefError(f"{where}: bad sealed_from '{w['sealed_from']}'")
 
     def ability(self, ab, where):
         kind = ab.get("kind")
@@ -540,6 +550,8 @@ class Checker:
             raise DefError(f"{where}: cost is only for activate")
         if kind == "silent" and "effect" not in ab:   # サイレントスキル（501.1a）: ターンのはじめにタップされていたら、アンタップしないかわりに使ってもよい
             raise DefError(f"{where}: silent needs effect")
+        if kind == "partner" and "effect" not in ab:   # [P]能力: キズナ等で使われる効果だけを持つ
+            raise DefError(f"{where}: partner needs effect")
         if "if" in ab:
             self.cond(ab["if"], where)
         for k in ("effect", "instead"):
@@ -593,9 +605,9 @@ def _load_face(raw, keywords, macros, chk: Checker, where) -> dict:
     if set(raw["civs"]) - CIVS:
         raise DefError(f"{where}: unknown civs {raw['civs']}")
     if "evolution" in raw["types"]:
-        if "evolve_from" not in raw:
+        if "evolve_from" not in raw and not raw.get("s_max"):
             raise DefError(f"{where}: evolution creature needs evolve_from")
-        ef = raw["evolve_from"]
+        ef = raw.get("evolve_from") or {}
         for f in (ef if isinstance(ef, list) else [ef]):   # 進化V: フィルタのリスト（1つずつ重ねる）
             chk.filter({k: v for k, v in f.items() if k != "zone"}, where)
     zone = raw.get("evolve_zone", "bz")
@@ -638,7 +650,7 @@ def _load_face(raw, keywords, macros, chk: Checker, where) -> dict:
                 evolve_count=(len(raw["evolve_from"]) if isinstance(raw.get("evolve_from"), list)
                               else int(raw.get("evolve_count", 1))),
                 cost_reduce_per_evo=int(raw.get("cost_reduce_per_evo", 0)),
-                free_if=raw.get("free_if"), galaxy_shield=raw.get("galaxy_shield"), bazurenda=raw.get("bazurenda"), neo=bool(raw.get("neo", False)), grave_evo=bool(raw.get("grave_evo", False)), star=bool(raw.get("star", False)), hyper=bool(raw.get("hyper", False)), **{"tap_reduce": 0, "s_back": None, **props})
+                free_if=raw.get("free_if"), galaxy_shield=raw.get("galaxy_shield"), bazurenda=raw.get("bazurenda"), neo=bool(raw.get("neo", False)), grave_evo=bool(raw.get("grave_evo", False)), star=bool(raw.get("star", False)), s_max=bool(raw.get("s_max", False)), hyper=bool(raw.get("hyper", False)), **{"tap_reduce": 0, "s_back": None, **props})
 
 
 def load_tables():

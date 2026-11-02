@@ -600,3 +600,56 @@ space_charge（単独42件）: スペース・チャージは、文明ごとの�
 - 実装: filter に `vanilla` を追加（defs.py の FILTER_KEYS、schema は自動で追随）。判定は印刷された特性で行う: その面の定義に能力・キーワードが無く、進化・NEO・スター進化・墓地進化・ハイパーモード等の書かれた仕組みも持たないこと（dmsim/engine/selectors.py の filter_match）。付与された能力は見ない。
 - 検証: tests/test_vocab_pilot41.py（動作1件: 上3枚がバニラ/キーワード持ち/能力持ちの時、バニラだけが手札に加わり残りは山札の下へ）＋ tests/test_vocab_pilot41_cards.py（ザ・ミスターの parse）。proto に T119 を追加。再変換ラウンド16で2枚を登録。
 - あわせて第40弾に回帰テストを追加: 置換効果は連鎖しない（総合ルール101.5 / 609.3）。置換で生じたイベントは replaced 印でそれ以上置換されず、自分のターンの《単騎連射 マグナム》がいても相手のバイケン型置換で出すことは妨げられない（test_vocab_pilot40.py の test_replacement_does_not_chain_against_magnum）。
+
+## 第42弾（フェーズ17-3）: 革命０トリガー（宣言型能力としての表現）
+
+- 対象: revolution_zero_trigger 単独18件。新しいエンジン機構は不要で、既存の宣言型能力（kind: declare、ニンジャ・ストライクと同系）で表せることを確認した。
+- クリーチャー版の型: declare {zone: hand, when: {event: attack, target: player}, if: {all: [{is_turn: opp}, {cmp: [{count: {zone: shield, owner: you}}, "==", 0]}]}, effect: [山札の上1枚を choose (look) → 条件（文明・進化ではない）に合えば move で出し as: base → op: invade でその上に重ねる]}。invade は侵略と同じ重ね処理で、進化として重なった扱いになる。move の as で新しい参照を取り直すのが要点（移動で世代が変わり、古い ref では重ね先が見つからない）。
+- 呪文版の型: declare の effect を [{op: play_free, select: {ref: self}}] にする（コストを支払わずに唱える）。
+- 検証: proto T120（ブロッカー持ちで、受けた攻撃をブロックできる形にしてある）、tests/test_vocab_pilot42.py 2件: ①シールド0で宣言→重なって出てブロックし攻撃側を破壊、②シールドが残っている間は宣言が提示されない。
+- 再変換ラウンド17で18件中14件を登録（converted 5,782枚）。残4件は革命０以外の部分が原因で差し戻し: 叛逆の絆（opponent_chooses_branch）、革命の鉄拳（power_relative）、龍帝の紋章（power_lt_card）、賢者の紋章（cancel_attack）。
+- 紋章系呪文に共通する「唱えた後、墓地に置くかわりに山札に加えてシャッフルする」は、resolve_to: deck ではシャッフルが伴わず近似になるため使わず、kind: replace {zone: hold, when: {event: move, to: graveyard, reason: resolve, subject: self}, instead: [move self to deck, shuffle]} で統一した（dmc64-011 先例）。
+- 注意（別途点検候補）: 「次の自分のターンのはじめに〜」型の delayed_trigger は duration: permanent（when は turn_start + player: you）を付けないと、デフォルトの end_of_turn 失効で発火前に消える。converted 内の duration 無し turn_start 先例は影響を受けている可能性がある。
+
+## 第43弾（フェーズ17-4）: S-MAX進化
+
+- 対象: s_max_evolution 単独17件。3つの仕組みを実装した。
+- (1) 進化元を必要としない召喚: カード属性 `s_max: true` を新設（defs.py / schema.py）。s_max の進化クリーチャーは evolve_from が無くてよく、プレイ判定・プレイ処理では通常のクリーチャーとして扱う（turn.py の _can_play_face / h_play で進化分岐をスキップ）。
+- (2) 敗北の置換: イベント `lose` を新設し、when: {event: lose} の kind: replace で表す。敗北の確定箇所（ダイレクトアタック = combat.py、デッキ切れ・状況起因の勝敗 = events.py の _sba_tasks、効果による敗北 = ops.py の op lose）はすべて Engine.game_lose を通るよう統一し、置換候補があれば lose_replace タスクで敗北するプレイヤーに諮問する。標準形の支払い（本体を破壊するか手札の同名を捨てる）は if + modal で表す（proto T121）。鬼/CRY 型は「離れる時」の通常の移動置換と対で同じ instead を使う。なお op win（相手を勝たせる効果）は従来どおり即確定で、敗北置換の対象にしていない。
+- (3) 2体制限: 状況起因処理（_sba_tasks）に S-MAX チェックを追加。自分の S-MAX が2体以上あれば smax_reduce タスクで残す1体を選ばせ、残りをすべて手札に戻す。
+- 検証: proto T121 / T122、tests/test_vocab_pilot43.py 5件（進化元なし召喚、2体制限、ダイレクトアタック敗北の置換＝破壊／同名破棄、辞退すると敗北）。
+- 再変換ラウンド18で17件中8件を登録（converted 5,790枚）。残9件はS-MAX以外の部分が原因で差し戻し（gap更新済み）: copy_abilities、shield_keep_rest_graveyard、mach_fighter ×2、master_g_breaker ×2、break_pre_trigger、battle_indestructible、cost_lt_card、player_attack_protection。
+
+## 第44弾（フェーズ17-5）: キズナと[P]能力
+
+- 対象: kizuna 単独18件。
+- 実装: (1) 能力種別 `partner` を新設（defs.py の ABILITY_KINDS、schema の enum）。[P]能力は単独では機能せず、effect だけを持つ。(2) キーワード `kizuna` を data/rules/keywords.yaml に追加: 出た時の誘発として op: use_partner を解決する。(3) op: use_partner（ops.py）: 自分のクリーチャーの[P]を列挙して1つ選ばせ、その effect を self=[P]の持ち主として解決する。候補が無ければ何もしない。
+- 検証: proto T123（キズナのみ）/ T124（[P]のみ）/ T125（両方）、tests/test_vocab_pilot44.py 4件: 他者の[P]を使う、自分の[P]を使う、複数候補から選ぶ、[P]が無ければ何も起こらない。
+- 再変換ラウンド19で18件中17件を登録（converted 5,807枚）。残1件（キズナ・チャージャー）は「パートナー召喚時にこのマナを全文明として扱う」が原因で差し戻し（既存 gap mana_all_civilizations）。
+
+## 第45弾（フェーズ17-6）: 無月の門
+
+- 対象: mugon_gate 単独18件。
+- 表現: 宣言ではなく「手札/墓地で機能する誘発型能力」で表す。zone: hand と zone: graveyard の2能力を併記し、when は「自分の魔導具が出た時」（subject: {owner: you, other: true, filter}）、if で重ねる枚数の実現可能性を門番する（cmp + count、合算形は sum）。
+- 実装: op: summon_on（ops.py）。parts: [{zone, count, filter?}]（zones で複数ゾーン合算も可）どおりに選ばせ、移動イベントの stack_on / stack_more で選んだカードの上に無償召喚する。満たせないパートがあれば何もしない。
+- 進化との違い: 重ねる処理 _stack は進化の流儀（召喚酔いなし・タップ継承）のため、後始末タスク summon_on_fix（interpreter.py / types.py）で通常の召喚どおりに直す（召喚酔いする、タップは op の tapped 指定どおり）。
+- 追随: summon_on は解決後に mugon_used イベントを流すので、「自分の『無月の門』能力を使った時」に誘発するカード（zone: hand/graveyard、when: {event: mugon_used, player: you}）も表現できる。
+- 制約（v1）: 重ねる対象は各ゾーンの「一番上」のカードだけ（他のクリーチャーの下にあるカードは選べない）。無月の門・終（呪文の代替コスト）は対象外。
+- 検証: proto T126（門番）/ T127（魔導具）、tests/test_vocab_pilot45.py 4件: 手札から召喚（下4枚・召喚酔い・タップしない）、墓地から召喚、追随者がタップして出る、枚数不足では発動しない。
+- 再変換ラウンド20で18件中15件を登録（converted 5,822枚）。残3件は別 gap が原因で差し戻し: mugon_gate_period（無月の門・終）、untap_limit、smash_burst。
+
+## 第46弾（フェーズ17-7）: 封印
+
+- 対象: seal_mechanic 単独18件。
+- 状態: Card.seals（上に裏向きで重なった封印の cid 列）と Card.seal_of。封印カードは top_of を持ち、バトルゾーンの「一番上」には数えない。
+- 無視される: 封印されているクリーチャーは特性（タイプ・種族・キーワード）を持たず、能力も機能しない（chars の早期分岐と abilities の門番）。パワーは印刷どおり返す（パワー0の状況起因処理で破壊されないため）。通常のフィルタでは選べず、filter: {sealed: true} でだけ指せる。
+- op: attach_seal（対象の持ち主の山札の上から count 枚を重ねる）/ op: remove_seal（封印を墓地に置く。通常の移動イベントとして処理する）。
+- コマンドが出た時: その持ち主は、そのコマンドと同じ文明を持つ自身のカードから封印を1つ墓地に置く（seal_release タスク、events.py の移動適用から起動）。
+- 封印の移動: 封印そのものが動くと対象から外れ、記録に sealed_from（どのカードの封印だったか）が付く。封印されたカードがバトルゾーンを離れる時、封印はそれぞれ持ち主の墓地に置かれる。「封印がすべてなくなった時」は when: {event: move, reason: seal, sealed_from: self} ＋ if: {cmp: [{seals_on: self}, "==", 0]} で表す。式 {seals: {owner}} はプレイヤーの封印総数（シンパシー用）、{seals_on: self} は自カードの封印数。
+- 既知の制約: 封印を付ける行為自体はイベント記録を出さない（「封印を付けた時」の誘発は未対応）。封印されたカードの離脱時誘発（LKI）は無視の完全な適用外。
+- 検証: proto T129（自らに2つ＋全外れでドロー）/ T130（相手に付ける）/ T131（コマンド）/ T132（remove_seal）、tests/test_vocab_pilot46.py 5件。
+
+### 第46弾v2: 封印を付けた状態で出す／進化フィルタ
+- move に seal: N を追加: バトルゾーンに出る時、持ち主の山札の上から N 枚を封印として付けた状態で出る。封印は誘発の収集より前に付くので、出た時能力は無視される（メモッタ型）。
+- 封印されているカードへの付け外し: attach_seal / remove_seal の選択の間だけ、無視による選択除外を外す（すでにある封印の数え直しや追加が公式どおりできる）。
+- フィルタに evolution を追加（「進化ではないクリーチャー」等。進化はタイプで判定）。
