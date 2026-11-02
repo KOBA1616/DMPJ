@@ -1541,3 +1541,17 @@ cards:
     text: 自分の手札を１枚選び、捨てる。
     spell:
       - {op: discard, select: {zone: hand, owner: you, chooser: you, count: 1}}
+  - id: T119
+    name: 無文引き提督
+    civs: [nature]
+    cost: 5
+    power: 5000
+    types: [creature]
+    text: このクリーチャーが出た時、自分の山札の上から３枚を表向きにする。その中から、カードに能力が書かれていないクリーチャーをすべて自分の手札に加え、残りを好きな順序で山札の一番下に置く。
+    abilities:
+      - kind: trigger
+        when: {event: move, to: bz, subject: self}
+        effect:
+          - {op: choose, select: {zone: deck, owner: you, from_top: 3, look: true, count: all}, as: pile}
+          - {op: move, select: {ref: pile, filter: {types: [creature], vanilla: true}, count: all}, to: hand, reason: return}
+          - {op: move, select: {ref: pile, count: all}, to: deck, position: bottom, order: choose, reason: put}

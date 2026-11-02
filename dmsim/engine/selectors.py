@@ -109,6 +109,13 @@ class SelectorMixin:
             return False
         if "neo" in f and bool(self.fdef(cid).neo) != f["neo"]:
             return False
+        if "vanilla" in f:   # 「カードに能力が書かれていない」: 能力もキーワードも無く、進化・NEO 等の書かれた仕組みも持たない
+            d = self.fdef(cid)
+            is_v = not d.abilities and not d.keywords and "evolution" not in d.types \
+                and not getattr(d, "neo", False) and not getattr(d, "star", False) \
+                and not getattr(d, "grave_evo", False) and not getattr(d, "hyper", False)
+            if is_v != f["vanilla"]:
+                return False
         if "keyword" in f and f["keyword"] not in ch["keywords"]:
             return False
         return True

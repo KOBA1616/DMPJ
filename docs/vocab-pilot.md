@@ -593,3 +593,10 @@ space_charge（単独42件）: スペース・チャージは、文明ごとの�
 - 実装: 移動イベントに、その移動を起こした効果の解決者 `by` を記録する。ops 経由の移動には ev_task が env["you"]（効果の解決者）を by として付け、_record_for が照合用レコードへ写し、when に `by: you / opp` と書けるようにした（schema・defs の検証にも追加）。状況起因処理・コスト支払い・S・バックの捨て札など、効果解決者を伴わない移動には by が付かないため「相手の効果」扱いにならない。
 - 書き方: `- {kind: replace, zone: hand, optional: true, when: {event: move, from: hand, to: graveyard, reason: discard, subject: self, by: opp}, instead: [{op: move, select: {ref: self, count: 1}, to: bz, reason: put}]}`。「相手のターンに」型は従来どおり if: {is_turn: opp}（提督シリーズの登録済み型）。
 - 検証: tests/test_vocab_pilot40.py（動作2件: 相手の呪文で捨てられる時は出せる／自分の呪文で捨てる時は発火せず墓地に行く）。proto に T116（捨て置換獣）・T117（相手に捨てさせる呪文）・T118（自分が捨てる呪文）を追加。
+
+## 第41弾（フェーズ17-2）: 「能力が書かれていない」フィルタ（vanilla）
+
+- 対象: ラウンド15で残った no_ability_filter 2件（《アクア提督 ザ・ミスター》DMR16極/真）。reject 原因は「カードに能力が書かれていないクリーチャー」を指すフィルタの不在。
+- 実装: filter に `vanilla` を追加（defs.py の FILTER_KEYS、schema は自動で追随）。判定は印刷された特性で行う: その面の定義に能力・キーワードが無く、進化・NEO・スター進化・墓地進化・ハイパーモード等の書かれた仕組みも持たないこと（dmsim/engine/selectors.py の filter_match）。付与された能力は見ない。
+- 検証: tests/test_vocab_pilot41.py（動作1件: 上3枚がバニラ/キーワード持ち/能力持ちの時、バニラだけが手札に加わり残りは山札の下へ）＋ tests/test_vocab_pilot41_cards.py（ザ・ミスターの parse）。proto に T119 を追加。再変換ラウンド16で2枚を登録。
+- あわせて第40弾に回帰テストを追加: 置換効果は連鎖しない（総合ルール101.5 / 609.3）。置換で生じたイベントは replaced 印でそれ以上置換されず、自分のターンの《単騎連射 マグナム》がいても相手のバイケン型置換で出すことは妨げられない（test_vocab_pilot40.py の test_replacement_does_not_chain_against_magnum）。
