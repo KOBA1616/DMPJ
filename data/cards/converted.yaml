@@ -209578,3 +209578,1363 @@ cards:
   source:
     official: dmrp13-s03
     review: pending
+- id: dm24-042
+  name: 巡霊者ソルディアス
+  types:
+  - creature
+  civs:
+  - light
+  cost: 3
+  power: 2500
+  races:
+  - コスモ・ウォーカー
+  mana: 1
+  text: このクリーチャーで攻撃するかわりに、このクリーチャーと自分のマナゾーンのタップされていないカードを８枚タップして、次の能力を使ってもよい。 / 呪文を１枚、自分の墓地から手札に戻す。
+  abilities:
+  - kind: activate
+    cost:
+      tap: self
+      tap_mana: 8
+    effect:
+    - op: move
+      select:
+        zone: graveyard
+        owner: you
+        filter:
+          types:
+          - spell
+        count: 1
+      to: hand
+      reason: return
+  source:
+    official: dm24-042
+    review: pending
+- id: dm24-046
+  name: 封魔オクトアリクス
+  types:
+  - creature
+  civs:
+  - water
+  cost: 5
+  power: 2000
+  races:
+  - グランド・デビル
+  mana: 1
+  keywords:
+  - blocker
+  text: 'ブロッカー
+
+    このクリーチャーで攻撃するかわりに、このクリーチャーと自分のマナゾーンのタップされていないカード８枚をタップして、次の能力を使ってもよい。
+
+    カードを１枚、マナゾーンから持ち主の手札に戻す。'
+  abilities:
+  - kind: activate
+    cost:
+      tap: self
+      tap_mana: 8
+    effect:
+    - op: bounce
+      select:
+        zone: mana
+        owner: any
+        count: 1
+  source:
+    official: dm24-046
+    review: pending
+- id: dm24-051
+  name: バイスフレイム・ドラグーン
+  types:
+  - creature
+  civs:
+  - darkness
+  cost: 3
+  power: 2000
+  races:
+  - ティラノ・ドレイク
+  mana: 1
+  text: このクリーチャーで攻撃するかわりに、このクリーチャーと自分のマナゾーンのタップされていないカードを８枚タップして、次の能力を使ってもよい。 / 相手の手札を見て、その中から１枚選び、捨てさせる。
+  abilities:
+  - kind: activate
+    cost:
+      tap: self
+      tap_mana: 8
+    effect:
+    - op: discard
+      select:
+        zone: hand
+        owner: opp
+        count: 1
+        look: true
+  source:
+    official: dm24-051
+    review: pending
+    notes: '相手の手札を見て選んで捨てさせる形は dm22-012 の discard + look: true の先例どおり'
+- id: dm24-056
+  name: 四風の練達ジャムール
+  types:
+  - creature
+  civs:
+  - fire
+  cost: 2
+  power: 1000
+  races:
+  - フェザーノイド
+  mana: 1
+  text: このクリーチャーで攻撃するかわりに、このクリーチャーと自分のマナゾーンのタップされていないカードを８枚タップして、次の能力を使ってもよい。 / バトルゾーンにある自分のクリーチャーを１体選ぶ。このターン、そのクリーチャーのパワーは+6000され、「W・ブレイカー」を得る。
+  abilities:
+  - kind: activate
+    cost:
+      tap: self
+      tap_mana: 8
+    effect:
+    - op: modify
+      select:
+        zone: bz
+        owner: you
+        filter:
+          types:
+          - creature
+        count: 1
+      mod:
+        power: 6000
+        grant:
+        - double_breaker
+      duration: end_of_turn
+  source:
+    official: dm24-056
+    review: pending
+- id: dm24-080
+  name: 戦攻王機スラグナス
+  types:
+  - creature
+  civs:
+  - water
+  cost: 5
+  power: 2000
+  races:
+  - グレートメカオー
+  - アースイーター
+  mana: 1
+  text: このクリーチャーで攻撃するかわりに、タップして次の能力を使ってもよい。 / バトルゾーンにある自分の光、闇、火または自然のクリーチャーを１体選ぶ。このターン、そのクリーチャーはブロックされない。
+  abilities:
+  - kind: activate
+    cost:
+      tap: self
+    effect:
+    - op: modify
+      select:
+        zone: bz
+        owner: you
+        filter:
+          types:
+          - creature
+          civs:
+          - light
+          - darkness
+          - fire
+          - nature
+        count: 1
+      mod:
+        grant:
+        - unblockable
+      duration: end_of_turn
+  source:
+    official: dm24-080
+    review: pending
+- id: dm24rp1-053
+  name: 宣凶師マ・モーレ
+  types:
+  - creature
+  civs:
+  - light
+  cost: 3
+  power: 3000
+  races:
+  - グラディエーター
+  mana: 1
+  text: このクリーチャーをタップした時、自分の山札の上から１枚目をシールド化してもよい。
+  abilities:
+  - kind: trigger
+    when:
+      event: tap
+      subject: self
+    effect:
+    - op: may
+      body:
+      - op: move
+        select:
+          zone: deck
+          owner: you
+          from_top: 1
+        to: shield
+        reason: charge
+  source:
+    official: dm24rp1-053
+    review: pending
+    notes: '原文はタップ誘発（攻撃するかわりの起動型ではない）。シールド化の move は dm22ex2-068 の先例どおり reason: charge'
+- id: dm26rp1-t010
+  name: ポップ・ルビン
+  types:
+  - creature
+  civs:
+  - fire
+  cost: 2
+  power: 1000
+  races:
+  - ファイアー・バード
+  mana: 1
+  text: このクリーチャーで攻撃するかわりに、タップして次の能力を使ってもよい。 / 自分のドラゴン・クリーチャーを１体アンタップする。
+  abilities:
+  - kind: activate
+    cost:
+      tap: self
+    effect:
+    - op: untap
+      select:
+        zone: bz
+        owner: you
+        filter:
+          types:
+          - creature
+          race_has: ドラゴン
+        count: 1
+  source:
+    official: dm26rp1-t010
+    review: pending
+    aliases:
+    - dm22-050
+    - dmc43-037
+    - dmc64-041
+    - dmc67-019
+- id: dm29-044
+  name: 高波男
+  types:
+  - creature
+  civs:
+  - darkness
+  cost: 4
+  power: 4000
+  races:
+  - ヘドリアン
+  mana: 1
+  text: このクリーチャーで攻撃するかわりに、タップして次の能力を使ってもよい。 / バトルゾーンにある相手のクリーチャーを１体選ぶ。そのクリーチャーは、次のターン、可能であれば攻撃する。
+  abilities:
+  - kind: activate
+    cost:
+      tap: self
+    effect:
+    - op: modify
+      select:
+        zone: bz
+        owner: opp
+        filter:
+          types:
+          - creature
+        count: 1
+      mod:
+        require:
+        - attack
+      duration: until_next_own_turn_start
+  source:
+    official: dm29-044
+    review: pending
+    notes: '「次のターン、可能であれば攻撃する」は modify の require: [attack] を until_next_own_turn_start（次の自分のターンのはじめまで＝相手のターンを丸ごと含む）で与えた。require
+      の形は dm09-031 の先例どおり'
+- id: dmc27-033
+  name: 恵みの化身
+  types:
+  - creature
+  civs:
+  - nature
+  cost: 6
+  power: 5000
+  races:
+  - ミステリー・トーテム
+  mana: 1
+  text: このクリーチャーで攻撃するかわりに、タップして次の能力を使ってもよい。 / 自分の墓地からカードを３枚まで選び、自分のマナゾーンに置く。
+  abilities:
+  - kind: activate
+    cost:
+      tap: self
+    effect:
+    - op: move
+      select:
+        zone: graveyard
+        owner: you
+        count: 3
+        up_to: true
+      to: mana
+      reason: put
+  source:
+    official: dmc27-033
+    review: pending
+    aliases:
+    - dm06-066
+- id: dmc34-021
+  name: 月虹の守護者アール・ノアール
+  types:
+  - creature
+  civs:
+  - light
+  cost: 6
+  power: 5500
+  races:
+  - ガーディアン
+  mana: 1
+  text: このクリーチャーで攻撃するかわりに、タップして次の能力を使ってもよい。 / 種族を１つ選ぶ。このターンの終わりに、バトルゾーンにあるその種族のクリーチャーをすべてアンタップする。
+  abilities:
+  - kind: activate
+    cost:
+      tap: self
+    effect:
+    - op: choose_race
+      as: kind
+    - op: delayed_trigger
+      when:
+        event: turn_end
+      effect:
+      - op: untap
+        select:
+          zone: bz
+          owner: any
+          filter:
+            types:
+            - creature
+            races:
+              race: kind
+          count: all
+  source:
+    official: dmc34-021
+    review: pending
+    notes: '種族の選択は choose_race、ターン終わりの処理は delayed_trigger（when: turn_end）に変数 kind
+      を引き継いだ。変数の受け渡しはニンジャ・ストライク系の先例どおり'
+    aliases:
+    - dm09-021
+- id: dm22ex2-052
+  faces:
+  - name: 目覚めのファミリア キナコ
+    types:
+    - creature
+    civs:
+    - darkness
+    cost: 2
+    power: 1000
+    races:
+    - デスパペット
+    - オラクル
+    - ディスタス
+    keywords:
+    - slayer
+    - summon_from_graveyard
+  - name: ムボー日和
+    types:
+    - spell
+    civs:
+    - nature
+    cost: 3
+    spell:
+    - op: move
+      select:
+        zone: mana
+        owner: you
+        count: 1
+      to: graveyard
+      reason: put
+    - op: move
+      select:
+        zone: deck
+        owner: you
+        from_top: 2
+      to: mana
+      reason: put
+      tapped: true
+  mana: 1
+  text: '目覚めのファミリア キナコ: スレイヤー / このクリーチャーを自分の墓地から召喚してもよい。 ／ ムボー日和: カードを1枚、自分のマナゾーンから墓地に置き、その後、自分の山札の上から2枚をタップしてマナゾーンに置く。'
+  source:
+    official: dm22ex2-052
+    review: pending
+- id: dm22rp2x-tf18
+  name: 鬼面妖蟲ワーム・ゴワルスキー
+  types:
+  - creature
+  - evolution
+  civs:
+  - darkness
+  cost: 2
+  power: 4000
+  races:
+  - パラサイトワーム
+  - デビルマスク
+  mana: 1
+  evolve_zone: graveyard
+  evolve_from:
+    civs:
+    - darkness
+  text: 墓地進化：闇のクリーチャーを1体自分の墓地から選び、このクリーチャーをその上に重ねつつ出す。 / このクリーチャーが破壊された時、相手の手札を1枚見ないで選び、捨てさせる。
+  abilities:
+  - kind: trigger
+    when:
+      event: move
+      from: bz
+      subject: self
+      reason: destroy
+    effect:
+    - op: discard
+      select:
+        zone: hand
+        owner: opp
+        count: 1
+  source:
+    official: dm22rp2x-tf18
+    review: pending
+    aliases:
+    - dm22rp1-t18
+    - dm22rp1-tf18
+    - dm22rp2-t18
+    - dm22rp2-tf18
+    - dm32-088
+    - dmc64-040
+- id: dm24rp1-064
+  name: タブ＝タラウプ
+  types:
+  - creature
+  civs:
+  - darkness
+  cost: 2
+  power: 2000
+  races:
+  - アビスロイヤル
+  mana: 1
+  keywords:
+  - summon_from_graveyard
+  text: このクリーチャーを自分の墓地から召喚してもよい。（コストは支払う）
+  source:
+    official: dm24rp1-064
+    review: pending
+- id: dm25ex2-cho041
+  name: 邪眼の始祖 ロマノフ・アルファ
+  types:
+  - creature
+  - evolution
+  civs:
+  - darkness
+  cost: 3
+  power: 3000
+  races:
+  - ダークロード
+  - ナイト
+  mana: 1
+  evolve_zone: graveyard
+  evolve_from:
+    civs:
+    - darkness
+  text: 墓地進化：闇のクリーチャーを1体自分の墓地から選び、このクリーチャーをその上に重ねつつ出す。 / このクリーチャーが出た時、自分の山札の上から4枚を墓地に置く。その後、闇のカードを1枚、自分の墓地から手札に戻す。
+  abilities:
+  - kind: trigger
+    when:
+      event: move
+      to: bz
+      subject: self
+    effect:
+    - op: mill
+      owner: you
+      count: 4
+    - op: move
+      select:
+        zone: graveyard
+        owner: you
+        filter:
+          civs:
+          - darkness
+        count: 1
+      to: hand
+      reason: return
+  source:
+    official: dm25ex2-cho041
+    review: pending
+    aliases:
+    - dm23ex2-072
+- id: dm25rp3-064
+  name: レー=ドール
+  types:
+  - creature
+  civs:
+  - darkness
+  cost: 2
+  power: 2000
+  races:
+  - アビスロイヤル
+  mana: 1
+  keywords:
+  - summon_from_graveyard
+  text: 'このクリーチャーを自分の墓地から召喚してもよい。
+
+    このクリーチャーが攻撃する時、自分の山札の上から２枚を墓地に置く。'
+  abilities:
+  - kind: trigger
+    when:
+      event: attack
+      subject: self
+    effect:
+    - op: mill
+      owner: you
+      count: 2
+  - kind: trigger
+    when:
+      event: attack
+      subject: self
+    effect:
+    - op: mill
+      owner: you
+      count: 2
+  source:
+    official: dm25rp3-064
+    review: pending
+    aliases:
+    - promoy24-spd1204
+- id: dm26ex2-006
+  name: 邪眼破壊神R・R・R
+  types:
+  - creature
+  - evolution
+  civs:
+  - darkness
+  cost: 5
+  power: 8000
+  races:
+  - ゴッド・ガルド
+  - ダークロード
+  - ナイト
+  mana: 1
+  evolve_zone: graveyard
+  evolve_from:
+    civs:
+    - darkness
+  keywords:
+  - powered_breaker
+  - center_g_link
+  text: '墓地進化：自分の墓地にある闇のクリーチャー１体の上に重ねつつ出す。
+
+    パワード・ブレイカー
+
+    このクリーチャーが攻撃する時、このクリーチャーに含まれるカード１枚につき、相手の手札を１枚見ないで選び、捨てさせる。
+
+    中央G・リンク（これまたは自分の他のゴッドが出る時、自分の各ゴッドからリンクしているカードを１枚まで外す。その後、これを「右G・リンク」または「左G・リンク」を持つゴッドにリンクしてもよい。リンクしたゴッドは、パワーや能力など各ゴッドの特性を持つ１体のクリーチャーとなる。離れる場合、その中の選んだ１枚が離れる）'
+  abilities:
+  - kind: trigger
+    when:
+      event: attack
+      subject: self
+    effect:
+    - op: discard
+      select:
+        zone: hand
+        owner: opp
+        count:
+          sum:
+          - link_count: self
+          - count:
+              under_of: self
+  source:
+    official: dm26ex2-006
+    review: pending
+    notes: 原文のパワーは8000+（リンクで増加）。「含まれるカード」は link_count（リンクしていなければ1）と under の合計で数えた
+- id: dm26rp2-s004
+  name: 魔V王 デスシラズ
+  types:
+  - creature
+  - evolution
+  civs:
+  - darkness
+  cost: 3
+  power: 8000
+  races:
+  - デーモン・コマンド・ドラゴン
+  - 革命軍
+  - ハムカツ団
+  mana: 1
+  evolve_zone: graveyard
+  evolve_from:
+    civs:
+    - darkness
+  keywords:
+  - double_breaker
+  text: '墓地進化：自分の墓地にある闇のクリーチャー１体の上に重ねつつ出す。
+
+    W・ブレイカー
+
+    自分のターンのはじめに、自分の山札の上から２枚を墓地に置いてもよい。
+
+    このクリーチャーが離れた時、自分の墓地にカードが13枚以上あれば、相手のクリーチャーをすべて破壊する。'
+  abilities:
+  - kind: trigger
+    when:
+      event: turn_start
+    if:
+      is_turn: you
+    effect:
+    - op: may
+      body:
+      - op: mill
+        owner: you
+        count: 2
+  - kind: trigger
+    when:
+      event: move
+      from: bz
+      subject: self
+    if:
+      cmp:
+      - count:
+          zone: graveyard
+          owner: you
+      - '>='
+      - 13
+    effect:
+    - op: destroy
+      select:
+        zone: bz
+        owner: opp
+        filter:
+          types:
+          - creature
+        count: all
+  source:
+    official: dm26rp2-s004
+    review: pending
+    aliases:
+    - dm26rp2-sec005
+- id: dm26rp3-038
+  name: ×マドギワ親父
+  types:
+  - creature
+  civs:
+  - darkness
+  cost: 3
+  power: 3000
+  races:
+  - ジョーカーズ
+  mana: 1
+  keywords:
+  - summon_from_graveyard
+  text: 'このクリーチャーを自分の墓地から召喚してもよい。
+
+    このクリーチャーが出た時、相手は自身の手札を１枚選び、捨てる。
+
+    Jクライム４（このクリーチャーが攻撃する時、これと自分の墓地にあるコスト４以下のジョーカーズ・クリーチャー１体を入れ替えてもよい）'
+  abilities:
+  - kind: trigger
+    when:
+      event: move
+      to: bz
+      subject: self
+    effect:
+    - op: discard
+      select:
+        zone: hand
+        owner: opp
+        chooser: opp
+        count: 1
+  - kind: trigger
+    when:
+      event: attack
+      subject: self
+    effect:
+    - op: may
+      body:
+      - op: swap
+        out:
+          ref: self
+        in:
+          zone: graveyard
+          owner: you
+          filter:
+            types:
+            - creature
+            races:
+            - ジョーカーズ
+            cost_le: 4
+          count: 1
+        out_to: graveyard
+  source:
+    official: dm26rp3-038
+    review: pending
+    notes: 'Jクライム4は swap（out_to: graveyard。入ったクリーチャーは攻撃を引き継ぐ）で表した'
+- id: dmbd10-007
+  name: 不死 デッド55
+  types:
+  - creature
+  - evolution
+  civs:
+  - darkness
+  cost: 4
+  power: 4000
+  races:
+  - ソニック・コマンド
+  - 侵略者
+  mana: 1
+  evolve_zone: graveyard
+  evolve_from:
+    civs:
+    - darkness
+  text: '墓地進化：闇のクリーチャーを１体自分の墓地から選び、このクリーチャーをその上に重ねつつバトルゾーンに出す。
+
+    このクリーチャーがバトルゾーンに出た時、自分の山札の上から２枚を墓地に置く。'
+  abilities:
+  - kind: trigger
+    when:
+      event: move
+      to: bz
+      subject: self
+    effect:
+    - op: mill
+      owner: you
+      count: 2
+  - kind: trigger
+    when:
+      event: move
+      to: bz
+      subject: self
+    effect:
+    - op: mill
+      owner: you
+      count: 2
+  source:
+    official: dmbd10-007
+    review: pending
+- id: dmbd10-012
+  name: 暗黒の悪魔神ヴァーズ・ロマノフ
+  types:
+  - creature
+  - evolution
+  civs:
+  - darkness
+  cost: 7
+  power: 7000
+  races:
+  - デーモン・コマンド
+  - ダークロード
+  mana: 1
+  evolve_zone: graveyard
+  evolve_from:
+    civs:
+    - darkness
+  keywords:
+  - double_breaker
+  text: '墓地進化：闇のクリーチャーを１体自分の墓地から選び、このクリーチャーをその上に重ねつつバトルゾーンに出す。
+
+    W・ブレイカー（このクリーチャーはシールドを２つブレイクする）
+
+    このクリーチャーがバトルゾーンに出た時、相手の進化ではないクリーチャーを１体破壊する。'
+  abilities:
+  - kind: trigger
+    when:
+      event: move
+      to: bz
+      subject: self
+    effect:
+    - op: destroy
+      select:
+        zone: bz
+        owner: opp
+        filter:
+          types:
+          - creature
+          not_types:
+          - evolution
+        count: 1
+  source:
+    official: dmbd10-012
+    review: pending
+    aliases:
+    - dmc68-007
+    - dmex04-035
+    - dmx14-044
+    - dmx18-013
+    - promoy13-025
+- id: dmc58-001
+  name: 邪神C・ロマノフ
+  types:
+  - creature
+  - evolution
+  civs:
+  - darkness
+  cost: 7
+  power: 5000
+  races:
+  - ゴッド
+  - ダークロード
+  - ナイト
+  mana: 1
+  evolve_zone: graveyard
+  evolve_from:
+    civs:
+    - darkness
+  keywords:
+  - right_g_link
+  text: 墓地進化-闇のクリーチャーを1体自分の墓地から選び、このクリーチャーをその上に重ねつつバトルゾーンに出す。 / メテオバーン - このクリーチャーが攻撃する時、このクリーチャーの下にあるカードを1枚選び墓地に置いてもよい。そうした場合、このクリーチャーと同じ文明を少なくともひとつ持つコスト6以下の呪文を1枚、コストを支払わずに自分の墓地から唱え、その後その呪文を自分の山札の一番下に置く。
+    / G・リンク《邪神M・ロマノフ》または《邪神R・ロマノフ》の右横。 / このクリーチャーは、リンクしている時、シールドをさらに1枚ブレイクする。
+  abilities:
+  - kind: trigger
+    when:
+      event: attack
+      subject: self
+    effect:
+    - op: may
+      body:
+      - op: move
+        select:
+          under_of: self
+          count: 1
+        to: graveyard
+        reason: put
+        as: paid
+      - op: if
+        cond:
+          exists:
+            ref: paid
+        then:
+        - op: play_free
+          select:
+            zone: graveyard
+            owner: you
+            filter:
+              types:
+              - spell
+              civs:
+              - darkness
+              cost_le: 6
+            count: 1
+          resolve_to: deck
+          resolve_position: bottom
+  - kind: static
+    affects: self
+    if:
+      cmp:
+      - link_count: self
+      - '>='
+      - 2
+    mod:
+      breaks: 2
+  source:
+    official: dmc58-001
+    review: pending
+    notes: メテオバーンで唱えた呪文は play_free の resolve_to で山札の下に置く。「リンクしている時」は link_count>=2
+      の static で表した
+- id: dmd25-005
+  name: 黒蟲奉行
+  types:
+  - creature
+  - evolution
+  civs:
+  - darkness
+  cost: 7
+  power: 7000
+  races:
+  - パラサイトワーム
+  mana: 1
+  evolve_zone: graveyard
+  evolve_from:
+    civs:
+    - darkness
+  keywords:
+  - double_breaker
+  text: 墓地進化-闇のクリーチャーを1体自分の墓地から選び、このクリーチャーをその上に重ねつつバトルゾーンに出す。 / W・ブレイカー / このクリーチャーがバトルゾーンに出た時、相手の進化ではないクリーチャーを1体破壊する。
+  abilities:
+  - kind: trigger
+    when:
+      event: move
+      to: bz
+      subject: self
+    effect:
+    - op: destroy
+      select:
+        zone: bz
+        owner: opp
+        filter:
+          types:
+          - creature
+          not_types:
+          - evolution
+        count: 1
+  source:
+    official: dmd25-005
+    review: pending
+    aliases:
+    - dmx12b-007
+- id: dmex03-013
+  name: 究極生命体 Z
+  types:
+  - creature
+  civs:
+  - darkness
+  cost: 7
+  power: 7000
+  races:
+  - ダークロード
+  - デーモン・コマンド
+  - ドラゴン・ゾンビ
+  mana: 1
+  keywords:
+  - double_breaker
+  - summon_from_graveyard
+  text: 'W・ブレイカー
+
+    このクリーチャーがバトルゾーンに出た時、相手のクリーチャーを１体破壊する。
+
+    このクリーチャーを自分の墓地から召喚してもよい。'
+  abilities:
+  - kind: trigger
+    when:
+      event: move
+      to: bz
+      subject: self
+    effect:
+    - op: destroy
+      select:
+        zone: bz
+        owner: opp
+        filter:
+          types:
+          - creature
+        count: 1
+  - kind: trigger
+    when:
+      event: move
+      to: bz
+      subject: self
+    effect:
+    - op: destroy
+      select:
+        zone: bz
+        owner: opp
+        filter:
+          types:
+          - creature
+        count: 1
+  source:
+    official: dmex03-013
+    review: pending
+    aliases:
+    - dmx22b-166
+- id: dmex17-009
+  name: 邪眼王B・ロマノフ
+  types:
+  - creature
+  - evolution
+  civs:
+  - darkness
+  cost: 5
+  power: 8000
+  races:
+  - ダークロード
+  - ドラゴン・ゾンビ
+  - ナイト
+  mana: 1
+  evolve_zone: graveyard
+  evolve_any: true
+  evolve_from:
+    civs:
+    - darkness
+  keywords:
+  - double_breaker
+  text: '超無限墓地進化：闇のクリーチャーを１体以上自分の墓地から選び、このクリーチャーをその上に重ねつつ出す。
+
+    W・ブレイカー
+
+    このクリーチャーが出た時、このクリーチャーにカードが４枚以上含まれていたら、相手のクリーチャーを１体破壊する。
+
+    メテオバーン：このクリーチャーが攻撃する時、このクリーチャーの下にあるカードを好きな数、墓地に置いてもよい。こうして墓地に置いたカード１枚につき、相手の手札から１枚見ないで選ぶ。相手はそれを見せて、山札の下に置く。'
+  abilities:
+  - kind: trigger
+    when:
+      event: move
+      to: bz
+      subject: self
+    if:
+      cmp:
+      - count:
+          under_of: self
+      - '>='
+      - 3
+    effect:
+    - op: destroy
+      select:
+        zone: bz
+        owner: opp
+        filter:
+          types:
+          - creature
+        count: 1
+  - kind: trigger
+    when:
+      event: attack
+      subject: self
+    effect:
+    - op: may
+      body:
+      - op: move
+        select:
+          under_of: self
+          count: any
+        to: graveyard
+        reason: put
+        as: paid
+      - op: if
+        cond:
+          exists:
+            ref: paid
+        then:
+        - op: repeat
+          times:
+            count:
+              ref: paid
+          body:
+          - op: move
+            select:
+              zone: hand
+              owner: opp
+              count: 1
+            to: deck
+            position: bottom
+            reason: put
+  source:
+    official: dmex17-009
+    review: pending
+    notes: 「カードが4枚以上含まれていたら」は under が3枚以上（本体込みで4枚）と等価。メテオバーンの「見せて」は公開情報上の注記として省略し、山札の下への移動で表した
+- id: dmpcd03-b02
+  name: 大邪眼Ｂ・ロマノフ
+  types:
+  - creature
+  - evolution
+  civs:
+  - darkness
+  cost: 7
+  power: 12000
+  races:
+  - ダークロード
+  - ドラゴン・ゾンビ
+  - ナイト
+  mana: 1
+  evolve_zone: graveyard
+  evolve_from:
+    civs:
+    - darkness
+  evolve_count: 3
+  keywords:
+  - triple_breaker
+  text: '墓地進化GV：闇のクリーチャーを３体自分の墓地から選び、このクリーチャーをその上に重ねつつ出す。
+
+    T・ブレイカー
+
+    メテオバーン：このクリーチャーが攻撃する時、このクリーチャーの下にあるカードを好きな数選び墓地に置いてもよい。こうして墓地に置いたカード１枚につき、相手の手札から１枚見ないで選ぶ。相手はそれを見せてから、自身の山札の下に置く。'
+  abilities:
+  - kind: trigger
+    when:
+      event: attack
+      subject: self
+    effect:
+    - op: may
+      body:
+      - op: move
+        select:
+          under_of: self
+          count: any
+        to: graveyard
+        reason: put
+        as: paid
+      - op: if
+        cond:
+          exists:
+            ref: paid
+        then:
+        - op: repeat
+          times:
+            count:
+              ref: paid
+          body:
+          - op: move
+            select:
+              zone: hand
+              owner: opp
+              count: 1
+            to: deck
+            position: bottom
+            reason: put
+  source:
+    official: dmpcd03-b02
+    review: pending
+    notes: メテオバーンの「見せて」は公開情報上の注記として省略し、山札の下への移動で表した
+    aliases:
+    - dmd25-002
+    - dmx12b-037
+    - dmx14-043
+- id: dmr10-v01
+  name: 不死帝 ブルース
+  types:
+  - creature
+  civs:
+  - darkness
+  cost: 8
+  power: 11000
+  races:
+  - アウトレイジMAX
+  mana: 1
+  keywords:
+  - summon_from_graveyard
+  - double_breaker
+  text: このクリーチャーをバトルゾーンに出した時、自分の山札の上から３枚を墓地に置く。W・ブレイカー進化ではないデスパペットと進化ではないアウトレイジを、自分の墓地から召喚してもよい。このクリーチャーを自分の墓地から召喚してもよい。
+  abilities:
+  - kind: trigger
+    when:
+      event: move
+      to: bz
+      subject: self
+    effect:
+    - op: mill
+      owner: you
+      count: 3
+  - kind: static
+    affects:
+      zone: graveyard
+      owner: you
+      filter:
+        any_of:
+        - races:
+          - デスパペット
+          not_types:
+          - evolution
+        - races:
+          - アウトレイジ
+          not_types:
+          - evolution
+    mod:
+      allow:
+      - summon_from_graveyard
+  source:
+    official: dmr10-v01
+    review: pending
+- id: dmr17-021
+  name: 暗黒鎧 キラード・アイ
+  types:
+  - creature
+  civs:
+  - darkness
+  cost: 5
+  power: 4000
+  races:
+  - ダーク・ナイトメア
+  - 革命軍
+  mana: 1
+  text: このクリーチャーがバトルゾーンに出た時、自分の山札の上から4枚を墓地に置いてもよい。 / 闇の進化クリーチャーを、自分の墓地から召喚してもよい。
+  abilities:
+  - kind: trigger
+    when:
+      event: move
+      to: bz
+      subject: self
+    effect:
+    - op: may
+      body:
+      - op: mill
+        owner: you
+        count: 4
+  - kind: static
+    affects:
+      zone: graveyard
+      owner: you
+      filter:
+        types:
+        - creature
+        - evolution
+        civs:
+        - darkness
+    mod:
+      allow:
+      - summon_from_graveyard
+  source:
+    official: dmr17-021
+    review: pending
+- id: dmr20-034
+  name: 残酷の悪魔龍 ヴォチ・イデール
+  types:
+  - creature
+  civs:
+  - darkness
+  cost: 5
+  power: 5000
+  races:
+  - デーモン・コマンド・ドラゴン
+  - 革命軍
+  mana: 1
+  text: 自分のクリーチャーの数が自分のシールドの数以上なら、このクリーチャーを墓地から召喚してもよい。
+  abilities:
+  - kind: static
+    zone: graveyard
+    affects: self
+    if:
+      cmp:
+      - count:
+          zone: bz
+          owner: you
+          filter:
+            types:
+            - creature
+      - '>='
+      - count:
+          zone: shield
+          owner: you
+    mod:
+      allow:
+      - summon_from_graveyard
+  source:
+    official: dmr20-034
+    review: pending
+- id: dmrp18-040
+  name: 龍恐連結 ランブラグ
+  types:
+  - creature
+  civs:
+  - darkness
+  cost: 8
+  power: 7000
+  races:
+  - ディスペクター
+  - デーモン・コマンド
+  - アーマード・ドラゴン
+  mana: 1
+  keywords:
+  - ex_life
+  - double_breaker
+  - summon_from_graveyard
+  text: 'EXライフ（このクリーチャーを出す時、自分の山札の上から１枚目をシールド化する。このクリーチャーが離れる時、かわりにそのシールドを墓地に置く）
+
+    W・ブレイカー（このクリーチャーはシールドを２つブレイクする）
+
+    このクリーチャーを自分の墓地から召喚してもよい。'
+  source:
+    official: dmrp18-040
+    review: pending
+- id: dmrp19-049
+  name: 魂の絆 スパイナー＆ウーニ
+  types:
+  - creature
+  civs:
+  - water
+  - darkness
+  cost: 4
+  power: 4000
+  races:
+  - ムートピア
+  - マフィ・ギャング
+  - レクスターズ
+  mana: 1
+  keywords:
+  - summon_from_graveyard
+  text: 'このクリーチャーを自分の墓地から召喚してもよい。
+
+    シンカパワー：このクリーチャーが進化する時、次のうちいずれか１つを選ぶ。
+
+    ▶カードを２枚引き、その後、自分の手札を１枚捨てる。
+
+    ▶相手のクリーチャーを１体選ぶ。このターン、そのクリーチャーのパワーを－5000する。（パワー０以下のクリーチャーは破壊される）'
+  abilities:
+  - kind: trigger
+    when:
+      event: move
+      to: bz
+      subject: self
+      stacked: true
+    effect:
+    - op: modal
+      modes:
+      - - op: draw
+          count: 2
+        - op: discard
+          select:
+            zone: hand
+            owner: you
+            count: 1
+      - - op: modify
+          select:
+            zone: bz
+            owner: opp
+            filter:
+              types:
+              - creature
+            count: 1
+          mod:
+            power: -5000
+          duration: end_of_turn
+  source:
+    official: dmrp19-049
+    review: pending
+- id: dmx11-043
+  name: 超神龍ハカイシ・ハカイ
+  types:
+  - creature
+  - evolution
+  civs:
+  - darkness
+  cost: 6
+  power: 12000
+  races:
+  - ドラゴン・ゾンビ
+  - ハンター
+  mana: 1
+  evolve_zone: graveyard
+  evolve_from:
+    races:
+    - ドラゴン・ゾンビ
+  evolve_count: 3
+  keywords:
+  - triple_breaker
+  text: '墓地進化GV-ドラゴン・ゾンビを３体自分の墓地から選び、このクリーチャーをその上に重ねつつバトルゾーンに出す。
+
+    T・ブレイカー(このクリーチャーはシールドを３枚ブレイクする)'
+  source:
+    official: dmx11-043
+    review: pending
+- id: dmx22a-044
+  name: 死神竜凰ドルゲドス
+  types:
+  - creature
+  - evolution
+  civs:
+  - darkness
+  cost: 3
+  power: 5000
+  races:
+  - ティラノ・ドレイク
+  mana: 1
+  evolve_zone: graveyard
+  evolve_from:
+    civs:
+    - darkness
+  text: 墓地進化―闇のクリーチャーを1体自分の墓地から選び、このクリーチャーをその上に重ねつつバトルゾーンに出す。 / このクリーチャーがバトルゾーンに出た時、相手のクリーチャーを1体選ぶ。そのターン、そのクリーチャーはブロックできない。
+  abilities:
+  - kind: trigger
+    when:
+      event: move
+      to: bz
+      subject: self
+    effect:
+    - op: modify
+      select:
+        zone: bz
+        owner: opp
+        filter:
+          types:
+          - creature
+        count: 1
+      mod:
+        deny:
+        - block
+      duration: end_of_turn
+  source:
+    official: dmx22a-044
+    review: pending
+    aliases:
+    - dm35-044
+    - dm35-044hc
+    - dmx07-017
