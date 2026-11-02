@@ -568,3 +568,9 @@ space_charge（単独42件）: スペース・チャージは、文明ごとの�
 - 素の墓地召喚（summon_from_graveyard 単独17件）: キーワード `summon_from_graveyard` を新設（アビスラッシュと同じ許可の自己付与）。あわせて h_play のラッシュ付随処理（召喚酔いでもプレイヤー攻撃可・ターン終わりに山札の下）はキーワード `abyss_rush` を持つカードにだけ付くよう絞った（従来は墓地から召喚した全カードに付いていた。他者の常在型で墓地召喚を許可されるカードも正しい挙動になる）。
 - 墓地進化（graveyard_evolution 単独17件）: 進化クリーチャー型は `evolve_zone: graveyard`＋evolve_from で既存可（進化元の墓地→バトルゾーン移動は stack_on 処理が既に対応済みだった）。通常クリーチャー型は面の宣言 `grave_evo: true` で「:gevo」選択肢を追加（NEO と同じ evo_mode 経路。通常召喚も可能で、重なっている間は進化クリーチャーとして扱う）。
 - 検証: tests/test_vocab_pilot36.py（動作2件: 付随処理なしの墓地召喚／墓地進化の重ね出し）＋test_vocab_pilot36_cards.py（代表2枚: タブ＝タラウプ、ワーム・ゴワルスキー）。アビスラッシュの既存テストも回帰確認済み。
+
+## 第37弾（フェーズ15）: 回数制限つき許可（ターン1回）
+
+- 「自分のターンに一度（／自分のターン中、クリーチャーを1体）、自分の墓地から召喚してもよい」という他者への回数制限つき許可（summon_others_from_graveyard_once_per_turn 4件）に対応。mod の allow 項目に `{action: summon_from_graveyard, once: true}` と書けるようにした。
+- 実装: chars が once つき allow を発生源（src）つきで記録し（cost_may の once と同じ方式）、墓地召喚の選択肢生成が「無制限の許可があれば常時／once の許可は発生源ごとに未使用の時だけ」を判定する。使用すると turn_counters に `summon_once:<src>` を記録し、そのターンは選択肢が出なくなる（次のターンに回復）。
+- 検証: tests/test_vocab_pilot37.py（動作2件: 1体だけ召喚できる／次のターンに回復）＋test_vocab_pilot37_cards.py（代表1枚: 堕魔 ヴォーミラ）。proto に T113 を追加。

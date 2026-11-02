@@ -442,6 +442,8 @@ class Checker:
                     raise DefError(f"{where}: unknown action '{act}'")
                 if isinstance(e, dict):
                     self.filter(e.get("other", {}), where)
+                    if "once" in e and not isinstance(e["once"], bool):
+                        raise DefError(f"{where}: allow/deny entry 'once' must be a boolean")
         if "cost" in m:   # 支払うコストの増減: 整数、または {amount: N, count: <selector>}（1体につきN。amount が負なら軽減）
             cm = m["cost"]
             if isinstance(cm, dict):

@@ -37,7 +37,7 @@ def build() -> dict:
         op_schemas.append({"type": "object", "properties": {"op": {"const": name}}, "required": ["op"],
                            "description": f"macro: {json.dumps(macros[name], ensure_ascii=False)}"})
     perm = {"anyOf": [{"enum": sorted(actions)},
-                      {"type": "object", "properties": {"action": {"enum": sorted(actions)}, "other": ref("filter")},
+                      {"type": "object", "properties": {"action": {"enum": sorted(actions)}, "other": ref("filter"), "once": {"type": "boolean"}},
                        "required": ["action"], "additionalProperties": False}]}
     face_props = {
         "name": {"type": "string"}, "types": {"type": "array", "items": {"enum": sorted(CARD_TYPES)}},
