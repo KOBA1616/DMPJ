@@ -1503,3 +1503,41 @@ cards:
     text: 相手のクリーチャーを、コストの合計が６以下になるように好きな数選び、破壊する。
     spell:
       - {op: destroy, select: {zone: bz, owner: opp, filter: {types: [creature]}, total_cost_le: 6}}
+  - id: T115
+    name: 合計破壊呪文（2体まで）
+    civs: [fire]
+    cost: 7
+    types: [spell]
+    text: 相手のクリーチャーを2体まで、コストの合計が１０以下になるように選び、破壊する。
+    spell:
+      - {op: destroy, select: {zone: bz, owner: opp, filter: {types: [creature]}, count: 2, up_to: true, total_cost_le: 10}}
+  - id: T116
+    name: 捨て置換獣
+    civs: [water]
+    cost: 6
+    power: 5000
+    types: [creature]
+    text: 相手のクリーチャーの能力または呪文によって、このクリーチャーが自分の手札から捨てられる時、墓地に置くかわりに出してもよい。
+    abilities:
+      - kind: replace
+        zone: hand
+        optional: true
+        when: {event: move, from: hand, to: graveyard, reason: discard, subject: self, by: opp}
+        instead:
+          - {op: move, select: {ref: self, count: 1}, to: bz, reason: put}
+  - id: T117
+    name: 強奪の呪文
+    civs: [darkness]
+    cost: 4
+    types: [spell]
+    text: 相手は自身の手札を１枚選び、捨てる。
+    spell:
+      - {op: discard, select: {zone: hand, owner: opp, chooser: opp, count: 1}}
+  - id: T118
+    name: 自捨の呪文
+    civs: [darkness]
+    cost: 2
+    types: [spell]
+    text: 自分の手札を１枚選び、捨てる。
+    spell:
+      - {op: discard, select: {zone: hand, owner: you, chooser: you, count: 1}}

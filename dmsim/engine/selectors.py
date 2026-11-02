@@ -227,9 +227,13 @@ class SelectorMixin:
         if "total_cost_le" in sel or "total_cost_ge" in sel:   # コストの合計制限つきの「好きな数」選択: 1枚ずつ積み上げる
             le = self.eval_expr(sel["total_cost_le"], env) if "total_cost_le" in sel else None
             ge = self.eval_expr(sel["total_cost_ge"], env) if "total_cost_ge" in sel else None
+            # 「N体まで」と併記された場合の枚数上限。count が無い「好きな数」は上限なし（従来どおり）
+            cap = n if ("count" in sel and not any_n and sel.get("count") != "all") else None
             os = t.setdefault("os", {})
             picked: list[int] = []
             for ans in os.get("tc_answers", []):   # 済んだ段の答えを再生する（ask の再入対策）
+                if cap is not None and len(picked) >= cap:
+                    break
                 rest = [c for c in cands if c not in picked]
                 if le is not None:
                     rest = [c for c in rest if sum(self.chars(x)["cost"] for x in picked) + self.chars(c)["cost"] <= le]
@@ -238,6 +242,8 @@ class SelectorMixin:
                 picked.append(rest[ans[0]])
             else:
                 while True:
+                    if cap is not None and len(picked) >= cap:
+                        break
                     total = sum(self.chars(x)["cost"] for x in picked)
                     rest = [c for c in cands if c not in picked]
                     if le is not None:
