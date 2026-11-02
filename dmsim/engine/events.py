@@ -1,7 +1,7 @@
 """イベント・パイプライン（置換→同時適用→状況起因処理→誘発）と待機・解決窓。"""
 from __future__ import annotations
 
-from ..types import CaptureTask, CloseWinTask, BattleRunTask, EnqueueStTask, EventTask, GLinkTask, OpenWinTask, ResolvePendingTask, SbackTask
+from ..types import CaptureTask, CloseWinTask, BattleRunTask, EnqueueStTask, EventTask, GLinkTask, LoseReplaceTask, OpenWinTask, ResolvePendingTask, SbackTask, SmaxReduceTask
 from .registry import task
 
 
@@ -262,6 +262,32 @@ class EventMixin:
             if ce["affected"] is not None and old in ce["affected"]:
                 ce["affected"].append(new)
 
+    def _lose_candidates(self, loser: int) -> list[tuple[int, int, dict]]:
+        """敗北を置換できる能力（when: {event: lose} の kind: replace）を持つ、敗北する側のバトルゾーンのカード。"""
+        s = self.s
+        out = []
+        rec = {"ev": "lose", "controller": loser}
+        for c in self.bz_tops(loser):
+            for i, ab in self.abilities(c, "replace"):
+                if ab.get("when", {}).get("event") != "lose":
+                    continue
+                env = {"you": loser, "self": s.ref(c), "event": rec, "vars": {}}
+                if "if" in ab and not self.eval_cond(ab["if"], env):
+                    continue
+                out.append((c, i, ab))
+        return out
+
+    def game_lose(self, loser: int, reason: str) -> list[dict]:
+        """敗北の確定口: 置換できる能力があれば諮問タスクを返し、無ければその場で敗北を確定する。
+        ダイレクトアタック・デッキ切れ・状況起因の勝敗・効果による敗北は、すべてここを通す。"""
+        s = self.s
+        if s.result is not None:
+            return []
+        if not self._lose_candidates(loser):
+            s.result = {"winner": 1 - loser, "reason": reason, "turn": s.turn}
+            return []
+        return [{"t": "lose_replace", "loser": loser, "reason": reason, "phase": 0}]
+
     def _sba(self):
         """状況起因処理（703.3: 条件を満たすものすべてを単一のイベントとして同時に処理）。
         イベントの後のほか、イベントを通さずに状態が変わった時（継続的効果の生成・終了など）にも呼ぶ（111.2d）。"""
@@ -276,8 +302,7 @@ class EventMixin:
         if out:
             # 両者が同時に0枚ならターン・プレイヤーの敗北とする（プロジェクトの裁定。条文に明記なし）
             loser = s.active if len(out) == 2 else out[0]
-            s.result = {"winner": 1 - loser, "reason": "deck_out", "turn": s.turn}
-            return []
+            return self.game_lose(loser, "deck_out")
         for c in self.bz_tops():   # 常在の勝敗条件（kind: state）。バトルゾーンで機能している間、条件を満たしたら決まる
             for _, ab in self.abilities(c, "state"):
                 env = {"you": s.cards[c].controller, "self": s.ref(c)}
@@ -285,8 +310,15 @@ class EventMixin:
                     for o in ab["effect"]:
                         win = o["op"] == "win"
                         who = self._rel(o.get("player", "you"), env)
-                        s.result = {"winner": who if win else 1 - who, "reason": "state", "turn": s.turn}
+                        if win:
+                            s.result = {"winner": who, "reason": "state", "turn": s.turn}
+                            return []
+                        return self.game_lose(who, "state")
                     return []
+        for p in (0, 1):   # S-MAX進化の2体制限: 自分のS-MAX進化クリーチャーが2体以上あれば、1体を残して残りを手札に戻す
+            tops = [c for c in self.bz_tops(p) if self.fdef(c).s_max]
+            if len(tops) >= 2:
+                return [{"t": "smax_reduce", "player": p}]
         dead = [s.ref(c) for c in self.bz_tops()
                 if "creature" in self.chars(c)["types"] and self.chars(c)["power"] <= 0]   # 703.4c
         # 「墓地に置かれるかわりにとどまる」置換で破壊できなかったものは、状態が動くまで同じ処理を繰り返さない
@@ -635,6 +667,60 @@ def h_resolve_pending(eng, t):
         if ab.get("bazurenda") and p.get("src") and s.alive(p["src"]):
             n += s.cards[p["src"][0]].bazurenda   # バズレンダ: [OL]能力を1回+追加で支払った回数使う
         eng._push(*[eng._child(ab["effect"], env) for _ in range(n)])
+    return None
+
+
+@task("lose_replace", LoseReplaceTask)
+def h_lose_replace(eng, t):
+    """敗北の置換（S-MAX進化など）: 敗北するプレイヤーが置換能力を1つ選んで解決したら敗北はなかったことになる。
+    選ばなかった（または解決後に置換源が残っていても、諮問は1回だけ）場合は敗北が確定する。"""
+    s = eng.s
+    if s.result is not None:
+        eng._pop(t)
+        return None
+    if t["phase"] == 0:
+        cands = eng._lose_candidates(t["loser"])
+        if not cands:
+            s.result = {"winner": 1 - t["loser"], "reason": t["reason"], "turn": s.turn}
+            eng._pop(t)
+            return None
+        opts = [{"key": f"lose_replace:{s.cards[c].defn}:{i}", "cid": c, "ab": i} for c, i, _ in cands] + [{"key": "decline"}]
+        ans, d = eng.ask(t, t["loser"], "lose_replace", opts, 0, 1)
+        if d:
+            return d
+        o = opts[ans[0]] if ans else opts[-1]
+        if o["key"] == "decline":
+            s.result = {"winner": 1 - t["loser"], "reason": t["reason"], "turn": s.turn}
+            eng._pop(t)
+            return None
+        t["phase"] = 1
+        ab = dict(eng.abilities(o["cid"], "replace"))[o["ab"]]
+        env = {"you": t["loser"], "self": s.ref(o["cid"]),
+               "event": {"ev": "lose", "controller": t["loser"]}, "vars": {}}
+        eng._push(eng._child(ab["instead"], env))
+        return None
+    eng._pop(t)   # 置換を解決したので敗北は回避された
+    return None
+
+
+@task("smax_reduce", SmaxReduceTask)
+def h_smax_reduce(eng, t):
+    """S-MAX進化の2体制限: 残す1体を選び、残りのS-MAX進化クリーチャーをすべて手札に戻す。"""
+    s = eng.s
+    p = t["player"]
+    tops = [c for c in eng.bz_tops(p) if eng.fdef(c).s_max]
+    if len(tops) < 2:
+        eng._pop(t)
+        return None
+    ans, d = eng.ask(t, p, "choose_smax_keep", [eng._card_option(c) for c in tops], 1, 1)
+    if d:
+        return d
+    eng._pop(t)
+    keep = tops[ans[0]]
+    evs = [{"ev": "move", "subject": s.ref(c), "to": "hand", "reason": "return"}
+           for c in tops if c != keep]
+    if evs:
+        eng._push(eng.ev_task(evs))
     return None
 
 

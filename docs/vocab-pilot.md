@@ -610,3 +610,12 @@ space_charge（単独42件）: スペース・チャージは、文明ごとの�
 - 再変換ラウンド17で18件中14件を登録（converted 5,782枚）。残4件は革命０以外の部分が原因で差し戻し: 叛逆の絆（opponent_chooses_branch）、革命の鉄拳（power_relative）、龍帝の紋章（power_lt_card）、賢者の紋章（cancel_attack）。
 - 紋章系呪文に共通する「唱えた後、墓地に置くかわりに山札に加えてシャッフルする」は、resolve_to: deck ではシャッフルが伴わず近似になるため使わず、kind: replace {zone: hold, when: {event: move, to: graveyard, reason: resolve, subject: self}, instead: [move self to deck, shuffle]} で統一した（dmc64-011 先例）。
 - 注意（別途点検候補）: 「次の自分のターンのはじめに〜」型の delayed_trigger は duration: permanent（when は turn_start + player: you）を付けないと、デフォルトの end_of_turn 失効で発火前に消える。converted 内の duration 無し turn_start 先例は影響を受けている可能性がある。
+
+## 第43弾（フェーズ17-4）: S-MAX進化
+
+- 対象: s_max_evolution 単独17件。3つの仕組みを実装した。
+- (1) 進化元を必要としない召喚: カード属性 `s_max: true` を新設（defs.py / schema.py）。s_max の進化クリーチャーは evolve_from が無くてよく、プレイ判定・プレイ処理では通常のクリーチャーとして扱う（turn.py の _can_play_face / h_play で進化分岐をスキップ）。
+- (2) 敗北の置換: イベント `lose` を新設し、when: {event: lose} の kind: replace で表す。敗北の確定箇所（ダイレクトアタック = combat.py、デッキ切れ・状況起因の勝敗 = events.py の _sba_tasks、効果による敗北 = ops.py の op lose）はすべて Engine.game_lose を通るよう統一し、置換候補があれば lose_replace タスクで敗北するプレイヤーに諮問する。標準形の支払い（本体を破壊するか手札の同名を捨てる）は if + modal で表す（proto T121）。鬼/CRY 型は「離れる時」の通常の移動置換と対で同じ instead を使う。なお op win（相手を勝たせる効果）は従来どおり即確定で、敗北置換の対象にしていない。
+- (3) 2体制限: 状況起因処理（_sba_tasks）に S-MAX チェックを追加。自分の S-MAX が2体以上あれば smax_reduce タスクで残す1体を選ばせ、残りをすべて手札に戻す。
+- 検証: proto T121 / T122、tests/test_vocab_pilot43.py 5件（進化元なし召喚、2体制限、ダイレクトアタック敗北の置換＝破壊／同名破棄、辞退すると敗北）。
+- 再変換ラウンド18で17件中8件を登録（converted 5,790枚）。残9件はS-MAX以外の部分が原因で差し戻し（gap更新済み）: copy_abilities、shield_keep_rest_graveyard、mach_fighter ×2、master_g_breaker ×2、break_pre_trigger、battle_indestructible、cost_lt_card、player_attack_protection。

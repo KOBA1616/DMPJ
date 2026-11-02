@@ -22,7 +22,7 @@ def core_ops() -> dict[str, dict[str, str]]:
     return OP_ARGS
 
 EVENTS = {"move", "draw", "cast", "summon", "attack", "block", "break", "tap", "untap",
-          "turn_start", "turn_end", "battle_win", "choose", "battle", "battle_start", "attack_end"}
+          "turn_start", "turn_end", "battle_win", "choose", "battle", "battle_start", "attack_end", "lose"}
 ABILITY_KINDS = {"trigger", "replace", "static", "declare", "activate", "silent", "state"}   # state: 状態を常に見て、満たされたら勝敗が決まる常在効果（if と effect: [win/lose]）
 ABILITY_KEYS = {"kind", "when", "if", "effect", "instead", "optional", "affects", "mod", "zone", "keyword", "cost", "id",
                 "once_per_turn", "first_time", "sst", "stp", "odrive", "choukon", "bazurenda"}
@@ -84,6 +84,7 @@ class Face:
     neo: bool = False                                     # NEO進化: 通常召喚も、evolve_from の上に重ねることもできる
     grave_evo: bool = False                               # 墓地進化: 通常召喚も、自分の墓地のクリーチャーの上に重ねて出すこともできる（evolve_zone: graveyard と併用）
     star: bool = False                                    # スター進化: 離れる時は一番上のカードだけが離れ、下は残る
+    s_max: bool = False                                   # S-MAX進化: 進化元を必要とせず、通常のクリーチャーとして召喚できる
     hyper: bool = False                                   # ハイパー化（他の自分のクリーチャー1体をタップしてハイパーモードを解放できる）
     resolve_to: str = "graveyard"                         # 呪文の解決後の置き場所（チャージャー等）
     after_resolve: list[dict] = field(default_factory=list)
@@ -133,6 +134,7 @@ class CardDef:
     neo: bool = False
     grave_evo: bool = False
     star: bool = False
+    s_max: bool = False
     hyper: bool = False
     resolve_to: str = "graveyard"
     after_resolve: list[dict] = field(default_factory=list)
@@ -593,9 +595,9 @@ def _load_face(raw, keywords, macros, chk: Checker, where) -> dict:
     if set(raw["civs"]) - CIVS:
         raise DefError(f"{where}: unknown civs {raw['civs']}")
     if "evolution" in raw["types"]:
-        if "evolve_from" not in raw:
+        if "evolve_from" not in raw and not raw.get("s_max"):
             raise DefError(f"{where}: evolution creature needs evolve_from")
-        ef = raw["evolve_from"]
+        ef = raw.get("evolve_from") or {}
         for f in (ef if isinstance(ef, list) else [ef]):   # 進化V: フィルタのリスト（1つずつ重ねる）
             chk.filter({k: v for k, v in f.items() if k != "zone"}, where)
     zone = raw.get("evolve_zone", "bz")
@@ -638,7 +640,7 @@ def _load_face(raw, keywords, macros, chk: Checker, where) -> dict:
                 evolve_count=(len(raw["evolve_from"]) if isinstance(raw.get("evolve_from"), list)
                               else int(raw.get("evolve_count", 1))),
                 cost_reduce_per_evo=int(raw.get("cost_reduce_per_evo", 0)),
-                free_if=raw.get("free_if"), galaxy_shield=raw.get("galaxy_shield"), bazurenda=raw.get("bazurenda"), neo=bool(raw.get("neo", False)), grave_evo=bool(raw.get("grave_evo", False)), star=bool(raw.get("star", False)), hyper=bool(raw.get("hyper", False)), **{"tap_reduce": 0, "s_back": None, **props})
+                free_if=raw.get("free_if"), galaxy_shield=raw.get("galaxy_shield"), bazurenda=raw.get("bazurenda"), neo=bool(raw.get("neo", False)), grave_evo=bool(raw.get("grave_evo", False)), star=bool(raw.get("star", False)), s_max=bool(raw.get("s_max", False)), hyper=bool(raw.get("hyper", False)), **{"tap_reduce": 0, "s_back": None, **props})
 
 
 def load_tables():

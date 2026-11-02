@@ -278,7 +278,7 @@ def h_attack(eng, t):
             if shields:
                 eng._push({"t": "break", "victim": 1 - a, "by": a, "count": n, "phase": 0, "in_effect": False, "breaker": att})
             else:
-                s.result = {"winner": a, "reason": "direct_attack", "turn": s.turn}   # 509.1 / 703.4a
+                eng._push(*eng.game_lose(1 - a, "direct_attack"))   # 509.1 / 703.4a（敗北の置換を諮ってから確定する）
         return None
     if not t.get("end_fired") and not s.result:               # 510 攻撃の終わり（キリフダッシュ等の誘発点）
         t["end_fired"] = True
