@@ -210938,3 +210938,147 @@ cards:
     - dm35-044
     - dm35-044hc
     - dmx07-017
+- id: dmex08-206
+  name: 堕魔 ヴォーミラ
+  types:
+  - creature
+  civs:
+  - darkness
+  cost: 4
+  power: 4000
+  races:
+  - マフィ・ギャング
+  - 魔導具
+  mana: 1
+  text: このクリーチャーがバトルゾーンに出た時、自分の山札の上から３枚を墓地に置いてもよい。 / 自分のターンに一度、魔導具クリーチャーを１体、自分の墓地から召喚してもよい。
+  abilities:
+  - kind: trigger
+    when:
+      event: move
+      to: bz
+      subject: self
+    effect:
+    - op: may
+      body:
+      - op: mill
+        owner: you
+        count: 3
+  - kind: static
+    affects:
+      owner: you
+      zone: graveyard
+      filter:
+        races:
+        - 魔導具
+    if:
+      is_turn: you
+    mod:
+      allow:
+      - action: summon_from_graveyard
+        once: true
+  source:
+    official: dmex08-206
+    review: pending
+    aliases:
+    - dmrp05-006
+- id: dm32-005
+  name: 死皇帝ハデス
+  types:
+  - creature
+  - evolution
+  civs:
+  - darkness
+  cost: 8
+  power: 9000
+  races:
+  - ダークロード
+  mana: 1
+  evolve_zone: graveyard
+  evolve_from:
+    civs:
+    - darkness
+  keywords:
+  - double_breaker
+  text: '墓地進化-闇のクリーチャーを１体自分の墓地から選び、このクリーチャーをその上に重ねつつバトルゾーンに出す。
+
+    自分のターンにクリーチャーを１体、自分の墓地から召喚してもよい。
+
+    W・ブレイカー(このクリーチャーはシールドを２枚ブレイクする)'
+  abilities:
+  - kind: static
+    affects:
+      owner: you
+      zone: graveyard
+      filter:
+        types:
+        - creature
+    if:
+      is_turn: you
+    mod:
+      allow:
+      - action: summon_from_graveyard
+        once: true
+  source:
+    official: dm32-005
+    review: pending
+- id: dm26rp3-040
+  name: ア・ストラ・ゼーレの電影
+  types:
+  - tamaseed
+  civs:
+  - darkness
+  cost: 3
+  races:
+  - トリックス
+  - ディスタス
+  mana: 1
+  text: 'このタマシードが出た時、各プレイヤーは自分の手札を１枚捨てる。
+
+    自分のターンに１度、ディスペクター・クリーチャーを自分の墓地から召喚してもよい。
+
+    ササゲール３（自分のディスペクター・クリーチャーの召喚コストを３少なくしてもよい。そうしたら、このエレメントを破壊する。ただしコストは０以下にならない）'
+  abilities:
+  - kind: static
+    affects: self
+    mod:
+      sac_reduce: 3
+  - kind: trigger
+    when:
+      event: move
+      to: bz
+      subject: self
+    effect:
+    - op: discard
+      select:
+        zone: hand
+        owner: you
+        chooser: you
+        count: 1
+    - op: discard
+      select:
+        zone: hand
+        owner: opp
+        chooser: opp
+        count: 1
+  - kind: static
+    affects:
+      owner: you
+      zone: graveyard
+      filter:
+        types:
+        - creature
+        races:
+        - ディスペクター
+    if:
+      is_turn: you
+    mod:
+      allow:
+      - action: summon_from_graveyard
+        once: true
+  - kind: static
+    affects: self
+    mod:
+      sac_reduce: 3
+  source:
+    official: dm26rp3-040
+    review: pending
