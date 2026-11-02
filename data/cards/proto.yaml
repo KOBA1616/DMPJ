@@ -1555,3 +1555,23 @@ cards:
           - {op: choose, select: {zone: deck, owner: you, from_top: 3, look: true, count: all}, as: pile}
           - {op: move, select: {ref: pile, filter: {types: [creature], vanilla: true}, count: all}, to: hand, reason: return}
           - {op: move, select: {ref: pile, count: all}, to: deck, position: bottom, order: choose, reason: put}
+  - id: T120
+    name: 革命ゼロ試獣
+    civs: [fire]
+    cost: 7
+    power: 9000
+    types: [creature, evolution]
+    evolve_from: {civs: [fire]}
+    races: [テスト]
+    keywords: [blocker]
+    text: 革命０トリガー：クリーチャーが自分を攻撃する時、自分のシールドがひとつもなければ、このクリーチャーを手札から見せてもよい。そうしたら、自分の山札の上から１枚目を表向きにする。そのカードが火の進化ではないクリーチャーなら出し、このクリーチャーをその上に置く。
+    abilities:
+      - kind: declare
+        zone: hand
+        when: {event: attack, target: player}
+        if: {all: [{is_turn: opp}, {cmp: [{count: {zone: shield, owner: you}}, "==", 0]}]}
+        effect:
+          - {op: choose, select: {zone: deck, owner: you, from_top: 1, look: true, count: all}, as: top}
+          - {op: if, cond: {exists: {ref: top, filter: {types: [creature], not_types: [evolution], civs: [fire]}}}, then: [
+              {op: move, select: {ref: top, count: 1}, to: bz, reason: put, as: base},
+              {op: invade, onto: {ref: base}}]}
