@@ -23,6 +23,7 @@ class Option(TypedDict, total=False):
     shield: int                     # S・バック: 捨てるシールドのカード
     tap: int                             # 起動型能力のコストでタップするクリーチャー
     tap_mana: int                        # 起動型能力の複合コストで追加でタップするマナの枚数
+    grave_evo: bool                      # 墓地進化（自分の墓地のクリーチャーの上に重ねて出す選択肢）
     free: bool                           # コストを支払わずに実行する選択肢（G・ゼロ）
     rush: bool                           # アビスラッシュ（墓地から召喚する選択肢）
     gshield: bool                        # ギャラクシールド（表向きにシールド化する選択肢）

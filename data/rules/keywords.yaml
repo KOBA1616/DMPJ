@@ -316,6 +316,10 @@ keywords:
     ja: このクリーチャーを自分のマナゾーンから召喚してもよい
     abilities:
       - {kind: static, zone: mana, affects: self, mod: {allow: [summon_from_mana]}}
+  summon_from_graveyard:
+    ja: このクリーチャーを自分の墓地から召喚してもよい（アビスラッシュの付随処理は付かない）
+    abilities:
+      - {kind: static, zone: graveyard, affects: self, mod: {allow: [summon_from_graveyard]}}
   yobinion:
     ja: ヨビニオン（このクリーチャーが召喚によって出た時、自分の山札の上から、これよりコストが小さいクリーチャーが出るまで表向きにしてもよい。そのクリーチャーを出す。残りをシャッフルし、山札の下に置く）
     abilities:

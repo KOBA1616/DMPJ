@@ -1465,3 +1465,21 @@ cards:
         cost: {tap: self}
         effect:
           - {op: draw, count: 1}
+  - id: T111
+    name: 墓地召喚獣
+    civs: [darkness]
+    cost: 3
+    power: 2000
+    types: [creature]
+    keywords: [summon_from_graveyard]
+    text: このクリーチャーを自分の墓地から召喚してもよい。
+  - id: T112
+    name: 墓地進化獣
+    civs: [darkness]
+    cost: 5
+    power: 4000
+    types: [creature]
+    grave_evo: true
+    evolve_zone: graveyard
+    evolve_from: {civs: [darkness]}
+    text: 墓地進化：闇のクリーチャーを１体自分の墓地から選び、このクリーチャーをその上に重ねつつ出す。
