@@ -224,7 +224,9 @@ def op_win(eng, t, op, env):
 @op("lose", player="player?")
 def op_lose(eng, t, op, env):
     p = eng._rel(op.get("player", "you"), env)
-    eng.s.result = {"winner": 1 - p, "reason": "effect", "turn": eng.s.turn}
+    tasks = eng.game_lose(p, "effect")   # 敗北の置換（S-MAX進化など）を諮ってから確定する
+    if tasks:
+        eng._defer(t, tasks)
 
 
 @op("set_var", name="str", value="any?")

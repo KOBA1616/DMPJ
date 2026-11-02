@@ -1575,3 +1575,45 @@ cards:
           - {op: if, cond: {exists: {ref: top, filter: {types: [creature], not_types: [evolution], civs: [fire]}}}, then: [
               {op: move, select: {ref: top, count: 1}, to: bz, reason: put, as: base},
               {op: invade, onto: {ref: base}}]}
+  - id: T121
+    name: S-MAX試獣
+    civs: [fire]
+    cost: 6
+    power: 11000
+    types: [creature, evolution]
+    s_max: true
+    races: [テスト]
+    keywords: [double_breaker]
+    text: S-MAX進化：自分がゲームに負ける時、かわりにこのクリーチャーを破壊するか、自分の手札から《S-MAX試獣》を１枚捨てる。（このクリーチャーは進化元を必要としない。自分のS-MAX進化クリーチャーが２体以上あれば、そのうちの１体を残し、残りをすべて手札に戻す）
+    abilities:
+      - kind: replace
+        optional: true
+        when: {event: lose}
+        instead:
+          - {op: if, cond: {exists: {zone: hand, owner: you, filter: {name: S-MAX試獣}}}, then: [
+              {op: modal, modes: [
+                [{op: move, select: {ref: self, count: 1}, to: graveyard, reason: destroy}],
+                [{op: discard, select: {zone: hand, owner: you, chooser: you, filter: {name: S-MAX試獣}, count: 1}}]]}],
+            else: [
+              {op: move, select: {ref: self, count: 1}, to: graveyard, reason: destroy}]}
+  - id: T122
+    name: S-MAX試獣・弐号
+    civs: [nature]
+    cost: 5
+    power: 8000
+    types: [creature, evolution]
+    s_max: true
+    races: [テスト]
+    keywords: [double_breaker]
+    text: S-MAX進化：自分がゲームに負ける時、かわりにこのクリーチャーを破壊するか、自分の手札から《S-MAX試獣・弐号》を１枚捨てる。（このクリーチャーは進化元を必要としない。自分のS-MAX進化クリーチャーが２体以上あれば、そのうちの１体を残し、残りをすべて手札に戻す）
+    abilities:
+      - kind: replace
+        optional: true
+        when: {event: lose}
+        instead:
+          - {op: if, cond: {exists: {zone: hand, owner: you, filter: {name: S-MAX試獣・弐号}}}, then: [
+              {op: modal, modes: [
+                [{op: move, select: {ref: self, count: 1}, to: graveyard, reason: destroy}],
+                [{op: discard, select: {zone: hand, owner: you, chooser: you, filter: {name: S-MAX試獣・弐号}, count: 1}}]]}],
+            else: [
+              {op: move, select: {ref: self, count: 1}, to: graveyard, reason: destroy}]}
