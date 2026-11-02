@@ -215968,3 +215968,682 @@ cards:
     official: promoy21-001
     review: pending
     notes: 'S-MAX進化は第43弾の s_max: true＋敗北置換（proto T121 と同型）。残りの原文は W・ブレイカー（キーワード処理済み）のみ。完全変換。'
+- id: dm22bd2-006
+  name: ナゾの光・リリアング
+  types:
+  - creature
+  civs:
+  - light
+  cost: 2
+  power: 2000
+  races:
+  - メタリカ
+  - スペシャルズ
+  mana: 1
+  text: 'キズナ（このクリーチャーが出た時、自分のクリーチャー１体の[P]能力を使う）
+
+    [P]光のコスト３以下の呪文を１枚、コストを支払わずに自分の手札から唱えてもよい。
+
+    エスケープ（このクリーチャーが破壊される時、墓地に置くかわりに自分のシールドを１つ手札に加えてもよい。ただし、その「S・トリガー」は使えない）'
+  keywords:
+  - kizuna
+  - escape
+  abilities:
+  - kind: partner
+    effect:
+    - op: may
+      body:
+      - op: play_free
+        select:
+          zone: hand
+          owner: you
+          filter:
+            types:
+            - spell
+            civs:
+            - light
+            cost_le: 3
+          count: 1
+  source:
+    official: dm22bd2-006
+    review: pending
+    notes: 'キズナはキーワード kizuna（第44弾）で表した。[P]は kind: partner で、光のコスト3以下の呪文の無料詠唱は may
+      + play_free（手札選択）。エスケープはキーワード。再変換ラウンド19。'
+    aliases:
+    - dmex03-s03
+    - dmex08-203
+    - dmex19-s7
+- id: dm26rp3-005
+  name: 蒸光逆夢 リリオクパング
+  types:
+  - creature
+  civs:
+  - light
+  - water
+  cost: 8
+  power: 10500
+  races:
+  - ディスペクター
+  - メタリカ
+  - ムートピア
+  - スペシャルズ
+  mana: 1
+  text: 'EXライフ（このクリーチャーを出す時、自分の山札の上から１枚をシールド化する。このクリーチャーが離れる時、かわりにそのシールドを墓地に置く）
+
+    ブロッカーW・ブレイカー
+
+    キズナ（このクリーチャーが出た時、自分のクリーチャーの[P]能力を１つ使う）
+
+    [P]カードを１枚引く。その後、コスト６以下の呪文を１枚、自分の手札からコストを支払わずに唱えてもよい。
+
+    このクリーチャーが攻撃する時、相手のクリーチャーを１体選び、持ち主の手札に戻してもよい。'
+  keywords:
+  - ex_life
+  - blocker
+  - double_breaker
+  - kizuna
+  abilities:
+  - kind: partner
+    effect:
+    - op: draw
+      count: 1
+    - op: may
+      body:
+      - op: play_free
+        select:
+          zone: hand
+          owner: you
+          filter:
+            types:
+            - spell
+            cost_le: 6
+          count: 1
+  - kind: trigger
+    when:
+      event: attack
+      subject: self
+    effect:
+    - op: may
+      body:
+      - op: move
+        select:
+          zone: bz
+          owner: opp
+          filter:
+            types:
+            - creature
+          count: 1
+        to: hand
+        reason: return
+  source:
+    official: dm26rp3-005
+    review: pending
+    notes: 'キズナはキーワード kizuna（第44弾）。[P]は kind: partner で、ドロー後にコスト6以下の呪文の無料詠唱（may +
+      play_free）。攻撃時のバウンスは trigger + may + move。EXライフ／ブロッカー／W・ブレイカーはキーワード。再変換ラウンド19。'
+- id: dmrp04m-025
+  name: 夜の青守銀 シャイン
+  types:
+  - creature
+  civs:
+  - light
+  cost: 3
+  power: 2500
+  races:
+  - メタリカ
+  mana: 1
+  text: 'S・トリガー（このクリーチャーをシールドゾーンから手札に加える時、コストを支払わずにすぐ召喚してもよい）
+
+    ブロッカー（このクリーチャーをタップして、相手クリーチャーの攻撃先をこのクリーチャーに変更してもよい）
+
+    このクリーチャーは、相手プレイヤーを攻撃できない。
+
+    キズナ（このクリーチャーがバトルゾーンに出た時、自分のクリーチャー１体のP能力を使う）
+
+    Pクリーチャーを１体選び、タップしてもよい。'
+  keywords:
+  - s_trigger
+  - blocker
+  - cannot_attack_player
+  - kizuna
+  abilities:
+  - kind: partner
+    effect:
+    - op: may
+      body:
+      - op: tap
+        select:
+          zone: bz
+          owner: any
+          filter:
+            types:
+            - creature
+          count: 1
+  source:
+    official: dmrp04m-025
+    review: pending
+    notes: 'キズナはキーワード kizuna（第44弾）。[P]は kind: partner で、クリーチャー1体をタップする任意効果（may + tap、対象は所有者を問わない）。S・トリガー／ブロッカー／相手プレイヤーを攻撃できないはキーワード。再変換ラウンド19。'
+- id: dmrp04m-028
+  name: 夜の南国別荘 クジハウス
+  types:
+  - creature
+  civs:
+  - water
+  cost: 7
+  power: 2000
+  races:
+  - ムートピア
+  mana: 1
+  text: 'S・トリガー（このクリーチャーをシールドゾーンから手札に加える時、コストを支払わずにすぐ召喚してもよい）
+
+    キズナ（このクリーチャーがバトルゾーンに出た時、自分のクリーチャー１体のP能力を使う）
+
+    P相手のコスト３以下のクリーチャーをすべて、持ち主の手札に戻す。'
+  keywords:
+  - s_trigger
+  - kizuna
+  abilities:
+  - kind: partner
+    effect:
+    - op: move
+      select:
+        zone: bz
+        owner: opp
+        filter:
+          types:
+          - creature
+          cost_le: 3
+        count: all
+      to: hand
+      reason: return
+  source:
+    official: dmrp04m-028
+    review: pending
+    notes: 'キズナはキーワード kizuna（第44弾）。[P]は kind: partner で、相手のコスト3以下のクリーチャーすべてを手札に戻す
+      move。S・トリガーはキーワード。再変換ラウンド19。'
+- id: dmrp04m-031
+  name: 夜の集器医 ランプ
+  types:
+  - creature
+  civs:
+  - darkness
+  cost: 4
+  power: 1000
+  races:
+  - マフィ・ギャング
+  mana: 1
+  text: 'S・トリガー（このクリーチャーをシールドゾーンから手札に加える時、コストを支払わずにすぐ召喚してもよい）
+
+    キズナ（このクリーチャーがバトルゾーンに出た時、自分のクリーチャー１体のP能力を使う）
+
+    Pこのターン、相手のクリーチャーすべてのパワーを ?1000 する。（パワー０以下のクリーチャーは破壊される）'
+  keywords:
+  - s_trigger
+  - kizuna
+  abilities:
+  - kind: partner
+    effect:
+    - op: modify
+      select:
+        zone: bz
+        owner: opp
+        filter:
+          types:
+          - creature
+        count: all
+      mod:
+        power: -1000
+      duration: end_of_turn
+  source:
+    official: dmrp04m-031
+    review: pending
+    notes: 'キズナはキーワード kizuna（第44弾）。[P]は kind: partner で、このターン相手クリーチャーすべてのパワーを-1000する
+      modify（duration: end_of_turn）。原文のパワーは「?1000」と記録されているが、パワー0以下の破壊の注記から -1000 と解釈した。S・トリガーはキーワード。再変換ラウンド19。'
+- id: dmrp04m-035
+  name: 夜のジャッジ・チュリス
+  types:
+  - creature
+  civs:
+  - fire
+  cost: 3
+  power: 1000
+  races:
+  - ビートジョッキー
+  mana: 1
+  text: 'S・トリガー（このクリーチャーをシールドゾーンから手札に加える時、コストを支払わずにすぐ召喚してもよい）
+
+    キズナ（このクリーチャーがバトルゾーンに出た時、自分のクリーチャー１体のP能力を使う）
+
+    P相手のパワー11000以下の、「ブロッカー」を持つクリーチャーを１体、破壊する。'
+  keywords:
+  - s_trigger
+  - kizuna
+  abilities:
+  - kind: partner
+    effect:
+    - op: destroy
+      select:
+        zone: bz
+        owner: opp
+        filter:
+          types:
+          - creature
+          power_le: 11000
+          keyword: blocker
+        count: 1
+  source:
+    official: dmrp04m-035
+    review: pending
+    notes: 'キズナはキーワード kizuna、[P] は kind: partner で表現（第44弾、proto T123/T124 と同型）。[P]
+      の対象は filter の power_le と keyword: blocker で表した。再変換ラウンド19。'
+- id: dmrp04m-039
+  name: 夜のコッツナ
+  types:
+  - creature
+  civs:
+  - nature
+  cost: 4
+  power: 12000
+  races:
+  - グランセクト
+  mana: 1
+  text: 'S・トリガー（このクリーチャーをシールドゾーンから手札に加える時、コストを支払わずにすぐ召喚してもよい）
+
+    このクリーチャーは攻撃できない。
+
+    キズナ（このクリーチャーがバトルゾーンに出た時、自分のクリーチャー１体のP能力を使う）
+
+    P自分のクリーチャーを１体、タップしてマナゾーンに置いてもよい。'
+  keywords:
+  - s_trigger
+  - cannot_attack
+  - kizuna
+  abilities:
+  - kind: partner
+    effect:
+    - op: may
+      body:
+      - op: choose
+        select:
+          zone: bz
+          owner: you
+          filter:
+            types:
+            - creature
+          count: 1
+        as: t
+      - op: mana_put
+        select:
+          ref: t
+          count: 1
+      - op: tap
+        select:
+          ref: t
+          count: 1
+  source:
+    official: dmrp04m-039
+    review: pending
+    notes: 'キズナはキーワード kizuna、[P] は kind: partner で表現（第44弾）。[P] の「タップしてマナゾーンに置く」は choose
+      で選んで mana_put の後に tap する形（《フェアリー・ソング》 dm23bd5-054 の変換済み先例と同型）。再変換ラウンド19。'
+- id: dmrp04s-009
+  name: マスティーカ・パンツァー
+  types:
+  - creature
+  civs:
+  - nature
+  cost: 7
+  power: 12000
+  races:
+  - グランセクト
+  mana: 1
+  text: T・ブレイカーキズナ（このクリーチャーがバトルゾーンに出た時、自分のクリーチャー１体のP能力を使う）P相手のクリーチャーを１体選び、持ち主のマナゾーンに置く。
+  keywords:
+  - triple_breaker
+  - kizuna
+  abilities:
+  - kind: partner
+    effect:
+    - op: mana_put
+      select:
+        zone: bz
+        owner: opp
+        filter:
+          types:
+          - creature
+        count: 1
+  source:
+    official: dmrp04s-009
+    review: pending
+    notes: 'キズナはキーワード kizuna、[P] は kind: partner で表現（第44弾）。[P] の持ち主のマナゾーン送りは mana_put（select
+      は owner: opp）で表した。再変換ラウンド19。'
+- id: dmrp04s-013
+  name: 足跡の絡み 汰弧
+  types:
+  - creature
+  civs:
+  - light
+  cost: 5
+  power: 5000
+  races:
+  - メタリカ
+  mana: 1
+  text: キズナ（このクリーチャーがバトルゾーンに出た時、自分のクリーチャー１体のP能力を使う）P自分の山札の上から１枚目を裏向きのまま、新しいシールドとしてシールドゾーンに置く。
+  keywords:
+  - kizuna
+  abilities:
+  - kind: partner
+    effect:
+    - op: move
+      select:
+        zone: deck
+        owner: you
+        from_top: 1
+        count: 1
+      to: shield
+      reason: charge
+  source:
+    official: dmrp04s-013
+    review: pending
+    notes: 'キズナはキーワード kizuna、[P] は kind: partner で表現（第44弾）。[P] の新しいシールド化は move to:
+      shield, reason: charge（《開眼者シンラン》 dm36-011 等の変換済み先例と同型）。再変換ラウンド19。'
+- id: dmrp04s-016
+  name: 珠を放つ者 シャケックラ
+  types:
+  - creature
+  civs:
+  - water
+  cost: 6
+  power: 6000
+  races:
+  - ムートピア
+  mana: 1
+  text: W・ブレイカー（このクリーチャーはシールドを２つブレイクする）クリーチャーを自分の手札から捨てた時、NEOクリーチャー１体の下に置いてもよい。キズナ（このクリーチャーがバトルゾーンに出た時、自分のクリーチャー１体のP能力を使う）Pカードを３枚引く。その後、自分の手札を２枚捨てる。
+  keywords:
+  - double_breaker
+  - kizuna
+  abilities:
+  - kind: trigger
+    when:
+      event: move
+      from: hand
+      to: graveyard
+      reason: discard
+      subject:
+        owner: you
+        filter:
+          types:
+          - creature
+    effect:
+    - op: may
+      body:
+      - op: choose
+        select:
+          zone: bz
+          owner: you
+          filter:
+            types:
+            - creature
+            neo: true
+          count: 1
+        as: base
+      - op: put_under
+        select:
+          ref: event.subject
+        onto:
+          ref: base
+  - kind: partner
+    effect:
+    - op: draw
+      count: 3
+    - op: discard
+      select:
+        zone: hand
+        owner: you
+        chooser: you
+        count: 2
+  source:
+    official: dmrp04s-016
+    review: pending
+    notes: 'キズナはキーワード kizuna、[P] は kind: partner で表現（第44弾）。手札からクリーチャーを捨てた時の誘発は when
+      の reason: discard＋subject フィルタで表し、捨てたカードは ref: event.subject で NEOクリーチャーの下に
+      put_under する（dm25ex3-rp3s06 の捨てた時誘発、dmrp03-035 ヒヨクの put_under＋filter neo が先例）。再変換ラウンド19。'
+- id: dmrp04s-019
+  name: コネチカット・ヤンキー
+  types:
+  - creature
+  civs:
+  - darkness
+  cost: 6
+  power: 6000
+  races:
+  - マフィ・ギャング
+  mana: 1
+  text: W・ブレイカー（このクリーチャーはシールドを２つブレイクする）キズナ（このクリーチャーがバトルゾーンに出た時、自分のクリーチャー１体のP能力を使う）Pコスト３以下の進化ではないクリーチャーを１体、自分の墓地からバトルゾーンに出す。
+  keywords:
+  - double_breaker
+  - kizuna
+  abilities:
+  - kind: partner
+    effect:
+    - op: move
+      select:
+        zone: graveyard
+        owner: you
+        filter:
+          types:
+          - creature
+          not_types:
+          - evolution
+          cost_le: 3
+        count: 1
+      to: bz
+      reason: put
+  source:
+    official: dmrp04s-019
+    review: pending
+    notes: 'キズナはキーワード kizuna、[P] は kind: partner で表現（第44弾）。[P] の墓地からの蘇生は filter の
+      not_types: [evolution] と cost_le: 3 で表した。再変換ラウンド19。'
+- id: dmrp04s-024
+  name: バング“BNG”ドンゴ
+  types:
+  - creature
+  civs:
+  - fire
+  cost: 5
+  power: 4000
+  races:
+  - ビートジョッキー
+  mana: 1
+  keywords:
+  - kizuna
+  text: キズナ（このクリーチャーがバトルゾーンに出た時、自分のクリーチャー１体のP能力を使う）P自分の手札を捨て、その後、カードを３枚引く。
+  abilities:
+  - kind: partner
+    effect:
+    - op: discard
+      select:
+        zone: hand
+        owner: you
+        count: all
+    - op: draw
+      count: 3
+  source:
+    official: dmrp04s-024
+    review: pending
+    notes: 'キズナはキーワード kizuna、[P]は kind: partner（手札をすべて捨てて3枚引く）。再変換ラウンド19。'
+- id: dmrp04s-032
+  name: 青守銀 シャイン
+  types:
+  - creature
+  civs:
+  - light
+  cost: 3
+  power: 2500
+  races:
+  - メタリカ
+  mana: 1
+  keywords:
+  - s_trigger
+  - kizuna
+  text: S・トリガー（このクリーチャーをシールドゾーンから手札に加える時、コストを支払わずにすぐ召喚してもよい）キズナ（このクリーチャーがバトルゾーンに出た時、自分のクリーチャー１体のP能力を使う）P次の自分のターンのはじめまで、自分のクリーチャー１体に「ブロッカー」を与える。（「ブロッカー」を持つクリーチャーをタップして、相手クリーチャーの攻撃先をそのクリーチャーに変更してもよい）
+  abilities:
+  - kind: partner
+    effect:
+    - op: modify
+      select:
+        zone: bz
+        owner: you
+        filter:
+          types:
+          - creature
+        count: 1
+      mod:
+        grant:
+        - blocker
+      duration: until_next_own_turn_start
+  source:
+    official: dmrp04s-032
+    review: pending
+    notes: 'キズナはキーワード kizuna、[P]は kind: partner（次の自分のターンのはじめまで自分のクリーチャー1体にブロッカー付与）。再変換ラウンド19。'
+- id: dmrp04s-036
+  name: 南国別荘 クジハウス
+  types:
+  - creature
+  civs:
+  - water
+  cost: 8
+  power: 2000
+  races:
+  - ムートピア
+  mana: 1
+  keywords:
+  - s_trigger
+  - kizuna
+  text: S・トリガー（このクリーチャーをシールドゾーンから手札に加える時、コストを支払わずにすぐ召喚してもよい）キズナ（このクリーチャーがバトルゾーンに出た時、自分のクリーチャー１体のP能力を使う）Pバトルゾーンにある、コスト７以下のカードを１枚選び、持ち主の手札に戻す。
+  abilities:
+  - kind: partner
+    effect:
+    - op: move
+      select:
+        zone: bz
+        owner: any
+        filter:
+          cost_le: 7
+        count: 1
+      to: hand
+      reason: return
+  source:
+    official: dmrp04s-036
+    review: pending
+    notes: 'キズナはキーワード kizuna、[P]は kind: partner（コスト7以下のカードを1枚手札に戻す。対象はクリーチャーに限らないので
+      types で絞らない）。再変換ラウンド19。'
+- id: dmrp04s-041
+  name: 集器医 ランプ
+  types:
+  - creature
+  civs:
+  - darkness
+  cost: 5
+  power: 1000
+  races:
+  - マフィ・ギャング
+  mana: 1
+  keywords:
+  - s_trigger
+  - kizuna
+  text: S・トリガー（このクリーチャーをシールドゾーンから手札に加える時、コストを支払わずにすぐ召喚してもよい）キズナ（このクリーチャーがバトルゾーンに出た時、自分のクリーチャー１体のP能力を使う）Pバトルゾーンにある相手のクリーチャーを１体選ぶ。そのターン、そのクリーチャーのパワーを
+    ?5000 する。（パワー０以下のクリーチャーは破壊される）
+  abilities:
+  - kind: partner
+    effect:
+    - op: modify
+      select:
+        zone: bz
+        owner: opp
+        filter:
+          types:
+          - creature
+        count: 1
+      mod:
+        power: -5000
+      duration: end_of_turn
+  source:
+    official: dmrp04s-041
+    review: pending
+    notes: 'キズナはキーワード kizuna、[P]は kind: partner（相手クリーチャー1体のパワーをそのターン-5000）。原文テキストのパワー増減記号は文字化け（?5000）のため、カード名・同型効果から
+      -5000 と判断した。再変換ラウンド19。'
+    aliases:
+    - promoy16-080
+- id: dmrp04s-046
+  name: ジャッジ・チュリス
+  types:
+  - creature
+  civs:
+  - fire
+  cost: 8
+  power: 4000
+  races:
+  - ビートジョッキー
+  mana: 1
+  keywords:
+  - s_trigger
+  - kizuna
+  text: S・トリガー（このクリーチャーをシールドゾーンから手札に加える時、コストを支払わずにすぐ召喚してもよい）キズナ（このクリーチャーがバトルゾーンに出た時、自分のクリーチャー１体のP能力を使う）P自分と相手のクリーチャーをそれぞれ１体ずつ選ぶ。その２体をバトルさせる。
+  abilities:
+  - kind: partner
+    effect:
+    - op: force_battle
+      a:
+        zone: bz
+        owner: you
+        filter:
+          types:
+          - creature
+        count: 1
+      b:
+        zone: bz
+        owner: opp
+        filter:
+          types:
+          - creature
+        count: 1
+  source:
+    official: dmrp04s-046
+    review: pending
+    notes: 'キズナはキーワード kizuna、[P]は kind: partner（自他のクリーチャー1体ずつをバトルさせる force_battle）。再変換ラウンド19。'
+- id: dmrp04s-053
+  name: コッツナ
+  types:
+  - creature
+  civs:
+  - nature
+  cost: 6
+  power: 12000
+  races:
+  - グランセクト
+  mana: 1
+  keywords:
+  - s_trigger
+  - cannot_attack_player
+  - kizuna
+  text: S・トリガー（このクリーチャーをシールドゾーンから手札に加える時、コストを支払わずにすぐ召喚してもよい）このクリーチャーは、相手プレイヤーを攻撃できない。キズナ（このクリーチャーがバトルゾーンに出た時、自分のクリーチャー１体のP能力を使う）P他のクリーチャーを１体選ぶ。次の自分のターンのはじめまで、そのクリーチャーはパワーを+3000され、相手プレイヤーを攻撃できない。
+  abilities:
+  - kind: partner
+    effect:
+    - op: modify
+      select:
+        zone: bz
+        owner: any
+        filter:
+          types:
+          - creature
+        other: true
+        count: 1
+      mod:
+        power: 3000
+        deny:
+        - attack_player
+      duration: until_next_own_turn_start
+  source:
+    official: dmrp04s-053
+    review: pending
+    notes: 'キズナはキーワード kizuna、[P]は kind: partner（他のクリーチャー1体を other: true で自らを除いて選び、次の自分のターンのはじめまでパワー+3000とプレイヤー攻撃不可）。再変換ラウンド19。'
