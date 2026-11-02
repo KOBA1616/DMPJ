@@ -1483,3 +1483,15 @@ cards:
     evolve_zone: graveyard
     evolve_from: {civs: [darkness]}
     text: 墓地進化：闇のクリーチャーを１体自分の墓地から選び、このクリーチャーをその上に重ねつつ出す。
+  - id: T113
+    name: 墓地召喚許可獣
+    civs: [darkness]
+    cost: 4
+    power: 3000
+    types: [creature]
+    text: 自分のターンに一度、クリーチャーを１体、自分の墓地から召喚してもよい。
+    abilities:
+      - kind: static
+        affects: {owner: you, zone: graveyard, filter: {types: [creature]}}
+        if: {is_turn: you}
+        mod: {allow: [{action: summon_from_graveyard, once: true}]}

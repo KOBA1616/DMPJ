@@ -382,6 +382,18 @@ class Engine(SelectorMixin, EventMixin, InterpreterMixin, TurnMixin, CombatMixin
             mods += [ab["mod"] for ab in self.rules.keywords[kw]["abilities"]
                      if ab["kind"] == "static" and ab.get("affects") == "self" and "mod" in ab
                      and ab.get("zone", "bz") == c.zone]
+        src_of = None   # 発生源つきで記録する mod（cost_may / 回数制限つき allow）の発生源マップ
+        if any("cost_may" in m or any(isinstance(e, dict) and e.get("once") for e in m.get("allow", [])) for m in mods):
+            src_of = {}
+            for _, ab in own:
+                if ab["kind"] == "static" and ab.get("affects") == "self" and ab.get("zone", "bz") == c.zone and "mod" in ab:
+                    src_of[id(ab["mod"])] = cid
+            for src in self.s.zones["bz"][0]:
+                if cards[src].top_of >= 0 or not self._affects_others(src):
+                    continue
+                for _, ab in self.abilities(src, "static"):
+                    if "mod" in ab:
+                        src_of[id(ab["mod"])] = src
         for m in mods:
             pw = m.get("power", 0)
             if isinstance(pw, dict):   # {amount, count}: 「〜ひとつにつき +N」
@@ -391,7 +403,9 @@ class Engine(SelectorMixin, EventMixin, InterpreterMixin, TurnMixin, CombatMixin
             if "power_when" in m:
                 ch["power"] += self._power_when(m["power_when"], ref, env_self)
             ch["keywords"].update(m.get("grant", []))
-            ch["allow"] += m.get("allow", [])
+            for e in m.get("allow", []):   # 回数制限つき許可は発生源を付けて記録する（選択肢側で使用済みを判定）
+                ch["allow"].append({**e, "src": (src_of or {}).get(id(m), cid)}
+                                    if isinstance(e, dict) and e.get("once") else e)
             ch["deny"] += m.get("deny", [])
             ch["require"] += m.get("require", [])
             for r in m.get("add_races", []):   # 種族追加（「種族に〜を追加する」）
@@ -414,19 +428,9 @@ class Engine(SelectorMixin, EventMixin, InterpreterMixin, TurnMixin, CombatMixin
                     ch[k] += sc[k]
                 ch["breaks"] = max(ch["breaks"], sc["breaks"])
         if any("cost_may" in m for m in mods):   # 任意のコスト軽減（cost_may）の発生源を引く（once の使用記録用）
-            src_of = {}
-            for _, ab in own:
-                if ab["kind"] == "static" and ab.get("affects") == "self" and ab.get("zone", "bz") == c.zone and "mod" in ab:
-                    src_of[id(ab["mod"])] = cid
-            for src in self.s.zones["bz"][0]:
-                if cards[src].top_of >= 0 or not self._affects_others(src):
-                    continue
-                for _, ab in self.abilities(src, "static"):
-                    if "mod" in ab:
-                        src_of[id(ab["mod"])] = src
             for m in mods:
                 if "cost_may" in m:
-                    ch["cost_may"].append({**m["cost_may"], "src": src_of.get(id(m), cid)})
+                    ch["cost_may"].append({**m["cost_may"], "src": (src_of or {}).get(id(m), cid)})
         cost_min = 0
         for m in mods:      # 支払うコストの増減（コスト参照の cost は変えない: 「コスト5以下」はカードのコストで見る）
             if "cost" in m:

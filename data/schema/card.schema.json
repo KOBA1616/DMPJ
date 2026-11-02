@@ -1669,6 +1669,9 @@
          },
          "other": {
           "$ref": "#/$defs/filter"
+         },
+         "once": {
+          "type": "boolean"
          }
         },
         "required": [
@@ -1732,6 +1735,9 @@
          },
          "other": {
           "$ref": "#/$defs/filter"
+         },
+         "once": {
+          "type": "boolean"
          }
         },
         "required": [
