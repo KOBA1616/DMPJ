@@ -580,3 +580,16 @@ space_charge（単独42件）: スペース・チャージは、文明ごとの�
 - 「コストの合計が N 以下／以上になるように好きな数選ぶ」（total_cost_selection_limit 21件＋total_cost_selection 18件）に対応。セレクタに `total_cost_le` / `total_cost_ge`（式）を追加した。
 - 実装: select が合計制限モードでは1枚ずつ積み上げる選択を行う。上限では予算を超える候補が自動で外れ、下限では合計が届くまで止められない（どう選んでも届かない場合は打ち切る）。答えは os に記録して再入時に再生する（ask の再入対策）。
 - 検証: tests/test_vocab_pilot38.py（動作2件: 合計以下で選ぶと予算外の候補が外れる／0枚で止められる）＋test_vocab_pilot38_cards.py（代表1枚: めった切り・スクラッパー）。proto に T114 を追加。
+
+## 第39弾（フェーズ16追補）: 合計コスト選択の枚数上限（「N体まで」併記）
+
+- きっかけ: 再変換ラウンド14の対象に「コストの合計がN以下になるようにクリーチャーを2体まで選ぶ」型（邪入梵ほか）が複数あり、第38弾の合計制限モードが count を見ていないため厳密に表せなかった（reject原因の追加分析）。
+- 実装: dmsim/engine/selectors.py の合計制限モードで、select に count がある場合だけその枚数で積み上げを打ち切る（再生パス・対話パス両方）。count 無しの「好きな数」は従来どおり無制限、count: any / all も上限なし扱い。
+- 検証: tests/test_vocab_pilot39.py（動作1件: 合計10以下・2体までで、予算内の3体目が残り、選択提示自体が2回で終わる）。proto に T115 を追加。第38弾の回帰テストも通過。
+
+## 第40弾（フェーズ17-1）: 手札破棄の置換（「相手の効果によって捨てられる時」）
+
+- 対象: discard_replacement 単独17件。置換自体（replace＋instead で出す）は既存だが、「相手のクリーチャーの能力または呪文によって」を表す手段が無く、ターン条件（if: is_turn）での代用は厳密でないため reject されていた。
+- 実装: 移動イベントに、その移動を起こした効果の解決者 `by` を記録する。ops 経由の移動には ev_task が env["you"]（効果の解決者）を by として付け、_record_for が照合用レコードへ写し、when に `by: you / opp` と書けるようにした（schema・defs の検証にも追加）。状況起因処理・コスト支払い・S・バックの捨て札など、効果解決者を伴わない移動には by が付かないため「相手の効果」扱いにならない。
+- 書き方: `- {kind: replace, zone: hand, optional: true, when: {event: move, from: hand, to: graveyard, reason: discard, subject: self, by: opp}, instead: [{op: move, select: {ref: self, count: 1}, to: bz, reason: put}]}`。「相手のターンに」型は従来どおり if: {is_turn: opp}（提督シリーズの登録済み型）。
+- 検証: tests/test_vocab_pilot40.py（動作2件: 相手の呪文で捨てられる時は出せる／自分の呪文で捨てる時は発火せず墓地に行く）。proto に T116（捨て置換獣）・T117（相手に捨てさせる呪文）・T118（自分が捨てる呪文）を追加。

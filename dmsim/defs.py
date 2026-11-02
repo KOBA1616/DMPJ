@@ -498,6 +498,8 @@ class Checker:
             raise DefError(f"{where}: bad attacker '{w['attacker']}'")
         if "via" in w and w["via"] not in VIAS:
             raise DefError(f"{where}: unknown via '{w['via']}'")
+        if "by" in w and w["by"] not in ("you", "opp"):
+            raise DefError(f"{where}: bad by '{w['by']}'")
 
     def ability(self, ab, where):
         kind = ab.get("kind")

@@ -10,6 +10,8 @@ class EventMixin:
         """同時に起こるイベントの束（400.7, 609.9）。"""
         if isinstance(evs, dict):
             evs = [evs]
+        if env and isinstance(env.get("you"), int):   # 効果の解決者が起こす移動には、起こしたプレイヤーを記録する（「相手の効果によって捨てられる時」等の照合用）
+            evs = [dict(e, by=env["you"]) if e.get("ev") == "move" and "by" not in e else e for e in evs]
         if env and env.get("capture"):   # 置換効果の中で起こすイベントは、元の束に加えて同時に適用する（609.9）
             return {"t": "capture", "evs": [dict(e, replaced=True) for e in evs]}
         if env and env.get("no_replace"):
@@ -67,6 +69,8 @@ class EventMixin:
             c = s.cards[ev["subject"][0]]
             rec = {"ev": "move", "subject": ev["subject"], "from": ev.get("from") if c.zone == "hold" else c.zone,
                    "to": ev["to"], "reason": ev["reason"], "controller": c.controller}
+            if "by" in ev:        # その移動を起こした効果の解決者（無ければ記録しない: 状況起因・コスト等は「相手の効果」扱いにしない）
+                rec["by"] = ev["by"]
             if ev.get("stack_on"):   # 進化として重ねて出た（シンカパワーの照合用）
                 rec["stacked"] = True
             if ev.get("alt"):        # 代替コストで実行された（「そうしたら」の照合用）
@@ -352,6 +356,8 @@ class EventMixin:
         if "face_up" in when and bool(rec.get("face_up")) != when["face_up"]:   # 表向きで置かれたか（ギャラクシールド）
             return False
         if "player" in when and rec.get("player") != self._rel(when["player"], env):
+            return False
+        if "by" in when and rec.get("by") != self._rel(when["by"], env):   # そのイベントを起こした効果の解決者（「相手の効果によって〜」）
             return False
         if "subject" in when:
             if "subject" not in rec:
