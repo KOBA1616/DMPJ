@@ -82,6 +82,7 @@ class Face:
     galaxy_shield: dict | None = None                     # ギャラクシールド: {cost, civs} 代替コストで表向きにシールド化する
     bazurenda: dict | None = None                         # バズレンダ: {cost, civs} 支払い時に追加でこのコストを好きな回数払える
     neo: bool = False                                     # NEO進化: 通常召喚も、evolve_from の上に重ねることもできる
+    grave_evo: bool = False                               # 墓地進化: 通常召喚も、自分の墓地のクリーチャーの上に重ねて出すこともできる（evolve_zone: graveyard と併用）
     star: bool = False                                    # スター進化: 離れる時は一番上のカードだけが離れ、下は残る
     hyper: bool = False                                   # ハイパー化（他の自分のクリーチャー1体をタップしてハイパーモードを解放できる）
     resolve_to: str = "graveyard"                         # 呪文の解決後の置き場所（チャージャー等）
@@ -130,6 +131,7 @@ class CardDef:
     galaxy_shield: dict | None = None
     bazurenda: dict | None = None                         # バズレンダ: {cost, civs}
     neo: bool = False
+    grave_evo: bool = False
     star: bool = False
     hyper: bool = False
     resolve_to: str = "graveyard"
@@ -629,7 +631,7 @@ def _load_face(raw, keywords, macros, chk: Checker, where) -> dict:
                 evolve_count=(len(raw["evolve_from"]) if isinstance(raw.get("evolve_from"), list)
                               else int(raw.get("evolve_count", 1))),
                 cost_reduce_per_evo=int(raw.get("cost_reduce_per_evo", 0)),
-                free_if=raw.get("free_if"), galaxy_shield=raw.get("galaxy_shield"), bazurenda=raw.get("bazurenda"), neo=bool(raw.get("neo", False)), star=bool(raw.get("star", False)), hyper=bool(raw.get("hyper", False)), **{"tap_reduce": 0, "s_back": None, **props})
+                free_if=raw.get("free_if"), galaxy_shield=raw.get("galaxy_shield"), bazurenda=raw.get("bazurenda"), neo=bool(raw.get("neo", False)), grave_evo=bool(raw.get("grave_evo", False)), star=bool(raw.get("star", False)), hyper=bool(raw.get("hyper", False)), **{"tap_reduce": 0, "s_back": None, **props})
 
 
 def load_tables():

@@ -114,6 +114,7 @@
      "slayer",
      "speed_attacker",
      "spell_to_hand",
+     "summon_from_graveyard",
      "summon_from_mana",
      "super_s_trigger",
      "triple_breaker",
@@ -192,6 +193,9 @@
    "additionalProperties": false
   },
   "neo": {
+   "type": "boolean"
+  },
+  "grave_evo": {
    "type": "boolean"
   },
   "star": {
@@ -299,6 +303,7 @@
        "slayer",
        "speed_attacker",
        "spell_to_hand",
+       "summon_from_graveyard",
        "summon_from_mana",
        "super_s_trigger",
        "triple_breaker",
@@ -377,6 +382,9 @@
      "additionalProperties": false
     },
     "neo": {
+     "type": "boolean"
+    },
+    "grave_evo": {
      "type": "boolean"
     },
     "star": {
@@ -1595,6 +1603,7 @@
        "slayer",
        "speed_attacker",
        "spell_to_hand",
+       "summon_from_graveyard",
        "summon_from_mana",
        "super_s_trigger",
        "triple_breaker",

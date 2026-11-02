@@ -83,6 +83,13 @@ class TurnMixin:
                         opt["face"] = fi
                     out.append(opt)
             for fi, f in ([(None, d)] if not d.faces else list(enumerate(d.faces))):
+                if f.grave_evo and f.evolve_from and self._evo_sources(cid, p, fi):   # 墓地進化: 自分の墓地のクリーチャーの上に重ねて出す選択肢
+                    opt = {"key": f"{o['key']}:gevo" if fi is None else f"{o['key']}:{fi}:gevo", "cid": cid,
+                           "name": f.name, "grave_evo": True}
+                    if fi is not None:
+                        opt["face"] = fi
+                    out.append(opt)
+            for fi, f in ([(None, d)] if not d.faces else list(enumerate(d.faces))):
                 ac = f.alt_cost   # 代替コスト: 別額を払う / 行動で払う
                 if ac:
                     ok = bool(self._mana_choices(cid, p, fi, cost=ac["cost"], limit=1, civs=ac.get("civs"))) if "cost" in ac else \
@@ -514,7 +521,7 @@ def st_main(eng, t):                                    # 504
             task["cost_civs"] = fd.vividraw["civs"]
         if o.get("fushigi"):
             task["fushigi"] = True
-        if o.get("neo"):
+        if o.get("neo") or o.get("grave_evo"):
             task["evo_mode"] = True
         eng._push(task)
 
@@ -937,7 +944,7 @@ def h_play(eng, t):
                {"op": "draw", "count": 1}]
         eng._push(eng._child([{"op": "delayed_trigger", "when": {"event": "turn_end"}, "effect": end}],
                              {"you": p, "self": ref, "vars": {}}))
-    if t.get("rush") and from_zone == "graveyard" and d.is_creature():   # アビスラッシュの付随処理
+    if t.get("rush") and from_zone == "graveyard" and d.is_creature() and "abyss_rush" in d.keywords:   # アビスラッシュの付随処理（素の墓地召喚には付けない）
         s.turn_counters[f"rush:{cid}"] = s.turn      # このターン、召喚酔いでもプレイヤーを攻撃できる
         eng._push(eng._child([{"op": "delayed_trigger", "when": {"event": "turn_end"},
                                "effect": [{"op": "move", "select": {"ref": "self_entered"},
