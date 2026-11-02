@@ -22,7 +22,7 @@ def core_ops() -> dict[str, dict[str, str]]:
     return OP_ARGS
 
 EVENTS = {"move", "draw", "cast", "summon", "attack", "block", "break", "tap", "untap",
-          "turn_start", "turn_end", "battle_win", "choose", "battle", "battle_start", "attack_end", "lose"}
+          "turn_start", "turn_end", "battle_win", "choose", "battle", "battle_start", "attack_end", "lose", "mugon_used"}
 ABILITY_KINDS = {"trigger", "replace", "static", "declare", "activate", "silent", "state", "partner"}   # state: 状態を常に見て、満たされたら勝敗が決まる常在効果（if と effect: [win/lose]）。partner: [P]能力（単独では機能せず、キズナ等で「使う」ことで解決する）
 ABILITY_KEYS = {"kind", "when", "if", "effect", "instead", "optional", "affects", "mod", "zone", "keyword", "cost", "id",
                 "once_per_turn", "first_time", "sst", "stp", "odrive", "choukon", "bazurenda"}

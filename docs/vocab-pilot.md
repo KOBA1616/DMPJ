@@ -626,3 +626,14 @@ space_charge（単独42件）: スペース・チャージは、文明ごとの�
 - 実装: (1) 能力種別 `partner` を新設（defs.py の ABILITY_KINDS、schema の enum）。[P]能力は単独では機能せず、effect だけを持つ。(2) キーワード `kizuna` を data/rules/keywords.yaml に追加: 出た時の誘発として op: use_partner を解決する。(3) op: use_partner（ops.py）: 自分のクリーチャーの[P]を列挙して1つ選ばせ、その effect を self=[P]の持ち主として解決する。候補が無ければ何もしない。
 - 検証: proto T123（キズナのみ）/ T124（[P]のみ）/ T125（両方）、tests/test_vocab_pilot44.py 4件: 他者の[P]を使う、自分の[P]を使う、複数候補から選ぶ、[P]が無ければ何も起こらない。
 - 再変換ラウンド19で18件中17件を登録（converted 5,807枚）。残1件（キズナ・チャージャー）は「パートナー召喚時にこのマナを全文明として扱う」が原因で差し戻し（既存 gap mana_all_civilizations）。
+
+## 第45弾（フェーズ17-6）: 無月の門
+
+- 対象: mugon_gate 単独18件。
+- 表現: 宣言ではなく「手札/墓地で機能する誘発型能力」で表す。zone: hand と zone: graveyard の2能力を併記し、when は「自分の魔導具が出た時」（subject: {owner: you, other: true, filter}）、if で重ねる枚数の実現可能性を門番する（cmp + count、合算形は sum）。
+- 実装: op: summon_on（ops.py）。parts: [{zone, count, filter?}]（zones で複数ゾーン合算も可）どおりに選ばせ、移動イベントの stack_on / stack_more で選んだカードの上に無償召喚する。満たせないパートがあれば何もしない。
+- 進化との違い: 重ねる処理 _stack は進化の流儀（召喚酔いなし・タップ継承）のため、後始末タスク summon_on_fix（interpreter.py / types.py）で通常の召喚どおりに直す（召喚酔いする、タップは op の tapped 指定どおり）。
+- 追随: summon_on は解決後に mugon_used イベントを流すので、「自分の『無月の門』能力を使った時」に誘発するカード（zone: hand/graveyard、when: {event: mugon_used, player: you}）も表現できる。
+- 制約（v1）: 重ねる対象は各ゾーンの「一番上」のカードだけ（他のクリーチャーの下にあるカードは選べない）。無月の門・終（呪文の代替コスト）は対象外。
+- 検証: proto T126（門番）/ T127（魔導具）、tests/test_vocab_pilot45.py 4件: 手札から召喚（下4枚・召喚酔い・タップしない）、墓地から召喚、追随者がタップして出る、枚数不足では発動しない。
+- 再変換ラウンド20で18件中15件を登録（converted 5,822枚）。残3件は別 gap が原因で差し戻し: mugon_gate_period（無月の門・終）、untap_limit、smash_burst。

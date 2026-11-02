@@ -377,6 +377,12 @@ class InvadeFixTask(TypedDict):
     tapped: bool
 
 
+class SummonOnFixTask(TypedDict):
+    t: Literal["summon_on_fix"]
+    cid: int
+    tapped: bool
+
+
 class PutUnderTask(TypedDict):
     t: Literal["put_under"]
     cid: int
