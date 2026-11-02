@@ -258,11 +258,15 @@ class Engine(SelectorMixin, EventMixin, InterpreterMixin, TurnMixin, CombatMixin
     def abilities(self, cid: int, kind: str | None = None) -> list[tuple[int, dict]]:
         """(添字, 能力) の列。無視されている能力は除く（608.4）。
         継続的効果の mod.gain で得た能力は負の添字（-1, -2, ...）で返す。"""
+        if self.s.cards[cid].zone == "bz" and self.s.cards[cid].seals:
+            return []   # 封印されているクリーチャーの能力は機能しない（封印が外れた時点から見える）
         out = [(i, ab) for i, ab in enumerate(self.fdef(cid).abilities)
                if (kind is None or ab["kind"] == kind)
                and (not ab.get("sst") or self.s.cards[cid].sst)   # スーパー・S・トリガーの追加能力は印がある時だけ
                and (not ab.get("stp") or self.s.cards[cid].stp)   # S・トリガー・プラスも同様
-               and (not ab.get("odrive") or self.s.cards[cid].odrive)]   # O・ドライブで得る能力も同様
+               and (not ab.get("odrive")
+                    or (ab["odrive"] is True and self.s.cards[cid].odrive)
+                    or (isinstance(ab.get("odrive"), str) and ab["odrive"] in self.s.cards[cid].odrive_civs))]   # O・ドライブで得る能力（odrive: <文明> はその文明をタップした時だけ）
         if self.s.cards[cid].zone == "bz" and kind != "static":
             ref = self.s.ref(cid)
             k = 0
@@ -336,6 +340,13 @@ class Engine(SelectorMixin, EventMixin, InterpreterMixin, TurnMixin, CombatMixin
         許可・禁止（allow / deny）と breaks もここで集める。ルール側はキーワード名を見ない。"""
         c = self.s.cards[cid]
         d = self.fdef(cid, face)
+        if face is None and c.zone == "bz" and c.seals:
+            # 封印されているクリーチャーは無視される: 種族・タイプ・キーワードを持たず、能力も機能しない
+            # （パワーは印刷どおり返し、パワー0の状況起因処理で破壊されないようにする）
+            return {"power": d.power, "cost": d.cost, "civs": list(d.civs), "types": [], "races": [],
+                    "keywords": set(), "name": d.name, "allow": [], "deny": [], "require": [],
+                    "breaks": 0, "break_opts": [], "pay_cost": d.cost, "sac_reduce": 0,
+                    "opt_reduce": None, "cost_may": []}
         ch = {"power": d.power, "cost": d.cost, "civs": list(d.civs), "types": list(d.types),
               "races": list(d.races), "keywords": set(d.keywords), "name": d.name,
               "allow": [], "deny": [], "require": [], "breaks": 1, "break_opts": [], "pay_cost": d.cost, "sac_reduce": 0, "opt_reduce": None, "cost_may": []}
@@ -567,6 +578,7 @@ class Engine(SelectorMixin, EventMixin, InterpreterMixin, TurnMixin, CombatMixin
         c.sst = False                               # スーパー・S・トリガーの追加能力の印も消える
         c.stp = False                               # S・トリガー・プラスの印も消える
         c.odrive = False                            # O・ドライブの印も消える
+        c.odrive_civs = []
         c.bazurenda = 0                             # バズレンダの追加支払い回数も消える
         c.vivid = False                             # ビビッドローの表向きも消える（引いたターンの記録 drawn_turn は残す）
         dest = self.zlist(to, c.controller if self.zshared(to) else c.owner)

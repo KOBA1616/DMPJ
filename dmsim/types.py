@@ -285,6 +285,10 @@ class PlayTask(TypedDict):
     od_yn: NotRequired[bool]             # O・ドライブ: 追加でタップするか
     od_done: NotRequired[bool]           # O・ドライブ: 確認済み
     odrive: NotRequired[bool]            # O・ドライブ: 追加でタップして召喚した
+    od_idx: NotRequired[int]             # O・ドライブ: 処理中のステップ（文明）番号
+    od_sub: NotRequired[int]             # O・ドライブ: ステップ内で処理中の文明番号
+    od_civs_done: NotRequired[list]      # O・ドライブ: 実際にタップした文明
+    odrive_civs: NotRequired[list]       # O・ドライブ: タップした文明（イベント/印への引き渡し用）
     climb: NotRequired[bool]             # ムゲンクライムとして実行する
     climb_done: NotRequired[bool]        # ムゲンクライム: クリーチャーのタップが済んだ
     resolve_to: NotRequired[str]         # 解決後の置き場所（play_free の resolve_to）
@@ -335,6 +339,22 @@ class DeclareTask(TypedDict):
     answer: NotRequired[list[int]]
 
 
+class LoseReplaceTask(TypedDict):
+    """敗北の置換（S-MAX進化など）: 敗北が確定する前に、置換できるかを敗北するプレイヤーに諮る。"""
+    t: Literal["lose_replace"]
+    loser: int
+    reason: str
+    phase: int
+    answer: NotRequired[list[int]]
+
+
+class SmaxReduceTask(TypedDict):
+    """S-MAX進化の2体制限（状況起因）: 残す1体を選び、残りをすべて手札に戻す。"""
+    t: Literal["smax_reduce"]
+    player: int
+    answer: NotRequired[list[int]]
+
+
 class BindTask(TypedDict):
     t: Literal["bind"]
     env: Env
@@ -361,6 +381,12 @@ class InvadeFixTask(TypedDict):
     tapped: bool
 
 
+class SummonOnFixTask(TypedDict):
+    t: Literal["summon_on_fix"]
+    cid: int
+    tapped: bool
+
+
 class PutUnderTask(TypedDict):
     t: Literal["put_under"]
     cid: int
@@ -371,6 +397,12 @@ class PutUnderTask(TypedDict):
 class SlayerTask(TypedDict):
     t: Literal["slayer"]
     pairs: list[list[Ref]]               # [スレイヤーを持っていた負けたクリーチャー, バトル相手]
+
+
+class SealReleaseTask(TypedDict):
+    t: Literal["seal_release"]
+    player: int
+    civs: list[str]
 
 
 def check_shape(d: dict, shape) -> None:
