@@ -224,6 +224,44 @@ class SelectorMixin:
         cands = [c for c in cands if self.s.cards[c].zone != "bz" or self.s.cards[c].controller == chooser
                  or self.permits(c, "be_chosen")]
         n = min(n, len(cands))
+        if "total_cost_le" in sel or "total_cost_ge" in sel:   # コストの合計制限つきの「好きな数」選択: 1枚ずつ積み上げる
+            le = self.eval_expr(sel["total_cost_le"], env) if "total_cost_le" in sel else None
+            ge = self.eval_expr(sel["total_cost_ge"], env) if "total_cost_ge" in sel else None
+            os = t.setdefault("os", {})
+            picked: list[int] = []
+            for ans in os.get("tc_answers", []):   # 済んだ段の答えを再生する（ask の再入対策）
+                rest = [c for c in cands if c not in picked]
+                if le is not None:
+                    rest = [c for c in rest if sum(self.chars(x)["cost"] for x in picked) + self.chars(c)["cost"] <= le]
+                if not ans:
+                    break
+                picked.append(rest[ans[0]])
+            else:
+                while True:
+                    total = sum(self.chars(x)["cost"] for x in picked)
+                    rest = [c for c in cands if c not in picked]
+                    if le is not None:
+                        rest = [c for c in rest if total + self.chars(c)["cost"] <= le]
+                    can_stop = ge is None or total >= ge
+                    if ge is not None and not can_stop and total + sum(self.chars(c)["cost"] for c in rest) < ge:
+                        can_stop = True   # どう選んでも下限に届かない時は打ち切る
+                    if not rest:
+                        break
+                    a, d = self.ask(t, chooser, "choose_cards",
+                                    [self._card_option(c, sel.get("look", False)) for c in rest], 0 if can_stop else 1, 1)
+                    if d:
+                        return None, d
+                    os.setdefault("tc_answers", []).append(a)
+                    if not a:
+                        break
+                    picked.append(rest[a[0]])
+            chosen = picked
+            t.setdefault("os", {})["chosen"] = chosen
+            picked_opp = [c for c in chosen if self.s.cards[c].zone == "bz" and self.s.cards[c].controller != chooser]
+            for c in picked_opp:   # 「相手がこのクリーチャーを選んだ時」
+                self._collect_triggers({"ev": "choose", "subject": self.s.ref(c), "player": chooser,
+                                        "controller": self.s.cards[c].controller})
+            return chosen, None
         mx = n
         mn = 0 if sel.get("up_to") or any_n else mx
         if mx == 0:

@@ -69,6 +69,7 @@ def build() -> dict:
                 "filter": ref("filter"),
                 "count": {"anyOf": [ref("expr"), {"const": "all"}, {"const": "any"}]}, "up_to": {"type": "boolean"},
                 "from_top": ref("expr"), "chooser": {"enum": ["you", "opp"]}, "ref": {"type": "string"},
+                "total_cost_le": ref("expr"), "total_cost_ge": ref("expr"),
                 "other": {"type": "boolean"}, "look": {"type": "boolean"}}, "additionalProperties": False},
             "expr": {"anyOf": [{"type": "integer"}, {"type": "object", "properties": {
                 "count": ref("selector"), "civ_count": ref("selector"), "entered": {"type": "object", "properties": {"owner": {"type": "string"}, "other": {"type": "boolean"}}, "additionalProperties": False}, "var": {"type": "string"}, "cost_of": {"type": "string"}, "races_of": {"type": "string"}, "race": {"type": "string"}, "link_count": {"type": "string"}, "sum": {"type": "array", "items": ref("expr")}},

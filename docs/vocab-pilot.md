@@ -574,3 +574,9 @@ space_charge（単独42件）: スペース・チャージは、文明ごとの�
 - 「自分のターンに一度（／自分のターン中、クリーチャーを1体）、自分の墓地から召喚してもよい」という他者への回数制限つき許可（summon_others_from_graveyard_once_per_turn 4件）に対応。mod の allow 項目に `{action: summon_from_graveyard, once: true}` と書けるようにした。
 - 実装: chars が once つき allow を発生源（src）つきで記録し（cost_may の once と同じ方式）、墓地召喚の選択肢生成が「無制限の許可があれば常時／once の許可は発生源ごとに未使用の時だけ」を判定する。使用すると turn_counters に `summon_once:<src>` を記録し、そのターンは選択肢が出なくなる（次のターンに回復）。
 - 検証: tests/test_vocab_pilot37.py（動作2件: 1体だけ召喚できる／次のターンに回復）＋test_vocab_pilot37_cards.py（代表1枚: 堕魔 ヴォーミラ）。proto に T113 を追加。
+
+## 第38弾（フェーズ16）: コストの合計制限つき選択
+
+- 「コストの合計が N 以下／以上になるように好きな数選ぶ」（total_cost_selection_limit 21件＋total_cost_selection 18件）に対応。セレクタに `total_cost_le` / `total_cost_ge`（式）を追加した。
+- 実装: select が合計制限モードでは1枚ずつ積み上げる選択を行う。上限では予算を超える候補が自動で外れ、下限では合計が届くまで止められない（どう選んでも届かない場合は打ち切る）。答えは os に記録して再入時に再生する（ask の再入対策）。
+- 検証: tests/test_vocab_pilot38.py（動作2件: 合計以下で選ぶと予算外の候補が外れる／0枚で止められる）＋test_vocab_pilot38_cards.py（代表1枚: めった切り・スクラッパー）。proto に T114 を追加。

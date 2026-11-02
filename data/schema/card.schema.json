@@ -1409,6 +1409,12 @@
     "ref": {
      "type": "string"
     },
+    "total_cost_le": {
+     "$ref": "#/$defs/expr"
+    },
+    "total_cost_ge": {
+     "$ref": "#/$defs/expr"
+    },
     "other": {
      "type": "boolean"
     },
