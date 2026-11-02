@@ -1495,3 +1495,11 @@ cards:
         affects: {owner: you, zone: graveyard, filter: {types: [creature]}}
         if: {is_turn: you}
         mod: {allow: [{action: summon_from_graveyard, once: true}]}
+  - id: T114
+    name: 合計破壊呪文
+    civs: [fire]
+    cost: 7
+    types: [spell]
+    text: 相手のクリーチャーを、コストの合計が６以下になるように好きな数選び、破壊する。
+    spell:
+      - {op: destroy, select: {zone: bz, owner: opp, filter: {types: [creature]}, total_cost_le: 6}}

@@ -37,7 +37,7 @@ PERMANENT_TYPES = {"tamaseed", "field", "cross_gear"}   # 手札から実行し�
 CARD_TYPES = {"creature", "spell", "evolution"} | PERMANENT_TYPES
 CIVS = {"light", "water", "darkness", "fire", "nature", "zero"}
 SELECTOR_KEYS = {"zone", "owner", "owner_of", "filter", "count", "up_to", "from_top", "chooser", "ref", "other",
-                 "under_of", "look", "exlife_of"}   # look: 非公開ゾーン（山札など）の中身を見て選ぶ
+                 "under_of", "look", "exlife_of", "total_cost_le", "total_cost_ge"}   # look: 非公開ゾーン（山札など）の中身を見て選ぶ。total_cost_*: コストの合計が上限以下／下限以上になるように好きな数選ぶ
 FILTER_KEYS = {"any_of", "types", "not_types", "civs", "civs_all", "not_civs", "races", "race_has", "name", "name_has", "not_name",
                "cost_le", "cost_ge", "power_le", "power_ge", "tapped", "keyword", "multicolor", "face_down", "neo"}
 FILTER_EXPR_KEYS = {"cost_le", "cost_ge", "power_le", "power_ge", "races"}   # 値に式を書ける（解決時に計算）
@@ -305,6 +305,9 @@ class Checker:
                 raise DefError(f"{where}: unknown zone '{z}'")
         if sel.get("owner", "you") not in ("you", "opp", "any"):
             raise DefError(f"{where}: bad owner '{sel['owner']}'")
+        for k in ("total_cost_le", "total_cost_ge"):
+            if k in sel:
+                self.expr(sel[k], where)
         self.filter(sel.get("filter", {}), where)
 
     def filter(self, f, where):
