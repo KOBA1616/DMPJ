@@ -212713,3 +212713,979 @@ cards:
       chosen が空で何も唱えない。
     aliases:
     - dm39-s01
+- id: dm26ex3-dcr005
+  name: 蒼神龍アナザー・ワールド
+  types:
+  - creature
+  civs:
+  - water
+  cost: 7
+  power: 6000
+  races:
+  - ポセイディア・ドラゴン
+  mana: 1
+  keywords:
+  - blocker
+  - double_breaker
+  text: 'ブロッカー
+
+    W・ブレイカー
+
+    相手の、クリーチャーの能力または呪文によって、このクリーチャーが自分の手札から捨てられる時、墓地に置くかわりに出してもよい。
+
+    このクリーチャーが出た時、各プレイヤーは自身の手札と墓地にあるカードをすべて山札に加えてシャッフルし、カードを５枚引く。'
+  abilities:
+  - kind: replace
+    zone: hand
+    optional: true
+    when:
+      event: move
+      from: hand
+      to: graveyard
+      reason: discard
+      subject: self
+      by: opp
+    instead:
+    - op: move
+      select:
+        ref: self
+        count: 1
+      to: bz
+      reason: put
+  - kind: trigger
+    when:
+      event: move
+      to: bz
+      subject: self
+    effect:
+    - op: move
+      select:
+        zone: hand
+        owner: you
+        count: all
+      to: deck
+      reason: put
+    - op: move
+      select:
+        zone: graveyard
+        owner: you
+        count: all
+      to: deck
+      reason: put
+    - op: shuffle
+    - op: move
+      select:
+        zone: hand
+        owner: opp
+        count: all
+      to: deck
+      reason: put
+    - op: move
+      select:
+        zone: graveyard
+        owner: opp
+        count: all
+      to: deck
+      reason: put
+    - op: shuffle
+      player: opp
+    - op: draw
+      count: 5
+    - op: draw
+      player: opp
+      count: 5
+  source:
+    official: dm26ex3-dcr005
+    review: pending
+    notes: 'フェーズ17-1（第40弾）の when.by: opp で「相手の能力または呪文によって捨てられる時」を原文どおりに表せる。出た時効果は登録済み《サイバー・Ｎ・ワールド》(dm23bd6-012)
+      と同一文面のため同型にした。再変換ラウンド15。'
+    aliases:
+    - dm24ex3-rp2s03
+    - dm24ex3-sec02
+    - dm24rp2-s03
+    - dmart23-002
+- id: dm26rp1-s011
+  name: 斬隠将撃龍ニバイケン
+  types:
+  - creature
+  civs:
+  - water
+  - fire
+  cost: 6
+  power: 6000
+  races:
+  - ポセイディア・ドラゴン
+  - アーマード・ドラゴン
+  - シノビ
+  mana: 1
+  keywords:
+  - blocker
+  - speed_attacker
+  - double_breaker
+  text: 'ブロッカー
+
+    スピードアタッカー　W・ブレイカー
+
+    相手のターンにこのクリーチャーが自分の手札から捨てられる時、墓地に置くかわりに出してもよい。
+
+    このクリーチャーが出た時、相手のクリーチャーを１体選んでもよい。その選んだクリーチャーとこのクリーチャーをバトルさせる。
+
+    このクリーチャーがタップした時、カードを２枚引いてもよい。そうしたら、自分の手札を１枚捨てる。'
+  abilities:
+  - kind: replace
+    zone: hand
+    optional: true
+    when:
+      event: move
+      from: hand
+      to: graveyard
+      reason: discard
+      subject: self
+    if:
+      is_turn: opp
+    instead:
+    - op: move
+      select:
+        ref: self
+        count: 1
+      to: bz
+      reason: put
+  - kind: trigger
+    when:
+      event: move
+      to: bz
+      subject: self
+    effect:
+    - op: choose
+      select:
+        ref: self
+      as: a
+    - op: choose
+      select:
+        zone: bz
+        owner: opp
+        filter:
+          types:
+          - creature
+        count: 0
+        up_to: true
+      as: b
+    - op: battle_substitute
+  - kind: trigger
+    when:
+      event: tap
+      subject: self
+    effect:
+    - op: may
+      body:
+      - op: draw
+        count: 2
+      - op: discard
+        select:
+          zone: hand
+          owner: you
+          count: 1
+  source:
+    official: dm26rp1-s011
+    review: pending
+    notes: '捨て置換は「相手のターンに」型（if: {is_turn: opp}、提督シリーズと同型）。出た時の任意バトルは choose を count:
+      0, up_to: true にして battle_substitute へ渡す型（攻撃時バトルの登録済み先例と同型）。タップ時誘発は「引いてもよい。そうしたら捨てる」を1つの
+      may にまとめる型（dm23rp1-sp2 の先例）。再変換ラウンド15。'
+    aliases:
+    - dm26rp1-sec012
+- id: dmbd07-a-004
+  name: 虫取りアーミー
+  types:
+  - creature
+  civs:
+  - nature
+  cost: 8
+  power: 8000
+  races:
+  - ジョーカーズ
+  mana: 1
+  keywords:
+  - double_breaker
+  text: 'マッハファイター（このクリーチャーは、バトルゾーンに出たターンの間、タップまたはアンタップしているクリーチャーを攻撃できる）
+
+    W・ブレイカー（このクリーチャーはシールドを２つブレイクする）
+
+    このクリーチャーがバトルゾーンに出た時、自分の山札の上から３枚を表向きにする。その中からジョーカーズをすべて手札に加え、残りを好きな順序で山札の一番下に置く。
+
+    相手の呪文の効果またはクリーチャーの能力によって、このクリーチャーが自分の手札から捨てられる時、墓地に置くかわりにバトルゾーンに出してもよい。'
+  abilities:
+  - kind: trigger
+    when:
+      event: move
+      to: bz
+      subject: self
+    effect:
+    - op: modify
+      select:
+        ref: self
+      mod:
+        allow:
+        - action: attack_creature
+          other:
+            tapped: false
+      duration: end_of_turn
+  - kind: trigger
+    when:
+      event: move
+      to: bz
+      subject: self
+    effect:
+    - op: modify
+      select:
+        ref: self
+      mod:
+        allow:
+        - action: attack_creature
+          other:
+            tapped: false
+      duration: end_of_turn
+  - kind: trigger
+    when:
+      event: move
+      to: bz
+      subject: self
+    effect:
+    - op: choose
+      select:
+        zone: deck
+        owner: you
+        from_top: 3
+        look: true
+        count: all
+      as: pile
+    - op: move
+      select:
+        ref: pile
+        filter:
+          races:
+          - ジョーカーズ
+        count: all
+      to: hand
+      reason: return
+    - op: move
+      select:
+        ref: pile
+        count: all
+      to: deck
+      reason: put
+  - kind: replace
+    zone: hand
+    optional: true
+    when:
+      event: move
+      from: hand
+      to: graveyard
+      reason: discard
+      subject: self
+      by: opp
+    instead:
+    - op: move
+      select:
+        ref: self
+        count: 1
+      to: bz
+      reason: put
+  source:
+    official: dmbd07-a-004
+    review: pending
+    notes: 'マッハファイターは登録済み先例（dm22rp1-071 等）と同型の modify allow。山札上3枚の処理は提督シリーズ（dm21-006）と同型（pile
+      に見て、種族で手札、残りを山札へ）。捨て置換はフェーズ17-1（第40弾）の when.by: opp（proto T116 が正本）。再変換ラウンド15。'
+    aliases:
+    - promoy17-070
+- id: dmd07-003
+  name: 隻眼の鬼カイザー ザーク嵐
+  types:
+  - creature
+  civs:
+  - fire
+  cost: 7
+  power: 6000
+  races:
+  - レッド・コマンド・ドラゴン
+  - ハンター
+  mana: 1
+  keywords:
+  - double_breaker
+  text: '相手の呪文の効果またはクリーチャーの能力によって、このクリーチャーが自分の手札から捨てられる時、墓地に置くかわりにバトルゾーンに出してもよい。
+
+    このクリーチャーをバトルゾーンに出した時、自分の山札の上から３枚をすべてのプレイヤーに見せる。その中からハンターをすべて自分の手札に加え、その後、残りを好きな順序で山札の一番下に置く。
+
+    W・ブレイカー(このクリーチャーはシールドを２枚ブレイクする)'
+  abilities:
+  - kind: replace
+    zone: hand
+    optional: true
+    when:
+      event: move
+      from: hand
+      to: graveyard
+      reason: discard
+      subject: self
+      by: opp
+    instead:
+    - op: move
+      select:
+        ref: self
+        count: 1
+      to: bz
+      reason: put
+  - kind: trigger
+    when:
+      event: move
+      to: bz
+      subject: self
+    effect:
+    - op: choose
+      select:
+        zone: deck
+        owner: you
+        from_top: 3
+        look: true
+        count: all
+      as: pile
+    - op: move
+      select:
+        ref: pile
+        filter:
+          races:
+          - ハンター
+        count: all
+      to: hand
+      reason: return
+    - op: move
+      select:
+        ref: pile
+        count: all
+      to: deck
+      reason: put
+  source:
+    official: dmd07-003
+    review: pending
+    notes: '捨て置換はフェーズ17-1（第40弾）の when.by: opp（proto T116 が正本）。山札上3枚の処理は提督シリーズ（dm21-006）と同型。再変換ラウンド15。'
+    aliases:
+    - promoy11-014
+- id: dmd27-005
+  name: 若頭の忠剣ハチ公
+  types:
+  - creature
+  civs:
+  - fire
+  cost: 3
+  power: 3000
+  races:
+  - フレイム・モンスター
+  - ハンター
+  mana: 1
+  text: 相手の呪文の効果またはクリーチャーの能力によって、このクリーチャーを自分の手札から捨てる時、墓地に置くかわりにバトルゾーンに出してもよい。このクリーチャーがバトルゾーンに出た時、自分の山札を見る。その中から《若頭の忠剣ハチ公》を１枚選んで相手に見せ、自分の手札に加えてもよい。その後、山札をシャッフルする。
+  abilities:
+  - kind: replace
+    zone: hand
+    optional: true
+    when:
+      event: move
+      from: hand
+      to: graveyard
+      reason: discard
+      subject: self
+      by: opp
+    instead:
+    - op: move
+      select:
+        ref: self
+        count: 1
+      to: bz
+      reason: put
+  - kind: trigger
+    when:
+      event: move
+      to: bz
+      subject: self
+    effect:
+    - op: may
+      body:
+      - op: choose
+        select:
+          zone: deck
+          owner: you
+          look: true
+          filter:
+            name: 若頭の忠剣ハチ公
+          count: 1
+        as: t
+      - op: move
+        select:
+          ref: t
+          count: all
+        to: hand
+        reason: draw
+    - op: shuffle
+  source:
+    official: dmd27-005
+    review: pending
+    notes: '捨て置換はフェーズ17-1（第40弾）の when.by: opp（proto T116 が正本）。同名サーチは filter の name
+      で指定し、任意取得は may で包む型（dm23-007 の登録済みサーチと同型）。シャッフルは may の外（原文どおり常時）。再変換ラウンド15。'
+    aliases:
+    - dmr03-027
+    - promoy10-034
+    - promoy13-045
+- id: dmex04-048
+  name: キキリカミ・パンツァー
+  types:
+  - creature
+  civs:
+  - nature
+  cost: 9
+  power: 12000
+  races:
+  - グランセクト
+  mana: 1
+  keywords:
+  - triple_breaker
+  text: 'T・ブレイカー
+
+    このクリーチャーがバトルゾーンに出た時、自分の山札の上から３枚を表向きにする。その中からパワー12000以上のクリーチャーをすべて、自分の手札に加え、その後、残りを好きな順序で山札の一番下に置く。
+
+    相手の呪文の効果またはクリーチャーの能力によって、このクリーチャーが自分の手札から捨てられる時、墓地に置くかわりにバトルゾーンに置いてもよい。'
+  abilities:
+  - kind: trigger
+    when:
+      event: move
+      to: bz
+      subject: self
+    effect:
+    - op: choose
+      select:
+        zone: deck
+        owner: you
+        from_top: 3
+        look: true
+        count: all
+      as: pile
+    - op: move
+      select:
+        ref: pile
+        filter:
+          types:
+          - creature
+          power_ge: 12000
+        count: all
+      to: hand
+      reason: return
+    - op: move
+      select:
+        ref: pile
+        count: all
+      to: deck
+      reason: put
+  - kind: replace
+    zone: hand
+    optional: true
+    when:
+      event: move
+      from: hand
+      to: graveyard
+      reason: discard
+      subject: self
+      by: opp
+    instead:
+    - op: move
+      select:
+        ref: self
+        count: 1
+      to: bz
+      reason: put
+  source:
+    official: dmex04-048
+    review: pending
+    notes: '捨てられる時の置換は第40弾の when.by: opp（相手の効果が起こした移動）で表した（proto T116 と同型）。登場時の「上から３枚」は提督シリーズ（dm21-006
+      等）の pile 形式に倣い、条件は filter の power_ge: 12000。再変換ラウンド15。'
+    aliases:
+    - dmsp01-019
+- id: dmex09-029
+  name: アクア闘士 サンダーボルト
+  types:
+  - creature
+  civs:
+  - water
+  cost: 3
+  power: 2000
+  races:
+  - リキッド・ピープル閃
+  mana: 1
+  text: 相手の呪文の効果またはクリーチャーの能力によって、このクリーチャーが自分の手札から捨てられる時、墓地に置くかわりにバトルゾーンに出し、カードを２枚引いてもよい。
+    / 自分の手札が５枚以上あれば、このクリーチャーのパワーを+4000し、「W・ブレイカー」を与える。
+  abilities:
+  - kind: replace
+    zone: hand
+    optional: true
+    when:
+      event: move
+      from: hand
+      to: graveyard
+      reason: discard
+      subject: self
+      by: opp
+    instead:
+    - op: move
+      select:
+        ref: self
+        count: 1
+      to: bz
+      reason: put
+    - op: may
+      body:
+      - op: draw
+        count: 2
+  - kind: static
+    affects: self
+    if:
+      cmp:
+      - count:
+          zone: hand
+          owner: you
+      - '>='
+      - 5
+    mod:
+      power: 4000
+      grant:
+      - double_breaker
+  source:
+    official: dmex09-029
+    review: pending
+    notes: '捨てられる時の置換は第40弾の when.by: opp で表した（proto T116 と同型）。「出し、カードを２枚引いてもよい」は instead
+      に move の後で任意ドロー（op: may）を続けた。手札５枚以上の常在修整は if: cmp（手札の枚数）＋ mod の power と grant:
+      [double_breaker]。再変換ラウンド15。'
+    aliases:
+    - dmx18-032
+- id: dmr02-005
+  name: エイリアン・ファーザー
+  types:
+  - creature
+  civs:
+  - darkness
+  - fire
+  cost: 5
+  power: 5000
+  races:
+  - エイリアン
+  mana: 1
+  text: マナゾーンに置く時、このカードはタップして置く。 / バトルゾーンにある自分の他のエイリアンはすべて「スピードアタッカー」と「スレイヤー」を得る。
+    / 相手の呪文の効果または相手のクリーチャーの能力によって、このクリーチャーが自分の手札から捨てられる時、墓地に置くかわりに自分のマナゾーンに置いてもよい。
+  abilities:
+  - kind: static
+    affects:
+      zone: bz
+      owner: you
+      filter:
+        races:
+        - エイリアン
+      other: true
+    mod:
+      grant:
+      - speed_attacker
+      - slayer
+  - kind: replace
+    zone: hand
+    optional: true
+    when:
+      event: move
+      from: hand
+      to: graveyard
+      reason: discard
+      subject: self
+      by: opp
+    instead:
+    - op: move
+      select:
+        ref: self
+        count: 1
+      to: mana
+      reason: put
+  source:
+    official: dmr02-005
+    review: pending
+    notes: '「マナゾーンに置く時タップして置く」は多色カードのエンジン規定（多色はタップして置かれる）で処理されるため abilities には書かない。捨てられる時の置換は第40弾の
+      when.by: opp で表し、置く先をマナゾーンにした（instead の to: mana）。再変換ラウンド15。'
+- id: dmrp03-035
+  name: 貝獣 ヒヨク
+  types:
+  - creature
+  civs:
+  - water
+  cost: 5
+  power: 5000
+  races:
+  - ムートピア
+  mana: 1
+  text: このカードを自分の手札から捨てる時、墓地に置くかわりに自分のNEOクリーチャー１体の下に置いてもよい。
+  abilities:
+  - kind: replace
+    zone: hand
+    optional: true
+    when:
+      event: move
+      from: hand
+      to: graveyard
+      reason: discard
+      subject: self
+    instead:
+    - op: choose
+      select:
+        zone: bz
+        owner: you
+        filter:
+          types:
+          - creature
+          neo: true
+        count: 1
+      as: base
+    - op: put_under
+      select:
+        ref: self
+        count: 1
+      onto:
+        ref: base
+  source:
+    official: dmrp03-035
+    review: pending
+    notes: '捨てる時の置換は相手の効果に限らない原文どおり、when に by を付けない形。下に置く処理は op: put_under（onto）で表し、置き先は
+      filter の neo: true で自分のNEOクリーチャーから選ぶ。NEOクリーチャーがいない時は置換を選べない想定。再変換ラウンド15。'
+- id: dmrp04m-006
+  name: ルネッザーンス
+  types:
+  - creature
+  civs:
+  - fire
+  cost: 10
+  power: 9000
+  races:
+  - ジョーカーズ
+  mana: 1
+  keywords:
+  - double_breaker
+  - speed_attacker
+  text: 'Ｊ・Ｏ・Ｅ ２ (このクリーチャーを、コストを２少なくして召喚してもよい。そうしたら、このターンの終わりに、これを自分の山札の一番下に置く。下に置いたら、カードを１枚引く)
+
+    相手の呪文の効果またはクリーチャーの能力によって、このクリーチャーが自分の手札から捨てられる時、墓地に置くかわりにバトルゾーンに置いてもよい。
+
+    W・ブレイカー　スピードアタッカー
+
+    このクリーチャーがバトルゾーンに出た時、自分の山札の上から３枚を表向きにする。その中からジョーカーズをすべて手札に加え、残りを好きな順序で山札の一番下に置く。'
+  abilities:
+  - kind: static
+    affects: self
+    zone: hand
+    mod:
+      opt_reduce:
+        amount: 2
+        then: deck_bottom_draw
+  - kind: static
+    affects: self
+    zone: hand
+    mod:
+      opt_reduce:
+        amount: 2
+        then: deck_bottom_draw
+  - kind: replace
+    zone: hand
+    optional: true
+    when:
+      event: move
+      from: hand
+      to: graveyard
+      reason: discard
+      subject: self
+      by: opp
+    instead:
+    - op: move
+      select:
+        ref: self
+        count: 1
+      to: bz
+      reason: put
+  - kind: trigger
+    when:
+      event: move
+      to: bz
+      subject: self
+    effect:
+    - op: choose
+      select:
+        zone: deck
+        owner: you
+        from_top: 3
+        look: true
+        count: all
+      as: pile
+    - op: move
+      select:
+        ref: pile
+        filter:
+          races:
+          - ジョーカーズ
+        count: all
+      to: hand
+      reason: return
+    - op: move
+      select:
+        ref: pile
+        count: all
+      to: deck
+      position: bottom
+      reason: return
+      order: choose
+  source:
+    official: dmrp04m-006
+    review: pending
+    notes: 'Ｊ・Ｏ・Ｅ ２ は既存の opt_reduce（amount: 2, then: deck_bottom_draw）で表現（dm26rp3-070
+      どうだいジンセー等が先例）。捨て置換は第40弾の when.by: opp（proto T116）で原文どおりに表せる。出た時の上３枚は提督型（choose
+      pile → 種族をすべて手札 → 残りを position: bottom, order: choose で底へ）。再変換ラウンド15。'
+- id: dmx02-030
+  name: 無頼聖者サンフィスト
+  types:
+  - creature
+  civs:
+  - light
+  - nature
+  cost: 3
+  power: 3000
+  races:
+  - ビーストフォーク
+  - イニシエート
+  mana: 1
+  keywords:
+  - blocker
+  text: 'マナゾーンに置く時、このカードはタップして置く。
+
+    ブロッカー
+
+    相手のターン中、このクリーチャーが自分の手札から捨てられる時、墓地に置くかわりにバトルゾーンに出してもよい。'
+  abilities:
+  - kind: replace
+    zone: hand
+    optional: true
+    when:
+      event: move
+      from: hand
+      to: graveyard
+      reason: discard
+      subject: self
+    if:
+      is_turn: opp
+    instead:
+    - op: move
+      select:
+        ref: self
+        count: 1
+      to: bz
+      reason: put
+  source:
+    official: dmx02-030
+    review: pending
+    notes: '「マナゾーンに置く時タップして置く」は多色カードのルール（405.1）としてエンジンが自動処理するため能力にしない。捨て置換は「相手のターン中」型なので従来型
+      if: {is_turn: opp}（dm21-006 等の提督シリーズが先例）。再変換ラウンド15。'
+    aliases:
+    - dm10-070
+    - dmc61-057
+- id: dmx04-006
+  name: ゲロ NICE・ハンゾウ
+  types:
+  - creature
+  civs:
+  - darkness
+  cost: 7
+  power: 5000
+  races:
+  - デーモン・コマンド
+  - ハンター
+  mana: 1
+  text: このクリーチャーをバトルゾーンに出した時、バトルゾーンにある相手のクリーチャーを１体選ぶ。そのターン、そのクリーチャーのパワーは-6000される。(パワー０以下のクリーチャーは破壊される)
+    / 相手の呪文の効果または相手のクリーチャーの能力によって、このクリーチャーが自分の手札から捨てられる時、墓地に置くかわりにバトルゾーンに置いてもよい。
+  abilities:
+  - kind: trigger
+    when:
+      event: move
+      to: bz
+      subject: self
+    effect:
+    - op: modify
+      select:
+        zone: bz
+        owner: opp
+        filter:
+          types:
+          - creature
+        count: 1
+      mod:
+        power: -6000
+      duration: end_of_turn
+  - kind: replace
+    zone: hand
+    optional: true
+    when:
+      event: move
+      from: hand
+      to: graveyard
+      reason: discard
+      subject: self
+      by: opp
+    instead:
+    - op: move
+      select:
+        ref: self
+        count: 1
+      to: bz
+      reason: put
+  source:
+    official: dmx04-006
+    review: pending
+    notes: '出た時のパワー-6000は modify（power: -6000, duration: end_of_turn）の既存型。パワー０以下の破壊は状況起因処理。捨て置換は第40弾の
+      when.by: opp（proto T116）で原文どおりに表せる。再変換ラウンド15。'
+- id: dmx11-074
+  name: 機械提督サウンドシューター
+  types:
+  - creature
+  civs:
+  - water
+  cost: 7
+  power: 5000
+  races:
+  - グレートメカオー
+  - キカイヒーロー
+  mana: 1
+  text: このクリーチャーをバトルゾーンに出した時、自分の山札の上から３枚をすべてのプレイヤーに見せる。その中にあるグレートメカオーとキカイヒーローをすべて自分の手札に加え、残りを好きな順序で山札の一番下に戻す。
+    / 相手のターン中にこのクリーチャーが自分の手札から捨てられる時、墓地に置くかわりにバトルゾーンに出してもよい。
+  abilities:
+  - kind: trigger
+    when:
+      event: move
+      to: bz
+      subject: self
+    effect:
+    - op: choose
+      select:
+        zone: deck
+        owner: you
+        from_top: 3
+        look: true
+        count: all
+      as: pile
+    - op: move
+      select:
+        ref: pile
+        filter:
+          races:
+          - グレートメカオー
+          - キカイヒーロー
+        count: all
+      to: hand
+      reason: return
+    - op: move
+      select:
+        ref: pile
+        count: all
+      to: deck
+      position: bottom
+      reason: return
+      order: choose
+  - kind: replace
+    zone: hand
+    optional: true
+    when:
+      event: move
+      from: hand
+      to: graveyard
+      reason: discard
+      subject: self
+    if:
+      is_turn: opp
+    instead:
+    - op: move
+      select:
+        ref: self
+        count: 1
+      to: bz
+      reason: put
+  source:
+    official: dmx11-074
+    review: pending
+    notes: '出た時の上３枚は提督型（dm21-006 と同型: choose pile → 種族をすべて手札 → 残りを position: bottom,
+      order: choose で底へ）。捨て置換は「相手のターン中に」型なので従来型 if: {is_turn: opp}。再変換ラウンド15。'
+    aliases:
+    - dm21-009
+- id: dmx14-058
+  name: 悪魔提督アルゴ・バルディオル
+  types:
+  - creature
+  civs:
+  - darkness
+  cost: 7
+  power: 5000
+  races:
+  - グランド・デビル
+  - ディープ・マリーン
+  mana: 1
+  text: このクリーチャーをバトルゾーンに出した時、自分の山札の上から３枚をすべてのプレイヤーに見せる。その中からグランド・デビルとディープ・マリーンをすべて自分の手札に加え、残りを好きな順序で山札の一番下に戻す。相手のターン中にこのクリーチャーが手札から捨てられる時、墓地に置くかわりにバトルゾーンに出してもよい。
+  abilities:
+  - kind: trigger
+    when:
+      event: move
+      to: bz
+      subject: self
+    effect:
+    - op: choose
+      select:
+        zone: deck
+        owner: you
+        from_top: 3
+        look: true
+        count: all
+      as: pile
+    - op: move
+      select:
+        ref: pile
+        filter:
+          races:
+          - グランド・デビル
+          - ディープ・マリーン
+        count: all
+      to: hand
+      reason: return
+    - op: move
+      select:
+        ref: pile
+        count: all
+      to: deck
+      position: bottom
+      reason: return
+      order: choose
+  - kind: replace
+    zone: hand
+    optional: true
+    when:
+      event: move
+      from: hand
+      to: graveyard
+      reason: discard
+      subject: self
+    if:
+      is_turn: opp
+    instead:
+    - op: move
+      select:
+        ref: self
+        count: 1
+      to: bz
+      reason: put
+  source:
+    official: dmx14-058
+    review: pending
+    notes: '出た時の上３枚は提督型（dm21-006 と同型: choose pile → 種族をすべて手札 → 残りを position: bottom,
+      order: choose で底へ）。捨て置換は「相手のターン中に」型なので従来型 if: {is_turn: opp}。再変換ラウンド15。'
+    aliases:
+    - dm21-012
