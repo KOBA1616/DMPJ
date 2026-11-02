@@ -216647,3 +216647,1418 @@ cards:
     official: dmrp04s-053
     review: pending
     notes: 'キズナはキーワード kizuna、[P]は kind: partner（他のクリーチャー1体を other: true で自らを除いて選び、次の自分のターンのはじめまでパワー+3000とプレイヤー攻撃不可）。再変換ラウンド19。'
+- id: dm26ex4-004
+  name: 切札接続 マンジー・ザ・ジョリー
+  types:
+  - creature
+  civs:
+  - darkness
+  cost: 8
+  power: 10000
+  races:
+  - ディスペクター
+  - マフィ・ギャング
+  - ドルスザク
+  - ジョーカーズ
+  mana: 1
+  text: 'J無月の門：各ターンの終わりに、自分の、魔導具またはジョーカーズと、墓地にある魔導具カードまたはジョーカーズ・カードを合計６つ選び、その上にこのクリーチャーを、自分の手札または墓地からコストを支払わずに召喚してもよい。
+
+    EXライフ（このクリーチャーを出す時、自分の山札の上から１枚をシールド化する。このクリーチャーが離れる時、かわりにそのシールドを墓地に置く）
+
+    W・ブレイカー
+
+    このクリーチャーが出た時または攻撃する時、相手のクリーチャーを１体選び、破壊する。'
+  keywords:
+  - ex_life
+  - double_breaker
+  abilities:
+  - kind: trigger
+    when:
+      event: move
+      to: bz
+      subject: self
+    effect: &id104
+    - op: destroy
+      select:
+        zone: bz
+        owner: opp
+        filter:
+          types:
+          - creature
+        count: 1
+  - kind: trigger
+    when:
+      event: attack
+      subject: self
+    effect: *id104
+  - kind: trigger
+    zone: hand
+    when: &id105
+      event: turn_end
+    if: &id106
+      cmp:
+      - sum:
+        - count:
+            zone: bz
+            owner: you
+            filter:
+              races:
+              - 魔導具
+              - ジョーカーズ
+        - count:
+            zone: graveyard
+            owner: you
+            filter:
+              races:
+              - 魔導具
+              - ジョーカーズ
+      - '>='
+      - 6
+    effect: &id107
+    - op: may
+      body:
+      - op: summon_on
+        parts:
+        - zones:
+          - bz
+          - graveyard
+          count: 6
+          filter:
+            races:
+            - 魔導具
+            - ジョーカーズ
+  - kind: trigger
+    zone: graveyard
+    when: *id105
+    if: *id106
+    effect: *id107
+  - kind: trigger
+    when:
+      event: move
+      to: bz
+      subject: self
+    effect:
+    - op: destroy
+      select:
+        zone: bz
+        owner: opp
+        filter:
+          types:
+          - creature
+        count: 1
+  - kind: trigger
+    when:
+      event: attack
+      subject: self
+    effect:
+    - op: destroy
+      select:
+        zone: bz
+        owner: opp
+        filter:
+          types:
+          - creature
+        count: 1
+  source:
+    official: dm26ex4-004
+    review: pending
+    notes: 'J無月の門は第45弾の形（zone: hand / graveyard の誘発＋summon_on）。タイミングは各ターンの終わり（when:
+      turn_end、プレイヤー不問）、対象はバトルゾーンと墓地の合算で6つ（parts は zones 合算、門番は sum の cmp）。EXライフとW・ブレイカーはキーワード。再変換ラウンド20。'
+- id: dm26ex4-sec016
+  name: 切札接続 マンジー・ザ・ジョリー(DM26EX4 ㊙16/㊙25)
+  types:
+  - creature
+  civs:
+  - darkness
+  cost: 8
+  power: 10000
+  races:
+  - ディスペクター
+  - マフィ・ギャング
+  - ドルスザク
+  - ジョーカーズ
+  mana: 1
+  text: 'J無月の門：各ターンの終わりに、自分の、魔導具またはジョーカーズと、墓地にある魔導具カードまたはジョーカーズ・カードを合計６つ選び、その上にこのクリーチャーを、自分の手札または墓地からコストを支払わずに召喚してもよい。
+
+    EXライフ
+
+    W・ブレイカー
+
+    このクリーチャーが出た時または攻撃する時、相手のクリーチャーを１体選び、破壊する。'
+  keywords:
+  - ex_life
+  - double_breaker
+  abilities:
+  - kind: trigger
+    when:
+      event: move
+      to: bz
+      subject: self
+    effect: &id108
+    - op: destroy
+      select:
+        zone: bz
+        owner: opp
+        filter:
+          types:
+          - creature
+        count: 1
+  - kind: trigger
+    when:
+      event: attack
+      subject: self
+    effect: *id108
+  - kind: trigger
+    zone: hand
+    when: &id109
+      event: turn_end
+    if: &id110
+      cmp:
+      - sum:
+        - count:
+            zone: bz
+            owner: you
+            filter:
+              races:
+              - 魔導具
+              - ジョーカーズ
+        - count:
+            zone: graveyard
+            owner: you
+            filter:
+              races:
+              - 魔導具
+              - ジョーカーズ
+      - '>='
+      - 6
+    effect: &id111
+    - op: may
+      body:
+      - op: summon_on
+        parts:
+        - zones:
+          - bz
+          - graveyard
+          count: 6
+          filter:
+            races:
+            - 魔導具
+            - ジョーカーズ
+  - kind: trigger
+    zone: graveyard
+    when: *id109
+    if: *id110
+    effect: *id111
+  - kind: trigger
+    when:
+      event: move
+      to: bz
+      subject: self
+    effect:
+    - op: destroy
+      select:
+        zone: bz
+        owner: opp
+        filter:
+          types:
+          - creature
+        count: 1
+  - kind: trigger
+    when:
+      event: attack
+      subject: self
+    effect:
+    - op: destroy
+      select:
+        zone: bz
+        owner: opp
+        filter:
+          types:
+          - creature
+        count: 1
+  source:
+    official: dm26ex4-sec016
+    review: pending
+    notes: 'dm26ex4-004 と同文（シークレット版）。J無月の門は第45弾の形（zone: hand / graveyard の誘発＋summon_on、合算6つ）。EXライフとW・ブレイカーはキーワード。再変換ラウンド20。'
+- id: dmbd08-b-006
+  name: 魔凰 デ・スザーク
+  types:
+  - creature
+  civs:
+  - darkness
+  cost: 8
+  power: 6000
+  races:
+  - マスター・ドルスザク
+  - マフィ・ギャング
+  mana: 1
+  text: '無月の門：自分の魔導具をバトルゾーンに出した時、自分の魔導具をバトルゾーンと墓地から２つずつ選び、このクリーチャーを自分の手札または墓地からそれら４枚の上にコストを支払わずに召喚してもよい。
+
+    W・ブレイカー（このクリーチャーはシールドを２つブレイクする）
+
+    このクリーチャーがバトルゾーンに出た時、そのターン、バトルゾーンにある相手のクリーチャーすべてのパワーを －3000 する。（パワー０以下のクリーチャーは破壊される）'
+  keywords:
+  - double_breaker
+  abilities:
+  - kind: trigger
+    zone: hand
+    when: &id112
+      event: move
+      to: bz
+      subject:
+        owner: you
+        other: true
+        filter:
+          races:
+          - 魔導具
+    if: &id113
+      all:
+      - cmp:
+        - count:
+            zone: bz
+            owner: you
+            filter:
+              races:
+              - 魔導具
+        - '>='
+        - 2
+      - cmp:
+        - count:
+            zone: graveyard
+            owner: you
+            filter:
+              races:
+              - 魔導具
+        - '>='
+        - 2
+    effect: &id114
+    - op: may
+      body:
+      - op: summon_on
+        parts:
+        - zone: bz
+          count: 2
+          filter:
+            races:
+            - 魔導具
+        - zone: graveyard
+          count: 2
+          filter:
+            races:
+            - 魔導具
+  - kind: trigger
+    zone: graveyard
+    when: *id112
+    if: *id113
+    effect: *id114
+  - kind: trigger
+    when:
+      event: move
+      to: bz
+      subject: self
+    effect:
+    - op: modify
+      select:
+        zone: bz
+        owner: opp
+        filter:
+          types:
+          - creature
+        count: all
+      mod:
+        power: -3000
+      duration: end_of_turn
+  source:
+    official: dmbd08-b-006
+    review: pending
+    notes: '無月の門は第45弾の標準形（zone: hand / graveyard の誘発＋summon_on、2つずつ）。出た時の相手全員パワー-3000は
+      modify（count: all、duration: end_of_turn）。W・ブレイカーはキーワード。再変換ラウンド20。'
+    aliases:
+    - dmex02-065
+    - promoy16-104
+- id: dmex03-s05
+  name: 黒目龍竜
+  types:
+  - creature
+  civs:
+  - darkness
+  cost: 10
+  power: 13000
+  races:
+  - ブラック・コマンド・ドラゴン
+  - スペシャルズ
+  mana: 1
+  text: '無月の門：自分の魔導具をバトルゾーンに出した時、自分の魔導具をバトルゾーンと墓地から２つずつ選び、このクリーチャーを自分の手札または墓地からそれら４枚の上にコストを支払わずに召喚してもよい。
+
+    T・ブレイカー
+
+    自分のターンのはじめに、闇のカードを１枚、自分の墓地から手札に戻してもよい。
+
+    自分のターンの終わりに、バトルゾーンまたはいずれかのシールドゾーンにある裏向きのカードを１枚選び、見てもよい。'
+  keywords:
+  - triple_breaker
+  abilities:
+  - kind: trigger
+    zone: hand
+    when: &id115
+      event: move
+      to: bz
+      subject:
+        owner: you
+        other: true
+        filter:
+          races:
+          - 魔導具
+    if: &id116
+      all:
+      - cmp:
+        - count:
+            zone: bz
+            owner: you
+            filter:
+              races:
+              - 魔導具
+        - '>='
+        - 2
+      - cmp:
+        - count:
+            zone: graveyard
+            owner: you
+            filter:
+              races:
+              - 魔導具
+        - '>='
+        - 2
+    effect: &id117
+    - op: may
+      body:
+      - op: summon_on
+        parts:
+        - zone: bz
+          count: 2
+          filter:
+            races:
+            - 魔導具
+        - zone: graveyard
+          count: 2
+          filter:
+            races:
+            - 魔導具
+  - kind: trigger
+    zone: graveyard
+    when: *id115
+    if: *id116
+    effect: *id117
+  - kind: trigger
+    when:
+      event: turn_start
+    if:
+      is_turn: you
+    effect:
+    - op: may
+      body:
+      - op: move
+        select:
+          zone: graveyard
+          owner: you
+          filter:
+            civs:
+            - darkness
+          count: 1
+        to: hand
+        reason: return
+  - kind: trigger
+    when:
+      event: turn_end
+      player: you
+    effect:
+    - op: may
+      body:
+      - op: choose
+        select:
+          zone:
+          - bz
+          - shield
+          owner: any
+          filter:
+            face_down: true
+          count: 1
+          look: true
+        as: seen
+  source:
+    official: dmex03-s05
+    review: pending
+    notes: '無月の門は第45弾の標準形。ターン開始時の墓地回収は may + move（闇フィルタ）。ターン終了時の「裏向きのカードを見てもよい」は choose（zone:
+      [bz, shield]、face_down、look: true）で表し、カードは動かさない。T・ブレイカーはキーワード。再変換ラウンド20。'
+- id: dmex19-m20
+  name: 卍 デ・スザーク 卍
+  types:
+  - creature
+  civs:
+  - darkness
+  cost: 8
+  power: 9000
+  races:
+  - マスター・ドルスザク
+  - マフィ・ギャング
+  mana: 1
+  keywords:
+  - double_breaker
+  text: '無月の門：自分の魔導具が出た時、自分の魔導具をバトルゾーンと墓地から２つずつ選び、このクリーチャーを自分の手札または墓地からそれら４枚の上にコストを支払わずに召喚してもよい。
+
+    W・ブレイカー
+
+    このクリーチャーが出た時、相手のクリーチャーを１体破壊する。
+
+    このクリーチャーの下に４枚以上カードがあれば、相手のクリーチャーはタップして出る。'
+  abilities:
+  - kind: trigger
+    when:
+      event: move
+      to: bz
+      subject: self
+    effect:
+    - op: destroy
+      select:
+        zone: bz
+        owner: opp
+        filter:
+          types:
+          - creature
+        count: 1
+  - kind: trigger
+    zone: hand
+    when:
+      event: move
+      to: bz
+      subject:
+        owner: you
+        other: true
+        filter:
+          races:
+          - 魔導具
+    if:
+      all:
+      - cmp:
+        - count:
+            zone: bz
+            owner: you
+            filter:
+              races:
+              - 魔導具
+        - '>='
+        - 2
+      - cmp:
+        - count:
+            zone: graveyard
+            owner: you
+            filter:
+              races:
+              - 魔導具
+        - '>='
+        - 2
+    effect:
+    - op: may
+      body:
+      - op: summon_on
+        parts:
+        - zone: bz
+          count: 2
+          filter:
+            races:
+            - 魔導具
+        - zone: graveyard
+          count: 2
+          filter:
+            races:
+            - 魔導具
+  - kind: trigger
+    zone: graveyard
+    when:
+      event: move
+      to: bz
+      subject:
+        owner: you
+        other: true
+        filter:
+          races:
+          - 魔導具
+    if:
+      all:
+      - cmp:
+        - count:
+            zone: bz
+            owner: you
+            filter:
+              races:
+              - 魔導具
+        - '>='
+        - 2
+      - cmp:
+        - count:
+            zone: graveyard
+            owner: you
+            filter:
+              races:
+              - 魔導具
+        - '>='
+        - 2
+    effect:
+    - op: may
+      body:
+      - op: summon_on
+        parts:
+        - zone: bz
+          count: 2
+          filter:
+            races:
+            - 魔導具
+        - zone: graveyard
+          count: 2
+          filter:
+            races:
+            - 魔導具
+  - kind: trigger
+    when:
+      event: move
+      to: bz
+      subject: self
+    effect:
+    - op: destroy
+      select:
+        zone: bz
+        owner: opp
+        filter:
+          types:
+          - creature
+        count: 1
+  - kind: static
+    affects:
+      zone: bz
+      owner: opp
+      filter:
+        types:
+        - creature
+    if:
+      cmp:
+      - count:
+          under_of: self
+      - '>='
+      - 4
+    mod:
+      grant:
+      - enters_tapped
+  source:
+    official: dmex19-m20
+    review: pending
+    notes: '無月の門は第45弾の型（手札/墓地の誘発＋summon_on）。「下に4枚以上で相手はタップして出る」は《「非道」の鬼 ゴウケン齋》と同型の
+      static（grant: [enters_tapped]、if は under_of の count）。'
+    aliases:
+    - dmbd20-002
+    - dmex06-dk6
+    - dmrp04m-m02
+    - promoy19-029
+- id: dmrp05-s06
+  name: 無明夜叉羅ムカデ
+  types:
+  - creature
+  civs:
+  - darkness
+  cost: 7
+  power: 8000
+  races:
+  - マフィ・ギャング
+  mana: 1
+  keywords:
+  - double_breaker
+  text: '無月の門：自分の魔導具をバトルゾーンに出した時、自分の魔導具をバトルゾーンと墓地から２つずつ選び、このクリーチャーを自分の手札または墓地からそれら４枚の上にコストを支払わずに召喚してもよい。
+
+    W・ブレイカー
+
+    このクリーチャーがバトルゾーンに出た時、相手のクリーチャーを１体選ぶ。そのターン、そのクリーチャーのパワーを ?9000 する。
+
+    自分のクリーチャーが攻撃する時、このクリーチャーの下にあるカードが４枚以上なら、相手は自身の手札を１枚選んで捨てる。'
+  abilities:
+  - kind: trigger
+    zone: hand
+    when:
+      event: move
+      to: bz
+      subject:
+        owner: you
+        other: true
+        filter:
+          races:
+          - 魔導具
+    if:
+      all:
+      - cmp:
+        - count:
+            zone: bz
+            owner: you
+            filter:
+              races:
+              - 魔導具
+        - '>='
+        - 2
+      - cmp:
+        - count:
+            zone: graveyard
+            owner: you
+            filter:
+              races:
+              - 魔導具
+        - '>='
+        - 2
+    effect:
+    - op: may
+      body:
+      - op: summon_on
+        parts:
+        - zone: bz
+          count: 2
+          filter:
+            races:
+            - 魔導具
+        - zone: graveyard
+          count: 2
+          filter:
+            races:
+            - 魔導具
+  - kind: trigger
+    zone: graveyard
+    when:
+      event: move
+      to: bz
+      subject:
+        owner: you
+        other: true
+        filter:
+          races:
+          - 魔導具
+    if:
+      all:
+      - cmp:
+        - count:
+            zone: bz
+            owner: you
+            filter:
+              races:
+              - 魔導具
+        - '>='
+        - 2
+      - cmp:
+        - count:
+            zone: graveyard
+            owner: you
+            filter:
+              races:
+              - 魔導具
+        - '>='
+        - 2
+    effect:
+    - op: may
+      body:
+      - op: summon_on
+        parts:
+        - zone: bz
+          count: 2
+          filter:
+            races:
+            - 魔導具
+        - zone: graveyard
+          count: 2
+          filter:
+            races:
+            - 魔導具
+  - kind: trigger
+    when:
+      event: move
+      to: bz
+      subject: self
+    effect:
+    - op: choose
+      select:
+        zone: bz
+        owner: opp
+        filter:
+          types:
+          - creature
+        count: 1
+      as: c
+    - op: modify
+      select:
+        ref: c
+        count: all
+      mod:
+        power: -9000
+      duration: end_of_turn
+  - kind: trigger
+    when:
+      event: attack
+      subject:
+        owner: you
+    if:
+      cmp:
+      - count:
+          under_of: self
+      - '>='
+      - 4
+    effect:
+    - op: discard
+      select:
+        zone: hand
+        owner: opp
+        chooser: opp
+        count: 1
+  source:
+    official: dmrp05-s06
+    review: pending
+    notes: '無月の門は第45弾の型。原文のパワー表記「?9000」はマイナスの文字化けと判断し -9000 で変換（実物の印刷も -9000）。攻撃時誘発は
+      under_of の count で門番し、捨てるカードは相手が選ぶ（chooser: opp、dm22ex2-046 と同型）。'
+- id: dmrp06-018
+  name: ストロング・ゲドー 卍
+  types:
+  - creature
+  civs:
+  - darkness
+  cost: 6
+  power: 6000
+  races:
+  - マフィ・ギャング
+  - ドルスザク
+  mana: 1
+  keywords:
+  - blocker
+  - slayer
+  - double_breaker
+  text: '無月の門：自分の魔導具をバトルゾーンに出した時、自分の魔導具をバトルゾーンと墓地から２つずつ選び、このクリーチャーを自分の手札または墓地からそれら４枚の上にコストを支払わずに召喚してもよい。
+
+    ブロッカー（このクリーチャーをタップして、相手クリーチャーの攻撃先をこのクリーチャーに変更してもよい）
+
+    スレイヤー（このクリーチャーがバトルする時、バトルの後、相手クリーチャーを破壊する）
+
+    W・ブレイカー（このクリーチャーはシールドを２つブレイクする）'
+  abilities:
+  - kind: trigger
+    zone: hand
+    when:
+      event: move
+      to: bz
+      subject:
+        owner: you
+        other: true
+        filter:
+          races:
+          - 魔導具
+    if:
+      all:
+      - cmp:
+        - count:
+            zone: bz
+            owner: you
+            filter:
+              races:
+              - 魔導具
+        - '>='
+        - 2
+      - cmp:
+        - count:
+            zone: graveyard
+            owner: you
+            filter:
+              races:
+              - 魔導具
+        - '>='
+        - 2
+    effect:
+    - op: may
+      body:
+      - op: summon_on
+        parts:
+        - zone: bz
+          count: 2
+          filter:
+            races:
+            - 魔導具
+        - zone: graveyard
+          count: 2
+          filter:
+            races:
+            - 魔導具
+  - kind: trigger
+    zone: graveyard
+    when:
+      event: move
+      to: bz
+      subject:
+        owner: you
+        other: true
+        filter:
+          races:
+          - 魔導具
+    if:
+      all:
+      - cmp:
+        - count:
+            zone: bz
+            owner: you
+            filter:
+              races:
+              - 魔導具
+        - '>='
+        - 2
+      - cmp:
+        - count:
+            zone: graveyard
+            owner: you
+            filter:
+              races:
+              - 魔導具
+        - '>='
+        - 2
+    effect:
+    - op: may
+      body:
+      - op: summon_on
+        parts:
+        - zone: bz
+          count: 2
+          filter:
+            races:
+            - 魔導具
+        - zone: graveyard
+          count: 2
+          filter:
+            races:
+            - 魔導具
+  source:
+    official: dmrp06-018
+    review: pending
+    notes: 無月の門は第45弾の型。残りはキーワード（ブロッカー／スレイヤー／W・ブレイカー）のみで原文どおり変換。
+    aliases:
+    - dmsd06-002
+- id: dmrp06-044
+  name: ハク★ヨン
+  types:
+  - creature
+  civs:
+  - darkness
+  cost: 6
+  power: 2000
+  races:
+  - マフィ・ギャング
+  - ムーゲッツ
+  mana: 1
+  keywords:
+  - s_trigger
+  - blocker
+  text: 'S・トリガー（このクリーチャーをシールドゾーンから手札に加える時、コストを支払わずにすぐ召喚してもよい）
+
+    ブロッカー（このクリーチャーをタップして、相手クリーチャーの攻撃先をこのクリーチャーに変更してもよい）
+
+    このクリーチャーが攻撃する時、攻撃の後、このクリーチャーを破壊する。
+
+    自分の「無月の門」能力を使った時、このクリーチャーを自分の墓地からバトルゾーンにタップして出してもよい。'
+  abilities:
+  - kind: trigger
+    when:
+      event: attack
+      subject: self
+    effect:
+    - op: delayed_trigger
+      when:
+        event: attack_end
+      effect:
+      - op: destroy
+        select:
+          ref: self
+  - kind: trigger
+    zone: graveyard
+    when:
+      event: mugon_used
+      player: you
+    effect:
+    - op: may
+      body:
+      - op: move
+        select:
+          ref: self
+        to: bz
+        reason: put
+        tapped: true
+  source:
+    official: dmrp06-044
+    review: pending
+    notes: '「攻撃の後、破壊」は attack_end への delayed_trigger（バイバイ・アメーバの型）。「無月の門を使った時」は summon_on
+      が発する mugon_used イベントを受け、墓地からタップして出す（move の tapped: true）。'
+    aliases:
+    - dmsd06-003
+- id: dmrp06-045
+  faces:
+  - name: マッ★カーツ/魔渇弓・冥
+    types:
+    - creature
+    civs:
+    - darkness
+    cost: 4
+    power: 4000
+    races:
+    - マフィ・ギャング
+    - ムーゲッツ
+    abilities:
+    - kind: trigger
+      zone: graveyard
+      when:
+        event: mugon_used
+        player: you
+      effect:
+      - op: may
+        body:
+        - op: move
+          select:
+            ref: self
+          to: bz
+          reason: put
+          tapped: true
+  - name: マッ★カーツ/魔渇弓・冥
+    types:
+    - spell
+    civs: []
+    cost: 3
+    spell:
+    - op: discard
+      select:
+        zone: hand
+        owner: opp
+        look: true
+        filter:
+          not_types:
+          - creature
+        count: 1
+  mana: 1
+  text: 'マッ★カーツ: 自分の「無月の門」能力を使った時、このクリーチャーを自分の墓地からバトルゾーンにタップして出してもよい。 ／ 魔渇弓・冥: 相手の手札を見て、クリーチャーではないカードを１枚選び、捨てさせる。'
+  source:
+    official: dmrp06-045
+    review: pending
+    notes: 'ツインパクト（呪文面は raw の faces から補完、文明なし・コスト3）。クリーチャー面は mugon_used イベントで墓地からタップして出す。呪文面は手札を見て（look:
+      true）クリーチャーでないカードを選んで捨てさせる。'
+- id: dmsd06-001
+  faces:
+  - name: 卍 デ・ルパンサー 卍
+    types:
+    - creature
+    civs:
+    - darkness
+    cost: 8
+    power: 8000
+    races:
+    - マフィ・ギャング
+    - ドルスザク
+    keywords:
+    - double_breaker
+    abilities:
+    - kind: trigger
+      zone: hand
+      when:
+        event: move
+        to: bz
+        subject:
+          owner: you
+          other: true
+          filter:
+            races:
+            - 魔導具
+      if:
+        all:
+        - cmp:
+          - count:
+              zone: bz
+              owner: you
+              filter:
+                races:
+                - 魔導具
+          - '>='
+          - 2
+        - cmp:
+          - count:
+              zone: graveyard
+              owner: you
+              filter:
+                races:
+                - 魔導具
+          - '>='
+          - 2
+      effect:
+      - op: may
+        body:
+        - op: summon_on
+          parts:
+          - zone: bz
+            count: 2
+            filter:
+              races:
+              - 魔導具
+          - zone: graveyard
+            count: 2
+            filter:
+              races:
+              - 魔導具
+    - kind: trigger
+      zone: graveyard
+      when:
+        event: move
+        to: bz
+        subject:
+          owner: you
+          other: true
+          filter:
+            races:
+            - 魔導具
+      if:
+        all:
+        - cmp:
+          - count:
+              zone: bz
+              owner: you
+              filter:
+                races:
+                - 魔導具
+          - '>='
+          - 2
+        - cmp:
+          - count:
+              zone: graveyard
+              owner: you
+              filter:
+                races:
+                - 魔導具
+          - '>='
+          - 2
+      effect:
+      - op: may
+        body:
+        - op: summon_on
+          parts:
+          - zone: bz
+            count: 2
+            filter:
+              races:
+              - 魔導具
+          - zone: graveyard
+            count: 2
+            filter:
+              races:
+              - 魔導具
+    - kind: trigger
+      when:
+        event: move
+        to: bz
+        subject: self
+      effect:
+      - op: destroy
+        select:
+          zone: bz
+          owner: opp
+          filter:
+            types:
+            - creature
+            tapped: false
+          count: 1
+    - kind: trigger
+      when:
+        event: attack
+        subject: self
+      effect:
+      - op: destroy
+        select:
+          zone: bz
+          owner: opp
+          filter:
+            types:
+            - creature
+            tapped: false
+          count: 1
+  - name: 葬爪
+    types:
+    - spell
+    civs:
+    - darkness
+    cost: 2
+    spell:
+    - op: move
+      select:
+        zone: deck
+        owner: you
+        from_top: 2
+      to: graveyard
+      reason: put
+  mana: 1
+  text: '卍 デ・ルパンサー 卍: 無月の門：自分の魔導具をバトルゾーンに出した時、自分の魔導具をバトルゾーンと墓地から２つずつ選び、このクリーチャーを自分の手札または墓地からそれら４枚の上にコストを支払わずに召喚してもよい。W・ブレイカー。このクリーチャーがバトルゾーンに出た時または攻撃する時、相手のアンタップしているクリーチャーを１体破壊する。／葬爪:
+    自分の山札の上から２枚を墓地に置く。'
+  source:
+    official: dmsd06-001
+    review: pending
+    aliases:
+    - promoy17-022
+    notes: ツインパクト。無月の門は第45弾の型（zone手札/墓地の誘発＋summon_on）で変換。呪文側は山札上２枚を墓地へ
+- id: dmbd08-b-003
+  name: ソー☆ギョッ
+  types:
+  - creature
+  civs:
+  - water
+  cost: 3
+  power: 2000
+  races:
+  - ムートピア
+  mana: 1
+  text: '自分の「無月の門」能力を使った時、このクリーチャーを自分の手札または墓地からバトルゾーンにタップして出してもよい。
+
+    このクリーチャーがバトルゾーンに出た時、カードを１枚引く。その後、自分の手札を１枚捨てる。'
+  abilities:
+  - kind: trigger
+    zone: hand
+    when:
+      event: mugon_used
+      player: you
+    effect:
+    - op: may
+      body:
+      - op: move
+        select:
+          ref: self
+        to: bz
+        reason: put
+        tapped: true
+  - kind: trigger
+    zone: graveyard
+    when:
+      event: mugon_used
+      player: you
+    effect:
+    - op: may
+      body:
+      - op: move
+        select:
+          ref: self
+        to: bz
+        reason: put
+        tapped: true
+  - kind: trigger
+    when:
+      event: move
+      to: bz
+      subject: self
+    effect:
+    - op: draw
+      count: 1
+    - op: discard
+      select:
+        zone: hand
+        owner: you
+        count: 1
+  source:
+    official: dmbd08-b-003
+    review: pending
+    notes: '「無月の門を使った時」の追随は mugon_used イベントを受ける誘発（zone: hand / graveyard）で変換。手札または墓地からタップして出す（move
+      の tapped: true）。出た時のドロー＋手札1枚捨ては変換済み。再変換ラウンド20（追随再下書き）。'
+- id: dmrp06-075
+  name: カニ★ニカ
+  types:
+  - creature
+  civs:
+  - darkness
+  cost: 4
+  power: 3000
+  races:
+  - マフィ・ギャング
+  - ムーゲッツ
+  mana: 1
+  text: 'このクリーチャーが破壊された時、カードを１枚引く。
+
+    自分の「無月の門」能力を使った時、このクリーチャーを自分の墓地からバトルゾーンにタップして出してもよい。'
+  abilities:
+  - kind: trigger
+    when:
+      event: move
+      from: bz
+      to: graveyard
+      reason: destroy
+      subject: self
+    effect:
+    - op: draw
+      count: 1
+  - kind: trigger
+    zone: graveyard
+    when:
+      event: mugon_used
+      player: you
+    effect:
+    - op: may
+      body:
+      - op: move
+        select:
+          ref: self
+        to: bz
+        reason: put
+        tapped: true
+  source:
+    official: dmrp06-075
+    review: pending
+    notes: '破壊時ドローは変換。「無月の門を使った時」の追随は mugon_used イベントを受ける誘発（zone: graveyard）で変換。墓地からタップして出す（move
+      の tapped: true）'
+- id: dmrp07-019
+  name: ティン★ビン
+  types:
+  - creature
+  civs:
+  - darkness
+  cost: 4
+  power: 4000
+  races:
+  - マフィ・ギャング
+  - ムーゲッツ
+  mana: 1
+  text: '自分の「無月の門」能力を使った時、このクリーチャーを自分の墓地からバトルゾーンにタップして出してもよい。
+
+    このクリーチャーがバトルゾーンに出た時、相手は自身の手札を１枚選び、捨てる。'
+  abilities:
+  - kind: trigger
+    zone: graveyard
+    when:
+      event: mugon_used
+      player: you
+    effect:
+    - op: may
+      body:
+      - op: move
+        select:
+          ref: self
+        to: bz
+        reason: put
+        tapped: true
+  - kind: trigger
+    when:
+      event: move
+      to: bz
+      subject: self
+    effect:
+    - op: discard
+      select:
+        zone: hand
+        owner: opp
+        chooser: opp
+        count: 1
+  source:
+    official: dmrp07-019
+    review: pending
+    notes: '「無月の門を使った時」の追随は mugon_used イベントを受ける誘発（zone: graveyard）で変換。墓地からタップして出す（move
+      の tapped: true）。出た時の相手の自己選択破棄は変換'
+- id: dmrp08-036
+  name: オト☆トメ
+  types:
+  - creature
+  civs:
+  - water
+  cost: 3
+  power: 3000
+  races:
+  - ムートピア
+  - ムーゲッツ
+  mana: 1
+  text: '自分の「無月の門」能力を使った時、このクリーチャーを自分の手札または墓地からバトルゾーンにタップして出してもよい。
+
+    自分のムートピアまたはムーゲッツが破壊される時、墓地に置くかわりに自分の手札に戻してもよい。'
+  abilities:
+  - kind: trigger
+    zone: hand
+    when:
+      event: mugon_used
+      player: you
+    effect:
+    - op: may
+      body:
+      - op: move
+        select:
+          ref: self
+        to: bz
+        reason: put
+        tapped: true
+  - kind: trigger
+    zone: graveyard
+    when:
+      event: mugon_used
+      player: you
+    effect:
+    - op: may
+      body:
+      - op: move
+        select:
+          ref: self
+        to: bz
+        reason: put
+        tapped: true
+  - kind: replace
+    optional: true
+    when:
+      event: move
+      from: bz
+      to: graveyard
+      reason: destroy
+      subject:
+        owner: you
+        filter:
+          types:
+          - creature
+          races:
+          - ムートピア
+          - ムーゲッツ
+    instead:
+    - op: move
+      select:
+        ref: event.subject
+      to: hand
+      reason: return
+  source:
+    official: dmrp08-036
+    review: pending
+    notes: '「無月の門を使った時」の追随は mugon_used イベントを受ける誘発（zone: hand / graveyard）で変換。手札または墓地からタップして出す（move
+      の tapped: true）。破壊置換（ジャックバイパーと同型、対象に自身も含む）は変換'
+- id: dmsd06-005
+  name: テン★カッツ
+  types:
+  - creature
+  civs:
+  - darkness
+  cost: 3
+  power: 1000
+  races:
+  - マフィ・ギャング
+  - ムーゲッツ
+  mana: 1
+  keywords:
+  - slayer
+  text: 'スレイヤー（このクリーチャーがバトルする時、バトルの後、相手クリーチャーを破壊する）
+
+    自分の「無月の門」能力を使った時、このクリーチャーを自分の墓地からバトルゾーンにタップして出してもよい。'
+  source:
+    official: dmsd06-005
+    review: pending
+    notes: 'スレイヤーはキーワード処理済み。「無月の門を使った時」の追随は mugon_used イベントを受ける誘発（zone: graveyard）で変換。墓地からタップして出す（move
+      の tapped: true）'
+  abilities:
+  - kind: trigger
+    zone: graveyard
+    when:
+      event: mugon_used
+      player: you
+    effect:
+    - op: may
+      body:
+      - op: move
+        select:
+          ref: self
+        to: bz
+        reason: put
+        tapped: true
