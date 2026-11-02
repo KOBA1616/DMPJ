@@ -83,6 +83,13 @@ class TurnMixin:
                         opt["face"] = fi
                     out.append(opt)
             for fi, f in ([(None, d)] if not d.faces else list(enumerate(d.faces))):
+                if f.grave_evo and f.evolve_from and self._evo_sources(cid, p, fi):   # 墓地進化: 自分の墓地のクリーチャーの上に重ねて出す選択肢
+                    opt = {"key": f"{o['key']}:gevo" if fi is None else f"{o['key']}:{fi}:gevo", "cid": cid,
+                           "name": f.name, "grave_evo": True}
+                    if fi is not None:
+                        opt["face"] = fi
+                    out.append(opt)
+            for fi, f in ([(None, d)] if not d.faces else list(enumerate(d.faces))):
                 ac = f.alt_cost   # 代替コスト: 別額を払う / 行動で払う
                 if ac:
                     ok = bool(self._mana_choices(cid, p, fi, cost=ac["cost"], limit=1, civs=ac.get("civs"))) if "cost" in ac else \
@@ -131,10 +138,13 @@ class TurnMixin:
                     if fi is not None:
                         opt["face"] = fi
                     out.append(opt)
-        seen = set()   # アビスラッシュ: 墓地から召喚できるカードも選択肢に出す
+        seen = set()   # アビスラッシュ等: 墓地から召喚できるカードも選択肢に出す
         for cid in self.zlist("graveyard", p):
             dn = self.s.cards[cid].defn
-            if dn in seen or not self.permits(cid, "summon_from_graveyard"):
+            if dn in seen:
+                continue
+            grant = self._grave_summon_grant(cid)
+            if grant is None:
                 continue
             seen.add(dn)
             d = self.cdef(cid)
@@ -142,6 +152,8 @@ class TurnMixin:
                 if self._can_play_face(cid, p, fi):
                     opt = {"key": f"play:{dn}:rush" if fi is None else f"play:{dn}:{fi}:rush",
                            "cid": cid, "name": f.name, "rush": True}
+                    if grant.get("once_src") is not None:
+                        opt["once_src"] = grant["once_src"]
                     if fi is not None:
                         opt["face"] = fi
                     out.append(opt)
@@ -181,6 +193,21 @@ class TurnMixin:
                         opt["face"] = fi
                     out.append(opt)
         return out
+
+    def _grave_summon_grant(self, cid) -> dict | None:
+        """墓地から召喚する許可の状態。無制限なら {}、回数制限つき（ターン1回・未使用）なら {"once_src": 発生源}、
+        許可が無い／使い切っていれば None。"""
+        limited = None
+        for e in self.chars(cid)["allow"]:
+            if isinstance(e, str):
+                if e == "summon_from_graveyard":
+                    return {}
+            elif e.get("action") == "summon_from_graveyard":
+                if not e.get("once"):
+                    return {}
+                if not self.s.turn_counters.get(f"summon_once:{e.get('src')}"):
+                    limited = e.get("src")
+        return {"once_src": limited} if limited is not None else None
 
     def _climb_ready(self, cid, p, fi, mc) -> bool:
         """ムゲンクライムの前提: 代替コストが払えて、タップできる自分のクリーチャーが足りる。"""
@@ -492,6 +519,8 @@ def st_main(eng, t):                                    # 504
         task = eng.play_task(o["cid"], a, o.get("free", False), o.get("face"))
         if o.get("rush"):
             task["rush"] = True
+        if o.get("once_src") is not None:
+            task["once_src"] = o["once_src"]
         if o.get("gshield"):
             fd = eng.cdef(o["cid"]).face(o.get("face"))
             task["to_shield"] = True
@@ -514,7 +543,7 @@ def st_main(eng, t):                                    # 504
             task["cost_civs"] = fd.vividraw["civs"]
         if o.get("fushigi"):
             task["fushigi"] = True
-        if o.get("neo"):
+        if o.get("neo") or o.get("grave_evo"):
             task["evo_mode"] = True
         eng._push(task)
 
@@ -937,7 +966,9 @@ def h_play(eng, t):
                {"op": "draw", "count": 1}]
         eng._push(eng._child([{"op": "delayed_trigger", "when": {"event": "turn_end"}, "effect": end}],
                              {"you": p, "self": ref, "vars": {}}))
-    if t.get("rush") and from_zone == "graveyard" and d.is_creature():   # アビスラッシュの付随処理
+    if t.get("once_src") is not None and from_zone == "graveyard":   # 回数制限つき許可（ターン1回）を使った
+        s.turn_counters[f"summon_once:{t['once_src']}"] = True
+    if t.get("rush") and from_zone == "graveyard" and d.is_creature() and "abyss_rush" in d.keywords:   # アビスラッシュの付随処理（素の墓地召喚には付けない）
         s.turn_counters[f"rush:{cid}"] = s.turn      # このターン、召喚酔いでもプレイヤーを攻撃できる
         eng._push(eng._child([{"op": "delayed_trigger", "when": {"event": "turn_end"},
                                "effect": [{"op": "move", "select": {"ref": "self_entered"},

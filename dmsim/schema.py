@@ -37,7 +37,7 @@ def build() -> dict:
         op_schemas.append({"type": "object", "properties": {"op": {"const": name}}, "required": ["op"],
                            "description": f"macro: {json.dumps(macros[name], ensure_ascii=False)}"})
     perm = {"anyOf": [{"enum": sorted(actions)},
-                      {"type": "object", "properties": {"action": {"enum": sorted(actions)}, "other": ref("filter")},
+                      {"type": "object", "properties": {"action": {"enum": sorted(actions)}, "other": ref("filter"), "once": {"type": "boolean"}},
                        "required": ["action"], "additionalProperties": False}]}
     face_props = {
         "name": {"type": "string"}, "types": {"type": "array", "items": {"enum": sorted(CARD_TYPES)}},
@@ -46,7 +46,7 @@ def build() -> dict:
         "keywords": {"type": "array", "items": {"enum": sorted(keywords)}},
         "abilities": {"type": "array", "items": ref("ability")}, "spell": ref("ops"),
         "evolve_from": {"type": "object", "properties": {k: {} for k in sorted(FILTER_KEYS | {"zone"})}, "additionalProperties": False}, "free_if": ref("cond"),
-        "galaxy_shield": {"type": "object", "properties": {"cost": {"type": "integer"}, "civs": {"type": "array", "items": {"enum": sorted(CIVS)}}}, "required": ["cost", "civs"], "additionalProperties": False}, "neo": {"type": "boolean"}, "star": {"type": "boolean"}, "hyper": {"type": "boolean"},
+        "galaxy_shield": {"type": "object", "properties": {"cost": {"type": "integer"}, "civs": {"type": "array", "items": {"enum": sorted(CIVS)}}}, "required": ["cost", "civs"], "additionalProperties": False}, "neo": {"type": "boolean"}, "grave_evo": {"type": "boolean"}, "star": {"type": "boolean"}, "hyper": {"type": "boolean"},
     }
     return {
         "$schema": "https://json-schema.org/draft/2020-12/schema",
@@ -69,6 +69,7 @@ def build() -> dict:
                 "filter": ref("filter"),
                 "count": {"anyOf": [ref("expr"), {"const": "all"}, {"const": "any"}]}, "up_to": {"type": "boolean"},
                 "from_top": ref("expr"), "chooser": {"enum": ["you", "opp"]}, "ref": {"type": "string"},
+                "total_cost_le": ref("expr"), "total_cost_ge": ref("expr"),
                 "other": {"type": "boolean"}, "look": {"type": "boolean"}}, "additionalProperties": False},
             "expr": {"anyOf": [{"type": "integer"}, {"type": "object", "properties": {
                 "count": ref("selector"), "civ_count": ref("selector"), "entered": {"type": "object", "properties": {"owner": {"type": "string"}, "other": {"type": "boolean"}}, "additionalProperties": False}, "var": {"type": "string"}, "cost_of": {"type": "string"}, "races_of": {"type": "string"}, "race": {"type": "string"}, "link_count": {"type": "string"}, "sum": {"type": "array", "items": ref("expr")}},
@@ -95,7 +96,7 @@ def build() -> dict:
                 "additionalProperties": False, "propertyNames": {"enum": sorted(MOD_KEYS)}},
             "when": {"type": "object", "properties": {
                 "event": {"enum": sorted(EVENTS)}, "from": {"enum": sorted(zones)}, "to": {"enum": sorted(zones)},
-                "reason": {"enum": sorted(REASONS)}, "player": {"enum": ["you", "opp"]}, "unpaid": {"type": "boolean"}, "target": {}, "attacker": {},
+                "reason": {"enum": sorted(REASONS)}, "player": {"enum": ["you", "opp"]}, "by": {"enum": ["you", "opp"]}, "unpaid": {"type": "boolean"}, "target": {}, "attacker": {},
                 "via": {"enum": sorted(VIAS)}, "subject": {}},
                 "required": ["event"], "additionalProperties": False},
             "ability": {"type": "object", "properties": {
