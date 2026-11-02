@@ -6,7 +6,29 @@
 when に `by: opp` と書けるようにした。状況起因処理やコスト支払いなど効果解決者を伴わない移動には
 by が付かないので、「相手の効果」扱いにはならない。
 """
+import yaml
+
 from conftest import setup
+from dmsim.defs import load_tables, parse_card
+
+MAGNUM = """
+id: dm26sd1-i011
+name: 単騎連射 マグナム
+types: [creature]
+civs: [fire]
+cost: 3
+power: 3000
+races: [アウトレイジ]
+mana: 1
+text: 自分のターンに相手のクリーチャーが出る時、かわりにそのクリーチャーを墓地に置く。
+abilities:
+  - kind: replace
+    when: {event: move, to: bz, subject: {owner: opp, filter: {types: [creature]}}}
+    if: {is_turn: you}
+    instead:
+      - {op: move, select: {ref: subject, count: 1}, to: graveyard, reason: put}
+source: {official: dm26sd1-i011, review: pending}
+"""
 
 
 def _settle(e, done, drive=None, max_steps=200):
@@ -58,6 +80,18 @@ def test_discard_by_opponent_effect_can_be_replaced_with_put(rules):
     victim = next(c for c in e.zlist("hand", 1) if e.s.cards[c].defn == "T116")
     assert _settle(e, lambda: e.s.cards[victim].zone == "bz", _drive("T117", "T116"), 200)
     assert e.s.cards[victim].zone == "bz"
+    assert victim not in e.zlist("graveyard", 1)
+
+
+def test_replacement_does_not_chain_against_magnum(rules):
+    """置換は連鎖しない（総合ルール101.5 / 609.3）: 置換で出るイベントはそれ以上置換されない。
+    自分のターンに《単騎連射 マグナム》がいても、相手のバイケン型置換で出すことは妨げられない。"""
+    rules.cards["dm26sd1-i011"] = parse_card(yaml.safe_load(MAGNUM), load_tables(), where="dm26sd1-i011")
+    e = setup(rules, {"bz": ["dm26sd1-i011"], "hand": ["T117"], "mana": ["T008"] * 4},
+              {"hand": ["T116"]})
+    victim = next(c for c in e.zlist("hand", 1) if e.s.cards[c].defn == "T116")
+    assert _settle(e, lambda: e.s.cards[victim].zone == "bz", _drive("T117", "T116"), 200)
+    assert victim in e.zlist("bz", 1)
     assert victim not in e.zlist("graveyard", 1)
 
 
