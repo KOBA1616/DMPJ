@@ -213823,3 +213823,1374 @@ cards:
     review: pending
     notes: '捨てられる時の置換は第40弾の when.by: opp（proto T116 と同型）。出た時の「能力が書かれていないクリーチャー」は第41弾の
       filter vanilla: true で表した。残りを好きな順序で山札の下に置く処理は position: bottom, order: choose。再変換ラウンド16。'
+- id: dm24bd1-002
+  name: ボルシャック・ドギラゴン
+  types:
+  - creature
+  - evolution
+  civs:
+  - fire
+  cost: 7
+  power: 12000
+  races:
+  - メガ・コマンド・ドラゴン
+  - 革命軍
+  mana: 1
+  keywords:
+  - triple_breaker
+  evolve_from:
+    types:
+    - creature
+    civs:
+    - fire
+  text: '革命０トリガー：クリーチャーが自分を攻撃する時、自分のシールドが１つもなければ、このクリーチャーを手札から見せてもよい。そうしたら、自分の山札の上から１枚目を表向きにする。そのカードが火の進化ではないクリーチャーなら出し、このクリーチャーをその上に置く。
+
+    進化：火のクリーチャー１体の上に置く。
+
+    T・ブレイカー
+
+    このクリーチャーが出た時または攻撃する時、相手のクリーチャーを１体選んでもよい。その選んだクリーチャーとこのクリーチャーをバトルさせる。'
+  abilities:
+  - kind: declare
+    zone: hand
+    when:
+      event: attack
+      target: player
+    if:
+      all:
+      - is_turn: opp
+      - cmp:
+        - count:
+            zone: shield
+            owner: you
+        - ==
+        - 0
+    effect:
+    - op: choose
+      select:
+        zone: deck
+        owner: you
+        from_top: 1
+        look: true
+        count: all
+      as: top
+    - op: if
+      cond:
+        exists:
+          ref: top
+          filter:
+            types:
+            - creature
+            not_types:
+            - evolution
+            civs:
+            - fire
+      then:
+      - op: move
+        select:
+          ref: top
+          count: 1
+        to: bz
+        reason: put
+        as: base
+      - op: invade
+        onto:
+          ref: base
+  - kind: trigger
+    when:
+      event: move
+      to: bz
+      subject: self
+    effect:
+    - op: may
+      body:
+      - op: force_battle
+        a:
+          ref: self
+        b:
+          zone: bz
+          owner: opp
+          filter:
+            types:
+            - creature
+          count: 1
+  - kind: trigger
+    when:
+      event: attack
+      subject: self
+    effect:
+    - op: may
+      body:
+      - op: force_battle
+        a:
+          ref: self
+        b:
+          zone: bz
+          owner: opp
+          filter:
+            types:
+            - creature
+          count: 1
+  source:
+    official: dm24bd1-002
+    review: pending
+    notes: 革命０トリガーは第42弾の declare 形式（proto T120 と同型）。出た時・攻撃する時のバトルは force_battle（dmrp14-021
+      と同型）を2つの trigger に分けて書いた。再変換ラウンド17。
+    aliases:
+    - dm23ex2-chog002
+    - dmart02-003
+    - dmbd15-002
+    - dmbd15-be2
+    - dmbd16-004
+    - dmex06-005
+    - dmex15-a009
+    - dmr19-l02
+    - dmx26-l03
+    - promoy16-055
+    - promoy16-058
+    - promoy23-011
+- id: dm25ex1-mc001
+  name: ミラクル・ミラダンテ
+  types:
+  - creature
+  - evolution
+  civs:
+  - light
+  cost: 7
+  power: 14500
+  races:
+  - エンジェル・コマンド・ドラゴン
+  - 革命軍
+  mana: 1
+  keywords:
+  - triple_breaker
+  evolve_from:
+    civs:
+    - light
+  text: '革命０トリガー：クリーチャーが自分を攻撃する時、自分のシールドが１つもなければ、自分の手札にあるこのクリーチャーを表向きにしてもよい。そうしたら、自分の山札の上から１枚を表向きにする。それが光の進化ではないクリーチャーなら出し、このクリーチャーをその上に置く。
+
+    進化：光のクリーチャー１体の上に置く。
+
+    T・ブレイカー
+
+    このクリーチャーが出た時、次の自分のターンのはじめまで、このクリーチャーに「ブロッカー」を与え、相手のコマンドは攻撃できない。'
+  abilities:
+  - kind: declare
+    zone: hand
+    when:
+      event: attack
+      target: player
+    if:
+      all:
+      - is_turn: opp
+      - cmp:
+        - count:
+            zone: shield
+            owner: you
+        - ==
+        - 0
+    effect:
+    - op: choose
+      select:
+        zone: deck
+        owner: you
+        from_top: 1
+        look: true
+        count: all
+      as: top
+    - op: if
+      cond:
+        exists:
+          ref: top
+          filter:
+            types:
+            - creature
+            not_types:
+            - evolution
+            civs:
+            - light
+      then:
+      - op: move
+        select:
+          ref: top
+          count: 1
+        to: bz
+        reason: put
+        as: base
+      - op: invade
+        onto:
+          ref: base
+  - kind: trigger
+    when:
+      event: move
+      to: bz
+      subject: self
+    effect:
+    - op: modify
+      select:
+        ref: self
+        count: all
+      mod:
+        grant:
+        - blocker
+      duration: until_next_own_turn_start
+    - op: modify
+      select:
+        zone: bz
+        owner: opp
+        filter:
+          types:
+          - creature
+          race_has: コマンド
+        count: all
+      mod:
+        deny:
+        - attack_player
+        - attack_creature
+      duration: until_next_own_turn_start
+      dynamic: true
+  source:
+    official: dm25ex1-mc001
+    review: pending
+    notes: '革命０トリガーは第42弾の declare 形式（proto T120 と同型）。partial は evolve_from のみで types
+      に evolution が無かったため、原文（進化クリーチャー）どおり補った。ブロッカー付与は modify の grant、「相手のコマンドは攻撃できない」は
+      modify の deny を dynamic: true でクラス全体に及ぶ形にした。再変換ラウンド17。'
+    aliases:
+    - dmex15-a006
+    - dmr20-l01
+    - dmrp08-g01
+    - dmx26-l01
+- id: dm25ex3-rp4tr4
+  name: 革命の絆
+  types:
+  - creature
+  civs:
+  - light
+  - fire
+  cost: 7
+  power: 8000
+  races:
+  - メガ・コマンド・ドラゴン
+  - エンジェル・コマンド・ドラゴン
+  - ヒューマノイド
+  - 革命軍
+  mana: 1
+  keywords:
+  - blocker
+  - double_breaker
+  neo: true
+  evolve_from:
+    civs:
+    - light
+    - fire
+  text: '革命０トリガー：クリーチャーが自分を攻撃する時、自分のシールドが１つもなければ、このクリーチャーを手札から見せてもよい。そうしたら、自分の山札の上から１枚を表向きにする。そのカードが光または火の、進化ではないクリーチャーなら出し、このクリーチャーをその上に置く。
+
+    NEO進化：光または火のクリーチャー１体の上に置いてもよい。
+
+    ブロッカー　W・ブレイカー
+
+    このクリーチャーが攻撃する時、バトルゾーンにあるクリーチャーではないカードを１枚選び、破壊してもよい。'
+  abilities:
+  - kind: declare
+    zone: hand
+    when:
+      event: attack
+      target: player
+    if:
+      all:
+      - is_turn: opp
+      - cmp:
+        - count:
+            zone: shield
+            owner: you
+        - ==
+        - 0
+    effect:
+    - op: choose
+      select:
+        zone: deck
+        owner: you
+        from_top: 1
+        look: true
+        count: all
+      as: top
+    - op: if
+      cond:
+        exists:
+          ref: top
+          filter:
+            types:
+            - creature
+            not_types:
+            - evolution
+            civs:
+            - light
+            - fire
+      then:
+      - op: move
+        select:
+          ref: top
+          count: 1
+        to: bz
+        reason: put
+        as: base
+      - op: invade
+        onto:
+          ref: base
+  - kind: trigger
+    when:
+      event: attack
+      subject: self
+    effect:
+    - op: may
+      body:
+      - op: destroy
+        select:
+          zone: bz
+          owner: any
+          filter:
+            not_types:
+            - creature
+          count: 1
+  source:
+    official: dm25ex3-rp4tr4
+    review: pending
+    notes: '革命０トリガーは第42弾の declare 形式（proto T120 と同型、文明は光/火）。NEO進化は neo: true と evolve_from
+      で表した（dm25ex3-011 と同型）。攻撃時の非クリーチャー破壊は op: destroy（dm23ex2-cho035 と同型）。再変換ラウンド17。'
+    aliases:
+    - dm23rp3-tr04
+    - dm23rp4-tr03
+    - dm23rp4x-tr03
+    - dm24bd1-008
+    - dm25rp4-tr4
+    - dmart17-002
+    - dmex15-b007
+    - promoy24-018
+- id: dm25ex3-tf12
+  name: 獅子王の紋章
+  types:
+  - spell
+  civs:
+  - light
+  - nature
+  cost: 6
+  mana: 1
+  text: 革命０トリガー：クリーチャーが自分を攻撃する時、自分のシールドが１つもなければ、この呪文をコストを支払わずに唱えてもよい。 / 自分の山札の上から１枚を表向きにする。それが光または自然の、進化ではないクリーチャーなら出す。次の自分のターンのはじめまで、そのクリーチャーに「ブロッカー」を与える。次の自分のターンのはじめに、そのクリーチャーをマナゾーンに置く。
+    / この呪文を唱えた後、墓地に置くかわりに山札に加えてシャッフルする。
+  abilities:
+  - kind: declare
+    zone: hand
+    when:
+      event: attack
+      target: player
+    if:
+      all:
+      - is_turn: opp
+      - cmp:
+        - count:
+            zone: shield
+            owner: you
+        - ==
+        - 0
+    effect:
+    - op: play_free
+      select:
+        ref: self
+  - kind: replace
+    zone: hold
+    when:
+      event: move
+      to: graveyard
+      reason: resolve
+      subject: self
+    instead:
+    - op: move
+      select:
+        ref: self
+      to: deck
+      reason: return
+    - op: shuffle
+      player: you
+  spell:
+  - op: choose
+    select:
+      zone: deck
+      owner: you
+      from_top: 1
+      look: true
+      count: all
+    as: top
+  - op: if
+    cond:
+      exists:
+        ref: top
+        filter:
+          types:
+          - creature
+          not_types:
+          - evolution
+          civs:
+          - light
+          - nature
+    then:
+    - op: move
+      select:
+        ref: top
+        count: 1
+      to: bz
+      reason: put
+      as: base
+    - op: modify
+      select:
+        ref: base
+        count: all
+      mod:
+        grant:
+        - blocker
+      duration: until_next_own_turn_start
+    - op: delayed_trigger
+      when:
+        event: turn_start
+        player: you
+      duration: permanent
+      effect:
+      - op: move
+        select:
+          ref: base
+          count: all
+        to: mana
+        reason: put
+  source:
+    official: dm25ex3-tf12
+    review: pending
+    notes: '革命０トリガー（呪文版）は declare + play_free（ニンジャ・ストライクと同型）で表した。山札の上を出す処理は choose/if/move、ブロッカー付与は
+      modify、次の自分のターンのはじめのマナ送りは delayed_trigger（when の player: you、duration: permanent
+      で次の自分のターン開始まで保持）。「唱えた後、墓地に置くかわりに山札に加えてシャッフルする」は kind: replace（zone: hold、reason:
+      resolve の墓地送りを置換して山札に戻しシャッフル）で表した（dmc64-011 先例、バッチIで実挙動確認済みの形式に統一）。再変換ラウンド17。'
+    aliases:
+    - dm25rp2-t03
+    - dmex08-159
+    - dmex15-b079
+    - dmr21-023
+    - promoy15-018
+- id: dm26rp2-002
+  name: 神極の絆
+  types:
+  - creature
+  - evolution
+  civs:
+  - light
+  cost: 4
+  power: 8500
+  races:
+  - オラクル・コマンド
+  mana: 1
+  keywords:
+  - blocker
+  - double_breaker
+  evolve_from:
+    types:
+    - creature
+    civs:
+    - light
+  text: '革命０トリガー：クリーチャーが自分を攻撃する時、自分のシールドが１つもなければ、このクリーチャーを手札から表向きにしてもよい。そうしたら、自分の山札の上から１枚を表向きにする。それが光の、進化ではないクリーチャーなら出し、このクリーチャーをその上に置く。
+
+    進化：光のクリーチャー１体の上に置く。
+
+    ブロッカー
+
+    W・ブレイカー
+
+    このクリーチャーが出た時または攻撃する時、自分の山札の上から１枚をシールド化する。'
+  abilities:
+  - kind: declare
+    zone: hand
+    when:
+      event: attack
+      target: player
+    if:
+      all:
+      - is_turn: opp
+      - cmp:
+        - count:
+            zone: shield
+            owner: you
+        - ==
+        - 0
+    effect:
+    - op: choose
+      select:
+        zone: deck
+        owner: you
+        from_top: 1
+        look: true
+        count: all
+      as: top
+    - op: if
+      cond:
+        exists:
+          ref: top
+          filter:
+            types:
+            - creature
+            not_types:
+            - evolution
+            civs:
+            - light
+      then:
+      - op: move
+        select:
+          ref: top
+          count: 1
+        to: bz
+        reason: put
+        as: base
+      - op: invade
+        onto:
+          ref: base
+  - kind: trigger
+    when:
+      event: move
+      to: bz
+      subject: self
+    effect:
+    - op: move
+      select:
+        zone: deck
+        owner: you
+        from_top: 1
+      to: shield
+      reason: charge
+  - kind: trigger
+    when:
+      event: attack
+      subject: self
+    effect:
+    - op: move
+      select:
+        zone: deck
+        owner: you
+        from_top: 1
+      to: shield
+      reason: charge
+  source:
+    official: dm26rp2-002
+    review: pending
+    notes: '革命０トリガーは第42弾の declare 形式（proto T120 と同型）。partial に進化の情報が無かったため、原文どおり types
+      に evolution と evolve_from を補った。出た時・攻撃する時のシールド化は move to: shield（dm22ex2-068
+      と同型）を2つの trigger に分けた。再変換ラウンド17。'
+- id: dm26rp2-005
+  name: 零黒の絆
+  types:
+  - creature
+  - evolution
+  civs:
+  - darkness
+  cost: 4
+  power: 8000
+  races:
+  - アウトレイジ・コマンドMAX
+  - デーモン・コマンド・ドラゴン
+  mana: 1
+  evolve_from:
+    civs:
+    - darkness
+  keywords:
+  - blocker
+  - double_breaker
+  text: '革命０トリガー：クリーチャーが自分を攻撃する時、自分のシールドが１つもなければ、このクリーチャーを手札から表向きにしてもよい。そうしたら、自分の山札の上から１枚を表向きにする。それが闇の、進化ではないクリーチャーなら出し、このクリーチャーをその上に置く。
+
+    進化：闇のクリーチャー１体の上に置く。
+
+    ブロッカー
+
+    W・ブレイカー
+
+    このクリーチャーが出た時、このターン、相手のクリーチャーすべてのパワーを－4000する。'
+  abilities:
+  - kind: declare
+    zone: hand
+    when:
+      event: attack
+      target: player
+    if:
+      all:
+      - is_turn: opp
+      - cmp:
+        - count:
+            zone: shield
+            owner: you
+        - ==
+        - 0
+    effect:
+    - op: choose
+      select:
+        zone: deck
+        owner: you
+        from_top: 1
+        look: true
+        count: all
+      as: top
+    - op: if
+      cond:
+        exists:
+          ref: top
+          filter:
+            types:
+            - creature
+            not_types:
+            - evolution
+            civs:
+            - darkness
+      then:
+      - op: move
+        select:
+          ref: top
+          count: 1
+        to: bz
+        reason: put
+        as: base
+      - op: invade
+        onto:
+          ref: base
+  - kind: trigger
+    when:
+      event: move
+      to: bz
+      subject: self
+    effect:
+    - op: modify
+      select:
+        zone: bz
+        owner: opp
+        filter:
+          types:
+          - creature
+        count: all
+      mod:
+        power: -4000
+      duration: end_of_turn
+  source:
+    official: dm26rp2-005
+    review: pending
+    notes: '革命０トリガーは kind: declare（proto T120 の型）で表現。出た時の全体パワー低下は modify（dm23bd7-038
+      の先例どおり）で完全変換。'
+- id: dm26rp2-007
+  name: 勇愛の絆
+  types:
+  - creature
+  - evolution
+  civs:
+  - fire
+  cost: 4
+  power: 9000
+  races:
+  - ガイアール・コマンド・ドラゴン
+  - ヒューマノイド爆
+  - ドラグナー
+  mana: 1
+  evolve_from:
+    civs:
+    - fire
+  keywords:
+  - double_breaker
+  text: '革命０トリガー：クリーチャーが自分を攻撃する時、自分のシールドが１つもなければ、このクリーチャーを手札から表向きにしてもよい。そうしたら、自分の山札の上から１枚を表向きにする。それが火の、進化ではないクリーチャーなら出し、このクリーチャーをその上に置く。
+
+    進化：火のクリーチャー１体の上に置く。
+
+    W・ブレイカー
+
+    このクリーチャーが出た時または攻撃する時、相手のコスト６以下のエレメントを１つ選び、破壊する。'
+  abilities:
+  - kind: declare
+    zone: hand
+    when:
+      event: attack
+      target: player
+    if:
+      all:
+      - is_turn: opp
+      - cmp:
+        - count:
+            zone: shield
+            owner: you
+        - ==
+        - 0
+    effect:
+    - op: choose
+      select:
+        zone: deck
+        owner: you
+        from_top: 1
+        look: true
+        count: all
+      as: top
+    - op: if
+      cond:
+        exists:
+          ref: top
+          filter:
+            types:
+            - creature
+            not_types:
+            - evolution
+            civs:
+            - fire
+      then:
+      - op: move
+        select:
+          ref: top
+          count: 1
+        to: bz
+        reason: put
+        as: base
+      - op: invade
+        onto:
+          ref: base
+  - kind: trigger
+    when:
+      event: move
+      to: bz
+      subject: self
+    effect:
+    - op: destroy
+      select:
+        zone: bz
+        owner: opp
+        filter:
+          cost_le: 6
+        count: 1
+  - kind: trigger
+    when:
+      event: attack
+      subject: self
+    effect:
+    - op: destroy
+      select:
+        zone: bz
+        owner: opp
+        filter:
+          cost_le: 6
+        count: 1
+  source:
+    official: dm26rp2-007
+    review: pending
+    notes: '革命０トリガーは kind: declare（proto T120 の型）で表現。「エレメント」は types を絞らない destroy（変換済み先例どおり）。出た時／攻撃時は2つの
+      trigger で完全変換。'
+- id: dm26rp2-s006
+  name: 永遠の絆
+  types:
+  - creature
+  - evolution
+  civs:
+  - nature
+  cost: 3
+  power: 9000
+  races:
+  - レッド・コマンド・ドラゴン
+  - ハンター
+  - エイリアン
+  mana: 1
+  evolve_from:
+    civs:
+    - nature
+  keywords:
+  - double_breaker
+  text: '革命０トリガー：クリーチャーが自分を攻撃する時、自分のシールドが１つもなければ、このクリーチャーを手札から表向きにしてもよい。そうしたら、自分の山札の上から１枚を表向きにする。それが自然の、進化ではないクリーチャーなら出し、このクリーチャーをその上に置く。
+
+    進化：自然のクリーチャー１体の上に置く。
+
+    W・ブレイカー
+
+    このクリーチャーが出た時または攻撃する時、相手のクリーチャーを１体選び、持ち主のマナゾーンに置く。'
+  abilities:
+  - kind: declare
+    zone: hand
+    when:
+      event: attack
+      target: player
+    if:
+      all:
+      - is_turn: opp
+      - cmp:
+        - count:
+            zone: shield
+            owner: you
+        - ==
+        - 0
+    effect:
+    - op: choose
+      select:
+        zone: deck
+        owner: you
+        from_top: 1
+        look: true
+        count: all
+      as: top
+    - op: if
+      cond:
+        exists:
+          ref: top
+          filter:
+            types:
+            - creature
+            not_types:
+            - evolution
+            civs:
+            - nature
+      then:
+      - op: move
+        select:
+          ref: top
+          count: 1
+        to: bz
+        reason: put
+        as: base
+      - op: invade
+        onto:
+          ref: base
+  - kind: trigger
+    when:
+      event: move
+      to: bz
+      subject: self
+    effect:
+    - op: mana_put
+      select:
+        zone: bz
+        owner: opp
+        filter:
+          types:
+          - creature
+        count: 1
+  - kind: trigger
+    when:
+      event: attack
+      subject: self
+    effect:
+    - op: mana_put
+      select:
+        zone: bz
+        owner: opp
+        filter:
+          types:
+          - creature
+        count: 1
+  source:
+    official: dm26rp2-s006
+    review: pending
+    notes: '革命０トリガーは kind: declare（proto T120 の型）で表現。持ち主のマナゾーン送りは mana_put。出た時／攻撃時は2つの
+      trigger で完全変換。'
+    aliases:
+    - dm26rp2-sec007
+- id: dmr17-015
+  name: 革命の防壁
+  types:
+  - spell
+  civs:
+  - light
+  cost: 3
+  mana: 1
+  text: 革命０トリガー―クリーチャーが自分を攻撃する時、自分のシールドが１枚もなければ、この呪文をコストを支払わずに唱えてもよい。自分の山札の上から１枚目を見せ、山札の一番下に置く。それが光のクリーチャーなら、自分の山札の上から１枚目を裏向きのまま、新しいシールドとして自分のシールドゾーンに置く。この呪文を唱えた後、墓地に置くかわりに山札に加えてシャッフルする。
+  abilities:
+  - kind: declare
+    zone: hand
+    when:
+      event: attack
+      target: player
+    if:
+      all:
+      - is_turn: opp
+      - cmp:
+        - count:
+            zone: shield
+            owner: you
+        - ==
+        - 0
+    effect:
+    - op: play_free
+      select:
+        ref: self
+  - kind: replace
+    zone: hold
+    when:
+      event: move
+      to: graveyard
+      reason: resolve
+      subject: self
+    instead:
+    - op: move
+      select:
+        ref: self
+      to: deck
+      reason: return
+    - op: shuffle
+      player: you
+  spell:
+  - op: choose
+    select:
+      zone: deck
+      owner: you
+      from_top: 1
+      look: true
+      count: all
+    as: top
+  - op: move
+    select:
+      ref: top
+      count: 1
+    to: deck
+    position: bottom
+    reason: put
+    as: moved
+  - op: if
+    cond:
+      exists:
+        ref: moved
+        filter:
+          types:
+          - creature
+          civs:
+          - light
+    then:
+    - op: move
+      select:
+        zone: deck
+        owner: you
+        from_top: 1
+        count: 1
+      to: shield
+      reason: charge
+  source:
+    official: dmr17-015
+    review: pending
+    notes: '革命０トリガーは declare＋play_free。唱えた後の山札回収は reason: resolve の置換（zone: hold）で
+      [山札に戻す＋シャッフル] と表現（dmc64-011 の同種条項の先例に倣う）。シールド追加は dm33-022 の move to shield（reason:
+      charge）の型。'
+- id: dmr17-022
+  name: 革命の裁門
+  types:
+  - spell
+  civs:
+  - darkness
+  cost: 4
+  mana: 1
+  text: 革命０トリガー―クリーチャーが自分を攻撃する時、自分のシールドが１枚もなければ、この呪文をコストを支払わずに唱えてもよい。自分の山札の上から１枚目を見せる。それが闇のクリーチャーなら、相手のクリーチャーを１体破壊する。この呪文を唱えた後、墓地に置くかわりに山札に加えてシャッフルする。
+  abilities:
+  - kind: declare
+    zone: hand
+    when:
+      event: attack
+      target: player
+    if:
+      all:
+      - is_turn: opp
+      - cmp:
+        - count:
+            zone: shield
+            owner: you
+        - ==
+        - 0
+    effect:
+    - op: play_free
+      select:
+        ref: self
+  - kind: replace
+    zone: hold
+    when:
+      event: move
+      to: graveyard
+      reason: resolve
+      subject: self
+    instead:
+    - op: move
+      select:
+        ref: self
+      to: deck
+      reason: return
+    - op: shuffle
+      player: you
+  spell:
+  - op: choose
+    select:
+      zone: deck
+      owner: you
+      from_top: 1
+      look: true
+      count: all
+    as: top
+  - op: if
+    cond:
+      exists:
+        ref: top
+        filter:
+          types:
+          - creature
+          civs:
+          - darkness
+    then:
+    - op: destroy
+      select:
+        zone: bz
+        owner: opp
+        filter:
+          types:
+          - creature
+        count: 1
+  source:
+    official: dmr17-022
+    review: pending
+    notes: '革命０トリガーは declare＋play_free。唱えた後の山札回収は reason: resolve の置換（zone: hold）で
+      [山札に戻す＋シャッフル] と表現（dmc64-011 の同種条項の先例に倣う）。完全変換。'
+- id: dmr18-017
+  name: 革命の水瓶
+  types:
+  - spell
+  civs:
+  - water
+  cost: 2
+  mana: 1
+  text: 革命０トリガー -クリーチャーが自分を攻撃する時、自分のシールドがひとつもなければ、この呪文をコストを支払わずに唱えてもよい。自分の山札の上から１枚目を表向きにする。それが水のクリーチャーなら、クリーチャーを１体選び、持ち主の手札に戻してもよい。この呪文を唱えた後、墓地に置くかわりに山札に加えてシャッフルする。
+  abilities:
+  - kind: declare
+    zone: hand
+    when:
+      event: attack
+      target: player
+    if:
+      all:
+      - is_turn: opp
+      - cmp:
+        - count:
+            zone: shield
+            owner: you
+        - ==
+        - 0
+    effect:
+    - op: play_free
+      select:
+        ref: self
+  - kind: replace
+    zone: hold
+    when:
+      event: move
+      to: graveyard
+      reason: resolve
+      subject: self
+    instead:
+    - op: move
+      select:
+        ref: self
+      to: deck
+      reason: return
+    - op: shuffle
+      player: you
+  spell:
+  - op: choose
+    select:
+      zone: deck
+      owner: you
+      from_top: 1
+      look: true
+      count: all
+    as: top
+  - op: if
+    cond:
+      exists:
+        ref: top
+        filter:
+          types:
+          - creature
+          civs:
+          - water
+    then:
+    - op: may
+      body:
+      - op: bounce
+        select:
+          zone: bz
+          owner: any
+          filter:
+            types:
+            - creature
+          count: 1
+  source:
+    official: dmr18-017
+    review: pending
+    notes: '革命０トリガーは第42弾の declare + play_free で表現。唱えた後の戻し先は resolve_to: deck で表した。
+      「唱えた後、墓地に置くかわりに山札に加えてシャッフルする」は kind: replace（zone: hold、reason: resolve の墓地送りを置換して山札に戻しシャッフル）で表した（dmc64-011
+      先例、バッチIで実挙動確認済みの形式に統一）。'
+- id: dmr19-024
+  name: 革命の巨石
+  types:
+  - spell
+  civs:
+  - nature
+  cost: 3
+  mana: 1
+  text: 革命０トリガー―クリーチャーが自分を攻撃する時、自分のシールドがひとつもなければ、この呪文をコストを支払わずに唱えてもよい。自分の山札の上から１枚目を表向きにする。それが自然のクリーチャーなら、相手のクリーチャーを１体選び、持ち主のマナゾーンに置く。この呪文を唱えた後、墓地に置くかわりに自分の山札に加えてシャッフルする。
+  abilities:
+  - kind: declare
+    zone: hand
+    when:
+      event: attack
+      target: player
+    if:
+      all:
+      - is_turn: opp
+      - cmp:
+        - count:
+            zone: shield
+            owner: you
+        - ==
+        - 0
+    effect:
+    - op: play_free
+      select:
+        ref: self
+  - kind: replace
+    zone: hold
+    when:
+      event: move
+      to: graveyard
+      reason: resolve
+      subject: self
+    instead:
+    - op: move
+      select:
+        ref: self
+      to: deck
+      reason: return
+    - op: shuffle
+      player: you
+  spell:
+  - op: choose
+    select:
+      zone: deck
+      owner: you
+      from_top: 1
+      look: true
+      count: all
+    as: top
+  - op: if
+    cond:
+      exists:
+        ref: top
+        filter:
+          types:
+          - creature
+          civs:
+          - nature
+    then:
+    - op: mana_put
+      select:
+        zone: bz
+        owner: opp
+        filter:
+          types:
+          - creature
+        count: 1
+  source:
+    official: dmr19-024
+    review: pending
+    notes: '革命０トリガーは第42弾の declare + play_free で表現。唱えた後の戻し先は resolve_to: deck で表した。
+      「唱えた後、墓地に置くかわりに山札に加えてシャッフルする」は kind: replace（zone: hold、reason: resolve の墓地送りを置換して山札に戻しシャッフル）で表した（dmc64-011
+      先例、バッチIで実挙動確認済みの形式に統一）。'
+- id: dmr23-015
+  name: 反逆狼の紋章
+  types:
+  - spell
+  civs:
+  - darkness
+  cost: 8
+  mana: 1
+  text: 革命０トリガー：クリーチャーが自分を攻撃する時、自分のシールドが１枚もなければ、この呪文をコストを支払わずに唱えてもよい。自分の山札の上から１枚目を表向きにする。それが闇のクリーチャーなら、闇のコスト８以下の進化ではないコマンドを１体、自分の墓地からバトルゾーンに出す。この呪文を唱えた後、墓地に置くかわりに自分の山札に加えてシャッフルする。
+  abilities:
+  - kind: declare
+    zone: hand
+    when:
+      event: attack
+      target: player
+    if:
+      all:
+      - is_turn: opp
+      - cmp:
+        - count:
+            zone: shield
+            owner: you
+        - ==
+        - 0
+    effect:
+    - op: play_free
+      select:
+        ref: self
+  - kind: replace
+    zone: hold
+    when:
+      event: move
+      to: graveyard
+      reason: resolve
+      subject: self
+    instead:
+    - op: move
+      select:
+        ref: self
+      to: deck
+      reason: return
+    - op: shuffle
+      player: you
+  spell:
+  - op: choose
+    select:
+      zone: deck
+      owner: you
+      from_top: 1
+      look: true
+      count: all
+    as: top
+  - op: if
+    cond:
+      exists:
+        ref: top
+        filter:
+          types:
+          - creature
+          civs:
+          - darkness
+    then:
+    - op: move
+      select:
+        zone: graveyard
+        owner: you
+        filter:
+          types:
+          - creature
+          civs:
+          - darkness
+          cost_le: 8
+          not_types:
+          - evolution
+          race_has: コマンド
+        count: 1
+      to: bz
+      reason: put
+  source:
+    official: dmr23-015
+    review: pending
+    notes: '革命０トリガーは第42弾の declare + play_free で表現。墓地から出すは move reason: put。唱えた後の戻し先は
+      resolve_to: deck で表した。 「唱えた後、墓地に置くかわりに山札に加えてシャッフルする」は kind: replace（zone: hold、reason:
+      resolve の墓地送りを置換して山札に戻しシャッフル）で表した（dmc64-011 先例、バッチIで実挙動確認済みの形式に統一）。'
+- id: dmr23-036
+  name: 宇宙一のカレーパン
+  types:
+  - spell
+  civs:
+  - fire
+  cost: 4
+  mana: 1
+  text: 革命０トリガー：クリーチャーが自分を攻撃する時、自分のシールドが１枚もなければ、この呪文をコストを支払わずに唱えてもよい。《勇者の１号 ハムカツマン蒼》を１体、自分の手札から山札の一番上に置いてもよい。そうしたら、このターン、自分のクリーチャー１体のパワーを+1000000
+    する。自分の山札の上から１枚目を表向きにする。それが火のクリーチャーなら、自分のクリーチャーと相手のクリーチャーを１体ずつ選び、その２体をバトルさせる。この呪文を唱えた後、墓地に置くかわりに自分の山札に加えてシャッフルする。
+  abilities:
+  - kind: declare
+    zone: hand
+    when:
+      event: attack
+      target: player
+    if:
+      all:
+      - is_turn: opp
+      - cmp:
+        - count:
+            zone: shield
+            owner: you
+        - ==
+        - 0
+    effect:
+    - op: play_free
+      select:
+        ref: self
+  - kind: replace
+    zone: hold
+    when:
+      event: move
+      to: graveyard
+      reason: resolve
+      subject: self
+    instead:
+    - op: move
+      select:
+        ref: self
+      to: deck
+      reason: return
+    - op: shuffle
+      player: you
+  spell:
+  - op: may
+    body:
+    - op: move
+      select:
+        zone: hand
+        owner: you
+        filter:
+          name: 勇者の１号 ハムカツマン蒼
+        count: 1
+      to: deck
+      reason: put
+      position: top
+      as: placed
+    - op: if
+      cond:
+        exists:
+          ref: placed
+      then:
+      - op: modify
+        select:
+          zone: bz
+          owner: you
+          filter:
+            types:
+            - creature
+          count: 1
+        mod:
+          power: 1000000
+        duration: end_of_turn
+  - op: choose
+    select:
+      zone: deck
+      owner: you
+      from_top: 1
+      look: true
+      count: all
+    as: top
+  - op: if
+    cond:
+      exists:
+        ref: top
+        filter:
+          types:
+          - creature
+          civs:
+          - fire
+    then:
+    - op: force_battle
+      a:
+        zone: bz
+        owner: you
+        filter:
+          types:
+          - creature
+        count: 1
+      b:
+        zone: bz
+        owner: opp
+        filter:
+          types:
+          - creature
+        count: 1
+  source:
+    official: dmr23-036
+    review: pending
+    notes: '革命０トリガーは第42弾の declare + play_free で表現。ハムカツマン蒼を置いた場合のみパワー修整が続く形は move の
+      as と exists で表した。唱えた後の戻し先は resolve_to: deck で表した。 「唱えた後、墓地に置くかわりに山札に加えてシャッフルする」は
+      kind: replace（zone: hold、reason: resolve の墓地送りを置換して山札に戻しシャッフル）で表した（dmc64-011
+      先例、バッチIで実挙動確認済みの形式に統一）。'
