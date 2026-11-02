@@ -578,6 +578,26 @@ def op_end_turn(eng, t, op, env):
     eng.s.skip_rest = True
 
 
+@op("use_partner")
+def op_use_partner(eng, t, op, env):
+    """キズナ: 自分のクリーチャー1体の[P]能力（kind: partner）を選んで使う。
+    効果の self は [P] を持つクリーチャーに移る。[P] を持つクリーチャーがいなければ何もしない。"""
+    you = env["you"]
+    cands = []
+    for c in eng.bz_tops(you):
+        for i, ab in eng.abilities(c, "partner"):
+            cands.append((c, i, ab))
+    if not cands:
+        return None
+    opts = [{"key": f"partner:{eng.s.cards[c].defn}:{i}", "cid": c, "ab": i} for c, i, _ in cands]
+    a, d = eng.ask(t, you, "use_partner", opts)
+    if d:
+        return d
+    c, i, ab = cands[a[0]]
+    eng._defer(t, [eng._child(ab["effect"], dict(env, self=eng.s.ref(c)))])
+    return None
+
+
 @op("choose", select="selector", **{"as": "str"})
 def op_choose(eng, t, op, env):
     """カードを選んで変数に入れるだけ（「〜を1体選ぶ。このターン、そのクリーチャーが〜」）。"""

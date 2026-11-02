@@ -1617,3 +1617,37 @@ cards:
                 [{op: discard, select: {zone: hand, owner: you, chooser: you, filter: {name: S-MAX試獣・弐号}, count: 1}}]]}],
             else: [
               {op: move, select: {ref: self, count: 1}, to: graveyard, reason: destroy}]}
+  - id: T123
+    name: 絆試獣・誘う者
+    civs: [nature]
+    cost: 3
+    power: 3000
+    types: [creature]
+    races: [テスト]
+    keywords: [kizuna]
+    text: キズナ（このクリーチャーが出た時、自分のクリーチャー１体の[P]能力を使う）
+  - id: T124
+    name: 絆試獣・持ち主
+    civs: [water]
+    cost: 4
+    power: 4000
+    types: [creature]
+    races: [テスト]
+    text: "[P]カードを１枚引く。"
+    abilities:
+      - kind: partner
+        effect:
+          - {op: draw, count: 1}
+  - id: T125
+    name: 絆試獣・一人二役
+    civs: [fire]
+    cost: 5
+    power: 5000
+    types: [creature]
+    races: [テスト]
+    keywords: [kizuna]
+    text: "キズナ（このクリーチャーが出た時、自分のクリーチャー１体の[P]能力を使う） / [P]カードを２枚引く。"
+    abilities:
+      - kind: partner
+        effect:
+          - {op: draw, count: 2}
