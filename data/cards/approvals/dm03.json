@@ -14,7 +14,7 @@
 ],
 "verifier": 2,
 "verify": "43手・turn 30 まで正常に回った（result={'winner': 0, 'reason': 'deck_out', 'turn': 30}）",
-"vocab_ver": "bd4848e956245a61"
+"vocab_ver": "c2c5cc91b4c6a6fc"
 },
 "dm03-015": {
 "by": "rule",
