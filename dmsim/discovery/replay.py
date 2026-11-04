@@ -36,9 +36,19 @@ def replay_test(rules, steps, prepare=None, me: int = 0):
                 d = e.advance()
                 if d is None or e.s.result is not None:
                     break
-                if d["kind"] != kind or tuple(d["options"][i]["key"] for i in idx if i < len(d["options"])) != keys \
-                        or any(i >= len(d["options"]) for i in idx):
+                if d["kind"] != kind:
                     break
+                ks = [o["key"] for o in d["options"]]
+                pick, used = [], set()
+                for j, key in zip(idx, keys):   # 元の添字が同じキーならそれを、無ければ同じキーの最初の選択肢を選ぶ（カードを外して添字がずれても同じ意味の選択をする）
+                    cand = j if j < len(ks) and ks[j] == key and j not in used else next((i for i, k2 in enumerate(ks) if k2 == key and i not in used), None)
+                    if cand is None:
+                        break
+                    pick.append(cand)
+                    used.add(cand)
+                if len(pick) != len(keys):
+                    break
+                idx = tuple(pick)
                 e.answer(list(idx))
             else:
                 e.advance()
