@@ -196,7 +196,7 @@ class EventMixin:
                 for m in self.link_members(ev["subject"][0]):
                     s.cards[m].tapped = c.tapped
             return [{"ev": kind, "subject": ev["subject"], "controller": c.controller}]
-        if kind in ("attack", "block", "cast", "turn_start", "turn_end", "break", "battle_win", "battle_start", "attack_end"):
+        if kind in ("attack", "block", "cast", "turn_start", "turn_end", "break", "battle_win", "battle_start", "attack_end", "mugon_used"):
             return [dict(ev)]
         raise ValueError(kind)
 

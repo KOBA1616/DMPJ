@@ -1651,3 +1651,50 @@ cards:
       - kind: partner
         effect:
           - {op: draw, count: 2}
+  - id: T126
+    name: 試獣・無月の門番
+    civs: [darkness]
+    cost: 8
+    power: 6000
+    types: [creature]
+    races: [テスト]
+    text: 無月の門：自分の魔導具をバトルゾーンに出した時、自分の魔導具をバトルゾーンと墓地から２つずつ選び、このクリーチャーを自分の手札または墓地からそれら４枚の上にコストを支払わずに召喚してもよい。
+    abilities:
+      - &mugon45
+        kind: trigger
+        zone: hand
+        when: {event: move, to: bz, subject: {owner: you, other: true, filter: {races: [魔導具]}}}
+        if: {all: [{cmp: [{count: {zone: bz, owner: you, filter: {races: [魔導具]}}}, ">=", 2]}, {cmp: [{count: {zone: graveyard, owner: you, filter: {races: [魔導具]}}}, ">=", 2]}]}
+        effect:
+          - op: may
+            body:
+              - {op: summon_on, parts: [{zone: bz, count: 2, filter: {races: [魔導具]}}, {zone: graveyard, count: 2, filter: {races: [魔導具]}}]}
+      - <<: *mugon45
+        zone: graveyard
+  - id: T127
+    name: 試作魔導具
+    civs: [darkness]
+    cost: 2
+    power: 1000
+    types: [creature]
+    races: [魔導具]
+    text: テスト用の魔導具。
+  - id: T128
+    name: 試獣・門の追随者
+    civs: [water]
+    cost: 3
+    power: 2000
+    types: [creature]
+    races: [テスト]
+    text: 自分の「無月の門」能力を使った時、このクリーチャーを自分の手札または墓地からバトルゾーンにタップして出してもよい。
+    abilities:
+      - &mugon45f
+        kind: trigger
+        zone: hand
+        when: {event: mugon_used, player: you}
+        effect:
+          - op: may
+            body:
+              - {op: move, select: {ref: self}, to: bz, reason: put, tapped: true}
+      - <<: *mugon45f
+        zone: graveyard

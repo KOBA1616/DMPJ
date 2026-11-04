@@ -572,6 +572,56 @@ def op_invade(eng, t, op, env):
     return None
 
 
+@op("summon_on", parts="any", tapped="bool?")
+def op_summon_on(eng, t, op, env):
+    """無月の門: parts で指定した枚数を自分のゾーンから選び、その上に self をコストを支払わずに召喚する。
+    parts: [{zone: <zone>, count: N, filter?: {...}}] の並び（zones: [z1, z2] なら複数ゾーンの合算から選ぶ）。
+    選んだカードは進化と同じ仕組みで下に重なるが、召喚酔いとタップ状態は通常の召喚として扱う（summon_on_fix）。
+    どこか1パートでも必要枚数を満たせなければ、何もしない。"""
+    s = eng.s
+    you = env["you"]
+    me = env["self"][0]
+    if s.cards[me].zone not in ("hand", "graveyard"):
+        return None
+
+    def cands(part, picked):
+        zones = part.get("zones") or [part["zone"]]
+        return [c for z in zones for c in eng.zlist(z, you)
+                if c != me and c not in picked and s.cards[c].top_of == -1
+                and eng.filter_match(c, part.get("filter", {}))]
+
+    os_ = t["os"]
+    if "picked" not in os_:
+        acc = []
+        for part in op["parts"]:
+            if len(cands(part, acc)) < part["count"]:
+                return None   # 実現可能性がない場合は誘発しても何もしない
+            acc += cands(part, acc)[:part["count"]]
+        os_["picked"] = []
+        os_["stage"] = 0
+    parts = op["parts"]
+    while os_["stage"] < len(parts):
+        part = parts[os_["stage"]]
+        cs = cands(part, os_["picked"])
+        if len(cs) < part["count"]:
+            return None
+        opts = [{"key": f"card:{s.cards[c].defn}", "cid": c} for c in cs]
+        a, d = eng.ask(t, you, "summon_on", opts, part["count"], part["count"])
+        if d:
+            return d
+        os_["picked"] += [cs[i] for i in a]
+        os_["stage"] += 1
+    picked = os_["picked"]
+    if not picked:
+        return None
+    ev = {"ev": "move", "subject": s.ref(me), "to": "bz", "reason": "summon", "unpaid": True,
+          "stack_on": s.ref(picked[0]), "stack_more": [s.ref(c) for c in picked[1:]]}
+    used = {"ev": "mugon_used", "subject": s.ref(me), "player": you}   # 「無月の門能力を使った時」の追随用
+    eng._defer(t, [eng.ev_task(ev, env), {"t": "summon_on_fix", "cid": me, "tapped": bool(op.get("tapped"))},
+                   eng.ev_task(used, env)])
+    return None
+
+
 @op("end_turn")
 def op_end_turn(eng, t, op, env):
     """ターンの残りをとばす（次のプレイヤーのターンをすぐに始める）。今の効果の解決は最後まで行う。"""
