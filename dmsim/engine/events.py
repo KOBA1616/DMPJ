@@ -12,6 +12,9 @@ class EventMixin:
             evs = [evs]
         if env and isinstance(env.get("you"), int):   # 効果の解決者が起こす移動には、起こしたプレイヤーを記録する（「相手の効果によって捨てられる時」等の照合用）
             evs = [dict(e, by=env["you"]) if e.get("ev") == "move" and "by" not in e else e for e in evs]
+            if self.s.trace is not None and env.get("self"):   # 因果の記録: その移動を起こした効果のカード名
+                cause = self.s.cards[env["self"][0]].defn
+                evs = [dict(e, cause=cause) if e.get("ev") == "move" and "cause" not in e else e for e in evs]
         if env and env.get("capture"):   # 置換効果の中で起こすイベントは、元の束に加えて同時に適用する（609.9）
             return {"t": "capture", "evs": [dict(e, replaced=True) for e in evs]}
         if env and env.get("no_replace"):
@@ -69,6 +72,8 @@ class EventMixin:
             c = s.cards[ev["subject"][0]]
             rec = {"ev": "move", "subject": ev["subject"], "from": ev.get("from") if c.zone == "hold" else c.zone,
                    "to": ev["to"], "reason": ev["reason"], "controller": c.controller}
+            if ev.get("cause"):
+                rec["cause"] = ev["cause"]
             if "by" in ev:        # その移動を起こした効果の解決者（無ければ記録しない: 状況起因・コスト等は「相手の効果」扱いにしない）
                 rec["by"] = ev["by"]
             if ev.get("stack_on"):   # 進化として重ねて出た（シンカパワーの照合用）
@@ -195,6 +200,8 @@ class EventMixin:
                             "reason": "seal", "controller": so.controller, "sealed_from": new})
             if ev.get("via"):
                 out[0]["via"] = ev["via"]
+            if ev.get("cause"):
+                out[0]["cause"] = ev["cause"]
             if ev.get("face_up"):
                 out[0]["face_up"] = True
             if ev["to"] == "bz" and "ex_life" in self.chars(cid)["keywords"]:
@@ -734,6 +741,11 @@ def h_resolve_pending(eng, t):
     else:
         ab = eng.pending_ability(p)
         env = p["env"]
+        if s.trace is not None:
+            rec = env.get("event") or {}
+            s.trace.append({"turn": s.turn, "src": p["defn"], "ab": p["ab"], "ev": rec.get("ev"), "from": rec.get("from"),
+                            "to": rec.get("to"), "reason": rec.get("reason"), "cause": rec.get("cause"),
+                            "subject": s.cards[rec["subject"][0]].defn if rec.get("subject") else None})
         if "if" in ab and not eng.eval_cond(ab["if"], env):   # 条件は解決時に確認（603.4, 605.2a）
             return None
         n = 1

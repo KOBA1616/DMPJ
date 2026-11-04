@@ -63,7 +63,8 @@ def synergy(rules, a: dict, b: dict, base: dict, opp: dict | None = None, w: dic
         for k, p0 in cases.items():
             vals[k].append(turn_value(rules, {"p0": p0, "p1": opp or {}, "seed": sd}, w, turns)[0])
     mean = {k: sum(v) / len(v) for k, v in vals.items()}
-    return {"S": mean["ab"] - mean["a"] - mean["b"] + mean["none"], "mean": mean, "seeds": list(seeds)}
+    per_seed = [vals["ab"][i] - vals["a"][i] - vals["b"][i] + vals["none"][i] for i in range(len(seeds))]
+    return {"S": mean["ab"] - mean["a"] - mean["b"] + mean["none"], "mean": mean, "seeds": list(seeds), "per_seed": per_seed}
 
 
 PLACES = ("hand", "graveyard", "mana", "bz")
@@ -82,9 +83,9 @@ def scan_pair(rules, a: str, b: str, base: dict | None = None, opp: dict | None 
 
 
 def combo_report(rules, a: dict, b: dict, base: dict, opp: dict | None = None, w: dict | None = None, turns: int = 1,
-                 seeds=(1, 2, 3), threshold: float = 1.0) -> dict:
+                 seeds=(1, 2, 3)) -> dict:
     """コンボの定義（手順あり/なしの差分）。基準線 = 各カード単体（A のみ、B のみ）の最善手順。
-    S = V(A,B) − V(A) − V(B) + V(なし)。S が threshold 以上なら combo。
+    S = V(A,B) − V(A) − V(B) + V(なし)。因果の連鎖があり、全シードで S>0 なら combo（閾値は使わない。lift は順位付け用）。
     gain = 両方あるときと A のみのときの資源ベクトルの差（「手札+n、バトルゾーン+n」の形）を、シードの平均で返す。"""
     from .. import scenario
     from ..solitaire import play_game
@@ -108,4 +109,40 @@ def combo_report(rules, a: dict, b: dict, base: dict, opp: dict | None = None, w
                 acc[x] += v / len(seeds)
         vec[k] = acc
     gain = {x: round(vec["ab"][x] - vec["a"][x], 2) for x in RES}
-    return {"S": r["S"], "is_combo": r["S"] >= threshold, "gain_over_a": gain, "mean": r["mean"], "seeds": list(seeds)}
+    # 閾値は使わない。因果の連鎖（一方の効果が他方の誘発を起こした）と、全シードで S>0 の一貫性で判定する
+    names = {c for part in (a, b) for cards in part.values() for c in cards}
+    links = []
+    for sd in seeds:
+        _, _, lk, _ = traced_turn(rules, {"p0": merge(base, a, b), "p1": opp or {}, "seed": sd}, w, turns)
+        links += [l for l in lk if l[0] in names and l[1] in names]
+    links = sorted(set(links))
+    consistent = all(x > 0 for x in r["per_seed"])
+    gap = abs(r["mean"]["a"] - r["mean"]["none"]) + abs(r["mean"]["b"] - r["mean"]["none"])
+    return {"S": r["S"], "per_seed": r["per_seed"], "causal_links": links, "consistent": consistent,
+            "lift": r["S"] / gap if gap > 1e-9 else None, "is_combo": bool(links) and consistent,
+            "gain_over_a": gain, "mean": r["mean"], "seeds": list(seeds)}
+
+
+def causal_links(trace: list) -> list[tuple[str, str]]:
+    """対戦の誘発ログから、カード間の因果の連鎖 (起こした側, 誘発した側) を返す。同じカード同士は除く。"""
+    return sorted({(t["cause"], t["src"]) for t in trace if t.get("cause") and t["cause"] != t["src"]})
+
+
+def traced_turn(rules, spec: dict, w: dict | None = None, turns: int = 1, budget: int = 200):
+    """turn_value と同じだが、最善手順を選んだ後に再生して誘発の因果を記録する。(V, 資源ベクトル, 因果の連鎖, trace) を返す。"""
+    from .. import scenario
+    from . import replay
+    from ..solitaire import play_game
+    w = w or load_weights()
+    start = scenario.build(rules, spec)
+    _, eng = play_game(rules, [], [], 1, max_turn=turns, budget=budget, start=start, lock_rounds=0,
+                       value_fn=lambda e, me: board_value(e, me, w))
+    steps = replay.steps_of(eng)
+    again = scenario.build(rules, spec)
+    again.s.trace = []
+    for kind, keys, idx in steps:               # 選ばれた手順を、記録を入れて再生する
+        d = again.advance()
+        if d is None:
+            break
+        again.answer(list(idx))
+    return board_value(eng, 0, w), resource_vector(eng, 0), causal_links(again.s.trace), again.s.trace

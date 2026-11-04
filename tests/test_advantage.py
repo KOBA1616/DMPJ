@@ -51,3 +51,15 @@ def test_combo_report_gain_matches_card_text():
     rules = t._small_rules(pathlib.Path(tempfile.mkdtemp()))
     r = adv.combo_report(rules, {"hand": [t.K]}, {"graveyard": [t.D]}, {"mana": [t.D] * 3}, opp={"bz": ["T001"]}, seeds=(1,))
     assert r["is_combo"] and r["gain_over_a"]["hand"] == 2 and r["gain_over_a"]["board"] == 1 and r["gain_over_a"]["deck"] == -2
+
+
+def test_causal_link_knight_causes_dmc_trigger_and_control_has_none():
+    import pathlib
+    import tempfile
+    import test_dmc_knight as t
+    rules = t._small_rules(pathlib.Path(tempfile.mkdtemp()))
+    spec = {"p0": {"mana": [t.D] * 3, "hand": [t.K], "graveyard": [t.D]}, "p1": {"bz": ["T001"]}, "seed": 1}
+    _, _, links, _ = adv.traced_turn(rules, spec)
+    assert (t.K, t.D) in links                       # 騎士の盾置き → DMC の墓地誘発
+    r = adv.combo_report(rules, {"hand": [t.K]}, {"hand": ["T001"]}, {"mana": [t.D] * 3}, opp={"bz": ["T001"]}, seeds=(1,))
+    assert not r["is_combo"] and r["causal_links"] == []
