@@ -280520,3 +280520,202 @@ cards:
     official: dmrp16-089
     review: pending
     notes: dmrp15-088 と同型（+4000）。
+- id: dm24ex1-020
+  name: ダイヤモンド・カミタイオ
+  types:
+  - creature
+  - evolution
+  civs:
+  - water
+  cost: 7
+  power: 7000
+  races:
+  - スノーフェアリー
+  mana: 1
+  evolve_from:
+    races:
+    - スノーフェアリー
+  alt_cost:
+    cost: 1
+    civs:
+    - nature
+    if:
+      cmp:
+      - count:
+          zone: bz
+          owner: you
+          filter:
+            races:
+            - スノーフェアリー
+      - '>='
+      - 3
+  abilities:
+  - kind: trigger
+    when:
+      event: move
+      to: bz
+      subject: self
+    effect:
+    - op: move
+      select:
+        zone: deck
+        owner: you
+        from_top: 1
+      to: mana
+      reason: put
+      tapped: true
+    - op: move
+      select:
+        zone: mana
+        owner: you
+        count: 1
+      to: hand
+      reason: return
+  text: '自分のスノーフェアリーが３つ以上あれば、このクリーチャーの召喚コストを[nn01]にしてもよい。
+
+    進化：スノーフェアリー・クリーチャー１体の上に置く。
+
+    W・ブレイカー
+
+    このクリーチャーが出た時、自分の山札の上から１枚目をタップしてマナゾーンに置いてもよい。その後、カードを１枚、自分のマナゾーンから手札に戻してもよい。'
+  source:
+    official: dm24ex1-020
+    review: pending
+    notes: 条件付き代替コスト（第56弾）。[nn01]は nature 1。W・ブレイカーは known_keywords のため書き直さない。
+  keywords:
+  - double_breaker
+- id: dm24rp2-059
+  name: ヒュロッキン
+  types:
+  - creature
+  civs:
+  - water
+  cost: 4
+  power: 4000
+  races:
+  - ムートピア
+  mana: 1
+  alt_cost:
+    cost: 1
+    civs:
+    - water
+    if:
+      exists:
+        zone: bz
+        owner: you
+        filter:
+          types:
+          - creature
+          tapped: true
+  text: '自分のタップしているクリーチャーがあれば、このクリーチャーを[ww01]支払って召喚してもよい。
+
+    ブロッカー（このクリーチャーをタップして、相手クリーチャーの攻撃先をこのクリーチャーに変更してもよい）'
+  source:
+    official: dm24rp2-059
+    review: pending
+    notes: 条件付き代替コスト（第56弾）。[ww01]は water 1。ブロッカーは known_keywords のため書き直さない。
+  keywords:
+  - blocker
+- id: dm24ex3-rp1s06
+  name: 深淵の憤髄 ファウン＝テイン
+  types:
+  - creature
+  civs:
+  - darkness
+  cost: 8
+  power: 8000
+  races:
+  - アビスロイヤル
+  mana: 1
+  alt_cost:
+    cost: 2
+    civs:
+    - darkness
+    - darkness
+    if:
+      cmp:
+      - count:
+          zone: graveyard
+          owner: you
+          filter:
+            types:
+            - creature
+      - '>='
+      - 6
+  abilities:
+  - kind: trigger
+    when:
+      event: move
+      to: bz
+      subject: self
+    effect:
+    - op: move
+      select:
+        zone: graveyard
+        owner: you
+        filter:
+          types:
+          - creature
+          civs:
+          - darkness
+          cost_le: 3
+        count: 2
+        up_to: true
+      to: bz
+      reason: put
+  text: '自分の墓地にクリーチャーが６体以上あれば、このクリーチャーを[dd02]支払って召喚してもよい。
+
+    ブロッカー
+
+    W・ブレイカー
+
+    このクリーチャーが出た時、コスト３以下の闇のクリーチャーを２体まで、自分の墓地から出す。'
+  source:
+    official: dm24ex3-rp1s06
+    review: pending
+    notes: '条件付き代替コスト（第56弾）。[dd02]は darkness 2。ブロッカー・W・ブレイカーは known_keywords のため書き直さない。「出す」は召喚ではないため
+      reason: put。'
+    aliases:
+    - dm24ex3-sec04
+    - dm24rp1-s06
+  keywords:
+  - blocker
+  - double_breaker
+- id: dm25ex2-098
+  name: ストリエ雷鬼
+  types:
+  - creature
+  civs:
+  - fire
+  cost: 6
+  power: 6000
+  races:
+  - ヒューマノイド爆
+  mana: 1
+  alt_cost:
+    cost: 1
+    civs:
+    - fire
+    if:
+      exists:
+        zone: hyper
+        owner: opp
+  abilities:
+  - kind: trigger
+    when:
+      event: move
+      to: bz
+      subject: self
+    effect:
+    - op: move
+      select:
+        zone: shield
+        owner: you
+        count: 1
+      to: hand
+      reason: return
+  text: 相手の超次元ゾーンにカードがあれば、このクリーチャーを[ff01]支払って召喚してもよい。 / このクリーチャーが出た時、自分のシールドを１つ手札に加える。ただし、その「S・トリガー」は使えない。
+  source:
+    official: dm25ex2-098
+    review: pending
+    notes: 条件付き代替コスト（第56弾）。[ff01]は fire 1。超次元ゾーンは hyper。「S・トリガーは使えない」は効果による移動ではエンジンが誘発しないため追加記述不要。
