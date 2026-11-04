@@ -287615,3 +287615,78 @@ cards:
     official: dmex17-024
     review: pending
     notes: 侵略はdeclare+invadeの定型（コスト９ちょうどはcost_ge:9+cost_le:9）。このターンの禁止はmodify+duration:end_of_turn。triple_breakerはknown_keywordsのため書き直さない。
+- id: dm26rp1-003
+  name: 傀儡秘宝ベンゾルス
+  types:
+  - creature
+  civs:
+  - darkness
+  cost: 7
+  power: 5000
+  races:
+  - パンドラボックス
+  - デスパペット
+  mana: 1
+  abilities:
+  - kind: trigger
+    when:
+      event: move
+      to: bz
+      subject: self
+    effect:
+    - op: choose
+      select:
+        zone: deck
+        owner: you
+        from_top: 3
+        count: 3
+        up_to: true
+      as: milled
+    - op: move
+      select:
+        ref: milled
+      to: graveyard
+      reason: put
+    - op: repeat
+      times:
+        count:
+          ref: milled
+          filter:
+            keyword: s_trigger
+      body:
+      - op: may
+        body:
+        - op: destroy
+          select:
+            zone: bz
+            owner: opp
+            filter:
+              types:
+              - creature
+            count: 1
+  - kind: static
+    affects:
+      owner: you
+      zone: graveyard
+      filter:
+        types:
+        - creature
+    if:
+      is_turn: you
+    mod:
+      allow:
+      - action: summon_from_graveyard
+  text: 'S・トリガー
+
+    このクリーチャーが出た時、自分の山札の上から３枚まで墓地に置く。こうして墓地に置いた「S・トリガー」を持つカード１枚につき、相手のクリーチャーを１体選び、破壊してもよい。
+
+    自分のターン中、クリーチャーを１体、自分の墓地から召喚してもよい。（コストは支払う）'
+  source:
+    official: dm26rp1-003
+    review: pending
+    notes: '"S・トリガーは known_keywords のため書き直さない。「３枚まで墓地に置く→こうして置いたS・トリガー１枚につき破壊」は choose+move(as:
+      milled)+repeat(count ref milled filter keyword) のイディオム。「自分のターン中、墓地から召喚してもよい」は
+      static+affects(own graveyard)+if is_turn: you+allow summon_from_graveyard（dmrp17-020
+      の型）。"'
+  keywords:
+  - s_trigger
