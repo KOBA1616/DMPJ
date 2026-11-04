@@ -557,3 +557,56 @@ cards:
     power: 4000
     races: [テスト]
     text: 試験用の相手クリーチャー
+
+  - id: R071
+    name: 試験用S・バック種族獣
+    types: [creature]
+    civs: [light]
+    cost: 5
+    power: 3000
+    races: [ドラゴン]
+    s_back: {races: [テスト]}
+    text: S・バック―テスト
+
+  - id: R072
+    name: 試験用S・バック複合文明呪文
+    types: [spell]
+    civs: [water]
+    cost: 5
+    s_back: {civs: [water, darkness]}
+    text: S・バック：水または闇。カードを2枚引く。
+    spell:
+      - {op: draw, count: 2}
+
+  - id: R073
+    name: 試験用メテオバーン起動獣
+    types: [creature, evolution]
+    civs: [nature]
+    cost: 1
+    power: 9000
+    races: [テスト]
+    evolve_from: {races: [テスト]}
+    text: 進化。メテオバーン - このクリーチャーが攻撃できる時、このクリーチャーの下にあるカードを1枚墓地に置いてもよい。そうした場合、相手のクリーチャーを1体タップしてもよい。
+    abilities:
+      - kind: activate
+        cost: {under: 1}
+        effect:
+          - op: may
+            body:
+              - {op: tap, select: {zone: bz, owner: opp, filter: {types: [creature]}, count: 1}}
+
+  - id: R074
+    name: 試験用汎用メテオバーン起動獣
+    types: [creature, evolution]
+    civs: [nature]
+    cost: 1
+    power: 9000
+    races: [テスト]
+    evolve_from: {races: [テスト]}
+    text: 進化。メテオバーン - 自分のクリーチャーが攻撃できる時、このクリーチャーの下にあるカードを1枚墓地に置いてもよい。そうした場合、カードを1枚引く。
+    abilities:
+      - kind: activate
+        any_attacker: true
+        cost: {under: 1}
+        effect:
+          - {op: draw, count: 1}

@@ -1155,6 +1155,68 @@ cards:
         affects: {zone: bz, owner: opp, filter: {types: [creature]}}
         mod: {power: -1000}
 
+  # ---- 語彙パイロット第47弾: 多文明O・ドライブ＋呪文側 ----
+  - id: T133
+    name: 試験用多文明ドライブ獣
+    types: [creature]
+    civs: [light, water]
+    cost: 5
+    power: 4000
+    races: [テスト]
+    text: O・ドライブ 光×1と水×1（このクリーチャーを召喚する時、自分のマナゾーンでさらに光1枚と水1枚をタップしてもよい。そうした場合、このクリーチャーが出た時、カードを2枚引く）
+    o_drive: {civs: {light: 1, water: 1}}
+    abilities:
+      - kind: trigger
+        odrive: true
+        when: {event: move, to: bz, subject: self}
+        effect:
+          - {op: draw, count: 2}
+  - id: T134
+    name: 試験用文明別ドライブ獣
+    types: [creature]
+    civs: [fire, nature]
+    cost: 5
+    power: 4000
+    races: [テスト]
+    text: O・ドライブ 火×1・自然×1（このクリーチャーを召喚する時、自分のマナゾーンでさらに火1枚または自然1枚またはその両方をタップしてもよい。火:このクリーチャーが出た時、相手のクリーチャーを1体破壊する。自然:このクリーチャーが出た時、カードを1枚引く）
+    o_drive: {civs: {fire: 1, nature: 1}, each: true}
+    abilities:
+      - kind: trigger
+        odrive: fire
+        when: {event: move, to: bz, subject: self}
+        effect:
+          - {op: move, select: {zone: bz, owner: opp, filter: {types: [creature]}, count: 1}, to: graveyard, reason: destroy}
+      - kind: trigger
+        odrive: nature
+        when: {event: move, to: bz, subject: self}
+        effect:
+          - {op: draw, count: 1}
+  - id: T135
+    name: 試験用ドライブ呪文
+    types: [spell]
+    civs: [light]
+    cost: 3
+    text: カードを1枚引く。O・ドライブ 光×1（この呪文を唱える時、自分のマナゾーンでさらに光1枚をタップしてもよい。そうした場合、カードを1枚引く）
+    o_drive: {civ: light, count: 1}
+    spell:
+      - {op: draw, count: 1}
+    odrive_spell:
+      - {op: draw, count: 1}
+
+  # ---- 語彙パイロット第48弾: mod cost_may の must（強制・ターン1回の軽減） ----
+  - id: T136
+    name: 試験用妖精・強制
+    types: [creature]
+    civs: [nature]
+    cost: 2
+    power: 1000
+    races: [テスト]
+    text: 各ターン、自分のクリーチャー１体目の召喚コストを１少なくする。ただし、コストは０以下にはならない。
+    abilities:
+      - kind: static
+        affects: {zone: hand, owner: you, filter: {types: [creature]}}
+        mod: {cost_may: {amount: 1, once: true, min: 1, must: true}}
+
 # 語彙パイロット第28弾（フェーズ6）: アバレチェーン/ヨビニオン/オシオキムーン/マナ召喚/シンカパワー/進化でないフィルタ
   - id: T083
     name: アバレチェーン獣
@@ -1555,3 +1617,374 @@ cards:
           - {op: choose, select: {zone: deck, owner: you, from_top: 3, look: true, count: all}, as: pile}
           - {op: move, select: {ref: pile, filter: {types: [creature], vanilla: true}, count: all}, to: hand, reason: return}
           - {op: move, select: {ref: pile, count: all}, to: deck, position: bottom, order: choose, reason: put}
+  - id: T120
+    name: 革命ゼロ試獣
+    civs: [fire]
+    cost: 7
+    power: 9000
+    types: [creature, evolution]
+    evolve_from: {civs: [fire]}
+    races: [テスト]
+    keywords: [blocker]
+    text: 革命０トリガー：クリーチャーが自分を攻撃する時、自分のシールドがひとつもなければ、このクリーチャーを手札から見せてもよい。そうしたら、自分の山札の上から１枚目を表向きにする。そのカードが火の進化ではないクリーチャーなら出し、このクリーチャーをその上に置く。
+    abilities:
+      - kind: declare
+        zone: hand
+        when: {event: attack, target: player}
+        if: {all: [{is_turn: opp}, {cmp: [{count: {zone: shield, owner: you}}, "==", 0]}]}
+        effect:
+          - {op: choose, select: {zone: deck, owner: you, from_top: 1, look: true, count: all}, as: top}
+          - {op: if, cond: {exists: {ref: top, filter: {types: [creature], not_types: [evolution], civs: [fire]}}}, then: [
+              {op: move, select: {ref: top, count: 1}, to: bz, reason: put, as: base},
+              {op: invade, onto: {ref: base}}]}
+  - id: T121
+    name: S-MAX試獣
+    civs: [fire]
+    cost: 6
+    power: 11000
+    types: [creature, evolution]
+    s_max: true
+    races: [テスト]
+    keywords: [double_breaker]
+    text: S-MAX進化：自分がゲームに負ける時、かわりにこのクリーチャーを破壊するか、自分の手札から《S-MAX試獣》を１枚捨てる。（このクリーチャーは進化元を必要としない。自分のS-MAX進化クリーチャーが２体以上あれば、そのうちの１体を残し、残りをすべて手札に戻す）
+    abilities:
+      - kind: replace
+        optional: true
+        when: {event: lose}
+        instead:
+          - {op: if, cond: {exists: {zone: hand, owner: you, filter: {name: S-MAX試獣}}}, then: [
+              {op: modal, modes: [
+                [{op: move, select: {ref: self, count: 1}, to: graveyard, reason: destroy}],
+                [{op: discard, select: {zone: hand, owner: you, chooser: you, filter: {name: S-MAX試獣}, count: 1}}]]}],
+            else: [
+              {op: move, select: {ref: self, count: 1}, to: graveyard, reason: destroy}]}
+  - id: T122
+    name: S-MAX試獣・弐号
+    civs: [nature]
+    cost: 5
+    power: 8000
+    types: [creature, evolution]
+    s_max: true
+    races: [テスト]
+    keywords: [double_breaker]
+    text: S-MAX進化：自分がゲームに負ける時、かわりにこのクリーチャーを破壊するか、自分の手札から《S-MAX試獣・弐号》を１枚捨てる。（このクリーチャーは進化元を必要としない。自分のS-MAX進化クリーチャーが２体以上あれば、そのうちの１体を残し、残りをすべて手札に戻す）
+    abilities:
+      - kind: replace
+        optional: true
+        when: {event: lose}
+        instead:
+          - {op: if, cond: {exists: {zone: hand, owner: you, filter: {name: S-MAX試獣・弐号}}}, then: [
+              {op: modal, modes: [
+                [{op: move, select: {ref: self, count: 1}, to: graveyard, reason: destroy}],
+                [{op: discard, select: {zone: hand, owner: you, chooser: you, filter: {name: S-MAX試獣・弐号}, count: 1}}]]}],
+            else: [
+              {op: move, select: {ref: self, count: 1}, to: graveyard, reason: destroy}]}
+  - id: T123
+    name: 絆試獣・誘う者
+    civs: [nature]
+    cost: 3
+    power: 3000
+    types: [creature]
+    races: [テスト]
+    keywords: [kizuna]
+    text: キズナ（このクリーチャーが出た時、自分のクリーチャー１体の[P]能力を使う）
+  - id: T124
+    name: 絆試獣・持ち主
+    civs: [water]
+    cost: 4
+    power: 4000
+    types: [creature]
+    races: [テスト]
+    text: "[P]カードを１枚引く。"
+    abilities:
+      - kind: partner
+        effect:
+          - {op: draw, count: 1}
+  - id: T125
+    name: 絆試獣・一人二役
+    civs: [fire]
+    cost: 5
+    power: 5000
+    types: [creature]
+    races: [テスト]
+    keywords: [kizuna]
+    text: "キズナ（このクリーチャーが出た時、自分のクリーチャー１体の[P]能力を使う） / [P]カードを２枚引く。"
+    abilities:
+      - kind: partner
+        effect:
+          - {op: draw, count: 2}
+  - id: T126
+    name: 試獣・無月の門番
+    civs: [darkness]
+    cost: 8
+    power: 6000
+    types: [creature]
+    races: [テスト]
+    text: 無月の門：自分の魔導具をバトルゾーンに出した時、自分の魔導具をバトルゾーンと墓地から２つずつ選び、このクリーチャーを自分の手札または墓地からそれら４枚の上にコストを支払わずに召喚してもよい。
+    abilities:
+      - &mugon45
+        kind: trigger
+        zone: hand
+        when: {event: move, to: bz, subject: {owner: you, other: true, filter: {races: [魔導具]}}}
+        if: {all: [{cmp: [{count: {zone: bz, owner: you, filter: {races: [魔導具]}}}, ">=", 2]}, {cmp: [{count: {zone: graveyard, owner: you, filter: {races: [魔導具]}}}, ">=", 2]}]}
+        effect:
+          - op: may
+            body:
+              - {op: summon_on, parts: [{zone: bz, count: 2, filter: {races: [魔導具]}}, {zone: graveyard, count: 2, filter: {races: [魔導具]}}]}
+      - <<: *mugon45
+        zone: graveyard
+  - id: T127
+    name: 試作魔導具
+    civs: [darkness]
+    cost: 2
+    power: 1000
+    types: [creature]
+    races: [魔導具]
+    text: テスト用の魔導具。
+  - id: T128
+    name: 試獣・門の追随者
+    civs: [water]
+    cost: 3
+    power: 2000
+    types: [creature]
+    races: [テスト]
+    text: 自分の「無月の門」能力を使った時、このクリーチャーを自分の手札または墓地からバトルゾーンにタップして出してもよい。
+    abilities:
+      - &mugon45f
+        kind: trigger
+        zone: hand
+        when: {event: mugon_used, player: you}
+        effect:
+          - op: may
+            body:
+              - {op: move, select: {ref: self}, to: bz, reason: put, tapped: true}
+      - <<: *mugon45f
+        zone: graveyard
+  - id: T129
+    name: 封印試獣・トビラ
+    civs: [darkness]
+    cost: 4
+    power: 4000
+    types: [creature]
+    races: [テスト]
+    text: このクリーチャーが出た時、このクリーチャーに封印を２つ付ける。このクリーチャーの封印がすべてなくなった時、カードを１枚引く。
+    abilities:
+      - kind: trigger
+        when: {event: move, to: bz, subject: self}
+        effect:
+          - {op: attach_seal, select: {ref: self}, count: 2}
+      - kind: trigger
+        when: {event: move, from: bz, to: graveyard, reason: seal, sealed_from: self}
+        if: {cmp: [{seals_on: self}, "==", 0]}
+        effect:
+          - {op: draw, count: 1}
+  - id: T130
+    name: 封印試獣・フウジ
+    civs: [fire]
+    cost: 3
+    power: 3000
+    types: [creature]
+    races: [テスト]
+    text: このクリーチャーが出た時、相手のクリーチャー１体に封印を１つ付ける。
+    abilities:
+      - kind: trigger
+        when: {event: move, to: bz, subject: self}
+        effect:
+          - {op: attach_seal, select: {zone: bz, owner: opp, filter: {types: [creature]}, count: 1}}
+  - id: T131
+    name: 試作コマンド獣
+    civs: [darkness]
+    cost: 3
+    power: 3000
+    types: [creature]
+    races: [ソニック・コマンド]
+    text: テスト用のコマンド。
+  - id: T132
+    name: 封印試獣・ハズシ
+    civs: [water]
+    cost: 3
+    power: 2000
+    types: [creature]
+    races: [テスト]
+    text: このクリーチャーが出た時、クリーチャー１体の封印を１つ墓地に置く。
+    abilities:
+      - kind: trigger
+        when: {event: move, to: bz, subject: self}
+        effect:
+          - {op: remove_seal, select: {zone: bz, owner: any, filter: {sealed: true}, count: 1}}
+
+  # ---- 語彙パイロット第49弾: no_leave（バトルゾーンを離れない） ----
+  - id: T137
+    name: 試験用不離獣
+    civs: [light]
+    cost: 4
+    power: 4000
+    types: [creature]
+    races: [テスト]
+    text: このクリーチャーはバトルゾーンを離れない。
+    abilities:
+      - kind: static
+        affects: self
+        mod: {no_leave: true}
+  - id: T138
+    name: 試験用半離獣
+    civs: [light]
+    cost: 4
+    power: 4000
+    types: [creature]
+    races: [テスト]
+    text: このクリーチャーは、破壊される時以外、バトルゾーンを離れない。
+    abilities:
+      - kind: static
+        affects: self
+        mod: {no_leave: {except_destroy: true}}
+  - id: T139
+    name: 試験用守護獣
+    civs: [light]
+    cost: 4
+    power: 4000
+    types: [creature]
+    races: [テスト]
+    text: 自分のクリーチャーは、相手のカードの効果でバトルゾーンを離れない。
+    abilities:
+      - kind: static
+        affects: {owner: you, zone: bz, filter: {types: [creature]}}
+        mod: {no_leave: {by_opp: true}}
+  - id: T140
+    name: 試験用バウンス呪文
+    types: [spell]
+    civs: [water]
+    cost: 3
+    text: 相手のクリーチャーを１体選び、持ち主の手札に戻す。
+    spell:
+      - op: move
+        select: {zone: bz, owner: opp, filter: {types: [creature]}, count: 1}
+        to: hand
+        reason: return
+  - id: T141
+    name: 試験用巨獣守護者
+    civs: [light]
+    cost: 8
+    power: 8000
+    types: [creature]
+    races: [テスト]
+    text: 自分のパワー12000以上のクリーチャーは、バトルに負けた時以外、バトルゾーンを離れない。
+    abilities:
+      - kind: static
+        affects: {owner: you, zone: bz, filter: {types: [creature], power_ge: 12000}}
+        mod: {no_leave: {except_battle: true}}
+  - id: T142
+    name: 試験用巨獣
+    civs: [nature]
+    cost: 7
+    power: 13000
+    types: [creature]
+    races: [テスト]
+    text: テスト用の大きなクリーチャー。
+  - id: T143
+    name: 試験用超巨獣
+    civs: [fire]
+    cost: 5
+    power: 14000
+    types: [creature]
+    races: [テスト]
+    text: スピードアタッカー
+    keywords: [speed_attacker]
+  - id: T144
+    name: マナ召喚許可獣
+    civs: [nature]
+    cost: 4
+    power: 3000
+    types: [creature]
+    text: 自分のターンに一度、クリーチャーを1体、自分のマナゾーンから召喚してもよい。
+    abilities:
+      - kind: static
+        affects: {owner: you, zone: mana, filter: {types: [creature]}}
+        if: {is_turn: you}
+        mod: {allow: [{action: summon_from_mana, once: true}]}
+  - id: T145
+    name: 試験用マナ召喚呪文
+    civs: [nature]
+    cost: 2
+    types: [spell]
+    text: このターン、クリーチャーを1体、自分のマナゾーンから召喚してもよい。
+    spell:
+      - {op: modify, select: {zone: mana, owner: you, filter: {types: [creature]}}, mod: {allow: [{action: summon_from_mana, once: true}]}, duration: end_of_turn, dynamic: true}
+  - id: T146
+    name: 誘引獣
+    civs: [fire]
+    cost: 3
+    power: 2000
+    types: [creature]
+    races: [テスト]
+    text: 相手のクリーチャーが攻撃する時、可能ならこのクリーチャーを攻撃する。
+    abilities:
+      - kind: static
+        affects: self
+        mod: {must_be_attacked: true}
+  - id: T147
+    name: 誘引付与呪文
+    civs: [fire]
+    cost: 2
+    types: [spell]
+    text: 自分のクリーチャーを1体選ぶ。次の自分のターンのはじめまで、そのクリーチャーは「相手のクリーチャーが攻撃する時、可能ならこのクリーチャーを攻撃する」を得る。
+    spell:
+      - {op: modify, select: {zone: bz, owner: you, filter: {types: [creature]}, count: 1}, mod: {must_be_attacked: true}, duration: until_next_own_turn_start}
+  - id: T148
+    name: 試験用メテオバーン起動獣
+    civs: [nature]
+    cost: 1
+    power: 9000
+    types: [creature, evolution]
+    races: [テスト]
+    evolve_from: {races: [テスト]}
+    text: 進化。メテオバーン - このクリーチャーが攻撃できる時、このクリーチャーの下にあるカードを1枚墓地に置いてもよい。そうした場合、相手のクリーチャーを1体タップしてもよい。
+    abilities:
+      - kind: activate
+        cost: {under: 1}
+        effect:
+          - op: may
+            body:
+              - {op: tap, select: {zone: bz, owner: opp, filter: {types: [creature]}, count: 1}}
+  - id: T149
+    name: 試験用ビビッドロー検出獣
+    civs: [nature]
+    cost: 2
+    power: 2000
+    types: [creature]
+    races: [テスト]
+    text: 自分のクリーチャーがビビッドロー能力を使って召喚された時、カードを1枚引く。
+    abilities:
+      - kind: trigger
+        when: {event: move, to: bz, vivid: true, subject: {owner: you, filter: {types: [creature]}}}
+        effect:
+          - {op: draw, count: 1}
+  - id: T150
+    name: 試験用ビビッドロー呪文
+    civs: [water]
+    cost: 3
+    types: [spell]
+    vividraw: {cost: 1, civs: [water]}
+    text: カードを1枚引く。この呪文をビビッドロー能力を使って唱えていれば、さらにもう1枚引く。
+    spell:
+      - {op: draw, count: 1}
+      - op: if
+        cond: {vivid_paid: true}
+        then:
+          - {op: draw, count: 1}
+  - id: T151
+    name: 試験用ビビッドロー探知呪文
+    civs: [nature]
+    cost: 2
+    types: [spell]
+    text: ビビッドローを持つ自分のクリーチャーを1体選び、アンタップする。
+    spell:
+      - {op: untap, select: {zone: bz, owner: you, filter: {types: [creature], vividraw: true}, count: 1}}
+  - id: T152
+    name: 試験用フシギバース探知呪文
+    civs: [nature]
+    cost: 2
+    types: [spell]
+    text: フシギバースを持つ自分のクリーチャーを1体選び、アンタップする。
+    spell:
+      - {op: untap, select: {zone: bz, owner: you, filter: {types: [creature], fushigi: true}, count: 1}}

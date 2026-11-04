@@ -23,6 +23,7 @@ class Option(TypedDict, total=False):
     shield: int                     # S・バック: 捨てるシールドのカード
     tap: int                             # 起動型能力のコストでタップするクリーチャー
     tap_mana: int                        # 起動型能力の複合コストで追加でタップするマナの枚数
+    under_cost: int                      # 起動型能力のコストで墓地に置く下のカードの枚数（第53弾）
     grave_evo: bool                      # 墓地進化（自分の墓地のクリーチャーの上に重ねて出す選択肢）
     once_src: int                        # 回数制限つき許可（ターン1回）の発生源カード
     free: bool                           # コストを支払わずに実行する選択肢（G・ゼロ）
@@ -124,6 +125,7 @@ class Continuous(TypedDict):
     duration: str
     controller: int
     filter: NotRequired[dict]
+    src: NotRequired[int]                # 発生源カードの cid（回数制限つき allow の帰属用、第50弾）
 
 
 class Delayed(TypedDict):
@@ -274,6 +276,7 @@ class PlayTask(TypedDict):
     bz_done: NotRequired[bool]           # バズレンダ: 追加支払いの確認が終わった
     bz_count: NotRequired[int]           # バズレンダ: 追加で支払った回数
     alt: NotRequired[bool]               # 代替コストで実行する
+    vivid: NotRequired[bool]             # ビビッドローで実行する（第54弾: イベント・条件への伝播用）
     alt_step: NotRequired[int]           # 代替コスト（行動形式）で済んだ段階
     evo_v: NotRequired[list]             # 進化V: フィルタごとに選んだ進化元
     fushigi: NotRequired[bool]           # フシギバースとして実行する
@@ -285,6 +288,10 @@ class PlayTask(TypedDict):
     od_yn: NotRequired[bool]             # O・ドライブ: 追加でタップするか
     od_done: NotRequired[bool]           # O・ドライブ: 確認済み
     odrive: NotRequired[bool]            # O・ドライブ: 追加でタップして召喚した
+    od_idx: NotRequired[int]             # O・ドライブ: 処理中のステップ（文明）番号
+    od_sub: NotRequired[int]             # O・ドライブ: ステップ内で処理中の文明番号
+    od_civs_done: NotRequired[list]      # O・ドライブ: 実際にタップした文明
+    odrive_civs: NotRequired[list]       # O・ドライブ: タップした文明（イベント/印への引き渡し用）
     climb: NotRequired[bool]             # ムゲンクライムとして実行する
     climb_done: NotRequired[bool]        # ムゲンクライム: クリーチャーのタップが済んだ
     resolve_to: NotRequired[str]         # 解決後の置き場所（play_free の resolve_to）
@@ -335,6 +342,22 @@ class DeclareTask(TypedDict):
     answer: NotRequired[list[int]]
 
 
+class LoseReplaceTask(TypedDict):
+    """敗北の置換（S-MAX進化など）: 敗北が確定する前に、置換できるかを敗北するプレイヤーに諮る。"""
+    t: Literal["lose_replace"]
+    loser: int
+    reason: str
+    phase: int
+    answer: NotRequired[list[int]]
+
+
+class SmaxReduceTask(TypedDict):
+    """S-MAX進化の2体制限（状況起因）: 残す1体を選び、残りをすべて手札に戻す。"""
+    t: Literal["smax_reduce"]
+    player: int
+    answer: NotRequired[list[int]]
+
+
 class BindTask(TypedDict):
     t: Literal["bind"]
     env: Env
@@ -361,6 +384,12 @@ class InvadeFixTask(TypedDict):
     tapped: bool
 
 
+class SummonOnFixTask(TypedDict):
+    t: Literal["summon_on_fix"]
+    cid: int
+    tapped: bool
+
+
 class PutUnderTask(TypedDict):
     t: Literal["put_under"]
     cid: int
@@ -371,6 +400,12 @@ class PutUnderTask(TypedDict):
 class SlayerTask(TypedDict):
     t: Literal["slayer"]
     pairs: list[list[Ref]]               # [スレイヤーを持っていた負けたクリーチャー, バトル相手]
+
+
+class SealReleaseTask(TypedDict):
+    t: Literal["seal_release"]
+    player: int
+    civs: list[str]
 
 
 def check_shape(d: dict, shape) -> None:
