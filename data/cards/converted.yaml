@@ -291204,3 +291204,462 @@ cards:
     - promoy24-028
   text: '調律師ピーカプ: スピードアタッカー（このクリーチャーは召喚酔いしない） / メガ・ラスト・バースト（このクリーチャーが離れて、手札、マナゾーン、または墓地に置かれた時、このカードの呪文側をコストを支払わずに唱えてもよい）
     ／ ♪音速で 本番中に チューニング: このターン、自分のクリーチャー１体に「スピードアタッカー」を与え、そのクリーチャーの最初の攻撃の終わりにそのクリーチャーをアンタップする。'
+- abilities:
+  - affects: self
+    kind: static
+    mod:
+      must_be_attacked: true
+  civs:
+  - nature
+  cost: 8
+  id: dmr08-033
+  keywords:
+  - guardman
+  - double_breaker
+  mana: 1
+  name: 土用の超人
+  power: 8000
+  races:
+  - ジャイアント
+  - アンノウン
+  source:
+    official: dmr08-033
+    review: pending
+  text: 'ガードマン(自分の他のクリーチャーが攻撃される時、このクリーチャーをタップしてもよい。そうした場合、攻撃クリーチャーはかわりにこのクリーチャーを攻撃する)
+
+    相手のクリーチャーが攻撃する場合、可能であればこのクリーチャーを攻撃する。
+
+    W・ブレイカー(このクリーチャーはシールドを２枚ブレイクする)'
+  types:
+  - creature
+- abilities:
+  - affects: self
+    kind: static
+    mod:
+      must_be_attacked: true
+  civs:
+  - nature
+  cost: 2
+  id: dmr13-068
+  mana: 1
+  name: 陽動の面 ヒッヒー
+  power: 2000
+  races:
+  - ビーストフォーク號
+  source:
+    official: dmr13-068
+    review: pending
+  text: 相手のクリーチャーが攻撃する場合、可能であればこのクリーチャーを攻撃する。
+  types:
+  - creature
+- abilities:
+  - effect:
+    - body:
+      - op: tap
+        select:
+          count: 1
+          ref: self
+      op: may
+    kind: trigger
+    when:
+      event: move
+      subject: self
+      to: bz
+  - affects: self
+    kind: static
+    mod:
+      must_be_attacked: true
+  civs:
+  - nature
+  cost: 8
+  id: dmr17-027
+  keywords:
+  - s_trigger
+  - guardman
+  mana: 1
+  name: 瞬撃の大地 ザンヴァッカ
+  power: 5000
+  races:
+  - ガイア・コマンド
+  source:
+    official: dmr17-027
+    review: pending
+    aliases:
+    - promoy21-046
+  text: S・トリガー（このクリーチャーをシールドゾーンから手札に加える時、コストを支払わずにすぐ召喚してもよい）ガードマン（このクリーチャーをタップして、相手クリーチャーの攻撃先を、自分の他のクリーチャーからこのクリーチャーに変更してもよい）このクリーチャーがバトルゾーンに出た時、タップしてもよい。相手のクリーチャーは、もし攻撃するのであれば、可能ならこのクリーチャーを攻撃する。
+  types:
+  - creature
+- abilities:
+  - affects: self
+    kind: static
+    mod:
+      must_be_attacked: true
+  - affects:
+      filter:
+        types:
+        - creature
+      other: true
+      owner: you
+      zone: bz
+    kind: static
+    mod:
+      grant:
+      - guardman
+  civs:
+  - nature
+  cost: 2
+  id: dmr19-023
+  mana: 1
+  name: フルフワモケダケ
+  power: 1000
+  races:
+  - バルーン・マッシュルーム
+  source:
+    official: dmr19-023
+    review: pending
+  text: '相手のクリーチャーが攻撃する時、可能であればこのクリーチャーを攻撃する。
+
+    自分の他のクリーチャーすべてに「ガードマン」を与える。'
+  types:
+  - creature
+- abilities:
+  - affects: self
+    kind: static
+    mod:
+      must_be_attacked: true
+  - instead:
+    - op: move
+      reason: put
+      select:
+        count: 1
+        ref: self
+      to: bz
+    kind: replace
+    optional: true
+    when:
+      by: opp
+      event: move
+      from: hand
+      reason: discard
+      subject: self
+      to: graveyard
+    zone: hand
+  civs:
+  - fire
+  - nature
+  cost: 8
+  id: dmr21-011
+  keywords:
+  - double_breaker
+  - speed_attacker
+  mana: 1
+  name: 永遠のエメラルド・リュウセイ
+  power: 8000
+  races:
+  - レッド・コマンド・ドラゴン
+  source:
+    official: dmr21-011
+    review: pending
+  text: 'マナゾーンに置く時、このカードはタップして置く。
+
+    W・ブレイカー
+
+    スピードアタッカー
+
+    相手のクリーチャーが攻撃する時、可能であればこのクリーチャーを攻撃する。
+
+    相手の呪文の効果またはクリーチャーの能力によって、このクリーチャーを手札から捨てる時、墓地に置くかわりにバトルゾーンに置いてもよい。'
+  types:
+  - creature
+- abilities:
+  - effect:
+    - body:
+      - op: tap
+        select:
+          count: 1
+          ref: self
+      op: may
+    kind: trigger
+    when:
+      event: move
+      subject: self
+      to: bz
+  - affects: self
+    kind: static
+    mod:
+      must_be_attacked: true
+  - affects: self
+    if:
+      cmp:
+      - count:
+          owner: you
+          zone: mana
+      - '>='
+      - 6
+    kind: static
+    mod:
+      grant:
+      - s_trigger
+    zone: shield
+  - effect:
+    - body:
+      - op: move
+        reason: put
+        select:
+          count: 1
+          filter:
+            civs:
+            - nature
+            cost_le: 6
+            types:
+            - creature
+          owner: you
+          zone: mana
+        to: bz
+      op: may
+    kind: trigger
+    when:
+      event: move
+      from: bz
+      reason: destroy
+      subject: self
+  civs:
+  - nature
+  cost: 7
+  id: dmr22-005
+  keywords:
+  - double_breaker
+  mana: 1
+  name: 獣軍隊X ゲリラフガン
+  power: 7000
+  races:
+  - ゲリラ・コマンド
+  - イニシャルズ
+  source:
+    official: dmr22-005
+    review: pending
+  text: W・ブレイカーこのクリーチャーがバトルゾーンに出た時、このクリーチャーをタップしてもよい。相手のクリーチャーが攻撃する時、可能ならこのクリーチャーを攻撃する。自分のマナゾーンにカードが６枚以上あれば、自分のシールドゾーンにあるこのクリーチャーに「S・トリガー」を与える。このクリーチャーが破壊された時、自然のコスト６以下のクリーチャーを１体、自分のマナゾーンからバトルゾーンに出してもよい。
+  types:
+  - creature
+- abilities:
+  - affects: self
+    kind: static
+    mod:
+      must_be_attacked: true
+  - affects: self
+    if:
+      cmp:
+      - count:
+          filter:
+            power_ge: 12000
+            types:
+            - creature
+          owner: you
+          zone: mana
+      - '>='
+      - 5
+    kind: static
+    mod:
+      grant:
+      - s_trigger
+    zone: shield
+  civs:
+  - nature
+  cost: 8
+  id: dmrp04m-007
+  keywords:
+  - triple_breaker
+  - enters_tapped
+  mana: 1
+  name: タマタンゴ・パンツァー
+  power: 12000
+  races:
+  - グランセクト
+  source:
+    official: dmrp04m-007
+    review: pending
+  text: 'T・ブレイカー
+
+    バトルゾーンに置く時、このカードはタップして置く。
+
+    相手のクリーチャーが攻撃する場合、可能ならこのクリーチャーを攻撃する。
+
+    自分のマナゾーンにパワー12000以上のクリーチャーが５体以上あれば、シールドゾーンにあるこのクリーチャーに「S・トリガー」を与える。'
+  types:
+  - creature
+- abilities:
+  - kind: trigger
+    when:
+      event: move
+      to: bz
+      subject: self
+    effect:
+    - op: modify
+      select:
+        ref: self
+      mod:
+        allow:
+        - action: attack_creature
+          other:
+            tapped: false
+      duration: end_of_turn
+  - effect:
+    - duration: end_of_turn
+      mod:
+        allow:
+        - action: attack_creature
+          other:
+            tapped: false
+      op: modify
+      select:
+        ref: self
+    kind: trigger
+    when:
+      event: move
+      subject: self
+      to: bz
+  - affects: self
+    kind: static
+    mod:
+      must_be_attacked: true
+  civs:
+  - nature
+  cost: 7
+  id: dmrp05-026
+  keywords:
+  - double_breaker
+  mana: 1
+  name: ゼロノ・スタッガー
+  power: 8000
+  races:
+  - グランセクト
+  source:
+    notes: マッハファイターは第58弾のイディオムどおり trigger → modify で allow を直接付与
+    official: dmrp05-026
+    review: pending
+  text: 'マッハファイター（このクリーチャーは、バトルゾーンに出たターンの間、タップまたはアンタップしているクリーチャーを攻撃できる）
+
+    W・ブレイカー（このクリーチャーはシールドを２つブレイクする）
+
+    相手のクリーチャーが攻撃する時、可能ならこのクリーチャーを攻撃する。'
+  types:
+  - creature
+- abilities:
+  - effect:
+    - duration: end_of_turn
+      mod:
+        allow:
+        - attack_player
+      op: modify
+      select:
+        ref: self
+    kind: trigger
+    when:
+      event: move
+      subject: self
+      to: bz
+  - affects: self
+    kind: static
+    mod:
+      require:
+      - attack
+  - affects: self
+    if:
+      cmp:
+      - count:
+          filter:
+            races:
+            - ジョーカーズ
+          owner: you
+          zone:
+          - bz
+          - mana
+      - '>='
+      - 2
+    kind: static
+    mod:
+      grant:
+      - double_breaker
+      power: 3000
+  civs:
+  - zero
+  cost: 5
+  id: dmsd01-009
+  mana: 1
+  name: チョートッQ
+  power: 5000
+  races:
+  - ジョーカーズ
+  source:
+    notes: 出たターンの相手プレイヤー攻撃許可は第58弾のイディオム（trigger → modify で allow 付与）
+    official: dmsd01-009
+    review: pending
+    aliases:
+    - dmrp01-029
+    - promoy16-003
+    - promoy16-coro40th003
+  text: 'このクリーチャーは、バトルゾーンに出たターン、相手プレイヤーを攻撃できる。
+
+    このクリーチャーは、可能なら毎ターン、相手プレイヤーを攻撃する。
+
+    バトルゾーンまたはマナゾーンに自分のジョーカーズが合計２枚以上あれば、このクリーチャーのパワーを+3000し、「W・ブレイカー」を与える。'
+  types:
+  - creature
+- abilities:
+  - affects:
+      filter:
+        types:
+        - creature
+      owner: opp
+      zone: bz
+    kind: static
+    mod:
+      require:
+      - attack
+  - effect:
+    - duration: during_attack
+      effect:
+      - op: untap
+        select:
+          ref: self
+      op: delayed_trigger
+      when:
+        event: battle_win
+        subject: self
+    kind: trigger
+    when:
+      event: block
+      subject: self
+  civs:
+  - light
+  - darkness
+  cost: 8
+  id: dmx12b-061
+  keywords:
+  - blocker
+  - cannot_attack_player
+  mana: 1
+  name: 悪魔聖霊バルホルス
+  power: 6000
+  races:
+  - エンジェル・コマンド
+  - デーモン・コマンド
+  source:
+    notes: ブロック後のアンタップは dm02-008 の先例（delayed_trigger when battle_win、duration during_attack）
+    official: dmx12b-061
+    review: pending
+    aliases:
+    - dm13-001
+    - dmc42-016
+    - dmc68-003
+  text: 'マナゾーンに置く時、このカードはタップして置く。
+
+    ブロッカー
+
+    相手のクリーチャーはすべて、可能であれば毎ターン攻撃する。
+
+    このクリーチャーは、相手プレイヤーを攻撃できない。
+
+    このクリーチャーがブロックした時、バトルの後、このクリーチャーをアンタップする。'
+  types:
+  - creature
