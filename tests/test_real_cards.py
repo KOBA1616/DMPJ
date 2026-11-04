@@ -193,3 +193,15 @@ def test_aleftina_wins_when_ten_or_more_shields_and_not_with_nine(rules):
         e.advance()
         assert (e.s.result is not None and e.s.result["winner"] == 0) == won, n
 
+
+
+def test_aleftina_costs_one_more_per_own_shield_while_in_hand(rules):
+    from dmsim import scenario
+    for shields, mana, playable in ((0, 4, True), (3, 6, False), (3, 7, True)):
+        spec = {"p0": {"hand": ["dmx12b-031"], "mana": ["dm16-007"] * mana, "shield": ["dm06-085"] * shields}, "p1": {}, "filler": "dm06-085"}
+        e = scenario.build(rules, spec)
+        d = e.advance()
+        e.answer([next(i for i, o in enumerate(d["options"]) if o["key"] == "pass")])   # マナはチャージしない（手札のアレフティナのコストだけ見る）
+        d = e.advance()
+        can = d["kind"] == "main" and any(o["key"].startswith("play:dmx12b-031") for o in d["options"])   # 払えないなら main は出ない
+        assert can == playable, (shields, mana)
