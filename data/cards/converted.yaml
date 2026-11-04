@@ -284945,3 +284945,1270 @@ cards:
     notes: Jチェンジは第24弾のイディオム。
     aliases:
     - dmrp07-092
+- id: dm24-007
+  name: 霊流星バルファート
+  types:
+  - creature
+  - evolution
+  civs:
+  - light
+  - nature
+  cost: 5
+  power: 7000
+  races:
+  - フェニックス
+  - アーク・セラフィム
+  mana: 1
+  evolve_from:
+  - civs:
+    - light
+    types:
+    - creature
+  - civs:
+    - nature
+    types:
+    - creature
+  abilities:
+  - kind: replace
+    when:
+      event: move
+      from: bz
+      to: graveyard
+      reason: destroy
+      subject: self
+    instead:
+    - op: move
+      select:
+        under_of: self
+        count: all
+      to: mana
+      reason: put
+    - op: move
+      select:
+        ref: self
+      to: shield
+      reason: put
+      face_up: false
+  text: 'マナゾーンに置く時、このカードはタップして置く。
+
+    進化V-自分の光のクリーチャー１体と自然のクリーチャー１体を重ねた上に置く。
+
+    このクリーチャーが破壊される時、このクリーチャーの下に重ねたカードをすべて自分のマナゾーンに置き、このクリーチャーを墓地に置くかわりに裏向きにしてシールドに加える。
+
+    W・ブレイカー'
+  source:
+    official: dm24-007
+    review: pending
+    notes: '"進化Vは evolve_from のフィルタのリスト（光1体＋自然1体）。破壊置換で下のカードはマナへ、本体は裏向きシールドへ（face_up:
+      false）。W・ブレイカーは known_keywords のため書き直さない。"'
+  keywords:
+  - double_breaker
+- id: dm24-010
+  name: 幻流星ミスター・イソップ
+  types:
+  - creature
+  - evolution
+  civs:
+  - fire
+  - nature
+  cost: 8
+  power: 9000
+  races:
+  - フェニックス
+  - ドリームメイト
+  mana: 1
+  evolve_from:
+  - civs:
+    - fire
+    types:
+    - creature
+  - civs:
+    - nature
+    types:
+    - creature
+  abilities:
+  - kind: trigger
+    when:
+      event: turn_start
+      player: you
+    effect:
+    - op: may
+      body:
+      - op: move
+        select:
+          zone: mana
+          owner: you
+          filter:
+            types:
+            - creature
+            civs:
+            - fire
+            - nature
+            cost_le: 7
+          count: 1
+        to: bz
+        reason: put
+  text: 'マナゾーンに置く時、このカードはタップして置く。
+
+    進化V-自分の火のクリーチャー１体と自然のクリーチャー１体を重ねた上に置く。
+
+    自分のターンのはじめに、コスト７以下の火または自然のクリーチャーを１体、自分のマナゾーンからバトルゾーンに出してもよい。
+
+    W・ブレイカー'
+  source:
+    official: dm24-010
+    review: pending
+    notes: '"進化Vは evolve_from のフィルタのリスト（火1体＋自然1体）。「出す」は召喚ではないため reason: put。火または自然は
+      civs のリスト（いずれか）。W・ブレイカーは known_keywords のため書き直さない。"'
+  keywords:
+  - double_breaker
+- id: dm24-038
+  name: 闘流星ナイトスクリーマー
+  types:
+  - creature
+  - evolution
+  civs:
+  - darkness
+  - fire
+  cost: 7
+  power: 11000
+  races:
+  - フェニックス
+  - ティラノ・ドレイク
+  mana: 1
+  evolve_from:
+  - civs:
+    - darkness
+    types:
+    - creature
+  - civs:
+    - fire
+    types:
+    - creature
+  abilities:
+  - kind: trigger
+    when:
+      event: attack
+      subject: self
+    if:
+      not:
+        exists:
+          zone: bz
+          owner: opp
+          filter:
+            races:
+            - ゴッド
+            - フェニックス
+    effect:
+    - op: destroy
+      select:
+        zone: bz
+        owner: opp
+        filter:
+          types:
+          - creature
+          tapped: false
+        count: 1
+        chooser: opp
+  text: 'マナゾーンに置く時、このカードはタップして置く。
+
+    進化V-自分の闇のクリーチャー１体と火のクリーチャー１体を重ねた上に置く。
+
+    このクリーチャーが攻撃する時、バトルゾーンに相手のゴッドまたはフェニックスが１体もなければ、相手は自分自身のタップされていないクリーチャーを１体選び、破壊する。
+
+    W・ブレイカー'
+  source:
+    official: dm24-038
+    review: pending
+    notes: '"進化Vは evolve_from のフィルタのリスト（闇1体＋火1体）。「ゴッドまたはフェニックス」は races のリスト（いずれか）。破壊対象は相手が選ぶ（chooser:
+      opp）。W・ブレイカーは known_keywords のため書き直さない。"'
+    aliases:
+    - dm24-038cc
+  keywords:
+  - double_breaker
+- id: dm26ex1-028
+  name: 超聖竜シデン・ギャラクシー
+  types:
+  - creature
+  - evolution
+  civs:
+  - light
+  - fire
+  cost: 5
+  power: 15000
+  races:
+  - エンジェル・コマンド
+  - アーマード・ドラゴン
+  - サムライ
+  mana: 1
+  evolve_from:
+    any_of:
+    - race_has: ドラゴン
+    - races:
+      - エンジェル・コマンド
+  evolve_count: 2
+  abilities:
+  - kind: trigger
+    first_time: true
+    when:
+      event: attack
+      subject: self
+    effect:
+    - op: may
+      body:
+      - op: move
+        select:
+          under_of: self
+          count: 2
+          up_to: true
+        to: graveyard
+        reason: put
+        as: paid
+      - op: if
+        cond:
+          exists:
+            ref: paid
+            filter:
+              race_has: ドラゴン
+        then:
+        - op: untap
+          select:
+            ref: self
+            count: 1
+      - op: if
+        cond:
+          exists:
+            ref: paid
+            filter:
+              races:
+              - エンジェル・コマンド
+        then:
+        - op: modify
+          select:
+            ref: self
+            count: 1
+          mod:
+            gain:
+            - kind: replace
+              when:
+                event: move
+                from: bz
+                to: graveyard
+                reason: destroy
+                subject: self
+              instead: []
+          duration: end_of_turn
+  text: '進化V：ドラゴンまたはエンジェル・コマンドいずれかのクリーチャー２体を重ねた上に置く。
+
+    T・ブレイカー
+
+    メテオバーン：各ターン、はじめてこのクリーチャーが攻撃する時、このクリーチャーの下にあるカードを２枚まで墓地に置いてもよい。こうしてドラゴン・カードを置いたら、このクリーチャーをアンタップする。こうしてエンジェル・コマンド・カードを置いたら、このクリーチャーがこのターンに破壊される時、かわりにとどまる。'
+  source:
+    official: dm26ex1-028
+    review: pending
+    notes: '"進化Vは any_of（ドラゴンまたはエンジェル・コマンド）＋evolve_count: 2。メテオバーンは攻撃時誘発のカスタム型（first_time:
+      true）。「こうして〜置いたら」は paid の種族で判定（race_has: ドラゴン）。「かわりにとどまる」は mod.gain の置換（instead:
+      []）を end_of_turn で付与。T・ブレイカーは known_keywords のため書き直さない。"'
+    aliases:
+    - 31-sec001
+    - dm31-s04
+    - dmc55-025
+    - dmc66-019
+    - dmex01-031
+    - dmx19-s51
+  keywords:
+  - triple_breaker
+- id: dm26ex1-038
+  name: 戦極竜ヴァルキリアス・ムサシ
+  types:
+  - creature
+  - evolution
+  civs:
+  - fire
+  cost: 6
+  power: 11000
+  races:
+  - ヒューマノイド
+  - アーマード・ドラゴン
+  - サムライ
+  mana: 1
+  evolve_from:
+    races:
+    - サムライ
+    types:
+    - creature
+  evolve_count: 2
+  abilities:
+  - kind: trigger
+    when:
+      event: move
+      to: bz
+      subject: self
+    effect:
+    - op: may
+      body:
+      - op: move
+        select:
+          zone: hand
+          owner: you
+          filter:
+            types:
+            - creature
+            races:
+            - サムライ
+            not_types:
+            - evolution
+          count: 2
+          up_to: true
+        to: bz
+        reason: put
+        as: put_out
+      - op: modify
+        select:
+          ref: put_out
+          count: all
+        mod:
+          grant:
+          - speed_attacker
+        duration: end_of_turn
+      - op: delayed_trigger
+        when:
+          event: turn_end
+        effect:
+        - op: destroy
+          select:
+            ref: put_out
+            count: all
+  text: '進化V：サムライ・クリーチャー２体を重ねた上に置く。
+
+    W・ブレイカー
+
+    このクリーチャーが出た時、進化ではないサムライ・クリーチャーを２体まで、自分の手札から出してもよい。そのクリーチャーに「スピードアタッカー」を与える。そのターンの終わりに、それらを破壊する。'
+  source:
+    official: dm26ex1-038
+    review: pending
+    notes: '"進化Vは races: [サムライ]＋evolve_count: 2。「進化ではない」は not_types: [evolution]。「出す」は
+      reason: put。出たクリーチャーは as: put_out で保持し、スピードアタッカー付与とターン終了時破壊に使う。W・ブレイカーは known_keywords
+      のため書き直さない。"'
+    aliases:
+    - dm30-004
+    - dmc53-018
+  keywords:
+  - double_breaker
+- id: dm31-005
+  name: 星狼凰マスター・オブ・デスティニー
+  types:
+  - creature
+  - evolution
+  civs:
+  - darkness
+  - nature
+  cost: 7
+  power: 12000
+  races:
+  - フェニックス
+  - ナイト
+  - サムライ
+  mana: 1
+  evolve_from:
+  - races:
+    - サムライ
+    types:
+    - creature
+  - races:
+    - ナイト
+    types:
+    - creature
+  abilities:
+  - kind: trigger
+    when:
+      event: attack
+      subject: self
+    effect:
+    - op: may
+      body:
+      - op: play_free
+        select:
+          zone: mana
+          owner: you
+          filter:
+            types:
+            - spell
+            keyword: s_trigger
+          count: 1
+    - op: may
+      body:
+      - op: move
+        select:
+          zone: mana
+          owner: you
+          filter:
+            types:
+            - cross_gear
+          count: 1
+        to: bz
+        reason: put
+  text: 'マナゾーンに置く時、このカードはタップして置く。
+
+    進化V-自分のサムライ・クリーチャー１体とナイト・クリーチャー１体を重ねた上に置く。
+
+    このクリーチャーが攻撃する時、自分のマナゾーンにある「S・トリガー」付きの呪文を１枚、コストを支払わずに唱えてもよい。その後、クロスギアを１枚、自分のマナゾーンからバトルゾーンに出してもよい。
+
+    T・ブレイカー(このクリーチャーはシールドを３枚ブレイクする)'
+  source:
+    official: dm31-005
+    review: pending
+    notes: '"進化Vは evolve_from のフィルタのリスト（サムライ1体＋ナイト1体）。S・トリガー付き呪文は keyword: s_trigger
+      で絞る。クロスギアの「出す」は move to bz（reason: put）。T・ブレイカーは known_keywords のため書き直さない。"'
+  keywords:
+  - triple_breaker
+- id: dm34-003
+  name: 死神の魔龍虫ビャハ
+  types:
+  - creature
+  - evolution
+  civs:
+  - darkness
+  cost: 8
+  power: 9000
+  races:
+  - パラサイトワーム
+  - ドラゴン・ゾンビ
+  mana: 1
+  evolve_from:
+  - civs:
+    - darkness
+    types:
+    - creature
+  - civs:
+    - darkness
+    types:
+    - creature
+  keywords:
+  - double_breaker
+  abilities:
+  - kind: replace
+    optional: true
+    when:
+      event: move
+      from: bz
+      to: graveyard
+      reason: destroy
+      subject:
+        owner: you
+        other: true
+        filter:
+          types:
+          - creature
+    instead:
+    - op: put_under
+      select:
+        ref: event.subject
+      onto:
+        ref: self
+  - kind: trigger
+    when:
+      event: attack
+      subject: self
+    effect:
+    - op: may
+      body:
+      - op: move
+        select:
+          under_of: self
+          count: 4
+        to: graveyard
+        reason: put
+        as: paid
+      - op: if
+        cond:
+          cmp:
+          - count:
+              ref: paid
+          - ==
+          - 4
+        then:
+        - op: destroy
+          select:
+            zone: bz
+            owner: opp
+            chooser: opp
+            filter:
+              types:
+              - creature
+            count: 4
+        - op: discard
+          select:
+            zone: hand
+            owner: opp
+            chooser: opp
+            count: 4
+  text: '進化V - 自分の闇のクリーチャー２体の上に置く。
+
+    自分の他のクリーチャーが破壊される時、そのクリーチャーを墓地に置くかわりにこのクリーチャーの下に置いてもよい。
+
+    メテオバーン - このクリーチャーが攻撃する時、このクリーチャーの下にあるカードを４枚選び墓地に置いてもよい。そうした場合、相手は自身のクリーチャーを４体選んで破壊し、その後、自身の手札を４枚選んで捨てる。
+
+    W・ブレイカー(このクリーチャーはシールドを２枚ブレイクする)'
+  source:
+    official: dm34-003
+    review: pending
+    notes: '"進化V（闇のクリーチャー2体）は evolve_from のフィルタリスト。破壊置換とメテオバーン型は dmr13-s01 の前例に倣う。相手が選ぶ破壊・捨ては
+      chooser: opp。"'
+- id: dmc42-009
+  name: 聖獣王ペガサス
+  types:
+  - creature
+  - evolution
+  civs:
+  - light
+  - nature
+  cost: 6
+  power: 12000
+  races:
+  - セイント・ペガサス
+  mana: 1
+  evolve_from:
+  - races:
+    - ホーン・ビースト
+  - races:
+    - エンジェル・コマンド
+  keywords:
+  - triple_breaker
+  abilities:
+  - kind: trigger
+    when:
+      event: attack
+      subject: self
+    effect:
+    - op: choose
+      select:
+        zone: deck
+        owner: you
+        from_top: 1
+        look: true
+        count: 1
+      as: t
+    - op: if
+      cond:
+        exists:
+          ref: t
+          filter:
+            types:
+            - creature
+            not_types:
+            - evolution
+      then:
+      - op: move
+        select:
+          ref: t
+          count: all
+        to: bz
+        reason: put
+      else:
+      - op: move
+        select:
+          ref: t
+          count: all
+        to: hand
+        reason: draw
+  - kind: trigger
+    when:
+      event: move
+      from: bz
+      subject: self
+    effect:
+    - op: choose
+      select:
+        zone: deck
+        owner: you
+        from_top: 1
+        look: true
+        count: 1
+      as: t
+    - op: if
+      cond:
+        exists:
+          ref: t
+          filter:
+            types:
+            - creature
+            not_types:
+            - evolution
+      then:
+      - op: move
+        select:
+          ref: t
+          count: all
+        to: bz
+        reason: put
+      else:
+      - op: move
+        select:
+          ref: t
+          count: all
+        to: hand
+        reason: draw
+  text: 'マナゾーンに置く時、このカードはタップして置く。
+
+    進化V-自分のホーン・ビースト１体とエンジェル・コマンド１体を重ねた上に置く。
+
+    このクリーチャーが攻撃した時またはバトルゾーンを離れた時、自分の山札の上から１枚目を表向きにする。それが進化クリーチャー以外のクリーチャーであれば、バトルゾーンに出す。それ以外のカードであれば、自分の手札に加える。
+
+    T・ブレイカー(このクリーチャーはシールドを３枚ブレイクする)'
+  source:
+    official: dmc42-009
+    review: pending
+    notes: 「攻撃した時またはバトルゾーンを離れた時」は dmr21-086 の前例に倣い trigger を2つに分けた。表向き＋条件分岐は dm22rp2x-071
+      の前例（choose + look + if）。
+    aliases:
+    - dm12-s05
+- id: dmc53-009
+  name: 龍炎鳳エターナル・フェニックス
+  types:
+  - creature
+  - evolution
+  civs:
+  - fire
+  cost: 5
+  power: 11000
+  races:
+  - フェニックス
+  mana: 1
+  evolve_from:
+  - races:
+    - ファイアー・バード
+  - races:
+    - アーマード・ドラゴン
+  keywords:
+  - double_breaker
+  abilities:
+  - kind: static
+    affects:
+      zone: bz
+      owner: you
+      filter:
+        types:
+        - creature
+        any_of:
+        - race_has: ドラゴン
+        - races:
+          - フェニックス
+    mod:
+      allow:
+      - action: attack_creature
+        other:
+          tapped: false
+  - kind: trigger
+    when:
+      event: move
+      from: bz
+      subject: self
+    effect:
+    - op: move
+      select:
+        zone: graveyard
+        owner: you
+        filter:
+          types:
+          - creature
+          civs:
+          - fire
+          not_types:
+          - evolution
+        count: all
+      to: hand
+      reason: return
+  text: '進化V - 自分のファイアー・バード１体とアーマード・ドラゴン１体を重ねた上に置く。
+
+    W・ブレイカー
+
+    バトルゾーンにある自分の、ドラゴンまたはフェニックスはすべて、タップされていないクリーチャーを攻撃できる。
+
+    このクリーチャーがバトルゾーンを離れた時、進化クリーチャーではない火のクリーチャーをすべて、自分の墓地から手札に戻す。'
+  source:
+    official: dmc53-009
+    review: pending
+    notes: '"タップされていないクリーチャーへの攻撃許可は dm01-031 の前例（allow: attack_creature + other.tapped:
+      false）。ドラゴンまたはフェニックスは any_of + race_has。"'
+    aliases:
+    - dm13-s01
+- id: dmc55-048
+  name: 光彗星アステロイド・マイン
+  types:
+  - creature
+  - evolution
+  civs:
+  - light
+  cost: 6
+  power: 11000
+  races:
+  - フェニックス
+  mana: 1
+  evolve_from:
+  - races:
+    - アーク・セラフィム
+    - セイント・ヘッド
+    - アポロニア・ドラゴン
+  - races:
+    - アーク・セラフィム
+    - セイント・ヘッド
+    - アポロニア・ドラゴン
+  keywords:
+  - double_breaker
+  abilities:
+  - kind: static
+    affects: self
+    mod:
+      deny:
+      - be_chosen
+  text: '進化V-自分のアーク・セラフィム、セイント・ヘッド、アポロニア・ドラゴンのいずれか２体を重ねた上に置く。
+
+    相手がバトルゾーンのクリーチャーを選ぶ時、このクリーチャーを選ぶことはできない。(ただし、このクリーチャーを攻撃またはブロックしてもよい)
+
+    W・ブレイカー(このクリーチャーはシールドを２枚ブレイクする)'
+  source:
+    official: dmc55-048
+    review: pending
+    notes: '"「いずれか２体」は同じフィルタ（races に3種並べる）を2つ並べた evolve_from。「選ぶことはできない」は deny: be_chosen。"'
+    aliases:
+    - dm22-021
+- id: dmc55-055
+  name: 炎彗星アステロイド・ガウス
+  types:
+  - creature
+  - evolution
+  civs:
+  - fire
+  cost: 7
+  power: 11000
+  races:
+  - フェニックス
+  mana: 1
+  evolve_from:
+  - races:
+    - ティラノ・ドレイク
+    - ブレイブ・スピリット
+    - アーマード・ドラゴン
+  - races:
+    - ティラノ・ドレイク
+    - ブレイブ・スピリット
+    - アーマード・ドラゴン
+  keywords:
+  - s_trigger
+  - double_breaker
+  text: 'S・トリガー(このクリーチャーをシールドゾーンから手札に加える時、コストを支払わずにすぐ召喚してもよい)
+
+    進化V-自分のティラノ・ドレイク、ブレイブ・スピリット、アーマード・ドラゴンのいずれか２体を重ねた上に置く。
+
+    W・ブレイカー(このクリーチャーはシールドを２枚ブレイクする)'
+  source:
+    official: dmc55-055
+    review: pending
+    notes: 進化Vのみ。S・トリガーとW・ブレイカーは known_keywords のため書き直さない。
+    aliases:
+    - dm22-030
+- id: dmc55-059
+  name: 地彗星アステロイド・ガイア
+  types:
+  - creature
+  - evolution
+  civs:
+  - nature
+  cost: 6
+  power: 11000
+  races:
+  - フェニックス
+  mana: 1
+  evolve_from:
+  - races:
+    - ドリームメイト
+    - ビークル・ビー
+    - アース・ドラゴン
+  - races:
+    - ドリームメイト
+    - ビークル・ビー
+    - アース・ドラゴン
+  keywords:
+  - double_breaker
+  abilities:
+  - kind: trigger
+    when:
+      event: block
+      attacker: self
+    effect:
+    - op: break
+      count: 1
+      player: opp
+  text: '進化V-自分のドリームメイト、ビークル・ビー、アース・ドラゴンのいずれか２体を重ねた上に置く。
+
+    このクリーチャーがブロックされた時、このクリーチャーは相手のシールドを１枚ブレイクする。
+
+    W・ブレイカー(このクリーチャーはシールドを２枚ブレイクする)'
+  source:
+    official: dmc55-059
+    review: pending
+    notes: '"「ブロックされた時」は when: {event: block, attacker: self}。「シールドを１枚ブレイク」は op: break。"'
+    aliases:
+    - dm22-033
+- id: dmc61-007
+  name: 龍炎凰インフィニティ・フェニックス
+  types:
+  - creature
+  - evolution
+  civs:
+  - fire
+  cost: 7
+  power: 13000
+  races:
+  - フェニックス
+  mana: 1
+  evolve_from:
+  - civs:
+    - fire
+    types:
+    - creature
+  - civs:
+    - fire
+    types:
+    - creature
+  keywords:
+  - triple_breaker
+  abilities:
+  - kind: static
+    affects:
+      zone: bz
+      owner: you
+      filter:
+        types:
+        - creature
+        any_of:
+        - race_has: ドラゴン
+        - races:
+          - フェニックス
+    mod:
+      allow:
+      - action: attack_creature
+        other:
+          tapped: false
+  - kind: replace
+    optional: true
+    when:
+      event: move
+      from: bz
+      subject: self
+    instead:
+    - op: move
+      select:
+        zone:
+        - graveyard
+        - mana
+        owner: you
+        filter:
+          types:
+          - creature
+          civs:
+          - fire
+        count: any
+      to: hand
+      reason: return
+      as: paid
+    - op: if
+      cond:
+        exists:
+          ref: paid
+      then:
+      - op: move
+        select:
+          ref: self
+        to: deck
+        reason: put
+      - op: shuffle
+        player: you
+  text: '進化V-自分の火のクリーチャー２体を重ねた上に置く。
+
+    バトルゾーンにある自分のドラゴンとフェニックスは、タップされていないクリーチャーを攻撃できる。
+
+    このクリーチャーがバトルゾーンを離れる時、かわりに自分の墓地またはマナゾーンから火のクリーチャーを好きな数、手札に戻してもよい。そうした場合、このクリーチャーを山札に戻し、シャッフルする。
+
+    T・ブレイカー(このクリーチャーはシールドを３枚ブレイクする)'
+  source:
+    official: dmc61-007
+    review: pending
+    notes: '"進化V（火のクリーチャー2体）は evolve_from のフィルタリスト。バトルゾーンを離れる時の置換は optional: true
+      の replace。「好きな数」は count: any。「そうした場合」は paid が存在すれば山札に戻してシャッフル。"'
+    aliases:
+    - dm27-002
+- id: dmc64-012
+  name: 超聖竜ボルフェウス・ヘヴン
+  types:
+  - creature
+  - evolution
+  civs:
+  - light
+  - fire
+  cost: 7
+  power: 13000
+  races:
+  - エンジェル・コマンド
+  - アーマード・ドラゴン
+  mana: 1
+  evolve_from:
+  - races:
+    - エンジェル・コマンド
+    - アーマード・ドラゴン
+  - races:
+    - エンジェル・コマンド
+    - アーマード・ドラゴン
+  keywords:
+  - triple_breaker
+  abilities:
+  - kind: trigger
+    when:
+      event: move
+      to: bz
+      subject: self
+    effect:
+    - op: may
+      body:
+      - op: play_free
+        select:
+          zone: hand
+          owner: you
+          filter:
+            types:
+            - spell
+            civs:
+            - light
+            - fire
+          count: 1
+  - kind: trigger
+    when:
+      event: attack
+      subject: self
+    effect:
+    - op: may
+      body:
+      - op: move
+        select:
+          zone: shield
+          owner: you
+          count: 1
+        to: graveyard
+        reason: put
+        as: paid
+      - op: if
+        cond:
+          exists:
+            ref: paid
+        then:
+        - op: destroy
+          select:
+            zone: bz
+            owner: opp
+            filter:
+              types:
+              - creature
+              power_le: 6000
+            count: any
+  text: 'マナゾーンに置く時、このカードはタップして置く。
+
+    進化V-自分のエンジェル・コマンドまたはアーマード・ドラゴンのいずれか２体を重ねた上に置く。
+
+    このクリーチャーをバトルゾーンに出した時、自分の手札にある光または火の呪文を１枚、コストを支払わずに唱えてもよい。
+
+    このクリーチャーが攻撃する時、自分のシールドを１枚、墓地に置いてもよい。そうした場合、相手のクリーチャーをパワーが6000以下になるように好きな数選び、破壊する。
+
+    T・ブレイカー'
+  source:
+    official: dmc64-012
+    review: pending
+    notes: '"出た時の呪文詠唱は play_free。「そうした場合」の破壊は power_le: 6000 のフィルタ＋ count: any（好きな数）。"'
+    aliases:
+    - dm27-s02
+    - dmc47-003
+    - dmc53-012
+- id: dmex01-032
+  name: 暗黒邪眼皇ロマノフ・シーザー
+  types:
+  - creature
+  - evolution
+  civs:
+  - darkness
+  - fire
+  cost: 6
+  power: 13000
+  races:
+  - アーマード・ドラゴン
+  - ドラゴン・ゾンビ
+  - ナイト
+  mana: 1
+  keywords:
+  - enters_tapped
+  - triple_breaker
+  evolve_from:
+  - civs:
+    - darkness
+    - fire
+    types:
+    - creature
+  - civs:
+    - darkness
+    - fire
+    types:
+    - creature
+  abilities:
+  - kind: trigger
+    when:
+      event: attack
+      subject: self
+    effect:
+    - op: may
+      body:
+      - op: move
+        select:
+          under_of: self
+          count: 1
+        to: graveyard
+        reason: put
+        as: paid
+      - op: if
+        cond:
+          exists:
+            ref: paid
+        then:
+        - op: play_free
+          select:
+            zone: graveyard
+            owner: you
+            filter:
+              types:
+              - spell
+              civs:
+              - darkness
+              - fire
+            total_cost_le: 7
+            count: any
+          as: cast_spells
+        - op: move
+          select:
+            ref: cast_spells
+          to: deck
+          position: bottom
+          reason: put
+  text: マナゾーンに置く時、このカードはタップして置く。進化V：自分の闇または火のクリーチャー２体の上に置く。T・ブレイカーメテオバーン：このクリーチャーが攻撃する時、このクリーチャーの下にあるカードを１枚選び墓地に置いてもよい。そうしたら、自分の墓地にある闇または火の呪文をコストの合計が７以下になるように好きな枚数選び、コストを支払わずに唱える。その後、その呪文を好きな順序で自分の山札の一番下に置く。
+  source:
+    official: dmex01-032
+    review: pending
+    notes: メテオバーンはtrigger+may+under_ofのイディオムで変換。「好きな順序」はエンジンが選択順を保持するため追加記述不要。
+- id: dmx12b-045
+  name: 英霊王スターマン
+  types:
+  - creature
+  - evolution
+  civs:
+  - light
+  - water
+  cost: 5
+  power: 9000
+  races:
+  - スターノイド
+  mana: 1
+  evolve_from:
+  - races:
+    - ライトブリンガー
+    types:
+    - creature
+  - races:
+    - サイバーロード
+    types:
+    - creature
+  abilities:
+  - kind: trigger
+    when:
+      event: attack
+      subject: self
+    effect:
+    - op: move
+      select:
+        zone: deck
+        owner: you
+        from_top: 1
+      to: shield
+      reason: put
+      face_up: false
+  - kind: trigger
+    when:
+      event: move
+      from: bz
+      subject: self
+    effect:
+    - op: move
+      select:
+        zone: deck
+        owner: you
+        from_top: 1
+      to: shield
+      reason: put
+      face_up: false
+  text: 'マナゾーンに置く時、このカードはタップして置く。
+
+    進化V-自分のライトブリンガー１体とサイバーロード１体を重ねた上に置く。
+
+    このクリーチャーが攻撃した時またはバトルゾーンを離れた時、自分の山札の上から１枚目を裏向きのまま、新しいシールドとして自分のシールドゾーンに加える。
+
+    W・ブレイカー'
+  source:
+    official: dmx12b-045
+    review: pending
+    notes: '"W・ブレイカーはknown_keywordsで処理済み。「攻撃した時または離れた時」は2つのtriggerに分けて変換。「裏向きのまま」はface_up:
+      false。"'
+    aliases:
+    - dm12-s02
+  keywords:
+  - double_breaker
+- id: dmx19-s52
+  name: 暗黒皇グレイテスト・シーザー
+  types:
+  - creature
+  - evolution
+  civs:
+  - darkness
+  - fire
+  cost: 6
+  power: 13000
+  races:
+  - アーマード・ドラゴン
+  - ドラゴン・ゾンビ
+  - ナイト
+  mana: 1
+  evolve_from:
+  - types:
+    - creature
+    any_of:
+    - races:
+      - ナイト
+    - race_has: ドラゴン
+  - types:
+    - creature
+    any_of:
+    - races:
+      - ナイト
+    - race_has: ドラゴン
+  abilities:
+  - kind: trigger
+    when:
+      event: attack
+      subject: self
+    effect:
+    - op: may
+      body:
+      - op: play_free
+        select:
+          zone: graveyard
+          owner: you
+          filter:
+            types:
+            - spell
+            civs:
+            - darkness
+            - fire
+          total_cost_le: 7
+          count: any
+        as: cast_spells
+      - op: move
+        select:
+          ref: cast_spells
+        to: deck
+        position: bottom
+        reason: put
+  text: マナゾーンに置く時、このカードはタップして置く。進化V-自分のナイト・クリーチャーまたはドラゴン２体を重ねた上に置く。このクリーチャーが攻撃する時、自分の墓地にある闇または火の呪文を、コストの合計が７以下になるように好きな枚数選び、コストを支払わずに唱えてもよい。その後、その呪文を好きな順序で自分の山札の一番下に置く。T・ブレイカー（このクリーチャーはシールドを３枚ブレイクする）
+  source:
+    official: dmx19-s52
+    review: pending
+    notes: T・ブレイカーはknown_keywordsで処理済み。「ナイトまたはドラゴン」はany_of+race_hasで変換。「好きな順序」はエンジンが選択順を保持するため追加記述不要。
+    aliases:
+    - dm31-s05
+    - dmc58-008
+  keywords:
+  - triple_breaker
+- id: sp-022
+  name: 光彗星アステロイド・ルクサス
+  types:
+  - creature
+  - evolution
+  civs:
+  - light
+  cost: 5
+  power: 9000
+  races:
+  - フェニックス
+  mana: 1
+  evolve_from:
+  - types:
+    - creature
+    any_of:
+    - race_has: ドラゴン
+    - races:
+      - ファイアー・バード
+    - races:
+      - ティラノ・ドレイク
+  - types:
+    - creature
+    any_of:
+    - race_has: ドラゴン
+    - races:
+      - ファイアー・バード
+    - races:
+      - ティラノ・ドレイク
+  abilities:
+  - kind: trigger
+    when:
+      event: attack
+      subject: self
+    effect:
+    - op: may
+      body:
+      - op: move
+        select:
+          under_of: self
+          count: 1
+        to: graveyard
+        reason: put
+        as: paid
+      - op: if
+        cond:
+          exists:
+            ref: paid
+        then:
+        - op: may
+          body:
+          - op: move
+            select:
+              zone: deck
+              owner: you
+              look: true
+              filter:
+                types:
+                - creature
+                any_of:
+                - race_has: ドラゴン
+                - races:
+                  - フェニックス
+              count: 1
+            to: hand
+            reason: put
+        - op: shuffle
+          player: you
+  text: '進化V-自分のドラゴン、ファイアー・バード、ティラノ・ドレイクのいずれか２体を重ねた上に置く。
+
+    メテオバーン-このクリーチャーが攻撃する時、このクリーチャーの下にあるカードを１枚選び墓地に置いてもよい。そうした場合、自分の山札を見る。その中からドラゴンまたはフェニックスを１体選び、相手に見せてから自分の手札に加えてもよい。その後、山札をシャッフルする。
+
+    W・ブレイカー'
+  source:
+    official: sp-022
+    review: pending
+    notes: '"W・ブレイカーはknown_keywordsで処理済み。メテオバーンはtrigger+may+under_ofのイディオムで変換。「相手に見せてから」はlook:
+      trueで表す（デッキからのサーチはルール上公開される）。"'
+  keywords:
+  - double_breaker
