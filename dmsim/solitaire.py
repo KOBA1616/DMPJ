@@ -282,7 +282,8 @@ class TurnSearch:
         h, ctr = abstract(eng, "in_turn")
         # マナは枚数だけでなく何が残っているか（文明）も区別する。払い方の違いで闇マナが残るか否かが変わる
         mana_left = tuple(sorted((c.defn, c.tapped) for c in (eng.s.cards[x] for p in (0, 1) for x in eng.s.zones["mana"][p])))
-        tkey = (h, tuple(sorted(ctr.items())), mana_left)
+        sizes = tuple(len(eng.s.zones[z][p]) for p in (0, 1) for z in ("hand", "shield", "graveyard", "bz"))   # 骨格が同じでも枚数が違う局面は別（手札を引いて捨てた後など）
+        tkey = (h, tuple(sorted(ctr.items())), mana_left, sizes)
         cert = det.observe(eng)
         if cert is not None and self.collect is not None:
             if all(c.start_skeleton != cert.start_skeleton for _, c in self.collect):
@@ -290,6 +291,8 @@ class TurnSearch:
             return -WIN, eng              # ループの先は辿らない（ループの発見だけを行う）
         if cert is not None and _is_burn(cert, self.me) and not self.burn_stock:
             cert = None                       # 周回数は呼び出し側が決める
+        elif cert is not None and verify(eng, cert, times=1).verified < 1:
+            cert = None                       # 骨格が戻っただけで、実際には繰り返せない（手札のカードを使い切る連鎖など）。ループ扱いせず探索を続ける
         elif cert is not None:
             # 周回数（ストック量）を選ぶ: 上限まで回す線のほか、あと数周手前で止める線（stock_offsets）も試す。
             # 山札を削るループは勝ちにつながるか分からないので上限（残り1枚）の線を試す。ループに入った直後に抜ける線は
