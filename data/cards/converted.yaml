@@ -288852,3 +288852,351 @@ cards:
     / レインボーナス：バトルゾーンに自分の多色クリーチャーがあれば、このターン、次に召喚する自分のクリーチャーのパワーを+3000する。
   types:
   - spell
+- abilities:
+  - affects: self
+    kind: static
+    mod:
+      battle_indestructible: true
+  civs:
+  - light
+  cost: 2
+  id: dm25rp3-055
+  mana: 1
+  name: XENOGEAR-翼3号
+  power: 1000
+  races:
+  - ファイアー・バード
+  - テクノ・サムライ
+  source:
+    official: dm25rp3-055
+    review: pending
+  text: このクリーチャーはバトル中破壊されない。
+  types:
+  - creature
+- abilities:
+  - affects: self
+    kind: static
+    mod:
+      battle_indestructible: true
+  civs:
+  - fire
+  cost: 3
+  id: dmr21-077
+  mana: 1
+  name: 爆G コステロ
+  power: 1000
+  races:
+  - ヒューマノイド爆
+  - イニシャルズ
+  source:
+    official: dmr21-077
+    review: pending
+  text: このクリーチャーはバトル中、破壊されない。
+  types:
+  - creature
+- abilities:
+  - affects: self
+    kind: static
+    mod:
+      battle_indestructible: true
+  civs:
+  - fire
+  cost: 3
+  id: dmrp16-078
+  keywords:
+  - guardman
+  mana: 1
+  name: ザイタク・チュリス
+  power: 1000
+  races:
+  - ビートジョッキー
+  source:
+    official: dmrp16-078
+    review: pending
+  text: 'ガードマン（このクリーチャーをタップして、相手クリーチャーの攻撃先を、自分の他のクリーチャーからこのクリーチャーに変更してもよい）
+
+    このクリーチャーは、バトル中破壊されない。'
+  types:
+  - creature
+- faces:
+  - abilities:
+    - affects: self
+      kind: static
+      mod:
+        battle_indestructible: true
+    - effect:
+      - body:
+        - count: 1
+          op: draw
+          player: you
+        op: may
+      kind: trigger
+      when:
+        event: move
+        subject:
+          filter:
+            races:
+            - エンジェル・コマンド
+          owner: you
+        to: bz
+    civs:
+    - light
+    cost: 4
+    keywords:
+    - blocker
+    name: 明晰の精霊エバーリエス
+    power: 4000
+    races:
+    - エンジェル・コマンド
+    text: ブロッカー / バトル中、このクリーチャーは破壊されない。 / 自分のエンジェル・コマンドが出た時、カードを１枚引いてもよい。
+    types:
+    - creature
+  - civs:
+    - light
+    cost: 4
+    keywords:
+    - s_trigger
+    name: ホーリー・スパーク
+    spell:
+    - op: tap
+      select:
+        filter:
+          types:
+          - creature
+        owner: opp
+        zone: bz
+    text: S・トリガー / バトルゾーンにある相手のクリーチャーすべてをタップする。
+    types:
+    - spell
+  id: dm25bd2-011
+  mana: 1
+  name: 明晰の精霊エバーリエス / ホーリー・スパーク
+  source:
+    notes: 呪文面のテキストは同名の古典カード（dm01-015 ホーリー・スパーク）から補完
+    official: dm25bd2-011
+    review: pending
+    aliases:
+    - dm25bd2-sp4
+  text: '明晰の精霊エバーリエス: ブロッカー / バトル中、このクリーチャーは破壊されない。 / 自分のエンジェル・コマンドが出た時、カードを１枚引いてもよい。
+    ／ ホーリー・スパーク: S・トリガー（この呪文をシールドゾーンから手札に加える時、コストを支払わずにすぐ唱えてもよい） / バトルゾーンにある相手のクリーチャーすべてをタップする。'
+- abilities:
+  - effect:
+    - in:
+        ref: self
+      op: swap
+      out:
+        ref: event.subject
+    kind: declare
+    when:
+      event: attack
+      subject:
+        filter:
+          civs:
+          - darkness
+          - fire
+          race_has: ドラゴン
+        owner: you
+    zone: hand
+  - effect:
+    - body:
+      - as: d
+        op: choose
+        select:
+          count: 1
+          filter:
+            types:
+            - creature
+          owner: you
+          zone: hand
+      - as: discarded
+        op: move
+        reason: discard
+        select:
+          count: all
+          ref: d
+        to: graveyard
+      - cond:
+          exists:
+            ref: discarded
+        op: if
+        then:
+        - as: t
+          op: choose
+          select:
+            count: 1
+            filter:
+              types:
+              - creature
+            owner: opp
+            zone: bz
+        - op: destroy
+          select:
+            ref: t
+      op: may
+    kind: trigger
+    when:
+      event: move
+      subject: self
+      to: bz
+  - affects: self
+    if:
+      cmp:
+      - count:
+          filter:
+            types:
+            - creature
+          owner: you
+          zone: graveyard
+      - '>='
+      - 5
+    kind: static
+    mod:
+      battle_indestructible: true
+  civs:
+  - darkness
+  - fire
+  cost: 7
+  id: dmr21-s08
+  keywords:
+  - double_breaker
+  mana: 1
+  name: 悪革の怨草士 デモンカヅラ
+  power: 8000
+  races:
+  - デーモン・コマンド・ドラゴン
+  - 革命軍
+  - アクミ団
+  source:
+    official: dmr21-s08
+    review: pending
+  text: マナゾーンに置く時、このカードはタップして置く。 / 革命チェンジ―闇または火のドラゴン / W・ブレイカー / このクリーチャーがバトルゾーンに出た時、クリーチャーを１体、自分の手札から捨ててもよい。そうしたら、相手のクリーチャーを１体、破壊する。
+    / 自分の墓地にクリーチャーが５体以上あれば、このクリーチャーはバトル中、破壊されない。
+  types:
+  - creature
+- abilities:
+  - affects: self
+    if:
+      exists:
+        filter:
+          civs:
+          - fire
+          types:
+          - creature
+        owner: you
+        zone: bz
+    kind: static
+    mod:
+      add_races:
+      - デーモン・ドラゴン
+      battle_indestructible: true
+  civs:
+  - darkness
+  cost: 4
+  id: dmr22-055
+  mana: 1
+  name: ドラッグ・ドラグーン
+  power: 4000
+  races:
+  - ティラノ・ドレイク
+  source:
+    official: dmr22-055
+    review: pending
+  text: バトルゾーンに自分の火のクリーチャーがあれば、このクリーチャーは種族にデーモン・ドラゴンを追加し、バトル中破壊されない。
+  types:
+  - creature
+- abilities:
+  - affects: self
+    kind: static
+    mod:
+      battle_indestructible: true
+  - effect:
+    - cond:
+        cmp:
+        - count:
+            owner: you
+            zone: shield
+        - <
+        - 3
+      op: if
+      then:
+      - op: destroy
+        select:
+          count: all
+          filter:
+            power_le: 13000
+            types:
+            - creature
+          owner: opp
+          zone: bz
+    kind: trigger
+    when:
+      event: move
+      subject: self
+      to: bz
+  civs:
+  - fire
+  cost: 7
+  evolve_from:
+    civs:
+    - fire
+    types:
+    - creature
+  id: dmd27-007
+  keywords:
+  - triple_breaker
+  mana: 1
+  name: 爆ぜる革命 ドラッケンA
+  power: 13000
+  races:
+  - メガ・コマンド・ドラゴン
+  - 革命軍
+  source:
+    official: dmd27-007
+    review: pending
+  text: 進化―自分の火のクリーチャー１体の上に置く。 / T・ブレイカー / バトル中、このクリーチャーは破壊されない。 / 革命２―このクリーチャーがバトルゾーンに出た時、自分のシールドが２つ以下なら、相手のパワー13000以下のクリーチャーをすべて破壊する。
+  types:
+  - creature
+  - evolution
+- abilities:
+  - effect:
+    - in:
+        ref: self
+      op: swap
+      out:
+        ref: event.subject
+    kind: declare
+    when:
+      event: attack
+      subject:
+        filter:
+          civs:
+          - fire
+          - nature
+          race_has: ドラゴン
+        owner: you
+    zone: hand
+  - affects: self
+    kind: static
+    mod:
+      battle_indestructible: true
+  civs:
+  - fire
+  - nature
+  cost: 7
+  id: promoy15-sp2d01
+  keywords:
+  - double_breaker
+  mana: 1
+  name: 行くぜ団長！ ドギラゴン
+  power: 11000
+  races:
+  - メガ・コマンド・ドラゴン
+  - 革命軍
+  - ハムカツ団
+  source:
+    notes: マナゾーンに置く時タップして置くは多色のルール注釈（noise）のため能力に書かない
+    official: promoy15-sp2d01
+    review: pending
+  text: 革命チェンジ―火または自然のドラゴン / W・ブレイカー / バトル中、このクリーチャーは破壊されない。
+  types:
+  - creature
