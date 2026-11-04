@@ -985,7 +985,25 @@ cards:
             label: 手札を1枚シールド化する
             body:
               - {op: move, select: {zone: hand, owner: you, count: 1}, to: shield, reason: put}
-    source: {official: dm23bd7-022, review: pending, notes: "最新版の本文（2023）に従い「ブレイク」。旧版は「手札に加える」。ブレイクした盾は S・トリガー等を宣言できる（113.6）"}
+    source:
+      official: dm23bd7-022
+      review: pending
+      notes: "最新版の本文（2023）に従い「ブレイク」。旧版は「手札に加える」。ブレイクした盾は S・トリガー等を宣言できる（113.6）"
+      aliases:
+      - dmd32-011
+      - dmex01-064
+      - dmex06-055
+      - dmex13-021
+      - dmex16-055
+      - dmr19-012
+      - dmrp07-g01
+      - dmrp21-t6
+      - dmrp21-tf6
+      - dmrp22-t8
+      - dmrp22-tf8
+      - dmx18-007
+      - promoy13-096
+      - promoy25-080
 
   - id: dmx19-s06
     name: 奇跡の精霊ミルザム

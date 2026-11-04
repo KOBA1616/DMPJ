@@ -25,12 +25,12 @@ EVENTS = {"move", "draw", "cast", "summon", "attack", "block", "break", "tap", "
           "turn_start", "turn_end", "battle_win", "choose", "battle", "battle_start", "attack_end", "lose", "mugon_used"}
 ABILITY_KINDS = {"trigger", "replace", "static", "declare", "activate", "silent", "state", "partner"}   # state: 状態を常に見て、満たされたら勝敗が決まる常在効果（if と effect: [win/lose]）。partner: [P]能力（単独では機能せず、キズナ等で「使う」ことで解決する）
 ABILITY_KEYS = {"kind", "when", "if", "effect", "instead", "optional", "affects", "mod", "zone", "keyword", "cost", "id",
-                "once_per_turn", "first_time", "sst", "stp", "odrive", "choukon", "bazurenda"}
+                "once_per_turn", "first_time", "sst", "stp", "odrive", "choukon", "bazurenda", "any_attacker"}
 REASONS = {"put", "destroy", "return", "discard", "charge", "summon", "cast", "break",
            "draw", "battle", "sba", "resolve", "evolve", "seal"}
 VIAS = {"revolution_change", "generate"}   # 出し方の印（「革命チェンジによって出た時」など）
 DURATIONS_FIXED = {"end_of_turn", "during_attack", "permanent", "until_next_own_turn_start"}
-MOD_KEYS = {"power", "grant", "allow", "deny", "breaks", "breaks_per_power", "battle_power", "power_when", "cost", "cost_min", "cost_may", "sac_reduce", "opt_reduce", "ignore", "ignore_ids", "gain", "require", "add_of", "add_races"}
+MOD_KEYS = {"power", "grant", "allow", "deny", "breaks", "breaks_per_power", "battle_power", "power_when", "cost", "cost_min", "cost_may", "sac_reduce", "opt_reduce", "ignore", "ignore_ids", "gain", "require", "add_of", "add_races", "no_leave", "must_be_attacked"}
 REQUIRES = {"attack", "block"}   # 強制（506.1b 攻撃しなければならない, 507.1b ブロックしなければならない）
 POSITIONS = {"top", "bottom"}
 PERMANENT_TYPES = {"tamaseed", "field", "cross_gear"}   # 手札から実行してバトルゾーンに出るクリーチャー以外のカード（315, 308, 303）
@@ -39,7 +39,7 @@ CIVS = {"light", "water", "darkness", "fire", "nature", "zero"}
 SELECTOR_KEYS = {"zone", "owner", "owner_of", "filter", "count", "up_to", "from_top", "chooser", "ref", "other",
                  "under_of", "look", "exlife_of", "total_cost_le", "total_cost_ge"}   # look: 非公開ゾーン（山札など）の中身を見て選ぶ。total_cost_*: コストの合計が上限以下／下限以上になるように好きな数選ぶ
 FILTER_KEYS = {"any_of", "types", "not_types", "civs", "civs_all", "not_civs", "races", "race_has", "name", "name_has", "not_name",
-               "cost_le", "cost_ge", "power_le", "power_ge", "tapped", "keyword", "multicolor", "face_down", "face_up", "neo", "vanilla", "sealed", "evolution", "mugen_climb"}
+               "cost_le", "cost_ge", "power_le", "power_ge", "tapped", "keyword", "multicolor", "face_down", "face_up", "neo", "vanilla", "sealed", "evolution", "mugen_climb", "twinpact", "vividraw", "fushigi"}
 FILTER_EXPR_KEYS = {"cost_le", "cost_ge", "power_le", "power_ge", "races"}   # 値に式を書ける（解決時に計算）
 
 
@@ -78,7 +78,7 @@ class Face:
     evolve_count: int = 1                                 # 進化元をちょうどこの数だけ重ねる（進化GV は3体）
     cost_reduce_per_evo: int = 0                          # 進化元1体につき召喚コストをいくら減らすか
     tap_reduce: int = 0                                   # ハイパーエナジー: コストが異なる自分のクリーチャー1体をタップするごとに減るコスト
-    s_back: str | None = None                             # S・バック: この文明のカードがシールドから手札に加わる時、それを捨てて無料で実行できる
+    s_back: str | dict | None = None                      # S・バック: 文明名（文字列）か、捨てるカードの条件（filter。第52弾で種族・複合文明・ツインパクトに対応）
     free_if: dict | None = None                           # 条件を満たす間はコストを支払わずに召喚できる（G・ゼロ）
     galaxy_shield: dict | None = None                     # ギャラクシールド: {cost, civs} 代替コストで表向きにシールド化する
     bazurenda: dict | None = None                         # バズレンダ: {cost, civs} 支払い時に追加でこのコストを好きな回数払える
@@ -129,7 +129,7 @@ class CardDef:
     evolve_count: int = 1
     cost_reduce_per_evo: int = 0
     tap_reduce: int = 0
-    s_back: str | None = None
+    s_back: str | dict | None = None
     free_if: dict | None = None
     galaxy_shield: dict | None = None
     bazurenda: dict | None = None                         # バズレンダ: {cost, civs}
@@ -399,6 +399,10 @@ class Checker:
             if not isinstance(v, bool):
                 raise DefError(f"{where}: alt_paid must be bool")
             return
+        if k == "vivid_paid":
+            if not isinstance(v, bool):
+                raise DefError(f"{where}: vivid_paid must be bool")
+            return
         raise DefError(f"{where}: unknown cond '{k}'")
 
     def count_spec(self, v, where):
@@ -422,9 +426,17 @@ class Checker:
                 raise DefError(f"{where}: add_races must be a list of race names")
         if "cost_may" in m:
             cm = m["cost_may"]
-            if not isinstance(cm, dict) or set(cm) - {"amount", "once", "min"} or not isinstance(cm.get("amount"), int) \
-                    or ("once" in cm and not isinstance(cm["once"], bool)) or ("min" in cm and not isinstance(cm["min"], int)):
-                raise DefError(f"{where}: cost_may must be {{amount: int, once?: bool, min?: int}}")
+            if not isinstance(cm, dict) or set(cm) - {"amount", "once", "min", "must"} or not isinstance(cm.get("amount"), int) \
+                    or ("once" in cm and not isinstance(cm["once"], bool)) or ("min" in cm and not isinstance(cm["min"], int)) \
+                    or ("must" in cm and not isinstance(cm["must"], bool)):
+                raise DefError(f"{where}: cost_may must be {{amount: int, once?: bool, min?: int, must?: bool}}")
+        if "no_leave" in m:
+            nl = m["no_leave"]
+            if nl is not True and not (isinstance(nl, dict) and set(nl) <= {"except_destroy", "by_opp", "except_battle"}
+                                       and all(isinstance(v, bool) for v in nl.values())):
+                raise DefError(f"{where}: no_leave must be true or {{except_destroy?: bool, by_opp?: bool, except_battle?: bool}}")
+        if "must_be_attacked" in m and m["must_be_attacked"] is not True:
+            raise DefError(f"{where}: must_be_attacked must be true")
         if "ignore_ids" in m:
             if not isinstance(m["ignore_ids"], list) or not all(isinstance(x, str) for x in m["ignore_ids"]):
                 raise DefError(f"{where}: ignore_ids must be a list of ability id strings")
@@ -538,11 +550,16 @@ class Checker:
             self.filter(aff.get("filter", {}), where)
         if kind == "activate":   # 起動型能力（602）。cost: {tap: self} か {tap: {filter}}（攻撃する代わりにタップして使う。602.3a）
             c = ab.get("cost")   # tap_mana: 自分のマナゾーンのタップされていないカードをその枚数追加でタップする（DM24系の複合コスト）
-            if not isinstance(c, dict) or not set(c) <= {"tap", "tap_mana"} or "tap" not in c:
-                raise DefError(f"{where}: activate needs cost: {{tap: self | <filter>, tap_mana?: int}}")
+            # under: このクリーチャーの下にあるカードをその枚数墓地に置く（メテオバーン「攻撃できる時」形。第53弾。tap と併用可、tap_mana とは併用不可）
+            if not isinstance(c, dict) or not set(c) <= {"tap", "tap_mana", "under"} or not ("tap" in c or "under" in c):
+                raise DefError(f"{where}: activate needs cost: {{tap: self | <filter>, tap_mana?: int, under?: int}}")
             if "tap_mana" in c and not (isinstance(c["tap_mana"], int) and c["tap_mana"] >= 1):
                 raise DefError(f"{where}: cost.tap_mana must be a positive int")
-            if c["tap"] != "self":
+            if "under" in c and not (isinstance(c["under"], int) and c["under"] >= 1):
+                raise DefError(f"{where}: cost.under must be a positive int")
+            if "under" in c and "tap_mana" in c:
+                raise DefError(f"{where}: cost.under cannot combine with tap_mana")
+            if "tap" in c and c["tap"] != "self":
                 if not isinstance(c["tap"], dict):
                     raise DefError(f"{where}: cost.tap must be 'self' or a filter")
                 self.filter(c["tap"], where)
@@ -583,6 +600,17 @@ def _load_face(raw, keywords, macros, chk: Checker, where) -> dict:
     chk.ops(props["after_resolve"], where)
     if props["resolve_to"] not in chk.zones:
         raise DefError(f"{where}: unknown zone '{props['resolve_to']}'")
+    if "s_back" in raw:   # S・バックの対象指定は面に直接書ける（キーワードの文明名形と併用可。第52弾）
+        props["s_back"] = raw["s_back"]
+    sb = props.get("s_back")
+    if sb is not None:
+        if isinstance(sb, str):
+            if sb not in CIVS:
+                raise DefError(f"{where}: s_back civ '{sb}' is unknown")
+        elif isinstance(sb, dict):
+            chk.filter(sb, where)
+        else:
+            raise DefError(f"{where}: s_back must be a civ name or a filter")
     abilities += [_expand_ability(a, macros, where) for a in raw.get("abilities", [])]
     for a in abilities:
         chk.ability(a, where)
@@ -688,6 +716,7 @@ def parse_card(raw: dict, tables, where: str | None = None) -> CardDef:
                        cost=faces[0].cost, power=faces[0].power, mana=raw.get("mana", 1),
                        races=faces[0].races, text=raw.get("text", ""),
                        keywords=sorted({k for f in faces for k in f.keywords}),
+                       s_back=next((f.s_back for f in faces if f.s_back is not None), None),
                        abilities=[], spell=[], faces=faces, source=raw.get("source", {}))
     f = _load_face(raw, keywords, macros, chk, where)
     return CardDef(id=raw["id"], mana=raw.get("mana", 1), text=raw.get("text", ""),

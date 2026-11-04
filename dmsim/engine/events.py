@@ -75,6 +75,8 @@ class EventMixin:
                 rec["stacked"] = True
             if ev.get("alt"):        # 代替コストで実行された（「そうしたら」の照合用）
                 rec["alt"] = True
+            if ev.get("vivid"):      # ビビッドローで実行された（第54弾。「ビビッドローを使って召喚した時」の照合用）
+                rec["vivid"] = True
             return rec
         if ev["ev"] == "draw":
             return {"ev": "draw", "player": ev["player"]}
@@ -105,6 +107,16 @@ class EventMixin:
             if ev["to"] == "bz" and c.zone != "hold" and not self.permits(cid, "enter_bz"):
                 return []   # 出せない（実行は h_play で先に確認している。効果で出す場合はここで止める）
             from_zone = ev.get("from") if c.zone == "hold" else c.zone
+            if from_zone == "bz" and ev["to"] != "bz":
+                # 「バトルゾーンを離れない」（第49弾）: 置換を経た最終的な移動に対して判定し、該当すれば移動自体が起こらない
+                for nl in self.chars(cid)["no_leave"]:
+                    if nl.get("except_destroy") and ev["reason"] == "destroy":
+                        continue   # 「破壊される以外は離れない」型: 破壊だけは通す
+                    if nl.get("except_battle") and ev.get("battle"):
+                        continue   # 「バトルに負けた時以外は離れない」型: バトルの敗北による破壊だけは通す（combat が battle 印を付ける）
+                    if nl.get("by_opp") and not (ev.get("by") is not None and ev["by"] != c.controller):
+                        continue   # 「相手の効果では離れない」型: by の無い移動（状況起因・バトル）と自分の効果は通す
+                    return []
             lki = {"defn": c.defn, "face": c.face, "controller": c.controller, "zone": from_zone,
                    "tapped": c.tapped, "chars": self.chars(cid), "ref": list(ev["subject"])}   # 過去の状態を見る（603.5c）
             sealed_from = None
@@ -421,6 +433,8 @@ class EventMixin:
         if "broke" in when and bool(rec.get("broke")) != when["broke"]:   # 攻撃の終わりに、その攻撃でシールドをブレイクしたか（キリフダッシュ）
             return False
         if "face_up" in when and bool(rec.get("face_up")) != when["face_up"]:   # 表向きで置かれたか（ギャラクシールド）
+            return False
+        if "vivid" in when and bool(rec.get("vivid")) != when["vivid"]:   # ビビッドローで実行されたか（第54弾）
             return False
         if "player" in when and rec.get("player") != self._rel(when["player"], env):
             return False
