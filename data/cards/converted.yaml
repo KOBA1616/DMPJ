@@ -290149,3 +290149,433 @@ cards:
     {x+}このターン、自分のクリーチャーはすべてのバトルに勝つ。'
   types:
   - spell
+- abilities:
+  - affects:
+      filter:
+        civs:
+        - darkness
+        - nature
+        types:
+        - creature
+      owner: you
+      zone: bz
+    kind: static
+    mod:
+      add_civs:
+      - fire
+  - affects:
+      filter:
+        civs:
+        - fire
+        types:
+        - creature
+      other: true
+      owner: you
+      zone: bz
+    kind: static
+    mod:
+      power: 1000
+  civs:
+  - fire
+  cost: 3
+  id: dm24-025
+  mana: 1
+  name: 染風の宮司カーズ
+  power: 2000
+  races:
+  - フェザーノイド
+  source:
+    official: dm24-025
+    review: pending
+  text: バトルゾーンにある自分の闇のクリーチャーと自然のクリーチャーはすべて、火のクリーチャーでもある。 / バトルゾーンにある自分の他の火のクリーチャーすべてのパワーは+1000される。
+  types:
+  - creature
+- abilities:
+  - affects:
+      filter:
+        civs:
+        - water
+        - nature
+        types:
+        - creature
+      owner: you
+      zone: bz
+    kind: static
+    mod:
+      add_civs:
+      - light
+  - affects:
+      filter:
+        civs:
+        - light
+        types:
+        - creature
+      other: true
+      owner: you
+      zone: bz
+    kind: static
+    mod:
+      power: 1000
+  civs:
+  - light
+  cost: 3
+  id: dm24-043
+  mana: 1
+  name: 染空の守護者エルス・エリクシオン
+  power: 2000
+  races:
+  - ガーディアン
+  source:
+    official: dm24-043
+    review: pending
+  text: バトルゾーンにある自分の水のクリーチャーと自然のクリーチャーはすべて、光のクリーチャーでもある。 / バトルゾーンにある自分の他の光のクリーチャーすべてのパワーは+1000される。
+  types:
+  - creature
+- abilities:
+  - affects:
+      filter:
+        civs:
+        - water
+        - fire
+        types:
+        - creature
+      owner: you
+      zone: bz
+    kind: static
+    mod:
+      add_civs:
+      - darkness
+  - affects:
+      filter:
+        civs:
+        - darkness
+        types:
+        - creature
+      other: true
+      owner: you
+      zone: bz
+    kind: static
+    mod:
+      power: 1000
+  civs:
+  - darkness
+  cost: 5
+  id: dm24-050
+  mana: 1
+  name: 黒染妃ゼノビア
+  power: 3000
+  races:
+  - ダークロード
+  source:
+    official: dm24-050
+    review: pending
+  text: バトルゾーンにある自分の水のクリーチャーと火のクリーチャーはすべて、闇のクリーチャーでもある。 / バトルゾーンにある自分の他の闇のクリーチャーすべてのパワーは+1000される。
+  types:
+  - creature
+- abilities:
+  - affects:
+      filter:
+        civs:
+        - fire
+        - light
+        types:
+        - creature
+      owner: you
+      zone: bz
+    kind: static
+    mod:
+      add_civs:
+      - nature
+  - affects:
+      filter:
+        civs:
+        - nature
+        types:
+        - creature
+      other: true
+      owner: you
+      zone: bz
+    kind: static
+    mod:
+      power: 1000
+  civs:
+  - nature
+  cost: 3
+  id: dm24-059
+  mana: 1
+  name: 幻染妖精リリアン
+  power: 2000
+  races:
+  - スノーフェアリー
+  source:
+    official: dm24-059
+    review: pending
+  text: バトルゾーンにある自分の火のクリーチャーと光のクリーチャーはすべて、自然のクリーチャーでもある。 / バトルゾーンにある自分の他の自然のクリーチャーすべてのパワーは+1000される。
+  types:
+  - creature
+- abilities:
+  - affects:
+      filter:
+        civs:
+        - light
+        - darkness
+        types:
+        - creature
+      owner: you
+      zone: bz
+    kind: static
+    mod:
+      add_civs:
+      - water
+  - affects:
+      filter:
+        civs:
+        - water
+        types:
+        - creature
+      other: true
+      owner: you
+      zone: bz
+    kind: static
+    mod:
+      power: 1000
+  civs:
+  - water
+  cost: 5
+  id: dmex12-057
+  keywords:
+  - s_trigger
+  mana: 1
+  name: ペイント・フラッペ
+  power: 1000
+  races:
+  - スプラッシュ・クイーン
+  source:
+    official: dmex12-057
+    review: pending
+    aliases:
+    - dm24-047
+  text: 'S・トリガー（このクリーチャーをシールドゾーンから手札に加える時、コストを支払わずにすぐ召喚してもよい）
+
+    自分の光のクリーチャーと闇のクリーチャーはすべて、水のクリーチャーでもある。
+
+    自分の他の水のクリーチャーすべてのパワーは+1000される。'
+  types:
+  - creature
+- abilities:
+  - affects:
+      filter:
+        civs:
+        - nature
+      owner: you
+      zone: mana
+    kind: static
+    mod:
+      add_civs:
+      - light
+      - fire
+  civs:
+  - nature
+  cost: 3
+  id: dm24-106
+  mana: 1
+  name: 聖火妖精パルック
+  power: 2000
+  races:
+  - スノーフェアリー
+  source:
+    notes: '「光または火のカードでもある」は両文明を追加する解釈で add_civs: [light, fire]'
+    official: dm24-106
+    review: pending
+  text: 自分のマナゾーンにある自然のカードは、光または火のカードでもある。
+  types:
+  - creature
+- faces:
+  - abilities:
+    - affects:
+        filter:
+          twinpact: true
+        owner: you
+        zone: mana
+      kind: static
+      mod:
+        add_civs:
+        - light
+        - water
+        - darkness
+        - fire
+        - nature
+    - effect:
+      - op: untap
+        select:
+          ref: event.subject
+      kind: trigger
+      when:
+        event: move
+        subject:
+          filter:
+            twinpact: true
+          owner: you
+        to: mana
+    civs:
+    - nature
+    cost: 3
+    mana: 1
+    name: アカシック・C
+    power: 3000
+    races:
+    - スノーフェアリー
+    - ジャイアント
+    types:
+    - creature
+  - civs:
+    - nature
+    cost: 7
+    keywords:
+    - s_trigger
+    mana: 1
+    name: 「叩き潰すのよ、クラッシュ！」
+    spell:
+    - body:
+      - as: target
+        op: choose
+        select:
+          count: 1
+          owner: opp
+          zone: bz
+      - op: move
+        reason: put
+        select:
+          ref: target
+        to: mana
+      op: may
+    types:
+    - spell
+  id: dm24bd5-025
+  source:
+    notes: 「各相手のエレメントを１つずつ」は2人対戦では相手のエレメント1体を選択する形で近似。厳密な多人数対応は別途検討
+    official: dm24bd5-025
+    review: pending
+    aliases:
+    - dm23bd6-006
+  text: 'アカシック・C: 自分のマナゾーンにあるツインパクトカードは、すべての文明を持つ。 ／ ツインパクトカードを自分のマナゾーンに置いた時、そのカードをアンタップする。
+    ／ 「叩き潰すのよ、クラッシュ！」: S・トリガー ／ 各相手のエレメントを１つずつ選び、持ち主のマナゾーンに置いてもよい。'
+- abilities:
+  - effect:
+    - as: milled
+      op: move
+      reason: put
+      select:
+        from_top: 1
+        owner: you
+        zone: deck
+      to: graveyard
+    - cond:
+        exists:
+          filter:
+            types:
+            - spell
+          ref: milled
+      op: if
+      then:
+      - body:
+        - op: play_free
+          select:
+            ref: milled
+        label: コストを支払わずに唱える
+        op: may
+    kind: trigger
+    when:
+      event: attack
+      subject: self
+  - affects: self
+    if:
+      exists:
+        filter:
+          name: セブ・コアクマン
+        owner: you
+        zone: bz
+    kind: static
+    mod:
+      add_civs:
+      - light
+    zone: deck
+  civs:
+  - water
+  - fire
+  cost: 7
+  id: promoy12-029
+  keywords:
+  - speed_attacker
+  - double_breaker
+  mana: 1
+  name: 紺碧術者 フューチャー
+  power: 6000
+  races:
+  - アウトレイジ
+  source:
+    notes: '山札にある時の文明追加は zone: deck の static で表現。エンジンが deck ゾーンの static を評価するか要確認'
+    official: promoy12-029
+    review: pending
+    aliases:
+    - promoy12-052
+  text: 'マナゾーンに置く時、このカードはタップして置く。
+
+    スピードアタッカー（このクリーチャーは召喚酔いしない）
+
+    このクリーチャーが攻撃する時、自分の山札の上から１枚目を墓地に置く。それが呪文であれば、コストを支払わずに唱えてもよい。
+
+    W・ブレイカー（このクリーチャーはシールドを２枚ブレイクする）
+
+    このクリーチャーが自分の山札にあり、バトルゾーンに自分の《セブ・コアクマン》があれば、このクリーチャーの文明に光を追加する。'
+  types:
+  - creature
+- abilities:
+  - effect:
+    - body:
+      - as: discarded
+        op: discard
+        select:
+          count: 1
+          owner: you
+          zone: hand
+      else:
+      - op: destroy
+        select:
+          ref: self
+      label: 手札を1枚捨てる
+      op: may
+    kind: trigger
+    when:
+      event: move
+      subject: self
+      to: bz
+  - affects:
+      filter:
+        types:
+        - spell
+      owner: you
+      zone: graveyard
+    kind: static
+    mod:
+      add_civs:
+      - darkness
+  civs:
+  - darkness
+  cost: 6
+  id: promoy7-014
+  keywords:
+  - blocker
+  - double_breaker
+  mana: 1
+  name: 邪眼死龍ゴルドノフV世
+  power: 7000
+  races:
+  - ドラゴン・ゾンビ
+  - ナイト
+  source:
+    official: promoy7-014
+    review: pending
+  text: ブロッカー（相手クリーチャーが攻撃する時、このクリーチャーをタップして、その攻撃を阻止してもよい。その後、その相手クリーチャーとバトルする）このクリーチャーをバトルゾーンに出した時、自分の手札を１枚捨てる。そうしない場合、このクリーチャーを破壊する。W・ブレイカー（このクリーチャーはシールドを２枚ブレイクする）自分の墓地にある呪文はすべて、文明に闇を追加する。
+  types:
+  - creature
