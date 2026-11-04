@@ -765,3 +765,10 @@ converted の監査（opt_reduce の素の整数表記9件）から。任意形�
 - 書き方: kind: static, affects: self, mod: {battle_indestructible: true}。「火のクリーチャーとバトル中」の条件付きは if で書く（未対応の場合は unsupported）。
 - tests/test_vocab_pilot59.py 2件（正常 parse／不正値の検証エラー）。
 - 待機13枚（battle_indestructible のみが gap のもの）。
+
+## 第60弾: attack_untapped（アンタップしているクリーチャーを攻撃できる）（2026-11-04）
+「このクリーチャーは、アンタップしているクリーチャーを攻撃できる」は、マッハファイターの効果部分（第58弾）と同じ語彙で表せる。違いは「出たターンの間」の制限が無い点。
+- 書き方: kind: static, affects: self, mod: {allow: [{action: attack_creature, other: {tapped: false}}]}。
+- 付与の場合: op: modify で同じ mod を付与（duration は原文どおり。「このターン」なら end_of_turn）。
+- tests/test_vocab_pilot60.py 2件（正常 parse／付与の parse）。
+- 待機17枚（attack_untapped のみが gap のもの）。
