@@ -2006,3 +2006,16 @@ cards:
           filter:
             types: [creature]
             tapped: true
+  - id: T154
+    name: 試験用タップ代替コスト獣
+    types: [creature]
+    civs: [water]
+    cost: 6
+    power: 3000
+    alt_cost:
+      do:
+      - zone: bz
+        owner: you
+        filter: {types: [creature], civs: [water]}
+        count: 2
+        tap: true

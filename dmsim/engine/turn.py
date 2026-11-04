@@ -95,7 +95,9 @@ class TurnMixin:
                     if "if" in ac and not self.eval_cond(ac["if"], {"you": p, "self": self.s.ref(cid), "vars": {}}):
                         continue
                     ok = bool(self._mana_choices(cid, p, fi, cost=ac["cost"], limit=1, civs=ac.get("civs"))) if "cost" in ac else \
-                        all(sum(1 for c in self.zlist(st["zone"], p) if self.filter_match(c, st.get("filter", {}))) >= st["count"]
+                        all(sum(1 for c in self.zlist(st["zone"], p)
+                                if c != cid and self.filter_match(c, st.get("filter", {}))
+                                and (not st.get("tap") or not self.s.cards[c].tapped)) >= st["count"]
                             for st in ac["do"])
                     if ok:
                         opt = {"key": f"{o['key']}:alt" if fi is None else f"{o['key']}:{fi}:alt",
@@ -737,8 +739,12 @@ def h_play(eng, t):
             ans, dd = eng.ask(t, p, "choose_cards", [eng._card_option(c) for c in cands], st["count"], st["count"])
             if dd:
                 return dd
-            evs = [{"ev": "move", "subject": s.ref(cands[i]), "to": st["to"], "reason": st.get("reason", "pay")}
-                   for i in ans]
+            if st.get("tap"):
+                # タップで支払う（第57弾）
+                evs = [{"ev": "tap", "subject": s.ref(cands[i])} for i in ans]
+            else:
+                evs = [{"ev": "move", "subject": s.ref(cands[i]), "to": st["to"], "reason": st.get("reason", "pay")}
+                       for i in ans]
             t["alt_step"] = step_i + 1
             if evs:
                 eng._push(eng.ev_task(evs))

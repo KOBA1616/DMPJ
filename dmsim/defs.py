@@ -665,8 +665,13 @@ def _load_face(raw, keywords, macros, chk: Checker, where) -> dict:
         if "cost" in ac and (not isinstance(ac["cost"], int) or set(ac.get("civs", [])) - CIVS):
             raise DefError(f"{where}: alt_cost needs {{cost: int, civs: [...]}}")
         for step in ac.get("do", []):
-            if step.get("zone") not in chk.zones or step.get("to") not in chk.zones or not isinstance(step.get("count"), int):
-                raise DefError(f"{where}: alt_cost do step needs {{zone, count: int, to, reason}}")
+            if step.get("zone") not in chk.zones or not isinstance(step.get("count"), int):
+                raise DefError(f"{where}: alt_cost do step needs {{zone, count: int, to, reason}} or {{zone, count: int, tap: true}}")
+            if step.get("tap"):
+                # タップで支払う（第57弾）: to/reason は不要
+                pass
+            elif step.get("to") not in chk.zones:
+                raise DefError(f"{where}: alt_cost do step needs {{zone, count: int, to, reason}} or {{zone, count: int, tap: true}}")
             if "filter" in step:
                 chk.filter(step["filter"], where)
         if "if" in ac:
