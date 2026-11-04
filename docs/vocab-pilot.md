@@ -747,3 +747,12 @@ converted の監査（opt_reduce の素の整数表記9件）から。任意形�
 - 書き方: alt_cost: {do: [{zone: bz, filter: {types: [creature], civs: [light]}, count: 2, tap: true}]}。
 - proto T154（試験用タップ代替コスト獣）。tests/test_vocab_pilot57.py 2件（定義の valid/invalid）。
 - 待機12枚: tap_alt_cost×7 / alt_cost_do_tap×4 / alt_cost_tap_payment×1（gap名を tap_alt_cost に統一）。
+
+## 第58弾: マッハファイターの付与パターン（2026-11-04）
+ラウンド59（race_addition）の差し戻しで判明: 「〜に『マッハファイター』を与える」の付与パターンが変換エージェントに知られていなかった。基盤は既存（keyword_patterns.yaml の mach_fighter パターン、combat._attack_options の allow 判定、第50弾の実カードテスト dm24rp3-076）。
+- 自身が持つ場合: keyword_patterns.yaml の `mach_fighter` が自動処理（出た時に trigger → 自分に allow 付与、duration: end_of_turn）。変換側は text から「マッハファイター（…）」を除くだけ。
+- 他に与える場合: `op: modify` で `mod: {allow: [{action: attack_creature, other: {tapped: false}}]}` を直接付与し、duration: end_of_turn。「出たターンの間」の条件は、付与対象が出たばかり（誘発の subject）か、常在型で全体に与える場合は各クリーチャーの出たターンにのみ有効というルール解釈でカバーする。
+- 書き方（誘発型）: when: {event: move, to: bz, subject: {owner: you, filter: {...}}} → effect: [{op: modify, select: {ref: event.subject}, mod: {allow: [{action: attack_creature, other: {tapped: false}}]}, duration: end_of_turn}]。
+- 書き方（常在型）: kind: static, affects: {zone: bz, owner: you, filter: {types: [creature]}}, mod: {gain: [{kind: trigger, when: {event: move, to: bz, subject: self}, effect: [{op: modify, select: {ref: self}, mod: {allow: [{action: attack_creature, other: {tapped: false}}]}, duration: end_of_turn}]}]}。既に場にいるクリーチャーには trigger が発火しない（正しいルール動作）。
+- tests/test_vocab_pilot58.py 2件（誘発付与の parse／常在付与の parse）＋実カード parse テスト。
+- 待機16枚（mach_fighter のみが gap のもの）。複合 gap の4枚（dmrp21-7a、dm26ex1-027、dm26ex3-033、dm26ex2-pr005）は別途対応。
