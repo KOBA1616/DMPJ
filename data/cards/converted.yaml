@@ -287485,3 +287485,133 @@ cards:
   keywords:
   - blocker
   - double_breaker
+- id: dm35-006
+  name: 神羅ビクトリーメテオ・ムーン
+  types:
+  - creature
+  - evolution
+  civs:
+  - light
+  cost: 6
+  power: 11500
+  races:
+  - エンジェル・コマンド
+  - ルナティック・エンペラー
+  mana: 1
+  evolve_from:
+    types:
+    - creature
+    - evolution
+  keywords:
+  - double_breaker
+  abilities:
+  - kind: trigger
+    when:
+      event: attack
+      subject:
+        owner: opp
+        filter:
+          types:
+          - creature
+    effect:
+    - op: may
+      body:
+      - op: move
+        select:
+          zone: deck
+          owner: you
+          from_top: 1
+          filter:
+            keyword: blocker
+          count: 1
+        to: bz
+        reason: put
+  text: '究極進化-自分の進化クリーチャー１体の上に置く。
+
+    相手のクリーチャーが攻撃する時、自分の山札の上から１枚目を見る。それが「ブロッカー」を持つカードであれば、バトルゾーンに出してもよい。
+
+    W・ブレイカー(このクリーチャーはシールドを２枚ブレイクする)'
+  source:
+    official: dm35-006
+    review: pending
+    notes: '"究極進化は evolve_from: {types: [creature, evolution]}。「見る」は from_top: 1 +
+      filter: {keyword: blocker} で条件判定（マジボンバー等の形式）。「出す」は召喚ではないため reason: put。"'
+- id: dmex17-024
+  name: Duplicates of G.O.D.
+  types:
+  - creature
+  - evolution
+  civs:
+  - light
+  cost: 9
+  power: 15500
+  races:
+  - エンジェル・コマンド
+  - 侵略者
+  mana: 1
+  evolve_from:
+    types:
+    - creature
+    - evolution
+  keywords:
+  - triple_breaker
+  abilities:
+  - kind: declare
+    zone: hand
+    when:
+      event: attack
+      subject:
+        owner: you
+        filter:
+          civs:
+          - light
+          types:
+          - evolution
+          cost_ge: 9
+          cost_le: 9
+    effect:
+    - op: may
+      body:
+      - op: invade
+        onto:
+          ref: event.subject
+  - kind: trigger
+    when:
+      event: move
+      to: bz
+      subject: self
+    effect:
+    - op: modify
+      select:
+        zone: hand
+        owner: opp
+        filter:
+          types:
+          - spell
+      mod:
+        deny:
+        - cast
+      duration: end_of_turn
+    - op: modify
+      select:
+        zone: hand
+        owner: opp
+        filter:
+          types:
+          - creature
+          cost_le: 8
+      mod:
+        deny:
+        - summon
+      duration: end_of_turn
+  text: '究極進化：進化クリーチャー１体の上に置く。
+
+    侵略：光のコスト９の進化クリーチャー（自分の光のコスト９の進化クリーチャーが攻撃する時、自分の手札にあるこのクリーチャーをその上に重ねてもよい）
+
+    T・ブレイカー
+
+    このクリーチャーが出た時、このターン、相手は呪文を唱えることができず、コストが９より小さいクリーチャーを召喚できない。'
+  source:
+    official: dmex17-024
+    review: pending
+    notes: 侵略はdeclare+invadeの定型（コスト９ちょうどはcost_ge:9+cost_le:9）。このターンの禁止はmodify+duration:end_of_turn。triple_breakerはknown_keywordsのため書き直さない。
