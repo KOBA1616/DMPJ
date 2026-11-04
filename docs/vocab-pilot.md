@@ -796,3 +796,10 @@ converted の監査（opt_reduce の素の整数表記9件）から。任意形�
 - duration で期間を指定（例: 次の相手のターン中 → until_next_opp_turn_end）
 - tests/test_vocab_pilot63.py 2件（正常 parse／検証）
 - 待機14枚（force_addition のみが gap のもの）。
+
+## 第64弾: must_attack_this_creature（相手は可能ならこのクリーチャーを攻撃する）— 新語彙なし（2026-11-04）
+「相手は可能ならこのクリーチャーを攻撃する」は既存の `mod: {must_be_attacked: true}` で表せる（第51弾で実装済み）。
+- 書き方: kind: static, affects: self, mod: {must_be_attacked: true}
+- enters_tapped との複合も対応可能（両方とも既存語彙）
+- tests/test_vocab_pilot64.py 2件（正常 parse／検証）
+- 待機7枚（enters_tapped + must_attack_this_creature のみが gap のもの）。
