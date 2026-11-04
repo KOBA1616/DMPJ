@@ -234,7 +234,8 @@ class TurnSearch:
       fast_forward で必要な周回だけ進め、その局面を子として探索を続ける。"""
 
     def __init__(self, me: int, budget: int = 200, weights: Weights | None = None, opp_policy=charge_only_policy,
-                 combo_cap: int = 6):
+                 combo_cap: int = 6, value_fn=None):
+        self.value_fn = value_fn              # 葉の評価を差し替える関数 f(eng, me)（None なら evaluate）。勝敗を使わない局面評価の測定用
         self.me = me
         self.budget = budget
         self.w = weights or Weights()
@@ -243,6 +244,9 @@ class TurnSearch:
         self.stock_offsets: tuple[int, ...] = (0, 1)   # ストックする周回数: 上限から何周手前までを試すか（山札の残りを1枚・2枚にする等）
         self.burn_stock = True                # 山札を削るだけのループを自動で残り1枚までストックする（2段探索の2段目では切る）
         self.collect: list | None = None      # ループ発見モード: 見つけたループ（局面の複製, 証明書）をここへ集めて、ストックはしない
+
+    def _eval(self, eng: Engine) -> float:
+        return self.value_fn(eng, self.me) if self.value_fn else evaluate(eng, self.me, self.w)
 
     def _settle(self, eng: Engine) -> dict | None:
         """相手の決定を相手役に答えさせながら、自分の決定かターン終了まで進める。"""
@@ -271,10 +275,10 @@ class TurnSearch:
     def _search(self, eng: Engine, det: Detectors) -> tuple[float, Engine]:
         d = self._settle(eng)
         if d is None:
-            return evaluate(eng, self.me, self.w), eng
+            return self._eval(eng), eng
         if self.left <= 0:
             leaf = self._rollout(eng)
-            return evaluate(leaf, self.me, self.w), leaf
+            return self._eval(leaf), leaf
         h, ctr = abstract(eng, "in_turn")
         # マナは枚数だけでなく何が残っているか（文明）も区別する。払い方の違いで闇マナが残るか否かが変わる
         mana_left = tuple(sorted((c.defn, c.tapped) for c in (eng.s.cards[x] for p in (0, 1) for x in eng.s.zones["mana"][p])))
@@ -335,7 +339,7 @@ class TurnSearch:
                 if d2 is None:
                     break
                 leaf.answer(candidates(leaf, d2, self.w, cap=1)[0])
-            scored.append((-evaluate(leaf, self.me, self.w), i, ch))
+            scored.append((-self._eval(leaf), i, ch))
         return [ch for _, _, ch in sorted(scored)]
 
     def _stocks(self, eng: Engine, cert: LoopCertificate) -> list[Engine]:
@@ -436,7 +440,7 @@ def lock_probe(eng: Engine, me: int, rounds: int = 2) -> LoopCertificate | None:
 
 def play_game(rules, deck: list[str], opp_deck: list[str], seed: int, *, first_player: int = 0,
               max_turn: int = 4, budget: int = 200, weights: Weights | None = None,
-              lock_rounds: int = 2, start: Engine | None = None, opp=None) -> tuple[GameResult, Engine]:
+              lock_rounds: int = 2, start: Engine | None = None, opp=None, value_fn=None) -> tuple[GameResult, Engine]:
     """自分 = プレイヤー0。自分の max_turn ターン目が終わるまで回す。各ターンの後に lock_probe でロックを確かめる。
     start（dmsim.scenario.build で作った局面など）を渡すとそこから始める（deck / opp_deck / seed は使わない）。"""
     me = 0
@@ -447,7 +451,7 @@ def play_game(rules, deck: list[str], opp_deck: list[str], seed: int, *, first_p
     if opp is not None:                      # 妨害モデル（dmsim.opponent.OppModel）。None なら従来の何もしない相手
         opp.setup(eng)
         opp_pol = opp.policy
-    search = TurnSearch(me, budget, weights, opp_policy=opp_pol)
+    search = TurnSearch(me, budget, weights, opp_policy=opp_pol, value_fn=value_fn)
     try:
         while (d := eng.advance()) is not None:
             if eng.s.active != me or d["player"] != me:
