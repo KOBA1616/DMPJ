@@ -9,11 +9,11 @@ from __future__ import annotations
 
 import json
 
-from .defs import CARD_TYPES, CIVS, DURATIONS_FIXED, EVENTS, FILTER_KEYS, MOD_KEYS, POSITIONS, REASONS, VIAS, \
+from .defs import ABILITY_KEYS, CARD_TYPES, CIVS, DURATIONS_FIXED, EVENTS, FILTER_KEYS, MOD_KEYS, POSITIONS, REASONS, VIAS, \
     core_ops, load_tables
 
 
-def build() -> dict:
+def _build() -> dict:
     zones, keywords, macros, actions, steps = load_tables()
     ops = core_ops()
     ref = lambda n: {"$ref": f"#/$defs/{n}"}  # noqa: E731
@@ -45,9 +45,12 @@ def build() -> dict:
         "power": {"type": "integer"}, "races": {"type": "array", "items": {"type": "string"}},
         "keywords": {"type": "array", "items": {"enum": sorted(keywords)}},
         "abilities": {"type": "array", "items": ref("ability")}, "spell": ref("ops"),
-        "evolve_from": {"type": "object", "properties": {k: {} for k in sorted(FILTER_KEYS | {"zone"})}, "additionalProperties": False}, "free_if": ref("cond"),
+        "evolve_from": {"anyOf": [{"type": "object", "properties": {k: {} for k in sorted(FILTER_KEYS | {"zone"})}, "additionalProperties": False}, {"type": "array", "items": {"type": "object"}}]}, "free_if": ref("cond"),
         "galaxy_shield": {"type": "object", "properties": {"cost": {"type": "integer"}, "civs": {"type": "array", "items": {"enum": sorted(CIVS)}}}, "required": ["cost", "civs"], "additionalProperties": False}, "neo": {"type": "boolean"}, "grave_evo": {"type": "boolean"}, "star": {"type": "boolean"}, "s_max": {"type": "boolean"}, "hyper": {"type": "boolean"},
     }
+    for k in ("text", "mana", "evolve_count", "evolve_zone", "evolve_any", "cost_reduce_per_evo", "resolve_to", "alt_cost", "s_back", "bazurenda",
+              "fushigi", "vividraw", "mugen_climb", "o_drive", "odrive_spell", "sst_spell", "stp_spell"):   # defs.parse_card が読む面の項目
+        face_props.setdefault(k, {})
     return {
         "$schema": "https://json-schema.org/draft/2020-12/schema",
         "title": "DMPJ card definition",
@@ -67,8 +70,8 @@ def build() -> dict:
                 "zone": {"anyOf": [{"enum": sorted(zones) + ["any"]}, {"type": "array", "items": {"enum": sorted(zones)}}]},
                 "exlife_of": {"type": "string"}, "under_of": {}, "owner": {"enum": ["you", "opp", "any"]}, "owner_of": {"type": "string"},
                 "filter": ref("filter"),
-                "count": {"anyOf": [ref("expr"), {"const": "all"}, {"const": "any"}]}, "up_to": {"type": "boolean"},
-                "from_top": ref("expr"), "chooser": {"enum": ["you", "opp"]}, "ref": {"type": "string"},
+                "count": {"anyOf": [ref("expr"), {"type": "object", "properties": {"upto": ref("expr")}, "additionalProperties": False}, {"const": "all"}, {"const": "any"}, {"const": "rest"}]}, "up_to": {"type": "boolean"},
+                "from_top": ref("expr"), "chooser": {"enum": ["you", "opp", "opponent", "random"]}, "ref": {"type": "string"},
                 "total_cost_le": ref("expr"), "total_cost_ge": ref("expr"),
                 "other": {"type": "boolean"}, "look": {"type": "boolean"}}, "additionalProperties": False},
             "expr": {"anyOf": [{"type": "integer"}, {"type": "object", "properties": {
@@ -78,18 +81,18 @@ def build() -> dict:
                 "exists": ref("selector"), "cmp": {"type": "array", "minItems": 3, "maxItems": 3},
                 "not": ref("cond"), "all": {"type": "array", "items": ref("cond")},
                 "any": {"type": "array", "items": ref("cond")}, "is_turn": {"enum": ["you", "opp"]},
-                "marked": {"type": "string"}, "self_marked": {"type": "string"}, "face_up": {"type": "boolean"}, "hyper": {"type": "boolean"}},
+                "marked": {"type": "string"}, "self_marked": {"type": "string"}, "face_up": {"type": "boolean"}, "vivid_paid": {}, "alt_paid": {}, "hyper": {"type": "boolean"}},
                 "additionalProperties": False},
             "mod": {"type": "object", "properties": {
                 "power": {"anyOf": [{"type": "integer"}, {"type": "object", "properties": {"amount": {"type": "integer"}, "count": {"anyOf": [ref("selector"), ref("expr")]}}, "required": ["amount"], "additionalProperties": False}]}, "grant": {"type": "array", "items": {"enum": sorted(keywords)}},
                 "allow": {"type": "array", "items": perm}, "deny": {"type": "array", "items": perm},
                 "require": {"type": "array", "items": {"enum": ["attack", "block"]}}, "add_of": {"const": "self"}, "add_races": {"type": "array", "items": {"type": "string"}},
                 "breaks": {"type": "integer"}, "breaks_per_power": {"type": "integer"},
-                "cost": {"anyOf": [{"type": "integer"}, {"type": "object", "properties": {"amount": {"type": "integer"}, "count": {"anyOf": [ref("selector"), ref("expr")]}}, "required": ["amount"], "additionalProperties": False}]},
+                "cost": {"anyOf": [{"type": "integer"}, {"type": "object", "properties": {"amount": {"type": "integer"}, "cost_min": {"type": "integer"}, "count": {"anyOf": [ref("selector"), ref("expr")]}}, "required": ["amount"], "additionalProperties": False}]},
                 "cost_min": {"type": "integer"},
                 "power_when": {"type": "object", "properties": {"amount": {"type": "integer"}, "count": {"anyOf": [ref("selector"), ref("expr")]}, "when": {"enum": ["attacking", "blocking"]}}, "required": ["amount", "when"], "additionalProperties": False},
                 "battle_power": {"type": "object", "properties": {"amount": {"type": "integer"}, "count": {"anyOf": [ref("selector"), ref("expr")]}, "only": {"enum": ["attacking"]}}, "required": ["amount"], "additionalProperties": False},
-                "sac_reduce": {"type": "integer"}, "cost_may": {"type": "object", "properties": {"amount": {"type": "integer"}, "once": {"type": "boolean"}, "min": {"type": "integer", "minimum": 0}}, "required": ["amount"], "additionalProperties": False}, "opt_reduce": {"type": "object", "properties": {"amount": {"type": "integer"}, "then": {"enum": ["destroy", "deck_bottom_draw"]}, "floor": {"type": "integer", "minimum": 0}, "per": {"type": "boolean"}, "do": {"type": "object", "properties": {"select": ref("selector"), "move_to": {"type": "string"}, "shuffle": {"type": "boolean"}, "tap": {"type": "boolean"}, "min": {"type": "integer", "minimum": 0}, "max": {"type": "integer", "minimum": 0}}, "required": ["select"], "additionalProperties": False}}, "required": ["amount"], "additionalProperties": False},
+                "sac_reduce": {"type": "integer"}, "cost_may": {"type": "object", "properties": {"amount": {"type": "integer"}, "once": {"type": "boolean"}, "must": {"type": "boolean"}, "min": {"type": "integer", "minimum": 0}}, "required": ["amount"], "additionalProperties": False}, "opt_reduce": {"type": "object", "properties": {"amount": {"type": "integer"}, "then": {"enum": ["destroy", "deck_bottom_draw"]}, "floor": {"type": "integer", "minimum": 0}, "per": {"type": "boolean"}, "do": {"type": "object", "properties": {"select": ref("selector"), "move_to": {"type": "string"}, "shuffle": {"type": "boolean"}, "tap": {"type": "boolean"}, "min": {"type": "integer", "minimum": 0}, "max": {"type": "integer", "minimum": 0}}, "required": ["select"], "additionalProperties": False}}, "required": ["amount"], "additionalProperties": False},
                 "ignore": {"type": "array", "items": {"enum": ["trigger", "static", "replace", "all"]}},
                 "ignore_ids": {"type": "array", "items": {"type": "string"}},
                 "gain": {"type": "array", "items": ref("ability")}},
@@ -97,16 +100,30 @@ def build() -> dict:
             "when": {"type": "object", "properties": {
                 "event": {"enum": sorted(EVENTS)}, "from": {"enum": sorted(zones)}, "to": {"enum": sorted(zones)},
                 "reason": {"enum": sorted(REASONS)}, "player": {"enum": ["you", "opp"]}, "by": {"enum": ["you", "opp"]}, "unpaid": {"type": "boolean"}, "target": {}, "attacker": {},
-                "via": {"enum": sorted(VIAS)}, "subject": {}},
+                "via": {"enum": sorted(VIAS)}, "subject": {}, "stacked": {}, "sealed_from": {}, "face_up": {}, "broke": {}, "vivid": {}},
                 "required": ["event"], "additionalProperties": False},
             "ability": {"type": "object", "properties": {
                 "kind": {"enum": ["trigger", "replace", "static", "declare", "activate", "silent", "state", "partner"]}, "when": ref("when"),
                 "if": ref("cond"), "effect": ref("ops"), "instead": ref("ops"), "optional": {"type": "boolean"},
                 "once_per_turn": {"type": "boolean"}, "first_time": {"type": "boolean"}, "id": {"type": "string"},
-                "affects": {}, "mod": ref("mod"), "cost": {"type": "object", "properties": {"tap": {}}, "required": ["tap"], "additionalProperties": False}, "zone": {"enum": sorted(zones)}},
+                "affects": {}, "mod": ref("mod"), "cost": {"type": "object", "properties": {"tap": {}, "tap_mana": {}, "under": {}}, "additionalProperties": False}, "zone": {"enum": sorted(set(zones) | {"hold"})}},
                 "required": ["kind"], "additionalProperties": False},
         },
     }
+
+
+def build() -> dict:
+    s = _build()
+    props = s["$defs"]["ability"]["properties"]
+    for k in sorted(ABILITY_KEYS):   # defs.ABILITY_KEYS が正。型を書いていない項目は何でも受ける
+        props.setdefault(k, {})
+    mods = s["$defs"]["mod"]["properties"]
+    for k in sorted(MOD_KEYS):   # defs.MOD_KEYS が正。型を書いていない項目は何でも受ける
+        mods.setdefault(k, {})
+    mods["cost_min"] = {"anyOf": [{"type": "integer"}, {"type": "object"}]}
+    mods["sac_reduce"] = {"anyOf": [{"type": "integer"}, {"type": "object"}]}
+    mods["breaks"] = {"anyOf": [{"type": "integer"}, {"type": "object"}]}
+    return s
 
 
 if __name__ == "__main__":

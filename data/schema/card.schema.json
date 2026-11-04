@@ -6,12 +6,8 @@
   "id": {
    "type": "string"
   },
-  "mana": {
-   "type": "integer"
-  },
-  "text": {
-   "type": "string"
-  },
+  "mana": {},
+  "text": {},
   "source": {
    "type": "object"
   },
@@ -138,39 +134,49 @@
    "$ref": "#/$defs/ops"
   },
   "evolve_from": {
-   "type": "object",
-   "properties": {
-    "any_of": {},
-    "civs": {},
-    "civs_all": {},
-    "cost_ge": {},
-    "cost_le": {},
-    "evolution": {},
-    "face_down": {},
-    "face_up": {},
-    "fushigi": {},
-    "keyword": {},
-    "mugen_climb": {},
-    "multicolor": {},
-    "name": {},
-    "name_has": {},
-    "neo": {},
-    "not_civs": {},
-    "not_name": {},
-    "not_types": {},
-    "power_ge": {},
-    "power_le": {},
-    "race_has": {},
-    "races": {},
-    "sealed": {},
-    "tapped": {},
-    "twinpact": {},
-    "types": {},
-    "vanilla": {},
-    "vividraw": {},
-    "zone": {}
-   },
-   "additionalProperties": false
+   "anyOf": [
+    {
+     "type": "object",
+     "properties": {
+      "any_of": {},
+      "civs": {},
+      "civs_all": {},
+      "cost_ge": {},
+      "cost_le": {},
+      "evolution": {},
+      "face_down": {},
+      "face_up": {},
+      "fushigi": {},
+      "keyword": {},
+      "mugen_climb": {},
+      "multicolor": {},
+      "name": {},
+      "name_has": {},
+      "neo": {},
+      "not_civs": {},
+      "not_name": {},
+      "not_types": {},
+      "power_ge": {},
+      "power_le": {},
+      "race_has": {},
+      "races": {},
+      "sealed": {},
+      "tapped": {},
+      "twinpact": {},
+      "types": {},
+      "vanilla": {},
+      "vividraw": {},
+      "zone": {}
+     },
+     "additionalProperties": false
+    },
+    {
+     "type": "array",
+     "items": {
+      "type": "object"
+     }
+    }
+   ]
   },
   "free_if": {
    "$ref": "#/$defs/cond"
@@ -215,7 +221,22 @@
   },
   "hyper": {
    "type": "boolean"
-  }
+  },
+  "evolve_count": {},
+  "evolve_zone": {},
+  "evolve_any": {},
+  "cost_reduce_per_evo": {},
+  "resolve_to": {},
+  "alt_cost": {},
+  "s_back": {},
+  "bazurenda": {},
+  "fushigi": {},
+  "vividraw": {},
+  "mugen_climb": {},
+  "o_drive": {},
+  "odrive_spell": {},
+  "sst_spell": {},
+  "stp_spell": {}
  },
  "required": [
   "id"
@@ -339,39 +360,49 @@
      "$ref": "#/$defs/ops"
     },
     "evolve_from": {
-     "type": "object",
-     "properties": {
-      "any_of": {},
-      "civs": {},
-      "civs_all": {},
-      "cost_ge": {},
-      "cost_le": {},
-      "evolution": {},
-      "face_down": {},
-      "face_up": {},
-      "fushigi": {},
-      "keyword": {},
-      "mugen_climb": {},
-      "multicolor": {},
-      "name": {},
-      "name_has": {},
-      "neo": {},
-      "not_civs": {},
-      "not_name": {},
-      "not_types": {},
-      "power_ge": {},
-      "power_le": {},
-      "race_has": {},
-      "races": {},
-      "sealed": {},
-      "tapped": {},
-      "twinpact": {},
-      "types": {},
-      "vanilla": {},
-      "vividraw": {},
-      "zone": {}
-     },
-     "additionalProperties": false
+     "anyOf": [
+      {
+       "type": "object",
+       "properties": {
+        "any_of": {},
+        "civs": {},
+        "civs_all": {},
+        "cost_ge": {},
+        "cost_le": {},
+        "evolution": {},
+        "face_down": {},
+        "face_up": {},
+        "fushigi": {},
+        "keyword": {},
+        "mugen_climb": {},
+        "multicolor": {},
+        "name": {},
+        "name_has": {},
+        "neo": {},
+        "not_civs": {},
+        "not_name": {},
+        "not_types": {},
+        "power_ge": {},
+        "power_le": {},
+        "race_has": {},
+        "races": {},
+        "sealed": {},
+        "tapped": {},
+        "twinpact": {},
+        "types": {},
+        "vanilla": {},
+        "vividraw": {},
+        "zone": {}
+       },
+       "additionalProperties": false
+      },
+      {
+       "type": "array",
+       "items": {
+        "type": "object"
+       }
+      }
+     ]
     },
     "free_if": {
      "$ref": "#/$defs/cond"
@@ -416,7 +447,24 @@
     },
     "hyper": {
      "type": "boolean"
-    }
+    },
+    "text": {},
+    "mana": {},
+    "evolve_count": {},
+    "evolve_zone": {},
+    "evolve_any": {},
+    "cost_reduce_per_evo": {},
+    "resolve_to": {},
+    "alt_cost": {},
+    "s_back": {},
+    "bazurenda": {},
+    "fushigi": {},
+    "vividraw": {},
+    "mugen_climb": {},
+    "o_drive": {},
+    "odrive_spell": {},
+    "sst_spell": {},
+    "stp_spell": {}
    },
    "required": [
     "name",
@@ -1490,10 +1538,22 @@
        "$ref": "#/$defs/expr"
       },
       {
+       "type": "object",
+       "properties": {
+        "upto": {
+         "$ref": "#/$defs/expr"
+        }
+       },
+       "additionalProperties": false
+      },
+      {
        "const": "all"
       },
       {
        "const": "any"
+      },
+      {
+       "const": "rest"
       }
      ]
     },
@@ -1506,7 +1566,9 @@
     "chooser": {
      "enum": [
       "you",
-      "opp"
+      "opp",
+      "opponent",
+      "random"
      ]
     },
     "ref": {
@@ -1624,6 +1686,8 @@
     "face_up": {
      "type": "boolean"
     },
+    "vivid_paid": {},
+    "alt_paid": {},
     "hyper": {
      "type": "boolean"
     }
@@ -1877,7 +1941,14 @@
      }
     },
     "breaks": {
-     "type": "integer"
+     "anyOf": [
+      {
+       "type": "integer"
+      },
+      {
+       "type": "object"
+      }
+     ]
     },
     "breaks_per_power": {
      "type": "integer"
@@ -1891,6 +1962,9 @@
        "type": "object",
        "properties": {
         "amount": {
+         "type": "integer"
+        },
+        "cost_min": {
          "type": "integer"
         },
         "count": {
@@ -1912,7 +1986,14 @@
      ]
     },
     "cost_min": {
-     "type": "integer"
+     "anyOf": [
+      {
+       "type": "integer"
+      },
+      {
+       "type": "object"
+      }
+     ]
     },
     "power_when": {
      "type": "object",
@@ -1971,7 +2052,14 @@
      "additionalProperties": false
     },
     "sac_reduce": {
-     "type": "integer"
+     "anyOf": [
+      {
+       "type": "integer"
+      },
+      {
+       "type": "object"
+      }
+     ]
     },
     "cost_may": {
      "type": "object",
@@ -1980,6 +2068,9 @@
        "type": "integer"
       },
       "once": {
+       "type": "boolean"
+      },
+      "must": {
        "type": "boolean"
       },
       "min": {
@@ -2068,7 +2159,9 @@
      "items": {
       "$ref": "#/$defs/ability"
      }
-    }
+    },
+    "must_be_attacked": {},
+    "no_leave": {}
    },
    "additionalProperties": false,
    "propertyNames": {
@@ -2189,7 +2282,12 @@
       "revolution_change"
      ]
     },
-    "subject": {}
+    "subject": {},
+    "stacked": {},
+    "sealed_from": {},
+    "face_up": {},
+    "broke": {},
+    "vivid": {}
    },
    "required": [
     "event"
@@ -2242,11 +2340,10 @@
     "cost": {
      "type": "object",
      "properties": {
-      "tap": {}
+      "tap": {},
+      "tap_mana": {},
+      "under": {}
      },
-     "required": [
-      "tap"
-     ],
      "additionalProperties": false
     },
     "zone": {
@@ -2257,11 +2354,19 @@
       "gr",
       "graveyard",
       "hand",
+      "hold",
       "hyper",
       "mana",
       "shield"
      ]
-    }
+    },
+    "any_attacker": {},
+    "bazurenda": {},
+    "choukon": {},
+    "keyword": {},
+    "odrive": {},
+    "sst": {},
+    "stp": {}
    },
    "required": [
     "kind"
