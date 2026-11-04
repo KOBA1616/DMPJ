@@ -287803,3 +287803,116 @@ cards:
     review: pending
     notes: '"W・ブレイカーは known_keywords（double_breaker）として keywords に含める。「持ち主の墓地」は相手のカードなので相手の墓地へ移動する（move
       の to: graveyard はカードの持ち主の墓地）。"'
+- id: dm25ex3-028
+  name: ～地獄帰りの騎士～
+  types:
+  - creature
+  civs:
+  - light
+  - water
+  - darkness
+  cost: 3
+  power: 3000
+  races:
+  - アーク・セラフィム
+  - スチーム・ナイト
+  mana: 1
+  neo: true
+  evolve_from:
+    civs:
+    - light
+    - water
+    - darkness
+  text: 'NEO進化：光、水、または闇のクリーチャー１体の上に置いてもよい。
+
+    このクリーチャーが出た時、カードを３枚引いてもよい。そうしたら、自分の手札を２枚捨て、自分の山札の上から１枚をシールド化する。'
+  abilities:
+  - kind: trigger
+    when:
+      event: move
+      to: bz
+      subject: self
+    effect:
+    - op: may
+      body:
+      - op: draw
+        count: 3
+      - op: discard
+        select:
+          zone: hand
+          owner: you
+          count: 2
+      - op: move
+        select:
+          zone: deck
+          owner: you
+          from_top: 1
+        to: shield
+        reason: charge
+  source:
+    official: dm25ex3-028
+    review: pending
+    notes: '「そうしたら」は3枚引くことを選んだ場合（may の中で続ける）。シールド化は山札の上から1枚を表向きでなく置く（reason: charge）。'
+    aliases:
+    - dm25rp3-022
+    - promoy24-070
+- id: dm25ex3-055
+  name: DARK MEMORY CONTAINER
+  types:
+  - creature
+  civs:
+  - light
+  - water
+  - darkness
+  cost: 5
+  power: 5500
+  races:
+  - ???
+  - スチーム・ナイト
+  mana: 1
+  keywords:
+  - blocker
+  text: 'ブロッカー（このクリーチャーをタップして、相手クリーチャーの攻撃先をこのクリーチャーに変更してもよい）
+
+    このクリーチャーが出た時、カードを２枚引く。
+
+    カードが自分のシールドゾーンに置かれた時、このクリーチャーを自分の墓地から出してもよい。'
+  abilities:
+  - kind: trigger
+    when:
+      event: move
+      to: bz
+      subject: self
+    effect:
+    - op: draw
+      count: 2
+  - kind: trigger
+    when:
+      event: move
+      to: bz
+      subject: self
+    effect:
+    - op: draw
+      count: 2
+  - kind: trigger
+    zone: graveyard
+    when:
+      event: move
+      to: shield
+      subject:
+        owner: you
+    effect:
+    - op: may
+      body:
+      - op: move
+        select:
+          ref: self
+        to: bz
+        reason: put
+  source:
+    official: dm25ex3-055
+    review: pending
+    notes: '種族の「???」は原文のまま入れる。墓地から出すのは zone: graveyard の誘発＋may。'
+    aliases:
+    - dm25rp2-048
+    - promoy25-051
