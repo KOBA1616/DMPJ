@@ -31,6 +31,24 @@ def _goal_cards(eng: Engine, me: int) -> bool:
     return False
 
 
+class _Settler:
+    """相手の決定を相手役に答えさせながら、自分の決定か終局まで進める（相手のターンもまたぐ）。max_turn を超えたら打ち切る。"""
+
+    def __init__(self, me: int, opp_policy, max_turn: int | None):
+        self.me, self.opp_policy, self.max_turn = me, opp_policy, max_turn
+
+    def _settle(self, eng: Engine):
+        while True:
+            d = eng.advance()
+            if d is None:
+                return None
+            if self.max_turn is not None and eng.s.turn > self.max_turn:
+                return None
+            if d["player"] == self.me:
+                return d
+            eng.answer(self.opp_policy(eng, d))
+
+
 def priority(eng: Engine, me: int, w: Weights, pend_w: float = 40.0, own_shield_w: float = 5.0) -> float:
     v = evaluate(eng, me, w)
     v += pend_w * sum(1 for p in eng.s.pending if p["controller"] == me)
@@ -75,12 +93,15 @@ def search(eng: Engine, me: int = 0, budget: int = 20000, w: Weights | None = No
     return BFResult(False, nodes, best[1], len(best[1].log))
 
 
-def beam(eng: Engine, me: int = 0, width: int = 200, max_depth: int = 80, w: Weights | None = None, opp_policy=None) -> BFResult:
+def beam(eng: Engine, me: int = 0, width: int = 200, max_depth: int = 80, w: Weights | None = None, opp_policy=None,
+         max_turn: int | None = None) -> BFResult:
     """ビーム探索: 決定の深さごとに、評価の高い width 個だけを残して進める。最良優先探索が「いま良く見える枝」に偏って
     谷（盾をいったん減らしてから増やす、など）を越えられない盤面向け。同じ局面（骨格＋山札の並び＋カウンタ）は1度だけ展開する。"""
     from ..solitaire import TurnSearch, charge_only_policy
     w = w or Weights()
     ts = TurnSearch(me, 1, w, opp_policy or charge_only_policy)
+    if max_turn is not None:       # 複数ターンの探索: 相手のターンもまたいで、max_turn ターン目までに勝てるかを見る
+        ts = _Settler(me, opp_policy or charge_only_policy, max_turn)
     layer = [eng.clone()]
     seen: set = set()
     nodes = 0

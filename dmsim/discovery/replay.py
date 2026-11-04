@@ -19,7 +19,7 @@ def steps_of(engine) -> list[tuple[str, tuple[str, ...], tuple[int, ...]]]:
     return out
 
 
-def replay_test(rules, steps, prepare=None, me: int = 0):
+def replay_test(rules, steps, prepare=None, me: int = 0, build=None):
     """spec -> 手順を再生して me が勝つか。prepare(engine) は局面を作った直後の細工（山札の並びの固定など）。"""
     cache: dict[str, bool] = {}
 
@@ -29,7 +29,7 @@ def replay_test(rules, steps, prepare=None, me: int = 0):
             return cache[k]
         ok = False
         try:
-            e = scenario.build(rules, spec)
+            e = (build or scenario.build)(rules, spec)
             if prepare:
                 prepare(e)
             for kind, keys, idx in steps:
