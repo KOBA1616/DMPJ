@@ -277822,3 +277822,1723 @@ cards:
     - dm25ex2-058
   keywords:
   - double_breaker
+- id: dmrp17-062
+  name: 青守銀 ピアチェレ
+  types:
+  - creature
+  civs:
+  - light
+  cost: 2
+  power: 2000
+  races:
+  - メタリカ
+  - レクスターズ
+  mana: 1
+  text: シンカパワー：このクリーチャーが進化する時、相手のクリーチャーを１体選び、タップする。
+  abilities:
+  - kind: trigger
+    when:
+      event: move
+      to: bz
+      subject: self
+      stacked: true
+    effect:
+    - op: choose
+      select:
+        zone: bz
+        owner: opp
+        filter:
+          types:
+          - creature
+        count: 1
+      as: c
+    - op: tap
+      select:
+        ref: c
+  source:
+    official: dmrp17-062
+    review: pending
+    notes: 'シンカパワーは stacked: true の誘発型（第28弾）。'
+    aliases:
+    - promoy20-010
+- id: dmrp17-070
+  name: 鋭鱗の剣兵 マンマサ
+  types:
+  - creature
+  civs:
+  - water
+  cost: 2
+  power: 2000
+  races:
+  - ムートピア
+  - レクスターズ
+  mana: 1
+  text: シンカパワー：このクリーチャーが進化する時、カードを１枚引く。
+  abilities:
+  - kind: trigger
+    when:
+      event: move
+      to: bz
+      subject: self
+      stacked: true
+    effect:
+    - op: draw
+      count: 1
+  source:
+    official: dmrp17-070
+    review: pending
+    notes: 'シンカパワーは stacked: true の誘発型（第28弾）。'
+    aliases:
+    - dmrp17-coro09
+- id: dmrp17-077
+  name: 凶鬼49号 バダバーダ
+  types:
+  - creature
+  civs:
+  - darkness
+  cost: 2
+  power: 2000
+  races:
+  - マフィ・ギャング
+  - レクスターズ
+  mana: 1
+  text: シンカパワー：このクリーチャーが進化する時、相手は自身の手札を１枚選んで捨てる。
+  abilities:
+  - kind: trigger
+    when:
+      event: move
+      to: bz
+      subject: self
+      stacked: true
+    effect:
+    - op: discard
+      select:
+        zone: hand
+        owner: opp
+        count: 1
+  source:
+    official: dmrp17-077
+    review: pending
+    notes: 'シンカパワーは stacked: true の誘発型（第28弾）。相手の捨ては op: discard（dm12-025 と同型）。'
+- id: dmrp18-002
+  name: 煌星龍 サッヴァーク
+  types:
+  - creature
+  civs:
+  - light
+  cost: 3
+  power: 4500
+  races:
+  - マスター・ドラゴン
+  - メタリカ
+  - レクスターズ
+  mana: 1
+  text: '{GS} G・ストライク（このクリーチャーを自分のシールドゾーンから手札に加える時、相手に見せ、相手のクリーチャーを１体選んでもよい。このターン、そのクリーチャーは攻撃できない）
+
+    ブロッカー
+
+    このクリーチャーを「G・ストライク」能力で相手に見せた時、相手のクリーチャーを１体選び、タップする。
+
+    シンカパワー：このクリーチャーが進化する時、相手のクリーチャーを２体まで選び、タップする。'
+  abilities:
+  - kind: trigger
+    zone: hand
+    when:
+      event: move
+      from: shield
+      to: hand
+      subject: self
+    effect:
+    - op: choose
+      select:
+        zone: bz
+        owner: opp
+        filter:
+          types:
+          - creature
+        count: 1
+      as: c
+    - op: tap
+      select:
+        ref: c
+  - kind: trigger
+    when:
+      event: move
+      to: bz
+      subject: self
+      stacked: true
+    effect:
+    - op: choose
+      select:
+        zone: bz
+        owner: opp
+        filter:
+          types:
+          - creature
+        count: 2
+        up_to: true
+      as: c
+    - op: tap
+      select:
+        ref: c
+  source:
+    official: dmrp18-002
+    review: pending
+    notes: 'G・ストライク見せ時は dmrp17-003 と同型のカスタム誘発（zone: hand、shield→hand）。g_strike・blocker
+      は known_keywords のため keywords に書かない。「２体まで」は count: 2 + up_to: true。'
+  keywords:
+  - g_strike
+  - blocker
+- id: dmrp18-003
+  name: R.S.S. アアルカイト
+  types:
+  - creature
+  civs:
+  - water
+  cost: 3
+  power: 3000
+  races:
+  - トリックス
+  - レクスターズ
+  mana: 1
+  text: '{GS} G・ストライク（このクリーチャーを自分のシールドゾーンから手札に加える時、相手に見せ、相手のクリーチャーを１体選んでもよい。このターン、そのクリーチャーは攻撃できない）
+
+    ジャストダイバー（このクリーチャーが出た時、次の自分のターンのはじめまで、このクリーチャーは相手に選ばれず、攻撃されない）
+
+    シンカパワー：このクリーチャーが進化する時、相手のクリーチャーを１体選び、手札に戻してもよい。'
+  abilities:
+  - kind: trigger
+    when:
+      event: move
+      to: bz
+      subject: self
+    effect:
+    - op: modify
+      select:
+        ref: self
+      mod:
+        deny:
+        - be_chosen
+        - be_attacked
+      duration: until_next_own_turn_start
+  - kind: trigger
+    when:
+      event: move
+      to: bz
+      subject: self
+      stacked: true
+    effect:
+    - op: may
+      body:
+      - op: move
+        select:
+          zone: bz
+          owner: opp
+          filter:
+            types:
+            - creature
+          count: 1
+        to: hand
+        reason: return
+  source:
+    official: dmrp18-003
+    review: pending
+    notes: 'シンカパワーは stacked: true の誘発型（第28弾）。g_strike は known_keywords のため keywords
+      に書かない。'
+  keywords:
+  - g_strike
+- id: dmrp18-004
+  name: テ・ラ・スザーク
+  types:
+  - creature
+  civs:
+  - darkness
+  cost: 4
+  power: 4000
+  races:
+  - ドルスザク
+  - マフィ・ギャング
+  - レクスターズ
+  mana: 1
+  text: '{GS} G・ストライク（このクリーチャーを自分のシールドゾーンから手札に加える時、相手に見せ、相手のクリーチャーを１体選んでもよい。このターン、そのクリーチャーは攻撃できない）
+
+    自分のターンの終わりに、自分の山札の上から１枚目を墓地に置いてもよい。それが進化クリーチャーなら手札に加え、そうでなければカードを１枚引く。
+
+    シンカパワー：このクリーチャーが進化する時、自分の墓地からコスト３以下のクリーチャーを１体出してもよい。'
+  abilities:
+  - kind: trigger
+    when:
+      event: turn_end
+      player: you
+    effect:
+    - op: may
+      body:
+      - op: choose
+        select:
+          zone: deck
+          owner: you
+          from_top: 1
+          count: 1
+        as: t
+      - op: move
+        select:
+          ref: t
+          count: all
+        to: graveyard
+        reason: put
+      - op: if
+        cond:
+          exists:
+            ref: t
+            filter:
+              evolution: true
+        then:
+        - op: move
+          select:
+            ref: t
+            count: all
+          to: hand
+          reason: return
+        else:
+        - op: draw
+          count: 1
+  - kind: trigger
+    when:
+      event: move
+      to: bz
+      subject: self
+      stacked: true
+    effect:
+    - op: may
+      body:
+      - op: move
+        select:
+          zone: graveyard
+          owner: you
+          filter:
+            types:
+            - creature
+            cost_le: 3
+          count: 1
+        to: bz
+        reason: put
+  source:
+    official: dmrp18-004
+    review: pending
+    notes: '墓地に置いたカードの種別判定は dm23bd4-033 と同型（as: t → exists ref filter）。「出す」は召喚ではないため
+      reason: put。g_strike は known_keywords のため keywords に書かない。'
+  keywords:
+  - g_strike
+- id: dmrp18-006
+  name: モモスター モンキッド
+  types:
+  - creature
+  civs:
+  - nature
+  cost: 4
+  power: 5000
+  races:
+  - ジョーカーズ
+  - レクスターズ
+  mana: 1
+  text: '{GS} G・ストライク（このクリーチャーを自分のシールドゾーンから手札に加える時、相手に見せ、相手のクリーチャーを１体選んでもよい。このターン、そのクリーチャーは攻撃できない）
+
+    マッハファイター（このクリーチャーは、出たターンの間、タップまたはアンタップしているクリーチャーを攻撃できる）
+
+    このクリーチャーが攻撃する時、自分の山札の上から１枚目をマナゾーンに置く。
+
+    シンカパワー：このクリーチャーが進化する時、カードを１枚、自分のマナゾーンから手札に戻してもよい。'
+  abilities:
+  - kind: trigger
+    when:
+      event: move
+      to: bz
+      subject: self
+    effect:
+    - op: modify
+      select:
+        ref: self
+      mod:
+        allow:
+        - action: attack_creature
+          other:
+            tapped: false
+      duration: end_of_turn
+  - kind: trigger
+    when:
+      event: attack
+      subject: self
+    effect:
+    - op: move
+      select:
+        zone: deck
+        owner: you
+        from_top: 1
+      to: mana
+      reason: put
+  - kind: trigger
+    when:
+      event: move
+      to: bz
+      subject: self
+      stacked: true
+    effect:
+    - op: may
+      body:
+      - op: move
+        select:
+          zone: mana
+          owner: you
+          count: 1
+        to: hand
+        reason: return
+  source:
+    official: dmrp18-006
+    review: pending
+    notes: 'シンカパワーは stacked: true の誘発型（第28弾）。g_strike は known_keywords のため keywords
+      に書かない。'
+  keywords:
+  - g_strike
+- id: dmrp18-046
+  name: ダチッコ・チュリスター
+  types:
+  - creature
+  civs:
+  - fire
+  cost: 2
+  power: 2000
+  races:
+  - ビートジョッキー
+  - レクスターズ
+  mana: 1
+  text: '{GS} G・ストライク（このクリーチャーを自分のシールドゾーンから手札に加える時、相手に見せ、相手のクリーチャーを１体選んでもよい。このターン、そのクリーチャーは攻撃できない）
+
+    シンカパワー：このクリーチャーが進化する時、相手の「ブロッカー」を持つクリーチャーを１体破壊する。'
+  abilities:
+  - kind: trigger
+    when:
+      event: move
+      to: bz
+      subject: self
+      stacked: true
+    effect:
+    - op: destroy
+      select:
+        zone: bz
+        owner: opp
+        filter:
+          types:
+          - creature
+          keyword: blocker
+        count: 1
+  source:
+    official: dmrp18-046
+    review: pending
+    notes: 'シンカパワーは stacked: true の誘発型（第28弾）。ブロッカー持ちの指定は filter keyword: blocker（dm22sp2-004
+      と同型）。g_strike は known_keywords のため keywords に書かない。'
+    aliases:
+    - dmrp18-coro08
+    - promoy20-059
+  keywords:
+  - g_strike
+- id: dmsd17-007
+  name: ブッパ・ハート
+  types:
+  - creature
+  civs:
+  - fire
+  cost: 2
+  power: 2000
+  races:
+  - ファイアー・バード
+  - レクスターズ
+  mana: 1
+  text: シンカパワー：このクリーチャーが進化する時、相手のパワー3000以下のクリーチャーを１体破壊する。
+  abilities:
+  - kind: trigger
+    when:
+      event: move
+      to: bz
+      subject: self
+      stacked: true
+    effect:
+    - op: destroy
+      select:
+        zone: bz
+        owner: opp
+        filter:
+          types:
+          - creature
+          power_le: 3000
+        count: 1
+  source:
+    official: dmsd17-007
+    review: pending
+    notes: 'シンカパワーは stacked: true の誘発型（第28弾）。'
+- id: dmsd17-013
+  name: パーリギリス
+  types:
+  - creature
+  civs:
+  - nature
+  cost: 2
+  power: 3000
+  races:
+  - ジョーカーズ
+  - レクスターズ
+  mana: 1
+  text: シンカパワー：このクリーチャーが進化する時、自分の山札の上から１枚目をマナゾーンに置く。
+  abilities:
+  - kind: trigger
+    when:
+      event: move
+      to: bz
+      subject: self
+      stacked: true
+    effect:
+    - op: move
+      select:
+        zone: deck
+        owner: you
+        from_top: 1
+      to: mana
+      reason: put
+  source:
+    official: dmsd17-013
+    review: pending
+    notes: 'シンカパワーは stacked: true の誘発型（第28弾）。山札の上からマナは dm18-136 と同型。'
+    aliases:
+    - dmrp17-094
+    - promoy20-062
+- id: promoy20-cp02
+  name: 進化王来 モモキング
+  types:
+  - creature
+  civs:
+  - fire
+  - nature
+  cost: 4
+  power: 5000
+  races:
+  - ジョーカーズ
+  - レクスターズ
+  mana: 1
+  text: 'マッハファイター（このクリーチャーは、出たターンの間、タップまたはアンタップしているクリーチャーを攻撃できる）
+
+    シンカパワー：このクリーチャーが進化する時、自分の手札を１枚捨ててもよい。そうしたら、カードを２枚引く。'
+  abilities:
+  - kind: trigger
+    when:
+      event: move
+      to: bz
+      subject: self
+    effect:
+    - op: modify
+      select:
+        ref: self
+      mod:
+        allow:
+        - action: attack_creature
+          other:
+            tapped: false
+      duration: end_of_turn
+  - kind: trigger
+    when:
+      event: move
+      to: bz
+      subject: self
+      stacked: true
+    effect:
+    - op: may
+      body:
+      - op: choose
+        select:
+          zone: hand
+          owner: you
+          count: 1
+        as: d
+      - op: discard
+        select:
+          ref: d
+          count: all
+      - op: if
+        cond:
+          exists:
+            ref: d
+        then:
+        - op: draw
+          count: 2
+  source:
+    official: promoy20-cp02
+    review: pending
+    notes: 「捨ててもよい。そうしたら」は dm22ex2-073 と同型（may → choose/discard → if exists → draw）。
+- id: dm22ex1-026
+  name: ネ申・マニフェスト
+  types:
+  - creature
+  civs:
+  - water
+  cost: 3
+  power: 2000
+  races:
+  - トリックス
+  - レクスターズ
+  mana: 1
+  abilities:
+  - kind: trigger
+    when:
+      event: move
+      to: bz
+      subject: self
+    effect:
+    - op: draw
+      count: 3
+    - op: discard
+      select:
+        zone: hand
+        owner: you
+        count: 2
+  - kind: trigger
+    when:
+      event: move
+      to: bz
+      subject: self
+      stacked: true
+    effect:
+    - op: modify
+      select:
+        ref: self
+      mod:
+        deny:
+        - be_blocked
+        - be_chosen
+      duration: until_next_own_turn_start
+  text: このクリーチャーが出た時、カードを３枚引き、その後、自分の手札を２枚捨てる。 / シンカパワー：このクリーチャーが進化する時、次の自分のターンのはじめまで、このクリーチャーはブロックされず、相手がクリーチャーを選ぶ時、このクリーチャーは選べない。
+  source:
+    official: dm22ex1-026
+    review: pending
+    notes: 'シンカパワーは stacked: true の誘発（第28弾）。「ブロックされず」→ deny: [be_blocked]、「選ぶ時、このクリーチャーは選べない」→
+      deny: [be_chosen]。期間は modify の duration: until_next_own_turn_start。'
+    aliases:
+    - dmrp17-002
+- id: dmrp17-001
+  name: 「正義星帝」
+  types:
+  - creature
+  civs:
+  - light
+  cost: 3
+  power: 3500
+  races:
+  - メタリカ
+  - レクスターズ
+  mana: 1
+  abilities:
+  - kind: static
+    affects:
+      owner: you
+      zone: hand
+      filter:
+        types:
+        - creature
+        race_has: 進化
+    mod:
+      cost: -1
+  - kind: trigger
+    when:
+      event: move
+      to: bz
+      subject: self
+    effect:
+    - op: modify
+      select:
+        ref: self
+      mod:
+        no_leave: true
+      duration: until_next_own_turn_start
+  - kind: trigger
+    when:
+      event: move
+      to: bz
+      subject: self
+      stacked: true
+    effect:
+    - op: modify
+      select:
+        zone: hand
+        owner: opp
+        filter:
+          types:
+          - spell
+          cost_le: 4
+        count: all
+      mod:
+        deny:
+        - cast
+      duration: until_next_own_turn_start
+  text: '自分の進化クリーチャーの召喚コストを１少なくする。ただし、コストは０以下にはならない。
+
+    このクリーチャーが出た時、次の自分のターンのはじめまで、このクリーチャーは離れない。
+
+    シンカパワー：このクリーチャーが進化する時、次の自分のターンのはじめまで、相手はコスト４以下の呪文を唱えられない。'
+  source:
+    official: dmrp17-001
+    review: pending
+    notes: '「離れない」→ no_leave: true。「コスト４以下の呪文を唱えられない」→ 相手の手札の呪文（cost_le: 4）に deny:
+      [cast] を duration 付きで付与。'
+- id: dmrp17-004
+  name: 虚∞龍 ゲンムエンペラー
+  types:
+  - creature
+  civs:
+  - darkness
+  cost: 3
+  power: 3000
+  races:
+  - ∞ドラゴン
+  - レクスターズ
+  mana: 1
+  abilities:
+  - kind: trigger
+    when:
+      event: move
+      to: bz
+      subject: self
+    effect:
+    - op: choose
+      select:
+        zone: deck
+        owner: you
+        from_top: 4
+        look: true
+        count: all
+      as: pile
+    - op: may
+      body:
+      - op: move
+        select:
+          ref: pile
+          filter:
+            types:
+            - evolution
+          count: 1
+        to: hand
+        reason: return
+    - op: move
+      select:
+        ref: pile
+        count: all
+      to: graveyard
+      reason: put
+  - kind: trigger
+    when:
+      event: move
+      to: bz
+      subject: self
+      stacked: true
+    effect:
+    - op: choose
+      select:
+        zone: bz
+        owner: opp
+        filter:
+          types:
+          - creature
+        count: 1
+      as: c
+    - op: modify
+      select:
+        ref: c
+      mod:
+        power:
+          amount: -1000
+          count:
+            zone: graveyard
+            owner: you
+      duration: end_of_turn
+  text: このクリーチャーが出た時、自分の山札の上から４枚を表向きにする。その中から進化クリーチャーを１体、手札に加えてもよい。残りを墓地に置く。 / シンカパワー：このクリーチャーが進化する時、相手のクリーチャーを１体選ぶ。このターン、自分の墓地にあるカード１枚につき、そのクリーチャーのパワーを－1000する。
+  source:
+    official: dmrp17-004
+    review: pending
+    notes: '表向き4枚は choose（from_top: 4, look: true, count: all）の確立パターン（dm22ex1-064
+      と同型）。「進化クリーチャー」→ filter types: [evolution]（dm24ex2-093 と同型）。「１枚につき－1000」→ mod.power
+      {amount: -1000, count: {zone: graveyard, owner: you}}。'
+- id: dmrp18-005
+  name: '"罰星怒"ブランド'
+  types:
+  - creature
+  civs:
+  - fire
+  cost: 2
+  power: 3000
+  races:
+  - ビートジョッキー
+  - レクスターズ
+  mana: 1
+  abilities:
+  - kind: trigger
+    when:
+      event: move
+      to: bz
+      subject: self
+      stacked: true
+    effect:
+    - op: destroy
+      select:
+        zone: bz
+        owner: opp
+        filter:
+          types:
+          - creature
+          cost_le: 1
+        count: 1
+  text: '{GS} G・ストライク（このクリーチャーを自分のシールドゾーンから手札に加える時、相手に見せ、相手のクリーチャーを１体選んでもよい。このターン、そのクリーチャーは攻撃できない）
+
+    シンカパワー：このクリーチャーが進化する時、進化した後、それよりコストが小さい相手のクリーチャーを１体破壊する。'
+  source:
+    official: dmrp18-005
+    review: pending
+    notes: '「それよりコストが小さい」はこのカードのコスト2未満＝cost_le: 1（コストは印刷値で固定のため厳密）。g_strike は known_keywords
+      のため書き直さない。'
+  keywords:
+  - g_strike
+- id: dmrp18-037
+  name: タン・ペペン
+  types:
+  - creature
+  civs:
+  - water
+  cost: 2
+  power: 2000
+  races:
+  - トリックス
+  - レクスターズ
+  mana: 1
+  abilities:
+  - kind: trigger
+    when:
+      event: move
+      to: bz
+      subject: self
+    effect:
+    - op: modify
+      select:
+        ref: self
+      mod:
+        deny:
+        - be_chosen
+        - be_attacked
+      duration: until_next_own_turn_start
+  - kind: trigger
+    when:
+      event: move
+      to: bz
+      subject: self
+      stacked: true
+    effect:
+    - op: modify
+      select:
+        ref: self
+      mod:
+        deny:
+        - be_attacked
+        - be_chosen
+      duration: until_next_own_turn_start
+  text: 'ジャストダイバー（このクリーチャーが出た時、次の自分のターンのはじめまで、このクリーチャーは相手に選ばれず、攻撃されない）
+
+    シンカパワー：このクリーチャーが進化する時、次の自分のターンのはじめまで、このクリーチャーは攻撃されず、相手がクリーチャーを選ぶ時、選ばれない。'
+  source:
+    official: dmrp18-037
+    review: pending
+    notes: '「攻撃されず」→ deny: [be_attacked]、「選ぶ時、選ばれない」→ deny: [be_chosen]。期間は modify
+      の duration: until_next_own_turn_start。'
+- id: dmrp18-042
+  name: 凶鬼77号 ビムナム
+  types:
+  - creature
+  civs:
+  - darkness
+  cost: 2
+  power: 3000
+  races:
+  - マフィ・ギャング
+  - レクスターズ
+  mana: 1
+  abilities:
+  - kind: trigger
+    when:
+      event: move
+      to: bz
+      subject:
+        owner: opp
+      reason: put
+    if:
+      is_turn: opp
+    effect:
+    - op: destroy
+      select:
+        ref: subject
+  - kind: trigger
+    when:
+      event: move
+      to: bz
+      subject: self
+      stacked: true
+    effect:
+    - op: choose
+      select:
+        zone: bz
+        owner: opp
+        filter:
+          types:
+          - creature
+        count: 1
+      as: c
+    - op: modify
+      select:
+        ref: c
+      mod:
+        power: -2000
+      duration: end_of_turn
+  text: 相手のターン中に、相手が召喚以外の方法でクリーチャーを出した時、そのクリーチャーを破壊する。 / シンカパワー：このクリーチャーが進化する時、相手のクリーチャーを１体選ぶ。このターン、そのクリーチャーのパワーを－2000する。
+  source:
+    official: dmrp18-042
+    review: pending
+    notes: '「召喚以外の方法で出した時」は when の reason: put（第33弾の確立事項）＋ if: {is_turn: opp}。「パワー０以下のクリーチャーは破壊される」はルール注釈のため
+      text から除去。'
+- id: dmrp19-001
+  name: 閃メク星戦 絶十
+  types:
+  - creature
+  civs:
+  - light
+  cost: 4
+  power: 3500
+  races:
+  - メタリカ
+  - レクスターズ
+  mana: 1
+  abilities:
+  - kind: trigger
+    when:
+      event: move
+      to: bz
+      subject: self
+    effect:
+    - op: tap
+      select:
+        zone: bz
+        owner: opp
+        filter:
+          types:
+          - creature
+        count:
+          count:
+            zone: bz
+            owner: you
+            filter:
+              types:
+              - creature
+  - kind: trigger
+    when:
+      event: move
+      to: bz
+      subject: self
+      stacked: true
+    effect:
+    - op: draw
+      count: 1
+    - op: if
+      cond:
+        cmp:
+        - count:
+            zone: shield
+            owner: you
+        - '>'
+        - count:
+            zone: shield
+            owner: opp
+      then:
+      - op: draw
+        count: 1
+  text: 'S・トリガー（このクリーチャーをシールドゾーンから手札に加える時、コストを支払わずにすぐ召喚してもよい）
+
+    このクリーチャーが出た時、バトルゾーンにある自分のクリーチャー１体につき、相手のクリーチャーを１体選びタップする。
+
+    シンカパワー：このクリーチャーが進化する時、カードを１枚引く。その後、自分のシールドの数が相手より多ければ、カードをもう１枚引く。'
+  source:
+    official: dmrp19-001
+    review: pending
+    notes: '「１体につき…１体選びタップ」は tap の count に count 式（自分のクリーチャー数）。「その後、シールドの数が相手より多ければ」→
+      op: if（cmp: shield 数の ''>''）。s_trigger は known_keywords のため書き直さない。'
+  keywords:
+  - s_trigger
+- id: dmrp19-003
+  name: Code:1500
+  types:
+  - creature
+  civs:
+  - water
+  cost: 4
+  power: 4000
+  races:
+  - ドラゴン・コード
+  - トリックス
+  - レクスターズ
+  mana: 1
+  abilities:
+  - kind: trigger
+    when:
+      event: move
+      to: bz
+      subject: self
+    effect:
+    - op: modify
+      select:
+        ref: self
+      mod:
+        deny:
+        - be_chosen
+        - be_attacked
+      duration: until_next_own_turn_start
+  - kind: trigger
+    when:
+      event: move
+      to: bz
+      subject: self
+    effect:
+    - op: draw
+      count: 1
+  - kind: trigger
+    when:
+      event: move
+      to: bz
+      subject: self
+      stacked: true
+    effect:
+    - op: may
+      body:
+      - op: move
+        select:
+          zone: hand
+          owner: you
+          count: 1
+        to: shield
+        reason: put
+        as: shielded
+    - op: if
+      cond:
+        exists:
+          ref: shielded
+      then:
+      - op: move
+        select:
+          zone: shield
+          owner: you
+          count: 1
+        to: hand
+        reason: return
+  text: 'ジャストダイバー（このクリーチャーが出た時、次の自分のターンのはじめまで、このクリーチャーは相手に選ばれず、攻撃されない）
+
+    このクリーチャーが出た時、カードを１枚引く。
+
+    シンカパワー：このクリーチャーが進化する時、自分の手札を１枚シールド化してもよい。そうしたら、自分のシールドを１つ手札に加える。ただし、その「S・トリガー」は使えない。'
+  source:
+    official: dmrp19-003
+    review: pending
+    notes: '「そうしたら」は may の結果を as: shielded で受けて op: if（exists）で分岐。「S・トリガーは使えない」は効果によるシールド→手札の移動（reason:
+      return）ではエンジンが S・トリガーを誘発しないため追加の記述不要。'
+- id: dmrp19-004
+  name: 無龍
+  types:
+  - creature
+  civs:
+  - darkness
+  cost: 6
+  power: 5000
+  races:
+  - マスター・ドラゴンZ
+  - レクスターズ
+  mana: 1
+  abilities:
+  - kind: static
+    affects:
+      owner: you
+      zone: hand
+      filter:
+        types:
+        - creature
+        race_has: 墓地にカードが2枚以上あればこの
+    mod:
+      cost: -3
+  - kind: trigger
+    when:
+      event: move
+      to: bz
+      subject: self
+      stacked: true
+    effect:
+    - op: may
+      body:
+      - op: move
+        select:
+          zone: deck
+          owner: you
+          from_top: 5
+        to: graveyard
+        reason: put
+  text: 'このクリーチャーを自分の墓地から召喚してもよい。
+
+    自分の墓地にカードが２枚以上あれば、このクリーチャーの召喚コストを３少なくする。
+
+    シンカパワー：このクリーチャーが進化する時、自分の山札の上から５枚を墓地に置いてもよい。'
+  source:
+    official: dmrp19-004
+    review: pending
+    notes: summon_from_graveyard は known_keywords のため書き直さない。
+  keywords:
+  - summon_from_graveyard
+- id: dmrp19-005
+  name: モモスター キャンベロ
+  types:
+  - creature
+  civs:
+  - fire
+  cost: 4
+  power: 2000
+  races:
+  - ジョーカーズ
+  - レクスターズ
+  mana: 1
+  abilities:
+  - kind: trigger
+    when:
+      event: move
+      to: bz
+      subject: self
+    effect:
+    - op: destroy
+      select:
+        zone: bz
+        owner: opp
+        filter:
+          types:
+          - creature
+          keyword: blocker
+        count: 1
+  - kind: trigger
+    when:
+      event: move
+      from: shield
+      to: hand
+      subject: self
+    effect:
+    - op: destroy
+      select:
+        zone: bz
+        owner: opp
+        filter:
+          types:
+          - creature
+          keyword: blocker
+        count: 1
+  - kind: trigger
+    when:
+      event: move
+      to: bz
+      subject: self
+      stacked: true
+    effect:
+    - op: may
+      body:
+      - op: discard
+        select:
+          zone: hand
+          owner: you
+          count: all
+        as: discarded
+    - op: if
+      cond:
+        exists:
+          ref: discarded
+      then:
+      - op: draw
+        count: 3
+  text: '{GS} G・ストライク（このクリーチャーを自分のシールドゾーンから手札に加える時、相手に見せ、相手のクリーチャーを１体選んでもよい。このターン、そのクリーチャーは攻撃できない）
+
+    スピードアタッカー
+
+    このクリーチャーが出た時、または「G・ストライク」能力で相手に見せた時、相手の「ブロッカー」を持つクリーチャーを１体破壊する。
+
+    シンカパワー：このクリーチャーが進化する時、自分の手札をすべて捨ててもよい。そうしたら、カードを３枚引く。'
+  source:
+    official: dmrp19-005
+    review: pending
+    notes: '「G・ストライク能力で相手に見せた時」は G・ストライクの発動タイミング（シールド→手札の移動）に対応するため when: {event:
+      move, from: shield, to: hand, subject: self} で表現。「ブロッカーを持つ」→ filter keyword:
+      blocker。「そうしたら」は may の結果を as: discarded で受けて op: if（exists）で分岐。g_strike・speed_attacker
+      は known_keywords のため書き直さない。'
+  keywords:
+  - g_strike
+  - speed_attacker
+- id: dmrp19-006
+  name: スターダム・オウ禍武斗
+  types:
+  - creature
+  civs:
+  - nature
+  cost: 4
+  power: 5000
+  races:
+  - グランセクト
+  - レクスターズ
+  mana: 1
+  abilities:
+  - kind: trigger
+    when:
+      event: move
+      to: bz
+      subject: self
+    effect:
+    - op: modify
+      select:
+        ref: self
+      mod:
+        allow:
+        - action: attack_creature
+          other:
+            tapped: false
+      duration: end_of_turn
+  - kind: trigger
+    when:
+      event: move
+      to: bz
+      subject: self
+    effect:
+    - op: move
+      select:
+        zone: deck
+        owner: you
+        from_top: 1
+      to: mana
+      reason: put
+      as: m1
+    - op: if
+      cond:
+        exists:
+          ref: m1
+          filter:
+            races:
+            - レクスターズ
+      then:
+      - op: may
+        body:
+        - op: move
+          select:
+            ref: m1
+          to: hand
+          reason: return
+  - kind: trigger
+    when:
+      event: move
+      to: bz
+      subject: self
+      stacked: true
+    effect:
+    - op: modify
+      select:
+        ref: self
+      mod:
+        must_be_attacked: true
+      duration: until_next_own_turn_start
+  text: 'マッハファイター（このクリーチャーは、出たターンの間、タップまたはアンタップしているクリーチャーを攻撃できる）
+
+    このクリーチャーが出た時、自分の山札の上から１枚目をマナゾーンに置く。それがレクスターズなら、手札に加えてもよい。
+
+    シンカパワー：このクリーチャーが進化する時、次の自分のターンのはじめまで、相手のクリーチャーが攻撃する時、可能ならこのクリーチャーを攻撃する。'
+  source:
+    official: dmrp19-006
+    review: pending
+    notes: '「それがレクスターズなら、手札に加えてもよい」は op: if（exists: {ref: m1, filter: {races: [レクスターズ]}}）で分岐して
+      may。「可能ならこのクリーチャーを攻撃する」→ must_be_attacked: true（第51弾、dmrp08-052 と同型）。'
+- id: dmrp19-045
+  name: 魂の絆 ラッタ＆「火砲」
+  types:
+  - creature
+  civs:
+  - light
+  - water
+  cost: 4
+  power: 5500
+  races:
+  - メタリカ
+  - トリックス
+  - レクスターズ
+  mana: 1
+  text: 'ジャストダイバー（このクリーチャーが出た時、次の自分のターンのはじめまで、このクリーチャーは相手に選ばれず、攻撃されない）
+
+    シンカパワー：このクリーチャーが進化する時、次のうちいずれか１つを選ぶ。
+
+    ▶自分の山札の上から１枚目をシールド化する。
+
+    ▶相手のクリーチャーを１体選び、持ち主の手札に戻す。'
+  abilities:
+  - kind: trigger
+    when:
+      event: move
+      to: bz
+      subject: self
+    effect:
+    - op: modify
+      select:
+        ref: self
+      mod:
+        deny:
+        - be_chosen
+        - be_attacked
+      duration: until_next_own_turn_start
+  - kind: trigger
+    when:
+      event: move
+      to: bz
+      subject: self
+      stacked: true
+    effect:
+    - op: modal
+      count: 1
+      modes:
+      - - op: move
+          select:
+            zone: deck
+            owner: you
+            from_top: 1
+            count: 1
+          to: shield
+          reason: charge
+      - - op: bounce
+          select:
+            zone: bz
+            owner: opp
+            filter:
+              types:
+              - creature
+            count: 1
+  source:
+    official: dmrp19-045
+    review: pending
+    notes: 'シンカパワーは when stacked: true の誘発（第28弾の型）。シールド化は to: shield, reason: charge。手札に戻すは
+      bounce マクロ。'
+- id: dmrp19-048
+  name: 魂の絆 ボントボ＆アムベル
+  types:
+  - creature
+  civs:
+  - light
+  - nature
+  cost: 4
+  power: 4500
+  races:
+  - メタリカ
+  - グランセクト
+  - レクスターズ
+  mana: 1
+  text: 'マッハファイター（このクリーチャーは、出たターンの間、タップまたはアンタップしているクリーチャーを攻撃できる）
+
+    シンカパワー：このクリーチャーが進化する時、次のうちいずれか１つを選ぶ。
+
+    ▶相手のクリーチャーを１体選びタップする。次の相手のターンのはじめに、そのクリーチャーはアンタップしない。
+
+    ▶自分の山札の上から１枚目をマナゾーンに置く。'
+  abilities:
+  - kind: trigger
+    when:
+      event: move
+      to: bz
+      subject: self
+    effect:
+    - op: modify
+      select:
+        ref: self
+      mod:
+        allow:
+        - action: attack_creature
+          other:
+            tapped: false
+      duration: end_of_turn
+  - kind: trigger
+    when:
+      event: move
+      to: bz
+      subject: self
+      stacked: true
+    effect:
+    - op: modal
+      count: 1
+      modes:
+      - - op: tap
+          select:
+            zone: bz
+            owner: opp
+            filter:
+              types:
+              - creature
+            count: 1
+          no_untap_next: true
+      - - op: move
+          select:
+            zone: deck
+            owner: you
+            from_top: 1
+            count: 1
+          to: mana
+          reason: put
+  source:
+    official: dmrp19-048
+    review: pending
+    notes: タップ＋フリーズは tap の no_untap_next（第1弾・第10弾の型）。
+- id: dmrp19-052
+  name: 魂の絆 ヘモグロ＆ハナコ
+  types:
+  - creature
+  civs:
+  - darkness
+  - fire
+  cost: 4
+  power: 3000
+  races:
+  - ジョーカーズ
+  - マフィ・ギャング
+  - レクスターズ
+  mana: 1
+  text: 'スピードアタッカー（このクリーチャーは召喚酔いしない）
+
+    シンカパワー：このクリーチャーが進化する時、次のうちいずれか１つを選ぶ。
+
+    ▶コスト２以下のクリーチャーを１体、自分の墓地から出す。
+
+    ▶自分のシールドを１つ手札に加える。ただし、その「S・トリガー」は使えない。'
+  abilities:
+  - kind: trigger
+    when:
+      event: move
+      to: bz
+      subject: self
+      stacked: true
+    effect:
+    - op: modal
+      count: 1
+      modes:
+      - - op: move
+          select:
+            zone: graveyard
+            owner: you
+            filter:
+              types:
+              - creature
+              cost_le: 2
+            count: 1
+          to: bz
+          reason: put
+      - - op: move
+          select:
+            zone: shield
+            owner: you
+            count: 1
+          to: hand
+          reason: return
+  source:
+    official: dmrp19-052
+    review: pending
+    notes: '「墓地から出す」は召喚ではないので reason: put。「シールドを手札に加える。ただしS・トリガーは使えない」は通常の move（reason:
+      return）で足りる（docs/vocab-pilot.md:119）。speed_attacker は known_keywords のため書き直さない。'
+  keywords:
+  - speed_attacker
+- id: dmrp20-050
+  name: 魂の絆 ルヴォワ&ブラボー
+  types:
+  - creature
+  civs:
+  - light
+  - fire
+  cost: 4
+  power: 5500
+  races:
+  - メタリカ
+  - ビートジョッキー
+  - レクスターズ
+  mana: 1
+  text: 'S・トリガー（このクリーチャーをシールドゾーンから手札に加える時、コストを支払わずにすぐ召喚してもよい）
+
+    シンカパワー：このクリーチャーが進化する時、次のうちいずれか１つを選ぶ。
+
+    ▶相手のクリーチャーを１体選び、タップする。次の相手のターンのはじめに、そのクリーチャーはアンタップしない。
+
+    ▶このターン、このクリーチャーの最初の攻撃の終わりに、このクリーチャーをアンタップする。'
+  abilities:
+  - kind: trigger
+    when:
+      event: move
+      to: bz
+      subject: self
+      stacked: true
+    effect:
+    - op: modal
+      count: 1
+      modes:
+      - - op: tap
+          select:
+            zone: bz
+            owner: opp
+            filter:
+              types:
+              - creature
+            count: 1
+          no_untap_next: true
+      - - op: delayed_trigger
+          when:
+            event: attack_end
+            attacker: self
+          once: true
+          duration: end_of_turn
+          effect:
+          - op: untap
+            select:
+              ref: self
+  source:
+    official: dmrp20-050
+    review: pending
+    notes: '「最初の攻撃の終わりにアンタップ」は once: true の遅延誘発（attack_end、ターン終了まで）で表した。s_trigger
+      は known_keywords のため書き直さない。'
+  keywords:
+  - s_trigger
+- id: dmrp20-052
+  name: 魂の絆 シェイク&"S-駆"
+  types:
+  - creature
+  civs:
+  - water
+  - fire
+  cost: 4
+  power: 3000
+  races:
+  - トリックス
+  - ビートジョッキー
+  - レクスターズ
+  mana: 1
+  text: 'スピードアタッカー（このクリーチャーは召喚酔いしない）
+
+    シンカパワー：このクリーチャーが進化する時、次のうちいずれか１つを選ぶ。
+
+    ▶相手のクリーチャーを２体まで選ぶ。次の自分のターンのはじめまで、それらのクリーチャーは攻撃もブロックもできない。
+
+    ▶相手のクリーチャーを２体まで選ぶ。次の相手のターン中、それらのクリーチャーは可能なら攻撃する。'
+  abilities:
+  - kind: trigger
+    when:
+      event: move
+      to: bz
+      subject: self
+      stacked: true
+    effect:
+    - op: modal
+      count: 1
+      modes:
+      - - op: choose
+          select:
+            zone: bz
+            owner: opp
+            filter:
+              types:
+              - creature
+            count: 2
+            up_to: true
+          as: c
+        - op: modify
+          select:
+            ref: c
+          mod:
+            deny:
+            - attack_player
+            - attack_creature
+            - block
+          duration: until_next_own_turn_start
+      - - op: choose
+          select:
+            zone: bz
+            owner: opp
+            filter:
+              types:
+              - creature
+            count: 2
+            up_to: true
+          as: c
+        - op: modify
+          select:
+            ref: c
+          mod:
+            require:
+            - attack
+          duration: until_next_own_turn_start
+  source:
+    official: dmrp20-052
+    review: pending
+    notes: '「攻撃もブロックもできない」は deny [attack_player, attack_creature, block]。「可能なら攻撃する」は
+      require [attack]（dm10-094 の型）。いずれも duration: until_next_own_turn_start（相手の次のターンをカバー）。speed_attacker
+      は known_keywords のため書き直さない。'
+  keywords:
+  - speed_attacker
+- id: dmrp20-054
+  name: 魂の絆 クリスマ&ウツボイド
+  types:
+  - creature
+  civs:
+  - water
+  - nature
+  cost: 4
+  power: 5000
+  races:
+  - ムートピア
+  - グランセクト
+  - レクスターズ
+  mana: 1
+  text: 'マッハファイター（このクリーチャーは、出たターンの間、タップまたはアンタップしているクリーチャーを攻撃できる）
+
+    シンカパワー：このクリーチャーが進化する時、次のうちいずれか１つを選ぶ。
+
+    ▶このターン、自分のクリーチャーはブロックされない。
+
+    ▶自分の山札の上から１枚目をマナゾーンに置く。その後、カードを１枚、自分のマナゾーンから手札に戻してもよい。'
+  abilities:
+  - kind: trigger
+    when:
+      event: move
+      to: bz
+      subject: self
+    effect:
+    - op: modify
+      select:
+        ref: self
+      mod:
+        allow:
+        - action: attack_creature
+          other:
+            tapped: false
+      duration: end_of_turn
+  - kind: trigger
+    when:
+      event: move
+      to: bz
+      subject: self
+      stacked: true
+    effect:
+    - op: modal
+      count: 1
+      modes:
+      - - op: modify
+          select:
+            zone: bz
+            owner: you
+            filter:
+              types:
+              - creature
+            count: all
+          mod:
+            deny:
+            - be_blocked
+          duration: end_of_turn
+      - - op: move
+          select:
+            zone: deck
+            owner: you
+            from_top: 1
+            count: 1
+          to: mana
+          reason: put
+        - op: may
+          body:
+          - op: move
+            select:
+              zone: mana
+              owner: you
+              count: 1
+            to: hand
+            reason: return
+  source:
+    official: dmrp20-054
+    review: pending
+    notes: 「ブロックされない」は deny [be_blocked] の一時的修整（end_of_turn）。
+- id: dmrp20-056
+  name: 魂の絆 すて～る&タイザイ
+  types:
+  - creature
+  civs:
+  - darkness
+  - nature
+  cost: 4
+  power: 4000
+  races:
+  - ジョーカーズ
+  - マフィ・ギャング
+  - レクスターズ
+  mana: 1
+  text: 'スレイヤー（このクリーチャーがバトルする時、バトルの後、相手クリーチャーを破壊する）
+
+    シンカパワー：このクリーチャーが進化する時、次のうちいずれか１つを選ぶ。
+
+    ▶相手のクリーチャーを１体選ぶ。このターン、そのクリーチャーのパワーを－6000する。（パワー０以下のクリーチャーは破壊される）
+
+    ▶プレイヤーを１人選ぶ。そのプレイヤーは自身の墓地を山札に加えてシャッフルする。'
+  abilities:
+  - kind: trigger
+    when:
+      event: move
+      to: bz
+      subject: self
+      stacked: true
+    effect:
+    - op: modal
+      count: 1
+      modes:
+      - - op: choose
+          select:
+            zone: bz
+            owner: opp
+            filter:
+              types:
+              - creature
+            count: 1
+          as: c
+        - op: modify
+          select:
+            ref: c
+          mod:
+            power: -6000
+          duration: end_of_turn
+      - - op: modal
+          count: 1
+          modes:
+          - - op: move
+              select:
+                zone: graveyard
+                owner: you
+                count: all
+              to: deck
+              reason: put
+            - op: shuffle
+              player: you
+          - - op: move
+              select:
+                zone: graveyard
+                owner: opp
+                count: all
+              to: deck
+              reason: put
+            - op: shuffle
+              player: opp
+  source:
+    official: dmrp20-056
+    review: pending
+    notes: '「プレイヤーを１人選ぶ」は modal の入れ子で表した（dm26sd1-o011 の型）。「墓地を山札に加えてシャッフル」は move to:
+      deck ＋ op: shuffle。slayer は known_keywords のため書き直さない。'
+  keywords:
+  - slayer
