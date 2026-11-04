@@ -290579,3 +290579,628 @@ cards:
   text: ブロッカー（相手クリーチャーが攻撃する時、このクリーチャーをタップして、その攻撃を阻止してもよい。その後、その相手クリーチャーとバトルする）このクリーチャーをバトルゾーンに出した時、自分の手札を１枚捨てる。そうしない場合、このクリーチャーを破壊する。W・ブレイカー（このクリーチャーはシールドを２枚ブレイクする）自分の墓地にある呪文はすべて、文明に闇を追加する。
   types:
   - creature
+- faces:
+  - abilities:
+    - affects:
+        filter:
+          types:
+          - creature
+        owner: you
+        zone: graveyard
+      if:
+        is_turn: you
+      kind: static
+      mod:
+        allow:
+        - action: summon_from_graveyard
+          once: true
+    civs:
+    - darkness
+    cost: 5
+    keywords:
+    - double_breaker
+    - mega_last_burst
+    name: トング＝ゴング
+    power: 7000
+    races:
+    - アビスロイヤル
+    types:
+    - creature
+  - civs:
+    - darkness
+    cost: 3
+    name: 「世界をつかませてやろうか？」
+    spell:
+    - op: destroy
+      select:
+        count: 1
+        filter:
+          cost_le: 4
+          types:
+          - creature
+        owner: opp
+        zone: bz
+    types:
+    - spell
+  id: dm23rp3-016
+  mana: 1
+  name: トング＝ゴング / 「世界をつかませてやろうか？」
+  source:
+    official: dm23rp3-016
+    review: pending
+    aliases:
+    - promoy22-044
+  text: 'トング＝ゴング: W・ブレイカー（このクリーチャーはシールドを２つブレイクする） / 自分のターンに一度、自分の墓地からクリーチャーを召喚してもよい。
+    / メガ・ラスト・バースト（このクリーチャーが離れて、手札、マナゾーン、または墓地に置かれた時、このカードの呪文側をコストを支払わずに唱えてもよい） ／ 「世界をつかませてやろうか？」:
+    相手のコスト４以下のクリーチャーを１体選び、破壊する。'
+- faces:
+  - abilities:
+    - effect:
+      - op: untap
+        select:
+          ref: self
+      first_time: true
+      kind: trigger
+      when:
+        event: attack_end
+        subject: self
+    civs:
+    - fire
+    cost: 3
+    keywords:
+    - mega_last_burst
+    name: ボルゼラス・ドラゴン
+    power: 4000
+    races:
+    - アーマード・ドラゴン
+    types:
+    - creature
+  - civs:
+    - fire
+    cost: 3
+    name: 「オレの行く道は止められねぇ」
+    spell:
+    - op: destroy
+      select:
+        count: 1
+        filter:
+          keyword: blocker
+          types:
+          - creature
+        owner: opp
+        zone: bz
+    - count: 1
+      op: draw
+      player: you
+    types:
+    - spell
+  id: dm23rp3-020
+  mana: 1
+  name: ボルゼラス・ドラゴン / 「オレの行く道は止められねぇ」
+  source:
+    official: dm23rp3-020
+    review: pending
+  text: 'ボルゼラス・ドラゴン: 各ターン、このクリーチャーの最初の攻撃の終わりに、このクリーチャーをアンタップする。 / メガ・ラスト・バースト（このクリーチャーが離れて、手札、マナゾーン、または墓地に置かれた時、このカードの呪文側をコストを支払わずに唱えてもよい）
+    ／ 「オレの行く道は止められねぇ」: 相手の「ブロッカー」を持つクリーチャーを１体選び、破壊する。 / カードを１枚引く。'
+- faces:
+  - civs:
+    - light
+    cost: 2
+    keywords:
+    - mega_last_burst
+    name: 強撃の鎧徒エッカルト
+    power: 2500
+    races:
+    - アーマード・イニシエート
+    types:
+    - creature
+  - civs:
+    - light
+    cost: 3
+    name: ウォーニング・ショット
+    spell:
+    - no_untap_next: true
+      op: tap
+      select:
+        count: 1
+        filter:
+          types:
+          - creature
+        owner: opp
+        zone: bz
+    - count: 1
+      op: draw
+      player: you
+    types:
+    - spell
+  id: dm23rp3-027
+  mana: 1
+  name: 強撃の鎧徒エッカルト / ウォーニング・ショット
+  source:
+    official: dm23rp3-027
+    review: pending
+  text: '強撃の鎧徒エッカルト: メガ・ラスト・バースト（このクリーチャーが離れて、手札、マナゾーン、または墓地に置かれた時、このカードの呪文側をコストを支払わずに唱えてもよい）
+    ／ ウォーニング・ショット: 相手のクリーチャーを１体選び、タップする。次の相手のターンのはじめに、そのクリーチャーはアンタップしない。 / カードを１枚引く。'
+- faces:
+  - civs:
+    - nature
+    cost: 5
+    keywords:
+    - g_strike
+    - double_breaker
+    - mega_last_burst
+    name: オ:ドユニワ
+    power: 6000
+    races:
+    - ヴェールアビス
+    types:
+    - creature
+  - civs:
+    - nature
+    cost: 3
+    name: 喰土邪覇
+    spell:
+    - op: move
+      reason: put
+      select:
+        count: 1
+        owner: you
+        zone: mana
+      to: graveyard
+    - op: move
+      reason: charge
+      select:
+        from_top: 2
+        owner: you
+        zone: deck
+      tapped: true
+      to: mana
+    types:
+    - spell
+  id: dm23rp3-039
+  mana: 1
+  name: オ:ドユニワ / 喰土邪覇
+  source:
+    official: dm23rp3-039
+    review: pending
+  text: 'オ:ドユニワ: G・ストライク（このクリーチャーを自分のシールドゾーンから手札に加える時、相手に見せ、相手のクリーチャーを１体選んでもよい。このターン、そのクリーチャーは攻撃できない）
+    / W・ブレイカー（このクリーチャーはシールドを２つブレイクする） / メガ・ラスト・バースト（このクリーチャーが離れて、手札、マナゾーン、または墓地に置かれた時、このカードの呪文側をコストを支払わずに唱えてもよい）
+    ／ 喰土邪覇: カードを１枚、自分のマナゾーンから墓地に置く。その後、自分の山札の上から２枚をタップしてマナゾーンに置く。'
+- abilities:
+  - effect:
+    - as: a
+      op: choose
+      select:
+        count: all
+        from_top: 4
+        look: true
+        owner: you
+        zone: deck
+    - body:
+      - op: move
+        reason: draw
+        select:
+          count: 2
+          filter:
+            twinpact: true
+          ref: a
+          up_to: true
+        to: hand
+      op: may
+    - op: move
+      position: bottom
+      reason: put
+      select:
+        count: all
+        ref: a
+      to: deck
+    kind: trigger
+    when:
+      event: move
+      subject: self
+      to: bz
+  - affects:
+      filter:
+        twinpact: true
+        types:
+        - creature
+      owner: you
+      zone: bz
+    kind: static
+    mod:
+      grant:
+      - mega_last_burst
+  civs:
+  - water
+  cost: 4
+  id: dm23rp4x-002
+  mana: 1
+  name: 暴徒-da-bummer
+  power: 4000
+  races:
+  - マジック・ドラゴン
+  source:
+    official: dm23rp4x-002
+    review: pending
+    aliases:
+    - dm23rp4-002
+    - dm23rp4x-002x
+  text: このクリーチャーが出た時、自分の山札の上から４枚を見る。その中からツインパクトカードを２枚まで、相手に見せてから手札に加える。残りを好きな順序で山札の下に置く。
+    / 自分のツインパクト・クリーチャーすべてに「メガ・ラスト・バースト」を与える。
+  types:
+  - creature
+- faces:
+  - abilities:
+    - effect:
+      - duration: until_next_own_turn_start
+        mod:
+          require:
+          - attack
+        op: modify
+        select:
+          count: all
+          filter:
+            types:
+            - creature
+          owner: opp
+          zone: bz
+      kind: trigger
+      when:
+        event: move
+        subject: self
+        to: bz
+    civs:
+    - darkness
+    cost: 5
+    keywords:
+    - blocker
+    - double_breaker
+    - mega_last_burst
+    name: シェケダン・ドメ・ゲルス
+    power: 7000
+    races:
+    - メカ・エンジェル・コマンド
+    types:
+    - creature
+  - civs:
+    - darkness
+    cost: 2
+    keywords:
+    - s_trigger
+    name: ドメスティック・アイ
+    spell:
+    - op: destroy
+      select:
+        chooser: opp
+        count: 1
+        filter:
+          tapped: false
+          types:
+          - creature
+        owner: opp
+        zone: bz
+    types:
+    - spell
+  id: dm23rp4x-016
+  mana: 1
+  name: シェケダン・ドメ・ゲルス / ドメスティック・アイ
+  source:
+    official: dm23rp4x-016
+    review: pending
+    aliases:
+    - dm23rp4-016
+  text: 'シェケダン・ドメ・ゲルス: ブロッカー / W・ブレイカー / このクリーチャーが出た時、次の自分のターンのはじめまで、相手のクリーチャーはすべて、可能なら攻撃する。
+    / メガ・ラスト・バースト（このクリーチャーが離れて、手札、マナゾーン、または墓地に置かれた時、このカードの呪文側をコストを支払わずに唱えてもよい） ／ ドメスティック・アイ:
+    S・トリガー / 相手は自身のアンタップしているクリーチャーを１体選び、破壊する。'
+- faces:
+  - civs:
+    - light
+    cost: 2
+    keywords:
+    - blocker
+    - mega_last_burst
+    name: モッチ・網・パラッチ
+    power: 1000
+    races:
+    - アーマード・ファイアー・バード
+    types:
+    - creature
+  - civs:
+    - light
+    cost: 3
+    name: 「これが最後の輝きだッピ！」
+    spell:
+    - op: tap
+      select:
+        count: 3
+        filter:
+          types:
+          - creature
+        owner: opp
+        up_to: true
+        zone: bz
+    types:
+    - spell
+  id: dm23rp4x-051
+  mana: 1
+  name: モッチ・網・パラッチ / 「これが最後の輝きだッピ！」
+  source:
+    official: dm23rp4x-051
+    review: pending
+    aliases:
+    - dm23rp4-051
+  text: 'モッチ・網・パラッチ: ブロッカー（このクリーチャーをタップして、相手クリーチャーの攻撃先をこのクリーチャーに変更してもよい） / メガ・ラスト・バースト（このクリーチャーが離れて、手札、マナゾーン、または墓地に置かれた時、このカードの呪文側をコストを支払わずに唱えてもよい）
+    ／ 「これが最後の輝きだッピ！」: 相手のクリーチャーを３体まで選び、タップする。'
+- faces:
+  - civs:
+    - water
+    cost: 2
+    keywords:
+    - blocker
+    - mega_last_burst
+    name: イシカワ・ハンドシーカー
+    power: 1000
+    races:
+    - マジック・マーフォーク
+    types:
+    - creature
+  - civs:
+    - water
+    cost: 3
+    name: ♪聞くだけで 才能バレる このチューン
+    spell:
+    - count: 2
+      op: draw
+      player: you
+    - op: discard
+      select:
+        count: 1
+        owner: you
+        zone: hand
+    types:
+    - spell
+  id: dm23rp4x-056
+  mana: 1
+  name: イシカワ・ハンドシーカー / ♪聞くだけで 才能バレる このチューン
+  source:
+    official: dm23rp4x-056
+    review: pending
+    aliases:
+    - dm23rp4-056
+  text: 'イシカワ・ハンドシーカー: ブロッカー（このクリーチャーをタップして、相手クリーチャーの攻撃先をこのクリーチャーに変更してもよい） / メガ・ラスト・バースト（このクリーチャーが離れて、手札、マナゾーン、または墓地に置かれた時、このカードの呪文側をコストを支払わずに唱えてもよい）
+    ／ ♪聞くだけで 才能バレる このチューン: カードを２枚引き、自分の手札を１枚捨てる。'
+- faces:
+  - civs:
+    - water
+    cost: 6
+    keywords:
+    - s_trigger
+    - blocker
+    - mega_last_burst
+    name: 踊戯音愛 パステル
+    power: 4000
+    races:
+    - マジック・マーメイド
+    types:
+    - creature
+  - civs:
+    - water
+    cost: 3
+    name: ♪摩訶不思議 マジカルプリズン キンキラリン
+    spell:
+    - as: targets
+      op: choose
+      select:
+        count: 2
+        filter:
+          types:
+          - creature
+        owner: opp
+        up_to: true
+        zone: bz
+    - duration: until_next_own_turn_start
+      mod:
+        deny:
+        - attack_player
+        - attack_creature
+        - block
+      op: modify
+      select:
+        ref: targets
+    types:
+    - spell
+  id: dm23sd3-003
+  mana: 1
+  name: 踊戯音愛 パステル / ♪摩訶不思議 マジカルプリズン キンキラリン
+  source:
+    official: dm23sd3-003
+    review: pending
+    aliases:
+    - dm23rp3-012
+  text: '踊戯音愛 パステル: S・トリガー / ブロッカー / メガ・ラスト・バースト（このクリーチャーが離れて、手札、マナゾーン、または墓地に置かれた時、このカードの呪文側をコストを支払わずに唱えてもよい）
+    ／ ♪摩訶不思議 マジカルプリズン キンキラリン: 相手のクリーチャーを２体まで選ぶ。次の自分のターンのはじめまで、それらは攻撃もブロックもできない。'
+- faces:
+  - civs:
+    - water
+    cost: 3
+    keywords:
+    - blocker
+    - mega_last_burst
+    name: 淡いと濃い ケローラ
+    power: 2000
+    races:
+    - マジック・アウトレイジ
+    types:
+    - creature
+  - civs:
+    - water
+    cost: 2
+    name: ♪やせガエル 負けるなケローラ スパイラル
+    spell:
+    - as: a
+      op: choose
+      select:
+        count: all
+        from_top: 4
+        look: true
+        owner: you
+        zone: deck
+    - op: move
+      reason: draw
+      select:
+        count: 1
+        ref: a
+      to: hand
+    - op: move
+      position: bottom
+      reason: put
+      select:
+        count: all
+        ref: a
+      to: deck
+    types:
+    - spell
+  id: dm24ex2-cho036
+  mana: 1
+  name: 淡いと濃い ケローラ / ♪やせガエル 負けるなケローラ スパイラル
+  source:
+    official: dm24ex2-cho036
+    review: pending
+    aliases:
+    - dm23rp3-030
+    - dm23sd3-007
+  text: '淡いと濃い ケローラ: ブロッカー / メガ・ラスト・バースト ／ ♪やせガエル 負けるなケローラ スパイラル: 自分の山札の上から４枚を見る。その中から１枚を手札に加え、残りを好きな順序で山札の下に置く。'
+- faces:
+  - abilities:
+    - affects: self
+      if:
+        exists:
+          filter:
+            race_has: マジック
+            types:
+            - creature
+          owner: you
+          zone: bz
+      kind: static
+      mod:
+        cost: -1
+      zone: hand
+    - effect:
+      - as: d
+        op: discard
+        select:
+          count: 2
+          owner: you
+          up_to: true
+          zone: hand
+      - count:
+          sum:
+          - count:
+              ref: d
+          - 1
+        op: draw
+        player: you
+      kind: trigger
+      when:
+        event: move
+        subject: self
+        to: bz
+    civs:
+    - fire
+    cost: 5
+    keywords:
+    - speed_attacker
+    - double_breaker
+    - mega_last_burst
+    name: Napo獅子-Vi無粋
+    power: 6000
+    races:
+    - マジック・ニトロ・ドラゴン
+    types:
+    - creature
+  - civs:
+    - fire
+    cost: 3
+    name: ♪オレの歌 聞けよ聞かなきゃ 殴り合い
+    spell:
+    - op: destroy
+      select:
+        count: all
+        filter:
+          cost_le: 2
+        owner: opp
+        zone: bz
+    types:
+    - spell
+  id: dm26sd1-i002f
+  mana: 1
+  name: Napo獅子-Vi無粋 / ♪オレの歌 聞けよ聞かなきゃ 殴り合い
+  source:
+    official: dm26sd1-i002f
+    review: pending
+    aliases:
+    - dm23rp3-04a
+    - dm23rp3-06b
+    - dm23rp3-s04
+  text: 'Napo獅子-Vi無粋: 自分のマジック・クリーチャーがあれば、このクリーチャーの召喚コストを１少なくする。 / このクリーチャーが出た時、自分の手札を２枚まで捨て、その枚数より１枚多くカードを引く。
+    / メガ・ラスト・バースト（このクリーチャーが離れて、手札、マナゾーン、または墓地に置かれた時、このカードの呪文側をコストを支払わずに唱えてもよい） / スピードアタッカー
+    / W・ブレイカー ／ ♪オレの歌 聞けよ聞かなきゃ 殴り合い: 相手のコスト２以下のエレメントをすべて破壊する。'
+- faces:
+  - civs:
+    - fire
+    cost: 4
+    keywords:
+    - speed_attacker
+    - mega_last_burst
+    name: 調律師ピーカプ
+    power: 4000
+    races:
+    - マジック・マシン・イーター
+    types:
+    - creature
+  - civs:
+    - fire
+    cost: 3
+    name: ♪音速で 本番中に チューニング
+    spell:
+    - as: c
+      op: choose
+      select:
+        count: 1
+        filter:
+          types:
+          - creature
+        owner: you
+        zone: bz
+    - duration: end_of_turn
+      mod:
+        grant:
+        - speed_attacker
+      op: modify
+      select:
+        ref: c
+    - duration: end_of_turn
+      effect:
+      - op: untap
+        select:
+          ref: c
+      once: true
+      op: delayed_trigger
+      when:
+        attacker:
+          ref: c
+        event: attack_end
+    types:
+    - spell
+  id: dm26sd1-i010
+  mana: 1
+  name: 調律師ピーカプ / ♪音速で 本番中に チューニング
+  source:
+    official: dm26sd1-i010
+    review: pending
+    aliases:
+    - dm23sd3-005
+    - promoy22-079
+    - promoy24-028
+  text: '調律師ピーカプ: スピードアタッカー（このクリーチャーは召喚酔いしない） / メガ・ラスト・バースト（このクリーチャーが離れて、手札、マナゾーン、または墓地に置かれた時、このカードの呪文側をコストを支払わずに唱えてもよい）
+    ／ ♪音速で 本番中に チューニング: このターン、自分のクリーチャー１体に「スピードアタッカー」を与え、そのクリーチャーの最初の攻撃の終わりにそのクリーチャーをアンタップする。'
