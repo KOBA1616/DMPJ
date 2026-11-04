@@ -258,11 +258,15 @@ class Engine(SelectorMixin, EventMixin, InterpreterMixin, TurnMixin, CombatMixin
     def abilities(self, cid: int, kind: str | None = None) -> list[tuple[int, dict]]:
         """(添字, 能力) の列。無視されている能力は除く（608.4）。
         継続的効果の mod.gain で得た能力は負の添字（-1, -2, ...）で返す。"""
+        if self.s.cards[cid].zone == "bz" and self.s.cards[cid].seals:
+            return []   # 封印されているクリーチャーの能力は機能しない（封印が外れた時点から見える）
         out = [(i, ab) for i, ab in enumerate(self.fdef(cid).abilities)
                if (kind is None or ab["kind"] == kind)
                and (not ab.get("sst") or self.s.cards[cid].sst)   # スーパー・S・トリガーの追加能力は印がある時だけ
                and (not ab.get("stp") or self.s.cards[cid].stp)   # S・トリガー・プラスも同様
-               and (not ab.get("odrive") or self.s.cards[cid].odrive)]   # O・ドライブで得る能力も同様
+               and (not ab.get("odrive")
+                    or (ab["odrive"] is True and self.s.cards[cid].odrive)
+                    or (isinstance(ab.get("odrive"), str) and ab["odrive"] in self.s.cards[cid].odrive_civs))]   # O・ドライブで得る能力（odrive: <文明> はその文明をタップした時だけ）
         if self.s.cards[cid].zone == "bz" and kind != "static":
             ref = self.s.ref(cid)
             k = 0
@@ -336,9 +340,16 @@ class Engine(SelectorMixin, EventMixin, InterpreterMixin, TurnMixin, CombatMixin
         許可・禁止（allow / deny）と breaks もここで集める。ルール側はキーワード名を見ない。"""
         c = self.s.cards[cid]
         d = self.fdef(cid, face)
+        if face is None and c.zone == "bz" and c.seals:
+            # 封印されているクリーチャーは無視される: 種族・タイプ・キーワードを持たず、能力も機能しない
+            # （パワーは印刷どおり返し、パワー0の状況起因処理で破壊されないようにする）
+            return {"power": d.power, "cost": d.cost, "civs": list(d.civs), "types": [], "races": [],
+                    "keywords": set(), "name": d.name, "allow": [], "deny": [], "require": [],
+                    "breaks": 0, "break_opts": [], "pay_cost": d.cost, "sac_reduce": 0,
+                    "opt_reduce": None, "cost_may": [], "no_leave": [], "must_be_attacked": False}
         ch = {"power": d.power, "cost": d.cost, "civs": list(d.civs), "types": list(d.types),
               "races": list(d.races), "keywords": set(d.keywords), "name": d.name,
-              "allow": [], "deny": [], "require": [], "breaks": 1, "break_opts": [], "pay_cost": d.cost, "sac_reduce": 0, "opt_reduce": None, "cost_may": []}
+              "allow": [], "deny": [], "require": [], "breaks": 1, "break_opts": [], "pay_cost": d.cost, "sac_reduce": 0, "opt_reduce": None, "cost_may": [], "no_leave": [], "must_be_attacked": False}
         if (d.neo or d.grave_evo) and c.zone == "bz" and c.under and "evolution" not in ch["types"]:
             ch["types"].append("evolution")   # NEO進化・墓地進化: カードが下にあれば進化クリーチャーとして扱う
         own = self.abilities(cid, "static") if face is None else list(enumerate(d.abilities))
@@ -394,6 +405,9 @@ class Engine(SelectorMixin, EventMixin, InterpreterMixin, TurnMixin, CombatMixin
                 for _, ab in self.abilities(src, "static"):
                     if "mod" in ab:
                         src_of[id(ab["mod"])] = src
+            for ce in self.s.continuous:   # 継続的効果（modify）の mod も発生源に帰属させる（第50弾）
+                if ce.get("src") is not None:
+                    src_of[id(ce["mod"])] = ce["src"]
         for m in mods:
             pw = m.get("power", 0)
             if isinstance(pw, dict):   # {amount, count}: 「〜ひとつにつき +N」
@@ -408,6 +422,11 @@ class Engine(SelectorMixin, EventMixin, InterpreterMixin, TurnMixin, CombatMixin
                                     if isinstance(e, dict) and e.get("once") else e)
             ch["deny"] += m.get("deny", [])
             ch["require"] += m.get("require", [])
+            if "no_leave" in m:   # 「バトルゾーンを離れない」（第49弾）。true は無条件、辞書は例外の指定
+                nl = m["no_leave"]
+                ch["no_leave"].append({} if nl is True else dict(nl))
+            if m.get("must_be_attacked"):   # 「相手のクリーチャーが攻撃する時、可能ならこのクリーチャーを攻撃する」（第51弾）
+                ch["must_be_attacked"] = True
             for r in m.get("add_races", []):   # 種族追加（「種族に〜を追加する」）
                 if r not in ch["races"]:
                     ch["races"].append(r)
@@ -426,6 +445,8 @@ class Engine(SelectorMixin, EventMixin, InterpreterMixin, TurnMixin, CombatMixin
                 ch["keywords"].update(sc["keywords"])
                 for k in ("allow", "deny", "require", "break_opts"):
                     ch[k] += sc[k]
+                ch["no_leave"] += sc["no_leave"]
+                ch["must_be_attacked"] = ch["must_be_attacked"] or sc["must_be_attacked"]
                 ch["breaks"] = max(ch["breaks"], sc["breaks"])
         if any("cost_may" in m for m in mods):   # 任意のコスト軽減（cost_may）の発生源を引く（once の使用記録用）
             for m in mods:
@@ -469,6 +490,7 @@ class Engine(SelectorMixin, EventMixin, InterpreterMixin, TurnMixin, CombatMixin
                     ch["allow"] += p["allow"]
                     ch["deny"] += p["deny"]
                     ch["require"] += p["require"]
+                    ch["no_leave"] += p["no_leave"]
                     ch["break_opts"] += p["break_opts"]
                     ch["breaks"] = max(ch["breaks"], p["breaks"])
                     ch["sac_reduce"] += p["sac_reduce"]
@@ -567,6 +589,7 @@ class Engine(SelectorMixin, EventMixin, InterpreterMixin, TurnMixin, CombatMixin
         c.sst = False                               # スーパー・S・トリガーの追加能力の印も消える
         c.stp = False                               # S・トリガー・プラスの印も消える
         c.odrive = False                            # O・ドライブの印も消える
+        c.odrive_civs = []
         c.bazurenda = 0                             # バズレンダの追加支払い回数も消える
         c.vivid = False                             # ビビッドローの表向きも消える（引いたターンの記録 drawn_turn は残す）
         dest = self.zlist(to, c.controller if self.zshared(to) else c.owner)

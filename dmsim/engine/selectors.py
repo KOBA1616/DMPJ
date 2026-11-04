@@ -13,6 +13,11 @@ class SelectorMixin:
                 return len({cv for c in self.candidates(x["civ_count"], env) for cv in self.chars(c)["civs"]})
             if "link_count" in x:   # このカードがリンクしているカードの枚数（リンクしていなければ1）
                 return len(self.link_members(env["self"][0])) if env.get("self") else 0
+            if "seals" in x:   # そのプレイヤーの封印の総数（自分のカードに付いている封印を全部数える）
+                p = self._rel(x["seals"].get("owner", "you"), env)
+                return sum(len(self.s.cards[c].seals) for c in self.bz_tops(p))
+            if "seals_on" in x:   # self に付いている封印の数
+                return len(self.s.cards[env["self"][0]].seals) if env.get("self") else 0
             if "entered" in x:   # このターン、そのプレイヤーがバトルゾーンに出したクリーチャーの数
                 spec = x["entered"]
                 lst = self.s.turn_counters.get(f"entered:{self._rel(spec.get('owner', 'you'), env)}", [])
@@ -65,6 +70,9 @@ class SelectorMixin:
         if "alt_paid" in c:   # 代替コストで実行した（「この呪文を[代替]支払って唱えたら」）
             paid = bool(env.get("alt_paid")) or bool((env.get("event") or {}).get("alt"))
             return paid == bool(c["alt_paid"])
+        if "vivid_paid" in c:   # ビビッドローで実行した（第54弾。「ビビッドロー能力を使って唱えていれば」）
+            paid = bool(env.get("vivid_paid")) or bool((env.get("event") or {}).get("vivid"))
+            return paid == bool(c["vivid_paid"])
         raise ValueError(f"bad cond {c}")
 
     def filter_match(self, cid: int, f: dict, lki: dict | None = None, base: bool = False) -> bool:
@@ -75,6 +83,12 @@ class SelectorMixin:
         else:
             ch = lki["chars"] if lki else self.chars(cid)
         c = self.s.cards[cid]
+        is_sealed = c.zone == "bz" and bool(c.seals)
+        if "sealed" in f:
+            if is_sealed != bool(f["sealed"]):
+                return False
+        elif is_sealed and lki is None and not base and not getattr(self, "_seal_ok", 0):
+            return False   # 封印されているクリーチャーは無視される（封印を対象にする効果だけが sealed で指す）
         if "any_of" in f and not any(self.filter_match(cid, sub, lki, base) for sub in f["any_of"]):
             return False
         if "types" in f and not set(f["types"]) & set(ch["types"]):
@@ -85,6 +99,18 @@ class SelectorMixin:
             return False
         if "name_has" in f and f["name_has"] not in ch["name"]:
             return False
+        if "twinpact" in f and bool(self.cdef(cid).faces) != bool(f["twinpact"]):
+            return False
+        if "vividraw" in f:
+            d = self.cdef(cid)
+            has = bool(d.vividraw) or any(fc.vividraw for fc in d.faces)
+            if has != bool(f["vividraw"]):
+                return False
+        if "fushigi" in f:
+            d = self.cdef(cid)
+            has = bool(d.fushigi) or any(fc.fushigi for fc in d.faces)
+            if has != bool(f["fushigi"]):
+                return False
         if "civs" in f and not set(f["civs"]) & set(ch["civs"]):
             return False
         if "civs_all" in f and not set(f["civs_all"]) <= set(ch["civs"]):
@@ -107,8 +133,14 @@ class SelectorMixin:
             return False
         if "face_down" in f and c.face_down != f["face_down"]:
             return False
+        if "face_up" in f and bool(c.face_up) != bool(f["face_up"]):
+            return False   # シールドゾーンの「表向きのカード」を絞る（シールド・ゴーの条件用）
         if "neo" in f and bool(self.fdef(cid).neo) != f["neo"]:
             return False
+        if "evolution" in f and ("evolution" in self.fdef(cid).types) != bool(f["evolution"]):
+            return False   # 「進化ではないクリーチャー」等（進化はタイプで表す）
+        if "mugen_climb" in f and (self.fdef(cid).mugen_climb is not None) != bool(f["mugen_climb"]):
+            return False   # 「『ムゲンクライム』能力を持つカード」
         if "vanilla" in f:   # 「カードに能力が書かれていない」: 能力もキーワードも無く、進化・NEO 等の書かれた仕組みも持たない
             d = self.fdef(cid)
             is_v = not d.abilities and not d.keywords and "evolution" not in d.types \
