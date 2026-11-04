@@ -30507,66 +30507,6 @@ cards:
     official: dm23bd7-005
     review: pending
     notes: ツインパクト。クリーチャー面の「相手１人につき」は2人戦前提で1体として登録した
-- id: dm23bd7-022
-  name: 音感の精霊龍 エメラルーダ
-  types:
-  - creature
-  civs:
-  - light
-  cost: 5
-  power: 5500
-  races:
-  - エンジェル・コマンド・ドラゴン
-  mana: 1
-  text: 'ブロッカー
-
-    このクリーチャーが出た時、自分のシールドを１つブレイクしてもよい。その後、自分の手札を１枚、シールド化してもよい。'
-  abilities:
-  - kind: trigger
-    when:
-      event: move
-      to: bz
-      subject: self
-    effect:
-    - op: may
-      body:
-      - op: move
-        select:
-          zone: shield
-          owner: you
-          count: 1
-        to: hand
-        reason: break
-    - op: may
-      body:
-      - op: move
-        select:
-          zone: hand
-          owner: you
-          count: 1
-        to: shield
-        reason: charge
-  source:
-    official: dm23bd7-022
-    review: pending
-    notes: '自分のシールドのブレイクは move to hand (reason: break) で表した'
-    aliases:
-    - dmd32-011
-    - dmex01-064
-    - dmex06-055
-    - dmex13-021
-    - dmex16-055
-    - dmr19-012
-    - dmrp07-g01
-    - dmrp21-t6
-    - dmrp21-tf6
-    - dmrp22-t8
-    - dmrp22-tf8
-    - dmx18-007
-    - promoy13-096
-    - promoy25-080
-  keywords:
-  - blocker
 - id: dm23bd7-023
   name: 天星の玉 ラ・クルスタ
   types:
@@ -32596,7 +32536,8 @@ cards:
         civs:
         - darkness
     mod:
-      opt_reduce: 1
+      opt_reduce:
+        amount: 1
       cost_min: 1
   source:
     official: dm23ex2-097
@@ -34112,7 +34053,8 @@ cards:
         races:
         - ジャイアント
     mod:
-      opt_reduce: 1
+      opt_reduce:
+        amount: 1
       cost_min: 1
   source:
     official: dm23rp1-073
@@ -37806,7 +37748,8 @@ cards:
       filter:
         race_has: メカ
     mod:
-      opt_reduce: 1
+      opt_reduce:
+        amount: 1
       cost_min: 1
   source:
     official: dm23sd2-012
@@ -38150,7 +38093,8 @@ cards:
       filter:
         race_has: アビス
     mod:
-      opt_reduce: 1
+      opt_reduce:
+        amount: 1
       cost_min: 1
   source:
     official: dm23sp1-017
@@ -41529,7 +41473,8 @@ cards:
         types:
         - creature
     mod:
-      opt_reduce: 1
+      opt_reduce:
+        amount: 1
       cost_min: 1
   - kind: static
     mod:
@@ -46335,7 +46280,8 @@ cards:
         types:
         - spell
     mod:
-      opt_reduce: 1
+      opt_reduce:
+        amount: 1
       cost_min: 1
   source:
     official: dm24ex3-tf22
@@ -47528,7 +47474,8 @@ cards:
         - creature
         race_has: 超化獣
     mod:
-      opt_reduce: 1
+      opt_reduce:
+        amount: 1
   source:
     official: dm24rp1-051
     review: pending
@@ -60798,7 +60745,8 @@ cards:
           types:
           - creature
       mod:
-        opt_reduce: 1
+        opt_reduce:
+          amount: 1
     - kind: static
       affects: self
       mod:
@@ -80606,7 +80554,8 @@ cards:
         filter:
           keyword: blocker
     mod:
-      opt_reduce: 3
+      opt_reduce:
+        amount: 3
   source:
     official: dmd05-015
     review: pending
