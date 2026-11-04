@@ -5313,20 +5313,20 @@
 {"id": "dmex17-040", "gaps": ["power_less_than_self"], "note": "このクリーチャーよりパワーが小さい相手クリーチャー", "source": "round69"}
 {"id": "dmx12b-003", "gaps": ["reveal_until_count_creatures"], "note": "N体の非進化クリーチャーが出るまで山札の上から見せるループ", "source": "round69"}
 {"id": "dmx19-s39", "gaps": ["dynamic_name_reference_filter"], "note": "そのクリーチャーと同じ名前のカード", "source": "round69"}
-{"id": "dm28-056", "gaps": ["janken_opponent_hand"], "note": "janken round70: janken_opponent_hand", "source": "round70"}
-{"id": "dm28-060", "gaps": ["janken_opponent_hand"], "note": "janken round70: janken_opponent_hand", "source": "round70"}
-{"id": "dm28-103", "gaps": ["janken_opponent_hand"], "note": "janken round70: janken_opponent_hand", "source": "round70"}
-{"id": "dm29-031", "gaps": ["janken_opponent_hand"], "note": "janken round70: janken_opponent_hand", "source": "round70"}
-{"id": "dm30-006", "gaps": ["janken_streak_count"], "note": "janken round70: janken_streak_count", "source": "round70"}
+{"id": "dm28-056", "gaps": ["janken_opponent_hand"], "note": "janken round70: janken_opponent_hand", "source": "round70", "out_of_scope": true, "out_of_scope_reason": "ジャンケン系は変換対象外（2026-11-04 ユーザー指示）"}
+{"id": "dm28-060", "gaps": ["janken_opponent_hand"], "note": "janken round70: janken_opponent_hand", "source": "round70", "out_of_scope": true, "out_of_scope_reason": "ジャンケン系は変換対象外（2026-11-04 ユーザー指示）"}
+{"id": "dm28-103", "gaps": ["janken_opponent_hand"], "note": "janken round70: janken_opponent_hand", "source": "round70", "out_of_scope": true, "out_of_scope_reason": "ジャンケン系は変換対象外（2026-11-04 ユーザー指示）"}
+{"id": "dm29-031", "gaps": ["janken_opponent_hand"], "note": "janken round70: janken_opponent_hand", "source": "round70", "out_of_scope": true, "out_of_scope_reason": "ジャンケン系は変換対象外（2026-11-04 ユーザー指示）"}
+{"id": "dm30-006", "gaps": ["janken_streak_count"], "note": "janken round70: janken_streak_count", "source": "round70", "out_of_scope": true, "out_of_scope_reason": "ジャンケン系は変換対象外（2026-11-04 ユーザー指示）"}
 {"id": "dm36-034", "gaps": ["per_creature_same_name_from_deck"], "note": "janken round70: per_creature_same_name_from_deck", "source": "round70"}
-{"id": "dmex08-041", "gaps": ["janken_opponent_hand"], "note": "janken round70: janken_opponent_hand", "source": "round70"}
-{"id": "dmex08-056", "gaps": ["janken_win_hand_event"], "note": "janken round70: janken_win_hand_event", "source": "round70"}
+{"id": "dmex08-041", "gaps": ["janken_opponent_hand"], "note": "janken round70: janken_opponent_hand", "source": "round70", "out_of_scope": true, "out_of_scope_reason": "ジャンケン系は変換対象外（2026-11-04 ユーザー指示）"}
+{"id": "dmex08-056", "gaps": ["janken_win_hand_event"], "note": "janken round70: janken_win_hand_event", "source": "round70", "out_of_scope": true, "out_of_scope_reason": "ジャンケン系は変換対象外（2026-11-04 ユーザー指示）"}
 {"id": "dmex08-132", "gaps": ["dynamic_name_reference"], "note": "janken round70: dynamic_name_reference", "source": "round70"}
-{"id": "dmex08-171", "gaps": ["janken_opponent_hand"], "note": "janken round70: janken_opponent_hand", "source": "round70"}
-{"id": "dmex08-172", "gaps": ["janken_opponent_hand"], "note": "janken round70: janken_opponent_hand", "source": "round70"}
-{"id": "dmex08-267", "gaps": ["janken_loss_replace", "battle_outcome_replace"], "note": "janken round70: janken_loss_replace, battle_outcome_replace", "source": "round70"}
+{"id": "dmex08-171", "gaps": ["janken_opponent_hand"], "note": "janken round70: janken_opponent_hand", "source": "round70", "out_of_scope": true, "out_of_scope_reason": "ジャンケン系は変換対象外（2026-11-04 ユーザー指示）"}
+{"id": "dmex08-172", "gaps": ["janken_opponent_hand"], "note": "janken round70: janken_opponent_hand", "source": "round70", "out_of_scope": true, "out_of_scope_reason": "ジャンケン系は変換対象外（2026-11-04 ユーザー指示）"}
+{"id": "dmex08-267", "gaps": ["janken_loss_replace", "battle_outcome_replace"], "note": "janken round70: janken_loss_replace, battle_outcome_replace", "source": "round70", "out_of_scope": true, "out_of_scope_reason": "ジャンケン系は変換対象外（2026-11-04 ユーザー指示）"}
 {"id": "dmx22b-100", "gaps": ["venue_reference"], "note": "janken round70: venue_reference", "source": "round70"}
-{"id": "dmx22b-106", "gaps": ["janken_opponent_hand"], "note": "janken round70: janken_opponent_hand", "source": "round70"}
+{"id": "dmx22b-106", "gaps": ["janken_opponent_hand"], "note": "janken round70: janken_opponent_hand", "source": "round70", "out_of_scope": true, "out_of_scope_reason": "ジャンケン系は変換対象外（2026-11-04 ユーザー指示）"}
 {"id": "promoy9-006", "gaps": ["venue_reference"], "note": "janken round70: venue_reference", "source": "round70"}
 {"id": "dm25ex1-089", "gaps": ["choukon_x"], "note": "超魂X（これがクリーチャーの下にあれば、そのクリーチャーにも以下の能力を与える）", "source": "round71"}
 {"id": "dm25ex2-044", "gaps": ["dragheart"], "note": "コスト４以下のドラグハート・ウエポンを１つ、自分の超次元ゾーンから出し、このクリーチャーに装備する", "source": "round71"}
