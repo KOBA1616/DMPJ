@@ -39,7 +39,7 @@ CIVS = {"light", "water", "darkness", "fire", "nature", "zero"}
 SELECTOR_KEYS = {"zone", "owner", "owner_of", "filter", "count", "up_to", "from_top", "chooser", "ref", "other",
                  "under_of", "look", "exlife_of", "total_cost_le", "total_cost_ge"}   # look: 非公開ゾーン（山札など）の中身を見て選ぶ。total_cost_*: コストの合計が上限以下／下限以上になるように好きな数選ぶ
 FILTER_KEYS = {"any_of", "types", "not_types", "civs", "civs_all", "not_civs", "races", "race_has", "name", "name_has", "not_name",
-               "cost_le", "cost_ge", "power_le", "power_ge", "tapped", "keyword", "multicolor", "face_down", "neo", "vanilla", "sealed", "evolution"}
+               "cost_le", "cost_ge", "power_le", "power_ge", "tapped", "keyword", "multicolor", "face_down", "face_up", "neo", "vanilla", "sealed", "evolution", "mugen_climb"}
 FILTER_EXPR_KEYS = {"cost_le", "cost_ge", "power_le", "power_ge", "races"}   # 値に式を書ける（解決時に計算）
 
 
@@ -66,7 +66,8 @@ class Face:
     spell: list[dict] = field(default_factory=list)
     sst_spell: list[dict] = field(default_factory=list)   # スーパー・S・トリガーで得る追加の解決 ops
     stp_spell: list[dict] = field(default_factory=list)   # S・トリガー・プラスで得る追加の解決 ops
-    o_drive: dict | None = None                           # O・ドライブ: {civ, count} 召喚時に追加でタップできるマナ
+    odrive_spell: list[dict] = field(default_factory=list)   # O・ドライブで得る追加の解決 ops（呪文側）
+    o_drive: dict | None = None                           # O・ドライブ: {civ, count} または {civs: {文明: 枚数}, each?} 召喚時に追加でタップできるマナ
     mugen_climb: dict | None = None                       # ムゲンクライム: {tap, cost, civs} 自分のクリーチャーをタップして手札/墓地から実行
     alt_cost: dict | None = None                          # 代替コスト: {cost, civs} または {do: [{zone, filter?, count, to, reason}...]}
     vividraw: dict | None = None                          # ビビッドロー: {cost, civs} 引いたターンに表向きにすると代替コストで実行できる
@@ -116,7 +117,8 @@ class CardDef:
     spell: list[dict] = field(default_factory=list)      # 呪文の解決 ops
     sst_spell: list[dict] = field(default_factory=list)  # スーパー・S・トリガーで得る追加の解決 ops
     stp_spell: list[dict] = field(default_factory=list)  # S・トリガー・プラスで得る追加の解決 ops
-    o_drive: dict | None = None                         # O・ドライブ: {civ, count}
+    odrive_spell: list[dict] = field(default_factory=list)  # O・ドライブで得る追加の解決 ops（呪文側）
+    o_drive: dict | None = None                         # O・ドライブ: {civ, count} または {civs: {文明: 枚数}, each?}
     mugen_climb: dict | None = None                     # ムゲンクライム: {tap, cost, civs}
     alt_cost: dict | None = None                        # 代替コスト
     vividraw: dict | None = None                        # ビビッドロー: {cost, civs}
@@ -590,10 +592,15 @@ def _load_face(raw, keywords, macros, chk: Checker, where) -> dict:
     chk.ops(sst_spell, where)
     stp_spell = expand_ops(raw.get("stp_spell", []), macros, where)
     chk.ops(stp_spell, where)
+    odrive_spell = expand_ops(raw.get("odrive_spell", []), macros, where)
+    chk.ops(odrive_spell, where)
     if "o_drive" in raw:
         od = raw["o_drive"]
-        if not isinstance(od, dict) or od.get("civ") not in CIVS or not isinstance(od.get("count"), int):
-            raise DefError(f"{where}: o_drive needs {{civ: <civ>, count: int}}")
+        legacy = isinstance(od, dict) and set(od) <= {"civ", "count"} and od.get("civ") in CIVS and isinstance(od.get("count"), int)
+        multi = isinstance(od, dict) and set(od) <= {"civs", "each"} and isinstance(od.get("civs"), dict) and bool(od["civs"]) \
+            and all(cv in CIVS and isinstance(n, int) and n >= 1 for cv, n in od["civs"].items())
+        if not (legacy or multi):
+            raise DefError(f"{where}: o_drive needs {{civ: <civ>, count: int}} or {{civs: {{<civ>: int, ...}}, each?: bool}}")
     if "mugen_climb" in raw:
         mc = raw["mugen_climb"]
         if not isinstance(mc, dict) or not isinstance(mc.get("tap"), int) or not isinstance(mc.get("cost"), int) \
@@ -645,7 +652,7 @@ def _load_face(raw, keywords, macros, chk: Checker, where) -> dict:
             raise DefError(f"{where}: fushigi needs {{cost: int, civs: [...], min: int}}")
     return dict(name=raw["name"], types=raw["types"], civs=raw["civs"], cost=raw["cost"],
                 power=raw.get("power", 0), races=split_races(raw.get("races", [])), keywords=names,
-                abilities=abilities, spell=spell, sst_spell=sst_spell, stp_spell=stp_spell, o_drive=raw.get("o_drive"), mugen_climb=raw.get("mugen_climb"), alt_cost=raw.get("alt_cost"), vividraw=raw.get("vividraw"), fushigi=raw.get("fushigi"), evolve_from=raw.get("evolve_from"),
+                abilities=abilities, spell=spell, sst_spell=sst_spell, stp_spell=stp_spell, odrive_spell=odrive_spell, o_drive=raw.get("o_drive"), mugen_climb=raw.get("mugen_climb"), alt_cost=raw.get("alt_cost"), vividraw=raw.get("vividraw"), fushigi=raw.get("fushigi"), evolve_from=raw.get("evolve_from"),
                 evolve_zone=zone, evolve_any=bool(raw.get("evolve_any", False)),
                 evolve_count=(len(raw["evolve_from"]) if isinstance(raw.get("evolve_from"), list)
                               else int(raw.get("evolve_count", 1))),

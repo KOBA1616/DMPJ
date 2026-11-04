@@ -285,6 +285,10 @@ class PlayTask(TypedDict):
     od_yn: NotRequired[bool]             # O・ドライブ: 追加でタップするか
     od_done: NotRequired[bool]           # O・ドライブ: 確認済み
     odrive: NotRequired[bool]            # O・ドライブ: 追加でタップして召喚した
+    od_idx: NotRequired[int]             # O・ドライブ: 処理中のステップ（文明）番号
+    od_sub: NotRequired[int]             # O・ドライブ: ステップ内で処理中の文明番号
+    od_civs_done: NotRequired[list]      # O・ドライブ: 実際にタップした文明
+    odrive_civs: NotRequired[list]       # O・ドライブ: タップした文明（イベント/印への引き渡し用）
     climb: NotRequired[bool]             # ムゲンクライムとして実行する
     climb_done: NotRequired[bool]        # ムゲンクライム: クリーチャーのタップが済んだ
     resolve_to: NotRequired[str]         # 解決後の置き場所（play_free の resolve_to）

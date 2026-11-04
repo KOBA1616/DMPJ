@@ -882,26 +882,51 @@ def h_play(eng, t):
                 t["bz_paid_for"] = cnt
             t["bz_count"] = cnt + 1
     if d.o_drive and not t["free"] and not t.get("od_done"):   # O・ドライブ: 追加で指定文明のマナをタップしてもよい
-        if t.get("od_yn") is None:
-            pool = [c for c in eng.zlist("mana", p) if not s.cards[c].tapped
-                    and d.o_drive["civ"] in eng.chars(c)["civs"]]
-            if len(pool) < d.o_drive["count"]:
-                t["od_yn"] = False
-            else:
-                ans, dd = eng.ask(t, p, "yes_no", [{"key": "yes"}, {"key": "no"}], prompt="O・ドライブ: 追加でタップする")
-                if dd:
-                    return dd
-                t["od_yn"] = ans[0] == 0
-        if t.get("od_yn"):
-            pool = [c for c in eng.zlist("mana", p) if not s.cards[c].tapped
-                    and d.o_drive["civ"] in eng.chars(c)["civs"]]
-            ans, dd = eng.ask(t, p, "choose_cards", [eng._card_option(c) for c in pool],
-                              d.o_drive["count"], d.o_drive["count"])
-            if dd:
-                return dd
-            for i in ans:
-                s.cards[pool[i]].tapped = True
-            t["odrive"] = True
+        od = d.o_drive
+        if "civs" in od:
+            steps = [[(cv, n)] for cv, n in od["civs"].items()] if od.get("each") else [list(od["civs"].items())]
+        else:
+            steps = [[(od["civ"], od["count"])]]
+        tapped_civs = t.setdefault("od_civs_done", [])
+        idx = t.get("od_idx", 0)
+        while idx < len(steps):
+            step = steps[idx]   # [(文明, 枚数), ...]（まとめて形は全文明が1ステップ、文明別形は1文明ずつ）
+            def _feasible(st, used):
+                if not st:
+                    return True
+                (cv, n), rest = st[0], st[1:]
+                pool = [c for c in eng.zlist("mana", p) if not s.cards[c].tapped and c not in used
+                        and cv in eng.chars(c)["civs"]]
+                from itertools import combinations
+                return any(_feasible(rest, used | set(comb)) for comb in combinations(pool, min(n, len(pool))) if len(pool) >= n)
+            if t.get("od_yn") is None:
+                if not _feasible(step, set()):
+                    t["od_yn"] = False
+                else:
+                    ans, dd = eng.ask(t, p, "yes_no", [{"key": "yes"}, {"key": "no"}], prompt="O・ドライブ: 追加でタップする")
+                    if dd:
+                        t["od_idx"] = idx
+                        return dd
+                    t["od_yn"] = ans[0] == 0
+            if t["od_yn"]:
+                sub = t.get("od_sub", 0)
+                while sub < len(step):
+                    cv, n = step[sub]
+                    pool = [c for c in eng.zlist("mana", p) if not s.cards[c].tapped
+                            and cv in eng.chars(c)["civs"]]
+                    ans, dd = eng.ask(t, p, "choose_cards", [eng._card_option(c) for c in pool], n, n)
+                    if dd:
+                        t["od_idx"], t["od_sub"] = idx, sub
+                        return dd
+                    for i in ans:
+                        s.cards[pool[i]].tapped = True
+                    tapped_civs.append(cv)
+                    sub += 1
+                t["od_sub"] = 0
+            t["od_yn"] = None
+            idx += 1
+        t["odrive"] = bool(tapped_civs)
+        t["odrive_civs"] = list(tapped_civs)
         t["od_done"] = True
     eng._pop(t)
     from_zone = s.cards[cid].zone
@@ -910,6 +935,9 @@ def h_play(eng, t):
         s.cards[cid].sst = True
     if stp_bonus:
         s.cards[cid].stp = True
+    if t.get("odrive"):
+        s.cards[cid].odrive = True
+        s.cards[cid].odrive_civs = list(t.get("odrive_civs", []))
     if d.bazurenda:
         s.cards[cid].bazurenda = t.get("bz_count", 0)
     if face is not None:
@@ -928,6 +956,7 @@ def h_play(eng, t):
             ev["stp"] = True
         if t.get("odrive"):
             ev["odrive"] = True
+            ev["odrive_civs"] = list(t.get("odrive_civs", []))
         if t.get("alt"):
             ev["alt"] = True
         if d.bazurenda:
@@ -952,7 +981,8 @@ def h_play(eng, t):
         if t.get("alt"):
             env["alt_paid"] = True
         spell_ops = list(d.spell) + (list(d.sst_spell) if s.cards[cid].sst else []) \
-            + (list(d.stp_spell) if s.cards[cid].stp else [])
+            + (list(d.stp_spell) if s.cards[cid].stp else []) \
+            + (list(d.odrive_spell) if s.cards[cid].odrive else [])
         reps = 1 + (s.cards[cid].bazurenda if d.bazurenda else 0)   # バズレンダ呪文は能力を1+追加回数使う
         eng._push(eng.ev_task({"ev": "cast", "player": p, "subject": ref, "unpaid": bool(t["free"])}),
                    *([eng._child(spell_ops, env)] * reps),

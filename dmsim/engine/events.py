@@ -129,6 +129,7 @@ class EventMixin:
                 c.stp = True
             if ev.get("odrive"):
                 c.odrive = True
+                c.odrive_civs = list(ev.get("odrive_civs", []))
             if ev.get("bazurenda"):
                 c.bazurenda = ev["bazurenda"]
             if ev.get("tapped"):   # 「タップして置く」: 置かれた時点でタップ状態（別のタップ イベントにしない）

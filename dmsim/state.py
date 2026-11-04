@@ -53,6 +53,7 @@ class Card:
     sst: bool = False                                       # スーパー・S・トリガー: シールド0枚で使った時に追加能力（sst印つき）を得た
     stp: bool = False                                       # S・トリガー・プラス: 条件を満たして使った時に追加能力（stp印つき）を得た
     odrive: bool = False                                    # O・ドライブ: 追加のマナタップをして召喚した
+    odrive_civs: list = field(default_factory=list)         # O・ドライブ: 実際にタップした文明（文明別の能力用）
     bazurenda: int = 0                                      # バズレンダ: 追加で支払った回数
     drawn_turn: int = -1                                    # このターンにドローしたか（ビビッドロー）
     vivid: bool = False                                     # ビビッドロー: 表向きにした

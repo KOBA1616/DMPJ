@@ -118,10 +118,14 @@ class SelectorMixin:
             return False
         if "face_down" in f and c.face_down != f["face_down"]:
             return False
+        if "face_up" in f and bool(c.face_up) != bool(f["face_up"]):
+            return False   # シールドゾーンの「表向きのカード」を絞る（シールド・ゴーの条件用）
         if "neo" in f and bool(self.fdef(cid).neo) != f["neo"]:
             return False
         if "evolution" in f and ("evolution" in self.fdef(cid).types) != bool(f["evolution"]):
             return False   # 「進化ではないクリーチャー」等（進化はタイプで表す）
+        if "mugen_climb" in f and (self.fdef(cid).mugen_climb is not None) != bool(f["mugen_climb"]):
+            return False   # 「『ムゲンクライム』能力を持つカード」
         if "vanilla" in f:   # 「カードに能力が書かれていない」: 能力もキーワードも無く、進化・NEO 等の書かれた仕組みも持たない
             d = self.fdef(cid)
             is_v = not d.abilities and not d.keywords and "evolution" not in d.types \

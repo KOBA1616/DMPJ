@@ -1155,6 +1155,54 @@ cards:
         affects: {zone: bz, owner: opp, filter: {types: [creature]}}
         mod: {power: -1000}
 
+  # ---- 語彙パイロット第47弾: 多文明O・ドライブ＋呪文側 ----
+  - id: T133
+    name: 試験用多文明ドライブ獣
+    types: [creature]
+    civs: [light, water]
+    cost: 5
+    power: 4000
+    races: [テスト]
+    text: O・ドライブ 光×1と水×1（このクリーチャーを召喚する時、自分のマナゾーンでさらに光1枚と水1枚をタップしてもよい。そうした場合、このクリーチャーが出た時、カードを2枚引く）
+    o_drive: {civs: {light: 1, water: 1}}
+    abilities:
+      - kind: trigger
+        odrive: true
+        when: {event: move, to: bz, subject: self}
+        effect:
+          - {op: draw, count: 2}
+  - id: T134
+    name: 試験用文明別ドライブ獣
+    types: [creature]
+    civs: [fire, nature]
+    cost: 5
+    power: 4000
+    races: [テスト]
+    text: O・ドライブ 火×1・自然×1（このクリーチャーを召喚する時、自分のマナゾーンでさらに火1枚または自然1枚またはその両方をタップしてもよい。火:このクリーチャーが出た時、相手のクリーチャーを1体破壊する。自然:このクリーチャーが出た時、カードを1枚引く）
+    o_drive: {civs: {fire: 1, nature: 1}, each: true}
+    abilities:
+      - kind: trigger
+        odrive: fire
+        when: {event: move, to: bz, subject: self}
+        effect:
+          - {op: move, select: {zone: bz, owner: opp, filter: {types: [creature]}, count: 1}, to: graveyard, reason: destroy}
+      - kind: trigger
+        odrive: nature
+        when: {event: move, to: bz, subject: self}
+        effect:
+          - {op: draw, count: 1}
+  - id: T135
+    name: 試験用ドライブ呪文
+    types: [spell]
+    civs: [light]
+    cost: 3
+    text: カードを1枚引く。O・ドライブ 光×1（この呪文を唱える時、自分のマナゾーンでさらに光1枚をタップしてもよい。そうした場合、カードを1枚引く）
+    o_drive: {civ: light, count: 1}
+    spell:
+      - {op: draw, count: 1}
+    odrive_spell:
+      - {op: draw, count: 1}
+
 # 語彙パイロット第28弾（フェーズ6）: アバレチェーン/ヨビニオン/オシオキムーン/マナ召喚/シンカパワー/進化でないフィルタ
   - id: T083
     name: アバレチェーン獣
