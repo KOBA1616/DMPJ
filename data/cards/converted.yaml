@@ -291782,3 +291782,721 @@ cards:
     自分の自然のクリーチャーの召喚コストを１少なくする。ただし、コストは０以下にはならない。'
   types:
   - creature
+- abilities:
+  - kind: trigger
+    when:
+      event: move
+      to: bz
+      subject: self
+    effect:
+    - op: modify
+      select:
+        ref: self
+      mod:
+        deny:
+        - be_chosen
+        - be_attacked
+      duration: until_next_own_turn_start
+  - effect:
+    - duration: until_next_own_turn_start
+      mod:
+        deny:
+        - be_chosen
+        - be_attacked
+      op: modify
+      select:
+        ref: self
+    kind: trigger
+    when:
+      event: move
+      subject: self
+      to: bz
+  - effect:
+    - body:
+      - op: move
+        reason: return
+        select:
+          ref: event.subject
+        to: hand
+      op: may
+    if:
+      cmp:
+      - cost_of:
+          ref: event.subject
+      - '>'
+      - count:
+          owner: opp
+          zone: mana
+    kind: trigger
+    when:
+      event: summon
+      subject:
+        owner: opp
+  civs:
+  - water
+  cost: 2
+  id: dm25rp1-034
+  keywords:
+  - g_strike
+  mana: 1
+  name: 洗打の妖精
+  power: 1000
+  races:
+  - ジャイアント・スノーフェアリー
+  source:
+    official: dm25rp1-034
+    review: pending
+    aliases:
+    - dm25rp1-sec19
+    - promoy24-082
+  text: '{GS} G・ストライク（このカードを自分のシールドゾーンから手札に加える時、表向きにし、相手のクリーチャーを１体選んでもよい。このターン、そのクリーチャーは攻撃できない）
+
+    ジャストダイバー（このクリーチャーが出た時、次の自分のターンのはじめまで、このクリーチャーは相手に選ばれず、攻撃されない）
+
+    相手のクリーチャーが出た時、それが相手のマナゾーンにあるカードの枚数よりコストが大きいクリーチャーなら、持ち主の手札に戻してもよい。'
+  types:
+  - creature
+- abilities:
+  - effect:
+    - as: t
+      op: choose
+      select:
+        count: 1
+        filter:
+          cost_ge:
+            sum:
+            - count:
+                owner: opp
+                zone: mana
+            - 1
+          types:
+          - creature
+        owner: opp
+        zone: bz
+    - op: move
+      position: bottom
+      reason: put
+      select:
+        ref: t
+      to: deck
+    kind: trigger
+    when:
+      event: move
+      subject: self
+      to: bz
+  civs:
+  - light
+  cost: 4
+  id: dm25rp4-056
+  keywords:
+  - s_trigger
+  - blocker
+  mana: 1
+  name: 星姫械 ペナルティフリート
+  power: 4500
+  races:
+  - メカ・デル・ステラ
+  source:
+    official: dm25rp4-056
+    review: pending
+  text: 'S・トリガー（このカードをシールドゾーンから手札に加える時、コストを支払わずにすぐ実行してもよい）
+
+    ブロッカー（このクリーチャーをタップして、相手クリーチャーの攻撃先をこのクリーチャーに変更してもよい）
+
+    このクリーチャーが出た時、相手のマナゾーンにあるカードの枚数よりコストが大きい相手のクリーチャーを１体選び、持ち主の山札の下に置く。'
+  types:
+  - creature
+- abilities:
+  - effect:
+    - op: move
+      reason: put
+      select:
+        ref: event.subject
+      to: mana
+    if:
+      is_turn: opp
+    kind: trigger
+    when:
+      event: move
+      subject:
+        filter:
+          cost_ge:
+            sum:
+            - count:
+                owner: opp
+                zone: mana
+            - 1
+          types:
+          - creature
+        owner: opp
+      to: bz
+  - effect:
+    - cost_le: 5
+      filter:
+        race_has: ジョーカーズ
+      op: mekurade
+    kind: trigger
+    when:
+      event: break
+      subject: self
+  civs:
+  - nature
+  cost: 3
+  id: dm26ex4-cho028
+  keywords:
+  - g_strike
+  mana: 1
+  name: 王道ダチ モンキッド
+  power: 3000
+  races:
+  - ジョーカーズ
+  - チーム切札
+  source:
+    official: dm26ex4-cho028
+    review: pending
+  text: '{GS} G・ストライク
+
+    相手のターンに相手のマナゾーンにあるカードの枚数よりコストが大きい相手のクリーチャーが出た時、そのクリーチャーを持ち主のマナゾーンに置く。
+
+    このクリーチャーがシールドをブレイクした時、ジョーカーズ・メクレイド５する。'
+  types:
+  - creature
+- abilities:
+  - kind: static
+    affects: self
+    mod:
+      sac_reduce: 1
+  - effect:
+    - op: move
+      position: bottom
+      reason: put
+      select:
+        ref: event.subject
+      to: deck
+    if:
+      cmp:
+      - cost_of:
+          ref: event.subject
+      - '>'
+      - count:
+          owner: opp
+          zone: mana
+    kind: trigger
+    when:
+      event: move
+      subject:
+        filter:
+          types:
+          - creature
+        owner: opp
+      to: bz
+  - affects: self
+    kind: static
+    mod:
+      sac_reduce: 1
+  civs:
+  - light
+  cost: 2
+  id: dm26ex4-cho040
+  mana: 1
+  name: 天翼 クリティブ-１
+  power: 2500
+  races:
+  - ジャスティス・ウイング
+  - ディスタス
+  source:
+    official: dm26ex4-cho040
+    review: pending
+  text: '相手が自身のマナゾーンのカードの枚数よりコストが大きいクリーチャーを出した時、相手はそのクリーチャーを山札の下に置く。
+
+    ササゲール１'
+  types:
+  - creature
+- abilities:
+  - kind: static
+    affects: self
+    mod:
+      sac_reduce: 2
+  - effect:
+    - op: destroy
+      select:
+        ref: event.subject
+    if:
+      cmp:
+      - cost_of:
+          ref: event.subject
+      - '>'
+      - count:
+          owner: opp
+          zone: mana
+    kind: trigger
+    when:
+      event: move
+      subject:
+        filter:
+          types:
+          - creature
+        owner: opp
+      to: bz
+  - affects: self
+    kind: static
+    mod:
+      sac_reduce: 2
+  civs:
+  - fire
+  cost: 2
+  id: dm26rp3-044
+  mana: 1
+  name: 爆衆 マキシ-2
+  power: 2000
+  races:
+  - ビートジョッキー
+  - ディスタス
+  source:
+    official: dm26rp3-044
+    review: pending
+  text: '相手のマナゾーンのカードの枚数よりコストが大きい相手のクリーチャーが出た時、そのクリーチャーを破壊する。
+
+    ササゲール２（自分のディスペクター・クリーチャーの召喚コストを２少なくしてもよい。そうしたら、このエレメントを破壊する。ただしコストは０以下にならない）'
+  types:
+  - creature
+- abilities:
+  - if:
+      is_turn: opp
+    instead:
+    - op: move
+      reason: put
+      select:
+        ref: event.subject
+      to: mana
+    kind: replace
+    when:
+      event: move
+      subject:
+        filter:
+          cost_ge:
+            sum:
+            - count:
+                owner: opp
+                zone: mana
+            - 1
+          types:
+          - creature
+        owner: opp
+      to: bz
+  - instead:
+    - op: move
+      reason: put
+      select:
+        ref: self
+      to: mana
+    kind: replace
+    when:
+      event: move
+      from: bz
+      reason: destroy
+      subject: self
+      to: graveyard
+  civs:
+  - nature
+  cost: 2
+  id: dm26sd1-q012
+  mana: 1
+  name: キャディ・ビートル
+  power: 1000
+  races:
+  - ジャイアント・インセクト
+  source:
+    official: dm26sd1-q012
+    review: pending
+    aliases:
+    - dm22rp1-049
+    - dm22rp1-17a
+    - dm23rp3-t05
+    - dm23rp3-tf05
+  text: 相手のターン中に、相手のマナゾーンのカードの枚数よりコストが大きい相手のクリーチャーが出る時、かわりにマナゾーンに置く。 / このクリーチャーが破壊される時、墓地のかわりにマナゾーンに置く。
+  types:
+  - creature
+- abilities:
+  - instead:
+    - op: move
+      reason: put
+      select:
+        ref: event.subject
+      to: mana
+    - op: move
+      reason: put
+      select:
+        ref: self
+      to: mana
+    kind: replace
+    when:
+      event: move
+      subject:
+        filter:
+          cost_ge:
+            sum:
+            - count:
+                owner: opp
+                zone: mana
+            - 1
+          types:
+          - creature
+        owner: opp
+      to: bz
+  civs:
+  - nature
+  cost: 1
+  id: dm26sd1-v010
+  keywords:
+  - cannot_attack
+  mana: 1
+  name: ベイB セガーレ
+  power: 6000
+  races:
+  - ミルクボーイ
+  source:
+    official: dm26sd1-v010
+    review: pending
+    aliases:
+    - dm22rp1-sp5
+    - dm24ex3-tf37
+    - dm24rp2-t10
+    - dmrp19-044
+  text: 'このクリーチャーは攻撃できない。
+
+    相手が、自身のマナゾーンにあるカードの枚数よりコストが大きいクリーチャーを出す時、相手はかわりにそれをマナゾーンに置き、その後、自分はこのクリーチャーをマナゾーンに置く。'
+  types:
+  - creature
+- abilities:
+  - instead:
+    - op: move
+      reason: put
+      select:
+        ref: event.subject
+      to: mana
+    - op: move
+      reason: put
+      select:
+        ref: self
+      to: mana
+    kind: replace
+    when:
+      event: move
+      subject:
+        filter:
+          cost_ge:
+            sum:
+            - count:
+                owner: opp
+                zone: mana
+            - 1
+          types:
+          - creature
+        owner: opp
+      to: bz
+  civs:
+  - nature
+  cost: 1
+  id: dmartkiwami02-005
+  keywords:
+  - cannot_attack
+  mana: 1
+  name: ベイB セガーレ
+  power: 6000
+  races:
+  - ミルクボーイ
+  source:
+    official: dmartkiwami02-005
+    review: pending
+  text: 'このクリーチャーは攻撃できない。
+
+    相手のマナゾーンにあるカードの枚数よりコストが大きい相手のクリーチャーが出る時、相手はかわりにそれをマナゾーンに置き、その後、自分はこのクリーチャーをマナゾーンに置く。'
+  types:
+  - creature
+- faces:
+  - abilities:
+    - effect:
+      - op: move
+        reason: destroy
+        select:
+          ref: event.subject
+        to: graveyard
+      if:
+        cmp:
+        - cost_of:
+            ref: event.subject
+        - '>'
+        - count:
+            owner: opp
+            zone: mana
+      kind: trigger
+      when:
+        event: move
+        subject:
+          filter:
+            types:
+            - creature
+          owner: opp
+        to: bz
+    civs:
+    - fire
+    cost: 3
+    name: マグナム・ルピア
+    power: 3000
+    races:
+    - ファイアー・バード
+    types:
+    - creature
+  - civs:
+    - fire
+    cost: 4
+    keywords:
+    - charger
+    name: クリムゾン・チャージャー
+    spell:
+    - op: move
+      reason: destroy
+      select:
+        count: 1
+        filter:
+          power_le: 2000
+          types:
+          - creature
+        owner: opp
+        zone: bz
+      to: graveyard
+    types:
+    - spell
+  id: dmbd15-se3
+  mana: 1
+  name: マグナム・ルピア / クリムゾン・チャージャー
+  source:
+    official: dmbd15-se3
+    review: pending
+    aliases:
+    - dmex04-002
+  text: 'マグナム・ルピア: 相手が、自身のマナゾーンのカードの枚数よりコストが大きいクリーチャーをバトルゾーンに出した時、そのクリーチャーを破壊する。 ／
+    クリムゾン・チャージャー: 相手のパワー2000以下のクリーチャーを１体破壊する。 / チャージャー'
+- abilities:
+  - kind: trigger
+    when:
+      event: move
+      to: bz
+      subject: self
+    effect:
+    - op: bounce
+      select:
+        zone: bz
+        owner: opp
+        filter:
+          types:
+          - creature
+        count: 1
+  - effect:
+    - op: move
+      reason: return
+      select:
+        count: 1
+        filter:
+          types:
+          - creature
+        owner: opp
+        zone: bz
+      to: hand
+    kind: trigger
+    when:
+      event: move
+      subject: self
+      to: bz
+  civs:
+  - water
+  cost: 5
+  free_if:
+    exists:
+      filter:
+        cost_ge:
+          sum:
+          - count:
+              owner: opp
+              zone: mana
+          - 1
+        types:
+        - creature
+      owner: opp
+      zone: bz
+  id: dmex13-029
+  mana: 1
+  name: 泡の魔神・アワンデス
+  power: 2000
+  races:
+  - ムートピア
+  - スペシャルズ
+  source:
+    notes: G・ゼロは free_if で表した
+    official: dmex13-029
+    review: pending
+    aliases:
+    - dmex03-008
+  text: 'G・ゼロ：バトルゾーンに、相手のマナゾーンにあるカードの枚数よりコストが大きい相手のクリーチャーがあれば、このクリーチャーをコストを支払わずに召喚してもよい。
+
+    このクリーチャーがバトルゾーンに出た時、相手のクリーチャーを１体選び、持ち主の手札に戻す。'
+  types:
+  - creature
+- civs:
+  - water
+  - nature
+  cost: 4
+  id: dmex14-034
+  keywords:
+  - s_trigger
+  mana: 1
+  name: 得波！ウェイブMAX
+  races:
+  - チームウェイブ
+  source:
+    official: dmex14-034
+    review: pending
+    aliases:
+    - dmrp14-026
+  spell:
+  - cond:
+      all:
+      - exists:
+          filter:
+            civs:
+            - water
+            types:
+            - creature
+          owner: you
+          zone: bz
+      - exists:
+          filter:
+            civs:
+            - nature
+            types:
+            - creature
+          owner: you
+          zone: bz
+    else:
+    - modes:
+      - - op: move
+          reason: put
+          select:
+            from_top: 1
+            owner: you
+            zone: deck
+          to: mana
+        - body:
+          - op: move
+            reason: return
+            select:
+              count: 1
+              owner: you
+              zone: mana
+            to: hand
+          op: may
+      - - op: move
+          reason: return
+          select:
+            count: all
+            filter:
+              cost_ge:
+                sum:
+                - count:
+                    owner: opp
+                    zone: mana
+                - 1
+              types:
+              - creature
+            owner: opp
+            zone: bz
+          to: hand
+      op: modal
+    op: if
+    then:
+    - op: move
+      reason: put
+      select:
+        from_top: 1
+        owner: you
+        zone: deck
+      to: mana
+    - body:
+      - op: move
+        reason: return
+        select:
+          count: 1
+          owner: you
+          zone: mana
+        to: hand
+      op: may
+    - op: move
+      reason: return
+      select:
+        count: all
+        filter:
+          cost_ge:
+            sum:
+            - count:
+                owner: opp
+                zone: mana
+            - 1
+          types:
+          - creature
+        owner: opp
+        zone: bz
+      to: hand
+  text: 'S・トリガー（この呪文をシールドゾーンから手札に加える時、コストを支払わずにすぐ唱えてもよい）
+
+    次のうちいずれか１つを選ぶ。バトルゾーンに自分の水のクリーチャーと自然のクリーチャーがそれぞれ１体以上あれば、両方選んでもよい。
+
+    ▶自分の山札の上から１枚目をマナゾーンに置く。その後、カードを１枚、自分のマナゾーンから手札に戻してもよい。
+
+    ▶相手は、自身のマナゾーンにあるカードの枚数より大きいコストを持つクリーチャーをすべて手札に戻す。'
+  types:
+  - spell
+- abilities:
+  - effect:
+    - op: move
+      position: bottom
+      reason: put
+      select:
+        count: all
+        filter:
+          cost_ge:
+            sum:
+            - count:
+                owner: opp
+                zone: mana
+            - 1
+          types:
+          - creature
+        owner: opp
+        zone: bz
+      to: deck
+    kind: trigger
+    when:
+      event: move
+      subject: self
+      to: bz
+  civs:
+  - light
+  cost: 3
+  id: dmrp12-017
+  keywords:
+  - s_trigger
+  mana: 1
+  name: 奇石 オリオン
+  power: 3500
+  races:
+  - メタリカ
+  source:
+    notes: 「好きな順序で」は相手が決める順序であり、移動先（山札の一番下）の指定で表現した
+    official: dmrp12-017
+    review: pending
+  text: 'S・トリガー（このクリーチャーをシールドゾーンから手札に加える時、コストを支払わずにすぐ召喚してもよい）
+
+    このクリーチャーがバトルゾーンに出た時、相手は自身のマナゾーンにあるカードの枚数よりコストの大きい自身のクリーチャーをすべて、好きな順序で山札の一番下に置く。'
+  types:
+  - creature
