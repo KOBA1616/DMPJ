@@ -64,3 +64,18 @@ def synergy(rules, a: dict, b: dict, base: dict, opp: dict | None = None, w: dic
             vals[k].append(turn_value(rules, {"p0": p0, "p1": opp or {}, "seed": sd}, w, turns)[0])
     mean = {k: sum(v) / len(v) for k, v in vals.items()}
     return {"S": mean["ab"] - mean["a"] - mean["b"] + mean["none"], "mean": mean, "seeds": list(seeds)}
+
+
+PLACES = ("hand", "graveyard", "mana", "bz")
+
+
+def scan_pair(rules, a: str, b: str, base: dict | None = None, opp: dict | None = None, places=PLACES,
+              w: dict | None = None, turns: int = 1, seeds=(1, 2, 3)) -> list[dict]:
+    """カード a, b を置き場所の全組み合わせに置いたときの相乗効果 S を測り、S の大きい順に返す。
+    「どこにいれば組が成立するか」の記録になる（例: 騎士は手札、DMC は墓地でも手札でもよい）。"""
+    out = []
+    for pa in places:
+        for pb in places:
+            r = synergy(rules, {pa: [a]}, {pb: [b]}, base or {}, opp=opp, w=w, turns=turns, seeds=seeds)
+            out.append({"a": a, "b": b, "place_a": pa, "place_b": pb, "S": r["S"], "mean": r["mean"]})
+    return sorted(out, key=lambda x: -x["S"])

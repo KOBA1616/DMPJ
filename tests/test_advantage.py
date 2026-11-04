@@ -28,3 +28,16 @@ def test_search_does_not_treat_a_nonrepeatable_chain_as_a_loop():
     spec = {"p0": {"mana": [t.D] * 3, "hand": [t.K], "graveyard": [t.D]}, "p1": {"bz": ["T001"]}, "seed": 1}
     v, vec = adv.turn_value(rules, spec)
     assert vec["board"] == 2 and vec["shield"] == 6      # 騎士の効果を使い、DMC が墓地から戻る
+
+
+def test_scan_pair_finds_where_knight_and_dmc_work_together_and_ignores_a_control():
+    import pathlib
+    import tempfile
+    import test_dmc_knight as t
+    rules = t._small_rules(pathlib.Path(tempfile.mkdtemp()))
+    kw = dict(base={"mana": [t.D] * 3}, opp={"bz": ["T001"]}, places=("hand", "graveyard", "mana"), seeds=(1,))
+    got = {(r["place_a"], r["place_b"]): r["S"] for r in adv.scan_pair(rules, t.K, t.D, **kw)}
+    assert got[("hand", "hand")] > 3 and got[("hand", "graveyard")] > 3     # 手札の騎士＋手札/墓地の DMC
+    assert got[("hand", "mana")] < 0.5                                       # マナにある DMC は組にならない
+    ctl = adv.scan_pair(rules, t.K, "T001", **kw)
+    assert all(abs(r["S"]) < 0.5 for r in ctl)                               # 無関係な組は相乗効果がない
