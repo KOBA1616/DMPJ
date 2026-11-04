@@ -772,3 +772,12 @@ converted の監査（opt_reduce の素の整数表記9件）から。任意形�
 - 付与の場合: op: modify で同じ mod を付与（duration は原文どおり。「このターン」なら end_of_turn）。
 - tests/test_vocab_pilot60.py 2件（正常 parse／付与の parse）。
 - 待機17枚（attack_untapped のみが gap のもの）。
+
+## 第61弾: win_all_battles（すべてのバトルに勝つ）（2026-11-04）
+「このクリーチャーはすべてのバトルに勝つ」を表す語彙が無かった。
+- defs: MOD_KEYS に `win_all_battles` を追加。値は true のみ。
+- engine/core.py: chars に `win_all_battles: False` を追加し、static の mod から集約（ダイナモ経由も伝播）。
+- engine/combat.py: _battle でパワー比較の前に win_all_battles を判定。片方だけ持てばその側が勝ち、両方持てば相打ちなし。
+- 書き方: kind: static, affects: self, mod: {win_all_battles: true}。
+- tests/test_vocab_pilot61.py 2件（正常 parse／不正値の検証エラー）。
+- 待機4枚（win_all_battles のみが gap のもの）。dmrp15-031 は ability_ignore との複合のため別途対応。

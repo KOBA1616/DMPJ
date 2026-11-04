@@ -144,7 +144,17 @@ class CombatMixin:
         """バトル（701.13）。結果で誘発した効果はその場で解決してからバトルを終える。"""
         px = self.chars(x[0])["power"] + self._battle_bonus(x, attacking=True)      # x は攻撃側
         py = self.chars(y[0])["power"] + self._battle_bonus(y)
-        losers_by_power = ([x] if px <= py else []) + ([y] if py <= px else [])
+        # 第61弾: すべてのバトルに勝つクリーチャーはパワーに関わらず勝つ
+        x_wins = self.chars(x[0])["win_all_battles"]
+        y_wins = self.chars(y[0])["win_all_battles"]
+        if x_wins and y_wins:
+            losers_by_power = []   # 両方勝つ場合は相打ちなし
+        elif x_wins:
+            losers_by_power = [y]
+        elif y_wins:
+            losers_by_power = [x]
+        else:
+            losers_by_power = ([x] if px <= py else []) + ([y] if py <= px else [])
         # 第59弾: バトル中破壊されないクリーチャーは破壊されない（勝敗判定はパワーどおり）
         losers = [r for r in losers_by_power if not self.chars(r[0])["battle_indestructible"]]
         winners = [r for r in (x, y) if r not in losers_by_power]
