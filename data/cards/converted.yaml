@@ -287867,6 +287867,7 @@ cards:
   cost: 5
   power: 5500
   races:
+  - ???
   - スチーム・ナイト
   mana: 1
   keywords:
@@ -287911,7 +287912,7 @@ cards:
   source:
     official: dm25ex3-055
     review: pending
-    notes: '種族の「???」は原文データの欠損のため、確定しているスチーム・ナイトのみを記載。墓地から出すのは zone: graveyard の誘発＋may。'
+    notes: '種族の「???」は原文のまま入れる。墓地から出すのは zone: graveyard の誘発＋may。'
     aliases:
     - dm25rp2-048
     - promoy25-051
