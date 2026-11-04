@@ -291663,3 +291663,122 @@ cards:
     このクリーチャーがブロックした時、バトルの後、このクリーチャーをアンタップする。'
   types:
   - creature
+- abilities:
+  - kind: static
+    affects:
+      owner: you
+      zone: hand
+      filter:
+        civs:
+        - light
+        types:
+        - creature
+    mod:
+      cost: -1
+  - kind: static
+    affects:
+      owner: you
+      zone: hand
+      filter:
+        civs:
+        - darkness
+        types:
+        - creature
+    mod:
+      cost: -1
+  - kind: static
+    affects:
+      owner: you
+      zone: hand
+      filter:
+        civs:
+        - nature
+        types:
+        - creature
+    mod:
+      cost: -1
+  - effect:
+    - as: chosen
+      op: choose
+      select:
+        count: 1
+        filter:
+          types:
+          - creature
+        owner: opp
+        zone: bz
+    - duration: end_of_turn
+      mod:
+        require:
+        - attack
+      op: modify
+      select:
+        ref: chosen
+    kind: trigger
+    when:
+      event: turn_start
+      player: opp
+  - affects:
+      filter:
+        civs:
+        - light
+        types:
+        - creature
+      owner: you
+      zone: hand
+    kind: static
+    mod:
+      cost: -1
+  - affects:
+      filter:
+        civs:
+        - darkness
+        types:
+        - creature
+      owner: you
+      zone: hand
+    kind: static
+    mod:
+      cost: -1
+  - affects:
+      filter:
+        civs:
+        - nature
+        types:
+        - creature
+      owner: you
+      zone: hand
+    kind: static
+    mod:
+      cost: -1
+  civs:
+  - light
+  - darkness
+  - nature
+  cost: 5
+  id: dm22ex2-012
+  keywords:
+  - blocker
+  - double_breaker
+  mana: 1
+  name: 原始龍覇 ジュラ=デッドマン
+  power: 7000
+  races:
+  - ジュラシック・コマンド・ドラゴン
+  - ドラグナー
+  source:
+    official: dm22ex2-012
+    review: pending
+  text: 'ブロッカー
+
+    W・ブレイカー
+
+    相手のターンのはじめに、相手のクリーチャーを１体選ぶ。このターン、そのクリーチャーは可能なら自分を攻撃する。
+
+    自分の光のクリーチャーの召喚コストを１少なくする。ただし、コストは０以下にはならない。
+
+    自分の闇のクリーチャーの召喚コストを１少なくする。ただし、コストは０以下にはならない。
+
+    自分の自然のクリーチャーの召喚コストを１少なくする。ただし、コストは０以下にはならない。'
+  types:
+  - creature
