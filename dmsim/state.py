@@ -37,13 +37,26 @@ class Card:
     controller: int = 0
     tapped: bool = False
     face_up: bool = False
+    face_down: bool = False                            # マナゾーンで裏向き（水晶武装）。マナとしては無色扱い
     entered_turn: int = -1
-    under: list[int] = field(default_factory=list)  # 下に重なっているカード（進化元・封印など。設計判断②）
+    under: list[int] = field(default_factory=list)  # 下に重なっているカード（進化元など。設計判断②）
     top_of: int = -1                                  # 自分が下に重なっている場合、その一番上の cid
+    seals: list[int] = field(default_factory=list)  # 封印: このカードの上に裏向きで重なっているカード（付けた順）
+    seal_of: int = -1                                 # 自分が封印として重なっている場合、その対象の cid
     face: int = -1                                    # ツインパクト等で今使っている面（-1 = カード全体, 810）
     entered_seq: int = 0                              # バトルゾーンに出た時刻（608.5 無視効果の優先）
     crossed: list | None = None                       # クロスギアがクロスしているクリーチャーの参照 [cid, gen]（303.3）。離れていれば無効
     exlife_of: list | None = None                     # 「EXライフ」シールドの紐付け先クリーチャーの参照 [cid, gen]。離れたら外れる
+    no_untap_next: bool = False                       # フリーズ等: 次の持ち主のターン開始時にアンタップしない（1回だけ。開始時に消費）
+    link: int = 0
+    hyper: bool = False                                     # G・リンクのグループID（0=リンクしていない）。同じIDのカード同士がリンクしている
+    sst: bool = False                                       # スーパー・S・トリガー: シールド0枚で使った時に追加能力（sst印つき）を得た
+    stp: bool = False                                       # S・トリガー・プラス: 条件を満たして使った時に追加能力（stp印つき）を得た
+    odrive: bool = False                                    # O・ドライブ: 追加のマナタップをして召喚した
+    odrive_civs: list = field(default_factory=list)         # O・ドライブ: 実際にタップした文明（文明別の能力用）
+    bazurenda: int = 0                                      # バズレンダ: 追加で支払った回数
+    drawn_turn: int = -1                                    # このターンにドローしたか（ビビッドロー）
+    vivid: bool = False                                     # ビビッドロー: 表向きにした
 
 
 def _jcopy(v):
@@ -61,6 +74,7 @@ def _copy_card(c: "Card") -> "Card":
     d = n.__dict__
     d.update(c.__dict__)
     d["under"] = list(c.under)
+    d["seals"] = list(c.seals)
     return n
 
 
@@ -85,10 +99,12 @@ class GameState:
     seq: int = 0                                            # タイムスタンプ／待機順の採番
     extra_turns: list[int] = field(default_factory=list)
     turn_counters: dict = field(default_factory=dict)       # 「このターン N 回目」系
+    ev_seq: int = 0                                             # イベントの通し番号（「各ターン、はじめて」の同一イベント判定）
     steps_this_turn: int = 0
     skip_rest: bool = False                                 # 「ターンの残りをとばす」
     deck_emptied: list[int] = field(default_factory=list)   # 山札が一瞬でも0枚になったプレイヤー（104.2b）
     sba_held: list[list[int]] = field(default_factory=list)   # パワー0以下の破壊を置換で止められたクリーチャー（同じ処理を繰り返さない）
+
 
     # ---- 参照 ----
     def ref(self, cid: int) -> list[int]:

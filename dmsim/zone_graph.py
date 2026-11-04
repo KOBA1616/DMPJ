@@ -31,7 +31,7 @@ from dataclasses import dataclass, field
 CHILD_KEYS = ("then", "else", "body")
 
 
-TICKS = ("attack", "battle_win", "block", "turn_start", "turn_end")   # 時間や戦闘の流れで起きる（カードの移動では起きない）
+TICKS = ("attack", "battle_start", "battle_win", "block", "turn_start", "turn_end")   # 時間や戦闘の流れで起きる（カードの移動では起きない）
 
 
 @dataclass

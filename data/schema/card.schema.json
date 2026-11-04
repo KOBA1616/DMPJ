@@ -68,38 +68,63 @@
    "type": "array",
    "items": {
     "enum": [
+     "abyss_rush",
      "blocker",
      "cannot_attack",
      "cannot_attack_player",
      "cannot_be_attacked",
      "cannot_block",
      "cannot_untap",
+     "center_g_link",
      "charger",
+     "cyclone",
      "double_breaker",
+     "dynamo",
+     "enters_tapped",
      "escape",
      "eternal_omega",
      "evo_charger",
      "ex_life",
+     "freeze",
+     "g_neo",
      "g_strike",
      "guardman",
      "hunting",
      "hyper_energy",
+     "kizuna",
      "last_burst",
+     "left_g_link",
      "mana_boost_cip",
      "mega_last_burst",
+     "meteor_burn",
+     "must_attack",
      "powered_breaker",
      "quad_breaker",
+     "right_g_link",
+     "s_back_darkness",
+     "s_back_fire",
+     "s_back_light",
+     "s_back_nature",
+     "s_back_water",
      "s_trigger",
+     "s_trigger_plus",
+     "shield_go",
      "shield_saver",
      "shinka_rise",
      "silent_skill",
      "slayer",
      "speed_attacker",
      "spell_to_hand",
+     "summon_from_graveyard",
+     "summon_from_mana",
+     "super_s_trigger",
      "triple_breaker",
+     "turbo_rush",
      "unblockable",
      "wave_striker",
-     "world_breaker"
+     "world_breaker",
+     "yobinion",
+     "z_rush"
     ]
    }
   },
@@ -115,13 +140,20 @@
   "evolve_from": {
    "type": "object",
    "properties": {
+    "any_of": {},
     "civs": {},
+    "civs_all": {},
     "cost_ge": {},
     "cost_le": {},
+    "evolution": {},
+    "face_down": {},
+    "face_up": {},
     "keyword": {},
+    "mugen_climb": {},
     "multicolor": {},
     "name": {},
     "name_has": {},
+    "neo": {},
     "not_civs": {},
     "not_name": {},
     "not_types": {},
@@ -129,14 +161,57 @@
     "power_le": {},
     "race_has": {},
     "races": {},
+    "sealed": {},
     "tapped": {},
     "types": {},
+    "vanilla": {},
     "zone": {}
    },
    "additionalProperties": false
   },
   "free_if": {
    "$ref": "#/$defs/cond"
+  },
+  "galaxy_shield": {
+   "type": "object",
+   "properties": {
+    "cost": {
+     "type": "integer"
+    },
+    "civs": {
+     "type": "array",
+     "items": {
+      "enum": [
+       "darkness",
+       "fire",
+       "light",
+       "nature",
+       "water",
+       "zero"
+      ]
+     }
+    }
+   },
+   "required": [
+    "cost",
+    "civs"
+   ],
+   "additionalProperties": false
+  },
+  "neo": {
+   "type": "boolean"
+  },
+  "grave_evo": {
+   "type": "boolean"
+  },
+  "star": {
+   "type": "boolean"
+  },
+  "s_max": {
+   "type": "boolean"
+  },
+  "hyper": {
+   "type": "boolean"
   }
  },
  "required": [
@@ -191,38 +266,63 @@
      "type": "array",
      "items": {
       "enum": [
+       "abyss_rush",
        "blocker",
        "cannot_attack",
        "cannot_attack_player",
        "cannot_be_attacked",
        "cannot_block",
        "cannot_untap",
+       "center_g_link",
        "charger",
+       "cyclone",
        "double_breaker",
+       "dynamo",
+       "enters_tapped",
        "escape",
        "eternal_omega",
        "evo_charger",
        "ex_life",
+       "freeze",
+       "g_neo",
        "g_strike",
        "guardman",
        "hunting",
        "hyper_energy",
+       "kizuna",
        "last_burst",
+       "left_g_link",
        "mana_boost_cip",
        "mega_last_burst",
+       "meteor_burn",
+       "must_attack",
        "powered_breaker",
        "quad_breaker",
+       "right_g_link",
+       "s_back_darkness",
+       "s_back_fire",
+       "s_back_light",
+       "s_back_nature",
+       "s_back_water",
        "s_trigger",
+       "s_trigger_plus",
+       "shield_go",
        "shield_saver",
        "shinka_rise",
        "silent_skill",
        "slayer",
        "speed_attacker",
        "spell_to_hand",
+       "summon_from_graveyard",
+       "summon_from_mana",
+       "super_s_trigger",
        "triple_breaker",
+       "turbo_rush",
        "unblockable",
        "wave_striker",
-       "world_breaker"
+       "world_breaker",
+       "yobinion",
+       "z_rush"
       ]
      }
     },
@@ -238,13 +338,20 @@
     "evolve_from": {
      "type": "object",
      "properties": {
+      "any_of": {},
       "civs": {},
+      "civs_all": {},
       "cost_ge": {},
       "cost_le": {},
+      "evolution": {},
+      "face_down": {},
+      "face_up": {},
       "keyword": {},
+      "mugen_climb": {},
       "multicolor": {},
       "name": {},
       "name_has": {},
+      "neo": {},
       "not_civs": {},
       "not_name": {},
       "not_types": {},
@@ -252,14 +359,57 @@
       "power_le": {},
       "race_has": {},
       "races": {},
+      "sealed": {},
       "tapped": {},
       "types": {},
+      "vanilla": {},
       "zone": {}
      },
      "additionalProperties": false
     },
     "free_if": {
      "$ref": "#/$defs/cond"
+    },
+    "galaxy_shield": {
+     "type": "object",
+     "properties": {
+      "cost": {
+       "type": "integer"
+      },
+      "civs": {
+       "type": "array",
+       "items": {
+        "enum": [
+         "darkness",
+         "fire",
+         "light",
+         "nature",
+         "water",
+         "zero"
+        ]
+       }
+      }
+     },
+     "required": [
+      "cost",
+      "civs"
+     ],
+     "additionalProperties": false
+    },
+    "neo": {
+     "type": "boolean"
+    },
+    "grave_evo": {
+     "type": "boolean"
+    },
+    "star": {
+     "type": "boolean"
+    },
+    "s_max": {
+     "type": "boolean"
+    },
+    "hyper": {
+     "type": "boolean"
     }
    },
    "required": [
@@ -274,6 +424,25 @@
    "type": "array",
    "items": {
     "anyOf": [
+     {
+      "type": "object",
+      "properties": {
+       "op": {
+        "const": "attach_seal"
+       },
+       "select": {
+        "$ref": "#/$defs/selector"
+       },
+       "count": {
+        "type": "integer"
+       }
+      },
+      "required": [
+       "op",
+       "select"
+      ],
+      "additionalProperties": false
+     },
      {
       "type": "object",
       "properties": {
@@ -307,6 +476,22 @@
       },
       "required": [
        "op"
+      ],
+      "additionalProperties": false
+     },
+     {
+      "type": "object",
+      "properties": {
+       "op": {
+        "const": "cast_face"
+       },
+       "face": {
+        "$ref": "#/$defs/expr"
+       }
+      },
+      "required": [
+       "op",
+       "face"
       ],
       "additionalProperties": false
      },
@@ -431,6 +616,65 @@
       "type": "object",
       "properties": {
        "op": {
+        "const": "flip_down"
+       },
+       "select": {
+        "$ref": "#/$defs/selector"
+       }
+      },
+      "required": [
+       "op",
+       "select"
+      ],
+      "additionalProperties": false
+     },
+     {
+      "type": "object",
+      "properties": {
+       "op": {
+        "const": "force_battle"
+       },
+       "a": {
+        "$ref": "#/$defs/selector"
+       },
+       "b": {
+        "$ref": "#/$defs/selector"
+       }
+      },
+      "required": [
+       "op",
+       "a"
+      ],
+      "additionalProperties": false
+     },
+     {
+      "type": "object",
+      "properties": {
+       "op": {
+        "const": "gachinko"
+       },
+       "times": {
+        "$ref": "#/$defs/expr"
+       },
+       "until_lose": {
+        "type": "boolean"
+       },
+       "stoppable": {
+        "type": "boolean"
+       },
+       "as": {
+        "type": "string"
+       }
+      },
+      "required": [
+       "op"
+      ],
+      "additionalProperties": false
+     },
+     {
+      "type": "object",
+      "properties": {
+       "op": {
         "const": "if"
        },
        "cond": {
@@ -446,6 +690,43 @@
       "required": [
        "op",
        "cond"
+      ],
+      "additionalProperties": false
+     },
+     {
+      "type": "object",
+      "properties": {
+       "op": {
+        "const": "invade"
+       },
+       "onto": {
+        "$ref": "#/$defs/selector"
+       }
+      },
+      "required": [
+       "op",
+       "onto"
+      ],
+      "additionalProperties": false
+     },
+     {
+      "type": "object",
+      "properties": {
+       "op": {
+        "const": "janken"
+       },
+       "win": {
+        "$ref": "#/$defs/ops"
+       },
+       "lose": {
+        "$ref": "#/$defs/ops"
+       },
+       "draw": {
+        "$ref": "#/$defs/ops"
+       }
+      },
+      "required": [
+       "op"
       ],
       "additionalProperties": false
      },
@@ -475,6 +756,9 @@
        },
        "name": {
         "type": "string"
+       },
+       "of_self": {
+        "type": "boolean"
        }
       },
       "required": [
@@ -494,11 +778,35 @@
        },
        "label": {
         "type": "string"
+       },
+       "else": {
+        "$ref": "#/$defs/ops"
        }
       },
       "required": [
        "op",
        "body"
+      ],
+      "additionalProperties": false
+     },
+     {
+      "type": "object",
+      "properties": {
+       "op": {
+        "const": "mekurade"
+       },
+       "filter": {
+        "$ref": "#/$defs/filter"
+       },
+       "cost_le": {
+        "type": "integer"
+       },
+       "look": {
+        "type": "integer"
+       }
+      },
+      "required": [
+       "op"
       ],
       "additionalProperties": false
      },
@@ -595,6 +903,7 @@
          "resolve",
          "return",
          "sba",
+         "seal",
          "summon"
         ]
        },
@@ -613,6 +922,12 @@
        "tapped": {
         "type": "boolean"
        },
+       "face_up": {
+        "type": "boolean"
+       },
+       "seal": {
+        "type": "integer"
+       },
        "as": {
         "type": "string"
        }
@@ -622,6 +937,37 @@
        "select",
        "to",
        "reason"
+      ],
+      "additionalProperties": false
+     },
+     {
+      "type": "object",
+      "properties": {
+       "op": {
+        "const": "move_under_to_event"
+       }
+      },
+      "required": [
+       "op"
+      ],
+      "additionalProperties": false
+     },
+     {
+      "type": "object",
+      "properties": {
+       "op": {
+        "const": "opp_may"
+       },
+       "body": {
+        "$ref": "#/$defs/ops"
+       },
+       "label": {
+        "type": "string"
+       }
+      },
+      "required": [
+       "op",
+       "body"
       ],
       "additionalProperties": false
      },
@@ -670,6 +1016,23 @@
       "type": "object",
       "properties": {
        "op": {
+        "const": "play_self"
+       },
+       "cost": {
+        "type": "integer"
+       },
+       "civs": {}
+      },
+      "required": [
+       "op",
+       "cost"
+      ],
+      "additionalProperties": false
+     },
+     {
+      "type": "object",
+      "properties": {
+       "op": {
         "const": "put_under"
        },
        "select": {
@@ -683,6 +1046,25 @@
        "op",
        "select",
        "onto"
+      ],
+      "additionalProperties": false
+     },
+     {
+      "type": "object",
+      "properties": {
+       "op": {
+        "const": "remove_seal"
+       },
+       "select": {
+        "$ref": "#/$defs/selector"
+       },
+       "count": {
+        "type": "integer"
+       }
+      },
+      "required": [
+       "op",
+       "select"
       ],
       "additionalProperties": false
      },
@@ -720,6 +1102,18 @@
       "required": [
        "op",
        "name"
+      ],
+      "additionalProperties": false
+     },
+     {
+      "type": "object",
+      "properties": {
+       "op": {
+        "const": "shield_plus"
+       }
+      },
+      "required": [
+       "op"
       ],
       "additionalProperties": false
      },
@@ -782,10 +1176,52 @@
       "type": "object",
       "properties": {
        "op": {
+        "const": "summon_on"
+       },
+       "parts": {},
+       "tapped": {
+        "type": "boolean"
+       }
+      },
+      "required": [
+       "op",
+       "parts"
+      ],
+      "additionalProperties": false
+     },
+     {
+      "type": "object",
+      "properties": {
+       "op": {
+        "const": "summon_self"
+       }
+      },
+      "required": [
+       "op"
+      ],
+      "additionalProperties": false
+     },
+     {
+      "type": "object",
+      "properties": {
+       "op": {
         "const": "swap"
        },
        "out": {
         "$ref": "#/$defs/selector"
+       },
+       "out_to": {
+        "enum": [
+         "abyss",
+         "bz",
+         "deck",
+         "gr",
+         "graveyard",
+         "hand",
+         "hyper",
+         "mana",
+         "shield"
+        ]
        },
        "in": {
         "$ref": "#/$defs/selector"
@@ -806,6 +1242,9 @@
        },
        "select": {
         "$ref": "#/$defs/selector"
+       },
+       "no_untap_next": {
+        "type": "boolean"
        }
       },
       "required": [
@@ -850,6 +1289,18 @@
       "type": "object",
       "properties": {
        "op": {
+        "const": "use_partner"
+       }
+      },
+      "required": [
+       "op"
+      ],
+      "additionalProperties": false
+     },
+     {
+      "type": "object",
+      "properties": {
+       "op": {
         "const": "win"
        },
        "player": {
@@ -857,6 +1308,18 @@
          "you",
          "opp"
         ]
+       }
+      },
+      "required": [
+       "op"
+      ],
+      "additionalProperties": false
+     },
+     {
+      "type": "object",
+      "properties": {
+       "op": {
+        "const": "yobinion"
        }
       },
       "required": [
@@ -930,13 +1393,20 @@
   "filter": {
    "type": "object",
    "properties": {
+    "any_of": {},
     "civs": {},
+    "civs_all": {},
     "cost_ge": {},
     "cost_le": {},
+    "evolution": {},
+    "face_down": {},
+    "face_up": {},
     "keyword": {},
+    "mugen_climb": {},
     "multicolor": {},
     "name": {},
     "name_has": {},
+    "neo": {},
     "not_civs": {},
     "not_name": {},
     "not_types": {},
@@ -944,8 +1414,10 @@
     "power_le": {},
     "race_has": {},
     "races": {},
+    "sealed": {},
     "tapped": {},
-    "types": {}
+    "types": {},
+    "vanilla": {}
    },
    "additionalProperties": false
   },
@@ -1031,6 +1503,12 @@
     "ref": {
      "type": "string"
     },
+    "total_cost_le": {
+     "$ref": "#/$defs/expr"
+    },
+    "total_cost_ge": {
+     "$ref": "#/$defs/expr"
+    },
     "other": {
      "type": "boolean"
     },
@@ -1051,6 +1529,21 @@
       "count": {
        "$ref": "#/$defs/selector"
       },
+      "civ_count": {
+       "$ref": "#/$defs/selector"
+      },
+      "entered": {
+       "type": "object",
+       "properties": {
+        "owner": {
+         "type": "string"
+        },
+        "other": {
+         "type": "boolean"
+        }
+       },
+       "additionalProperties": false
+      },
       "var": {
        "type": "string"
       },
@@ -1061,6 +1554,9 @@
        "type": "string"
       },
       "race": {
+       "type": "string"
+      },
+      "link_count": {
        "type": "string"
       },
       "sum": {
@@ -1112,6 +1608,15 @@
     },
     "marked": {
      "type": "string"
+    },
+    "self_marked": {
+     "type": "string"
+    },
+    "face_up": {
+     "type": "boolean"
+    },
+    "hyper": {
+     "type": "boolean"
     }
    },
    "additionalProperties": false
@@ -1131,7 +1636,14 @@
          "type": "integer"
         },
         "count": {
-         "$ref": "#/$defs/selector"
+         "anyOf": [
+          {
+           "$ref": "#/$defs/selector"
+          },
+          {
+           "$ref": "#/$defs/expr"
+          }
+         ]
         }
        },
        "required": [
@@ -1145,38 +1657,63 @@
      "type": "array",
      "items": {
       "enum": [
+       "abyss_rush",
        "blocker",
        "cannot_attack",
        "cannot_attack_player",
        "cannot_be_attacked",
        "cannot_block",
        "cannot_untap",
+       "center_g_link",
        "charger",
+       "cyclone",
        "double_breaker",
+       "dynamo",
+       "enters_tapped",
        "escape",
        "eternal_omega",
        "evo_charger",
        "ex_life",
+       "freeze",
+       "g_neo",
        "g_strike",
        "guardman",
        "hunting",
        "hyper_energy",
+       "kizuna",
        "last_burst",
+       "left_g_link",
        "mana_boost_cip",
        "mega_last_burst",
+       "meteor_burn",
+       "must_attack",
        "powered_breaker",
        "quad_breaker",
+       "right_g_link",
+       "s_back_darkness",
+       "s_back_fire",
+       "s_back_light",
+       "s_back_nature",
+       "s_back_water",
        "s_trigger",
+       "s_trigger_plus",
+       "shield_go",
        "shield_saver",
        "shinka_rise",
        "silent_skill",
        "slayer",
        "speed_attacker",
        "spell_to_hand",
+       "summon_from_graveyard",
+       "summon_from_mana",
+       "super_s_trigger",
        "triple_breaker",
+       "turbo_rush",
        "unblockable",
        "wave_striker",
-       "world_breaker"
+       "world_breaker",
+       "yobinion",
+       "z_rush"
       ]
      }
     },
@@ -1201,6 +1738,8 @@
          "s_trigger",
          "slayer",
          "summon",
+         "summon_from_graveyard",
+         "summon_from_mana",
          "untap_at_start"
         ]
        },
@@ -1224,11 +1763,16 @@
            "s_trigger",
            "slayer",
            "summon",
+           "summon_from_graveyard",
+           "summon_from_mana",
            "untap_at_start"
           ]
          },
          "other": {
           "$ref": "#/$defs/filter"
+         },
+         "once": {
+          "type": "boolean"
          }
         },
         "required": [
@@ -1260,6 +1804,8 @@
          "s_trigger",
          "slayer",
          "summon",
+         "summon_from_graveyard",
+         "summon_from_mana",
          "untap_at_start"
         ]
        },
@@ -1283,11 +1829,16 @@
            "s_trigger",
            "slayer",
            "summon",
+           "summon_from_graveyard",
+           "summon_from_mana",
            "untap_at_start"
           ]
          },
          "other": {
           "$ref": "#/$defs/filter"
+         },
+         "once": {
+          "type": "boolean"
          }
         },
         "required": [
@@ -1305,6 +1856,15 @@
        "attack",
        "block"
       ]
+     }
+    },
+    "add_of": {
+     "const": "self"
+    },
+    "add_races": {
+     "type": "array",
+     "items": {
+      "type": "string"
      }
     },
     "breaks": {
@@ -1325,7 +1885,14 @@
          "type": "integer"
         },
         "count": {
-         "$ref": "#/$defs/selector"
+         "anyOf": [
+          {
+           "$ref": "#/$defs/selector"
+          },
+          {
+           "$ref": "#/$defs/expr"
+          }
+         ]
         }
        },
        "required": [
@@ -1345,7 +1912,14 @@
        "type": "integer"
       },
       "count": {
-       "$ref": "#/$defs/selector"
+       "anyOf": [
+        {
+         "$ref": "#/$defs/selector"
+        },
+        {
+         "$ref": "#/$defs/expr"
+        }
+       ]
       },
       "when": {
        "enum": [
@@ -1367,7 +1941,14 @@
        "type": "integer"
       },
       "count": {
-       "$ref": "#/$defs/selector"
+       "anyOf": [
+        {
+         "$ref": "#/$defs/selector"
+        },
+        {
+         "$ref": "#/$defs/expr"
+        }
+       ]
       },
       "only": {
        "enum": [
@@ -1383,11 +1964,78 @@
     "sac_reduce": {
      "type": "integer"
     },
-    "opt_reduce": {
+    "cost_may": {
      "type": "object",
+     "properties": {
+      "amount": {
+       "type": "integer"
+      },
+      "once": {
+       "type": "boolean"
+      },
+      "min": {
+       "type": "integer",
+       "minimum": 0
+      }
+     },
      "required": [
       "amount"
-     ]
+     ],
+     "additionalProperties": false
+    },
+    "opt_reduce": {
+     "type": "object",
+     "properties": {
+      "amount": {
+       "type": "integer"
+      },
+      "then": {
+       "enum": [
+        "destroy",
+        "deck_bottom_draw"
+       ]
+      },
+      "floor": {
+       "type": "integer",
+       "minimum": 0
+      },
+      "per": {
+       "type": "boolean"
+      },
+      "do": {
+       "type": "object",
+       "properties": {
+        "select": {
+         "$ref": "#/$defs/selector"
+        },
+        "move_to": {
+         "type": "string"
+        },
+        "shuffle": {
+         "type": "boolean"
+        },
+        "tap": {
+         "type": "boolean"
+        },
+        "min": {
+         "type": "integer",
+         "minimum": 0
+        },
+        "max": {
+         "type": "integer",
+         "minimum": 0
+        }
+       },
+       "required": [
+        "select"
+       ],
+       "additionalProperties": false
+      }
+     },
+     "required": [
+      "amount"
+     ],
+     "additionalProperties": false
     },
     "ignore": {
      "type": "array",
@@ -1400,6 +2048,12 @@
       ]
      }
     },
+    "ignore_ids": {
+     "type": "array",
+     "items": {
+      "type": "string"
+     }
+    },
     "gain": {
      "type": "array",
      "items": {
@@ -1410,16 +2064,20 @@
    "additionalProperties": false,
    "propertyNames": {
     "enum": [
+     "add_of",
+     "add_races",
      "allow",
      "battle_power",
      "breaks",
      "breaks_per_power",
      "cost",
+     "cost_may",
      "cost_min",
      "deny",
      "gain",
      "grant",
      "ignore",
+     "ignore_ids",
      "opt_reduce",
      "power",
      "power_when",
@@ -1434,14 +2092,18 @@
     "event": {
      "enum": [
       "attack",
+      "attack_end",
       "battle",
+      "battle_start",
       "battle_win",
       "block",
       "break",
       "cast",
       "choose",
       "draw",
+      "lose",
       "move",
+      "mugon_used",
       "summon",
       "tap",
       "turn_end",
@@ -1489,6 +2151,7 @@
       "resolve",
       "return",
       "sba",
+      "seal",
       "summon"
      ]
     },
@@ -1498,15 +2161,17 @@
       "opp"
      ]
     },
+    "by": {
+     "enum": [
+      "you",
+      "opp"
+     ]
+    },
     "unpaid": {
      "type": "boolean"
     },
-    "target": {
-     "enum": [
-      "player",
-      "creature"
-     ]
-    },
+    "target": {},
+    "attacker": {},
     "via": {
      "enum": [
       "generate",
@@ -1531,7 +2196,8 @@
       "declare",
       "activate",
       "silent",
-      "state"
+      "state",
+      "partner"
      ]
     },
     "when": {
@@ -1548,6 +2214,15 @@
     },
     "optional": {
      "type": "boolean"
+    },
+    "once_per_turn": {
+     "type": "boolean"
+    },
+    "first_time": {
+     "type": "boolean"
+    },
+    "id": {
+     "type": "string"
     },
     "affects": {},
     "mod": {

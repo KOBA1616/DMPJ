@@ -22,23 +22,24 @@ def core_ops() -> dict[str, dict[str, str]]:
     return OP_ARGS
 
 EVENTS = {"move", "draw", "cast", "summon", "attack", "block", "break", "tap", "untap",
-          "turn_start", "turn_end", "battle_win", "choose", "battle"}
-ABILITY_KINDS = {"trigger", "replace", "static", "declare", "activate", "silent", "state"}   # state: 状態を常に見て、満たされたら勝敗が決まる常在効果（if と effect: [win/lose]）
-ABILITY_KEYS = {"kind", "when", "if", "effect", "instead", "optional", "affects", "mod", "zone", "keyword", "cost"}
+          "turn_start", "turn_end", "battle_win", "choose", "battle", "battle_start", "attack_end", "lose", "mugon_used"}
+ABILITY_KINDS = {"trigger", "replace", "static", "declare", "activate", "silent", "state", "partner"}   # state: 状態を常に見て、満たされたら勝敗が決まる常在効果（if と effect: [win/lose]）。partner: [P]能力（単独では機能せず、キズナ等で「使う」ことで解決する）
+ABILITY_KEYS = {"kind", "when", "if", "effect", "instead", "optional", "affects", "mod", "zone", "keyword", "cost", "id",
+                "once_per_turn", "first_time", "sst", "stp", "odrive", "choukon", "bazurenda"}
 REASONS = {"put", "destroy", "return", "discard", "charge", "summon", "cast", "break",
-           "draw", "battle", "sba", "resolve", "evolve"}
+           "draw", "battle", "sba", "resolve", "evolve", "seal"}
 VIAS = {"revolution_change", "generate"}   # 出し方の印（「革命チェンジによって出た時」など）
 DURATIONS_FIXED = {"end_of_turn", "during_attack", "permanent", "until_next_own_turn_start"}
-MOD_KEYS = {"power", "grant", "allow", "deny", "breaks", "breaks_per_power", "battle_power", "power_when", "cost", "cost_min", "sac_reduce", "opt_reduce", "ignore", "gain", "require"}
+MOD_KEYS = {"power", "grant", "allow", "deny", "breaks", "breaks_per_power", "battle_power", "power_when", "cost", "cost_min", "cost_may", "sac_reduce", "opt_reduce", "ignore", "ignore_ids", "gain", "require", "add_of", "add_races"}
 REQUIRES = {"attack", "block"}   # 強制（506.1b 攻撃しなければならない, 507.1b ブロックしなければならない）
 POSITIONS = {"top", "bottom"}
 PERMANENT_TYPES = {"tamaseed", "field", "cross_gear"}   # 手札から実行してバトルゾーンに出るクリーチャー以外のカード（315, 308, 303）
 CARD_TYPES = {"creature", "spell", "evolution"} | PERMANENT_TYPES
 CIVS = {"light", "water", "darkness", "fire", "nature", "zero"}
 SELECTOR_KEYS = {"zone", "owner", "owner_of", "filter", "count", "up_to", "from_top", "chooser", "ref", "other",
-                 "under_of", "look", "exlife_of"}   # look: 非公開ゾーン（山札など）の中身を見て選ぶ
-FILTER_KEYS = {"types", "not_types", "civs", "not_civs", "races", "race_has", "name", "name_has", "not_name",
-               "cost_le", "cost_ge", "power_le", "power_ge", "tapped", "keyword", "multicolor"}
+                 "under_of", "look", "exlife_of", "total_cost_le", "total_cost_ge"}   # look: 非公開ゾーン（山札など）の中身を見て選ぶ。total_cost_*: コストの合計が上限以下／下限以上になるように好きな数選ぶ
+FILTER_KEYS = {"any_of", "types", "not_types", "civs", "civs_all", "not_civs", "races", "race_has", "name", "name_has", "not_name",
+               "cost_le", "cost_ge", "power_le", "power_ge", "tapped", "keyword", "multicolor", "face_down", "face_up", "neo", "vanilla", "sealed", "evolution", "mugen_climb"}
 FILTER_EXPR_KEYS = {"cost_le", "cost_ge", "power_le", "power_ge", "races"}   # 値に式を書ける（解決時に計算）
 
 
@@ -63,12 +64,29 @@ class Face:
     keywords: list[str] = field(default_factory=list)
     abilities: list[dict] = field(default_factory=list)
     spell: list[dict] = field(default_factory=list)
+    sst_spell: list[dict] = field(default_factory=list)   # スーパー・S・トリガーで得る追加の解決 ops
+    stp_spell: list[dict] = field(default_factory=list)   # S・トリガー・プラスで得る追加の解決 ops
+    odrive_spell: list[dict] = field(default_factory=list)   # O・ドライブで得る追加の解決 ops（呪文側）
+    o_drive: dict | None = None                           # O・ドライブ: {civ, count} または {civs: {文明: 枚数}, each?} 召喚時に追加でタップできるマナ
+    mugen_climb: dict | None = None                       # ムゲンクライム: {tap, cost, civs} 自分のクリーチャーをタップして手札/墓地から実行
+    alt_cost: dict | None = None                          # 代替コスト: {cost, civs} または {do: [{zone, filter?, count, to, reason}...]}
+    vividraw: dict | None = None                          # ビビッドロー: {cost, civs} 引いたターンに表向きにすると代替コストで実行できる
+    fushigi: dict | None = None                           # フシギバース: {cost, civs, min} 自分のクリーチャー1体をタップしてマナに置き、差額を払って墓地から召喚
     evolve_from: dict | None = None                       # 進化元の条件（801.1a）。filter 形式
     evolve_zone: str = "bz"                               # 進化元を探すゾーン（超無限墓地進化は graveyard）
     evolve_any: bool = False                              # 進化元を1体以上選べる（超無限墓地進化）
+    evolve_count: int = 1                                 # 進化元をちょうどこの数だけ重ねる（進化GV は3体）
     cost_reduce_per_evo: int = 0                          # 進化元1体につき召喚コストをいくら減らすか
     tap_reduce: int = 0                                   # ハイパーエナジー: コストが異なる自分のクリーチャー1体をタップするごとに減るコスト
+    s_back: str | None = None                             # S・バック: この文明のカードがシールドから手札に加わる時、それを捨てて無料で実行できる
     free_if: dict | None = None                           # 条件を満たす間はコストを支払わずに召喚できる（G・ゼロ）
+    galaxy_shield: dict | None = None                     # ギャラクシールド: {cost, civs} 代替コストで表向きにシールド化する
+    bazurenda: dict | None = None                         # バズレンダ: {cost, civs} 支払い時に追加でこのコストを好きな回数払える
+    neo: bool = False                                     # NEO進化: 通常召喚も、evolve_from の上に重ねることもできる
+    grave_evo: bool = False                               # 墓地進化: 通常召喚も、自分の墓地のクリーチャーの上に重ねて出すこともできる（evolve_zone: graveyard と併用）
+    star: bool = False                                    # スター進化: 離れる時は一番上のカードだけが離れ、下は残る
+    s_max: bool = False                                   # S-MAX進化: 進化元を必要とせず、通常のクリーチャーとして召喚できる
+    hyper: bool = False                                   # ハイパー化（他の自分のクリーチャー1体をタップしてハイパーモードを解放できる）
     resolve_to: str = "graveyard"                         # 呪文の解決後の置き場所（チャージャー等）
     after_resolve: list[dict] = field(default_factory=list)
 
@@ -97,12 +115,29 @@ class CardDef:
     keywords: list[str] = field(default_factory=list)    # 持っているキーワード名（フィルタ用）
     abilities: list[dict] = field(default_factory=list)  # 展開済みの能力（キーワード由来も含む）
     spell: list[dict] = field(default_factory=list)      # 呪文の解決 ops
+    sst_spell: list[dict] = field(default_factory=list)  # スーパー・S・トリガーで得る追加の解決 ops
+    stp_spell: list[dict] = field(default_factory=list)  # S・トリガー・プラスで得る追加の解決 ops
+    odrive_spell: list[dict] = field(default_factory=list)  # O・ドライブで得る追加の解決 ops（呪文側）
+    o_drive: dict | None = None                         # O・ドライブ: {civ, count} または {civs: {文明: 枚数}, each?}
+    mugen_climb: dict | None = None                     # ムゲンクライム: {tap, cost, civs}
+    alt_cost: dict | None = None                        # 代替コスト
+    vividraw: dict | None = None                        # ビビッドロー: {cost, civs}
+    fushigi: dict | None = None                         # フシギバース: {cost, civs, min}
     evolve_from: dict | None = None
     evolve_zone: str = "bz"
     evolve_any: bool = False
+    evolve_count: int = 1
     cost_reduce_per_evo: int = 0
     tap_reduce: int = 0
+    s_back: str | None = None
     free_if: dict | None = None
+    galaxy_shield: dict | None = None
+    bazurenda: dict | None = None                         # バズレンダ: {cost, civs}
+    neo: bool = False
+    grave_evo: bool = False
+    star: bool = False
+    s_max: bool = False
+    hyper: bool = False
     resolve_to: str = "graveyard"
     after_resolve: list[dict] = field(default_factory=list)
     faces: list[Face] = field(default_factory=list)      # ツインパクト: [0]=クリーチャー側, [1]=呪文側
@@ -214,6 +249,8 @@ class Checker:
                 self.value(ty, op[k], f"{where}: {name}.{k}")
 
     def value(self, ty, v, where):
+        if ty == "filter":
+            return self.filter(v, where)
         if ty == "zone" and v not in self.zones:
             raise DefError(f"{where}: unknown zone '{v}'")
         if ty == "reason" and v not in REASONS:
@@ -272,12 +309,20 @@ class Checker:
                 raise DefError(f"{where}: unknown zone '{z}'")
         if sel.get("owner", "you") not in ("you", "opp", "any"):
             raise DefError(f"{where}: bad owner '{sel['owner']}'")
+        for k in ("total_cost_le", "total_cost_ge"):
+            if k in sel:
+                self.expr(sel[k], where)
         self.filter(sel.get("filter", {}), where)
 
     def filter(self, f, where):
         bad = set(f) - FILTER_KEYS
         if bad:
             raise DefError(f"{where}: unknown filter keys {sorted(bad)}")
+        if "any_of" in f:
+            if not isinstance(f["any_of"], list) or not f["any_of"]:
+                raise DefError(f"{where}: any_of must be a non-empty list of filters")
+            for sub in f["any_of"]:
+                self.filter(sub, where)
         for k in ("civs", "not_civs"):
             if k in f and set(f[k]) - CIVS:
                 raise DefError(f"{where}: unknown civs {f[k]}")
@@ -294,7 +339,21 @@ class Checker:
             k, v = next(iter(x.items()))
             if k == "count":
                 return self.selector(v, where)
+            if k == "civ_count":   # 対象カード群にある文明の種類数（多色はそれぞれ数える）
+                return self.selector(v, where)
+            if k == "entered":   # このターンに出したクリーチャーの数 {owner, other?}
+                if not isinstance(v, dict) or set(v) - {"owner", "other"} or v.get("owner", "you") not in ("you", "opp"):
+                    raise DefError(f"{where}: entered needs {{owner: you/opp, other?: bool}}")
+                return
             if k in ("var", "cost_of", "races_of", "race"):
+                return
+            if k == "link_count":   # リンクしているカードの枚数（値は self 固定で無視される）
+                return
+            if k == "seals":   # そのプレイヤーの封印の総数 {owner: you/opp}
+                if not isinstance(v, dict) or set(v) - {"owner"} or v.get("owner", "you") not in ("you", "opp"):
+                    raise DefError(f"{where}: seals needs {{owner: you/opp}}")
+                return
+            if k == "seals_on":   # self に付いている封印の数（値は self 固定で無視される）
                 return
             if k == "sum":
                 for e in v:
@@ -320,7 +379,7 @@ class Checker:
             for x in v:
                 self.cond(x, where)
             return
-        if k == "marked":
+        if k in ("marked", "self_marked"):
             if not isinstance(v, str):
                 raise DefError(f"{where}: marked needs a name")
             return
@@ -328,15 +387,67 @@ class Checker:
             if v not in ("you", "opp"):
                 raise DefError(f"{where}: is_turn must be you/opp")
             return
+        if k == "face_up":
+            if not isinstance(v, bool):
+                raise DefError(f"{where}: face_up must be bool")
+            return
+        if k == "hyper":
+            if not isinstance(v, bool):
+                raise DefError(f"{where}: hyper must be bool")
+            return
+        if k == "alt_paid":
+            if not isinstance(v, bool):
+                raise DefError(f"{where}: alt_paid must be bool")
+            return
         raise DefError(f"{where}: unknown cond '{k}'")
+
+    def count_spec(self, v, where):
+        """mod の count: セレクタ（体数）か、civ_count / sum を含む式（文明の種類数など）。"""
+        if isinstance(v, dict) and ("civ_count" in v or "sum" in v):
+            return self.expr(v, where)
+        return self.selector(v, where)
 
     def mod(self, m, where):
         bad = set(m) - MOD_KEYS
         if bad:
             raise DefError(f"{where}: unknown mod keys {sorted(bad)}")
+        if "power" in m and isinstance(m["power"], dict):
+            pm = m["power"]
+            if set(pm) - {"amount", "count"} or not isinstance(pm.get("amount"), int):
+                raise DefError(f"{where}: power needs amount (int) and optional count")
+            if "count" in pm:
+                self.count_spec(pm["count"], where)
+        if "add_races" in m:
+            if not isinstance(m["add_races"], list) or not all(isinstance(x, str) for x in m["add_races"]):
+                raise DefError(f"{where}: add_races must be a list of race names")
+        if "cost_may" in m:
+            cm = m["cost_may"]
+            if not isinstance(cm, dict) or set(cm) - {"amount", "once", "min"} or not isinstance(cm.get("amount"), int) \
+                    or ("once" in cm and not isinstance(cm["once"], bool)) or ("min" in cm and not isinstance(cm["min"], int)):
+                raise DefError(f"{where}: cost_may must be {{amount: int, once?: bool, min?: int}}")
+        if "ignore_ids" in m:
+            if not isinstance(m["ignore_ids"], list) or not all(isinstance(x, str) for x in m["ignore_ids"]):
+                raise DefError(f"{where}: ignore_ids must be a list of ability id strings")
+        if "opt_reduce" in m:
+            o = m["opt_reduce"]
+            if not isinstance(o, dict) or not isinstance(o.get("amount"), int):
+                raise DefError(f"{where}: opt_reduce needs amount (int)")
+            if set(o) - {"amount", "then", "floor", "per", "do"}:
+                raise DefError(f"{where}: opt_reduce has unknown keys {sorted(set(o) - {'amount', 'then', 'floor', 'per', 'do'})}")
+            if "then" in o and o["then"] not in ("destroy", "deck_bottom_draw"):
+                raise DefError(f"{where}: opt_reduce.then must be destroy / deck_bottom_draw")
+            if "do" in o:
+                do = o["do"]
+                if not isinstance(do, dict) or "select" not in do or set(do) - {"select", "move_to", "shuffle", "min", "max", "tap"}:
+                    raise DefError(f"{where}: opt_reduce.do needs select and optional move_to/shuffle/min/max/tap")
+                self.selector(do["select"], where)
+                if "move_to" in do and do["move_to"] not in self.zones:
+                    raise DefError(f"{where}: opt_reduce.do.move_to must be a zone")
         for kw in m.get("grant", []):
             if kw not in self.keywords:
                 raise DefError(f"{where}: unknown keyword '{kw}'")
+        if "add_of" in m and m["add_of"] != "self":
+            raise DefError(f"{where}: add_of は self だけ")
         for k in ("allow", "deny"):
             for e in m.get(k, []):
                 act = e if isinstance(e, str) else e.get("action")
@@ -344,13 +455,15 @@ class Checker:
                     raise DefError(f"{where}: unknown action '{act}'")
                 if isinstance(e, dict):
                     self.filter(e.get("other", {}), where)
+                    if "once" in e and not isinstance(e["once"], bool):
+                        raise DefError(f"{where}: allow/deny entry 'once' must be a boolean")
         if "cost" in m:   # 支払うコストの増減: 整数、または {amount: N, count: <selector>}（1体につきN。amount が負なら軽減）
             cm = m["cost"]
             if isinstance(cm, dict):
                 if set(cm) - {"amount", "count"} or not isinstance(cm.get("amount"), int):
                     raise DefError(f"{where}: cost needs amount (int) and optional count (selector)")
                 if "count" in cm:
-                    self.selector(cm["count"], where)
+                    self.count_spec(cm["count"], where)
             elif not isinstance(cm, int):
                 raise DefError(f"{where}: cost must be int or {{amount, count}}")
         if "cost_min" in m and not isinstance(m["cost_min"], int):
@@ -361,7 +474,7 @@ class Checker:
                     or pw.get("when") not in ("attacking", "blocking"):
                 raise DefError(f"{where}: power_when needs amount (int), when: attacking|blocking and optional count (selector)")
             if "count" in pw:
-                self.selector(pw["count"], where)
+                self.count_spec(pw["count"], where)
         if "battle_power" in m:   # バトル中だけのパワー修整: {amount: N, count: <selector>, only: attacking}（ハンティング。バトル中だけ。「攻撃中」「ブロック中」は power_when）
             bp = m["battle_power"]
             if not isinstance(bp, dict) or set(bp) - {"amount", "count", "only"} or not isinstance(bp.get("amount"), int):
@@ -369,7 +482,7 @@ class Checker:
             if bp.get("only", "attacking") != "attacking":
                 raise DefError(f"{where}: battle_power only must be attacking")
             if "count" in bp:
-                self.selector(bp["count"], where)
+                self.count_spec(bp["count"], where)
         for k in m.get("require", []):
             if k not in REQUIRES:
                 raise DefError(f"{where}: bad require '{k}' (allowed: {sorted(REQUIRES)})")
@@ -388,8 +501,17 @@ class Checker:
                 raise DefError(f"{where}: unknown zone '{w[k]}'")
         if "reason" in w and w["reason"] not in REASONS:
             raise DefError(f"{where}: unknown reason '{w['reason']}'")
+        tg = w.get("target")
+        if tg is not None and tg not in ("player", "creature", "self") and not isinstance(tg, dict):
+            raise DefError(f"{where}: bad target '{tg}'")
+        if w.get("attacker") is not None and w["attacker"] not in ("self", "crossed") and not isinstance(w["attacker"], dict):
+            raise DefError(f"{where}: bad attacker '{w['attacker']}'")
         if "via" in w and w["via"] not in VIAS:
             raise DefError(f"{where}: unknown via '{w['via']}'")
+        if "by" in w and w["by"] not in ("you", "opp"):
+            raise DefError(f"{where}: bad by '{w['by']}'")
+        if w.get("sealed_from") is not None and w["sealed_from"] not in ("self",) and not isinstance(w["sealed_from"], dict):
+            raise DefError(f"{where}: bad sealed_from '{w['sealed_from']}'")
 
     def ability(self, ab, where):
         kind = ab.get("kind")
@@ -398,6 +520,8 @@ class Checker:
         bad = set(ab) - ABILITY_KEYS
         if bad:
             raise DefError(f"{where}: unknown ability keys {sorted(bad)}")
+        if "id" in ab and not isinstance(ab["id"], str):
+            raise DefError(f"{where}: ability id must be a string")
         if kind in ("trigger", "replace", "declare"):
             self.when(ab.get("when", {}), where)
         if kind == "state":
@@ -413,9 +537,11 @@ class Checker:
                 raise DefError(f"{where}: unknown zone '{aff['zone']}'")
             self.filter(aff.get("filter", {}), where)
         if kind == "activate":   # 起動型能力（602）。cost: {tap: self} か {tap: {filter}}（攻撃する代わりにタップして使う。602.3a）
-            c = ab.get("cost")
-            if not isinstance(c, dict) or set(c) != {"tap"}:
-                raise DefError(f"{where}: activate needs cost: {{tap: self | <filter>}}")
+            c = ab.get("cost")   # tap_mana: 自分のマナゾーンのタップされていないカードをその枚数追加でタップする（DM24系の複合コスト）
+            if not isinstance(c, dict) or not set(c) <= {"tap", "tap_mana"} or "tap" not in c:
+                raise DefError(f"{where}: activate needs cost: {{tap: self | <filter>, tap_mana?: int}}")
+            if "tap_mana" in c and not (isinstance(c["tap_mana"], int) and c["tap_mana"] >= 1):
+                raise DefError(f"{where}: cost.tap_mana must be a positive int")
             if c["tap"] != "self":
                 if not isinstance(c["tap"], dict):
                     raise DefError(f"{where}: cost.tap must be 'self' or a filter")
@@ -426,6 +552,8 @@ class Checker:
             raise DefError(f"{where}: cost is only for activate")
         if kind == "silent" and "effect" not in ab:   # サイレントスキル（501.1a）: ターンのはじめにタップされていたら、アンタップしないかわりに使ってもよい
             raise DefError(f"{where}: silent needs effect")
+        if kind == "partner" and "effect" not in ab:   # [P]能力: キズナ等で使われる効果だけを持つ
+            raise DefError(f"{where}: partner needs effect")
         if "if" in ab:
             self.cond(ab["if"], where)
         for k in ("effect", "instead"):
@@ -460,26 +588,76 @@ def _load_face(raw, keywords, macros, chk: Checker, where) -> dict:
         chk.ability(a, where)
     spell = expand_ops(raw.get("spell", []), macros, where)
     chk.ops(spell, where)
+    sst_spell = expand_ops(raw.get("sst_spell", []), macros, where)
+    chk.ops(sst_spell, where)
+    stp_spell = expand_ops(raw.get("stp_spell", []), macros, where)
+    chk.ops(stp_spell, where)
+    odrive_spell = expand_ops(raw.get("odrive_spell", []), macros, where)
+    chk.ops(odrive_spell, where)
+    if "o_drive" in raw:
+        od = raw["o_drive"]
+        legacy = isinstance(od, dict) and set(od) <= {"civ", "count"} and od.get("civ") in CIVS and isinstance(od.get("count"), int)
+        multi = isinstance(od, dict) and set(od) <= {"civs", "each"} and isinstance(od.get("civs"), dict) and bool(od["civs"]) \
+            and all(cv in CIVS and isinstance(n, int) and n >= 1 for cv, n in od["civs"].items())
+        if not (legacy or multi):
+            raise DefError(f"{where}: o_drive needs {{civ: <civ>, count: int}} or {{civs: {{<civ>: int, ...}}, each?: bool}}")
+    if "mugen_climb" in raw:
+        mc = raw["mugen_climb"]
+        if not isinstance(mc, dict) or not isinstance(mc.get("tap"), int) or not isinstance(mc.get("cost"), int) \
+                or set(mc.get("civs", [])) - CIVS:
+            raise DefError(f"{where}: mugen_climb needs {{tap: int, cost: int, civs: [...]}}")
     for t in raw["types"]:
         if t not in CARD_TYPES:
             raise DefError(f"{where}: unknown type '{t}'")
     if set(raw["civs"]) - CIVS:
         raise DefError(f"{where}: unknown civs {raw['civs']}")
     if "evolution" in raw["types"]:
-        if "evolve_from" not in raw:
+        if "evolve_from" not in raw and not raw.get("s_max"):
             raise DefError(f"{where}: evolution creature needs evolve_from")
-        chk.filter({k: v for k, v in raw["evolve_from"].items() if k != "zone"}, where)
+        ef = raw.get("evolve_from") or {}
+        for f in (ef if isinstance(ef, list) else [ef]):   # 進化V: フィルタのリスト（1つずつ重ねる）
+            chk.filter({k: v for k, v in f.items() if k != "zone"}, where)
     zone = raw.get("evolve_zone", "bz")
     if zone not in chk.zones:
         raise DefError(f"{where}: unknown evolve_zone '{zone}'")
     if "free_if" in raw:
         chk.cond(raw["free_if"], where)
+    if "galaxy_shield" in raw:
+        gs = raw["galaxy_shield"]
+        if not isinstance(gs, dict) or not isinstance(gs.get("cost"), int) or set(gs.get("civs", [])) - CIVS:
+            raise DefError(f"{where}: galaxy_shield needs {{cost: int, civs: [...]}}")
+    if "bazurenda" in raw:
+        bz = raw["bazurenda"]
+        if not isinstance(bz, dict) or not isinstance(bz.get("cost"), int) or set(bz.get("civs", [])) - CIVS:
+            raise DefError(f"{where}: bazurenda needs {{cost: int, civs: [...]}}")
+    if "alt_cost" in raw:
+        ac = raw["alt_cost"]
+        if not isinstance(ac, dict) or not ({"cost", "do"} & set(ac)):
+            raise DefError(f"{where}: alt_cost needs {{cost, civs}} or {{do: [...]}}")
+        if "cost" in ac and (not isinstance(ac["cost"], int) or set(ac.get("civs", [])) - CIVS):
+            raise DefError(f"{where}: alt_cost needs {{cost: int, civs: [...]}}")
+        for step in ac.get("do", []):
+            if step.get("zone") not in chk.zones or step.get("to") not in chk.zones or not isinstance(step.get("count"), int):
+                raise DefError(f"{where}: alt_cost do step needs {{zone, count: int, to, reason}}")
+            if "filter" in step:
+                chk.filter(step["filter"], where)
+    if "vividraw" in raw:
+        vd = raw["vividraw"]
+        if not isinstance(vd, dict) or not isinstance(vd.get("cost"), int) or set(vd.get("civs", [])) - CIVS:
+            raise DefError(f"{where}: vividraw needs {{cost: int, civs: [...]}}")
+    if "fushigi" in raw:
+        fg = raw["fushigi"]
+        if not isinstance(fg, dict) or not isinstance(fg.get("cost"), int) or set(fg.get("civs", [])) - CIVS \
+                or not isinstance(fg.get("min", 1), int):
+            raise DefError(f"{where}: fushigi needs {{cost: int, civs: [...], min: int}}")
     return dict(name=raw["name"], types=raw["types"], civs=raw["civs"], cost=raw["cost"],
                 power=raw.get("power", 0), races=split_races(raw.get("races", [])), keywords=names,
-                abilities=abilities, spell=spell, evolve_from=raw.get("evolve_from"),
+                abilities=abilities, spell=spell, sst_spell=sst_spell, stp_spell=stp_spell, odrive_spell=odrive_spell, o_drive=raw.get("o_drive"), mugen_climb=raw.get("mugen_climb"), alt_cost=raw.get("alt_cost"), vividraw=raw.get("vividraw"), fushigi=raw.get("fushigi"), evolve_from=raw.get("evolve_from"),
                 evolve_zone=zone, evolve_any=bool(raw.get("evolve_any", False)),
+                evolve_count=(len(raw["evolve_from"]) if isinstance(raw.get("evolve_from"), list)
+                              else int(raw.get("evolve_count", 1))),
                 cost_reduce_per_evo=int(raw.get("cost_reduce_per_evo", 0)),
-                free_if=raw.get("free_if"), **{"tap_reduce": 0, **props})
+                free_if=raw.get("free_if"), galaxy_shield=raw.get("galaxy_shield"), bazurenda=raw.get("bazurenda"), neo=bool(raw.get("neo", False)), grave_evo=bool(raw.get("grave_evo", False)), star=bool(raw.get("star", False)), s_max=bool(raw.get("s_max", False)), hyper=bool(raw.get("hyper", False)), **{"tap_reduce": 0, "s_back": None, **props})
 
 
 def load_tables():

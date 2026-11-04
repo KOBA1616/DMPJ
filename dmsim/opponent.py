@@ -45,7 +45,7 @@ class OppModel:
             return [next((i for i, x in enumerate(keys) if x != "pass"), keys.index("pass"))]
         if k == "block" and self.block:
             return [next((i for i, x in enumerate(keys) if x != "no_block"), keys.index("no_block"))]
-        if k == "declare_strigger" and self.strigger:
+        if k in ("declare_strigger", "declare_sback") and self.strigger:
             return list(range(len(keys)))
         if k == "main" and self.play != "none":
             best = self._pick_play(eng, keys)

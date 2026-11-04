@@ -10,6 +10,13 @@ from .registry import task
 
 
 class CombatMixin:
+    def _breaker(self, env) -> dict:
+        """効果でブレイクする時の、ブレイクしたクリーチャー（効果の発生源がバトルゾーンのクリーチャーなら）。"""
+        me = env.get("self")
+        if me and self.s.alive(me) and self.s.cards[me[0]].zone == "bz" and "creature" in self.chars(me[0])["types"]:
+            return {"breaker": me}
+        return {}
+
     def _can_attack(self, cid) -> bool:
         c = self.s.cards[cid]
         if c.tapped or "creature" not in self.chars(cid)["types"]:
@@ -19,9 +26,13 @@ class CombatMixin:
     def _attack_options(self, a):
         out = []
         for cid in self.bz_tops(a):
-            if not self._can_attack(cid):
-                continue
             dfn = self.s.cards[cid].defn
+            if not self._can_attack(cid):
+                # アビスラッシュで出たターンだけ、召喚酔いでもプレイヤーへの攻撃はできる（クリーチャーは不可）
+                if self.s.turn_counters.get(f"rush:{cid}") == self.s.turn and not self.s.cards[cid].tapped \
+                        and "creature" in self.chars(cid)["types"] and self.permits(cid, "attack_player"):
+                    out.append({"key": f"attack:{dfn}:player", "cid": cid, "target": "player"})
+                continue
             if self.permits(cid, "attack_player"):
                 out.append({"key": f"attack:{dfn}:player", "cid": cid, "target": "player"})
             allow = [e for e in self.chars(cid)["allow"] if isinstance(e, dict) and e["action"] == "attack_creature"]
@@ -49,7 +60,13 @@ class CombatMixin:
                 for x in who:
                     if x in can:
                         key = f"activate:{dfn}:{i}" + ("" if x == cid else f":{self.s.cards[x].defn}")
-                        out.append({"key": key, "cid": cid, "ab": i, "tap": x})
+                        o = {"key": key, "cid": cid, "ab": i, "tap": x}
+                        n = ab["cost"].get("tap_mana")
+                        if n:   # 複合コスト: タップされていないマナが足りる時だけ使える
+                            if sum(1 for m in self.zlist("mana", a) if not self.s.cards[m].tapped) < n:
+                                continue
+                            o["tap_mana"] = n
+                        out.append(o)
         return out
 
     def _battle_substitute(self, t, att, tgt):
@@ -98,7 +115,7 @@ class CombatMixin:
             if bp and bp.get("only") == "attacking" and not attacking:
                 continue
             if bp and ab.get("affects") == "self" and ab.get("zone", "bz") == self.s.cards[cid].zone:
-                total += bp["amount"] * (self.eval_expr({"count": bp["count"]}, env) if "count" in bp else 1)
+                total += bp["amount"] * (self.count_of(bp["count"], env) if "count" in bp else 1)
         return total
 
     def _battle(self, x, y):
@@ -194,6 +211,9 @@ def h_attack(eng, t):
         return None
     if ph == 0:                                               # 506 攻撃クリーチャー指定
         t["phase"] = 1
+        s.turn_counters["attack_no"] = s.turn_counters.get("attack_no", 0) + 1
+        t["ano"] = s.turn_counters["attack_no"]
+        s.turn_counters["current_attack"] = t["ano"]
         s.cards[att[0]].tapped = True
         rec = {"ev": "attack", "subject": att, "target": t["target"], "controller": a}
         eng._push(eng.ev_task(rec), _decl(eng, a, "attack", rec))
@@ -240,7 +260,8 @@ def h_attack(eng, t):
             if d:
                 t["phase"] = 3
                 return d
-            eng._push(*eng._battle(att, tgt))
+            eng._push(*eng._window(eng.ev_task({"ev": "battle_start", "subject": att, "opponent": tgt, "controller": a})),
+                      {"t": "battle_run", "att": att, "tgt": tgt})
         return None
     if ph == 4:                                               # 509 ダイレクトアタック
         if t["target"] == "player" and eng.zlist("shield", 1 - a):
@@ -255,9 +276,15 @@ def h_attack(eng, t):
         if t["target"] == "player":
             shields = eng.zlist("shield", 1 - a)
             if shields:
-                eng._push({"t": "break", "victim": 1 - a, "by": a, "count": n, "phase": 0, "in_effect": False})
+                eng._push({"t": "break", "victim": 1 - a, "by": a, "count": n, "phase": 0, "in_effect": False, "breaker": att})
             else:
-                s.result = {"winner": a, "reason": "direct_attack", "turn": s.turn}   # 509.1 / 703.4a
+                eng._push(*eng.game_lose(1 - a, "direct_attack"))   # 509.1 / 703.4a（敗北の置換を諮ってから確定する）
+        return None
+    if not t.get("end_fired") and not s.result:               # 510 攻撃の終わり（キリフダッシュ等の誘発点）
+        t["end_fired"] = True
+        broke = s.turn_counters.get(f"broke_in:{att[0]}") == t.get("ano")
+        eng._push(eng.ev_task({"ev": "attack_end", "subject": att, "target": t["target"],
+                               "controller": a, "broke": broke}))
         return None
     eng._pop(t)
     eng._expire("during_attack")                             # 510.2
@@ -281,32 +308,63 @@ def h_break(eng, t):
         t["chosen"] = [shields[i] for i in ans]
         t["phase"] = 1
         return None
-    opts = []
-    for c in [x for ch in t["chosen"] for x in [ch] + list(s.cards[ch].under)]:   # シールドの束は、重なったカードのどれも宣言できる（113.2）
-        d = eng.cdef(c)
-        for fi in ([None] if not d.faces else range(len(d.faces))):
-            if eng._permits_face(c, "s_trigger", fi):
-                o = {"key": f"strigger:{s.cards[c].defn}" + ("" if fi is None else f":{fi}"), "cid": c}
-                if fi is not None:
-                    o["face"] = fi
-                opts.append(o)
-    declared = []
-    if opts:
-        ans, d = eng.ask(t, victim, "declare_strigger", opts, 0, len(opts))
+    if t["phase"] == 1:
+        opts = []
+        for c in [x for ch in t["chosen"] for x in [ch] + list(s.cards[ch].under)]:   # シールドの束は、重なったカードのどれも宣言できる（113.2）
+            d = eng.cdef(c)
+            for fi in ([None] if not d.faces else range(len(d.faces))):
+                if eng._permits_face(c, "s_trigger", fi):
+                    o = {"key": f"strigger:{s.cards[c].defn}" + ("" if fi is None else f":{fi}"), "cid": c}
+                    if fi is not None:
+                        o["face"] = fi
+                    opts.append(o)
+        declared = []
+        if opts:
+            ans, d = eng.ask(t, victim, "declare_strigger", opts, 0, len(opts))
+            if d:
+                return d
+            seen = set()
+            for i in ans:   # 1枚のカードで使えるのは1つの面だけ
+                if opts[i]["cid"] not in seen:
+                    seen.add(opts[i]["cid"])
+                    declared.append([opts[i]["cid"], opts[i].get("face")])
+        t["declared"] = declared
+        t["phase"] = 2
+        return None
+    declared = t["declared"]
+    sback = []
+    # S・バック: S・トリガーの宣言と同じ機会に、手札のカードの S・バックを宣言する（112.3b）
+    used = {c for c, _ in declared}
+    pool = [x for ch in t["chosen"] for x in [ch] + list(s.cards[ch].under) if x not in used]
+    sopts = []
+    for h in eng.zlist("hand", victim):
+        hd = eng.cdef(h)
+        if hd.s_back and eng.permits(h, "summon" if hd.is_creature() else "cast"):
+            sopts += [{"key": f"sback:{s.cards[h].defn}:{s.cards[x].defn}", "cid": h, "shield": x}
+                      for x in pool if hd.s_back in eng.cdef(x).civs]
+    if sopts:
+        ans, d = eng.ask(t, victim, "declare_sback", sopts, 0, len(sopts))
         if d:
             return d
-        seen = set()
-        for i in ans:   # 1枚のカードで使えるのは1つの面だけ
-            if opts[i]["cid"] not in seen:
-                seen.add(opts[i]["cid"])
-                declared.append([opts[i]["cid"], opts[i].get("face")])
+        su, sh = set(), set()
+        for i in ans:       # 1枚のカードの S・バックは1回、捨てるカードも1枚につき1回
+            if sopts[i]["cid"] not in su and sopts[i]["shield"] not in sh:
+                su.add(sopts[i]["cid"])
+                sh.add(sopts[i]["shield"])
+                sback.append((sopts[i]["cid"], sopts[i]["shield"]))
     eng._pop(t)
     chosen = [c for c in t["chosen"] if s.cards[c].zone == "shield"]   # 宣言の間に別のゾーンへ移っていたら加えない
     seq = [eng.ev_task([{"ev": "move", "subject": s.ref(c), "to": "hand", "reason": t.get("reason", "break")}
-                         for c in chosen]),
-           {"t": "enqueue_st", "cids": declared, "player": victim}]
+                         for c in chosen])]
+    if sback:       # 手札に加わったカードを捨てる → そうした場合だけ、コストを支払わずに実行する
+        seq.append({"t": "sback", "pairs": [[h, x] for h, x in sback], "player": victim})
+    seq.append({"t": "enqueue_st", "cids": declared, "player": victim})
     if t.get("fire_break", True):
-        seq.append(eng.ev_task({"ev": "break", "player": victim, "count": len(chosen)}))
+        ev = {"ev": "break", "player": victim, "count": len(chosen)}
+        if t.get("breaker") and s.alive(t["breaker"]):      # ブレイクしたクリーチャー（「他のクリーチャーがシールドをブレイクした」）
+            ev["subject"] = t["breaker"]
+            s.turn_counters[f"broke_in:{t['breaker'][0]}"] = s.turn_counters.get("current_attack", 0)
+        seq.append(eng.ev_task(ev))
     if t["in_effect"]:   # S・トリガーの解決中のブレイクは、新しい S・トリガーをその場で解決する（101.4g）
         seq = eng._window(*seq, only_st=True)
     eng._push(*seq)

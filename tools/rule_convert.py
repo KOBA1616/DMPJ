@@ -445,6 +445,8 @@ def convert(row: dict) -> dict | None:
                 continue
             if k not in kws:
                 kws.append(k)
+    if "turbo_rush" in kws:         # ターボラッシュの能力は self_marked の条件が要る。付け忘れの誤変換を避けてモデルへ
+        return None
     if "silent_skill" in kws:       # サイレントスキルの効果文は kind: silent に入れる。ルールの能力文では置けないのでモデルへ
         return None
     if "wave_striker" in kws:       # ウェーブストライカー: 続く能力はすべて「他に2体以上」の間だけ得る。他のキーワードが混ざる原文はモデルへ
@@ -526,4 +528,8 @@ def split(row: dict) -> tuple[list[str], str, list[dict]] | None:
                     kws.append(k)
         if tokens:
             rest.append(" ".join(tokens))
+    if "meteor_burn" in kws and re.search(r"メテオバーン\s*[-―ー－]?\s*(?:このクリーチャー|自分のクリーチャー)が攻撃", row.get("text") or ""):
+        # 攻撃時型メテオバーン（「攻撃する時／攻撃できる時」に下のカードを墓地に置く誘発能力）は
+        # 離脱置換キーワードではない。本文は rest に残るので、キーワードとして付けずモデルに誘発として変換させる
+        kws.remove("meteor_burn")
     return (kws, " / ".join(rest), extra) if kws or extra else None

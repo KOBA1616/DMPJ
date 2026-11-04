@@ -20,8 +20,21 @@ class Option(TypedDict, total=False):
     pid: int
     ab: int
     face: int
+    shield: int                     # S・バック: 捨てるシールドのカード
     tap: int                             # 起動型能力のコストでタップするクリーチャー
+    tap_mana: int                        # 起動型能力の複合コストで追加でタップするマナの枚数
+    grave_evo: bool                      # 墓地進化（自分の墓地のクリーチャーの上に重ねて出す選択肢）
+    once_src: int                        # 回数制限つき許可（ターン1回）の発生源カード
     free: bool                           # コストを支払わずに実行する選択肢（G・ゼロ）
+    rush: bool                           # アビスラッシュ（墓地から召喚する選択肢）
+    gshield: bool                        # ギャラクシールド（表向きにシールド化する選択肢）
+    neo: bool                            # NEO進化（進化元に重ねて出す選択肢）
+    hyper_act: NotRequired[bool]         # ハイパーモード解放（メインステップの行動）
+    climb: NotRequired[bool]             # ムゲンクライム（タップ+代替コストで実行する選択肢）
+    alt: NotRequired[bool]               # 代替コストで実行する選択肢
+    vivid: NotRequired[bool]             # ビビッドロー（代替コストで実行する選択肢）
+    reveal: NotRequired[bool]            # ビビッドロー（表向きにする選択肢）
+    fushigi: NotRequired[bool]           # フシギバース（墓地から召喚する選択肢）
 
 
 class Decision(TypedDict):
@@ -142,6 +155,31 @@ class EventTask(TypedDict):
     captured: list[Event]
     applying: bool
     answer: NotRequired[list[int]]
+    link_i: NotRequired[int]             # G・リンクの離脱置換: 処理済みのイベント位置
+    link_chosen: NotRequired[list[int]]  # G・リンクの離脱置換: 離れることが決まったカード
+
+
+class GLinkTask(TypedDict):
+    t: Literal["g_link"]
+    cid: int
+    player: int
+    step: str
+    answer: NotRequired[list[int]]
+
+
+class HyperTask(TypedDict):
+    t: Literal["hyper"]
+    cid: int
+    player: int
+    answer: NotRequired[list[int]]
+
+
+class ActivateTask(TypedDict):
+    t: Literal["activate"]
+    cid: int
+    player: int
+    ab: int
+    answer: NotRequired[list[int]]
 
 
 class CaptureTask(TypedDict):
@@ -174,6 +212,8 @@ class AttackTask(TypedDict):
     phase: int
     cp: bool
     blocked: NotRequired[bool]
+    ano: NotRequired[int]                # このターン何回目の攻撃か（キリフダッシュの「その攻撃中に」判定）
+    end_fired: NotRequired[bool]         # attack_end イベントを発火済みか
     decl: NotRequired[int]               # 使用宣言の段階（506.3b〜）
     subbed: NotRequired[list[int]]       # 身代わりバトルの置換を済ませた側（0=攻撃側, 1=攻撃先）
     answer: NotRequired[list[int]]
@@ -189,6 +229,8 @@ class BreakTask(TypedDict):
     chosen: NotRequired[list[int]]
     answer: NotRequired[list[int]]
     reason: NotRequired[str]         # 手札へ加える理由（既定は break）。効果で加える時は効果の reason
+    breaker: NotRequired[Ref]        # ブレイクしたクリーチャー（攻撃、またはクリーチャーの効果）
+    declared: NotRequired[list]      # 宣言済みの S・トリガー [[cid, face | None]]
     fire_break: NotRequired[bool]    # ブレイクのイベントを起こすか（効果でシールドを手札に加える時は起こさない）
 
 
@@ -214,10 +256,56 @@ class PlayTask(TypedDict):
     sac_done: NotRequired[bool]
     reduced: NotRequired[bool]           # B・A・D / J・O・E: コストを減らして実行する
     reduce_done: NotRequired[bool]
+    fuel: NotRequired[list[int]]         # 支払い時の行動（opt_reduce.do）で選んだカード
+    fuel_done: NotRequired[bool]
+    cost_may_i: NotRequired[int]         # cost_may の確認が済んだ発生源の数
+    cost_may_total: NotRequired[int]     # cost_may で得た軽減の合計
+    cost_may_min: NotRequired[int]       # cost_may の下限（使った発生源の最大）
+    cost_may_done: NotRequired[bool]
+    rush: NotRequired[bool]              # アビスラッシュ（墓地からの召喚）
+    once_src: NotRequired[int]           # 回数制限つき許可（ターン1回）の発生源。使用したら記録する
+    evo_mode: NotRequired[bool]          # NEO進化として重ねて出す
+    to_shield: NotRequired[bool]         # ギャラクシールド（代替コストで表向きにシールド化する）
+    as_paid: NotRequired[bool]           # コストを支払ったものとして実行する（ギャラクシールドのターン開始時召喚）
+    cost_override: NotRequired[int]      # 代替コスト（キリフダッシュ等）: 通常コストの代わりに払う総額
+    cost_civs: NotRequired[list]         # 代替コストで必要な文明（省略時はカードの文明）
     st: NotRequired[bool]                # S・トリガーとして実行する（101.4g）
+    paid_done: NotRequired[bool]         # 本体のコストを支払い済み（後段の決定での再入対策）
+    bz_done: NotRequired[bool]           # バズレンダ: 追加支払いの確認が終わった
+    bz_count: NotRequired[int]           # バズレンダ: 追加で支払った回数
+    alt: NotRequired[bool]               # 代替コストで実行する
+    alt_step: NotRequired[int]           # 代替コスト（行動形式）で済んだ段階
+    evo_v: NotRequired[list]             # 進化V: フィルタごとに選んだ進化元
+    fushigi: NotRequired[bool]           # フシギバースとして実行する
+    fushigi_done: NotRequired[bool]      # フシギバース: 進化元代わりのクリーチャーをマナに置いた
+    alt_done: NotRequired[bool]          # 代替コスト（行動形式）の支払いが終わった
+    bz_yn_for: NotRequired[int]          # バズレンダ: 「追加で支払うか」を確認済みの回数
+    bz_pay: NotRequired[bool]            # バズレンダ: その回は追加で支払う
+    bz_paid_for: NotRequired[int]        # バズレンダ: 追加支払いが済んだ回数
+    od_yn: NotRequired[bool]             # O・ドライブ: 追加でタップするか
+    od_done: NotRequired[bool]           # O・ドライブ: 確認済み
+    odrive: NotRequired[bool]            # O・ドライブ: 追加でタップして召喚した
+    od_idx: NotRequired[int]             # O・ドライブ: 処理中のステップ（文明）番号
+    od_sub: NotRequired[int]             # O・ドライブ: ステップ内で処理中の文明番号
+    od_civs_done: NotRequired[list]      # O・ドライブ: 実際にタップした文明
+    odrive_civs: NotRequired[list]       # O・ドライブ: タップした文明（イベント/印への引き渡し用）
+    climb: NotRequired[bool]             # ムゲンクライムとして実行する
+    climb_done: NotRequired[bool]        # ムゲンクライム: クリーチャーのタップが済んだ
     resolve_to: NotRequired[str]         # 解決後の置き場所（play_free の resolve_to）
     resolve_position: NotRequired[str]   # resolve_to が山札のときの top / bottom
     answer: NotRequired[list[int]]
+
+
+class SbackTask(TypedDict):
+    t: Literal["sback"]
+    pairs: list[list]                    # [S・バックのカード, 捨てるカード]
+    player: int
+
+
+class BattleRunTask(TypedDict):
+    t: Literal["battle_run"]
+    att: list
+    tgt: list
 
 
 class EnqueueStTask(TypedDict):
@@ -251,6 +339,22 @@ class DeclareTask(TypedDict):
     answer: NotRequired[list[int]]
 
 
+class LoseReplaceTask(TypedDict):
+    """敗北の置換（S-MAX進化など）: 敗北が確定する前に、置換できるかを敗北するプレイヤーに諮る。"""
+    t: Literal["lose_replace"]
+    loser: int
+    reason: str
+    phase: int
+    answer: NotRequired[list[int]]
+
+
+class SmaxReduceTask(TypedDict):
+    """S-MAX進化の2体制限（状況起因）: 残す1体を選び、残りをすべて手札に戻す。"""
+    t: Literal["smax_reduce"]
+    player: int
+    answer: NotRequired[list[int]]
+
+
 class BindTask(TypedDict):
     t: Literal["bind"]
     env: Env
@@ -270,6 +374,19 @@ class SwapFixTask(TypedDict):
     tapped: bool
 
 
+class InvadeFixTask(TypedDict):
+    t: Literal["invade_fix"]
+    cid: int
+    onto: Ref
+    tapped: bool
+
+
+class SummonOnFixTask(TypedDict):
+    t: Literal["summon_on_fix"]
+    cid: int
+    tapped: bool
+
+
 class PutUnderTask(TypedDict):
     t: Literal["put_under"]
     cid: int
@@ -280,6 +397,12 @@ class PutUnderTask(TypedDict):
 class SlayerTask(TypedDict):
     t: Literal["slayer"]
     pairs: list[list[Ref]]               # [スレイヤーを持っていた負けたクリーチャー, バトル相手]
+
+
+class SealReleaseTask(TypedDict):
+    t: Literal["seal_release"]
+    player: int
+    civs: list[str]
 
 
 def check_shape(d: dict, shape) -> None:

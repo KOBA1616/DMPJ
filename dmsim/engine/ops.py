@@ -6,7 +6,7 @@ from .registry import op
 
 
 @op("move", select="selector", to="zone", reason="reason", position="position?", card_only="bool?",
-    order="str?", tapped="bool?", **{"as": "str?"})
+    order="str?", tapped="bool?", face_up="bool?", seal="int?", **{"as": "str?"})
 def op_move(eng, t, op, env):
     """ゾーン移動。as を付けると、移動した後のカード（新しいオブジェクト）を変数に入れる（「その〜」で使う）。
     card_only: カードとして動かす（109.2a）。進化クリーチャーの一番上だけが離れ、下は再構築される（801.4）。
@@ -40,6 +40,12 @@ def op_move(eng, t, op, env):
     if op.get("tapped"):
         for e in evs:
             e["tapped"] = True
+    if op.get("face_up"):
+        for e in evs:
+            e["face_up"] = True
+    if op.get("seal"):
+        for e in evs:
+            e["seal"] = op["seal"]   # バトルゾーンに出る時、封印を付けた状態で出る（出た時能力は無視される）
     bind = [{"t": "bind", "env": env, "name": op["as"], "cids": cids, "zone": op["to"]}] if "as" in op else []
     if not evs and not out_tasks:
         if bind:
@@ -84,11 +90,15 @@ def op_draw(eng, t, op, env):
     eng._defer(t, [eng.ev_task({"ev": "draw", "player": p}, env) for p in ps for _ in range(n)])
 
 
-@op("tap", select="selector")
+@op("tap", select="selector", no_untap_next="bool?")
 def op_tap(eng, t, op, env, kind="tap"):
+    """no_untap_next: フリーズ等。そのクリーチャーは、次の持ち主のターンのはじめにアンタップしない。"""
     cids, d = eng.select(t, op["select"], env)
     if d:
         return d
+    if kind == "tap" and op.get("no_untap_next"):
+        for c in cids:
+            eng.s.cards[c].no_untap_next = True
     if cids:
         eng._defer(t, [eng.ev_task([{"ev": kind, "subject": eng.s.ref(c)} for c in cids], env)])
     return None
@@ -99,13 +109,27 @@ def op_untap(eng, t, op, env):
     return op_tap(eng, t, op, env, "untap")
 
 
-@op("may", body="ops", label="str?")
+@op("flip_down", select="selector")
+def op_flip_down(eng, t, op, env):
+    """水晶武装: マナゾーンのカードを裏向きにする。裏向きのマナは無色として扱う（支払いの文明に数えない）。"""
+    cids, d = eng.select(t, op["select"], env)
+    if d:
+        return d
+    for c in cids:
+        if eng.s.cards[c].zone == "mana":
+            eng.s.cards[c].face_down = True
+    return None
+
+
+@op("may", body="ops", label="str?", **{"else": "ops?"})
 def op_may(eng, t, op, env):
     a, d = eng.ask(t, env["you"], "yes_no", [{"key": "yes"}, {"key": "no"}], prompt=op.get("label", ""))
     if d:
         return d
     if a[0] == 0:
         eng._defer(t, [eng._child(op["body"], env)])
+    elif op.get("else"):   # 「そうしなければ」（アバレチェーンなど）
+        eng._defer(t, [eng._child(op["else"], env)])
     return None
 
 
@@ -151,7 +175,7 @@ def op_break(eng, t, op, env):
     宣言された S・トリガーをその場で先に解決してから、続きを処理する。"""
     eng._defer(t, [{"t": "break", "victim": eng._rel(op.get("player", "opp"), env), "by": env["you"],
                      "count": eng.eval_expr(op.get("count", 1), env), "phase": 0,
-                     "in_effect": bool(env.get("in_st")) or bool(op.get("st_first"))}])
+                     "in_effect": bool(env.get("in_st")) or bool(op.get("st_first")), **eng._breaker(env)}])
 
 
 @op("modify", select="selector", mod="mod", duration="duration?", dynamic="bool?")
@@ -162,6 +186,8 @@ def op_modify(eng, t, op, env):
     s.seq += 1
     ce = {"id": s.seq, "mod": op["mod"], "duration": eng._duration(op.get("duration", "end_of_turn"), env),
           "controller": env["you"]}
+    if "add_of" in op["mod"]:      # ダイナモ: このクリーチャー（効果の発生源）のパワーと能力を対象に加える
+        ce["add_from"] = env["self"]
     if op.get("dynamic"):
         sel = op["select"]
         ce["affected"] = None
@@ -180,10 +206,12 @@ def op_modify(eng, t, op, env):
     return None
 
 
-@op("mark", name="str")
+@op("mark", name="str", of_self="bool?")
 def op_mark(eng, t, op, env):
-    """このターンの印を付ける（cond の marked で読む）。ターンが変わると消える。「各ターン1度」「他のファイナル革命を使っていなければ」用。"""
-    eng.s.turn_counters[op["name"]] = eng.s.turn_counters.get(op["name"], 0) + 1
+    """このターンの印を付ける（cond の marked で読む）。ターンが変わると消える。「各ターン1度」「他のファイナル革命を使っていなければ」用。
+    of_self: このカード自身の印にする（cond の self_marked で読む。ターボラッシュ）。"""
+    key = op["name"] + (f":{env['self'][0]}:{env['self'][1]}" if op.get("of_self") else "")
+    eng.s.turn_counters[key] = eng.s.turn_counters.get(key, 0) + 1
 
 
 @op("shuffle", player="player?")
@@ -199,7 +227,9 @@ def op_win(eng, t, op, env):
 @op("lose", player="player?")
 def op_lose(eng, t, op, env):
     p = eng._rel(op.get("player", "you"), env)
-    eng.s.result = {"winner": 1 - p, "reason": "effect", "turn": eng.s.turn}
+    tasks = eng.game_lose(p, "effect")   # 敗北の置換（S-MAX進化など）を諮ってから確定する
+    if tasks:
+        eng._defer(t, tasks)
 
 
 @op("set_var", name="str", value="any?")
@@ -274,23 +304,378 @@ def op_play_free(eng, t, op, env):
     return None
 
 
-@op("swap", out="selector", **{"in": "selector"})
+@op("mekurade", filter="filter?", cost_le="int?", look="int?")
+def op_mekurade(eng, t, op, env):
+    """メクレイド: 自分の山札の上からN枚（既定3）を見て、条件に合う1枚をコストを支払わずに使ってもよい。
+    残りは好きな順序で山札の下に置く。条件は filter と cost_le（「コストN以下」）。"""
+    s = eng.s
+    p = env["you"]
+    os_ = t.setdefault("os", {})
+    if "looked" not in os_:
+        os_["looked"] = list(s.zones["deck"][p][:op.get("look", 3)])
+    looked = os_["looked"]
+    f = dict(op.get("filter") or {})
+    if "cost_le" in op:
+        f["cost_le"] = op["cost_le"]
+    cands = [c for c in looked if s.cards[c].zone == "deck" and eng.filter_match(c, f)]
+    if cands and "picked" not in os_:
+        ans, d = eng.ask(t, p, "choose_cards", [eng._card_option(c, True) for c in cands], 0, 1)
+        if d:
+            return d
+        os_["picked"] = cands[ans[0]] if ans else None
+    pick = os_.get("picked")
+    rest = [c for c in looked if c != pick and s.cards[c].zone == "deck"]
+    tasks = []
+    if pick is not None:
+        want = (op.get("filter") or {}).get("types")
+        tasks.append(eng.play_task(pick, p, True, _free_face(eng, pick, want)))
+    if rest:
+        env.setdefault("vars", {})["mek_rest"] = [s.ref(c) for c in rest]
+        tasks.append(eng._child([{"op": "move", "select": {"ref": "mek_rest"}, "to": "deck", "reason": "put",
+                                  "position": "bottom", "order": "choose"}], env))
+    if tasks:
+        eng._defer(t, tasks)
+    return None
+
+
+@op("janken", win="ops?", lose="ops?", draw="ops?")
+def op_janken(eng, t, op, env):
+    """ジャンケン: 両プレイヤーが グー/チョキ/パー を選び、勝敗で分岐する。"""
+    if "jk" not in t["os"]:
+        a, d = eng.ask(t, env["you"], "choose_one",
+                       [{"key": "rock", "name": "グー"}, {"key": "scissors", "name": "チョキ"}, {"key": "paper", "name": "パー"}])
+        if d:
+            return d
+        t["os"]["jk"] = a[0]
+        return None
+    a, d = eng.ask(t, 1 - env["you"], "choose_one",
+                   [{"key": "rock", "name": "グー"}, {"key": "scissors", "name": "チョキ"}, {"key": "paper", "name": "パー"}])
+    if d:
+        return d
+    me, op_hand = t["os"].pop("jk"), a[0]   # 0=グー, 1=チョキ, 2=パー
+    if me == op_hand:
+        branch = op.get("draw")
+    elif (me - op_hand) % 3 == 2:   # グー>チョキ, チョキ>パー, パー>グー
+        branch = op.get("win")
+    else:
+        branch = op.get("lose")
+    if branch:
+        eng._defer(t, [eng._child(branch, env)])
+    return None
+
+
+@op("move_under_to_event")
+def op_move_under_to_event(eng, t, op, env):
+    """G-NEO進化の離脱置換の代わり: 発生源の下のカードすべてを、置換されたイベントの行き先へ移動する。"""
+    ev = env.get("event") or {}
+    to = ev.get("to")
+    if not to or to == "bz":
+        return None
+    cid = env["self"][0]
+    unders = list(eng.s.cards[cid].under)
+    if not unders:
+        return None
+    evs = []
+    for u in unders:
+        e = {"ev": "move", "subject": eng.s.ref(u), "to": to, "reason": ev.get("reason", "put")}
+        if ev.get("position"):
+            e["position"] = ev["position"]
+        evs.append(e)
+    eng._defer(t, [eng.ev_task(evs)])
+    return None
+
+
+@op("shield_plus")
+def op_shield_plus(eng, t, op, env):
+    """シールド・プラス: 自分の山札の上から1枚を、自分のシールド1つの下に置く（束は1つと数える）。"""
+    s = eng.s
+    p = env["you"]
+    shields = eng.zlist("shield", p)
+    deck = s.zones["deck"][p]
+    if not shields or not deck:
+        return None
+    a, d = eng.ask(t, p, "choose_cards", [eng._card_option(c) for c in shields], 1, 1)
+    if d:
+        return d
+    target = shields[a[0]]
+    tucked = deck[0]
+    eng._raw_move(tucked, "shield")
+    lst = s.zones["shield"][p if not eng.zshared("shield") else 0]
+    if tucked in lst:
+        lst.remove(tucked)   # 束の下のカードはゾーンの並びに入らない（113.2）
+    s.cards[target].under.append(tucked)
+    s.cards[tucked].top_of = target
+    return None
+
+
+@op("opp_may", body="ops", label="str?")
+def op_opp_may(eng, t, op, env):
+    """「相手は〜してもよい」: 相手が yes/no を選び、yes なら body を相手の視点で実行する。"""
+    opp = 1 - env["you"]
+    a, d = eng.ask(t, opp, "yes_no", [{"key": "yes"}, {"key": "no"}], prompt=op.get("label", ""))
+    if d:
+        return d
+    if a[0] == 0:
+        env2 = dict(env)
+        env2["you"] = opp
+        eng._defer(t, [eng._child(op["body"], env2)])
+    return None
+
+
+@op("yobinion")
+def op_yobinion(eng, t, op, env):
+    """ヨビニオン: 自分の山札の上から、これ（発生源）よりコストが小さいクリーチャーが出るまで
+    表向きにする。そのクリーチャーを出す。残りはシャッフルし、山札の下に置く。"""
+    from ..state import rng_below
+    s = eng.s
+    p = env["you"]
+    threshold = eng.chars(env["self"][0])["cost"]
+    revealed, found = [], None
+    for c in list(s.zones["deck"][p]):
+        revealed.append(c)
+        ch = eng.chars(c)
+        if "creature" in ch["types"] and ch["cost"] < threshold:
+            found = c
+            break
+    rest = [c for c in revealed if c != found]
+    for i in range(len(rest) - 1, 0, -1):   # 残りをシャッフル（Fisher-Yates）
+        j = rng_below(s, i + 1)
+        rest[i], rest[j] = rest[j], rest[i]
+    for c in rest:
+        eng._raw_move(c, "deck", "bottom")
+    if found is not None:
+        eng._defer(t, [eng.ev_task({"ev": "move", "subject": s.ref(found), "to": "bz",
+                                     "reason": "put", "controller": p}, env)])
+    return None
+
+
+@op("gachinko", times="expr?", until_lose="bool?", stoppable="bool?", **{"as": "str?"})
+def op_gachinko(eng, t, op, env):
+    """ガチンコ・ジャッジ: 各プレイヤーは自身の山札の上から1枚を見せ、それを一番下に置く。
+    そのカードのコストが相手以上であれば自分の勝ち。times 回（式可）繰り返すか、
+    until_lose（自分が負けるまで）/ stoppable（自分が中止するまで）の組み合わせ。
+    勝った回数を env の変数（既定 wins）に書き、後続の op が {var: wins} で参照する。"""
+    s = eng.s
+    me, opp = env["you"], 1 - env["you"]
+    os_ = t.setdefault("os", {})
+    st = os_.setdefault("gj", {"done": 0, "wins": 0, "stopped": False})
+    times = eng.eval_expr(op["times"], env) if "times" in op else None
+    while not st["stopped"] and (times is None or st["done"] < times):
+        if op.get("stoppable") and st.get("stop_for") != st["done"]:
+            ans, d = eng.ask(t, me, "yes_no", [{"key": "yes"}, {"key": "no"}], prompt="ガチンコ・ジャッジを続ける")
+            if d:
+                return d
+            st["stop_for"] = st["done"]
+            if ans[0] == 1:
+                st["stopped"] = True
+                break
+        mine, theirs = s.zones["deck"][me], s.zones["deck"][opp]
+        if not mine or not theirs:
+            break
+        a, b = mine[0], theirs[0]
+        win = eng.chars(a)["cost"] >= eng.chars(b)["cost"]
+        eng._raw_move(a, "deck", "bottom")
+        eng._raw_move(b, "deck", "bottom")
+        st["done"] += 1
+        if win:
+            st["wins"] += 1
+        elif op.get("until_lose"):
+            break
+    env.setdefault("vars", {})[op.get("as", "wins")] = st["wins"]
+    return None
+
+
+@op("cast_face", face="expr")
+def op_cast_face(eng, t, op, env):
+    """ツインパクトの呪文面を、カードをバトルゾーンに置いたまま唱える（スマッシュ・バースト）。
+    唱えたことにはなる（cast イベント、コストは支払わない）が、カード自体は動かず、
+    解決後に墓地へも行かない。face: "spell" なら呪文面を探す（ラスト・バースト）。"""
+    s = eng.s
+    if not s.alive(env["self"]):
+        return
+    cid = env["self"][0]
+    d = eng.cdef(cid)
+    fi = op["face"]
+    if fi == -1:   # 呪文面を探す（ラスト・バースト）
+        fi = next((i for i, f in enumerate(d.faces) if f.spell), None)
+        if fi is None:
+            return
+    if fi >= len(d.faces):
+        return
+    f = d.faces[fi]
+    ref = s.ref(cid)
+    tasks = [eng.ev_task({"ev": "cast", "player": env["you"], "subject": ref, "unpaid": True}),
+             eng._child(f.spell, {"you": env["you"], "self": ref, "vars": dict(env.get("vars", {}))})]
+    if f.after_resolve:
+        tasks.append(eng._child(f.after_resolve, {"you": env["you"], "self": ref, "vars": dict(env.get("vars", {}))}))
+    eng._defer(t, tasks)
+
+
+@op("summon_self")
+def op_summon_self(eng, t, op, env):
+    """このカード自身をコストを支払ったものとして召喚する（ギャラクシールドのターン開始時召喚）。
+    支払いはしないが、召喚イベントでは「コストを支払わずに召喚した」扱いにならない。"""
+    task = eng.play_task(env["self"][0], env["you"], True)
+    task["as_paid"] = True
+    eng._defer(t, [task])
+
+
+@op("play_self", cost="int", civs="any?")
+def op_play_self(eng, t, op, env):
+    """このカード自身を代替コストで実行する（キリフダッシュ: 攻撃の終わりに [コスト] を支払って召喚する）。
+    civs は代替コストで必要な文明（省略時はカード自身の文明）。"""
+    task = eng.play_task(env["self"][0], env["you"], False)
+    task["cost_override"] = op["cost"]
+    if "civs" in op:
+        task["cost_civs"] = op["civs"]
+    eng._defer(t, [task])
+    return None
+
+
+@op("swap", out="selector", out_to="zone?", **{"in": "selector"})
 def op_swap(eng, t, op, env):
-    """入れ替える（701.26）。out をバトルゾーンから手札へ、in をバトルゾーンへ。
+    """入れ替える（701.26）。out をバトルゾーンから out_to（既定は手札）へ、in をバトルゾーンへ。
     入ったクリーチャーは出たクリーチャーのタップ状態と攻撃中の状態を引き継ぐ（701.26a: 革命チェンジ）。
-    out が正常に離れなければ入れ替えは行わない（701.26b）。"""
+    out が正常に離れなければ入れ替えは行わない（701.26b）。out_to: mana が J・チェンジ。"""
     outs, d = eng.select(t, op["out"], env)
     if d:
         return d
-    ins = eng.candidates(op["in"], env)
+    if "ref" in op["in"]:
+        ins = eng.candidates(op["in"], env)
+    else:                                   # 入る側も選べる（J・チェンジのマナゾーンから等）
+        ins, d = eng.select(t, op["in"], env)
+        if d:
+            return d
     if not outs or not ins:
         return None
     o, i = outs[0], ins[0]
     if not eng.permits(i, "enter_bz"):   # 「コスト７以下のクリーチャーを出せない」: 入れ替えもできない
         return None
-    eng._defer(t, [eng.ev_task({"ev": "move", "subject": eng.s.ref(o), "to": "hand", "reason": "return"}, env),
+    eng._defer(t, [eng.ev_task({"ev": "move", "subject": eng.s.ref(o), "to": op.get("out_to", "hand"), "reason": "return"}, env),
                    {"t": "swap_in", "out": eng.s.ref(o), "out_gen_next": eng.s.cards[o].gen + 1,
                     "in": eng.s.ref(i), "tapped": eng.s.cards[o].tapped, "env": env}])
+    return None
+
+
+@op("invade", onto="selector")
+def op_invade(eng, t, op, env):
+    """侵略: 手札にあるこのクリーチャーを、攻撃中のクリーチャーの上に重ねて出す。
+    下になったクリーチャーのタップ状態と攻撃中の状態を引き継ぐ。"""
+    ontos, d = eng.select(t, op["onto"], env)
+    if d:
+        return d
+    if not ontos:
+        return None
+    me = env["self"][0]
+    if not eng.permits(me, "enter_bz"):
+        return None
+    a = ontos[0]
+    eng._defer(t, [eng.ev_task({"ev": "move", "subject": eng.s.ref(me), "to": "bz", "reason": "put", "via": "invasion"}, env),
+                   {"t": "invade_fix", "cid": me, "onto": eng.s.ref(a), "tapped": eng.s.cards[a].tapped}])
+    return None
+
+
+@op("summon_on", parts="any", tapped="bool?")
+def op_summon_on(eng, t, op, env):
+    """無月の門: parts で指定した枚数を自分のゾーンから選び、その上に self をコストを支払わずに召喚する。
+    parts: [{zone: <zone>, count: N, filter?: {...}}] の並び（zones: [z1, z2] なら複数ゾーンの合算から選ぶ）。
+    選んだカードは進化と同じ仕組みで下に重なるが、召喚酔いとタップ状態は通常の召喚として扱う（summon_on_fix）。
+    どこか1パートでも必要枚数を満たせなければ、何もしない。"""
+    s = eng.s
+    you = env["you"]
+    me = env["self"][0]
+    if s.cards[me].zone not in ("hand", "graveyard"):
+        return None
+
+    def cands(part, picked):
+        zones = part.get("zones") or [part["zone"]]
+        return [c for z in zones for c in eng.zlist(z, you)
+                if c != me and c not in picked and s.cards[c].top_of == -1
+                and eng.filter_match(c, part.get("filter", {}))]
+
+    os_ = t["os"]
+    if "picked" not in os_:
+        acc = []
+        for part in op["parts"]:
+            if len(cands(part, acc)) < part["count"]:
+                return None   # 実現可能性がない場合は誘発しても何もしない
+            acc += cands(part, acc)[:part["count"]]
+        os_["picked"] = []
+        os_["stage"] = 0
+    parts = op["parts"]
+    while os_["stage"] < len(parts):
+        part = parts[os_["stage"]]
+        cs = cands(part, os_["picked"])
+        if len(cs) < part["count"]:
+            return None
+        opts = [{"key": f"card:{s.cards[c].defn}", "cid": c} for c in cs]
+        a, d = eng.ask(t, you, "summon_on", opts, part["count"], part["count"])
+        if d:
+            return d
+        os_["picked"] += [cs[i] for i in a]
+        os_["stage"] += 1
+    picked = os_["picked"]
+    if not picked:
+        return None
+    ev = {"ev": "move", "subject": s.ref(me), "to": "bz", "reason": "summon", "unpaid": True,
+          "stack_on": s.ref(picked[0]), "stack_more": [s.ref(c) for c in picked[1:]]}
+    used = {"ev": "mugon_used", "subject": s.ref(me), "player": you}   # 「無月の門能力を使った時」の追随用
+    eng._defer(t, [eng.ev_task(ev, env), {"t": "summon_on_fix", "cid": me, "tapped": bool(op.get("tapped"))},
+                   eng.ev_task(used, env)])
+    return None
+
+
+@op("attach_seal", select="selector", count="int?")
+def op_attach_seal(eng, t, op, env):
+    """封印を付ける: 選んだカードそれぞれに、その持ち主の山札の上から count 枚（既定1）を裏向きで重ねる。
+    封印されたカードは無視される（特性・能力が機能しない）。山札が足りなければあるだけ付ける。
+    すでに封印されているカードにも追加で付けられる（選択の間だけ無視を外す）。"""
+    eng._seal_ok = getattr(eng, "_seal_ok", 0) + 1
+    try:
+        cids, d = eng.select(t, op["select"], env)
+    finally:
+        eng._seal_ok -= 1
+    if d:
+        return d
+    s = eng.s
+    n = op.get("count", 1)
+    for cid in cids:
+        c = s.cards[cid]
+        if c.zone != "bz" or c.top_of >= 0:
+            continue
+        deck = s.zones["deck"][c.controller]
+        for _ in range(n):
+            if not deck:
+                break
+            top = deck[0]
+            eng._raw_move(top, "bz")
+            sc = s.cards[top]
+            sc.top_of = cid
+            sc.seal_of = cid
+            c.seals.append(top)
+    return None
+
+
+@op("remove_seal", select="selector", count="int?")
+def op_remove_seal(eng, t, op, env):
+    """封印を外す: 選んだカードそれぞれから count 枚（既定1）までの封印を墓地に置く。
+    移動イベントとして処理するので、「封印が離れた時」「封印がすべてなくなった時」が誘発する。
+    対象は封印されたカードなので、選択の間だけ無視を外す。"""
+    eng._seal_ok = getattr(eng, "_seal_ok", 0) + 1
+    try:
+        cids, d = eng.select(t, op["select"], env)
+    finally:
+        eng._seal_ok -= 1
+    if d:
+        return d
+    s = eng.s
+    n = op.get("count", 1)
+    evs = []
+    for cid in cids:
+        for seal in list(s.cards[cid].seals)[:n]:
+            evs.append({"ev": "move", "subject": s.ref(seal), "to": "graveyard", "reason": "seal"})
+    if evs:
+        eng._defer(t, [eng.ev_task(evs, env)])
     return None
 
 
@@ -298,6 +683,26 @@ def op_swap(eng, t, op, env):
 def op_end_turn(eng, t, op, env):
     """ターンの残りをとばす（次のプレイヤーのターンをすぐに始める）。今の効果の解決は最後まで行う。"""
     eng.s.skip_rest = True
+
+
+@op("use_partner")
+def op_use_partner(eng, t, op, env):
+    """キズナ: 自分のクリーチャー1体の[P]能力（kind: partner）を選んで使う。
+    効果の self は [P] を持つクリーチャーに移る。[P] を持つクリーチャーがいなければ何もしない。"""
+    you = env["you"]
+    cands = []
+    for c in eng.bz_tops(you):
+        for i, ab in eng.abilities(c, "partner"):
+            cands.append((c, i, ab))
+    if not cands:
+        return None
+    opts = [{"key": f"partner:{eng.s.cards[c].defn}:{i}", "cid": c, "ab": i} for c, i, _ in cands]
+    a, d = eng.ask(t, you, "use_partner", opts)
+    if d:
+        return d
+    c, i, ab = cands[a[0]]
+    eng._defer(t, [eng._child(ab["effect"], dict(env, self=eng.s.ref(c)))])
+    return None
 
 
 @op("choose", select="selector", **{"as": "str"})
@@ -347,4 +752,24 @@ def op_put_under(eng, t, op, env):
 @op("battle_substitute")
 def op_battle_substitute(eng, t, op, env):
     """バトル相手の置換（when: {event: battle}）の印。実際の入れ替えは combat の _battle_substitute が行う。"""
+    return None
+
+
+@op("force_battle", a="selector", b="selector?")
+def op_force_battle(eng, t, op, env):
+    """選んだクリーチャー同士をバトルさせる（「その2体をバトルさせる」）。
+    a が攻撃側。b を省略すると a の先頭2体同士。対象は choose で変数に入れてから ref で指すのが基本。
+    バトル相手の置換（battle_substitute）は攻撃時のフローでのみ判定しており、ここでは未判定。"""
+    aa = eng.candidates(op["a"], env)
+    if op.get("b"):
+        bb = eng.candidates(op["b"], env)
+        pairs = [(aa[0], bb[0])] if aa and bb else []
+    else:
+        pairs = [(aa[0], aa[1])] if len(aa) >= 2 else []
+    tasks = []
+    for x, y in pairs:
+        if eng.s.cards[x].zone == "bz" and eng.s.cards[y].zone == "bz" and x != y:
+            tasks.extend(eng._battle(eng.s.ref(x), eng.s.ref(y)))
+    if tasks:
+        eng._defer(t, tasks)
     return None

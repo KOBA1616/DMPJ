@@ -57,6 +57,13 @@ INSTRUCTIONS = """\
 - ウェーブストライカーは keywords: [wave_striker]（印だけ）。続く能力は、能力ごとに `if: {cmp: [{count: {zone: bz, owner: any, other: true, filter: {keyword: wave_striker}}}, ">=", 2]}` を付けて書く（常在型・誘発型どちらも。「他に」の数は原文に「自分の」が無いので owner: any）。
 - known_keywords に wave_striker があるときは、残りの text の能力すべてに上記の if を付ける（付け忘れると常時働く誤変換になる）。
 - サイレントスキルは keywords: [silent_skill]（印）と、続く効果文を `kind: silent, effect: [...]`（自分のターンのはじめにタップされていたら、アンタップしないかわりに使ってもよい。ルール 501.1a で処理済み）。
+- ターボラッシュは keywords: [turbo_rush]（印。ルール側が「自分の他のクリーチャーがシールドをブレイクしたあと」にそのターン中だけ印を付ける）。続く能力すべてに `if: {self_marked: turbo_rush}` を付ける（付け忘れると常時働く誤変換になる）。
+- 「攻撃された時」は `when: {event: attack, target: self}`（このクリーチャーが攻撃先）、「自分のクリーチャーが攻撃された時」は `target: {owner: you}`（他のクリーチャーだけなら other: true も）。攻撃された側は `select: {ref: event.target}`。「ブロックされた時」は `when: {event: block, attacker: self}`、攻撃クリーチャーは `ref: event.attacker`。
+- サイクロンは keywords: [cyclone]（呪文。エンジンが「唱える直前に召喚していたか」を見て、唱えた後に手札へ戻す）。「自分が唱える呪文はすべてサイクロンを得る」は static、affects: {zone: hand, owner: you, filter: {types: [spell]}}、mod: {grant: [cyclone]}。
+- S・バックは文明ごとのキーワード（s_back_light / s_back_water / s_back_darkness / s_back_fire / s_back_nature）を keywords に書く（実行は召喚か詠唱かカードの種類で決まる）。続く能力・呪文はそのまま書く。
+- 進化GV（進化元をちょうどN体重ねる）は evolve_from に条件（races に複数並べると「いずれか」）を書き、`evolve_count: 3` を付ける。
+- メテオバーン（下のカードを墓地に置いてもよい。そうした場合〜）は trigger の effect に `op: may` を置き、body の最初に `{op: move, select: {under_of: self, count: 1}, to: graveyard, reason: put, as: paid}`、続けて `{op: if, cond: {exists: {ref: paid}}, then: [...]}` で「そうした場合」の効果を書く（下のカードが無ければ後続は行わない）。条件のない「下のカードを出す／手札に加えてもよい」は may の body に move だけ。発動の時期は when で表す（「このクリーチャーが攻撃する時」= subject: self、「クリーチャーが攻撃する時」= subject: {owner: any}、「相手のクリーチャーが攻撃する時」= subject: {owner: opp}）。「攻撃できる時」「呪文の効果が実行される時」は語彙が無いので unsupported。
+- ダイナモは keywords: [dynamo]（攻撃できる時の起動と、バトルが始まる時の誘発はルール側が持つ。パワーと能力はそのターンの終わりまで他のダイナモ1体に加わる）。カード側に書くのは残りの能力だけ。「ブロックされなかった時」は語彙が無いので unsupported。
 - 攻撃・ブロックの強制は static の mod.require（[attack] / [block]）。「毎ターン攻撃しなければならない」「相手のクリーチャーが攻撃する時、可能であればブロックする」はルールで変換済み。条件つきの強制（次のターンだけ等）は mod.require に条件が書けないので unsupported。
 - text には原文から括弧書きの注釈を除いたものを「 / 」区切りで書く。
 - 「コストを支払わずに召喚する／唱える」は op: play_free（召喚・唱えたことになり、「召喚した時」「唱えた時」が誘発する）。「バトルゾーンに出す／置く」（ヘブンズ・ゲート型、墓地・マナ・手札から出す、置換で出す）は召喚ではないので op: move, to: bz, reason: put（play_free や reason: summon は使わない。112.3g, 603.5a）。

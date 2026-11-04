@@ -16,6 +16,27 @@ keywords:
     ja: ブロッカー
     abilities:
       - {kind: static, affects: self, mod: {allow: [block]}}
+  kizuna:
+    ja: キズナ（このクリーチャーが出た時、自分のクリーチャー1体の[P]能力を使う）
+    abilities:
+      - kind: trigger
+        when: {event: move, to: bz, subject: self}
+        effect:
+          - {op: use_partner}
+  abyss_rush:
+    ja: アビスラッシュ
+    abilities:
+      - {kind: static, zone: graveyard, affects: self, mod: {allow: [summon_from_graveyard]}}
+  # G・リンク: キーワード自体は「どの位置のゴッドか」の印。リンク手順・特性統合・離脱置換はエンジン側（docs/g-link-plan.md）
+  left_g_link:
+    ja: 左G・リンク
+    abilities: []
+  center_g_link:
+    ja: 中央G・リンク
+    abilities: []
+  right_g_link:
+    ja: 右G・リンク
+    abilities: []
   speed_attacker:
     ja: スピードアタッカー
     abilities:
@@ -24,6 +45,27 @@ keywords:
     ja: S・トリガー
     abilities:
       - {kind: static, zone: shield, affects: self, mod: {allow: [s_trigger]}}
+  super_s_trigger:
+    ja: スーパー・S・トリガー（このカードをシールドゾーンから手札に加える時、コストを支払わずにすぐ使ってもよい。その時自分のシールドが1つもなければ、このカードに記された追加能力を得る）
+    abilities:
+      - {kind: static, zone: shield, affects: self, mod: {allow: [s_trigger]}}
+  s_trigger_plus:
+    ja: S・トリガー・プラス（このカードをシールドゾーンから手札に加える時、コストを支払わずにすぐ使ってもよい。それが相手のターンで、そのターン中に自分のシールドが2つ以上ブレイクされていれば、このカードに記された追加能力を得る）
+    abilities:
+      - {kind: static, zone: shield, affects: self, mod: {allow: [s_trigger]}}
+  shield_go:
+    ja: シールド・ゴー（このクリーチャーが破壊された時、表向きにシールド化する。このクリーチャーが表向きで、シールドゾーンを離れる時、かわりに自分の墓地に置く）
+    abilities:
+      - kind: replace
+        when: {event: move, from: bz, to: graveyard, reason: destroy, subject: self}
+        instead:
+          - {op: move, select: {ref: self}, to: shield, reason: put, face_up: true}
+      - kind: replace
+        zone: shield
+        when: {event: move, from: shield, subject: self}
+        if: {face_up: true}
+        instead:
+          - {op: move, select: {ref: self}, to: graveyard, reason: put}
   double_breaker:
     ja: W・ブレイカー
     abilities:
@@ -66,6 +108,49 @@ keywords:
     ja: この呪文を唱えた後、墓地に置くかわりに手札に戻す
     abilities: []
     card: {resolve_to: hand}
+  cyclone:      # このターン、唱える直前にクリーチャーを召喚していれば、唱えた後に墓地ではなく手札に戻す（エンジンが直前の実行を見て判定）
+    ja: サイクロン（このターン、この呪文を唱える直前にクリーチャーを召喚していれば、この呪文を唱えた後、墓地に置くかわりに自分の手札に戻す）
+    abilities: []
+  s_back_light:
+    ja: S・バック-光（光のカードを自分のシールドゾーンから手札に加える時、そのカードを捨ててもよい。そうした場合、コストを支払わずにこのカードを実行する）
+    abilities: []
+    card: {s_back: light}
+  s_back_water:
+    ja: S・バック-水（水のカードを自分のシールドゾーンから手札に加える時、そのカードを捨ててもよい。そうした場合、コストを支払わずにこのカードを実行する）
+    abilities: []
+    card: {s_back: water}
+  s_back_darkness:
+    ja: S・バック-闇（闇のカードを自分のシールドゾーンから手札に加える時、そのカードを捨ててもよい。そうした場合、コストを支払わずにこのカードを実行する）
+    abilities: []
+    card: {s_back: darkness}
+  s_back_fire:
+    ja: S・バック-火（火のカードを自分のシールドゾーンから手札に加える時、そのカードを捨ててもよい。そうした場合、コストを支払わずにこのカードを実行する）
+    abilities: []
+    card: {s_back: fire}
+  s_back_nature:
+    ja: S・バック-自然（自然のカードを自分のシールドゾーンから手札に加える時、そのカードを捨ててもよい。そうした場合、コストを支払わずにこのカードを実行する）
+    abilities: []
+    card: {s_back: nature}
+  dynamo:      # バトルが始まる時、あるいはこのクリーチャーで攻撃できる時、タップしてもよい。そうした場合、そのターンの終わりまで、パワーと能力（ダイナモ自身を除く）を自分の他のダイナモ1体に加える
+    ja: ダイナモ（バトルが始まる時、あるいはこのクリーチャーで攻撃できる時、このクリーチャーをタップしてもよい。そうした場合、そのターンの終わりまで、このクリーチャーのパワーと能力をバトルゾーンにある自分の他のダイナモ１体に加える）
+    abilities:
+      - kind: activate
+        cost: {tap: self}
+        if: {exists: {zone: bz, owner: you, other: true, filter: {keyword: dynamo}}}
+        effect: [{op: choose, select: {zone: bz, owner: you, other: true, filter: {keyword: dynamo}, count: 1}, as: dynamo_to},
+           {op: modify, select: {ref: dynamo_to}, mod: {add_of: self}, duration: end_of_turn}]
+      - kind: trigger
+        when: {event: battle_start}
+        if:
+          all:
+            - {exists: {ref: self, filter: {tapped: false}}}
+            - {exists: {zone: bz, owner: you, other: true, filter: {keyword: dynamo}}}
+        effect:
+          - op: may
+            body:
+              - {op: tap, select: {ref: self}}
+              - {op: choose, select: {zone: bz, owner: you, other: true, filter: {keyword: dynamo}, count: 1}, as: dynamo_to}
+              - {op: modify, select: {ref: dynamo_to}, mod: {add_of: self}, duration: end_of_turn}
   evo_charger:
     ja: Evoチャージャー（チャージャーの後、マナのクリーチャー1体を自分の進化クリーチャーの下に重ねてもよい）
     abilities: []
@@ -111,6 +196,9 @@ keywords:
     ja: このクリーチャーは攻撃されない
     abilities:
       - {kind: static, affects: self, mod: {deny: [be_attacked]}}
+  enters_tapped:      # 適用は events の move 処理（EXライフと同じくキーワード名を見て処理する）
+    ja: このクリーチャーは、タップしてバトルゾーンに出る
+    abilities: []
 
   # ---- 名前つき効果（注釈つき）。原文の名前と注釈つき文言を rule_convert が照合する ----
   powered_breaker:    # 509.2: パワー6000ごとに1つ多くブレイクする（ブレイカー能力の1つ）
@@ -190,4 +278,64 @@ keywords:
   # サイレントスキル（501.1a）: 能力そのものは各カードの kind: silent。キーワードは「サイレントスキルを持つ」の印
   silent_skill:
     ja: サイレントスキル
+    abilities: []
+  # ターボラッシュ: 自分の他のクリーチャーがシールドをブレイクしたあと、そのターンが終わるまで次の能力を得る。
+  # 印を付けるだけ。続く能力に if: {self_marked: turbo_rush} を付けて書く
+  turbo_rush:
+    ja: ターボラッシュ
+    abilities:
+      - kind: trigger
+        when: {event: break, subject: {owner: you, other: true, filter: {types: [creature]}}}
+        effect:
+          - {op: mark, name: turbo_rush, of_self: true}
+  freeze:      # 「ブロックされなかった」ことは、シールドがブレイクされたこと（break イベントの発生源がこのクリーチャー）で判定する
+    ja: フリーズ（このクリーチャーが相手プレイヤーを攻撃してブロックされなかった時、バトルゾーンにある相手のクリーチャーを１体選び、タップしてもよい。そのクリーチャーは、次の相手のターンのはじめにアンタップしない）
+    abilities:
+      - kind: trigger
+        when: {event: break, subject: self}
+        effect:
+          - op: may
+            body:
+              - {op: choose, select: {zone: bz, owner: opp, filter: {types: [creature]}, count: 1}, as: frozen}
+              - {op: tap, select: {ref: frozen}, no_untap_next: true}
+  meteor_burn:
+    ja: メテオバーン（このクリーチャーがバトルゾーンを離れる時、かわりにこのクリーチャーの下にあるカードを1枚選び墓地に置いてもよい。そうした場合、このクリーチャーはバトルゾーンに留まる）
+    abilities:
+      - kind: replace
+        optional: true
+        when: {event: move, from: bz, subject: self}
+        if: {cmp: [{count: {under_of: self}}, ">=", 1]}
+        instead:
+          - {op: move, select: {under_of: self, count: 1}, to: graveyard, reason: put}
+  g_neo:              # G-NEO進化の離脱置換: 離れる時、かわりに下のカードすべてが同じ行き先へ離れる（重ねる側は面の neo: true で宣言する）
+    ja: G-NEO進化（このクリーチャーがバトルゾーンを離れる時、かわりにこのクリーチャーの下にあるカードをすべて、同じ行き先へ置く）
+    abilities:
+      - kind: replace
+        when: {event: move, from: bz, subject: self}
+        if: {cmp: [{count: {under_of: self}}, ">=", 1]}
+        instead:
+          - {op: move_under_to_event}
+  must_attack:
+    ja: このクリーチャーは、可能なら毎ターン攻撃する
+    abilities:
+      - {kind: static, affects: self, mod: {require: [attack]}}
+  summon_from_mana:
+    ja: このクリーチャーを自分のマナゾーンから召喚してもよい
+    abilities:
+      - {kind: static, zone: mana, affects: self, mod: {allow: [summon_from_mana]}}
+  summon_from_graveyard:
+    ja: このクリーチャーを自分の墓地から召喚してもよい（アビスラッシュの付随処理は付かない）
+    abilities:
+      - {kind: static, zone: graveyard, affects: self, mod: {allow: [summon_from_graveyard]}}
+  yobinion:
+    ja: ヨビニオン（このクリーチャーが召喚によって出た時、自分の山札の上から、これよりコストが小さいクリーチャーが出るまで表向きにしてもよい。そのクリーチャーを出す。残りをシャッフルし、山札の下に置く）
+    abilities:
+      - kind: trigger
+        when: {event: move, to: bz, subject: self, reason: summon}
+        effect:
+          - op: may
+            body:
+              - {op: yobinion}
+  z_rush:      # Zラッシュ: 常在型。シールドが離れた際、その時点でバトルゾーンにいる Zラッシュ持ちのハイパーモードを即座に解放する（適用はイベント適用側。公式Q&A 48466）
+    ja: Zラッシュ（シールドが離れたら、次の自分のターンのはじめまで、このクリーチャーのハイパーモードを解放する）
     abilities: []
