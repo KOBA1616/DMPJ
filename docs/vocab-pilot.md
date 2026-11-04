@@ -789,3 +789,10 @@ converted の監査（opt_reduce の素の整数表記9件）から。任意形�
 - 書き方: kind: static, affects: {...}, mod: {add_civs: ["fire"]}。「好きな文明をひとつ追加する」は選択肢が必要なため別途検討。
 - tests/test_vocab_pilot62.py 2件（正常 parse／不正値の検証エラー）。
 - 待機10枚（civ_addition のみが gap のもの）。
+
+## 第63弾: force_attack（可能なら攻撃する）— 新語彙なし（2026-11-04）
+「可能であれば攻撃する」は既存の `require: ["attack"]` で表せる（エンジンが強制攻撃を処理済み）。
+- 書き方: kind: static（または modify）, affects: {...}, mod: {require: ["attack"]}
+- duration で期間を指定（例: 次の相手のターン中 → until_next_opp_turn_end）
+- tests/test_vocab_pilot63.py 2件（正常 parse／検証）
+- 待機14枚（force_addition のみが gap のもの）。
