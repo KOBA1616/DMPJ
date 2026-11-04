@@ -283552,3 +283552,1396 @@ cards:
     notes: 第57弾 tap_alt_cost。
     aliases:
     - dmrp03-038
+- id: dm24ex3-tf36
+  name: タイク・タイソンズ
+  types:
+  - creature
+  civs:
+  - nature
+  cost: 2
+  power: 1000
+  races:
+  - ジョーカーズ
+  mana: 1
+  abilities:
+  - kind: trigger
+    when:
+      event: attack
+      subject: self
+    effect:
+    - op: may
+      body:
+      - op: swap
+        out:
+          ref: self
+        in:
+          zone: mana
+          owner: you
+          filter:
+            types:
+            - creature
+            races:
+            - ジョーカーズ
+            cost_le: 4
+          count: 1
+        out_to: mana
+  - kind: trigger
+    when:
+      event: move
+      from: bz
+      subject: self
+    effect:
+    - op: move
+      select:
+        zone: deck
+        owner: you
+        from_top: 1
+      to: mana
+      reason: put
+  text: Jチェンジ４（このクリーチャーが攻撃する時、このクリーチャーと自分のマナゾーンにあるコスト４以下のジョーカーズ・クリーチャー１体を入れ替えてもよい）
+    / このクリーチャーが離れた時、自分の山札の上から１枚目をマナゾーンに置く。
+  source:
+    official: dm24ex3-tf36
+    review: pending
+    notes: '"Jチェンジは第24弾の型（trigger + swap、out_to: mana）で変換。キーワード j_change は語彙に存在しないため使用しない。"'
+    aliases:
+    - dm24rp3-t09
+    - dmbd07-a-012
+    - dmex09-020
+    - dmex19-051
+    - dmrp07-055
+    - dmsd08-014
+    - promoy18-034
+- id: dm26ex4-cho026
+  name: グレープ・ダール
+  types:
+  - creature
+  civs:
+  - nature
+  cost: 5
+  power: 5000
+  races:
+  - ジョーカーズ
+  - スペシャルズ
+  mana: 1
+  abilities:
+  - kind: trigger
+    when:
+      event: move
+      to: bz
+      subject: self
+    effect:
+    - op: modify
+      select:
+        ref: self
+      mod:
+        allow:
+        - action: attack_creature
+          other:
+            tapped: false
+      duration: end_of_turn
+  - kind: trigger
+    when:
+      event: attack
+      subject: self
+    effect:
+    - op: may
+      body:
+      - op: swap
+        out:
+          ref: self
+        in:
+          zone: mana
+          owner: you
+          filter:
+            types:
+            - creature
+            races:
+            - ジョーカーズ
+            cost_le: 6
+          count: 1
+        out_to: mana
+  - kind: trigger
+    when:
+      event: move
+      to: bz
+      subject: self
+    effect:
+    - op: may
+      body:
+      - op: move
+        select:
+          zone: deck
+          owner: you
+          from_top: 2
+        to: mana
+        reason: put
+        as: paid
+    - op: if
+      cond:
+        exists:
+          ref: paid
+      then:
+      - op: move
+        select:
+          zone: mana
+          owner: you
+          count: 1
+        to: graveyard
+        reason: put
+  text: 'マッハファイター
+
+    Jチェンジ６
+
+    このクリーチャーが出た時、自分の山札の上から２枚をマナゾーンに置いてもよい。そうしたら、カードを１枚、自分のマナゾーンから墓地に置く。'
+  source:
+    official: dm26ex4-cho026
+    review: pending
+    notes: '"Jチェンジは第24弾の型（trigger + swap）で変換。「そうしたら」は may の as: paid と if exists の組み合わせで表現。カード名の括弧書き（DM26EX4
+      超26/超50）は製品情報のため text から除いた。"'
+- id: dm26ex4-cho044
+  name: タイク・タイソンズ
+  types:
+  - creature
+  civs:
+  - nature
+  cost: 2
+  power: 1000
+  races:
+  - ジョーカーズ
+  mana: 1
+  abilities:
+  - kind: trigger
+    when:
+      event: attack
+      subject: self
+    effect:
+    - op: may
+      body:
+      - op: swap
+        out:
+          ref: self
+        in:
+          zone: mana
+          owner: you
+          filter:
+            types:
+            - creature
+            races:
+            - ジョーカーズ
+            cost_le: 4
+          count: 1
+        out_to: mana
+  - kind: trigger
+    when:
+      event: move
+      from: bz
+      subject: self
+    effect:
+    - op: move
+      select:
+        zone: deck
+        owner: you
+        from_top: 1
+      to: mana
+      reason: put
+  text: Jチェンジ４ / このクリーチャーが離れた時、自分の山札の上から１枚をマナゾーンに置く。
+  source:
+    official: dm26ex4-cho044
+    review: pending
+    notes: Jチェンジは第24弾の型（trigger + swap）で変換。カード名の括弧書き（DM26EX4 超44/超50）は製品情報のため text
+      から除いた。
+- id: dm26rp3-045
+  name: メモッタルド・デカスギオ / メモメモ・ジョーカーズ
+  types:
+  - creature
+  civs:
+  - nature
+  cost: 6
+  power: 8000
+  races:
+  - ジョーカーズ
+  mana: 1
+  keywords:
+  - g_strike
+  - double_breaker
+  abilities:
+  - kind: trigger
+    when:
+      event: move
+      to: bz
+      subject: self
+    effect:
+    - op: modify
+      select:
+        ref: self
+      mod:
+        allow:
+        - action: attack_creature
+          other:
+            tapped: false
+      duration: end_of_turn
+  - kind: trigger
+    when:
+      event: attack
+      subject: self
+    effect:
+    - op: may
+      body:
+      - op: swap
+        out:
+          ref: self
+        in:
+          zone: mana
+          owner: you
+          filter:
+            types:
+            - creature
+            races:
+            - ジョーカーズ
+            cost_le: 8
+          count: 1
+        out_to: mana
+  text: マッハファイター / Jチェンジ８（このクリーチャーが攻撃する時、これと自分のマナゾーンにあるコスト８以下のジョーカーズ・クリーチャー１体を入れ替えてもよい）
+  source:
+    official: dm26rp3-045
+    review: pending
+    notes: G・ストライクとW・ブレイカーは keywords。マッハファイターはキーワードではなく trigger + modify の型で変換（既存カードの例に倣う）。Jチェンジは第24弾の型。種族の「???」は原文データの欠損のため、確定しているジョーカーズのみを記載。
+- id: dm26rp3-052
+  name: ヒミッツキッチ・グローブ
+  types:
+  - creature
+  civs:
+  - darkness
+  - nature
+  cost: 3
+  power: 3000
+  races:
+  - ジョーカーズ
+  mana: 1
+  abilities:
+  - kind: trigger
+    when:
+      event: move
+      to: bz
+      subject: self
+    effect:
+    - op: mill
+      count: 3
+      owner: you
+    - op: may
+      body:
+      - op: move
+        select:
+          zone: graveyard
+          owner: you
+          filter:
+            types:
+            - creature
+          count: 1
+        to: mana
+        reason: put
+  - kind: trigger
+    when:
+      event: attack
+      subject: self
+    effect:
+    - op: may
+      body:
+      - op: swap
+        out:
+          ref: self
+        in:
+          zone: mana
+          owner: you
+          filter:
+            types:
+            - creature
+            races:
+            - ジョーカーズ
+            cost_le: 4
+          count: 1
+        out_to: mana
+  - kind: trigger
+    when:
+      event: attack
+      subject: self
+    effect:
+    - op: may
+      body:
+      - op: swap
+        out:
+          ref: self
+        in:
+          zone: graveyard
+          owner: you
+          filter:
+            types:
+            - creature
+            races:
+            - ジョーカーズ
+            cost_le: 6
+          count: 1
+        out_to: graveyard
+  text: このクリーチャーが出た時、自分の山札の上から３枚を墓地に置く。その後、クリーチャーを１体、自分の墓地からマナゾーンに置いてもよい。 / Jチェンジ４（このクリーチャーが攻撃する時、これと自分のマナゾーンにあるコスト４以下のジョーカーズ・クリーチャー１体を入れ替えてもよい）
+    / Jクライム６（このクリーチャーが攻撃する時、これと自分の墓地にあるコスト６以下のジョーカーズ・クリーチャー１体を入れ替えてもよい）
+  source:
+    official: dm26rp3-052
+    review: pending
+    notes: '"Jチェンジは第24弾の型（out_to: mana）、Jクライムは既存の型（out_to: graveyard、dm26rp3-038 の例に倣う）で変換。"'
+    aliases:
+    - promoy25-087
+- id: dm26rp3-074
+  name: ホッタレマン
+  types:
+  - creature
+  civs:
+  - nature
+  cost: 1
+  power: 1000
+  races:
+  - ジョーカーズ
+  mana: 1
+  abilities:
+  - kind: static
+    affects: self
+    if:
+      cmp:
+      - sum:
+        - count:
+            zone: bz
+            owner: you
+            filter:
+              race_has: ジョーカーズ
+        - count:
+            zone: mana
+            owner: you
+            filter:
+              race_has: ジョーカーズ
+      - <
+      - 5
+    mod:
+      grant:
+      - cannot_attack
+  - kind: trigger
+    when:
+      event: attack
+      subject: self
+    effect:
+    - op: may
+      body:
+      - op: swap
+        out:
+          ref: self
+        in:
+          zone: mana
+          owner: you
+          filter:
+            types:
+            - creature
+            races:
+            - ジョーカーズ
+            cost_le: 4
+          count: 1
+        out_to: mana
+  text: 自分の、ジョーカーズとマナゾーンにあるジョーカーズ・カードが合計５つ以上なければ、このクリーチャーは攻撃できない。 / Jチェンジ４（このクリーチャーが攻撃する時、これと自分のマナゾーンにあるコスト４以下のジョーカーズ・クリーチャー１体を入れ替えてもよい）
+  source:
+    official: dm26rp3-074
+    review: pending
+    notes: '"攻撃禁止は static + if（ジョーカーズ数の合計が５未満）+ grant: [cannot_attack] で表現。Jチェンジは第24弾の型。"'
+- id: dm26rp3-sec020
+  name: メモッタルド・デカスギオ / メモメモ・ジョーカーズ
+  types:
+  - creature
+  civs:
+  - nature
+  cost: 6
+  power: 8000
+  races:
+  - ジョーカーズ
+  mana: 1
+  keywords:
+  - g_strike
+  - double_breaker
+  abilities:
+  - kind: trigger
+    when:
+      event: move
+      to: bz
+      subject: self
+    effect:
+    - op: modify
+      select:
+        ref: self
+      mod:
+        allow:
+        - action: attack_creature
+          other:
+            tapped: false
+      duration: end_of_turn
+  - kind: trigger
+    when:
+      event: attack
+      subject: self
+    effect:
+    - op: may
+      body:
+      - op: swap
+        out:
+          ref: self
+        in:
+          zone: mana
+          owner: you
+          filter:
+            types:
+            - creature
+            races:
+            - ジョーカーズ
+            cost_le: 8
+          count: 1
+        out_to: mana
+  text: マッハファイター / Jチェンジ８
+  source:
+    official: dm26rp3-sec020
+    review: pending
+    notes: dm26rp3-045 のシークレット版。G・ストライクとW・ブレイカーは keywords。マッハファイターは trigger + modify
+      の型。種族の「???」は原文データの欠損のため、確定しているジョーカーズのみを記載。カード名の括弧書き（DM26RP3 ㊙20/㊙24）は製品情報のため除いた。
+- id: dm26rp3-sec021
+  name: ヒミッツキッチ・グローブ
+  types:
+  - creature
+  civs:
+  - darkness
+  - nature
+  cost: 3
+  power: 3000
+  races:
+  - ジョーカーズ
+  mana: 1
+  abilities:
+  - kind: trigger
+    when:
+      event: move
+      to: bz
+      subject: self
+    effect:
+    - op: mill
+      count: 3
+      owner: you
+    - op: may
+      body:
+      - op: move
+        select:
+          zone: graveyard
+          owner: you
+          filter:
+            types:
+            - creature
+          count: 1
+        to: mana
+        reason: put
+  - kind: trigger
+    when:
+      event: attack
+      subject: self
+    effect:
+    - op: may
+      body:
+      - op: swap
+        out:
+          ref: self
+        in:
+          zone: mana
+          owner: you
+          filter:
+            types:
+            - creature
+            races:
+            - ジョーカーズ
+            cost_le: 4
+          count: 1
+        out_to: mana
+  - kind: trigger
+    when:
+      event: attack
+      subject: self
+    effect:
+    - op: may
+      body:
+      - op: swap
+        out:
+          ref: self
+        in:
+          zone: graveyard
+          owner: you
+          filter:
+            types:
+            - creature
+            races:
+            - ジョーカーズ
+            cost_le: 6
+          count: 1
+        out_to: graveyard
+  text: このクリーチャーが出た時、自分の山札の上から３枚を墓地に置く。その後、クリーチャーを１体、自分の墓地からマナゾーンに置いてもよい。 / Jチェンジ４
+    / Jクライム６
+  source:
+    official: dm26rp3-sec021
+    review: pending
+    notes: '"dm26rp3-052 のシークレット版。Jチェンジは第24弾の型（out_to: mana）、Jクライムは既存の型（out_to: graveyard）で変換。カード名の括弧書き（DM26RP3
+      ㊙21/㊙24）は製品情報のため除いた。"'
+- id: dmbd07-a-002
+  name: ダダダッシュX
+  types:
+  - creature
+  civs:
+  - nature
+  cost: 7
+  power: 7000
+  races:
+  - ジョーカーズ
+  mana: 1
+  abilities:
+  - kind: trigger
+    when:
+      event: move
+      to: bz
+      subject: self
+    effect:
+    - op: modify
+      select:
+        ref: self
+      mod:
+        allow:
+        - action: attack_creature
+          other:
+            tapped: false
+      duration: end_of_turn
+  - kind: trigger
+    when:
+      event: move
+      to: bz
+      subject: self
+    effect:
+    - op: modify
+      select:
+        zone: hand
+        owner: opp
+        filter:
+          types:
+          - spell
+          cost_le: 4
+      mod:
+        deny:
+        - cast
+      duration: end_of_turn
+  - kind: trigger
+    when:
+      event: attack
+      subject: self
+    effect:
+    - op: may
+      body:
+      - op: swap
+        out:
+          ref: self
+        out_to: mana
+        in:
+          zone: mana
+          owner: you
+          filter:
+            types:
+            - creature
+            cost_le: 8
+            race_has: ジョーカーズ
+          count: 1
+  text: 'マッハファイター
+
+    W・ブレイカー
+
+    このクリーチャーがバトルゾーンに出た時、そのターン、相手はコスト４以下の呪文を唱えられない。
+
+    Jチェンジ８（このクリーチャーが攻撃する時、このクリーチャーと自分のマナゾーンにあるコスト８以下のジョーカーズ１体を入れ替えてもよい）'
+  source:
+    official: dmbd07-a-002
+    review: pending
+    notes: W・ブレイカーは known_keywords のため書き直さない。詠唱禁止はタイム槍 ドレミ dm26rp2-053 と同型で duration
+      を end_of_turn にした。Jチェンジ８はパイロット第24弾の型（trigger + swap、out_to mana）。
+  keywords:
+  - double_breaker
+- id: dmbd07-a-011
+  name: シューズッキュン
+  types:
+  - creature
+  civs:
+  - nature
+  cost: 3
+  power: 2000
+  races:
+  - ジョーカーズ
+  mana: 1
+  abilities:
+  - kind: trigger
+    when:
+      event: move
+      to: bz
+      subject: self
+    effect:
+    - op: modify
+      select:
+        ref: self
+      mod:
+        allow:
+        - action: attack_creature
+          other:
+            tapped: false
+      duration: end_of_turn
+  - kind: trigger
+    when:
+      event: attack
+      subject: self
+    effect:
+    - op: may
+      body:
+      - op: swap
+        out:
+          ref: self
+        out_to: mana
+        in:
+          zone: mana
+          owner: you
+          filter:
+            types:
+            - creature
+            cost_le: 4
+            race_has: ジョーカーズ
+          count: 1
+  text: 'マッハファイター（このクリーチャーは、バトルゾーンに出たターンの間、タップまたはアンタップしているクリーチャーを攻撃できる）
+
+    Jチェンジ４（このクリーチャーが攻撃する時、このクリーチャーと自分のマナゾーンにあるコスト４以下のジョーカーズ１体を入れ替えてもよい）'
+  source:
+    official: dmbd07-a-011
+    review: pending
+    notes: Jチェンジ４はパイロット第24弾の型（trigger + swap、out_to mana）。
+    aliases:
+    - dmrp07-054
+    - promoy17-040
+- id: dmbd11-b02
+  name: 忠温コタツ丸
+  types:
+  - creature
+  civs:
+  - nature
+  cost: 3
+  power: 3000
+  races:
+  - ジョーカーズ
+  mana: 1
+  abilities:
+  - kind: trigger
+    when:
+      event: attack
+      subject: self
+    effect:
+    - op: may
+      body:
+      - op: swap
+        out:
+          ref: self
+        out_to: mana
+        in:
+          zone: mana
+          owner: you
+          filter:
+            types:
+            - creature
+            cost_le: 4
+            race_has: ジョーカーズ
+          count: 1
+  text: 'このクリーチャーを自分のマナゾーンから召喚してもよい。
+
+    Jチェンジ４（このクリーチャーが攻撃する時、このクリーチャーと自分のマナゾーンにあるコスト４以下のジョーカーズ１体を入れ替えてもよい）'
+  source:
+    official: dmbd11-b02
+    review: pending
+    notes: マナゾーンからの召喚は known_keywords（summon_from_mana）のため書き直さない。Jチェンジ４はパイロット第24弾の型。
+    aliases:
+    - dmrp08-054
+  keywords:
+  - summon_from_mana
+- id: dmbd11-e02
+  name: スコプンプン
+  types:
+  - creature
+  civs:
+  - nature
+  cost: 7
+  power: 8000
+  races:
+  - ジョーカーズ
+  mana: 1
+  abilities:
+  - kind: trigger
+    when:
+      event: attack
+      subject: self
+    effect:
+    - op: may
+      body:
+      - op: swap
+        out:
+          ref: self
+        out_to: mana
+        in:
+          zone: mana
+          owner: you
+          filter:
+            types:
+            - creature
+            cost_le: 10
+            race_has: ジョーカーズ
+          count: 1
+  - kind: trigger
+    when:
+      event: move
+      to: bz
+      subject: self
+    effect:
+    - op: move
+      select:
+        zone: bz
+        owner: opp
+        filter:
+          types:
+          - creature
+        count: 1
+      to: mana
+      reason: put
+  text: 'Jチェンジ10（このクリーチャーが攻撃する時、このクリーチャーと自分のマナゾーンにあるコスト10以下のジョーカーズ１体を入れ替えてもよい）
+
+    W・ブレイカー（このクリーチャーはシールドを２つブレイクする）
+
+    このクリーチャーがバトルゾーンに出た時、相手のクリーチャーを１体選び、持ち主のマナゾーンに置く。'
+  source:
+    official: dmbd11-e02
+    review: pending
+    notes: W・ブレイカーは known_keywords のため書き直さない。「持ち主のマナゾーンに置く」は to mana で持ち主のマナへ（マクスカルゴ・トラップと同型）。Jチェンジ10はパイロット第24弾の型。
+    aliases:
+    - dmrp08-026
+    - promoy17-072
+  keywords:
+  - double_breaker
+- id: dmbd11-f07
+  name: シロイヌムサシ
+  types:
+  - creature
+  civs:
+  - nature
+  cost: 4
+  power: 5000
+  races:
+  - ジョーカーズ
+  mana: 1
+  abilities:
+  - kind: trigger
+    when:
+      event: attack
+      subject: self
+    effect:
+    - op: may
+      body:
+      - op: swap
+        out:
+          ref: self
+        out_to: mana
+        in:
+          zone: mana
+          owner: you
+          filter:
+            types:
+            - creature
+            cost_le: 6
+            race_has: ジョーカーズ
+          count: 1
+  - kind: trigger
+    when:
+      event: move
+      from: bz
+      subject: self
+    effect:
+    - op: move
+      select:
+        zone: deck
+        owner: you
+        from_top: 2
+      to: mana
+      reason: put
+    - op: move
+      select:
+        zone: mana
+        owner: you
+        count: 1
+      to: deck
+      reason: put
+      position: bottom
+  text: Jチェンジ６ / このクリーチャーがバトルゾーンを離れた時、自分の山札の上から２枚をマナゾーンに置く。その後、カードを１枚、自分のマナゾーンから山札の一番下に置く。
+  source:
+    official: dmbd11-f07
+    review: pending
+    notes: Jチェンジの括弧書き説明は注釈のため text から除いた。離れた時誘発は when event move from bz subject self。マナ加速と山札戻しはどちらも「てもよい」なしのため
+      may なし。
+    aliases:
+    - dmrp08-053
+- id: dmex07-029
+  name: ヤッタレ塾長
+  types:
+  - creature
+  civs:
+  - nature
+  cost: 6
+  power: 4000
+  races:
+  - ジョーカーズ
+  mana: 1
+  abilities:
+  - kind: trigger
+    when:
+      event: move
+      to: bz
+      subject: self
+    effect:
+    - op: modify
+      select:
+        zone: bz
+        owner: you
+        filter:
+          race_has: ジョーカーズ
+        count: 1
+      mod:
+        gain:
+        - kind: trigger
+          when:
+            event: attack
+            subject: self
+          effect:
+          - op: may
+            body:
+            - op: swap
+              out:
+                ref: self
+              out_to: mana
+              in:
+                zone: mana
+                owner: you
+                filter:
+                  types:
+                  - creature
+                  cost_le: 8
+                  race_has: ジョーカーズ
+                count: 1
+      duration: end_of_turn
+  text: このクリーチャーがバトルゾーンに出た時、そのターン、自分のジョーカーズ１体に「Jチェンジ８」を与える。
+  source:
+    official: dmex07-029
+    review: pending
+    notes: Jチェンジ８の付与は mod.gain で誘発型能力そのものを付与（フラッシュ・アーマー dm22-023 と同型）。付与先の self は能力を得たジョーカーズを指す。括弧書きの説明文は注釈のため
+      text から除いた。
+- id: dmex19-015
+  name: ソーナンデス
+  types:
+  - creature
+  civs:
+  - nature
+  cost: 6
+  power: 7000
+  races:
+  - ジョーカーズ
+  mana: 1
+  abilities:
+  - kind: trigger
+    when:
+      event: move
+      to: bz
+      subject: self
+    effect:
+    - op: modify
+      select:
+        ref: self
+      mod:
+        allow:
+        - action: attack_creature
+          other:
+            tapped: false
+      duration: end_of_turn
+  - kind: trigger
+    when:
+      event: attack
+      subject: self
+    effect:
+    - op: may
+      body:
+      - op: swap
+        out:
+          ref: self
+        out_to: mana
+        in:
+          zone: mana
+          owner: you
+          filter:
+            types:
+            - creature
+            cost_le: 8
+            race_has: ジョーカーズ
+          count: 1
+  - kind: trigger
+    when:
+      event: move
+      from: bz
+      subject: self
+    effect:
+    - op: may
+      body:
+      - op: choose
+        select:
+          zone: hand
+          owner: you
+          count: 1
+        as: d
+      - op: discard
+        select:
+          ref: d
+          count: all
+      - op: if
+        cond:
+          exists:
+            ref: d
+        then:
+        - op: move
+          select:
+            zone: mana
+            owner: you
+            filter:
+              types:
+              - creature
+            count: 1
+          to: hand
+          reason: return
+  text: 'マッハファイター（このクリーチャーは、出たターンの間、タップまたはアンタップしているクリーチャーを攻撃できる）
+
+    Jチェンジ８（このクリーチャーが攻撃する時、このクリーチャーと自分のマナゾーンにあるコスト８以下のジョーカーズ１体を入れ替えてもよい）
+
+    W・ブレイカー
+
+    このクリーチャーが離れた時、自分の手札を１枚捨ててもよい。そうしたら、クリーチャーを１体、自分のマナゾーンから手札に戻す。'
+  source:
+    official: dmex19-015
+    review: pending
+    notes: W・ブレイカーは known_keywords のため書き直さない。「そうしたら」は choose + discard + if exists（牙神兵ガンガン・マンモスと同型）。
+    aliases:
+    - dmrp07-010
+  keywords:
+  - double_breaker
+- id: dmex19-016
+  name: グレープ・ダール
+  types:
+  - creature
+  civs:
+  - nature
+  cost: 5
+  power: 5000
+  races:
+  - ジョーカーズ
+  - スペシャルズ
+  mana: 1
+  abilities:
+  - kind: trigger
+    when:
+      event: move
+      to: bz
+      subject: self
+    effect:
+    - op: modify
+      select:
+        ref: self
+      mod:
+        allow:
+        - action: attack_creature
+          other:
+            tapped: false
+      duration: end_of_turn
+  - kind: trigger
+    when:
+      event: attack
+      subject: self
+    effect:
+    - op: may
+      body:
+      - op: swap
+        out:
+          ref: self
+        out_to: mana
+        in:
+          zone: mana
+          owner: you
+          filter:
+            types:
+            - creature
+            cost_le: 6
+            race_has: ジョーカーズ
+          count: 1
+  - kind: trigger
+    when:
+      event: move
+      to: bz
+      subject: self
+    effect:
+    - op: may
+      body:
+      - op: move
+        select:
+          zone: deck
+          owner: you
+          from_top: 2
+        to: mana
+        reason: put
+        as: paid
+      - op: if
+        cond:
+          exists:
+            ref: paid
+        then:
+        - op: move
+          select:
+            zone: mana
+            owner: you
+            count: 1
+          to: graveyard
+          reason: put
+  text: 'マッハファイター（このクリーチャーは、出たターンの間、タップまたはアンタップしているクリーチャーを攻撃できる）
+
+    Jチェンジ６（このクリーチャーが攻撃する時、このクリーチャーと自分のマナゾーンにあるコスト６以下のジョーカーズ１体を入れ替えてもよい）
+
+    このクリーチャーが出た時、自分の山札の上から２枚をマナゾーンに置いてもよい。そうしたら、カードを１枚、自分のマナゾーンから墓地に置く。'
+  source:
+    official: dmex19-016
+    review: pending
+    notes: 「そうしたら」は may の body 内で as paid + if exists（メテオバーンの型）。種族はジョーカーズとスペシャルズの両方。
+    aliases:
+    - dmex03-040
+    - dmex08-119
+- id: dmrp07-027
+  name: おテントさん
+  types:
+  - creature
+  civs:
+  - nature
+  cost: 5
+  power: 5000
+  races:
+  - ジョーカーズ
+  mana: 1
+  abilities:
+  - kind: trigger
+    when:
+      event: attack
+      subject: self
+    effect:
+    - op: may
+      body:
+      - op: swap
+        out:
+          ref: self
+        out_to: mana
+        in:
+          zone: mana
+          owner: you
+          filter:
+            types:
+            - creature
+            cost_le: 6
+            race_has: ジョーカーズ
+          count: 1
+  - kind: trigger
+    when:
+      event: move
+      to: bz
+      subject: self
+    effect:
+    - op: may
+      body:
+      - op: force_battle
+        a:
+          ref: self
+        b:
+          zone: bz
+          owner: opp
+          filter:
+            types:
+            - creature
+          count: 1
+  text: Jチェンジ６ / このクリーチャーがバトルゾーンに出た時、相手のクリーチャーを１体選んでもよい。その選んだクリーチャーとこのクリーチャーをバトルさせる。
+  source:
+    official: dmrp07-027
+    review: pending
+    notes: Jチェンジの括弧書き説明は注釈のため text から除いた。バトルさせるは force_battle（dmrp14-021 と同型、may の
+      body 内に直接）。
+    aliases:
+    - promoy17-049
+- id: dmrp07-087
+  name: おいも三兄弟
+  types:
+  - creature
+  civs:
+  - nature
+  cost: 4
+  power: 5000
+  races:
+  - ジョーカーズ
+  mana: 1
+  abilities:
+  - kind: trigger
+    when:
+      event: attack
+      subject: self
+    effect:
+    - op: may
+      body:
+      - op: swap
+        out:
+          ref: self
+        out_to: mana
+        in:
+          zone: mana
+          owner: you
+          filter:
+            types:
+            - creature
+            cost_le: 6
+            races:
+            - ジョーカーズ
+          count: 1
+  text: Jチェンジ６（このクリーチャーが攻撃する時、このクリーチャーと自分のマナゾーンにあるコスト６以下のジョーカーズ１体を入れ替えてもよい）
+  source:
+    official: dmrp07-087
+    review: pending
+    notes: '"Jチェンジは第24弾のイディオム（攻撃時誘発+swap out_to: mana）。"'
+- id: dmrp07-088
+  name: ホッチKISS
+  types:
+  - creature
+  civs:
+  - nature
+  cost: 4
+  power: 3000
+  races:
+  - ジョーカーズ
+  mana: 1
+  abilities:
+  - kind: trigger
+    when:
+      event: attack
+      subject: self
+    effect:
+    - op: may
+      body:
+      - op: swap
+        out:
+          ref: self
+        out_to: mana
+        in:
+          zone: mana
+          owner: you
+          filter:
+            types:
+            - creature
+            cost_le: 4
+            races:
+            - ジョーカーズ
+          count: 1
+  text: 'S・トリガー（このクリーチャーをシールドゾーンから手札に加える時、コストを支払わずにすぐ召喚してもよい）
+
+    Jチェンジ４（このクリーチャーが攻撃する時、このクリーチャーと自分のマナゾーンにあるコスト４以下のジョーカーズ１体を入れ替えてもよい）'
+  source:
+    official: dmrp07-088
+    review: pending
+    notes: Jチェンジは第24弾のイディオム。S・トリガーは known_keywords のため書き直さない。
+  keywords:
+  - s_trigger
+- id: dmrp08-089
+  name: 宅配ビンちゃん
+  types:
+  - creature
+  civs:
+  - nature
+  cost: 6
+  power: 6000
+  races:
+  - ジョーカーズ
+  mana: 1
+  abilities:
+  - kind: trigger
+    when:
+      event: attack
+      subject: self
+    effect:
+    - op: may
+      body:
+      - op: swap
+        out:
+          ref: self
+        out_to: mana
+        in:
+          zone: mana
+          owner: you
+          filter:
+            types:
+            - creature
+            cost_le: 8
+            races:
+            - ジョーカーズ
+          count: 1
+  text: 'Jチェンジ８（このクリーチャーが攻撃する時、このクリーチャーと自分のマナゾーンにあるコスト８以下のジョーカーズ１体を入れ替えてもよい）
+
+    W・ブレイカー（このクリーチャーはシールドを２つブレイクする）'
+  source:
+    official: dmrp08-089
+    review: pending
+    notes: Jチェンジは第24弾のイディオム。W・ブレイカーは known_keywords のため書き直さない。
+  keywords:
+  - double_breaker
+- id: dmrp08-091
+  name: アツギダルマ
+  types:
+  - creature
+  civs:
+  - nature
+  cost: 4
+  power: 4000
+  races:
+  - ジョーカーズ
+  mana: 1
+  abilities:
+  - kind: trigger
+    when:
+      event: move
+      to: bz
+      subject: self
+    effect:
+    - op: modify
+      select:
+        ref: self
+      mod:
+        allow:
+        - action: attack_creature
+          other:
+            tapped: false
+      duration: end_of_turn
+  - kind: trigger
+    when:
+      event: attack
+      subject: self
+    effect:
+    - op: may
+      body:
+      - op: swap
+        out:
+          ref: self
+        out_to: mana
+        in:
+          zone: mana
+          owner: you
+          filter:
+            types:
+            - creature
+            cost_le: 4
+            races:
+            - ジョーカーズ
+          count: 1
+  text: 'マッハファイター（このクリーチャーは、バトルゾーンに出たターンの間、タップまたはアンタップしているクリーチャーを攻撃できる）
+
+    Jチェンジ４（このクリーチャーが攻撃する時、このクリーチャーと自分のマナゾーンにあるコスト４以下のジョーカーズ１体を入れ替えてもよい）'
+  source:
+    official: dmrp08-091
+    review: pending
+    notes: Jチェンジは第24弾のイディオム。
+- id: dmrp09-101
+  name: ドゥーユーノーミー
+  types:
+  - creature
+  civs:
+  - nature
+  cost: 3
+  power: 2000
+  races:
+  - ジョーカーズ
+  mana: 1
+  abilities:
+  - kind: trigger
+    when:
+      event: attack
+      subject: self
+    effect:
+    - op: may
+      body:
+      - op: swap
+        out:
+          ref: self
+        out_to: mana
+        in:
+          zone: mana
+          owner: you
+          filter:
+            types:
+            - creature
+            cost_le: 6
+            races:
+            - ジョーカーズ
+          count: 1
+  text: 'Jチェンジ６（このクリーチャーが攻撃する時、このクリーチャーと自分のマナゾーンにあるコスト６以下のジョーカーズ１体を入れ替えてもよい）
+
+    このクリーチャーは、相手プレイヤーを攻撃できない。'
+  source:
+    official: dmrp09-101
+    review: pending
+    notes: Jチェンジは第24弾のイディオム。「このクリーチャーは相手プレイヤーを攻撃できない」は known_keywords のため書き直さない。
+  keywords:
+  - cannot_attack_player
+- id: dmsd08-019
+  name: ボーボボ・ボーボ坊
+  types:
+  - creature
+  civs:
+  - nature
+  cost: 2
+  power: 3000
+  races:
+  - ジョーカーズ
+  mana: 1
+  abilities:
+  - kind: trigger
+    when:
+      event: attack
+      subject: self
+    effect:
+    - op: may
+      body:
+      - op: swap
+        out:
+          ref: self
+        out_to: mana
+        in:
+          zone: mana
+          owner: you
+          filter:
+            types:
+            - creature
+            cost_le: 4
+            races:
+            - ジョーカーズ
+          count: 1
+  text: Jチェンジ４（このクリーチャーが攻撃する時、このクリーチャーと自分のマナゾーンにあるコスト４以下のジョーカーズ１体を入れ替えてもよい）
+  source:
+    official: dmsd08-019
+    review: pending
+    notes: Jチェンジは第24弾のイディオム。
+    aliases:
+    - dmrp07-092
