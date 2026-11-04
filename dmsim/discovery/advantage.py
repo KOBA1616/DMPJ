@@ -146,3 +146,32 @@ def traced_turn(rules, spec: dict, w: dict | None = None, turns: int = 1, budget
             break
         again.answer(list(idx))
     return board_value(eng, 0, w), resource_vector(eng, 0), causal_links(again.s.trace), again.s.trace
+
+
+def detect_conversion(mean: dict) -> list[str]:
+    """デメリット変換の検出。単体の V が「なし」より低いカード X（a か b）が、相手と組むと回収される: V(a,b) > V(相手単体)。
+    戻り値は、デメリット側のカード（"a" / "b"）の一覧。"""
+    out = []
+    for x, other in (("a", "b"), ("b", "a")):
+        if mean[x] < mean["none"] - 1e-9 and mean["ab"] > mean[other] + 1e-9:
+            out.append(x)
+    return out
+
+
+def scan_pair_report(rules, a: str, b: str, base: dict | None = None, opp: dict | None = None, places=PLACES,
+                     w: dict | None = None, turns: int = 1, seeds=(1, 2, 3)) -> dict:
+    """置き場所ごとに combo_report を回し、成立する条件・失敗する条件・デメリット変換を分けて返す。
+    - works: 因果の連鎖があり全シードで S>0 の置き場所（成立条件）
+    - fails: S ≤ 0 または符号が割れた置き場所（失敗条件。捨てずに記録する）
+    - converts: 「デメリット変換」。A 単体の V が「なし」より低く（または B 単体が低く）、組にすると回収されて S>0 のもの"""
+    works, fails, converts = [], [], []
+    for pa in places:
+        for pb in places:
+            r = combo_report(rules, {pa: [a]}, {pb: [b]}, base or {}, opp=opp, w=w, turns=turns, seeds=seeds)
+            row = {"place_a": pa, "place_b": pb, "S": r["S"], "consistent": r["consistent"], "causal_links": r["causal_links"],
+                   "lift": r["lift"], "mean": r["mean"]}
+            (works if r["is_combo"] else fails).append(row)
+            for who in detect_conversion(r["mean"]):
+                converts.append({**row, "disadvantage_card": a if who == "a" else b,
+                                 "solo_delta": r["mean"][who] - r["mean"]["none"]})
+    return {"a": a, "b": b, "works": works, "fails": fails, "converts": converts}

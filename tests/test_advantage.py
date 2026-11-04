@@ -63,3 +63,22 @@ def test_causal_link_knight_causes_dmc_trigger_and_control_has_none():
     assert (t.K, t.D) in links                       # 騎士の盾置き → DMC の墓地誘発
     r = adv.combo_report(rules, {"hand": [t.K]}, {"hand": ["T001"]}, {"mana": [t.D] * 3}, opp={"bz": ["T001"]}, seeds=(1,))
     assert not r["is_combo"] and r["causal_links"] == []
+
+
+def test_detect_conversion_flags_a_solo_disadvantage_that_pays_off_in_a_pair():
+    # A 単体は「なし」より低い（デメリット）が、B と組むと B 単体より高い → A がデメリット変換
+    assert adv.detect_conversion({"none": 1.0, "a": -1.0, "b": 2.0, "ab": 6.0}) == ["a"]
+    # 騎士のように単体でも得なカードは、デメリット変換ではない
+    assert adv.detect_conversion({"none": 0.5, "a": 5.5, "b": 0.7, "ab": 10.65}) == []
+    # 組にしても回収されないデメリットは対象外
+    assert adv.detect_conversion({"none": 1.0, "a": -1.0, "b": 2.0, "ab": 1.5}) == []
+
+
+def test_scan_pair_report_separates_working_and_failing_places():
+    import pathlib
+    import tempfile
+    import test_dmc_knight as t
+    rules = t._small_rules(pathlib.Path(tempfile.mkdtemp()))
+    x = adv.scan_pair_report(rules, t.K, t.D, base={"mana": [t.D] * 3}, opp={"bz": ["T001"]}, places=("hand", "graveyard", "mana"), seeds=(1,))
+    assert {(w["place_a"], w["place_b"]) for w in x["works"]} == {("hand", "hand"), ("hand", "graveyard")}
+    assert len(x["fails"]) == 7 and all(f["S"] <= 1e-9 or not f["causal_links"] for f in x["fails"])
