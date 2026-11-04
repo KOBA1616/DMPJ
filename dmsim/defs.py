@@ -669,6 +669,8 @@ def _load_face(raw, keywords, macros, chk: Checker, where) -> dict:
                 raise DefError(f"{where}: alt_cost do step needs {{zone, count: int, to, reason}}")
             if "filter" in step:
                 chk.filter(step["filter"], where)
+        if "if" in ac:
+            chk.cond(ac["if"], where + ": alt_cost.if")
     if "vividraw" in raw:
         vd = raw["vividraw"]
         if not isinstance(vd, dict) or not isinstance(vd.get("cost"), int) or set(vd.get("civs", [])) - CIVS:

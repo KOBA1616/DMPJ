@@ -728,3 +728,10 @@ converted の監査（opt_reduce の素の整数表記9件）から。任意形�
 
 ## 第55弾: filter の fushigi 所持判定（2026-11-04）
 ラウンド56（fushigibirth 23件）の差し戻しで判明: 「墓地に置いた中から『フシギバース』を持つクリーチャー1体につき〜」を数える/選ぶための所持フィルタが無かった。第54弾の vividraw と同じ型で、filter に `fushigi: true/false` を追加（defs FILTER_KEYS、selectors filter_match: CardDef 本体かいずれかの面が fushigi を持つか）。数え上げは count 式の filter や exists {ref, filter: {fushigi: true}} で書ける。試験カード T152（探知呪文）を proto に追加、tests/test_vocab_pilot55.py 1件（T095 だけが選ばれる）。
+
+## 第56弾: 条件付き代替コスト（alt_cost の if）（2026-11-04）
+ラウンド60（summon_time_alternative_cost 35件）の差し戻しで判明: 「〜があれば、このクリーチャーを[コスト]支払って召喚してもよい」の条件付き代替コストを表す語彙が無かった。alt_cost は {cost, civs} または {do: [...]} のみで条件を付けられなかった。
+- defs: alt_cost に `if`（条件式）を許可。chk.cond で検証。
+- engine/turn.py: :alt 選択肢の提示時に if 条件を eval_cond で評価し、不成立なら選択肢を出さない（continue）。env は {"you": p, "self": ref(cid), "vars": {}}（free_if と同型）。
+- 書き方: alt_cost: {cost: 1, civs: [water, water], if: {exists: {zone: bz, owner: you, filter: {types: [creature], tapped: true}}}}。
+- proto T153（試験用条件付き代替コスト獣）。tests/test_vocab_pilot56.py 2件（条件成立/不成立での eval_cond）＋実カード parse テスト（4枚）。

@@ -90,8 +90,10 @@ class TurnMixin:
                         opt["face"] = fi
                     out.append(opt)
             for fi, f in ([(None, d)] if not d.faces else list(enumerate(d.faces))):
-                ac = f.alt_cost   # 代替コスト: 別額を払う / 行動で払う
+                ac = f.alt_cost   # 代替コスト: 別額を払う / 行動で払う（if があれば条件成立時のみ提示）
                 if ac:
+                    if "if" in ac and not self.eval_cond(ac["if"], {"you": p, "self": self.s.ref(cid), "vars": {}}):
+                        continue
                     ok = bool(self._mana_choices(cid, p, fi, cost=ac["cost"], limit=1, civs=ac.get("civs"))) if "cost" in ac else \
                         all(sum(1 for c in self.zlist(st["zone"], p) if self.filter_match(c, st.get("filter", {}))) >= st["count"]
                             for st in ac["do"])
