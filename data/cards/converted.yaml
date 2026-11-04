@@ -287690,3 +287690,116 @@ cards:
       の型）。"'
   keywords:
   - s_trigger
+- id: dmex03-011
+  name: 爆弾魔オーバスト
+  types:
+  - creature
+  - evolution
+  civs:
+  - darkness
+  cost: 10
+  power: 10000
+  races:
+  - マフィ・ギャング
+  - スペシャルズ
+  mana: 1
+  evolve_from:
+    types:
+    - creature
+    civs:
+    - darkness
+    zone: graveyard
+  abilities:
+  - kind: static
+    affects: self
+    mod:
+      breaks: 99
+  - kind: trigger
+    when:
+      event: attack_end
+      subject: self
+    effect:
+    - op: break
+      player: you
+      count:
+        count:
+          zone: shield
+          owner: you
+  - kind: trigger
+    when:
+      event: move
+      to: graveyard
+      reason: destroy
+      subject: self
+    effect:
+    - op: destroy
+      select:
+        zone: bz
+        filter:
+          types:
+          - creature
+        count: all
+  text: 墓地進化：闇のクリーチャーを１体自分の墓地から選び、このクリーチャーをその上に重ねつつバトルゾーンに出す。 / G・ブレイカー（このクリーチャーは、相手のシールドをすべてブレイクし、その攻撃の後、自分のシールドをすべてブレイクする）
+    / このクリーチャーが破壊された時、クリーチャーをすべて破壊する。
+  source:
+    official: dmex03-011
+    review: pending
+    notes: '"G・ブレイカーは語彙にないため、「相手のシールドをすべてブレイク」は breaks: 99（ワールド・ブレイカーと同値のイディオム）、「その攻撃の後、自分のシールドをすべてブレイク」は
+      attack_end 誘発＋自分のシールド枚数分のブレイクで表現。"'
+- id: dmex08-093
+  name: 閻魔大王
+  types:
+  - creature
+  - evolution
+  civs:
+  - darkness
+  cost: 7
+  power: 7160
+  races:
+  - デーモン・コマンド
+  mana: 1
+  evolve_from:
+    types:
+    - creature
+    civs:
+    - darkness
+    zone: graveyard
+  keywords:
+  - double_breaker
+  abilities:
+  - kind: trigger
+    when:
+      event: move
+      to: bz
+      subject: self
+    effect:
+    - op: move
+      select:
+        zone: bz
+        owner: opp
+        filter:
+          not_types:
+          - creature
+          face_up: true
+        count: all
+      to: graveyard
+      reason: put
+    - op: move
+      select:
+        zone: shield
+        owner: opp
+        filter:
+          face_up: true
+        count: all
+      to: graveyard
+      reason: put
+  text: '墓地進化：闇のクリーチャーを１体自分の墓地から選び、このクリーチャーをその上に重ねつつバトルゾーンに出す。
+
+    W・ブレイカー
+
+    このクリーチャーがバトルゾーンに出た時、バトルゾーンにある相手の、クリーチャーではない表向きのカードすべてと、相手のシールドゾーンにある表向きのカードをすべて、持ち主の墓地に置く。'
+  source:
+    official: dmex08-093
+    review: pending
+    notes: '"W・ブレイカーは known_keywords（double_breaker）として keywords に含める。「持ち主の墓地」は相手のカードなので相手の墓地へ移動する（move
+      の to: graveyard はカードの持ち主の墓地）。"'
