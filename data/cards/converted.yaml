@@ -279542,3 +279542,981 @@ cards:
       deck ＋ op: shuffle。slayer は known_keywords のため書き直さない。'
   keywords:
   - slayer
+- id: dm25ex3-rp2tr7
+  name: 魔軸の鎖 カメカメン
+  types:
+  - creature
+  civs:
+  - light
+  cost: 3
+  power: 3000
+  races:
+  - ビーストフォーク
+  - 暴拳王国
+  mana: 1
+  abilities:
+  - kind: trigger
+    first_time: true
+    when:
+      event: attack
+      subject:
+        owner: you
+        filter:
+          types:
+          - creature
+    effect:
+    - op: may
+      body:
+      - op: play_free
+        select:
+          zone: hand
+          owner: you
+          count: 1
+          filter:
+            types:
+            - spell
+            cost_le: 4
+      else:
+      - op: draw
+        count: 1
+  text: アバレチェーン：各ターン、はじめて自分のクリーチャーが攻撃する時、コスト４以下の呪文を１枚、自分の手札からコストを支払わずに唱えてもよい。そうしなければ、カードを１枚引く。
+  source:
+    official: dm25ex3-rp2tr7
+    review: pending
+    notes: 第28弾の代表例と同型（first_time + may/else）。
+    aliases:
+    - dm25rp2-tr07
+    - dmex19-005
+    - dmrp15-001
+- id: dm26rp3-048
+  name: 凄虫逆夢 ボイノ・ブサント
+  types:
+  - creature
+  civs:
+  - light
+  - nature
+  cost: 5
+  power: 6500
+  races:
+  - ディスペクター
+  - ビーストフォーク
+  - グランセクト
+  - 暴拳王国
+  mana: 1
+  abilities:
+  - kind: trigger
+    first_time: true
+    when:
+      event: attack
+      subject:
+        owner: you
+        filter:
+          types:
+          - creature
+    effect:
+    - op: may
+      body:
+      - op: move
+        select:
+          zone: deck
+          owner: you
+          from_top: 2
+        to: mana
+        reason: put
+    - op: may
+      body:
+      - op: move
+        select:
+          zone: mana
+          owner: you
+          count: 1
+        to: hand
+        reason: return
+  text: 'EXライフ（このクリーチャーを出す時、自分の山札の上から１枚をシールド化する。このクリーチャーが離れる時、かわりにそのシールドを墓地に置く）
+
+    ブロッカー（このクリーチャーをタップして、相手クリーチャーの攻撃先をこのクリーチャーに変更してもよい）
+
+    W・ブレイカー
+
+    アバレチェーン：自分のクリーチャーが攻撃する時、それがこのターン最初の攻撃なら、自分の山札の上から２枚をマナゾーンに置いてもよい。その後、カードを１枚、自分のマナゾーンから手札に戻してもよい。'
+  source:
+    official: dm26rp3-048
+    review: pending
+    notes: 2つの「してもよい」は独立した may として直列に書いた。ex_life・blocker・double_breaker は known_keywords
+      のため書き直さない。
+  keywords:
+  - ex_life
+  - blocker
+  - double_breaker
+- id: dmex13-s04
+  name: 捕封の鎖 テラエイプ
+  types:
+  - creature
+  civs:
+  - light
+  - nature
+  cost: 9
+  power: 15000
+  races:
+  - ビーストフォーク
+  - 暴拳王国
+  mana: 1
+  abilities:
+  - kind: static
+    zone: hand
+    affects: self
+    mod:
+      cost:
+        amount: -1
+        count:
+          zone: bz
+          owner: you
+          filter:
+            types:
+            - creature
+  - kind: trigger
+    when:
+      event: move
+      to: bz
+      subject: self
+    effect:
+    - op: modify
+      select:
+        ref: self
+      mod:
+        allow:
+        - action: attack_creature
+          other:
+            tapped: false
+      duration: end_of_turn
+  - kind: trigger
+    first_time: true
+    when:
+      event: attack
+      subject:
+        owner: you
+        filter:
+          types:
+          - creature
+    effect:
+    - op: choose
+      select:
+        zone: bz
+        owner: opp
+        filter:
+          types:
+          - creature
+        count: 1
+      as: c
+    - op: move
+      select:
+        ref: c
+      to: mana
+      reason: put
+  text: 'シンパシー：クリーチャー（このクリーチャーを召喚する時支払うコストは、バトルゾーンにある自分のクリーチャー１体につき１少なくなる。ただしコストは０以下にならない）
+
+    マッハファイター（このクリーチャーは、バトルゾーンに出たターンの間、タップまたはアンタップしているクリーチャーを攻撃できる）
+
+    T・ブレイカー
+
+    アバレチェーン：自分のクリーチャーが攻撃する時、それがこのターン最初の攻撃なら、相手のクリーチャーを１体選び、持ち主のマナゾーンに置く。'
+  source:
+    official: dmex13-s04
+    review: pending
+    notes: 「持ち主のマナゾーン」は選んだ相手クリーチャーの持ち主（相手）のマナ。triple_breaker は known_keywords のため書き直さない。
+  keywords:
+  - triple_breaker
+- id: dmex13-018
+  name: 裏鍛の鎖 ポコアイアイ
+  types:
+  - creature
+  civs:
+  - nature
+  cost: 5
+  power: 5000
+  races:
+  - ビーストフォーク
+  - 暴拳王国
+  mana: 1
+  abilities:
+  - kind: trigger
+    when:
+      event: move
+      to: bz
+      subject: self
+    effect:
+    - op: move
+      select:
+        zone: deck
+        owner: you
+        from_top: 2
+      to: mana
+      reason: put
+      tapped: true
+  - kind: trigger
+    first_time: true
+    when:
+      event: attack
+      subject:
+        owner: you
+        filter:
+          types:
+          - creature
+    effect:
+    - op: may
+      body:
+      - op: move
+        select:
+          zone: mana
+          owner: you
+          count: 1
+        to: hand
+        reason: return
+  text: このクリーチャーがバトルゾーンに出た時、自分の山札の上から２枚をタップしてマナゾーンに置く。 / アバレチェーン：自分のクリーチャーが攻撃する時、それがこのターン最初の攻撃なら、カードを１枚、自分のマナゾーンから手札に戻してもよい。
+  source:
+    official: dmex13-018
+    review: pending
+- id: dmex13-067
+  name: 拿繰の鎖 パンチフォックス
+  types:
+  - creature
+  civs:
+  - nature
+  cost: 3
+  power: 4000
+  races:
+  - ビーストフォーク
+  - 暴拳王国
+  mana: 1
+  abilities:
+  - kind: trigger
+    when:
+      event: turn_end
+      player: you
+    if:
+      exists:
+        zone: bz
+        owner: you
+        filter:
+          types:
+          - creature
+          power_ge: 6000
+    effect:
+    - op: draw
+      count: 1
+  - kind: trigger
+    first_time: true
+    when:
+      event: attack
+      subject:
+        owner: you
+        filter:
+          types:
+          - creature
+    effect:
+    - op: modify
+      select:
+        ref: event.attacker
+      mod:
+        power: 2000
+      duration: end_of_turn
+  text: 自分のターンの終わりに、バトルゾーンに自分のパワー6000以上のクリーチャーがあれば、カードを１枚引く。 / アバレチェーン：自分のクリーチャーが攻撃する時、それがこのターン最初の攻撃なら、このターン、そのクリーチャーのパワーを+2000する。
+  source:
+    official: dmex13-067
+    review: pending
+- id: dmrp15-007
+  name: 荒舞の鎖 ナマケイラ
+  types:
+  - creature
+  civs:
+  - light
+  - nature
+  cost: 6
+  power: 7500
+  races:
+  - ビーストフォーク
+  - 暴拳王国
+  mana: 1
+  text: 'ブロッカー
+
+    W・ブレイカー
+
+    アバレチェーン：自分のクリーチャーが攻撃する時、それがこのターン最初の攻撃なら、自分の山札の上から２枚見てもよい。そうしたら、そのうちの１枚を裏向きにして、新しいシールドとしてシールドゾーンに置き、もう１枚をマナゾーンに置く。
+
+    このクリーチャーが破壊された時、相手のクリーチャーを１体選び、持ち主のマナゾーンに置く。'
+  abilities:
+  - kind: trigger
+    first_time: true
+    when:
+      event: attack
+      subject:
+        owner: you
+        filter:
+          types:
+          - creature
+    effect:
+    - op: may
+      body:
+      - op: choose
+        select:
+          zone: deck
+          owner: you
+          from_top: 2
+          look: true
+          count: all
+        as: seen
+      - op: choose
+        select:
+          ref: seen
+          count: 1
+        as: to_shield
+      - op: move
+        select:
+          ref: to_shield
+          count: all
+        to: shield
+        reason: put
+        face_up: false
+      - op: move
+        select:
+          ref: seen
+          count: all
+        to: mana
+        reason: put
+  - kind: trigger
+    when:
+      event: move
+      from: bz
+      to: graveyard
+      reason: destroy
+      subject: self
+    effect:
+    - op: choose
+      select:
+        zone: bz
+        owner: opp
+        filter:
+          types:
+          - creature
+        count: 1
+      as: c
+    - op: mana_put
+      select:
+        ref: c
+        count: all
+  source:
+    official: dmrp15-007
+    review: pending
+    notes: 'アバレチェーンは first_time + 攻撃誘発。「２枚見てもよい」は may + choose（look: true、from_top:
+      2）。「１枚を裏向きにして新しいシールドとして」は move to shield（face_up: false）。「もう１枚をマナゾーンに」は move
+      to mana（dm25ex1-068 の「めくり」パターンに準拠）。破壊時効果は「相手のクリーチャー１体を選び、持ち主のマナゾーンに置く」を choose
+      + mana_put で表した。blocker・double_breaker は known_keywords のため書き直さない。'
+  keywords:
+  - blocker
+  - double_breaker
+- id: dmrp15-044
+  name: 破泡の鎖 スモウトード
+  types:
+  - creature
+  civs:
+  - nature
+  cost: 6
+  power: 6000
+  races:
+  - ビーストフォーク
+  - 暴拳王国
+  mana: 1
+  text: 'W・ブレイカー（このクリーチャーはシールドを２つブレイクする）
+
+    アバレチェーン：自分のクリーチャーが攻撃する時、それがこのターン最初の攻撃なら、このターン、そのクリーチャーのパワーを +6000し、「パワード・ブレイカー」を与える。（「パワード・ブレイカー」を持つクリーチャーは、そのパワー6000ごとにシールドをさらに１つブレイクする）'
+  abilities:
+  - kind: trigger
+    first_time: true
+    when:
+      event: attack
+      subject:
+        owner: you
+        filter:
+          types:
+          - creature
+    effect:
+    - op: modify
+      select:
+        ref: event.subject
+      mod:
+        power: 6000
+        grant:
+        - powered_breaker
+      duration: end_of_turn
+  source:
+    official: dmrp15-044
+    review: pending
+    notes: 'アバレチェーンは first_time + 攻撃誘発。「このターン、パワーを+6000し、パワード・ブレイカーを与える」は modify（duration:
+      end_of_turn、mod.power: 6000、grant: [powered_breaker]）。double_breaker は known_keywords
+      のため書き直さない。'
+    aliases:
+    - promoy19-055
+  keywords:
+  - double_breaker
+- id: dmrp15-046
+  name: 爆鳥の鎖 ナゲバード
+  types:
+  - creature
+  civs:
+  - nature
+  cost: 5
+  power: 4000
+  races:
+  - ドリームメイト
+  - 暴拳王国
+  mana: 1
+  text: 'マッハファイター（このクリーチャーは、バトルゾーンに出たターンの間、タップまたはアンタップしているクリーチャーを攻撃できる）
+
+    アバレチェーン：自分のクリーチャーが攻撃する時、それがこのターン最初の攻撃なら、相手のクリーチャーを１体選んでもよい。その選んだクリーチャーと、攻撃しているクリーチャーをバトルさせる。'
+  abilities:
+  - kind: trigger
+    when:
+      event: move
+      to: bz
+      subject: self
+    effect:
+    - op: modify
+      select:
+        ref: self
+      mod:
+        allow:
+        - action: attack_creature
+          other:
+            tapped: false
+      duration: end_of_turn
+  - kind: trigger
+    first_time: true
+    when:
+      event: attack
+      subject:
+        owner: you
+        filter:
+          types:
+          - creature
+    effect:
+    - op: may
+      body:
+      - op: choose
+        select:
+          zone: bz
+          owner: opp
+          filter:
+            types:
+            - creature
+          count: 1
+        as: c
+      - op: force_battle
+        a:
+          ref: c
+        b:
+          ref: event.subject
+  source:
+    official: dmrp15-046
+    review: pending
+    notes: 'アバレチェーンは first_time + 攻撃誘発。「選んでもよい」は op: may で包む。「攻撃しているクリーチャー」は ref:
+      event.subject で参照。'
+- id: dmrp15-051
+  name: 振手の鎖 ヤワラヘッジ
+  types:
+  - creature
+  civs:
+  - light
+  - nature
+  cost: 6
+  power: 6000
+  races:
+  - ビーストフォーク
+  - 暴拳王国
+  mana: 1
+  text: 'ブロッカー（このクリーチャーをタップして、相手クリーチャーの攻撃先をこのクリーチャーに変更してもよい）
+
+    W・ブレイカー（このクリーチャーはシールドを２つブレイクする）
+
+    アバレチェーン：自分のクリーチャーが攻撃する時、それがこのターン最初の攻撃なら、相手のクリーチャーを１体選び、タップする。次の相手のターンのはじめに、そのクリーチャーはアンタップしない。'
+  abilities:
+  - kind: trigger
+    first_time: true
+    when:
+      event: attack
+      subject:
+        owner: you
+        filter:
+          types:
+          - creature
+    effect:
+    - op: choose
+      select:
+        zone: bz
+        owner: opp
+        filter:
+          types:
+          - creature
+        count: 1
+      as: c
+    - op: tap
+      select:
+        ref: c
+      no_untap_next: true
+  source:
+    official: dmrp15-051
+    review: pending
+    notes: 'アバレチェーンは first_time + 攻撃誘発。「相手のクリーチャー１体を選び、タップする」は choose + tap。「次の相手のターンのはじめにアンタップしない」は
+      tap の no_untap_next: true で表した（自分のターン中の攻撃時にタップするため、直後のアンタップステップは相手ターン開始時）。blocker・double_breaker
+      は known_keywords のため書き直さない。'
+    aliases:
+    - promoy19-061
+  keywords:
+  - blocker
+  - double_breaker
+- id: dmrp15-058
+  name: 貴不の鎖 マガタイル
+  types:
+  - creature
+  civs:
+  - light
+  cost: 5
+  power: 5500
+  races:
+  - イニシエート
+  - 暴拳王国
+  mana: 1
+  text: アバレチェーン：自分のクリーチャーが攻撃する時、それがこのターン最初の攻撃なら、このターンの終わりにそのクリーチャーをアンタップする。
+  abilities:
+  - kind: trigger
+    first_time: true
+    when:
+      event: attack
+      subject:
+        owner: you
+        filter:
+          types:
+          - creature
+    effect:
+    - op: delayed_trigger
+      when:
+        event: turn_end
+      effect:
+      - op: untap
+        select:
+          ref: event.subject
+  source:
+    official: dmrp15-058
+    review: pending
+    notes: 'アバレチェーンは first_time + 攻撃誘発。「このターンの終わりにそのクリーチャーをアンタップする」は delayed_trigger（when:
+      turn_end）で表した。delayed_trigger 内の ref: event.subject は元の攻撃イベントの subject（攻撃クリーチャー）を指す想定。'
+- id: dmrp15-059
+  name: 倒伏の鎖 キックボック
+  types:
+  - creature
+  civs:
+  - light
+  cost: 4
+  power: 4500
+  races:
+  - スターライト・ツリー
+  - 暴拳王国
+  mana: 1
+  text: アバレチェーン：自分のクリーチャーが攻撃する時、それがこのターン最初の攻撃なら、相手のクリーチャーを１体選び、タップする。
+  abilities:
+  - kind: trigger
+    first_time: true
+    when:
+      event: attack
+      subject:
+        owner: you
+        filter:
+          types:
+          - creature
+    effect:
+    - op: choose
+      select:
+        zone: bz
+        owner: opp
+        filter:
+          types:
+          - creature
+        count: 1
+      as: c
+    - op: tap
+      select:
+        ref: c
+  source:
+    official: dmrp15-059
+    review: pending
+    notes: アバレチェーンは first_time + 攻撃誘発。「相手のクリーチャー１体を選び、タップする」は choose + tap。原文の括弧書き（まず何を攻撃するか選んでから、タップするクリーチャーを選ぶ）はタイミングの注釈のため
+      text から除去。
+- id: dmrp15-082
+  name: 増刀の鎖 シノブ
+  types:
+  - creature
+  civs:
+  - nature
+  cost: 2
+  power: 2000
+  races:
+  - スノーフェアリー
+  - 暴拳王国
+  mana: 1
+  text: アバレチェーン：自分のクリーチャーが攻撃する時、それがこのターン最初の攻撃なら、自分の山札の上から１枚目をマナゾーンに置く。
+  abilities:
+  - kind: trigger
+    first_time: true
+    when:
+      event: attack
+      subject:
+        owner: you
+        filter:
+          types:
+          - creature
+    effect:
+    - op: mana_put
+      select:
+        zone: deck
+        owner: you
+        from_top: 1
+  source:
+    official: dmrp15-082
+    review: pending
+    notes: 'アバレチェーンは first_time + 攻撃誘発。「山札の上から１枚目をマナゾーンに置く」は mana_put（from_top: 1）で表した。'
+- id: dmrp15-088
+  name: 圧破の鎖 ナグルキツネ
+  types:
+  - creature
+  civs:
+  - light
+  - nature
+  cost: 3
+  power: 2500
+  races:
+  - ビーストフォーク
+  - 暴拳王国
+  mana: 1
+  text: 'このクリーチャーがバトルゾーンに出た時、相手のクリーチャーを１体選び、タップする。
+
+    アバレチェーン：自分のクリーチャーが攻撃する時、それがこのターン最初の攻撃なら、このターン、そのクリーチャーのパワーを+3000 する。'
+  abilities:
+  - kind: trigger
+    when:
+      event: move
+      to: bz
+      subject: self
+    effect:
+    - op: tap
+      select:
+        zone: bz
+        owner: opp
+        filter:
+          types:
+          - creature
+        count: 1
+  - kind: trigger
+    first_time: true
+    when:
+      event: attack
+      subject:
+        owner: you
+        filter:
+          types:
+          - creature
+    effect:
+    - op: modify
+      select:
+        ref: event.subject
+      mod:
+        power: 3000
+      duration: end_of_turn
+  source:
+    official: dmrp15-088
+    review: pending
+    notes: アバレチェーンは first_time + 攻撃誘発（第28弾の型）。攻撃クリーチャーは ref event.subject で参照。
+    aliases:
+    - promoy19-085
+- id: dmrp16-s01
+  name: 聖板龍 ジークシュトルツ
+  types:
+  - creature
+  civs:
+  - light
+  cost: 7
+  power: 11000
+  races:
+  - バーサーカー・ドラゴン
+  - 暴拳王国
+  mana: 1
+  text: 'ブロッカー
+
+    W・ブレイカー
+
+    相手のシールドゾーンにある表向きのカードの能力を無視する。
+
+    相手は、自身のシールドゾーンにある表向きのカードを手札に加える時、その「S・トリガー」を使えない。
+
+    アバレチェーン：自分のクリーチャーが攻撃する時、それがこのターン最初の攻撃なら、相手のクリーチャーを１体選び、表向きのまま、新しいシールドとして持ち主のシールドゾーンに置く。'
+  abilities:
+  - kind: static
+    affects:
+      owner: opp
+      zone: shield
+      filter:
+        face_up: true
+    mod:
+      ignore:
+      - all
+  - kind: static
+    affects:
+      owner: opp
+      zone: shield
+      filter:
+        face_up: true
+    mod:
+      deny:
+      - s_trigger
+  - kind: trigger
+    first_time: true
+    when:
+      event: attack
+      subject:
+        owner: you
+        filter:
+          types:
+          - creature
+    effect:
+    - op: move
+      select:
+        zone: bz
+        owner: opp
+        filter:
+          types:
+          - creature
+        count: 1
+      to: shield
+      reason: put
+      face_up: true
+  source:
+    official: dmrp16-s01
+    review: pending
+    notes: ブロッカー・W・ブレイカーは known_keywords のため書き直さない。「S・トリガーを使えない」は deny s_trigger。
+  keywords:
+  - blocker
+  - double_breaker
+- id: dmrp16-005
+  name: 未謎の鎖 ブリタネッコ
+  types:
+  - creature
+  civs:
+  - nature
+  cost: 4
+  power: 4000
+  races:
+  - ビーストフォーク
+  - 暴拳王国
+  mana: 1
+  text: このクリーチャーがバトルゾーンに出た時、自分のクリーチャーを１体マナゾーンに置いてもよい。そうしたら、相手のクリーチャーを１体選び、持ち主のマナゾーンに置く。
+    / アバレチェーン：自分のクリーチャーが攻撃する時、それがこのターン最初の攻撃なら、自分の山札の上から１枚目をマナゾーンに置く。その後、カードを１枚、自分のマナゾーンから手札に戻してもよい。
+  abilities:
+  - kind: trigger
+    when:
+      event: move
+      to: bz
+      subject: self
+    effect:
+    - op: may
+      body:
+      - op: choose
+        select:
+          zone: bz
+          owner: you
+          filter:
+            types:
+            - creature
+          count: 1
+        as: c
+      - op: move
+        select:
+          ref: c
+        to: mana
+        reason: put
+      - op: choose
+        select:
+          zone: bz
+          owner: opp
+          filter:
+            types:
+            - creature
+          count: 1
+        as: oc
+      - op: move
+        select:
+          ref: oc
+        to: mana
+        reason: put
+  - kind: trigger
+    first_time: true
+    when:
+      event: attack
+      subject:
+        owner: you
+        filter:
+          types:
+          - creature
+    effect:
+    - op: move
+      select:
+        zone: deck
+        owner: you
+        from_top: 1
+        count: 1
+      to: mana
+      reason: put
+    - op: may
+      body:
+      - op: move
+        select:
+          zone: mana
+          owner: you
+          count: 1
+        to: hand
+        reason: return
+  source:
+    official: dmrp16-005
+    review: pending
+    notes: 「そうしたら」は may の body 内に書くことで「選んだ場合のみ」を表す。「持ち主のマナゾーン」は to mana で持ち主のゾーンへ。
+- id: dmrp16-061
+  name: 衝突の鎖 ワンパン
+  types:
+  - creature
+  civs:
+  - light
+  cost: 2
+  power: 2000
+  races:
+  - ビーストフォーク
+  - 暴拳王国
+  mana: 1
+  text: アバレチェーン：自分のクリーチャーが攻撃する時、それがこのターン最初の攻撃なら、相手は自身のアンタップしているクリーチャーを１体選び、タップする。
+  abilities:
+  - kind: trigger
+    first_time: true
+    when:
+      event: attack
+      subject:
+        owner: you
+        filter:
+          types:
+          - creature
+    effect:
+    - op: tap
+      select:
+        zone: bz
+        owner: opp
+        filter:
+          types:
+          - creature
+          tapped: false
+        count: 1
+        chooser: opp
+  source:
+    official: dmrp16-061
+    review: pending
+    notes: 括弧書きの注意文は text から除去。「相手が選ぶ」は chooser opp。
+- id: dmrp16-081
+  name: 呼織の鎖 マチョシビロ
+  types:
+  - creature
+  civs:
+  - nature
+  cost: 3
+  power: 2000
+  races:
+  - ビーストフォーク
+  - 暴拳王国
+  mana: 1
+  text: アバレチェーン：自分のクリーチャーが攻撃する時、それがこのターン最初の攻撃なら、自分の山札の上から２枚を見る。その中からクリーチャーを１体相手に見せ、手札に加えてもよい。残りを好きな順序で山札の下に置く。
+  abilities:
+  - kind: trigger
+    first_time: true
+    when:
+      event: attack
+      subject:
+        owner: you
+        filter:
+          types:
+          - creature
+    effect:
+    - op: choose
+      as: pile
+      select:
+        zone: deck
+        owner: you
+        from_top: 2
+        look: true
+        count: all
+    - op: may
+      body:
+      - op: choose
+        as: a
+        select:
+          ref: pile
+          filter:
+            types:
+            - creature
+          count: 1
+      - op: move
+        select:
+          ref: a
+          count: all
+        to: hand
+        reason: draw
+    - op: move
+      select:
+        ref: pile
+        count: all
+      to: deck
+      position: bottom
+      reason: put
+  source:
+    official: dmrp16-081
+    review: pending
+    notes: 「見る」は look true の choose（dm23ex2-108 と同型）。「好きな順序」は order の語彙値が不明のため付記せず。
+    aliases:
+    - promoy19-094
+- id: dmrp16-089
+  name: 天渚の鎖 イキリワニ
+  types:
+  - creature
+  civs:
+  - light
+  - nature
+  cost: 2
+  power: 1000
+  races:
+  - ビーストフォーク
+  - 暴拳王国
+  mana: 1
+  text: アバレチェーン：自分のクリーチャーが攻撃する時、それがこのターン最初の攻撃なら、このターン、そのクリーチャーのパワーを+4000する。
+  abilities:
+  - kind: trigger
+    first_time: true
+    when:
+      event: attack
+      subject:
+        owner: you
+        filter:
+          types:
+          - creature
+    effect:
+    - op: modify
+      select:
+        ref: event.subject
+      mod:
+        power: 4000
+      duration: end_of_turn
+  source:
+    official: dmrp16-089
+    review: pending
+    notes: dmrp15-088 と同型（+4000）。
