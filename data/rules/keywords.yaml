@@ -16,6 +16,13 @@ keywords:
     ja: ブロッカー
     abilities:
       - {kind: static, affects: self, mod: {allow: [block]}}
+  kizuna:
+    ja: キズナ（このクリーチャーが出た時、自分のクリーチャー1体の[P]能力を使う）
+    abilities:
+      - kind: trigger
+        when: {event: move, to: bz, subject: self}
+        effect:
+          - {op: use_partner}
   abyss_rush:
     ja: アビスラッシュ
     abilities:
