@@ -91,6 +91,7 @@
      "guardman",
      "hunting",
      "hyper_energy",
+     "kizuna",
      "last_burst",
      "left_g_link",
      "mana_boost_cip",
@@ -144,8 +145,12 @@
     "civs_all": {},
     "cost_ge": {},
     "cost_le": {},
+    "evolution": {},
     "face_down": {},
+    "face_up": {},
+    "fushigi": {},
     "keyword": {},
+    "mugen_climb": {},
     "multicolor": {},
     "name": {},
     "name_has": {},
@@ -157,8 +162,12 @@
     "power_le": {},
     "race_has": {},
     "races": {},
+    "sealed": {},
     "tapped": {},
+    "twinpact": {},
     "types": {},
+    "vanilla": {},
+    "vividraw": {},
     "zone": {}
    },
    "additionalProperties": false
@@ -199,6 +208,9 @@
    "type": "boolean"
   },
   "star": {
+   "type": "boolean"
+  },
+  "s_max": {
    "type": "boolean"
   },
   "hyper": {
@@ -280,6 +292,7 @@
        "guardman",
        "hunting",
        "hyper_energy",
+       "kizuna",
        "last_burst",
        "left_g_link",
        "mana_boost_cip",
@@ -333,8 +346,12 @@
       "civs_all": {},
       "cost_ge": {},
       "cost_le": {},
+      "evolution": {},
       "face_down": {},
+      "face_up": {},
+      "fushigi": {},
       "keyword": {},
+      "mugen_climb": {},
       "multicolor": {},
       "name": {},
       "name_has": {},
@@ -346,8 +363,12 @@
       "power_le": {},
       "race_has": {},
       "races": {},
+      "sealed": {},
       "tapped": {},
+      "twinpact": {},
       "types": {},
+      "vanilla": {},
+      "vividraw": {},
       "zone": {}
      },
      "additionalProperties": false
@@ -390,6 +411,9 @@
     "star": {
      "type": "boolean"
     },
+    "s_max": {
+     "type": "boolean"
+    },
     "hyper": {
      "type": "boolean"
     }
@@ -406,6 +430,25 @@
    "type": "array",
    "items": {
     "anyOf": [
+     {
+      "type": "object",
+      "properties": {
+       "op": {
+        "const": "attach_seal"
+       },
+       "select": {
+        "$ref": "#/$defs/selector"
+       },
+       "count": {
+        "type": "integer"
+       }
+      },
+      "required": [
+       "op",
+       "select"
+      ],
+      "additionalProperties": false
+     },
      {
       "type": "object",
       "properties": {
@@ -866,6 +909,7 @@
          "resolve",
          "return",
          "sba",
+         "seal",
          "summon"
         ]
        },
@@ -886,6 +930,9 @@
        },
        "face_up": {
         "type": "boolean"
+       },
+       "seal": {
+        "type": "integer"
        },
        "as": {
         "type": "string"
@@ -1012,6 +1059,25 @@
       "type": "object",
       "properties": {
        "op": {
+        "const": "remove_seal"
+       },
+       "select": {
+        "$ref": "#/$defs/selector"
+       },
+       "count": {
+        "type": "integer"
+       }
+      },
+      "required": [
+       "op",
+       "select"
+      ],
+      "additionalProperties": false
+     },
+     {
+      "type": "object",
+      "properties": {
+       "op": {
         "const": "repeat"
        },
        "times": {
@@ -1116,6 +1182,23 @@
       "type": "object",
       "properties": {
        "op": {
+        "const": "summon_on"
+       },
+       "parts": {},
+       "tapped": {
+        "type": "boolean"
+       }
+      },
+      "required": [
+       "op",
+       "parts"
+      ],
+      "additionalProperties": false
+     },
+     {
+      "type": "object",
+      "properties": {
+       "op": {
         "const": "summon_self"
        }
       },
@@ -1205,6 +1288,18 @@
       "required": [
        "op",
        "select"
+      ],
+      "additionalProperties": false
+     },
+     {
+      "type": "object",
+      "properties": {
+       "op": {
+        "const": "use_partner"
+       }
+      },
+      "required": [
+       "op"
       ],
       "additionalProperties": false
      },
@@ -1309,8 +1404,12 @@
     "civs_all": {},
     "cost_ge": {},
     "cost_le": {},
+    "evolution": {},
     "face_down": {},
+    "face_up": {},
+    "fushigi": {},
     "keyword": {},
+    "mugen_climb": {},
     "multicolor": {},
     "name": {},
     "name_has": {},
@@ -1322,8 +1421,12 @@
     "power_le": {},
     "race_has": {},
     "races": {},
+    "sealed": {},
     "tapped": {},
-    "types": {}
+    "twinpact": {},
+    "types": {},
+    "vanilla": {},
+    "vividraw": {}
    },
    "additionalProperties": false
   },
@@ -1586,6 +1689,7 @@
        "guardman",
        "hunting",
        "hyper_energy",
+       "kizuna",
        "last_burst",
        "left_g_link",
        "mana_boost_cip",
@@ -1983,6 +2087,8 @@
      "grant",
      "ignore",
      "ignore_ids",
+     "must_be_attacked",
+     "no_leave",
      "opt_reduce",
      "power",
      "power_when",
@@ -2006,7 +2112,9 @@
       "cast",
       "choose",
       "draw",
+      "lose",
       "move",
+      "mugon_used",
       "summon",
       "tap",
       "turn_end",
@@ -2054,10 +2162,17 @@
       "resolve",
       "return",
       "sba",
+      "seal",
       "summon"
      ]
     },
     "player": {
+     "enum": [
+      "you",
+      "opp"
+     ]
+    },
+    "by": {
      "enum": [
       "you",
       "opp"
@@ -2092,7 +2207,8 @@
       "declare",
       "activate",
       "silent",
-      "state"
+      "state",
+      "partner"
      ]
     },
     "when": {
