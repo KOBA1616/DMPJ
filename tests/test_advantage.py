@@ -41,3 +41,13 @@ def test_scan_pair_finds_where_knight_and_dmc_work_together_and_ignores_a_contro
     assert got[("hand", "mana")] < 0.5                                       # マナにある DMC は組にならない
     ctl = adv.scan_pair(rules, t.K, "T001", **kw)
     assert all(abs(r["S"]) < 0.5 for r in ctl)                               # 無関係な組は相乗効果がない
+
+
+def test_combo_report_gain_matches_card_text():
+    """墓地の DMC を、騎士の盾置きで戻す。基準線（騎士のみ）に対する増分は 手札+2・バトルゾーン+1・山札−2。"""
+    import pathlib
+    import tempfile
+    import test_dmc_knight as t
+    rules = t._small_rules(pathlib.Path(tempfile.mkdtemp()))
+    r = adv.combo_report(rules, {"hand": [t.K]}, {"graveyard": [t.D]}, {"mana": [t.D] * 3}, opp={"bz": ["T001"]}, seeds=(1,))
+    assert r["is_combo"] and r["gain_over_a"]["hand"] == 2 and r["gain_over_a"]["board"] == 1 and r["gain_over_a"]["deck"] == -2

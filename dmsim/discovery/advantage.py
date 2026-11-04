@@ -79,3 +79,33 @@ def scan_pair(rules, a: str, b: str, base: dict | None = None, opp: dict | None 
             r = synergy(rules, {pa: [a]}, {pb: [b]}, base or {}, opp=opp, w=w, turns=turns, seeds=seeds)
             out.append({"a": a, "b": b, "place_a": pa, "place_b": pb, "S": r["S"], "mean": r["mean"]})
     return sorted(out, key=lambda x: -x["S"])
+
+
+def combo_report(rules, a: dict, b: dict, base: dict, opp: dict | None = None, w: dict | None = None, turns: int = 1,
+                 seeds=(1, 2, 3), threshold: float = 1.0) -> dict:
+    """コンボの定義（手順あり/なしの差分）。基準線 = 各カード単体（A のみ、B のみ）の最善手順。
+    S = V(A,B) − V(A) − V(B) + V(なし)。S が threshold 以上なら combo。
+    gain = 両方あるときと A のみのときの資源ベクトルの差（「手札+n、バトルゾーン+n」の形）を、シードの平均で返す。"""
+    from .. import scenario
+    from ..solitaire import play_game
+    w = w or load_weights()
+
+    def merge(*parts):
+        out = {}
+        for part in parts:
+            for z, cards in (part or {}).items():
+                out[z] = out.get(z, []) + list(cards)
+        return out
+
+    r = synergy(rules, a, b, base, opp=opp, w=w, turns=turns, seeds=seeds)
+    vec = {}
+    for k, p0 in {"a": merge(base, a), "ab": merge(base, a, b)}.items():
+        acc = {x: 0.0 for x in RES}
+        for sd in seeds:
+            start = scenario.build(rules, {"p0": p0, "p1": opp or {}, "seed": sd})
+            _, eng = play_game(rules, [], [], 1, max_turn=turns, start=start, lock_rounds=0, value_fn=lambda e, me: board_value(e, me, w))
+            for x, v in resource_vector(eng, 0).items():
+                acc[x] += v / len(seeds)
+        vec[k] = acc
+    gain = {x: round(vec["ab"][x] - vec["a"][x], 2) for x in RES}
+    return {"S": r["S"], "is_combo": r["S"] >= threshold, "gain_over_a": gain, "mean": r["mean"], "seeds": list(seeds)}

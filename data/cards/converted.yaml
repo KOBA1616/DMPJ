@@ -287887,14 +287887,6 @@ cards:
     - op: draw
       count: 2
   - kind: trigger
-    when:
-      event: move
-      to: bz
-      subject: self
-    effect:
-    - op: draw
-      count: 2
-  - kind: trigger
     zone: graveyard
     when:
       event: move
