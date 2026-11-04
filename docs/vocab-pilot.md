@@ -803,3 +803,10 @@ converted の監査（opt_reduce の素の整数表記9件）から。任意形�
 - enters_tapped との複合も対応可能（両方とも既存語彙）
 - tests/test_vocab_pilot64.py 2件（正常 parse／検証）
 - 待機7枚（enters_tapped + must_attack_this_creature のみが gap のもの）。
+
+## 第65弾: cost_gt_count（コストがゾーンの枚数より大きい）— 新語彙なし（2026-11-05）
+「相手のマナゾーンにあるカードの枚数よりコストが大きいクリーチャー」は既存の `if: {cmp: [{cost_of: ...}, ">", {count: ...}]}` で表せる。
+- 書き方: trigger の if に cmp を使用。cost_of で対象のコスト、count でゾーンの枚数を取得。
+- 例: `if: {cmp: [{cost_of: {ref: event.subject}}, ">", {count: {zone: mana, owner: opp}}]}`
+- tests/test_vocab_pilot65.py 2件（正常 parse／検証）
+- 待機14枚（cost_gt_count のみが gap のもの）。
