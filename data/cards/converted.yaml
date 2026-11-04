@@ -283108,3 +283108,447 @@ cards:
       bz, owner: opp）。known_keywords の double_breaker は処理済みのため書き直さない。"'
   keywords:
   - double_breaker
+- id: dmex04-063
+  name: エメスレム・ルミナリエ
+  types:
+  - spell
+  civs:
+  - light
+  cost: 7
+  mana: 1
+  alt_cost:
+    do:
+    - zone: bz
+      owner: you
+      filter:
+        types:
+        - creature
+        civs:
+        - light
+      count: 4
+      tap: true
+  spell:
+  - op: may
+    body:
+    - op: move
+      select:
+        zone: hand
+        owner: you
+        filter:
+          races:
+          - メタリカ
+          cost_le: 8
+        count: 1
+      to: bz
+      reason: put
+      as: moved
+    - op: may
+      body:
+      - op: tap
+        select:
+          ref: moved
+  text: コストを支払うかわりに、自分の光のクリーチャーを４体タップして、この呪文を唱えてもよい。 / コスト８以下のメタリカを１体、自分の手札からバトルゾーンに出してもよい。その後、それをタップしてもよい。
+  source:
+    official: dmex04-063
+    review: pending
+    notes: '"第57弾 tap_alt_cost。「出す」は召喚ではないため reason: put。"'
+    aliases:
+    - dmbd04-007
+- id: dmrp03-033
+  name: シンクロ・シールド
+  types:
+  - spell
+  civs:
+  - light
+  cost: 5
+  mana: 1
+  alt_cost:
+    do:
+    - zone: bz
+      owner: you
+      filter:
+        types:
+        - creature
+        civs:
+        - light
+      count: 2
+      tap: true
+  spell:
+  - op: shield_plus
+  text: コストを支払うかわりに、自分の光のクリーチャーを２体タップして、この呪文を唱えてもよい。自分の山札の上から１枚目を裏向きのまま、新しいシールドとして自分のシールドゾーンに置く。
+  source:
+    official: dmrp03-033
+    review: pending
+    notes: 第57弾 tap_alt_cost。山札の上を裏向きでシールド化は shield_plus。
+- id: dmrp03-044
+  name: シンクロ・デスサイズ
+  types:
+  - spell
+  civs:
+  - darkness
+  cost: 5
+  mana: 1
+  alt_cost:
+    do:
+    - zone: bz
+      owner: you
+      filter:
+        types:
+        - creature
+        civs:
+        - darkness
+      count: 2
+      tap: true
+  spell:
+  - op: modify
+    select:
+      zone: bz
+      owner: opp
+      filter:
+        types:
+        - creature
+      count: 1
+    mod:
+      power: -6000
+    duration: end_of_turn
+  text: コストを支払うかわりに、自分の闇のクリーチャーを２体タップして、この呪文を唱えてもよい。相手のクリーチャーを１体選ぶ。このターン、そのクリーチャーのパワーを-6000する。（パワー０以下のクリーチャーは破壊される）
+  source:
+    official: dmrp03-044
+    review: pending
+    notes: 第57弾 tap_alt_cost。原文の「_6000」は-6000と読む。括弧書きはルール注釈のため変換しない。
+- id: dmrp03-051
+  name: シンクロ・チューン
+  types:
+  - spell
+  civs:
+  - fire
+  cost: 3
+  mana: 1
+  alt_cost:
+    do:
+    - zone: bz
+      owner: you
+      filter:
+        types:
+        - creature
+        civs:
+        - fire
+      count: 2
+      tap: true
+  spell:
+  - op: discard
+    select:
+      zone: hand
+      owner: you
+      count: 1
+  - op: draw
+    count: 2
+  text: コストを支払うかわりに、自分の火のクリーチャーを２体タップして、この呪文を唱えてもよい。自分の手札を１枚捨て、その後、カードを２枚引く。
+  source:
+    official: dmrp03-051
+    review: pending
+    notes: 第57弾 tap_alt_cost。
+- id: dmrp03-056
+  name: シンクロ・マニューバ
+  types:
+  - spell
+  civs:
+  - nature
+  cost: 5
+  mana: 1
+  alt_cost:
+    do:
+    - zone: bz
+      owner: you
+      filter:
+        types:
+        - creature
+        civs:
+        - nature
+      count: 2
+      tap: true
+  spell:
+  - op: move
+    select:
+      zone: bz
+      owner: opp
+      filter:
+        types:
+        - creature
+      count: 1
+    to: mana
+    reason: put
+  text: コストを支払うかわりに、自分の自然のクリーチャーを２体タップして、この呪文を唱えてもよい。相手のクリーチャーを１体選び、持ち主のマナゾーンに置く。
+  source:
+    official: dmrp03-056
+    review: pending
+    notes: '"第57弾 tap_alt_cost。「持ち主のマナゾーン」は move to: mana。"'
+- id: dmrp04m-015
+  name: 暗闇の裏闇市
+  types:
+  - spell
+  civs:
+  - darkness
+  cost: 4
+  mana: 1
+  alt_cost:
+    do:
+    - zone: bz
+      owner: you
+      filter:
+        types:
+        - creature
+        civs:
+        - darkness
+      count: 4
+      tap: true
+  spell:
+  - op: destroy
+    select:
+      zone: bz
+      owner: you
+      filter:
+        types:
+        - creature
+      count: any
+    as: d
+  - op: repeat
+    times:
+      count:
+        ref: d
+    body:
+    - op: draw
+      count: 2
+  text: コストを支払うかわりに、自分の闇のクリーチャーを４体タップして、この呪文を唱えてもよい。 / 自分のクリーチャーを好きな数破壊する。その後、こうして破壊したクリーチャー１体につき２枚、カードを引く。
+  source:
+    official: dmrp04m-015
+    review: pending
+    notes: 第57弾 tap_alt_cost。破壊した数は destroy の as で保持し、ドローは repeat の times で繰り返した（dm25ex2-cho030
+      と同型）。
+- id: dmrp04m-019
+  name: デッドヒート・メガマックス
+  types:
+  - spell
+  civs:
+  - fire
+  cost: 8
+  mana: 1
+  alt_cost:
+    do:
+    - zone: bz
+      owner: you
+      filter:
+        types:
+        - creature
+        civs:
+        - fire
+      count: 4
+      tap: true
+  spell:
+  - op: choose
+    select:
+      zone: deck
+      owner: you
+      from_top: 4
+      look: true
+      count: all
+    as: pile
+  - op: may
+    body:
+    - op: move
+      select:
+        ref: pile
+        filter:
+          types:
+          - creature
+          civs:
+          - fire
+        count: 1
+        up_to: true
+      to: bz
+      reason: put
+  - op: move
+    select:
+      ref: pile
+      count: all
+    to: deck
+    reason: put
+    position: bottom
+    order: choose
+  text: コストを支払うかわりに、自分の火のクリーチャーを４体タップして、この呪文を唱えてもよい。 / 自分の山札の上から４枚を見る。その中から火のクリーチャーを１体、バトルゾーンに出してもよい。残りを好きな順序で自分の山札の一番下に置く。
+  source:
+    official: dmrp04m-019
+    review: pending
+    notes: '"第57弾 tap_alt_cost。「見る」は choose with look: true。「出す」は召喚ではないため reason:
+      put。"'
+- id: dmrp04s-021
+  name: 七王の円卓
+  types:
+  - spell
+  civs:
+  - darkness
+  cost: 7
+  mana: 1
+  alt_cost:
+    do:
+    - zone: bz
+      owner: you
+      filter:
+        types:
+        - creature
+        civs:
+        - darkness
+      count: 4
+      tap: true
+  spell:
+  - op: move
+    select:
+      zone: graveyard
+      owner: you
+      filter:
+        races:
+        - マフィ・ギャング
+        cost_le: 8
+      count: 1
+    to: bz
+    reason: put
+  text: コストを支払うかわりに、自分の闇のクリーチャーを４体タップして、この呪文を唱えてもよい。コスト８以下のマフィ・ギャングを１体、自分の墓地からバトルゾーンに出す。
+  source:
+    official: dmrp04s-021
+    review: pending
+    notes: '"第57弾 tap_alt_cost。「出す」は召喚ではないため reason: put。"'
+- id: dmrp04s-039
+  name: 覇王海賊船 キングシャーク
+  types:
+  - spell
+  civs:
+  - water
+  cost: 6
+  mana: 1
+  alt_cost:
+    do:
+    - zone: bz
+      owner: you
+      filter:
+        types:
+        - creature
+        civs:
+        - water
+      count: 4
+      tap: true
+  spell:
+  - op: bounce
+    select:
+      zone: bz
+      owner: opp
+      filter:
+        types:
+        - creature
+        tapped: true
+      count: all
+  text: コストを支払うかわりに、自分の水のクリーチャーを４体タップして、この呪文を唱えてもよい。相手のタップしているクリーチャーをすべて、持ち主の手札に戻す。
+  source:
+    official: dmrp04s-039
+    review: pending
+    notes: 第57弾 tap_alt_cost。手札に戻すは bounce マクロ。
+- id: dmrp04s-056
+  name: ヨギー・ベジタリバー
+  types:
+  - spell
+  civs:
+  - nature
+  cost: 7
+  mana: 1
+  alt_cost:
+    do:
+    - zone: bz
+      owner: you
+      filter:
+        types:
+        - creature
+        civs:
+        - nature
+      count: 4
+      tap: true
+  spell:
+  - op: move
+    select:
+      zone: deck
+      owner: you
+      from_top: 3
+    to: mana
+    reason: put
+    tapped: true
+  text: コストを支払うかわりに、自分の自然のクリーチャーを４体タップして、この呪文を唱えてもよい。自分の山札の上から３枚を、タップしてマナゾーンに置く。
+  source:
+    official: dmrp04s-056
+    review: pending
+    notes: '"第57弾 tap_alt_cost。タップしてマナに置くは move with tapped: true。"'
+- id: dmrp22-057
+  name: ウチカタハジメ
+  types:
+  - spell
+  civs:
+  - water
+  cost: 3
+  mana: 1
+  alt_cost:
+    do:
+    - zone: bz
+      owner: you
+      filter:
+        types:
+        - tamaseed
+        civs:
+        - water
+      count: 2
+      tap: true
+  spell:
+  - op: bounce
+    select:
+      zone: bz
+      owner: opp
+      filter:
+        types:
+        - creature
+      count: 1
+  text: コストを支払うかわりに、自分の水のタマシードを２枚タップして、この呪文を唱えてもよい。 / 相手のクリーチャーを１体選び、持ち主の手札に戻す。
+  source:
+    official: dmrp22-057
+    review: pending
+    notes: '"第57弾 tap_alt_cost。タップ対象はタマシード（types: [tamaseed]）のため creature ではない。"'
+- id: dmsd11-012
+  name: シンクロ・スパイラル
+  types:
+  - spell
+  civs:
+  - water
+  cost: 3
+  mana: 1
+  alt_cost:
+    do:
+    - zone: bz
+      owner: you
+      filter:
+        types:
+        - creature
+        civs:
+        - water
+      count: 2
+      tap: true
+  spell:
+  - op: bounce
+    select:
+      zone: bz
+      owner: opp
+      filter:
+        types:
+        - creature
+      count: 1
+  text: コストを支払うかわりに、自分の水のクリーチャーを２体タップして、この呪文を唱えてもよい。 / 相手のクリーチャーを１体選び、持ち主の手札に戻す。
+  source:
+    official: dmsd11-012
+    review: pending
+    notes: 第57弾 tap_alt_cost。
+    aliases:
+    - dmrp03-038
