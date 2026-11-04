@@ -218,6 +218,14 @@ def evaluate_deck(rules, cfg: AutoConfig, deck: list[str], opp_deck: list[str]):
     return wins, score / cfg.eval_seeds, first_win
 
 
+PLAIN_REASONS = {"direct_attack", "deck_out"}
+
+
+def classify_win(reason) -> str:
+    """勝ち方の自動分類。直接攻撃・山札切れ以外（状態勝ちなど）はコンボ候補として扱う。"""
+    return "plain" if reason in PLAIN_REASONS else "combo"
+
+
 def save_deck_win(rules, cfg: AutoConfig, deck: list[str], opp_deck: list[str], wins: int, board: dict, result, name: str):
     steps = replay.steps_of(result.engine)
     if not replay.replay_test(rules, steps, build=build_game)(board):
@@ -227,14 +235,16 @@ def save_deck_win(rules, cfg: AutoConfig, deck: list[str], opp_deck: list[str], 
     sig = hashlib.blake2b(json.dumps(used, ensure_ascii=False).encode(), digest_size=6).hexdigest()
     path = cfg.out_dir / f"{sig}.json"
     rate = wins / cfg.eval_seeds
-    info = {"signature": sig, "win_rate": rate, "log": len(steps), "cards": used}
+    reason = (result.engine.s.result or {}).get("reason")
+    cls = classify_win(reason)
+    info = {"signature": sig, "win_rate": rate, "log": len(steps), "cards": used, "reason": reason, "class": cls}
     if path.exists():
         return sig, None, info
     ls = LoopSpec(name=name, kind="deterministic" if rate >= 0.99 else "reroll",
                   minimal=[Pred(0, {"name": c}, 1, ">=", zone="deck") for c in used],
                   goal=[Pred(0, {"name": used[0]}, 1, ">=", zone="deck")] if used else [],
                   source={"board": board, "steps": [[k, list(keys), list(idx)] for k, keys, idx in steps], "win_rate": rate,
-                          "win_turn": (result.engine.s.result or {}).get("turn"), "auto": True, "mode": "deck",
+                          "win_turn": (result.engine.s.result or {}).get("turn"), "auto": True, "mode": "deck", "class": cls, "win_reason": reason,
                           "search": {"kind": "beam", "width": cfg.width, "max_turn": cfg.max_turn, "seeds": cfg.eval_seeds},
                           "note": "通常の開幕(40枚・先手後手ランダム)から勝てたデッキ。cards は手順で使われたカード。win_rate は探索した全シードのうち勝てた割合"})
     cfg.out_dir.mkdir(parents=True, exist_ok=True)
@@ -274,11 +284,14 @@ def run_decks(rules, cfg: AutoConfig, log=print) -> dict:
             log(f"skip deck: {type(ex).__name__}: {ex}")
             continue
         stats["decks"] += 1
-        archive.append((wins * 1e6 + score, i, deck))
+        bonus = 5e5 if fw and classify_win((fw[1].engine.s.result or {}).get("reason")) == "combo" else 0
+        archive.append((wins * 1e6 + bonus + score, i, deck))
         archive.sort(key=lambda x: -x[0])
         del archive[30:]
         if fw:
             stats["winning_decks"] += 1
+            if classify_win((fw[1].engine.s.result or {}).get("reason")) == "combo":
+                stats["combo_wins"] = stats.get("combo_wins", 0) + 1
             sig, path, info = save_deck_win(rules, cfg, deck, opp, wins, fw[0], fw[1], f"自動発見(デッキ) {len(stats['saved']) + 1}")
             if path:
                 stats["saved"].append(str(path))

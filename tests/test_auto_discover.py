@@ -59,3 +59,9 @@ def test_deck_mode_rejects_an_illegal_seed_deck(tmp_path):
     from dmsim.discovery.auto import run_decks
     with pytest.raises(ValueError):
         run_decks(load_rules(), AutoConfig(pool=[], seeds=[{"deck": [EM] * 40}], seconds=1, out_dir=tmp_path), log=lambda *_: None)
+
+
+def test_classify_win_separates_plain_from_combo():
+    from dmsim.discovery.auto import classify_win
+    assert classify_win("direct_attack") == "plain"
+    assert classify_win("state") == "combo"
