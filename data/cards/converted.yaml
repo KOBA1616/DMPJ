@@ -281603,3 +281603,1027 @@ cards:
   keywords:
   - s_trigger
   - yobinion
+- id: dm25rp1-031
+  name: 借魂
+  types:
+  - spell
+  civs:
+  - light
+  cost: 1
+  mana: 1
+  spell:
+  - op: draw
+    count:
+      count:
+        zone: bz
+        owner: you
+        filter:
+          types:
+          - creature
+          - evolution
+    player: you
+  text: '{GS} G・ストライク（このカードを自分のシールドゾーンから手札に加える時、表向きにし、相手のクリーチャーを１体選んでもよい。このターン、そのクリーチャーは攻撃できない）
+
+    自分の進化クリーチャー１体につき、カードを１枚引く。'
+  source:
+    official: dm25rp1-031
+    review: pending
+    notes: G・ストライクは known_keywords のため書き直さない。「１体につき」は count 式で数える。
+  keywords:
+  - g_strike
+- id: dm25rp1-056
+  name: ～銀眼の看守～
+  types:
+  - creature
+  civs:
+  - light
+  cost: 2
+  power: 4000
+  races:
+  - グレートメカオー
+  - スチーム・ナイト
+  mana: 1
+  abilities:
+  - kind: replace
+    when:
+      event: move
+      from: bz
+      to: graveyard
+      reason: destroy
+      subject:
+        zone: bz
+        owner: you
+        filter:
+          types:
+          - creature
+          - evolution
+    optional: true
+    instead:
+    - op: destroy
+      select:
+        ref: self
+  text: 'ブロッカー（このクリーチャーをタップして、相手クリーチャーの攻撃先をこのクリーチャーに変更してもよい）
+
+    このクリーチャーは相手プレイヤーを攻撃できない。
+
+    セイバー：進化クリーチャー（自分の進化クリーチャーが破壊される時、このクリーチャーをかわりに破壊してもよい）'
+  source:
+    official: dm25rp1-056
+    review: pending
+    notes: ブロッカー・攻撃できないは known_keywords のため書き直さない。セイバーはキーワードの標準効果（自分の進化クリーチャーが破壊される時、かわりにこのクリーチャーを破壊してもよい）として
+      replace で書いた。
+  keywords:
+  - blocker
+  - cannot_attack_player
+- id: dm26ex2-066
+  name: エボリューション・エッグ
+  types:
+  - spell
+  civs:
+  - nature
+  cost: 2
+  mana: 1
+  spell:
+  - op: may
+    body:
+    - op: choose
+      select:
+        zone: deck
+        owner: you
+        look: true
+        filter:
+          types:
+          - creature
+          - evolution
+        count: 1
+      as: t
+    - op: move
+      select:
+        ref: t
+        count: all
+      to: hand
+      reason: draw
+  - op: shuffle
+    player: you
+  text: 'S・トリガー（このカードを自分のシールドゾーンから手札に加える時、コストを支払わずにすぐ実行してもよい）
+
+    自分の山札を見る。その中から進化クリーチャーを１体表向きにし、手札に加えてもよい。その後、山札をシャッフルする。'
+  source:
+    official: dm26ex2-066
+    review: pending
+    notes: '"S・トリガーは known_keywords のため書き直さない。山札サーチは choose（look: true）＋ move の型（dm23-007
+      の先例）。"'
+    aliases:
+    - dm22-035
+    - dm22ex1-cho40
+    - dmex08-125
+    - promoy24-106
+  keywords:
+  - s_trigger
+- id: dm26ex2-076
+  name: 魔光蟲ヴィルジニア卿
+  types:
+  - creature
+  civs:
+  - darkness
+  cost: 5
+  power: 3000
+  races:
+  - パラサイトワーム
+  - ナイト
+  mana: 1
+  abilities:
+  - kind: trigger
+    when:
+      event: move
+      to: bz
+      subject: self
+    effect:
+    - op: choose
+      select:
+        zone: graveyard
+        owner: you
+        filter:
+          types:
+          - creature
+        count: 1
+      as: tgt
+    - op: move
+      select:
+        ref: tgt
+        count: all
+      to: hand
+      reason: return
+    - op: if
+      cond:
+        all:
+        - exists:
+            ref: tgt
+            filter:
+              types:
+              - creature
+              - evolution
+        - exists:
+            ref: tgt
+            filter:
+              races:
+              - パラサイトワーム
+              - ナイト
+      then:
+      - op: may
+        body:
+        - op: move
+          select:
+            ref: tgt
+            count: all
+          to: bz
+          reason: put
+  text: このクリーチャーが出た時、クリーチャーを１体、自分の墓地から手札に戻す。それがこのクリーチャーと同じ種族を持つ進化クリーチャーなら、自分の手札から出してもよい。
+  source:
+    official: dm26ex2-076
+    review: pending
+    notes: '"「このクリーチャーと同じ種族」はカードの種族（パラサイトワーム／ナイト）を直接書いた（dmc58-001「このクリーチャーと同じ文明」の先例）。「出す」は召喚ではないため
+      reason: put。"'
+    aliases:
+    - dm30-044
+    - dm30-044hc
+    - dmc55-076
+    - dmd25-015
+    - dmex17-123
+    - dmpcd03-b10
+- id: dm26sd1-y006
+  name: 進化設計図
+  types:
+  - spell
+  civs:
+  - nature
+  cost: 2
+  mana: 1
+  spell:
+  - op: choose
+    select:
+      zone: deck
+      owner: you
+      from_top: 6
+      look: true
+      count: all
+    as: pile
+  - op: move
+    select:
+      ref: pile
+      filter:
+        types:
+        - creature
+        - evolution
+      count: all
+    to: hand
+    reason: draw
+  - op: move
+    select:
+      zone: deck
+      owner: you
+      from_top: 6
+      count: rest
+    to: deck
+    reason: put
+    position: bottom
+  text: 'S・トリガー（このカードを自分のシールドゾーンから手札に加える時、コストを支払わずにすぐ実行してもよい）
+
+    自分の山札の上から６枚を表向きにする。その中から進化クリーチャーをすべて手札に加え、残りを好きな順序で山札の下に置く。'
+  source:
+    official: dm26sd1-y006
+    review: pending
+    notes: '"S・トリガーは known_keywords のため書き直さない。「残り」は count: rest＋position: bottom の型（dmrp17-090
+      の先例）。"'
+    aliases:
+    - dm14-040
+    - dm23ex2-cho022
+    - dm25sd2-004
+    - dm32-040
+    - dmr18-025
+    - dmsd17-009
+    - promoy4-006
+  keywords:
+  - s_trigger
+- id: dm32-070
+  name: エボリュート・パワー
+  types:
+  - spell
+  civs:
+  - nature
+  cost: 2
+  mana: 1
+  spell:
+  - op: choose
+    select:
+      zone: bz
+      owner: you
+      filter:
+        types:
+        - creature
+      count: 1
+    as: tgt
+  - op: modify
+    select:
+      ref: tgt
+      count: 1
+    mod:
+      power: 3000
+      breaks: 1
+    duration: end_of_turn
+  - op: if
+    cond:
+      exists:
+        ref: tgt
+        filter:
+          types:
+          - creature
+          - evolution
+    then:
+    - op: may
+      body:
+      - op: draw
+        count: 1
+        player: you
+  text: このターン、バトルゾーンにある自分のクリーチャー１体のパワーは+3000され、シールドをさらに１枚ブレイクする。そのクリーチャーが進化クリーチャーであれば、カードを１枚引いてもよい。
+  source:
+    official: dm32-070
+    review: pending
+    notes: '"「さらに１枚ブレイクする」は mod の breaks: 1（dmr01-s06 の先例）。「そのクリーチャーが進化クリーチャーであれば」は
+      ref: tgt への exists で照合。"'
+- id: dm32-074
+  name: 白騎士の黙聖セパ
+  types:
+  - creature
+  civs:
+  - light
+  cost: 3
+  power: 2000
+  races:
+  - ライトブリンガー
+  - イニシエート
+  mana: 1
+  abilities:
+  - kind: replace
+    when:
+      event: move
+      from: bz
+      to: graveyard
+      reason: destroy
+      subject:
+        zone: bz
+        owner: you
+        filter:
+          types:
+          - creature
+          - evolution
+    optional: true
+    instead:
+    - op: destroy
+      select:
+        ref: self
+  text: セイバー：進化クリーチャー
+  source:
+    official: dm32-074
+    review: pending
+    notes: '"括弧書きの注釈（セイバーの説明文）は text から除いた。セイバーは replace の型（dmr20-030 ウルトラ・セイバーの先例）。「破壊される時」が原文にあるため
+      reason: destroy＋to: graveyard を付けた。"'
+- id: dm32-078
+  name: エボリュート・クロック
+  types:
+  - spell
+  civs:
+  - light
+  cost: 1
+  mana: 1
+  spell:
+  - op: delayed_trigger
+    when:
+      event: turn_end
+      player: you
+    effect:
+    - op: choose
+      select:
+        zone: bz
+        owner: you
+        filter:
+          types:
+          - creature
+        count: 1
+      as: tgt
+    - op: untap
+      select:
+        ref: tgt
+    - op: if
+      cond:
+        exists:
+          ref: tgt
+          filter:
+            types:
+            - creature
+            - evolution
+      then:
+      - op: may
+        body:
+        - op: draw
+          count: 1
+          player: you
+  text: 自分のターンの終わりに、バトルゾーンにある自分のクリーチャーを１体アンタップする。それが進化クリーチャーであれば、カードを１枚引いてもよい。
+  source:
+    official: dm32-078
+    review: pending
+    notes: '"「自分のターンの終わりに」は delayed_trigger（when: {event: turn_end, player: you}）。"'
+- id: dm33-054
+  name: 優雪妖精バケット・バケコ
+  types:
+  - creature
+  civs:
+  - nature
+  cost: 3
+  power: 2000
+  races:
+  - スノーフェアリー
+  mana: 1
+  abilities:
+  - kind: replace
+    when:
+      event: move
+      to: graveyard
+      reason: destroy
+      subject:
+        owner: you
+        filter:
+          types:
+          - creature
+          - evolution
+    instead:
+    - op: move
+      select:
+        ref: self
+      to: mana
+      reason: put
+  text: 自分の進化クリーチャーが破壊される時、かわりにこのクリーチャーを自分のマナゾーンに置く。
+  source:
+    official: dm33-054
+    review: pending
+    notes: 置換はセイバー（dm05-050）と同型だが「もよい」が無いため optional なし。
+- id: dm34-013
+  name: 死神の凶獣ベル・ヘル・デ・ジャクソン
+  types:
+  - creature
+  civs:
+  - darkness
+  cost: 6
+  power: 6000
+  races:
+  - デーモン・コマンド
+  mana: 1
+  abilities:
+  - kind: trigger
+    when:
+      event: attack
+      subject: self
+    effect:
+    - op: choose
+      select:
+        zone: bz
+        owner: you
+        filter:
+          types:
+          - creature
+        count: 1
+        up_to: true
+      as: sac
+    - op: destroy
+      select:
+        ref: sac
+        count: all
+    - op: if
+      cond:
+        exists:
+          ref: sac
+      then:
+      - op: move
+        select:
+          zone: deck
+          owner: you
+          filter:
+            types:
+            - creature
+            - evolution
+            races:
+            - デーモン・コマンド
+          count: 1
+          up_to: true
+        to: hand
+        reason: draw
+      - op: shuffle
+        player: you
+  text: 'このクリーチャーが攻撃する時、自分のクリーチャーを１体破壊してもよい。そうした場合、自分の山札を見る。その中から進化であるデーモン・コマンドを１体選び、相手に見せてから、手札に加えてもよい。その後、山札をシャッフルする。
+
+    W・ブレイカー(このクリーチャーはシールドを２枚ブレイクする)'
+  source:
+    official: dm34-013
+    review: pending
+    notes: 「破壊してもよい」は up_to で選び、選んだ場合だけ（sac が空でない）山札サーチを行う。W・ブレイカーは known_keywords
+      のため書き直さない。
+  keywords:
+  - double_breaker
+- id: dm34-055
+  name: ハッスル・ハッスル
+  types:
+  - spell
+  civs:
+  - nature
+  cost: 2
+  mana: 1
+  spell:
+  - op: modify
+    select:
+      zone: bz
+      owner: you
+      filter:
+        types:
+        - creature
+        not_types:
+        - evolution
+      count: all
+    mod:
+      power: 1000
+    duration: end_of_turn
+  - op: modify
+    select:
+      zone: bz
+      owner: you
+      filter:
+        types:
+        - creature
+        - evolution
+      count: all
+    mod:
+      power: 4000
+    duration: end_of_turn
+  text: このターン、バトルゾーンにある自分の、進化ではないクリーチャーすべてのパワーは+1000される。 / このターン、バトルゾーンにある自分の、進化クリーチャーすべてのパワーは+4000される。
+  source:
+    official: dm34-055
+    review: pending
+    notes: '"「進化ではない」は not_types: [evolution]。"'
+- id: dm35-022
+  name: 予言者パシャ
+  types:
+  - creature
+  civs:
+  - light
+  cost: 3
+  power: 2000
+  races:
+  - ライトブリンガー
+  - オリジン
+  mana: 1
+  abilities:
+  - kind: replace
+    optional: true
+    when:
+      event: move
+      to: graveyard
+      reason: destroy
+      subject:
+        owner: you
+        filter:
+          types:
+          - creature
+          - evolution
+        other: true
+    instead:
+    - op: destroy
+      select:
+        ref: self
+        count: 1
+  - kind: replace
+    optional: true
+    when:
+      event: move
+      to: graveyard
+      reason: destroy
+      subject:
+        owner: you
+        filter:
+          races:
+          - ゴッド
+        other: true
+    instead:
+    - op: destroy
+      select:
+        ref: self
+        count: 1
+  text: セイバー：進化クリーチャーまたはゴッド(自分の進化クリーチャーまたはゴッド１体が破壊される時、このクリーチャーをかわりに破壊してもよい)
+  source:
+    official: dm35-022
+    review: pending
+    notes: セイバーは dm05-050 と同じ置換の形。対象が「進化クリーチャーまたはゴッド」のため置換を2つに分けた。
+- id: dm35-025
+  name: 封魔ハーゲンディ
+  types:
+  - creature
+  civs:
+  - water
+  cost: 4
+  power: 3000
+  races:
+  - グランド・デビル
+  mana: 1
+  abilities:
+  - kind: trigger
+    when:
+      event: move
+      to: bz
+      subject:
+        owner: you
+        filter:
+          any_of:
+          - types:
+            - creature
+            - evolution
+          - races:
+            - ゴッド
+    effect:
+    - op: may
+      body:
+      - op: draw
+        count: 1
+  text: バトルゾーンに自分の進化クリーチャーまたはゴッドを出した時、カードを１枚引いてもよい。
+  source:
+    official: dm35-025
+    review: pending
+    notes: 「進化クリーチャーまたはゴッド」は any_of でフィルタ。
+- id: dm35-055
+  name: クレスト・EVO チャージャー
+  types:
+  - spell
+  civs:
+  - nature
+  cost: 4
+  mana: 1
+  spell:
+  - op: move
+    select:
+      zone: deck
+      owner: you
+      filter:
+        types:
+        - creature
+        - evolution
+      count: 1
+      up_to: true
+    to: hand
+    reason: draw
+  - op: shuffle
+    player: you
+  text: '自分の山札を見る。その中から進化クリーチャーを１体選び、相手に見せてから自分の手札に加えてもよい。その後、山札をシャッフルする。
+
+    Evoチャージャー(この呪文を唱えた後、墓地に置くかわりに自分のマナゾーンに置く。その後、クリーチャーを１体、自分のマナゾーンからバトルゾーンにある自分の進化クリーチャー１体の下に重ねて置いてもよい)'
+  source:
+    official: dm35-055
+    review: pending
+    notes: EVOチャージャーは known_keywords（エンジンがマナ送り＋進化下重ねを処理）。残りの山札サーチのみ変換。
+  keywords:
+  - evo_charger
+- id: dmc55-002
+  name: 暗黒導師ブラック・ルシファー
+  types:
+  - creature
+  civs:
+  - darkness
+  cost: 6
+  power: 6000
+  races:
+  - デーモン・コマンド
+  mana: 1
+  abilities:
+  - kind: trigger
+    when:
+      event: move
+      to: bz
+      subject: self
+    effect:
+    - op: mill
+      owner: you
+      count: 5
+  - kind: static
+    affects: self
+    mod:
+      power:
+        amount: 1000
+        count:
+          zone: graveyard
+          owner: you
+          filter:
+            types:
+            - creature
+            races:
+            - デーモン・コマンド
+  - kind: replace
+    optional: true
+    when:
+      event: move
+      from: bz
+      to: graveyard
+      reason: destroy
+      subject: self
+    instead:
+    - op: move
+      select:
+        zone: graveyard
+        owner: you
+        filter:
+          types:
+          - creature
+          - evolution
+          races:
+          - デーモン・コマンド
+        count: 1
+        up_to: true
+      to: hand
+      reason: return
+  text: 'このクリーチャーをバトルゾーンに出した時、自分の山札の上から５枚を自分の墓地に置く。
+
+    このクリーチャーのパワーは、自分の墓地にあるデーモン・コマンド１体につき+1000される。
+
+    W・ブレイカー
+
+    このクリーチャーが破壊される時、このクリーチャーを墓地におくかわりに、進化デーモン・コマンドを１体、自分の墓地から手札に戻してもよい。'
+  source:
+    official: dmc55-002
+    review: pending
+    notes: W・ブレイカーは known_keywords のため書き直さない。3つ目の置換で、破壊されたこのクリーチャー自体の行き先は原文に明記がなく、instead
+      節の効果（墓地から手札に戻す）のみを書いた。
+  keywords:
+  - double_breaker
+- id: dmd21-004
+  name: エヴォル・メラッチ
+  types:
+  - creature
+  civs:
+  - fire
+  cost: 3
+  power: 1000
+  races:
+  - ファイアー・バード炎
+  mana: 1
+  abilities:
+  - kind: trigger
+    when:
+      event: move
+      to: bz
+      subject: self
+    effect:
+    - op: may
+      body:
+      - op: choose
+        select:
+          zone: deck
+          owner: you
+          from_top: 4
+          look: true
+          count: all
+        as: pile
+      - op: move
+        select:
+          ref: pile
+          filter:
+            types:
+            - creature
+            - evolution
+          count: 1
+        to: hand
+        reason: draw
+      - op: move
+        select:
+          ref: pile
+          count: all
+        to: deck
+        position: bottom
+        reason: put
+        order: choose
+  text: このクリーチャーをバトルゾーンに出した時、自分の山札の上から４枚を見る。その中から進化クリーチャーを１体、相手に見せてから自分の手札に加えてもよい。その後、残りを好きな順序で自分の山札の一番下に置く。
+  source:
+    official: dmd21-004
+    review: pending
+    notes: 上から4枚見て進化1体を手札、残りは好きな順序で山札の下。dm20-s02 と同型の pile イディオム。
+- id: dmd21-008
+  name: 爆裂Ｂ-ＢＯＹ
+  types:
+  - creature
+  civs:
+  - fire
+  cost: 2
+  power: 1000
+  races:
+  - ヒューマノイド
+  mana: 1
+  abilities:
+  - kind: static
+    affects:
+      owner: you
+      zone: hand
+      filter:
+        types:
+        - creature
+        - evolution
+        civs:
+        - fire
+    mod:
+      cost_may:
+        amount: 1
+        min: 1
+  text: 自分の火の進化クリーチャーの召喚コストを１少なくしてもよい。ただし、コストは０以下にならない。
+  source:
+    official: dmd21-008
+    review: pending
+    notes: '"「〜してもよい」のコスト軽減は cost_may。min: 1 で「コストは０以下にならない」を表す。"'
+- id: dmd22-009
+  name: 死神封魔ラヴァール
+  types:
+  - creature
+  civs:
+  - darkness
+  cost: 2
+  power: 1000
+  races:
+  - グランド・デビル
+  mana: 1
+  abilities:
+  - kind: static
+    affects:
+      owner: you
+      zone: hand
+      filter:
+        types:
+        - creature
+        - evolution
+        civs:
+        - darkness
+    mod:
+      cost_may:
+        amount: 1
+        min: 1
+  text: 自分の闇の進化クリーチャーの召喚コストを１少なくしてもよい。ただし、コストは０以下にならない。
+  source:
+    official: dmd22-009
+    review: pending
+    notes: dmd21-008 と同型（闇）。
+    aliases:
+    - dm32-057
+- id: dmd23-007
+  name: 白騎士の霊騎ラジューヌ
+  types:
+  - creature
+  civs:
+  - light
+  cost: 2
+  power: 1000
+  races:
+  - アーク・セラフィム
+  mana: 1
+  abilities:
+  - kind: static
+    affects:
+      owner: you
+      zone: hand
+      filter:
+        types:
+        - creature
+        - evolution
+        civs:
+        - light
+    mod:
+      cost_may:
+        amount: 1
+        min: 1
+  text: 自分の光の進化クリーチャーの召喚コストを１少なくしてもよい。ただし、コストは０以下にならない。
+  source:
+    official: dmd23-007
+    review: pending
+    notes: dmd21-008 と同型（光）。
+    aliases:
+    - dm32-045
+- id: dmd27-008
+  name: 革命龍 アサルト
+  types:
+  - creature
+  - evolution
+  civs:
+  - fire
+  cost: 5
+  power: 8000
+  races:
+  - メガ・コマンド・ドラゴン
+  - 革命軍
+  mana: 1
+  evolve_from:
+    civs:
+    - fire
+    types:
+    - creature
+  keywords:
+  - double_breaker
+  abilities:
+  - kind: trigger
+    when:
+      event: move
+      to: bz
+      subject: self
+    effect:
+    - op: may
+      body:
+      - op: choose
+        select:
+          zone: deck
+          owner: you
+          look: true
+          filter:
+            types:
+            - creature
+            - evolution
+            civs:
+            - fire
+            races:
+            - 革命軍
+          count: 1
+        as: t
+      - op: move
+        select:
+          ref: t
+          count: all
+        to: hand
+        reason: draw
+    - op: shuffle
+  - kind: static
+    if:
+      cmp:
+      - count:
+          zone: shield
+          owner: you
+      - <=
+      - 2
+    affects:
+      owner: you
+      zone: hand
+      filter:
+        types:
+        - creature
+        - evolution
+        races:
+        - 革命軍
+    mod:
+      cost:
+        amount: -3
+      cost_min: 1
+  text: 進化―自分の火のクリーチャー１体の上に置く。 / W・ブレイカー / このクリーチャーがバトルゾーンに出た時、自分の山札を見る。その中から火の革命軍の進化クリーチャーを１体選び、相手に見せてから手札に加えてもよい。その後、山札をシャッフルする。
+    / 革命２―自分のシールドが２つ以下なら、自分の革命軍の進化クリーチャーの召喚コストを最大３少なくする。ただし、コストは０以下にならない。
+  source:
+    official: dmd27-008
+    review: pending
+    notes: 進化元は「自分の火のクリーチャー１体」。W・ブレイカーは keywords に記載（known_keywords にないため）。革命２は条件付きコスト軽減（static
+      + if）。「相手に見せてから」はエンジンが選んだカードを公開するため追加記述なし。
+    aliases:
+    - promoy14-061
+- id: dmex06-067
+  name: 轟速 ザ・マッハ
+  types:
+  - creature
+  civs:
+  - fire
+  cost: 5
+  power: 5000
+  races:
+  - ソニック・コマンド
+  - 侵略者
+  mana: 1
+  abilities:
+  - kind: trigger
+    when:
+      event: move
+      to: bz
+      subject: self
+    effect:
+    - op: may
+      body:
+      - op: choose
+        select:
+          zone: deck
+          owner: you
+          from_top: 4
+          look: true
+          count: all
+        as: pile
+      - op: move
+        select:
+          ref: pile
+          filter:
+            types:
+            - creature
+            - evolution
+          count: 1
+        to: hand
+        reason: draw
+      - op: move
+        select:
+          ref: pile
+          count: all
+        to: deck
+        position: bottom
+        reason: put
+        order: choose
+  text: 'スピードアタッカー（このクリーチャーは召喚酔いしない）
+
+    このクリーチャーがバトルゾーンに出た時、自分の山札の上から４枚を表向きにする。その中から進化クリーチャーを１体、自分の手札に加えてもよい。残りを好きな順序で山札の一番下に置く。'
+  source:
+    official: dmex06-067
+    review: pending
+    notes: スピードアタッカーは known_keywords のため書き直さない。上から4枚見て進化1体を手札、残りは好きな順序で山札の下（dmd21-004
+      と同型）。
+    aliases:
+    - dmr18-022
+    - promoy14-035
+  keywords:
+  - speed_attacker
+- id: dm25rp4-046
+  name: 歓喜老GO-GEKI-63
+  types:
+  - creature
+  civs:
+  - nature
+  cost: 3
+  power: 12000
+  races:
+  - アース・ドラゴン
+  - ジャイアント
+  - テクノ・サムライ
+  mana: 1
+  abilities:
+  - kind: static
+    affects: self
+    if:
+      not:
+        exists:
+          zone: bz
+          owner: you
+          filter:
+            types:
+            - creature
+            - evolution
+    mod:
+      deny:
+      - attack_player
+      - attack_creature
+  text: 'T・ブレイカー（このクリーチャーはシールドを３つブレイクする）
+
+    自分の進化クリーチャーがなければ、このクリーチャーは攻撃できない。'
+  source:
+    official: dm25rp4-046
+    review: pending
+    notes: T・ブレイカーは known_keywords のため書き直さない。「攻撃できない」は deny の attack_player と attack_creature
+      の両方で表す（dm19-025 の先例）。
+  keywords:
+  - triple_breaker
