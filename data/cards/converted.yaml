@@ -289200,3 +289200,706 @@ cards:
   text: 革命チェンジ―火または自然のドラゴン / W・ブレイカー / バトル中、このクリーチャーは破壊されない。
   types:
   - creature
+- abilities:
+  - affects: self
+    kind: static
+    mod:
+      allow:
+      - action: attack_creature
+        other:
+          tapped: false
+  civs:
+  - fire
+  cost: 3
+  id: dm26rp2-070
+  mana: 1
+  name: 機神勇者ビクトリーダッシュ・バスター
+  power: 4000
+  races:
+  - ヒューマノイド
+  - ビーストフォーク
+  source:
+    official: dm26rp2-070
+    review: pending
+  text: このクリーチャーは、アンタップしているクリーチャーを攻撃できる。
+  types:
+  - creature
+- abilities:
+  - affects: self
+    kind: static
+    mod:
+      allow:
+      - action: attack_creature
+        other:
+          tapped: false
+  - effect:
+    - count: 1
+      op: draw
+      player: you
+    - op: move
+      reason: return
+      select:
+        ref: self
+      to: hand
+    kind: trigger
+    when:
+      event: turn_end
+      player: you
+  civs:
+  - fire
+  cost: 8
+  id: dmex16-028
+  keywords:
+  - speed_attacker
+  - double_breaker
+  mana: 1
+  name: 轟音 ザ・ジェットV
+  power: 8000
+  races:
+  - ソニック・コマンド
+  - イニシャルズ
+  source:
+    official: dmex16-028
+    review: pending
+  text: 'スピードアタッカー（このクリーチャーは召喚酔いしない）
+
+    W・ブレイカー（このクリーチャーはシールドを２つブレイクする）
+
+    このクリーチャーは、アンタップしているクリーチャーを攻撃できる。
+
+    自分のターンの終わりに、カードを１枚引き、その後、このクリーチャーを手札に戻す。'
+  types:
+  - creature
+- abilities:
+  - effect:
+    - as: chosen
+      op: choose
+      select:
+        filter:
+          civs:
+          - fire
+          race_has: ハンター
+          types:
+          - creature
+        owner: you
+        zone: bz
+    - duration: end_of_turn
+      mod:
+        allow:
+        - action: attack_creature
+          other:
+            tapped: false
+      op: modify
+      select:
+        ref: chosen
+    kind: trigger
+    when:
+      event: move
+      subject: self
+      to: bz
+  civs:
+  - fire
+  cost: 4
+  id: dmr01-063
+  keywords:
+  - hunting
+  mana: 1
+  name: イケイケ・ピッピー
+  power: 3000
+  races:
+  - ファイアー・バード
+  - ハンター
+  source:
+    official: dmr01-063
+    review: pending
+  text: 'このクリーチャーをバトルゾーンに出した時、そのターン、バトルゾーンにある自分の火のハンター・クリーチャー１体は、アンタップされているクリーチャーを攻撃できる。
+
+    ハンティング(バトル中、このクリーチャーのパワーは、バトルゾーンにある自分のハンター１体につき+1000される)'
+  types:
+  - creature
+- abilities:
+  - kind: static
+    affects: self
+    mod:
+      power_when:
+        amount: 3000
+        when: attacking
+  - affects: self
+    if:
+      exists:
+        filter:
+          civs:
+          - zero
+          types:
+          - creature
+        owner: you
+        zone: bz
+    kind: static
+    mod:
+      allow:
+      - action: attack_creature
+        other:
+          tapped: false
+  - affects: self
+    kind: static
+    mod:
+      power_when:
+        amount: 3000
+        when: attacking
+  civs:
+  - fire
+  cost: 4
+  id: dmr08-048
+  mana: 1
+  name: ドスコイ
+  power: 2000
+  races:
+  - トライストーン
+  source:
+    official: dmr08-048
+    review: pending
+  text: 'バトルゾーンに自分の無色クリーチャーがあれば、このクリーチャーはタップしていないクリーチャーを攻撃できる。
+
+    パワーアタッカー+3000(攻撃中、このクリーチャーのパワーは+3000される)'
+  types:
+  - creature
+- abilities:
+  - effect:
+    - duration: end_of_turn
+      mod:
+        allow:
+        - action: attack_creature
+          other:
+            tapped: false
+      op: modify
+      select:
+        filter:
+          types:
+          - creature
+        owner: you
+        zone: bz
+    kind: trigger
+    when:
+      event: move
+      subject: self
+      to: bz
+  civs:
+  - fire
+  cost: 5
+  id: dmr09-030
+  mana: 1
+  name: ノビル兄貴オニズーム
+  power: 2000
+  races:
+  - ヒューマノイド
+  - ハンター
+  - エイリアン
+  source:
+    official: dmr09-030
+    review: pending
+  text: このクリーチャーをバトルゾーンに出した時、そのターン、バトルゾーンにある自分のクリーチャーはすべて、タップされていないクリーチャーを攻撃できる。
+  types:
+  - creature
+- civs:
+  - fire
+  cost: 5
+  free_if:
+    exists:
+      filter:
+        race_has: アウトレイジ
+      owner: you
+      zone: bz
+  id: dmr10-028
+  mana: 1
+  name: 無法の裏技ドドンガ・ドン
+  source:
+    official: dmr10-028
+    review: pending
+  spell:
+  - as: tgt
+    op: choose
+    select:
+      count: 1
+      filter:
+        types:
+        - creature
+      owner: you
+      zone: bz
+  - duration: end_of_turn
+    mod:
+      allow:
+      - action: attack_creature
+        other:
+          tapped: false
+      power_when:
+        amount: 3000
+        when: attacking
+    op: modify
+    select:
+      ref: tgt
+  text: G・ゼロ - バトルゾーンに自分のアウトレイジがあれば、この呪文をコストを支払わずに唱えてもよい。 / このターン、バトルゾーンにある自分のクリーチャー１体は「パワーアタッカー+3000」を得、タップされていないクリーチャーを攻撃できる。
+  types:
+  - spell
+- civs:
+  - fire
+  cost: 2
+  id: dmr12-047
+  mana: 1
+  name: 一極両得 ドンドン＆パンパン
+  source:
+    official: dmr12-047
+    review: pending
+  spell:
+  - cond:
+      exists:
+        filter:
+          race_has: エグザイル
+          types:
+          - creature
+        owner: you
+        zone: bz
+    else:
+    - modes:
+      - - duration: end_of_turn
+          mod:
+            grant:
+            - speed_attacker
+          op: modify
+          select:
+            count: all
+            filter:
+              types:
+              - creature
+            owner: you
+            zone: bz
+      - - as: tgt
+          op: choose
+          select:
+            count: 1
+            filter:
+              types:
+              - creature
+            owner: you
+            zone: bz
+        - duration: end_of_turn
+          mod:
+            allow:
+            - action: attack_creature
+              other:
+                tapped: false
+          op: modify
+          select:
+            ref: tgt
+      op: modal
+    op: if
+    then:
+    - duration: end_of_turn
+      mod:
+        grant:
+        - speed_attacker
+      op: modify
+      select:
+        count: all
+        filter:
+          types:
+          - creature
+        owner: you
+        zone: bz
+    - as: tgt
+      op: choose
+      select:
+        count: 1
+        filter:
+          types:
+          - creature
+        owner: you
+        zone: bz
+    - duration: end_of_turn
+      mod:
+        allow:
+        - action: attack_creature
+          other:
+            tapped: false
+      op: modify
+      select:
+        ref: tgt
+  text: 次のうちいずれかひとつを選ぶ。バトルゾーンに自分のエグザイル・クリーチャーがあれば、両方を選んでもよい。 / ▼このターン、バトルゾーンにある自分のクリーチャーはすべて、「スピードアタッカー」を得る。
+    / ▼このターン、バトルゾーンにある自分のクリーチャー１体は、タップされていないクリーチャーを攻撃できる。
+  types:
+  - spell
+- abilities:
+  - affects: self
+    kind: static
+    mod:
+      allow:
+      - action: attack_creature
+        other:
+          tapped: false
+  civs:
+  - fire
+  cost: 2
+  id: dmr18-065
+  mana: 1
+  name: 音速 ドライブ
+  power: 1000
+  races:
+  - ヒューマノイド爆
+  - 侵略者
+  source:
+    official: dmr18-065
+    review: pending
+  text: このクリーチャーは、アンタップしているクリーチャーを攻撃できる。
+  types:
+  - creature
+- civs:
+  - darkness
+  - fire
+  cost: 2
+  id: dmr23-071
+  mana: 1
+  name: 一撃必殺のロックオン
+  source:
+    official: dmr23-071
+    review: pending
+  spell:
+  - as: target
+    op: choose
+    select:
+      filter:
+        types:
+        - creature
+      owner: you
+      zone: bz
+  - duration: end_of_turn
+    mod:
+      allow:
+      - action: attack_creature
+        other:
+          tapped: false
+      grant:
+      - slayer
+    op: modify
+    select:
+      ref: target
+  text: マナゾーンに置く時、このカードはタップして置く。このターン、自分のクリーチャー１体は「スレイヤー」を得、アンタップしているクリーチャーを攻撃できる。
+  types:
+  - spell
+- abilities:
+  - affects: self
+    kind: static
+    mod:
+      allow:
+      - action: attack_creature
+        other:
+          tapped: false
+  civs:
+  - fire
+  cost: 5
+  id: dmrp03-079
+  keywords:
+  - s_trigger
+  mana: 1
+  name: ヒゲ総理
+  power: 3000
+  races:
+  - ジョーカーズ
+  source:
+    official: dmrp03-079
+    review: pending
+  text: S・トリガー（このクリーチャーをシールドゾーンから手札に加える時、コストを支払わずにすぐ召喚してもよい）このクリーチャーは、アンタップしているクリーチャーを攻撃できる。
+  types:
+  - creature
+- abilities:
+  - kind: trigger
+    when:
+      event: move
+      to: bz
+      subject: self
+    effect:
+    - op: modify
+      select:
+        ref: self
+      mod:
+        allow:
+        - action: attack_creature
+          other:
+            tapped: false
+      duration: end_of_turn
+  - bazurenda: true
+    effect:
+    - as: tgt
+      op: choose
+      select:
+        count: 1
+        filter:
+          types:
+          - creature
+        owner: you
+        zone: bz
+    - duration: end_of_turn
+      mod:
+        allow:
+        - action: attack_creature
+          other:
+            tapped: false
+        power: 3000
+      op: modify
+      select:
+        ref: tgt
+    kind: trigger
+    when:
+      event: move
+      subject: self
+      to: bz
+  - effect:
+    - body:
+      - count: 1
+        op: draw
+        player: you
+      op: may
+    kind: trigger
+    when:
+      event: battle_win
+      subject:
+        filter:
+          types:
+          - creature
+        owner: you
+  bazurenda:
+    civs: []
+    cost: 2
+  civs:
+  - water
+  - nature
+  cost: 6
+  id: dmrp13-008
+  keywords:
+  - double_breaker
+  mana: 1
+  name: ウシキン☆チャンネル
+  power: 6000
+  races:
+  - トリックス
+  - チームウェイブ
+  source:
+    notes: マッハファイターは keyword_patterns で自動処理。バズレンダの civs は無色のため空リスト
+    official: dmrp13-008
+    review: pending
+  text: 'バズレンダ [cc02]（このクリーチャーのコストを支払う時、追加で [cc02]を好きな回数支払ってもよい。このクリーチャーがバトルゾーンに出た時、その{OL}
+    能力を１回と、追加で [cc02]支払った回数、使う）
+
+    {OL}このターン、自分のクリーチャー１体は、パワーを+3000され、アンタップしているクリーチャーを攻撃できる。
+
+    マッハファイター
+
+    W・ブレイカー
+
+    自分のクリーチャーがバトルで勝った時、カードを１枚引いてもよい。'
+  types:
+  - creature
+- abilities:
+  - affects:
+      filter:
+        types:
+        - creature
+      owner: you
+      zone: bz
+    kind: static
+    mod:
+      allow:
+      - action: attack_creature
+        other:
+          tapped: false
+      grant:
+      - speed_attacker
+  - instead:
+    - op: battle_substitute
+    kind: replace
+    optional: true
+    when:
+      event: battle
+      subject:
+        filter:
+          types:
+          - creature
+        other: true
+        owner: you
+  - effect:
+    - body:
+      - count: 1
+        op: break
+        player: opp
+      op: may
+    kind: trigger
+    when:
+      event: battle_win
+      subject: self
+  civs:
+  - fire
+  - nature
+  cost: 10
+  id: dmrp16-s11
+  keywords:
+  - triple_breaker
+  mana: 1
+  name: 百万面相 トカゲ丸
+  power: 16000
+  races:
+  - ジョーカーズ
+  - チーム切札
+  - スペシャルズ
+  source:
+    official: dmrp16-s11
+    review: pending
+  text: 'T・ブレイカー
+
+    自分のクリーチャーはすべて「スピードアタッカー」を得、アンタップしているクリーチャーを攻撃できる。
+
+    自分の他のクリーチャーが相手のクリーチャーとバトルする時、かわりにこのクリーチャーにバトルさせてもよい。
+
+    このクリーチャーがバトルに勝った時、相手のシールドを１つブレイクしてもよい。'
+  types:
+  - creature
+- abilities:
+  - affects:
+      filter:
+        race_has: ドラゴン
+        types:
+        - creature
+      other: true
+      owner: you
+      zone: bz
+    kind: static
+    mod:
+      allow:
+      - action: attack_creature
+        other:
+          tapped: false
+  civs:
+  - fire
+  cost: 5
+  id: dmx17-034
+  mana: 1
+  name: 熱血龍 タイマンド・ツクデ
+  power: 5000
+  races:
+  - ガイアール・コマンド・ドラゴン
+  source:
+    official: dmx17-034
+    review: pending
+  text: バトルゾーンにある自分の他のドラゴンはすべて、タップされていないクリーチャーを攻撃できる。
+  types:
+  - creature
+- abilities:
+  - affects: self
+    kind: static
+    mod:
+      allow:
+      - action: attack_creature
+        other:
+          tapped: false
+  - effect:
+    - op: move
+      reason: return
+      select:
+        ref: self
+      to: hand
+    kind: trigger
+    when:
+      event: turn_end
+      player: you
+  civs:
+  - fire
+  cost: 8
+  id: dmx23-010
+  keywords:
+  - speed_attacker
+  - double_breaker
+  mana: 1
+  name: バザガジール・ドラゴン
+  power: 8000
+  races:
+  - アーマード・ドラゴン
+  source:
+    official: dmx23-010
+    review: pending
+    aliases:
+    - dm06-031
+    - dmc49-018
+  text: スピードアタッカー(このクリーチャーは召喚酔いしない）W・ブレイカー（このクリーチャーはシールドを２つブレイクする）このクリーチャーは、アンタップしているクリーチャーを攻撃できる。自分のターンの終わりに、このクリーチャーを自分の手札に戻す。
+  types:
+  - creature
+- abilities:
+  - effect:
+    - duration: end_of_turn
+      mod:
+        allow:
+        - action: attack_creature
+          other:
+            tapped: false
+      op: modify
+      select:
+        ref: self
+    kind: trigger
+    when:
+      event: move
+      subject: self
+      to: bz
+  civs:
+  - fire
+  cost: 9
+  id: promoy13-084
+  keywords:
+  - speed_attacker
+  - triple_breaker
+  mana: 1
+  name: 熱血龍 ガイアール・キラー・カイザー
+  power: 12000
+  races:
+  - ガイアール・コマンド・ドラゴン
+  source:
+    official: promoy13-084
+    review: pending
+  text: 'スピードアタッカー（このクリーチャーは召喚酔いしない）
+
+    T・ブレイカー（このクリーチャーはシールドを３枚ブレイクする）
+
+    このクリーチャーは、バトルゾーンに出したターン、アンタップされているクリーチャーを攻撃できる。'
+  types:
+  - creature
+- abilities:
+  - effect:
+    - duration: end_of_turn
+      mod:
+        allow:
+        - action: attack_creature
+          other:
+            tapped: false
+      op: modify
+      select:
+        ref: self
+    kind: trigger
+    when:
+      event: move
+      subject: self
+      to: bz
+  civs:
+  - fire
+  cost: 6
+  id: promoy15-067
+  keywords:
+  - speed_attacker
+  - double_breaker
+  mana: 1
+  name: 'ガイアール Re:'
+  power: 7000
+  races:
+  - レッド・コマンド・ドラゴン
+  - ハンター
+  - ハムカツ団
+  source:
+    official: promoy15-067
+    review: pending
+  text: スピードアタッカー（このクリーチャーは召喚酔いしない）W・ブレイカー（このクリーチャーはシールドを２つブレイクする）このクリーチャーは、バトルゾーンに出たターンに、アンタップしているクリーチャーを攻撃できる。
+  types:
+  - creature
