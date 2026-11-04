@@ -276700,3 +276700,1125 @@ cards:
     review: pending
     notes: '「バトルゾーンに出た時」→ when: {event: move, to: bz, subject: self}。「そのターン、自分のクリーチャーすべての種族にゲリラ・コマンドを追加する」→
       modify（duration: end_of_turn）。'
+- id: dm23rp4x-027
+  name: 助招！アルデ&パワッチ
+  types:
+  - creature
+  civs:
+  - light
+  cost: 5
+  power: 5500
+  races:
+  - メカ・デル・ステラ
+  - アーマード・ファイアー・バード
+  mana: 1
+  abilities:
+  - kind: static
+    affects: self
+    zone: hand
+    mod:
+      opt_reduce:
+        amount: 2
+        do:
+          select:
+            zone: bz
+            owner: you
+            filter:
+              types:
+              - creature
+              tapped: false
+          min: 1
+          max: 1
+          tap: true
+  text: 'このクリーチャーを召喚する時、自分のクリーチャーを１体タップしてもよい。そうしたら、このクリーチャーの召喚コストを２少なくする。
+
+    エスケープ（このクリーチャーが破壊される時、墓地に置くかわりに自分のシールドを１つ手札に加えてもよい。ただし、その「S・トリガー」は使えない）'
+  source:
+    official: dm23rp4x-027
+    review: pending
+    aliases:
+    - dm23rp4-027
+  keywords:
+  - escape
+- id: dm23rp4x-032
+  name: 助招！ノラテップvs.ミモザスター
+  types:
+  - creature
+  civs:
+  - darkness
+  cost: 5
+  power: 5000
+  races:
+  - ノワールアビス
+  - メカ・デル・ステラ
+  mana: 1
+  keywords:
+  - abyss_rush
+  abilities:
+  - kind: static
+    affects: self
+    zone: hand
+    mod:
+      opt_reduce:
+        amount: 2
+        do:
+          select:
+            zone: shield
+            owner: you
+          min: 1
+          max: 1
+          move_to: graveyard
+  text: 'このクリーチャーを召喚する時、自分のシールドを１つ墓地に置いてもよい。そうしたら、このクリーチャーの召喚コストを２少なくする。
+
+    アビスラッシュ：このクリーチャーを自分の墓地から召喚してもよい。そうしたら、このターン、このクリーチャーはプレイヤーを攻撃でき、ターンの終わりに山札の下に置かれる。'
+  source:
+    official: dm23rp4x-032
+    review: pending
+    notes: アビスラッシュの「そうしたら」部分はエンジン側が処理（keywords.yaml の定義どおり）。
+    aliases:
+    - dm23rp4-032
+- id: dm23rp4x-034
+  name: 助招！コッピ&Machine
+  types:
+  - creature
+  civs:
+  - fire
+  cost: 5
+  power: 5000
+  races:
+  - アーマード・ファイアー・バード
+  - マジック・サイバー・コマンド
+  mana: 1
+  abilities:
+  - kind: trigger
+    when:
+      event: move
+      to: bz
+      subject: self
+    effect:
+    - op: destroy
+      select:
+        zone: bz
+        owner: opp
+        filter:
+          types:
+          - creature
+          power_le: 4000
+        count: 1
+  - kind: static
+    affects: self
+    zone: hand
+    mod:
+      opt_reduce:
+        amount: 2
+        do:
+          select:
+            zone: hand
+            owner: you
+          min: 1
+          max: 1
+          move_to: graveyard
+  text: 'このクリーチャーを召喚する時、自分の手札を１枚捨ててもよい。そうしたら、このクリーチャーの召喚コストを２少なくする。
+
+    このクリーチャーが出た時、相手のパワー4000以下のクリーチャーを１体選び、破壊する。'
+  source:
+    official: dm23rp4x-034
+    review: pending
+    aliases:
+    - dm23rp4-034
+- id: dm23rp4x-038
+  name: 助招！サイネリアvs.トレイン
+  types:
+  - creature
+  civs:
+  - nature
+  cost: 5
+  power: 7000
+  races:
+  - ジャイアント・スノーフェアリー
+  - アビスロイヤル
+  mana: 1
+  abilities:
+  - kind: static
+    affects: self
+    zone: hand
+    mod:
+      opt_reduce:
+        amount: 2
+        do:
+          select:
+            zone: bz
+            owner: you
+          min: 1
+          max: 1
+          move_to: mana
+  text: 'このクリーチャーを召喚する時、自分のエレメントを１つ、マナゾーンに置いてもよい。そうしたら、このクリーチャーの召喚コストを２少なくする。
+
+    W・ブレイカー（このクリーチャーはシールドを２つブレイクする）'
+  source:
+    official: dm23rp4x-038
+    review: pending
+    notes: '「エレメント」はバトルゾーンのカード全般のため filter なし（zone: bz のみ）。double_breaker は known_keywords
+      のため keywords に書かない。'
+    aliases:
+    - dm23rp4-038
+  keywords:
+  - double_breaker
+- id: dm24ex3-043
+  name: 「双斬」の鬼 ウコン大丸＆サコン大丸
+  types:
+  - creature
+  civs:
+  - darkness
+  - fire
+  cost: 5
+  power: 5000
+  races:
+  - デモニオ
+  mana: 1
+  abilities:
+  - kind: static
+    affects: self
+    zone: hand
+    mod:
+      opt_reduce:
+        amount: 1
+        do:
+          select:
+            zone: hand
+            owner: you
+          min: 0
+          max: 1
+          move_to: graveyard
+  - kind: static
+    affects: self
+    zone: hand
+    mod:
+      opt_reduce:
+        amount: 1
+        do:
+          select:
+            zone: shield
+            owner: you
+          min: 0
+          max: 1
+          move_to: graveyard
+  - kind: trigger
+    when:
+      event: move
+      to: bz
+      subject: self
+    effect:
+    - op: modal
+      count: 1
+      modes:
+      - - op: move
+          select:
+            zone: graveyard
+            owner: you
+            filter:
+              types:
+              - creature
+              cost_le: 2
+            count: 1
+          to: bz
+          reason: put
+      - - op: choose
+          select:
+            zone: bz
+            owner: opp
+            filter:
+              types:
+              - creature
+            count: 1
+          as: c
+        - op: force_battle
+          a:
+            ref: c
+          b:
+            ref: self
+  text: このクリーチャーを召喚する時、自分の手札またはシールドゾーンのカードを、最大１枚ずつ墓地に置いてもよい。こうして墓地に置いたカード１枚につき、このクリーチャーの召喚コストを１少なくする。
+    / このクリーチャーが出た時、次のうちいずれか１つを選ぶ。 / ▶コスト２以下のクリーチャーを１体、自分の墓地から出す。 / ▶相手のクリーチャーを１体選ぶ。その選んだクリーチャーとこのクリーチャーをバトルさせる。
+  source:
+    official: dm24ex3-043
+    review: pending
+    notes: '「最大１枚ずつ」は手札とシールドで別々の opt_reduce に分割（各 min: 0, max: 1）。「出す」は召喚ではないため reason:
+      put。'
+    aliases:
+    - dm24rp4-026
+- id: dm24ex4-073
+  name: 導姫ユーキ
+  types:
+  - creature
+  civs:
+  - fire
+  cost: 4
+  power: 4000
+  races:
+  - ヒューマノイド
+  mana: 1
+  abilities:
+  - kind: static
+    affects: self
+    zone: hand
+    mod:
+      opt_reduce:
+        amount: 2
+        do:
+          select:
+            zone: hand
+            owner: you
+          min: 1
+          max: 1
+          move_to: graveyard
+  text: 'このクリーチャーを召喚する時、自分の手札を１枚捨ててもよい。そうしたら、このクリーチャーの召喚コストを２少なくする。
+
+    スピードアタッカー（このクリーチャーは召喚酔いしない）'
+  source:
+    official: dm24ex4-073
+    review: pending
+    notes: speed_attacker は known_keywords のため keywords に書かない。
+    aliases:
+    - dm24ex4-pr033
+    - promoy23-122
+  keywords:
+  - speed_attacker
+- id: dm26rp2-036
+  name: 熱血の星夜 アバター・イン・ザ・ラブ
+  types:
+  - creature
+  civs:
+  - darkness
+  cost: 7
+  power: 8000
+  races:
+  - エンジェル・コマンド
+  - アンノウン
+  mana: 1
+  abilities:
+  - kind: static
+    affects: self
+    zone: hand
+    mod:
+      opt_reduce:
+        amount: 4
+        do:
+          select:
+            zone: bz
+            owner: you
+            filter:
+              types:
+              - creature
+          min: 1
+          max: 1
+          move_to: graveyard
+  text: 'このクリーチャーを召喚する時、自分のクリーチャーを１体破壊してもよい。そうしたら、このクリーチャーの召喚コストを４少なくする。
+
+    ブロッカー（このクリーチャーをタップして、相手クリーチャーの攻撃先をこのクリーチャーに変更してもよい）
+
+    W・ブレイカー（このクリーチャーはシールドを２つブレイクする）'
+  source:
+    official: dm26rp2-036
+    review: pending
+    notes: '「破壊する」は do の move_to: graveyard で表す（do に reason を指定できない）。blocker・double_breaker
+      は known_keywords のため keywords に書かない。'
+  keywords:
+  - blocker
+  - double_breaker
+- id: dm26sd1-k008
+  name: D２V３ 終断のレッドトロン / フォビドゥン・ハンド
+  types:
+  - creature
+  civs:
+  - fire
+  cost: 5
+  power: 5000
+  races:
+  - ソニック・コマンド
+  - マスター・イニシャルズX
+  mana: 1
+  abilities:
+  - kind: static
+    affects: self
+    zone: hand
+    mod:
+      opt_reduce:
+        amount: 2
+        do:
+          select:
+            zone: hand
+            owner: you
+          min: 1
+          max: 1
+          move_to: graveyard
+  - kind: trigger
+    when:
+      event: move
+      to: bz
+      subject: self
+    effect:
+    - op: may
+      body:
+      - op: choose
+        select:
+          zone: bz
+          owner: opp
+          filter:
+            types:
+            - creature
+          count: 1
+        as: c
+      - op: force_battle
+        a:
+          ref: c
+        b:
+          ref: self
+  text: このクリーチャーを召喚する時、自分の手札を１枚捨ててもよい。そうしたら、このクリーチャーの召喚コストを２少なくする。 / このクリーチャーが出た時、相手のクリーチャーを１体選んでもよい。その選んだクリーチャーとこのクリーチャーをバトルさせる。
+  source:
+    official: dm26sd1-k008
+    review: pending
+    notes: '「選んでもよい」は op: may で包む。'
+    aliases:
+    - dmart16-004
+    - dmbd21-014
+- id: dm24ex3-rp3s08
+  name: 疾駆竜 ボルシャック・アッシュ・レイダー
+  types:
+  - creature
+  civs:
+  - fire
+  cost: 6
+  power: 6000
+  races:
+  - アーマード・ドラゴン
+  mana: 1
+  alt_cost:
+    cost: 4
+    civs:
+    - fire
+    - fire
+  text: 'このクリーチャーを、{ff04}を支払って召喚してもよい。そうしたら、このクリーチャーが出た時、相手は自身の山札の上から２枚をシールド化してもよい。
+
+    スピードアタッカー
+
+    W・ブレイカー
+
+    自分のクリーチャーがシールドをブレイクした時、カードを１枚引いてもよい。'
+  abilities:
+  - kind: trigger
+    when:
+      event: move
+      to: bz
+      subject: self
+    if:
+      alt_paid: true
+    effect:
+    - op: opp_may
+      body:
+      - op: move
+        select:
+          zone: deck
+          owner: you
+          count: 2
+        to: shield
+        reason: put
+  - kind: trigger
+    when:
+      event: break
+      subject:
+        owner: you
+        filter:
+          types:
+          - creature
+    effect:
+    - op: may
+      body:
+      - op: draw
+        count: 1
+  source:
+    official: dm24ex3-rp3s08
+    review: pending
+    notes: '代替コスト{ff04}は alt_cost {cost: 4, civs: [fire, fire]}。「そうしたら〜出た時」は if: {alt_paid:
+      true} の誘発型。opp_may 内の you は相手を指す（相手の山札→シールド）。「自分のクリーチャーがシールドをブレイクした時」は break
+      イベントの subject フィルタ。speed_attacker・double_breaker は known_keywords のため書き直さない。'
+    aliases:
+    - dm24ex3-rp3sec09
+    - dm24rp3-s08
+    - dm24rp3-sec009
+  keywords:
+  - speed_attacker
+  - double_breaker
+- id: dm24ex3-046
+  name: 新星姫 マルシアス
+  types:
+  - creature
+  civs:
+  - light
+  cost: 5
+  power: 6000
+  races:
+  - メカ・デル・ステラ
+  mana: 1
+  alt_cost:
+    cost: 2
+    civs:
+    - light
+    - light
+  text: 'このクリーチャーを、{ll02}を支払って召喚してもよい。そうしたら、このクリーチャーが出た時、相手はコスト３以下のクリーチャーを１体、自身の手札から出してもよい。
+
+    ブロッカー（このクリーチャーをタップして、相手クリーチャーの攻撃先をこのクリーチャーに変更してもよい）
+
+    W・ブレイカー（このクリーチャーはシールドを２つブレイクする）'
+  abilities:
+  - kind: trigger
+    when:
+      event: move
+      to: bz
+      subject: self
+    if:
+      alt_paid: true
+    effect:
+    - op: opp_may
+      body:
+      - op: move
+        select:
+          zone: hand
+          owner: you
+          count: 1
+          filter:
+            types:
+            - creature
+            cost_le: 3
+        to: bz
+        reason: put
+  source:
+    official: dm24ex3-046
+    review: pending
+    notes: '代替コスト{ll02}は alt_cost {cost: 2, civs: [light, light]}。「そうしたら〜出た時」は if:
+      {alt_paid: true} の誘発型。blocker・double_breaker は known_keywords のため書き直さない。'
+    aliases:
+    - dm24rp3-030
+  keywords:
+  - blocker
+  - double_breaker
+- id: dm24rp3-057
+  name: 芸馬猫刄 スゴローニャ
+  types:
+  - creature
+  civs:
+  - water
+  cost: 5
+  power: 6000
+  races:
+  - マジック・モンスター
+  - ゲーム・コマンド
+  mana: 1
+  alt_cost:
+    cost: 3
+    civs:
+    - water
+    - water
+  text: 'このクリーチャーを、 {ww03}を支払って召喚してもよい。そうしたら、このクリーチャーが出た時、カードを１枚、自分のマナゾーンから手札に戻す。
+
+    W・ブレイカー（このクリーチャーはシールドを２つブレイクする）'
+  abilities:
+  - kind: trigger
+    when:
+      event: move
+      to: bz
+      subject: self
+    if:
+      alt_paid: true
+    effect:
+    - op: move
+      select:
+        zone: mana
+        owner: you
+        count: 1
+      to: hand
+      reason: return
+  source:
+    official: dm24rp3-057
+    review: pending
+    notes: '代替コスト{ww03}は alt_cost {cost: 3, civs: [water, water]}。種族は「/」で分割。「そうしたら〜出た時」は
+      if: {alt_paid: true} の誘発型。double_breaker は known_keywords のため書き直さない。'
+  keywords:
+  - double_breaker
+- id: dm24rp3-062
+  name: 黒神龍スカルシューム
+  types:
+  - creature
+  civs:
+  - darkness
+  cost: 5
+  power: 6000
+  races:
+  - ドラゴン・ゾンビ
+  mana: 1
+  alt_cost:
+    cost: 2
+    civs:
+    - darkness
+    - darkness
+  text: 'このクリーチャーを、{dd02}を支払って召喚してもよい。そうしたら、このクリーチャーが出た時、相手はカードを２枚引いてもよい。
+
+    W・ブレイカー（このクリーチャーはシールドを２つブレイクする）'
+  abilities:
+  - kind: trigger
+    when:
+      event: move
+      to: bz
+      subject: self
+    if:
+      alt_paid: true
+    effect:
+    - op: opp_may
+      body:
+      - op: draw
+        count: 2
+  source:
+    official: dm24rp3-062
+    review: pending
+    notes: '代替コスト{dd02}は alt_cost {cost: 2, civs: [darkness, darkness]}。「そうしたら〜出た時」は
+      if: {alt_paid: true} の誘発型。opp_may 内の draw は相手が引く。double_breaker は known_keywords
+      のため書き直さない。'
+  keywords:
+  - double_breaker
+- id: dm24rp3-067
+  name: ボルシャック・デュアルショック
+  types:
+  - creature
+  civs:
+  - fire
+  cost: 5
+  power: 6000
+  races:
+  - アーマード・ドラゴン
+  mana: 1
+  alt_cost:
+    cost: 3
+    civs:
+    - fire
+    - fire
+  text: 'このクリーチャーを、 {ff03}を支払って召喚してもよい。そうしたら、このクリーチャーが出た時、自分のシールドを１つ墓地に置く。
+
+    W・ブレイカー（このクリーチャーはシールドを２つブレイクする）'
+  abilities:
+  - kind: trigger
+    when:
+      event: move
+      to: bz
+      subject: self
+    if:
+      alt_paid: true
+    effect:
+    - op: move
+      select:
+        zone: shield
+        owner: you
+        count: 1
+      to: graveyard
+      reason: put
+  source:
+    official: dm24rp3-067
+    review: pending
+    notes: '代替コスト{ff03}は alt_cost {cost: 3, civs: [fire, fire]}。「そうしたら〜出た時」は if: {alt_paid:
+      true} の誘発型。double_breaker は known_keywords のため書き直さない。'
+  keywords:
+  - double_breaker
+- id: dm24rp3-072
+  name: 振回転の超人
+  types:
+  - creature
+  civs:
+  - nature
+  cost: 5
+  power: 6000
+  races:
+  - ジャイアント
+  mana: 1
+  alt_cost:
+    cost: 2
+    civs:
+    - nature
+    - nature
+  text: 'このクリーチャーを、 {nn02}を支払って召喚してもよい。そうしたら、このクリーチャーが出た時、相手は自身の山札の上から１枚目をマナゾーンに置いてもよい。
+
+    W・ブレイカー（このクリーチャーはシールドを２つブレイクする）'
+  abilities:
+  - kind: trigger
+    when:
+      event: move
+      to: bz
+      subject: self
+    if:
+      alt_paid: true
+    effect:
+    - op: opp_may
+      body:
+      - op: move
+        select:
+          zone: deck
+          owner: you
+          count: 1
+        to: mana
+        reason: put
+  source:
+    official: dm24rp3-072
+    review: pending
+    notes: '代替コスト{nn02}は alt_cost {cost: 2, civs: [nature, nature]}。「そうしたら〜出た時」は if:
+      {alt_paid: true} の誘発型。double_breaker は known_keywords のため書き直さない。'
+  keywords:
+  - double_breaker
+- id: dm24ex3-tf07
+  name: 神出鬼没 ピットデル
+  types:
+  - creature
+  civs:
+  - water
+  cost: 4
+  power: 2000
+  races:
+  - ムートピア
+  mana: 1
+  alt_cost:
+    do:
+    - zone: hand
+      filter:
+        civs:
+        - water
+      count: 2
+      to: graveyard
+      reason: discard
+  text: 'コストを支払うかわりに水のカードを２枚自分の手札から捨て、このクリーチャーを召喚してもよい。
+
+    ブロッカー'
+  source:
+    official: dm24ex3-tf07
+    review: pending
+    notes: '代替コスト（行動）は alt_cost {do: [...]}（第29弾の型）。ブロッカーは known_keywords のため書き直さない。'
+    aliases:
+    - dm24rp1-t04
+    - dmex13-013
+    - dmrp01-018
+  keywords:
+  - blocker
+- id: dm24ex4-035
+  name: 強瀾怒闘 キューブリック
+  types:
+  - creature
+  civs:
+  - water
+  - fire
+  cost: 4
+  power: 5000
+  races:
+  - マジック・アウトレイジMAX
+  mana: 1
+  alt_cost:
+    do:
+    - zone: hand
+      filter:
+        civs:
+        - water
+      count: 1
+      to: graveyard
+      reason: discard
+    - zone: hand
+      filter:
+        civs:
+        - fire
+      count: 1
+      to: graveyard
+      reason: discard
+    if:
+      cmp:
+      - count:
+          zone: mana
+          owner: you
+      - '>='
+      - 4
+  text: '自分のマナゾーンにカードが４枚以上あれば、コストを支払うかわりに水のカード１枚と火のカード１枚を自分の手札から捨てて、このクリーチャーを召喚してもよい。
+
+    スピードアタッカー
+
+    このクリーチャーが出た時、相手のクリーチャーを１体選び、持ち主の手札に戻す。'
+  source:
+    official: dm24ex4-035
+    review: pending
+    notes: '代替コスト（行動）は alt_cost {do: [...]} に条件式 if を付けた（マナ４枚以上）。スピードアタッカーは known_keywords
+      のため書き直さない。'
+    aliases:
+    - dm23ex1-026
+  keywords:
+  - speed_attacker
+  abilities:
+  - kind: trigger
+    when:
+      event: move
+      to: bz
+      subject: self
+    effect:
+    - op: bounce
+      select:
+        zone: bz
+        owner: opp
+        filter:
+          types:
+          - creature
+        count: 1
+- id: dm25ex2-cho014
+  name: 鬼ヶ邪王 ジャオウガ・ゼロ
+  types:
+  - creature
+  civs:
+  - darkness
+  - fire
+  cost: 7
+  power: 7000
+  races:
+  - デモニオ
+  mana: 1
+  alt_cost:
+    do:
+    - zone: graveyard
+      owner: you
+      filter:
+        civs:
+        - darkness
+        - fire
+      count: 8
+      to: deck
+      reason: put
+      position: bottom
+      shuffle: true
+  text: 'コストを支払うかわりに、自分の墓地にある闇または火のカードを合計８枚、シャッフルしてから山札の下に置いて、このクリーチャーを召喚してもよい。
+
+    W・ブレイカー
+
+    自分のクリーチャーすべてに「スピードアタッカー」を与える。
+
+    このクリーチャーが攻撃する時、自分の山札の上から３枚を墓地に置く。その中からデモニオを１つ出してもよい。'
+  abilities:
+  - kind: static
+    affects:
+      owner: you
+      filter:
+        types:
+        - creature
+    mod:
+      grant:
+      - speed_attacker
+  - kind: trigger
+    when:
+      event: attack
+      attacker: self
+    effect:
+    - op: move
+      select:
+        zone: deck
+        owner: you
+        from_top: 3
+      to: graveyard
+      reason: put
+      as: milled
+    - op: may
+      body:
+      - op: move
+        select:
+          ref: milled
+          filter:
+            races:
+            - デモニオ
+          count: 1
+        to: bz
+        reason: put
+  source:
+    official: dm25ex2-cho014
+    review: pending
+    notes: '代替コスト（行動）は alt_cost {do: [...]}。「闇または火」は filter の civs: [darkness, fire]（いずれか）。「シャッフルしてから山札の下」は
+      position: bottom と shuffle: true を do ステップに付記。攻撃時効果は mill 3（as: milled）からデモニオ１体を出してもよい（may）。W・ブレイカーは
+      known_keywords のため書き直さない。'
+    aliases:
+    - dm23bd2-004
+    - dmex19-s19
+  keywords:
+  - double_breaker
+- id: dmex16-049
+  name: 煉獄の悪魔龍 フォーエバー・オカルト
+  types:
+  - creature
+  civs:
+  - darkness
+  cost: 8
+  power: 9000
+  races:
+  - デーモン・コマンド・ドラゴン
+  mana: 1
+  alt_cost:
+    do:
+    - zone: bz
+      owner: you
+      filter:
+        types:
+        - creature
+      count: 3
+      to: graveyard
+      reason: destroy
+  text: 'コストを支払うかわりに自分のクリーチャーを３体破壊して、このクリーチャーを召喚してもよい。
+
+    W・ブレイカー（このクリーチャーはシールドを２つブレイクする）
+
+    このクリーチャーが攻撃する時、クリーチャーを１体、自分の墓地から手札に戻す。'
+  source:
+    official: dmex16-049
+    review: pending
+    notes: '代替コスト（行動）は alt_cost {do: [...]}（第29弾の型）。W・ブレイカーは known_keywords のため書き直さない。'
+    aliases:
+    - dmr14-012
+    - promoy13-049
+  keywords:
+  - double_breaker
+  abilities:
+  - kind: trigger
+    when:
+      event: attack
+      subject: self
+    effect:
+    - op: move
+      select:
+        zone: graveyard
+        owner: you
+        filter:
+          types:
+          - creature
+        count: 1
+      to: hand
+      reason: return
+- id: dm25ex2-072
+  name: ワダウケノミコト
+  types:
+  - creature
+  civs:
+  - water
+  cost: 5
+  power: 5000
+  races:
+  - ミズガミ
+  - ロスト・クルセイダー
+  mana: 1
+  alt_cost:
+    cost: 2
+    civs:
+    - water
+    - water
+  abilities:
+  - kind: trigger
+    when:
+      event: move
+      to: bz
+      subject: self
+    if:
+      alt_paid: true
+    effect:
+    - op: move
+      select:
+        zone: bz
+        owner: you
+        filter:
+          types:
+          - creature
+        count: 1
+      to: hand
+      reason: return
+  - kind: replace
+    when:
+      event: move
+      from: bz
+      to: graveyard
+      reason: destroy
+      subject:
+        owner: you
+        filter:
+          types:
+          - creature
+          civs:
+          - water
+    instead:
+    - op: move
+      select:
+        ref: event.subject
+      to: hand
+      reason: return
+  text: 'このクリーチャーを[ww02]支払って召喚してもよい。そうしたら、このクリーチャーが出た時、自分のクリーチャーを１体手札に戻す。
+
+    ブロッカー（このクリーチャーをタップして、相手クリーチャーの攻撃先をこのクリーチャーに変更してもよい）
+
+    自分の水のクリーチャーが破壊される時、墓地に置くかわりに手札に戻す。'
+  source:
+    official: dm25ex2-072
+    review: pending
+    notes: '代替コスト[ww02]は alt_cost {cost: 2, civs: [water, water]}（第29弾の型）。「そうしたら」の出た時効果は
+      if {alt_paid: true}。破壊置換は dm26ex2-075 と同型。ブロッカーは known_keywords のため書き直さない。'
+  keywords:
+  - blocker
+- id: dm25ex4-009
+  name: 偽りの剣豪バロムバロスト
+  types:
+  - creature
+  civs:
+  - darkness
+  cost: 6
+  power: 7000
+  races:
+  - デモニオ・コマンド
+  mana: 1
+  alt_cost:
+    cost: 2
+    civs:
+    - darkness
+    - darkness
+  abilities:
+  - kind: trigger
+    when:
+      event: move
+      to: bz
+      subject: self
+    if:
+      alt_paid: true
+    effect:
+    - op: move
+      select:
+        ref: self
+      to: hyper
+      reason: put
+  - kind: trigger
+    when:
+      event: move
+      to: bz
+      subject: self
+    effect:
+    - op: choose
+      select:
+        zone: bz
+        owner: opp
+        filter:
+          types:
+          - creature
+        count: 1
+      as: c
+    - op: modify
+      select:
+        ref: c
+      mod:
+        power: -4000
+      duration: end_of_turn
+  - kind: trigger
+    when:
+      event: attack
+      subject: self
+    effect:
+    - op: choose
+      select:
+        zone: bz
+        owner: opp
+        filter:
+          types:
+          - creature
+        count: 1
+      as: c
+    - op: modify
+      select:
+        ref: c
+      mod:
+        power: -4000
+      duration: end_of_turn
+  text: 'このクリーチャーを[dd02]支払って召喚してもよい。そうしたら、このクリーチャーをバトルゾーンから超次元ゾーンに置く。
+
+    ブロッカー
+
+    W・ブレイカー
+
+    このクリーチャーが出た時または攻撃する時、相手のクリーチャーを１体選ぶ。このターン、そのクリーチャーのパワーを－4000する。'
+  source:
+    official: dm25ex4-009
+    review: pending
+    notes: '代替コスト[dd02]は alt_cost {cost: 2, civs: [darkness, darkness]}。「出た時または攻撃する時」は出た時と攻撃時の2つの誘発に分割（既存例と同型）。パワー－4000は
+      modify {power: -4000} + duration: end_of_turn。ブロッカー・W・ブレイカーは known_keywords
+      のため書き直さない。'
+  keywords:
+  - blocker
+  - double_breaker
+- id: dm26ex2-048
+  name: 一王伝双三眼槍
+  types:
+  - creature
+  civs:
+  - darkness
+  - fire
+  cost: 5
+  power: 6000
+  races:
+  - デモニオ
+  - 鬼札王国
+  mana: 1
+  alt_cost:
+    cost: 3
+    civs:
+    - darkness
+    - fire
+  abilities:
+  - kind: trigger
+    when:
+      event: move
+      to: bz
+      subject: self
+    if:
+      alt_paid: true
+    effect:
+    - op: move
+      select:
+        zone: shield
+        owner: you
+        count: 2
+      to: hand
+      reason: return
+  - kind: replace
+    optional: true
+    when:
+      event: lose
+      player: you
+    effect:
+    - op: if
+      cond:
+        cmp:
+        - sum:
+          - count:
+              zone: shield
+              owner: you
+          - count:
+              zone: shield
+              owner: opp
+        - <=
+        - 6
+      then:
+      - op: move
+        select:
+          ref: self
+        to: graveyard
+        reason: destroy
+  text: 'このクリーチャーを[df03]支払って召喚してもよい。そうしたら、自分のシールドを２つ手札に加える。その「S・トリガー」は使えない。
+
+    W・ブレイカー
+
+    鬼タイム ：自分がゲームに負ける時、自分と相手のシールドが合計６つ以下なら、かわりにこのクリーチャーを破壊してもよい。'
+  source:
+    official: dm26ex2-048
+    review: pending
+    notes: '代替コスト[df03]は alt_cost {cost: 3, civs: [darkness, fire]}。「そうしたら」のシールド回収は
+      if {alt_paid: true} の誘発。「S・トリガーは使えない」はエンジン側に委ねる。鬼タイムは when {event: lose} の置換（既存例と同型）。シールド合計６以下は
+      sum 式で比較。W・ブレイカーは known_keywords のため書き直さない。'
+    aliases:
+    - dm25ex2-058
+  keywords:
+  - double_breaker
