@@ -275652,3 +275652,1051 @@ cards:
       chooser: opp で相手が選ぶ'
   keywords:
   - triple_breaker
+- id: dm23ex2-094
+  name: 暗黒鎧 ギガリンα
+  types:
+  - creature
+  civs:
+  - darkness
+  cost: 3
+  power: 2000
+  races:
+  - ダーク・ナイトメア
+  - サバイバー
+  keywords:
+  - slayer
+  abilities:
+  - kind: static
+    affects:
+      owner: you
+      filter:
+        types:
+        - creature
+        races:
+        - サバイバー
+      other: true
+    mod:
+      grant:
+      - slayer
+  - kind: static
+    affects:
+      owner: you
+      filter:
+        types:
+        - creature
+        civs:
+        - darkness
+    mod:
+      add_races:
+      - サバイバー
+  source:
+    notes: 'oSスレイヤーは slayer キーワード。サバイバーは other: true で他のサバイバーに slayer を grant。種族追加は
+      mod add_races。厳密一致。'
+    review: pending
+    official: dm23ex2-094
+    aliases:
+    - dmex18-063
+- id: dm23ex2-100
+  name: 無礼な刃 ラッシュα
+  types:
+  - creature
+  civs:
+  - fire
+  cost: 4
+  power: 3000
+  races:
+  - アウトレイジ
+  - サバイバー
+  mana: 1
+  abilities:
+  - kind: static
+    affects:
+      owner: you
+      filter:
+        types:
+        - creature
+        races:
+        - サバイバー
+      other: true
+    mod:
+      grant:
+      - speed_attacker
+  - kind: static
+    affects:
+      owner: you
+      filter:
+        types:
+        - creature
+        civs:
+        - fire
+    mod:
+      add_races:
+      - サバイバー
+  keywords:
+  - speed_attacker
+  text: oSスピードアタッカー / サバイバー / 自分の火のクリーチャーはすべて、種族にサバイバーを追加する。
+  source:
+    official: dm23ex2-100
+    review: pending
+    notes: oSスピードアタッカー→keywords[speed_attacker]（括弧内は注釈のため除外）。サバイバー（自分の他のサバイバーすべてに、上のoS能力を与える）→static
+      grant[speed_attacker]（affects は自分の他のサバイバー・クリーチャー）。自分の火のクリーチャーはすべて、種族にサバイバーを追加する→static
+      add_races[サバイバー]（affects は自分の火クリーチャー）。
+    aliases:
+    - dmex18-065
+- id: dmex18-052
+  name: 奇石 アゾールα
+  types:
+  - creature
+  civs:
+  - light
+  cost: 3
+  power: 2000
+  races:
+  - メタリカ
+  - サバイバー
+  mana: 1
+  abilities:
+  - kind: static
+    affects:
+      owner: you
+      filter:
+        types:
+        - creature
+        races:
+        - サバイバー
+      other: true
+    mod:
+      grant:
+      - blocker
+  - kind: static
+    affects:
+      owner: you
+      filter:
+        types:
+        - creature
+        civs:
+        - light
+    mod:
+      add_races:
+      - サバイバー
+  text: 'oS ブロッカー（このクリーチャーをタップして、相手クリーチャーの攻撃先をこのクリーチャーに変更してもよい）
+
+    サバイバー（自分のサバイバーすべてに、上のoS 能力を与える）
+
+    自分の光のクリーチャーはすべて、種族にサバイバーを追加する。'
+  source:
+    official: dmex18-052
+    review: pending
+    notes: known_keywords[blocker]はルール処理済みのためkeywordsに再記入せず、能力としても書き直さない。「oS」は除去済みのoSブロッカーに対応。サバイバー（自分の他のサバイバーすべてに、上のoS能力を与える）→static
+      grant[blocker]（affects は自分の他のサバイバー・クリーチャー）。自分の光のクリーチャーはすべて、種族にサバイバーを追加する→static
+      add_races[サバイバー]（affects は自分の光クリーチャー）。
+  keywords:
+  - blocker
+- id: dm25ex2-cho016
+  name: 宇宙 タコンチュ
+  types:
+  - creature
+  civs:
+  - water
+  cost: 5
+  power: 5000
+  races:
+  - マジック・コマンド
+  - 侵略者
+  mana: 1
+  text: 自分の水のクリーチャーはすべて、種族にマジック・コマンドを追加する。 相手のターン中に、このクリーチャーが破壊される時、かわりに相手はカードを５枚引き、そのターン、このクリーチャーのパワーを+5000する。
+  abilities:
+  - kind: static
+    affects:
+      owner: you
+      filter:
+        types:
+        - creature
+        civs:
+        - water
+    mod:
+      add_races:
+      - マジック・コマンド
+  - kind: replace
+    when:
+      event: move
+      to: graveyard
+      subject: self
+    if:
+      is_turn: opp
+    instead:
+    - op: draw
+      player: opp
+      count: 5
+    - op: modify
+      select:
+        ref: self
+        count: 1
+      mod:
+        power: 5000
+      duration: end_of_turn
+  source:
+    official: dm25ex2-cho016
+    review: pending
+    notes: '能力1は static＋add_races（「自分の水のクリーチャー」＝filter の types: [creature]＋civs: [water]）。能力2は置換：「破壊される時」は
+      when: {event: move, to: graveyard, subject: self} の既定イディオム、「相手のターン中に」は if: {is_turn:
+      opp}。「かわりに」以下2効果（相手の5ドロー、そのターンの自パワー+5000＝duration: end_of_turn）を instead に並列記載。原文パワー「5000+」は印刷値の慣例で
+      base 5000 を採用（dm24bd5-005 と同型）。'
+    aliases:
+    - dmex12-002
+    - dmr20-003
+- id: dmd26-017
+  name: シータ・トゥレイト
+  types:
+  - creature
+  - evolution
+  civs:
+  - nature
+  cost: 6
+  power: 3000
+  races:
+  - サバイバー
+  mana: 1
+  evolve_from:
+    races:
+    - サバイバー
+  text: S・トリガー（このクリーチャーをシールドゾーンから手札に加える時、コストを支払わずにすぐ召喚してもよい）進化-自分のサバイバー１体の上に置く。自分のクリーチャーはすべて、種族にサバイバーを追加する。
+  abilities:
+  - kind: static
+    affects:
+      owner: you
+      filter:
+        types:
+        - creature
+    mod:
+      add_races:
+      - サバイバー
+  source:
+    official: dmd26-017
+    review: pending
+    notes: '進化元は evolve_from: {races: [サバイバー]}（「自分のサバイバー１体の上に置く」の既定形）。種族追加は static＋add_races（文明限定なし＝filter
+      は types のみ）。known_keywords の s_trigger はルール処理済みのため keywords に書かない。厳密一致。'
+    aliases:
+    - promoy2-002
+  keywords:
+  - s_trigger
+- id: dmex19-039
+  name: お願い！デッキー
+  types:
+  - creature
+  civs:
+  - zero
+  cost: 3
+  power: 3000
+  races:
+  - ジョーカーズ
+  mana: 1
+  text: 自分のクリーチャーはすべて、種族にジョーカーズを追加する。
+  abilities:
+  - kind: static
+    affects:
+      owner: you
+      filter:
+        types:
+        - creature
+    mod:
+      add_races:
+      - ジョーカーズ
+  source:
+    official: dmex19-039
+    review: pending
+    notes: 種族追加は static＋add_races（文明・ゾーンの限定なし＝filter は types のみ）。厳密一致。
+- id: dmx15-017
+  name: 高貴心 プリン・プリンセス
+  types:
+  - creature
+  civs:
+  - nature
+  cost: 4
+  power: 4000
+  races:
+  - アウトレイジ
+  mana: 1
+  text: バトルゾーンにある自分のクリーチャーはすべて、種族にアウトレイジを追加する。
+  abilities:
+  - kind: static
+    affects:
+      owner: you
+      filter:
+        types:
+        - creature
+    mod:
+      add_races:
+      - アウトレイジ
+  source:
+    official: dmx15-017
+    review: pending
+    notes: 「バトルゾーンにある」は static の affects の既定ゾーン（bz）と一致するため zone の明記は不要。種族追加は static＋add_races。厳密一致。
+- id: dmx25-033
+  name: 好奇心 プリンセスプリン
+  types:
+  - creature
+  civs:
+  - nature
+  cost: 5
+  power: 5000
+  races:
+  - ハンター
+  - エイリアン
+  mana: 1
+  text: 自分のクリーチャーはすべて、種族にハンターとエイリアンを追加する。ハンティング（バトル中、このクリーチャーのパワーを、バトルゾーンにある自分のハンター１体につき+1000する）
+  abilities:
+  - kind: static
+    affects:
+      owner: you
+      filter:
+        types:
+        - creature
+    mod:
+      add_races:
+      - ハンター
+      - エイリアン
+  source:
+    official: dmx25-033
+    review: pending
+    notes: 「ハンターとエイリアン」は add_races に2要素を並列記載。known_keywords の hunting はルール処理済みのため
+      keywords に書かない。厳密一致。
+    aliases:
+    - dmr06-017
+    - dmr06-017m
+    - dmx12b-080
+    - promoy11-034
+  keywords:
+  - hunting
+- id: promoy9-001
+  name: バルケリオス・武者・ドラゴン
+  types:
+  - creature
+  civs:
+  - fire
+  cost: 7
+  power: 6000
+  races:
+  - アーマード・ドラゴン
+  - サムライ
+  mana: 1
+  free_if:
+    exists:
+      zone: bz
+      owner: you
+      filter:
+        name: ボルメテウス・武者・ドラゴン
+  text: G・ゼロ-バトルゾーンに自分の《ボルメテウス・武者・ドラゴン》があれば、このクリーチャーをコストを支払わずに召喚してもよい。バトルゾーンにある自分のドラゴンはすべて、種族にサムライを追加する。W・ブレイカー（このクリーチャーはシールドを２枚ブレイクする）
+  abilities:
+  - kind: static
+    affects:
+      owner: you
+      filter:
+        types:
+        - creature
+        race_has: ドラゴン
+    mod:
+      add_races:
+      - サムライ
+  source:
+    official: promoy9-001
+    review: pending
+    notes: 'G・ゼロはカード欄外の free_if（exists＋name 指定。dm23ex1-075 と同型）。「自分のドラゴン」は race_has:
+      ドラゴン（dm23ex1-078 の既定）。known_keywords の double_breaker はルール処理済みのため keywords に書かない。厳密一致。'
+  keywords:
+  - double_breaker
+- id: dmc38-008
+  name: 封魔の戦慄ジュマゾール
+  types:
+  - creature
+  civs:
+  - darkness
+  cost: 7
+  power: 8000
+  races:
+  - デーモン・コマンド
+  mana: 1
+  abilities:
+  - kind: static
+    affects:
+      owner: you
+      zone: bz
+      filter:
+        types:
+        - creature
+        races:
+        - グランド・デビル
+    mod:
+      add_races:
+      - デーモン・コマンド
+  - kind: static
+    affects:
+      owner: you
+      zone: graveyard
+      filter:
+        types:
+        - creature
+        races:
+        - グランド・デビル
+    mod:
+      add_races:
+      - デーモン・コマンド
+  - kind: replace
+    optional: true
+    when:
+      event: move
+      from: bz
+      to: graveyard
+      reason: destroy
+      subject: self
+    instead:
+    - op: destroy
+      select:
+        zone: bz
+        owner: you
+        filter:
+          types:
+          - creature
+          races:
+          - デーモン・コマンド
+        other: true
+        count: 1
+  text: 'バトルゾーンと墓地にある自分のグランド・デビルはすべて、種族にデーモン・コマンドを追加する。
+
+    このクリーチャーが破壊される時、自分の他のデーモン・コマンド１体をかわりに破壊してもよい。
+
+    W・ブレイカー(このクリーチャーはシールドを２枚ブレイクする。)'
+  source:
+    official: dmc38-008
+    review: pending
+    notes: '能力1はバトルゾーン・墓地の2常在型に分割。能力2は置換（optional: true、instead で other: true の自分のデーモン・コマンド1体を破壊）。double_breaker
+      は known_keywords のためルール処理済み。'
+    aliases:
+    - dm21-s03
+  keywords:
+  - double_breaker
+- id: dmex19-048
+  name: 魅力医 ミョウオウ
+  types:
+  - creature
+  civs:
+  - darkness
+  cost: 3
+  power: 4000
+  races:
+  - マフィ・ギャング
+  - 魔導具
+  mana: 1
+  text: 'ブロッカー（このクリーチャーをタップして、相手クリーチャーの攻撃先をこのクリーチャーに変更してもよい）
+
+    このクリーチャーは攻撃できない。
+
+    このクリーチャーが出た時、自分の山札の上から２枚を墓地に置く。
+
+    バトルゾーンと墓地にある自分のマフィ・ギャングはすべて、種族に魔導具を追加する。'
+  abilities:
+  - kind: trigger
+    when:
+      event: move
+      to: bz
+      subject: self
+    effect:
+    - op: mill
+      owner: you
+      count: 2
+  - kind: static
+    affects:
+      owner: you
+      zone: bz
+      filter:
+        types:
+        - creature
+        races:
+        - マフィ・ギャング
+    mod:
+      add_races:
+      - 魔導具
+  - kind: static
+    affects:
+      owner: you
+      zone: graveyard
+      filter:
+        types:
+        - creature
+        races:
+        - マフィ・ギャング
+    mod:
+      add_races:
+      - 魔導具
+  source:
+    official: dmex19-048
+    review: pending
+    notes: バトルゾーン・墓地の2常在型に分割。blocker・cannot_attack は known_keywords のためルール処理済み。
+  keywords:
+  - blocker
+  - cannot_attack
+- id: dmx21-058
+  name: ユニバース・ラピア
+  types:
+  - creature
+  civs:
+  - fire
+  cost: 7
+  power: 5000
+  races:
+  - ファイアー・バード
+  mana: 1
+  abilities:
+  - kind: static
+    affects:
+      owner: you
+      zone: mana
+    mod:
+      add_races:
+      - フェニックス
+  - kind: static
+    affects:
+      owner: you
+      zone: deck
+    mod:
+      add_races:
+      - フェニックス
+  - kind: static
+    affects:
+      owner: you
+      zone: graveyard
+    mod:
+      add_races:
+      - フェニックス
+  - kind: static
+    affects:
+      owner: you
+      zone: bz
+    mod:
+      add_races:
+      - フェニックス
+  text: 自分のマナゾーン、山札、墓地、そしてバトルゾーンにあるカードは、種族にフェニックスを追加する。
+  source:
+    official: dmx21-058
+    review: pending
+    notes: 「カード」はクリーチャーに限定されないため filter に types を付けず、マナ・山札・墓地・バトルゾーンの4常在型に分割。
+- id: dmc61-032
+  name: 無双龍聖ジオ・マスターチャ
+  types:
+  - creature
+  civs:
+  - light
+  - nature
+  cost: 7
+  power: 8000
+  races:
+  - アポロニア・ドラゴン
+  - アース・ドラゴン
+  mana: 1
+  text: 'マナゾーンに置く時、このカードはタップして置く。
+
+    バトルゾーンにある自分の、コスト４以上のクリーチャーすべてのパワーは+3000され、種族にアポロニア・ドラゴンとアース・ドラゴンを追加する。
+
+    W・ブレイカー(このクリーチャーはシールドを２枚ブレイクする)'
+  abilities:
+  - kind: static
+    affects:
+      owner: you
+      zone: bz
+      filter:
+        types:
+        - creature
+        cost_ge: 4
+    mod:
+      power: 3000
+      add_races:
+      - アポロニア・ドラゴン
+      - アース・ドラゴン
+  source:
+    official: dmc61-032
+    review: pending
+    notes: '「自分の、コスト４以上のクリーチャーすべて」→ affects {owner: you, zone: bz, filter: {types:
+      [creature], cost_ge: 4}}（「他の」がないため自身を含む）。「パワーは+3000され」→ mod.power: 3000。「種族にアポロニア・ドラゴンとアース・ドラゴンを追加する」→
+      mod.add_races。W・ブレイカーは known_keywords のためルール処理済み。'
+    aliases:
+    - dm24-034
+    - dmc47-019
+  keywords:
+  - double_breaker
+- id: dmr16s-029
+  name: リンクウッドの龍変化！(DMR16真 29/54)
+  types:
+  - spell
+  civs:
+  - fire
+  cost: 3
+  mana: 1
+  text: このターン、バトルゾーンにある自分のクリーチャーすべてのパワーは+3000され、種族にガイアール・コマンド・ドラゴンを追加する。
+  spell:
+  - op: modify
+    select:
+      zone: bz
+      owner: you
+      filter:
+        types:
+        - creature
+      count: all
+    mod:
+      power: 3000
+      add_races:
+      - ガイアール・コマンド・ドラゴン
+    duration: end_of_turn
+  source:
+    official: dmr16s-029
+    review: pending
+    notes: '「このターン」→ modify の duration: end_of_turn。対象「バトルゾーンにある自分のクリーチャーすべて」→ select
+      {zone: bz, owner: you, filter: {types: [creature]}, count: all}。'
+- id: dmx12b-002
+  name: DASH総帥 グレッグ
+  types:
+  - creature
+  civs:
+  - light
+  cost: 3
+  power: 2500
+  races:
+  - ヒューマノイド
+  - ヒーロー
+  mana: 1
+  text: バトルゾーンにある自分の他のクリーチャーすべてのパワーは+500され、種族に「ヒーロー」を追加する。
+  abilities:
+  - kind: static
+    affects:
+      owner: you
+      zone: bz
+      filter:
+        types:
+        - creature
+      other: true
+    mod:
+      power: 500
+      add_races:
+      - ヒーロー
+  source:
+    official: dmx12b-002
+    review: pending
+    notes: '「自分の他のクリーチャーすべて」→ affects {owner: you, zone: bz, filter: {types: [creature]},
+      other: true}。「パワーは+500され」→ mod.power: 500。「種族に「ヒーロー」を追加する」→ mod.add_races: [ヒーロー]。'
+- id: dmr14-051
+  name: 暴龍警報
+  types:
+  - spell
+  civs:
+  - fire
+  cost: 2
+  mana: 1
+  free_if:
+    exists:
+      zone: bz
+      owner: you
+      filter:
+        races:
+        - ドラグナー
+        civs:
+        - fire
+  text: G・ゼロ - バトルゾーンに自分の火のドラグナーがあれば、この呪文をコストを支払わずに唱えてもよい。バトルゾーンにあるクリーチャーを１体選ぶ。このターン、そのクリーチャーは「スピードアタッカー」を得、種族にガイアール・コマンド・ドラゴンを追加する。
+  spell:
+  - op: choose
+    select:
+      zone: bz
+      filter:
+        types:
+        - creature
+      count: 1
+    as: c
+  - op: modify
+    select:
+      ref: c
+    mod:
+      grant:
+      - speed_attacker
+      add_races:
+      - ガイアール・コマンド・ドラゴン
+    duration: end_of_turn
+  source:
+    official: dmr14-051
+    review: pending
+    notes: 'G・ゼロは free_if。「バトルゾーンにあるクリーチャーを１体選ぶ」→ choose。「このターン、そのクリーチャーは「スピードアタッカー」を得、種族にガイアール・コマンド・ドラゴンを追加する」→
+      modify（duration: end_of_turn）。'
+    aliases:
+    - dmr14-051d
+- id: dmr17-032
+  name: 三界 ザゼンダ
+  types:
+  - creature
+  civs:
+  - light
+  cost: 3
+  power: 3000
+  races:
+  - ジャスティス・ウイング
+  - 侵略者
+  mana: 1
+  text: 自分の光のクリーチャーがバトルゾーンに３体以上あれば、このクリーチャーのパワーを+2000し、種族にエンジェル・コマンドを追加する。
+  abilities:
+  - kind: static
+    affects: self
+    if:
+      cmp:
+      - count:
+          zone: bz
+          owner: you
+          filter:
+            civs:
+            - light
+            types:
+            - creature
+      - '>='
+      - 3
+    mod:
+      power: 2000
+      add_races:
+      - エンジェル・コマンド
+  source:
+    official: dmr17-032
+    review: pending
+    notes: '「自分の光のクリーチャーがバトルゾーンに３体以上」→ count >= 3。原文に「他の」が無いため自身も数える。「パワーを+2000し、種族にエンジェル・コマンドを追加」→
+      mod{power: 2000, add_races}。'
+- id: dmr17-043
+  name: 侵略者 フワシロ
+  types:
+  - creature
+  civs:
+  - darkness
+  cost: 3
+  power: 3000
+  races:
+  - ファンキー・ナイトメア
+  - 侵略者
+  mana: 1
+  text: 自分の墓地に闇のクリーチャーが２体以上あれば、このクリーチャーのパワーを+2000し、種族にデーモン・コマンドを追加する。
+  abilities:
+  - kind: static
+    affects: self
+    if:
+      cmp:
+      - count:
+          zone: graveyard
+          owner: you
+          filter:
+            civs:
+            - darkness
+            types:
+            - creature
+      - '>='
+      - 2
+    mod:
+      power: 2000
+      add_races:
+      - デーモン・コマンド
+  source:
+    official: dmr17-043
+    review: pending
+    notes: '「自分の墓地に闇のクリーチャーが２体以上」→ count(zone: graveyard) >= 2。「パワーを+2000し、種族にデーモン・コマンドを追加」→
+      mod{power: 2000, add_races}。'
+- id: dmr17-049
+  name: 音速 ニトロエアー
+  types:
+  - creature
+  civs:
+  - fire
+  cost: 3
+  power: 3000
+  races:
+  - ヒューマノイド爆
+  - 侵略者
+  mana: 1
+  text: 自分の他の火のクリーチャーがバトルゾーンに出た時、そのターン、このクリーチャーのパワーを+2000し、種族にソニック・コマンドを追加する。
+  abilities:
+  - kind: trigger
+    when:
+      event: move
+      to: bz
+      subject:
+        owner: you
+        filter:
+          civs:
+          - fire
+          types:
+          - creature
+        other: true
+    effect:
+    - op: modify
+      select:
+        ref: self
+      mod:
+        power: 2000
+        add_races:
+        - ソニック・コマンド
+      duration: end_of_turn
+  source:
+    official: dmr17-049
+    review: pending
+    notes: '「自分の他の火のクリーチャーがバトルゾーンに出た時」→ when{event: move, to: bz, subject: {owner:
+      you, other: true, filter: {...}}}。「そのターン、パワーを+2000し、種族にソニック・コマンドを追加」→ modify（duration:
+      end_of_turn）。'
+- id: dmr17-055
+  name: 獣軍隊 オンバ
+  types:
+  - creature
+  civs:
+  - nature
+  cost: 3
+  power: 3000
+  races:
+  - ビーストフォーク號
+  - 侵略者
+  mana: 1
+  text: 自分の他の、自然のパワー6000以上のクリーチャーがあれば、このクリーチャーのパワーを+3000し、「W・ブレイカー」を与え、種族にゲリラ・コマンドを追加する。
+  abilities:
+  - kind: static
+    affects: self
+    if:
+      exists:
+        zone: bz
+        owner: you
+        other: true
+        filter:
+          civs:
+          - nature
+          types:
+          - creature
+          power_ge: 6000
+    mod:
+      power: 3000
+      grant:
+      - double_breaker
+      add_races:
+      - ゲリラ・コマンド
+  source:
+    official: dmr17-055
+    review: pending
+    notes: '「自分の他の、自然のパワー6000以上のクリーチャーがあれば」→ exists(other: true, filter: {civs: [nature],
+      power_ge: 6000})。「パワーを+3000し、「W・ブレイカー」を与え、種族にゲリラ・コマンドを追加」→ mod{power: 3000,
+      grant: [double_breaker], add_races}。'
+- id: dmr19-077
+  name: 音速 ピード
+  types:
+  - creature
+  civs:
+  - fire
+  cost: 2
+  power: 2000
+  races:
+  - ヒューマノイド爆
+  - 侵略者
+  mana: 1
+  text: 相手のシールドが２つ以下なら、このクリーチャーのパワーを+3000し、種族にソニック・コマンドを追加する。
+  abilities:
+  - kind: static
+    affects: self
+    if:
+      cmp:
+      - count:
+          zone: shield
+          owner: opp
+      - <=
+      - 2
+    mod:
+      power: 3000
+      add_races:
+      - ソニック・コマンド
+  source:
+    official: dmr19-077
+    review: pending
+    notes: '「相手のシールドが２つ以下なら」→ count(zone: shield, owner: opp) <= 2。「パワーを+3000し、種族にソニック・コマンドを追加」→
+      mod{power: 3000, add_races}。'
+- id: dmr22-047
+  name: 変形機装 ドラコン
+  types:
+  - creature
+  civs:
+  - light
+  cost: 4
+  power: 4000
+  races:
+  - グレートメカオー
+  mana: 1
+  text: バトルゾーンに自分の水のクリーチャーがあれば、このクリーチャーはブロックされず、種族にエンジェル・ドラゴンを追加する。
+  abilities:
+  - kind: static
+    affects: self
+    if:
+      exists:
+        zone: bz
+        owner: you
+        filter:
+          civs:
+          - water
+          types:
+          - creature
+    mod:
+      deny:
+      - be_blocked
+      add_races:
+      - エンジェル・ドラゴン
+  source:
+    official: dmr22-047
+    review: pending
+    notes: '「ブロックされず」→ deny: [be_blocked]。「種族にエンジェル・ドラゴンを追加する」→ add_races。条件は static
+      の if（exists）。自身は光のため条件に自己は含まれ得ない。'
+- id: dmr22-050
+  name: 封魔ドランブネ
+  types:
+  - creature
+  civs:
+  - water
+  cost: 4
+  power: 4000
+  races:
+  - グランド・デビル
+  mana: 1
+  text: バトルゾーンに自分の闇のクリーチャーがあれば、このクリーチャーに「スレイヤー」を与え、種族にクリスタル・ドラゴンを追加する。
+  abilities:
+  - kind: static
+    affects: self
+    if:
+      exists:
+        zone: bz
+        owner: you
+        filter:
+          civs:
+          - darkness
+          types:
+          - creature
+    mod:
+      grant:
+      - slayer
+      add_races:
+      - クリスタル・ドラゴン
+  source:
+    official: dmr22-050
+    review: pending
+    notes: '「「スレイヤー」を与え」は条件付き付与のため mod.grant: [slayer]。「種族にクリスタル・ドラゴンを追加する」→ add_races。'
+- id: dmr22-058
+  name: カッ飛びタケゾー
+  types:
+  - creature
+  civs:
+  - fire
+  cost: 4
+  power: 4000
+  races:
+  - ドリームメイト
+  mana: 1
+  text: バトルゾーンに自分の自然のクリーチャーがあれば、このクリーチャーのパワーを+2000し、「W・ブレイカー」を与え、種族にメガ・ドラゴンを追加する。
+  abilities:
+  - kind: static
+    affects: self
+    if:
+      exists:
+        zone: bz
+        owner: you
+        filter:
+          civs:
+          - nature
+          types:
+          - creature
+    mod:
+      power: 2000
+      grant:
+      - double_breaker
+      add_races:
+      - メガ・ドラゴン
+  source:
+    official: dmr22-058
+    review: pending
+    notes: '「パワーを+2000し」→ power: 2000。「「W・ブレイカー」を与え」→ grant: [double_breaker]。「種族にメガ・ドラゴンを追加する」→
+      add_races。'
+- id: dmr22-062
+  name: 剛撃霊騎ドゥルガー
+  types:
+  - creature
+  civs:
+  - nature
+  cost: 4
+  power: 4000
+  races:
+  - ジャイアント
+  - アーク・セラフィム
+  mana: 1
+  text: バトルゾーンに自分の光のクリーチャーがあれば、このクリーチャーは種族にジュラシック・ドラゴンを追加し、自分のターンの終わりにアンタップする。
+  abilities:
+  - kind: static
+    affects: self
+    if:
+      exists:
+        zone: bz
+        owner: you
+        filter:
+          civs:
+          - light
+          types:
+          - creature
+    mod:
+      add_races:
+      - ジュラシック・ドラゴン
+  - kind: trigger
+    if:
+      exists:
+        zone: bz
+        owner: you
+        filter:
+          civs:
+          - light
+          types:
+          - creature
+    when:
+      event: turn_end
+      player: you
+    effect:
+    - op: untap
+      select:
+        ref: self
+  source:
+    official: dmr22-062
+    review: pending
+    notes: '「種族にジュラシック・ドラゴンを追加し」→ 条件付き static の add_races。「自分のターンの終わりにアンタップする」→ when:
+      {event: turn_end, player: you} の誘発で untap self。「してもよい」が無いので may は付けない。'
+- id: dmx20-021
+  name: 獣軍隊 フォック
+  types:
+  - creature
+  civs:
+  - nature
+  cost: 4
+  power: 4000
+  races:
+  - ゲリラ・コマンド
+  - 侵略者
+  mana: 1
+  text: このクリーチャーがバトルゾーンに出た時、そのターン、自分のクリーチャーすべての種族にゲリラ・コマンドを追加する。
+  abilities:
+  - kind: trigger
+    when:
+      event: move
+      to: bz
+      subject: self
+    effect:
+    - op: modify
+      select:
+        zone: bz
+        owner: you
+        filter:
+          types:
+          - creature
+        count: all
+      mod:
+        add_races:
+        - ゲリラ・コマンド
+      duration: end_of_turn
+  source:
+    official: dmx20-021
+    review: pending
+    notes: '「バトルゾーンに出た時」→ when: {event: move, to: bz, subject: self}。「そのターン、自分のクリーチャーすべての種族にゲリラ・コマンドを追加する」→
+      modify（duration: end_of_turn）。'
