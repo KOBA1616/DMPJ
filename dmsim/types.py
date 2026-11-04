@@ -23,6 +23,7 @@ class Option(TypedDict, total=False):
     shield: int                     # S・バック: 捨てるシールドのカード
     tap: int                             # 起動型能力のコストでタップするクリーチャー
     tap_mana: int                        # 起動型能力の複合コストで追加でタップするマナの枚数
+    under_cost: int                      # 起動型能力のコストで墓地に置く下のカードの枚数（第53弾）
     grave_evo: bool                      # 墓地進化（自分の墓地のクリーチャーの上に重ねて出す選択肢）
     once_src: int                        # 回数制限つき許可（ターン1回）の発生源カード
     free: bool                           # コストを支払わずに実行する選択肢（G・ゼロ）
@@ -124,6 +125,7 @@ class Continuous(TypedDict):
     duration: str
     controller: int
     filter: NotRequired[dict]
+    src: NotRequired[int]                # 発生源カードの cid（回数制限つき allow の帰属用、第50弾）
 
 
 class Delayed(TypedDict):
@@ -274,6 +276,7 @@ class PlayTask(TypedDict):
     bz_done: NotRequired[bool]           # バズレンダ: 追加支払いの確認が終わった
     bz_count: NotRequired[int]           # バズレンダ: 追加で支払った回数
     alt: NotRequired[bool]               # 代替コストで実行する
+    vivid: NotRequired[bool]             # ビビッドローで実行する（第54弾: イベント・条件への伝播用）
     alt_step: NotRequired[int]           # 代替コスト（行動形式）で済んだ段階
     evo_v: NotRequired[list]             # 進化V: フィルタごとに選んだ進化元
     fushigi: NotRequired[bool]           # フシギバースとして実行する

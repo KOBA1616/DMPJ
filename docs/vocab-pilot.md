@@ -667,3 +667,64 @@ space_charge（単独42件）: スペース・チャージは、文明ごとの�
 - 呪文側: 面フィールド `odrive_spell`（stp_spell と同型）。唱える時に追加タップを払っていたら解決 ops に追加される。単一文明・多文明どちらの o_drive でもよい。
 - proto T133（まとめて形）/ T134（文明別形）/ T135（呪文側）。tests/test_vocab_pilot47.py 4件＋実カード（ライオン・アームズ/ビューティシャン/コアラ大佐の火能力/ソーラー・ドライブ）で検証。
 - 残: ゼツ型「支払ったコストに合う能力を得る」(o_drive_multiple_costs) は別構造のため未対応。
+
+## 第48弾: cost_may の must（強制・ターン1回の軽減）（2026-11-03）
+converted の監査（opt_reduce の素の整数表記9件）から。任意形は第9弾の cost_may {amount, once, min} で足りたが、強制形（「各ターン、自分の〜１体目/１枚目のコストを少なくする」）は確認を出す cost_may では表せなかった。
+- mod cost_may に `must: true` を追加: 支払い時に確認せず適用する。once の消費記録（発生源ごとターン1回）は任意形と共有。
+- 適用先: 珊瑚妖精キユリ（dm24bd5-060／ツインパクト版 dm26ex4-055）、ザパンプ（dm24ex3-tf22）。ツインパクト版のテキストには床の条項が無いため min は付けない。
+- proto T136。tests/test_vocab_pilot48.py 2件（確認が出ないこと・once 消費・min の床）＋実カード3枚の parse テスト。
+- 同時に直したもの: 任意形5枚（ブラッドレイン dm23ex2-097 ほか）は cost_may {amount: 1, once: true, min: 1} に、突風のゴーマッハ・スワン（dmd05-015）の条件つき自己軽減は mod {cost: -3, cost_min: 1} に正規化。これで converted 全6,169枚が厳密 parse を通過するようになった。
+
+## 第49弾: no_leave（バトルゾーンを離れない）（2026-11-03）
+ラウンド24〜26で繰り返し差し戻された leave_prevention / leave_protection 系（計17件）の受け皿。
+- mod に `no_leave` を追加。値は true（無条件）か辞書 {except_destroy, by_opp, except_battle}（いずれも bool、併記可）。
+  - except_destroy: 「破壊される時以外、離れない」型。reason: destroy の移動だけ通す。
+  - by_opp: 「相手のカードの効果で離れない」型。移動イベントの by（第40弾で導入した解決者記録）が相手の時だけ止める。by の無い移動（状況起因処理・バトル敗北・コスト）は通す。
+  - except_battle: 「バトルに負けた時以外、離れない」型。combat の敗北破壊イベントに battle: true の印を追加し、その移動だけ通す（スレイヤー等の効果破壊は止める）。
+- 判定場所: events の移動適用（_apply_one）の先頭。置換を経た最終的な移動に対して判定するので、置換で行き先が変わっても正しく止まる。止めた場合は移動イベント自体が発生しない（「離れた時」誘発も起きない）。
+- 特性の集約: chars の no_leave に発生源ごとの例外指定を集める（封印中は空）。付与（modify の mod に no_leave を書く期間つき付与）も同じ経路で効く。
+- proto T137（無条件）/ T138（except_destroy）/ T139（by_opp 付与）/ T140（バウンス呪文）/ T141（except_battle 付与、パワー12000以上）/ T142・T143（バトル検証用）。tests/test_vocab_pilot49.py 5件＋実カード（ブルトゥーラ-D1、龍装者 ジスタジオ）の parse テスト。
+- 既知の制約: 進化元など「下のカード」だけの離脱抑止、G・リンクグループ単位の判定は未対応。
+
+## 第50弾: 回数制限つき許可のマナ召喚版（once_per_turn_mana_summon_permission）（2026-11-04）
+ラウンド47（summon_from_mana 27件）で6件がこの gap で差し戻された。第37弾の墓地召喚版は実装済みだったが、マナ召喚の選択肢（turn.py の :msum）は permits の真偽しか見ておらず、once の消費経路が無かった。
+- turn.py に `_mana_summon_grant` を追加（第37弾の `_grave_summon_grant` と同じ方式）: chars の allow にある {action: summon_from_mana, once: true} を発生源ごとに判定し、無制限なら {}、未使用の制限つきなら {"once_src": 発生源}、使い切りなら選択肢を出さない。使用時の消費は墓地版と共有（turn_counters の `summon_once:<src>`、from_zone が mana の場合も記録）。
+- 効果で与える許可（呪文・誘発からの modify）の帰属: 継続的効果（ce）に発生源カードの cid（`src`）を記録し（ops の op_modify、types の Continuous に src を追加）、chars の src_of マップに継続的効果の mod も加えた。これで「このターン、1体だけ」という呪文型の許可も、対象全員で共有の1回になる（従来は対象カード自身に帰属してしまい、1体ずつ使えてしまうところだった）。
+- 書き方: 常在型は static {affects: {owner: you, zone: mana, filter: {...}}, mod: {allow: [{action: summon_from_mana, once: true}]}}。呪文型は効果で modify {select: {zone: mana, owner: you, filter: {types: [creature]}}, mod: {allow: [{action: summon_from_mana, once: true}]}, duration: end_of_turn, dynamic: true}。
+- proto T144（常在型の許可獣）/ T145（呪文型）。tests/test_vocab_pilot50.py 3件（常在型で1体だけ／翌ターン回復／呪文型は唱える前は出ず・唱えた後も共有の1回だけ）＋実カード parse テスト（蔑如と覚悟 dm24rp3-076。マッハファイター付与は「マナから召喚された時」の遅延誘発で対象に与える形）。
+- 注意: 蔑如と覚悟の遅延誘発は「この呪文の許可で召喚した」こと自体は区別できない（別のマナ召喚許可と併用し、そちらを先に使った場合にだけ差が出る）。notes に明記する前提で変換する。
+
+## 第51弾: must_be_attacked（攻撃先の強制）（2026-11-04）
+ラウンド40・44・45・46・48と繰り返し差し戻された must_attack_this_creature（rejects に21件）の受け皿。
+- mod に `must_be_attacked: true` を追加（defs の MOD_KEYS＋検証、chars に集約。封印中は false、ダイナモの add_of 経由でも伝わる）。
+- 判定場所: combat の _attack_options。攻撃クリーチャーごとに合法な攻撃先（プレイヤー／タップ状態または許可で攻撃できるクリーチャー）を集め、その中に must_be_attacked 持ちが含まれれば、選択肢を誘引持ちへの攻撃だけに制限する。「可能なら」の範囲は既存の合法性判定（タップ状態・attack_creature の許可・be_attacked の許可）がそのまま決めるので、アンタップしていて攻撃できない誘引持ちは制限をかけない。複数いればその中から選ぶ。
+- 書き方: 本体は static {affects: self, mod: {must_be_attacked: true}}（条件があれば if を付ける）。付与は modify の mod に同じ形（期間は duration で指定。「次の自分のターンのはじめまで」は until_next_own_turn_start）。
+- ガードマン（攻撃先の変更）とは別機構で、こちらは宣言時の選択肢そのものを制限する。ブロックの可否には影響しない。
+- proto T146（誘引獣）/ T147（付与呪文）。tests/test_vocab_pilot51.py 3件（タップした誘引持ちだけが攻撃先になる／アンタップの誘引持ちは制限しない／呪文付与が相手ターンまで効く）＋実カード parse テスト（指示虫アロー・ワーム dmrp16-016）。
+
+## 第52弾: S・バックの対象指定を filter に一般化（2026-11-04）
+ラウンド50（s_back 22件）の下書きで判明: S・バックの対象は文明指定だけでなく種族指定（アウトレイジ、サイバー等）・複合文明（水または闇）・ツインパクト指定があり、面フィールド s_back（文明名の文字列）と combat の文明照合だけでは表せなかった。
+- 面フィールド s_back に filter（辞書）を書けるようにした。文字列は従来どおり文明名。辞書は捨てるカードへの filter_match で判定（combat の宣言選択肢の生成）。面への直接指定は _load_face で raw の s_back を props に取り込む形にし、文字列は文明名の検証、辞書は filter 検証を行う。
+- filter に `twinpact: true/false` を追加（defs の FILTER_KEYS、selectors の filter_match で CardDef.faces の有無を見る）。「S・バック：ツインパクト」は {twinpact: true} と書く。
+- ツインパクトの CardDef.s_back は None 固定だったのを、面のうち最初に s_back を持つ面の値に集約（呪文面にだけ付いているアリス型が宣言候補になる）。
+- 書き方: 種族は {race_has: アウトレイジ}（種族名の一部一致。完全一致の種族は {races: [...] }）、複合文明は {civs: [water, darkness]}、ツインパクトは {twinpact: true}。文明1つは従来どおりキーワード（s_back_light 等）でもよい。
+- 試験カード R071（種族形）/ R072（複合文明形）を tests/rule_cards.yaml に追加。tests/test_vocab_pilot52.py 3件（種族形で宣言が出て無料召喚／複合文明形で無料詠唱／合わない文明だけでは宣言が出ない）＋実カード parse テスト（アリス dm23ex1-034、ツインパクト集約の確認）。既存の S・バックテスト4件も継続合格。
+
+## 第53弾: 起動型コスト {under: N} — メテオバーン「攻撃できる時」形（2026-11-04）
+ラウンド52（meteor_burn 21件）の差し戻しで判明: メテオバーンには「バトルゾーンを離れる時」の置換形（keywords.yaml の `meteor_burn`）と「このクリーチャーが攻撃する時」の誘発形（R067 の先例）のほかに、「このクリーチャーが**攻撃できる時**、下のカードを墓地に置いてもよい」という起動型の形がある（超神龍アルグロス・クリューソス等4枚）。既存の kind: activate はコストがタップ必須で表せなかった。
+- defs: activate の cost に `under: N`（正の整数）を許可。tap との併用可、tap_mana とは併用不可。tap が無く under のみの形も可。
+- combat._activate_options: under のみの形は「タップするクリーチャー」ではなくクリーチャー自身に選択肢が付き（key は activate:<defn>:<i>）、下のカードが N 枚以上ある時だけ提示される。攻撃できる時だけ使える点は従来どおり（can = 攻撃選択肢のあるクリーチャー）。
+- turn.st_attack: コストの支払いは tap（あれば）→ under（効果の先頭に move {select: {under_of: self, count: N}, to: graveyard, reason: put} を差し込む形で効果より先に処理）。タップしないので使用後も攻撃でき、攻撃を強制されているクリーチャーの免除手段にならないため強制フィルタ（forced）は tap がある選択肢にだけ効く。
+- types: Option に under_cost を追加。
+- 試験カードは R073（tests/rule_cards.yaml）と T148（proto、本弾の形そのもの）。tests/test_vocab_pilot53.py 1件（攻撃ステップで起動できる／下のカードが墓地へ行く／自身はタップせず攻撃もできる／下が無くなれば再使用できない）。
+- 変種: 原文が「**自分の**クリーチャーが攻撃できる時」のカード（魔皇アゼルザード sp-015 等）は、能力に `any_attacker: true` を付ける。保持者自身が攻撃できなくても、自分の他のクリーチャーが攻撃できる状態なら使える（combat._activate_options のゲートが can 全体を見る）。ABILITY_KEYS に any_attacker を追加。試験カード R074。実カード parse は tests/test_vocab_pilot53_cards.py（4枚）。
+
+## 第54弾: ビビッドロー使用の可視化（2026-11-04）
+ラウンド54（vividraw 27件）の差し戻しで判明: ビビッドローで実行したことを他カードの誘発・呪文自身の分岐・対象フィルタから参照できなかった。代替コストの alt / alt_paid と同じ型で3経路を足した。
+- プレイタスクに `vivid: true` を刻み（types の PlayTask に vivid を追加）、召喚/設置の移動イベント（ev["vivid"]）→ イベント記録（rec["vivid"]、events._record_for）へ伝播。誘発は when: {event: move, to: bz, reason: summon, vivid: true, subject: {...}} や when: {event: cast, vivid: true, player: you} と書く（_match_when に vivid フラグ照合を追加）。
+- 呪文の解決 env に vivid_paid を入れ、条件 {vivid_paid: true} で「ビビッドロー能力を使って唱えていれば」の分岐が書ける（selectors の eval_cond、defs の cond 検証。CIP 等の誘発解決では env.event 側の vivid 印でも判定する）。
+- filter に `vividraw: true/false` を追加（defs FILTER_KEYS、selectors filter_match: CardDef 本体か いずれかの面が vividraw を持つか。第52弾の twinpact と同じ型）。「見たカードがビビッドローを持つなら」は exists {ref, filter: {vividraw: true}} で判定できる。
+- 試験カード T149（使用時誘発獣）/ T150（分岐呪文）/ T151（探知呪文）を proto に追加。tests/test_vocab_pilot54.py 5件（誘発する／通常召喚ではしない／呪文分岐の両方向／フィルタ）＋実カード parse（シャッセロアー、空が真っ赤に燃え尽きる！）。
+
+## 第55弾: filter の fushigi 所持判定（2026-11-04）
+ラウンド56（fushigibirth 23件）の差し戻しで判明: 「墓地に置いた中から『フシギバース』を持つクリーチャー1体につき〜」を数える/選ぶための所持フィルタが無かった。第54弾の vividraw と同じ型で、filter に `fushigi: true/false` を追加（defs FILTER_KEYS、selectors filter_match: CardDef 本体かいずれかの面が fushigi を持つか）。数え上げは count 式の filter や exists {ref, filter: {fushigi: true}} で書ける。試験カード T152（探知呪文）を proto に追加、tests/test_vocab_pilot55.py 1件（T095 だけが選ばれる）。

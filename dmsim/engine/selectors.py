@@ -70,6 +70,9 @@ class SelectorMixin:
         if "alt_paid" in c:   # 代替コストで実行した（「この呪文を[代替]支払って唱えたら」）
             paid = bool(env.get("alt_paid")) or bool((env.get("event") or {}).get("alt"))
             return paid == bool(c["alt_paid"])
+        if "vivid_paid" in c:   # ビビッドローで実行した（第54弾。「ビビッドロー能力を使って唱えていれば」）
+            paid = bool(env.get("vivid_paid")) or bool((env.get("event") or {}).get("vivid"))
+            return paid == bool(c["vivid_paid"])
         raise ValueError(f"bad cond {c}")
 
     def filter_match(self, cid: int, f: dict, lki: dict | None = None, base: bool = False) -> bool:
@@ -96,6 +99,18 @@ class SelectorMixin:
             return False
         if "name_has" in f and f["name_has"] not in ch["name"]:
             return False
+        if "twinpact" in f and bool(self.cdef(cid).faces) != bool(f["twinpact"]):
+            return False
+        if "vividraw" in f:
+            d = self.cdef(cid)
+            has = bool(d.vividraw) or any(fc.vividraw for fc in d.faces)
+            if has != bool(f["vividraw"]):
+                return False
+        if "fushigi" in f:
+            d = self.cdef(cid)
+            has = bool(d.fushigi) or any(fc.fushigi for fc in d.faces)
+            if has != bool(f["fushigi"]):
+                return False
         if "civs" in f and not set(f["civs"]) & set(ch["civs"]):
             return False
         if "civs_all" in f and not set(f["civs_all"]) <= set(ch["civs"]):

@@ -185,7 +185,7 @@ def op_modify(eng, t, op, env):
     s = eng.s
     s.seq += 1
     ce = {"id": s.seq, "mod": op["mod"], "duration": eng._duration(op.get("duration", "end_of_turn"), env),
-          "controller": env["you"]}
+          "controller": env["you"], "src": env["self"][0] if env.get("self") else None}
     if "add_of" in op["mod"]:      # ダイナモ: このクリーチャー（効果の発生源）のパワーと能力を対象に加える
         ce["add_from"] = env["self"]
     if op.get("dynamic"):

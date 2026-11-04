@@ -33,20 +33,31 @@ class CombatMixin:
                         and "creature" in self.chars(cid)["types"] and self.permits(cid, "attack_player"):
                     out.append({"key": f"attack:{dfn}:player", "cid": cid, "target": "player"})
                 continue
-            if self.permits(cid, "attack_player"):
-                out.append({"key": f"attack:{dfn}:player", "cid": cid, "target": "player"})
+            player_opt = {"key": f"attack:{dfn}:player", "cid": cid, "target": "player"} \
+                if self.permits(cid, "attack_player") else None
             allow = [e for e in self.chars(cid)["allow"] if isinstance(e, dict) and e["action"] == "attack_creature"]
+            creature_opts = []
             for tc in self.bz_tops(1 - a):
                 # 505.2 既定ではタップ状態のクリーチャーだけ。「タップされていないクリーチャーを攻撃できる」(マッハファイター等)は allow で広げる
                 if (self.s.cards[tc].tapped or any(e.get("other", {}).get("tapped") is False and self.filter_match(tc, e["other"]) for e in allow)) \
                         and self.permits(cid, "attack_creature", tc) and self.permits(tc, "be_attacked", cid):
-                    out.append({"key": f"attack:{dfn}:{self.s.cards[tc].defn}", "cid": cid,
-                                "target": self.s.ref(tc)})
+                    creature_opts.append({"key": f"attack:{dfn}:{self.s.cards[tc].defn}", "cid": cid,
+                                          "target": self.s.ref(tc)})
+            # 「可能ならこのクリーチャーを攻撃する」（第51弾）: 合法な攻撃先になる誘引持ちがいれば、攻撃先はそれらに限る
+            taunts = [o for o in creature_opts if self.chars(o["target"][0])["must_be_attacked"]]
+            if taunts:
+                out += taunts
+            else:
+                if player_opt:
+                    out.append(player_opt)
+                out += creature_opts
         return out
 
     def _activate_options(self, a, attack_opts):
-        """起動型能力（602）のうち「攻撃する代わりにタップして使う」もの。攻撃ができるときだけ使える（602.3a）。
-        cost.tap が self ならこのクリーチャー、フィルタなら条件に合う自分のクリーチャー1体をタップする。"""
+        """起動型能力（602）のうち攻撃ステップで使うもの。攻撃ができるときだけ使える（602.3a）。
+        cost.tap が self ならこのクリーチャー、フィルタなら条件に合う自分のクリーチャー1体をタップする。
+        cost.under（第53弾）はタップせず、下のカードを墓地に置いて使う（メテオバーン「攻撃できる時」形）。
+        使った後も攻撃できるため、攻撃を強制されているクリーチャーでも使える。"""
         can = {o["cid"] for o in attack_opts}
         out = []
         for cid in self.bz_tops(a):
@@ -55,17 +66,28 @@ class CombatMixin:
                 if "if" in ab and not self.eval_cond(ab["if"], env):
                     continue
                 dfn = self.s.cards[cid].defn
-                who = [cid] if ab["cost"]["tap"] == "self" else \
-                    [x for x in self.bz_tops(a) if self.filter_match(x, ab["cost"]["tap"])]
+                cost = ab["cost"]
+                if "under" in cost and len(self.s.cards[cid].under) < cost["under"]:
+                    continue   # 下のカードが足りなければコストを払えない
+                if "tap" not in cost:   # under のみ: タップしないので選択肢はクリーチャー自身に付く
+                    # 原文が「自分のクリーチャーが攻撃できる時」の形は any_attacker: true（保持者自身でなくてもよい）
+                    if cid in can or (ab.get("any_attacker") and can):
+                        out.append({"key": f"activate:{dfn}:{i}", "cid": cid, "ab": i,
+                                    "under_cost": cost["under"]})
+                    continue
+                who = [cid] if cost["tap"] == "self" else \
+                    [x for x in self.bz_tops(a) if self.filter_match(x, cost["tap"])]
                 for x in who:
                     if x in can:
                         key = f"activate:{dfn}:{i}" + ("" if x == cid else f":{self.s.cards[x].defn}")
                         o = {"key": key, "cid": cid, "ab": i, "tap": x}
-                        n = ab["cost"].get("tap_mana")
+                        n = cost.get("tap_mana")
                         if n:   # 複合コスト: タップされていないマナが足りる時だけ使える
                             if sum(1 for m in self.zlist("mana", a) if not self.s.cards[m].tapped) < n:
                                 continue
                             o["tap_mana"] = n
+                        if "under" in cost:
+                            o["under_cost"] = cost["under"]
                         out.append(o)
         return out
 
@@ -125,7 +147,7 @@ class CombatMixin:
         losers = ([x] if px <= py else []) + ([y] if py <= px else [])
         winners = [r for r in (x, y) if r not in losers]
         slay = [[r, y if r == x else x] for r in losers if self.permits(r[0], "slayer")]
-        evs = [{"ev": "move", "subject": r, "to": "graveyard", "reason": "destroy"} for r in losers]
+        evs = [{"ev": "move", "subject": r, "to": "graveyard", "reason": "destroy", "battle": True} for r in losers]
         evs += [{"ev": "battle_win", "subject": r, "controller": self.s.cards[r[0]].controller} for r in winners]
         out = self._window(self.ev_task(evs))
         if slay:   # 701.13d バトルの後に誘発する「スレイヤー」
@@ -340,8 +362,10 @@ def h_break(eng, t):
     for h in eng.zlist("hand", victim):
         hd = eng.cdef(h)
         if hd.s_back and eng.permits(h, "summon" if hd.is_creature() else "cast"):
+            # 対象指定: 文明名（文字列）はその文明のカード、filter（辞書）はその条件に合うカード（第52弾）
             sopts += [{"key": f"sback:{s.cards[h].defn}:{s.cards[x].defn}", "cid": h, "shield": x}
-                      for x in pool if hd.s_back in eng.cdef(x).civs]
+                      for x in pool if (hd.s_back in eng.cdef(x).civs if isinstance(hd.s_back, str)
+                                        else eng.filter_match(x, hd.s_back))]
     if sopts:
         ans, d = eng.ask(t, victim, "declare_sback", sopts, 0, len(sopts))
         if d:

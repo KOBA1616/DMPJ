@@ -346,10 +346,10 @@ class Engine(SelectorMixin, EventMixin, InterpreterMixin, TurnMixin, CombatMixin
             return {"power": d.power, "cost": d.cost, "civs": list(d.civs), "types": [], "races": [],
                     "keywords": set(), "name": d.name, "allow": [], "deny": [], "require": [],
                     "breaks": 0, "break_opts": [], "pay_cost": d.cost, "sac_reduce": 0,
-                    "opt_reduce": None, "cost_may": []}
+                    "opt_reduce": None, "cost_may": [], "no_leave": [], "must_be_attacked": False}
         ch = {"power": d.power, "cost": d.cost, "civs": list(d.civs), "types": list(d.types),
               "races": list(d.races), "keywords": set(d.keywords), "name": d.name,
-              "allow": [], "deny": [], "require": [], "breaks": 1, "break_opts": [], "pay_cost": d.cost, "sac_reduce": 0, "opt_reduce": None, "cost_may": []}
+              "allow": [], "deny": [], "require": [], "breaks": 1, "break_opts": [], "pay_cost": d.cost, "sac_reduce": 0, "opt_reduce": None, "cost_may": [], "no_leave": [], "must_be_attacked": False}
         if (d.neo or d.grave_evo) and c.zone == "bz" and c.under and "evolution" not in ch["types"]:
             ch["types"].append("evolution")   # NEO進化・墓地進化: カードが下にあれば進化クリーチャーとして扱う
         own = self.abilities(cid, "static") if face is None else list(enumerate(d.abilities))
@@ -405,6 +405,9 @@ class Engine(SelectorMixin, EventMixin, InterpreterMixin, TurnMixin, CombatMixin
                 for _, ab in self.abilities(src, "static"):
                     if "mod" in ab:
                         src_of[id(ab["mod"])] = src
+            for ce in self.s.continuous:   # 継続的効果（modify）の mod も発生源に帰属させる（第50弾）
+                if ce.get("src") is not None:
+                    src_of[id(ce["mod"])] = ce["src"]
         for m in mods:
             pw = m.get("power", 0)
             if isinstance(pw, dict):   # {amount, count}: 「〜ひとつにつき +N」
@@ -419,6 +422,11 @@ class Engine(SelectorMixin, EventMixin, InterpreterMixin, TurnMixin, CombatMixin
                                     if isinstance(e, dict) and e.get("once") else e)
             ch["deny"] += m.get("deny", [])
             ch["require"] += m.get("require", [])
+            if "no_leave" in m:   # 「バトルゾーンを離れない」（第49弾）。true は無条件、辞書は例外の指定
+                nl = m["no_leave"]
+                ch["no_leave"].append({} if nl is True else dict(nl))
+            if m.get("must_be_attacked"):   # 「相手のクリーチャーが攻撃する時、可能ならこのクリーチャーを攻撃する」（第51弾）
+                ch["must_be_attacked"] = True
             for r in m.get("add_races", []):   # 種族追加（「種族に〜を追加する」）
                 if r not in ch["races"]:
                     ch["races"].append(r)
@@ -437,6 +445,8 @@ class Engine(SelectorMixin, EventMixin, InterpreterMixin, TurnMixin, CombatMixin
                 ch["keywords"].update(sc["keywords"])
                 for k in ("allow", "deny", "require", "break_opts"):
                     ch[k] += sc[k]
+                ch["no_leave"] += sc["no_leave"]
+                ch["must_be_attacked"] = ch["must_be_attacked"] or sc["must_be_attacked"]
                 ch["breaks"] = max(ch["breaks"], sc["breaks"])
         if any("cost_may" in m for m in mods):   # 任意のコスト軽減（cost_may）の発生源を引く（once の使用記録用）
             for m in mods:
@@ -480,6 +490,7 @@ class Engine(SelectorMixin, EventMixin, InterpreterMixin, TurnMixin, CombatMixin
                     ch["allow"] += p["allow"]
                     ch["deny"] += p["deny"]
                     ch["require"] += p["require"]
+                    ch["no_leave"] += p["no_leave"]
                     ch["break_opts"] += p["break_opts"]
                     ch["breaks"] = max(ch["breaks"], p["breaks"])
                     ch["sac_reduce"] += p["sac_reduce"]
