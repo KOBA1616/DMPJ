@@ -346,10 +346,12 @@ class Engine(SelectorMixin, EventMixin, InterpreterMixin, TurnMixin, CombatMixin
             return {"power": d.power, "cost": d.cost, "civs": list(d.civs), "types": [], "races": [],
                     "keywords": set(), "name": d.name, "allow": [], "deny": [], "require": [],
                     "breaks": 0, "break_opts": [], "pay_cost": d.cost, "sac_reduce": 0,
-                    "opt_reduce": None, "cost_may": [], "no_leave": [], "must_be_attacked": False}
+                    "opt_reduce": None, "cost_may": [], "no_leave": [], "must_be_attacked": False,
+                    "battle_indestructible": False}
         ch = {"power": d.power, "cost": d.cost, "civs": list(d.civs), "types": list(d.types),
               "races": list(d.races), "keywords": set(d.keywords), "name": d.name,
-              "allow": [], "deny": [], "require": [], "breaks": 1, "break_opts": [], "pay_cost": d.cost, "sac_reduce": 0, "opt_reduce": None, "cost_may": [], "no_leave": [], "must_be_attacked": False}
+              "allow": [], "deny": [], "require": [], "breaks": 1, "break_opts": [], "pay_cost": d.cost, "sac_reduce": 0, "opt_reduce": None, "cost_may": [], "no_leave": [], "must_be_attacked": False,
+              "battle_indestructible": False}
         if (d.neo or d.grave_evo) and c.zone == "bz" and c.under and "evolution" not in ch["types"]:
             ch["types"].append("evolution")   # NEO進化・墓地進化: カードが下にあれば進化クリーチャーとして扱う
         own = self.abilities(cid, "static") if face is None else list(enumerate(d.abilities))
@@ -427,6 +429,8 @@ class Engine(SelectorMixin, EventMixin, InterpreterMixin, TurnMixin, CombatMixin
                 ch["no_leave"].append({} if nl is True else dict(nl))
             if m.get("must_be_attacked"):   # 「相手のクリーチャーが攻撃する時、可能ならこのクリーチャーを攻撃する」（第51弾）
                 ch["must_be_attacked"] = True
+            if m.get("battle_indestructible"):   # 「バトル中、このクリーチャーは破壊されない」（第59弾）
+                ch["battle_indestructible"] = True
             for r in m.get("add_races", []):   # 種族追加（「種族に〜を追加する」）
                 if r not in ch["races"]:
                     ch["races"].append(r)
@@ -447,6 +451,7 @@ class Engine(SelectorMixin, EventMixin, InterpreterMixin, TurnMixin, CombatMixin
                     ch[k] += sc[k]
                 ch["no_leave"] += sc["no_leave"]
                 ch["must_be_attacked"] = ch["must_be_attacked"] or sc["must_be_attacked"]
+                ch["battle_indestructible"] = ch["battle_indestructible"] or sc["battle_indestructible"]
                 ch["breaks"] = max(ch["breaks"], sc["breaks"])
         if any("cost_may" in m for m in mods):   # 任意のコスト軽減（cost_may）の発生源を引く（once の使用記録用）
             for m in mods:

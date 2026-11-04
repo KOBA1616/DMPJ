@@ -144,8 +144,10 @@ class CombatMixin:
         """バトル（701.13）。結果で誘発した効果はその場で解決してからバトルを終える。"""
         px = self.chars(x[0])["power"] + self._battle_bonus(x, attacking=True)      # x は攻撃側
         py = self.chars(y[0])["power"] + self._battle_bonus(y)
-        losers = ([x] if px <= py else []) + ([y] if py <= px else [])
-        winners = [r for r in (x, y) if r not in losers]
+        losers_by_power = ([x] if px <= py else []) + ([y] if py <= px else [])
+        # 第59弾: バトル中破壊されないクリーチャーは破壊されない（勝敗判定はパワーどおり）
+        losers = [r for r in losers_by_power if not self.chars(r[0])["battle_indestructible"]]
+        winners = [r for r in (x, y) if r not in losers_by_power]
         slay = [[r, y if r == x else x] for r in losers if self.permits(r[0], "slayer")]
         evs = [{"ev": "move", "subject": r, "to": "graveyard", "reason": "destroy", "battle": True} for r in losers]
         evs += [{"ev": "battle_win", "subject": r, "controller": self.s.cards[r[0]].controller} for r in winners]

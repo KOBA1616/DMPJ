@@ -756,3 +756,12 @@ converted の監査（opt_reduce の素の整数表記9件）から。任意形�
 - 書き方（常在型）: kind: static, affects: {zone: bz, owner: you, filter: {types: [creature]}}, mod: {gain: [{kind: trigger, when: {event: move, to: bz, subject: self}, effect: [{op: modify, select: {ref: self}, mod: {allow: [{action: attack_creature, other: {tapped: false}}]}, duration: end_of_turn}]}]}。既に場にいるクリーチャーには trigger が発火しない（正しいルール動作）。
 - tests/test_vocab_pilot58.py 2件（誘発付与の parse／常在付与の parse）＋実カード parse テスト。
 - 待機16枚（mach_fighter のみが gap のもの）。複合 gap の4枚（dmrp21-7a、dm26ex1-027、dm26ex3-033、dm26ex2-pr005）は別途対応。
+
+## 第59弾: battle_indestructible（バトル中破壊されない）（2026-11-04）
+「バトル中、このクリーチャーは破壊されない」を表す語彙が無かった。
+- defs: MOD_KEYS に `battle_indestructible` を追加。値は true のみ。
+- engine/core.py: chars に `battle_indestructible: False` を追加し、static の mod から集約（ダイナモの add_from 経由も伝播）。
+- engine/combat.py: _battle でパワー敗者から battle_indestructible 持ちを除外（破壊イベントを出さない）。勝敗判定（battle_win の対象）はパワーどおり。
+- 書き方: kind: static, affects: self, mod: {battle_indestructible: true}。「火のクリーチャーとバトル中」の条件付きは if で書く（未対応の場合は unsupported）。
+- tests/test_vocab_pilot59.py 2件（正常 parse／不正値の検証エラー）。
+- 待機13枚（battle_indestructible のみが gap のもの）。
