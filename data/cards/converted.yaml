@@ -286212,3 +286212,1276 @@ cards:
       trueで表す（デッキからのサーチはルール上公開される）。"'
   keywords:
   - double_breaker
+- id: dm24ex4-003
+  name: 月と破壊と魔王と天使
+  types:
+  - creature
+  civs:
+  - light
+  - darkness
+  cost: 7
+  power: 11500
+  races:
+  - エンジェル・コマンド
+  - デーモン・コマンド
+  - 月光王国
+  mana: 1
+  abilities:
+  - kind: trigger
+    when:
+      event: move
+      to: bz
+      subject: self
+    effect:
+    - op: move
+      select:
+        zone: deck
+        owner: you
+        from_top: 2
+      to: shield
+      reason: put
+  - kind: trigger
+    when:
+      event: turn_end
+      player: you
+    effect:
+    - op: break
+      player: you
+      count: 1
+  - kind: trigger
+    when:
+      event: move
+      from: shield
+      subject:
+        owner: you
+    effect:
+    - op: may
+      body:
+      - op: break
+        player: opp
+        count: 1
+  text: 'ブロッカー
+
+    W・ブレイカー
+
+    このクリーチャーが出た時、自分の山札の上から２枚をシールド化する。
+
+    自分のターンの終わりに、このクリーチャーは自分のシールドを１つブレイクする。
+
+    オシオキムーン：カードが自分のシールドゾーンを離れた時、このクリーチャーは相手のシールドを１つブレイクしてもよい。'
+  source:
+    official: dm24ex4-003
+    review: pending
+    notes: '"ブロッカー・W・ブレイカーは known_keywords のため書き直さない。オシオキムーンは when {event: move, from:
+      shield, subject: {owner: you}}。"'
+    aliases:
+    - dm23bd5-011
+    - dmex19-m2
+    - dmrp15-km3
+  keywords:
+  - blocker
+  - double_breaker
+- id: dm26rp3-023
+  name: 冥運逆夢 ハミデスナスカ
+  types:
+  - creature
+  civs:
+  - light
+  - darkness
+  cost: 6
+  power: 7000
+  races:
+  - ディスペクター
+  - デーモン・コマンド
+  - メタリカ
+  - 月光王国
+  mana: 1
+  abilities:
+  - kind: trigger
+    when:
+      event: attack
+      subject: self
+    effect:
+    - op: may
+      body:
+      - op: move
+        select:
+          zone: deck
+          owner: you
+          from_top: 1
+        to: shield
+        reason: put
+  - kind: trigger
+    when:
+      event: move
+      from: shield
+      subject:
+        owner: you
+    effect:
+    - op: destroy
+      select:
+        zone: bz
+        owner: opp
+        chooser: opp
+        filter:
+          types:
+          - creature
+          tapped: false
+        count: 1
+  text: 'EXライフ（このクリーチャーを出す時、自分の山札の上から１枚をシールド化する。このクリーチャーが離れる時、かわりにそのシールドを墓地に置く）
+
+    ブロッカー
+
+    W・ブレイカー
+
+    このクリーチャーが攻撃する時、自分の山札の上から１枚をシールド化してもよい。
+
+    オシオキムーン：カードが自分のシールドゾーンを離れた時、相手は自身のアンタップしているクリーチャーを１体選び、破壊する。'
+  source:
+    official: dm26rp3-023
+    review: pending
+    notes: '"EXライフ・ブロッカー・W・ブレイカーは known_keywords のため書き直さない。「相手は自身の〜を選び」→ chooser:
+      opp。「アンタップしている」→ filter.tapped: false。"'
+  keywords:
+  - ex_life
+  - blocker
+  - double_breaker
+- id: dm26sd1-t002f
+  name: 冥界を統べる新月のハーデス
+  types:
+  - creature
+  civs:
+  - light
+  - darkness
+  cost: 9
+  power: 15500
+  races:
+  - エンジェル・コマンド
+  - デーモン・コマンド
+  - 月光王国
+  mana: 1
+  abilities:
+  - kind: static
+    affects:
+      owner: you
+      filter:
+        types:
+        - creature
+    mod:
+      grant:
+      - escape
+  - kind: trigger
+    when:
+      event: move
+      from: shield
+      subject:
+        owner: you
+    effect:
+    - op: destroy
+      select:
+        zone: bz
+        owner: opp
+        filter:
+          types:
+          - creature
+        count: 1
+  text: 'ブロッカー（このクリーチャーをタップして、相手クリーチャーの攻撃先をこのクリーチャーに変更してもよい）
+
+    T・ブレイカー（このクリーチャーはシールドを３つブレイクする）
+
+    自分のクリーチャーすべてに「エスケープ」を与える。（「エスケープ」を持つクリーチャーが破壊される時、かわりに自分のシールドを１つ手札に加えてもよい。その「S・トリガー」は使えない）
+
+    オシオキムーン：カードが自分のシールドゾーンを離れた時、相手のクリーチャーを１体選び、破壊する。'
+  source:
+    official: dm26sd1-t002f
+    review: pending
+    notes: ブロッカー・T・ブレイカーは known_keywords のため書き直さない。
+    aliases:
+    - dm23bd5-016
+    - dm25ex2-cho011
+    - dmex13-s06
+  keywords:
+  - blocker
+  - triple_breaker
+- id: dmex13-074
+  name: 月夜に巣食うマジョ
+  types:
+  - creature
+  civs:
+  - darkness
+  cost: 3
+  power: 2000
+  races:
+  - デビルマスク
+  - 月光王国
+  mana: 1
+  abilities:
+  - kind: trigger
+    when:
+      event: turn_end
+      player: you
+    effect:
+    - op: may
+      body:
+      - op: move
+        select:
+          zone: shield
+          owner: you
+          count: 1
+        to: hand
+        reason: return
+  - kind: trigger
+    when:
+      event: move
+      from: shield
+      subject:
+        owner: you
+    effect:
+    - op: destroy
+      select:
+        zone: bz
+        owner: opp
+        filter:
+          types:
+          - creature
+          cost_ge: 1
+          cost_le: 1
+        count: 1
+  text: 自分のターンの終わりに、自分のシールドを１つ手札に加えてもよい。ただし、その「S・トリガー」は使えない。 / オシオキムーン：カードが自分のシールドゾーンを離れた時、相手のコスト１のクリーチャーを１体破壊する。
+  source:
+    official: dmex13-074
+    review: pending
+    notes: '"「S・トリガーは使えない」は効果による移動（reason: return）ではエンジンが誘発しないため追加記述不要。「コスト１」→ filter.cost_ge:
+      1, cost_le: 1。"'
+- id: dmex14-016
+  name: 特攻む月からのセンコウ
+  types:
+  - creature
+  civs:
+  - darkness
+  cost: 3
+  power: 1000
+  races:
+  - デビルマスク
+  - 月光王国
+  mana: 1
+  abilities:
+  - kind: trigger
+    when:
+      event: move
+      to: bz
+      subject: self
+    effect:
+    - op: may
+      body:
+      - op: move
+        select:
+          zone: shield
+          owner: you
+          count: 1
+        to: graveyard
+        reason: put
+  - kind: trigger
+    when:
+      event: move
+      from: shield
+      subject:
+        owner: you
+    effect:
+    - op: if
+      cond:
+        cmp:
+        - count:
+            zone: hand
+            owner: opp
+        - '>='
+        - 2
+      then:
+      - op: discard
+        select:
+          zone: hand
+          owner: opp
+          chooser: opp
+          count: 1
+  text: このクリーチャーがバトルゾーンに出た時、自分のシールドを１つ、墓地に置いてもよい。 / オシオキムーン：カードが自分のシールドゾーンを離れた時、相手の手札が２枚以上あれば、相手は自身の手札を１枚選び、捨てる。
+  source:
+    official: dmex14-016
+    review: pending
+    notes: '"「相手は自身の手札を１枚選び」→ chooser: opp。「相手の手札が２枚以上あれば」→ if/cmp。"'
+- id: dmex14-s02
+  name: 月を象るデスサイズ
+  types:
+  - creature
+  civs:
+  - light
+  - darkness
+  cost: 6
+  power: 7000
+  races:
+  - エンジェル・コマンド
+  - デーモン・コマンド
+  - 月光王国
+  mana: 1
+  abilities:
+  - kind: static
+    affects:
+      zone: bz
+      owner: you
+      other: true
+      filter:
+        types:
+        - creature
+    mod:
+      power: 2000
+  - kind: trigger
+    when:
+      event: move
+      from: shield
+      subject:
+        owner: you
+    effect:
+    - op: modify
+      select:
+        zone: bz
+        owner: opp
+        filter:
+          types:
+          - creature
+      mod:
+        power: -2000
+      duration: end_of_turn
+  text: 'ブロッカー
+
+    W・ブレイカー
+
+    自分の他のクリーチャーすべてのパワーを+2000する。
+
+    オシオキムーン：カードが自分のシールドゾーンを離れた時、このターン、相手のクリーチャーすべてのパワーを－2000する（パワー０以下のクリーチャーは破壊される）'
+  source:
+    official: dmex14-s02
+    review: pending
+    notes: '"ブロッカー・W・ブレイカーは known_keywords のため書き直さない。「自分の他のクリーチャーすべて」→ affects {zone:
+      bz, owner: you, other: true, filter: {types: [creature]}}。「このターン」→ duration:
+      end_of_turn。"'
+  keywords:
+  - blocker
+  - double_breaker
+- id: dmex19-035
+  name: 月から来た科学のウラガワ
+  types:
+  - creature
+  civs:
+  - light
+  - darkness
+  cost: 6
+  power: 8500
+  races:
+  - デビルマスク
+  - 月光王国
+  mana: 1
+  abilities:
+  - kind: trigger
+    when:
+      event: move
+      to: bz
+      subject: self
+    effect:
+    - op: may
+      body:
+      - op: play_free
+        select:
+          zone: hand
+          owner: you
+          filter:
+            types:
+            - spell
+            cost_le: 4
+          count: 1
+  - kind: trigger
+    when:
+      event: move
+      from: shield
+      subject:
+        owner: you
+    effect:
+    - op: move
+      select:
+        zone: graveyard
+        owner: you
+        filter:
+          types:
+          - spell
+        count: 1
+      to: hand
+      reason: return
+  text: 'ブロッカー（このクリーチャーをタップして、相手クリーチャーの攻撃先をこのクリーチャーに変更してもよい）
+
+    スレイヤー（このクリーチャーがバトルする時、バトルの後、相手クリーチャーを破壊する）
+
+    W・ブレイカー（このクリーチャーはシールドを２つブレイクする）
+
+    このクリーチャーが出た時、コスト４以下の呪文を１枚、自分の手札からコストを支払わずに唱えてもよい。
+
+    オシオキムーン：カードが自分のシールドゾーンを離れた時、呪文を１枚、自分の墓地から手札に戻す。'
+  source:
+    official: dmex19-035
+    review: pending
+    notes: '"ブロッカー・スレイヤー・W・ブレイカーは known_keywords のため書き直さない。「コストを支払わずに唱える」→ op: play_free。"'
+    aliases:
+    - dmex13-023
+  keywords:
+  - blocker
+  - slayer
+  - double_breaker
+- id: dmrp15-003
+  name: 偽りの月を盗むファントム
+  types:
+  - creature
+  civs:
+  - darkness
+  cost: 5
+  power: 6000
+  races:
+  - デーモン・コマンド
+  - 月光王国
+  mana: 1
+  abilities:
+  - kind: trigger
+    when:
+      event: move
+      from: shield
+      subject:
+        owner: you
+    effect:
+    - op: discard
+      select:
+        zone: hand
+        owner: opp
+        chooser: opp
+        count: 2
+  text: 'ブロッカー
+
+    W・ブレイカー
+
+    オシオキムーン：カードが自分のシールドゾーンを離れた時、相手は自身の手札を２枚選び、捨てる。'
+  source:
+    official: dmrp15-003
+    review: pending
+    notes: '"ブロッカー・W・ブレイカーは known_keywords のため書き直さない。「相手は自身の手札を２枚選び」→ chooser: opp,
+      count: 2。"'
+  keywords:
+  - blocker
+  - double_breaker
+- id: dmrp15-012
+  name: 定めの月を待つセイジャ
+  types:
+  - creature
+  civs:
+  - light
+  cost: 3
+  power: 8500
+  races:
+  - セイント・ヘッド
+  - 月光王国
+  mana: 1
+  keywords:
+  - double_breaker
+  - enters_tapped
+  abilities:
+  - kind: static
+    affects: self
+    mod:
+      deny:
+      - untap_at_start
+  - kind: trigger
+    when:
+      event: move
+      from: shield
+      subject:
+        owner: you
+    effect:
+    - op: untap
+      select:
+        ref: self
+  text: 'W・ブレイカー（このクリーチャーはシールドを２つブレイクする）
+
+    このクリーチャーはタップしてバトルゾーンに置かれ、自分のターンのはじめにアンタップしない。
+
+    オシオキムーン：カードが自分のシールドゾーンを離れた時、このクリーチャーをアンタップする。'
+  source:
+    official: dmrp15-012
+    review: pending
+    notes: '"W・ブレイカーは known_keywords のため書き直さない。「タップしてバトルゾーンに置かれ」→ keywords: [enters_tapped]。「自分のターンのはじめにアンタップしない」→
+      static deny: [untap_at_start]。"'
+- id: dmrp15-017
+  name: 昏き月のシニガミ
+  types:
+  - creature
+  civs:
+  - darkness
+  cost: 3
+  power: 3000
+  races:
+  - デビルマスク
+  - 月光王国
+  mana: 1
+  abilities:
+  - kind: trigger
+    when:
+      event: move
+      from: shield
+      subject:
+        owner: you
+    effect:
+    - op: choose
+      select:
+        zone: bz
+        owner: opp
+        filter:
+          types:
+          - creature
+        count: 1
+      as: t
+    - op: modify
+      select:
+        ref: t
+      mod:
+        power: -3000
+      duration: end_of_turn
+  text: 'スレイヤー（このクリーチャーがバトルする時、バトルの後、相手クリーチャーを破壊する）
+
+    オシオキムーン：カードが自分のシールドゾーンを離れた時、相手のクリーチャーを１体選ぶ。このターン、そのクリーチャーのパワーを－3000する。（パワー０以下のクリーチャーは破壊される）'
+  source:
+    official: dmrp15-017
+    review: pending
+    notes: ''
+  keywords:
+  - slayer
+- id: dmrp15-048
+  name: 月の魔法ツカイ
+  types:
+  - creature
+  civs:
+  - light
+  - darkness
+  cost: 4
+  power: 5500
+  races:
+  - デビルマスク
+  - 月光王国
+  mana: 1
+  abilities:
+  - kind: trigger
+    when:
+      event: move
+      to: bz
+      subject: self
+    effect:
+    - op: move
+      select:
+        zone: shield
+        owner: you
+        count: 1
+      to: graveyard
+      reason: put
+  - kind: trigger
+    when:
+      event: move
+      from: shield
+      subject:
+        owner: you
+    effect:
+    - op: destroy
+      select:
+        zone: bz
+        owner: opp
+        chooser: opp
+        filter:
+          types:
+          - creature
+        count: 1
+  text: 'ブロッカー（このクリーチャーをタップして、相手クリーチャーの攻撃先をこのクリーチャーに変更してもよい）
+
+    このクリーチャーがバトルゾーンに出た時、自分のシールドを１つ墓地に置く。
+
+    オシオキムーン：カードが自分のシールドゾーンを離れた時、相手は自身のクリーチャーを１体選び、破壊する。'
+  source:
+    official: dmrp15-048
+    review: pending
+    notes: ''
+    aliases:
+    - promoy19-056
+    - promoy21-013
+  keywords:
+  - blocker
+- id: dmrp15-049
+  name: 月明かりに沈むニンギョ
+  types:
+  - creature
+  civs:
+  - light
+  - darkness
+  cost: 2
+  power: 2500
+  races:
+  - デビルマスク
+  - 月光王国
+  mana: 1
+  abilities:
+  - kind: trigger
+    when:
+      event: move
+      to: bz
+      subject: self
+    effect:
+    - op: move
+      select:
+        zone: deck
+        owner: you
+        from_top: 1
+      to: graveyard
+      reason: put
+  - kind: trigger
+    when:
+      event: move
+      from: shield
+      subject:
+        owner: you
+    effect:
+    - op: choose
+      select:
+        zone: graveyard
+        owner: you
+        filter:
+          types:
+          - creature
+        count: 1
+      as: c
+    - op: move
+      select:
+        ref: c
+      to: hand
+      reason: return
+  text: 'ブロッカー（このクリーチャーをタップして、相手クリーチャーの攻撃先をこのクリーチャーに変更してもよい）
+
+    このクリーチャーは、相手プレイヤーを攻撃できない。
+
+    このクリーチャーがバトルゾーンに出た時、自分の山札の上から１枚目を墓地に置く。
+
+    オシオキムーン：カードが自分のシールドゾーンを離れた時、クリーチャーを１体、自分の墓地から手札に戻す。'
+  source:
+    official: dmrp15-049
+    review: pending
+    notes: ''
+  keywords:
+  - blocker
+  - cannot_attack_player
+- id: dmrp15-062
+  name: 月下の感情なきキカイ
+  types:
+  - creature
+  civs:
+  - light
+  cost: 2
+  power: 2000
+  races:
+  - シャイン・モンスター
+  - 月光王国
+  mana: 1
+  abilities:
+  - kind: trigger
+    when:
+      event: move
+      from: shield
+      subject:
+        owner: you
+    effect:
+    - op: tap
+      select:
+        zone: bz
+        owner: opp
+        filter:
+          types:
+          - creature
+        count: 1
+  text: オシオキムーン：カードが自分のシールドゾーンを離れた時、相手のクリーチャーを１体選び、タップする。
+  source:
+    official: dmrp15-062
+    review: pending
+    notes: ''
+- id: dmrp15-071
+  name: 街に届かぬ月のアカリ
+  types:
+  - creature
+  civs:
+  - darkness
+  cost: 2
+  power: 1000
+  races:
+  - デビルマスク
+  - 月光王国
+  mana: 1
+  abilities:
+  - kind: trigger
+    when:
+      event: attack
+      subject: self
+    effect:
+    - op: delayed_trigger
+      when:
+        event: attack_end
+      effect:
+      - op: destroy
+        select:
+          ref: self
+  - kind: trigger
+    when:
+      event: move
+      from: shield
+      subject:
+        owner: you
+    effect:
+    - op: modify
+      select:
+        ref: self
+      mod:
+        grant:
+        - slayer
+      duration: end_of_turn
+  text: 'ブロッカー（このクリーチャーをタップして、相手クリーチャーの攻撃先をこのクリーチャーに変更してもよい）
+
+    このクリーチャーが攻撃する時、攻撃の後、このクリーチャーを破壊する。
+
+    オシオキムーン：カードが自分のシールドゾーンを離れた時、そのターン、このクリーチャーに「スレイヤー」を与える。（「スレイヤー」を持つクリーチャーがバトルする時、バトルの後、相手クリーチャーを破壊する）'
+  source:
+    official: dmrp15-071
+    review: pending
+    notes: ''
+  keywords:
+  - blocker
+- id: dmrp15-s01
+  name: 至宝を奪う月のロンリネス
+  types:
+  - creature
+  civs:
+  - light
+  cost: 5
+  power: 6500
+  races:
+  - エンジェル・コマンド
+  - 月光王国
+  mana: 1
+  abilities:
+  - kind: static
+    affects:
+      owner: opp
+      zone: hand
+      filter:
+        types:
+        - spell
+    mod:
+      cost: 1
+  - kind: trigger
+    when:
+      event: move
+      from: shield
+      subject:
+        owner: you
+    effect:
+    - op: may
+      body:
+      - op: move
+        select:
+          zone: hand
+          owner: you
+          filter:
+            types:
+            - creature
+            keyword: blocker
+            cost_le: 7
+          count: 1
+        to: bz
+        reason: put
+  text: 'W・ブレイカー
+
+    相手の呪文を唱えるコストは１多くなる。
+
+    オシオキムーン：カードが自分のシールドゾーンを離れた時、コスト７以下の「ブロッカー」を持つクリーチャーを１体、自分の手札からバトルゾーンに出してもよい。'
+  source:
+    official: dmrp15-s01
+    review: pending
+    notes: ''
+  keywords:
+  - double_breaker
+- id: dmrp15-s06
+  name: 闇の破王 デス・キング
+  types:
+  - creature
+  civs:
+  - light
+  - darkness
+  cost: 6
+  power: 6000
+  races:
+  - デーモン・コマンド
+  - 月光王国
+  - スペシャルズ
+  mana: 1
+  abilities:
+  - kind: trigger
+    zone: graveyard
+    when:
+      event: turn_start
+    if:
+      all:
+      - is_turn: you
+      - exists:
+          zone: mana
+          owner: you
+          filter:
+            civs:
+            - light
+      - exists:
+          zone: mana
+          owner: you
+          filter:
+            civs:
+            - darkness
+    effect:
+    - op: may
+      body:
+      - op: choose
+        select:
+          zone: bz
+          owner: you
+          filter:
+            types:
+            - creature
+          count: 1
+        as: s
+      - op: destroy
+        select:
+          ref: s
+          count: all
+      - op: move
+        select:
+          ref: self
+          count: 1
+        to: bz
+        reason: put
+      - op: move
+        select:
+          zone: shield
+          owner: you
+          count: 1
+        to: graveyard
+        reason: put
+  - kind: trigger
+    when:
+      event: move
+      from: shield
+      subject:
+        owner: you
+    effect:
+    - op: tap
+      select:
+        zone: bz
+        owner: opp
+        filter:
+          types:
+          - creature
+        count: 1
+      no_untap_next: true
+  text: 'ブロッカー
+
+    W・ブレイカー
+
+    自分のターンのはじめに、このクリーチャーが自分の墓地にあり、自分のマナゾーンに光のカードと闇のカードがそれぞれ１枚以上あれば、自分のクリーチャーを１体破壊してもよい。そうしたら、このクリーチャーをバトルゾーンに出し、自分のシールドを１つ墓地に置く。
+
+    オシオキムーン：カードが自分のシールドゾーンを離れた時、相手のクリーチャーを１体選び、タップする。次の相手のターンのはじめに、そのクリーチャーはアンタップしない。'
+  source:
+    official: dmrp15-s06
+    review: pending
+    notes: ''
+  keywords:
+  - blocker
+  - double_breaker
+- id: dmrp16-001
+  name: 三日月を謡うオラトリオ
+  types:
+  - creature
+  civs:
+  - light
+  cost: 7
+  power: 8000
+  races:
+  - エンジェル・コマンド
+  - 月光王国
+  mana: 1
+  abilities:
+  - kind: static
+    zone: hand
+    affects: self
+    mod:
+      cost:
+        amount: -1
+        count:
+          zone: bz
+          owner: you
+          filter:
+            types:
+            - creature
+  - kind: trigger
+    when:
+      event: move
+      to: bz
+      subject: self
+    effect:
+    - op: draw
+      count: 1
+  - kind: trigger
+    when:
+      event: move
+      from: shield
+      subject:
+        owner: you
+    effect:
+    - op: may
+      body:
+      - op: move
+        select:
+          zone: hand
+          owner: you
+          filter:
+            types:
+            - creature
+            civs:
+            - light
+            - darkness
+            cost_le: 3
+          count: 1
+        to: bz
+        reason: put
+  text: 'シンパシー：クリーチャー（このクリーチャーの召喚コストは、バトルゾーンにある自分のクリーチャー１体につき１少なくなる。ただしコストは０以下にはならない）
+
+    ブロッカー
+
+    W・ブレイカー
+
+    このクリーチャーがバトルゾーンに出た時、カードを１枚引く。
+
+    オシオキムーン：カードが自分のシールドゾーンを離れた時、光または闇のコスト３以下のクリーチャーを１体、自分の手札からバトルゾーンに出してもよい。'
+  source:
+    official: dmrp16-001
+    review: pending
+    notes: '"オシオキムーンは trigger（第28弾イディオム）。ブロッカー・W・ブレイカーは known_keywords のため書き直さない。「出す」は召喚ではないため
+      reason: put。"'
+  keywords:
+  - blocker
+  - double_breaker
+- id: dmrp16-030
+  name: 千年の月のファラオ
+  types:
+  - creature
+  civs:
+  - light
+  cost: 4
+  power: 4500
+  races:
+  - エンジェル・コマンド
+  - 月光王国
+  mana: 1
+  abilities:
+  - kind: trigger
+    when:
+      event: move
+      from: shield
+      subject:
+        owner: you
+    effect:
+    - op: modal
+      count: 1
+      modes:
+      - - op: tap
+          select:
+            zone: bz
+            filter:
+              types:
+              - creature
+            count: 1
+      - - op: untap
+          select:
+            zone: bz
+            filter:
+              types:
+              - creature
+            count: 1
+  text: オシオキムーン：カードが自分のシールドゾーンを離れた時、クリーチャーを１体選び、タップまたはアンタップする。
+  source:
+    official: dmrp16-030
+    review: pending
+    notes: オシオキムーンは trigger（第28弾イディオム）。「〜してもよい」が無いため強制。タップ/アンタップの選択は modal（dmbd03-004
+      と同型）。「クリーチャー」に持ち主の指定が無いため owner を付けない。
+- id: dmrp16-048
+  name: 月に宛てたテガミ
+  types:
+  - creature
+  civs:
+  - light
+  - darkness
+  cost: 4
+  power: 4000
+  races:
+  - デビルマスク
+  - 月光王国
+  mana: 1
+  abilities:
+  - kind: trigger
+    when:
+      event: move
+      from: shield
+      subject:
+        owner: you
+    effect:
+    - op: modify
+      select:
+        zone: bz
+        owner: opp
+        filter:
+          types:
+          - creature
+        count: 1
+      mod:
+        require:
+        - attack
+      duration: until_next_own_turn_start
+  text: 'ブロッカー（このクリーチャーをタップして、相手クリーチャーの攻撃先をこのクリーチャーに変更してもよい）
+
+    オシオキムーン：カードが自分のシールドゾーンを離れた時、相手のクリーチャーを１体選ぶ。次の自分のターンのはじめまで、そのクリーチャーは可能なら攻撃する。'
+  source:
+    official: dmrp16-048
+    review: pending
+    notes: オシオキムーンは trigger（第28弾イディオム）。「〜してもよい」が無いため強制。「可能なら攻撃する」は mod.require [attack]（dm10-094
+      と同型）。
+  keywords:
+  - blocker
+- id: dmrp16-049
+  name: 月を閉じ込めたヒバナ
+  types:
+  - creature
+  civs:
+  - light
+  - darkness
+  cost: 3
+  power: 2000
+  races:
+  - デビルマスク
+  - 月光王国
+  mana: 1
+  abilities:
+  - kind: trigger
+    when:
+      event: move
+      from: bz
+      to: graveyard
+      reason: destroy
+      subject: self
+    effect:
+    - op: move
+      select:
+        zone: graveyard
+        owner: you
+        other: true
+        count: 1
+      to: shield
+      reason: put
+      face_up: true
+  - kind: trigger
+    when:
+      event: move
+      from: shield
+      subject:
+        owner: you
+    effect:
+    - op: may
+      body:
+      - op: mill
+        owner: you
+        count: 3
+  text: このクリーチャーが破壊された時、他のカードを１枚、自分の墓地から表向きのまま、新しいシールドとしてシールドゾーンに置く。 / オシオキムーン：カードが自分のシールドゾーンを離れた時、自分の山札の上から３枚を墓地に置いてもよい。
+  source:
+    official: dmrp16-049
+    review: pending
+    notes: '"破壊時能力は trigger。「他のカード」は filter の other: true。「表向きのまま、新しいシールドとして」は face_up:
+      true（shield_go キーワードと同型の move）。"'
+- id: dmrp16-059
+  name: 月面を目指したユメ
+  types:
+  - creature
+  civs:
+  - light
+  cost: 3
+  power: 4000
+  races:
+  - ガーディアン
+  - 月光王国
+  mana: 1
+  abilities:
+  - kind: trigger
+    when:
+      event: move
+      from: shield
+      subject:
+        owner: you
+    effect:
+    - op: untap
+      select:
+        ref: self
+  text: 'ブロッカー（このクリーチャーをタップして、相手クリーチャーの攻撃先をこのクリーチャーに変更してもよい）
+
+    このクリーチャーは、相手プレイヤーを攻撃できない。
+
+    オシオキムーン：カードが自分のシールドゾーンを離れた時、このクリーチャーをアンタップする。'
+  source:
+    official: dmrp16-059
+    review: pending
+    notes: オシオキムーンは trigger（第28弾イディオム）。「〜してもよい」が無いため強制。ブロッカー・「このクリーチャーは、相手プレイヤーを攻撃できない」は
+      known_keywords のため書き直さない。
+  keywords:
+  - blocker
+  - cannot_attack_player
+- id: dmrp16-072
+  name: 死してなお蜜月のゲンショク
+  types:
+  - creature
+  civs:
+  - darkness
+  cost: 2
+  power: 2000
+  races:
+  - ヘドリアン
+  - 月光王国
+  mana: 1
+  abilities:
+  - kind: trigger
+    when:
+      event: move
+      from: shield
+      subject:
+        owner: you
+    effect:
+    - op: move
+      select:
+        zone: graveyard
+        owner: you
+        filter:
+          name: 死してなお蜜月のゲンショク
+        count: 1
+      to: bz
+      reason: put
+  text: 'ブロッカー（このクリーチャーをタップして、相手クリーチャーの攻撃先をこのクリーチャーに変更してもよい）
+
+    このクリーチャーは攻撃できない。
+
+    オシオキムーン：カードが自分のシールドゾーンを離れた時、《死してなお蜜月のゲンショク》を１体、自分の墓地からバトルゾーンに出す。'
+  source:
+    official: dmrp16-072
+    review: pending
+    notes: '"オシオキムーンは trigger（第28弾イディオム）。「〜してもよい」が無いため強制。「出す」は召喚ではないため reason: put。ブロッカー・「このクリーチャーは、攻撃できない」は
+      known_keywords のため書き直さない。"'
+  keywords:
+  - blocker
+  - cannot_attack
+- id: dmrp16-086
+  name: 終わり無き月々のトリヒキ
+  types:
+  - creature
+  civs:
+  - light
+  - darkness
+  cost: 5
+  power: 6000
+  races:
+  - デビルマスク
+  - 月光王国
+  mana: 1
+  abilities:
+  - kind: trigger
+    when:
+      event: move
+      from: shield
+      subject:
+        owner: you
+    effect:
+    - op: may
+      body:
+      - op: draw
+        count: 1
+  text: 'ブロッカー（このクリーチャーをタップして、相手クリーチャーの攻撃先をこのクリーチャーに変更してもよい）
+
+    W・ブレイカー（このクリーチャーはシールドを２つブレイクする）
+
+    オシオキムーン：カードが自分のシールドゾーンを離れた時、カードを１枚引いてもよい。'
+  source:
+    official: dmrp16-086
+    review: pending
+    notes: オシオキムーンは trigger（第28弾イディオム）。ブロッカー・W・ブレイカーは known_keywords のため書き直さない。
+  keywords:
+  - blocker
+  - double_breaker
+- id: dmrp16-s03
+  name: 月に彷徨うアビス
+  types:
+  - creature
+  civs:
+  - darkness
+  cost: 6
+  power: 8000
+  races:
+  - デーモン・コマンド
+  - 月光王国
+  mana: 1
+  abilities:
+  - kind: trigger
+    when:
+      event: move
+      from: shield
+      subject:
+        owner: you
+    effect:
+    - op: may
+      body:
+      - op: move
+        select:
+          ref: self
+        to: deck
+        reason: put
+        position: bottom
+        as: paid
+      - op: if
+        cond:
+          exists:
+            ref: paid
+        then:
+        - op: destroy
+          select:
+            zone: bz
+            owner: opp
+            filter:
+              types:
+              - creature
+              tapped: false
+            count: any
+  text: 'ブロッカー
+
+    W・ブレイカー
+
+    オシオキムーン：カードが自分のシールドゾーンを離れた時、このクリーチャーを山札の下に置いてもよい。そうしたら、相手のアンタップしているクリーチャーをすべて破壊する。'
+  source:
+    official: dmrp16-s03
+    review: pending
+    notes: '"オシオキムーンは trigger（第28弾イディオム）。「〜してもよい。そうしたら」はメテオバーン型（may の body に move＋as:
+      paid、続けて op: if で「そうした場合」）。ブロッカー・W・ブレイカーは known_keywords のため書き直さない。"'
+  keywords:
+  - blocker
+  - double_breaker
