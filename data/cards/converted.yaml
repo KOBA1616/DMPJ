@@ -282627,3 +282627,484 @@ cards:
       の両方で表す（dm19-025 の先例）。
   keywords:
   - triple_breaker
+- id: dm26ex3-031
+  name: 闇王ゼーロ
+  types:
+  - spell
+  civs:
+  - darkness
+  cost: 8
+  mana: 1
+  alt_cost:
+    do:
+    - zone: hand
+      filter:
+        civs:
+        - darkness
+      count: 3
+      to: graveyard
+      reason: discard
+    - zone: bz
+      filter:
+        types:
+        - creature
+        civs:
+        - darkness
+      count: 3
+      to: graveyard
+      reason: destroy
+  spell:
+  - op: move
+    select:
+      zone: deck
+      owner: you
+      from_top: 4
+    to: graveyard
+    reason: put
+  - op: move
+    select:
+      zone: graveyard
+      owner: you
+      filter:
+        types:
+        - creature
+        civs:
+        - darkness
+      count: 1
+    to: bz
+    reason: put
+  text: コストを支払うかわりに、自分の手札から闇のカードを３枚捨て、自分の闇のクリーチャーを３体破壊して、この呪文を唱えてもよい。 / 自分の山札の上から４枚を墓地に置く。その後、闇のクリーチャーを１体、自分の墓地から出す。
+  source:
+    official: dm26ex3-031
+    review: pending
+    notes: '"代替コスト（行動）は第29弾の型（闇王ゼーロが代表例）。「出す」は召喚ではないため reason: put。"'
+    aliases:
+    - dm25rp3-td3
+    - dmbd22-019
+    - dmex15-b016
+- id: dm26ex4-043
+  name: ペダンティック・ガード
+  types:
+  - spell
+  civs:
+  - light
+  cost: 5
+  mana: 1
+  alt_cost:
+    cost: 4
+    civs:
+    - light
+    - light
+  spell:
+  - op: if
+    cond:
+      alt_paid: true
+    then:
+    - op: opp_may
+      body:
+      - op: move
+        select:
+          zone: deck
+          owner: you
+          from_top: 1
+        to: shield
+        reason: put
+  - op: move
+    select:
+      zone: deck
+      owner: you
+      from_top: 2
+    to: shield
+    reason: put
+  text: この呪文を[ll04]支払って唱えてもよい。そうしたら、相手は自身の山札の上から１枚をシールド化してもよい。 / 自分の山札の上から２枚をシールド化する。
+  source:
+    official: dm26ex4-043
+    review: pending
+    notes: '"代替コスト[ll04]は alt_cost {cost: 4, civs: [light, light]}（第29弾の型）。「そうしたら」は
+      if: {alt_paid: true} + opp_may（第29弾で確立）。opp_may 内の you は相手を指す。"'
+- id: dm26ex4-045
+  name: ペダンティック・アート
+  types:
+  - spell
+  civs:
+  - water
+  cost: 3
+  mana: 1
+  alt_cost:
+    cost: 2
+    civs:
+    - water
+    - water
+  spell:
+  - op: if
+    cond:
+      alt_paid: true
+    then:
+    - op: opp_may
+      body:
+      - op: draw
+        count: 1
+  - op: draw
+    count: 2
+  text: この呪文を[ww02]支払って唱えてもよい。そうしたら、相手はカードを１枚引いてもよい。 / カードを２枚引く。
+  source:
+    official: dm26ex4-045
+    review: pending
+    notes: '"代替コスト[ww02]は alt_cost {cost: 2, civs: [water, water]}。「そうしたら」は if: {alt_paid:
+      true} + opp_may（第29弾の型）。"'
+- id: dm26ex4-048
+  name: ペダンティック・ニール
+  types:
+  - spell
+  civs:
+  - darkness
+  cost: 5
+  mana: 1
+  alt_cost:
+    cost: 4
+    civs:
+    - darkness
+    - darkness
+  spell:
+  - op: if
+    cond:
+      alt_paid: true
+    then:
+    - op: move
+      select:
+        zone: hand
+        owner: you
+        count: 1
+      to: graveyard
+      reason: discard
+  - op: discard
+    select:
+      zone: hand
+      owner: opp
+      count: 2
+  text: この呪文を[dd04]支払って唱えてもよい。そうしたら、自分の手札を１枚捨てる。 / 相手の手札を２枚見ないで選び、捨てさせる。
+  source:
+    official: dm26ex4-048
+    review: pending
+    notes: '"代替コスト[dd04]は alt_cost {cost: 4, civs: [darkness, darkness]}。「そうしたら、自分の手札を１枚捨てる」は「してもよい」が無いため強制（may
+      なし）。「見ないで選び、捨てさせる」は op: discard マクロ（ランダム捨て）。"'
+- id: dm26ex4-053
+  name: ペダンティック・ライフ
+  types:
+  - spell
+  civs:
+  - nature
+  cost: 4
+  mana: 1
+  alt_cost:
+    cost: 3
+    civs:
+    - nature
+    - nature
+  spell:
+  - op: if
+    cond:
+      alt_paid: true
+    then:
+    - op: opp_may
+      body:
+      - op: move
+        select:
+          zone: deck
+          owner: you
+          from_top: 1
+        to: mana
+        reason: put
+        tapped: true
+  - op: move
+    select:
+      zone: deck
+      owner: you
+      from_top: 2
+    to: mana
+    reason: put
+    tapped: true
+  - op: may
+    body:
+    - op: move
+      select:
+        zone: mana
+        owner: you
+        count: 1
+      to: hand
+      reason: return
+  text: この呪文を[nn03]支払って唱えてもよい。そうしたら、相手は自身の山札の上から１枚をタップしてマナゾーンに置いてもよい。 / 自分の山札の上から２枚をタップしてマナゾーンに置く。その後、カードを１枚、自分のマナゾーンから手札に戻してもよい。
+  source:
+    official: dm26ex4-053
+    review: pending
+    notes: '"代替コスト[nn03]は alt_cost {cost: 3, civs: [nature, nature]}。「そうしたら」は if:
+      {alt_paid: true} + opp_may。タップしてマナに置くは move の tapped: true。"'
+- id: dmartkiwami01-005
+  name: 偽りの剣豪バロムバロスト(DMART極01 5/5)
+  types:
+  - creature
+  civs:
+  - darkness
+  cost: 6
+  power: 7000
+  races:
+  - デーモン・コマンド
+  mana: 1
+  keywords:
+  - blocker
+  - double_breaker
+  alt_cost:
+    cost: 2
+    civs:
+    - darkness
+    - darkness
+  abilities:
+  - kind: trigger
+    when:
+      event: move
+      to: bz
+      subject: self
+    if:
+      alt_paid: true
+    effect:
+    - op: move
+      select:
+        ref: self
+      to: hyper
+      reason: put
+  - kind: trigger
+    when:
+      event: move
+      to: bz
+      subject: self
+    effect:
+    - op: modify
+      select:
+        zone: bz
+        owner: opp
+        filter:
+          types:
+          - creature
+        count: 1
+      mod:
+        power: -4000
+      duration: end_of_turn
+  - kind: trigger
+    when:
+      event: attack
+      subject: self
+    effect:
+    - op: modify
+      select:
+        zone: bz
+        owner: opp
+        filter:
+          types:
+          - creature
+        count: 1
+      mod:
+        power: -4000
+      duration: end_of_turn
+  text: 'このクリーチャーを[dd02]支払って召喚してもよい。そうしたら、このクリーチャーをバトルゾーンから超次元ゾーンに置く。
+
+    ブロッカー
+
+    W・ブレイカー
+
+    このクリーチャーが出た時または攻撃する時、相手のクリーチャーを１体選ぶ。このターン、そのクリーチャーのパワーを－4000する。'
+  source:
+    official: dmartkiwami01-005
+    review: pending
+    notes: '"代替コスト[dd02]は alt_cost {cost: 2, civs: [darkness, darkness]}。「そうしたら」は
+      if: {alt_paid: true} の誘発型（超次元ゾーンは hyper）。「出た時または攻撃する時」は2つの誘発型に分けて記述。blocker・double_breaker
+      は known_keywords のため書き直さない。"'
+- id: dmex09-004
+  name: ニクジール・ブッシャー
+  types:
+  - creature
+  civs:
+  - fire
+  cost: 6
+  power: 6000
+  races:
+  - ジョーカーズ
+  mana: 1
+  alt_cost:
+    do:
+    - zone: bz
+      owner: you
+      filter:
+        types:
+        - creature
+      count: 1
+      to: deck
+      reason: put
+      position: bottom
+    - zone: shield
+      owner: you
+      count: 1
+      to: deck
+      reason: put
+      position: bottom
+    - zone: hand
+      owner: you
+      count: 1
+      to: deck
+      reason: put
+      position: bottom
+  text: 'コストを支払うかわりに、自分のクリーチャー１体とシールド１つ、そして手札１枚を山札の一番下に置いて、このクリーチャーを召喚してもよい。
+
+    W・ブレイカー'
+  source:
+    official: dmex09-004
+    review: pending
+    notes: '"代替コスト（行動）は alt_cost {do: [...]}（第13弾の型）。「山札の一番下」は position: bottom（シャッフルの文言は無いため
+      shuffle なし）。W・ブレイカーは known_keywords のため書き直さない。"'
+    aliases:
+    - dmrp04s-008
+  keywords:
+  - double_breaker
+- id: dmrp11-s05
+  name: カエルB ジャック
+  types:
+  - creature
+  civs:
+  - water
+  cost: 3
+  power: 7000
+  races:
+  - トリックス
+  mana: 1
+  abilities:
+  - kind: static
+    affects:
+      zone: hand
+      owner: you
+      filter:
+        types:
+        - spell
+    mod:
+      opt_reduce:
+        amount: 1
+        per: true
+        do:
+          select:
+            zone: bz
+            owner: you
+            filter:
+              types:
+              - creature
+          tap: true
+  - kind: trigger
+    first_time: true
+    when:
+      event: cast
+      player: you
+    effect:
+    - op: draw
+      count: 1
+  text: 'このクリーチャーは攻撃できない。
+
+    自分が呪文を唱える時、自分のクリーチャーを好きな数タップしてもよい。こうしてタップしたクリーチャー１体につき、その呪文を唱えるコストを１少なくする。ただし、コストは０以下にならない。
+
+    各ターン、自分がはじめて呪文を唱えた時、カードを１枚引く。'
+  source:
+    official: dmrp11-s05
+    review: pending
+    notes: 「タップした１体につき１少なく」は opt_reduce の per + do(tap)。known_keywords の cannot_attack
+      は処理済みのため書き直さない。
+  keywords:
+  - cannot_attack
+- id: dmrp15-052
+  name: 戯具 ザンブロク
+  types:
+  - creature
+  civs:
+  - water
+  - darkness
+  cost: 3
+  power: 2000
+  races:
+  - マフィ・ギャング
+  - チーム零
+  mana: 1
+  alt_cost:
+    if:
+      cmp:
+      - count:
+          zone: mana
+          owner: you
+      - '>='
+      - 4
+    do:
+    - zone: hand
+      owner: you
+      filter:
+        types:
+        - creature
+        civs:
+        - water
+        - darkness
+      count: 1
+      to: graveyard
+      reason: discard
+  text: '自分のマナゾーンにカードが４枚以上あれば、コストを支払うかわりに、自分の手札から水または闇のクリーチャーを１体捨て、このクリーチャーを召喚してもよい。
+
+    ブロッカー（このクリーチャーをタップして、相手クリーチャーの攻撃先をこのクリーチャーに変更してもよい）
+
+    このクリーチャーは攻撃できない。'
+  source:
+    official: dmrp15-052
+    review: pending
+    notes: '"条件付き代替コスト（第56弾の if）＋手札捨て（do）。「水または闇」は filter の civs: [water, darkness]（OR）。known_keywords
+      の blocker・cannot_attack は処理済みのため書き直さない。"'
+  keywords:
+  - blocker
+  - cannot_attack
+- id: promoy22-spd1002
+  name: シェルフ＝ガーチェルフ
+  types:
+  - creature
+  civs:
+  - darkness
+  cost: 8
+  power: 6000
+  races:
+  - アビスロイヤル
+  mana: 1
+  alt_cost:
+    cost: 2
+    civs:
+    - darkness
+    - darkness
+    if:
+      cmp:
+      - count:
+          zone: graveyard
+          owner: you
+      - '>='
+      - 5
+  abilities:
+  - kind: trigger
+    when:
+      event: move
+      to: bz
+      subject: self
+    effect:
+    - op: destroy
+      select:
+        zone: bz
+        owner: opp
+        count: 1
+  text: '自分の墓地にカードが５枚以上あれば、このクリーチャーを[dd02]支払って召喚してもよい。
+
+    W・ブレイカー（このクリーチャーはシールドを２つブレイクする）
+
+    このクリーチャーが出た時、相手のエレメントを１つ選び、破壊する。'
+  source:
+    official: promoy22-spd1002
+    review: pending
+    notes: '"条件付き代替コスト（第56弾の if）。[dd02]は darkness 2。「相手のエレメント」はバトルゾーンの相手のカードと解釈（zone:
+      bz, owner: opp）。known_keywords の double_breaker は処理済みのため書き直さない。"'
+  keywords:
+  - double_breaker
