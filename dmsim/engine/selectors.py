@@ -13,6 +13,11 @@ class SelectorMixin:
                 return len({cv for c in self.candidates(x["civ_count"], env) for cv in self.chars(c)["civs"]})
             if "link_count" in x:   # このカードがリンクしているカードの枚数（リンクしていなければ1）
                 return len(self.link_members(env["self"][0])) if env.get("self") else 0
+            if "seals" in x:   # そのプレイヤーの封印の総数（自分のカードに付いている封印を全部数える）
+                p = self._rel(x["seals"].get("owner", "you"), env)
+                return sum(len(self.s.cards[c].seals) for c in self.bz_tops(p))
+            if "seals_on" in x:   # self に付いている封印の数
+                return len(self.s.cards[env["self"][0]].seals) if env.get("self") else 0
             if "entered" in x:   # このターン、そのプレイヤーがバトルゾーンに出したクリーチャーの数
                 spec = x["entered"]
                 lst = self.s.turn_counters.get(f"entered:{self._rel(spec.get('owner', 'you'), env)}", [])
@@ -75,6 +80,12 @@ class SelectorMixin:
         else:
             ch = lki["chars"] if lki else self.chars(cid)
         c = self.s.cards[cid]
+        is_sealed = c.zone == "bz" and bool(c.seals)
+        if "sealed" in f:
+            if is_sealed != bool(f["sealed"]):
+                return False
+        elif is_sealed and lki is None and not base and not getattr(self, "_seal_ok", 0):
+            return False   # 封印されているクリーチャーは無視される（封印を対象にする効果だけが sealed で指す）
         if "any_of" in f and not any(self.filter_match(cid, sub, lki, base) for sub in f["any_of"]):
             return False
         if "types" in f and not set(f["types"]) & set(ch["types"]):
@@ -109,6 +120,8 @@ class SelectorMixin:
             return False
         if "neo" in f and bool(self.fdef(cid).neo) != f["neo"]:
             return False
+        if "evolution" in f and ("evolution" in self.fdef(cid).types) != bool(f["evolution"]):
+            return False   # 「進化ではないクリーチャー」等（進化はタイプで表す）
         if "vanilla" in f:   # 「カードに能力が書かれていない」: 能力もキーワードも無く、進化・NEO 等の書かれた仕組みも持たない
             d = self.fdef(cid)
             is_v = not d.abilities and not d.keywords and "evolution" not in d.types \

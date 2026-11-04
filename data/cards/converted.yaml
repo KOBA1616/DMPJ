@@ -213823,3 +213823,4747 @@ cards:
     review: pending
     notes: '捨てられる時の置換は第40弾の when.by: opp（proto T116 と同型）。出た時の「能力が書かれていないクリーチャー」は第41弾の
       filter vanilla: true で表した。残りを好きな順序で山札の下に置く処理は position: bottom, order: choose。再変換ラウンド16。'
+- id: dm24bd1-002
+  name: ボルシャック・ドギラゴン
+  types:
+  - creature
+  - evolution
+  civs:
+  - fire
+  cost: 7
+  power: 12000
+  races:
+  - メガ・コマンド・ドラゴン
+  - 革命軍
+  mana: 1
+  keywords:
+  - triple_breaker
+  evolve_from:
+    types:
+    - creature
+    civs:
+    - fire
+  text: '革命０トリガー：クリーチャーが自分を攻撃する時、自分のシールドが１つもなければ、このクリーチャーを手札から見せてもよい。そうしたら、自分の山札の上から１枚目を表向きにする。そのカードが火の進化ではないクリーチャーなら出し、このクリーチャーをその上に置く。
+
+    進化：火のクリーチャー１体の上に置く。
+
+    T・ブレイカー
+
+    このクリーチャーが出た時または攻撃する時、相手のクリーチャーを１体選んでもよい。その選んだクリーチャーとこのクリーチャーをバトルさせる。'
+  abilities:
+  - kind: declare
+    zone: hand
+    when:
+      event: attack
+      target: player
+    if:
+      all:
+      - is_turn: opp
+      - cmp:
+        - count:
+            zone: shield
+            owner: you
+        - ==
+        - 0
+    effect:
+    - op: choose
+      select:
+        zone: deck
+        owner: you
+        from_top: 1
+        look: true
+        count: all
+      as: top
+    - op: if
+      cond:
+        exists:
+          ref: top
+          filter:
+            types:
+            - creature
+            not_types:
+            - evolution
+            civs:
+            - fire
+      then:
+      - op: move
+        select:
+          ref: top
+          count: 1
+        to: bz
+        reason: put
+        as: base
+      - op: invade
+        onto:
+          ref: base
+  - kind: trigger
+    when:
+      event: move
+      to: bz
+      subject: self
+    effect:
+    - op: may
+      body:
+      - op: force_battle
+        a:
+          ref: self
+        b:
+          zone: bz
+          owner: opp
+          filter:
+            types:
+            - creature
+          count: 1
+  - kind: trigger
+    when:
+      event: attack
+      subject: self
+    effect:
+    - op: may
+      body:
+      - op: force_battle
+        a:
+          ref: self
+        b:
+          zone: bz
+          owner: opp
+          filter:
+            types:
+            - creature
+          count: 1
+  source:
+    official: dm24bd1-002
+    review: pending
+    notes: 革命０トリガーは第42弾の declare 形式（proto T120 と同型）。出た時・攻撃する時のバトルは force_battle（dmrp14-021
+      と同型）を2つの trigger に分けて書いた。再変換ラウンド17。
+    aliases:
+    - dm23ex2-chog002
+    - dmart02-003
+    - dmbd15-002
+    - dmbd15-be2
+    - dmbd16-004
+    - dmex06-005
+    - dmex15-a009
+    - dmr19-l02
+    - dmx26-l03
+    - promoy16-055
+    - promoy16-058
+    - promoy23-011
+- id: dm25ex1-mc001
+  name: ミラクル・ミラダンテ
+  types:
+  - creature
+  - evolution
+  civs:
+  - light
+  cost: 7
+  power: 14500
+  races:
+  - エンジェル・コマンド・ドラゴン
+  - 革命軍
+  mana: 1
+  keywords:
+  - triple_breaker
+  evolve_from:
+    civs:
+    - light
+  text: '革命０トリガー：クリーチャーが自分を攻撃する時、自分のシールドが１つもなければ、自分の手札にあるこのクリーチャーを表向きにしてもよい。そうしたら、自分の山札の上から１枚を表向きにする。それが光の進化ではないクリーチャーなら出し、このクリーチャーをその上に置く。
+
+    進化：光のクリーチャー１体の上に置く。
+
+    T・ブレイカー
+
+    このクリーチャーが出た時、次の自分のターンのはじめまで、このクリーチャーに「ブロッカー」を与え、相手のコマンドは攻撃できない。'
+  abilities:
+  - kind: declare
+    zone: hand
+    when:
+      event: attack
+      target: player
+    if:
+      all:
+      - is_turn: opp
+      - cmp:
+        - count:
+            zone: shield
+            owner: you
+        - ==
+        - 0
+    effect:
+    - op: choose
+      select:
+        zone: deck
+        owner: you
+        from_top: 1
+        look: true
+        count: all
+      as: top
+    - op: if
+      cond:
+        exists:
+          ref: top
+          filter:
+            types:
+            - creature
+            not_types:
+            - evolution
+            civs:
+            - light
+      then:
+      - op: move
+        select:
+          ref: top
+          count: 1
+        to: bz
+        reason: put
+        as: base
+      - op: invade
+        onto:
+          ref: base
+  - kind: trigger
+    when:
+      event: move
+      to: bz
+      subject: self
+    effect:
+    - op: modify
+      select:
+        ref: self
+        count: all
+      mod:
+        grant:
+        - blocker
+      duration: until_next_own_turn_start
+    - op: modify
+      select:
+        zone: bz
+        owner: opp
+        filter:
+          types:
+          - creature
+          race_has: コマンド
+        count: all
+      mod:
+        deny:
+        - attack_player
+        - attack_creature
+      duration: until_next_own_turn_start
+      dynamic: true
+  source:
+    official: dm25ex1-mc001
+    review: pending
+    notes: '革命０トリガーは第42弾の declare 形式（proto T120 と同型）。partial は evolve_from のみで types
+      に evolution が無かったため、原文（進化クリーチャー）どおり補った。ブロッカー付与は modify の grant、「相手のコマンドは攻撃できない」は
+      modify の deny を dynamic: true でクラス全体に及ぶ形にした。再変換ラウンド17。'
+    aliases:
+    - dmex15-a006
+    - dmr20-l01
+    - dmrp08-g01
+    - dmx26-l01
+- id: dm25ex3-rp4tr4
+  name: 革命の絆
+  types:
+  - creature
+  civs:
+  - light
+  - fire
+  cost: 7
+  power: 8000
+  races:
+  - メガ・コマンド・ドラゴン
+  - エンジェル・コマンド・ドラゴン
+  - ヒューマノイド
+  - 革命軍
+  mana: 1
+  keywords:
+  - blocker
+  - double_breaker
+  neo: true
+  evolve_from:
+    civs:
+    - light
+    - fire
+  text: '革命０トリガー：クリーチャーが自分を攻撃する時、自分のシールドが１つもなければ、このクリーチャーを手札から見せてもよい。そうしたら、自分の山札の上から１枚を表向きにする。そのカードが光または火の、進化ではないクリーチャーなら出し、このクリーチャーをその上に置く。
+
+    NEO進化：光または火のクリーチャー１体の上に置いてもよい。
+
+    ブロッカー　W・ブレイカー
+
+    このクリーチャーが攻撃する時、バトルゾーンにあるクリーチャーではないカードを１枚選び、破壊してもよい。'
+  abilities:
+  - kind: declare
+    zone: hand
+    when:
+      event: attack
+      target: player
+    if:
+      all:
+      - is_turn: opp
+      - cmp:
+        - count:
+            zone: shield
+            owner: you
+        - ==
+        - 0
+    effect:
+    - op: choose
+      select:
+        zone: deck
+        owner: you
+        from_top: 1
+        look: true
+        count: all
+      as: top
+    - op: if
+      cond:
+        exists:
+          ref: top
+          filter:
+            types:
+            - creature
+            not_types:
+            - evolution
+            civs:
+            - light
+            - fire
+      then:
+      - op: move
+        select:
+          ref: top
+          count: 1
+        to: bz
+        reason: put
+        as: base
+      - op: invade
+        onto:
+          ref: base
+  - kind: trigger
+    when:
+      event: attack
+      subject: self
+    effect:
+    - op: may
+      body:
+      - op: destroy
+        select:
+          zone: bz
+          owner: any
+          filter:
+            not_types:
+            - creature
+          count: 1
+  source:
+    official: dm25ex3-rp4tr4
+    review: pending
+    notes: '革命０トリガーは第42弾の declare 形式（proto T120 と同型、文明は光/火）。NEO進化は neo: true と evolve_from
+      で表した（dm25ex3-011 と同型）。攻撃時の非クリーチャー破壊は op: destroy（dm23ex2-cho035 と同型）。再変換ラウンド17。'
+    aliases:
+    - dm23rp3-tr04
+    - dm23rp4-tr03
+    - dm23rp4x-tr03
+    - dm24bd1-008
+    - dm25rp4-tr4
+    - dmart17-002
+    - dmex15-b007
+    - promoy24-018
+- id: dm25ex3-tf12
+  name: 獅子王の紋章
+  types:
+  - spell
+  civs:
+  - light
+  - nature
+  cost: 6
+  mana: 1
+  text: 革命０トリガー：クリーチャーが自分を攻撃する時、自分のシールドが１つもなければ、この呪文をコストを支払わずに唱えてもよい。 / 自分の山札の上から１枚を表向きにする。それが光または自然の、進化ではないクリーチャーなら出す。次の自分のターンのはじめまで、そのクリーチャーに「ブロッカー」を与える。次の自分のターンのはじめに、そのクリーチャーをマナゾーンに置く。
+    / この呪文を唱えた後、墓地に置くかわりに山札に加えてシャッフルする。
+  abilities:
+  - kind: declare
+    zone: hand
+    when:
+      event: attack
+      target: player
+    if:
+      all:
+      - is_turn: opp
+      - cmp:
+        - count:
+            zone: shield
+            owner: you
+        - ==
+        - 0
+    effect:
+    - op: play_free
+      select:
+        ref: self
+  - kind: replace
+    zone: hold
+    when:
+      event: move
+      to: graveyard
+      reason: resolve
+      subject: self
+    instead:
+    - op: move
+      select:
+        ref: self
+      to: deck
+      reason: return
+    - op: shuffle
+      player: you
+  spell:
+  - op: choose
+    select:
+      zone: deck
+      owner: you
+      from_top: 1
+      look: true
+      count: all
+    as: top
+  - op: if
+    cond:
+      exists:
+        ref: top
+        filter:
+          types:
+          - creature
+          not_types:
+          - evolution
+          civs:
+          - light
+          - nature
+    then:
+    - op: move
+      select:
+        ref: top
+        count: 1
+      to: bz
+      reason: put
+      as: base
+    - op: modify
+      select:
+        ref: base
+        count: all
+      mod:
+        grant:
+        - blocker
+      duration: until_next_own_turn_start
+    - op: delayed_trigger
+      when:
+        event: turn_start
+        player: you
+      duration: permanent
+      effect:
+      - op: move
+        select:
+          ref: base
+          count: all
+        to: mana
+        reason: put
+  source:
+    official: dm25ex3-tf12
+    review: pending
+    notes: '革命０トリガー（呪文版）は declare + play_free（ニンジャ・ストライクと同型）で表した。山札の上を出す処理は choose/if/move、ブロッカー付与は
+      modify、次の自分のターンのはじめのマナ送りは delayed_trigger（when の player: you、duration: permanent
+      で次の自分のターン開始まで保持）。「唱えた後、墓地に置くかわりに山札に加えてシャッフルする」は kind: replace（zone: hold、reason:
+      resolve の墓地送りを置換して山札に戻しシャッフル）で表した（dmc64-011 先例、バッチIで実挙動確認済みの形式に統一）。再変換ラウンド17。'
+    aliases:
+    - dm25rp2-t03
+    - dmex08-159
+    - dmex15-b079
+    - dmr21-023
+    - promoy15-018
+- id: dm26rp2-002
+  name: 神極の絆
+  types:
+  - creature
+  - evolution
+  civs:
+  - light
+  cost: 4
+  power: 8500
+  races:
+  - オラクル・コマンド
+  mana: 1
+  keywords:
+  - blocker
+  - double_breaker
+  evolve_from:
+    types:
+    - creature
+    civs:
+    - light
+  text: '革命０トリガー：クリーチャーが自分を攻撃する時、自分のシールドが１つもなければ、このクリーチャーを手札から表向きにしてもよい。そうしたら、自分の山札の上から１枚を表向きにする。それが光の、進化ではないクリーチャーなら出し、このクリーチャーをその上に置く。
+
+    進化：光のクリーチャー１体の上に置く。
+
+    ブロッカー
+
+    W・ブレイカー
+
+    このクリーチャーが出た時または攻撃する時、自分の山札の上から１枚をシールド化する。'
+  abilities:
+  - kind: declare
+    zone: hand
+    when:
+      event: attack
+      target: player
+    if:
+      all:
+      - is_turn: opp
+      - cmp:
+        - count:
+            zone: shield
+            owner: you
+        - ==
+        - 0
+    effect:
+    - op: choose
+      select:
+        zone: deck
+        owner: you
+        from_top: 1
+        look: true
+        count: all
+      as: top
+    - op: if
+      cond:
+        exists:
+          ref: top
+          filter:
+            types:
+            - creature
+            not_types:
+            - evolution
+            civs:
+            - light
+      then:
+      - op: move
+        select:
+          ref: top
+          count: 1
+        to: bz
+        reason: put
+        as: base
+      - op: invade
+        onto:
+          ref: base
+  - kind: trigger
+    when:
+      event: move
+      to: bz
+      subject: self
+    effect:
+    - op: move
+      select:
+        zone: deck
+        owner: you
+        from_top: 1
+      to: shield
+      reason: charge
+  - kind: trigger
+    when:
+      event: attack
+      subject: self
+    effect:
+    - op: move
+      select:
+        zone: deck
+        owner: you
+        from_top: 1
+      to: shield
+      reason: charge
+  source:
+    official: dm26rp2-002
+    review: pending
+    notes: '革命０トリガーは第42弾の declare 形式（proto T120 と同型）。partial に進化の情報が無かったため、原文どおり types
+      に evolution と evolve_from を補った。出た時・攻撃する時のシールド化は move to: shield（dm22ex2-068
+      と同型）を2つの trigger に分けた。再変換ラウンド17。'
+- id: dm26rp2-005
+  name: 零黒の絆
+  types:
+  - creature
+  - evolution
+  civs:
+  - darkness
+  cost: 4
+  power: 8000
+  races:
+  - アウトレイジ・コマンドMAX
+  - デーモン・コマンド・ドラゴン
+  mana: 1
+  evolve_from:
+    civs:
+    - darkness
+  keywords:
+  - blocker
+  - double_breaker
+  text: '革命０トリガー：クリーチャーが自分を攻撃する時、自分のシールドが１つもなければ、このクリーチャーを手札から表向きにしてもよい。そうしたら、自分の山札の上から１枚を表向きにする。それが闇の、進化ではないクリーチャーなら出し、このクリーチャーをその上に置く。
+
+    進化：闇のクリーチャー１体の上に置く。
+
+    ブロッカー
+
+    W・ブレイカー
+
+    このクリーチャーが出た時、このターン、相手のクリーチャーすべてのパワーを－4000する。'
+  abilities:
+  - kind: declare
+    zone: hand
+    when:
+      event: attack
+      target: player
+    if:
+      all:
+      - is_turn: opp
+      - cmp:
+        - count:
+            zone: shield
+            owner: you
+        - ==
+        - 0
+    effect:
+    - op: choose
+      select:
+        zone: deck
+        owner: you
+        from_top: 1
+        look: true
+        count: all
+      as: top
+    - op: if
+      cond:
+        exists:
+          ref: top
+          filter:
+            types:
+            - creature
+            not_types:
+            - evolution
+            civs:
+            - darkness
+      then:
+      - op: move
+        select:
+          ref: top
+          count: 1
+        to: bz
+        reason: put
+        as: base
+      - op: invade
+        onto:
+          ref: base
+  - kind: trigger
+    when:
+      event: move
+      to: bz
+      subject: self
+    effect:
+    - op: modify
+      select:
+        zone: bz
+        owner: opp
+        filter:
+          types:
+          - creature
+        count: all
+      mod:
+        power: -4000
+      duration: end_of_turn
+  source:
+    official: dm26rp2-005
+    review: pending
+    notes: '革命０トリガーは kind: declare（proto T120 の型）で表現。出た時の全体パワー低下は modify（dm23bd7-038
+      の先例どおり）で完全変換。'
+- id: dm26rp2-007
+  name: 勇愛の絆
+  types:
+  - creature
+  - evolution
+  civs:
+  - fire
+  cost: 4
+  power: 9000
+  races:
+  - ガイアール・コマンド・ドラゴン
+  - ヒューマノイド爆
+  - ドラグナー
+  mana: 1
+  evolve_from:
+    civs:
+    - fire
+  keywords:
+  - double_breaker
+  text: '革命０トリガー：クリーチャーが自分を攻撃する時、自分のシールドが１つもなければ、このクリーチャーを手札から表向きにしてもよい。そうしたら、自分の山札の上から１枚を表向きにする。それが火の、進化ではないクリーチャーなら出し、このクリーチャーをその上に置く。
+
+    進化：火のクリーチャー１体の上に置く。
+
+    W・ブレイカー
+
+    このクリーチャーが出た時または攻撃する時、相手のコスト６以下のエレメントを１つ選び、破壊する。'
+  abilities:
+  - kind: declare
+    zone: hand
+    when:
+      event: attack
+      target: player
+    if:
+      all:
+      - is_turn: opp
+      - cmp:
+        - count:
+            zone: shield
+            owner: you
+        - ==
+        - 0
+    effect:
+    - op: choose
+      select:
+        zone: deck
+        owner: you
+        from_top: 1
+        look: true
+        count: all
+      as: top
+    - op: if
+      cond:
+        exists:
+          ref: top
+          filter:
+            types:
+            - creature
+            not_types:
+            - evolution
+            civs:
+            - fire
+      then:
+      - op: move
+        select:
+          ref: top
+          count: 1
+        to: bz
+        reason: put
+        as: base
+      - op: invade
+        onto:
+          ref: base
+  - kind: trigger
+    when:
+      event: move
+      to: bz
+      subject: self
+    effect:
+    - op: destroy
+      select:
+        zone: bz
+        owner: opp
+        filter:
+          cost_le: 6
+        count: 1
+  - kind: trigger
+    when:
+      event: attack
+      subject: self
+    effect:
+    - op: destroy
+      select:
+        zone: bz
+        owner: opp
+        filter:
+          cost_le: 6
+        count: 1
+  source:
+    official: dm26rp2-007
+    review: pending
+    notes: '革命０トリガーは kind: declare（proto T120 の型）で表現。「エレメント」は types を絞らない destroy（変換済み先例どおり）。出た時／攻撃時は2つの
+      trigger で完全変換。'
+- id: dm26rp2-s006
+  name: 永遠の絆
+  types:
+  - creature
+  - evolution
+  civs:
+  - nature
+  cost: 3
+  power: 9000
+  races:
+  - レッド・コマンド・ドラゴン
+  - ハンター
+  - エイリアン
+  mana: 1
+  evolve_from:
+    civs:
+    - nature
+  keywords:
+  - double_breaker
+  text: '革命０トリガー：クリーチャーが自分を攻撃する時、自分のシールドが１つもなければ、このクリーチャーを手札から表向きにしてもよい。そうしたら、自分の山札の上から１枚を表向きにする。それが自然の、進化ではないクリーチャーなら出し、このクリーチャーをその上に置く。
+
+    進化：自然のクリーチャー１体の上に置く。
+
+    W・ブレイカー
+
+    このクリーチャーが出た時または攻撃する時、相手のクリーチャーを１体選び、持ち主のマナゾーンに置く。'
+  abilities:
+  - kind: declare
+    zone: hand
+    when:
+      event: attack
+      target: player
+    if:
+      all:
+      - is_turn: opp
+      - cmp:
+        - count:
+            zone: shield
+            owner: you
+        - ==
+        - 0
+    effect:
+    - op: choose
+      select:
+        zone: deck
+        owner: you
+        from_top: 1
+        look: true
+        count: all
+      as: top
+    - op: if
+      cond:
+        exists:
+          ref: top
+          filter:
+            types:
+            - creature
+            not_types:
+            - evolution
+            civs:
+            - nature
+      then:
+      - op: move
+        select:
+          ref: top
+          count: 1
+        to: bz
+        reason: put
+        as: base
+      - op: invade
+        onto:
+          ref: base
+  - kind: trigger
+    when:
+      event: move
+      to: bz
+      subject: self
+    effect:
+    - op: mana_put
+      select:
+        zone: bz
+        owner: opp
+        filter:
+          types:
+          - creature
+        count: 1
+  - kind: trigger
+    when:
+      event: attack
+      subject: self
+    effect:
+    - op: mana_put
+      select:
+        zone: bz
+        owner: opp
+        filter:
+          types:
+          - creature
+        count: 1
+  source:
+    official: dm26rp2-s006
+    review: pending
+    notes: '革命０トリガーは kind: declare（proto T120 の型）で表現。持ち主のマナゾーン送りは mana_put。出た時／攻撃時は2つの
+      trigger で完全変換。'
+    aliases:
+    - dm26rp2-sec007
+- id: dmr17-015
+  name: 革命の防壁
+  types:
+  - spell
+  civs:
+  - light
+  cost: 3
+  mana: 1
+  text: 革命０トリガー―クリーチャーが自分を攻撃する時、自分のシールドが１枚もなければ、この呪文をコストを支払わずに唱えてもよい。自分の山札の上から１枚目を見せ、山札の一番下に置く。それが光のクリーチャーなら、自分の山札の上から１枚目を裏向きのまま、新しいシールドとして自分のシールドゾーンに置く。この呪文を唱えた後、墓地に置くかわりに山札に加えてシャッフルする。
+  abilities:
+  - kind: declare
+    zone: hand
+    when:
+      event: attack
+      target: player
+    if:
+      all:
+      - is_turn: opp
+      - cmp:
+        - count:
+            zone: shield
+            owner: you
+        - ==
+        - 0
+    effect:
+    - op: play_free
+      select:
+        ref: self
+  - kind: replace
+    zone: hold
+    when:
+      event: move
+      to: graveyard
+      reason: resolve
+      subject: self
+    instead:
+    - op: move
+      select:
+        ref: self
+      to: deck
+      reason: return
+    - op: shuffle
+      player: you
+  spell:
+  - op: choose
+    select:
+      zone: deck
+      owner: you
+      from_top: 1
+      look: true
+      count: all
+    as: top
+  - op: move
+    select:
+      ref: top
+      count: 1
+    to: deck
+    position: bottom
+    reason: put
+    as: moved
+  - op: if
+    cond:
+      exists:
+        ref: moved
+        filter:
+          types:
+          - creature
+          civs:
+          - light
+    then:
+    - op: move
+      select:
+        zone: deck
+        owner: you
+        from_top: 1
+        count: 1
+      to: shield
+      reason: charge
+  source:
+    official: dmr17-015
+    review: pending
+    notes: '革命０トリガーは declare＋play_free。唱えた後の山札回収は reason: resolve の置換（zone: hold）で
+      [山札に戻す＋シャッフル] と表現（dmc64-011 の同種条項の先例に倣う）。シールド追加は dm33-022 の move to shield（reason:
+      charge）の型。'
+- id: dmr17-022
+  name: 革命の裁門
+  types:
+  - spell
+  civs:
+  - darkness
+  cost: 4
+  mana: 1
+  text: 革命０トリガー―クリーチャーが自分を攻撃する時、自分のシールドが１枚もなければ、この呪文をコストを支払わずに唱えてもよい。自分の山札の上から１枚目を見せる。それが闇のクリーチャーなら、相手のクリーチャーを１体破壊する。この呪文を唱えた後、墓地に置くかわりに山札に加えてシャッフルする。
+  abilities:
+  - kind: declare
+    zone: hand
+    when:
+      event: attack
+      target: player
+    if:
+      all:
+      - is_turn: opp
+      - cmp:
+        - count:
+            zone: shield
+            owner: you
+        - ==
+        - 0
+    effect:
+    - op: play_free
+      select:
+        ref: self
+  - kind: replace
+    zone: hold
+    when:
+      event: move
+      to: graveyard
+      reason: resolve
+      subject: self
+    instead:
+    - op: move
+      select:
+        ref: self
+      to: deck
+      reason: return
+    - op: shuffle
+      player: you
+  spell:
+  - op: choose
+    select:
+      zone: deck
+      owner: you
+      from_top: 1
+      look: true
+      count: all
+    as: top
+  - op: if
+    cond:
+      exists:
+        ref: top
+        filter:
+          types:
+          - creature
+          civs:
+          - darkness
+    then:
+    - op: destroy
+      select:
+        zone: bz
+        owner: opp
+        filter:
+          types:
+          - creature
+        count: 1
+  source:
+    official: dmr17-022
+    review: pending
+    notes: '革命０トリガーは declare＋play_free。唱えた後の山札回収は reason: resolve の置換（zone: hold）で
+      [山札に戻す＋シャッフル] と表現（dmc64-011 の同種条項の先例に倣う）。完全変換。'
+- id: dmr18-017
+  name: 革命の水瓶
+  types:
+  - spell
+  civs:
+  - water
+  cost: 2
+  mana: 1
+  text: 革命０トリガー -クリーチャーが自分を攻撃する時、自分のシールドがひとつもなければ、この呪文をコストを支払わずに唱えてもよい。自分の山札の上から１枚目を表向きにする。それが水のクリーチャーなら、クリーチャーを１体選び、持ち主の手札に戻してもよい。この呪文を唱えた後、墓地に置くかわりに山札に加えてシャッフルする。
+  abilities:
+  - kind: declare
+    zone: hand
+    when:
+      event: attack
+      target: player
+    if:
+      all:
+      - is_turn: opp
+      - cmp:
+        - count:
+            zone: shield
+            owner: you
+        - ==
+        - 0
+    effect:
+    - op: play_free
+      select:
+        ref: self
+  - kind: replace
+    zone: hold
+    when:
+      event: move
+      to: graveyard
+      reason: resolve
+      subject: self
+    instead:
+    - op: move
+      select:
+        ref: self
+      to: deck
+      reason: return
+    - op: shuffle
+      player: you
+  spell:
+  - op: choose
+    select:
+      zone: deck
+      owner: you
+      from_top: 1
+      look: true
+      count: all
+    as: top
+  - op: if
+    cond:
+      exists:
+        ref: top
+        filter:
+          types:
+          - creature
+          civs:
+          - water
+    then:
+    - op: may
+      body:
+      - op: bounce
+        select:
+          zone: bz
+          owner: any
+          filter:
+            types:
+            - creature
+          count: 1
+  source:
+    official: dmr18-017
+    review: pending
+    notes: '革命０トリガーは第42弾の declare + play_free で表現。唱えた後の戻し先は resolve_to: deck で表した。
+      「唱えた後、墓地に置くかわりに山札に加えてシャッフルする」は kind: replace（zone: hold、reason: resolve の墓地送りを置換して山札に戻しシャッフル）で表した（dmc64-011
+      先例、バッチIで実挙動確認済みの形式に統一）。'
+- id: dmr19-024
+  name: 革命の巨石
+  types:
+  - spell
+  civs:
+  - nature
+  cost: 3
+  mana: 1
+  text: 革命０トリガー―クリーチャーが自分を攻撃する時、自分のシールドがひとつもなければ、この呪文をコストを支払わずに唱えてもよい。自分の山札の上から１枚目を表向きにする。それが自然のクリーチャーなら、相手のクリーチャーを１体選び、持ち主のマナゾーンに置く。この呪文を唱えた後、墓地に置くかわりに自分の山札に加えてシャッフルする。
+  abilities:
+  - kind: declare
+    zone: hand
+    when:
+      event: attack
+      target: player
+    if:
+      all:
+      - is_turn: opp
+      - cmp:
+        - count:
+            zone: shield
+            owner: you
+        - ==
+        - 0
+    effect:
+    - op: play_free
+      select:
+        ref: self
+  - kind: replace
+    zone: hold
+    when:
+      event: move
+      to: graveyard
+      reason: resolve
+      subject: self
+    instead:
+    - op: move
+      select:
+        ref: self
+      to: deck
+      reason: return
+    - op: shuffle
+      player: you
+  spell:
+  - op: choose
+    select:
+      zone: deck
+      owner: you
+      from_top: 1
+      look: true
+      count: all
+    as: top
+  - op: if
+    cond:
+      exists:
+        ref: top
+        filter:
+          types:
+          - creature
+          civs:
+          - nature
+    then:
+    - op: mana_put
+      select:
+        zone: bz
+        owner: opp
+        filter:
+          types:
+          - creature
+        count: 1
+  source:
+    official: dmr19-024
+    review: pending
+    notes: '革命０トリガーは第42弾の declare + play_free で表現。唱えた後の戻し先は resolve_to: deck で表した。
+      「唱えた後、墓地に置くかわりに山札に加えてシャッフルする」は kind: replace（zone: hold、reason: resolve の墓地送りを置換して山札に戻しシャッフル）で表した（dmc64-011
+      先例、バッチIで実挙動確認済みの形式に統一）。'
+- id: dmr23-015
+  name: 反逆狼の紋章
+  types:
+  - spell
+  civs:
+  - darkness
+  cost: 8
+  mana: 1
+  text: 革命０トリガー：クリーチャーが自分を攻撃する時、自分のシールドが１枚もなければ、この呪文をコストを支払わずに唱えてもよい。自分の山札の上から１枚目を表向きにする。それが闇のクリーチャーなら、闇のコスト８以下の進化ではないコマンドを１体、自分の墓地からバトルゾーンに出す。この呪文を唱えた後、墓地に置くかわりに自分の山札に加えてシャッフルする。
+  abilities:
+  - kind: declare
+    zone: hand
+    when:
+      event: attack
+      target: player
+    if:
+      all:
+      - is_turn: opp
+      - cmp:
+        - count:
+            zone: shield
+            owner: you
+        - ==
+        - 0
+    effect:
+    - op: play_free
+      select:
+        ref: self
+  - kind: replace
+    zone: hold
+    when:
+      event: move
+      to: graveyard
+      reason: resolve
+      subject: self
+    instead:
+    - op: move
+      select:
+        ref: self
+      to: deck
+      reason: return
+    - op: shuffle
+      player: you
+  spell:
+  - op: choose
+    select:
+      zone: deck
+      owner: you
+      from_top: 1
+      look: true
+      count: all
+    as: top
+  - op: if
+    cond:
+      exists:
+        ref: top
+        filter:
+          types:
+          - creature
+          civs:
+          - darkness
+    then:
+    - op: move
+      select:
+        zone: graveyard
+        owner: you
+        filter:
+          types:
+          - creature
+          civs:
+          - darkness
+          cost_le: 8
+          not_types:
+          - evolution
+          race_has: コマンド
+        count: 1
+      to: bz
+      reason: put
+  source:
+    official: dmr23-015
+    review: pending
+    notes: '革命０トリガーは第42弾の declare + play_free で表現。墓地から出すは move reason: put。唱えた後の戻し先は
+      resolve_to: deck で表した。 「唱えた後、墓地に置くかわりに山札に加えてシャッフルする」は kind: replace（zone: hold、reason:
+      resolve の墓地送りを置換して山札に戻しシャッフル）で表した（dmc64-011 先例、バッチIで実挙動確認済みの形式に統一）。'
+- id: dmr23-036
+  name: 宇宙一のカレーパン
+  types:
+  - spell
+  civs:
+  - fire
+  cost: 4
+  mana: 1
+  text: 革命０トリガー：クリーチャーが自分を攻撃する時、自分のシールドが１枚もなければ、この呪文をコストを支払わずに唱えてもよい。《勇者の１号 ハムカツマン蒼》を１体、自分の手札から山札の一番上に置いてもよい。そうしたら、このターン、自分のクリーチャー１体のパワーを+1000000
+    する。自分の山札の上から１枚目を表向きにする。それが火のクリーチャーなら、自分のクリーチャーと相手のクリーチャーを１体ずつ選び、その２体をバトルさせる。この呪文を唱えた後、墓地に置くかわりに自分の山札に加えてシャッフルする。
+  abilities:
+  - kind: declare
+    zone: hand
+    when:
+      event: attack
+      target: player
+    if:
+      all:
+      - is_turn: opp
+      - cmp:
+        - count:
+            zone: shield
+            owner: you
+        - ==
+        - 0
+    effect:
+    - op: play_free
+      select:
+        ref: self
+  - kind: replace
+    zone: hold
+    when:
+      event: move
+      to: graveyard
+      reason: resolve
+      subject: self
+    instead:
+    - op: move
+      select:
+        ref: self
+      to: deck
+      reason: return
+    - op: shuffle
+      player: you
+  spell:
+  - op: may
+    body:
+    - op: move
+      select:
+        zone: hand
+        owner: you
+        filter:
+          name: 勇者の１号 ハムカツマン蒼
+        count: 1
+      to: deck
+      reason: put
+      position: top
+      as: placed
+    - op: if
+      cond:
+        exists:
+          ref: placed
+      then:
+      - op: modify
+        select:
+          zone: bz
+          owner: you
+          filter:
+            types:
+            - creature
+          count: 1
+        mod:
+          power: 1000000
+        duration: end_of_turn
+  - op: choose
+    select:
+      zone: deck
+      owner: you
+      from_top: 1
+      look: true
+      count: all
+    as: top
+  - op: if
+    cond:
+      exists:
+        ref: top
+        filter:
+          types:
+          - creature
+          civs:
+          - fire
+    then:
+    - op: force_battle
+      a:
+        zone: bz
+        owner: you
+        filter:
+          types:
+          - creature
+        count: 1
+      b:
+        zone: bz
+        owner: opp
+        filter:
+          types:
+          - creature
+        count: 1
+  source:
+    official: dmr23-036
+    review: pending
+    notes: '革命０トリガーは第42弾の declare + play_free で表現。ハムカツマン蒼を置いた場合のみパワー修整が続く形は move の
+      as と exists で表した。唱えた後の戻し先は resolve_to: deck で表した。 「唱えた後、墓地に置くかわりに山札に加えてシャッフルする」は
+      kind: replace（zone: hold、reason: resolve の墓地送りを置換して山札に戻しシャッフル）で表した（dmc64-011
+      先例、バッチIで実挙動確認済みの形式に統一）。'
+- id: dm24rp2-sp3
+  name: ブランド-MAX
+  types:
+  - creature
+  - evolution
+  civs:
+  - fire
+  cost: 4
+  power: 5000
+  races:
+  - ビートジョッキー
+  - レクスターズ
+  mana: 1
+  s_max: true
+  text: S-MAX進化：自分がゲームに負ける時、かわりにこのクリーチャーを破壊するか、自分の手札から《ブランド-MAX》を１枚捨てる。（このクリーチャーは進化元を必要としない。自分のS-MAX進化クリーチャーが２体以上あれば、そのうちの１体を残し、残りをすべて手札に戻す）
+    / このクリーチャーが攻撃する時、自分の他のクリーチャーを１体アンタップする。このターン、そのクリーチャーはシールドをさらに１つブレイクする。 / 相手がこのクリーチャーを選んだ時、相手のシールドを１つ、持ち主の墓地に置く。
+  abilities:
+  - kind: replace
+    optional: true
+    when:
+      event: lose
+    instead:
+    - op: if
+      cond:
+        exists:
+          zone: hand
+          owner: you
+          filter:
+            name: ブランド-MAX
+      then:
+      - op: modal
+        modes:
+        - - op: move
+            select:
+              ref: self
+              count: 1
+            to: graveyard
+            reason: destroy
+        - - op: discard
+            select:
+              zone: hand
+              owner: you
+              chooser: you
+              filter:
+                name: ブランド-MAX
+              count: 1
+      else:
+      - op: move
+        select:
+          ref: self
+          count: 1
+        to: graveyard
+        reason: destroy
+  - kind: trigger
+    when:
+      event: attack
+      subject: self
+    effect:
+    - op: choose
+      select:
+        zone: bz
+        owner: you
+        chooser: you
+        filter:
+          types:
+          - creature
+        other: true
+        count: 1
+      as: tgt
+    - op: untap
+      select:
+        ref: tgt
+        count: 1
+    - op: modify
+      select:
+        ref: tgt
+        count: 1
+      mod:
+        breaks: 1
+      duration: end_of_turn
+  - kind: trigger
+    when:
+      event: choose
+      subject: self
+    effect:
+    - op: move
+      select:
+        zone: shield
+        owner: opp
+        chooser: you
+        count: 1
+      to: graveyard
+      reason: put
+  source:
+    official: dm24rp2-sp3
+    review: pending
+    notes: 'S-MAX進化は s_max: true＋第43弾の標準形。攻撃時のアンタップ＋追加ブレイクは mod breaks、選ばれた時は event:
+      choose（アポロヌス先例どおり）。再変換ラウンド18。'
+    aliases:
+    - dm22bd2-007
+    - dmrp21-6a
+    - dmrp21-8b
+    - dmrp21-s6
+- id: dm26ex4-028
+  name: 切札接続 MAXAM ザ・オウガ
+  types:
+  - creature
+  - evolution
+  civs:
+  - light
+  - darkness
+  cost: 7
+  power: 13000
+  races:
+  - ディスペクター
+  - ジョーカーズ
+  - デモニオ
+  - レクスターズ
+  mana: 1
+  s_max: true
+  keywords:
+  - ex_life
+  - triple_breaker
+  text: 'S-MAX進化：自分がゲームに負ける時、かわりにこのクリーチャーを破壊するか、自分の手札から《切札接続 MAXAM ザ・オウガ》を１枚捨てる。（このクリーチャーは進化元を必要としない。自分のS-MAX進化クリーチャーが２体以上あれば、１体を残し、残りをすべて手札に戻す）
+
+    EXライフ（このクリーチャーを出す時、自分の山札の上から１枚をシールド化する。このクリーチャーが離れる時、かわりにそのシールドを墓地に置く）
+
+    T・ブレイカー
+
+    このクリーチャーが攻撃する時、相手のクリーチャーを２体選んで破壊し、相手の手札を２枚見ないで選び、捨てさせる。その後、自分の山札の上から１枚をシールド化してもよい。'
+  abilities:
+  - kind: replace
+    optional: true
+    when:
+      event: lose
+    instead:
+    - op: if
+      cond:
+        exists:
+          zone: hand
+          owner: you
+          filter:
+            name: 切札接続 MAXAM ザ・オウガ
+      then:
+      - op: modal
+        modes:
+        - - op: move
+            select:
+              ref: self
+              count: 1
+            to: graveyard
+            reason: destroy
+        - - op: discard
+            select:
+              zone: hand
+              owner: you
+              chooser: you
+              filter:
+                name: 切札接続 MAXAM ザ・オウガ
+              count: 1
+      else:
+      - op: move
+        select:
+          ref: self
+          count: 1
+        to: graveyard
+        reason: destroy
+  - kind: trigger
+    when:
+      event: attack
+      subject: self
+    effect:
+    - op: destroy
+      select:
+        zone: bz
+        owner: opp
+        chooser: you
+        count: 2
+    - op: discard
+      select:
+        zone: hand
+        owner: opp
+        count: 2
+    - op: may
+      body:
+      - op: move
+        select:
+          zone: deck
+          owner: you
+          from_top: 1
+        to: shield
+        reason: charge
+  source:
+    official: dm26ex4-028
+    review: pending
+    notes: 'S-MAX進化は s_max: true＋第43弾の標準形。EXライフはキーワード。攻撃時は2体破壊＋見ないで2枚捨て＋任意のシールド化（move
+      to shield、ギガゲドー先例）。再変換ラウンド18。'
+- id: dm26ex4-sec021
+  name: 切札接続 MAXAM ザ・オウガ
+  types:
+  - creature
+  - evolution
+  civs:
+  - light
+  - darkness
+  cost: 7
+  power: 13000
+  races:
+  - ディスペクター
+  - ジョーカーズ
+  - デモニオ
+  - レクスターズ
+  mana: 1
+  s_max: true
+  keywords:
+  - ex_life
+  - triple_breaker
+  text: 'S-MAX進化：自分がゲームに負ける時、かわりにこのクリーチャーを破壊するか、自分の手札から《切札接続 MAXAM ザ・オウガ》を１枚捨てる。
+
+    EXライフ
+
+    T・ブレイカー
+
+    このクリーチャーが攻撃する時、相手のクリーチャーを２体選んで破壊し、相手の手札を２枚見ないで選び、捨てさせる。その後、自分の山札の上から１枚をシールド化してもよい。'
+  abilities:
+  - kind: replace
+    optional: true
+    when:
+      event: lose
+    instead:
+    - op: if
+      cond:
+        exists:
+          zone: hand
+          owner: you
+          filter:
+            name: 切札接続 MAXAM ザ・オウガ
+      then:
+      - op: modal
+        modes:
+        - - op: move
+            select:
+              ref: self
+              count: 1
+            to: graveyard
+            reason: destroy
+        - - op: discard
+            select:
+              zone: hand
+              owner: you
+              chooser: you
+              filter:
+                name: 切札接続 MAXAM ザ・オウガ
+              count: 1
+      else:
+      - op: move
+        select:
+          ref: self
+          count: 1
+        to: graveyard
+        reason: destroy
+  - kind: trigger
+    when:
+      event: attack
+      subject: self
+    effect:
+    - op: destroy
+      select:
+        zone: bz
+        owner: opp
+        chooser: you
+        count: 2
+    - op: discard
+      select:
+        zone: hand
+        owner: opp
+        count: 2
+    - op: may
+      body:
+      - op: move
+        select:
+          zone: deck
+          owner: you
+          from_top: 1
+        to: shield
+        reason: charge
+  source:
+    official: dm26ex4-sec021
+    review: pending
+    notes: 'dm26ex4-028 と同文（シークレット版）。S-MAX進化は s_max: true＋第43弾の標準形。EXライフはキーワード。再変換ラウンド18。'
+- id: dmrp21-2a
+  name: Code:-MAX
+  types:
+  - creature
+  - evolution
+  civs:
+  - water
+  cost: 6
+  power: 7000
+  races:
+  - ドラゴン・コード
+  - トリックス
+  - レクスターズ
+  mana: 1
+  s_max: true
+  keywords:
+  - double_breaker
+  text: 'S-MAX進化：自分がゲームに負ける時、かわりにこのクリーチャーを破壊するか、自分の手札から《Code:-MAX》を１枚捨てる。（このクリーチャーは進化元を必要としない。自分のS-MAX進化クリーチャーが２体以上あれば、そのうちの１体を残し、残りをすべて手札に戻す）
+
+    W・ブレイカー
+
+    このクリーチャーが出た時、カードを２枚引いてもよい。
+
+    このクリーチャーが攻撃する時、自分の手札からコストを支払わずに、コスト４以下のタマシードを１枚使うか、コスト４以下の呪文を１枚唱えてもよい。'
+  abilities:
+  - kind: trigger
+    when:
+      event: move
+      to: bz
+      subject: self
+    effect:
+    - op: may
+      body:
+      - op: draw
+        count: 2
+  - kind: replace
+    optional: true
+    when:
+      event: lose
+    instead:
+    - op: if
+      cond:
+        exists:
+          zone: hand
+          owner: you
+          filter:
+            name: Code:-MAX
+      then:
+      - op: modal
+        modes:
+        - - op: move
+            select:
+              ref: self
+              count: 1
+            to: graveyard
+            reason: destroy
+        - - op: discard
+            select:
+              zone: hand
+              owner: you
+              chooser: you
+              filter:
+                name: Code:-MAX
+              count: 1
+      else:
+      - op: move
+        select:
+          ref: self
+          count: 1
+        to: graveyard
+        reason: destroy
+  - kind: trigger
+    when:
+      event: move
+      to: bz
+      subject: self
+    effect:
+    - op: may
+      body:
+      - op: draw
+        count: 2
+  - kind: trigger
+    when:
+      event: attack
+      subject: self
+    effect:
+    - op: may
+      body:
+      - op: play_free
+        select:
+          zone: hand
+          owner: you
+          filter:
+            any_of:
+            - types:
+              - tamaseed
+              cost_le: 4
+            - types:
+              - spell
+              cost_le: 4
+          count: 1
+  source:
+    official: dmrp21-2a
+    review: pending
+    notes: 'S-MAX進化は s_max: true と第43弾の標準形（lose 置換）で表現。攻撃時の無料使用は play_free に any_of
+      フィルタ（タマシード／呪文、いずれもコスト4以下）を組み合わせた。再変換ラウンド18。'
+    aliases:
+    - dmrp21-4b
+    - dmrp21-s2
+- id: dmrp21-4a
+  name: ゲンム-MAX
+  types:
+  - creature
+  - evolution
+  civs:
+  - darkness
+  cost: 6
+  power: 15000
+  races:
+  - ∞・ドラゴン
+  - レクスターズ
+  mana: 1
+  s_max: true
+  keywords:
+  - powered_breaker
+  - slayer
+  text: 'S-MAX進化：自分がゲームに負ける時、かわりにこのクリーチャーを破壊するか、自分の手札から《ゲンム-MAX》を１枚捨てる。（このクリーチャーは進化元を必要としない。自分のS-MAX進化クリーチャーが２体以上あれば、そのうちの１体を残し、残りをすべて手札に戻す）
+
+    パワード・ブレイカー
+
+    スレイヤー
+
+    自分のシールド１つにつき、このクリーチャーのパワーを-2000する。
+
+    このクリーチャーが出た時または攻撃する時、自分のシールドを１つブレイクしてもよい。
+
+    自分のシールドが１つシールドゾーンを離れるたび、相手のクリーチャーを１体選ぶ。このターン、そのクリーチャーのパワーを－4000する。'
+  abilities:
+  - kind: replace
+    optional: true
+    when:
+      event: lose
+    instead:
+    - op: if
+      cond:
+        exists:
+          zone: hand
+          owner: you
+          filter:
+            name: ゲンム-MAX
+      then:
+      - op: modal
+        modes:
+        - - op: move
+            select:
+              ref: self
+              count: 1
+            to: graveyard
+            reason: destroy
+        - - op: discard
+            select:
+              zone: hand
+              owner: you
+              chooser: you
+              filter:
+                name: ゲンム-MAX
+              count: 1
+      else:
+      - op: move
+        select:
+          ref: self
+          count: 1
+        to: graveyard
+        reason: destroy
+  - kind: static
+    mod:
+      power:
+        amount: -2000
+        count:
+          zone: shield
+          owner: you
+  - kind: trigger
+    when:
+      event: move
+      to: bz
+      subject: self
+    effect:
+    - op: may
+      body:
+      - op: break
+        player: you
+        count: 1
+  - kind: trigger
+    when:
+      event: attack
+      subject: self
+    effect:
+    - op: may
+      body:
+      - op: break
+        player: you
+        count: 1
+  - kind: trigger
+    when:
+      event: move
+      from: shield
+      subject:
+        owner: you
+    effect:
+    - op: modify
+      select:
+        zone: bz
+        owner: opp
+        filter:
+          types:
+          - creature
+        count: 1
+      mod:
+        power: -4000
+      duration: end_of_turn
+  source:
+    official: dmrp21-4a
+    review: pending
+    notes: 'S-MAX進化は s_max: true と第43弾の標準形（lose 置換）で表現。パワーの数え下げは static の power amount/count
+      式、自分のシールドのブレイクは op: break（アブライゼ・ドルバ先例）、シールドが離れる誘発は move from: shield（dm23rp3-017
+      先例）で表現。再変換ラウンド18。'
+    aliases:
+    - dmrp21-6b
+    - dmrp21-s4
+- id: dmrp22-6a
+  name: EVE-鬼MAX
+  types:
+  - creature
+  - evolution
+  civs:
+  - fire
+  cost: 5
+  power: 9000
+  races:
+  - イブユニット
+  - デモニオ
+  - 鬼レクスターズ
+  mana: 1
+  s_max: true
+  keywords:
+  - double_breaker
+  text: '鬼S-MAX進化：自分がゲームに負ける時、またはこのクリーチャーが離れる時、かわりに自分の表向きのカードを３枚破壊してもよい。（このクリーチャーは進化元を必要としない。自分のS-MAX進化クリーチャーが２体以上あれば、そのうちの１体を残し、残りをすべて手札に戻す）
+
+    W・ブレイカー
+
+    自分のクリーチャーが相手を攻撃する時、相手のクリーチャーを１体選んでもよい。その２体をバトルさせる。
+
+    自分のクリーチャーがバトルに勝った時、相手の、クリーチャーではないカードを１枚破壊してもよい。'
+  abilities:
+  - kind: replace
+    optional: true
+    when:
+      event: lose
+    if:
+      cmp:
+      - count:
+          zone: bz
+          owner: you
+      - '>='
+      - 3
+    instead:
+    - op: move
+      select:
+        zone: bz
+        owner: you
+        chooser: you
+        count: 3
+      to: graveyard
+      reason: destroy
+  - kind: replace
+    optional: true
+    when:
+      event: move
+      from: bz
+      subject: self
+    if:
+      cmp:
+      - count:
+          zone: bz
+          owner: you
+      - '>='
+      - 3
+    instead:
+    - op: move
+      select:
+        zone: bz
+        owner: you
+        chooser: you
+        count: 3
+      to: graveyard
+      reason: destroy
+  - kind: trigger
+    when:
+      event: attack
+      target: player
+      subject:
+        owner: you
+    effect:
+    - op: may
+      body:
+      - op: force_battle
+        a:
+          ref: subject
+        b:
+          zone: bz
+          owner: opp
+          filter:
+            types:
+            - creature
+          count: 1
+  - kind: trigger
+    when:
+      event: battle_win
+      subject:
+        owner: you
+    effect:
+    - op: destroy
+      select:
+        zone: bz
+        owner: opp
+        chooser: you
+        filter:
+          not_types:
+          - creature
+        count: 1
+        up_to: true
+  source:
+    official: dmrp22-6a
+    review: pending
+    notes: '鬼S-MAX進化は第43弾の型（敗北時と離れる時の2つの置換）。攻撃時のバトルは force_battle（攻撃クリーチャーは ref: subject）、バトル勝利時の破壊は
+      not_types: [creature]＋up_to で『選んでもよい』を表した。完全変換。'
+    aliases:
+    - dmrp22-8b
+    - dmrp22-s6
+- id: dmsd20-001
+  name: モモキングｰMAX
+  types:
+  - creature
+  - evolution
+  civs:
+  - light
+  cost: 6
+  power: 9000
+  races:
+  - ジョーカーズ
+  - ヒーロー・ドラゴン
+  - レクスターズ
+  mana: 1
+  s_max: true
+  keywords:
+  - double_breaker
+  text: 'S-MAX進化：自分がゲームに負ける時、かわりにこのクリーチャーを破壊するか、自分の手札から《モモキングｰMAX》を１枚捨てる。（このクリーチャーは進化元を必要としない。自分のS-MAX進化クリーチャーが２体以上あれば、そのうちの１体を残し、残りをすべて手札に戻す）
+
+    W・ブレイカー（このクリーチャーはシールドを２つブレイクする）
+
+    このクリーチャーが攻撃する時、カードを１枚引く。その後、コスト６以下のタマシードを１枚、自分の手札から出してもよい。'
+  abilities:
+  - kind: replace
+    optional: true
+    when:
+      event: lose
+    instead:
+    - op: if
+      cond:
+        exists:
+          zone: hand
+          owner: you
+          filter:
+            name: モモキングｰMAX
+      then:
+      - op: modal
+        modes:
+        - - op: move
+            select:
+              ref: self
+              count: 1
+            to: graveyard
+            reason: destroy
+        - - op: discard
+            select:
+              zone: hand
+              owner: you
+              chooser: you
+              filter:
+                name: モモキングｰMAX
+              count: 1
+      else:
+      - op: move
+        select:
+          ref: self
+          count: 1
+        to: graveyard
+        reason: destroy
+  - kind: trigger
+    when:
+      event: attack
+      subject: self
+    effect:
+    - op: draw
+      player: you
+      count: 1
+    - op: may
+      body:
+      - op: play_free
+        select:
+          zone: hand
+          owner: you
+          filter:
+            types:
+            - tamaseed
+            cost_le: 6
+          count: 1
+  source:
+    official: dmsd20-001
+    review: pending
+    notes: 'S-MAX進化は第43弾の s_max: true＋敗北置換（proto T121 と同型）。攻撃時はドロー後に may＋play_free
+      でコスト6以下のタマシードを出す形にした。完全変換。'
+    aliases:
+    - promoy21-010
+- id: promoy21-001
+  name: ジョニーｰMAX
+  types:
+  - creature
+  - evolution
+  civs:
+  - light
+  cost: 5
+  power: 9000
+  races:
+  - ジョーカーズ
+  - レクスターズ
+  mana: 1
+  s_max: true
+  keywords:
+  - double_breaker
+  text: 'S-MAX進化：自分がゲームに負ける時、かわりにこのクリーチャーを破壊するか、自分の手札から《ジョニーｰMAX》を１枚捨てる。（このクリーチャーは進化元を必要としない。自分のS-MAX進化クリーチャーが２体以上あれば、そのうちの１体を残し、残りをすべて手札に戻す）
+
+    W・ブレイカー（このクリーチャーはシールドを２つブレイクする）'
+  abilities:
+  - kind: replace
+    optional: true
+    when:
+      event: lose
+    instead:
+    - op: if
+      cond:
+        exists:
+          zone: hand
+          owner: you
+          filter:
+            name: ジョニーｰMAX
+      then:
+      - op: modal
+        modes:
+        - - op: move
+            select:
+              ref: self
+              count: 1
+            to: graveyard
+            reason: destroy
+        - - op: discard
+            select:
+              zone: hand
+              owner: you
+              chooser: you
+              filter:
+                name: ジョニーｰMAX
+              count: 1
+      else:
+      - op: move
+        select:
+          ref: self
+          count: 1
+        to: graveyard
+        reason: destroy
+  source:
+    official: promoy21-001
+    review: pending
+    notes: 'S-MAX進化は第43弾の s_max: true＋敗北置換（proto T121 と同型）。残りの原文は W・ブレイカー（キーワード処理済み）のみ。完全変換。'
+- id: dm22bd2-006
+  name: ナゾの光・リリアング
+  types:
+  - creature
+  civs:
+  - light
+  cost: 2
+  power: 2000
+  races:
+  - メタリカ
+  - スペシャルズ
+  mana: 1
+  text: 'キズナ（このクリーチャーが出た時、自分のクリーチャー１体の[P]能力を使う）
+
+    [P]光のコスト３以下の呪文を１枚、コストを支払わずに自分の手札から唱えてもよい。
+
+    エスケープ（このクリーチャーが破壊される時、墓地に置くかわりに自分のシールドを１つ手札に加えてもよい。ただし、その「S・トリガー」は使えない）'
+  keywords:
+  - kizuna
+  - escape
+  abilities:
+  - kind: partner
+    effect:
+    - op: may
+      body:
+      - op: play_free
+        select:
+          zone: hand
+          owner: you
+          filter:
+            types:
+            - spell
+            civs:
+            - light
+            cost_le: 3
+          count: 1
+  source:
+    official: dm22bd2-006
+    review: pending
+    notes: 'キズナはキーワード kizuna（第44弾）で表した。[P]は kind: partner で、光のコスト3以下の呪文の無料詠唱は may
+      + play_free（手札選択）。エスケープはキーワード。再変換ラウンド19。'
+    aliases:
+    - dmex03-s03
+    - dmex08-203
+    - dmex19-s7
+- id: dm26rp3-005
+  name: 蒸光逆夢 リリオクパング
+  types:
+  - creature
+  civs:
+  - light
+  - water
+  cost: 8
+  power: 10500
+  races:
+  - ディスペクター
+  - メタリカ
+  - ムートピア
+  - スペシャルズ
+  mana: 1
+  text: 'EXライフ（このクリーチャーを出す時、自分の山札の上から１枚をシールド化する。このクリーチャーが離れる時、かわりにそのシールドを墓地に置く）
+
+    ブロッカーW・ブレイカー
+
+    キズナ（このクリーチャーが出た時、自分のクリーチャーの[P]能力を１つ使う）
+
+    [P]カードを１枚引く。その後、コスト６以下の呪文を１枚、自分の手札からコストを支払わずに唱えてもよい。
+
+    このクリーチャーが攻撃する時、相手のクリーチャーを１体選び、持ち主の手札に戻してもよい。'
+  keywords:
+  - ex_life
+  - blocker
+  - double_breaker
+  - kizuna
+  abilities:
+  - kind: partner
+    effect:
+    - op: draw
+      count: 1
+    - op: may
+      body:
+      - op: play_free
+        select:
+          zone: hand
+          owner: you
+          filter:
+            types:
+            - spell
+            cost_le: 6
+          count: 1
+  - kind: trigger
+    when:
+      event: attack
+      subject: self
+    effect:
+    - op: may
+      body:
+      - op: move
+        select:
+          zone: bz
+          owner: opp
+          filter:
+            types:
+            - creature
+          count: 1
+        to: hand
+        reason: return
+  source:
+    official: dm26rp3-005
+    review: pending
+    notes: 'キズナはキーワード kizuna（第44弾）。[P]は kind: partner で、ドロー後にコスト6以下の呪文の無料詠唱（may +
+      play_free）。攻撃時のバウンスは trigger + may + move。EXライフ／ブロッカー／W・ブレイカーはキーワード。再変換ラウンド19。'
+- id: dmrp04m-025
+  name: 夜の青守銀 シャイン
+  types:
+  - creature
+  civs:
+  - light
+  cost: 3
+  power: 2500
+  races:
+  - メタリカ
+  mana: 1
+  text: 'S・トリガー（このクリーチャーをシールドゾーンから手札に加える時、コストを支払わずにすぐ召喚してもよい）
+
+    ブロッカー（このクリーチャーをタップして、相手クリーチャーの攻撃先をこのクリーチャーに変更してもよい）
+
+    このクリーチャーは、相手プレイヤーを攻撃できない。
+
+    キズナ（このクリーチャーがバトルゾーンに出た時、自分のクリーチャー１体のP能力を使う）
+
+    Pクリーチャーを１体選び、タップしてもよい。'
+  keywords:
+  - s_trigger
+  - blocker
+  - cannot_attack_player
+  - kizuna
+  abilities:
+  - kind: partner
+    effect:
+    - op: may
+      body:
+      - op: tap
+        select:
+          zone: bz
+          owner: any
+          filter:
+            types:
+            - creature
+          count: 1
+  source:
+    official: dmrp04m-025
+    review: pending
+    notes: 'キズナはキーワード kizuna（第44弾）。[P]は kind: partner で、クリーチャー1体をタップする任意効果（may + tap、対象は所有者を問わない）。S・トリガー／ブロッカー／相手プレイヤーを攻撃できないはキーワード。再変換ラウンド19。'
+- id: dmrp04m-028
+  name: 夜の南国別荘 クジハウス
+  types:
+  - creature
+  civs:
+  - water
+  cost: 7
+  power: 2000
+  races:
+  - ムートピア
+  mana: 1
+  text: 'S・トリガー（このクリーチャーをシールドゾーンから手札に加える時、コストを支払わずにすぐ召喚してもよい）
+
+    キズナ（このクリーチャーがバトルゾーンに出た時、自分のクリーチャー１体のP能力を使う）
+
+    P相手のコスト３以下のクリーチャーをすべて、持ち主の手札に戻す。'
+  keywords:
+  - s_trigger
+  - kizuna
+  abilities:
+  - kind: partner
+    effect:
+    - op: move
+      select:
+        zone: bz
+        owner: opp
+        filter:
+          types:
+          - creature
+          cost_le: 3
+        count: all
+      to: hand
+      reason: return
+  source:
+    official: dmrp04m-028
+    review: pending
+    notes: 'キズナはキーワード kizuna（第44弾）。[P]は kind: partner で、相手のコスト3以下のクリーチャーすべてを手札に戻す
+      move。S・トリガーはキーワード。再変換ラウンド19。'
+- id: dmrp04m-031
+  name: 夜の集器医 ランプ
+  types:
+  - creature
+  civs:
+  - darkness
+  cost: 4
+  power: 1000
+  races:
+  - マフィ・ギャング
+  mana: 1
+  text: 'S・トリガー（このクリーチャーをシールドゾーンから手札に加える時、コストを支払わずにすぐ召喚してもよい）
+
+    キズナ（このクリーチャーがバトルゾーンに出た時、自分のクリーチャー１体のP能力を使う）
+
+    Pこのターン、相手のクリーチャーすべてのパワーを ?1000 する。（パワー０以下のクリーチャーは破壊される）'
+  keywords:
+  - s_trigger
+  - kizuna
+  abilities:
+  - kind: partner
+    effect:
+    - op: modify
+      select:
+        zone: bz
+        owner: opp
+        filter:
+          types:
+          - creature
+        count: all
+      mod:
+        power: -1000
+      duration: end_of_turn
+  source:
+    official: dmrp04m-031
+    review: pending
+    notes: 'キズナはキーワード kizuna（第44弾）。[P]は kind: partner で、このターン相手クリーチャーすべてのパワーを-1000する
+      modify（duration: end_of_turn）。原文のパワーは「?1000」と記録されているが、パワー0以下の破壊の注記から -1000 と解釈した。S・トリガーはキーワード。再変換ラウンド19。'
+- id: dmrp04m-035
+  name: 夜のジャッジ・チュリス
+  types:
+  - creature
+  civs:
+  - fire
+  cost: 3
+  power: 1000
+  races:
+  - ビートジョッキー
+  mana: 1
+  text: 'S・トリガー（このクリーチャーをシールドゾーンから手札に加える時、コストを支払わずにすぐ召喚してもよい）
+
+    キズナ（このクリーチャーがバトルゾーンに出た時、自分のクリーチャー１体のP能力を使う）
+
+    P相手のパワー11000以下の、「ブロッカー」を持つクリーチャーを１体、破壊する。'
+  keywords:
+  - s_trigger
+  - kizuna
+  abilities:
+  - kind: partner
+    effect:
+    - op: destroy
+      select:
+        zone: bz
+        owner: opp
+        filter:
+          types:
+          - creature
+          power_le: 11000
+          keyword: blocker
+        count: 1
+  source:
+    official: dmrp04m-035
+    review: pending
+    notes: 'キズナはキーワード kizuna、[P] は kind: partner で表現（第44弾、proto T123/T124 と同型）。[P]
+      の対象は filter の power_le と keyword: blocker で表した。再変換ラウンド19。'
+- id: dmrp04m-039
+  name: 夜のコッツナ
+  types:
+  - creature
+  civs:
+  - nature
+  cost: 4
+  power: 12000
+  races:
+  - グランセクト
+  mana: 1
+  text: 'S・トリガー（このクリーチャーをシールドゾーンから手札に加える時、コストを支払わずにすぐ召喚してもよい）
+
+    このクリーチャーは攻撃できない。
+
+    キズナ（このクリーチャーがバトルゾーンに出た時、自分のクリーチャー１体のP能力を使う）
+
+    P自分のクリーチャーを１体、タップしてマナゾーンに置いてもよい。'
+  keywords:
+  - s_trigger
+  - cannot_attack
+  - kizuna
+  abilities:
+  - kind: partner
+    effect:
+    - op: may
+      body:
+      - op: choose
+        select:
+          zone: bz
+          owner: you
+          filter:
+            types:
+            - creature
+          count: 1
+        as: t
+      - op: mana_put
+        select:
+          ref: t
+          count: 1
+      - op: tap
+        select:
+          ref: t
+          count: 1
+  source:
+    official: dmrp04m-039
+    review: pending
+    notes: 'キズナはキーワード kizuna、[P] は kind: partner で表現（第44弾）。[P] の「タップしてマナゾーンに置く」は choose
+      で選んで mana_put の後に tap する形（《フェアリー・ソング》 dm23bd5-054 の変換済み先例と同型）。再変換ラウンド19。'
+- id: dmrp04s-009
+  name: マスティーカ・パンツァー
+  types:
+  - creature
+  civs:
+  - nature
+  cost: 7
+  power: 12000
+  races:
+  - グランセクト
+  mana: 1
+  text: T・ブレイカーキズナ（このクリーチャーがバトルゾーンに出た時、自分のクリーチャー１体のP能力を使う）P相手のクリーチャーを１体選び、持ち主のマナゾーンに置く。
+  keywords:
+  - triple_breaker
+  - kizuna
+  abilities:
+  - kind: partner
+    effect:
+    - op: mana_put
+      select:
+        zone: bz
+        owner: opp
+        filter:
+          types:
+          - creature
+        count: 1
+  source:
+    official: dmrp04s-009
+    review: pending
+    notes: 'キズナはキーワード kizuna、[P] は kind: partner で表現（第44弾）。[P] の持ち主のマナゾーン送りは mana_put（select
+      は owner: opp）で表した。再変換ラウンド19。'
+- id: dmrp04s-013
+  name: 足跡の絡み 汰弧
+  types:
+  - creature
+  civs:
+  - light
+  cost: 5
+  power: 5000
+  races:
+  - メタリカ
+  mana: 1
+  text: キズナ（このクリーチャーがバトルゾーンに出た時、自分のクリーチャー１体のP能力を使う）P自分の山札の上から１枚目を裏向きのまま、新しいシールドとしてシールドゾーンに置く。
+  keywords:
+  - kizuna
+  abilities:
+  - kind: partner
+    effect:
+    - op: move
+      select:
+        zone: deck
+        owner: you
+        from_top: 1
+        count: 1
+      to: shield
+      reason: charge
+  source:
+    official: dmrp04s-013
+    review: pending
+    notes: 'キズナはキーワード kizuna、[P] は kind: partner で表現（第44弾）。[P] の新しいシールド化は move to:
+      shield, reason: charge（《開眼者シンラン》 dm36-011 等の変換済み先例と同型）。再変換ラウンド19。'
+- id: dmrp04s-016
+  name: 珠を放つ者 シャケックラ
+  types:
+  - creature
+  civs:
+  - water
+  cost: 6
+  power: 6000
+  races:
+  - ムートピア
+  mana: 1
+  text: W・ブレイカー（このクリーチャーはシールドを２つブレイクする）クリーチャーを自分の手札から捨てた時、NEOクリーチャー１体の下に置いてもよい。キズナ（このクリーチャーがバトルゾーンに出た時、自分のクリーチャー１体のP能力を使う）Pカードを３枚引く。その後、自分の手札を２枚捨てる。
+  keywords:
+  - double_breaker
+  - kizuna
+  abilities:
+  - kind: trigger
+    when:
+      event: move
+      from: hand
+      to: graveyard
+      reason: discard
+      subject:
+        owner: you
+        filter:
+          types:
+          - creature
+    effect:
+    - op: may
+      body:
+      - op: choose
+        select:
+          zone: bz
+          owner: you
+          filter:
+            types:
+            - creature
+            neo: true
+          count: 1
+        as: base
+      - op: put_under
+        select:
+          ref: event.subject
+        onto:
+          ref: base
+  - kind: partner
+    effect:
+    - op: draw
+      count: 3
+    - op: discard
+      select:
+        zone: hand
+        owner: you
+        chooser: you
+        count: 2
+  source:
+    official: dmrp04s-016
+    review: pending
+    notes: 'キズナはキーワード kizuna、[P] は kind: partner で表現（第44弾）。手札からクリーチャーを捨てた時の誘発は when
+      の reason: discard＋subject フィルタで表し、捨てたカードは ref: event.subject で NEOクリーチャーの下に
+      put_under する（dm25ex3-rp3s06 の捨てた時誘発、dmrp03-035 ヒヨクの put_under＋filter neo が先例）。再変換ラウンド19。'
+- id: dmrp04s-019
+  name: コネチカット・ヤンキー
+  types:
+  - creature
+  civs:
+  - darkness
+  cost: 6
+  power: 6000
+  races:
+  - マフィ・ギャング
+  mana: 1
+  text: W・ブレイカー（このクリーチャーはシールドを２つブレイクする）キズナ（このクリーチャーがバトルゾーンに出た時、自分のクリーチャー１体のP能力を使う）Pコスト３以下の進化ではないクリーチャーを１体、自分の墓地からバトルゾーンに出す。
+  keywords:
+  - double_breaker
+  - kizuna
+  abilities:
+  - kind: partner
+    effect:
+    - op: move
+      select:
+        zone: graveyard
+        owner: you
+        filter:
+          types:
+          - creature
+          not_types:
+          - evolution
+          cost_le: 3
+        count: 1
+      to: bz
+      reason: put
+  source:
+    official: dmrp04s-019
+    review: pending
+    notes: 'キズナはキーワード kizuna、[P] は kind: partner で表現（第44弾）。[P] の墓地からの蘇生は filter の
+      not_types: [evolution] と cost_le: 3 で表した。再変換ラウンド19。'
+- id: dmrp04s-024
+  name: バング“BNG”ドンゴ
+  types:
+  - creature
+  civs:
+  - fire
+  cost: 5
+  power: 4000
+  races:
+  - ビートジョッキー
+  mana: 1
+  keywords:
+  - kizuna
+  text: キズナ（このクリーチャーがバトルゾーンに出た時、自分のクリーチャー１体のP能力を使う）P自分の手札を捨て、その後、カードを３枚引く。
+  abilities:
+  - kind: partner
+    effect:
+    - op: discard
+      select:
+        zone: hand
+        owner: you
+        count: all
+    - op: draw
+      count: 3
+  source:
+    official: dmrp04s-024
+    review: pending
+    notes: 'キズナはキーワード kizuna、[P]は kind: partner（手札をすべて捨てて3枚引く）。再変換ラウンド19。'
+- id: dmrp04s-032
+  name: 青守銀 シャイン
+  types:
+  - creature
+  civs:
+  - light
+  cost: 3
+  power: 2500
+  races:
+  - メタリカ
+  mana: 1
+  keywords:
+  - s_trigger
+  - kizuna
+  text: S・トリガー（このクリーチャーをシールドゾーンから手札に加える時、コストを支払わずにすぐ召喚してもよい）キズナ（このクリーチャーがバトルゾーンに出た時、自分のクリーチャー１体のP能力を使う）P次の自分のターンのはじめまで、自分のクリーチャー１体に「ブロッカー」を与える。（「ブロッカー」を持つクリーチャーをタップして、相手クリーチャーの攻撃先をそのクリーチャーに変更してもよい）
+  abilities:
+  - kind: partner
+    effect:
+    - op: modify
+      select:
+        zone: bz
+        owner: you
+        filter:
+          types:
+          - creature
+        count: 1
+      mod:
+        grant:
+        - blocker
+      duration: until_next_own_turn_start
+  source:
+    official: dmrp04s-032
+    review: pending
+    notes: 'キズナはキーワード kizuna、[P]は kind: partner（次の自分のターンのはじめまで自分のクリーチャー1体にブロッカー付与）。再変換ラウンド19。'
+- id: dmrp04s-036
+  name: 南国別荘 クジハウス
+  types:
+  - creature
+  civs:
+  - water
+  cost: 8
+  power: 2000
+  races:
+  - ムートピア
+  mana: 1
+  keywords:
+  - s_trigger
+  - kizuna
+  text: S・トリガー（このクリーチャーをシールドゾーンから手札に加える時、コストを支払わずにすぐ召喚してもよい）キズナ（このクリーチャーがバトルゾーンに出た時、自分のクリーチャー１体のP能力を使う）Pバトルゾーンにある、コスト７以下のカードを１枚選び、持ち主の手札に戻す。
+  abilities:
+  - kind: partner
+    effect:
+    - op: move
+      select:
+        zone: bz
+        owner: any
+        filter:
+          cost_le: 7
+        count: 1
+      to: hand
+      reason: return
+  source:
+    official: dmrp04s-036
+    review: pending
+    notes: 'キズナはキーワード kizuna、[P]は kind: partner（コスト7以下のカードを1枚手札に戻す。対象はクリーチャーに限らないので
+      types で絞らない）。再変換ラウンド19。'
+- id: dmrp04s-041
+  name: 集器医 ランプ
+  types:
+  - creature
+  civs:
+  - darkness
+  cost: 5
+  power: 1000
+  races:
+  - マフィ・ギャング
+  mana: 1
+  keywords:
+  - s_trigger
+  - kizuna
+  text: S・トリガー（このクリーチャーをシールドゾーンから手札に加える時、コストを支払わずにすぐ召喚してもよい）キズナ（このクリーチャーがバトルゾーンに出た時、自分のクリーチャー１体のP能力を使う）Pバトルゾーンにある相手のクリーチャーを１体選ぶ。そのターン、そのクリーチャーのパワーを
+    ?5000 する。（パワー０以下のクリーチャーは破壊される）
+  abilities:
+  - kind: partner
+    effect:
+    - op: modify
+      select:
+        zone: bz
+        owner: opp
+        filter:
+          types:
+          - creature
+        count: 1
+      mod:
+        power: -5000
+      duration: end_of_turn
+  source:
+    official: dmrp04s-041
+    review: pending
+    notes: 'キズナはキーワード kizuna、[P]は kind: partner（相手クリーチャー1体のパワーをそのターン-5000）。原文テキストのパワー増減記号は文字化け（?5000）のため、カード名・同型効果から
+      -5000 と判断した。再変換ラウンド19。'
+    aliases:
+    - promoy16-080
+- id: dmrp04s-046
+  name: ジャッジ・チュリス
+  types:
+  - creature
+  civs:
+  - fire
+  cost: 8
+  power: 4000
+  races:
+  - ビートジョッキー
+  mana: 1
+  keywords:
+  - s_trigger
+  - kizuna
+  text: S・トリガー（このクリーチャーをシールドゾーンから手札に加える時、コストを支払わずにすぐ召喚してもよい）キズナ（このクリーチャーがバトルゾーンに出た時、自分のクリーチャー１体のP能力を使う）P自分と相手のクリーチャーをそれぞれ１体ずつ選ぶ。その２体をバトルさせる。
+  abilities:
+  - kind: partner
+    effect:
+    - op: force_battle
+      a:
+        zone: bz
+        owner: you
+        filter:
+          types:
+          - creature
+        count: 1
+      b:
+        zone: bz
+        owner: opp
+        filter:
+          types:
+          - creature
+        count: 1
+  source:
+    official: dmrp04s-046
+    review: pending
+    notes: 'キズナはキーワード kizuna、[P]は kind: partner（自他のクリーチャー1体ずつをバトルさせる force_battle）。再変換ラウンド19。'
+- id: dmrp04s-053
+  name: コッツナ
+  types:
+  - creature
+  civs:
+  - nature
+  cost: 6
+  power: 12000
+  races:
+  - グランセクト
+  mana: 1
+  keywords:
+  - s_trigger
+  - cannot_attack_player
+  - kizuna
+  text: S・トリガー（このクリーチャーをシールドゾーンから手札に加える時、コストを支払わずにすぐ召喚してもよい）このクリーチャーは、相手プレイヤーを攻撃できない。キズナ（このクリーチャーがバトルゾーンに出た時、自分のクリーチャー１体のP能力を使う）P他のクリーチャーを１体選ぶ。次の自分のターンのはじめまで、そのクリーチャーはパワーを+3000され、相手プレイヤーを攻撃できない。
+  abilities:
+  - kind: partner
+    effect:
+    - op: modify
+      select:
+        zone: bz
+        owner: any
+        filter:
+          types:
+          - creature
+        other: true
+        count: 1
+      mod:
+        power: 3000
+        deny:
+        - attack_player
+      duration: until_next_own_turn_start
+  source:
+    official: dmrp04s-053
+    review: pending
+    notes: 'キズナはキーワード kizuna、[P]は kind: partner（他のクリーチャー1体を other: true で自らを除いて選び、次の自分のターンのはじめまでパワー+3000とプレイヤー攻撃不可）。再変換ラウンド19。'
+- id: dm26ex4-004
+  name: 切札接続 マンジー・ザ・ジョリー
+  types:
+  - creature
+  civs:
+  - darkness
+  cost: 8
+  power: 10000
+  races:
+  - ディスペクター
+  - マフィ・ギャング
+  - ドルスザク
+  - ジョーカーズ
+  mana: 1
+  text: 'J無月の門：各ターンの終わりに、自分の、魔導具またはジョーカーズと、墓地にある魔導具カードまたはジョーカーズ・カードを合計６つ選び、その上にこのクリーチャーを、自分の手札または墓地からコストを支払わずに召喚してもよい。
+
+    EXライフ（このクリーチャーを出す時、自分の山札の上から１枚をシールド化する。このクリーチャーが離れる時、かわりにそのシールドを墓地に置く）
+
+    W・ブレイカー
+
+    このクリーチャーが出た時または攻撃する時、相手のクリーチャーを１体選び、破壊する。'
+  keywords:
+  - ex_life
+  - double_breaker
+  abilities:
+  - kind: trigger
+    when:
+      event: move
+      to: bz
+      subject: self
+    effect: &id104
+    - op: destroy
+      select:
+        zone: bz
+        owner: opp
+        filter:
+          types:
+          - creature
+        count: 1
+  - kind: trigger
+    when:
+      event: attack
+      subject: self
+    effect: *id104
+  - kind: trigger
+    zone: hand
+    when: &id105
+      event: turn_end
+    if: &id106
+      cmp:
+      - sum:
+        - count:
+            zone: bz
+            owner: you
+            filter:
+              races:
+              - 魔導具
+              - ジョーカーズ
+        - count:
+            zone: graveyard
+            owner: you
+            filter:
+              races:
+              - 魔導具
+              - ジョーカーズ
+      - '>='
+      - 6
+    effect: &id107
+    - op: may
+      body:
+      - op: summon_on
+        parts:
+        - zones:
+          - bz
+          - graveyard
+          count: 6
+          filter:
+            races:
+            - 魔導具
+            - ジョーカーズ
+  - kind: trigger
+    zone: graveyard
+    when: *id105
+    if: *id106
+    effect: *id107
+  - kind: trigger
+    when:
+      event: move
+      to: bz
+      subject: self
+    effect:
+    - op: destroy
+      select:
+        zone: bz
+        owner: opp
+        filter:
+          types:
+          - creature
+        count: 1
+  - kind: trigger
+    when:
+      event: attack
+      subject: self
+    effect:
+    - op: destroy
+      select:
+        zone: bz
+        owner: opp
+        filter:
+          types:
+          - creature
+        count: 1
+  source:
+    official: dm26ex4-004
+    review: pending
+    notes: 'J無月の門は第45弾の形（zone: hand / graveyard の誘発＋summon_on）。タイミングは各ターンの終わり（when:
+      turn_end、プレイヤー不問）、対象はバトルゾーンと墓地の合算で6つ（parts は zones 合算、門番は sum の cmp）。EXライフとW・ブレイカーはキーワード。再変換ラウンド20。'
+- id: dm26ex4-sec016
+  name: 切札接続 マンジー・ザ・ジョリー(DM26EX4 ㊙16/㊙25)
+  types:
+  - creature
+  civs:
+  - darkness
+  cost: 8
+  power: 10000
+  races:
+  - ディスペクター
+  - マフィ・ギャング
+  - ドルスザク
+  - ジョーカーズ
+  mana: 1
+  text: 'J無月の門：各ターンの終わりに、自分の、魔導具またはジョーカーズと、墓地にある魔導具カードまたはジョーカーズ・カードを合計６つ選び、その上にこのクリーチャーを、自分の手札または墓地からコストを支払わずに召喚してもよい。
+
+    EXライフ
+
+    W・ブレイカー
+
+    このクリーチャーが出た時または攻撃する時、相手のクリーチャーを１体選び、破壊する。'
+  keywords:
+  - ex_life
+  - double_breaker
+  abilities:
+  - kind: trigger
+    when:
+      event: move
+      to: bz
+      subject: self
+    effect: &id108
+    - op: destroy
+      select:
+        zone: bz
+        owner: opp
+        filter:
+          types:
+          - creature
+        count: 1
+  - kind: trigger
+    when:
+      event: attack
+      subject: self
+    effect: *id108
+  - kind: trigger
+    zone: hand
+    when: &id109
+      event: turn_end
+    if: &id110
+      cmp:
+      - sum:
+        - count:
+            zone: bz
+            owner: you
+            filter:
+              races:
+              - 魔導具
+              - ジョーカーズ
+        - count:
+            zone: graveyard
+            owner: you
+            filter:
+              races:
+              - 魔導具
+              - ジョーカーズ
+      - '>='
+      - 6
+    effect: &id111
+    - op: may
+      body:
+      - op: summon_on
+        parts:
+        - zones:
+          - bz
+          - graveyard
+          count: 6
+          filter:
+            races:
+            - 魔導具
+            - ジョーカーズ
+  - kind: trigger
+    zone: graveyard
+    when: *id109
+    if: *id110
+    effect: *id111
+  - kind: trigger
+    when:
+      event: move
+      to: bz
+      subject: self
+    effect:
+    - op: destroy
+      select:
+        zone: bz
+        owner: opp
+        filter:
+          types:
+          - creature
+        count: 1
+  - kind: trigger
+    when:
+      event: attack
+      subject: self
+    effect:
+    - op: destroy
+      select:
+        zone: bz
+        owner: opp
+        filter:
+          types:
+          - creature
+        count: 1
+  source:
+    official: dm26ex4-sec016
+    review: pending
+    notes: 'dm26ex4-004 と同文（シークレット版）。J無月の門は第45弾の形（zone: hand / graveyard の誘発＋summon_on、合算6つ）。EXライフとW・ブレイカーはキーワード。再変換ラウンド20。'
+- id: dmbd08-b-006
+  name: 魔凰 デ・スザーク
+  types:
+  - creature
+  civs:
+  - darkness
+  cost: 8
+  power: 6000
+  races:
+  - マスター・ドルスザク
+  - マフィ・ギャング
+  mana: 1
+  text: '無月の門：自分の魔導具をバトルゾーンに出した時、自分の魔導具をバトルゾーンと墓地から２つずつ選び、このクリーチャーを自分の手札または墓地からそれら４枚の上にコストを支払わずに召喚してもよい。
+
+    W・ブレイカー（このクリーチャーはシールドを２つブレイクする）
+
+    このクリーチャーがバトルゾーンに出た時、そのターン、バトルゾーンにある相手のクリーチャーすべてのパワーを －3000 する。（パワー０以下のクリーチャーは破壊される）'
+  keywords:
+  - double_breaker
+  abilities:
+  - kind: trigger
+    zone: hand
+    when: &id112
+      event: move
+      to: bz
+      subject:
+        owner: you
+        other: true
+        filter:
+          races:
+          - 魔導具
+    if: &id113
+      all:
+      - cmp:
+        - count:
+            zone: bz
+            owner: you
+            filter:
+              races:
+              - 魔導具
+        - '>='
+        - 2
+      - cmp:
+        - count:
+            zone: graveyard
+            owner: you
+            filter:
+              races:
+              - 魔導具
+        - '>='
+        - 2
+    effect: &id114
+    - op: may
+      body:
+      - op: summon_on
+        parts:
+        - zone: bz
+          count: 2
+          filter:
+            races:
+            - 魔導具
+        - zone: graveyard
+          count: 2
+          filter:
+            races:
+            - 魔導具
+  - kind: trigger
+    zone: graveyard
+    when: *id112
+    if: *id113
+    effect: *id114
+  - kind: trigger
+    when:
+      event: move
+      to: bz
+      subject: self
+    effect:
+    - op: modify
+      select:
+        zone: bz
+        owner: opp
+        filter:
+          types:
+          - creature
+        count: all
+      mod:
+        power: -3000
+      duration: end_of_turn
+  source:
+    official: dmbd08-b-006
+    review: pending
+    notes: '無月の門は第45弾の標準形（zone: hand / graveyard の誘発＋summon_on、2つずつ）。出た時の相手全員パワー-3000は
+      modify（count: all、duration: end_of_turn）。W・ブレイカーはキーワード。再変換ラウンド20。'
+    aliases:
+    - dmex02-065
+    - promoy16-104
+- id: dmex03-s05
+  name: 黒目龍竜
+  types:
+  - creature
+  civs:
+  - darkness
+  cost: 10
+  power: 13000
+  races:
+  - ブラック・コマンド・ドラゴン
+  - スペシャルズ
+  mana: 1
+  text: '無月の門：自分の魔導具をバトルゾーンに出した時、自分の魔導具をバトルゾーンと墓地から２つずつ選び、このクリーチャーを自分の手札または墓地からそれら４枚の上にコストを支払わずに召喚してもよい。
+
+    T・ブレイカー
+
+    自分のターンのはじめに、闇のカードを１枚、自分の墓地から手札に戻してもよい。
+
+    自分のターンの終わりに、バトルゾーンまたはいずれかのシールドゾーンにある裏向きのカードを１枚選び、見てもよい。'
+  keywords:
+  - triple_breaker
+  abilities:
+  - kind: trigger
+    zone: hand
+    when: &id115
+      event: move
+      to: bz
+      subject:
+        owner: you
+        other: true
+        filter:
+          races:
+          - 魔導具
+    if: &id116
+      all:
+      - cmp:
+        - count:
+            zone: bz
+            owner: you
+            filter:
+              races:
+              - 魔導具
+        - '>='
+        - 2
+      - cmp:
+        - count:
+            zone: graveyard
+            owner: you
+            filter:
+              races:
+              - 魔導具
+        - '>='
+        - 2
+    effect: &id117
+    - op: may
+      body:
+      - op: summon_on
+        parts:
+        - zone: bz
+          count: 2
+          filter:
+            races:
+            - 魔導具
+        - zone: graveyard
+          count: 2
+          filter:
+            races:
+            - 魔導具
+  - kind: trigger
+    zone: graveyard
+    when: *id115
+    if: *id116
+    effect: *id117
+  - kind: trigger
+    when:
+      event: turn_start
+    if:
+      is_turn: you
+    effect:
+    - op: may
+      body:
+      - op: move
+        select:
+          zone: graveyard
+          owner: you
+          filter:
+            civs:
+            - darkness
+          count: 1
+        to: hand
+        reason: return
+  - kind: trigger
+    when:
+      event: turn_end
+      player: you
+    effect:
+    - op: may
+      body:
+      - op: choose
+        select:
+          zone:
+          - bz
+          - shield
+          owner: any
+          filter:
+            face_down: true
+          count: 1
+          look: true
+        as: seen
+  source:
+    official: dmex03-s05
+    review: pending
+    notes: '無月の門は第45弾の標準形。ターン開始時の墓地回収は may + move（闇フィルタ）。ターン終了時の「裏向きのカードを見てもよい」は choose（zone:
+      [bz, shield]、face_down、look: true）で表し、カードは動かさない。T・ブレイカーはキーワード。再変換ラウンド20。'
+- id: dmex19-m20
+  name: 卍 デ・スザーク 卍
+  types:
+  - creature
+  civs:
+  - darkness
+  cost: 8
+  power: 9000
+  races:
+  - マスター・ドルスザク
+  - マフィ・ギャング
+  mana: 1
+  keywords:
+  - double_breaker
+  text: '無月の門：自分の魔導具が出た時、自分の魔導具をバトルゾーンと墓地から２つずつ選び、このクリーチャーを自分の手札または墓地からそれら４枚の上にコストを支払わずに召喚してもよい。
+
+    W・ブレイカー
+
+    このクリーチャーが出た時、相手のクリーチャーを１体破壊する。
+
+    このクリーチャーの下に４枚以上カードがあれば、相手のクリーチャーはタップして出る。'
+  abilities:
+  - kind: trigger
+    when:
+      event: move
+      to: bz
+      subject: self
+    effect:
+    - op: destroy
+      select:
+        zone: bz
+        owner: opp
+        filter:
+          types:
+          - creature
+        count: 1
+  - kind: trigger
+    zone: hand
+    when:
+      event: move
+      to: bz
+      subject:
+        owner: you
+        other: true
+        filter:
+          races:
+          - 魔導具
+    if:
+      all:
+      - cmp:
+        - count:
+            zone: bz
+            owner: you
+            filter:
+              races:
+              - 魔導具
+        - '>='
+        - 2
+      - cmp:
+        - count:
+            zone: graveyard
+            owner: you
+            filter:
+              races:
+              - 魔導具
+        - '>='
+        - 2
+    effect:
+    - op: may
+      body:
+      - op: summon_on
+        parts:
+        - zone: bz
+          count: 2
+          filter:
+            races:
+            - 魔導具
+        - zone: graveyard
+          count: 2
+          filter:
+            races:
+            - 魔導具
+  - kind: trigger
+    zone: graveyard
+    when:
+      event: move
+      to: bz
+      subject:
+        owner: you
+        other: true
+        filter:
+          races:
+          - 魔導具
+    if:
+      all:
+      - cmp:
+        - count:
+            zone: bz
+            owner: you
+            filter:
+              races:
+              - 魔導具
+        - '>='
+        - 2
+      - cmp:
+        - count:
+            zone: graveyard
+            owner: you
+            filter:
+              races:
+              - 魔導具
+        - '>='
+        - 2
+    effect:
+    - op: may
+      body:
+      - op: summon_on
+        parts:
+        - zone: bz
+          count: 2
+          filter:
+            races:
+            - 魔導具
+        - zone: graveyard
+          count: 2
+          filter:
+            races:
+            - 魔導具
+  - kind: trigger
+    when:
+      event: move
+      to: bz
+      subject: self
+    effect:
+    - op: destroy
+      select:
+        zone: bz
+        owner: opp
+        filter:
+          types:
+          - creature
+        count: 1
+  - kind: static
+    affects:
+      zone: bz
+      owner: opp
+      filter:
+        types:
+        - creature
+    if:
+      cmp:
+      - count:
+          under_of: self
+      - '>='
+      - 4
+    mod:
+      grant:
+      - enters_tapped
+  source:
+    official: dmex19-m20
+    review: pending
+    notes: '無月の門は第45弾の型（手札/墓地の誘発＋summon_on）。「下に4枚以上で相手はタップして出る」は《「非道」の鬼 ゴウケン齋》と同型の
+      static（grant: [enters_tapped]、if は under_of の count）。'
+    aliases:
+    - dmbd20-002
+    - dmex06-dk6
+    - dmrp04m-m02
+    - promoy19-029
+- id: dmrp05-s06
+  name: 無明夜叉羅ムカデ
+  types:
+  - creature
+  civs:
+  - darkness
+  cost: 7
+  power: 8000
+  races:
+  - マフィ・ギャング
+  mana: 1
+  keywords:
+  - double_breaker
+  text: '無月の門：自分の魔導具をバトルゾーンに出した時、自分の魔導具をバトルゾーンと墓地から２つずつ選び、このクリーチャーを自分の手札または墓地からそれら４枚の上にコストを支払わずに召喚してもよい。
+
+    W・ブレイカー
+
+    このクリーチャーがバトルゾーンに出た時、相手のクリーチャーを１体選ぶ。そのターン、そのクリーチャーのパワーを ?9000 する。
+
+    自分のクリーチャーが攻撃する時、このクリーチャーの下にあるカードが４枚以上なら、相手は自身の手札を１枚選んで捨てる。'
+  abilities:
+  - kind: trigger
+    zone: hand
+    when:
+      event: move
+      to: bz
+      subject:
+        owner: you
+        other: true
+        filter:
+          races:
+          - 魔導具
+    if:
+      all:
+      - cmp:
+        - count:
+            zone: bz
+            owner: you
+            filter:
+              races:
+              - 魔導具
+        - '>='
+        - 2
+      - cmp:
+        - count:
+            zone: graveyard
+            owner: you
+            filter:
+              races:
+              - 魔導具
+        - '>='
+        - 2
+    effect:
+    - op: may
+      body:
+      - op: summon_on
+        parts:
+        - zone: bz
+          count: 2
+          filter:
+            races:
+            - 魔導具
+        - zone: graveyard
+          count: 2
+          filter:
+            races:
+            - 魔導具
+  - kind: trigger
+    zone: graveyard
+    when:
+      event: move
+      to: bz
+      subject:
+        owner: you
+        other: true
+        filter:
+          races:
+          - 魔導具
+    if:
+      all:
+      - cmp:
+        - count:
+            zone: bz
+            owner: you
+            filter:
+              races:
+              - 魔導具
+        - '>='
+        - 2
+      - cmp:
+        - count:
+            zone: graveyard
+            owner: you
+            filter:
+              races:
+              - 魔導具
+        - '>='
+        - 2
+    effect:
+    - op: may
+      body:
+      - op: summon_on
+        parts:
+        - zone: bz
+          count: 2
+          filter:
+            races:
+            - 魔導具
+        - zone: graveyard
+          count: 2
+          filter:
+            races:
+            - 魔導具
+  - kind: trigger
+    when:
+      event: move
+      to: bz
+      subject: self
+    effect:
+    - op: choose
+      select:
+        zone: bz
+        owner: opp
+        filter:
+          types:
+          - creature
+        count: 1
+      as: c
+    - op: modify
+      select:
+        ref: c
+        count: all
+      mod:
+        power: -9000
+      duration: end_of_turn
+  - kind: trigger
+    when:
+      event: attack
+      subject:
+        owner: you
+    if:
+      cmp:
+      - count:
+          under_of: self
+      - '>='
+      - 4
+    effect:
+    - op: discard
+      select:
+        zone: hand
+        owner: opp
+        chooser: opp
+        count: 1
+  source:
+    official: dmrp05-s06
+    review: pending
+    notes: '無月の門は第45弾の型。原文のパワー表記「?9000」はマイナスの文字化けと判断し -9000 で変換（実物の印刷も -9000）。攻撃時誘発は
+      under_of の count で門番し、捨てるカードは相手が選ぶ（chooser: opp、dm22ex2-046 と同型）。'
+- id: dmrp06-018
+  name: ストロング・ゲドー 卍
+  types:
+  - creature
+  civs:
+  - darkness
+  cost: 6
+  power: 6000
+  races:
+  - マフィ・ギャング
+  - ドルスザク
+  mana: 1
+  keywords:
+  - blocker
+  - slayer
+  - double_breaker
+  text: '無月の門：自分の魔導具をバトルゾーンに出した時、自分の魔導具をバトルゾーンと墓地から２つずつ選び、このクリーチャーを自分の手札または墓地からそれら４枚の上にコストを支払わずに召喚してもよい。
+
+    ブロッカー（このクリーチャーをタップして、相手クリーチャーの攻撃先をこのクリーチャーに変更してもよい）
+
+    スレイヤー（このクリーチャーがバトルする時、バトルの後、相手クリーチャーを破壊する）
+
+    W・ブレイカー（このクリーチャーはシールドを２つブレイクする）'
+  abilities:
+  - kind: trigger
+    zone: hand
+    when:
+      event: move
+      to: bz
+      subject:
+        owner: you
+        other: true
+        filter:
+          races:
+          - 魔導具
+    if:
+      all:
+      - cmp:
+        - count:
+            zone: bz
+            owner: you
+            filter:
+              races:
+              - 魔導具
+        - '>='
+        - 2
+      - cmp:
+        - count:
+            zone: graveyard
+            owner: you
+            filter:
+              races:
+              - 魔導具
+        - '>='
+        - 2
+    effect:
+    - op: may
+      body:
+      - op: summon_on
+        parts:
+        - zone: bz
+          count: 2
+          filter:
+            races:
+            - 魔導具
+        - zone: graveyard
+          count: 2
+          filter:
+            races:
+            - 魔導具
+  - kind: trigger
+    zone: graveyard
+    when:
+      event: move
+      to: bz
+      subject:
+        owner: you
+        other: true
+        filter:
+          races:
+          - 魔導具
+    if:
+      all:
+      - cmp:
+        - count:
+            zone: bz
+            owner: you
+            filter:
+              races:
+              - 魔導具
+        - '>='
+        - 2
+      - cmp:
+        - count:
+            zone: graveyard
+            owner: you
+            filter:
+              races:
+              - 魔導具
+        - '>='
+        - 2
+    effect:
+    - op: may
+      body:
+      - op: summon_on
+        parts:
+        - zone: bz
+          count: 2
+          filter:
+            races:
+            - 魔導具
+        - zone: graveyard
+          count: 2
+          filter:
+            races:
+            - 魔導具
+  source:
+    official: dmrp06-018
+    review: pending
+    notes: 無月の門は第45弾の型。残りはキーワード（ブロッカー／スレイヤー／W・ブレイカー）のみで原文どおり変換。
+    aliases:
+    - dmsd06-002
+- id: dmrp06-044
+  name: ハク★ヨン
+  types:
+  - creature
+  civs:
+  - darkness
+  cost: 6
+  power: 2000
+  races:
+  - マフィ・ギャング
+  - ムーゲッツ
+  mana: 1
+  keywords:
+  - s_trigger
+  - blocker
+  text: 'S・トリガー（このクリーチャーをシールドゾーンから手札に加える時、コストを支払わずにすぐ召喚してもよい）
+
+    ブロッカー（このクリーチャーをタップして、相手クリーチャーの攻撃先をこのクリーチャーに変更してもよい）
+
+    このクリーチャーが攻撃する時、攻撃の後、このクリーチャーを破壊する。
+
+    自分の「無月の門」能力を使った時、このクリーチャーを自分の墓地からバトルゾーンにタップして出してもよい。'
+  abilities:
+  - kind: trigger
+    when:
+      event: attack
+      subject: self
+    effect:
+    - op: delayed_trigger
+      when:
+        event: attack_end
+      effect:
+      - op: destroy
+        select:
+          ref: self
+  - kind: trigger
+    zone: graveyard
+    when:
+      event: mugon_used
+      player: you
+    effect:
+    - op: may
+      body:
+      - op: move
+        select:
+          ref: self
+        to: bz
+        reason: put
+        tapped: true
+  source:
+    official: dmrp06-044
+    review: pending
+    notes: '「攻撃の後、破壊」は attack_end への delayed_trigger（バイバイ・アメーバの型）。「無月の門を使った時」は summon_on
+      が発する mugon_used イベントを受け、墓地からタップして出す（move の tapped: true）。'
+    aliases:
+    - dmsd06-003
+- id: dmrp06-045
+  faces:
+  - name: マッ★カーツ/魔渇弓・冥
+    types:
+    - creature
+    civs:
+    - darkness
+    cost: 4
+    power: 4000
+    races:
+    - マフィ・ギャング
+    - ムーゲッツ
+    abilities:
+    - kind: trigger
+      zone: graveyard
+      when:
+        event: mugon_used
+        player: you
+      effect:
+      - op: may
+        body:
+        - op: move
+          select:
+            ref: self
+          to: bz
+          reason: put
+          tapped: true
+  - name: マッ★カーツ/魔渇弓・冥
+    types:
+    - spell
+    civs: []
+    cost: 3
+    spell:
+    - op: discard
+      select:
+        zone: hand
+        owner: opp
+        look: true
+        filter:
+          not_types:
+          - creature
+        count: 1
+  mana: 1
+  text: 'マッ★カーツ: 自分の「無月の門」能力を使った時、このクリーチャーを自分の墓地からバトルゾーンにタップして出してもよい。 ／ 魔渇弓・冥: 相手の手札を見て、クリーチャーではないカードを１枚選び、捨てさせる。'
+  source:
+    official: dmrp06-045
+    review: pending
+    notes: 'ツインパクト（呪文面は raw の faces から補完、文明なし・コスト3）。クリーチャー面は mugon_used イベントで墓地からタップして出す。呪文面は手札を見て（look:
+      true）クリーチャーでないカードを選んで捨てさせる。'
+- id: dmsd06-001
+  faces:
+  - name: 卍 デ・ルパンサー 卍
+    types:
+    - creature
+    civs:
+    - darkness
+    cost: 8
+    power: 8000
+    races:
+    - マフィ・ギャング
+    - ドルスザク
+    keywords:
+    - double_breaker
+    abilities:
+    - kind: trigger
+      zone: hand
+      when:
+        event: move
+        to: bz
+        subject:
+          owner: you
+          other: true
+          filter:
+            races:
+            - 魔導具
+      if:
+        all:
+        - cmp:
+          - count:
+              zone: bz
+              owner: you
+              filter:
+                races:
+                - 魔導具
+          - '>='
+          - 2
+        - cmp:
+          - count:
+              zone: graveyard
+              owner: you
+              filter:
+                races:
+                - 魔導具
+          - '>='
+          - 2
+      effect:
+      - op: may
+        body:
+        - op: summon_on
+          parts:
+          - zone: bz
+            count: 2
+            filter:
+              races:
+              - 魔導具
+          - zone: graveyard
+            count: 2
+            filter:
+              races:
+              - 魔導具
+    - kind: trigger
+      zone: graveyard
+      when:
+        event: move
+        to: bz
+        subject:
+          owner: you
+          other: true
+          filter:
+            races:
+            - 魔導具
+      if:
+        all:
+        - cmp:
+          - count:
+              zone: bz
+              owner: you
+              filter:
+                races:
+                - 魔導具
+          - '>='
+          - 2
+        - cmp:
+          - count:
+              zone: graveyard
+              owner: you
+              filter:
+                races:
+                - 魔導具
+          - '>='
+          - 2
+      effect:
+      - op: may
+        body:
+        - op: summon_on
+          parts:
+          - zone: bz
+            count: 2
+            filter:
+              races:
+              - 魔導具
+          - zone: graveyard
+            count: 2
+            filter:
+              races:
+              - 魔導具
+    - kind: trigger
+      when:
+        event: move
+        to: bz
+        subject: self
+      effect:
+      - op: destroy
+        select:
+          zone: bz
+          owner: opp
+          filter:
+            types:
+            - creature
+            tapped: false
+          count: 1
+    - kind: trigger
+      when:
+        event: attack
+        subject: self
+      effect:
+      - op: destroy
+        select:
+          zone: bz
+          owner: opp
+          filter:
+            types:
+            - creature
+            tapped: false
+          count: 1
+  - name: 葬爪
+    types:
+    - spell
+    civs:
+    - darkness
+    cost: 2
+    spell:
+    - op: move
+      select:
+        zone: deck
+        owner: you
+        from_top: 2
+      to: graveyard
+      reason: put
+  mana: 1
+  text: '卍 デ・ルパンサー 卍: 無月の門：自分の魔導具をバトルゾーンに出した時、自分の魔導具をバトルゾーンと墓地から２つずつ選び、このクリーチャーを自分の手札または墓地からそれら４枚の上にコストを支払わずに召喚してもよい。W・ブレイカー。このクリーチャーがバトルゾーンに出た時または攻撃する時、相手のアンタップしているクリーチャーを１体破壊する。／葬爪:
+    自分の山札の上から２枚を墓地に置く。'
+  source:
+    official: dmsd06-001
+    review: pending
+    aliases:
+    - promoy17-022
+    notes: ツインパクト。無月の門は第45弾の型（zone手札/墓地の誘発＋summon_on）で変換。呪文側は山札上２枚を墓地へ
+- id: dmbd08-b-003
+  name: ソー☆ギョッ
+  types:
+  - creature
+  civs:
+  - water
+  cost: 3
+  power: 2000
+  races:
+  - ムートピア
+  mana: 1
+  text: '自分の「無月の門」能力を使った時、このクリーチャーを自分の手札または墓地からバトルゾーンにタップして出してもよい。
+
+    このクリーチャーがバトルゾーンに出た時、カードを１枚引く。その後、自分の手札を１枚捨てる。'
+  abilities:
+  - kind: trigger
+    zone: hand
+    when:
+      event: mugon_used
+      player: you
+    effect:
+    - op: may
+      body:
+      - op: move
+        select:
+          ref: self
+        to: bz
+        reason: put
+        tapped: true
+  - kind: trigger
+    zone: graveyard
+    when:
+      event: mugon_used
+      player: you
+    effect:
+    - op: may
+      body:
+      - op: move
+        select:
+          ref: self
+        to: bz
+        reason: put
+        tapped: true
+  - kind: trigger
+    when:
+      event: move
+      to: bz
+      subject: self
+    effect:
+    - op: draw
+      count: 1
+    - op: discard
+      select:
+        zone: hand
+        owner: you
+        count: 1
+  source:
+    official: dmbd08-b-003
+    review: pending
+    notes: '「無月の門を使った時」の追随は mugon_used イベントを受ける誘発（zone: hand / graveyard）で変換。手札または墓地からタップして出す（move
+      の tapped: true）。出た時のドロー＋手札1枚捨ては変換済み。再変換ラウンド20（追随再下書き）。'
+- id: dmrp06-075
+  name: カニ★ニカ
+  types:
+  - creature
+  civs:
+  - darkness
+  cost: 4
+  power: 3000
+  races:
+  - マフィ・ギャング
+  - ムーゲッツ
+  mana: 1
+  text: 'このクリーチャーが破壊された時、カードを１枚引く。
+
+    自分の「無月の門」能力を使った時、このクリーチャーを自分の墓地からバトルゾーンにタップして出してもよい。'
+  abilities:
+  - kind: trigger
+    when:
+      event: move
+      from: bz
+      to: graveyard
+      reason: destroy
+      subject: self
+    effect:
+    - op: draw
+      count: 1
+  - kind: trigger
+    zone: graveyard
+    when:
+      event: mugon_used
+      player: you
+    effect:
+    - op: may
+      body:
+      - op: move
+        select:
+          ref: self
+        to: bz
+        reason: put
+        tapped: true
+  source:
+    official: dmrp06-075
+    review: pending
+    notes: '破壊時ドローは変換。「無月の門を使った時」の追随は mugon_used イベントを受ける誘発（zone: graveyard）で変換。墓地からタップして出す（move
+      の tapped: true）'
+- id: dmrp07-019
+  name: ティン★ビン
+  types:
+  - creature
+  civs:
+  - darkness
+  cost: 4
+  power: 4000
+  races:
+  - マフィ・ギャング
+  - ムーゲッツ
+  mana: 1
+  text: '自分の「無月の門」能力を使った時、このクリーチャーを自分の墓地からバトルゾーンにタップして出してもよい。
+
+    このクリーチャーがバトルゾーンに出た時、相手は自身の手札を１枚選び、捨てる。'
+  abilities:
+  - kind: trigger
+    zone: graveyard
+    when:
+      event: mugon_used
+      player: you
+    effect:
+    - op: may
+      body:
+      - op: move
+        select:
+          ref: self
+        to: bz
+        reason: put
+        tapped: true
+  - kind: trigger
+    when:
+      event: move
+      to: bz
+      subject: self
+    effect:
+    - op: discard
+      select:
+        zone: hand
+        owner: opp
+        chooser: opp
+        count: 1
+  source:
+    official: dmrp07-019
+    review: pending
+    notes: '「無月の門を使った時」の追随は mugon_used イベントを受ける誘発（zone: graveyard）で変換。墓地からタップして出す（move
+      の tapped: true）。出た時の相手の自己選択破棄は変換'
+- id: dmrp08-036
+  name: オト☆トメ
+  types:
+  - creature
+  civs:
+  - water
+  cost: 3
+  power: 3000
+  races:
+  - ムートピア
+  - ムーゲッツ
+  mana: 1
+  text: '自分の「無月の門」能力を使った時、このクリーチャーを自分の手札または墓地からバトルゾーンにタップして出してもよい。
+
+    自分のムートピアまたはムーゲッツが破壊される時、墓地に置くかわりに自分の手札に戻してもよい。'
+  abilities:
+  - kind: trigger
+    zone: hand
+    when:
+      event: mugon_used
+      player: you
+    effect:
+    - op: may
+      body:
+      - op: move
+        select:
+          ref: self
+        to: bz
+        reason: put
+        tapped: true
+  - kind: trigger
+    zone: graveyard
+    when:
+      event: mugon_used
+      player: you
+    effect:
+    - op: may
+      body:
+      - op: move
+        select:
+          ref: self
+        to: bz
+        reason: put
+        tapped: true
+  - kind: replace
+    optional: true
+    when:
+      event: move
+      from: bz
+      to: graveyard
+      reason: destroy
+      subject:
+        owner: you
+        filter:
+          types:
+          - creature
+          races:
+          - ムートピア
+          - ムーゲッツ
+    instead:
+    - op: move
+      select:
+        ref: event.subject
+      to: hand
+      reason: return
+  source:
+    official: dmrp08-036
+    review: pending
+    notes: '「無月の門を使った時」の追随は mugon_used イベントを受ける誘発（zone: hand / graveyard）で変換。手札または墓地からタップして出す（move
+      の tapped: true）。破壊置換（ジャックバイパーと同型、対象に自身も含む）は変換'
+- id: dmsd06-005
+  name: テン★カッツ
+  types:
+  - creature
+  civs:
+  - darkness
+  cost: 3
+  power: 1000
+  races:
+  - マフィ・ギャング
+  - ムーゲッツ
+  mana: 1
+  keywords:
+  - slayer
+  text: 'スレイヤー（このクリーチャーがバトルする時、バトルの後、相手クリーチャーを破壊する）
+
+    自分の「無月の門」能力を使った時、このクリーチャーを自分の墓地からバトルゾーンにタップして出してもよい。'
+  source:
+    official: dmsd06-005
+    review: pending
+    notes: 'スレイヤーはキーワード処理済み。「無月の門を使った時」の追随は mugon_used イベントを受ける誘発（zone: graveyard）で変換。墓地からタップして出す（move
+      の tapped: true）'
+  abilities:
+  - kind: trigger
+    zone: graveyard
+    when:
+      event: mugon_used
+      player: you
+    effect:
+    - op: may
+      body:
+      - op: move
+        select:
+          ref: self
+        to: bz
+        reason: put
+        tapped: true
+- id: dm25ex2-cho001
+  name: 禁断機関 VV-8
+  types:
+  - creature
+  civs:
+  - water
+  cost: 6
+  power: 12345
+  mana: 1
+  text: 'T・ブレイカー
+
+    このクリーチャーが出た時、自分の山札の上から５枚を見て、その中から２枚を手札に加える。このクリーチャーに封印を３つ付ける。
+
+    禁断機動：このクリーチャーの封印がすべてなくなった時、このターンの後に自分のターンを追加する。'
+  abilities:
+  - kind: trigger
+    when:
+      event: move
+      to: bz
+      subject: self
+    effect:
+    - op: choose
+      select:
+        zone: deck
+        owner: you
+        from_top: 5
+        look: true
+        count: all
+      as: pile
+    - op: choose
+      select:
+        ref: pile
+        count: 2
+      as: picked
+    - op: move
+      select:
+        ref: picked
+        count: all
+      to: hand
+      reason: draw
+    - op: attach_seal
+      select:
+        ref: self
+      count: 3
+  - kind: trigger
+    when:
+      event: move
+      from: bz
+      to: graveyard
+      reason: seal
+      sealed_from: self
+    if:
+      cmp:
+      - seals_on: self
+      - ==
+      - 0
+    effect:
+    - op: extra_turn
+      player: you
+  keywords:
+  - triple_breaker
+  source:
+    official: dm25ex2-cho001
+    review: pending
+    notes: 出た時の「５枚見て２枚を手札に加える」は choose の pile 形式、封印３つは attach_seal、禁断機動は sealed_from（self）と
+      seals_on の条件で表した
+    aliases:
+    - dmex03-l01
+    - dmex15-a007
+    - dmr22-l01
+- id: dm25ex4-058
+  name: 英知の撤退
+  types:
+  - spell
+  civs:
+  - darkness
+  cost: 3
+  mana: 1
+  text: '{GS} G・ストライク（このカードを自分のシールドゾーンから手札に加える時、表向きにし、相手のクリーチャーを１体選んでもよい。このターン、そのクリーチャーは攻撃できない）
+
+    相手のクリーチャーを１体選び、相手はそれに封印を１つ付ける。（カードを封印するには、自分の山札の上から１枚を裏向きのままそのカードの上に置く。コマンドが出た時、その持ち主はそのコマンドと同じ文明を持つ自身のカードから封印を１つ、墓地に置く。封印されているクリーチャーは無視される）'
+  spell:
+  - op: attach_seal
+    select:
+      zone: bz
+      owner: opp
+      filter:
+        types:
+        - creature
+      count: 1
+    count: 1
+  keywords:
+  - g_strike
+  source:
+    official: dm25ex4-058
+    review: pending
+    notes: G・ストライクはキーワードで処理済み。呪文本体は attach_seal で表した（封印は対象の持ち主＝相手の山札の上から付く）
+- id: dm26rp2-006
+  name: 不明な不透明 メモッタ
+  types:
+  - creature
+  civs:
+  - darkness
+  cost: 4
+  power: 6000
+  mana: 1
+  keywords:
+  - double_breaker
+  text: 'W・ブレイカー
+
+    このクリーチャーが召喚によって出た時、自分の山札の上から３枚を墓地に置く。その後、コストの合計が５以下になるように、進化ではないクリーチャーを２体まで、封印を１つずつ付けて自分の墓地から出す。（カードを封印するには、自分の山札の上から１枚を裏向きでそのカードの上に置く。コマンドが出た時、その持ち主はそのコマンドと同じ文明を持つ自身のカードから封印を１つ、墓地に置く。封印されているクリーチャーは無視される）'
+  abilities:
+  - kind: trigger
+    when:
+      event: summon
+      subject: self
+    effect:
+    - op: mill
+      owner: you
+      count: 3
+    - op: move
+      select:
+        zone: graveyard
+        owner: you
+        count:
+          upto: 2
+        total_cost_le: 5
+        filter:
+          types:
+          - creature
+          evolution: false
+      to: bz
+      reason: put
+      seal: 1
+  source:
+    official: dm26rp2-006
+    review: pending
+    notes: 「封印を１つずつ付けて出す」は move の seal 指定（第46弾v2）で表した。封印は誘発の収集より前に付くので、出したクリーチャーの出た時能力は無視される
+    aliases:
+    - dm26rp2-sec013
+- id: dm26rp2-051
+  name: D2-W革命のボルトロン
+  types:
+  - creature
+  civs:
+  - darkness
+  - fire
+  cost: 3
+  power: 10000
+  mana: 1
+  races:
+  - ソニック・コマンド
+  - イニシャルズW
+  keywords:
+  - double_breaker
+  text: 'W・ブレイカー（このクリーチャーはシールドを２つブレイクする）
+
+    自分のターンの終わりに、自分のクリーチャー１体に封印を１つ付ける。
+
+    （カードを封印するには、自分の山札の上から１枚を裏向きでそのカードの上に置く。コマンドが出た時、その持ち主はそのコマンドと同じ文明を持つ自身のカードから封印を１つ、墓地に置く。封印されているクリーチャーは無視される）'
+  abilities:
+  - kind: trigger
+    when:
+      event: turn_end
+      player: you
+    effect:
+    - op: attach_seal
+      select:
+        zone: bz
+        owner: you
+        filter:
+          types:
+          - creature
+        count: 1
+  source:
+    official: dm26rp2-051
+    review: pending
+    notes: 原文どおり第46弾の attach_seal で表した。コマンドが出た時の自動解放・封印中は無視される点はエンジン側の処理
+- id: dm26rp2-064
+  name: 革命α ドルーター
+  types:
+  - creature
+  civs:
+  - darkness
+  cost: 3
+  power: 4000
+  mana: 1
+  races:
+  - ソニック・コマンド
+  - イニシャルズW
+  text: 自分の封印が墓地に置かれた時、そのカードを自分の墓地から手札に戻してもよい。
+  abilities:
+  - kind: trigger
+    when:
+      event: move
+      from: bz
+      to: graveyard
+      reason: seal
+      subject:
+        owner: you
+    effect:
+    - op: may
+      body:
+      - op: move
+        select:
+          ref: event.subject
+        to: hand
+        reason: return
+  source:
+    official: dm26rp2-064
+    review: pending
+    notes: '封印が外れて墓地に置かれる移動（reason: seal、持ち主が自分）を誘発条件とし、event.subject でその封印カード自身を手札に戻す形で原文どおり表した。封印の付いていたカードが離れて封印が墓地に置かれる場合も
+      reason: seal で記録されるため同様に誘発する'
+- id: dm26rp2-or001
+  name: 燃える禁断 ドルマゲドンW
+  types:
+  - creature
+  civs:
+  - darkness
+  - fire
+  cost: 2
+  power: 999999
+  mana: 1
+  races:
+  - 禁断
+  - ソニック・コマンド
+  keywords:
+  - triple_breaker
+  text: 'T・ブレイカー
+
+    このクリーチャーが出た時、自分の手札を１枚捨て、カードを２枚引く。その後、このクリーチャーに封印を４つ付ける。
+
+    このクリーチャーが攻撃する時、相手のクリーチャーを１体選び、相手はそれに封印を１つ付ける。（カードを封印するには、自分の山札の上から１枚を裏向きでそのカードの上に置く。コマンドが出た時、その持ち主はそのコマンドと同じ文明を持つ自身のカードから封印を１つ、墓地に置く。封印されているクリーチャーは無視される）'
+  abilities:
+  - kind: trigger
+    when:
+      event: move
+      to: bz
+      subject: self
+    effect:
+    - op: discard
+      select:
+        zone: hand
+        owner: you
+        count: 1
+    - op: draw
+      count: 2
+    - op: attach_seal
+      select:
+        ref: self
+      count: 4
+  - kind: trigger
+    when:
+      event: attack
+      subject: self
+    effect:
+    - op: attach_seal
+      select:
+        zone: bz
+        owner: opp
+        filter:
+          types:
+          - creature
+        count: 1
+  source:
+    official: dm26rp2-or001
+    review: pending
+    notes: 原文どおり第46弾の attach_seal で表した。攻撃時の封印は、選ぶのは自分で、付ける封印は対象の持ち主（相手）の山札から出る（attach_seal
+      が対象のコントローラーの山札を使うため原文と一致）
+    aliases:
+    - dm26rp2-sec001
+- id: dm26sd1-m010
+  name: 秩序の意志
+  types:
+  - spell
+  civs:
+  - darkness
+  cost: 4
+  mana: 1
+  keywords:
+  - s_back_darkness
+  text: 'S・バック：闇（指定のカードを自分のシールドゾーンから手札に加える時、そのカードを捨ててもよい。そうしたら、コストを支払わずにこのカードを実行する）
+
+    相手のクリーチャーを１体選び、相手はそれに封印を１つ付ける。（カードを封印するには、自分の山札の上から１枚を裏向きでそのカードの上に置く。コマンドが出た時、その持ち主はそのコマンドと同じ文明を持つ自身のカードから封印を１つ、墓地に置く。封印されているクリーチャーは無視される）'
+  spell:
+  - op: attach_seal
+    select:
+      zone: bz
+      owner: opp
+      filter:
+        types:
+        - creature
+      count: 1
+  source:
+    official: dm26sd1-m010
+    review: pending
+    notes: S・バック：闇はキーワード s_back_darkness で処理済み。本文は attach_seal で原文どおり表した（付ける封印は相手の山札から出る）
+    aliases:
+    - dm23bd3-007
+    - dm23rp3-t03
+    - dm23rp3-tf03
+    - dm24ex3-td11
+    - dmart16-003
+    - dmex12-035
+    - dmex15-b065
+    - promoy23-007
+- id: dmx23-043
+  name: 禁断の影 ードキンダム・ソウルー
+  types:
+  - creature
+  civs:
+  - fire
+  cost: 4
+  power: 9999
+  mana: 1
+  keywords:
+  - double_breaker
+  abilities:
+  - kind: trigger
+    when:
+      event: move
+      to: bz
+      subject: self
+    effect:
+    - op: attach_seal
+      select:
+        ref: self
+      count: 3
+  - kind: trigger
+    when:
+      event: attack
+      subject: self
+    effect:
+    - op: attach_seal
+      select:
+        zone: bz
+        owner: opp
+        filter:
+          types:
+          - creature
+        count: 1
+      count: 2
+  text: W・ブレイカーこのクリーチャーがバトルゾーンに出た時、封印を３つ付ける。このクリーチャーが攻撃する時、相手のクリーチャーを１体選び、相手はそれに封印を２つ付ける。（カードを封印するには、自分の山札の上から１枚目を裏向きのままそのカードの上に置く。コマンドがバトルゾーンに出た時、その持ち主はそのコマンドと同じ文明を持つ自身のカードから封印を１つ、墓地に置く。クリーチャーが封印されている間、両プレイヤーはそのクリーチャーを無視する）
+  source:
+    official: dmx23-043
+    review: pending
+    notes: 出た時の原文は『封印を３つ付ける』と対象の明記がないが、封印には宿主が必要であり、禁断クリーチャーの通例として、このクリーチャー自身に付けるものとして変換した（要レビュー）。攻撃時は相手のクリーチャー1体に、相手の山札から封印を2つ付ける形で変換。
+- id: dmx23-044
+  name: 禁断V デカルパ
+  types:
+  - creature
+  civs:
+  - fire
+  cost: 5
+  power: 4000
+  races:
+  - ソニック・コマンド
+  - イニシャルズ
+  mana: 1
+  abilities:
+  - kind: trigger
+    when:
+      event: attack
+      subject: self
+    effect:
+    - op: remove_seal
+      select:
+        zone: bz
+        owner: you
+        filter:
+          sealed: true
+        count: 1
+      count: 1
+    - op: remove_seal
+      select:
+        zone: bz
+        owner: you
+        filter:
+          sealed: true
+        count: 1
+      count: 1
+  - kind: trigger
+    when:
+      event: move
+      from: bz
+      to: graveyard
+      reason: seal
+      subject:
+        owner: you
+    effect:
+    - op: may
+      body:
+      - op: draw
+        count: 1
+  text: このクリーチャーが攻撃する時、自分の封印を２つ、墓地に置く。自分の封印を墓地に置いた時、カードを１枚引いてもよい。
+  source:
+    official: dmx23-044
+    review: pending
+    notes: '攻撃時の『自分の封印を２つ、墓地に置く』は、宿主を問わず任意の2つを選べるよう remove_seal（宿主1体・1つ）を2回に分けて変換。封印が1つしかなければ1つだけ置く。『封印を墓地に置いた時』は
+      reason: seal の移動（宿主が離れた際に付いて行く封印も含む）で誘発する形で変換。'
+- id: dmx23-045
+  name: リベレーション・オブ・ジ・エンド
+  types:
+  - spell
+  civs:
+  - fire
+  cost: 9
+  mana: 1
+  keywords:
+  - s_trigger
+  spell:
+  - op: destroy
+    select:
+      zone: bz
+      owner: opp
+      filter:
+        types:
+        - creature
+        power_le: 9999
+      count: 1
+  - op: remove_seal
+    select:
+      zone: bz
+      owner: you
+      filter:
+        sealed: true
+      count: 1
+    count: 1
+  text: S・トリガー（この呪文をシールドゾーンから手札に加える時、コストを支払わずにすぐ唱えてもよい）相手のパワー9999以下のクリーチャーを１体、破壊する。自分の封印を１つ、墓地に置く。
+  source:
+    official: dmx23-045
+    review: pending
+    aliases:
+    - dmd27-017
+    - dmx22b-091
+    - promoy14-046
+    notes: 原文どおり変換。自分の封印がなければ封印を置く部分は何もしない。
+- id: dmx23-046
+  name: 禁断U トルーパ
+  types:
+  - creature
+  civs:
+  - fire
+  cost: 3
+  power: 3000
+  races:
+  - ヒューマノイド爆
+  - 侵略者
+  - イニシャルズ
+  mana: 1
+  abilities:
+  - kind: trigger
+    when:
+      event: attack
+      subject: self
+    effect:
+    - op: remove_seal
+      select:
+        zone: bz
+        owner: you
+        filter:
+          sealed: true
+        count: 1
+      count: 1
+  text: このクリーチャーが攻撃する時、自分の封印を１つ、墓地に置く。
+  source:
+    official: dmx23-046
+    review: pending
+    aliases:
+    - dmr19-043
+    - promoy14-047
+    notes: 原文どおり変換。自分の封印がなければ何もしない。
+- id: dmx26-007
+  name: ドキンダム・アポカリプス
+  types:
+  - creature
+  civs:
+  - darkness
+  - fire
+  cost: 9
+  power: 9999
+  mana: 1
+  keywords:
+  - double_breaker
+  abilities:
+  - kind: trigger
+    when:
+      event: move
+      to: bz
+      subject: self
+    effect:
+    - op: attach_seal
+      select:
+        zone: bz
+        owner: any
+        filter:
+          types:
+          - creature
+        count: all
+      count: 1
+  text: マナゾーンに置く時、このカードはタップして置く。W・ブレイカーこのクリーチャーがバトルゾーンに出た時、クリーチャーすべてに封印を１つ付ける。（カードを封印するには、自分の山札の上から１枚目を裏向きのままそのカードの上に置く。コマンドがバトルゾーンに出た時、その持ち主はそのコマンドと同じ文明を持つ自身のカードから封印を１つ、墓地に置く。クリーチャーが封印されている間、両プレイヤーはそのクリーチャーを無視する）
+  source:
+    official: dmx26-007
+    review: pending
+    notes: 『マナゾーンに置く時タップして置く』は多色カードのルール（405.1）で処理される注釈のため能力として書かない。封印は両プレイヤーのクリーチャーすべて（自身を含む）に、その持ち主の山札から1つずつ付ける形で変換。既に封印されているクリーチャーはエンジンの無視仕様により選択対象にならず、追加の封印は付かない。

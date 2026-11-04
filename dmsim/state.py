@@ -39,8 +39,10 @@ class Card:
     face_up: bool = False
     face_down: bool = False                            # マナゾーンで裏向き（水晶武装）。マナとしては無色扱い
     entered_turn: int = -1
-    under: list[int] = field(default_factory=list)  # 下に重なっているカード（進化元・封印など。設計判断②）
+    under: list[int] = field(default_factory=list)  # 下に重なっているカード（進化元など。設計判断②）
     top_of: int = -1                                  # 自分が下に重なっている場合、その一番上の cid
+    seals: list[int] = field(default_factory=list)  # 封印: このカードの上に裏向きで重なっているカード（付けた順）
+    seal_of: int = -1                                 # 自分が封印として重なっている場合、その対象の cid
     face: int = -1                                    # ツインパクト等で今使っている面（-1 = カード全体, 810）
     entered_seq: int = 0                              # バトルゾーンに出た時刻（608.5 無視効果の優先）
     crossed: list | None = None                       # クロスギアがクロスしているクリーチャーの参照 [cid, gen]（303.3）。離れていれば無効
@@ -71,6 +73,7 @@ def _copy_card(c: "Card") -> "Card":
     d = n.__dict__
     d.update(c.__dict__)
     d["under"] = list(c.under)
+    d["seals"] = list(c.seals)
     return n
 
 

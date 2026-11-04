@@ -335,6 +335,22 @@ class DeclareTask(TypedDict):
     answer: NotRequired[list[int]]
 
 
+class LoseReplaceTask(TypedDict):
+    """敗北の置換（S-MAX進化など）: 敗北が確定する前に、置換できるかを敗北するプレイヤーに諮る。"""
+    t: Literal["lose_replace"]
+    loser: int
+    reason: str
+    phase: int
+    answer: NotRequired[list[int]]
+
+
+class SmaxReduceTask(TypedDict):
+    """S-MAX進化の2体制限（状況起因）: 残す1体を選び、残りをすべて手札に戻す。"""
+    t: Literal["smax_reduce"]
+    player: int
+    answer: NotRequired[list[int]]
+
+
 class BindTask(TypedDict):
     t: Literal["bind"]
     env: Env
@@ -361,6 +377,12 @@ class InvadeFixTask(TypedDict):
     tapped: bool
 
 
+class SummonOnFixTask(TypedDict):
+    t: Literal["summon_on_fix"]
+    cid: int
+    tapped: bool
+
+
 class PutUnderTask(TypedDict):
     t: Literal["put_under"]
     cid: int
@@ -371,6 +393,12 @@ class PutUnderTask(TypedDict):
 class SlayerTask(TypedDict):
     t: Literal["slayer"]
     pairs: list[list[Ref]]               # [スレイヤーを持っていた負けたクリーチャー, バトル相手]
+
+
+class SealReleaseTask(TypedDict):
+    t: Literal["seal_release"]
+    player: int
+    civs: list[str]
 
 
 def check_shape(d: dict, shape) -> None:

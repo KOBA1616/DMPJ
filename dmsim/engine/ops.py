@@ -6,7 +6,7 @@ from .registry import op
 
 
 @op("move", select="selector", to="zone", reason="reason", position="position?", card_only="bool?",
-    order="str?", tapped="bool?", face_up="bool?", **{"as": "str?"})
+    order="str?", tapped="bool?", face_up="bool?", seal="int?", **{"as": "str?"})
 def op_move(eng, t, op, env):
     """ゾーン移動。as を付けると、移動した後のカード（新しいオブジェクト）を変数に入れる（「その〜」で使う）。
     card_only: カードとして動かす（109.2a）。進化クリーチャーの一番上だけが離れ、下は再構築される（801.4）。
@@ -43,6 +43,9 @@ def op_move(eng, t, op, env):
     if op.get("face_up"):
         for e in evs:
             e["face_up"] = True
+    if op.get("seal"):
+        for e in evs:
+            e["seal"] = op["seal"]   # バトルゾーンに出る時、封印を付けた状態で出る（出た時能力は無視される）
     bind = [{"t": "bind", "env": env, "name": op["as"], "cids": cids, "zone": op["to"]}] if "as" in op else []
     if not evs and not out_tasks:
         if bind:
@@ -224,7 +227,9 @@ def op_win(eng, t, op, env):
 @op("lose", player="player?")
 def op_lose(eng, t, op, env):
     p = eng._rel(op.get("player", "you"), env)
-    eng.s.result = {"winner": 1 - p, "reason": "effect", "turn": eng.s.turn}
+    tasks = eng.game_lose(p, "effect")   # 敗北の置換（S-MAX進化など）を諮ってから確定する
+    if tasks:
+        eng._defer(t, tasks)
 
 
 @op("set_var", name="str", value="any?")
@@ -570,10 +575,134 @@ def op_invade(eng, t, op, env):
     return None
 
 
+@op("summon_on", parts="any", tapped="bool?")
+def op_summon_on(eng, t, op, env):
+    """無月の門: parts で指定した枚数を自分のゾーンから選び、その上に self をコストを支払わずに召喚する。
+    parts: [{zone: <zone>, count: N, filter?: {...}}] の並び（zones: [z1, z2] なら複数ゾーンの合算から選ぶ）。
+    選んだカードは進化と同じ仕組みで下に重なるが、召喚酔いとタップ状態は通常の召喚として扱う（summon_on_fix）。
+    どこか1パートでも必要枚数を満たせなければ、何もしない。"""
+    s = eng.s
+    you = env["you"]
+    me = env["self"][0]
+    if s.cards[me].zone not in ("hand", "graveyard"):
+        return None
+
+    def cands(part, picked):
+        zones = part.get("zones") or [part["zone"]]
+        return [c for z in zones for c in eng.zlist(z, you)
+                if c != me and c not in picked and s.cards[c].top_of == -1
+                and eng.filter_match(c, part.get("filter", {}))]
+
+    os_ = t["os"]
+    if "picked" not in os_:
+        acc = []
+        for part in op["parts"]:
+            if len(cands(part, acc)) < part["count"]:
+                return None   # 実現可能性がない場合は誘発しても何もしない
+            acc += cands(part, acc)[:part["count"]]
+        os_["picked"] = []
+        os_["stage"] = 0
+    parts = op["parts"]
+    while os_["stage"] < len(parts):
+        part = parts[os_["stage"]]
+        cs = cands(part, os_["picked"])
+        if len(cs) < part["count"]:
+            return None
+        opts = [{"key": f"card:{s.cards[c].defn}", "cid": c} for c in cs]
+        a, d = eng.ask(t, you, "summon_on", opts, part["count"], part["count"])
+        if d:
+            return d
+        os_["picked"] += [cs[i] for i in a]
+        os_["stage"] += 1
+    picked = os_["picked"]
+    if not picked:
+        return None
+    ev = {"ev": "move", "subject": s.ref(me), "to": "bz", "reason": "summon", "unpaid": True,
+          "stack_on": s.ref(picked[0]), "stack_more": [s.ref(c) for c in picked[1:]]}
+    used = {"ev": "mugon_used", "subject": s.ref(me), "player": you}   # 「無月の門能力を使った時」の追随用
+    eng._defer(t, [eng.ev_task(ev, env), {"t": "summon_on_fix", "cid": me, "tapped": bool(op.get("tapped"))},
+                   eng.ev_task(used, env)])
+    return None
+
+
+@op("attach_seal", select="selector", count="int?")
+def op_attach_seal(eng, t, op, env):
+    """封印を付ける: 選んだカードそれぞれに、その持ち主の山札の上から count 枚（既定1）を裏向きで重ねる。
+    封印されたカードは無視される（特性・能力が機能しない）。山札が足りなければあるだけ付ける。
+    すでに封印されているカードにも追加で付けられる（選択の間だけ無視を外す）。"""
+    eng._seal_ok = getattr(eng, "_seal_ok", 0) + 1
+    try:
+        cids, d = eng.select(t, op["select"], env)
+    finally:
+        eng._seal_ok -= 1
+    if d:
+        return d
+    s = eng.s
+    n = op.get("count", 1)
+    for cid in cids:
+        c = s.cards[cid]
+        if c.zone != "bz" or c.top_of >= 0:
+            continue
+        deck = s.zones["deck"][c.controller]
+        for _ in range(n):
+            if not deck:
+                break
+            top = deck[0]
+            eng._raw_move(top, "bz")
+            sc = s.cards[top]
+            sc.top_of = cid
+            sc.seal_of = cid
+            c.seals.append(top)
+    return None
+
+
+@op("remove_seal", select="selector", count="int?")
+def op_remove_seal(eng, t, op, env):
+    """封印を外す: 選んだカードそれぞれから count 枚（既定1）までの封印を墓地に置く。
+    移動イベントとして処理するので、「封印が離れた時」「封印がすべてなくなった時」が誘発する。
+    対象は封印されたカードなので、選択の間だけ無視を外す。"""
+    eng._seal_ok = getattr(eng, "_seal_ok", 0) + 1
+    try:
+        cids, d = eng.select(t, op["select"], env)
+    finally:
+        eng._seal_ok -= 1
+    if d:
+        return d
+    s = eng.s
+    n = op.get("count", 1)
+    evs = []
+    for cid in cids:
+        for seal in list(s.cards[cid].seals)[:n]:
+            evs.append({"ev": "move", "subject": s.ref(seal), "to": "graveyard", "reason": "seal"})
+    if evs:
+        eng._defer(t, [eng.ev_task(evs, env)])
+    return None
+
+
 @op("end_turn")
 def op_end_turn(eng, t, op, env):
     """ターンの残りをとばす（次のプレイヤーのターンをすぐに始める）。今の効果の解決は最後まで行う。"""
     eng.s.skip_rest = True
+
+
+@op("use_partner")
+def op_use_partner(eng, t, op, env):
+    """キズナ: 自分のクリーチャー1体の[P]能力（kind: partner）を選んで使う。
+    効果の self は [P] を持つクリーチャーに移る。[P] を持つクリーチャーがいなければ何もしない。"""
+    you = env["you"]
+    cands = []
+    for c in eng.bz_tops(you):
+        for i, ab in eng.abilities(c, "partner"):
+            cands.append((c, i, ab))
+    if not cands:
+        return None
+    opts = [{"key": f"partner:{eng.s.cards[c].defn}:{i}", "cid": c, "ab": i} for c, i, _ in cands]
+    a, d = eng.ask(t, you, "use_partner", opts)
+    if d:
+        return d
+    c, i, ab = cands[a[0]]
+    eng._defer(t, [eng._child(ab["effect"], dict(env, self=eng.s.ref(c)))])
+    return None
 
 
 @op("choose", select="selector", **{"as": "str"})
