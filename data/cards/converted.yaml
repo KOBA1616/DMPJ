@@ -289903,3 +289903,249 @@ cards:
   text: スピードアタッカー（このクリーチャーは召喚酔いしない）W・ブレイカー（このクリーチャーはシールドを２つブレイクする）このクリーチャーは、バトルゾーンに出たターンに、アンタップしているクリーチャーを攻撃できる。
   types:
   - creature
+- faces:
+  - abilities:
+    - affects: self
+      kind: static
+      mod:
+        win_all_battles: true
+    civs:
+    - light
+    cost: 5
+    keywords:
+    - mega_last_burst
+    mana: 1
+    name: 蜘紙の聖沌 kum0
+    power: 4000
+    races:
+    - メカ・デル・ステラ
+    - シノビ
+    text: このクリーチャーはすべてのバトルに勝つ。 / メガ・ラスト・バースト
+    types:
+    - creature
+  - civs:
+    - light
+    cost: 3
+    mana: 1
+    name: 聖沌忍法 メカ吹雪の術
+    spell:
+    - as: e
+      op: choose
+      select:
+        count: 1
+        filter:
+          cost_le: 3
+        owner: opp
+        zone: bz
+    - op: move
+      reason: put
+      select:
+        ref: e
+      to: shield
+    text: 相手のコスト３以下のエレメントを１つ選び、シールド化する。
+    types:
+    - spell
+  id: dm23rp3-009
+  name: 蜘紙の聖沌 kum0 / 聖沌忍法 メカ吹雪の術
+  source:
+    official: dm23rp3-009
+    review: pending
+- abilities:
+  - kind: trigger
+    when:
+      event: turn_end
+      player: you
+    effect:
+    - op: untap
+      select:
+        ref: self
+  - effect:
+    - op: untap
+      select:
+        ref: self
+    kind: trigger
+    when:
+      event: turn_end
+      player: you
+  - effect:
+    - duration: until_next_own_turn_start
+      mod:
+        win_all_battles: true
+      op: modify
+      select:
+        ref: event.subject
+    first_time: true
+    kind: trigger
+    when:
+      event: attack
+      subject:
+        filter:
+          types:
+          - creature
+        owner: you
+  civs:
+  - light
+  cost: 5
+  id: dmrp16-012
+  keywords:
+  - blocker
+  mana: 1
+  name: 初忍の鎖 ムテキホッグ
+  power: 5000
+  races:
+  - ビーストフォーク
+  - 暴拳王国
+  source:
+    official: dmrp16-012
+    review: pending
+  text: 'ブロッカー（このクリーチャーをタップして、相手クリーチャーの攻撃先をこのクリーチャーに変更してもよい）
+
+    自分のターンの終わりに、このクリーチャーをアンタップする。
+
+    アバレチェーン：自分のクリーチャーが攻撃する時、それがこのターン最初の攻撃なら、次の自分のターンのはじめまで、そのクリーチャーはすべてのバトルに勝つ。'
+  types:
+  - creature
+- abilities:
+  - effect:
+    - body:
+      - as: c
+        op: choose
+        select:
+          count: any
+          filter:
+            races:
+            - メカ・デル・ステラ
+          owner: you
+          zone: hand
+      - op: move
+        reason: put
+        select:
+          ref: c
+        to: bz
+      op: may
+    kind: trigger
+    when:
+      event: tap
+      subject: self
+  - effect:
+    - body:
+      - op: shield_plus
+      op: may
+    kind: trigger
+    when:
+      event: attack
+      subject:
+        filter:
+          race_has: メカ
+        owner: you
+  - effect:
+    - body:
+      - op: shield_plus
+      op: may
+    kind: trigger
+    when:
+      event: block
+      subject:
+        filter:
+          race_has: メカ
+        owner: you
+  - affects:
+      filter:
+        race_has: メカ
+      owner: you
+      zone: bz
+    if:
+      cmp:
+      - count:
+          owner: you
+          zone: shield
+      - '>='
+      - 10
+    kind: static
+    mod:
+      deny:
+      - be_chosen
+      win_all_battles: true
+  civs:
+  - light
+  cost: 8
+  id: dm23rp2x-01a
+  keywords:
+  - blocker
+  - triple_breaker
+  mana: 1
+  name: 聖沌大忍者 シキソクゼック
+  power: 13000
+  races:
+  - メカ・デル・ソル
+  - シノビ
+  source:
+    official: dm23rp2x-01a
+    review: pending
+    aliases:
+    - dm23rp2-01a
+    - dm23rp2-03b
+    - dm23rp2-s01
+    - dm23rp2x-03b
+    - dm23rp2x-s01
+    - dm23rp2x-s01x
+  text: 'ブロッカー
+
+    T・ブレイカー
+
+    このクリーチャーがタップした時、自分の手札から好きな数のメカ・デル・ステラを出してもよい。
+
+    自分のメカが攻撃またはブロックした時、自分の山札の上から１枚目をシールド化してもよい。
+
+    自分のシールドが10以上あれば、自分のメカはすべてのバトルに勝ち、相手に選ばれない。'
+  types:
+  - creature
+- civs:
+  - light
+  cost: 2
+  id: dm23rp1-031
+  keywords:
+  - s_trigger_plus
+  mana: 1
+  name: ディライト・ディフェンス
+  source:
+    official: dm23rp1-031
+    review: pending
+  spell:
+  - op: untap
+    select:
+      count: all
+      filter:
+        types:
+        - creature
+      owner: you
+      zone: bz
+  - duration: until_next_own_turn_start
+    mod:
+      grant:
+      - blocker
+    op: modify
+    select:
+      filter:
+        types:
+        - creature
+      owner: you
+      zone: bz
+  stp_spell:
+  - duration: end_of_turn
+    mod:
+      win_all_battles: true
+    op: modify
+    select:
+      filter:
+        types:
+        - creature
+      owner: you
+      zone: bz
+  text: '{STP} S・トリガー・プラス（この呪文を自分のシールドゾーンから手札に加える時、コストを支払わずにすぐ唱えてもよい。それが相手のターンで、そのターン中に自分のシールドが２つ以上ブレイクされていれば、この呪文に{x+}能力を与える）
+
+    自分のクリーチャーをすべてアンタップする。次の自分のターンのはじめまで、それらのクリーチャーに「ブロッカー」を与える。（「ブロッカー」を持つクリーチャーをタップして、相手クリーチャーの攻撃先をそのクリーチャーに変更してもよい）
+
+    {x+}このターン、自分のクリーチャーはすべてのバトルに勝つ。'
+  types:
+  - spell
