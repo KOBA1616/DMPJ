@@ -265,7 +265,7 @@ class TurnMixin:
         action = "summon" if d.is_creature() else "generate" if d.is_permanent() else "cast"
         if not self.permits(cid, action) or (d.is_creature() and not self.permits(cid, "enter_bz")):
             return False
-        if "evolution" in d.types:
+        if "evolution" in d.types and not d.s_max:   # S-MAX進化は進化元を必要としない（通常召喚として扱う）
             if isinstance(d.evolve_from, list):   # 進化V: フィルタごとに進化元が要る
                 if not self._evo_v_ready(cid, p, face):
                     return False
@@ -717,7 +717,7 @@ def h_play(eng, t):
         t["alt_done"] = True
         t["free"] = True        # コストは行動で払い切った
         t["as_paid"] = True
-    if ("evolution" in d.types or t.get("evo_mode")) and "evo" not in t:
+    if ("evolution" in d.types or t.get("evo_mode")) and "evo" not in t and not eng.cdef(cid).face(face).s_max:
         face_def = eng.cdef(cid).face(face)
         if isinstance(face_def.evolve_from, list):   # 進化V: フィルタごとに1体ずつ選ぶ
             chosen = t.setdefault("evo_v", [])

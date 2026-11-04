@@ -1,7 +1,7 @@
 """効果DSLのインタプリタ。op は ops.py で registry に登録する。"""
 from __future__ import annotations
 
-from ..types import BindTask, EffectTask, InvadeFixTask, PutUnderTask, SwapFixTask, SwapInTask
+from ..types import BindTask, EffectTask, InvadeFixTask, PutUnderTask, SummonOnFixTask, SwapFixTask, SwapInTask
 from .registry import OPS, task
 
 
@@ -78,6 +78,20 @@ def h_invade_fix(eng, t):
     if s.cards[cid].zone != "bz" or not s.alive(onto) or s.cards[onto[0]].zone != "bz":
         return None
     eng._stack(cid, onto[0])
+    return None
+
+
+@task("summon_on_fix", SummonOnFixTask)
+def h_summon_on_fix(eng, t):
+    """無月の門の後始末: 重ねる処理（_stack）は進化の流儀で召喚酔いを消しタップ状態を引き継ぐため、
+    通常の召喚として直す（召喚酔いする。タップ状態は op の指定どおり）。"""
+    s = eng.s
+    eng._pop(t)
+    c = s.cards[t["cid"]]
+    if c.zone != "bz":
+        return None
+    c.tapped = t["tapped"]
+    c.entered_turn = s.turn
     return None
 
 
