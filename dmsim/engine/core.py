@@ -433,6 +433,9 @@ class Engine(SelectorMixin, EventMixin, InterpreterMixin, TurnMixin, CombatMixin
                 ch["battle_indestructible"] = True
             if m.get("win_all_battles"):   # 「このクリーチャーはすべてのバトルに勝つ」（第61弾）
                 ch["win_all_battles"] = True
+            for cv in m.get("add_civs", []):   # 文明追加（第62弾）
+                if cv not in ch["civs"]:
+                    ch["civs"].append(cv)
             for r in m.get("add_races", []):   # 種族追加（「種族に〜を追加する」）
                 if r not in ch["races"]:
                     ch["races"].append(r)

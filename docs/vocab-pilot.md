@@ -781,3 +781,11 @@ converted の監査（opt_reduce の素の整数表記9件）から。任意形�
 - 書き方: kind: static, affects: self, mod: {win_all_battles: true}。
 - tests/test_vocab_pilot61.py 2件（正常 parse／不正値の検証エラー）。
 - 待機4枚（win_all_battles のみが gap のもの）。dmrp15-031 は ability_ignore との複合のため別途対応。
+
+## 第62弾: add_civs（文明追加）（2026-11-04）
+「〜は〜のクリーチャーでもある」「文明に〜を追加する」を表す語彙が無かった。
+- defs: MOD_KEYS に `add_civs` を追加。文明名の非空リスト（CIVS で検証）。
+- engine/core.py: chars の集約で add_civs の文明を ch["civs"] に追加（重複なし）。
+- 書き方: kind: static, affects: {...}, mod: {add_civs: ["fire"]}。「好きな文明をひとつ追加する」は選択肢が必要なため別途検討。
+- tests/test_vocab_pilot62.py 2件（正常 parse／不正値の検証エラー）。
+- 待機10枚（civ_addition のみが gap のもの）。
