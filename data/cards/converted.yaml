@@ -287916,3 +287916,939 @@ cards:
     aliases:
     - dm25rp2-048
     - promoy25-051
+- faces:
+  - abilities:
+    - effect:
+      - body:
+        - as: target
+          op: choose
+          select:
+            count: 1
+            owner: opp
+            zone: shield
+        - op: move
+          reason: put
+          select:
+            ref: target
+          to: mana
+        op: may
+      kind: trigger
+      when:
+        event: battle_win
+        subject: self
+    - affects:
+        filter:
+          cost_le: 5
+          types:
+          - spell
+        owner: opp
+        zone: hand
+      kind: static
+      mod:
+        deny:
+        - cast
+    - affects:
+        filter:
+          cost_le: 5
+          types:
+          - tamaseed
+          - field
+          - cross_gear
+        owner: opp
+        zone: hand
+      kind: static
+      mod:
+        deny:
+        - generate
+    civs:
+    - nature
+    cost: 8
+    keywords:
+    - triple_breaker
+    mana: 1
+    name: 超球の超人
+    power: 12000
+    races:
+    - ジャイアント
+    types:
+    - creature
+  - civs:
+    - nature
+    cost: 5
+    mana: 1
+    name: 父なるタッチダウン
+    spell:
+    - as: target
+      op: choose
+      select:
+        count: 1
+        filter:
+          types:
+          - creature
+        owner: opp
+        zone: bz
+    - op: move
+      reason: put
+      select:
+        ref: target
+      to: mana
+    - body:
+      - op: move
+        reason: put
+        select:
+          count: 1
+          filter:
+            cost_le:
+              sum:
+              - cost_of: target
+              - -1
+            types:
+            - creature
+          owner: you
+          zone: mana
+        to: bz
+      op: may
+    types:
+    - spell
+  id: dm26sd1-q004
+  source:
+    notes: マッハファイターは keyword_patterns で自動処理。相手の非クリーチャー実行禁止は呪文への cast 禁止とタマシード・フィールド・クロスギアへの
+      generate 禁止に分けて記述
+    official: dm26sd1-q004
+    review: pending
+    aliases:
+    - dm23rp2-07a
+    - dm23rp2-09b
+    - dm23rp2-s07
+    - dm23rp2x-07a
+    - dm23rp2x-09b
+    - dm23rp2x-s07
+    - dm23rp2x-s07x
+  text: '超球の超人: マッハファイター / T・ブレイカー / このクリーチャーがバトルに勝った時、相手のシールドを１つ選び、持ち主のマナゾーンに置いてもよい。
+    / 相手はコスト５以下の、クリーチャーではないカードを実行できない。 ／ 父なるタッチダウン: 相手のクリーチャーを１体選び、持ち主のマナゾーンに置く。その後、そのクリーチャーよりコストが小さいクリーチャーを１体、自分のマナゾーンから出してもよい。'
+- faces:
+  - abilities:
+    - effect:
+      - op: move
+        reason: put
+        select:
+          count: 1
+          filter:
+            twinpact: true
+          owner: you
+          zone: graveyard
+        to: mana
+      kind: trigger
+      when:
+        event: move
+        subject: self
+        to: bz
+    - effect:
+      - body:
+        - op: move
+          reason: put
+          select:
+            count: 1
+            filter:
+              cost_le:
+                sum:
+                - count:
+                    filter:
+                      twinpact: true
+                    owner: you
+                    zone: mana
+                - -1
+              types:
+              - creature
+            owner: you
+            zone: mana
+          to: bz
+        op: may
+      kind: trigger
+      when:
+        attacker: self
+        event: attack
+    civs:
+    - nature
+    cost: 5
+    mana: 1
+    name: 全虹帝 ミノガミ
+    power: 5000
+    races:
+    - グランセクト
+    types:
+    - creature
+  - civs:
+    - nature
+    cost: 3
+    mana: 1
+    name: ハザード・パクト
+    spell:
+    - as: put_card
+      op: move
+      reason: put
+      select:
+        from_top: 1
+        owner: you
+        zone: deck
+      to: mana
+    - cond:
+        exists:
+          filter:
+            twinpact: true
+          ref: put_card
+      op: if
+      then:
+      - count: 1
+        op: draw
+        player: you
+    types:
+    - spell
+  id: dm26sd1-u008
+  source:
+    notes: マッハファイターは keyword_patterns で自動処理。「ツインパクトカードの枚数よりコストが小さい」は cost_le に sum
+      で枚数-1 を指定
+    official: dm26sd1-u008
+    review: pending
+    aliases:
+    - dm23bd6-031
+    - dmex16-081
+  text: '全虹帝 ミノガミ: マッハファイター / このクリーチャーが出た時、ツインパクトカードを１枚、自分の墓地からマナゾーンに置く。 / このクリーチャーが攻撃する時、自分のマナゾーンにあるツインパクトカードの枚数よりコストが小さいクリーチャーを１体、自分のマナゾーンから出してもよい。
+    ／ ハザード・パクト: 自分の山札の上から１枚をマナゾーンに置く。それがツインパクトカードなら、カードを１枚引く。'
+- faces:
+  - civs:
+    - nature
+    cost: 4
+    mana: 1
+    name: アカシシーマ/レッド・アグラフ
+    power: 4000
+    races:
+    - グランセクト
+    types:
+    - creature
+  - civs:
+    - nature
+    cost: 2
+    mana: 1
+    name: アカシシーマ/レッド・アグラフ
+    spell:
+    - duration: end_of_turn
+      mod:
+        allow:
+        - action: attack_creature
+          other:
+            tapped: false
+        power: 4000
+      op: modify
+      select:
+        count: 1
+        filter:
+          types:
+          - creature
+        owner: you
+        zone: bz
+    types:
+    - spell
+  id: dmbd08-a-010
+  source:
+    notes: クリーチャー面のマッハファイターは keyword_patterns で自動処理。呪文面はパワー+4000とアンタップ攻撃許可を duration
+      end_of_turn で付与
+    official: dmbd08-a-010
+    review: pending
+    aliases:
+    - dmrp06-054
+  text: 'アカシシーマ: マッハファイター ／ レッド・アグラフ: このターン、自分のクリーチャー１体はパワーを+4000され、タップまたはアンタップしているクリーチャーを攻撃できる。'
+- faces:
+  - abilities:
+    - effect:
+      - op: move
+        reason: put
+        select:
+          ref: self
+        to: mana
+      kind: replace
+      when:
+        event: move
+        reason: destroy
+        subject: self
+        to: graveyard
+    civs:
+    - nature
+    cost: 4
+    mana: 1
+    name: オブラディ・ホーネット
+    power: 5000
+    races:
+    - グランセクト
+    types:
+    - creature
+  - civs:
+    - nature
+    cost: 3
+    mana: 1
+    name: 「Let it Bee！」
+    spell:
+    - count: 1
+      op: draw
+      player: you
+    - op: move
+      reason: put
+      select:
+        count: 1
+        owner: you
+        zone: hand
+      to: mana
+    types:
+    - spell
+  id: dmex17-041
+  source:
+    notes: マッハファイターは keyword_patterns で自動処理。破壊置換は replace で墓地行きをマナゾーン行きに変更
+    official: dmex17-041
+    review: pending
+    aliases:
+    - dmrp06-010
+  text: 'オブラディ・ホーネット: マッハファイター / このクリーチャーが破壊される時、墓地に置くかわりにマナゾーンに置く。 ／ 「Let it Bee！」:
+    カードを１枚引き、その後、自分の手札を１枚、マナゾーンに置く。'
+- faces:
+  - abilities:
+    - effect:
+      - body:
+        - op: move
+          reason: put
+          select:
+            from_top: 2
+            owner: you
+            zone: deck
+          to: mana
+        - op: move
+          reason: return
+          select:
+            count: 1
+            owner: you
+            zone: mana
+          to: hand
+        op: may
+      kind: trigger
+      when:
+        event: battle_win
+        subject: self
+    civs:
+    - nature
+    cost: 4
+    name: タイムピョンチキ
+    power: 5000
+    races:
+    - ジョーカーズ
+    - レクスターズ
+    types:
+    - creature
+  - civs:
+    - nature
+    cost: 3
+    name: オラオラ・ジョーカーズ
+    spell:
+    - as: moved
+      op: move
+      reason: put
+      select:
+        from_top: 1
+        owner: you
+        zone: deck
+      to: mana
+    - cond:
+        exists:
+          filter:
+            race_has: ジョーカーズ
+          ref: moved
+      op: if
+      then:
+      - count: 1
+        op: draw
+        player: you
+    types:
+    - spell
+  id: dm26sd1-n010
+  mana: 1
+  source:
+    notes: マッハファイターは keyword_patterns で自動処理
+    official: dm26sd1-n010
+    review: pending
+    aliases:
+    - dm24ex2-071
+    - dm25ex2-cho047
+  text: 'タイムピョンチキ: このクリーチャーがバトルに勝った時、山札の上から２枚をマナゾーンに置いてもよい。そうしたら、カードを１枚、自分のマナゾーンから手札に戻す。
+    ／ オラオラ・ジョーカーズ: 自分の山札の上から１枚をマナゾーンに置く。それがジョーカーズ・カードなら、カードを１枚引く。'
+- faces:
+  - abilities:
+    - effect:
+      - body:
+        - op: move
+          reason: put
+          select:
+            count: 1
+            filter:
+              civs:
+              - nature
+              cost_le: 6
+              types:
+              - creature
+            owner: you
+            zone:
+            - hand
+            - mana
+          to: bz
+        op: may
+      kind: trigger
+      when:
+        event: move
+        subject: self
+        to: bz
+    - effect:
+      - body:
+        - op: move
+          reason: put
+          select:
+            count: 1
+            filter:
+              civs:
+              - nature
+              cost_le: 6
+              types:
+              - creature
+            owner: you
+            zone:
+            - hand
+            - mana
+          to: bz
+        op: may
+      kind: trigger
+      when:
+        event: cast
+        subject:
+          filter:
+            name_has: トラップ
+            types:
+            - spell
+          owner: you
+    civs:
+    - nature
+    cost: 7
+    keywords:
+    - triple_breaker
+    name: ナ・チュラルゴ・デンジャー
+    power: 12000
+    races:
+    - グランセクト
+    - ジャイアント
+    types:
+    - creature
+  - civs:
+    - nature
+    cost: 6
+    keywords:
+    - s_trigger
+    name: ナチュラル・トラップ
+    spell:
+    - op: move
+      reason: put
+      select:
+        count: 1
+        filter:
+          types:
+          - creature
+        owner: opp
+        zone: bz
+      to: mana
+    types:
+    - spell
+  id: dm26sd1-p004
+  mana: 1
+  source:
+    notes: マッハファイターは keyword_patterns で自動処理。「出た時または唱えた時」は誘発2つに分けた
+    official: dm26sd1-p004
+    review: pending
+    aliases:
+    - dm23bd6-013
+    - dm26sd1-u003
+    - dmex19-s17
+    - dmrp06-s09
+  text: 'ナ・チュラルゴ・デンジャー: T・ブレイカー（このクリーチャーはシールドを３つブレイクする） / このクリーチャーが出た時または自分が名前に《トラップ》とある呪文を唱えた時、自然のコスト６以下のクリーチャーを１体、自分の手札またはマナゾーンから出してもよい。
+    ／ ナチュラル・トラップ: S・トリガー（このカードを自分のシールドゾーンから手札に加える時、コストを支払わずにすぐ実行してもよい） / 相手のクリーチャーを１体選び、持ち主のマナゾーンに置く。'
+- faces:
+  - civs:
+    - nature
+    cost: 4
+    keywords:
+    - last_burst
+    name: ふでがき師匠
+    power: 3000
+    races:
+    - ジョーカーズ
+    types:
+    - creature
+  - civs:
+    - nature
+    cost: 5
+    name: 一筆奏上！
+    spell:
+    - as: pile
+      op: choose
+      select:
+        count: all
+        from_top: 2
+        look: true
+        owner: you
+        zone: deck
+    - as: hit
+      op: choose
+      select:
+        count: all
+        filter:
+          race_has: ジョーカーズ
+        ref: pile
+    - op: move
+      reason: put
+      select:
+        count: all
+        ref: hit
+      to: mana
+    - op: move
+      position: bottom
+      reason: put
+      select:
+        count: all
+        ref: pile
+      to: deck
+    types:
+    - spell
+  id: dmbd07-a-003
+  mana: 1
+  source:
+    notes: マッハファイターは keyword_patterns で自動処理。呪文面の文明は原文が空欄のため自然と推定
+    official: dmbd07-a-003
+    review: pending
+  text: 'ふでがき師匠: ラスト・バースト（このクリーチャーが破壊された時、このカードの呪文側をコストを支払わずに唱えてもよい） ／ 一筆奏上！: 自分の山札の上から２枚を表向きにする。その中から、ジョーカーズをすべて自分のマナゾーンに置き、残りを好きな順序で山札の一番下に置く。'
+- abilities:
+  - affects:
+      filter:
+        cost_ge: 6
+      owner: you
+      zone: hand
+    kind: static
+    mod:
+      cost: -1
+      cost_min: 0
+  - effect:
+    - duration: end_of_turn
+      mod:
+        allow:
+        - action: attack_creature
+          other:
+            tapped: false
+      op: modify
+      select:
+        ref: event.subject
+    kind: trigger
+    when:
+      event: move
+      subject:
+        filter:
+          cost_ge: 6
+          types:
+          - creature
+        owner: you
+      to: bz
+  civs:
+  - nature
+  cost: 2
+  id: dm24ex3-076
+  keywords:
+  - guardman
+  mana: 1
+  name: 緑狩の爪
+  power: 2000
+  races:
+  - ビーストフォーク
+  source:
+    official: dm24ex3-076
+    review: pending
+    aliases:
+    - dm24rp3-051
+  text: 'ガードマン（このクリーチャーをタップして、相手クリーチャーの攻撃先を、自分の他のクリーチャーからこのクリーチャーに変更してもよい）
+
+    自分のコスト６以上のカードを使うコストを１少なくする。ただし、コストは０以下にはならない。
+
+    自分のコスト６以上のクリーチャーが出た時、このターン、そのクリーチャーに「マッハファイター」を与える。（「マッハファイター」を持つクリーチャーは、出たターンの間、タップまたはアンタップしているクリーチャーを攻撃できる）'
+  types:
+  - creature
+- abilities:
+  - affects:
+      filter:
+        types:
+        - creature
+      owner: you
+      zone: bz
+    kind: static
+    mod:
+      gain:
+      - effect:
+        - duration: end_of_turn
+          mod:
+            allow:
+            - action: attack_creature
+              other:
+                tapped: false
+          op: modify
+          select:
+            ref: self
+        kind: trigger
+        when:
+          event: move
+          subject: self
+          to: bz
+  civs:
+  - nature
+  cost: 10
+  id: dm24ex3-rp4s05
+  keywords:
+  - double_breaker
+  - yobinion
+  mana: 1
+  name: 魔誕の獅子デスライガー
+  power: 11000
+  races:
+  - デーモン・コマンド
+  source:
+    notes: マッハファイター付与は第58弾のパターン（static + gain で trigger を付与）
+    official: dm24ex3-rp4s05
+    review: pending
+    aliases:
+    - dm24ex3-rp4sec06
+    - dm24rp4-s05
+    - dm24rp4-sec06
+  text: 'W・ブレイカー
+
+    自分のクリーチャーすべてに「マッハファイター」を与える。
+
+    W・ヨビニオン（このクリーチャーが召喚によって出た時、自分の山札の上から、これよりコストが小さいクリーチャーが２体出るまで表向きにしてもよい。その２体を出す。残りをシャッフルし、山札の下に置く）'
+  types:
+  - creature
+- abilities:
+  - kind: trigger
+    when:
+      event: move
+      to: bz
+      subject: self
+    effect:
+    - op: modify
+      select:
+        ref: self
+      mod:
+        allow:
+        - action: attack_creature
+          other:
+            tapped: false
+      duration: end_of_turn
+  - kind: static
+    affects: self
+    mod:
+      sac_reduce: 2
+  - affects: self
+    kind: static
+    mod:
+      sac_reduce: 2
+  - effect:
+    - as: target
+      op: choose
+      select:
+        count: 1
+        filter:
+          types:
+          - creature
+        owner: you
+        zone: bz
+    - duration: end_of_turn
+      mod:
+        allow:
+        - action: attack_creature
+          other:
+            tapped: false
+      op: modify
+      select:
+        ref: target
+    kind: trigger
+    when:
+      event: move
+      from: bz
+      subject: self
+  civs:
+  - nature
+  cost: 3
+  id: dm26rp3-073
+  mana: 1
+  name: 大地 ワタン-2
+  power: 3000
+  races:
+  - グランセクト
+  - ディスタス
+  source:
+    notes: マッハファイターは keyword_patterns.yaml で自動処理。ササゲールは sac_reduce で表す（破壊はエンジン側で処理）
+    official: dm26rp3-073
+    review: pending
+  text: 'マッハファイター（このクリーチャーは、出たターンの間、タップまたはアンタップしているクリーチャーを攻撃できる）
+
+    ササゲール２（自分のディスペクター・クリーチャーの召喚コストを２少なくしてもよい。そうしたら、このエレメントを破壊する。ただしコストは０以下にならない）
+
+    このクリーチャーが離れた時、このターン、自分のクリーチャー１体に「マッハファイター」を与える。'
+  types:
+  - creature
+- abilities:
+  - affects:
+      filter:
+        types:
+        - creature
+      owner: you
+      zone: bz
+    kind: static
+    mod:
+      gain:
+      - effect:
+        - duration: end_of_turn
+          mod:
+            allow:
+            - action: attack_creature
+              other:
+                tapped: false
+          op: modify
+          select:
+            ref: self
+        kind: trigger
+        when:
+          event: move
+          subject: self
+          to: bz
+  - effect:
+    - count: 1
+      op: draw
+      player: you
+    - body:
+      - count: 1
+        op: break
+        player: opp
+      op: may
+    kind: trigger
+    when:
+      event: battle_win
+      subject:
+        filter:
+          types:
+          - creature
+        owner: you
+  civs:
+  - water
+  - fire
+  - nature
+  cost: 9
+  id: dmrp18-s11
+  keywords:
+  - ex_life
+  - quad_breaker
+  mana: 1
+  name: 偽爆電融 ゾルネードシヴァ
+  power: 23000
+  races:
+  - ディスペクター
+  - アンノウン
+  - フレイム・コマンド
+  source:
+    notes: マッハファイター付与は第58弾のパターン（static + gain で trigger を付与）
+    official: dmrp18-s11
+    review: pending
+  text: 'EXライフ（このクリーチャーを出す時、自分の山札の上から１枚目をシールド化する。このクリーチャーが離れる時、かわりにそのシールドを墓地に置く）
+
+    Q・ブレイカー
+
+    自分のクリーチャーすべてに「マッハファイター」を与える。
+
+    自分のクリーチャーがバトルに勝った時、カードを１枚引く。その後、相手のシールドを１つブレイクしてもよい。'
+  types:
+  - creature
+- abilities:
+  - instead:
+    - modes:
+      - - op: destroy
+          select:
+            count: 3
+            owner: you
+            zone: bz
+      - - op: move
+          reason: put
+          select:
+            count: 1
+            owner: you
+            zone: shield
+          to: graveyard
+      op: modal
+    kind: replace
+    optional: true
+    when:
+      event: lose
+  - instead:
+    - modes:
+      - - op: destroy
+          select:
+            count: 3
+            owner: you
+            zone: bz
+      - - op: move
+          reason: put
+          select:
+            count: 1
+            owner: you
+            zone: shield
+          to: graveyard
+      op: modal
+    kind: replace
+    optional: true
+    when:
+      event: move
+      from: bz
+      subject: self
+  - effect:
+    - duration: end_of_turn
+      mod:
+        allow:
+        - action: attack_creature
+          other:
+            tapped: false
+      op: modify
+      select:
+        ref: self
+    kind: trigger
+    when:
+      event: move
+      subject: self
+      to: bz
+  - effect:
+    - op: untap
+      select:
+        ref: self
+    if:
+      any:
+      - not:
+          exists:
+            owner: you
+            zone: shield
+      - not:
+          exists:
+            owner: opp
+            zone: shield
+    kind: trigger
+    when:
+      event: attack_end
+      subject: self
+  civs:
+  - darkness
+  - fire
+  - nature
+  cost: 5
+  id: dm26ex2-spr005
+  keywords:
+  - double_breaker
+  - slayer
+  mana: 1
+  name: CRY-S-MAX ジャオウガ
+  power: 8000
+  races:
+  - デモニオ
+  - 鬼レクスターズ
+  s_max: true
+  source:
+    notes: 'CRY-S-MAX進化は s_max: true＋置換2種（負ける時・離れる時）。標準S-MAXとの違いは置換コスト（表向きのカード3枚破壊かシールド1枚墓地）。マッハファイターは「マッハファイタースレイヤー」のため
+      keyword_patterns が fullmatch せず手書き（第58弾）。スレイヤーは keywords。鬼エンドは attack_end 時にシールド0のプレイヤーがいればアンタップ。'
+    official: dm26ex2-spr005
+    review: pending
+    aliases:
+    - dm26ex2-sprsec005
+    - dm26ex2-sprsec005cho
+  text: 'CRY-S-MAX進化：自分がゲームに負ける時またはこのクリーチャーが離れる時、かわりに自分の表向きのカードを３枚破壊するか、自分のシールドを１つ墓地に置いてもよい。（このクリーチャーは進化元を必要としない。自分のS-MAX進化クリーチャーが２体以上あれば、そのうちの１体を残し、残りをすべて手札に戻す）
+
+    マッハファイタースレイヤー　W・ブレイカー
+
+    鬼エンド：このクリーチャーの攻撃の終わりに、シールドが１つもないプレイヤーがいれば、このクリーチャーをアンタップする。'
+  types:
+  - creature
+  - evolution
+- civs:
+  - nature
+  cost: 1
+  id: dmex14-060
+  mana: 1
+  name: 【ガチ】アイスバトルチャレンジ【対決】
+  source:
+    notes: コスト軽減は cost_may（once）で次に召喚する1体に。マッハファイター付与は第50弾の dm24rp3-076 と同じ delayed_trigger
+      形。レインボーナスは多色クリーチャーがいれば次に召喚するクリーチャーにパワー+3000。
+    official: dmex14-060
+    review: pending
+  spell:
+  - body:
+    - duration: end_of_turn
+      dynamic: true
+      mod:
+        cost_may:
+          amount: 1
+          min: 0
+          once: true
+      op: modify
+      select:
+        filter:
+          types:
+          - creature
+        owner: you
+        zone: hand
+    op: may
+  - effect:
+    - duration: end_of_turn
+      mod:
+        allow:
+        - action: attack_creature
+          other:
+            tapped: false
+      op: modify
+      select:
+        ref: subject
+    op: delayed_trigger
+    when:
+      event: move
+      reason: summon
+      subject:
+        owner: you
+      to: bz
+  - cond:
+      exists:
+        filter:
+          multicolor: true
+          types:
+          - creature
+        owner: you
+        zone: bz
+    op: if
+    then:
+    - effect:
+      - duration: end_of_turn
+        mod:
+          power: 3000
+        op: modify
+        select:
+          ref: subject
+      op: delayed_trigger
+      when:
+        event: move
+        reason: summon
+        subject:
+          owner: you
+        to: bz
+  text: このターン、次に自分が召喚するクリーチャーのコストを１少なくしてもよい。ただし、コストは０以下にはならない。そのターン、そのクリーチャーに「マッハファイター」を与える。
+    / レインボーナス：バトルゾーンに自分の多色クリーチャーがあれば、このターン、次に召喚する自分のクリーチャーのパワーを+3000する。
+  types:
+  - spell
