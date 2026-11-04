@@ -280719,3 +280719,887 @@ cards:
     official: dm25ex2-098
     review: pending
     notes: 条件付き代替コスト（第56弾）。[ff01]は fire 1。超次元ゾーンは hyper。「S・トリガーは使えない」は効果による移動ではエンジンが誘発しないため追加記述不要。
+- id: dm24ex2-027
+  name: 蒼狼の巫女 ツクヨミテラス
+  types:
+  - creature
+  civs:
+  - water
+  cost: 6
+  power: 4000
+  races:
+  - ナイト
+  - サムライ
+  - オリジン
+  mana: 1
+  text: 'ヨビニオン（このクリーチャーが召喚によって出た時、自分の山札の上から、これよりコストが小さいクリーチャーが出るまで表向きにしてもよい。そのクリーチャーを出す。残りをシャッフルし、山札の下に置く）
+
+    各ターン、自分の２体目のクリーチャーが出た時、それよりコストが小さい呪文を１枚、自分の手札からコストを支払わずに唱えてもよい。'
+  abilities:
+  - kind: trigger
+    when:
+      event: move
+      to: bz
+      subject:
+        owner: you
+        filter:
+          types:
+          - creature
+    if:
+      cmp:
+      - entered:
+          owner: you
+      - ==
+      - 2
+    effect:
+    - op: choose
+      select:
+        ref: event.subject
+      as: entered_creature
+    - op: may
+      body:
+      - op: play_free
+        select:
+          zone: hand
+          owner: you
+          filter:
+            types:
+            - spell
+            cost_le:
+              sum:
+              - cost_of: entered_creature
+              - -1
+          count: 1
+  source:
+    official: dm24ex2-027
+    review: pending
+    notes: '"「自分の２体目のクリーチャーが出た時」は entered 式の == 2（dm24ex2-030 と同型）。「それよりコストが小さい」は
+      cost_le に (cost_of - 1) の式（dmrp16-014 の「よりコストが小さい」パターンと同型）。出たクリーチャーは choose
+      + ref: event.subject で変数に束縛（確立パターン）。"'
+  keywords:
+  - yobinion
+- id: dm24ex3-rp4s01
+  name: 魔誕の騎士ザガーン
+  types:
+  - creature
+  civs:
+  - light
+  cost: 5
+  power: 6500
+  races:
+  - デーモン・コマンド
+  mana: 1
+  text: 'ブロッカー
+
+    W・ブレイカー
+
+    エスケープ
+
+    ヨビニオン（このクリーチャーが召喚によって出た時、自分の山札の上から、これよりコストが小さいクリーチャーが出るまで表向きにしてもよい。そのクリーチャーを出す。残りをシャッフルし、山札の下に置く）
+
+    各ターン、はじめて自分の手札から召喚して出した他のクリーチャーに、そのターン「ヨビニオン」を与える。'
+  abilities:
+  - kind: trigger
+    first_time: true
+    when:
+      event: move
+      from: hand
+      to: bz
+      reason: summon
+      subject:
+        owner: you
+        other: true
+        filter:
+          types:
+          - creature
+    effect:
+    - op: modify
+      select:
+        ref: event.subject
+      mod:
+        grant:
+        - yobinion
+      duration: end_of_turn
+  source:
+    official: dm24ex3-rp4s01
+    review: pending
+    notes: '"「各ターン、はじめて」は first_time: true。「手札から召喚して出した」は from: hand + reason: summon
+      の move イベント（dmrp15-054 と同型）。「他のクリーチャー」は other: true。「そのターン〜を与える」は grant + duration:
+      end_of_turn。"'
+    aliases:
+    - dm24ex3-rp4sec02
+    - dm24rp4-s01
+    - dm24rp4-sec02
+  keywords:
+  - blocker
+  - double_breaker
+  - escape
+  - yobinion
+- id: dm24ex3-012
+  name: ヨビニオン・クロウラー
+  types:
+  - creature
+  civs:
+  - water
+  cost: 4
+  power: 3000
+  races:
+  - アースイーター
+  mana: 1
+  text: 'ブロッカー
+
+    ヨビニオン（このクリーチャーが召喚によって出た時、自分の山札の上から、これよりコストが小さいクリーチャーが出るまで表向きにしてもよい。そのクリーチャーを出す。残りをシャッフルし、山札の下に置く）
+
+    このクリーチャーが破壊される時、墓地に置くかわりに手札に戻してもよい。'
+  abilities:
+  - kind: replace
+    optional: true
+    when:
+      event: move
+      from: bz
+      to: graveyard
+      reason: destroy
+      subject: self
+    instead:
+    - op: move
+      select:
+        ref: self
+      to: hand
+      reason: return
+  source:
+    official: dm24ex3-012
+    review: pending
+    notes: '"「破壊される時、墓地に置くかわりに」は置換型の定型。「〜してもよい」は optional: true。"'
+    aliases:
+    - dm24rp3-017
+  keywords:
+  - blocker
+  - yobinion
+- id: dm24ex3-016
+  name: 悪魔世界の激流
+  types:
+  - spell
+  civs:
+  - water
+  cost: 5
+  mana: 1
+  text: 'ヨビニオン（自分の山札の上から、この呪文よりコストが小さいクリーチャーが出るまで表向きにしてもよい。そのクリーチャーを出す。残りをシャッフルし、山札の下に置く）
+
+    自分のクリーチャーを１体選ぶ。次の自分のターンのはじめまで、そのクリーチャーは相手に選ばれず、攻撃されない。'
+  spell:
+  - op: choose
+    select:
+      zone: bz
+      owner: you
+      filter:
+        types:
+        - creature
+      count: 1
+    as: c
+  - op: modify
+    select:
+      ref: c
+    mod:
+      deny:
+      - be_chosen
+      - be_attacked
+    duration: until_next_own_turn_start
+  source:
+    official: dm24ex3-016
+    review: pending
+    notes: '"「相手に選ばれず、攻撃されない」は deny: [be_chosen, be_attacked]（dm22rp1-056 のジャストダイバーと同文・同型）。"'
+    aliases:
+    - dm24rp4-016
+  keywords:
+  - yobinion
+- id: dm24ex3-023
+  name: 邪魔変
+  types:
+  - spell
+  civs:
+  - darkness
+  cost: 8
+  mana: 1
+  text: 'ヨビニオン（自分の山札の上から、この呪文よりコストが小さいクリーチャーが出るまで表向きにしてもよい。そのクリーチャーを出す。残りをシャッフルし、山札の下に置く）
+
+    相手は自身のクリーチャーを３体選び、破壊する。'
+  spell:
+  - op: destroy
+    select:
+      zone: bz
+      owner: opp
+      filter:
+        types:
+        - creature
+      count: 3
+      chooser: opp
+  source:
+    official: dm24ex3-023
+    review: pending
+    notes: '"「相手は〜選び」は chooser: opp。"'
+    aliases:
+    - dm24rp4-018
+  keywords:
+  - yobinion
+- id: dm24ex3-032
+  name: 悪魔世界の業焔
+  types:
+  - spell
+  civs:
+  - fire
+  cost: 5
+  mana: 1
+  text: 'ヨビニオン（自分の山札の上から、この呪文よりコストが小さいクリーチャーが出るまで表向きにしてもよい。そのクリーチャーを出す。残りをシャッフルし、山札の下に置く）
+
+    次のうちいずれか１つを選ぶ。
+
+    ▶シールドを１つブレイクする。
+
+    ▶このターン、自分のクリーチャーすべてに「スピードアタッカー」を与える。'
+  spell:
+  - op: modal
+    count: 1
+    modes:
+    - - op: break
+        player: opp
+        count: 1
+    - - op: modify
+        select:
+          zone: bz
+          owner: you
+          filter:
+            types:
+            - creature
+          count: all
+        mod:
+          grant:
+          - speed_attacker
+        duration: end_of_turn
+  source:
+    official: dm24ex3-032
+    review: pending
+    notes: '"「シールドを１つブレイクする」は相手のシールド（player: opp）。「このターン、〜すべてに〜を与える」は grant + count:
+      all + duration: end_of_turn。"'
+    aliases:
+    - dm24rp4-020
+    - promoy23-098
+  keywords:
+  - yobinion
+- id: dm24ex3-040
+  name: 悪魔世界の豊潤
+  types:
+  - spell
+  civs:
+  - nature
+  cost: 7
+  mana: 1
+  text: 'ヨビニオン（自分の山札の上から、この呪文よりコストが小さいクリーチャーが出るまで表向きにしてもよい。そのクリーチャーを出す。残りをシャッフルし、山札の下に置く）
+
+    自分の山札の上から、自分のクリーチャーの数だけマナゾーンに置く。'
+  spell:
+  - op: move
+    select:
+      zone: deck
+      owner: you
+      from_top:
+        count:
+          zone: bz
+          owner: you
+          filter:
+            types:
+            - creature
+    to: mana
+    reason: put
+  source:
+    official: dm24ex3-040
+    review: pending
+    notes: 「〜の数だけ」は from_top に count 式。
+    aliases:
+    - dm24rp4-022
+  keywords:
+  - yobinion
+- id: dm24rp3-031
+  name: ゴールド・ウィリデ
+  types:
+  - creature
+  civs:
+  - light
+  cost: 5
+  power: 5000
+  races:
+  - メカ・デル・ディネロ
+  - メカ・エンジェル・コマンド
+  mana: 1
+  abilities:
+  - kind: trigger
+    when:
+      event: move
+      to: bz
+      subject: self
+    effect:
+    - op: tap
+      select:
+        zone: bz
+        owner: opp
+        filter:
+          types:
+          - creature
+        count: 2
+      no_untap_next: true
+  text: 'ヨビニオン（このクリーチャーが召喚によって出た時、自分の山札の上から、これよりコストが小さいクリーチャーが出るまで表向きにしてもよい。そのクリーチャーを出す。残りをシャッフルし、山札の下に置く）
+
+    このクリーチャーが出た時、相手のクリーチャーを２体選び、タップする。次の相手のターンのはじめに、それらはアンタップしない。'
+  source:
+    official: dm24rp3-031
+    review: pending
+    notes: ヨビニオンは known_keywords のためルール処理済み。「次の相手のターンのはじめにアンタップしない」は tap の no_untap_next（フリーズ条項と同型）。
+  keywords:
+  - yobinion
+- id: dm24rp3-034
+  name: ヨビニオン・スナイパー
+  types:
+  - creature
+  civs:
+  - water
+  cost: 6
+  power: 5000
+  races:
+  - リキッド・ピープル
+  mana: 1
+  abilities:
+  - kind: static
+    affects: self
+    mod:
+      power_when:
+        amount: 4000
+        when: blocking
+  - kind: trigger
+    when:
+      event: move
+      to: bz
+      subject: self
+    effect:
+    - op: choose
+      select:
+        zone: bz
+        owner: opp
+        filter:
+          types:
+          - creature
+        count: 2
+        up_to: true
+      as: c
+    - op: modify
+      select:
+        ref: c
+      mod:
+        deny:
+        - attack_player
+        - attack_creature
+        - block
+      duration: until_next_own_turn_start
+  text: 'ブロッカー
+
+    パワード・ブロッカー +4000（ブロック中、このクリーチャーのパワーを+4000する）
+
+    ヨビニオン（このクリーチャーが召喚によって出た時、自分の山札の上から、これよりコストが小さいクリーチャーが出るまで表向きにしてもよい。そのクリーチャーを出す。残りをシャッフルし、山札の下に置く）
+
+    このクリーチャーが出た時、相手のクリーチャーを２体まで選ぶ。次の自分のターンのはじめまで、それらは攻撃もブロックもできない。'
+  source:
+    official: dm24rp3-034
+    review: pending
+    notes: '"ブロッカーとヨビニオンは known_keywords のためルール処理済み。「パワード・ブロッカー+4000」はブロック中のパワー+4000（power_when）。「２体まで」は
+      count: 2 + up_to: true。"'
+  keywords:
+  - blocker
+  - yobinion
+- id: dm24rp3-045
+  name: ヨビニオン・ガッツンダー
+  types:
+  - creature
+  civs:
+  - fire
+  cost: 5
+  power: 6000
+  races:
+  - アーマロイド
+  mana: 1
+  abilities:
+  - kind: static
+    affects: self
+    mod:
+      battle_power:
+        amount: 6000
+  text: 'ガードマン（このクリーチャーをタップして、相手クリーチャーの攻撃先を、自分の他のクリーチャーからこのクリーチャーに変更してもよい）
+
+    W・ブレイカー（このクリーチャーはシールドを２つブレイクする）
+
+    ヨビニオン（このクリーチャーが召喚によって出た時、自分の山札の上から、これよりコストが小さいクリーチャーが出るまで表向きにしてもよい。そのクリーチャーを出す。残りをシャッフルし、山札の下に置く）
+
+    バトル中、このクリーチャーのパワーを+6000する。'
+  source:
+    official: dm24rp3-045
+    review: pending
+    notes: ガードマン・W・ブレイカー・ヨビニオンは known_keywords のためルール処理済み。「バトル中」は mod.battle_power。
+  keywords:
+  - guardman
+  - double_breaker
+  - yobinion
+- id: dm26ex1-023
+  name: 魔誕の猛将ダイダロス
+  types:
+  - creature
+  civs:
+  - fire
+  cost: 5
+  power: 6000
+  races:
+  - デーモン・コマンド
+  mana: 1
+  abilities:
+  - kind: trigger
+    when:
+      event: attack
+      subject: self
+    effect:
+    - op: destroy
+      select:
+        zone: bz
+        owner: opp
+        filter:
+          types:
+          - creature
+          power_le: 4000
+        count: 1
+  - kind: static
+    affects:
+      owner: you
+      filter:
+        types:
+        - creature
+    mod:
+      grant:
+      - speed_attacker
+      - guardman
+  - kind: trigger
+    when:
+      event: attack
+      attacker: self
+    effect:
+    - op: destroy
+      select:
+        zone: bz
+        owner: opp
+        filter:
+          types:
+          - creature
+          power_le: 4000
+        count: 1
+  text: 'W・ブレイカー
+
+    ヨビニオン（このクリーチャーが召喚によって出た時、自分の山札の上から、これよりコストが小さいクリーチャーが出るまで表向きにしてもよい。そのクリーチャーを出す。残りをシャッフルし、山札の下に置く）
+
+    自分のクリーチャーすべてに「スピードアタッカー」と「ガードマン」を与える。
+
+    このクリーチャーが攻撃する時、相手のパワー4000以下のクリーチャーを１体選び、破壊する。'
+  source:
+    official: dm26ex1-023
+    review: pending
+    notes: W・ブレイカーとヨビニオンは known_keywords のためルール処理済み。
+    aliases:
+    - dm24ex3-rp4s04
+    - dm24ex3-rp4sec05
+    - dm24rp4-s04
+    - dm24rp4-sec05
+  keywords:
+  - double_breaker
+  - yobinion
+- id: dm26ex1-n007
+  name: ヨビニオン・コオニ
+  types:
+  - creature
+  civs:
+  - darkness
+  cost: 4
+  power: 3000
+  races:
+  - デモニオ
+  mana: 1
+  abilities:
+  - kind: trigger
+    when:
+      event: move
+      to: bz
+      subject:
+        owner: you
+        filter:
+          types:
+          - creature
+    if:
+      cmp:
+      - entered:
+          owner: you
+      - ==
+      - 2
+    effect:
+    - op: may
+      body:
+      - op: move
+        select:
+          zone: deck
+          owner: you
+          from_top: 3
+        to: graveyard
+        reason: put
+  - kind: trigger
+    when:
+      event: move
+      from: bz
+      subject: self
+    effect:
+    - op: may
+      body:
+      - op: choose
+        select:
+          zone: graveyard
+          owner: you
+          filter:
+            types:
+            - creature
+            cost_ge: 5
+          count: 1
+        as: c
+      - op: move
+        select:
+          ref: c
+        to: hand
+        reason: return
+  text: 'ヨビニオン（このクリーチャーが召喚によって出た時、自分の山札の上から、これよりコストが小さいクリーチャーが出るまで表向きにしてもよい。そのクリーチャーを出す。残りをシャッフルし、山札の下に置く）
+
+    各ターン、自分の２体目のクリーチャーが出た時、自分の山札の上から３枚を墓地に置いてもよい。
+
+    このクリーチャーが離れた時、コスト５以上のクリーチャーを１体、自分の墓地から手札に戻してもよい。'
+  source:
+    official: dm26ex1-n007
+    review: pending
+    notes: ヨビニオンは known_keywords のため書き直さない。「２体目」は entered 式の確立パターン（== 2）。
+    aliases:
+    - dm26ex1-secn007
+  keywords:
+  - yobinion
+- id: dm26sd1-a001
+  name: ヨビニオン・マルル
+  types:
+  - creature
+  civs:
+  - nature
+  cost: 4
+  power: 5000
+  races:
+  - スノーフェアリー
+  mana: 1
+  abilities:
+  - kind: trigger
+    when:
+      event: move
+      to: bz
+      subject:
+        owner: you
+        filter:
+          types:
+          - creature
+    if:
+      cmp:
+      - entered:
+          owner: you
+      - ==
+      - 2
+    effect:
+    - op: modal
+      count: 1
+      modes:
+      - - op: move
+          select:
+            zone: deck
+            owner: you
+            from_top: 1
+            look: true
+          to: hand
+          reason: put
+      - - op: move
+          select:
+            zone: deck
+            owner: you
+            from_top: 1
+            look: true
+          to: mana
+          reason: put
+          tapped: true
+  text: 'ヨビニオン（このクリーチャーが召喚によって出た時、自分の山札の上から、これよりコストが小さいクリーチャーが出るまで表向きにしてもよい。そのクリーチャーを出す。残りをシャッフルし、山札の下に置く）
+
+    各ターン、自分の２体目のクリーチャーが出た時、自分の山札の上から１枚を見る。そのカードを手札に加えるか、タップしてマナゾーンに置く。'
+  source:
+    official: dm26sd1-a001
+    review: pending
+    notes: ヨビニオンは known_keywords のため書き直さない。「２体目」は entered 式の確立パターン。「見る→手札かタップしてマナ」は
+      modal の2択。
+    aliases:
+    - dm24ex3-rp3s10
+    - dm24ex3-rp3sec11
+    - dm24rp3-s10
+    - dm24rp3-sec011
+    - dm25ex2-cho009
+    - dm26rp1-sp003
+    - dm26sd1-a001star
+  keywords:
+  - yobinion
+- id: dm26sd1-x009
+  name: ヨビニオン・フレイムバーン
+  types:
+  - creature
+  civs:
+  - fire
+  cost: 4
+  power: 4000
+  races:
+  - アーマード・ドラゴン
+  mana: 1
+  abilities:
+  - kind: trigger
+    when:
+      event: move
+      to: bz
+      subject: self
+    effect:
+    - op: may
+      body:
+      - op: discard
+        select:
+          zone: hand
+          owner: you
+          count: 1
+        as: d
+      - op: if
+        cond:
+          exists:
+            ref: d
+        then:
+        - op: draw
+          count: 2
+  text: 'スピードアタッカー（このクリーチャーは召喚酔いしない）
+
+    ヨビニオン（このクリーチャーが召喚によって出た時、自分の山札の上から、これよりコストが小さいクリーチャーが出るまで表向きにしてもよい。そのクリーチャーを出す。残りをシャッフルし、山札の下に置く）
+
+    このクリーチャーが出た時、自分の手札を１枚捨ててもよい。そうしたら、カードを２枚引く。'
+  source:
+    official: dm26sd1-x009
+    review: pending
+    notes: スピードアタッカー・ヨビニオンは known_keywords のため書き直さない。「捨ててもよい。そうしたら」は may＋if(exists)
+      の確立パターン。
+    aliases:
+    - dm24ex3-rp3006
+    - dm24ex3-sec08
+    - dm24rp3-006
+    - dm25ex2-cho020
+  keywords:
+  - speed_attacker
+  - yobinion
+- id: dm26sd1-a010
+  name: ティンパニ＝シンバリー
+  types:
+  - creature
+  civs:
+  - darkness
+  cost: 4
+  power: 4000
+  races:
+  - アビスロイヤル
+  mana: 1
+  abilities:
+  - kind: trigger
+    when:
+      event: move
+      to: bz
+      subject:
+        owner: you
+        filter:
+          types:
+          - creature
+    if:
+      cmp:
+      - entered:
+          owner: you
+      - ==
+      - 2
+    effect:
+    - op: may
+      body:
+      - op: destroy
+        select:
+          ref: self
+        as: s
+      - op: if
+        cond:
+          exists:
+            ref: s
+        then:
+        - op: choose
+          select:
+            zone: bz
+            owner: opp
+            filter:
+              types:
+              - creature
+            count: 1
+            chooser: opp
+          as: c
+        - op: destroy
+          select:
+            ref: c
+  text: 'ブロッカー（このクリーチャーをタップして、相手クリーチャーの攻撃先をこのクリーチャーに変更してもよい）
+
+    ヨビニオン（このクリーチャーが召喚によって出た時、自分の山札の上から、これよりコストが小さいクリーチャーが出るまで表向きにしてもよい。そのクリーチャーを出す。残りをシャッフルし、山札の下に置く）
+
+    各ターン、自分の２体目のクリーチャーが出た時、このクリーチャーを破壊してもよい。そうしたら、相手は自身のクリーチャーを１体選び、破壊する。'
+  source:
+    official: dm26sd1-a010
+    review: pending
+    notes: '"ブロッカー・ヨビニオンは known_keywords のため書き直さない。「相手は自身のクリーチャーを１体選び」は chooser: opp。"'
+    aliases:
+    - dm24ex3-020
+    - dm24rp3-020
+    - dm26sd1-m009
+    - dm26sd1-x011
+    - promoy24-099
+  keywords:
+  - blocker
+  - yobinion
+- id: dm26sd1-a012
+  name: ヨビニオン・トライブ
+  types:
+  - creature
+  civs:
+  - nature
+  cost: 4
+  power: 4000
+  races:
+  - ビーストフォーク
+  mana: 1
+  abilities:
+  - kind: replace
+    when:
+      event: move
+      from: bz
+      to: graveyard
+      reason: destroy
+      subject: self
+    instead:
+    - op: move
+      select:
+        ref: self
+      to: mana
+      reason: put
+  text: 'このクリーチャーを自分のマナゾーンから召喚してもよい。
+
+    ヨビニオン（このクリーチャーが召喚によって出た時、自分の山札の上から、これよりコストが小さいクリーチャーが出るまで表向きにしてもよい。そのクリーチャーを出す。残りをシャッフルし、山札の下に置く）
+
+    このクリーチャーが破壊される時、墓地のかわりにマナゾーンに置く。'
+  source:
+    official: dm26sd1-a012
+    review: pending
+    notes: マナゾーンから召喚・ヨビニオンは known_keywords のため書き直さない。破壊置換の確立パターン。
+    aliases:
+    - dm24ex3-sec15
+    - dm24rp3-027
+  keywords:
+  - summon_from_mana
+  - yobinion
+- id: dm26sd1-s008
+  name: ゴールド・フラウム
+  types:
+  - creature
+  civs:
+  - light
+  cost: 4
+  power: 4500
+  races:
+  - メカ・デル・ディネロ
+  - メカ・エンジェル・コマンド
+  mana: 1
+  abilities:
+  - kind: trigger
+    when:
+      event: move
+      to: bz
+      subject: self
+    effect:
+    - op: may
+      body:
+      - op: move
+        select:
+          zone: deck
+          owner: you
+          from_top: 1
+        to: shield
+        reason: put
+  text: 'ブロッカー（このクリーチャーをタップして、相手クリーチャーの攻撃先をこのクリーチャーに変更してもよい）
+
+    ヨビニオン（このクリーチャーが召喚によって出た時、自分の山札の上から、これよりコストが小さいクリーチャーが出るまで表向きにしてもよい。そのクリーチャーを出す。残りをシャッフルし、山札の下に置く）
+
+    このクリーチャーが出た時、自分の山札の上から１枚をシールド化してもよい。'
+  source:
+    official: dm26sd1-s008
+    review: pending
+    notes: ブロッカー・ヨビニオンは known_keywords のため書き直さない。種族は「/」で分割。
+    aliases:
+    - dm24ex3-sec12
+    - dm24rp3-015
+    - promoy23-110
+  keywords:
+  - blocker
+  - yobinion
+- id: dm26sd1-r009
+  name: 悪魔世界の閃光
+  types:
+  - spell
+  civs:
+  - light
+  cost: 6
+  mana: 1
+  spell:
+  - op: untap
+    select:
+      zone: bz
+      owner: you
+      filter:
+        types:
+        - creature
+      count: all
+  - op: modify
+    select:
+      zone: bz
+      owner: you
+      filter:
+        types:
+        - creature
+      count: all
+    mod:
+      grant:
+      - blocker
+    duration: until_next_own_turn_start
+  text: 'S・トリガー（このカードを自分のシールドゾーンから手札に加える時、コストを支払わずにすぐ実行してもよい）
+
+    ヨビニオン（自分の山札の上から、この呪文よりコストが小さいクリーチャーが出るまで表向きにしてもよい。そのクリーチャーを出す。残りをシャッフルし、山札の下に置く）
+
+    自分のクリーチャーをすべてアンタップする。次の自分のターンのはじめまで、自分のクリーチャーすべてに「ブロッカー」を与える。（「ブロッカー」を持つクリーチャーをタップして、相手クリーチャーの攻撃先をそのクリーチャーに変更してもよい）'
+  source:
+    official: dm26sd1-r009
+    review: pending
+    notes: S・トリガー・ヨビニオンは known_keywords のため書き直さない。
+    aliases:
+    - dm24ex3-008
+    - dm24rp4-014
+    - promoy24-057
+  keywords:
+  - s_trigger
+  - yobinion
