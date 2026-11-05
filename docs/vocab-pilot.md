@@ -1185,3 +1185,10 @@ draw イベントへの置換で表す（draw は個別イベントとして発�
   （under_of は下にあるカードを返し、本体1枚を加える）。回数・枚数・パワー量の式に使う。
 - tests/test_vocab_pilot120.py 2件（正常 parse／検証）
 - 待機6枚（under_card_count のみが gap のもの）。
+
+## 第121弾: total_count_condition（合計数条件）— 新語彙なし（2026-11-05）
+「バトルゾーンとマナゾーンにある〜カードが合計N以上」は count の sum で表す。
+- 書き方: {cmp: [{sum: [{count: {zone: bz, owner: you, filter}}, {count: {zone: mana, owner: you, filter}}]}, ">=", N]}。
+  G・ゼロ等の free_if や static の if、コスト軽減の条件に使う。
+- tests/test_vocab_pilot121.py 2件（正常 parse／検証）
+- 待機6枚（total_count_condition のみが gap のもの）。
