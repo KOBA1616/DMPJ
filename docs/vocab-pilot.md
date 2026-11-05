@@ -929,3 +929,9 @@ converted の監査（opt_reduce の素の整数表記9件）から。任意形�
 - 書き方: filter: {cost_le: {cost_of: {ref: 束縛変数}}}（めくった／置いたカードを as で束縛して参照）。
 - tests/test_vocab_pilot82.py 2件（正常 parse／検証）
 - 待機11枚（cost_le_card_cost のみが gap のもの）。
+
+## 第83弾: evolution_existence_filter（進化クリーチャーの有無）— 新語彙なし（2026-11-05）
+「自分の進化クリーチャーがあれば／なければ」は既存の filter: {evolution: true} + exists 条件で表せる。
+- 書き方: if: {exists: {zone: bz, owner: you, filter: {evolution: true}}}（否定は not で包む）。
+- tests/test_vocab_pilot83.py 2件（正常 parse／検証）
+- 待機11枚（evolution_existence_filter のみが gap のもの）。
