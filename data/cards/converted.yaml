@@ -308737,3 +308737,688 @@ cards:
     このクリーチャーが召喚によって出た時、次の自分のターンのはじめまで自分はゲームに負けず、相手はゲームに勝たない。'
   types:
   - creature
+- abilities:
+  - affects:
+      filter:
+        any_of:
+        - race_has: H・ソウル
+        - race_has: M・ソウル
+        - race_has: E・ソウル
+        - race_has: K・ソウル
+        - race_has: W・ソウル
+        - race_has: B・ソウル
+      other: true
+      owner: you
+      zone: bz
+    kind: static
+    mod:
+      power: 1000
+  civs:
+  - water
+  cost: 3
+  id: dm36-021
+  mana: 1
+  name: アクア・ドッペル
+  power: 2000
+  races:
+  - リキッド・ピープル
+  - M・ソウル
+  source:
+    official: dm36-021
+    review: pending
+  text: バトルゾーンにある自分の他の、(H・ソウル)、(M・ソウル)、(E・ソウル)、(K・ソウル)、(W・ソウル)、または(B・ソウル)クリーチャーすべてのパワーは+1000される。
+  types:
+  - creature
+- abilities:
+  - effect:
+    - op: destroy
+      select:
+        chooser: opp
+        count: 1
+        filter:
+          types:
+          - creature
+        owner: opp
+        zone: bz
+    kind: trigger
+    when:
+      event: move
+      from: bz
+      reason: destroy
+      subject:
+        filter:
+          race_has: E・ソウル
+          types:
+          - creature
+        other: true
+        owner: you
+      to: graveyard
+  civs:
+  - darkness
+  cost: 6
+  id: dm36-025
+  mana: 1
+  name: 妖魔伯爵アンヴィル
+  power: 5000
+  races:
+  - ダークロード
+  - E・ソウル
+  source:
+    official: dm36-025
+    review: pending
+  text: 自分の他の(E・ソウル)クリーチャーが破壊された時、相手は自身のクリーチャーを１体選び破壊する。
+  types:
+  - creature
+- abilities:
+  - effect:
+    - duration: end_of_turn
+      mod:
+        grant:
+        - double_breaker
+        power: 3000
+      op: modify
+      select:
+        count: 1
+        filter:
+          race_has: K・ソウル
+          types:
+          - creature
+        owner: you
+        zone: bz
+    kind: trigger
+    when:
+      event: move
+      subject: self
+      to: bz
+  civs:
+  - fire
+  cost: 2
+  evolve_from:
+    race_has: K・ソウル
+  id: dm36-029
+  mana: 1
+  name: 機神装甲ヴァルタイソン
+  power: 4000
+  races:
+  - ヒューマノイド
+  - K・ソウル
+  source:
+    official: dm36-029
+    review: pending
+  text: 進化-自分の(K・ソウル)クリーチャー１体の上に置く。 / このクリーチャーをバトルゾーンに出した時、バトルゾーンにある自分の(K・ソウル)クリーチャーを１体選ぶ。そのターン、そのクリーチャーのパワーは+3000され、「W・ブレイカー」を得る。
+  types:
+  - creature
+  - evolution
+- abilities:
+  - effect:
+    - body:
+      - as: returned
+        op: bounce
+        select:
+          count: 1
+          filter:
+            race_has: K・ソウル
+            types:
+            - creature
+          other: true
+          owner: you
+          zone: bz
+      - cond:
+          exists:
+            ref: returned
+        op: if
+        then:
+        - op: untap
+          select:
+            ref: self
+      op: may
+    kind: trigger
+    when:
+      event: attack
+      subject: self
+  civs:
+  - fire
+  cost: 5
+  id: dm36-032
+  mana: 1
+  name: 突風の拳士ウィラポン
+  power: 5000
+  races:
+  - フェザーノイド
+  - K・ソウル
+  source:
+    official: dm36-032
+    review: pending
+  text: このクリーチャーが攻撃する時、自分の他の(K・ソウル)クリーチャーを１体、バトルゾーンから自分の手札に戻してもよい。そうした場合、このクリーチャーをアンタップする。
+  types:
+  - creature
+- abilities:
+  - instead:
+    - op: move
+      reason: put
+      select:
+        ref: event.subject
+      to: mana
+    kind: replace
+    when:
+      event: move
+      from: bz
+      reason: destroy
+      subject:
+        filter:
+          race_has: W・ソウル
+          types:
+          - creature
+        other: true
+        owner: you
+      to: graveyard
+  civs:
+  - nature
+  cost: 4
+  id: dm36-067
+  mana: 1
+  name: 獅子舞妖精ミエゾウ
+  power: 3000
+  races:
+  - スノーフェアリー
+  - W・ソウル
+  source:
+    official: dm36-067
+    review: pending
+  text: 自分の他の(W・ソウル)クリーチャーが破壊される時、墓地に置くかわりに自分のマナゾーンに置く。
+  types:
+  - creature
+- abilities:
+  - effect:
+    - op: bounce
+      select:
+        count: 1
+        filter:
+          race_has: M・ソウル
+          types:
+          - creature
+        owner: you
+        zone: bz
+    kind: trigger
+    when:
+      event: move
+      subject: self
+      to: bz
+  civs:
+  - water
+  cost: 2
+  id: dm36-082
+  mana: 1
+  name: 海底機兵シーカイ
+  power: 5000
+  races:
+  - グレートメカオー
+  - M・ソウル
+  source:
+    official: dm36-082
+    review: pending
+  text: このクリーチャーをバトルゾーンに出した時、自分の(M・ソウル)クリーチャーを１体、バトルゾーンから手札に戻す。
+  types:
+  - creature
+- abilities:
+  - effect:
+    - op: bounce
+      select:
+        count: 1
+        filter:
+          race_has: E・ソウル
+          types:
+          - creature
+        owner: you
+        up_to: true
+        zone: graveyard
+    kind: trigger
+    when:
+      event: move
+      subject: self
+      to: bz
+  civs:
+  - darkness
+  cost: 3
+  id: dm36-089
+  mana: 1
+  name: 墓穴怪人ガンジンメン
+  power: 2000
+  races:
+  - デビルマスク
+  - E・ソウル
+  source:
+    official: dm36-089
+    review: pending
+  text: このクリーチャーをバトルゾーンに出した時、(E・ソウル)クリーチャーを１体、自分の墓地から手札に戻してもよい。
+  types:
+  - creature
+- abilities:
+  - effect:
+    - op: destroy
+      select:
+        ref: self
+    if:
+      not:
+        exists:
+          filter:
+            race_has: E・ソウル
+            types:
+            - creature
+          other: true
+          owner: you
+          zone: bz
+    kind: trigger
+    when:
+      event: turn_end
+      player: you
+  civs:
+  - darkness
+  cost: 2
+  id: dm36-091
+  mana: 1
+  name: 自爆虫バリキン・ワーム
+  power: 4000
+  races:
+  - パラサイトワーム
+  - E・ソウル
+  source:
+    official: dm36-091
+    review: pending
+  text: 自分のターンの終わりに、バトルゾーンに自分の他の(E・ソウル)クリーチャーがなければ、このクリーチャーを破壊する。
+  types:
+  - creature
+- abilities:
+  - affects: self
+    if:
+      exists:
+        filter:
+          race_has: K・ソウル
+          types:
+          - creature
+        other: true
+        owner: you
+        zone: bz
+    kind: static
+    mod:
+      power_when:
+        amount: 2000
+        when: attacking
+  civs:
+  - fire
+  cost: 2
+  id: dm36-100
+  mana: 1
+  name: 百足兵アインラッド
+  power: 2000
+  races:
+  - アーマロイド
+  - K・ソウル
+  source:
+    official: dm36-100
+    review: pending
+  text: バトルゾーンに自分の他の(K・ソウル)クリーチャーがあれば、このクリーチャーは「パワーアタッカー+2000」を得る。
+  types:
+  - creature
+- abilities:
+  - affects: self
+    kind: static
+    mod:
+      power:
+        amount: 1000
+        count:
+          filter:
+            race_has: W・ソウル
+            types:
+            - creature
+          other: true
+          owner: you
+          zone: bz
+  civs:
+  - nature
+  cost: 3
+  id: dm36-106
+  mana: 1
+  name: マタタビ・ダケオ
+  power: 2000
+  races:
+  - ワイルド・ベジーズ
+  - W・ソウル
+  source:
+    official: dm36-106
+    review: pending
+  text: このクリーチャーのパワーは、バトルゾーンにある自分の他の(W・ソウル)クリーチャー１体につき+1000される。
+  types:
+  - creature
+- abilities:
+  - affects:
+      filter:
+        any_of:
+        - race_has: K・ソウル
+        - race_has: W・ソウル
+      owner: you
+      zone: bz
+    kind: static
+    mod:
+      grant:
+      - double_breaker
+  civs:
+  - fire
+  cost: 6
+  id: dm37-016
+  mana: 1
+  name: 爆裂ガレラス・シドウ
+  power: 6000
+  races:
+  - フレイム・コマンド
+  - K・ソウル
+  source:
+    official: dm37-016
+    review: pending
+  text: バトルゾーンにある自分の(K・ソウル)と(W・ソウル)クリーチャーはすべて「W・ブレイカー」を持つ。
+  types:
+  - creature
+- abilities:
+  - instead:
+    - op: move
+      reason: put
+      select:
+        ref: self
+      to: mana
+    kind: replace
+    when:
+      event: move
+      from: bz
+      subject: self
+  - instead:
+    - op: move
+      reason: put
+      select:
+        ref: event.subject
+      to: mana
+    kind: replace
+    when:
+      event: move
+      from: bz
+      subject:
+        filter:
+          any_of:
+          - race_has: K・ソウル
+          - race_has: W・ソウル
+        other: true
+        owner: you
+  civs:
+  - nature
+  cost: 5
+  evolve_from:
+    any_of:
+    - race_has: K・ソウル
+    - race_has: W・ソウル
+  id: dm37-017
+  keywords:
+  - double_breaker
+  mana: 1
+  name: 大神砕オーガ
+  power: 8000
+  races:
+  - ガイア・コマンド
+  - W・ソウル
+  source:
+    official: dm37-017
+    review: pending
+  text: '進化-自分の(K・ソウル)または(W・ソウル)クリーチャー１体の上に置く。
+
+    W・ブレイカー(このクリーチャーはシールドを２枚ブレイクする)
+
+    このクリーチャーがバトルゾーンを離れる時、バトルゾーンを離れるかわりに、マナゾーンに置く。
+
+    自分の他の(K・ソウル)または(W・ソウル)クリーチャーがバトルゾーンを離れる時、バトルゾーンを離れるかわりに、そのクリーチャーをマナゾーンに置く。'
+  types:
+  - creature
+  - evolution
+- abilities:
+  - effect:
+    - body:
+      - as: shown
+        op: choose
+        select:
+          from_top: 3
+          owner: you
+          zone: deck
+      - op: move
+        reason: put
+        select:
+          filter:
+            race_has: M・ソウル
+            types:
+            - creature
+          ref: shown
+        to: hand
+      - op: move
+        reason: put
+        select:
+          ref: shown
+        to: graveyard
+      op: may
+    kind: trigger
+    when:
+      event: move
+      subject: self
+      to: bz
+  civs:
+  - water
+  cost: 6
+  id: dm39-024
+  mana: 1
+  name: シンカイドッペル
+  power: 3000
+  races:
+  - ブルー・モンスター
+  - M・ソウル
+  source:
+    notes: 'このクリーチャーのソウルは M・ソウル のみのため、「このクリーチャーと同じソウルをひとつでも持つ」は race_has: M・ソウル で表した'
+    official: dm39-024
+    review: pending
+  text: このクリーチャーをバトルゾーンに出した時、自分の山札の上から３枚をすべてのプレイヤーに見せてもよい。その中から、このクリーチャーと同じソウルをひとつでも持つクリーチャーをすべて自分の手札に加え、残りを墓地に置く。
+  types:
+  - creature
+- abilities:
+  - affects: self
+    kind: static
+    mod:
+      cost:
+        amount: -1
+        count:
+          filter:
+            race_has: M・ソウル
+            types:
+            - creature
+          owner: you
+          zone: bz
+      cost_min: 1
+    zone: hand
+  - effect:
+    - as: seen
+      op: choose
+      select:
+        from_top: 1
+        owner: you
+        zone: deck
+    - as: me
+      op: choose
+      select:
+        ref: self
+    - cond:
+        all:
+        - exists:
+            filter:
+              types:
+              - creature
+            ref: seen
+        - cmp:
+          - cost_of: seen
+          - <
+          - cost_of: me
+      op: if
+      then:
+      - body:
+        - op: move
+          reason: put
+          select:
+            ref: seen
+          to: bz
+        op: may
+    kind: trigger
+    when:
+      event: move
+      subject: self
+      to: bz
+  civs:
+  - water
+  cost: 5
+  id: dm39-041
+  mana: 1
+  name: アクア・ジャック
+  power: 1000
+  races:
+  - リキッド・ピープル
+  - M・ソウル
+  source:
+    notes: 'シンパシーは static（zone: hand）の cost で表した（下限は原文どおり1）。連鎖のコスト比較は、このクリーチャーと見たカードを変数に束縛し
+      cost_of で参照した'
+    official: dm39-041
+    review: pending
+  text: シンパシー:(M・ソウル)クリーチャー / 連鎖
+  types:
+  - creature
+- abilities:
+  - effect:
+    - op: destroy
+      select:
+        count: 1
+        filter:
+          keyword: blocker
+          types:
+          - creature
+        owner: opp
+        zone: bz
+    kind: trigger
+    when:
+      event: attack
+      subject: self
+  civs:
+  - fire
+  cost: 6
+  id: dmex01-043
+  keywords:
+  - speed_attacker
+  - double_breaker
+  mana: 1
+  name: 爆竜 GENJI・XX
+  power: 7000
+  races:
+  - アーマード・ドラゴン
+  - フレイム・コマンド
+  - サムライ
+  - K・ソウル
+  source:
+    official: dmex01-043
+    review: pending
+    aliases:
+    - dm38-003
+    - dmd15-002
+    - dmx12a-002
+    - dmx12b-055
+    - promoy13-095
+  text: '【K・ソウル】
+
+    スピードアタッカーW・ブレイカーこのクリーチャーが攻撃する時、相手の「ブロッカー」を持つクリーチャーを１体破壊する。'
+  types:
+  - creature
+- civs:
+  - darkness
+  cost: 3
+  id: dmex04-058
+  mana: 1
+  name: 究極男
+  power: 3000
+  races:
+  - ヘドリアン
+  - ハンター
+  - エイリアン
+  - サムライ
+  - ナイト
+  - オリジン
+  - ダイナモ
+  - シノビ
+  - サバイバー
+  - H・ソウル
+  - M・ソウル
+  - E・ソウル
+  - K・ソウル
+  - W・ソウル
+  - B・ソウル
+  - U・ソウル
+  source:
+    official: dmex04-058
+    review: pending
+    aliases:
+    - dmx12b-009
+  text: 【H Souls】【M Souls】【E Souls】【K Souls】【W Souls】【B Souls】【U Souls】
+  types:
+  - creature
+- abilities:
+  - effect:
+    - op: destroy
+      select:
+        count: all
+        filter:
+          types:
+          - creature
+        other: true
+        owner: any
+        zone: bz
+    kind: trigger
+    when:
+      event: move
+      subject: self
+      to: bz
+  - affects:
+      filter:
+        types:
+        - spell
+      owner: opp
+      zone: hand
+    kind: static
+    mod:
+      deny:
+      - cast
+  civs:
+  - light
+  - darkness
+  cost: 10
+  evolve_from:
+    races:
+    - エンジェル・コマンド
+    - デーモン・コマンド
+  id: dmx19-s49
+  keywords:
+  - triple_breaker
+  mana: 1
+  name: 悪魔神王バルカディアス
+  power: 14500
+  races:
+  - エンジェル・コマンド
+  - デーモン・コマンド
+  - H・ソウル
+  - E・ソウル
+  source:
+    official: dmx19-s49
+    review: pending
+    aliases:
+    - dm38-s05
+    - promoy11-077
+  text: 【H・ソウル】【E・ソウル】マナゾーンに置く時、このカードはタップして置く。進化-自分のエンジェル・コマンドまたはデーモン・コマンド１体の上に置く。このクリーチャーをバトルゾーンに出した時、他のクリーチャーをすべて破壊する。相手は呪文を唱えることができない。T・ブレイカー
+  types:
+  - creature
+  - evolution
