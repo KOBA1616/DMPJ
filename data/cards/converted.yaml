@@ -309422,3 +309422,485 @@ cards:
   types:
   - creature
   - evolution
+- abilities:
+  - instead:
+    - op: move
+      reason: put
+      select:
+        ref: event.subject
+      to: mana
+    kind: replace
+    when:
+      event: move
+      subject:
+        filter:
+          cost_ge:
+            sum:
+            - count:
+                owner: opp
+                zone: mana
+            - 1
+          types:
+          - creature
+        owner: opp
+      to: bz
+  civs:
+  - nature
+  cost: 2
+  id: dm26rp3-sp005
+  keywords:
+  - cannot_attack
+  mana: 1
+  name: クイーン&かぼちゃうちゃう(DM26RP3 SP5/SP5)
+  power: 12000
+  races:
+  - グランセクト
+  source:
+    notes: 「相手のマナ枚数よりコストが大きい」は subject フィルタの cost_ge に（相手のマナ枚数＋１）の式を渡して表現した（dm25ex2-029
+      の先例）
+    official: dm26rp3-sp005
+    review: pending
+  text: 'このクリーチャーは攻撃できない。
+
+    相手のマナゾーンにあるカードの枚数よりコストが大きい相手のクリーチャーが出る時、かわりにそれを持ち主のマナゾーンに置く。'
+  types:
+  - creature
+- abilities:
+  - if:
+      all:
+      - is_turn: opp
+      - cmp:
+        - sum:
+          - count:
+              filter:
+                race_has: ジョーカーズ
+              owner: you
+              zone: bz
+          - count:
+              filter:
+                race_has: ジョーカーズ
+              owner: you
+              zone: mana
+        - '>='
+        - 3
+    instead:
+    - op: move
+      position: bottom
+      reason: put
+      select:
+        ref: event.subject
+      to: deck
+    - op: move
+      position: bottom
+      reason: put
+      select:
+        ref: self
+      to: deck
+    kind: replace
+    when:
+      event: move
+      subject:
+        filter:
+          cost_ge:
+            sum:
+            - count:
+                owner: opp
+                zone: mana
+            - 1
+          types:
+          - creature
+        owner: opp
+      to: bz
+  civs:
+  - zero
+  cost: 1
+  id: dm26rp3-t001
+  keywords:
+  - cannot_attack
+  mana: 1
+  name: ベイビーポンの助(DM26RP3 T1/T10)
+  power: 6000
+  races:
+  - ジョーカーズ
+  source:
+    notes: 「相手のマナ枚数よりコストが大きい」は subject フィルタの cost_ge に（相手のマナ枚数＋１）の式を渡して表現した（dm25ex2-029
+      の先例）。ジョーカーズの合計はバトルゾーンの自分のジョーカーズとマナゾーンのジョーカーズ・カードの count の sum で判定した
+    official: dm26rp3-t001
+    review: pending
+  text: 'このクリーチャーは攻撃できない。
+
+    相手のターンに相手のマナゾーンにあるカードの枚数よりコストが大きい相手のクリーチャーが出る時、自分の、ジョーカーズとマナゾーンにあるジョーカーズ・カードが合計３つ以上なら、相手はかわりにそのクリーチャーを山札の下に置き、その後、このクリーチャーを山札の下に置く。'
+  types:
+  - creature
+- abilities:
+  - kind: trigger
+    when:
+      event: move
+      to: bz
+      subject: self
+    effect:
+    - op: modify
+      select:
+        ref: self
+      mod:
+        allow:
+        - action: attack_creature
+          other:
+            tapped: false
+      duration: end_of_turn
+  - effect:
+    - duration: end_of_turn
+      mod:
+        allow:
+        - action: attack_creature
+          other:
+            tapped: false
+      op: modify
+      select:
+        ref: self
+    kind: trigger
+    when:
+      event: move
+      subject: self
+      to: bz
+  - affects: self
+    kind: static
+    mod:
+      power:
+        amount: 1000
+        count:
+          owner: you
+          zone: mana
+  - if:
+      cmp:
+      - count:
+          owner: you
+          zone: mana
+      - '>'
+      - count:
+          owner: opp
+          zone: mana
+    instead:
+    - op: move
+      reason: put
+      select:
+        ref: event.subject
+      to: mana
+    kind: replace
+    when:
+      event: move
+      subject:
+        filter:
+          types:
+          - creature
+        owner: opp
+      to: bz
+  - affects: self
+    kind: static
+    mod:
+      must_be_attacked: true
+  civs:
+  - nature
+  cost: 11
+  id: dm26rp3-tr006
+  keywords:
+  - powered_breaker
+  mana: 1
+  name: 自然の四君子 ガイアハザード(DM26RP3 TR6/TR9)
+  power: 12000
+  races:
+  - グランセクト
+  - レクスターズ
+  source:
+    notes: マッハファイターは keyword_patterns の雛形どおり出た時の誘発で明記した。パワーは「12000+」表記の基礎値12000とした（+1000する常在型で加算される）
+    official: dm26rp3-tr006
+    review: pending
+  text: 'マッハファイター
+
+    パワード・ブレイカー
+
+    自分のマナゾーンにあるカード１枚につき、このクリーチャーのパワーを+1000する。
+
+    相手のクリーチャーが出る時、自分のマナゾーンのカードが相手のより多ければ、相手はかわりにそのクリーチャーをマナゾーンに置く。
+
+    相手のクリーチャーが攻撃するなら、可能ならこのクリーチャーを攻撃する。'
+  types:
+  - creature
+- abilities:
+  - instead:
+    - op: move
+      reason: put
+      select:
+        ref: event.subject
+      to: mana
+    kind: replace
+    when:
+      event: move
+      subject:
+        filter:
+          cost_ge:
+            sum:
+            - count:
+                owner: opp
+                zone: mana
+            - 1
+          types:
+          - creature
+        owner: opp
+      to: bz
+  civs:
+  - nature
+  cost: 4
+  id: dmex06-094
+  mana: 1
+  name: 獣軍隊 ヤドック
+  power: 4000
+  races:
+  - ゲリラ・コマンド
+  - 侵略者
+  source:
+    notes: 「相手のマナ枚数よりコストが大きい」は subject フィルタの cost_ge に（相手のマナ枚数＋１）の式を渡して表現した（dm25ex2-029
+      の先例）
+    official: dmex06-094
+    review: pending
+    aliases:
+    - dmex02-021
+    - dmr20-066
+  text: 相手のマナゾーンにあるカードの枚数より大きいコストを持つ相手のクリーチャーがバトルゾーンに出る時、相手はかわりにそのクリーチャーを自身のマナゾーンに置く。
+  types:
+  - creature
+- abilities:
+  - effect:
+    - op: move
+      position: bottom
+      reason: put
+      select:
+        ref: event.subject
+      to: deck
+    kind: trigger
+    when:
+      event: move
+      subject:
+        filter:
+          cost_ge:
+            sum:
+            - count:
+                owner: opp
+                zone: mana
+            - 1
+          types:
+          - creature
+        owner: opp
+      to: bz
+  civs:
+  - light
+  cost: 2
+  id: dmex07-009
+  keywords:
+  - blocker
+  - cannot_attack_player
+  mana: 1
+  name: 制御の翼 オリオティス
+  power: 2500
+  races:
+  - ジャスティス・ウイング
+  source:
+    notes: 原文は「出した時」なので置換ではなく誘発型で表現した。「自身のマナ枚数よりコストが大きい」は subject フィルタの cost_ge に（相手のマナ枚数＋１）の式を渡して表現した（dm25ex2-029
+      の先例）
+    official: dmex07-009
+    review: pending
+    aliases:
+    - dmr15-007
+    - dmx26-015
+  text: 'ブロッカー（このクリーチャーをタップして、相手クリーチャーの攻撃先をこのクリーチャーに変更してもよい）
+
+    このクリーチャーは、相手プレイヤーを攻撃できない。
+
+    相手が、自身のマナゾーンにあるカードの枚数よりコストの大きいクリーチャーをバトルゾーンに出した時、相手はそのクリーチャーを自身の山札の一番下に置く。'
+  types:
+  - creature
+- abilities:
+  - kind: static
+    affects: self
+    mod:
+      sac_reduce: 1
+  - effect:
+    - op: move
+      position: bottom
+      reason: put
+      select:
+        ref: event.subject
+      to: deck
+    kind: trigger
+    when:
+      event: move
+      subject:
+        filter:
+          cost_ge:
+            sum:
+            - count:
+                owner: opp
+                zone: mana
+            - 1
+          types:
+          - creature
+        owner: opp
+      to: bz
+  - affects: self
+    kind: static
+    mod:
+      sac_reduce: 1
+  civs:
+  - light
+  cost: 2
+  id: dmrp19-031
+  mana: 1
+  name: 天翼 クリティブ-１
+  power: 2500
+  races:
+  - ジャスティス・ウイング
+  - ディスタス
+  source:
+    notes: 原文は「出した時」なので置換ではなく誘発型で表現した。ササゲール１は mod の sac_reduce で表現した（dm23bd5-043 の先例）
+    official: dmrp19-031
+    review: pending
+  text: '相手が、自身のマナゾーンのカードの枚数よりコストが大きいクリーチャーを出した時、相手はそのクリーチャーを山札の下に置く。
+
+    ササゲール１（ディスペクターを召喚する時、コストを１少なくしてもよい。そうしたら、このクリーチャーを破壊する。そのディスペクターのコストは０以下にはならない）'
+  types:
+  - creature
+- abilities:
+  - kind: trigger
+    when:
+      event: move
+      to: bz
+      subject: self
+    effect:
+    - op: modify
+      select:
+        ref: self
+      mod:
+        allow:
+        - action: attack_creature
+          other:
+            tapped: false
+      duration: end_of_turn
+  - effect:
+    - duration: end_of_turn
+      mod:
+        allow:
+        - action: attack_creature
+          other:
+            tapped: false
+      op: modify
+      select:
+        ref: self
+    kind: trigger
+    when:
+      event: move
+      subject: self
+      to: bz
+  - if:
+      cmp:
+      - count:
+          owner: you
+          zone: mana
+      - '>'
+      - count:
+          owner: opp
+          zone: mana
+    instead:
+    - op: move
+      reason: put
+      select:
+        ref: event.subject
+      to: mana
+    kind: replace
+    when:
+      event: move
+      subject:
+        filter:
+          types:
+          - creature
+        owner: opp
+      to: bz
+  - affects: self
+    kind: static
+    mod:
+      power:
+        amount: 1000
+        count:
+          owner: you
+          zone: mana
+  - affects: self
+    kind: static
+    mod:
+      must_be_attacked: true
+  civs:
+  - nature
+  cost: 11
+  id: dmrp22-10b
+  keywords:
+  - powered_breaker
+  mana: 1
+  name: 自然の四君子 ガイアハザード
+  power: 12000
+  races:
+  - グランセクト
+  - レクスターズ
+  source:
+    notes: マッハファイターは keyword_patterns の雛形どおり出た時の誘発で明記した。パワーは「12000+」表記の基礎値12000とした（+1000する常在型で加算される）
+    official: dmrp22-10b
+    review: pending
+    aliases:
+    - dmrp22-8a
+    - dmrp22-s8
+  text: 'マッハファイター
+
+    パワード・ブレイカー
+
+    相手のクリーチャーが出る時、自分のマナゾーンのカードが相手のより多ければ、相手はかわりにそのクリーチャーをマナゾーンに置く。
+
+    自分のマナゾーンにあるカード１枚につき、このクリーチャーのパワーを+1000する。
+
+    相手のクリーチャーが攻撃する時、可能ならこのクリーチャーを攻撃する。'
+  types:
+  - creature
+- abilities:
+  - effect:
+    - op: move
+      reason: put
+      select:
+        ref: self
+      to: deck
+    - op: shuffle
+      player: you
+    kind: trigger
+    when:
+      event: move
+      reason: put
+      subject: self
+      to: bz
+  civs:
+  - darkness
+  - fire
+  cost: 13
+  id: dmx22b-052
+  keywords:
+  - speed_attacker
+  - world_breaker
+  mana: 1
+  name: 世紀末ヘヴィ・デス・メタル
+  power: 39000
+  races:
+  - クリエイター
+  - ハンター
+  source:
+    notes: '「召喚されずにバトルゾーンに出た時」は reason: put で表現した（dm25rp1-012 の先例）。「マナゾーンに置く時タップして置く」は多色カードの規定で処理されるため能力には書かなかった'
+    official: dmx22b-052
+    review: pending
+    aliases:
+    - dmx04-s04
+  text: マナゾーンに置く時、このカードはタップして置く。 / スピードアタッカー / ワールド・ブレイカー / このクリーチャーが召喚されずにバトルゾーンに出た時、自分の山札に加えてシャッフルする。
+  types:
+  - creature
