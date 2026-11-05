@@ -321581,3 +321581,69 @@ cards:
     このクリーチャーは、パワー5500以下のクリーチャーとのバトル中、破壊されない。'
   types:
   - creature
+- abilities:
+  - affects:
+      owner: you
+      zone: mana
+    kind: static
+    mod:
+      add_civs:
+      - light
+      - water
+      - darkness
+      - fire
+      - nature
+  civs:
+  - nature
+  cost: 2
+  id: dmex01-014
+  mana: 1
+  name: 薫風妖精コートニー
+  power: 2000
+  races:
+  - スノーフェアリー
+  source:
+    notes: '第123弾の型（affects: {zone: mana, owner: you}, add_civs 全5文明）。無条件の常在効果のため厳密に変換できた'
+    official: dmex01-014
+    review: pending
+    aliases:
+    - dm13-015
+    - dmc42-035
+    - dmx02-015
+    - dmx16-066
+  text: 自分のマナゾーンにあるカードを、すべての文明のカードとして扱う。
+  types:
+  - creature
+- abilities:
+  - affects:
+      owner: you
+      zone: mana
+    kind: static
+    mod:
+      add_civs:
+      - light
+      - water
+      - darkness
+      - fire
+      - nature
+  civs:
+  - nature
+  cost: 2
+  id: dmrp20-046
+  mana: 1
+  name: 薫風妖精Re:コートニー
+  power: 2000
+  races:
+  - スノーフェアリー
+  source:
+    notes: 'G・ストライクは split の known_keywords のため下書きには入れない（submit 時に merge_split で戻る）。残りの効果は第123弾の型（affects:
+      {zone: mana, owner: you}, add_civs 全5文明）で無条件のため厳密に変換できた'
+    official: dmrp20-046
+    review: pending
+  text: '{GS} G・ストライク（このクリーチャーを自分のシールドゾーンから手札に加える時、相手に見せ、相手のクリーチャーを１体選んでもよい。このターン、そのクリーチャーは攻撃できない）
+
+    自分のマナゾーンにあるカードを、すべての文明のカードとして扱う。'
+  types:
+  - creature
+  keywords:
+  - g_strike
