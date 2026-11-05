@@ -1160,3 +1160,11 @@ draw イベントへの置換で表す（draw は個別イベントとして発�
 - 書き方: filter: {cost_le: {sum: [{count: {zone: mana, owner: you}}, -1]}}。
 - tests/test_vocab_pilot117.py 2件（正常 parse／検証）
 - 待機9枚（cost_lt_count のみが gap のもの）。
+
+## 第118弾: summon_event_trigger（召喚した時）— 新語彙なし（2026-11-05）
+「自分の他のクリーチャーを召喚した時、〜」は move イベント（reason: summon）を他者 subject で表す。
+- 書き方: {kind: trigger, when: {event: move, to: bz, reason: summon,
+  subject: {owner: you, other: true, filter}}, effect: [...]}。
+  「呪文を唱えた時」との複合条件は cast イベントの誘発を併記する。
+- tests/test_vocab_pilot118.py 2件（正常 parse／検証）
+- 待機8枚（summon_event_trigger のみが gap のもの）。
