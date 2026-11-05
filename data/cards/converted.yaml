@@ -317773,3 +317773,351 @@ cards:
   - creature
   keywords:
   - s_trigger
+- abilities:
+  - kind: trigger
+    when:
+      event: move
+      to: bz
+      subject: self
+    effect:
+    - op: modify
+      select:
+        ref: self
+      mod:
+        deny:
+        - be_chosen
+        - be_attacked
+      duration: until_next_own_turn_start
+  - effect:
+    - duration: until_next_own_turn_start
+      mod:
+        deny:
+        - be_chosen
+        - be_attacked
+      op: modify
+      select:
+        ref: self
+    kind: trigger
+    when:
+      event: move
+      subject: self
+      to: bz
+  - effect:
+    - op: play_free
+      select:
+        count: 1
+        filter:
+          cost_le: 4
+          types:
+          - spell
+        owner: you
+        up_to: true
+        zone: graveyard
+    kind: trigger
+    when:
+      event: move
+      subject: self
+      to: bz
+  - effect:
+    - body:
+      - op: play_free
+        select:
+          ref: event.subject
+      op: may
+    kind: trigger
+    once_per_turn: true
+    when:
+      event: cast
+      subject:
+        filter:
+          types:
+          - spell
+        owner: you
+        zone: hand
+  - instead:
+    - op: move
+      position: bottom
+      reason: put
+      select:
+        ref: event.subject
+      to: deck
+    kind: replace
+    when:
+      event: move
+      from: graveyard
+      reason: resolve
+      subject:
+        filter:
+          types:
+          - spell
+        owner: you
+      to: graveyard
+  civs:
+  - water
+  - darkness
+  cost: 5
+  id: dm26sd1-c002f
+  keywords:
+  - blocker
+  mana: 1
+  name: 龍素記号ｗD サイクルペディア
+  power: 5000
+  races:
+  - クリスタル・コマンド・ドラゴン
+  - ダークロード
+  source:
+    notes: 'ジャストダイバーは出た時の modify（deny: [be_chosen, be_attacked]、until_next_own_turn_start）で表した（dm22rp1-056
+      と同型）。墓地から唱えた呪文の置き場変更は、解決時の move（from: graveyard、to: graveyard、reason: resolve）を山札の下へ置く
+      replace で表した。この replace が効くため、このカード自身の play_free には resolve_to を付けていない'
+    official: dm26sd1-c002f
+    review: pending
+    aliases:
+    - dm22ex1-018
+    - dm23ex1-014
+    - dm23ex2-cho007
+    - dm23rp3-sp2
+    - dm24ex4-018
+  text: 'ブロッカー
+
+    ジャストダイバー（このクリーチャーが出た時、次の自分のターンのはじめまで、このクリーチャーは相手に選ばれず、攻撃されない）
+
+    このクリーチャーが出た時、コスト４以下の呪文を１枚、自分の墓地からコストを支払わずに唱えてもよい。
+
+    各ターンに１度、自分の手札から呪文を唱えた時、その呪文を自分の墓地からコストを支払わずに唱えてもよい。
+
+    自分の墓地から呪文を唱えた後、墓地のかわりに山札の下に置く。'
+  types:
+  - creature
+- abilities:
+  - effect:
+    - body:
+      - op: play_free
+        select:
+          ref: event.subject
+      op: may
+    kind: trigger
+    when:
+      event: cast
+      subject:
+        filter:
+          types:
+          - spell
+        owner: you
+        zone: hand
+  civs:
+  - water
+  cost: 8
+  id: dmr07-002
+  keywords:
+  - double_breaker
+  mana: 1
+  name: 真実の名 アカデミー・マスター
+  power: 6000
+  races:
+  - リキッド・ピープル
+  - ハンター
+  - アンノウン
+  source:
+    notes: 唱えた呪文そのものは event.subject で参照し、解決後に墓地にあるその呪文を play_free で唱え直す形にした
+    official: dmr07-002
+    review: pending
+  text: '自分の手札から呪文を唱えた時、その後、その呪文を墓地からコストを支払わずに唱えてよい。
+
+    W・ブレイカー(このクリーチャーはシールドを２枚ブレイクする)'
+  types:
+  - creature
+- civs:
+  - water
+  cost: 5
+  id: dmr16g-009
+  mana: 1
+  name: 龍素知新(DMR16極 9/54)
+  source:
+    notes: '唱えた後の置き場変更は play_free の resolve_to: deck / resolve_position: bottom で表した（dmx24-017
+      と同型）'
+    official: dmr16g-009
+    review: pending
+  spell:
+  - op: play_free
+    resolve_position: bottom
+    resolve_to: deck
+    select:
+      count: 1
+      filter:
+        cost_le: 7
+        types:
+        - spell
+      owner: you
+      zone: graveyard
+  text: コスト７以下の呪文を１枚、自分の墓地からコストを支払わずに唱える。唱えた後、その呪文を墓地に置くかわりに自分の山札の一番下に置く。
+  types:
+  - spell
+- civs:
+  - water
+  cost: 5
+  id: dmr16s-010
+  mana: 1
+  name: 龍素知新(DMR16真 10/54)
+  source:
+    notes: '唱えた後の置き場変更は play_free の resolve_to: deck / resolve_position: bottom で表した（dmx24-017
+      と同型）'
+    official: dmr16s-010
+    review: pending
+  spell:
+  - op: play_free
+    resolve_position: bottom
+    resolve_to: deck
+    select:
+      count: 1
+      filter:
+        cost_le: 7
+        types:
+        - spell
+      owner: you
+      zone: graveyard
+  text: コスト７以下の呪文を１枚、自分の墓地からコストを支払わずに唱える。唱えた後、その呪文を墓地に置くかわりに自分の山札の一番下に置く。
+  types:
+  - spell
+- civs:
+  - darkness
+  cost: 7
+  id: dmrp07-020
+  keywords:
+  - s_trigger
+  mana: 1
+  name: 連殺の卍月ハンド
+  source:
+    notes: 手札から唱えた後の再唱は、本体が墓地に置かれる移動を when とする delayed_trigger で表した（dmrp06-036 の xB
+      と同型）。闇のカード２枚の捨て札は discard の as で変数 d に束縛し、捨てた場合だけ再唱する
+    official: dmrp07-020
+    review: pending
+  spell:
+  - op: destroy
+    select:
+      count: 1
+      filter:
+        types:
+        - creature
+      owner: opp
+      zone: bz
+  - effect:
+    - body:
+      - as: d
+        op: discard
+        select:
+          count: 2
+          filter:
+            civs:
+            - darkness
+          owner: you
+          zone: hand
+      - cond:
+          exists:
+            ref: d
+        op: if
+        then:
+        - op: play_free
+          select:
+            count: 1
+            filter:
+              name: 連殺の卍月ハンド
+            owner: you
+            zone: graveyard
+      op: may
+    op: delayed_trigger
+    when:
+      event: move
+      subject: self
+      to: graveyard
+  text: 'S・トリガー（この呪文をシールドゾーンから手札に加える時、コストを支払わずにすぐ唱えてもよい）
+
+    相手のクリーチャーを１体、破壊する。
+
+    この呪文を自分の手札から唱えた時、闇のカードを２枚、自分の手札から捨ててもよい。そうしたら、この呪文を自分の墓地からコストを支払わずに唱える。'
+  types:
+  - spell
+- civs:
+  - darkness
+  - fire
+  cost: 5
+  id: dmrp16-010
+  mana: 1
+  name: 終の鬼術 死刀露
+  races:
+  - 鬼札王国
+  source:
+    notes: '破壊したクリーチャーは move の as で変数 sac に束縛し、「それよりコストが１大きい」は cost_ge / cost_le の両方に
+      {sum: [{cost_of: sac}, 1]} を置いてちょうど+1に限定した。出たクリーチャーは as: out で保持しスピードアタッカーを付与。鬼タイムの再唱は本体が墓地に置かれる移動を
+      when とする delayed_trigger 内で、シールド合計６つ以下の条件を判定して表した'
+    official: dmrp16-010
+    review: pending
+  spell:
+  - as: sac
+    op: move
+    reason: destroy
+    select:
+      count: 1
+      filter:
+        types:
+        - creature
+      owner: you
+      zone: bz
+    to: graveyard
+  - as: out
+    op: move
+    reason: put
+    select:
+      count: 1
+      filter:
+        cost_ge:
+          sum:
+          - cost_of: sac
+          - 1
+        cost_le:
+          sum:
+          - cost_of: sac
+          - 1
+        types:
+        - creature
+      owner: you
+      zone: graveyard
+    to: bz
+  - duration: end_of_turn
+    mod:
+      grant:
+      - speed_attacker
+    op: modify
+    select:
+      ref: out
+  - effect:
+    - cond:
+        cmp:
+        - sum:
+          - count:
+              owner: you
+              zone: shield
+          - count:
+              owner: opp
+              zone: shield
+        - <=
+        - 6
+      op: if
+      then:
+      - body:
+        - op: play_free
+          select:
+            count: 1
+            filter:
+              name: 終の鬼術 死刀露
+            owner: you
+            zone: graveyard
+        op: may
+    op: delayed_trigger
+    when:
+      event: move
+      subject: self
+      to: graveyard
+  text: 自分のクリーチャーを１体破壊する。その後、それよりコストが１大きいクリーチャーを１体、自分の墓地からバトルゾーンに出す。このターン、そのクリーチャーに「スピードアタッカー」を与える。
+    / 鬼タイム：この呪文を手札から唱えた後、自分と相手のシールドの数が合計６つ以下なら、この呪文を墓地からコストを支払わずに唱えてもよい。
+  types:
+  - spell
