@@ -818,3 +818,10 @@ converted の監査（opt_reduce の素の整数表記9件）から。任意形�
 - 書き方: filter: {colorless: true}（無色カードのみ）、filter: {colorless: false}（無色でないカード）。
 - tests/test_vocab_pilot66.py 2件（正常 parse／FILTER_KEYS 確認）。
 - 待機13枚（filter_colorless のみが gap のもの）。
+
+## 第67弾: tap_activated_ability（攻撃するかわりにタップして能力を使う）— 新語彙なし（2026-11-05）
+「このクリーチャーで攻撃するかわりに、タップして次の能力を使ってもよい」は既存の `kind: activate, cost: {tap: self}` で表せる。
+- 書き方: kind: activate, cost: {tap: self}, effect: [...]
+- 「攻撃するかわりに」は activate のコストとして表現（エンジンが攻撃の代わりに発動することを処理）。
+- tests/test_vocab_pilot67.py 2件（正常 parse／検証）
+- 待機13枚（tap_activated_ability のみが gap のもの）。
