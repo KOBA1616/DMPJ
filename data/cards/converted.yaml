@@ -321647,3 +321647,197 @@ cards:
   - creature
   keywords:
   - g_strike
+- abilities:
+  - effect:
+    - op: tap
+      select:
+        count: 2
+        filter:
+          types:
+          - creature
+        owner: opp
+        up_to: true
+        zone: bz
+    if:
+      cmp:
+      - count:
+          owner: you
+          zone: shield
+      - '>='
+      - count:
+          owner: opp
+          zone: shield
+    kind: trigger
+    when:
+      event: move
+      subject: self
+      to: bz
+  civs:
+  - light
+  cost: 4
+  id: dm36-045
+  mana: 1
+  name: 宣凶師バンガ
+  power: 3000
+  races:
+  - グラディエーター
+  source:
+    official: dm36-045
+    review: pending
+  text: ホーリー・フィールド(自分のシールドの数が相手以上であれば、このクリーチャーは次の能力を得る) このクリーチャーをバトルゾーンに出した時、バトルゾーンにある相手のクリーチャーを２体まで選び、タップする。
+  types:
+  - creature
+- abilities:
+  - affects: self
+    if:
+      cmp:
+      - count:
+          owner: you
+          zone: shield
+      - '>='
+      - count:
+          owner: opp
+          zone: shield
+    kind: static
+    mod:
+      grant:
+      - double_breaker
+      power: 3000
+  civs:
+  - light
+  cost: 4
+  id: dm36-071
+  mana: 1
+  name: 宣凶師ロッカナタ
+  power: 4000
+  races:
+  - グラディエーター
+  source:
+    official: dm36-071
+    review: pending
+  text: ホーリー・フィールド(自分のシールドの数が相手以上であれば、このクリーチャーは次の能力を得る) このクリーチャーのパワーは+3000され、「W・ブレイカー」を得る。
+  types:
+  - creature
+- abilities:
+  - affects: self
+    if:
+      cmp:
+      - count:
+          owner: you
+          zone: shield
+      - '>='
+      - count:
+          owner: opp
+          zone: shield
+    kind: static
+    mod:
+      grant:
+      - blocker
+  civs:
+  - light
+  cost: 3
+  id: dm36-072
+  mana: 1
+  name: 予言者カーラ
+  power: 3000
+  races:
+  - ライトブリンガー
+  source:
+    official: dm36-072
+    review: pending
+  text: ホーリー・フィールド(自分のシールドの数が相手以上であれば、このクリーチャーは次の能力を得る) このクリーチャーは「ブロッカー」を得る。
+  types:
+  - creature
+- abilities:
+  - effect:
+    - body:
+      - count: 1
+        op: draw
+      op: may
+    if:
+      cmp:
+      - count:
+          owner: you
+          zone: shield
+      - '>='
+      - count:
+          owner: opp
+          zone: shield
+    kind: trigger
+    when:
+      event: move
+      reason: destroy
+      subject: self
+      to: graveyard
+    zone: graveyard
+  civs:
+  - light
+  cost: 3
+  id: dm36-074
+  keywords:
+  - shield_saver
+  mana: 1
+  name: 神座の伝道師バーニアン
+  power: 1000
+  races:
+  - バーサーカー
+  source:
+    official: dm36-074
+    review: pending
+  text: 'シールド・セイバー(自分のシールドがブレイクされる時、かわりにこのクリーチャーを破壊してもよい)
+
+    ホーリー・フィールド(自分のシールドの数が相手以上であれば、このクリーチャーは次の能力を得る) このクリーチャーが破壊された時、カードを１枚引いてもよい。'
+  types:
+  - creature
+- civs:
+  - light
+  cost: 3
+  id: dm38-007
+  keywords:
+  - s_trigger
+  mana: 1
+  name: スター・フラッシュ
+  source:
+    notes: '原文は呪文だがホーリー・フィールドの定型文が「このクリーチャーは次の能力を得る」のまま書かれている。成立時は後段の「１体のかわりに２体まで」が基本効果を置き換える置換的な変種と解釈し、spell
+      内の op: if（シールド数比較）で then=２体まで／else=１体 に分岐して表した'
+    official: dm38-007
+    review: pending
+  spell:
+  - cond:
+      cmp:
+      - count:
+          owner: you
+          zone: shield
+      - '>='
+      - count:
+          owner: opp
+          zone: shield
+    else:
+    - op: tap
+      select:
+        count: 1
+        filter:
+          types:
+          - creature
+        owner: opp
+        zone: bz
+    op: if
+    then:
+    - op: tap
+      select:
+        count: 2
+        filter:
+          types:
+          - creature
+        owner: opp
+        up_to: true
+        zone: bz
+  text: 'S・トリガー(この呪文をシールドゾーンから手札に加える時、コストを支払わずにすぐ唱えてもよい)
+
+    バトルゾーンにある相手のクリーチャーを１体選んでタップする。
+
+    ホーリー・フィールド(自分のシールドの数が相手以上であれば、このクリーチャーは次の能力を得る)
+
+    バトルゾーンにある相手のクリーチャーを１体のかわりに２体まで選んでタップする。'
+  types:
+  - spell
