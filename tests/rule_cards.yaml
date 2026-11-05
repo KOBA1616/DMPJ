@@ -641,3 +641,17 @@ cards:
     power: 2000
     races: [テスト]
     text: 試験用の相手クリーチャー
+
+  - id: R077
+    name: 試験用攻撃され獣
+    types: [creature]
+    civs: [water]
+    cost: 1
+    power: 5000
+    races: [テスト]
+    text: このクリーチャーが攻撃された時、カードを1枚引く。
+    abilities:
+      - kind: trigger
+        when: {event: attack, target: self}
+        effect:
+          - {op: draw, count: 1}

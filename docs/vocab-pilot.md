@@ -887,3 +887,11 @@ converted の監査（opt_reduce の素の整数表記9件）から。任意形�
 - 意味: バトルが始まる時、あるいはこのクリーチャーで攻撃できる時、タップしてもよい。そうした場合、そのターンの終わりまで、パワーと能力（ダイナモ自身を除く）を自分の他のダイナモ1体に加える。
 - tests/test_vocab_pilot76.py 2件（正常 parse／キーワード定義確認）
 - 待機12枚（dynamo のみが gap のもの）。
+
+## 第77弾: attacked_trigger（攻撃された時）— 新語彙なし（2026-11-05）
+「このクリーチャーが攻撃された時」は既存の attack イベント + target: self で表せる。
+- 書き方: kind: trigger, when: {event: attack, target: self}
+- 「相手が自分のクリーチャーを攻撃する時」は target: {owner: you, filter: {types: [creature]}}。
+- 攻撃宣言時に解決する（ブロック・バトルの前）。
+- tests/test_vocab_pilot77.py 3件（parse + 実挙動）。試験カード R077 を tests/rule_cards.yaml に追加。
+- 待機11枚（attacked_trigger のみが gap のもの）。
