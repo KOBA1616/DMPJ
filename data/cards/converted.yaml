@@ -303244,3 +303244,862 @@ cards:
   types:
   - creature
   - evolution
+- civs:
+  - nature
+  cost: 3
+  id: dmex02-003
+  keywords:
+  - s_trigger
+  mana: 1
+  name: フェアリー・トラップ
+  source:
+    notes: '表向きにしたカードは choose（look: true）で変数 t に束縛し、「よりコストが小さい」は第85弾のイディオム cost_le:
+      {sum: [{cost_of: {ref: t}}, -1]} で表した'
+    official: dmex02-003
+    review: pending
+    aliases:
+    - dmd34-005
+  spell:
+  - as: t
+    op: choose
+    select:
+      count: 1
+      from_top: 1
+      look: true
+      owner: you
+      zone: deck
+  - modes:
+    - - op: mana_put
+        select:
+          ref: t
+    - - op: mana_put
+        select:
+          count: 1
+          filter:
+            cost_le:
+              sum:
+              - cost_of:
+                  ref: t
+              - -1
+            types:
+            - creature
+          owner: opp
+          zone: bz
+    op: modal
+  text: 'S・トリガー（この呪文をシールドゾーンから手札に加える時、コストを支払わずにすぐ唱えてもよい）
+
+    自分の山札の上から１枚目を表向きにし、その後、次のうちいずれか１つを選ぶ。
+
+    ▼表向きにしたカードを自分のマナゾーンに置く。
+
+    ▼表向きにしたカードよりコストが小さい相手のクリーチャーを１体選び、持ち主のマナゾーンに置く。'
+  types:
+  - spell
+- abilities:
+  - affects: self
+    kind: static
+    mod:
+      allow:
+      - attack_player
+  - effect:
+    - body:
+      - as: d
+        op: discard
+        select:
+          count: 1
+          filter:
+            race_has: ジョーカーズ
+          owner: you
+          zone: hand
+      - op: move
+        position: bottom
+        reason: put
+        select:
+          count: 1
+          filter:
+            cost_le:
+              sum:
+              - cost_of:
+                  ref: d
+              - -1
+          owner: opp
+          zone: bz
+        to: deck
+      op: may
+    kind: trigger
+    when:
+      event: move
+      subject: self
+      to: bz
+  - effect:
+    - body:
+      - as: d
+        op: discard
+        select:
+          count: 1
+          filter:
+            race_has: ジョーカーズ
+          owner: you
+          zone: hand
+      - op: move
+        position: bottom
+        reason: put
+        select:
+          count: 1
+          filter:
+            cost_le:
+              sum:
+              - cost_of:
+                  ref: d
+              - -1
+          owner: opp
+          zone: bz
+        to: deck
+      op: may
+    kind: trigger
+    when:
+      event: attack
+      subject: self
+  civs:
+  - zero
+  cost: 7
+  id: dmex02-008
+  keywords:
+  - double_breaker
+  mana: 1
+  name: ザンジェットW７
+  power: 9000
+  races:
+  - ジョーカーズ
+  source:
+    notes: '「バトルゾーンに出たターンに相手プレイヤーを攻撃できる」は dm26sd1-n009 の先例どおり static の allow: [attack_player]
+      で表した。捨てたジョーカーズは discard の as で変数 d に束縛し、「それよりコストが小さい」は第85弾のイディオムで表した。相手のカードは種類を問わないため
+      filter は cost_le のみ'
+    official: dmex02-008
+    review: pending
+  text: 'W・ブレイカー
+
+    このクリーチャーは、バトルゾーンに出たターンに相手プレイヤーを攻撃できる。
+
+    このクリーチャーがバトルゾーンに出た時、または攻撃する時、ジョーカーズを１枚、自分の手札から捨ててもよい。そうしたら、それよりコストが小さい相手のカードを１枚バトルゾーンから選び、持ち主の山札の一番下に置く。'
+  types:
+  - creature
+- abilities:
+  - effect:
+    - as: t
+      op: choose
+      select:
+        count: 1
+        filter:
+          power_le: 6000
+          types:
+          - creature
+        owner: opp
+        zone: bz
+    - op: move
+      reason: return
+      select:
+        ref: t
+      to: hand
+    - as: s
+      op: choose
+      select:
+        count: 1
+        filter:
+          cost_le:
+            sum:
+            - cost_of:
+                ref: t
+            - -1
+          types:
+          - creature
+        owner: you
+        zone: graveyard
+    - op: move
+      reason: put
+      select:
+        ref: s
+      to: bz
+    kind: trigger
+    when:
+      event: move
+      subject: self
+      to: bz
+  civs:
+  - water
+  - darkness
+  cost: 4
+  id: dmex13-016
+  mana: 1
+  name: 戯具 ヴォエテ
+  power: 2000
+  races:
+  - マフィ・ギャング
+  - チーム零
+  source:
+    notes: '戻したクリーチャーは choose で変数 t に束縛し、「そのクリーチャーよりコストが小さい」は第85弾のイディオムで表した。墓地から出すのは召喚ではないので
+      move（reason: put）'
+    official: dmex13-016
+    review: pending
+  text: このクリーチャーがバトルゾーンに出た時、相手のパワー6000以下のクリーチャーを１体選び、持ち主の手札に戻す。その後、そのクリーチャーよりコストが小さいクリーチャーを１体、自分の墓地からバトルゾーンに出す。
+  types:
+  - creature
+- civs:
+  - nature
+  cost: 3
+  id: dmex14-058
+  keywords:
+  - s_trigger
+  mana: 1
+  name: フェイバリット・ムーブ
+  races:
+  - 暴拳王国
+  source:
+    notes: 'マナゾーンに置いたカードは move の as で変数 placed に束縛し、「より、コストが小さい」は第85弾のイディオムで表した。レインボーナスの条件は自分の多色クリーチャーの存在（filter:
+      {multicolor: true} の exists）'
+    official: dmex14-058
+    review: pending
+  spell:
+  - as: placed
+    op: move
+    reason: put
+    select:
+      count: 1
+      from_top: 1
+      owner: you
+      zone: deck
+    to: mana
+  - cond:
+      exists:
+        filter:
+          multicolor: true
+          types:
+          - creature
+        owner: you
+        zone: bz
+    op: if
+    then:
+    - op: mana_put
+      select:
+        count: 1
+        filter:
+          cost_le:
+            sum:
+            - cost_of:
+                ref: placed
+            - -1
+          types:
+          - creature
+        owner: opp
+        zone: bz
+  text: 'S・トリガー（この呪文をシールドゾーンから手札に加える時、コストを支払わずにすぐ唱えてもよい）
+
+    自分の山札の上から１枚目をマナゾーンに置く。
+
+    レインボーナス：バトルゾーンに自分の多色クリーチャーがあれば、この呪文の効果でマナゾーンに置いたカードより、コストが小さい相手のクリーチャーを１体選び、持ち主のマナゾーンに置く。'
+  types:
+  - spell
+- civs:
+  - nature
+  cost: 4
+  id: dmex17-066
+  mana: 1
+  name: 母なる聖地
+  source:
+    notes: 'タップしてマナゾーンに置くクリーチャーは choose で変数 t に束縛し、move の tapped: true でタップ状態で置く。「そのクリーチャーよりコストが小さい」は第85弾のイディオム。マナゾーンから出すのは召喚ではないので
+      move（reason: put）'
+    official: dmex17-066
+    review: pending
+  spell:
+  - as: t
+    op: choose
+    select:
+      count: 1
+      filter:
+        types:
+        - creature
+      owner: you
+      zone: bz
+  - op: move
+    reason: put
+    select:
+      ref: t
+    tapped: true
+    to: mana
+  - as: s
+    op: choose
+    select:
+      count: 1
+      filter:
+        cost_le:
+          sum:
+          - cost_of:
+              ref: t
+          - -1
+        types:
+        - creature
+      owner: you
+      zone: mana
+  - op: move
+    reason: put
+    select:
+      ref: s
+    to: bz
+  text: バトルゾーンにある自分のクリーチャーを１体、タップしてマナゾーンに置く。その後、そのクリーチャーよりコストが小さいクリーチャーを１体、自分のマナゾーンから出す。
+  types:
+  - spell
+- civs:
+  - darkness
+  cost: 6
+  id: dmpcd03-b07
+  keywords:
+  - s_trigger
+  mana: 1
+  name: 地獄門デス・ゲート
+  source:
+    notes: '破壊するクリーチャーは choose で変数 t に束縛し、「そのクリーチャーよりコストが小さい」は第85弾のイディオム、進化ではないは not_types:
+      [evolution] で表した。墓地から出すのは召喚ではないので move（reason: put）'
+    official: dmpcd03-b07
+    review: pending
+    aliases:
+    - dmd05-010
+    - dmd12-016
+    - dmd19-019
+    - dmd25-010
+    - dmd33-013
+    - dmd35-009
+    - dmex06-066
+    - dmex15-b063
+    - dmr02-010
+    - dmsd06-010
+    - dmx10-029
+    - dmx12b-076
+    - dmx14-073
+    - dmx16-081
+    - dmx20-028
+    - dmx23-058
+    - dmx24-020
+    - promoy10-026
+    - promoy11-043
+  spell:
+  - as: t
+    op: choose
+    select:
+      count: 1
+      filter:
+        tapped: false
+        types:
+        - creature
+      owner: opp
+      zone: bz
+  - op: destroy
+    select:
+      ref: t
+  - body:
+    - op: move
+      reason: put
+      select:
+        count: 1
+        filter:
+          cost_le:
+            sum:
+            - cost_of:
+                ref: t
+            - -1
+          not_types:
+          - evolution
+          types:
+          - creature
+        owner: you
+        zone: graveyard
+      to: bz
+    op: may
+  text: 'S・トリガー（この呪文をシールドゾーンから手札に加える時、コストを支払わずにすぐ唱えてもよい）
+
+    相手のタップしていないクリーチャーを１体破壊する。そのクリーチャーよりコストが小さい、進化ではないクリーチャーを１体、自分の墓地から出してもよい。'
+  types:
+  - spell
+- abilities:
+  - effect:
+    - as: atk
+      op: choose
+      select:
+        ref: event.subject
+    - as: m
+      op: move
+      reason: put
+      select:
+        count: 1
+        from_top: 1
+        owner: you
+        zone: deck
+      to: graveyard
+    - cond:
+        exists:
+          filter:
+            cost_le:
+              sum:
+              - cost_of:
+                  ref: atk
+              - -1
+            not_types:
+            - evolution
+            race_has: ハンター
+          ref: m
+      op: if
+      then:
+      - body:
+        - op: move
+          reason: put
+          select:
+            ref: m
+          to: bz
+        op: may
+    kind: trigger
+    when:
+      event: attack
+      subject:
+        filter:
+          race_has: ハンター
+        owner: you
+  civs:
+  - fire
+  cost: 6
+  id: dmr01-008
+  keywords:
+  - hunting
+  - double_breaker
+  mana: 1
+  name: 熱血ボス！バルス・カイザー
+  power: 6000
+  races:
+  - レッド・コマンド・ドラゴン
+  - ハンター
+  source:
+    notes: '攻撃しているハンターは choose（ref: event.subject）で変数 atk に、墓地に置いたカードは move の as で変数
+      m に束縛した。「攻撃している自分のハンターよりコストが小さい」は第85弾のイディオムを m の filter 内で参照。バトルゾーンに出すのは召喚ではないので
+      move（reason: put）'
+    official: dmr01-008
+    review: pending
+  text: '自分のハンターが攻撃する時、自分の山札の上から１枚目を墓地に置く。そのカードが、攻撃している自分のハンターよりコストが小さい、進化ではないハンター・クリーチャーであれば、バトルゾーンに出してもよい。
+
+    ハンティング(バトル中、このクリーチャーのパワーは、バトルゾーンにある自分のハンター１体につき+1000される)
+
+    W・ブレイカー(このクリーチャーはシールドを２枚ブレイクする)'
+  types:
+  - creature
+- abilities:
+  - effect:
+    - body:
+      - as: d
+        op: discard
+        select:
+          count: 1
+          owner: you
+          zone: hand
+      - op: destroy
+        select:
+          count: 1
+          filter:
+            cost_le:
+              sum:
+              - cost_of:
+                  ref: d
+              - -1
+            types:
+            - creature
+          owner: opp
+          zone: bz
+      op: may
+    kind: trigger
+    when:
+      event: attack
+      subject: self
+  civs:
+  - darkness
+  cost: 5
+  evolve_from:
+    race_has: ゴースト
+  id: dmr05-005
+  keywords:
+  - double_breaker
+  mana: 1
+  name: 拷問の魔黒スネーク・テイルコート
+  power: 8000
+  races:
+  - ゴースト
+  source:
+    notes: 捨てた手札は discard の as で変数 d に束縛し、「そのカードよりコストが小さい」は第85弾のイディオムで表した
+    official: dmr05-005
+    review: pending
+  text: '進化-自分のゴースト１体の上に置く。
+
+    このクリーチャーが攻撃する時、自分の手札を１枚捨ててもよい。そうした場合、そのカードよりコストが小さい相手のクリーチャーを１体破壊する。
+
+    W・ブレイカー(このクリーチャーはシールドを２枚ブレイクする)'
+  types:
+  - creature
+  - evolution
+- abilities:
+  - effect:
+    - as: m
+      op: move
+      reason: put
+      select:
+        count: 1
+        from_top: 1
+        owner: you
+        zone: deck
+      to: graveyard
+    - cond:
+        exists:
+          filter:
+            civs:
+            - darkness
+            types:
+            - creature
+          ref: m
+      op: if
+      then:
+      - as: t
+        op: choose
+        select:
+          count: 1
+          filter:
+            tapped: false
+            types:
+            - creature
+          owner: opp
+          zone: bz
+      - op: destroy
+        select:
+          ref: t
+      - body:
+        - op: move
+          reason: put
+          select:
+            count: 1
+            filter:
+              cost_le:
+                sum:
+                - cost_of:
+                    ref: t
+                - -1
+              not_types:
+              - evolution
+              types:
+              - creature
+            owner: you
+            zone: graveyard
+          to: bz
+        op: may
+    kind: trigger
+    when:
+      event: move
+      subject: self
+      to: bz
+  - effect:
+    - as: m
+      op: move
+      reason: put
+      select:
+        count: 1
+        from_top: 1
+        owner: you
+        zone: deck
+      to: graveyard
+    - cond:
+        exists:
+          filter:
+            civs:
+            - darkness
+            types:
+            - creature
+          ref: m
+      op: if
+      then:
+      - as: t
+        op: choose
+        select:
+          count: 1
+          filter:
+            tapped: false
+            types:
+            - creature
+          owner: opp
+          zone: bz
+      - op: destroy
+        select:
+          ref: t
+      - body:
+        - op: move
+          reason: put
+          select:
+            count: 1
+            filter:
+              cost_le:
+                sum:
+                - cost_of:
+                    ref: t
+                - -1
+              not_types:
+              - evolution
+              types:
+              - creature
+            owner: you
+            zone: graveyard
+          to: bz
+        op: may
+    kind: trigger
+    when:
+      event: attack
+      subject: self
+  civs:
+  - darkness
+  cost: 7
+  id: dmr20-s05
+  keywords:
+  - double_breaker
+  mana: 1
+  name: 地獄の悪魔龍 デスゲイト
+  power: 9000
+  races:
+  - デーモン・コマンド・ドラゴン
+  - 革命軍
+  source:
+    notes: '墓地に置いたカードは move の as で変数 m に束縛し、闇のクリーチャーかどうかは exists（ref: m の filter）で判定した。破壊したクリーチャーは
+      choose で変数 t に束縛し、「破壊したクリーチャーよりコストが小さい」は第85弾のイディオム。墓地から出すのは召喚ではないので move（reason:
+      put）'
+    official: dmr20-s05
+    review: pending
+  text: W・ブレイカーこのクリーチャーがバトルゾーンに出た時または攻撃する時、自分の山札の上から１枚目を墓地に置く。それが闇のクリーチャーなら、相手のアンタップしているクリーチャーを１体破壊し、破壊したクリーチャーよりコストが小さい進化ではないクリーチャーを１体、自分の墓地からバトルゾーンに出してもよい。
+  types:
+  - creature
+- abilities:
+  - effect:
+    - as: d
+      op: choose
+      select:
+        ref: event.subject
+    - as: s
+      op: choose
+      select:
+        count: 1
+        filter:
+          cost_le:
+            sum:
+            - cost_of:
+                ref: d
+            - -1
+          types:
+          - creature
+        owner: you
+        zone: graveyard
+    - op: move
+      reason: put
+      select:
+        ref: s
+      to: bz
+    kind: trigger
+    when:
+      event: move
+      reason: destroy
+      subject:
+        filter:
+          types:
+          - creature
+        owner: opp
+      to: graveyard
+  civs:
+  - darkness
+  cost: 7
+  id: dmrp05-021
+  keywords:
+  - double_breaker
+  mana: 1
+  name: 採菌医 ウォンド
+  power: 9000
+  races:
+  - マフィ・ギャング
+  source:
+    notes: '破壊された相手のクリーチャーは choose（ref: event.subject）で変数 d に束縛し、「それよりコストが小さい」は第85弾のイディオムで表した。墓地から出すのは召喚ではないので
+      move（reason: put）'
+    official: dmrp05-021
+    review: pending
+  text: 'W・ブレイカー（このクリーチャーはシールドを２つブレイクする）
+
+    相手のクリーチャーが破壊された時、それよりコストが小さいクリーチャーを１体、自分の墓地からバトルゾーンに出す。'
+  types:
+  - creature
+- abilities:
+  - if:
+      cmp:
+      - count:
+          owner: you
+          zone: bz
+      - '>='
+      - 3
+    instead:
+    - op: move
+      reason: destroy
+      select:
+        chooser: you
+        count: 3
+        owner: you
+        zone: bz
+      to: graveyard
+    kind: replace
+    optional: true
+    when:
+      event: lose
+  - if:
+      cmp:
+      - count:
+          owner: you
+          zone: bz
+      - '>='
+      - 3
+    instead:
+    - op: move
+      reason: destroy
+      select:
+        chooser: you
+        count: 3
+        owner: you
+        zone: bz
+      to: graveyard
+    kind: replace
+    optional: true
+    when:
+      event: move
+      from: bz
+      subject: self
+  - effect:
+    - as: t
+      op: choose
+      select:
+        count: 1
+        filter:
+          tapped: false
+          types:
+          - creature
+          - tamaseed
+        owner: opp
+        zone: bz
+    - op: move
+      reason: return
+      select:
+        ref: t
+      to: hand
+    - as: s
+      op: choose
+      select:
+        count: 1
+        filter:
+          cost_le:
+            sum:
+            - cost_of:
+                ref: t
+            - -1
+          types:
+          - tamaseed
+        owner: you
+        zone: graveyard
+    - op: move
+      reason: put
+      select:
+        ref: s
+      to: bz
+    kind: trigger
+    when:
+      event: tap
+      subject: self
+  civs:
+  - water
+  cost: 5
+  id: dmrp22-3a
+  keywords:
+  - blocker
+  - double_breaker
+  mana: 1
+  name: 「亜堕無」-鬼MAX
+  power: 7000
+  races:
+  - アダムユニット
+  - デモニオ
+  - 鬼レクスターズ
+  s_max: true
+  source:
+    notes: '鬼S-MAX進化は s_max: true と第43弾の標準形（dmrp22-6a と同型。自分の表向きのカード＝バトルゾーンのカード3枚を破壊）で表した。戻したカードは
+      choose で変数 t に束縛し、「その戻したカードよりコストが小さい」は第85弾のイディオム。墓地から出すのは召喚ではないので move（reason:
+      put）'
+    official: dmrp22-3a
+    review: pending
+    aliases:
+    - dmrp22-5b
+    - dmrp22-s3
+  text: '鬼S-MAX進化：自分がゲームに負ける時、またはこのクリーチャーが離れる時、かわりに自分の表向きのカードを３枚破壊してもよい。（このクリーチャーは進化元を必要としない。自分のS-MAX進化クリーチャーが２体以上あれば、そのうちの１体を残し、残りをすべて手札に戻す）
+
+    ブロッカー　W・ブレイカー
+
+    このクリーチャーがタップした時、バトルゾーンにある相手の、アンタップしているクリーチャー１体またはアンタップしているタマシードを１枚、持ち主の手札に戻す。その後、その戻したカードよりコストが小さいタマシード
+    を１枚、自分の墓地から出す。'
+  types:
+  - creature
+  - evolution
+- abilities:
+  - effect:
+    - as: atk
+      op: choose
+      select:
+        ref: event.subject
+    - body:
+      - as: s
+        op: choose
+        select:
+          count: 1
+          filter:
+            cost_le:
+              sum:
+              - cost_of:
+                  ref: atk
+              - -1
+            types:
+            - creature
+            - tamaseed
+          owner: you
+          zone: graveyard
+      - op: move
+        reason: put
+        select:
+          ref: s
+        to: bz
+      op: may
+    first_time: true
+    kind: trigger
+    when:
+      event: attack
+      subject:
+        filter:
+          types:
+          - creature
+        owner: you
+  civs:
+  - darkness
+  cost: 4
+  id: dm22sd1-013
+  mana: 1
+  name: 深淵の食卓
+  races:
+  - アビスロイヤル
+  source:
+    notes: '「各ターン、はじめて攻撃する時」は first_time: true で表した。攻撃しているクリーチャーは choose（ref: event.subject）で変数
+      atk に束縛し、「そのクリーチャーよりコストが小さい」は第85弾のイディオム。墓地から出すのは召喚ではないので move（reason: put）'
+    official: dm22sd1-013
+    review: pending
+    aliases:
+    - dm22rp1-041
+    - dm22rp1-16a
+  text: 各ターン、自分のクリーチャーがはじめて攻撃する時、そのクリーチャーよりコストが小さいクリーチャー１体またはタマシードを１枚、自分の墓地から出してもよい。
+  types:
+  - tamaseed
