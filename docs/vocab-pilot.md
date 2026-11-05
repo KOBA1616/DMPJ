@@ -1168,3 +1168,13 @@ draw イベントへの置換で表す（draw は個別イベントとして発�
   「呪文を唱えた時」との複合条件は cast イベントの誘発を併記する。
 - tests/test_vocab_pilot118.py 2件（正常 parse／検証）
 - 待機8枚（summon_event_trigger のみが gap のもの）。
+
+## 第119弾: enters_non_summon（召喚以外の方法で出た時）— 新語彙なし（2026-11-05）
+「召喚以外の方法で出た時」は move イベントの reason: put で表す
+（バトルゾーンへの出現理由は summon / put の2種のみ）。
+- 書き方（誘発）: {kind: trigger, when: {event: move, to: bz, reason: put,
+  subject: {owner: opp, filter}}, if: {is_turn: opp}, effect: [...]}。
+- 書き方（置換）: {kind: replace, when: {event: move, to: bz, reason: put, subject: {...}},
+  instead: [{op: move, select: {ref: event.subject}, to: graveyard, reason: put}]}。
+- tests/test_vocab_pilot119.py 2件（正常 parse／検証）
+- 待機6枚（enters_non_summon のみが gap のもの）。
