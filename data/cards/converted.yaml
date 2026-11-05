@@ -321376,3 +321376,208 @@ cards:
     ▶クリーチャーを１体、自分のマナゾーンから手札に戻す。'
   types:
   - creature
+- abilities:
+  - affects: self
+    kind: static
+    mod:
+      battle_power:
+        amount: 5000
+        opponent_filter:
+          keyword: blocker
+  civs:
+  - fire
+  cost: 2
+  id: dmex09-034
+  mana: 1
+  name: プリンス・プンコー
+  power: 2000
+  races:
+  - ジョーカーズ
+  - チーム切札
+  source:
+    official: dmex09-034
+    review: pending
+  text: 「ブロッカー」を持つクリーチャーとバトル中、このクリーチャーのパワーを+5000する。
+  types:
+  - creature
+- abilities:
+  - affects: self
+    kind: static
+    mod:
+      battle_indestructible:
+        opponent_filter:
+          civs:
+          - fire
+  - effect:
+    - body:
+      - op: move
+        reason: charge
+        select:
+          count: 1
+          from_top: 1
+          owner: you
+          zone: deck
+        to: shield
+      op: may
+    kind: trigger
+    when:
+      event: move
+      from:
+      - graveyard
+      - mana
+      - deck
+      - shield
+      - hyper
+      - gr
+      subject:
+        filter:
+          cost_le: 4
+          types:
+          - creature
+        owner: opp
+      to: bz
+  civs:
+  - light
+  cost: 2
+  id: dmex11-017
+  keywords:
+  - blocker
+  - cannot_attack_player
+  mana: 1
+  name: 「戒律の大弓」
+  power: 3000
+  races:
+  - メタリカ
+  - チーム銀河
+  source:
+    notes: '「手札以外のどこからでも」は第98弾の from リスト列挙で表した（dmrp14-035 と同文・同条件の先例に従い、基本列挙の墓地・マナ・山札・シールドに
+      hyper・gr を加えた）。シールド化は move to: shield, reason: charge（シールドは既定で裏向き。dmd23-003
+      と同型）'
+    official: dmex11-017
+    review: pending
+  text: 'ブロッカー（このクリーチャーをタップして、相手クリーチャーの攻撃先をこのクリーチャーに変更してもよい）
+
+    このクリーチャーは、相手プレイヤーを攻撃できない。
+
+    このクリーチャーは、火のクリーチャーとバトル中、破壊されない。
+
+    相手のコスト４以下のクリーチャーが、手札以外のどこからでもバトルゾーンに出た時、自分の山札の上から１枚目を裏向きのまま、新しいシールドとしてシールドゾーンに置いてもよい。'
+  types:
+  - creature
+- abilities:
+  - affects: self
+    kind: static
+    mod:
+      battle_power:
+        amount: 4000
+        opponent_filter:
+          civs:
+          - fire
+  civs:
+  - light
+  - water
+  cost: 3
+  id: dmex11-025
+  keywords:
+  - blocker
+  - cannot_attack_player
+  mana: 1
+  name: 電脳聖者タージマル
+  power: 4000
+  races:
+  - イニシエート
+  - リキッド・ピープル
+  source:
+    official: dmex11-025
+    review: pending
+    aliases:
+    - dm10-062
+    - dmc34-031
+    - dmc37-024
+    - dmd06-013
+    - dmx23-017
+  text: 'ブロッカー（このクリーチャーをタップして、相手クリーチャーの攻撃先をこのクリーチャーに変更してもよい）
+
+    このクリーチャーは、相手プレイヤーを攻撃できない。
+
+    火のクリーチャーとバトル中、このクリーチャーのパワーを+4000する。'
+  types:
+  - creature
+- abilities:
+  - affects: self
+    kind: static
+    mod:
+      battle_power:
+        amount: 6000
+        opponent_filter:
+          keyword: blocker
+  civs:
+  - fire
+  cost: 2
+  id: dmrp07-083
+  mana: 1
+  name: ビビラ戦車 ギョロンパ
+  power: 2000
+  races:
+  - ビートジョッキー
+  source:
+    official: dmrp07-083
+    review: pending
+  text: 「ブロッカー」を持つクリーチャーとバトル中、このクリーチャーのパワーを+6000する。
+  types:
+  - creature
+- abilities:
+  - affects: self
+    kind: static
+    mod:
+      battle_power:
+        amount: 5000
+        opponent_filter:
+          keyword: blocker
+  civs:
+  - fire
+  cost: 5
+  id: dmrp08-081
+  mana: 1
+  name: “DLB”メガヒット
+  power: 5000
+  races:
+  - ビートジョッキー
+  source:
+    official: dmrp08-081
+    review: pending
+  text: このクリーチャーは、「ブロッカー」を持つクリーチャーとバトル中、パワーを+5000される。
+  types:
+  - creature
+- abilities:
+  - affects: self
+    kind: static
+    mod:
+      battle_indestructible:
+        opponent_filter:
+          power_le: 5500
+  civs:
+  - light
+  cost: 5
+  id: dmrp20-058
+  keywords:
+  - s_trigger
+  - blocker
+  - cannot_attack_player
+  mana: 1
+  name: 光器パーフェクト・マライア
+  power: 2500
+  races:
+  - メカ・デル・ソル
+  source:
+    official: dmrp20-058
+    review: pending
+  text: 'S・トリガー（このクリーチャーをシールドゾーンから手札に加える時、コストを支払わずにすぐ召喚してもよい）
+
+    ブロッカー（このクリーチャーをタップして、相手クリーチャーの攻撃先をこのクリーチャーに変更してもよい）
+
+    このクリーチャーは、相手プレイヤーを攻撃できない。
+
+    このクリーチャーは、パワー5500以下のクリーチャーとのバトル中、破壊されない。'
+  types:
+  - creature
