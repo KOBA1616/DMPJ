@@ -319482,3 +319482,598 @@ cards:
   text: 自分のクリーチャーを１体、タップする。その後、それよりパワーが小さい相手のクリーチャーをすべてタップする。
   types:
   - spell
+- faces:
+  - abilities:
+    - effect:
+      - body:
+        - count: 3
+          op: mill
+          owner: you
+        - op: destroy
+          select:
+            count: 1
+            filter:
+              cost_le:
+                sum:
+                - count:
+                    owner: you
+                    zone: graveyard
+                - -1
+              types:
+              - creature
+            owner: opp
+            zone: bz
+        op: may
+      kind: trigger
+      when:
+        event: move
+        subject: self
+        to: bz
+    civs:
+    - darkness
+    cost: 5
+    keywords:
+    - s_trigger
+    name: リバース・ラピア
+    power: 3000
+    races:
+    - ファイアー・バード
+    - ドラゴン・ゾンビ
+    types:
+    - creature
+  - civs:
+    - darkness
+    cost: 3
+    keywords:
+    - charger
+    name: 「闇の王に逆らったらこうなるんだから♪」
+    spell:
+    - count: 1
+      op: mill
+      owner: you
+    - body:
+      - op: move
+        reason: return
+        select:
+          count: 1
+          filter:
+            races:
+            - フェニックス
+          owner: you
+          zone: graveyard
+        to: hand
+      op: may
+    types:
+    - spell
+  id: dm25ex1-060
+  mana: 1
+  source:
+    notes: 'ツインパクト。「墓地の枚数よりコストが小さい」は cost_le に sum（墓地枚数−1）の式（第117弾 cost_lt_count）。クリーチャー面は「そうしたら」なのでミルと破壊を1つの
+      may にまとめた。フェニックス・カードは races: [フェニックス] で表した'
+    official: dm25ex1-060
+    review: pending
+  text: 'リバース・ラピア: S・トリガー / このクリーチャーが出た時、自分の山札の上から３枚を墓地に置いてもよい。そうしたら、自分の墓地にあるカードの枚数よりコストが小さい相手のクリーチャーを１体選び、破壊する。
+    ／ 「闇の王に逆らったらこうなるんだから♪」: 自分の山札の上から１枚を墓地に置く。その後、フェニックス・カードを１枚、自分の墓地から手札に戻してもよい。
+    / チャージャー'
+- abilities:
+  - effect:
+    - body:
+      - count: 3
+        op: mill
+        owner: you
+      op: may
+    - op: destroy
+      select:
+        count: 1
+        filter:
+          cost_le:
+            sum:
+            - count:
+                owner: you
+                zone: graveyard
+            - -1
+          types:
+          - creature
+        owner: opp
+        zone: bz
+    kind: trigger
+    when:
+      event: move
+      subject: self
+      to: bz
+  civs:
+  - darkness
+  cost: 4
+  id: dm25sd1-011
+  keywords:
+  - s_trigger
+  mana: 1
+  name: ハンマ＝ダンマ
+  power: 2000
+  races:
+  - アビスロイヤル
+  source:
+    notes: 「墓地の枚数よりコストが小さい」は cost_le に sum（墓地枚数−1）の式（第117弾 cost_lt_count）。原文は「その後」であり「そうしたら」ではないため、ミルの
+      may と破壊は分けた（ミルしなくても破壊する）
+    official: dm25sd1-011
+    review: pending
+    aliases:
+    - dm22sd1-004
+    - dm23ex2-074
+    - dm23sp1-014
+    - promoy21-083
+    - promoy22-spd1008
+    - promoy24-spd1209
+  text: 'S・トリガー（このカードをシールドゾーンから手札に加える時、コストを支払わずにすぐ実行してもよい）
+
+    このクリーチャーが出た時、自分の山札の上から３枚を墓地に置いてもよい。その後、自分の墓地にあるカードの枚数よりコストが小さい相手のクリーチャーを１体選び、破壊する。'
+  types:
+  - creature
+- abilities:
+  - affects: self
+    kind: static
+    mod:
+      power:
+        amount: 1000
+        count:
+          owner: you
+          zone: graveyard
+  - effect:
+    - count: 2
+      op: mill
+      owner: you
+    - op: destroy
+      select:
+        count: 1
+        filter:
+          cost_le:
+            sum:
+            - count:
+                owner: you
+                zone: graveyard
+            - -1
+          types:
+          - creature
+        owner: opp
+        zone: bz
+    kind: trigger
+    when:
+      event: move
+      subject: self
+      to: bz
+  civs:
+  - darkness
+  cost: 4
+  id: dm26ex3-058
+  keywords:
+  - s_trigger
+  - powered_breaker
+  mana: 1
+  name: 阿武祖怒幽竜
+  power: 1000
+  races:
+  - ドラゴン・ゾンビ
+  source:
+    notes: パワーは「1000+」の素の値1000。墓地枚数比例のパワーは mod.power の {amount, count} 形（dmex10-026
+      の先例）。「墓地の枚数よりコストが小さい」は cost_le に sum（墓地枚数−1）の式（第117弾 cost_lt_count）。ミル後の墓地枚数で数える
+    official: dm26ex3-058
+    review: pending
+  text: 'S・トリガー
+
+    パワード・ブレイカー（このクリーチャーは、そのパワー6000ごとにシールドをもう１つブレイクする）
+
+    自分の墓地にあるカード１枚につき、このクリーチャーのパワーを+1000する。
+
+    このクリーチャーが出た時、自分の山札の上から２枚を墓地に置く。その後、自分の墓地にあるカードの枚数よりコストが小さい相手のクリーチャーを１体選び、破壊する。'
+  types:
+  - creature
+- civs:
+  - fire
+  - nature
+  cost: 8
+  id: dm26ex3-082
+  keywords:
+  - s_trigger
+  mana: 1
+  name: 蒼龍の大地
+  source:
+    notes: 「マナの枚数よりコストが小さい」は cost_le に sum（マナ枚数−1）の式（第117弾 cost_lt_count、選択時点＝出す前のマナ枚数で数える）。出したクリーチャーは
+      move の as で束縛し、火または自然なら相手選択（may で束縛）→ force_battle（dm24ex1-005 の先例）
+    official: dm26ex3-082
+    review: pending
+    aliases:
+    - dm23bd6-043
+    - dm24ex3-td13
+    - dm25rp1-sp5
+    - dmbd05-018
+    - dmex09-014
+    - dmex15-b081
+    - dmex16-074
+    - dmr22-028
+    - promoy15-076
+    - promoy20-002
+  spell:
+  - as: summoned
+    op: move
+    reason: put
+    select:
+      count: 1
+      filter:
+        cost_le:
+          sum:
+          - count:
+              owner: you
+              zone: mana
+          - -1
+        not_types:
+        - evolution
+        types:
+        - creature
+      owner: you
+      zone: mana
+    to: bz
+  - cond:
+      any:
+      - exists:
+          filter:
+            civs:
+            - fire
+          ref: summoned
+      - exists:
+          filter:
+            civs:
+            - nature
+          ref: summoned
+    op: if
+    then:
+    - body:
+      - as: t
+        op: choose
+        select:
+          count: 1
+          filter:
+            types:
+            - creature
+          owner: opp
+          zone: bz
+      op: may
+    - cond:
+        exists:
+          ref: t
+      op: if
+      then:
+      - a:
+          ref: summoned
+        b:
+          ref: t
+        op: force_battle
+  text: 'S・トリガー
+
+    自分のマナゾーンにあるカードの枚数よりコストが小さい、進化ではないクリーチャーを１体、自分のマナゾーンから出す。それが火または自然のクリーチャーなら、相手のクリーチャーを１体選んでもよい。その２体をバトルさせる。'
+  types:
+  - spell
+- abilities:
+  - effect:
+    - body:
+      - op: move
+        reason: put
+        select:
+          count: 1
+          filter:
+            types:
+            - creature
+          owner: opp
+          zone: bz
+        to: mana
+      op: may
+    - body:
+      - op: move
+        reason: put
+        select:
+          count: 1
+          filter:
+            cost_le:
+              sum:
+              - count:
+                  owner: you
+                  zone: mana
+              - -1
+            types:
+            - creature
+          owner: you
+          zone: mana
+        to: bz
+      op: may
+    kind: trigger
+    when:
+      event: move
+      subject: self
+      to: bz
+  civs:
+  - nature
+  cost: 10
+  id: dm26sd1-a011
+  keywords:
+  - s_trigger
+  mana: 1
+  name: 逆転の剣スカイソード
+  power: 5000
+  races:
+  - ビーストフォーク
+  source:
+    notes: 「マナの枚数よりコストが小さい」は cost_le に sum（マナ枚数−1）の式（第117弾 cost_lt_count）。原文に進化除外の指定はないため
+      not_types は付けない。2つの効果はそれぞれ独立の may
+    official: dm26sd1-a011
+    review: pending
+    aliases:
+    - dm24ex3-033
+    - dm24rp3-025
+    - dm25rp4-sp5
+    - dm26sd1-k006
+    - promoy25-035
+  text: 'S・トリガー（このカードを自分のシールドゾーンから手札に加える時、コストを支払わずにすぐ実行してもよい）
+
+    このクリーチャーが出た時、相手のクリーチャーを１体選び、持ち主のマナゾーンに置いてもよい。その後、自分のマナゾーンにあるカードの枚数よりコストが小さいクリーチャーを１体、自分のマナゾーンから出してもよい。'
+  types:
+  - creature
+- civs:
+  - water
+  - fire
+  cost: 2
+  id: dmex14-032
+  keywords:
+  - s_trigger
+  mana: 1
+  name: 選伐！美孔麗MAX
+  races:
+  - 美孔麗王国
+  source:
+    notes: 両方選べる条件は if の all＋exists、水と火それぞれ1体以上（dmex14-022 と同型）。「手札の枚数よりコストが小さい」は
+      cost_le に sum（手札枚数−1）の式（第117弾 cost_lt_count）。見た2枚のうち1枚を一番下へ、残りは dm22-045 の先例どおり一番上に戻す
+    official: dmex14-032
+    review: pending
+    aliases:
+    - dmrp15-027
+  spell:
+  - cond:
+      all:
+      - exists:
+          filter:
+            civs:
+            - water
+            types:
+            - creature
+          owner: you
+          zone: bz
+      - exists:
+          filter:
+            civs:
+            - fire
+            types:
+            - creature
+          owner: you
+          zone: bz
+    else:
+    - count: 1
+      modes:
+      - - as: pile
+          op: choose
+          select:
+            count: all
+            from_top: 2
+            look: true
+            owner: you
+            zone: deck
+        - as: bottom_card
+          op: choose
+          select:
+            count: 1
+            ref: pile
+        - op: move
+          position: bottom
+          reason: put
+          select:
+            count: all
+            ref: bottom_card
+          to: deck
+        - op: move
+          position: top
+          reason: put
+          select:
+            count: all
+            ref: pile
+          to: deck
+        - body:
+          - count: 1
+            op: draw
+          op: may
+      - - op: destroy
+          select:
+            count: 1
+            filter:
+              cost_le:
+                sum:
+                - count:
+                    owner: you
+                    zone: hand
+                - -1
+              types:
+              - creature
+            owner: opp
+            zone: bz
+      op: modal
+    op: if
+    then:
+    - as: pile
+      op: choose
+      select:
+        count: all
+        from_top: 2
+        look: true
+        owner: you
+        zone: deck
+    - as: bottom_card
+      op: choose
+      select:
+        count: 1
+        ref: pile
+    - op: move
+      position: bottom
+      reason: put
+      select:
+        count: all
+        ref: bottom_card
+      to: deck
+    - op: move
+      position: top
+      reason: put
+      select:
+        count: all
+        ref: pile
+      to: deck
+    - body:
+      - count: 1
+        op: draw
+      op: may
+    - op: destroy
+      select:
+        count: 1
+        filter:
+          cost_le:
+            sum:
+            - count:
+                owner: you
+                zone: hand
+            - -1
+          types:
+          - creature
+        owner: opp
+        zone: bz
+  text: 'S・トリガー（この呪文をシールドゾーンから手札に加える時、コストを支払わずにすぐ唱えてもよい）
+
+    次のうちいずれか１つを選ぶ。バトルゾーンに自分の水のクリーチャーと火のクリーチャーがそれぞれ１体以上あれば、両方選んでもよい。
+
+    ▶自分の山札の上から２枚を見る。そのうちの１枚を山札の一番下に置く。その後、カードを１枚引いてもよい。
+
+    ▶自分の手札の枚数よりコストが小さい相手のクリーチャーを１体破壊する。'
+  types:
+  - spell
+- abilities:
+  - effect:
+    - op: move
+      reason: put
+      select:
+        count: 1
+        filter:
+          cost_le:
+            sum:
+            - count:
+                filter:
+                  tapped: true
+                  types:
+                  - creature
+                owner: you
+                zone: bz
+            - -1
+          types:
+          - creature
+        owner: opp
+        zone: bz
+      to: mana
+    kind: trigger
+    when:
+      event: attack
+      subject: self
+  civs:
+  - nature
+  cost: 2
+  id: dmr02-047
+  mana: 1
+  name: 神討妖精ユキダル・オジサン
+  power: 2000
+  races:
+  - スノーフェアリー
+  - ハンター
+  source:
+    notes: 「自分のタップされているクリーチャーの数よりコストが小さい」は cost_le に sum（タップ中クリーチャー数−1）の式（第117弾 cost_lt_count）。集計には攻撃中のこのクリーチャー自身（タップ状態）も含む。移動先は持ち主（相手）のマナゾーン
+    official: dmr02-047
+    review: pending
+  text: このクリーチャーが攻撃する時、バトルゾーンにある自分のタップされているクリーチャーの数よりコストが小さい相手のクリーチャーを１体、バトルゾーンから選ぶ。選んだクリーチャーを相手のマナゾーンに置く。
+  types:
+  - creature
+- abilities:
+  - effect:
+    - count: 2
+      op: draw
+    - op: bounce
+      select:
+        count: all
+        filter:
+          cost_le:
+            sum:
+            - count:
+                owner: you
+                zone: hand
+            - -1
+          types:
+          - creature
+        other: true
+        owner: any
+        zone: bz
+    kind: trigger
+    when:
+      event: move
+      subject: self
+      to: bz
+  civs:
+  - water
+  cost: 7
+  id: dmrp07-015
+  keywords:
+  - double_breaker
+  mana: 1
+  name: 特級潜湿艦 リゲタリア
+  power: 7000
+  races:
+  - ムートピア
+  source:
+    notes: '「手札の枚数よりコストが小さい」は cost_le に sum（手札枚数−1）の式（第117弾 cost_lt_count）。手札枚数は2枚引いた後の枚数で数える（解決順どおり、dmrp02-040
+      の先例）。「他の」は other: true、対象は両プレイヤーのクリーチャーすべて'
+    official: dmrp07-015
+    review: pending
+  text: 'W・ブレイカー（このクリーチャーはシールドを２つブレイクする）
+
+    このクリーチャーがバトルゾーンに出た時、カードを２枚引く。その後、自分の手札の枚数よりコストが小さい他のクリーチャーをすべて持ち主の手札に戻す。'
+  types:
+  - creature
+- civs:
+  - fire
+  cost: 7
+  id: dmx13-016
+  mana: 1
+  name: 進撃のトライストーン
+  source:
+    notes: 「無色カードの枚数よりコストが小さい」は cost_le に sum（無色マナ枚数−1）の式（第117弾 cost_lt_count＋第66弾
+      colorless フィルタ）。対象は両プレイヤーのクリーチャーすべて
+    official: dmx13-016
+    review: pending
+  spell:
+  - op: destroy
+    select:
+      count: all
+      filter:
+        cost_le:
+          sum:
+          - count:
+              filter:
+                colorless: true
+              owner: you
+              zone: mana
+          - -1
+        types:
+        - creature
+      owner: any
+      zone: bz
+  text: 自分のマナゾーンにある無色カードの枚数よりコストが小さいクリーチャーをすべて破壊する。
+  types:
+  - spell
