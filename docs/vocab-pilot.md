@@ -1153,3 +1153,10 @@ draw イベントへの置換で表す（draw は個別イベントとして発�
 - tests/test_vocab_pilot116.py 4件（parse 2件＋実挙動2件: R082 power_of で T001 のみ破壊、
   R081 cost_of dict 形式で T001 のみ破壊。試験カード R081〜R083）
 - 待機9枚（power_lt_card のみが gap のもの）。
+
+## 第117弾: cost_lt_count（コストが数より小さい）— 新語彙なし（2026-11-05）
+選択フィルタの cost_le に {sum: [{count: <ゾーン集計>}, -1]} を渡すことで
+「（数）よりコストが小さい」を表す（第65・73弾の集計式＋「より小さい」イディオム）。
+- 書き方: filter: {cost_le: {sum: [{count: {zone: mana, owner: you}}, -1]}}。
+- tests/test_vocab_pilot117.py 2件（正常 parse／検証）
+- 待機9枚（cost_lt_count のみが gap のもの）。
