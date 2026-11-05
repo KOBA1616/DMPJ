@@ -6,13 +6,14 @@ from .registry import op
 
 
 @op("move", select="selector", to="zone", reason="reason", position="position?", card_only="bool?",
-    order="str?", tapped="bool?", face_up="bool?", seal="int?", **{"as": "str?"})
+    order="str?", tapped="bool?", face_up="bool?", face_down="bool?", seal="int?", **{"as": "str?"})
 def op_move(eng, t, op, env):
     """ゾーン移動。as を付けると、移動した後のカード（新しいオブジェクト）を変数に入れる（「その〜」で使う）。
     card_only: カードとして動かす（109.2a）。進化クリーチャーの一番上だけが離れ、下は再構築される（801.4）。
     order: choose なら、2枚以上を山札に置く時の並びをプレイヤーが決める（「好きな順序で」）。
     答えの先頭が、置いたカードの中で一番上になる。
-    tapped: タップして置く（置かれた時点でタップ状態）。"""
+    tapped: タップして置く（置かれた時点でタップ状態）。
+    face_down: 裏向きのまま置く（マナゾーンのみ意味を持つ。水晶武装の裏向きマナになる）。"""
     cids, d = eng.select(t, op["select"], env)
     if d:
         return d
@@ -43,6 +44,9 @@ def op_move(eng, t, op, env):
     if op.get("face_up"):
         for e in evs:
             e["face_up"] = True
+    if op.get("face_down"):
+        for e in evs:
+            e["face_down"] = True
     if op.get("seal"):
         for e in evs:
             e["seal"] = op["seal"]   # バトルゾーンに出る時、封印を付けた状態で出る（出た時能力は無視される）
@@ -72,7 +76,8 @@ def op_together(eng, t, op, env):
             raise ValueError("together: move targets must be count: all or ref")
         cids = eng.candidates(sel, env)
         evs += [{"ev": "move", "subject": eng.s.ref(c), "to": sub["to"], "reason": sub["reason"],
-                 "position": "top", **({"tapped": True} if sub.get("tapped") else {})} for c in cids]
+                 "position": "top", **({"tapped": True} if sub.get("tapped") else {}),
+                 **({"face_down": True} if sub.get("face_down") else {})} for c in cids]
         if "as" in sub:
             binds.append({"t": "bind", "env": env, "name": sub["as"], "cids": cids, "zone": sub["to"]})
     if evs:

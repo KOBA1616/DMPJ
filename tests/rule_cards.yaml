@@ -804,3 +804,11 @@ cards:
       - kind: static
         affects: self
         mod: {indestructible: true}
+  - id: R091
+    name: 試験用裏向き呪文
+    types: [spell]
+    civs: [light]
+    cost: 2
+    text: 自分の山札の上から１枚目を、裏向きのままマナゾーンに置く。
+    spell:
+      - {op: move, select: {zone: deck, owner: you, from_top: 1}, to: mana, reason: put, face_down: true}
