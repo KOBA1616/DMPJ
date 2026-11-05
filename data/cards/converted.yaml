@@ -301178,3 +301178,593 @@ cards:
   text: アタック・チャンス-ワイルド・ベジーズ / このターン、バトルゾーンにある自分のクリーチャー１体のパワーは+6000され、シールドをさらに１枚ブレイクする。
   types:
   - spell
+- faces:
+  - abilities:
+    - instead:
+      - op: move
+        reason: put
+        select:
+          ref: self
+        to: mana
+      kind: replace
+      when:
+        event: move
+        from: bz
+        reason: destroy
+        subject: self
+        to: graveyard
+    civs:
+    - nature
+    cost: 2
+    keywords:
+    - g_strike
+    - guardman
+    name: チアスイート アカネ
+    power: 1000
+    races:
+    - ジャイアント・スノーフェアリー
+    types:
+    - creature
+  - civs:
+    - nature
+    cost: 8
+    name: 「ファーーー！甘い甘い!!」
+    races:
+    - ジャイアント・スキル
+    spell:
+    - op: move
+      reason: put
+      select:
+        count: all
+        filter:
+          not_race_has: ジャイアント
+          types:
+          - creature
+        owner: any
+        zone: bz
+      to: mana
+    types:
+    - spell
+  id: dm26ex1-n021
+  mana: 1
+  source:
+    notes: 'ツインパクト。破壊置換は shield_go と同型の replace（墓地のかわりにマナゾーンへ）。呪文側の「ジャイアントではない」は not_race_has:
+      ジャイアント（第81弾）で表した'
+    official: dm26ex1-n021
+    review: pending
+    aliases:
+    - dm26ex1-secn021
+  text: 'チアスイート アカネ: {GS} G・ストライク / ガードマン / このクリーチャーが破壊される時、墓地のかわりにマナゾーンに置く。 ／ 「ファーーー！甘い甘い!!」:
+    ジャイアントではないクリーチャーをすべて、持ち主のマナゾーンに置く。'
+- abilities:
+  - effect:
+    - op: move
+      reason: put
+      select:
+        count: all
+        filter:
+          not_race_has: ドラゴン
+        owner: any
+        zone: mana
+      to: graveyard
+    kind: trigger
+    when:
+      event: move
+      subject: self
+      to: bz
+  civs:
+  - fire
+  cost: 9
+  evolve_from:
+    race_has: ドラゴン
+    types:
+    - creature
+  id: dm26ex3-dcr007
+  keywords:
+  - triple_breaker
+  mana: 1
+  name: 超竜バジュラズテラ
+  power: 12000
+  races:
+  - アーマード・ドラゴン
+  source:
+    notes: '「ドラゴン・カード以外」は種族にドラゴンを含まないカードとして not_race_has: ドラゴン（第81弾）で表した。各プレイヤー自身のマナゾーンが対象なので
+      owner: any の一括 move で表した'
+    official: dm26ex3-dcr007
+    review: pending
+    aliases:
+    - dm25ex1-pr4
+    - dmart11-004
+    - dmx12b-012
+    - sp-020
+  text: '進化：ドラゴン・クリーチャー１体の上に置く。
+
+    T・ブレイカー
+
+    このクリーチャーが出た時、各プレイヤーはドラゴン・カード以外をすべて、自身のマナゾーンから墓地に置く。'
+  types:
+  - creature
+  - evolution
+- abilities:
+  - effect:
+    - op: destroy
+      select:
+        count: all
+        filter:
+          not_race_has: ドラゴン
+          types:
+          - creature
+        owner: any
+        zone: bz
+    kind: trigger
+    when:
+      event: move
+      subject: self
+      to: bz
+  - effect:
+    - as: t
+      op: choose
+      select:
+        count: 1
+        from_top: 1
+        look: true
+        owner: you
+        zone: deck
+    - cond:
+        exists:
+          filter:
+            race_has: ドラゴン
+          ref: t
+      else:
+      - op: move
+        position: bottom
+        reason: put
+        select:
+          count: all
+          ref: t
+        to: deck
+      op: if
+      then:
+      - op: play_free
+        select:
+          count: all
+          ref: t
+    kind: trigger
+    when:
+      event: attack
+      subject: self
+  - effect:
+    - effect:
+      - op: untap
+        select:
+          ref: self
+      op: delayed_trigger
+      when:
+        event: attack_end
+    first_time: true
+    if:
+      cmp:
+      - count:
+          filter:
+            race_has: ドラゴン
+            types:
+            - creature
+          owner: you
+          zone: mana
+      - '>='
+      - 5
+    kind: trigger
+    when:
+      event: attack
+      subject: self
+  civs:
+  - fire
+  cost: 10
+  id: dm26ex4-006
+  keywords:
+  - ex_life
+  - speed_attacker
+  - triple_breaker
+  mana: 1
+  name: 切札電融 モル世界ドラゴEXT
+  power: 15000
+  races:
+  - ディスペクター
+  - レッド・コマンド・ドラゴン
+  - ドラグナー
+  source:
+    notes: '出た時の全体破壊は not_race_has: ドラゴン（第81弾）。攻撃時の表向きは choose（look）で束縛し exists で分岐、「出す」は
+      dm23bd4-031/041 の型で play_free、それ以外は山札の下へ。龍マナ武装５は first_time の攻撃誘発に if（マナゾーンのドラゴン・クリーチャー5体以上）を付け、attack_end
+      への delayed_trigger でアンタップ（dm22rp1-043 の型）'
+    official: dm26ex4-006
+    review: pending
+  text: 'EXライフ（このクリーチャーを出す時、自分の山札の上から１枚をシールド化する。このクリーチャーが離れる時、かわりにそのシールドを墓地に置く）
+
+    スピードアタッカー　T・ブレイカー
+
+    このクリーチャーが出た時、ドラゴンではないクリーチャーをすべて破壊する。
+
+    このクリーチャーが攻撃する時、自分の山札の上から１枚を表向きにする。それがドラゴンなら出す。それ以外なら山札の下に置く。
+
+    龍マナ武装５：各ターン、このクリーチャーがはじめて攻撃する時、自分のマナゾーンにドラゴン・クリーチャーが５体以上あれば、その攻撃の後、このクリーチャーをアンタップする。'
+  types:
+  - creature
+- abilities:
+  - effect:
+    - op: destroy
+      select:
+        count: all
+        filter:
+          not_race_has: ドラゴン
+          types:
+          - creature
+        owner: any
+        zone: bz
+    kind: trigger
+    when:
+      event: move
+      subject: self
+      to: bz
+  - effect:
+    - as: t
+      op: choose
+      select:
+        count: 1
+        from_top: 1
+        look: true
+        owner: you
+        zone: deck
+    - cond:
+        exists:
+          filter:
+            race_has: ドラゴン
+          ref: t
+      else:
+      - op: move
+        position: bottom
+        reason: put
+        select:
+          count: all
+          ref: t
+        to: deck
+      op: if
+      then:
+      - op: play_free
+        select:
+          count: all
+          ref: t
+    kind: trigger
+    when:
+      event: attack
+      subject: self
+  - effect:
+    - effect:
+      - op: untap
+        select:
+          ref: self
+      op: delayed_trigger
+      when:
+        event: attack_end
+    first_time: true
+    if:
+      cmp:
+      - count:
+          filter:
+            race_has: ドラゴン
+            types:
+            - creature
+          owner: you
+          zone: mana
+      - '>='
+      - 5
+    kind: trigger
+    when:
+      event: attack
+      subject: self
+  civs:
+  - fire
+  cost: 10
+  id: dm26ex4-sec013
+  keywords:
+  - ex_life
+  - speed_attacker
+  - triple_breaker
+  mana: 1
+  name: 切札電融 モル世界ドラゴEXT(DM26EX4 ㊙13/㊙25)
+  power: 15000
+  races:
+  - ディスペクター
+  - レッド・コマンド・ドラゴン
+  - ドラグナー
+  source:
+    notes: 'dm26ex4-006 のシークレット版（原文はキーワードの括弧書きが省略された表記）。変換内容は同カードと同一。出た時の全体破壊は not_race_has:
+      ドラゴン（第81弾）。攻撃時の表向きは choose（look）＋exists 分岐で「出す」は play_free（dm23bd4-031/041 の型）。龍マナ武装５は
+      first_time 誘発＋if＋attack_end 遅延アンタップ（dm22rp1-043 の型）'
+    official: dm26ex4-sec013
+    review: pending
+  text: 'EXライフ
+
+    スピードアタッカー
+
+    T・ブレイカー
+
+    このクリーチャーが出た時、ドラゴンではないクリーチャーをすべて破壊する。
+
+    このクリーチャーが攻撃する時、自分の山札の上から１枚を表向きにする。それがドラゴンなら出す。それ以外なら山札の下に置く。
+
+    龍マナ武装５：各ターン、このクリーチャーがはじめて攻撃する時、自分のマナゾーンにドラゴン・クリーチャーが５体以上あれば、その攻撃の後、このクリーチャーをアンタップする。'
+  types:
+  - creature
+- abilities:
+  - effect:
+    - as: mine
+      op: move
+      reason: put
+      select:
+        count: all
+        filter:
+          not_race_has: アンノウン
+          types:
+          - creature
+        owner: you
+        zone: bz
+      to: deck
+    - as: theirs
+      op: move
+      reason: put
+      select:
+        count: all
+        filter:
+          not_race_has: アンノウン
+          types:
+          - creature
+        owner: opp
+        zone: bz
+      to: deck
+    - op: shuffle
+    - op: shuffle
+      player: opp
+    - count:
+        count:
+          ref: mine
+      op: draw
+    - count:
+        count:
+          ref: theirs
+      op: draw
+      player: opp
+    kind: trigger
+    when:
+      event: move
+      subject: self
+      to: bz
+  civs:
+  - water
+  cost: 8
+  id: dmr05-s04
+  mana: 1
+  name: 偽りの名イージス
+  power: 5000
+  races:
+  - リヴァイアサン
+  - アンノウン
+  source:
+    notes: '「アンノウン以外」は not_race_has: アンノウン（第81弾）。引く枚数はプレイヤーごとに異なるため、you/opp に分けて move
+      し、それぞれ as で束縛して draw の count 式で参照した（dm38-005 の destroy＋as＋draw の型）。山札に加える move
+      はサイバー・N・ワールドの先例どおり reason: put'
+    official: dmr05-s04
+    review: pending
+  text: このクリーチャーをバトルゾーンに出した時、各プレイヤーはバトルゾーンにあるアンノウン以外のクリーチャーをすべて自身の山札に加えてシャッフルし、こうして山札に加えたクリーチャー１体につき１枚カードを引く。
+  types:
+  - creature
+- abilities:
+  - effect:
+    - op: move
+      order: choose
+      position: bottom
+      reason: put
+      select:
+        filter:
+          not_race_has:
+          - ゴッド
+          - オラクリオン
+          - オラクル
+          types:
+          - creature
+        owner: you
+        zone: bz
+      to: deck
+    - op: move
+      order: choose
+      position: bottom
+      reason: put
+      select:
+        filter:
+          not_race_has:
+          - ゴッド
+          - オラクリオン
+          - オラクル
+          types:
+          - creature
+        owner: opp
+        zone: bz
+      to: deck
+    kind: trigger
+    when:
+      event: summon
+      subject: self
+  civs:
+  - light
+  - darkness
+  cost: 9
+  evolve_from:
+    race_has: オラクル
+  id: dmr12-s04
+  keywords:
+  - triple_breaker
+  mana: 1
+  name: 破獄のマントラ ゾロ・ア・スター
+  power: 12000
+  races:
+  - オラクリオン
+  - オラクル
+  source:
+    notes: '出た時の能力は not_race_has のリスト形式（第81弾拡張）で3種族の否定を表現し、各プレイヤー分を you/opp に分けて山札の一番下へ（position:
+      bottom、order: choose）。「マナゾーンに置く時タップして置く」は多色カードのルール処理のため能力に書かない（先例どおり）'
+    official: dmr12-s04
+    review: pending
+  text: マナゾーンに置く時、このカードはタップして置く。進化ー自分のオラクル１体の上に置く。このクリーチャーをバトルゾーンに出した時、各プレイヤーはバトルゾーンにある自身の、ゴッド、オラクリオン、オラクル以外のクリーチャーをすべて、好きな順序で山札の一番下に置く。T・ブレイカー（このクリーチャーはシールドを３枚ブレイクする）
+  types:
+  - creature
+  - evolution
+- civs:
+  - nature
+  cost: 4
+  id: dmr13-070
+  mana: 1
+  name: 古龍の罠
+  source:
+    notes: '「ドラゴン以外のクリーチャー」は not_race_has: ドラゴン（第81弾）で表した。持ち主のマナゾーンへは move to: mana
+      で表す'
+    official: dmr13-070
+    review: pending
+  spell:
+  - op: move
+    reason: put
+    select:
+      count: 1
+      filter:
+        not_race_has: ドラゴン
+        types:
+        - creature
+      owner: opp
+      zone: bz
+    to: mana
+  text: バトルゾーンにある相手の、ドラゴン以外のクリーチャーを１体選び、持ち主のマナゾーンに置く。
+  types:
+  - spell
+- abilities:
+  - effect:
+    - as: pile
+      op: choose
+      select:
+        count: all
+        from_top: 6
+        look: true
+        owner: you
+        zone: deck
+    - op: move
+      order: choose
+      position: bottom
+      reason: put
+      select:
+        count: all
+        filter:
+          not_race_has: ドラゴン
+        ref: pile
+      to: deck
+    - op: move
+      order: choose
+      position: top
+      reason: put
+      select:
+        count: all
+        ref: pile
+      to: deck
+    kind: trigger
+    when:
+      event: move
+      subject: self
+      to: bz
+  civs:
+  - fire
+  cost: 5
+  id: dmr18-037
+  mana: 1
+  name: ボッカン・ポルカ
+  power: 5000
+  races:
+  - ファイアー・バード炎
+  - 革命軍
+  source:
+    notes: '提督型（choose で pile に束縛 → フィルタで一部を移動 → 残りを移動）で表した。「ドラゴンではないカード」は not_race_has:
+      ドラゴン（第81弾）。一番下・一番上とも「好きな順序で」なので order: choose を付けた'
+    official: dmr18-037
+    review: pending
+  text: このクリーチャーがバトルゾーンに出た時、自分の山札の上から６枚を表向きにする。その中のドラゴンではないカードをすべて、好きな順序で山札の一番下に置く。その後、残りを好きな順序で山札の一番上に置く。
+  types:
+  - creature
+- abilities:
+  - effect:
+    - op: destroy
+      select:
+        count: all
+        filter:
+          not_race_has: ハンター
+          types:
+          - creature
+        owner: any
+        zone: bz
+    kind: trigger
+    when:
+      event: move
+      subject: self
+      to: bz
+  civs:
+  - darkness
+  cost: 10
+  evolve_from:
+    race_has: ハンター
+    types:
+    - creature
+  id: dmx04-s01
+  keywords:
+  - triple_breaker
+  mana: 1
+  name: 悪魔神バロム・ハンター
+  power: 12000
+  races:
+  - デーモン・コマンド
+  - ハンター
+  source:
+    notes: '「ハンター以外」は not_race_has: ハンター（第81弾）。このクリーチャー自身はハンターを含むためフィルタで自然に除外される。対象は両プレイヤーのクリーチャーすべて（owner:
+      any）'
+    official: dmx04-s01
+    review: pending
+  text: '進化-自分のハンター・クリーチャー１体の上に置く。
+
+    このクリーチャーをバトルゾーンに出した時、ハンター以外のクリーチャーをすべて破壊する。
+
+    T・ブレイカー(このクリーチャーはシールドを３枚ブレイクする)'
+  types:
+  - creature
+  - evolution
+- abilities:
+  - affects:
+      filter:
+        not_race_has: ドラゴン
+        types:
+        - creature
+      owner: you
+    kind: static
+    mod:
+      power_when:
+        amount: 4000
+        when: attacking
+  civs:
+  - fire
+  cost: 7
+  id: sp-006
+  mana: 1
+  name: ミラフォース・ドラゴン
+  power: 8000
+  races:
+  - ボルケーノ・ドラゴン
+  source:
+    notes: '「ドラゴン以外の自分のクリーチャー」は not_race_has: ドラゴン（第81弾）の affects で表した。このクリーチャー自身はボルケーノ・ドラゴンで種族にドラゴンを含むため対象外になる。パワーアタッカー+4000
+      は power_when（when: attacking）で付与'
+    official: sp-006
+    review: pending
+  text: このクリーチャーがバトルゾーンにある間、バトルゾーンにある自分のドラゴン以外のクリーチャーはすべて「パワーアタッカー+4000」を得る。
+  types:
+  - creature
