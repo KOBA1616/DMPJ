@@ -313928,3 +313928,157 @@ cards:
   source:
     official: dmrp15-038
     review: pending
+- faces:
+  - abilities:
+    - affects: self
+      kind: static
+      mod:
+        power_when:
+          amount: 5000
+          when: attacking
+    - affects:
+        filter:
+          cost_le: 4
+          types:
+          - creature
+        owner: any
+        zone: hand
+      kind: static
+      mod:
+        deny:
+        - summon
+    civs:
+    - fire
+    cost: 9
+    keywords:
+    - speed_attacker
+    - triple_breaker
+    name: ボルシャック・クロス・NEX
+    power: 12000
+    races:
+    - アーマード・ドラゴン
+    types:
+    - creature
+  - civs:
+    - fire
+    cost: 8
+    name: ボルシャック英雄譚
+    spell:
+    - as: pile
+      op: choose
+      select:
+        count: all
+        from_top: 6
+        look: true
+        owner: you
+        zone: deck
+    - as: out
+      op: choose
+      select:
+        count: any
+        filter:
+          name_has: ボルシャック
+          race_has: ドラゴン
+          types:
+          - creature
+        ref: pile
+    - op: move
+      reason: put
+      select:
+        count: all
+        ref: out
+      to: bz
+    - op: move
+      position: bottom
+      reason: put
+      select:
+        count: all
+        ref: pile
+      to: deck
+    types:
+    - spell
+  id: dm25ex3-rp1tr5
+  mana: 1
+  source:
+    notes: 'ツインパクト。パワーは「12000+」の素の値12000（+分はパワーアタッカー+5000）。召喚制限は第101弾・34-sec001の先例どおり、すべてのプレイヤーの手札にあるコスト4以下のクリーチャーへの
+      static deny [summon]（owner: any）で表した。効果で出すことは原文どおり禁止していない。呪文側は choose（from_top:
+      6, look）で6枚を見て、名前に《ボルシャック》とあるドラゴンを count: any で選び分けて出し、残りは ref: pile の残りを山札の下へ（dm22-043の型）'
+    official: dm25ex3-rp1tr5
+    review: pending
+    aliases:
+    - dm25bd1-003
+    - dm25rp1-tr05
+    - dmbd16-005
+    - dmex04-026
+  text: 'ボルシャック・クロス・NEX: スピードアタッカー / パワーアタッカー+5000 / T・ブレイカー / すべてのプレイヤーは、コスト４以下のクリーチャーを召喚できない。
+    ／ ボルシャック英雄譚: 自分の山札の上から６枚を見る。その中から、名前に《ボルシャック》とあるドラゴンを好きな数出してもよい。残りを好きな順序で山札の下に置く。'
+- abilities:
+  - affects: self
+    kind: static
+    mod:
+      power_when:
+        amount: 5000
+        when: attacking
+  - affects:
+      filter:
+        cost_le: 4
+        types:
+        - creature
+      owner: any
+      zone: hand
+    kind: static
+    mod:
+      deny:
+      - summon
+  civs:
+  - fire
+  cost: 9
+  id: dmd13-008
+  keywords:
+  - speed_attacker
+  - triple_breaker
+  mana: 1
+  name: ボルシャック・クロス・NEX
+  power: 12000
+  races:
+  - アーマード・ドラゴン
+  source:
+    notes: 'スピードアタッカーは known_keywords（split 済み）。原文はキーワードが連結していて split で外れなかったため、パワーアタッカー+5000は能力として、T・ブレイカーは
+      keywords に書いた（34-sec001と同型・同文）。召喚制限は第101弾・34-sec001の先例どおり、すべてのプレイヤーの手札にあるコスト4以下のクリーチャーへの
+      static deny [summon]（owner: any）で表した。効果で出すことは原文どおり禁止していない'
+    official: dmd13-008
+    review: pending
+    aliases:
+    - 34-sec001
+    - dm34-s04
+    - dmc64-010
+    - dmx12b-041
+  text: スピードアタッカー（このクリーチャーは召喚酔いしない）パワーアタッカー+5000（攻撃中、このクリーチャーのパワーは+5000される）T・ブレイカー（このクリーチャーはシールドを３枚ブレイクする）誰もコスト４以下のクリーチャーを召喚できない。
+  types:
+  - creature
+- abilities:
+  - affects: self
+    kind: static
+    mod:
+      deny:
+      - summon
+    zone: hand
+  civs:
+  - nature
+  cost: 1
+  id: dmr13-038
+  mana: 1
+  name: 連鎖庇護類 ジュラピ
+  power: 6000
+  races:
+  - ジュラシック・コマンド・ドラゴン
+  source:
+    notes: 'W・ブレイカーは known_keywords（split 済み）。「このクリーチャーを召喚することはできない」は自身の手札からの召喚だけの禁止なので、zone:
+      hand、affects: self の static deny [summon] で表した（dm24rp4-075の自己版 deny と同型）。効果でバトルゾーンに出すことは原文どおり禁止していない'
+    official: dmr13-038
+    review: pending
+  text: このクリーチャーを召喚することはできない。W・ブレイカー（このクリーチャーはシールドを２枚ブレイクする）
+  types:
+  - creature
+  keywords:
+  - double_breaker
