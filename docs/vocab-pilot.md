@@ -838,3 +838,10 @@ converted の監査（opt_reduce の素の整数表記9件）から。任意形�
 - 「タップされていれば」は exists で self の tapped 状態を確認。
 - tests/test_vocab_pilot69.py 2件（正常 parse／検証）
 - 待機13枚（kourin のみが gap のもの）。
+
+## 第70弾: ability_ignore（能力を無視する）— 新語彙なし（2026-11-05）
+「〜の能力を無視する」は既存の `mod: {ignore: [all]}` で表せる（modify で付与、duration で期間を指定）。
+- 書き方: op: modify, select: {...}, mod: {ignore: [all]}, duration: until_next_own_turn_start 等
+- 対象が「すべてのクリーチャー」の場合は select で対象範囲を指定する。
+- tests/test_vocab_pilot70.py 2件（正常 parse／検証）
+- 待機13枚（ability_ignore のみが gap のもの）。
