@@ -292500,3 +292500,476 @@ cards:
     このクリーチャーがバトルゾーンに出た時、相手は自身のマナゾーンにあるカードの枚数よりコストの大きい自身のクリーチャーをすべて、好きな順序で山札の一番下に置く。'
   types:
   - creature
+- abilities:
+  - effect:
+    - as: seen
+      op: choose
+      select:
+        from_top: 3
+        owner: you
+        zone: deck
+    - op: move
+      reason: put
+      select:
+        count: any
+        filter:
+          colorless: true
+        look: true
+        ref: seen
+      to: hand
+    - op: move
+      order: choose
+      position: bottom
+      reason: put
+      select:
+        ref: seen
+      to: deck
+    kind: trigger
+    when:
+      event: move
+      subject: self
+      to: bz
+  civs:
+  - nature
+  cost: 3
+  id: dm23ex3-t16
+  mana: 1
+  name: ニヤリー
+  power: 2000
+  races:
+  - トライストーン
+  source:
+    official: dm23ex3-t16
+    review: pending
+    aliases:
+    - dmr07-033
+    - dmr07-033m
+    - dmx14-013
+    - dmx25-045
+  text: このクリーチャーが出た時、自分の山札の上から３枚を見る。その中から好きな枚数の無色カードを表向きにし、自分の手札に加えてもよい。残りを好きな順序で山札の下に置く。
+  types:
+  - creature
+- abilities:
+  - affects:
+      filter:
+        colorless: true
+        types:
+        - creature
+      owner: you
+      zone: hand
+    kind: static
+    mod:
+      cost: -2
+  civs:
+  - fire
+  cost: 3
+  id: dm23ex3-t18
+  mana: 1
+  name: ゼロ・ルピア
+  power: 1000
+  races:
+  - ファイアー・バード
+  - アンノイズ
+  source:
+    notes: '「最大２少なくする」は「してもよい」ではなく下限の条項も原文に無いため、cost_may ではなく mod: {cost: -2} とした（最大２＋下限ありの先例は
+      cost: -2 と cost_min の組み合わせ）'
+    official: dm23ex3-t18
+    review: pending
+    aliases:
+    - dmx13-034
+    - promoy11-071
+  text: 自分の無色クリーチャーの召喚コストを最大２少なくする。
+  types:
+  - creature
+- civs:
+  - nature
+  cost: 3
+  id: dm23ex3-t19
+  mana: 1
+  name: フェアリー・クリスタル
+  source:
+    notes: 'dm25ex1-087（ボント・プラントボ）と同じ形。置いたカードは変数 a に保持し、filter: {colorless: true}
+      で条件分岐させた'
+    official: dm23ex3-t19
+    review: pending
+    aliases:
+    - dmx13-036
+    - dmx14-082
+  spell:
+  - as: a
+    op: choose
+    select:
+      count: all
+      from_top: 1
+      look: true
+      owner: you
+      zone: deck
+  - op: mana_put
+    select:
+      count: all
+      ref: a
+  - cond:
+      exists:
+        filter:
+          colorless: true
+        ref: a
+    op: if
+    then:
+    - op: mana_put
+      select:
+        count: 1
+        from_top: 1
+        owner: you
+        zone: deck
+  text: 自分の山札の上から１枚目をマナゾーンに置く。そのカードが無色なら、自分の山札の上からさらに１枚、マナゾーンに置く。
+  types:
+  - spell
+- abilities:
+  - effect:
+    - op: move
+      reason: put
+      select:
+        count: 1
+        filter:
+          colorless: true
+        look: true
+        owner: you
+        up_to: true
+        zone: deck
+      to: hand
+    - op: shuffle
+    kind: trigger
+    when:
+      event: move
+      subject: self
+      to: bz
+  civs:
+  - zero
+  cost: 7
+  id: dm23ex3-tf01
+  keywords:
+  - double_breaker
+  mana: 1
+  name: 宿命のディスティニー・リュウセイ
+  power: 7000
+  races:
+  - キング・コマンド・ドラゴン
+  - ハンター
+  source:
+    official: dm23ex3-tf01
+    review: pending
+    aliases:
+    - dmx25-024
+    - promoy11-073
+  text: 'W・ブレイカー（このクリーチャーはシールドを２つブレイクする）
+
+    このクリーチャーが出た時、自分の山札を見る。その中から無色カードを１枚表向きにし、手札に加えてもよい。その後、山札をシャッフルする。'
+  types:
+  - creature
+- abilities:
+  - effect:
+    - as: t
+      op: choose
+      select:
+        count: 1
+        from_top: 1
+        look: true
+        owner: you
+        zone: deck
+    - body:
+      - op: move
+        reason: put
+        select:
+          count: all
+          filter:
+            colorless: true
+            evolution: false
+            types:
+            - creature
+          ref: t
+        to: bz
+      op: may
+    kind: trigger
+    when:
+      event: attack
+      subject: self
+  civs:
+  - zero
+  cost: 7
+  id: dm23ex3-tf02
+  keywords:
+  - double_breaker
+  mana: 1
+  name: 真実の名 修羅丸
+  power: 6000
+  races:
+  - ヒューマノイド
+  - アンノウン
+  source:
+    notes: 'dm23bd4-025（竜星バルガライザー）と同じ choose＋may の形。出さない場合は山札の上に残る。出すは召喚ではないため reason:
+      put'
+    official: dm23ex3-tf02
+    review: pending
+    aliases:
+    - dmx13-006
+    - dmx14-009
+  text: 'W・ブレイカー（このクリーチャーはシールドを２つブレイクする）
+
+    このクリーチャーが攻撃する時、自分の山札の上から１枚目を表向きにする。そのカードが進化ではない無色クリーチャーなら出してもよい。'
+  types:
+  - creature
+- abilities:
+  - effect:
+    - as: left
+      op: choose
+      select:
+        count: 1
+        ref: event.subject
+    - body:
+      - op: move
+        reason: put
+        select:
+          count: 1
+          filter:
+            colorless: true
+            cost_ge:
+              cost_of: left
+            cost_le:
+              cost_of: left
+            types:
+            - creature
+          owner: you
+          zone: mana
+        to: bz
+      op: may
+    kind: trigger
+    when:
+      event: move
+      from: bz
+      subject:
+        filter:
+          colorless: true
+          types:
+          - creature
+        owner: you
+  civs:
+  - nature
+  cost: 7
+  id: dm23ex3-tf10
+  keywords:
+  - double_breaker
+  mana: 1
+  name: ドヤガオー
+  power: 9000
+  races:
+  - トライストーン
+  source:
+    official: dm23ex3-tf10
+    review: pending
+    aliases:
+    - dmr08-005
+  text: 'W・ブレイカー
+
+    自分の無色クリーチャーが離れた時、そのクリーチャーとコストが同じ無色クリーチャーを１体、自分のマナゾーンから出してもよい。'
+  types:
+  - creature
+- abilities:
+  - affects:
+      filter:
+        multicolor: true
+      owner: opp
+      zone: hand
+    kind: static
+    mod:
+      cost: 2
+  - affects:
+      filter:
+        colorless: true
+      owner: you
+      zone: hand
+    kind: static
+    mod:
+      cost: -2
+  civs:
+  - light
+  - darkness
+  cost: 3
+  id: dm24ex2-055
+  keywords:
+  - g_strike
+  mana: 1
+  name: 神化のカルマ シフォン
+  power: 4000
+  races:
+  - オラクル
+  source:
+    official: dm24ex2-055
+    review: pending
+  text: '{GS} G・ストライク（このクリーチャーを自分のシールドゾーンから手札に加える時、表向きにし、相手のクリーチャーを１体選んでもよい。このターン、そのクリーチャーは攻撃できない）
+
+    相手の多色カードを使うコストを２多くする。
+
+    自分の無色カードを使うコストを２少なくする。'
+  types:
+  - creature
+- civs:
+  - water
+  cost: 4
+  free_if:
+    exists:
+      filter:
+        colorless: true
+        types:
+        - creature
+      owner: you
+      zone: bz
+  id: dm24ex2-cho044
+  mana: 1
+  name: ゼロの裏技ニヤリー・ゲット
+  source:
+    official: dm24ex2-cho044
+    review: pending
+    aliases:
+    - dm23ex3-t17
+    - dmex01-060
+    - dmr10-039
+    - dmsd04-014
+    - promoy16-115
+    - promoy24-014
+  spell:
+  - as: shown
+    op: choose
+    select:
+      count: all
+      from_top: 3
+      look: true
+      owner: you
+      zone: deck
+  - op: move
+    reason: put
+    select:
+      count: all
+      filter:
+        colorless: true
+      ref: shown
+    to: hand
+  - op: move
+    order: choose
+    position: bottom
+    reason: put
+    select:
+      count: all
+      ref: shown
+    to: deck
+  text: G・ゼロ：自分の無色クリーチャーがあれば、この呪文をコストを支払わずに唱えてもよい。 / 自分の山札の上から３枚を表向きにする。その中から無色カードをすべて手札に加え、残りを好きな順序で山札の下に置く。
+  types:
+  - spell
+- civs:
+  - nature
+  cost: 2
+  id: dm24sp2-012
+  mana: 1
+  name: ピクシー・ライフ
+  source:
+    official: dm24sp2-012
+    review: pending
+    aliases:
+    - dm23bd5-060
+    - dm23ex3-t20
+    - dmd12-021
+    - dmex01-055
+    - dmex17-cho22
+    - dmr08-055
+    - dmx22a-054
+  spell:
+  - op: mana_put
+    select:
+      from_top: 1
+      owner: you
+      zone: deck
+  - body:
+    - op: move
+      reason: return
+      select:
+        count: 1
+        filter:
+          colorless: true
+        owner: you
+        zone: mana
+      to: hand
+    op: may
+  text: 自分の山札の上から１枚目をマナゾーンに置く。その後、無色カードを１枚、自分のマナゾーンから手札に戻してもよい。
+  types:
+  - spell
+- civs:
+  - light
+  - darkness
+  cost: 3
+  id: dmd10-007
+  mana: 1
+  name: 天界の神罰
+  source:
+    official: dmd10-007
+    review: pending
+  spell:
+  - op: destroy
+    select:
+      count: 1
+      filter:
+        colorless: false
+        types:
+        - creature
+      owner: opp
+      zone: bz
+  - op: tap
+    select:
+      count: 1
+      filter:
+        types:
+        - creature
+      owner: you
+      zone: bz
+  text: マナゾーンに置く時、このカードはタップして置く。 / 相手の無色ではないクリーチャーを１体破壊する。 / バトルゾーンにある自分のクリーチャーを１体タップする。
+  types:
+  - spell
+- abilities:
+  - affects: self
+    kind: static
+    mod:
+      breaks:
+        amount: 1
+        count:
+          filter:
+            colorless: true
+            types:
+            - creature
+          other: true
+          owner: you
+          zone: bz
+      power:
+        amount: 5000
+        count:
+          filter:
+            colorless: true
+            types:
+            - creature
+          other: true
+          owner: you
+          zone: bz
+  civs: []
+  cost: 6
+  id: dmd10-008
+  mana: 1
+  name: 神託のサトリ 最澄
+  power: 5000
+  races:
+  - オラクル
+  source:
+    notes: 文明はゼロ＝無色として civs を空にした
+    official: dmd10-008
+    review: pending
+    aliases:
+    - dmx13-012
+  text: バトルゾーンにある自分の他の無色クリーチャー１体につき、このクリーチャーのパワーは+5000され、シールドをさらに１枚ブレイクする。
+  types:
+  - creature
