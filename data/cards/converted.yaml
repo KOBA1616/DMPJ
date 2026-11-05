@@ -322579,3 +322579,228 @@ cards:
   text: このクリーチャーは、このクリーチャーよりパワーが小さいクリーチャーにブロックされない。 / 「シールド・ゴー」を持つカードが自分のシールドゾーンに表向きであれば、このクリーチャーのパワーは+4000され、「W・ブレイカー」を得る。
   types:
   - creature
+- abilities:
+  - effect:
+    - body:
+      - as: paid
+        op: move
+        reason: break
+        select:
+          count: 1
+          owner: you
+          zone: shield
+        to: hand
+      - cond:
+          exists:
+            ref: paid
+        op: if
+        then:
+        - op: destroy
+          select:
+            count: 1
+            filter:
+              types:
+              - creature
+            owner: opp
+            zone: bz
+      op: may
+    kind: trigger
+    when:
+      event: move
+      subject: self
+      to: bz
+  - affects: self
+    if:
+      all:
+      - cmp:
+        - sum:
+          - count:
+              owner: you
+              zone: shield
+          - count:
+              owner: opp
+              zone: shield
+        - <=
+        - 6
+      - is_turn: you
+    kind: static
+    mod:
+      indestructible: true
+  civs:
+  - darkness
+  - fire
+  cost: 6
+  id: dmex14-s08
+  keywords:
+  - blocker
+  - speed_attacker
+  - double_breaker
+  mana: 1
+  name: 「修羅」の鬼 アシュラ天狗
+  power: 7000
+  races:
+  - デモニオ
+  - 鬼札王国
+  source:
+    notes: 'シールドの手札化は dm23rp3-017 / dm24ex3-tf43 の先例どおり move reason: break（この経路では「S・トリガー」は使えない）。「このようにして加えたら」は
+      as: paid + exists: {ref: paid} で判定。鬼タイムは変換済み先例どおり sum の cmp（シールド合計<=6）と is_turn:
+      you の all。破壊されないは第127弾 indestructible。'
+    official: dmex14-s08
+    review: pending
+  text: 'ブロッカー
+
+    スピードアタッカー
+
+    W・ブレイカー
+
+    このクリーチャーがバトルゾーンに出た時、自分のシールドを１つ、手札に加えてもよい。ただし、その「S・トリガー」は使えない。このようにしてシールドを手札に加えたら、相手のクリーチャーを１体破壊する。
+
+    鬼タイム：自分と相手のシールドの数が合計６つ以下で、自分のターンなら、このクリーチャーは破壊されない。'
+  types:
+  - creature
+- abilities:
+  - affects: self
+    if:
+      all:
+      - cmp:
+        - sum:
+          - count:
+              owner: you
+              zone: shield
+          - count:
+              owner: opp
+              zone: shield
+        - <=
+        - 6
+      - is_turn: you
+    kind: static
+    mod:
+      indestructible: true
+  civs:
+  - darkness
+  - fire
+  cost: 2
+  id: dmrp13-054
+  mana: 1
+  name: コクヨウ童子
+  power: 2000
+  races:
+  - デモニオ
+  - 鬼札王国
+  source:
+    notes: '鬼タイムは変換済み先例どおり sum の cmp（シールド合計<=6）と is_turn: you の all。破壊されないは第127弾 indestructible。'
+    official: dmrp13-054
+    review: pending
+    aliases:
+    - promoy19-011
+  text: 鬼タイム ：自分のターン中、自分と相手のシールドの数が合計６つ以下なら、このクリーチャーは破壊されない。
+  types:
+  - creature
+- abilities:
+  - affects: self
+    if:
+      exists:
+        filter:
+          civs:
+          - light
+        owner: you
+        zone: bz
+    kind: static
+    mod:
+      indestructible: true
+  civs:
+  - water
+  cost: 4
+  id: dmrp14-064
+  keywords:
+  - unblockable
+  mana: 1
+  name: 「不可視の密偵」
+  power: 5000
+  races:
+  - リキッド・ピープル
+  - チーム銀河
+  source:
+    notes: '破壊されないは第127弾の static mod indestructible。条件は自分の光のクリーチャーの存在（exists: zone
+      bz, owner you, filter civs [light]）。原文に「他の」の指定はなく、このクリーチャー自身は水文明のため自身ではこの条件を満たさない。ブロックされないは
+      unblockable。'
+    official: dmrp14-064
+    review: pending
+  text: 'このクリーチャーはブロックされない。
+
+    自分の光のクリーチャーがバトルゾーンにあれば、このクリーチャーは破壊されない。'
+  types:
+  - creature
+- abilities:
+  - effect:
+    - duration: until_next_own_turn_start
+      mod:
+        indestructible: true
+      op: modify
+      select:
+        ref: event.subject
+    first_time: true
+    kind: trigger
+    when:
+      event: attack
+      subject:
+        filter:
+          types:
+          - creature
+        owner: you
+  civs:
+  - light
+  cost: 3
+  id: dmrp15-030
+  mana: 1
+  name: 聖武の鎖 レスラコーン
+  power: 3500
+  races:
+  - ビーストフォーク
+  - 暴拳王国
+  source:
+    notes: 'アバレチェーンはラウンド62等の既存イディオムどおり first_time: true + attack 誘発（subject: owner
+      you）。攻撃クリーチャーは ref: event.subject（dmrp16-012 の win_all_battles 付与と同型）。破壊されないの付与は第127弾どおり
+      modify の mod indestructible、duration: until_next_own_turn_start（次の自分のターンのはじめまで）。'
+    official: dmrp15-030
+    review: pending
+  text: アバレチェーン：自分のクリーチャーが攻撃する時、それがこのターン最初の攻撃なら、次の自分のターンのはじめまで、そのクリーチャーは破壊されない。
+  types:
+  - creature
+- abilities:
+  - effect:
+    - duration: end_of_turn
+      mod:
+        indestructible: true
+      op: modify
+      select:
+        count: 1
+        filter:
+          types:
+          - creature
+        owner: you
+        zone: bz
+    kind: trigger
+    when:
+      event: move
+      subject: self
+      to: bz
+  civs:
+  - light
+  cost: 4
+  id: dmrp18-059
+  mana: 1
+  name: 「収納の達人」
+  power: 4000
+  races:
+  - メタリカ
+  - レクスターズ
+  source:
+    notes: '破壊されないの付与は第127弾どおり modify の mod indestructible、duration: end_of_turn（このターン）。対象は自分のクリーチャー1体（自身も含む、原文に「他の」の指定なし）。'
+    official: dmrp18-059
+    review: pending
+    aliases:
+    - dmrp18-coro09
+  text: このクリーチャーが出た時、自分のクリーチャーを１体選ぶ。このターン、そのクリーチャーは破壊されない。
+  types:
+  - creature
