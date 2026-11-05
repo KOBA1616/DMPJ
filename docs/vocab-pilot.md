@@ -1135,3 +1135,9 @@ draw イベントへの置換で表す（draw は個別イベントとして発�
   「見て選ぶ」場合は先に look で公開してから選ぶ点が異なる。
 - tests/test_vocab_pilot114.py 2件（正常 parse／検証）
 - 待機7枚（random_discard のみが gap のもの）。
+
+## 第115弾: filter_not_race（〜でないクリーチャー）— 新語彙なし（2026-11-05）
+選択フィルタの「種族〜でない」は第81弾の not_race_has で表す（文字列／リスト両形式）。
+- 書き方: filter: {not_race_has: ドラゴン}（複数種族のいずれでもない場合はリスト）。
+- tests/test_vocab_pilot115.py 2件（正常 parse／検証）
+- 待機8枚（filter_not_race のみが gap のもの）。
