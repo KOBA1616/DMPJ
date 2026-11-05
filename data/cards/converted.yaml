@@ -322338,3 +322338,244 @@ cards:
   types:
   - creature
   - evolution
+- abilities:
+  - effect:
+    - op: play_free
+      select:
+        ref: self
+    if:
+      all:
+      - is_turn: opp
+      - cmp:
+        - count:
+            owner: you
+            zone: shield
+        - ==
+        - 0
+    kind: declare
+    when:
+      event: attack
+      target: player
+    zone: hand
+  - instead:
+    - op: move
+      reason: return
+      select:
+        ref: self
+      to: deck
+    - op: shuffle
+      player: you
+    kind: replace
+    when:
+      event: move
+      reason: resolve
+      subject: self
+      to: graveyard
+    zone: hold
+  civs:
+  - fire
+  cost: 3
+  id: dmex17-cho28
+  mana: 1
+  name: 革命の鉄拳
+  source:
+    notes: '革命０トリガー（呪文版）は第42弾の declare + play_free で表した。唱えた後の山札回収は kind: replace（zone:
+      hold、reason: resolve の墓地送りを置換して山札に戻しシャッフル）で表した（dmc64-011 先例）。表向きにした４枚は choose
+      (look) で shown に束縛し、その中の火のクリーチャー１体を refc に選んで power_of で参照した（dmr21-029 と同型、「以下」は
+      power_le: {power_of: {ref: refc}}）。選ばなかったカードは山札の上に残る。'
+    official: dmex17-cho28
+    review: pending
+    aliases:
+    - dmex01-070
+    - dmex06-069
+    - dmex08-101
+    - dmex10-009
+    - dmr17-025
+    - dmx26-022
+    - promoy14-006
+    - promoy14-075
+  spell:
+  - as: shown
+    op: choose
+    select:
+      count: all
+      from_top: 4
+      look: true
+      owner: you
+      zone: deck
+  - as: refc
+    op: choose
+    select:
+      count: 1
+      filter:
+        civs:
+        - fire
+        types:
+        - creature
+      ref: shown
+  - op: destroy
+    select:
+      count: 1
+      filter:
+        power_le:
+          power_of:
+            ref: refc
+        types:
+        - creature
+      owner: opp
+      zone: bz
+  text: 革命０トリガー：クリーチャーが自分を攻撃する時、自分のシールドが１枚もなければ、この呪文をコストを支払わずに唱えてもよい。 / 自分の山札の上から４枚を表向きにし、その中から火のクリーチャーを１体選ぶ。そのクリーチャー以下のパワーを持つ相手のクリーチャーを１体破壊する。
+    / この呪文を唱えた後、墓地に置くかわりに山札に加えてシャッフルする。
+  types:
+  - spell
+- abilities:
+  - effect:
+    - as: chosen
+      op: choose
+      select:
+        count: 1
+        filter:
+          power_le:
+            sum:
+            - power_of:
+                ref: self
+            - -1
+          types:
+          - creature
+        owner: opp
+        zone: bz
+    - op: mana_put
+      select:
+        count: 1
+        ref: chosen
+    - body:
+      - op: move
+        reason: put
+        select:
+          count: 1
+          filter:
+            evolution: false
+            power_le:
+              sum:
+              - power_of:
+                  ref: chosen
+              - -1
+            race_has: ジャイアント
+            types:
+            - creature
+          owner: you
+          zone: mana
+        to: bz
+      op: may
+    kind: trigger
+    when:
+      event: move
+      subject: self
+      to: bz
+  civs:
+  - nature
+  cost: 9
+  id: dmr06-004
+  keywords:
+  - double_breaker
+  mana: 1
+  name: 真実の名 ジャイアント・マック
+  power: 11000
+  races:
+  - ジャイアント
+  - アンノウン
+  source:
+    notes: '１段目は choose で chosen に束縛してから mana_put した。「このクリーチャーよりパワーの小さい」は第116・126弾の
+      filter {power_le: {sum: [{power_of: {ref: self}}, -1]}}。２段目は chosen を power_of
+      で参照する同イディオムで「その選んだクリーチャーよりパワーの小さい」を表し、「進化ではない」は filter の evolution: false、「ジャイアント」は
+      race_has で表した。出すのは召喚ではないため move to bz reason: put。'
+    official: dmr06-004
+    review: pending
+  text: 'このクリーチャーをバトルゾーンに出した時、バトルゾーンにある、このクリーチャーよりパワーの小さい相手のクリーチャーを１体選び、持ち主のマナゾーンに置く。その後、その選んだクリーチャーよりパワーの小さい、進化ではないジャイアントを１体、自分のマナゾーンからバトルゾーンに出してもよい。
+
+    W・ブレイカー(このクリーチャーはシールドを２枚ブレイクする)'
+  types:
+  - creature
+- abilities:
+  - effect:
+    - op: destroy
+      select:
+        count: 1
+        filter:
+          power_le:
+            sum:
+            - power_of:
+                ref: self
+            - -1
+          types:
+          - creature
+        owner: opp
+        zone: bz
+    kind: trigger
+    when:
+      event: move
+      subject: self
+      to: bz
+  civs:
+  - fire
+  cost: 3
+  id: dmr06-048
+  mana: 1
+  name: 鉄拳制裁オニノブシ
+  power: 2000
+  races:
+  - ヒューマノイド
+  - ハンター
+  - エイリアン
+  source:
+    notes: '「このクリーチャーよりパワーの小さい」は第116・126弾の filter {power_le: {sum: [{power_of: {ref:
+      self}}, -1]}} で表した。'
+    official: dmr06-048
+    review: pending
+  text: このクリーチャーをバトルゾーンに出した時、このクリーチャーよりパワーの小さい相手のクリーチャーを１体破壊する。
+  types:
+  - creature
+- abilities:
+  - affects: self
+    kind: static
+    mod:
+      deny:
+      - action: be_blocked
+        other:
+          power_le:
+            sum:
+            - power_of:
+                ref: self
+            - -1
+  - affects: self
+    if:
+      exists:
+        filter:
+          face_up: true
+          keyword: shield_go
+        owner: you
+        zone: shield
+    kind: static
+    mod:
+      grant:
+      - double_breaker
+      power: 4000
+  civs:
+  - nature
+  cost: 4
+  id: dmr10-030
+  mana: 1
+  name: 雪滑り ヘパティカ
+  power: 4000
+  races:
+  - アウトレイジ
+  source:
+    notes: '「パワーが小さいクリーチャーにブロックされない」は第126弾の static mod {deny: [{action: be_blocked,
+      other: {power_le: {sum: [{power_of: {ref: self}}, -1]}}}]} で表した。シールド・ゴー条件は exists
+      {zone: shield, owner: you, filter: {keyword: shield_go, face_up: true}} で表せることを確認した（dmr10-022
+      等の先例）ため unsupported には残さず、条件つき static でパワー+4000と W・ブレイカー付与を表した。'
+    official: dmr10-030
+    review: pending
+  text: このクリーチャーは、このクリーチャーよりパワーが小さいクリーチャーにブロックされない。 / 「シールド・ゴー」を持つカードが自分のシールドゾーンに表向きであれば、このクリーチャーのパワーは+4000され、「W・ブレイカー」を得る。
+  types:
+  - creature
