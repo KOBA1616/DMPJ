@@ -304966,3 +304966,731 @@ cards:
     ・このターン、このクリーチャーはシールドをさらに１枚ブレイクする。
   types:
   - creature
+- abilities:
+  - instead:
+    - op: destroy
+      select:
+        ref: self
+    kind: replace
+    optional: true
+    when:
+      event: move
+      from: bz
+      subject:
+        filter:
+          any_of:
+          - race_has: メカ
+          - race_has: アーマード
+        other: true
+        owner: you
+  civs:
+  - light
+  cost: 2
+  id: dm23rp3-054
+  mana: 1
+  name: 飛工！デネビア&ドッペル
+  power: 1000
+  races:
+  - メカ・デル・ステラ
+  - アーマード・ワイバーン
+  source:
+    official: dm23rp3-054
+    review: pending
+    aliases:
+    - promoy22-046
+  text: ウルトラ・セイバー：メカまたはアーマード（自分のメカまたはアーマードが離れる時、かわりにこのクリーチャーを破壊してもよい）
+  types:
+  - creature
+- abilities:
+  - effect:
+    - count: 1
+      op: draw
+    if:
+      exists:
+        filter:
+          race_has: アーマード
+        other: true
+        owner: you
+        zone: bz
+    kind: trigger
+    when:
+      event: move
+      subject: self
+      to: bz
+  - affects:
+      filter:
+        race_has: アーマード
+      owner: you
+      zone: hand
+    kind: static
+    mod:
+      cost: -1
+  - instead:
+    - op: destroy
+      select:
+        ref: self
+    kind: replace
+    optional: true
+    when:
+      event: move
+      from: bz
+      subject:
+        filter:
+          race_has: アーマード
+        other: true
+        owner: you
+  civs:
+  - light
+  cost: 3
+  id: dm23rp4x-028
+  mana: 1
+  name: アシステスト・インコッピ
+  power: 2000
+  races:
+  - アーマード・ファイアー・バード
+  source:
+    official: dm23rp4x-028
+    review: pending
+    aliases:
+    - dm23rp4-028
+    - promoy22-065
+  text: このクリーチャーが出た時、自分の他のアーマードがあれば、カードを１枚引く。 / 自分のアーマードを使うコストを１少なくする。ただし、コストは０以下にはならない。
+    / ウルトラ・セイバー：アーマード（自分のアーマードが離れる時、かわりにこのクリーチャーを破壊してもよい）
+  types:
+  - creature
+- abilities:
+  - effect:
+    - count: 1
+      op: draw
+    if:
+      exists:
+        filter:
+          race_has: マジック
+        other: true
+        owner: you
+        zone: bz
+    kind: trigger
+    when:
+      event: move
+      subject: self
+      to: bz
+  - affects:
+      filter:
+        race_has: マジック
+      owner: you
+      zone: hand
+    kind: static
+    mod:
+      cost: -1
+  - instead:
+    - op: destroy
+      select:
+        ref: self
+    kind: replace
+    optional: true
+    when:
+      event: move
+      from: bz
+      subject:
+        filter:
+          race_has: マジック
+        other: true
+        owner: you
+  civs:
+  - fire
+  cost: 3
+  id: dm23rp4x-035
+  mana: 1
+  name: アシステスト・Mogi事変
+  power: 2000
+  races:
+  - マジック・マーフォーク
+  source:
+    official: dm23rp4x-035
+    review: pending
+    aliases:
+    - dm23rp4-035
+  text: このクリーチャーが出た時、自分の他のマジックがあれば、カードを１枚引く。 / 自分のマジックを使うコストを１少なくする。ただし、コストは０以下にはならない。
+    / ウルトラ・セイバー：マジック（自分のマジックが離れる時、かわりにこのクリーチャーを破壊してもよい）
+  types:
+  - creature
+- abilities:
+  - effect:
+    - count: 1
+      op: draw
+    if:
+      exists:
+        filter:
+          race_has: アビス
+        other: true
+        owner: you
+        zone: bz
+    kind: trigger
+    when:
+      event: move
+      subject: self
+      to: bz
+  - affects:
+      filter:
+        race_has: アビス
+      owner: you
+      zone: hand
+    kind: static
+    mod:
+      cost: -1
+  - instead:
+    - op: destroy
+      select:
+        ref: self
+    kind: replace
+    optional: true
+    when:
+      event: move
+      from: bz
+      subject:
+        filter:
+          race_has: アビス
+        other: true
+        owner: you
+  civs:
+  - nature
+  cost: 3
+  id: dm23rp4x-039
+  mana: 1
+  name: オ:ンータイ
+  power: 2000
+  races:
+  - ヴェールアビス
+  source:
+    official: dm23rp4x-039
+    review: pending
+    aliases:
+    - dm23rp4-039
+    - promoy23-spd1110
+  text: このクリーチャーが出た時、自分の他のアビスがあれば、カードを１枚引く。 / 自分のアビスを使うコストを１少なくする。ただし、コストは０以下にはならない。
+    / ウルトラ・セイバー：アビス（自分のアビスが離れる時、かわりにこのクリーチャーを破壊してもよい）
+  types:
+  - creature
+- abilities:
+  - instead:
+    - op: destroy
+      select:
+        ref: self
+    kind: replace
+    optional: true
+    when:
+      event: move
+      from: bz
+      subject:
+        filter:
+          race_has: 超化獣
+        other: true
+        owner: you
+  - effect:
+    - body:
+      - count: 1
+        op: draw
+      op: may
+    kind: trigger
+    when:
+      event: move
+      subject: self
+      to: graveyard
+  civs:
+  - light
+  cost: 2
+  id: dm24rp1-055
+  mana: 1
+  name: 超化の守護者レイガー
+  power: 1000
+  races:
+  - ガーディアン
+  source:
+    official: dm24rp1-055
+    review: pending
+  text: ウルトラ・セイバー：超化獣（自分の超化獣が離れる時、かわりにこのクリーチャーを破壊してもよい） / このクリーチャーが破壊された時、カードを１枚引いてもよい。
+  types:
+  - creature
+- abilities:
+  - instead:
+    - op: destroy
+      select:
+        ref: self
+    kind: replace
+    optional: true
+    when:
+      event: move
+      from: bz
+      subject:
+        filter:
+          race_has: メカ
+        other: true
+        owner: you
+  - effect:
+    - body:
+      - op: move
+        reason: put
+        select:
+          ref: self
+        to: bz
+      op: may
+    if:
+      exists:
+        filter:
+          race_has: メカ
+        owner: you
+        zone: bz
+    kind: trigger
+    when:
+      event: attack
+      subject:
+        filter:
+          types:
+          - creature
+        owner: opp
+    zone: hand
+  civs:
+  - light
+  cost: 3
+  id: dm25ex1-052
+  keywords:
+  - cannot_attack
+  mana: 1
+  name: 瞬現の聖沌 n41kun4
+  power: 1000
+  races:
+  - メカ・デル・ステラ
+  - シノビ
+  source:
+    notes: '手札からの誘発は zone: hand の trigger で表した（dm25ex3-rp4s01 等の先例）'
+    official: dm25ex1-052
+    review: pending
+    aliases:
+    - dm23rp1-030
+  text: 'このクリーチャーは攻撃できない。
+
+    ウルトラ・セイバー：メカ（自分のメカが離れる時、かわりにこのクリーチャーを破壊してもよい）
+
+    相手のクリーチャーが攻撃する時、自分のメカがあれば、このクリーチャーを自分の手札から出してもよい。'
+  types:
+  - creature
+- abilities:
+  - effect:
+    - count: 1
+      op: draw
+    if:
+      exists:
+        filter:
+          race_has: ロスト・クルセイダー
+        other: true
+        owner: you
+        zone: bz
+    kind: trigger
+    when:
+      event: move
+      subject: self
+      to: bz
+  - affects:
+      filter:
+        race_has: ロスト・クルセイダー
+      owner: you
+      zone: hand
+    kind: static
+    mod:
+      cost: -1
+  - instead:
+    - op: destroy
+      select:
+        ref: self
+    kind: replace
+    optional: true
+    when:
+      event: move
+      from: bz
+      subject:
+        filter:
+          race_has: ロスト・クルセイダー
+        other: true
+        owner: you
+  civs:
+  - water
+  cost: 3
+  id: dm26ex2-054
+  mana: 1
+  name: ワダシストノミコト
+  power: 2000
+  races:
+  - ミズガミ
+  - ロスト・クルセイダー
+  source:
+    official: dm26ex2-054
+    review: pending
+  text: このクリーチャーが出た時、自分の他のロスト・クルセイダーがあれば、カードを１枚引く。 / 自分のロスト・クルセイダー・カードを実行するコストを１少なくする。ただしコストは０以下にならない。
+    / ウルトラ・セイバー：ロスト・クルセイダー（自分のロスト・クルセイダーが離れる時、かわりにこのクリーチャーを破壊してもよい）
+  types:
+  - creature
+- abilities:
+  - effect:
+    - op: move
+      reason: put
+      select:
+        from_top: 1
+        owner: you
+        zone: deck
+      tapped: true
+      to: mana
+    kind: trigger
+    when:
+      event: move
+      subject: self
+      to: bz
+  - affects:
+      filter:
+        race_has: ドラゴン
+      owner: you
+    kind: static
+    mod:
+      grant:
+      - speed_attacker
+  - instead:
+    - op: destroy
+      select:
+        ref: self
+    kind: replace
+    optional: true
+    when:
+      event: move
+      from: bz
+      subject:
+        filter:
+          race_has: ドラゴン
+        other: true
+        owner: you
+  civs:
+  - fire
+  - nature
+  cost: 4
+  id: dm26ex3-093
+  mana: 1
+  name: 龍の世界 龍幻郷
+  races:
+  - ドラゴン・ワールド
+  source:
+    notes: 原文のスピードアタッカー説明の括弧書きはキーワード注釈として除いた
+    official: dm26ex3-093
+    review: pending
+    aliases:
+    - dm23bd4-009
+    - dm25rp3-td5
+  text: このフィールドが出た時、自分の山札の上から１枚をタップしてマナゾーンに置く。 / 自分のドラゴンすべてに「スピードアタッカー」を与える。 / ウルトラ・セイバー：ドラゴン（自分のドラゴンが離れる時、かわりにこのフィールドを破壊してもよい）
+  types:
+  - field
+- abilities:
+  - effect:
+    - count: 1
+      op: draw
+    if:
+      exists:
+        filter:
+          race_has: ジャイアント
+        other: true
+        owner: you
+        zone: bz
+    kind: trigger
+    when:
+      event: move
+      subject: self
+      to: bz
+  - affects:
+      filter:
+        race_has: ジャイアント
+      owner: you
+      zone: hand
+    kind: static
+    mod:
+      cost: -1
+  - instead:
+    - op: destroy
+      select:
+        ref: self
+    kind: replace
+    optional: true
+    when:
+      event: move
+      from: bz
+      subject:
+        filter:
+          race_has: ジャイアント
+        other: true
+        owner: you
+  civs:
+  - water
+  cost: 3
+  id: dm26sd1-q011
+  mana: 1
+  name: アシステスト・シネラリア
+  power: 2000
+  races:
+  - ジャイアント・スノーフェアリー
+  source:
+    official: dm26sd1-q011
+    review: pending
+    aliases:
+    - dm23rp4-030
+    - dm23rp4x-030
+  text: このクリーチャーが出た時、自分の他のジャイアントがあれば、カードを１枚引く。 / 自分のジャイアント・カードを実行するコストを１少なくする。ただしコストは０以下にならない。
+    / ウルトラ・セイバー：ジャイアント（自分のジャイアントが離れる時、かわりにこのクリーチャーを破壊してもよい）
+  types:
+  - creature
+- abilities:
+  - effect:
+    - count: 1
+      op: draw
+    if:
+      exists:
+        filter:
+          race_has: メカ
+        other: true
+        owner: you
+        zone: bz
+    kind: trigger
+    when:
+      event: move
+      subject: self
+      to: bz
+  - affects:
+      filter:
+        race_has: メカ
+      owner: you
+      zone: hand
+    kind: static
+    mod:
+      cost: -1
+  - instead:
+    - op: destroy
+      select:
+        ref: self
+    kind: replace
+    optional: true
+    when:
+      event: move
+      from: bz
+      subject:
+        filter:
+          race_has: メカ
+        other: true
+        owner: you
+  civs:
+  - darkness
+  cost: 3
+  id: dm26sd1-s012
+  mana: 1
+  name: アシステスト・アルデッド
+  power: 2000
+  races:
+  - メカ・デル・ステラ
+  source:
+    official: dm26sd1-s012
+    review: pending
+    aliases:
+    - dm23rp4-033
+    - dm23rp4-15a
+    - dm23rp4-17b
+    - dm23rp4x-033
+    - dm23rp4x-15a
+    - dm23rp4x-17b
+  text: このクリーチャーが出た時、自分の他のメカがあれば、カードを１枚引く。 / 自分のメカ・カードを実行するコストを１少なくする。ただしコストは０以下にならない。
+    / ウルトラ・セイバー：メカ（自分のメカが離れる時、かわりにこのクリーチャーを破壊してもよい）
+  types:
+  - creature
+- abilities:
+  - instead:
+    - op: destroy
+      select:
+        ref: self
+    kind: replace
+    optional: true
+    when:
+      event: move
+      from: bz
+      subject:
+        filter:
+          race_has: ジョーカーズ
+        other: true
+        owner: you
+  civs:
+  - fire
+  cost: 2
+  id: dmbd11-d06
+  mana: 1
+  name: おしゃかなクン
+  power: 1000
+  races:
+  - ジョーカーズ
+  source:
+    official: dmbd11-d06
+    review: pending
+    aliases:
+    - dmrp04s-085
+  text: ウルトラ・セイバー：ジョーカーズ（自分のジョーカーズがバトルゾーンを離れる時、かわりにこのクリーチャーを破壊してもよい）
+  types:
+  - creature
+- abilities:
+  - instead:
+    - op: destroy
+      select:
+        ref: self
+    kind: replace
+    optional: true
+    when:
+      event: move
+      from: bz
+      subject:
+        filter:
+          cost_ge: 9
+          cost_le: 9
+          types:
+          - creature
+        other: true
+        owner: you
+  civs:
+  - light
+  cost: 9
+  id: dmex04-009
+  keywords:
+  - s_trigger
+  mana: 1
+  name: 三極 デュエナース
+  power: 3500
+  races:
+  - エンジェル・コマンド
+  - 革命軍
+  - 侵略者
+  source:
+    official: dmex04-009
+    review: pending
+    aliases:
+    - dmr20-011
+  text: 'S・トリガー（このクリーチャーをシールドゾーンから手札に加える時、コストを支払わずにすぐ召喚してもよい）
+
+    ウルトラ・セイバー：コスト９のクリーチャー（自分のコスト９のクリーチャーがバトルゾーンを離れる時、かわりにこのクリーチャーを破壊してもよい）'
+  types:
+  - creature
+- abilities:
+  - instead:
+    - op: destroy
+      select:
+        ref: self
+    kind: replace
+    optional: true
+    when:
+      event: move
+      from: bz
+      subject:
+        filter:
+          race_has: マフィ・ギャング
+        other: true
+        owner: you
+  civs:
+  - darkness
+  cost: 3
+  id: dmex07-039
+  mana: 1
+  name: 堕魔 グリナイブ
+  power: 1000
+  races:
+  - マフィ・ギャング
+  - 魔導具
+  source:
+    official: dmex07-039
+    review: pending
+    aliases:
+    - dmrp06-078
+  text: ウルトラ・セイバー：マフィ・ギャング（自分のマフィ・ギャングがバトルゾーンを離れる時、かわりにこのクリーチャーを破壊してもよい）
+  types:
+  - creature
+- abilities:
+  - kind: trigger
+    when:
+      event: attack
+      subject: self
+    effect:
+    - op: may
+      body:
+      - op: move
+        select:
+          zone:
+          - hand
+          - deck
+          from_top: 1
+          owner: you
+          filter:
+            types:
+            - creature
+            not_types:
+            - evolution
+            cost_le: 2
+          count: 1
+        to: bz
+        reason: put
+  - effect:
+    - body:
+      - op: move
+        reason: put
+        select:
+          count: 1
+          filter:
+            cost_le: 2
+            not_types:
+            - evolution
+            types:
+            - creature
+          from_top: 1
+          owner: you
+          zone:
+          - hand
+          - deck
+        to: bz
+      op: may
+    kind: trigger
+    when:
+      event: attack
+      subject: self
+  - instead:
+    - op: destroy
+      select:
+        ref: self
+    kind: replace
+    optional: true
+    when:
+      event: move
+      from: bz
+      subject:
+        filter:
+          civs:
+          - light
+          - fire
+          types:
+          - creature
+        other: true
+        owner: you
+  civs:
+  - light
+  - fire
+  cost: 3
+  id: dmex11-042
+  mana: 1
+  name: Ｕ・Ｓ・Ａ・PORISU
+  power: 2000
+  races:
+  - ビートジョッキー
+  - チームボンバー
+  source:
+    notes: マジボンバーは dmex11-019（U・S・A・DANGER）と同型で表した
+    official: dmex11-042
+    review: pending
+  text: 'マジボンバー ２（このクリーチャーが攻撃する時、自分の山札の上から１枚目を見る。その後、コスト２以下のクリーチャーを１体、自分の手札または山札の上から、バトルゾーンに出してもよい）
+
+    ウルトラ・セイバー：光または火のクリーチャー（自分の光または火のクリーチャーがバトルゾーンを離れる時、かわりにこのクリーチャーを破壊してもよい）'
+  types:
+  - creature
