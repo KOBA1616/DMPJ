@@ -351,7 +351,8 @@ class Engine(SelectorMixin, EventMixin, InterpreterMixin, TurnMixin, CombatMixin
         ch = {"power": d.power, "cost": d.cost, "civs": list(d.civs), "types": list(d.types),
               "races": list(d.races), "keywords": set(d.keywords), "name": d.name,
               "allow": [], "deny": [], "require": [], "breaks": 1, "break_opts": [], "pay_cost": d.cost, "sac_reduce": 0, "opt_reduce": None, "cost_may": [], "no_leave": [], "must_be_attacked": False,
-              "battle_indestructible": False, "battle_indestructible_filters": [], "win_all_battles": False}
+              "battle_indestructible": False, "battle_indestructible_filters": [], "win_all_battles": False,
+              "indestructible": False}
         if (d.neo or d.grave_evo) and c.zone == "bz" and c.under and "evolution" not in ch["types"]:
             ch["types"].append("evolution")   # NEO進化・墓地進化: カードが下にあれば進化クリーチャーとして扱う
         own = self.abilities(cid, "static") if face is None else list(enumerate(d.abilities))
@@ -435,6 +436,8 @@ class Engine(SelectorMixin, EventMixin, InterpreterMixin, TurnMixin, CombatMixin
                 ch["battle_indestructible_filters"].append(m["battle_indestructible"]["opponent_filter"])
             if m.get("win_all_battles"):   # 「このクリーチャーはすべてのバトルに勝つ」（第61弾）
                 ch["win_all_battles"] = True
+            if m.get("indestructible"):   # 「破壊されない」（第127弾）
+                ch["indestructible"] = True
             for cv in m.get("add_civs", []):   # 文明追加（第62弾）
                 if cv not in ch["civs"]:
                     ch["civs"].append(cv)
@@ -461,6 +464,7 @@ class Engine(SelectorMixin, EventMixin, InterpreterMixin, TurnMixin, CombatMixin
                 ch["battle_indestructible"] = ch["battle_indestructible"] or sc["battle_indestructible"]
                 ch["battle_indestructible_filters"] += sc.get("battle_indestructible_filters", [])
                 ch["win_all_battles"] = ch["win_all_battles"] or sc["win_all_battles"]
+                ch["indestructible"] = ch["indestructible"] or sc.get("indestructible", False)
                 ch["breaks"] = max(ch["breaks"], sc["breaks"])
         if any("cost_may" in m for m in mods):   # 任意のコスト軽減（cost_may）の発生源を引く（once の使用記録用）
             for m in mods:

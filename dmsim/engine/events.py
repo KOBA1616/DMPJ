@@ -107,6 +107,9 @@ class EventMixin:
             if ev["to"] == "bz" and c.zone != "hold" and not self.permits(cid, "enter_bz"):
                 return []   # 出せない（実行は h_play で先に確認している。効果で出す場合はここで止める）
             from_zone = ev.get("from") if c.zone == "hold" else c.zone
+            if from_zone == "bz" and ev["to"] == "graveyard" and ev.get("reason") == "destroy" \
+                    and self.chars(cid).get("indestructible"):
+                return []   # 「破壊されない」（第127弾）: 置換を経た最終的な破壊に対して判定し、破壊自体が起こらない
             if from_zone == "bz" and ev["to"] != "bz":
                 # 「バトルゾーンを離れない」（第49弾）: 置換を経た最終的な移動に対して判定し、該当すれば移動自体が起こらない
                 for nl in self.chars(cid)["no_leave"]:

@@ -792,3 +792,15 @@ cards:
       - kind: static
         affects: self
         mod: {deny: [{action: be_blocked, other: {power_le: {sum: [{power_of: {ref: self}}, -1]}}}]}
+  - id: R090
+    name: 試験用不壊獣
+    types: [creature]
+    civs: [light]
+    cost: 4
+    power: 3000
+    races: [テスト]
+    text: このクリーチャーは破壊されない。
+    abilities:
+      - kind: static
+        affects: self
+        mod: {indestructible: true}

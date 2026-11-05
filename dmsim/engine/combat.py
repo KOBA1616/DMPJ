@@ -145,7 +145,7 @@ class CombatMixin:
     def _battle_indestructible(self, ref, opponent) -> bool:
         """バトルで破壊されないか。無条件（第59弾）と、相手フィルタつき（第122弾）の両方を見る。"""
         ch = self.chars(ref[0])
-        if ch["battle_indestructible"]:
+        if ch["battle_indestructible"] or ch.get("indestructible"):
             return True
         return any(self.filter_match(opponent[0], f) for f in ch.get("battle_indestructible_filters", []))
 

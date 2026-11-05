@@ -1216,3 +1216,7 @@ draw イベントへの置換で表す（draw は個別イベントとして発�
 - 「パワーがこのクリーチャーより小さい相手のクリーチャー」は第116弾の filter {power_le: {sum: [{power_of: {ref: self}}, -1]}} で表す（選択側は candidates が式を前評価する）。
 - 「パワーがこのクリーチャーより小さいクリーチャーにブロックされない」= static mod {deny: [{action: be_blocked, other: {power_le: <同式>}}]}。エンジン拡張: permits の other フィルタの式を許可側カード（self）基準で前評価する（core.permits の _other_filter、candidates と同じ方式）。
 - proto T162、試験カード R089、tests/test_vocab_pilot126.py 3件（parse 1件＋実挙動2件: パワー3000ブロッカーはブロック不可、5000ブロッカーはブロックして相打ち）。
+
+### 第127弾 indestructible（2026-11-05）
+- 「破壊されない」は新語彙 static mod: {indestructible: true}（エンジン拡張）。chars に集め、events._apply_one が置換を経た最終的な破壊（reason: destroy で墓地へ）を防ぐ。バトルでも battle_indestructible と同様に扱う（combat の _battle_indestructible が併せて見る）。条件つきは static の if、付与は modify の mod で同じ形。
+- proto T163、試験カード R090、tests/test_vocab_pilot127.py 5件（parse 2件＋実挙動3件: バトルで負けても残る／破壊効果でも残る／対照は破壊される）。
