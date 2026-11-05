@@ -2141,3 +2141,15 @@ cards:
     keywords: [null_breaker]
     text: ヌル・ブレイカー（このクリーチャーはシールドを０ブレイクする）
     abilities: []
+  - id: T166
+    name: 試験用クルー竜
+    types: [creature]
+    civs: [fire]
+    cost: 6
+    power: 5000
+    races: [テスト, ドラゴン]
+    text: クルー・ブレイカー：ドラゴン（このクリーチャーは、バトルゾーンにある自分の他のドラゴン１体につき、シールドをさらにもう１枚ブレイクする）
+    abilities:
+      - kind: static
+        affects: self
+        mod: {breaks: {count: {zone: bz, owner: you, other: true, filter: {race_has: ドラゴン}}}}

@@ -424,6 +424,12 @@ class Checker:
         if "add_races" in m:
             if not isinstance(m["add_races"], list) or not all(isinstance(x, str) for x in m["add_races"]):
                 raise DefError(f"{where}: add_races must be a list of race names")
+        if "breaks" in m:
+            b = m["breaks"]
+            if not isinstance(b, int) and not (isinstance(b, dict) and set(b) == {"count"}):
+                raise DefError(f"{where}: breaks must be an int or {{count: <selector>}} (1 + count)")
+            if isinstance(b, dict):
+                self.count_spec(b["count"], where)
         if "cost_may" in m:
             cm = m["cost_may"]
             if not isinstance(cm, dict) or set(cm) - {"amount", "once", "min", "must"} or not isinstance(cm.get("amount"), int) \

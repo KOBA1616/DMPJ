@@ -445,8 +445,16 @@ class Engine(SelectorMixin, EventMixin, InterpreterMixin, TurnMixin, CombatMixin
                 if r not in ch["races"]:
                     ch["races"].append(r)
             if "breaks" in m:   # ブレイカー能力ごとのブレイク数（509.2b）。使う能力は攻撃時に選ぶ（509.2c）
-                ch["break_opts"].append(m["breaks"])
-            ch["breaks"] = max(ch["breaks"], m.get("breaks", 1))
+                b = m["breaks"]
+                if isinstance(b, dict):   # クルー・ブレイカー（第130弾）: 1 + 数えた対象の数
+                    n = 1 + self.count_of(b["count"], env_self)
+                    ch["break_opts"].append(n)
+                    ch["breaks"] = max(ch["breaks"], n)
+                else:
+                    ch["break_opts"].append(b)
+                    ch["breaks"] = max(ch["breaks"], b)
+            elif "breaks" not in m:
+                ch["breaks"] = max(ch["breaks"], 1)
         for ce in self.s.continuous:     # ダイナモ: 発生源のクリーチャーのパワーと能力（常在型の許可・禁止・ブレイク数・キーワード）を加える
             src = ce.get("add_from")
             if src and src[0] != cid and self.s.alive(src) and src[0] not in self._adding and self._ce_applies(ce, cid, ref):
