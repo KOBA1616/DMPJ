@@ -323829,3 +323829,120 @@ cards:
     自分のマナゾーンにあるカードを１枚、裏向きにしてもよい。（マナゾーンにある裏向きのカードは、マナの数字が１の無色カードとして扱う。その持ち主はそれをいつでも見てもよい）'
   types:
   - spell
+- civs:
+  - light
+  cost: 1
+  id: dm25rp3-056
+  mana: 1
+  name: 忍風の聖光 fu53n
+  power: 2000
+  races:
+  - メカ・デル・ステラ
+  - シノビ
+  source:
+    notes: G・ストライクとヌル・ブレイカーは split の known_keywords（g_strike / null_breaker）で処理済みのため
+      keywords には入れない。残りの text はなし（他の効果なし）
+    official: dm25rp3-056
+    review: pending
+  text: '{GS} G・ストライク（このカードを自分のシールドゾーンから手札に加える時、表向きにし、相手のクリーチャーを１体選んでもよい。このターン、そのクリーチャーは攻撃できない）
+
+    ヌル・ブレイカー（このクリーチャーはシールドを０ブレイクする）'
+  types:
+  - creature
+  keywords:
+  - g_strike
+  - null_breaker
+- civs:
+  - water
+  cost: 1
+  id: dm25rp3-060
+  mana: 1
+  name: ～透明すぎる水～
+  power: 2000
+  races:
+  - リキッド・ピープル
+  - スチーム・ナイト
+  source:
+    notes: G・ストライクとヌル・ブレイカーは split の known_keywords（g_strike / null_breaker）で処理済みのため
+      keywords には入れない。残りの text はなし（他の効果なし）
+    official: dm25rp3-060
+    review: pending
+  text: '{GS} G・ストライク（このカードを自分のシールドゾーンから手札に加える時、表向きにし、相手のクリーチャーを１体選んでもよい。このターン、そのクリーチャーは攻撃できない）
+
+    ヌル・ブレイカー（このクリーチャーはシールドを０ブレイクする）'
+  types:
+  - creature
+  keywords:
+  - g_strike
+  - null_breaker
+- civs:
+  - darkness
+  cost: 1
+  id: dm25rp3-066
+  mana: 1
+  name: ヘッドレス＝トレース
+  power: 2000
+  races:
+  - アビスロイヤル
+  source:
+    notes: G・ストライクとヌル・ブレイカーは split の known_keywords（g_strike / null_breaker）で処理済みのため
+      keywords には入れない。残りの text はなし（他の効果なし）
+    official: dm25rp3-066
+    review: pending
+    aliases:
+    - promoy24-065
+    - promoy24-spd1203
+  text: '{GS} G・ストライク（このカードを自分のシールドゾーンから手札に加える時、表向きにし、相手のクリーチャーを１体選んでもよい。このターン、そのクリーチャーは攻撃できない）
+
+    ヌル・ブレイカー（このクリーチャーはシールドを０ブレイクする）'
+  types:
+  - creature
+  keywords:
+  - g_strike
+  - null_breaker
+- civs:
+  - fire
+  cost: 1
+  id: dm25rp3-071
+  mana: 1
+  name: 轟速 ジャトリング
+  power: 2000
+  races:
+  - ヒューマノイド
+  - 侵略者
+  source:
+    notes: G・ストライクとヌル・ブレイカーは split の known_keywords（g_strike / null_breaker）で処理済みのため
+      keywords には入れない。残りの text はなし（他の効果なし）
+    official: dm25rp3-071
+    review: pending
+  text: '{GS} G・ストライク（このカードを自分のシールドゾーンから手札に加える時、表向きにし、相手のクリーチャーを１体選んでもよい。このターン、そのクリーチャーは攻撃できない）
+
+    ヌル・ブレイカー（このクリーチャーはシールドを０ブレイクする）'
+  types:
+  - creature
+  keywords:
+  - g_strike
+  - null_breaker
+- civs:
+  - nature
+  cost: 1
+  id: dm25rp3-076
+  mana: 1
+  name: 与剣KURUTO-910
+  power: 2000
+  races:
+  - ライトブリンガー
+  - テクノ・サムライ
+  source:
+    notes: G・ストライクとヌル・ブレイカーは split の known_keywords（g_strike / null_breaker）で処理済みのため
+      keywords には入れない。残りの text はなし（他の効果なし）
+    official: dm25rp3-076
+    review: pending
+  text: '{GS} G・ストライク（このカードを自分のシールドゾーンから手札に加える時、表向きにし、相手のクリーチャーを１体選んでもよい。このターン、そのクリーチャーは攻撃できない）
+
+    ヌル・ブレイカー（このクリーチャーはシールドを０ブレイクする）'
+  types:
+  - creature
+  keywords:
+  - g_strike
+  - null_breaker
