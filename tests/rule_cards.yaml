@@ -655,3 +655,19 @@ cards:
         when: {event: attack, target: self}
         effect:
           - {op: draw, count: 1}
+  - id: R078
+    name: 試験用相手分岐獣
+    types: [creature]
+    civs: [water]
+    cost: 1
+    power: 5000
+    races: [テスト]
+    text: このクリーチャーが攻撃する時、相手はカードを１枚引いてもよい。
+    abilities:
+      - kind: trigger
+        when: {event: attack, subject: self}
+        effect:
+          - op: may
+            player: opp
+            body:
+              - {op: draw, player: opp, count: 1}

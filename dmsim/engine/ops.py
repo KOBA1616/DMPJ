@@ -121,9 +121,10 @@ def op_flip_down(eng, t, op, env):
     return None
 
 
-@op("may", body="ops", label="str?", **{"else": "ops?"})
+@op("may", body="ops", label="str?", player="str?", **{"else": "ops?"})
 def op_may(eng, t, op, env):
-    a, d = eng.ask(t, env["you"], "yes_no", [{"key": "yes"}, {"key": "no"}], prompt=op.get("label", ""))
+    decider = eng._rel(op.get("player", "you"), env)
+    a, d = eng.ask(t, decider, "yes_no", [{"key": "yes"}, {"key": "no"}], prompt=op.get("label", ""))
     if d:
         return d
     if a[0] == 0:

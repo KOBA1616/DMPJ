@@ -1011,3 +1011,9 @@ converted の監査（opt_reduce の素の整数表記9件）から。任意形�
 - 書き方: types に evolution を含め、evolve_from: {<進化元の条件>}、evolve_zone: mana。
 - tests/test_vocab_pilot95.py 2件（正常 parse／検証）
 - 待機16枚（mana_evolution のみが gap のもの）。
+
+## 第96弾: opponent_chooses_branch（相手が選ぶ分岐）— エンジン拡張（2026-11-05）
+「相手は〜してもよい。そうしたら…、そうしなければ…」は may の決定者を相手にする＋ else 分岐で表す。
+- エンジン変更: dmsim/engine/ops.py の op_may に player 引数を追加（従来はコントローラー固定）。{op: may, player: opp, body: [...], else: [...]} と書く。else は「そうしなければ」。
+- 試験カード R078 を tests/rule_cards.yaml に追加。tests/test_vocab_pilot96.py 3件（parse 2件＋相手が決定者になる実挙動1件）。
+- 待機20枚（opponent_chooses_branch のみが gap のもの）。
