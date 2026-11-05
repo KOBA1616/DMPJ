@@ -296335,3 +296335,779 @@ cards:
     L・ゲート：ヒューマノイド(このクリーチャーが破壊される時、墓地に置くかわりに、ヒューマノイドを１体、自分の墓地から手札に戻してもよい。そうした場合、このクリーチャーを山札の一番下に置く)'
   types:
   - creature
+- abilities:
+  - effect:
+    - count: 2
+      op: draw
+    - op: discard
+      select:
+        count: 1
+        owner: you
+        zone: hand
+    kind: trigger
+    when:
+      event: move
+      subject: self
+      to: bz
+  civs:
+  - water
+  - darkness
+  - nature
+  cost: 3
+  id: dm23bd3-009
+  keywords:
+  - blocker
+  - summon_from_mana
+  - summon_from_graveyard
+  mana: 1
+  name: Disジルコン
+  power: 3000
+  races:
+  - スピリット・クォーツ
+  - ディスタス
+  source:
+    notes: マナゾーンまたは墓地からの召喚は第72弾の型で keywords [summon_from_mana, summon_from_graveyard]
+      の併記。原文どおり厳密
+    official: dm23bd3-009
+    review: pending
+    aliases:
+    - dm22ex2-034
+    - dm22rp1-t13
+    - dm22rp1-tf13
+    - dm23bd1-015
+    - dmrp17-028
+  text: 'ブロッカー（このクリーチャーをタップして、相手クリーチャーの攻撃先をこのクリーチャーに変更してもよい）
+
+    このクリーチャーを、自分のマナゾーンまたは墓地から召喚してもよい。
+
+    このクリーチャーが出た時、カードを２枚引き、自分の手札を１枚捨てる。'
+  types:
+  - creature
+- abilities:
+  - kind: static
+    affects: self
+    mod:
+      sac_reduce: 2
+  - affects: self
+    kind: static
+    mod:
+      sac_reduce: 2
+  civs:
+  - darkness
+  - nature
+  cost: 3
+  id: dm23bd5-047
+  keywords:
+  - summon_from_mana
+  - summon_from_graveyard
+  mana: 1
+  name: 異鎧 ディスマジ-２
+  power: 5000
+  races:
+  - ロスト・クルセイダー
+  - エイリアン
+  - ディスタス
+  source:
+    notes: 'ササゲール２は dm23bd5-043 と同型の static mod {sac_reduce: 2}。墓地またはマナゾーンからの召喚は第72弾の型で
+      keywords 併記。原文どおり厳密'
+    official: dm23bd5-047
+    review: pending
+    aliases:
+    - dmrp19-053
+  text: 'このクリーチャーを自分の墓地またはマナゾーンから召喚してもよい。
+
+    ササゲール２（ディスペクターを召喚する時、コストを２少なくしてもよい。そうしたら、このクリーチャーを破壊する。そのディスペクターのコストは０以下にはならない）'
+  types:
+  - creature
+- abilities:
+  - affects: self
+    if:
+      cmp:
+      - count:
+          filter:
+            race_has: アビス
+          owner: you
+          zone: bz
+      - '>='
+      - 3
+    kind: static
+    mod:
+      grant:
+      - triple_breaker
+  - effect:
+    - op: mana_put
+      select:
+        count: 1
+        filter:
+          types:
+          - creature
+        owner: opp
+        zone: bz
+    if:
+      cmp:
+      - count:
+          filter:
+            race_has: アビス
+          owner: you
+          zone: bz
+      - '>='
+      - 4
+    kind: trigger
+    when:
+      event: move
+      subject: self
+      to: bz
+  civs:
+  - nature
+  cost: 3
+  evolve_from:
+    cost_ge: 3
+    cost_le: 3
+    race_has: アビス
+  id: dm23ex2-053
+  keywords:
+  - summon_from_mana
+  mana: 1
+  name: オ:マルグンサ
+  power: 3000
+  races:
+  - ヴェールアビス
+  source:
+    notes: '進化元「コスト３のアビス」は cost_ge/cost_le ともに3（ちょうど3）で表した。アビスの数え上げは race_has: アビスで、このクリーチャー自身（ヴェールアビス）も含む。原文どおり厳密'
+    official: dm23ex2-053
+    review: pending
+  text: 'このクリーチャーを自分のマナゾーンから召喚してもよい。
+
+    進化：コスト３のアビス１体の上に置く。
+
+    自分のアビスが３つ以上あれば、このクリーチャーに「T・ブレイカー」を与える。（「T・ブレイカー」を持つクリーチャーは、シールドを３つブレイクする）
+
+    このクリーチャーが出た時、自分のアビスが４つ以上あれば、相手のクリーチャーを１体選び、マナゾーンに置く。'
+  types:
+  - creature
+  - evolution
+- abilities:
+  - affects:
+      filter:
+        colorless: true
+        types:
+        - creature
+      owner: you
+      zone: mana
+    kind: static
+    mod:
+      allow:
+      - action: summon_from_mana
+  civs:
+  - nature
+  cost: 4
+  id: dm23ex3-t09
+  mana: 1
+  name: 空腹の超人
+  power: 4000
+  races:
+  - ジャイアント
+  - アンノイズ
+  source:
+    notes: '「無色クリーチャーを自分のマナゾーンから召喚してもよい」は常在型の allow（affects: マナゾーンの自分の無色クリーチャー）で表した。（コストは支払う）は通常の召喚どおりで追加の変換なし。原文どおり厳密'
+    official: dm23ex3-t09
+    review: pending
+    aliases:
+    - dmx13-017
+  text: 無色クリーチャーを自分のマナゾーンから召喚してもよい。（コストは支払う）
+  types:
+  - creature
+- abilities:
+  - effect:
+    - body:
+      - op: mana_put
+        select:
+          from_top: 1
+          owner: you
+          zone: deck
+      op: may
+    kind: trigger
+    when:
+      event: draw
+      player: opp
+  - affects:
+      filter:
+        race_has: アンノウン
+        types:
+        - creature
+      owner: you
+      zone: mana
+    kind: static
+    mod:
+      allow:
+      - action: summon_from_mana
+  civs:
+  - nature
+  cost: 8
+  id: dm23ex3-tf06
+  keywords:
+  - double_breaker
+  mana: 1
+  name: 偽りの名 ハングリー・エレガンス
+  power: 8000
+  races:
+  - ジャイアント
+  - アンノウン
+  source:
+    notes: '「アンノウン・クリーチャーを自分のマナゾーンから召喚してもよい」は常在型の allow（affects: マナゾーンの自分のアンノウン）で表した。原文どおり厳密'
+    official: dm23ex3-tf06
+    review: pending
+    aliases:
+    - dmr05-s07
+  text: 'W・ブレイカー
+
+    相手がカードを引いた時、自分の山札の上から１枚目をマナゾーンに置いてもよい。
+
+    アンノウン・クリーチャーを自分のマナゾーンから召喚してもよい。'
+  types:
+  - creature
+- abilities:
+  - effect:
+    - body:
+      - op: mana_put
+        select:
+          from_top: 2
+          owner: you
+          zone: deck
+      op: may
+    kind: trigger
+    when:
+      event: move
+      reason: summon
+      subject:
+        filter:
+          race_has: ドラゴン
+          types:
+          - creature
+        owner: you
+      to: bz
+  - affects:
+      filter:
+        race_has: ドラゴン
+        types:
+        - creature
+      owner: you
+      zone: bz
+    kind: static
+    mod:
+      grant:
+      - speed_attacker
+      - slayer
+  - affects:
+      filter:
+        race_has: ドラゴン
+        types:
+        - creature
+      owner: you
+      zone: mana
+    kind: static
+    mod:
+      allow:
+      - action: summon_from_mana
+  civs:
+  - darkness
+  - fire
+  - nature
+  cost: 10
+  id: dm23ex3-tf08
+  keywords:
+  - triple_breaker
+  mana: 1
+  name: 「覇道」の頂 シュラ・ベートーベン
+  power: 13000
+  races:
+  - キング・コマンド・ドラゴン
+  - ゼニス
+  source:
+    notes: '「召喚によって出た時」は reason: summon の move 誘発。対象は「自分のドラゴン・クリーチャー」で自身も含む（「他の」とは書かれていない）。マナゾーンからの召喚許可は常在型
+      allow。原文どおり厳密'
+    official: dm23ex3-tf08
+    review: pending
+    aliases:
+    - dmrp12-g05
+    - dmx25-s10
+  text: 'T・ブレイカー
+
+    自分のドラゴン・クリーチャーが召喚によって出た時、自分の山札の上から２枚をマナゾーンに置いてもよい。
+
+    自分のドラゴン・クリーチャーすべてに「スピードアタッカー」と「スレイヤー」を与える。
+
+    ドラゴン・クリーチャーを自分のマナゾーンから召喚してもよい。'
+  types:
+  - creature
+- faces:
+  - civs:
+    - nature
+    cost: 5
+    keywords:
+    - summon_from_mana
+    - double_breaker
+    - mega_last_burst
+    mana: 1
+    name: 弓道の妖精
+    power: 7000
+    races:
+    - ジャイアント・スノーフェアリー
+    types:
+    - creature
+  - civs:
+    - nature
+    cost: 2
+    mana: 1
+    name: ド級の弩弓
+    races:
+    - ジャイアント・スキル
+    spell:
+    - body:
+      - a:
+          count: 1
+          filter:
+            types:
+            - creature
+          owner: you
+          zone: bz
+        b:
+          count: 1
+          filter:
+            types:
+            - creature
+          owner: opp
+          zone: bz
+        op: force_battle
+      op: may
+    - count: 1
+      op: draw
+    types:
+    - spell
+  id: dm23rp3-023
+  mana: 1
+  source:
+    notes: ツインパクト。原文どおり厳密
+    official: dm23rp3-023
+    review: pending
+  text: '弓道の妖精: このクリーチャーを自分のマナゾーンから召喚してもよい。 / W・ブレイカー / メガ・ラスト・バースト ／ ド級の弩弓: 自分と相手のクリーチャーを１体ずつ選んでもよい。その２体をバトルさせる。
+    / カードを１枚引く。'
+- abilities:
+  - affects:
+      filter:
+        multicolor: true
+        types:
+        - creature
+      owner: you
+      zone: mana
+    kind: static
+    mod:
+      allow:
+      - action: summon_from_mana
+  civs:
+  - nature
+  cost: 6
+  id: dm24-s05
+  mana: 1
+  name: 華憐妖精ミンメイ
+  power: 2000
+  races:
+  - スノーフェアリー
+  source:
+    notes: '「自分のマナゾーンにある多色クリーチャーを召喚してもよい」は常在型の allow（affects: マナゾーンの自分の多色クリーチャー）で表した。原文どおり厳密'
+    official: dm24-s05
+    review: pending
+  text: 自分のマナゾーンにある多色クリーチャーを召喚してもよい。
+  types:
+  - creature
+- abilities:
+  - effect:
+    - op: move
+      reason: put
+      select:
+        ref: self
+      to: mana
+    kind: trigger
+    when:
+      event: turn_end
+      player: you
+  civs:
+  - nature
+  cost: 2
+  id: dm24bd5-031
+  keywords:
+  - summon_from_mana
+  mana: 1
+  name: 再生妖精スズラン
+  power: 1000
+  races:
+  - スノーフェアリー
+  source:
+    official: dm24bd5-031
+    review: pending
+    aliases:
+    - dmrp04s-028
+    - promoy18-014
+  text: 'このクリーチャーを自分のマナゾーンから召喚してもよい。
+
+    自分のターンの終わりに、このクリーチャーをマナゾーンに置く。'
+  types:
+  - creature
+- abilities:
+  - affects: self
+    kind: static
+    mod:
+      power:
+        amount: 1000
+        count:
+          owner: any
+          zone: graveyard
+  - effect:
+    - count: 2
+      op: mill
+      owner: opp
+    kind: trigger
+    when:
+      event: attack
+      subject: self
+  civs:
+  - water
+  - darkness
+  cost: 4
+  id: dm24ex1-027
+  keywords:
+  - summon_from_graveyard
+  - powered_breaker
+  mana: 1
+  name: 冥土人形アズレア・デビルモモ
+  power: 3000
+  races:
+  - デスパペット
+  source:
+    notes: '「すべての墓地」は両プレイヤーの墓地として owner: any で数えた。原文どおり厳密'
+    official: dm24ex1-027
+    review: pending
+  text: 'このクリーチャーを、自分の墓地から召喚してもよい。
+
+    パワード・ブレイカー
+
+    すべての墓地にあるカード１枚につき、このクリーチャーのパワーを+1000する。
+
+    このクリーチャーが攻撃する時、相手は自身の山札の上から２枚を墓地に置く。'
+  types:
+  - creature
+- faces:
+  - abilities:
+    - effect:
+      - body:
+        - op: move
+          reason: return
+          select:
+            count: 1
+            filter:
+              twinpact: true
+            owner: you
+            zone: mana
+          to: hand
+        op: may
+      kind: trigger
+      when:
+        event: move
+        subject: self
+        to: bz
+    civs:
+    - nature
+    cost: 5
+    keywords:
+    - summon_from_mana
+    mana: 1
+    name: 雪精 サエポヨ＆ユキぴょん
+    power: 4000
+    races:
+    - スノーフェアリー風
+    types:
+    - creature
+  - civs:
+    - nature
+    cost: 3
+    keywords:
+    - charger
+    mana: 1
+    name: ハンマー・チャージャー
+    spell:
+    - as: pile
+      op: choose
+      select:
+        count: all
+        from_top: 3
+        look: true
+        owner: you
+        zone: deck
+    - body:
+      - op: move
+        reason: draw
+        select:
+          count: 1
+          filter:
+            twinpact: true
+          ref: pile
+        to: hand
+      op: may
+    - op: move
+      reason: put
+      select:
+        count: all
+        ref: pile
+      to: deck
+    types:
+    - spell
+  id: dm24ex2-cho039
+  mana: 1
+  source:
+    notes: ツインパクト。呪文側の「上から３枚を見る→１枚を手札→残りを山札の下」は dm24bd1-014 と同型の choose pile 形式で変換。原文どおり厳密
+    official: dm24ex2-cho039
+    review: pending
+    aliases:
+    - dm23bd6-008
+  text: '雪精 サエポヨ＆ユキぴょん: このクリーチャーを自分のマナゾーンから召喚してもよい。 / このクリーチャーが出た時、ツインパクトカードを１枚、自分のマナゾーンから手札に戻してもよい。
+    ／ ハンマー・チャージャー: 自分の山札の上から３枚を見る。その中からツインパクトカードを１枚、表向きにしてから手札に加えてもよい。その後、残りを好きな順序で山札の下に置く。
+    / チャージャー'
+- abilities:
+  - effect:
+    - body:
+      - op: move
+        reason: return
+        select:
+          count: any
+          owner: you
+          zone: graveyard
+        to: hand
+      op: may
+    kind: trigger
+    when:
+      event: move
+      subject: self
+      to: bz
+  civs:
+  - darkness
+  cost: 9
+  id: dm24ex3-018
+  keywords:
+  - summon_from_graveyard
+  - triple_breaker
+  mana: 1
+  name: フェンス＝カドゥッセンス
+  power: 14000
+  races:
+  - アビスロイヤル
+  source:
+    notes: '「好きな枚数」は select の count: any で表した（dm26ex3-040 の先例）。原文どおり厳密'
+    official: dm24ex3-018
+    review: pending
+    aliases:
+    - dm24rp2-017
+  text: 'このクリーチャーを自分の墓地から召喚してもよい。
+
+    T・ブレイカー
+
+    このクリーチャーが出た時、カードを好きな枚数、自分の墓地から手札に戻してもよい。'
+  types:
+  - creature
+- abilities:
+  - kind: trigger
+    when:
+      event: move
+      to: bz
+      subject: self
+    effect:
+    - op: mill
+      owner: you
+      count: 2
+  - effect:
+    - count: 2
+      op: mill
+      owner: you
+    kind: trigger
+    when:
+      event: move
+      subject: self
+      to: bz
+  - affects:
+      filter:
+        race_has: 超化獣
+        types:
+        - creature
+      owner: you
+      zone: graveyard
+    kind: static
+    mod:
+      allow:
+      - action: summon_from_graveyard
+  civs:
+  - darkness
+  cost: 3
+  id: dm24ex3-063
+  keywords:
+  - blocker
+  mana: 1
+  name: ガスラン＝リュカスライン
+  power: 4000
+  races:
+  - アビスロイヤル
+  source:
+    notes: '「超化獣クリーチャーを自分の墓地から召喚してもよい」は常在型の allow（affects: 墓地の自分の超化獣）で表した。（コストは支払う）は通常の召喚どおり。原文どおり厳密'
+    official: dm24ex3-063
+    review: pending
+    aliases:
+    - dm24rp1-039
+  text: 'ブロッカー（このクリーチャーをタップして、相手クリーチャーの攻撃先をこのクリーチャーに変更してもよい）
+
+    このクリーチャーが出た時、自分の山札の上から２枚を墓地に置く。
+
+    超化獣クリーチャーを自分の墓地から召喚してもよい。（コストは支払う）'
+  types:
+  - creature
+- abilities:
+  - kind: trigger
+    when:
+      event: move
+      to: bz
+      subject: self
+    effect:
+    - op: modify
+      select:
+        ref: self
+      mod:
+        allow:
+        - action: attack_creature
+          other:
+            tapped: false
+      duration: end_of_turn
+  - effect:
+    - duration: end_of_turn
+      mod:
+        allow:
+        - action: attack_creature
+          other:
+            tapped: false
+      op: modify
+      select:
+        ref: self
+    kind: trigger
+    when:
+      event: move
+      subject: self
+      to: bz
+  - affects: self
+    kind: static
+    mod:
+      add_civs:
+      - light
+      - water
+      - darkness
+      - fire
+  - affects: self
+    kind: static
+    mod:
+      add_civs:
+      - light
+      - water
+      - darkness
+      - fire
+    zone: graveyard
+  civs:
+  - nature
+  cost: 4
+  id: dm24ex3-tf32
+  keywords:
+  - summon_from_mana
+  mana: 1
+  name: 虹速 ザ・ヴェルデ
+  power: 4000
+  races:
+  - ソニック・コマンド
+  - 侵略者
+  source:
+    notes: 'マッハファイターは第58弾の型（出た時に modify で allow を付与）。「すべての文明を持つ」は素の文明（自然）以外の4文明を add_civs
+      で追加し、バトルゾーン用と墓地用（zone: graveyard）の2つの常在型に分けた。原文どおり厳密'
+    official: dm24ex3-tf32
+    review: pending
+    aliases:
+    - dm24rp1-t09
+    - dmbd10-008
+    - dmrp20-a20
+    - dmrp20-b20
+    - promoy22-007
+  text: 'このクリーチャーを自分のマナゾーンから召喚してもよい。
+
+    マッハファイター（このクリーチャーは、出たターンの間、タップまたはアンタップしているクリーチャーを攻撃できる）
+
+    このクリーチャーは、バトルゾーンまたは自分の墓地にある間、すべての文明を持つ。'
+  types:
+  - creature
+- abilities:
+  - effect:
+    - body:
+      - op: move
+        reason: put
+        select:
+          count: 1
+          owner: any
+          zone: bz
+        to: shield
+      op: may
+    kind: trigger
+    when:
+      event: move
+      subject: self
+      to: bz
+  - affects:
+      filter:
+        types:
+        - creature
+      other: true
+      owner: you
+      zone: bz
+    kind: static
+    mod:
+      grant:
+      - powered_breaker
+      power: 6000
+  civs:
+  - light
+  - nature
+  cost: 6
+  evolve_from:
+    civs:
+    - light
+    - nature
+    types:
+    - creature
+  id: dm24ex4-016
+  keywords:
+  - summon_from_mana
+  - triple_breaker
+  mana: 1
+  name: 聖霊龍王 メルヴェイユ
+  power: 12000
+  races:
+  - エンジェル・コマンド・ドラゴン
+  source:
+    notes: 「エレメントを１つ選び」は dm23rp1-012 の先例に倣い、バトルゾーンのカード全般として types を絞らず、持ち主も限定しない（原文に「相手の」「自分の」の指定なし）。原文どおり厳密
+    official: dm24ex4-016
+    review: pending
+    aliases:
+    - dm24ex4-chosec004
+    - dm24ex4-sec004
+  text: 'このクリーチャーを、自分のマナゾーンから召喚してもよい。
+
+    進化：光または自然のクリーチャー１体の上に置く。
+
+    T・ブレイカー
+
+    このクリーチャーが出た時、エレメントを１つ選び、シールド化してもよい。
+
+    自分の他のクリーチャーすべてのパワーを＋6000し、「パワード・ブレイカー」を与える。'
+  types:
+  - creature
+  - evolution
