@@ -320526,3 +320526,318 @@ cards:
   text: 自分の魔導具クリーチャーを召喚した時または魔導具を持つ呪文を唱えた時、このクリーチャーを自分の墓地からバトルゾーンに出してもよい。
   types:
   - creature
+- abilities:
+  - kind: trigger
+    when:
+      event: move
+      to: bz
+      subject: self
+    effect:
+    - op: mill
+      owner: you
+      count: 1
+  - effect:
+    - count: 1
+      op: mill
+      owner: you
+    kind: trigger
+    when:
+      event: move
+      subject: self
+      to: bz
+  - effect:
+    - op: destroy
+      select:
+        ref: event.subject
+    if:
+      is_turn: opp
+    kind: trigger
+    when:
+      event: move
+      reason: put
+      subject:
+        filter:
+          types:
+          - creature
+        owner: opp
+      to: bz
+  civs:
+  - darkness
+  cost: 2
+  id: dm25sd1-008
+  mana: 1
+  name: ブルーム＝プルーフ
+  power: 3000
+  races:
+  - アビスロイヤル
+  source:
+    official: dm25sd1-008
+    review: pending
+    aliases:
+    - dm22rp2-016
+    - dm22rp2x-016
+    - dm23sp1-010
+    - promoy22-053
+  text: 'このクリーチャーが出た時、自分の山札の上から１枚を墓地に置く。
+
+    相手のターン中に、相手のクリーチャーが召喚以外の方法で出た時、そのクリーチャーを破壊する。'
+  types:
+  - creature
+- abilities:
+  - affects: self
+    kind: static
+    mod:
+      deny:
+      - be_chosen
+  - effect:
+    - body:
+      - op: bounce
+        select:
+          ref: event.subject
+      op: may
+    if:
+      is_turn: opp
+    kind: trigger
+    when:
+      event: move
+      reason: put
+      subject:
+        filter:
+          types:
+          - creature
+        owner: opp
+      to: bz
+  civs:
+  - water
+  cost: 2
+  id: dm26ex2-055
+  mana: 1
+  name: 異端流し オニカマス
+  power: 2000
+  races:
+  - ムートピア
+  source:
+    official: dm26ex2-055
+    review: pending
+    aliases:
+    - dm25ex2-cho040
+    - dm26sd1-f009
+    - dm26sd1-w011
+    - dmbd15-016
+    - dmbd19-011
+    - dmex06-077
+    - dmex08-295
+    - dmex09-015
+    - dmrp01-041
+    - dmrp21-t13
+    - dmrp21-tf13
+    - dmrp22-t13
+    - dmrp22-tf13
+    - promoy17-039
+    - promoy24-038
+  text: このクリーチャーは相手に選ばれない。 / 相手のターンに相手が召喚以外の方法でクリーチャーを出した時、そのクリーチャーを持ち主の手札に戻してもよい。
+  types:
+  - creature
+- abilities:
+  - kind: declare
+    zone: hand
+    when:
+      event: attack
+      subject:
+        owner: you
+        filter:
+          civs:
+          - fire
+    effect:
+    - op: swap
+      out:
+        ref: event.subject
+      in:
+        ref: self
+  - effect:
+    - in:
+        ref: self
+      op: swap
+      out:
+        ref: event.subject
+    kind: declare
+    when:
+      event: attack
+      subject:
+        filter:
+          civs:
+          - fire
+        owner: you
+    zone: hand
+  - effect:
+    - op: destroy
+      select:
+        ref: event.subject
+    if:
+      is_turn: you
+    kind: trigger
+    when:
+      event: move
+      reason: put
+      subject:
+        filter:
+          types:
+          - creature
+        owner: opp
+      to: bz
+  civs:
+  - fire
+  cost: 4
+  id: dm26rp2-068
+  keywords:
+  - speed_attacker
+  mana: 1
+  name: 超革命 マッハ55
+  power: 4000
+  races:
+  - ソニック・コマンド
+  - イニシャルズW
+  source:
+    official: dm26rp2-068
+    review: pending
+    aliases:
+    - dm26rp2-sec023
+  text: '革命チェンジ：火のクリーチャー（自分の指定のクリーチャーが攻撃する時、そのクリーチャーと手札にあるこのクリーチャーを入れ替えてもよい）
+
+    スピードアタッカー（このクリーチャーは召喚酔いしない）
+
+    自分のターンに相手のクリーチャーが召喚以外の方法で出た時、そのクリーチャーを破壊する。'
+  types:
+  - creature
+- abilities:
+  - affects: self
+    kind: static
+    mod:
+      battle_power:
+        amount: 2000
+  - if:
+      is_turn: opp
+    instead:
+    - op: move
+      reason: put
+      select:
+        ref: event.subject
+      to: graveyard
+    kind: replace
+    when:
+      event: move
+      reason: put
+      subject:
+        filter:
+          types:
+          - creature
+        owner: opp
+      to: bz
+  civs:
+  - fire
+  cost: 2
+  id: dm26rp2-t010
+  mana: 1
+  name: 赤い稲妻 テスタ・ロッサ
+  power: 2000
+  races:
+  - アウトレイジ
+  source:
+    official: dm26rp2-t010
+    review: pending
+    aliases:
+    - dm22bd2-017
+    - dm23ex1-076
+    - dm24sd1-008
+    - dmrp18-083
+    - dmrp21-t19
+    - dmrp21-tf19
+    - dmrp22-t20
+    - dmrp22-tf20
+    - promoy22-009
+    - promoy23-003
+    - promoy23-006
+  text: バトル中、このクリーチャーのパワーを+2000する。 / 相手のターンに相手のクリーチャーが召喚以外の方法で出る時、相手はかわりにそのクリーチャーを墓地に置く。
+  types:
+  - creature
+- abilities:
+  - affects: self
+    kind: static
+    mod:
+      deny:
+      - be_chosen
+  - effect:
+    - body:
+      - op: bounce
+        select:
+          ref: event.subject
+      op: may
+    if:
+      is_turn: opp
+    kind: trigger
+    when:
+      event: move
+      reason: put
+      subject:
+        filter:
+          types:
+          - creature
+        owner: opp
+      to: bz
+  civs:
+  - water
+  cost: 2
+  id: dmartkiwami02-004
+  mana: 1
+  name: 異端流し オニカマス(DMART極02 4/5)
+  power: 2000
+  races:
+  - ムートピア
+  source:
+    official: dmartkiwami02-004
+    review: pending
+  text: このクリーチャーは相手に選ばれない。 / 相手のターンに相手が召喚以外の方法でクリーチャーを出した時、そのクリーチャーを持ち主の手札に戻してもよい。
+  types:
+  - creature
+- abilities:
+  - effect:
+    - op: move
+      reason: put
+      select:
+        ref: self
+      to: deck
+    - op: shuffle
+      player: you
+    kind: trigger
+    when:
+      event: move
+      reason: put
+      subject: self
+      to: bz
+  civs:
+  - darkness
+  - fire
+  cost: 13
+  id: dmsp02-004
+  keywords:
+  - g_strike
+  - speed_attacker
+  - world_breaker
+  mana: 1
+  name: 破壊龍神ヘヴィ・デス・メタル GS
+  power: 39000
+  races:
+  - ゴッド
+  - フェニックス
+  source:
+    official: dmsp02-004
+    review: pending
+  text: '{GS} G・ストライク（このクリーチャーを自分のシールドゾーンから手札に加える時、相手に見せ、相手のクリーチャーを１体選んでもよい。このターン、そのクリーチャーは攻撃できない）
+
+    スピードアタッカー
+
+    ワールド・ブレイカー（このクリーチャーは相手のシールドをすべてブレイクする）
+
+    このクリーチャーが召喚以外の方法で出た時、山札に加えてシャッフルする。'
+  types:
+  - creature
