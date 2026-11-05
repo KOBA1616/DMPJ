@@ -292973,3 +292973,555 @@ cards:
   text: バトルゾーンにある自分の他の無色クリーチャー１体につき、このクリーチャーのパワーは+5000され、シールドをさらに１枚ブレイクする。
   types:
   - creature
+- abilities:
+  - cost:
+      tap: self
+    effect:
+    - op: untap
+      select:
+        count: 1
+        filter:
+          races:
+          - フレイム・コマンド
+          types:
+          - creature
+        owner: you
+        zone: bz
+    kind: activate
+  civs:
+  - fire
+  cost: 4
+  id: dm37-047
+  keywords:
+  - speed_attacker
+  mana: 1
+  name: ピッチュ・アイニー
+  power: 2000
+  races:
+  - ファイアー・バード
+  source:
+    official: dm37-047
+    review: pending
+  text: 'スピードアタッカー(このクリーチャーは召喚酔いしない)
+
+    このクリーチャーで攻撃するかわりに、タップして次の能力を使ってもよい。 バトルゾーンにある自分のフレイム・コマンドを１体アンタップする。'
+  types:
+  - creature
+- abilities:
+  - cost:
+      tap: self
+    effect:
+    - as: paid
+      op: move
+      reason: destroy
+      select:
+        count: 1
+        filter:
+          races:
+          - ファイアー・バード
+          - ドラゴン
+          types:
+          - creature
+        owner: you
+        zone: bz
+      to: graveyard
+    - body:
+      - op: move
+        reason: put
+        select:
+          count: 1
+          filter:
+            cost_le:
+              sum:
+              - cost_of: paid
+              - 1
+            races:
+            - ファイアー・バード
+            - ドラゴン
+            types:
+            - creature
+          owner: you
+          zone: hand
+        to: bz
+      op: may
+    kind: activate
+  civs:
+  - fire
+  cost: 2
+  id: dm39-016
+  mana: 1
+  name: G・アイニー
+  power: 1000
+  races:
+  - ファイアー・バード
+  source:
+    official: dm39-016
+    review: pending
+  text: このクリーチャーで攻撃するかわりに、タップして次の能力を使ってもよい。 / 自分のファイアー・バードまたはドラゴンを１体破壊する。その破壊したクリーチャーよりコストが１大きいかそれ以下の、ファイアー・バードまたはドラゴンを１体、自分の手札からバトルゾーンに出してもよい。
+  types:
+  - creature
+- abilities:
+  - cost:
+      tap: self
+    effect:
+    - as: kind
+      op: choose_race
+    - duration: end_of_turn
+      mod:
+        gain:
+        - instead:
+          - op: move
+            reason: return
+            select:
+              ref: self
+            to: hand
+          kind: replace
+          when:
+            event: move
+            from: bz
+            reason: destroy
+            subject: self
+            to: graveyard
+      op: modify
+      select:
+        count: all
+        filter:
+          races:
+            race: kind
+          types:
+          - creature
+        owner: any
+        zone: bz
+    kind: activate
+  civs:
+  - water
+  cost: 4
+  id: dmex08-300
+  mana: 1
+  name: ポキラ
+  power: 3000
+  races:
+  - サイバーロード
+  source:
+    notes: 置換の付与は dm22-023 の型（mod.gain でこのターンだけ付与）。発動時点でバトルゾーンにある同種族クリーチャーのみが対象で、後から出た同種族クリーチャーには及ばない（dm09-028
+      のスレイヤー付与と同じ形）。
+    official: dmex08-300
+    review: pending
+    aliases:
+    - dm09-025
+  text: このクリーチャーで攻撃するかわりに、タップして次の能力を使ってもよい。 / 種族を１つ選ぶ。このターン、その種族のクリーチャーが破壊される時、墓地に置くかわりに自分の手札に戻す。
+  types:
+  - creature
+- abilities:
+  - cost:
+      tap: self
+    effect:
+    - modes:
+      - - op: move
+          reason: return
+          select:
+            count: 2
+            owner: you
+            zone: mana
+          to: hand
+      - - op: move
+          reason: return
+          select:
+            chooser: opp
+            count: 2
+            owner: opp
+            zone: mana
+          to: hand
+      op: modal
+    kind: activate
+  civs:
+  - water
+  cost: 6
+  evolve_from:
+    races:
+    - スプラッシュ・クイーン
+  id: dmex15-a023
+  mana: 1
+  name: アドミラル・クイーン
+  power: 4000
+  races:
+  - スプラッシュ・クイーン
+  source:
+    notes: 「プレイヤーを一人選ぶ」は dm23bd1-se007 の先例どおり modal で自分/相手を選ぶ形にした。相手モードでは選ぶカードも相手が選ぶ（chooser
+      opp）。
+    official: dmex15-a023
+    review: pending
+    aliases:
+    - dm15-s02
+  text: 進化：スプラッシュ・クイーン１体の上に置く。 / このクリーチャーで攻撃するかわりに、タップして次の能力を使ってもよい。 / プレイヤーを一人選ぶ。そのプレイヤーは、自身のマナゾーンからカードを２枚選び、手札に戻す。
+  types:
+  - creature
+  - evolution
+- abilities:
+  - cost:
+      tap: self
+    effect:
+    - body:
+      - as: p
+        op: choose
+        select:
+          count: 1
+          filter:
+            name_has: ワンケングレンオー
+          look: true
+          owner: you
+          zone: deck
+      - onto:
+          ref: self
+        op: put_under
+        select:
+          count: all
+          ref: p
+      op: may
+    - op: shuffle
+    kind: activate
+  civs:
+  - fire
+  cost: 2
+  id: dmex18-067
+  mana: 1
+  name: ケングレンオー 〜出発〜
+  power: 1000
+  races:
+  - フレイム・モンスター
+  source:
+    notes: dmc64-031（ケングレンオー～水遊び～）と同一のタップ能力のため、その型をそのまま使用（上に置く処理は put_under onto self、シャッフルは
+      may の外）。
+    official: dmex18-067
+    review: pending
+  text: このクリーチャーで攻撃するかわりに、タップして次の能力を使ってもよい。 / 自分の山札を見る。その中から、名前に《ワンケングレンオー》とあるカードを１枚選び、バトルゾーンにあるこのクリーチャーの上に置いてもよい。その後、山札をシャッフルする。
+  types:
+  - creature
+- abilities:
+  - cost:
+      tap: self
+    effect:
+    - op: destroy
+      select:
+        ref: self
+    - op: destroy
+      select:
+        chooser: opp
+        count: 1
+        filter:
+          types:
+          - creature
+        owner: opp
+        zone: bz
+    kind: activate
+  civs:
+  - darkness
+  - fire
+  cost: 3
+  id: dmr02-053
+  mana: 1
+  name: 闘凶ディス・チキンレーサー
+  power: 2000
+  races:
+  - ブレイブ・スピリット
+  - エイリアン
+  source:
+    notes: 多色カードはマナゾーンに置く時にエンジンが自動的にタップする（405.1）ため、1文目は abilities に書かない。
+    official: dmr02-053
+    review: pending
+  text: マナゾーンに置く時、このカードはタップして置く。 / このクリーチャーで攻撃するかわりに、タップして次の能力を使ってもよい。 / このクリーチャーを破壊する。相手は自身のクリーチャーを１体選び、破壊する。
+  types:
+  - creature
+- abilities:
+  - cost:
+      tap: self
+    effect:
+    - body:
+      - as: paid
+        op: move
+        reason: destroy
+        select:
+          count: 3
+          filter:
+            any_of:
+            - name: ゼッコウチョ
+            - name: 黒神龍ギョウテン・キョウテイ
+            - name: 黒神龍サイデスカ・ガンマスター
+          owner: you
+          zone: bz
+        to: graveyard
+      - cond:
+          exists:
+            ref: paid
+        op: if
+        then:
+        - modes:
+          - - body:
+              - as: t
+                op: choose
+                select:
+                  count: 1
+                  filter:
+                    name: 真実の名ゼッキョウ・サイキョウ
+                  look: true
+                  owner: you
+                  zone: deck
+              - op: move
+                reason: put
+                select:
+                  count: all
+                  ref: t
+                to: bz
+              op: may
+            - op: shuffle
+          - - body:
+              - as: t
+                op: choose
+                select:
+                  count: 1
+                  filter:
+                    name: 真実の名ゼッキョウ・サイキョウ
+                  owner: you
+                  zone: graveyard
+              - op: move
+                reason: put
+                select:
+                  count: all
+                  ref: t
+                to: bz
+              op: may
+          - - body:
+              - as: t
+                op: choose
+                select:
+                  count: 1
+                  filter:
+                    name: 真実の名ゼッキョウ・サイキョウ
+                  owner: you
+                  zone: hand
+              - op: move
+                reason: put
+                select:
+                  count: all
+                  ref: t
+                to: bz
+              op: may
+          op: modal
+      op: may
+    kind: activate
+  civs:
+  - darkness
+  cost: 4
+  id: dmr07-027
+  mana: 1
+  name: 黒神龍ギョウテン・キョウテイ
+  power: 4000
+  races:
+  - ドラゴン・ゾンビ
+  - アンノイズ
+  source:
+    notes: ３体破壊は全３体そろった場合のみ実行可能として書いた（count 3、メテオバーンの型どおり may＋if exists paid）。ゾーン選択は
+      modal の３モードで表現し、山札モードのみシャッフルする。
+    official: dmr07-027
+    review: pending
+  text: このクリーチャーで攻撃するかわりに、タップして次の能力を使ってもよい。 / 自分の《ゼッコウチョ》《黒神龍ギョウテン・キョウテイ》《黒神龍サイデスカ・ガンマスター》の３体を破壊してもよい。そうした場合、自分の山札、墓地、手札の好きなゾーンを見る。その中から《真実の名ゼッキョウ・サイキョウ》を１体選び、バトルゾーンに出してもよい。このようにして山札を見ていた場合、その後シャッフルする。
+  types:
+  - creature
+- abilities:
+  - cost:
+      tap: self
+    effect:
+    - op: destroy
+      select:
+        count: 1
+        filter:
+          keyword: blocker
+          types:
+          - creature
+        owner: opp
+        zone: bz
+    kind: activate
+  civs:
+  - fire
+  cost: 2
+  id: dmx02-013
+  mana: 1
+  name: ピーカプのドライバー
+  power: 1000
+  races:
+  - ゼノパーツ
+  source:
+    official: dmx02-013
+    review: pending
+    aliases:
+    - dm06-033
+    - dmc27-016
+    - dmc42-031
+    - dmc55-041
+  text: このクリーチャーで攻撃するかわりに、タップして次の能力を使ってもよい。 / 相手の「ブロッカー」を持つクリーチャーを１体破壊する。
+  types:
+  - creature
+- abilities:
+  - cost:
+      tap: self
+    effect:
+    - body:
+      - as: t
+        op: choose
+        select:
+          count: 1
+          filter:
+            types:
+            - creature
+          look: true
+          owner: you
+          zone: deck
+      - op: move
+        reason: draw
+        select:
+          count: all
+          ref: t
+        to: hand
+      op: may
+    - op: shuffle
+    kind: activate
+  civs:
+  - nature
+  cost: 4
+  id: dmx09-025
+  mana: 1
+  name: 魅了妖精チャミリア
+  power: 3000
+  races:
+  - スノーフェアリー
+  source:
+    notes: dm23-007 の型（choose look true＋move＋may の外の shuffle）。
+    official: dmx09-025
+    review: pending
+    aliases:
+    - dm06-039
+  text: このクリーチャーで攻撃するかわりに、タップして次の能力を使ってもよい。 / 自分の山札を見る。その中からクリーチャーを１体選び、相手に見せてから自分の手札に加えてもよい。その後、山札をシャッフルする。
+  types:
+  - creature
+- abilities:
+  - cost:
+      tap: self
+    effect:
+    - op: discard
+      select:
+        count: 2
+        owner: opp
+        zone: hand
+    kind: activate
+  civs:
+  - darkness
+  cost: 8
+  id: dmx12b-038
+  mana: 1
+  name: 残虐覇王デスカール
+  power: 4000
+  races:
+  - ダークロード
+  source:
+    notes: 「見ないで」は dm12-025 の先例どおり discard のみで表現（手札は非公開ゾーンのため選択時に見えない）。
+    official: dmx12b-038
+    review: pending
+    aliases:
+    - dm07-s03
+  text: このクリーチャーで攻撃するかわりに、タップして次の能力を使ってもよい。 / 相手の手札から２枚見ないで選び、捨てさせる。
+  types:
+  - creature
+- abilities:
+  - cost:
+      tap: self
+    effect:
+    - cond:
+        cmp:
+        - count:
+            filter:
+              types:
+              - creature
+            owner: any
+            zone: bz
+        - '>='
+        - 6
+      op: if
+      then:
+      - op: destroy
+        select:
+          count: all
+          filter:
+            types:
+            - creature
+          owner: any
+          zone: bz
+    kind: activate
+  civs:
+  - light
+  - fire
+  cost: 7
+  id: dmx12b-084
+  keywords:
+  - blocker
+  - double_breaker
+  mana: 1
+  name: 偽りの名 イーサン
+  power: 7500
+  races:
+  - アンノウン
+  source:
+    notes: 多色カードはマナゾーンに置く時にエンジンが自動的にタップする（405.1）ため、1文目は abilities に書かない。「それらをすべて」は自分自身を含むバトルゾーンのクリーチャー全てとした。
+    official: dmx12b-084
+    review: pending
+    aliases:
+    - dmx06-008
+  text: 'マナゾーンに置く時、このカードはタップして置く。
+
+    ブロッカー
+
+    このクリーチャーで攻撃するかわりに、タップして次の能力を使ってもよい。
+
+    バトルゾーンにクリーチャーが６体以上あれば、それらをすべて破壊する。
+
+    W・ブレイカー（このクリーチャーはシールドを２枚ブレイクする）'
+  types:
+  - creature
+- abilities:
+  - cost:
+      tap: self
+    effect:
+    - op: untap
+      select:
+        count: 1
+        filter:
+          races:
+          - アウトレイジ
+          types:
+          - creature
+        owner: you
+        zone: bz
+    kind: activate
+  civs:
+  - fire
+  cost: 7
+  id: promoy12-038
+  keywords:
+  - speed_attacker
+  - double_breaker
+  mana: 1
+  name: 弐天炎明 ガンリュウ・ムサシ
+  power: 7000
+  races:
+  - アウトレイジMAX
+  source:
+    official: promoy12-038
+    review: pending
+  text: 'スピードアタッカー（このクリーチャーは召喚酔いしない）
+
+    W・ブレイカー（このクリーチャーはシールドを２枚ブレイクする）
+
+    このクリーチャーで攻撃するかわりに、タップして次のｔ能力を使ってもよい。
+
+    t バトルゾーンにある自分のアウトレイジを１体、アンタップする。'
+  types:
+  - creature
