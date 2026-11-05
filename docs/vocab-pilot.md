@@ -1030,3 +1030,9 @@ converted の監査（opt_reduce の素の整数表記9件）から。任意形�
 - 書き方: {kind: replace, when: {event: move, to: bz, from: [graveyard, mana, deck, shield], subject: {owner: opp, filter}}, instead: [...]}。「召喚以外の方法で出る」は reason: put（バトルゾーンへの出現理由は summon / put の2種のみ）。
 - tests/test_vocab_pilot98.py 3件（parse 2件＋照合の実挙動1件）。
 - 待機10枚（enters_from_non_hand_replacement のみが gap のもの）。
+
+## 第99弾: attack_target_filter（攻撃できる対象のフィルタ）— 新語彙なし（2026-11-05）
+「タップされていない○○のクリーチャーを攻撃できる」は第60弾の allow に other フィルタを付けて表す。
+- 書き方: kind: static, affects: self, mod: {allow: [{action: attack_creature, other: {tapped: false, civs: [light]}}]}。other はそのまま filter_match に渡るため、civs / races / cost_le 等の通常フィルタが使える。
+- tests/test_vocab_pilot99.py 2件（正常 parse／検証）
+- 待機10枚（attack_target_filter のみが gap のもの）。
