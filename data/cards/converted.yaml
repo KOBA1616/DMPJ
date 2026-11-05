@@ -294407,3 +294407,679 @@ cards:
     このクリーチャーはブロックされず、「W・ブレイカー」を得る。
   types:
   - creature
+- abilities:
+  - effect:
+    - body:
+      - as: t
+        op: choose
+        select:
+          count: 1
+          filter:
+            cost_le: 6
+            races:
+            - スノーフェアリー
+            types:
+            - creature
+          look: true
+          owner: you
+          zone: deck
+      - op: move
+        reason: put
+        select:
+          count: all
+          ref: t
+        to: bz
+      op: may
+    - op: shuffle
+    if:
+      exists:
+        filter:
+          tapped: true
+        ref: self
+    kind: trigger
+    when:
+      event: turn_end
+      player: you
+  civs:
+  - nature
+  cost: 4
+  id: dm24ex1-063
+  mana: 1
+  name: 妖精のイザナイ オーロラ
+  power: 2000
+  races:
+  - オラクル
+  - スノーフェアリー
+  source:
+    official: dm24ex1-063
+    review: pending
+    aliases:
+    - dmex12-071
+    - dmr09-068
+  text: 光臨：自分のターンの終わりに、このクリーチャーがタップされていれば、自分の山札を見る。その中からコスト６以下のスノーフェアリー・クリーチャーを１体、出してもよい。その後、山札をシャッフルする。
+  types:
+  - creature
+- abilities:
+  - kind: declare
+    zone: hand
+    when:
+      event: attack
+      subject:
+        owner: you
+        filter:
+          race_has: ドリームメイト
+    effect:
+    - op: swap
+      out:
+        ref: event.subject
+      in:
+        ref: self
+  - effect:
+    - in:
+        ref: self
+      op: swap
+      out:
+        ref: event.subject
+    kind: declare
+    when:
+      event: attack
+      subject:
+        filter:
+          race_has: ドリームメイト
+        owner: you
+    zone: hand
+  - effect:
+    - body:
+      - as: t
+        op: choose
+        select:
+          count: 1
+          filter:
+            cost_le: 5
+            races:
+            - ドリームメイト
+            types:
+            - creature
+          look: true
+          owner: you
+          zone: deck
+      - op: move
+        reason: put
+        select:
+          count: all
+          ref: t
+        to: bz
+      op: may
+    - op: shuffle
+    if:
+      exists:
+        filter:
+          tapped: true
+        ref: self
+    kind: trigger
+    when:
+      event: turn_end
+      player: you
+  civs:
+  - nature
+  cost: 3
+  id: dm24ex1-065
+  mana: 1
+  name: 森夢のイザナイ メイ様
+  power: 2000
+  races:
+  - オラクル
+  - ドリームメイト
+  source:
+    official: dm24ex1-065
+    review: pending
+    aliases:
+    - dmex12-072
+  text: '革命チェンジ：ドリームメイト（自分のドリームメイトが攻撃する時、そのクリーチャーと手札にあるこのクリーチャーを入れ替えてもよい）
+
+    光臨：自分のターンの終わりに、このクリーチャーがタップしていれば、自分の山札を見る。その中からコスト５以下のドリームメイト・クリーチャーを１体、出してもよい。その後、山札をシャッフルする。'
+  types:
+  - creature
+- abilities:
+  - effect:
+    - body:
+      - as: t
+        op: choose
+        select:
+          count: 1
+          filter:
+            cost_le: 7
+            race_has: ゴッド
+          look: true
+          owner: you
+          zone: deck
+      - op: move
+        reason: put
+        select:
+          count: all
+          ref: t
+        to: bz
+      op: may
+    - op: shuffle
+    if:
+      exists:
+        filter:
+          tapped: true
+        ref: self
+    kind: trigger
+    when:
+      event: turn_end
+      player: you
+  civs:
+  - zero
+  cost: 5
+  id: dmr09-045
+  mana: 1
+  name: 神来のイザナイ 日蓮
+  power: 4000
+  races:
+  - オラクル
+  source:
+    official: dmr09-045
+    review: pending
+    aliases:
+    - dmr09-045m
+  text: 光臨：自分のターンの終わりに、このクリーチャーがタップされていれば、自分の山札を見る。その中からコスト７以下のゴッドを１体、バトルゾーンに出してもよい。その後、山札をシャッフルする。
+  types:
+  - creature
+- abilities:
+  - effect:
+    - body:
+      - as: t
+        op: choose
+        select:
+          count: 1
+          filter:
+            cost_le: 6
+            races:
+            - アーク・セラフィム
+          look: true
+          owner: you
+          zone: deck
+      - op: move
+        reason: put
+        select:
+          count: all
+          ref: t
+        to: bz
+      op: may
+    - op: shuffle
+    if:
+      exists:
+        filter:
+          tapped: true
+        ref: self
+    kind: trigger
+    when:
+      event: turn_end
+      player: you
+  civs:
+  - light
+  cost: 4
+  id: dmr09-047
+  mana: 1
+  name: 霊騎のイザナイ パイル
+  power: 2000
+  races:
+  - オラクル
+  - アーク・セラフィム
+  source:
+    official: dmr09-047
+    review: pending
+  text: 光臨：自分のターンの終わりに、このクリーチャーがタップされていれば、自分の山札を見る。その中からコスト６以下のアーク・セラフィムを１体、バトルゾーンに出してもよい。その後、山札をシャッフルする。
+  types:
+  - creature
+- abilities:
+  - effect:
+    - body:
+      - as: t
+        op: choose
+        select:
+          count: 1
+          filter:
+            cost_le: 7
+            races:
+            - アースイーター
+          look: true
+          owner: you
+          zone: deck
+      - op: move
+        reason: put
+        select:
+          count: all
+          ref: t
+        to: bz
+      op: may
+    - op: shuffle
+    if:
+      exists:
+        filter:
+          tapped: true
+        ref: self
+    kind: trigger
+    when:
+      event: turn_end
+      player: you
+  civs:
+  - water
+  cost: 5
+  id: dmr09-053
+  mana: 1
+  name: 戦攻のイザナイ アカダシ
+  power: 3000
+  races:
+  - オラクル
+  - アースイーター
+  source:
+    official: dmr09-053
+    review: pending
+  text: 光臨：自分のターンの終わりに、このクリーチャーがタップされていれば、自分の山札を見る。その中からコスト７以下のアースイーターを１体、バトルゾーンに出してもよい。その後、山札をシャッフルする。
+  types:
+  - creature
+- abilities:
+  - effect:
+    - body:
+      - as: t
+        op: choose
+        select:
+          count: 1
+          filter:
+            cost_le: 7
+            races:
+            - グランド・デビル
+          look: true
+          owner: you
+          zone: deck
+      - op: move
+        reason: put
+        select:
+          count: all
+          ref: t
+        to: bz
+      op: may
+    - op: shuffle
+    if:
+      exists:
+        filter:
+          tapped: true
+        ref: self
+    kind: trigger
+    when:
+      event: turn_end
+      player: you
+  civs:
+  - darkness
+  cost: 5
+  id: dmr09-058
+  mana: 1
+  name: 封魔のイザナイ ガラムマサラ
+  power: 3000
+  races:
+  - オラクル
+  - グランド・デビル
+  source:
+    official: dmr09-058
+    review: pending
+  text: 光臨：自分のターンの終わりに、このクリーチャーがタップされていれば、自分の山札を見る。その中からコスト７以下のグランド・デビルを１体、バトルゾーンに出してもよい。その後、山札をシャッフルする。
+  types:
+  - creature
+- abilities:
+  - effect:
+    - body:
+      - as: t
+        op: choose
+        select:
+          count: 1
+          filter:
+            cost_le: 7
+            races:
+            - フレイム・コマンド
+          look: true
+          owner: you
+          zone: deck
+      - op: move
+        reason: put
+        select:
+          count: all
+          ref: t
+        to: bz
+      op: may
+    - op: shuffle
+    if:
+      exists:
+        filter:
+          tapped: true
+        ref: self
+    kind: trigger
+    when:
+      event: turn_end
+      player: you
+  civs:
+  - fire
+  cost: 5
+  id: dmr09-062
+  mana: 1
+  name: 爆裂のイザナイ ダイダラ
+  power: 4000
+  races:
+  - オラクル
+  - フレイム・コマンド
+  source:
+    official: dmr09-062
+    review: pending
+  text: 光臨：自分のターンの終わりに、このクリーチャーがタップされていれば、自分の山札を見る。その中からコスト７以下のフレイム・コマンドを１体、バトルゾーンに出してもよい。その後、山札をシャッフルする。
+  types:
+  - creature
+- abilities:
+  - effect:
+    - body:
+      - as: t
+        op: choose
+        select:
+          count: 1
+          filter:
+            cost_le: 7
+            races:
+            - メカ・デル・ソル
+            - グレートメカオー
+          look: true
+          owner: you
+          zone: deck
+      - op: move
+        reason: put
+        select:
+          count: all
+          ref: t
+        to: bz
+      op: may
+    - op: shuffle
+    if:
+      exists:
+        filter:
+          tapped: true
+        ref: self
+    kind: trigger
+    when:
+      event: turn_end
+      player: you
+  civs:
+  - light
+  - water
+  cost: 6
+  id: dmr10-031
+  keywords:
+  - double_breaker
+  mana: 1
+  name: 光機のイザナイ ロイヤルティー
+  power: 6000
+  races:
+  - オラクル
+  - グレートメカオー
+  - メカ・デル・ソル
+  source:
+    notes: 多色カードはマナゾーンに置く時にエンジンが自動的にタップする（405.1）ため、1文目は abilities に書かない。
+    official: dmr10-031
+    review: pending
+  text: マナゾーンに置く時、このカードはタップして置く。 / W・ブレイカー / 光臨：自分のターンの終わりに、このクリーチャーがタップされていれば、自分の山札を見る。その中からコスト７以下のメカ・デル・ソルまたはグレートメカオーを１体、バトルゾーンに出してもよい。その後、山札をシャッフルする。
+  types:
+  - creature
+- abilities:
+  - affects: self
+    kind: static
+    mod:
+      power_when:
+        amount: 4000
+        when: attacking
+  - effect:
+    - body:
+      - as: t
+        op: choose
+        select:
+          count: 1
+          filter:
+            cost_le: 8
+            races:
+            - ドラゴン・ゾンビ
+            - アーマード・ドラゴン
+          look: true
+          owner: you
+          zone: deck
+      - op: move
+        reason: put
+        select:
+          count: all
+          ref: t
+        to: bz
+      op: may
+    - op: shuffle
+    if:
+      exists:
+        filter:
+          tapped: true
+        ref: self
+    kind: trigger
+    when:
+      event: turn_end
+      player: you
+  civs:
+  - darkness
+  - fire
+  cost: 7
+  id: dmr10-032
+  keywords:
+  - double_breaker
+  mana: 1
+  name: 神龍のイザナイ ガーリック
+  power: 4000
+  races:
+  - オラクル
+  - ドラゴン・ゾンビ
+  - アーマード・ドラゴン
+  source:
+    notes: 多色カードはマナゾーンに置く時にエンジンが自動的にタップする（405.1）ため、1文目は abilities に書かない。
+    official: dmr10-032
+    review: pending
+  text: マナゾーンに置く時、このカードはタップして置く。 / パワーアタッカー+4000 / W・ブレイカー / 光臨：自分のターンの終わりに、このクリーチャーがタップされていれば、自分の山札を見る。その中からコスト８以下のドラゴン・ゾンビまたはアーマード・ドラゴンを１体、バトルゾーンに出してもよい。その後、山札をシャッフルする。
+  types:
+  - creature
+- abilities:
+  - effect:
+    - body:
+      - as: t
+        op: choose
+        select:
+          count: 1
+          filter:
+            cost_le: 6
+            keyword: shield_go
+            types:
+            - creature
+          look: true
+          owner: you
+          zone: deck
+      - op: move
+        reason: put
+        select:
+          count: all
+          ref: t
+        to: bz
+      op: may
+    - op: shuffle
+    if:
+      exists:
+        filter:
+          tapped: true
+        ref: self
+    kind: trigger
+    when:
+      event: turn_end
+      player: you
+  civs:
+  - light
+  cost: 5
+  id: dmr12-006
+  mana: 1
+  name: 匠のイザナイ ファッション・モンスター
+  power: 5000
+  races:
+  - アウトレイジMAX
+  - オラクル
+  source:
+    official: dmr12-006
+    review: pending
+  text: 光臨：自分のターンの終わりに、このクリーチャーがタップされていれば、自分の山札を見る。その中からコスト６以下の、「シールド・ゴー」を持つクリーチャーを１体、バトルゾーンに出してもよい。その後、山札をシャッフルする。
+  types:
+  - creature
+- abilities:
+  - effect:
+    - body:
+      - as: t
+        op: choose
+        select:
+          count: 1
+          filter:
+            cost_le: 6
+            races:
+            - オラクル
+          look: true
+          owner: you
+          zone: deck
+      - op: move
+        reason: put
+        select:
+          count: all
+          ref: t
+        to: bz
+      op: may
+    - op: shuffle
+    if:
+      exists:
+        filter:
+          tapped: true
+        ref: self
+    kind: trigger
+    when:
+      event: turn_end
+      player: you
+  civs:
+  - light
+  cost: 4
+  id: dmx15-021
+  mana: 1
+  name: マントラのイザナイ カリーナ
+  power: 2000
+  races:
+  - オラクル
+  source:
+    official: dmx15-021
+    review: pending
+  text: 光臨：自分のターンの終わりに、このクリーチャーがタップされていれば、自分の山札を見る。その中からコスト６以下のオラクルを１体、バトルゾーンに出してもよい。その後、山札をシャッフルする。
+  types:
+  - creature
+- abilities:
+  - effect:
+    - body:
+      - as: t
+        op: choose
+        select:
+          count: 1
+          filter:
+            cost_le: 7
+            races:
+            - ゴッド・ノヴァ
+          look: true
+          owner: you
+          zone: deck
+      - op: move
+        reason: put
+        select:
+          count: all
+          ref: t
+        to: bz
+      op: may
+    - op: shuffle
+    if:
+      exists:
+        filter:
+          tapped: true
+        ref: self
+    kind: trigger
+    when:
+      event: turn_end
+      player: you
+  civs:
+  - zero
+  cost: 8
+  id: dmx22b-165
+  keywords:
+  - left_g_link
+  - triple_breaker
+  mana: 1
+  name: 左神人類 ヨミ
+  power: 12000
+  races:
+  - ゴッド・ノヴァ
+  - オラクル
+  source:
+    official: dmx22b-165
+    review: pending
+  text: T・ブレイカー光臨―自分のターンの終わりに、このクリーチャーがタップされていれば、自分の山札を見る。その中からコスト７以下のゴッド・ノヴァを１体、バトルゾーンに出してもよい。その後、山札をシャッフルする。左G・リンク（このクリーチャーがバトルゾーンに出る時、「中央G・リンク」または「右G・リンク」を持つゴッドの左側にリンクしてもよい。リンクしたゴッドは、各ゴッドの特性〔パワーや能力〕をすべて持つ１体のクリーチャーとなる。バトルゾーンを離れる時は、その中の１枚を選ぶ）
+  types:
+  - creature
+- abilities:
+  - effect:
+    - body:
+      - as: t
+        op: choose
+        select:
+          count: 1
+          filter:
+            cost_le: 7
+            races:
+            - オラクリオン
+          look: true
+          owner: you
+          zone: deck
+      - op: move
+        reason: put
+        select:
+          count: all
+          ref: t
+        to: bz
+      op: may
+    - op: shuffle
+    if:
+      exists:
+        filter:
+          tapped: true
+        ref: self
+    kind: trigger
+    when:
+      event: turn_end
+      player: you
+  civs:
+  - light
+  - darkness
+  cost: 7
+  id: dmx22b-167
+  keywords:
+  - right_g_link
+  - double_breaker
+  mana: 1
+  name: 右神のイザナイ ゾロスター
+  power: 9000
+  races:
+  - ゴッド・ノヴァ OMG
+  - オラクル
+  source:
+    notes: 多色カードはマナゾーンに置く時にエンジンが自動的にタップする（405.1）ため、1文目は abilities に書かない。
+    official: dmx22b-167
+    review: pending
+  text: マナゾーンに置く時、このカードはタップして置く。W・ブレイカー光臨―自分のターンの終わりに、このクリーチャーがタップされていれば、自分の山札を見る。その中からコスト７以下のオラクリオンを１体、バトルゾーンに出してもよい。その後、山札をシャッフルする。右G・リンク
+  types:
+  - creature
