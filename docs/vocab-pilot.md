@@ -902,3 +902,9 @@ converted の監査（opt_reduce の素の整数表記9件）から。任意形�
 - 「シールドがブレイクされた時」は event: break（player: you）を使う。
 - tests/test_vocab_pilot78.py 2件（正常 parse／検証）
 - 待機11枚（shield_event_trigger のみが gap のもの）。
+
+## 第79弾: civ_count（文明の種類数）— 新語彙なし（2026-11-05）
+「〜にある文明ひとつにつき」は既存の式 civ_count で表せる（対象カード群にある文明の種類数、多色はそれぞれ数える）。
+- 書き方: {civ_count: {zone: bz, owner: opp}} を式として使う（breaks や power の係数、cmp の辺など）。
+- tests/test_vocab_pilot79.py 2件（正常 parse／検証）
+- 待機11枚（civ_count のみが gap のもの）。
