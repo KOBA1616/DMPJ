@@ -315114,3 +315114,271 @@ cards:
   - creature
   keywords:
   - blocker
+- abilities:
+  - effect:
+    - duration: end_of_turn
+      mod:
+        breaks: 1
+        power: 6000
+      op: modify
+      select:
+        ref: event.subject
+    kind: trigger
+    when:
+      event: attack
+      subject:
+        filter:
+          types:
+          - creature
+          vanilla: true
+        owner: you
+  civs:
+  - fire
+  cost: 6
+  id: dmx12a-009
+  keywords:
+  - double_breaker
+  mana: 1
+  name: 解放の女傑 ドラクロワ
+  power: 6000
+  races:
+  - ヒューマノイド
+  - ハンター
+  - エイリアン
+  source:
+    notes: '「カードに能力が書かれていない」は第41弾の filter vanilla: true。「さらに１枚ブレイク」は第80弾の先例どおり mod
+      の breaks: 1 で表した'
+    official: dmx12a-009
+    review: pending
+  text: 'カードに能力が書かれていない自分のクリーチャーが攻撃する時、そのターン、そのクリーチャーのパワーは+6000され、シールドをさらに１枚ブレイクする。
+
+    W・ブレイカー（このクリーチャーはシールドを２枚ブレイクする）'
+  types:
+  - creature
+- abilities:
+  - effect:
+    - body:
+      - op: move
+        reason: put
+        select:
+          count: 2
+          filter:
+            types:
+            - creature
+            vanilla: true
+          owner: you
+          up_to: true
+          zone: graveyard
+        to: bz
+      op: may
+    kind: trigger
+    when:
+      event: move
+      subject: self
+      to: bz
+  civs:
+  - darkness
+  cost: 5
+  id: dmx12a-018
+  mana: 1
+  name: 砂場男
+  power: 3000
+  races:
+  - ヘドリアン
+  - ハンター
+  source:
+    notes: '「カードに能力が書かれていない」は第41弾の filter vanilla: true。「出す」は召喚ではないため move, to: bz,
+      reason: put で表した'
+    official: dmx12a-018
+    review: pending
+  text: このクリーチャーをバトルゾーンに出した時、カードに能力が書かれていないクリーチャーを２体まで、自分の墓地からバトルゾーンに出してもよい。
+  types:
+  - creature
+- abilities:
+  - effect:
+    - duration: end_of_turn
+      mod:
+        breaks: 1
+        power: 5000
+      op: modify
+      select:
+        count: all
+        filter:
+          types:
+          - creature
+          vanilla: true
+        owner: you
+        zone: bz
+    kind: trigger
+    when:
+      event: move
+      subject: self
+      to: bz
+  civs:
+  - nature
+  cost: 5
+  id: dmx16-071
+  mana: 1
+  name: ナメナメ・ナメコー
+  power: 5000
+  races:
+  - ワイルド・ベジーズ
+  source:
+    notes: '「カードに能力が書かれていない」は第41弾の filter vanilla: true。「さらに１枚ブレイク」は第80弾の先例どおり mod
+      の breaks: 1 で表した'
+    official: dmx16-071
+    review: pending
+  text: このクリーチャーをバトルゾーンに出した時、そのターン、バトルゾーンにある自分の、カードに能力が書かれていないクリーチャーすべてのパワーは+5000され、シールドをさらに１枚ブレイクする。
+  types:
+  - creature
+- civs:
+  - nature
+  cost: 2
+  id: dmx16-072
+  mana: 1
+  name: 純白設計図
+  source:
+    notes: '「カードに能力が書かれていないクリーチャー」は第41弾の filter vanilla: true（アクア提督 ザ・ミスターと同型、枚数のみ５枚）'
+    official: dmx16-072
+    review: pending
+  spell:
+  - as: pile
+    op: choose
+    select:
+      count: all
+      from_top: 5
+      look: true
+      owner: you
+      zone: deck
+  - op: move
+    reason: return
+    select:
+      count: all
+      filter:
+        types:
+        - creature
+        vanilla: true
+      ref: pile
+    to: hand
+  - op: move
+    order: choose
+    position: bottom
+    reason: put
+    select:
+      count: all
+      ref: pile
+    to: deck
+  text: 自分の山札の上から５枚を、すべてのプレイヤーに見せる。その中からカードに能力が書かれていないクリーチャーをすべて自分の手札に加え、残りを好きな順序で山札の一番下に戻す。
+  types:
+  - spell
+- abilities:
+  - affects:
+      filter:
+        cost_ge: 3
+        types:
+        - creature
+        vanilla: true
+      owner: you
+      zone: hand
+    kind: static
+    mod:
+      cost_may:
+        amount: 2
+        min: 1
+  civs:
+  - nature
+  cost: 1
+  id: dmx16-073
+  keywords:
+  - guardman
+  - cannot_attack
+  mana: 1
+  name: 駱駝の御輿
+  power: 3000
+  races:
+  - ビーストフォーク
+  - ハンター
+  source:
+    notes: '「カードに能力が書かれていない」は第41弾の filter vanilla: true。「２少なくしてもよい。ただしコストは１より少なくならない」は
+      cost_may: {amount: 2, min: 1} で表した'
+    official: dmx16-073
+    review: pending
+    aliases:
+    - dmr07-034
+  text: ガードマン（自分の他のクリーチャーが攻撃される時、このクリーチャーをタップしてもよい。そうした場合、攻撃クリーチャーはかわりにこのクリーチャーを攻撃する）このクリーチャーは攻撃することができない。コスト３以上で、カードに能力が書かれていないクリーチャーの召喚コストを２少なくしてもよい。ただし、コストは１より少なくならない。
+  types:
+  - creature
+- civs:
+  - water
+  - nature
+  cost: 2
+  id: dmx22b-158
+  mana: 1
+  name: バニラ・ゾーン
+  source:
+    notes: '「能力が書かれていないカード」は第41弾の filter vanilla: true（原文がクリーチャーに限定していないため types は付けない）。「マナゾーンに置く時タップして置く」は多色の一般ルールで自動処理'
+    official: dmx22b-158
+    review: pending
+  spell:
+  - as: pile
+    op: choose
+    select:
+      count: all
+      from_top: 2
+      look: true
+      owner: you
+      zone: deck
+  - op: mana_put
+    select:
+      count: all
+      filter:
+        vanilla: true
+      ref: pile
+  - op: move
+    reason: put
+    select:
+      count: all
+      ref: pile
+    to: graveyard
+  text: マナゾーンに置く時、このカードはタップして置く。 / 自分の山札の上から２枚を表向きにする。その中から、能力が書かれていないカードをすべてマナゾーンに置き、その後、残りを墓地に置く。
+  types:
+  - spell
+- abilities:
+  - effect:
+    - body:
+      - count: 1
+        op: draw
+      op: may
+    kind: trigger
+    when:
+      event: summon
+      subject:
+        filter:
+          types:
+          - creature
+          vanilla: true
+        owner: you
+  civs:
+  - water
+  cost: 1
+  id: dmx22b-159
+  keywords:
+  - blocker
+  - cannot_attack
+  mana: 1
+  name: アクア・ティーチャー
+  power: 1000
+  races:
+  - リキッド・ピープル
+  - ハンター
+  source:
+    notes: '「カードに能力が書かれていない」は第41弾の filter vanilla: true。召喚は summon イベントで表した'
+    official: dmx22b-159
+    review: pending
+    aliases:
+    - dmd17-013
+    - dmr07-042
+    - dmr07-042m
+  text: ブロッカー（このクリーチャーをタップして、相手クリーチャーの攻撃先をこのクリーチャーに変更してもよい）このクリーチャーは攻撃できない。カードに能力が書かれていないクリーチャーを召喚した時、カードを１枚引いてもよい。
+  types:
+  - creature
