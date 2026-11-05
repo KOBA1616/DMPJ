@@ -935,3 +935,9 @@ converted の監査（opt_reduce の素の整数表記9件）から。任意形�
 - 書き方: if: {exists: {zone: bz, owner: you, filter: {evolution: true}}}（否定は not で包む）。
 - tests/test_vocab_pilot83.py 2件（正常 parse／検証）
 - 待機11枚（evolution_existence_filter のみが gap のもの）。
+
+## 第84弾: evolution_gv（進化GV）— 新語彙なし（2026-11-05）
+「進化GV-自分の〜N体を重ねた上に置く」は既存の evolve_from + evolve_count で表せる。
+- 書き方: evolve_from: {<filter>}, evolve_count: N（重ねる進化元の体数）。
+- tests/test_vocab_pilot84.py 2件（正常 parse／検証）
+- 待機12枚（evolution_gv のみが gap のもの）。
