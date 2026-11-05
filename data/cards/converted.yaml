@@ -323041,3 +323041,133 @@ cards:
   text: マナゾーンに置く時、このカードはタップして置く。 / 革命チェンジ：光または水のコスト５以上のドラゴン / W・ブレイカー / このクリーチャーがバトルゾーンに出た時、次の自分のターンのはじめまで、自分のクリーチャーは破壊されない。
   types:
   - creature
+- civs:
+  - nature
+  cost: 6
+  id: dmr02-014
+  mana: 1
+  name: ダンシング・フィーバー
+  source:
+    notes: '上から６枚は choose の pile 形式で表し、その中から３枚までを tapped: true でマナゾーンに置き、残りは好きな順序で山札の一番下に置いた'
+    official: dmr02-014
+    review: pending
+    aliases:
+    - promoy17-006
+  spell:
+  - as: pile
+    op: choose
+    select:
+      count: all
+      from_top: 6
+      look: true
+      owner: you
+      zone: deck
+  - op: move
+    reason: put
+    select:
+      count: 3
+      ref: pile
+      up_to: true
+    tapped: true
+    to: mana
+  - op: move
+    order: choose
+    position: bottom
+    reason: put
+    select:
+      count: all
+      ref: pile
+    to: deck
+  text: 自分の山札の上から６枚を見る。その中から３枚まで、タップして自分のマナゾーンに置き、その後、残りを好きな順序で自分の山札の一番下に置く。
+  types:
+  - spell
+- civs:
+  - nature
+  cost: 5
+  id: dmr03-028
+  mana: 1
+  name: 再誕の聖地
+  source:
+    official: dmr03-028
+    review: pending
+  spell:
+  - op: move
+    reason: put
+    select:
+      count: all
+      owner: you
+      zone: graveyard
+    tapped: true
+    to: mana
+  text: 自分の墓地にあるカードをすべて、タップしてマナゾーンに置く。
+  types:
+  - spell
+- civs:
+  - nature
+  cost: 6
+  id: dmr06-019
+  mana: 1
+  name: 広くて狭い牧場
+  source:
+    notes: '見せたカードは choose で変数 r に保持し、山札の上からその枚数分（from_top の count 式）を tapped: true
+      でマナゾーンに置いた。見せる処理そのものは choose で表した'
+    official: dmr06-019
+    review: pending
+  spell:
+  - as: r
+    op: choose
+    select:
+      count: any
+      filter:
+        cost_ge: 7
+      owner: you
+      zone: hand
+  - op: move
+    reason: put
+    select:
+      from_top:
+        count:
+          ref: r
+      owner: you
+      zone: deck
+    tapped: true
+    to: mana
+  text: 自分の手札にあるコスト７以上のカードを好きな数、相手に見せる。このようにして見せたカード１枚につき、自分の山札の上から１枚目をタップしてマナゾーンに置く。
+  types:
+  - spell
+- abilities:
+  - instead:
+    - op: move
+      reason: put
+      select:
+        ref: subject
+      tapped: true
+      to: mana
+    kind: replace
+    when:
+      event: move
+      subject:
+        filter:
+          types:
+          - creature
+        other: true
+        owner: you
+      to: graveyard
+  civs:
+  - nature
+  cost: 6
+  id: dmr12-004
+  keywords:
+  - double_breaker
+  mana: 1
+  name: 神々の地 ディオニソス
+  power: 7000
+  races:
+  - アウトレイジMAX
+  source:
+    notes: '「どこからでも」は when に from を付けずに表し、代わりの移動は tapped: true でタップしてマナゾーンに置いた'
+    official: dmr12-004
+    review: pending
+  text: 自分の他のクリーチャーが、どこからでも自分の墓地に置かれる時、墓地に置くかわりにタップしてマナゾーンに置く。W・ブレイカー（このクリーチャーはシールドを２枚ブレイクする）
+  types:
+  - creature
