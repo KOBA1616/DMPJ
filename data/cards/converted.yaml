@@ -310632,3 +310632,1345 @@ cards:
   types:
   - creature
   - evolution
+- civs:
+  - light
+  - water
+  cost: 3
+  id: dm23ex1-022
+  keywords:
+  - g_strike
+  mana: 1
+  name: 「正義と正義の盾」
+  source:
+    notes: '「相手は〜してもよい。そうしたら…、そうしなければ…」は may の player: opp と else で表した（第96弾）。シールド化は
+      move to: shield, reason: charge'
+    official: dm23ex1-022
+    review: pending
+  spell:
+  - as: t
+    op: choose
+    select:
+      count: 1
+      filter:
+        types:
+        - creature
+      owner: opp
+      zone: bz
+  - body:
+    - op: move
+      reason: return
+      select:
+        ref: t
+      to: hand
+    - count: 2
+      op: draw
+    else:
+    - op: move
+      reason: charge
+      select:
+        ref: t
+      to: shield
+    - op: move
+      reason: charge
+      select:
+        from_top: 1
+        owner: you
+        zone: deck
+      to: shield
+    op: may
+    player: opp
+  text: '{GS} G・ストライク
+
+    相手のクリーチャーを１体選ぶ。相手はそれを手札に戻してもよい。そうしたら、自分はカードを２枚引く。そうしなければ、相手はそれをシールド化し、自分は自分の山札の上から１枚目をシールド化する。'
+  types:
+  - spell
+- abilities:
+  - effect:
+    - body:
+      - op: discard
+        select:
+          chooser: opp
+          count: 2
+          owner: opp
+          zone: hand
+      else:
+      - as: x
+        op: choose
+        select:
+          chooser: opp
+          count: 1
+          owner: opp
+          zone:
+          - bz
+          - mana
+      - op: move
+        reason: put
+        select:
+          ref: x
+        to: graveyard
+      op: may
+      player: opp
+    kind: trigger
+    when:
+      event: summon
+      subject:
+        filter:
+          types:
+          - creature
+        owner: opp
+  - effect:
+    - body:
+      - op: discard
+        select:
+          chooser: opp
+          count: 2
+          owner: opp
+          zone: hand
+      else:
+      - as: x
+        op: choose
+        select:
+          chooser: opp
+          count: 1
+          owner: opp
+          zone:
+          - bz
+          - mana
+      - op: move
+        reason: put
+        select:
+          ref: x
+        to: graveyard
+      op: may
+      player: opp
+    kind: trigger
+    when:
+      event: cast
+      subject:
+        filter:
+          types:
+          - spell
+        owner: opp
+  civs:
+  - zero
+  cost: 7
+  id: dm23ex2-023
+  keywords:
+  - blocker
+  - double_breaker
+  mana: 1
+  name: 魔壊業皇 デストピア
+  power: 9000
+  races:
+  - デーモン・コマンド・ドラゴン
+  - オラクル
+  source:
+    notes: '分岐は may の player: opp と else で表した（第96弾）。捨てるカードと墓地に置くカードは相手が選ぶ（chooser:
+      opp）。エレメントはバトルゾーンのカードとして zone: bz で表した'
+    official: dm23ex2-023
+    review: pending
+  text: 'ブロッカー
+
+    W・ブレイカー
+
+    相手がクリーチャーを召喚した時または呪文を唱えた時、相手は自身の手札を２枚選んで捨てる。そうしなければ、相手は自身のエレメント１つまたは自身のマナゾーンにあるカード１枚を選び、墓地に置く。'
+  types:
+  - creature
+- abilities:
+  - effect:
+    - as: revealed
+      op: choose
+      select:
+        count: 2
+        filter:
+          cost_le: 6
+          types:
+          - spell
+        look: true
+        owner: you
+        up_to: true
+        zone: deck
+    - op: shuffle
+      player: you
+    - as: g
+      op: choose
+      select:
+        chooser: opp
+        count: 1
+        ref: revealed
+    - op: move
+      reason: put
+      select:
+        ref: g
+      to: graveyard
+    - op: play_free
+      select:
+        count: 1
+        ref: revealed
+    kind: trigger
+    when:
+      event: move
+      reason: summon
+      subject: self
+      to: bz
+  - effect:
+    - body:
+      - op: play_free
+        resolve_position: bottom
+        resolve_to: deck
+        select:
+          count: 1
+          filter:
+            cost_le: 6
+            types:
+            - spell
+          owner: you
+          zone: graveyard
+      op: may
+    kind: trigger
+    when:
+      event: attack
+      subject: self
+  civs:
+  - zero
+  cost: 10
+  id: dm23ex3-tr15
+  keywords:
+  - double_breaker
+  - eternal_omega
+  mana: 1
+  name: 「十尾」の頂 バック・トゥ・ザ・オレ
+  power: 11000
+  races:
+  - エンジェル・コマンド
+  - ゼニス
+  source:
+    notes: '「もう１枚」は、墓地に置かれたカードが ref の世代変化で revealed から外れることで表した。攻撃時の呪文の山札の下への置き換えは
+      play_free の resolve_to: deck + resolve_position: bottom'
+    official: dm23ex3-tr15
+    review: pending
+    aliases:
+    - dmr08-s01
+  text: 'W・ブレイカー
+
+    このクリーチャーが召喚によって出た時、自分の山札を見る。その中からコスト６以下の呪文を２枚まで、表向きにしてもよい。その後、山札をシャッフルする。表向きにした呪文のうち１枚を相手に選ばせて墓地に置く。もう１枚をコストを支払わずに唱える。
+
+    このクリーチャーが攻撃する時、コスト６以下の呪文を１枚、自分の墓地からコストを支払わずに唱えてもよい。その後、その呪文を山札の下に置く。
+
+    エターナル・Ω（このクリーチャーが離れる時、かわりに手札に戻す）'
+  types:
+  - creature
+- faces:
+  - abilities:
+    - effect:
+      - op: discard
+        select:
+          count: 1
+          owner: you
+          zone: hand
+      - count: 1
+        op: draw
+      kind: trigger
+      when:
+        event: move
+        subject: self
+        to: bz
+    civs:
+    - fire
+    cost: 3
+    keywords:
+    - speed_attacker
+    mana: 1
+    name: 一期音愛 カーリー
+    power: 2000
+    races:
+    - マジック・マーメイド
+    types:
+    - creature
+  - civs:
+    - water
+    cost: 4
+    keywords:
+    - s_trigger
+    mana: 1
+    name: ♪さようなら また会うかもね さようなら
+    races:
+    - マジック・ソング
+    spell:
+    - as: t
+      op: choose
+      select:
+        count: 1
+        filter:
+          types:
+          - creature
+        owner: opp
+        zone: bz
+    - body:
+      - op: move
+        position: top
+        reason: put
+        select:
+          ref: t
+        to: deck
+      else:
+      - op: move
+        position: bottom
+        reason: put
+        select:
+          ref: t
+        to: deck
+      op: may
+      player: opp
+    types:
+    - spell
+  id: dm23rp4x-047
+  mana: 1
+  name: 一期音愛 カーリー / ♪さようなら また会うかもね さようなら
+  source:
+    notes: '呪文面の「山札の上か下」は may の player: opp で相手に選ばせた（第96弾）。上は position: top、下は position:
+      bottom'
+    official: dm23rp4x-047
+    review: pending
+    aliases:
+    - dm23rp4-047
+  text: '一期音愛 カーリー: スピードアタッカー / このクリーチャーが出た時、自分の手札を１枚捨て、カードを１枚引く。 ／ ♪さようなら また会うかもね
+    さようなら: S・トリガー / 相手のクリーチャーを１体選ぶ。相手はそれを山札の上か下に置く。'
+- civs:
+  - darkness
+  cost: 3
+  id: dm24-094
+  mana: 1
+  name: スカル・チェーンソー
+  source:
+    notes: '「手札を捨てることができない場合」は相手の手札の有無で分岐した。後段の二者択一は may の player: opp と else で表した（第96弾）'
+    official: dm24-094
+    review: pending
+  spell:
+  - cond:
+      exists:
+        owner: opp
+        zone: hand
+    else:
+    - body:
+      - as: x
+        op: choose
+        select:
+          chooser: opp
+          count: 1
+          filter:
+            types:
+            - creature
+          owner: opp
+          zone: bz
+      - op: destroy
+        select:
+          ref: x
+      else:
+      - as: y
+        op: choose
+        select:
+          chooser: opp
+          count: 1
+          owner: opp
+          zone: mana
+      - op: move
+        reason: put
+        select:
+          ref: y
+        to: graveyard
+      op: may
+      player: opp
+    op: if
+    then:
+    - op: discard
+      select:
+        chooser: opp
+        count: 1
+        owner: opp
+        zone: hand
+  text: 相手は、自分自身の手札を１枚捨てる。手札を捨てることができない場合、相手は自分自身のクリーチャーを１体破壊するか、マナゾーンから自分自身のカードを１枚選んで墓地に置く。
+  types:
+  - spell
+- abilities:
+  - effect:
+    - body:
+      - as: sac
+        op: choose
+        select:
+          count: 3
+          filter:
+            tapped: true
+            types:
+            - creature
+          owner: you
+          zone: bz
+      - op: destroy
+        select:
+          count: all
+          ref: sac
+      - cond:
+          cmp:
+          - var: sac
+          - ==
+          - 3
+        op: if
+        then:
+        - op: move
+          reason: put
+          select:
+            ref: self
+          to: bz
+      op: may
+    if:
+      exists:
+        filter:
+          civs:
+          - darkness
+        owner: you
+        zone: mana
+    kind: trigger
+    when:
+      event: turn_end
+      subject: self
+    zone: graveyard
+  - effect:
+    - body:
+      - as: x
+        op: choose
+        select:
+          chooser: opp
+          count: 1
+          filter:
+            types:
+            - creature
+          owner: opp
+          zone: bz
+      - op: destroy
+        select:
+          ref: x
+      else:
+      - op: discard
+        select:
+          chooser: opp
+          count: 1
+          owner: opp
+          zone: hand
+      op: may
+      player: opp
+    kind: trigger
+    when:
+      event: move
+      subject:
+        filter:
+          types:
+          - creature
+        owner: you
+      to: bz
+  - effect:
+    - body:
+      - as: x
+        op: choose
+        select:
+          chooser: opp
+          count: 1
+          filter:
+            types:
+            - creature
+          owner: opp
+          zone: bz
+      - op: destroy
+        select:
+          ref: x
+      else:
+      - op: discard
+        select:
+          chooser: opp
+          count: 1
+          owner: opp
+          zone: hand
+      op: may
+      player: opp
+    kind: trigger
+    when:
+      event: move
+      from: bz
+      subject:
+        filter:
+          types:
+          - creature
+        owner: you
+  civs:
+  - darkness
+  cost: 6
+  id: dm24ex3-rp2s05
+  keywords:
+  - blocker
+  - double_breaker
+  mana: 1
+  name: 死神覇王 ブラックXENARCH
+  power: 9000
+  races:
+  - ダークロード
+  source:
+    notes: '墓地の能力の「３体破壊したら」は、束縛した変数の枚数（var: sac == 3）で判定した。第２の能力の分岐は may の player:
+      opp と else で表した（第96弾）'
+    official: dm24ex3-rp2s05
+    review: pending
+    aliases:
+    - dm24ex3-sec05
+    - dm24rp2-s05
+  text: '各ターンの終わりに、このクリーチャーが自分の墓地にあり、自分のマナゾーンに闇のカードがあれば、自分のタップしているクリーチャーを３体破壊してもよい。そうしたら、このクリーチャーを自分の墓地から出す。
+
+    ブロッカー
+
+    W・ブレイカー
+
+    自分のクリーチャーが出た時または離れた時、相手は自身のクリーチャーを１体選び、破壊する。そうしなければ、相手は自身の手札を１枚選び、捨てる。'
+  types:
+  - creature
+- abilities:
+  - effect:
+    - modes:
+      - - as: t
+          op: choose
+          select:
+            count: 1
+            filter:
+              types:
+              - creature
+            owner: opp
+            zone: bz
+        - body:
+          - op: move
+            position: top
+            reason: put
+            select:
+              ref: t
+            to: deck
+          else:
+          - op: move
+            position: bottom
+            reason: put
+            select:
+              ref: t
+            to: deck
+          op: may
+          player: opp
+      - - count: 3
+          op: draw
+      op: modal
+    kind: trigger
+    when:
+      event: move
+      subject: self
+      to: bz
+  civs:
+  - water
+  cost: 10
+  id: dm25ex2-023
+  keywords:
+  - s_trigger
+  - blocker
+  mana: 1
+  name: ワダトキ=識=ノミコト
+  power: 4000
+  races:
+  - ミズガミ
+  - ロスト・クルセイダー
+  source:
+    notes: 'モード内の「山札の上か下」は may の player: opp で相手に選ばせた（第96弾）。上は position: top、下は position:
+      bottom'
+    official: dm25ex2-023
+    review: pending
+  text: 'S・トリガー
+
+    ブロッカー
+
+    このクリーチャーが出た時、次のうちいずれか１つを選ぶ。
+
+    ▶相手のクリーチャーを１体選ぶ。相手はそれを山札の上か下に置く。
+
+    ▶カードを３枚引く。'
+  types:
+  - creature
+- civs:
+  - water
+  cost: 4
+  id: dm25rp2-062
+  keywords:
+  - s_trigger
+  mana: 1
+  name: ♪甘くなき 和を輪をもって 甘くする
+  races:
+  - マジック・ソング
+  source:
+    notes: '「山札の上か下」は may の player: opp で相手に選ばせた（第96弾）。上は position: top、下は position:
+      bottom'
+    official: dm25rp2-062
+    review: pending
+  spell:
+  - as: t
+    op: choose
+    select:
+      count: 1
+      filter:
+        types:
+        - creature
+      owner: opp
+      zone: bz
+  - body:
+    - op: move
+      position: top
+      reason: put
+      select:
+        ref: t
+      to: deck
+    else:
+    - op: move
+      position: bottom
+      reason: put
+      select:
+        ref: t
+      to: deck
+    op: may
+    player: opp
+  text: 'S・トリガー（このカードをシールドゾーンから手札に加える時、コストを支払わずにすぐ実行してもよい）
+
+    相手のクリーチャーを１体選ぶ。相手はそれを山札の上か下に置く。'
+  types:
+  - spell
+- abilities:
+  - effect:
+    - as: targets
+      op: choose
+      select:
+        count: 3
+        filter:
+          types:
+          - creature
+        owner: opp
+        up_to: true
+        zone: bz
+    - as: s
+      op: choose
+      select:
+        chooser: opp
+        count: 1
+        ref: targets
+    - op: move
+      reason: charge
+      select:
+        ref: s
+      to: shield
+    - as: m
+      op: choose
+      select:
+        chooser: opp
+        count: 1
+        ref: targets
+    - op: move
+      reason: put
+      select:
+        ref: m
+      to: mana
+    - op: move
+      reason: return
+      select:
+        count: all
+        ref: targets
+      to: hand
+    kind: trigger
+    when:
+      event: move
+      subject: self
+      to: bz
+  civs:
+  - light
+  - water
+  - nature
+  cost: 5
+  id: dm26ex1-047
+  keywords:
+  - s_trigger
+  mana: 1
+  name: プリンセス・パーティ ～シラハの絆～
+  power: 5000
+  races:
+  - スノーフェアリー
+  - ドリームメイト
+  - スプラッシュ・クイーン
+  source:
+    notes: 割り当ては原文の順（シールド化、マナゾーン、手札）に相手が１体ずつ選ぶ形で表した。移動済みのカードは ref の世代が変わり、後続の選択から外れる
+    official: dm26ex1-047
+    review: pending
+    aliases:
+    - dm24ex3-rp3010
+    - dm24ex3-sec10
+    - dm24rp3-010
+    - dm25ex2-cho022
+    - dm25ex3-rp3tr9
+    - dm25ex3-sp6
+    - dm25rp3-tr9
+    - promoy24-053
+  text: 'S・トリガー
+
+    このクリーチャーが出た時、相手のクリーチャーを３体まで選ぶ。相手はその中から１体をシールド化し、１体をマナゾーンに置き、１体を手札に戻す。'
+  types:
+  - creature
+- abilities:
+  - effect:
+    - as: t
+      op: choose
+      select:
+        count: 1
+        filter:
+          types:
+          - creature
+        owner: opp
+        zone: bz
+    - body:
+      - op: destroy
+        select:
+          ref: t
+      else:
+      - op: move
+        position: top
+        reason: put
+        select:
+          ref: t
+        to: deck
+      op: may
+      player: opp
+    kind: trigger
+    when:
+      event: attack
+      subject: self
+  - effect:
+    - as: t
+      op: choose
+      select:
+        count: 1
+        filter:
+          types:
+          - creature
+        owner: opp
+        zone: bz
+    - body:
+      - op: destroy
+        select:
+          ref: t
+      else:
+      - op: move
+        position: top
+        reason: put
+        select:
+          ref: t
+        to: deck
+      op: may
+      player: opp
+    kind: trigger
+    when:
+      event: move
+      from: bz
+      subject: self
+  civs:
+  - water
+  - darkness
+  cost: 3
+  evolve_from:
+    civs:
+    - water
+    - darkness
+    types:
+    - creature
+  id: dm26rp1-050
+  keywords:
+  - double_breaker
+  mana: 1
+  name: 蛇王のL ナーガ
+  power: 8000
+  races:
+  - ナーガ
+  source:
+    notes: '「破壊するか山札の上に置く」は may の player: opp の body（破壊）と else（山札の上）で表した（第96弾）'
+    official: dm26rp1-050
+    review: pending
+  text: '進化：水または闇のクリーチャー１体の上に置く。
+
+    W・ブレイカー（このクリーチャーはシールドを２つブレイクする）
+
+    このクリーチャーが攻撃する時または離れた時、相手のクリーチャーを１体選ぶ。相手はそのクリーチャーを、破壊するか山札の上に置く。'
+  types:
+  - creature
+  - evolution
+- abilities:
+  - effect:
+    - as: top
+      op: choose
+      select:
+        count: all
+        from_top: 1
+        look: true
+        owner: you
+        zone: deck
+    - cond:
+        exists:
+          filter:
+            civs:
+            - water
+            not_types:
+            - evolution
+            types:
+            - creature
+          ref: top
+      op: if
+      then:
+      - as: base
+        op: move
+        reason: put
+        select:
+          count: 1
+          ref: top
+        to: bz
+      - onto:
+          ref: base
+        op: invade
+    if:
+      all:
+      - is_turn: opp
+      - cmp:
+        - count:
+            owner: you
+            zone: shield
+        - ==
+        - 0
+    kind: declare
+    when:
+      event: attack
+      target: player
+    zone: hand
+  - effect:
+    - as: t
+      op: choose
+      select:
+        count: 1
+        filter:
+          types:
+          - creature
+        owner: opp
+        zone: bz
+    - body:
+      - op: move
+        position: top
+        reason: put
+        select:
+          ref: t
+        to: deck
+      else:
+      - op: move
+        position: bottom
+        reason: put
+        select:
+          ref: t
+        to: deck
+      op: may
+      player: opp
+    kind: trigger
+    when:
+      event: move
+      subject: self
+      to: bz
+  - effect:
+    - as: t
+      op: choose
+      select:
+        count: 1
+        filter:
+          types:
+          - creature
+        owner: opp
+        zone: bz
+    - body:
+      - op: move
+        position: top
+        reason: put
+        select:
+          ref: t
+        to: deck
+      else:
+      - op: move
+        position: bottom
+        reason: put
+        select:
+          ref: t
+        to: deck
+      op: may
+      player: opp
+    kind: trigger
+    when:
+      event: attack
+      subject: self
+  civs:
+  - water
+  cost: 4
+  evolve_from:
+    civs:
+    - water
+    types:
+    - creature
+  id: dm26rp2-003
+  keywords:
+  - double_breaker
+  mana: 1
+  name: 叛逆の絆
+  power: 8000
+  races:
+  - アウトレイジ・コマンドMAX
+  source:
+    notes: '革命０トリガーは declare + invade の既存形式（dm25ex1-mc001 と同型、水文明に置換）。主能力の「山札の上か下」は
+      may の player: opp で表した（第96弾）'
+    official: dm26rp2-003
+    review: pending
+  text: '革命０トリガー：クリーチャーが自分を攻撃する時、自分のシールドが１つもなければ、このクリーチャーを手札から表向きにしてもよい。そうしたら、自分の山札の上から１枚を表向きにする。それが水の、進化ではないクリーチャーなら出し、このクリーチャーをその上に置く。
+
+    進化：水のクリーチャー１体の上に置く。
+
+    W・ブレイカー
+
+    このクリーチャーが出た時または攻撃する時、相手のクリーチャーを１体選ぶ。相手はそれを山札の上か下に置く。'
+  types:
+  - creature
+  - evolution
+- abilities:
+  - effect:
+    - as: t
+      op: choose
+      select:
+        count: 1
+        owner: opp
+        zone: bz
+    - body:
+      - op: move
+        position: top
+        reason: put
+        select:
+          ref: t
+        to: deck
+      else:
+      - op: move
+        position: bottom
+        reason: put
+        select:
+          ref: t
+        to: deck
+      op: may
+      player: opp
+    kind: trigger
+    when:
+      event: move
+      subject: self
+      to: bz
+  civs:
+  - water
+  cost: 5
+  id: dm26rp3-059
+  keywords:
+  - s_trigger
+  mana: 1
+  name: 覇王になる男 ググッピー
+  power: 4000
+  races:
+  - ムートピア
+  source:
+    notes: 'エレメントはバトルゾーンのカードとして zone: bz（タイプ無制限）で表した。「山札の上か下」は may の player: opp で表した（第96弾）'
+    official: dm26rp3-059
+    review: pending
+  text: 'S・トリガー（このカードを自分のシールドゾーンから手札に加える時、コストを支払わずにすぐ実行してもよい）
+
+    このクリーチャーが出た時、相手のエレメントを１つ選ぶ。相手はそれを山札の上か下に置く。'
+  types:
+  - creature
+- civs:
+  - water
+  - nature
+  cost: 8
+  id: dmbd18-005
+  keywords:
+  - s_trigger
+  mana: 1
+  name: 神歌と繚嵐の扉
+  source:
+    notes: '「残り」は、出したカードが ref の世代変化で pile から外れることで表し、並び順は move の order: choose。ターン終わりの移動は
+      delayed_trigger で、移動後の姿を as: out で束縛し直して参照した'
+    official: dmbd18-005
+    review: pending
+    aliases:
+    - dmbd18-be04
+  spell:
+  - as: pile
+    op: choose
+    select:
+      count: all
+      from_top: 4
+      look: true
+      owner: you
+      zone: deck
+  - as: c
+    op: choose
+    select:
+      chooser: opp
+      count: 1
+      filter:
+        types:
+        - creature
+      ref: pile
+  - as: out
+    op: move
+    reason: put
+    select:
+      count: 1
+      ref: c
+    to: bz
+  - op: move
+    order: choose
+    position: bottom
+    reason: put
+    select:
+      count: all
+      ref: pile
+    to: deck
+  - effect:
+    - op: move
+      position: bottom
+      reason: put
+      select:
+        count: 1
+        ref: out
+      to: deck
+    op: delayed_trigger
+    when:
+      event: turn_end
+  - body:
+    - as: a
+      op: choose
+      select:
+        count: 1
+        filter:
+          types:
+          - creature
+        owner: you
+        zone: bz
+    - as: b
+      op: choose
+      select:
+        count: 1
+        filter:
+          types:
+          - creature
+        owner: opp
+        zone: bz
+    - a:
+        ref: a
+      b:
+        ref: b
+      op: force_battle
+    op: may
+  text: 'S・トリガー
+
+    自分の山札の上から４枚を表向きにし、その中からクリーチャーを１体、相手に選ばせる。そのクリーチャーを出し、残りを好きな順序で山札の下に置く。このターンの終わりに、そのクリーチャーを山札の下に置く。
+
+    自分と相手のクリーチャーを１体ずつ選んでもよい。その２体をバトルさせる。'
+  types:
+  - spell
+- abilities:
+  - kind: declare
+    zone: hand
+    when:
+      event: attack
+      subject:
+        owner: you
+        filter:
+          civs:
+          - water
+          - darkness
+          race_has: ドラゴン
+    effect:
+    - op: swap
+      out:
+        ref: event.subject
+      in:
+        ref: self
+  - effect:
+    - in:
+        ref: self
+      op: swap
+      out:
+        ref: event.subject
+    kind: declare
+    when:
+      event: attack
+      subject:
+        filter:
+          civs:
+          - water
+          - darkness
+          race_has: ドラゴン
+        owner: you
+    zone: hand
+  - effect:
+    - as: t
+      op: choose
+      select:
+        count: 1
+        filter:
+          types:
+          - creature
+        owner: opp
+        zone: bz
+    - body:
+      - op: destroy
+        select:
+          ref: t
+      else:
+      - op: move
+        reason: return
+        select:
+          count: all
+          filter:
+            types:
+            - creature
+          owner: opp
+          zone: bz
+        to: hand
+      op: may
+      player: opp
+    kind: trigger
+    when:
+      event: move
+      subject: self
+      to: bz
+  civs:
+  - water
+  - darkness
+  cost: 7
+  id: dmex08-232
+  keywords:
+  - double_breaker
+  mana: 1
+  name: 秘革の求答士 クエスチョン
+  power: 8000
+  races:
+  - クリスタル・コマンド・ドラゴン
+  - 革命軍
+  - テック団
+  source:
+    notes: '革命チェンジは declare + swap の既存形式。「破壊してもよい。破壊しなかったら…」は may の player: opp と
+      else で表した（第96弾）'
+    official: dmex08-232
+    review: pending
+    aliases:
+    - dmr21-s07
+  text: '革命チェンジ：水または闇のドラゴン（自分の水または闇のドラゴンが攻撃する時、そのクリーチャーと手札にあるこのクリーチャーを入れ替えてもよい）
+
+    W・ブレイカー
+
+    このクリーチャーがバトルゾーンに出た時、相手のクリーチャーを１体選ぶ。相手はそれを破壊してもよい。相手が破壊しなかったら、相手のクリーチャーをすべて持ち主の手札に戻す。'
+  types:
+  - creature
+- civs:
+  - water
+  - nature
+  cost: 4
+  id: dmex14-074
+  mana: 1
+  name: ウェイブの伝説
+  races:
+  - チームウェイブ
+  source:
+    notes: 'マナゾーンに置いた時の文は dmex14-062（銀河の伝説）の先例どおり、マナチャージ時の処理としてエンジン側に委ね、spell には書かなかった。呪文効果の分岐は
+      may の player: opp と else で表した（第96弾）'
+    official: dmex14-074
+    review: pending
+  spell:
+  - as: t
+    op: choose
+    select:
+      count: 1
+      owner: opp
+      zone: bz
+  - body:
+    - op: move
+      reason: put
+      select:
+        ref: t
+      to: mana
+    else:
+    - op: move
+      reason: return
+      select:
+        ref: t
+      to: hand
+    op: may
+    player: opp
+  text: このカードを自分のマナゾーンに置いた時、自分の手札にある多色カードを１枚、相手に見せてもよい。そうしたら、このカードをアンタップする。 / バトルゾーンにある相手のカードを１枚選ぶ。相手はそのカードを、自身のマナゾーンに置くか、手札に戻す。
+  types:
+  - spell
+- civs:
+  - water
+  cost: 3
+  id: dmex18-038
+  mana: 1
+  name: フューチャー・ブレイン
+  source:
+    notes: '分岐は may の player: opp と else で表した（第96弾）。ただし play_free はコントローラー視点で解決されるエンジン仕様のため、相手が唱えた呪文の効果解決が相手視点になるかは要確認'
+    official: dmex18-038
+    review: pending
+  spell:
+  - count: 3
+    op: draw
+  - body:
+    - op: play_free
+      select:
+        chooser: opp
+        count: 1
+        filter:
+          cost_le: 3
+          types:
+          - spell
+        owner: opp
+        zone: hand
+    else:
+    - count: 1
+      op: draw
+      player: opp
+    op: may
+    player: opp
+  text: カードを３枚引く。 / 相手はコスト３以下の呪文を１枚、自身の手札からコストを支払わずに唱えてもよい。そうしなければ、相手はカードを１枚引く。
+  types:
+  - spell
+- abilities:
+  - effect:
+    - as: t
+      op: choose
+      select:
+        count: 1
+        filter:
+          types:
+          - creature
+        owner: opp
+        zone: bz
+    - body:
+      - op: move
+        position: top
+        reason: put
+        select:
+          ref: t
+        to: deck
+      else:
+      - op: move
+        position: bottom
+        reason: put
+        select:
+          ref: t
+        to: deck
+      op: may
+      player: opp
+    kind: trigger
+    when:
+      event: move
+      subject: self
+      to: bz
+  - effect:
+    - as: t
+      op: choose
+      select:
+        count: 1
+        filter:
+          types:
+          - creature
+        owner: opp
+        zone: bz
+    - body:
+      - op: move
+        position: top
+        reason: put
+        select:
+          ref: t
+        to: deck
+      else:
+      - op: move
+        position: bottom
+        reason: put
+        select:
+          ref: t
+        to: deck
+      op: may
+      player: opp
+    kind: trigger
+    when:
+      event: attack
+      subject: self
+  civs:
+  - water
+  cost: 7
+  id: dmrp15-002
+  keywords:
+  - double_breaker
+  mana: 1
+  mugen_climb:
+    civs:
+    - water
+    cost: 3
+    tap: 3
+  name: 無量大龍 ノヴェ・シエントス
+  power: 8000
+  races:
+  - ゼロ・ドラゴン
+  - チーム零
+  source:
+    notes: '「山札の上または下のどちらかを選んで」は may の player: opp で相手に選ばせた（第96弾）。ムゲンクライムは面の宣言 mugen_climb
+      で表した'
+    official: dmrp15-002
+    review: pending
+  text: 'ムゲンクライム ３（自分のクリーチャーを３体タップし、 [ww03]支払って、このクリーチャーを自分の手札または墓地から召喚してもよい）
+
+    W・ブレイカー
+
+    このクリーチャーがバトルゾーンに出た時または攻撃する時、相手のクリーチャーを１体選ぶ。相手はそのクリーチャーを、自身の山札の上または下のどちらかを選んで置く。'
+  types:
+  - creature
+- civs:
+  - darkness
+  cost: 5
+  id: dmrp22-018
+  mana: 1
+  name: 邪王極限怒号掌
+  source:
+    notes: '相手のモード選択は、modal がコントローラーにしか聞けないため may の player: opp の二分岐で表した（第96弾）。「アンタップしない」は
+      tap の no_untap_next'
+    official: dmrp22-018
+    review: pending
+  spell:
+  - body:
+    - no_untap_next: true
+      op: tap
+      select:
+        count: all
+        owner: opp
+        zone: mana
+    else:
+    - op: destroy
+      select:
+        count: all
+        filter:
+          types:
+          - creature
+        owner: opp
+        zone: bz
+    op: may
+    player: opp
+  text: 相手は、次のうちいずれか１つを選ぶ。 / ▶相手は自身のマナゾーンにあるカードをすべてタップする。次の相手のターンのはじめに、それらはアンタップしない。
+    / ▶相手は自身のクリーチャーをすべて破壊する。
+  types:
+  - spell
