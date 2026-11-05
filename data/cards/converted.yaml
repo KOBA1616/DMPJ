@@ -302331,3 +302331,190 @@ cards:
     自分の手札を１枚捨てる。こうして捨てたカード以下のコストの相手のエレメントを１つ選び、破壊する。'
   types:
   - spell
+- civs:
+  - water
+  cost: 2
+  id: dm25ex3-066
+  mana: 1
+  name: 蒸熱のタイフーン
+  source:
+    official: dm25ex3-066
+    review: pending
+    aliases:
+    - dm25rp1-062
+  spell:
+  - count: 2
+    op: draw
+  - cond:
+      not:
+        exists:
+          filter:
+            evolution: true
+          owner: you
+          zone: bz
+    op: if
+    then:
+    - op: discard
+      select:
+        count: 1
+        owner: you
+        zone: hand
+  text: カードを２枚引く。 / 自分の進化クリーチャーがなければ、自分の手札を１枚捨てる。
+  types:
+  - spell
+- abilities:
+  - affects: self
+    if:
+      exists:
+        filter:
+          evolution: true
+        owner: you
+        zone: bz
+    kind: static
+    mod:
+      grant:
+      - blocker
+  civs:
+  - water
+  cost: 4
+  id: dm32-081
+  mana: 1
+  name: ハリセン・フィッシュ
+  power: 3000
+  races:
+  - ゲル・フィッシュ
+  - オリジン
+  source:
+    official: dm32-081
+    review: pending
+  text: バトルゾーンに自分の進化クリーチャーがある時、このクリーチャーは「ブロッカー」を得る。
+  types:
+  - creature
+- abilities:
+  - affects:
+      filter:
+        power_le: 3000
+        types:
+        - creature
+      owner: you
+      zone: bz
+    if:
+      exists:
+        filter:
+          evolution: true
+        owner: you
+        zone: bz
+    kind: static
+    mod:
+      deny:
+      - be_attacked
+  civs:
+  - fire
+  cost: 3
+  id: dm32-099
+  mana: 1
+  name: ファイアスモーク・ドレイク
+  power: 3000
+  races:
+  - ティラノ・ドレイク
+  source:
+    official: dm32-099
+    review: pending
+  text: 自分の進化クリーチャーがバトルゾーンにある時、バトルゾーンにある自分のパワー3000以下のクリーチャーは攻撃されない。
+  types:
+  - creature
+- abilities:
+  - affects: self
+    if:
+      exists:
+        filter:
+          evolution: true
+        owner: you
+        zone: bz
+    kind: static
+    mod:
+      power: 4000
+  civs:
+  - nature
+  cost: 2
+  id: dm32-107
+  mana: 1
+  name: 呪氷妖精マッド・サクラン
+  power: 1000
+  races:
+  - スノーフェアリー
+  - オリジン
+  source:
+    official: dm32-107
+    review: pending
+  text: 自分の進化クリーチャーがバトルゾーンにある時、このクリーチャーのパワーは+4000される。
+  types:
+  - creature
+- civs:
+  - darkness
+  - fire
+  cost: 6
+  id: dmc58-006
+  mana: 1
+  name: 爆進デス＆リバース
+  source:
+    notes: '爆進ダブルは鬼タイム（dm22ex2-028）と同じ形で表した。自分の進化クリーチャーがあれば両方の効果、なければ modal でいずれか1つを選ぶ。墓地からバトルゾーンに出すのは召喚ではないため
+      move（reason: put）で表した。「マナゾーンに置く時タップして置く」は多色カードのルール処理のため能力に書かない（先例どおり）'
+    official: dmc58-006
+    review: pending
+  spell:
+  - cond:
+      exists:
+        filter:
+          evolution: true
+        owner: you
+        zone: bz
+    else:
+    - modes:
+      - - op: destroy
+          select:
+            count: 1
+            filter:
+              power_le: 5000
+              types:
+              - creature
+            owner: opp
+            zone: bz
+      - - op: move
+          reason: put
+          select:
+            count: 1
+            filter:
+              cost_le: 3
+              types:
+              - creature
+            owner: you
+            zone: graveyard
+          to: bz
+      op: modal
+    op: if
+    then:
+    - op: destroy
+      select:
+        count: 1
+        filter:
+          power_le: 5000
+          types:
+          - creature
+        owner: opp
+        zone: bz
+    - op: move
+      reason: put
+      select:
+        count: 1
+        filter:
+          cost_le: 3
+          types:
+          - creature
+        owner: you
+        zone: graveyard
+      to: bz
+  text: マナゾーンに置く時、このカードはタップして置く。 / 次のうちいずれかひとつを選ぶ。相手のパワー5000以下のクリーチャーを１体破壊する。コスト３以下のクリーチャーを１体、自分の墓地からバトルゾーンに出す。
+    / 爆進ダブル
+  types:
+  - spell
