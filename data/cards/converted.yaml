@@ -320841,3 +320841,215 @@ cards:
     このクリーチャーが召喚以外の方法で出た時、山札に加えてシャッフルする。'
   types:
   - creature
+- civs:
+  - light
+  cost: 7
+  id: dm35-007
+  mana: 1
+  name: 白騎士アトミック・ゲイナー
+  source:
+    official: dm35-007
+    review: pending
+  spell:
+  - as: t
+    op: choose
+    select:
+      count: 1
+      filter:
+        types:
+        - creature
+      owner: you
+      zone: bz
+  - body:
+    - op: move
+      reason: put
+      select:
+        from_top: 1
+        owner: you
+        zone: deck
+      to: shield
+    op: repeat
+    times:
+      sum:
+      - 1
+      - count:
+          under_of: t
+  text: バトルゾーンにある自分のクリーチャーを１体選ぶ。そのクリーチャーに含まれるカード１枚につき、自分の山札の上から１枚を裏向きのまま、新しいシールドとしてシールドゾーンに加える。
+  types:
+  - spell
+- abilities:
+  - effect:
+    - as: t
+      op: choose
+      select:
+        count: 1
+        filter:
+          types:
+          - creature
+        owner: you
+        zone: bz
+    - body:
+      - count:
+          sum:
+          - 1
+          - count:
+              under_of: t
+        op: draw
+      op: may
+    kind: trigger
+    when:
+      event: move
+      subject: self
+      to: bz
+  civs:
+  - water
+  cost: 4
+  id: dm35-011
+  mana: 1
+  name: 吸熱銃機カタクロシン
+  power: 2000
+  races:
+  - グレートメカオー
+  - オリジン
+  source:
+    official: dm35-011
+    review: pending
+  text: このクリーチャーをバトルゾーンに出した時、バトルゾーンにある自分のクリーチャーを１体選ぶ。そのクリーチャーに含まれるカード１枚につき、カードを１枚引いてもよい。
+  types:
+  - creature
+- abilities:
+  - effect:
+    - as: mine
+      op: choose
+      select:
+        count: 1
+        filter:
+          types:
+          - creature
+        owner: you
+        zone: bz
+    - as: foe
+      op: choose
+      select:
+        count: 1
+        filter:
+          types:
+          - creature
+        owner: opp
+        zone: bz
+    - duration: end_of_turn
+      mod:
+        power:
+          amount: -2000
+          count:
+            sum:
+            - 1
+            - count:
+                under_of: mine
+      op: modify
+      select:
+        ref: foe
+    kind: trigger
+    when:
+      event: move
+      subject: self
+      to: bz
+  civs:
+  - darkness
+  cost: 6
+  id: dm35-027
+  mana: 1
+  name: 骸醒虫バルマンティス・ワーム
+  power: 4000
+  races:
+  - パラサイトワーム
+  - オリジン
+  source:
+    official: dm35-027
+    review: pending
+  text: このクリーチャーをバトルゾーンに出した時、バトルゾーンにある自分と相手のクリーチャーを１体ずつ選ぶ。そのターン、その自分のクリーチャーに含まれるカード１枚につき、選んだ相手クリーチャーのパワーは-2000される。
+  types:
+  - creature
+- abilities:
+  - effect:
+    - as: t
+      op: choose
+      select:
+        count: 1
+        filter:
+          types:
+          - creature
+        owner: you
+        zone: bz
+    - body:
+      - op: mana_put
+        select:
+          from_top: 1
+          owner: you
+          zone: deck
+      op: repeat
+      times:
+        sum:
+        - 1
+        - count:
+            under_of: t
+    kind: trigger
+    when:
+      event: move
+      subject: self
+      to: bz
+  civs:
+  - nature
+  cost: 5
+  id: dm35-053
+  mana: 1
+  name: 豊穣の祈りマナーン
+  power: 2000
+  races:
+  - ドリームメイト
+  source:
+    official: dm35-053
+    review: pending
+  text: このクリーチャーをバトルゾーンに出した時、バトルゾーンにある自分のクリーチャーを１体選ぶ。そのクリーチャーに含まれるカード１枚につき、自分の山札の上から１枚、マナゾーンに置く。
+  types:
+  - creature
+- civs:
+  - darkness
+  cost: 6
+  id: dmbd12-i03
+  mana: 1
+  name: 死神アトミック・デストロイヤー
+  source:
+    official: dmbd12-i03
+    review: pending
+    aliases:
+    - dm35-014
+  spell:
+  - as: t
+    op: choose
+    select:
+      count: 1
+      filter:
+        types:
+        - creature
+      owner: you
+      zone: bz
+  - body:
+    - op: destroy
+      select:
+        chooser: opp
+        count: 1
+        filter:
+          types:
+          - creature
+        owner: opp
+        zone: bz
+    op: repeat
+    times:
+      sum:
+      - 1
+      - count:
+          under_of: t
+  text: 自分のクリーチャーを１体選ぶ。そのクリーチャーに含まれるカード１枚につき、相手は自身のクリーチャーを１体選んで破壊する。
+  types:
+  - spell
