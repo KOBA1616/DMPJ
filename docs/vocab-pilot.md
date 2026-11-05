@@ -845,3 +845,10 @@ converted の監査（opt_reduce の素の整数表記9件）から。任意形�
 - 対象が「すべてのクリーチャー」の場合は select で対象範囲を指定する。
 - tests/test_vocab_pilot70.py 2件（正常 parse／検証）
 - 待機13枚（ability_ignore のみが gap のもの）。
+
+## 第71弾: l_gate（L・ゲート）— 新語彙なし（2026-11-05）
+「L・ゲート：種族（このクリーチャーが破壊される時、墓地に置くかわりに、その種族を１体、自分の墓地から手札に戻してもよい。そうした場合、このクリーチャーを山札の一番下に置く）」は既存の kind: replace で表せる。
+- 書き方: kind: replace, when: {event: move, from: bz, to: graveyard, reason: destroy, subject: self}, instead: [may で墓地から種族1体を手札へ、そうしたら self を山札の一番下へ]
+- 種族はカードごとに異なるためキーワード化せず、パターンとして各カードに書く。
+- tests/test_vocab_pilot71.py 2件（正常 parse／検証）
+- 待機12枚（l_gate のみが gap のもの）。
