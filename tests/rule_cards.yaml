@@ -843,3 +843,25 @@ cards:
     races: [テスト, ドラゴン]
     text: 試験用ダミー（ドラゴン）
     abilities: []
+  - id: R095
+    name: テスト・係数ブレイカー
+    types: [creature]
+    civs: [fire]
+    cost: 5
+    power: 5000
+    races: [テスト]
+    abilities:
+    - kind: static
+      affects: self
+      mod: {breaks: {amount: 2, count: {zone: bz, owner: opp, filter: {types: [creature]}}}}
+  - id: R096
+    name: テスト・文明ブレイカー
+    types: [creature]
+    civs: [fire]
+    cost: 5
+    power: 5000
+    races: [テスト]
+    abilities:
+    - kind: static
+      affects: self
+      mod: {breaks: {civ_count: {zone: bz, owner: opp}}}

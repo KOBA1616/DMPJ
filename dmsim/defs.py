@@ -426,10 +426,17 @@ class Checker:
                 raise DefError(f"{where}: add_races must be a list of race names")
         if "breaks" in m:
             b = m["breaks"]
-            if not isinstance(b, int) and not (isinstance(b, dict) and set(b) == {"count"}):
-                raise DefError(f"{where}: breaks must be an int or {{count: <selector>}} (1 + count)")
             if isinstance(b, dict):
-                self.count_spec(b["count"], where)
+                if "count" in b:   # {count: セレクタ, amount?: 係数}（クルー・ブレイカー等）: 1 + amount × 数
+                    if set(b) - {"amount", "count"} or ("amount" in b and not isinstance(b["amount"], int)):
+                        raise DefError(f"{where}: breaks dict with count takes only amount/count")
+                    self.count_spec(b["count"], where)
+                else:   # 式形式（{civ_count: セレクタ}、第79弾）: 1 + 文明の種類数
+                    if set(b) != {"civ_count"}:
+                        raise DefError(f"{where}: breaks must be an int, {{count: <selector>}}, or {{civ_count: <selector>}}")
+                    self.count_spec(b["civ_count"], where)
+            elif not isinstance(b, int):
+                raise DefError(f"{where}: breaks must be an int or a dict (1 + value)")
         if "cost_may" in m:
             cm = m["cost_may"]
             if not isinstance(cm, dict) or set(cm) - {"amount", "once", "min", "must"} or not isinstance(cm.get("amount"), int) \

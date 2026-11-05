@@ -60,3 +60,17 @@ def test_crew_breaker_counts_others(rr):
     e2 = setup(rr, {"bz": ["R093"]}, {})
     cid2 = e2.bz_tops(0)[0]
     assert e2.chars(cid2)["break_opts"] == [1]
+
+
+def test_breaks_amount_form(rules, rr):
+    """既存形式 {amount, count}: 1 + 係数×数（dmd10-008 型）。相手2体で 1+2×2=5。"""
+    e = setup(rr, {"bz": ["R095"]}, {"bz": ["R010", "R011"]})
+    a = next(i for i, c in enumerate(e.s.cards) if c.defn == "R095")
+    assert e.chars(a)["breaks"] == 5
+
+
+def test_breaks_civ_count_form(rules, rr):
+    """既存形式 {civ_count: セレクタ}（第79弾）: 1 + 文明の種類数。相手が自然+水で 3。"""
+    e = setup(rr, {"bz": ["R096"]}, {"bz": ["R010", "R012"]})
+    a = next(i for i, c in enumerate(e.s.cards) if c.defn == "R096")
+    assert e.chars(a)["breaks"] == 3

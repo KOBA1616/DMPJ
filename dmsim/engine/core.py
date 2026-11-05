@@ -446,8 +446,10 @@ class Engine(SelectorMixin, EventMixin, InterpreterMixin, TurnMixin, CombatMixin
                     ch["races"].append(r)
             if "breaks" in m:   # ブレイカー能力ごとのブレイク数（509.2b）。使う能力は攻撃時に選ぶ（509.2c）
                 b = m["breaks"]
-                if isinstance(b, dict):   # クルー・ブレイカー（第130弾）: 1 + 数えた対象の数
-                    n = 1 + self.count_of(b["count"], env_self)
+                if isinstance(b, dict):   # dict 形式はすべて「1 + 値」: {count} は 1+数（クルー・ブレイカー、第130弾）、
+                    # {amount, count} は 1+係数×数（dmd10-008 型）、式形式 {civ_count: ...} は 1+式の値（第79弾、dmc34-025 型）
+                    v = b.get("amount", 1) * self.count_of(b["count"], env_self) if "count" in b else self.count_of(b, env_self)
+                    n = 1 + v
                     ch["break_opts"].append(n)
                     ch["breaks"] = max(ch["breaks"], n)
                 else:
