@@ -298564,3 +298564,573 @@ cards:
     マジボンバー ４（このクリーチャーが攻撃する時、自分の山札の上から１枚目を見る。その後、コスト４以下のクリーチャーを１体、自分の手札または山札の上から、バトルゾーンに出してもよい）'
   types:
   - creature
+- abilities:
+  - effect:
+    - body:
+      - op: bounce
+        select:
+          ref: event.opponent
+      op: may
+    kind: trigger
+    when:
+      event: battle_start
+      subject: self
+  - effect:
+    - body:
+      - op: bounce
+        select:
+          ref: event.subject
+      op: may
+    kind: trigger
+    when:
+      event: battle_start
+      opponent: self
+  - affects: self
+    if:
+      cmp:
+      - count:
+          owner: you
+          zone: shield
+      - <=
+      - 2
+    kind: static
+    mod:
+      grant:
+      - blocker
+      power: 2000
+  civs:
+  - water
+  cost: 5
+  id: dmr01-020
+  mana: 1
+  name: ラブリー・ハート
+  power: 4000
+  races:
+  - サイバー・ウイルス
+  - ハンター
+  source:
+    notes: バトルする時は攻撃側・守備側の両方を含むため battle_start の trigger を2つに分けた（第75弾）
+    official: dmr01-020
+    review: pending
+    aliases:
+    - dmr01-020m
+  text: このクリーチャーがバトルする時、バトルしている相手のクリーチャーを持ち主の手札に戻してもよい。 / 自分のシールドが２枚以下の時、このクリーチャーのパワーは+2000され、「ブロッカー」を得る。
+  types:
+  - creature
+- abilities:
+  - effect:
+    - as: t
+      op: choose
+      select:
+        count: 1
+        from_top: 1
+        look: true
+        owner: you
+        zone: deck
+    - cond:
+        exists:
+          filter:
+            any_of:
+            - race_has: ゴッド
+            - colorless: true
+              types:
+              - creature
+          ref: t
+      else:
+      - op: move
+        reason: draw
+        select:
+          count: all
+          ref: t
+        to: hand
+      op: if
+      then:
+      - body:
+        - op: move
+          reason: put
+          select:
+            count: all
+            ref: t
+          to: bz
+        op: may
+    kind: trigger
+    when:
+      event: battle_start
+      subject: self
+  - effect:
+    - as: t
+      op: choose
+      select:
+        count: 1
+        from_top: 1
+        look: true
+        owner: you
+        zone: deck
+    - cond:
+        exists:
+          filter:
+            any_of:
+            - race_has: ゴッド
+            - colorless: true
+              types:
+              - creature
+          ref: t
+      else:
+      - op: move
+        reason: draw
+        select:
+          count: all
+          ref: t
+        to: hand
+      op: if
+      then:
+      - body:
+        - op: move
+          reason: put
+          select:
+            count: all
+            ref: t
+          to: bz
+        op: may
+    kind: trigger
+    when:
+      event: battle_start
+      opponent: self
+  civs:
+  - zero
+  cost: 7
+  id: dmr10-001
+  keywords:
+  - blocker
+  - double_breaker
+  mana: 1
+  name: 精霊のイザナイ 天草
+  power: 6500
+  races:
+  - オラクル
+  - エンジェル・コマンド
+  source:
+    notes: バトルする時は攻撃側・守備側の両方を含むため battle_start の trigger を2つに分けた（第75弾）。「すべてのプレイヤーに見せる」は公開の扱いをせず、dm22rp2x-071
+      と同型の choose（look）＋ if/else で変換。出してもよいと選ばなかった場合は山札の上に残る
+    official: dmr10-001
+    review: pending
+  text: ブロッカーこのクリーチャーがバトルする時、自分の山札の上から１枚目をすべてのプレイヤーに見せる。それがゴッドか無色クリーチャーであれば、バトルゾーンに出してもよい。それ以外であれば、自分の手札に加える。W・ブレイカー
+  types:
+  - creature
+- abilities:
+  - effect:
+    - op: destroy
+      select:
+        count: 1
+        ref: self
+    kind: trigger
+    when:
+      event: battle_win
+      subject: self
+  civs:
+  - darkness
+  cost: 2
+  id: dmr12-043
+  keywords:
+  - blocker
+  - cannot_attack
+  mana: 1
+  name: 血塗られた信徒 チリ
+  power: 4000
+  races:
+  - オラクル
+  source:
+    notes: バトルの後の自壊は battle_win で表した（dm18-072 ボーン・スパイダーと同型。負け・引き分けでは通常どおり破壊される）
+    official: dmr12-043
+    review: pending
+  text: ブロッカー（相手クリーチャーが攻撃する時、このクリーチャーをタップして、その攻撃を阻止してもよい。その後、その相手クリーチャーとバトルする）このクリーチャーは攻撃することができない。このクリーチャーがバトルする時、バトルの後、このクリーチャーを破壊する。
+  types:
+  - creature
+- abilities:
+  - effect:
+    - op: destroy
+      select:
+        count: 1
+        ref: self
+    kind: trigger
+    when:
+      event: battle_win
+      subject: self
+  civs:
+  - darkness
+  cost: 2
+  id: dmr14-045
+  keywords:
+  - blocker
+  - cannot_attack
+  mana: 1
+  name: ブラッディ・メアリー
+  power: 4000
+  races:
+  - ファンキー・ナイトメア
+  source:
+    notes: バトルの後の自壊は battle_win で表した（dm18-072 ボーン・スパイダーと同型。負け・引き分けでは通常どおり破壊される）
+    official: dmr14-045
+    review: pending
+  text: ブロッカー（相手クリーチャーが攻撃する時、このクリーチャーをタップして、その攻撃を阻止してもよい。その後、その相手クリーチャーとバトルする）このクリーチャーは攻撃することができない。このクリーチャーがバトルする時、バトルの後、このクリーチャーを破壊する。
+  types:
+  - creature
+- abilities:
+  - effect:
+    - body:
+      - count: 3
+        op: mill
+        owner: you
+      op: may
+    kind: trigger
+    when:
+      event: move
+      subject: self
+      to: bz
+  - effect:
+    - op: destroy
+      select:
+        count: 1
+        ref: self
+    kind: trigger
+    when:
+      event: battle_win
+      subject: self
+  civs:
+  - darkness
+  cost: 3
+  id: dmrp02-044
+  mana: 1
+  name: 凶鬼25号 ギュリン
+  power: 4000
+  races:
+  - マフィ・ギャング
+  source:
+    notes: バトルの後の自壊は battle_win で表した（dm18-072 ボーン・スパイダーと同型。負け・引き分けでは通常どおり破壊される）
+    official: dmrp02-044
+    review: pending
+  text: このクリーチャーがバトルゾーンに出た時、自分の山札の上から３枚を墓地に置いてもよい。 / このクリーチャーがバトルする時、バトルの後、このクリーチャーを破壊する。
+  types:
+  - creature
+- abilities:
+  - effect:
+    - op: destroy
+      select:
+        count: 1
+        ref: self
+    kind: trigger
+    when:
+      event: battle_win
+      subject: self
+  civs:
+  - darkness
+  cost: 5
+  id: dmrp05-044
+  keywords:
+  - s_trigger
+  - blocker
+  - cannot_attack
+  mana: 1
+  name: 歯壊医 デント
+  power: 5000
+  races:
+  - マフィ・ギャング
+  source:
+    notes: バトルの後の自壊は battle_win で表した（dm18-072 ボーン・スパイダーと同型。負け・引き分けでは通常どおり破壊される）
+    official: dmrp05-044
+    review: pending
+  text: 'S・トリガー（このクリーチャーをシールドゾーンから手札に加える時、コストを支払わずにすぐ召喚してもよい）
+
+    ブロッカー（このクリーチャーをタップして、相手クリーチャーの攻撃先をこのクリーチャーに変更してもよい）
+
+    このクリーチャーは攻撃できない。
+
+    このクリーチャーがバトルした時、バトルの後、このクリーチャーを破壊する。'
+  types:
+  - creature
+- abilities:
+  - effect:
+    - op: destroy
+      select:
+        count: 1
+        ref: self
+    kind: trigger
+    when:
+      event: battle_win
+      subject: self
+  civs:
+  - darkness
+  cost: 6
+  id: dmrp06-043
+  keywords:
+  - s_trigger
+  - blocker
+  - cannot_attack
+  mana: 1
+  name: 衰えの影ナイト・エルダー
+  power: 8000
+  races:
+  - ゴースト
+  source:
+    notes: バトルの後の自壊は battle_win で表した（dm18-072 ボーン・スパイダーと同型。負け・引き分けでは通常どおり破壊される）
+    official: dmrp06-043
+    review: pending
+  text: 'S・トリガー（このクリーチャーをシールドゾーンから手札に加える時、コストを支払わずにすぐ召喚してもよい）
+
+    ブロッカー（このクリーチャーをタップして、相手クリーチャーの攻撃先をこのクリーチャーに変更してもよい）
+
+    このクリーチャーは攻撃できない。
+
+    このクリーチャーがバトルした時、バトルの後、このクリーチャーを破壊する。'
+  types:
+  - creature
+- abilities:
+  - effect:
+    - duration: end_of_turn
+      mod:
+        power: 2000
+      op: modify
+      select:
+        ref: event.subject
+    kind: trigger
+    when:
+      event: battle_start
+      subject:
+        filter:
+          race_has: ビーストフォーク
+        other: true
+        owner: you
+  - effect:
+    - duration: end_of_turn
+      mod:
+        power: 2000
+      op: modify
+      select:
+        ref: event.opponent
+    kind: trigger
+    when:
+      event: battle_start
+      opponent:
+        filter:
+          race_has: ビーストフォーク
+        other: true
+        owner: you
+  civs:
+  - nature
+  cost: 2
+  id: dmx09-011
+  mana: 1
+  name: 番傘の牡丹
+  power: 1000
+  races:
+  - ビーストフォーク
+  source:
+    notes: 'バトルする時は攻撃側・守備側の両方を含むため battle_start の trigger を2つに分けた（第75弾）。対象は「自分の他のビーストフォーク」なので
+      other: true で自身を除いた'
+    official: dmx09-011
+    review: pending
+  text: 自分の他のビーストフォークがバトルする時、そのターン、そのクリーチャーのパワーは+2000される。
+  types:
+  - creature
+- abilities:
+  - effect:
+    - op: move
+      reason: break
+      select:
+        count: 1
+        owner: you
+        zone: shield
+      to: hand
+    kind: trigger
+    when:
+      event: battle_start
+      subject: self
+  - effect:
+    - op: move
+      reason: break
+      select:
+        count: 1
+        owner: you
+        zone: shield
+      to: hand
+    kind: trigger
+    when:
+      event: battle_start
+      opponent: self
+  civs:
+  - fire
+  cost: 3
+  id: dmx09-034
+  keywords:
+  - speed_attacker
+  mana: 1
+  name: ライラ・アイニー
+  power: 2000
+  races:
+  - ファイアー・バード
+  source:
+    notes: 'バトルする時は攻撃側・守備側の両方を含むため battle_start の trigger を2つに分けた（第75弾）。シールドを手札に加える処理は
+      dmrp15-041 と同型（move to hand, reason: break。「S・トリガー」は使えない点も同型）'
+    official: dmx09-034
+    review: pending
+    aliases:
+    - dm39-031
+  text: 'スピードアタッカー(このクリーチャーは召喚酔いしない)
+
+    このクリーチャーがバトルする時、自分のシールドをひとつ手札に加える。ただし、その「S・トリガー」は使えない。'
+  types:
+  - creature
+- abilities:
+  - affects: self
+    if:
+      not:
+        exists:
+          filter:
+            colorless: true
+            types:
+            - creature
+          owner: you
+          zone: bz
+    kind: static
+    mod:
+      deny:
+      - attack_creature
+      - attack_player
+  - effect:
+    - op: destroy
+      select:
+        count: 1
+        ref: self
+    kind: trigger
+    when:
+      event: battle_win
+      subject: self
+  civs:
+  - darkness
+  cost: 2
+  id: dmx13-032
+  keywords:
+  - blocker
+  mana: 1
+  name: 漆黒の守護者ハラッカダン
+  power: 4000
+  races:
+  - ガーディアン
+  - アンノイズ
+  source:
+    notes: バトルの後の自壊は battle_win で表した（dm18-072 ボーン・スパイダーと同型。負け・引き分けでは通常どおり破壊される）。条件つきの攻撃不可はキーワードではなく、条件つき
+      static の deny で表した
+    official: dmx13-032
+    review: pending
+  text: 'ブロッカー（相手クリーチャーが攻撃する時、このクリーチャーをタップして、その攻撃を阻止してもよい。その後、その相手クリーチャーとバトルする）
+
+    バトルゾーンに自分の無色クリーチャーがなければ、このクリーチャーは攻撃することができない。
+
+    このクリーチャーがバトルする時、バトルの後、このクリーチャーを破壊する。'
+  types:
+  - creature
+- abilities:
+  - effect:
+    - body:
+      - op: move
+        reason: put
+        select:
+          count: 1
+          filter:
+            any_of:
+            - race_has: ゴッド
+            - race_has: フェニックス
+            types:
+            - creature
+          look: true
+          owner: you
+          zone: deck
+        to: hand
+      op: may
+    - op: shuffle
+    kind: trigger
+    when:
+      event: move
+      subject: self
+      to: bz
+  - effect:
+    - op: destroy
+      select:
+        count: 1
+        ref: self
+    kind: trigger
+    when:
+      event: battle_win
+      subject: self
+  civs:
+  - darkness
+  cost: 5
+  id: dmx21-019
+  keywords:
+  - blocker
+  - cannot_attack
+  mana: 1
+  name: 黒神龍ドボルザーク
+  power: 5000
+  races:
+  - ドラゴン・ゾンビ
+  source:
+    notes: 山札探索は dm03-024 キング・ボニータスと同型（シャッフルは加えることを選ばなかった場合でも行うため may の外に置いた。山札を見る・相手に見せる処理は扱っていない）。バトルの後の自壊は
+      battle_win で表した（dm18-072 と同型。負け・引き分けでは通常どおり破壊される）
+    official: dmx21-019
+    review: pending
+    aliases:
+    - dmc40-003
+  text: ブロッカーこのクリーチャーは攻撃できない。このクリーチャーがバトルゾーンに出た時、自分の山札を見る。その中からゴッドまたはフェニックスを１体選び、相手に見せてから自分の手札に加えてもよい。その後、山札をシャッフルする。このクリーチャーがバトルする時、バトルの後、このクリーチャーを破壊する。
+  types:
+  - creature
+- abilities:
+  - effect:
+    - duration: during_attack
+      mod:
+        power: 7000
+      op: modify
+      select:
+        ref: event.subject
+    kind: trigger
+    when:
+      event: battle_start
+      subject:
+        filter:
+          race_has: ドラゴン
+        owner: you
+  - effect:
+    - duration: during_attack
+      mod:
+        power: 7000
+      op: modify
+      select:
+        ref: event.opponent
+    kind: trigger
+    when:
+      event: battle_start
+      opponent:
+        filter:
+          race_has: ドラゴン
+        owner: you
+  civs:
+  - fire
+  cost: 7
+  id: promoy13-008
+  keywords:
+  - double_breaker
+  mana: 1
+  name: バトルエール・カイザー
+  power: 7000
+  races:
+  - レッド・コマンド・ドラゴン
+  source:
+    notes: 'バトルする時は攻撃側・守備側の両方を含むため battle_start の trigger を2つに分けた（第75弾）。「自分のドラゴン」は自身（レッド・コマンド・ドラゴン）も含むため
+      other は付けていない。「そのバトル中」は duration: during_attack で表した'
+    official: promoy13-008
+    review: pending
+  text: '自分のドラゴンがバトルする時、そのバトル中、そのドラゴンのパワーは+7000される。
+
+    W・ブレイカー（このクリーチャーはシールドを２枚ブレイクする）'
+  types:
+  - creature
