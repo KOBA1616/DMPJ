@@ -322072,3 +322072,269 @@ cards:
   text: バトルゾーンにある相手のクリーチャーを１体選び、タップする。 / 自分のマナゾーンにある文明の数が、相手のより多い場合、呪文を１枚、自分の墓地から手札に戻してもよい。
   types:
   - spell
+- abilities:
+  - effect:
+    - body:
+      - op: bounce
+        select:
+          count: 1
+          filter:
+            power_le:
+              sum:
+              - power_of:
+                  ref: self
+              - -1
+            types:
+            - creature
+          owner: opp
+          zone: bz
+      op: may
+    kind: trigger
+    when:
+      event: attack
+      subject: self
+  civs:
+  - water
+  cost: 4
+  id: dm14-048
+  mana: 1
+  name: ノスタルジア・フィッシュ
+  power: 3000
+  races:
+  - ゲル・フィッシュ
+  source:
+    official: dm14-048
+    review: pending
+  text: このクリーチャーが攻撃する時、バトルゾーンにある、パワーがこのクリーチャーより小さい相手のクリーチャーを１体選び、持ち主の手札に戻してもよい。
+  types:
+  - creature
+- abilities:
+  - effect:
+    - op: destroy
+      select:
+        count: 1
+        filter:
+          power_le:
+            sum:
+            - power_of:
+                ref: self
+            - -1
+          types:
+          - creature
+        owner: opp
+        zone: bz
+    kind: trigger
+    when:
+      event: attack
+      subject: self
+  civs:
+  - fire
+  cost: 4
+  id: dm15-015
+  mana: 1
+  name: 強撃砲士モービィー
+  power: 2000
+  races:
+  - ヒューマノイド
+  source:
+    official: dm15-015
+    review: pending
+  text: このクリーチャーが攻撃する時、パワーがこのクリーチャーより小さい相手のクリーチャーを１体破壊する。
+  types:
+  - creature
+- abilities:
+  - affects: self
+    kind: static
+    mod:
+      power:
+        amount: 1000
+        count:
+          filter:
+            types:
+            - creature
+          other: true
+          owner: any
+          zone: bz
+  - affects: self
+    kind: static
+    mod:
+      deny:
+      - action: be_blocked
+        other:
+          power_le:
+            sum:
+            - power_of:
+                ref: self
+            - -1
+  civs:
+  - nature
+  cost: 7
+  free_if:
+    cmp:
+    - count:
+        filter:
+          types:
+          - creature
+        owner: any
+        zone: bz
+    - '>='
+    - 8
+  id: dm16-005
+  mana: 1
+  name: 統率するレオパルド・ホーン
+  power: 1000
+  races:
+  - ホーン・ビースト
+  source:
+    notes: 'G・ゼロは free_if で表した。原文に所有者の限定がないため、条件の枚数もパワー修整の枚数も owner: any で数え、パワー修整は
+      other: true で自身を除く。ブロック不可は第126弾の deny be_blocked + power_le 式'
+    official: dm16-005
+    review: pending
+  text: G・ゼロ-バトルゾーンにクリーチャーが８体以上あれば、このクリーチャーをコストを支払わずに召喚してもよい。 / このクリーチャーのパワーは、バトルゾーンにある他のクリーチャー１体につき+1000される。
+    / このクリーチャーは、パワーがこのクリーチャーより小さいクリーチャーにブロックされない。
+  types:
+  - creature
+- abilities:
+  - effect:
+    - op: destroy
+      select:
+        count: 1
+        filter:
+          power_le:
+            sum:
+            - power_of:
+                ref: self
+            - -1
+          types:
+          - creature
+        owner: opp
+        zone: bz
+    kind: trigger
+    when:
+      event: move
+      subject: self
+      to: bz
+  - affects:
+      filter:
+        power_le:
+          sum:
+          - power_of:
+              ref: self
+          - -1
+        types:
+        - creature
+      owner: opp
+      zone: bz
+    kind: static
+    mod:
+      grant:
+      - enters_tapped
+  civs:
+  - darkness
+  cost: 5
+  evolve_from:
+    civs:
+    - water
+    - darkness
+    - fire
+  id: dm25rp1-016
+  keywords:
+  - double_breaker
+  - g_neo
+  mana: 1
+  name: トートロット＝シャルロット
+  neo: true
+  power: 7000
+  races:
+  - アビスロイヤル
+  source:
+    notes: 'G-NEO進化は neo: true + evolve_from（文明のみ）+ keywords の g_neo で表した（dm25ex3-011
+      と同型で、対象外ではない）。タップして出る付与は第90弾の static grant enters_tapped で、affects の filter
+      に第126弾の power_le 式を入れた。W・ブレイカーは double_breaker（submit 時に split の known_keywords
+      と重複排除される）'
+    official: dm25rp1-016
+    review: pending
+    aliases:
+    - promoy24-051
+  text: 'G-NEO進化：水、闇、または火のクリーチャー１体の上に置いてもよい。（カードが下にあれば、NEO進化クリーチャーとして扱い、離れる時、かわりに下のカードすべてが離れる）
+
+    W・ブレイカー
+
+    このクリーチャーが出た時、このクリーチャーよりパワーが小さい相手のクリーチャーを１体選び、破壊する。
+
+    このクリーチャーよりパワーが小さい相手のクリーチャーはタップして出る。'
+  types:
+  - creature
+- abilities:
+  - effect:
+    - body:
+      - onto:
+          ref: event.subject
+        op: invade
+      op: may
+    kind: declare
+    when:
+      event: attack
+      subject:
+        filter:
+          civs:
+          - nature
+          cost_ge: 3
+          types:
+          - evolution
+        owner: you
+    zone: hand
+  - effect:
+    - op: move
+      reason: put
+      select:
+        count: all
+        filter:
+          power_le:
+            sum:
+            - power_of:
+                ref: self
+            - -1
+          types:
+          - creature
+        owner: opp
+        zone: bz
+      to: mana
+    kind: trigger
+    when:
+      event: move
+      subject: self
+      to: bz
+  civs:
+  - nature
+  cost: 8
+  evolve_from:
+    types:
+    - evolution
+  id: dmex17-040
+  keywords:
+  - quad_breaker
+  mana: 1
+  name: 甲獣軍隊 ベアフ・ガンガンオー
+  power: 18000
+  races:
+  - ゲリラ・コマンド
+  - ビークル・ビー
+  - 侵略者
+  source:
+    notes: '究極進化は evolve_from: {types: [evolution]} で表した（dm23ex2-006 等と同型）。侵略は kind:
+      declare + op: invade で表した（dmex17-024、dm25sd2-003 と同型。攻撃主体の filter に civs: [nature]、cost_ge:
+      3、types: [evolution]）。Q・ブレイカーは quad_breaker（submit 時に split の known_keywords
+      と重複排除される）。表せない部分はなかったため unsupported は付けていない'
+    official: dmex17-040
+    review: pending
+  text: '究極進化：進化クリーチャー１体の上に置く。
+
+    侵略：自然のコスト３以上の進化クリーチャー（自分の自然のコスト３以上の進化クリーチャーが攻撃する時、自分の手札にあるこのクリーチャーをその上に重ねてもよい）
+
+    Q・ブレイカー
+
+    このクリーチャーが出た時、このクリーチャーよりパワーが小さい相手のクリーチャーをすべて、持ち主のマナゾーンに置く。'
+  types:
+  - creature
+  - evolution
