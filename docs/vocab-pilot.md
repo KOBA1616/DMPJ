@@ -992,3 +992,10 @@ converted の監査（opt_reduce の素の整数表記9件）から。任意形�
 - 通常の「出た時」（summon イベント）は召喚以外で出た場合も誘発するため、原文が「召喚によって」を明記する場合のみこの形を使う。
 - tests/test_vocab_pilot92.py 2件（正常 parse／検証）
 - 待機20枚（summon_only_entry のみが gap のもの）。
+
+## 第93弾: soul（ソウル種族フィルタ）— 新語彙なし（2026-11-05）
+(H・ソウル) 等のソウルは種族として扱い、any_of の race_has で表せる。
+- 書き方: filter: {any_of: [{race_has: H・ソウル}, {race_has: M・ソウル}, {race_has: E・ソウル}, {race_has: K・ソウル}, {race_has: W・ソウル}, {race_has: B・ソウル}]}。
+- 「他の」は other: true。
+- tests/test_vocab_pilot93.py 2件（正常 parse／検証）
+- 待機18枚（soul のみが gap のもの）。
