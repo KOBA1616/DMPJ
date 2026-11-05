@@ -306240,3 +306240,913 @@ cards:
   text: このクリーチャーのパワーは、バトルゾーンにある水または闇のクリーチャー１体につき-1000される。 / このクリーチャーは、パワーが6000以上の時、｢W・ブレイカー｣を得る。
   types:
   - creature
+- abilities:
+  - effect: &id154
+    - no_untap_next: true
+      op: tap
+      select:
+        count: 1
+        filter:
+          types:
+          - creature
+        owner: opp
+        zone: bz
+    kind: trigger
+    when:
+      event: move
+      subject: self
+      to: bz
+  - effect: *id154
+    kind: trigger
+    when:
+      event: move
+      subject:
+        filter:
+          name_has: 権力のコイン
+          types:
+          - tamaseed
+        other: true
+        owner: you
+      to: bz
+  civs:
+  - light
+  cost: 3
+  id: dm22rp1-054
+  keywords:
+  - s_trigger
+  mana: 1
+  name: 権力のコイン
+  source:
+    official: dm22rp1-054
+    review: pending
+  text: 'S・トリガー（このタマシードをシールドゾーンから手札に加える時、コストを支払わずにすぐ使ってもよい）
+
+    このタマシードまたは、名前に《権力のコイン》とある自分の他のタマシードが出た時、相手のクリーチャーを１体選んでタップする。次の相手のターンのはじめに、そのクリーチャーはアンタップしない。'
+  types:
+  - tamaseed
+- abilities:
+  - effect:
+    - no_untap_next: true
+      op: tap
+      select:
+        count: 1
+        filter:
+          types:
+          - creature
+        owner: opp
+        zone: bz
+    kind: trigger
+    when:
+      event: move
+      subject: self
+      to: bz
+  civs:
+  - light
+  cost: 2
+  id: dm22rp2x-054
+  keywords:
+  - shield_saver
+  mana: 1
+  name: 轟龍のギフト
+  source:
+    official: dm22rp2x-054
+    review: pending
+    aliases:
+    - dm22rp2-054
+    - promoy21-071
+  text: 'このタマシードが出た時、相手のクリーチャーを１体選び、タップする。そのクリーチャーは、次の相手のターンのはじめにアンタップしない。
+
+    シールド・セイバー（自分のシールドがブレイクされる時、かわりにこのタマシードを破壊してもよい）'
+  types:
+  - tamaseed
+- abilities:
+  - effect:
+    - body:
+      - as: paid
+        op: move
+        reason: destroy
+        select:
+          ref: self
+        to: graveyard
+      - cond:
+          exists:
+            ref: paid
+        op: if
+        then:
+        - modes:
+          - - no_untap_next: true
+              op: tap
+              select:
+                count: 1
+                filter:
+                  types:
+                  - creature
+                owner: opp
+                zone: bz
+          - - op: mana_put
+              select:
+                from_top: 1
+                owner: you
+                zone: deck
+          op: modal
+      op: may
+    kind: trigger
+    when:
+      event: move
+      subject: self
+      to: bz
+  civs:
+  - light
+  - nature
+  cost: 2
+  id: dm23bd5-009
+  mana: 1
+  name: Disゴリアス
+  power: 2000
+  races:
+  - ナイト
+  - ディスタス
+  source:
+    official: dm23bd5-009
+    review: pending
+  text: このクリーチャーが出た時、このクリーチャーを破壊してもよい。そうしたら、次のうちいずれか１つを選ぶ。 / ▶相手のクリーチャーを１体選び、タップする。そのクリーチャーは次の相手のターンのはじめにアンタップしない。
+    / ▶自分の山札の上から１枚目をマナゾーンに置く。
+  types:
+  - creature
+- abilities:
+  - effect:
+    - body:
+      - no_untap_next: true
+        op: tap
+        select:
+          count: 1
+          filter:
+            types:
+            - creature
+          owner: opp
+          zone: bz
+      op: repeat
+      times:
+        count:
+          filter:
+            types:
+            - spell
+          owner: you
+          zone: graveyard
+    kind: trigger
+    when:
+      event: move
+      subject: self
+      to: bz
+  - effect:
+    - as: casted
+      op: choose
+      select:
+        ref: event.subject
+    - body:
+      - op: move
+        reason: put
+        select:
+          count: 1
+          filter:
+            cost_le:
+              cost_of:
+                ref: casted
+            race_has: ナイト
+          owner: you
+          zone: graveyard
+        to: bz
+      op: may
+    kind: trigger
+    when:
+      event: cast
+      subject:
+        filter:
+          types:
+          - spell
+        owner: you
+  - affects:
+      filter:
+        race_has: ナイト
+        types:
+        - creature
+      other: true
+      owner: you
+      zone: bz
+    kind: static
+    mod:
+      gain:
+      - instead:
+        - op: move
+          reason: destroy
+          select:
+            ref: self
+          to: graveyard
+        kind: replace
+        optional: true
+        when:
+          event: move
+          from: bz
+          subject:
+            filter:
+              race_has: ナイト
+              types:
+              - creature
+            other: true
+            owner: you
+  civs:
+  - light
+  - darkness
+  cost: 8
+  id: dm23ex2-030
+  keywords:
+  - blocker
+  - triple_breaker
+  mana: 1
+  name: 真紅の魔光大帝ネロ・グリフィス・マイヤー
+  power: 12000
+  races:
+  - エンジェル・コマンド
+  - ダークロード
+  - ナイト
+  source:
+    official: dm23ex2-030
+    review: pending
+  text: 'ブロッカー
+
+    T・ブレイカー
+
+    このクリーチャーが出た時、自分の墓地にある呪文１枚につき、相手のクリーチャーを１体選び、タップする。次の相手のターンのはじめに、それらのクリーチャーはアンタップしない。
+
+    自分が呪文を唱えた時、その呪文のコスト以下のナイトを１枚、自分の墓地から出してもよい。
+
+    自分の他のナイト・クリーチャーに「ウルトラ・セイバー：ナイト」を与える。（自分のナイトが離れる時、「ウルトラ・セイバー：ナイト」を持つクリーチャーをかわりに破壊してもよい）'
+  types:
+  - creature
+- abilities:
+  - effect:
+    - no_untap_next: true
+      op: tap
+      select:
+        count: 1
+        filter:
+          types:
+          - creature
+        owner: opp
+        zone: bz
+    - body:
+      - op: flip_down
+        select:
+          count: 1
+          owner: you
+          zone: mana
+      op: may
+    kind: trigger
+    when:
+      event: move
+      subject: self
+      to: bz
+  civs:
+  - light
+  cost: 2
+  id: dm23ex3-055
+  keywords:
+  - blocker
+  mana: 1
+  name: 転々のシダン ラシャ
+  power: 3000
+  races:
+  - オラクル・セレス
+  source:
+    official: dm23ex3-055
+    review: pending
+  text: 'ブロッカー（このクリーチャーをタップして、相手クリーチャーの攻撃先をこのクリーチャーに変更してもよい）
+
+    このクリーチャーが出た時、相手のクリーチャーを１体選び、タップする。次の相手のターンのはじめに、そのクリーチャーはアンタップしない。その後、自分のマナゾーンのカードを１枚、裏向きにしてもよい。（マナゾーンにある裏向きのカードは、マナの数字が１の無色カードとして扱う。その持ち主はそれをいつでも見てもよい）'
+  types:
+  - creature
+- abilities:
+  - effect:
+    - no_untap_next: true
+      op: tap
+      select:
+        count: all
+        filter:
+          types:
+          - creature
+        owner: opp
+        zone: bz
+    kind: trigger
+    when:
+      event: move
+      subject: self
+      to: bz
+  - affects:
+      filter:
+        race_has: メカ・デル・ステラ
+      owner: you
+      zone: bz
+    kind: static
+    mod:
+      grant:
+      - powered_breaker
+      power: 6000
+  - if:
+      cmp:
+      - count:
+          owner: you
+          zone: shield
+      - '>='
+      - 2
+    instead:
+    - op: move
+      reason: return
+      select:
+        count: 2
+        owner: you
+        zone: shield
+      to: hand
+    kind: replace
+    optional: true
+    when:
+      event: move
+      from: bz
+      subject: self
+  civs:
+  - light
+  cost: 8
+  id: dm23rp1-001
+  keywords:
+  - triple_breaker
+  mana: 1
+  name: アプドリ・ビグッティーノ
+  power: 13000
+  races:
+  - メカ・デル・ディネロ
+  source:
+    notes: 真・エスケープは escape キーワード（破壊される時・シールド１つ）と異なるため、離れる時全般・シールド２つとして replace を直接書いた（手札に加えたシールドの「S・トリガー」が使えない点は
+      escape と同扱いの想定）。raw の原文に文字化け（「アンタッ…しない」）があったため text は「アンタップしない」と補正した
+    official: dm23rp1-001
+    review: pending
+  text: 'T・ブレイカー
+
+    このクリーチャーが出た時、相手のクリーチャーをすべてタップする。次の相手のターンのはじめに、それらのクリーチャーはアンタップしない。
+
+    自分のメカ・デル・ステラすべてのパワーを+6000し、「パワード・ブレイカー」を与える。
+
+    真・エスケープ（このクリーチャーが離れる時、かわりに自分のシールドを２つ手札に加えてもよい。ただし、その「S・トリガー」は使えない）'
+  types:
+  - creature
+- abilities:
+  - effect:
+    - no_untap_next: true
+      op: tap
+      select:
+        count: 1
+        filter:
+          types:
+          - creature
+        owner: opp
+        zone: bz
+    kind: trigger
+    when:
+      event: move
+      subject: self
+      to: bz
+  civs:
+  - light
+  cost: 5
+  id: dm23rp1-053
+  keywords:
+  - s_trigger
+  - blocker
+  mana: 1
+  name: 忍封の聖沌 133k3n
+  power: 5500
+  races:
+  - メカ・デル・ステラ
+  - シノビ
+  source:
+    official: dm23rp1-053
+    review: pending
+  text: 'S・トリガー（このクリーチャーをシールドゾーンから手札に加える時、コストを支払わずにすぐ召喚してもよい）
+
+    ブロッカー（このクリーチャーをタップして、相手クリーチャーの攻撃先をこのクリーチャーに変更してもよい）
+
+    このクリーチャーが出た時、相手のクリーチャーを１体選び、タップする。次の相手のターンのはじめに、そのクリーチャーはアンタップしない。'
+  types:
+  - creature
+- abilities:
+  - effect: &id155
+    - no_untap_next: true
+      op: tap
+      select:
+        count: 1
+        filter:
+          civs:
+          - light
+        owner: opp
+        zone: mana
+    - no_untap_next: true
+      op: tap
+      select:
+        count: 1
+        filter:
+          civs:
+          - water
+        owner: opp
+        zone: mana
+    - no_untap_next: true
+      op: tap
+      select:
+        count: 1
+        filter:
+          civs:
+          - darkness
+        owner: opp
+        zone: mana
+    - no_untap_next: true
+      op: tap
+      select:
+        count: 1
+        filter:
+          civs:
+          - fire
+        owner: opp
+        zone: mana
+    - no_untap_next: true
+      op: tap
+      select:
+        count: 1
+        filter:
+          civs:
+          - nature
+        owner: opp
+        zone: mana
+    kind: trigger
+    when:
+      event: move
+      subject: self
+      to: bz
+  - effect: *id155
+    kind: trigger
+    when:
+      event: attack
+      subject: self
+  civs:
+  - fire
+  cost: 6
+  id: dm24bd1-007
+  keywords:
+  - double_breaker
+  mana: 1
+  name: メガ・マナロック・ドラゴン
+  power: 7000
+  races:
+  - メガ・コマンド・ドラゴン
+  source:
+    notes: 「各文明１枚ずつ」は文明ごとの tap ５回に分解した（その文明のカードが無い場合は select が空で何もしない）
+    official: dm24bd1-007
+    review: pending
+    aliases:
+    - dm23ex2-chog006
+    - dmart06-004
+    - dmr17-s08
+  text: 'W・ブレイカー
+
+    このクリーチャーが出た時または攻撃する時、相手のマナゾーンからカードを各文明１枚ずつ選び、タップする。次の相手のターンのはじめに、それらのカードはアンタップしない。'
+  types:
+  - creature
+- faces:
+  - abilities:
+    - effect:
+      - as: pile
+        op: choose
+        select:
+          count: all
+          from_top: 2
+          look: true
+          owner: you
+          zone: deck
+      - op: move
+        reason: charge
+        select:
+          count: 1
+          ref: pile
+        to: shield
+      - op: move
+        reason: draw
+        select:
+          count: all
+          ref: pile
+        to: hand
+      kind: trigger
+      when:
+        event: move
+        subject: self
+        to: bz
+    civs:
+    - light
+    cost: 6
+    keywords:
+    - blocker
+    - double_breaker
+    name: 審議の精霊フォースオーダー
+    power: 7000
+    races:
+    - エンジェル・コマンド
+    text: ブロッカー / W・ブレイカー / このクリーチャーが出た時、自分の山札の上から２枚を見る。そのうちの１枚をシールド化し、もう１枚を手札に加える。
+    types:
+    - creature
+  - civs:
+    - light
+    cost: 3
+    keywords:
+    - charger
+    name: サイレンス・チャージャー
+    spell:
+    - no_untap_next: true
+      op: tap
+      select:
+        count: 1
+        filter:
+          types:
+          - creature
+        owner: opp
+        zone: bz
+    text: 相手のクリーチャーを１体選び、タップする。次の相手のターンのはじめに、そのクリーチャーはアンタップしない。 / チャージャー
+    types:
+    - spell
+  id: dm24ex4-061
+  mana: 1
+  source:
+    official: dm24ex4-061
+    review: pending
+    aliases:
+    - dm24ex4-pr021
+    - promoy23-120
+  text: 審議の精霊フォースオーダー： ブロッカー / W・ブレイカー / このクリーチャーが出た時、自分の山札の上から２枚を見る。そのうちの１枚をシールド化し、もう１枚を手札に加える。
+    ／ サイレンス・チャージャー： 相手のクリーチャーを１体選び、タップする。次の相手のターンのはじめに、そのクリーチャーはアンタップしない。 / チャージャー
+- abilities:
+  - affects:
+      filter:
+        cost_ge: 6
+      owner: you
+      zone: hand
+    kind: static
+    mod:
+      cost: -1
+      cost_min: 0
+  - effect:
+    - no_untap_next: true
+      op: tap
+      select:
+        count: 1
+        filter:
+          types:
+          - creature
+        owner: opp
+        zone: bz
+    kind: trigger
+    when:
+      event: move
+      subject:
+        filter:
+          cost_ge: 6
+          types:
+          - creature
+        owner: you
+      to: bz
+  civs:
+  - light
+  cost: 2
+  id: dm24rp3-033
+  keywords:
+  - blocker
+  mana: 1
+  name: 寒さ知らずのムサムー
+  power: 2000
+  races:
+  - ドリームメイト
+  source:
+    official: dm24rp3-033
+    review: pending
+    aliases:
+    - dm24rp3-sec021
+  text: 'ブロッカー（このクリーチャーをタップして、相手クリーチャーの攻撃先をこのクリーチャーに変更してもよい）
+
+    自分のコスト６以上のカードを使うコストを１少なくする。ただし、コストは０以下にはならない。
+
+    自分のコスト６以上のクリーチャーが出た時、相手のクリーチャーを１体選び、タップする。次の相手のターンのはじめに、そのクリーチャーはアンタップしない。'
+  types:
+  - creature
+- abilities:
+  - effect:
+    - modes:
+      - - no_untap_next: true
+          op: tap
+          select:
+            count: 1
+            filter:
+              types:
+              - creature
+            owner: opp
+            zone: bz
+      - - as: pile
+          op: choose
+          select:
+            count: all
+            from_top: 2
+            look: true
+            owner: you
+            zone: deck
+        - op: move
+          reason: draw
+          select:
+            count: 1
+            ref: pile
+          to: hand
+      op: modal
+    kind: trigger
+    when:
+      event: move
+      subject: self
+      to: bz
+  civs:
+  - light
+  - water
+  cost: 3
+  id: dm24rp4-047
+  keywords:
+  - s_trigger
+  mana: 1
+  name: 魔誕麗姫ピカドール
+  power: 3500
+  races:
+  - デーモン・コマンド
+  - スプラッシュ・クイーン
+  source:
+    notes: ２つ目のモードで残りの１枚は原文に指定が無いため、見た山札の上に戻る（choose の look はカードを移動しない）
+    official: dm24rp4-047
+    review: pending
+    aliases:
+    - dm24rp4-sec20
+  text: 'S・トリガー（このクリーチャーをシールドゾーンから手札に加える時、コストを支払わずにすぐ召喚してもよい）
+
+    このクリーチャーが出た時、次のうちいずれか１つを選ぶ。
+
+    ▶相手のクリーチャーを１体選び、タップする。次の相手のターンのはじめに、そのクリーチャーはアンタップしない。
+
+    ▶自分の山札の上から２枚を見て、そのうちの１枚を手札に加える。'
+  types:
+  - creature
+- abilities:
+  - effect:
+    - op: bounce
+      select:
+        count: 1
+        owner: opp
+        zone: bz
+    - as: d
+      op: choose
+      select:
+        chooser: random
+        count: 1
+        owner: opp
+        zone: hand
+    - op: move
+      reason: discard
+      select:
+        count: all
+        ref: d
+      to: graveyard
+    kind: trigger
+    when:
+      event: move
+      subject: self
+      to: bz
+  - effect:
+    - no_untap_next: true
+      op: tap
+      select:
+        count: 1
+        filter:
+          types:
+          - creature
+        owner: opp
+        zone: bz
+    kind: trigger
+    when:
+      event: move
+      from: hand
+      subject:
+        owner: opp
+      to: graveyard
+  civs:
+  - light
+  - water
+  - darkness
+  cost: 4
+  id: dm25rp1-023
+  mana: 1
+  name: ～不死の黄昏司祭～
+  power: 4000
+  races:
+  - エンジェル・コマンド
+  - ドラゴン・ゾンビ
+  - スチーム・ナイト
+  source:
+    official: dm25rp1-023
+    review: pending
+    aliases:
+    - dm25rp1-sec18
+  text: このクリーチャーが出た時、相手のエレメントを１つ選び、持ち主の手札に戻す。その後、相手の手札を１枚見ないで選び、捨てさせる。 / 相手が自身の手札を１枚捨てた時、相手のクリーチャーを１体選び、タップする。次の相手のターンのはじめに、そのクリーチャーはアンタップしない。
+  types:
+  - creature
+- abilities:
+  - effect:
+    - body:
+      - op: play_free
+        select:
+          ref: self
+      op: may
+    if:
+      cmp:
+      - count:
+          owner: you
+          zone: shield
+      - ==
+      - 0
+    kind: trigger
+    when:
+      event: move
+      from: shield
+      subject: self
+      to: hand
+    zone: hand
+  - effect:
+    - no_untap_next: true
+      op: tap
+      select:
+        count: all
+        filter:
+          types:
+          - creature
+        owner: opp
+        zone: bz
+    kind: trigger
+    when:
+      event: move
+      subject: self
+      to: bz
+  - effect:
+    - body:
+      - op: move
+        reason: charge
+        select:
+          count: 1
+          owner: opp
+          zone: bz
+        to: shield
+      op: may
+    kind: trigger
+    when:
+      event: attack
+      subject: self
+  civs:
+  - light
+  cost: 8
+  id: dm26sd1-j004
+  keywords:
+  - blocker
+  - triple_breaker
+  mana: 1
+  name: 閃光の精霊カンビアーレ
+  power: 13000
+  races:
+  - エンジェル・コマンド
+  source:
+    notes: '革命０はシールドゾーンから手札に加えた時の誘発（zone: hand）として書いた'
+    official: dm26sd1-j004
+    review: pending
+    aliases:
+    - dm24ex3-rp2s01
+    - dm24ex3-rp2tr01
+    - dm24rp2-s01
+    - dm24rp2-tr01
+    - dm25ex3-rp2tr4
+    - dm25rp2-tr04
+    - dm26sd1-n004
+  text: '革命０：このクリーチャーを自分のシールドゾーンから手札に加えた時、自分のシールドが１つもなければ、このクリーチャーを自分の手札からコストを支払わずに召喚してもよい。
+
+    ブロッカー
+
+    T・ブレイカー（このクリーチャーはシールドを３つブレイクする）
+
+    このクリーチャーが出た時、相手のクリーチャーをすべてタップする。次の相手のターンのはじめに、それらはアンタップしない。
+
+    このクリーチャーが攻撃する時、相手のエレメントを１つ選び、シールド化してもよい。'
+  types:
+  - creature
+- abilities:
+  - effect:
+    - no_untap_next: true
+      op: tap
+      select:
+        count: 1
+        filter:
+          tapped: true
+          types:
+          - creature
+        owner: opp
+        zone: bz
+    kind: trigger
+    when:
+      event: move
+      subject: self
+      to: bz
+  civs:
+  - light
+  cost: 2
+  id: dm28-015
+  mana: 1
+  name: 遊撃鉄人アザース
+  power: 1000
+  races:
+  - グレートメカオー
+  source:
+    notes: 対象はすでにタップされているクリーチャーなので、tap の no_untap_next で「アンタップされない」を表した（フリーズ条項と同型）
+    official: dm28-015
+    review: pending
+  text: このクリーチャーをバトルゾーンに出した時、バトルゾーンにある相手のタップされているクリーチャーを１体選ぶ。次の相手のターンのはじめに、そのクリーチャーはアンタップされない。
+  types:
+  - creature
+- abilities:
+  - effect:
+    - no_untap_next: true
+      op: tap
+      select:
+        count: all
+        filter:
+          tapped: true
+          types:
+          - creature
+        owner: opp
+        zone: bz
+    kind: trigger
+    when:
+      event: move
+      subject: self
+      to: bz
+  civs:
+  - light
+  cost: 7
+  id: dm32-012
+  mana: 1
+  name: 光縛の精霊ファルケン
+  power: 5000
+  races:
+  - エンジェル・コマンド
+  source:
+    notes: 対象はすでにタップされているクリーチャーすべてなので、tap の no_untap_next で「アンタップされない」を表した（フリーズ条項と同型）
+    official: dm32-012
+    review: pending
+  text: このクリーチャーをバトルゾーンに出した時、バトルゾーンにある相手のタップされているクリーチャーはすべて、次の相手のターンのはじめにアンタップされない。
+  types:
+  - creature
+- civs:
+  - light
+  cost: 4
+  id: dmrp03-014
+  keywords:
+  - super_s_trigger
+  mana: 1
+  name: オヴィデンス・メーザー
+  source:
+    notes: xB は sst_spell に分離し、本体で選んだ３体（targets）をそのまま指して tap の no_untap_next で凍結を表した（spell
+      と sst_spell は同じ解決の中で変数を共有する）
+    official: dmrp03-014
+    review: pending
+  spell:
+  - as: targets
+    op: choose
+    select:
+      count: 3
+      filter:
+        types:
+        - creature
+      owner: opp
+      zone: bz
+  - op: tap
+    select:
+      count: all
+      ref: targets
+  sst_spell:
+  - no_untap_next: true
+    op: tap
+    select:
+      count: all
+      ref: targets
+  text: スーパー・S・トリガー / 相手のクリーチャーを３体選び、タップする。 / xB 相手のクリーチャーは、次の相手のターンのはじめにアンタップしない。
+  types:
+  - spell
