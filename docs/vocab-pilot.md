@@ -1178,3 +1178,10 @@ draw イベントへの置換で表す（draw は個別イベントとして発�
   instead: [{op: move, select: {ref: event.subject}, to: graveyard, reason: put}]}。
 - tests/test_vocab_pilot119.py 2件（正常 parse／検証）
 - 待機6枚（enters_non_summon のみが gap のもの）。
+
+## 第120弾: under_card_count（含まれるカードの数）— 新語彙なし（2026-11-05）
+「そのクリーチャーに含まれるカード１枚につき」は under_of セレクタの count で表す。
+- 書き方: 含まれる総数 = {sum: [1, {count: {under_of: <変数名またはself>}}]}
+  （under_of は下にあるカードを返し、本体1枚を加える）。回数・枚数・パワー量の式に使う。
+- tests/test_vocab_pilot120.py 2件（正常 parse／検証）
+- 待機6枚（under_card_count のみが gap のもの）。
