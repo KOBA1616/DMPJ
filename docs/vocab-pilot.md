@@ -1079,3 +1079,9 @@ converted の監査（opt_reduce の素の整数表記9件）から。任意形�
 - 書き方: {kind: trigger, when: {event: battle_win, subject: self}, effect: [...]}。
 - tests/test_vocab_pilot106.py 2件（正常 parse／検証）
 - 待機9枚（trigger_when_wins_battle のみが gap のもの）。
+
+## 第107弾: tap_event_trigger（タップした時）— 新語彙なし（2026-11-05）
+「このクリーチャーがタップした時、〜」は第105弾の first_time を付けない形で表す（毎回発動）。
+- 書き方: {kind: trigger, when: {event: tap, subject: self}, effect: [...]}。
+- tests/test_vocab_pilot107.py 2件（正常 parse／検証）
+- 待機7枚（tap_event_trigger のみが gap のもの）。
