@@ -299868,3 +299868,422 @@ cards:
     W・ブレイカー'
   types:
   - creature
+- abilities:
+  - effect:
+    - op: move
+      reason: charge
+      select:
+        count: 1
+        from_top: 1
+        owner: you
+        zone: deck
+      to: shield
+    kind: trigger
+    when:
+      event: move
+      subject: self
+      to: bz
+  - effect:
+    - as: t
+      op: choose
+      select:
+        count: 1
+        from_top: 1
+        look: true
+        owner: you
+        zone: deck
+    - cond:
+        exists:
+          filter:
+            any_of:
+            - civs:
+              - light
+              types:
+              - spell
+            - race_has: メタリカ
+            cost_le:
+              count:
+                owner: you
+                zone: shield
+          ref: t
+      op: if
+      then:
+      - body:
+        - op: play_free
+          select:
+            ref: t
+        op: may
+    kind: trigger
+    when:
+      event: move
+      subject:
+        owner: you
+      to: shield
+  civs:
+  - light
+  cost: 6
+  id: dmrp05-s03
+  keywords:
+  - double_breaker
+  mana: 1
+  name: 超運命 アミダナスカ
+  power: 7500
+  races:
+  - メタリカ
+  - スペシャルズ
+  source:
+    notes: '第78弾の対象カード。山札の上を見る処理は choose（look: true）で変数 t に取り、条件（シールド数以下のコスト、光の呪文またはメタリカ）を満たす場合だけ
+      play_free で使ってもよい形にした。使わない場合は山札の上に残る'
+    official: dmrp05-s03
+    review: pending
+  text: 'W・ブレイカー
+
+    このクリーチャーがバトルゾーンに出た時、自分の山札の上から１枚目を裏向きのまま、新しいシールドとして自分のシールドゾーンに置く。
+
+    自分のシールドゾーンにカードが置かれた時、自分の山札の上から１枚目を見る。それが自分のシールドの数以下のコストを持つ光の呪文またはメタリカなら、コストを支払わずに使ってもよい。'
+  types:
+  - creature
+- abilities:
+  - effect:
+    - duration: until_next_own_turn_start
+      mod:
+        grant:
+        - blocker
+      op: modify
+      select:
+        ref: self
+    kind: trigger
+    when:
+      event: move
+      subject:
+        owner: you
+      to: shield
+  civs:
+  - light
+  cost: 5
+  id: dmrp06-059
+  mana: 1
+  name: 安息の喜び 慈拓
+  power: 5000
+  races:
+  - メタリカ
+  source:
+    notes: 第78弾の対象カード。ブロッカー付与は modify の mod grant + duration until_next_own_turn_start
+      で変換
+    official: dmrp06-059
+    review: pending
+  text: 自分のシールドゾーンにカードが置かれた時、次の自分のターンのはじめまで、このクリーチャーに「ブロッカー」を与える。
+  types:
+  - creature
+- abilities:
+  - effect:
+    - body:
+      - op: move
+        reason: put
+        select:
+          ref: self
+        to: bz
+      op: may
+    kind: trigger
+    when:
+      event: move
+      subject:
+        owner: you
+      to: shield
+    zone: hand
+  civs:
+  - light
+  cost: 5
+  id: dmrp07-031
+  keywords:
+  - blocker
+  - cannot_attack_player
+  mana: 1
+  name: 青守銀 アドマニ
+  power: 4500
+  races:
+  - メタリカ
+  source:
+    notes: '第78弾の対象カード。手札で機能する誘発（zone: hand）。「バトルゾーンに出す」は召喚ではないので move（reason: put）で変換'
+    official: dmrp07-031
+    review: pending
+  text: 'ブロッカー（このクリーチャーをタップして、相手クリーチャーの攻撃先をこのクリーチャーに変更してもよい）
+
+    このクリーチャーは、相手プレイヤーを攻撃できない。
+
+    自分のシールドゾーンにカードが置かれた時、このクリーチャーを自分の手札からバトルゾーンに出してもよい。'
+  types:
+  - creature
+- abilities:
+  - effect:
+    - body:
+      - op: move
+        reason: put
+        select:
+          ref: self
+        to: bz
+      op: may
+    kind: trigger
+    when:
+      event: move
+      subject:
+        owner: you
+      to: shield
+    zone: hand
+  civs:
+  - light
+  cost: 4
+  id: dmrp07-059
+  mana: 1
+  name: 赤攻銀 イザヤック
+  power: 4000
+  races:
+  - メタリカ
+  source:
+    notes: '第78弾の対象カード。手札で機能する誘発（zone: hand）。「バトルゾーンに出す」は召喚ではないので move（reason: put）で変換'
+    official: dmrp07-059
+    review: pending
+  text: 自分のシールドゾーンにカードが置かれた時、このクリーチャーを自分の手札からバトルゾーンに出してもよい。
+  types:
+  - creature
+- abilities:
+  - if:
+      is_turn: opp
+    instead:
+    - op: move
+      reason: put
+      select:
+        ref: event.subject
+      to: graveyard
+    kind: replace
+    when:
+      event: move
+      subject:
+        owner: opp
+      to: shield
+  civs:
+  - fire
+  cost: 4
+  id: dmrp08-046
+  keywords:
+  - speed_attacker
+  mana: 1
+  name: バイクロ・チュリス
+  power: 3000
+  races:
+  - ビートジョッキー
+  source:
+    notes: 第78弾の対象カード。相手のカードが相手のシールドゾーンへ置かれる移動への置換（26-s003 と同型）。「相手のターン中に」は if is_turn
+      opp、置き先の墓地はそのカードの持ち主の墓地
+    official: dmrp08-046
+    review: pending
+  text: 'スピードアタッカー（このクリーチャーは召喚酔いしない）
+
+    相手のターン中に、相手が自身のシールドゾーンにカードを置く時、かわりに墓地に置く。'
+  types:
+  - creature
+- abilities:
+  - effect:
+    - count: 1
+      op: draw
+    first_time: true
+    kind: trigger
+    when:
+      event: move
+      subject:
+        owner: you
+      to: shield
+  civs:
+  - light
+  - water
+  cost: 2
+  id: dmrp14-087
+  mana: 1
+  name: 「機械の番犬」
+  power: 2500
+  races:
+  - メタリカ
+  - チーム銀河
+  source:
+    notes: 第78弾の対象カード。「各ターン、はじめて」は first_time 誘発で変換
+    official: dmrp14-087
+    review: pending
+  text: 各ターン、はじめてカードが自分のシールドゾーンに置かれた時、カードを１枚引く。
+  types:
+  - creature
+- abilities:
+  - effect:
+    - duration: until_next_own_turn_start
+      mod:
+        no_leave: true
+      op: modify
+      select:
+        ref: self
+    kind: trigger
+    when:
+      event: move
+      subject:
+        owner: you
+      to: shield
+  - effect:
+    - op: untap
+      select:
+        ref: self
+    kind: trigger
+    when:
+      event: move
+      from: shield
+      subject:
+        owner: you
+  civs:
+  - light
+  cost: 7
+  id: dmsd07-001
+  keywords:
+  - blocker
+  - double_breaker
+  mana: 1
+  name: 煌世の剣 メシアカリバー
+  power: 7000
+  races:
+  - メタリカ
+  - サバキスト
+  source:
+    notes: 第78弾の対象カード。「離れない」は modify の mod no_leave + duration until_next_own_turn_start
+      で変換。「シールドゾーンからカードが離れた時」は move イベントの from shield で変換
+    official: dmsd07-001
+    review: pending
+  text: 'ブロッカー（このクリーチャーをタップして、相手クリーチャーの攻撃先をこのクリーチャーに変更してもよい）
+
+    W・ブレイカー（このクリーチャーはシールドを２つブレイクする）
+
+    自分のシールドゾーンにカードが置かれた時、次の自分のターンのはじめまで、このクリーチャーはバトルゾーンを離れない。
+
+    自分のシールドゾーンからカードが離れた時、このクリーチャーをアンタップする。'
+  types:
+  - creature
+- abilities:
+  - effect:
+    - no_untap_next: true
+      op: tap
+      select:
+        count: 1
+        filter:
+          types:
+          - creature
+        owner: opp
+        zone: bz
+    kind: trigger
+    when:
+      event: move
+      subject:
+        owner: you
+      to: shield
+  civs:
+  - light
+  cost: 3
+  id: dmsd07-009
+  mana: 1
+  name: イカリノ裁徒
+  power: 3500
+  races:
+  - メタリカ
+  - サバキスト
+  source:
+    notes: 第78弾の対象カード。「次の相手のターンのはじめにアンタップしない」は tap の no_untap_next で変換（フリーズ条項と同型）
+    official: dmsd07-009
+    review: pending
+    aliases:
+    - dmrp05-033
+  text: 自分のシールドゾーンにカードが置かれた時、相手のクリーチャーを１体選び、タップする。そのクリーチャーは次の相手のターンのはじめにアンタップしない。
+  types:
+  - creature
+- abilities:
+  - effect:
+    - duration: end_of_turn
+      mod:
+        grant:
+        - double_breaker
+        power: 3000
+      op: modify
+      select:
+        ref: self
+    kind: trigger
+    when:
+      event: move
+      subject:
+        owner: you
+      to: shield
+  civs:
+  - light
+  cost: 4
+  id: dmsd07-012
+  mana: 1
+  name: ケジメノ裁徒
+  power: 4000
+  races:
+  - メタリカ
+  - サバキスト
+  source:
+    notes: 第78弾の対象カード。「そのターン」は modify の duration end_of_turn で変換
+    official: dmsd07-012
+    review: pending
+    aliases:
+    - dmrp05-060
+  text: 自分のシールドゾーンにカードが置かれた時、そのターン、このクリーチャーのパワーを+3000し、「W・ブレイカー」を与える。
+  types:
+  - creature
+- abilities:
+  - affects:
+      filter:
+        civs:
+        - darkness
+        race_has: エンジェル・コマンド
+      owner: you
+    if:
+      cmp:
+      - count:
+          owner: you
+          zone: shield
+      - <=
+      - 2
+    kind: static
+    mod:
+      grant:
+      - blocker
+  - effect:
+    - body:
+      - count: 1
+        op: draw
+      op: may
+    kind: trigger
+    when:
+      event: move
+      from: shield
+      subject:
+        owner: you
+      to: graveyard
+  civs:
+  - darkness
+  cost: 7
+  id: dmx11-024
+  keywords:
+  - double_breaker
+  mana: 1
+  name: 偽りの星夜 ブーケトス
+  power: 9000
+  races:
+  - エンジェル・コマンド
+  - アンノウン
+  source:
+    notes: 第78弾の対象カード。「自分の墓地にシールドが置かれた時」は、自分のシールドゾーンのカードが墓地に置かれる移動（from shield / to
+      graveyard）と解釈した。ブロッカー付与は条件つき static（シールド2つ以下の間）で変換
+    official: dmx11-024
+    review: pending
+  text: '自分のシールドがふたつ以下であれば、バトルゾーンにある自分の闇のエンジェル・コマンドはすべて「ブロッカー」を得る。
+
+    自分の墓地にシールドが置かれた時、カードを１枚引いてもよい。
+
+    W・ブレイカー(このクリーチャーはシールドを２枚ブレイクする)'
+  types:
+  - creature
