@@ -57,3 +57,12 @@ def test_not_race_has_partial_match(rules):
     cid = e.zlist("bz", 0)[0]
     assert not e.filter_match(cid, {"not_race_has": "アーマード"})
     assert e.filter_match(cid, {"not_race_has": "エンジェル"})
+
+
+def test_not_race_has_list_form(rules):
+    """リスト形式: いずれかの種族に部分一致したら除外される（第81弾拡張）。"""
+    e = setup(rules, {"bz": ["T156", "T001"]}, {})
+    by_defn = {e.s.cards[c].defn: c for c in e.zlist("bz", 0)}
+    f = {"not_race_has": ["ゴッド", "ドラゴン", "オラクル"]}
+    assert not e.filter_match(by_defn["T156"], f)   # アーマード・ドラゴンはドラゴンに一致
+    assert e.filter_match(by_defn["T001"], f)       # テストはいずれにも一致しない

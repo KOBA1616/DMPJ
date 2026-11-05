@@ -922,3 +922,4 @@ converted の監査（opt_reduce の素の整数表記9件）から。任意形�
 - 実装: defs.py の FILTER_KEYS に追加、engine/selectors.py の filter_match に対応行を追加。proto T156。
 - tests/test_vocab_pilot81.py 3件（parse／filter_match の実挙動）
 - 待機11枚（not_race_filter のみが gap のもの）。
+- 拡張（同日）: not_race_has はリストも受け付ける（いずれかに部分一致したら除外）。dmr12-s04 の3種族否定で使用。tests/test_vocab_pilot81.py に list 形式のテストを追加（計4件）。
