@@ -315382,3 +315382,350 @@ cards:
   text: ブロッカー（このクリーチャーをタップして、相手クリーチャーの攻撃先をこのクリーチャーに変更してもよい）このクリーチャーは攻撃できない。カードに能力が書かれていないクリーチャーを召喚した時、カードを１枚引いてもよい。
   types:
   - creature
+- civs:
+  - fire
+  cost: 2
+  id: dmsd11-020
+  mana: 1
+  name: 二刀流トレーニング
+  source:
+    notes: 「はじめてタップされた時」は delayed_trigger の once で表した（dmrp17-087 二刀流Re:トレーニングと同型）
+    official: dmsd11-020
+    review: pending
+    aliases:
+    - dmr15-051
+  spell:
+  - as: t
+    op: choose
+    select:
+      count: 1
+      filter:
+        types:
+        - creature
+      owner: you
+      zone: bz
+  - duration: end_of_turn
+    effect:
+    - op: untap
+      select:
+        ref: t
+    once: true
+    op: delayed_trigger
+    when:
+      event: tap
+      subject:
+        ref: t
+  text: バトルゾーンにある自分のクリーチャーを１体選ぶ。そのクリーチャーがこのターンはじめてタップされた時、アンタップする。
+  types:
+  - spell
+- abilities:
+  - effect:
+    - op: untap
+      select:
+        ref: self
+    first_time: true
+    kind: trigger
+    when:
+      event: tap
+      subject: self
+  civs:
+  - fire
+  cost: 7
+  id: dmx04-002
+  keywords:
+  - hunting
+  - double_breaker
+  mana: 1
+  name: 闘魂！紫電・ドラゴン
+  power: 7000
+  races:
+  - アーマード・ドラゴン
+  - ハンター
+  source:
+    notes: ハンティングとW・ブレイカーはキーワード。「各ターン、はじめて」は first_time の印で表した（第105弾）
+    official: dmx04-002
+    review: pending
+    aliases:
+    - promoy11-006
+    - promoy11-025
+  text: '各ターン、このクリーチャーがはじめてタップした時、アンタップする。
+
+    ハンティング(バトル中、このクリーチャーのパワーは、バトルゾーンにある自分のハンター１体につき+1000される)
+
+    W・ブレイカー(このクリーチャーはシールドを２枚ブレイクする)'
+  types:
+  - creature
+- abilities:
+  - effect:
+    - op: discard
+      select:
+        chooser: opp
+        count: 2
+        owner: opp
+        zone: hand
+    kind: trigger
+    when:
+      event: attack
+      subject: self
+  - effect:
+    - as: sh
+      op: choose
+      select:
+        count: 0
+        owner: you
+        up_to: true
+        zone: shield
+    - cond:
+        cmp:
+        - count:
+            ref: sh
+        - '>='
+        - 1
+      op: if
+      then:
+      - op: move
+        reason: put
+        select:
+          ref: sh
+        to: graveyard
+      - op: untap
+        select:
+          ref: self
+    first_time: true
+    if:
+      is_turn: you
+    kind: trigger
+    when:
+      event: tap
+      subject: self
+  civs:
+  - darkness
+  cost: 9
+  id: dmx11-022
+  keywords:
+  - double_breaker
+  mana: 1
+  name: 偽りの星夜 ジューン・ブライド
+  power: 11000
+  races:
+  - エンジェル・コマンド
+  - アンノウン
+  source:
+    notes: '「自分のターン中」は if: {is_turn: you} で限定し、「はじめて」は first_time で表した（第105弾）。シールドを墓地に置いてもよい／そうした場合は、choose
+      の0枚選択と if で表した（dmd08-019と同型）'
+    official: dmx11-022
+    review: pending
+  text: 'このクリーチャーが攻撃する時、相手は自身の手札から２枚選んで捨てる。
+
+    このクリーチャーが、自分のターン中はじめてタップされた時、自分のシールドをひとつ墓地に置いてもよい。そうした場合、このクリーチャーをアンタップする。
+
+    W・ブレイカー(このクリーチャーはシールドを２枚ブレイクする)'
+  types:
+  - creature
+- abilities:
+  - effect:
+    - op: destroy
+      select:
+        count: 1
+        filter:
+          power_le: 6000
+          types:
+          - creature
+        owner: opp
+        zone: bz
+    kind: trigger
+    when:
+      event: attack
+      subject: self
+  - effect:
+    - op: untap
+      select:
+        ref: self
+    first_time: true
+    kind: trigger
+    when:
+      event: tap
+      subject: self
+  civs:
+  - fire
+  cost: 8
+  id: dmx21-008
+  keywords:
+  - double_breaker
+  mana: 1
+  name: 紫電ボルメテウス・武者・ドラゴン
+  power: 11000
+  races:
+  - アーマード・ドラゴン
+  - サムライ
+  source:
+    notes: W・ブレイカーはキーワード。「各ターン、はじめて」は first_time の印で表した（第105弾）
+    official: dmx21-008
+    review: pending
+  text: W・ブレイカーこのクリーチャーが攻撃する時、相手のパワー6000以下のクリーチャーを１体破壊する。各ターン、このクリーチャーがはじめてタップした時、アンタップする。
+  types:
+  - creature
+- abilities:
+  - effect:
+    - op: untap
+      select:
+        ref: self
+    first_time: true
+    kind: trigger
+    when:
+      event: tap
+      subject: self
+  - affects: self
+    if:
+      cmp:
+      - count:
+          filter:
+            civs:
+            - fire
+          owner: you
+          zone: mana
+      - '>='
+      - 5
+    kind: static
+    mod:
+      battle_power:
+        amount: 13000
+  civs:
+  - fire
+  cost: 6
+  id: dmx24-021
+  keywords:
+  - speed_attacker
+  mana: 1
+  name: 爆勝 グレンモルト「魂」
+  power: 5000
+  races:
+  - ヒューマノイド爆
+  source:
+    notes: スピードアタッカーはキーワード。「各ターン、はじめて」は first_time の印で表した（第105弾）。マナ武装は条件つき常在型とし、バトル中だけのパワー修整は
+      battle_power で表した
+    official: dmx24-021
+    review: pending
+    aliases:
+    - promoy13-090
+  text: スピードアタッカー（このクリーチャーは召喚酔いしない）各ターン、このクリーチャーがはじめてタップした時、アンタップする。マナ武装 ５：このクリーチャーがバトル中、自分のマナゾーンに火のカードが５枚以上あれば、このクリーチャーのパワーを+13000する。
+  types:
+  - creature
+- abilities:
+  - effect:
+    - op: destroy
+      select:
+        count: 1
+        filter:
+          power_le: 6000
+          types:
+          - creature
+        owner: opp
+        zone: bz
+    kind: trigger
+    when:
+      event: attack
+      subject: self
+  - effect:
+    - op: untap
+      select:
+        ref: self
+    first_time: true
+    kind: trigger
+    when:
+      event: tap
+      subject: self
+  - affects: self
+    kind: static
+    mod:
+      battle_power:
+        amount: 1000
+        count:
+          filter:
+            civs:
+            - fire
+          owner: you
+          zone: graveyard
+  civs:
+  - fire
+  cost: 10
+  id: dmx26-v07
+  keywords:
+  - speed_attacker
+  - triple_breaker
+  mana: 1
+  name: 勝利天帝 Gメビウス
+  power: 12000
+  races:
+  - ガイアール・コマンド・ドラゴン
+  source:
+    notes: スピードアタッカーとT・ブレイカーはキーワード。「各ターン、はじめて」は first_time の印で表した（第105弾）。バトル中だけのパワー修整は
+      battle_power で表した
+    official: dmx26-v07
+    review: pending
+    aliases:
+    - dmx17-v02
+  text: スピードアタッカーT・ブレイカーこのクリーチャーが攻撃する時、相手のパワー6000以下のクリーチャーを１体破壊する。このクリーチャーが各ターンはじめてタップした時、アンタップする。バトル中、このクリーチャーのパワーを、自分の墓地にある火のカード１枚につき+1000する。
+  types:
+  - creature
+- abilities:
+  - kind: trigger
+    when:
+      event: attack
+      subject: self
+    effect:
+    - op: may
+      body:
+      - op: move
+        select:
+          zone:
+          - hand
+          - deck
+          from_top: 1
+          owner: you
+          filter:
+            types:
+            - creature
+            not_types:
+            - evolution
+            cost_le: 4
+          count: 1
+        to: bz
+        reason: put
+  - effect:
+    - op: untap
+      select:
+        ref: self
+    first_time: true
+    kind: trigger
+    when:
+      event: tap
+      subject: self
+  civs:
+  - light
+  - fire
+  cost: 7
+  id: promoy19-040
+  keywords:
+  - blocker
+  - speed_attacker
+  mana: 1
+  name: 爆誕!!!ダイナボルト
+  power: 5000
+  races:
+  - ダイナマイト・ドラゴン
+  - チームボンバー
+  source:
+    notes: ブロッカーとスピードアタッカーはキーワード。マジボンバー ４は rule_convert.split の magic_bomber 展開が submit
+      時に extra として付くため、abilities には重ねて書かない。「各ターン、はじめて」は first_time の印で表した（第105弾）
+    official: promoy19-040
+    review: pending
+  text: 'ブロッカー
+
+    スピードアタッカー（このクリーチャーは召喚酔いしない）
+
+    マジボンバー ４（このクリーチャーが攻撃する時、自分の山札の上から１枚目を見る。その後、コスト４以下のクリーチャーを１体、自分の手札または山札の上から、バトルゾーンに出してもよい）
+
+    各ターン、このクリーチャーがはじめてタップした時、アンタップする。'
+  types:
+  - creature
