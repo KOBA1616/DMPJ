@@ -324139,3 +324139,163 @@ cards:
   text: ガードマン（このクリーチャーをタップして、相手クリーチャーの攻撃先を、自分の他のクリーチャーからこのクリーチャーに変更してもよい）マナ武装 ３-自分のマナゾーンに自然のカードが３枚以上あれば、自分の自然のクリーチャーはそれよりパワーが小さいクリーチャーにブロックされない。
   types:
   - creature
+- abilities:
+  - affects: self
+    kind: static
+    mod:
+      breaks:
+        count:
+          filter:
+            multicolor: true
+          owner: you
+          zone: bz
+  - affects: self
+    kind: static
+    mod:
+      power_when:
+        amount: 5000
+        count:
+          filter:
+            multicolor: true
+          owner: you
+          zone: bz
+        when: attacking
+  civs:
+  - light
+  - fire
+  cost: 7
+  evolve_from:
+    multicolor: true
+  id: dm26-009
+  mana: 1
+  name: 星鎧亜イカロス
+  power: 6000
+  races:
+  - メカ・デル・ソル
+  - ロスト・クルセイダー
+  source:
+    notes: クルー・ブレイカーは第130弾の breaks {count} で表した。原文に「他の」が無いため selector に other は付けない（自分自身も多色クリーチャーとして数える）。「パワーアタッカー+5000」を得る部分も同じ数え方で
+      power_when の count にした。マナゾーンに置く時タップして置くは多色の一般ルールで自動処理
+    official: dm26-009
+    review: pending
+    aliases:
+    - dm26-009cc
+  text: マナゾーンに置く時、このカードはタップして置く。 / 進化-自分の多色クリーチャー１体の上に置く。 / クルー・ブレイカー:多色クリーチャー / このクリーチャーは、バトルゾーンにある自分の多色クリーチャー１体につき「パワーアタッカー+5000」を得る。
+  types:
+  - creature
+  - evolution
+- abilities:
+  - affects: self
+    kind: static
+    mod:
+      power:
+        amount: 5000
+        count:
+          filter:
+            race_has: ドラゴン
+          other: true
+          owner: you
+          zone: bz
+  - affects: self
+    kind: static
+    mod:
+      breaks:
+        count:
+          filter:
+            race_has: ドラゴン
+          other: true
+          owner: you
+          zone: bz
+  civs:
+  - fire
+  cost: 6
+  id: dmc51-006
+  mana: 1
+  name: アルティメット・ドラゴン
+  power: 5000
+  races:
+  - アーマード・ドラゴン
+  source:
+    notes: 'パワー修整とクルー・ブレイカー（第130弾）はどちらも「自分の他のドラゴン」を数えるため、同じ selector（other: true、race_has:
+      ドラゴン）を power の count と breaks の count に使った'
+    official: dmc51-006
+    review: pending
+    aliases:
+    - dm10-s06
+    - dmc36-005
+  text: このクリーチャーのパワーは、バトルゾーンにある自分の他のドラゴン１体につき+5000される。 / クルー・ブレイカー：ドラゴン
+  types:
+  - creature
+- abilities:
+  - affects: self
+    kind: static
+    mod:
+      breaks:
+        count:
+          filter:
+            keyword: blocker
+          other: true
+          owner: you
+          zone: bz
+  civs:
+  - light
+  cost: 6
+  id: dmr01-002
+  mana: 1
+  name: 雷神の求道者センジュ
+  power: 6000
+  races:
+  - メカサンダー
+  source:
+    notes: 'ブロッカーは rule_convert.split の known_keywords（blocker）で処理済みのため keywords には入れない（submit
+      時に merge_split で戻る）。クルー・ブレイカーは第130弾の breaks {count} で、自分の他の「ブロッカー」を持つクリーチャーを
+      filter {keyword: blocker}、other: true で数えた'
+    official: dmr01-002
+    review: pending
+  text: 'ブロッカー(相手クリーチャーが攻撃する時、このクリーチャーをタップして、その攻撃を阻止してもよい。その後、その相手クリーチャーとバトルする)
+
+    クルー・ブレイカー:ブロッカー(このクリーチャーは、バトルゾーンにある自分の他の「ブロッカー」を持つクリーチャー１体につき、シールドをさらにもう１枚ブレイクする)'
+  types:
+  - creature
+  keywords:
+  - blocker
+- abilities:
+  - affects: self
+    kind: static
+    mod:
+      power:
+        amount: 5000
+        count:
+          filter:
+            race_has: ハンター
+          other: true
+          owner: you
+          zone: bz
+  - affects: self
+    kind: static
+    mod:
+      breaks:
+        count:
+          filter:
+            race_has: ハンター
+          other: true
+          owner: you
+          zone: bz
+  civs:
+  - light
+  cost: 6
+  id: dmr03-006
+  mana: 1
+  name: 光神龍オメガ・アルティメット
+  power: 5000
+  races:
+  - アポロニア・ドラゴン
+  - ハンター
+  source:
+    notes: 'パワー修整とクルー・ブレイカー（第130弾）はどちらも「自分の他のハンター」を数えるため、同じ selector（other: true、race_has:
+      ハンター）を power の count と breaks の count に使った'
+    official: dmr03-006
+    review: pending
+  text: このクリーチャーのパワーは、バトルゾーンにある自分の他のハンター１体につき+5000される。 / クルー・ブレイカー:ハンター
+  types:
+  - creature
