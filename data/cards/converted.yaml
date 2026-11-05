@@ -295083,3 +295083,555 @@ cards:
   text: マナゾーンに置く時、このカードはタップして置く。W・ブレイカー光臨―自分のターンの終わりに、このクリーチャーがタップされていれば、自分の山札を見る。その中からコスト７以下のオラクリオンを１体、バトルゾーンに出してもよい。その後、山札をシャッフルする。右G・リンク
   types:
   - creature
+- abilities:
+  - effect:
+    - duration: until_next_own_turn_start
+      mod:
+        ignore:
+        - all
+      op: modify
+      select:
+        count: all
+        filter:
+          types:
+          - creature
+        owner: opp
+        zone: bz
+    kind: trigger
+    when:
+      event: move
+      subject: self
+      to: bz
+  - effect:
+    - body:
+      - count: 1
+        op: draw
+      op: may
+    - body:
+      - op: play_free
+        select:
+          count: 1
+          filter:
+            cost_le: 9
+            types:
+            - spell
+          owner: you
+          zone: hand
+      op: may
+    if:
+      is_turn: opp
+    kind: trigger
+    when:
+      event: summon
+      subject:
+        filter:
+          cost_le: 9
+          types:
+          - creature
+        owner: opp
+  - effect:
+    - body:
+      - count: 1
+        op: draw
+      op: may
+    - body:
+      - op: play_free
+        select:
+          count: 1
+          filter:
+            cost_le: 9
+            types:
+            - spell
+          owner: you
+          zone: hand
+      op: may
+    if:
+      is_turn: opp
+    kind: trigger
+    when:
+      event: cast
+      subject:
+        filter:
+          cost_le: 9
+          types:
+          - spell
+        owner: opp
+  civs:
+  - light
+  - water
+  - fire
+  cost: 9
+  id: dm26rp3-std012
+  keywords:
+  - ex_life
+  - triple_breaker
+  mana: 1
+  name: 禁時混成王 ドキンダンテXXII
+  power: 99999
+  races:
+  - ディスペクター
+  - エンジェル・コマンド・ドラゴン
+  - 禁断
+  source:
+    notes: '能力の無視は第70弾の型（modify の mod {ignore: [all]}、duration: until_next_own_turn_start）。「実行した時」はクリーチャー＝summon、呪文＝cast
+      の2誘発に分け、どちらも if: {is_turn: opp} で相手のターンに限定した'
+    official: dm26rp3-std012
+    review: pending
+  text: 'EXライフ
+
+    T・ブレイカー
+
+    このクリーチャーが出た時、次の自分のターンのはじめまで、相手のクリーチャーすべての能力を無視する。
+
+    相手のターンに相手がコスト９以下の、クリーチャーまたは呪文を実行した時、自分はカードを１枚引いてもよい。その後、コスト９以下の呪文を１枚、自分の手札からコストを支払わずに唱えてもよい。'
+  types:
+  - creature
+- abilities:
+  - effect:
+    - duration: until_next_own_turn_start
+      mod:
+        ignore:
+        - all
+      op: modify
+      select:
+        count: all
+        filter:
+          types:
+          - creature
+        owner: opp
+        zone: bz
+    kind: trigger
+    when:
+      event: move
+      subject: self
+      to: bz
+  - effect:
+    - body:
+      - count: 1
+        op: draw
+      op: may
+    - body:
+      - op: play_free
+        select:
+          count: 1
+          filter:
+            cost_le: 9
+            types:
+            - spell
+          owner: you
+          zone: hand
+      op: may
+    if:
+      is_turn: opp
+    kind: trigger
+    when:
+      event: summon
+      subject:
+        filter:
+          cost_le: 9
+          types:
+          - creature
+        owner: opp
+  - effect:
+    - body:
+      - count: 1
+        op: draw
+      op: may
+    - body:
+      - op: play_free
+        select:
+          count: 1
+          filter:
+            cost_le: 9
+            types:
+            - spell
+          owner: you
+          zone: hand
+      op: may
+    if:
+      is_turn: opp
+    kind: trigger
+    when:
+      event: cast
+      subject:
+        filter:
+          cost_le: 9
+          types:
+          - spell
+        owner: opp
+  civs:
+  - light
+  - water
+  - fire
+  cost: 9
+  id: dm26rp3-stdchosec012
+  keywords:
+  - ex_life
+  - triple_breaker
+  mana: 1
+  name: 禁時混成王 ドキンダンテXXII
+  power: 99999
+  races:
+  - ディスペクター
+  - エンジェル・コマンド・ドラゴン
+  - 禁断
+  source:
+    notes: '能力の無視は第70弾の型（modify の mod {ignore: [all]}、duration: until_next_own_turn_start）。「実行した時」はクリーチャー＝summon、呪文＝cast
+      の2誘発に分け、どちらも if: {is_turn: opp} で相手のターンに限定した'
+    official: dm26rp3-stdchosec012
+    review: pending
+  text: 'EXライフ
+
+    T・ブレイカー
+
+    このクリーチャーが出た時、次の自分のターンのはじめまで、相手のクリーチャーすべての能力を無視する。
+
+    相手のターンに相手がコスト９以下の、クリーチャーまたは呪文を実行した時、自分はカードを１枚引いてもよい。その後、コスト９以下の呪文を１枚、自分の手札からコストを支払わずに唱えてもよい。'
+  types:
+  - creature
+- abilities:
+  - effect:
+    - duration: until_next_own_turn_start
+      mod:
+        ignore:
+        - all
+      op: modify
+      select:
+        count: all
+        filter:
+          types:
+          - creature
+        owner: opp
+        zone: bz
+    kind: trigger
+    when:
+      event: move
+      subject: self
+      to: bz
+  - effect:
+    - body:
+      - count: 1
+        op: draw
+      op: may
+    - body:
+      - op: play_free
+        select:
+          count: 1
+          filter:
+            cost_le: 9
+            types:
+            - spell
+          owner: you
+          zone: hand
+      op: may
+    if:
+      is_turn: opp
+    kind: trigger
+    when:
+      event: summon
+      subject:
+        filter:
+          cost_le: 9
+          types:
+          - creature
+        owner: opp
+  - effect:
+    - body:
+      - count: 1
+        op: draw
+      op: may
+    - body:
+      - op: play_free
+        select:
+          count: 1
+          filter:
+            cost_le: 9
+            types:
+            - spell
+          owner: you
+          zone: hand
+      op: may
+    if:
+      is_turn: opp
+    kind: trigger
+    when:
+      event: cast
+      subject:
+        filter:
+          cost_le: 9
+          types:
+          - spell
+        owner: opp
+  civs:
+  - light
+  - water
+  - fire
+  cost: 9
+  id: dm26rp3-stdsec012
+  keywords:
+  - ex_life
+  - triple_breaker
+  mana: 1
+  name: 禁時混成王 ドキンダンテXXII
+  power: 99999
+  races:
+  - ディスペクター
+  - エンジェル・コマンド・ドラゴン
+  - 禁断
+  source:
+    notes: '能力の無視は第70弾の型（modify の mod {ignore: [all]}、duration: until_next_own_turn_start）。「実行した時」はクリーチャー＝summon、呪文＝cast
+      の2誘発に分け、どちらも if: {is_turn: opp} で相手のターンに限定した'
+    official: dm26rp3-stdsec012
+    review: pending
+  text: 'EXライフ
+
+    T・ブレイカー
+
+    このクリーチャーが出た時、次の自分のターンのはじめまで、相手のクリーチャーすべての能力を無視する。
+
+    相手のターンに相手がコスト９以下の、クリーチャーまたは呪文を実行した時、自分はカードを１枚引いてもよい。その後、コスト９以下の呪文を１枚、自分の手札からコストを支払わずに唱えてもよい。'
+  types:
+  - creature
+- abilities:
+  - kind: trigger
+    when:
+      event: move
+      to: bz
+      subject: self
+    effect:
+    - op: modify
+      select:
+        ref: self
+      mod:
+        allow:
+        - action: attack_creature
+          other:
+            tapped: false
+      duration: end_of_turn
+  - effect:
+    - count: 5
+      op: mill
+      owner: you
+    - op: destroy
+      select:
+        ref: self
+    id: above
+    kind: trigger
+    when:
+      event: move
+      subject: self
+      to: bz
+  - affects: self
+    if:
+      cmp:
+      - sum:
+        - count:
+            owner: you
+            zone: shield
+        - count:
+            owner: opp
+            zone: shield
+      - <=
+      - 6
+    kind: static
+    mod:
+      ignore_ids:
+      - above
+  civs:
+  - darkness
+  - fire
+  - nature
+  cost: 3
+  id: dm26sd1-x008
+  keywords:
+  - summon_from_graveyard
+  - speed_attacker
+  - triple_breaker
+  mana: 1
+  name: 鬼札アバクと鬼札王国
+  power: 13000
+  races:
+  - デモニオ
+  source:
+    notes: '鬼タイムの「真上の▪️能力を無視する」は第7弾の ignore_ids 方式（対象の能力に id: above を付け、鬼タイム条件の常在型が
+      mod {ignore_ids: [above]}）。マッハファイターは keyword_patterns で自動処理のため abilities に書かない'
+    official: dm26sd1-x008
+    review: pending
+    aliases:
+    - dm23rp3-tr07
+    - dm25ex2-019
+    - dmex15-b010
+  text: 'このクリーチャーが出た時、自分の山札の上から５枚を墓地に置く。その後、このクリーチャーを破壊する。
+
+    鬼タイム ：自分と相手のシールドが合計６つ以下なら、真上の▪️能力を無視する。
+
+    このクリーチャーを自分の墓地から召喚してもよい。
+
+    スピードアタッカー（このクリーチャーは召喚酔いしない）
+
+    マッハファイター（このクリーチャーは、出たターンの間、タップまたはアンタップしているクリーチャーを攻撃できる）
+
+    T・ブレイカー（このクリーチャーはシールドを３つブレイクする）'
+  types:
+  - creature
+- abilities:
+  - affects: self
+    id: above
+    kind: static
+    mod:
+      deny:
+      - attack_player
+      - attack_creature
+  - affects: self
+    if:
+      cmp:
+      - sum:
+        - count:
+            owner: you
+            zone: shield
+        - count:
+            owner: opp
+            zone: shield
+      - <=
+      - 6
+    kind: static
+    mod:
+      ignore_ids:
+      - above
+  civs:
+  - fire
+  cost: 1
+  id: dmrp14-079
+  mana: 1
+  name: アシガル変怪
+  power: 2000
+  races:
+  - ドラゴノイド
+  - 鬼札王国
+  source:
+    notes: '第7弾の代表カード（tests/test_vocab_pilot7_cards.py）と同型。「攻撃できない」はキーワードの展開形を id:
+      above つきで直接書き、鬼タイムの常在型が ignore_ids で無視する'
+    official: dmrp14-079
+    review: pending
+  text: 'このクリーチャーは攻撃できない。
+
+    鬼タイム ：自分と相手のシールドの数が合計６つ以下なら、真上の▪️能力を無視する。'
+  types:
+  - creature
+  keywords:
+  - cannot_attack
+- abilities:
+  - affects: self
+    id: above
+    kind: static
+    mod:
+      deny:
+      - attack_player
+      - attack_creature
+  - affects: self
+    if:
+      cmp:
+      - sum:
+        - count:
+            owner: you
+            zone: shield
+        - count:
+            owner: opp
+            zone: shield
+      - <=
+      - 6
+    kind: static
+    mod:
+      ignore_ids:
+      - above
+  - effect:
+    - op: move
+      reason: break
+      select:
+        count: 1
+        owner: you
+        zone: shield
+      to: hand
+    kind: trigger
+    when:
+      event: turn_start
+      player: you
+  civs:
+  - darkness
+  - fire
+  cost: 3
+  id: dmrp15-010
+  keywords:
+  - quad_breaker
+  - cannot_attack
+  mana: 1
+  name: 「魂狩」の鬼 ガシャド髑髏
+  power: 21000
+  races:
+  - デモニオ
+  - 鬼札王国
+  source:
+    notes: '鬼タイムは第7弾の ignore_ids 方式（「攻撃できない」の展開形に id: above）。シールドを手札に加える（S・トリガー不可）は
+      dmrp15-041 と同型で move to hand, reason: break とした'
+    official: dmrp15-010
+    review: pending
+    aliases:
+    - dmart01-003
+  text: 'Q・ブレイカー
+
+    このクリーチャーは攻撃できない。
+
+    鬼タイム ：自分と相手のシールドの数が合計６つ以下なら、真上の▪️能力を無視する。
+
+    自分のターンのはじめに、自分のシールドを１つ手札に加える。ただし、その「S・トリガー」は使えない。'
+  types:
+  - creature
+- abilities:
+  - affects: self
+    id: above
+    kind: static
+    mod:
+      deny:
+      - attack_player
+      - attack_creature
+  - affects: self
+    if:
+      cmp:
+      - sum:
+        - count:
+            owner: you
+            zone: shield
+        - count:
+            owner: opp
+            zone: shield
+      - <=
+      - 6
+    kind: static
+    mod:
+      ignore_ids:
+      - above
+  civs:
+  - darkness
+  cost: 1
+  id: dmrp16-074
+  keywords:
+  - slayer
+  - cannot_attack
+  mana: 1
+  name: ヤモリ変怪
+  power: 1000
+  races:
+  - デモニオ
+  - 鬼札王国
+  source:
+    notes: '第7弾の ignore_ids 方式（「攻撃できない」の展開形に id: above を付け、鬼タイムの常在型が無視する）。dmrp14-079
+      と同型'
+    official: dmrp16-074
+    review: pending
+  text: 'スレイヤー（このクリーチャーがバトルする時、バトルの後、相手クリーチャーを破壊する）
+
+    このクリーチャーは攻撃できない。
+
+    鬼タイム ：自分と相手のシールドの数が合計６つ以下なら、真上の▪️能力を無視する。'
+  types:
+  - creature
