@@ -321841,3 +321841,234 @@ cards:
     バトルゾーンにある相手のクリーチャーを１体のかわりに２体まで選んでタップする。'
   types:
   - spell
+- abilities:
+  - affects: self
+    kind: static
+    mod:
+      power:
+        amount: 4000
+        count:
+          civ_count:
+            owner: you
+            zone: mana
+  - affects: self
+    if:
+      exists:
+        filter:
+          power_ge: 6000
+        ref: self
+    kind: static
+    mod:
+      grant:
+      - double_breaker
+  - affects: self
+    if:
+      exists:
+        filter:
+          power_ge: 15000
+        ref: self
+    kind: static
+    mod:
+      grant:
+      - triple_breaker
+  - affects: self
+    if:
+      exists:
+        filter:
+          power_ge: 20000
+        ref: self
+    kind: static
+    mod:
+      grant:
+      - quad_breaker
+  civs:
+  - light
+  cost: 7
+  id: dm27-006
+  mana: 1
+  name: 黙示聖霊ラグナシア
+  power: 0
+  races:
+  - エンジェル・コマンド
+  - ライトブリンガー
+  source:
+    official: dm27-006
+    review: pending
+  text: このクリーチャーのパワーは、自分のマナゾーンにある文明ひとつにつき+4000される。 / このクリーチャーは、パワーが6000以上の時、「W・ブレイカー」を得る。
+    / このクリーチャーは、パワーが15000以上の時、「T・ブレイカー」を得る。 / このクリーチャーは、パワーが20000以上の時、「Q・ブレイカー」を得る。
+  types:
+  - creature
+- abilities:
+  - instead:
+    - op: destroy
+      select:
+        count: 1
+        ref: self
+    kind: replace
+    optional: true
+    when:
+      event: move
+      reason: destroy
+      subject:
+        filter:
+          cost_le:
+            civ_count:
+              owner: you
+              zone: mana
+          types:
+          - creature
+        other: true
+        owner: you
+      to: graveyard
+  civs:
+  - light
+  cost: 4
+  id: dm27-022
+  mana: 1
+  name: 電界の守護者ラ・フランシス
+  power: 3000
+  races:
+  - ガーディアン
+  source:
+    notes: 原文は「破壊される 時」と半角スペース入り（raw のまま転記）。置換の型はセイバー（dm20-038）と同型で、対象条件に文明数以下のコストを
+      filter の cost_le 式で付けた
+    official: dm27-022
+    review: pending
+  text: 自分のマナゾーンにある文明の数以下のコストを持つ自分のクリーチャーが破壊される 時、このクリーチャーをかわりに破壊してもよい。
+  types:
+  - creature
+- abilities:
+  - effect:
+    - body:
+      - as: t
+        op: choose
+        select:
+          count: 1
+          filter:
+            cost_le:
+              civ_count:
+                owner: you
+                zone: mana
+            types:
+            - creature
+          look: true
+          owner: you
+          zone: deck
+      - op: move
+        reason: draw
+        select:
+          count: all
+          ref: t
+        to: hand
+      op: may
+    - op: shuffle
+    kind: trigger
+    when:
+      event: move
+      subject: self
+      to: bz
+  civs:
+  - nature
+  cost: 6
+  id: dm27-029
+  keywords:
+  - s_trigger
+  mana: 1
+  name: 森の飛忍モモンガジロウ
+  power: 1000
+  races:
+  - ドリームメイト
+  source:
+    notes: 相手に見せる処理は扱っていない。第125弾 tests/test_vocab_pilot125.py の CARD2 と同型（シャッフルは may
+      の外）
+    official: dm27-029
+    review: pending
+  text: 'S・トリガー
+
+    このクリーチャーをバトルゾーンに出した時、自分の山札を見る。その中から、自分のマナゾーンにある文明の数以下のコストを持つクリーチャーを１体選び、相手に見せてから自分の手札に加えてもよい。その後、山札をシャッフルする。'
+  types:
+  - creature
+- abilities:
+  - effect:
+    - duration: end_of_turn
+      mod:
+        power:
+          amount: 1000
+          count:
+            civ_count:
+              owner: you
+              zone: mana
+      op: modify
+      select:
+        count: 1
+        filter:
+          types:
+          - creature
+        owner: you
+        zone: bz
+    kind: trigger
+    when:
+      event: move
+      subject: self
+      to: bz
+  civs:
+  - light
+  - nature
+  cost: 3
+  id: dm27-032
+  mana: 1
+  name: 黄金の円盾
+  power: 3000
+  races:
+  - ビーストフォーク
+  source:
+    notes: 「マナゾーンに置く時、このカードはタップして置く」は多色の規定でエンジン側処理のため abilities には書かない（dm25-035 と同型）
+    official: dm27-032
+    review: pending
+  text: マナゾーンに置く時、このカードはタップして置く。 / このクリーチャーをバトルゾーンに出した時、バトルゾーンにある自分のクリーチャーを１体選ぶ。そのターン、そのクリーチャーのパワーは、自分のマナゾーンにある文明ひとつにつき+1000される。
+  types:
+  - creature
+- civs:
+  - light
+  cost: 3
+  id: dm27-039
+  mana: 1
+  name: リフレクティング・レイ
+  source:
+    official: dm27-039
+    review: pending
+  spell:
+  - op: tap
+    select:
+      count: 1
+      filter:
+        types:
+        - creature
+      owner: opp
+      zone: bz
+  - cond:
+      cmp:
+      - civ_count:
+          owner: you
+          zone: mana
+      - '>'
+      - civ_count:
+          owner: opp
+          zone: mana
+    op: if
+    then:
+    - body:
+      - op: move
+        reason: return
+        select:
+          count: 1
+          filter:
+            types:
+            - spell
+          owner: you
+          zone: graveyard
+        to: hand
+      op: may
+  text: バトルゾーンにある相手のクリーチャーを１体選び、タップする。 / 自分のマナゾーンにある文明の数が、相手のより多い場合、呪文を１枚、自分の墓地から手札に戻してもよい。
+  types:
+  - spell
