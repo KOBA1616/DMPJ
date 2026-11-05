@@ -895,3 +895,10 @@ converted の監査（opt_reduce の素の整数表記9件）から。任意形�
 - 攻撃宣言時に解決する（ブロック・バトルの前）。
 - tests/test_vocab_pilot77.py 3件（parse + 実挙動）。試験カード R077 を tests/rule_cards.yaml に追加。
 - 待機11枚（attacked_trigger のみが gap のもの）。
+
+## 第78弾: shield_event_trigger（シールドゾーンに置かれた時）— 新語彙なし（2026-11-05）
+「自分のシールドゾーンにカードが置かれた時」は既存の move イベント + to: shield で表せる。
+- 書き方: kind: trigger, when: {event: move, to: shield, subject: {owner: you}}
+- 「シールドがブレイクされた時」は event: break（player: you）を使う。
+- tests/test_vocab_pilot78.py 2件（正常 parse／検証）
+- 待機11枚（shield_event_trigger のみが gap のもの）。
