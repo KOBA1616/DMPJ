@@ -437,8 +437,12 @@ class Checker:
                 raise DefError(f"{where}: no_leave must be true or {{except_destroy?: bool, by_opp?: bool, except_battle?: bool}}")
         if "must_be_attacked" in m and m["must_be_attacked"] is not True:
             raise DefError(f"{where}: must_be_attacked must be true")
-        if "battle_indestructible" in m and m["battle_indestructible"] is not True:
-            raise DefError(f"{where}: battle_indestructible must be true")
+        if "battle_indestructible" in m:
+            bi = m["battle_indestructible"]
+            if bi is not True and not (isinstance(bi, dict) and set(bi) == {"opponent_filter"}):
+                raise DefError(f"{where}: battle_indestructible must be true or {{opponent_filter: <filter>}}")
+            if isinstance(bi, dict):
+                self.filter(bi["opponent_filter"], where)
         if "win_all_battles" in m and m["win_all_battles"] is not True:
             raise DefError(f"{where}: win_all_battles must be true")
         if "add_civs" in m:
@@ -497,12 +501,14 @@ class Checker:
                 self.count_spec(pw["count"], where)
         if "battle_power" in m:   # バトル中だけのパワー修整: {amount: N, count: <selector>, only: attacking}（ハンティング。バトル中だけ。「攻撃中」「ブロック中」は power_when）
             bp = m["battle_power"]
-            if not isinstance(bp, dict) or set(bp) - {"amount", "count", "only"} or not isinstance(bp.get("amount"), int):
-                raise DefError(f"{where}: battle_power needs amount (int) and optional count (selector) / only: attacking")
+            if not isinstance(bp, dict) or set(bp) - {"amount", "count", "only", "opponent_filter"} or not isinstance(bp.get("amount"), int):
+                raise DefError(f"{where}: battle_power needs amount (int) and optional count (selector) / only: attacking / opponent_filter (filter)")
             if bp.get("only", "attacking") != "attacking":
                 raise DefError(f"{where}: battle_power only must be attacking")
             if "count" in bp:
                 self.count_spec(bp["count"], where)
+            if "opponent_filter" in bp:
+                self.filter(bp["opponent_filter"], where)
         for k in m.get("require", []):
             if k not in REQUIRES:
                 raise DefError(f"{where}: bad require '{k}' (allowed: {sorted(REQUIRES)})")

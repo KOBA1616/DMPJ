@@ -1192,3 +1192,7 @@ draw イベントへの置換で表す（draw は個別イベントとして発�
   G・ゼロ等の free_if や static の if、コスト軽減の条件に使う。
 - tests/test_vocab_pilot121.py 2件（正常 parse／検証）
 - 待機6枚（total_count_condition のみが gap のもの）。
+
+### 第122弾 battle_opponent_filter（2026-11-05）
+- 「『ブロッカー』を持つクリーチャーとバトル中、パワーを+Nする」= mod: {battle_power: {amount: N, opponent_filter: {keyword: blocker}}}。「火のクリーチャーとバトル中、破壊されない」= mod: {battle_indestructible: {opponent_filter: {civs: [fire]}}}（エンジン拡張: battle_power / battle_indestructible に opponent_filter を追加。combat._battle が相手を渡してフィルタ判定。chars には battle_indestructible_filters として集める）。
+- proto T159/T160、試験カード R084/R085/R086、tests/test_vocab_pilot122.py 6件（parse 2件＋実挙動4件: 対ブロッカーで勝つ／対非ブロッカーで負ける／対火で不壊／対自然で破壊）。

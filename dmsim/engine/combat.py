@@ -126,9 +126,9 @@ class CombatMixin:
                 break
         return att, tgt, None
 
-    def _battle_bonus(self, ref, attacking: bool = False) -> int:
+    def _battle_bonus(self, ref, attacking: bool = False, opponent=None) -> int:
         """バトル中だけのパワー修整（mod battle_power。ハンティング: 自分のハンター1体につき+1000）。only: attacking は攻撃側のときだけ。
-        「攻撃中」「ブロック中」のパワー修整は mod power_when（バトルをしていない間も含む）。"""
+        opponent_filter（第122弾）: バトルの相手がフィルタに合う時だけ。「攻撃中」「ブロック中」のパワー修整は mod power_when（バトルをしていない間も含む）。"""
         cid = ref[0]
         env = {"you": self.s.cards[cid].controller, "self": ref}
         total = 0
@@ -136,14 +136,23 @@ class CombatMixin:
             bp = ab.get("mod", {}).get("battle_power")
             if bp and bp.get("only") == "attacking" and not attacking:
                 continue
+            if bp and "opponent_filter" in bp and (opponent is None or not self.filter_match(opponent[0], bp["opponent_filter"])):
+                continue
             if bp and ab.get("affects") == "self" and ab.get("zone", "bz") == self.s.cards[cid].zone:
                 total += bp["amount"] * (self.count_of(bp["count"], env) if "count" in bp else 1)
         return total
 
+    def _battle_indestructible(self, ref, opponent) -> bool:
+        """バトルで破壊されないか。無条件（第59弾）と、相手フィルタつき（第122弾）の両方を見る。"""
+        ch = self.chars(ref[0])
+        if ch["battle_indestructible"]:
+            return True
+        return any(self.filter_match(opponent[0], f) for f in ch.get("battle_indestructible_filters", []))
+
     def _battle(self, x, y):
         """バトル（701.13）。結果で誘発した効果はその場で解決してからバトルを終える。"""
-        px = self.chars(x[0])["power"] + self._battle_bonus(x, attacking=True)      # x は攻撃側
-        py = self.chars(y[0])["power"] + self._battle_bonus(y)
+        px = self.chars(x[0])["power"] + self._battle_bonus(x, attacking=True, opponent=y)      # x は攻撃側
+        py = self.chars(y[0])["power"] + self._battle_bonus(y, opponent=x)
         # 第61弾: すべてのバトルに勝つクリーチャーはパワーに関わらず勝つ
         x_wins = self.chars(x[0])["win_all_battles"]
         y_wins = self.chars(y[0])["win_all_battles"]
@@ -156,7 +165,7 @@ class CombatMixin:
         else:
             losers_by_power = ([x] if px <= py else []) + ([y] if py <= px else [])
         # 第59弾: バトル中破壊されないクリーチャーは破壊されない（勝敗判定はパワーどおり）
-        losers = [r for r in losers_by_power if not self.chars(r[0])["battle_indestructible"]]
+        losers = [r for r in losers_by_power if not self._battle_indestructible(r, y if r == x else x)]
         winners = [r for r in (x, y) if r not in losers_by_power]
         slay = [[r, y if r == x else x] for r in losers if self.permits(r[0], "slayer")]
         evs = [{"ev": "move", "subject": r, "to": "graveyard", "reason": "destroy", "battle": True} for r in losers]

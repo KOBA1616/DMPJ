@@ -726,3 +726,36 @@ cards:
     races: [テスト]
     text: 試験用ダミー（大）
     abilities: []
+  - id: R084
+    name: 試験用対壁獣
+    types: [creature]
+    civs: [fire]
+    cost: 4
+    power: 3000
+    races: [テスト]
+    text: 「ブロッカー」を持つクリーチャーとバトル中、このクリーチャーのパワーを+5000する。
+    abilities:
+      - kind: static
+        affects: self
+        mod: {battle_power: {amount: 5000, opponent_filter: {keyword: blocker}}}
+  - id: R085
+    name: 試験用対炎不壊獣
+    types: [creature]
+    civs: [light]
+    cost: 3
+    power: 2000
+    races: [テスト]
+    text: このクリーチャーは、火のクリーチャーとバトル中、破壊されない。
+    abilities:
+      - kind: static
+        affects: self
+        mod: {battle_indestructible: {opponent_filter: {civs: [fire]}}}
+  - id: R086
+    name: 試験用炎獣
+    types: [creature]
+    civs: [fire]
+    cost: 5
+    power: 4000
+    races: [テスト]
+    text: 試験用ダミー（火）
+    abilities: []
