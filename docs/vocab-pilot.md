@@ -923,3 +923,9 @@ converted の監査（opt_reduce の素の整数表記9件）から。任意形�
 - tests/test_vocab_pilot81.py 3件（parse／filter_match の実挙動）
 - 待機11枚（not_race_filter のみが gap のもの）。
 - 拡張（同日）: not_race_has はリストも受け付ける（いずれかに部分一致したら除外）。dmr12-s04 の3種族否定で使用。tests/test_vocab_pilot81.py に list 形式のテストを追加（計4件）。
+
+## 第82弾: cost_le_card_cost（そのカード以下のコスト）— 新語彙なし（2026-11-05）
+「そのカード以下のコストを持つ〜」は filter の cost_le に式を書く既存パターンで表せる（cost_le / cost_ge / power_le / power_ge / races は式可）。
+- 書き方: filter: {cost_le: {cost_of: {ref: 束縛変数}}}（めくった／置いたカードを as で束縛して参照）。
+- tests/test_vocab_pilot82.py 2件（正常 parse／検証）
+- 待機11枚（cost_le_card_cost のみが gap のもの）。
