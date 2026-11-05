@@ -345,7 +345,7 @@ class Checker:
                 if not isinstance(v, dict) or set(v) - {"owner", "other"} or v.get("owner", "you") not in ("you", "opp"):
                     raise DefError(f"{where}: entered needs {{owner: you/opp, other?: bool}}")
                 return
-            if k in ("var", "cost_of", "races_of", "race"):
+            if k in ("var", "cost_of", "power_of", "races_of", "race"):
                 return
             if k == "link_count":   # リンクしているカードの枚数（値は self 固定で無視される）
                 return

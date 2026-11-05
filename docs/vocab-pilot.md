@@ -1141,3 +1141,15 @@ draw イベントへの置換で表す（draw は個別イベントとして発�
 - 書き方: filter: {not_race_has: ドラゴン}（複数種族のいずれでもない場合はリスト）。
 - tests/test_vocab_pilot115.py 2件（正常 parse／検証）
 - 待機8枚（filter_not_race のみが gap のもの）。
+
+## 第116弾: power_lt_card（そのカードよりパワーが小さい）— エンジン拡張（2026-11-05）
+新式 power_of（参照カードの現在パワー。cost_of の対）を追加した。
+- defs: 式キーに power_of を追加。selectors.eval_expr: power_of を評価（chars の現在パワー、複数なら最大）。
+  schema にも power_of を追加。proto T158。
+- ついでに cost_of / power_of の参照解決を共通化（_expr_refs）: 従来 {cost_of: {ref: t}} は
+  実行時 TypeError、{cost_of: "self"} は 0 扱いになる潜在バグがあり、{ref:} 形式と "self" が
+  正しく解決されるよう修正した（変換済みカードの dict 形式 cost_of が実際に効くようになる）。
+- 書き方: filter: {power_le: {sum: [{power_of: {ref: t}}, -1]}}（「より小さい」イディオム）。
+- tests/test_vocab_pilot116.py 4件（parse 2件＋実挙動2件: R082 power_of で T001 のみ破壊、
+  R081 cost_of dict 形式で T001 のみ破壊。試験カード R081〜R083）
+- 待機9枚（power_lt_card のみが gap のもの）。

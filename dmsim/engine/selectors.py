@@ -3,6 +3,14 @@ from __future__ import annotations
 
 
 class SelectorMixin:
+    def _expr_refs(self, v, env):
+        """cost_of / power_of の参照先を ref のリストにする。
+        値は変数名（文字列）または {ref: 名前}。 "self" は自分自身を指す。"""
+        name = v.get("ref") if isinstance(v, dict) else v
+        if name == "self":
+            return [env["self"]] if env.get("self") else []
+        return list(env.get("vars", {}).get(name, []))
+
     def eval_expr(self, x, env):
         if isinstance(x, int):
             return x
@@ -27,9 +35,10 @@ class SelectorMixin:
             if "var" in x:
                 v = env.get("vars", {}).get(x["var"], [])
                 return v if isinstance(v, int) else len(v)   # 数を数えた変数（ガチンコの勝ち数など）はそのまま
-            if "cost_of" in x:   # 変数に束縛したカード（複数なら最大）のコスト
-                ids = env.get("vars", {}).get(x["cost_of"], [])
-                return max((self.chars(c[0])["cost"] for c in ids), default=0)
+            if "cost_of" in x:   # 参照カード（複数なら最大）のコスト
+                return max((self.chars(c[0])["cost"] for c in self._expr_refs(x["cost_of"], env)), default=0)
+            if "power_of" in x:   # 参照カード（複数なら最大）の現在パワー（第116弾で追加。cost_of の対）
+                return max((self.chars(c[0])["power"] for c in self._expr_refs(x["power_of"], env)), default=0)
             if "race" in x:   # choose_race で選んだ種族名
                 return [env.get("races", {})[x["race"]]]
             if "races_of" in x:   # 変数に束縛したカードの種族（「種族をひとつ選ぶ」の代わりに、場のカード1体を選んでその種族とする）

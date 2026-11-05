@@ -691,3 +691,38 @@ cards:
     keywords: [right_g_link]
     text: G・リンク（左）
     abilities: []
+  - id: R081
+    name: 試験用コスト参照獣
+    types: [creature]
+    civs: [fire]
+    cost: 5
+    power: 5000
+    races: [テスト]
+    text: このクリーチャーが攻撃する時、これ以下のコストを持つ相手のクリーチャーを１体破壊する。
+    abilities:
+      - kind: trigger
+        when: {event: attack, subject: self}
+        effect:
+          - {op: destroy, select: {zone: bz, owner: opp, filter: {cost_le: {cost_of: {ref: self}}}, count: 1}}
+  - id: R082
+    name: 試験用パワー参照獣
+    types: [creature]
+    civs: [fire]
+    cost: 5
+    power: 5000
+    races: [テスト]
+    text: このクリーチャーが攻撃する時、これよりパワーが小さい相手のクリーチャーを１体破壊する。
+    abilities:
+      - kind: trigger
+        when: {event: attack, subject: self}
+        effect:
+          - {op: destroy, select: {zone: bz, owner: opp, filter: {power_le: {sum: [{power_of: {ref: self}}, -1]}}, count: 1}}
+  - id: R083
+    name: 試験用巨獣
+    types: [creature]
+    civs: [nature]
+    cost: 9
+    power: 6000
+    races: [テスト]
+    text: 試験用ダミー（大）
+    abilities: []

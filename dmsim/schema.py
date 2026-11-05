@@ -75,7 +75,7 @@ def _build() -> dict:
                 "total_cost_le": ref("expr"), "total_cost_ge": ref("expr"),
                 "other": {"type": "boolean"}, "look": {"type": "boolean"}}, "additionalProperties": False},
             "expr": {"anyOf": [{"type": "integer"}, {"type": "object", "properties": {
-                "count": ref("selector"), "civ_count": ref("selector"), "entered": {"type": "object", "properties": {"owner": {"type": "string"}, "other": {"type": "boolean"}}, "additionalProperties": False}, "var": {"type": "string"}, "cost_of": {"type": "string"}, "races_of": {"type": "string"}, "race": {"type": "string"}, "link_count": {"type": "string"}, "sum": {"type": "array", "items": ref("expr")}},
+                "count": ref("selector"), "civ_count": ref("selector"), "entered": {"type": "object", "properties": {"owner": {"type": "string"}, "other": {"type": "boolean"}}, "additionalProperties": False}, "var": {"type": "string"}, "cost_of": {"type": "string"}, "power_of": {"type": "string"}, "races_of": {"type": "string"}, "race": {"type": "string"}, "link_count": {"type": "string"}, "sum": {"type": "array", "items": ref("expr")}},
                 "minProperties": 1, "maxProperties": 1, "additionalProperties": False}]},
             "cond": {"type": "object", "minProperties": 1, "maxProperties": 1, "properties": {
                 "exists": ref("selector"), "cmp": {"type": "array", "minItems": 3, "maxItems": 3},

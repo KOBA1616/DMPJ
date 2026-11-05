@@ -2049,3 +2049,17 @@ cards:
             body:
               - op: bounce
                 select: {zone: bz, owner: any, count: 1, filter: {any_of: [{evolution: true}, {linked_god: true}]}}
+  - id: T158
+    name: 試験用弱者狩獣
+    types: [creature]
+    civs: [fire]
+    cost: 5
+    power: 5000
+    races: [テスト]
+    text: このクリーチャーが出た時、これよりパワーが小さい相手のクリーチャーを１体破壊する。
+    abilities:
+      - kind: trigger
+        when: {event: summon, subject: self}
+        effect:
+          - op: destroy
+            select: {zone: bz, owner: opp, count: 1, filter: {power_le: {sum: [{power_of: {ref: self}}, -1]}}}
