@@ -2019,3 +2019,17 @@ cards:
         filter: {types: [creature], civs: [water]}
         count: 2
         tap: true
+  - id: T156
+    name: 試験用非ドラゴン破壊獣
+    types: [creature]
+    civs: [fire]
+    cost: 5
+    power: 4000
+    races: [アーマード・ドラゴン]
+    text: このクリーチャーがバトルゾーンに出た時、相手のドラゴンでないクリーチャーを１体破壊する。
+    abilities:
+      - kind: trigger
+        when: {event: summon, subject: self}
+        effect:
+          - op: destroy
+            select: {zone: bz, owner: opp, count: 1, filter: {types: [creature], not_race_has: ドラゴン}}

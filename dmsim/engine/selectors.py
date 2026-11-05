@@ -97,6 +97,8 @@ class SelectorMixin:
             return False
         if "race_has" in f and not any(f["race_has"] in r for r in ch["races"]):
             return False
+        if "not_race_has" in f and any(f["not_race_has"] in r for r in ch["races"]):
+            return False
         if "name_has" in f and f["name_has"] not in ch["name"]:
             return False
         if "twinpact" in f and bool(self.cdef(cid).faces) != bool(f["twinpact"]):

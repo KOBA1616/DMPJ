@@ -915,3 +915,10 @@ converted の監査（opt_reduce の素の整数表記9件）から。任意形�
 - W・ブレイカー等のキーワード化済みのブレイク数とは別に、付与・増加分を mod で表す。
 - tests/test_vocab_pilot80.py 2件（正常 parse／検証）
 - 待機11枚（break_increase のみが gap のもの）。
+
+## 第81弾: not_race_filter（〜でないクリーチャー）— 新語彙 filter: {not_race_has}（2026-11-05）
+「ドラゴンでないクリーチャー」のような種族否定フィルタが無かったため、filter キー not_race_has を追加した。
+- 書き方: filter: {not_race_has: ドラゴン}（race_has の否定。種族文字列に部分一致したら除外）
+- 実装: defs.py の FILTER_KEYS に追加、engine/selectors.py の filter_match に対応行を追加。proto T156。
+- tests/test_vocab_pilot81.py 3件（parse／filter_match の実挙動）
+- 待機11枚（not_race_filter のみが gap のもの）。
