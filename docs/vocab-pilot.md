@@ -1112,3 +1112,10 @@ converted の監査（opt_reduce の素の整数表記9件）から。任意形�
   effect: [tap {select: {ref: self}}, <効果>]}（出る前に置換として解決し、タップ状態で出る）。
 - tests/test_vocab_pilot111.py 2件（正常 parse／検証）
 - 待機7枚（optional_enters_tapped のみが gap のもの）。
+
+## 第112弾: recast_from_graveyard（墓地から唱える）— 新語彙なし（2026-11-05）
+「コスト○以下の呪文を1枚、自分の墓地からコストを支払わずに唱える」は play_free で表す。
+- 書き方: {op: play_free, select: {zone: graveyard, owner: you, filter: {types: [spell], cost_le: N}, count: 1}}。
+  唱えた後の置き場変更は replace（move の to: graveyard を deck bottom へ）で併記する。
+- tests/test_vocab_pilot112.py 2件（正常 parse／検証）
+- 待機7枚（recast_from_graveyard のみが gap のもの）。
