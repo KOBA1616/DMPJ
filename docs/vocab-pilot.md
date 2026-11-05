@@ -972,3 +972,10 @@ converted の監査（opt_reduce の素の整数表記9件）から。任意形�
 - 書き方: {op: tap, select: {...}, no_untap_next: true}。
 - tests/test_vocab_pilot89.py 2件（正常 parse／検証）
 - 待機21枚（does_not_untap_next_turn のみが gap のもの）。
+
+## 第90弾: enters_battle_zone_tapped（タップして出る）— 新語彙なし（2026-11-05）
+「〜（のクリーチャー）は、タップして出る」は既存の grant enters_tapped で表せる。
+- 書き方: kind: static, affects: {zone: bz, owner: <対象>, filter: {...}}, mod: {grant: [enters_tapped]}。
+- 自分自身がタップして出る場合は affects: self。
+- tests/test_vocab_pilot90.py 2件（正常 parse／検証）
+- 待機16枚（enters_battle_zone_tapped のみが gap のもの）。
