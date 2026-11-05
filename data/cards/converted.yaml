@@ -323171,3 +323171,251 @@ cards:
   text: 自分の他のクリーチャーが、どこからでも自分の墓地に置かれる時、墓地に置くかわりにタップしてマナゾーンに置く。W・ブレイカー（このクリーチャーはシールドを２枚ブレイクする）
   types:
   - creature
+- abilities:
+  - if:
+      exists:
+        filter:
+          neo: true
+        owner: you
+        zone: bz
+    instead:
+    - onto:
+        count: 1
+        filter:
+          neo: true
+        owner: you
+        zone: bz
+      op: put_under
+      select:
+        ref: self
+    kind: replace
+    optional: true
+    when:
+      event: move
+      from: bz
+      reason: destroy
+      subject: self
+      to: graveyard
+  civs:
+  - light
+  cost: 4
+  id: dmrp04s-060
+  keywords:
+  - blocker
+  - cannot_attack_player
+  mana: 1
+  name: 緑知銀 サムニダ
+  power: 5000
+  races:
+  - メタリカ
+  source:
+    notes: '破壊置換は kind: replace（optional: true）、when は move bz→graveyard reason: destroy
+      subject: self、instead は put_under（select: ref self、onto: 自分のNEOクリーチャー1体）。エンジン
+      events._replacement は onto の有無を候補判定で見ないため、NEOが無い時に置換を選ぶと元の破壊が skip され put_under
+      が空振りして場に残る不整合が生じる。エスケープの先例どおり if: exists（自分のNEOクリーチャー）で候補自体を絞り、対象が無い場合は置換を選べず通常どおり墓地に置かれる形にした。'
+    official: dmrp04s-060
+    review: pending
+  text: ブロッカー（このクリーチャーをタップして、相手クリーチャーの攻撃先をこのクリーチャーに変更してもよい）このクリーチャーは、相手プレイヤーを攻撃できない。このクリーチャーが破壊される時、墓地に置くかわりに自分のNEOクリーチャー１体の下に置いてもよい。
+  types:
+  - creature
+- abilities:
+  - effect:
+    - count: 1
+      op: draw
+    - op: discard
+      select:
+        count: 1
+        owner: you
+        zone: hand
+    kind: trigger
+    when:
+      event: move
+      subject: self
+      to: bz
+  - if:
+      exists:
+        filter:
+          neo: true
+        owner: you
+        zone: bz
+    instead:
+    - onto:
+        count: 1
+        filter:
+          neo: true
+        owner: you
+        zone: bz
+      op: put_under
+      select:
+        ref: self
+    kind: replace
+    optional: true
+    when:
+      event: move
+      from: bz
+      reason: destroy
+      subject: self
+      to: graveyard
+  civs:
+  - water
+  cost: 2
+  id: dmrp04s-070
+  mana: 1
+  name: 貝獣 リガイト
+  power: 1000
+  races:
+  - ムートピア
+  source:
+    notes: '出た時のドロー→ディスカードは原文の順序どおり draw の後に discard（手札から1枚選んで捨てる）を並べた。破壊置換は kind:
+      replace（optional: true）、when は move bz→graveyard reason: destroy subject: self、instead
+      は put_under（select: ref self、onto: 自分のNEOクリーチャー1体）。エンジン events._replacement
+      は onto の有無を候補判定で見ないため、NEOが無い時に置換を選ぶと元の破壊が skip され put_under が空振りして場に残る不整合が生じる。エスケープの先例どおり
+      if: exists（自分のNEOクリーチャー）で候補自体を絞り、対象が無い場合は置換を選べず通常どおり墓地に置かれる形にした。'
+    official: dmrp04s-070
+    review: pending
+  text: このクリーチャーがバトルゾーンに出た時、カードを１枚引き、その後、自分の手札を１枚捨てる。 / このクリーチャーが破壊される時、墓地に置くかわりに自分のNEOクリーチャー１体の下に置いてもよい。
+  types:
+  - creature
+- abilities:
+  - if:
+      exists:
+        filter:
+          neo: true
+        owner: you
+        zone: bz
+    instead:
+    - onto:
+        count: 1
+        filter:
+          neo: true
+        owner: you
+        zone: bz
+      op: put_under
+      select:
+        ref: self
+    kind: replace
+    optional: true
+    when:
+      event: move
+      from: bz
+      reason: destroy
+      subject: self
+      to: graveyard
+  civs:
+  - darkness
+  cost: 3
+  id: dmrp04s-076
+  keywords:
+  - slayer
+  mana: 1
+  name: 骨滴医 ホルモン
+  power: 1000
+  races:
+  - マフィ・ギャング
+  source:
+    notes: '破壊置換は kind: replace（optional: true）、when は move bz→graveyard reason: destroy
+      subject: self、instead は put_under（select: ref self、onto: 自分のNEOクリーチャー1体）。エンジン
+      events._replacement は onto の有無を候補判定で見ないため、NEOが無い時に置換を選ぶと元の破壊が skip され put_under
+      が空振りして場に残る不整合が生じる。エスケープの先例どおり if: exists（自分のNEOクリーチャー）で候補自体を絞り、対象が無い場合は置換を選べず通常どおり墓地に置かれる形にした。'
+    official: dmrp04s-076
+    review: pending
+  text: スレイヤー / このクリーチャーが破壊される時、墓地に置くかわりに自分のNEOクリーチャー１体の下に置いてもよい。
+  types:
+  - creature
+- abilities:
+  - if:
+      exists:
+        filter:
+          neo: true
+        owner: you
+        zone: bz
+    instead:
+    - onto:
+        count: 1
+        filter:
+          neo: true
+        owner: you
+        zone: bz
+      op: put_under
+      select:
+        ref: self
+    kind: replace
+    optional: true
+    when:
+      event: move
+      from: bz
+      reason: destroy
+      subject: self
+      to: graveyard
+  civs:
+  - fire
+  cost: 3
+  id: dmrp04s-083
+  keywords:
+  - speed_attacker
+  mana: 1
+  name: ナッコー・チュリス
+  power: 1000
+  races:
+  - ビートジョッキー
+  source:
+    notes: '破壊置換は kind: replace（optional: true）、when は move bz→graveyard reason: destroy
+      subject: self、instead は put_under（select: ref self、onto: 自分のNEOクリーチャー1体）。エンジン
+      events._replacement は onto の有無を候補判定で見ないため、NEOが無い時に置換を選ぶと元の破壊が skip され put_under
+      が空振りして場に残る不整合が生じる。エスケープの先例どおり if: exists（自分のNEOクリーチャー）で候補自体を絞り、対象が無い場合は置換を選べず通常どおり墓地に置かれる形にした。'
+    official: dmrp04s-083
+    review: pending
+  text: スピードアタッカー（このクリーチャーは召喚酔いしない）このクリーチャーが破壊される時、墓地に置くかわりに自分のNEOクリーチャー１体の下に置いてもよい。
+  types:
+  - creature
+- abilities:
+  - affects: self
+    kind: static
+    mod:
+      power_when:
+        amount: 3000
+        when: attacking
+  - if:
+      exists:
+        filter:
+          neo: true
+        owner: you
+        zone: bz
+    instead:
+    - onto:
+        count: 1
+        filter:
+          neo: true
+        owner: you
+        zone: bz
+      op: put_under
+      select:
+        ref: self
+    kind: replace
+    optional: true
+    when:
+      event: move
+      from: bz
+      reason: destroy
+      subject: self
+      to: graveyard
+  civs:
+  - nature
+  cost: 3
+  id: dmrp04s-090
+  mana: 1
+  name: とまとん
+  power: 2000
+  races:
+  - グランセクト
+  source:
+    notes: 'パワーアタッカー+3000は keyword_patterns の先例どおり static の power_when（amount: 3000,
+      when: attacking）で表した。破壊置換は kind: replace（optional: true）、when は move bz→graveyard
+      reason: destroy subject: self、instead は put_under（select: ref self、onto: 自分のNEOクリーチャー1体）。エンジン
+      events._replacement は onto の有無を候補判定で見ないため、NEOが無い時に置換を選ぶと元の破壊が skip され put_under
+      が空振りして場に残る不整合が生じる。エスケープの先例どおり if: exists（自分のNEOクリーチャー）で候補自体を絞り、対象が無い場合は置換を選べず通常どおり墓地に置かれる形にした。'
+    official: dmrp04s-090
+    review: pending
+  text: パワーアタッカー+3000 / このクリーチャーが破壊される時、墓地に置くかわりに自分のNEOクリーチャー１体の下に置いてもよい。
+  types:
+  - creature
