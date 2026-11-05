@@ -293525,3 +293525,885 @@ cards:
     t バトルゾーンにある自分のアウトレイジを１体、アンタップする。'
   types:
   - creature
+- civs:
+  - light
+  cost: 7
+  faces:
+  - abilities:
+    - affects:
+        filter:
+          types:
+          - creature
+        owner: you
+        zone: bz
+      if:
+        cmp:
+        - count:
+            filter:
+              keyword: wave_striker
+            other: true
+            owner: any
+            zone: bz
+        - '>='
+        - 2
+      kind: static
+      mod:
+        grant:
+        - blocker
+        - double_breaker
+        power: 5000
+    civs:
+    - light
+    cost: 7
+    keywords:
+    - wave_striker
+    name: 星雲の精霊キルスティン
+    power: 5000
+    races:
+    - エンジェル・コマンド
+    text: 'ウェーブストライカー（「ウェーブストライカー」を持つクリーチャーが他に２体以上あれば、このクリーチャーに次のw能力を与える）
+
+      w自分のクリーチャーすべてのパワーを+5000し、「ブロッカー」と「W・ブレイカー」を与える。'
+    types:
+    - creature
+  - civs:
+    - light
+    cost: 3
+    name: 神秘の石柱
+    spell:
+    - op: move
+      reason: put
+      select:
+        count: 2
+        owner: you
+        zone: deck
+      tapped: true
+      to: mana
+    - as: chosen
+      op: choose
+      select:
+        count: 1
+        owner: you
+        zone: mana
+    - op: move
+      reason: put
+      select:
+        ref: chosen
+      to: graveyard
+    text: 自分の山札の上から２枚を、タップしてマナゾーンに置く。その後、カードを１枚、自分のマナゾーンから墓地に置く。
+    types:
+    - spell
+  id: dm22ex1-063
+  keywords:
+  - wave_striker
+  mana: 1
+  name: 星雲の精霊キルスティン / 神秘の石柱
+  power: 5000
+  races:
+  - エンジェル・コマンド
+  source:
+    official: dm22ex1-063
+    review: pending
+  text: '星雲の精霊キルスティン: ウェーブストライカー（「ウェーブストライカー」を持つクリーチャーが他に２体以上あれば、このクリーチャーに次のw能力を与える）
+
+    w自分のクリーチャーすべてのパワーを+5000し、「ブロッカー」と「W・ブレイカー」を与える。 ／ 神秘の石柱: 自分の山札の上から２枚を、タップしてマナゾーンに置く。その後、カードを１枚、自分のマナゾーンから墓地に置く。'
+  types:
+  - creature
+- civs:
+  - light
+  cost: 2
+  faces:
+  - abilities:
+    - affects:
+        filter:
+          types:
+          - creature
+        owner: you
+        zone: bz
+      if:
+        cmp:
+        - count:
+            filter:
+              keyword: wave_striker
+            other: true
+            owner: any
+            zone: bz
+        - '>='
+        - 2
+      kind: static
+      mod:
+        power: 1000
+    civs:
+    - light
+    cost: 2
+    keywords:
+    - wave_striker
+    name: 予言者ラメール
+    power: 1500
+    races:
+    - ライトブリンガー
+    text: 'ウェーブストライカー（「ウェーブストライカー」を持つクリーチャーが他に２体以上あれば、このクリーチャーに次のw能力を与える）
+
+      w自分のクリーチャーすべてのパワーを+1000する。'
+    types:
+    - creature
+  - civs:
+    - light
+    cost: 6
+    keywords:
+    - s_trigger
+    name: マスター・スパーク
+    spell:
+    - op: tap
+      select:
+        count: all
+        filter:
+          types:
+          - creature
+        owner: opp
+        zone: bz
+    - count: 1
+      op: draw
+    text: 相手のクリーチャーをすべてタップする。カードを１枚引く。
+    types:
+    - spell
+  id: dm22ex1-074
+  keywords:
+  - wave_striker
+  mana: 1
+  name: 予言者ラメール / マスター・スパーク
+  power: 1500
+  races:
+  - ライトブリンガー
+  source:
+    official: dm22ex1-074
+    review: pending
+  text: 'ウェーブストライカー（「ウェーブストライカー」を持つクリーチャーが他に２体以上あれば、このクリーチャーに次のw能力を与える）
+
+    w自分のクリーチャーすべてのパワーを+1000する。'
+  types:
+  - creature
+- civs:
+  - darkness
+  cost: 2
+  faces:
+  - abilities:
+    - effect:
+      - body:
+        - as: chosen
+          op: choose
+          select:
+            count: 1
+            filter:
+              types:
+              - creature
+            owner: you
+            zone: graveyard
+        - op: move
+          reason: return
+          select:
+            ref: chosen
+          to: hand
+        op: may
+      if:
+        cmp:
+        - count:
+            filter:
+              keyword: wave_striker
+            other: true
+            owner: any
+            zone: bz
+        - '>='
+        - 2
+      kind: trigger
+      when:
+        event: summon
+        subject: self
+    civs:
+    - darkness
+    cost: 2
+    keywords:
+    - wave_striker
+    name: 骨折人形トロンボ
+    power: 1000
+    races:
+    - デスパペット
+    text: 'ウェーブストライカー（「ウェーブストライカー」を持つクリーチャーが他に２体以上あれば、このクリーチャーに次のw能力を与える）
+
+      wこのクリーチャーが出た時、クリーチャーを１体、自分の墓地から手札に戻してもよい。'
+    types:
+    - creature
+  - civs:
+    - darkness
+    cost: 7
+    keywords:
+    - s_trigger
+    name: デビル・ハンド
+    spell:
+    - as: chosen
+      op: choose
+      select:
+        count: 1
+        filter:
+          types:
+          - creature
+        owner: opp
+        zone: bz
+    - op: destroy
+      select:
+        ref: chosen
+    - body:
+      - op: move
+        reason: put
+        select:
+          count: 3
+          owner: you
+          zone: deck
+        to: graveyard
+      op: may
+    text: 相手のクリーチャーを１体破壊する。自分の山札の上から３枚を墓地に置いてもよい。
+    types:
+    - spell
+  id: dm22ex1-082
+  keywords:
+  - wave_striker
+  mana: 1
+  name: 骨折人形トロンボ / デビル・ハンド
+  power: 1000
+  races:
+  - デスパペット
+  source:
+    official: dm22ex1-082
+    review: pending
+  text: '骨折人形トロンボ: ウェーブストライカー（「ウェーブストライカー」を持つクリーチャーが他に２体以上あれば、このクリーチャーに次のw能力を与える）
+
+    wこのクリーチャーが出た時、クリーチャーを１体、自分の墓地から手札に戻してもよい。 ／ デビル・ハンド: 相手のクリーチャーを１体破壊する。自分の山札の上から３枚を墓地に置いてもよい。'
+  types:
+  - creature
+- abilities:
+  - effect:
+    - op: discard
+      select:
+        count: 3
+        owner: opp
+        zone: hand
+    if:
+      cmp:
+      - count:
+          filter:
+            keyword: wave_striker
+          other: true
+          owner: any
+          zone: bz
+      - '>='
+      - 2
+    kind: trigger
+    when:
+      event: summon
+      subject: self
+  civs:
+  - darkness
+  cost: 5
+  id: dm22ex1-084
+  keywords:
+  - wave_striker
+  mana: 1
+  name: 略奪秘宝ジャギラ
+  power: 3000
+  races:
+  - パンドラボックス
+  source:
+    official: dm22ex1-084
+    review: pending
+    aliases:
+    - dm11-025
+  text: 'ウェーブストライカー（「ウェーブストライカー」を持つクリーチャーが他に２体以上あれば、このクリーチャーに次のw能力を与える）
+
+    wこのクリーチャーが出た時、相手の手札を３枚見ないで選び、捨てさせる。'
+  types:
+  - creature
+- civs:
+  - fire
+  cost: 3
+  faces:
+  - abilities:
+    - effect:
+      - op: destroy
+        select:
+          count: all
+          filter:
+            power_le: 2000
+            types:
+            - creature
+          owner: any
+          zone: bz
+      if:
+        cmp:
+        - count:
+            filter:
+              keyword: wave_striker
+            other: true
+            owner: any
+            zone: bz
+        - '>='
+        - 2
+      kind: trigger
+      when:
+        event: summon
+        subject: self
+    civs:
+    - fire
+    cost: 3
+    keywords:
+    - wave_striker
+    name: 斬神兵グランドルメス
+    power: 2000
+    races:
+    - アーマロイド
+    text: 'ウェーブストライカー（「ウェーブストライカー」を持つクリーチャーが他に２体以上あれば、このクリーチャーに次のw能力を与える）
+
+      wこのクリーチャーが出た時、パワー2000以下のクリーチャーをすべて破壊する。'
+    types:
+    - creature
+  - civs:
+    - fire
+    cost: 5
+    keywords:
+    - s_trigger
+    name: バースト・ワンショット
+    spell:
+    - op: destroy
+      select:
+        count: all
+        filter:
+          power_le: 3000
+          types:
+          - creature
+        owner: opp
+        zone: bz
+    - cond:
+        exists:
+          filter:
+            power_ge: 6000
+            types:
+            - creature
+          owner: you
+          zone: bz
+      op: if
+      then:
+      - count: 1
+        op: draw
+    text: 相手のパワー3000以下のクリーチャーをすべて破壊する。自分のパワー6000以上のクリーチャーがあれば、カードを１枚引く。
+    types:
+    - spell
+  id: dm22ex1-088
+  keywords:
+  - wave_striker
+  mana: 1
+  name: 斬神兵グランドルメス / バースト・ワンショット
+  power: 2000
+  races:
+  - アーマロイド
+  source:
+    official: dm22ex1-088
+    review: pending
+  text: '斬神兵グランドルメス: ウェーブストライカー（「ウェーブストライカー」を持つクリーチャーが他に２体以上あれば、このクリーチャーに次のw能力を与える）
+
+    wこのクリーチャーが出た時、パワー2000以下のクリーチャーをすべて破壊する。 ／ バースト・ワンショット: 相手のパワー3000以下のクリーチャーをすべて破壊する。自分のパワー6000以上のクリーチャーがあれば、カードを１枚引く。'
+  types:
+  - creature
+- abilities:
+  - kind: trigger
+    when:
+      event: attack
+      subject: self
+    effect:
+    - op: may
+      body:
+      - op: move
+        select:
+          zone:
+          - hand
+          - deck
+          from_top: 1
+          owner: you
+          filter:
+            types:
+            - creature
+            not_types:
+            - evolution
+            cost_le: 3
+          count: 1
+        to: bz
+        reason: put
+  - effect:
+    - body:
+      - op: move
+        reason: put
+        select:
+          count: 1
+          filter:
+            cost_le: 3
+            not_types:
+            - evolution
+            types:
+            - creature
+          from_top: 1
+          owner: you
+          zone:
+          - hand
+          - deck
+        to: bz
+      op: may
+    kind: trigger
+    when:
+      event: attack
+      subject: self
+  - affects: self
+    if:
+      cmp:
+      - count:
+          filter:
+            keyword: wave_striker
+          other: true
+          owner: any
+          zone: bz
+      - '>='
+      - 2
+    kind: static
+    mod:
+      grant:
+      - double_breaker
+      power: 3000
+  civs:
+  - fire
+  cost: 4
+  id: dm22ex1-091
+  keywords:
+  - speed_attacker
+  - wave_striker
+  mana: 1
+  name: 要撃闘士スピニング・スピン
+  power: 3000
+  races:
+  - ドラゴノイド
+  source:
+    official: dm22ex1-091
+    review: pending
+  text: 'スピードアタッカー（このクリーチャーは召喚酔いしない）
+
+    マジボンバー ３（このクリーチャーが攻撃する時、自分の山札の上から１枚目を見る。その後、コスト３以下のクリーチャーを１体、自分の手札または山札の上から出してもよい）
+
+    ウェーブストライカー（「ウェーブストライカー」を持つクリーチャーが他に２体以上あれば、このクリーチャーに次のw能力を与える）
+
+    wこのクリーチャーのパワーを+3000し、「W・ブレイカー」を与える。（「W・ブレイカー」を持つクリーチャーは、シールドを２つブレイクする）'
+  types:
+  - creature
+- civs:
+  - nature
+  cost: 2
+  faces:
+  - abilities:
+    - effect:
+      - op: move
+        reason: put
+        select:
+          count: 1
+          owner: you
+          zone: deck
+        to: mana
+      - as: chosen
+        op: choose
+        select:
+          count: 1
+          filter:
+            types:
+            - creature
+          owner: you
+          zone: mana
+      - op: move
+        reason: return
+        select:
+          ref: chosen
+        to: hand
+      if:
+        cmp:
+        - count:
+            filter:
+              keyword: wave_striker
+            other: true
+            owner: any
+            zone: bz
+        - '>='
+        - 2
+      kind: trigger
+      when:
+        event: summon
+        subject: self
+    civs:
+    - nature
+    cost: 2
+    keywords:
+    - wave_striker
+    name: アラーム・ラディッシュ
+    power: 1000
+    races:
+    - ワイルド・ベジーズ
+    text: 'ウェーブストライカー（「ウェーブストライカー」を持つクリーチャーが他に２体以上あれば、このクリーチャーに次のw能力を与える）
+
+      wこのクリーチャーを出した時、自分の山札の上から１枚目をマナゾーンに置く。その後、クリーチャーを１体、自分のマナゾーンから手札に戻す。'
+    types:
+    - creature
+  - civs:
+    - nature
+    cost: 7
+    keywords:
+    - s_trigger
+    name: ナチュラトゥルー・トラップ
+    spell:
+    - as: chosen
+      op: choose
+      select:
+        count: 1
+        filter:
+          types:
+          - creature
+        owner: opp
+        zone: bz
+    - op: move
+      reason: put
+      select:
+        ref: chosen
+      to: mana
+    - count: 1
+      op: draw
+    text: 相手のクリーチャーを１体選び、持ち主のマナゾーンに置く。カードを１枚引く。
+    types:
+    - spell
+  id: dm22ex1-093
+  keywords:
+  - wave_striker
+  mana: 1
+  name: アラーム・ラディッシュ / ナチュラトゥルー・トラップ
+  power: 1000
+  races:
+  - ワイルド・ベジーズ
+  source:
+    official: dm22ex1-093
+    review: pending
+  text: 'アラーム・ラディッシュ: ウェーブストライカー（「ウェーブストライカー」を持つクリーチャーが他に２体以上あれば、このクリーチャーに次のw能力を与える）
+
+    wこのクリーチャーを出した時、自分の山札の上から１枚目をマナゾーンに置く。その後、クリーチャーを１体、自分のマナゾーンから手札に戻す。 ／ ナチュラトゥルー・トラップ:
+    相手のクリーチャーを１体選び、持ち主のマナゾーンに置く。カードを１枚引く。'
+  types:
+  - creature
+- civs:
+  - light
+  cost: 3
+  faces:
+  - abilities:
+    - affects: self
+      if:
+        cmp:
+        - count:
+            filter:
+              keyword: wave_striker
+            other: true
+            owner: any
+            zone: bz
+        - '>='
+        - 2
+      kind: static
+      mod:
+        grant:
+        - blocker
+        power: 4000
+    civs:
+    - light
+    cost: 3
+    keywords:
+    - wave_striker
+    name: 堅防の使徒アースラ
+    power: 2000
+    races:
+    - イニシエート
+    text: 'ウェーブストライカー（「ウェーブストライカー」を持つクリーチャーが他に２体以上あれば、このクリーチャーに次のw能力を与える）
+
+      wこのクリーチャーのパワーを+4000し、「ブロッカー」を与える。'
+    types:
+    - creature
+  - civs:
+    - light
+    cost: 1
+    keywords:
+    - s_trigger
+    name: グローリー・ストーン
+    spell:
+    - cond:
+        cmp:
+        - count:
+            owner: opp
+            zone: mana
+        - '>'
+        - count:
+            owner: you
+            zone: mana
+      op: if
+      then:
+      - op: move
+        reason: put
+        select:
+          count: 1
+          owner: you
+          zone: deck
+        to: mana
+    text: 相手のマナゾーンのカードが自分のより多ければ、自分の山札の上から１枚目をマナゾーンに置く。
+    types:
+    - spell
+  id: dm22ex1-101
+  keywords:
+  - wave_striker
+  mana: 1
+  name: 堅防の使徒アースラ / グローリー・ストーン
+  power: 2000
+  races:
+  - イニシエート
+  source:
+    official: dm22ex1-101
+    review: pending
+  text: '堅防の使徒アースラ: ウェーブストライカー（「ウェーブストライカー」を持つクリーチャーが他に２体以上あれば、このクリーチャーに次のw能力を与える）
+
+    wこのクリーチャーのパワーを+4000し、「ブロッカー」を与える。 ／ グローリー・ストーン: 相手のマナゾーンのカードが自分のより多ければ、自分の山札の上から１枚目をマナゾーンに置く。'
+  types:
+  - creature
+- civs:
+  - fire
+  cost: 3
+  faces:
+  - abilities:
+    - affects: self
+      if:
+        cmp:
+        - count:
+            filter:
+              keyword: wave_striker
+            other: true
+            owner: any
+            zone: bz
+        - '>='
+        - 2
+      kind: static
+      mod:
+        allow:
+        - action: attack_creature
+          other:
+            tapped: false
+        power: 4000
+    civs:
+    - fire
+    cost: 3
+    keywords:
+    - wave_striker
+    name: 炎舞闘士サピエント・アーク
+    power: 2000
+    races:
+    - ドラゴノイド
+    text: 'ウェーブストライカー（「ウェーブストライカー」を持つクリーチャーが他に２体以上あれば、このクリーチャーに次のw能力を与える）
+
+      wこのクリーチャーのパワーは+4000され、アンタップしているクリーチャーを攻撃できる。'
+    types:
+    - creature
+  - civs:
+    - fire
+    cost: 1
+    name: 無限掌
+    spell:
+    - as: chosen
+      op: choose
+      select:
+        count: 1
+        filter:
+          types:
+          - creature
+        owner: you
+        zone: bz
+    - duration: end_of_turn
+      mod:
+        gain:
+        - effect:
+          - op: untap
+            select:
+              ref: self
+          kind: trigger
+          when:
+            event: battle_win
+            subject: self
+      op: modify
+      select:
+        ref: chosen
+    text: 自分のクリーチャーを１体選ぶ。このターン、そのクリーチャーがバトルに勝った時、アンタップする。
+    types:
+    - spell
+  id: dm22ex1-113
+  keywords:
+  - wave_striker
+  mana: 1
+  name: 炎舞闘士サピエント・アーク / 無限掌
+  power: 2000
+  races:
+  - ドラゴノイド
+  source:
+    official: dm22ex1-113
+    review: pending
+  text: '炎舞闘士サピエント・アーク: ウェーブストライカー（「ウェーブストライカー」を持つクリーチャーが他に２体以上あれば、このクリーチャーに次のw能力を与える）
+
+    wこのクリーチャーのパワーは+4000され、アンタップしているクリーチャーを攻撃できる。 ／ 無限掌: 自分のクリーチャーを１体選ぶ。このターン、そのクリーチャーがバトルに勝った時、アンタップする。'
+  types:
+  - creature
+- civs:
+  - nature
+  cost: 3
+  faces:
+  - abilities:
+    - affects: self
+      if:
+        cmp:
+        - count:
+            filter:
+              keyword: wave_striker
+            other: true
+            owner: any
+            zone: bz
+        - '>='
+        - 2
+      kind: static
+      mod:
+        deny:
+        - action: be_blocked
+          other:
+            power_le: 5000
+        power: 4000
+    civs:
+    - nature
+    cost: 3
+    keywords:
+    - wave_striker
+    name: ニンジャ・パンプキン
+    power: 2000
+    races:
+    - ワイルド・ベジーズ
+    text: 'ウェーブストライカー（「ウェーブストライカー」を持つクリーチャーが他に２体以上あれば、このクリーチャーに次のw能力を与える）
+
+      wこのクリーチャーのパワーは+4000され、パワー5000以下のクリーチャーにブロックされない。'
+    types:
+    - creature
+  - civs:
+    - nature
+    cost: 1
+    name: グローリー・マッスル
+    spell:
+    - as: chosen
+      op: choose
+      select:
+        count: 1
+        filter:
+          types:
+          - creature
+        owner: you
+        zone: bz
+    - duration: end_of_turn
+      mod:
+        power: 4000
+      op: modify
+      select:
+        ref: chosen
+    text: このターン、自分のクリーチャー１体のパワーを+4000する。
+    types:
+    - spell
+  id: dm22ex1-119
+  keywords:
+  - wave_striker
+  mana: 1
+  name: ニンジャ・パンプキン / グローリー・マッスル
+  power: 2000
+  races:
+  - ワイルド・ベジーズ
+  source:
+    official: dm22ex1-119
+    review: pending
+  text: 'ニンジャ・パンプキン: ウェーブストライカー（「ウェーブストライカー」を持つクリーチャーが他に２体以上あれば、このクリーチャーに次のw能力を与える）
+
+    wこのクリーチャーのパワーは+4000され、パワー5000以下のクリーチャーにブロックされない。 ／ グローリー・マッスル: このターン、自分のクリーチャー１体のパワーを+4000する。'
+  types:
+  - creature
+- abilities:
+  - effect:
+    - body:
+      - as: chosen
+        op: choose
+        select:
+          count: 1
+          filter:
+            keyword: wave_striker
+            types:
+            - creature
+          owner: you
+          zone: graveyard
+      - op: move
+        reason: return
+        select:
+          ref: chosen
+        to: hand
+      op: may
+    if:
+      cmp:
+      - count:
+          filter:
+            keyword: wave_striker
+          other: true
+          owner: any
+          zone: bz
+      - '>='
+      - 2
+    kind: trigger
+    when:
+      event: summon
+      subject: self
+  - affects: self
+    if:
+      cmp:
+      - count:
+          filter:
+            keyword: wave_striker
+          other: true
+          owner: any
+          zone: bz
+      - '>='
+      - 2
+    kind: static
+    mod:
+      deny:
+      - be_blocked
+      grant:
+      - double_breaker
+  civs:
+  - water
+  - darkness
+  cost: 6
+  id: promoy3-012
+  keywords:
+  - wave_striker
+  mana: 1
+  name: 電脳奇面アンギラー
+  power: 6000
+  races:
+  - リキッド・ピープル
+  - デビルマスク
+  source:
+    official: promoy3-012
+    review: pending
+  text: マナゾーンに置く時、このカードはタップして置く。ウェーブストライカー（バトルゾーンに「ウェーブストライカー」を持つクリーチャーが他に２体以上あれば、このクリーチャーは次のw
+    能力を得る） w このクリーチャーをバトルゾーンに出した時、「ウェーブストライカー」を持つクリーチャーを１体、自分の墓地から自分の手札に戻してもよい。 w
+    このクリーチャーはブロックされず、「W・ブレイカー」を得る。
+  types:
+  - creature
