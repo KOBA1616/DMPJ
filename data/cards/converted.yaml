@@ -313567,3 +313567,364 @@ cards:
   types:
   - creature
   - evolution
+- id: dm24ex3-tf11
+  name: アンヤク夜叉
+  types:
+  - creature
+  civs:
+  - fire
+  cost: 4
+  power: 3000
+  races:
+  - デモニオ
+  - 鬼札王国
+  mana: 1
+  text: クリーチャーが攻撃する時、自分のマナゾーンに闇文明と火文明があれば、自分の手札にあるこのクリーチャーを表向きにし、山札の下に置いてもよい。そうしたら、相手のパワー3000以下のクリーチャーを１体選び、破壊する。
+    / 鬼エンド：このクリーチャーが出た時、シールドが１つもないプレイヤーがいれば、相手のパワー6000以下のクリーチャーを１体選び、破壊する。
+  abilities:
+  - kind: declare
+    zone: hand
+    when:
+      event: attack
+      subject:
+        owner: any
+    if:
+      all:
+      - exists:
+          zone: mana
+          owner: you
+          filter:
+            civs:
+            - darkness
+      - exists:
+          zone: mana
+          owner: you
+          filter:
+            civs:
+            - fire
+    effect:
+    - op: may
+      body:
+      - op: move
+        select:
+          ref: self
+        to: deck
+        position: bottom
+        reason: put
+        face_up: true
+        as: placed
+      - op: if
+        cond:
+          exists:
+            ref: placed
+        then:
+        - op: destroy
+          select:
+            zone: bz
+            owner: opp
+            filter:
+              types:
+              - creature
+              power_le: 3000
+            count: 1
+  - kind: trigger
+    when:
+      event: move
+      to: bz
+      subject: self
+    if:
+      any:
+      - cmp:
+        - count:
+            zone: shield
+            owner: you
+        - ==
+        - 0
+      - cmp:
+        - count:
+            zone: shield
+            owner: opp
+        - ==
+        - 0
+    effect:
+    - op: destroy
+      select:
+        zone: bz
+        owner: opp
+        filter:
+          types:
+          - creature
+          power_le: 6000
+        count: 1
+  source:
+    official: dm24ex3-tf11
+    review: pending
+    aliases:
+    - dm24rp4-t01
+    - dmrp16-018
+    - promoy19-091
+    - promoy19-092
+- id: dm25ex2-037
+  name: 鬼ヶ英悪 ジャオウガOG
+  types:
+  - creature
+  civs:
+  - darkness
+  - fire
+  cost: 5
+  power: 5000
+  races:
+  - デモニオ
+  - デーモン・コマンド
+  - 鬼レクスターズ
+  mana: 1
+  keywords:
+  - speed_attacker
+  text: '鬼エンド：クリーチャーが攻撃する時、シールドが１つもないプレイヤーがいて、自分のマナゾーンに闇文明と火文明があれば、このクリーチャーを自分の手札からコストを支払わずに召喚してもよい。
+
+    スピードアタッカー
+
+    このクリーチャーが出た時、相手の「ブロッカー」を持つクリーチャーを１体選び、破壊する。'
+  abilities:
+  - kind: declare
+    zone: hand
+    when:
+      event: attack
+      subject:
+        owner: any
+    if:
+      all:
+      - any:
+        - cmp:
+          - count:
+              zone: shield
+              owner: you
+          - ==
+          - 0
+        - cmp:
+          - count:
+              zone: shield
+              owner: opp
+          - ==
+          - 0
+      - exists:
+          zone: mana
+          owner: you
+          filter:
+            civs:
+            - darkness
+      - exists:
+          zone: mana
+          owner: you
+          filter:
+            civs:
+            - fire
+    effect:
+    - op: play_free
+      select:
+        ref: self
+  - kind: trigger
+    when:
+      event: move
+      to: bz
+      subject: self
+    effect:
+    - op: destroy
+      select:
+        zone: bz
+        owner: opp
+        filter:
+          types:
+          - creature
+          keyword: blocker
+        count: 1
+  source:
+    official: dm25ex2-037
+    review: pending
+    aliases:
+    - dm22ex2-009
+    - dm22ex2-10a
+    - dm22ex2-10b
+    - dm23bd2-009
+- id: dm26ex2-pr008
+  name: 百鬼の邪王門
+  types:
+  - spell
+  civs:
+  - darkness
+  - fire
+  cost: 6
+  races:
+  - 鬼札王国
+  mana: 1
+  text: 鬼エンド：クリーチャーが攻撃する時、シールドが１つもないプレイヤーがいて、自分のマナゾーンに闇と火文明があれば、この呪文を自分の手札からコストを支払わずに唱えてもよい。
+    / 自分の山札の上から４枚を墓地に置く。こうして墓地に置いたカードの中から、闇または火の、コスト６以下の、進化ではないクリーチャーを１体出す。その後、相手のクリーチャーを１体選んでもよい。その２体をバトルさせる。
+  abilities:
+  - kind: declare
+    zone: hand
+    when:
+      event: attack
+      subject:
+        owner: any
+    if:
+      all:
+      - any:
+        - cmp:
+          - count:
+              zone: shield
+              owner: you
+          - ==
+          - 0
+        - cmp:
+          - count:
+              zone: shield
+              owner: opp
+          - ==
+          - 0
+      - exists:
+          zone: mana
+          owner: you
+          filter:
+            civs:
+            - darkness
+      - exists:
+          zone: mana
+          owner: you
+          filter:
+            civs:
+            - fire
+    effect:
+    - op: play_free
+      select:
+        ref: self
+  spell:
+  - op: move
+    select:
+      zone: deck
+      owner: you
+      from_top: 4
+    to: graveyard
+    reason: put
+    as: milled
+  - op: move
+    select:
+      ref: milled
+      filter:
+        types:
+        - creature
+        not_types:
+        - evolution
+        civs:
+        - darkness
+        - fire
+        cost_le: 6
+      count: 1
+    to: bz
+    reason: put
+    as: summoned
+  - op: if
+    cond:
+      exists:
+        ref: summoned
+    then:
+    - op: may
+      body:
+      - op: choose
+        select:
+          zone: bz
+          owner: opp
+          filter:
+            types:
+            - creature
+          count: 1
+        as: foe
+      - op: force_battle
+        a:
+          ref: summoned
+        b:
+          ref: foe
+  source:
+    official: dm26ex2-pr008
+    review: pending
+    aliases:
+    - dm22ex2-029
+    - dm23bd2-001
+    - dm24ex3-tf14
+    - dm24ex4-057
+    - dm24ex4-pr017
+    - dm24rp4-t03
+    - dm25ex2-cho034
+    - dm26ex2-pr008cho
+    - dm26sd1-c012
+    - dmart01-005
+    - dmex17-069
+    - dmrp15-028
+    - promoy21-031
+    - promoy25-055
+    - promoy25-059
+    - promoy25-072
+- id: dmrp15-038
+  name: 百鬼の天邪閣
+  types:
+  - spell
+  civs:
+  - darkness
+  cost: 4
+  races:
+  - 鬼札王国
+  mana: 1
+  text: 鬼エンド：クリーチャーが攻撃する時、シールドが１つもないプレイヤーがいて、自分のマナゾーンに闇のカードと火のカードがそれぞれ１枚以上あれば、この呪文を自分の手札からコストを支払わずに唱えてもよい。
+    / このターン、相手のクリーチャーすべてのパワーを－2000する。
+  abilities:
+  - kind: declare
+    zone: hand
+    when:
+      event: attack
+      subject:
+        owner: any
+    if:
+      all:
+      - any:
+        - cmp:
+          - count:
+              zone: shield
+              owner: you
+          - ==
+          - 0
+        - cmp:
+          - count:
+              zone: shield
+              owner: opp
+          - ==
+          - 0
+      - exists:
+          zone: mana
+          owner: you
+          filter:
+            civs:
+            - darkness
+      - exists:
+          zone: mana
+          owner: you
+          filter:
+            civs:
+            - fire
+    effect:
+    - op: play_free
+      select:
+        ref: self
+  spell:
+  - op: modify
+    select:
+      zone: bz
+      owner: opp
+      filter:
+        types:
+        - creature
+      count: all
+    mod:
+      power: -2000
+    duration: end_of_turn
+  source:
+    official: dmrp15-038
+    review: pending
