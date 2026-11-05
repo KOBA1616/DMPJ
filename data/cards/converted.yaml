@@ -323419,3 +323419,287 @@ cards:
   text: パワーアタッカー+3000 / このクリーチャーが破壊される時、墓地に置くかわりに自分のNEOクリーチャー１体の下に置いてもよい。
   types:
   - creature
+- abilities:
+  - effect:
+    - cond:
+        exists:
+          filter:
+            name: ヘリオス・ティガ・ドラゴン
+          owner: you
+          zone: bz
+      else:
+      - op: discard
+        select:
+          chooser: opp
+          count: 1
+          owner: opp
+          zone: hand
+      op: if
+      then:
+      - op: discard
+        select:
+          count: all
+          owner: opp
+          zone: hand
+    kind: trigger
+    when:
+      event: move
+      subject: self
+      to: bz
+  civs:
+  - darkness
+  cost: 7
+  id: dmc34-011
+  mana: 1
+  name: 白虎の剣皇ダーク・サラマンダス
+  power: 7000
+  races:
+  - デーモン・コマンド
+  source:
+    official: dmc34-011
+    review: pending
+    aliases:
+    - promoy4-042
+  text: 'このクリーチャーをバトルゾーンに出した時、相手は自分自身の手札を１枚選んで捨てる。バトルゾーンに自分の《ヘリオス・ティガ・ドラゴン》が１体でもあれば、相手は手札を１枚ではなくすべて捨てる。
+
+    W・ブレイカー(このクリーチャーはシールドを２枚ブレイクする)'
+  types:
+  - creature
+  keywords:
+  - double_breaker
+- abilities:
+  - effect:
+    - cond:
+        exists:
+          filter:
+            name: 白虎の剣皇ダーク・サラマンダス
+          owner: you
+          zone: bz
+      else:
+      - op: destroy
+        select:
+          count: all
+          filter:
+            power_le: 2000
+            types:
+            - creature
+          owner: opp
+          zone: bz
+      op: if
+      then:
+      - op: destroy
+        select:
+          count: all
+          filter:
+            power_le: 4000
+            types:
+            - creature
+          owner: opp
+          zone: bz
+    kind: trigger
+    when:
+      event: move
+      subject: self
+      to: bz
+  civs:
+  - fire
+  cost: 7
+  id: dmc39-022
+  mana: 1
+  name: ヘリオス・ティガ・ドラゴン
+  power: 7000
+  races:
+  - アーマード・ドラゴン
+  source:
+    official: dmc39-022
+    review: pending
+    aliases:
+    - dmc34-015
+    - promoy4-041
+  text: 'このクリーチャーをバトルゾーンに出した時、相手のパワー2000以下のクリーチャーをすべて破壊する。バトルゾーンに自分の《白虎の剣皇ダーク・サラマンダス》が１体でもあれば、パワー2000以下のかわりに4000以下の相手のクリーチャーをすべて破壊する。
+
+    W・ブレイカー(このクリーチャーはシールドを２枚ブレイクする)'
+  types:
+  - creature
+  keywords:
+  - double_breaker
+- abilities:
+  - effect:
+    - body:
+      - as: paid
+        op: discard
+        select:
+          count: 1
+          filter:
+            race_has: エンジェル・コマンド
+          owner: you
+          zone: hand
+      - cond:
+          exists:
+            ref: paid
+        op: if
+        then:
+        - as: deck
+          op: choose
+          select:
+            count: all
+            owner: you
+            zone: deck
+        - op: move
+          reason: return
+          select:
+            count: 1
+            filter:
+              any_of:
+              - race_has: ドラゴン
+              - types:
+                - cross_gear
+            ref: deck
+          to: hand
+        - op: shuffle
+          player: you
+      op: may
+    kind: trigger
+    when:
+      event: attack
+      subject:
+        filter:
+          race_has: ドラゴン
+        owner: you
+  - instead:
+    - op: destroy
+      select:
+        count: 1
+        filter:
+          race_has: エンジェル・コマンド
+        owner: you
+        zone: bz
+    kind: replace
+    optional: true
+    when:
+      event: move
+      from: bz
+      reason: destroy
+      subject:
+        filter:
+          name: ボルバルザーク・紫電・ドラゴン
+        owner: you
+      to: graveyard
+  civs:
+  - fire
+  cost: 6
+  id: dmc47-025
+  mana: 1
+  name: バルキリー・裂空・ドラゴン
+  power: 6000
+  races:
+  - アーマード・ドラゴン
+  - サムライ
+  source:
+    official: dmc47-025
+    review: pending
+  text: '自分のドラゴンが攻撃する時、自分の手札からエンジェル・コマンドを１体捨ててもよい。そうした場合、自分の山札を見る。その中からドラゴン１体またはクロスギアを１枚選び、相手に見せてから手札に加える。その後、山札をシャッフルする。
+
+    自分の《ボルバルザーク・紫電・ドラゴン》が破壊される時、かわりに自分のエンジェル・コマンドを１体破壊してもよい。
+
+    W・ブレイカー(このクリーチャーはシールドを２枚ブレイクする)'
+  types:
+  - creature
+  keywords:
+  - double_breaker
+- civs:
+  - fire
+  cost: 6
+  id: dmc47-026
+  mana: 1
+  name: 武者ザンゲキ剣
+  source:
+    official: dmc47-026
+    review: pending
+    aliases:
+    - dm27-028
+  spell:
+  - op: destroy
+    select:
+      count: 1
+      filter:
+        power_le: 5000
+        types:
+        - creature
+      owner: opp
+      zone: bz
+  - cond:
+      exists:
+        filter:
+          name: ボルメテウス・武者・ドラゴン
+        owner: you
+        zone: bz
+    op: if
+    then:
+    - op: destroy
+      select:
+        count: 1
+        filter:
+          power_le: 5000
+          types:
+          - creature
+        owner: opp
+        zone: bz
+  text: 'S・トリガー
+
+    相手のパワー5000以下のクリーチャーを１体破壊する。バトルゾーンに自分の《ボルメテウス・武者・ドラゴン》が１体でもあれば、相手のパワー5000以下のクリーチャーをもう１体破壊する。'
+  types:
+  - spell
+  keywords:
+  - s_trigger
+- abilities:
+  - affects:
+      filter:
+        race_has: ドラゴン
+      owner: you
+      zone: hand
+    kind: static
+    mod:
+      cost: -1
+      cost_min: 1
+  - effect:
+    - body:
+      - op: move
+        reason: put
+        select:
+          from_top: 1
+          owner: you
+          zone: deck
+        to: shield
+      op: may
+    kind: trigger
+    when:
+      event: attack
+      subject:
+        filter:
+          name: ボルメテウス・武者・ドラゴン
+        other: true
+        owner: you
+        zone: bz
+  civs:
+  - light
+  - fire
+  cost: 4
+  id: dmc53-020
+  mana: 1
+  name: ムシャ・ルピア
+  power: 2000
+  races:
+  - ファイアー・バード
+  source:
+    notes: コスト軽減の「してもよい」は常在型能力として登録した（dm21-051、dm22-053と同型。エンジンのコスト計算は任意適用を区別しない）。マナゾーンに置く時のタップは多色カードのルール注釈（noise）で能力ではない
+    official: dmc53-020
+    review: pending
+    aliases:
+    - dm27-014
+    - dm27-014cc
+    - dmc43-029
+  text: マナゾーンに置く時、このカードはタップして置く。 / 自分のドラゴンを召喚するコストを１少なくしてもよい。ただし、コストは１より少なくならない。 /
+    自分の《ボルメテウス・武者・ドラゴン》が攻撃する時、自分の山札の上から１枚目を裏向きのままシールドに加えてもよい。
+  types:
+  - creature
