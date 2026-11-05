@@ -309904,3 +309904,731 @@ cards:
   text: マナゾーンに置く時、このカードはタップして置く。 / スピードアタッカー / ワールド・ブレイカー / このクリーチャーが召喚されずにバトルゾーンに出た時、自分の山札に加えてシャッフルする。
   types:
   - creature
+- abilities:
+  - kind: replace
+    when:
+      event: move
+      from: bz
+      to: graveyard
+      reason: destroy
+      subject: self
+    instead:
+    - op: move
+      select:
+        ref: self
+      to: mana
+      reason: put
+  - instead:
+    - op: move
+      reason: put
+      select:
+        ref: self
+      to: mana
+    kind: replace
+    when:
+      event: move
+      from: bz
+      reason: destroy
+      subject: self
+      to: graveyard
+  civs:
+  - nature
+  cost: 3
+  evolve_from:
+    civs:
+    - nature
+    types:
+    - creature
+  evolve_zone: mana
+  id: dm22ex1-121
+  mana: 1
+  name: ドリドリ・コドリアン
+  power: 3000
+  races:
+  - ワイルド・ベジーズ
+  source:
+    notes: 'マナ進化は evolve_from + evolve_zone: mana（第95弾）。破壊時のマナゾーン置換は replace（墓地のかわりにマナゾーンへ）で表した'
+    official: dm22ex1-121
+    review: pending
+  text: 'マナ進化：自然のクリーチャーを１体自分のマナゾーンから選び、このクリーチャーをその上に重ねつつ出す。
+
+    このクリーチャーが破壊される時、墓地に置くかわりにマナゾーンに置く。'
+  types:
+  - creature
+  - evolution
+- abilities:
+  - effect:
+    - body:
+      - as: r
+        op: move
+        reason: return
+        select:
+          count: all
+          filter:
+            races:
+            - スノーフェアリー
+            types:
+            - creature
+          owner: you
+          zone: mana
+        to: hand
+      op: may
+    - cond:
+        cmp:
+        - count:
+            ref: r
+        - '>='
+        - 1
+      op: if
+      then:
+      - op: mana_put
+        select:
+          count: all
+          filter:
+            races:
+            - スノーフェアリー
+            types:
+            - creature
+          owner: you
+          zone: graveyard
+    kind: trigger
+    when:
+      event: move
+      subject: self
+      to: bz
+  civs:
+  - nature
+  cost: 5
+  evolve_from:
+    civs:
+    - nature
+    types:
+    - creature
+  evolve_zone: mana
+  id: dm24bd5-054
+  mana: 1
+  name: ダイヤモンド・カスケード
+  power: 5000
+  races:
+  - スノーフェアリー
+  source:
+    notes: 'マナ進化は evolve_from + evolve_zone: mana（第95弾）。「戻してもよい。そうしたら」は may で全戻しを
+      as: r に束縛し、戻した枚数を cmp（count ref r >= 1）で判定して墓地からの全置きを行う（dm26ex2-028 の型）'
+    official: dm24bd5-054
+    review: pending
+    aliases:
+    - dm24ex1-082
+    - dm32-104
+    - dm32-104hc
+    - dmex12-100
+  text: マナ進化：自然のクリーチャーを１体自分のマナゾーンから選び、このクリーチャーをその上に重ねつつ出す。 / このクリーチャーが出た時、スノーフェアリーをすべて、自分のマナゾーンから手札に戻してもよい。そうしたら、スノーフェアリーをすべて、自分の墓地からマナゾーンに置く。
+  types:
+  - creature
+  - evolution
+- abilities:
+  - effect:
+    - duration: during_attack
+      effect:
+      - op: destroy
+        select:
+          count: 1
+          filter:
+            power_le: 3000
+            tapped: true
+            types:
+            - creature
+          owner: opp
+          zone: bz
+      op: delayed_trigger
+      when:
+        event: break
+        player: opp
+    kind: trigger
+    when:
+      event: attack
+      subject: self
+  civs:
+  - fire
+  cost: 3
+  evolve_from:
+    civs:
+    - fire
+    types:
+    - creature
+  evolve_zone: mana
+  id: dm24ex3-rp3tr8
+  mana: 1
+  name: ブレードグレンオー・マックス
+  power: 4000
+  races:
+  - フレイム・モンスター
+  source:
+    notes: 'マナ進化は evolve_from + evolve_zone: mana（第95弾）。「相手プレイヤーを攻撃してブロックされなかった時」は
+      dm09-015 と同じく攻撃時に break（player: opp）を待つ delayed_trigger（during_attack）で表し、対象に
+      tapped: true を加えた。原文の「重ねつつに出す」は原文どおり（「つつ」の後に「に」が入る表記）'
+    official: dm24ex3-rp3tr8
+    review: pending
+    aliases:
+    - dm24rp3-tr08
+    - dm28-007
+    - dmx14-032
+  text: マナ進化：火のクリーチャーを１体自分のマナゾーンから選び、このクリーチャーをその上に重ねつつに出す。 / このクリーチャーが相手プレイヤーを攻撃してブロックされなかった時、相手のタップしているパワー3000以下のクリーチャーを１体選び、破壊する。
+  types:
+  - creature
+  - evolution
+- abilities:
+  - kind: trigger
+    when:
+      event: move
+      to: bz
+      subject: self
+    effect:
+    - op: modify
+      select:
+        ref: self
+      mod:
+        allow:
+        - action: attack_creature
+          other:
+            tapped: false
+      duration: end_of_turn
+  - effect:
+    - body:
+      - as: paid
+        op: move
+        reason: put
+        select:
+          count: 1
+          under_of: self
+        to: graveyard
+      - cond:
+          exists:
+            ref: paid
+        op: if
+        then:
+        - op: mana_put
+          select:
+            count: 1
+            filter:
+              types:
+              - creature
+            owner: opp
+            zone: bz
+        - op: mana_put
+          select:
+            from_top: 2
+            owner: you
+            zone: deck
+      op: may
+    kind: trigger
+    when:
+      event: attack
+      subject: self
+  alt_cost:
+    civs:
+    - nature
+    - nature
+    cost: 3
+    if:
+      cmp:
+      - sum:
+        - count:
+            filter:
+              any_of:
+              - race_has: グランセクト
+              - race_has: フェニックス
+            owner: you
+            zone: mana
+        - count:
+            filter:
+              any_of:
+              - race_has: グランセクト
+              - race_has: フェニックス
+            owner: you
+            zone: bz
+      - '>='
+      - 5
+  civs:
+  - nature
+  cost: 5
+  evolve_count: 3
+  evolve_from:
+    types:
+    - creature
+  evolve_zone: mana
+  id: dm25ex1-050
+  keywords:
+  - triple_breaker
+  mana: 1
+  name: 愛銀河ジュピター・カリストエフェクト
+  power: 14000
+  races:
+  - グランセクト
+  - フェニックス
+  source:
+    notes: '条件付き代替コスト[nn03]は alt_cost {cost: 3, civs: [nature, nature], if: ...}（第56弾）。条件の「マナゾーンにあるカードとエレメントの合計」は
+      sum（マナゾーンのカウント＋バトルゾーンのカウント）で表し、種族は any_of（race_has グランセクト／フェニックス）で絞った。マナ進化GVは
+      evolve_from + evolve_count: 3 + evolve_zone: mana（第95弾）。マッハファイターは keyword_patterns
+      で自動処理（第58弾）のため abilities には書かない。メテオバーンは may + move（as: paid）+ if exists（dm22-s05
+      の先例）で表し、相手クリーチャーのマナ置きと山札上２枚のマナ置きを原文の順序どおり並べた'
+    official: dm25ex1-050
+    review: pending
+  text: '自分のマナゾーンにあるカードとエレメントが、合計５つ以上、種族にグランセクトまたはフェニックスを持っていれば、このクリーチャーを[nn03]支払って召喚してもよい。
+
+    マナ進化GV：クリーチャーを３体自分のマナゾーンから選び、このクリーチャーをその上に重ねつつ出す。
+
+    マッハファイター
+
+    T・ブレイカー
+
+    メテオバーン：このクリーチャーが攻撃する時、このクリーチャーの下にあるカードを１枚墓地に置いてもよい。そうしたら、相手のクリーチャーを１体選び、持ち主のマナゾーンに置く。その後、自分の山札の上から２枚をマナゾーンに置く。'
+  types:
+  - creature
+  - evolution
+- abilities:
+  - kind: trigger
+    when:
+      event: move
+      to: bz
+      subject: self
+    effect:
+    - op: modify
+      select:
+        ref: self
+      mod:
+        allow:
+        - action: attack_creature
+          other:
+            tapped: false
+      duration: end_of_turn
+  - instead:
+    - op: move
+      reason: put
+      select:
+        ref: self
+      to: mana
+    kind: replace
+    when:
+      event: move
+      from: bz
+      reason: destroy
+      subject: self
+      to: graveyard
+  civs:
+  - fire
+  - nature
+  cost: 4
+  evolve_from:
+    civs:
+    - fire
+    - nature
+    types:
+    - creature
+  evolve_zone: mana
+  id: dm26ex2-069
+  keywords:
+  - double_breaker
+  mana: 1
+  name: 超轟速 レッドランチャー
+  power: 8000
+  races:
+  - ソニック・コマンド
+  - 侵略者
+  source:
+    notes: 'マナ進化は evolve_from {civs: [fire, nature]} + evolve_zone: mana（第95弾。「火または自然」は
+      civs のいずれか）。マッハファイターは keyword_patterns で自動処理（第58弾）のため abilities には書かない。破壊時のマナゾーン置換は
+      replace で表した'
+    official: dm26ex2-069
+    review: pending
+  text: 'マナ進化：自分のマナゾーンにある、火または自然のクリーチャー１体の上に重ねつつ出す。
+
+    マッハファイター（このクリーチャーは、出たターンの間、タップまたはアンタップしているクリーチャーを攻撃できる）
+
+    W・ブレイカー（このクリーチャーはシールドを２つブレイクする）
+
+    このクリーチャーが破壊される時、墓地のかわりにマナゾーンに置く。'
+  types:
+  - creature
+  - evolution
+- abilities:
+  - effect:
+    - body:
+      - op: untap
+        select:
+          ref: self
+      op: may
+    kind: trigger
+    when:
+      event: attack
+      subject:
+        filter:
+          not_name: 聖帝リオン・ザード
+          types:
+          - creature
+        other: true
+        owner: you
+      target: player
+  civs:
+  - light
+  cost: 7
+  evolve_from:
+    civs:
+    - light
+    types:
+    - creature
+  evolve_zone: mana
+  id: dm28-001
+  mana: 1
+  name: 聖帝リオン・ザード
+  power: 5500
+  races:
+  - アーク・セラフィム
+  source:
+    notes: 'マナ進化は evolve_from + evolve_zone: mana（第95弾）。攻撃誘発は attack イベントに target:
+      player（プレイヤーへの攻撃）を付け、subject は自分の他のクリーチャー（other: true）に not_name で同名の別個体も除外した'
+    official: dm28-001
+    review: pending
+  text: マナ進化-光のクリーチャーを１体自分のマナゾーンから選び、このクリーチャーをその上に重ねつつバトルゾーンに出す。 / 自分の他の、《聖帝リオン・ザード》以外のクリーチャーが相手プレイヤーを攻撃する時、このクリーチャーをアンタップしてもよい。
+  types:
+  - creature
+  - evolution
+- abilities:
+  - kind: replace
+    when:
+      event: move
+      from: bz
+      to: graveyard
+      reason: destroy
+      subject: self
+    instead:
+    - op: move
+      select:
+        ref: self
+      to: mana
+      reason: put
+  - instead:
+    - op: move
+      reason: put
+      select:
+        ref: self
+      to: mana
+    kind: replace
+    when:
+      event: move
+      from: bz
+      reason: destroy
+      subject: self
+      to: graveyard
+  civs:
+  - nature
+  cost: 4
+  evolve_from:
+    civs:
+    - nature
+    types:
+    - creature
+  evolve_zone: mana
+  id: dm32-105
+  mana: 1
+  name: 大作家ヴィクトル・ユニゴーン
+  power: 5000
+  races:
+  - ドリームメイト
+  source:
+    notes: 'マナ進化は evolve_from + evolve_zone: mana（第95弾）。破壊時のマナゾーン置換は replace で表した'
+    official: dm32-105
+    review: pending
+  text: 'マナ進化-自然のクリーチャーを１体自分のマナゾーンから選び、このクリーチャーをその上に重ねつつバトルゾーンに出す。
+
+    このクリーチャーが破壊される時、墓地に置くかわりに自分のマナゾーンに置く。'
+  types:
+  - creature
+  - evolution
+- abilities:
+  - effect:
+    - op: mana_put
+      select:
+        from_top: 2
+        owner: you
+        zone: deck
+    if:
+      cmp:
+      - count:
+          owner: opp
+          zone: mana
+      - '>'
+      - count:
+          owner: you
+          zone: mana
+    kind: trigger
+    when:
+      event: turn_end
+      player: you
+  civs:
+  - nature
+  cost: 5
+  evolve_from:
+    civs:
+    - nature
+    types:
+    - creature
+  evolve_zone: mana
+  id: dm33-019
+  mana: 1
+  name: ダイヤモンド・クラック
+  power: 5000
+  races:
+  - スノーフェアリー
+  source:
+    notes: 'マナ進化は evolve_from + evolve_zone: mana（第95弾）。ターン終わりの条件は cmp + count（owner:
+      opp / you のマナゾーン枚数比較、第73弾 zone_count_comparison の型）で表した'
+    official: dm33-019
+    review: pending
+  text: マナ進化-自然のクリーチャーを１体自分のマナゾーンから選び、このクリーチャーをその上に重ねつつバトルゾーンに出す。 / 自分のターンの終わりに、相手のマナゾーンのカードが自分より多ければ、自分の山札の上から２枚をマナゾーンに置く。
+  types:
+  - creature
+  - evolution
+- abilities:
+  - affects:
+      filter:
+        civs:
+        - nature
+        types:
+        - creature
+      owner: you
+      zone: hand
+    kind: static
+    mod:
+      cost_may:
+        amount: 2
+        min: 1
+  civs:
+  - nature
+  cost: 7
+  evolve_from:
+    civs:
+    - nature
+    types:
+    - creature
+  evolve_zone: mana
+  id: dm35-s05
+  mana: 1
+  name: 大神秘ビシャモン
+  power: 5000
+  races:
+  - ジャイアント
+  - サムライ
+  source:
+    notes: 'マナ進化は evolve_from + evolve_zone: mana（第95弾）。コスト軽減は static の cost_may {amount:
+      2, min: 1}（dmx09-055 と同型、対象は手札の自分の自然のクリーチャー）で表した'
+    official: dm35-s05
+    review: pending
+  text: マナ進化-自然のクリーチャーを１体自分のマナゾーンから選び、このクリーチャーをその上に重ねつつバトルゾーンに出す。 / 自分の自然のクリーチャーを召喚するコストを最大２少なくしてもよい。ただし、コストは１より少なくならない。
+  types:
+  - creature
+  - evolution
+- civs:
+  - nature
+  cost: 5
+  evolve_from:
+    civs:
+    - nature
+    types:
+    - creature
+  evolve_zone: mana
+  id: dmex04-020
+  keywords:
+  - double_breaker
+  mana: 1
+  name: 大神秘イダ
+  power: 7000
+  races:
+  - ジャイアント
+  - サムライ
+  source:
+    notes: 'マナ進化は evolve_from + evolve_zone: mana（第95弾）。残りの能力は W・ブレイカーのみ'
+    official: dmex04-020
+    review: pending
+    aliases:
+    - dm35-033
+    - dm35-033hc
+    - dmx09-040
+    - dmx20-051
+    - dmx22b-098
+    - promoy10-050
+  text: 'マナ進化：自然のクリーチャーを１体自分のマナゾーンから選び、このクリーチャーをその上に重ねつつバトルゾーンに出す。
+
+    W・ブレイカー（このクリーチャーはシールドを２つブレイクする）'
+  types:
+  - creature
+  - evolution
+- abilities:
+  - effect:
+    - as: t
+      op: choose
+      select:
+        count: all
+        from_top: 4
+        owner: you
+        zone: deck
+    - op: mana_put
+      select:
+        count: all
+        ref: t
+    - op: tap
+      select:
+        count: all
+        ref: t
+    kind: trigger
+    when:
+      event: move
+      subject: self
+      to: bz
+  civs:
+  - nature
+  cost: 6
+  evolve_from:
+    civs:
+    - nature
+    types:
+    - creature
+  evolve_zone: mana
+  id: dmex08-177
+  keywords:
+  - double_breaker
+  mana: 1
+  name: マナゴリラ
+  power: 7000
+  races:
+  - グランセクト
+  - スペシャルズ
+  source:
+    notes: 'マナ進化は evolve_from + evolve_zone: mana（第95弾）。「タップしてマナゾーンに置く」は choose（from_top:
+      4、as: t）→ mana_put（ref: t）→ tap（ref: t）の順で表した（dm23bd5-054 フェアリー・ソングと同型）'
+    official: dmex08-177
+    review: pending
+    aliases:
+    - dmex03-025
+  text: 'マナ進化：自然のクリーチャーを１体自分のマナゾーンから選び、このクリーチャーをその上に重ねつつバトルゾーンに出す。
+
+    W・ブレイカー（このクリーチャーはシールドを２つブレイクする）
+
+    このクリーチャーがバトルゾーンに出た時、自分の山札の上から４枚を、タップしてマナゾーンに置く。'
+  types:
+  - creature
+  - evolution
+- abilities:
+  - kind: trigger
+    when:
+      event: move
+      to: bz
+      subject: self
+    effect:
+    - op: move
+      select:
+        zone: deck
+        owner: you
+        from_top: 2
+      to: mana
+      reason: put
+  - effect:
+    - op: mana_put
+      select:
+        from_top: 2
+        owner: you
+        zone: deck
+    kind: trigger
+    when:
+      event: move
+      subject: self
+      to: bz
+  civs:
+  - nature
+  cost: 5
+  evolve_count: 3
+  evolve_from:
+    races:
+    - ワイルド・ベジーズ
+  evolve_zone: mana
+  id: dmx11-058
+  keywords:
+  - double_breaker
+  mana: 1
+  name: 味頭領ドン・ドリアン
+  power: 7000
+  races:
+  - ワイルド・ベジーズ
+  source:
+    notes: 'マナ進化GVは evolve_from（種族）+ evolve_count: 3 + evolve_zone: mana（第95弾）'
+    official: dmx11-058
+    review: pending
+  text: 'マナ進化GV-ワイルド・ベジーズを３体自分のマナゾーンから選び、このクリーチャーをその上に重ねつつバトルゾーンに出す。
+
+    このクリーチャーをバトルゾーンに出した時、自分の山札の上から２枚をマナゾーンに置く。
+
+    W・ブレイカー(このクリーチャーはシールドを２枚ブレイクする)'
+  types:
+  - creature
+  - evolution
+- abilities:
+  - effect:
+    - body:
+      - as: paid
+        op: move
+        reason: put
+        select:
+          count: any
+          under_of: self
+        to: graveyard
+      - cond:
+          exists:
+            ref: paid
+        op: if
+        then:
+        - body:
+          - op: move
+            reason: charge
+            select:
+              from_top: 1
+              owner: you
+              zone: deck
+            to: shield
+          op: repeat
+          times:
+            count:
+              ref: paid
+      op: may
+    kind: trigger
+    when:
+      event: attack
+      subject: self
+  civs:
+  - light
+  - fire
+  - nature
+  cost: 7
+  evolve_count: 3
+  evolve_from:
+    types:
+    - creature
+  evolve_zone: mana
+  id: dmx21-059
+  keywords:
+  - double_breaker
+  mana: 1
+  name: 超神星グランドクロス・アブソリュートキュア
+  power: 9000
+  races:
+  - フェニックス
+  source:
+    notes: '「マナゾーンに置く時、このカードはタップして置く」は多色カードの一般ルール（リマインダー）のため abilities には書かない（dm10-041
+      等の先例）。マナ進化GVは evolve_from + evolve_count: 3 + evolve_zone: mana（第95弾）。メテオバーンは
+      may + move（count: any、as: paid）+ if exists の中で repeat（times: count ref paid）し、１枚につき山札の上１枚を新しいシールドとして置く
+      move（to: shield、reason: charge）を行った（dmex17-009 の repeat 型と dmbd04-013 のシールド化の型）'
+    official: dmx21-059
+    review: pending
+  text: マナゾーンに置く時、このカードはタップして置く。 / マナ進化GV-クリーチャーを３体自分のマナゾーンから選び、このクリーチャーをその上に重ねつつバトルゾーンに出す。
+    / W・ブレイカー / メテオバーン-このクリーチャーが攻撃する時、このクリーチャーの下にあるカードを好きな数選び墓地に置いてもよい。このようにして墓地に置いたカード１枚につき、自分の山札の上から１枚目を裏向きのまま、新しいシールドとして自分のシールドゾーンに置く。
+  types:
+  - creature
+  - evolution
