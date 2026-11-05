@@ -307553,3 +307553,864 @@ cards:
     このクリーチャーがバトルする時、バトルの後、このクリーチャーと相手クリーチャーを破壊する。'
   types:
   - creature
+- civs:
+  - zero
+  cost: 3
+  id: dm23ex3-t12
+  mana: 1
+  name: 戦慄のプレリュード
+  source:
+    official: dm23ex3-t12
+    review: pending
+    aliases:
+    - dmd12-018
+    - dmex01-054
+    - dmex06-074
+    - dmx13-018
+    - dmx14-012
+    - dmx25-037
+    - promoy11-060
+    - promoy16-057
+    - promoy16-060
+    - promoy16-072
+  spell:
+  - body:
+    - duration: end_of_turn
+      dynamic: true
+      mod:
+        cost_may:
+          amount: 5
+          min: 0
+          once: true
+      op: modify
+      select:
+        filter:
+          colorless: true
+          types:
+          - creature
+        owner: you
+        zone: hand
+    op: may
+  text: このターン、次に召喚する自分の無色クリーチャーの召喚コストを最大５少なくする。
+  types:
+  - spell
+- abilities:
+  - effect:
+    - body:
+      - duration: end_of_turn
+        dynamic: true
+        mod:
+          cost_may:
+            amount: 6
+            min: 0
+            once: true
+        op: modify
+        select:
+          filter:
+            race_has: アーマード
+          owner: you
+          zone: hand
+      op: may
+    kind: trigger
+    when:
+      event: move
+      subject: self
+      to: bz
+  - affects:
+      filter:
+        race_has: ドラゴン
+        types:
+        - creature
+      owner: you
+      zone: bz
+    kind: static
+    mod:
+      grant:
+      - speed_attacker
+  civs:
+  - fire
+  cost: 4
+  id: dm23rp1-021
+  keywords:
+  - g_strike
+  mana: 1
+  name: クック・轟・ブルッチ
+  power: 3000
+  races:
+  - アーマード・ファイアー・バード
+  source:
+    notes: '次に使うアーマードは召喚・詠唱の両方を含むため、modify の filter は race_has: アーマードのみ（types で絞らない）。'
+    official: dm23rp1-021
+    review: pending
+    aliases:
+    - dm23rp1-14a
+    - dm23rp1-16b
+  text: '{GS} G・ストライク（このクリーチャーを自分のシールドゾーンから手札に加える時、相手に見せ、相手のクリーチャーを１体選んでもよい。このターン、そのクリーチャーは攻撃できない）
+
+    このクリーチャーが出た時、このターン次に使うアーマードのコストを６少なくする。ただしコストは０以下にはならない。
+
+    自分のドラゴンすべてに「スピードアタッカー」を与える。（「スピードアタッカー」を持つクリーチャーは召喚酔いしない）'
+  types:
+  - creature
+- civs:
+  - nature
+  cost: 1
+  id: dm24bd3-013
+  mana: 1
+  name: フェアリー・ギフト
+  source:
+    official: dm24bd3-013
+    review: pending
+    aliases:
+    - dm14-069
+    - dm23bd4-051
+    - dmbd18-se10
+    - dmc55-065
+    - dmx14-079
+    - dmx22b-068
+    - promoy11-031
+    - promoy13-022
+    - promoy23-025
+  spell:
+  - body:
+    - duration: end_of_turn
+      dynamic: true
+      mod:
+        cost_may:
+          amount: 3
+          min: 0
+          once: true
+      op: modify
+      select:
+        filter:
+          types:
+          - creature
+        owner: you
+        zone: hand
+    op: may
+  text: このターン、次に召喚する自分のクリーチャー１体のコストを３少なくする。ただしコストは０以下にはならない。
+  types:
+  - spell
+- civs:
+  - zero
+  cost: 2
+  id: dm24ex2-062
+  mana: 1
+  name: 水晶のセレナーデ
+  source:
+    official: dm24ex2-062
+    review: pending
+  spell:
+  - body:
+    - duration: end_of_turn
+      dynamic: true
+      mod:
+        cost_may:
+          amount: 4
+          min: 0
+          once: true
+      op: modify
+      select:
+        filter:
+          race_has: ゼニス
+          types:
+          - creature
+        owner: you
+        zone: hand
+    op: may
+  - body:
+    - op: flip_down
+      select:
+        count: 1
+        owner: you
+        zone: mana
+    op: may
+  text: このターン、次に召喚する自分のゼニス・クリーチャーのコストを４少なくする。 / 自分のマナゾーンのカードを１枚、裏向きにしてもよい。
+  types:
+  - spell
+- abilities:
+  - effect:
+    - body:
+      - duration: end_of_turn
+        dynamic: true
+        mod:
+          cost_may:
+            amount: 2
+            min: 0
+            once: true
+        op: modify
+        select:
+          filter:
+            types:
+            - creature
+          owner: you
+          zone: hand
+      op: may
+    kind: trigger
+    when:
+      event: untap
+      subject: self
+  - effect:
+    - body:
+      - op: move
+        reason: put
+        select:
+          from_top: 1
+          owner: you
+          zone: deck
+        to: shield
+      op: may
+    if:
+      is_turn: opp
+    kind: trigger
+    when:
+      event: move
+      from: bz
+      subject: self
+  civs:
+  - light
+  cost: 2
+  id: dm24ex3-048
+  mana: 1
+  name: 聖騎士アリアン
+  power: 2500
+  races:
+  - レインボー・ファントム
+  source:
+    official: dm24ex3-048
+    review: pending
+    aliases:
+    - dm24rp1-030
+  text: このクリーチャーがアンタップした時、このターン、次に召喚する自分のクリーチャーのコストを２少なくする。ただし、コストは０以下にはならない。 / 相手のターン中に、このクリーチャーが離れた時、自分の山札の上から１枚目をシールド化してもよい。
+  types:
+  - creature
+- abilities:
+  - effect:
+    - body:
+      - duration: end_of_turn
+        dynamic: true
+        mod:
+          cost_may:
+            amount: 3
+            min: 0
+            once: true
+        op: modify
+        select:
+          filter:
+            race_has: ビートジョッキー
+            types:
+            - creature
+          owner: you
+          zone: hand
+      op: may
+    kind: trigger
+    when:
+      event: move
+      subject: self
+      to: bz
+  civs:
+  - fire
+  cost: 2
+  id: dm24sd1-006
+  mana: 1
+  name: ダチッコ・チュリス
+  power: 2000
+  races:
+  - ビートジョッキー
+  source:
+    official: dm24sd1-006
+    review: pending
+    aliases:
+    - dmex02-060
+    - dmex11-014
+    - dmex15-b070
+    - dmex16-093
+    - dmrp01-024
+    - promoy16-044
+    - promoy16-091
+  text: このクリーチャーが出た時、このターン次に召喚する自分のビートジョッキーの召喚コストを最大３少なくしてもよい。ただし、コストは０以下にならない。
+  types:
+  - creature
+- civs:
+  - darkness
+  - fire
+  cost: 2
+  id: dm26ex2-mc025
+  mana: 1
+  name: 鬼寄せの術
+  races:
+  - 鬼札王国
+  source:
+    notes: 'シールド回収は reason: return で「S・トリガー」は使えないことを表す（dm25ex2-081 の先例）。'
+    official: dm26ex2-mc025
+    review: pending
+    aliases:
+    - dm24ex3-tf15
+    - dm24rp2-t06
+    - dm24rp4-t04
+    - dm25ex2-060
+    - dm25rp3-sp4
+    - dmex10-012
+    - dmex15-b080
+    - dmex16-070
+    - dmrp22-t10
+    - dmrp22-tf10
+    - promoy19-049
+  spell:
+  - op: move
+    reason: return
+    select:
+      count: 1
+      owner: you
+      zone: shield
+    to: hand
+  - body:
+    - duration: end_of_turn
+      dynamic: true
+      mod:
+        cost_may:
+          amount: 4
+          min: 0
+          once: true
+      op: modify
+      select:
+        filter:
+          civs:
+          - darkness
+          - fire
+          types:
+          - creature
+        owner: you
+        zone: hand
+    op: may
+  text: 自分のシールドを１つ手札に加える。その「S・トリガー」は使えない。 / このターン、次に召喚する自分の闇または火のクリーチャーのコストを４少なくする。ただしコストは０以下にならない。
+  types:
+  - spell
+- civs:
+  - fire
+  cost: 3
+  id: dm26ex3-065
+  mana: 1
+  name: スクランブル・チェンジ
+  source:
+    notes: スピードアタッカー付与は dmex14-060 と同じ delayed_trigger 形。「そのクリーチャー」は次に召喚する火のドラゴンを指すため、delayed_trigger
+      の subject にも同じ filter を付けた。
+    official: dm26ex3-065
+    review: pending
+    aliases:
+    - dm23rp4-t02
+    - dm23rp4-tf02
+    - dm23rp4x-tf02
+    - dmr22-019
+    - promoy15-053
+  spell:
+  - body:
+    - duration: end_of_turn
+      dynamic: true
+      mod:
+        cost_may:
+          amount: 5
+          min: 0
+          once: true
+      op: modify
+      select:
+        filter:
+          civs:
+          - fire
+          race_has: ドラゴン
+          types:
+          - creature
+        owner: you
+        zone: hand
+    op: may
+  - effect:
+    - duration: end_of_turn
+      mod:
+        grant:
+        - speed_attacker
+      op: modify
+      select:
+        ref: subject
+    op: delayed_trigger
+    when:
+      event: move
+      reason: summon
+      subject:
+        filter:
+          civs:
+          - fire
+          race_has: ドラゴン
+          types:
+          - creature
+        owner: you
+      to: bz
+  text: このターン、次に召喚する自分の火のドラゴン・クリーチャーのコストを５少なくする。ただしコストは０以下にならない。そのクリーチャーが出た時、そのターン、そのクリーチャーに「スピードアタッカー」を与える。（「スピードアタッカー」を持つクリーチャーは召喚酔いしない）
+  types:
+  - spell
+- civs:
+  - fire
+  cost: 1
+  id: dm26ex3-066
+  mana: 1
+  name: キリモミ・ヤマアラシ
+  source:
+    official: dm26ex3-066
+    review: pending
+    aliases:
+    - dm25ex2-046
+    - dm25rp1-td04
+    - dm26sd1-e009
+    - dm29-017
+    - dmc51-008
+    - dmex08-127
+    - dmx22a-016
+    - promoy23-064
+  spell:
+  - body:
+    - duration: end_of_turn
+      dynamic: true
+      mod:
+        cost_may:
+          amount: 1
+          min: 0
+          once: true
+      op: modify
+      select:
+        filter:
+          types:
+          - creature
+        owner: you
+        zone: hand
+    op: may
+  - effect:
+    - duration: end_of_turn
+      mod:
+        grant:
+        - speed_attacker
+      op: modify
+      select:
+        ref: subject
+    op: delayed_trigger
+    when:
+      event: move
+      reason: summon
+      subject:
+        owner: you
+      to: bz
+  text: このターン、次に召喚する自分のクリーチャーのコストを１少なくする。ただしコストは０以下にならない。そのクリーチャーが出た時、そのターン、そのクリーチャーに「スピードアタッカー」を与える。（「スピードアタッカー」を持つクリーチャーは召喚酔いしない）
+  types:
+  - spell
+- civs:
+  - light
+  - water
+  - fire
+  cost: 3
+  id: dm26ex3-087
+  mana: 1
+  name: T・T・T
+  source:
+    official: dm26ex3-087
+    review: pending
+    aliases:
+    - dm22bd2-016
+    - dm22ex1-cho31
+    - dm23rp1-sp4
+    - dm26sd1-e010
+    - dmrp18-026
+    - dmrp18-a05
+    - dmrp18-b05
+    - promoy21-032
+    - promoy21-080
+    - promoy24-121
+  spell:
+  - count: 1
+    modes:
+    - - op: tap
+        select:
+          count: 3
+          filter:
+            types:
+            - creature
+          owner: opp
+          up_to: true
+          zone: bz
+    - - count: 3
+        op: draw
+    - - body:
+        - duration: end_of_turn
+          dynamic: true
+          mod:
+            cost_may:
+              amount: 3
+              min: 0
+              once: true
+          op: modify
+          select:
+            filter:
+              types:
+              - creature
+            owner: you
+            zone: hand
+        op: may
+      - effect:
+        - duration: end_of_turn
+          mod:
+            grant:
+            - speed_attacker
+          op: modify
+          select:
+            ref: subject
+        op: delayed_trigger
+        when:
+          event: move
+          reason: summon
+          subject:
+            owner: you
+          to: bz
+    op: modal
+  text: 次の中から１回選ぶ。 / ▶相手のクリーチャーを３体まで選び、タップする。 / ▶カードを３枚引く。 / ▶このターン、次に召喚する自分のクリーチャーのコストを３少なくする。ただしコストは０以下にならない。そのクリーチャーが出た時、このターン、そのクリーチャーに「スピードアタッカー」を与える。
+  types:
+  - spell
+- civs:
+  - darkness
+  - fire
+  cost: 2
+  id: dm26ex4-cho037
+  mana: 1
+  name: 鬼寄せの術(DM26EX4 超37/超50)
+  races:
+  - 鬼札王国
+  source:
+    notes: 'シールド回収は reason: return で「S・トリガー」は使えないことを表す（dm25ex2-081 の先例）。名前は raw どおりセット表記込み。'
+    official: dm26ex4-cho037
+    review: pending
+  spell:
+  - op: move
+    reason: return
+    select:
+      count: 1
+      owner: you
+      zone: shield
+    to: hand
+  - body:
+    - duration: end_of_turn
+      dynamic: true
+      mod:
+        cost_may:
+          amount: 4
+          min: 0
+          once: true
+      op: modify
+      select:
+        filter:
+          civs:
+          - darkness
+          - fire
+          types:
+          - creature
+        owner: you
+        zone: hand
+    op: may
+  text: 自分のシールドを１つ手札に加える。その「S・トリガー」は使えない。 / このターン、次に召喚する自分の闇または火のクリーチャーのコストを４少なくする。ただしコストは０以下にならない。
+  types:
+  - spell
+- abilities:
+  - effect:
+    - body:
+      - duration: end_of_turn
+        dynamic: true
+        mod:
+          cost_may:
+            amount: 3
+            min: 0
+            once: true
+        op: modify
+        select:
+          filter:
+            race_has: 超化獣
+            types:
+            - creature
+          owner: you
+          zone: hand
+      op: may
+    - effect:
+      - duration: end_of_turn
+        mod:
+          grant:
+          - speed_attacker
+        op: modify
+        select:
+          ref: subject
+      op: delayed_trigger
+      when:
+        event: move
+        reason: summon
+        subject:
+          filter:
+            race_has: 超化獣
+            types:
+            - creature
+          owner: you
+        to: bz
+    kind: trigger
+    when:
+      event: move
+      subject: self
+      to: bz
+  civs:
+  - fire
+  cost: 3
+  id: dm26rp1-t006
+  mana: 1
+  name: クック・驚・ブルッチ
+  power: 4000
+  races:
+  - アーマード・ファイアー・バード
+  source:
+    notes: スピードアタッカー付与は dmex14-060 と同じ delayed_trigger 形。「そのクリーチャー」は次に召喚する超化獣を指すため、delayed_trigger
+      の subject にも同じ filter を付けた。
+    official: dm26rp1-t006
+    review: pending
+    aliases:
+    - dm24ex3-068
+    - dm24rp2-043
+    - promoy23-026
+  text: このクリーチャーが出た時、このターン、次に召喚する自分の超化獣クリーチャーのコストを３少なくする。ただしコストは０以下にならない。そのクリーチャーが出た時、このターン、そのクリーチャーに「スピードアタッカー」を与える。（「スピードアタッカー」を持つクリーチャーは召喚酔いしない）
+  types:
+  - creature
+- civs:
+  - light
+  - fire
+  cost: 3
+  id: dmex15-b034
+  mana: 1
+  name: オレは決闘者!!
+  source:
+    notes: 「このターンの終わりに、そのドラゴンをアンタップする」は、召喚されたドラゴンを choose で dragon に束縛し、turn_end の
+      delayed_trigger から参照した（as 束縛が delayed_trigger に残る先例に倣った）。
+    official: dmex15-b034
+    review: pending
+  spell:
+  - body:
+    - duration: end_of_turn
+      dynamic: true
+      mod:
+        cost_may:
+          amount: 3
+          min: 0
+          once: true
+      op: modify
+      select:
+        filter:
+          race_has: ドラゴン
+          types:
+          - creature
+        owner: you
+        zone: hand
+    op: may
+  - effect:
+    - as: dragon
+      op: choose
+      select:
+        ref: subject
+    - duration: until_next_own_turn_start
+      mod:
+        grant:
+        - speed_attacker
+        - blocker
+      op: modify
+      select:
+        ref: dragon
+    - effect:
+      - op: untap
+        select:
+          ref: dragon
+      op: delayed_trigger
+      when:
+        event: turn_end
+    op: delayed_trigger
+    when:
+      event: move
+      reason: summon
+      subject:
+        filter:
+          race_has: ドラゴン
+          types:
+          - creature
+        owner: you
+      to: bz
+  - count: 1
+    op: draw
+  text: このターン、次に召喚する自分のドラゴンの召喚コストを最大３少なくする。ただし、コストは０以下にならない。次の自分のターンのはじめまで、そのドラゴンに「スピードアタッカー」と「ブロッカー」を与える。このターンの終わりに、そのドラゴンをアンタップする。
+    / カードを１枚引く。
+  types:
+  - spell
+- abilities:
+  - effect:
+    - body:
+      - duration: end_of_turn
+        dynamic: true
+        mod:
+          cost_may:
+            amount: 1
+            min: 1
+            once: true
+        op: modify
+        select:
+          filter:
+            types:
+            - creature
+          owner: you
+          zone: hand
+      op: may
+    kind: trigger
+    when:
+      event: move
+      subject:
+        filter:
+          civs:
+          - nature
+        owner: you
+      to: mana
+  civs:
+  - light
+  cost: 4
+  id: dmr01-043
+  mana: 1
+  name: 悟りの精霊ガガ・シャウラ
+  power: 4000
+  races:
+  - エンジェル・コマンド
+  - エイリアン
+  source:
+    notes: 'スペース・チャージは第10弾の型（move to mana の誘発＋効果側 may）。「コストは１より少なくならない」は cost_may
+      の min: 1 で表した。'
+    official: dmr01-043
+    review: pending
+  text: スペース・チャージ：自然（自分のマナゾーンに自然のカードが置かれた時、このクリーチャーの q 能力を使ってもよい） / q このターン、次にクリーチャーを召喚する時、そのクリーチャーの召喚コストを１少なくしてもよい。ただし、コストは１より少なくならない。
+  types:
+  - creature
+- abilities:
+  - effect:
+    - body:
+      - op: move
+        reason: return
+        select:
+          count: 1
+          filter:
+            types:
+            - creature
+          owner: you
+          zone: graveyard
+        to: hand
+      op: may
+    kind: trigger
+    when:
+      event: move
+      subject:
+        filter:
+          civs:
+          - darkness
+        owner: you
+      to: mana
+  - effect:
+    - body:
+      - duration: end_of_turn
+        dynamic: true
+        mod:
+          cost_may:
+            amount: 2
+            min: 1
+            once: true
+        op: modify
+        select:
+          filter:
+            types:
+            - creature
+          owner: you
+          zone: hand
+      op: may
+    kind: trigger
+    when:
+      event: move
+      subject:
+        filter:
+          civs:
+          - nature
+        owner: you
+      to: mana
+  civs:
+  - darkness
+  - nature
+  cost: 5
+  id: dmr03-019
+  mana: 1
+  name: 鎧亜戦隊ディス・マジシャン
+  power: 4000
+  races:
+  - ロスト・クルセイダー
+  - エイリアン
+  source:
+    notes: 'スペース・チャージは第10弾の型（文明ごとの誘発＋効果側 may）。「マナゾーンに置く時タップして置く」は多色ルールで処理されるため能力には書かない。「コストは１より少なくならない」は
+      cost_may の min: 1 で表した。'
+    official: dmr03-019
+    review: pending
+  text: マナゾーンに置く時、このカードはタップして置く。 / スペース・チャージ：闇/自然（自分のマナゾーンに闇、自然のいずれかまたは両方を持つカードが置かれた時、このクリーチャーの
+    q 能力を使ってもよい） / q 闇：クリーチャーを１体、自分の墓地から手札に戻す。 / q 自然：このターン中、次に召喚するクリーチャーのコストを最大２少なくする。ただし、コストは１より少なくならない。
+  types:
+  - creature
+- abilities:
+  - effect:
+    - body:
+      - civs:
+        - fire
+        - nature
+        cost: 2
+        op: play_self
+      op: may
+    kind: trigger
+    optional: true
+    when:
+      broke: true
+      event: attack_end
+      subject:
+        owner: you
+    zone: hand
+  civs:
+  - fire
+  - nature
+  cost: 3
+  id: dmrp16-057
+  mana: 1
+  name: モモモスモモモ・ダッシュ
+  races:
+  - ジョーカーズ
+  - チーム切札
+  source:
+    notes: 'キリフダッシュ[fn02]は第11弾の型（play_self、cost: 2, civs: [fire, nature]）。'
+    official: dmrp16-057
+    review: pending
+    aliases:
+    - promoy19-097
+  spell:
+  - body:
+    - duration: end_of_turn
+      dynamic: true
+      mod:
+        cost_may:
+          amount: 5
+          min: 0
+          once: true
+      op: modify
+      select:
+        filter:
+          race_has: チーム切札
+          types:
+          - creature
+        owner: you
+        zone: hand
+    op: may
+  text: キリフダッシュ [fn02]（自分のクリーチャーの攻撃の終わりに、そのクリーチャーがその攻撃中にシールドをブレイクしていれば、この呪文を[fn02]支払って唱えてもよい）
+    / このターン、次に自分のチーム切札を召喚する時、その召喚コストを最大５少なくする。ただし、コストは０以下にはならない。
+  types:
+  - spell
