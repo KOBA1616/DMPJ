@@ -1119,3 +1119,11 @@ converted の監査（opt_reduce の素の整数表記9件）から。任意形�
   唱えた後の置き場変更は replace（move の to: graveyard を deck bottom へ）で併記する。
 - tests/test_vocab_pilot112.py 2件（正常 parse／検証）
 - 待機7枚（recast_from_graveyard のみが gap のもの）。
+
+## 第113弾: draw_replacement（引くかわりに）— 新語彙なし（2026-11-05）
+「自分がカードを引く時、1枚のかわりに2枚引いてもよい。そうした場合、手札を1枚捨てる」は
+draw イベントへの置換で表す（draw は個別イベントとして発行される）。
+- 書き方: {kind: replace, when: {event: draw, player: you}, optional: true,
+  instead: [{op: draw, count: 2}, {op: discard, select: {zone: hand, owner: you, count: 1}}]}。
+- tests/test_vocab_pilot113.py 2件（正常 parse／検証）
+- 待機7枚（draw_replacement のみが gap のもの）。
