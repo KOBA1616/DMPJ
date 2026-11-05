@@ -305694,3 +305694,549 @@ cards:
     ウルトラ・セイバー：光または火のクリーチャー（自分の光または火のクリーチャーがバトルゾーンを離れる時、かわりにこのクリーチャーを破壊してもよい）'
   types:
   - creature
+- abilities:
+  - affects: self
+    kind: static
+    mod:
+      power:
+        amount: 2000
+        count:
+          filter:
+            civs:
+            - nature
+            types:
+            - creature
+          other: true
+          owner: you
+          zone: bz
+  - affects: self
+    if:
+      exists:
+        filter:
+          power_ge: 6000
+        ref: self
+    kind: static
+    mod:
+      grant:
+      - double_breaker
+  civs:
+  - nature
+  cost: 6
+  id: dm09-019
+  mana: 1
+  name: 緑神龍アンリストヴァル
+  power: 0
+  races:
+  - アース・ドラゴン
+  source:
+    official: dm09-019
+    review: pending
+  text: このクリーチャーのパワーは、バトルゾーンにある自分の他の自然のクリーチャー１体につき+2000される。 / このクリーチャーは、パワーが6000以上のとき、「W・ブレイカー」を得る。
+  types:
+  - creature
+- abilities:
+  - affects: self
+    kind: static
+    mod:
+      power:
+        amount: 2000
+        count:
+          filter:
+            civs:
+            - darkness
+            types:
+            - creature
+          owner: you
+          zone: graveyard
+  - affects: self
+    if:
+      exists:
+        filter:
+          power_ge: 6000
+        ref: self
+    kind: static
+    mod:
+      grant:
+      - double_breaker
+  civs:
+  - darkness
+  cost: 6
+  id: dm09-027
+  mana: 1
+  name: 黒神龍イゾリストヴァル
+  power: 0
+  races:
+  - ドラゴン・ゾンビ
+  source:
+    official: dm09-027
+    review: pending
+    aliases:
+    - promoy2-025
+  text: このクリーチャーがバトルゾーンにある間、このクリーチャーのパワーは、自分の墓地にある闇のクリーチャー１体につき+2000される。 / このクリーチャーは、パワーが6000以上のとき、「W・ブレイカー」を得る。
+  types:
+  - creature
+- abilities:
+  - affects: self
+    kind: static
+    mod:
+      power:
+        amount: 2000
+        count:
+          filter:
+            race_has: セイント・ヘッド
+            types:
+            - creature
+          owner: you
+          zone: bz
+  - affects: self
+    if:
+      exists:
+        filter:
+          power_ge: 6000
+        ref: self
+    kind: static
+    mod:
+      grant:
+      - double_breaker
+  civs:
+  - nature
+  cost: 5
+  id: dm21-033
+  mana: 1
+  name: 霊騎シュバイン
+  power: 3000
+  races:
+  - アーク・セラフィム
+  source:
+    official: dm21-033
+    review: pending
+  text: このクリーチャーのパワーは、バトルゾーンにある自分のセイント・ヘッド１体につき+2000される。 / このクリーチャーは、パワーが6000以上の時、「W・ブレイカー」を得る。
+  types:
+  - creature
+- abilities:
+  - kind: trigger
+    when:
+      event: move
+      to: bz
+      subject: self
+    effect:
+    - op: modify
+      select:
+        ref: self
+      mod:
+        allow:
+        - action: attack_creature
+          other:
+            tapped: false
+      duration: end_of_turn
+  - effect:
+    - duration: end_of_turn
+      mod:
+        allow:
+        - action: attack_creature
+          other:
+            tapped: false
+      op: modify
+      select:
+        ref: self
+    kind: trigger
+    when:
+      event: move
+      subject: self
+      to: bz
+  - affects: self
+    kind: static
+    mod:
+      power:
+        amount: 1000
+        count:
+          owner: you
+          zone: mana
+  - affects: self
+    if:
+      exists:
+        filter:
+          power_ge: 12000
+        ref: self
+    kind: static
+    mod:
+      grant:
+      - triple_breaker
+  - effect:
+    - body:
+      - op: move
+        reason: charge
+        select:
+          from_top:
+            count:
+              owner: you
+              zone: mana
+          owner: you
+          zone: deck
+        tapped: true
+        to: mana
+      op: may
+    kind: trigger
+    when:
+      event: battle_win
+      subject: self
+  civs:
+  - nature
+  cost: 6
+  id: dm23bd5-015
+  keywords:
+  - double_breaker
+  mana: 1
+  name: ドルツヴァイ・アステリオ
+  power: 1000
+  races:
+  - グランセクト
+  source:
+    notes: マッハファイターは keyword_patterns.yaml の雛形どおり、出た時の誘発として明記した（キーワードとしては存在しないため）。バトル勝利時のマナ加速は、解決時点の自分のマナゾーンの枚数を
+      from_top の式で数える。
+    official: dm23bd5-015
+    review: pending
+    aliases:
+    - dmex13-s03
+    - dmrp06-s10
+  text: 'マッハファイター（このクリーチャーは、出たターンの間、タップまたはアンタップしているクリーチャーを攻撃できる）
+
+    W・ブレイカー
+
+    自分のマナゾーンにあるカード１枚につき、このクリーチャーのパワーを+1000する。
+
+    このクリーチャーのパワーが12000以上なら、このクリーチャーに「T・ブレイカー」を与える。
+
+    このクリーチャーがバトルに勝った時、自分のマナゾーンにあるカードを数える。それと同じ枚数を自分の山札の上からタップしてマナゾーンに置いてもよい。'
+  types:
+  - creature
+- abilities:
+  - affects: self
+    kind: static
+    mod:
+      power:
+        amount: 3000
+        count:
+          owner: you
+          zone: hand
+  - affects: self
+    if:
+      exists:
+        filter:
+          power_ge: 6000
+        ref: self
+    kind: static
+    mod:
+      grant:
+      - double_breaker
+  - affects: self
+    if:
+      exists:
+        filter:
+          power_ge: 15000
+        ref: self
+    kind: static
+    mod:
+      grant:
+      - triple_breaker
+  civs:
+  - fire
+  cost: 7
+  id: dm09-s04
+  mana: 1
+  name: 紅神龍オグリストヴァル
+  power: 0
+  races:
+  - ボルケーノ・ドラゴン
+  source:
+    official: dm09-s04
+    review: pending
+  text: このクリーチャーがバトルゾーンにある間、このクリーチャーのパワーは、自分の手札１枚につき+3000される。 / このクリーチャーは、パワーが6000以上のとき、「W・ブレイカー」を得る。
+    / このクリーチャーは、パワーが15000以上のとき、「T・ブレイカー」を得る。
+  types:
+  - creature
+- abilities:
+  - affects: self
+    kind: static
+    mod:
+      power:
+        amount: 2000
+        count:
+          filter:
+            tapped: true
+          owner: opp
+          zone: mana
+  - affects: self
+    if:
+      exists:
+        filter:
+          power_ge: 6000
+        ref: self
+    kind: static
+    mod:
+      grant:
+      - double_breaker
+  civs:
+  - water
+  cost: 8
+  id: dm10-003
+  mana: 1
+  name: キング・オクアノス
+  power: 2000
+  races:
+  - リヴァイアサン
+  source:
+    official: dm10-003
+    review: pending
+  text: このクリーチャーのパワーは、相手のマナゾーンでタップされているカード１枚につき+2000される。 / このクリーチャーは、パワーが6000以上の時、「W・ブレイカー」を得る。
+  types:
+  - creature
+- abilities:
+  - affects: self
+    kind: static
+    mod:
+      power:
+        amount: 1000
+        count:
+          filter:
+            civs:
+            - water
+          owner: opp
+          zone: mana
+  - affects: self
+    if:
+      exists:
+        filter:
+          power_ge: 6000
+        ref: self
+    kind: static
+    mod:
+      grant:
+      - double_breaker
+  civs:
+  - fire
+  - nature
+  cost: 3
+  id: dm10-040
+  mana: 1
+  name: 反発のタグタップ
+  power: 3000
+  races:
+  - スピリット・クォーツ
+  source:
+    notes: 「マナゾーンに置く時タップして置く」は多色カードのルール処理のため能力には書かない（先例どおり）。
+    official: dm10-040
+    review: pending
+    aliases:
+    - promoy3-006
+  text: マナゾーンに置く時、このカードはタップして置く。 / このクリーチャーのパワーは、相手のマナゾーンにある水のカード１枚につき+1000される。 /
+    このクリーチャーは、パワーが6000以上の時、「W・ブレイカー」を得る。
+  types:
+  - creature
+- abilities:
+  - affects: self
+    kind: static
+    mod:
+      power:
+        amount: 3000
+        count:
+          civ_count:
+            owner: you
+            zone: mana
+  - affects: self
+    if:
+      exists:
+        filter:
+          power_ge: 6000
+        ref: self
+    kind: static
+    mod:
+      grant:
+      - double_breaker
+  - affects: self
+    if:
+      exists:
+        filter:
+          power_ge: 15000
+        ref: self
+    kind: static
+    mod:
+      grant:
+      - triple_breaker
+  civs:
+  - light
+  cost: 6
+  id: dm10-s01
+  mana: 1
+  name: 聖断の精霊エリクシア
+  power: 1000
+  races:
+  - エンジェル・コマンド
+  source:
+    official: dm10-s01
+    review: pending
+  text: このクリーチャーのパワーは、自分のマナゾーンにあるカードの文明１つにつき+3000される。 / このクリーチャーは、パワーが6000以上の時、「W・ブレイカー」を得る。
+    / このクリーチャーは、パワーが15000以上の時、「T・ブレイカー」を得る。
+  types:
+  - creature
+- abilities:
+  - affects: self
+    kind: static
+    mod:
+      power:
+        amount: 2000
+        count:
+          sum:
+          - count:
+              owner: you
+              zone: shield
+          - count:
+              owner: opp
+              zone: shield
+  - affects: self
+    if:
+      exists:
+        filter:
+          power_ge: 6000
+        ref: self
+    kind: static
+    mod:
+      grant:
+      - double_breaker
+  - affects: self
+    if:
+      exists:
+        filter:
+          power_ge: 15000
+        ref: self
+    kind: static
+    mod:
+      grant:
+      - triple_breaker
+  civs:
+  - nature
+  cost: 7
+  id: dm10-s08
+  mana: 1
+  name: 緑神龍ダクマバルガロウ
+  power: 1000
+  races:
+  - アース・ドラゴン
+  source:
+    official: dm10-s08
+    review: pending
+  text: このクリーチャーのパワーは、自分と相手のシールド１枚につき+2000される。 / このクリーチャーは、パワーが6000以上の時、「W・ブレイカー」を得る。
+    / このクリーチャーは、パワーが15000以上の時、「T・ブレイカー」を得る。
+  types:
+  - creature
+- abilities:
+  - affects: self
+    kind: static
+    mod:
+      power:
+        amount: 3000
+        count:
+          filter:
+            name: 伝承するクローン・ホーン
+          owner: any
+          zone: graveyard
+  - affects: self
+    if:
+      exists:
+        filter:
+          power_ge: 6000
+        ref: self
+    kind: static
+    mod:
+      grant:
+      - double_breaker
+  civs:
+  - nature
+  cost: 4
+  id: dm12-030
+  mana: 1
+  name: 伝承するクローン・ホーン
+  power: 3000
+  races:
+  - ホーン・ビースト
+  source:
+    official: dm12-030
+    review: pending
+  text: このクリーチャーのパワーは、すべての墓地にある《伝承するクローン・ホーン》１枚につき、+3000される。 / このクリーチャーは、パワーが6000以上の時、「W・ブレイカー」を得る。
+  types:
+  - creature
+- abilities:
+  - affects: self
+    kind: static
+    mod:
+      power:
+        amount: 2000
+        count:
+          civ_count:
+            owner: any
+            zone: bz
+  - affects: self
+    if:
+      exists:
+        filter:
+          power_ge: 6000
+        ref: self
+    kind: static
+    mod:
+      grant:
+      - double_breaker
+  civs:
+  - nature
+  cost: 4
+  id: dm13-014
+  mana: 1
+  name: 地脈の超人
+  power: 1000
+  races:
+  - ジャイアント
+  source:
+    official: dm13-014
+    review: pending
+  text: このクリーチャーのパワーは、バトルゾーンにある文明１つにつき+2000される。 / このクリーチャーは、パワーが6000以上の時、｢W・ブレイカー｣を得る。
+  types:
+  - creature
+- abilities:
+  - affects: self
+    kind: static
+    mod:
+      power:
+        amount: -1000
+        count:
+          filter:
+            civs:
+            - water
+            - darkness
+            types:
+            - creature
+          owner: any
+          zone: bz
+  - affects: self
+    if:
+      exists:
+        filter:
+          power_ge: 6000
+        ref: self
+    kind: static
+    mod:
+      grant:
+      - double_breaker
+  civs:
+  - nature
+  cost: 5
+  id: dm14-065
+  mana: 1
+  name: 乱戦の化身
+  power: 6000
+  races:
+  - ミステリー・トーテム
+  source:
+    official: dm14-065
+    review: pending
+  text: このクリーチャーのパワーは、バトルゾーンにある水または闇のクリーチャー１体につき-1000される。 / このクリーチャーは、パワーが6000以上の時、｢W・ブレイカー｣を得る。
+  types:
+  - creature
