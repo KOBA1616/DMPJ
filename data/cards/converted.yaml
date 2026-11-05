@@ -315729,3 +315729,540 @@ cards:
     各ターン、このクリーチャーがはじめてタップした時、アンタップする。'
   types:
   - creature
+- abilities:
+  - effect:
+    - body:
+      - op: untap
+        select:
+          ref: self
+      op: may
+    kind: trigger
+    when:
+      event: battle_win
+      subject: self
+  civs:
+  - light
+  - fire
+  cost: 11
+  id: dm24-s07
+  keywords:
+  - double_breaker
+  - speed_attacker
+  mana: 1
+  name: 機動聖霊ムゲン・イングマール
+  power: 11000
+  races:
+  - エンジェル・コマンド
+  - アーマロイド
+  source:
+    official: dm24-s07
+    review: pending
+  text: 'マナゾーンに置く時、このカードはタップして置く。
+
+    W・ブレイカー(このクリーチャーはシールドを２枚ブレイクする)
+
+    スピードアタッカー(このクリーチャーは召喚酔いしない)
+
+    このクリーチャーがバトルに勝った時、アンタップしてもよい。'
+  types:
+  - creature
+- abilities:
+  - effect:
+    - duration: end_of_turn
+      mod:
+        allow:
+        - action: attack_creature
+          other:
+            tapped: false
+      op: modify
+      select:
+        ref: self
+    kind: trigger
+    when:
+      event: move
+      subject: self
+      to: bz
+  - effect:
+    - duration: until_next_own_turn_start
+      mod:
+        gain:
+        - instead: []
+          kind: replace
+          when:
+            event: lose
+      op: modify
+      select:
+        ref: self
+    kind: trigger
+    when:
+      event: battle_win
+      subject: self
+  civs:
+  - fire
+  cost: 8
+  id: dm24bd1-003
+  keywords:
+  - speed_attacker
+  - triple_breaker
+  mana: 1
+  name: 伝説のレジェンド ドギラゴン
+  power: 14000
+  races:
+  - メガ・コマンド・ドラゴン
+  - 革命軍
+  - ハムカツ団
+  source:
+    notes: '敗北の防止は promoy20-cp11 の先例どおり mod.gain で lose replace（instead: []）を次の自分のターンのはじめまで付与した'
+    official: dm24bd1-003
+    review: pending
+    aliases:
+    - dm23bd4-012
+    - dmex08-288
+    - dmrp06-g02
+    - dmx26-l02
+  text: 'スピードアタッカー
+
+    T・ブレイカー
+
+    このクリーチャーが出た時、このターン、このクリーチャーはアンタップしているクリーチャーを攻撃できる。
+
+    このクリーチャーがバトルに勝った時、次の自分のターンのはじめまで、自分はゲームに負けない。'
+  types:
+  - creature
+- abilities:
+  - effect:
+    - duration: end_of_turn
+      mod: &id156
+        allow:
+        - action: attack_creature
+          other:
+            tapped: false
+      op: modify
+      select:
+        ref: self
+    kind: trigger
+    when:
+      event: move
+      subject: self
+      to: bz
+  - effect:
+    - duration: end_of_turn
+      mod: *id156
+      op: modify
+      select:
+        count: all
+        filter:
+          types:
+          - creature
+        owner: you
+        zone: bz
+    kind: trigger
+    when:
+      event: battle_win
+      subject: self
+  civs:
+  - fire
+  cost: 7
+  id: dm24bd6-020
+  keywords:
+  - speed_attacker
+  - double_breaker
+  mana: 1
+  name: 偽りの名 バザガジー・ラゴン
+  power: 8000
+  races:
+  - アーマード・ドラゴン
+  - アンノウン
+  source:
+    official: dm24bd6-020
+    review: pending
+    aliases:
+    - dmr05-007
+    - dmx17-003
+  text: 'スピードアタッカー
+
+    W・ブレイカー
+
+    このクリーチャーが出た時、このターン、このクリーチャーはアンタップしているクリーチャーを攻撃できる。
+
+    このクリーチャーがバトルに勝った時、このターン、自分のクリーチャーはアンタップしているクリーチャーを攻撃できる。'
+  types:
+  - creature
+- faces:
+  - abilities:
+    - affects: self
+      kind: static
+      mod:
+        battle_power:
+          amount: 4000
+    - effect:
+      - body:
+        - op: play_free
+          select:
+            count: 1
+            filter:
+              cost_le: 5
+              races:
+              - ジョーカーズ
+              types:
+              - creature
+            owner: you
+            zone: hand
+        op: may
+      kind: trigger
+      when:
+        event: battle_win
+        subject: self
+    civs:
+    - fire
+    cost: 6
+    name: ムシ無視のんのん
+    power: 4000
+    races:
+    - ジョーカーズ
+    types:
+    - creature
+  - civs:
+    - fire
+    cost: 5
+    keywords:
+    - s_trigger
+    name: 灰になるほどヒート
+    spell:
+    - body:
+      - as: p
+        op: play_free
+        select:
+          count: 1
+          filter:
+            cost_le: 6
+            races:
+            - ジョーカーズ
+            types:
+            - creature
+          owner: you
+          zone: hand
+      - cond:
+          exists:
+            ref: p
+        op: if
+        then:
+        - body:
+          - a:
+              ref: p
+            b:
+              count: 1
+              filter:
+                types:
+                - creature
+              owner: opp
+              zone: bz
+            op: force_battle
+          op: may
+      op: may
+    types:
+    - spell
+  id: dm24ex3-tf10
+  mana: 1
+  source:
+    notes: 手札から出すは corpus の先例（dm22rp1-028 等）どおり play_free で表した
+    official: dm24ex3-tf10
+    review: pending
+    aliases:
+    - dm24rp3-t03
+    - dmex15-b068
+    - dmrp06-022
+    - dmrp21-t11
+    - dmrp21-tf11
+    - dmsd08-008
+    - promoy17-085
+    - promoy19-042
+  text: 'ムシ無視のんのん: バトル中、このクリーチャーのパワーを+4000する。 / このクリーチャーがバトルに勝った時、コスト５以下のジョーカーズ・クリーチャーを１体、自分の手札から出してもよい。
+    ／ 灰になるほどヒート: S・トリガー / コスト６以下のジョーカーズ・クリーチャーを１体、自分の手札から出してもよい。そうしたら、相手のクリーチャーを１体選んでもよい。その２体をバトルさせる。'
+- abilities:
+  - kind: trigger
+    when:
+      event: move
+      to: bz
+      subject: self
+    effect:
+    - op: modify
+      select:
+        ref: self
+      mod:
+        allow:
+        - action: attack_creature
+          other:
+            tapped: false
+      duration: end_of_turn
+  - kind: trigger
+    when:
+      event: move
+      to: bz
+      subject: self
+    effect:
+    - op: modify
+      select:
+        ref: self
+      mod:
+        deny:
+        - be_chosen
+        - be_attacked
+      duration: until_next_own_turn_start
+  - effect:
+    - duration: end_of_turn
+      mod:
+        allow:
+        - action: attack_creature
+          other:
+            tapped: false
+      op: modify
+      select:
+        ref: self
+    kind: trigger
+    when:
+      event: move
+      subject: self
+      to: bz
+  - effect:
+    - duration: until_next_own_turn_start
+      mod:
+        deny:
+        - be_chosen
+        - be_attacked
+      op: modify
+      select:
+        ref: self
+    kind: trigger
+    when:
+      event: move
+      subject: self
+      to: bz
+  - effect:
+    - as: a
+      op: choose
+      select:
+        count: all
+        from_top: 1
+        look: true
+        owner: you
+        zone: deck
+    - modes:
+      - - op: move
+          reason: draw
+          select:
+            count: all
+            ref: a
+          to: hand
+      - - op: mana_put
+          select:
+            count: all
+            ref: a
+      op: modal
+    kind: trigger
+    when:
+      event: battle_win
+      subject: self
+  civs:
+  - water
+  - fire
+  - nature
+  cost: 3
+  id: dm24ex3-tf17
+  keywords:
+  - speed_attacker
+  mana: 1
+  name: Disノメノン
+  power: 5000
+  races:
+  - ジャイアント・インセクト
+  - ディスタス
+  source:
+    notes: マッハファイターとジャストダイバーは keyword_patterns の展開形で書いた。行き先の選択は dm25ex2-036 の先例どおり
+      modal で表した
+    official: dm24ex3-tf17
+    review: pending
+    aliases:
+    - dm24bd1-017
+    - dm24rp1-t05
+    - dmart07-005
+    - dmbd19-009
+    - dmrp18-029
+    - dmrp18-a04
+    - dmrp18-b04
+  text: 'スピードアタッカー
+
+    マッハファイター
+
+    ジャストダイバー（このクリーチャーが出た時、次の自分のターンのはじめまで、このクリーチャーは相手に選ばれず、攻撃されない）
+
+    このクリーチャーがバトルに勝った時、自分の山札の上から１枚目を見て、手札に加えるかマナゾーンに置く。'
+  types:
+  - creature
+- faces:
+  - abilities:
+    - effect:
+      - op: destroy
+        select:
+          count: 1
+          ref: self
+      kind: trigger
+      when:
+        event: battle_win
+        subject: self
+    civs:
+    - darkness
+    cost: 5
+    keywords:
+    - s_trigger
+    - blocker
+    name: 終断γ ドルブロ
+    power: 3000
+    races:
+    - ソニック・コマンド
+    - イニシャルズX
+    types:
+    - creature
+  - civs:
+    - darkness
+    cost: 3
+    keywords:
+    - charger
+    name: ボーンおどり・チャージャー
+    spell:
+    - count: 2
+      op: mill
+      owner: you
+    types:
+    - spell
+  id: dm24ex4-067
+  mana: 1
+  source:
+    official: dm24ex4-067
+    review: pending
+    aliases:
+    - dm23bd7-053
+    - dm23rp4-t07
+    - dm23rp4-tf07
+    - dm23rp4x-tf07
+    - dm24ex4-pr027
+    - dmbd21-013
+  text: '終断γ ドルブロ: S・トリガー（このクリーチャーをシールドゾーンから手札に加える時、コストを支払わずにすぐ召喚してもよい） / ブロッカー /
+    このクリーチャーがバトルに勝った時、このクリーチャーを破壊する。 ／ ボーンおどり・チャージャー: 自分の山札の上から２枚を墓地に置く。 / チャージャー（この呪文を唱えた後、墓地のかわりにマナゾーンに置く）'
+- abilities:
+  - effect:
+    - body:
+      - op: play_free
+        select:
+          count: 1
+          filter:
+            types:
+            - creature
+          owner: you
+          zone: graveyard
+      op: may
+    kind: trigger
+    when:
+      event: battle_win
+      subject:
+        filter:
+          any_of:
+          - races:
+            - デーモン・コマンド
+            types:
+            - creature
+          - name_has: 死神
+            types:
+            - creature
+        owner: you
+  civs:
+  - darkness
+  cost: 7
+  evolve_from:
+    any_of:
+    - races:
+      - デーモン・コマンド
+    - name_has: 死神
+  id: dm24rp4-td2
+  keywords:
+  - triple_breaker
+  mana: 1
+  name: 死神明王バロム・モナーク
+  power: 12000
+  races:
+  - デーモン・コマンド
+  source:
+    notes: 墓地から出すは corpus の先例（dm23rp2x-062 等）どおり play_free で表した
+    official: dm24rp4-td2
+    review: pending
+    aliases:
+    - dm35-s03
+    - dmd33-006
+  text: '進化：デーモン・コマンド・クリーチャーまたは名前に《死神》とあるクリーチャー１体の上に置く。
+
+    T・ブレイカー
+
+    自分のデーモン・コマンド・クリーチャーまたは名前に《死神》とあるクリーチャーがバトルに勝った時、クリーチャーを１体、自分の墓地から出してもよい。'
+  types:
+  - creature
+  - evolution
+- abilities:
+  - effect:
+    - body:
+      - count: 1
+        op: draw
+      op: may
+    - body:
+      - op: play_free
+        select:
+          count: 1
+          filter:
+            not_types:
+            - evolution
+            races:
+            - デーモン・コマンド
+            types:
+            - creature
+          owner: you
+          zone: hand
+      op: may
+    kind: trigger
+    when:
+      event: battle_win
+      subject:
+        filter:
+          races:
+          - デーモン・コマンド
+          types:
+          - creature
+        owner: you
+  civs:
+  - light
+  cost: 7
+  evolve_from:
+    races:
+    - デーモン・コマンド
+  id: dm25ex2-021
+  keywords:
+  - triple_breaker
+  mana: 1
+  name: 偽りの悪魔神 バロム・ミステリー
+  power: 12000
+  races:
+  - デーモン・コマンド
+  - アンノウン
+  source:
+    notes: 手札から出すは corpus の先例どおり play_free で表した
+    official: dm25ex2-021
+    review: pending
+    aliases:
+    - dmex08-179
+    - dmx11-016
+  text: '進化：デーモン・コマンド・クリーチャー１体の上に置く。
+
+    T・ブレイカー
+
+    自分のデーモン・コマンドがバトルに勝った時、カードを１枚引いてもよい。その後、進化ではないデーモン・コマンド・クリーチャーを１体、自分の手札から出してもよい。'
+  types:
+  - creature
+  - evolution
