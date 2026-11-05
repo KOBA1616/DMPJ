@@ -979,3 +979,9 @@ converted の監査（opt_reduce の素の整数表記9件）から。任意形�
 - 自分自身がタップして出る場合は affects: self。
 - tests/test_vocab_pilot90.py 2件（正常 parse／検証）
 - 待機16枚（enters_battle_zone_tapped のみが gap のもの）。
+
+## 第91弾: next_summon_cost_reduction（次に召喚するコスト軽減）— 新語彙なし（2026-11-05）
+「このターン、次に召喚する自分の〜のコストをN少なくする」は cost_may（once）の modify で表せる（dmex14-060 の先例）。
+- 書き方: {op: may, body: [{op: modify, select: {zone: hand, owner: you, filter: {...}}, mod: {cost_may: {amount: N, min: 0, once: true}}, duration: end_of_turn, dynamic: true}]}。
+- tests/test_vocab_pilot91.py 2件（正常 parse／検証）
+- 待機16枚（next_summon_cost_reduction のみが gap のもの）。
