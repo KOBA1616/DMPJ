@@ -312712,3 +312712,517 @@ cards:
   text: 相手は自身の手札を１枚選び、捨てる。 / ナイト・マジック
   types:
   - spell
+- faces:
+  - abilities:
+    - instead:
+      - op: move
+        reason: put
+        select:
+          ref: event.subject
+        to: hand
+      kind: replace
+      when:
+        event: move
+        from:
+        - graveyard
+        - mana
+        - deck
+        - shield
+        subject:
+          filter:
+            types:
+            - creature
+          owner: opp
+        to: bz
+    civs:
+    - water
+    cost: 3
+    mana: 1
+    name: カシス・グレープ
+    power: 3000
+    races:
+    - スプラッシュ・クイーン
+    types:
+    - creature
+  - civs:
+    - water
+    cost: 6
+    mana: 1
+    name: ♥トキメク思いがグレイドをあげ～る
+    spell:
+    - cost_le: 8
+      filter:
+        race_has: スプラッシュ・クイーン
+      op: mekurade
+    types:
+    - spell
+  id: dm24ex1-017
+  mana: 1
+  name: カシス・グレープ / ♥トキメク思いがグレイドをあげ～る
+  source:
+    official: dm24ex1-017
+    review: pending
+  text: 'カシス・グレープ: 相手のクリーチャーが、相手の手札以外から出る時、その持ち主は、かわりにそのクリーチャーを手札に加える。 ／ ♥トキメク思いがグレイドをあげ～る:
+    スプラッシュ・クイーン・メクレイド８する。'
+- abilities:
+  - kind: trigger
+    when:
+      event: move
+      to: bz
+      subject: self
+    effect:
+    - op: modify
+      select:
+        ref: self
+      mod:
+        deny:
+        - be_chosen
+        - be_attacked
+      duration: until_next_own_turn_start
+  - effect:
+    - duration: until_next_own_turn_start
+      mod:
+        deny:
+        - be_chosen
+        - be_attacked
+      op: modify
+      select:
+        ref: self
+    kind: trigger
+    when:
+      event: move
+      subject: self
+      to: bz
+  - if:
+      is_turn: opp
+    instead:
+    - op: move
+      reason: put
+      select:
+        ref: event.subject
+      to: graveyard
+    kind: replace
+    when:
+      event: move
+      reason: put
+      subject:
+        filter:
+          types:
+          - creature
+        owner: opp
+      to: bz
+  civs:
+  - water
+  - fire
+  cost: 4
+  id: dm24ex2-059
+  mana: 1
+  name: 超えるメラッチ
+  power: 5000
+  races:
+  - ファイアー・バード炎
+  - 革命軍
+  source:
+    official: dm24ex2-059
+    review: pending
+  text: 'ジャストダイバー（このクリーチャーが出た時、次の自分のターンのはじめまで、このクリーチャーは相手に選ばれず、攻撃されない）
+
+    相手のターン中に、相手のクリーチャーが召喚以外の方法で出る時、相手はかわりにそのクリーチャーを墓地に置く。'
+  types:
+  - creature
+- abilities:
+  - effect:
+    - op: move
+      reason: put
+      select:
+        ref: event.subject
+      to: mana
+    kind: trigger
+    when:
+      event: move
+      from:
+      - graveyard
+      - mana
+      - deck
+      - shield
+      subject:
+        filter:
+          types:
+          - creature
+        owner: opp
+      to: bz
+  - effect:
+    - op: move
+      reason: put
+      select:
+        from_top: 2
+        owner: you
+        zone: deck
+      to: mana
+    - body:
+      - op: bounce
+        select:
+          count: 1
+          owner: you
+          zone: mana
+      op: may
+    if:
+      is_turn: opp
+    kind: trigger
+    when:
+      event: move
+      from: bz
+      subject: self
+  civs:
+  - nature
+  cost: 3
+  id: dm24ex3-073
+  mana: 1
+  name: バンカー・アントリオン
+  power: 4000
+  races:
+  - ジャイアント・インセクト
+  source:
+    official: dm24ex3-073
+    review: pending
+    aliases:
+    - dm24rp1-048
+  text: '相手のクリーチャーが手札以外から出た時、それを持ち主のマナゾーンに置く。
+
+    相手のターン中に、このクリーチャーが離れた時、自分の山札の上から２枚をマナゾーンに置く。その後、カードを１枚、自分のマナゾーンから手札に戻してもよい。'
+  types:
+  - creature
+- abilities:
+  - kind: trigger
+    when:
+      event: move
+      to: bz
+      subject: self
+    effect:
+    - op: modify
+      select:
+        ref: self
+      mod:
+        deny:
+        - be_chosen
+        - be_attacked
+      duration: until_next_own_turn_start
+  - effect:
+    - duration: until_next_own_turn_start
+      mod:
+        deny:
+        - be_chosen
+        - be_attacked
+      op: modify
+      select:
+        ref: self
+    kind: trigger
+    when:
+      event: move
+      subject: self
+      to: bz
+  - instead:
+    - op: move
+      reason: put
+      select:
+        ref: event.subject
+      to: hand
+    kind: replace
+    when:
+      event: move
+      from:
+      - graveyard
+      - mana
+      - deck
+      - shield
+      subject:
+        filter:
+          types:
+          - creature
+        owner: opp
+      to: bz
+  civs:
+  - water
+  cost: 4
+  id: dm25ex1-055
+  mana: 1
+  name: 星光の精霊龍 ベルフォール
+  power: 5000
+  races:
+  - エンジェル・コマンド・ドラゴン
+  source:
+    official: dm25ex1-055
+    review: pending
+    aliases:
+    - promoy25-094
+  text: 'ジャストダイバー（このクリーチャーが出た時、次の自分のターンのはじめまで、このクリーチャーは相手に選ばれず、攻撃されない）
+
+    相手のクリーチャーが、相手の手札以外から出る時、かわりにそれを持ち主の手札に加える。'
+  types:
+  - creature
+- abilities:
+  - effect:
+    - body:
+      - op: move
+        position: top
+        reason: put
+        select:
+          ref: event.subject
+        to: deck
+      else:
+      - op: move
+        position: bottom
+        reason: put
+        select:
+          ref: event.subject
+        to: deck
+      op: may
+      player: opp
+    kind: trigger
+    when:
+      event: move
+      reason: put
+      subject:
+        filter:
+          types:
+          - creature
+        owner: opp
+      to: bz
+  - effect:
+    - body:
+      - count: 1
+        op: draw
+      - op: discard
+        select:
+          count: 1
+          owner: you
+          zone: hand
+      op: may
+    if:
+      is_turn: opp
+    kind: trigger
+    when:
+      event: move
+      from: bz
+      subject: self
+  civs:
+  - water
+  cost: 2
+  id: dm25ex1-059
+  mana: 1
+  name: カクラリコ
+  power: 2000
+  races:
+  - サイバーロード
+  source:
+    official: dm25ex1-059
+    review: pending
+    aliases:
+    - dm24ex3-055
+    - dm24rp1-035
+  text: '相手のクリーチャーが召喚以外の方法で出た時、相手はそれを山札の上か下に置く。
+
+    相手のターン中に、このクリーチャーが離れた時、カードを１枚引いてもよい。そうしたら、自分の手札を１枚捨てる。'
+  types:
+  - creature
+- abilities:
+  - instead:
+    - op: move
+      reason: return
+      select:
+        ref: event.subject
+      to: hand
+    kind: replace
+    when:
+      event: move
+      from:
+      - graveyard
+      - mana
+      - deck
+      - shield
+      subject:
+        owner: any
+      to: bz
+  civs:
+  - water
+  cost: 2
+  id: dm26ex4-044
+  keywords:
+  - g_strike
+  mana: 1
+  name: 親愛なる友 アリス
+  power: 3000
+  races:
+  - マジック・アウトレイジ
+  source:
+    notes: '対象はエレメント全般（両プレイヤー）のため subject は owner: any でタイプ制限なし。出現元は第98弾の列挙（墓地・マナ・山札・シールド）に従った'
+    official: dm26ex4-044
+    review: pending
+  text: '{GS} G・ストライク（このカードを自分のシールドゾーンから手札に加える時、表向きにし、相手のクリーチャーを１体選んでもよい。このターン、そのクリーチャーは攻撃できない）
+
+    エレメントが手札以外から出る時、かわりに持ち主の手札に戻す。'
+  types:
+  - creature
+- abilities:
+  - kind: trigger
+    when:
+      event: move
+      to: bz
+      subject: self
+    effect:
+    - op: modify
+      select:
+        ref: self
+      mod:
+        deny:
+        - be_chosen
+        - be_attacked
+      duration: until_next_own_turn_start
+  - effect:
+    - duration: until_next_own_turn_start
+      mod:
+        deny:
+        - be_chosen
+        - be_attacked
+      op: modify
+      select:
+        ref: self
+    kind: trigger
+    when:
+      event: move
+      subject: self
+      to: bz
+  - instead:
+    - op: move
+      reason: put
+      select:
+        ref: event.subject
+      to: hand
+    kind: replace
+    when:
+      event: move
+      from:
+      - graveyard
+      - mana
+      - deck
+      - shield
+      subject:
+        filter:
+          types:
+          - creature
+        owner: opp
+      to: bz
+  civs:
+  - water
+  cost: 4
+  id: dm26ex4-cho041
+  mana: 1
+  name: 星光の精霊龍 ベルフォール
+  power: 5000
+  races:
+  - エンジェル・コマンド・ドラゴン
+  source:
+    official: dm26ex4-cho041
+    review: pending
+  text: 'ジャストダイバー
+
+    相手のクリーチャーが相手の手札以外から出る時、かわりにそれを持ち主の手札に加える。'
+  types:
+  - creature
+- abilities:
+  - instead:
+    - op: move
+      reason: put
+      select:
+        ref: event.subject
+      to: mana
+    kind: replace
+    when:
+      event: move
+      from:
+      - graveyard
+      - mana
+      - deck
+      - shield
+      subject:
+        owner: opp
+      to: bz
+  civs:
+  - nature
+  cost: 1
+  id: dm26sd1-q013
+  keywords:
+  - g_strike
+  - cannot_attack_player
+  mana: 1
+  name: とこしえの超人
+  power: 4000
+  races:
+  - ジャイアント
+  source:
+    notes: 対象は「カード」全般のため subject にタイプ制限を付けていない。出現元は第98弾の列挙（墓地・マナ・山札・シールド）に従った
+    official: dm26sd1-q013
+    review: pending
+    aliases:
+    - dm22rp1-t15
+    - dm22rp1-tf15
+    - dm22rp2-t15
+    - dm22rp2-tf15
+    - dm22rp2x-tf15
+    - dm24ex4-079
+    - dm24ex4-pr039
+    - dm25rp3-sp5
+    - dm26sd1-v011
+    - dm26sd1-y009
+    - dmrp17-025
+    - promoy20-014
+    - promoy20-078
+    - promoy23-031
+  text: '{GS} G・ストライク（このカードを自分のシールドゾーンから手札に加える時、表向きにし、相手のクリーチャーを１体選んでもよい。このターン、そのクリーチャーは攻撃できない）
+
+    このクリーチャーは相手プレイヤーを攻撃できない。
+
+    相手が自身の手札以外からカードを出す時、かわりにマナゾーンに置く。'
+  types:
+  - creature
+- abilities:
+  - instead:
+    - op: move
+      reason: put
+      select:
+        ref: event.subject
+      to: hand
+    kind: replace
+    when:
+      event: move
+      from:
+      - graveyard
+      - mana
+      - deck
+      - shield
+      - hyper
+      - gr
+      subject:
+        filter:
+          cost_le: 4
+          types:
+          - creature
+        owner: opp
+      to: bz
+  civs:
+  - water
+  cost: 2
+  id: dmrp14-035
+  mana: 1
+  name: ワナビーワラビー
+  power: 2000
+  races:
+  - トリックス
+  - チームウェイブ
+  source:
+    notes: 「手札以外のどこからでも」のため、出現元は第98弾の基本列挙（墓地・マナ・山札・シールド）に超次元ゾーン（hyper）と超GRゾーン（gr）を加えた
+    official: dmrp14-035
+    review: pending
+  text: 相手のコスト４以下のクリーチャーが、手札以外のどこからでもバトルゾーンに出る時、相手はかわりにそのクリーチャーを手札に加える。
+  types:
+  - creature
