@@ -314082,3 +314082,440 @@ cards:
   - creature
   keywords:
   - double_breaker
+- abilities:
+  - effect:
+    - body:
+      - op: play_free
+        select:
+          count: 1
+          filter:
+            types:
+            - cross_gear
+          owner: you
+          zone: hand
+      op: may
+    kind: trigger
+    when:
+      event: move
+      subject: self
+      to: bz
+  - effect:
+    - cond:
+        exists:
+          owner: you
+          zone: shield
+      op: if
+      then:
+      - body:
+        - count: 1
+          op: break
+          player: you
+          st_first: true
+        - op: destroy
+          select:
+            count: 1
+            filter:
+              power_le: 6000
+              types:
+              - creature
+            owner: opp
+            zone: bz
+        op: may
+    kind: trigger
+    when:
+      event: move
+      subject: self
+      to: bz
+  - effect:
+    - cond:
+        exists:
+          owner: you
+          zone: shield
+      op: if
+      then:
+      - body:
+        - count: 1
+          op: break
+          player: you
+          st_first: true
+        - op: destroy
+          select:
+            count: 1
+            filter:
+              power_le: 6000
+              types:
+              - creature
+            owner: opp
+            zone: bz
+        op: may
+    kind: trigger
+    when:
+      event: attack
+      subject: self
+  civs:
+  - fire
+  cost: 4
+  id: dm26sd1-r001
+  keywords:
+  - double_breaker
+  mana: 1
+  name: ボルメテウス・武者・ドラゴン「武偉」
+  power: 6000
+  races:
+  - アーマード・ドラゴン
+  - アーマード・サムライ
+  source:
+    notes: 「出た時または攻撃する時」は move/attack の2つの誘発で表した。「そうしたら」の破壊は、自分のシールドが実際にブレイクできる場合だけ行うため、シールドの存在を
+      if で確認してから may（ブレイク＋破壊）を提示した。ブレイクは st_first（S・トリガーを先に解決）
+    official: dm26sd1-r001
+    review: pending
+    aliases:
+    - dm23ex1-005
+    - dm26sd1-r001sec
+    - dm26sd1-r001star
+  text: '侍流ジェネレート（このクリーチャーが出た時、クロスギアを１枚、自分の手札からコストを支払わずにジェネレートしてもよい）
+
+    W・ブレイカー（このクリーチャーはシールドを２つブレイクする）
+
+    このクリーチャーが出た時または攻撃する時、このクリーチャーは自分のシールドを１つブレイクしてもよい。そうしたら、相手のパワー6000以下のクリーチャーを１体選び、破壊する。'
+  types:
+  - creature
+- abilities:
+  - effect:
+    - body:
+      - op: play_free
+        select:
+          count: 1
+          filter:
+            types:
+            - cross_gear
+          owner: you
+          zone: hand
+      op: may
+    kind: trigger
+    when:
+      event: move
+      subject: self
+      to: bz
+  - effect:
+    - body:
+      - op: move
+        reason: put
+        select:
+          count: 1
+          filter:
+            types:
+            - cross_gear
+          owner: you
+          zone: graveyard
+        to: bz
+      op: may
+    kind: trigger
+    when:
+      event: move
+      from: bz
+      reason: destroy
+      subject: self
+      to: graveyard
+  civs:
+  - nature
+  cost: 7
+  id: dm28-009
+  keywords:
+  - double_breaker
+  mana: 1
+  name: 緑神龍ガムス・謙信
+  power: 6000
+  races:
+  - アース・ドラゴン
+  - サムライ
+  source:
+    official: dm28-009
+    review: pending
+  text: '侍流ジェネレート(このクリーチャーをバトルゾーンに出した時、自分の手札にあるクロスギアを１枚、コストを支払わずにジェネレートしてもよい)
+
+    このクリーチャーが破壊された時、クロスギアを１枚、自分の墓地からバトルゾーンに出してもよい。
+
+    W・ブレイカー(このクリーチャーはシールドを２枚ブレイクする)'
+  types:
+  - creature
+- abilities:
+  - effect:
+    - body:
+      - body:
+        - count: 1
+          op: draw
+        op: may
+      op: repeat
+      times:
+        count:
+          filter:
+            race_has: サムライ
+            types:
+            - creature
+          other: true
+          owner: you
+          zone: bz
+    kind: trigger
+    when:
+      event: move
+      subject: self
+      to: bz
+  - effect:
+    - body:
+      - op: play_free
+        select:
+          count: 1
+          filter:
+            types:
+            - cross_gear
+          owner: you
+          zone: hand
+      op: may
+    kind: trigger
+    when:
+      event: move
+      subject: self
+      to: bz
+  civs:
+  - water
+  cost: 6
+  id: dm28-047
+  keywords:
+  - blocker
+  - cannot_attack
+  mana: 1
+  name: 歌舞機ロイド・ゴエモン
+  power: 2000
+  races:
+  - グレートメカオー
+  - サムライ
+  source:
+    notes: '「1体につき1枚引いてもよい」は dm21-024 と同型に repeat + may で1枚ごとに任意にした。「自分の他のサムライ」は other:
+      true + race_has: サムライ（dm26sd1-r011 と同型）'
+    official: dm28-047
+    review: pending
+  text: 'ブロッカー
+
+    このクリーチャーは攻撃することができない。
+
+    このクリーチャーをバトルゾーンに出した時、バトルゾーンにある自分の他のサムライ１体につき１枚、カードを引いてもよい。
+
+    侍流ジェネレート(このクリーチャーをバトルゾーンに出した時、自分の手札にあるクロスギアを１枚、コストを支払わずにジェネレートしてもよい)'
+  types:
+  - creature
+- abilities:
+  - effect:
+    - body:
+      - op: play_free
+        select:
+          count: 1
+          filter:
+            types:
+            - cross_gear
+          owner: you
+          zone: hand
+      op: may
+    kind: trigger
+    when:
+      event: move
+      subject: self
+      to: bz
+  civs:
+  - fire
+  cost: 5
+  id: dm28-058
+  mana: 1
+  name: 風来の雲ベンケイ
+  power: 5000
+  races:
+  - ドリームメイト
+  - サムライ
+  source:
+    official: dm28-058
+    review: pending
+  text: 侍流ジェネレート
+  types:
+  - creature
+- abilities:
+  - effect:
+    - body:
+      - op: play_free
+        select:
+          count: 1
+          filter:
+            types:
+            - cross_gear
+          owner: you
+          zone: hand
+      op: may
+    kind: trigger
+    when:
+      event: move
+      subject: self
+      to: bz
+  - effect:
+    - op: destroy
+      select:
+        count: 1
+        filter:
+          power_le: 4000
+          types:
+          - creature
+        owner: opp
+        zone: bz
+    kind: trigger
+    when:
+      event: move
+      subject:
+        filter:
+          types:
+          - cross_gear
+        owner: you
+      to: bz
+  civs:
+  - fire
+  cost: 6
+  id: dm31-030
+  keywords:
+  - double_breaker
+  mana: 1
+  name: バイオレンス・迅雷・ドラゴン
+  power: 6000
+  races:
+  - アーマード・ドラゴン
+  - サムライ
+  source:
+    official: dm31-030
+    review: pending
+    aliases:
+    - dm31-030hc
+  text: '侍流ジェネレート(このクリーチャーをバトルゾーンに出した時、自分の手札にあるクロスギアを１枚、コストを支払わずにジェネレートしてもよい)
+
+    W・ブレイカー(このクリーチャーはシールドを２枚ブレイクする)
+
+    自分がクロスギアをバトルゾーンに出した時、相手のパワー4000以下のクリーチャーを１体破壊する。'
+  types:
+  - creature
+- abilities:
+  - effect:
+    - body:
+      - op: play_free
+        select:
+          count: 1
+          filter:
+            types:
+            - cross_gear
+          owner: you
+          zone: hand
+      op: may
+    kind: trigger
+    when:
+      event: move
+      subject: self
+      to: bz
+  - affects:
+      filter:
+        cost_ge: 4
+        types:
+        - creature
+      other: true
+      owner: you
+      zone: bz
+    kind: static
+    mod:
+      add_races:
+      - サムライ
+      - アーマード・ドラゴン
+      - アース・ドラゴン
+      power: 2000
+  civs:
+  - fire
+  - nature
+  cost: 6
+  id: dmc45-015
+  keywords:
+  - double_breaker
+  mana: 1
+  name: 武装竜鬼ジオゴクトラ
+  power: 6000
+  races:
+  - アーマード・ドラゴン
+  - アース・ドラゴン
+  - サムライ
+  source:
+    notes: '多色なのでマナにはタップして置かれる（エンジンの規定）。種族追加は static の mod.add_races、「自分の他の」は other:
+      true'
+    official: dmc45-015
+    review: pending
+  text: 'マナゾーンに置く時、このカードはタップして置く。
+
+    侍流ジェネレート(このクリーチャーをバトルゾーンに出した時、自分の手札にあるクロスギアを１枚、コストを支払わずにジェネレートしてもよい)
+
+    バトルゾーンにある自分の他の、コスト４以上のクリーチャーすべてのパワーは+2000され、種族に「サムライ」「アーマード・ドラゴン」「アース・ドラゴン」を追加する。
+
+    W・ブレイカー'
+  types:
+  - creature
+- abilities:
+  - effect:
+    - body:
+      - op: play_free
+        select:
+          count: 1
+          filter:
+            types:
+            - cross_gear
+          owner: you
+          zone: hand
+      op: may
+    kind: trigger
+    when:
+      event: move
+      subject: self
+      to: bz
+  - effect:
+    - body:
+      - op: destroy
+        select:
+          count: 1
+          filter:
+            keyword: blocker
+            types:
+            - creature
+          owner: opp
+          zone: bz
+      op: may
+    kind: trigger
+    when:
+      event: move
+      subject:
+        filter:
+          types:
+          - cross_gear
+        owner: you
+      to: bz
+  civs:
+  - fire
+  cost: 6
+  id: dmc47-014
+  keywords:
+  - double_breaker
+  mana: 1
+  name: グランドクロス・斬鉄・ドラゴン
+  power: 6000
+  races:
+  - アーマード・ドラゴン
+  - サムライ
+  source:
+    official: dmc47-014
+    review: pending
+    aliases:
+    - promoy7-007
+  text: '侍流ジェネレート(このクリーチャーをバトルゾーンに出した時、自分の手札にあるクロスギアを１枚、コストを支払わずにジェネレートしてもよい)
+
+    自分のクロスギアをバトルゾーンに出した時、「ブロッカー」を持つ相手のクリーチャーを１体破壊してもよい。
+
+    W・ブレイカー(このクリーチャーはシールドを２枚ブレイクする)'
+  types:
+  - creature
