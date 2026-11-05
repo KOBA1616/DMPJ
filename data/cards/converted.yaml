@@ -313226,3 +313226,344 @@ cards:
   text: 相手のコスト４以下のクリーチャーが、手札以外のどこからでもバトルゾーンに出る時、相手はかわりにそのクリーチャーを手札に加える。
   types:
   - creature
+- abilities:
+  - affects: self
+    kind: static
+    mod:
+      allow:
+      - action: attack_creature
+        other:
+          civs:
+          - light
+          tapped: false
+  civs:
+  - darkness
+  cost: 5
+  id: dmc21-007
+  keywords:
+  - cannot_attack_player
+  mana: 1
+  name: 黒神龍バグラザード
+  power: 9000
+  races:
+  - ドラゴン・ゾンビ
+  source:
+    official: dmc21-007
+    review: pending
+  text: 'このクリーチャーは、相手プレイヤーを攻撃できない。
+
+    このクリーチャーは、タップされていない光のクリーチャーを攻撃できる。'
+  types:
+  - creature
+- civs:
+  - fire
+  cost: 4
+  id: dmc27-051
+  mana: 1
+  name: クエイク・ゲート
+  source:
+    official: dmc27-051
+    review: pending
+    aliases:
+    - dm02-051
+  spell:
+  - duration: end_of_turn
+    mod:
+      allow:
+      - action: attack_creature
+        other:
+          tapped: false
+      power: 1000
+    op: modify
+    select:
+      count: all
+      filter:
+        types:
+        - creature
+      owner: you
+      zone: bz
+  text: このターン、バトルゾーンにある自分のクリーチャーすべてのパワーは+1000され、タップされていないクリーチャーを攻撃できる。
+  types:
+  - spell
+- abilities:
+  - affects: self
+    kind: static
+    mod:
+      allow:
+      - action: attack_creature
+        other:
+          civs:
+          - fire
+          tapped: false
+  civs:
+  - water
+  cost: 5
+  id: dmc34-023
+  keywords:
+  - cannot_attack_player
+  mana: 1
+  name: ゼリーム・クロウラー
+  power: 4000
+  races:
+  - アースイーター
+  source:
+    official: dmc34-023
+    review: pending
+    aliases:
+    - dm13-022
+  text: 'このクリーチャーは、タップされていない火のクリーチャーを攻撃できる。
+
+    このクリーチャーは、相手プレイヤーを攻撃できない。'
+  types:
+  - creature
+- abilities:
+  - affects:
+      filter:
+        race_has: ドラゴン
+      owner: any
+      zone: bz
+    kind: static
+    mod:
+      allow:
+      - action: attack_creature
+        other:
+          tapped: false
+  civs:
+  - fire
+  cost: 2
+  id: dmc67-013
+  mana: 1
+  name: チッタ・ペロル
+  power: 1000
+  races:
+  - ファイアー・バード
+  source:
+    official: dmc67-013
+    review: pending
+    aliases:
+    - dm14-060
+    - dmc36-023
+    - dmc49-027
+    - promoy4-008
+  text: バトルゾーンにあるドラゴンはすべて、タップされていないクリーチャーを攻撃できる。
+  types:
+  - creature
+- abilities:
+  - affects: self
+    kind: static
+    mod:
+      deny:
+      - action: attack_creature
+        other:
+          not_civs:
+          - light
+  civs:
+  - darkness
+  cost: 5
+  id: dmd05-002
+  keywords:
+  - double_breaker
+  mana: 1
+  name: ジェノサイド・カイザー
+  power: 7000
+  races:
+  - ブラック・コマンド・ドラゴン
+  - ハンター
+  - エイリアン
+  source:
+    notes: '「光以外のクリーチャーを攻撃できない」は allow ではなく deny + other（not_civs: [light]）で表現した。permits
+      は対象カードに other フィルタを当てるため、光でないクリーチャーへの攻撃だけが禁止され、プレイヤーへの攻撃と（タップした）光のクリーチャーへの攻撃は通常どおりになる。'
+    official: dmd05-002
+    review: pending
+  text: 'このクリーチャーは光以外のクリーチャーを攻撃できない。
+
+    W・ブレイカー(このクリーチャーはシールドを２枚ブレイクする)'
+  types:
+  - creature
+- abilities:
+  - affects: self
+    kind: static
+    mod:
+      allow:
+      - action: attack_creature
+        other:
+          tapped: false
+  - effect:
+    - cond:
+        exists:
+          filter:
+            power_ge: 6000
+            types:
+            - creature
+          ref: event.target
+      op: if
+      then:
+      - duration: end_of_turn
+        mod:
+          power: 9000
+        op: modify
+        select:
+          ref: self
+    kind: trigger
+    when:
+      event: attack
+      subject: self
+  civs:
+  - fire
+  cost: 2
+  id: dmd15-009
+  mana: 1
+  name: 砕神兵ガッツンダー
+  power: 1000
+  races:
+  - アーマロイド
+  source:
+    official: dmd15-009
+    review: pending
+    aliases:
+    - dm10-031
+    - dmc55-040
+  text: このクリーチャーは、タップされていないクリーチャーを攻撃できる。 / このクリーチャーがパワー6000以上のクリーチャーを攻撃する時、そのターン、このクリーチャーのパワーは+9000される。
+  types:
+  - creature
+- civs:
+  - fire
+  cost: 3
+  id: dmd15-011
+  keywords:
+  - charger
+  mana: 1
+  name: 勝負だ！チャージャー
+  source:
+    official: dmd15-011
+    review: pending
+    aliases:
+    - dmr03-013
+  spell:
+  - duration: end_of_turn
+    mod:
+      allow:
+      - action: attack_creature
+        other:
+          tapped: false
+    op: modify
+    select:
+      count: 1
+      filter:
+        types:
+        - creature
+      owner: you
+      zone: bz
+  text: このターン、バトルゾーンにある自分のクリーチャー１体は、タップされていないクリーチャーを攻撃できる。チャージャー（この呪文を唱えた後、墓地に置くかわりに自分のマナゾーンに置く）
+  types:
+  - spell
+- abilities:
+  - affects: self
+    kind: static
+    mod:
+      allow:
+      - action: attack_creature
+        other:
+          tapped: false
+  - effect:
+    - count: 1
+      modes:
+      - - body:
+          - as: t
+            op: choose
+            select:
+              count: 1
+              filter:
+                race_has: ドラゴン
+              look: true
+              owner: you
+              zone: deck
+          - op: move
+            reason: draw
+            select:
+              count: all
+              ref: t
+            to: hand
+          op: may
+        - op: shuffle
+      - - duration: end_of_turn
+          mod:
+            allow:
+            - action: attack_creature
+              other:
+                tapped: false
+            power: 2000
+          op: modify
+          select:
+            count: 1
+            filter:
+              types:
+              - creature
+            owner: you
+            zone: bz
+      op: modal
+    kind: trigger
+    when:
+      event: move
+      subject: self
+      to: graveyard
+    zone: graveyard
+  civs:
+  - fire
+  cost: 3
+  id: dmd15-012
+  mana: 1
+  name: スピア・ルピア
+  power: 1000
+  races:
+  - ファイアー・バード
+  source:
+    official: dmd15-012
+    review: pending
+    aliases:
+    - dm32-062
+    - dm32-062hc
+    - dmc62-017
+    - dmx09-037
+    - promoy13-013
+  text: このクリーチャーは、アンタップされているクリーチャーを攻撃できる。 / このクリーチャーが破壊された時、次のうちいずれかひとつを選ぶ。 ▼自分の山札を見る。その中からドラゴンを１体選び、相手に見せてから自分の手札に加えてもよい。その後、山札をシャッフルする。
+    ▼バトルゾーンにある自分のクリーチャー１体は、このターン、アンタップされているクリーチャーを攻撃でき、パワーが+2000される。
+  types:
+  - creature
+- abilities:
+  - affects: self
+    kind: static
+    mod:
+      power_when:
+        amount: 6000
+        when: attacking
+  - affects: self
+    kind: static
+    mod:
+      allow:
+      - action: attack_creature
+        other:
+          tapped: false
+  civs:
+  - fire
+  cost: 5
+  evolve_from:
+    civs:
+    - fire
+    types:
+    - creature
+  id: dmd21-002
+  keywords:
+  - triple_breaker
+  mana: 1
+  name: ゴウ・グラップラードラゴン
+  power: 6000
+  races:
+  - メガ・コマンド・ドラゴン
+  source:
+    official: dmd21-002
+    review: pending
+  text: 進化-自分の火のクリーチャー１体の上に置く。パワーアタッカー+6000（攻撃中、このクリーチャーのパワーは+6000される）このクリーチャーは、アンタップされているクリーチャーを攻撃できる。T・ブレイカー（このクリーチャーはシールドを３枚ブレイクする）
+  types:
+  - creature
+  - evolution
