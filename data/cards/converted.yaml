@@ -311974,3 +311974,741 @@ cards:
     / ▶相手は自身のクリーチャーをすべて破壊する。
   types:
   - spell
+- faces:
+  - abilities:
+    - affects:
+        filter:
+          types:
+          - spell
+        owner: you
+        zone: hand
+      kind: static
+      mod:
+        cost_may:
+          amount: 1
+          min: 1
+    civs:
+    - water
+    cost: 3
+    name: 氷牙フランツI世
+    power: 2000
+    races:
+    - サイバーロード
+    - ナイト
+    types:
+    - creature
+  - civs:
+    - water
+    cost: 5
+    keywords:
+    - s_trigger
+    name: 魔弾オープン・ブレイン
+    races:
+    - ナイト
+    spell:
+    - body:
+      - body:
+        - count: 1
+          op: draw
+        op: may
+      op: repeat
+      times: 2
+    - cond:
+        exists:
+          filter:
+            race_has: ナイト
+          owner: you
+          zone: bz
+      op: if
+      then:
+      - body:
+        - body:
+          - body:
+            - count: 1
+              op: draw
+            op: may
+          op: repeat
+          times: 2
+        op: may
+    types:
+    - spell
+  id: dm23bd6-055
+  mana: 1
+  source:
+    notes: 'ツインパクト。クリーチャー面のコスト軽減は「してもよい」なので cost_may（下限は原文の「０以下にはならない」から min: 1）。呪文面の「２枚まで引く」は
+      repeat 2 + may draw、ナイト・マジックはその複写を if + may で再実行（第97弾）'
+    official: dm23bd6-055
+    review: pending
+    aliases:
+    - dmex17-112
+  text: '氷牙フランツI世: 自分の呪文を唱えるコストを１少なくしてもよい。ただし、コストは０以下にはならない。 ／ 魔弾オープン・ブレイン: S・トリガー
+    / カードを２枚まで引く。 / ナイト・マジック'
+- civs:
+  - water
+  cost: 5
+  id: dm28-050
+  mana: 1
+  name: 魔弾ストリーム・サークル
+  races:
+  - ナイト
+  source:
+    official: dm28-050
+    review: pending
+  spell:
+  - op: bounce
+    select:
+      count: 1
+      filter:
+        types:
+        - creature
+        - cross_gear
+      owner: any
+      zone: bz
+  - cond:
+      exists:
+        filter:
+          race_has: ナイト
+        owner: you
+        zone: bz
+    op: if
+    then:
+    - body:
+      - op: bounce
+        select:
+          count: 1
+          filter:
+            types:
+            - creature
+            - cross_gear
+          owner: any
+          zone: bz
+      op: may
+  text: バトルゾーンにあるクリーチャー１体またはクロスギア１枚を選び、持ち主の手札に戻す。 / ナイト・マジック
+  types:
+  - spell
+- civs:
+  - light
+  cost: 2
+  id: dm28-077
+  mana: 1
+  name: 魔弾チェーン・スパーク
+  races:
+  - ナイト
+  source:
+    official: dm28-077
+    review: pending
+  spell:
+  - op: tap
+    select:
+      count: 1
+      filter:
+        types:
+        - creature
+      owner: opp
+      zone: bz
+  - cond:
+      exists:
+        filter:
+          race_has: ナイト
+        owner: you
+        zone: bz
+    op: if
+    then:
+    - body:
+      - op: tap
+        select:
+          count: 1
+          filter:
+            types:
+            - creature
+          owner: opp
+          zone: bz
+      op: may
+  text: バトルゾーンにある相手のクリーチャーを１体選び、タップする。 / ナイト・マジック
+  types:
+  - spell
+- civs:
+  - fire
+  cost: 2
+  id: dm30-051
+  mana: 1
+  name: 魔弾バクレツ・ストライク
+  races:
+  - ナイト
+  source:
+    official: dm30-051
+    review: pending
+  spell:
+  - duration: end_of_turn
+    mod:
+      grant:
+      - double_breaker
+      power: 3000
+    op: modify
+    select:
+      count: 1
+      filter:
+        types:
+        - creature
+      owner: you
+      zone: bz
+  - cond:
+      exists:
+        filter:
+          race_has: ナイト
+        owner: you
+        zone: bz
+    op: if
+    then:
+    - body:
+      - duration: end_of_turn
+        mod:
+          grant:
+          - double_breaker
+          power: 3000
+        op: modify
+        select:
+          count: 1
+          filter:
+            types:
+            - creature
+          owner: you
+          zone: bz
+      op: may
+  text: このターン、バトルゾーンにある自分のクリーチャー１体のパワーは+3000され、「W・ブレイカー」を得る。 / ナイト・マジック
+  types:
+  - spell
+- civs:
+  - fire
+  - nature
+  cost: 6
+  id: dm31-020
+  mana: 1
+  name: 魔弾ベター・トゥモロー
+  races:
+  - ナイト
+  source:
+    notes: '「マナゾーンに置く時、このカードはタップして置く」は多色カードのルール処理に委ね、text のみに残した（dm10-037 等の先例）。「シールドをさらに１枚ブレイクする」は
+      mod の breaks: 1（dm28-030 の先例）'
+    official: dm31-020
+    review: pending
+  spell:
+  - duration: end_of_turn
+    mod:
+      breaks: 1
+      power_when:
+        amount: 3000
+        when: attacking
+    op: modify
+    select:
+      count: all
+      filter:
+        types:
+        - creature
+      owner: you
+      zone: bz
+  - cond:
+      exists:
+        filter:
+          race_has: ナイト
+        owner: you
+        zone: bz
+    op: if
+    then:
+    - body:
+      - duration: end_of_turn
+        mod:
+          breaks: 1
+          power_when:
+            amount: 3000
+            when: attacking
+        op: modify
+        select:
+          count: all
+          filter:
+            types:
+            - creature
+          owner: you
+          zone: bz
+      op: may
+  text: マナゾーンに置く時、このカードはタップして置く。 / このターンの終わりまで、バトルゾーンにある自分のクリーチャーすべては「パワーアタッカー+3000」を得、シールドをさらに１枚ブレイクする。
+    / ナイト・マジック
+  types:
+  - spell
+- civs:
+  - fire
+  cost: 3
+  id: dm31-032
+  mana: 1
+  name: 魔弾クリティカル・デストロイヤー
+  races:
+  - ナイト
+  source:
+    official: dm31-032
+    review: pending
+  spell:
+  - op: destroy
+    select:
+      count: 1
+      filter:
+        keyword: blocker
+        types:
+        - creature
+      owner: opp
+      zone: bz
+  - cond:
+      exists:
+        filter:
+          race_has: ナイト
+        owner: you
+        zone: bz
+    op: if
+    then:
+    - body:
+      - op: destroy
+        select:
+          count: 1
+          filter:
+            keyword: blocker
+            types:
+            - creature
+          owner: opp
+          zone: bz
+      op: may
+  text: 相手の「ブロッカー」を持つクリーチャーを１体破壊する。 / ナイト・マジック
+  types:
+  - spell
+- civs:
+  - fire
+  cost: 5
+  id: dm31-051
+  mana: 1
+  name: 魔弾ソード・ランチャー
+  races:
+  - ナイト
+  source:
+    official: dm31-051
+    review: pending
+  spell:
+  - modes:
+    - - op: destroy
+        select:
+          count: 1
+          filter:
+            power_le: 3000
+            types:
+            - creature
+          owner: opp
+          zone: bz
+    - - op: move
+        reason: put
+        select:
+          count: 1
+          filter:
+            types:
+            - cross_gear
+          owner: opp
+          zone: bz
+        to: graveyard
+    op: modal
+  - cond:
+      exists:
+        filter:
+          race_has: ナイト
+        owner: you
+        zone: bz
+    op: if
+    then:
+    - body:
+      - modes:
+        - - op: destroy
+            select:
+              count: 1
+              filter:
+                power_le: 3000
+                types:
+                - creature
+              owner: opp
+              zone: bz
+        - - op: move
+            reason: put
+            select:
+              count: 1
+              filter:
+                types:
+                - cross_gear
+              owner: opp
+              zone: bz
+            to: graveyard
+        op: modal
+      op: may
+  text: 相手のパワー3000以下のクリーチャーを１体破壊するか、バトルゾーンににある相手のクロスギアを１枚選んで墓地に置く。 / ナイト・マジック
+  types:
+  - spell
+- civs:
+  - nature
+  cost: 4
+  id: dm31-055
+  mana: 1
+  name: 魔弾パンダフル・ライフ
+  races:
+  - ナイト
+  source:
+    official: dm31-055
+    review: pending
+  spell:
+  - op: move
+    reason: put
+    select:
+      from_top: 1
+      owner: you
+      zone: deck
+    to: mana
+  - cond:
+      exists:
+        filter:
+          race_has: ナイト
+        owner: you
+        zone: bz
+    op: if
+    then:
+    - body:
+      - op: move
+        reason: put
+        select:
+          from_top: 1
+          owner: you
+          zone: deck
+        to: mana
+      op: may
+  text: 自分の山札の上から１枚目を、マナゾーンに置く。 / ナイト・マジック
+  types:
+  - spell
+- abilities:
+  - affects: self
+    if:
+      not:
+        exists:
+          filter:
+            types:
+            - creature
+          owner: you
+          zone: bz
+    kind: static
+    mod:
+      cost: -1
+    zone: hand
+  civs:
+  - darkness
+  cost: 8
+  id: dmex17-056
+  mana: 1
+  name: 煉獄魔弾グレイテスト・ゲート
+  races:
+  - ナイト
+  source:
+    notes: 'コスト軽減は dmrp16-040 型（static + zone: hand + affects: self + if not exists）。ナイト・マジックで繰り返すのは墓地から出す能力のみ（原文の
+      k 能力）'
+    official: dmex17-056
+    review: pending
+  spell:
+  - op: move
+    reason: put
+    select:
+      count: 1
+      filter:
+        evolution: false
+        types:
+        - creature
+      owner: you
+      zone: graveyard
+    to: bz
+  - cond:
+      exists:
+        filter:
+          race_has: ナイト
+        owner: you
+        zone: bz
+    op: if
+    then:
+    - body:
+      - op: move
+        reason: put
+        select:
+          count: 1
+          filter:
+            evolution: false
+            types:
+            - creature
+          owner: you
+          zone: graveyard
+        to: bz
+      op: may
+  text: バトルゾーンに自分のクリーチャーがなければ、この呪文を唱えるコストを１少なくする。 / 進化ではないクリーチャーを１体、自分の墓地から出す。 / ナイト・マジック
+  types:
+  - spell
+- civs:
+  - light
+  cost: 3
+  id: dmpcd02-b02
+  mana: 1
+  name: 魔弾グローリー・ゲート
+  races:
+  - ナイト
+  source:
+    notes: '上３枚の処理は提督型（choose pile → ナイトを手札 → 残りを position: bottom, order: choose
+      で底へ。dmrp04m-006 の先例）'
+    official: dmpcd02-b02
+    review: pending
+    aliases:
+    - dmc46-003
+  spell:
+  - as: pile
+    op: choose
+    select:
+      count: all
+      from_top: 3
+      look: true
+      owner: you
+      zone: deck
+  - op: move
+    reason: return
+    select:
+      count: 1
+      filter:
+        race_has: ナイト
+      ref: pile
+    to: hand
+  - op: move
+    order: choose
+    position: bottom
+    reason: return
+    select:
+      count: all
+      ref: pile
+    to: deck
+  - cond:
+      exists:
+        filter:
+          race_has: ナイト
+        owner: you
+        zone: bz
+    op: if
+    then:
+    - body:
+      - as: pile
+        op: choose
+        select:
+          count: all
+          from_top: 3
+          look: true
+          owner: you
+          zone: deck
+      - op: move
+        reason: return
+        select:
+          count: 1
+          filter:
+            race_has: ナイト
+          ref: pile
+        to: hand
+      - op: move
+        order: choose
+        position: bottom
+        reason: return
+        select:
+          count: all
+          ref: pile
+        to: deck
+      op: may
+  text: 自分の山札の上から３枚を表向きにする。その中からナイトを１枚手札に加え、残りを好きな順序で山札の下に置く。 / ナイト・マジック
+  types:
+  - spell
+- civs:
+  - darkness
+  cost: 2
+  id: dmpcd02-b12
+  mana: 1
+  name: 魔弾ソウル・キャッチャー
+  races:
+  - ナイト
+  source:
+    official: dmpcd02-b12
+    review: pending
+    aliases:
+    - dm28-057
+    - dmc64-035
+  spell:
+  - op: move
+    reason: return
+    select:
+      count: 1
+      filter:
+        types:
+        - creature
+      owner: you
+      zone: graveyard
+    to: hand
+  - cond:
+      exists:
+        filter:
+          race_has: ナイト
+        owner: you
+        zone: bz
+    op: if
+    then:
+    - body:
+      - op: move
+        reason: return
+        select:
+          count: 1
+          filter:
+            types:
+            - creature
+          owner: you
+          zone: graveyard
+        to: hand
+      op: may
+  text: クリーチャーを１体、自分の墓地から手札に戻す。 / ナイト・マジック
+  types:
+  - spell
+- civs:
+  - water
+  cost: 5
+  id: dmpcd02-b14
+  keywords:
+  - s_trigger
+  mana: 1
+  name: 魔弾オープン・ブレイン
+  races:
+  - ナイト
+  source:
+    notes: 「２枚まで引く」は repeat 2 + may draw（dm21-040 の先例）
+    official: dmpcd02-b14
+    review: pending
+    aliases:
+    - dm28-085
+    - dmc64-039
+    - dmex03-066
+  spell:
+  - body:
+    - body:
+      - count: 1
+        op: draw
+      op: may
+    op: repeat
+    times: 2
+  - cond:
+      exists:
+        filter:
+          race_has: ナイト
+        owner: you
+        zone: bz
+    op: if
+    then:
+    - body:
+      - body:
+        - body:
+          - count: 1
+            op: draw
+          op: may
+        op: repeat
+        times: 2
+      op: may
+  text: 'S・トリガー（この呪文をシールドゾーンから手札に加える時、コストを支払わずにすぐ唱えてもよい）
+
+    kカードを２枚まで引く。
+
+    ナイト・マジック（バトルゾーンに自分のナイトがあれば、この呪文の k能力をもう一度使ってもよい）'
+  types:
+  - spell
+- civs:
+  - darkness
+  cost: 4
+  id: dmpcd02-b16
+  mana: 1
+  name: 魔弾デュアル・ザンジバル
+  races:
+  - ナイト
+  source:
+    official: dmpcd02-b16
+    review: pending
+    aliases:
+    - dm28-093
+  spell:
+  - duration: end_of_turn
+    mod:
+      power: -2000
+    op: modify
+    select:
+      count: 1
+      filter:
+        types:
+        - creature
+      owner: opp
+      zone: bz
+  - cond:
+      exists:
+        filter:
+          race_has: ナイト
+        owner: you
+        zone: bz
+    op: if
+    then:
+    - body:
+      - duration: end_of_turn
+        mod:
+          power: -2000
+        op: modify
+        select:
+          count: 1
+          filter:
+            types:
+            - creature
+          owner: opp
+          zone: bz
+      op: may
+  text: 相手のクリーチャーを１体選ぶ。このターン、そのクリーチャーのパワーを－2000する。 / ナイト・マジック
+  types:
+  - spell
+- civs:
+  - darkness
+  cost: 4
+  id: dmpcd02-b17
+  mana: 1
+  name: 魔弾バレット・バイス
+  races:
+  - ナイト
+  source:
+    notes: '捨てるカードの選択者は相手なので chooser: opp を明示した'
+    official: dmpcd02-b17
+    review: pending
+    aliases:
+    - dm29-047
+    - dmex01-035
+  spell:
+  - op: discard
+    select:
+      chooser: opp
+      count: 1
+      owner: opp
+      zone: hand
+  - cond:
+      exists:
+        filter:
+          race_has: ナイト
+        owner: you
+        zone: bz
+    op: if
+    then:
+    - body:
+      - op: discard
+        select:
+          chooser: opp
+          count: 1
+          owner: opp
+          zone: hand
+      op: may
+  text: 相手は自身の手札を１枚選び、捨てる。 / ナイト・マジック
+  types:
+  - spell
