@@ -858,3 +858,10 @@ converted の監査（opt_reduce の素の整数表記9件）から。任意形�
 - 書き方: keywords: [summon_from_mana, summon_from_graveyard]
 - tests/test_vocab_pilot72.py 2件（正常 parse／検証）
 - 待機15枚（summon_from_mana_or_graveyard のみが gap のもの）。
+
+## 第73弾: zone_count_comparison（ゾーン枚数の相手比較）— 新語彙なし（2026-11-05）
+「自分の〜が相手より少ない場合」は既存の cmp + count（owner: you / opp）で表せる。
+- 書き方: if: {cmp: [{count: {zone: hand, owner: you}}, "<", {count: {zone: hand, owner: opp}}]}
+- 「多い場合」は ">"、「以下／以上」は "<=" / ">="。
+- tests/test_vocab_pilot73.py 2件（正常 parse／検証）
+- 待機15枚（zone_count_comparison のみが gap のもの）。
