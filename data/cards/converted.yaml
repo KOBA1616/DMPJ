@@ -301768,3 +301768,566 @@ cards:
   text: このクリーチャーがバトルゾーンにある間、バトルゾーンにある自分のドラゴン以外のクリーチャーはすべて「パワーアタッカー+4000」を得る。
   types:
   - creature
+- abilities:
+  - effect:
+    - as: milled
+      op: move
+      reason: put
+      select:
+        from_top: 1
+        owner: opp
+        zone: deck
+      to: graveyard
+    - op: bounce
+      select:
+        count: 1
+        filter:
+          cost_le:
+            cost_of:
+              ref: milled
+        owner: opp
+        zone: bz
+    kind: trigger
+    when:
+      event: move
+      subject: self
+      to: bz
+  civs:
+  - water
+  cost: 3
+  id: dm24ex1-038
+  keywords:
+  - s_trigger
+  - blocker
+  mana: 1
+  name: 冥土人形ウォカンナ・ピエール
+  power: 2000
+  races:
+  - デスパペット
+  source:
+    official: dm24ex1-038
+    review: pending
+  text: 'S・トリガー
+
+    ブロッカー
+
+    このクリーチャーが出た時、相手は自身の山札の上から１枚目を墓地に置く。そのカード以下のコストを持つ相手のエレメントを１つ選び、持ち主の手札に戻す。'
+  types:
+  - creature
+- civs:
+  - water
+  - nature
+  cost: 5
+  id: dm24ex2-cho014
+  keywords:
+  - s_trigger
+  mana: 1
+  name: ドンドン水撒くナウ
+  source:
+    official: dm24ex2-cho014
+    review: pending
+    aliases:
+    - dmbd13-011
+    - dmbd18-009
+    - dmex06-015
+    - dmrp19-a19
+    - dmrp19-b19
+  spell:
+  - op: move
+    reason: put
+    select:
+      from_top: 2
+      owner: you
+      zone: deck
+    tapped: true
+    to: mana
+  - as: c
+    op: move
+    reason: return
+    select:
+      count: 1
+      filter:
+        types:
+        - creature
+      owner: you
+      zone: mana
+    to: hand
+  - body:
+    - op: bounce
+      select:
+        count: 1
+        filter:
+          cost_le:
+            cost_of:
+              ref: c
+          types:
+          - creature
+        owner: opp
+        zone: bz
+    op: may
+  text: 'S・トリガー
+
+    自分の山札の上から２枚を、タップしてマナゾーンに置く。
+
+    クリーチャーを１体、自分のマナゾーンから手札に戻す。その後、そのクリーチャー以下のコストの相手のクリーチャーを１体選び、持ち主の手札に戻してもよい。'
+  types:
+  - spell
+- abilities:
+  - effect:
+    - as: t
+      op: choose
+      select:
+        count: 1
+        filter:
+          tapped: false
+          types:
+          - creature
+        owner: opp
+        zone: bz
+    - op: destroy
+      select:
+        ref: t
+    - op: move
+      reason: put
+      select:
+        count: 1
+        filter:
+          cost_le:
+            cost_of:
+              ref: t
+          types:
+          - creature
+        owner: you
+        zone: graveyard
+      to: bz
+    kind: trigger
+    when:
+      event: move
+      subject: self
+      to: bz
+  civs:
+  - darkness
+  cost: 6
+  id: dm24ex4-046
+  keywords:
+  - s_trigger
+  mana: 1
+  name: 機怪人形ガチャック2
+  power: 2000
+  races:
+  - デスパペット
+  source:
+    official: dm24ex4-046
+    review: pending
+    aliases:
+    - dm24ex3-019
+    - dm24ex4-pr006
+    - dm24rp1-019
+    - spdeck13-010
+  text: 'S・トリガー
+
+    このクリーチャーが出た時、相手のアンタップしているクリーチャーを１体選び、破壊する。その後、選んだクリーチャー以下のコストのクリーチャーを１体、自分の墓地から出す。'
+  types:
+  - creature
+- abilities:
+  - effect:
+    - as: t
+      op: choose
+      select:
+        count: 1
+        filter:
+          types:
+          - creature
+        other: true
+        owner: any
+        zone: bz
+    - op: bounce
+      select:
+        ref: t
+    - body:
+      - op: move
+        reason: put
+        select:
+          count: 1
+          filter:
+            cost_le:
+              sum:
+              - cost_of:
+                  ref: t
+              - -1
+            types:
+            - creature
+          owner: you
+          zone: hand
+        to: bz
+      op: may
+    kind: trigger
+    when:
+      event: move
+      subject: self
+      to: bz
+  civs:
+  - water
+  cost: 8
+  id: dm25ex1-041
+  mana: 1
+  name: スクリプト
+  power: 3000
+  races:
+  - サイバーロード
+  source:
+    notes: 「よりコストが小さい」は cost_le に sum（cost_of - 1）の式を書く既存パターン（vocab-pilot.md の cost_lt_count
+      の項）で表した
+    official: dm25ex1-041
+    review: pending
+    aliases:
+    - dm22ex1-045
+    - dmr08-010
+  text: このクリーチャーが出た時、他のクリーチャーを１体選び、持ち主の手札に戻す。その後、そのクリーチャーよりコストが小さいクリーチャーを１体、自分の手札から出してもよい。
+  types:
+  - creature
+- civs:
+  - water
+  - darkness
+  - fire
+  cost: 5
+  id: dm25ex3-rp3010
+  keywords:
+  - s_trigger
+  mana: 1
+  name: 邪悪発動
+  source:
+    official: dm25ex3-rp3010
+    review: pending
+    aliases:
+    - dm25rp3-010
+  spell:
+  - count: 3
+    op: draw
+  - as: d
+    op: discard
+    select:
+      count: 1
+      owner: you
+      zone: hand
+  - body:
+    - op: destroy
+      select:
+        count: 1
+        filter:
+          cost_le:
+            cost_of:
+              ref: d
+          types:
+          - creature
+        owner: opp
+        zone: bz
+    op: may
+  - duration: end_of_turn
+    mod:
+      deny:
+      - attack_player
+      - attack_creature
+      - block
+    op: modify
+    select:
+      count: all
+      filter:
+        cost_ge:
+          cost_of:
+            ref: d
+        types:
+        - creature
+      owner: opp
+      zone: bz
+  text: 'S・トリガー
+
+    カードを３枚引き、自分の手札を１枚捨てる。こうして捨てたカード以下のコストを持つ相手のクリーチャーを１体選び、破壊してもよい。このターン、こうして捨てたカード以上のコストを持つ相手のクリーチャーは、攻撃もブロックもできない。'
+  types:
+  - spell
+- abilities:
+  - affects: self
+    if:
+      cmp:
+      - sum:
+        - count:
+            filter:
+              types:
+              - creature
+            owner: you
+            zone: bz
+        - count:
+            filter:
+              types:
+              - creature
+            owner: you
+            zone: mana
+      - '>='
+      - 5
+    kind: static
+    mod:
+      grant:
+      - s_trigger
+    zone: shield
+  civs:
+  - light
+  - fire
+  - nature
+  cost: 3
+  id: dm25ex3-rp4s09
+  mana: 1
+  name: 皇天闘と炎天華の決断
+  source:
+    official: dm25ex3-rp4s09
+    review: pending
+    aliases:
+    - dm25ex3-rp4sec10
+    - dm25rp4-s09
+    - dm25rp4-sec10
+  spell:
+  - count: 2
+    modes:
+    - - as: pile
+        op: choose
+        select:
+          count: all
+          from_top: 2
+          look: true
+          owner: you
+          zone: deck
+      - as: a
+        op: choose
+        select:
+          count: any
+          filter:
+            types:
+            - creature
+          ref: pile
+      - op: move
+        reason: draw
+        select:
+          count: all
+          ref: a
+        to: hand
+      - op: move
+        order: choose
+        position: bottom
+        reason: put
+        select:
+          count: all
+          ref: pile
+        to: deck
+    - - as: d
+        op: discard
+        select:
+          count: 1
+          owner: you
+          zone: hand
+      - op: destroy
+        select:
+          count: 1
+          filter:
+            cost_le:
+              cost_of:
+                ref: d
+            types:
+            - creature
+          owner: opp
+          zone: bz
+    - - op: move
+        reason: charge
+        select:
+          count: 1
+          owner: you
+          zone: hand
+        to: shield
+    op: modal
+    repeat: true
+  text: バトルゾーンとマナゾーンに、自分のクリーチャーが合計５体以上あれば、自分のシールドゾーンにあるこの呪文に「S・トリガー」を与える。 / 次の中から２回選ぶ。（同じものを選んでもよい）
+    / ▶自分の山札の上から２枚を表向きにする。その中から好きな枚数のクリーチャーを手札に加え、残りを好きな順序で山札の下に置く。 / ▶自分の手札を１枚捨てる。こうして捨てたカード以下のコストの相手のクリーチャーを１体選び、破壊する。
+    / ▶自分の手札を１枚シールド化する。
+  types:
+  - spell
+- civs:
+  - water
+  - fire
+  - nature
+  cost: 5
+  id: dm26ex2-050
+  keywords:
+  - s_trigger
+  mana: 1
+  name: ドンドン火噴くナウ
+  source:
+    official: dm26ex2-050
+    review: pending
+    aliases:
+    - dm22ex1-cho33
+    - dm23bd6-044
+    - dm23ex2-cho025
+    - dm26sd1-b012
+    - dmart03-002
+    - dmbd19-010
+    - dmrp17-029
+    - dmrp17-a08
+    - dmrp17-b08
+    - promoy21-029
+    - promoy21-058
+  spell:
+  - as: pile
+    op: choose
+    select:
+      count: all
+      from_top: 3
+      look: true
+      owner: you
+      zone: deck
+  - as: m
+    op: choose
+    select:
+      count: 1
+      ref: pile
+  - op: move
+    reason: put
+    select:
+      count: all
+      ref: m
+    to: mana
+  - as: h
+    op: choose
+    select:
+      count: 1
+      ref: pile
+  - op: move
+    reason: draw
+    select:
+      count: all
+      ref: h
+    to: hand
+  - as: g
+    op: move
+    reason: put
+    select:
+      count: all
+      ref: pile
+    to: graveyard
+  - op: destroy
+    select:
+      count: 1
+      filter:
+        cost_le:
+          cost_of:
+            ref: g
+        types:
+        - creature
+      owner: opp
+      zone: bz
+  text: 'S・トリガー
+
+    自分の山札の上から３枚を見る。その中から１枚をマナゾーンに置き、１枚を手札に加え、残りの１枚を墓地に置く。こうして墓地に置いたカード以下のコストの相手のクリーチャーを１体選び、破壊する。'
+  types:
+  - spell
+- abilities:
+  - effect:
+    - op: move
+      reason: put
+      select:
+        from_top: 1
+        owner: you
+        zone: deck
+      tapped: true
+      to: mana
+    - as: d
+      op: move
+      reason: return
+      select:
+        count: 1
+        filter:
+          race_has: ドラゴン
+          types:
+          - creature
+        owner: you
+        zone: mana
+      to: hand
+    - op: bounce
+      select:
+        count: 1
+        filter:
+          cost_le:
+            cost_of:
+              ref: d
+          types:
+          - creature
+        owner: opp
+        zone: bz
+    kind: trigger
+    when:
+      event: move
+      subject: self
+      to: bz
+  civs:
+  - water
+  - nature
+  cost: 5
+  id: dm26ex3-081
+  keywords:
+  - s_trigger
+  - blocker
+  mana: 1
+  name: 流星アーシュ
+  power: 5000
+  races:
+  - ブルー・コマンド・ドラゴン
+  - グリーン・コマンド・ドラゴン
+  - ハンター
+  source:
+    official: dm26ex3-081
+    review: pending
+    aliases:
+    - dm24sp1-013
+    - dm24sp1-td005
+    - dm25ex3-rp2tr9
+    - dm25rp2-tr09
+    - dm26sd1-h014
+    - promoy23-012
+  text: 'S・トリガー
+
+    ブロッカー
+
+    このクリーチャーが出た時、自分の山札の上から１枚をタップしてマナゾーンに置き、その後、ドラゴン・クリーチャーを１体、自分のマナゾーンから手札に戻す。そのドラゴン以下のコストの相手のクリーチャーを１体選び、持ち主の手札に戻す。'
+  types:
+  - creature
+- civs:
+  - fire
+  cost: 1
+  id: dm26sd1-e014
+  keywords:
+  - s_trigger
+  mana: 1
+  name: 最期の竜炎
+  source:
+    official: dm26sd1-e014
+    review: pending
+    aliases:
+    - dm24rp3-071
+  spell:
+  - as: d
+    op: discard
+    select:
+      count: 1
+      owner: you
+      zone: hand
+  - op: destroy
+    select:
+      count: 1
+      filter:
+        cost_le:
+          cost_of:
+            ref: d
+      owner: opp
+      zone: bz
+  text: 'S・トリガー（このカードを自分のシールドゾーンから手札に加える時、コストを支払わずにすぐ実行してもよい）
+
+    自分の手札を１枚捨てる。こうして捨てたカード以下のコストの相手のエレメントを１つ選び、破壊する。'
+  types:
+  - spell
