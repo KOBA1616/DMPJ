@@ -82,3 +82,19 @@ def test_scan_pair_report_separates_working_and_failing_places():
     x = adv.scan_pair_report(rules, t.K, t.D, base={"mana": [t.D] * 3}, opp={"bz": ["T001"]}, places=("hand", "graveyard", "mana"), seeds=(1,))
     assert {(w["place_a"], w["place_b"]) for w in x["works"]} == {("hand", "hand"), ("hand", "graveyard")}
     assert len(x["fails"]) == 7 and all(f["S"] <= 1e-9 or not f["causal_links"] for f in x["fails"])
+
+
+def test_audit_catches_a_duplicated_trigger_and_passes_the_fixed_card():
+    import copy
+    import pathlib
+    import tempfile
+    import test_dmc_knight as t
+    from dmsim.discovery import audit
+    rules = t._small_rules(pathlib.Path(tempfile.mkdtemp()))
+    assert audit.audit_card(rules, t.D)["ok"] is True                 # 原文どおり 2枚引く
+    cd = rules.cards[t.D]
+    cd.abilities.append(copy.deepcopy(next(a for a in cd.abilities if a.get("effect") == [{"op": "draw", "count": 2}])))   # 二重登録を再現
+    bad = audit.audit_card(rules, t.D)
+    assert bad["ok"] is False and bad["measured"]["draws"] == 4
+    assert audit.predict_cip("このクリーチャーが出た時、カードを２枚引く。") == {"draws": 2, "discards": 0}
+    assert audit.predict_cip("このクリーチャーが出た時、カードを２枚引いてもよい。") is None   # 条件つきは予測しない

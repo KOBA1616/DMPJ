@@ -219239,14 +219239,6 @@ cards:
     effect:
     - op: draw
       count: 2
-  - kind: trigger
-    when:
-      event: move
-      to: bz
-      subject: self
-    effect:
-    - op: draw
-      count: 2
   text: 'ムゲンクライム ２（自分のクリーチャーを２体タップし、 [ww02]支払って、このクリーチャーを自分の手札または墓地から召喚してもよい）
 
     このクリーチャーが出た時、カードを２枚引く。'
@@ -240990,14 +240982,6 @@ cards:
 
     自分が呪文を唱えた時、相手のクリーチャーを１体選ぶ。次の自分のターンのはじめまで、そのクリーチャーは攻撃もブロックもできない。'
   abilities:
-  - kind: trigger
-    when:
-      event: move
-      to: bz
-      subject: self
-    effect:
-    - op: draw
-      count: 2
   - kind: trigger
     when:
       event: move
