@@ -1207,3 +1207,7 @@ draw イベントへの置換で表す（draw は個別イベントとして発�
 ### 第124弾 holy_field（2026-11-05）
 - 「ホーリー・フィールド（自分のシールドの数が相手以上であれば、このクリーチャーは次の能力を得る）」は新語彙なし。得る能力そのものに if: {cmp: [{count: {zone: shield, owner: you}}, ">=", {count: {zone: shield, owner: opp}}]} を付ける（第73弾のゾーン枚数比較＋第97弾の条件つき能力）。静的なら static の if、誘発なら trigger の if。
 - tests/test_vocab_pilot124.py 3件（static parse、trigger parse、実カード dm36-072 の原文確認）。
+
+### 第125弾 civilization_count（2026-11-05）
+- 「自分のマナゾーンにある文明ひとつにつき」「文明の数以下のコスト」は既存の式 civ_count で表す（新語彙なし）。{civ_count: {zone: mana, owner: you}} は対象群にある文明の種類数（多色は持つ文明をすべて数える）。mod の count（パワー+N×種類数）、filter の cost_le 等の式、cmp の項（相手との比較）に使える。
+- tests/test_vocab_pilot125.py 3件（power の count、filter の cost_le、cmp の項、それぞれ parse）。
