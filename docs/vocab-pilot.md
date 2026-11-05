@@ -941,3 +941,9 @@ converted の監査（opt_reduce の素の整数表記9件）から。任意形�
 - 書き方: evolve_from: {<filter>}, evolve_count: N（重ねる進化元の体数）。
 - tests/test_vocab_pilot84.py 2件（正常 parse／検証）
 - 待機12枚（evolution_gv のみが gap のもの）。
+
+## 第85弾: cost_lt_card（そのカードよりコストが小さい）— 新語彙なし（2026-11-05）
+「そのカードよりコストが小さい〜」は cost_le に sum 式を書く確立済みイディオムで表せる。
+- 書き方: filter: {cost_le: {sum: [{cost_of: {ref: 束縛変数}}, -1]}}（第65弾 cost_gt_count の項と対）。
+- tests/test_vocab_pilot85.py 2件（正常 parse／検証）
+- 待機12枚（cost_lt_card のみが gap のもの）。
