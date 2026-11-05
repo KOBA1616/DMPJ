@@ -825,3 +825,9 @@ converted の監査（opt_reduce の素の整数表記9件）から。任意形�
 - 「攻撃するかわりに」は activate のコストとして表現（エンジンが攻撃の代わりに発動することを処理）。
 - tests/test_vocab_pilot67.py 2件（正常 parse／検証）
 - 待機13枚（tap_activated_ability のみが gap のもの）。
+
+## 第68弾: wave_striker（ウェーブストライカー）— 新語彙なし（2026-11-05）
+「ウェーブストライカー」は既存のキーワード（keywords.yaml に定義済み）。条件付き能力の付与は if で表す。
+- 書き方: keywords: [wave_striker]、続く能力に `if: {cmp: [{count: {zone: bz, owner: any, other: true, filter: {keyword: wave_striker}}}, ">=", 2]}` を付ける。
+- tests/test_vocab_pilot68.py 2件（正常 parse／検証）
+- 待機13枚（wave_striker のみが gap のもの）。
