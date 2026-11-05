@@ -2,6 +2,7 @@
 
 選択フィルタ側の cost_le に式 {cost_of: {ref: t}} を渡すことで
 「そのカードのコスト以下のカード」を表す（第82弾のイディオム）。
+選択は op に select を埋め込む形（move + select + as で束縛）。
 新語彙なし。
 """
 from dmsim.defs import load_tables, parse_card
@@ -16,19 +17,18 @@ CARD = {
     "cost": 4,
     "power": None,
     "races": [],
-    "text": "自分の手札を1枚捨てる。そのコスト以下の進化ではないクリーチャーを1体、自分の山札から選び、相手に見せて、手札に加える。",
+    "text": "自分の手札を1枚捨てる。そのコスト以下のクリーチャーを1体、自分の山札から選び、手札に加える。",
     "spell": [
-        {"op": "select",
+        {"op": "move",
          "select": {"zone": "hand", "owner": "you", "count": 1},
          "as": "t",
-         "then": [{"op": "move", "ref": "t", "to": "graveyard",
-                   "reason": "discard"}]},
-        {"op": "select",
+         "to": "graveyard", "reason": "discard"},
+        {"op": "move",
          "select": {"zone": "deck", "owner": "you",
                     "filter": {"civs": ["water"],
                                "cost_le": {"cost_of": {"ref": "t"}}},
                     "count": 1},
-         "then": [{"op": "move", "to": "hand", "reason": "put"}]},
+         "to": "hand", "reason": "put"},
     ],
     "source": {"official": "test-clc2", "review": "pending"},
 }
