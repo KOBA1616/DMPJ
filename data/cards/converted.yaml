@@ -316795,3 +316795,274 @@ cards:
     自分の山札の上から１枚目を墓地に置く。そのカード以下のコストを持つ相手のクリーチャーを１体破壊する。'
   types:
   - spell
+- abilities:
+  - affects:
+      filter:
+        civs:
+        - light
+        - water
+        keyword: blocker
+      owner: you
+      zone: shield
+    kind: static
+    mod:
+      grant:
+      - s_trigger
+  civs:
+  - light
+  - water
+  cost: 5
+  id: dmex11-023
+  mana: 1
+  name: 電脳護聖ビョイト
+  power: 4000
+  races:
+  - ガーディアン
+  - サイバーロード
+  - アンノイズ
+  source:
+    official: dmex11-023
+    review: pending
+    aliases:
+    - dmx08-023
+  text: 自分の手札に加える、「ブロッカー」を持つ光または水のシールドカードすべてに、「S・トリガー」を与える。
+  types:
+  - creature
+- civs:
+  - light
+  cost: 3
+  id: dmex12-028
+  keywords:
+  - s_trigger
+  mana: 1
+  name: 星龍の記憶
+  source:
+    notes: '「次の自分のターンの終わりまで」は duration の固定値に無いため、dmex17-082 の先例どおり、次の自分のターンのはじめまでの
+      modify と、ターン開始時に end_of_turn の modify を掛け直す delayed_trigger の複合で表した。対象はシールドゾーン全体で、期間中に新たに置かれたシールドにも及ぶよう
+      dynamic: true を付けた'
+    official: dmex12-028
+    review: pending
+    aliases:
+    - dm29-008
+    - dmx10-019
+    - dmx22b-054
+  spell:
+  - duration: until_next_own_turn_start
+    dynamic: true
+    mod:
+      grant:
+      - s_trigger
+    op: modify
+    select:
+      count: all
+      owner: you
+      zone: shield
+  - duration: permanent
+    effect:
+    - duration: end_of_turn
+      dynamic: true
+      mod:
+        grant:
+        - s_trigger
+      op: modify
+      select:
+        count: all
+        owner: you
+        zone: shield
+    op: delayed_trigger
+    when:
+      event: turn_start
+      player: you
+  text: 'S・トリガー（この呪文をシールドゾーンから手札に加える時、コストを支払わずにすぐ唱えてもよい）
+
+    次の自分のターンの終わりまで、自分の手札に加えるシールドカードすべてに「S・トリガー」を与える。'
+  types:
+  - spell
+- civs:
+  - light
+  cost: 7
+  id: dmrp02-015
+  keywords:
+  - super_s_trigger
+  mana: 1
+  name: ルクショップ・チェサイズ
+  source:
+    notes: 'oB 能力は sst_spell に置いた。付与はシールドゾーンの光のカード全体への modify（duration: until_next_own_turn_start）で、期間中に新たに置かれたシールドにも及ぶよう
+      dynamic: true を付けた'
+    official: dmrp02-015
+    review: pending
+    aliases:
+    - promoy16-026
+    - promoy16-027
+  spell:
+  - as: pile
+    op: choose
+    select:
+      count: all
+      from_top: 2
+      look: true
+      owner: you
+      zone: deck
+  - op: move
+    reason: draw
+    select:
+      count: 1
+      ref: pile
+    to: hand
+  - op: move
+    reason: charge
+    select:
+      count: all
+      ref: pile
+    to: shield
+  sst_spell:
+  - duration: until_next_own_turn_start
+    dynamic: true
+    mod:
+      grant:
+      - s_trigger
+    op: modify
+    select:
+      count: all
+      filter:
+        civs:
+        - light
+      owner: you
+      zone: shield
+  text: スーパー・S・トリガー / 自分の山札の上から２枚を見る。そのうちの１枚を自分の手札に加え、もう１枚を裏向きにして、新しいシールドとして自分のシールドゾーンに加える。
+    / oB 次の自分のターンのはじめまで、自分の手札に加える光のシールドカードすべてに「S・トリガー」を与える。
+  types:
+  - spell
+- civs:
+  - light
+  - water
+  cost: 2
+  id: dmrp13-085
+  mana: 1
+  name: 銀・河・出・撃
+  races:
+  - チーム銀河
+  source:
+    notes: '選んだシールドの「カードすべて」を表すため、シールドの表のカード（ref: sh）とその下に重なっているカード（under_of: sh）の両方に
+      modify で付与した'
+    official: dmrp13-085
+    review: pending
+  spell:
+  - as: sh
+    op: choose
+    select:
+      count: 1
+      owner: you
+      zone: shield
+  - duration: until_next_own_turn_start
+    mod:
+      grant:
+      - s_trigger
+    op: modify
+    select:
+      ref: sh
+  - duration: until_next_own_turn_start
+    mod:
+      grant:
+      - s_trigger
+    op: modify
+    select:
+      under_of: sh
+  - count: 1
+    op: draw
+  text: 自分のシールドを１つ選ぶ。次の自分のターンのはじめまで、そのシールドのカードすべてに「S・トリガー」を与える。 / カードを１枚引く。
+  types:
+  - spell
+- abilities:
+  - effect:
+    - body:
+      - op: play_free
+        select:
+          ref: self
+      op: may
+    kind: declare
+    when:
+      event: attack
+      subject:
+        filter:
+          civs_all:
+          - light
+          - darkness
+          - fire
+          race_has: ディスペクター
+        owner: you
+    zone: hand
+  civs:
+  - light
+  - darkness
+  - fire
+  cost: 6
+  id: dmrp18-010
+  mana: 1
+  name: 聖魔王秘伝ロストパラダイスワルツ
+  source:
+    notes: 'アタック・チャンスは dm22ex1-cho10 の先例どおり declare＋play_free で表し、攻撃クリーチャーの条件は race_has:
+      ディスペクター と civs_all（光・闇・火すべて）で表した。付与はシールドゾーンのコスト８以下のカード全体への modify で、期間中に新たに置かれたシールドにも及ぶよう
+      dynamic: true を付けた'
+    official: dmrp18-010
+    review: pending
+  spell:
+  - duration: until_next_own_turn_start
+    dynamic: true
+    mod:
+      grant:
+      - s_trigger
+    op: modify
+    select:
+      count: all
+      filter:
+        cost_le: 8
+      owner: you
+      zone: shield
+  - count: 1
+    op: break
+    player: you
+  - count: 1
+    op: break
+    player: opp
+  text: アタック・チャンス：光と闇と火を持つディスペクター / 次の自分のターンのはじめまで、自分の手札に加える、コスト８以下のシールドカードすべてに、「S・トリガー」を与える。
+    / 自分のシールドを１つブレイクする。その後、相手のシールドを１つブレイクする。
+  types:
+  - spell
+- abilities:
+  - affects:
+      owner: you
+      zone: shield
+    kind: static
+    mod:
+      grant:
+      - s_trigger
+  civs: []
+  cost: 10
+  id: dmsp02-008
+  keywords:
+  - g_strike
+  - blocker
+  - triple_breaker
+  - eternal_omega
+  mana: 1
+  name: 「俺」の頂 ライオネル GS
+  power: 13000
+  races:
+  - アンノウン
+  - ゼニス
+  source:
+    notes: 文明はゼロ＝無色のため、dm23ex3-tr06（「俺」の頂 ライオネル）の先例どおり civs を空にした
+    official: dmsp02-008
+    review: pending
+  text: '{GS} G・ストライク（このクリーチャーを自分のシールドゾーンから手札に加える時、相手に見せ、相手のクリーチャーを１体選んでもよい。このターン、そのクリーチャーは攻撃できない）
+
+    ブロッカー
+
+    T・ブレイカー
+
+    自分の手札に加えるシールドカードすべてに「S・トリガー」を与える。
+
+    エターナル・Ω（このクリーチャーが離れる時、かわりに手札に戻す）'
+  types:
+  - creature
