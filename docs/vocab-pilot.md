@@ -852,3 +852,9 @@ converted の監査（opt_reduce の素の整数表記9件）から。任意形�
 - 種族はカードごとに異なるためキーワード化せず、パターンとして各カードに書く。
 - tests/test_vocab_pilot71.py 2件（正常 parse／検証）
 - 待機12枚（l_gate のみが gap のもの）。
+
+## 第72弾: summon_from_mana_or_graveyard（マナゾーンまたは墓地から召喚）— 新語彙なし（2026-11-05）
+「このクリーチャーを、自分のマナゾーンまたは墓地から召喚してもよい」は既存キーワード2つの併記で表せる。
+- 書き方: keywords: [summon_from_mana, summon_from_graveyard]
+- tests/test_vocab_pilot72.py 2件（正常 parse／検証）
+- 待機15枚（summon_from_mana_or_graveyard のみが gap のもの）。
