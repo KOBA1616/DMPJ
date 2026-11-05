@@ -1005,3 +1005,9 @@ converted の監査（opt_reduce の素の整数表記9件）から。任意形�
 - 書き方: kind: replace, when: {event: move, to: bz, subject: {owner: opp, filter: {...}}}, instead: [move {ref: event.subject} to: <置換先>]。「置かせてもよい」は optional: true。
 - tests/test_vocab_pilot94.py 2件（正常 parse／検証）
 - 待機18枚（entry_replacement のみが gap のもの）。
+
+## 第95弾: mana_evolution（マナ進化）— 新語彙なし（2026-11-05）
+「マナ進化：〜を自分のマナゾーンから選び、このクリーチャーをその上に重ねつつ出す」は evolve_zone で表せる（墓地進化の先例）。
+- 書き方: types に evolution を含め、evolve_from: {<進化元の条件>}、evolve_zone: mana。
+- tests/test_vocab_pilot95.py 2件（正常 parse／検証）
+- 待機16枚（mana_evolution のみが gap のもの）。
