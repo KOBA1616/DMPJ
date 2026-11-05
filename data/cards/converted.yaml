@@ -323703,3 +323703,129 @@ cards:
     自分の《ボルメテウス・武者・ドラゴン》が攻撃する時、自分の山札の上から１枚目を裏向きのままシールドに加えてもよい。
   types:
   - creature
+- civs:
+  - nature
+  cost: 4
+  id: dm24sp2-009
+  keywords:
+  - g_strike
+  mana: 1
+  name: 「これは命懸けのデュエルなのです」
+  source:
+    official: dm24sp2-009
+    review: pending
+    aliases:
+    - dm24sp2-td04
+  spell:
+  - face_down: true
+    op: move
+    reason: put
+    select:
+      from_top: 2
+      owner: you
+      zone: deck
+    to: mana
+  text: '{GS} G・ストライク（この呪文を自分のシールドゾーンから手札に加える時、表向きにし、相手のクリーチャーを１体選んでもよい。このターン、そのクリーチャーは攻撃できない）
+
+    自分の山札の上から２枚を裏向きのままマナゾーンに置く。（マナゾーンにある裏向きのカードは、マナの数字が１の無色カードとして扱う。その持ち主はそれをいつでも見てもよい）'
+  types:
+  - spell
+- abilities:
+  - effect:
+    - body:
+      - op: flip_down
+        select:
+          count: 1
+          owner: you
+          zone: mana
+      op: may
+    kind: trigger
+    when:
+      event: move
+      subject: self
+      to: bz
+  - affects:
+      filter:
+        any_of:
+        - race_has: アンノウン
+        - race_has: ゼニス
+        types:
+        - creature
+      owner: you
+      zone: hand
+    kind: static
+    mod:
+      cost: -2
+  civs:
+  - zero
+  cost: 3
+  id: dm24sp2-011
+  mana: 1
+  name: 奪取のクリス アラカン
+  power: 3000
+  races:
+  - オラクル・セレス
+  source:
+    official: dm24sp2-011
+    review: pending
+    aliases:
+    - dm23ex3-051
+  text: このクリーチャーが出た時、自分のマナゾーンにあるカードを１枚、裏向きにしてもよい。 / 自分のアンノウン・クリーチャーとゼニス・クリーチャーの召喚コストを２少なくする。ただし、コストは０以下にはならない。
+  types:
+  - creature
+- civs:
+  - nature
+  cost: 2
+  id: dm24sp2-013
+  keywords:
+  - s_trigger
+  mana: 1
+  name: 「この私のために華を咲かすのだ！」
+  source:
+    official: dm24sp2-013
+    review: pending
+    aliases:
+    - dm23ex3-073
+    - promoy23-055
+  spell:
+  - face_down: true
+    op: move
+    reason: put
+    select:
+      from_top: 1
+      owner: you
+      zone: deck
+    to: mana
+  text: 'S・トリガー（この呪文をシールドゾーンから手札に加える時、コストを支払わずにすぐ唱えてもよい）
+
+    自分の山札の上から１枚目を、裏向きのままマナゾーンに置く。（マナゾーンにある裏向きのカードは、マナの数字が１の無色カードとして扱う。その持ち主はそれをいつでも見てもよい）'
+  types:
+  - spell
+- civs:
+  - zero
+  cost: 2
+  id: dm25ex2-086
+  keywords:
+  - s_trigger
+  mana: 1
+  name: 「これ以上、蓄積された魔力を増やしてどうするのです？」
+  source:
+    official: dm25ex2-086
+    review: pending
+  spell:
+  - count: 1
+    op: draw
+  - body:
+    - op: flip_down
+      select:
+        count: 1
+        owner: you
+        zone: mana
+    op: may
+  text: 'S・トリガー（このカードをシールドゾーンから手札に加える時、コストを支払わずにすぐ実行してもよい）
+
+    カードを１枚引く。
+
+    自分のマナゾーンにあるカードを１枚、裏向きにしてもよい。（マナゾーンにある裏向きのカードは、マナの数字が１の無色カードとして扱う。その持ち主はそれをいつでも見てもよい）'
+  types:
+  - spell
