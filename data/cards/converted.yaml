@@ -318566,3 +318566,331 @@ cards:
   text: このクリーチャーが攻撃する時、相手の手札を１枚見ないで選び、捨てさせる。その後、その捨てさせたカードよりコストの小さい闇のクリーチャーを１体、自分の墓地からバトルゾーンに出してもよい。W・ブレイカー（このクリーチャーはシールドを２枚ブレイクする）
   types:
   - creature
+- abilities:
+  - effect:
+    - op: destroy
+      select:
+        count: 1
+        filter:
+          not_race_has: ティラノ・ドレイク
+          types:
+          - creature
+        owner: you
+        zone: bz
+    - op: destroy
+      select:
+        chooser: opp
+        count: 1
+        filter:
+          not_race_has: ティラノ・ドレイク
+          types:
+          - creature
+        owner: opp
+        zone: bz
+    kind: trigger
+    when:
+      event: move
+      subject:
+        filter:
+          races:
+          - ティラノ・ドレイク
+          types:
+          - creature
+        owner: you
+      to: bz
+  civs:
+  - fire
+  cost: 8
+  id: dm19-s08
+  mana: 1
+  name: オメガ・クライシス・ドラグーン
+  power: 6000
+  races:
+  - ティラノ・ドレイク
+  source:
+    notes: '誘発条件はこのクリーチャー自身の出現も含む（自身はティラノ・ドレイクのため破壊対象にはならない）。「ティラノ・ドレイク以外の種族」は not_race_has:
+      ティラノ・ドレイク（第81弾）で表した。ティラノ・ドレイクは複合種族が存在しないため部分一致と完全一致で対象は変わらない。相手の選択は chooser:
+      opp で表した（dmex09-019 の先例）'
+    official: dm19-s08
+    review: pending
+  text: 自分のティラノ・ドレイクをバトルゾーンに出した時、各プレイヤーは自分自身の、ティラノ・ドレイク以外の種族のクリーチャーを１体選び、破壊する。
+  types:
+  - creature
+- abilities:
+  - affects:
+      filter:
+        races:
+        - グレートメカオー
+        - キカイヒーロー
+        types:
+        - creature
+      owner: any
+      zone: bz
+    kind: static
+    mod:
+      grant:
+      - blocker
+  - affects:
+      filter:
+        not_race_has:
+        - グレートメカオー
+        - キカイヒーロー
+        types:
+        - creature
+      owner: any
+      zone: bz
+    kind: static
+    mod:
+      deny:
+      - block
+  civs:
+  - light
+  cost: 7
+  id: dm21-s01
+  mana: 1
+  name: キャプテン・ミリオンパーツ
+  power: 4500
+  races:
+  - キカイヒーロー
+  source:
+    notes: '第1能力は dm38-036 と同型の static grant（対象は原文に「自分の」が無いため owner: any）。第2能力の「グレートメカオーとキカイヒーロー以外」は
+      not_race_has のリスト形式（第81弾拡張）で表した。両種族とも複合種族が存在しないため、部分一致と完全一致で対象は変わらない'
+    official: dm21-s01
+    review: pending
+  text: バトルゾーンにあるグレートメカオーとキカイヒーローはすべて「ブロッカー」を得る。 / バトルゾーンにある、グレートメカオーとキカイヒーロー以外のクリーチャーは、ブロックすることができない。
+  types:
+  - creature
+- civs:
+  - light
+  cost: 6
+  id: dm22-039
+  mana: 1
+  name: セレスティアル・アーク
+  source:
+    notes: '「ドラゴンまたはフェニックスではない」は not_race_has のリスト形式（第81弾拡張、第115弾）で表した。裏向きにして持ち主のシールドゾーンに置く処理は
+      move to: shield（reason: charge）で表した（dm23bd7-043 のシールド化と同型。シールドは既定で裏向き）'
+    official: dm22-039
+    review: pending
+  spell:
+  - op: move
+    reason: charge
+    select:
+      count: 1
+      filter:
+        not_race_has:
+        - ドラゴン
+        - フェニックス
+        types:
+        - creature
+      owner: any
+      zone: bz
+    to: shield
+  text: バトルゾーンにある、ドラゴンまたはフェニックスではないクリーチャーを１体選び、裏向きにして持ち主のシールドゾーンに置く。
+  types:
+  - spell
+- faces:
+  - abilities:
+    - effect:
+      - body:
+        - op: destroy
+          select:
+            count: 1
+            filter:
+              cost_le: 6
+              not_race_has: ドラゴン
+            owner: opp
+            zone: bz
+        op: may
+      kind: trigger
+      when:
+        event: attack
+        subject: self
+    civs:
+    - fire
+    cost: 7
+    keywords:
+    - speed_attacker
+    - double_breaker
+    name: ボルザード・スーパーヒーロー
+    power: 6000
+    races:
+    - アーマード・ドラゴン
+    types:
+    - creature
+  - civs:
+    - fire
+    cost: 5
+    keywords:
+    - s_trigger
+    name: 超帝王タイム
+    spell:
+    - op: destroy
+      select:
+        count: all
+        filter:
+          cost_le: 3
+          not_race_has: ドラゴン
+        owner: any
+        zone: bz
+    types:
+    - spell
+  id: dm23bd4-003
+  mana: 1
+  source:
+    notes: 'ツインパクト。エレメントは types を絞らずバトルゾーンのカード全般として表した（dm23rp4x-020 等の先例）。両面とも「ドラゴンではない」は
+      not_race_has: ドラゴン（第81弾）で表した'
+    official: dm23bd4-003
+    review: pending
+    aliases:
+    - promoy23-102
+  text: 'ボルザード・スーパーヒーロー: スピードアタッカー / W・ブレイカー / このクリーチャーが攻撃する時、相手のコスト６以下のドラゴンではないエレメントを１つ選び、破壊してもよい。
+    ／ 超帝王タイム: S・トリガー / コスト３以下のドラゴンではないエレメントをすべて破壊する。'
+- abilities:
+  - effect:
+    - op: destroy
+      select:
+        count: all
+        filter:
+          not_race_has:
+          - デーモン・コマンド
+          - エンジェル・コマンド
+          types:
+          - creature
+        owner: any
+        zone: bz
+    - op: move
+      reason: return
+      select:
+        count: all
+        filter:
+          types:
+          - spell
+        owner: any
+        zone: mana
+      to: hand
+    kind: trigger
+    when:
+      event: move
+      subject: self
+      to: bz
+  - affects:
+      filter:
+        types:
+        - spell
+      owner: opp
+      zone: hand
+    kind: static
+    mod:
+      deny:
+      - cast
+  civs:
+  - light
+  - darkness
+  cost: 10
+  evolve_from:
+    races:
+    - デーモン・コマンド
+    - エンジェル・コマンド
+  id: dm23ex2-028
+  keywords:
+  - triple_breaker
+  mana: 1
+  name: 偽りの悪魔神王 デス・マリッジ
+  power: 15000
+  races:
+  - エンジェル・コマンド
+  - デーモン・コマンド
+  - アンノウン
+  source:
+    notes: '「デーモン・コマンドでもエンジェル・コマンドでもない」は not_race_has のリスト形式（第81弾拡張）で表した。部分一致のためデーモン・コマンド・ドラゴン等も各種族として扱われ対象外になり、このクリーチャー自身も両種族を持つため対象外になる。マナゾーンの呪文の回収は
+      owner: any の一括 move で各プレイヤー自身の分として表した。進化元と呪文封じは dmx19-s49（悪魔神王バルカディアス）と同型'
+    official: dm23ex2-028
+    review: pending
+    aliases:
+    - dmx12a-003
+  text: '進化：デーモン・コマンドまたはエンジェル・コマンド１体の上に置く。
+
+    T・ブレイカー
+
+    このクリーチャーが出た時、デーモン・コマンドでもエンジェル・コマンドでもないクリーチャーをすべて破壊する。その後、各プレイヤーはマナゾーンにある呪文をすべて手札に戻す。
+
+    相手は呪文を唱えられない。'
+  types:
+  - creature
+  - evolution
+- abilities:
+  - effect:
+    - body:
+      - a:
+          count: 1
+          filter:
+            types:
+            - creature
+          owner: you
+          zone: bz
+        b:
+          count: 1
+          filter:
+            types:
+            - creature
+          owner: opp
+          zone: bz
+        op: force_battle
+      op: may
+    kind: trigger
+    when:
+      event: move
+      subject: self
+      to: bz
+  - instead:
+    - op: move
+      reason: put
+      select:
+        count: 1
+        ref: subject
+      to: graveyard
+    kind: replace
+    when:
+      event: move
+      subject:
+        filter:
+          not_race_has: ドラゴン
+          types:
+          - creature
+        owner: any
+      to: bz
+  civs:
+  - fire
+  cost: 10
+  id: dm26ex3-dcr001
+  keywords:
+  - triple_breaker
+  mana: 1
+  name: 龍世界 ドラゴ大王
+  power: 13000
+  races:
+  - レッド・コマンド・ドラゴン
+  source:
+    notes: '出場置換は第94弾の型（kind: replace、instead で ref: subject を墓地へ。dm26sd1-i011 単騎連射
+      マグナムと同型）。原文に対象の所有者の限定が無いため subject は owner: any とした。このクリーチャー自身はレッド・コマンド・ドラゴンで種族にドラゴンを含むため置換の対象外になる。「ドラゴンではない」は
+      not_race_has: ドラゴン（第81弾）で表した'
+    official: dm26ex3-dcr001
+    review: pending
+    aliases:
+    - dm25ex1-pr1
+    - dm26sd1-h003
+    - dmart11-001
+    - dmbd18-be06
+    - dmbd18-se02
+    - dmex12-dr2
+    - dmx16-001
+    - dmx26-v06
+    - promoy17-064
+    - promoy17-067
+  text: 'T・ブレイカー
+
+    このクリーチャーが出た時、自分と相手のクリーチャーを１体ずつ選んでもよい。その２体をバトルさせる。
+
+    ドラゴンではないクリーチャーが出る時、かわりにそれを持ち主の墓地に置く。'
+  types:
+  - creature
