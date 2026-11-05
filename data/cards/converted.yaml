@@ -307150,3 +307150,406 @@ cards:
   text: スーパー・S・トリガー / 相手のクリーチャーを３体選び、タップする。 / xB 相手のクリーチャーは、次の相手のターンのはじめにアンタップしない。
   types:
   - spell
+- abilities:
+  - affects: self
+    kind: static
+    mod:
+      deny:
+      - untap_at_start
+  - effect:
+    - effect:
+      - op: untap
+        select:
+          ref: self
+      op: delayed_trigger
+      when:
+        event: turn_end
+    kind: trigger
+    when:
+      event: attack
+      subject:
+        owner: opp
+  civs:
+  - light
+  cost: 5
+  id: dm14-011
+  keywords:
+  - double_breaker
+  - enters_tapped
+  mana: 1
+  name: 光器ドミニカ
+  power: 9000
+  races:
+  - メカ・デル・ソル
+  source:
+    notes: 「アンタップしない」は deny untap_at_start。「そのターンの終わりにアンタップする」は turn_end の delayed_trigger
+      で表した
+    official: dm14-011
+    review: pending
+  text: 'このクリーチャーは、タップされた状態でバトルゾーンに出る。
+
+    ターンのはじめにアンタップする時、このクリーチャーはアンタップしない。
+
+    相手のクリーチャーが攻撃した時、そのターンの終わりにこのクリーチャーをアンタップする。
+
+    W・ブレイカー(このクリーチャーはシールドを２枚ブレイクする)'
+  types:
+  - creature
+- abilities:
+  - affects:
+      filter:
+        civs:
+        - fire
+        - nature
+        types:
+        - creature
+      owner: opp
+      zone: bz
+    kind: static
+    mod:
+      grant:
+      - enters_tapped
+  civs:
+  - light
+  cost: 7
+  id: dm19-011
+  mana: 1
+  name: 霊騎ラファーム
+  power: 4000
+  races:
+  - アーク・セラフィム
+  source:
+    notes: 「タップして置く」は static の grant enters_tapped（第90弾の型）。文明フィルタの複数指定は「または」
+    official: dm19-011
+    review: pending
+  text: 相手は、火または自然のクリーチャーをバトルゾーンに出す時、そのクリーチャーをタップして置く。
+  types:
+  - creature
+- abilities:
+  - affects: self
+    kind: static
+    mod:
+      deny:
+      - untap_at_start
+  - effect:
+    - op: untap
+      select:
+        ref: self
+    kind: trigger
+    when:
+      event: move
+      subject:
+        filter:
+          types:
+          - creature
+        other: true
+        owner: you
+      to: bz
+  civs:
+  - light
+  cost: 3
+  id: dm24ex1-052
+  keywords:
+  - blocker
+  - double_breaker
+  - enters_tapped
+  mana: 1
+  name: ソムリエ猫のアペリチフ
+  power: 6000
+  races:
+  - ドリームメイト
+  source:
+    notes: 「自分のターンのはじめにアンタップしない」は deny untap_at_start（アンタップは自分のターンのはじめにだけ起こるため等価）。効果によるアンタップは妨げない
+    official: dm24ex1-052
+    review: pending
+  text: 'ブロッカー（このクリーチャーをタップして、相手クリーチャーの攻撃先をこのクリーチャーに変更してもよい）
+
+    W・ブレイカー（このクリーチャーはシールドを２つブレイクする）
+
+    このクリーチャーは、タップして出る。
+
+    自分のターンのはじめに、このクリーチャーはアンタップしない。
+
+    自分の他のクリーチャーが出た時、このクリーチャーをアンタップする。'
+  types:
+  - creature
+- abilities:
+  - affects:
+      filter:
+        civs:
+        - darkness
+        types:
+        - creature
+      owner: any
+      zone: bz
+    kind: static
+    mod:
+      grant:
+      - enters_tapped
+  civs:
+  - darkness
+  cost: 1
+  id: dm25ex2-cho049
+  keywords:
+  - enters_tapped
+  mana: 1
+  name: 緊縛の影バインド・シャドウ
+  power: 1000
+  races:
+  - ゴースト
+  source:
+    notes: '自身のタップ入りは keywords の enters_tapped。「闇のクリーチャーはタップして出る」は両プレイヤーが対象（原文に所有者の限定なし）なので
+      owner: any の static grant（第90弾の型）'
+    official: dm25ex2-cho049
+    review: pending
+    aliases:
+    - dm16-047
+    - dmx12b-102
+  text: このクリーチャーはタップして出る。 / 闇のクリーチャーはタップして出る。
+  types:
+  - creature
+- abilities:
+  - affects: self
+    kind: static
+    mod:
+      must_be_attacked: true
+  civs:
+  - nature
+  cost: 3
+  id: dm25rp3-073
+  keywords:
+  - s_trigger
+  - enters_tapped
+  mana: 1
+  name: 戦祭SAMBA-38
+  power: 5000
+  races:
+  - ミステリー・トーテム
+  - テクノ・サムライ
+  source:
+    notes: '攻撃先の強制は must_be_attacked（static、affects: self）'
+    official: dm25rp3-073
+    review: pending
+  text: 'S・トリガー（このカードをシールドゾーンから手札に加える時、コストを支払わずにすぐ実行してもよい）
+
+    このクリーチャーはタップして出る。
+
+    相手のクリーチャーが攻撃する時、可能ならこのクリーチャーを攻撃する。'
+  types:
+  - creature
+- faces:
+  - abilities:
+    - affects:
+        filter:
+          types:
+          - creature
+        owner: opp
+        zone: bz
+      kind: static
+      mod:
+        grant:
+        - enters_tapped
+    civs:
+    - light
+    cost: 9
+    keywords:
+    - blocker
+    - double_breaker
+    mana: 1
+    name: 閃光の神官 ヴェルベット
+    power: 11000
+    races:
+    - オラクル
+    types:
+    - creature
+  - civs:
+    - nature
+    cost: 3
+    mana: 1
+    name: フェアリー・パワー
+    spell:
+    - as: placed
+      op: move
+      reason: put
+      select:
+        from_top: 1
+        owner: you
+        zone: deck
+      to: mana
+    - cond:
+        exists:
+          filter:
+            power_ge: 6000
+            types:
+            - creature
+          ref: placed
+      op: if
+      then:
+      - count: 1
+        op: draw
+    types:
+    - spell
+  id: dm26sd1-t010
+  source:
+    notes: 'ツインパクト。クリーチャー面の「相手のクリーチャーはタップして出る」は static の grant enters_tapped（第90弾の型）。呪文面は置いたカードを
+      as: placed で追い、パワー6000以上のクリーチャーなら1枚引く'
+    official: dm26sd1-t010
+    review: pending
+    aliases:
+    - dm22ex1-062
+    - dm24sd2-008
+  text: '閃光の神官 ヴェルベット: ブロッカー / W・ブレイカー / 相手のクリーチャーはタップして出る。 ／ フェアリー・パワー: 自分の山札の上から１枚をマナゾーンに置く。それがパワー6000以上のクリーチャーなら、カードを１枚引く。'
+- abilities:
+  - affects:
+      filter:
+        types:
+        - creature
+      owner: you
+      zone: bz
+    kind: static
+    mod:
+      deny:
+      - attack_creature
+  - affects:
+      filter:
+        types:
+        - creature
+      owner: opp
+      zone: bz
+    kind: static
+    mod:
+      grant:
+      - enters_tapped
+  civs:
+  - water
+  cost: 4
+  id: dm35-010
+  mana: 1
+  name: スベンガリィ・クロウラー
+  power: 4000
+  races:
+  - アースイーター
+  - オリジン
+  source:
+    notes: 「タップして置く」は static の grant enters_tapped（第90弾の型）
+    official: dm35-010
+    review: pending
+  text: 自分のクリーチャーは、クリーチャーを攻撃することができない。 / 相手のクリーチャーは、バトルゾーンに出す時タップして置く。
+  types:
+  - creature
+- abilities:
+  - effect:
+    - duration: until_next_own_turn_start
+      mod:
+        must_be_attacked: true
+      op: modify
+      select:
+        ref: self
+    kind: trigger
+    when:
+      event: move
+      subject: self
+      to: bz
+  civs:
+  - nature
+  cost: 7
+  id: dm35-034
+  keywords:
+  - s_trigger
+  - enters_tapped
+  mana: 1
+  name: 戦祭の化身
+  power: 4000
+  races:
+  - ミステリー・トーテム
+  - オリジン
+  source:
+    notes: タップして置くは keywords の enters_tapped。攻撃先の強制は must_be_attacked を次の自分のターンのはじめまで
+      modify で与えた
+    official: dm35-034
+    review: pending
+  text: 'S・トリガー(このクリーチャーをシールドゾーンから手札に加える時、コストを支払わずにすぐ召喚してもよい)
+
+    バトルゾーンに置く時、このクリーチャーはタップして置く。
+
+    このクリーチャーをバトルゾーンに出した時、次の自分のターンのはじめまで、相手の攻撃クリーチャーは可能であればこのクリーチャーを攻撃する。'
+  types:
+  - creature
+- abilities:
+  - affects: self
+    kind: static
+    mod:
+      must_be_attacked: true
+  - effect:
+    - as: foe
+      op: choose
+      select:
+        ref: event.opponent
+    - effect:
+      - op: destroy
+        select:
+          ref: self
+      - op: destroy
+        select:
+          ref: foe
+      op: delayed_trigger
+      when:
+        event: attack_end
+    kind: trigger
+    when:
+      event: battle_start
+      subject: self
+  - effect:
+    - as: foe
+      op: choose
+      select:
+        ref: event.subject
+    - effect:
+      - op: destroy
+        select:
+          ref: self
+      - op: destroy
+        select:
+          ref: foe
+      op: delayed_trigger
+      when:
+        event: attack_end
+    kind: trigger
+    when:
+      event: battle_start
+      opponent: self
+  civs:
+  - darkness
+  cost: 6
+  id: dmbd17-teki010
+  keywords:
+  - s_trigger
+  - enters_tapped
+  mana: 1
+  name: 黒神龍オドル・ニードル
+  power: 5000
+  races:
+  - ドラゴン・ゾンビ
+  source:
+    notes: '攻撃先の強制は must_be_attacked（static、affects: self）。「バトルの後」は attack_end の delayed_trigger
+      で表す（dmex14-037 の型）。event: battle は battle_substitute の置換専用で誘発の収集には届かないため、攻撃側・防御側とも
+      battle_start で相手クリーチャーを choose して束縛し、攻撃の終わりに両方を破壊する形にした'
+    official: dmbd17-teki010
+    review: pending
+    aliases:
+    - dmd25-006
+    - dmx11-045
+    - dmx14-071
+    - dmx16-078
+    - dmx21-025
+    - dmx25-002
+    - promoy14-009
+  text: 'S・トリガー（このクリーチャーをシールドゾーンから手札に加える時、コストを支払わずにすぐ召喚してもよい）
+
+    このクリーチャーはタップして出る。
+
+    相手のクリーチャーが攻撃する時、可能ならこのクリーチャーを攻撃する。
+
+    このクリーチャーがバトルする時、バトルの後、このクリーチャーと相手クリーチャーを破壊する。'
+  types:
+  - creature
