@@ -308414,3 +308414,326 @@ cards:
     / このターン、次に自分のチーム切札を召喚する時、その召喚コストを最大５少なくする。ただし、コストは０以下にはならない。
   types:
   - spell
+- abilities:
+  - effect:
+    - as: milled
+      op: move
+      reason: put
+      select:
+        from_top: 7
+        owner: you
+        zone: deck
+      to: graveyard
+    - as: played
+      op: play_free
+      select:
+        count: any
+        filter:
+          civs:
+          - water
+          cost_le: 7
+        ref: milled
+    - cond:
+        cmp:
+        - count:
+            ref: played
+        - ==
+        - 7
+      op: if
+      then:
+      - op: win
+        player: you
+    kind: trigger
+    when:
+      event: move
+      reason: summon
+      subject: self
+      to: bz
+  - effect:
+    - op: move
+      reason: put
+      select:
+        count: all
+        owner: you
+        zone: graveyard
+      to: deck
+    - op: shuffle
+      player: you
+    kind: trigger
+    when:
+      event: move
+      from: bz
+      subject: self
+  civs:
+  - water
+  cost: 14
+  id: dm25ex2-cho004
+  keywords:
+  - triple_breaker
+  mana: 1
+  name: 夢の変形 デュエランド
+  power: 14000
+  races:
+  - ジ・アンサー
+  source:
+    notes: 墓地に置いた７枚は move の as で milled に束縛し、実行した分は play_free の as で played に束縛して７枚すべてか判定した
+    official: dm25ex2-cho004
+    review: pending
+    aliases:
+    - dmex08-124
+    - dmr20-s03
+  text: 'T・ブレイカー
+
+    このクリーチャーが召喚によって出た時、自分の山札の上から７枚を墓地に置く。その中から、水のコスト７以下のカードを好きな数、コストを支払わずに実行してもよい。こうして７枚すべてを実行した場合、自分はゲームに勝つ。
+
+    このクリーチャーが離れた時、自分の墓地にあるカードをすべて山札に加えてシャッフルする。'
+  types:
+  - creature
+- abilities:
+  - effect:
+    - count: 2
+      op: draw
+    - as: dropped
+      op: discard
+      select:
+        chooser: opp
+        count: 1
+        owner: you
+        zone: hand
+    - cond:
+        exists:
+          filter:
+            civs:
+            - fire
+            types:
+            - creature
+          ref: dropped
+      op: if
+      then:
+      - op: move
+        reason: put
+        select:
+          ref: dropped
+        to: bz
+      - duration: end_of_turn
+        mod:
+          grant:
+          - speed_attacker
+        op: modify
+        select:
+          ref: dropped
+      - effect:
+        - op: destroy
+          select:
+            ref: dropped
+        op: delayed_trigger
+        when:
+          event: turn_end
+    kind: trigger
+    when:
+      event: move
+      reason: summon
+      subject: self
+      to: bz
+  - effect:
+    - count: 2
+      op: draw
+    - as: dropped
+      op: discard
+      select:
+        chooser: opp
+        count: 1
+        owner: you
+        zone: hand
+    - cond:
+        exists:
+          filter:
+            civs:
+            - fire
+            types:
+            - creature
+          ref: dropped
+      op: if
+      then:
+      - op: move
+        reason: put
+        select:
+          ref: dropped
+        to: bz
+      - duration: end_of_turn
+        mod:
+          grant:
+          - speed_attacker
+        op: modify
+        select:
+          ref: dropped
+      - effect:
+        - op: destroy
+          select:
+            ref: dropped
+        op: delayed_trigger
+        when:
+          event: turn_end
+    if:
+      is_turn: you
+    kind: trigger
+    when:
+      event: turn_start
+  - effect:
+    - as: dropped
+      op: choose
+      select:
+        ref: event.subject
+    - op: destroy
+      select:
+        count: 1
+        filter:
+          cost_le:
+            cost_of: dropped
+          types:
+          - creature
+        owner: opp
+        zone: bz
+    kind: trigger
+    when:
+      event: move
+      from: hand
+      reason: discard
+      subject:
+        owner: you
+      to: graveyard
+  civs:
+  - fire
+  cost: 5
+  id: dm26ex4-008
+  keywords:
+  - speed_attacker
+  - double_breaker
+  mana: 1
+  name: 火神 アポフィス
+  power: 8000
+  races:
+  - ヒノガミ
+  - ロスト・クルセイダー・ドラゴン
+  source:
+    notes: '捨てた手札は discard の as で dropped に束縛し、火のクリーチャー判定とコスト参照に使った。ターンのはじめの誘発は when:
+      turn_start に if: is_turn: you を付けた'
+    official: dm26ex4-008
+    review: pending
+  text: 'スピードアタッカー
+
+    W・ブレイカー
+
+    このクリーチャーが召喚によって出た時または自分のターンのはじめに、カードを２枚引き、自分の手札を１枚相手に見ないで選ばせ、捨てる。それが火のクリーチャーなら、自分の墓地から出す。このターン、そのクリーチャーに「スピードアタッカー」を与え、このターンの終わりに破壊する。
+
+    自分が手札を１枚捨てた時、こうして捨てたカード以下のコストの相手のクリーチャーを１体選び、破壊する。'
+  types:
+  - creature
+- abilities:
+  - effect:
+    - as: came
+      op: choose
+      select:
+        ref: event.subject
+    - body:
+      - op: move
+        reason: put
+        select:
+          count: 1
+          filter:
+            cost_ge:
+              cost_of: came
+            cost_le:
+              cost_of: came
+            race_has: ゴースト
+          owner: you
+          zone: graveyard
+        to: bz
+      op: may
+    kind: trigger
+    when:
+      event: move
+      reason: summon
+      subject:
+        filter:
+          race_has: ゴースト
+        owner: you
+      to: bz
+  civs:
+  - darkness
+  cost: 6
+  id: dmr05-026
+  mana: 1
+  name: 拷問の影カワハギ・ジャケット
+  power: 4000
+  races:
+  - ゴースト
+  source:
+    notes: '出たゴーストは choose の as で came に束縛し、同コスト判定を cost_le / cost_ge の両方に {cost_of:
+      came} を使って表した'
+    official: dmr05-026
+    review: pending
+    aliases:
+    - dmr05-026m
+  text: このクリーチャーまたは他のゴーストを召喚してバトルゾーンに出した時、それとコストが同じゴーストを１体、自分の墓地からバトルゾーンに出してもよい。
+  types:
+  - creature
+- abilities:
+  - affects: self
+    kind: static
+    mod:
+      cost:
+        amount: -3
+        count:
+          filter:
+            race_has: ドラゴン
+          owner: you
+          zone: bz
+      cost_min: 0
+    zone: hand
+  - effect:
+    - duration: until_next_own_turn_start
+      mod:
+        gain:
+        - instead: []
+          kind: replace
+          when:
+            event: lose
+      op: modify
+      select:
+        ref: self
+    kind: trigger
+    when:
+      event: move
+      reason: summon
+      subject: self
+      to: bz
+  civs:
+  - fire
+  cost: 20
+  id: promoy20-cp11
+  keywords:
+  - speed_attacker
+  - quad_breaker
+  mana: 1
+  name: 伝説の切札龍
+  power: 20000
+  races:
+  - アーマード・ドラゴン
+  - メガ・コマンド・ドラゴン
+  - ジョーカーズ・ドラゴン
+  source:
+    notes: 'トリプル・シンパシーは static（zone: hand）の cost（１体につき-3、下限は原文どおり cost_min: 0）で表した。敗北・勝利の防止は
+      dm22-023 の先例どおり mod.gain で lose replace（instead: []）を次の自分のターンのはじめまで付与した。「相手は勝たない」は
+      dmex10-s03 の先例どおり自分の敗北と同一の game_lose を通るものとして表した'
+    official: promoy20-cp11
+    review: pending
+  text: 'トリプル・シンパシー：ドラゴン（このクリーチャーの召喚コストを、バトルゾーンにある自分のドラゴン１体につき３少なくする。ただしコストは０以下にはならない）
+
+    スピードアタッカー（このクリーチャーは召喚酔いしない）
+
+    Q・ブレイカー（このクリーチャーはシールドを４つブレイクする）
+
+    このクリーチャーが召喚によって出た時、次の自分のターンのはじめまで自分はゲームに負けず、相手はゲームに勝たない。'
+  types:
+  - creature
