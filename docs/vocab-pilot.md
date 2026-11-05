@@ -1073,3 +1073,9 @@ converted の監査（opt_reduce の素の整数表記9件）から。任意形�
 - 書き方: {kind: trigger, first_time: true, when: {event: tap, subject: self}, effect: [...]}。first_time はラウンド110（dmrp14-007 の attack_end）でも使用した既存フラグ。
 - tests/test_vocab_pilot105.py 2件（正常 parse／検証）
 - 待機7枚（first_tap_trigger のみが gap のもの）。
+
+## 第106弾: trigger_when_wins_battle（バトルに勝った時）— 新語彙なし（2026-11-05）
+「このクリーチャーがバトルに勝った時、〜」は既存の battle_win イベントで表す（勝者のみが subject）。
+- 書き方: {kind: trigger, when: {event: battle_win, subject: self}, effect: [...]}。
+- tests/test_vocab_pilot106.py 2件（正常 parse／検証）
+- 待機9枚（trigger_when_wins_battle のみが gap のもの）。
