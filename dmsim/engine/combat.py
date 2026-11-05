@@ -319,7 +319,8 @@ def h_attack(eng, t):
         if t["target"] == "player":
             shields = eng.zlist("shield", 1 - a)
             if shields:
-                eng._push({"t": "break", "victim": 1 - a, "by": a, "count": n, "phase": 0, "in_effect": False, "breaker": att})
+                if n > 0:   # ヌル・ブレイカー（0ブレイク）ではブレイク自体が起こらない（第129弾）
+                    eng._push({"t": "break", "victim": 1 - a, "by": a, "count": n, "phase": 0, "in_effect": False, "breaker": att})
             else:
                 eng._push(*eng.game_lose(1 - a, "direct_attack"))   # 509.1 / 703.4a（敗北の置換を諮ってから確定する）
         return None

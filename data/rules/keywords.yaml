@@ -66,6 +66,10 @@ keywords:
         if: {face_up: true}
         instead:
           - {op: move, select: {ref: self}, to: graveyard, reason: put}
+  null_breaker:
+    ja: ヌル・ブレイカー
+    abilities:
+      - {kind: static, affects: self, mod: {breaks: 0}}
   double_breaker:
     ja: W・ブレイカー
     abilities:

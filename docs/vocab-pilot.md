@@ -1225,3 +1225,8 @@ draw イベントへの置換で表す（draw は個別イベントとして発�
 - 「裏向きのままマナゾーンに置く」は新語彙 move op の face_down: true（エンジン拡張: move イベントが face_down を運び、_apply_one がマナ到着時に裏向きにする。together の move でも伝播）。move+flip_down の合成は置かれた瞬間が表向きになるため採らない（ラウンド122の判断を正式化）。既にマナにあるカードを裏向きにするのは従来どおり flip_down op。
 - 裏向きマナは支払い時に無色・マナ数1として扱う（_mana_choices の既存処理）。
 - proto T164、試験カード R091、tests/test_vocab_pilot128.py 3件（parse、裏向きで到着し支払いで無色扱い、対照）。
+
+### 第129弾 null_breaker（2026-11-05）
+- 「ヌル・ブレイカー（このクリーチャーはシールドを０ブレイクする）」を keywords.yaml のキーワードとして登録（静的 mod {breaks: 0}）。攻撃時のブレイク数は break_opts で決まるため 0 が唯一の選択肢になる。
+- エンジン修正: combat のダイレクトアタックでブレイク数 0 の時はブレイクタスク自体を積まない（ブレイクイベントも発生しない）。
+- proto T165、試験カード R092、tests/test_vocab_pilot129.py 3件（parse、break_opts=[0]、攻撃してもシールドが割れない）。

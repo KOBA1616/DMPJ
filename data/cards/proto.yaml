@@ -2131,3 +2131,13 @@ cards:
     text: 自分の山札の上から１枚目を、裏向きのままマナゾーンに置く。
     spell:
       - {op: move, select: {zone: deck, owner: you, from_top: 1}, to: mana, reason: put, face_down: true}
+  - id: T165
+    name: 試験用ヌル獣
+    types: [creature]
+    civs: [water]
+    cost: 3
+    power: 2000
+    races: [テスト]
+    keywords: [null_breaker]
+    text: ヌル・ブレイカー（このクリーチャーはシールドを０ブレイクする）
+    abilities: []
