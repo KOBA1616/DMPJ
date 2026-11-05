@@ -297925,3 +297925,642 @@ cards:
     このクリーチャーがバトルゾーンに出た時、バトルゾーンにある相手のクリーチャーの数が自分より多ければ、相手は自身のクリーチャーを２体選び、破壊する。'
   types:
   - creature
+- abilities:
+  - affects:
+      filter:
+        race_has: ジャイアント
+        types:
+        - creature
+      owner: you
+      zone: hand
+    kind: static
+    mod:
+      cost: -3
+      cost_min: 0
+  - effect:
+    - op: move
+      reason: put
+      select:
+        ref: self
+      to: mana
+    kind: trigger
+    when:
+      event: move
+      subject:
+        filter:
+          race_has: ジャイアント
+        other: true
+        owner: you
+      to: bz
+  civs:
+  - nature
+  cost: 4
+  id: dmr21-045
+  mana: 1
+  name: 優雅なアントワネット
+  power: 1000
+  races:
+  - ドリームメイト
+  source:
+    notes: コスト軽減は dmr17-029 と同型（static の mod cost/cost_min）。第74弾の対象カード
+    official: dmr21-045
+    review: pending
+  text: 自分のジャイアントの召喚コストは最大３少なくなる。ただし、コストは０以下にはならない。 / 自分のジャイアントがバトルゾーンに出た時、このクリーチャーを自分のマナゾーンに置く。
+  types:
+  - creature
+- abilities:
+  - effect:
+    - op: bounce
+      select:
+        count: 1
+        filter:
+          types:
+          - creature
+        owner: opp
+        zone: bz
+    kind: trigger
+    when:
+      event: move
+      subject: self
+      to: bz
+  - effect:
+    - body:
+      - count: 1
+        op: draw
+      op: may
+    if: &id152
+      cmp:
+      - count:
+          filter:
+            multicolor: true
+          owner: you
+          zone: mana
+      - '>='
+      - 4
+    kind: trigger
+    when:
+      event: move
+      subject:
+        filter:
+          types:
+          - creature
+        owner: opp
+      to: bz
+  - effect:
+    - body:
+      - count: 1
+        op: draw
+      op: may
+    if: *id152
+    kind: trigger
+    when:
+      event: move
+      from: bz
+      subject:
+        filter:
+          types:
+          - creature
+        owner: opp
+  civs:
+  - water
+  - darkness
+  cost: 6
+  id: dmr23-008
+  keywords:
+  - double_breaker
+  mana: 1
+  name: 水晶恐皇クリアハデス
+  power: 6000
+  races:
+  - クリスタル・コマンド・ドラゴン
+  - ダークロード
+  source:
+    notes: マナゾーンに置く時のタップはルールの注釈（keyword_patterns の noise）のため abilities に書かない。マナ武装は
+      if 条件で表し、「出た時」「離れた時」を2つの trigger に分けた
+    official: dmr23-008
+    review: pending
+  text: マナゾーンに置く時、このカードはタップして置く。 / W・ブレイカー / このクリーチャーがバトルゾーンに出た時、相手のクリーチャーを１体選び、持ち主の手札に戻す。
+    / マナ武装 ４：相手のクリーチャーがバトルゾーンに出た時またはバトルゾーンを離れた時、自分のマナゾーンに多色カードが４枚以上あれば、カードを１枚引いてもよい。
+  types:
+  - creature
+- abilities:
+  - effect:
+    - body:
+      - op: mana_put
+        select:
+          count: 1
+          from_top: 1
+          owner: you
+          zone: deck
+      op: may
+    kind: trigger
+    when:
+      event: move
+      subject:
+        filter:
+          civs_all:
+          - light
+          - nature
+          types:
+          - creature
+        owner: you
+      to: bz
+  civs:
+  - nature
+  cost: 3
+  id: dmr23-038
+  mana: 1
+  name: 求愛の面 フレガータ
+  power: 3000
+  races:
+  - ビーストフォーク號
+  source:
+    notes: 第74弾のセレクタ形式。原文に「他の」が無いため other は付けない（自身は光を持たないため実質は他のクリーチャーのみが対象）
+    official: dmr23-038
+    review: pending
+  text: 自分の光と自然を両方持つクリーチャーがバトルゾーンに出た時、自分の山札の上から１枚目をマナゾーンに置いてもよい。
+  types:
+  - creature
+- abilities:
+  - effect: &id153
+    - op: tap
+      select:
+        count: 1
+        filter:
+          types:
+          - creature
+        owner: opp
+        zone: bz
+    kind: trigger
+    when:
+      event: move
+      subject:
+        filter:
+          civs_all:
+          - light
+          - water
+          types:
+          - creature
+        owner: you
+      to: bz
+  - effect: *id153
+    kind: trigger
+    when:
+      event: cast
+      subject:
+        filter:
+          civs_all:
+          - light
+          - water
+          types:
+          - spell
+        owner: you
+  civs:
+  - light
+  cost: 3
+  id: dmr23-047
+  keywords:
+  - blocker
+  - cannot_attack_player
+  mana: 1
+  name: 卓球の玉 ポンピン
+  power: 3500
+  races:
+  - ジャスティス・オーブ
+  source:
+    notes: 「出た時」と「唱えた時」を2つの trigger に分けた。原文に「他の」が無いため other は付けない（自身は水を持たない）
+    official: dmr23-047
+    review: pending
+  text: ブロッカー（このクリーチャーをタップして、相手クリーチャーの攻撃先をこのクリーチャーに変更してもよい）このクリーチャーは、相手プレイヤーを攻撃できない。自分の光と水を両方持つクリーチャーがバトルゾーンに出た時、または光と水を両方持つ呪文を唱えた時、相手のクリーチャーを１体選び、タップする。
+  types:
+  - creature
+- abilities:
+  - effect:
+    - a:
+        ref: event.subject
+      b:
+        count: 1
+        filter:
+          types:
+          - creature
+        owner: opp
+        zone: bz
+      op: force_battle
+    kind: trigger
+    when:
+      event: move
+      subject:
+        filter:
+          civs_all:
+          - fire
+          - nature
+          types:
+          - creature
+        owner: you
+      to: bz
+  civs:
+  - fire
+  cost: 2
+  id: dmr23-056
+  mana: 1
+  name: 目覚まし隊長 アサダッピー
+  power: 1000
+  races:
+  - ファイアー・バード炎
+  source:
+    notes: バトルさせる2体のうち、出たクリーチャーは event.subject、相手のクリーチャーは選択（force_battle の b）。原文に「他の」が無いため
+      other は付けない（自身は自然を持たない）
+    official: dmr23-056
+    review: pending
+  text: 自分の火と自然を両方持つクリーチャーがバトルゾーンに出た時、相手のクリーチャーを１体選ぶ。その２体をバトルさせる。
+  types:
+  - creature
+- abilities:
+  - effect:
+    - duration: end_of_turn
+      mod:
+        breaks: 2
+        power_when:
+          amount: 5000
+          when: attacking
+      op: modify
+      select:
+        ref: self
+    kind: trigger
+    when:
+      event: move
+      subject:
+        filter:
+          race_has: ビートジョッキー
+        other: true
+        owner: you
+      to: bz
+  civs:
+  - fire
+  cost: 5
+  id: dmrp02-048
+  mana: 1
+  name: トゲダマ戦車 チューヘッド
+  power: 5000
+  races:
+  - ビートジョッキー
+  source:
+    notes: '「シールドをさらに１つブレイク」は breaks: 2（通常の1ブレイク前提）として表した（dmrp04s-049 の notes と同方式）'
+    official: dmrp02-048
+    review: pending
+  text: 自分の他のビートジョッキーがバトルゾーンに出た時、そのターン、このクリーチャーは「パワーアタッカー+5000」を得、シールドをさらに１つブレイクする。（攻撃中、「パワーアタッカー+5000」を持つクリーチャーのパワーは+5000される）
+  types:
+  - creature
+- abilities:
+  - effect:
+    - duration: end_of_turn
+      mod:
+        grant:
+        - double_breaker
+        power: 4000
+      op: modify
+      select:
+        ref: self
+    kind: trigger
+    when:
+      event: move
+      subject:
+        filter:
+          power_ge: 12000
+          types:
+          - creature
+        owner: you
+      to: bz
+  civs:
+  - nature
+  cost: 3
+  id: dmrp03-091
+  mana: 1
+  name: アップップ・タンク
+  power: 2000
+  races:
+  - グランセクト
+  source:
+    notes: 原文に「他の」が無いため、自身が出た時もパワー条件を満たせば誘発する形にした
+    official: dmrp03-091
+    review: pending
+  text: 自分のパワー12000以上のクリーチャーがバトルゾーンに出た時、そのターン、このクリーチャーのパワーを+4000し、「W・ブレイカー」を与える。（「W・ブレイカー」を持つクリーチャーは、シールドを２つブレイクする）
+  types:
+  - creature
+- abilities:
+  - effect:
+    - count: 1
+      op: mill
+      owner: you
+    - op: move
+      reason: return
+      select:
+        count: 1
+        filter:
+          types:
+          - spell
+        owner: you
+        zone: graveyard
+      to: hand
+    kind: trigger
+    when:
+      event: move
+      subject:
+        filter:
+          race_has: ムートピア
+        owner: you
+      to: bz
+  civs:
+  - water
+  cost: 5
+  id: dmrp04m-003
+  keywords:
+  - blocker
+  mana: 1
+  name: 龍装艦 スペルエビート
+  power: 5000
+  races:
+  - ドラゴンギルド
+  - ムートピア
+  source:
+    notes: 「このクリーチャーまたは自分の他のムートピア」は自身もムートピアのため subject のフィルタのみで両方を覆う
+    official: dmrp04m-003
+    review: pending
+  text: 'ブロッカー
+
+    このクリーチャーまたは自分の他のムートピアがバトルゾーンに出た時、自分の山札の上から１枚目を墓地に置く。その後、呪文を１枚、自分の墓地から手札に戻す。'
+  types:
+  - creature
+- abilities:
+  - effect:
+    - body:
+      - onto:
+          ref: event.subject
+        op: put_under
+        select:
+          count: 1
+          filter:
+            types:
+            - creature
+          owner: you
+          zone: mana
+      op: may
+    kind: trigger
+    when:
+      event: move
+      subject:
+        filter:
+          neo: true
+          types:
+          - creature
+        owner: you
+      to: bz
+  civs:
+  - nature
+  cost: 4
+  id: dmrp04s-054
+  mana: 1
+  name: ジュースダス・タンク
+  power: 4000
+  races:
+  - グランセクト
+  source:
+    notes: 「その下」は出たNEOクリーチャー（event.subject）の下。put_under の onto で表した
+    official: dmrp04s-054
+    review: pending
+  text: 自分のNEOクリーチャーがバトルゾーンに出た時、自分のマナゾーンにあるクリーチャーを１体、その下に置いてもよい。
+  types:
+  - creature
+- abilities:
+  - kind: static
+    affects: self
+    zone: hand
+    mod:
+      opt_reduce:
+        amount: 3
+        then: destroy
+  - affects: self
+    kind: static
+    mod:
+      opt_reduce:
+        amount: 3
+        then: destroy
+    zone: hand
+  - affects:
+      filter:
+        race_has: ビートジョッキー
+        types:
+        - creature
+      owner: you
+      zone: hand
+    kind: static
+    mod:
+      cost: -2
+      cost_min: 0
+  - effect:
+    - body:
+      - duration: end_of_turn
+        mod:
+          grant:
+          - speed_attacker
+        op: modify
+        select:
+          ref: event.subject
+      - effect:
+        - op: destroy
+          select:
+            ref: event.subject
+        op: delayed_trigger
+        when:
+          event: turn_end
+      op: may
+    kind: trigger
+    when:
+      event: move
+      subject:
+        filter:
+          types:
+          - creature
+        other: true
+        owner: you
+      to: bz
+  civs:
+  - fire
+  cost: 6
+  id: dmrp05-025
+  mana: 1
+  name: “真友”チュリス
+  power: 4000
+  races:
+  - ビートジョッキー
+  source:
+    notes: B・A・Dは keyword_patterns の bad 展開形（opt_reduce）で書いた。SA付与とターン終わりの破壊は dmx06-s02
+      と同型（modify grant + delayed_trigger、参照は event.subject）で、全体を may に入れた
+    official: dmrp05-025
+    review: pending
+  text: 'B・A・D ３（このクリーチャーを、コストを３少なくして召喚してもよい。そうしたら、このターンの終わりにこのクリーチャーを破壊する）
+
+    自分のビートジョッキーを召喚するコストを最大２少なくする。ただしコストは０以下にならない。
+
+    自分の他のクリーチャーがバトルゾーンに出た時、そのクリーチャーに「スピードアタッカー」を与えてもよい。そうしたら、そのターンの終わりにそのクリーチャーを破壊する。（「スピードアタッカー」を持つクリーチャーは召喚酔いしない）'
+  types:
+  - creature
+- abilities:
+  - effect:
+    - duration: end_of_turn
+      mod:
+        power: 3000
+      op: modify
+      select:
+        ref: event.subject
+    kind: trigger
+    when:
+      event: move
+      subject:
+        filter:
+          types:
+          - creature
+        other: true
+        owner: you
+      to: bz
+  civs:
+  - nature
+  cost: 3
+  id: dmrp06-091
+  mana: 1
+  name: ムオーム
+  power: 3000
+  races:
+  - グランセクト
+  source:
+    official: dmrp06-091
+    review: pending
+  text: 自分の他のクリーチャーがバトルゾーンに出た時、そのターン、そのクリーチャーのパワーを+3000する。
+  types:
+  - creature
+- abilities:
+  - effect:
+    - duration: end_of_turn
+      mod:
+        breaks: 2
+        power: 4000
+      op: modify
+      select:
+        ref: self
+    kind: trigger
+    when:
+      event: move
+      subject:
+        filter:
+          types:
+          - creature
+        other: true
+        owner: you
+      to: bz
+  civs:
+  - nature
+  cost: 5
+  id: dmrp09-056
+  mana: 1
+  name: 花見田どん
+  power: 4000
+  races:
+  - ジョーカーズ
+  source:
+    notes: '「シールドをさらに１つブレイク」は breaks: 2（通常の1ブレイク前提）として表した（dmrp04s-049 の notes と同方式）'
+    official: dmrp09-056
+    review: pending
+  text: 自分の他のクリーチャーがバトルゾーンに出た時、そのターン、このクリーチャーはパワーを+4000され、シールドをさらに１つブレイクする。
+  types:
+  - creature
+- abilities:
+  - kind: trigger
+    when:
+      event: attack
+      subject: self
+    effect:
+    - op: may
+      body:
+      - op: move
+        select:
+          zone:
+          - hand
+          - deck
+          from_top: 1
+          owner: you
+          filter:
+            types:
+            - creature
+            not_types:
+            - evolution
+            cost_le: 4
+          count: 1
+        to: bz
+        reason: put
+  - effect:
+    - op: move
+      position: bottom
+      reason: put
+      select:
+        count: 1
+        from_top: 1
+        look: true
+        owner: you
+        up_to: true
+        zone: deck
+      to: deck
+    kind: trigger
+    when:
+      event: move
+      subject:
+        filter:
+          types:
+          - creature
+        owner: you
+      to: bz
+  - effect:
+    - body:
+      - op: move
+        reason: put
+        select:
+          count: 1
+          filter:
+            cost_le: 4
+            not_types:
+            - evolution
+            types:
+            - creature
+          from_top: 1
+          owner: you
+          zone:
+          - hand
+          - deck
+        to: bz
+      op: may
+    kind: trigger
+    when:
+      event: attack
+      subject: self
+  civs:
+  - light
+  - fire
+  cost: 4
+  id: dmrp14-051
+  mana: 1
+  name: U・S・A・VEGAS
+  power: 4000
+  races:
+  - ビートジョッキー
+  - チームボンバー
+  source:
+    notes: 第1能力は dm19-021 と同型（look + up_to の move で「見て、置いてもよい」）。原文に「他の」が無いため自身が出た時も誘発する。マジボンバーは
+      keyword_patterns の magic_bomber 展開形で書いた
+    official: dmrp14-051
+    review: pending
+    aliases:
+    - promoy19-041
+  text: '自分のクリーチャーがバトルゾーンに出た時、自分の山札の上から１枚目を見る。そのカードを山札の一番下に置いてもよい。
+
+    マジボンバー ４（このクリーチャーが攻撃する時、自分の山札の上から１枚目を見る。その後、コスト４以下のクリーチャーを１体、自分の手札または山札の上から、バトルゾーンに出してもよい）'
+  types:
+  - creature
