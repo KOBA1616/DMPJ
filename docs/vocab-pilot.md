@@ -1061,3 +1061,9 @@ converted の監査（opt_reduce の素の整数表記9件）から。任意形�
 - 書き方: filter: {any_of: [{evolution: true}, {linked_god: true}]}。proto T157。
 - 試験カード R079・R080 を tests/rule_cards.yaml に追加。tests/test_vocab_pilot103.py 2件（parse／照合の実挙動）。
 - 待機7枚（linked_god_filter のみが gap のもの）。
+
+## 第104弾: attack_end_trigger（攻撃の終わりに）— 新語彙なし（2026-11-05）
+「このクリーチャーの攻撃の終わりに、〜」は既存の attack_end イベントで表す（キリフダッシュ用に追加済みのイベント。攻撃クリーチャーが subject）。
+- 書き方: {kind: trigger, when: {event: attack_end, subject: self}, effect: [...]}。
+- tests/test_vocab_pilot104.py 2件（正常 parse／検証）
+- 待機7枚（attack_end_trigger のみが gap のもの）。
