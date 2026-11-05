@@ -299134,3 +299134,199 @@ cards:
     W・ブレイカー（このクリーチャーはシールドを２枚ブレイクする）'
   types:
   - creature
+- abilities:
+  - effect:
+    - body:
+      - op: move
+        reason: charge
+        select:
+          from_top: 1
+          owner: you
+          zone: deck
+        to: shield
+      op: may
+    kind: trigger
+    when:
+      event: tap
+      subject: self
+  civs:
+  - light
+  cost: 4
+  id: dm23ex2-067
+  keywords:
+  - powered_breaker
+  - dynamo
+  mana: 1
+  name: 伝印の精霊龍 エメラモンド
+  power: 4500
+  races:
+  - エンジェル・コマンド・ドラゴン
+  - ダイナモ
+  source:
+    notes: 'ダイナモは keywords: [dynamo]（第76弾）。「タップした時」は when: {event: tap, subject: self}。シールド化は山札上から
+      shield へ move（reason: charge、dm22ex2-068 と同型）'
+    official: dm23ex2-067
+    review: pending
+  text: 'パワード・ブレイカー（このクリーチャーは、そのパワー6000ごとにシールドをさらに１つブレイクする）
+
+    このクリーチャーがタップした時、山札の上から１枚目をシールド化してもよい。
+
+    ダイナモ（バトルが始まる時、あるいはこのクリーチャーで攻撃できる時、このクリーチャーをタップしてもよい。そうしたら、そのターンの終わりまで、このクリーチャーのパワーと能力を自分の他のダイナモ１体に加える）'
+  types:
+  - creature
+- abilities:
+  - effect:
+    - body:
+      - count: 1
+        op: draw
+      op: may
+    kind: trigger
+    when:
+      event: tap
+      subject: self
+  civs:
+  - water
+  cost: 2
+  id: dm23ex2-092
+  keywords:
+  - dynamo
+  mana: 1
+  name: 一なる伝印 イワシモンズ
+  power: 1000
+  races:
+  - ムートピア
+  - ダイナモ
+  source:
+    notes: 'ダイナモは keywords: [dynamo]（第76弾）。「タップした時」は when: {event: tap, subject: self}'
+    official: dm23ex2-092
+    review: pending
+  text: 'ダイナモ（バトルが始まる時、あるいはこのクリーチャーで攻撃できる時、このクリーチャーをタップしてもよい。そうしたら、そのターンの終わりまで、このクリーチャーのパワーと能力を自分の他のダイナモ１体に加える）
+
+    このクリーチャーがタップした時、カードを１枚引いてもよい。'
+  types:
+  - creature
+- abilities:
+  - effect:
+    - body:
+      - op: discard
+        select:
+          count: 1
+          owner: you
+          zone: hand
+      - count: 1
+        op: draw
+      op: may
+    kind: trigger
+    when:
+      event: tap
+      subject: self
+  civs:
+  - fire
+  cost: 2
+  id: dm23ex2-101
+  keywords:
+  - dynamo
+  mana: 1
+  name: 伝印る両手 スミスモンド
+  power: 3000
+  races:
+  - アウトレイジ
+  - ダイナモ
+  source:
+    notes: 'ダイナモは keywords: [dynamo]（第76弾）。「タップした時」は when: {event: tap, subject: self}。「捨ててもよい。そうしたら引く」は
+      may の body に discard → draw を並べる形（dm24rp3-069 と同型）'
+    official: dm23ex2-101
+    review: pending
+  text: 'このクリーチャーがタップした時、自分の手札を１枚捨ててもよい。そうしたら、カードを１枚引く。
+
+    ダイナモ（バトルが始まる時、あるいはこのクリーチャーで攻撃できる時、このクリーチャーをタップしてもよい。そうしたら、そのターンの終わりまで、このクリーチャーのパワーと能力を自分の他のダイナモ１体に加える）'
+  types:
+  - creature
+- abilities:
+  - effect:
+    - body:
+      - as: t
+        op: choose
+        select:
+          count: 1
+          from_top: 1
+          owner: you
+          zone: deck
+      - op: mana_put
+        select:
+          count: all
+          ref: t
+      - op: tap
+        select:
+          count: all
+          ref: t
+      op: may
+    kind: trigger
+    when:
+      event: tap
+      subject: self
+  civs:
+  - nature
+  cost: 3
+  id: dm23ex2-104
+  keywords:
+  - dynamo
+  mana: 1
+  name: 伝印速 ヴェルモンド
+  power: 4000
+  races:
+  - ソニック・コマンド
+  - ダイナモ
+  source:
+    notes: 'ダイナモは keywords: [dynamo]（第76弾）。「タップした時」は when: {event: tap, subject: self}。「タップしてマナゾーンに置く」は
+      choose で確保してから mana_put → tap の順（dm23bd5-054 フェアリー・ソングと同型）'
+    official: dm23ex2-104
+    review: pending
+  text: 'ダイナモ（バトルが始まる時、あるいはこのクリーチャーで攻撃できる時、このクリーチャーをタップしてもよい。そうしたら、そのターンの終わりまで、このクリーチャーのパワーと能力を自分の他のダイナモ１体に加える）
+
+    このクリーチャーがタップした時、自分の山札の上から１枚目をタップしてマナゾーンに置いてもよい。'
+  types:
+  - creature
+- faces:
+  - civs:
+    - fire
+    cost: 3
+    keywords:
+    - speed_attacker
+    - dynamo
+    mana: 1
+    name: 早食王のリンパオ
+    power: 1000
+    races:
+    - ドリームメイト
+    - ダイナモ
+    types:
+    - creature
+  - civs:
+    - darkness
+    cost: 3
+    mana: 1
+    name: ライク・ア・ローリング・ストーム
+    spell:
+    - count: 3
+      op: mill
+      owner: you
+    - op: move
+      reason: return
+      select:
+        count: 1
+        filter:
+          types:
+          - creature
+        owner: you
+        zone: graveyard
+      to: hand
+    types:
+    - spell
+  id: dm23ex2-110
+  mana: 1
+  source:
+    notes: 'ツインパクト。ダイナモは keywords: [dynamo]（第76弾）。呪文側は mill 3 の後に墓地のクリーチャー1体を手札へ戻す'
+    official: dm23ex2-110
+    review: pending
+  text: '早食王のリンパオ: スピードアタッカー / ダイナモ ／ ライク・ア・ローリング・ストーム: 自分の山札の上から３枚を墓地に置く。その後、クリーチャーを１体、自分の墓地から手札に戻す。'
