@@ -314519,3 +314519,305 @@ cards:
     W・ブレイカー(このクリーチャーはシールドを２枚ブレイクする)'
   types:
   - creature
+- civs:
+  - fire
+  cost: 4
+  id: dm35-016
+  mana: 1
+  name: ピーコック・ブレス
+  source:
+    notes: 「パワーアタッカー」は battle_power ではなく power_when で付与した（第2・第3文のパワー判定が、プレイヤーを攻撃している間も修整込みのパワーで判定される必要があるため）。第2・第3文は第88弾の条件つき
+      static を gain でこのターンの間だけ与えた
+    official: dm35-016
+    review: pending
+  spell:
+  - cond:
+      exists:
+        filter:
+          any_of:
+          - evolution: true
+          - linked_god: true
+        owner: you
+        zone: bz
+    else:
+    - duration: end_of_turn
+      mod:
+        power_when:
+          amount: 3000
+          when: attacking
+      op: modify
+      select:
+        count: all
+        filter:
+          types:
+          - creature
+        owner: you
+        zone: bz
+    op: if
+    then:
+    - duration: end_of_turn
+      mod:
+        power_when:
+          amount: 6000
+          when: attacking
+      op: modify
+      select:
+        count: all
+        filter:
+          types:
+          - creature
+        owner: you
+        zone: bz
+  - duration: end_of_turn
+    mod:
+      gain:
+      - affects: self
+        if:
+          exists:
+            filter:
+              power_ge: 6000
+            ref: self
+        kind: static
+        mod:
+          grant:
+          - double_breaker
+      - affects: self
+        if:
+          exists:
+            filter:
+              power_ge: 12000
+            ref: self
+        kind: static
+        mod:
+          grant:
+          - triple_breaker
+    op: modify
+    select:
+      count: all
+      filter:
+        types:
+        - creature
+      owner: you
+      zone: bz
+  text: このターン、バトルゾーンにある自分のクリーチャーはすべて「パワーアタッカー+3000」を得る。バトルゾーンに自分の進化クリーチャーまたはリンクしているゴッドがあれば、バトルゾーンにある自分のクリーチャーはすべて、「パワーアタッカー+3000」のかわりに「パワーアタッカー+6000」を得る。
+    / このターン、自分のクリーチャーが攻撃する時、そのパワーが6000以上であれば「W・ブレイカー」を得る。 / このターン、自分のクリーチャーが攻撃する時、そのパワーが12000以上であれば「T・ブレイカー」を得る。
+  types:
+  - spell
+- abilities:
+  - effect:
+    - op: destroy
+      select:
+        ref: self
+    if:
+      not:
+        exists:
+          filter:
+            any_of:
+            - evolution: true
+            - linked_god: true
+          owner: you
+          zone: bz
+    kind: trigger
+    when:
+      event: move
+      subject: self
+      to: bz
+  civs:
+  - nature
+  cost: 1
+  id: dm35-035
+  mana: 1
+  name: ペドナネイチャー
+  power: 4000
+  races:
+  - エメラルド・モンスター
+  source:
+    official: dm35-035
+    review: pending
+  text: このクリーチャーをバトルゾーンに出した時、バトルゾーンに自分の進化クリーチャーまたはリンクしているゴッドがなければ、このクリーチャーを破壊する。
+  types:
+  - creature
+- civs:
+  - light
+  cost: 3
+  id: dm35-039
+  keywords:
+  - s_trigger
+  mana: 1
+  name: ソーラー・グレース
+  source:
+    official: dm35-039
+    review: pending
+  spell:
+  - op: tap
+    select:
+      count: 1
+      filter:
+        types:
+        - creature
+      owner: opp
+      zone: bz
+  - cond:
+      exists:
+        filter:
+          any_of:
+          - evolution: true
+          - linked_god: true
+        owner: you
+        zone: bz
+    op: if
+    then:
+    - op: tap
+      select:
+        count: 1
+        filter:
+          types:
+          - creature
+        owner: opp
+        zone: bz
+  text: 'S・トリガー(この呪文をシールドゾーンから手札に加える時、コストを支払わずにすぐ唱えてもよい)
+
+    バトルゾーンにある相手のクリーチャーを１体選び、タップする。バトルゾーンに自分の進化クリーチャーまたはリンクしているゴッドがあれば、バトルゾーンにある相手のクリーチャーをもう１体選び、タップする。'
+  types:
+  - spell
+- abilities:
+  - affects: self
+    if:
+      exists:
+        filter:
+          any_of:
+          - evolution: true
+          - linked_god: true
+        owner: you
+        zone: bz
+    kind: static
+    mod:
+      grant:
+      - slayer
+  civs:
+  - darkness
+  cost: 4
+  id: dm35-046
+  keywords:
+  - blocker
+  - cannot_attack
+  mana: 1
+  name: キラーノイズ・マラカス
+  power: 3000
+  races:
+  - ガーゴイル
+  source:
+    official: dm35-046
+    review: pending
+  text: 'ブロッカー(相手クリーチャーが攻撃する時、このクリーチャーをタップして、その攻撃を阻止してもよい。その後、その相手クリーチャーとバトルする)
+
+    このクリーチャーは攻撃することができない。
+
+    バトルゾーンに自分の進化クリーチャーまたはリンクしているゴッドがある時、このクリーチャーは「スレイヤー」を得る。(「スレイヤー」を得たクリーチャーがバトルする時、バトルの後、相手クリーチャーを破壊する)'
+  types:
+  - creature
+- abilities:
+  - affects: self
+    if:
+      exists:
+        filter:
+          any_of:
+          - evolution: true
+          - linked_god: true
+        owner: you
+        zone: bz
+    kind: static
+    mod:
+      grant:
+      - speed_attacker
+  civs:
+  - fire
+  cost: 4
+  id: dm35-049
+  mana: 1
+  name: ヤシチグレンオー
+  power: 4000
+  races:
+  - フレイム・モンスター
+  source:
+    official: dm35-049
+    review: pending
+  text: バトルゾーンに自分の進化クリーチャーまたはリンクしているゴッドがある時、このクリーチャーは「スピードアタッカー」を得る。
+  types:
+  - creature
+- abilities:
+  - affects: self
+    if:
+      exists:
+        filter:
+          any_of:
+          - evolution: true
+          - linked_god: true
+        owner: you
+        zone: bz
+    kind: static
+    mod:
+      grant:
+      - double_breaker
+      power_when:
+        amount: 4000
+        when: attacking
+  civs:
+  - nature
+  cost: 4
+  id: dm35-052
+  mana: 1
+  name: 無頼妖精セツ・ゴウワン
+  power: 4000
+  races:
+  - スノーフェアリー
+  - ビーストフォーク
+  - オリジン
+  source:
+    official: dm35-052
+    review: pending
+  text: バトルゾーンに自分の進化クリーチャーまたはリンクしているゴッドがある時、このクリーチャーは「パワーアタッカー+4000」と「W・ブレイカー」を得る。
+  types:
+  - creature
+- abilities:
+  - effect:
+    - body:
+      - op: bounce
+        select:
+          count: 1
+          filter:
+            any_of:
+            - evolution: true
+            - linked_god: true
+          owner: any
+          zone: bz
+      op: may
+    kind: trigger
+    when:
+      event: move
+      subject: self
+      to: bz
+  civs:
+  - water
+  cost: 5
+  id: dm36-019
+  keywords:
+  - s_trigger
+  mana: 1
+  name: クール・ビューティー
+  power: 2000
+  races:
+  - スプラッシュ・クイーン
+  - M・ソウル
+  source:
+    official: dm36-019
+    review: pending
+    aliases:
+    - promoy21-074
+  text: '【M・ソウル】
+
+    S・トリガー(このクリーチャーをシールドゾーンから手札に加える時、コストを支払わずにすぐ召喚してもよい)
+
+    このクリーチャーをバトルゾーンに出した時、バトルゾーンにある進化クリーチャーまたはリンクしているゴッドを１体選び、持ち主の手札に戻してもよい。'
+  types:
+  - creature
