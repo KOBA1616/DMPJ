@@ -1196,3 +1196,8 @@ draw イベントへの置換で表す（draw は個別イベントとして発�
 ### 第122弾 battle_opponent_filter（2026-11-05）
 - 「『ブロッカー』を持つクリーチャーとバトル中、パワーを+Nする」= mod: {battle_power: {amount: N, opponent_filter: {keyword: blocker}}}。「火のクリーチャーとバトル中、破壊されない」= mod: {battle_indestructible: {opponent_filter: {civs: [fire]}}}（エンジン拡張: battle_power / battle_indestructible に opponent_filter を追加。combat._battle が相手を渡してフィルタ判定。chars には battle_indestructible_filters として集める）。
 - proto T159/T160、試験カード R084/R085/R086、tests/test_vocab_pilot122.py 6件（parse 2件＋実挙動4件: 対ブロッカーで勝つ／対非ブロッカーで負ける／対火で不壊／対自然で破壊）。
+
+### 第123弾 mana_all_civilizations（2026-11-05）
+- 「自分のマナゾーンにあるカードを、すべての文明のカードとして扱う」= static {affects: {zone: mana, owner: you}, mod: {add_civs: [light, water, darkness, fire, nature]}}。「すべての文明を持つかのようにタップしてもよい」系も同じ静的で表す（支払い時の文明として扱う点が本質）。
+- エンジン拡張: turn._mana_choices の文明判定をカード定義ではなく特性（chars）ベースに変更（グループキーに chars の文明タプルを含める）。これで add_civs（自分の静的・マナ側の静的を含む）が支払いに効く。
+- proto T161、試験カード R087/R088、tests/test_vocab_pilot123.py 3件（parse、R087 ありで自然マナが火の文明を満たす、なしでは満たせない）。

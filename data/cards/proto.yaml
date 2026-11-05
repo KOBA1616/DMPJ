@@ -2087,3 +2087,15 @@ cards:
       - kind: static
         affects: self
         mod: {battle_indestructible: {opponent_filter: {civs: [fire]}}}
+  - id: T161
+    name: 試験用薫風妖精
+    types: [creature]
+    civs: [nature]
+    cost: 2
+    power: 1000
+    races: [テスト]
+    text: 自分のマナゾーンにあるカードを、すべての文明のカードとして扱う。
+    abilities:
+      - kind: static
+        affects: {zone: mana, owner: you}
+        mod: {add_civs: [light, water, darkness, fire, nature]}

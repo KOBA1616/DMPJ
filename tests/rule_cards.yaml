@@ -759,3 +759,24 @@ cards:
     races: [テスト]
     text: 試験用ダミー（火）
     abilities: []
+  - id: R087
+    name: 試験用薫風妖精
+    types: [creature]
+    civs: [nature]
+    cost: 2
+    power: 1000
+    races: [テスト]
+    text: 自分のマナゾーンにあるカードを、すべての文明のカードとして扱う。
+    abilities:
+      - kind: static
+        affects: {zone: mana, owner: you}
+        mod: {add_civs: [light, water, darkness, fire, nature]}
+  - id: R088
+    name: 試験用炎獣（支払い用）
+    types: [creature]
+    civs: [fire]
+    cost: 2
+    power: 2000
+    races: [テスト]
+    text: 試験用ダミー（火・支払い用）
+    abilities: []
