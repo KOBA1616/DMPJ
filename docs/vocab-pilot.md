@@ -959,3 +959,10 @@ converted の監査（opt_reduce の素の整数表記9件）から。任意形�
 - 書き方: kind: replace, when: {event: move, from: bz, subject: {owner: you, other: true, filter: {該当条件}}}, optional: true, instead: [destroy {ref: self}]。
 - tests/test_vocab_pilot87.py 2件（正常 parse／検証）
 - 待機14枚（ultra_saber のみが gap のもの）。
+
+## 第88弾: grant_based_on_own_power_threshold（自分のパワー条件で得る）— 新語彙なし（2026-11-05）
+「パワーがN以上のとき、〜を得る」は条件付き static で表せる（自分の現在パワーを exists で参照）。
+- 書き方: kind: static, affects: self, if: {exists: {ref: self, filter: {power_ge: N}}}, mod: {grant: [...]}。
+- power は修正込みの現在値で判定される。
+- tests/test_vocab_pilot88.py 2件（正常 parse／検証）
+- 待機13枚（grant_based_on_own_power_threshold のみが gap のもの）。
