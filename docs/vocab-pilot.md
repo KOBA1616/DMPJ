@@ -865,3 +865,10 @@ converted の監査（opt_reduce の素の整数表記9件）から。任意形�
 - 「多い場合」は ">"、「以下／以上」は "<=" / ">="。
 - tests/test_vocab_pilot73.py 2件（正常 parse／検証）
 - 待機15枚（zone_count_comparison のみが gap のもの）。
+
+## 第74弾: enters_event_trigger（他クリーチャーが出た時の誘発）— 新語彙なし（2026-11-05）
+「自分の〜がバトルゾーンに出た時」は既存の when.subject セレクタで表せる。
+- 書き方: kind: trigger, when: {event: move, to: bz, subject: {owner: you, other: true, filter: {race_has: ...}}}（summon イベントでも可）
+- 効果の対象が self の場合は effect 内で select: {ref: self} を使う。
+- tests/test_vocab_pilot74.py 2件（正常 parse／検証）
+- 待機15枚（enters_event_trigger のみが gap のもの）。
