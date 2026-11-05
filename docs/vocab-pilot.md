@@ -1085,3 +1085,10 @@ converted の監査（opt_reduce の素の整数表記9件）から。任意形�
 - 書き方: {kind: trigger, when: {event: tap, subject: self}, effect: [...]}。
 - tests/test_vocab_pilot107.py 2件（正常 parse／検証）
 - 待機7枚（tap_event_trigger のみが gap のもの）。
+
+## 第108弾: cost_le_card（カードのコスト以下）— 新語彙なし（2026-11-05）
+選択フィルタ側でも第82弾のイディオムが使える: filter: {cost_le: {cost_of: {ref: t}}} で
+「as で束縛したカードのコスト以下」を表す（自身以下は {cost_of: {ref: self}}）。
+- 書き方: select ... as: t → select/filter で cost_le: {cost_of: {ref: t}}。
+- tests/test_vocab_pilot108.py 2件（正常 parse／検証）
+- 待機7枚（cost_le_card のみが gap のもの）。
