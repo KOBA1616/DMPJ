@@ -1023,3 +1023,10 @@ converted の監査（opt_reduce の素の整数表記9件）から。任意形�
 - 書き方: spell: [<効果>, {op: if, cond: {exists: {zone: bz, owner: you, filter: {race_has: ナイト}}}, then: [{op: may, body: [<効果>]}]}]（先例 dm28-016 魔弾プラス・ワン）。
 - tests/test_vocab_pilot97.py 2件（正常 parse／検証）
 - 待機16枚（night_magic のみが gap のもの）。
+
+## 第98弾: enters_from_non_hand_replacement（手札以外から出る時の置換）— エンジン拡張（2026-11-05）
+「相手のクリーチャーが、相手の手札以外から出る時、かわりに手札に加える」等の出現元で条件づける置換。
+- エンジン変更: when の from / to / reason / via にリスト指定を許可（いずれかに一致）。dmsim/engine/events.py の _match_when と dmsim/defs.py の検証を対応させた。
+- 書き方: {kind: replace, when: {event: move, to: bz, from: [graveyard, mana, deck, shield], subject: {owner: opp, filter}}, instead: [...]}。「召喚以外の方法で出る」は reason: put（バトルゾーンへの出現理由は summon / put の2種のみ）。
+- tests/test_vocab_pilot98.py 3件（parse 2件＋照合の実挙動1件）。
+- 待機10枚（enters_from_non_hand_replacement のみが gap のもの）。

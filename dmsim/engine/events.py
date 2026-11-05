@@ -416,8 +416,13 @@ class EventMixin:
         if when["event"] != rec["ev"]:
             return False
         for k in ("from", "to", "reason", "via"):
-            if k in when and rec.get(k) != when[k]:
-                return False
+            if k in when:
+                wv = when[k]
+                if isinstance(wv, list):   # リスト指定は「いずれか」（手札以外から出る等）
+                    if rec.get(k) not in wv:
+                        return False
+                elif rec.get(k) != wv:
+                    return False
         if "target" in when:   # 攻撃先: player（シールドも含む）か creature。self や {owner, filter} なら、そのクリーチャーが攻撃された時
             tg, w = rec.get("target"), when["target"]
             if w in ("player", "creature"):

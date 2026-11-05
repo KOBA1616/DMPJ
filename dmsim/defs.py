@@ -517,10 +517,16 @@ class Checker:
         if ev not in EVENTS:
             raise DefError(f"{where}: unknown event '{ev}'")
         for k in ("from", "to"):
-            if k in w and w[k] not in self.zones:
-                raise DefError(f"{where}: unknown zone '{w[k]}'")
-        if "reason" in w and w["reason"] not in REASONS:
-            raise DefError(f"{where}: unknown reason '{w['reason']}'")
+            if k in w:
+                vals = w[k] if isinstance(w[k], list) else [w[k]]
+                for v in vals:
+                    if v not in self.zones:
+                        raise DefError(f"{where}: unknown zone '{v}'")
+        if "reason" in w:
+            vals = w["reason"] if isinstance(w["reason"], list) else [w["reason"]]
+            for v in vals:
+                if v not in REASONS:
+                    raise DefError(f"{where}: unknown reason '{v}'")
         tg = w.get("target")
         if tg is not None and tg not in ("player", "creature", "self") and not isinstance(tg, dict):
             raise DefError(f"{where}: bad target '{tg}'")
