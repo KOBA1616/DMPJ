@@ -297111,3 +297111,817 @@ cards:
   types:
   - creature
   - evolution
+- abilities:
+  - effect:
+    - cond:
+        cmp:
+        - count:
+            owner: you
+            zone: hand
+        - <
+        - count:
+            owner: opp
+            zone: hand
+      op: if
+      then:
+      - body:
+        - count: 1
+          op: draw
+        op: may
+    - cond:
+        cmp:
+        - count:
+            owner: you
+            zone: mana
+        - <
+        - count:
+            owner: opp
+            zone: mana
+      op: if
+      then:
+      - body:
+        - op: move
+          reason: put
+          select:
+            from_top: 1
+            owner: you
+            zone: deck
+          to: mana
+        op: may
+    - cond:
+        cmp:
+        - count:
+            owner: you
+            zone: shield
+        - <
+        - count:
+            owner: opp
+            zone: shield
+      op: if
+      then:
+      - body:
+        - op: move
+          reason: charge
+          select:
+            from_top: 1
+            owner: you
+            zone: deck
+          to: shield
+        op: may
+    kind: trigger
+    when:
+      event: move
+      subject: self
+      to: bz
+  civs:
+  - light
+  cost: 8
+  id: dmr07-s02
+  keywords:
+  - blocker
+  - double_breaker
+  mana: 1
+  name: 真実の名 ホワイト・オブ・ライオネル
+  power: 11500
+  races:
+  - エンジェル・コマンド
+  - アンノウン
+  source:
+    notes: '３つの条件はすべて zone_count_comparison（第73弾）の cmp + count（owner: you / opp）で表現。各効果は原文どおり個別に「してもよい」'
+    official: dmr07-s02
+    review: pending
+  text: 'ブロッカー
+
+    このクリーチャーをバトルゾーンに出した時、自分の手札が相手より少ない場合、カードを１枚引いてもよい。自分のマナゾーンのカードが相手より少ない場合、自分の山札の上から１枚目をマナゾーンに置いてもよい。自分のシールドが相手より少ない場合、自分の山札の上から１枚目を裏向きのまま、新しいシールドとして自分のシールドゾーンに加えてもよい。
+
+    W・ブレイカー(このクリーチャーはシールドを２枚ブレイクする)'
+  types:
+  - creature
+- civs:
+  - light
+  cost: 3
+  id: dmr16s-021
+  mana: 1
+  name: プロテクション・サークル(DMR16真 21/54)
+  source:
+    notes: 'シールド比較は zone_count_comparison（第73弾）の cmp + count で表現。手札→シールドは move reason:
+      charge（dm22ex2-041 等の先例）'
+    official: dmr16s-021
+    review: pending
+  spell:
+  - op: move
+    reason: charge
+    select:
+      count: 1
+      owner: you
+      zone: hand
+    to: shield
+  - cond:
+      cmp:
+      - count:
+          owner: you
+          zone: shield
+      - '>'
+      - count:
+          owner: opp
+          zone: shield
+    op: if
+    then:
+    - body:
+      - count: 1
+        op: draw
+      op: may
+  text: 自分の手札を１枚、新しいシールドとして自分のシールドゾーンに裏向きにして加える。自分のシールドの数が相手のより多ければ、カードを１枚引いてもよい。
+  types:
+  - spell
+- civs:
+  - water
+  cost: 4
+  id: dmr16s-041
+  mana: 1
+  name: スクリュー・スパイラル(DMR16真 41/54)
+  source:
+    notes: シールド比較は zone_count_comparison（第73弾）の cmp + count で表現
+    official: dmr16s-041
+    review: pending
+  spell:
+  - op: bounce
+    select:
+      count: 1
+      filter:
+        types:
+        - creature
+      owner: any
+      zone: bz
+  - cond:
+      cmp:
+      - count:
+          owner: you
+          zone: shield
+      - '>'
+      - count:
+          owner: opp
+          zone: shield
+    op: if
+    then:
+    - body:
+      - count: 1
+        op: draw
+      op: may
+  text: バトルゾーンにあるクリーチャーを１体選び、持ち主の手札に戻す。自分のシールドの数が相手のより多ければ、カードを１枚引いてもよい。
+  types:
+  - spell
+- civs:
+  - darkness
+  cost: 2
+  id: dmr16s-045
+  mana: 1
+  name: 闇からの復権(DMR16真 45/54)
+  source:
+    notes: シールド比較は zone_count_comparison（第73弾）の cmp + count で表現
+    official: dmr16s-045
+    review: pending
+  spell:
+  - op: move
+    reason: return
+    select:
+      count: 1
+      filter:
+        types:
+        - creature
+      owner: you
+      zone: graveyard
+    to: hand
+  - cond:
+      cmp:
+      - count:
+          owner: you
+          zone: shield
+      - '>'
+      - count:
+          owner: opp
+          zone: shield
+    op: if
+    then:
+    - body:
+      - count: 1
+        op: draw
+      op: may
+  text: クリーチャーを１体、自分の墓地から手札に戻す。自分のシールドの数が相手のより多ければ、カードを１枚引いてもよい。
+  types:
+  - spell
+- civs:
+  - fire
+  cost: 1
+  id: dmr16s-049
+  mana: 1
+  name: 爆流剣術 神速の技(DMR16真 49/54)
+  source:
+    notes: シールド比較は zone_count_comparison（第73弾）の cmp + count で表現。スピードアタッカー付与は modify
+      + grant（dmr19-079 等の先例）
+    official: dmr16s-049
+    review: pending
+  spell:
+  - duration: end_of_turn
+    mod:
+      grant:
+      - speed_attacker
+    op: modify
+    select:
+      count: 1
+      filter:
+        types:
+        - creature
+      owner: you
+      zone: bz
+  - cond:
+      cmp:
+      - count:
+          owner: you
+          zone: shield
+      - '>'
+      - count:
+          owner: opp
+          zone: shield
+    op: if
+    then:
+    - body:
+      - count: 1
+        op: draw
+      op: may
+  text: このターン、バトルゾーンにある自分のクリーチャー１体は「スピードアタッカー」を得る。自分のシールドの数が相手のより多ければ、カードを１枚引いてもよい。
+  types:
+  - spell
+- civs:
+  - nature
+  cost: 3
+  id: dmr16s-054
+  mana: 1
+  name: 熱狂の加護(DMR16真 54/54)
+  source:
+    notes: 'シールド比較は zone_count_comparison（第73弾）の cmp + count で表現。「パワー+3000され、シールドをさらに１枚ブレイクする」は
+      dmr21-057 バスター・チャージャーと同文型で mod {power, breaks: 1}'
+    official: dmr16s-054
+    review: pending
+  spell:
+  - duration: end_of_turn
+    mod:
+      breaks: 1
+      power: 3000
+    op: modify
+    select:
+      count: 1
+      filter:
+        types:
+        - creature
+      owner: you
+      zone: bz
+  - cond:
+      cmp:
+      - count:
+          owner: you
+          zone: shield
+      - '>'
+      - count:
+          owner: opp
+          zone: shield
+    op: if
+    then:
+    - body:
+      - count: 1
+        op: draw
+      op: may
+  text: このターン、バトルゾーンにある自分のクリーチャー１体のパワーは+3000され、シールドをさらに１枚ブレイクする。自分のシールドの数が相手のより多ければ、カードを１枚引いてもよい。
+  types:
+  - spell
+- civs:
+  - light
+  cost: 2
+  id: dmrp02-035
+  mana: 1
+  name: シディアン・ビーティス
+  source:
+    notes: '「相手のマナ枚数よりコストが大きい」は filter の cost_ge: {sum: [{count: mana/opp}, 1]}（dmrp15-018
+      サイコロ町の半兵衛と同型、第65弾）。シールド化は持ち主のシールドゾーンへの move reason: charge'
+    official: dmrp02-035
+    review: pending
+    aliases:
+    - promoy16-095
+  spell:
+  - op: move
+    reason: charge
+    select:
+      count: all
+      filter:
+        cost_ge:
+          sum:
+          - count:
+              owner: opp
+              zone: mana
+          - 1
+        not_types:
+        - evolution
+        types:
+        - creature
+      owner: opp
+      zone: bz
+    to: shield
+  text: 相手のマナゾーンにあるカードの枚数よりコストが大きい相手の進化ではないクリーチャーをすべて、裏向きにして、それぞれ新しいシールドとして持ち主のシールドゾーンに置く。
+  types:
+  - spell
+- civs:
+  - water
+  cost: 5
+  id: dmrp02-040
+  mana: 1
+  name: マジカル・バキューム
+  source:
+    notes: '「自分の手札の枚数よりコストが小さい」は cost_le: {sum: [{count: hand/you}, -1]} で表現（「より大きい」を
+      cost_ge +1 で表す第65弾の対）。手札枚数は２枚引いた後の枚数で数える（解決順どおり）'
+    official: dmrp02-040
+    review: pending
+  spell:
+  - count: 2
+    op: draw
+  - body:
+    - op: bounce
+      select:
+        count: 1
+        filter:
+          cost_le:
+            sum:
+            - count:
+                owner: you
+                zone: hand
+            - -1
+          types:
+          - creature
+        owner: any
+        zone: bz
+    op: may
+  text: カードを２枚引く。その後、自分の手札の枚数よりコストが小さいクリーチャーを１体選び、持ち主の手札に戻してもよい。
+  types:
+  - spell
+- abilities:
+  - affects: self
+    if:
+      cmp:
+      - count:
+          filter:
+            types:
+            - creature
+          owner: you
+          zone: bz
+      - '>'
+      - count:
+          filter:
+            types:
+            - creature
+          owner: opp
+          zone: bz
+    kind: static
+    mod:
+      grant:
+      - blocker
+  - effect:
+    - op: untap
+      select:
+        ref: self
+    if:
+      cmp:
+      - count:
+          filter:
+            types:
+            - creature
+          owner: you
+          zone: bz
+      - '>'
+      - count:
+          filter:
+            types:
+            - creature
+          owner: opp
+          zone: bz
+    kind: trigger
+    when:
+      event: turn_end
+      player: you
+  civs:
+  - light
+  cost: 6
+  id: dmrp05-032
+  keywords:
+  - double_breaker
+  mana: 1
+  name: 青守銀 ワッシェン
+  power: 6000
+  races:
+  - メタリカ
+  source:
+    notes: 条件は zone_count_comparison（第73弾）の cmp + count。「自分のターンの終わりにアンタップする」は dmr22-062
+      と同型の turn_end 誘発（条件は同じ cmp を付けた）
+    official: dmrp05-032
+    review: pending
+  text: 'W・ブレイカー（このクリーチャーはシールドを２つブレイクする）
+
+    バトルゾーンにある自分のクリーチャーの数が相手より多ければ、このクリーチャーは「ブロッカー」を得、自分のターンの終わりにアンタップする。（「ブロッカー」を持つクリーチャーをタップして、相手クリーチャーの攻撃先をこのクリーチャーに変更してもよい）'
+  types:
+  - creature
+- abilities:
+  - effect:
+    - op: tap
+      select:
+        count: 1
+        filter:
+          types:
+          - creature
+        owner: opp
+        zone: bz
+    if:
+      cmp:
+      - count:
+          filter:
+            types:
+            - creature
+          owner: you
+          zone: bz
+      - '>'
+      - count:
+          filter:
+            types:
+            - creature
+          owner: opp
+          zone: bz
+    kind: trigger
+    when:
+      event: attack
+      subject: self
+  civs:
+  - light
+  cost: 3
+  id: dmrp05-061
+  mana: 1
+  name: 赤攻銀 シュクラン
+  power: 3000
+  races:
+  - メタリカ
+  source:
+    notes: 条件は zone_count_comparison（第73弾）の cmp + count で表現
+    official: dmrp05-061
+    review: pending
+  text: このクリーチャーが攻撃する時、バトルゾーンにある自分のクリーチャーの数が相手より多ければ、相手のクリーチャーを１体選び、タップする。
+  types:
+  - creature
+- abilities:
+  - kind: static
+    affects: self
+    zone: hand
+    mod:
+      opt_reduce:
+        amount: 2
+        then: deck_bottom_draw
+  - affects: self
+    kind: static
+    mod:
+      opt_reduce:
+        amount: 2
+        then: deck_bottom_draw
+    zone: hand
+  - effect:
+    - op: move
+      order: choose
+      position: bottom
+      reason: put
+      select:
+        chooser: opp
+        count: all
+        filter:
+          cost_ge:
+            sum:
+            - count:
+                owner: opp
+                zone: mana
+            - 1
+          types:
+          - creature
+        owner: opp
+        zone: bz
+      to: deck
+    kind: trigger
+    when:
+      event: move
+      subject: self
+      to: bz
+  civs:
+  - fire
+  cost: 4
+  id: dmrp06-024
+  mana: 1
+  name: サイコロプス
+  power: 4000
+  races:
+  - ジョーカーズ
+  source:
+    notes: 'Ｊ・Ｏ・Ｅ ２ は opt_reduce {amount: 2, then: deck_bottom_draw}（dmrp04m-006 等の先例）。出た時の処理は「相手のマナ枚数より大きい」を
+      cost_ge: {sum: [count, 1]} で表し（dmrp15-018 と同型）、相手自身が好きな順序で置くため chooser: opp
+      + order: choose、置き先は position: bottom'
+    official: dmrp06-024
+    review: pending
+    aliases:
+    - promoy17-023
+  text: 'Ｊ・Ｏ・Ｅ ２ (このクリーチャーを、コストを２少なくして召喚してもよい。そうしたら、このターンの終わりに、これを自分の山札の一番下に置く。下に置いたら、カードを１枚引く)
+
+    このクリーチャーがバトルゾーンに出た時、相手は自身のマナゾーンにあるカードの枚数よりコストが大きい自身のクリーチャーをすべて、好きな順序で持ち主の山札の一番下に置く。'
+  types:
+  - creature
+- abilities:
+  - effect:
+    - cond:
+        cmp:
+        - count:
+            filter:
+              types:
+              - creature
+            owner: you
+            zone: bz
+        - '>'
+        - count:
+            filter:
+              types:
+              - creature
+            owner: opp
+            zone: bz
+      op: if
+      then:
+      - count: 1
+        op: draw
+    - body:
+      - op: move
+        reason: put
+        select:
+          count: 1
+          filter:
+            civs:
+            - light
+            cost_le: 5
+            not_types:
+            - evolution
+            types:
+            - creature
+          owner: you
+          zone: hand
+        to: bz
+      op: may
+    kind: trigger
+    when:
+      event: move
+      subject: self
+      to: bz
+  civs:
+  - light
+  cost: 5
+  id: dmrp06-032
+  mana: 1
+  name: 五導の並び 蓮多
+  power: 5000
+  races:
+  - メタリカ
+  source:
+    notes: '条件文は「カードを１枚引く」までに掛かると解釈し、「その後」の手札から出す効果は無条件とした（文の区切りに基づく判断で、要確認）。出す処理は召喚ではないため
+      move reason: put'
+    official: dmrp06-032
+    review: pending
+  text: このクリーチャーがバトルゾーンに出た時、バトルゾーンにある自分のクリーチャーの数が相手より多ければ、カードを１枚引く。その後、光のコスト５以下の進化ではないクリーチャーを１体、自分の手札からバトルゾーンに出してもよい。
+  types:
+  - creature
+- abilities:
+  - effect:
+    - op: move
+      reason: return
+      select:
+        count: 1
+        filter:
+          types:
+          - spell
+        owner: you
+        zone: graveyard
+      to: hand
+    if:
+      cmp:
+      - count:
+          filter:
+            types:
+            - creature
+          owner: you
+          zone: bz
+      - '>'
+      - count:
+          filter:
+            types:
+            - creature
+          owner: opp
+          zone: bz
+    kind: trigger
+    when:
+      event: move
+      subject: self
+      to: bz
+  civs:
+  - light
+  cost: 2
+  id: dmrp06-063
+  mana: 1
+  name: 緑知銀 ターシェ
+  power: 1000
+  races:
+  - メタリカ
+  source:
+    notes: 条件は zone_count_comparison（第73弾）の cmp + count で表現
+    official: dmrp06-063
+    review: pending
+  text: このクリーチャーがバトルゾーンに出た時、バトルゾーンにある自分のクリーチャーの数が相手より多ければ、呪文を１枚、自分の墓地から手札に戻す。
+  types:
+  - creature
+- abilities:
+  - affects: self
+    if:
+      cmp:
+      - count:
+          filter:
+            types:
+            - creature
+          owner: you
+          zone: bz
+      - '>'
+      - count:
+          filter:
+            types:
+            - creature
+          owner: opp
+          zone: bz
+    kind: static
+    mod:
+      grant:
+      - blocker
+  - effect:
+    - op: untap
+      select:
+        ref: self
+    if:
+      cmp:
+      - count:
+          filter:
+            types:
+            - creature
+          owner: you
+          zone: bz
+      - '>'
+      - count:
+          filter:
+            types:
+            - creature
+          owner: opp
+          zone: bz
+    kind: trigger
+    when:
+      event: turn_end
+      player: you
+  - effect:
+    - count: 1
+      op: draw
+    - body:
+      - op: move
+        reason: put
+        select:
+          count: 1
+          filter:
+            cost_le: 5
+            not_types:
+            - evolution
+            types:
+            - creature
+          owner: you
+          zone: hand
+        to: bz
+      op: may
+    kind: trigger
+    when:
+      event: tap
+      subject: self
+  - instead:
+    - op: destroy
+      select:
+        count: 1
+        filter:
+          civs:
+          - light
+          types:
+          - creature
+        other: true
+        owner: you
+        zone: bz
+    kind: replace
+    optional: true
+    when:
+      event: move
+      from: bz
+      subject: self
+  civs:
+  - light
+  cost: 6
+  id: dmrp07-s02
+  keywords:
+  - double_breaker
+  mana: 1
+  name: 龍装者 デュオ・コマンドー
+  power: 6000
+  races:
+  - ドラゴンギルド
+  - メタリカ
+  source:
+    notes: '条件は zone_count_comparison（第73弾）の cmp + count。「自分のターンの終わりにアンタップする」は turn_end
+      誘発（dmr22-062 と同型）。タップされた時は when: {event: tap, subject: self}。離れる時の身代わりは dm24bd4-006
+      / dm23sd2-004 と同型の optional replace（対象を光に限定）'
+    official: dmrp07-s02
+    review: pending
+  text: 'W・ブレイカー
+
+    バトルゾーンにある自分のクリーチャーの数が相手より多ければ、このクリーチャーに「ブロッカー」を与え、自分のターンの終わりにアンタップする。
+
+    このクリーチャーがタップされた時、カードを１枚引く。その後、コスト５以下の進化ではないクリーチャーを１体、自分の手札からバトルゾーンに出してもよい。
+
+    このクリーチャーがバトルゾーンを離れる時、かわりに自分の他の光のクリーチャーを１体破壊してもよい。'
+  types:
+  - creature
+- abilities:
+  - effect:
+    - op: discard
+      select:
+        chooser: opp
+        count: 2
+        owner: opp
+        zone: hand
+    if:
+      cmp:
+      - count:
+          owner: opp
+          zone: hand
+      - '>'
+      - count:
+          owner: you
+          zone: hand
+    kind: trigger
+    when:
+      event: move
+      subject: self
+      to: bz
+  - effect:
+    - op: destroy
+      select:
+        chooser: opp
+        count: 2
+        owner: opp
+        zone: bz
+    if:
+      cmp:
+      - count:
+          filter:
+            types:
+            - creature
+          owner: opp
+          zone: bz
+      - '>'
+      - count:
+          filter:
+            types:
+            - creature
+          owner: you
+          zone: bz
+    kind: trigger
+    when:
+      event: move
+      subject: self
+      to: bz
+  civs:
+  - darkness
+  cost: 7
+  id: dmrp08-020
+  keywords:
+  - double_breaker
+  mana: 1
+  name: キルケ・ゴール
+  power: 8000
+  races:
+  - マフィ・ギャング
+  source:
+    notes: '条件は zone_count_comparison（第73弾）の cmp + count（相手側を左辺に置く逆向き比較）。捨てる／破壊する対象は相手が選ぶため
+      chooser: opp（dm22ex2-046 等の先例）'
+    official: dmrp08-020
+    review: pending
+  text: 'W・ブレイカー（このクリーチャーはシールドを２つブレイクする）
+
+    このクリーチャーがバトルゾーンに出た時、相手の手札の枚数が自分より多ければ、相手は自身の手札を２枚選び、捨てる。
+
+    このクリーチャーがバトルゾーンに出た時、バトルゾーンにある相手のクリーチャーの数が自分より多ければ、相手は自身のクリーチャーを２体選び、破壊する。'
+  types:
+  - creature
