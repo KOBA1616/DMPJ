@@ -318121,3 +318121,156 @@ cards:
     / 鬼タイム：この呪文を手札から唱えた後、自分と相手のシールドの数が合計６つ以下なら、この呪文を墓地からコストを支払わずに唱えてもよい。
   types:
   - spell
+- abilities:
+  - effect:
+    - cond:
+        cmp:
+        - count:
+            owner: you
+            zone: deck
+        - '>'
+        - 5
+      op: if
+      then:
+      - op: move
+        reason: put
+        select:
+          count: all
+          from_top:
+            sum:
+            - count:
+                owner: you
+                zone: deck
+            - -5
+          owner: you
+          zone: deck
+        to: graveyard
+    kind: trigger
+    when:
+      event: move
+      subject: self
+      to: bz
+  - if:
+      cmp:
+      - count:
+          owner: you
+          zone: deck
+      - ==
+      - 1
+    instead:
+    - op: move
+      reason: return
+      select:
+        count: 1
+        owner: you
+        zone: graveyard
+      to: hand
+    kind: replace
+    optional: true
+    when:
+      event: draw
+      player: you
+  civs:
+  - darkness
+  cost: 8
+  id: dmx15-s05
+  keywords:
+  - double_breaker
+  mana: 1
+  name: 世界の果て ターミネーター
+  power: 8000
+  races:
+  - アウトレイジMAX
+  source:
+    notes: 山札を下から５枚残す処理は、山札が６枚以上の時だけ上から（山札枚数－５）枚を墓地に置く形で表した（５枚以下では何も置かない）。最後の１枚のドロー置換は《水上第九院
+      シャコガイル》と同じく置換の if で山札枚数を判定した
+    official: dmx15-s05
+    review: pending
+  text: このクリーチャーをバトルゾーンに出した時、自分の山札を下から５枚を残してすべて墓地に置く。 / W・ブレイカー / 自分の山札の最後の１枚を引く時、かわりにカードを１枚、自分の墓地から手札に戻してもよい。
+  types:
+  - creature
+- abilities:
+  - instead:
+    - count: 2
+      op: draw
+    - op: discard
+      select:
+        count: 1
+        owner: you
+        zone: hand
+    kind: replace
+    optional: true
+    when:
+      event: draw
+      player: you
+  - effect:
+    - op: move
+      position: bottom
+      reason: put
+      select:
+        count: 1
+        look: true
+        owner: opp
+        zone: hand
+      to: deck
+    - count: 1
+      op: draw
+      player: opp
+    kind: trigger
+    when:
+      event: move
+      subject: self
+      to: bz
+  civs:
+  - water
+  cost: 5
+  id: dmx17-013
+  mana: 1
+  name: 蒼神龍ヴェール・バビロニア
+  power: 4000
+  races:
+  - ポセイディア・ドラゴン
+  - オリジン
+  source:
+    official: dmx17-013
+    review: pending
+    aliases:
+    - dm32-021
+    - dm32-021hc
+  text: 自分がカードを１枚引く時、１枚のかわりに２枚引いてもよい。そうした場合、自分の手札を１枚捨てる。 / このクリーチャーをバトルゾーンに出した時、相手の手札を見て、その中から１枚選ぶ。相手はそれを自身の山札の一番下に戻した後、カードを１枚引く。
+  types:
+  - creature
+- abilities:
+  - instead:
+    - count: 2
+      op: draw
+    - op: discard
+      select:
+        count: 1
+        owner: you
+        zone: hand
+    kind: replace
+    optional: true
+    when:
+      event: draw
+      player: you
+  civs:
+  - water
+  - fire
+  cost: 4
+  id: promoy12-004
+  mana: 1
+  name: 日曜日よりの使者 メーテル
+  power: 3000
+  races:
+  - アウトレイジ
+  source:
+    notes: 「マナゾーンに置く時、このカードはタップして置く」は多色カードのエンジン規定で処理されるため abilities には書かない
+    official: promoy12-004
+    review: pending
+    aliases:
+    - promoy12-030
+    - promoy12-087
+  text: マナゾーンに置く時、このカードはタップして置く。 / 自分がカードを１枚引く時、１枚のかわりに２枚引き、自分の手札を１枚捨ててもよい。
+  types:
+  - creature
