@@ -428,6 +428,9 @@ class EventMixin:
         if "attacker" in when:   # ブロックされた時などの、攻撃クリーチャーの条件（self なら「このクリーチャーがブロックされた時」）
             if rec.get("attacker") is None or not self._ref_match(when["attacker"], rec["attacker"], env):
                 return False
+        if "opponent" in when:   # バトルの相手（battle_start の対戦クリーチャー）。self なら「このクリーチャーが攻撃された側でバトルする時」
+            if rec.get("opponent") is None or not self._ref_match(when["opponent"], rec["opponent"], env):
+                return False
         if "unpaid" in when and bool(rec.get("unpaid")) != when["unpaid"]:   # マナをタップせずに（コストを支払わずに）
             return False
         if "broke" in when and bool(rec.get("broke")) != when["broke"]:   # 攻撃の終わりに、その攻撃でシールドをブレイクしたか（キリフダッシュ）

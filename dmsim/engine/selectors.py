@@ -199,7 +199,7 @@ class SelectorMixin:
             elif r == "crossed":   # このクロスギアをクロスしているクリーチャー（303.3a）
                 g = s.cards[env["self"][0]].crossed
                 refs = [g] if g else []
-            elif r in ("event.target", "event.attacker"):   # 攻撃された（攻撃先の）クリーチャー / ブロックされた（攻撃）クリーチャー
+            elif r in ("event.target", "event.attacker", "event.opponent"):   # 攻撃された（攻撃先の）クリーチャー / ブロックされた（攻撃）クリーチャー / バトルの相手
                 v = env["event"].get(r.split(".")[1])
                 refs = [v] if isinstance(v, list) else []
             elif r in ("event.subject", "subject"):   # subject は event.subject の別名（変換データが両形を使う）

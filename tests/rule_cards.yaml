@@ -610,3 +610,34 @@ cards:
         cost: {under: 1}
         effect:
           - {op: draw, count: 1}
+
+  - id: R075
+    name: 試験用バトル跳ね返し獣
+    types: [creature]
+    civs: [water]
+    cost: 1
+    power: 3000
+    races: [テスト]
+    text: このクリーチャーがバトルする時、バトルしている相手のクリーチャーを持ち主の手札に戻してもよい。
+    abilities:
+      - kind: trigger
+        when: {event: battle_start, subject: self}
+        effect:
+          - op: may
+            body:
+              - {op: bounce, select: {ref: event.opponent}}
+      - kind: trigger
+        when: {event: battle_start, opponent: self}
+        effect:
+          - op: may
+            body:
+              - {op: bounce, select: {ref: event.subject}}
+
+  - id: R076
+    name: 試験用2000
+    types: [creature]
+    civs: [nature]
+    cost: 1
+    power: 2000
+    races: [テスト]
+    text: 試験用の相手クリーチャー

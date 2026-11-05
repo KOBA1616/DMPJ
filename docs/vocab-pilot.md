@@ -872,3 +872,11 @@ converted の監査（opt_reduce の素の整数表記9件）から。任意形�
 - 効果の対象が self の場合は effect 内で select: {ref: self} を使う。
 - tests/test_vocab_pilot74.py 2件（正常 parse／検証）
 - 待機15枚（enters_event_trigger のみが gap のもの）。
+
+## 第75弾: battle_trigger（バトルする時）— エンジン拡張あり（2026-11-05）
+「このクリーチャーがバトルする時」は battle_start イベントで表す。proto T155。
+- 攻撃側: when: {event: battle_start, subject: self}。バトル相手は select: {ref: event.opponent}。
+- 守備側（攻撃先になった時）: when: {event: battle_start, opponent: self}（本弾で when の opponent キー照合を events.py に追加）。バトル相手（攻撃クリーチャー）は select: {ref: event.subject}。
+- selectors.py に ref: event.opponent を追加。defs.py の when 検証に opponent を追加（attacker と同形）。
+- tests/test_vocab_pilot75.py 3件（parse + 攻撃側・守備側の実挙動）。試験カード R075/R076 を tests/rule_cards.yaml に追加。
+- 待機15枚（battle_trigger のみが gap のもの）。

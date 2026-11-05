@@ -526,6 +526,8 @@ class Checker:
             raise DefError(f"{where}: bad target '{tg}'")
         if w.get("attacker") is not None and w["attacker"] not in ("self", "crossed") and not isinstance(w["attacker"], dict):
             raise DefError(f"{where}: bad attacker '{w['attacker']}'")
+        if w.get("opponent") is not None and w["opponent"] not in ("self", "crossed") and not isinstance(w["opponent"], dict):
+            raise DefError(f"{where}: bad opponent '{w['opponent']}'")
         if "via" in w and w["via"] not in VIAS:
             raise DefError(f"{where}: unknown via '{w['via']}'")
         if "by" in w and w["by"] not in ("you", "opp"):
