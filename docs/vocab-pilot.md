@@ -1099,3 +1099,9 @@ converted の監査（opt_reduce の素の整数表記9件）から。任意形�
   先例: dm24ex4-015（手札の光カード）、dmr20-s01（シールドのメタリカ/裁きの紋章）。
 - tests/test_vocab_pilot109.py 2件（正常 parse／検証）
 - 待機7枚（shield_trigger_grant のみが gap のもの）。
+
+## 第110弾: battle_win_all（すべてのバトルに勝つ）— 新語彙なし（2026-11-05）
+「このクリーチャーはすべてのバトルに勝つ」は第61弾の mod で表す（条件付きは if を併記）。
+- 書き方: {kind: static, mod: {win_all_battles: true}}（combat._battle でパワー比較より優先）。
+- tests/test_vocab_pilot110.py 2件（正常 parse／検証）
+- 待機7枚（battle_win_all のみが gap のもの）。
