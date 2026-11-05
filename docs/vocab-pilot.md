@@ -1042,3 +1042,9 @@ converted の監査（opt_reduce の素の整数表記9件）から。任意形�
 - 書き方: {kind: declare, zone: hand, when: {event: attack, subject: {owner: any}}, if: {all: [{any: [{cmp: [{count: {zone: shield, owner: you}}, "==", 0]}, {cmp: [{count: {zone: shield, owner: opp}}, "==", 0]}]}, {exists: {zone: mana, owner: you, filter: {civs: [darkness]}}}, {exists: {zone: mana, owner: you, filter: {civs: [fire]}}}]}, effect: [{op: play_free, select: {ref: self}}]}。条件（対象プレイヤー・文明）は原文どおりに調整する。
 - tests/test_vocab_pilot100.py 2件（正常 parse／検証）
 - 待機10枚（oni_end のみが gap のもの）。
+
+## 第101弾: summon_restriction（召喚制限）— 新語彙なし（2026-11-05）
+「すべてのプレイヤーは、コスト４以下のクリーチャーを召喚できない」は手札ゾーンへの常在型 deny で表す。
+- 書き方: {kind: static, affects: {zone: hand, owner: any, filter: {types: [creature], cost_le: 4}}, mod: {deny: [summon]}}（先例 34-sec001）。owner は原文どおり（自分だけ／相手だけ／全員）。効果で出すことは禁止しない点も原文どおり。
+- tests/test_vocab_pilot101.py 2件（正常 parse／検証）
+- 待機10枚（summon_restriction のみが gap のもの）。
