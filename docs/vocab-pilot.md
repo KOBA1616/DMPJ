@@ -1203,3 +1203,7 @@ draw イベントへの置換で表す（draw は個別イベントとして発�
 - proto T161、試験カード R087/R088、tests/test_vocab_pilot123.py 3件（parse、R087 ありで自然マナが火の文明を満たす、なしでは満たせない）。
 
 - 第123弾の適用範囲の訂正（ラウンド130）: 「〜を召喚する時／実行する時、すべての文明を持つかのようにタップしてもよい」のように支払い範囲が限定される変種は、無条件の静的にすると原文より広くなるため対象外。gap mana_civilization_tap として rejects に残す（dm24bd6-042、dm24rp2-074、dm26rp3-012）。第123弾の静的は無条件の「すべての文明のカードとして扱う」にのみ使う。
+
+### 第124弾 holy_field（2026-11-05）
+- 「ホーリー・フィールド（自分のシールドの数が相手以上であれば、このクリーチャーは次の能力を得る）」は新語彙なし。得る能力そのものに if: {cmp: [{count: {zone: shield, owner: you}}, ">=", {count: {zone: shield, owner: opp}}]} を付ける（第73弾のゾーン枚数比較＋第97弾の条件つき能力）。静的なら static の if、誘発なら trigger の if。
+- tests/test_vocab_pilot124.py 3件（static parse、trigger parse、実カード dm36-072 の原文確認）。
