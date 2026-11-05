@@ -322804,3 +322804,240 @@ cards:
   text: このクリーチャーが出た時、自分のクリーチャーを１体選ぶ。このターン、そのクリーチャーは破壊されない。
   types:
   - creature
+- civs:
+  - zero
+  cost: 5
+  free_if:
+    exists:
+      filter:
+        race_has: ゴッド
+      owner: you
+      zone: bz
+  id: dm22rp2x-tf14
+  mana: 1
+  name: 神の裏技ゴッド・ウォール
+  source:
+    notes: 'G・ゼロは free_if（自分のゴッドの存在）で表した。選んだクリーチャーは choose で chosen に束縛し、ゴッドかどうかを
+      exists + filter {race_has: ゴッド} で分岐（dm22-047 連龍陣と同型）。ゴッドなら modify の no_leave、ゴッドでなければ第127弾
+      modify の indestructible、いずれも duration: until_next_own_turn_start（次の自分のターンのはじめまで）。'
+    official: dm22rp2x-tf14
+    review: pending
+    aliases:
+    - dm22rp2-t14
+    - dm22rp2-tf14
+    - dmr10-020
+    - dmr10-020m
+  spell:
+  - as: chosen
+    op: choose
+    select:
+      count: 1
+      filter:
+        types:
+        - creature
+      owner: you
+      zone: bz
+  - cond:
+      exists:
+        filter:
+          race_has: ゴッド
+        ref: chosen
+    else:
+    - duration: until_next_own_turn_start
+      mod:
+        indestructible: true
+      op: modify
+      select:
+        ref: chosen
+    op: if
+    then:
+    - duration: until_next_own_turn_start
+      mod:
+        no_leave: true
+      op: modify
+      select:
+        ref: chosen
+  text: G・ゼロ：自分のゴッドがあれば、この呪文をコストを支払わずに唱えてもよい。 / 自分のクリーチャーを１体選ぶ。それがゴッドなら、次の自分のターンのはじめまで離れない。ゴッドでなければ、次の自分のターンのはじめまで破壊されない。
+  types:
+  - spell
+- abilities:
+  - effect:
+    - op: untap
+      select:
+        count: all
+        filter:
+          types:
+          - creature
+        owner: you
+        zone: bz
+    - duration: end_of_turn
+      mod:
+        indestructible: true
+      op: modify
+      select:
+        count: all
+        filter:
+          types:
+          - creature
+        owner: you
+        zone: bz
+    kind: trigger
+    stp: true
+    when:
+      event: move
+      subject: self
+      to: bz
+  civs:
+  - light
+  cost: 2
+  id: dm23sd2-013
+  keywords:
+  - s_trigger_plus
+  - blocker
+  mana: 1
+  name: 忍防の聖沌 h4990u
+  power: 2500
+  races:
+  - メカ・デル・ステラ
+  - シノビ
+  source:
+    notes: 'S・トリガー・プラスは keywords の s_trigger_plus、{x+}能力は stp: true の出た時誘発で表した（dm23rp2x-026
+      等の先例）。{x+}の内容は自分のクリーチャーすべてをアンタップする untap（count: all）と、このターンの全体付与として modify（count:
+      all）の第127弾 indestructible、duration: end_of_turn。ブロッカーはキーワード。'
+    official: dm23sd2-013
+    review: pending
+    aliases:
+    - dm23rp2-053
+    - dm23rp2x-053
+  text: '{STP} S・トリガー・プラス（このクリーチャーを自分のシールドゾーンから手札に加える時、コストを支払わずにすぐ召喚してもよい。それが相手のターンで、そのターン中に自分のシールドが２つ以上ブレイクされていれば、このクリーチャーに{x+}能力を与える）
+
+    ブロッカー（このクリーチャーをタップして、相手クリーチャーの攻撃先をこのクリーチャーに変更してもよい）
+
+    {x+}このクリーチャーが出た時、自分のクリーチャーをすべてアンタップする。このターン、自分のクリーチャーは破壊されない。'
+  types:
+  - creature
+- abilities:
+  - effect:
+    - body:
+      - duration: until_next_own_turn_start
+        mod:
+          indestructible: true
+        op: modify
+        select:
+          count: 1
+          filter:
+            types:
+            - creature
+          owner: any
+          zone: bz
+      op: may
+    kind: trigger
+    when:
+      event: move
+      subject: self
+      to: bz
+  - effect:
+    - body:
+      - op: move
+        reason: charge
+        select:
+          from_top: 2
+          owner: you
+          zone: deck
+        to: shield
+      op: may
+    if:
+      cmp:
+      - count:
+          filter:
+            tapped: true
+            types:
+            - creature
+          owner: you
+          zone: bz
+      - '>='
+      - 3
+    kind: trigger
+    when:
+      event: turn_end
+      player: you
+  civs:
+  - light
+  cost: 3
+  id: dm24ex3-047
+  mana: 1
+  name: 予言者コーア
+  power: 3000
+  races:
+  - ライトブリンガー
+  source:
+    notes: '出た時は「選んでもよい」なので may で包み、対象は文明・持ち主を問わないクリーチャー１体（owner: any、原文に「自分の」の指定なし）。破壊されないの付与は第127弾
+      modify の indestructible、duration: until_next_own_turn_start。ターン終了時は when turn_end
+      player: you に、タップしている自分のクリーチャーの count（filter tapped: true）>= 3 の if を付け、山札の上から２枚を
+      move to shield reason: charge（シールド化）の may で表した。'
+    official: dm24ex3-047
+    review: pending
+    aliases:
+    - dm24rp2-029
+  text: このクリーチャーが出た時、クリーチャーを１体選んでもよい。次の自分のターンのはじめまで、そのクリーチャーは破壊されない。 / 自分のターンの終わりに、自分のタップしているクリーチャーが３体以上あれば、自分の山札の上から２枚をシールド化してもよい。
+  types:
+  - creature
+- abilities:
+  - effect:
+    - in:
+        ref: self
+      op: swap
+      out:
+        ref: event.subject
+    kind: declare
+    when:
+      event: attack
+      subject:
+        filter:
+          civs:
+          - light
+          - water
+          cost_ge: 5
+          race_has: ドラゴン
+        owner: you
+    zone: hand
+  - effect:
+    - duration: until_next_own_turn_start
+      mod:
+        indestructible: true
+      op: modify
+      select:
+        count: all
+        filter:
+          types:
+          - creature
+        owner: you
+        zone: bz
+    kind: trigger
+    when:
+      event: move
+      subject: self
+      to: bz
+  civs:
+  - light
+  - water
+  cost: 8
+  id: dmx23-013
+  keywords:
+  - double_breaker
+  mana: 1
+  name: 大音卿 カラフルベル
+  power: 11500
+  races:
+  - エンジェル・コマンド・ドラゴン
+  - 革命軍
+  - ドレミ団
+  source:
+    notes: '革命チェンジは declare + swap で表した（dm24ex1-046 の光または水のドラゴン型に cost_ge: 5 を追加）。W・ブレイカーはキーワード。出た時の全体付与は
+      modify（自分のクリーチャー count: all）の第127弾 indestructible、duration: until_next_own_turn_start（次の自分のターンのはじめまで）。「マナゾーンに置く時タップして置く」は多色カードの規則として
+      text にのみ残した。'
+    official: dmx23-013
+    review: pending
+  text: マナゾーンに置く時、このカードはタップして置く。 / 革命チェンジ：光または水のコスト５以上のドラゴン / W・ブレイカー / このクリーチャーがバトルゾーンに出た時、次の自分のターンのはじめまで、自分のクリーチャーは破壊されない。
+  types:
+  - creature
