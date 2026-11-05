@@ -317066,3 +317066,375 @@ cards:
     エターナル・Ω（このクリーチャーが離れる時、かわりに手札に戻す）'
   types:
   - creature
+- abilities:
+  - effect:
+    - duration: until_next_own_turn_start
+      mod:
+        win_all_battles: true
+      op: modify
+      select:
+        ref: self
+    kind: trigger
+    when:
+      event: move
+      subject: self
+      to: bz
+  - effect:
+    - body:
+      - as: t
+        op: choose
+        select:
+          count: 2
+          filter:
+            race_has: メカ
+            tapped: false
+          owner: you
+          zone: bz
+      - op: tap
+        select:
+          count: all
+          ref: t
+      - cond:
+          exists:
+            ref: t
+        op: if
+        then:
+        - cost_le: 8
+          filter:
+            race_has: メカ
+          op: mekurade
+      op: may
+    kind: trigger
+    when:
+      event: attack
+      subject: self
+  - effect:
+    - op: untap
+      select:
+        count: 3
+        filter:
+          types:
+          - creature
+        owner: you
+        up_to: true
+        zone: bz
+    kind: trigger
+    when:
+      event: turn_end
+      player: you
+  civs:
+  - light
+  cost: 4
+  id: dm23rp1-2a
+  keywords:
+  - blocker
+  mana: 1
+  name: 新星姫 マルシドループ
+  power: 4500
+  races:
+  - メカ・デル・ステラ
+  source:
+    official: dm23rp1-2a
+    review: pending
+    aliases:
+    - dm23rp1-4b
+    - dm23rp1-s2
+  text: 'ブロッカー
+
+    このクリーチャーが出た時、次の自分のターンのはじめまで、このクリーチャーはすべてのバトルに勝つ。
+
+    このクリーチャーが攻撃する時、自分のメカを２つタップしてもよい。そうしたら、メカ・メクレイド８する。（メカ・メクレイド８：自分の山札の上から３枚を見る。その中から、コスト８以下のメカを１枚、コストを支払わずに使ってもよい。残りを好きな順序で山札の下に置く）
+
+    自分のターンの終わりに、自分のクリーチャーを３体までアンタップする。'
+  types:
+  - creature
+- civs:
+  - light
+  cost: 2
+  id: dmex14-044
+  keywords:
+  - s_trigger
+  mana: 1
+  name: 虹・望・一・体
+  races:
+  - チーム銀河
+  source:
+    notes: レインボーナスは多色クリーチャーの存在条件として表した。選んだクリーチャーは変数 c に保持し、ブロッカー付与とレインボーナスの両方の対象とした
+    official: dmex14-044
+    review: pending
+  spell:
+  - as: c
+    op: choose
+    select:
+      count: 1
+      filter:
+        types:
+        - creature
+      owner: you
+      zone: bz
+  - duration: until_next_own_turn_start
+    mod:
+      grant:
+      - blocker
+    op: modify
+    select:
+      ref: c
+  - cond:
+      exists:
+        filter:
+          multicolor: true
+          types:
+          - creature
+        owner: you
+        zone: bz
+    op: if
+    then:
+    - duration: until_next_own_turn_start
+      mod:
+        win_all_battles: true
+      op: modify
+      select:
+        ref: c
+  text: 'S・トリガー（この呪文をシールドゾーンから手札に加える時、コストを支払わずにすぐ唱えてもよい）
+
+    自分のクリーチャーを１体選ぶ。次の自分のターンのはじめまで、そのクリーチャーに「ブロッカー」を与える。（「ブロッカー」を持つクリーチャーをタップして、相手クリーチャーの攻撃先をそのクリーチャーに変更してもよい）
+
+    レインボーナス：バトルゾーンに自分の多色クリーチャーがあれば、次の自分のターンのはじめまで、選んだクリーチャーはすべてのバトルに勝つ。'
+  types:
+  - spell
+- abilities:
+  - effect:
+    - body:
+      - as: paid
+        op: move
+        reason: put
+        select:
+          count: 1
+          owner: you
+          zone: shield
+        to: graveyard
+      - cond:
+          exists:
+            ref: paid
+        op: if
+        then:
+        - duration: end_of_turn
+          mod:
+            win_all_battles: true
+          op: modify
+          select:
+            ref: self
+      op: may
+    kind: trigger
+    when:
+      event: battle_start
+      subject: self
+  - effect:
+    - body:
+      - as: paid
+        op: move
+        reason: put
+        select:
+          count: 1
+          owner: you
+          zone: shield
+        to: graveyard
+      - cond:
+          exists:
+            ref: paid
+        op: if
+        then:
+        - duration: end_of_turn
+          mod:
+            win_all_battles: true
+          op: modify
+          select:
+            ref: self
+      op: may
+    kind: trigger
+    when:
+      event: battle_start
+      opponent: self
+  civs:
+  - darkness
+  cost: 6
+  id: dmr08-015
+  keywords:
+  - double_breaker
+  mana: 1
+  name: 凶導の堕天ケーキ・カット
+  power: 6000
+  races:
+  - エンジェル・コマンド
+  source:
+    notes: バトルする時は攻撃側・守備側の両方を含むため battle_start の trigger を2つに分けた（第75弾）
+    official: dmr08-015
+    review: pending
+  text: 'このクリーチャーがバトルする時、自分のシールドをひとつ、墓地に置いてもよい。そうした場合、そのターン、このクリーチャーはすべてのバトルに勝つ。
+
+    W・ブレイカー(このクリーチャーはシールドを２枚ブレイクする)'
+  types:
+  - creature
+- civs:
+  - light
+  cost: 4
+  id: dmr09-050
+  keywords:
+  - s_trigger
+  mana: 1
+  name: グロリアス・タクティクス
+  source:
+    official: dmr09-050
+    review: pending
+  spell:
+  - duration: end_of_turn
+    mod:
+      win_all_battles: true
+    op: modify
+    select:
+      count: all
+      filter:
+        types:
+        - creature
+      owner: you
+      zone: bz
+  text: S・トリガー（この呪文をシールドゾーンから手札に加える時、コストを支払わずにすぐ唱えてもよい）このターン、自分のクリーチャーはすべてのバトルに勝つ。
+  types:
+  - spell
+- abilities:
+  - effect:
+    - cond:
+        cmp:
+        - count:
+            filter:
+              types:
+              - creature
+            owner: you
+            zone: bz
+        - '>='
+        - count:
+            owner: you
+            zone: shield
+      op: if
+      then:
+      - duration: end_of_turn
+        mod:
+          win_all_battles: true
+        op: modify
+        select:
+          count: all
+          filter:
+            types:
+            - creature
+          owner: you
+          zone: bz
+    kind: trigger
+    when:
+      event: move
+      subject: self
+      to: bz
+  civs:
+  - light
+  cost: 6
+  id: dmr20-027
+  mana: 1
+  name: 乙女の玉 ルルル
+  power: 4500
+  races:
+  - ジャスティス・オーブ
+  - 革命軍
+  source:
+    official: dmr20-027
+    review: pending
+  text: このクリーチャーがバトルゾーンに出た時、自分のクリーチャーの数が自分のシールドの数以上なら、そのターン、自分のクリーチャーはすべてのバトルに勝つ。
+  types:
+  - creature
+- abilities:
+  - kind: trigger
+    when:
+      event: attack
+      subject: self
+    effect:
+    - op: may
+      body:
+      - op: move
+        select:
+          zone:
+          - hand
+          - deck
+          from_top: 1
+          owner: you
+          filter:
+            types:
+            - creature
+            not_types:
+            - evolution
+            cost_le: 6
+          count: 1
+        to: bz
+        reason: put
+  - effect:
+    - body:
+      - op: move
+        reason: put
+        select:
+          count: 1
+          filter:
+            cost_le: 6
+            not_types:
+            - evolution
+            types:
+            - creature
+          from_top: 1
+          owner: you
+          zone:
+          - hand
+          - deck
+        to: bz
+      op: may
+    kind: trigger
+    when:
+      event: attack
+      subject: self
+  - effect:
+    - duration: end_of_turn
+      mod:
+        win_all_battles: true
+      op: modify
+      select:
+        ref: self
+    kind: trigger
+    when:
+      event: move
+      subject:
+        filter:
+          types:
+          - creature
+        other: true
+        owner: you
+      to: bz
+  civs:
+  - light
+  cost: 6
+  id: dmrp13-001
+  keywords:
+  - blocker
+  - double_breaker
+  mana: 1
+  name: FENIXXX・グローリ
+  power: 7500
+  races:
+  - ビートジョッキー
+  - チームボンバー
+  source:
+    official: dmrp13-001
+    review: pending
+  text: 'ブロッカー
+
+    W・ブレイカー
+
+    マジボンバー ６（このクリーチャーが攻撃する時、自分の山札の上から１枚目を見る。その後、コスト６以下のクリーチャーを１体、自分の手札または山札の上から、バトルゾーンに出してもよい）
+
+    自分の他のクリーチャーがバトルゾーンに出た時、このターン、このクリーチャーはすべてのバトルに勝つ。'
+  types:
+  - creature
