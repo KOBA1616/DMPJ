@@ -295635,3 +295635,703 @@ cards:
     鬼タイム ：自分と相手のシールドの数が合計６つ以下なら、真上の▪️能力を無視する。'
   types:
   - creature
+- abilities:
+  - effect:
+    - as: s
+      op: choose
+      select:
+        count: 1
+        look: true
+        owner: you
+        zone: shield
+    - body:
+      - op: move
+        reason: put
+        select:
+          ref: s
+        to: graveyard
+      - op: move
+        reason: put
+        select:
+          count: 1
+          from_top: 1
+          owner: you
+          zone: deck
+        to: shield
+      op: may
+    kind: trigger
+    when:
+      event: move
+      subject: self
+      to: bz
+  - instead:
+    - body:
+      - as: g
+        op: choose
+        select:
+          count: 1
+          filter:
+            race_has: グレートメカオー
+          owner: you
+          zone: graveyard
+      - op: move
+        reason: return
+        select:
+          ref: g
+        to: hand
+      - op: move
+        position: bottom
+        reason: put
+        select:
+          ref: self
+        to: deck
+      op: may
+    kind: replace
+    when:
+      event: move
+      from: bz
+      reason: destroy
+      subject: self
+      to: graveyard
+  civs:
+  - water
+  cost: 7
+  id: dm23-002
+  keywords:
+  - double_breaker
+  mana: 1
+  name: 回収機兵カイゾック
+  power: 6000
+  races:
+  - グレートメカオー
+  source:
+    notes: シールドを見る処理は choose（look）で表した（dm26-045 の先例）。シールドへの追加は裏向きがシールドゾーンの既定のため position
+      等は付けない
+    official: dm23-002
+    review: pending
+  text: 'このクリーチャーをバトルゾーンに出した時、自分のシールドを見る。その中から１枚、自分の墓地に置いてもよい。そうした場合、自分の山札の上から１枚目を、裏向きにして自分のシールドに置く。
+
+    L・ゲート：グレートメカオー(このクリーチャーが破壊される時、墓地に置くかわりに、グレートメカオーを１体、自分の墓地から手札に戻してもよい。そうした場合、このクリーチャーを山札の一番下に置く)
+
+    W・ブレイカー'
+  types:
+  - creature
+- abilities:
+  - instead:
+    - body:
+      - as: g1
+        op: choose
+        select:
+          count: 1
+          filter:
+            race_has: グレートメカオー
+          owner: you
+          up_to: true
+          zone: graveyard
+      - as: g2
+        op: choose
+        select:
+          count: 1
+          filter:
+            race_has: キカイヒーロー
+          owner: you
+          up_to: true
+          zone: graveyard
+      - cond:
+          exists:
+            ref: g1
+        op: if
+        then:
+        - op: move
+          reason: return
+          select:
+            ref: g1
+          to: hand
+      - cond:
+          exists:
+            ref: g2
+        op: if
+        then:
+        - op: move
+          reason: return
+          select:
+            ref: g2
+          to: hand
+      - cond:
+          any:
+          - exists:
+              ref: g1
+          - exists:
+              ref: g2
+        op: if
+        then:
+        - op: move
+          position: bottom
+          reason: put
+          select:
+            ref: self
+          to: deck
+      op: may
+    kind: replace
+    when:
+      event: move
+      from: bz
+      reason: destroy
+      subject: self
+      to: graveyard
+  civs:
+  - light
+  cost: 5
+  id: dm23-008
+  mana: 1
+  name: 迎撃武装ブライト
+  power: 3500
+  races:
+  - グレートメカオー
+  source:
+    notes: 二種族ゲートは各種族につき最大１体の choose（up_to）で表した。両種族を持つ１枚のカードを重複して選ぶ可否は要確認
+    official: dm23-008
+    review: pending
+  text: L・ゲート：グレートメカオーとキカイヒーロー(このクリーチャーが破壊される時、墓地に置くかわりに、グレートメカオーかキカイヒーローを１体、または両方１体ずつを、自分の墓地から手札に戻してもよい。そうした場合、このクリーチャーを山札の一番下に置く)
+  types:
+  - creature
+- abilities:
+  - effect:
+    - op: discard
+      select:
+        count: 1
+        owner: you
+        zone: hand
+    kind: trigger
+    when:
+      event: move
+      subject: self
+      to: bz
+  - instead:
+    - body:
+      - as: g
+        op: choose
+        select:
+          count: 1
+          filter:
+            race_has: ドラゴン
+          owner: you
+          zone: graveyard
+      - op: move
+        reason: return
+        select:
+          ref: g
+        to: hand
+      - op: move
+        position: bottom
+        reason: put
+        select:
+          ref: self
+        to: deck
+      op: may
+    kind: replace
+    when:
+      event: move
+      from: bz
+      reason: destroy
+      subject: self
+      to: graveyard
+  civs:
+  - darkness
+  cost: 6
+  id: dm23-013
+  keywords:
+  - double_breaker
+  mana: 1
+  name: 黒神龍ギルガザメス
+  power: 8000
+  races:
+  - ドラゴン・ゾンビ
+  source:
+    official: dm23-013
+    review: pending
+  text: 'このクリーチャーをバトルゾーンに出した時、自分の手札を１枚捨てる。
+
+    L・ゲート：ドラゴン(このクリーチャーが破壊される時、墓地に置くかわりに、ドラゴンを１体、自分の墓地から手札に戻してもよい。そうした場合、このクリーチャーを山札の一番下に置く)
+
+    W・ブレイカー'
+  types:
+  - creature
+- abilities:
+  - instead:
+    - body:
+      - as: g1
+        op: choose
+        select:
+          count: 1
+          filter:
+            race_has: ドリームメイト
+          owner: you
+          up_to: true
+          zone: graveyard
+      - as: g2
+        op: choose
+        select:
+          count: 1
+          filter:
+            race_has: ビークル・ビー
+          owner: you
+          up_to: true
+          zone: graveyard
+      - cond:
+          exists:
+            ref: g1
+        op: if
+        then:
+        - op: move
+          reason: return
+          select:
+            ref: g1
+          to: hand
+      - cond:
+          exists:
+            ref: g2
+        op: if
+        then:
+        - op: move
+          reason: return
+          select:
+            ref: g2
+          to: hand
+      - cond:
+          any:
+          - exists:
+              ref: g1
+          - exists:
+              ref: g2
+        op: if
+        then:
+        - op: move
+          position: bottom
+          reason: put
+          select:
+            ref: self
+          to: deck
+      op: may
+    kind: replace
+    when:
+      event: move
+      from: bz
+      reason: destroy
+      subject: self
+      to: graveyard
+  civs:
+  - fire
+  cost: 5
+  id: dm23-017
+  mana: 1
+  name: 三途渡しのユーリン
+  power: 2000
+  races:
+  - ドリームメイト
+  source:
+    notes: 二種族ゲートは各種族につき最大１体の choose（up_to）で表した。両種族を持つ１枚のカードを重複して選ぶ可否は要確認
+    official: dm23-017
+    review: pending
+  text: L・ゲート：ドリームメイトとビークル・ビー(このクリーチャーが破壊される時、墓地に置くかわりに、ドリームメイトかビークル・ビーを１体、または両方１体ずつを、自分の墓地から手札に戻してもよい。そうした場合、このクリーチャーを自分の山札の一番下に置く)
+  types:
+  - creature
+- abilities:
+  - instead:
+    - body:
+      - as: g
+        op: choose
+        select:
+          count: 1
+          filter:
+            race_has: ガーディアン
+          owner: you
+          zone: graveyard
+      - op: move
+        reason: return
+        select:
+          ref: g
+        to: hand
+      - op: move
+        position: bottom
+        reason: put
+        select:
+          ref: self
+        to: deck
+      op: may
+    kind: replace
+    when:
+      event: move
+      from: bz
+      reason: destroy
+      subject: self
+      to: graveyard
+  civs:
+  - light
+  cost: 5
+  id: dm23-036
+  keywords:
+  - blocker
+  - cannot_attack_player
+  mana: 1
+  name: 転生の守護者コア・パルサー
+  power: 2500
+  races:
+  - ガーディアン
+  source:
+    official: dm23-036
+    review: pending
+  text: 'ブロッカー
+
+    このクリーチャーは、相手プレイヤーを攻撃できない。
+
+    L・ゲート：ガーディアン(このクリーチャーが破壊される時、墓地に置くかわりに、ガーディアンを１体、自分の墓地から手札に戻してもよい。そうした場合、このクリーチャーを山札の一番下に置く)'
+  types:
+  - creature
+- abilities:
+  - instead:
+    - body:
+      - as: g
+        op: choose
+        select:
+          count: 1
+          filter:
+            race_has: グレートメカオー
+          owner: you
+          zone: graveyard
+      - op: move
+        reason: return
+        select:
+          ref: g
+        to: hand
+      - op: move
+        position: bottom
+        reason: put
+        select:
+          ref: self
+        to: deck
+      op: may
+    kind: replace
+    when:
+      event: move
+      from: bz
+      reason: destroy
+      subject: self
+      to: graveyard
+  civs:
+  - light
+  cost: 4
+  id: dm23-038
+  mana: 1
+  name: 三日月鉄人ネムカッチャン
+  power: 2500
+  races:
+  - グレートメカオー
+  source:
+    official: dm23-038
+    review: pending
+  text: L・ゲート：グレートメカオー(このクリーチャーが破壊される時、墓地に置くかわりに、グレートメカオーを１体、自分の墓地から手札に戻してもよい。そうした場合、このクリーチャーを山札の一番下に置く)
+  types:
+  - creature
+- abilities:
+  - instead:
+    - body:
+      - as: g
+        op: choose
+        select:
+          count: 1
+          filter:
+            race_has: グランド・デビル
+          owner: you
+          zone: graveyard
+      - op: move
+        reason: return
+        select:
+          ref: g
+        to: hand
+      - op: move
+        position: bottom
+        reason: put
+        select:
+          ref: self
+        to: deck
+      op: may
+    kind: replace
+    when:
+      event: move
+      from: bz
+      reason: destroy
+      subject: self
+      to: graveyard
+  civs:
+  - water
+  cost: 3
+  id: dm23-042
+  mana: 1
+  name: 封魔ガルシャ
+  power: 1000
+  races:
+  - グランド・デビル
+  source:
+    official: dm23-042
+    review: pending
+  text: L・ゲート：グランド・デビル(このクリーチャーが破壊される時、墓地に置くかわりに、グランド・デビルを１体、自分の墓地から手札に戻してもよい。そうした場合、このクリーチャーを山札の一番下に置く)
+  types:
+  - creature
+- abilities:
+  - instead:
+    - body:
+      - as: g
+        op: choose
+        select:
+          count: 1
+          filter:
+            race_has: ティラノ・ドレイク
+          owner: you
+          zone: graveyard
+      - op: move
+        reason: return
+        select:
+          ref: g
+        to: hand
+      - op: move
+        position: bottom
+        reason: put
+        select:
+          ref: self
+        to: deck
+      op: may
+    kind: replace
+    when:
+      event: move
+      from: bz
+      reason: destroy
+      subject: self
+      to: graveyard
+  civs:
+  - darkness
+  cost: 6
+  id: dm23-044
+  mana: 1
+  name: アンダーテイカー・ドラグーン
+  power: 5000
+  races:
+  - ティラノ・ドレイク
+  source:
+    official: dm23-044
+    review: pending
+  text: L・ゲート：ティラノ・ドレイク(このクリーチャーが破壊される時、墓地に置くかわりに、ティラノ・ドレイクを１体、自分の墓地から手札に戻してもよい。そうした場合、このクリーチャーを山札の一番下に置く)
+  types:
+  - creature
+- abilities:
+  - effect:
+    - op: destroy
+      select:
+        count: 1
+        filter:
+          types:
+          - creature
+        owner: you
+        zone: bz
+    kind: trigger
+    when:
+      event: move
+      subject: self
+      to: bz
+  - instead:
+    - body:
+      - as: g
+        op: choose
+        select:
+          count: 1
+          filter:
+            race_has: デスパペット
+          owner: you
+          zone: graveyard
+      - op: move
+        reason: return
+        select:
+          ref: g
+        to: hand
+      - op: move
+        position: bottom
+        reason: put
+        select:
+          ref: self
+        to: deck
+      op: may
+    kind: replace
+    when:
+      event: move
+      from: bz
+      reason: destroy
+      subject: self
+      to: graveyard
+  civs:
+  - darkness
+  cost: 2
+  id: dm23-047
+  mana: 1
+  name: 厄介人形ヤップップ
+  power: 5000
+  races:
+  - デスパペット
+  source:
+    notes: CIP の破壊対象にはこのクリーチャー自身も含まれる（原文どおり）
+    official: dm23-047
+    review: pending
+  text: このクリーチャーをバトルゾーンに出した時、自分のクリーチャーを１体破壊する。 / L・ゲート：デスパペット(このクリーチャーが破壊される時、墓地に置くかわりに、デスパペットを１体、自分の墓地から手札に戻してもよい。そうした場合、このクリーチャーを山札の一番下に置く)
+  types:
+  - creature
+- abilities:
+  - instead:
+    - body:
+      - as: g
+        op: choose
+        select:
+          count: 1
+          filter:
+            race_has: ティラノ・ドレイク
+          owner: you
+          zone: graveyard
+      - op: move
+        reason: return
+        select:
+          ref: g
+        to: hand
+      - op: move
+        position: bottom
+        reason: put
+        select:
+          ref: self
+        to: deck
+      op: may
+    kind: replace
+    when:
+      event: move
+      from: bz
+      reason: destroy
+      subject: self
+      to: graveyard
+  civs:
+  - fire
+  cost: 5
+  id: dm23-048
+  mana: 1
+  name: アマゾネス・ドラグーン
+  power: 4000
+  races:
+  - ティラノ・ドレイク
+  source:
+    official: dm23-048
+    review: pending
+  text: L・ゲート：ティラノ・ドレイク(このクリーチャーが破壊される時、墓地に置くかわりに、ティラノ・ドレイクを１体、自分の墓地から手札に戻してもよい。そうした場合、このクリーチャーを山札の一番下に置く)
+  types:
+  - creature
+- abilities:
+  - instead:
+    - body:
+      - as: g
+        op: choose
+        select:
+          count: 1
+          filter:
+            race_has: アーク・セラフィム
+          owner: you
+          zone: graveyard
+      - op: move
+        reason: return
+        select:
+          ref: g
+        to: hand
+      - op: move
+        position: bottom
+        reason: put
+        select:
+          ref: self
+        to: deck
+      op: may
+    kind: replace
+    when:
+      event: move
+      from: bz
+      reason: destroy
+      subject: self
+      to: graveyard
+  civs:
+  - nature
+  cost: 5
+  id: dm23-053
+  mana: 1
+  name: 霊騎アルシェル
+  power: 3000
+  races:
+  - アーク・セラフィム
+  source:
+    notes: raw の race フィールドは文字化け（アーク���セラフィム）のため、カードテキストの表記「アーク・セラフィム」を採用した
+    official: dm23-053
+    review: pending
+  text: L・ゲート：アーク・セラフィム(このクリーチャーが破壊される時、墓地に置くかわりに、アーク・セラフィムを１体、自分の墓地から手札に戻してもよい。そうした場合、このクリーチャーを山札の一番下に置く)
+  types:
+  - creature
+- abilities:
+  - effect:
+    - op: destroy
+      select:
+        ref: self
+    kind: trigger
+    when:
+      event: turn_end
+      player: you
+  - instead:
+    - body:
+      - as: g
+        op: choose
+        select:
+          count: 1
+          filter:
+            race_has: ヒューマノイド
+          owner: you
+          zone: graveyard
+      - op: move
+        reason: return
+        select:
+          ref: g
+        to: hand
+      - op: move
+        position: bottom
+        reason: put
+        select:
+          ref: self
+        to: deck
+      op: may
+    kind: replace
+    when:
+      event: move
+      from: bz
+      reason: destroy
+      subject: self
+      to: graveyard
+  civs:
+  - fire
+  cost: 3
+  id: dmx09-035
+  keywords:
+  - speed_attacker
+  mana: 1
+  name: 特攻小僧スカイラブ
+  power: 1000
+  races:
+  - ヒューマノイド
+  source:
+    official: dmx09-035
+    review: pending
+    aliases:
+    - dm23-032
+  text: 'スピードアタッカー(このクリーチャーは召喚酔いしない)
+
+    自分のターンの終わりに、このクリーチャーを破壊する。
+
+    L・ゲート：ヒューマノイド(このクリーチャーが破壊される時、墓地に置くかわりに、ヒューマノイドを１体、自分の墓地から手札に戻してもよい。そうした場合、このクリーチャーを山札の一番下に置く)'
+  types:
+  - creature
