@@ -321053,3 +321053,326 @@ cards:
   text: 自分のクリーチャーを１体選ぶ。そのクリーチャーに含まれるカード１枚につき、相手は自身のクリーチャーを１体選んで破壊する。
   types:
   - spell
+- abilities:
+  - effect:
+    - as: out
+      op: move
+      reason: put
+      select:
+        count: 2
+        filter:
+          races:
+          - ジョーカーズ
+          types:
+          - creature
+        owner: you
+        up_to: true
+        zone: hand
+      to: bz
+    - duration: end_of_turn
+      mod:
+        grant:
+        - speed_attacker
+      op: modify
+      select:
+        count: all
+        ref: out
+    - effect:
+      - as: bottomed
+        op: move
+        order: choose
+        position: bottom
+        reason: put
+        select:
+          count: all
+          ref: out
+        to: deck
+      - count:
+          var: bottomed
+        op: draw
+      op: delayed_trigger
+      when:
+        event: turn_end
+    kind: trigger
+    when:
+      event: move
+      subject: self
+      to: bz
+  - effect:
+    - op: destroy
+      select:
+        count: all
+        filter:
+          keyword: blocker
+          types:
+          - creature
+        owner: opp
+        zone: bz
+    if:
+      cmp:
+      - sum:
+        - count:
+            filter:
+              races:
+              - ジョーカーズ
+            owner: you
+            zone: bz
+        - count:
+            filter:
+              races:
+              - ジョーカーズ
+            owner: you
+            zone: mana
+      - '>='
+      - 7
+    kind: trigger
+    when:
+      event: attack
+      subject: self
+  civs:
+  - fire
+  cost: 7
+  evolve_from:
+    races:
+    - ジョーカーズ
+  id: dm26ex4-cho012
+  keywords:
+  - g_strike
+  - double_breaker
+  mana: 1
+  name: メラベンチャー・ザ・ジョニー
+  power: 10000
+  races:
+  - ジョーカーズ
+  source:
+    notes: '合計７つ以上の条件は第121弾の型（count の sum + cmp）で攻撃誘発の if に置いた。出したクリーチャーへのスピードアタッカー付与は
+      modify の grant（duration: end_of_turn）、ターンの終わりの山札の下への移動と1体につき1枚引く処理は delayed_trigger（turn_end）の中で
+      move の as: bottomed と draw の {var: bottomed} で表した'
+    official: dm26ex4-cho012
+    review: pending
+  text: '{GS} G・ストライク
+
+    進化：ジョーカーズ・クリーチャー１体の上に置く。
+
+    W・ブレイカー
+
+    このクリーチャーが出た時、ジョーカーズ・クリーチャーを２体まで自分の手札から出し、それらに「スピードアタッカー」を与える。このターンの終わりに、それらを好きな順序で山札の下に置き、こうして下に置いたクリーチャー１体につき、カードを１枚引く。
+
+    このクリーチャーが攻撃する時、自分の、ジョーカーズとマナゾーンにあるジョーカーズ・カードが合計７つ以上なら、相手の「ブロッカー」を持つクリーチャーをすべて破壊する。'
+  types:
+  - creature
+  - evolution
+- abilities:
+  - kind: trigger
+    when:
+      event: move
+      to: bz
+      subject: self
+    effect:
+    - op: modify
+      select:
+        ref: self
+      mod:
+        allow:
+        - action: attack_creature
+          other:
+            tapped: false
+      duration: end_of_turn
+  - affects: self
+    if:
+      cmp:
+      - sum:
+        - count:
+            filter:
+              races:
+              - ジョーカーズ
+            owner: you
+            zone: bz
+        - count:
+            filter:
+              races:
+              - ジョーカーズ
+            owner: you
+            zone: mana
+      - '>='
+      - 7
+    kind: static
+    mod:
+      grant:
+      - s_trigger
+    zone: shield
+  - effect:
+    - count: 3
+      modes:
+      - - op: mana_put
+          select:
+            count: 1
+            filter:
+              types:
+              - creature
+            owner: opp
+            zone: bz
+      - - op: move
+          reason: put
+          select:
+            from_top: 1
+            owner: you
+            zone: deck
+          to: mana
+      - - op: move
+          reason: return
+          select:
+            count: 1
+            filter:
+              types:
+              - creature
+            owner: you
+            zone: mana
+          to: hand
+      op: modal
+      repeat: true
+    kind: trigger
+    when:
+      event: move
+      subject: self
+      to: bz
+  civs:
+  - nature
+  cost: 8
+  id: dm26rp3-s006
+  keywords:
+  - triple_breaker
+  mana: 1
+  name: 闘帝合体 サンダイテイオー
+  power: 13000
+  races:
+  - ジョーカーズ
+  source:
+    notes: 'S・トリガー付与は zone: shield の static に第121弾の型（count の sum + cmp、合計７つ以上）を if
+      として置いた（dmx23-031 と同型）。マッハファイターは keyword_patterns の展開能力で、submit 時に split の extra
+      として自動で abilities の先頭に付くため、この下書きの abilities には入れていない（入れると二重登録になる）。３回選択は modal
+      の count: 3 + repeat: true'
+    official: dm26rp3-s006
+    review: pending
+  text: '自分の、ジョーカーズとマナゾーンにあるジョーカーズ・カードが合計７つ以上なら、自分のシールドゾーンにあるこのクリーチャーに「S・トリガー」を与える。
+
+    マッハファイター
+
+    T・ブレイカー
+
+    このクリーチャーが出た時、次の中から３回選ぶ。同じものを選んでもよい。
+
+    ▶相手のクリーチャーを１体選び、持ち主のマナゾーンに置く。
+
+    ▶自分の山札の上から１枚をマナゾーンに置く。
+
+    ▶クリーチャーを１体、自分のマナゾーンから手札に戻す。'
+  types:
+  - creature
+- abilities:
+  - kind: trigger
+    when:
+      event: move
+      to: bz
+      subject: self
+    effect:
+    - op: modify
+      select:
+        ref: self
+      mod:
+        allow:
+        - action: attack_creature
+          other:
+            tapped: false
+      duration: end_of_turn
+  - affects: self
+    if:
+      cmp:
+      - sum:
+        - count:
+            filter:
+              races:
+              - ジョーカーズ
+            owner: you
+            zone: bz
+        - count:
+            filter:
+              races:
+              - ジョーカーズ
+            owner: you
+            zone: mana
+      - '>='
+      - 7
+    kind: static
+    mod:
+      grant:
+      - s_trigger
+    zone: shield
+  - effect:
+    - count: 3
+      modes:
+      - - op: mana_put
+          select:
+            count: 1
+            filter:
+              types:
+              - creature
+            owner: opp
+            zone: bz
+      - - op: move
+          reason: put
+          select:
+            from_top: 1
+            owner: you
+            zone: deck
+          to: mana
+      - - op: move
+          reason: return
+          select:
+            count: 1
+            filter:
+              types:
+              - creature
+            owner: you
+            zone: mana
+          to: hand
+      op: modal
+      repeat: true
+    kind: trigger
+    when:
+      event: move
+      subject: self
+      to: bz
+  civs:
+  - nature
+  cost: 8
+  id: dm26rp3-sec007
+  keywords:
+  - triple_breaker
+  mana: 1
+  name: 闘帝合体 サンダイテイオー
+  power: 13000
+  races:
+  - ジョーカーズ
+  source:
+    notes: 'dm26rp3-s006 と同一原文の別刷り。下書きの内容も同一（id と official のみ差し替え）。S・トリガー付与は zone:
+      shield の static に第121弾の型（count の sum + cmp、合計７つ以上）を if として置いた（dmx23-031 と同型）。マッハファイターは
+      keyword_patterns の展開能力で、submit 時に split の extra として自動で abilities の先頭に付くため、この下書きの
+      abilities には入れていない（入れると二重登録になる）。３回選択は modal の count: 3 + repeat: true'
+    official: dm26rp3-sec007
+    review: pending
+  text: '自分の、ジョーカーズとマナゾーンにあるジョーカーズ・カードが合計７つ以上なら、自分のシールドゾーンにあるこのクリーチャーに「S・トリガー」を与える。
+
+    マッハファイター
+
+    T・ブレイカー
+
+    このクリーチャーが出た時、次の中から３回選ぶ。同じものを選んでもよい。
+
+    ▶相手のクリーチャーを１体選び、持ち主のマナゾーンに置く。
+
+    ▶自分の山札の上から１枚をマナゾーンに置く。
+
+    ▶クリーチャーを１体、自分のマナゾーンから手札に戻す。'
+  types:
+  - creature
