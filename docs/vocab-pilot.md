@@ -966,3 +966,9 @@ converted の監査（opt_reduce の素の整数表記9件）から。任意形�
 - power は修正込みの現在値で判定される。
 - tests/test_vocab_pilot88.py 2件（正常 parse／検証）
 - 待機13枚（grant_based_on_own_power_threshold のみが gap のもの）。
+
+## 第89弾: does_not_untap_next_turn（次のターンのはじめにアンタップしない）— 新語彙なし（2026-11-05）
+「タップする。次の相手のターンのはじめに、そのクリーチャーはアンタップしない」は tap 演算の no_untap_next で表せる（フリーズ条項）。
+- 書き方: {op: tap, select: {...}, no_untap_next: true}。
+- tests/test_vocab_pilot89.py 2件（正常 parse／検証）
+- 待機21枚（does_not_untap_next_turn のみが gap のもの）。
