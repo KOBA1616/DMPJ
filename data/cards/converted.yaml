@@ -314821,3 +314821,296 @@ cards:
     このクリーチャーをバトルゾーンに出した時、バトルゾーンにある進化クリーチャーまたはリンクしているゴッドを１体選び、持ち主の手札に戻してもよい。'
   types:
   - creature
+- abilities:
+  - effect:
+    - op: discard
+      select:
+        chooser: opp
+        count: 2
+        owner: opp
+        zone: hand
+    - body:
+      - op: move
+        reason: return
+        select:
+          count: 2
+          filter:
+            types:
+            - creature
+          owner: you
+          zone: graveyard
+        to: hand
+      op: may
+    kind: trigger
+    when:
+      event: move
+      subject: self
+      to: bz
+  - effect:
+    - duration: end_of_turn
+      mod:
+        power: -8000
+      op: modify
+      select:
+        count: 1
+        filter:
+          types:
+          - creature
+        owner: opp
+        zone: bz
+    kind: trigger
+    when:
+      event: attack
+      subject: self
+  - effect:
+    - op: untap
+      select:
+        ref: self
+    kind: trigger
+    when:
+      event: attack_end
+      subject: self
+  civs:
+  - darkness
+  cost: 10
+  evolve_from:
+    races:
+    - ゴッド
+  id: dmex01-037
+  keywords:
+  - double_breaker
+  mana: 1
+  name: 第七神帝サハスラーラ
+  power: 21000
+  races:
+  - クリエイター
+  - オリジン
+  source:
+    notes: 原文のパワー変化「_8000」は-8000として補った
+    official: dmex01-037
+    review: pending
+  text: 進化：自分のゴッド１体の上に置く。 / W・ブレイカー / このクリーチャーがバトルゾーンに出た時、相手は自身の手札を２枚選び、捨てる。その後、クリーチャーを２体、自分の墓地から手札に戻してもよい。
+    / このクリーチャーが攻撃する時、相手のクリーチャーを１体選ぶ。このターン、そのクリーチャーのパワーを_8000する。 / このクリーチャーの攻撃の終わりに、このクリーチャーをアンタップする。
+  types:
+  - creature
+  - evolution
+- abilities:
+  - effect:
+    - as: target
+      op: choose
+      select:
+        count: 1
+        filter:
+          types:
+          - creature
+        other: true
+        owner: you
+        zone: bz
+    - duration: end_of_turn
+      effect:
+      - op: untap
+        select:
+          ref: target
+      once: true
+      op: delayed_trigger
+      when:
+        event: attack_end
+        subject:
+          ref: target
+    kind: trigger
+    when:
+      event: move
+      subject: self
+      to: bz
+  civs:
+  - fire
+  cost: 6
+  id: dmrp12-026
+  mana: 1
+  name: “KNG”メガヒット
+  power: 6000
+  races:
+  - ビートジョッキー
+  source:
+    notes: '「次の攻撃の終わりにアンタップ」は attack_end への delayed_trigger（subject: {ref: target}、once:
+      true、duration: end_of_turn）で表した'
+    official: dmrp12-026
+    review: pending
+  text: 'スピードアタッカー（このクリーチャーは召喚酔いしない）
+
+    W・ブレイカー（このクリーチャーはシールドを２つブレイクする）
+
+    このクリーチャーがバトルゾーンに出た時、自分の他のクリーチャーを１体選ぶ。このターン、そのクリーチャーの次の攻撃の終わりに、そのクリーチャーをアンタップする。'
+  types:
+  - creature
+  keywords:
+  - speed_attacker
+  - double_breaker
+- abilities:
+  - effect:
+    - op: untap
+      select:
+        count: 1
+        filter:
+          types:
+          - creature
+        owner: you
+        zone: bz
+    first_time: true
+    kind: trigger
+    when:
+      event: attack_end
+      subject:
+        filter:
+          types:
+          - creature
+        owner: any
+  civs:
+  - light
+  - fire
+  cost: 5
+  id: dmrp14-007
+  mana: 1
+  name: 電龍 ヴェヴェロキラー
+  power: 5500
+  races:
+  - ニトロ・ドラゴン
+  - チームボンバー
+  source:
+    notes: '「それがこのターン最初の攻撃なら」は first_time: true の attack_end 誘発で表した（ボルゼラス・ドラゴンの型）'
+    official: dmrp14-007
+    review: pending
+  text: 'ブロッカー
+
+    スピードアタッカー
+
+    クリーチャーの攻撃の終わりに、それがこのターン最初の攻撃なら、自分のクリーチャーを１体アンタップする。'
+  types:
+  - creature
+  keywords:
+  - blocker
+  - speed_attacker
+- abilities:
+  - kind: static
+    affects: self
+    mod:
+      sac_reduce: 1
+  - effect:
+    - op: destroy
+      select:
+        ref: self
+    kind: trigger
+    when:
+      event: attack_end
+      subject: self
+  civs:
+  - darkness
+  cost: 5
+  id: dmrp17-040
+  mana: 1
+  name: 禁忌 ドルブロ-１
+  power: 3000
+  races:
+  - イニシャルズX
+  - ディスタス
+  source:
+    official: dmrp17-040
+    review: pending
+  text: 'S・トリガー（このクリーチャーをシールドゾーンから手札に加える時、コストを支払わずにすぐ召喚してもよい）
+
+    ブロッカー（このクリーチャーをタップして、相手クリーチャーの攻撃先をこのクリーチャーに変更してもよい）
+
+    このクリーチャーの攻撃の終わりに、
+
+    このクリーチャーを破壊する。
+
+    ササゲール１（ディスペクターを召喚する時、コストを１少なくしてもよい。そうしたら、このクリーチャーを破壊する。そのディスペクターのコストは０以下にはならない）'
+  types:
+  - creature
+  keywords:
+  - s_trigger
+  - blocker
+- abilities:
+  - effect:
+    - op: destroy
+      select:
+        ref: self
+    kind: trigger
+    when:
+      event: attack_end
+      subject: self
+  civs:
+  - darkness
+  cost: 4
+  id: dmrp19-074
+  mana: 1
+  name: さびらびりん
+  power: 5000
+  races:
+  - ジョーカーズ
+  - レクスターズ
+  source:
+    official: dmrp19-074
+    review: pending
+    aliases:
+    - dmrp19-coro04
+    - promoy20-058
+  text: 'S・トリガー（このクリーチャーをシールドゾーンから手札に加える時、コストを支払わずにすぐ召喚してもよい）
+
+    ブロッカー（このクリーチャーをタップして、相手クリーチャーの攻撃先をこのクリーチャーに変更してもよい）
+
+    このクリーチャーの攻撃の終わりに、このクリーチャーを破壊する。'
+  types:
+  - creature
+  keywords:
+  - s_trigger
+  - blocker
+- abilities:
+  - effect:
+    - op: move
+      reason: put
+      select:
+        count: 1
+        owner: you
+        zone: shield
+      to: graveyard
+    - count: 1
+      op: draw
+    kind: trigger
+    when:
+      event: move
+      subject: self
+      to: bz
+  - effect:
+    - op: destroy
+      select:
+        ref: self
+    kind: trigger
+    when:
+      event: attack_end
+      subject: self
+  civs:
+  - darkness
+  - fire
+  cost: 2
+  id: dmrp19-095
+  mana: 1
+  name: うしおこまる
+  power: 3000
+  races:
+  - ジョーカーズ
+  - レクスターズ
+  source:
+    official: dmrp19-095
+    review: pending
+    aliases:
+    - promoy20-044
+  text: 'ブロッカー（このクリーチャーをタップして、相手クリーチャーの攻撃先をこのクリーチャーに変更してもよい）
+
+    このクリーチャーが出た時、自分のシールドを１つ墓地に置く。その後、カードを１枚引く。
+
+    このクリーチャーの攻撃の終わりに、このクリーチャーを破壊する。'
+  types:
+  - creature
+  keywords:
+  - blocker
