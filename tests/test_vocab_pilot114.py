@@ -33,7 +33,11 @@ def test_random_discard_parses():
     card = parse_card(CARD, TABLES)
     assert card is not None
     ab = card.abilities[0]
-    assert ab["effect"][0]["op"] == "discard"
+    # discard は parse 時に move（reason: discard）へ正規化される
+    step = ab["effect"][0]
+    assert step["op"] == "move"
+    assert step["to"] == "graveyard"
+    assert step["reason"] == "discard"
 
 
 def test_random_discard_select_shape():
