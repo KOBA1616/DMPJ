@@ -1048,3 +1048,9 @@ converted の監査（opt_reduce の素の整数表記9件）から。任意形�
 - 書き方: {kind: static, affects: {zone: hand, owner: any, filter: {types: [creature], cost_le: 4}}, mod: {deny: [summon]}}（先例 34-sec001）。owner は原文どおり（自分だけ／相手だけ／全員）。効果で出すことは禁止しない点も原文どおり。
 - tests/test_vocab_pilot101.py 2件（正常 parse／検証）
 - 待機10枚（summon_restriction のみが gap のもの）。
+
+## 第102弾: samurai_generate（侍流ジェネレート）— 新語彙なし（2026-11-05）
+「このクリーチャーをバトルゾーンに出した時、クロスギアを１枚、自分の手札からコストを支払わずにジェネレートしてもよい」は play_free で表す（クロスギアをプレイする行為がジェネレート。move イベントにも via: generate が付く）。
+- 書き方: {kind: trigger, when: {event: move, to: bz, subject: self}, effect: [{op: may, body: [{op: play_free, select: {zone: hand, owner: you, filter: {types: [cross_gear]}, count: 1}}]}]}。
+- tests/test_vocab_pilot102.py 2件（正常 parse／検証）
+- 待機10枚（samurai_generate のみが gap のもの）。
