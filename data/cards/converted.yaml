@@ -318894,3 +318894,591 @@ cards:
     ドラゴンではないクリーチャーが出る時、かわりにそれを持ち主の墓地に置く。'
   types:
   - creature
+- faces:
+  - abilities:
+    - effect:
+      - op: tap
+        select:
+          count: 2
+          filter:
+            types:
+            - creature
+          owner: opp
+          zone: bz
+      kind: trigger
+      when:
+        event: move
+        subject: self
+        to: bz
+    civs:
+    - light
+    - fire
+    cost: 7
+    keywords:
+    - s_trigger
+    - blocker
+    - speed_attacker
+    name: ボルシャック・セブンス
+    power: 5000
+    races:
+    - アーマード・ドラゴン
+    - エンジェル・コマンド
+    types:
+    - creature
+  - civs:
+    - light
+    - fire
+    - nature
+    cost: 13
+    name: インビンシブル・サンバースト
+    spell:
+    - as: putc
+      op: move
+      reason: put
+      select:
+        count: 1
+        filter:
+          name_has: ボルシャック
+          types:
+          - creature
+        owner: you
+        zone: mana
+      to: bz
+    - duration: until_next_own_turn_start
+      mod:
+        grant:
+        - blocker
+      op: modify
+      select:
+        ref: putc
+    - op: destroy
+      select:
+        count: all
+        filter:
+          power_le:
+            sum:
+            - power_of:
+                ref: putc
+            - -1
+          types:
+          - creature
+        owner: opp
+        zone: bz
+    types:
+    - spell
+  id: dm25bd1-014
+  source:
+    notes: 'ツインパクト。マナゾーンから出すのは召喚ではないため move reason: put。出したクリーチャーは move の as で変数 putc
+      に束縛し、ブロッカー付与の対象と power_of の参照に使った'
+    official: dm25bd1-014
+    review: pending
+    aliases:
+    - dm25bd1-sp7
+  text: 'ボルシャック・セブンス: S・トリガー / ブロッカー / スピードアタッカー / このクリーチャーが出た時、相手のクリーチャーを２体選び、タップする。
+    ／ インビンシブル・サンバースト: 名前に《ボルシャック》とあるクリーチャーを１体、自分のマナゾーンから出す。次の自分のターンのはじめまで、そのクリーチャーに「ブロッカー」を与える。そのクリーチャーよりパワーが小さい相手のクリーチャーをすべて破壊する。'
+- abilities:
+  - effect:
+    - as: atk
+      op: choose
+      select:
+        ref: event.subject
+    - op: destroy
+      select:
+        count: 1
+        filter:
+          power_le:
+            sum:
+            - power_of:
+                ref: atk
+            - -1
+          types:
+          - creature
+        owner: opp
+        zone: bz
+    kind: trigger
+    when:
+      event: attack
+      subject:
+        filter:
+          name_has: 紫電
+          race_has: ドラゴン
+        owner: you
+  - instead:
+    - op: destroy
+      select:
+        ref: self
+    kind: replace
+    optional: true
+    when:
+      event: move
+      reason: destroy
+      subject:
+        filter:
+          name_has: 紫電
+          race_has: ドラゴン
+        other: true
+        owner: you
+      to: graveyard
+  civs:
+  - fire
+  cost: 4
+  id: dmc67-011
+  mana: 1
+  name: ルルーク・紫玄・ルピア
+  power: 3000
+  races:
+  - ファイアー・バード
+  - サムライ
+  source:
+    notes: 攻撃したドラゴンは choose で変数 atk に束縛し、その現在パワーを power_of で参照した（dm24ex3-rp4001 の
+      cost_of と同型）。セイバーは replace + instead で自身を破壊する確立済みの形
+    official: dmc67-011
+    review: pending
+    aliases:
+    - dm34-031
+  text: 自分の、名前に《紫電》とあるドラゴンが攻撃する時、それよりパワーの小さい相手のクリーチャーを１体破壊する。 / セイバー-名前に《紫電》とあるドラゴン(自分の、名前に《紫電》とあるドラゴン１体が破壊される時、このクリーチャーをかわりに破壊してもよい)
+  types:
+  - creature
+- abilities:
+  - effect:
+    - op: mana_put
+      select:
+        count: 1
+        filter:
+          power_le:
+            sum:
+            - power_of:
+                ref: self
+            - -1
+          types:
+          - creature
+        owner: opp
+        zone: bz
+    kind: trigger
+    when:
+      event: attack
+      subject: self
+  - affects: self
+    if:
+      cmp:
+      - count:
+          owner: you
+          zone: shield
+      - <=
+      - 2
+    kind: static
+    mod:
+      grant:
+      - quad_breaker
+      power: 9000
+  civs:
+  - nature
+  cost: 7
+  evolve_from:
+    civs:
+    - nature
+    types:
+    - creature
+  id: dmr17-010
+  keywords:
+  - double_breaker
+  mana: 1
+  name: 革命類突進目 トリケラX
+  power: 9000
+  races:
+  - ジュラシック・コマンド・ドラゴン
+  - 革命軍
+  source:
+    notes: パワーは「9000+」の素の値9000。原文の攻撃時文中の文字化け（このクリー…ャー）は「このクリーチャー」と補った。革命２は条件つき常在型（promoy14-005
+      と同型、Q・ブレイカー付与は grant）で表した
+    official: dmr17-010
+    review: pending
+  text: 進化-自分の自然のクリーチャー１体の上に置く。 / W・ブレイカー / このクリーチャーが攻撃する時、このクリーチャーよりパワーの小さい相手のクリーチャーを１体選び、持ち主のマナゾーンに置く。
+    / 革命２―自分のシールドが２つ以下なら、このクリーチャーのパワーを+9000し、「Q・ブレイカー」を与える。
+  types:
+  - creature
+  - evolution
+- abilities:
+  - effect:
+    - as: t
+      op: choose
+      select:
+        from_top: 1
+        look: true
+        owner: you
+        zone: deck
+    - op: move
+      reason: put
+      select:
+        ref: t
+      to: hand
+    - cond:
+        exists:
+          filter:
+            types:
+            - creature
+          ref: t
+      op: if
+      then:
+      - op: destroy
+        select:
+          count: 1
+          filter:
+            power_le:
+              sum:
+              - power_of:
+                  ref: t
+              - -1
+            types:
+            - creature
+          owner: opp
+          zone: bz
+    kind: trigger
+    when:
+      event: move
+      subject: self
+      to: bz
+  - effect:
+    - as: t
+      op: choose
+      select:
+        from_top: 1
+        look: true
+        owner: you
+        zone: deck
+    - op: move
+      reason: put
+      select:
+        ref: t
+      to: hand
+    - cond:
+        exists:
+          filter:
+            types:
+            - creature
+          ref: t
+      op: if
+      then:
+      - op: destroy
+        select:
+          count: 1
+          filter:
+            power_le:
+              sum:
+              - power_of:
+                  ref: t
+              - -1
+            types:
+            - creature
+          owner: opp
+          zone: bz
+    kind: trigger
+    when:
+      event: attack
+      subject: self
+  civs:
+  - fire
+  cost: 8
+  id: dmr21-005
+  mana: 1
+  name: メガ・デストロイ・ドラゴン
+  power: 8000
+  races:
+  - メガ・コマンド・ドラゴン
+  source:
+    notes: W・ブレイカーは rule_convert.split の known_keywords（double_breaker）で処理済みのため keywords
+      に書き直さない（submit 時に merge_split で戻される）。表向きにしたカードは choose (look) で変数 t に束縛し、手札に加えた後も
+      power_of で参照した。表向きにした情報の公開は扱っていない
+    official: dmr21-005
+    review: pending
+  text: W・ブレイカーこのクリーチャーがバトルゾーンに出た時または攻撃する時、自分の山札の上から１枚目を表向きにし、それを手札に加える。それがクリーチャーなら、それよりパワーの小さい相手のクリーチャーを１体、破壊する。
+  types:
+  - creature
+  keywords:
+  - double_breaker
+- abilities:
+  - effect:
+    - op: play_free
+      select:
+        ref: self
+    if:
+      all:
+      - is_turn: opp
+      - cmp:
+        - count:
+            owner: you
+            zone: shield
+        - ==
+        - 0
+    kind: declare
+    when:
+      event: attack
+      target: player
+    zone: hand
+  - instead:
+    - op: move
+      reason: return
+      select:
+        ref: self
+      to: deck
+    - op: shuffle
+      player: you
+    kind: replace
+    when:
+      event: move
+      reason: resolve
+      subject: self
+      to: graveyard
+    zone: hold
+  civs:
+  - fire
+  - nature
+  cost: 5
+  id: dmr21-029
+  mana: 1
+  name: 龍帝の紋章
+  source:
+    notes: '革命０トリガー（呪文版）は第42弾の declare + play_free で表した。唱えた後の山札戻し+シャッフルは kind: replace（zone:
+      hold、reason: resolve の墓地送りを置換。dmc64-011 先例）。表向きにした2枚は choose (look) で shown
+      に束縛し、その中の火のクリーチャー1体を refc に選んで power_of で参照した。マナゾーンに置かなかったカードは山札の上に残る。表向きにした情報の公開は扱っていない'
+    official: dmr21-029
+    review: pending
+    aliases:
+    - promoy15-032
+  spell:
+  - as: shown
+    op: choose
+    select:
+      count: all
+      from_top: 2
+      look: true
+      owner: you
+      zone: deck
+  - as: refc
+    op: choose
+    select:
+      count: 1
+      filter:
+        civs:
+        - fire
+        types:
+        - creature
+      ref: shown
+  - op: destroy
+    select:
+      count: 1
+      filter:
+        power_le:
+          sum:
+          - power_of:
+              ref: refc
+          - -1
+        types:
+        - creature
+      owner: opp
+      zone: bz
+  - op: move
+    reason: put
+    select:
+      count: 1
+      filter:
+        civs:
+        - nature
+        types:
+        - creature
+      ref: shown
+    to: mana
+  text: マナゾーンに置く時、このカードはタップして置く。 / 革命０トリガー：クリーチャーが自分を攻撃する時、自分のシールドが１枚もなければ、この呪文をコストを支払わずに唱えてもよい。
+    / 自分の山札の上から２枚を表向きにする。その中の火のクリーチャー１体よりパワーの小さい相手のクリーチャーを１体破壊し、その中の自然のクリーチャーを１体自分のマナゾーンに置く。
+    / この呪文を唱えた後、自分の墓地に置くかわりに山札に加えてシャッフルする。
+  types:
+  - spell
+- abilities:
+  - effect:
+    - as: dead
+      op: choose
+      select:
+        ref: event.subject
+    - body:
+      - op: destroy
+        select:
+          count: 1
+          filter:
+            power_le:
+              sum:
+              - power_of:
+                  ref: dead
+              - -1
+            types:
+            - creature
+          owner: opp
+          zone: bz
+      op: may
+    kind: trigger
+    when:
+      event: move
+      from: bz
+      reason: destroy
+      subject:
+        filter:
+          types:
+          - creature
+        owner: any
+      to: graveyard
+  civs:
+  - fire
+  cost: 8
+  id: dmr23-004
+  mana: 1
+  name: メガ・デューバー・ドラゴン
+  power: 8000
+  races:
+  - メガ・コマンド・ドラゴン
+  source:
+    notes: 'W・ブレイカーは rule_convert.split の known_keywords（double_breaker）で処理済みのため keywords
+      に書き直さない（submit 時に merge_split で戻される）。「このクリーチャーまたは他のクリーチャー」は所有者を限定しないため subject
+      は owner: any。破壊されたクリーチャーは choose で変数 dead に束縛し、そのパワーを power_of で参照した（dm24ex3-rp4001
+      の cost_of と同型）'
+    official: dmr23-004
+    review: pending
+  text: W・ブレイカーこのクリーチャーまたは他のクリーチャーが破壊された時、それよりパワーの小さい相手のクリーチャーを１体破壊してもよい。
+  types:
+  - creature
+  keywords:
+  - double_breaker
+- abilities:
+  - effect:
+    - op: destroy
+      select:
+        count: all
+        filter:
+          power_le:
+            sum:
+            - power_of:
+                ref: self
+            - -1
+          types:
+          - creature
+        owner: opp
+        zone: bz
+    if:
+      cmp:
+      - count:
+          filter:
+            multicolor: true
+          owner: you
+          zone: mana
+      - '>='
+      - 4
+    kind: trigger
+    when:
+      event: attack
+      subject: self
+  civs:
+  - fire
+  - nature
+  cost: 7
+  id: dmr23-010
+  keywords:
+  - double_breaker
+  mana: 1
+  name: 激龍霊樹ドドンギャス
+  power: 9000
+  races:
+  - メガ・コマンド・ドラゴン
+  - ミステリー・トーテム
+  source:
+    notes: 'マナ武装 ４は攻撃時誘発の if（自分のマナゾーンの多色カード4枚以上）で表した。「このクリーチャーよりパワーが小さい」は power_of
+      {ref: self} の新式イディオム（第116弾）'
+    official: dmr23-010
+    review: pending
+  text: マナゾーンに置く時、このカードはタップして置く。 / W・ブレイカー / マナ武装 ４：このクリーチャーが攻撃する時、自分のマナゾーンに多色カードが４枚以上あれば、このクリーチャーよりパワーが小さい相手のクリーチャーをすべて破壊する。
+  types:
+  - creature
+- abilities:
+  - kind: static
+    affects: self
+    zone: hand
+    mod:
+      opt_reduce:
+        amount: 2
+        then: destroy
+  - effect:
+    - op: destroy
+      select:
+        count: all
+        filter:
+          power_le:
+            sum:
+            - power_of:
+                ref: self
+            - -1
+          types:
+          - creature
+        owner: any
+        zone: bz
+    kind: trigger
+    when:
+      event: attack
+      subject: self
+  civs:
+  - fire
+  cost: 9
+  id: dmrp03-s07
+  keywords:
+  - speed_attacker
+  - triple_breaker
+  mana: 1
+  name: “滅砲”戦車 ヘビーベビィ
+  power: 12000
+  races:
+  - ビートジョッキー
+  source:
+    notes: 'B・A・D ２は rule_convert.split の extra（static の opt_reduce {amount: 2, then:
+      destroy}）で処理済みのため abilities に書き直さない（submit 時に merge_split で戻される）。スピードアタッカーとT・ブレイカーは
+      split で抽出されなかったため keywords に書いた。「クリーチャーをすべて」は所有者を限定しないため owner: any（自身はパワーが等しいため対象にならない）'
+    official: dmrp03-s07
+    review: pending
+  text: B・A・D ２ （このクリーチャーを、コストを２少なくして召喚してもよい。そうしたら、このターンの終わりにこのクリーチャーを破壊する）スピードアタッカーT・ブレイカーこのクリーチャーが攻撃する時、このクリーチャーよりパワーが小さいクリーチャーをすべて破壊する。
+  types:
+  - creature
+- civs:
+  - light
+  cost: 1
+  id: dmrp04s-034
+  mana: 1
+  name: クリスティナ・フォール
+  source:
+    notes: tap 演算には as が無いため、自分のクリーチャーを先に choose で変数 t に束縛してから tap し、そのパワーを power_of
+      で参照した（フリーズの choose→tap と同型）
+    official: dmrp04s-034
+    review: pending
+  spell:
+  - as: t
+    op: choose
+    select:
+      count: 1
+      filter:
+        types:
+        - creature
+      owner: you
+      zone: bz
+  - op: tap
+    select:
+      ref: t
+  - op: tap
+    select:
+      count: all
+      filter:
+        power_le:
+          sum:
+          - power_of:
+              ref: t
+          - -1
+        types:
+        - creature
+      owner: opp
+      zone: bz
+  text: 自分のクリーチャーを１体、タップする。その後、それよりパワーが小さい相手のクリーチャーをすべてタップする。
+  types:
+  - spell
