@@ -300700,3 +300700,481 @@ cards:
   text: バトルゾーンにある自分のカードの文明ひとつにつき、カードを１枚引く。
   types:
   - spell
+- abilities:
+  - affects:
+      filter:
+        race_has: ヒューマノイド
+      other: true
+      owner: you
+    if:
+      exists:
+        filter:
+          tapped: true
+        ref: self
+    kind: static
+    mod:
+      breaks: 1
+  civs:
+  - fire
+  cost: 5
+  evolve_from:
+    races:
+    - ヒューマノイド
+  id: dmx11-030
+  keywords:
+  - double_breaker
+  mana: 1
+  name: 鬼ドリル 爆マサムネ
+  power: 9000
+  races:
+  - ヒューマノイド
+  - ハンター
+  - エイリアン
+  source:
+    notes: 第80弾の型（このカードの原文が tests/test_vocab_pilot80.py の題材）。ブレイク数の増加分は mod の breaks
+      で表した
+    official: dmx11-030
+    review: pending
+  text: '進化-自分のヒューマノイド１体の上に置く。
+
+    W・ブレイカー(このクリーチャーはシールドを２枚ブレイクする)
+
+    このクリーチャーがタップされている時、自分の他のヒューマノイドはすべて、シールドをさらに１枚ブレイクする。'
+  types:
+  - creature
+  - evolution
+- abilities:
+  - affects:
+      filter:
+        types:
+        - creature
+      owner: you
+    if:
+      cmp:
+      - count:
+          filter:
+            civs:
+            - light
+            types:
+            - creature
+          owner: you
+          zone: bz
+      - '>='
+      - 11
+    kind: static
+    mod:
+      breaks: 11
+      power: 11000
+  civs:
+  - light
+  cost: 11
+  id: dmx12b-001
+  keywords:
+  - blocker
+  - double_breaker
+  mana: 1
+  name: 逆転の精霊ヘブンイレブン8210式
+  power: 11000
+  races:
+  - エンジェル・コマンド
+  source:
+    notes: ブレイク数の増加分は mod の breaks で表した（第80弾）
+    official: dmx12b-001
+    review: pending
+  text: 'ブロッカー
+
+    W・ブレイカー（このクリーチャーはシールドを２枚ブレイクする）
+
+    バトルゾーンに自分の光のクリーチャーが11体以上あれば、自分のクリーチャーすべてのパワーは+11000され、シールドをさらに11枚ブレイクする。'
+  types:
+  - creature
+- civs:
+  - fire
+  cost: 5
+  id: dmx15-016
+  mana: 1
+  name: 必殺！ワイの龍炎
+  source:
+    notes: ブレイク数の増加分は mod の breaks で表した（第80弾）。「７体なければ」は if の else で表した
+    official: dmx15-016
+    review: pending
+  spell:
+  - cond:
+      cmp:
+      - count:
+          filter:
+            race_has: アウトレイジ
+            types:
+            - creature
+          owner: you
+          zone: bz
+      - '>='
+      - 7
+    else:
+    - duration: end_of_turn
+      mod:
+        breaks: 1
+        power: 3000
+      op: modify
+      select:
+        count: all
+        filter:
+          race_has: アウトレイジ
+          types:
+          - creature
+        owner: you
+        zone: bz
+    op: if
+    then:
+    - duration: end_of_turn
+      mod:
+        breaks: 7
+        power: 77777
+      op: modify
+      select:
+        count: all
+        filter:
+          race_has: アウトレイジ
+          types:
+          - creature
+        owner: you
+        zone: bz
+  text: バトルゾーンに自分のアウトレイジが７体以上あれば、このターン、バトルゾーンにある自分のアウトレイジすべてのパワーは+77777され、シールドをさらに７枚ブレイクする。バトルゾーンに自分のアウトレイジが７体なければ、このターン、バトルゾーンにある自分のアウトレイジすべてのパワーは+3000され、シールドをさらに１枚ブレイクする。
+  types:
+  - spell
+- abilities:
+  - effect:
+    - duration: end_of_turn
+      mod:
+        breaks: 1
+      op: modify
+      select:
+        count: 1
+        filter:
+          types:
+          - creature
+        owner: you
+        zone: bz
+    kind: trigger
+    when:
+      event: move
+      subject: self
+      to: bz
+  civs:
+  - darkness
+  - nature
+  cost: 2
+  id: dmx22a-059
+  mana: 1
+  name: 無頼封魔アニマベルギス
+  power: 1000
+  races:
+  - グランド・デビル
+  - ビーストフォーク
+  source:
+    notes: 「マナゾーンに置く時、このカードはタップして置く」は多色カードのルール処理のため能力に書かない（変換済み多色カードの先例どおり）。ブレイク数の増加分は
+      mod の breaks で表した（第80弾）
+    official: dmx22a-059
+    review: pending
+    aliases:
+    - dm26-054
+  text: マナゾーンに置く時、このカードはタップして置く。 / このクリーチャーがバトルゾーンに出た時、自分のクリーチャーを１体選ぶ。そのターン、そのクリーチャーはシールドをさらにひとつブレイクする。
+  types:
+  - creature
+- abilities:
+  - affects: self
+    kind: static
+    mod:
+      breaks:
+        count:
+          filter:
+            civs:
+            - fire
+            race_has: ドラゴン
+          owner: you
+          zone: graveyard
+      power_when:
+        amount: 5656
+        count:
+          filter:
+            civs:
+            - fire
+            race_has: ドラゴン
+          owner: you
+          zone: graveyard
+        when: attacking
+  civs:
+  - fire
+  cost: 5
+  id: dmx22b-027
+  mana: 1
+  name: ボルシャック・コロドラゴン
+  power: 5656
+  races:
+  - アーマード・ドラゴン
+  source:
+    notes: 「パワーアタッカー+5656」は power_when（攻撃中）、ブレイク数の増加分は breaks の count 式で表した（跳箱男 dmr05-027
+      と同型、第80弾）
+    official: dmx22b-027
+    review: pending
+    aliases:
+    - dmx12b-016
+  text: 自分の墓地にある火のドラゴン１体につき、このクリーチャーは「パワーアタッカー+5656」を得、シールドをさらに１枚ブレイクする。
+  types:
+  - creature
+- abilities:
+  - affects:
+      filter:
+        race_has: カレーパン
+      other: true
+      owner: you
+    kind: static
+    mod:
+      breaks: 1
+      power: 3000
+  civs:
+  - fire
+  cost: 3
+  id: dmx26-031
+  mana: 1
+  name: 激熱 カ・レーパン
+  power: 3000
+  races:
+  - カレーパン
+  - コスモ・ウォーカー
+  - エイリアン
+  source:
+    notes: ブレイク数の増加分は mod の breaks で表した（第80弾）
+    official: dmx26-031
+    review: pending
+    aliases:
+    - dmx22b-013
+  text: 自分の他のカレーパンすべてのパワーは+3000され、シールドをさらに１つブレイクする。
+  types:
+  - creature
+- abilities:
+  - effect:
+    - as: milled
+      op: move
+      reason: put
+      select:
+        count: all
+        from_top: 2
+        owner: you
+        zone: deck
+      to: graveyard
+    - cond:
+        cmp:
+        - count:
+            filter:
+              race_has: アウトレイジ
+            ref: milled
+        - ==
+        - 2
+      op: if
+      then:
+      - duration: end_of_turn
+        mod:
+          breaks: 1
+          power: 7777
+        op: modify
+        select:
+          ref: self
+    kind: trigger
+    when:
+      event: attack
+      subject: self
+  civs:
+  - fire
+  cost: 3
+  id: promoy12-006
+  mana: 1
+  name: カンフーパンヤオ カツドン
+  power: 2000
+  races:
+  - アウトレイジ
+  source:
+    notes: '「2枚ともアウトレイジ」は墓地に置いた束（ref: milled）のうちアウトレイジの枚数が2に等しいことで判定した（変換済みカードの先例どおり）。ブレイク数の増加分は
+      mod の breaks で表した（第80弾）'
+    official: promoy12-006
+    review: pending
+  text: このクリーチャーが攻撃する時、自分の山札の上から２枚を墓地に置く。そのカードが２枚ともアウトレイジであれば、そのターン、このクリーチャーのパワーは+7777され、シールドをさらに１枚ブレイクする。
+  types:
+  - creature
+- abilities:
+  - affects:
+      filter:
+        types:
+        - creature
+      other: true
+      owner: you
+    if:
+      cmp:
+      - count:
+          owner: you
+          zone: shield
+      - <=
+      - 2
+    kind: static
+    mod:
+      breaks: 2
+  civs:
+  - fire
+  cost: 7
+  evolve_from:
+    civs:
+    - fire
+    types:
+    - creature
+  id: promoy14-013
+  keywords:
+  - triple_breaker
+  mana: 1
+  name: 革命龍 ドカン
+  power: 13000
+  races:
+  - メガ・コマンド・ドラゴン
+  - 革命軍
+  source:
+    notes: 革命２は条件つき常在型能力として表した（promoy14-005 の先例）。ブレイク数の増加分は mod の breaks で表した（第80弾）
+    official: promoy14-013
+    review: pending
+  text: 進化―自分の火のクリーチャー１体の上に置く。 / T・ブレイカー / 革命２―自分のシールドが２つ以下なら、自分の他のクリーチャーはシールドをさらに２つブレイクする。
+  types:
+  - creature
+  - evolution
+- abilities:
+  - affects: self
+    kind: static
+    mod:
+      breaks:
+        count:
+          filter:
+            race_has: ドラゴノイド
+          owner: you
+          zone: bz
+  civs:
+  - fire
+  cost: 4
+  evolve_from:
+    races:
+    - アーマード・ドラゴン
+  id: promoy2-014
+  mana: 1
+  name: 超竜バハム
+  power: 11000
+  races:
+  - アーマード・ドラゴン
+  source:
+    notes: 「シールドを攻撃したとき」のブレイク数増加は、ブレイク数が参照される場面（シールドをブレイクする時）にだけ効くため、跳箱男（dmr05-027）と同じ常在型の
+      breaks 式で表した（第80弾）。攻撃宣言時点ではなくブレイク時点でドラゴノイドの数を数える解釈になる点は要確認
+    official: promoy2-014
+    review: pending
+    aliases:
+    - promoy2-014b
+    - promoy3-034
+  text: 進化ー自分のアーマード・ドラゴン１体の上に置く。 / シールドを攻撃したとき、バトルゾーンにある自分のドラゴノイド１体につき、シールドをさらにもう１枚ブレイクする。
+  types:
+  - creature
+  - evolution
+- abilities:
+  - effect:
+    - body:
+      - op: play_free
+        select:
+          ref: self
+      op: may
+    kind: declare
+    when:
+      event: attack
+      subject:
+        filter:
+          race_has: エグザイル
+        owner: you
+    zone: hand
+  civs:
+  - fire
+  cost: 4
+  id: dmd11-003
+  mana: 1
+  name: EX秘伝カツトンファー
+  source:
+    notes: 'アタック・チャンスは declare（dmr07-029 の先例）。「攻撃の後、そのクリーチャーを破壊してもよい」は attack_end
+      への遅延誘発で表し、攻撃のたびに選べるよう once: false にした（無限掌 dm09-032 の先例）。ブレイク数の増加分は mod の breaks
+      で表した（第80弾）'
+    official: dmd11-003
+    review: pending
+  spell:
+  - as: t
+    op: choose
+    select:
+      count: 1
+      filter:
+        types:
+        - creature
+      owner: you
+      zone: bz
+  - duration: end_of_turn
+    mod:
+      breaks: 1
+      power: 6000
+    op: modify
+    select:
+      ref: t
+  - duration: end_of_turn
+    effect:
+    - body:
+      - op: destroy
+        select:
+          ref: t
+      op: may
+    once: false
+    op: delayed_trigger
+    when:
+      event: attack_end
+      subject:
+        ref: t
+  text: アタック・チャンス-エグザイル・クリーチャー / このターン、バトルゾーンにある自分のクリーチャー１体のパワーは+6000され、シールドをさらに１枚ブレイクする。そのクリーチャーがこのターン攻撃する時、攻撃の後、そのクリーチャーを破壊してもよい。
+  types:
+  - spell
+- abilities:
+  - effect:
+    - body:
+      - op: play_free
+        select:
+          ref: self
+      op: may
+    kind: declare
+    when:
+      event: attack
+      subject:
+        filter:
+          race_has: ワイルド・ベジーズ
+        owner: you
+    zone: hand
+  civs:
+  - nature
+  cost: 3
+  id: dmr06-033
+  mana: 1
+  name: 千切秘伝ワイルド・ベジタブル
+  source:
+    notes: アタック・チャンスは declare（dmr07-029 の先例）。ブレイク数の増加分は mod の breaks で表した（第80弾）
+    official: dmr06-033
+    review: pending
+  spell:
+  - duration: end_of_turn
+    mod:
+      breaks: 1
+      power: 6000
+    op: modify
+    select:
+      count: 1
+      filter:
+        types:
+        - creature
+      owner: you
+      zone: bz
+  text: アタック・チャンス-ワイルド・ベジーズ / このターン、バトルゾーンにある自分のクリーチャー１体のパワーは+6000され、シールドをさらに１枚ブレイクする。
+  types:
+  - spell
