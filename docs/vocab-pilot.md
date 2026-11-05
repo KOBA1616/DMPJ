@@ -953,3 +953,9 @@ converted の監査（opt_reduce の素の整数表記9件）から。任意形�
 - 書き方: choose {from_top: 3, look: true} as: pile → repeat {times: {count: {ref: pile, filter: {...}}}} で本体 → move {ref: pile} to: deck, position: bottom, order: choose。
 - tests/test_vocab_pilot86.py 2件（正常 parse／検証）
 - 待機15枚（thrilling_three のみが gap のもの）。
+
+## 第87弾: ultra_saber（ウルトラ・セイバー）— 新語彙なし（2026-11-05）
+「自分の〜が離れる時、かわりにこのクリーチャーを破壊してもよい」は既存の replace で表せる（shield_saver の汎用版）。
+- 書き方: kind: replace, when: {event: move, from: bz, subject: {owner: you, other: true, filter: {該当条件}}}, optional: true, instead: [destroy {ref: self}]。
+- tests/test_vocab_pilot87.py 2件（正常 parse／検証）
+- 待機14枚（ultra_saber のみが gap のもの）。
