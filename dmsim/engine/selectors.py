@@ -145,6 +145,10 @@ class SelectorMixin:
             return False
         if "evolution" in f and ("evolution" in self.fdef(cid).types) != bool(f["evolution"]):
             return False   # 「進化ではないクリーチャー」等（進化はタイプで表す）
+        if "linked_god" in f:
+            linked = self.link_side(cid) is not None and len(self.link_members(cid)) >= 2
+            if linked != bool(f["linked_god"]):
+                return False   # 「リンクしているゴッド」: リンク位置を持ち、実際に2体以上でリンクしている
         if "mugen_climb" in f and (self.fdef(cid).mugen_climb is not None) != bool(f["mugen_climb"]):
             return False   # 「『ムゲンクライム』能力を持つカード」
         if "vanilla" in f:   # 「カードに能力が書かれていない」: 能力もキーワードも無く、進化・NEO 等の書かれた仕組みも持たない

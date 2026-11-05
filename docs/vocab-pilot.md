@@ -1054,3 +1054,10 @@ converted の監査（opt_reduce の素の整数表記9件）から。任意形�
 - 書き方: {kind: trigger, when: {event: move, to: bz, subject: self}, effect: [{op: may, body: [{op: play_free, select: {zone: hand, owner: you, filter: {types: [cross_gear]}, count: 1}}]}]}。
 - tests/test_vocab_pilot102.py 2件（正常 parse／検証）
 - 待機10枚（samurai_generate のみが gap のもの）。
+
+## 第103弾: linked_god_filter（リンクしているゴッド）— 新語彙あり（2026-11-05）
+「進化クリーチャーまたはリンクしているゴッド」は any_of の片方として新フィルタで表す。
+- 新フィルタ: {linked_god: true}（defs.py FILTER_KEYS 追加、engine/selectors.py の filter_match に実装）。判定はリンク位置キーワードを持ち、link_members が2体以上（実際にリンク中）。
+- 書き方: filter: {any_of: [{evolution: true}, {linked_god: true}]}。proto T157。
+- 試験カード R079・R080 を tests/rule_cards.yaml に追加。tests/test_vocab_pilot103.py 2件（parse／照合の実挙動）。
+- 待機7枚（linked_god_filter のみが gap のもの）。

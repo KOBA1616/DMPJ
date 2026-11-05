@@ -671,3 +671,23 @@ cards:
             player: opp
             body:
               - {op: draw, player: opp, count: 1}
+  - id: R079
+    name: 試験用左神
+    types: [creature]
+    civs: [light]
+    cost: 5
+    power: 5000
+    races: [ゴッド]
+    keywords: [left_g_link]
+    text: G・リンク（右）
+    abilities: []
+  - id: R080
+    name: 試験用右神
+    types: [creature]
+    civs: [light]
+    cost: 5
+    power: 5000
+    races: [ゴッド]
+    keywords: [right_g_link]
+    text: G・リンク（左）
+    abilities: []

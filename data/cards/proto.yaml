@@ -2033,3 +2033,19 @@ cards:
         effect:
           - op: destroy
             select: {zone: bz, owner: opp, count: 1, filter: {types: [creature], not_race_has: ドラゴン}}
+  - id: T157
+    name: 試験用神迎え獣
+    types: [creature]
+    civs: [light]
+    cost: 5
+    power: 4000
+    races: [テスト]
+    text: このクリーチャーがバトルゾーンに出た時、バトルゾーンにある進化クリーチャーまたはリンクしているゴッドを１体、持ち主の手札に戻してもよい。
+    abilities:
+      - kind: trigger
+        when: {event: summon, subject: self}
+        effect:
+          - op: may
+            body:
+              - op: bounce
+                select: {zone: bz, owner: any, count: 1, filter: {any_of: [{evolution: true}, {linked_god: true}]}}
