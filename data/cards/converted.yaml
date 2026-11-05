@@ -316519,3 +316519,279 @@ cards:
   text: このクリーチャーがタップされた時、自分の山札の上から１枚目をマナゾーンに置く。
   types:
   - creature
+- abilities:
+  - effect:
+    - body:
+      - as: t
+        op: move
+        reason: put
+        select:
+          count: 1
+          filter:
+            races:
+            - エイリアン
+            types:
+            - creature
+          other: true
+          owner: you
+          zone: bz
+        to: mana
+      - cond:
+          exists:
+            ref: t
+        op: if
+        then:
+        - op: move
+          reason: put
+          select:
+            count: 1
+            filter:
+              cost_le:
+                cost_of:
+                  ref: t
+              races:
+              - エイリアン
+              types:
+              - creature
+            owner: you
+            zone: mana
+          to: bz
+      op: may
+    kind: trigger
+    when:
+      event: attack
+      subject: self
+  civs:
+  - nature
+  cost: 6
+  id: dmr04-001
+  keywords:
+  - double_breaker
+  mana: 1
+  name: 輪廻の超人
+  power: 6000
+  races:
+  - ジャイアント
+  - エイリアン
+  source:
+    official: dmr04-001
+    review: pending
+  text: 'このクリーチャーが攻撃する時、自分の他のエイリアンを１体、バトルゾーンから自分のマナゾーンに置いてもよい。そうした場合、そのエイリアンのコスト以下のエイリアンを１体、自分のマナゾーンからバトルゾーンに出す。
+
+    W・ブレイカー(このクリーチャーはシールドを２枚ブレイクする)'
+  types:
+  - creature
+- abilities:
+  - effect:
+    - as: t
+      op: move
+      reason: put
+      select:
+        from_top: 1
+        owner: you
+        zone: deck
+      to: mana
+    - op: move
+      reason: put
+      select:
+        count: all
+        filter:
+          cost_le:
+            cost_of:
+              ref: t
+          types:
+          - creature
+        owner: any
+        zone: bz
+      to: mana
+    kind: trigger
+    when:
+      event: move
+      subject: self
+      to: bz
+  civs:
+  - nature
+  cost: 7
+  id: dmrp01-s10
+  keywords:
+  - triple_breaker
+  mana: 1
+  name: パンプパンプ・パンツァー
+  power: 12000
+  races:
+  - グランセクト
+  source:
+    official: dmrp01-s10
+    review: pending
+  text: T・ブレイカーこのクリーチャーがバトルゾーンに出た時、自分の山札の上から１枚目をマナゾーンに置く。その後、それ以下のコストを持つクリーチャーをすべて、持ち主のマナゾーンに置く。
+  types:
+  - creature
+- abilities:
+  - effect:
+    - as: t
+      op: choose
+      select:
+        ref: event.subject
+    - body:
+      - op: move
+        reason: put
+        select:
+          count: 1
+          filter:
+            civs:
+            - light
+            cost_le:
+              cost_of:
+                ref: t
+            types:
+            - creature
+          owner: you
+          zone: hand
+        to: bz
+      op: may
+    kind: trigger
+    when:
+      event: cast
+      subject:
+        filter:
+          types:
+          - spell
+        owner: you
+  civs:
+  - light
+  cost: 4
+  id: dmrp08-012
+  mana: 1
+  name: 奇石 ケイヴ
+  power: 4000
+  races:
+  - メタリカ
+  source:
+    official: dmrp08-012
+    review: pending
+  text: 自分が呪文を唱えた時、それ以下のコストを持つ光のクリーチャーを１体、自分の手札からバトルゾーンに出してもよい。
+  types:
+  - creature
+- abilities:
+  - effect:
+    - as: t
+      op: move
+      reason: put
+      select:
+        count: 1
+        filter:
+          types:
+          - creature
+        owner: you
+        zone: bz
+      tapped: true
+      to: mana
+    - op: move
+      reason: put
+      select:
+        count: 1
+        filter:
+          cost_le:
+            cost_of:
+              ref: t
+          types:
+          - creature
+        owner: opp
+        zone: bz
+      to: mana
+    kind: trigger
+    when:
+      event: move
+      subject: self
+      to: bz
+  civs:
+  - nature
+  cost: 6
+  id: dmrp12-058
+  keywords:
+  - s_trigger
+  mana: 1
+  name: スカラベヤ
+  power: 3000
+  races:
+  - グランセクト
+  source:
+    official: dmrp12-058
+    review: pending
+  text: 'S・トリガー（このクリーチャーをシールドゾーンから手札に加える時、コストを支払わずにすぐ召喚してもよい）
+
+    このクリーチャーがバトルゾーンに出た時、自分のクリーチャーを１体マナゾーンにタップして置く。その後、そのクリーチャー以下のコストを持つ相手のクリーチャーを１体選び、持ち主のマナゾーンに置く。'
+  types:
+  - creature
+- civs:
+  - fire
+  cost: 3
+  id: dmrp19-019
+  keywords:
+  - s_trigger
+  mana: 1
+  name: ゲット・ザ・フューチャー
+  source:
+    official: dmrp19-019
+    review: pending
+  spell:
+  - as: t
+    op: discard
+    select:
+      count: 1
+      owner: you
+      zone: hand
+  - count: 1
+    op: draw
+  - op: destroy
+    select:
+      count: 1
+      filter:
+        cost_le:
+          cost_of:
+            ref: t
+        types:
+        - creature
+      owner: opp
+      zone: bz
+  text: 'S・トリガー（この呪文をシールドゾーンから手札に加える時、コストを支払わずにすぐ唱えてもよい）
+
+    自分の手札を１枚捨て、その後、カードを１枚引く。その捨てたカード以下のコストを持つ相手のクリーチャーを１体破壊する。'
+  types:
+  - spell
+- civs:
+  - fire
+  cost: 2
+  id: dmrp20-043
+  keywords:
+  - s_trigger
+  mana: 1
+  name: メタルカオス・バースト
+  source:
+    official: dmrp20-043
+    review: pending
+  spell:
+  - as: t
+    op: move
+    reason: put
+    select:
+      from_top: 1
+      owner: you
+      zone: deck
+    to: graveyard
+  - op: destroy
+    select:
+      count: 1
+      filter:
+        cost_le:
+          cost_of:
+            ref: t
+        types:
+        - creature
+      owner: opp
+      zone: bz
+  text: 'S・トリガー（この呪文をシールドゾーンから手札に加える時、コストを支払わずにすぐ唱えてもよい）
+
+    自分の山札の上から１枚目を墓地に置く。そのカード以下のコストを持つ相手のクリーチャーを１体破壊する。'
+  types:
+  - spell
