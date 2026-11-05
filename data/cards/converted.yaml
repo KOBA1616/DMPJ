@@ -299330,3 +299330,541 @@ cards:
     official: dm23ex2-110
     review: pending
   text: '早食王のリンパオ: スピードアタッカー / ダイナモ ／ ライク・ア・ローリング・ストーム: 自分の山札の上から３枚を墓地に置く。その後、クリーチャーを１体、自分の墓地から手札に戻す。'
+- abilities:
+  - effect:
+    - body:
+      - op: tap
+        select:
+          count: 1
+          filter:
+            types:
+            - creature
+          owner: opp
+          zone: bz
+      op: may
+    kind: trigger
+    when:
+      event: move
+      subject: self
+      to: bz
+  - effect:
+    - duration: during_attack
+      mod:
+        grant:
+        - blocker
+      op: modify
+      select:
+        ref: self
+    kind: trigger
+    when:
+      event: attack
+      target:
+        filter:
+          types:
+          - creature
+        owner: you
+  civs:
+  - light
+  cost: 5
+  id: dm28-070
+  mana: 1
+  name: 霊壁の使徒ミルース
+  power: 4500
+  races:
+  - イニシエート
+  source:
+    notes: '「攻撃された時」は第77弾の型（attack イベント + target）。「その攻撃の終わりまで」は duration: during_attack
+      で表した'
+    official: dm28-070
+    review: pending
+  text: このクリーチャーをバトルゾーンに出した時、バトルゾーンにある相手のクリーチャーを１体選び、タップしてもよい。 / 相手が自分のクリーチャーを攻撃する時、その攻撃の終わりまで、このクリーチャーは「ブロッカー」を得る。
+  types:
+  - creature
+- abilities:
+  - effect:
+    - duration: end_of_turn
+      mod:
+        grant:
+        - slayer
+      op: modify
+      select:
+        ref: self
+    kind: trigger
+    when:
+      event: attack
+      target: self
+  civs:
+  - darkness
+  cost: 3
+  id: dm28-090
+  mana: 1
+  name: 罠々男
+  power: 3000
+  races:
+  - ヘドリアン
+  source:
+    notes: '「攻撃された時」は第77弾の型（attack イベント + target: self）。攻撃宣言時に解決するため、続くバトルにもスレイヤーが効く'
+    official: dm28-090
+    review: pending
+  text: このクリーチャーが攻撃された時、そのターン、このクリーチャーは「スレイヤー」を得る。
+  types:
+  - creature
+- abilities:
+  - effect:
+    - op: destroy
+      select:
+        ref: self
+    kind: trigger
+    when:
+      event: attack
+      target: self
+  civs:
+  - fire
+  cost: 2
+  id: dm30-017
+  mana: 1
+  name: ソフトナックル・ドラグーン
+  power: 3000
+  races:
+  - ティラノ・ドレイク
+  source:
+    notes: '「攻撃した時」は第77弾の型で attack イベント + target: self（攻撃宣言時に解決する）'
+    official: dm30-017
+    review: pending
+  text: 相手のクリーチャーがこのクリーチャーを攻撃した時、このクリーチャーを破壊する。
+  types:
+  - creature
+- abilities:
+  - effect:
+    - op: move
+      reason: return
+      select:
+        count: 1
+        owner: you
+        zone: shield
+      to: hand
+    kind: trigger
+    when:
+      event: attack
+      target: self
+  civs:
+  - fire
+  cost: 2
+  id: dmd15-016
+  mana: 1
+  name: ライラ・ラッタ
+  power: 3000
+  races:
+  - ファイアー・バード
+  source:
+    notes: '「攻撃された時」は第77弾の型。「S・トリガーは使えない」は通常の move（shield→hand、reason: return）で足りるという初期パイロットの確認どおり（エスケープと同じ扱い）'
+    official: dmd15-016
+    review: pending
+    aliases:
+    - dm28-099
+    - dmc56-036
+    - dmc65-014
+  text: このクリーチャーが攻撃された時、自分のシールドをひとつ、手札に加える。ただし、その「S・トリガー」は使えない。
+  types:
+  - creature
+- abilities:
+  - effect:
+    - op: tap
+      select:
+        count: 1
+        filter:
+          types:
+          - creature
+        owner: opp
+        zone: bz
+    kind: trigger
+    when:
+      event: attack
+      target: self
+  - effect:
+    - op: tap
+      select:
+        count: 1
+        filter:
+          types:
+          - creature
+        owner: opp
+        zone: bz
+    kind: trigger
+    when:
+      event: choose
+      subject: self
+  - effect:
+    - op: tap
+      select:
+        count: 1
+        filter:
+          types:
+          - creature
+        owner: opp
+        zone: bz
+    kind: trigger
+    when:
+      event: move
+      stacked: true
+      subject: self
+      to: bz
+  civs:
+  - light
+  cost: 3
+  id: dmrp20-060
+  mana: 1
+  name: 奇石 プンギ
+  power: 3000
+  races:
+  - メタリカ
+  - レクスターズ
+  source:
+    notes: '「攻撃された時または相手に選ばれた時」は同一効果の誘発を2つに分けた（attack は第77弾の型、choose は「相手がこのクリーチャーを選んだ時」の先例どおり
+      {event: choose, subject: self}。エンジンは相手が自分のクリーチャーを選んだ時にだけ発火する）。シンカパワーは stacked:
+      true の誘発型（第28弾）'
+    official: dmrp20-060
+    review: pending
+    aliases:
+    - dmrp20-coro03
+  text: このクリーチャーが攻撃された時または相手に選ばれた時、相手のクリーチャーを１体選び、タップする。 / シンカパワー：このクリーチャーが進化する時、相手のクリーチャーを１体選び、タップする。
+  types:
+  - creature
+- abilities:
+  - effect:
+    - count: 1
+      op: draw
+    kind: trigger
+    when:
+      event: attack
+      target: self
+  - effect:
+    - count: 1
+      op: draw
+    kind: trigger
+    when:
+      event: choose
+      subject: self
+  - effect:
+    - count: 1
+      op: draw
+    kind: trigger
+    when:
+      event: move
+      stacked: true
+      subject: self
+      to: bz
+  civs:
+  - water
+  cost: 3
+  id: dmrp20-066
+  mana: 1
+  name: 復元されし者 モンハタ
+  power: 3000
+  races:
+  - ムートピア
+  - レクスターズ
+  source:
+    notes: '「攻撃された時または相手に選ばれた時」は同一効果の誘発を2つに分けた（attack は第77弾の型、choose は「相手がこのクリーチャーを選んだ時」の先例どおり
+      {event: choose, subject: self}）。シンカパワーは stacked: true の誘発型（第28弾）'
+    official: dmrp20-066
+    review: pending
+    aliases:
+    - dmrp20-coro09
+  text: このクリーチャーが攻撃された時または相手に選ばれた時、カードを１枚引く。 / シンカパワー：このクリーチャーが進化する時、カードを１枚引く。
+  types:
+  - creature
+- abilities:
+  - effect:
+    - op: discard
+      select:
+        chooser: opp
+        count: 1
+        owner: opp
+        zone: hand
+    kind: trigger
+    when:
+      event: attack
+      target: self
+  - effect:
+    - op: discard
+      select:
+        chooser: opp
+        count: 1
+        owner: opp
+        zone: hand
+    kind: trigger
+    when:
+      event: choose
+      subject: self
+  - effect:
+    - op: discard
+      select:
+        chooser: opp
+        count: 1
+        owner: opp
+        zone: hand
+    kind: trigger
+    when:
+      event: move
+      stacked: true
+      subject: self
+      to: bz
+  civs:
+  - darkness
+  cost: 3
+  id: dmrp20-073
+  mana: 1
+  name: 凶鬼星号 ヴォルガル
+  power: 3000
+  races:
+  - マフィ・ギャング
+  - レクスターズ
+  source:
+    notes: '「攻撃された時または相手に選ばれた時」は同一効果の誘発を2つに分けた（attack は第77弾の型、choose は「相手がこのクリーチャーを選んだ時」の先例どおり
+      {event: choose, subject: self}）。捨てるカードは相手が選ぶ（chooser: opp）。シンカパワーは stacked:
+      true の誘発型（第28弾）'
+    official: dmrp20-073
+    review: pending
+    aliases:
+    - dmrp20-coro10
+  text: このクリーチャーが攻撃された時または相手に選ばれた時、相手は自身の手札を１枚選び、捨てる。 / シンカパワー：このクリーチャーが進化する時、相手は自身の手札を１枚選び、捨てる。
+  types:
+  - creature
+- abilities:
+  - effect:
+    - op: destroy
+      select:
+        count: 1
+        filter:
+          power_le: 3000
+          types:
+          - creature
+        owner: opp
+        zone: bz
+    kind: trigger
+    when:
+      event: attack
+      target: self
+  - effect:
+    - op: destroy
+      select:
+        count: 1
+        filter:
+          power_le: 3000
+          types:
+          - creature
+        owner: opp
+        zone: bz
+    kind: trigger
+    when:
+      event: choose
+      subject: self
+  - effect:
+    - op: destroy
+      select:
+        count: 1
+        filter:
+          power_le: 3000
+          types:
+          - creature
+        owner: opp
+        zone: bz
+    kind: trigger
+    when:
+      event: move
+      stacked: true
+      subject: self
+      to: bz
+  civs:
+  - fire
+  cost: 3
+  id: dmrp20-079
+  mana: 1
+  name: 星舞神 G・W・D
+  power: 3000
+  races:
+  - ビートジョッキー
+  - レクスターズ
+  source:
+    notes: '「攻撃された時または相手に選ばれた時」は同一効果の誘発を2つに分けた（attack は第77弾の型、choose は「相手がこのクリーチャーを選んだ時」の先例どおり
+      {event: choose, subject: self}）。シンカパワーは stacked: true の誘発型（第28弾）'
+    official: dmrp20-079
+    review: pending
+  text: このクリーチャーが攻撃された時または相手に選ばれた時、相手のパワー3000以下のクリーチャーを１体破壊する。 / シンカパワー：このクリーチャーが進化する時、相手のパワー3000以下のクリーチャーを１体破壊する。
+  types:
+  - creature
+- abilities:
+  - effect:
+    - op: move
+      reason: put
+      select:
+        from_top: 1
+        owner: you
+        zone: deck
+      to: mana
+    kind: trigger
+    when:
+      event: attack
+      target: self
+  - effect:
+    - op: move
+      reason: put
+      select:
+        from_top: 1
+        owner: you
+        zone: deck
+      to: mana
+    kind: trigger
+    when:
+      event: choose
+      subject: self
+  - effect:
+    - op: move
+      reason: put
+      select:
+        from_top: 1
+        owner: you
+        zone: deck
+      to: mana
+    kind: trigger
+    when:
+      event: move
+      stacked: true
+      subject: self
+      to: bz
+  civs:
+  - nature
+  cost: 3
+  id: dmrp20-087
+  mana: 1
+  name: ハッチッチ
+  power: 3000
+  races:
+  - グランセクト
+  - レクスターズ
+  source:
+    notes: '「攻撃された時または相手に選ばれた時」は同一効果の誘発を2つに分けた（attack は第77弾の型、choose は「相手がこのクリーチャーを選んだ時」の先例どおり
+      {event: choose, subject: self}）。シンカパワーは stacked: true の誘発型（第28弾）'
+    official: dmrp20-087
+    review: pending
+    aliases:
+    - dmrp20-coro05
+    - promoy20-069
+  text: このクリーチャーが攻撃された時または相手に選ばれた時、自分の山札の上から１枚目をマナゾーンに置く。 / シンカパワー：このクリーチャーが進化する時、自分の山札の上から１枚目をマナゾーンに置く。
+  types:
+  - creature
+- abilities:
+  - effect:
+    - as: milled
+      op: move
+      reason: put
+      select:
+        from_top: 1
+        owner: opp
+        zone: deck
+      to: graveyard
+    - cond:
+        exists:
+          filter:
+            types:
+            - creature
+          ref: milled
+      op: if
+      then:
+      - duration: end_of_turn
+        mod:
+          grant:
+          - triple_breaker
+          power: 7000
+        op: modify
+        select:
+          ref: self
+    - cond:
+        exists:
+          filter:
+            types:
+            - spell
+          ref: milled
+      op: if
+      then:
+      - body:
+        - op: play_free
+          select:
+            ref: milled
+        op: may
+    kind: trigger
+    when:
+      event: attack
+      subject: self
+  - effect:
+    - as: milled
+      op: move
+      reason: put
+      select:
+        from_top: 1
+        owner: opp
+        zone: deck
+      to: graveyard
+    - cond:
+        exists:
+          filter:
+            types:
+            - creature
+          ref: milled
+      op: if
+      then:
+      - duration: end_of_turn
+        mod:
+          grant:
+          - triple_breaker
+          power: 7000
+        op: modify
+        select:
+          ref: self
+    - cond:
+        exists:
+          filter:
+            types:
+            - spell
+          ref: milled
+      op: if
+      then:
+      - body:
+        - op: play_free
+          select:
+            ref: milled
+        op: may
+    kind: trigger
+    when:
+      event: attack
+      target: self
+  civs:
+  - light
+  - water
+  cost: 9
+  id: dmx12b-023
+  keywords:
+  - blocker
+  - double_breaker
+  mana: 1
+  name: 変幻の精霊ナイツ・オブ・コバルト
+  power: 7000
+  races:
+  - エンジェル・コマンド
+  source:
+    notes: '「攻撃した時または攻撃された時」は同一効果の誘発を2つに分けた（攻撃された時は第77弾の型）。「マナゾーンに置く時、このカードはタップして置く」は多色カードのルール処理のため能力に書かない（変換済み多色カードの先例どおり）。墓地に置いたカードは
+      as: milled で束縛し、種類で分岐した。呪文の場合は唱えた後に持ち主の墓地へ行くのが通常の解決先なので play_free のみで表した'
+    official: dmx12b-023
+    review: pending
+    aliases:
+    - promoy11-038
+  text: 'マナゾーンに置く時、このカードはタップして置く。
+
+    ブロッカー
+
+    このクリーチャーが攻撃した時または攻撃された時、相手は自身の山札の上から１枚目を墓地に置く。それがクリーチャーであれば、そのターン中、このクリーチャーのパワーは+7000され、「T・ブレイカー」を得る。それが呪文であれば、自分がコストを支払わずに唱え、持ち主の墓地に置いてもよい。
+
+    W・ブレイカー'
+  types:
+  - creature
