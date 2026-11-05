@@ -880,3 +880,10 @@ converted の監査（opt_reduce の素の整数表記9件）から。任意形�
 - selectors.py に ref: event.opponent を追加。defs.py の when 検証に opponent を追加（attacker と同形）。
 - tests/test_vocab_pilot75.py 3件（parse + 攻撃側・守備側の実挙動）。試験カード R075/R076 を tests/rule_cards.yaml に追加。
 - 待機15枚（battle_trigger のみが gap のもの）。
+
+## 第76弾: dynamo（ダイナモ）— 新語彙なし（2026-11-05）
+「ダイナモ」は keywords.yaml に定義済み（エンジン挙動テスト tests/test_vocab_dynamo.py あり）。
+- 書き方: keywords: [dynamo]
+- 意味: バトルが始まる時、あるいはこのクリーチャーで攻撃できる時、タップしてもよい。そうした場合、そのターンの終わりまで、パワーと能力（ダイナモ自身を除く）を自分の他のダイナモ1体に加える。
+- tests/test_vocab_pilot76.py 2件（正常 parse／キーワード定義確認）
+- 待機12枚（dynamo のみが gap のもの）。
