@@ -302518,3 +302518,729 @@ cards:
     / 爆進ダブル
   types:
   - spell
+- abilities:
+  - effect:
+    - body:
+      - as: paid
+        op: move
+        reason: put
+        select:
+          count: 1
+          under_of: self
+        to: graveyard
+      - cond:
+          exists:
+            ref: paid
+        op: if
+        then:
+        - op: mana_put
+          select:
+            count: 1
+            owner: opp
+            zone: bz
+      op: may
+    kind: trigger
+    when:
+      event: attack
+      subject: self
+  civs:
+  - nature
+  cost: 6
+  evolve_count: 3
+  evolve_from:
+    races:
+    - ダイナモ
+  id: dm22-s05
+  keywords:
+  - dynamo
+  - triple_breaker
+  mana: 1
+  name: 超神星ウラヌス・ナインテイル
+  power: 12000
+  races:
+  - フェニックス
+  - ダイナモ
+  source:
+    notes: '進化GVは evolve_from + evolve_count: 3（第84弾）。ダイナモはキーワード（起動・誘発はルール側）。攻撃時メテオバーンは第19弾系の先例（dm19-007）どおり
+      may + move（as: paid）+ if exists で表した。相手クリーチャーをマナゾーンに置く処理は mana_put マクロ'
+    official: dm22-s05
+    review: pending
+  text: '進化GV-自分のダイナモ３体を重ねた上に置く。
+
+    ダイナモ(バトルが始まる時、あるいはこのクリーチャーで攻撃できる時、このクリーチャーをタップしてもよい。そうした場合、そのターンの終わりまで、このクリーチャーのパワーと能力をバトルゾーンにある他のダイナモ１体に加える)
+
+    メテオバーン-このクリーチャーが攻撃する時、このクリーチャーの下にあるカードを１枚墓地に置いてもよい。そうした場合、バトルゾーンにある相手のクリーチャーを１体選び、持ち主のマナゾーンに置く。
+
+    T・ブレイカー'
+  types:
+  - creature
+  - evolution
+- abilities:
+  - affects:
+      filter:
+        types:
+        - spell
+      owner: opp
+      zone: hand
+    kind: static
+    mod:
+      deny:
+      - cast
+  - effect:
+    - op: destroy
+      select:
+        count: 1
+        owner: opp
+        zone: bz
+    - as: t
+      op: choose
+      select:
+        count: 1
+        filter:
+          any_of:
+          - race_has: ドラゴン
+          - race_has: コマンド
+          types:
+          - creature
+        look: true
+        owner: you
+        up_to: true
+        zone: deck
+    - cond:
+        exists:
+          ref: t
+      op: if
+      then:
+      - op: move
+        reason: put
+        select:
+          ref: t
+        to: bz
+    - op: shuffle
+    kind: trigger
+    when:
+      event: attack
+      subject: self
+  civs:
+  - light
+  - darkness
+  - fire
+  cost: 15
+  evolve_count: 3
+  evolve_from:
+    races:
+    - エンジェル・コマンド
+    - デーモン・コマンド
+    - アーマード・ドラゴン
+  id: dm24ex3-sp3
+  keywords:
+  - world_breaker
+  mana: 1
+  name: 竜魔神王バルカディア・NEX
+  power: 25000
+  races:
+  - エンジェル・コマンド
+  - デーモン・コマンド
+  - アーマード・ドラゴン
+  source:
+    notes: '進化GVは evolve_from + evolve_count: 3（第84弾）。「相手は呪文を唱えられない」は static の deny:
+      [cast]（dm24ex3-tf30 の先例、対象を相手に限定）。攻撃時の山札サーチは choose（look、up_to）+ if exists で「出してもよい」を表し、シャッフルは常に行う。「出す」は召喚ではないため
+      move（reason: put）'
+    official: dm24ex3-sp3
+    review: pending
+    aliases:
+    - dmex17-022
+    - dmx12b-026
+    - dmx12b-027
+  text: '進化GV：エンジェル・コマンド、デーモン・コマンド、アーマード・ドラゴンいずれかのクリーチャー３体を重ねた上に置く。
+
+    ワールド・ブレイカー（このクリーチャーは相手のシールドをすべてブレイクする）
+
+    相手は呪文を唱えられない。
+
+    このクリーチャーが攻撃する時、相手のクリーチャーを１体選び、破壊する。その後、自分の山札を見る。その中からドラゴン・クリーチャーまたはコマンド・クリーチャーを１体、出してもよい。その後、山札をシャッフルする。'
+  types:
+  - creature
+  - evolution
+- abilities:
+  - effect:
+    - body:
+      - as: paid
+        op: move
+        reason: put
+        select:
+          count: 1
+          under_of: self
+        to: graveyard
+      - cond:
+          exists:
+            ref: paid
+        op: if
+        then:
+        - op: move
+          reason: put
+          select:
+            count: 1
+            filter:
+              not_types:
+              - evolution
+              race_has: ドラゴン
+              types:
+              - creature
+            owner: you
+            zone: hand
+          to: bz
+        - op: destroy
+          select:
+            count: 1
+            filter:
+              power_le: 5000
+              types:
+              - creature
+            owner: opp
+            zone: bz
+        - op: move
+          reason: put
+          select:
+            count: 1
+            owner: opp
+            zone: mana
+          to: graveyard
+      op: may
+    kind: trigger
+    when:
+      event: attack
+      subject: self
+  civs:
+  - fire
+  cost: 5
+  evolve_count: 3
+  evolve_from:
+    races:
+    - ドラゴン・ゾンビ
+    - アーマード・ドラゴン
+    - アース・ドラゴン
+  id: dm25ex1-009
+  keywords:
+  - triple_breaker
+  mana: 1
+  name: 超神星ライラ・ボルストーム
+  power: 18000
+  races:
+  - フェニックス
+  source:
+    notes: '進化GVは evolve_from + evolve_count: 3（第84弾）。メテオバーンは may + move（as: paid）+
+      if exists（dm19-007 の先例）。手札から出す処理は召喚ではないため move（reason: put）。３つの処理は原文の順序どおり直列に並べた'
+    official: dm25ex1-009
+    review: pending
+    aliases:
+    - dm20-s04
+  text: '進化GV：ドラゴン・ゾンビ、アーマード・ドラゴン、アース・ドラゴンいずれかのクリーチャー３体の上に重ねつつ出す。
+
+    Ｔ・ブレイカー
+
+    メテオバーン：このクリーチャーが攻撃する時、このクリーチャーの下にあるカードを１枚、墓地に置いてもよい。そうしたら、進化ではないドラゴン・クリーチャーを１体、自分の手札から出し、相手のパワー5000以下のクリーチャーを１体選んで破壊し、相手のマナゾーンにあるカードを１枚選んで持ち主の墓地に置く。'
+  types:
+  - creature
+  - evolution
+- abilities:
+  - effect:
+    - body:
+      - as: paid
+        op: move
+        reason: put
+        select:
+          count: 1
+          under_of: self
+        to: graveyard
+      - cond:
+          exists:
+            filter:
+              not_types:
+              - evolution
+              types:
+              - creature
+            ref: paid
+        op: if
+        then:
+        - op: move
+          reason: put
+          select:
+            ref: paid
+          to: bz
+        - duration: end_of_turn
+          mod:
+            grant:
+            - speed_attacker
+          op: modify
+          select:
+            ref: paid
+        - effect:
+          - op: destroy
+            select:
+              ref: paid
+          op: delayed_trigger
+          when:
+            event: turn_end
+      op: may
+    kind: trigger
+    when:
+      event: attack
+      subject: self
+  civs:
+  - fire
+  cost: 6
+  evolve_count: 3
+  evolve_from:
+    races:
+    - アーマード・ドラゴン
+    - ティラノ・ドレイク
+    - ブレイブ・スピリット
+  id: dm25ex1-027
+  keywords:
+  - triple_breaker
+  mana: 1
+  name: 超神星イクシオン・バーニングレイブ
+  power: 13000
+  races:
+  - フェニックス
+  source:
+    notes: '進化GVは evolve_from + evolve_count: 3（第84弾）。メテオバーンは may + move（as: paid）。「それが進化ではないクリーチャーなら」は
+      exists（ref: paid + filter）で判定し、墓地から出す処理は move（reason: put）。スピードアタッカー付与は modify（end_of_turn）、ターン終わりの破壊は
+      delayed_trigger（turn_end）で表した'
+    official: dm25ex1-027
+    review: pending
+    aliases:
+    - promoy5-057
+  text: '進化GV：アーマード・ドラゴン、ティラノ・ドレイク、ブレイブ・スピリットいずれかのクリーチャー３体の上に重ねつつ出す。
+
+    Ｔ・ブレイカー
+
+    メテオバーン：このクリーチャーが攻撃する時、このクリーチャーの下にあるカードを１枚、墓地に置いてもよい。それが進化ではないクリーチャーなら自分の墓地から出す。このターン、そのクリーチャーに「スピードアタッカー」を与える。このターンの終わりに、そのクリーチャーを破壊する。'
+  types:
+  - creature
+  - evolution
+- abilities:
+  - effect:
+    - body:
+      - as: paid
+        op: move
+        reason: put
+        select:
+          count: 1
+          under_of: self
+        to: graveyard
+      - cond:
+          exists:
+            ref: paid
+        op: if
+        then:
+        - op: destroy
+          select:
+            count: 1
+            owner: opp
+            zone: bz
+      op: may
+    kind: trigger
+    when:
+      event: attack
+      subject: self
+  civs:
+  - darkness
+  cost: 4
+  evolve_count: 3
+  evolve_from:
+    races:
+    - デスパペット
+    - グランド・デビル
+    - ティラノ・ドレイク
+  id: dmc54-007
+  keywords:
+  - triple_breaker
+  mana: 1
+  name: 超神星プルート・デスブリンガー
+  power: 13000
+  races:
+  - フェニックス
+  source:
+    notes: '進化GVは evolve_from + evolve_count: 3（第84弾）。メテオバーンは dm19-007 と同型（may + move（as:
+      paid）+ if exists）'
+    official: dmc54-007
+    review: pending
+    aliases:
+    - dm19-s06
+  text: '進化GV-自分のデスパペット、グランド・デビル、ティラノ・ドレイクのいずれか３体を重ねた上に置く。
+
+    メテオバーン - このクリーチャーが攻撃する時、このクリーチャーの下にあるカードを１枚選んで墓地に置いてもよい。そうした場合、相手のクリーチャーを１体破壊する。
+
+    T・ブレイカー(このクリーチャーはシールドを３枚ブレイクする)'
+  types:
+  - creature
+  - evolution
+- abilities:
+  - effect:
+    - body:
+      - as: paid
+        op: move
+        reason: put
+        select:
+          count: 3
+          under_of: self
+        to: graveyard
+      - cond:
+          exists:
+            ref: paid
+        op: if
+        then:
+        - as: t
+          op: choose
+          select:
+            count: 1
+            filter:
+              name_has: NEX
+              types:
+              - creature
+            look: true
+            owner: you
+            up_to: true
+            zone: deck
+        - cond:
+            exists:
+              ref: t
+          op: if
+          then:
+          - op: move
+            reason: put
+            select:
+              ref: t
+            to: bz
+        - op: shuffle
+      op: may
+    kind: trigger
+    when:
+      event: attack
+      subject: self
+  civs:
+  - fire
+  cost: 6
+  evolve_count: 3
+  evolve_from:
+    name_has: ルピア
+  id: dmc62-003
+  keywords:
+  - double_breaker
+  mana: 1
+  name: ギャラクシー・ルピア
+  power: 9000
+  races:
+  - フェニックス
+  - ファイアー・バード
+  source:
+    notes: '進化GVは evolve_from: {name_has: ルピア} + evolve_count: 3（第84弾）。メテオバーンは下のカード３枚を
+      move（count: 3、as: paid）し、if exists で後続を表した。山札から出す処理は choose（look、up_to）+ if
+      exists の move（reason: put）、シャッフルは常に行う'
+    official: dmc62-003
+    review: pending
+  text: '進化GV-名前に《ルピア》とある自分のクリーチャー３体を重ねた上に置く。
+
+    メテオバーン-このクリーチャーが攻撃する時、このクリーチャーの下にあるカードを３枚選び墓地に置いてもよい。そうした場合、自分の山札を見る。その中から、名前に《NEX》とあるクリーチャーを１体、バトルゾーンに出してもよい。その後、山札をシャッフルする。
+
+    W・ブレイカー(このクリーチャーはシールドを２枚ブレイクする)'
+  types:
+  - creature
+  - evolution
+- abilities:
+  - effect:
+    - body:
+      - as: paid
+        op: move
+        reason: put
+        select:
+          count: 1
+          under_of: self
+        to: graveyard
+      - cond:
+          exists:
+            ref: paid
+        op: if
+        then:
+        - op: move
+          order: choose
+          position: top
+          reason: put
+          select:
+            count: all
+            owner: opp
+            zone: bz
+          to: deck
+      op: may
+    kind: trigger
+    when:
+      event: attack
+      subject: self
+  civs:
+  - water
+  cost: 7
+  evolve_count: 3
+  evolve_from:
+    races:
+    - グランド・デビル
+    - デーモン・コマンド
+    - エンジェル・コマンド
+  id: dmc66-006
+  keywords:
+  - triple_breaker
+  mana: 1
+  name: 超神星ネプチューン・シュトローム
+  power: 13000
+  races:
+  - フェニックス
+  source:
+    notes: '進化GVは evolve_from + evolve_count: 3（第84弾）。メテオバーンは dm19-007 と同型（may + move（as:
+      paid）+ if exists）。全戻しは move（to: deck、position: top、order: choose）で「好きな順序で一番上に」を表した'
+    official: dmc66-006
+    review: pending
+    aliases:
+    - dm21-s02
+    - dmc38-005
+    - dmc61-s02
+  text: '進化GV-自分のグランド・デビル、デーモン・コマンド、エンジェル・コマンドのいずれか３体を重ねた上に置く。
+
+    メテオバーン-このクリーチャーが攻撃する時、このクリーチャーの下にあるカードを１枚、墓地に置いてもよい。そうした場合、相手はバトルゾーンにある自身のクリーチャーをすべて、持ち主の山札の一番上に好きな順序で置く。
+
+    T・ブレイカー（このクリーチャーはシールドを３枚ブレイクする）'
+  types:
+  - creature
+  - evolution
+- abilities:
+  - instead:
+    - op: move
+      reason: return
+      select:
+        ref: self
+      to: hand
+    kind: replace
+    when:
+      event: move
+      from: bz
+      reason: destroy
+      subject: self
+      to: graveyard
+  civs:
+  - water
+  cost: 5
+  evolve_count: 3
+  evolve_from:
+    races:
+    - リキッド・ピープル
+  free_if:
+    cmp:
+    - count:
+        filter:
+          types:
+          - creature
+          vanilla: true
+        owner: you
+        zone: bz
+    - '>='
+    - 3
+  id: dmd17-002
+  keywords:
+  - triple_breaker
+  mana: 1
+  name: 零次龍程式 トライグラマ
+  power: 12000
+  races:
+  - クリスタル・コマンド・ドラゴン
+  source:
+    notes: 'G・ゼロは free_if（cmp + count、filter: {vanilla: true} が「カードに能力が書かれていない」）。進化GVは
+      evolve_from + evolve_count: 3（第84弾）。破壊時の手札戻しは replace（shield_go と同型）。raw の text
+      は文の区切りが欠落しているため、text は意味の切れ目で区切って再構成した'
+    official: dmd17-002
+    review: pending
+  text: G・ゼロ - バトルゾーンに自分の、カードに能力が書かれていないクリーチャーが３体以上あれば、このクリーチャーをコストを支払わずに召喚してもよい /
+    進化GV-自分のリキッド・ピープル３体を重ねた上に置く / T・ブレイカー / このクリーチャーが破壊される時、墓地に置くかわりに自分の手札に戻す
+  types:
+  - creature
+  - evolution
+- civs:
+  - light
+  cost: 6
+  evolve_count: 3
+  evolve_from:
+    races:
+    - ガーディアン
+    - グレートメカオー
+    - アーク・セラフィム
+  id: dmx12b-029
+  keywords:
+  - meteor_burn
+  - triple_breaker
+  mana: 1
+  name: 超神星ヴィーナス・ラ・セイントマザー
+  power: 12500
+  races:
+  - フェニックス
+  source:
+    notes: '進化GVは evolve_from + evolve_count: 3（第84弾）。「バトルゾーンを離れる時、かわりに下のカードを墓地に置いてもよい」は
+      meteor_burn キーワードそのもの（keywords.yaml 定義済み、dm23-001 の先例）なので abilities には書かない'
+    official: dmx12b-029
+    review: pending
+    aliases:
+    - dm19-s01
+    - dmc66-002
+  text: '進化GV-自分のガーディアン、グレートメカオー、アーク・セラフィムのいずれか３体を重ねた上に置く。
+
+    メテオバーン - このクリーチャーがバトルゾーンを離れる時、かわりにこのクリーチャーの下にあるカードを１枚選び墓地に置いてもよい。
+
+    T・ブレイカー（このクリーチャーはシールドを３枚ブレイクする）'
+  types:
+  - creature
+  - evolution
+- abilities:
+  - instead:
+    - onto:
+        ref: self
+      op: put_under
+      select:
+        ref: event.subject
+    kind: replace
+    optional: true
+    when:
+      event: move
+      from: bz
+      reason: destroy
+      subject:
+        filter:
+          types:
+          - creature
+        other: true
+        owner: you
+      to: graveyard
+  - effect:
+    - body:
+      - as: paid
+        op: move
+        reason: put
+        select:
+          count: 6
+          under_of: self
+        to: graveyard
+      - cond:
+          exists:
+            ref: paid
+        op: if
+        then:
+        - op: bounce
+          select:
+            count: all
+            owner: opp
+            zone:
+            - bz
+            - mana
+      op: may
+    kind: trigger
+    when:
+      event: attack
+      subject: self
+  civs:
+  - water
+  cost: 6
+  evolve_count: 3
+  evolve_from:
+    races:
+    - グレートメカオー
+    - グランドデビル
+    - ポセイディア・ドラゴン
+  id: dmx12b-032
+  keywords:
+  - triple_breaker
+  mana: 1
+  name: 超神星ペテルギウス・ファイナルキャノン
+  power: 15000
+  races:
+  - フェニックス
+  source:
+    notes: '進化GVは evolve_from + evolve_count: 3（第84弾）。進化元名は原文表記「グランドデビル」（・なし）のまま。破壊置換は
+      replace（optional: true、セイバー系の先例）+ put_under（onto: self）。メガメテオバーン６は攻撃時メテオバーンと同型で
+      count: 6。全戻しは bounce（zone: [bz, mana]、count: all）'
+    official: dmx12b-032
+    review: pending
+    aliases:
+    - dm22-s02
+  text: '進化GV-自分のグレートメカオー、グランドデビル、ポセイディア・ドラゴンのいずれか３体を重ねた上に置く。
+
+    自分の他のクリーチャーが破壊される時、墓地に置くかわりにこのクリーチャーの下に置いてもよい。
+
+    メガメテオバーン６：このクリーチャーが攻撃する時、このクリーチャーの下にあるカードを６枚、墓地に置いてもよい。そうした場合、相手はバトルゾーンにある自身のクリーチャーすべてと自身のマナゾーンにあるカードすべてを手札に戻す。
+
+    T・ブレイカー'
+  types:
+  - creature
+  - evolution
+- abilities:
+  - effect:
+    - as: pile
+      op: choose
+      select:
+        count: all
+        from_top: 5
+        look: true
+        owner: you
+        zone: deck
+    - op: play_free
+      select:
+        count: any
+        filter:
+          types:
+          - creature
+        ref: pile
+    - op: move
+      reason: put
+      select:
+        count: all
+        ref: pile
+      to: graveyard
+    kind: trigger
+    when:
+      event: move
+      subject: self
+      to: bz
+  civs:
+  - nature
+  cost: 8
+  evolve_count: 3
+  evolve_from:
+    races:
+    - アーク・セラフィム
+    - ドリームメイト
+    - グレートメカオー
+  id: dmx12b-043
+  keywords:
+  - blocker
+  - triple_breaker
+  mana: 1
+  name: 超神星ビッグバン・アナスタシス
+  power: 13000
+  races:
+  - フェニックス
+  source:
+    notes: '進化GVは evolve_from + evolve_count: 3（第84弾）。出た時の処理は choose（from_top: 5、look、count:
+      all、as: pile）→ play_free（ref: pile、クリーチャー、count: any＝好きな数）→ 残りを move で墓地（dm23bd1-006
+      の先例と同型）。「見せる」は look で表した'
+    official: dmx12b-043
+    review: pending
+    aliases:
+    - dm23-s02
+    - dmc55-023
+    - dmc66-014
+  text: '進化GV-自分のアーク・セラフィム、ドリームメイト、グレートメカオーのいずれか３体を重ねた上に置く。
+
+    ブロッカー
+
+    このクリーチャーをバトルゾーンに出した時、自分の山札の上から５枚をすべてのプレイヤーに見せる。その中からクリーチャーを好きな数、コストを支払わずに召喚してもよい。その後、それ以外のカードを墓地に置く。
+
+    T・ブレイカー'
+  types:
+  - creature
+  - evolution
