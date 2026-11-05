@@ -947,3 +947,9 @@ converted の監査（opt_reduce の素の整数表記9件）から。任意形�
 - 書き方: filter: {cost_le: {sum: [{cost_of: {ref: 束縛変数}}, -1]}}（第65弾 cost_gt_count の項と対）。
 - tests/test_vocab_pilot85.py 2件（正常 parse／検証）
 - 待機12枚（cost_lt_card のみが gap のもの）。
+
+## 第86弾: thrilling_three（スリリング・スリー）— 新語彙なし（2026-11-05）
+「山札の上から3枚を表向きにし、〜1体につき次の能力を1回行う。その後、すべて山札の一番下に戻す」は既存の choose（look）+ repeat（回数=式）+ move で表せる。
+- 書き方: choose {from_top: 3, look: true} as: pile → repeat {times: {count: {ref: pile, filter: {...}}}} で本体 → move {ref: pile} to: deck, position: bottom, order: choose。
+- tests/test_vocab_pilot86.py 2件（正常 parse／検証）
+- 待機15枚（thrilling_three のみが gap のもの）。
