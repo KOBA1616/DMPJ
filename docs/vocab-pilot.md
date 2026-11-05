@@ -999,3 +999,9 @@ converted の監査（opt_reduce の素の整数表記9件）から。任意形�
 - 「他の」は other: true。
 - tests/test_vocab_pilot93.py 2件（正常 parse／検証）
 - 待機18枚（soul のみが gap のもの）。
+
+## 第94弾: entry_replacement（出る時の置換）— 新語彙なし（2026-11-05）
+「相手のクリーチャーが出る時、かわりに〜に置く」は出場置換で表せる。
+- 書き方: kind: replace, when: {event: move, to: bz, subject: {owner: opp, filter: {...}}}, instead: [move {ref: event.subject} to: <置換先>]。「置かせてもよい」は optional: true。
+- tests/test_vocab_pilot94.py 2件（正常 parse／検証）
+- 待機18枚（entry_replacement のみが gap のもの）。
