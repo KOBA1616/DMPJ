@@ -300287,3 +300287,416 @@ cards:
     W・ブレイカー(このクリーチャーはシールドを２枚ブレイクする)'
   types:
   - creature
+- abilities:
+  - affects: self
+    kind: static
+    mod:
+      breaks:
+        civ_count:
+          owner: opp
+          zone: bz
+  civs:
+  - darkness
+  cost: 7
+  id: dmc34-025
+  mana: 1
+  name: 混沌の魔将ヴァジュータ
+  power: 6000
+  races:
+  - デーモン・コマンド
+  source:
+    official: dmc34-025
+    review: pending
+  text: このクリーチャーは、バトルゾーンにある相手の文明ひとつにつき１枚、シールドを追加でブレイクする。
+  types:
+  - creature
+- abilities:
+  - effect:
+    - op: move
+      reason: put
+      select:
+        from_top:
+          civ_count:
+            owner: you
+            zone: mana
+        owner: you
+        zone: deck
+      to: mana
+    kind: trigger
+    when:
+      event: move
+      subject: self
+      to: bz
+  - effect:
+    - op: move
+      reason: return
+      select:
+        count: 2
+        owner: you
+        zone: mana
+      to: hand
+    kind: trigger
+    when:
+      event: move
+      from: bz
+      reason: destroy
+      subject: self
+      to: graveyard
+  civs:
+  - nature
+  cost: 7
+  evolve_from:
+    races:
+    - ワイルド・ベジーズ
+  id: dmc42-033
+  keywords:
+  - double_breaker
+  mana: 1
+  name: 大菜王ビッグ・ナスディーン
+  power: 6000
+  races:
+  - ワイルド・ベジーズ
+  source:
+    official: dmc42-033
+    review: pending
+    aliases:
+    - dm17-018
+    - promoy4-027
+  text: '進化-自分のワイルド・ベジーズ１体の上に置く。
+
+    このクリーチャーをバトルゾーンに出した時、自分のマナゾーンにある文明を数える。その後、その文明の数と同じ枚数のカードを、自分の山札の上からマナゾーンに置く。
+
+    W・ブレイカー
+
+    このクリーチャーが破壊された時、カードを２枚、自分のマナゾーンから手札に戻す。'
+  types:
+  - creature
+  - evolution
+- abilities:
+  - effect:
+    - body:
+      - as: pile
+        op: choose
+        select:
+          count: all
+          from_top:
+            civ_count:
+              owner: you
+              zone: mana
+          look: true
+          owner: you
+          zone: deck
+      - as: keep
+        op: choose
+        select:
+          count: 1
+          ref: pile
+      - op: move
+        reason: return
+        select:
+          count: all
+          ref: keep
+        to: hand
+      - op: move
+        order: choose
+        position: bottom
+        reason: put
+        select:
+          count: all
+          ref: pile
+        to: deck
+      op: may
+    kind: trigger
+    when:
+      event: move
+      subject: self
+      to: bz
+  civs:
+  - water
+  cost: 4
+  id: dmc57-028
+  keywords:
+  - blocker
+  - cannot_attack
+  mana: 1
+  name: スペース・クロウラー
+  power: 3000
+  races:
+  - アースイーター
+  source:
+    official: dmc57-028
+    review: pending
+    aliases:
+    - dm27-024
+    - dm27-024cc
+  text: 'ブロッカー
+
+    このクリーチャーは攻撃することができない。
+
+    このクリーチャーをバトルゾーンに出した時、自分のマナゾーンにある文明を数える。その数と同じ枚数のカードを自分の山札の上から見てもよい。その中から１枚を自分の手札に加える。残りをすべて好きな順序で山札の一番下に戻す。'
+  types:
+  - creature
+- abilities:
+  - effect:
+    - duration: end_of_turn
+      mod:
+        power:
+          amount: -1000
+          count:
+            civ_count:
+              owner: you
+              zone: mana
+      op: modify
+      select:
+        count: 1
+        filter:
+          types:
+          - creature
+        owner: opp
+        zone: bz
+    kind: trigger
+    when:
+      event: move
+      subject: self
+      to: bz
+  civs:
+  - darkness
+  cost: 4
+  id: dmc61-046
+  mana: 1
+  name: 斬撃虫ブレードワーム
+  power: 1000
+  races:
+  - パラサイトワーム
+  source:
+    official: dmc61-046
+    review: pending
+    aliases:
+    - dm27-025
+  text: このクリーチャーをバトルゾーンに出した時、バトルゾーンにある相手のクリーチャーを１体選ぶ。そのターン、そのクリーチャーのパワーは、自分のマナゾーンにある文明ひとつにつき-1000される。
+  types:
+  - creature
+- abilities:
+  - effect:
+    - op: move
+      reason: put
+      select:
+        from_top:
+          civ_count:
+            filter:
+              types:
+              - creature
+            owner: you
+            zone: bz
+        owner: you
+        zone: deck
+      tapped: true
+      to: mana
+    kind: trigger
+    when:
+      event: move
+      subject: self
+      to: bz
+  civs:
+  - nature
+  cost: 5
+  id: dmex16-033
+  mana: 1
+  name: 邪悪の面 ナム＝デッドマン
+  power: 2000
+  races:
+  - ビーストフォーク號
+  source:
+    official: dmex16-033
+    review: pending
+  text: このクリーチャーが出た時、自分のクリーチャーが持つ文明を数える。その後、それと同じ数のカードを自分の山札の上からタップしてマナゾーンに置く。
+  types:
+  - creature
+- abilities:
+  - affects: self
+    kind: static
+    mod:
+      power:
+        amount: 3000
+        count:
+          civ_count:
+            owner: you
+            zone: mana
+  civs:
+  - light
+  - nature
+  cost: 7
+  id: dmpcd01-t04
+  keywords:
+  - blocker
+  - powered_breaker
+  mana: 1
+  name: 剛撃聖霊エリクシア
+  power: 3000
+  races:
+  - エンジェル・コマンド
+  - ジャイアント
+  source:
+    official: dmpcd01-t04
+    review: pending
+  text: 'ブロッカー
+
+    パワード・ブレイカー（このクリーチャーは、そのパワー6000ごとにシールドをさらに１つブレイクする）
+
+    自分のマナゾーンにある文明１つにつき、このクリーチャーのパワーを+3000 する。'
+  types:
+  - creature
+- civs:
+  - darkness
+  cost: 3
+  id: dmr04-008
+  mana: 1
+  name: 五武吸魂
+  source:
+    notes: raw の '?2000' は原文の '-2000' の文字化けとして扱った
+    official: dmr04-008
+    review: pending
+  spell:
+  - duration: end_of_turn
+    mod:
+      power:
+        amount: -2000
+        count:
+          civ_count:
+            owner: you
+            zone: bz
+    op: modify
+    select:
+      count: 1
+      filter:
+        types:
+        - creature
+      owner: opp
+      zone: bz
+  text: バトルゾーンにある相手のクリーチャーを１体選ぶ。このターン、そのクリーチャーのパワーは、バトルゾーンにある自分のカードの文明ひとつにつき-2000される。
+  types:
+  - spell
+- civs:
+  - light
+  cost: 4
+  id: dmr04-021
+  keywords:
+  - s_trigger
+  mana: 1
+  name: すべってコロバナナ
+  source:
+    official: dmr04-021
+    review: pending
+  spell:
+  - body:
+    - op: tap
+      select:
+        count: 1
+        filter:
+          types:
+          - creature
+        owner: opp
+        zone: bz
+    op: repeat
+    times:
+      civ_count:
+        owner: you
+        zone: bz
+  text: 'S・トリガー(この呪文をシールドゾーンから手札に加える時、コストを支払わずにすぐ唱えてもよい)
+
+    バトルゾーンにある自分のカードの文明ひとつにつき、バトルゾーンにある相手のクリーチャーを１体選び、タップする。'
+  types:
+  - spell
+- abilities:
+  - affects: self
+    kind: static
+    mod:
+      power:
+        amount: 2000
+        count:
+          civ_count:
+            owner: you
+            zone: bz
+  - affects: self
+    if:
+      cmp:
+      - count:
+          filter:
+            name: ポンズ・DE・オイシイタケ
+            power_ge: 6000
+          owner: you
+          zone: bz
+      - '>='
+      - 1
+    kind: static
+    mod:
+      grant:
+      - double_breaker
+  civs:
+  - nature
+  cost: 4
+  id: dmr04-025
+  mana: 1
+  name: ポンズ・DE・オイシイタケ
+  power: 0
+  races:
+  - ワイルド・ベジーズ
+  - エイリアン
+  source:
+    notes: パワー6000以上の判定は自身の現在パワーを名前指定で数える形で表した
+    official: dmr04-025
+    review: pending
+  text: このクリーチャーのパワーは、バトルゾーンにある自分のカードの文明ひとつにつき+2000される。 / このクリーチャーは、パワーが6000以上の時、「W・ブレイカー」を得る。
+  types:
+  - creature
+- abilities:
+  - affects: self
+    kind: static
+    mod:
+      power:
+        amount: 1000
+        count:
+          civ_count:
+            owner: you
+            zone: bz
+  civs:
+  - light
+  cost: 2
+  id: dmr04-037
+  keywords:
+  - blocker
+  - cannot_attack_player
+  mana: 1
+  name: ガガの守護者サメヘッド
+  power: 1000
+  races:
+  - ガーディアン
+  - エイリアン
+  source:
+    official: dmr04-037
+    review: pending
+  text: 'ブロッカー(相手クリーチャーが攻撃する時、このクリーチャーをタップして、その攻撃を阻止してもよい。その後、その相手クリーチャーとバトルする)
+
+    このクリーチャーは、相手プレイヤーを攻撃できない。
+
+    このクリーチャーのパワーは、バトルゾーンにある自分のカードの文明ひとつにつき+1000される。'
+  types:
+  - creature
+- civs:
+  - water
+  cost: 6
+  id: dmr04-039
+  mana: 1
+  name: エナジー・ステッキ
+  source:
+    official: dmr04-039
+    review: pending
+  spell:
+  - count:
+      civ_count:
+        owner: you
+        zone: bz
+    op: draw
+  text: バトルゾーンにある自分のカードの文明ひとつにつき、カードを１枚引く。
+  types:
+  - spell
