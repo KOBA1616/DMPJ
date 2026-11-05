@@ -1067,3 +1067,9 @@ converted の監査（opt_reduce の素の整数表記9件）から。任意形�
 - 書き方: {kind: trigger, when: {event: attack_end, subject: self}, effect: [...]}。
 - tests/test_vocab_pilot104.py 2件（正常 parse／検証）
 - 待機7枚（attack_end_trigger のみが gap のもの）。
+
+## 第105弾: first_tap_trigger（はじめてタップした時）— 新語彙なし（2026-11-05）
+「各ターン、このクリーチャーがはじめてタップした時、〜」は tap イベント＋ first_time で表す。
+- 書き方: {kind: trigger, first_time: true, when: {event: tap, subject: self}, effect: [...]}。first_time はラウンド110（dmrp14-007 の attack_end）でも使用した既存フラグ。
+- tests/test_vocab_pilot105.py 2件（正常 parse／検証）
+- 待機7枚（first_tap_trigger のみが gap のもの）。
