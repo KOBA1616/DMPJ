@@ -908,3 +908,10 @@ converted の監査（opt_reduce の素の整数表記9件）から。任意形�
 - 書き方: {civ_count: {zone: bz, owner: opp}} を式として使う（breaks や power の係数、cmp の辺など）。
 - tests/test_vocab_pilot79.py 2件（正常 parse／検証）
 - 待機11枚（civ_count のみが gap のもの）。
+
+## 第80弾: break_increase（ブレイク数増加）— 新語彙なし（2026-11-05）
+「シールドをさらにN枚ブレイクする」は静的 modify の mod: {breaks: N}（加算）で表せる。
+- 書き方: kind: static, affects: {...}, mod: {breaks: 1}。条件は if で付ける。
+- W・ブレイカー等のキーワード化済みのブレイク数とは別に、付与・増加分を mod で表す。
+- tests/test_vocab_pilot80.py 2件（正常 parse／検証）
+- 待機11枚（break_increase のみが gap のもの）。
