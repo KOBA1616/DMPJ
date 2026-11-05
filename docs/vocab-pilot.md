@@ -1105,3 +1105,10 @@ converted の監査（opt_reduce の素の整数表記9件）から。任意形�
 - 書き方: {kind: static, mod: {win_all_battles: true}}（combat._battle でパワー比較より優先）。
 - tests/test_vocab_pilot110.py 2件（正常 parse／検証）
 - 待機7枚（battle_win_all のみが gap のもの）。
+
+## 第111弾: optional_enters_tapped（タップして出てもよい）— 新語彙なし（2026-11-05）
+「タップして出てもよい。そうした場合、〜」は出現置換の may で表す。
+- 書き方: {kind: replace, when: {event: move, subject: self, to: bz}, optional: true,
+  effect: [tap {select: {ref: self}}, <効果>]}（出る前に置換として解決し、タップ状態で出る）。
+- tests/test_vocab_pilot111.py 2件（正常 parse／検証）
+- 待機7枚（optional_enters_tapped のみが gap のもの）。
