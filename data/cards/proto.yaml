@@ -2099,3 +2099,15 @@ cards:
       - kind: static
         affects: {zone: mana, owner: you}
         mod: {add_civs: [light, water, darkness, fire, nature]}
+  - id: T162
+    name: 試験用統率獣
+    types: [creature]
+    civs: [nature]
+    cost: 6
+    power: 5000
+    races: [テスト]
+    text: このクリーチャーは、パワーがこのクリーチャーより小さいクリーチャーにブロックされない。
+    abilities:
+      - kind: static
+        affects: self
+        mod: {deny: [{action: be_blocked, other: {power_le: {sum: [{power_of: {ref: self}}, -1]}}}]}

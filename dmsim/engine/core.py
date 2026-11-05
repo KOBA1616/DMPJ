@@ -524,7 +524,7 @@ class Engine(SelectorMixin, EventMixin, InterpreterMixin, TurnMixin, CombatMixin
                 if isinstance(e, str):
                     if e == action:
                         return True
-                elif e["action"] == action and (other is None or self.filter_match(other, e.get("other", {}))):
+                elif e["action"] == action and (other is None or self.filter_match(other, self._other_filter(e.get("other", {}), cid))):
                     return True
             return False
         if hit(ch["deny"]):
@@ -532,6 +532,13 @@ class Engine(SelectorMixin, EventMixin, InterpreterMixin, TurnMixin, CombatMixin
         if hit(ch["allow"]):
             return True
         return self.rules.actions[action]["default"]
+
+    def _other_filter(self, f: dict, cid: int) -> dict:
+        """allow/deny の other フィルタ: 値が式なら許可側のカード（self）を基準に評価する（第126弾。candidates と同じ前評価）。"""
+        if not any(isinstance(v, dict) for v in f.values()):
+            return f
+        env = {"you": self.s.cards[cid].controller, "self": self.s.ref(cid)}
+        return {k: self.eval_expr(v, env) if isinstance(v, dict) else v for k, v in f.items()}
 
     def _duration(self, dur: str, env: dict) -> str:
         if dur == "until_next_own_turn_start":

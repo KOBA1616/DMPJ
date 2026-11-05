@@ -780,3 +780,15 @@ cards:
     races: [テスト]
     text: 試験用ダミー（火・支払い用）
     abilities: []
+  - id: R089
+    name: 試験用統率獣
+    types: [creature]
+    civs: [nature]
+    cost: 6
+    power: 5000
+    races: [テスト]
+    text: このクリーチャーは、パワーがこのクリーチャーより小さいクリーチャーにブロックされない。
+    abilities:
+      - kind: static
+        affects: self
+        mod: {deny: [{action: be_blocked, other: {power_le: {sum: [{power_of: {ref: self}}, -1]}}}]}

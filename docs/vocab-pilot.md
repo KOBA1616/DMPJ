@@ -1211,3 +1211,8 @@ draw イベントへの置換で表す（draw は個別イベントとして発�
 ### 第125弾 civilization_count（2026-11-05）
 - 「自分のマナゾーンにある文明ひとつにつき」「文明の数以下のコスト」は既存の式 civ_count で表す（新語彙なし）。{civ_count: {zone: mana, owner: you}} は対象群にある文明の種類数（多色は持つ文明をすべて数える）。mod の count（パワー+N×種類数）、filter の cost_le 等の式、cmp の項（相手との比較）に使える。
 - tests/test_vocab_pilot125.py 3件（power の count、filter の cost_le、cmp の項、それぞれ parse）。
+
+### 第126弾 power_less_than_self（2026-11-05）
+- 「パワーがこのクリーチャーより小さい相手のクリーチャー」は第116弾の filter {power_le: {sum: [{power_of: {ref: self}}, -1]}} で表す（選択側は candidates が式を前評価する）。
+- 「パワーがこのクリーチャーより小さいクリーチャーにブロックされない」= static mod {deny: [{action: be_blocked, other: {power_le: <同式>}}]}。エンジン拡張: permits の other フィルタの式を許可側カード（self）基準で前評価する（core.permits の _other_filter、candidates と同じ方式）。
+- proto T162、試験カード R089、tests/test_vocab_pilot126.py 3件（parse 1件＋実挙動2件: パワー3000ブロッカーはブロック不可、5000ブロッカーはブロックして相打ち）。
