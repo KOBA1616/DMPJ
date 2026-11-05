@@ -831,3 +831,10 @@ converted の監査（opt_reduce の素の整数表記9件）から。任意形�
 - 書き方: keywords: [wave_striker]、続く能力に `if: {cmp: [{count: {zone: bz, owner: any, other: true, filter: {keyword: wave_striker}}}, ">=", 2]}` を付ける。
 - tests/test_vocab_pilot68.py 2件（正常 parse／検証）
 - 待機13枚（wave_striker のみが gap のもの）。
+
+## 第69弾: kourin（光臨）— 新語彙なし（2026-11-05）
+「光臨：自分のターンの終わりに、このクリーチャーがタップされていれば、〜」は既存の trigger + if で表せる。
+- 書き方: kind: trigger, when: {event: turn_end, player: you}, if: {exists: {ref: self, filter: {tapped: true}}}, effect: [...]
+- 「タップされていれば」は exists で self の tapped 状態を確認。
+- tests/test_vocab_pilot69.py 2件（正常 parse／検証）
+- 待機13枚（kourin のみが gap のもの）。
