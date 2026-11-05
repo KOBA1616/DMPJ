@@ -1092,3 +1092,10 @@ converted の監査（opt_reduce の素の整数表記9件）から。任意形�
 - 書き方: select ... as: t → select/filter で cost_le: {cost_of: {ref: t}}。
 - tests/test_vocab_pilot108.py 2件（正常 parse／検証）
 - 待機7枚（cost_le_card のみが gap のもの）。
+
+## 第109弾: shield_trigger_grant（S・トリガー付与）— 新語彙なし（2026-11-05）
+「（ゾーンにある）自分のカードは『S・トリガー』を得る」は static の grant で表す。
+- 書き方: {kind: static, affects: {zone: shield/hand, owner: you, filter}, mod: {grant: [s_trigger]}}。
+  先例: dm24ex4-015（手札の光カード）、dmr20-s01（シールドのメタリカ/裁きの紋章）。
+- tests/test_vocab_pilot109.py 2件（正常 parse／検証）
+- 待機7枚（shield_trigger_grant のみが gap のもの）。
