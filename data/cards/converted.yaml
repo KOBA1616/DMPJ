@@ -318274,3 +318274,295 @@ cards:
   text: マナゾーンに置く時、このカードはタップして置く。 / 自分がカードを１枚引く時、１枚のかわりに２枚引き、自分の手札を１枚捨ててもよい。
   types:
   - creature
+- civs:
+  - darkness
+  cost: 2
+  id: dmrp15-073
+  mana: 1
+  name: 魔王と天使のカナシミ
+  races:
+  - 月光王国
+  source:
+    notes: 'シールドを手札に加える操作は move（reason: return）で表した（dmrp02-050 と同型）。「S・トリガー」は使えない点はエンジン側の扱いに委ねる'
+    official: dmrp15-073
+    review: pending
+    aliases:
+    - promoy22-071
+  spell:
+  - op: discard
+    select:
+      count: 1
+      owner: opp
+      zone: hand
+  - op: move
+    reason: return
+    select:
+      count: 1
+      owner: you
+      zone: shield
+    to: hand
+  text: 相手の手札を１枚見ないで選び、捨てさせる。 / 自分のシールドを１つ、手札に加える。ただし、その「S・トリガー」は使えない。
+  types:
+  - spell
+- abilities:
+  - effect:
+    - count: 1
+      modes:
+      - - op: discard
+          select:
+            count: 1
+            owner: opp
+            zone: hand
+      - - op: discard
+          select:
+            count: 1
+            owner: you
+            zone: hand
+        - count: 2
+          op: draw
+      op: modal
+    kind: trigger
+    when:
+      event: move
+      subject: self
+      to: bz
+  civs:
+  - darkness
+  - fire
+  cost: 3
+  id: dmrp15-094
+  mana: 1
+  name: ドクバリ変怪
+  power: 3000
+  races:
+  - デモニオ
+  - 鬼札王国
+  source:
+    official: dmrp15-094
+    review: pending
+  text: このクリーチャーがバトルゾーンに出た時、次のうちいずれか１つを選ぶ。 / ▶︎相手の手札を１枚見ないで選び、捨てさせる。 / ▶︎自分の手札を１枚捨て、その後、カードを２枚引く。
+  types:
+  - creature
+- abilities:
+  - kind: static
+    affects: self
+    mod:
+      sac_reduce: 2
+  - effect:
+    - op: discard
+      select:
+        count: 1
+        owner: opp
+        zone: hand
+    kind: trigger
+    when:
+      event: move
+      reason: destroy
+      subject: self
+      to: graveyard
+  - affects: self
+    kind: static
+    mod:
+      sac_reduce: 2
+  civs:
+  - light
+  - darkness
+  cost: 3
+  id: dmrp18-053
+  keywords:
+  - blocker
+  mana: 1
+  name: 腐聖 ベガ-２
+  power: 3000
+  races:
+  - イニシエート
+  - ゴースト
+  - ディスタス
+  source:
+    notes: 'ササゲール２は mod: {sac_reduce: 2} で表した（dm23bd5-043 腐聖 ブラッドウ-２と同型）'
+    official: dmrp18-053
+    review: pending
+  text: 'ブロッカー（このクリーチャーをタップして、相手クリーチャーの攻撃先をこのクリーチャーに変更してもよい）このクリーチャーが破壊された時、相手の手札を１枚見ないで選び、捨てさせる。
+
+    ササゲール２（ディスペクターを召喚する時、コストを２少なくしてもよい。そうしたら、このクリーチャーを破壊する。そのディスペクターのコストは０以下にはならない）'
+  types:
+  - creature
+- abilities:
+  - effect:
+    - op: discard
+      select:
+        count: 1
+        owner: opp
+        zone: hand
+    kind: trigger
+    when:
+      event: attack
+      subject:
+        filter:
+          types:
+          - creature
+        owner: you
+  civs:
+  - darkness
+  cost: 6
+  evolve_from:
+    races:
+    - ゴースト
+  id: dmx10-024
+  keywords:
+  - double_breaker
+  mana: 1
+  name: 邪悪の魔黒デビル・マーシャル
+  power: 6000
+  races:
+  - ゴースト
+  source:
+    official: dmx10-024
+    review: pending
+    aliases:
+    - dm10-022
+  text: '進化-自分のゴースト１体の上に置く。
+
+    W・ブレイカー
+
+    自分のクリーチャーが攻撃する時、相手の手札を１枚見ないで選び、捨てさせる。'
+  types:
+  - creature
+  - evolution
+- civs:
+  - darkness
+  cost: 4
+  id: dmx15-026
+  mana: 1
+  name: 魂の道しるべ
+  source:
+    notes: 2回目に捨てさせる枚数は、自分のシールドゾーンにある表向きで「シールド・ゴー」を持つカードの枚数を count 式で参照した
+    official: dmx15-026
+    review: pending
+  spell:
+  - op: discard
+    select:
+      count: 1
+      owner: opp
+      zone: hand
+  - op: discard
+    select:
+      count:
+        count:
+          filter:
+            face_up: true
+            keyword: shield_go
+          owner: you
+          zone: shield
+      owner: opp
+      zone: hand
+  text: 相手の手札を１枚見ないで選び、捨てさせる。その後、自分のシールドゾーンに表向きである「シールド・ゴー」を持つカード１枚につき相手の手札を１枚見ないで選び、捨てさせる。
+  types:
+  - spell
+- abilities:
+  - effect:
+    - body:
+      - as: d
+        op: discard
+        select:
+          count: any
+          filter:
+            civs:
+            - darkness
+          owner: you
+          zone: hand
+      - op: discard
+        select:
+          count:
+            var: d
+          owner: opp
+          zone: hand
+      op: may
+    kind: trigger
+    when:
+      event: move
+      subject: self
+      to: bz
+  - affects: self
+    if:
+      cmp:
+      - count:
+          owner: you
+          zone: hand
+      - ==
+      - 0
+    kind: static
+    mod:
+      grant:
+      - triple_breaker
+      power: 6000
+  civs:
+  - darkness
+  cost: 6
+  id: dmx16-016
+  keywords:
+  - double_breaker
+  mana: 1
+  name: 絶望の悪魔龍 フューチャレス
+  power: 6000
+  races:
+  - デーモン・コマンド・ドラゴン
+  source:
+    notes: '捨てた闇のカードは discard の as で変数 d に保持し、相手に捨てさせる枚数を {var: d} でそろえた（dm04-017
+      と同型）。手札0枚時の条件は dmex07-044 と同型の cmp'
+    official: dmx16-016
+    review: pending
+  text: このクリーチャーをバトルゾーンに出した時、自分の闇のカードを好きな数、捨ててもよい。こうして捨てたカード１枚につき、相手の手札を１枚見ないで選び、捨てさせる。
+    / W・ブレイカー / 自分の手札が１枚もなければ、このクリーチャーのパワーは+6000され、「T・ブレイカー」を得る。
+  types:
+  - creature
+- abilities:
+  - effect:
+    - as: d
+      op: discard
+      select:
+        count: 1
+        owner: opp
+        zone: hand
+    - body:
+      - op: move
+        reason: put
+        select:
+          count: 1
+          filter:
+            civs:
+            - darkness
+            cost_le:
+              sum:
+              - cost_of: d
+              - -1
+            types:
+            - creature
+          owner: you
+          zone: graveyard
+        to: bz
+      op: may
+    kind: trigger
+    when:
+      event: attack
+      subject: self
+  civs:
+  - darkness
+  cost: 7
+  id: dmx17-007
+  keywords:
+  - double_breaker
+  mana: 1
+  name: 雷鳴の悪魔龍 トラトウルフ
+  power: 8000
+  races:
+  - デーモン・コマンド・ドラゴン
+  source:
+    notes: '捨てさせたカードは discard の as で変数 d に保持し、「よりコストの小さい」は cost_le: {sum: [{cost_of:
+      d}, -1]} で表した（docs/vocab-pilot.md の cost_lt_count の確立した型）。相手の手札が無く捨てさせられなかった場合は
+      d が空で、後続の対象は無くなる'
+    official: dmx17-007
+    review: pending
+  text: このクリーチャーが攻撃する時、相手の手札を１枚見ないで選び、捨てさせる。その後、その捨てさせたカードよりコストの小さい闇のクリーチャーを１体、自分の墓地からバトルゾーンに出してもよい。W・ブレイカー（このクリーチャーはシールドを２枚ブレイクする）
+  types:
+  - creature
