@@ -320077,3 +320077,452 @@ cards:
   text: 自分のマナゾーンにある無色カードの枚数よりコストが小さいクリーチャーをすべて破壊する。
   types:
   - spell
+- abilities:
+  - effect:
+    - op: move
+      reason: put
+      select:
+        ref: self
+      to: mana
+    kind: trigger
+    when:
+      event: move
+      reason: summon
+      subject:
+        filter:
+          types:
+          - creature
+        other: true
+        owner: you
+      to: bz
+  civs:
+  - nature
+  cost: 9
+  id: dmrp03-026
+  keywords:
+  - world_breaker
+  mana: 1
+  name: 龍装者 ジュランジュ
+  power: 24000
+  races:
+  - ドラゴンギルド
+  - グランセクト
+  source:
+    official: dmrp03-026
+    review: pending
+  text: ワールド・ブレイカー / 自分の他のクリーチャーを召喚した時、このクリーチャーを自分のマナゾーンに置く。
+  types:
+  - creature
+- abilities:
+  - effect:
+    - body:
+      - op: move
+        reason: put
+        select:
+          ref: self
+        to: bz
+      op: may
+    kind: trigger
+    when:
+      event: move
+      reason: summon
+      subject:
+        filter:
+          power_ge: 12000
+          types:
+          - creature
+        owner: you
+      to: bz
+    zone: mana
+  civs:
+  - nature
+  cost: 4
+  id: dmrp03-088
+  mana: 1
+  name: ぴーまんどりる
+  power: 4000
+  races:
+  - グランセクト
+  source:
+    official: dmrp03-088
+    review: pending
+  text: 自分のパワー12000以上のクリーチャーを召喚した時、このクリーチャーを自分のマナゾーンからバトルゾーンに出してもよい。
+  types:
+  - creature
+- abilities:
+  - kind: trigger
+    when:
+      event: move
+      to: bz
+      subject: self
+    effect:
+    - op: tap
+      select:
+        zone: bz
+        owner: opp
+        filter:
+          types:
+          - creature
+        count: 1
+  - effect:
+    - op: tap
+      select:
+        count: 1
+        filter:
+          types:
+          - creature
+        owner: opp
+        zone: bz
+    kind: trigger
+    when:
+      event: move
+      subject: self
+      to: bz
+  - effect:
+    - no_untap_next: true
+      op: tap
+      select:
+        count: all
+        filter:
+          types:
+          - creature
+        owner: opp
+        zone: bz
+    if:
+      is_turn: you
+    kind: trigger
+    when:
+      event: move
+      reason: summon
+      subject:
+        filter:
+          cost_ge: 8
+          types:
+          - creature
+        owner: you
+      to: bz
+  - effect:
+    - no_untap_next: true
+      op: tap
+      select:
+        count: all
+        filter:
+          types:
+          - creature
+        owner: opp
+        zone: bz
+    if:
+      is_turn: you
+    kind: trigger
+    when:
+      event: cast
+      subject:
+        filter:
+          cost_ge: 8
+        owner: you
+  civs:
+  - light
+  cost: 3
+  id: dmrp05-034
+  mana: 1
+  name: 空間の守護者ジル・ハイク
+  power: 2500
+  races:
+  - ガーディアン
+  source:
+    official: dmrp05-034
+    review: pending
+  text: 'このクリーチャーがバトルゾーンに出た時、相手のクリーチャーを１体選び、タップする。
+
+    自分のターン中に、コスト８以上のクリーチャーを召喚した時またはコスト８以上の呪文を唱えた時、相手のクリーチャーをすべてタップする。次の相手のターンのはじめに、それらはアンタップしない。'
+  types:
+  - creature
+- abilities:
+  - effect:
+    - op: move
+      reason: return
+      select:
+        count: 1
+        filter:
+          types:
+          - creature
+        owner: opp
+        zone: bz
+      to: hand
+    - count: 1
+      op: draw
+    if:
+      is_turn: you
+    kind: trigger
+    when:
+      event: move
+      reason: summon
+      subject:
+        filter:
+          cost_ge: 8
+          types:
+          - creature
+        owner: you
+      to: bz
+  - effect:
+    - op: move
+      reason: return
+      select:
+        count: 1
+        filter:
+          types:
+          - creature
+        owner: opp
+        zone: bz
+      to: hand
+    - count: 1
+      op: draw
+    if:
+      is_turn: you
+    kind: trigger
+    when:
+      event: cast
+      subject:
+        filter:
+          cost_ge: 8
+        owner: you
+  civs:
+  - water
+  cost: 3
+  id: dmrp05-039
+  keywords:
+  - blocker
+  - cannot_attack
+  mana: 1
+  name: ソエルボ・クロウラー
+  power: 4000
+  races:
+  - アースイーター
+  source:
+    official: dmrp05-039
+    review: pending
+  text: 'ブロッカー（このクリーチャーをタップして、相手クリーチャーの攻撃先をこのクリーチャーに変更してもよい）
+
+    このクリーチャーは攻撃できない。
+
+    自分のターン中に、コスト８以上のクリーチャーを召喚した時またはコスト８以上の呪文を唱えた時、相手のクリーチャーを１体選び、持ち主の手札に戻す。その後、カードを１枚引く。'
+  types:
+  - creature
+- abilities:
+  - effect:
+    - body:
+      - a:
+          ref: self
+        b:
+          count: 1
+          filter:
+            types:
+            - creature
+          owner: opp
+          zone: bz
+        op: force_battle
+      op: may
+    kind: trigger
+    when:
+      event: attack
+      subject: self
+  - effect:
+    - duration: end_of_turn
+      mod:
+        grant:
+        - double_breaker
+        power: 6000
+      op: modify
+      select:
+        ref: self
+    if:
+      is_turn: you
+    kind: trigger
+    when:
+      event: move
+      reason: summon
+      subject:
+        filter:
+          cost_ge: 8
+          types:
+          - creature
+        owner: you
+      to: bz
+  - effect:
+    - duration: end_of_turn
+      mod:
+        grant:
+        - double_breaker
+        power: 6000
+      op: modify
+      select:
+        ref: self
+    if:
+      is_turn: you
+    kind: trigger
+    when:
+      event: cast
+      subject:
+        filter:
+          cost_ge: 8
+        owner: you
+  civs:
+  - fire
+  cost: 3
+  id: dmrp05-050
+  mana: 1
+  name: リーリィ・ペロル
+  power: 2000
+  races:
+  - ファイアー・バード
+  source:
+    official: dmrp05-050
+    review: pending
+  text: このクリーチャーが攻撃する時、相手のクリーチャーを１体選んでもよい。その選んだクリーチャーとこのクリーチャーをバトルさせる。 / 自分のターン中に、コスト８以上のクリーチャーを召喚した時またはコスト８以上の呪文を唱えた時、そのターン、このクリーチャーのパワーを+6000
+    し、「W・ブレイカー」を与える。
+  types:
+  - creature
+- abilities:
+  - kind: trigger
+    when:
+      event: move
+      to: bz
+      subject: self
+    effect:
+    - op: move
+      select:
+        zone: deck
+        owner: you
+        from_top: 1
+      to: mana
+      reason: put
+  - effect:
+    - op: move
+      reason: put
+      select:
+        count: 1
+        from_top: 1
+        owner: you
+        zone: deck
+      to: mana
+    kind: trigger
+    when:
+      event: move
+      subject: self
+      to: bz
+  - effect:
+    - op: move
+      reason: put
+      select:
+        count: 1
+        filter:
+          types:
+          - creature
+        owner: opp
+        zone: bz
+      to: mana
+    if:
+      is_turn: you
+    kind: trigger
+    when:
+      event: move
+      reason: summon
+      subject:
+        filter:
+          cost_ge: 8
+          types:
+          - creature
+        owner: you
+      to: bz
+  - effect:
+    - op: move
+      reason: put
+      select:
+        count: 1
+        filter:
+          types:
+          - creature
+        owner: opp
+        zone: bz
+      to: mana
+    if:
+      is_turn: you
+    kind: trigger
+    when:
+      event: cast
+      subject:
+        filter:
+          cost_ge: 8
+        owner: you
+  civs:
+  - nature
+  cost: 4
+  id: dmrp05-054
+  mana: 1
+  name: 仁王の超人
+  power: 3000
+  races:
+  - ジャイアント
+  source:
+    official: dmrp05-054
+    review: pending
+  text: 'このクリーチャーがバトルゾーンに出た時、自分の山札の上から１枚目をマナゾーンに置く。
+
+    自分のターン中に、コスト８以上のクリーチャーを召喚した時またはコスト８以上の呪文を唱えた時、相手のクリーチャーを１体選び、持ち主のマナゾーンに置く。'
+  types:
+  - creature
+- abilities:
+  - effect:
+    - body:
+      - op: move
+        reason: put
+        select:
+          ref: self
+        to: bz
+      op: may
+    kind: trigger
+    when:
+      event: move
+      reason: summon
+      subject:
+        filter:
+          race_has: 魔導具
+          types:
+          - creature
+        owner: you
+      to: bz
+    zone: graveyard
+  - effect:
+    - body:
+      - op: move
+        reason: put
+        select:
+          ref: self
+        to: bz
+      op: may
+    kind: trigger
+    when:
+      event: cast
+      subject:
+        filter:
+          race_has: 魔導具
+          types:
+          - spell
+        owner: you
+    zone: graveyard
+  civs:
+  - darkness
+  cost: 2
+  id: dmrp08-022
+  mana: 1
+  name: 堕魔 ドゥベル
+  power: 1000
+  races:
+  - マフィ・ギャング
+  - 魔導具
+  source:
+    official: dmrp08-022
+    review: pending
+  text: 自分の魔導具クリーチャーを召喚した時または魔導具を持つ呪文を唱えた時、このクリーチャーを自分の墓地からバトルゾーンに出してもよい。
+  types:
+  - creature
