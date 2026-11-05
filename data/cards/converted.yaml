@@ -316266,3 +316266,256 @@ cards:
   types:
   - creature
   - evolution
+- abilities:
+  - effect:
+    - op: end_turn
+    if:
+      is_turn: you
+    kind: trigger
+    when:
+      event: tap
+      subject: self
+  - effect:
+    - count: 2
+      op: break
+      player: opp
+    kind: trigger
+    when:
+      event: untap
+      subject: self
+  - effect:
+    - duration: end_of_turn
+      mod:
+        power: 10000
+      op: modify
+      select:
+        ref: self
+    kind: trigger
+    when:
+      event: attack
+      target: self
+  - affects: self
+    kind: static
+    mod:
+      deny:
+      - be_chosen
+  civs:
+  - water
+  cost: 7
+  id: dmrp03-005
+  mana: 1
+  name: 万年の甲 ガメッシュ
+  power: 7000
+  races:
+  - ムートピア
+  source:
+    notes: '「選べない」は呪文限定だが be_chosen で代表させた（dmex13-049 と同型）。「ターンの残りをとばす」は op: end_turn'
+    official: dmrp03-005
+    review: pending
+  text: 自分のターン中にこのクリーチャーがタップした時、ターンの残りをとばす。 / このクリーチャーは、アンタップした時、相手のシールドを２つブレイクする。
+    / このクリーチャーが攻撃された時、そのターン、これのパワーを+10000する。 / 相手が呪文の効果によってバトルゾーンにあるクリーチャーを選ぶ時、このクリーチャーは選べない。
+  types:
+  - creature
+- abilities:
+  - effect:
+    - count: 1
+      op: break
+      player: you
+    - count: 1
+      op: break
+      player: opp
+    kind: trigger
+    when:
+      event: move
+      subject: self
+      to: bz
+  - effect:
+    - count: 1
+      op: break
+      player: you
+    - count: 1
+      op: break
+      player: opp
+    kind: trigger
+    when:
+      event: tap
+      subject: self
+  - affects:
+      filter:
+        any_of:
+        - race_has: メタリカ
+        - race_has: 裁きの紋章
+      owner: you
+      zone: shield
+    kind: static
+    mod:
+      grant:
+      - s_trigger
+  civs:
+  - zero
+  cost: 6
+  id: dmrp03-dg01
+  mana: 1
+  name: DG　〜ヒトノ造リシモノ〜
+  power: 5000
+  races:
+  - メタリカ
+  source:
+    notes: '「出た時またはタップした時」は同一効果の誘発を2つに分けた。シールドのブレイクは op: break（自分1つ・相手1つ）。S・トリガー付与は
+      affects zone: shield の常在型で表した（dmr20-s01 と同型）'
+    official: dmrp03-dg01
+    review: pending
+  text: このクリーチャーがバトルゾーンに出た時またはタップした時、自分と相手のシールドを１つずつ選ぶ。このクリーチャーは選ばれたそれらのシールドをブレイクする。
+    / 自分のシールドゾーンから手札に加えるメタリカまたは裁きの紋章すべてに「S・トリガー」を与える。
+  types:
+  - creature
+- abilities:
+  - effect:
+    - body:
+      - op: move
+        reason: put
+        select:
+          count: 1
+          filter:
+            civs:
+            - light
+            cost_le: 3
+            types:
+            - creature
+          owner: you
+          zone: hand
+        to: bz
+      op: may
+    kind: trigger
+    when:
+      event: tap
+      subject: self
+  civs:
+  - light
+  cost: 4
+  id: dmrp04s-030
+  mana: 1
+  name: 奇石 サンローズ
+  power: 3500
+  races:
+  - メタリカ
+  source:
+    notes: '手札から「出す」は召喚ではないので move to: bz, reason: put（dmrp07-s02 のタップ誘発と同型）'
+    official: dmrp04s-030
+    review: pending
+  text: このクリーチャーがタップした時、光のコスト３以下のクリーチャーを１体、自分の手札からバトルゾーンに出してもよい。
+  types:
+  - creature
+- abilities:
+  - effect:
+    - count: 1
+      op: draw
+    kind: trigger
+    when:
+      event: tap
+      subject: self
+  civs:
+  - water
+  cost: 3
+  id: dmrp04s-069
+  mana: 1
+  name: 貝獣 タッカラ
+  power: 2000
+  races:
+  - ムートピア
+  source:
+    official: dmrp04s-069
+    review: pending
+  text: このクリーチャーがタップした時、カードを１枚引く。
+  types:
+  - creature
+- abilities:
+  - effect:
+    - op: discard
+      select:
+        chooser: opp
+        count: 1
+        owner: opp
+        zone: hand
+    kind: trigger
+    when:
+      event: tap
+      subject: self
+  civs:
+  - darkness
+  cost: 4
+  id: dmrp04s-073
+  mana: 1
+  name: 凶鬼43号 ドシュ
+  power: 4000
+  races:
+  - マフィ・ギャング
+  source:
+    notes: '捨てるカードは相手が選ぶ（chooser: opp）'
+    official: dmrp04s-073
+    review: pending
+  text: このクリーチャーがタップした時、相手は自身の手札を１枚選び、捨てる。
+  types:
+  - creature
+- abilities:
+  - effect:
+    - body:
+      - op: destroy
+        select:
+          count: 1
+          filter:
+            power_le: 3000
+            types:
+            - creature
+          owner: opp
+          zone: bz
+      op: may
+    kind: trigger
+    when:
+      event: tap
+      subject: self
+  civs:
+  - fire
+  cost: 4
+  id: dmrp04s-081
+  mana: 1
+  name: MR. SBATER
+  power: 4000
+  races:
+  - ジョーカーズ
+  source:
+    notes: '「タップされた時」は when: {event: tap, subject: self}（dmrp07-s02 と同型）'
+    official: dmrp04s-081
+    review: pending
+  text: このクリーチャーがタップされた時、相手のパワー3000以下のクリーチャーを１体破壊してもよい。
+  types:
+  - creature
+- abilities:
+  - effect:
+    - op: move
+      reason: put
+      select:
+        from_top: 1
+        owner: you
+        zone: deck
+      to: mana
+    kind: trigger
+    when:
+      event: tap
+      subject: self
+  civs:
+  - nature
+  cost: 3
+  id: dmrp04s-091
+  mana: 1
+  name: イモモシ
+  power: 1000
+  races:
+  - グランセクト
+  source:
+    notes: '「タップされた時」は when: {event: tap, subject: self}（dmrp07-s02 と同型）'
+    official: dmrp04s-091
+    review: pending
+  text: このクリーチャーがタップされた時、自分の山札の上から１枚目をマナゾーンに置く。
+  types:
+  - creature
