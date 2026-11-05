@@ -1127,3 +1127,11 @@ draw イベントへの置換で表す（draw は個別イベントとして発�
   instead: [{op: draw, count: 2}, {op: discard, select: {zone: hand, owner: you, count: 1}}]}。
 - tests/test_vocab_pilot113.py 2件（正常 parse／検証）
 - 待機7枚（draw_replacement のみが gap のもの）。
+
+## 第114弾: random_discard（見ないで選び捨てさせる）— 新語彙なし（2026-11-05）
+「相手の手札を1枚見ないで選び、捨てさせる」は既存の discard で表す
+（手札は秘匿ゾーンのため、選ぶ側からは見えない選択になる。変換済み110件が同型）。
+- 書き方: {op: discard, select: {zone: hand, owner: opp, count: 1}}（chooser は既定でコントローラー）。
+  「見て選ぶ」場合は先に look で公開してから選ぶ点が異なる。
+- tests/test_vocab_pilot114.py 2件（正常 parse／検証）
+- 待機7枚（random_discard のみが gap のもの）。
