@@ -129,6 +129,8 @@ class SelectorMixin:
                 return False
         if "multicolor" in f and (len(ch["civs"]) > 1) != f["multicolor"]:
             return False
+        if "colorless" in f and (len(ch["civs"]) == 0) != f["colorless"]:
+            return False
         if "tapped" in f and (lki["tapped"] if lki else c.tapped) != f["tapped"]:
             return False
         if "face_down" in f and c.face_down != f["face_down"]:

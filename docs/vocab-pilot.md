@@ -810,3 +810,11 @@ converted の監査（opt_reduce の素の整数表記9件）から。任意形�
 - 例: `if: {cmp: [{cost_of: {ref: event.subject}}, ">", {count: {zone: mana, owner: opp}}]}`
 - tests/test_vocab_pilot65.py 2件（正常 parse／検証）
 - 待機14枚（cost_gt_count のみが gap のもの）。
+
+## 第66弾: colorless（無色フィルタ）（2026-11-05）
+「無色カード」を対象とするフィルタが無かった。
+- defs: FILTER_KEYS に `colorless` を追加。
+- engine/selectors.py: filter_match で colorless をチェック（civs が空の場合に true）。
+- 書き方: filter: {colorless: true}（無色カードのみ）、filter: {colorless: false}（無色でないカード）。
+- tests/test_vocab_pilot66.py 2件（正常 parse／FILTER_KEYS 確認）。
+- 待機13枚（filter_colorless のみが gap のもの）。
