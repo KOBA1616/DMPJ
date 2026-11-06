@@ -324916,3 +324916,307 @@ cards:
   text: 自分の他の、名前に《死神》とあるクリーチャーをバトルゾーンに出した時、自分の墓地からそのクリーチャーよりコストが小さく、名前に《死神》とあるクリーチャーを１体選んでもよい。その選んだクリーチャーを手札に戻す。
   types:
   - creature
+- civs:
+  - darkness
+  cost: 6
+  id: dm23rp2x-019
+  keywords:
+  - s_trigger_plus
+  mana: 1
+  name: 死神XENARCH・ハンド
+  source:
+    notes: S・トリガー・プラスはキーワード（条件はキーワード側で処理）。+能力は stp_spell に書き、「このターン中に出た」は第134弾の新フィルタ
+      entered_this_turn で表した（proto T167 と同型）
+    official: dm23rp2x-019
+    review: pending
+    aliases:
+    - dm23rp2-019
+  spell:
+  - op: destroy
+    select:
+      count: 1
+      filter:
+        types:
+        - creature
+      owner: opp
+      zone: bz
+  stp_spell:
+  - op: destroy
+    select:
+      count: all
+      filter:
+        entered_this_turn: true
+        types:
+        - creature
+      owner: opp
+      zone: bz
+  text: '{STP} S・トリガー・プラス（この呪文を自分のシールドゾーンから手札に加える時、コストを支払わずにすぐ唱えてもよい。それが相手のターンで、そのターン中に自分のシールドが２つ以上ブレイクされていれば、この呪文に{x+}能力を与える）
+
+    相手のクリーチャーを１体選び、破壊する。
+
+    {x+}このターン中に出た相手のクリーチャーをすべて破壊する。'
+  types:
+  - spell
+- abilities:
+  - effect:
+    - in:
+        ref: self
+      op: swap
+      out:
+        ref: event.subject
+    kind: declare
+    when:
+      event: attack
+      subject:
+        filter:
+          any_of:
+          - race_has: ジャイアント
+          - race_has: マジック
+          cost_ge: 3
+        owner: you
+    zone: hand
+  - effect:
+    - count: 2
+      op: draw
+    kind: trigger
+    when:
+      event: move
+      subject: self
+      to: bz
+      via: revolution_change
+  - affects:
+      filter:
+        entered_this_turn: true
+        types:
+        - creature
+      owner: opp
+      zone: bz
+    kind: static
+    mod:
+      deny:
+      - attack_player
+      - attack_creature
+  civs:
+  - water
+  cost: 4
+  id: dm23rp4x-014
+  keywords:
+  - double_breaker
+  mana: 1
+  name: 巨魔天 アオフェシー
+  power: 6000
+  races:
+  - ジャイアント・マジック・セレス
+  source:
+    notes: '革命チェンジは declare＋swap（条件は cost_ge: 3 と any_of の race_has で「コスト3以上のジャイアントまたはコスト3以上のマジック」、dm26sd1-r007
+      と同型）。革命チェンジで出た時は via: revolution_change で照合。「相手のクリーチャーは、出たターン、攻撃できない」は affects
+      の対象フィルタに第134弾の entered_this_turn を使った常在型 deny（attack_player / attack_creature
+      の両方）'
+    official: dm23rp4x-014
+    review: pending
+    aliases:
+    - dm23rp4-014
+  text: '革命チェンジ：コスト３以上のジャイアントまたはコスト３以上のマジック（自分のコスト３以上のジャイアントまたはコスト３以上のマジックが攻撃する時、そのクリーチャーと手札にあるこのクリーチャーを入れ替えてもよい）
+
+    W・ブレイカー
+
+    このクリーチャーが「革命チェンジ」によって出た時、カードを２枚引く。
+
+    相手のクリーチャーは、出たターン、攻撃できない。'
+  types:
+  - creature
+- abilities:
+  - effect:
+    - as: top
+      op: choose
+      select:
+        count: all
+        from_top: 1
+        look: true
+        owner: you
+        zone: deck
+    - cond:
+        exists:
+          filter:
+            civs:
+            - water
+            not_types:
+            - evolution
+            types:
+            - creature
+          ref: top
+      op: if
+      then:
+      - as: base
+        op: move
+        reason: put
+        select:
+          count: 1
+          ref: top
+        to: bz
+      - onto:
+          ref: base
+        op: invade
+    if:
+      all:
+      - is_turn: opp
+      - cmp:
+        - count:
+            owner: you
+            zone: shield
+        - ==
+        - 0
+    kind: declare
+    when:
+      event: attack
+      target: player
+    zone: hand
+  - affects:
+      filter:
+        entered_this_turn: true
+        types:
+        - creature
+      owner: opp
+      zone: bz
+    kind: static
+    mod:
+      deny:
+      - attack_player
+  civs:
+  - water
+  cost: 7
+  evolve_from:
+    civs:
+    - water
+  id: dm25ex1-005
+  keywords:
+  - blocker
+  - double_breaker
+  - g_neo
+  mana: 1
+  name: トワイライトMk.2 Type オロチ
+  neo: true
+  power: 8000
+  races:
+  - サイバー・コマンド
+  source:
+    notes: '革命０トリガーは dm24bd1-002（ボルシャック・ドギラゴン）と同型の declare 形式（文明は水）。「表向きにしてもよい」は宣言そのもので表す（同先例）。G-NEO進化は
+      neo: true＋evolve_from＋g_neo キーワード。「相手のクリーチャーは出たターン、自分を攻撃できない」は affects の対象フィルタに第134弾の
+      entered_this_turn を使った常在型 deny: [attack_player]'
+    official: dm25ex1-005
+    review: pending
+  text: '革命０トリガー：クリーチャーが自分を攻撃する時、自分のシールドが１つもなければ、自分の手札にあるこのクリーチャーを表向きにしてもよい。そうしたら、自分の山札の上から１枚を表向きにする。それが水の進化ではないクリーチャーなら出し、このクリーチャーをその上に置く。
+
+    G-NEO進化：水のクリーチャー１体の上に置いてもよい。
+
+    ブロッカー
+
+    W・ブレイカー
+
+    相手のクリーチャーは出たターン、自分を攻撃できない。'
+  types:
+  - creature
+- abilities:
+  - kind: trigger
+    when:
+      event: move
+      to: bz
+      subject: self
+    effect:
+    - op: modify
+      select:
+        ref: self
+      mod:
+        allow:
+        - action: attack_creature
+          other:
+            tapped: false
+      duration: end_of_turn
+  - effect:
+    - duration: end_of_turn
+      mod:
+        allow:
+        - action: attack_creature
+          other:
+            tapped: false
+      op: modify
+      select:
+        ref: self
+    kind: trigger
+    when:
+      event: move
+      subject: self
+      to: bz
+  - effect:
+    - modes:
+      - - as: d
+          op: choose
+          select:
+            chooser: random
+            count: 1
+            owner: opp
+            zone: hand
+        - op: move
+          reason: discard
+          select:
+            count: all
+            ref: d
+          to: graveyard
+      - - count: 1
+          op: break
+          player: opp
+      op: modal
+    kind: trigger
+    when:
+      event: attack
+      subject:
+        filter:
+          entered_this_turn: true
+          types:
+          - creature
+        owner: you
+  civs:
+  - darkness
+  - fire
+  - nature
+  cost: 4
+  evolve_from:
+    civs:
+    - darkness
+    - fire
+    - nature
+  id: dm25ex3-rp1s11
+  keywords:
+  - double_breaker
+  - g_neo
+  mana: 1
+  name: 堕チシ八叉ノ蛇神
+  neo: true
+  power: 6000
+  races:
+  - デーモン・コマンド
+  - アビスロイヤル
+  source:
+    notes: 'マッハファイターは keyword_patterns の展開形で書いた。G-NEO進化は neo: true＋evolve_from＋g_neo
+      キーワード。「自分のクリーチャーが出たターンに攻撃する時」は when の subject セレクタに第134弾の entered_this_turn
+      フィルタを使った（攻撃したクリーチャー自身の entered_turn が現在のターンと一致する場合に誘発）。第2モードのブレイクは break op
+      の帰属（発生源＝このクリーチャー）どおり「このクリーチャーは...ブレイクする」'
+    official: dm25ex3-rp1s11
+    review: pending
+    aliases:
+    - dm25ex3-rp1sec12
+    - dm25rp1-s11
+    - dm25rp1-sec12
+  text: 'G-NEO進化：闇、火、または自然のクリーチャー１体の上に置いてもよい。
+
+    マッハファイター
+
+    W・ブレイカー
+
+    自分のクリーチャーが出たターンに攻撃する時、次のうちいずれか１つを選ぶ。
+
+    ▶相手の手札を１枚見ないで選び、捨てさせる。
+
+    ▶このクリーチャーは相手のシールドを１つブレイクする。'
+  types:
+  - creature
