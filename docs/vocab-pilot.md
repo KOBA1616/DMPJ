@@ -1311,3 +1311,9 @@ draw イベントへの置換で表す（draw は個別イベントとして発�
 - 新式: {drew: {owner: opp}}（このターンそのプレイヤーが引いた枚数。engine/events.py の draw 適用で turn_counters を数え、eval_expr で参照）。「そのターン1枚目のドローでなければ」は trigger の if: {cmp: [{drew: {owner: opp}}, ">=", 2]}（当該ドローは適用済みのため数に含まれる）。
 - 試験カード R102。tests/test_vocab_pilot142.py 2件（parse／drew カウンタで deny が解ける実挙動＋実際のドローで数える確認）。
 - 待機5枚（draw_event_trigger のみが gap のもの）。
+
+## 第143弾: leave_stay（離れるかわりにとどまる）— 新語彙なし（2026-11-06）
+「バトルゾーンを離れる時、かわりにとどまる」は mod: {no_leave: true}（第49弾）。
+- 条件付きは条件付き static（第88弾）の if と併記。例外は辞書形: {except_destroy: true}（破壊以外）、{except_battle: true}（バトル敗北以外）、{by_opp: true}（相手の効果では離れない）。
+- tests/test_vocab_pilot143.py 2件（正常 parse／検証）
+- 待機6枚（leave_stay のみが gap のもの）。
