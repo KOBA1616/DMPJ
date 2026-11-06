@@ -1286,3 +1286,10 @@ draw イベントへの置換で表す（draw は個別イベントとして発�
 - 書き方: filter: {any_of: [{race_has: ゴッド}, {types: [spell]}]}（第93弾 soul の any_of と同形）。同じ区分の AND は通常キー併記。
 - tests/test_vocab_pilot138.py 2件（正常 parse／検証）
 - 待機5枚（filter_or_race_or_type のみが gap のもの）。
+
+## 第139弾: mach_fighter_grant（マッハファイターの付与）— 新語彙なし（2026-11-06）
+「マッハファイターを与える」は第58弾の展開形（allow attack_creature、other: {tapped: false}）を modify / static で付与する。
+- 一時的付与: trigger の effect で modify（select は対象、mod: {allow: [{action: attack_creature, other: {tapped: false}}]}、duration: end_of_turn）。
+- 常在付与: static の affects（対象範囲）+ 同じ allow を mod に置く。
+- tests/test_vocab_pilot139.py 2件（正常 parse／検証）
+- 待機6枚（mach_fighter_grant のみが gap のもの）。
