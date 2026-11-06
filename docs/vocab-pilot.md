@@ -363,6 +363,10 @@ space_charge（単独42件）: スペース・チャージは、文明ごとの�
 
 - ジャンケン系は変換対象にしない。`op: janken` の win/lose 分岐は既存語彙にあるが、相手の出した手（グー/チョキ/パー）の参照、連勝数カウント、ジャンケン結果の置換などは語彙がなく、実装コストに見合わないため対象外とする。該当 gap: janken_opponent_hand（8件）、janken_streak_count（1件）、janken_win_hand_event（1件）、janken_loss_replace（1件）、battle_outcome_replace（1件、ジャンケン由来）
 
+## 対象外（2026-11-06 ユーザー指示）
+
+- outside_game 系は変換対象にしない。音読など実世界の行為に依存する内容のため。該当 gap: outside_game（12件、全て dmex08）
+
 ## 次の候補
 
 - 進化系: NEO進化（251件、二択の出し方＋重なっている時の性質変化）、スター進化（153件、離れる時は一番上だけ）
