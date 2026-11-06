@@ -326095,3 +326095,460 @@ cards:
     種族をひとつ選ぶ。このターンの終わりまで、バトルゾーンにある自分のクリーチャーはすべて、その種族を追加する。'
   types:
   - spell
+- civs:
+  - darkness
+  cost: 6
+  id: dm31-013
+  mana: 1
+  name: 魔弾ゴッド・ジェノサイダー
+  races:
+  - ナイト
+  source:
+    official: dm31-013
+    review: pending
+  spell:
+  - as: first
+    op: destroy
+    select:
+      count: 1
+      filter:
+        types:
+        - creature
+      owner: opp
+      zone: bz
+  - cond:
+      exists:
+        filter:
+          race_has: ゴッド
+        ref: first
+    op: if
+    then:
+    - body:
+      - op: destroy
+        select:
+          count: 1
+          filter:
+            types:
+            - creature
+          owner: opp
+          zone: bz
+      op: may
+  text: 相手のクリーチャーを１体破壊する。そのクリーチャーがゴッドであれば、相手のクリーチャーをもう１体破壊してもよい。
+  types:
+  - spell
+- abilities:
+  - effect:
+    - body:
+      - as: paid
+        op: move
+        reason: discard
+        select:
+          count: 1
+          owner: you
+          zone: hand
+        to: graveyard
+      op: may
+    - cond:
+        exists:
+          ref: paid
+      op: if
+      then:
+      - body:
+        - as: t
+          op: choose
+          select:
+            count: 1
+            filter:
+              race_has: ゴッド
+            look: true
+            owner: you
+            zone: deck
+        - op: move
+          reason: draw
+          select:
+            count: all
+            ref: t
+          to: hand
+        op: may
+      - op: shuffle
+    kind: trigger
+    when:
+      event: move
+      subject: self
+      to: bz
+  civs:
+  - darkness
+  cost: 4
+  id: dm32-056
+  keywords:
+  - blocker
+  - cannot_attack
+  mana: 1
+  name: ゴッド・ガット
+  power: 2000
+  races:
+  - ファイアー・バード
+  source:
+    official: dm32-056
+    review: pending
+    aliases:
+    - promoy12-055
+  text: 'ブロッカー
+
+    このクリーチャーは攻撃することができない。
+
+    このクリーチャーをバトルゾーンに出した時、自分の手札を１枚捨ててもよい。そうした場合、自分の山札を見る。その中からゴッドを１枚選び、相手に見せてから自分の手札に加えてもよい。その後、山札をシャッフルする。'
+  types:
+  - creature
+- abilities:
+  - effect:
+    - as: g
+      op: choose
+      select:
+        count: 2
+        filter:
+          race_has: ゴッド
+        look: true
+        owner: you
+        up_to: true
+        zone: deck
+    - cond:
+        exists:
+          ref: g
+      op: if
+      then:
+      - as: h
+        op: choose
+        select:
+          count: 1
+          ref: g
+      - op: move
+        reason: draw
+        select:
+          count: all
+          ref: h
+        to: hand
+    - op: shuffle
+    - cond:
+        exists:
+          ref: g
+      op: if
+      then:
+      - op: move
+        position: top
+        reason: put
+        select:
+          count: all
+          ref: g
+        to: deck
+    kind: trigger
+    when:
+      event: move
+      subject: self
+      to: bz
+  civs:
+  - light
+  - water
+  - darkness
+  - fire
+  - nature
+  cost: 6
+  id: dmc55-015
+  keywords:
+  - double_breaker
+  mana: 1
+  name: バリバリ・ミラックル
+  power: 6000
+  races:
+  - ワールド・バード
+  source:
+    notes: 原文のマナ数は「-」のため 1 とした。多色のマナタップはルール処理に委ね text のみに残置。「もう１体を戻す」は choose で h
+      を分けた残りの ref g を数える形（dm22-043 の先例どおり、ref からの choose は元のグループから分かれる前提）
+    official: dmc55-015
+    review: pending
+    aliases:
+    - promoy6-038
+  text: 'マナゾーンに置く時、このカードはタップして置く。
+
+    このクリーチャーをバトルゾーンに出した時、自分の山札を見る。その中からゴッドを２体まで選んで相手に見せてもよい。そのうちの１体を自分の手札に加える。その後、山札をシャッフルし、もう１体を山札の一番上に戻す。
+
+    W・ブレイカー(このクリーチャーはシールドを２枚ブレイクする)'
+  types:
+  - creature
+- civs:
+  - light
+  cost: 10
+  id: dmc57-001
+  mana: 1
+  name: ゴッド・ブリンガー
+  source:
+    official: dmc57-001
+    review: pending
+  spell:
+  - op: move
+    reason: charge
+    select:
+      from_top:
+        count:
+          filter:
+            race_has: ゴッド
+          owner: you
+          zone: bz
+      owner: you
+      zone: deck
+    to: shield
+  - body:
+    - as: g
+      op: choose
+      select:
+        count: any
+        filter:
+          race_has: ゴッド
+        look: true
+        owner: you
+        zone: shield
+    - op: move
+      reason: put
+      select:
+        count: all
+        ref: g
+      to: bz
+    op: may
+  text: バトルゾーンにある自分のゴッドを数える。自分の山札の上から、その数と同じ枚数のカードを、新しいシールドとしてシールドゾーンに加える。その後、自分のシールドをすべて見る。その中から好きな数のゴッドを選び、バトルゾーンに出してもよい。
+  types:
+  - spell
+- abilities:
+  - effect:
+    - as: t
+      op: choose
+      select:
+        count: 1
+        filter:
+          types:
+          - creature
+        owner: opp
+        zone: bz
+    - cond:
+        exists:
+          filter:
+            race_has: ゴッド
+          owner: you
+          zone: mana
+      else:
+      - duration: end_of_turn
+        mod:
+          power: -2000
+        op: modify
+        select:
+          ref: t
+      op: if
+      then:
+      - duration: end_of_turn
+        mod:
+          power: -4000
+        op: modify
+        select:
+          ref: t
+    kind: trigger
+    when:
+      event: move
+      subject: self
+      to: bz
+  civs:
+  - darkness
+  cost: 6
+  id: dmc57-002
+  keywords:
+  - s_trigger
+  mana: 1
+  name: 神炎の影グレイブ・ディール
+  power: 3000
+  races:
+  - ゴースト
+  source:
+    official: dmc57-002
+    review: pending
+    aliases:
+    - promoy12-012
+  text: 'S・トリガー
+
+    このクリーチャーをバトルゾーンに出した時、バトルゾーンにある相手のクリーチャーを１体選ぶ。自分のマナゾーンにゴッドがあれば、そのターン、その選んだクリーチャーのパワーは-4000される。自分のマナゾーンにゴッドがない場合、そのターン、その選んだクリーチャーのパワーは-2000される。'
+  types:
+  - creature
+- abilities:
+  - affects: self
+    kind: static
+    mod:
+      opt_reduce:
+        amount: 3
+        do:
+          select:
+            filter:
+              linked_god: true
+            owner: you
+            zone: bz
+        floor: 1
+        per: true
+    zone: hand
+  civs:
+  - darkness
+  cost: 10
+  id: dmc57-013
+  mana: 1
+  name: バイオレンス・ヘヴン
+  source:
+    notes: コスト軽減は「リンクしているゴッドを数えた分だけ任意に減らす」形として opt_reduce の per（do.select で対象を数える。dmr18-039
+      の先例と同型）で表した
+    official: dmc57-013
+    review: pending
+    aliases:
+    - dm27-001
+  spell:
+  - op: destroy
+    select:
+      count: all
+      filter:
+        not_race_has: ゴッド
+        types:
+        - creature
+      owner: any
+      zone: bz
+  text: 自分のリンクしているゴッド１体につき、この呪文を唱えるコストを最大３少なくしてもよい。ただし、コストは１より少なくならない。 / ゴッド以外のクリーチャーをすべて破壊する。
+  types:
+  - spell
+- abilities:
+  - affects: self
+    if:
+      exists:
+        filter:
+          race_has: ゴッド
+        owner: you
+        zone: bz
+    kind: static
+    mod:
+      grant:
+      - slayer
+  - effect:
+    - body:
+      - count: 1
+        op: draw
+      op: may
+    if:
+      exists:
+        filter:
+          race_has: ゴッド
+        owner: you
+        zone: bz
+    kind: trigger
+    when:
+      event: attack
+      subject: self
+  civs:
+  - water
+  - darkness
+  cost: 2
+  id: dmc63-006
+  mana: 1
+  name: 電脳妖魔メルゲイナー
+  power: 1000
+  races:
+  - リキッド・ピープル
+  - ヘドリアン
+  source:
+    notes: 多色のマナタップはルール処理に委ね text のみに残置
+    official: dmc63-006
+    review: pending
+  text: マナゾーンに置く時、このカードはタップして置く。 / バトルゾーンに自分のゴッドがあれば、このクリーチャーは「スレイヤー」を得る。 / このクリーチャーが攻撃する時、バトルゾーンに自分のゴッドがあれば、カードを１枚引いてもよい。
+  types:
+  - creature
+- civs:
+  - light
+  cost: 5
+  id: dmd14-003
+  keywords:
+  - s_trigger
+  mana: 1
+  name: オラクルDJ
+  source:
+    official: dmd14-003
+    review: pending
+  spell:
+  - op: tap
+    select:
+      count: all
+      filter:
+        types:
+        - creature
+      owner: opp
+      zone: bz
+  - effect:
+    - op: untap
+      select:
+        count: all
+        filter:
+          race_has: ゴッド
+        owner: you
+        zone: bz
+    op: delayed_trigger
+    when:
+      event: turn_end
+  text: S・トリガー（この呪文をシールドゾーンから手札に加える時、コストを支払わずにすぐ唱えてもよい）バトルゾーンにある相手のクリーチャーをすべてタップする。ターンの終わりに、バトルゾーンにある自分のゴッドをすべてアンタップする。
+  types:
+  - spell
+- abilities:
+  - effect:
+    - op: move
+      reason: charge
+      select:
+        count: 2
+        from_top: 2
+        owner: you
+        up_to: true
+        zone: deck
+      to: shield
+    kind: trigger
+    when:
+      event: attack
+      subject: self
+  - affects:
+      filter:
+        race_has: ゴッド
+      owner: you
+      zone: bz
+    if:
+      cmp:
+      - count:
+          owner: you
+          zone: shield
+      - '>='
+      - 7
+    kind: static
+    mod:
+      breaks: 1
+      power: 6000
+  civs:
+  - light
+  - nature
+  cost: 8
+  id: dmex08-123
+  keywords:
+  - blocker
+  - double_breaker
+  mana: 1
+  name: 聖域の守護神・アテナ -NON-
+  power: 11000
+  races:
+  - エンジェル・コマンド
+  - ゴッド
+  source:
+    official: dmex08-123
+    review: pending
+  text: 'ブロッカー
+
+    W・ブレイカー
+
+    このクリーチャーが攻撃する時、自分の山札の上から２枚までを裏向きのまま、それぞれ新しいシールドとして自分のシールドゾーンに置く。
+
+    自分のシールドが７つ以上あれば、自分のゴッドすべてはパワーを+6000され、シールドをさらに１枚ブレイクする。'
+  types:
+  - creature
