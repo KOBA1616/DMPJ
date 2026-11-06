@@ -25,16 +25,21 @@ CARD = {
 }
 
 
+def _static_ab(card):
+    return next(ab for ab in card.abilities
+                if ab["kind"] == "static" and "power_when" in ab.get("mod", {}))
+
+
 def test_powered_blocker_parses():
     card = parse_card(CARD, TABLES)
     assert card is not None
-    ab = card.abilities[0]
+    ab = _static_ab(card)
     assert ab["kind"] == "static"
 
 
 def test_powered_blocker_power_when():
     card = parse_card(CARD, TABLES)
-    ab = card.abilities[0]
+    ab = _static_ab(card)
     pw = ab["mod"]["power_when"]
     assert pw["amount"] == 4000
     assert pw["when"] == "blocking"
