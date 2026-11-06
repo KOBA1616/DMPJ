@@ -865,3 +865,16 @@ cards:
     - kind: static
       affects: self
       mod: {breaks: {civ_count: {zone: bz, owner: opp}}}
+  - id: R097
+    name: 試験用被ブロック獣
+    types: [creature]
+    civs: [fire]
+    cost: 1
+    power: 9000
+    races: [テスト]
+    text: このクリーチャーがブロックされた時、このクリーチャーをアンタップする。
+    abilities:
+      - kind: trigger
+        when: {event: block, attacker: self}
+        effect:
+          - {op: untap, select: {ref: self}}
