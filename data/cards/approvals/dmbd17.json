@@ -17,7 +17,7 @@
 ],
 "verifier": 2,
 "verify_error": "移動先 bz が原文に無い",
-"vocab_ver": "1dbe098d6a2fbe80"
+"vocab_ver": "0c08d163de8c8f64"
 },
 "dmbd17-teki002": {
 "by": "rule",

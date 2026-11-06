@@ -14,7 +14,7 @@
 ],
 "verifier": 2,
 "verify": "43手・turn 30 まで正常に回った（result={'winner': 0, 'reason': 'deck_out', 'turn': 30}）",
-"vocab_ver": "b9742370b5c88547"
+"vocab_ver": "ce8bc0b1cb80bf35"
 },
 "promoy22-021": {
 "by": "rule",
@@ -81,7 +81,7 @@
 ],
 "verifier": 2,
 "verify": "43手・turn 30 まで正常に回った（result={'winner': 0, 'reason': 'deck_out', 'turn': 30}）",
-"vocab_ver": "9760fc74d410bb3b"
+"vocab_ver": "257051283978a095"
 },
 "promoy22-kamip02": {
 "by": "rule",
@@ -98,7 +98,7 @@
 ],
 "verifier": 2,
 "verify": "43手・turn 30 まで正常に回った（result={'winner': 0, 'reason': 'deck_out', 'turn': 30}）",
-"vocab_ver": "9760fc74d410bb3b"
+"vocab_ver": "257051283978a095"
 },
 "promoy22-kamip03": {
 "by": "rule",
@@ -115,7 +115,7 @@
 ],
 "verifier": 2,
 "verify": "43手・turn 30 まで正常に回った（result={'winner': 0, 'reason': 'deck_out', 'turn': 30}）",
-"vocab_ver": "9760fc74d410bb3b"
+"vocab_ver": "257051283978a095"
 },
 "promoy22-kamip04": {
 "by": "rule",
@@ -132,7 +132,7 @@
 ],
 "verifier": 2,
 "verify": "43手・turn 30 まで正常に回った（result={'winner': 0, 'reason': 'deck_out', 'turn': 30}）",
-"vocab_ver": "9760fc74d410bb3b"
+"vocab_ver": "257051283978a095"
 },
 "promoy22-kamip05": {
 "by": "rule",
@@ -149,7 +149,7 @@
 ],
 "verifier": 2,
 "verify": "43手・turn 30 まで正常に回った（result={'winner': 0, 'reason': 'deck_out', 'turn': 30}）",
-"vocab_ver": "9760fc74d410bb3b"
+"vocab_ver": "257051283978a095"
 },
 "promoy22-kamip06": {
 "by": "rule",
@@ -166,7 +166,7 @@
 ],
 "verifier": 2,
 "verify": "43手・turn 30 まで正常に回った（result={'winner': 0, 'reason': 'deck_out', 'turn': 30}）",
-"vocab_ver": "9760fc74d410bb3b"
+"vocab_ver": "257051283978a095"
 },
 "promoy22-kamip07": {
 "by": "rule",
@@ -183,7 +183,7 @@
 ],
 "verifier": 2,
 "verify": "43手・turn 30 まで正常に回った（result={'winner': 0, 'reason': 'deck_out', 'turn': 30}）",
-"vocab_ver": "9760fc74d410bb3b"
+"vocab_ver": "257051283978a095"
 },
 "promoy22-kamip08": {
 "by": "rule",
@@ -200,7 +200,7 @@
 ],
 "verifier": 2,
 "verify": "43手・turn 30 まで正常に回った（result={'winner': 0, 'reason': 'deck_out', 'turn': 30}）",
-"vocab_ver": "9760fc74d410bb3b"
+"vocab_ver": "257051283978a095"
 },
 "promoy22-spd1003": {
 "by": "rule",
