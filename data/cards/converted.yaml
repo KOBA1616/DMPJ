@@ -327882,3 +327882,187 @@ cards:
   text: 自分のクリーチャーは、それよりパワーが小さいクリーチャーにブロックされない。 / このクリーチャーが出た時または攻撃する時、自分のクリーチャーを１体選ぶ。このターン、そのクリーチャーのパワーを２倍にし、「パワード・ブレイカー」を与える。（「パワード・ブレイカー」を持つクリーチャーは、そのパワー6000ごとにシールドをさらに１つブレイクする）
   types:
   - creature
+- abilities:
+  - effect:
+    - body:
+      - count: 1
+        op: draw
+      op: may
+    if:
+      all:
+      - is_turn: opp
+      - cmp:
+        - drew:
+            owner: opp
+        - '>='
+        - 2
+    kind: trigger
+    when:
+      event: draw
+      player: opp
+  civs:
+  - light
+  cost: 5
+  id: dmr06-034
+  mana: 1
+  name: サイコメトラー ヤミカバチ
+  power: 5000
+  races:
+  - デーモン・コマンド
+  - アンノイズ
+  source:
+    official: dmr06-034
+    review: pending
+  text: 相手のターン中、相手がカードを引いた時、それがそのターン１枚目のドローでなければ、自分もカードを１枚引いてもよい。
+  types:
+  - creature
+- abilities:
+  - effect:
+    - body:
+      - count: 2
+        op: draw
+      op: may
+    kind: trigger
+    when:
+      event: draw
+      player: opp
+  - if:
+      cmp:
+      - count:
+          owner: you
+          zone: deck
+      - ==
+      - 1
+    instead:
+    - op: move
+      order: choose
+      position: top
+      reason: put
+      select:
+        count: any
+        filter:
+          types:
+          - spell
+        owner: you
+        zone: graveyard
+      to: deck
+    - count: 1
+      op: draw
+    kind: replace
+    when:
+      event: draw
+      player: you
+  civs:
+  - water
+  cost: 8
+  id: dmr14-002
+  keywords:
+  - double_breaker
+  mana: 1
+  name: 龍素記号Tb ドロダブルBros.
+  power: 8000
+  races:
+  - クリスタル・コマンド・ドラゴン
+  source:
+    notes: 最後の１枚のドロー置換は原文に「してもよい」が無いため optional を付けていない（山札の上に置く呪文の枚数は０枚も選べる）。置換の if
+      で山札枚数を判定する形は《世界の果て ターミネーター》の変換に倣った
+    official: dmr14-002
+    review: pending
+  text: 相手がカードを１枚引いた時、自分はカードを２枚引いてもよい。自分の山札の最後の１枚を引く時、かわりに好きな枚数の呪文を自分の墓地から山札の一番上に好きな順序で置き、その後カードを１枚引く。W・ブレイカー（このクリーチャーはシールドを２枚ブレイクする）
+  types:
+  - creature
+- abilities:
+  - effect:
+    - duration: end_of_turn
+      mod:
+        add_races:
+        - マジック・コマンド
+        power: 2000
+      op: modify
+      select:
+        ref: self
+    if:
+      cmp:
+      - sum:
+        - drew:
+            owner: you
+        - drew:
+            owner: opp
+      - '>='
+      - 2
+    kind: trigger
+    when:
+      event: draw
+      player: you
+  civs:
+  - water
+  cost: 3
+  id: dmr17-038
+  mana: 1
+  name: 奇天烈 ディーラー
+  power: 2000
+  races:
+  - リキッド・ピープル閃
+  - 侵略者
+  source:
+    notes: 「ターン最初のドロー」はそのターンの最初のドロー（通常はターンプレイヤーのドロー）を指すと解釈し、両プレイヤーの drew の合計が２以上かどうかで判定した（相手のターン中に自分が引いた場合も誘発する）
+    official: dmr17-038
+    review: pending
+  text: ターン最初のドロー以外で自分がカードを引いた時、そのターン、このクリーチャーのパワーを+2000し、種族にマジック・コマンドを追加する。
+  types:
+  - creature
+- abilities:
+  - effect:
+    - op: tap
+      select:
+        count: 1
+        ref: self
+    kind: trigger
+    when:
+      event: move
+      subject: self
+      to: bz
+  - effect:
+    - body:
+      - op: tap
+        select:
+          count: 3
+          filter:
+            tapped: false
+          owner: you
+          zone: mana
+      - op: untap
+        select:
+          ref: self
+      op: may
+    if:
+      all:
+      - is_turn: you
+      - cmp:
+        - drew:
+            owner: you
+        - ==
+        - 1
+    kind: trigger
+    when:
+      event: draw
+      player: you
+  civs:
+  - nature
+  cost: 1
+  id: dmr22-064
+  keywords:
+  - double_breaker
+  - cannot_untap
+  mana: 1
+  name: ベイB ソーター
+  power: 6000
+  races:
+  - ミルクボーイ
+  - イニシャルズ
+  source:
+    official: dmr22-064
+    review: pending
+  text: W・ブレイカー（このクリーチャーはシールドを２つブレイクする）このクリーチャーがバトルゾーンに出た時、このクリーチャーをタップする。自分のターンのはじめに、このクリーチャーはアンタップしない。自分のターン、１枚目のカードを引く時、自分のマナゾーンのカードを３枚タップしてもよい。そうしたら、このクリーチャーをアンタップする。
+  types:
+  - creature
