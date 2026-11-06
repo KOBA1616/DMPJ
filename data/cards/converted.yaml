@@ -324756,3 +324756,163 @@ cards:
   text: マナゾーンに置く時、このカードはタップして置く。このクリーチャーがブロックされた時、「ブロッカー」を持つ相手のクリーチャーをすべて破壊する。W・ブレイカー
   types:
   - creature
+- abilities:
+  - effect:
+    - body:
+      - as: dropped
+        op: discard
+        select:
+          count: 1
+          filter:
+            types:
+            - creature
+          owner: you
+          zone: hand
+      - op: destroy
+        select:
+          count: 1
+          filter:
+            cost_le:
+              sum:
+              - cost_of:
+                  ref: dropped
+              - -1
+            types:
+            - creature
+          owner: opp
+          zone: bz
+      op: may
+    if:
+      is_turn: you
+    kind: trigger
+    when:
+      event: turn_end
+      subject: self
+  civs:
+  - darkness
+  cost: 7
+  id: dm39-012
+  mana: 1
+  name: 毒針の暗殺者アンタレス
+  power: 4000
+  races:
+  - デーモン・コマンド
+  - エイリアン
+  source:
+    official: dm39-012
+    review: pending
+  text: 自分のターンの終わりに、クリーチャーを１体、自分の手札から捨ててもよい。そうした場合、そのクリーチャーよりコストが小さい相手のクリーチャーを１体破壊する。
+  types:
+  - creature
+- abilities:
+  - effect:
+    - as: casted
+      op: choose
+      select:
+        ref: event.subject
+    - body:
+      - op: play_free
+        select:
+          count: 1
+          filter:
+            cost_le:
+              sum:
+              - cost_of:
+                  ref: casted
+              - -1
+            types:
+            - spell
+          owner: you
+          zone: hand
+      op: may
+    if:
+      is_turn: you
+    kind: trigger
+    when:
+      event: cast
+      subject:
+        filter:
+          types:
+          - spell
+        owner: you
+  civs:
+  - darkness
+  cost: 5
+  evolve_from:
+    race_has: ナイト
+  id: dmc55-029
+  keywords:
+  - double_breaker
+  mana: 1
+  name: 黒騎士ザールフェルドII世
+  power: 7000
+  races:
+  - デーモン・コマンド
+  - パラサイトワーム
+  - ナイト
+  source:
+    official: dmc55-029
+    review: pending
+    aliases:
+    - dm30-003
+  text: '進化-自分のナイト・クリーチャー１体の上に置く。
+
+    自分のターンに呪文を唱えた時、その呪文よりコストが小さい呪文を自分の手札から１枚選び、コストを支払わずに唱えてもよい。
+
+    W・ブレイカー(このクリーチャーはシールドを２枚ブレイクする)'
+  types:
+  - creature
+  - evolution
+- abilities:
+  - effect:
+    - as: entered
+      op: choose
+      select:
+        ref: event.subject
+    - body:
+      - op: move
+        reason: return
+        select:
+          count: 1
+          filter:
+            cost_le:
+              sum:
+              - cost_of:
+                  ref: entered
+              - -1
+            name_has: 死神
+            types:
+            - creature
+          owner: you
+          zone: graveyard
+        to: hand
+      op: may
+    kind: trigger
+    when:
+      event: move
+      subject:
+        filter:
+          name_has: 死神
+          types:
+          - creature
+        other: true
+        owner: you
+      to: bz
+  civs:
+  - darkness
+  cost: 5
+  id: dmc60-005
+  mana: 1
+  name: 死神ギガアニマ
+  power: 4000
+  races:
+  - キマイラ
+  source:
+    official: dmc60-005
+    review: pending
+    aliases:
+    - dm33-014
+    - dm33-014hc
+  text: 自分の他の、名前に《死神》とあるクリーチャーをバトルゾーンに出した時、自分の墓地からそのクリーチャーよりコストが小さく、名前に《死神》とあるクリーチャーを１体選んでもよい。その選んだクリーチャーを手札に戻す。
+  types:
+  - creature
