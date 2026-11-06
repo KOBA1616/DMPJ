@@ -1276,7 +1276,7 @@ draw イベントへの置換で表す（draw は個別イベントとして発�
 ## 第137弾: god_filter（ゴッドのフィルタ・条件）— 新語彙なし（2026-11-06）
 「ゴッド」は種族名として扱う。既存語彙の組み合わせで足りる。
 - 対象・検索・数え上げ: filter: {race_has: ゴッド}。「ゴッド以外」は not_race_has: ゴッド（第81弾）。
-- 存在条件: if: {exists: {zone: <ゾーン>, owner: you, filter: {race_has: ゴッド}}}。破壊したカードがゴッドかは exists: {ref: <束縛名>, filter: {race_has: ゴッド}}。
+- 存在条件: exists を条件に使う（ゾーン指定、または破壊したカードは ref 指定で op: if の cond に）。
 - 「リンクしているゴッド」は filter: {linked_god: true}（第103弾）を count に使う。
 - tests/test_vocab_pilot137.py 2件（正常 parse／検証）
 - 待機9枚（god_filter のみが gap のもの）。

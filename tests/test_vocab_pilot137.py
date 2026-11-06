@@ -1,7 +1,7 @@
 """語彙パイロット第137弾: god_filter（ゴッドのフィルタ・条件）。
 
 「ゴッド」は種族 race_has: ゴッド で扱う。「そのクリーチャーがゴッドであれば」は
-exists: {ref: X, filter: {race_has: ゴッド}}。新語彙なし。
+exists: {ref: X, filter: {race_has: ゴッド}} を op: if の cond に置く。新語彙なし。
 """
 from dmsim.defs import load_tables, parse_card
 
@@ -19,11 +19,13 @@ CARD = {
         {"op": "destroy",
          "select": {"zone": "bz", "owner": "opp", "count": 1, "filter": {"types": ["creature"]}},
          "as": "first"},
-        {"op": "may",
-         "if": {"exists": {"ref": "first", "filter": {"race_has": "ゴッド"}}},
-         "body": [
-             {"op": "destroy",
-              "select": {"zone": "bz", "owner": "opp", "count": 1, "filter": {"types": ["creature"]}}},
+        {"op": "if",
+         "cond": {"exists": {"ref": "first", "filter": {"race_has": "ゴッド"}}},
+         "then": [
+             {"op": "may", "body": [
+                 {"op": "destroy",
+                  "select": {"zone": "bz", "owner": "opp", "count": 1, "filter": {"types": ["creature"]}}},
+             ]},
          ]},
     ],
     "source": {"official": "test-gf", "review": "pending"},
@@ -38,6 +40,6 @@ def test_god_filter_parses():
 
 def test_god_filter_shape():
     card = parse_card(CARD, TABLES)
-    cond = card.spell[1]["if"]["exists"]
+    cond = card.spell[1]["cond"]["exists"]
     assert cond["ref"] == "first"
     assert cond["filter"]["race_has"] == "ゴッド"
