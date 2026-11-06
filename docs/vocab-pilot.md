@@ -1280,3 +1280,9 @@ draw イベントへの置換で表す（draw は個別イベントとして発�
 - 「リンクしているゴッド」は filter: {linked_god: true}（第103弾）を count に使う。
 - tests/test_vocab_pilot137.py 2件（正常 parse／検証）
 - 待機9枚（god_filter のみが gap のもの）。
+
+## 第138弾: filter_or_race_or_type（種族またはタイプの選択）— 新語彙なし（2026-11-06）
+「ゴッドまたは呪文」「ナイト呪文または〜呪文」のような OR 条件の対象指定は filter の any_of で表す。
+- 書き方: filter: {any_of: [{race_has: ゴッド}, {types: [spell]}]}（第93弾 soul の any_of と同形）。同じ区分の AND は通常キー併記。
+- tests/test_vocab_pilot138.py 2件（正常 parse／検証）
+- 待機5枚（filter_or_race_or_type のみが gap のもの）。
