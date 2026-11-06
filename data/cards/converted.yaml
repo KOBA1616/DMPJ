@@ -325857,3 +325857,241 @@ cards:
     / 自分のターンの終わりに、このターンにバトルゾーンに出した自分の、進化ではないアーマード・ドラゴンをすべて手札に戻す。
   types:
   - creature
+- civs:
+  - light
+  cost: 2
+  id: dm09-023
+  keywords:
+  - s_trigger
+  mana: 1
+  name: センチネル・ガード
+  source:
+    official: dm09-023
+    review: pending
+  spell:
+  - as: kind
+    op: choose_race
+  - duration: until_next_own_turn_start
+    mod:
+      grant:
+      - blocker
+    op: modify
+    select:
+      count: all
+      filter:
+        races:
+          race: kind
+        types:
+        - creature
+      owner: any
+      zone: bz
+  text: 'S・トリガー
+
+    種族を１つ選ぶ。次の自分のターンが始まるまで、バトルゾーンにあるその種族のクリーチャーはすべて「ブロッカー」を得る。'
+  types:
+  - spell
+- civs:
+  - water
+  cost: 5
+  id: dm09-043
+  mana: 1
+  name: サイバー・トンネル
+  source:
+    official: dm09-043
+    review: pending
+  spell:
+  - as: kind
+    op: choose_race
+  - duration: end_of_turn
+    mod:
+      deny:
+      - be_blocked
+    op: modify
+    select:
+      count: all
+      filter:
+        races:
+          race: kind
+        types:
+        - creature
+      owner: any
+      zone: bz
+  text: 種族を１つ選ぶ。このターン、その種族のクリーチャーはブロックされない。
+  types:
+  - spell
+- civs:
+  - nature
+  cost: 3
+  id: dm09-055
+  mana: 1
+  name: 強欲の開拓
+  source:
+    official: dm09-055
+    review: pending
+  spell:
+  - as: kind
+    op: choose_race
+  - op: mana_put
+    select:
+      count: 99
+      filter:
+        races:
+          race: kind
+        types:
+        - creature
+      owner: you
+      up_to: true
+      zone: hand
+  text: 種族を１つ選ぶ。その種族のクリーチャーを自分の手札から好きな枚数選び、自分のマナゾーンに置いてもよい。
+  types:
+  - spell
+- civs:
+  - light
+  cost: 2
+  id: dm19-016
+  keywords:
+  - s_trigger
+  mana: 1
+  name: ソーラー・コミューン
+  source:
+    official: dm19-016
+    review: pending
+  spell:
+  - as: kind
+    op: choose_race
+  - as: t
+    op: choose
+    select:
+      count:
+        count:
+          filter:
+            races:
+              race: kind
+            types:
+            - creature
+          owner: you
+          zone: bz
+      filter:
+        types:
+        - creature
+      owner: opp
+      up_to: true
+      zone: bz
+  - op: tap
+    select:
+      count: all
+      ref: t
+  text: 'S・トリガー(この呪文をシールドゾーンから手札に加える時、コストを支払わずにすぐ唱えてもよい)
+
+    種族をひとつ選ぶ。バトルゾーンにある、選んだ種族の自分のクリーチャー１体につき、バトルゾーンにある相手のクリーチャーを１体選び、タップしてもよい。'
+  types:
+  - spell
+- civs:
+  - nature
+  cost: 3
+  id: dm19-040
+  keywords:
+  - s_trigger
+  mana: 1
+  name: トライバル・コミューン
+  source:
+    official: dm19-040
+    review: pending
+  spell:
+  - as: kind
+    op: choose_race
+  - duration: end_of_turn
+    mod:
+      deny:
+      - action: be_blocked
+        other:
+          power_le: 5000
+      power: 4000
+    op: modify
+    select:
+      count: all
+      filter:
+        races:
+          race: kind
+        types:
+        - creature
+      owner: you
+      zone: bz
+  text: 'S・トリガー(この呪文をシールドゾーンから手札に加える時、コストを支払わずにすぐ唱えてもよい)
+
+    種族をひとつ選ぶ。このターンの終わりまで、バトルゾーンにある、選んだ種族の自分のクリーチャーすべてのパワーは+4000され、パワーが5000以下のクリーチャーにブロックされない。'
+  types:
+  - spell
+- civs:
+  - fire
+  cost: 3
+  id: dm19-064
+  keywords:
+  - s_trigger
+  mana: 1
+  name: クリムゾン・コミューン
+  source:
+    official: dm19-064
+    review: pending
+  spell:
+  - as: kind
+    op: choose_race
+  - as: t
+    op: choose
+    select:
+      count:
+        count:
+          filter:
+            races:
+              race: kind
+            types:
+            - creature
+          owner: you
+          zone: bz
+      filter:
+        keyword: blocker
+        types:
+        - creature
+      owner: opp
+      up_to: true
+      zone: bz
+  - op: destroy
+    select:
+      count: all
+      ref: t
+  text: 'S・トリガー(この呪文をシールドゾーンから手札に加える時、コストを支払わずにすぐ唱えてもよい)
+
+    種族をひとつ選ぶ。バトルゾーンにある、選んだ種族の自分のクリーチャー１体につき、相手の「ブロッカー」を持つクリーチャーを１体、破壊してもよい。'
+  types:
+  - spell
+- civs:
+  - nature
+  cost: 3
+  id: dm20-035
+  keywords:
+  - s_trigger
+  mana: 1
+  name: ビックリ・イリュージョン
+  source:
+    official: dm20-035
+    review: pending
+  spell:
+  - as: kind
+    op: choose_race
+  - duration: end_of_turn
+    mod:
+      add_races:
+      - race: kind
+    op: modify
+    select:
+      count: all
+      filter:
+        types:
+        - creature
+      owner: you
+      zone: bz
+  text: 'S・トリガー(この呪文をシールドゾーンから手札に加える時、コストを支払わずにすぐ唱えてもよい)
+
+    種族をひとつ選ぶ。このターンの終わりまで、バトルゾーンにある自分のクリーチャーはすべて、その種族を追加する。'
+  types:
+  - spell
