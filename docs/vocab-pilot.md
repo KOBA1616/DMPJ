@@ -1272,3 +1272,11 @@ draw イベントへの置換で表す（draw は個別イベントとして発�
 - 選んだ種族そのものを追加する効果: mod: {add_races: [{race: <変数名>}]}。add_races の式エントリを許可し（defs / schema）、op_modify が継続効果の生成時に env で種族名へ展開して固定する（エンジン拡張）。
 - proto T168、試験カード R099。tests/test_vocab_pilot136.py 2件（parse／起動→選択→種族追加の実挙動）。
 - 待機9枚（choose_a_race のみが gap のもの）。
+
+## 第137弾: god_filter（ゴッドのフィルタ・条件）— 新語彙なし（2026-11-06）
+「ゴッド」は種族名として扱う。既存語彙の組み合わせで足りる。
+- 対象・検索・数え上げ: filter: {race_has: ゴッド}。「ゴッド以外」は not_race_has: ゴッド（第81弾）。
+- 存在条件: if: {exists: {zone: <ゾーン>, owner: you, filter: {race_has: ゴッド}}}。破壊したカードがゴッドかは exists: {ref: <束縛名>, filter: {race_has: ゴッド}}。
+- 「リンクしているゴッド」は filter: {linked_god: true}（第103弾）を count に使う。
+- tests/test_vocab_pilot137.py 2件（正常 parse／検証）
+- 待機9枚（god_filter のみが gap のもの）。
