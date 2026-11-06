@@ -326552,3 +326552,249 @@ cards:
     自分のシールドが７つ以上あれば、自分のゴッドすべてはパワーを+6000され、シールドをさらに１枚ブレイクする。'
   types:
   - creature
+- civs:
+  - water
+  cost: 2
+  id: dm23ex1-069
+  keywords:
+  - g_strike
+  mana: 1
+  name: 神化設計図
+  source:
+    official: dm23ex1-069
+    review: pending
+  spell:
+  - op: move
+    reason: draw
+    select:
+      count: 1
+      filter:
+        any_of:
+        - race_has: ゴッド
+        - types:
+          - spell
+      from_top: 3
+      look: true
+      owner: you
+      zone: deck
+    to: hand
+  text: '{GS} G・ストライク（この呪文を自分のシールドゾーンから手札に加える時、相手に見せ、相手のクリーチャーを１体選んでもよい。このターン、そのクリーチャーは攻撃できない）
+
+    自分の山札の上から３枚を見る。その中からゴッドまたは呪文を１枚選んで相手に見せ、手札に加える。残りを好きな順序で山札の下に置く。'
+  types:
+  - spell
+- abilities:
+  - effect:
+    - body:
+      - as: pile
+        op: choose
+        select:
+          count: all
+          from_top: 5
+          look: true
+          owner: you
+          zone: deck
+      - op: move
+        reason: draw
+        select:
+          count: all
+          filter:
+            types:
+            - spell
+          ref: pile
+        to: hand
+      - op: move
+        reason: put
+        select:
+          count: all
+          ref: pile
+        to: graveyard
+      op: may
+    kind: trigger
+    when:
+      event: move
+      subject: self
+      to: bz
+  - effect:
+    - body:
+      - op: play_free
+        select:
+          count: 1
+          filter:
+            any_of:
+            - race_has: ナイト
+            - keyword: s_trigger
+            types:
+            - spell
+          owner: you
+          zone: hand
+      op: may
+    kind: trigger
+    when:
+      event: move
+      from: bz
+      reason: destroy
+      subject:
+        filter:
+          race_has: ナイト
+        owner: you
+      to: graveyard
+  civs:
+  - light
+  - darkness
+  cost: 9
+  id: dm23ex2-029
+  keywords:
+  - blocker
+  - triple_breaker
+  mana: 1
+  name: 魔光大帝ネロ・グリフィスⅡ世
+  power: 12000
+  races:
+  - エンジェル・コマンド
+  - ダークロード
+  - ナイト
+  source:
+    official: dm23ex2-029
+    review: pending
+    aliases:
+    - dmex17-042
+  text: 'ブロッカー
+
+    T・ブレイカー
+
+    このクリーチャーが出た時、自分の山札の上から５枚を表向きにしてもよい。そうしたら、その中から呪文をすべて手札に加え、残りを墓地に置く。
+
+    自分のナイトが破壊された時、自分の手札からナイト呪文または「S・トリガー」を持つ呪文を１枚、コストを支払わずに唱えてもよい。'
+  types:
+  - creature
+- civs:
+  - light
+  cost: 4
+  id: dm23sd2-014
+  mana: 1
+  name: 聖沌忍法 7r0y
+  races:
+  - メカ・デル・テック
+  - シノビ
+  source:
+    official: dm23sd2-014
+    review: pending
+    aliases:
+    - dm23rp2-055
+    - dm23rp2x-055
+  spell:
+  - body:
+    - as: bounced
+      op: move
+      reason: return
+      select:
+        count: 1
+        filter:
+          any_of:
+          - race_has: メカ
+          - race_has: シノビ
+        owner: you
+        zone: bz
+      to: hand
+    - cond:
+        exists:
+          ref: bounced
+      op: if
+      then:
+      - body:
+        - op: move
+          reason: put
+          select:
+            count: 1
+            filter:
+              any_of:
+              - race_has: メカ
+              - race_has: シノビ
+              cost_le: 5
+              types:
+              - creature
+            owner: you
+            zone: hand
+          to: bz
+        op: may
+    op: may
+  text: 自分のメカまたはシノビを１つ、手札に戻してもよい。そうしたら、コスト５以下でメカまたはシノビのクリーチャーを１体、自分の手札から出してもよい。
+  types:
+  - spell
+- abilities:
+  - affects: self
+    kind: static
+    mod:
+      power_when:
+        amount: 3000
+        count:
+          filter:
+            any_of:
+            - race_has: ドラゴン
+            - race_has: ドリームメイト
+            types:
+            - creature
+          other: true
+          owner: you
+          zone: bz
+        when: attacking
+  - effect:
+    - op: destroy
+      select:
+        count: all
+        filter:
+          power_le:
+            sum:
+            - power_of:
+                ref: self
+            - -1
+          types:
+          - creature
+        owner: opp
+        zone: bz
+    if:
+      cmp:
+      - count:
+          filter:
+            any_of:
+            - race_has: ドラゴン
+            - race_has: ドリームメイト
+            types:
+            - creature
+          other: true
+          owner: you
+          zone: bz
+      - '>='
+      - 5
+    kind: trigger
+    when:
+      event: attack
+      subject: self
+  civs:
+  - fire
+  cost: 5
+  id: dm24ex1-018
+  keywords:
+  - speed_attacker
+  - powered_breaker
+  mana: 1
+  name: 幻獣竜機ボルパンサー
+  power: 3000
+  races:
+  - ドリームメイト
+  - アーマード・ドラゴン
+  source:
+    official: dm24ex1-018
+    review: pending
+    aliases:
+    - dmex18-006
+  text: 'スピードアタッカー
+
+    パワード・ブレイカー
+
+    攻撃中、このクリーチャーのパワーを、自分の他のドラゴン・クリーチャーまたはドリームメイト・クリーチャー１体につき+3000する。
+
+    このクリーチャーが攻撃する時、自分の他のドラゴン・クリーチャーまたはドリームメイト・クリーチャーが合計５体以上あれば、このクリーチャーよりパワーの小さい相手のクリーチャーをすべて破壊する。'
+  types:
+  - creature
