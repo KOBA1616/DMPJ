@@ -324592,3 +324592,167 @@ cards:
     パワード・ブロッカー+6000（ブロック中、このクリーチャーのパワーを+6000する）'
   types:
   - creature
+- abilities:
+  - effect:
+    - op: untap
+      select:
+        ref: self
+    kind: trigger
+    when:
+      attacker: self
+      event: block
+  civs:
+  - fire
+  cost: 10
+  id: dmd13-001
+  keywords:
+  - speed_attacker
+  - triple_breaker
+  mana: 1
+  name: 暴走特急 マルドゥック
+  power: 15000
+  races:
+  - アウトレイジMAX
+  source:
+    official: dmd13-001
+    review: pending
+  text: スピードアタッカー（このクリーチャーは召喚酔いしない）T・ブレイカー（このクリーチャーはシールドを３枚ブレイクする）このクリーチャーがブロックされた時、このクリーチャーをアンタップする。
+  types:
+  - creature
+- civs:
+  - fire
+  cost: 6
+  free_if:
+    cmp:
+    - count:
+        filter:
+          race_has: ドラゴン
+        owner: you
+        zone: bz
+    - '>='
+    - 3
+  id: dmr16g-015
+  mana: 1
+  name: リンクウッドの魂燃焼！
+  source:
+    notes: raw名の括弧内サフィックス（DMR16極 15/54）はカード名に含めなかった。ブロックされた時の付与は dm30-050 先例どおり delayed_trigger
+      で書き、対象は ref event.attacker
+    official: dmr16g-015
+    review: pending
+  spell:
+  - duration: end_of_turn
+    mod:
+      breaks: 1
+      power: 3000
+    op: modify
+    select:
+      count: all
+      filter:
+        types:
+        - creature
+      owner: you
+      zone: bz
+  - duration: end_of_turn
+    effect:
+    - op: untap
+      select:
+        ref: event.attacker
+    op: delayed_trigger
+    when:
+      event: block
+      subject:
+        filter:
+          types:
+          - creature
+        owner: opp
+  text: G・ゼロ - バトルゾーンに自分のドラゴンが３体以上あれば、この呪文をコストを支払わずに唱えてもよい。 / このターン、バトルゾーンにある自分のクリーチャーすべてのパワーは+3000され、シールドをさらに１枚ブレイクする。
+    / このターン、自分のクリーチャーがブロックされた時、そのクリーチャーをアンタップする。
+  types:
+  - spell
+- civs:
+  - fire
+  cost: 6
+  free_if:
+    cmp:
+    - count:
+        filter:
+          race_has: ドラゴン
+        owner: you
+        zone: bz
+    - '>='
+    - 3
+  id: dmr16s-015
+  mana: 1
+  name: リンクウッドの魂燃焼！
+  source:
+    notes: raw名の括弧内サフィックス（DMR16真 15/54）はカード名に含めなかった。ブロックされた時の付与は dm30-050 先例どおり delayed_trigger
+      で書き、対象は ref event.attacker
+    official: dmr16s-015
+    review: pending
+  spell:
+  - duration: end_of_turn
+    mod:
+      breaks: 1
+      power: 3000
+    op: modify
+    select:
+      count: all
+      filter:
+        types:
+        - creature
+      owner: you
+      zone: bz
+  - duration: end_of_turn
+    effect:
+    - op: untap
+      select:
+        ref: event.attacker
+    op: delayed_trigger
+    when:
+      event: block
+      subject:
+        filter:
+          types:
+          - creature
+        owner: opp
+  text: G・ゼロ - バトルゾーンに自分のドラゴンが３体以上あれば、この呪文をコストを支払わずに唱えてもよい。 / このターン、バトルゾーンにある自分のクリーチャーすべてのパワーは+3000され、シールドをさらに１枚ブレイクする。
+    / このターン、自分のクリーチャーがブロックされた時、そのクリーチャーをアンタップする。
+  types:
+  - spell
+- abilities:
+  - effect:
+    - op: destroy
+      select:
+        count: all
+        filter:
+          keyword: blocker
+          types:
+          - creature
+        owner: opp
+        zone: bz
+    kind: trigger
+    when:
+      attacker: self
+      event: block
+  civs:
+  - darkness
+  - fire
+  cost: 10
+  id: promoy3-028
+  keywords:
+  - double_breaker
+  mana: 1
+  name: 勇騎恐皇フォルテ
+  power: 6000
+  races:
+  - ダークロード
+  - ヒューマノイド
+  source:
+    notes: 「マナゾーンに置く時タップして置く」は多色カードのルール処理に委ね、text のみに残した
+    official: promoy3-028
+    review: pending
+    aliases:
+    - promoy3-037
+  text: マナゾーンに置く時、このカードはタップして置く。このクリーチャーがブロックされた時、「ブロッカー」を持つ相手のクリーチャーをすべて破壊する。W・ブレイカー
+  types:
+  - creature
