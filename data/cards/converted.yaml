@@ -325220,3 +325220,640 @@ cards:
     ▶このクリーチャーは相手のシールドを１つブレイクする。'
   types:
   - creature
+- abilities:
+  - effect:
+    - body:
+      - count: 1
+        op: draw
+      op: may
+    kind: trigger
+    when:
+      event: battle_win
+      subject:
+        owner: you
+  - effect:
+    - body:
+      - duration: end_of_turn
+        mod:
+          allow:
+          - action: attack_creature
+            other:
+              tapped: false
+        op: modify
+        select:
+          count: 1
+          filter:
+            entered_this_turn: true
+            types:
+            - creature
+          owner: you
+          zone: bz
+      op: may
+    kind: trigger
+    when:
+      event: tap
+      subject: self
+  civs:
+  - nature
+  cost: 3
+  id: dm24ex3-038
+  mana: 1
+  name: ローズスパイク・バタフライ
+  power: 4000
+  races:
+  - ジャイアント・インセクト
+  source:
+    notes: '「マッハファイター」の付与は dm22rp1-071 のマッハファイター展開形（allow: attack_creature / other:
+      {tapped: false}）を modify で与える形にした'
+    official: dm24ex3-038
+    review: pending
+    aliases:
+    - dm24rp2-026
+  text: 自分のクリーチャーがバトルに勝った時、カードを１枚引いてもよい。 / このクリーチャーがタップした時、このターン中に出た自分のクリーチャーを１体選んでもよい。このターン、そのクリーチャーに「マッハファイター」を与える。
+  types:
+  - creature
+- abilities:
+  - affects: self
+    if:
+      cmp:
+      - count:
+          filter:
+            civs:
+            - fire
+            types:
+            - creature
+          owner: you
+          zone: mana
+      - '>='
+      - 4
+    kind: static
+    mod:
+      breaks: 2
+      power_when:
+        amount: 4000
+        when: attacking
+  - affects:
+      filter:
+        entered_this_turn: true
+        types:
+        - creature
+      owner: opp
+      zone: bz
+    kind: static
+    mod:
+      deny:
+      - attack_player
+  - effect:
+    - no_untap_next: true
+      op: tap
+      select:
+        ref: self
+    kind: trigger
+    when:
+      event: attack
+      subject: self
+  civs:
+  - fire
+  cost: 2
+  id: dm24sd1-005
+  mana: 1
+  name: こたつむり
+  power: 2000
+  races:
+  - ビートジョッキー
+  - スペシャルズ
+  source:
+    notes: 原文のパワーは「2000+」（パワーアタッカー込みの表記）のため基礎パワー2000とし、+4000は power_when で表した。「次の自分のターンのはじめにアンタップしない」は、攻撃時に
+      tap の no_untap_next で印を付けて表した（攻撃で既にタップしているため tap イベント自体は状態を変えない）
+    official: dm24sd1-005
+    review: pending
+    aliases:
+    - dm23ex2-025
+    - dmex18-007
+    - dmrp07-008
+  text: 自分のマナゾーンに火のクリーチャーが４体以上あれば、このクリーチャーに「パワーアタッカー+4000」と「W・ブレイカー」を与える。 / 相手のクリーチャーは、出たターン、プレイヤーを攻撃できない。
+    / このクリーチャーが攻撃する時、このクリーチャーは次の自分のターンのはじめにアンタップしない。
+  types:
+  - creature
+- abilities:
+  - kind: trigger
+    when:
+      event: move
+      to: bz
+      subject: self
+    effect:
+    - op: modify
+      select:
+        ref: self
+      mod:
+        allow:
+        - action: attack_creature
+          other:
+            tapped: false
+      duration: end_of_turn
+  - effect:
+    - duration: end_of_turn
+      mod:
+        allow:
+        - action: attack_creature
+          other:
+            tapped: false
+      op: modify
+      select:
+        ref: self
+    kind: trigger
+    when:
+      event: move
+      subject: self
+      to: bz
+  - effect:
+    - op: untap
+      select:
+        count: 2
+        owner: you
+        zone: mana
+    if:
+      exists:
+        filter:
+          entered_this_turn: true
+        ref: self
+    kind: trigger
+    when:
+      event: attack
+      subject: self
+  - affects:
+      owner: you
+      zone: mana
+    kind: static
+    mod:
+      add_civs:
+      - light
+      - water
+      - darkness
+      - fire
+      - nature
+  civs:
+  - nature
+  cost: 3
+  id: dm25rp3-021
+  mana: 1
+  name: 轟速 ジャ・ヴェルデ
+  power: 4000
+  races:
+  - ソニック・コマンド
+  - 侵略者
+  source:
+    notes: マッハファイターは dm22rp1-071 と同じ展開形で表した。「出たターンに攻撃する時」の自己条件は、攻撃トリガーの if で自分自身が
+      entered_this_turn フィルタに合うかを exists で判定した。マナゾーンの全文明化は第123弾の型（add_civs 全5文明）
+    official: dm25rp3-021
+    review: pending
+    aliases:
+    - dm25rp3-sec18
+  text: 'マッハファイター（このクリーチャーは、出たターンの間、タップまたはアンタップしているクリーチャーを攻撃できる）
+
+    このクリーチャーが出たターンに攻撃する時、自分のマナゾーンにあるカードを２枚、アンタップする。
+
+    自分のマナゾーンにあるカードを、すべての文明のカードとして扱う。'
+  types:
+  - creature
+- abilities:
+  - effect:
+    - duration: end_of_turn
+      mod:
+        grant:
+        - speed_attacker
+      op: modify
+      select:
+        ref: self
+    if:
+      cmp:
+      - entered:
+          other: true
+          owner: you
+      - '>='
+      - 1
+    kind: trigger
+    when:
+      event: move
+      subject: self
+      to: bz
+  civs:
+  - fire
+  cost: 2
+  id: dmrp11-054
+  mana: 1
+  name: スリップ尖車 スピンクル
+  power: 2000
+  races:
+  - ビートジョッキー
+  source:
+    official: dmrp11-054
+    review: pending
+  text: このクリーチャーがバトルゾーンに出た時、そのターン中、すでに自分の他のクリーチャーがバトルゾーンに出ていれば、このターン、このクリーチャーに「スピードアタッカー」を与える。
+  types:
+  - creature
+- abilities:
+  - if:
+      cmp:
+      - entered:
+          owner: you
+      - <
+      - 2
+    kind: static
+    mod:
+      deny:
+      - attack_player
+      - attack_creature
+  civs:
+  - fire
+  cost: 2
+  id: dmrp11-095
+  mana: 1
+  name: ハッタリ・チュリス
+  power: 5000
+  races:
+  - ビートジョッキー
+  source:
+    official: dmrp11-095
+    review: pending
+  text: このターン中に自分のクリーチャーが２体以上バトルゾーンに出ていなければ、このクリーチャーは攻撃できない。
+  types:
+  - creature
+- abilities:
+  - kind: trigger
+    when:
+      event: attack
+      subject: self
+    effect:
+    - op: may
+      body:
+      - op: move
+        select:
+          zone:
+          - hand
+          - deck
+          from_top: 1
+          owner: you
+          filter:
+            types:
+            - creature
+            not_types:
+            - evolution
+            cost_le: 5
+          count: 1
+        to: bz
+        reason: put
+  - effect:
+    - count: 1
+      op: draw
+    if:
+      cmp:
+      - entered:
+          owner: you
+      - ==
+      - 2
+    kind: trigger
+    when:
+      event: move
+      subject:
+        filter:
+          types:
+          - creature
+        owner: you
+      to: bz
+  - effect:
+    - body:
+      - op: move
+        reason: put
+        select:
+          count: 1
+          filter:
+            cost_le: 5
+            not_types:
+            - evolution
+            types:
+            - creature
+          from_top: 1
+          owner: you
+          zone:
+          - hand
+          - deck
+        to: bz
+      op: may
+    kind: trigger
+    when:
+      event: attack
+      subject: self
+  civs:
+  - light
+  - fire
+  cost: 5
+  id: dmrp13-025
+  mana: 1
+  name: U・S・A・HOOD
+  power: 5500
+  races:
+  - ビートジョッキー
+  - チームボンバー
+  source:
+    notes: マジボンバーは変換済み dm26rp3-024 と同じ定型（攻撃時、may で手札または山札の上1枚からコスト以下のクリーチャーを出す）で表した
+    official: dmrp13-025
+    review: pending
+  text: '自分のクリーチャーがバトルゾーンに出た時、それがこのターン自分がバトルゾーンに出した２体目のクリーチャーなら、カードを１枚引く。
+
+    マジボンバー ５（このクリーチャーが攻撃する時、自分の山札の上から１枚目を見る。その後、コスト５以下のクリーチャーを１体、自分の手札または山札の上から、バトルゾーンに出してもよい）'
+  types:
+  - creature
+- abilities:
+  - effect:
+    - no_untap_next: true
+      op: tap
+      select:
+        count: 1
+        filter:
+          types:
+          - creature
+        owner: opp
+        zone: bz
+    if:
+      cmp:
+      - entered:
+          owner: you
+      - ==
+      - 2
+    kind: trigger
+    when:
+      event: move
+      subject:
+        filter:
+          types:
+          - creature
+        owner: you
+      to: bz
+  civs:
+  - light
+  cost: 3
+  id: dmrp13-031
+  mana: 1
+  name: 鮮鮮-グラフィ
+  power: 3500
+  races:
+  - バーサーカー
+  - チームボンバー
+  source:
+    notes: 「次の相手のターンのはじめにアンタップしない」は tap の no_untap_next で表した（フリーズ条項と同型）
+    official: dmrp13-031
+    review: pending
+  text: 自分のクリーチャーがバトルゾーンに出た時、それがこのターン自分がバトルゾーンに出した２体目のクリーチャーなら、相手のクリーチャーを１体選び、タップする。次の相手のターンのはじめに、そのクリーチャーはアンタップしない。
+  types:
+  - creature
+- abilities:
+  - kind: trigger
+    when:
+      event: attack
+      subject: self
+    effect:
+    - op: may
+      body:
+      - op: move
+        select:
+          zone:
+          - hand
+          - deck
+          from_top: 1
+          owner: you
+          filter:
+            types:
+            - creature
+            not_types:
+            - evolution
+            cost_le: 4
+          count: 1
+        to: bz
+        reason: put
+  - effect:
+    - body:
+      - op: move
+        reason: put
+        select:
+          count: 1
+          filter:
+            cost_le: 4
+            not_types:
+            - evolution
+            types:
+            - creature
+          from_top: 1
+          owner: you
+          zone:
+          - hand
+          - deck
+        to: bz
+      op: may
+    kind: trigger
+    when:
+      event: attack
+      subject: self
+  - effect:
+    - count: 1
+      modes:
+      - - face_up: true
+          op: move
+          reason: put
+          select:
+            from_top: 1
+            owner: you
+            zone: deck
+          to: shield
+      - - face_down: true
+          op: move
+          reason: put
+          select:
+            from_top: 1
+            owner: you
+            zone: deck
+          to: shield
+      op: modal
+    if:
+      all:
+      - is_turn: you
+      - cmp:
+        - entered:
+            owner: you
+        - '>='
+        - 2
+    kind: trigger
+    when:
+      event: turn_end
+  civs:
+  - light
+  cost: 5
+  id: dmrp14-031
+  mana: 1
+  name: 笑笑-エナジー
+  power: 4500
+  races:
+  - エンジェル・コマンド
+  - チームボンバー
+  source:
+    notes: マジボンバーは変換済み dm26rp3-024 と同じ定型で表した。「表向きまたは裏向きにして置く」は、向きを選ぶ modal（表向きで置く／裏向きで置く）で表した
+    official: dmrp14-031
+    review: pending
+  text: 'マジボンバー ４（このクリーチャーが攻撃する時、自分の山札の上から１枚目を見る。その後、コスト４以下のクリーチャーを１体、自分の手札または山札の上から、バトルゾーンに出してもよい）
+
+    自分のターンの終わりに、そのターン、自分のクリーチャーを２体以上バトルゾーンに出していれば、自分の山札の上から１枚目を見る。それを表向きまたは裏向きにして、新しいシールドとしてシールドゾーンに置く。'
+  types:
+  - creature
+- abilities:
+  - affects:
+      filter:
+        entered_this_turn: true
+        types:
+        - creature
+      owner: opp
+      zone: bz
+    kind: static
+    mod:
+      deny:
+      - attack_player
+      - attack_creature
+  civs:
+  - light
+  cost: 2
+  id: dmrp21-028
+  keywords:
+  - blocker
+  - cannot_attack_player
+  mana: 1
+  name: レク・シディア
+  power: 3000
+  races:
+  - メタリカ
+  - レクスターズ
+  source:
+    official: dmrp21-028
+    review: pending
+    aliases:
+    - dmrp21-15a
+  text: 'ブロッカー（このクリーチャーをタップして、相手クリーチャーの攻撃先をこのクリーチャーに変更してもよい）
+
+    このクリーチャーは、相手プレイヤーを攻撃できない。
+
+    相手のクリーチャーは、出たターン攻撃できない。'
+  types:
+  - creature
+- abilities:
+  - effect:
+    - body:
+      - a:
+          ref: self
+        b:
+          count: 1
+          filter:
+            types:
+            - creature
+          owner: opp
+          zone: bz
+        op: force_battle
+      op: may
+    kind: trigger
+    when:
+      event: move
+      subject: self
+      to: bz
+  - effect:
+    - effect:
+      - op: move
+        position: bottom
+        reason: put
+        select:
+          ref: self
+        to: deck
+      op: delayed_trigger
+      when:
+        event: turn_end
+    if:
+      is_turn: opp
+    kind: trigger
+    when:
+      event: move
+      subject: self
+      to: bz
+  civs:
+  - fire
+  cost: 7
+  id: dmsp01-017
+  keywords:
+  - s_trigger
+  - double_breaker
+  mana: 1
+  name: メリー“KEN”バンド
+  power: 6000
+  races:
+  - ビートジョッキー
+  source:
+    official: dmsp01-017
+    review: pending
+  text: S・トリガー（このクリーチャーをシールドゾーンから手札に加える時、コストを支払わずにすぐ召喚してもよい）W・ブレイカー（このクリーチャーはシールドを２つブレイクする）このクリーチャーがバトルゾーンに出た時、相手のクリーチャーを１体選んでもよい。その選んだクリーチャーとこのクリーチャーをバトルさせる。相手のターン中にこのクリーチャーをバトルゾーンに出していれば、そのターンの終わりにこのクリーチャーを自分の山札の一番下に置く。
+  types:
+  - creature
+- abilities:
+  - affects:
+      filter:
+        name_has: NEX
+        types:
+        - creature
+      owner: you
+      zone: hand
+    kind: static
+    mod:
+      cost: -1
+      cost_min: 1
+  - affects:
+      filter:
+        race_has: アーマード・ドラゴン
+      owner: you
+      zone: bz
+    kind: static
+    mod:
+      grant:
+      - speed_attacker
+  - effect:
+    - op: move
+      reason: return
+      select:
+        count: all
+        filter:
+          entered_this_turn: true
+          evolution: false
+          race_has: アーマード・ドラゴン
+        owner: you
+        zone: bz
+      to: hand
+    if:
+      is_turn: you
+    kind: trigger
+    when:
+      event: turn_end
+  civs:
+  - fire
+  cost: 4
+  id: dmx21-007
+  mana: 1
+  name: マッハ・ルピア
+  power: 2000
+  races:
+  - ファイアー・バード
+  source:
+    notes: 'コスト軽減の「してもよい」は dm21-051 と同様に常在型能力として表し、「コストは０以下にならない」は cost_min: 1 とした。「進化ではない」は
+      filter の evolution: false で表した'
+    official: dmx21-007
+    review: pending
+    aliases:
+    - dm34-049
+    - dm34-049hc
+    - dmc62-018
+  text: 自分の、名前に《NEX》とあるクリーチャーの召喚コストを１少なくしてもよい。ただし、コストは０以下にならない。 / 自分のアーマード・ドラゴンすべてに「スピードアタッカー」を与える。
+    / 自分のターンの終わりに、このターンにバトルゾーンに出した自分の、進化ではないアーマード・ドラゴンをすべて手札に戻す。
+  types:
+  - creature
