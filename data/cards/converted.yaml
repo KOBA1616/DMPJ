@@ -327300,3 +327300,309 @@ cards:
   text: '闘争類拳嘩目 ステゴロ・カイザー: マッハファイター（このクリーチャーは、出たターンの間、タップまたはアンタップしているクリーチャーを攻撃できる）
     / W・ブレイカー / このクリーチャーが攻撃する時、自分の山札の上から１枚をマナゾーンに置く。その後、カードを１枚、自分のマナゾーンから手札に戻してもよい。
     ／ お清めシャラップ: 自分の山札の上から１枚をマナゾーンに置く。カードを１枚以上、プレイヤー１人の墓地から選んでもよい。そのプレイヤーは、それらを自身の山札に加えてシャッフルする。'
+- abilities:
+  - effect:
+    - as: picked
+      op: choose
+      select:
+        count: 1
+        filter:
+          evolution: false
+          types:
+          - creature
+        owner: opp
+        zone: mana
+    - op: move
+      reason: put
+      select:
+        count: all
+        filter:
+          name:
+            name_of:
+              ref: picked
+          types:
+          - creature
+        owner: opp
+        zone: bz
+      to: mana
+    kind: trigger
+    when:
+      event: move
+      subject: self
+      to: bz
+  civs:
+  - nature
+  cost: 9
+  id: dm19-036
+  mana: 1
+  name: 霊騎ラディア
+  power: 5000
+  races:
+  - アーク・セラフィム
+  source:
+    official: dm19-036
+    review: pending
+  text: このクリーチャーをバトルゾーンに出した時、相手のマナゾーンにある進化クリーチャーではないクリーチャーを１体選ぶ。相手は、そのクリーチャーと同じカード名の自分自身のクリーチャーをすべて、バトルゾーンからマナゾーンに置く。
+  types:
+  - creature
+- abilities:
+  - effect:
+    - as: mate
+      op: choose
+      select:
+        ref: event.subject
+    - body:
+      - op: move
+        reason: put
+        select:
+          count: 1
+          filter:
+            name:
+              name_of:
+                ref: mate
+            types:
+            - creature
+          owner: you
+          zone: mana
+        to: bz
+      op: may
+    kind: trigger
+    when:
+      event: move
+      from: bz
+      reason: destroy
+      subject:
+        filter:
+          race_has: ドリームメイト
+        owner: you
+      to: graveyard
+  civs:
+  - nature
+  cost: 7
+  id: dm19-s09
+  keywords:
+  - double_breaker
+  mana: 1
+  name: ジェネラル・クワガタン
+  power: 7000
+  races:
+  - ビークル・ビー
+  source:
+    official: dm19-s09
+    review: pending
+  text: '自分のドリームメイトが破壊された時、そのドリームメイトと同じ名前のクリーチャーを１体、自分のマナゾーンからバトルゾーンに出してもよい。
+
+    W・ブレイカー(このクリーチャーはシールドを２枚ブレイクする)'
+  types:
+  - creature
+- faces:
+  - civs:
+    - water
+    cost: 4
+    name: パーロック
+    power: 4000
+    races:
+    - サイバーロード
+    - オリジン
+    types:
+    - creature
+  - civs:
+    - water
+    cost: 4
+    keywords:
+    - s_trigger
+    name: 蓄積された魔力の渦
+    spell:
+    - as: picked
+      op: choose
+      select:
+        count: 1
+        filter:
+          types:
+          - creature
+        owner: any
+        zone: bz
+    - op: move
+      reason: return
+      select:
+        count: all
+        filter:
+          name:
+            name_of:
+              ref: picked
+          types:
+          - creature
+        owner: any
+        zone: bz
+      to: hand
+    types:
+    - spell
+  id: dm22ex1-105
+  mana: 1
+  source:
+    notes: 'クリーチャー面（パーロック）の原文テキストは取得データで空（missing: text）。同名の原典印刷 dm34-024 も raw では空で、converted.yaml
+      ではバニラ扱い＋要確認の注記付きで変換済みのため、本カードもクリーチャー面は能力なし（バニラ）として扱った。原文の取りこぼしでないか要確認。'
+    official: dm22ex1-105
+    review: pending
+  text: '蓄積された魔力の渦: S・トリガー / クリーチャーを１体選ぶ。そのクリーチャーと、同じ名前を持つ他のクリーチャーをすべて、バトルゾーンから持ち主の手札に戻す。'
+- abilities:
+  - effect:
+    - count: 2
+      op: mill
+      owner: you
+    - body:
+      - op: move
+        reason: put
+        select:
+          count: 1
+          filter:
+            cost_le: 5
+            types:
+            - creature
+          owner: you
+          zone: graveyard
+        to: bz
+      op: may
+    kind: trigger
+    when:
+      event: move
+      subject: self
+      to: bz
+  - effect:
+    - body:
+      - as: bounced
+        op: move
+        reason: return
+        select:
+          count: 1
+          filter:
+            types:
+            - creature
+          other: true
+          owner: you
+          zone: bz
+        to: hand
+      - cond:
+          exists:
+            ref: bounced
+        op: if
+        then:
+        - body:
+          - op: move
+            reason: put
+            select:
+              count: 1
+              filter:
+                name:
+                  name_of:
+                    ref: bounced
+                types:
+                - creature
+              owner: you
+              zone: hand
+            to: bz
+          op: may
+      op: may
+    if:
+      exists:
+        filter:
+          tapped: true
+        ref: self
+    kind: trigger
+    when:
+      event: turn_end
+      player: you
+  civs:
+  - light
+  - water
+  - darkness
+  cost: 6
+  evolve_from:
+    civs:
+    - light
+    - water
+    - darkness
+  id: dm25ex3-rp1s06
+  keywords:
+  - blocker
+  - double_breaker
+  - g_neo
+  mana: 1
+  name: ～邪眼帝～
+  neo: true
+  power: 7500
+  races:
+  - ドラゴン・ゾンビ
+  - ダークロード
+  - スチーム・ナイト
+  source:
+    official: dm25ex3-rp1s06
+    review: pending
+    aliases:
+    - dm25ex3-rp1sec07
+    - dm25rp1-s06
+    - dm25rp1-sec07
+  text: 'G-NEO進化：光、水、または闇のクリーチャー１体の上に置いてもよい。
+
+    ブロッカーW・ブレイカー
+
+    このクリーチャーが出た時、自分の山札の上から２枚を墓地に置く。その後、コスト５以下のクリーチャーを１体、自分の墓地から出してもよい。
+
+    自分のターンの終わりに、このクリーチャーがタップしていれば、自分の他のクリーチャーを１体、手札に戻してもよい。そうしたら、それと同じ名前のクリーチャーを１体、自分の手札から出してもよい。'
+  types:
+  - creature
+- abilities:
+  - cost:
+      tap: self
+    effect:
+    - as: picked
+      op: choose
+      select:
+        count: 1
+        filter:
+          types:
+          - creature
+        owner: you
+        zone: graveyard
+    - op: move
+      reason: return
+      select:
+        count: all
+        filter:
+          name:
+            name_of:
+              ref: picked
+          types:
+          - creature
+        owner: you
+        zone: graveyard
+      to: hand
+    kind: activate
+  civs:
+  - water
+  - darkness
+  cost: 7
+  id: dmc34-005
+  keywords:
+  - double_breaker
+  mana: 1
+  name: 覚醒のタンザナイト
+  power: 9000
+  races:
+  - スピリット・クォーツ
+  source:
+    notes: 「マナゾーンに置く時、このカードはタップして置く」は多色カードのルール処理のため能力としては書かず text のみに残した（dm10-041
+      等の先例どおり）。raw のテキストには文字化け（W・ブレイカーの「・」が欠落）があったため復元した。
+    official: dmc34-005
+    review: pending
+    aliases:
+    - dm10-008
+  text: 'マナゾーンに置く時、このカードはタップして置く。
+
+    W・ブレイカー
+
+    このクリーチャーで攻撃するかわりに、タップして次の能力を使ってもよい。
+
+    自分の墓地からクリーチャーを１体選ぶ。そのクリーチャーと同じ名前のクリーチャーをすべて、自分の墓地から手札に戻す。'
+  types:
+  - creature
