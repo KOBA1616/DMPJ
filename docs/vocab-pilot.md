@@ -1299,3 +1299,9 @@ draw イベントへの置換で表す（draw は個別イベントとして発�
 - 新式: {name_of: {ref: <束縛名>}}（engine/selectors.py の eval_expr に追加。参照カードのカード名を返す。複数参照なら先頭）。フィルタでは filter: {name: {name_of: {ref: X}}} と書き、candidates が選択時に名前へ解決する。
 - proto T169。tests/test_vocab_pilot140.py 2件（parse／candidates の同名照合の実挙動）。
 - 待機5枚（same_name_as_chosen_card のみが gap のもの）。
+
+## 第141弾: power_doubling（パワーを2倍にする）— エンジン拡張あり（2026-11-06）
+新 mod: {double_power: true} を実装した。
+- op_modify が継続効果の生成時に対象ごとの現在パワーを控え（ce["double_power"]）、chars がそれを加算として適用する。範囲固定（110.2e）の効果のみ対象で、生成後に加わった対象には及ばない。
+- defs MOD_KEYS / 検証、schema に追加。proto T170、試験カード R101。tests/test_vocab_pilot141.py 2件（parse／起動でパワー3000→6000の実挙動）。
+- 待機5枚（power_doubling のみが gap のもの）。

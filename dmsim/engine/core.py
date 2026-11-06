@@ -388,7 +388,9 @@ class Engine(SelectorMixin, EventMixin, InterpreterMixin, TurnMixin, CombatMixin
                     if self._subject_match(aff, cid, env, None, base=True) and \
                             ("if" not in ab or self._static_cond(ab["if"], env)):
                         mods.append(ab["mod"])
-        mods += [ce["mod"] for ce in self.s.continuous if self._ce_applies(ce, cid, ref)]
+        mods += [{**ce["mod"], "power": ce["mod"].get("power", 0) + ce["double_power"].get(cid, 0)}
+                 if "double_power" in ce else ce["mod"]
+                 for ce in self.s.continuous if self._ce_applies(ce, cid, ref)]
         granted = set()
         for m in mods:
             granted.update(k for k in m.get("grant", []) if k not in ch["keywords"])

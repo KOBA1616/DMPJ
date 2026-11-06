@@ -211,6 +211,8 @@ def op_modify(eng, t, op, env):
             s.seq -= 1
             return d
         ce["affected"] = [s.ref(c) for c in cids]
+    if mod.get("double_power"):      # 「パワーを2倍にする」: 生成時点のパワーを対象ごとに控え、加算として適用する（第141弾。範囲固定の効果のみ）
+        ce["double_power"] = {r[0]: eng.chars(r[0])["power"] for r in ce.get("affected") or []}
     s.continuous.append(ce)
     sba = eng._sba_tasks()
     if sba:   # パワー0以下になったら、この効果の続きより先に破壊する（703.4c, 111.2d）

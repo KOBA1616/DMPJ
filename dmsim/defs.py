@@ -30,7 +30,7 @@ REASONS = {"put", "destroy", "return", "discard", "charge", "summon", "cast", "b
            "draw", "battle", "sba", "resolve", "evolve", "seal"}
 VIAS = {"revolution_change", "generate"}   # 出し方の印（「革命チェンジによって出た時」など）
 DURATIONS_FIXED = {"end_of_turn", "during_attack", "permanent", "until_next_own_turn_start"}
-MOD_KEYS = {"power", "grant", "allow", "deny", "breaks", "breaks_per_power", "battle_power", "power_when", "cost", "cost_min", "cost_may", "sac_reduce", "opt_reduce", "ignore", "ignore_ids", "gain", "require", "add_of", "add_races", "no_leave", "must_be_attacked", "battle_indestructible", "win_all_battles", "add_civs", "indestructible"}
+MOD_KEYS = {"power", "grant", "allow", "deny", "breaks", "breaks_per_power", "battle_power", "power_when", "cost", "cost_min", "cost_may", "sac_reduce", "opt_reduce", "ignore", "ignore_ids", "gain", "require", "add_of", "add_races", "no_leave", "must_be_attacked", "battle_indestructible", "win_all_battles", "add_civs", "indestructible", "double_power"}
 REQUIRES = {"attack", "block"}   # 強制（506.1b 攻撃しなければならない, 507.1b ブロックしなければならない）
 POSITIONS = {"top", "bottom"}
 PERMANENT_TYPES = {"tamaseed", "field", "cross_gear"}   # 手札から実行してバトルゾーンに出るクリーチャー以外のカード（315, 308, 303）
@@ -415,6 +415,8 @@ class Checker:
         bad = set(m) - MOD_KEYS
         if bad:
             raise DefError(f"{where}: unknown mod keys {sorted(bad)}")
+        if "double_power" in m and m["double_power"] is not True:
+            raise DefError(f"{where}: double_power must be true")
         if "power" in m and isinstance(m["power"], dict):
             pm = m["power"]
             if set(pm) - {"amount", "count"} or not isinstance(pm.get("amount"), int):

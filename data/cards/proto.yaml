@@ -2190,3 +2190,15 @@ cards:
         as: picked
       - op: destroy
         select: {zone: bz, owner: any, count: all, filter: {types: [creature], name: {name_of: {ref: picked}}}}
+  - id: T170
+    name: 試験用倍化呪文
+    types: [spell]
+    civs: [fire]
+    cost: 3
+    races: [テスト]
+    text: 自分のクリーチャーを１体選ぶ。このターン、そのクリーチャーのパワーを２倍にし、「パワード・ブレイカー」を与える。
+    spell:
+      - op: modify
+        select: {zone: bz, owner: you, count: 1, filter: {types: [creature]}}
+        mod: {double_power: true, grant: [powered_breaker]}
+        duration: end_of_turn

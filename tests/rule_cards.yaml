@@ -923,3 +923,21 @@ cards:
     races: [ドラゴン]
     text: バニラ。
     abilities: []
+
+  # 第141弾 double_power の試験用: 起動で自分自身のパワーを2倍にする
+  - id: R101
+    name: 試験用倍化獣
+    types: [creature]
+    civs: [fire]
+    cost: 3
+    power: 3000
+    races: [テスト]
+    text: 起動（タップ） このターン、このクリーチャーのパワーを２倍にする。
+    abilities:
+      - kind: activate
+        cost: {tap: self}
+        effect:
+          - op: modify
+            select: {ref: self}
+            mod: {double_power: true}
+            duration: end_of_turn
