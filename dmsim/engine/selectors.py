@@ -158,6 +158,9 @@ class SelectorMixin:
             linked = self.link_side(cid) is not None and len(self.link_members(cid)) >= 2
             if linked != bool(f["linked_god"]):
                 return False   # 「リンクしているゴッド」: リンク位置を持ち、実際に2体以上でリンクしている
+        if "entered_this_turn" in f:
+            if (c.entered_turn == self.s.turn) != bool(f["entered_this_turn"]):
+                return False   # 「このターン中に出た」: entered_turn はバトルゾーンに出たターン（それ以外は -1）
         if "mugen_climb" in f and (self.fdef(cid).mugen_climb is not None) != bool(f["mugen_climb"]):
             return False   # 「『ムゲンクライム』能力を持つカード」
         if "vanilla" in f:   # 「カードに能力が書かれていない」: 能力もキーワードも無く、進化・NEO 等の書かれた仕組みも持たない

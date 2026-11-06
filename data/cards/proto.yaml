@@ -2153,3 +2153,13 @@ cards:
       - kind: static
         affects: self
         mod: {breaks: {count: {zone: bz, owner: you, other: true, filter: {race_has: ドラゴン}}}}
+  - id: T167
+    name: 試験用一掃呪文
+    types: [spell]
+    civs: [darkness]
+    cost: 5
+    races: [テスト]
+    text: このターン中に出た相手のクリーチャーをすべて破壊する。
+    spell:
+      - op: destroy
+        select: {zone: bz, owner: opp, count: all, filter: {types: [creature], entered_this_turn: true}}

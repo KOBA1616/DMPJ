@@ -1253,3 +1253,9 @@ draw イベントへの置換で表す（draw は個別イベントとして発�
 - 書き方: 捨てるカードを as で束縛し、対象選択の filter: {cost_le: {sum: [{cost_of: {ref: <束縛名>}}, -1]}}（「より小さい」＝参照コスト−1以下）。
 - tests/test_vocab_pilot133.py 2件（正常 parse／検証）
 - 待機4枚（cost_lt_card_cost のみが gap のもの）。
+
+## 第134弾: entered_this_turn_filter（このターン中に出た）— 新語彙あり（2026-11-06）
+「このターン中に出たクリーチャー」を対象フィルタで絞れるようにした。
+- 新フィルタ: {entered_this_turn: true}（defs.py FILTER_KEYS 追加、engine/selectors.py の filter_match に実装）。判定はカードの entered_turn（バトルゾーンに出たターン。それ以外は -1）が現在のターンと一致するか。
+- proto T167。tests/test_vocab_pilot134.py 2件（parse／照合の実挙動）。
+- 待機4枚（entered_this_turn_filter のみが gap のもの）。entered_this_turn_condition（9枚）の条件側にも使える可能性あり。
