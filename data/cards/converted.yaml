@@ -327606,3 +327606,279 @@ cards:
     自分の墓地からクリーチャーを１体選ぶ。そのクリーチャーと同じ名前のクリーチャーをすべて、自分の墓地から手札に戻す。'
   types:
   - creature
+- abilities:
+  - kind: trigger
+    when:
+      event: move
+      to: bz
+      subject: self
+    effect:
+    - op: modify
+      select:
+        ref: self
+      mod:
+        allow:
+        - action: attack_creature
+          other:
+            tapped: false
+      duration: end_of_turn
+  - effect:
+    - duration: end_of_turn
+      mod:
+        allow:
+        - action: attack_creature
+          other:
+            tapped: false
+      op: modify
+      select:
+        ref: self
+    kind: trigger
+    when:
+      event: move
+      subject: self
+      to: bz
+  - effect:
+    - count: 1
+      modes:
+      - - duration: end_of_turn
+          mod:
+            double_power: true
+            grant:
+            - powered_breaker
+          op: modify
+          select:
+            count: 1
+            filter:
+              types:
+              - creature
+            owner: you
+            zone: bz
+      - - op: move
+          reason: put
+          select:
+            from_top: 1
+            owner: you
+            zone: deck
+          to: mana
+      - - op: move
+          reason: put
+          select:
+            count: 1
+            filter:
+              cost_le: 3
+              types:
+              - creature
+            owner: you
+            zone: mana
+          to: bz
+      op: modal
+    kind: trigger
+    when:
+      event: attack
+      subject: self
+  civs:
+  - nature
+  cost: 4
+  id: dm23rp1-007
+  mana: 1
+  name: 極輪の妖精
+  power: 4000
+  races:
+  - ジャイアント・スノーフェアリー
+  source:
+    official: dm23rp1-007
+    review: pending
+    aliases:
+    - dm23rp1-10a
+    - dm23rp1-12b
+  text: 'マッハファイター
+
+    このクリーチャーが攻撃する時、次のうちいずれか１つを選ぶ。
+
+    ▶自分のクリーチャーを１体選ぶ。このターン、そのクリーチャーのパワーを２倍にし、「パワード・ブレイカー」を与える。
+
+    ▶自分の山札の上から１枚目をマナゾーンに置く。
+
+    ▶コスト３以下のクリーチャーを１体、自分のマナゾーンから出す。'
+  types:
+  - creature
+- abilities:
+  - effect:
+    - op: untap
+      select:
+        ref: self
+    - duration: end_of_turn
+      mod:
+        double_power: true
+      op: modify
+      select:
+        ref: self
+    - body:
+      - count: 1
+        op: break
+        player: opp
+      op: may
+    kind: trigger
+    when:
+      event: battle_win
+      subject: self
+  - instead:
+    - op: destroy
+      select:
+        count: 1
+        filter:
+          types:
+          - creature
+        other: true
+        owner: you
+        zone: bz
+    kind: replace
+    optional: true
+    when:
+      event: move
+      from: bz
+      reason: destroy
+      subject: self
+      to: graveyard
+  civs:
+  - fire
+  cost: 4
+  id: dmex07-s04
+  keywords:
+  - speed_attacker
+  mana: 1
+  name: ドープ"DBL"ボーダー
+  power: 4000
+  races:
+  - ビートジョッキー
+  source:
+    official: dmex07-s04
+    review: pending
+    aliases:
+    - dmrp01-s08
+  text: 'スピードアタッカー
+
+    このクリーチャーがバトルに勝った時、アンタップし、そのターン、このクリーチャーのパワーを２倍する。その後、相手のシールドを１つブレイクしてもよい。
+
+    このクリーチャーが破壊される時、かわりに自分の他のクリーチャーを１体破壊してもよい。'
+  types:
+  - creature
+- abilities:
+  - effect:
+    - body:
+      - op: play_free
+        select:
+          ref: self
+      op: may
+    kind: declare
+    when:
+      event: attack
+      subject:
+        filter:
+          civs:
+          - fire
+          race_has: ディスペクター
+        owner: you
+    zone: hand
+  civs:
+  - fire
+  cost: 6
+  id: dmrp18-019
+  keywords:
+  - g_strike
+  mana: 1
+  name: 電融秘伝グリードソレノイド
+  source:
+    official: dmrp18-019
+    review: pending
+  spell:
+  - duration: end_of_turn
+    mod:
+      double_power: true
+      grant:
+      - powered_breaker
+    op: modify
+    select:
+      count: 1
+      filter:
+        types:
+        - creature
+      owner: you
+      zone: bz
+  text: '{GS} G・ストライク（この呪文を自分のシールドゾーンから手札に加える時、相手に見せ、相手のクリーチャーを１体選んでもよい。このターン、そのクリーチャーは攻撃できない）
+
+    アタック・チャンス：火のディスペクター（自分の火のディスペクターが攻撃する時、この呪文をコストを支払わずに唱えてもよい）
+
+    このターン、自分のクリーチャー１体のパワーを２倍にし、「パワード・ブレイカー」を与える。（「パワード・ブレイカー」を持つクリーチャーは、そのパワー6000ごとにシールドをさらに１つブレイクする）'
+  types:
+  - spell
+- abilities:
+  - affects:
+      filter:
+        types:
+        - creature
+      owner: you
+      zone: bz
+    kind: static
+    mod:
+      deny:
+      - action: be_blocked
+        other:
+          power_le:
+            sum:
+            - power_of:
+                ref: self
+            - -1
+  - effect:
+    - duration: end_of_turn
+      mod:
+        double_power: true
+        grant:
+        - powered_breaker
+      op: modify
+      select:
+        count: 1
+        filter:
+          types:
+          - creature
+        owner: you
+        zone: bz
+    kind: trigger
+    when:
+      event: move
+      subject: self
+      to: bz
+  - effect:
+    - duration: end_of_turn
+      mod:
+        double_power: true
+        grant:
+        - powered_breaker
+      op: modify
+      select:
+        count: 1
+        filter:
+          types:
+          - creature
+        owner: you
+        zone: bz
+    kind: trigger
+    when:
+      event: attack
+      subject: self
+  civs:
+  - nature
+  cost: 5
+  id: dmrp22-023
+  mana: 1
+  name: 打振の星 ブリタネッコ
+  power: 5000
+  races:
+  - ビーストフォーク
+  - レクスターズ
+  source:
+    official: dmrp22-023
+    review: pending
+  text: 自分のクリーチャーは、それよりパワーが小さいクリーチャーにブロックされない。 / このクリーチャーが出た時または攻撃する時、自分のクリーチャーを１体選ぶ。このターン、そのクリーチャーのパワーを２倍にし、「パワード・ブレイカー」を与える。（「パワード・ブレイカー」を持つクリーチャーは、そのパワー6000ごとにシールドをさらに１つブレイクする）
+  types:
+  - creature
