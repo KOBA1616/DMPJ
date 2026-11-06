@@ -39,6 +39,9 @@ class SelectorMixin:
                 return max((self.chars(c[0])["cost"] for c in self._expr_refs(x["cost_of"], env)), default=0)
             if "power_of" in x:   # 参照カード（複数なら最大）の現在パワー（第116弾で追加。cost_of の対）
                 return max((self.chars(c[0])["power"] for c in self._expr_refs(x["power_of"], env)), default=0)
+            if "name_of" in x:   # 参照カードのカード名（「そのクリーチャーと同じ名前の〜」フィルタ用、第140弾。複数なら先頭）
+                refs = self._expr_refs(x["name_of"], env)
+                return self.chars(refs[0][0])["name"] if refs else ""
             if "race" in x:   # choose_race で選んだ種族名
                 return [env.get("races", {})[x["race"]]]
             if "races_of" in x:   # 変数に束縛したカードの種族（「種族をひとつ選ぶ」の代わりに、場のカード1体を選んでその種族とする）

@@ -1293,3 +1293,9 @@ draw イベントへの置換で表す（draw は個別イベントとして発�
 - 常在付与: static の affects（対象範囲）+ 同じ allow を mod に置く。
 - tests/test_vocab_pilot139.py 2件（正常 parse／検証）
 - 待機6枚（mach_fighter_grant のみが gap のもの）。
+
+## 第140弾: same_name_as_chosen_card（選んだカードと同じ名前）— エンジン拡張あり（2026-11-06）
+「そのクリーチャーと同じ名前のクリーチャーをすべて〜」は新式 name_of で表す。
+- 新式: {name_of: {ref: <束縛名>}}（engine/selectors.py の eval_expr に追加。参照カードのカード名を返す。複数参照なら先頭）。フィルタでは filter: {name: {name_of: {ref: X}}} と書き、candidates が選択時に名前へ解決する。
+- proto T169。tests/test_vocab_pilot140.py 2件（parse／candidates の同名照合の実挙動）。
+- 待機5枚（same_name_as_chosen_card のみが gap のもの）。

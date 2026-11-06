@@ -2177,3 +2177,16 @@ cards:
         select: {zone: bz, owner: you, count: all, filter: {types: [creature]}}
         mod: {add_races: [{race: kind}]}
         duration: end_of_turn
+  - id: T169
+    name: 試験用同名一掃呪文
+    types: [spell]
+    civs: [darkness]
+    cost: 5
+    races: [テスト]
+    text: 自分の墓地からクリーチャーを１体選ぶ。そのクリーチャーと同じ名前のクリーチャーをすべて破壊する。
+    spell:
+      - op: choose
+        select: {zone: graveyard, owner: you, count: 1, filter: {types: [creature]}}
+        as: picked
+      - op: destroy
+        select: {zone: bz, owner: any, count: all, filter: {types: [creature], name: {name_of: {ref: picked}}}}
