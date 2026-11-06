@@ -48,5 +48,5 @@ def test_cost_lt_card_cost_filter():
     card = parse_card(CARD, TABLES)
     ab = card.abilities[0]
     destroy = ab["effect"][0]["body"][1]
-    assert destroy["op"] == "destroy"
+    assert destroy["reason"] == "destroy"   # destroy は move（reason: destroy）に正規化される
     assert "cost_le" in destroy["select"]["filter"]
