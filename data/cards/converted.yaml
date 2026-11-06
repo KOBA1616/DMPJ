@@ -326798,3 +326798,505 @@ cards:
     このクリーチャーが攻撃する時、自分の他のドラゴン・クリーチャーまたはドリームメイト・クリーチャーが合計５体以上あれば、このクリーチャーよりパワーの小さい相手のクリーチャーをすべて破壊する。'
   types:
   - creature
+- abilities:
+  - kind: trigger
+    when:
+      event: move
+      to: bz
+      subject: self
+    effect:
+    - op: modify
+      select:
+        ref: self
+      mod:
+        allow:
+        - action: attack_creature
+          other:
+            tapped: false
+      duration: end_of_turn
+  - effect:
+    - duration: end_of_turn
+      mod:
+        allow:
+        - action: attack_creature
+          other:
+            tapped: false
+      op: modify
+      select:
+        ref: self
+    kind: trigger
+    when:
+      event: move
+      subject: self
+      to: bz
+  - effect:
+    - duration: end_of_turn
+      mod:
+        allow:
+        - action: attack_creature
+          other:
+            tapped: false
+      op: modify
+      select:
+        ref: event.subject
+    kind: trigger
+    when:
+      event: move
+      subject:
+        filter:
+          cost_ge: 6
+          types:
+          - creature
+        other: true
+        owner: you
+      to: bz
+  civs:
+  - nature
+  cost: 4
+  id: dm24rp4-073
+  mana: 1
+  name: 哀樹奇面グリッファ
+  power: 5000
+  races:
+  - ジャイアント・デビルマスク
+  source:
+    official: dm24rp4-073
+    review: pending
+  text: 'マッハファイター（このクリーチャーは、出たターンの間、タップまたはアンタップしているクリーチャーを攻撃できる）
+
+    自分のコスト６以上のクリーチャーが出た時、そのターン、そのクリーチャーに「マッハファイター」を与える。'
+  types:
+  - creature
+- abilities:
+  - affects: self
+    kind: static
+    mod:
+      cost:
+        amount: -1
+        count:
+          filter:
+            civs:
+            - nature
+            types:
+            - creature
+          owner: you
+          zone: bz
+      cost_min: 1
+    zone: hand
+  - affects:
+      filter:
+        civs:
+        - nature
+        types:
+        - creature
+      owner: you
+      zone: bz
+    kind: static
+    mod:
+      allow:
+      - action: attack_creature
+        other:
+          tapped: false
+  - effect:
+    - as: top1
+      op: choose
+      select:
+        count: 1
+        from_top: 1
+        look: true
+        owner: you
+        zone: deck
+    - cond:
+        exists:
+          filter:
+            power_ge: 12000
+            types:
+            - creature
+          ref: top1
+      else:
+      - op: move
+        reason: put
+        select:
+          ref: top1
+        to: mana
+      op: if
+      then:
+      - op: move
+        reason: put
+        select:
+          ref: top1
+        to: bz
+    kind: trigger
+    when:
+      event: attack
+      subject:
+        filter:
+          power_ge: 12000
+          types:
+          - creature
+        owner: you
+  civs:
+  - nature
+  cost: 8
+  id: dm25ex1-mc010
+  keywords:
+  - double_breaker
+  mana: 1
+  name: クイーン・オブ・ネイチャー
+  power: 12000
+  races:
+  - グランセクト
+  source:
+    notes: '「コストは０以下にはならない」は下限1として cost_min: 1 にした（dm21-020 の「１より少なくならない」と同義と解釈）。マッハファイターの常在付与は
+      dmex09-s04 と同じ static allow 形'
+    official: dm25ex1-mc010
+    review: pending
+    aliases:
+    - dmex19-013
+  text: 'シンパシー：自然のクリーチャー（自分の自然のクリーチャー１体につき、このクリーチャーの召喚コストを１少なくする。ただしコストは０以下にはならない）
+
+    W・ブレイカー
+
+    自分の自然のクリーチャーすべてに「マッハファイター」を与える。
+
+    自分のパワー12000以上のクリーチャーが攻撃する時、自分の山札の上から１枚を表向きにする。それがパワー12000以上のクリーチャーなら出す。それ以外ならマナゾーンに置く。'
+  types:
+  - creature
+- faces:
+  - abilities:
+    - effect:
+      - duration: end_of_turn
+        mod:
+          allow:
+          - action: attack_creature
+            other:
+              tapped: false
+        op: modify
+        select:
+          ref: self
+      kind: trigger
+      when:
+        event: move
+        subject: self
+        to: bz
+    - instead:
+      - op: move
+        reason: put
+        select:
+          count: 1
+          ref: subject
+        to: mana
+      kind: replace
+      optional: true
+      when:
+        event: move
+        from: bz
+        subject:
+          filter:
+            types:
+            - creature
+          owner: you
+    - effect:
+      - body:
+        - op: move
+          reason: put
+          select:
+            count: 1
+            filter:
+              cost_le:
+                count:
+                  owner: you
+                  zone: mana
+              types:
+              - creature
+            owner: you
+            zone: mana
+          to: bz
+        op: may
+      kind: trigger
+      when:
+        event: battle_win
+        subject: self
+    civs:
+    - nature
+    cost: 10
+    keywords:
+    - triple_breaker
+    name: 八頭竜 ACE-Yamata
+    power: 16000
+    races:
+    - アース・ドラゴン
+    - オリジン
+    types:
+    - creature
+  - civs:
+    - nature
+    cost: 3
+    name: 神秘の宝剣
+    spell:
+    - as: t
+      op: choose
+      select:
+        count: 1
+        filter:
+          not_civs:
+          - nature
+        look: true
+        owner: you
+        zone: deck
+    - body:
+      - op: move
+        reason: put
+        select:
+          count: all
+          ref: t
+        tapped: true
+        to: mana
+      op: may
+    - op: shuffle
+    types:
+    - spell
+  id: dm25rp4-sp4
+  mana: 1
+  source:
+    notes: '「離れる時」は dm23ex1-081 と同様 from: bz の move 全般で照合した（このカード自身も対象に含む）。バトル勝利時のコスト上限は自分のマナゾーンのカード枚数を
+      count 式で参照した'
+    official: dm25rp4-sp4
+    review: pending
+    aliases:
+    - dm22ex1-033
+    - dm24ex2-cho018
+    - dmbd18-003
+  text: '八頭竜 ACE-Yamata: マッハファイター　T・ブレイカー / 自分のクリーチャーが離れる時、かわりにマナゾーンに置いてもよい。 / このクリーチャーがバトルに勝った時、自分のマナゾーンにあるカードの枚数以下のコストのクリーチャーを１体、自分のマナゾーンから出してもよい。
+    ／ 神秘の宝剣: 自分の山札を見る。その中から自然ではないカードを１枚、タップしてマナゾーンに置いてもよい。その後、山札をシャッフルする。'
+- faces:
+  - abilities:
+    - effect:
+      - duration: end_of_turn
+        mod:
+          allow:
+          - action: attack_creature
+            other:
+              tapped: false
+        op: modify
+        select:
+          ref: self
+      kind: trigger
+      when:
+        event: move
+        subject: self
+        to: bz
+    civs:
+    - nature
+    cost: 8
+    keywords:
+    - triple_breaker
+    name: 摩破目 ナトゥーラ・トプス
+    power: 12000
+    races:
+    - ジュラシック・コマンド・ドラゴン
+    types:
+    - creature
+  - civs:
+    - nature
+    cost: 3
+    name: ストンピング・ウィード
+    spell:
+    - op: move
+      reason: put
+      select:
+        from_top: 1
+        owner: you
+        zone: deck
+      to: mana
+    - body:
+      - op: move
+        position: top
+        reason: put
+        select:
+          count: 1
+          owner: you
+          zone: mana
+        to: deck
+      op: may
+    types:
+    - spell
+  id: dm25sp1-015
+  mana: 1
+  source:
+    official: dm25sp1-015
+    review: pending
+    aliases:
+    - dm23bd4-050
+    - dm23bd6-045
+    - dmbd05-011
+  text: '摩破目 ナトゥーラ・トプス: マッハファイター（このクリーチャーは、出たターンの間、タップまたはアンタップしているクリーチャーを攻撃できる） /
+    T・ブレイカー（このクリーチャーはシールドを３つブレイクする） ／ ストンピング・ウィード: 自分の山札の上から１枚をマナゾーンに置く。その後、カードを１枚、自分のマナゾーンから山札の上に置いてもよい。'
+- faces:
+  - abilities:
+    - effect:
+      - duration: end_of_turn
+        mod:
+          allow:
+          - action: attack_creature
+            other:
+              tapped: false
+        op: modify
+        select:
+          ref: self
+      kind: trigger
+      when:
+        event: move
+        subject: self
+        to: bz
+    civs:
+    - nature
+    cost: 4
+    keywords:
+    - g_strike
+    - double_breaker
+    name: 轟速 ザ・ジオ
+    power: 7000
+    races:
+    - ソニック・コマンド
+    - 侵略者
+    types:
+    - creature
+  - civs:
+    - nature
+    cost: 1
+    name: 「キサマのデュエマは周回遅れだ！」
+    races:
+    - ソニック・コマンド・ワード
+    spell:
+    - op: move
+      reason: draw
+      select:
+        count: 1
+        filter:
+          evolution: true
+          types:
+          - creature
+        from_top: 5
+        look: true
+        owner: you
+        zone: deck
+      to: hand
+    types:
+    - spell
+  id: dm26ex2-082
+  mana: 1
+  source:
+    notes: 呪文面の「残りを好きな順序で山札の下に置く」は dm23ex1-069 と同じく from_top + look の move で表した
+    official: dm26ex2-082
+    review: pending
+  text: '轟速 ザ・ジオ: {GS} G・ストライク（このカードを自分のシールドゾーンから手札に加える時、表向きにし、相手のクリーチャーを１体選んでもよい。このターン、そのクリーチャーは攻撃できない）
+    / マッハファイター（このクリーチャーは、出たターンの間、タップまたはアンタップしているクリーチャーを攻撃できる） / W・ブレイカー（このクリーチャーはシールドを２つブレイクする）
+    ／ 「キサマのデュエマは周回遅れだ！」: 自分の山札の上から５枚を表向きにする。その中から進化クリーチャーを１体手札に加え、残りを好きな順序で山札の下に置く。'
+- faces:
+  - abilities:
+    - effect:
+      - duration: end_of_turn
+        mod:
+          allow:
+          - action: attack_creature
+            other:
+              tapped: false
+        op: modify
+        select:
+          ref: self
+      kind: trigger
+      when:
+        event: move
+        subject: self
+        to: bz
+    - effect:
+      - op: move
+        reason: put
+        select:
+          from_top: 1
+          owner: you
+          zone: deck
+        to: mana
+      - body:
+        - op: move
+          reason: return
+          select:
+            count: 1
+            owner: you
+            zone: mana
+          to: hand
+        op: may
+      kind: trigger
+      when:
+        event: attack
+        subject: self
+    civs:
+    - nature
+    cost: 7
+    keywords:
+    - double_breaker
+    name: 闘争類拳嘩目 ステゴロ・カイザー
+    power: 9000
+    races:
+    - ジュラシック・コマンド・ドラゴン
+    - ハンター
+    types:
+    - creature
+  - civs:
+    - nature
+    cost: 3
+    name: お清めシャラップ
+    spell:
+    - op: move
+      reason: put
+      select:
+        from_top: 1
+        owner: you
+        zone: deck
+      to: mana
+    - body:
+      - as: back
+        op: choose
+        select:
+          count: any
+          zone: graveyard
+      - op: move
+        reason: return
+        select:
+          ref: back
+        to: deck
+      - op: shuffle
+        player: you
+      op: may
+    types:
+    - spell
+  id: dm26ex3-068
+  mana: 1
+  source:
+    notes: 呪文面の墓地選択は dmex17-133 と同じ形（choose を owner 指定なしで書き、山札へ戻す move とシャッフルは対象プレイヤー側の処理としてエンジンに委ねる前提）にした
+    official: dm26ex3-068
+    review: pending
+    aliases:
+    - dm22bd3-012
+    - dm22ex1-054
+    - dm23bd4-035
+    - dm23bd5-027
+    - dm23bd6-028
+    - dm23ex1-041
+    - dm23ex2-cho021
+    - dm24ex3-td12
+    - dm24sp1-011
+    - dm26sd1-c011
+    - dm26sd1-l011
+    - dm26sd1-t009
+    - dmbd09-010
+    - dmex12-041
+    - dmex16-034
+    - dmrp19-a15
+    - dmrp19-b15
+    - promoy23-002
+    - promoy23-005
+  text: '闘争類拳嘩目 ステゴロ・カイザー: マッハファイター（このクリーチャーは、出たターンの間、タップまたはアンタップしているクリーチャーを攻撃できる）
+    / W・ブレイカー / このクリーチャーが攻撃する時、自分の山札の上から１枚をマナゾーンに置く。その後、カードを１枚、自分のマナゾーンから手札に戻してもよい。
+    ／ お清めシャラップ: 自分の山札の上から１枚をマナゾーンに置く。カードを１枚以上、プレイヤー１人の墓地から選んでもよい。そのプレイヤーは、それらを自身の山札に加えてシャッフルする。'
