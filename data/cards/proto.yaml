@@ -2153,3 +2153,52 @@ cards:
       - kind: static
         affects: self
         mod: {breaks: {count: {zone: bz, owner: you, other: true, filter: {race_has: ドラゴン}}}}
+  - id: T167
+    name: 試験用一掃呪文
+    types: [spell]
+    civs: [darkness]
+    cost: 5
+    races: [テスト]
+    text: このターン中に出た相手のクリーチャーをすべて破壊する。
+    spell:
+      - op: destroy
+        select: {zone: bz, owner: opp, count: all, filter: {types: [creature], entered_this_turn: true}}
+  - id: T168
+    name: 試験用種族付与呪文
+    types: [spell]
+    civs: [nature]
+    cost: 3
+    races: [テスト]
+    text: 種族をひとつ選ぶ。このターンの終わりまで、自分のクリーチャーはすべて、その種族を追加する。
+    spell:
+      - op: choose_race
+        as: kind
+      - op: modify
+        select: {zone: bz, owner: you, count: all, filter: {types: [creature]}}
+        mod: {add_races: [{race: kind}]}
+        duration: end_of_turn
+  - id: T169
+    name: 試験用同名一掃呪文
+    types: [spell]
+    civs: [darkness]
+    cost: 5
+    races: [テスト]
+    text: 自分の墓地からクリーチャーを１体選ぶ。そのクリーチャーと同じ名前のクリーチャーをすべて破壊する。
+    spell:
+      - op: choose
+        select: {zone: graveyard, owner: you, count: 1, filter: {types: [creature]}}
+        as: picked
+      - op: destroy
+        select: {zone: bz, owner: any, count: all, filter: {types: [creature], name: {name_of: {ref: picked}}}}
+  - id: T170
+    name: 試験用倍化呪文
+    types: [spell]
+    civs: [fire]
+    cost: 3
+    races: [テスト]
+    text: 自分のクリーチャーを１体選ぶ。このターン、そのクリーチャーのパワーを２倍にし、「パワード・ブレイカー」を与える。
+    spell:
+      - op: modify
+        select: {zone: bz, owner: you, count: 1, filter: {types: [creature]}}
+        mod: {double_power: true, grant: [powered_breaker]}
+        duration: end_of_turn

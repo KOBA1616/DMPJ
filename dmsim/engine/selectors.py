@@ -32,6 +32,9 @@ class SelectorMixin:
                 if spec.get("other") and env.get("self"):   # 「自分の他のクリーチャー」: 自分自身は数えない
                     lst = [c for c in lst if c != env["self"][0]]
                 return len(lst)
+            if "drew" in x:   # このターン、そのプレイヤーがカードを引いた枚数（第142弾）
+                spec = x["drew"]
+                return self.s.turn_counters.get(f"drew:{self._rel(spec.get('owner', 'you'), env)}", 0)
             if "var" in x:
                 v = env.get("vars", {}).get(x["var"], [])
                 return v if isinstance(v, int) else len(v)   # 数を数えた変数（ガチンコの勝ち数など）はそのまま
@@ -39,6 +42,9 @@ class SelectorMixin:
                 return max((self.chars(c[0])["cost"] for c in self._expr_refs(x["cost_of"], env)), default=0)
             if "power_of" in x:   # 参照カード（複数なら最大）の現在パワー（第116弾で追加。cost_of の対）
                 return max((self.chars(c[0])["power"] for c in self._expr_refs(x["power_of"], env)), default=0)
+            if "name_of" in x:   # 参照カードのカード名（「そのクリーチャーと同じ名前の〜」フィルタ用、第140弾。複数なら先頭）
+                refs = self._expr_refs(x["name_of"], env)
+                return self.chars(refs[0][0])["name"] if refs else ""
             if "race" in x:   # choose_race で選んだ種族名
                 return [env.get("races", {})[x["race"]]]
             if "races_of" in x:   # 変数に束縛したカードの種族（「種族をひとつ選ぶ」の代わりに、場のカード1体を選んでその種族とする）
@@ -158,6 +164,9 @@ class SelectorMixin:
             linked = self.link_side(cid) is not None and len(self.link_members(cid)) >= 2
             if linked != bool(f["linked_god"]):
                 return False   # 「リンクしているゴッド」: リンク位置を持ち、実際に2体以上でリンクしている
+        if "entered_this_turn" in f:
+            if (c.entered_turn == self.s.turn) != bool(f["entered_this_turn"]):
+                return False   # 「このターン中に出た」: entered_turn はバトルゾーンに出たターン（それ以外は -1）
         if "mugen_climb" in f and (self.fdef(cid).mugen_climb is not None) != bool(f["mugen_climb"]):
             return False   # 「『ムゲンクライム』能力を持つカード」
         if "vanilla" in f:   # 「カードに能力が書かれていない」: 能力もキーワードも無く、進化・NEO 等の書かれた仕組みも持たない

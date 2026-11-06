@@ -234,6 +234,7 @@ class EventMixin:
             cid = deck[0]
             self._raw_move(cid, "hand")
             s.cards[cid].drawn_turn = s.turn   # ビビッドロー: このターンにドローした記録
+            s.turn_counters[f"drew:{p}"] = s.turn_counters.get(f"drew:{p}", 0) + 1   # このターン引いた枚数（第142弾）
             return [{"ev": "draw", "player": p, "subject": s.ref(cid)},
                     {"ev": "move", "subject": s.ref(cid), "lki": None, "from": "deck", "to": "hand",
                      "reason": "draw", "controller": p}]

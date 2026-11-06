@@ -86,7 +86,7 @@ def _build() -> dict:
             "mod": {"type": "object", "properties": {
                 "power": {"anyOf": [{"type": "integer"}, {"type": "object", "properties": {"amount": {"type": "integer"}, "count": {"anyOf": [ref("selector"), ref("expr")]}}, "required": ["amount"], "additionalProperties": False}]}, "grant": {"type": "array", "items": {"enum": sorted(keywords)}},
                 "allow": {"type": "array", "items": perm}, "deny": {"type": "array", "items": perm},
-                "require": {"type": "array", "items": {"enum": ["attack", "block"]}}, "add_of": {"const": "self"}, "add_races": {"type": "array", "items": {"type": "string"}},
+                "require": {"type": "array", "items": {"enum": ["attack", "block"]}}, "add_of": {"const": "self"}, "double_power": {"type": "boolean"}, "add_races": {"type": "array", "items": {"anyOf": [{"type": "string"}, {"type": "object"}]}},
                 "breaks": {"type": "integer"}, "breaks_per_power": {"type": "integer"},
                 "cost": {"anyOf": [{"type": "integer"}, {"type": "object", "properties": {"amount": {"type": "integer"}, "cost_min": {"type": "integer"}, "count": {"anyOf": [ref("selector"), ref("expr")]}}, "required": ["amount"], "additionalProperties": False}]},
                 "cost_min": {"type": "integer"},

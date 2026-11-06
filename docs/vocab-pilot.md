@@ -1235,3 +1235,85 @@ draw イベントへの置換で表す（draw は個別イベントとして発�
 - 「クルー・ブレイカー：X（自分の他のX１体につき、シールドをさらにもう１枚ブレイクする）」は static mod {breaks: {count: <selector>}} で表す（エンジン拡張: breaks に {count} 形式を追加。ブレイク数 = 1 + count_of(selector)。「他の」が無い原文では other を付けない）。
 - proto T166、試験カード R093/R094、tests/test_vocab_pilot130.py 3件（parse、不正形式の拒否、他のドラゴン2体で break_opts=[3]／0体で [1]）。
 - **訂正・統一（2026-11-05、全体テストで検出）**: breaks の dict 形式は既存カードにも2形式あり、第130弾の検証がそれらを弾いて3テスト失敗した。統一後の仕様: dict はすべて「1 + 値」— {count: sel} は 1+数、{amount: A, count: sel} は 1+A×数（dmd10-008 型）、{civ_count: sel} は 1+文明の種類数（第79弾、dmc34-025 型）。回帰テストとして R095/R096 を追加（同テストファイル、計5件）。なお第130弾以前、dict 形式は chars で未評価（int との max で壊れる潜在バグ）だったため、この統一で初めて実働する。
+
+## 第131弾: powered_blocker（パワード・ブロッカー）— 新語彙なし（2026-11-06）
+「パワード・ブロッカー +N（ブロック中、このクリーチャーのパワーを+Nする）」は常在型のパワー修整で表す。
+- 書き方: kind: static, affects: self, mod: {power_when: {amount: N, when: blocking}}（ブロッカー自体はキーワードで処理済み）。
+- tests/test_vocab_pilot131.py 2件（正常 parse／検証）
+- 待機8枚（powered_blocker のみが gap のもの）。
+
+## 第132弾: blocked_trigger（ブロックされた時）— 新語彙なし（2026-11-06）
+「このクリーチャーがブロックされた時」は block イベントの attacker 照合で表す。
+- 書き方: {kind: trigger, when: {event: block, attacker: self}, effect: [...]}。block レコードの subject はブロッカー側なので、「自分のクリーチャーがブロックされた時」を他者の視点で書く場合は subject: {owner: opp} になる（先例 dm30-050、dm29-012）。
+- 試験カード R097 を tests/rule_cards.yaml に追加。tests/test_vocab_pilot132.py 3件（parse 2件＋実挙動1件）。
+- 待機4枚（blocked_trigger のみが gap のもの）。
+
+## 第133弾: cost_lt_card_cost（参照カードよりコストが小さい）— 新語彙なし（2026-11-06）
+「その捨てたカードよりコストが小さい相手のクリーチャーを破壊する」は第82・85弾の式フィルタの応用で表す。
+- 書き方: 捨てるカードを as で束縛し、対象選択の filter: {cost_le: {sum: [{cost_of: {ref: <束縛名>}}, -1]}}（「より小さい」＝参照コスト−1以下）。
+- tests/test_vocab_pilot133.py 2件（正常 parse／検証）
+- 待機4枚（cost_lt_card_cost のみが gap のもの）。
+
+## 第134弾: entered_this_turn_filter（このターン中に出た）— 新語彙あり（2026-11-06）
+「このターン中に出たクリーチャー」を対象フィルタで絞れるようにした。
+- 新フィルタ: {entered_this_turn: true}（defs.py FILTER_KEYS 追加、engine/selectors.py の filter_match に実装）。判定はカードの entered_turn（バトルゾーンに出たターン。それ以外は -1）が現在のターンと一致するか。
+- proto T167。tests/test_vocab_pilot134.py 2件（parse／照合の実挙動）。
+- 待機4枚（entered_this_turn_filter のみが gap のもの）。entered_this_turn_condition（9枚）の条件側にも使える可能性あり。
+
+## 第135弾: entered_this_turn_condition（このターン中に出た数での条件）— 新語彙なし（2026-11-06）
+「このターン中に自分のクリーチャーがN体以上バトルゾーンに出ていれば／なければ」は式 {entered: {owner: you}}（既存実装、そのまま数が返る。other: true で自分自身を除く）で数え、cmp で条件化する。
+- 書き方: 条件付き static（第88弾）や trigger の if に {cmp: [{entered: {owner: you}}, "<", 2]} 等（count: で包まない）。
+- 試験カード R098。tests/test_vocab_pilot135.py 2件（parse／entered カウンタで deny が解ける実挙動）。
+- 待機11枚（entered_this_turn_condition のみが gap のもの）。
+
+## 第136弾: choose_a_race（選んだ種族の付与・参照）— エンジン拡張あり（2026-11-06）
+「種族をひとつ選ぶ」choose_race（既存）の使い分け。
+- 選んだ種族のクリーチャーへの効果: filter: {races: {race: <変数名>}}（既存先例 dm09-028 等）。
+- 選んだ種族そのものを追加する効果: mod: {add_races: [{race: <変数名>}]}。add_races の式エントリを許可し（defs / schema）、op_modify が継続効果の生成時に env で種族名へ展開して固定する（エンジン拡張）。
+- proto T168、試験カード R099。tests/test_vocab_pilot136.py 2件（parse／起動→選択→種族追加の実挙動）。
+- 待機9枚（choose_a_race のみが gap のもの）。
+
+## 第137弾: god_filter（ゴッドのフィルタ・条件）— 新語彙なし（2026-11-06）
+「ゴッド」は種族名として扱う。既存語彙の組み合わせで足りる。
+- 対象・検索・数え上げ: filter: {race_has: ゴッド}。「ゴッド以外」は not_race_has: ゴッド（第81弾）。
+- 存在条件: exists を条件に使う（ゾーン指定、または破壊したカードは ref 指定で op: if の cond に）。
+- 「リンクしているゴッド」は filter: {linked_god: true}（第103弾）を count に使う。
+- tests/test_vocab_pilot137.py 2件（正常 parse／検証）
+- 待機9枚（god_filter のみが gap のもの）。
+
+## 第138弾: filter_or_race_or_type（種族またはタイプの選択）— 新語彙なし（2026-11-06）
+「ゴッドまたは呪文」「ナイト呪文または〜呪文」のような OR 条件の対象指定は filter の any_of で表す。
+- 書き方: filter: {any_of: [{race_has: ゴッド}, {types: [spell]}]}（第93弾 soul の any_of と同形）。同じ区分の AND は通常キー併記。
+- tests/test_vocab_pilot138.py 2件（正常 parse／検証）
+- 待機5枚（filter_or_race_or_type のみが gap のもの）。
+
+## 第139弾: mach_fighter_grant（マッハファイターの付与）— 新語彙なし（2026-11-06）
+「マッハファイターを与える」は第58弾の展開形（allow attack_creature、other: {tapped: false}）を modify / static で付与する。
+- 一時的付与: trigger の effect で modify（select は対象、mod: {allow: [{action: attack_creature, other: {tapped: false}}]}、duration: end_of_turn）。
+- 常在付与: static の affects（対象範囲）+ 同じ allow を mod に置く。
+- tests/test_vocab_pilot139.py 2件（正常 parse／検証）
+- 待機6枚（mach_fighter_grant のみが gap のもの）。
+
+## 第140弾: same_name_as_chosen_card（選んだカードと同じ名前）— エンジン拡張あり（2026-11-06）
+「そのクリーチャーと同じ名前のクリーチャーをすべて〜」は新式 name_of で表す。
+- 新式: {name_of: {ref: <束縛名>}}（engine/selectors.py の eval_expr に追加。参照カードのカード名を返す。複数参照なら先頭）。フィルタでは filter: {name: {name_of: {ref: X}}} と書き、candidates が選択時に名前へ解決する。
+- proto T169。tests/test_vocab_pilot140.py 2件（parse／candidates の同名照合の実挙動）。
+- 待機5枚（same_name_as_chosen_card のみが gap のもの）。
+
+## 第141弾: power_doubling（パワーを2倍にする）— エンジン拡張あり（2026-11-06）
+新 mod: {double_power: true} を実装した。
+- op_modify が継続効果の生成時に対象ごとの現在パワーを控え（ce["double_power"]）、chars がそれを加算として適用する。範囲固定（110.2e）の効果のみ対象で、生成後に加わった対象には及ばない。
+- defs MOD_KEYS / 検証、schema に追加。proto T170、試験カード R101。tests/test_vocab_pilot141.py 2件（parse／起動でパワー3000→6000の実挙動）。
+- 待機5枚（power_doubling のみが gap のもの）。
+
+## 第142弾: draw_event_trigger（引いた時の誘発と枚数条件）— エンジン拡張あり（2026-11-06）
+「相手がカードを引いた時」は既存の when: {event: draw, player: opp}。
+- 新式: {drew: {owner: opp}}（このターンそのプレイヤーが引いた枚数。engine/events.py の draw 適用で turn_counters を数え、eval_expr で参照）。「そのターン1枚目のドローでなければ」は trigger の if: {cmp: [{drew: {owner: opp}}, ">=", 2]}（当該ドローは適用済みのため数に含まれる）。
+- 試験カード R102。tests/test_vocab_pilot142.py 2件（parse／drew カウンタで deny が解ける実挙動＋実際のドローで数える確認）。
+- 待機5枚（draw_event_trigger のみが gap のもの）。
+
+## 第143弾: leave_stay（離れるかわりにとどまる）— 新語彙なし（2026-11-06）
+「バトルゾーンを離れる時、かわりにとどまる」は mod: {no_leave: true}（第49弾）。
+- 条件付きは条件付き static（第88弾）の if と併記。例外は辞書形: {except_destroy: true}（破壊以外）、{except_battle: true}（バトル敗北以外）、{by_opp: true}（相手の効果では離れない）。
+- tests/test_vocab_pilot143.py 2件（正常 parse／検証）
+- 待機6枚（leave_stay のみが gap のもの）。
