@@ -32,6 +32,9 @@ class SelectorMixin:
                 if spec.get("other") and env.get("self"):   # 「自分の他のクリーチャー」: 自分自身は数えない
                     lst = [c for c in lst if c != env["self"][0]]
                 return len(lst)
+            if "drew" in x:   # このターン、そのプレイヤーがカードを引いた枚数（第142弾）
+                spec = x["drew"]
+                return self.s.turn_counters.get(f"drew:{self._rel(spec.get('owner', 'you'), env)}", 0)
             if "var" in x:
                 v = env.get("vars", {}).get(x["var"], [])
                 return v if isinstance(v, int) else len(v)   # 数を数えた変数（ガチンコの勝ち数など）はそのまま

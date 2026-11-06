@@ -941,3 +941,17 @@ cards:
             select: {ref: self}
             mod: {double_power: true}
             duration: end_of_turn
+
+  # 第142弾 drew 条件の試験用: このターン相手が2枚以上引いていなければ攻撃できない
+  - id: R102
+    name: 試験用ドロー条件獣
+    types: [creature]
+    civs: [water]
+    cost: 3
+    power: 2000
+    races: [テスト]
+    text: このターン中に相手がカードを２枚以上引いていなければ、このクリーチャーは攻撃できない。
+    abilities:
+      - kind: static
+        if: {cmp: [{drew: {owner: opp}}, "<", 2]}
+        mod: {deny: [attack_player, attack_creature]}

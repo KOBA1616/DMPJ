@@ -1305,3 +1305,9 @@ draw イベントへの置換で表す（draw は個別イベントとして発�
 - op_modify が継続効果の生成時に対象ごとの現在パワーを控え（ce["double_power"]）、chars がそれを加算として適用する。範囲固定（110.2e）の効果のみ対象で、生成後に加わった対象には及ばない。
 - defs MOD_KEYS / 検証、schema に追加。proto T170、試験カード R101。tests/test_vocab_pilot141.py 2件（parse／起動でパワー3000→6000の実挙動）。
 - 待機5枚（power_doubling のみが gap のもの）。
+
+## 第142弾: draw_event_trigger（引いた時の誘発と枚数条件）— エンジン拡張あり（2026-11-06）
+「相手がカードを引いた時」は既存の when: {event: draw, player: opp}。
+- 新式: {drew: {owner: opp}}（このターンそのプレイヤーが引いた枚数。engine/events.py の draw 適用で turn_counters を数え、eval_expr で参照）。「そのターン1枚目のドローでなければ」は trigger の if: {cmp: [{drew: {owner: opp}}, ">=", 2]}（当該ドローは適用済みのため数に含まれる）。
+- 試験カード R102。tests/test_vocab_pilot142.py 2件（parse／drew カウンタで deny が解ける実挙動＋実際のドローで数える確認）。
+- 待機5枚（draw_event_trigger のみが gap のもの）。
