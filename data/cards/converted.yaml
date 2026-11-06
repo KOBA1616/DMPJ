@@ -324299,3 +324299,296 @@ cards:
   text: このクリーチャーのパワーは、バトルゾーンにある自分の他のハンター１体につき+5000される。 / クルー・ブレイカー:ハンター
   types:
   - creature
+- abilities:
+  - affects: self
+    kind: static
+    mod:
+      power_when:
+        amount: 4000
+        when: blocking
+  civs:
+  - water
+  cost: 3
+  id: dm22rp2x-033
+  keywords:
+  - blocker
+  mana: 1
+  name: AQcess
+  power: 4000
+  races:
+  - マジック・リキッド・ピープル
+  source:
+    official: dm22rp2x-033
+    review: pending
+    aliases:
+    - dm22rp2-033
+  text: 'ブロッカー（このクリーチャーをタップして、相手クリーチャーの攻撃先をこのクリーチャーに変更してもよい）
+
+    パワード・ブロッカー +4000（ブロック中、このクリーチャーのパワーを+4000する）'
+  types:
+  - creature
+- faces:
+  - abilities:
+    - affects: self
+      kind: static
+      mod:
+        power_when:
+          amount: 4000
+          when: blocking
+    civs:
+    - water
+    cost: 2
+    keywords:
+    - blocker
+    - cannot_attack
+    mana: 1
+    name: サダイエ・ホンカドリーマー
+    power: 2000
+    races:
+    - マジック・マーフォーク
+    types:
+    - creature
+  - civs:
+    - water
+    cost: 3
+    keywords:
+    - s_trigger
+    mana: 1
+    name: ♪古池や ワンスアゲイン スパイラル
+    races:
+    - マジック・ソング
+    spell:
+    - op: bounce
+      select:
+        count: 1
+        filter:
+          types:
+          - creature
+        owner: any
+        zone: bz
+    types:
+    - spell
+  id: dm23rp1-056
+  mana: 1
+  name: サダイエ・ホンカドリーマー / ♪古池や ワンスアゲイン スパイラル
+  source:
+    official: dm23rp1-056
+    review: pending
+  text: 'サダイエ・ホンカドリーマー: ブロッカー（このクリーチャーをタップして、相手クリーチャーの攻撃先をこのクリーチャーに変更してもよい）パワード・ブロッカー
+    +4000（ブロック中、このクリーチャーのパワーを+4000する）このクリーチャーは攻撃できない。 ／ ♪古池や ワンスアゲイン スパイラル: S・トリガー（この呪文をシールドゾーンから手札に加える時、コストを支払わずにすぐ唱えてもよい）クリーチャーを１体選び、持ち主の手札に戻す。'
+- abilities:
+  - affects: self
+    kind: static
+    mod:
+      power_when:
+        amount: 6000
+        when: blocking
+  civs:
+  - water
+  cost: 6
+  id: dm23rp3-055
+  keywords:
+  - s_trigger
+  - blocker
+  mana: 1
+  name: 転繋！極輪&NETWORK
+  power: 4000
+  races:
+  - マジック・リキッド・ピープル
+  - ジャイアント・スノーフェアリー
+  source:
+    official: dm23rp3-055
+    review: pending
+  text: 'S・トリガー（このクリーチャーをシールドゾーンから手札に加える時、コストを支払わずにすぐ召喚してもよい）
+
+    ブロッカー（このクリーチャーをタップして、相手クリーチャーの攻撃先をこのクリーチャーに変更してもよい）
+
+    パワード・ブロッカー +6000（ブロック中、このクリーチャーのパワーを+6000する）'
+  types:
+  - creature
+- abilities:
+  - affects: self
+    kind: static
+    mod:
+      opt_reduce:
+        amount: 2
+        do:
+          max: 1
+          min: 1
+          move_to: hand
+          select:
+            filter:
+              types:
+              - creature
+            owner: you
+            zone: bz
+    zone: hand
+  - affects: self
+    kind: static
+    mod:
+      power_when:
+        amount: 6000
+        when: blocking
+  civs:
+  - water
+  cost: 5
+  id: dm23rp4x-029
+  keywords:
+  - blocker
+  mana: 1
+  name: 助招！Mogi林檎&無双
+  power: 4000
+  races:
+  - ジャイアント・スノーフェアリー
+  - マジック・マーフォーク
+  source:
+    official: dm23rp4x-029
+    review: pending
+    aliases:
+    - dm23rp4-029
+    - promoy22-066
+  text: 'このクリーチャーを召喚する時、自分のクリーチャーを１体、手札に戻してもよい。そうしたら、このクリーチャーの召喚コストを２少なくする。
+
+    ブロッカー（このクリーチャーをタップして、相手クリーチャーの攻撃先をこのクリーチャーに変更してもよい）
+
+    パワード・ブロッカー +6000（ブロック中、このクリーチャーのパワーを+6000する）'
+  types:
+  - creature
+- faces:
+  - abilities:
+    - affects: self
+      kind: static
+      mod:
+        power_when:
+          amount: 4000
+          when: blocking
+    civs:
+    - water
+    cost: 5
+    keywords:
+    - blocker
+    - double_breaker
+    mana: 1
+    name: 詠み人-シラズ-Machine
+    power: 6000
+    races:
+    - マジック・コマンド
+    types:
+    - creature
+  - civs:
+    - water
+    cost: 1
+    mana: 1
+    name: 招水呪文「マジックル」
+    races:
+    - マジック・ソング
+    spell:
+    - as: pile
+      op: choose
+      select:
+        count: all
+        from_top: 2
+        look: true
+        owner: you
+        zone: deck
+    - body:
+      - as: a
+        op: choose
+        select:
+          count: 1
+          filter:
+            any_of:
+            - race_has: マジック
+            - types:
+              - spell
+          ref: pile
+      - op: move
+        reason: draw
+        select:
+          count: all
+          ref: a
+        to: hand
+      op: may
+    - op: move
+      order: choose
+      position: bottom
+      reason: put
+      select:
+        count: all
+        ref: pile
+      to: deck
+    types:
+    - spell
+  id: dm23sd3-013
+  mana: 1
+  name: 詠み人-シラズ-Machine / 招水呪文「マジックル」
+  source:
+    notes: '呪文面の残りを山札の下に置く移動は position: bottom, order: choose を明記した（dm23ex2-108 の同型文は
+      position/order 無しだが、第86弾のイディオムに従った）'
+    official: dm23sd3-013
+    review: pending
+    aliases:
+    - dm23rp2-056
+    - dm23rp2x-056
+  text: '詠み人-シラズ-Machine: ブロッカー（このクリーチャーをタップして、相手クリーチャーの攻撃先をこのクリーチャーに変更してもよい）パワード・ブロッカー
+    +4000（ブロック中、このクリーチャーのパワーを+4000する）W・ブレイカー（このクリーチャーはシールドを２つブレイクする） ／ 招水呪文「マジックル」:
+    自分の山札の上から２枚を見る。その中からマジックまたは呪文を１枚、相手に見せてから手札に加えてもよい。残りを好きな順序で山札の下に置く。'
+- abilities:
+  - affects: self
+    kind: static
+    mod:
+      power_when:
+        amount: 2000
+        when: blocking
+  civs:
+  - light
+  cost: 4
+  id: dm24-072
+  keywords:
+  - blocker
+  - cannot_attack_player
+  mana: 1
+  name: 宣凶師ゼルビア
+  power: 4000
+  races:
+  - グラディエーター
+  source:
+    official: dm24-072
+    review: pending
+  text: 'ブロッカー(相手クリーチャーが攻撃する時、このクリーチャーをタップして、その攻撃を阻止してもよい。その後、その相手クリーチャーとバトルする)
+
+    このクリーチャーは、相手プレイヤーを攻撃できない。
+
+    このクリーチャーがブロックしている時、このクリーチャーのパワーは+2000される。'
+  types:
+  - creature
+- abilities:
+  - affects: self
+    kind: static
+    mod:
+      power_when:
+        amount: 6000
+        when: blocking
+  civs:
+  - water
+  cost: 2
+  id: dm25rp3-058
+  keywords:
+  - s_trigger
+  - blocker
+  mana: 1
+  name: 皿廻の妖精
+  power: 2000
+  races:
+  - ジャイアント・スノーフェアリー
+  source:
+    notes: 原文のパワーは 2000+ 表記。基礎パワー2000とし、+6000はブロック中の power_when で表した
+    official: dm25rp3-058
+    review: pending
+  text: 'S・トリガー（このカードをシールドゾーンから手札に加える時、コストを支払わずにすぐ実行してもよい）
+
+    ブロッカー（このクリーチャーをタップして、相手クリーチャーの攻撃先をこのクリーチャーに変更してもよい）
+
+    パワード・ブロッカー+6000（ブロック中、このクリーチャーのパワーを+6000する）'
+  types:
+  - creature
