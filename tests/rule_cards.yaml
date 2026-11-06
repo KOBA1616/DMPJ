@@ -878,3 +878,17 @@ cards:
         when: {event: block, attacker: self}
         effect:
           - {op: untap, select: {ref: self}}
+
+  # 第135弾 entered_count 条件の試験用: このターン2体以上出ていなければ攻撃できない
+  - id: R098
+    name: 試験用条件獣
+    types: [creature]
+    civs: [fire]
+    cost: 3
+    power: 2000
+    races: [テスト]
+    text: このターン中に自分のクリーチャーが２体以上バトルゾーンに出ていなければ、このクリーチャーは攻撃できない。
+    abilities:
+      - kind: static
+        if: {cmp: [{entered: {owner: you}}, "<", 2]}
+        mod: {deny: [attack_player, attack_creature]}

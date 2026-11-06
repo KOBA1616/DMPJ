@@ -1259,3 +1259,9 @@ draw イベントへの置換で表す（draw は個別イベントとして発�
 - 新フィルタ: {entered_this_turn: true}（defs.py FILTER_KEYS 追加、engine/selectors.py の filter_match に実装）。判定はカードの entered_turn（バトルゾーンに出たターン。それ以外は -1）が現在のターンと一致するか。
 - proto T167。tests/test_vocab_pilot134.py 2件（parse／照合の実挙動）。
 - 待機4枚（entered_this_turn_filter のみが gap のもの）。entered_this_turn_condition（9枚）の条件側にも使える可能性あり。
+
+## 第135弾: entered_this_turn_condition（このターン中に出た数での条件）— 新語彙なし（2026-11-06）
+「このターン中に自分のクリーチャーがN体以上バトルゾーンに出ていれば／なければ」は式 {entered: {owner: you}}（既存実装、そのまま数が返る。other: true で自分自身を除く）で数え、cmp で条件化する。
+- 書き方: 条件付き static（第88弾）や trigger の if に {cmp: [{entered: {owner: you}}, "<", 2]} 等（count: で包まない）。
+- 試験カード R098。tests/test_vocab_pilot135.py 2件（parse／entered カウンタで deny が解ける実挙動）。
+- 待機11枚（entered_this_turn_condition のみが gap のもの）。
