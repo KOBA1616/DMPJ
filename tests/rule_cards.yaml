@@ -892,3 +892,34 @@ cards:
       - kind: static
         if: {cmp: [{entered: {owner: you}}, "<", 2]}
         mod: {deny: [attack_player, attack_creature]}
+
+  # 第136弾 add_races 式展開の試験用: 起動で種族を選び、自分のクリーチャーすべてがその種族を追加する
+  - id: R099
+    name: 試験用種族付与獣
+    types: [creature]
+    civs: [nature]
+    cost: 3
+    power: 2000
+    races: [テスト]
+    text: 古代の儀式（タップ） 種族をひとつ選ぶ。このターンの終わりまで、自分のクリーチャーはすべて、その種族を追加する。
+    abilities:
+      - kind: activate
+        cost: {tap: self}
+        effect:
+          - op: choose_race
+            as: kind
+          - op: modify
+            select: {zone: bz, owner: you, count: all, filter: {types: [creature]}}
+            mod: {add_races: [{race: kind}]}
+            duration: end_of_turn
+
+  # 第136弾の試験用: ドラゴン種族のクリーチャー（choose_race の選択肢と対象確認用）
+  - id: R100
+    name: 試験用ドラゴン
+    types: [creature]
+    civs: [fire]
+    cost: 2
+    power: 1000
+    races: [ドラゴン]
+    text: バニラ。
+    abilities: []

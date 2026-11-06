@@ -190,7 +190,13 @@ def op_modify(eng, t, op, env):
     dynamic: true は「相手のクリーチャーは〜できない」のように、後から入ったカードにも及ぶ範囲指定。"""
     s = eng.s
     s.seq += 1
-    ce = {"id": s.seq, "mod": op["mod"], "duration": eng._duration(op.get("duration", "end_of_turn"), env),
+    mod = op["mod"]
+    if any(isinstance(r, dict) for r in mod.get("add_races", [])):
+        # 式の種族（{race: 変数名} = choose_race で選んだ種族）は生成時の env で名前へ展開して固定する（第136弾）
+        mod = dict(mod)
+        mod["add_races"] = [name for r in mod["add_races"]
+                            for name in (eng.eval_expr(r, env) if isinstance(r, dict) else [r])]
+    ce = {"id": s.seq, "mod": mod, "duration": eng._duration(op.get("duration", "end_of_turn"), env),
           "controller": env["you"], "src": env["self"][0] if env.get("self") else None}
     if "add_of" in op["mod"]:      # ダイナモ: このクリーチャー（効果の発生源）のパワーと能力を対象に加える
         ce["add_from"] = env["self"]

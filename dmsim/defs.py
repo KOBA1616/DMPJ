@@ -422,8 +422,8 @@ class Checker:
             if "count" in pm:
                 self.count_spec(pm["count"], where)
         if "add_races" in m:
-            if not isinstance(m["add_races"], list) or not all(isinstance(x, str) for x in m["add_races"]):
-                raise DefError(f"{where}: add_races must be a list of race names")
+            if not isinstance(m["add_races"], list) or not all(isinstance(x, (str, dict)) for x in m["add_races"]):
+                raise DefError(f"{where}: add_races must be a list of race names or expressions")
         if "breaks" in m:
             b = m["breaks"]
             if isinstance(b, dict):

@@ -2163,3 +2163,17 @@ cards:
     spell:
       - op: destroy
         select: {zone: bz, owner: opp, count: all, filter: {types: [creature], entered_this_turn: true}}
+  - id: T168
+    name: 試験用種族付与呪文
+    types: [spell]
+    civs: [nature]
+    cost: 3
+    races: [テスト]
+    text: 種族をひとつ選ぶ。このターンの終わりまで、自分のクリーチャーはすべて、その種族を追加する。
+    spell:
+      - op: choose_race
+        as: kind
+      - op: modify
+        select: {zone: bz, owner: you, count: all, filter: {types: [creature]}}
+        mod: {add_races: [{race: kind}]}
+        duration: end_of_turn
