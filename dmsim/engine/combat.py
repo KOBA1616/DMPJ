@@ -126,9 +126,9 @@ class CombatMixin:
                 break
         return att, tgt, None
 
-    def _battle_bonus(self, ref, attacking: bool = False) -> int:
+    def _battle_bonus(self, ref, attacking: bool = False, opponent=None) -> int:
         """バトル中だけのパワー修整（mod battle_power。ハンティング: 自分のハンター1体につき+1000）。only: attacking は攻撃側のときだけ。
-        「攻撃中」「ブロック中」のパワー修整は mod power_when（バトルをしていない間も含む）。"""
+        opponent_filter（第122弾）: バトルの相手がフィルタに合う時だけ。「攻撃中」「ブロック中」のパワー修整は mod power_when（バトルをしていない間も含む）。"""
         cid = ref[0]
         env = {"you": self.s.cards[cid].controller, "self": ref}
         total = 0
@@ -136,16 +136,37 @@ class CombatMixin:
             bp = ab.get("mod", {}).get("battle_power")
             if bp and bp.get("only") == "attacking" and not attacking:
                 continue
+            if bp and "opponent_filter" in bp and (opponent is None or not self.filter_match(opponent[0], bp["opponent_filter"])):
+                continue
             if bp and ab.get("affects") == "self" and ab.get("zone", "bz") == self.s.cards[cid].zone:
                 total += bp["amount"] * (self.count_of(bp["count"], env) if "count" in bp else 1)
         return total
 
+    def _battle_indestructible(self, ref, opponent) -> bool:
+        """バトルで破壊されないか。無条件（第59弾）と、相手フィルタつき（第122弾）の両方を見る。"""
+        ch = self.chars(ref[0])
+        if ch["battle_indestructible"] or ch.get("indestructible"):
+            return True
+        return any(self.filter_match(opponent[0], f) for f in ch.get("battle_indestructible_filters", []))
+
     def _battle(self, x, y):
         """バトル（701.13）。結果で誘発した効果はその場で解決してからバトルを終える。"""
-        px = self.chars(x[0])["power"] + self._battle_bonus(x, attacking=True)      # x は攻撃側
-        py = self.chars(y[0])["power"] + self._battle_bonus(y)
-        losers = ([x] if px <= py else []) + ([y] if py <= px else [])
-        winners = [r for r in (x, y) if r not in losers]
+        px = self.chars(x[0])["power"] + self._battle_bonus(x, attacking=True, opponent=y)      # x は攻撃側
+        py = self.chars(y[0])["power"] + self._battle_bonus(y, opponent=x)
+        # 第61弾: すべてのバトルに勝つクリーチャーはパワーに関わらず勝つ
+        x_wins = self.chars(x[0])["win_all_battles"]
+        y_wins = self.chars(y[0])["win_all_battles"]
+        if x_wins and y_wins:
+            losers_by_power = []   # 両方勝つ場合は相打ちなし
+        elif x_wins:
+            losers_by_power = [y]
+        elif y_wins:
+            losers_by_power = [x]
+        else:
+            losers_by_power = ([x] if px <= py else []) + ([y] if py <= px else [])
+        # 第59弾: バトル中破壊されないクリーチャーは破壊されない（勝敗判定はパワーどおり）
+        losers = [r for r in losers_by_power if not self._battle_indestructible(r, y if r == x else x)]
+        winners = [r for r in (x, y) if r not in losers_by_power]
         slay = [[r, y if r == x else x] for r in losers if self.permits(r[0], "slayer")]
         evs = [{"ev": "move", "subject": r, "to": "graveyard", "reason": "destroy", "battle": True} for r in losers]
         evs += [{"ev": "battle_win", "subject": r, "controller": self.s.cards[r[0]].controller} for r in winners]
@@ -298,7 +319,8 @@ def h_attack(eng, t):
         if t["target"] == "player":
             shields = eng.zlist("shield", 1 - a)
             if shields:
-                eng._push({"t": "break", "victim": 1 - a, "by": a, "count": n, "phase": 0, "in_effect": False, "breaker": att})
+                if n > 0:   # ヌル・ブレイカー（0ブレイク）ではブレイク自体が起こらない（第129弾）
+                    eng._push({"t": "break", "victim": 1 - a, "by": a, "count": n, "phase": 0, "in_effect": False, "breaker": att})
             else:
                 eng._push(*eng.game_lose(1 - a, "direct_attack"))   # 509.1 / 703.4a（敗北の置換を諮ってから確定する）
         return None

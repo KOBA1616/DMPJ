@@ -3,6 +3,14 @@ from __future__ import annotations
 
 
 class SelectorMixin:
+    def _expr_refs(self, v, env):
+        """cost_of / power_of の参照先を ref のリストにする。
+        値は変数名（文字列）または {ref: 名前}。 "self" は自分自身を指す。"""
+        name = v.get("ref") if isinstance(v, dict) else v
+        if name == "self":
+            return [env["self"]] if env.get("self") else []
+        return list(env.get("vars", {}).get(name, []))
+
     def eval_expr(self, x, env):
         if isinstance(x, int):
             return x
@@ -24,12 +32,19 @@ class SelectorMixin:
                 if spec.get("other") and env.get("self"):   # 「自分の他のクリーチャー」: 自分自身は数えない
                     lst = [c for c in lst if c != env["self"][0]]
                 return len(lst)
+            if "drew" in x:   # このターン、そのプレイヤーがカードを引いた枚数（第142弾）
+                spec = x["drew"]
+                return self.s.turn_counters.get(f"drew:{self._rel(spec.get('owner', 'you'), env)}", 0)
             if "var" in x:
                 v = env.get("vars", {}).get(x["var"], [])
                 return v if isinstance(v, int) else len(v)   # 数を数えた変数（ガチンコの勝ち数など）はそのまま
-            if "cost_of" in x:   # 変数に束縛したカード（複数なら最大）のコスト
-                ids = env.get("vars", {}).get(x["cost_of"], [])
-                return max((self.chars(c[0])["cost"] for c in ids), default=0)
+            if "cost_of" in x:   # 参照カード（複数なら最大）のコスト
+                return max((self.chars(c[0])["cost"] for c in self._expr_refs(x["cost_of"], env)), default=0)
+            if "power_of" in x:   # 参照カード（複数なら最大）の現在パワー（第116弾で追加。cost_of の対）
+                return max((self.chars(c[0])["power"] for c in self._expr_refs(x["power_of"], env)), default=0)
+            if "name_of" in x:   # 参照カードのカード名（「そのクリーチャーと同じ名前の〜」フィルタ用、第140弾。複数なら先頭）
+                refs = self._expr_refs(x["name_of"], env)
+                return self.chars(refs[0][0])["name"] if refs else ""
             if "race" in x:   # choose_race で選んだ種族名
                 return [env.get("races", {})[x["race"]]]
             if "races_of" in x:   # 変数に束縛したカードの種族（「種族をひとつ選ぶ」の代わりに、場のカード1体を選んでその種族とする）
@@ -97,6 +112,10 @@ class SelectorMixin:
             return False
         if "race_has" in f and not any(f["race_has"] in r for r in ch["races"]):
             return False
+        if "not_race_has" in f:
+            pats = f["not_race_has"] if isinstance(f["not_race_has"], list) else [f["not_race_has"]]
+            if any(p in r for p in pats for r in ch["races"]):
+                return False
         if "name_has" in f and f["name_has"] not in ch["name"]:
             return False
         if "twinpact" in f and bool(self.cdef(cid).faces) != bool(f["twinpact"]):
@@ -129,6 +148,8 @@ class SelectorMixin:
                 return False
         if "multicolor" in f and (len(ch["civs"]) > 1) != f["multicolor"]:
             return False
+        if "colorless" in f and (len(ch["civs"]) == 0) != f["colorless"]:
+            return False
         if "tapped" in f and (lki["tapped"] if lki else c.tapped) != f["tapped"]:
             return False
         if "face_down" in f and c.face_down != f["face_down"]:
@@ -139,6 +160,13 @@ class SelectorMixin:
             return False
         if "evolution" in f and ("evolution" in self.fdef(cid).types) != bool(f["evolution"]):
             return False   # 「進化ではないクリーチャー」等（進化はタイプで表す）
+        if "linked_god" in f:
+            linked = self.link_side(cid) is not None and len(self.link_members(cid)) >= 2
+            if linked != bool(f["linked_god"]):
+                return False   # 「リンクしているゴッド」: リンク位置を持ち、実際に2体以上でリンクしている
+        if "entered_this_turn" in f:
+            if (c.entered_turn == self.s.turn) != bool(f["entered_this_turn"]):
+                return False   # 「このターン中に出た」: entered_turn はバトルゾーンに出たターン（それ以外は -1）
         if "mugen_climb" in f and (self.fdef(cid).mugen_climb is not None) != bool(f["mugen_climb"]):
             return False   # 「『ムゲンクライム』能力を持つカード」
         if "vanilla" in f:   # 「カードに能力が書かれていない」: 能力もキーワードも無く、進化・NEO 等の書かれた仕組みも持たない
@@ -197,7 +225,7 @@ class SelectorMixin:
             elif r == "crossed":   # このクロスギアをクロスしているクリーチャー（303.3a）
                 g = s.cards[env["self"][0]].crossed
                 refs = [g] if g else []
-            elif r in ("event.target", "event.attacker"):   # 攻撃された（攻撃先の）クリーチャー / ブロックされた（攻撃）クリーチャー
+            elif r in ("event.target", "event.attacker", "event.opponent"):   # 攻撃された（攻撃先の）クリーチャー / ブロックされた（攻撃）クリーチャー / バトルの相手
                 v = env["event"].get(r.split(".")[1])
                 refs = [v] if isinstance(v, list) else []
             elif r in ("event.subject", "subject"):   # subject は event.subject の別名（変換データが両形を使う）
