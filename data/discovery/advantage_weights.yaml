@@ -1,0 +1,19 @@
+# 局面評価 V の換算規則（資源1単位の価値）。初期値は仮置きで koba の確認待ち。
+# V = 自分の資源の合計 − 相手の資源の合計。値は「手札1枚 = 1.0」を基準にした相対値。
+version: 1
+self:
+  hand: 1.0
+  shield: 1.2          # 盾は守りと S・トリガーの機会
+  mana: 0.8
+  board: 1.5           # バトルゾーンのカード1枚
+  board_power: 0.0003  # パワー1000あたり0.3 の上乗せ
+  graveyard: 0.2       # 再利用できる可能性
+  deck: 0.0
+opp:
+  hand: 1.0
+  shield: 1.2
+  mana: 0.8
+  board: 1.5
+  board_power: 0.0003
+  graveyard: 0.0
+  deck: 0.0
