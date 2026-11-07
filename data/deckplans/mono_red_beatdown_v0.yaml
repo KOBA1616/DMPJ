@@ -1,0 +1,19 @@
+# 火単 我我我ビートダウン案（koba 2026-11-07）。記録のみ。ID は未確定（カード変換の reject 解消後に確定する）。
+# 注意: “罰怒”ブランド 1st は別カード。どの版を指すかは koba に確認してから card_id を入れる。
+schema_version: 1
+name: mono_red_beatdown_v0
+tags: [beatdown, aggro, mono_red]
+source: koba
+notes: 速攻・ビートダウンの代表デッキ案。10種×4枚=40枚。
+status: proposed
+entries:
+- {name: ブレイズ・クロー, count: 4}
+- {name: ブンブン・チュリス, count: 4}
+- {name: カンゴク入道, count: 4}
+- {name: コダマンマGS, count: 4}
+- {name: 罰怒ブランド, count: 4}
+- {name: 我我我ガイアールブランド, count: 4}
+- {name: クミタテチュリス, count: 4}
+- {name: 赤い稲妻テスタロッサ, count: 4}
+- {name: こたつむり, count: 4}
+- {name: グレイトS-駆, count: 4}
