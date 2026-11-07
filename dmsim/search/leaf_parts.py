@@ -51,9 +51,13 @@ def make_value_fn(spec: PartsSpec, weights: Weights | None = None):
 
 SAGA = "dm22ex2-021"
 # 絶望神サガ: 入口=墓地にサガ + 墓地にクリーチャー2枚（手札から出す経路は別）。手札・場のサガは小さく加点
+# coef=10: evaluate の打点項（場のクリーチャー1体で+40）に勝てる大きさが必要。1〜5 では saga_entry の T2 墓地サガ率が 4/40 のまま、10 で 12/40
 SAGA_SPEC = PartsSpec((
     Part("graveyard", (SAGA,), 1, 3.0),
     Part("graveyard", (), 2, 1.0),
     Part("hand", (SAGA,), 1, 0.5),
     Part("bz", (SAGA,), 1, 0.5),
-))
+    # 出口札と入口札（エマージェンシー・タイフーン）はマナに置かず手札に残す
+    Part("hand", ("dm22ex1-007", "dmrp03-s03"), 1, 1.5),
+    Part("hand", ("dm26ex2-071",), 1, 1.0),
+), coef=10.0)
