@@ -35,14 +35,23 @@ SAGA, DRAG, SHAKO, ET, ETS, KODAMA, IWASHIN, HARUKASU = ("dm22ex2-021", "dm22ex1
                                                        "dmex10-020", "dmrp03-036", "dm01-080")
 EXPLICIT = {
     "saga_entry2": [(SAGA, 4), (DRAG, 4), (SHAKO, 4), (ET, 4), (ETS, 4), (KODAMA, 4), (IWASHIN, 4)],
+    # アカシック: 必要部品5種を各4枚に寄せ、ドロー札（エナジー・ライト、エマージェンシー・タイフーン）とH.D.2.・モーニンジョーを足す
+    "akashic_focus": [("dm23ex2-009", 4), ("dm24ex3-rp3tr6", 4), ("dmrp12-s01", 4), ("dm23bd7-035", 4), ("dm24ex1-038", 4),
+                      ("dm06-085", 4), (ETS, 4), ("dmrp07-009", 4), ("dm24ex1-043", 4)],
+    # 天門: ブロッカー・攻撃できないカード（オリーブオイル・シーブス・ミルザム）を外し、攻撃役（アレフティナ・ランサー・ハルカス）を増やす
+    "tenmon_attackers": [("dm16-007", 2), ("dmx12b-031", 4), ("dm23bd7-022", 4), ("dmx19-s06", 1), ("dmx24-017", 2), ("dm23ex2-cho018", 4),
+                         ("dmx11-082", 4), ("dm31-025", 4), ("dm02-024", 4), ("dm06-085", 3), ("dm01-080", 4)],
 }
+ATTACKER_ONLY = {"tenmon_attackers"}  # 残りの汎用札にブロッカー・攻撃できないカードを入れない
 
 
-def filler_pool(rules, civs, banned_names):
+def filler_pool(rules, civs, banned_names, attackers=False):
     out, names = [], set()
     for i in sorted(rules.cards):
         cd = rules.cards[i]
         if not i.startswith("dm") or cd.name in banned_names or cd.name in names:
+            continue
+        if attackers and any(w in (cd.text or "") for w in ("ブロッカー", "攻撃できない", "攻撃することができない")):
             continue
         if cd.types != ["creature"] or cd.cost > 5 or len(cd.civs) != 1 or cd.civs[0] not in civs:
             continue
@@ -85,8 +94,8 @@ def main(argv=None):
     for name, cids in plans.items():
         parts, seen = [], set()
         if name in EXPLICIT:
-            civs = {"water", "darkness"}
             deck = [i for i, n in EXPLICIT[name] for _ in range(n)]
+            civs = {c for i in deck for c in rules.cards[i].civs}
             cnt = {}
             for i in deck:
                 cnt[rules.cards[i].name] = cnt.get(rules.cards[i].name, 0) + 1
@@ -107,7 +116,7 @@ def main(argv=None):
             cnt = {}
             for i in deck:
                 cnt[rules.cards[i].name] = cnt.get(rules.cards[i].name, 0) + 1
-        pool = filler_pool(rules, civs, banned)
+        pool = filler_pool(rules, civs, banned, name in ATTACKER_ONLY)
         k = 0
         while len(deck) < 40 and pool:
             i = pool[(k * 7) % len(pool)]
