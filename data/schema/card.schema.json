@@ -94,6 +94,7 @@
      "mega_last_burst",
      "meteor_burn",
      "must_attack",
+     "null_breaker",
      "powered_breaker",
      "quad_breaker",
      "right_g_link",
@@ -141,13 +142,16 @@
       "any_of": {},
       "civs": {},
       "civs_all": {},
+      "colorless": {},
       "cost_ge": {},
       "cost_le": {},
+      "entered_this_turn": {},
       "evolution": {},
       "face_down": {},
       "face_up": {},
       "fushigi": {},
       "keyword": {},
+      "linked_god": {},
       "mugen_climb": {},
       "multicolor": {},
       "name": {},
@@ -155,6 +159,7 @@
       "neo": {},
       "not_civs": {},
       "not_name": {},
+      "not_race_has": {},
       "not_types": {},
       "power_ge": {},
       "power_le": {},
@@ -320,6 +325,7 @@
        "mega_last_burst",
        "meteor_burn",
        "must_attack",
+       "null_breaker",
        "powered_breaker",
        "quad_breaker",
        "right_g_link",
@@ -367,13 +373,16 @@
         "any_of": {},
         "civs": {},
         "civs_all": {},
+        "colorless": {},
         "cost_ge": {},
         "cost_le": {},
+        "entered_this_turn": {},
         "evolution": {},
         "face_down": {},
         "face_up": {},
         "fushigi": {},
         "keyword": {},
+        "linked_god": {},
         "mugen_climb": {},
         "multicolor": {},
         "name": {},
@@ -381,6 +390,7 @@
         "neo": {},
         "not_civs": {},
         "not_name": {},
+        "not_race_has": {},
         "not_types": {},
         "power_ge": {},
         "power_le": {},
@@ -833,6 +843,9 @@
        "label": {
         "type": "string"
        },
+       "player": {
+        "type": "string"
+       },
        "else": {
         "$ref": "#/$defs/ops"
        }
@@ -977,6 +990,9 @@
         "type": "boolean"
        },
        "face_up": {
+        "type": "boolean"
+       },
+       "face_down": {
         "type": "boolean"
        },
        "seal": {
@@ -1450,13 +1466,16 @@
     "any_of": {},
     "civs": {},
     "civs_all": {},
+    "colorless": {},
     "cost_ge": {},
     "cost_le": {},
+    "entered_this_turn": {},
     "evolution": {},
     "face_down": {},
     "face_up": {},
     "fushigi": {},
     "keyword": {},
+    "linked_god": {},
     "mugen_climb": {},
     "multicolor": {},
     "name": {},
@@ -1464,6 +1483,7 @@
     "neo": {},
     "not_civs": {},
     "not_name": {},
+    "not_race_has": {},
     "not_types": {},
     "power_ge": {},
     "power_le": {},
@@ -1621,6 +1641,9 @@
       "cost_of": {
        "type": "string"
       },
+      "power_of": {
+       "type": "string"
+      },
       "races_of": {
        "type": "string"
       },
@@ -1760,6 +1783,7 @@
        "mega_last_burst",
        "meteor_burn",
        "must_attack",
+       "null_breaker",
        "powered_breaker",
        "quad_breaker",
        "right_g_link",
@@ -1804,6 +1828,7 @@
          "be_chosen",
          "block",
          "cast",
+         "cast_free",
          "enter_bz",
          "evolve_base",
          "generate",
@@ -1829,6 +1854,7 @@
            "be_chosen",
            "block",
            "cast",
+           "cast_free",
            "enter_bz",
            "evolve_base",
            "generate",
@@ -1870,6 +1896,7 @@
          "be_chosen",
          "block",
          "cast",
+         "cast_free",
          "enter_bz",
          "evolve_base",
          "generate",
@@ -1895,6 +1922,7 @@
            "be_chosen",
            "block",
            "cast",
+           "cast_free",
            "enter_bz",
            "evolve_base",
            "generate",
@@ -1934,10 +1962,20 @@
     "add_of": {
      "const": "self"
     },
+    "double_power": {
+     "type": "boolean"
+    },
     "add_races": {
      "type": "array",
      "items": {
-      "type": "string"
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "object"
+       }
+      ]
      }
     },
     "breaks": {
@@ -2044,6 +2082,9 @@
        "enum": [
         "attacking"
        ]
+      },
+      "opponent_filter": {
+       "$ref": "#/$defs/filter"
       }
      },
      "required": [
@@ -2160,15 +2201,21 @@
       "$ref": "#/$defs/ability"
      }
     },
+    "add_civs": {},
+    "battle_indestructible": {},
+    "indestructible": {},
     "must_be_attacked": {},
-    "no_leave": {}
+    "no_leave": {},
+    "win_all_battles": {}
    },
    "additionalProperties": false,
    "propertyNames": {
     "enum": [
+     "add_civs",
      "add_of",
      "add_races",
      "allow",
+     "battle_indestructible",
      "battle_power",
      "breaks",
      "breaks_per_power",
@@ -2176,17 +2223,20 @@
      "cost_may",
      "cost_min",
      "deny",
+     "double_power",
      "gain",
      "grant",
      "ignore",
      "ignore_ids",
+     "indestructible",
      "must_be_attacked",
      "no_leave",
      "opt_reduce",
      "power",
      "power_when",
      "require",
-     "sac_reduce"
+     "sac_reduce",
+     "win_all_battles"
     ]
    }
   },
@@ -2216,47 +2266,112 @@
      ]
     },
     "from": {
-     "enum": [
-      "abyss",
-      "bz",
-      "deck",
-      "gr",
-      "graveyard",
-      "hand",
-      "hyper",
-      "mana",
-      "shield"
+     "anyOf": [
+      {
+       "enum": [
+        "abyss",
+        "bz",
+        "deck",
+        "gr",
+        "graveyard",
+        "hand",
+        "hyper",
+        "mana",
+        "shield"
+       ]
+      },
+      {
+       "type": "array",
+       "items": {
+        "enum": [
+         "abyss",
+         "bz",
+         "deck",
+         "gr",
+         "graveyard",
+         "hand",
+         "hyper",
+         "mana",
+         "shield"
+        ]
+       }
+      }
      ]
     },
     "to": {
-     "enum": [
-      "abyss",
-      "bz",
-      "deck",
-      "gr",
-      "graveyard",
-      "hand",
-      "hyper",
-      "mana",
-      "shield"
+     "anyOf": [
+      {
+       "enum": [
+        "abyss",
+        "bz",
+        "deck",
+        "gr",
+        "graveyard",
+        "hand",
+        "hyper",
+        "mana",
+        "shield"
+       ]
+      },
+      {
+       "type": "array",
+       "items": {
+        "enum": [
+         "abyss",
+         "bz",
+         "deck",
+         "gr",
+         "graveyard",
+         "hand",
+         "hyper",
+         "mana",
+         "shield"
+        ]
+       }
+      }
      ]
     },
     "reason": {
-     "enum": [
-      "battle",
-      "break",
-      "cast",
-      "charge",
-      "destroy",
-      "discard",
-      "draw",
-      "evolve",
-      "put",
-      "resolve",
-      "return",
-      "sba",
-      "seal",
-      "summon"
+     "anyOf": [
+      {
+       "enum": [
+        "battle",
+        "break",
+        "cast",
+        "charge",
+        "destroy",
+        "discard",
+        "draw",
+        "evolve",
+        "put",
+        "resolve",
+        "return",
+        "sba",
+        "seal",
+        "summon"
+       ]
+      },
+      {
+       "type": "array",
+       "items": {
+        "enum": [
+         "battle",
+         "break",
+         "cast",
+         "charge",
+         "destroy",
+         "discard",
+         "draw",
+         "evolve",
+         "put",
+         "resolve",
+         "return",
+         "sba",
+         "seal",
+         "summon"
+        ]
+       }
+      }
      ]
     },
     "player": {
@@ -2276,6 +2391,7 @@
     },
     "target": {},
     "attacker": {},
+    "opponent": {},
     "via": {
      "enum": [
       "generate",
