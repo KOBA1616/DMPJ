@@ -76,6 +76,14 @@ class TurnMixin:
                         opt["face"] = fi
                     out.append(opt)
             for fi, f in ([(None, d)] if not d.faces else list(enumerate(d.faces))):
+                if "spell" in f.types and self.permits(cid, "cast") and self.permits(cid, "cast_free"):
+                    fk = f"{o['key']}:free" if fi is None else f"{o['key']}:{fi}:free"
+                    if all(x["key"] != fk for x in out):   # 無償詠唱（アカシック3など）: コストを支払わずに唱える選択肢
+                        opt = {"key": fk, "cid": cid, "name": f.name, "free": True}
+                        if fi is not None:
+                            opt["face"] = fi
+                        out.append(opt)
+            for fi, f in ([(None, d)] if not d.faces else list(enumerate(d.faces))):
                 if f.neo and f.evolve_from and self._evo_sources(cid, p, fi):   # NEO進化: 重ねて出す選択肢
                     opt = {"key": f"{o['key']}:neo" if fi is None else f"{o['key']}:{fi}:neo", "cid": cid,
                            "name": f.name, "neo": True}

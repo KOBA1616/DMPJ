@@ -56,3 +56,28 @@ def test_hd2_chosen_player_self(rules):
 def test_hd2_chosen_player_opponent(rules):
     e = _hd2(rules, 1)
     assert len(e.zlist("mana", 0)) == 5 and len(e.zlist("mana", 1)) == 2   # 相手の山札の上2枚が相手のマナへ
+
+
+def test_akashic3_allows_free_cast_of_spells(rules):
+    e = setup(rules, {"bz": ["dm23ex2-009"], "hand": [HD2]})
+    answer(e, "charge", "pass")
+    d = e.advance()
+    keys = [o["key"] for o in d["options"]]
+    assert f"play:{HD2}:1:free" in keys                     # マナ0でも呪文面を無償で唱えられる
+    assert f"play:{HD2}:0:free" not in keys                 # クリーチャー面は対象外
+
+
+def test_no_free_cast_without_akashic3(rules):
+    e = setup(rules, {"hand": [HD2]})
+    answer(e, "charge", "pass")
+    d = e.advance()
+    assert not any(o["key"].endswith(":free") for o in d["options"])
+
+
+def test_akashic3_free_cast_resolves_without_mana(rules):
+    e = setup(rules, {"bz": ["dm23ex2-009"], "hand": [HD2]}, deck_size=20)
+    answer(e, "charge", "pass")
+    answer(e, "main", f"play:{HD2}:1:free")
+    answer(e, "choose_mode", "mode:0")
+    e.advance()
+    assert len(e.zlist("mana", 0)) == 2
