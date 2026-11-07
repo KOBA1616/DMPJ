@@ -7,6 +7,7 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 from dmsim.defs import load_rules  # noqa: E402
+from dmsim.opponent import PRESETS  # noqa: E402
 from dmsim.eval.harness import EvalConfig, run_eval  # noqa: E402
 from dmsim.eval.infolevel import InfoLevel  # noqa: E402
 from dmsim.solitaire import load_deck  # noqa: E402
@@ -20,9 +21,11 @@ def main(argv=None):
     ap.add_argument("--budget-mults", type=float, nargs="+", default=[1.0])
     ap.add_argument("--turns", type=int, default=4)
     ap.add_argument("--levels", nargs="+", default=["fair", "cheat"], choices=["fair", "cheat"])
+    ap.add_argument("--opp", nargs="+", default=["none"], help="相手モデル(dmsim.opponent.PRESETS)。複数で比較")
+    ap.add_argument("--opp-deck", help="相手のデッキYAML。省略時は T001×40（bz/blockers/strigger を効かせるには実デッキを指定）")
     ap.add_argument("--out")
     a = ap.parse_args(argv)
-    cfg = EvalConfig(decks={Path(p).stem: load_deck(p) for p in a.deck}, opp_deck=["T001"] * 40,
+    cfg = EvalConfig(decks={Path(p).stem: load_deck(p) for p in a.deck}, opp_deck=load_deck(a.opp_deck) if a.opp_deck else ["T001"] * 40, opps={n: PRESETS[n] for n in a.opp},
                      seeds=list(range(1, a.seeds + 1)), levels=tuple(InfoLevel(x) for x in a.levels),
                      budget_mults=tuple(a.budget_mults), base_budget=a.budget, max_turn=a.turns)
     rep = run_eval(load_rules(), cfg)

@@ -8,8 +8,10 @@ from pathlib import Path
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 from dmsim.defs import load_rules  # noqa: E402
 from dmsim.eval import fair_runner  # noqa: E402
+from dmsim.opponent import PRESETS  # noqa: E402
 from dmsim.eval.harness import EvalConfig, hidden_info_cost, run_eval  # noqa: E402
 from dmsim.play import default_decks  # noqa: E402
+from dmsim.solitaire import load_deck  # noqa: E402
 
 
 def main(argv=None):
@@ -21,18 +23,20 @@ def main(argv=None):
     ap.add_argument("--prefix", default="dm")
     ap.add_argument("--deck", nargs="*", help="デッキYAML(load_deck形式)。複数可。省略時は default_decks の1番目")
     ap.add_argument("--setup", help="scenario YAML（キル手前の局面から始める。例 tests/saga_setup.yaml）")
+    ap.add_argument("--opp", nargs="+", default=["none"], help="相手モデル(dmsim.opponent.PRESETS)。複数で比較")
+    ap.add_argument("--opp-deck", help="相手のデッキYAML。省略時は T001×40（bz/blockers/strigger を効かせるには実デッキを指定）")
     ap.add_argument("--out")
     a = ap.parse_args(argv)
     rules = load_rules()
     fair_runner.register(a.n_det)
-    from dmsim.solitaire import load_deck
     decks = {Path(p).stem: load_deck(p) for p in a.deck} if a.deck else {"default0": default_decks(rules, a.prefix)[0]}
     import yaml
     spec = yaml.safe_load(Path(a.setup).read_text(encoding="utf-8")) if a.setup else None
-    cfg = EvalConfig(start_spec=spec, decks=decks, opp_deck=["T001"] * 40, seeds=list(range(1, a.seeds + 1)),
+    cfg = EvalConfig(start_spec=spec, decks=decks, opp_deck=load_deck(a.opp_deck) if a.opp_deck else ["T001"] * 40, opps={n: PRESETS[n] for n in a.opp}, seeds=list(range(1, a.seeds + 1)),
                      base_budget=a.budget, max_turn=a.turns)
     rep = run_eval(rules, cfg)
-    rep["hidden_info_cost"] = {d: {t: hidden_info_cost(rep, d, t) for t in range(1, a.turns + 1)} for d in decks}
+    rep["hidden_info_cost"] = {f"{d}|opp={o}": {t: hidden_info_cost(rep, d, t, opp=o) for t in range(1, a.turns + 1)}
+                              for d in decks for o in a.opp}
     for k, c in rep["cells"].items():
         print(k, {t: [round(v["rate"], 2), [round(x, 2) for x in v["ci95"]]] for t, v in c["kill_rate_by_turn"].items()},
               f"nodes={c['mean_nodes']:.0f} sec={c['seconds']:.0f}")

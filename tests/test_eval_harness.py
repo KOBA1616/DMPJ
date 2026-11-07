@@ -52,3 +52,28 @@ def test_explog_version(tmp_path):
     with pytest.raises(explog.VersionMismatch):
         explog.read_log(p, "v2")
     assert explog.summarize_log(p)["steps"] == 1
+
+
+def test_opp_axis_and_keys():
+    seen = []
+
+    def run(rules, deck, opp_deck, seed, fp, max_turn, budget, **kw):
+        seen.append(kw.get("opp"))
+        return GameResult(seed=seed, first_player=fp, kill_turn=3 if (kw.get("opp") is None or seed % 2) else None)
+
+    register_runner(InfoLevel.CHEAT, run)
+    register_runner(InfoLevel.FAIR, run)
+    from dmsim.opponent import PRESETS
+    cfg = EvalConfig(decks={"d": ["x"]}, opp_deck=["y"], seeds=list(range(1, 5)), first="first",
+                     opps={"none": None, "blockers": PRESETS["blockers"]})
+    rep = run_eval(None, cfg)
+    assert "d|fair|x1.0" in rep["cells"] and "d|fair|x1.0|opp=blockers" in rep["cells"]
+    assert rep["cells"]["d|fair|x1.0|opp=blockers"]["kill_rate_by_turn"][3]["rate"] == 0.5
+    assert PRESETS["blockers"] in seen and None in seen
+    assert hidden_info_cost(rep, "d", 3, opp="blockers")["diff"] == 0.0
+
+
+def test_fair_runner_accepts_opp():
+    import inspect
+    from dmsim.eval.fair_runner import make_fair_runner
+    assert "opp" in inspect.signature(make_fair_runner()).parameters
