@@ -1,11 +1,12 @@
 name: akashic
 combos:
 - akashic
-warnings:
-- dm23ex2-cho005 は未登録
-- dm24ex3-rp3tr6 は未登録
-- dmrp07-009 は未登録
+warnings: []
 deck:
+- dm23ex2-009
+- dm23ex2-009
+- dm24ex3-rp3tr6
+- dm24ex3-rp3tr6
 - dmrp12-s01
 - dmrp12-s01
 - dm24ex1-043
@@ -16,6 +17,10 @@ deck:
 - dm24ex1-038
 - dm24ex1-038
 - dm24ex1-038
+- dmrp07-009
+- dmrp07-009
+- dmrp07-009
+- dmrp07-009
 - dm23bd7-035
 - dm23bd7-035
 - dm01-010
@@ -38,11 +43,3 @@ deck:
 - dm04-039
 - dm04-048
 - dm05-022
-- dm05-038
-- dm05-047
-- dm06-027
-- dm06-067
-- dm06-079
-- dm06-089
-- dm06-106
-- dm07-024

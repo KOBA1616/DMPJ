@@ -15,6 +15,10 @@ from dmsim.defs import load_rules  # noqa: E402
 import known_combos  # noqa: E402
 
 
+# known_combos 側の収録IDとエンジン登録IDが違う同一カード（同じ効果の別収録）。combos.yaml は触らずここで読み替える
+ALIAS = {"dm23ex2-cho005": "dm23ex2-009"}  # 完全水中要塞 アカシック3
+
+
 def copies(cd, role, cap=4):
     if role in ("support", "entry"):
         return 4 if role == "entry" else 3
@@ -44,6 +48,7 @@ def build(rules, parts_lists, size=40, cap=4):
     deck, warn, cnt = [], [], {}
     civs = set()
     for pid, role in parts_lists:
+        pid = ALIAS.get(pid, pid)
         cd = rules.cards.get(pid)
         if cd is None:
             warn.append(f"{pid} は未登録")
