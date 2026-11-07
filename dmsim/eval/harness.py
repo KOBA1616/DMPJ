@@ -24,6 +24,7 @@ class EvalConfig:
     start_spec: dict | None = None                   # dmsim.scenario.build の spec。あれば各シードでその局面から始める
     opps: dict = field(default_factory=lambda: {"none": None})  # 名前 -> OppModel|None（相手モデルの差し替え点。dmsim.opponent.PRESETS）
     progress: object | None = None                   # dmsim.eval.progress.ProgressSpec。あれば段階指標を記録し集計する
+    level_mult: dict = field(default_factory=dict)   # 水準別の予算倍率 {InfoLevel: x}（探索量をそろえる比較用。例 CHEAT を n_det 倍）
     n_det: int = 8                                   # progress 指定時の FAIR の決定化数
     known_combos: dict[str, Callable] = field(default_factory=dict)  # 名前 -> fn(GameResult)->bool（再発見の判定）
 
@@ -101,7 +102,7 @@ def run_eval(rules, cfg: EvalConfig) -> dict:
                 for bm in cfg.budget_mults:
                     t0 = time.perf_counter()
                     kw = {} if opp is None else {"opp": opp}
-                    res = [runner(rules, deck, cfg.opp_deck, s, fp, cfg.max_turn, max(1, int(cfg.base_budget * bm)),
+                    res = [runner(rules, deck, cfg.opp_deck, s, fp, cfg.max_turn, max(1, int(cfg.base_budget * bm * cfg.level_mult.get(InfoLevel(lv), 1))),
                                   **_start_kw(rules, cfg, s, fp), **kw)
                            for s in cfg.seeds for fp in fps]
                     cell = _cell(res, cfg)
