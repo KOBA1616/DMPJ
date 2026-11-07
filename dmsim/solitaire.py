@@ -234,7 +234,8 @@ class TurnSearch:
       fast_forward で必要な周回だけ進め、その局面を子として探索を続ける。"""
 
     def __init__(self, me: int, budget: int = 200, weights: Weights | None = None, opp_policy=charge_only_policy,
-                 combo_cap: int = 6, value_fn=None):
+                 combo_cap: int = 6, value_fn=None, time_limit: float | None = None):
+        self.time_limit = time_limit          # 1手の探索の実時間の上限（秒）。超えたら budget 切れと同じく貪欲に打ち切る。None は無制限（再現性のため既定）
         self.value_fn = value_fn              # 葉の評価を差し替える関数 f(eng, me)（None なら evaluate）。勝敗を使わない局面評価の測定用
         self.me = me
         self.budget = budget
@@ -266,6 +267,7 @@ class TurnSearch:
     def run(self, eng: Engine) -> tuple[Engine, TurnStats]:
         """eng（自分の決定待ち）から探索し、一番評価の高いターン終了局面の Engine を返す。eng は変更しない。"""
         self.left = self.budget
+        self._deadline = None if self.time_limit is None else time.monotonic() + self.time_limit
         self.seen: set = set()
         self.stats = TurnStats()
         det = Detectors.new(eng, self.me)
@@ -276,6 +278,8 @@ class TurnSearch:
         d = self._settle(eng)
         if d is None:
             return self._eval(eng), eng
+        if self._deadline is not None and self.left > 0 and time.monotonic() > self._deadline:
+            self.left = 0                     # 時間切れ: 以降は予算切れと同じ扱い
         if self.left <= 0:
             leaf = self._rollout(eng)
             return self._eval(leaf), leaf
