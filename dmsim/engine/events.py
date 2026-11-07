@@ -151,6 +151,7 @@ class EventMixin:
                 c.tapped = True
             if ev.get("face_up") and ev["to"] == "shield":   # 「表向きでシールドゾーンに置く」（ギャラクシールド）
                 c.face_up = True
+                self.note_public("face_up", cid)
             if ev.get("face_down") and ev["to"] == "mana":   # 「裏向きのままマナゾーンに置く」（第128弾）: 置かれた時点で裏向き（別のイベントにしない）
                 c.face_down = True
             if ev["to"] == "bz" and "enters_tapped" in self.chars(cid)["keywords"]:   # 「タップしてバトルゾーンに出る」
