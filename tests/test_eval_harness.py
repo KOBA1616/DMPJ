@@ -13,11 +13,10 @@ def _fake(kill_by_seed):
     return run
 
 
-def test_fair_unregistered_raises():
+def test_fair_default_registered():
     from dmsim.eval import infolevel
     infolevel._RUNNERS.pop(InfoLevel.FAIR, None)
-    with pytest.raises(NotImplementedError):
-        get_runner(InfoLevel.FAIR)
+    assert callable(get_runner(InfoLevel.FAIR))  # 既定で FairTurnSearch が登録される
 
 
 def test_harness_cells_and_hidden_cost():
