@@ -32,3 +32,28 @@ def test_value_fn_reaches_search(rules):
     e = _eng(rules, {"hand": ["T001", "T073"], "mana": ["T004"] * 4})
     FairTurnSearch(0, budget=20, n_det=2, seed=1, value_fn=vf).run(e)
     assert calls
+
+
+def test_saga_spec_comes_from_known_combos():
+    from dmsim.search.leaf_parts import DRAGELION, SHAKOGAIRU, load_specs
+    assert SAGA_SPEC.coef == 10.0
+    assert any(p.zone == "graveyard" and p.ids == (SHAKOGAIRU,) for p in SAGA_SPEC.parts)
+    assert any(p.zone == "hand" and p.ids == (DRAGELION,) for p in SAGA_SPEC.parts)
+    assert set(load_specs()) >= {"saga", "tenmon", "knight_dmc", "akashic"}
+
+
+def test_default_spec_from_core_parts(rules):
+    from dmsim.search.leaf_parts import spec_from_combo
+    combo = {"id": "x", "parts": [{"id": "T001", "name": "a", "role": "core"}, {"id": "T073", "name": "b", "role": "support"},
+                                  {"name": "id無し", "role": "core"}]}
+    spec = spec_from_combo(combo)               # leaf_parts なし → id のある core 部品だけから導出
+    assert {i for p in spec.parts for i in p.ids} == {"T001"}
+    held = _eng(rules, {"hand": ["T001", "T073"]})
+    none = _eng(rules, {"hand": ["T073", "T073"]})
+    assert parts_score(held, 0, spec) > parts_score(none, 0, spec) == 0
+
+
+def test_holdout_split_is_selectable():
+    from dmsim.search.leaf_parts import load_specs
+    assert "drill_lock" not in load_specs(split="tuning")
+    assert "drill_lock" in load_specs(split="holdout")
