@@ -1,0 +1,241 @@
+# アカシック系デッキの部品（手書き変換）
+cards:
+- id: dm24ex3-rp3tr6
+  name: 森夢龍 フィオナ・フォレスト
+  types:
+  - creature
+  civs:
+  - nature
+  cost: 7
+  power: 7000
+  races:
+  - ドリームメイト・ドラゴン
+  mana: 1
+  keywords:
+  - double_breaker
+  abilities:
+  - kind: trigger
+    when:
+      event: move
+      to: bz
+      subject: self
+    effect:
+    - op: may
+      body:
+      - op: move
+        select:
+          zone: mana
+          owner: you
+          filter:
+            types:
+            - field
+          count: 1
+        to: bz
+        reason: put
+  - kind: static
+    affects:
+      zone: bz
+      owner: you
+      other: true
+      filter:
+        race_has: ドリームメイト
+    mod:
+      deny:
+      - be_chosen
+  text: 'W・ブレイカー
+
+    このクリーチャーが出た時、フィールドを１枚、自分のマナゾーンから出してもよい。
+
+    相手が自分のクリーチャーを選ぶ時、自分の他のドリームメイトは選ばれない。'
+  source:
+    official: dm24ex3-rp3tr6
+    review: pending
+    notes: 手書き変換。『相手が選ぶ時』は be_chosen（相手に選ばれる）の禁止で、自分の他のドリームメイトに常在型で与える
+- id: dm24rp3-tr06
+  name: 森夢龍 フィオナ・フォレスト
+  types:
+  - creature
+  civs:
+  - nature
+  cost: 7
+  power: 7000
+  races:
+  - ドリームメイト・ドラゴン
+  mana: 1
+  keywords:
+  - double_breaker
+  abilities:
+  - kind: trigger
+    when:
+      event: move
+      to: bz
+      subject: self
+    effect:
+    - op: may
+      body:
+      - op: move
+        select:
+          zone: mana
+          owner: you
+          filter:
+            types:
+            - field
+          count: 1
+        to: bz
+        reason: put
+  - kind: static
+    affects:
+      zone: bz
+      owner: you
+      other: true
+      filter:
+        race_has: ドリームメイト
+    mod:
+      deny:
+      - be_chosen
+  text: 'W・ブレイカー
+
+    このクリーチャーが出た時、フィールドを１枚、自分のマナゾーンから出してもよい。
+
+    相手が自分のクリーチャーを選ぶ時、自分の他のドリームメイトは選ばれない。'
+  source:
+    official: dm24rp3-tr06
+    review: pending
+    notes: 手書き変換。『相手が選ぶ時』は be_chosen（相手に選ばれる）の禁止で、自分の他のドリームメイトに常在型で与える
+- id: dmex12-s16
+  name: 森夢龍 フィオナ・フォレスト
+  types:
+  - creature
+  civs:
+  - nature
+  cost: 7
+  power: 7000
+  races:
+  - ドリームメイト・ドラゴン
+  mana: 1
+  keywords:
+  - double_breaker
+  abilities:
+  - kind: trigger
+    when:
+      event: move
+      to: bz
+      subject: self
+    effect:
+    - op: may
+      body:
+      - op: move
+        select:
+          zone: mana
+          owner: you
+          filter:
+            types:
+            - field
+          count: 1
+        to: bz
+        reason: put
+  - kind: static
+    affects:
+      zone: bz
+      owner: you
+      other: true
+      filter:
+        race_has: ドリームメイト
+    mod:
+      deny:
+      - be_chosen
+  text: 'W・ブレイカー
+
+    このクリーチャーが出た時、フィールドを１枚、自分のマナゾーンから出してもよい。
+
+    相手が自分のクリーチャーを選ぶ時、自分の他のドリームメイトは選ばれない。'
+  source:
+    official: dmex12-s16
+    review: pending
+    notes: 手書き変換。『相手が選ぶ時』は be_chosen（相手に選ばれる）の禁止で、自分の他のドリームメイトに常在型で与える
+- id: dmrp07-009
+  faces:
+  - name: ラルド・ワースピーダ
+    types:
+    - creature
+    civs:
+    - nature
+    cost: 3
+    power: 8000
+    races:
+    - グランセクト
+    keywords:
+    - guardman
+    - cannot_attack
+    - last_burst
+    abilities:
+    - kind: replace
+      optional: true
+      when:
+        event: move
+        to: graveyard
+        reason: destroy
+        subject:
+          owner: you
+          filter:
+            races:
+            - グランセクト
+          other: true
+      instead:
+      - op: destroy
+        select:
+          ref: self
+          count: 1
+  - name: H.D.2.
+    types:
+    - spell
+    civs:
+    - nature
+    cost: 5
+    spell:
+    - op: modal
+      modes:
+      - - op: move
+          select:
+            zone: deck
+            owner: you
+            from_top: 2
+          to: mana
+          reason: put
+      - - op: move
+          select:
+            zone: deck
+            owner: opp
+            from_top: 2
+          to: mana
+          reason: put
+  mana: 1
+  text: 'ラルド・ワースピーダ: ガードマン / 攻撃できない / セイバー：グランセクト / ラスト・バースト ／ H.D.2.: プレイヤーを１人選ぶ。そのプレイヤーは、自身の山札の上から２枚をマナゾーンに置く。'
+  source:
+    official: dmrp07-009
+    review: pending
+    notes: 手書き変換（ツインパクト）。『プレイヤーを1人選ぶ』は modal で自分/相手を選ぶ形。セイバーは dm20-038 と同じ置換
+- id: dm23ex2-009
+  name: 完全水中要塞 アカシック3
+  types: [field]
+  civs: [water]
+  cost: 10
+  mana: 1
+  abilities:
+  - kind: static
+    affects: {zone: hand, owner: you, filter: {types: [spell]}}
+    mod: {allow: [cast_free]}
+  text: 自分は呪文をコストを支払わずに唱えてもよい。
+  source: {official: dm23ex2-009, review: pending, notes: 手書き変換。手札の呪文に無償詠唱を許可する常在型（permissions の cast_free）}
+- id: dm25ex2-cho005
+  name: 完全水中要塞 アカシック3
+  types: [field]
+  civs: [water]
+  cost: 10
+  mana: 1
+  abilities:
+  - kind: static
+    affects: {zone: hand, owner: you, filter: {types: [spell]}}
+    mod: {allow: [cast_free]}
+  text: 自分は呪文をコストを支払わずに唱えてもよい。
+  source: {official: dm25ex2-cho005, review: pending, notes: 手書き変換。dm23ex2-009 と同じ効果}
