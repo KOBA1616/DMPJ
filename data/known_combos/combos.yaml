@@ -1,0 +1,65 @@
+# 既知コンボの正解集合（計画書 v2.5 §3-3）。
+# split: tuning=調整用（探索設定の調整に使ってよい） / holdout=検証専用（調整に一切使わず最後の確認だけ）。
+# parts[].role: core=コンボの主要部品（重なり検査の対象） / support=汎用の補助札（検査対象外）。
+# 重なり規則: 異なる split に同じ core 部品（id、なければ name）があってはならない。
+# status: verified=エンジンで再現済み / hypothesis=机上の仮説 / draft=名前・手順が未確定。
+combos:
+  - id: tenmon
+    split: tuning
+    status: verified
+    summary: 天門（ヘブンズ・ゲート）で盾の束を作り、アレフティナ等で盾10枚勝ち。初期型/アゲイン型。
+    loopspec: data/loops/tenmon_initial.json
+    parts:
+      - {id: dm16-007, name: ヘブンズ・ゲート, role: core}
+      - {id: dmx12b-031, name: 光霊姫アレフティナ, role: core}
+      - {id: dm23bd7-022, name: 音感の精霊龍 エメラルーダ, role: core}
+      - {id: dmx19-s06, name: 奇跡の精霊ミルザム, role: core}
+      - {id: dmx24-017, name: 目的不明の作戦, role: core}
+      - {id: dm23ex2-cho018, name: 転生スイッチ, role: core}
+      - {id: dmx11-082, name: ハイドロ・コミューン, role: core}
+      - {id: dmd24-024, name: 埋没のカルマ オリーブオイル, role: core}
+      - {id: dm31-025, name: フォース・アゲイン, role: core}
+      - {id: dm02-024, name: クリスタル・ランサー, role: support}
+      - {id: dm06-085, name: エナジー・ライト, role: support}
+      - {id: dm01-080, name: アクア・ハルカス, role: support}
+  - id: saga
+    split: tuning
+    status: verified
+    summary: 絶望神サガの蘇生ループ。入口=待機サガ+墓地サガ+墓地クリーチャー2枚。出口はドラゲリオン等（3kill）。
+    parts:
+      - {id: dm22ex2-021, name: 絶望神サガ, role: core}
+      - {id: dm22ex1-007, name: 超神星DOOM・ドラゲリオン, role: core}
+      - {id: dmex10-020, name: コダマダンス・チャージャー, role: core}
+      - {id: dm22ex1-025, name: 蒼狼の大王 イザナギテラス, role: core}
+      - {id: dmrp03-036, name: 一なる部隊 イワシン, role: core}
+      - {id: dmrp03-s03, name: 水上第九院 シャコガイル, role: core}
+      - {id: dm01-027, name: デーモン・ハンド, role: support}
+      - {id: dm01-080, name: アクア・ハルカス, role: support}
+  - id: knight_dmc
+    split: tuning
+    status: verified
+    summary: ～地獄帰りの騎士～ と DARK MEMORY CONTAINER。盾が置かれた時に墓地から出る。
+    parts:
+      - {id: dm25ex3-028, name: ～地獄帰りの騎士～, role: core}
+      - {id: dm25ex3-055, name: DARK MEMORY CONTAINER, role: core}
+  - id: akashic
+    split: tuning
+    status: hypothesis
+    summary: アカシック3 を5マナ踏み倒し経路で場に出し、呪文を無償連打。ナウ・オア・ネバー+ウォカンナ、または H.D.2. で相手の山札を削る（計画書 §10.2、机上の仮説）。
+    parts:
+      - {id: dm23ex2-cho005, name: 完全水中要塞 アカシック3, role: core}
+      - {id: dm24ex3-rp3tr6, name: 森夢龍 フィオナ・フォレスト, role: core}
+      - {id: dmrp12-s01, name: 天命龍装 ホーリーエンド／ナウ・オア・ネバー, role: core}
+      - {id: dm24ex1-043, name: 激烈元気モーニンジョー, role: core}
+      - {id: dm24ex1-038, name: 冥土人形ウォカンナ・ピエール, role: core}
+      - {id: dmrp07-009, name: ラルド・ワースピーダ／H.D.2., role: core}
+      - {id: dm23bd7-035, name: 魔刻の斬将オルゼキア／訪れる魔の時刻, role: core}
+  - id: drill_lock
+    split: holdout
+    status: draft
+    summary: ターンをまたぐロック（仮説）。ドリルスコールで相手マナを墓地へ→ジョバンニがターン終了時に回収、クルトの気合釣りで山札回復、相手を山札切れへ。計画書 §10.1。
+    parts:
+      - {name: ドリルスコール, role: core}
+      - {id: null, name: 天雷王機ジョバンニX世, role: core}
+      - {name: クルトの気合釣り, role: core}
+# 検証専用の2件目は koba の回答待ち。

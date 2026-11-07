@@ -1,0 +1,13 @@
+# ゲーム設定 v0（2026-11-07 時点のエンジン実装から書き起こし。変更したらキル率の比較は無効）
+version: v0
+rules: 総合ルール Ver.1.53（data/rules）
+format: original            # 殿堂・制限なし、サイキック・GR対象外
+players: 2
+deck_size: 40               # 既定デッキは実カードを繰り返して40枚（dmsim/play.py）
+initial_shields: 5          # dmsim/engine/core.py new_game
+initial_hand: 5
+mulligan: none              # 実装なし
+first_player_draw_skip: true   # 先攻1ターン目はドローしない（turn.py 500.6）
+first_player: seed 偶奇で交互（bench / play_game は s % 2）
+deck_out: 同時ならターンプレイヤー敗北（決定 2026-10-24）
+search_defaults: {max_turn: 4, budget: 200, information: cheating}   # 現行 TurnSearch は真の山札順を見る

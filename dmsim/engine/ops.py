@@ -327,6 +327,8 @@ def op_mekurade(eng, t, op, env):
     os_ = t.setdefault("os", {})
     if "looked" not in os_:
         os_["looked"] = list(s.zones["deck"][p][:op.get("look", 3)])
+        for c in os_["looked"]:
+            eng.note_public("look", c, [p])
     looked = os_["looked"]
     f = dict(op.get("filter") or {})
     if "cost_le" in op:
@@ -447,11 +449,14 @@ def op_yobinion(eng, t, op, env):
     revealed, found = [], None
     for c in list(s.zones["deck"][p]):
         revealed.append(c)
+        eng.note_public("reveal", c)
         ch = eng.chars(c)
         if "creature" in ch["types"] and ch["cost"] < threshold:
             found = c
             break
     rest = [c for c in revealed if c != found]
+    if len(rest) > 1:
+        eng.note_public("shuffle", player=p, zone="deck")
     for i in range(len(rest) - 1, 0, -1):   # 残りをシャッフル（Fisher-Yates）
         j = rng_below(s, i + 1)
         rest[i], rest[j] = rest[j], rest[i]
@@ -487,6 +492,8 @@ def op_gachinko(eng, t, op, env):
         if not mine or not theirs:
             break
         a, b = mine[0], theirs[0]
+        eng.note_public("reveal", a)
+        eng.note_public("reveal", b)
         win = eng.chars(a)["cost"] >= eng.chars(b)["cost"]
         eng._raw_move(a, "deck", "bottom")
         eng._raw_move(b, "deck", "bottom")
