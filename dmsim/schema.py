@@ -98,8 +98,8 @@ def _build() -> dict:
                 "gain": {"type": "array", "items": ref("ability")}},
                 "additionalProperties": False, "propertyNames": {"enum": sorted(MOD_KEYS)}},
             "when": {"type": "object", "properties": {
-                "event": {"enum": sorted(EVENTS)}, "from": {"enum": sorted(zones)}, "to": {"enum": sorted(zones)},
-                "reason": {"enum": sorted(REASONS)}, "player": {"enum": ["you", "opp"]}, "by": {"enum": ["you", "opp"]}, "unpaid": {"type": "boolean"}, "target": {}, "attacker": {},
+                "event": {"enum": sorted(EVENTS)}, "from": {"anyOf": [{"enum": sorted(zones)}, {"type": "array", "items": {"enum": sorted(zones)}}]}, "to": {"anyOf": [{"enum": sorted(zones)}, {"type": "array", "items": {"enum": sorted(zones)}}]},
+                "reason": {"anyOf": [{"enum": sorted(REASONS)}, {"type": "array", "items": {"enum": sorted(REASONS)}}]}, "player": {"enum": ["you", "opp"]}, "by": {"enum": ["you", "opp"]}, "unpaid": {"type": "boolean"}, "target": {}, "attacker": {}, "opponent": {},
                 "via": {"enum": sorted(VIAS)}, "subject": {}, "stacked": {}, "sealed_from": {}, "face_up": {}, "broke": {}, "vivid": {}},
                 "required": ["event"], "additionalProperties": False},
             "ability": {"type": "object", "properties": {
