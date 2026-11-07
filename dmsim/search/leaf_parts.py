@@ -7,6 +7,9 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
+from pathlib import Path
+
+import yaml
 
 from ..engine import Engine
 from ..solitaire import Weights, evaluate
@@ -52,15 +55,30 @@ def make_value_fn(spec: PartsSpec, weights: Weights | None = None):
 # 絶望神サガ: キル手前(T3開始)の最小局面は、墓地にサガ+シャコガイル+クリーチャー1体、手札にサガ+ドラゲリオン、
 # 水・闇のマナ3（data/eval/saga_near_kill を縮めて確認: シャコガイルが墓地に無い/ドラゲリオンかサガが手札に無いと起動しない）。
 # coef=10: evaluate の打点項（場のクリーチャー1体で+40）に勝てる大きさが必要。1〜5 では saga_entry の T2 墓地サガ率が 4/40 のまま、10 で 12/40
+KNOWN_COMBOS = Path(__file__).resolve().parents[2] / "data" / "known_combos" / "combos.yaml"
+# 既定の導出: core 部品（id あり）を手札・場に置くほど加点、墓地は少なめ、マナは0（チャージで潰さないよう手札優先）
+DEFAULT_ZONE_WEIGHTS = (("hand", 1.0), ("bz", 1.0), ("graveyard", 0.5))
+
+
+def spec_from_combo(combo: dict, coef: float = 10.0) -> PartsSpec:
+    """known_combos の1件から部品表を作る。combo に leaf_parts（手書きの [{zone, ids, need, weight}]）があればそれを使い、
+    なければ core 部品（id あり）ごとに DEFAULT_ZONE_WEIGHTS で作る。同じ id の部品は1つにまとめる（枚数は need に足す）。"""
+    if combo.get("leaf_parts"):
+        return PartsSpec(tuple(Part(p["zone"], tuple(p.get("ids", ())), p.get("need", 1), p.get("weight", 1.0))
+                               for p in combo["leaf_parts"]), coef=combo.get("leaf_coef", coef))
+    ids = list(dict.fromkeys(p["id"] for p in combo["parts"] if p.get("role") == "core" and p.get("id")))
+    return PartsSpec(tuple(Part(z, (i,), 1, w) for i in ids for z, w in DEFAULT_ZONE_WEIGHTS), coef=coef)
+
+
+def load_specs(path: Path = KNOWN_COMBOS, split: str | None = None) -> dict[str, PartsSpec]:
+    """既知コンボの id → 部品表。split（tuning / holdout）で絞れる。検証専用(holdout)は調整に使わないこと。"""
+    combos = yaml.safe_load(Path(path).read_text(encoding="utf-8"))["combos"]
+    return {c["id"]: spec_from_combo(c) for c in combos if split in (None, c.get("split"))}
+
+
 SAGA = "dm22ex2-021"
 DRAGELION, SHAKOGAIRU, ET = "dm22ex1-007", "dmrp03-s03", "dm26ex2-071"
-SAGA_SPEC = PartsSpec((
-    Part("graveyard", (SAGA,), 1, 3.0),
-    Part("graveyard", (SHAKOGAIRU,), 1, 3.0),
-    Part("graveyard", (), 2, 1.0),
-    Part("hand", (SAGA,), 1, 1.5),           # 墓地のサガとは別の1枚（出して起動する）
-    Part("hand", (DRAGELION,), 1, 3.0),
-    Part("hand", (SHAKOGAIRU,), 1, 0.5),     # 手札のシャコガイルは捨てて墓地へ落とせる
-    Part("bz", (SAGA,), 1, 0.5),
-    Part("hand", (ET,), 1, 1.0),             # 入口札（エマージェンシー・タイフーン）はマナに置かず手札に残す
-), coef=10.0)
+# 絶望神サガ: 手書きの値は data/known_combos/combos.yaml の saga.leaf_parts にある。
+# キル手前(T3開始)の最小局面は、墓地にサガ+シャコガイル+クリーチャー1体、手札にサガ+ドラゲリオン、水・闇のマナ3
+# （data/eval/saga_near_kill を縮めて確認）。coef=10 は evaluate の打点項（場のクリーチャー1体で+40）に勝てる大きさ。
+SAGA_SPEC = load_specs()["saga"]

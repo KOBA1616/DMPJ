@@ -35,6 +35,17 @@ combos:
       - {id: dmrp03-s03, name: 水上第九院 シャコガイル, role: core}
       - {id: dm01-027, name: デーモン・ハンド, role: support}
       - {id: dm01-080, name: アクア・ハルカス, role: support}
+    # 探索の葉の部品表（dmsim/search/leaf_parts.py）。キル手前の最小局面を saga_near_kill から縮めて確認した値
+    leaf_coef: 10.0
+    leaf_parts:
+      - {zone: graveyard, ids: [dm22ex2-021], need: 1, weight: 3.0}
+      - {zone: graveyard, ids: [dmrp03-s03], need: 1, weight: 3.0}
+      - {zone: graveyard, ids: [], need: 2, weight: 1.0}
+      - {zone: hand, ids: [dm22ex2-021], need: 1, weight: 1.5}
+      - {zone: hand, ids: [dm22ex1-007], need: 1, weight: 3.0}
+      - {zone: hand, ids: [dmrp03-s03], need: 1, weight: 0.5}
+      - {zone: bz, ids: [dm22ex2-021], need: 1, weight: 0.5}
+      - {zone: hand, ids: [dm26ex2-071], need: 1, weight: 1.0}
   - id: knight_dmc
     split: tuning
     status: verified
