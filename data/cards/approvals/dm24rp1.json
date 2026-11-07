@@ -15,7 +15,7 @@
 ],
 "verifier": 2,
 "verify": "43手・turn 30 まで正常に回った（result={'winner': 0, 'reason': 'deck_out', 'turn': 30}）",
-"vocab_ver": "3e574aba47237e2f"
+"vocab_ver": "de3ce05fb242a0e8"
 },
 "dm24rp1-052": {
 "by": "rule",
@@ -32,7 +32,7 @@
 ],
 "verifier": 2,
 "verify": "43手・turn 30 まで正常に回った（result={'winner': 0, 'reason': 'deck_out', 'turn': 30}）",
-"vocab_ver": "958c2b81cc54273a"
+"vocab_ver": "3dcce7283a8c180e"
 },
 "dm24rp1-056": {
 "by": "rule",
@@ -50,7 +50,7 @@
 ],
 "verifier": 2,
 "verify": "43手・turn 30 まで正常に回った（result={'winner': 0, 'reason': 'deck_out', 'turn': 30}）",
-"vocab_ver": "1c6c4bbbea61a27c"
+"vocab_ver": "927ac6fa5a71374c"
 },
 "dm24rp1-059": {
 "by": "rule",
@@ -67,6 +67,6 @@
 ],
 "verifier": 2,
 "verify": "43手・turn 30 まで正常に回った（result={'winner': 0, 'reason': 'deck_out', 'turn': 30}）",
-"vocab_ver": "06d75827b5a85a34"
+"vocab_ver": "aa2b2162eb106f8e"
 }
 }
