@@ -1,4 +1,4 @@
-# アカシック系デッキの部品（手書き変換。アカシック3は常在型の無償詠唱が必要でエンジン変更待ち）
+# アカシック系デッキの部品（手書き変換）
 cards:
 - id: dm24ex3-rp3tr6
   name: 森夢龍 フィオナ・フォレスト
@@ -215,3 +215,27 @@ cards:
     official: dmrp07-009
     review: pending
     notes: 手書き変換（ツインパクト）。『プレイヤーを1人選ぶ』は modal で自分/相手を選ぶ形。セイバーは dm20-038 と同じ置換
+- id: dm23ex2-009
+  name: 完全水中要塞 アカシック3
+  types: [field]
+  civs: [water]
+  cost: 10
+  mana: 1
+  abilities:
+  - kind: static
+    affects: {zone: hand, owner: you, filter: {types: [spell]}}
+    mod: {allow: [cast_free]}
+  text: 自分は呪文をコストを支払わずに唱えてもよい。
+  source: {official: dm23ex2-009, review: pending, notes: 手書き変換。手札の呪文に無償詠唱を許可する常在型（permissions の cast_free）}
+- id: dm25ex2-cho005
+  name: 完全水中要塞 アカシック3
+  types: [field]
+  civs: [water]
+  cost: 10
+  mana: 1
+  abilities:
+  - kind: static
+    affects: {zone: hand, owner: you, filter: {types: [spell]}}
+    mod: {allow: [cast_free]}
+  text: 自分は呪文をコストを支払わずに唱えてもよい。
+  source: {official: dm25ex2-cho005, review: pending, notes: 手書き変換。dm23ex2-009 と同じ効果}
