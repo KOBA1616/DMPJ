@@ -33,7 +33,10 @@ class FairTurnSearch:
     def _vote(self, eng: Engine, d: dict, k: int) -> Counter:
         votes: Counter = Counter()
         base = len(eng.log)
+        avail = {o["key"] for o in d["options"]}
         for i in range(self.n_det):
+            if i and self._decided(votes, self.n_det - i, avail):
+                break                               # 残りの決定化が全部2位に入っても首位は変わらない
             e = eng.clone()
             e.s = determinize(eng.s, self.me, self.seed * 1_000_003 + k * 1009 + i, self.known)
             leaf, st = TurnSearch(self.me, self.budget, self.weights, opp_policy=self.opp_policy).run(e)
@@ -43,6 +46,15 @@ class FairTurnSearch:
                     votes[tuple(ent["keys"])] += 1
                     break
         return votes
+
+    @staticmethod
+    def _decided(votes: Counter, remaining: int, avail) -> bool:
+        """首位が使える手で、2位との差が残り回数より大きければ、結果（最多の手）は確定している。"""
+        mc = votes.most_common(2)
+        if not mc or not all(x in avail for x in mc[0][0]):
+            return False
+        second = mc[1][1] if len(mc) > 1 else 0
+        return mc[0][1] - second > remaining
 
     def run(self, eng: Engine) -> Engine:
         """eng（自分の決定待ち）から自分のターンを最後まで進めた Engine を返す。eng は変更しない。"""

@@ -40,3 +40,11 @@ def test_independent_of_true_deck_order(rules):
     a = FairTurnSearch(0, budget=30, n_det=3, seed=4).run(e1)
     b = FairTurnSearch(0, budget=30, n_det=3, seed=4).run(e2)
     assert [x["keys"] for x in a.log] == [x["keys"] for x in b.log]
+
+
+def test_early_stop_decided():
+    from collections import Counter
+    avail = {"a", "b"}
+    assert FairTurnSearch._decided(Counter({("a",): 5, ("b",): 1}), 3, avail)
+    assert not FairTurnSearch._decided(Counter({("a",): 5, ("b",): 3}), 3, avail)
+    assert not FairTurnSearch._decided(Counter({("z",): 5}), 1, avail)
