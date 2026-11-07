@@ -346,10 +346,13 @@ class Engine(SelectorMixin, EventMixin, InterpreterMixin, TurnMixin, CombatMixin
             return {"power": d.power, "cost": d.cost, "civs": list(d.civs), "types": [], "races": [],
                     "keywords": set(), "name": d.name, "allow": [], "deny": [], "require": [],
                     "breaks": 0, "break_opts": [], "pay_cost": d.cost, "sac_reduce": 0,
-                    "opt_reduce": None, "cost_may": [], "no_leave": [], "must_be_attacked": False}
+                    "opt_reduce": None, "cost_may": [], "no_leave": [], "must_be_attacked": False,
+                    "battle_indestructible": False, "win_all_battles": False}
         ch = {"power": d.power, "cost": d.cost, "civs": list(d.civs), "types": list(d.types),
               "races": list(d.races), "keywords": set(d.keywords), "name": d.name,
-              "allow": [], "deny": [], "require": [], "breaks": 1, "break_opts": [], "pay_cost": d.cost, "sac_reduce": 0, "opt_reduce": None, "cost_may": [], "no_leave": [], "must_be_attacked": False}
+              "allow": [], "deny": [], "require": [], "breaks": 1, "break_opts": [], "pay_cost": d.cost, "sac_reduce": 0, "opt_reduce": None, "cost_may": [], "no_leave": [], "must_be_attacked": False,
+              "battle_indestructible": False, "battle_indestructible_filters": [], "win_all_battles": False,
+              "indestructible": False}
         if (d.neo or d.grave_evo) and c.zone == "bz" and c.under and "evolution" not in ch["types"]:
             ch["types"].append("evolution")   # NEO進化・墓地進化: カードが下にあれば進化クリーチャーとして扱う
         own = self.abilities(cid, "static") if face is None else list(enumerate(d.abilities))
@@ -385,7 +388,9 @@ class Engine(SelectorMixin, EventMixin, InterpreterMixin, TurnMixin, CombatMixin
                     if self._subject_match(aff, cid, env, None, base=True) and \
                             ("if" not in ab or self._static_cond(ab["if"], env)):
                         mods.append(ab["mod"])
-        mods += [ce["mod"] for ce in self.s.continuous if self._ce_applies(ce, cid, ref)]
+        mods += [{**ce["mod"], "power": ce["mod"].get("power", 0) + ce["double_power"].get(cid, 0)}
+                 if "double_power" in ce else ce["mod"]
+                 for ce in self.s.continuous if self._ce_applies(ce, cid, ref)]
         granted = set()
         for m in mods:
             granted.update(k for k in m.get("grant", []) if k not in ch["keywords"])
@@ -427,12 +432,33 @@ class Engine(SelectorMixin, EventMixin, InterpreterMixin, TurnMixin, CombatMixin
                 ch["no_leave"].append({} if nl is True else dict(nl))
             if m.get("must_be_attacked"):   # 「相手のクリーチャーが攻撃する時、可能ならこのクリーチャーを攻撃する」（第51弾）
                 ch["must_be_attacked"] = True
+            if m.get("battle_indestructible") is True:   # 「バトル中、このクリーチャーは破壊されない」（第59弾）
+                ch["battle_indestructible"] = True
+            elif isinstance(m.get("battle_indestructible"), dict):   # 「〜とのバトル中、破壊されない」（第122弾）: 相手はバトル時に判定
+                ch["battle_indestructible_filters"].append(m["battle_indestructible"]["opponent_filter"])
+            if m.get("win_all_battles"):   # 「このクリーチャーはすべてのバトルに勝つ」（第61弾）
+                ch["win_all_battles"] = True
+            if m.get("indestructible"):   # 「破壊されない」（第127弾）
+                ch["indestructible"] = True
+            for cv in m.get("add_civs", []):   # 文明追加（第62弾）
+                if cv not in ch["civs"]:
+                    ch["civs"].append(cv)
             for r in m.get("add_races", []):   # 種族追加（「種族に〜を追加する」）
                 if r not in ch["races"]:
                     ch["races"].append(r)
             if "breaks" in m:   # ブレイカー能力ごとのブレイク数（509.2b）。使う能力は攻撃時に選ぶ（509.2c）
-                ch["break_opts"].append(m["breaks"])
-            ch["breaks"] = max(ch["breaks"], m.get("breaks", 1))
+                b = m["breaks"]
+                if isinstance(b, dict):   # dict 形式はすべて「1 + 値」: {count} は 1+数（クルー・ブレイカー、第130弾）、
+                    # {amount, count} は 1+係数×数（dmd10-008 型）、式形式 {civ_count: ...} は 1+式の値（第79弾、dmc34-025 型）
+                    v = b.get("amount", 1) * self.count_of(b["count"], env_self) if "count" in b else self.count_of(b, env_self)
+                    n = 1 + v
+                    ch["break_opts"].append(n)
+                    ch["breaks"] = max(ch["breaks"], n)
+                else:
+                    ch["break_opts"].append(b)
+                    ch["breaks"] = max(ch["breaks"], b)
+            elif "breaks" not in m:
+                ch["breaks"] = max(ch["breaks"], 1)
         for ce in self.s.continuous:     # ダイナモ: 発生源のクリーチャーのパワーと能力（常在型の許可・禁止・ブレイク数・キーワード）を加える
             src = ce.get("add_from")
             if src and src[0] != cid and self.s.alive(src) and src[0] not in self._adding and self._ce_applies(ce, cid, ref):
@@ -447,6 +473,10 @@ class Engine(SelectorMixin, EventMixin, InterpreterMixin, TurnMixin, CombatMixin
                     ch[k] += sc[k]
                 ch["no_leave"] += sc["no_leave"]
                 ch["must_be_attacked"] = ch["must_be_attacked"] or sc["must_be_attacked"]
+                ch["battle_indestructible"] = ch["battle_indestructible"] or sc["battle_indestructible"]
+                ch["battle_indestructible_filters"] += sc.get("battle_indestructible_filters", [])
+                ch["win_all_battles"] = ch["win_all_battles"] or sc["win_all_battles"]
+                ch["indestructible"] = ch["indestructible"] or sc.get("indestructible", False)
                 ch["breaks"] = max(ch["breaks"], sc["breaks"])
         if any("cost_may" in m for m in mods):   # 任意のコスト軽減（cost_may）の発生源を引く（once の使用記録用）
             for m in mods:
@@ -510,7 +540,7 @@ class Engine(SelectorMixin, EventMixin, InterpreterMixin, TurnMixin, CombatMixin
                 if isinstance(e, str):
                     if e == action:
                         return True
-                elif e["action"] == action and (other is None or self.filter_match(other, e.get("other", {}))):
+                elif e["action"] == action and (other is None or self.filter_match(other, self._other_filter(e.get("other", {}), cid))):
                     return True
             return False
         if hit(ch["deny"]):
@@ -518,6 +548,13 @@ class Engine(SelectorMixin, EventMixin, InterpreterMixin, TurnMixin, CombatMixin
         if hit(ch["allow"]):
             return True
         return self.rules.actions[action]["default"]
+
+    def _other_filter(self, f: dict, cid: int) -> dict:
+        """allow/deny の other フィルタ: 値が式なら許可側のカード（self）を基準に評価する（第126弾。candidates と同じ前評価）。"""
+        if not any(isinstance(v, dict) for v in f.values()):
+            return f
+        env = {"you": self.s.cards[cid].controller, "self": self.s.ref(cid)}
+        return {k: self.eval_expr(v, env) if isinstance(v, dict) else v for k, v in f.items()}
 
     def _duration(self, dur: str, env: dict) -> str:
         if dur == "until_next_own_turn_start":

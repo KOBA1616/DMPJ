@@ -2019,3 +2019,186 @@ cards:
         filter: {types: [creature], civs: [water]}
         count: 2
         tap: true
+  - id: T156
+    name: 試験用非ドラゴン破壊獣
+    types: [creature]
+    civs: [fire]
+    cost: 5
+    power: 4000
+    races: [アーマード・ドラゴン]
+    text: このクリーチャーがバトルゾーンに出た時、相手のドラゴンでないクリーチャーを１体破壊する。
+    abilities:
+      - kind: trigger
+        when: {event: summon, subject: self}
+        effect:
+          - op: destroy
+            select: {zone: bz, owner: opp, count: 1, filter: {types: [creature], not_race_has: ドラゴン}}
+  - id: T157
+    name: 試験用神迎え獣
+    types: [creature]
+    civs: [light]
+    cost: 5
+    power: 4000
+    races: [テスト]
+    text: このクリーチャーがバトルゾーンに出た時、バトルゾーンにある進化クリーチャーまたはリンクしているゴッドを１体、持ち主の手札に戻してもよい。
+    abilities:
+      - kind: trigger
+        when: {event: summon, subject: self}
+        effect:
+          - op: may
+            body:
+              - op: bounce
+                select: {zone: bz, owner: any, count: 1, filter: {any_of: [{evolution: true}, {linked_god: true}]}}
+  - id: T158
+    name: 試験用弱者狩獣
+    types: [creature]
+    civs: [fire]
+    cost: 5
+    power: 5000
+    races: [テスト]
+    text: このクリーチャーが出た時、これよりパワーが小さい相手のクリーチャーを１体破壊する。
+    abilities:
+      - kind: trigger
+        when: {event: summon, subject: self}
+        effect:
+          - op: destroy
+            select: {zone: bz, owner: opp, count: 1, filter: {power_le: {sum: [{power_of: {ref: self}}, -1]}}}
+  - id: T159
+    name: 試験用対壁獣
+    types: [creature]
+    civs: [fire]
+    cost: 4
+    power: 3000
+    races: [テスト]
+    text: 「ブロッカー」を持つクリーチャーとバトル中、このクリーチャーのパワーを+5000する。
+    abilities:
+      - kind: static
+        affects: self
+        mod: {battle_power: {amount: 5000, opponent_filter: {keyword: blocker}}}
+  - id: T160
+    name: 試験用対炎不壊獣
+    types: [creature]
+    civs: [light]
+    cost: 3
+    power: 2000
+    races: [テスト]
+    text: このクリーチャーは、火のクリーチャーとバトル中、破壊されない。
+    abilities:
+      - kind: static
+        affects: self
+        mod: {battle_indestructible: {opponent_filter: {civs: [fire]}}}
+  - id: T161
+    name: 試験用薫風妖精
+    types: [creature]
+    civs: [nature]
+    cost: 2
+    power: 1000
+    races: [テスト]
+    text: 自分のマナゾーンにあるカードを、すべての文明のカードとして扱う。
+    abilities:
+      - kind: static
+        affects: {zone: mana, owner: you}
+        mod: {add_civs: [light, water, darkness, fire, nature]}
+  - id: T162
+    name: 試験用統率獣
+    types: [creature]
+    civs: [nature]
+    cost: 6
+    power: 5000
+    races: [テスト]
+    text: このクリーチャーは、パワーがこのクリーチャーより小さいクリーチャーにブロックされない。
+    abilities:
+      - kind: static
+        affects: self
+        mod: {deny: [{action: be_blocked, other: {power_le: {sum: [{power_of: {ref: self}}, -1]}}}]}
+  - id: T163
+    name: 試験用不壊獣
+    types: [creature]
+    civs: [light]
+    cost: 4
+    power: 3000
+    races: [テスト]
+    text: このクリーチャーは破壊されない。
+    abilities:
+      - kind: static
+        affects: self
+        mod: {indestructible: true}
+  - id: T164
+    name: 試験用裏向き呪文
+    types: [spell]
+    civs: [light]
+    cost: 2
+    text: 自分の山札の上から１枚目を、裏向きのままマナゾーンに置く。
+    spell:
+      - {op: move, select: {zone: deck, owner: you, from_top: 1}, to: mana, reason: put, face_down: true}
+  - id: T165
+    name: 試験用ヌル獣
+    types: [creature]
+    civs: [water]
+    cost: 3
+    power: 2000
+    races: [テスト]
+    keywords: [null_breaker]
+    text: ヌル・ブレイカー（このクリーチャーはシールドを０ブレイクする）
+    abilities: []
+  - id: T166
+    name: 試験用クルー竜
+    types: [creature]
+    civs: [fire]
+    cost: 6
+    power: 5000
+    races: [テスト, ドラゴン]
+    text: クルー・ブレイカー：ドラゴン（このクリーチャーは、バトルゾーンにある自分の他のドラゴン１体につき、シールドをさらにもう１枚ブレイクする）
+    abilities:
+      - kind: static
+        affects: self
+        mod: {breaks: {count: {zone: bz, owner: you, other: true, filter: {race_has: ドラゴン}}}}
+  - id: T167
+    name: 試験用一掃呪文
+    types: [spell]
+    civs: [darkness]
+    cost: 5
+    races: [テスト]
+    text: このターン中に出た相手のクリーチャーをすべて破壊する。
+    spell:
+      - op: destroy
+        select: {zone: bz, owner: opp, count: all, filter: {types: [creature], entered_this_turn: true}}
+  - id: T168
+    name: 試験用種族付与呪文
+    types: [spell]
+    civs: [nature]
+    cost: 3
+    races: [テスト]
+    text: 種族をひとつ選ぶ。このターンの終わりまで、自分のクリーチャーはすべて、その種族を追加する。
+    spell:
+      - op: choose_race
+        as: kind
+      - op: modify
+        select: {zone: bz, owner: you, count: all, filter: {types: [creature]}}
+        mod: {add_races: [{race: kind}]}
+        duration: end_of_turn
+  - id: T169
+    name: 試験用同名一掃呪文
+    types: [spell]
+    civs: [darkness]
+    cost: 5
+    races: [テスト]
+    text: 自分の墓地からクリーチャーを１体選ぶ。そのクリーチャーと同じ名前のクリーチャーをすべて破壊する。
+    spell:
+      - op: choose
+        select: {zone: graveyard, owner: you, count: 1, filter: {types: [creature]}}
+        as: picked
+      - op: destroy
+        select: {zone: bz, owner: any, count: all, filter: {types: [creature], name: {name_of: {ref: picked}}}}
+  - id: T170
+    name: 試験用倍化呪文
+    types: [spell]
+    civs: [fire]
+    cost: 3
+    races: [テスト]
+    text: 自分のクリーチャーを１体選ぶ。このターン、そのクリーチャーのパワーを２倍にし、「パワード・ブレイカー」を与える。
+    spell:
+      - op: modify
+        select: {zone: bz, owner: you, count: 1, filter: {types: [creature]}}
+        mod: {double_power: true, grant: [powered_breaker]}
+        duration: end_of_turn

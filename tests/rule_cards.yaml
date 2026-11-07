@@ -610,3 +610,348 @@ cards:
         cost: {under: 1}
         effect:
           - {op: draw, count: 1}
+
+  - id: R075
+    name: 試験用バトル跳ね返し獣
+    types: [creature]
+    civs: [water]
+    cost: 1
+    power: 3000
+    races: [テスト]
+    text: このクリーチャーがバトルする時、バトルしている相手のクリーチャーを持ち主の手札に戻してもよい。
+    abilities:
+      - kind: trigger
+        when: {event: battle_start, subject: self}
+        effect:
+          - op: may
+            body:
+              - {op: bounce, select: {ref: event.opponent}}
+      - kind: trigger
+        when: {event: battle_start, opponent: self}
+        effect:
+          - op: may
+            body:
+              - {op: bounce, select: {ref: event.subject}}
+
+  - id: R076
+    name: 試験用2000
+    types: [creature]
+    civs: [nature]
+    cost: 1
+    power: 2000
+    races: [テスト]
+    text: 試験用の相手クリーチャー
+
+  - id: R077
+    name: 試験用攻撃され獣
+    types: [creature]
+    civs: [water]
+    cost: 1
+    power: 5000
+    races: [テスト]
+    text: このクリーチャーが攻撃された時、カードを1枚引く。
+    abilities:
+      - kind: trigger
+        when: {event: attack, target: self}
+        effect:
+          - {op: draw, count: 1}
+  - id: R078
+    name: 試験用相手分岐獣
+    types: [creature]
+    civs: [water]
+    cost: 1
+    power: 5000
+    races: [テスト]
+    text: このクリーチャーが攻撃する時、相手はカードを１枚引いてもよい。
+    abilities:
+      - kind: trigger
+        when: {event: attack, subject: self}
+        effect:
+          - op: may
+            player: opp
+            body:
+              - {op: draw, player: opp, count: 1}
+  - id: R079
+    name: 試験用左神
+    types: [creature]
+    civs: [light]
+    cost: 5
+    power: 5000
+    races: [ゴッド]
+    keywords: [left_g_link]
+    text: G・リンク（右）
+    abilities: []
+  - id: R080
+    name: 試験用右神
+    types: [creature]
+    civs: [light]
+    cost: 5
+    power: 5000
+    races: [ゴッド]
+    keywords: [right_g_link]
+    text: G・リンク（左）
+    abilities: []
+  - id: R081
+    name: 試験用コスト参照獣
+    types: [creature]
+    civs: [fire]
+    cost: 5
+    power: 5000
+    races: [テスト]
+    text: このクリーチャーが攻撃する時、これ以下のコストを持つ相手のクリーチャーを１体破壊する。
+    abilities:
+      - kind: trigger
+        when: {event: attack, subject: self}
+        effect:
+          - {op: destroy, select: {zone: bz, owner: opp, filter: {cost_le: {cost_of: {ref: self}}}, count: 1}}
+  - id: R082
+    name: 試験用パワー参照獣
+    types: [creature]
+    civs: [fire]
+    cost: 5
+    power: 5000
+    races: [テスト]
+    text: このクリーチャーが攻撃する時、これよりパワーが小さい相手のクリーチャーを１体破壊する。
+    abilities:
+      - kind: trigger
+        when: {event: attack, subject: self}
+        effect:
+          - {op: destroy, select: {zone: bz, owner: opp, filter: {power_le: {sum: [{power_of: {ref: self}}, -1]}}, count: 1}}
+  - id: R083
+    name: 試験用巨獣
+    types: [creature]
+    civs: [nature]
+    cost: 9
+    power: 6000
+    races: [テスト]
+    text: 試験用ダミー（大）
+    abilities: []
+  - id: R084
+    name: 試験用対壁獣
+    types: [creature]
+    civs: [fire]
+    cost: 4
+    power: 3000
+    races: [テスト]
+    text: 「ブロッカー」を持つクリーチャーとバトル中、このクリーチャーのパワーを+5000する。
+    abilities:
+      - kind: static
+        affects: self
+        mod: {battle_power: {amount: 5000, opponent_filter: {keyword: blocker}}}
+  - id: R085
+    name: 試験用対炎不壊獣
+    types: [creature]
+    civs: [light]
+    cost: 3
+    power: 2000
+    races: [テスト]
+    text: このクリーチャーは、火のクリーチャーとバトル中、破壊されない。
+    abilities:
+      - kind: static
+        affects: self
+        mod: {battle_indestructible: {opponent_filter: {civs: [fire]}}}
+  - id: R086
+    name: 試験用炎獣
+    types: [creature]
+    civs: [fire]
+    cost: 5
+    power: 4000
+    races: [テスト]
+    text: 試験用ダミー（火）
+    abilities: []
+  - id: R087
+    name: 試験用薫風妖精
+    types: [creature]
+    civs: [nature]
+    cost: 2
+    power: 1000
+    races: [テスト]
+    text: 自分のマナゾーンにあるカードを、すべての文明のカードとして扱う。
+    abilities:
+      - kind: static
+        affects: {zone: mana, owner: you}
+        mod: {add_civs: [light, water, darkness, fire, nature]}
+  - id: R088
+    name: 試験用炎獣（支払い用）
+    types: [creature]
+    civs: [fire]
+    cost: 2
+    power: 2000
+    races: [テスト]
+    text: 試験用ダミー（火・支払い用）
+    abilities: []
+  - id: R089
+    name: 試験用統率獣
+    types: [creature]
+    civs: [nature]
+    cost: 6
+    power: 5000
+    races: [テスト]
+    text: このクリーチャーは、パワーがこのクリーチャーより小さいクリーチャーにブロックされない。
+    abilities:
+      - kind: static
+        affects: self
+        mod: {deny: [{action: be_blocked, other: {power_le: {sum: [{power_of: {ref: self}}, -1]}}}]}
+  - id: R090
+    name: 試験用不壊獣
+    types: [creature]
+    civs: [light]
+    cost: 4
+    power: 3000
+    races: [テスト]
+    text: このクリーチャーは破壊されない。
+    abilities:
+      - kind: static
+        affects: self
+        mod: {indestructible: true}
+  - id: R091
+    name: 試験用裏向き呪文
+    types: [spell]
+    civs: [light]
+    cost: 2
+    text: 自分の山札の上から１枚目を、裏向きのままマナゾーンに置く。
+    spell:
+      - {op: move, select: {zone: deck, owner: you, from_top: 1}, to: mana, reason: put, face_down: true}
+  - id: R092
+    name: 試験用ヌル獣
+    types: [creature]
+    civs: [water]
+    cost: 3
+    power: 2000
+    races: [テスト]
+    keywords: [null_breaker]
+    text: ヌル・ブレイカー（このクリーチャーはシールドを０ブレイクする）
+    abilities: []
+  - id: R093
+    name: 試験用クルー竜
+    types: [creature]
+    civs: [fire]
+    cost: 6
+    power: 5000
+    races: [テスト, ドラゴン]
+    text: クルー・ブレイカー：ドラゴン（このクリーチャーは、バトルゾーンにある自分の他のドラゴン１体につき、シールドをさらにもう１枚ブレイクする）
+    abilities:
+      - kind: static
+        affects: self
+        mod: {breaks: {count: {zone: bz, owner: you, other: true, filter: {race_has: ドラゴン}}}}
+  - id: R094
+    name: 試験用ドラゴン
+    types: [creature]
+    civs: [fire]
+    cost: 3
+    power: 2000
+    races: [テスト, ドラゴン]
+    text: 試験用ダミー（ドラゴン）
+    abilities: []
+  - id: R095
+    name: テスト・係数ブレイカー
+    types: [creature]
+    civs: [fire]
+    cost: 5
+    power: 5000
+    races: [テスト]
+    abilities:
+    - kind: static
+      affects: self
+      mod: {breaks: {amount: 2, count: {zone: bz, owner: opp, filter: {types: [creature]}}}}
+  - id: R096
+    name: テスト・文明ブレイカー
+    types: [creature]
+    civs: [fire]
+    cost: 5
+    power: 5000
+    races: [テスト]
+    abilities:
+    - kind: static
+      affects: self
+      mod: {breaks: {civ_count: {zone: bz, owner: opp}}}
+  - id: R097
+    name: 試験用被ブロック獣
+    types: [creature]
+    civs: [fire]
+    cost: 1
+    power: 9000
+    races: [テスト]
+    text: このクリーチャーがブロックされた時、このクリーチャーをアンタップする。
+    abilities:
+      - kind: trigger
+        when: {event: block, attacker: self}
+        effect:
+          - {op: untap, select: {ref: self}}
+
+  # 第135弾 entered_count 条件の試験用: このターン2体以上出ていなければ攻撃できない
+  - id: R098
+    name: 試験用条件獣
+    types: [creature]
+    civs: [fire]
+    cost: 3
+    power: 2000
+    races: [テスト]
+    text: このターン中に自分のクリーチャーが２体以上バトルゾーンに出ていなければ、このクリーチャーは攻撃できない。
+    abilities:
+      - kind: static
+        if: {cmp: [{entered: {owner: you}}, "<", 2]}
+        mod: {deny: [attack_player, attack_creature]}
+
+  # 第136弾 add_races 式展開の試験用: 起動で種族を選び、自分のクリーチャーすべてがその種族を追加する
+  - id: R099
+    name: 試験用種族付与獣
+    types: [creature]
+    civs: [nature]
+    cost: 3
+    power: 2000
+    races: [テスト]
+    text: 古代の儀式（タップ） 種族をひとつ選ぶ。このターンの終わりまで、自分のクリーチャーはすべて、その種族を追加する。
+    abilities:
+      - kind: activate
+        cost: {tap: self}
+        effect:
+          - op: choose_race
+            as: kind
+          - op: modify
+            select: {zone: bz, owner: you, count: all, filter: {types: [creature]}}
+            mod: {add_races: [{race: kind}]}
+            duration: end_of_turn
+
+  # 第136弾の試験用: ドラゴン種族のクリーチャー（choose_race の選択肢と対象確認用）
+  - id: R100
+    name: 試験用ドラゴン
+    types: [creature]
+    civs: [fire]
+    cost: 2
+    power: 1000
+    races: [ドラゴン]
+    text: バニラ。
+    abilities: []
+
+  # 第141弾 double_power の試験用: 起動で自分自身のパワーを2倍にする
+  - id: R101
+    name: 試験用倍化獣
+    types: [creature]
+    civs: [fire]
+    cost: 3
+    power: 3000
+    races: [テスト]
+    text: 起動（タップ） このターン、このクリーチャーのパワーを２倍にする。
+    abilities:
+      - kind: activate
+        cost: {tap: self}
+        effect:
+          - op: modify
+            select: {ref: self}
+            mod: {double_power: true}
+            duration: end_of_turn
+
+  # 第142弾 drew 条件の試験用: このターン相手が2枚以上引いていなければ攻撃できない
+  - id: R102
+    name: 試験用ドロー条件獣
+    types: [creature]
+    civs: [water]
+    cost: 3
+    power: 2000
+    races: [テスト]
+    text: このターン中に相手がカードを２枚以上引いていなければ、このクリーチャーは攻撃できない。
+    abilities:
+      - kind: static
+        if: {cmp: [{drew: {owner: opp}}, "<", 2]}
+        mod: {deny: [attack_player, attack_creature]}

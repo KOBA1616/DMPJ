@@ -112,6 +112,9 @@ class EventMixin:
             if ev["to"] == "bz" and c.zone != "hold" and not self.permits(cid, "enter_bz"):
                 return []   # 出せない（実行は h_play で先に確認している。効果で出す場合はここで止める）
             from_zone = ev.get("from") if c.zone == "hold" else c.zone
+            if from_zone == "bz" and ev["to"] == "graveyard" and ev.get("reason") == "destroy" \
+                    and self.chars(cid).get("indestructible"):
+                return []   # 「破壊されない」（第127弾）: 置換を経た最終的な破壊に対して判定し、破壊自体が起こらない
             if from_zone == "bz" and ev["to"] != "bz":
                 # 「バトルゾーンを離れない」（第49弾）: 置換を経た最終的な移動に対して判定し、該当すれば移動自体が起こらない
                 for nl in self.chars(cid)["no_leave"]:
@@ -153,6 +156,8 @@ class EventMixin:
                 c.tapped = True
             if ev.get("face_up") and ev["to"] == "shield":   # 「表向きでシールドゾーンに置く」（ギャラクシールド）
                 c.face_up = True
+            if ev.get("face_down") and ev["to"] == "mana":   # 「裏向きのままマナゾーンに置く」（第128弾）: 置かれた時点で裏向き（別のイベントにしない）
+                c.face_down = True
             if ev["to"] == "bz" and "enters_tapped" in self.chars(cid)["keywords"]:   # 「タップしてバトルゾーンに出る」
                 c.tapped = True
             for u in unders:   # クリーチャーとして離れたら下のカードも同じゾーンへ（109.2b, 316.3）
@@ -236,6 +241,7 @@ class EventMixin:
             cid = deck[0]
             self._raw_move(cid, "hand")
             s.cards[cid].drawn_turn = s.turn   # ビビッドロー: このターンにドローした記録
+            s.turn_counters[f"drew:{p}"] = s.turn_counters.get(f"drew:{p}", 0) + 1   # このターン引いた枚数（第142弾）
             return [{"ev": "draw", "player": p, "subject": s.ref(cid)},
                     {"ev": "move", "subject": s.ref(cid), "lki": None, "from": "deck", "to": "hand",
                      "reason": "draw", "controller": p}]
@@ -423,8 +429,13 @@ class EventMixin:
         if when["event"] != rec["ev"]:
             return False
         for k in ("from", "to", "reason", "via"):
-            if k in when and rec.get(k) != when[k]:
-                return False
+            if k in when:
+                wv = when[k]
+                if isinstance(wv, list):   # リスト指定は「いずれか」（手札以外から出る等）
+                    if rec.get(k) not in wv:
+                        return False
+                elif rec.get(k) != wv:
+                    return False
         if "target" in when:   # 攻撃先: player（シールドも含む）か creature。self や {owner, filter} なら、そのクリーチャーが攻撃された時
             tg, w = rec.get("target"), when["target"]
             if w in ("player", "creature"):
@@ -434,6 +445,9 @@ class EventMixin:
                 return False
         if "attacker" in when:   # ブロックされた時などの、攻撃クリーチャーの条件（self なら「このクリーチャーがブロックされた時」）
             if rec.get("attacker") is None or not self._ref_match(when["attacker"], rec["attacker"], env):
+                return False
+        if "opponent" in when:   # バトルの相手（battle_start の対戦クリーチャー）。self なら「このクリーチャーが攻撃された側でバトルする時」
+            if rec.get("opponent") is None or not self._ref_match(when["opponent"], rec["opponent"], env):
                 return False
         if "unpaid" in when and bool(rec.get("unpaid")) != when["unpaid"]:   # マナをタップせずに（コストを支払わずに）
             return False

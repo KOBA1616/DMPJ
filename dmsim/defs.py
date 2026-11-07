@@ -30,7 +30,7 @@ REASONS = {"put", "destroy", "return", "discard", "charge", "summon", "cast", "b
            "draw", "battle", "sba", "resolve", "evolve", "seal"}
 VIAS = {"revolution_change", "generate"}   # 出し方の印（「革命チェンジによって出た時」など）
 DURATIONS_FIXED = {"end_of_turn", "during_attack", "permanent", "until_next_own_turn_start"}
-MOD_KEYS = {"power", "grant", "allow", "deny", "breaks", "breaks_per_power", "battle_power", "power_when", "cost", "cost_min", "cost_may", "sac_reduce", "opt_reduce", "ignore", "ignore_ids", "gain", "require", "add_of", "add_races", "no_leave", "must_be_attacked"}
+MOD_KEYS = {"power", "grant", "allow", "deny", "breaks", "breaks_per_power", "battle_power", "power_when", "cost", "cost_min", "cost_may", "sac_reduce", "opt_reduce", "ignore", "ignore_ids", "gain", "require", "add_of", "add_races", "no_leave", "must_be_attacked", "battle_indestructible", "win_all_battles", "add_civs", "indestructible", "double_power"}
 REQUIRES = {"attack", "block"}   # 強制（506.1b 攻撃しなければならない, 507.1b ブロックしなければならない）
 POSITIONS = {"top", "bottom"}
 PERMANENT_TYPES = {"tamaseed", "field", "cross_gear"}   # 手札から実行してバトルゾーンに出るクリーチャー以外のカード（315, 308, 303）
@@ -38,8 +38,8 @@ CARD_TYPES = {"creature", "spell", "evolution"} | PERMANENT_TYPES
 CIVS = {"light", "water", "darkness", "fire", "nature", "zero"}
 SELECTOR_KEYS = {"zone", "owner", "owner_of", "filter", "count", "up_to", "from_top", "chooser", "ref", "other",
                  "under_of", "look", "exlife_of", "total_cost_le", "total_cost_ge"}   # look: 非公開ゾーン（山札など）の中身を見て選ぶ。total_cost_*: コストの合計が上限以下／下限以上になるように好きな数選ぶ
-FILTER_KEYS = {"any_of", "types", "not_types", "civs", "civs_all", "not_civs", "races", "race_has", "name", "name_has", "not_name",
-               "cost_le", "cost_ge", "power_le", "power_ge", "tapped", "keyword", "multicolor", "face_down", "face_up", "neo", "vanilla", "sealed", "evolution", "mugen_climb", "twinpact", "vividraw", "fushigi"}
+FILTER_KEYS = {"any_of", "types", "not_types", "civs", "civs_all", "not_civs", "races", "race_has", "not_race_has", "name", "name_has", "not_name",
+               "cost_le", "cost_ge", "power_le", "power_ge", "tapped", "keyword", "multicolor", "colorless", "face_down", "face_up", "neo", "vanilla", "sealed", "evolution", "mugen_climb", "twinpact", "vividraw", "fushigi", "linked_god", "entered_this_turn"}
 FILTER_EXPR_KEYS = {"cost_le", "cost_ge", "power_le", "power_ge", "races"}   # 値に式を書ける（解決時に計算）
 
 
@@ -345,7 +345,11 @@ class Checker:
                 if not isinstance(v, dict) or set(v) - {"owner", "other"} or v.get("owner", "you") not in ("you", "opp"):
                     raise DefError(f"{where}: entered needs {{owner: you/opp, other?: bool}}")
                 return
-            if k in ("var", "cost_of", "races_of", "race"):
+            if k == "drew":   # このターンに引いたカードの枚数 {owner}（第142弾）
+                if not isinstance(v, dict) or set(v) - {"owner"} or v.get("owner", "you") not in ("you", "opp"):
+                    raise DefError(f"{where}: drew needs {{owner: you/opp}}")
+                return
+            if k in ("var", "cost_of", "power_of", "races_of", "race"):
                 return
             if k == "link_count":   # リンクしているカードの枚数（値は self 固定で無視される）
                 return
@@ -415,6 +419,8 @@ class Checker:
         bad = set(m) - MOD_KEYS
         if bad:
             raise DefError(f"{where}: unknown mod keys {sorted(bad)}")
+        if "double_power" in m and m["double_power"] is not True:
+            raise DefError(f"{where}: double_power must be true")
         if "power" in m and isinstance(m["power"], dict):
             pm = m["power"]
             if set(pm) - {"amount", "count"} or not isinstance(pm.get("amount"), int):
@@ -422,8 +428,21 @@ class Checker:
             if "count" in pm:
                 self.count_spec(pm["count"], where)
         if "add_races" in m:
-            if not isinstance(m["add_races"], list) or not all(isinstance(x, str) for x in m["add_races"]):
-                raise DefError(f"{where}: add_races must be a list of race names")
+            if not isinstance(m["add_races"], list) or not all(isinstance(x, (str, dict)) for x in m["add_races"]):
+                raise DefError(f"{where}: add_races must be a list of race names or expressions")
+        if "breaks" in m:
+            b = m["breaks"]
+            if isinstance(b, dict):
+                if "count" in b:   # {count: セレクタ, amount?: 係数}（クルー・ブレイカー等）: 1 + amount × 数
+                    if set(b) - {"amount", "count"} or ("amount" in b and not isinstance(b["amount"], int)):
+                        raise DefError(f"{where}: breaks dict with count takes only amount/count")
+                    self.count_spec(b["count"], where)
+                else:   # 式形式（{civ_count: セレクタ}、第79弾）: 1 + 文明の種類数
+                    if set(b) != {"civ_count"}:
+                        raise DefError(f"{where}: breaks must be an int, {{count: <selector>}}, or {{civ_count: <selector>}}")
+                    self.count_spec(b["civ_count"], where)
+            elif not isinstance(b, int):
+                raise DefError(f"{where}: breaks must be an int or a dict (1 + value)")
         if "cost_may" in m:
             cm = m["cost_may"]
             if not isinstance(cm, dict) or set(cm) - {"amount", "once", "min", "must"} or not isinstance(cm.get("amount"), int) \
@@ -437,6 +456,20 @@ class Checker:
                 raise DefError(f"{where}: no_leave must be true or {{except_destroy?: bool, by_opp?: bool, except_battle?: bool}}")
         if "must_be_attacked" in m and m["must_be_attacked"] is not True:
             raise DefError(f"{where}: must_be_attacked must be true")
+        if "battle_indestructible" in m:
+            bi = m["battle_indestructible"]
+            if bi is not True and not (isinstance(bi, dict) and set(bi) == {"opponent_filter"}):
+                raise DefError(f"{where}: battle_indestructible must be true or {{opponent_filter: <filter>}}")
+            if isinstance(bi, dict):
+                self.filter(bi["opponent_filter"], where)
+        if "win_all_battles" in m and m["win_all_battles"] is not True:
+            raise DefError(f"{where}: win_all_battles must be true")
+        if "indestructible" in m and m["indestructible"] is not True:
+            raise DefError(f"{where}: indestructible must be true")
+        if "add_civs" in m:
+            ac = m["add_civs"]
+            if not isinstance(ac, list) or not ac or not all(c in CIVS for c in ac):
+                raise DefError(f"{where}: add_civs must be a non-empty list of civilizations")
         if "ignore_ids" in m:
             if not isinstance(m["ignore_ids"], list) or not all(isinstance(x, str) for x in m["ignore_ids"]):
                 raise DefError(f"{where}: ignore_ids must be a list of ability id strings")
@@ -489,12 +522,14 @@ class Checker:
                 self.count_spec(pw["count"], where)
         if "battle_power" in m:   # バトル中だけのパワー修整: {amount: N, count: <selector>, only: attacking}（ハンティング。バトル中だけ。「攻撃中」「ブロック中」は power_when）
             bp = m["battle_power"]
-            if not isinstance(bp, dict) or set(bp) - {"amount", "count", "only"} or not isinstance(bp.get("amount"), int):
-                raise DefError(f"{where}: battle_power needs amount (int) and optional count (selector) / only: attacking")
+            if not isinstance(bp, dict) or set(bp) - {"amount", "count", "only", "opponent_filter"} or not isinstance(bp.get("amount"), int):
+                raise DefError(f"{where}: battle_power needs amount (int) and optional count (selector) / only: attacking / opponent_filter (filter)")
             if bp.get("only", "attacking") != "attacking":
                 raise DefError(f"{where}: battle_power only must be attacking")
             if "count" in bp:
                 self.count_spec(bp["count"], where)
+            if "opponent_filter" in bp:
+                self.filter(bp["opponent_filter"], where)
         for k in m.get("require", []):
             if k not in REQUIRES:
                 raise DefError(f"{where}: bad require '{k}' (allowed: {sorted(REQUIRES)})")
@@ -509,15 +544,23 @@ class Checker:
         if ev not in EVENTS:
             raise DefError(f"{where}: unknown event '{ev}'")
         for k in ("from", "to"):
-            if k in w and w[k] not in self.zones:
-                raise DefError(f"{where}: unknown zone '{w[k]}'")
-        if "reason" in w and w["reason"] not in REASONS:
-            raise DefError(f"{where}: unknown reason '{w['reason']}'")
+            if k in w:
+                vals = w[k] if isinstance(w[k], list) else [w[k]]
+                for v in vals:
+                    if v not in self.zones:
+                        raise DefError(f"{where}: unknown zone '{v}'")
+        if "reason" in w:
+            vals = w["reason"] if isinstance(w["reason"], list) else [w["reason"]]
+            for v in vals:
+                if v not in REASONS:
+                    raise DefError(f"{where}: unknown reason '{v}'")
         tg = w.get("target")
         if tg is not None and tg not in ("player", "creature", "self") and not isinstance(tg, dict):
             raise DefError(f"{where}: bad target '{tg}'")
         if w.get("attacker") is not None and w["attacker"] not in ("self", "crossed") and not isinstance(w["attacker"], dict):
             raise DefError(f"{where}: bad attacker '{w['attacker']}'")
+        if w.get("opponent") is not None and w["opponent"] not in ("self", "crossed") and not isinstance(w["opponent"], dict):
+            raise DefError(f"{where}: bad opponent '{w['opponent']}'")
         if "via" in w and w["via"] not in VIAS:
             raise DefError(f"{where}: unknown via '{w['via']}'")
         if "by" in w and w["by"] not in ("you", "opp"):

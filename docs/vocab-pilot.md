@@ -756,3 +756,564 @@ converted の監査（opt_reduce の素の整数表記9件）から。任意形�
 - 書き方（常在型）: kind: static, affects: {zone: bz, owner: you, filter: {types: [creature]}}, mod: {gain: [{kind: trigger, when: {event: move, to: bz, subject: self}, effect: [{op: modify, select: {ref: self}, mod: {allow: [{action: attack_creature, other: {tapped: false}}]}, duration: end_of_turn}]}]}。既に場にいるクリーチャーには trigger が発火しない（正しいルール動作）。
 - tests/test_vocab_pilot58.py 2件（誘発付与の parse／常在付与の parse）＋実カード parse テスト。
 - 待機16枚（mach_fighter のみが gap のもの）。複合 gap の4枚（dmrp21-7a、dm26ex1-027、dm26ex3-033、dm26ex2-pr005）は別途対応。
+
+## 第59弾: battle_indestructible（バトル中破壊されない）（2026-11-04）
+「バトル中、このクリーチャーは破壊されない」を表す語彙が無かった。
+- defs: MOD_KEYS に `battle_indestructible` を追加。値は true のみ。
+- engine/core.py: chars に `battle_indestructible: False` を追加し、static の mod から集約（ダイナモの add_from 経由も伝播）。
+- engine/combat.py: _battle でパワー敗者から battle_indestructible 持ちを除外（破壊イベントを出さない）。勝敗判定（battle_win の対象）はパワーどおり。
+- 書き方: kind: static, affects: self, mod: {battle_indestructible: true}。「火のクリーチャーとバトル中」の条件付きは if で書く（未対応の場合は unsupported）。
+- tests/test_vocab_pilot59.py 2件（正常 parse／不正値の検証エラー）。
+- 待機13枚（battle_indestructible のみが gap のもの）。
+
+## 第60弾: attack_untapped（アンタップしているクリーチャーを攻撃できる）（2026-11-04）
+「このクリーチャーは、アンタップしているクリーチャーを攻撃できる」は、マッハファイターの効果部分（第58弾）と同じ語彙で表せる。違いは「出たターンの間」の制限が無い点。
+- 書き方: kind: static, affects: self, mod: {allow: [{action: attack_creature, other: {tapped: false}}]}。
+- 付与の場合: op: modify で同じ mod を付与（duration は原文どおり。「このターン」なら end_of_turn）。
+- tests/test_vocab_pilot60.py 2件（正常 parse／付与の parse）。
+- 待機17枚（attack_untapped のみが gap のもの）。
+
+## 第61弾: win_all_battles（すべてのバトルに勝つ）（2026-11-04）
+「このクリーチャーはすべてのバトルに勝つ」を表す語彙が無かった。
+- defs: MOD_KEYS に `win_all_battles` を追加。値は true のみ。
+- engine/core.py: chars に `win_all_battles: False` を追加し、static の mod から集約（ダイナモ経由も伝播）。
+- engine/combat.py: _battle でパワー比較の前に win_all_battles を判定。片方だけ持てばその側が勝ち、両方持てば相打ちなし。
+- 書き方: kind: static, affects: self, mod: {win_all_battles: true}。
+- tests/test_vocab_pilot61.py 2件（正常 parse／不正値の検証エラー）。
+- 待機4枚（win_all_battles のみが gap のもの）。dmrp15-031 は ability_ignore との複合のため別途対応。
+
+## 第62弾: add_civs（文明追加）（2026-11-04）
+「〜は〜のクリーチャーでもある」「文明に〜を追加する」を表す語彙が無かった。
+- defs: MOD_KEYS に `add_civs` を追加。文明名の非空リスト（CIVS で検証）。
+- engine/core.py: chars の集約で add_civs の文明を ch["civs"] に追加（重複なし）。
+- 書き方: kind: static, affects: {...}, mod: {add_civs: ["fire"]}。「好きな文明をひとつ追加する」は選択肢が必要なため別途検討。
+- tests/test_vocab_pilot62.py 2件（正常 parse／不正値の検証エラー）。
+- 待機10枚（civ_addition のみが gap のもの）。
+
+## 第63弾: force_attack（可能なら攻撃する）— 新語彙なし（2026-11-04）
+「可能であれば攻撃する」は既存の `require: ["attack"]` で表せる（エンジンが強制攻撃を処理済み）。
+- 書き方: kind: static（または modify）, affects: {...}, mod: {require: ["attack"]}
+- duration で期間を指定（例: 次の相手のターン中 → until_next_opp_turn_end）
+- tests/test_vocab_pilot63.py 2件（正常 parse／検証）
+- 待機14枚（force_addition のみが gap のもの）。
+
+## 第64弾: must_attack_this_creature（相手は可能ならこのクリーチャーを攻撃する）— 新語彙なし（2026-11-04）
+「相手は可能ならこのクリーチャーを攻撃する」は既存の `mod: {must_be_attacked: true}` で表せる（第51弾で実装済み）。
+- 書き方: kind: static, affects: self, mod: {must_be_attacked: true}
+- enters_tapped との複合も対応可能（両方とも既存語彙）
+- tests/test_vocab_pilot64.py 2件（正常 parse／検証）
+- 待機7枚（enters_tapped + must_attack_this_creature のみが gap のもの）。
+
+## 第65弾: cost_gt_count（コストがゾーンの枚数より大きい）— 新語彙なし（2026-11-05）
+「相手のマナゾーンにあるカードの枚数よりコストが大きいクリーチャー」は既存の `if: {cmp: [{cost_of: ...}, ">", {count: ...}]}` で表せる。
+- 書き方: trigger の if に cmp を使用。cost_of で対象のコスト、count でゾーンの枚数を取得。
+- 例: `if: {cmp: [{cost_of: {ref: event.subject}}, ">", {count: {zone: mana, owner: opp}}]}`
+- tests/test_vocab_pilot65.py 2件（正常 parse／検証）
+- 待機14枚（cost_gt_count のみが gap のもの）。
+
+## 第66弾: colorless（無色フィルタ）（2026-11-05）
+「無色カード」を対象とするフィルタが無かった。
+- defs: FILTER_KEYS に `colorless` を追加。
+- engine/selectors.py: filter_match で colorless をチェック（civs が空の場合に true）。
+- 書き方: filter: {colorless: true}（無色カードのみ）、filter: {colorless: false}（無色でないカード）。
+- tests/test_vocab_pilot66.py 2件（正常 parse／FILTER_KEYS 確認）。
+- 待機13枚（filter_colorless のみが gap のもの）。
+
+## 第67弾: tap_activated_ability（攻撃するかわりにタップして能力を使う）— 新語彙なし（2026-11-05）
+「このクリーチャーで攻撃するかわりに、タップして次の能力を使ってもよい」は既存の `kind: activate, cost: {tap: self}` で表せる。
+- 書き方: kind: activate, cost: {tap: self}, effect: [...]
+- 「攻撃するかわりに」は activate のコストとして表現（エンジンが攻撃の代わりに発動することを処理）。
+- tests/test_vocab_pilot67.py 2件（正常 parse／検証）
+- 待機13枚（tap_activated_ability のみが gap のもの）。
+
+## 第68弾: wave_striker（ウェーブストライカー）— 新語彙なし（2026-11-05）
+「ウェーブストライカー」は既存のキーワード（keywords.yaml に定義済み）。条件付き能力の付与は if で表す。
+- 書き方: keywords: [wave_striker]、続く能力に `if: {cmp: [{count: {zone: bz, owner: any, other: true, filter: {keyword: wave_striker}}}, ">=", 2]}` を付ける。
+- tests/test_vocab_pilot68.py 2件（正常 parse／検証）
+- 待機13枚（wave_striker のみが gap のもの）。
+
+## 第69弾: kourin（光臨）— 新語彙なし（2026-11-05）
+「光臨：自分のターンの終わりに、このクリーチャーがタップされていれば、〜」は既存の trigger + if で表せる。
+- 書き方: kind: trigger, when: {event: turn_end, player: you}, if: {exists: {ref: self, filter: {tapped: true}}}, effect: [...]
+- 「タップされていれば」は exists で self の tapped 状態を確認。
+- tests/test_vocab_pilot69.py 2件（正常 parse／検証）
+- 待機13枚（kourin のみが gap のもの）。
+
+## 第70弾: ability_ignore（能力を無視する）— 新語彙なし（2026-11-05）
+「〜の能力を無視する」は既存の `mod: {ignore: [all]}` で表せる（modify で付与、duration で期間を指定）。
+- 書き方: op: modify, select: {...}, mod: {ignore: [all]}, duration: until_next_own_turn_start 等
+- 対象が「すべてのクリーチャー」の場合は select で対象範囲を指定する。
+- tests/test_vocab_pilot70.py 2件（正常 parse／検証）
+- 待機13枚（ability_ignore のみが gap のもの）。
+
+## 第71弾: l_gate（L・ゲート）— 新語彙なし（2026-11-05）
+「L・ゲート：種族（このクリーチャーが破壊される時、墓地に置くかわりに、その種族を１体、自分の墓地から手札に戻してもよい。そうした場合、このクリーチャーを山札の一番下に置く）」は既存の kind: replace で表せる。
+- 書き方: kind: replace, when: {event: move, from: bz, to: graveyard, reason: destroy, subject: self}, instead: [may で墓地から種族1体を手札へ、そうしたら self を山札の一番下へ]
+- 種族はカードごとに異なるためキーワード化せず、パターンとして各カードに書く。
+- tests/test_vocab_pilot71.py 2件（正常 parse／検証）
+- 待機12枚（l_gate のみが gap のもの）。
+
+## 第72弾: summon_from_mana_or_graveyard（マナゾーンまたは墓地から召喚）— 新語彙なし（2026-11-05）
+「このクリーチャーを、自分のマナゾーンまたは墓地から召喚してもよい」は既存キーワード2つの併記で表せる。
+- 書き方: keywords: [summon_from_mana, summon_from_graveyard]
+- tests/test_vocab_pilot72.py 2件（正常 parse／検証）
+- 待機15枚（summon_from_mana_or_graveyard のみが gap のもの）。
+
+## 第73弾: zone_count_comparison（ゾーン枚数の相手比較）— 新語彙なし（2026-11-05）
+「自分の〜が相手より少ない場合」は既存の cmp + count（owner: you / opp）で表せる。
+- 書き方: if: {cmp: [{count: {zone: hand, owner: you}}, "<", {count: {zone: hand, owner: opp}}]}
+- 「多い場合」は ">"、「以下／以上」は "<=" / ">="。
+- tests/test_vocab_pilot73.py 2件（正常 parse／検証）
+- 待機15枚（zone_count_comparison のみが gap のもの）。
+
+## 第74弾: enters_event_trigger（他クリーチャーが出た時の誘発）— 新語彙なし（2026-11-05）
+「自分の〜がバトルゾーンに出た時」は既存の when.subject セレクタで表せる。
+- 書き方: kind: trigger, when: {event: move, to: bz, subject: {owner: you, other: true, filter: {race_has: ...}}}（summon イベントでも可）
+- 効果の対象が self の場合は effect 内で select: {ref: self} を使う。
+- tests/test_vocab_pilot74.py 2件（正常 parse／検証）
+- 待機15枚（enters_event_trigger のみが gap のもの）。
+
+## 第75弾: battle_trigger（バトルする時）— エンジン拡張あり（2026-11-05）
+「このクリーチャーがバトルする時」は battle_start イベントで表す。proto T155。
+- 攻撃側: when: {event: battle_start, subject: self}。バトル相手は select: {ref: event.opponent}。
+- 守備側（攻撃先になった時）: when: {event: battle_start, opponent: self}（本弾で when の opponent キー照合を events.py に追加）。バトル相手（攻撃クリーチャー）は select: {ref: event.subject}。
+- selectors.py に ref: event.opponent を追加。defs.py の when 検証に opponent を追加（attacker と同形）。
+- tests/test_vocab_pilot75.py 3件（parse + 攻撃側・守備側の実挙動）。試験カード R075/R076 を tests/rule_cards.yaml に追加。
+- 待機15枚（battle_trigger のみが gap のもの）。
+
+## 第76弾: dynamo（ダイナモ）— 新語彙なし（2026-11-05）
+「ダイナモ」は keywords.yaml に定義済み（エンジン挙動テスト tests/test_vocab_dynamo.py あり）。
+- 書き方: keywords: [dynamo]
+- 意味: バトルが始まる時、あるいはこのクリーチャーで攻撃できる時、タップしてもよい。そうした場合、そのターンの終わりまで、パワーと能力（ダイナモ自身を除く）を自分の他のダイナモ1体に加える。
+- tests/test_vocab_pilot76.py 2件（正常 parse／キーワード定義確認）
+- 待機12枚（dynamo のみが gap のもの）。
+
+## 第77弾: attacked_trigger（攻撃された時）— 新語彙なし（2026-11-05）
+「このクリーチャーが攻撃された時」は既存の attack イベント + target: self で表せる。
+- 書き方: kind: trigger, when: {event: attack, target: self}
+- 「相手が自分のクリーチャーを攻撃する時」は target: {owner: you, filter: {types: [creature]}}。
+- 攻撃宣言時に解決する（ブロック・バトルの前）。
+- tests/test_vocab_pilot77.py 3件（parse + 実挙動）。試験カード R077 を tests/rule_cards.yaml に追加。
+- 待機11枚（attacked_trigger のみが gap のもの）。
+
+## 第78弾: shield_event_trigger（シールドゾーンに置かれた時）— 新語彙なし（2026-11-05）
+「自分のシールドゾーンにカードが置かれた時」は既存の move イベント + to: shield で表せる。
+- 書き方: kind: trigger, when: {event: move, to: shield, subject: {owner: you}}
+- 「シールドがブレイクされた時」は event: break（player: you）を使う。
+- tests/test_vocab_pilot78.py 2件（正常 parse／検証）
+- 待機11枚（shield_event_trigger のみが gap のもの）。
+
+## 第79弾: civ_count（文明の種類数）— 新語彙なし（2026-11-05）
+「〜にある文明ひとつにつき」は既存の式 civ_count で表せる（対象カード群にある文明の種類数、多色はそれぞれ数える）。
+- 書き方: {civ_count: {zone: bz, owner: opp}} を式として使う（breaks や power の係数、cmp の辺など）。
+- tests/test_vocab_pilot79.py 2件（正常 parse／検証）
+- 待機11枚（civ_count のみが gap のもの）。
+
+## 第80弾: break_increase（ブレイク数増加）— 新語彙なし（2026-11-05）
+「シールドをさらにN枚ブレイクする」は静的 modify の mod: {breaks: N}（加算）で表せる。
+- 書き方: kind: static, affects: {...}, mod: {breaks: 1}。条件は if で付ける。
+- W・ブレイカー等のキーワード化済みのブレイク数とは別に、付与・増加分を mod で表す。
+- tests/test_vocab_pilot80.py 2件（正常 parse／検証）
+- 待機11枚（break_increase のみが gap のもの）。
+
+## 第81弾: not_race_filter（〜でないクリーチャー）— 新語彙 filter: {not_race_has}（2026-11-05）
+「ドラゴンでないクリーチャー」のような種族否定フィルタが無かったため、filter キー not_race_has を追加した。
+- 書き方: filter: {not_race_has: ドラゴン}（race_has の否定。種族文字列に部分一致したら除外）
+- 実装: defs.py の FILTER_KEYS に追加、engine/selectors.py の filter_match に対応行を追加。proto T156。
+- tests/test_vocab_pilot81.py 3件（parse／filter_match の実挙動）
+- 待機11枚（not_race_filter のみが gap のもの）。
+- 拡張（同日）: not_race_has はリストも受け付ける（いずれかに部分一致したら除外）。dmr12-s04 の3種族否定で使用。tests/test_vocab_pilot81.py に list 形式のテストを追加（計4件）。
+
+## 第82弾: cost_le_card_cost（そのカード以下のコスト）— 新語彙なし（2026-11-05）
+「そのカード以下のコストを持つ〜」は filter の cost_le に式を書く既存パターンで表せる（cost_le / cost_ge / power_le / power_ge / races は式可）。
+- 書き方: filter: {cost_le: {cost_of: {ref: 束縛変数}}}（めくった／置いたカードを as で束縛して参照）。
+- tests/test_vocab_pilot82.py 2件（正常 parse／検証）
+- 待機11枚（cost_le_card_cost のみが gap のもの）。
+
+## 第83弾: evolution_existence_filter（進化クリーチャーの有無）— 新語彙なし（2026-11-05）
+「自分の進化クリーチャーがあれば／なければ」は既存の filter: {evolution: true} + exists 条件で表せる。
+- 書き方: if: {exists: {zone: bz, owner: you, filter: {evolution: true}}}（否定は not で包む）。
+- tests/test_vocab_pilot83.py 2件（正常 parse／検証）
+- 待機11枚（evolution_existence_filter のみが gap のもの）。
+
+## 第84弾: evolution_gv（進化GV）— 新語彙なし（2026-11-05）
+「進化GV-自分の〜N体を重ねた上に置く」は既存の evolve_from + evolve_count で表せる。
+- 書き方: evolve_from: {<filter>}, evolve_count: N（重ねる進化元の体数）。
+- tests/test_vocab_pilot84.py 2件（正常 parse／検証）
+- 待機12枚（evolution_gv のみが gap のもの）。
+
+## 第85弾: cost_lt_card（そのカードよりコストが小さい）— 新語彙なし（2026-11-05）
+「そのカードよりコストが小さい〜」は cost_le に sum 式を書く確立済みイディオムで表せる。
+- 書き方: filter: {cost_le: {sum: [{cost_of: {ref: 束縛変数}}, -1]}}（第65弾 cost_gt_count の項と対）。
+- tests/test_vocab_pilot85.py 2件（正常 parse／検証）
+- 待機12枚（cost_lt_card のみが gap のもの）。
+
+## 第86弾: thrilling_three（スリリング・スリー）— 新語彙なし（2026-11-05）
+「山札の上から3枚を表向きにし、〜1体につき次の能力を1回行う。その後、すべて山札の一番下に戻す」は既存の choose（look）+ repeat（回数=式）+ move で表せる。
+- 書き方: choose {from_top: 3, look: true} as: pile → repeat {times: {count: {ref: pile, filter: {...}}}} で本体 → move {ref: pile} to: deck, position: bottom, order: choose。
+- tests/test_vocab_pilot86.py 2件（正常 parse／検証）
+- 待機15枚（thrilling_three のみが gap のもの）。
+
+## 第87弾: ultra_saber（ウルトラ・セイバー）— 新語彙なし（2026-11-05）
+「自分の〜が離れる時、かわりにこのクリーチャーを破壊してもよい」は既存の replace で表せる（shield_saver の汎用版）。
+- 書き方: kind: replace, when: {event: move, from: bz, subject: {owner: you, other: true, filter: {該当条件}}}, optional: true, instead: [destroy {ref: self}]。
+- tests/test_vocab_pilot87.py 2件（正常 parse／検証）
+- 待機14枚（ultra_saber のみが gap のもの）。
+
+## 第88弾: grant_based_on_own_power_threshold（自分のパワー条件で得る）— 新語彙なし（2026-11-05）
+「パワーがN以上のとき、〜を得る」は条件付き static で表せる（自分の現在パワーを exists で参照）。
+- 書き方: kind: static, affects: self, if: {exists: {ref: self, filter: {power_ge: N}}}, mod: {grant: [...]}。
+- power は修正込みの現在値で判定される。
+- tests/test_vocab_pilot88.py 2件（正常 parse／検証）
+- 待機13枚（grant_based_on_own_power_threshold のみが gap のもの）。
+
+## 第89弾: does_not_untap_next_turn（次のターンのはじめにアンタップしない）— 新語彙なし（2026-11-05）
+「タップする。次の相手のターンのはじめに、そのクリーチャーはアンタップしない」は tap 演算の no_untap_next で表せる（フリーズ条項）。
+- 書き方: {op: tap, select: {...}, no_untap_next: true}。
+- tests/test_vocab_pilot89.py 2件（正常 parse／検証）
+- 待機21枚（does_not_untap_next_turn のみが gap のもの）。
+
+## 第90弾: enters_battle_zone_tapped（タップして出る）— 新語彙なし（2026-11-05）
+「〜（のクリーチャー）は、タップして出る」は既存の grant enters_tapped で表せる。
+- 書き方: kind: static, affects: {zone: bz, owner: <対象>, filter: {...}}, mod: {grant: [enters_tapped]}。
+- 自分自身がタップして出る場合は affects: self。
+- tests/test_vocab_pilot90.py 2件（正常 parse／検証）
+- 待機16枚（enters_battle_zone_tapped のみが gap のもの）。
+
+## 第91弾: next_summon_cost_reduction（次に召喚するコスト軽減）— 新語彙なし（2026-11-05）
+「このターン、次に召喚する自分の〜のコストをN少なくする」は cost_may（once）の modify で表せる（dmex14-060 の先例）。
+- 書き方: {op: may, body: [{op: modify, select: {zone: hand, owner: you, filter: {...}}, mod: {cost_may: {amount: N, min: 0, once: true}}, duration: end_of_turn, dynamic: true}]}。
+- tests/test_vocab_pilot91.py 2件（正常 parse／検証）
+- 待機16枚（next_summon_cost_reduction のみが gap のもの）。
+
+## 第92弾: summon_only_entry（召喚によって出た時）— 新語彙なし（2026-11-05）
+「このクリーチャーが召喚によって出た時」は move イベントの理由限定で表せる（delayed_trigger の reason: summon の先例）。
+- 書き方: kind: trigger, when: {event: move, to: bz, reason: summon, subject: self}。
+- 通常の「出た時」（summon イベント）は召喚以外で出た場合も誘発するため、原文が「召喚によって」を明記する場合のみこの形を使う。
+- tests/test_vocab_pilot92.py 2件（正常 parse／検証）
+- 待機20枚（summon_only_entry のみが gap のもの）。
+
+## 第93弾: soul（ソウル種族フィルタ）— 新語彙なし（2026-11-05）
+(H・ソウル) 等のソウルは種族として扱い、any_of の race_has で表せる。
+- 書き方: filter: {any_of: [{race_has: H・ソウル}, {race_has: M・ソウル}, {race_has: E・ソウル}, {race_has: K・ソウル}, {race_has: W・ソウル}, {race_has: B・ソウル}]}。
+- 「他の」は other: true。
+- tests/test_vocab_pilot93.py 2件（正常 parse／検証）
+- 待機18枚（soul のみが gap のもの）。
+
+## 第94弾: entry_replacement（出る時の置換）— 新語彙なし（2026-11-05）
+「相手のクリーチャーが出る時、かわりに〜に置く」は出場置換で表せる。
+- 書き方: kind: replace, when: {event: move, to: bz, subject: {owner: opp, filter: {...}}}, instead: [move {ref: event.subject} to: <置換先>]。「置かせてもよい」は optional: true。
+- tests/test_vocab_pilot94.py 2件（正常 parse／検証）
+- 待機18枚（entry_replacement のみが gap のもの）。
+
+## 第95弾: mana_evolution（マナ進化）— 新語彙なし（2026-11-05）
+「マナ進化：〜を自分のマナゾーンから選び、このクリーチャーをその上に重ねつつ出す」は evolve_zone で表せる（墓地進化の先例）。
+- 書き方: types に evolution を含め、evolve_from: {<進化元の条件>}、evolve_zone: mana。
+- tests/test_vocab_pilot95.py 2件（正常 parse／検証）
+- 待機16枚（mana_evolution のみが gap のもの）。
+
+## 第96弾: opponent_chooses_branch（相手が選ぶ分岐）— エンジン拡張（2026-11-05）
+「相手は〜してもよい。そうしたら…、そうしなければ…」は may の決定者を相手にする＋ else 分岐で表す。
+- エンジン変更: dmsim/engine/ops.py の op_may に player 引数を追加（従来はコントローラー固定）。{op: may, player: opp, body: [...], else: [...]} と書く。else は「そうしなければ」。
+- 試験カード R078 を tests/rule_cards.yaml に追加。tests/test_vocab_pilot96.py 3件（parse 2件＋相手が決定者になる実挙動1件）。
+- 待機20枚（opponent_chooses_branch のみが gap のもの）。
+
+## 第97弾: night_magic（ナイト・マジック）— 新語彙なし（2026-11-05）
+「バトルゾーンに自分のナイトがあれば、この呪文の能力をもう一度使ってもよい」は、呪文の効果の後ろに条件付き再実行を置く。
+- 書き方: spell: [<効果>, {op: if, cond: {exists: {zone: bz, owner: you, filter: {race_has: ナイト}}}, then: [{op: may, body: [<効果>]}]}]（先例 dm28-016 魔弾プラス・ワン）。
+- tests/test_vocab_pilot97.py 2件（正常 parse／検証）
+- 待機16枚（night_magic のみが gap のもの）。
+
+## 第98弾: enters_from_non_hand_replacement（手札以外から出る時の置換）— エンジン拡張（2026-11-05）
+「相手のクリーチャーが、相手の手札以外から出る時、かわりに手札に加える」等の出現元で条件づける置換。
+- エンジン変更: when の from / to / reason / via にリスト指定を許可（いずれかに一致）。dmsim/engine/events.py の _match_when と dmsim/defs.py の検証を対応させた。
+- 書き方: {kind: replace, when: {event: move, to: bz, from: [graveyard, mana, deck, shield], subject: {owner: opp, filter}}, instead: [...]}。「召喚以外の方法で出る」は reason: put（バトルゾーンへの出現理由は summon / put の2種のみ）。
+- tests/test_vocab_pilot98.py 3件（parse 2件＋照合の実挙動1件）。
+- 待機10枚（enters_from_non_hand_replacement のみが gap のもの）。
+
+## 第99弾: attack_target_filter（攻撃できる対象のフィルタ）— 新語彙なし（2026-11-05）
+「タップされていない○○のクリーチャーを攻撃できる」は第60弾の allow に other フィルタを付けて表す。
+- 書き方: kind: static, affects: self, mod: {allow: [{action: attack_creature, other: {tapped: false, civs: [light]}}]}。other はそのまま filter_match に渡るため、civs / races / cost_le 等の通常フィルタが使える。
+- tests/test_vocab_pilot99.py 2件（正常 parse／検証）
+- 待機10枚（attack_target_filter のみが gap のもの）。
+
+## 第100弾: oni_end（鬼エンド）— 新語彙なし（2026-11-05）
+「クリーチャーが攻撃する時、シールドが１つもないプレイヤーがいて、自分のマナゾーンに闇文明と火文明があれば、手札からコストを支払わずに召喚/唱えてもよい」はニンジャ・ストライクと同じ declare で表す。
+- 書き方: {kind: declare, zone: hand, when: {event: attack, subject: {owner: any}}, if: {all: [{any: [{cmp: [{count: {zone: shield, owner: you}}, "==", 0]}, {cmp: [{count: {zone: shield, owner: opp}}, "==", 0]}]}, {exists: {zone: mana, owner: you, filter: {civs: [darkness]}}}, {exists: {zone: mana, owner: you, filter: {civs: [fire]}}}]}, effect: [{op: play_free, select: {ref: self}}]}。条件（対象プレイヤー・文明）は原文どおりに調整する。
+- tests/test_vocab_pilot100.py 2件（正常 parse／検証）
+- 待機10枚（oni_end のみが gap のもの）。
+
+## 第101弾: summon_restriction（召喚制限）— 新語彙なし（2026-11-05）
+「すべてのプレイヤーは、コスト４以下のクリーチャーを召喚できない」は手札ゾーンへの常在型 deny で表す。
+- 書き方: {kind: static, affects: {zone: hand, owner: any, filter: {types: [creature], cost_le: 4}}, mod: {deny: [summon]}}（先例 34-sec001）。owner は原文どおり（自分だけ／相手だけ／全員）。効果で出すことは禁止しない点も原文どおり。
+- tests/test_vocab_pilot101.py 2件（正常 parse／検証）
+- 待機10枚（summon_restriction のみが gap のもの）。
+
+## 第102弾: samurai_generate（侍流ジェネレート）— 新語彙なし（2026-11-05）
+「このクリーチャーをバトルゾーンに出した時、クロスギアを１枚、自分の手札からコストを支払わずにジェネレートしてもよい」は play_free で表す（クロスギアをプレイする行為がジェネレート。move イベントにも via: generate が付く）。
+- 書き方: {kind: trigger, when: {event: move, to: bz, subject: self}, effect: [{op: may, body: [{op: play_free, select: {zone: hand, owner: you, filter: {types: [cross_gear]}, count: 1}}]}]}。
+- tests/test_vocab_pilot102.py 2件（正常 parse／検証）
+- 待機10枚（samurai_generate のみが gap のもの）。
+
+## 第103弾: linked_god_filter（リンクしているゴッド）— 新語彙あり（2026-11-05）
+「進化クリーチャーまたはリンクしているゴッド」は any_of の片方として新フィルタで表す。
+- 新フィルタ: {linked_god: true}（defs.py FILTER_KEYS 追加、engine/selectors.py の filter_match に実装）。判定はリンク位置キーワードを持ち、link_members が2体以上（実際にリンク中）。
+- 書き方: filter: {any_of: [{evolution: true}, {linked_god: true}]}。proto T157。
+- 試験カード R079・R080 を tests/rule_cards.yaml に追加。tests/test_vocab_pilot103.py 2件（parse／照合の実挙動）。
+- 待機7枚（linked_god_filter のみが gap のもの）。
+
+## 第104弾: attack_end_trigger（攻撃の終わりに）— 新語彙なし（2026-11-05）
+「このクリーチャーの攻撃の終わりに、〜」は既存の attack_end イベントで表す（キリフダッシュ用に追加済みのイベント。攻撃クリーチャーが subject）。
+- 書き方: {kind: trigger, when: {event: attack_end, subject: self}, effect: [...]}。
+- tests/test_vocab_pilot104.py 2件（正常 parse／検証）
+- 待機7枚（attack_end_trigger のみが gap のもの）。
+
+## 第105弾: first_tap_trigger（はじめてタップした時）— 新語彙なし（2026-11-05）
+「各ターン、このクリーチャーがはじめてタップした時、〜」は tap イベント＋ first_time で表す。
+- 書き方: {kind: trigger, first_time: true, when: {event: tap, subject: self}, effect: [...]}。first_time はラウンド110（dmrp14-007 の attack_end）でも使用した既存フラグ。
+- tests/test_vocab_pilot105.py 2件（正常 parse／検証）
+- 待機7枚（first_tap_trigger のみが gap のもの）。
+
+## 第106弾: trigger_when_wins_battle（バトルに勝った時）— 新語彙なし（2026-11-05）
+「このクリーチャーがバトルに勝った時、〜」は既存の battle_win イベントで表す（勝者のみが subject）。
+- 書き方: {kind: trigger, when: {event: battle_win, subject: self}, effect: [...]}。
+- tests/test_vocab_pilot106.py 2件（正常 parse／検証）
+- 待機9枚（trigger_when_wins_battle のみが gap のもの）。
+
+## 第107弾: tap_event_trigger（タップした時）— 新語彙なし（2026-11-05）
+「このクリーチャーがタップした時、〜」は第105弾の first_time を付けない形で表す（毎回発動）。
+- 書き方: {kind: trigger, when: {event: tap, subject: self}, effect: [...]}。
+- tests/test_vocab_pilot107.py 2件（正常 parse／検証）
+- 待機7枚（tap_event_trigger のみが gap のもの）。
+
+## 第108弾: cost_le_card（カードのコスト以下）— 新語彙なし（2026-11-05）
+選択フィルタ側でも第82弾のイディオムが使える: filter: {cost_le: {cost_of: {ref: t}}} で
+「as で束縛したカードのコスト以下」を表す（自身以下は {cost_of: {ref: self}}）。
+- 書き方: select ... as: t → select/filter で cost_le: {cost_of: {ref: t}}。
+- tests/test_vocab_pilot108.py 2件（正常 parse／検証）
+- 待機7枚（cost_le_card のみが gap のもの）。
+
+## 第109弾: shield_trigger_grant（S・トリガー付与）— 新語彙なし（2026-11-05）
+「（ゾーンにある）自分のカードは『S・トリガー』を得る」は static の grant で表す。
+- 書き方: {kind: static, affects: {zone: shield/hand, owner: you, filter}, mod: {grant: [s_trigger]}}。
+  先例: dm24ex4-015（手札の光カード）、dmr20-s01（シールドのメタリカ/裁きの紋章）。
+- tests/test_vocab_pilot109.py 2件（正常 parse／検証）
+- 待機7枚（shield_trigger_grant のみが gap のもの）。
+
+## 第110弾: battle_win_all（すべてのバトルに勝つ）— 新語彙なし（2026-11-05）
+「このクリーチャーはすべてのバトルに勝つ」は第61弾の mod で表す（条件付きは if を併記）。
+- 書き方: {kind: static, mod: {win_all_battles: true}}（combat._battle でパワー比較より優先）。
+- tests/test_vocab_pilot110.py 2件（正常 parse／検証）
+- 待機7枚（battle_win_all のみが gap のもの）。
+
+## 第111弾: optional_enters_tapped（タップして出てもよい）— 新語彙なし（2026-11-05）
+「タップして出てもよい。そうした場合、〜」は出現置換の may で表す。
+- 書き方: {kind: replace, when: {event: move, subject: self, to: bz}, optional: true,
+  effect: [tap {select: {ref: self}}, <効果>]}（出る前に置換として解決し、タップ状態で出る）。
+- tests/test_vocab_pilot111.py 2件（正常 parse／検証）
+- 待機7枚（optional_enters_tapped のみが gap のもの）。
+
+## 第112弾: recast_from_graveyard（墓地から唱える）— 新語彙なし（2026-11-05）
+「コスト○以下の呪文を1枚、自分の墓地からコストを支払わずに唱える」は play_free で表す。
+- 書き方: {op: play_free, select: {zone: graveyard, owner: you, filter: {types: [spell], cost_le: N}, count: 1}}。
+  唱えた後の置き場変更は replace（move の to: graveyard を deck bottom へ）で併記する。
+- tests/test_vocab_pilot112.py 2件（正常 parse／検証）
+- 待機7枚（recast_from_graveyard のみが gap のもの）。
+
+## 第113弾: draw_replacement（引くかわりに）— 新語彙なし（2026-11-05）
+「自分がカードを引く時、1枚のかわりに2枚引いてもよい。そうした場合、手札を1枚捨てる」は
+draw イベントへの置換で表す（draw は個別イベントとして発行される）。
+- 書き方: {kind: replace, when: {event: draw, player: you}, optional: true,
+  instead: [{op: draw, count: 2}, {op: discard, select: {zone: hand, owner: you, count: 1}}]}。
+- tests/test_vocab_pilot113.py 2件（正常 parse／検証）
+- 待機7枚（draw_replacement のみが gap のもの）。
+
+## 第114弾: random_discard（見ないで選び捨てさせる）— 新語彙なし（2026-11-05）
+「相手の手札を1枚見ないで選び、捨てさせる」は既存の discard で表す
+（手札は秘匿ゾーンのため、選ぶ側からは見えない選択になる。変換済み110件が同型）。
+- 書き方: {op: discard, select: {zone: hand, owner: opp, count: 1}}（chooser は既定でコントローラー）。
+  「見て選ぶ」場合は先に look で公開してから選ぶ点が異なる。
+- tests/test_vocab_pilot114.py 2件（正常 parse／検証）
+- 待機7枚（random_discard のみが gap のもの）。
+
+## 第115弾: filter_not_race（〜でないクリーチャー）— 新語彙なし（2026-11-05）
+選択フィルタの「種族〜でない」は第81弾の not_race_has で表す（文字列／リスト両形式）。
+- 書き方: filter: {not_race_has: ドラゴン}（複数種族のいずれでもない場合はリスト）。
+- tests/test_vocab_pilot115.py 2件（正常 parse／検証）
+- 待機8枚（filter_not_race のみが gap のもの）。
+
+## 第116弾: power_lt_card（そのカードよりパワーが小さい）— エンジン拡張（2026-11-05）
+新式 power_of（参照カードの現在パワー。cost_of の対）を追加した。
+- defs: 式キーに power_of を追加。selectors.eval_expr: power_of を評価（chars の現在パワー、複数なら最大）。
+  schema にも power_of を追加。proto T158。
+- ついでに cost_of / power_of の参照解決を共通化（_expr_refs）: 従来 {cost_of: {ref: t}} は
+  実行時 TypeError、{cost_of: "self"} は 0 扱いになる潜在バグがあり、{ref:} 形式と "self" が
+  正しく解決されるよう修正した（変換済みカードの dict 形式 cost_of が実際に効くようになる）。
+- 書き方: filter: {power_le: {sum: [{power_of: {ref: t}}, -1]}}（「より小さい」イディオム）。
+- tests/test_vocab_pilot116.py 4件（parse 2件＋実挙動2件: R082 power_of で T001 のみ破壊、
+  R081 cost_of dict 形式で T001 のみ破壊。試験カード R081〜R083）
+- 待機9枚（power_lt_card のみが gap のもの）。
+
+## 第117弾: cost_lt_count（コストが数より小さい）— 新語彙なし（2026-11-05）
+選択フィルタの cost_le に {sum: [{count: <ゾーン集計>}, -1]} を渡すことで
+「（数）よりコストが小さい」を表す（第65・73弾の集計式＋「より小さい」イディオム）。
+- 書き方: filter: {cost_le: {sum: [{count: {zone: mana, owner: you}}, -1]}}。
+- tests/test_vocab_pilot117.py 2件（正常 parse／検証）
+- 待機9枚（cost_lt_count のみが gap のもの）。
+
+## 第118弾: summon_event_trigger（召喚した時）— 新語彙なし（2026-11-05）
+「自分の他のクリーチャーを召喚した時、〜」は move イベント（reason: summon）を他者 subject で表す。
+- 書き方: {kind: trigger, when: {event: move, to: bz, reason: summon,
+  subject: {owner: you, other: true, filter}}, effect: [...]}。
+  「呪文を唱えた時」との複合条件は cast イベントの誘発を併記する。
+- tests/test_vocab_pilot118.py 2件（正常 parse／検証）
+- 待機8枚（summon_event_trigger のみが gap のもの）。
+
+## 第119弾: enters_non_summon（召喚以外の方法で出た時）— 新語彙なし（2026-11-05）
+「召喚以外の方法で出た時」は move イベントの reason: put で表す
+（バトルゾーンへの出現理由は summon / put の2種のみ）。
+- 書き方（誘発）: {kind: trigger, when: {event: move, to: bz, reason: put,
+  subject: {owner: opp, filter}}, if: {is_turn: opp}, effect: [...]}。
+- 書き方（置換）: {kind: replace, when: {event: move, to: bz, reason: put, subject: {...}},
+  instead: [{op: move, select: {ref: event.subject}, to: graveyard, reason: put}]}。
+- tests/test_vocab_pilot119.py 2件（正常 parse／検証）
+- 待機6枚（enters_non_summon のみが gap のもの）。
+
+## 第120弾: under_card_count（含まれるカードの数）— 新語彙なし（2026-11-05）
+「そのクリーチャーに含まれるカード１枚につき」は under_of セレクタの count で表す。
+- 書き方: 含まれる総数 = {sum: [1, {count: {under_of: <変数名またはself>}}]}
+  （under_of は下にあるカードを返し、本体1枚を加える）。回数・枚数・パワー量の式に使う。
+- tests/test_vocab_pilot120.py 2件（正常 parse／検証）
+- 待機6枚（under_card_count のみが gap のもの）。
+
+## 第121弾: total_count_condition（合計数条件）— 新語彙なし（2026-11-05）
+「バトルゾーンとマナゾーンにある〜カードが合計N以上」は count の sum で表す。
+- 書き方: {cmp: [{sum: [{count: {zone: bz, owner: you, filter}}, {count: {zone: mana, owner: you, filter}}]}, ">=", N]}。
+  G・ゼロ等の free_if や static の if、コスト軽減の条件に使う。
+- tests/test_vocab_pilot121.py 2件（正常 parse／検証）
+- 待機6枚（total_count_condition のみが gap のもの）。
+
+### 第122弾 battle_opponent_filter（2026-11-05）
+- 「『ブロッカー』を持つクリーチャーとバトル中、パワーを+Nする」= mod: {battle_power: {amount: N, opponent_filter: {keyword: blocker}}}。「火のクリーチャーとバトル中、破壊されない」= mod: {battle_indestructible: {opponent_filter: {civs: [fire]}}}（エンジン拡張: battle_power / battle_indestructible に opponent_filter を追加。combat._battle が相手を渡してフィルタ判定。chars には battle_indestructible_filters として集める）。
+- proto T159/T160、試験カード R084/R085/R086、tests/test_vocab_pilot122.py 6件（parse 2件＋実挙動4件: 対ブロッカーで勝つ／対非ブロッカーで負ける／対火で不壊／対自然で破壊）。
+
+### 第123弾 mana_all_civilizations（2026-11-05）
+- 「自分のマナゾーンにあるカードを、すべての文明のカードとして扱う」= static {affects: {zone: mana, owner: you}, mod: {add_civs: [light, water, darkness, fire, nature]}}。「すべての文明を持つかのようにタップしてもよい」系も同じ静的で表す（支払い時の文明として扱う点が本質）。
+- エンジン拡張: turn._mana_choices の文明判定をカード定義ではなく特性（chars）ベースに変更（グループキーに chars の文明タプルを含める）。これで add_civs（自分の静的・マナ側の静的を含む）が支払いに効く。
+- proto T161、試験カード R087/R088、tests/test_vocab_pilot123.py 3件（parse、R087 ありで自然マナが火の文明を満たす、なしでは満たせない）。
+
+- 第123弾の適用範囲の訂正（ラウンド130）: 「〜を召喚する時／実行する時、すべての文明を持つかのようにタップしてもよい」のように支払い範囲が限定される変種は、無条件の静的にすると原文より広くなるため対象外。gap mana_civilization_tap として rejects に残す（dm24bd6-042、dm24rp2-074、dm26rp3-012）。第123弾の静的は無条件の「すべての文明のカードとして扱う」にのみ使う。
+
+### 第124弾 holy_field（2026-11-05）
+- 「ホーリー・フィールド（自分のシールドの数が相手以上であれば、このクリーチャーは次の能力を得る）」は新語彙なし。得る能力そのものに if: {cmp: [{count: {zone: shield, owner: you}}, ">=", {count: {zone: shield, owner: opp}}]} を付ける（第73弾のゾーン枚数比較＋第97弾の条件つき能力）。静的なら static の if、誘発なら trigger の if。
+- tests/test_vocab_pilot124.py 3件（static parse、trigger parse、実カード dm36-072 の原文確認）。
+
+### 第125弾 civilization_count（2026-11-05）
+- 「自分のマナゾーンにある文明ひとつにつき」「文明の数以下のコスト」は既存の式 civ_count で表す（新語彙なし）。{civ_count: {zone: mana, owner: you}} は対象群にある文明の種類数（多色は持つ文明をすべて数える）。mod の count（パワー+N×種類数）、filter の cost_le 等の式、cmp の項（相手との比較）に使える。
+- tests/test_vocab_pilot125.py 3件（power の count、filter の cost_le、cmp の項、それぞれ parse）。
+
+### 第126弾 power_less_than_self（2026-11-05）
+- 「パワーがこのクリーチャーより小さい相手のクリーチャー」は第116弾の filter {power_le: {sum: [{power_of: {ref: self}}, -1]}} で表す（選択側は candidates が式を前評価する）。
+- 「パワーがこのクリーチャーより小さいクリーチャーにブロックされない」= static mod {deny: [{action: be_blocked, other: {power_le: <同式>}}]}。エンジン拡張: permits の other フィルタの式を許可側カード（self）基準で前評価する（core.permits の _other_filter、candidates と同じ方式）。
+- proto T162、試験カード R089、tests/test_vocab_pilot126.py 3件（parse 1件＋実挙動2件: パワー3000ブロッカーはブロック不可、5000ブロッカーはブロックして相打ち）。
+
+### 第127弾 indestructible（2026-11-05）
+- 「破壊されない」は新語彙 static mod: {indestructible: true}（エンジン拡張）。chars に集め、events._apply_one が置換を経た最終的な破壊（reason: destroy で墓地へ）を防ぐ。バトルでも battle_indestructible と同様に扱う（combat の _battle_indestructible が併せて見る）。条件つきは static の if、付与は modify の mod で同じ形。
+- proto T163、試験カード R090、tests/test_vocab_pilot127.py 5件（parse 2件＋実挙動3件: バトルで負けても残る／破壊効果でも残る／対照は破壊される）。
+
+### 第128弾 facedown_mana（2026-11-05）
+- 「裏向きのままマナゾーンに置く」は新語彙 move op の face_down: true（エンジン拡張: move イベントが face_down を運び、_apply_one がマナ到着時に裏向きにする。together の move でも伝播）。move+flip_down の合成は置かれた瞬間が表向きになるため採らない（ラウンド122の判断を正式化）。既にマナにあるカードを裏向きにするのは従来どおり flip_down op。
+- 裏向きマナは支払い時に無色・マナ数1として扱う（_mana_choices の既存処理）。
+- proto T164、試験カード R091、tests/test_vocab_pilot128.py 3件（parse、裏向きで到着し支払いで無色扱い、対照）。
+
+### 第129弾 null_breaker（2026-11-05）
+- 「ヌル・ブレイカー（このクリーチャーはシールドを０ブレイクする）」を keywords.yaml のキーワードとして登録（静的 mod {breaks: 0}）。攻撃時のブレイク数は break_opts で決まるため 0 が唯一の選択肢になる。
+- エンジン修正: combat のダイレクトアタックでブレイク数 0 の時はブレイクタスク自体を積まない（ブレイクイベントも発生しない）。
+- proto T165、試験カード R092、tests/test_vocab_pilot129.py 3件（parse、break_opts=[0]、攻撃してもシールドが割れない）。
+
+### 第130弾 crew_breaker（2026-11-05）
+- 「クルー・ブレイカー：X（自分の他のX１体につき、シールドをさらにもう１枚ブレイクする）」は static mod {breaks: {count: <selector>}} で表す（エンジン拡張: breaks に {count} 形式を追加。ブレイク数 = 1 + count_of(selector)。「他の」が無い原文では other を付けない）。
+- proto T166、試験カード R093/R094、tests/test_vocab_pilot130.py 3件（parse、不正形式の拒否、他のドラゴン2体で break_opts=[3]／0体で [1]）。
+- **訂正・統一（2026-11-05、全体テストで検出）**: breaks の dict 形式は既存カードにも2形式あり、第130弾の検証がそれらを弾いて3テスト失敗した。統一後の仕様: dict はすべて「1 + 値」— {count: sel} は 1+数、{amount: A, count: sel} は 1+A×数（dmd10-008 型）、{civ_count: sel} は 1+文明の種類数（第79弾、dmc34-025 型）。回帰テストとして R095/R096 を追加（同テストファイル、計5件）。なお第130弾以前、dict 形式は chars で未評価（int との max で壊れる潜在バグ）だったため、この統一で初めて実働する。
+
+## 第131弾: powered_blocker（パワード・ブロッカー）— 新語彙なし（2026-11-06）
+「パワード・ブロッカー +N（ブロック中、このクリーチャーのパワーを+Nする）」は常在型のパワー修整で表す。
+- 書き方: kind: static, affects: self, mod: {power_when: {amount: N, when: blocking}}（ブロッカー自体はキーワードで処理済み）。
+- tests/test_vocab_pilot131.py 2件（正常 parse／検証）
+- 待機8枚（powered_blocker のみが gap のもの）。
+
+## 第132弾: blocked_trigger（ブロックされた時）— 新語彙なし（2026-11-06）
+「このクリーチャーがブロックされた時」は block イベントの attacker 照合で表す。
+- 書き方: {kind: trigger, when: {event: block, attacker: self}, effect: [...]}。block レコードの subject はブロッカー側なので、「自分のクリーチャーがブロックされた時」を他者の視点で書く場合は subject: {owner: opp} になる（先例 dm30-050、dm29-012）。
+- 試験カード R097 を tests/rule_cards.yaml に追加。tests/test_vocab_pilot132.py 3件（parse 2件＋実挙動1件）。
+- 待機4枚（blocked_trigger のみが gap のもの）。
+
+## 第133弾: cost_lt_card_cost（参照カードよりコストが小さい）— 新語彙なし（2026-11-06）
+「その捨てたカードよりコストが小さい相手のクリーチャーを破壊する」は第82・85弾の式フィルタの応用で表す。
+- 書き方: 捨てるカードを as で束縛し、対象選択の filter: {cost_le: {sum: [{cost_of: {ref: <束縛名>}}, -1]}}（「より小さい」＝参照コスト−1以下）。
+- tests/test_vocab_pilot133.py 2件（正常 parse／検証）
+- 待機4枚（cost_lt_card_cost のみが gap のもの）。
+
+## 第134弾: entered_this_turn_filter（このターン中に出た）— 新語彙あり（2026-11-06）
+「このターン中に出たクリーチャー」を対象フィルタで絞れるようにした。
+- 新フィルタ: {entered_this_turn: true}（defs.py FILTER_KEYS 追加、engine/selectors.py の filter_match に実装）。判定はカードの entered_turn（バトルゾーンに出たターン。それ以外は -1）が現在のターンと一致するか。
+- proto T167。tests/test_vocab_pilot134.py 2件（parse／照合の実挙動）。
+- 待機4枚（entered_this_turn_filter のみが gap のもの）。entered_this_turn_condition（9枚）の条件側にも使える可能性あり。
+
+## 第135弾: entered_this_turn_condition（このターン中に出た数での条件）— 新語彙なし（2026-11-06）
+「このターン中に自分のクリーチャーがN体以上バトルゾーンに出ていれば／なければ」は式 {entered: {owner: you}}（既存実装、そのまま数が返る。other: true で自分自身を除く）で数え、cmp で条件化する。
+- 書き方: 条件付き static（第88弾）や trigger の if に {cmp: [{entered: {owner: you}}, "<", 2]} 等（count: で包まない）。
+- 試験カード R098。tests/test_vocab_pilot135.py 2件（parse／entered カウンタで deny が解ける実挙動）。
+- 待機11枚（entered_this_turn_condition のみが gap のもの）。
+
+## 第136弾: choose_a_race（選んだ種族の付与・参照）— エンジン拡張あり（2026-11-06）
+「種族をひとつ選ぶ」choose_race（既存）の使い分け。
+- 選んだ種族のクリーチャーへの効果: filter: {races: {race: <変数名>}}（既存先例 dm09-028 等）。
+- 選んだ種族そのものを追加する効果: mod: {add_races: [{race: <変数名>}]}。add_races の式エントリを許可し（defs / schema）、op_modify が継続効果の生成時に env で種族名へ展開して固定する（エンジン拡張）。
+- proto T168、試験カード R099。tests/test_vocab_pilot136.py 2件（parse／起動→選択→種族追加の実挙動）。
+- 待機9枚（choose_a_race のみが gap のもの）。
+
+## 第137弾: god_filter（ゴッドのフィルタ・条件）— 新語彙なし（2026-11-06）
+「ゴッド」は種族名として扱う。既存語彙の組み合わせで足りる。
+- 対象・検索・数え上げ: filter: {race_has: ゴッド}。「ゴッド以外」は not_race_has: ゴッド（第81弾）。
+- 存在条件: exists を条件に使う（ゾーン指定、または破壊したカードは ref 指定で op: if の cond に）。
+- 「リンクしているゴッド」は filter: {linked_god: true}（第103弾）を count に使う。
+- tests/test_vocab_pilot137.py 2件（正常 parse／検証）
+- 待機9枚（god_filter のみが gap のもの）。
+
+## 第138弾: filter_or_race_or_type（種族またはタイプの選択）— 新語彙なし（2026-11-06）
+「ゴッドまたは呪文」「ナイト呪文または〜呪文」のような OR 条件の対象指定は filter の any_of で表す。
+- 書き方: filter: {any_of: [{race_has: ゴッド}, {types: [spell]}]}（第93弾 soul の any_of と同形）。同じ区分の AND は通常キー併記。
+- tests/test_vocab_pilot138.py 2件（正常 parse／検証）
+- 待機5枚（filter_or_race_or_type のみが gap のもの）。
+
+## 第139弾: mach_fighter_grant（マッハファイターの付与）— 新語彙なし（2026-11-06）
+「マッハファイターを与える」は第58弾の展開形（allow attack_creature、other: {tapped: false}）を modify / static で付与する。
+- 一時的付与: trigger の effect で modify（select は対象、mod: {allow: [{action: attack_creature, other: {tapped: false}}]}、duration: end_of_turn）。
+- 常在付与: static の affects（対象範囲）+ 同じ allow を mod に置く。
+- tests/test_vocab_pilot139.py 2件（正常 parse／検証）
+- 待機6枚（mach_fighter_grant のみが gap のもの）。
+
+## 第140弾: same_name_as_chosen_card（選んだカードと同じ名前）— エンジン拡張あり（2026-11-06）
+「そのクリーチャーと同じ名前のクリーチャーをすべて〜」は新式 name_of で表す。
+- 新式: {name_of: {ref: <束縛名>}}（engine/selectors.py の eval_expr に追加。参照カードのカード名を返す。複数参照なら先頭）。フィルタでは filter: {name: {name_of: {ref: X}}} と書き、candidates が選択時に名前へ解決する。
+- proto T169。tests/test_vocab_pilot140.py 2件（parse／candidates の同名照合の実挙動）。
+- 待機5枚（same_name_as_chosen_card のみが gap のもの）。
+
+## 第141弾: power_doubling（パワーを2倍にする）— エンジン拡張あり（2026-11-06）
+新 mod: {double_power: true} を実装した。
+- op_modify が継続効果の生成時に対象ごとの現在パワーを控え（ce["double_power"]）、chars がそれを加算として適用する。範囲固定（110.2e）の効果のみ対象で、生成後に加わった対象には及ばない。
+- defs MOD_KEYS / 検証、schema に追加。proto T170、試験カード R101。tests/test_vocab_pilot141.py 2件（parse／起動でパワー3000→6000の実挙動）。
+- 待機5枚（power_doubling のみが gap のもの）。
+
+## 第142弾: draw_event_trigger（引いた時の誘発と枚数条件）— エンジン拡張あり（2026-11-06）
+「相手がカードを引いた時」は既存の when: {event: draw, player: opp}。
+- 新式: {drew: {owner: opp}}（このターンそのプレイヤーが引いた枚数。engine/events.py の draw 適用で turn_counters を数え、eval_expr で参照）。「そのターン1枚目のドローでなければ」は trigger の if: {cmp: [{drew: {owner: opp}}, ">=", 2]}（当該ドローは適用済みのため数に含まれる）。
+- 試験カード R102。tests/test_vocab_pilot142.py 2件（parse／drew カウンタで deny が解ける実挙動＋実際のドローで数える確認）。
+- 待機5枚（draw_event_trigger のみが gap のもの）。
+
+## 第143弾: leave_stay（離れるかわりにとどまる）— 新語彙なし（2026-11-06）
+「バトルゾーンを離れる時、かわりにとどまる」は mod: {no_leave: true}（第49弾）。
+- 条件付きは条件付き static（第88弾）の if と併記。例外は辞書形: {except_destroy: true}（破壊以外）、{except_battle: true}（バトル敗北以外）、{by_opp: true}（相手の効果では離れない）。
+- tests/test_vocab_pilot143.py 2件（正常 parse／検証）
+- 待機6枚（leave_stay のみが gap のもの）。
