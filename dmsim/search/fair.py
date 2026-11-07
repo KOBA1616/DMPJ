@@ -25,9 +25,10 @@ def _own_decision(eng: Engine, me: int, opp_policy):
 
 class FairTurnSearch:
     def __init__(self, me: int, budget: int = 200, n_det: int = 8, seed: int = 0, weights=None,
-                 opp_policy=charge_only_policy, known=()):
+                 opp_policy=charge_only_policy, known=(), value_fn=None):
         self.me, self.budget, self.n_det, self.seed = me, budget, n_det, seed
         self.weights, self.opp_policy, self.known = weights, opp_policy, set(known)
+        self.value_fn = value_fn            # 葉の評価の差し替え f(eng, me)。leaf_parts.make_value_fn など
         self.nodes = 0
 
     def _vote(self, eng: Engine, d: dict, k: int) -> Counter:
@@ -36,7 +37,8 @@ class FairTurnSearch:
         for i in range(self.n_det):
             e = eng.clone()
             e.s = determinize(eng.s, self.me, self.seed * 1_000_003 + k * 1009 + i, self.known)
-            leaf, st = TurnSearch(self.me, self.budget, self.weights, opp_policy=self.opp_policy).run(e)
+            leaf, st = TurnSearch(self.me, self.budget, self.weights, opp_policy=self.opp_policy,
+                                value_fn=self.value_fn).run(e)
             self.nodes += st.nodes
             for ent in leaf.log[base:]:
                 if ent["p"] == self.me:
