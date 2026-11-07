@@ -328,11 +328,16 @@ class Engine(SelectorMixin, EventMixin, InterpreterMixin, TurnMixin, CombatMixin
 
     def _affects_others(self, cid: int) -> bool:
         """この面が他のカードに及ぶ mod 付きの常在型能力を持つか（定義だけで決まるのでキャッシュする）。"""
+        c = self.s.cards[cid]
+        r = self._xcache.get((c.defn, c.face))      # 面の定義は (defn, face) で決まる。fdef の面オブジェクト生成を避ける
+        if r is not None:
+            return r
         d = self.fdef(cid)
         r = self._xcache.get(id(d))
         if r is None:
             r = self._xcache[id(d)] = any(
                 ab["kind"] == "static" and "mod" in ab and ab.get("affects") != "self" for ab in d.abilities)
+        self._xcache[(c.defn, c.face)] = r
         return r
 
     def chars(self, cid: int, face: int | None = None) -> dict:
@@ -363,8 +368,9 @@ class Engine(SelectorMixin, EventMixin, InterpreterMixin, TurnMixin, CombatMixin
                 if ab["kind"] == "static" and ab.get("affects") == "self" and ab.get("zone", "bz") == c.zone and "mod" in ab
                 and ("if" not in ab or self._static_cond(ab["if"], env_self))]   # 条件つきの常在型（例:「墓地が13枚より少なければ攻撃できない」）は常に見直す
         cards = self.s.cards
+        aff_others = self._affects_others
         for src in self.s.zones["bz"][0]:   # バトルゾーンの常在型能力（重ねたカードの下は除く）。affects.zone で他のゾーンのカードにも及ぶ
-            if cards[src].top_of >= 0 or not self._affects_others(src):
+            if cards[src].top_of >= 0 or not aff_others(src):
                 continue
             for _, ab in self.abilities(src, "static"):
                 aff = ab.get("affects", {})
@@ -377,7 +383,7 @@ class Engine(SelectorMixin, EventMixin, InterpreterMixin, TurnMixin, CombatMixin
                         mods.append(ab["mod"])
         for p in (0, 1):   # シールドゾーンから働く常在型（G・城など。zone: shield を宣言した能力だけ）
             for src in self.s.zones["shield"][p]:
-                if not self._affects_others(src):
+                if not aff_others(src):
                     continue
                 for _, ab in self.abilities(src, "static"):
                     aff = ab.get("affects", {})

@@ -48,3 +48,10 @@ def test_early_stop_decided():
     assert FairTurnSearch._decided(Counter({("a",): 5, ("b",): 1}), 3, avail)
     assert not FairTurnSearch._decided(Counter({("a",): 5, ("b",): 3}), 3, avail)
     assert not FairTurnSearch._decided(Counter({("z",): 5}), 1, avail)
+
+
+def test_time_limit_zero_still_finishes(rules):
+    from dmsim.solitaire import TurnSearch
+    e = _reach_own(_eng(rules, None))
+    leaf, st = TurnSearch(0, budget=500, time_limit=0.0).run(e)
+    assert st.nodes <= 2 and leaf is not e
