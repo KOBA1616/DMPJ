@@ -15,6 +15,7 @@ actions:
   summon:                {default: true,  rule: "601",    ja: 召喚できる}
   summon_from_graveyard: {default: false, rule: "unverified", ja: 墓地から召喚できる（アビスラッシュ）}
   summon_from_mana:      {default: false, rule: "unverified", ja: マナゾーンから召喚できる}
+  cast_free:             {default: false, rule: "601",    ja: コストを支払わずに唱えてもよい（呪文。アカシック3の常在型）}
   cast:                  {default: true,  rule: "601",    ja: 唱えられる}
   slayer:                {default: false, rule: "unverified", ja: バトルで負けた時、相手も破壊する}
   be_chosen:             {default: true,  rule: "unverified", ja: 相手に選ばれる}
