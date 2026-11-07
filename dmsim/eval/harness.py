@@ -21,6 +21,7 @@ class EvalConfig:
     base_budget: int = 200
     max_turn: int = 4
     first: str = "both"                              # first / second / both
+    start_spec: dict | None = None                   # dmsim.scenario.build の spec。あれば各シードでその局面から始める
     known_combos: dict[str, Callable] = field(default_factory=dict)  # 名前 -> fn(GameResult)->bool（再発見の判定）
 
 
@@ -40,6 +41,13 @@ def _cell(results, cfg: EvalConfig) -> dict:
     return out
 
 
+def _start_kw(rules, cfg: EvalConfig, seed: int, fp: int) -> dict:
+    if cfg.start_spec is None:
+        return {}
+    from ..scenario import build
+    return {"start": build(rules, {**cfg.start_spec, "seed": seed}, first_player=fp)}
+
+
 def run_eval(rules, cfg: EvalConfig) -> dict:
     fps = {"first": [0], "second": [1], "both": [0, 1]}[cfg.first]
     report: dict = {"seeds": list(cfg.seeds), "max_turn": cfg.max_turn, "cells": {}}
@@ -48,7 +56,8 @@ def run_eval(rules, cfg: EvalConfig) -> dict:
             runner = get_runner(lv)
             for bm in cfg.budget_mults:
                 t0 = time.perf_counter()
-                res = [runner(rules, deck, cfg.opp_deck, s, fp, cfg.max_turn, max(1, int(cfg.base_budget * bm)))
+                res = [runner(rules, deck, cfg.opp_deck, s, fp, cfg.max_turn, max(1, int(cfg.base_budget * bm)),
+                              **_start_kw(rules, cfg, s, fp))
                        for s in cfg.seeds for fp in fps]
                 cell = _cell(res, cfg)
                 cell["seconds"] = time.perf_counter() - t0

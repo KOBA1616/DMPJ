@@ -11,11 +11,11 @@ from .infolevel import InfoLevel, register_runner
 
 
 def make_fair_runner(n_det: int = 8):
-    def run(rules, deck, opp_deck, seed, first_player, max_turn, budget):
+    def run(rules, deck, opp_deck, seed, first_player, max_turn, budget, start=None):
         me = 0
         t0 = time.perf_counter()
         res = GameResult(seed=seed, first_player=first_player)
-        eng = Engine.new_game(rules, [deck, opp_deck], seed, first_player)
+        eng = start.clone() if start is not None else Engine.new_game(rules, [deck, opp_deck], seed, first_player)
         try:
             while (d := eng.advance()) is not None:
                 if eng.s.active != me or d["player"] != me:
