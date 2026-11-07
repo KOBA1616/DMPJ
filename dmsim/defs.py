@@ -773,6 +773,10 @@ def parse_card(raw: dict, tables, where: str | None = None) -> CardDef:
                    source=raw.get("source", {}), **f)
 
 
+# libyaml があれば C 実装の安全ローダを使う（純 Python 版の十数倍速い）。構文の解釈は SafeLoader と同じ
+_YamlLoader = getattr(yaml, "CSafeLoader", yaml.SafeLoader)
+
+
 def card_yaml_files() -> list[Path]:
     """読み込むカード定義の YAML。環境変数 DMSIM_SKIP_CONVERTED があれば、確認前の変換結果（converted.yaml）は除く（テストを軽くする）。"""
     from .cardfiles import card_files
@@ -792,7 +796,7 @@ def load_rules(card_files: list[Path] | None = None, only_approved: bool | None 
     card_files = card_files or card_yaml_files()
     cards: dict[str, CardDef] = {}
     for f in card_files:
-        for raw in yaml.safe_load(Path(f).read_text(encoding="utf-8")).get("cards") or []:
+        for raw in yaml.load(Path(f).read_text(encoding="utf-8"), Loader=_YamlLoader).get("cards") or []:
             if only_approved and not approval.is_usable(raw, ledger, versions):
                 continue
             cd = parse_card(raw, tables)
