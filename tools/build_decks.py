@@ -30,6 +30,14 @@ ENTRY = [("dm26ex2-071", "entry"), ("dmd08-015", "entry")]  # 氷牙レオポル
 VARIANTS = {"saga_entry": "saga"}  # tenmon_v2 は測定で悪化（8T勝ち 10→6/40）したため作らない
 
 
+# 枚数を明示するデッキ案（サガ起動の4種 = 墓地サガ・墓地シャコガイル・手札サガ・手札ドラゲリオン を2ターン目までに揃える配分）。残りは汎用札
+SAGA, DRAG, SHAKO, ET, ETS, KODAMA, IWASHIN, HARUKASU = ("dm22ex2-021", "dm22ex1-007", "dmrp03-s03", "dm26ex2-071", "dmd08-015",
+                                                       "dmex10-020", "dmrp03-036", "dm01-080")
+EXPLICIT = {
+    "saga_entry2": [(SAGA, 4), (DRAG, 4), (SHAKO, 4), (ET, 4), (ETS, 4), (KODAMA, 4), (IWASHIN, 4)],
+}
+
+
 def filler_pool(rules, civs, banned_names):
     out, names = [], set()
     for i in sorted(rules.cards):
@@ -71,10 +79,20 @@ def main(argv=None):
     plans["mix_tenmon_saga"] = ["tenmon", "saga"]
     for v, base in VARIANTS.items():
         plans[v] = [base]
+    for v in EXPLICIT:
+        plans[v] = [v]
     Path(a.out).mkdir(parents=True, exist_ok=True)
     for name, cids in plans.items():
         parts, seen = [], set()
-        for c in cids:
+        if name in EXPLICIT:
+            civs = {"water", "darkness"}
+            deck = [i for i, n in EXPLICIT[name] for _ in range(n)]
+            cnt = {}
+            for i in deck:
+                cnt[rules.cards[i].name] = cnt.get(rules.cards[i].name, 0) + 1
+            warn = []
+            cids = ["saga"]
+        for c in ([] if name in EXPLICIT else cids):
             for p in combos[c]["parts"]:
                 if p["id"] not in seen:
                     seen.add(p["id"])
@@ -83,11 +101,12 @@ def main(argv=None):
             core = [x for x in parts if x[1] == "core"]
             rest = [x for x in parts if x[1] != "core" and x[0] not in {e[0] for e in ENTRY}]
             parts = core + [e for e in ENTRY if e[0] not in {x[0] for x in core}] + rest
-        deck, civs, warn = build(rules, parts, cap=2 if len(cids) > 1 else 4)
-        # 部品を2組以上混ぜるときは枠が足りないので、core を優先して先頭から詰める（build が打ち切る）
-        cnt = {}
-        for i in deck:
-            cnt[rules.cards[i].name] = cnt.get(rules.cards[i].name, 0) + 1
+        if name not in EXPLICIT:
+            deck, civs, warn = build(rules, parts, cap=2 if len(cids) > 1 else 4)
+            # 部品を2組以上混ぜるときは枠が足りないので、core を優先して先頭から詰める（build が打ち切る）
+            cnt = {}
+            for i in deck:
+                cnt[rules.cards[i].name] = cnt.get(rules.cards[i].name, 0) + 1
         pool = filler_pool(rules, civs, banned)
         k = 0
         while len(deck) < 40 and pool:
