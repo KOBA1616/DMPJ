@@ -1,0 +1,14 @@
+# 相手モデル「ビート」の代表デッキ（火単 我我我）。notes/beat-deck-proposal-20261107.md
+# id: null は未変換（rejects）。変換されたら id を入れるだけで有効になる（エンジン/カードデータは触らない）。
+name: beat_fire_gaga
+slots:
+- {name: 凶戦士ブレイズ・クロー, id: dm24ex4-094, n: 4}
+- {name: ブンブン・チュリス, id: null, n: 4, blocked_by: does_not_untap, ref: dm24sd1-011}
+- {name: カンゴク入道, id: dm24ex3-tf31, n: 4}
+- {name: 斬斬人形コダマンマ GS, id: dm24ex3-tf44, n: 4}
+- {name: “罰怒”ブランド, id: null, n: 4, blocked_by: master_bad, ref: dm24sd1-003}
+- {name: 我我我ガイアール・ブランド, id: null, n: 4, blocked_by: star_evolution, ref: dm25ex3-sp1}
+- {name: クミタテ・チュリス, id: dm24sd1-007, n: 4}
+- {name: 赤い稲妻 テスタ・ロッサ, id: dm26rp2-t010, n: 4}
+- {name: こたつむり, id: dm24sd1-005, n: 4}
+- {name: グレイト“Ｓ-駆”, id: null, n: 4, blocked_by: ggg_condition, ref: dm26sd1-v005}
