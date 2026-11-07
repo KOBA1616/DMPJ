@@ -43,3 +43,32 @@ def test_no_leak_of_true_order(rules):
     for owner in (0, 1):
         ha = hidden_cids(a, 0)[owner]
         assert sorted(da.cards[c].defn for c in ha) == sorted(db.cards[c].defn for c in ha)
+
+
+def _rec(s, kind, cid, viewers):
+    c = s.cards[cid]
+    s.pub = getattr(s, "pub", [])
+    s.pub.append({"n": len(s.pub), "turn": 0, "kind": kind, "viewers": viewers, "cid": cid, "gen": c.gen,
+                  "defn": c.defn, "owner": c.owner, "zone": c.zone, "idx": 0})
+
+
+def test_pub_look_and_reveal(rules):
+    from dmsim.search import known_from_pub
+    s = _state(rules, None)
+    a, b = s.zones["deck"][1][0], s.zones["deck"][1][1]
+    _rec(s, "look", a, [0])
+    _rec(s, "reveal", b, [0, 1])
+    assert known_from_pub(s, 0) == {a, b}
+    assert known_from_pub(s, 1) == {b}
+    assert a not in hidden_cids(s, 0)[1] and a in hidden_cids(s, 1)[1]
+    d = determinize(s, 0, seed=9)
+    assert d.cards[a].defn == s.cards[a].defn
+
+
+def test_pub_stale_gen_ignored(rules):
+    from dmsim.search import known_from_pub
+    s = _state(rules, None)
+    a = s.zones["deck"][1][0]
+    _rec(s, "look", a, [0])
+    s.cards[a].gen += 1
+    assert known_from_pub(s, 0) == set()
