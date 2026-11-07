@@ -94,3 +94,21 @@ def test_progress_metrics_real_engine():
     assert c["board_turn"]["reach_rate"] == 1.0 and c["cards_turn"]["reach_rate"] == 1.0
     assert set(c["curve_mean"]) == {0, 1}
     assert hidden_info_cost_progress(rep, "d", "opp_shield")["n"] == 2
+
+
+def test_calibrate_mult_converges():
+    from dmsim.eval.harness import calibrate_mult
+    f = lambda m: 100.0 * m ** 0.5           # 非線形（早期終了で予算に比例しない）
+    m, got = calibrate_mult(f, 400.0, 1.0, 0.05, 6)
+    assert abs(got - 400.0) <= 0.05 * 400.0 and 15 < m < 17
+
+
+def test_match_nodes_in_run_eval():
+    fair = lambda rules, deck, o, seed, fp, mt, budget, **kw: GameResult(seed=seed, first_player=fp, kill_turn=None, nodes=500)
+    cheat = lambda rules, deck, o, seed, fp, mt, budget, **kw: GameResult(seed=seed, first_player=fp, kill_turn=None, nodes=budget * 2)
+    register_runner(InfoLevel.FAIR, fair)
+    register_runner(InfoLevel.CHEAT, cheat)
+    cfg = EvalConfig(decks={"d": ["x"]}, opp_deck=["y"], seeds=[1, 2, 3], first="first", base_budget=100, match_nodes=True)
+    rep = run_eval(None, cfg)
+    c = rep["cells"]["d|cheat|x1.0"]
+    assert abs(c["mean_nodes"] - 500) <= 50 and abs(c["budget_mult_used"] - 2.5) < 0.3
