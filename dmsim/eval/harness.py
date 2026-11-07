@@ -25,6 +25,9 @@ class EvalConfig:
     opps: dict = field(default_factory=lambda: {"none": None})  # 名前 -> OppModel|None（相手モデルの差し替え点。dmsim.opponent.PRESETS）
     progress: object | None = None                   # dmsim.eval.progress.ProgressSpec。あれば段階指標を記録し集計する
     level_mult: dict = field(default_factory=dict)   # 水準別の予算倍率 {InfoLevel: x}（探索量をそろえる比較用。例 CHEAT を n_det 倍）
+    match_nodes: bool = False                        # True: CHEAT の予算倍率を FAIR の平均ノード数に合うよう自動調整する（level_mult は初期値）
+    match_pilot: int = 8                             # 調整に使う試験局数
+    match_tol: float = 0.1                           # 目標との許容誤差（比）
     n_det: int = 8                                   # progress 指定時の FAIR の決定化数
     known_combos: dict[str, Callable] = field(default_factory=dict)  # 名前 -> fn(GameResult)->bool（再発見の判定）
 
@@ -47,6 +50,10 @@ def _cell(results, cfg: EvalConfig) -> dict:
     if results and hasattr(results[0], "curve"):
         out["per_game_progress"] = [[r.board_turn, r.cards_turn, r.curve[-1] if r.curve else None] for r in results]
     return out
+
+
+def _mean_nodes(results) -> float:
+    return sum(r.nodes for r in results) / len(results) if results else 0.0
 
 
 def _turn_or_cap(t, cfg: EvalConfig) -> float:
@@ -88,6 +95,25 @@ def cell_key(dname: str, level, mult: float, opp: str = "none") -> str:
     return k if opp == "none" else f"{k}|opp={opp}"
 
 
+def calibrate_mult(run_pilot, target_nodes: float, mult: float = 1.0, tol: float = 0.1, iters: int = 4) -> tuple[float, float]:
+    """run_pilot(mult)->平均ノード数 を呼び、目標ノード数に近づく予算倍率を探す（比で更新。探索は早期終了するので一般に非線形）。
+    戻り値は (倍率, その時の平均ノード数)。許容内に入れば打ち切り、入らなければ最も近かったものを返す。"""
+    best, prev = None, None
+    for _ in range(iters):
+        got = run_pilot(mult)
+        if best is None or abs(got - target_nodes) < abs(best[1] - target_nodes):
+            best = (mult, got)
+        if got <= 0 or abs(got - target_nodes) <= tol * target_nodes:
+            break
+        k = 1.0                                   # ノード数 ∝ 倍率^k として、直近2点から k を推定（対数空間の割線法）
+        if prev is not None and prev[0] != mult and prev[1] > 0:
+            import math
+            k = min(1.5, max(0.2, math.log(got / prev[1]) / math.log(mult / prev[0])))
+        prev = (mult, got)
+        mult = max(0.05, mult * min(8.0, max(0.125, (target_nodes / got) ** (1 / k))))
+    return best
+
+
 def run_eval(rules, cfg: EvalConfig) -> dict:
     fps = {"first": [0], "second": [1], "both": [0, 1]}[cfg.first]
     report: dict = {"seeds": list(cfg.seeds), "max_turn": cfg.max_turn, "cells": {}}
@@ -102,10 +128,25 @@ def run_eval(rules, cfg: EvalConfig) -> dict:
                 for bm in cfg.budget_mults:
                     t0 = time.perf_counter()
                     kw = {} if opp is None else {"opp": opp}
-                    res = [runner(rules, deck, cfg.opp_deck, s, fp, cfg.max_turn, max(1, int(cfg.base_budget * bm * cfg.level_mult.get(InfoLevel(lv), 1))),
-                                  **_start_kw(rules, cfg, s, fp), **kw)
-                           for s in cfg.seeds for fp in fps]
+                    lm = cfg.level_mult.get(InfoLevel(lv), 1)
+                    jobs = [(s, fp) for s in cfg.seeds for fp in fps]
+
+                    def run_jobs(mult, jobs=jobs):
+                        return [runner(rules, deck, cfg.opp_deck, s, fp, cfg.max_turn, max(1, int(cfg.base_budget * bm * mult)),
+                                       **_start_kw(rules, cfg, s, fp), **kw) for s, fp in jobs]
+
+                    calib = None
+                    fair_key = cell_key(dname, InfoLevel.FAIR, bm, oname)
+                    if cfg.match_nodes and InfoLevel(lv) is InfoLevel.CHEAT and fair_key in report["cells"]:
+                        target = report["cells"][fair_key]["mean_nodes"]
+                        pilot = jobs[:cfg.match_pilot]
+                        lm, got = calibrate_mult(lambda m: _mean_nodes(run_jobs(m, pilot)), target, lm, cfg.match_tol)
+                        calib = {"target_nodes": target, "pilot_nodes": got, "mult": lm}
+                    res = run_jobs(lm)
                     cell = _cell(res, cfg)
+                    if calib:
+                        cell["node_match"] = calib
+                    cell["budget_mult_used"] = lm
                     cell["seconds"] = time.perf_counter() - t0
                     report["cells"][cell_key(dname, lv, bm, oname)] = cell
     return report
