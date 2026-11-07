@@ -1,6 +1,6 @@
 from dmsim import scenario
 from dmsim.search import FairTurnSearch
-from dmsim.search.leaf_parts import SAGA, SAGA_SPEC, PartsSpec, make_value_fn, parts_score
+from dmsim.search.leaf_parts import SAGA, SAGA_SPEC, Part, PartsSpec, make_value_fn, parts_score
 
 
 def _eng(rules, p0):
@@ -16,7 +16,7 @@ def test_saga_in_graveyard_scores_above_hand(rules):
 
 
 def test_creature_count_capped_by_need(rules):
-    spec = PartsSpec(SAGA_SPEC.parts[1:2])
+    spec = PartsSpec((Part("graveyard", (), 2, 1.0),))
     two = _eng(rules, {"hand": ["T001"], "graveyard": ["T001"] * 2})
     four = _eng(rules, {"hand": ["T001"], "graveyard": ["T001"] * 4})
     assert parts_score(two, 0, spec) == parts_score(four, 0, spec) == 2.0

@@ -49,15 +49,18 @@ def make_value_fn(spec: PartsSpec, weights: Weights | None = None):
     return value
 
 
-SAGA = "dm22ex2-021"
-# 絶望神サガ: 入口=墓地にサガ + 墓地にクリーチャー2枚（手札から出す経路は別）。手札・場のサガは小さく加点
+# 絶望神サガ: キル手前(T3開始)の最小局面は、墓地にサガ+シャコガイル+クリーチャー1体、手札にサガ+ドラゲリオン、
+# 水・闇のマナ3（data/eval/saga_near_kill を縮めて確認: シャコガイルが墓地に無い/ドラゲリオンかサガが手札に無いと起動しない）。
 # coef=10: evaluate の打点項（場のクリーチャー1体で+40）に勝てる大きさが必要。1〜5 では saga_entry の T2 墓地サガ率が 4/40 のまま、10 で 12/40
+SAGA = "dm22ex2-021"
+DRAGELION, SHAKOGAIRU, ET = "dm22ex1-007", "dmrp03-s03", "dm26ex2-071"
 SAGA_SPEC = PartsSpec((
     Part("graveyard", (SAGA,), 1, 3.0),
+    Part("graveyard", (SHAKOGAIRU,), 1, 3.0),
     Part("graveyard", (), 2, 1.0),
-    Part("hand", (SAGA,), 1, 0.5),
+    Part("hand", (SAGA,), 1, 1.5),           # 墓地のサガとは別の1枚（出して起動する）
+    Part("hand", (DRAGELION,), 1, 3.0),
+    Part("hand", (SHAKOGAIRU,), 1, 0.5),     # 手札のシャコガイルは捨てて墓地へ落とせる
     Part("bz", (SAGA,), 1, 0.5),
-    # 出口札と入口札（エマージェンシー・タイフーン）はマナに置かず手札に残す
-    Part("hand", ("dm22ex1-007", "dmrp03-s03"), 1, 1.5),
-    Part("hand", ("dm26ex2-071",), 1, 1.0),
+    Part("hand", (ET,), 1, 1.0),             # 入口札（エマージェンシー・タイフーン）はマナに置かず手札に残す
 ), coef=10.0)
