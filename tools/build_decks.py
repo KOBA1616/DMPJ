@@ -22,8 +22,8 @@ def copies(cd, role, cap=4):
 
 
 # 入口札（引き札・低コスト）。既存デッキは変えず、*_entry / tenmon_v2 として別に作る。
-ENTRY = [("dmd08-015", "entry"), ("dm08-043", "entry"), ("dm06-085", "entry")]  # エマージェンシー・タイフーン/ブレイン・チャージャー/エナジー・ライト
-VARIANTS = {"saga_entry": "saga", "tenmon_v2": "tenmon"}
+ENTRY = [("dm26ex2-071", "entry"), ("dmd08-015", "entry")]  # 氷牙レオポル・ディーネ公/エマージェンシー・タイフーン（診断メモの ET）+ 呪文版ET。4枚ずつ
+VARIANTS = {"saga_entry": "saga"}  # tenmon_v2 は測定で悪化（8T勝ち 10→6/40）したため作らない
 
 
 def filler_pool(rules, civs, banned_names):
