@@ -1,0 +1,270 @@
+version: 1
+starts:
+- id: 天門ループ（初期型）@31-974f5c30
+  loop: 天門ループ（初期型）
+  version: 1
+  level: 31
+  remaining: 31
+  turn: 1
+  split: tuning
+  unverified:
+  - dm01-080
+  - dm02-024
+  - dm06-085
+  - dm16-007
+  - dm23bd7-022
+  - dm23ex2-cho018
+  - dm31-025
+  - dmd24-024
+  - dmx11-082
+  - dmx12b-031
+  - dmx19-s06
+  - dmx24-017
+  use_for_primary: false
+  lossy: true
+  spec:
+    deck_exact:
+    - true
+    - true
+    deck_size: 0
+    filler: T013
+    seed: 1
+    p0:
+      deck:
+      - dm23ex2-cho018
+      - dm31-025
+      - dm31-025
+      - dmx11-082
+      hand:
+      - dm31-025
+      - dm31-025
+      - T013
+      - T013
+      - T013
+      - T013
+      - T013
+      - T013
+      - T013
+      - T013
+      bz:
+      - dm23bd7-022
+      - dmx19-s06
+      - dmd24-024
+      - dmx12b-031
+      mana:
+      - dm01-080
+      - dm01-080
+      - dm01-080
+      - dm01-080
+      - dm06-085
+      - dm06-085
+      - dm06-085
+      - dm06-085
+      - dm02-024
+      - dm02-024
+      - dm02-024
+      - dm02-024
+      shield:
+      - dmx24-017
+      - dmx24-017
+      - dmx24-017
+      - dm16-007
+      - dm16-007
+      - dm16-007
+      - dm16-007
+    p1:
+      deck:
+      - T013
+      - T013
+      - T013
+      - T013
+      - T013
+      - T013
+      - T013
+      - T013
+      - T013
+      shield:
+      - T013
+      - T013
+      - T013
+      - T013
+      - T013
+- id: 天門ループ（初期型）@28-f270b172
+  loop: 天門ループ（初期型）
+  version: 1
+  level: 28
+  remaining: 28
+  turn: 3
+  split: tuning
+  unverified:
+  - dm01-080
+  - dm02-024
+  - dm06-085
+  - dm16-007
+  - dm23bd7-022
+  - dm23ex2-cho018
+  - dm31-025
+  - dmd24-024
+  - dmx11-082
+  - dmx12b-031
+  - dmx19-s06
+  - dmx24-017
+  use_for_primary: false
+  lossy: true
+  spec:
+    deck_exact:
+    - true
+    - true
+    deck_size: 0
+    filler: T013
+    seed: 1
+    p0:
+      deck:
+      - dm31-025
+      - dm31-025
+      - dmx11-082
+      hand:
+      - dm31-025
+      - dm31-025
+      - T013
+      - T013
+      - T013
+      - T013
+      - T013
+      - T013
+      - dm23ex2-cho018
+      bz:
+      - dm23bd7-022
+      - dmx19-s06
+      - dmd24-024
+      - dmx12b-031
+      graveyard:
+      - T013
+      mana:
+      - dm01-080
+      - dm01-080
+      - dm01-080
+      - dm01-080
+      - dm06-085
+      - dm06-085
+      - dm06-085
+      - dm06-085
+      - dm02-024
+      - dm02-024
+      - dm02-024
+      - dm02-024
+      - T013
+      shield:
+      - dmx24-017
+      - dmx24-017
+      - dmx24-017
+      - dm16-007
+      - dm16-007
+      - dm16-007
+      - dm16-007
+    p1:
+      deck:
+      - T013
+      - T013
+      - T013
+      - T013
+      - T013
+      - T013
+      - T013
+      - T013
+      - T013
+      shield:
+      - T013
+      - T013
+      - T013
+      - T013
+      - T013
+- id: 天門ループ（初期型）@17-146db469
+  loop: 天門ループ（初期型）
+  version: 1
+  level: 17
+  remaining: 17
+  turn: 5
+  split: tuning
+  unverified:
+  - dm01-080
+  - dm02-024
+  - dm06-085
+  - dm16-007
+  - dm23bd7-022
+  - dm23ex2-cho018
+  - dm31-025
+  - dmd24-024
+  - dmx11-082
+  - dmx12b-031
+  - dmx19-s06
+  - dmx24-017
+  use_for_primary: false
+  lossy: true
+  spec:
+    deck_exact:
+    - true
+    - true
+    deck_size: 0
+    filler: T013
+    seed: 1
+    p0:
+      deck:
+      - dm31-025
+      - T013
+      - T013
+      - dm31-025
+      - T013
+      - dm23ex2-cho018
+      - dmx11-082
+      hand:
+      - dm31-025
+      - T013
+      - T013
+      - T013
+      - dm23bd7-022
+      - dm31-025
+      bz:
+      - dmx19-s06
+      - dmx12b-031
+      - dmd24-024
+      mana:
+      - dm01-080
+      - dm01-080
+      - dm01-080
+      - dm01-080
+      - dm06-085
+      - dm06-085
+      - dm06-085
+      - dm06-085
+      - dm02-024
+      - dm02-024
+      - dm02-024
+      - dm02-024
+      - T013
+      - T013
+      shield:
+      - dmx24-017
+      - dmx24-017
+      - dmx24-017
+      - dm16-007
+      - dm16-007
+      - dm16-007
+      - dm16-007
+    p1:
+      deck:
+      - T013
+      - T013
+      - T013
+      - T013
+      - T013
+      - T013
+      - T013
+      - T013
+      - T013
+      shield:
+      - T013
+      - T013
+      - T013
+      - T013
+      - T013
