@@ -29,6 +29,7 @@ class EvalConfig:
     match_pilot: int = 8                             # 調整に使う試験局数
     match_tol: float = 0.1                           # 目標との許容誤差（比）
     n_det: int = 8                                   # progress 指定時の FAIR の決定化数
+    explog: object | None = None                     # dmsim.eval.steplog.ExpLogSpec。あれば各セルの先頭の局を1手ごとに版つきJSONLへ記録する
     known_combos: dict[str, Callable] = field(default_factory=dict)  # 名前 -> fn(GameResult)->bool（再発見の判定）
 
 
@@ -131,9 +132,18 @@ def run_eval(rules, cfg: EvalConfig) -> dict:
                     lm = cfg.level_mult.get(InfoLevel(lv), 1)
                     jobs = [(s, fp) for s in cfg.seeds for fp in fps]
 
-                    def run_jobs(mult, jobs=jobs):
-                        return [runner(rules, deck, cfg.opp_deck, s, fp, cfg.max_turn, max(1, int(cfg.base_budget * bm * mult)),
-                                       **_start_kw(rules, cfg, s, fp), **kw) for s, fp in jobs]
+                    engs: dict = {}
+
+                    def run_jobs(mult, jobs=jobs, keep=False):
+                        out = []
+                        for i, (s, fp) in enumerate(jobs):
+                            extra = {}
+                            if keep and cfg.explog is not None and i < cfg.explog.max_games_per_cell:
+                                extra["sink"] = lambda e, i=i: engs.__setitem__(i, e)
+                            out.append(runner(rules, deck, cfg.opp_deck, s, fp, cfg.max_turn,
+                                              max(1, int(cfg.base_budget * bm * mult)),
+                                              **_start_kw(rules, cfg, s, fp), **kw, **extra))
+                        return out
 
                     calib = None
                     fair_key = cell_key(dname, InfoLevel.FAIR, bm, oname)
@@ -142,14 +152,30 @@ def run_eval(rules, cfg: EvalConfig) -> dict:
                         pilot = jobs[:cfg.match_pilot]
                         lm, got = calibrate_mult(lambda m: _mean_nodes(run_jobs(m, pilot)), target, lm, cfg.match_tol)
                         calib = {"target_nodes": target, "pilot_nodes": got, "mult": lm}
-                    res = run_jobs(lm)
+                    res = run_jobs(lm, keep=True)
                     cell = _cell(res, cfg)
+                    if cfg.explog is not None:
+                        cell["explog"] = _write_explog(rules, cfg, dname, deck, lv, bm, lm, oname, opp, jobs, res, engs)
                     if calib:
                         cell["node_match"] = calib
                     cell["budget_mult_used"] = lm
                     cell["seconds"] = time.perf_counter() - t0
                     report["cells"][cell_key(dname, lv, bm, oname)] = cell
     return report
+
+
+def _write_explog(rules, cfg: EvalConfig, dname, deck, lv, bm, lm, oname, opp, jobs, res, engs) -> dict:
+    from .steplog import CellLogger
+    key = cell_key(dname, lv, bm, oname)
+    exp_cfg = {"deck": dname, "level": InfoLevel(lv).value, "budget_mult": bm, "opp": oname, "seeds": list(cfg.seeds),
+               "base_budget": cfg.base_budget, "max_turn": cfg.max_turn, "first": cfg.first}
+    cl = CellLogger(cfg.explog, exp_cfg, key, oname)
+    for i, eng in sorted(engs.items()):
+        s, fp = jobs[i]
+        cl.add_game(rules, eng, res[i], deck, cfg.opp_deck, fp, _start_kw(rules, cfg, s, fp).get("start"), opp)
+    out = cl.close()
+    out["truncated"] = out["truncated"] or len(jobs) > out["games"]   # 局数上限で記録しなかった局がある
+    return out
 
 
 def kill_vector(cell: dict, turn: int) -> list[float]:
