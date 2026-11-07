@@ -105,6 +105,7 @@ class GameState:
     deck_emptied: list[int] = field(default_factory=list)   # 山札が一瞬でも0枚になったプレイヤー（104.2b）
     pub: list[dict] = field(default_factory=list)            # 公開イベントの記録（誰が何を見たか）。Engine.note_public が追記する。公平探索の信念更新用
     sba_held: list[list[int]] = field(default_factory=list)   # パワー0以下の破壊を置換で止められたクリーチャー（同じ処理を繰り返さない）
+    trace: list | None = None                               # 誘発の因果の記録（None なら記録しない。探索では切っておく）
 
 
     # ---- 参照 ----
