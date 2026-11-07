@@ -25,6 +25,8 @@ def main(argv=None):
     ap.add_argument("--setup", help="scenario YAML（キル手前の局面から始める。例 tests/saga_setup.yaml）")
     ap.add_argument("--opp", nargs="+", default=["none"], help="相手モデル(dmsim.opponent.PRESETS)。複数で比較")
     ap.add_argument("--opp-deck", help="相手のデッキYAML。省略時は T001×40（bz/blockers/strigger を効かせるには実デッキを指定）")
+    ap.add_argument("--need", nargs="*", default=[], help="必要カード DEFN[:枚数]（山札・盾以外にそろう最初のターンを測る）")
+    ap.add_argument("--board", nargs="*", default=[], help="最小盤面 ゾーン:DEFN[:枚数]（例 graveyard:dm22ex2-021:1）")
     ap.add_argument("--out")
     a = ap.parse_args(argv)
     rules = load_rules()
@@ -32,7 +34,14 @@ def main(argv=None):
     decks = {Path(p).stem: load_deck(p) for p in a.deck} if a.deck else {"default0": default_decks(rules, a.prefix)[0]}
     import yaml
     spec = yaml.safe_load(Path(a.setup).read_text(encoding="utf-8")) if a.setup else None
-    cfg = EvalConfig(start_spec=spec, decks=decks, opp_deck=load_deck(a.opp_deck) if a.opp_deck else ["T001"] * 40, opps={n: PRESETS[n] for n in a.opp}, seeds=list(range(1, a.seeds + 1)),
+    from dmsim.eval.progress import ProgressSpec
+    cards = {x.split(":")[0]: int(x.split(":")[1]) if ":" in x else 1 for x in a.need}
+    board: dict = {}
+    for x in a.board:
+        z, d, *n = x.split(":")
+        board.setdefault(z, {})[d] = int(n[0]) if n else 1
+    prog = ProgressSpec(board=board, cards=cards) if (cards or board) else None
+    cfg = EvalConfig(progress=prog, n_det=a.n_det, start_spec=spec, decks=decks, opp_deck=load_deck(a.opp_deck) if a.opp_deck else ["T001"] * 40, opps={n: PRESETS[n] for n in a.opp}, seeds=list(range(1, a.seeds + 1)),
                      base_budget=a.budget, max_turn=a.turns)
     rep = run_eval(rules, cfg)
     rep["hidden_info_cost"] = {f"{d}|opp={o}": {t: hidden_info_cost(rep, d, t, opp=o) for t in range(1, a.turns + 1)}
@@ -43,6 +52,19 @@ def main(argv=None):
     for d, ts in rep["hidden_info_cost"].items():
         for t, v in ts.items():
             print("cost", d, "turn", t, round(v["diff"], 3), [round(x, 3) for x in v["ci"]], "sig" if v["significant"] else "")
+    if prog:
+        from dmsim.eval.harness import hidden_info_cost_progress
+        for k, c in rep["cells"].items():
+            pr = c["progress"]
+            print("progress", k, {m: [round(pr[m]["reach_rate"], 2), round(pr[m]["mean_turn_capped"], 2)] for m in ("board_turn", "cards_turn")},
+                  "opp_shield@end", round(pr["curve_mean"][max(pr["curve_mean"])]["opp_shield"], 2))
+        rep["hidden_info_cost_progress"] = {}
+        for d in decks:
+            for o in a.opp:
+                for m in ("board_turn", "cards_turn", "opp_shield", "opp_deck"):
+                    v = hidden_info_cost_progress(rep, d, m, opp=o)
+                    rep["hidden_info_cost_progress"][f"{d}|opp={o}|{m}"] = v
+                    print("cost_progress", d, o, m, round(v["diff"], 3), [round(x, 3) for x in v["ci"]], "sig" if v["significant"] else "")
     if a.out:
         Path(a.out).parent.mkdir(parents=True, exist_ok=True)
         Path(a.out).write_text(json.dumps(rep, ensure_ascii=False, indent=1), encoding="utf-8")

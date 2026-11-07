@@ -1,0 +1,10 @@
+# 隠れ情報が効く局面: saga_setup と同じ盤面だが、手札にドラゲリオン(dm22ex1-007)が無く、山札(13枚)のどこかにある。
+# 位置はシードごとに eval 側でシャッフル(shuffle_deck)する。公平探索は位置を知らず、ずるい探索は知る。
+p0:
+  hand: [dm22ex2-021, T001, T001, T001, T001]
+  mana: [dm01-080, dm01-080, dm01-027]
+  graveyard: [dm22ex2-021, dmrp03-036, dmrp03-s03, T001, T001, T001, T001, T001, T001, T001, T001, T001, T001, T001, T001]
+  deck: [dm22ex1-007]
+p1: {}
+deck_size: 12
+shuffle_deck: true

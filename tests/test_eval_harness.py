@@ -77,3 +77,20 @@ def test_fair_runner_accepts_opp():
     import inspect
     from dmsim.eval.fair_runner import make_fair_runner
     assert "opp" in inspect.signature(make_fair_runner()).parameters
+
+
+def test_progress_metrics_real_engine():
+    """実エンジンで段階指標が記録され、harness 集計と対比較に流れる（サガのキル手前の局面）。"""
+    import yaml
+    from pathlib import Path
+    from dmsim.defs import load_rules
+    from dmsim.eval.harness import hidden_info_cost_progress
+    from dmsim.eval.progress import ProgressSpec
+    spec = yaml.safe_load(Path("tests/saga_setup.yaml").read_text(encoding="utf-8"))
+    cfg = EvalConfig(decks={"d": ["T001"] * 40}, opp_deck=["T001"] * 40, seeds=[1, 2], first="first", base_budget=10, max_turn=1,
+                     n_det=2, start_spec=spec, progress=ProgressSpec(board={"graveyard": {"dm22ex2-021": 1}}, cards={"dm22ex2-021": 1}))
+    rep = run_eval(load_rules(), cfg)
+    c = rep["cells"]["d|fair|x1.0"]["progress"]
+    assert c["board_turn"]["reach_rate"] == 1.0 and c["cards_turn"]["reach_rate"] == 1.0
+    assert set(c["curve_mean"]) == {0, 1}
+    assert hidden_info_cost_progress(rep, "d", "opp_shield")["n"] == 2
