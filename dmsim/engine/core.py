@@ -69,6 +69,7 @@ class Engine(SelectorMixin, EventMixin, InterpreterMixin, TurnMixin, CombatMixin
             for _ in range(5):
                 e._raw_move(s.zones["deck"][p][0], "hand")
         s.deck_emptied = []
+        s.pub = []                                   # 準備中のシャッフル等は公開イベントに数えない
         s.tasks.append(e.turn_task())
         return e
 
@@ -581,7 +582,28 @@ class Engine(SelectorMixin, EventMixin, InterpreterMixin, TurnMixin, CombatMixin
         assert self.s.tasks[-1] is t
         self.s.tasks.pop()
 
+    def note_public(self, kind: str, cid: int | None = None, viewers=None, *, player: int | None = None,
+                    zone: str | None = None):
+        """公開イベントを s.pub に追記する（公平探索が「誰が何を見たか」を信念に残すための記録）。
+        kind: "reveal"（相手にも見せた）/ "look"（viewers だけが見た）/ "face_up"（表向きにした）/
+              "shuffle"（player の zone を切り直した。それまでの位置の知識は無効）。
+        viewers: 見たプレイヤーのリスト。None なら全員。cid があれば、その時点の gen・defn・zone・位置を記録する。"""
+        s = self.s
+        rec = {"n": len(s.pub), "turn": s.turn, "kind": kind,
+               "viewers": [0, 1] if viewers is None else sorted(viewers)}
+        if cid is not None:
+            c = s.cards[cid]
+            lst = s.zones[c.zone][0 if self.zshared(c.zone) else c.owner] if c.zone in s.zones else []
+            rec.update(cid=cid, gen=c.gen, defn=c.defn, owner=c.owner, zone=c.zone,
+                       idx=lst.index(cid) if cid in lst else -1)
+        if player is not None:
+            rec["player"] = player
+        if zone is not None:
+            rec["zone"] = zone
+        s.pub.append(rec)
+
     def _shuffle(self, p: int):
+        self.note_public("shuffle", player=p, zone="deck")
         deck = self.s.zones["deck"][p]
         for i in range(len(deck) - 1, 0, -1):
             j = rng_below(self.s, i + 1)
