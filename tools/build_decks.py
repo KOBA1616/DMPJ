@@ -16,9 +16,14 @@ import known_combos  # noqa: E402
 
 
 def copies(cd, role, cap=4):
-    if role == "support":
-        return 3
+    if role in ("support", "entry"):
+        return 4 if role == "entry" else 3
     return min(cap, 4 if cd.cost <= 5 else 2)
+
+
+# 入口札（引き札・低コスト）。既存デッキは変えず、*_entry / tenmon_v2 として別に作る。
+ENTRY = [("dmd08-015", "entry"), ("dm08-043", "entry"), ("dm06-085", "entry")]  # エマージェンシー・タイフーン/ブレイン・チャージャー/エナジー・ライト
+VARIANTS = {"saga_entry": "saga", "tenmon_v2": "tenmon"}
 
 
 def filler_pool(rules, civs, banned_names):
@@ -59,6 +64,8 @@ def main(argv=None):
     banned = {p["name"] for c in combos.values() if c["split"] == "holdout" for p in c["parts"]}
     plans = {c: [c] for c in combos if combos[c]["split"] == "tuning"}
     plans["mix_tenmon_saga"] = ["tenmon", "saga"]
+    for v, base in VARIANTS.items():
+        plans[v] = [base]
     Path(a.out).mkdir(parents=True, exist_ok=True)
     for name, cids in plans.items():
         parts, seen = [], set()
@@ -67,6 +74,10 @@ def main(argv=None):
                 if p["id"] not in seen:
                     seen.add(p["id"])
                     parts.append((p["id"], p["role"]))
+        if name in VARIANTS:  # 入口札はコア直後（support より前）に入れる
+            core = [x for x in parts if x[1] == "core"]
+            rest = [x for x in parts if x[1] != "core" and x[0] not in {e[0] for e in ENTRY}]
+            parts = core + [e for e in ENTRY if e[0] not in {x[0] for x in core}] + rest
         deck, civs, warn = build(rules, parts, cap=2 if len(cids) > 1 else 4)
         # 部品を2組以上混ぜるときは枠が足りないので、core を優先して先頭から詰める（build が打ち切る）
         cnt = {}
