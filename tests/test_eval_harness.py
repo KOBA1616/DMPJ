@@ -112,3 +112,22 @@ def test_match_nodes_in_run_eval():
     rep = run_eval(None, cfg)
     c = rep["cells"]["d|cheat|x1.0"]
     assert abs(c["mean_nodes"] - 500) <= 50 and abs(c["budget_mult_used"] - 2.5) < 0.3
+
+
+def test_explog_connected_to_harness(tmp_path):
+    """ハーネスの対局を1手ごとに版つきログへ記録し、上限が効く。段階指標と同時に使える。"""
+    import yaml
+    from pathlib import Path
+    from dmsim.defs import load_rules
+    from dmsim.eval.progress import ProgressSpec
+    from dmsim.eval.steplog import ExpLogSpec
+    spec = yaml.safe_load(Path("tests/saga_setup.yaml").read_text(encoding="utf-8"))
+    el = ExpLogSpec(out_dir=str(tmp_path), max_games_per_cell=1, max_steps_per_game=3, engine_ver="vt")
+    cfg = EvalConfig(decks={"d": ["T001"] * 40}, opp_deck=["T001"] * 40, seeds=[1, 2], first="first", base_budget=10, max_turn=1,
+                     n_det=2, start_spec=spec, progress=ProgressSpec(cards={"dm22ex2-021": 1}), explog=el)
+    rep = run_eval(load_rules(), cfg)
+    for lv in ("fair", "cheat"):
+        info = rep["cells"][f"d|{lv}|x1.0"]["explog"]
+        h, steps = explog.read_log(info["path"], "vt")
+        assert info["games"] == 1 and info["truncated"] and 0 < len(steps) <= 3
+        assert h["config"]["level"] == lv and steps[0]["seed"] == 1 and steps[0]["legal"]

@@ -62,7 +62,7 @@ def make_progress_runner(level: InfoLevel, spec: ProgressSpec, n_det: int = 8):
     """InfoLevel の runner と同じ署名。自分のターンごとに盤面を記録する以外は solitaire.play_game(lock_rounds=0) と同じ回し方。"""
     level = InfoLevel(level)
 
-    def run(rules, deck, opp_deck, seed, first_player, max_turn, budget, start=None, opp=None):
+    def run(rules, deck, opp_deck, seed, first_player, max_turn, budget, start=None, opp=None, sink=None):
         me = 0
         t0 = time.perf_counter()
         res = ProgressResult(seed=seed, first_player=first_player)
@@ -111,6 +111,8 @@ def make_progress_runner(level: InfoLevel, spec: ProgressSpec, n_det: int = 8):
             res.error = f"{type(ex).__name__}: {ex}"
         res.decisions = len(eng.log)
         res.seconds = time.perf_counter() - t0
+        if sink is not None:
+            sink(eng)
         return res
 
     return run

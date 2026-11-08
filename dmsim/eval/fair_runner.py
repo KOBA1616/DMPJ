@@ -11,7 +11,7 @@ from .infolevel import InfoLevel, register_runner
 
 
 def make_fair_runner(n_det: int = 8):
-    def run(rules, deck, opp_deck, seed, first_player, max_turn, budget, start=None, opp=None):
+    def run(rules, deck, opp_deck, seed, first_player, max_turn, budget, start=None, opp=None, sink=None):
         me = 0
         t0 = time.perf_counter()
         res = GameResult(seed=seed, first_player=first_player)
@@ -43,6 +43,8 @@ def make_fair_runner(n_det: int = 8):
             res.error = f"{type(ex).__name__}: {ex}"
         res.decisions = len(eng.log)
         res.seconds = time.perf_counter() - t0
+        if sink is not None:
+            sink(eng)
         return res
     return run
 
