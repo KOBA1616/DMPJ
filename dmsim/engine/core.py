@@ -11,6 +11,7 @@
   内側の窓を開いて、その場で解決する。"""
 from __future__ import annotations
 
+import contextlib
 import os
 
 from ..defs import CardDef, Face, Rules
@@ -44,6 +45,7 @@ class Engine(SelectorMixin, EventMixin, InterpreterMixin, TurnMixin, CombatMixin
         self.check = CHECK if check is None else check   # タスクの形を毎回検査する（テスト・開発者モード用）
         self.s = state
         self._pw_busy = False
+        self._chcache: dict | None = None   # chars_scope() の間だけ有効な特性キャッシュ（状態が変わらない区間専用）
         self.step_limit = step_limit
         self.turn_limit = turn_limit
         self.log: list[dict] = []
@@ -340,7 +342,35 @@ class Engine(SelectorMixin, EventMixin, InterpreterMixin, TurnMixin, CombatMixin
         self._xcache[(c.defn, c.face)] = r
         return r
 
+    @contextlib.contextmanager
+    def chars_scope(self):
+        """状態を一切変更しない区間（選択肢の列挙など）で chars() の結果を使い回す。
+        区間内で状態を書き換える処理を呼んではならない。DMSIM_CHECK=1 では使い回した値を毎回再計算と比べる。
+        入れ子の評価中（_in_static_cond / _pw_busy）は値が変わるので使わない。区間の入れ子は外側が優先。"""
+        if self._chcache is not None:
+            yield
+            return
+        self._chcache = {}
+        try:
+            yield
+        finally:
+            self._chcache = None
+
     def chars(self, cid: int, face: int | None = None) -> dict:
+        """特性の計算（chars_scope の間は同一状態の結果を使い回す）。返す辞書は呼び出し側が自由に書き換えてよい（コピーを返す）。"""
+        cc = self._chcache
+        if cc is None or self._in_static_cond or self._pw_busy:
+            return self._chars_calc(cid, face)
+        k = (cid, face)
+        r = cc.get(k)
+        if r is None:
+            r = cc[k] = self._chars_calc(cid, face)
+        elif self.check:
+            fresh = self._chars_calc(cid, face)
+            assert fresh == r, f"chars cache stale: cid={cid} face={face}"
+        return {k2: (v.copy() if type(v) in (list, set) else v) for k2, v in r.items()}
+
+    def _chars_calc(self, cid: int, face: int | None = None) -> dict:
         """特性の計算。複数の継続的効果は同時に適用する（608.1）。MTG のようなレイヤーはない。
         常在型能力の効果は固定されず常に範囲を見直す（608.3a）。解決で生成された効果は生成時の範囲に固定（110.2e）。
         許可・禁止（allow / deny）と breaks もここで集める。ルール側はキーワード名を見ない。"""
