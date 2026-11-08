@@ -57,3 +57,12 @@ def test_batch_skips_holdout_and_unknown():
 def test_finish_proposes_n_det():
     from dmsim.autofix.loop import propose
     assert any(c.n_det == 8 for c, _ in propose("finish", Knobs()))
+
+
+def test_store_resumes_and_lookahead(tmp_path):
+    from dmsim.autofix import run_targets
+    st = tmp_path / "k.yaml"
+    run_targets([{"combo": "a"}], {"a": {"split": "tuning"}}, lambda t: fake, rounds=4, store=str(st))
+    assert st.exists()
+    from dmsim.autofix.loop import propose
+    assert any(c.lookahead == 1 for c, _ in propose("finish", Knobs()))
