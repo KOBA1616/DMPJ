@@ -107,3 +107,8 @@ def test_prep_bonus_value(rules):
     e.advance()
     assert prep_used(e, 0, ["dmd08-015"]) == 3 and prep_used(e, 0, []) == 0
     assert with_prep_bonus(lambda _e, _m: 1.0, ["dmd08-015"], 5.0)(e, 0) == 11.0       # 上限2枚
+
+
+def test_merge_parts_order():
+    from dmsim.autofix.loop import _merge
+    assert _merge([{"kill": [1, 2], "board": [3]}, {"kill": [4], "board": [5, 6]}]) == {"kill": [1, 2, 4], "board": [3, 5, 6]}

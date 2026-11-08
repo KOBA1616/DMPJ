@@ -108,14 +108,14 @@ def autofix(measure, k0: Knobs, combo: dict | None = None, rule: Rule = Rule(), 
     return cur, hist
 
 
-def harness_measure(rules, deck, opp_deck, seeds, spec=None, prog=None, parts_spec=None, max_turn=4, prep_ids=()):
-    """実エンジンの測定（FAIR のみ）。parts_spec は dmsim.search.leaf_parts.PartsSpec。"""
+def harness_measure(rules, deck, opp_deck, seeds, spec=None, prog=None, parts_spec=None, max_turn=4, prep_ids=(), workers: int = 1):
+    """実エンジンの測定（FAIR のみ）。workers>1 なら seeds を分けて fork で並列に回す（結果は seeds の順に連結。Claude のトークンは増えない）。parts_spec は dmsim.search.leaf_parts.PartsSpec。"""
     from ..eval import fair_runner
     from ..eval.harness import EvalConfig, cell_key, run_eval
     from ..eval.infolevel import InfoLevel
     from ..search.leaf_parts import Part, PartsSpec, make_value_fn
 
-    def measure(k: Knobs) -> dict:
+    def measure_seeds(k: Knobs, seeds) -> dict:
         n_det = k.n_det
         fair_runner.register(n_det, k.lookahead)
         vfn = None
@@ -135,4 +135,28 @@ def harness_measure(rules, deck, opp_deck, seeds, spec=None, prog=None, parts_sp
         if prep_ids:                      # 各局の最終局面で墓地に行った準備札の枚数（診断の prep_unused 用）
             out["prep"] = [sum(n for d, n in ((p[2] or {}).get("gy_defs") or {}).items() if d in prep_ids) for p in pp]
         return out
+
+    def measure(k: Knobs) -> dict:
+        if workers <= 1 or len(seeds) < workers * 2:
+            return measure_seeds(k, seeds)
+        import multiprocessing as mp
+        global _JOB
+        chunks = [seeds[i::workers] for i in range(workers)]       # 飛び飛びに割ると重い局が偏らない
+        _JOB = (measure_seeds, k, chunks)
+        with mp.get_context("fork").Pool(workers) as pool:
+            parts = pool.map(_run_chunk, range(workers))
+        return _merge(parts)       # 分け方は毎回同じなので、測定間の対比較は同じ順で対応する
     return measure
+
+
+_JOB = None
+
+
+def _run_chunk(i):
+    fn, k, chunks = _JOB
+    return fn(k, chunks[i])
+
+
+def _merge(parts):
+    """chunk ごとの結果を chunk 順に連結する（同じ分け方なら測定間で局の対応が保たれる）。"""
+    return {key: [v for part in parts for v in part[key]] for key in parts[0]}
