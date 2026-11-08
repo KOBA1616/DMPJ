@@ -17,6 +17,7 @@ class Knobs:
     gy_mult: float = 1.0        # 墓地の部品の重み倍率
     budget: int = 100           # 探索予算
     n_det: int = 4              # 公平探索の決定化数
+    lookahead: int = 0          # 複数ターン探索の先読み（dmsim/search/multiturn）
 
 
 @dataclass(frozen=True)
@@ -27,6 +28,7 @@ class Rule:
     coef_max: float = 100.0
     budget_max: int = 1600
     n_det_max: int = 16
+    lookahead_max: int = 2
 
 
 def propose(stage: str, k: Knobs, rule: Rule = Rule()) -> list[tuple[Knobs, str]]:
@@ -40,6 +42,8 @@ def propose(stage: str, k: Knobs, rule: Rule = Rule()) -> list[tuple[Knobs, str]
     elif stage == "finish":
         if k.budget * 2 <= rule.budget_max:
             out.append((replace(k, budget=k.budget * 2), "探索予算を2倍"))
+        if k.lookahead + 1 <= rule.lookahead_max:
+            out.append((replace(k, lookahead=k.lookahead + 1), "先読み(lookahead)を+1"))
         if k.n_det * 2 <= rule.n_det_max:
             out.append((replace(k, n_det=k.n_det * 2), "決定化数を2倍"))
         if k.coef * 2 <= rule.coef_max:
@@ -104,7 +108,7 @@ def harness_measure(rules, deck, opp_deck, seeds, spec=None, prog=None, parts_sp
 
     def measure(k: Knobs) -> dict:
         n_det = k.n_det
-        fair_runner.register(n_det)
+        fair_runner.register(n_det, k.lookahead)
         vfn = None
         if parts_spec is not None:
             ps = PartsSpec(tuple(replace(p, weight=p.weight * k.gy_mult) if p.zone == "graveyard" else p for p in parts_spec.parts), coef=k.coef)

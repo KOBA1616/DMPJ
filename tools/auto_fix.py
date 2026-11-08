@@ -29,13 +29,14 @@ def run_batch(a, combos):
     specs = load_specs()
 
     def mk(t):
-        cards = {x.split(":")[0]: int(x.split(":")[1]) if ":" in x else 1 for x in t.get("need", [])}
+        need = t.get("need") or [p["id"] for p in combos[t["combo"]]["parts"] if p.get("role") == "core" and p.get("id")]
+        cards = {x.split(":")[0]: int(x.split(":")[1]) if ":" in x else 1 for x in need}
         board = _board(t.get("board", []))
         spec = yaml.safe_load(Path(t["setup"]).read_text(encoding="utf-8")) if t.get("setup") else None
         return harness_measure(rules, load_deck(t["deck"]), load_deck(t["opp_deck"]) if t.get("opp_deck") else ["T001"] * 40,
                                list(range(1, t.get("seeds", a.seeds) + 1)), spec,
                                ProgressSpec(board=board, cards=cards) if (cards or board) else None, specs[t["combo"]], max_turn=a.turns)
-    for r in run_targets(ts, combos, mk, Rule(turn=a.turns), a.rounds, a.out):
+    for r in run_targets(ts, combos, mk, Rule(turn=a.turns), a.rounds, a.out, a.store):
         print(r)
 
 
@@ -51,6 +52,7 @@ def main(argv=None):
     ap.add_argument("--seeds", type=int, default=20)
     ap.add_argument("--turns", type=int, default=4)
     ap.add_argument("--rounds", type=int, default=3)
+    ap.add_argument("--store", default="data/autofix/knobs.yaml", help="採用した設定の保存先（次回の開始点になる）")
     ap.add_argument("--out")
     a = ap.parse_args(argv)
     combos = {c["id"]: c for c in yaml.safe_load(Path("data/known_combos/combos.yaml").read_text(encoding="utf-8"))["combos"]}
