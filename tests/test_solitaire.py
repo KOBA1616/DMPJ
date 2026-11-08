@@ -123,3 +123,10 @@ def test_opp_blockers_lower_kill_rate(rules):
     blk = summarize(measure(deck, opp, range(1, 9), rules=rules, max_turn=5, budget=60, opp=PRESETS["blockers"]), 5)
     assert not blk["errors"]
     assert blk["kill_rate_by_turn"][5]["kills"] <= base["kill_rate_by_turn"][5]["kills"]
+
+
+def test_beat_deck_spec_reports_unconverted(rules):
+    from dmsim.opponent import BEAT_DECK_PATH, PRESETS, deck_from_spec
+    deck, missing = deck_from_spec(BEAT_DECK_PATH, known=set(rules.cards))
+    assert len(deck) == 40 and PRESETS["beat"].play == "all"
+    assert all(m["id"] is None or m["id"] not in rules.cards for m in missing)

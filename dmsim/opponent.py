@@ -68,10 +68,33 @@ class OppModel:
         return best
 
 
+def deck_from_spec(path, known=None, filler: str = "T001") -> tuple[list[str], list[dict]]:
+    """スロット形式のデッキ（slots: [{name,id|null,n}]）から (デッキ, 未解決スロット) を作る。
+
+    id が null か known（使えるカードID集合）に無いスロットは filler で埋め、未解決として返す。
+    変換が進んだらYAMLの id を埋めるだけで忠実な再現になる。"""
+    from pathlib import Path
+
+    import yaml
+    y = yaml.safe_load(Path(path).read_text(encoding="utf-8"))
+    deck, missing = [], []
+    for sl in y["slots"]:
+        ok = sl.get("id") and (known is None or sl["id"] in known)
+        deck += [sl["id"] if ok else filler] * sl["n"]
+        if not ok:
+            missing.append(sl)
+    return deck, missing
+
+
+# 「ビート」: 使えるカードは全部出し、S・トリガーも使い、ブロックはしない（殴り切る側）。
+BEAT = OppModel("beat", strigger=True, play="all")
+BEAT_DECK_PATH = "data/decks/beat_fire_gaga.yaml"
+
 PRESETS: dict[str, OppModel | None] = {
     "none": None,
     "shields3": OppModel("shields3", shields=3),
     "blockers": OppModel("blockers", block=True, play="blockers"),
     "strigger": OppModel("strigger", strigger=True),
     "full": OppModel("full", block=True, strigger=True, play="all"),
+    "beat": BEAT,
 }
