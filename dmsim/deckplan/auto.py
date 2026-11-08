@@ -38,14 +38,14 @@ def core_names(combo: dict) -> list[str]:
 
 
 def auto_improve(rules, deck_ids: list[str], opp_ids: list[str], combo: dict, seeds: list[int], ledger,
-                 rounds: int = 2, seed: int = 0, turn: int = 4, kinds=("add_parts", "add_prep"), n: int = 4,
+                 rounds: int = 2, seed: int = 0, turn: int = 4, setup: dict | None = None, kinds=("add_parts", "add_prep"), n: int = 4,
                  out_dir: str | Path | None = "data/deckplans/auto", **cfg_kw) -> dict:
     """戻り値: {base, final, adopted(bool), verdicts}。採用時のみ out_dir に候補を保存する（rejected/inconclusive は保存しない）。"""
     rule = AcceptRule(turn=turn)
     base = proposal_from_ids(rules, deck_ids, f"{combo['id']}_base")
     pool = core_names(combo)
     resolver = make_resolver(rules)
-    scorer = harness_scorer(rules, opp_ids, seeds, rule, **cfg_kw)
+    scorer = harness_scorer(rules, opp_ids, seeds, rule, setup=setup, **cfg_kw)
     t0 = time.time()
     final = base
     for k in kinds:     # 種類ごとに順に（add_prep は pool 空 = 全候補から。add_parts は core 名から）

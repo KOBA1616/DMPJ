@@ -71,3 +71,11 @@ def test_auto_improve_adopts_and_protects(tmp_path, monkeypatch):
     base = A.proposal_from_ids(rules, deck)
     assert A.make_resolver(rules)(base.entries[0])[1] == D.CONFIRMED
     assert A.make_resolver(rules)(D.Entry("存在しない札", 1))[1] == D.UNCONVERTED
+
+
+def test_spec_with_deck_replaces_deck_only():
+    from dmsim.deckplan.evaluate import spec_with_deck
+    setup = {"p0": {"hand": ["a", "T"], "mana": ["m"], "graveyard": ["g"], "deck": ["x"]}, "p1": {}, "deck_size": 1}
+    s = spec_with_deck(setup, ["a", "a", "m", "z", "z"])
+    assert s["p0"]["hand"] == ["a", "T"] and s["p0"]["deck"] == ["a", "z", "z"] and s["deck_size"] == 3
+    assert setup["p0"]["deck"] == ["x"]       # 元は変えない
