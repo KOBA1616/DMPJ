@@ -22,6 +22,14 @@ def _board(xs):
     return board
 
 
+def _prep_ids(combo, rules, deck, opp, spec):
+    """準備札: combos.yaml の prep_ids があればそれ、無ければプレイログから自動検出（dmsim.autofix.usage）。"""
+    if combo.get("prep_ids"):
+        return tuple(combo["prep_ids"])
+    from dmsim.autofix.usage import auto_prep_ids
+    return auto_prep_ids(rules, deck, opp, spec)
+
+
 def run_batch(a, combos):
     from dmsim.autofix import run_targets
     ts = yaml.safe_load(Path(a.targets).read_text(encoding="utf-8"))["targets"]
@@ -34,9 +42,10 @@ def run_batch(a, combos):
         from dmsim.autofix.batch import default_board
         board = _board(t["board"]) if t.get("board") else default_board(combos[t["combo"]])
         spec = yaml.safe_load(Path(t["setup"]).read_text(encoding="utf-8")) if t.get("setup") else None
-        return harness_measure(rules, load_deck(t["deck"]), load_deck(t["opp_deck"]) if t.get("opp_deck") else ["T001"] * 40,
-                               list(range(1, t.get("seeds", a.seeds) + 1)), spec,
-                               ProgressSpec(board=board, cards=cards) if (cards or board) else None, specs[t["combo"]], max_turn=a.turns, prep_ids=tuple(combos[t["combo"]].get("prep_ids", ())))
+        deck, opp = load_deck(t["deck"]), load_deck(t["opp_deck"]) if t.get("opp_deck") else ["T001"] * 40
+        return harness_measure(rules, deck, opp, list(range(1, t.get("seeds", a.seeds) + 1)), spec,
+                               ProgressSpec(board=board, cards=cards) if (cards or board) else None, specs[t["combo"]], max_turn=a.turns,
+                               prep_ids=_prep_ids(combos[t["combo"]], rules, deck, opp, specs[t["combo"]]))
     for r in run_targets(ts, combos, mk, Rule(turn=a.turns), a.rounds, a.out, a.store):
         print(r)
 
@@ -65,9 +74,10 @@ def main(argv=None):
     if a.targets:
         return run_batch(a, combos)
     spec = yaml.safe_load(Path(a.setup).read_text(encoding="utf-8")) if a.setup else None
-    meas = harness_measure(load_rules(), load_deck(a.deck), load_deck(a.opp_deck) if a.opp_deck else ["T001"] * 40,
+    rules_, deck_, opp_ = load_rules(), load_deck(a.deck), load_deck(a.opp_deck) if a.opp_deck else ["T001"] * 40
+    meas = harness_measure(rules_, deck_, opp_,
                            list(range(1, a.seeds + 1)), spec, ProgressSpec(board=board, cards=cards) if (cards or board) else None,
-                           load_specs()[a.combo], max_turn=a.turns, prep_ids=tuple(combos[a.combo].get("prep_ids", ())))
+                           load_specs()[a.combo], max_turn=a.turns, prep_ids=_prep_ids(combos[a.combo], rules_, deck_, opp_, load_specs()[a.combo]))
     k, hist = autofix(meas, Knobs(), combos[a.combo], Rule(turn=a.turns), a.rounds, a.out)
     for h in hist:
         print(h["round"], h["stage"], h["cause"], h["rates"], [(t["change"], t["verdict"]) for t in h.get("tries", [])])
