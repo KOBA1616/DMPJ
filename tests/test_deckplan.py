@@ -79,3 +79,11 @@ def test_spec_with_deck_replaces_deck_only():
     s = spec_with_deck(setup, ["a", "a", "m", "z", "z"])
     assert s["p0"]["hand"] == ["a", "T"] and s["p0"]["deck"] == ["a", "z", "z"] and s["deck_size"] == 3
     assert setup["p0"]["deck"] == ["x"]       # 元は変えない
+
+
+def test_scorer_workers_merge(monkeypatch):
+    import dmsim.eval.harness as H
+    from dmsim.deckplan.evaluate import harness_scorer
+    monkeypatch.setattr(H, "run_eval", lambda rules, cfg: {"cells": {H.cell_key("d", "fair", 1.0): {"per_game": [(s, 0, 3) for s in cfg.seeds]}}})
+    out = harness_scorer(None, [], list(range(10)), workers=3)(["x"])
+    assert sorted(out) == [(s, 0) for s in range(10)]
