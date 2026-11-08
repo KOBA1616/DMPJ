@@ -35,7 +35,8 @@ _count = zone_counts
 def snapshot(eng: Engine, me: int, turn: int) -> dict:
     n = lambda z, p: len(eng.zlist(z, p))
     return {"turn": turn, "opp_shield": n("shield", 1 - me), "opp_deck": n("deck", 1 - me), "own_gy": n("graveyard", me),
-            "own_hand": n("hand", me), "own_mana": n("mana", me), "own_bz": n("bz", me)}
+            "own_hand": n("hand", me), "own_mana": n("mana", me), "own_bz": n("bz", me),
+            "gy_defs": dict(zone_counts(eng, me, "graveyard"))}
 
 
 def board_ok(eng: Engine, me: int, spec: ProgressSpec) -> bool:
@@ -46,7 +47,7 @@ def cards_ok(eng: Engine, me: int, spec: ProgressSpec) -> bool:
     return cards_met(eng, me, spec.cards)
 
 
-def make_progress_runner(level: InfoLevel, spec: ProgressSpec, n_det: int = 8, value_fn=None):
+def make_progress_runner(level: InfoLevel, spec: ProgressSpec, n_det: int = 8, value_fn=None, lookahead: int = 0):
     """InfoLevel の runner と同じ署名。自分のターンごとに盤面を記録する以外は solitaire.play_game(lock_rounds=0) と同じ回し方。"""
     level = InfoLevel(level)
 
@@ -83,7 +84,7 @@ def make_progress_runner(level: InfoLevel, spec: ProgressSpec, n_det: int = 8, v
                     res.nodes += st.nodes
                 else:
                     from ..search.fair import FairTurnSearch
-                    fs = FairTurnSearch(me, budget, n_det, seed * 7919 + ot, opp_policy=opp_pol, value_fn=value_fn)
+                    fs = FairTurnSearch(me, budget, n_det, seed * 7919 + ot, opp_policy=opp_pol, value_fn=value_fn, lookahead=lookahead)
                     eng = fs.run(eng)
                     res.nodes += fs.nodes
                 record(ot)

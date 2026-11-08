@@ -14,10 +14,50 @@ from dmsim.search.leaf_parts import load_specs  # noqa: E402
 from dmsim.solitaire import load_deck  # noqa: E402
 
 
+def _board(xs):
+    board: dict = {}
+    for x in xs:
+        z, d, *n = x.split(":")
+        board.setdefault(z, {})[d] = int(n[0]) if n else 1
+    return board
+
+
+def _prep_ids(combo, rules, deck, opp, spec):
+    """準備札: combos.yaml の prep_ids があればそれ、無ければプレイログから自動検出（dmsim.autofix.usage）。"""
+    if combo.get("prep_ids"):
+        return tuple(combo["prep_ids"])
+    from dmsim.autofix.usage import auto_prep_ids
+    return auto_prep_ids(rules, deck, opp, spec)
+
+
+def run_batch(a, combos):
+    from dmsim.autofix import run_targets
+    ts = yaml.safe_load(Path(a.targets).read_text(encoding="utf-8"))["targets"]
+    rules = load_rules()
+    specs = load_specs()
+
+    def mk(t):
+        from dmsim.autofix.batch import default_board, default_need
+        cards = {x.split(":")[0]: int(x.split(":")[1]) if ":" in x else 1 for x in t["need"]} if t.get("need") else default_need(combos[t["combo"]])
+        board = _board(t["board"]) if t.get("board") else default_board(combos[t["combo"]])
+        spec = yaml.safe_load(Path(t["setup"]).read_text(encoding="utf-8")) if t.get("setup") else None
+        deck, opp = load_deck(t["deck"]), load_deck(t["opp_deck"]) if t.get("opp_deck") else ["T001"] * 40
+        return harness_measure(rules, deck, opp, list(range(1, t.get("seeds", a.seeds) + 1)), spec,
+                               ProgressSpec(board=board, cards=cards) if (cards or board) else None, specs[t["combo"]], max_turn=a.turns, workers=a.workers,
+                               prep_ids=_prep_ids(combos[t["combo"]], rules, deck, opp, specs[t["combo"]]))
+    for r in run_targets(ts, combos, mk, Rule(turn=a.turns), a.rounds, a.out, a.store):
+        print(r)
+    if a.deck_fix and a.out:
+        import deck_fix                                   # 同じ tools/ にある。cards 段階の記録があるコンボだけ回る
+        deck_fix.main(["--targets", a.targets, "--stage-from", a.out, "--seeds", str(a.seeds), "--turns", str(a.turns),
+                       "--workers", str(a.workers), "--cands", "6", "--time-budget", str(a.deck_fix_budget)])
+
+
 def main(argv=None):
     ap = argparse.ArgumentParser()
-    ap.add_argument("--combo", required=True)
-    ap.add_argument("--deck", required=True)
+    ap.add_argument("--targets", help="複数対象のYAML(data/autofix/targets.yaml)。指定時は --combo/--deck 等は無視")
+    ap.add_argument("--combo")
+    ap.add_argument("--deck")
     ap.add_argument("--setup")
     ap.add_argument("--opp-deck")
     ap.add_argument("--need", nargs="*", default=[])
@@ -25,6 +65,10 @@ def main(argv=None):
     ap.add_argument("--seeds", type=int, default=20)
     ap.add_argument("--turns", type=int, default=4)
     ap.add_argument("--rounds", type=int, default=3)
+    ap.add_argument("--store", default="data/autofix/knobs.yaml", help="採用した設定の保存先（次回の開始点になる）")
+    ap.add_argument("--workers", type=int, default=1, help="並列プロセス数（seeds を分けて回す。CPU数まで）")
+    ap.add_argument("--deck-fix", action="store_true", help="終了後、cards 段階の記録があれば tools/deck_fix.py --stage-from を続けて回す（--out 必須）")
+    ap.add_argument("--deck-fix-budget", type=int, default=5400, help="--deck-fix の時間予算（秒）。対象ごとの候補数と粗比較の局数を自動配分し、前回途中のデッキを優先する（既定 90分）")
     ap.add_argument("--out")
     a = ap.parse_args(argv)
     combos = {c["id"]: c for c in yaml.safe_load(Path("data/known_combos/combos.yaml").read_text(encoding="utf-8"))["combos"]}
@@ -33,10 +77,13 @@ def main(argv=None):
     for x in a.board:
         z, d, *n = x.split(":")
         board.setdefault(z, {})[d] = int(n[0]) if n else 1
+    if a.targets:
+        return run_batch(a, combos)
     spec = yaml.safe_load(Path(a.setup).read_text(encoding="utf-8")) if a.setup else None
-    meas = harness_measure(load_rules(), load_deck(a.deck), load_deck(a.opp_deck) if a.opp_deck else ["T001"] * 40,
+    rules_, deck_, opp_ = load_rules(), load_deck(a.deck), load_deck(a.opp_deck) if a.opp_deck else ["T001"] * 40
+    meas = harness_measure(rules_, deck_, opp_,
                            list(range(1, a.seeds + 1)), spec, ProgressSpec(board=board, cards=cards) if (cards or board) else None,
-                           load_specs()[a.combo], max_turn=a.turns)
+                           load_specs()[a.combo], max_turn=a.turns, workers=a.workers, prep_ids=_prep_ids(combos[a.combo], rules_, deck_, opp_, load_specs()[a.combo]))
     k, hist = autofix(meas, Knobs(), combos[a.combo], Rule(turn=a.turns), a.rounds, a.out)
     for h in hist:
         print(h["round"], h["stage"], h["cause"], h["rates"], [(t["change"], t["verdict"]) for t in h.get("tries", [])])

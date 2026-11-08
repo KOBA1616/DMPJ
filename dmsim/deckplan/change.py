@@ -60,12 +60,12 @@ def swap(deck: DeckProposal, rng: random.Random, pool: list[str], n: int = 5, **
 
 
 @proposer("add_parts")
-def add_parts(deck: DeckProposal, rng: random.Random, pool: list[str], n: int = 5, want: int = 3, **_) -> list[Change]:
+def add_parts(deck: DeckProposal, rng: random.Random, pool: list[str], n: int = 5, want: int = 3, protect: set | None = None, **_) -> list[Change]:
     """cards 段階の診断用: 部品（pool＝既知コンボの core 名）が want 枚未満なら、部品でない札を1枚抜いて部品を1枚足す。
     自動診断（dmsim.autofix）から呼ぶ。採否は evaluate.decide だけが行う。"""
     have = {e.name: e.count for e in deck.entries}
     lacking = [p for p in pool if have.get(p, 0) < min(want, 4)]
-    others = [e.name for e in deck.entries if e.name not in pool]
+    others = [e.name for e in deck.entries if e.name not in pool and e.name not in (protect or ())]
     if not lacking or not others:
         return []
     out = []
@@ -73,3 +73,45 @@ def add_parts(deck: DeckProposal, rng: random.Random, pool: list[str], n: int = 
         a, b = rng.choice(others), rng.choice(lacking)
         out.append(Change("add_parts", [(a, -1), (b, 1)], f"部品不足: {a} → {b}"))
     return out
+
+
+@proposer("add_prep")
+def add_prep(deck: DeckProposal, rng: random.Random, pool: list[str] | None = None, n: int = 5, max_cost: int = 4, protect: set | None = None, **_) -> list[Change]:
+    """墓地への仕込み手段（tools/suggest_prep の静的列挙）を1枚足し、仕込みでない札を1枚抜く。
+    pool を渡せばその名前に限る。採否は evaluate.decide だけが行う。"""
+    from tools.suggest_prep import scan
+    have = {e.name for e in deck.entries}
+    cands = [r["name"] for r in scan()
+             if r["name"] not in have and (not pool or r["name"] in pool)
+             and isinstance(r["cost"], int) and r["cost"] <= max_cost]
+    others = [e.name for e in deck.entries if e.name not in (protect or ())]
+    if not cands or not others:
+        return []
+    return [Change("add_prep", [(a, -1), (b, 1)], f"仕込み手段: {a} → {b}")
+            for a, b in ((rng.choice(others), rng.choice(cands)) for _ in range(n))]
+
+
+@proposer("cut_unused")
+def cut_unused(deck: DeckProposal, rng: random.Random, pool: list[str] | None = None, n: int = 5, unused: list[str] | None = None,
+               protect: set | None = None, adds: list[str] | None = None, **_) -> list[Change]:
+    """使われにくい札（usage 監査の unused 名）を1枚抜き、adds（部品・準備札）の別札を1枚入れる。
+    unused / adds は呼び出し側が与える。コア（protect）は抜かない。"""
+    have = {e.name: e.count for e in deck.entries}
+    outs = [u for u in (unused or []) if have.get(u, 0) > 0 and u not in (protect or ())]
+    ins = [a for a in (adds or []) if have.get(a, 0) < 4]
+    if not outs or not ins:
+        return []
+    return [Change("cut_unused", [(a, -1), (b, 1)], f"使われにくい札を入れ替え: {a} → {b}")
+            for a, b in ((rng.choice(outs), rng.choice(ins)) for _ in range(n)) if a != b]
+
+
+@proposer("trim_parts")
+def trim_parts(deck: DeckProposal, rng: random.Random, pool: list[str], n: int = 5, protect: set | None = None, **_) -> list[Change]:
+    """部品（pool）の枚数調整: 3枚以上ある部品を1枚減らし、部品でない既存札を1枚増やす（部品が多すぎて事故る場合の減らす案）。"""
+    have = {e.name: e.count for e in deck.entries}
+    heavy = [p for p in pool if have.get(p, 0) >= 3]
+    fill = [e.name for e in deck.entries if e.name not in pool and e.count < 4]
+    if not heavy or not fill:
+        return []
+    return [Change("trim_parts", [(a, -1), (b, 1)], f"部品を減らす: {a} → {b}")
+            for a, b in ((rng.choice(heavy), rng.choice(fill)) for _ in range(n))]

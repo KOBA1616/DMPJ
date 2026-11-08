@@ -30,11 +30,12 @@ def main(argv=None):
     ap.add_argument("--cheat-mult", type=float, default=1.0, help="ずるい側の予算倍率（公平の決定化数に合わせると探索量がそろう）")
     ap.add_argument("--seed-from", type=int, default=1, help="開始シード（シードを分けて並列実行するため）")
     ap.add_argument("--match-nodes", action="store_true", help="ずるい側の予算を公平側の平均ノード数に合うよう自動調整する（--cheat-mult は初期値）")
-    ap.add_argument("--parts", help="既知コンボID（data/known_combos）の部品表を葉の評価に足す（dmsim.search.leaf_parts。--need/--board 指定時のみ有効）")
+    ap.add_argument("--parts", default="auto", help="既知コンボID（data/known_combos）の部品表を葉の評価に足す（--need/--board 指定時のみ有効）。auto(既定)=デッキYAMLの combos が1つならそれを使う／none=使わない(旧既定。過去の測定と比べる時)")
+    ap.add_argument("--lookahead", type=int, default=0, help="複数ターン探索: 葉を次の自分のターンの小探索(この予算)で評価する（公平側のみ。0で無効）")
     ap.add_argument("--out")
     a = ap.parse_args(argv)
     rules = load_rules()
-    fair_runner.register(a.n_det)
+    fair_runner.register(a.n_det, a.lookahead)
     decks = {Path(p).stem: load_deck(p) for p in a.deck} if a.deck else {"default0": default_decks(rules, a.prefix)[0]}
     import yaml
     spec = yaml.safe_load(Path(a.setup).read_text(encoding="utf-8")) if a.setup else None
@@ -47,9 +48,11 @@ def main(argv=None):
     prog = ProgressSpec(board=board, cards=cards) if (cards or board) else None
     from dmsim.eval.infolevel import InfoLevel
     vfn = None
-    if a.parts:
-        from dmsim.search.leaf_parts import load_specs, make_value_fn
-        vfn = make_value_fn(load_specs()[a.parts])
+    from dmsim.search.leaf_parts import load_specs, make_value_fn, parts_id_for_decks
+    pid = parts_id_for_decks(a.deck, a.parts) if prog else (None if a.parts in ("auto", "none") else a.parts)
+    if pid:
+        vfn = make_value_fn(load_specs()[pid])
+        print("parts:", pid)
     cfg = EvalConfig(value_fn=vfn, match_nodes=a.match_nodes, level_mult={InfoLevel.CHEAT: a.cheat_mult}, progress=prog, n_det=a.n_det, start_spec=spec, decks=decks, opp_deck=load_deck(a.opp_deck) if a.opp_deck else ["T001"] * 40, opps={n: PRESETS[n] for n in a.opp}, seeds=list(range(a.seed_from, a.seed_from + a.seeds)),
                      base_budget=a.budget, max_turn=a.turns)
     rep = run_eval(rules, cfg)

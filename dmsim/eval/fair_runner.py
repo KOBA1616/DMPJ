@@ -10,7 +10,7 @@ from ..solitaire import GameResult, _origin, charge_only_policy, own_turn
 from .infolevel import InfoLevel, register_runner
 
 
-def make_fair_runner(n_det: int = 8):
+def make_fair_runner(n_det: int = 8, lookahead: int = 0):
     def run(rules, deck, opp_deck, seed, first_player, max_turn, budget, start=None, opp=None, sink=None):
         me = 0
         t0 = time.perf_counter()
@@ -28,7 +28,7 @@ def make_fair_runner(n_det: int = 8):
                 ot = own_turn(eng, me)
                 if ot > max_turn:
                     break
-                fs = FairTurnSearch(me, budget, n_det, seed * 7919 + ot, opp_policy=opp_pol)
+                fs = FairTurnSearch(me, budget, n_det, seed * 7919 + ot, opp_policy=opp_pol, lookahead=lookahead)
                 eng = fs.run(eng)
                 res.nodes += fs.nodes
             r = eng.s.result
@@ -49,5 +49,5 @@ def make_fair_runner(n_det: int = 8):
     return run
 
 
-def register(n_det: int = 8) -> None:
-    register_runner(InfoLevel.FAIR, make_fair_runner(n_det))
+def register(n_det: int = 8, lookahead: int = 0) -> None:
+    register_runner(InfoLevel.FAIR, make_fair_runner(n_det, lookahead))
