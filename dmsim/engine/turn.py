@@ -536,7 +536,8 @@ def st_charge(eng, t):                                  # 503
 @step("main")
 def st_main(eng, t):                                    # 504
     a = eng.s.active
-    opts = eng._play_options(a) + eng._cross_options(a) + eng._hyper_options(a) + eng._reveal_options(a) + [{"key": "pass"}]
+    with eng.chars_scope():   # 選択肢の列挙は読み取りだけなので、同じ状態での chars() の重複計算を省く
+        opts = eng._play_options(a) + eng._cross_options(a) + eng._hyper_options(a) + eng._reveal_options(a) + [{"key": "pass"}]
     ans, d = eng.ask(t, a, "main", opts)
     if d:
         return d

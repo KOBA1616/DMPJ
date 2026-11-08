@@ -37,9 +37,11 @@ def get_runner(level: InfoLevel) -> Callable:
 def _register_default_cheat() -> None:
     from ..solitaire import play_game
 
-    def run(rules, deck, opp_deck, seed, first_player, max_turn, budget, start=None, opp=None):
-        res, _ = play_game(rules, deck, opp_deck, seed, first_player=first_player, max_turn=max_turn, budget=budget,
+    def run(rules, deck, opp_deck, seed, first_player, max_turn, budget, start=None, opp=None, sink=None):
+        res, eng = play_game(rules, deck, opp_deck, seed, first_player=first_player, max_turn=max_turn, budget=budget,
                              lock_rounds=0, start=start, opp=opp)  # FAIR と揃える（ロックは別指標）
+        if sink is not None:
+            sink(eng)
         return res
 
     _RUNNERS[InfoLevel.CHEAT] = run
