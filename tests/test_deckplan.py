@@ -50,3 +50,24 @@ def test_improve_loop_with_fake_scorer(tmp_path):
     out = D.improve(p, scorer, res, ["Y"], tmp_path / "l.jsonl", rounds=2, seed=1, n=20, rule=AcceptRule(turn=3))
     assert (tmp_path / "l.jsonl").read_text().count("\n") > 0
     assert out.size() == 40
+
+
+def test_auto_improve_adopts_and_protects(tmp_path, monkeypatch):
+    from dmsim.deckplan import auto as A
+    from dmsim.defs import load_rules
+    rules = load_rules()
+    ids = list(rules.cards)[:10]
+    deck = [i for i in ids[1:] for _ in range(4)] + [ids[0]] + [ids[1]] * 0 + [ids[2]] * 0 + [ids[3]] * 0
+    deck += [list(rules.cards)[10]] * 3
+    combo = {"id": "t", "parts": [{"name": rules.cards[ids[0]].name, "role": "core"}]}
+    # 候補に「部品を増やすほど強い」偽の評価を差す
+    core = ids[0]
+    monkeypatch.setattr(A, "harness_scorer", lambda *a, **k: (lambda d: {(s, 0): (3 if s % 5 >= 4 - d.count(core) else None) for s in range(60)}))
+    out = A.auto_improve(rules, deck, [], combo, [], tmp_path / "l.jsonl", rounds=1, kinds=("add_parts",), n=20, out_dir=tmp_path)
+    assert out["adopted"] and out["final"] != out["base"]
+    import yaml
+    saved = yaml.safe_load(open(out["path"], encoding="utf-8"))
+    assert sum(e["count"] for e in saved["entries"]) == 40
+    base = A.proposal_from_ids(rules, deck)
+    assert A.make_resolver(rules)(base.entries[0])[1] == D.CONFIRMED
+    assert A.make_resolver(rules)(D.Entry("存在しない札", 1))[1] == D.UNCONVERTED
