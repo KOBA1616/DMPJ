@@ -36,7 +36,7 @@ def run_batch(a, combos):
         spec = yaml.safe_load(Path(t["setup"]).read_text(encoding="utf-8")) if t.get("setup") else None
         return harness_measure(rules, load_deck(t["deck"]), load_deck(t["opp_deck"]) if t.get("opp_deck") else ["T001"] * 40,
                                list(range(1, t.get("seeds", a.seeds) + 1)), spec,
-                               ProgressSpec(board=board, cards=cards) if (cards or board) else None, specs[t["combo"]], max_turn=a.turns)
+                               ProgressSpec(board=board, cards=cards) if (cards or board) else None, specs[t["combo"]], max_turn=a.turns, prep_ids=tuple(combos[t["combo"]].get("prep_ids", ())))
     for r in run_targets(ts, combos, mk, Rule(turn=a.turns), a.rounds, a.out, a.store):
         print(r)
 
@@ -67,7 +67,7 @@ def main(argv=None):
     spec = yaml.safe_load(Path(a.setup).read_text(encoding="utf-8")) if a.setup else None
     meas = harness_measure(load_rules(), load_deck(a.deck), load_deck(a.opp_deck) if a.opp_deck else ["T001"] * 40,
                            list(range(1, a.seeds + 1)), spec, ProgressSpec(board=board, cards=cards) if (cards or board) else None,
-                           load_specs()[a.combo], max_turn=a.turns)
+                           load_specs()[a.combo], max_turn=a.turns, prep_ids=tuple(combos[a.combo].get("prep_ids", ())))
     k, hist = autofix(meas, Knobs(), combos[a.combo], Rule(turn=a.turns), a.rounds, a.out)
     for h in hist:
         print(h["round"], h["stage"], h["cause"], h["rates"], [(t["change"], t["verdict"]) for t in h.get("tries", [])])

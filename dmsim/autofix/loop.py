@@ -19,6 +19,7 @@ class Knobs:
     finish_mult: float = 0.0    # 締めの束（部品の同時そろい）の倍率。0 は無効
     n_det: int = 4              # 公平探索の決定化数
     lookahead: int = 0          # 複数ターン探索の先読み（dmsim/search/multiturn）
+    prep_bonus: float = 0.0     # 準備札が墓地に行く加点（dmsim/search/prep）。0 は無効
 
 
 @dataclass(frozen=True)
@@ -32,9 +33,12 @@ class Rule:
     lookahead_max: int = 2
 
 
-def propose(stage: str, k: Knobs, rule: Rule = Rule()) -> list[tuple[Knobs, str]]:
+def propose(stage: str, k: Knobs, rule: Rule = Rule(), hints: tuple = ()) -> list[tuple[Knobs, str]]:
     """診断の段階に応じた候補。cards（デッキ側）は自動採用しないので候補に出さない（deck_hint として報告）。"""
     out = []
+    if "prep_unused" in hints and stage != "ok" and k.prep_bonus * 2 <= 80:
+        nb = k.prep_bonus * 2 if k.prep_bonus else 10.0
+        out.append((replace(k, prep_bonus=nb), "準備札を撃つ加点を足す" if not k.prep_bonus else "準備札の加点を2倍"))
     if stage == "board":
         if k.coef * 2 <= rule.coef_max:
             out.append((replace(k, coef=k.coef * 2), "部品倍率を2倍"))
@@ -84,7 +88,7 @@ def autofix(measure, k0: Knobs, combo: dict | None = None, rule: Rule = Rule(), 
             break
         accepted = False
         ent["tries"] = []
-        for cand, why in propose(d.stage, cur, rule):
+        for cand, why in propose(d.stage, cur, rule, d.hints):
             m = measure(cand)
             r = paired_diff(_metric(m, d.stage, rule), _metric(base, d.stage, rule), alpha=rule.alpha)
             if unverified_deck:
@@ -104,7 +108,7 @@ def autofix(measure, k0: Knobs, combo: dict | None = None, rule: Rule = Rule(), 
     return cur, hist
 
 
-def harness_measure(rules, deck, opp_deck, seeds, spec=None, prog=None, parts_spec=None, max_turn=4):
+def harness_measure(rules, deck, opp_deck, seeds, spec=None, prog=None, parts_spec=None, max_turn=4, prep_ids=()):
     """実エンジンの測定（FAIR のみ）。parts_spec は dmsim.search.leaf_parts.PartsSpec。"""
     from ..eval import fair_runner
     from ..eval.harness import EvalConfig, cell_key, run_eval
@@ -120,9 +124,15 @@ def harness_measure(rules, deck, opp_deck, seeds, spec=None, prog=None, parts_sp
             if k.finish_mult > 0:
                 ps = replace(ps, bundles=parts_spec.bundles).with_finish(k.finish_mult) if parts_spec.finish else ps
             vfn = make_value_fn(ps)
+            if k.prep_bonus > 0 and prep_ids:
+                from ..search.prep import with_prep_bonus
+                vfn = with_prep_bonus(vfn, prep_ids, k.prep_bonus)
         cfg = EvalConfig(decks={"d": deck}, opp_deck=opp_deck, seeds=seeds, levels=(InfoLevel.FAIR,), progress=prog,
                          start_spec=spec, n_det=n_det, value_fn=vfn, base_budget=k.budget, max_turn=max_turn)
         c = run_eval(rules, cfg)["cells"][cell_key("d", "fair", 1.0)]
         pp = c.get("per_game_progress", [])
-        return {"kill": [g[2] for g in c["per_game"]], "board": [p[0] for p in pp], "cards": [p[1] for p in pp]}
+        out = {"kill": [g[2] for g in c["per_game"]], "board": [p[0] for p in pp], "cards": [p[1] for p in pp]}
+        if prep_ids:                      # 各局の最終局面で墓地に行った準備札の枚数（診断の prep_unused 用）
+            out["prep"] = [sum(n for d, n in ((p[2] or {}).get("gy_defs") or {}).items() if d in prep_ids) for p in pp]
+        return out
     return measure

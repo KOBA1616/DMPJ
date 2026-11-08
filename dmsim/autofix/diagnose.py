@@ -4,7 +4,7 @@
 入力 m は {"kill": [キルターン|None], "board": [..], "cards": [..]}（同一シード順、未到達は None）。"""
 from __future__ import annotations
 
-from dataclasses import dataclass
+from dataclasses import dataclass, replace
 
 
 @dataclass(frozen=True)
@@ -12,14 +12,27 @@ class Diagnosis:
     stage: str          # ok / cards / board / finish
     cause: str          # 人が読む原因
     rates: dict         # kill / board / cards の到達率
+    hints: tuple = ()   # 段階とは別の取りこぼし（例 prep_unused: 準備札を撃っていない）
 
 
 def _rate(xs, max_turn):
     return sum(x is not None and x <= max_turn for x in xs) / len(xs) if xs else 0.0
 
 
+def prep_unused(m: dict, floor: float = 0.5) -> bool:
+    """準備札（m["prep"]: 各局で墓地に行った準備札の枚数）を使った局の割合が floor 未満。測っていない時は False。"""
+    xs = m.get("prep")
+    return bool(xs) and sum(1 for x in xs if x and x > 0) / len(xs) < floor
+
+
 def diagnose(m: dict, max_turn: int, target: float = 0.5, floor: float = 0.5) -> Diagnosis:
     r = {k: _rate(m.get(k, []), max_turn) for k in ("kill", "board", "cards")}
+    hints = ("prep_unused",) if prep_unused(m, floor) else ()
+    d = _stage(m, r, target, floor)
+    return replace(d, hints=hints) if hints else d
+
+
+def _stage(m: dict, r: dict, target: float, floor: float) -> Diagnosis:
     if r["kill"] >= target:
         return Diagnosis("ok", "キル率が目標以上", r)
     if m.get("cards") and r["cards"] < floor:

@@ -46,6 +46,8 @@ combos:
       - {zone: hand, ids: [dmrp03-s03], need: 1, weight: 0.5}
       - {zone: bz, ids: [dm22ex2-021], need: 1, weight: 0.5}
       - {zone: hand, ids: [dm26ex2-071], need: 1, weight: 1.0}
+    # 準備札: 引いて捨てる呪文。撃たれないと墓地サガが揃わない（自動診断の prep_unused が使う）
+    prep_ids: [dmd08-015, dm26ex2-071]
     # 締めの束（既定は無効。自動修正が finish 段階で候補として足す）: キル手前の最小局面
     # = 手札にサガ+ドラゲリオン、墓地にサガ+シャコガイル が同時にそろう
     finish_bundles:

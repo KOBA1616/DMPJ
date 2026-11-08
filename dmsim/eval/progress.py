@@ -35,7 +35,8 @@ _count = zone_counts
 def snapshot(eng: Engine, me: int, turn: int) -> dict:
     n = lambda z, p: len(eng.zlist(z, p))
     return {"turn": turn, "opp_shield": n("shield", 1 - me), "opp_deck": n("deck", 1 - me), "own_gy": n("graveyard", me),
-            "own_hand": n("hand", me), "own_mana": n("mana", me), "own_bz": n("bz", me)}
+            "own_hand": n("hand", me), "own_mana": n("mana", me), "own_bz": n("bz", me),
+            "gy_defs": dict(zone_counts(eng, me, "graveyard"))}
 
 
 def board_ok(eng: Engine, me: int, spec: ProgressSpec) -> bool:
