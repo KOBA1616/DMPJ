@@ -96,3 +96,15 @@ DRAGELION, SHAKOGAIRU, ET = "dm22ex1-007", "dmrp03-s03", "dm26ex2-071"
 # キル手前(T3開始)の最小局面は、墓地にサガ+シャコガイル+クリーチャー1体、手札にサガ+ドラゲリオン、水・闇のマナ3
 # （data/eval/saga_near_kill を縮めて確認）。coef=10 は evaluate の打点項（場のクリーチャー1体で+40）に勝てる大きさ。
 SAGA_SPEC = load_specs()["saga"]
+
+
+def parts_id_for_decks(deck_paths, parts: str = "auto"):
+    """--parts の解決。none→None、auto→デッキYAMLの combos が1つで部品表があればその id（複数デッキ・不明は None）、他はそのまま。"""
+    if parts == "none":
+        return None
+    if parts != "auto":
+        return parts
+    if not deck_paths or len(deck_paths) != 1:
+        return None
+    ids = (yaml.safe_load(Path(deck_paths[0]).read_text(encoding="utf-8")) or {}).get("combos") or []
+    return ids[0] if len(ids) == 1 and ids[0] in load_specs() else None
