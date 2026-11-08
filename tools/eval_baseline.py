@@ -31,10 +31,11 @@ def main(argv=None):
     ap.add_argument("--seed-from", type=int, default=1, help="開始シード（シードを分けて並列実行するため）")
     ap.add_argument("--match-nodes", action="store_true", help="ずるい側の予算を公平側の平均ノード数に合うよう自動調整する（--cheat-mult は初期値）")
     ap.add_argument("--parts", help="既知コンボID（data/known_combos）の部品表を葉の評価に足す（dmsim.search.leaf_parts。--need/--board 指定時のみ有効）")
+    ap.add_argument("--lookahead", type=int, default=0, help="複数ターン探索: 葉を次の自分のターンの小探索(この予算)で評価する（公平側のみ。0で無効）")
     ap.add_argument("--out")
     a = ap.parse_args(argv)
     rules = load_rules()
-    fair_runner.register(a.n_det)
+    fair_runner.register(a.n_det, a.lookahead)
     decks = {Path(p).stem: load_deck(p) for p in a.deck} if a.deck else {"default0": default_decks(rules, a.prefix)[0]}
     import yaml
     spec = yaml.safe_load(Path(a.setup).read_text(encoding="utf-8")) if a.setup else None
