@@ -60,12 +60,12 @@ def swap(deck: DeckProposal, rng: random.Random, pool: list[str], n: int = 5, **
 
 
 @proposer("add_parts")
-def add_parts(deck: DeckProposal, rng: random.Random, pool: list[str], n: int = 5, want: int = 3, **_) -> list[Change]:
+def add_parts(deck: DeckProposal, rng: random.Random, pool: list[str], n: int = 5, want: int = 3, protect: set | None = None, **_) -> list[Change]:
     """cards 段階の診断用: 部品（pool＝既知コンボの core 名）が want 枚未満なら、部品でない札を1枚抜いて部品を1枚足す。
     自動診断（dmsim.autofix）から呼ぶ。採否は evaluate.decide だけが行う。"""
     have = {e.name: e.count for e in deck.entries}
     lacking = [p for p in pool if have.get(p, 0) < min(want, 4)]
-    others = [e.name for e in deck.entries if e.name not in pool]
+    others = [e.name for e in deck.entries if e.name not in pool and e.name not in (protect or ())]
     if not lacking or not others:
         return []
     out = []
@@ -76,15 +76,15 @@ def add_parts(deck: DeckProposal, rng: random.Random, pool: list[str], n: int = 
 
 
 @proposer("add_prep")
-def add_prep(deck: DeckProposal, rng: random.Random, pool: list[str] | None = None, n: int = 5, max_cost: int = 4, **_) -> list[Change]:
+def add_prep(deck: DeckProposal, rng: random.Random, pool: list[str] | None = None, n: int = 5, max_cost: int = 4, protect: set | None = None, **_) -> list[Change]:
     """墓地への仕込み手段（tools/suggest_prep の静的列挙）を1枚足し、仕込みでない札を1枚抜く。
     pool を渡せばその名前に限る。採否は evaluate.decide だけが行う。"""
     from tools.suggest_prep import scan
     have = {e.name for e in deck.entries}
     cands = [r["name"] for r in scan()
-             if r["name"] not in have and (pool is None or r["name"] in pool)
+             if r["name"] not in have and (not pool or r["name"] in pool)
              and isinstance(r["cost"], int) and r["cost"] <= max_cost]
-    others = [e.name for e in deck.entries]
+    others = [e.name for e in deck.entries if e.name not in (protect or ())]
     if not cands or not others:
         return []
     return [Change("add_prep", [(a, -1), (b, 1)], f"仕込み手段: {a} → {b}")
