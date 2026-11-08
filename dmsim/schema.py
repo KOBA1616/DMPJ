@@ -68,14 +68,16 @@ def _build() -> dict:
                        "additionalProperties": False},
             "selector": {"type": "object", "properties": {
                 "zone": {"anyOf": [{"enum": sorted(zones) + ["any"]}, {"type": "array", "items": {"enum": sorted(zones)}}]},
-                "exlife_of": {"type": "string"}, "under_of": {}, "owner": {"enum": ["you", "opp", "any"]}, "owner_of": {"type": "string"},
+                "exlife_of": {"type": "string"}, "under_of": {}, "bundle_of": {}, "owner": {"enum": ["you", "opp", "any"]}, "owner_of": {"type": "string"},
                 "filter": ref("filter"),
                 "count": {"anyOf": [ref("expr"), {"type": "object", "properties": {"upto": ref("expr")}, "additionalProperties": False}, {"const": "all"}, {"const": "any"}, {"const": "rest"}]}, "up_to": {"type": "boolean"},
                 "from_top": ref("expr"), "chooser": {"enum": ["you", "opp", "opponent", "random"]}, "ref": {"type": "string"},
                 "total_cost_le": ref("expr"), "total_cost_ge": ref("expr"),
+                "total_power_le": ref("expr"), "total_power_ge": ref("expr"),
+                "distinct_costs": {"type": "boolean"}, "distinct_from": ref("selector"),
                 "other": {"type": "boolean"}, "look": {"type": "boolean"}}, "additionalProperties": False},
             "expr": {"anyOf": [{"type": "integer"}, {"type": "object", "properties": {
-                "count": ref("selector"), "civ_count": ref("selector"), "entered": {"type": "object", "properties": {"owner": {"type": "string"}, "other": {"type": "boolean"}}, "additionalProperties": False}, "var": {"type": "string"}, "cost_of": {"type": "string"}, "power_of": {"type": "string"}, "races_of": {"type": "string"}, "race": {"type": "string"}, "link_count": {"type": "string"}, "sum": {"type": "array", "items": ref("expr")}},
+                "count": ref("selector"), "civ_count": ref("selector"), "distinct_cost_count": ref("selector"), "entered": {"type": "object", "properties": {"owner": {"type": "string"}, "other": {"type": "boolean"}}, "additionalProperties": False}, "var": {"type": "string"}, "cost_of": {"type": "string"}, "power_of": {"type": "string"}, "races_of": {"type": "string"}, "race": {"type": "string"}, "link_count": {"type": "string"}, "sum": {"type": "array", "items": ref("expr")}},
                 "minProperties": 1, "maxProperties": 1, "additionalProperties": False}]},
             "cond": {"type": "object", "minProperties": 1, "maxProperties": 1, "properties": {
                 "exists": ref("selector"), "cmp": {"type": "array", "minItems": 3, "maxItems": 3},
@@ -105,6 +107,7 @@ def _build() -> dict:
             "ability": {"type": "object", "properties": {
                 "kind": {"enum": ["trigger", "replace", "static", "declare", "activate", "silent", "state", "partner"]}, "when": ref("when"),
                 "if": ref("cond"), "effect": ref("ops"), "instead": ref("ops"), "optional": {"type": "boolean"},
+                "continue": {"type": "boolean"},
                 "once_per_turn": {"type": "boolean"}, "first_time": {"type": "boolean"}, "id": {"type": "string"},
                 "affects": {}, "mod": ref("mod"), "cost": {"type": "object", "properties": {"tap": {}, "tap_mana": {}, "under": {}}, "additionalProperties": False}, "zone": {"enum": sorted(set(zones) | {"hold"})}},
                 "required": ["kind"], "additionalProperties": False},

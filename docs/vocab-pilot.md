@@ -1317,3 +1317,53 @@ draw イベントへの置換で表す（draw は個別イベントとして発�
 - 条件付きは条件付き static（第88弾）の if と併記。例外は辞書形: {except_destroy: true}（破壊以外）、{except_battle: true}（バトル敗北以外）、{by_opp: true}（相手の効果では離れない）。
 - tests/test_vocab_pilot143.py 2件（正常 parse／検証）
 - 待機6枚（leave_stay のみが gap のもの）。
+
+## 第144弾: total_power_selection（パワーの合計制限つき選択）— エンジン拡張あり（2026-11-08）
+「相手のクリーチャーを、パワーの合計がN以下になるように好きな数選び、破壊する」に対応。第38・39弾の total_cost_le/ge の選択機構をパワー軸へ一般化した。
+- 新セレクタ: `total_power_le` / `total_power_ge`（式）。変更は3か所: defs.py（SELECTOR_KEYS＋selector の式検証）、schema.py（selector の properties）、engine/selectors.py（合計制限モードを軸ごとの (特性キー, 上限, 下限) のリストに共通化し、値の取得を chars の cost／power で切り替える方式 (a) を採用）。パワーは chars(x)["power"]＝現在パワー（常在型の修整込み）で合計する。
+- 枚数上限（第39弾の count 併記）は軸に依存しないためそのまま使える。上限が式の形（`{power_of: <変数>}`）や「より少なく」（`{sum: [{power_of: <変数>}, -1]}`）も既存の式で書ける。破壊数連動は destroy の as＋repeat、モード選択・条件分岐は既存 op で対応する（設計ノート §1）。
+- proto T171（合計6000以下）／T172（2体まで・合計10000以下）。tests/test_vocab_pilot144.py 4件（合計以下で予算外の候補が外れる／0枚で止められる／常在型 +1000 の修整が現在パワーに反映され予算判定が変わる／count 上限）＋tests/test_vocab_pilot144_cards.py（代表2枚: 地獄万力、プラスワン・フレーム）。
+- 待機29枚（total_power_selection 単独20件＋total_power_selection_limit 単独9件、2026-11-08 実測）。再変換は別ラウンドで実施する。
+
+## 第145弾: barabaraety＋distinct_cost_count（異なるコストの種類数）— エンジン拡張あり（2026-11-08）
+「コストが異なる自分のエレメントが3つ以上あれば、この能力を与える」（バラバラエティ）に対応する。
+- 新式: `{distinct_cost_count: <セレクタ>}`（対象カード群にあるコストの種類数。civ_count のコスト版）。エレメントは `zone: [bz, mana]`、自分のクリーチャーは `zone: bz`＋types フィルタ、墓地は `zone: graveyard`。数えるコストは chars の cost（印刷コスト。コスト軽減などの支払うコストの増減は cost を変えない）。追加箇所: engine/selectors.py（eval_expr／count_of）、defs.py（expr()／count_spec()）、schema.py（expr の properties）。
+- バラエティ・ブレイカー用に breaks dict へ `base`（既定1）を追加。`{distinct_cost_count: ..., base: 0}` でブレイク数がちょうど種類数になる（defs.py の mod 検証＋engine/core.py の評価。既存の `{count}`／`{civ_count}` 形式は base 省略で従来どおり）。
+- 評価の再入ガード: 数える対象に発生源自身が含まれるのがこのファミリーの常形で、素朴に chars を呼ぶと自身の常在条件・ブレイク数の評価から無限再帰する（candidates 列挙中の filter_match 経由でも再入する）。評価中（`_distinct_costing`）のカードは定義（印刷）特性・コストで見る（filter_match の base 条件に `_distinct_costing` を追加）。civ_count の同型条件は対象が自分を含まない形（例: 相手のバトルゾーン）でのみ使われてきたため露見しなかった既存の潜在制限で、本弾では civ_count 側には触っていない。
+- proto T173（常在＋誘発の if）／T174（バラエティ・ブレイカー）／T175（G・ゼロの free_if）／T176（「1体につき1枚引く」の draw count）、試験カード R103。tests/test_vocab_pilot145.py 6件（parse／エレメントの種類数で deny が切り替わる・重複を数えない・自身も数える／裏向きマナも数える／軽減が付いても印刷コストで数える／base: 0 でブレイク数がちょうど種類数／ブレイカー2体で相互再帰しない）＋tests/test_vocab_pilot145_cards.py（代表1枚: 魔誕哀樹シンバーロ）。
+- 待機26枚（barabaraety 単独17＋distinct_cost_count 単独9）。複合2件のうち dm26sd1-t004 は no_leave（第143弾）と合わせて解消見込み、dm25ex3-td07 は choose_number が残る。再変換は別ラウンドで実施する。「異なるコストの選択」（dm24ex3-rp4005／dmrp19-s03）は選択時の制約が別途必要なため本弾の範囲外。
+
+## 第146弾: shield_break_replacement（ブレイクの自己置換）— エンジン拡張あり（2026-11-08）
+公式FAQどおり自己置換効果として実装した（ユーザー決定 2026-11-08）。語彙は既存の kind: replace＋when: {event: break} に統一し、エンジン側は h_break に諮問段を新設した。
+- 諮問段: h_break の phase 0（chosen 確定後）から phase 1（S・トリガー宣言）の間に、シールド1つずつ置換を諮る（combat.py の h_break から events.py の `_break_consult`／`_break_candidates` を呼ぶ。進捗は BreakTask の brk_* に持たせ、instead の effect タスクを break タスクの上に push して再入する）。諮問順はターン・プレイヤー→非ターン・プレイヤー（609.9a）。1つのシールドに適用できる置換は1つだけ（適用済みは再諮問しない＝自己置換は連鎖しない。FAQ qa_old/36516）。擬似ブレイク（効果でシールドを手札に加える。113.6、fire_break: False）は諮問の対象外。効果ブレイク（op break、in_effect のものを含む）も同じ段を通る。
+- 発生源の走査は _replacement と同じ規則（そのプレイヤーの bz_tops＋シールドゾーン。バトルゾーン外は zone 宣言が実ゾーンと一致するものだけ）で、シールドゾーンの発生源は表向きのものだけを候補にする。被ブレイク側で発生源がバトルゾーンと表向きシールドの両方にありうるカード（雷光の聖騎士）は、同じ replace 能力を zone 宣言違いで2つ書く形を想定（実ゾーンに合う方だけが拾われる）。
+- 書き方: ブレイク側は `when: {event: break, subject: self}`、被ブレイク側は `when: {event: break, player: you}`（ブレイクしたクリーチャーの条件は subject に {owner: opp, filter} を重ねる）。条件は replace の if、獲得型は static＋mod の gain で書ける。
+- 置換されたシールドは「ブレイクされた」ことにならない（QA 33466）: 諮問後に chosen から外し、S・トリガー宣言・S・バック pool・最終 move のすべてから除外する。実際にブレイクされるシールドが0枚なら break レコード自体を出さない（broke_in も立てない）。**【裁定待ち】**この扱いは「ブレイクする時、かわりに」型（FAQ の裏付けあり）でも「手札に加えるかわりに」型でも同じとする設計の仮定で実装した（設計ノート pilot146 §5-1）。裁定が逆になれば、events.py の `_break_consult` の取り消しの印（brk_cancelled）と combat.py のレコード抑制を切り替える。
+- 割り込み型（ガイアール・ベイビー）は新キー `continue: true`（ability のキー。break の replace だけに書け、defs.py で検証する）: instead の後もそのシールドのブレイクが続く。ブレイク枚数は諮問前に確定済みで、割り込みで出したクリーチャーの能力で増えることはない（qa_old/36514）。**【裁定待ち】**ミラクルスター（dmr21-s06）を「ブレイクした」として数えるか（設計ノート pilot146 §5-2）は、continue の有無だけで両案に対応できる形を維持し、決着まで再変換の対象から外す。
+- 諮問 env の変数 `shield`（束のトップ＋under の ref 列）と `{ref: event.shield}`（トップ）でブレイクされるシールドを参照できる（selectors.py の ref 解決に event.shield を追加）。コスト参照は `cost_of: {ref: shield}`（束なら最大コスト＝「束の中のカード1枚より小さい」の存在読み。qa_old/36515）。束はトップへの move で under ごと動く（109.2b）。
+- proto T177（B型: W・ブレイカー＋行き先変更）／T178（A型: continue: true＋コスト参照つきで手札から出す）／T179（C型: 手札を捨てて取り消し）、試験カード R104（デス型: シールドを墓地へ＋ブレイクしたクリーチャーを破壊）。tests/test_vocab_pilot146.py 13件（parse／continue の検証／B型の全置換・束ごと墓地／A型の割り込み継続・束の最大コスト参照／C型の decline・accept・ライダー／部分置換で count 1／擬似ブレイクで諮問なし／連鎖しない／効果ブレイクでも諮問）＋tests/test_vocab_pilot146_cards.py（代表2枚: ボルメテウス・ホワイト・ドラゴン GS、ガイアール・ベイビー）。
+- 待機12枚（shield_break_replacement を gaps に含む。単独11＋複合1）。うち dmx15-s04 は shield_go_condition が残るため対象外、dmr21-s06 は裁定待ちのため対象外。再変換は別ラウンドで実施する。P・サファイア（dmx15-v01）用の filter `s_trigger` は本弾に含めていない（再変換時に必要なら小追加する）。
+
+## 第147弾: distinct_cost_selection（コストが異なる選択）— エンジン拡張あり（2026-11-08）
+「コストが異なるクリーチャーを好きな数」の選択時制約を、セレクタの新キー2つで表す。土台は第38弾の積み上げ選択（total_cost_le/ge）と、ハイパーエナジー支払い（turn.py）の「使用済みコストを候補から外す」述語。解釈はユーザー決定（2026-11-08）で確定済み。
+- `distinct_from: <セレクタ>`（型1: 参照集合と重ならない）: 候補確定（candidates＋be_chosen 絞り込み）の直後に、参照集合のコストと重なる候補を外す前置フィルタ。評価は選択開始時に1回だけ＝「出す前の場」が比較対象で、選んだカードが出た後に場のコストが増えても残りの選択には影響しない。選んだカード同士のコスト重複は可。defs.py の selector() で再帰検証する。
+- `distinct_costs: true`（型2: 選んだ同士が互いに異なる）: 積み上げ分岐の発動条件に加え、`_fits` に「候補のコストが選択済み集合に無いこと」の述語を追加（total 系の limits が空でも動く）。「好きな数」（count: any／up_to）は既存の下限なし＝常に止められる。候補がすべて重複コストになったら rest が空になって自動で終わる。
+- 型3（全コスト網羅）: `distinct_costs` ＋ count に `{distinct_cost_count: ...}` の式を組み合わせる（dmrp03-007。当てはまるものをすべて＝コストの種類ごとに1体ずつ、同コストが複数あれば1つを選ぶ。公式QA 31610）。can_stop は distinct の時だけ必要数（need＝count の評価値）に達するまで止められない規則を追加し、どう選んでも届かない場合は打ち切る。**既存の total 系の can_stop の意味は変えていない**。なお候補が1枚だけになった段は ask の一意自動決定で選ばれる（決定としては現れない）。
+- distinct 系のキーは count の併記が必須（defs.py で検証）。count: all 単独は「選んだことにならない」ため不可、count: all＋up_to: true（any 相当）は可。distinct_costs は true のみ。schema.py の selector properties にも2キーを追加し card.schema.json を再生成した。
+- 登場は op move の既存の逐次処理（409.1e）に乗り、選んだ順＝出てくる順。「出た時」は全員出終わるまで待機する（公式QA 31611）ことを実挙動テストで裏取りした（最初に出た R105 の出た時能力の選択肢に、最後に出たカードが含まれる）。
+- コストの取り方は chars の cost（印刷コスト。ハイパーエナジー支払いの先例に一致）。
+- **範囲外（親判断で確定）**: 進化クリーチャーの重ね出しは本弾では扱わない（設計ノート §5-1 の (a)）。型2の dm26ex1-017・型3の dmrp03-007 で進化が絡む分は、再変換フェーズで gap を細分して rejects に戻す。dm26sd1-u001 清永（distinct_cost_condition、条件側）は本弾に含めない（§5-2）。
+- proto T180（型2: 出た時、墓地からコストが異なるクリーチャーを好きな数手札に戻す）／T181（型1: 攻撃時、上から3枚から自分のどのクリーチャーともコストが異なるものを好きな数出す）／T182（型3: ターン終わりに墓地の異なるコスト8種をすべて出す）、試験カード R105（出た時観測獣: 型3の待機の観測用）。tests/test_vocab_pilot147.py 7件（parse／検証／型2の選択と自動終了・0枚停止／型1の前置フィルタと同士重複可／型3の全コスト登場・逐次登場と待機・7種で不発）＋tests/test_vocab_pilot147_cards.py（代表3枚: 無龍 <デッゾ.Star>、魔誕の邪将クエイクス、ラトリエ・ロブション）。
+- 待機8枚（distinct_cost_selection を gaps に含む。単独7＋複合1）。うち dm24ex3-rp2010 は dynamic_name_reference_filter が残るため、選択が解けても登録には至らない（gap が1つに減る見込み）。再変換は別ラウンドで実施する。
+
+## 第148弾: shield_stack / flip_up / shield_flip（シールドの重ね置きと向き変更）— エンジン拡張あり（2026-11-08）
+「シールド１つの上に表向きにして置く」と「シールドゾーンにあるカードの表向き／裏向き」を、move の拡張・新セレクタ・新 op で表す。設計は判断1（束の中の表向きも数える。ユーザー決定 2026-11-08）を反映し、判断2〜4は範囲を絞った（下記「範囲外」）。
+- move の新キー `stack_on: <セレクタ>`（to: shield の時だけ。対象セレクタの count は1だけ。defs で検証）: 移動したカードが対象の束の新しいトップになる。put_under（下に入れる・イベントなし）でも shield_plus（下に差すだけ）でも表せない「上に・表向きで・誘発が発火する形」のための拡張で、move レコード経由なので「シールドゾーンに置かれた時」「表向きで置かれた時」が正しく発火する。対象の束は効果の使用者が選ぶ（セレクタの owner は候補の絞り込み。相手のシールドに重ねる時は owner: opp）。重ねる先のシールドが無い場合は置けないので移動自体を行わない。イベント適用（events.py の _apply_one）で束を合体する: 順序は [新しいトップ, その下のカード, 旧トップ, 旧トップの下]、旧トップの face_up はそのまま残る。対象の束が消えていたら通常の新しいシールドとして置く。イベント側のキーは shield_stack（進化の stack_on とは分ける。あちらは _record_for が stacked として照合するため）。
+- セレクタ新キー `bundle_of`: 値 `"self"` | 変数名 | セレクタ。解決した束（トップ）ごとに [トップ]＋その下すべてを候補にする。**束の中の（覆われている）表向きカードも「シールドゾーンにある表向きのカード」の数え・選択に含める**（ユーザー決定）ため、表向きカードの数え・選択は `{bundle_of: {zone: shield, ...}, filter: {face_up: true}}` の形を変換の標準とする。素の zone: shield はトップだけを見る（シールドの枚数を数える用途ではこちらが正しい）。defs は再帰検証し、schema にも追加した（card.schema.json 再生成済み）。
+- op `flip_up`（新設）＋ `flip_down` のシールド拡張: シールドゾーンでは face_up の付け外し、マナゾーンでは face_down の付け外し（flip_up のマナ側はエターナル・Κ 等の「裏向きのマナを表向きにする」用）。どちらもイベントを作らない直操作で、「置かれた時」は誘発しない（ギャラクシールドのターン開始時召喚は状態条件 if: {face_up: true} で拾う）。表向き化は note_public で公開を記録する。両方向の選択（「表向きまたは裏向きにしてもよい」）は既存の modal で書く。
+- 裁キ型の変換型: 「唱えた後、墓地に置くかわりにシールドの上に置く」は kind: replace（zone: hold、when: {event: move, subject: self, to: graveyard, reason: resolve}）の instead に stack_on つき move を書く（先例 dmc64-011 系）。自分のシールドが無い場合は重ねられないのでカードは保留ゾーンに残り、ターン終了時に通常どおり墓地に置かれる（512.1）。
+- ブレイク処理は無変更: 束はトップへの move で under ごと動き、束のカード全員が S・トリガー宣言できる（既存実装。本弾のテストで重ね置きで作った束でも確認した）。
+- proto T183（裁キ型呪文）／T184（B型: 山札上を裏向き新シールド＋別の山札上を表向きでその上に。D型: 相手のクリーチャーを表向きで持ち主のシールドへ）／T185（束のカードすべてを表向き／表向きのカードを裏向き）、試験カード R106（「シールドゾーンに置かれた時」の観測獣。反転で誘発しないことの確認用）／R107（modal で束の中のカードを両方向に返す呪文。シンクロ・ルピア呪文面の型）。tests/test_vocab_pilot148.py 11件（parse／stack_on の検証／B型の束形成と置かれた時×2／束のブレイクで両カードが S・トリガー宣言可・ブレイクは1回として数える／D型の相手シールド重ねと置かれたカード自身の誘発／覆われた表向きが bundle_of で数えられる／反転で誘発せず次の自分のターン開始に召喚／modal の両方向反転／裁キ型の置換とシールド無しでの墓地行き／進化クリーチャーの下の保持）＋tests/test_vocab_pilot148_cards.py 2件（代表4枚: 天門ノ裁キ、煌龍 サッヴァーク、カイザー・ルピア、シンクロ・ルピア）。
+- 待機36枚（shield_stack 28／flip_up 7／shield_flip 3。dmex19-m18・promoy17-044 は stack と flip の両方を含む）。再変換しても残るもの: dmex07-m02 は gr_summon、dm24sp2-001 は deny_cast_below_facedown_mana_count、dmx12b-035 は unblocked_trigger が残る。再変換は別ラウンドで実施する（reopen shield_stack flip_up shield_flip）。
+- **範囲外（ユーザー承認済みの切り分け）**: dmex19-m18 のブレイカー部分（「各ブレイクの前に」の割り込みは h_break への新フックが要る。本弾はその shield_flip 部分のみ対象）、dm25ex3-rp4001 の「シールド1つにつき」の繰り返し、dmbd07-b-001 の「重ねた表向きのカードを使う」は扱わない（gap の細分は再変換ラウンドで行う）。
+- 既存の変換済みカードへの影響: 「表向きのシールド」を素のセレクタ（zone: shield＋filter: face_up）で数える／選ぶ既存カード（ℵHEAVEN dm24ex2-025 の勝利条件、シールド・ゴー条件の dmr10 系、dm26ex2-013/024、dmrp16-s01、dmex08-093、dmex14-021 等）はトップだけを見ている。束の中に表向きカードがある局面ではユーザー決定と食い違うため、関係するカードは今後のラウンドで bundle_of 形への書き換えを検討する（本弾では converted.yaml は変更しない）。

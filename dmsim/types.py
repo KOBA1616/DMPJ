@@ -234,6 +234,12 @@ class BreakTask(TypedDict):
     breaker: NotRequired[Ref]        # ブレイクしたクリーチャー（攻撃、またはクリーチャーの効果）
     declared: NotRequired[list]      # 宣言済みの S・トリガー [[cid, face | None]]
     fire_break: NotRequired[bool]    # ブレイクのイベントを起こすか（効果でシールドを手札に加える時は起こさない）
+    brk_list: NotRequired[list[int]]        # 置換の諮問対象のシールド（chosen の写し。第146弾）
+    brk_i: NotRequired[int]                 # 諮問中のシールドの添字
+    brk_p: NotRequired[int]                 # 諮問中のプレイヤーの添字（ターン・プレイヤーから）
+    brk_cancelled: NotRequired[list[int]]   # 置換でブレイクが取り消されたシールド
+    brk_waiting: NotRequired[list]          # instead を実行中の [シールドの cid, continue か]
+    brk_done: NotRequired[bool]             # 諮問が終わったか
 
 
 class CrossTask(TypedDict):

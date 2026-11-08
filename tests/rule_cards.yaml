@@ -955,3 +955,83 @@ cards:
       - kind: static
         if: {cmp: [{drew: {owner: opp}}, "<", 2]}
         mod: {deny: [attack_player, attack_creature]}
+
+  # 第145弾 distinct_cost_count の試験用: 異なるコストのエレメントが3つ以上なければ攻撃できない
+  - id: R103
+    name: 試験用バラエティ獣
+    types: [creature]
+    civs: [nature]
+    cost: 4
+    power: 3000
+    races: [テスト]
+    text: コストが異なる自分のエレメントが３つ以上なければ、このクリーチャーは攻撃できない。
+    abilities:
+      - kind: static
+        if: {cmp: [{distinct_cost_count: {zone: [bz, mana], owner: you}}, "<", 3]}
+        mod: {deny: [attack_player, attack_creature]}
+
+  # 第146弾 shield_break_replacement の試験用: 被ブレイク側の置換＋ブレイクしたクリーチャーの破壊
+  - id: R104
+    name: ブレイク置換破壊試験獣
+    types: [creature]
+    civs: [darkness]
+    cost: 6
+    power: 5000
+    races: [テスト]
+    text: 相手のクリーチャーが自分のシールドをブレイクする時、そのシールドを手札に加えるかわりに墓地に置いてもよい。そうした場合、そのシールドをブレイクしたクリーチャーを破壊する。
+    abilities:
+      - kind: replace
+        when: {event: break, player: you, subject: {owner: opp, filter: {types: [creature]}}}
+        optional: true
+        instead:
+          - {op: move, select: {ref: event.shield, count: 1}, to: graveyard, reason: put}
+          - {op: move, select: {ref: event.subject, count: 1}, to: graveyard, reason: destroy}
+
+  # 第147弾 distinct 選択モードの試験用: 型3の逐次登場で「出た時」が全員出終わるまで待機することの観測用
+  - id: R105
+    name: 出た時観測獣
+    types: [creature]
+    civs: [water]
+    cost: 4
+    power: 3000
+    races: [テスト]
+    text: このクリーチャーが出た時、自分のクリーチャーを１体選んでもよい。そのクリーチャーを手札に戻す。
+    abilities:
+      - kind: trigger
+        when: {event: move, to: bz, subject: self}
+        effect:
+          - {op: move, select: {zone: bz, owner: you, filter: {types: [creature]}, count: 1, up_to: true}, to: hand, reason: return}
+
+  # 第148弾 シールドの重ね置き・向き変更の試験用: 「シールドゾーンに置かれた時」の観測用（反転では誘発しないことの確認にも使う）
+  - id: R106
+    name: シールド置かれ観測獣
+    types: [creature]
+    civs: [water]
+    cost: 3
+    power: 2000
+    races: [テスト]
+    text: 自分のシールドゾーンにカードが置かれた時、カードを１枚引いてもよい。
+    abilities:
+      - kind: trigger
+        when: {event: move, to: shield, subject: {owner: you}}
+        effect:
+          - op: may
+            body:
+              - {op: draw, player: you, count: 1}
+
+  # 第148弾 試験用: 束の中のカードを modal で表向き／裏向きにする（シンクロ・ルピア呪文面の型）
+  - id: R107
+    name: 束内反転試験呪文
+    types: [spell]
+    civs: [water]
+    cost: 3
+    races: [テスト]
+    text: シールドを１つ見る。そのシールドに含まれるカードを１枚、表向きまたは裏向きにしてもよい。
+    spell:
+      - {op: choose, select: {zone: shield, owner: you, count: 1, look: true}, as: sh}
+      - op: may
+        body:
+          - op: modal
+            modes:
+              - [{op: flip_up, select: {bundle_of: sh, count: 1}}]
+              - [{op: flip_down, select: {bundle_of: sh, count: 1}}]

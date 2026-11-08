@@ -6,17 +6,39 @@ from .registry import op
 
 
 @op("move", select="selector", to="zone", reason="reason", position="position?", card_only="bool?",
-    order="str?", tapped="bool?", face_up="bool?", face_down="bool?", seal="int?", **{"as": "str?"})
+    order="str?", tapped="bool?", face_up="bool?", face_down="bool?", seal="int?", stack_on="selector?", **{"as": "str?"})
 def op_move(eng, t, op, env):
     """ゾーン移動。as を付けると、移動した後のカード（新しいオブジェクト）を変数に入れる（「その〜」で使う）。
     card_only: カードとして動かす（109.2a）。進化クリーチャーの一番上だけが離れ、下は再構築される（801.4）。
     order: choose なら、2枚以上を山札に置く時の並びをプレイヤーが決める（「好きな順序で」）。
     答えの先頭が、置いたカードの中で一番上になる。
     tapped: タップして置く（置かれた時点でタップ状態）。
-    face_down: 裏向きのまま置く（マナゾーンのみ意味を持つ。水晶武装の裏向きマナになる）。"""
-    cids, d = eng.select(t, op["select"], env)
-    if d:
-        return d
+    face_down: 裏向きのまま置く（マナゾーンのみ意味を持つ。水晶武装の裏向きマナになる）。
+    stack_on: シールドの上に重ねて置く（第148弾。to: shield の時だけ）。対象の束は効果の使用者が選ぶ
+    （セレクタの owner は候補の絞り込み。相手のシールドに重ねる時は owner: opp と書く）。
+    重ねる先のシールドが無い場合は置けないので、移動自体を行わない。"""
+    target_ref = None
+    if "stack_on" in op:
+        os_ = t.setdefault("os", {})
+        if "move_cids" not in os_:
+            cids, d = eng.select(t, op["select"], env)
+            if d:
+                return d
+            os_["move_cids"] = list(cids)
+            os_.pop("chosen", None)   # 2段目の選択（重ねる先）を新たに聞けるようにする（put_under と同じ型）
+        cids = os_["move_cids"]
+        if cids:
+            tgt, d = eng.select(t, op["stack_on"], env)
+            if d:
+                return d
+            if tgt:
+                target_ref = eng.s.ref(tgt[0])
+            else:
+                cids = []   # 重ねる先のシールドが無い: 置けないので移動しない
+    else:
+        cids, d = eng.select(t, op["select"], env)
+        if d:
+            return d
     if op.get("order") == "choose" and op["to"] == "deck" and len({eng.s.cards[c].defn for c in cids}) > 1:
         a, d = eng.ask(t, env["you"], "order_cards", [eng._card_option(c, True) for c in cids], len(cids), len(cids))
         if d:
@@ -50,6 +72,9 @@ def op_move(eng, t, op, env):
     if op.get("seal"):
         for e in evs:
             e["seal"] = op["seal"]   # バトルゾーンに出る時、封印を付けた状態で出る（出た時能力は無視される）
+    if target_ref is not None:
+        for e in evs:
+            e["shield_stack"] = target_ref   # シールドの束の上に重ねる（第148弾。イベントのキーは進化の stack_on と分ける: あちらは _record_for が stacked として照合する）
     bind = [{"t": "bind", "env": env, "name": op["as"], "cids": cids, "zone": op["to"]}] if "as" in op else []
     if not evs and not out_tasks:
         if bind:
@@ -116,13 +141,37 @@ def op_untap(eng, t, op, env):
 
 @op("flip_down", select="selector")
 def op_flip_down(eng, t, op, env):
-    """水晶武装: マナゾーンのカードを裏向きにする。裏向きのマナは無色として扱う（支払いの文明に数えない）。"""
+    """水晶武装: マナゾーンのカードを裏向きにする。裏向きのマナは無色として扱う（支払いの文明に数えない）。
+    シールドゾーンの表向きのカードを裏向きに戻すのにも使う（第148弾）。どちらもイベントは作らない。"""
     cids, d = eng.select(t, op["select"], env)
     if d:
         return d
     for c in cids:
-        if eng.s.cards[c].zone == "mana":
-            eng.s.cards[c].face_down = True
+        card = eng.s.cards[c]
+        if card.zone == "mana":
+            card.face_down = True
+        elif card.zone == "shield":
+            card.face_up = False
+    return None
+
+
+@op("flip_up", select="selector")
+def op_flip_up(eng, t, op, env):
+    """カードを表向きにする（第148弾）: シールドゾーンのカードは表向きにし（公開を記録する）、
+    マナゾーンの裏向きカードは表向きに戻す（エターナル・Κ 等）。イベントは作らないので
+    「表向きで置かれた時」は誘発しない（向きを変えただけ。ギャラクシールドのターン開始時召喚は
+    状態条件で拾う）。両方向の選択は modal で書く。束の中のカードは bundle_of で指す。"""
+    cids, d = eng.select(t, op["select"], env)
+    if d:
+        return d
+    for c in cids:
+        card = eng.s.cards[c]
+        if card.zone == "shield":
+            if not card.face_up:
+                card.face_up = True
+                eng.note_public("face_up", c)
+        elif card.zone == "mana":
+            card.face_down = False
     return None
 
 
