@@ -83,3 +83,27 @@ def test_default_board_uses_all_heavy_parts():
     c = {x["id"]: x for x in yaml.safe_load(open("data/known_combos/combos.yaml", encoding="utf-8"))["combos"]}["saga"]
     b = default_board(c)
     assert b["graveyard"] == {"dm22ex2-021": 1, "dmrp03-s03": 1} and b["hand"] == {"dm22ex2-021": 1, "dm22ex1-007": 1}
+
+
+def test_prep_unused_hint_and_candidate():
+    from dmsim.autofix import propose
+    n = 10
+    m = {"kill": [None] * n, "board": [2] * n, "cards": [1] * n, "prep": [0] * 8 + [1, 1]}
+    d = diagnose(m, 4)
+    assert d.stage == "finish" and d.hints == ("prep_unused",)
+    assert diagnose({**m, "prep": [1] * n}, 4).hints == ()
+    assert diagnose({k: v for k, v in m.items() if k != "prep"}, 4).hints == ()      # 測っていなければ出さない
+    cands = propose(d.stage, Knobs(), hints=d.hints)
+    assert cands[0][0].prep_bonus == 10.0
+    assert propose(d.stage, cands[0][0], hints=d.hints)[0][0].prep_bonus == 20.0
+    assert all(c.prep_bonus == 0.0 for c, _ in propose(d.stage, Knobs()))
+
+
+def test_prep_bonus_value(rules):
+    from dmsim import scenario
+    from dmsim.search.prep import prep_used, with_prep_bonus
+    e = scenario.build(rules, {"p0": {"graveyard": ["dmd08-015", "dmd08-015", "dmd08-015", "T001"]}, "p1": {}, "filler": "T001",
+                               "seed": 1, "deck_size": 10, "deck_left": None})
+    e.advance()
+    assert prep_used(e, 0, ["dmd08-015"]) == 3 and prep_used(e, 0, []) == 0
+    assert with_prep_bonus(lambda _e, _m: 1.0, ["dmd08-015"], 5.0)(e, 0) == 11.0       # 上限2枚
