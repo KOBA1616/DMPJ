@@ -39,6 +39,7 @@ class Engine(SelectorMixin, EventMixin, InterpreterMixin, TurnMixin, CombatMixin
                  check: bool | None = None):
         self.rules = rules
         self._in_static_cond = 0
+        self._distinct_costing = set()   # distinct_cost_count の評価中に特性を見ているカード（再入防止、第145弾）
         self._adding = set()
         self._link_merging = False
         self._xcache = rules.__dict__.setdefault("_affects_others_cache", {})   # 定義だけで決まるので複製間で共有
@@ -485,10 +486,11 @@ class Engine(SelectorMixin, EventMixin, InterpreterMixin, TurnMixin, CombatMixin
                     ch["races"].append(r)
             if "breaks" in m:   # ブレイカー能力ごとのブレイク数（509.2b）。使う能力は攻撃時に選ぶ（509.2c）
                 b = m["breaks"]
-                if isinstance(b, dict):   # dict 形式はすべて「1 + 値」: {count} は 1+数（クルー・ブレイカー、第130弾）、
-                    # {amount, count} は 1+係数×数（dmd10-008 型）、式形式 {civ_count: ...} は 1+式の値（第79弾、dmc34-025 型）
+                if isinstance(b, dict):   # dict 形式はすべて「base + 値」（base は既定1、第145弾）: {count} は base+数（クルー・ブレイカー、第130弾）、
+                    # {amount, count} は base+係数×数（dmd10-008 型）、式形式 {civ_count: ...} は base+式の値（第79弾、dmc34-025 型）。
+                    # バラエティ・ブレイカーは {distinct_cost_count: ..., base: 0} でちょうど種類数になる
                     v = b.get("amount", 1) * self.count_of(b["count"], env_self) if "count" in b else self.count_of(b, env_self)
-                    n = 1 + v
+                    n = b.get("base", 1) + v
                     ch["break_opts"].append(n)
                     ch["breaks"] = max(ch["breaks"], n)
                 else:

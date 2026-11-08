@@ -12,7 +12,23 @@ from dataclasses import dataclass, field
 from ..discovery.loopspec import Pred, Route
 from .registry import KINDS, ROLES
 
-SCHEMA_VERSION = 0
+SCHEMA_VERSION = 1   # v1 = 記録形式の確定版（notes/plan-record-format.md）。v0 は MIGRATIONS で読める。
+VALID_OPS = (">=", "<=", "==", ">", "<")
+# 版の対応表: 旧版 -> (dict -> dict)。版を上げるときは必ずここに足す。
+MIGRATIONS: dict = {0: lambda d: {**d, "schema_version": 1}}
+
+
+def _canon_pred(d: dict) -> dict:
+    return {**d, "zones": sorted(d["zones"])}
+
+
+def _canon_route(d: dict) -> dict:
+    return {**d, "civs": sorted(d["civs"])}
+
+
+def dumps(obj) -> str:
+    """正規形の JSON（キー順固定・空白なし・NaN 不可）。plan_id と保存の両方で使う。"""
+    return json.dumps(obj, ensure_ascii=False, sort_keys=True, separators=(",", ":"), allow_nan=False)
 
 
 def pred_to_dict(p: Pred) -> dict:
@@ -51,6 +67,9 @@ class PlanSpec:
         if self.kind not in KINDS:
             raise ValueError(f"unregistered kind {self.kind}")
         self.roles = tuple(self.roles)
+        for p in (*self.minimal, *self.goal):
+            if p.op not in VALID_OPS or p.n < 0:
+                raise ValueError(f"invalid Pred {p}")
         for r in self.roles:
             if r not in ROLES:
                 raise ValueError(f"unregistered role {r}")
@@ -66,9 +85,13 @@ class PlanSpec:
 
     @classmethod
     def from_dict(cls, d: dict) -> "PlanSpec":
-        ver = d.get("schema_version", SCHEMA_VERSION)
-        if ver != SCHEMA_VERSION:
-            raise ValueError(f"schema_version {ver} は未対応（版が変わるときは対応表が必須）")
+        d = dict(d)
+        ver = d.get("schema_version", 0)
+        while ver != SCHEMA_VERSION:
+            if ver not in MIGRATIONS:
+                raise ValueError(f"schema_version {ver} は未対応（版が変わるときは対応表が必須）")
+            d = MIGRATIONS[ver](d)
+            ver = d["schema_version"]
         extra = {**d.get("extra", {}), **{k: v for k, v in d.items() if k not in _KNOWN}}
         return cls(
             kind=d["kind"], roles=tuple(d.get("roles") or ("win_path",)),
@@ -80,7 +103,7 @@ class PlanSpec:
         )
 
     def to_json(self) -> str:
-        return json.dumps(self.to_dict(), ensure_ascii=False, sort_keys=True)
+        return dumps(self.to_dict())
 
     @classmethod
     def from_json(cls, s: str) -> "PlanSpec":
@@ -88,9 +111,22 @@ class PlanSpec:
 
     @property
     def plan_id(self) -> str:
+        """正規形: 出典を除き、集合として扱う項目（役割・弱点・Pred・Route・zones・civs）は並べ替える。"""
         d = self.to_dict()
         d.pop("source")
         d["roles"] = sorted(d["roles"])
         d["hazards"] = sorted(d["hazards"])
-        blob = json.dumps(d, ensure_ascii=False, sort_keys=True)
-        return hashlib.sha256(blob.encode()).hexdigest()[:16]
+        for k, f in (("minimal", _canon_pred), ("goal", _canon_pred), ("routes", _canon_route)):
+            d[k] = sorted((f(x) for x in d[k]), key=dumps)
+        return hashlib.sha256(dumps(d).encode()).hexdigest()[:16]
+
+
+def dump_jsonl(plans, path) -> None:
+    with open(path, "w", encoding="utf-8") as f:
+        for p in plans:
+            f.write(p.to_json() + "\n")
+
+
+def load_jsonl(path) -> list[PlanSpec]:
+    with open(path, encoding="utf-8") as f:
+        return [PlanSpec.from_json(line) for line in f if line.strip()]

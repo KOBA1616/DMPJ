@@ -8,14 +8,12 @@
 from __future__ import annotations
 
 import time
-from collections import Counter
 from dataclasses import dataclass, field
 
 from ..engine.core import Engine
 from ..solitaire import GameResult, TurnSearch, _origin, charge_only_policy, own_turn
 from .infolevel import InfoLevel
-
-VISIBLE_ZONES = ("hand", "bz", "mana", "graveyard", "shield_bz")  # 山札・盾は含めない
+from .stage import VISIBLE_ZONES, board_met, cards_met, zone_counts  # noqa: F401  段階指標の共通部品
 
 
 @dataclass(frozen=True)
@@ -31,9 +29,7 @@ class ProgressResult(GameResult):
     curve: list = field(default_factory=list)   # [{turn, opp_shield, opp_deck, own_gy, own_hand, own_mana, own_bz}]
 
 
-def _count(eng: Engine, zone: str, p: int) -> Counter:
-    s = eng.s
-    return Counter(s.cards[c].defn for c in eng.zlist(zone, p))
+_count = zone_counts
 
 
 def snapshot(eng: Engine, me: int, turn: int) -> dict:
@@ -43,22 +39,14 @@ def snapshot(eng: Engine, me: int, turn: int) -> dict:
 
 
 def board_ok(eng: Engine, me: int, spec: ProgressSpec) -> bool:
-    return all(not (Counter(need) - _count(eng, z, me)) for z, need in spec.board.items())
+    return board_met(eng, me, spec.board)
 
 
 def cards_ok(eng: Engine, me: int, spec: ProgressSpec) -> bool:
-    if not spec.cards:
-        return False
-    have: Counter = Counter()
-    for z in VISIBLE_ZONES:
-        try:
-            have += _count(eng, z, me)
-        except KeyError:
-            pass
-    return not (Counter(spec.cards) - have)
+    return cards_met(eng, me, spec.cards)
 
 
-def make_progress_runner(level: InfoLevel, spec: ProgressSpec, n_det: int = 8):
+def make_progress_runner(level: InfoLevel, spec: ProgressSpec, n_det: int = 8, value_fn=None):
     """InfoLevel の runner と同じ署名。自分のターンごとに盤面を記録する以外は solitaire.play_game(lock_rounds=0) と同じ回し方。"""
     level = InfoLevel(level)
 
@@ -82,7 +70,7 @@ def make_progress_runner(level: InfoLevel, spec: ProgressSpec, n_det: int = 8):
         try:
             eng.advance()
             record(0)
-            search = TurnSearch(me, budget, opp_policy=opp_pol) if level is InfoLevel.CHEAT else None
+            search = TurnSearch(me, budget, opp_policy=opp_pol, value_fn=value_fn) if level is InfoLevel.CHEAT else None
             while (d := eng.advance()) is not None:
                 if eng.s.active != me or d["player"] != me:
                     eng.answer(opp_pol(eng, d))
@@ -95,7 +83,7 @@ def make_progress_runner(level: InfoLevel, spec: ProgressSpec, n_det: int = 8):
                     res.nodes += st.nodes
                 else:
                     from ..search.fair import FairTurnSearch
-                    fs = FairTurnSearch(me, budget, n_det, seed * 7919 + ot, opp_policy=opp_pol)
+                    fs = FairTurnSearch(me, budget, n_det, seed * 7919 + ot, opp_policy=opp_pol, value_fn=value_fn)
                     eng = fs.run(eng)
                     res.nodes += fs.nodes
                 record(ot)

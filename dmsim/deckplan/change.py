@@ -57,3 +57,19 @@ def swap(deck: DeckProposal, rng: random.Random, pool: list[str], n: int = 5, **
         if a != b:
             out.append(Change("swap", [(a, -1), (b, 1)], f"{a} → {b}"))
     return out
+
+
+@proposer("add_parts")
+def add_parts(deck: DeckProposal, rng: random.Random, pool: list[str], n: int = 5, want: int = 3, **_) -> list[Change]:
+    """cards 段階の診断用: 部品（pool＝既知コンボの core 名）が want 枚未満なら、部品でない札を1枚抜いて部品を1枚足す。
+    自動診断（dmsim.autofix）から呼ぶ。採否は evaluate.decide だけが行う。"""
+    have = {e.name: e.count for e in deck.entries}
+    lacking = [p for p in pool if have.get(p, 0) < min(want, 4)]
+    others = [e.name for e in deck.entries if e.name not in pool]
+    if not lacking or not others:
+        return []
+    out = []
+    for _ in range(n):
+        a, b = rng.choice(others), rng.choice(lacking)
+        out.append(Change("add_parts", [(a, -1), (b, 1)], f"部品不足: {a} → {b}"))
+    return out
