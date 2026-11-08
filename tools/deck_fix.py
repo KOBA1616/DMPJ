@@ -39,6 +39,7 @@ def main(argv=None):
     ap.add_argument("--usage-seeds", type=int, default=8, help="使われにくい札を探す試行数（0で無効）")
     ap.add_argument("--cands", type=int, default=4, help="種類ごとの候補数")
     ap.add_argument("--coarse-budget", type=int, default=40, help="①粗比較の base_budget（通常は 200）")
+    ap.add_argument("--coarse-seeds", type=int, default=None, help="①粗比較に使う局数（省略時は --seeds と同じ。時間上限に収めたいとき減らす）")
     ap.add_argument("--top-k", type=int, default=2, help="②通常予算で再比較する上位件数")
     ap.add_argument("--out", default="logs/deckfix.jsonl")
     a = ap.parse_args(argv)
@@ -61,7 +62,7 @@ def main(argv=None):
         setup = yaml.safe_load(Path(setup_path).read_text(encoding="utf-8")) if setup_path else None
         un = unused_names(rules, deck, opp, list(range(1, a.usage_seeds + 1))) if a.usage_seeds else []   # 抜く候補（usage 監査）
         r = two_stage(rules, deck, opp, c, list(range(1, a.seeds + 1)), a.out, turn=a.turns, setup=setup, workers=a.workers,
-                      unused=un, adds=add_candidates(c), n=a.cands, coarse_budget=a.coarse_budget, top_k=a.top_k)
+                      unused=un, adds=add_candidates(c), n=a.cands, coarse_budget=a.coarse_budget, top_k=a.top_k, coarse_seeds=a.coarse_seeds)
         print(t["combo"], r)
     return 0
 

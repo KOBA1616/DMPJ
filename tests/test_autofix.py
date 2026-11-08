@@ -155,3 +155,13 @@ def test_alias_makes_akashic_parts_match_deck():
     assert "dm23ex2-cho005" not in need and "dm23ex2-009" in need
     deck = load_deck("data/decks/akashic.yaml")
     assert all(deck.count(i) >= 1 for i in need)               # 重い部品がデッキに入っている（0枚なら cards が常に未達になる）
+
+
+def test_stage_value_is_continuous_and_monotone():
+    from dmsim.deckplan.evaluate import stage_value
+    assert stage_value(None, None, None, 4) == 0.0
+    a = stage_value(None, None, 3, 4)
+    b = stage_value(None, None, 1, 4)
+    c = stage_value(None, 2, 1, 4)
+    d = stage_value(3, 2, 1, 4)
+    assert 0 < a < b < c < d <= 3.0                        # 早い・段階が進むほど大きい
