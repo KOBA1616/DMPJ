@@ -16,6 +16,7 @@ class Knobs:
     coef: float = 10.0          # 部品表の倍率（leaf_parts）
     gy_mult: float = 1.0        # 墓地の部品の重み倍率
     budget: int = 100           # 探索予算
+    n_det: int = 4              # 公平探索の決定化数
 
 
 @dataclass(frozen=True)
@@ -25,6 +26,7 @@ class Rule:
     alpha: float = 0.05
     coef_max: float = 100.0
     budget_max: int = 1600
+    n_det_max: int = 16
 
 
 def propose(stage: str, k: Knobs, rule: Rule = Rule()) -> list[tuple[Knobs, str]]:
@@ -38,6 +40,8 @@ def propose(stage: str, k: Knobs, rule: Rule = Rule()) -> list[tuple[Knobs, str]
     elif stage == "finish":
         if k.budget * 2 <= rule.budget_max:
             out.append((replace(k, budget=k.budget * 2), "探索予算を2倍"))
+        if k.n_det * 2 <= rule.n_det_max:
+            out.append((replace(k, n_det=k.n_det * 2), "決定化数を2倍"))
         if k.coef * 2 <= rule.coef_max:
             out.append((replace(k, coef=k.coef * 2), "部品倍率を2倍"))
     return out
@@ -91,15 +95,16 @@ def autofix(measure, k0: Knobs, combo: dict | None = None, rule: Rule = Rule(), 
     return cur, hist
 
 
-def harness_measure(rules, deck, opp_deck, seeds, spec=None, prog=None, parts_spec=None, n_det=4, max_turn=4):
+def harness_measure(rules, deck, opp_deck, seeds, spec=None, prog=None, parts_spec=None, max_turn=4):
     """実エンジンの測定（FAIR のみ）。parts_spec は dmsim.search.leaf_parts.PartsSpec。"""
     from ..eval import fair_runner
     from ..eval.harness import EvalConfig, cell_key, run_eval
     from ..eval.infolevel import InfoLevel
     from ..search.leaf_parts import Part, PartsSpec, make_value_fn
-    fair_runner.register(n_det)
 
     def measure(k: Knobs) -> dict:
+        n_det = k.n_det
+        fair_runner.register(n_det)
         vfn = None
         if parts_spec is not None:
             ps = PartsSpec(tuple(replace(p, weight=p.weight * k.gy_mult) if p.zone == "graveyard" else p for p in parts_spec.parts), coef=k.coef)
