@@ -63,6 +63,109 @@ class EventMixin:
                 return self._child(ab["instead"], env)
         return None
 
+    def _break_candidates(self, rec, p):
+        """プレイヤー p がブレイク（rec）に対して使える置換効果（kind: replace, when.event == break）の候補。
+
+        発生源の走査は _replacement と同じ規則: そのプレイヤーの bz_tops とシールドゾーンのカードで、
+        バトルゾーン外の発生源は能力の zone 宣言が実ゾーンと一致するものだけ。シールドゾーンの
+        発生源は表向きのものだけ（裏向きのシールドに能力はない）。"""
+        s = self.s
+        cands = []
+        srcs = list(self.bz_tops(p))
+        for x in s.zones["shield"][p]:
+            if x not in srcs:
+                srcs.append(x)
+        top = rec["shield"][0]
+        bundle = [s.ref(top)] + [s.ref(u) for u in s.cards[top].under]
+        for src in srcs:
+            c = s.cards[src]
+            for i, ab in self.abilities(src, "replace"):
+                if ab.get("when", {}).get("event") != "break":
+                    continue
+                if c.zone != "bz" and ab.get("zone") != c.zone:
+                    continue   # バトルゾーン外の発生源は、そのゾーンを宣言した置換だけ
+                if c.zone == "shield" and not c.face_up:
+                    continue   # 裏向きのシールドに能力はない
+                if self._pattern_match(ab["when"], rec, src, None):
+                    if "if" in ab:
+                        env = {"you": c.controller, "self": s.ref(src), "event": rec,
+                               "vars": {"shield": bundle}}
+                        if not self.eval_cond(ab["if"], env):
+                            continue
+                    cands.append((src, i, ab))
+        return cands
+
+    def _break_consult(self, t):
+        """ブレイクの置換の諮問（第146弾。公式FAQどおり自己置換効果として扱う）。
+
+        h_break の phase 0（chosen 確定後）から phase 1（S・トリガー宣言）の間に、シールド1つずつ
+        置換を諮る。諮問順はターン・プレイヤー→非ターン・プレイヤー（609.9a）。1つのシールドに
+        適用できる置換は1つだけ（適用済みのシールドは再諮問しない＝自己置換は連鎖しない。
+        FAQ qa_old/36516 と整合）。
+        戻り値: True（諮問が終わった）/ None（instead を push したので続きは再入時）/ Decision。
+        置換されたシールドは「ブレイクされた」ことにならない（QA 33466）ため、諮問の終わりに
+        chosen から取り消しの印（brk_cancelled）とゾーンを離れたものを除き、S・トリガー宣言・
+        S・バック・最終 move のすべてから外す。この「ブレイクされたことにならない」扱いは
+        「ブレイクする時、かわりに」型でも「手札に加えるかわりに」型でも同じとする
+        【裁定待ち: 設計ノート pilot146 §5-1。裁定が逆になれば、取り消しの印の付け方
+        （brk_cancelled への追加）と combat.py 側の break レコード抑制をここで切り替える】。
+        continue: true の置換（割り込み型。ガイアール・ベイビー）は instead の後もブレイクが続く
+        ので、取り消しの印を付けず chosen に残す【裁定待ち: 設計ノート pilot146 §5-2 の
+        ミラクルスターの扱いは、この印の付け方（continue の有無）だけで両案に対応する】。"""
+        s = self.s
+        victim = t["victim"]
+        if "brk_list" not in t:
+            t["brk_list"] = list(t["chosen"])
+            t["brk_i"] = 0
+            t["brk_p"] = 0
+            t["brk_cancelled"] = []
+        if "brk_waiting" in t:   # instead の解決が終わって戻ってきた
+            cid, cont = t.pop("brk_waiting")
+            if not cont:
+                t["brk_cancelled"].append(cid)
+            t["brk_i"] += 1
+            t["brk_p"] = 0
+        order = (s.active, 1 - s.active)
+        while t["brk_i"] < len(t["brk_list"]):
+            cid = t["brk_list"][t["brk_i"]]
+            if s.cards[cid].zone != "shield":   # 諮問の途中で別の効果で離れたシールドは諮らない
+                t["brk_i"] += 1
+                t["brk_p"] = 0
+                continue
+            rec = {"ev": "break", "player": victim, "shield": s.ref(cid), "controller": t["by"]}
+            if t.get("breaker") and s.alive(t["breaker"]):
+                rec["subject"] = t["breaker"]
+            while t["brk_p"] < 2:
+                p = order[t["brk_p"]]
+                cands = self._break_candidates(rec, p)
+                if not cands:
+                    t["brk_p"] += 1
+                    continue
+                opts = [{"key": f"replace:{s.cards[s_].defn}:{i}", "cid": s_, "ab": i} for s_, i, _ in cands]
+                if all(ab.get("optional") for _, _, ab in cands):
+                    opts.append({"key": "decline"})
+                a, d = self.ask(t, p, "choose_replacement", opts)
+                if d:
+                    return d
+                o = opts[a[0]]
+                if o["key"] == "decline":
+                    t["brk_p"] += 1
+                    continue
+                src, i = o["cid"], o["ab"]
+                ab = next(a_ for s_, i_, a_ in cands if (s_, i_) == (src, i))
+                bundle = [s.ref(cid)] + [s.ref(u) for u in s.cards[cid].under]
+                env = {"you": s.cards[src].controller, "self": s.ref(src), "event": rec,
+                       "vars": {"shield": bundle}, "no_replace": True}
+                t["brk_waiting"] = [cid, bool(ab.get("continue"))]
+                self._push(self._child(ab["instead"], env))
+                return None
+            t["brk_i"] += 1
+            t["brk_p"] = 0
+        cancelled = set(t["brk_cancelled"])
+        t["chosen"] = [c for c in t["chosen"] if c not in cancelled and s.cards[c].zone == "shield"]
+        t["brk_done"] = True
+        return True
+
     def _record_for(self, ev):
         """適用前のイベントを、誘発・置換の照合用レコードにする。"""
         s = self.s
@@ -142,6 +245,10 @@ class EventMixin:
                 # カードとして離れる（801.4）/ スター進化（離れる時は一番上のカードだけ）: 下のカードを再構築して残す
                 self._rebuild(cid)
                 unders = []
+            stack_unders = []
+            if unders and ev["to"] == "shield" and ev.get("shield_stack"):
+                # シールドの上に重ねて置く（第148弾）: 自分の下のカードは別のシールドにせず、束の一部として連れて行く
+                stack_unders, unders = unders, []
             self._raw_move(cid, ev["to"], ev.get("position", "top"), ev.get("controller"))
             if ev.get("sst"):
                 c.sst = True         # スーパー・S・トリガーの印は移動した先で付ける（移動で消えるため）
@@ -157,6 +264,27 @@ class EventMixin:
             if ev.get("face_up") and ev["to"] == "shield":   # 「表向きでシールドゾーンに置く」（ギャラクシールド）
                 c.face_up = True
                 self.note_public("face_up", cid)
+            if ev["to"] == "shield" and ev.get("shield_stack"):
+                # シールドの束の上に重ねる（第148弾）: 束は [新しいトップ, その下のカード, 旧トップ, 旧トップの下] の順で
+                # 1つのシールドとして合体する。対象の束が消えている・持ち主が違う場合は通常の新しいシールドとして置く。
+                # 旧トップの face_up はそのまま残る（覆われても表向きのまま。数え・選択は bundle_of 経由）
+                for u in stack_unders:
+                    self._raw_move(u, "shield")
+                    self.zlist("shield", s.cards[u].owner).remove(u)   # 束の下のカードはシールドの数に数えない（113.2）
+                new_under = list(stack_unders)
+                tgt = ev["shield_stack"]
+                if s.alive(tgt):
+                    top = tgt[0]
+                    while s.cards[top].top_of >= 0:   # 対象がその後別のカードの下に入っていたら、今のトップへたどる
+                        top = s.cards[top].top_of
+                    tc = s.cards[top]
+                    if top != cid and tc.zone == "shield" and tc.owner == c.owner:
+                        self.zlist("shield", tc.owner).remove(top)
+                        new_under += [top] + list(tc.under)
+                        tc.under = []
+                c.under = new_under
+                for u in new_under:
+                    s.cards[u].top_of = cid
             if ev.get("face_down") and ev["to"] == "mana":   # 「裏向きのままマナゾーンに置く」（第128弾）: 置かれた時点で裏向き（別のイベントにしない）
                 c.face_down = True
             if ev["to"] == "bz" and "enters_tapped" in self.chars(cid)["keywords"]:   # 「タップしてバトルゾーンに出る」

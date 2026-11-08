@@ -353,6 +353,10 @@ def h_break(eng, t):
         t["phase"] = 1
         return None
     if t["phase"] == 1:
+        if t.get("fire_break", True) and not t.get("brk_done"):
+            r = eng._break_consult(t)   # ブレイクの置換の諮問（第146弾。chosen 確定後・宣言の前。擬似ブレイクは対象外）
+            if r is not True:
+                return r
         opts = []
         for c in [x for ch in t["chosen"] for x in [ch] + list(s.cards[ch].under)]:   # シールドの束は、重なったカードのどれも宣言できる（113.2）
             d = eng.cdef(c)
@@ -405,7 +409,7 @@ def h_break(eng, t):
     if sback:       # 手札に加わったカードを捨てる → そうした場合だけ、コストを支払わずに実行する
         seq.append({"t": "sback", "pairs": [[h, x] for h, x in sback], "player": victim})
     seq.append({"t": "enqueue_st", "cids": declared, "player": victim})
-    if t.get("fire_break", True):
+    if t.get("fire_break", True) and chosen:   # 実際にブレイクされるシールドが無いならブレイク自体が起こらなかった（QA 33466。第146弾）
         ev = {"ev": "break", "player": victim, "count": len(chosen)}
         if t.get("breaker") and s.alive(t["breaker"]):      # ブレイクしたクリーチャー（「他のクリーチャーがシールドをブレイクした」）
             ev["subject"] = t["breaker"]

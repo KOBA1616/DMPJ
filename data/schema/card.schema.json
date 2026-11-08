@@ -696,6 +696,22 @@
       "type": "object",
       "properties": {
        "op": {
+        "const": "flip_up"
+       },
+       "select": {
+        "$ref": "#/$defs/selector"
+       }
+      },
+      "required": [
+       "op",
+       "select"
+      ],
+      "additionalProperties": false
+     },
+     {
+      "type": "object",
+      "properties": {
+       "op": {
         "const": "force_battle"
        },
        "a": {
@@ -997,6 +1013,9 @@
        },
        "seal": {
         "type": "integer"
+       },
+       "stack_on": {
+        "$ref": "#/$defs/selector"
        },
        "as": {
         "type": "string"
@@ -1539,6 +1558,7 @@
      "type": "string"
     },
     "under_of": {},
+    "bundle_of": {},
     "owner": {
      "enum": [
       "you",
@@ -1600,6 +1620,18 @@
     "total_cost_ge": {
      "$ref": "#/$defs/expr"
     },
+    "total_power_le": {
+     "$ref": "#/$defs/expr"
+    },
+    "total_power_ge": {
+     "$ref": "#/$defs/expr"
+    },
+    "distinct_costs": {
+     "type": "boolean"
+    },
+    "distinct_from": {
+     "$ref": "#/$defs/selector"
+    },
     "other": {
      "type": "boolean"
     },
@@ -1621,6 +1653,9 @@
        "$ref": "#/$defs/selector"
       },
       "civ_count": {
+       "$ref": "#/$defs/selector"
+      },
+      "distinct_cost_count": {
        "$ref": "#/$defs/selector"
       },
       "entered": {
@@ -2438,6 +2473,9 @@
      "$ref": "#/$defs/ops"
     },
     "optional": {
+     "type": "boolean"
+    },
+    "continue": {
      "type": "boolean"
     },
     "once_per_turn": {

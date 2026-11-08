@@ -2202,3 +2202,212 @@ cards:
         select: {zone: bz, owner: you, count: 1, filter: {types: [creature]}}
         mod: {double_power: true, grant: [powered_breaker]}
         duration: end_of_turn
+  # ---- 語彙パイロット第144弾: パワーの合計制限つき選択（total_power_le / total_power_ge） ----
+  - id: T171
+    name: 合計パワー破壊呪文
+    civs: [fire]
+    cost: 7
+    types: [spell]
+    text: 相手のクリーチャーを、パワーの合計が6000以下になるように好きな数選び、破壊する。
+    spell:
+      - {op: destroy, select: {zone: bz, owner: opp, filter: {types: [creature]}, total_power_le: 6000}}
+  - id: T172
+    name: 合計パワー破壊呪文（2体まで）
+    civs: [fire]
+    cost: 7
+    types: [spell]
+    text: 相手のクリーチャーを2体まで、パワーの合計が10000以下になるように選び、破壊する。
+    spell:
+      - {op: destroy, select: {zone: bz, owner: opp, filter: {types: [creature]}, count: 2, up_to: true, total_power_le: 10000}}
+  # ---- 語彙パイロット第145弾: distinct_cost_count（異なるコストの種類数） ----
+  - id: T173
+    name: バラバラエティ試験獣
+    civs: [nature]
+    cost: 4
+    power: 3000
+    types: [creature]
+    races: [テスト]
+    text: バラバラエティ３：このクリーチャーのパワーを+1000する。このクリーチャーが出た時、コストが異なる自分のエレメントが３つ以上あれば、カードを１枚引いてもよい。
+    abilities:
+      - kind: static
+        affects: self
+        if: {cmp: [{distinct_cost_count: {zone: [bz, mana], owner: you}}, ">=", 3]}
+        mod: {power: 1000}
+      - kind: trigger
+        when: {event: move, to: bz, subject: self}
+        if: {cmp: [{distinct_cost_count: {zone: [bz, mana], owner: you}}, ">=", 3]}
+        effect:
+          - {op: may, body: [{op: draw, count: 1}]}
+  - id: T174
+    name: バラエティ・ブレイカー試験獣
+    civs: [fire]
+    cost: 5
+    power: 4000
+    types: [creature]
+    races: [テスト]
+    text: バラエティ・ブレイカー（このクリーチャーは、コストが異なる自分のクリーチャーの数、シールドをブレイクする）
+    abilities:
+      - kind: static
+        affects: self
+        mod: {breaks: {distinct_cost_count: {zone: bz, owner: you, filter: {types: [creature]}}, base: 0}}
+  - id: T175
+    name: バラエティG・ゼロ試験獣
+    civs: [darkness]
+    cost: 6
+    power: 5000
+    types: [creature]
+    races: [テスト]
+    text: G・ゼロ：コストが異なる自分のクリーチャーが５体以上あれば、このクリーチャーをコストを支払わずに召喚してもよい。
+    free_if: {cmp: [{distinct_cost_count: {zone: bz, owner: you, filter: {types: [creature]}}}, ">=", 5]}
+  - id: T176
+    name: バラエティ・ドロー呪文
+    civs: [water]
+    cost: 2
+    types: [spell]
+    races: [テスト]
+    text: コストが異なる自分のクリーチャー１体につき、カードを１枚引く。
+    spell:
+      - {op: draw, player: you, count: {distinct_cost_count: {zone: bz, owner: you, filter: {types: [creature]}}}}
+  - id: T177
+    name: ブレイク置換試験獣
+    civs: [fire]
+    cost: 6
+    power: 6000
+    types: [creature]
+    races: [テスト]
+    keywords: [double_breaker]
+    text: W・ブレイカー／このクリーチャーがシールドをブレイクする時、相手はかわりにそのシールドを墓地に置く。
+    abilities:
+      - kind: replace
+        when: {event: break, subject: self}
+        instead:
+          - {op: move, select: {ref: event.shield, count: 1}, to: graveyard, reason: put}
+  - id: T178
+    name: ブレイク割り込み試験獣
+    civs: [fire]
+    cost: 7
+    power: 7000
+    types: [creature]
+    races: [テスト]
+    text: このクリーチャーが相手のシールドをブレイクする時、相手はかわりにそのシールドをすべてのプレイヤーに見せる。そのシールドの中のカード1枚よりコストが小さい、進化ではないクリーチャーを1体、自分の手札からバトルゾーンに出してもよい。その後、このクリーチャーはそのシールドをブレイクする。
+    abilities:
+      - kind: replace
+        when: {event: break, subject: self}
+        continue: true
+        instead:
+          - op: may
+            body:
+              - {op: move, select: {zone: hand, owner: you, filter: {types: [creature], cost_le: {sum: [{cost_of: {ref: shield}}, -1]}, evolution: false}, count: 1, up_to: true}, to: bz, reason: put}
+  - id: T179
+    name: 被ブレイク置換試験獣
+    civs: [light]
+    cost: 5
+    power: 5000
+    types: [creature]
+    races: [テスト]
+    text: 自分のシールドがブレイクされる時、かわりに自分の手札を1枚捨ててもよい。
+    abilities:
+      - kind: replace
+        when: {event: break, player: you}
+        optional: true
+        instead:
+          - {op: move, select: {zone: hand, owner: you, count: 1}, to: graveyard, reason: discard}
+  - id: T180
+    name: distinct選択試験獣
+    civs: [fire]
+    cost: 5
+    power: 5000
+    types: [creature]
+    races: [テスト]
+    text: このクリーチャーが出た時、コストが異なるクリーチャーを好きな数、自分の墓地から手札に戻す。
+    abilities:
+      - kind: trigger
+        when: {event: move, to: bz, subject: self}
+        effect:
+          - {op: move, select: {zone: graveyard, owner: you, filter: {types: [creature]}, count: any, distinct_costs: true}, to: hand, reason: return}
+  - id: T181
+    name: distinct参照試験獣
+    civs: [fire]
+    cost: 7
+    power: 7000
+    types: [creature]
+    races: [テスト]
+    text: このクリーチャーが攻撃する時、自分の山札の上から３枚を表向きにする。その中から、コスト６以下で、自分のどのクリーチャーともコストが異なるクリーチャーを好きな数出してもよい。残りをすべて墓地に置く。
+    abilities:
+      - kind: trigger
+        when: {event: attack, subject: self}
+        effect:
+          - {op: choose, select: {zone: deck, owner: you, from_top: 3, look: true, count: all}, as: pile}
+          - {op: move, select: {ref: pile, filter: {types: [creature], cost_le: 6}, count: any, distinct_from: {zone: bz, owner: you, filter: {types: [creature]}}}, to: bz, reason: put}
+          - {op: move, select: {ref: pile, count: all}, to: graveyard, reason: put}
+  - id: T182
+    name: 全コスト登場試験獣
+    civs: [darkness]
+    cost: 8
+    power: 8000
+    types: [creature]
+    races: [テスト]
+    text: 自分のターンの終わりに、自分の墓地にコストが違うクリーチャーが８体以上あれば、それらをすべてバトルゾーンに出してもよい。
+    abilities:
+      - kind: trigger
+        when: {event: turn_end, player: you}
+        if: {cmp: [{distinct_cost_count: {zone: graveyard, owner: you, filter: {types: [creature]}}}, ">=", 8]}
+        effect:
+          - op: may
+            body:
+              - {op: move, select: {zone: graveyard, owner: you, filter: {types: [creature]}, count: {distinct_cost_count: {zone: graveyard, owner: you, filter: {types: [creature]}}}, distinct_costs: true}, to: bz, reason: put}
+  - id: T183
+    name: 裁キ型試験呪文
+    civs: [light]
+    cost: 4
+    types: [spell]
+    races: [テスト]
+    text: カードを１枚引く。この呪文を自分の手札から唱えた後、墓地に置くかわりに自分のシールド１つの上に表向きにして置く。
+    spell:
+      - {op: draw, player: you, count: 1}
+    abilities:
+      - kind: replace
+        zone: hold
+        when: {event: move, subject: self, to: graveyard, reason: resolve}
+        instead:
+          - {op: move, select: {ref: self}, to: shield, reason: put, face_up: true, stack_on: {zone: shield, owner: you, count: 1}}
+  - id: T184
+    name: 重ね置き試験龍
+    civs: [light]
+    cost: 7
+    power: 7000
+    types: [creature]
+    races: [テスト]
+    text: このクリーチャーが出た時、自分の山札の上から１枚目を裏向きで新しいシールドとして加え、その後、自分の山札の上から１枚目を表向きにして、そのシールドの上に置く。このクリーチャーが出た時、バトルゾーンにある相手のクリーチャーを１体選び、表向きで持ち主のシールド１つの上に置く。
+    abilities:
+      - kind: trigger
+        when: {event: move, to: bz, subject: self}
+        effect:
+          - {op: move, select: {zone: deck, owner: you, from_top: 1, count: 1}, to: shield, reason: put, as: newshield}
+          - {op: move, select: {zone: deck, owner: you, from_top: 1, count: 1}, to: shield, reason: put, face_up: true, stack_on: {ref: newshield}}
+      - kind: trigger
+        when: {event: move, to: bz, subject: self}
+        effect:
+          - {op: move, select: {zone: bz, owner: opp, filter: {types: [creature]}, count: 1}, to: shield, reason: put, face_up: true, stack_on: {zone: shield, owner: opp, count: 1}}
+  - id: T185
+    name: 向き変更試験獣
+    civs: [water]
+    cost: 4
+    power: 3000
+    types: [creature]
+    races: [テスト]
+    text: このクリーチャーが出た時、自分のシールドを１つ見てもよい。そうしたら、そのシールドに含まれるカードをすべて表向きにしてもよい。このクリーチャーが出た時、自分のシールドゾーンにある表向きのカードを１枚選び、裏向きにしてもよい。
+    abilities:
+      - kind: trigger
+        when: {event: move, to: bz, subject: self}
+        effect:
+          - {op: choose, select: {zone: shield, owner: you, count: 1, look: true}, as: sh}
+          - op: may
+            body:
+              - {op: flip_up, select: {bundle_of: sh, count: all}}
+      - kind: trigger
+        when: {event: move, to: bz, subject: self}
+        effect:
+          - op: may
+            body:
+              - {op: flip_down, select: {bundle_of: {zone: shield, owner: you}, filter: {face_up: true}, count: 1}}

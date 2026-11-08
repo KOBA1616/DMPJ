@@ -25,7 +25,7 @@ EVENTS = {"move", "draw", "cast", "summon", "attack", "block", "break", "tap", "
           "turn_start", "turn_end", "battle_win", "choose", "battle", "battle_start", "attack_end", "lose", "mugon_used"}
 ABILITY_KINDS = {"trigger", "replace", "static", "declare", "activate", "silent", "state", "partner"}   # state: 状態を常に見て、満たされたら勝敗が決まる常在効果（if と effect: [win/lose]）。partner: [P]能力（単独では機能せず、キズナ等で「使う」ことで解決する）
 ABILITY_KEYS = {"kind", "when", "if", "effect", "instead", "optional", "affects", "mod", "zone", "keyword", "cost", "id",
-                "once_per_turn", "first_time", "sst", "stp", "odrive", "choukon", "bazurenda", "any_attacker"}
+                "once_per_turn", "first_time", "sst", "stp", "odrive", "choukon", "bazurenda", "any_attacker", "continue"}
 REASONS = {"put", "destroy", "return", "discard", "charge", "summon", "cast", "break",
            "draw", "battle", "sba", "resolve", "evolve", "seal"}
 VIAS = {"revolution_change", "generate"}   # 出し方の印（「革命チェンジによって出た時」など）
@@ -37,7 +37,8 @@ PERMANENT_TYPES = {"tamaseed", "field", "cross_gear"}   # 手札から実行し�
 CARD_TYPES = {"creature", "spell", "evolution"} | PERMANENT_TYPES
 CIVS = {"light", "water", "darkness", "fire", "nature", "zero"}
 SELECTOR_KEYS = {"zone", "owner", "owner_of", "filter", "count", "up_to", "from_top", "chooser", "ref", "other",
-                 "under_of", "look", "exlife_of", "total_cost_le", "total_cost_ge"}   # look: 非公開ゾーン（山札など）の中身を見て選ぶ。total_cost_*: コストの合計が上限以下／下限以上になるように好きな数選ぶ
+                 "under_of", "bundle_of", "look", "exlife_of", "total_cost_le", "total_cost_ge", "total_power_le", "total_power_ge",
+                 "distinct_costs", "distinct_from"}   # look: 非公開ゾーン（山札など）の中身を見て選ぶ。total_cost_* / total_power_*: コスト／パワーの合計が上限以下／下限以上になるように好きな数選ぶ。distinct_costs / distinct_from: 「コストが異なる」選択の制約（第147弾）。bundle_of: シールドの束に含まれるカードすべて（第148弾）
 FILTER_KEYS = {"any_of", "types", "not_types", "civs", "civs_all", "not_civs", "races", "race_has", "not_race_has", "name", "name_has", "not_name",
                "cost_le", "cost_ge", "power_le", "power_ge", "tapped", "keyword", "multicolor", "colorless", "face_down", "face_up", "neo", "vanilla", "sealed", "evolution", "mugen_climb", "twinpact", "vividraw", "fushigi", "linked_god", "entered_this_turn"}
 FILTER_EXPR_KEYS = {"cost_le", "cost_ge", "power_le", "power_ge", "races"}   # 値に式を書ける（解決時に計算）
@@ -247,6 +248,13 @@ class Checker:
                         raise DefError(f"{where}: op '{name}' missing arg '{k}'")
                     continue
                 self.value(ty, op[k], f"{where}: {name}.{k}")
+            if name == "move" and "stack_on" in op:
+                # シールドの上に重ねて置く（第148弾）: 行き先はシールドゾーンだけ、対象の束は1つだけ
+                if op.get("to") != "shield":
+                    raise DefError(f"{where}: move.stack_on needs to: shield")
+                so = op["stack_on"]
+                if isinstance(so, dict) and "count" in so and so["count"] != 1:
+                    raise DefError(f"{where}: move.stack_on selector count must be 1")
 
     def value(self, ty, v, where):
         if ty == "filter":
@@ -302,16 +310,29 @@ class Checker:
             raise DefError(f"{where}: unknown selector keys {sorted(bad)}")
         if "owner" in sel and "owner_of" in sel:
             raise DefError(f"{where}: owner and owner_of are exclusive")
-        if "under_of" not in sel and "exlife_of" not in sel and "ref" not in sel and "zone" not in sel:
+        if "under_of" not in sel and "bundle_of" not in sel and "exlife_of" not in sel and "ref" not in sel and "zone" not in sel:
             raise DefError(f"{where}: selector needs zone or ref")
         for z in ([sel["zone"]] if isinstance(sel.get("zone"), str) else sel.get("zone", [])):
             if z != "any" and z not in self.zones:   # any = すべてのゾーン、配列 = そのうちのどれか
                 raise DefError(f"{where}: unknown zone '{z}'")
         if sel.get("owner", "you") not in ("you", "opp", "any"):
             raise DefError(f"{where}: bad owner '{sel['owner']}'")
-        for k in ("total_cost_le", "total_cost_ge"):
+        for k in ("total_cost_le", "total_cost_ge", "total_power_le", "total_power_ge"):
             if k in sel:
                 self.expr(sel[k], where)
+        if "distinct_costs" in sel and sel["distinct_costs"] is not True:
+            raise DefError(f"{where}: distinct_costs must be true")
+        if "distinct_from" in sel:
+            self.selector(sel["distinct_from"], where)   # 参照集合は通常のセレクタとして再帰検証する
+        if "bundle_of" in sel and isinstance(sel["bundle_of"], dict):
+            self.selector(sel["bundle_of"], where)   # 束のトップを指すセレクタとして再帰検証する（文字列なら "self" / 変数名）
+        if "distinct_costs" in sel or "distinct_from" in sel:
+            # 「コストが異なる」制約は選択にだけ付く。count: all 単独は「選んだことにならない」ため不可
+            # （count: all + up_to: true は any 相当の選択になるので許す）
+            if "count" not in sel:
+                raise DefError(f"{where}: distinct_costs/distinct_from needs count")
+            if sel.get("count") == "all" and not sel.get("up_to"):
+                raise DefError(f"{where}: distinct_costs/distinct_from with count: all needs up_to: true")
         self.filter(sel.get("filter", {}), where)
 
     def filter(self, f, where):
@@ -340,6 +361,8 @@ class Checker:
             if k == "count":
                 return self.selector(v, where)
             if k == "civ_count":   # 対象カード群にある文明の種類数（多色はそれぞれ数える）
+                return self.selector(v, where)
+            if k == "distinct_cost_count":   # 対象カード群にあるコストの種類数（同じコストは1つに数える。第145弾）
                 return self.selector(v, where)
             if k == "entered":   # このターンに出したクリーチャーの数 {owner, other?}
                 if not isinstance(v, dict) or set(v) - {"owner", "other"} or v.get("owner", "you") not in ("you", "opp"):
@@ -410,8 +433,8 @@ class Checker:
         raise DefError(f"{where}: unknown cond '{k}'")
 
     def count_spec(self, v, where):
-        """mod の count: セレクタ（体数）か、civ_count / sum を含む式（文明の種類数など）。"""
-        if isinstance(v, dict) and ("civ_count" in v or "sum" in v):
+        """mod の count: セレクタ（体数）か、civ_count / distinct_cost_count / sum を含む式（文明・コストの種類数など）。"""
+        if isinstance(v, dict) and ("civ_count" in v or "distinct_cost_count" in v or "sum" in v):
             return self.expr(v, where)
         return self.selector(v, where)
 
@@ -433,16 +456,19 @@ class Checker:
         if "breaks" in m:
             b = m["breaks"]
             if isinstance(b, dict):
-                if "count" in b:   # {count: セレクタ, amount?: 係数}（クルー・ブレイカー等）: 1 + amount × 数
-                    if set(b) - {"amount", "count"} or ("amount" in b and not isinstance(b["amount"], int)):
-                        raise DefError(f"{where}: breaks dict with count takes only amount/count")
+                if "base" in b and not (isinstance(b["base"], int) and b["base"] >= 0):   # base（既定1）: ブレイク数の土台（第145弾）
+                    raise DefError(f"{where}: breaks base must be an int >= 0")
+                if "count" in b:   # {count: セレクタ, amount?: 係数}（クルー・ブレイカー等）: base + amount × 数
+                    if set(b) - {"amount", "count", "base"} or ("amount" in b and not isinstance(b["amount"], int)):
+                        raise DefError(f"{where}: breaks dict with count takes only amount/count/base")
                     self.count_spec(b["count"], where)
-                else:   # 式形式（{civ_count: セレクタ}、第79弾）: 1 + 文明の種類数
-                    if set(b) != {"civ_count"}:
-                        raise DefError(f"{where}: breaks must be an int, {{count: <selector>}}, or {{civ_count: <selector>}}")
-                    self.count_spec(b["civ_count"], where)
+                else:   # 式形式（{civ_count: セレクタ}、第79弾）: base + 式の値
+                    keys = set(b) - {"base"}
+                    if keys not in ({"civ_count"}, {"distinct_cost_count"}):
+                        raise DefError(f"{where}: breaks must be an int, {{count: <selector>}}, {{civ_count: <selector>}}, or {{distinct_cost_count: <selector>}}")
+                    self.count_spec(b[next(iter(keys))], where)
             elif not isinstance(b, int):
-                raise DefError(f"{where}: breaks must be an int or a dict (1 + value)")
+                raise DefError(f"{where}: breaks must be an int or a dict (base + value)")
         if "cost_may" in m:
             cm = m["cost_may"]
             if not isinstance(cm, dict) or set(cm) - {"amount", "once", "min", "must"} or not isinstance(cm.get("amount"), int) \
@@ -579,6 +605,9 @@ class Checker:
             raise DefError(f"{where}: ability id must be a string")
         if kind in ("trigger", "replace", "declare"):
             self.when(ab.get("when", {}), where)
+        if "continue" in ab:   # ブレイクの割り込み型（第146弾）: 置換の instead の後もブレイクが続く。break の置換だけに書ける
+            if kind != "replace" or ab.get("when", {}).get("event") != "break" or not isinstance(ab["continue"], bool):
+                raise DefError(f"{where}: continue is only for replace of break, as a bool")
         if kind == "state":
             if "if" not in ab or not all(o.get("op") in ("win", "lose") for o in ab.get("effect", [])) or not ab.get("effect"):
                 raise DefError(f"{where}: state は if と effect（win / lose だけ）が要る")
