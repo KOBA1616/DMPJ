@@ -72,7 +72,7 @@ def _rate(d: dict, turn: int) -> float:
 
 def two_stage(rules, deck_ids: list[str], opp_ids: list[str], combo: dict, seeds: list[int], ledger,
               seed: int = 0, turn: int = 4, setup: dict | None = None, kinds=("add_parts", "add_prep", "cut_unused", "trim_parts"), n: int = 4,
-              unused: list[str] | None = None, adds: list[str] | None = None, coarse_budget: int = 40, top_k: int = 2, workers: int = 1, coarse_seeds: int | None = None, out_dir: str | Path | None = "data/deckplans/auto") -> dict:
+              unused: list[str] | None = None, adds: list[str] | None = None, coarse_budget: int = 40, top_k: int = 2, workers: int = 1, coarse_seeds: int | None = None, deadline: float | None = None, out_dir: str | Path | None = "data/deckplans/auto") -> dict:
     """2段階: ①低い base_budget で全候補を同一シードで粗く比較 → ②粗い差が正の上位 top_k 件だけ通常予算で再比較し、
     有意に良ければ採用（採否は evaluate.decide のみ）。未変換カードを含む候補は粗比較にも回さない。"""
     rule = AcceptRule(turn=turn)
@@ -100,8 +100,11 @@ def two_stage(rules, deck_ids: list[str], opp_ids: list[str], combo: dict, seeds
             cands.append((ch, cand))
     t0 = time.time()
     cbase = coarse(ids_of(base, resolver))
-    ranked = []
+    ranked, evaluated = [], 0
     for ch, cand in cands:
+        if deadline is not None and time.time() > deadline:       # 時間予算を使い切ったら粗比較を打ち切る（次回に回す）
+            break
+        evaluated += 1
         cc = coarse(ids_of(cand, resolver))
         diff = _rate({k: v[0] for k, v in cc.items()}, turn) - _rate({k: v[0] for k, v in cbase.items()}, turn)
         sdiff = sum(cc[k][1] - cbase[k][1] for k in cc) / max(1, len(cc))          # 段階進捗（連続値）の平均差
@@ -126,7 +129,7 @@ def two_stage(rules, deck_ids: list[str], opp_ids: list[str], combo: dict, seeds
         path = Path(out_dir) / f"{final.name}.yaml"
         save(final, path)
     return {"base": base.plan_id(), "final": final.plan_id(), "adopted": final is not base, "path": str(path) if path else None,
-            "candidates": len(cands), "passed_coarse": len(ranked), "sec": round(time.time() - t0, 1)}
+            "candidates": len(cands), "evaluated": evaluated, "complete": evaluated == len(cands), "passed_coarse": len(ranked), "sec": round(time.time() - t0, 1)}
 
 
 def unused_names(rules, deck_ids: list[str], opp_ids: list[str], seeds: list[int], turns: int = 3, budget: int = 60) -> list[str]:
