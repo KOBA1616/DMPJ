@@ -12,6 +12,7 @@ from pathlib import Path
 import yaml
 
 from ..engine import Engine
+from ..eval.stage import count_matching
 from ..solitaire import Weights, evaluate
 
 
@@ -30,15 +31,9 @@ class PartsSpec:
 
 
 def parts_score(eng: Engine, me: int, spec: PartsSpec) -> float:
-    s = eng.s
     total = 0.0
     for p in spec.parts:
-        n = 0
-        for cid in eng.zlist(p.zone, me):
-            d = s.cards[cid].defn
-            if (p.ids and d in p.ids) or (not p.ids and "creature" in eng.chars(cid)["types"]):
-                n += 1
-        total += p.weight * min(n, p.need)
+        total += p.weight * min(count_matching(eng, me, p.zone, p.ids), p.need)
     return spec.coef * total
 
 
