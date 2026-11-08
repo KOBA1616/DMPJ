@@ -41,6 +41,8 @@ def main(argv=None):
     ap.add_argument("--coarse-budget", type=int, default=40, help="①粗比較の base_budget（通常は 200）")
     ap.add_argument("--coarse-seeds", type=int, default=None, help="①粗比較に使う局数（省略時は --seeds と同じ。時間上限に収めたいとき減らす）")
     ap.add_argument("--top-k", type=int, default=2, help="②通常予算で再比較する上位件数")
+    ap.add_argument("--time-budget", type=int, default=0, help="全体の時間予算（秒）。指定すると対象ごとに候補数と粗比較の局数を自動配分し、締め切りで打ち切る（--cands/--coarse-seeds は上限）")
+    ap.add_argument("--history", default="data/autofix/deckfix_times.yaml", help="--time-budget 用の所要時間の履歴（前回途中のデッキを優先する）")
     ap.add_argument("--out", default="logs/deckfix.jsonl")
     a = ap.parse_args(argv)
     combos = {c["id"]: c for c in yaml.safe_load(Path("data/known_combos/combos.yaml").read_text(encoding="utf-8"))["combos"]}
@@ -50,20 +52,36 @@ def main(argv=None):
         print("cards 段階の記録なし。何もしない"); return 0
     rules = load_rules()
     Path(a.out).parent.mkdir(parents=True, exist_ok=True)
-    for t in ts:
-        c = combos.get(t["combo"])
-        if c is None or c.get("split") == "holdout" or (a.only and t["combo"] not in a.only):
-            continue
-        if gate and "*" not in gate and t["combo"] not in gate:
-            continue
+    import time
+    from dmsim.deckplan import budget as B
+    hist = B.load_history(a.history) if a.time_budget else {}
+    ok = lambda t: (c := combos.get(t["combo"])) is not None and c.get("split") != "holdout" and not (a.only and t["combo"] not in a.only) \
+        and not (gate and "*" not in gate and t["combo"] not in gate)
+    ts = [t for t in ts if ok(t)]
+    if a.time_budget:
+        names = B.order_targets([t["combo"] for t in ts], hist)
+        ts = sorted(ts, key=lambda t: names.index(t["combo"]))      # 前回途中・未実行のデッキが先
+    start = time.time()
+    for i, t in enumerate(ts):
+        c = combos[t["combo"]]
+        cands, cs, deadline = a.cands, a.coarse_seeds, None
+        if a.time_budget:
+            slot = (a.time_budget - (time.time() - start)) / (len(ts) - i)
+            if slot < B.MIN_SLOT_SEC:
+                print(t["combo"], "時間予算の残りが少ないので次回へ"); continue
+            cands, cs = B.allocate(hist.get(t["combo"]), slot, a.cands, a.coarse_seeds or a.seeds)
+            deadline = time.time() + slot * B.SAFETY
         deck = load_deck(t["deck"])
         opp = load_deck(t["opp_deck"]) if t.get("opp_deck") else ["T001"] * 40
         setup_path = a.setup or t.get("setup")        # 仕込み済み開始局面（4ターン以内キル率を現実的に比べるため。無ければ冷たい開幕）
         setup = yaml.safe_load(Path(setup_path).read_text(encoding="utf-8")) if setup_path else None
         un = unused_names(rules, deck, opp, list(range(1, a.usage_seeds + 1))) if a.usage_seeds else []   # 抜く候補（usage 監査）
         r = two_stage(rules, deck, opp, c, list(range(1, a.seeds + 1)), a.out, turn=a.turns, setup=setup, workers=a.workers,
-                      unused=un, adds=add_candidates(c), n=a.cands, coarse_budget=a.coarse_budget, top_k=a.top_k, coarse_seeds=a.coarse_seeds)
+                      unused=un, adds=add_candidates(c), n=cands, coarse_budget=a.coarse_budget, top_k=a.top_k, coarse_seeds=cs, deadline=deadline)
         print(t["combo"], r)
+        if a.time_budget:
+            B.update(hist, t["combo"], r, cands, cs or a.seeds, time.time())
+            B.save_history(a.history, hist)
     return 0
 
 

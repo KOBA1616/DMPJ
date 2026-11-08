@@ -165,3 +165,21 @@ def test_stage_value_is_continuous_and_monotone():
     c = stage_value(None, 2, 1, 4)
     d = stage_value(3, 2, 1, 4)
     assert 0 < a < b < c < d <= 3.0                        # 早い・段階が進むほど大きい
+
+
+def test_budget_allocation_and_order(tmp_path):
+    from dmsim.deckplan import budget as B
+    hist = {"a": {"sec": 3000, "cands": 40, "coarse_seeds": 30, "complete": False, "last_run": 100.0},
+            "b": {"sec": 400, "cands": 40, "coarse_seeds": 30, "complete": True, "last_run": 50.0},
+            "c": {"sec": 400, "cands": 40, "coarse_seeds": 30, "complete": True, "last_run": 10.0}}
+    assert B.order_targets(["b", "c", "a", "new"], hist) == ["new", "a", "c", "b"]      # 未実行→途中→古い順
+    # 重いデッキ(a: 2.5秒/候補/局)は同じ枠なら軽いデッキ(b: 0.33)より小さく配分される
+    ca = B.allocate(hist["a"], 1200, 5, 30)
+    cb = B.allocate(hist["b"], 1200, 5, 30)
+    assert ca[0] * ca[1] < cb[0] * cb[1] and ca[1] >= 8 and ca[0] >= 3
+    assert B.allocate(None, 1e9, 5, 30) == (5, 30)                                          # 枠が十分なら上限のまま
+    h = {}
+    B.update(h, "x", {"sec": 100.0, "evaluated": 20, "complete": False}, 5, 12, 1.0)
+    assert h["x"]["complete"] is False and h["x"]["cands"] == 20
+    B.save_history(tmp_path / "h.yaml", h)
+    assert B.load_history(tmp_path / "h.yaml") == h

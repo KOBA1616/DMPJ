@@ -49,7 +49,8 @@ def run_batch(a, combos):
         print(r)
     if a.deck_fix and a.out:
         import deck_fix                                   # 同じ tools/ にある。cards 段階の記録があるコンボだけ回る
-        deck_fix.main(["--targets", a.targets, "--stage-from", a.out, "--seeds", str(a.seeds), "--turns", str(a.turns)])
+        deck_fix.main(["--targets", a.targets, "--stage-from", a.out, "--seeds", str(a.seeds), "--turns", str(a.turns),
+                       "--workers", str(a.workers), "--cands", "6", "--time-budget", str(a.deck_fix_budget)])
 
 
 def main(argv=None):
@@ -67,6 +68,7 @@ def main(argv=None):
     ap.add_argument("--store", default="data/autofix/knobs.yaml", help="採用した設定の保存先（次回の開始点になる）")
     ap.add_argument("--workers", type=int, default=1, help="並列プロセス数（seeds を分けて回す。CPU数まで）")
     ap.add_argument("--deck-fix", action="store_true", help="終了後、cards 段階の記録があれば tools/deck_fix.py --stage-from を続けて回す（--out 必須）")
+    ap.add_argument("--deck-fix-budget", type=int, default=5400, help="--deck-fix の時間予算（秒）。対象ごとの候補数と粗比較の局数を自動配分し、前回途中のデッキを優先する（既定 90分）")
     ap.add_argument("--out")
     a = ap.parse_args(argv)
     combos = {c["id"]: c for c in yaml.safe_load(Path("data/known_combos/combos.yaml").read_text(encoding="utf-8"))["combos"]}
