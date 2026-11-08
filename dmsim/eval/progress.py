@@ -58,7 +58,7 @@ def cards_ok(eng: Engine, me: int, spec: ProgressSpec) -> bool:
     return not (Counter(spec.cards) - have)
 
 
-def make_progress_runner(level: InfoLevel, spec: ProgressSpec, n_det: int = 8):
+def make_progress_runner(level: InfoLevel, spec: ProgressSpec, n_det: int = 8, value_fn=None):
     """InfoLevel の runner と同じ署名。自分のターンごとに盤面を記録する以外は solitaire.play_game(lock_rounds=0) と同じ回し方。"""
     level = InfoLevel(level)
 
@@ -82,7 +82,7 @@ def make_progress_runner(level: InfoLevel, spec: ProgressSpec, n_det: int = 8):
         try:
             eng.advance()
             record(0)
-            search = TurnSearch(me, budget, opp_policy=opp_pol) if level is InfoLevel.CHEAT else None
+            search = TurnSearch(me, budget, opp_policy=opp_pol, value_fn=value_fn) if level is InfoLevel.CHEAT else None
             while (d := eng.advance()) is not None:
                 if eng.s.active != me or d["player"] != me:
                     eng.answer(opp_pol(eng, d))
@@ -95,7 +95,7 @@ def make_progress_runner(level: InfoLevel, spec: ProgressSpec, n_det: int = 8):
                     res.nodes += st.nodes
                 else:
                     from ..search.fair import FairTurnSearch
-                    fs = FairTurnSearch(me, budget, n_det, seed * 7919 + ot, opp_policy=opp_pol)
+                    fs = FairTurnSearch(me, budget, n_det, seed * 7919 + ot, opp_policy=opp_pol, value_fn=value_fn)
                     eng = fs.run(eng)
                     res.nodes += fs.nodes
                 record(ot)
