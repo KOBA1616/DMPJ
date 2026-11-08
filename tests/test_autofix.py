@@ -112,3 +112,19 @@ def test_prep_bonus_value(rules):
 def test_merge_parts_order():
     from dmsim.autofix.loop import _merge
     assert _merge([{"kill": [1, 2], "board": [3]}, {"kill": [4], "board": [5, 6]}]) == {"kill": [1, 2, 4], "board": [3, 5, 6]}
+
+
+def test_cards_stage_tries_prep_bonus_and_default_need():
+    import yaml
+
+    from dmsim.autofix.batch import default_need
+    c = {x["id"]: x for x in yaml.safe_load(open("data/known_combos/combos.yaml", encoding="utf-8"))["combos"]}
+    assert set(default_need(c["saga"])) == {"dm22ex2-021", "dmrp03-s03", "dm22ex1-007"}
+    assert len(default_need(c["tenmon"])) >= 5                    # leaf_parts が無いコンボは core 全部
+
+    def m(k):
+        n = 20
+        got = [2 if i < (10 if k.prep_bonus else 2) else None for i in range(n)]
+        return {"kill": [None] * n, "board": [None] * n, "cards": got, "prep": [0] * n}
+    k, hist = autofix(m, Knobs(), rounds=1)
+    assert hist[0]["stage"] == "cards" and hist[0]["tries"][0]["verdict"] == "accept" and k.prep_bonus > 0

@@ -37,9 +37,8 @@ def run_batch(a, combos):
     specs = load_specs()
 
     def mk(t):
-        need = t.get("need") or [p["id"] for p in combos[t["combo"]]["parts"] if p.get("role") == "core" and p.get("id")]
-        cards = {x.split(":")[0]: int(x.split(":")[1]) if ":" in x else 1 for x in need}
-        from dmsim.autofix.batch import default_board
+        from dmsim.autofix.batch import default_board, default_need
+        cards = {x.split(":")[0]: int(x.split(":")[1]) if ":" in x else 1 for x in t["need"]} if t.get("need") else default_need(combos[t["combo"]])
         board = _board(t["board"]) if t.get("board") else default_board(combos[t["combo"]])
         spec = yaml.safe_load(Path(t["setup"]).read_text(encoding="utf-8")) if t.get("setup") else None
         deck, opp = load_deck(t["deck"]), load_deck(t["opp_deck"]) if t.get("opp_deck") else ["T001"] * 40
