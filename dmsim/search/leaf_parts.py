@@ -6,7 +6,7 @@
 """
 from __future__ import annotations
 
-from dataclasses import dataclass
+from dataclasses import dataclass, replace
 from pathlib import Path
 
 import yaml
@@ -25,15 +25,32 @@ class Part:
 
 
 @dataclass(frozen=True)
+class Bundle:
+    """締めの部品の「同時そろい」。items の (zone, id, 枚数) がすべて満たされた時だけ weight を加点する。
+    部品ごとの加点では「ドラゲリオンは手札、シャコガイルは墓地」を同時に満たす局面を区別できないため。"""
+    items: tuple[tuple[str, str, int], ...]
+    weight: float = 5.0
+
+
+@dataclass(frozen=True)
 class PartsSpec:
     parts: tuple[Part, ...]
     coef: float = 1.0         # 全体の倍率
+    bundles: tuple[Bundle, ...] = ()           # 有効な同時そろい（自動修正が finish 段階で足す）
+    finish: tuple[Bundle, ...] = ()            # 既知コンボ定義の締めの束（既定では無効。with_finish() で bundles に足す）
+
+    def with_finish(self, mult: float = 1.0) -> "PartsSpec":
+        """締めの束を mult 倍して有効にした部品表（自動修正の候補）。"""
+        return replace(self, bundles=self.bundles + tuple(replace(b, weight=b.weight * mult) for b in self.finish))
 
 
 def parts_score(eng: Engine, me: int, spec: PartsSpec) -> float:
     total = 0.0
     for p in spec.parts:
         total += p.weight * min(count_matching(eng, me, p.zone, p.ids), p.need)
+    for b in spec.bundles:
+        if all(count_matching(eng, me, z, (i,)) >= n for z, i, n in b.items):
+            total += b.weight
     return spec.coef * total
 
 
@@ -59,8 +76,10 @@ def spec_from_combo(combo: dict, coef: float = 10.0) -> PartsSpec:
     """known_combos の1件から部品表を作る。combo に leaf_parts（手書きの [{zone, ids, need, weight}]）があればそれを使い、
     なければ core 部品（id あり）ごとに DEFAULT_ZONE_WEIGHTS で作る。同じ id の部品は1つにまとめる（枚数は need に足す）。"""
     if combo.get("leaf_parts"):
+        finish = tuple(Bundle(tuple((i["zone"], i["id"], i.get("n", 1)) for i in b["items"]), b.get("weight", 5.0))
+                       for b in combo.get("finish_bundles", ()))
         return PartsSpec(tuple(Part(p["zone"], tuple(p.get("ids", ())), p.get("need", 1), p.get("weight", 1.0))
-                               for p in combo["leaf_parts"]), coef=combo.get("leaf_coef", coef))
+                               for p in combo["leaf_parts"]), coef=combo.get("leaf_coef", coef), finish=finish)
     ids = list(dict.fromkeys(p["id"] for p in combo["parts"] if p.get("role") == "core" and p.get("id")))
     return PartsSpec(tuple(Part(z, (i,), 1, w) for i in ids for z, w in DEFAULT_ZONE_WEIGHTS), coef=coef)
 

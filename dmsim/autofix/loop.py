@@ -16,6 +16,7 @@ class Knobs:
     coef: float = 10.0          # 部品表の倍率（leaf_parts）
     gy_mult: float = 1.0        # 墓地の部品の重み倍率
     budget: int = 100           # 探索予算
+    finish_mult: float = 0.0    # 締めの束（部品の同時そろい）の倍率。0 は無効
     n_det: int = 4              # 公平探索の決定化数
     lookahead: int = 0          # 複数ターン探索の先読み（dmsim/search/multiturn）
 
@@ -40,6 +41,10 @@ def propose(stage: str, k: Knobs, rule: Rule = Rule()) -> list[tuple[Knobs, str]
         if k.gy_mult * 2 <= 8:
             out.append((replace(k, gy_mult=k.gy_mult * 2), "墓地の部品の重みを2倍"))
     elif stage == "finish":
+        if k.finish_mult == 0.0:
+            out.append((replace(k, finish_mult=1.0), "締めの束（同時そろい）を加える"))
+        elif k.finish_mult * 2 <= 8:
+            out.append((replace(k, finish_mult=k.finish_mult * 2), "締めの束の重みを2倍"))
         if k.budget * 2 <= rule.budget_max:
             out.append((replace(k, budget=k.budget * 2), "探索予算を2倍"))
         if k.lookahead + 1 <= rule.lookahead_max:
@@ -111,7 +116,9 @@ def harness_measure(rules, deck, opp_deck, seeds, spec=None, prog=None, parts_sp
         fair_runner.register(n_det, k.lookahead)
         vfn = None
         if parts_spec is not None:
-            ps = PartsSpec(tuple(replace(p, weight=p.weight * k.gy_mult) if p.zone == "graveyard" else p for p in parts_spec.parts), coef=k.coef)
+            ps = replace(parts_spec, parts=tuple(replace(p, weight=p.weight * k.gy_mult) if p.zone == "graveyard" else p for p in parts_spec.parts), coef=k.coef)
+            if k.finish_mult > 0:
+                ps = replace(ps, bundles=parts_spec.bundles).with_finish(k.finish_mult) if parts_spec.finish else ps
             vfn = make_value_fn(ps)
         cfg = EvalConfig(decks={"d": deck}, opp_deck=opp_deck, seeds=seeds, levels=(InfoLevel.FAIR,), progress=prog,
                          start_spec=spec, n_det=n_det, value_fn=vfn, base_budget=k.budget, max_turn=max_turn)
