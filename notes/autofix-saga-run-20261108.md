@@ -19,3 +19,10 @@
 | drill_lock | 除外（holdout） | - | - | - | - |
 - 4件とも cards 段階＝デッキ側（部品の枚数・引き込み）が詰まりの主因。探索設定側の候補は出ず、採用なし。
 - 次: `deck_fix.py --stage-from` でデッキ案（部品追加・準備札追加）を同一シード比較。
+
+## デッキ側の自動改善（deck_fix.py、各30局、1ラウンド、天門・knight_dmc・アカシック。saga はデッキ改善スレッドが別途実測のため対象外）
+結果は下記のとおり（採用=同一シード比較で有意に良い案）。
+- tenmon {'base': '96015b55dd4a', 'final': '96015b55dd4a', 'adopted': False, 'path': None, 'sec': 557.2}
+- knight_dmc {'base': '95f04717076c', 'final': '95f04717076c', 'adopted': False, 'path': None, 'sec': 2962.7}
+- akashic {'base': '3b07974f7a40', 'final': '3b07974f7a40', 'adopted': False, 'path': None, 'sec': 431.4}
+- 解釈: 1ラウンド・30局・案は少数では、有意に良い案は見つからなかった。局数と案数を増やすか、部品の重い定義（leaf_parts）を足して cards 判定を意味のあるものにするのが次。
