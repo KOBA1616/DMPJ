@@ -143,3 +143,15 @@ def test_ledger_has_combo_for_deck_fix(tmp_path):
     sys.path.insert(0, "tools")
     import deck_fix
     assert deck_fix.cards_stage_decks(str(led)) == {"saga"}
+
+
+def test_alias_makes_akashic_parts_match_deck():
+    import yaml
+
+    from dmsim.autofix.batch import default_need
+    from dmsim.solitaire import load_deck
+    c = {x["id"]: x for x in yaml.safe_load(open("data/known_combos/combos.yaml", encoding="utf-8"))["combos"]}["akashic"]
+    need = default_need(c)
+    assert "dm23ex2-cho005" not in need and "dm23ex2-009" in need
+    deck = load_deck("data/decks/akashic.yaml")
+    assert all(deck.count(i) >= 1 for i in need)               # 重い部品がデッキに入っている（0枚なら cards が常に未達になる）

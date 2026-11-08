@@ -51,4 +51,5 @@ def default_need(combo: dict, min_weight: float = 1.5) -> dict:
         if p.ids and p.weight >= min_weight:
             for i in p.ids:
                 need[i] = max(need.get(i, 0), p.need)
-    return need or {p["id"]: 1 for p in combo["parts"] if p.get("role") == "core" and p.get("id")}
+    from ..search.leaf_parts import canon
+    return need or {canon(p["id"]): 1 for p in combo["parts"] if p.get("role") == "core" and p.get("id")}

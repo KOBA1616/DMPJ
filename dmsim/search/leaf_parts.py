@@ -82,6 +82,15 @@ def auto_finish(combo: dict) -> tuple[Bundle, ...]:
     return (Bundle(tuple(("hand|bz", i, 1) for i in ids), 5.0),) if len(ids) >= 2 else ()
 
 
+# known_combos 側の収録IDとエンジン登録IDが違う同一カード。combos.yaml は触らず、部品表の導出でエンジン側のIDに読み替える
+# （読み替えないと、デッキに入っているカードが部品として数えられず、cards 段階が常に未達になる。例: アカシック3 が 0 枚扱い）
+ID_ALIAS = {"dm23ex2-cho005": "dm23ex2-009"}  # 完全水中要塞 アカシック3
+
+
+def canon(i: str) -> str:
+    return ID_ALIAS.get(i, i)
+
+
 HEAVY_CORE_DEFAULT = 3   # loopspec が無く core が多いコンボで、定義の先頭から重い部品とみなす種数
 HEAVY_MULT = 2.0         # 重い部品の加点倍率（既定の重み1.0×2 = 2.0 ≥ 1.5。autofix の cards 段階の必要カードになる）
 
@@ -93,7 +102,7 @@ def heavy_ids(combo: dict) -> list[str]:
     2) なければ core 部品が HEAVY_CORE_DEFAULT 以下なら全部
     3) それより多ければ定義の先頭から HEAVY_CORE_DEFAULT 種（定義は主要部品から並べる約束）"""
     import json
-    core = list(dict.fromkeys(p["id"] for p in combo.get("parts", ()) if p.get("role") == "core" and p.get("id")))
+    core = list(dict.fromkeys(canon(p["id"]) for p in combo.get("parts", ()) if p.get("role") == "core" and p.get("id")))
     lp = combo.get("loopspec")
     if lp and (KNOWN_COMBOS.parents[2] / lp).exists():
         spec = json.loads((KNOWN_COMBOS.parents[2] / lp).read_text(encoding="utf-8"))
@@ -113,7 +122,7 @@ def spec_from_combo(combo: dict, coef: float = 10.0) -> PartsSpec:
                        for b in combo.get("finish_bundles", ())) or auto_finish(combo)
         return PartsSpec(tuple(Part(p["zone"], tuple(p.get("ids", ())), p.get("need", 1), p.get("weight", 1.0))
                                for p in combo["leaf_parts"]), coef=combo.get("leaf_coef", coef), finish=finish)
-    ids = list(dict.fromkeys(p["id"] for p in combo["parts"] if p.get("role") == "core" and p.get("id")))
+    ids = list(dict.fromkeys(canon(p["id"]) for p in combo["parts"] if p.get("role") == "core" and p.get("id")))
     heavy = set(heavy_ids(combo))
     return PartsSpec(tuple(Part(z, (i,), 1, w * (HEAVY_MULT if i in heavy else 1.0)) for i in ids for z, w in DEFAULT_ZONE_WEIGHTS),
                      coef=coef, finish=auto_finish(combo))
