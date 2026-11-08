@@ -33,6 +33,7 @@ def main(argv=None):
     ap.add_argument("--only", nargs="*", default=[])
     ap.add_argument("--stage-from", help="autofix の履歴。cards 段階の記録があるときだけ回す（コンボ名なしの記録は全対象）")
     ap.add_argument("--setup", help="仕込み済み開始局面のYAML（全対象に適用）。無ければ targets の setup を使う")
+    ap.add_argument("--workers", type=int, default=1, help="並列プロセス数（seeds を分けて fork で回す）")
     ap.add_argument("--seeds", type=int, default=30)
     ap.add_argument("--turns", type=int, default=4)
     ap.add_argument("--rounds", type=int, default=2)
@@ -55,7 +56,7 @@ def main(argv=None):
         opp = load_deck(t["opp_deck"]) if t.get("opp_deck") else ["T001"] * 40
         setup_path = a.setup or t.get("setup")        # 仕込み済み開始局面（4ターン以内キル率を現実的に比べるため。無ければ冷たい開幕）
         setup = yaml.safe_load(Path(setup_path).read_text(encoding="utf-8")) if setup_path else None
-        r = auto_improve(rules, deck, opp, c, list(range(1, a.seeds + 1)), a.out, rounds=a.rounds, turn=a.turns, setup=setup)
+        r = auto_improve(rules, deck, opp, c, list(range(1, a.seeds + 1)), a.out, rounds=a.rounds, turn=a.turns, setup=setup, workers=a.workers)
         print(t["combo"], r)
     return 0
 
