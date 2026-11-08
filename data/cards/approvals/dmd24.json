@@ -17,7 +17,7 @@
 ],
 "verifier": 2,
 "verify_error": "原文に このクリーチャーは攻撃できない があるが cannot_attack が定義に無い",
-"vocab_ver": "68f4b0a1d2867dea"
+"vocab_ver": "8cfe768bf7256d23"
 },
 "dmd24-032": {
 "by": "rule",
