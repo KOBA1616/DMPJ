@@ -69,3 +69,11 @@ def test_finish_bundle_needs_all_items_and_is_off_by_default(rules):
     assert parts_score(full, 0, spec) == parts_score(full, 0, spec.with_finish(0.0))
     assert parts_score(full, 0, on) - parts_score(full, 0, spec) == on.coef * on.bundles[0].weight
     assert parts_score(part, 0, on) == parts_score(part, 0, spec)   # 1つ欠ければ加点しない
+
+
+def test_parts_id_for_decks():
+    from dmsim.search.leaf_parts import parts_id_for_decks
+    assert parts_id_for_decks(["data/decks/saga_entry.yaml"], "auto") == "saga"
+    assert parts_id_for_decks(["data/decks/saga_entry.yaml"], "none") is None
+    assert parts_id_for_decks(["data/decks/saga_entry.yaml"], "knight_dmc") == "knight_dmc"
+    assert parts_id_for_decks(None, "auto") is None and parts_id_for_decks(["a", "b"], "auto") is None
