@@ -8,8 +8,10 @@ from collections import Counter
 from pathlib import Path
 
 from . import change as C
-from .evaluate import AcceptRule, harness_scorer
-from .loop import improve
+from .evaluate import AcceptRule, decide, harness_scorer, record
+from .loop import ids_of, improve
+import random
+from .spec import check
 from .spec import CONFIRMED, UNCONVERTED, DeckProposal, Entry, save
 
 
@@ -62,3 +64,58 @@ def auto_improve(rules, deck_ids: list[str], opp_ids: list[str], combo: dict, se
         save(final, path)
     return {"base": base.plan_id(), "final": final.plan_id(), "adopted": adopted, "path": str(path) if path else None,
             "sec": round(time.time() - t0, 1)}
+
+
+def _rate(d: dict, turn: int) -> float:
+    return sum(1.0 for v in d.values() if v is not None and v <= turn) / max(1, len(d))
+
+
+def two_stage(rules, deck_ids: list[str], opp_ids: list[str], combo: dict, seeds: list[int], ledger,
+              seed: int = 0, turn: int = 4, setup: dict | None = None, kinds=("add_parts", "add_prep"), n: int = 4,
+              coarse_budget: int = 40, top_k: int = 2, workers: int = 1, out_dir: str | Path | None = "data/deckplans/auto") -> dict:
+    """2段階: ①低い base_budget で全候補を同一シードで粗く比較 → ②粗い差が正の上位 top_k 件だけ通常予算で再比較し、
+    有意に良ければ採用（採否は evaluate.decide のみ）。未変換カードを含む候補は粗比較にも回さない。"""
+    rule = AcceptRule(turn=turn)
+    base = proposal_from_ids(rules, deck_ids, f"{combo['id']}_base")
+    pool, resolver, rng = core_names(combo), make_resolver(rules), random.Random(seed)
+    mk = lambda **kw: harness_scorer(rules, opp_ids, seeds, rule, setup=setup, workers=workers, **kw)
+    coarse, fine = mk(base_budget=coarse_budget), mk()
+    cands = []
+    for k in kinds:
+        for ch in C.PROPOSERS[k](base, rng, pool if k == "add_parts" else [], n=n, protect=set(pool)):
+            try:
+                cand = C.apply(base, ch)
+            except ValueError:
+                continue
+            st = check(cand, resolver)
+            if st["issues"] or st["unverified"]:
+                record(ledger, {"stage": "skip", "cand": cand.plan_id(), "change": ch.ops, "why": st["issues"] or "unverified"})
+                continue
+            cands.append((ch, cand))
+    t0 = time.time()
+    cbase = coarse(ids_of(base, resolver))
+    ranked = []
+    for ch, cand in cands:
+        diff = _rate(coarse(ids_of(cand, resolver)), turn) - _rate(cbase, turn)
+        record(ledger, {"stage": "coarse", "cand": cand.plan_id(), "change": ch.ops, "reason": ch.reason, "diff": diff, "budget": coarse_budget})
+        if diff > 0:
+            ranked.append((diff, ch, cand))
+    ranked.sort(key=lambda x: -x[0])
+    final, best = base, None
+    if ranked:
+        fbase = fine(ids_of(base, resolver))
+        for _, ch, cand in ranked[:top_k]:
+            res = decide(fbase, fine(ids_of(cand, resolver)), rule, False)
+            record(ledger, {"stage": "fine", "base": base.plan_id(), "cand": cand.plan_id(), "change": ch.ops, "reason": ch.reason, **res})
+            if res["verdict"] == "accept":
+                final, best = cand, res
+                break
+    path = None
+    if final is not base and out_dir:
+        final.name, final.status, final.source = f"{combo['id']}_auto_{final.plan_id()}", "adopted", "deckplan.auto.two_stage"
+        final.notes = f"粗比較(budget={coarse_budget})→通常予算で再比較し有意に改善 (FAIR, {turn}ターンキル率, seeds={len(seeds)})"
+        Path(out_dir).mkdir(parents=True, exist_ok=True)
+        path = Path(out_dir) / f"{final.name}.yaml"
+        save(final, path)
+    return {"base": base.plan_id(), "final": final.plan_id(), "adopted": final is not base, "path": str(path) if path else None,
+            "candidates": len(cands), "passed_coarse": len(ranked), "sec": round(time.time() - t0, 1)}

@@ -87,3 +87,25 @@ def test_scorer_workers_merge(monkeypatch):
     monkeypatch.setattr(H, "run_eval", lambda rules, cfg: {"cells": {H.cell_key("d", "fair", 1.0): {"per_game": [(s, 0, 3) for s in cfg.seeds]}}})
     out = harness_scorer(None, [], list(range(10)), workers=3)(["x"])
     assert sorted(out) == [(s, 0) for s in range(10)]
+
+
+def test_two_stage_screens_then_adopts(tmp_path, monkeypatch):
+    from dmsim.deckplan import auto as A
+    from dmsim.defs import load_rules
+    rules = load_rules()
+    ids = list(rules.cards)
+    core = ids[0]
+    deck = [i for i in ids[1:10] for _ in range(4)] + [core]
+    deck += [ids[10]] * 3
+    combo = {"id": "t", "parts": [{"name": rules.cards[core].name, "role": "core"}]}
+    calls = []
+
+    def fake(rules_, opp, seeds, rule, setup=None, workers=1, base_budget=200, **kw):
+        def sc(d):
+            calls.append(base_budget)
+            return {(s, 0): (3 if s % 5 >= 4 - d.count(core) else None) for s in range(60)}
+        return sc
+    monkeypatch.setattr(A, "harness_scorer", fake)
+    out = A.two_stage(rules, deck, [], combo, [], tmp_path / "l.jsonl", kinds=("add_parts",), n=8, coarse_budget=10, top_k=2, out_dir=tmp_path)
+    assert out["adopted"] and out["passed_coarse"] >= 1
+    assert 10 in calls and 200 in calls and calls.count(200) <= 3     # 粗い測定が多数、通常予算は base＋上位のみ

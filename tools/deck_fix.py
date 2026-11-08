@@ -10,7 +10,7 @@ import yaml
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 from dmsim.defs import load_rules  # noqa: E402
-from dmsim.deckplan.auto import auto_improve  # noqa: E402
+from dmsim.deckplan.auto import two_stage  # noqa: E402
 from dmsim.solitaire import load_deck  # noqa: E402
 
 
@@ -36,7 +36,9 @@ def main(argv=None):
     ap.add_argument("--workers", type=int, default=1, help="並列プロセス数（seeds を分けて fork で回す）")
     ap.add_argument("--seeds", type=int, default=30)
     ap.add_argument("--turns", type=int, default=4)
-    ap.add_argument("--rounds", type=int, default=2)
+    ap.add_argument("--cands", type=int, default=4, help="種類ごとの候補数")
+    ap.add_argument("--coarse-budget", type=int, default=40, help="①粗比較の base_budget（通常は 200）")
+    ap.add_argument("--top-k", type=int, default=2, help="②通常予算で再比較する上位件数")
     ap.add_argument("--out", default="logs/deckfix.jsonl")
     a = ap.parse_args(argv)
     combos = {c["id"]: c for c in yaml.safe_load(Path("data/known_combos/combos.yaml").read_text(encoding="utf-8"))["combos"]}
@@ -56,7 +58,8 @@ def main(argv=None):
         opp = load_deck(t["opp_deck"]) if t.get("opp_deck") else ["T001"] * 40
         setup_path = a.setup or t.get("setup")        # 仕込み済み開始局面（4ターン以内キル率を現実的に比べるため。無ければ冷たい開幕）
         setup = yaml.safe_load(Path(setup_path).read_text(encoding="utf-8")) if setup_path else None
-        r = auto_improve(rules, deck, opp, c, list(range(1, a.seeds + 1)), a.out, rounds=a.rounds, turn=a.turns, setup=setup, workers=a.workers)
+        r = two_stage(rules, deck, opp, c, list(range(1, a.seeds + 1)), a.out, turn=a.turns, setup=setup, workers=a.workers,
+                      n=a.cands, coarse_budget=a.coarse_budget, top_k=a.top_k)
         print(t["combo"], r)
     return 0
 
