@@ -57,3 +57,15 @@ def test_holdout_split_is_selectable():
     from dmsim.search.leaf_parts import load_specs
     assert "drill_lock" not in load_specs(split="tuning")
     assert "drill_lock" in load_specs(split="holdout")
+
+
+def test_finish_bundle_needs_all_items_and_is_off_by_default(rules):
+    from dmsim.search.leaf_parts import DRAGELION, SHAKOGAIRU, load_specs
+    spec = load_specs()["saga"]
+    assert spec.finish and not spec.bundles
+    on = spec.with_finish(1.0)
+    full = _eng(rules, {"hand": [SAGA, DRAGELION], "graveyard": [SAGA, SHAKOGAIRU]})
+    part = _eng(rules, {"hand": [SAGA, DRAGELION], "graveyard": [SAGA]})
+    assert parts_score(full, 0, spec) == parts_score(full, 0, spec.with_finish(0.0))
+    assert parts_score(full, 0, on) - parts_score(full, 0, spec) == on.coef * on.bundles[0].weight
+    assert parts_score(part, 0, on) == parts_score(part, 0, spec)   # 1つ欠ければ加点しない

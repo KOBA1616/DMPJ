@@ -45,3 +45,11 @@ def test_add_parts_proposer():
     chs = C.PROPOSERS["add_parts"](p, random.Random(0), ["PARTX"], n=2)
     assert chs and all(c.ops[1] == ("PARTX", 1) for c in chs)
     assert C.apply(p, chs[0]).size() == 40
+
+
+def test_finish_stage_proposes_finish_bundle_first():
+    from dmsim.autofix.loop import propose
+    c = propose("finish", Knobs())
+    assert c[0][0].finish_mult == 1.0 and "締めの束" in c[0][1]
+    assert propose("finish", Knobs(finish_mult=1.0))[0][0].finish_mult == 2.0
+    assert all(k.finish_mult <= 8 for k, _ in propose("finish", Knobs(finish_mult=8.0)))
