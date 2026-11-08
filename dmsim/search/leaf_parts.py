@@ -82,6 +82,29 @@ def auto_finish(combo: dict) -> tuple[Bundle, ...]:
     return (Bundle(tuple(("hand|bz", i, 1) for i in ids), 5.0),) if len(ids) >= 2 else ()
 
 
+HEAVY_CORE_DEFAULT = 3   # loopspec が無く core が多いコンボで、定義の先頭から重い部品とみなす種数
+HEAVY_MULT = 2.0         # 重い部品の加点倍率（既定の重み1.0×2 = 2.0 ≥ 1.5。autofix の cards 段階の必要カードになる）
+
+
+def heavy_ids(combo: dict) -> list[str]:
+    """手書きの leaf_parts が無いコンボの「重い部品」を既知コンボの定義から導く（手書きの重み付けをしない）。
+    1) loopspec（combo["loopspec"] の JSON）があれば、その goal と minimal のうち手札・場・墓地に要求される core 部品
+       （マナ・山札・盾に置くだけの札は仕込みの対象でないので除く）
+    2) なければ core 部品が HEAVY_CORE_DEFAULT 以下なら全部
+    3) それより多ければ定義の先頭から HEAVY_CORE_DEFAULT 種（定義は主要部品から並べる約束）"""
+    import json
+    core = list(dict.fromkeys(p["id"] for p in combo.get("parts", ()) if p.get("role") == "core" and p.get("id")))
+    lp = combo.get("loopspec")
+    if lp and (KNOWN_COMBOS.parents[2] / lp).exists():
+        spec = json.loads((KNOWN_COMBOS.parents[2] / lp).read_text(encoding="utf-8"))
+        want = {c["match"].get("name") for c in spec.get("goal", ()) if c.get("zone") in ("hand", "bz", "graveyard")}
+        want |= {c["match"].get("name") for c in spec.get("minimal", ()) if c.get("zone") in ("hand", "bz", "graveyard")}
+        got = [i for i in core if i in want]
+        if got:
+            return got
+    return core if len(core) <= HEAVY_CORE_DEFAULT else core[:HEAVY_CORE_DEFAULT]
+
+
 def spec_from_combo(combo: dict, coef: float = 10.0) -> PartsSpec:
     """known_combos の1件から部品表を作る。combo に leaf_parts（手書きの [{zone, ids, need, weight}]）があればそれを使い、
     なければ core 部品（id あり）ごとに DEFAULT_ZONE_WEIGHTS で作る。同じ id の部品は1つにまとめる（枚数は need に足す）。"""
@@ -91,7 +114,9 @@ def spec_from_combo(combo: dict, coef: float = 10.0) -> PartsSpec:
         return PartsSpec(tuple(Part(p["zone"], tuple(p.get("ids", ())), p.get("need", 1), p.get("weight", 1.0))
                                for p in combo["leaf_parts"]), coef=combo.get("leaf_coef", coef), finish=finish)
     ids = list(dict.fromkeys(p["id"] for p in combo["parts"] if p.get("role") == "core" and p.get("id")))
-    return PartsSpec(tuple(Part(z, (i,), 1, w) for i in ids for z, w in DEFAULT_ZONE_WEIGHTS), coef=coef, finish=auto_finish(combo))
+    heavy = set(heavy_ids(combo))
+    return PartsSpec(tuple(Part(z, (i,), 1, w * (HEAVY_MULT if i in heavy else 1.0)) for i in ids for z, w in DEFAULT_ZONE_WEIGHTS),
+                     coef=coef, finish=auto_finish(combo))
 
 
 def load_specs(path: Path = KNOWN_COMBOS, split: str | None = None) -> dict[str, PartsSpec]:

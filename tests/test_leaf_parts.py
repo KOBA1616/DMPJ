@@ -1,3 +1,4 @@
+import yaml
 from dmsim import scenario
 from dmsim.search import FairTurnSearch
 from dmsim.search.leaf_parts import SAGA, SAGA_SPEC, Part, PartsSpec, make_value_fn, parts_score
@@ -95,3 +96,19 @@ def test_auto_finish_bundle_scores_only_when_all_present(rules):
     both = _eng(rules, {"hand": ["T001"], "bz": ["T004"]})
     one = _eng(rules, {"hand": ["T001"]})
     assert parts_score(both, 0, spec) == 5.0 and parts_score(one, 0, spec) == 0.0
+
+
+def test_heavy_parts_are_derived_from_combo_definition():
+    from dmsim.autofix.batch import default_need
+    from dmsim.search.leaf_parts import HEAVY_CORE_DEFAULT, heavy_ids
+    combos = {c["id"]: c for c in yaml.safe_load(open("data/known_combos/combos.yaml", encoding="utf-8"))["combos"]}
+    # core が少ないコンボは全部、多いコンボは loopspec か先頭から絞る（天門の core 9種が全部 cards の必要カードにならない）
+    assert len(heavy_ids(combos["knight_dmc"])) == 2
+    ten = heavy_ids(combos["tenmon"])
+    assert ten and len(ten) < 9 and "dmx12b-031" in ten
+    aka = heavy_ids(combos["akashic"])
+    assert aka == [p["id"] for p in combos["akashic"]["parts"][:HEAVY_CORE_DEFAULT]]
+    for k in ("tenmon", "akashic", "knight_dmc"):
+        need = default_need(combos[k])
+        assert need and len(need) < len([p for p in combos[k]["parts"] if p.get("role") == "core"]) or k == "knight_dmc"
+    assert set(default_need(combos["saga"]))    # 手書きのコンボは従来どおり
