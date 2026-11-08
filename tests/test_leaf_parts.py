@@ -77,3 +77,21 @@ def test_parts_id_for_decks():
     assert parts_id_for_decks(["data/decks/saga_entry.yaml"], "none") is None
     assert parts_id_for_decks(["data/decks/saga_entry.yaml"], "knight_dmc") == "knight_dmc"
     assert parts_id_for_decks(None, "auto") is None and parts_id_for_decks(["a", "b"], "auto") is None
+
+
+def test_auto_finish_for_combos_without_handwritten_bundles(rules):
+    from dmsim.search.leaf_parts import AUTO_FINISH_MAX, auto_finish, load_specs
+    specs = load_specs()
+    assert all(s.finish for k, s in specs.items() if k in ("tenmon", "akashic", "knight_dmc"))
+    assert specs["saga"].finish[0].items[0][0] == "hand"      # 手書きがあればそれを使う
+    a = auto_finish({"parts": [{"id": f"x{i}", "role": "core"} for i in range(9)] + [{"id": "s", "role": "support"}]})
+    assert len(a[0].items) == AUTO_FINISH_MAX and all(z == "hand|bz" for z, _, _ in a[0].items)
+    assert auto_finish({"parts": [{"id": "x", "role": "core"}]}) == ()   # 1種だけなら束にならない
+
+
+def test_auto_finish_bundle_scores_only_when_all_present(rules):
+    from dmsim.search.leaf_parts import Bundle
+    spec = PartsSpec((), finish=(Bundle((("hand|bz", "T001", 1), ("hand|bz", "T004", 1)), 5.0),)).with_finish()
+    both = _eng(rules, {"hand": ["T001"], "bz": ["T004"]})
+    one = _eng(rules, {"hand": ["T001"]})
+    assert parts_score(both, 0, spec) == 5.0 and parts_score(one, 0, spec) == 0.0

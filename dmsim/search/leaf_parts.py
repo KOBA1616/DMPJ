@@ -49,7 +49,7 @@ def parts_score(eng: Engine, me: int, spec: PartsSpec) -> float:
     for p in spec.parts:
         total += p.weight * min(count_matching(eng, me, p.zone, p.ids), p.need)
     for b in spec.bundles:
-        if all(count_matching(eng, me, z, (i,)) >= n for z, i, n in b.items):
+        if all(sum(count_matching(eng, me, zz, (i,)) for zz in z.split("|")) >= n for z, i, n in b.items):   # zone は "hand|bz" のように複数指定できる（どれかにあればよい）
             total += b.weight
     return spec.coef * total
 
@@ -72,16 +72,26 @@ KNOWN_COMBOS = Path(__file__).resolve().parents[2] / "data" / "known_combos" / "
 DEFAULT_ZONE_WEIGHTS = (("hand", 1.0), ("bz", 1.0), ("graveyard", 0.5))
 
 
+AUTO_FINISH_MAX = 5   # 自動生成の束に入れる core 部品の上限（多すぎると同時にそろわず、加点が一度も起きない）
+
+
+def auto_finish(combo: dict) -> tuple[Bundle, ...]:
+    """手書きの finish_bundles が無いコンボ用の自動生成: core 部品（id あり、先頭から AUTO_FINISH_MAX 種）が
+    手札か場に同時にそろった時の束を1つ作る。効くかどうかは自動修正が公平探索の対比較で決める（既定では無効）。"""
+    ids = list(dict.fromkeys(p["id"] for p in combo.get("parts", ()) if p.get("role") == "core" and p.get("id")))[:AUTO_FINISH_MAX]
+    return (Bundle(tuple(("hand|bz", i, 1) for i in ids), 5.0),) if len(ids) >= 2 else ()
+
+
 def spec_from_combo(combo: dict, coef: float = 10.0) -> PartsSpec:
     """known_combos の1件から部品表を作る。combo に leaf_parts（手書きの [{zone, ids, need, weight}]）があればそれを使い、
     なければ core 部品（id あり）ごとに DEFAULT_ZONE_WEIGHTS で作る。同じ id の部品は1つにまとめる（枚数は need に足す）。"""
     if combo.get("leaf_parts"):
         finish = tuple(Bundle(tuple((i["zone"], i["id"], i.get("n", 1)) for i in b["items"]), b.get("weight", 5.0))
-                       for b in combo.get("finish_bundles", ()))
+                       for b in combo.get("finish_bundles", ())) or auto_finish(combo)
         return PartsSpec(tuple(Part(p["zone"], tuple(p.get("ids", ())), p.get("need", 1), p.get("weight", 1.0))
                                for p in combo["leaf_parts"]), coef=combo.get("leaf_coef", coef), finish=finish)
     ids = list(dict.fromkeys(p["id"] for p in combo["parts"] if p.get("role") == "core" and p.get("id")))
-    return PartsSpec(tuple(Part(z, (i,), 1, w) for i in ids for z, w in DEFAULT_ZONE_WEIGHTS), coef=coef)
+    return PartsSpec(tuple(Part(z, (i,), 1, w) for i in ids for z, w in DEFAULT_ZONE_WEIGHTS), coef=coef, finish=auto_finish(combo))
 
 
 def load_specs(path: Path = KNOWN_COMBOS, split: str | None = None) -> dict[str, PartsSpec]:
