@@ -16,7 +16,7 @@ import known_combos  # noqa: E402
 
 
 # known_combos 側の収録IDとエンジン登録IDが違う同一カード（同じ効果の別収録）。combos.yaml は触らずここで読み替える
-ALIAS = {"dm23ex2-cho005": "dm23ex2-009"}  # 完全水中要塞 アカシック3
+from dmsim.search.leaf_parts import ID_ALIAS as ALIAS  # noqa: E402  # 部品表の導出と共通
 
 
 def copies(cd, role, cap=4):

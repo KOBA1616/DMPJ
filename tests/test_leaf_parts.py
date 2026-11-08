@@ -107,7 +107,8 @@ def test_heavy_parts_are_derived_from_combo_definition():
     ten = heavy_ids(combos["tenmon"])
     assert ten and len(ten) < 9 and "dmx12b-031" in ten
     aka = heavy_ids(combos["akashic"])
-    assert aka == [p["id"] for p in combos["akashic"]["parts"][:HEAVY_CORE_DEFAULT]]
+    from dmsim.search.leaf_parts import canon
+    assert aka == [canon(p["id"]) for p in combos["akashic"]["parts"][:HEAVY_CORE_DEFAULT]]   # 収録IDの違うカードはエンジン側IDに読み替える
     for k in ("tenmon", "akashic", "knight_dmc"):
         need = default_need(combos[k])
         assert need and len(need) < len([p for p in combos[k]["parts"] if p.get("role") == "core"]) or k == "knight_dmc"
