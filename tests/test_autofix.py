@@ -128,3 +128,18 @@ def test_cards_stage_tries_prep_bonus_and_default_need():
         return {"kill": [None] * n, "board": [None] * n, "cards": got, "prep": [0] * n}
     k, hist = autofix(m, Knobs(), rounds=1)
     assert hist[0]["stage"] == "cards" and hist[0]["tries"][0]["verdict"] == "accept" and k.prep_bonus > 0
+
+
+def test_ledger_has_combo_for_deck_fix(tmp_path):
+    import json
+
+    from dmsim.autofix import Knobs, autofix
+    led = tmp_path / "l.jsonl"
+    cards_only = lambda k: {"kill": [None] * 10, "board": [None] * 10, "cards": [None] * 10}
+    autofix(cards_only, Knobs(), {"id": "saga", "split": "tuning"}, ledger=str(led))
+    e = json.loads(led.read_text().splitlines()[0])
+    assert e["combo"] == "saga" and e["stage"] == "cards" and e["deck_hint"]
+    import sys
+    sys.path.insert(0, "tools")
+    import deck_fix
+    assert deck_fix.cards_stage_decks(str(led)) == {"saga"}

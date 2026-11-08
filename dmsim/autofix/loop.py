@@ -79,7 +79,7 @@ def autofix(measure, k0: Knobs, combo: dict | None = None, rule: Rule = Rule(), 
     base = measure(cur)
     for rd in range(rounds):
         d = diagnose(base, rule.turn)
-        ent = {"round": rd, "knobs": cur.__dict__, "stage": d.stage, "cause": d.cause, "rates": d.rates, "rule": rule.version, "hints": list(d.hints)}
+        ent = {"round": rd, "knobs": cur.__dict__, "stage": d.stage, "cause": d.cause, "rates": d.rates, "rule": rule.version, "hints": list(d.hints), "combo": (combo or {}).get("id")}
         if d.stage == "cards":
             ent["deck_hint"] = {"proposer": "add_parts", "note": "デッキ側の改善が必要。deckplan.improve(kinds=(\"add_parts\", \"add_prep\"), pool=コンボのcore名) で候補を評価する。自動採用はしない"}
         cands = propose(d.stage, cur, rule, d.hints)       # cards でも準備札の加点(prep_bonus)は探索側の設定なので試す
