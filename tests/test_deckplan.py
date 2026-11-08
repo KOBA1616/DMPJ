@@ -103,7 +103,8 @@ def test_two_stage_screens_then_adopts(tmp_path, monkeypatch):
     def fake(rules_, opp, seeds, rule, setup=None, workers=1, base_budget=200, **kw):
         def sc(d):
             calls.append(base_budget)
-            return {(s, 0): (3 if s % 5 >= 4 - d.count(core) else None) for s in range(60)}
+            kt = {(s, 0): (3 if s % 5 >= 4 - d.count(core) else None) for s in range(60)}
+            return {k: (v, 0.0 if v is None else 1.0) for k, v in kt.items()} if kw.get("stage_spec") is not None else kt   # 粗比較は (キルターン, 段階進捗)
         return sc
     monkeypatch.setattr(A, "harness_scorer", fake)
     out = A.two_stage(rules, deck, [], combo, [], tmp_path / "l.jsonl", kinds=("add_parts",), n=8, coarse_budget=10, top_k=2, out_dir=tmp_path)

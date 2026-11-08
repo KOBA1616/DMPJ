@@ -72,14 +72,19 @@ def _rate(d: dict, turn: int) -> float:
 
 def two_stage(rules, deck_ids: list[str], opp_ids: list[str], combo: dict, seeds: list[int], ledger,
               seed: int = 0, turn: int = 4, setup: dict | None = None, kinds=("add_parts", "add_prep", "cut_unused", "trim_parts"), n: int = 4,
-              unused: list[str] | None = None, adds: list[str] | None = None, coarse_budget: int = 40, top_k: int = 2, workers: int = 1, out_dir: str | Path | None = "data/deckplans/auto") -> dict:
+              unused: list[str] | None = None, adds: list[str] | None = None, coarse_budget: int = 40, top_k: int = 2, workers: int = 1, coarse_seeds: int | None = None, out_dir: str | Path | None = "data/deckplans/auto") -> dict:
     """2段階: ①低い base_budget で全候補を同一シードで粗く比較 → ②粗い差が正の上位 top_k 件だけ通常予算で再比較し、
     有意に良ければ採用（採否は evaluate.decide のみ）。未変換カードを含む候補は粗比較にも回さない。"""
     rule = AcceptRule(turn=turn)
     base = proposal_from_ids(rules, deck_ids, f"{combo['id']}_base")
     pool, resolver, rng = core_names(combo), make_resolver(rules), random.Random(seed)
     mk = lambda **kw: harness_scorer(rules, opp_ids, seeds, rule, setup=setup, workers=workers, **kw)
-    coarse, fine = mk(base_budget=coarse_budget), mk()
+    from ..autofix.batch import default_board, default_need
+    from ..eval.progress import ProgressSpec
+    prog = ProgressSpec(board=default_board(combo), cards=default_need(combo))
+    cs = seeds[:coarse_seeds] if coarse_seeds else seeds                  # 粗比較は局数を減らしてよい（時間上限に収める）
+    coarse = harness_scorer(rules, opp_ids, cs, rule, setup=setup, workers=workers, stage_spec=prog, base_budget=coarse_budget)
+    fine = mk()
     cands = []
     for k in kinds:
         for ch in C.PROPOSERS[k](base, rng, pool if k in ("add_parts", "trim_parts") else [], n=n, protect=set(pool),
@@ -97,11 +102,13 @@ def two_stage(rules, deck_ids: list[str], opp_ids: list[str], combo: dict, seeds
     cbase = coarse(ids_of(base, resolver))
     ranked = []
     for ch, cand in cands:
-        diff = _rate(coarse(ids_of(cand, resolver)), turn) - _rate(cbase, turn)
-        record(ledger, {"stage": "coarse", "cand": cand.plan_id(), "change": ch.ops, "reason": ch.reason, "diff": diff, "budget": coarse_budget})
-        if diff > 0:
-            ranked.append((diff, ch, cand))
-    ranked.sort(key=lambda x: -x[0])
+        cc = coarse(ids_of(cand, resolver))
+        diff = _rate({k: v[0] for k, v in cc.items()}, turn) - _rate({k: v[0] for k, v in cbase.items()}, turn)
+        sdiff = sum(cc[k][1] - cbase[k][1] for k in cc) / max(1, len(cc))          # 段階進捗（連続値）の平均差
+        record(ledger, {"stage": "coarse", "cand": cand.plan_id(), "change": ch.ops, "reason": ch.reason, "diff": diff, "stage_diff": sdiff, "budget": coarse_budget})
+        if diff > 0 or sdiff > 0:                 # キル率が同じでも、段階進捗が進む案は通常予算の再比較に回す
+            ranked.append(((diff, sdiff), ch, cand))
+    ranked.sort(key=lambda x: x[0], reverse=True)
     final, best = base, None
     if ranked:
         fbase = fine(ids_of(base, resolver))
