@@ -1,0 +1,3 @@
+# 自動診断→改善の対象。combo は data/known_combos の id（holdout は自動で除外される）。
+targets:
+  - {combo: saga, deck: data/decks/saga_entry.yaml, need: [dm22ex2-021], board: ["graveyard:dm22ex2-021:1"], seeds: 100}

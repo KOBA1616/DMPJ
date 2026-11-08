@@ -45,3 +45,15 @@ def test_add_parts_proposer():
     chs = C.PROPOSERS["add_parts"](p, random.Random(0), ["PARTX"], n=2)
     assert chs and all(c.ops[1] == ("PARTX", 1) for c in chs)
     assert C.apply(p, chs[0]).size() == 40
+
+
+def test_batch_skips_holdout_and_unknown():
+    from dmsim.autofix import run_targets
+    combos = {"a": {"split": "tuning"}, "h": {"split": "holdout"}}
+    r = run_targets([{"combo": "a"}, {"combo": "h"}, {"combo": "zz"}], combos, lambda t: fake, rounds=2)
+    assert r[0]["stage"] and "skipped" in r[1] and "skipped" in r[2]
+
+
+def test_finish_proposes_n_det():
+    from dmsim.autofix.loop import propose
+    assert any(c.n_det == 8 for c, _ in propose("finish", Knobs()))
