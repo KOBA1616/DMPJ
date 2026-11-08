@@ -28,6 +28,7 @@ class EvalConfig:
     match_nodes: bool = False                        # True: CHEAT の予算倍率を FAIR の平均ノード数に合うよう自動調整する（level_mult は初期値）
     match_pilot: int = 8                             # 調整に使う試験局数
     match_tol: float = 0.1                           # 目標との許容誤差（比）
+    lookahead: int = 0                               # 公平側の複数ターン探索（葉を次ターンの小探索で評価する予算。0で無効。progress 指定時のみ）
     n_det: int = 8                                   # progress 指定時の FAIR の決定化数
     value_fn: Callable | None = None                 # 葉の評価の差し替え f(eng, me)（progress 指定時のみ有効。例 leaf_parts.make_value_fn(spec)）
     explog: object | None = None                     # dmsim.eval.steplog.ExpLogSpec。あれば各セルの先頭の局を1手ごとに版つきJSONLへ記録する
@@ -123,7 +124,7 @@ def run_eval(rules, cfg: EvalConfig) -> dict:
         for lv in cfg.levels:
             if cfg.progress is not None:
                 from .progress import make_progress_runner
-                runner = make_progress_runner(lv, cfg.progress, cfg.n_det, cfg.value_fn)
+                runner = make_progress_runner(lv, cfg.progress, cfg.n_det, cfg.value_fn, cfg.lookahead)
             else:
                 runner = get_runner(lv)
             for oname, opp in cfg.opps.items():

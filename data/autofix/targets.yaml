@@ -1,0 +1,8 @@
+# 自動診断→改善の対象。combo は data/known_combos の id（holdout は自動で除外される）。
+# need を省くと、コンボの core 部品（id あり）を必要カードとして使う。board は任意。
+targets:
+  - {combo: saga, deck: data/decks/saga_entry.yaml, need: [dm22ex2-021], board: ["graveyard:dm22ex2-021:1"], seeds: 100}
+  - {combo: tenmon, deck: data/decks/tenmon.yaml, seeds: 60}
+  - {combo: knight_dmc, deck: data/decks/knight_dmc.yaml, seeds: 60}
+  - {combo: akashic, deck: data/decks/akashic.yaml, seeds: 60}
+  - {combo: drill_lock, deck: data/decks/saga.yaml}   # holdout: 自動で除外されることの確認用

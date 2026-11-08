@@ -53,3 +53,24 @@ def test_finish_stage_proposes_finish_bundle_first():
     assert c[0][0].finish_mult == 1.0 and "締めの束" in c[0][1]
     assert propose("finish", Knobs(finish_mult=1.0))[0][0].finish_mult == 2.0
     assert all(k.finish_mult <= 8 for k, _ in propose("finish", Knobs(finish_mult=8.0)))
+
+
+def test_batch_skips_holdout_and_unknown():
+    from dmsim.autofix import run_targets
+    combos = {"a": {"split": "tuning"}, "h": {"split": "holdout"}}
+    r = run_targets([{"combo": "a"}, {"combo": "h"}, {"combo": "zz"}], combos, lambda t: fake, rounds=2)
+    assert r[0]["stage"] and "skipped" in r[1] and "skipped" in r[2]
+
+
+def test_finish_proposes_n_det():
+    from dmsim.autofix.loop import propose
+    assert any(c.n_det == 8 for c, _ in propose("finish", Knobs()))
+
+
+def test_store_resumes_and_lookahead(tmp_path):
+    from dmsim.autofix import run_targets
+    st = tmp_path / "k.yaml"
+    run_targets([{"combo": "a"}], {"a": {"split": "tuning"}}, lambda t: fake, rounds=4, store=str(st))
+    assert st.exists()
+    from dmsim.autofix.loop import propose
+    assert any(c.lookahead == 1 for c, _ in propose("finish", Knobs()))

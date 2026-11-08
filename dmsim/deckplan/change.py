@@ -73,3 +73,19 @@ def add_parts(deck: DeckProposal, rng: random.Random, pool: list[str], n: int = 
         a, b = rng.choice(others), rng.choice(lacking)
         out.append(Change("add_parts", [(a, -1), (b, 1)], f"部品不足: {a} → {b}"))
     return out
+
+
+@proposer("add_prep")
+def add_prep(deck: DeckProposal, rng: random.Random, pool: list[str] | None = None, n: int = 5, max_cost: int = 4, **_) -> list[Change]:
+    """墓地への仕込み手段（tools/suggest_prep の静的列挙）を1枚足し、仕込みでない札を1枚抜く。
+    pool を渡せばその名前に限る。採否は evaluate.decide だけが行う。"""
+    from tools.suggest_prep import scan
+    have = {e.name for e in deck.entries}
+    cands = [r["name"] for r in scan()
+             if r["name"] not in have and (pool is None or r["name"] in pool)
+             and isinstance(r["cost"], int) and r["cost"] <= max_cost]
+    others = [e.name for e in deck.entries]
+    if not cands or not others:
+        return []
+    return [Change("add_prep", [(a, -1), (b, 1)], f"仕込み手段: {a} → {b}")
+            for a, b in ((rng.choice(others), rng.choice(cands)) for _ in range(n))]

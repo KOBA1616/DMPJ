@@ -25,10 +25,13 @@ def _own_decision(eng: Engine, me: int, opp_policy):
 
 class FairTurnSearch:
     def __init__(self, me: int, budget: int = 200, n_det: int = 8, seed: int = 0, weights=None,
-                 opp_policy=charge_only_policy, known=(), value_fn=None):
+                 opp_policy=charge_only_policy, known=(), value_fn=None, lookahead: int = 0):
         self.me, self.budget, self.n_det, self.seed = me, budget, n_det, seed
         self.weights, self.opp_policy, self.known = weights, opp_policy, set(known)
         self.value_fn = value_fn            # 葉の評価の差し替え f(eng, me)。leaf_parts.make_value_fn など
+        if lookahead > 0:                   # 複数ターン探索: 葉を次の自分のターンの小探索で評価する（search/multiturn.py）
+            from .multiturn import make_lookahead_value_fn
+            self.value_fn = make_lookahead_value_fn(value_fn, lookahead, opp_policy, weights)
         self.nodes = 0
 
     def _vote(self, eng: Engine, d: dict, k: int) -> Counter:

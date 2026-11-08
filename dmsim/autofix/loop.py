@@ -17,6 +17,8 @@ class Knobs:
     gy_mult: float = 1.0        # 墓地の部品の重み倍率
     budget: int = 100           # 探索予算
     finish_mult: float = 0.0    # 締めの束（部品の同時そろい）の倍率。0 は無効
+    n_det: int = 4              # 公平探索の決定化数
+    lookahead: int = 0          # 複数ターン探索の先読み（dmsim/search/multiturn）
 
 
 @dataclass(frozen=True)
@@ -26,6 +28,8 @@ class Rule:
     alpha: float = 0.05
     coef_max: float = 100.0
     budget_max: int = 1600
+    n_det_max: int = 16
+    lookahead_max: int = 2
 
 
 def propose(stage: str, k: Knobs, rule: Rule = Rule()) -> list[tuple[Knobs, str]]:
@@ -43,6 +47,10 @@ def propose(stage: str, k: Knobs, rule: Rule = Rule()) -> list[tuple[Knobs, str]
             out.append((replace(k, finish_mult=k.finish_mult * 2), "締めの束の重みを2倍"))
         if k.budget * 2 <= rule.budget_max:
             out.append((replace(k, budget=k.budget * 2), "探索予算を2倍"))
+        if k.lookahead + 1 <= rule.lookahead_max:
+            out.append((replace(k, lookahead=k.lookahead + 1), "先読み(lookahead)を+1"))
+        if k.n_det * 2 <= rule.n_det_max:
+            out.append((replace(k, n_det=k.n_det * 2), "決定化数を2倍"))
         if k.coef * 2 <= rule.coef_max:
             out.append((replace(k, coef=k.coef * 2), "部品倍率を2倍"))
     return out
@@ -69,7 +77,7 @@ def autofix(measure, k0: Knobs, combo: dict | None = None, rule: Rule = Rule(), 
         d = diagnose(base, rule.turn)
         ent = {"round": rd, "knobs": cur.__dict__, "stage": d.stage, "cause": d.cause, "rates": d.rates, "rule": rule.version}
         if d.stage == "cards":
-            ent["deck_hint"] = {"proposer": "add_parts", "note": "デッキ側の改善が必要。deckplan.improve(kinds=(\"add_parts\",), pool=コンボのcore名) で候補を評価する。自動採用はしない"}
+            ent["deck_hint"] = {"proposer": "add_parts", "note": "デッキ側の改善が必要。deckplan.improve(kinds=(\"add_parts\", \"add_prep\"), pool=コンボのcore名) で候補を評価する。自動採用はしない"}
         if d.stage in ("ok", "cards"):
             hist.append(ent)
             record(ledger, ent) if ledger else None
@@ -96,15 +104,16 @@ def autofix(measure, k0: Knobs, combo: dict | None = None, rule: Rule = Rule(), 
     return cur, hist
 
 
-def harness_measure(rules, deck, opp_deck, seeds, spec=None, prog=None, parts_spec=None, n_det=4, max_turn=4):
+def harness_measure(rules, deck, opp_deck, seeds, spec=None, prog=None, parts_spec=None, max_turn=4):
     """実エンジンの測定（FAIR のみ）。parts_spec は dmsim.search.leaf_parts.PartsSpec。"""
     from ..eval import fair_runner
     from ..eval.harness import EvalConfig, cell_key, run_eval
     from ..eval.infolevel import InfoLevel
     from ..search.leaf_parts import Part, PartsSpec, make_value_fn
-    fair_runner.register(n_det)
 
     def measure(k: Knobs) -> dict:
+        n_det = k.n_det
+        fair_runner.register(n_det, k.lookahead)
         vfn = None
         if parts_spec is not None:
             ps = replace(parts_spec, parts=tuple(replace(p, weight=p.weight * k.gy_mult) if p.zone == "graveyard" else p for p in parts_spec.parts), coef=k.coef)
