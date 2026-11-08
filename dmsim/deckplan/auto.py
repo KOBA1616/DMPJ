@@ -71,8 +71,8 @@ def _rate(d: dict, turn: int) -> float:
 
 
 def two_stage(rules, deck_ids: list[str], opp_ids: list[str], combo: dict, seeds: list[int], ledger,
-              seed: int = 0, turn: int = 4, setup: dict | None = None, kinds=("add_parts", "add_prep"), n: int = 4,
-              coarse_budget: int = 40, top_k: int = 2, workers: int = 1, out_dir: str | Path | None = "data/deckplans/auto") -> dict:
+              seed: int = 0, turn: int = 4, setup: dict | None = None, kinds=("add_parts", "add_prep", "cut_unused", "trim_parts"), n: int = 4,
+              unused: list[str] | None = None, adds: list[str] | None = None, coarse_budget: int = 40, top_k: int = 2, workers: int = 1, out_dir: str | Path | None = "data/deckplans/auto") -> dict:
     """2段階: ①低い base_budget で全候補を同一シードで粗く比較 → ②粗い差が正の上位 top_k 件だけ通常予算で再比較し、
     有意に良ければ採用（採否は evaluate.decide のみ）。未変換カードを含む候補は粗比較にも回さない。"""
     rule = AcceptRule(turn=turn)
@@ -82,7 +82,8 @@ def two_stage(rules, deck_ids: list[str], opp_ids: list[str], combo: dict, seeds
     coarse, fine = mk(base_budget=coarse_budget), mk()
     cands = []
     for k in kinds:
-        for ch in C.PROPOSERS[k](base, rng, pool if k == "add_parts" else [], n=n, protect=set(pool)):
+        for ch in C.PROPOSERS[k](base, rng, pool if k in ("add_parts", "trim_parts") else [], n=n, protect=set(pool),
+                                 unused=unused, adds=adds):
             try:
                 cand = C.apply(base, ch)
             except ValueError:
@@ -119,3 +120,16 @@ def two_stage(rules, deck_ids: list[str], opp_ids: list[str], combo: dict, seeds
         save(final, path)
     return {"base": base.plan_id(), "final": final.plan_id(), "adopted": final is not base, "path": str(path) if path else None,
             "candidates": len(cands), "passed_coarse": len(ranked), "sec": round(time.time() - t0, 1)}
+
+
+def unused_names(rules, deck_ids: list[str], opp_ids: list[str], seeds: list[int], turns: int = 3, budget: int = 60) -> list[str]:
+    """usage 監査（dmsim.autofix.usage）で使われにくい札の名前。抜く候補に使う。"""
+    from ..autofix.usage import collect_usage, unused_cards
+    u = collect_usage(rules, deck_ids, opp_ids, seeds, max_turn=turns, budget=budget)
+    return [rules.cards[r["id"]].name for r in unused_cards(u) if r["id"] in rules.cards]
+
+
+def add_candidates(combo: dict, max_cost: int = 4) -> list[str]:
+    """入れる側の候補: コンボの core 部品＋墓地への準備札（tools/suggest_prep）。"""
+    from tools.suggest_prep import scan
+    return core_names(combo) + [r["name"] for r in scan() if isinstance(r["cost"], int) and r["cost"] <= max_cost]

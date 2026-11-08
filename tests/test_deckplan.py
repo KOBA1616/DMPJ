@@ -109,3 +109,12 @@ def test_two_stage_screens_then_adopts(tmp_path, monkeypatch):
     out = A.two_stage(rules, deck, [], combo, [], tmp_path / "l.jsonl", kinds=("add_parts",), n=8, coarse_budget=10, top_k=2, out_dir=tmp_path)
     assert out["adopted"] and out["passed_coarse"] >= 1
     assert 10 in calls and 200 in calls and calls.count(200) <= 3     # 粗い測定が多数、通常予算は base＋上位のみ
+
+
+def test_cut_unused_and_trim_parts():
+    p = from_dict({"name": "d", "entries": [{"name": "A", "count": 3}, {"name": "B", "count": 2}, {"name": "C", "count": 3}, {"name": "D", "count": 4}]})
+    rng = random.Random(0)
+    cu = C.PROPOSERS["cut_unused"](p, rng, n=5, unused=["B", "A", "Z"], protect={"A"}, adds=["A", "X", "D"])
+    assert cu and all(c.ops[0][0] == "B" and c.ops[1][0] in ("A", "X") for c in cu)     # 保護札は抜かない・4枚ある札は足さない
+    tp = C.PROPOSERS["trim_parts"](p, rng, ["A", "B"], n=3)
+    assert tp and all(c.ops == [("A", -1), ("C", 1)] for c in tp)
