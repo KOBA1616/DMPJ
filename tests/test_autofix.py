@@ -34,3 +34,14 @@ def test_guards():
     cards_only = lambda k: {"kill": [None] * 10, "board": [None] * 10, "cards": [None] * 10}
     k, hist = autofix(cards_only, Knobs())
     assert k == Knobs() and "deck_hint" in hist[0]
+
+
+def test_add_parts_proposer():
+    import random
+
+    from dmsim import deckplan as D
+    from dmsim.deckplan import change as C
+    p = D.load("data/deckplans/mono_red_beatdown_v0.yaml")
+    chs = C.PROPOSERS["add_parts"](p, random.Random(0), ["PARTX"], n=2)
+    assert chs and all(c.ops[1] == ("PARTX", 1) for c in chs)
+    assert C.apply(p, chs[0]).size() == 40
