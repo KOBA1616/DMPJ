@@ -1,8 +1,8 @@
 # 自動診断→改善の対象。combo は data/known_combos の id（holdout は自動で除外される）。
 # need を省くと core 部品、board を省くと leaf_parts の重み1.5以上の部品すべてで盤面の揃いを見る（一部だけ見ると診断が甘くなる）。
 targets:
-  - {combo: saga, deck: data/decks/saga_entry.yaml, seeds: 100}   # need=core部品、board=重み1.5以上の部品すべて(墓地サガ・シャコガイル、手札サガ・ドラゲリオン)
-  - {combo: tenmon, deck: data/decks/tenmon.yaml, seeds: 60}
-  - {combo: knight_dmc, deck: data/decks/knight_dmc.yaml, seeds: 60}
-  - {combo: akashic, deck: data/decks/akashic.yaml, seeds: 60}
+  - {combo: saga, deck: data/decks/saga_entry.yaml, seeds: 40}   # need=core部品、board=重み1.5以上の部品すべて(墓地サガ・シャコガイル、手札サガ・ドラゲリオン)
+  - {combo: tenmon, deck: data/decks/tenmon.yaml, seeds: 40}
+  - {combo: knight_dmc, deck: data/decks/knight_dmc.yaml, seeds: 40}
+  - {combo: akashic, deck: data/decks/akashic.yaml, seeds: 40}
   - {combo: drill_lock, deck: data/decks/saga.yaml}   # holdout: 自動で除外されることの確認用
