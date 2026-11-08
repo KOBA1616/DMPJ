@@ -28,3 +28,15 @@ def run_targets(targets: list[dict], combos: dict, make_measure, rule: Rule = Ru
             Path(store).write_text(yaml.safe_dump(saved, allow_unicode=True), encoding="utf-8")
         out.append({"target": t, "final": k.__dict__, "stage": hist[-1]["stage"], "rates": hist[-1]["rates"]})
     return out
+
+
+def default_board(combo: dict, min_weight: float = 1.5) -> dict:
+    """最小盤面Mを部品表から作る: 重みが min_weight 以上で ID 指定の部品を、ゾーンごとに全部そろえる。
+    一部の部品だけを見ると診断が甘くなる（盤面が揃った＝仕込み完了と誤判定する）ので、指定がなければ全部品で見る。"""
+    from ..search.leaf_parts import spec_from_combo
+    board: dict = {}
+    for p in spec_from_combo(combo).parts:
+        if p.ids and p.weight >= min_weight:
+            for i in p.ids:
+                board.setdefault(p.zone, {})[i] = max(board.get(p.zone, {}).get(i, 0), p.need)
+    return board

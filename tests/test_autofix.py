@@ -74,3 +74,12 @@ def test_store_resumes_and_lookahead(tmp_path):
     assert st.exists()
     from dmsim.autofix.loop import propose
     assert any(c.lookahead == 1 for c, _ in propose("finish", Knobs()))
+
+
+def test_default_board_uses_all_heavy_parts():
+    import yaml
+
+    from dmsim.autofix.batch import default_board
+    c = {x["id"]: x for x in yaml.safe_load(open("data/known_combos/combos.yaml", encoding="utf-8"))["combos"]}["saga"]
+    b = default_board(c)
+    assert b["graveyard"] == {"dm22ex2-021": 1, "dmrp03-s03": 1} and b["hand"] == {"dm22ex2-021": 1, "dm22ex1-007": 1}
