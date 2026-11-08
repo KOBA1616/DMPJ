@@ -25,13 +25,28 @@ class AcceptRule:
 Scorer = Callable[[list[str]], "dict[tuple, int | None]"]
 
 
-def harness_scorer(rules, opp_deck: list[str], seeds: list[int], rule: AcceptRule = AcceptRule(), **cfg_kw) -> Scorer:
+def spec_with_deck(setup: dict, deck: list[str]) -> dict:
+    """仕込み済み開始局面（手札・マナ・墓地は固定）の山札を、候補デッキの残り札に差し替える。
+    デッキの変更（部品・準備札の追加）が山札経由でだけ効くので、局面を固定したまま候補どうしを比べられる。"""
+    from collections import Counter
+    left = Counter(deck)
+    p0 = setup.get("p0", {})
+    for z in ("hand", "mana", "graveyard", "battle"):
+        for c in p0.get(z, []):
+            if left.get(c, 0) > 0:
+                left[c] -= 1
+    rest = sorted(left.elements())
+    return {**setup, "p0": {**p0, "deck": rest}, "deck_size": len(rest), "shuffle_deck": True}
+
+
+def harness_scorer(rules, opp_deck: list[str], seeds: list[int], rule: AcceptRule = AcceptRule(), setup: dict | None = None, **cfg_kw) -> Scorer:
     from ..eval.harness import EvalConfig, cell_key, run_eval
     from ..eval.infolevel import InfoLevel
 
     def score(deck: list[str]) -> dict:
+        kw = {"start_spec": spec_with_deck(setup, deck)} if setup else {}
         cfg = EvalConfig(decks={"d": deck}, opp_deck=opp_deck, seeds=seeds, levels=(InfoLevel(rule.level),),
-                         max_turn=rule.turn, **cfg_kw)
+                         max_turn=rule.turn, **kw, **cfg_kw)
         cell = run_eval(rules, cfg)["cells"][cell_key("d", rule.level, 1.0)]
         return {(s, fp): kt for s, fp, kt in cell["per_game"]}
     return score
