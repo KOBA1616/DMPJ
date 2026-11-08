@@ -30,6 +30,7 @@ def main(argv=None):
     ap.add_argument("--cheat-mult", type=float, default=1.0, help="ずるい側の予算倍率（公平の決定化数に合わせると探索量がそろう）")
     ap.add_argument("--seed-from", type=int, default=1, help="開始シード（シードを分けて並列実行するため）")
     ap.add_argument("--match-nodes", action="store_true", help="ずるい側の予算を公平側の平均ノード数に合うよう自動調整する（--cheat-mult は初期値）")
+    ap.add_argument("--parts", help="既知コンボID（data/known_combos）の部品表を葉の評価に足す（dmsim.search.leaf_parts。--need/--board 指定時のみ有効）")
     ap.add_argument("--out")
     a = ap.parse_args(argv)
     rules = load_rules()
@@ -45,7 +46,11 @@ def main(argv=None):
         board.setdefault(z, {})[d] = int(n[0]) if n else 1
     prog = ProgressSpec(board=board, cards=cards) if (cards or board) else None
     from dmsim.eval.infolevel import InfoLevel
-    cfg = EvalConfig(match_nodes=a.match_nodes, level_mult={InfoLevel.CHEAT: a.cheat_mult}, progress=prog, n_det=a.n_det, start_spec=spec, decks=decks, opp_deck=load_deck(a.opp_deck) if a.opp_deck else ["T001"] * 40, opps={n: PRESETS[n] for n in a.opp}, seeds=list(range(a.seed_from, a.seed_from + a.seeds)),
+    vfn = None
+    if a.parts:
+        from dmsim.search.leaf_parts import load_specs, make_value_fn
+        vfn = make_value_fn(load_specs()[a.parts])
+    cfg = EvalConfig(value_fn=vfn, match_nodes=a.match_nodes, level_mult={InfoLevel.CHEAT: a.cheat_mult}, progress=prog, n_det=a.n_det, start_spec=spec, decks=decks, opp_deck=load_deck(a.opp_deck) if a.opp_deck else ["T001"] * 40, opps={n: PRESETS[n] for n in a.opp}, seeds=list(range(a.seed_from, a.seed_from + a.seeds)),
                      base_budget=a.budget, max_turn=a.turns)
     rep = run_eval(rules, cfg)
     rep["hidden_info_cost"] = {f"{d}|opp={o}": {t: hidden_info_cost(rep, d, t, opp=o) for t in range(1, a.turns + 1)}
