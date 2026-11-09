@@ -50,6 +50,8 @@ class Card:
     no_untap_next: bool = False                       # フリーズ等: 次の持ち主のターン開始時にアンタップしない（1回だけ。開始時に消費）
     link: int = 0
     hyper: bool = False                                     # G・リンクのグループID（0=リンクしていない）。同じIDのカード同士がリンクしている
+    strigger_off: bool = False                              # S・トリガーの印: 手札にある間、S・トリガーを宣言できない（エメラル／エスケープ等。バンドC2 U68）
+    strigger_on: bool = False                               # S・トリガーの印: 手札にある間、本来の定義になくても S・トリガーを宣言できる（バンドC2 U68）
     sst: bool = False                                       # スーパー・S・トリガー: シールド0枚で使った時に追加能力（sst印つき）を得た
     stp: bool = False                                       # S・トリガー・プラス: 条件を満たして使った時に追加能力（stp印つき）を得た
     odrive: bool = False                                    # O・ドライブ: 追加のマナタップをして召喚した
@@ -57,6 +59,7 @@ class Card:
     bazurenda: int = 0                                      # バズレンダ: 追加で支払った回数
     drawn_turn: int = -1                                    # このターンにドローしたか（ビビッドロー）
     vivid: bool = False                                     # ビビッドロー: 表向きにした
+    dswitched: bool = False                                 # Dスイッチ: ゲーム中で一度上下逆さまにした（使用済み。第151弾）
 
 
 def _jcopy(v):
@@ -99,6 +102,9 @@ class GameState:
     seq: int = 0                                            # タイムスタンプ／待機順の採番
     extra_turns: list[int] = field(default_factory=list)
     turn_counters: dict = field(default_factory=dict)       # 「このターン N 回目」系
+    prev_counters: dict = field(default_factory=dict)       # 前のターンの turn_counters の退避（st_start で消す直前にコピー。「前のターンに〜」の読み口）
+    game_counters: dict = field(default_factory=dict)       # ゲーム単位の履歴（ターン開始で消えない。mark の scope: game の置き場所）
+    declares: dict = field(default_factory=dict)            # 宣言ストア（choose_number / choose_name / choose_civ が書き、式 {declared: 名前} が読む。バンドC2 基盤B5）
     ev_seq: int = 0                                             # イベントの通し番号（「各ターン、はじめて」の同一イベント判定）
     steps_this_turn: int = 0
     skip_rest: bool = False                                 # 「ターンの残りをとばす」

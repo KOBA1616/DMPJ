@@ -41,6 +41,7 @@ class Engine(SelectorMixin, EventMixin, InterpreterMixin, TurnMixin, CombatMixin
                  check: bool | None = None):
         self.rules = rules
         self._in_static_cond = 0
+        self._threshold_busy = set()   # {power_ge: N} の評価中にパワーを見ているカード（再入防止。第3段・共通基盤）
         self._distinct_costing = set()   # distinct_cost_count の評価中に特性を見ているカード（再入防止、第145弾）
         self._adding = set()
         self._link_merging = False
@@ -272,6 +273,8 @@ class Engine(SelectorMixin, EventMixin, InterpreterMixin, TurnMixin, CombatMixin
                if (kind is None or ab["kind"] == kind)
                and (not ab.get("sst") or self.s.cards[cid].sst)   # スーパー・S・トリガーの追加能力は印がある時だけ
                and (not ab.get("stp") or self.s.cards[cid].stp)   # S・トリガー・プラスも同様
+               and (not ab.get("dswitch")
+                    or (not self.s.cards[cid].dswitched and self.permits(cid, "d_switch")))   # Dスイッチ（第151弾）: 使用済み・禁止中は能力自体が出ない（kind 照合の後ろで permits を見るので chars 計算とは再帰しない）
                and (not ab.get("odrive")
                     or (ab["odrive"] is True and self.s.cards[cid].odrive)
                     or (isinstance(ab.get("odrive"), str) and ab["odrive"] in self.s.cards[cid].odrive_civs))]   # O・ドライブで得る能力（odrive: <文明> はその文明をタップした時だけ）
@@ -408,6 +411,76 @@ class Engine(SelectorMixin, EventMixin, InterpreterMixin, TurnMixin, CombatMixin
                 self._affc_building = False
         return self._affc
 
+    def _threshold_power(self, cid: int) -> int:
+        """条件アトム {power_ge: N} 用の「再帰しないパワー」: 印刷パワーに、適用範囲が合う常在型と
+        継続的効果の power 修整（power_when 含む）を重ねた値。常在型の if は通常どおり評価するが、
+        評価の連鎖がこのカード自身に戻ってきたら（_threshold_busy）印刷パワーだけを返すため、
+        条件を評価している常在型自身の修整は数に入らない（＝「印刷パワー＋他の常在修整」）。
+        {power_of: "self"} を常在型の if に書くと chars が再入して無限再帰する（ラウンド187で実証）のへの対処。"""
+        if cid in self._threshold_busy:
+            return self.fdef(cid).power
+        self._threshold_busy.add(cid)
+        try:
+            c = self.s.cards[cid]
+            d = self.fdef(cid)
+            if c.zone == "bz" and c.seals:
+                return d.power   # 封印されているクリーチャーはパワーも印刷どおり（chars と同じ扱い）
+            p = d.power
+            ref = self.s.ref(cid)
+            env_self = {"you": c.controller, "self": ref}
+            own = self.abilities(cid, "static")
+            mods = [ab["mod"] for _, ab in own
+                    if ab["kind"] == "static" and ab.get("affects") == "self" and ab.get("zone", "bz") == c.zone and "mod" in ab
+                    and ("if" not in ab or self._static_cond(ab["if"], env_self))]
+            cards = self.s.cards
+            for src in self.s.zones["bz"][0]:   # _chars_calc と同じ集め方（バトルゾーン→シールドゾーン→継続的効果→付与キーワード）
+                if cards[src].top_of >= 0 or not self._affects_others(src):
+                    continue
+                for _, ab in self.abilities(src, "static"):
+                    aff = ab.get("affects", {})
+                    if ab.get("zone", "bz") != "bz":
+                        continue
+                    if "mod" in ab and aff != "self" and (aff.get("zone", "bz") if isinstance(aff, dict) else "bz") == c.zone:
+                        env = {"you": self.s.cards[src].controller, "self": self.s.ref(src)}
+                        if self._subject_match(aff, cid, env, None, base=True) and \
+                                ("if" not in ab or self._static_cond(ab["if"], env)):
+                            mods.append(ab["mod"])
+            for zp in (0, 1):
+                for src in self.s.zones["shield"][zp]:
+                    if not self._affects_others(src):
+                        continue
+                    for _, ab in self.abilities(src, "static"):
+                        aff = ab.get("affects", {})
+                        if ab.get("zone") != "shield" or "mod" not in ab or aff == "self":
+                            continue
+                        if (aff.get("zone", "bz") if isinstance(aff, dict) else "bz") != c.zone:
+                            continue
+                        env = {"you": self.s.cards[src].controller, "self": self.s.ref(src)}
+                        if self._subject_match(aff, cid, env, None, base=True) and \
+                                ("if" not in ab or self._static_cond(ab["if"], env)):
+                            mods.append(ab["mod"])
+            mods += [{**ce["mod"], "power": ce["mod"].get("power", 0) + ce["double_power"].get(cid, 0)}
+                     if "double_power" in ce else ce["mod"]
+                     for ce in self.s.continuous if self._ce_applies(ce, cid, ref)]
+            granted = set()
+            for m in mods:
+                granted.update(k for k in m.get("grant", []) if k not in self.fdef(cid).keywords)
+            for kw in sorted(granted):
+                mods += [ab["mod"] for ab in self.rules.keywords[kw]["abilities"]
+                         if ab["kind"] == "static" and ab.get("affects") == "self" and "mod" in ab
+                         and ab.get("zone", "bz") == c.zone]
+            for m in mods:
+                pw = m.get("power", 0)
+                if isinstance(pw, dict):
+                    p += pw["amount"] * (self.count_of(pw["count"], env_self) if "count" in pw else 1)
+                else:
+                    p += pw
+                if "power_when" in m:
+                    p += self._power_when(m["power_when"], ref, env_self)
+            return p
+        finally:
+            self._threshold_busy.discard(cid)
+
     def _chars_calc(self, cid: int, face: int | None = None) -> dict:
         """特性の計算。複数の継続的効果は同時に適用する（608.1）。MTG のようなレイヤーはない。
         常在型能力の効果は固定されず常に範囲を見直す（608.3a）。解決で生成された効果は生成時の範囲に固定（110.2e）。
@@ -418,15 +491,15 @@ class Engine(SelectorMixin, EventMixin, InterpreterMixin, TurnMixin, CombatMixin
             # 封印されているクリーチャーは無視される: 種族・タイプ・キーワードを持たず、能力も機能しない
             # （パワーは印刷どおり返し、パワー0の状況起因処理で破壊されないようにする）
             return {"power": d.power, "cost": d.cost, "civs": list(d.civs), "types": [], "races": [],
-                    "keywords": set(), "name": d.name, "allow": [], "deny": [], "require": [],
-                    "breaks": 0, "break_opts": [], "pay_cost": d.cost, "sac_reduce": 0,
+                    "keywords": set(), "name": d.name, "names": [d.name], "allow": [], "deny": [], "require": [],
+                    "breaks": 0, "break_opts": [], "breaks_add": 0, "pay_cost": d.cost, "sac_reduce": 0,
                     "opt_reduce": None, "cost_may": [], "no_leave": [], "must_be_attacked": False,
-                    "battle_indestructible": False, "win_all_battles": False}
+                    "battle_indestructible": False, "win_all_battles": False, "crystal_soul": 0}
         ch = {"power": d.power, "cost": d.cost, "civs": list(d.civs), "types": list(d.types),
-              "races": list(d.races), "keywords": set(d.keywords), "name": d.name,
-              "allow": [], "deny": [], "require": [], "breaks": 1, "break_opts": [], "pay_cost": d.cost, "sac_reduce": 0, "opt_reduce": None, "cost_may": [], "no_leave": [], "must_be_attacked": False,
+              "races": list(d.races), "keywords": set(d.keywords), "name": d.name, "names": [d.name],
+              "allow": [], "deny": [], "require": [], "breaks": 1, "break_opts": [], "breaks_add": 0, "pay_cost": d.cost, "sac_reduce": 0, "opt_reduce": None, "cost_may": [], "no_leave": [], "must_be_attacked": False,
               "battle_indestructible": False, "battle_indestructible_filters": [], "win_all_battles": False,
-              "indestructible": False}
+              "indestructible": False, "crystal_soul": d.crystal_soul}
         if (d.neo or d.grave_evo) and c.zone == "bz" and c.under and "evolution" not in ch["types"]:
             ch["types"].append("evolution")   # NEO進化・墓地進化: カードが下にあれば進化クリーチャーとして扱う
         own = self.abilities(cid, "static") if face is None else list(enumerate(d.abilities))
@@ -516,12 +589,19 @@ class Engine(SelectorMixin, EventMixin, InterpreterMixin, TurnMixin, CombatMixin
                 ch["win_all_battles"] = True
             if m.get("indestructible"):   # 「破壊されない」（第127弾）
                 ch["indestructible"] = True
+            if m.get("crystal_soul"):   # 水晶ソウルの付与（第154弾）: 自前宣言と競合したら大きい方
+                ch["crystal_soul"] = max(ch["crystal_soul"], m["crystal_soul"])
             for cv in m.get("add_civs", []):   # 文明追加（第62弾）
                 if cv not in ch["civs"]:
                     ch["civs"].append(cv)
             for r in m.get("add_races", []):   # 種族追加（「種族に〜を追加する」）
                 if r not in ch["races"]:
                     ch["races"].append(r)
+            for nm in m.get("add_names", []):   # 名前の追加（「名前は《〜》も持つ」。バンドC2 U97）。主名（name）は変えず、名前の集合（names）に足す
+                if nm not in ch["names"]:
+                    ch["names"].append(nm)
+            if "breaks_add" in m:   # 「シールドをさらにN枚ブレイクする／N枚少なくブレイクする」相対指定（負値も可）。集約の最後に break_opts の各値へ加算する
+                ch["breaks_add"] += m["breaks_add"]
             if "breaks" in m:   # ブレイカー能力ごとのブレイク数（509.2b）。使う能力は攻撃時に選ぶ（509.2c）
                 b = m["breaks"]
                 if isinstance(b, dict):   # dict 形式はすべて「base + 値」（base は既定1、第145弾）: {count} は base+数（クルー・ブレイカー、第130弾）、
@@ -578,6 +658,12 @@ class Engine(SelectorMixin, EventMixin, InterpreterMixin, TurnMixin, CombatMixin
                 n = 1 + max(0, ch["power"]) // m["breaks_per_power"]
                 ch["break_opts"].append(n)
                 ch["breaks"] = max(ch["breaks"], n)
+        if ch["breaks_add"]:   # 相対ブレイク（breaks_add）: max 合成の後に、使う能力の値すべて（能力が無い場合の既定1を含む）へ加算する。
+            # 509.2c の選択肢も加算後の集合になる。0 未満にはならない。breaks_add が 0 のカードでは従来と完全一致する
+            if not ch["break_opts"]:
+                ch["break_opts"] = [ch["breaks"]]
+            ch["break_opts"] = [max(0, v + ch["breaks_add"]) for v in ch["break_opts"]]
+            ch["breaks"] = max(ch["break_opts"])
         if c.link and c.zone == "bz" and not self._link_merging:   # G・リンク: グループ全員の特性を統合する
             members = [m for m in self.link_members(cid) if m != cid]
             if members:
@@ -600,6 +686,8 @@ class Engine(SelectorMixin, EventMixin, InterpreterMixin, TurnMixin, CombatMixin
                     ch["no_leave"] += p["no_leave"]
                     ch["break_opts"] += p["break_opts"]
                     ch["breaks"] = max(ch["breaks"], p["breaks"])
+                    ch["breaks_add"] = max(ch["breaks_add"], p["breaks_add"])   # リンク統合でも伝播させる（breaks と同じく max。メンバー側の break_opts は各メンバーの計算で加算済み）
+                    ch["crystal_soul"] = max(ch["crystal_soul"], p["crystal_soul"])
                     ch["sac_reduce"] += p["sac_reduce"]
         ch["keywords"] = sorted(ch["keywords"])   # 状態（LKI）に入るので JSON にできる形で返す
         return ch
@@ -637,6 +725,14 @@ class Engine(SelectorMixin, EventMixin, InterpreterMixin, TurnMixin, CombatMixin
         if dur == "until_next_own_turn_start":
             return f"until_turn_start:{env['you']}"
         return dur
+
+    def _mark_key(self, name: str, scope: str, env: dict) -> str:
+        """mark の印のキー合成（op mark と cond marked で共用。バンドB 基盤 mark-scope）。
+        scope: turn（既定。turn_counters に名前そのまま）/ attack（その攻撃の中だけ。current_attack で修飾）/
+        game（game_counters に名前そのまま。ターン開始で消えない）。of_self の接尾辞は op_mark 側で付ける。"""
+        if scope == "attack":
+            return f"{name}:atk{self.s.turn_counters.get('current_attack', 0)}"
+        return name
 
     def ask(self, t: dict, player: int, kind: str, options: list[dict], mn: int = 1, mx: int = 1, prompt: str = ""):
         """(answer, None) か (None, Decision) を返す。選択肢が一意なら決定を出さない。"""
@@ -689,6 +785,7 @@ class Engine(SelectorMixin, EventMixin, InterpreterMixin, TurnMixin, CombatMixin
         """イベントを通さない移動（ゲーム準備用と、イベント適用の内部処理）。"""
         s = self.s
         c = s.cards[cid]
+        frm = c.zone
         if c.zone == "hold":
             s.hold.remove(cid)
         else:
@@ -721,12 +818,16 @@ class Engine(SelectorMixin, EventMixin, InterpreterMixin, TurnMixin, CombatMixin
         c.exlife_of = None                          # 一度離れたシールドは紐付けが外れる
         c.no_untap_next = False                     # ゾーン移動で新しいオブジェクトになるので凍結の印も消える
         c.hyper = False                             # ハイパーモードも新しいオブジェクトでは解ける
+        if to != "hand" and frm in ("hand", "hold"):
+            c.strigger_off = False                  # S・トリガーの印は手札にある間だけ有効（手札を離れたら消える。バンドC2 U68）
+            c.strigger_on = False
         c.sst = False                               # スーパー・S・トリガーの追加能力の印も消える
         c.stp = False                               # S・トリガー・プラスの印も消える
         c.odrive = False                            # O・ドライブの印も消える
         c.odrive_civs = []
         c.bazurenda = 0                             # バズレンダの追加支払い回数も消える
         c.vivid = False                             # ビビッドローの表向きも消える（引いたターンの記録 drawn_turn は残す）
+        c.dswitched = False                         # Dスイッチの使用済みも消える（新しいオブジェクトとして出直したら再び使える。第151弾）
         dest = self.zlist(to, c.controller if self.zshared(to) else c.owner)
         if position == "top" and self.rules.zones[to]["ordered"]:
             dest.insert(0, cid)

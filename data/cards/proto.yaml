@@ -2411,3 +2411,1309 @@ cards:
           - op: may
             body:
               - {op: flip_down, select: {bundle_of: {zone: shield, owner: you}, filter: {face_up: true}, count: 1}}
+  # ---- 語彙パイロット第149弾（2026-11-08）: d_d_d_rider（play_self の via と cond 原子 ddd_paid） ----
+  - id: T186
+    name: D・D・Dライダー試験獣
+    civs: [fire]
+    cost: 2
+    power: 2000
+    types: [creature]
+    races: [テスト]
+    text: D・D・D [dfn06]（自分のクリーチャーが攻撃する時、このカードを [dfn06] 支払って自分の手札から実行してもよい）。このクリーチャーが「D・D・D」によって出た時、カードを１枚引く。
+    abilities:
+      - kind: declare
+        zone: hand
+        when: {event: attack, subject: {owner: you, filter: {types: [creature]}}}
+        effect:
+          - op: may
+            body:
+              - {op: play_self, cost: 6, civs: [darkness, fire, nature], via: d_d_d}
+      - kind: trigger
+        when: {event: move, subject: self, to: bz, via: d_d_d}
+        effect:
+          - {op: draw, count: 1}
+  - id: T187
+    name: D・D・Dライダー試験呪文
+    civs: [water]
+    cost: 3
+    types: [spell]
+    races: [テスト]
+    text: D・D・D [ww01]（自分のクリーチャーが攻撃する時、このカードを [ww01] 支払って自分の手札から実行してもよい）。カードを１枚引く。この呪文を「D・D・D」で唱えたなら、もう１枚引く。
+    abilities:
+      - kind: declare
+        zone: hand
+        when: {event: attack, subject: {owner: you, filter: {types: [creature]}}}
+        effect:
+          - op: may
+            body:
+              - {op: play_self, cost: 1, civs: [water], via: d_d_d}
+    spell:
+      - {op: draw, count: 1}
+      - op: if
+        cond: {ddd_paid: true}
+        then:
+          - {op: draw, count: 1}
+  - id: T188
+    name: D・D・D決断試験呪文
+    civs: [light, water, nature]
+    cost: 4
+    types: [spell]
+    races: [テスト]
+    text: この呪文の「D・D・D」をマナゾーンから使ってもよい。D・D・D [lwn05]（自分のクリーチャーが攻撃する時、このカードを [lwn05] 支払って自分の手札またはマナゾーンから実行してもよい）。次の中から２回選ぶ。この呪文を「D・D・D」で唱えたなら、かわりに３回選んでもよい。（同じものを選んでもよい）▶カードを１枚引く。▶自分の山札の上から１枚を墓地に置く。▶自分のマナゾーンにあるカードを１枚アンタップする。
+    abilities:
+      - kind: declare
+        zone: hand
+        when: {event: attack, subject: {owner: you, filter: {types: [creature]}}}
+        effect:
+          - op: may
+            body:
+              - {op: play_self, cost: 5, civs: [light, water, nature], via: d_d_d}
+      - kind: declare
+        zone: mana
+        when: {event: attack, subject: {owner: you, filter: {types: [creature]}}}
+        effect:
+          - op: may
+            body:
+              - {op: play_self, cost: 5, civs: [light, water, nature], via: d_d_d}
+    spell:
+      - op: if
+        cond: {ddd_paid: true}
+        then:
+          - op: modal
+            count: 3
+            repeat: true
+            modes: &t188_modes
+              - [{op: draw, count: 1}]
+              - [{op: mill, owner: you, count: 1}]
+              - [{op: untap, select: {zone: mana, owner: you, count: 1}}]
+        else:
+          - op: modal
+            count: 2
+            repeat: true
+            modes: *t188_modes
+  # ---- 語彙パイロット第150弾（2026-11-08）: become_evolution_base_trigger（進化元になる時） ----
+  - id: T189
+    name: シンカパワー試験タマシード
+    civs: [nature]
+    cost: 3
+    types: [tamaseed]
+    races: [テスト]
+    keywords: [shinka_rise]
+    text: シンカライズ（このタマシードがクリーチャーであるかのように、この上に進化クリーチャーを置いてもよい）。シンカパワー：このタマシードが進化する時、このターン、その進化したクリーチャーに「マッハファイター」を与える。
+    abilities:
+      - kind: trigger
+        when: {event: evolve_base, subject: self}
+        effect:
+          - {op: modify, select: {ref: event.top}, mod: {allow: [{action: attack_creature, other: {tapped: false}}]}, duration: end_of_turn}
+  - id: T190
+    name: 併記型NEO試験獣
+    civs: [nature]
+    cost: 2
+    power: 2000
+    types: [creature]
+    races: [テスト]
+    neo: true
+    evolve_from: {types: [creature]}
+    text: NEO進化：クリーチャー１体の上に置いてもよい。（カードが下にあれば、これをNEO進化クリーチャーとして扱う）このクリーチャーが、進化して出た時、または進化元になる時、カードを１枚引く。
+    abilities:
+      - kind: trigger
+        when: {event: move, subject: self, to: bz, stacked: true}
+        effect:
+          - {op: draw, count: 1}
+      - kind: trigger
+        when: {event: evolve_base, subject: self}
+        effect:
+          - {op: draw, count: 1}
+  - id: T191
+    name: 進化試験獣
+    civs: [nature]
+    cost: 5
+    power: 6000
+    types: [creature, evolution]
+    evolve_from: {any_of: [{types: [creature]}, {types: [tamaseed]}]}
+    races: [テスト]
+    text: 進化：クリーチャーまたはタマシード１つの上に置いてもよい。
+
+  # ---- 語彙パイロット第151弾（2026-11-09）: D2フィールド ----
+  - id: T192
+    name: Dスイッチ試験フィールド
+    types: [field, d2_field]
+    civs: [nature]
+    cost: 2
+    text: D2フィールド：自分のクリーチャーのパワーは+1000される。Dスイッチ：自分のターンのはじめに、このD2フィールドをゲーム中で一度上下逆さまにしてもよい。そうしたら、カードを1枚引く。（他のD2フィールドが出た時、このD2フィールドを破壊する）
+    abilities:
+      - kind: static
+        affects: {zone: bz, owner: you, filter: {types: [creature]}}
+        mod: {power: 1000}
+      - kind: trigger
+        dswitch: true
+        when: {event: turn_start, player: you}
+        effect:
+          - op: may
+            body:
+              - {op: dswitch}
+              - {op: draw, count: 1}
+  - id: T193
+    name: D2試験フィールド
+    types: [field, d2_field]
+    civs: [fire]
+    cost: 2
+    text: D2フィールド：このD2フィールドが出た時、カードを1枚引く。（他のD2フィールドが出た時、このD2フィールドを破壊する）
+    abilities:
+      - kind: trigger
+        when: {event: move, to: bz, subject: self}
+        effect:
+          - {op: draw, count: 1}
+  - id: T194
+    name: D2言及試験クリーチャー
+    types: [creature]
+    civs: [nature]
+    cost: 3
+    power: 2000
+    races: [テスト]
+    text: このクリーチャーが出た時、自分のD2フィールドがあれば、カードを1枚引く。
+    abilities:
+      - kind: trigger
+        when: {event: move, to: bz, subject: self}
+        if: {exists: {zone: bz, owner: you, filter: {types: [d2_field]}}}
+        effect:
+          - {op: draw, count: 1}
+  - id: T195
+    name: D2 S・トリガー試験フィールド
+    types: [field, d2_field]
+    civs: [water]
+    cost: 2
+    keywords: [s_trigger]
+    text: S・トリガー（このD2フィールドをシールドゾーンから手札に加える時、コストを支払わずにすぐ展開してもよい）D2フィールド：このD2フィールドが出た時、カードを1枚引く。（他のD2フィールドが出た時、このD2フィールドを破壊する）
+    abilities:
+      - kind: trigger
+        when: {event: move, to: bz, subject: self}
+        effect:
+          - {op: draw, count: 1}
+
+  # ---- 語彙パイロット第153弾（2026-11-09）: キズナプラス ----
+  - id: T196
+    name: キズナプラス試験獣
+    civs: [nature]
+    cost: 4
+    power: 4000
+    types: [creature]
+    races: [テスト]
+    neo: true
+    evolve_from: {civs: [nature]}
+    keywords: [kizuna_plus]
+    text: "NEO進化：自然のクリーチャー１体の上に置いてもよい。（クリーチャーが下にあれば、これをNEO進化クリーチャーとして扱う）キズナプラス（このクリーチャーが攻撃する時、その下にあるカードを1枚、自分の墓地に置いてもよい。そうしたら、このクリーチャーと自分の他のクリーチャー1体の[P]能力を使う）[P]カードを1枚引く。"
+    abilities:
+      - kind: partner
+        effect:
+          - {op: draw, count: 1}
+  - id: T197
+    name: 絆試獣・乙
+    civs: [water]
+    cost: 4
+    power: 4000
+    types: [creature]
+    races: [テスト]
+    text: "[P]カードを2枚引く。"
+    abilities:
+      - kind: partner
+        effect:
+          - {op: draw, count: 2}
+
+  # ---- 語彙パイロット第154弾（2026-11-09）: crystal_soul（水晶ソウル） ----
+  - id: T198
+    name: 水晶ソウル試験獣2
+    types: [creature]
+    civs: [water]
+    cost: 7
+    power: 7000
+    races: [テスト]
+    crystal_soul: 2
+    text: 水晶ソウル2（このクリーチャーを召喚する時、自分のマナゾーンにある裏向きのカードのマナの数字は2になる）
+  - id: T199
+    name: 水晶ソウル試験呪文3
+    types: [spell]
+    civs: []
+    cost: 6
+    crystal_soul: 3
+    text: 水晶ソウル3（この呪文を唱える時、自分のマナゾーンにある裏向きのカードのマナの数字は3になる）/ カードを1枚引く。
+    spell:
+      - {op: draw, count: 1}
+  - id: T200
+    name: 水晶付与試験獣
+    types: [creature]
+    civs: [nature]
+    cost: 5
+    power: 5000
+    races: [テスト]
+    text: 自分の手札にあるゼニス・クリーチャーすべては「水晶ソウル3」を得る。
+    abilities:
+      - kind: static
+        affects: {zone: hand, owner: you, filter: {race_has: ゼニス, types: [creature]}}
+        mod: {crystal_soul: 3}
+  - id: T201
+    name: ゼニス試験獣
+    types: [creature]
+    civs: []
+    cost: 9
+    power: 9000
+    races: [ゼニス]
+    text: ""
+  - id: T202
+    name: 多マナ試験カード
+    types: [creature]
+    civs: [nature]
+    cost: 3
+    power: 3000
+    mana: 3
+    races: [テスト]
+    text: ""
+
+  # ---- 語彙パイロット第155弾（2026-11-09）: link_established（リンクした時） ----
+  - id: T203
+    name: リンク時試験左ゴッド
+    types: [creature]
+    civs: [darkness]
+    cost: 3
+    power: 2000
+    races: [ゴッド, テスト]
+    keywords: [left_g_link]
+    text: 左G・リンク このクリーチャーがリンクした時、カードを1枚引く。
+    abilities:
+      - kind: trigger
+        when: {event: link_established, subject: self}
+        effect:
+          - {op: draw, count: 1}
+  - id: T204
+    name: リンク時試験中央ゴッド
+    types: [creature]
+    civs: [darkness]
+    cost: 4
+    power: 3000
+    races: [ゴッド, テスト]
+    keywords: [center_g_link]
+    text: 中央G・リンク このクリーチャーがカード3枚でリンクした時、カードを1枚引く。
+    abilities:
+      - kind: trigger
+        when: {event: link_established, subject: self}
+        if: {cmp: [{link_count: self}, ">=", 3]}
+        effect:
+          - {op: draw, count: 1}
+  - id: T205
+    name: リンク時試験右ゴッド
+    types: [creature]
+    civs: [darkness]
+    cost: 3
+    power: 2500
+    races: [ゴッド, テスト]
+    keywords: [right_g_link]
+    text: 右G・リンク このクリーチャーがリンクした時、カードを1枚引く。
+    abilities:
+      - kind: trigger
+        when: {event: link_established, subject: self}
+        effect:
+          - {op: draw, count: 1}
+  - id: T206
+    name: 無償召喚の番人
+    types: [creature]
+    civs: [light]
+    cost: 3
+    power: 2000
+    races: [テスト]
+    text: 自分がコストを支払わずにクリーチャーを出した時、カードを1枚引く。
+    abilities:
+      - kind: trigger
+        when: {event: move, to: bz, subject: {owner: you, filter: {types: [creature]}}, unpaid: true}
+        effect:
+          - {op: draw, count: 1}
+  - id: T207
+    name: 盾発の試験兵
+    types: [creature]
+    civs: [light]
+    cost: 3
+    power: 2500
+    races: [テスト]
+    text: S・トリガー
+    keywords: [s_trigger]
+  - id: T208
+    name: 無封鎖の突撃手
+    types: [creature]
+    civs: [fire]
+    cost: 3
+    power: 4000
+    races: [テスト]
+    text: このクリーチャーが攻撃してブロックされなかった時、カードを1枚引く。
+    abilities:
+      - kind: trigger
+        when: {event: attack_end, subject: self, blocked: false}
+        effect:
+          - {op: draw, count: 1}
+  - id: T209
+    name: 封鎖感知の突撃手
+    types: [creature]
+    civs: [fire]
+    cost: 3
+    power: 4000
+    races: [テスト]
+    text: このクリーチャーが攻撃してブロックされた時、カードを1枚引く。
+    abilities:
+      - kind: trigger
+        when: {event: attack_end, subject: self, blocked: true}
+        effect:
+          - {op: draw, count: 1}
+  - id: T210
+    name: 直撃無封鎖の突撃手
+    types: [creature]
+    civs: [fire]
+    cost: 3
+    power: 4000
+    races: [テスト]
+    text: このクリーチャーが相手プレイヤーを攻撃してブロックされなかった時、カードを1枚引く。
+    abilities:
+      - kind: trigger
+        when: {event: attack_end, subject: self, target: player, blocked: false}
+        effect:
+          - {op: draw, count: 1}
+  - id: T211
+    name: 束数えの番人
+    types: [creature]
+    civs: [light]
+    cost: 2
+    power: 1500
+    races: [テスト]
+    text: このクリーチャーが出た時、自分の表向きのカードを含むシールドが2つ以上あれば、カードを1枚引く。
+    abilities:
+      - kind: trigger
+        when: {event: move, to: bz, subject: self}
+        if: {cmp: [{bundles: {owner: you, face_up: true}}, ">=", 2]}
+        effect:
+          - {op: draw, count: 1}
+  - id: T212
+    name: 束数えの秘術
+    types: [spell]
+    civs: [water]
+    cost: 1
+    races: [テスト]
+    text: 自分の表向きのカードを含むシールド1つにつき、カードを1枚引く。
+    spell:
+      - {op: draw, count: {bundles: {owner: you, face_up: true}}}
+
+  # ---- leave_under_untap（設計ノート pilot155。下にあったクリーチャーのアンタップ） ----
+
+  - id: T213
+    name: 離脱アンタップ試験龍
+    types: [creature, evolution]
+    civs: [fire]
+    cost: 6
+    power: 7000
+    races: [テスト]
+    keywords: [double_breaker]
+    star: true
+    evolve_from: {civs: [fire]}
+    text: スター進化：自分の火のクリーチャー１体の上に置く。（このクリーチャーが離れる時、かわりに一番上のカードだけが離れる）W・ブレイカー / このクリーチャーが離れた時、その下にあったクリーチャーをアンタップする。
+    abilities:
+      - kind: trigger
+        when: {event: move, from: bz, subject: self}
+        effect:
+          - {op: untap, select: {ref: event.under}}
+  - id: T214
+    name: 離脱観測の不動兵
+    types: [creature]
+    civs: [fire]
+    cost: 3
+    power: 3000
+    races: [テスト]
+    keywords: [cannot_untap]
+    text: このクリーチャーはアンタップしない。（スター進化の進化元専用。再構築で引き継いだタップ状態がターン開始で消えないため、離脱時アンタップの有無を観測できる。効果によるアンタップは通常どおり受ける）
+
+  # ---- hyper_release（設計ノート pilot156。効果によるハイパーモード解放） ----
+
+  - id: T215
+    name: 解放試験超化獣
+    types: [creature]
+    civs: [nature]
+    cost: 5
+    power: 5000
+    races: [超化獣]
+    hyper: true
+    text: ハイパー化：自分の他のクリーチャーを１体タップする。（ハイパーモードの間、このクリーチャーのパワーを+4000する）
+    abilities:
+      - kind: static
+        affects: self
+        mod: {power: 4000}
+        if: {hyper: true}
+  - id: T216
+    name: 攻撃時解放試験獣
+    types: [creature]
+    civs: [fire]
+    cost: 4
+    power: 4000
+    races: [テスト]
+    text: このクリーチャーが攻撃する時、次の自分のターンのはじめまで、自分の超化獣クリーチャー１体のハイパーモードを解放する。
+    abilities:
+      - kind: trigger
+        when: {event: attack, subject: self}
+        effect:
+          - {op: hyper_release, select: {zone: bz, owner: you, count: 1, filter: {types: [creature], race_has: 超化獣}}}
+  - id: T217
+    name: 解放試験呪文
+    types: [spell]
+    civs: [nature]
+    cost: 2
+    races: [テスト]
+    text: 次の自分のターンのはじめまで、自分の超化獣クリーチャー１体のハイパーモードを解放する。
+    spell:
+      - {op: hyper_release, select: {zone: bz, owner: you, count: 1, filter: {types: [creature], race_has: 超化獣}}}
+  - id: T218
+    name: 非ハイパー超化試験獣
+    types: [creature]
+    civs: [nature]
+    cost: 3
+    power: 3000
+    races: [超化獣]
+    text: ハイパー面を持たない超化獣。（解放の対象に選べるが、旗は立たないことの判別用）
+  - id: T219
+    name: 自己解放試験獣
+    types: [creature]
+    civs: [water]
+    cost: 5
+    power: 5000
+    races: [超化獣]
+    hyper: true
+    text: このクリーチャーが出た時、次の自分のターンのはじめまで、このクリーチャーのハイパーモードを解放する。（ハイパーモードの間、このクリーチャーのパワーを+4000する）
+    abilities:
+      - kind: static
+        affects: self
+        mod: {power: 4000}
+        if: {hyper: true}
+      - kind: trigger
+        when: {event: move, to: bz, subject: self}
+        effect:
+          - {op: hyper_release, select: {ref: self}}
+  - id: T220
+    name: 全体解放試験獣
+    types: [creature]
+    civs: [nature]
+    cost: 6
+    power: 6000
+    races: [超化獣]
+    hyper: true
+    keywords: [double_breaker]
+    text: ハイパー化：自分の他のクリーチャーを１体タップする。このクリーチャーが攻撃する時、ハイパーモードなら、次の自分のターンのはじめまで、自分の超化獣クリーチャーすべてのハイパーモードを解放する。
+    abilities:
+      - kind: trigger
+        when: {event: attack, subject: self}
+        if: {hyper: true}
+        effect:
+          - {op: hyper_release, select: {zone: bz, owner: you, count: all, filter: {types: [creature], race_has: 超化獣}}}
+  - id: T221
+    name: 条件解放試験呪文
+    types: [spell]
+    civs: [fire]
+    cost: 2
+    races: [テスト]
+    text: 自分のクリーチャーを１体選ぶ。それが超化獣であれば、次の自分のターンのはじめまで、そのハイパーモードを解放する。その後、相手のクリーチャーを１体選んでもよい。その２体をバトルさせる。
+    spell:
+      - {op: choose, select: {zone: bz, owner: you, count: 1, filter: {types: [creature]}}, as: a}
+      - op: if
+        cond: {exists: {ref: a, filter: {race_has: 超化獣}}}
+        then:
+          - {op: hyper_release, select: {ref: a}}
+      - op: may
+        body:
+          - {op: choose, select: {zone: bz, owner: opp, count: 1, filter: {types: [creature]}}, as: b}
+          - {op: force_battle, a: {ref: a}, b: {ref: b}}
+  - id: T222
+    name: 手札出し解放試験呪文
+    types: [spell]
+    civs: [light]
+    cost: 5
+    races: [テスト]
+    keywords: [s_trigger]
+    text: コスト７以下の超化獣クリーチャーを１体、自分の手札から出してもよい。次の自分のターンのはじめまで、そのクリーチャーのハイパーモードを解放し、「ブロッカー」を与える。
+    spell:
+      - op: may
+        body:
+          - {op: move, select: {zone: hand, owner: you, count: 1, filter: {types: [creature], race_has: 超化獣, cost_le: 7}}, to: bz, reason: put, as: ent}
+      - {op: hyper_release, select: {ref: ent}}
+      - {op: modify, select: {ref: ent}, mod: {grant: [blocker]}, duration: until_next_own_turn_start}
+  - id: T223
+    name: 重ね出し試験獣
+    types: [creature]
+    civs: [darkness]
+    cost: 8
+    power: 8000
+    races: [テスト]
+    text: このクリーチャーが出た時、自分の墓地からコスト５以下の、コストが異なるクリーチャーを好きな数出す。進化クリーチャーは進化元に重ねて出す。（dm26ex1-017 の重ね出し部分のみの写し。第158弾 put_evolution_stacking）
+    abilities:
+      - kind: trigger
+        when: {event: move, to: bz, subject: self}
+        effect:
+          - {op: move, select: {zone: graveyard, owner: you, filter: {types: [creature], cost_le: 5}, count: any, distinct_costs: true}, to: bz, reason: put, stack_evo: true}
+  - id: T224
+    name: 重ね出し試験獣・型3
+    types: [creature]
+    civs: [darkness]
+    cost: 8
+    power: 9000
+    races: [テスト]
+    text: 自分のターンの終わりに、自分の墓地から、コストがすべて異なるクリーチャーを好きな数出してもよい。進化クリーチャーは進化元に重ねて出す。（dmrp03-007 の写し＋stack_evo。第158弾 put_evolution_stacking）
+    abilities:
+      - kind: trigger
+        when: {event: turn_end, player: you}
+        effect:
+          - op: may
+            body:
+              - {op: move, select: {zone: graveyard, owner: you, filter: {types: [creature]}, count: any, distinct_costs: true}, to: bz, reason: put, stack_evo: true}
+
+  - id: T225
+    name: 除外タップ試験呪文
+    types: [spell]
+    civs: [water]
+    cost: 3
+    races: [テスト]
+    text: 自分のクリーチャーを1体選ぶ。その後、それ以外のクリーチャーをすべてタップする。（dmex14-s04 型。第3段・共通基盤 selector exclude）
+    spell:
+      - {op: choose, select: {zone: bz, owner: you, filter: {types: [creature]}, count: 1}, as: picked}
+      - {op: tap, select: {zone: bz, owner: any, filter: {types: [creature]}, count: all, exclude: {ref: picked}}}
+
+  - id: T226
+    name: 二重除外タップ試験呪文
+    types: [spell]
+    civs: [water]
+    cost: 4
+    races: [テスト]
+    text: 自分のクリーチャーを2体選ぶ。その後、それ以外のクリーチャーをすべてタップする。（exclude のリスト形。第3段・共通基盤）
+    spell:
+      - {op: choose, select: {zone: bz, owner: you, filter: {types: [creature]}, count: 1}, as: keep_a}
+      - {op: choose, select: {zone: bz, owner: you, filter: {types: [creature]}, count: 1, exclude: {ref: keep_a}}, as: keep_b}
+      - {op: tap, select: {zone: bz, owner: any, filter: {types: [creature]}, count: all, exclude: [{ref: keep_a}, {ref: keep_b}]}}
+
+  - id: T227
+    name: 閾値試験獣・到達
+    types: [creature]
+    civs: [fire]
+    cost: 6
+    power: 5000
+    races: [テスト]
+    text: このクリーチャーのパワーを+2000する。このクリーチャーのパワーが6000以上なら、このクリーチャーは「T・ブレイカー」を得る。（power_threshold_breaker 型。第3段・共通基盤 power_ge）
+    abilities:
+      - {kind: static, affects: self, mod: {power: 2000}}
+      - {kind: static, affects: self, if: {power_ge: 6000}, mod: {breaks: 3}}
+
+  - id: T228
+    name: 閾値試験獣・未達
+    types: [creature]
+    civs: [fire]
+    cost: 6
+    power: 5000
+    races: [テスト]
+    text: このクリーチャーのパワーが6000以上なら、このクリーチャーは「T・ブレイカー」を得る。（power_threshold_breaker 型。第3段・共通基盤 power_ge）
+    abilities:
+      - {kind: static, affects: self, if: {power_ge: 6000}, mod: {breaks: 3}}
+
+  - id: T229
+    name: 閾値試験獣・自己強化
+    types: [creature]
+    civs: [fire]
+    cost: 6
+    power: 5000
+    races: [テスト]
+    text: このクリーチャーのパワーが6000以上なら、このクリーチャーのパワーを+2000し、「W・ブレイカー」を得る。（条件を評価している常在型自身の修整は閾値の数えに入らない。第3段・共通基盤 power_ge）
+    abilities:
+      - {kind: static, affects: self, if: {power_ge: 6000}, mod: {power: 2000, breaks: 2}}
+
+  - id: T230
+    name: 閾値試験獣・他者依存
+    types: [creature]
+    civs: [nature]
+    cost: 5
+    power: 4000
+    races: [テスト]
+    text: このクリーチャーのパワーが6000以上なら、このクリーチャーは「W・ブレイカー」を得る。（power_threshold_breaker 型。第3段・共通基盤 power_ge）
+    abilities:
+      - {kind: static, affects: self, if: {power_ge: 6000}, mod: {breaks: 2}}
+
+  - id: T231
+    name: 全体強化試験獣
+    types: [creature]
+    civs: [nature]
+    cost: 5
+    power: 3000
+    races: [テスト]
+    text: 自分のクリーチャーすべてのパワーを+3000する。
+    abilities:
+      - {kind: static, affects: {owner: you}, mod: {power: 3000}}
+
+  - id: T232
+    name: 加算試験獣
+    types: [creature]
+    civs: [fire]
+    cost: 5
+    power: 5000
+    races: [テスト]
+    keywords: [double_breaker]
+    text: W・ブレイカー。このクリーチャーは、シールドをさらに1枚ブレイクする。（第3段・共通基盤 breaks_add）
+    abilities:
+      - {kind: static, affects: self, mod: {breaks_add: 1}}
+
+  - id: T233
+    name: 全体加算試験獣
+    types: [creature]
+    civs: [nature]
+    cost: 4
+    power: 3000
+    races: [テスト]
+    text: 自分のクリーチャーはすべて、シールドをさらに1枚ブレイクする。（dm23bd6-027 型。第3段・共通基盤 breaks_add）
+    abilities:
+      - {kind: static, affects: {owner: you, filter: {types: [creature]}}, mod: {breaks_add: 1}}
+
+  - id: T234
+    name: 減算試験獣
+    types: [creature]
+    civs: [darkness]
+    cost: 4
+    power: 3000
+    races: [テスト]
+    text: 相手のクリーチャーはすべて、シールドを1つ少なくブレイクする。（dmr21-007 型。第3段・共通基盤 breaks_add の負値）
+    abilities:
+      - {kind: static, affects: {owner: opp, filter: {types: [creature]}}, mod: {breaks_add: -1}}
+
+  - id: T235
+    name: 相対ブレイク付与試験呪文
+    types: [spell]
+    civs: [fire]
+    cost: 2
+    races: [テスト]
+    text: 自分のクリーチャー1体を選ぶ。このターン、そのクリーチャーはシールドをさらに1枚ブレイクする。（next_breaker 型。modify＋breaks_add。第3段・共通基盤）
+    spell:
+      - {op: choose, select: {zone: bz, owner: you, filter: {types: [creature]}, count: 1}, as: t}
+      - {op: modify, select: {ref: t}, mod: {breaks_add: 1}, duration: end_of_turn}
+
+  # ---- 第3段・共通基盤その2a（2026-11-09）: 履歴カウンタ一般化と宣言プリミティブ ----
+  - id: T236
+    name: 引き軽減試験獣
+    types: [creature]
+    civs: [water]
+    cost: 4
+    power: 3000
+    races: [テスト]
+    text: このクリーチャーの召喚コストは、自分のこのターンに引いたカード1枚につき1少なくなる。（ティガウォック型。mod の count に履歴式 turn_count。バンドC1 U19）
+    abilities:
+      - {kind: static, zone: hand, affects: self, mod: {cost: {amount: -1, count: {turn_count: {kind: draw, owner: you}}}}}
+
+  - id: T237
+    name: 詠唱門番試験獣
+    types: [creature]
+    civs: [water]
+    cost: 3
+    power: 2500
+    races: [テスト]
+    text: 自分がこのターンに呪文を唱えていなければ、このクリーチャーを召喚できない。（ガリアル型。turn_count cast の条件読み。バンドC1 U19）
+    abilities:
+      - {kind: static, zone: hand, affects: self, if: {cmp: [{turn_count: {kind: cast, owner: you}}, "==", 0]}, mod: {deny: [summon]}}
+
+  - id: T238
+    name: 順序番人試験獣
+    types: [creature]
+    civs: [nature]
+    cost: 3
+    power: 2000
+    races: [テスト]
+    text: 相手がこのターンに2枚目以降のカードをマナゾーンに置いた時、カードを1枚引く。（タクヤ型。when の ord ge。バンドC1 U19）
+    abilities:
+      - kind: trigger
+        when: {event: move, to: mana, subject: {owner: opp}, ord: {kind: mana_put, ge: 2}}
+        effect:
+          - {op: draw, player: you, count: 1}
+
+  - id: T239
+    name: 最初番人試験獣
+    types: [creature]
+    civs: [light]
+    cost: 3
+    power: 2000
+    races: [テスト]
+    text: 相手のターンに、相手の最初のクリーチャーがバトルゾーンに出た時、カードを1枚引く。（グラヴィッツ型。when の ord eq。バンドC1 U19）
+    abilities:
+      - kind: trigger
+        when: {event: move, to: bz, subject: {owner: opp, filter: {types: [creature]}}, ord: {kind: enter, eq: 1}}
+        effect:
+          - {op: draw, player: you, count: 1}
+
+  - id: T240
+    name: 使用覚醒試験獣
+    types: [creature]
+    civs: [fire]
+    cost: 4
+    power: 3000
+    races: [テスト]
+    text: 自分がこのターンにコスト5以上の呪文を唱えていれば、このクリーチャーのパワーは+3000する。（used_count の特性つき読み。バンドC1 U19）
+    abilities:
+      - {kind: static, affects: self, if: {cmp: [{used_count: {owner: you, filter: {types: [spell], cost_ge: 5}}}, ">=", 1]}, mod: {power: 3000}}
+
+  - id: T241
+    name: 高額知識試験呪文
+    types: [spell]
+    civs: [water]
+    cost: 5
+    text: カードを1枚引く。（T240 の覚醒条件用。コスト5の呪文）
+    spell:
+      - {op: draw, player: you, count: 1}
+
+  - id: T242
+    name: 盾離れ門番試験獣
+    types: [creature]
+    civs: [light]
+    cost: 3
+    power: 3000
+    races: [テスト]
+    text: 自分のシールドがこのターンに1枚も離れていなければ、このクリーチャーは攻撃できない。（ザ・ナイト型。turn_count shield_left。バンドC1 U19）
+    abilities:
+      - {kind: static, affects: self, if: {cmp: [{turn_count: {kind: shield_left, owner: you}}, "==", 0]}, mod: {deny: [attack_player, attack_creature]}}
+
+  - id: T243
+    name: 自盾割り試験呪文
+    types: [spell]
+    civs: [darkness]
+    cost: 2
+    text: 自分のシールドを1つブレイクする。（T242 の解除用）
+    spell:
+      - {op: break, player: you, count: 1}
+
+  - id: T244
+    name: 前ターン盾番試験獣
+    types: [creature]
+    civs: [nature]
+    cost: 4
+    power: 3000
+    races: [テスト]
+    text: 相手が前のターンにシールドを加えていれば、このクリーチャーのパワーは+3000する。（prev_shield_added。バンドB U18）
+    abilities:
+      - {kind: static, affects: self, if: {cmp: [{prev_shield_added: {owner: opp}}, ">=", 1]}, mod: {power: 3000}}
+
+  - id: T245
+    name: 自盾追加試験呪文
+    types: [spell]
+    civs: [nature]
+    cost: 2
+    text: 自分の山札の上から1枚目を、自分の新しいシールドとして置く。（T244 の仕込み用。相手のターンに唱えると、次の自ターンに「前のターンに相手がシールドを加えた」になる）
+    spell:
+      - {op: move, select: {zone: deck, owner: you, from_top: 1, count: 1}, to: shield, reason: put}
+
+  - id: T246
+    name: 自ブレイク覚醒試験獣
+    types: [creature]
+    civs: [fire]
+    cost: 3
+    power: 3000
+    races: [テスト]
+    text: このクリーチャーがこのターンにシールドをブレイクしていれば、このクリーチャーのパワーは+2000する。（broke_by_self。バンドC1 U19）
+    abilities:
+      - {kind: static, affects: self, if: {cmp: [{turn_count: {kind: broke_by_self}}, ">=", 1]}, mod: {power: 2000}}
+
+  - id: T247
+    name: 数字宣言試験呪文
+    types: [spell]
+    civs: [water]
+    cost: 2
+    text: 数字を1つ言う。その後、その数だけカードを引く。（choose_number＋{declared:}。バンドC2 U97）
+    spell:
+      - {op: choose_number, as: n, min: 0, max: 10}
+      - {op: draw, player: you, count: {declared: n}}
+
+  - id: T248
+    name: 文明宣言試験呪文
+    types: [spell]
+    civs: [light]
+    cost: 3
+    text: 文明をひとつ選ぶ。その後、その文明でないクリーチャーをすべてタップする。（プラトーン型。choose_civ＋filter の not_civs 式。バンドB U3）
+    spell:
+      - {op: choose_civ, as: c}
+      - {op: tap, select: {zone: bz, owner: any, filter: {types: [creature], not_civs: {declared: c}}, count: all}}
+
+  - id: T249
+    name: 名前宣言試験呪文
+    types: [spell]
+    civs: [water]
+    cost: 2
+    text: カードの名前を1つ言う。自分のバトルゾーンにその名前のカードがあれば、カードを1枚引く。（choose_name＋filter の name 式。バンドC2 U97）
+    spell:
+      - {op: choose_name, as: nm}
+      - {op: if, cond: {exists: {zone: bz, owner: you, filter: {name: {declared: nm}}}}, then: [{op: draw, player: you, count: 1}]}
+
+  - id: T250
+    name: 封唱宣言試験呪文
+    types: [spell]
+    civs: [darkness]
+    cost: 3
+    text: 数字を1つ言う。次の自分のターンのはじめまで、相手はそのコストの呪文を唱えられない。（dmart10-005 型。modify 生成時の宣言ベイク＋dynamic の範囲ベイク。基盤B4）
+    spell:
+      - {op: choose_number, as: n, min: 0, max: 10}
+      - {op: modify, select: {zone: hand, owner: opp, filter: {types: [spell], cost_le: {declared: n}, cost_ge: {declared: n}}}, mod: {deny: [cast]}, duration: until_next_own_turn_start, dynamic: true}
+
+  - id: T251
+    name: 別名持ち試験獣
+    types: [creature]
+    civs: [nature]
+    cost: 3
+    power: 3000
+    races: [テスト]
+    text: このクリーチャーの名前は《別名試験獣》も持つ。（dm23ex1-039 型。mod の add_names。バンドC2 U97）
+    abilities:
+      - {kind: static, affects: self, mod: {add_names: [別名試験獣]}}
+  - id: T252
+    name: 捨て検知試験獣
+    types: [creature]
+    civs: [nature]
+    cost: 3
+    power: 2000
+    races: [テスト]
+    text: 相手の効果によって自分のクリーチャーが手札から捨てられた時、カードを1枚引く。（キリバイ型の検知側＋帰属。バンドC1 U26）
+    abilities:
+      - kind: trigger
+        when: {event: move, from: hand, to: graveyard, reason: discard, subject: {owner: you, filter: {types: [creature]}}, by: opp}
+        effect:
+          - {op: draw, count: 1}
+
+  - id: T253
+    name: 捨てられ誘発試験獣
+    types: [creature]
+    civs: [water]
+    cost: 4
+    power: 3000
+    races: [テスト]
+    text: 相手の呪文の効果または相手のクリーチャーの能力によってこのクリーチャーが自分の手札から捨てられた時、カードを2枚引く。（パウアー型。バンドC1 U26）
+    abilities:
+      - kind: trigger
+        zone: hand
+        when: {event: move, from: hand, to: graveyard, reason: discard, subject: self, by: opp}
+        effect:
+          - {op: draw, count: 2}
+
+  - id: T254
+    name: 捨て置換試験獣
+    types: [creature]
+    civs: [fire]
+    cost: 5
+    power: 4000
+    races: [テスト]
+    text: 相手のターン中に、このクリーチャーが手札から捨てられる時、墓地に置くかわりにバトルゾーンに出す。（メテオキャノン・ドラゴン型。バンドC1 U26）
+    abilities:
+      - kind: replace
+        zone: hand
+        when: {event: move, from: hand, to: graveyard, reason: discard, subject: self}
+        if: {is_turn: opp}
+        instead:
+          - {op: move, select: {ref: self}, to: bz, reason: put}
+
+  - id: T255
+    name: 呪文では離れない試験獣
+    types: [creature]
+    civs: [light]
+    cost: 4
+    power: 3000
+    races: [テスト]
+    text: このクリーチャーが相手の呪文の効果によってバトルゾーンを離れる時、かわりにとどまる。（dm17-013 型。基盤B1＋バンドC2 U108）
+    abilities:
+      - kind: replace
+        when: {event: move, from: bz, subject: self, cause: {by: opp, kind: spell}}
+        instead: []
+
+  - id: T256
+    name: 除去試験呪文
+    types: [spell]
+    civs: [darkness]
+    cost: 3
+    text: 相手のクリーチャーを1体破壊する。（基盤B1 の呪文側の発生源）
+    spell:
+      - {op: destroy, select: {zone: bz, owner: opp, filter: {types: [creature]}, count: 1}}
+
+  - id: T257
+    name: 破壊能力試験獣
+    types: [creature]
+    civs: [darkness]
+    cost: 5
+    power: 5000
+    races: [テスト]
+    text: このクリーチャーがバトルゾーンに出た時、相手のクリーチャーを1体破壊する。（基盤B1 の能力側の発生源）
+    abilities:
+      - kind: trigger
+        when: {event: move, to: bz, subject: self}
+        effect:
+          - {op: destroy, select: {zone: bz, owner: opp, filter: {types: [creature]}, count: 1}}
+
+  - id: T258
+    name: 公開合計試験呪文
+    types: [spell]
+    civs: [water]
+    cost: 2
+    text: 自分の山札の上から3枚を表向きにする。その3枚のコストの合計が6以下ならカードを2枚引き、そうでなければ1枚引く。（バンドC1 U39）
+    spell:
+      - {op: choose, select: {zone: deck, owner: you, from_top: 3, look: true, count: all}, as: revealed, reveal: true}
+      - op: if
+        cond: {cmp: [{total_cost: {ref: revealed}}, "<=", 6]}
+        then:
+          - {op: draw, count: 2}
+        else:
+          - {op: draw, count: 1}
+
+  - id: T259
+    name: 合計パワー門試験呪文
+    types: [spell]
+    civs: [fire]
+    cost: 2
+    text: 自分のクリーチャーを好きな数選ぶ。選んだクリーチャーのパワーの合計が5000以上ならカードを2枚引き、そうでなければ1枚引く。（バンドC1 U39 の total_power）
+    spell:
+      - {op: choose, select: {zone: bz, owner: you, filter: {types: [creature]}, count: any}, as: picked}
+      - op: if
+        cond: {cmp: [{total_power: {ref: picked}}, ">=", 5000]}
+        then:
+          - {op: draw, count: 2}
+        else:
+          - {op: draw, count: 1}
+
+  - id: T260
+    name: マナ合計強化試験獣
+    types: [creature]
+    civs: [nature]
+    cost: 3
+    power: 2000
+    races: [テスト]
+    text: このクリーチャーのパワーは、自分のマナゾーンにあるカードのコストの合計と同じ数だけ大きくなる。（バンドC1 U39 の total_cost を mod の count で使う形）
+    abilities:
+      - {kind: static, affects: self, mod: {power: {amount: 1, count: {total_cost: {zone: mana, owner: you}}}}}
+
+  - id: T261
+    name: エメラル型試験呪文
+    types: [spell]
+    civs: [water]
+    cost: 1
+    text: 自分のシールドを1つ手札に加える。そのS・トリガーは使えない。（エメラル型。バンドC2 U68）
+    spell:
+      - {op: move, select: {zone: shield, owner: you, count: 1}, to: hand, reason: return, strigger: "off"}
+
+  - id: T262
+    name: 帰還試験呪文
+    types: [spell]
+    civs: [water]
+    cost: 1
+    text: 自分のシールドを1つ手札に加える。（T261 の対照。印なし）
+    spell:
+      - {op: move, select: {zone: shield, owner: you, count: 1}, to: hand, reason: return}
+
+  - id: T263
+    name: 印付与試験呪文
+    types: [spell]
+    civs: [light]
+    cost: 1
+    text: 自分のシールドを1つ選ぶ。そのシールドはS・トリガーを持つ。（バンドC2 U68 の op strigger）
+    spell:
+      - {op: strigger, select: {zone: shield, owner: you, count: 1}, mode: "on"}
+
+  - id: T264
+    name: 無印の盾兵
+    types: [creature]
+    civs: [nature]
+    cost: 3
+    power: 3000
+    races: [テスト]
+    text: （S・トリガーを持たない試験用クリーチャー。バンドC2 U68 の付与対象）
+
+  - id: T265
+    name: 付与誘発試験獣
+    types: [creature]
+    civs: [light]
+    cost: 3
+    power: 2000
+    races: [テスト]
+    text: 自分のシールドが手札に加わった時、そのカードはS・トリガーを得る。（dmx18-024 型。バンドC2 U68）
+    abilities:
+      - kind: trigger
+        when: {event: move, from: shield, to: hand, subject: {owner: you}}
+        effect:
+          - {op: strigger, select: {ref: event.subject}, mode: "on"}
+
+  - id: T266
+    name: 非光封じ試験獣
+    types: [creature]
+    civs: [darkness]
+    cost: 4
+    power: 3000
+    races: [テスト]
+    text: 自分の光以外のカードのS・トリガーは使えない。（dmrp01-s03 型。バンドC2 U68）
+    abilities:
+      - {kind: static, affects: {zone: shield, owner: you, filter: {not_civs: [light]}}, mod: {deny: [s_trigger]}}
+
+  - id: T267
+    name: 選ばれ誘発試験獣
+    types: [creature]
+    civs: [nature]
+    cost: 3
+    power: 2000
+    races: [テスト]
+    text: 相手がこのクリーチャーを選んだ時、カードを1枚引く。（バンドB U7 の chosen_trigger）
+    abilities:
+      - kind: trigger
+        when: {event: choose, subject: self}
+        effect:
+          - {op: draw, count: 1}
+
+  - id: T268
+    name: ST使用観測試験獣
+    types: [creature]
+    civs: [water]
+    cost: 3
+    power: 2000
+    races: [テスト]
+    text: 相手がS・トリガーを使った時、カードを1枚引く。（バンドB U7 の use_s_trigger）
+    abilities:
+      - kind: trigger
+        when: {event: use_s_trigger, player: opp}
+        effect:
+          - {op: draw, count: 1}
+
+  - id: T269
+    name: バトル後自壊試験獣
+    types: [creature]
+    civs: [fire]
+    cost: 4
+    power: 4000
+    races: [テスト]
+    keywords: [blocker]
+    text: ブロッカー。このクリーチャーのバトルの後、このクリーチャーを破壊する。（ジャグラヴィーン型。バンドB U7 の battle_end）
+    abilities:
+      - kind: trigger
+        when: {event: battle_end, subject: self}
+        effect:
+          - {op: move, select: {ref: self}, to: graveyard, reason: destroy}
+
+  - id: T270
+    name: 強制バトル試験呪文
+    types: [spell]
+    civs: [fire]
+    cost: 2
+    text: 自分のクリーチャー1体と相手のクリーチャー1体をバトルさせる。（バンドB U7 の battle_end を force_battle でも確認する）
+    spell:
+      - {op: force_battle, a: {zone: bz, owner: you, filter: {types: [creature]}}, b: {zone: bz, owner: opp, filter: {types: [creature]}}}
+
+  - id: T271
+    name: GGG軽減試験獣
+    types: [creature]
+    civs: [fire]
+    cost: 7
+    power: 6000
+    races: [テスト]
+    text: "G・G・G: 自分の手札が1枚以下なら、このクリーチャーの召喚コストは6少なくなる。（バンドB U1）"
+    abilities:
+      - kind: static
+        zone: hand
+        affects: self
+        if: {cmp: [{count: {zone: hand, owner: you}}, "<=", 1]}
+        mod: {cost: -6}
+
+  - id: T272
+    name: ラビリンス試験獣
+    types: [creature]
+    civs: [light]
+    cost: 5
+    power: 4000
+    races: [テスト]
+    text: "ラビリンス: 自分のシールドの数が相手より多ければ、相手はコスト5以下の呪文を唱えられない。（オーリリア型。バンドB U1）"
+    abilities:
+      - kind: static
+        affects: {zone: hand, owner: opp, filter: {types: [spell], cost_le: 5}}
+        if: {cmp: [{count: {zone: shield, owner: you}}, ">", {count: {zone: shield, owner: opp}}]}
+        mod: {deny: [cast]}
+
+  - id: T273
+    name: 観測試験呪文
+    types: [spell]
+    civs: [water]
+    cost: 5
+    text: カードを1枚引く。（バンドB U1 のラビリンスで唱えられるかを見る対象）
+    spell:
+      - {op: draw, count: 1}
+
+  - id: T274
+    name: レインボーナス試験獣
+    types: [creature]
+    civs: [nature]
+    cost: 3
+    power: 2000
+    races: [テスト]
+    text: このクリーチャーがバトルゾーンに出た時、自分の多色クリーチャーがあれば、カードを1枚引く。（レインボーナス。バンドB U1）
+    abilities:
+      - kind: trigger
+        when: {event: move, to: bz, subject: self}
+        if: {exists: {zone: bz, owner: you, filter: {types: [creature], multicolor: true}}}
+        effect:
+          - {op: draw, count: 1}
+
+  - id: T275
+    name: 多色試験獣
+    types: [creature]
+    civs: [fire, nature]
+    cost: 3
+    power: 2000
+    races: [テスト]
+    text: （多色の試験用クリーチャー。バンドB U1）
+
+  - id: T276
+    name: 龍マナ武装試験獣
+    types: [creature]
+    civs: [fire]
+    cost: 4
+    power: 3000
+    races: [テスト]
+    text: このクリーチャーがバトルゾーンに出た時、自分のマナゾーンにドラゴン・クリーチャーが5体以上あれば、カードを1枚引く。（龍マナ武装5。バンドB U1）
+    abilities:
+      - kind: trigger
+        when: {event: move, to: bz, subject: self}
+        if: {cmp: [{count: {zone: mana, owner: you, filter: {types: [creature], race_has: ドラゴン}}}, ">=", 5]}
+        effect:
+          - {op: draw, count: 1}
+
+  - id: T277
+    name: 竜試験兵
+    types: [creature]
+    civs: [fire]
+    cost: 2
+    power: 1000
+    races: [アーマード・ドラゴン]
+    text: （マナ武装の数え対象。バンドB U1）
+  - id: T278
+    name: 逃避試験獣
+    types: [creature]
+    civs: [nature]
+    cost: 3
+    power: 2500
+    races: [テスト]
+    keywords: [escape]
+    text: エスケープ（このクリーチャーが破壊される時、墓地に置くかわりに自分のシールドを1つ手札に加えてもよい。そのS・トリガーは使えない。バンドC2 U68）
+
+  - id: T279
+    name: 闇盾試験兵
+    types: [creature]
+    civs: [darkness]
+    cost: 3
+    power: 2500
+    races: [テスト]
+    keywords: [s_trigger]
+    text: S・トリガー（このシールドが手札に加えられた時、コストを支払わずにすぐ召喚してもよい。バンドC2 U68 の deny 対象）
+
+  # ---- 第3段・from_under 機構（下にあったカードの移動レコード） ----
+  - id: T280
+    name: 下敷き墓地試験兵
+    types: [creature]
+    civs: [water]
+    cost: 2
+    power: 1000
+    races: [テスト]
+    text: このカードが墓地に置かれた時、それが墓地に置かれる直前に進化クリーチャーの下にあった場合、カードを1枚引く。（dm34型。from_under 機構の観測用に may でない形）
+    abilities:
+      - kind: trigger
+        when: {event: move, to: graveyard, subject: self, from_under: {filter: {types: [evolution]}}}
+        effect:
+          - {op: draw, count: 1}
+
+  - id: T281
+    name: 進化試験龍
+    types: [creature, evolution]
+    civs: [fire]
+    cost: 5
+    power: 5000
+    races: [テスト]
+    evolve_from: {civs: [water]}
+    text: 進化―自分の水のクリーチャー1体の上に置く。（from_under の宿主用）
+  - id: T282
+    name: 平宿主試験獣
+    types: [creature]
+    civs: [nature]
+    cost: 4
+    power: 3000
+    races: [テスト]
+    text: （進化でない宿主の対照用）
+  - id: T283
+    name: 邪眼試験帝
+    types: [creature]
+    civs: [darkness]
+    cost: 5
+    power: 6000
+    races: [テスト]
+    text: カードがこのクリーチャーの下を離れた時、カードを1枚引く。（邪眼帝型。from_under の self 形の観測用）
+    abilities:
+      - kind: trigger
+        when: {event: move, from_under: self}
+        effect:
+          - {op: draw, count: 1}
+
+  - id: T284
+    name: 燃焼宿主試験龍
+    types: [creature, evolution]
+    civs: [fire]
+    cost: 6
+    power: 7000
+    races: [テスト]
+    evolve_from: {civs: [water]}
+    text: 進化―自分の水のクリーチャー1体の上に置く。攻撃できる時、このクリーチャーの下にあるカードを1枚墓地に置いてもよい。そうしたら、カードを1枚引く。（メテオバーン型。下のカード単独移動の観測用）
+    abilities:
+      - kind: activate
+        cost: {under: 1}
+        effect:
+          - {op: draw, count: 1}
+
+  - id: T285
+    name: 下離れ観測試験獣
+    types: [creature]
+    civs: [nature]
+    cost: 3
+    power: 2500
+    races: [テスト]
+    text: カードが自分のクリーチャーの下を離れた時、カードを1枚引く。（ジャシン型。from_under の宿主 owner 照合用）
+    abilities:
+      - kind: trigger
+        when: {event: move, subject: {owner: you}, from_under: {owner: you}}
+        effect:
+          - {op: draw, count: 1}
+
+  - id: T286
+    name: 道具観測試験獣
+    types: [creature]
+    civs: [darkness]
+    cost: 3
+    power: 2500
+    races: [テスト]
+    text: 自分のテストが、クリーチャーの下から自分の墓地に置かれた時、カードを1枚引く。（マイケル型。from_under の true 形＋subject フィルタ用）
+    abilities:
+      - kind: trigger
+        when: {event: move, to: graveyard, subject: {owner: you, filter: {race_has: テスト}}, from_under: true}
+        effect:
+          - {op: draw, count: 1}
+
+  - id: T287
+    name: 無言の下敷き試験兵
+    types: [creature]
+    civs: [water]
+    cost: 2
+    power: 1000
+    races: [テスト]
+    text: （能力のない下のカード用）
+
+  - id: T288
+    name: 道具観測・双試験獣
+    types: [creature]
+    civs: [darkness]
+    cost: 3
+    power: 2500
+    races: [テスト]
+    text: 自分のテストが、破壊された時またはクリーチャーの下から自分の墓地に置かれた時、カードを1枚引く。（マイケル実物型。破壊側は from_under false で下からの分を除く）
+    abilities:
+      - kind: trigger
+        when: {event: move, to: graveyard, reason: destroy, subject: {owner: you, filter: {race_has: テスト}}, from_under: false}
+        effect:
+          - {op: draw, count: 1}
+      - kind: trigger
+        when: {event: move, to: graveyard, subject: {owner: you, filter: {race_has: テスト}}, from_under: true}
+        effect:
+          - {op: draw, count: 1}

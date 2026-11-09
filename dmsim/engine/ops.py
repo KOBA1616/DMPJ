@@ -6,7 +6,8 @@ from .registry import op
 
 
 @op("move", select="selector", to="zone", reason="reason", position="position?", card_only="bool?",
-    order="str?", tapped="bool?", face_up="bool?", face_down="bool?", seal="int?", stack_on="selector?", **{"as": "str?"})
+    order="str?", tapped="bool?", face_up="bool?", face_down="bool?", seal="int?", stack_on="selector?",
+    stack_evo="bool?", strigger="str?", **{"as": "str?"})
 def op_move(eng, t, op, env):
     """ゾーン移動。as を付けると、移動した後のカード（新しいオブジェクト）を変数に入れる（「その〜」で使う）。
     card_only: カードとして動かす（109.2a）。進化クリーチャーの一番上だけが離れ、下は再構築される（801.4）。
@@ -14,6 +15,8 @@ def op_move(eng, t, op, env):
     答えの先頭が、置いたカードの中で一番上になる。
     tapped: タップして置く（置かれた時点でタップ状態）。
     face_down: 裏向きのまま置く（マナゾーンのみ意味を持つ。水晶武装の裏向きマナになる）。
+    strigger: off/on = 手札に加わるカードへの S・トリガーの印（off はその S・トリガーを使えない＝
+    エメラル／エスケープ型。宣言の諮問でも抑えられ、移動後のカードに印が残る。バンドC2 U68）。
     stack_on: シールドの上に重ねて置く（第148弾。to: shield の時だけ）。対象の束は効果の使用者が選ぶ
     （セレクタの owner は候補の絞り込み。相手のシールドに重ねる時は owner: opp と書く）。
     重ねる先のシールドが無い場合は置けないので、移動自体を行わない。"""
@@ -39,6 +42,18 @@ def op_move(eng, t, op, env):
         cids, d = eng.select(t, op["select"], env)
         if d:
             return d
+    if op.get("stack_evo"):
+        # 重ね出し（put_evolution_stacking）: 選んだカードを1体ずつ順に出し、進化クリーチャーは
+        # その都度選んだ進化元に重ねる（put_stacked タスクへ引き渡す）
+        task = {"t": "put_stacked", "cids": list(cids), "all_cids": list(cids), "player": env["you"],
+                "env": env, "reason": op["reason"], "tapped": bool(op.get("tapped")),
+                "face_up": bool(op.get("face_up"))}
+        if op.get("seal"):
+            task["seal"] = op["seal"]
+        if "as" in op:
+            task["bind"] = op["as"]
+        eng._defer(t, [task])
+        return None
     if op.get("order") == "choose" and op["to"] == "deck" and len({eng.s.cards[c].defn for c in cids}) > 1:
         a, d = eng.ask(t, env["you"], "order_cards", [eng._card_option(c, True) for c in cids], len(cids), len(cids))
         if d:
@@ -53,7 +68,8 @@ def op_move(eng, t, op, env):
     for c in shield_out:
         by_owner.setdefault(eng.s.cards[c].controller, []).append(c)
     out_tasks = [{"t": "break", "victim": p, "by": env["you"], "count": len(cs), "phase": 1, "chosen": cs,
-                  "in_effect": bool(env.get("in_st")), "reason": op["reason"], "fire_break": False}
+                  "in_effect": bool(env.get("in_st")), "reason": op["reason"], "fire_break": False,
+                  **({"strigger": op["strigger"]} if op.get("strigger") else {})}
                  for p, cs in sorted(by_owner.items(), key=lambda kv: kv[0] != eng.s.active)]   # ターン・プレイヤー側が先（111.1）
     evs = [{"ev": "move", "subject": eng.s.ref(c), "to": op["to"], "reason": op["reason"],
             "position": op.get("position", "top")} for c in cids if c not in shield_out]
@@ -72,6 +88,9 @@ def op_move(eng, t, op, env):
     if op.get("seal"):
         for e in evs:
             e["seal"] = op["seal"]   # バトルゾーンに出る時、封印を付けた状態で出る（出た時能力は無視される）
+    if op.get("strigger"):
+        for e in evs:
+            e["strigger"] = op["strigger"]   # 手札に加わるカードへの S・トリガーの印（off=使えない／on=得る。バンドC2 U68）
     if target_ref is not None:
         for e in evs:
             e["shield_stack"] = target_ref   # シールドの束の上に重ねる（第148弾。イベントのキーは進化の stack_on と分ける: あちらは _record_for が stacked として照合する）
@@ -139,6 +158,23 @@ def op_untap(eng, t, op, env):
     return op_tap(eng, t, op, env, "untap")
 
 
+@op("hyper_release", select="selector")
+def op_hyper_release(eng, t, op, env):
+    """ハイパーモードの解放（効果による）: 選んだクリーチャーの旗を立てる。
+    ハイパー化（メインステップの hyper_act: 自分の他のクリーチャー1体をタップする手順）とは
+    別物で、コストは伴わない。タップ・イベント・タスクは発行しない（Zラッシュの直接付与と同じ）。
+    期限は書かない: 「次の自分のターンのはじめまで」は st_start の無条件解除（turn.py）と一致する。
+    ハイパー面を持たない対象には旗を立てない（選択自体は文面どおり行い、効果だけが空振りする）。
+    候補が0体なら select が決定を出さず、そのまま不発する。"""
+    cids, d = eng.select(t, op["select"], env)
+    if d:
+        return d
+    for c in cids:
+        if eng.fdef(c).hyper:
+            eng.s.cards[c].hyper = True
+    return None
+
+
 @op("flip_down", select="selector")
 def op_flip_down(eng, t, op, env):
     """水晶武装: マナゾーンのカードを裏向きにする。裏向きのマナは無色として扱う（支払いの文明に数えない）。
@@ -172,6 +208,18 @@ def op_flip_up(eng, t, op, env):
                 eng.note_public("face_up", c)
         elif card.zone == "mana":
             card.face_down = False
+    return None
+
+
+@op("dswitch")
+def op_dswitch(eng, t, op, env):
+    """Dスイッチ（第151弾）: 発生源の D2フィールドを上下逆さまにする（使用済みの旗 dswitched を立てる）。
+    イベントは作らない（flip_up／flip_down と同じ直操作）。「ゲーム中で一度」はこの旗で数え、
+    ゾーン移動でリセットされる（新しいオブジェクトとして出直したら再び使える）。
+    能力の出し分け（使用済み・deny: [d_switch] の間は能力自体が出ない）は abilities() 側で行う。"""
+    cid = env["self"][0]
+    if eng.s.alive(env["self"]):
+        eng.s.cards[cid].dswitched = True
     return None
 
 
@@ -233,6 +281,19 @@ def op_break(eng, t, op, env):
                      "in_effect": bool(env.get("in_st")) or bool(op.get("st_first")), **eng._breaker(env)}])
 
 
+def _bake_refs(obj, eng, env):
+    """生成時ベイク（バンドC2 基盤B4）: {declared: 名前} と {var: 名前} の式を、生成時点の値へ
+    リテラルに固定する。宣言・変数は解決の後段（特性計算や dynamic の範囲照合）では env から
+    読めないため、継続的効果へ持ち込む時はここで固定する。"""
+    if isinstance(obj, dict):
+        if len(obj) == 1 and next(iter(obj)) in ("declared", "var"):
+            return eng.eval_expr(obj, env)
+        return {k: _bake_refs(v, eng, env) for k, v in obj.items()}
+    if isinstance(obj, list):
+        return [_bake_refs(v, eng, env) for v in obj]
+    return obj
+
+
 @op("modify", select="selector", mod="mod", duration="duration?", dynamic="bool?")
 def op_modify(eng, t, op, env):
     """継続的効果を生成する。既定では解決時の範囲に固定（110.2e）。
@@ -240,6 +301,8 @@ def op_modify(eng, t, op, env):
     s = eng.s
     s.seq += 1
     mod = op["mod"]
+    # {declared:...} / {var:...} は生成時にベイクする（基盤B4。add_races は下の専用処理、gain は能力そのものなので対象外）
+    mod = {k: (v if k in ("add_races", "gain") else _bake_refs(v, eng, env)) for k, v in mod.items()}
     if any(isinstance(r, dict) for r in mod.get("add_races", [])):
         # 式の種族（{race: 変数名} = choose_race で選んだ種族）は生成時の env で名前へ展開して固定する（第136弾）
         mod = dict(mod)
@@ -252,8 +315,10 @@ def op_modify(eng, t, op, env):
     if op.get("dynamic"):
         sel = op["select"]
         ce["affected"] = None
+        # dynamic の範囲フィルタは特性計算のたびに env なしで照合されるため、宣言・変数の参照は生成時にベイクする（基盤B4）
         ce["filter"] = {"zone": sel.get("zone", "bz"), "owner": eng._rel(sel["owner"], env)
-                        if sel.get("owner", "you") != "any" else "any", "filter": sel.get("filter", {})}
+                        if sel.get("owner", "you") != "any" else "any",
+                        "filter": _bake_refs(sel.get("filter", {}), eng, env)}
     else:
         cids, d = eng.select(t, op["select"], env)
         if d:
@@ -269,12 +334,20 @@ def op_modify(eng, t, op, env):
     return None
 
 
-@op("mark", name="str", of_self="bool?")
+@op("mark", name="str", of_self="bool?", scope="str?")
 def op_mark(eng, t, op, env):
-    """このターンの印を付ける（cond の marked で読む）。ターンが変わると消える。「各ターン1度」「他のファイナル革命を使っていなければ」用。
+    """印を付ける（cond の marked で読む）。「各ターン1度」「他のファイナル革命を使っていなければ」用。
+    scope（バンドB 基盤 mark-scope）: 既定は turn（ターンが変わると消える）。
+    attack はその攻撃の中だけ、game はゲーム中ずっと（game_counters。ターン開始で消えない。
+    「ゲーム中に一度だけ」や極限ファイナル革命の使用履歴用）。
     of_self: このカード自身の印にする（cond の self_marked で読む。ターボラッシュ）。"""
-    key = op["name"] + (f":{env['self'][0]}:{env['self'][1]}" if op.get("of_self") else "")
-    eng.s.turn_counters[key] = eng.s.turn_counters.get(key, 0) + 1
+    scope = op.get("scope", "turn")
+    if scope not in ("turn", "attack", "game"):
+        raise ValueError(f"mark scope must be turn/attack/game, got {scope!r}")
+    store = eng.s.game_counters if scope == "game" else eng.s.turn_counters
+    key = eng._mark_key(op["name"], scope, env) + \
+        (f":{env['self'][0]}:{env['self'][1]}" if op.get("of_self") else "")
+    store[key] = store.get(key, 0) + 1
 
 
 @op("shuffle", player="player?")
@@ -590,14 +663,17 @@ def op_summon_self(eng, t, op, env):
     eng._defer(t, [task])
 
 
-@op("play_self", cost="int", civs="any?")
+@op("play_self", cost="int", civs="any?", via="any?")
 def op_play_self(eng, t, op, env):
     """このカード自身を代替コストで実行する（キリフダッシュ: 攻撃の終わりに [コスト] を支払って召喚する）。
-    civs は代替コストで必要な文明（省略時はカード自身の文明）。"""
+    civs は代替コストで必要な文明（省略時はカード自身の文明）。
+    via は出し方の印（第149弾。D・D・D の declare だけが via: d_d_d を付ける。キリフダッシュには付けない）。"""
     task = eng.play_task(env["self"][0], env["you"], False)
     task["cost_override"] = op["cost"]
     if "civs" in op:
         task["cost_civs"] = op["civs"]
+    if "via" in op:
+        task["via"] = op["via"]
     eng._defer(t, [task])
     return None
 
@@ -755,13 +831,24 @@ def op_end_turn(eng, t, op, env):
     eng.s.skip_rest = True
 
 
-@op("use_partner")
+@op("use_partner", of="str?", exclude_self="bool?", pending="bool?")
 def op_use_partner(eng, t, op, env):
     """キズナ: 自分のクリーチャー1体の[P]能力（kind: partner）を選んで使う。
-    効果の self は [P] を持つクリーチャーに移る。[P] を持つクリーチャーがいなければ何もしない。"""
+    効果の self は [P] を持つクリーチャーに移る。[P] を持つクリーチャーがいなければ何もしない。
+    of: self = 候補をこのクリーチャー自身の[P]だけに絞る。exclude_self: true = 自分を候補から除く
+    （どちらもキズナプラス用。第153弾）。引数なしは従来どおり全候補から1つ選ぶ（キズナ）。
+    pending: true = 選んだ[P]をその場で解決せず、待機中の効果として登録する。
+    キズナプラスの2つの[P]は支払いの時点でそれぞれ確定した待機効果になり、解決順は使う側が
+    好きな順番で選べる（603.3a／605.1）。発生源が解決前に離れても不発にならない（110.5a）。"""
+    s = eng.s
     you = env["you"]
+    self_cid = env["self"][0] if env.get("self") else None
     cands = []
     for c in eng.bz_tops(you):
+        if op.get("of") == "self" and c != self_cid:
+            continue
+        if op.get("exclude_self") and c == self_cid:
+            continue
         for i, ab in eng.abilities(c, "partner"):
             cands.append((c, i, ab))
     if not cands:
@@ -771,17 +858,52 @@ def op_use_partner(eng, t, op, env):
     if d:
         return d
     c, i, ab = cands[a[0]]
+    if op.get("pending"):
+        ref = s.ref(c)
+        s.seq += 1
+        p = {"pid": s.seq, "kind": "normal", "win": s.windows[-1] if s.windows else 0,
+             "controller": you, "src": ref, "defn": s.cards[c].defn, "ab": i,
+             "env": {"you": you, "self": ref, "event": env.get("event"), "vars": {}}}
+        face = s.cards[c].face
+        if face >= 0:
+            p["face"] = face
+        if i < 0:          # 継続的効果で得た[P]は、能力そのものを持たせる（誘発収集と同じ形）
+            p["inline"] = ab
+        s.pending.append(p)
+        return None
     eng._defer(t, [eng._child(ab["effect"], dict(env, self=eng.s.ref(c)))])
     return None
 
 
-@op("choose", select="selector", **{"as": "str"})
+@op("choose", select="selector", reveal="bool?", **{"as": "str"})
 def op_choose(eng, t, op, env):
-    """カードを選んで変数に入れるだけ（「〜を1体選ぶ。このターン、そのクリーチャーが〜」）。"""
+    """カードを選んで変数に入れるだけ（「〜を1体選ぶ。このターン、そのクリーチャーが〜」）。
+    reveal: true の時は束縛したカードを全プレイヤーに公開する（「表向きにする」。公開集合の保持。バンドC1 U39）。"""
     cids, d = eng.select(t, op["select"], env)
     if d:
         return d
     env.setdefault("vars", {})[op["as"]] = [eng.s.ref(c) for c in cids]
+    if op.get("reveal"):
+        for c in cids:
+            eng.note_public("reveal", c)
+    return None
+
+
+@op("strigger", select="selector", mode="str")
+def op_strigger(eng, t, op, env):
+    """S・トリガーの印だけを付ける（移動を伴わない。バンドC2 U68）。
+    mode: on = 本来の定義になくても S・トリガーを宣言できる／off = 宣言できない。
+    印は手札にある間だけ有効で、手札を離れる移動で消える（core._raw_move）。"""
+    cids, d = eng.select(t, op["select"], env)
+    if d:
+        return d
+    if op["mode"] not in ("on", "off"):
+        raise ValueError(f"strigger mode must be on/off: {op['mode']}")
+    for c in cids:
+        if op["mode"] == "off":
+            eng.s.cards[c].strigger_off = True
+        else:
+            eng.s.cards[c].strigger_on = True
     return None
 
 
@@ -794,6 +916,46 @@ def op_choose_race(eng, t, op, env):
     if d:
         return d
     env.setdefault("races", {})[op["as"]] = names[a[0]]
+    return None
+
+
+@op("choose_number", min="int?", max="int?", **{"as": "str"})
+def op_choose_number(eng, t, op, env):
+    """「数字を1つ言う」（宣言プリミティブ。バンドC2 U97／バンドB U3）: min〜max の整数から1つ選び、
+    GameState.declares に入れる。後段は式 {declared: 名前} で読む。範囲は原文どおり指定する（既定は 0〜10）。
+    chooser は効果の解決者（env の you）。相手に選ばせる形は今回の範囲外（統一の未確定事項）。"""
+    lo, hi = op.get("min", 0), op.get("max", 10)
+    opts = [{"key": f"num:{n}", "name": str(n)} for n in range(lo, hi + 1)]
+    a, d = eng.ask(t, env["you"], "choose_one", opts, 1, 1)
+    if d:
+        return d
+    eng.s.declares[op["as"]] = lo + a[0]
+    return None
+
+
+@op("choose_name", **{"as": "str"})
+def op_choose_name(eng, t, op, env):
+    """「カードの名前を1つ言う」（宣言プリミティブ）: 対戦中の両デッキ＋各ゾーンに存在するカード名から
+    1つ選び、GameState.declares に入れる。後段は式 {declared: 名前} で読む（filter の name 等）。"""
+    names = sorted({eng.rules.cards[c.defn].name for c in eng.s.cards})
+    opts = [{"key": f"name:{n}", "name": n} for n in names]
+    a, d = eng.ask(t, env["you"], "choose_name", opts, 1, 1)
+    if d:
+        return d
+    eng.s.declares[op["as"]] = names[a[0]]
+    return None
+
+
+@op("choose_civ", **{"as": "str"})
+def op_choose_civ(eng, t, op, env):
+    """「文明をひとつ選ぶ」（宣言プリミティブ）: 5文明から1つ選び、GameState.declares に入れる。
+    後段は式 {declared: 名前} で読む（filter の civs / not_civs は文字列を単一文明として扱う）。"""
+    civs = ["light", "water", "darkness", "fire", "nature"]
+    opts = [{"key": f"civ:{cv}", "name": cv} for cv in civs]
+    a, d = eng.ask(t, env["you"], "choose_civ", opts, 1, 1)
+    if d:
+        return d
+    eng.s.declares[op["as"]] = civs[a[0]]
     return None
 
 

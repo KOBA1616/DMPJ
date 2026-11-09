@@ -405,8 +405,9 @@ class TurnMixin:
         eff = max(0, eff + ch["pay_cost"] - d.cost)           # 継続的効果によるコストの増減（mod cost）
         if eff == 0 and not (civs if civs is not None else d.civs):
             return [[]]
+        cs = ch.get("crystal_soul", 0)   # 水晶ソウル（第154弾）: このカードの支払いでは裏向きマナの数字が cs になる（置換。文明は得ない）
         untapped = [c for c in self.zlist("mana", p) if not self.s.cards[c].tapped]
-        if len(untapped) < len(d.civs) or sum(self.cdef(c).mana for c in untapped) < eff:
+        if len(untapped) < len(d.civs) or sum(cs if (cs and self.s.cards[c].face_down) else self.cdef(c).mana for c in untapped) < eff:
             return []
         groups: dict = {}
         for c in untapped:   # 裏向きマナは無色として別グループに分ける（水晶武装）。文明は特性（chars）で見る: 「マナゾーンにあるカードをすべての文明として扱う」等が効く（第123弾）
@@ -414,7 +415,7 @@ class TurnMixin:
             groups.setdefault((self.s.cards[c].defn, self.s.cards[c].face_down, civkey), []).append(c)
         names = sorted(groups)
         need = list(civs) if civs is not None else list(d.civs)
-        mana = [self.rules.cards[n[0]].mana for n in names]
+        mana = [cs if (cs and n[1]) else self.rules.cards[n[0]].mana for n in names]   # n[1] はグループの face_down: 裏向きグループだけ水晶ソウル値に差し替える
         out: list[list[int]] = []
 
         def civ_ok(cnt):
@@ -485,10 +486,12 @@ def h_turn(eng, t):
 @step("start")
 def st_start(eng, t):                                   # 501
     s = eng.s
-    for c in eng.zlist("bz", s.active):                 # ハイパーモードは次の自分のターンのはじめまで（文字通り。相手ターンに解放されても自分のターンのはじめに戻る）
-        s.cards[c].hyper = False
+    for c in eng.zlist("bz", s.active):                 # ハイパーモードは次の自分のターンのはじめまで（文字通り。bz は共有ゾーンなので、そのターンのプレイヤーがコントロールするカードだけを戻す。相手ターンに解放されても自分のターンのはじめに戻る）
+        if s.cards[c].controller == s.active:
+            s.cards[c].hyper = False
     a = s.active
     s.steps_this_turn = 0
+    s.prev_counters = dict(s.turn_counters)   # 前のターンの履歴を退避する（{prev_shield_added} の読み先。バンドB U18）
     s.turn_counters = {}
     n = len(s.continuous)
     s.continuous = [c for c in s.continuous if c["duration"] != f"until_turn_start:{a}"]
@@ -1018,16 +1021,20 @@ def h_play(eng, t):
             ev["alt"] = True
         if t.get("vivid"):
             ev["vivid"] = True
+        if t.get("via"):
+            ev["via"] = t["via"]   # 出し方の印（第149弾。D・D・D で出した時は via: d_d_d）
         if d.bazurenda:
             ev["bazurenda"] = t.get("bz_count", 0)
         if t.get("evo"):
             ev["stack_on"] = t["evo"][0]
+            ev["evolution"] = True   # 進化として重ねた印（第150弾: evolve_base レコードは進化の時だけ出す。無月の門の summon_on には付けない）
             if len(t["evo"]) > 1:
                 ev["stack_more"] = t["evo"][1:]
         eng._push(eng.ev_task(ev))
     elif d.is_permanent():      # タマシード・フィールド・クロスギア: 実行（展開・ジェネレート）したらバトルゾーンに出る（315.2, 308.2, 303.2）
         ev = {"ev": "move", "subject": ref, "from": from_zone, "to": "bz", "reason": "put",
-              "controller": p, "via": "generate", "unpaid": bool(t["free"])}
+              "controller": p, "via": t.get("via") or "generate", "unpaid": bool(t["free"])}
+        # 出し方の印（第149弾）: play_self の via があればそちらを優先し、無ければ従来どおり generate
         if sst_bonus:
             ev["sst"] = True
         if d.bazurenda:
@@ -1041,6 +1048,8 @@ def h_play(eng, t):
             env["alt_paid"] = True
         if t.get("vivid"):
             env["vivid_paid"] = True
+        if t.get("via") == "d_d_d":
+            env["ddd_paid"] = True   # D・D・D で唱えた（第149弾。「この呪文を『D・D・D』で唱えたなら」）
         spell_ops = list(d.spell) + (list(d.sst_spell) if s.cards[cid].sst else []) \
             + (list(d.stp_spell) if s.cards[cid].stp else []) \
             + (list(d.odrive_spell) if s.cards[cid].odrive else [])
@@ -1048,6 +1057,8 @@ def h_play(eng, t):
         cev = {"ev": "cast", "player": p, "subject": ref, "unpaid": bool(t["free"])}
         if t.get("vivid"):
             cev["vivid"] = True
+        if t.get("via"):
+            cev["via"] = t["via"]   # 出し方の印（第149弾。when: {event: cast, via: d_d_d} の照合用）
         eng._push(eng.ev_task(cev),
                    *([eng._child(spell_ops, env)] * reps),
                    eng.ev_task({"ev": "move", "subject": ref, "from": from_zone, "to": t.get("resolve_to", "hand" if cyc else d.resolve_to),

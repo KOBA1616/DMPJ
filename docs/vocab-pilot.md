@@ -399,6 +399,7 @@ space_charge（単独42件）: スペース・チャージは、文明ごとの�
 
 - 面に `hyper: true` を宣言する。メインステップに「ハイパー化」の選択肢が出て、自分の他のクリーチャーを1体タップすると解放される（タップはイベントを通す）
 - ハイパーモードでだけ働く能力は条件 `{hyper: true}` で書く。次の自分のターンのはじめに解ける
+- 持続期間の裏取りと解除範囲の修正（2026-11-09）: 公式 QA 44820／48760 で「次の自分のターンのはじめまで」（相手ターンを挟んで続く）を確認。ターン開始時の解除は bz が共有ゾーンのため全カードに及んでいた（自分のターンに解放すると相手ターンのはじめに解けていた）ので、解除を「そのターンのプレイヤーがコントロールするカードだけ」に絞った。hyper_act／Zラッシュ／op hyper_release の全経路が対象。詳細は faq-check-hyper-duration-20261109.md
 
 ## 次の候補
 
@@ -1367,3 +1368,178 @@ draw イベントへの置換で表す（draw は個別イベントとして発�
 - 待機36枚（shield_stack 28／flip_up 7／shield_flip 3。dmex19-m18・promoy17-044 は stack と flip の両方を含む）。再変換しても残るもの: dmex07-m02 は gr_summon、dm24sp2-001 は deny_cast_below_facedown_mana_count、dmx12b-035 は unblocked_trigger が残る。再変換は別ラウンドで実施する（reopen shield_stack flip_up shield_flip）。
 - **範囲外（ユーザー承認済みの切り分け）**: dmex19-m18 のブレイカー部分（「各ブレイクの前に」の割り込みは h_break への新フックが要る。本弾はその shield_flip 部分のみ対象）、dm25ex3-rp4001 の「シールド1つにつき」の繰り返し、dmbd07-b-001 の「重ねた表向きのカードを使う」は扱わない（gap の細分は再変換ラウンドで行う）。
 - 既存の変換済みカードへの影響: 「表向きのシールド」を素のセレクタ（zone: shield＋filter: face_up）で数える／選ぶ既存カード（ℵHEAVEN dm24ex2-025 の勝利条件、シールド・ゴー条件の dmr10 系、dm26ex2-013/024、dmrp16-s01、dmex08-093、dmex14-021 等）はトップだけを見ている。束の中に表向きカードがある局面ではユーザー決定と食い違うため、関係するカードは今後のラウンドで bundle_of 形への書き換えを検討する（本弾では converted.yaml は変更しない）。
+
+## 第149弾: d_d_d_rider（「D・D・D」によって出た時／唱えた時の照合）— エンジン拡張あり（2026-11-09）
+「D・D・D」（自分のクリーチャーが攻撃する時、このカードを固有コストで手札／マナから実行する代替プレイ）の経由で出たこと・唱えたことを、play 本体の印 `via` で照合する。設計ノート pilot149-d-d-d-rider-design どおり。
+- op `play_self` に任意キー `via` を追加（タスクに `via` が写り、play フローがイベントに `via` として伝播し、誘発収集レコードまで届く）。defs の `VIAS` に `d_d_d` を追加し、`play_self.via` の値域を VIAS で検証する。印は既存の `vivid` 印と同格の横並びの値で、precedent は g_link の挿入タスクで使う `via`（リンク由来の入場の区別。タスク・イベントの素の文字列キー）がある。エンジンは D・D・D の効果文を一切解釈せず、印の生成（play_self の宣言）・伝播（play フロー）・照合（when／cond）の3点だけを担う。
+- クリーチャー型ライダー: 誘発の `when` に `via: d_d_d` を追加で書く（既存の alt／vivid と同じく when の文字列キーとして照合する。当該カードに限る追加条件で、形状は `unpaid` と平行）。**通常召喚・キリフダッシュ等では発火しない**（via は play_self 実行時のイベントにだけ付く）。
+- 呪文型ライダー: 条件式に `ddd_paid`（bool）を追加し、効果リストの先頭に `{op: if, cond: {ddd_paid: true}, then: [追加処理]}` を書く（常設の alt_paid／vivid_paid と同じ作り。env には play タスクの via が入る場合だけ立ち、イベント経由でも拾える）。登録済みカードに先例がある形で、S・トリガーで唱えた場合は play_self を経由しないため `ddd_paid` は立たない。「そうしたら」型の接続は、唱えた本体が成功した時に続けて解決する一続きの効果として then の中に書く。根拠は公式QA Q31668（選択肢は置換効果のため、無効化されたカードはブレイクされたことにならない——本弾の論点は「D・D・Dで唱えたか」の状態照合であり、反例となる裁定は確認できなかった。第146弾の裁定待ち2件とは別件）。
+- モーダルの個数差（通常2つ／D・D・Dなら3つ等）は、modal を if の then／else に複製して count（と repeat の有無）だけ変えて書く。エンジン側に特例は作らない。
+- マナゾーンからの declare は `zone: mana` の declare をもう1つ書く（既存の多ゾーン宣言の型。対象カードは攻撃誘発の提示が2回になる構造で、変換時の手書き確認事項とする）。
+- **変換ルール（親判断 2026-11-09）: `via: d_d_d` を付けるのはライダー（「D・D・Dによって出た時／唱えたなら」の効果）を持つ11枚の declare だけ**。ライダーを持たない D・D・D カードには付けない（不発火の保証は T186 のキリフダッシュ対照テストで担保し、誤爆の心配は無いが、変換の手間と「via を見たらライダーがある」という可読性の規約を優先する）。タマシード／フィールドの play は `t['via']` があればそちらを優先し、無ければ従来どおり `generate` とする。
+- **潜在バグの根治（同梱）**: 誘発収集レコード（events.py の `_apply_one` が作る out）には via だけが写り、**alt／vivid の印が写っていなかった**。そのため `when: {vivid: true}` の move 誘発（登録済みカードの実在の形）と、誘発の `if: {alt_paid: true}` は実際には発火しない状態だった。本弾で alt／vivid も同じ経路で収集レコードに伝播させた。第54弾の既存テスト `test_trigger_fires_on_vivid_summon` は「入場後に手札が1枚になるまで進める」非判別な形でこのバグを素通ししていたため、「入場直後の Decision 提示時点の手札」で見る判別形に補強した（修正を外すと落ちることを確認済み）。
+- proto T186（declare＋ライダー誘発。キリフダッシュ execute 併記で不発火も固定）／T187（呪文の ddd_paid 分岐）／T188（declare 2枚＋モーダル3/2の書き分け）、試験カード R108（vivid の move 誘発と alt_paid の if をタップで観測する獣。ドローのような代替説明が利かない効果で観測する）。tests/test_vocab_pilot149.py 16件（parse／検証エラー3件／ライダー発火・不発火（通常召喚・キリフダッシュ）／呪文の追加処理あり・なし・S・トリガー不発／モーダル2⇔3と全モード1回ずつ／マナゾーンからの declare／vivid 伝播の判別2件／alt 伝播の判別2件）＋tests/test_vocab_pilot149_cards.py 11件（対象11枚の手書き変換。単独7枚は変換形まで、複合4枚は parse と残 unsupported の内訳まで）。
+- schema は再生成済み（when.via の列挙に d_d_d、play_self に via、条件式に ddd_paid）。
+- 待機11枚（単独7: dm25ex3-021, dm25ex3-026, dm25ex3-038, dm25ex3-rp3011, dm25ex3-rp3s08, dm25ex3-rp4007, dm25rp4-019／複合4: dm25ex3-010, dm25ex3-rp4005, dm25ex3-rp4s05, dm25rp4-012）。再変換は別ラウンドで実施する（reopen d_d_d_rider）。
+- **範囲外（親判断 2026-11-09）**: dm25ex3-010 の cip_trigger_double（出た時誘発の2度トリガー）は実装しない。dm25ex3-rp4s05 の「出ることによって起こる効果やルールはすべて無視する」は実装しない（ライダー本体の「マナから12体まで出す」だけを書く。無視条項は手書き変換テストでは仮の need 名 `enter_effects_ignored` で残し、命名は再変換時に確定する）。dm25rp4-012 のライダーは declare に via だけ付けて unsupported に d_d_d_rider を残す（シャッフル→公開→無料実行／手札かマナの複合の精査は再変換ラウンドで行う）。
+
+## 第150弾: become_evolution_base_trigger（進化元になる時）— エンジン拡張あり（2026-11-09）
+「このクリーチャーが進化元になる時」（NEOクリーチャーの併記誘発）と「シンカパワー：このタマシードが進化する時」を、進化の重ね適用時に出す合成レコードで照合する。設計ノート pilot150-evo-base-design どおり。
+- 進化の重ね適用時（events.py の `_apply_one` の stack_on 分岐）、h_play が立てた進化印（`ev["evolution"]`、t["evo"] がある時だけ）がある場合に限り、進化元を subject・出たクリーチャーの適用後 ref を top とする合成レコード `{"ev": "evolve_base", "subject", "top", "controller"}` を元ごとに1つ出す（進化V等の複数元は元ごとに発火する）。defs の EVENTS に `evolve_base` を追加（schema は再生成のみ）。
+- 誘発収集（`_collect_triggers`）では、evolve_base レコードの subject を発生源に加える（重ねられた側は bz_tops から外れるため、レコードを出すだけでは進化元の能力を走査できない。離れたカードの lki 追加と同じ形）。他者の進化元化を見る文面は対象に無いので、汎用の走査には広げない。
+- 変換の型: `- kind: trigger / when: {event: evolve_base, subject: self} / effect: [...]`。型N（NEO併記）は2能力に分ける: 出た時側は既存の `{event: move, subject: self, to: bz, stacked: true}`、元になる時側は evolve_base。効果が同じでも2つ並べる。
+- 効果の宛先の注意: 型N-b／S-a（「この進化したクリーチャー／それに与える」）は、元になる時側では宛先を `{ref: event.top}`（selectors の event.* 参照に第146弾の event.shield と並べて追加）に書き換える（出た時側は `{ref: self}` のまま）。**同じ文面でも2能力で宛先が違う**。
+- **前提修正: when の `stacked` 照合を有効化**（第28弾で「照合可能」とされたが `_match_when` に分岐が無く、未知キーとして素通りしていた。あわせて収集レコードへの stacked 伝播も無かった）。これで「進化して出た時」は重ねて出た時だけ発火する。converted の stacked 使用52箇所のうち、変わるのは重ねずに出られるカード（NEO等）が通常召喚で誘発しなくなる＝文面どおりになる方向のみ。第28弾の T087 テストは重ねて出す形なので従来どおり発火する。
+- **発火しない経路（親判断 2026-11-09）**: 無月の門（summon_on）は進化ではないので発火しない（ev に進化印を付けないことで切り分ける）。侵略はイベントを経ず `_stack` を直接呼ぶため自動的に対象外（進化ではないので正しい）。スター進化の離脱・G-NEO の離脱置換など重ね以外の処理には触らない。進化元が既に重なっていた側では、その時点のトップだけが subject になる（下のカードは新たに元になるわけではない）。
+- proto T189（シンカパワー試験タマシード: evolve_base で event.top にマッハファイター相当の許可を与える）／T190（併記型NEO試験獣: stacked 側と evolve_base 側の両方でドロー）／T191（進化試験獣: クリーチャー／タマシード両対応の受け手）。設計ノートは T188〜T190 の予定だったが、第149弾が T188（決断試験呪文）まで使ったため +1 ずらした。tests/test_vocab_pilot150.py 8件（parse／シンカパワーの付与先がトップであること／NEO通常召喚で両側とも不発火（判別）／NEO重ね出しで stacked 発火／NEOが元になって evolve_base 発火／進化Vで元ごとに発火／無月の門で不発火／侵略で不発火）＋tests/test_vocab_pilot150_cards.py 4件（dmrp22-025 レヴィヤの地版、dm25rp2-058 ～淡き舵取りの唄～、dm25rp4-077 スマッシュ・ホーンの地版、dm25rp3-044 轟速 ジャ・ターボ3 の手変換）。
+- schema は再生成済み（イベント列挙に evolve_base）。
+- 待機31枚（型N 16／型S 15。うち dmrp22-021 は must_attack_next_turn が残る）。再変換は別ラウンドで実施する（reopen become_evolution_base_trigger、登録見込み30枚）。
+
+## 第151弾: d2_field（D2フィールドの型印・一意性・Dスイッチ）— エンジン拡張あり（2026-11-09）
+D2フィールドの本体は既存の型 `field` で実行・常在型・誘発が既に書ける（第25弾）。本弾の新規は3点だけ: 型印 `d2_field` の併記と一意性フックのプール分離、Dスイッチ（旗＋op＋出し分け）、禁止の受け皿（deny: [d_switch] の照合点。deny: [generate] は既存）。設計ノート pilot151-d2-field-design と公式裏取り faq-check-d2-20261109 どおり。
+- D2フィールドは types に `["field", "d2_field"]` と書く（defs の CARD_TYPES に型印 `d2_field` を追加。is_permanent は "field" で従来どおり）。D2だけを指すフィルタは `{types: [d2_field]}`、存在条件は exists＋同フィルタ（いずれも既存語彙。selectors の変更なし）。`{types: [field]}` では D2 も数えられる（併記の帰結）。変換指示（tools/convert_cards.py）にも併記を明記した。
+- 一意性: バトルゾーンの D2フィールドは両プレイヤー合わせて1つだけ。新しい D2フィールドが出たら、他の D2フィールドはすべて破壊される（events の適用後フック）。**プール分離（公式裏取りで確定）**: 総合ルール 703.4l は出現側・対象側とも「D2フィールド」に限定され、通常フィールドには一意性の規定が無い（308）。行き先は destroy（701.6「バトルゾーンから墓地に置くことは破壊」＋109.1 最新表記＋公式 QA 47896 で破壊置換が適用できた事例）。フックは出現イベントごとに1回だけ適用される形（move の適用時にだけ走る）で、置換で生き残った D2 は次の新しい D2 が出るまで残る（QA 47896）。通常フィールド同士は第25弾の挙動（T069／T070）を温存する（通常フィールド同士の一意性も総合ルールに規定は無く、温存は設計側の選択）。
+- Dスイッチの型: kind: trigger に `dswitch: true` を付け、効果の先頭に may＋`{op: dswitch}` を置く。使うと may の body が走って旗が立ち、断れば反転せず使用済みにもならない（次の同じタイミングで再提示される）。使用済みは Card の `dswitched` 旗で管理し、_raw_move（ゾーン移動）でリセットされる＝新しいオブジェクトとして出直したら再び使える（「ゲーム中で一度」はオブジェクト単位。親判断）。出し分けは abilities() の印照合に追加: `dswitch: true` の能力は「dswitched でなく、かつ permits(発生源, "d_switch")」の時だけ有効（kind 照合の後ろで permits を見るので chars 計算とは再帰しない）。op `dswitch` は self 専用の直操作でイベントは作らない（flip_up／flip_down と同じ性格）。defs は ABILITY_KEYS に `dswitch` を追加し、trigger に true でだけ書けるよう検証する。permissions.yaml に行為 `d_switch`（default: true）を追加。
+- 禁止の受け皿: 「Dスイッチを使えず」は affects／modify＋`deny: [d_switch]`（対象フィルタは types: [d2_field]）、「D2フィールドを展開できない」は affects／modify＋`deny: [generate]`（第33弾の deny cast と同型）。**「展開できない」の範囲はメインの generate まで**（親判断。S・トリガー等の play_free 経路は止めない）。文面が「バトルゾーンに出せない」とより広い dmex08-204 ワチャゴナは本弾の範囲外（再変換では条項だけ unsupported に細分する）。
+- proto T192（Dスイッチ試験フィールド: 常在型＋ターンのはじめの Dスイッチでドロー）／T193（D2試験フィールド: 出た時ドロー）／T194（D2言及試験クリーチャー: exists 条件）／T195（D2 S・トリガー試験フィールド。設計ノートの T192〜T194 に S・トリガー確認用を1枚追加）、試験カード R109（自分のターンの終わり型の Dスイッチ観測フィールド）。tests/test_vocab_pilot151.py 13件（parse／dswitch キーの検証2件／一意性（両プレイヤー・プール分離の共存・出す順序2通り）／filter の併記帰結／Dスイッチの断る→再提示→使う→提示されない／使用ターンのドロー数／ターン終わり型／墓地→手札→出直しで再使用可／deny 2種と期限切れ後の復帰／S・トリガーで無料展開／言及カードの条件3場面／クリーチャー選択と攻撃の対象外）＋tests/test_vocab_pilot151_cards.py 7件（dmr21-036、dmr21-047、dm23ex3-042、dmd35-011、dmr21-035、dmr23-040、dmex08-204 の手変換）。
+- schema は再生成済み（型の列挙に d2_field、能力キーに dswitch、行為に d_switch、op に dswitch）。
+- 待機68枚（本体46／言及22。うち dm23ex2-034 は対象外の複合、dm25ex2-057 は超次元、dmex17-cho38 は文明喪失、dm26ex3-053 は二度トリガーが残る）。再変換は別ラウンドで実施する（reopen d2_field d_switch、登録見込み約49〜56枚）。
+- **範囲外・残件（親判断／精査の結果）**: dm23ex3-014 の継続的アンタップ禁止と dmex08-140（ジャンケン）は扱わない。dm23ex3-042 の Dスイッチ効果「このターン破壊された自分のクリーチャーをすべて墓地から手札に戻す」は、「このターン破壊された」カードを墓地から選ぶセレクタが現行語彙に無いため、本弾では unsupported（need: destroyed_this_turn_select）に細分して残す（カードテストでは常在型と型印だけを固定）。dmex08-204 の禁止条項も同様に unsupported（need: d2_field_enter_ban_all_paths）。dmd35-011 の侵略ZERO は再変換ラウンドで精査する（相手がコストを支払わずに出していたかの追跡が要る可能性）。
+
+## 第153弾: kizuna_plus（キズナプラス）— エンジン拡張あり（小）（2026-11-09）
+キズナプラスはキーワード `kizuna_plus` と書く。[P]能力の受け皿（kind: partner）と「下のカード」の選択・移動・数えは既存（第44弾）。本弾の新規は op `use_partner` の引数拡張とキーワード追加だけ。設計ノート pilot153-kizuna-plus-design と公式裏取り faq-check-kizuna-20261109 どおり。
+- 変換の型: カード側は `keywords: [kizuna_plus]` と、自身の[P]を `kind: partner` の能力として書くだけ（変換指示 tools/convert_cards.py にも明記）。展開形は攻撃時誘発（when: {event: attack, subject: self}、if: 下のカード1枚以上）で、may の body が「下のカード1枚を墓地に置く（under_of＋move、reason: put）→自分の[P]を使う→他のクリーチャー1体の[P]を使う」。
+- op `use_partner` に引数を追加: `of: self`（候補を自身の[P]だけに絞る）、`exclude_self: true`（自身を候補から除く）、`pending: true`（選んだ[P]をその場で解決せず待機中の効果として登録する）。引数なしは従来どおり（素のキズナ。第44弾の挙動・テストは不変）。
+- **2つの[P]の順序（公式裏取りで確定）**: 文面の列挙順で固定ではない。支払いの時点で2つの[P]はそれぞれ独立した待機効果として確定し（総合ルール 603.3a。本文がキズナプラス自体を例示）、解決順は使う側が好きな順番で選べる（605.1／101.4a）。そのためキーワード展開は use_partner を2回直列に解決せず、両方とも `pending: true` で待機に登録する形にした（order_pending の判断で順序を選ぶ。途中で誘発した他の効果も割り込める）。発生源が解決前に離れても不発にならない（110.5a。待機中の効果は発生源から独立）。選択自体（自分の[P]と、どの他のクリーチャーの[P]か）は支払い時点で確定する。
+- **他の[P]持ちがいない場合（公式裏取りで確定）**: 支払いだけ行って自分の[P]だけ使うことができる（101.3／605.2b／606.2）。誘発の if は「下のカード1枚以上」のみで、他の[P]の存在条件は付けない（exclude_self 側は候補なしで何もしない）。逆に、他の[P]持ちがいる場合はその[P]を使うことは必須（文面は「使う」）。
+- 誘発の `if` は収集時と解決時の両方で評価される（h_resolve_pending が解決時に再評価する）ことを実施時に確認したので、may の body 側へのガードの重ねは不要だった。
+- proto T196（キズナプラス試験獣: NEO進化＋[P]「1ドロー」）／T197（絆試獣・乙: [P]のみ「2ドロー」）。進化元と他の[P]持ちの一部は既存の T001／T124 を流用。tests/test_vocab_pilot153.py 9件（parse と展開形／素のキズナの不変／両[P]が使われて攻撃が続行する／may を断る／下が無いと提示されない／他の[P]なしで自分の[P]だけ／複数候補からの選択と自身の除外／順序選択の判別2件: 相手の[P]の破壊を先に解決して発生源が離れても自分の[P]が解決する・逆順）＋tests/test_vocab_pilot153_cards.py 4件（dmrp03-002、dmrp03-015、dmrp04s-029、dmex06-020 の手変換）。
+- schema は再生成済み（キーワード列挙に kizuna_plus、op use_partner に of／exclude_self／pending）。
+- 待機19枚（全件単独 gap。同名の別印刷7件がキューにあり通常変換で登録可能になる）。再変換は別ラウンドで実施する（reopen kizuna_plus、登録見込み19枚）。
+- **範囲外**: キズナコンプ（kizuna_comp 5件）は本弾に含めない（「好きな数」を繰り返し選ぶ意味論が別途要る。第154弾候補）。dmrp03-008（キズナプラス持ちだが rejects の gaps が空）は reopen の対象にならないので再変換時に個別確認が要る。
+
+## 第154弾: crystal_soul（水晶ソウル）— エンジン拡張あり（小）（2026-11-09）
+水晶ソウルN は面の宣言 `crystal_soul: N` と書く（キーワード欄には書かない）。「このカードを召喚／唱える時、自分のマナゾーンにある裏向きのカードのマナの数字はNになる」。設計ノート pilot154-crystal-soul-design どおり。
+- 実装は chars の `crystal_soul`（面の宣言を種に、mod {crystal_soul: N} と max で集約。G・リンクの特性統合でも max）を _mana_choices が読み、支払うカードに水晶ソウルがある時だけ裏向きグループの数値（と早期判定の合計）をその値に差し替える。支払いの総和計算は _mana_choices に一元化されているため組み込み先はこの1関数で足りる（実支払い・可否判定・墓地召喚・フシギバース等の支払いを伴う実行はすべて経由する）。**裏向きマナは無色のまま（文明は得ない）**。**上書きは置換であり最大値ではない**（文面「数字はNになる」。proto T202＝マナ数3で判別）。
+- 付与は affects {zone: hand, owner: you, filter: {...}} の常在型＋mod {crystal_soul: N}（dm24bd6-001 偽神殺しのツラトゥストラの型: 手札のアンノウンに2、ゼニスに3）。付与は手札にある間だけ効く。
+- **代替コスト・バズレンダの追加支払いにも一律に及ぶ**（親判断 2026-11-09: _mana_choices 経由の支払いはすべて対象。水晶ソウルと代替コスト宣言・バズレンダを併せ持つ実カードは存在しないため実務差は無い。併せ持ちが現れた時点で公式裏取りを行う）。**自前と付与で値が競合した場合は max**（親判断。実カードでは付与値が種族ごとに自前値と一致し競合しない）。
+- proto T198（水晶ソウル試験獣2: 水・コスト7・ソウル2）／T199（水晶ソウル試験呪文3: コスト6・ソウル3・1ドロー）／T200（水晶付与試験獣: 手札のゼニスに mod でソウル3）／T201（ゼニス試験獣: コスト9・宣言なし）／T202（多マナ試験カード: mana: 3 のバニラ）。tests/test_vocab_pilot154.py 10件（parse／宣言と mod の検証／ソウル2の支払いと対照（判別: 表向きまで上書きされると合計が偶数だけになり払えない）／裏向きだけでは払えない／裏向きは文明を得ない（判別: 数値が届いても文明で弾く）／置換 vs 最大値（判別）／呪文のソウル3／付与の有無と手札限定／宣言なしカードの支払いの不変／実支払いの召喚 e2e）＋tests/test_vocab_pilot154_cards.py 2件（dm23ex3-036 偽りの名 システイス、dm24sp2-008 偽りの名 プラットの手変換）。
+- schema は再生成済み（面の項目と mod に crystal_soul）。
+- 待機: 単独6枚（再変換で登録見込み）。eternal_kappa の弾と合わせると11枚（kappa のみ複合4枚＋付与の dm24bd6-001）。キューの別印刷15件も通常変換で登録可能になる。再変換は別ラウンドで実施する（reopen crystal_soul）。
+- **範囲外**: dmex06-034 の mana_value_boost_multicolor（「マナゾーンで多色カードをタップする時、そのうちの好きな枚数のカードのマナを2にしてもよい」）は形が違う別需要で本弾に含めない。
+
+## 第155弾: link_establish_event（リンクした時）— エンジン拡張あり（小）（2026-11-09）
+G・リンクの手順（h_g_link、第16弾）は Card.link の状態変更のみで誘発収集用レコードを出さなかったため、「リンクした時」を受ける先が無かった（ラウンド182の実測: 代替型「出た時の誘発＋能力側 if: link_count>=2」は、誘発条件の評価がリンク手順より前に行われるため発火しない。効果側 if に寄せれば出る側だけは表せるが、リンクされる側の誘発を拾えず近似になる）。本弾の新規は合成イベント `link_established` の追加だけ（第150弾 evolve_base と同型）。
+- 変換の型: `kind: trigger, when: {event: link_established, subject: self}`。「カードN枚でリンクした時」は能力の `if: {cmp: [{link_count: self}, ">=", N]}`（link_count 式は既存。収集時点ではリンク成立済みなので正しく判定できる）。変換指示（tools/convert_cards.py）にも明記した。
+- 発行点: h_g_link でリンク先を選んで gid を付けた直後（手順の完了時点）に、成立したグループの全員（link_members）を subject とするレコードを ev_task の束で出す。_apply_one は attack_end 等と同じ素通しでレコード化し、置換諮問の対象にはならない（_record_for は move／draw のみ）。リンクを外しただけ・リンク先をパスした場合は成立ではないので出さない。外して付け直した場合は、成立した新しいグループの全員だけが対象（外れたメンバーは含まれない）。
+- 誘発収集は既存の仕組みのまま: 発生源は bz_tops＋リンクグループ全員の展開で全メンバーが候補になり、各メンバーの能力は発生源が代表（link_rep）に正規化されるため、subject が代表のレコードに一致して1回だけ拾われる。これにより「リンクされる側（既に場にいたゴッド）」の「リンクした時」も誘発する（判別テストあり）。_collect_triggers への発生源の追加は不要だった（evolve_base では重ねられた側が bz_tops から外れるため必要だったが、リンクのメンバーは全員場に残る）。
+- リンク成立のタイミング裏取り（公式FAQ）: 「リンクした時」の能力は出た時にトリガーする能力ではない（公式FAQ 2026-06-11変更）。《「黒幕」》自身を3枚リンクした状態で出した場合も、その「カード3枚でリンクした時」はトリガーする。すでに場にいる《「黒幕」》が他のゴッドの登場で3枚リンクした場合もトリガーする。本弾の発行形（出る側・リンクされる側の全員）はこの運用と一致する。
+- **パターンA「出た時、またはリンクした時」（6件: dmd12-003／dmd12-004／dmr09-011／dmr09-012／dmr09-041／dmr09-042）は本弾の対象外**。出た時とリンクした時が別の誘発イベントであることは上記FAQで裏取りできたが、一体の能力として書かれた「出た時、またはリンクした時」が、リンクした状態で出た時に1回だけ誘発するのか、出た時とリンクした時で2回誘発するのかは、公式の裏取りが取れなかった。推測で回数を固めないため、変換形（move 誘発と link_established 誘発の2能力に分ける形）は本弾では固定せず、再変換でも能力ごと unsupported（need: link_establish_event）に残す。裏取りが取れれば2能力形で登録できる見込み。
+- 4方向リンク（g_link_four_way 8件）と5体チェーン（g_link_five_god_chain 1件）は本弾の範囲外（リンク手順そのものの拡張が主ブロッカー。再変換では link 側の need だけ link_establish_event に差し替えてある）。
+- proto T203（リンク時試験左ゴッド: link_established でドロー）／T204（リンク時試験中央ゴッド: カード3枚でリンクした時、link_count の if でドロー。黒幕型）／T205（リンク時試験右ゴッド: link_established でドロー）。tests/test_vocab_pilot155.py 6件（parse／リンクなし・パスで不発／出た側とリンクされる側の両方が各1回（trace で解決回数を実測する判別テスト）／link_count 条件（2枚で不発・3枚で発火）／外したメンバーは成立で誘発しない／外すだけでは成立しない）＋tests/test_vocab_pilot155_cards.py 2件（dm22ex2-s02「黒幕」、dmr11-004 悪魔右神メタモルフォーゼの手変換）。
+- schema は再生成済み（イベント列挙に link_established）。
+- 待機4枚（単独のうちパターンAを除く分: dm22ex2-s02、dm25-008、dmr11-003、dmr11-004）。再変換は別ラウンドで実施する（reopen link_establish_event。パターンA 6件と複合9件は戻しになる）。
+
+## 第2段・小パイロットその1: unpaid 修正／unblocked 小拡張／bundles 式 — エンジン拡張あり（小）（2026-11-09）
+網羅計画の第2段のうち、エンジン変更3件をまとめて実施したもの（カードデータは変更していない。是正・再変換は次ラウンド）。
+
+### 1. unpaid 潜在バグ修正
+- 症状: イベント（ev）の unpaid は実行側で立てられていた（turn.py の h_play が「free かつ as_paid でない」時に付け、ops.py の summon_on 等も付ける）が、_apply_one が作る move の収集レコードと置換照合用の _record_for のレコードに複写されていなかった。そのため when {event: move, unpaid: true} の誘発（登録済み dm26rp1-038、dm26ex2-041 極限龍神ヘヴィ等。第149弾の変換群にも同形がある）がすべて不発だった（ラウンド187の精査で実証）。summon レコードには従来から unpaid が載っていたため、「召喚した時」形だけが動き move 形が死んでいた。
+- 修正: events.py の _record_for / _apply_one で、via・alt・vivid と同じ並びで ev の unpaid をレコードへ複写する（立っている時だけ True を載せる従来形式。照合は _match_when の既存の unpaid 分岐）。置換側（kind: replace の when）でも unpaid が読めるようになる。
+
+### 2. unblocked 小拡張（gap unblocked_trigger、単独11件）
+- attack タスクは phase 2 でブロック成立時に t["blocked"] を立てていたが、攻撃の終わりに作る attack_end レコードへ伝播しておらず「ブロックされなかった時」を when で書けなかった（設計 design-full-bandA.md の unblocked-trigger 単位どおりの小拡張）。
+- 変更: combat.py の attack_end レコードに "blocked": bool(t.get("blocked")) を追加し、events.py の _match_when に broke と同じ形の blocked 照合を追加。defs.when は blocked が bool でなければ DefError とする検証を追加し、schema にも blocked を追加した。変換の型は when: {event: attack_end, subject: self, target: player, blocked: false} 等（対象指定なし・blocked: true の形も可）。遅延誘発（delayed_trigger の when）でも同じ照合が効く。
+- ガードマンで攻撃先が変更された場合はブロックではない（507.2b）ので t["blocked"] は立たず blocked: false のまま（正しい）。
+- **attack_end の発火条件自体は変えていない**。攻撃が途中で取り除かれた場合に attack_end が発火するかは設計側でも未確定（公式確認待ち。ura／j-tornado と共通の前提）で、本弾では現行の発火範囲のまま記録だけを足した。
+
+### 3. 束（バンドル）数えの式 {bundles: ...}
+- 数え方の単位は 113.2 で分かれる: 「シールドの数」は束単位、「シールドゾーンにあるカードの枚数」は束の中身を含むカード単位。表向きカードのカード数は既存の bundle_of＋filter: face_up で数えられるが、「表向きのカードを含むシールドが10以上」（ℵHEAVEN dm24ex2-025）と「表向きのシールド1つにつき」（ミケランジェロ dm26rp2-022）は束の数であり、数える式が無かった（faq-check-judgments-20261109.md 論点4。ラウンド175で bundle_of 形に統一した2枚は、束に表向きカードが2枚以上ある局面では文面と一致しない既知の不完全さがあった）。
+- 追加する式アトム: {bundles: {owner: you/opp, face_up?: bool}}。face_up: true は「表向きのカードを1枚以上含む束」だけ（覆われている表向きカードも含む。文面の「含む」に対応）、false は含まない束だけ、省略時は全束。評価は selectors.py の eval_expr（count_of からも引ける。mod の count 等でも使える）、検証は defs.py の expr / count_spec、schema にも追加した。カード側の是正（上記2枚の書き換え）は次ラウンドで行う。
+
+- proto T206（無償召喚の番人: unpaid の move でドロー）／T207（盾発の試験兵: S・トリガー）／T208（無封鎖の突撃手: attack_end blocked: false）／T209（封鎖感知の突撃手: blocked: true）／T210（直撃無封鎖の突撃手: target: player 併記）／T211（束数えの番人: bundles 条件でドロー）／T212（束数えの秘術: bundles 枚数ドロー）。
+- tests/test_vocab_unpaid.py 4件（parse／S・トリガー無償召喚で move 誘発が発火（trace で解決回数を実測。複写を外すと落ちる判別済み）／支払い召喚では不発／既存 move 誘発の回帰）＋tests/test_vocab_unblocked.py 6件（parse と bool 検証／無封鎖で発火／ブロックで不発（判別済み）／blocked: true はブロック時のみ／target: player 併記形）＋tests/test_vocab_bundles.py 5件（式の数え分け: 束3・表向き含む束2・表向きカード3枚の区別／検証の DefError／閾値条件の発火・不発／束数ドロー）。
+- schema は再生成済み（when に blocked、expr に bundles。あわせて従来から生成側にあったキーワード rensa の列挙差分も取り込まれた）。
+
+## 第3段・共通基盤その2a: 履歴カウンタ一般化／宣言プリミティブ — エンジン拡張あり（2026-11-09）
+網羅計画の第3段・共通基盤のうち、履歴系（バンドC1 U19＋バンドA/B/D の履歴系単位の受け口）と宣言系（バンドC2 基盤B4・U97、バンドB U3）をまとめて実施したもの。統一の確定事項（unification-applied-20261109.md）どおりの形で実装した。カードデータは変更していない（再変換は別ラウンド）。
+
+### 1. 履歴カウンタ一般化（式 {turn_count:} / {used_count:} / {prev_shield_added:}、when の {ord:}）
+- 記録器: events.apply_batch が適用済みレコードを並び順に走査し（_record_history）、turn_counters の hist:<kind>:{player}（クリーチャー単位は hist:<kind>:{cid}）へ集約する。あわせて対象レコードへ rec["ord"] = {kind: その出来事のこのターン通し番号} を刻み、when の {ord: {kind, 比較1つ}}（_match_when の照合）で「そのターン最初の〜」「2枚目以降の〜」が書ける。同時適用の束内の順序はレコードの並び順。
+- kind: shield_put / shield_left / mana_put / cast / summon / attack / destroyed / broke_by_self（self 固定）/ draw / broken / enter / discard / leave / tap / untap / block / enter_unpaid / attack_by / attack_on（統一で追加した分を含む）。ord が刻まれるのは mana_put / enter / cast / summon / draw / attack / attack_by。
+- 式 {turn_count: {kind, owner?, other?, filter?, ref?}}: attack は攻撃クリーチャーの cid リスト（hist:attackers）から数え直すため other（自分以外）/ filter（問い合わせ時点の特性で照合）が効く。attack_by / attack_on は ref（"self" か変数名）でクリーチャーを指す。owner: any は destroyed と attack だけ（検証で制限）。攻撃先（attack_on）は宣言時点で記録し、ブロック等で変わっても遡らない（バンドA の設計既定）。
+- 式 {used_count: {owner?, filter?}}: cast レコード（唱えた呪文）と via: generate の実行（タマシード／フィールド／クロスギア）を、印刷特性 {cost, types, civs} のスナップショットで hist:used:{player} に積み、特性での数え直しができる。
+- 式 {prev_shield_added: {owner}}: st_start がリセット直前に turn_counters を prev_counters へ退避し、前のターンの hist:shield_put を読む（バンドB U18）。ターン開始の一括アンタップも untap として数える（同設計の既定。公式確認は設計側の宿題のまま）。
+- count_of の一般化: 式キー（turn_count / used_count / prev_shield_added / declared 等）を mod の count に書ける（バンドB U18 の受け口一般化）。
+- 既存キー（entered: / drew: / broken: / broke_in:）は従来どおり別途維持し、既存カードの挙動は変えていない。ゲーム内履歴は mark の scope: game（下記）で担う。
+- mark の scope（バンドB 基盤 mark-scope）: op mark に scope（turn＝既定 / attack＝その攻撃の中だけ / game）を追加。game は GameState.game_counters に積み、ターン開始で消えない（「ゲーム中に一度だけ」、極限ファイナル革命の使用履歴用。使用済みの実数え・カードデータ側の付け替えは別ラウンド）。cond の marked は辞書形 {name, scope} を受ける（文字列形は従来どおり）。
+
+### 2. 宣言プリミティブ（op choose_number / choose_name / choose_civ、式 {declared:}）
+- 保存先は GameState.declares。choose_number {as, min?, max?}（既定 0〜10、ask は choose_one で選択肢 num:N）、choose_name {as}（候補は対戦中の全カード名）、choose_civ {as}（5文明、ask は choose_civ で選択肢 civ:<文明名>）。選ぶのは常に効果の解決者。**choose_civ の player / exclude は統一の未確定事項のため実装していない**（相手に選ばせる形は今回の範囲外）。
+- 式 {declared: 名前} は declares を読む。未宣言は 0 を返す（設計は「実行時エラーにしない」までで値未定のため、数・名前・文明のどの照合でも「一致しない」側に倒れる 0 を既定値とした。実装判断として明記）。
+- filter の受け口（バンドB U3）: FILTER_EXPR_KEYS に civs / not_civs / name を追加し、式の結果が文明名の文字列なら単一文明のリストとして扱う（filter_match の正規化）。検証側は辞書値にリテラル照合を素通りさせるガードを追加。あわせて name_of の式検証分岐が無かった分を他の *_of と同じ受理に統一した（従来 filter 経由で未検証だった T169 の形が、今回の検証追加で弾かれるのを防ぐ）。
+- modify 生成時のベイク（バンドC2 基盤B4）: op modify は mod 内（add_races の専用処理と gain を除く）と dynamic: true の範囲フィルタ内の {declared:} / {var:} を生成時点の値へ固定する（特性計算・範囲照合は env を持たないため、固定しないと宣言が届かない。判別テストあり）。
+- mod の add_names（バンドC2 U97）: chars に名前の集合 names（主名＋追加分）を持ち、filter の name / name_has / not_name は集合に当てる。name_of は主名のまま（文面の「名前は〜も持つ」の読み）。
+
+- proto T236（引き軽減試験獣: mod の count に turn_count draw。ティガウォック型）／T237（詠唱門番試験獣: turn_count cast の条件読み。ガリアル型）／T238（順序番人試験獣: ord ge。タクヤ型）／T239（最初番人試験獣: ord eq。グラヴィッツ型）／T240＋T241（used_count）／T242＋T243（shield_left）／T244＋T245（prev_shield_added）／T246（broke_by_self）／T247（数字宣言試験呪文）／T248（文明宣言試験呪文。プラトーン型）／T249（名前宣言試験呪文）／T250（封唱宣言試験呪文。dmart10-005 型）／T251（別名持ち試験獣）。
+- tests/test_vocab_hist_counters.py 11件（parse と検証／引き軽減／詠唱門／ord ge・eq の発火境界／used_count の特性判別／shield_left の攻撃可否／prev_shield_added の前ターン読み／broke_by_self／記録器の直接確認（discard・tap・untap・destroyed・leave とリセット・退避）／game スコープ mark の持続）＋tests/test_vocab_declare.py 6件（parse と検証／数字宣言ドロー（0 の判別つき）／文明宣言タップ（選んだ文明は tap されない判別つき）／名前宣言ドロー（場に無い名前の判別つき）／封唱宣言のベイク（別の数字では封じられない判別つき）／add_names）。
+- 判別確認: 記録器（_record_history）を止めると履歴テスト 11件中9件が落ちる（残りは parse と mark）、ベイク（dynamic 範囲分）を止めると T250 のテストが落ちる、{declared:} の読みを止めると宣言テスト 6件中4件が落ちることを確認済み。
+- schema は再生成済み（式に turn_count / used_count / prev_shield_added / declared / name_of、cond の marked 辞書形、when に ord、mod に add_names、op に choose_number / choose_name / choose_civ と mark の scope）。
+- 全体テスト初回で判明した回帰2件とその修正（同日）: (1) count_of の一般化で単一キー制限をかけたため、複合キー辞書 {distinct_cost_count: ..., base: 0}（variety breaker の mod）がセレクタ扱いになって KeyError になった。従来キー（civ_count / distinct_cost_count / sum / var / bundles）は従来どおりキー有無で式判定し、新規キーだけ単一キーで判定するよう分けた。(2) filter の name に式検証を広げたため、既存の変換データの形 name: {ref: 変数名}（参照指定形。dmr01-058 等5件）と name: {name_of: ...}（8件）が読み込みで弾かれた。{ref: 名前} は式ではないので検証対象外とし、name_of は他の *_of と同じ受理分岐を defs.expr に追加した（従来は未検証で素通りしていた形の明示化）。
+
+## 第3段・共通基盤その2b: レコード系基盤5点（効果帰属／公開集合／S・トリガーの印／合成レコード時機／名前つき条件） — エンジン拡張あり（2026-11-09）
+網羅計画の第3段・共通基盤のうち、レコード系の5点（バンドC2 基盤B1、C1 U39・U26、C2 U68、B U7・U1）をまとめて実施したもの。統一の確定事項（unification-applied-20261109.md）どおりの形で実装した。カードデータ（converted.yaml / rejects.jsonl）は変更していない（再変換は別ラウンド）。
+
+### 1. 効果帰属レコード（バンドC2 基盤B1）＋捨て札の帰属（バンドC1 U26）
+- events.ev_task: 効果の解決中に出る move イベントへ、発生源の defn 名 cause_defn と種別 cause_kind（発生源の面の types に spell を含めば "spell"、そうでなければ "ability"）を常時刻む（従来の trace 用 cause も同じ値で常時化）。状況起因処理・コスト・バトル等の効果起因でない移動には付かない。_record_for と _apply_one の収集レコードにも複写する。
+- when の新キー cause: {by?: you/opp, kind?: spell/ability}（defs 検証・schema 追加）。by は解決者との関係、kind は cause_kind と照合する。発生源の無いレコードには一致しない。
+- U26 の実態は2つの潜在不具合だった: (1) _apply_one が by を収集レコードへ複写しておらず、when:{by:} が move 誘発で一切効かなかった（複写を追加）。(2) _collect_triggers の lki 発生源がバトルゾーン発だけだったため、手札から捨てられた本人の誘発・置換（発生源ゾーン=hand）が拾えなかった。非bz の lki でも「移動後の現在ゾーン ≠ lki ゾーン」の場合に発生源へ加え、能力フィルタを lsrc の zone に合わせた。shield→hand の自己誘発（G・ストライク等、能力は zone: hand）は通常経路で拾われるため二重発火しない（lki の zone=shield と一致しない）。
+- 置換の諮問（h_event）は従来から when の by / cause を見ており、T254 型（手札の置換）は追加変更なしで機能することをテストで確認した。
+
+### 2. 公開集合の保持（バンドC1 U39）
+- 式に {total_cost: セレクタ} / {total_power: セレクタ} を追加（selectors.eval_expr、defs 検証、schema 追加、count_of 経由で mod の count でも使用可）。choose の as で束ねた集合を {ref: 変数名} で指すのが主用途で、「公開した3枚のコストの合計」等が書ける。空集合は 0。
+- op choose に reveal: true を追加し、束ねたカードを note_public("reveal", cid) で公開情報（s.pub）に残す。reveal_until（公開の持続）の本実装は対象文面が出た時点で別途。
+
+### 3. S・トリガーの印（バンドC2 U68）
+- Card に strigger_off / strigger_on（手札にいる間だけ有効な印）を追加。_raw_move で手札から離れる時に両方消去する（hold 経由も含む）。
+- op move に strigger: "off"/"on" を追加: 手札に加わる移動（効果の擬似ブレイク経由を含む）と束の下のカードに印を付ける。h_break の宣言適格判定で off は宣言不可に、on は「クリーチャーか呪文の面なら宣言可」に上書きする。data/rules/keywords.yaml の escape はこの印（strigger: "off"）を使うよう変更（YAML の裸 off は真偽値になるため引用符つき）。
+- op strigger {select, mode} を新設（移動させずに対象へ印を付ける。dmx18-024 型の付与誘発用）。
+- 到達性の確認: バトルゾーンの常在型は affects.zone で他ゾーンの chars に届くため、mod deny: [s_trigger]（dmrp01-s03 型）は追加実装なしでシールドゾーンのカードに効くことをテストで確認した。
+
+### 4. 合成レコードの誘発時機（バンドB U7）
+- use_s_trigger レコードを新設: h_break で S・トリガーとして宣言されたカードが h_enqueue_st で待機に入る時にだけ _collect_triggers へ渡す（S・バック経由は付けない）。EVENTS と schema に追加。
+- battle_end レコードを新設: combat._battle のスレイヤー窓の後に、両参加者を subject（相手を opponent）とするレコードを出す。攻撃フローのバトルと force_battle の両方が _battle を通るため両対応。既に場を離れた参加者は発生源が無く拾われない（設計の許容範囲）。
+- chosen_trigger（相手がこのクリーチャーを選んだ時）は精査で既存可と確定: selectors.select が choose レコードを _collect_triggers へ渡す既存機構で発火する。ただし作られるのは「選んだプレイヤーが対象のコントローラの相手」の時だけ（picked_opp 条件）。chooser: opp で被害側が自分のクリーチャーを選ぶ形では作られない — 実在文面（相手が選ぶ）とは一致するが、変換時は形に注意。
+- 式のイベント参照の基盤: selectors._expr_refs が "event.<key>"（event.opponent 等）を env["event"] から引けるようになり、{power_of: {ref: "event.opponent"}} 等が書ける。あわせて schema の cost_of / power_of を {ref:} 形も受ける anyOf に広げた。
+- **battle_lose レコードは未実装（判断保留）**: 生成形が統一メモ §4-1 で未確定（バンドB の move 由来案 vs バンドD のバトル解決時点の対レコード案）。ユーザーの確定後に別途実装する。
+
+### 5. 名前つき条件アトム（バンドB U1）— 精査で全て既存可
+- G・G・G = 手札数の count 式＋zone: hand の常在型 cost mod、ラビリンス = シールド数の比較式＋相手の手札ゾーンへの affects と deny: [cast]、レインボーナス = filter multicolor の exists、龍マナ武装 = マナゾーンの race_has フィルタの count で、いずれも既存の式・フィルタで書けることをテストで裏取りした。新規アトムの追加は不要。ラビリンスの前提だった「BZ の常在型が相手の手札のカードの chars（deny cast）に届く」ことも実測で確認。convert_cards.py の対応表への追記は変換側の作業として残す（本弾はエンジンとテストのみ）。
+
+- proto T252〜T279（T280 は chosen の形の誤りに気づき撤去）: T252 捨て検知試験獣（by: opp つき検知）／T253 捨てられ誘発試験獣（パウアー型）／T254 捨て置換試験獣（メテオキャノン型）／T255 呪文では離れない試験獣（cause 照合）／T256 除去試験呪文／T257 破壊能力試験獣／T258 公開合計試験呪文／T259 合計パワー門試験呪文／T260 マナ合計強化試験獣／T261 エメラル型試験呪文／T262 帰還試験呪文／T263 印付与試験呪文／T264 無印の盾兵／T265 付与誘発試験獣／T266 非光封じ試験獣／T267 選ばれ誘発試験獣／T268 ST使用観測試験獣／T269 バトル後自壊試験獣／T270 強制バトル試験呪文／T271 GGG軽減試験獣／T272 ラビリンス試験獣／T273 観測試験呪文／T274 レインボーナス試験獣／T275 多色試験獣／T276 龍マナ武装試験獣／T277 竜試験兵／T278 逃避試験獣／T279 闇盾試験兵。
+- tests/test_vocab_cause_records.py 8件（parse と cause 検証／相手の呪文での捨て札で手札誘発が発火（by 複写と lki 拡張の判別済み）／自分の呪文では不発／検知側 by: opp の発火・不発／置換は相手ターンだけ／cause kind: spell で場に残る・ability とバトルでは残らない判別）＋tests/test_vocab_reveal_binding.py 5件（parse と検証／合計コストの境界と公開の保持・超過側の判別／合計パワーの門／mod の count での合計／空集合は0）＋tests/test_vocab_strigger_mark.py 7件（parse と検証／move off で宣言不可（判別済み）・対照で宣言可／エスケープの off／op strigger の on で宣言可・無印では不可／印は手札を離れると消える／deny: [s_trigger] がシールドに届く・光は対象外）＋tests/test_vocab_trigger_records.py 6件（parse／chosen の発火・対照／use_s_trigger の発火・辞退では不発（判別済み）／battle_end はバトルでのみ・force_battle でも（判別済み）／event 参照の式）＋tests/test_vocab_named_conditions.py 5件（parse／GGG の軽減と判別／ラビリンスの deny と対照／レインボーナス／龍マナ武装）。
+- 判別確認: by の収集レコード複写を外すと cause 系2件が落ちる、cause 刻印を外すと spell 置換テストが落ちる、lki 拡張を外すと手札誘発テストが落ちる、宣言適格の上書きを外すと off の2件が落ちる、use_s_trigger／battle_end のレコード生成を外すと各テストが落ちることを確認済み。
+- schema は再生成済み（when に cause、式に total_cost / total_power、cost_of / power_of の anyOf 化、EVENTS に use_s_trigger / battle_end）。
+- **全体テストの既存失敗1件（本弾の変更起因・要判断）**: tests/test_tools.py::test_system_prompt_picks_similar_examples が「例つきプロンプト長 < 全体の60%」の比率ガードで落ちた（56182 < 93304×0.6=55982.4、比率 0.6021、超過は約200字=0.36%）。原因は system_prompt の共通部（schema.build() の JSON と rules テキスト）が語彙追加のたびに増える累積で、本弾の増加は約640字（cause 約150、total_cost/total_power 約240、cost_of/power_of の anyOf 化 約200、新イベント名 約35、keywords の escape 1行 +19）。本弾開始時点の余裕は約56字しか無かった（第2a等の増加で既に際どかった）。examples_for の例選択自体は無事（先頭 dmx03-035・8枚を確認）。エンジンの挙動テストは全て通過しており、直し方は閾値の見直しかプロンプト側の削減で、変換ツール側の判断として親へ残す。本弾の5点はいずれも切り離して戻すと各単位の受け口が消えるため、独断では巻き戻していない。
+
+## 第3段・from_under 機構（下にあったカードの移動レコード） — エンジン拡張あり（2026-11-10）
+網羅計画の第3段の残件。第156弾の event.under（離脱する側から下を見る）に対する、下のカード側から見る機構。gap from_under_trigger の rejects 10件（dm34 系5件、dmsd06-012、邪眼帝2件、dm25ex3-or4、dm25rp4-033）が対象。カードデータ（converted.yaml / rejects.jsonl）は変更していない（再変換は別ラウンド）。
+
+### 設計
+- レコード: バトルゾーンで他のカードの下にあったカードの move レコードには、宿主（上にいたカード）の移動直前の姿を host（移動直前の ref）と host_lki（defn/face/controller/zone/tapped/chars/ref のスナップショット）として載せる。host の有無が「下にあったか」の判別そのもの。シールドの束は対象外（バトルゾーンの重なりだけ。束は第148弾の bundles 式の領分）。封印（seal_of が付いたカード）も対象外。
+- 発行経路は2つ: (1) スタック一括移動 — _apply_one が一緒に動いた下のカードにも move レコードを出す（従来は最上位のレコードしか出なかった）。移動前に under_lkis として各下カードの姿を取り、実際に行き先へ動いたものだけにレコードを出す。再構築（card_only／スター進化）で場に残る分は unders から外れており対象にならない。(2) 単独移動 — 下のカードだけが動く移動（メテオバーンのコスト、G-NEO 置換の move_under_to_event 等）は、そのレコード自体に host / host_lki を載せる（_record_for も同じ）。
+- when の新キー from_under: true（下にあった）/ false（下になかった。通常の移動だけを見る否定形）/ self（発生源自身の下にあった。宿主自身の誘発用）/ {owner?, filter?, other?}（宿主への条件。subject と同じ形で host_lki に当てる）。defs 検証と schema（when プロパティに from_under）追加済み。false 形は dmsd06-012 のため: 「破壊された時」と「下から墓地に置かれた時」が同じ移動（宿主ごと破壊）で重ならないよう、破壊側の誘発を from_under: false で切り分ける（フレーバー文の「一気に4枚」が1枚につき1回の裏付け）。
+- 誘発収集: 下のカードのレコードでは宿主も lki 発生源に加える（宿主は既に場を離れており、通常経路では届かないため）。ただし宿主の能力は when に from_under を書いたものだけを見る（host_only スコープ）: 宿主の通常の観測誘発が下のカードの枚数だけ重複発火するのを防ぐ。宿主自身の移動は宿主自身のレコードで通常どおり収集される。下のカード自身の誘発はスコープしない（U26 の作法どおり、本人の move レコードで本人の誘発が発火する）。
+- 履歴: 下のカードのレコードは hist の leave / destroyed に数えない。下のカードは総合ルールの進化の扱いで「特性を持たないカード」として置かれ（dmwiki の破壊の項）、クリーチャーとして離れた／破壊されたのは最上位だけのため。カード単位の観測（ボーン・アミーゴ型の「自分のカードが破壊された時」）はレコード自体が出るので拾える。mana_put 等の他の種別は従来どおりカードごとに数える。
+- 根拠: 下のカードにもカード単位のイベントが立つことは dmwiki の破壊の項（下のカードは「特性を持たないカードが破壊された」ものとして扱われ、カード単位の観測誘発は下のカード1枚ごとに誘発する／「クリーチャーが破壊された」のは最上位だけ）による。邪眼帝型（宿主自身の「下を離れた時」）を宿主破壊時にも発火させるのは 603.5c/d の lki 原則による（発生源の能力は移動直前に存在した）。邪眼帝固有の公式 QA は未確認。
+
+### 実装
+- dmsim/engine/events.py: _record_for と _apply_one に host / host_lki の付与と下カードのレコード発行、_match_when に from_under 照合、_collect_triggers に宿主の lki 発生源（host_only スコープ付き）、_record_history に host 付きレコードの leave / destroyed 除外。
+- dmsim/defs.py: when の from_under 検証（true / false / self / {owner, filter, other}）。dmsim/schema.py と data/schema/card.schema.json: when プロパティに from_under を追加し再生成（差分はその1点のみ）。
+- proto T280〜T288: T280 下敷き墓地試験兵（A型: 自身＋宿主フィルタ {types: [evolution]}）／T281 進化試験龍／T282 平宿主試験獣／T283 邪眼試験帝（C型: from_under: self）／T284 燃焼宿主試験龍（単独移動: under コストの起動型）／T285 下離れ観測試験獣（D型: 宿主 owner 照合）／T286 道具観測試験獣（B型: from_under: true）／T287 無言の下敷き試験兵／T288 道具観測・双試験獣（B実物型: 破壊側 from_under: false ＋下から側 true の2誘発）。
+- tests/test_vocab_from_under.py 18件（parse と検証／レコードの形の直接確認／履歴の数え／A型の発火と対照2件／C型の宿主ごと破壊で下の枚数だけ発火・対照2件／D型の発火と相手側の対照／B型の発火と種族対照／B実物型は重なっても1回・通常破壊で1回／単独移動（under コスト）の発火と対照）。発火の観測は trace の解決回数。
+- tests/test_vocab_from_under_cards.py 1件（対象10件すべての手変換 parse）: dm34 系5件は A型の誘発追加、dmsd06-012 は B実物型の2誘発、邪眼帝2件は from_under: self ＋ modal（山札上1枚をシールド化／相手クリーチャー1体を破壊）、dm25ex3-or4 は D型 ＋ 相手の自己選択捨て札と may ブレイク、dm25rp4-033 は D型（to: graveyard）＋ {ref: event.subject} を手札に戻す may。10件すべて parse 通過し、unsupported から from_under_trigger を外せる形になった。
+- 判別確認: 下カードのレコード発行を止めると直接確認・A・C・D・B の5件が落ちる、宿主の lki 発生源を止めると C型の1件だけが落ちることを確認済み（復元後は全通過）。
+
+### 残る不足
+- 再構築パス（card_only／スター進化で最上位だけが離れる時）で場に残らず墓地へ落ちる非クリーチャーの下カード（タマシード等）は _rebuild の内部で raw_move され、レコードが出ないまま。対象10件には不要（dm34 系はスタックごと離脱、邪眼帝は G-NEO 置換で下が個別の move イベントになる）ため未実装のまま残す。必要になった時点で _rebuild 側にもレコード発行が要る。
