@@ -34,25 +34,53 @@ def order_targets(names: list[str], hist: dict) -> list[str]:
     return sorted(names, key=key)
 
 
-def unit_sec(h: dict | None) -> float:
+REF_BUDGET = 40            # unit（1候補×1局あたりの秒）は粗比較の base_budget=40 に換算した値で持つ（所要時間は探索予算にほぼ比例）
+MIN_BUDGET = 10
+
+
+def unit_sec(h: dict | None) -> float | None:
+    """履歴から 1候補×1局あたりの所要秒（REF_BUDGET 換算）。履歴が無ければ None。"""
     if h and h.get("cands") and h.get("coarse_seeds") and h.get("sec"):
-        return max(0.05, h["sec"] / (h["cands"] * h["coarse_seeds"]))
-    return DEFAULT_UNIT_SEC
+        return max(0.05, h["sec"] / (h["cands"] * h["coarse_seeds"]) * REF_BUDGET / max(1, h.get("coarse_budget", REF_BUDGET)))
+    return None
 
 
-def allocate(h: dict | None, slot_sec: float, max_cands: int, max_cs: int, min_cands: int = 3, min_cs: int = 8, kinds: int = 4) -> tuple[int, int]:
-    """枠 slot_sec に収まる (種類ごとの候補数, 粗比較の局数)。まず局数を縮め、次に候補数を縮める。
-    履歴の cands は評価した候補の総数なので、見積もりは 種類ごとの候補数×kinds（deck_fix の既定は4種類）で数える。"""
-    u, budget = unit_sec(h) * kinds, slot_sec * SAFETY
-    cands, cs = max_cands, max_cs
-    while cs > min_cs and u * cands * cs > budget:
+def probe_unit(rules, deck, opp, setup, workers: int = 1, budget: int = REF_BUDGET, n_det: int = 4) -> float:
+    """1シード（先後で2局）を実測して、1候補×1局あたりの所要秒（REF_BUDGET 換算、並列を考慮）を返す。
+    重いデッキ（例 knight_dmc は1局が約30秒）を履歴なしでも先に見つけるための実測。"""
+    import time
+
+    from ..eval import fair_runner
+    from ..eval.harness import EvalConfig, run_eval
+    from ..eval.infolevel import InfoLevel
+    from .evaluate import spec_with_deck
+    fair_runner.register(n_det, 0)
+    kw = {"start_spec": spec_with_deck(setup, deck)} if setup else {}
+    t = time.time()
+    run_eval(rules, EvalConfig(decks={"d": deck}, opp_deck=opp, seeds=[1], levels=(InfoLevel.FAIR,), max_turn=4, base_budget=budget, n_det=n_det, **kw))
+    return max(0.05, (time.time() - t) / max(1, workers) * REF_BUDGET / max(1, budget))
+
+
+def allocate(h: dict | None, slot_sec: float, max_cands: int, max_cs: int, min_cands: int = 3, min_cs: int = 8, kinds: int = 4,
+             probe: float | None = None, max_budget: int = REF_BUDGET) -> tuple[int, int, int]:
+    """枠 slot_sec に収まる (種類ごとの候補数, 粗比較の局数, 粗比較の探索予算)。
+    重いデッキほど、まず探索予算（深さ）を半分ずつ MIN_BUDGET まで、次に局数、最後に候補数を縮める。
+    単価は 履歴と実測(probe)の大きい方（履歴なしで実測もなければ既定値）。cands は評価した候補の総数なので kinds 倍で数える。"""
+    cands_u = [x for x in (unit_sec(h), probe) if x is not None]
+    u = (max(cands_u) if cands_u else DEFAULT_UNIT_SEC) * kinds
+    budget = slot_sec * SAFETY
+    cands, cs, b = max_cands, max_cs, max_budget
+    cost = lambda: u * cands * cs * b / REF_BUDGET
+    while b > MIN_BUDGET and cost() > budget:
+        b = max(MIN_BUDGET, b // 2)
+    while cs > min_cs and cost() > budget:
         cs -= 1
-    while cands > min_cands and u * cands * cs > budget:
+    while cands > min_cands and cost() > budget:
         cands -= 1
-    return cands, cs
+    return cands, cs, b
 
 
-def update(hist: dict, name: str, res: dict, cands: int, cs: int, now: float) -> None:
+def update(hist: dict, name: str, res: dict, cands: int, cs: int, now: float, coarse_budget: int = REF_BUDGET) -> None:
     """two_stage の結果で履歴を更新する。途中で終わった時は complete=False のままにして次回優先にする。"""
     hist[name] = {"sec": float(res.get("sec", 0.0)), "cands": int(res.get("evaluated", cands)) or cands, "coarse_seeds": cs,
-                  "complete": bool(res.get("complete", True)), "last_run": now}
+                  "complete": bool(res.get("complete", True)), "last_run": now, "coarse_budget": coarse_budget}
