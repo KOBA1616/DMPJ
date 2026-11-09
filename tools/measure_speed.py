@@ -8,6 +8,7 @@ from dmsim.defs import load_rules
 from dmsim.play import default_decks
 from dmsim.engine import Engine
 from dmsim.solitaire import play_game
+from dmsim.engine_view import turn_of  # noqa: E402
 
 def t(f, n):
     s = time.perf_counter()
@@ -23,7 +24,7 @@ def main():
     print(f"clone (initial state): {t(lambda i: e.clone(), a.n)*1e3:.3f} ms")
     def adv(i):
         g = Engine.new_game(rules, [deck, deck], i + 1); n = 0
-        while g.s.turn <= 3 and n < 400:
+        while turn_of(g) <= 3 and n < 400:
             d = g.advance()
             if d is None: break
             g.answer(0) if True else None; n += 1

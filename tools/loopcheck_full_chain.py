@@ -7,6 +7,7 @@ import sys
 
 from dmsim import scenario as sc
 from dmsim.defs import load_rules
+from dmsim.engine_view import card_zone_of, defn_of, result_of, zone_of  # noqa: E402
 
 SAGA, SHAKO, DRAG, IWA = "dm22ex2-021", "dmrp03-s03", "dm22ex1-007", "dmrp03-036"
 IZA, KODAMA, ET = "dm22ex1-025", "dmex10-020", "dm26ex2-071"
@@ -14,8 +15,8 @@ IZA, KODAMA, ET = "dm22ex1-025", "dmex10-020", "dm26ex2-071"
 
 def policy(eng, d):
     keys = [o["key"] for o in d["options"]]
-    deck = len(eng.s.zones["deck"][0])
-    dn = lambda o: eng.s.cards[o["cid"]].defn
+    deck = len(zone_of(eng, "deck", 0))
+    dn = lambda o: defn_of(eng, o["cid"])
     if d["kind"] == "charge":
         return [keys.index("pass")]
     if d["kind"] == "yes_no":
@@ -39,7 +40,7 @@ def policy(eng, d):
                 return [j]
         return [keys.index("pass")]
     if d["kind"] == "choose_cards":
-        z = eng.s.cards[d["options"][0]["cid"]].zone
+        z = card_zone_of(eng, d["options"][0]["cid"])
         pick = lambda *want: next((j for w in want for j, o in enumerate(d["options"]) if dn(o) == w), None)
         if z == "bz":                       # メテオバーンの下の1枚: イワシンを墓地へ
             j = pick(IWA)
@@ -66,15 +67,15 @@ def trial(rules, pos, deck_left=18):
                    "graveyard": [ET, SAGA], "deck": [DRAG, IWA, SHAKO]},
             "p1": {}, "deck_size": 40, "deck_left": [deck_left, 40], "seed": 1}
     e = sc.build(rules, spec)
-    deck = e.s.zones["deck"][0]
-    cs = [c for c in deck if e.s.cards[c].defn in (DRAG, IWA, SHAKO)]
+    deck = zone_of(e, "deck", 0)
+    cs = [c for c in deck if defn_of(e, c) in (DRAG, IWA, SHAKO)]
     for c in cs:
         deck.remove(c)
     for c, p in zip(cs, pos):
         deck.insert(p, c)
     for _ in range(3000):
         d = e.advance()
-        if d is None or e.s.result:
+        if d is None or result_of(e):
             break
         e.answer(policy(e, d))
     return e
@@ -84,5 +85,5 @@ if __name__ == "__main__":
     rules = load_rules()
     for pos in ([tuple(int(x) for x in a.split(",")) for a in sys.argv[1:]] or [(0, 1, 2), (3, 5, 7), (6, 9, 12)]):
         e = trial(rules, pos)
-        gy = [e.s.cards[c].defn for c in e.s.zones["graveyard"][0]]
-        print(pos, e.s.result, "deck", len(e.s.zones["deck"][0]), "gy", len(gy), "bz", [e.s.cards[c].defn for c in e.s.zones["bz"][0]])
+        gy = [defn_of(e, c) for c in zone_of(e, "graveyard", 0)]
+        print(pos, result_of(e), "deck", len(zone_of(e, "deck", 0)), "gy", len(gy), "bz", [defn_of(e, c) for c in zone_of(e, "bz", 0)])
