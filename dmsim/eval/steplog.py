@@ -12,6 +12,7 @@ from pathlib import Path
 
 from ..engine.core import Engine
 from .explog import LogWriter
+from ..engine_view import digest_of, turn_of
 
 
 @dataclass
@@ -42,8 +43,8 @@ def replay_steps(rules, eng_final: Engine, deck, opp_deck, seed, first_player, s
         d = eng.advance()
         if d is None:
             break
-        steps.append({"state": eng.s.digest(), "legal": [o["key"] for o in d["options"]], "chosen": list(ent["keys"]),
-                      "p": d["player"], "kind": d["kind"], "turn": eng.s.turn})
+        steps.append({"state": digest_of(eng), "legal": [o["key"] for o in d["options"]], "chosen": list(ent["keys"]),
+                      "p": d["player"], "kind": d["kind"], "turn": turn_of(eng)})
         eng.answer(ent["choice"])
     return steps, len(steps) == len(eng_final.log)
 

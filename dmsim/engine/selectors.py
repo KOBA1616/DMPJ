@@ -4,13 +4,27 @@ from __future__ import annotations
 from .registry import read_only
 
 
+def _civ_list(v) -> list:
+    """filter の civs 系の値の正規化: 式の前評価で文明名の文字列になった場合（{declared: c} 等）は
+    単一文明のリストとして扱う（バンドB U3）。文字列でもリストでもない値（未宣言の既定値など）は空＝一致しない。"""
+    if isinstance(v, str):
+        return [v]
+    if isinstance(v, list):
+        return v
+    return []
+
+
 class SelectorMixin:
     def _expr_refs(self, v, env):
         """cost_of / power_of の参照先を ref のリストにする。
-        値は変数名（文字列）または {ref: 名前}。 "self" は自分自身を指す。"""
+        値は変数名（文字列）または {ref: 名前}。 "self" は自分自身を指す。
+        "event.<キー>" はイベントレコードの参照（event.opponent 等。バンドB U7 の基盤 expr-event-ref）。"""
         name = v.get("ref") if isinstance(v, dict) else v
         if name == "self":
             return [env["self"]] if env.get("self") else []
+        if isinstance(name, str) and name.startswith("event.") and env.get("event"):
+            r = env["event"].get(name.split(".", 1)[1])
+            return [r] if isinstance(r, list) else []
         return list(env.get("vars", {}).get(name, []))
 
     def eval_expr(self, x, env):
@@ -46,6 +60,10 @@ class SelectorMixin:
                 finally:
                     for c in added:
                         self._distinct_costing.discard(c)
+            if "total_cost" in x:   # 対象カード群のコストの合計（公開集合の保持。バンドC1 U39）
+                return sum(self.chars(c)["cost"] for c in self.candidates(x["total_cost"], env))
+            if "total_power" in x:   # 対象カード群のパワーの合計（バンドC1 U39。U17 の「下のカードの合計パワー」でも使う）
+                return sum(self.chars(c)["power"] for c in self.candidates(x["total_power"], env))
             if "link_count" in x:   # このカードがリンクしているカードの枚数（リンクしていなければ1）
                 return len(self.link_members(env["self"][0])) if env.get("self") else 0
             if "seals" in x:   # そのプレイヤーの封印の総数（自分のカードに付いている封印を全部数える）
@@ -53,6 +71,14 @@ class SelectorMixin:
                 return sum(len(self.s.cards[c].seals) for c in self.bz_tops(p))
             if "seals_on" in x:   # self に付いている封印の数
                 return len(self.s.cards[env["self"][0]].seals) if env.get("self") else 0
+            if "bundles" in x:   # シールドの束の数（束の中身のカードは数えない。113.2）。face_up: true は「表向きのカードを含む束」だけ、false は「表向きのカードを含まない束」だけを数える
+                spec = x["bundles"]
+                tops = self.zlist("shield", self._rel(spec.get("owner", "you"), env))
+                if "face_up" not in spec:
+                    return len(tops)
+                want = bool(spec["face_up"])
+                return sum(1 for t in tops
+                           if any(self.s.cards[c].face_up for c in [t] + self.s.cards[t].under) == want)
             if "entered" in x:   # このターン、そのプレイヤーがバトルゾーンに出したクリーチャーの数
                 spec = x["entered"]
                 lst = self.s.turn_counters.get(f"entered:{self._rel(spec.get('owner', 'you'), env)}", [])
@@ -65,6 +91,18 @@ class SelectorMixin:
             if "var" in x:
                 v = env.get("vars", {}).get(x["var"], [])
                 return v if isinstance(v, int) else len(v)   # 数を数えた変数（ガチンコの勝ち数など）はそのまま
+            if "declared" in x:   # 宣言した値（choose_number / choose_name / choose_civ。GameState.declares から読む。バンドC2 U97）
+                return self.s.declares.get(x["declared"], 0)   # 未宣言は 0（数・名前・文明のどの読みでも「一致しない」側に倒れる既定値）
+            if "turn_count" in x:   # このターンに〜した回数（履歴カウンタ基盤。バンドC1 U19）
+                return self._turn_count(x["turn_count"], env)
+            if "used_count" in x:   # 「使った」履歴（唱えた呪文＋via: generate で実行したカード）の特性つき数え（バンドC1 U19）
+                spec = x["used_count"]
+                lst = self.s.turn_counters.get(f"hist:used:{self._rel(spec.get('owner', 'you'), env)}", [])
+                f = spec.get("filter")
+                return len(lst) if not f else sum(1 for snap in lst if self._snapshot_match(snap, f))
+            if "prev_shield_added" in x:   # 前のターンに、そのプレイヤーがシールドを加えた回数（バンドB U18。prev_counters の hist:shield_put を読む）
+                spec = x["prev_shield_added"]
+                return self.s.prev_counters.get(f"hist:shield_put:{self._rel(spec.get('owner', 'you'), env)}", 0)
             if "cost_of" in x:   # 参照カード（複数なら最大）のコスト
                 return max((self.chars_ro(c[0])["cost"] for c in self._expr_refs(x["cost_of"], env)), default=0)
             if "power_of" in x:   # 参照カード（複数なら最大）の現在パワー（第116弾で追加。cost_of の対）
@@ -80,11 +118,64 @@ class SelectorMixin:
                 return sum(self.eval_expr(v, env) for v in x["sum"])
         raise ValueError(f"bad expr {x}")
 
+    # count_of が式として評価する単一キーの辞書（バンドB U18 の一般化: 履歴式も mod の count に書ける）
+    _EXPR_KEYS = {"count", "civ_count", "distinct_cost_count", "link_count", "seals", "seals_on",
+                  "entered", "drew", "turn_count", "used_count", "prev_shield_added",
+                  "var", "cost_of", "power_of", "name_of", "race", "races_of", "sum", "bundles", "declared",
+                  "total_cost", "total_power"}
+
+    # 従来から複合キー辞書（{distinct_cost_count: ..., base: 0} 等）でも式として読んでいたキー。
+    # 単一キー制限をかけると variety breaker の mod が壊れるため、これらは従来どおりキー有無で判定する
+    _LEGACY_EXPR_KEYS = {"civ_count", "distinct_cost_count", "sum", "var", "bundles"}
+
     def count_of(self, v, env):
-        """mod の count の評価: セレクタなら体数、式（civ_count / distinct_cost_count / sum 等）ならその値。"""
-        if isinstance(v, dict) and ("civ_count" in v or "distinct_cost_count" in v or "sum" in v or "var" in v):
+        """mod の count の評価: セレクタなら体数、式（civ_count / distinct_cost_count / sum / 履歴式等）ならその値。"""
+        if isinstance(v, dict) and (any(k in v for k in self._LEGACY_EXPR_KEYS)
+                                    or (len(v) == 1 and next(iter(v)) in self._EXPR_KEYS)):
             return self.eval_expr(v, env)
         return len(self.candidates(v, env))
+
+    def _turn_count(self, spec: dict, env) -> int:
+        """式 {turn_count: spec} の評価。記録は events の _record_history が turn_counters の hist: キーに集約する。
+        kind: attack は攻撃クリーチャーの cid リスト（hist:attackers）から数える（other / filter 対応のため）。
+        attack_by / attack_on はクリーチャー単位（ref で指す）。broke_by_self は env の self 固定（owner を持たない）。"""
+        s = self.s
+        kind = spec["kind"]
+        if kind in ("attack_by", "attack_on"):
+            return sum(s.turn_counters.get(f"hist:{kind}:{r[0]}", 0)
+                       for r in self._expr_refs(spec.get("ref"), env))
+        if kind == "broke_by_self":
+            return s.turn_counters.get(f"hist:broke_by:{env['self'][0]}", 0) if env.get("self") else 0
+        owner = spec.get("owner", "you")
+        players = (0, 1) if owner == "any" else (self._rel(owner, env),)
+        if kind == "attack":
+            total = 0
+            for p in players:
+                lst = list(s.turn_counters.get(f"hist:attackers:{p}", []))
+                if spec.get("other") and env.get("self"):
+                    lst = [c for c in lst if c != env["self"][0]]
+                f = spec.get("filter")
+                if f:
+                    if any(isinstance(v, dict) for v in f.values()):   # 式の値は問い合わせ時点の env で計算する
+                        f = {k: self.eval_expr(v, env) if isinstance(v, dict) else v for k, v in f.items()}
+                    lst = [c for c in lst if self.filter_match(c, f)]   # フィルタは問い合わせ時点の特性で照合する（バンドA の設計既定）
+                total += len(lst)
+            return total
+        return sum(s.turn_counters.get(f"hist:{kind}:{p}", 0) for p in players)
+
+    @staticmethod
+    def _snapshot_match(snap: dict, f: dict) -> bool:
+        """「使った」履歴の特性スナップショット（印刷特性 {cost, types, civs}）への簡易照合（バンドC1 U19）。
+        filter の特性部分（types / civs / cost_ge / cost_le）だけを見る。"""
+        if "types" in f and not set(f["types"]) & set(snap["types"]):
+            return False
+        if "civs" in f and not set(f["civs"]) & set(snap["civs"]):
+            return False
+        if "cost_ge" in f and snap["cost"] < f["cost_ge"]:
+            return False
+        if "cost_le" in f and snap["cost"] > f["cost_le"]:
+            return False
+        return True
 
     def eval_cond(self, c, env) -> bool:
         if "exists" in c:
@@ -99,8 +190,17 @@ class SelectorMixin:
             return all(self.eval_cond(x, env) for x in c["all"])
         if "any" in c:
             return any(self.eval_cond(x, env) for x in c["any"])
-        if "marked" in c:   # このターンに mark した印があるか（「そのターンに他のファイナル革命を使っていなければ」）
-            return bool(self.s.turn_counters.get(c["marked"]))
+        if "power_ge" in c:   # このカード自身のパワーが N 以上か（常在型の条件用）。特性計算の再入で無限再帰しないよう、印刷パワー＋他の常在修整で見る（_threshold_power）
+            return bool(env.get("self")) and self.s.alive(env["self"]) \
+                and self._threshold_power(env["self"][0]) >= c["power_ge"]
+        if "marked" in c:   # mark した印があるか（「そのターンに他のファイナル革命を使っていなければ」）。
+            # 辞書形 {name, scope} はスコープつき（バンドB 基盤 mark-scope）: scope: game は game_counters を読み、ターン開始で消えない
+            v = c["marked"]
+            if isinstance(v, dict):
+                scope = v.get("scope", "turn")
+                store = self.s.game_counters if scope == "game" else self.s.turn_counters
+                return bool(store.get(self._mark_key(v["name"], scope, env)))
+            return bool(self.s.turn_counters.get(v))
         if "self_marked" in c:   # このカード自身がこのターンに mark した印があるか（ターボラッシュ）
             return bool(self.s.turn_counters.get(f"{c['self_marked']}:{env['self'][0]}:{env['self'][1]}"))
         if "is_turn" in c:
@@ -115,15 +215,19 @@ class SelectorMixin:
         if "vivid_paid" in c:   # ビビッドローで実行した（第54弾。「ビビッドロー能力を使って唱えていれば」）
             paid = bool(env.get("vivid_paid")) or bool((env.get("event") or {}).get("vivid"))
             return paid == bool(c["vivid_paid"])
+        if "ddd_paid" in c:   # D・D・D で実行した（第149弾。「この呪文を『D・D・D』で唱えたなら」）
+            paid = bool(env.get("ddd_paid")) or (env.get("event") or {}).get("via") == "d_d_d"
+            return paid == bool(c["ddd_paid"])
         raise ValueError(f"bad cond {c}")
 
     def filter_match(self, cid: int, f: dict, lki: dict | None = None, base: bool = False) -> bool:
         if base or self._in_static_cond > 1 or cid in self._distinct_costing:   # 常在型能力の範囲・入れ子の条件の判定中は特性計算を再帰させない（_distinct_costing は第145弾の数え中）
             d = self.fdef(cid)
             ch = {"power": d.power, "cost": d.cost, "civs": d.civs, "types": d.types, "races": d.races,
-                  "keywords": set(d.keywords), "name": d.name}
+                  "keywords": set(d.keywords), "name": d.name, "names": [d.name]}
         else:
             ch = lki["chars"] if lki else self.chars(cid)
+        names = ch.get("names") or [ch["name"]]   # 名前の集合（主名＋add_names。バンドC2 U97）
         c = self.s.cards[cid]
         is_sealed = c.zone == "bz" and bool(c.seals)
         if "sealed" in f:
@@ -143,7 +247,7 @@ class SelectorMixin:
             pats = f["not_race_has"] if isinstance(f["not_race_has"], list) else [f["not_race_has"]]
             if any(p in r for p in pats for r in ch["races"]):
                 return False
-        if "name_has" in f and f["name_has"] not in ch["name"]:
+        if "name_has" in f and not any(f["name_has"] in nm for nm in names):
             return False
         if "twinpact" in f and bool(self.cdef(cid).faces) != bool(f["twinpact"]):
             return False
@@ -157,17 +261,17 @@ class SelectorMixin:
             has = bool(d.fushigi) or any(fc.fushigi for fc in d.faces)
             if has != bool(f["fushigi"]):
                 return False
-        if "civs" in f and not set(f["civs"]) & set(ch["civs"]):
+        if "civs" in f and not set(_civ_list(f["civs"])) & set(ch["civs"]):
             return False
-        if "civs_all" in f and not set(f["civs_all"]) <= set(ch["civs"]):
+        if "civs_all" in f and not set(_civ_list(f["civs_all"])) <= set(ch["civs"]):
             return False
-        if "not_civs" in f and set(f["not_civs"]) & set(ch["civs"]):
+        if "not_civs" in f and set(_civ_list(f["not_civs"])) & set(ch["civs"]):
             return False
         if "races" in f and not set(f["races"]) & set(ch["races"]):
             return False
-        if "name" in f and ch["name"] != f["name"]:
+        if "name" in f and f["name"] not in names:   # 追加の名前（add_names）にも当たる
             return False
-        if "not_name" in f and ch["name"] == f["not_name"]:
+        if "not_name" in f and f["not_name"] in names:
             return False
         for k, key, cmp in (("cost_le", "cost", int.__le__), ("cost_ge", "cost", int.__ge__),
                             ("power_le", "power", int.__le__), ("power_ge", "power", int.__ge__)):
@@ -271,7 +375,7 @@ class SelectorMixin:
             elif r == "crossed":   # このクロスギアをクロスしているクリーチャー（303.3a）
                 g = s.cards[env["self"][0]].crossed
                 refs = [g] if g else []
-            elif r in ("event.target", "event.attacker", "event.opponent", "event.shield"):   # 攻撃された（攻撃先の）クリーチャー / ブロックされた（攻撃）クリーチャー / バトルの相手 / ブレイクされるシールド（第146弾）
+            elif r in ("event.target", "event.attacker", "event.opponent", "event.shield", "event.top", "event.under"):   # 攻撃された（攻撃先の）クリーチャー / ブロックされた（攻撃）クリーチャー / バトルの相手 / ブレイクされるシールド（第146弾）/ 進化で上に乗ったクリーチャー（第150弾）/ 離れる時に下にあったクリーチャー（leave_under_untap）
                 v = env["event"].get(r.split(".")[1])
                 refs = [v] if isinstance(v, list) else []
             elif r in ("event.subject", "subject"):   # subject は event.subject の別名（変換データが両形を使う）
@@ -306,6 +410,12 @@ class SelectorMixin:
                     continue
                 if self.filter_match(cid, f):
                     out.append(cid)
+        if "exclude" in sel:   # 「〜以外の」参照除外（C1 U35）: ゾーン経路の候補（filter 適用後）から、exclude が指すカードをすべて引く。ref／under_of 等の特殊経路には適用しない
+            ex = sel["exclude"]
+            excluded = set()
+            for sub in (ex if isinstance(ex, list) else [ex]):
+                excluded.update(self.candidates(sub, env))
+            out = [c for c in out if c not in excluded]
         return out
 
     def _card_option(self, cid: int, look: bool = False, **extra) -> dict:

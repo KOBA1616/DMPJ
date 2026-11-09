@@ -14,6 +14,7 @@ from ..engine.core import Engine
 from ..solitaire import GameResult, TurnSearch, _origin, charge_only_policy, own_turn
 from .infolevel import InfoLevel
 from .stage import VISIBLE_ZONES, board_met, cards_met, zone_counts  # noqa: F401  段階指標の共通部品
+from ..engine_view import active_of, result_of
 
 
 @dataclass(frozen=True)
@@ -36,7 +37,8 @@ def snapshot(eng: Engine, me: int, turn: int) -> dict:
     n = lambda z, p: len(eng.zlist(z, p))
     return {"turn": turn, "opp_shield": n("shield", 1 - me), "opp_deck": n("deck", 1 - me), "own_gy": n("graveyard", me),
             "own_hand": n("hand", me), "own_mana": n("mana", me), "own_bz": n("bz", me),
-            "gy_defs": dict(zone_counts(eng, me, "graveyard"))}
+            "gy_defs": dict(zone_counts(eng, me, "graveyard")),
+            "defs": {z: dict(zone_counts(eng, me, z)) for z in ("hand", "bz", "mana", "graveyard")}}   # 部品の自動発見用（最終局面の自分側の見えるゾーン）
 
 
 def board_ok(eng: Engine, me: int, spec: ProgressSpec) -> bool:
@@ -73,7 +75,7 @@ def make_progress_runner(level: InfoLevel, spec: ProgressSpec, n_det: int = 8, v
             record(0)
             search = TurnSearch(me, budget, opp_policy=opp_pol, value_fn=value_fn) if level is InfoLevel.CHEAT else None
             while (d := eng.advance()) is not None:
-                if eng.s.active != me or d["player"] != me:
+                if active_of(eng) != me or d["player"] != me:
                     eng.answer(opp_pol(eng, d))
                     continue
                 ot = own_turn(eng, me)
@@ -88,7 +90,7 @@ def make_progress_runner(level: InfoLevel, spec: ProgressSpec, n_det: int = 8, v
                     eng = fs.run(eng)
                     res.nodes += fs.nodes
                 record(ot)
-            r = eng.s.result
+            r = result_of(eng)
             if r is not None:
                 if r["winner"] == me:
                     res.kill_turn = own_turn(eng, me, r["turn"])

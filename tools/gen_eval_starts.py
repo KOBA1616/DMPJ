@@ -12,6 +12,7 @@ sys.path.insert(0, str(ROOT))
 from dmsim import load_rules  # noqa: E402
 from dmsim.discovery import evalstarts  # noqa: E402
 from dmsim.discovery.loopspec import LoopSpec  # noqa: E402
+from dmsim.engine_view import defn_of, order_zone, zone_of  # noqa: E402
 
 
 def main(argv=None):
@@ -28,8 +29,8 @@ def main(argv=None):
     if a.prepare != "none" and "deck_order" in ls.source and "転生スイッチ" in ls.source["deck_order"]:
         def prep(e):
             ts, fa = "dm23ex2-cho018", "dm31-025"
-            dk = e.s.zones["deck"][0]
-            e.s.zones["deck"][0][:] = sorted(dk, key=lambda c: (e.s.cards[c].defn != ts, e.s.cards[c].defn != fa))
+            dk = zone_of(e, "deck", 0)
+            order_zone(e, "deck", 0, lambda c: (defn_of(e, c) != ts, defn_of(e, c) != fa))
     starts = evalstarts.make_starts(rules, ls, approved, a.levels, prep)
     text = yaml.safe_dump({"version": evalstarts.VERSION, "starts": starts}, allow_unicode=True, sort_keys=False)
     if a.out:

@@ -50,7 +50,7 @@ INSTRUCTIONS = """\
 - known_keywords があるときは、それらのキーワードはルールで処理済み（text から除いてある）。keywords に入れ直さず、残りの text だけを変換する。
 - 「〜できない」は static の mod.deny、「〜できる」は mod.allow。「〜してもよい」は op: may。
 - 進化は types に evolution を含め evolve_from に進化元の条件を書く。ツインパクトは faces に2面を書く。
-- カードの種類: クリーチャーは creature、呪文は spell、タマシードは tamaseed、フィールドは field、クロスギアは cross_gear（実行するとバトルゾーンに出る）。「タマシード/クリーチャー」は両方を types に書く。サイキック・GR・超次元・ドラグハートはオリジナルフォーマットでは使わないので変換しない（取り込み側で飛ばす）。他の種類（オーラ・城 など）は未対応なので、近似せず source.unsupported に書く。
+- カードの種類: クリーチャーは creature、呪文は spell、タマシードは tamaseed、フィールドは field、クロスギアは cross_gear（実行するとバトルゾーンに出る）。D2フィールドは ["field", "d2_field"] と併記する（D2だけを指すフィルタは {types: [d2_field]}。一意性はルール側の処理）。「タマシード/クリーチャー」は両方を types に書く。サイキック・GR・超次元・ドラグハートはオリジナルフォーマットでは使わないので変換しない（取り込み側で飛ばす）。他の種類（オーラ・城 など）は未対応なので、近似せず source.unsupported に書く。
 - 革命チェンジ・ニンジャ・ストライク等の宣言は kind: declare（既存カードの例に倣う）。
 - 「このクリーチャーで攻撃する代わりに、タップして次の能力を使ってもよい」（タップ能力）は kind: activate、cost: {tap: self}、effect に続く効果文の ops（攻撃ができない間は使えない。召喚酔い含む）。「バトルゾーンにある自分の光のクリーチャーをタップし、攻撃する代わりに次の能力を使ってもよい」は cost: {tap: {civs: [light]}}（条件に合う自分のクリーチャー1体をタップ）。
 - クロスギアは types: [cross_gear]。「クロスギア:このカードをバトルゾーンに置く。…コストをもう一度支払う。…バトルゾーンに残る。」の定型文はエンジンの規則（303）で処理済みなので abilities に書かない（text には残す）。「これをクロスしたクリーチャー」は、常在型が `kind: static, affects: crossed, mod: {...}`（パワー修整・キーワード付与）、誘発型が `when: {…, subject: crossed}`、効果の対象が `select: {ref: crossed}`。
@@ -61,7 +61,10 @@ INSTRUCTIONS = """\
 - 「攻撃された時」は `when: {event: attack, target: self}`（このクリーチャーが攻撃先）、「自分のクリーチャーが攻撃された時」は `target: {owner: you}`（他のクリーチャーだけなら other: true も）。攻撃された側は `select: {ref: event.target}`。「ブロックされた時」は `when: {event: block, attacker: self}`、攻撃クリーチャーは `ref: event.attacker`。
 - サイクロンは keywords: [cyclone]（呪文。エンジンが「唱える直前に召喚していたか」を見て、唱えた後に手札へ戻す）。「自分が唱える呪文はすべてサイクロンを得る」は static、affects: {zone: hand, owner: you, filter: {types: [spell]}}、mod: {grant: [cyclone]}。
 - S・バックは文明ごとのキーワード（s_back_light / s_back_water / s_back_darkness / s_back_fire / s_back_nature）を keywords に書く（実行は召喚か詠唱かカードの種類で決まる）。続く能力・呪文はそのまま書く。
+- キズナプラスは keywords: [kizuna_plus] と書き、自身の[P]能力は `kind: partner, effect: [...]` で書く（キズナと同じ。[P]は単独では機能せず、キズナ／キズナプラスで「使う」ことで解決する）。
+- 「このクリーチャーがリンクした時／ゴッドとリンクした時」は `kind: trigger, when: {event: link_established, subject: self}` と書く（リンク手順の完了後に、リンクされる側＝既に場にいたゴッドも含めグループ全員が誘発する）。「カードN枚でリンクした時」は能力の `if: {cmp: [{link_count: self}, ">=", N]}` を付ける。ただし「バトルゾーンに出した時、またはこのクリーチャーがゴッドとリンクした時」のように出た時と一体の能力は、リンクした状態で出た時の誘発回数（1回か2回か）の公式裏取りが取れていないため変換しない（能力ごと source.unsupported に need: link_establish_event で残す）。
 - 進化GV（進化元をちょうどN体重ねる）は evolve_from に条件（races に複数並べると「いずれか」）を書き、`evolve_count: 3` を付ける。
+- 水晶ソウルN（このカードを召喚／唱える時、自分のマナゾーンにある裏向きのカードのマナの数字はNになる）は面の宣言 `crystal_soul: N` と書く（キーワード欄には書かない。裏向きマナは無色のまま＝文明は得ない）。「自分の手札にある〜すべてに『水晶ソウルN』を与える」は常在型 `kind: static, affects: {zone: hand, owner: you, filter: {...}}, mod: {crystal_soul: N}` と書く。
 - メテオバーン（下のカードを墓地に置いてもよい。そうした場合〜）は trigger の effect に `op: may` を置き、body の最初に `{op: move, select: {under_of: self, count: 1}, to: graveyard, reason: put, as: paid}`、続けて `{op: if, cond: {exists: {ref: paid}}, then: [...]}` で「そうした場合」の効果を書く（下のカードが無ければ後続は行わない）。条件のない「下のカードを出す／手札に加えてもよい」は may の body に move だけ。発動の時期は when で表す（「このクリーチャーが攻撃する時」= subject: self、「クリーチャーが攻撃する時」= subject: {owner: any}、「相手のクリーチャーが攻撃する時」= subject: {owner: opp}）。「攻撃できる時」「呪文の効果が実行される時」は語彙が無いので unsupported。
 - ダイナモは keywords: [dynamo]（攻撃できる時の起動と、バトルが始まる時の誘発はルール側が持つ。パワーと能力はそのターンの終わりまで他のダイナモ1体に加わる）。カード側に書くのは残りの能力だけ。「ブロックされなかった時」は語彙が無いので unsupported。
 - 攻撃・ブロックの強制は static の mod.require（[attack] / [block]）。「毎ターン攻撃しなければならない」「相手のクリーチャーが攻撃する時、可能であればブロックする」はルールで変換済み。条件つきの強制（次のターンだけ等）は mod.require に条件が書けないので unsupported。
@@ -78,6 +81,17 @@ INSTRUCTIONS = """\
 
 def _rules_text(name: str) -> str:
     return (DATA / "rules" / name).read_text(encoding="utf-8")
+
+
+def _strip_yaml_comments(text: str) -> str:
+    """YAML のコメント行（インデントの後に # で始まる行）を取り除く。コメントは人間向けの
+    注釈でデータではないので、パース結果は変わらない（tests/test_tools.py で照合している）。"""
+    return "".join(l for l in text.splitlines(keepends=True) if not l.strip().startswith("#"))
+
+
+def _prompt_rules_text(name: str) -> str:
+    """プロンプトに埋める用。ルールのデータはそのままに、コメント行だけ除いて量を減らす。"""
+    return _strip_yaml_comments(_rules_text(name))
 
 
 def examples_text(exclude: frozenset = frozenset()) -> str:
@@ -112,7 +126,7 @@ def system_prompt(exclude: frozenset = frozenset(), row: dict | None = None, n_e
     ex = examples_for(row, n_examples, exclude) if row is not None and n_examples else examples_text(exclude)
     parts = [INSTRUCTIONS,
              "## JSON Schema\n" + json.dumps(schema.build(), ensure_ascii=False, sort_keys=True, separators=(",", ":")),
-             *[f"## data/rules/{n}\n{_rules_text(n)}" for n in
+             *[f"## data/rules/{n}\n{_prompt_rules_text(n)}" for n in
                ("zones.yaml", "keywords.yaml", "op_macros.yaml", "permissions.yaml", "turn.yaml")],
              "## 変換済みカードの例（data/cards/real.yaml）\n" + ex]
     return "\n\n".join(parts)

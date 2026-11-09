@@ -38,6 +38,7 @@ import dmsim.solitaire as sol  # noqa: E402
 from dmsim.defs import load_rules  # noqa: E402
 from dmsim.loop_first import discover_loops  # noqa: E402
 from dmsim.zone_graph import find_cycles  # noqa: E402
+from dmsim.engine_view import defn_of, result_of, turn_of, zones_of  # noqa: E402
 
 SAGA, SHAKO, DRAG, IWA = "dm22ex2-021", "dmrp03-s03", "dm22ex1-007", "dmrp03-036"
 BUDGET = 3000
@@ -67,11 +68,11 @@ class MacroPlanner:
     kill_pieces_grave: tuple = (IWA, SHAKO)
 
     def features(self, eng, me: int = ME) -> dict:
-        z = eng.s.zones
-        names = lambda zone: [eng.s.cards[c].defn for c in z[zone][me]]  # noqa: E731
+        z = zones_of(eng)
+        names = lambda zone: [defn_of(eng, c) for c in z[zone][me]]  # noqa: E731
         hand, grave = names("hand"), names("graveyard")
         return {
-            "turn": eng.s.turn,
+            "turn": turn_of(eng),
             "deck": len(z["deck"][me]),
             "hand_n": len(hand),
             "mana": len(z["mana"][me]),
@@ -200,13 +201,13 @@ class Pipeline:
     def run_search(self, seed: int, candidates_fn, intent: Intent | None = None):
         sol.candidates = candidates_fn
         eng = self.build(seed)
-        t0 = eng.s.turn
+        t0 = turn_of(eng)
         ts = sol.TurnSearch(ME, (intent.budget if intent else BUDGET))
         if intent:
             ts.burn_stock = intent.burn_stock
             ts.stock_offsets = tuple(intent.stock_offsets)
         out, st = ts.run(eng)
-        r = out.s.result
+        r = result_of(out)
         won = bool(r and r.get("winner") == ME and r.get("turn") == t0)
         return won, out, st.nodes
 
@@ -221,7 +222,7 @@ class Pipeline:
             i, ok = 0, True
             for _ in range(4000):
                 d = eng.advance()
-                if d is None or eng.s.result:
+                if d is None or result_of(eng):
                     break
                 if i >= len(leaf.log):
                     ok = False
@@ -237,7 +238,7 @@ class Pipeline:
                 except Exception:
                     ok = False
                     break
-            r = eng.s.result
+            r = result_of(eng)
             if ok and r and r.get("winner") == ME:
                 wins += 1
             else:

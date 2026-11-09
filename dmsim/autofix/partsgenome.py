@@ -37,4 +37,10 @@ def load_specs_evolved(store_path: str = "data/autofix/parts.yaml") -> dict:
     specs = load_specs()
     p = Path(store_path)
     st = (yaml.safe_load(p.read_text(encoding="utf-8")) or {}) if p.exists() else {}
-    return {k: apply(v, tuple(st[k])) if k in st else v for k, v in specs.items()}
+    from .partdiscovery import apply_store
+    ed = {}
+    q = Path(store_path).with_name("parts_edits.yaml")
+    if q.exists():
+        ed = yaml.safe_load(q.read_text(encoding="utf-8")) or {}
+    # 追加・削除を先に反映（部品の並びが変わるので、重み倍率は編集後の長さと合う時だけ掛かる）
+    return {k: apply(apply_store(v, ed.get(k)), tuple(st[k])) if k in st else apply_store(v, ed.get(k)) for k, v in specs.items()}

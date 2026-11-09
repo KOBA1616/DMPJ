@@ -14,6 +14,7 @@ import yaml
 from ..engine import Engine
 from ..eval.stage import count_matching
 from ..solitaire import Weights, evaluate
+from ..engine_view import result_of
 
 
 @dataclass(frozen=True)
@@ -60,7 +61,7 @@ def make_value_fn(spec: PartsSpec, weights: Weights | None = None):
 
     def value(eng: Engine, me: int) -> float:
         v = evaluate(eng, me, w)
-        return v if eng.s.result is not None else v + parts_score(eng, me, spec)
+        return v if result_of(eng) is not None else v + parts_score(eng, me, spec)
     return value
 
 

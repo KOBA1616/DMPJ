@@ -15,7 +15,8 @@ import yaml
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 from dmsim.defs import load_rules  # noqa: E402
-from dmsim.solitaire import measure  # noqa: E402
+from dmsim.scenario import build  # noqa: E402
+from dmsim.solitaire import measure, play_game  # noqa: E402
 from dmsim.zone_graph import Cycle, bundles_of, feeds  # noqa: E402
 
 REGISTERED = ("tenmon", "saga", "knight_dmc", "akashic")
@@ -47,6 +48,33 @@ def score(c, freq: dict | None = None) -> float:
     return s
 
 
+OPP_DECK = 30     # 通常の開幕（40枚 − 手札5 − シールド5）に合わせる
+MANA5 = ["T001", "T003", "T004", "T005", "T008"]
+
+
+def verify_lock(rules, cards: list[str], seeds, turns: int = 3, budget: int = 100) -> dict:
+    """ロック候補の成立確認。手札に2枚＋十分なマナ（5文明）、相手は山札30枚・マナ6枚の局面から実エンジンで回し、
+    ロックの確立または山札切れ勝ちが出るかを見る。自分の山札切れ負けが出たら lost に数える（自分の山札切れ対策）。"""
+    spec = {"p0": {"hand": list(cards), "mana": MANA5 * 2}, "p1": {"mana": ["T001"] * 6}, "deck_size": OPP_DECK, "shuffle_deck": True}
+    ok = lost = err = 0
+    kinds: set = set()
+    for s in seeds:
+        try:
+            start = build(rules, {**spec, "seed": s})
+            res, _ = play_game(rules, [], [], s, max_turn=turns, budget=budget, start=start)
+        except Exception as ex:      # 1局の失敗で止めない
+            err += 1
+            kinds.add(f"error:{type(ex).__name__}")
+            continue
+        if res.kill_turn is not None and (res.kind in ("lock", "deck_out", "loop_deck_out") or res.origin == "lock"):
+            ok += 1
+            kinds.add(f"{res.origin}/{res.kind}")
+        if res.lost:
+            lost += 1
+    n = len(list(seeds)) if not isinstance(seeds, range) else len(seeds)
+    return {"games": n, "lock_wins": ok, "self_lost": lost, "errors": err, "kinds": sorted(kinds)}
+
+
 def build_deck(rules, cards: list[str], rng: random.Random, size: int = 40) -> list[str]:
     civs = set()
     for cid in cards:
@@ -64,7 +92,7 @@ def build_deck(rules, cards: list[str], rng: random.Random, size: int = 40) -> l
     return deck
 
 
-def fast_cycles(rules) -> list:
+def fast_cycles(rules, max_cycle3: int = 300000) -> list:
     """長さ1〜2の循環（自己ループと2枚の相互受け渡し）だけを、前提で絞ってから調べる。全組を総当たりしないのでメモリも時間も小さい。"""
     bs = bundles_of(rules)
     by_to: dict = {}      # 前提の種類・行き先ごとの受け手
@@ -78,6 +106,15 @@ def fast_cycles(rules) -> list:
         cand = {j for k, js in by_to.items() if k in keys or k[0] not in ("move", "draw", "cast") for j in js}
         succ[i] = {j: v for j in cand if (v := feeds(a, bs[j], rules))}
     out, seen = [], set()
+    # 3枚の循環 i→j→k→i（i が最小）。数が膨らむので上限を置く
+    small = {i for i, s in succ.items() if 0 < len(s) <= 150}     # 受け手が多すぎる汎用札は3枚循環の起点にしない（爆発を防ぐ）
+    for i in sorted(small):
+        for j in succ[i]:
+            if j <= i or j not in small:
+                continue
+            for k in succ[j]:
+                if k > i and i in succ[k] and len({bs[i].card, bs[j].card, bs[k].card}) == 3 and len(out) < max_cycle3:
+                    out.append(Cycle([bs[i], bs[j], bs[k]], succ[i][j] == 2 and succ[j][k] == 2 and succ[k][i] == 2))
     for i in range(len(bs)):
         for j, v in succ[i].items():
             if j < i or (j != i and i not in succ.get(j, {})):
@@ -89,6 +126,25 @@ def fast_cycles(rules) -> list:
             path = [bs[i]] if i == j else [bs[i], bs[j]]
             out.append(Cycle(path, v == 2 and (i == j or succ[j][i] == 2)))
     return out
+
+
+def lock_pairs(rules, per: int = 400) -> list[dict]:
+    """ターンをまたぐロックの組: 相手のマナを動かす札 A と、相手の山札を減らす／引かせる札 B。自分の山札を削る札は減点（自分の山札切れ対策）。"""
+    bs = bundles_of(rules)
+    known = registered_cards()
+    mana_a = {b.card: b for b in bs if any(m.owner == "opp" and m.src == "mana" for m in b.moves)}
+    deck_b = {b.card: b for b in bs if any(m.owner == "opp" and (m.src == "deck" or m.draw) for m in b.moves)}
+    out = []
+    for ca, a in mana_a.items():
+        for cb, b in deck_b.items():
+            if ca == cb or {ca, cb} <= known or ca.startswith(("T", "R", "L")) or cb.startswith(("T", "R", "L")):
+                continue
+            selfdeck = sum(1 for x in (a, b) for m in x.moves if m.owner != "opp" and m.src == "deck")
+            s = 8.0 - 1.5 * selfdeck - 0.3 * (a.cost + b.cost)
+            out.append({"cards": sorted([ca, cb]), "names": [rules.cards[x].name for x in sorted([ca, cb])], "score": round(s, 2),
+                        "period": "lock", "sure": False, "delta": {}, "opp_delta": {"mana": -1, "deck": -1}, "mana": a.cost + b.cost})
+    out.sort(key=lambda d: -d["score"])
+    return out[:per]
 
 
 def candidates(rules, max_cards: int = 2, max_len: int = 2) -> list[dict]:
@@ -106,6 +162,7 @@ def candidates(rules, max_cards: int = 2, max_len: int = 2) -> list[dict]:
         seen.add(cards)
         out.append({"cards": list(cards), "names": [rules.cards[x].name for x in cards], "score": round(score(c, freq), 2), "period": c.period,
                     "sure": c.sure, "delta": c.delta(), "opp_delta": c.opp_delta(), "mana": c.mana()})
+    out.extend(lock_pairs(rules))
     out.sort(key=lambda d: -d["score"])
     return out
 
@@ -119,6 +176,7 @@ def main(argv=None):
     ap.add_argument("--workers", type=int, default=1)
     ap.add_argument("--max-cards", type=int, default=2)
     ap.add_argument("--max-len", type=int, default=4)
+    ap.add_argument("--locks", type=int, default=0, help="ロック候補の成立確認だけを、上位この件数ぶん回す（軽いので多く回せる）")
     ap.add_argument("--list-only", action="store_true", help="候補の一覧だけ出す（測らない）")
     ap.add_argument("--cache", default=".cache/combohunt_cycles.json")
     ap.add_argument("--out", default="data/combohunt/results.jsonl")
@@ -140,8 +198,24 @@ def main(argv=None):
     done = set()
     if out.exists():
         done = {tuple(json.loads(l)["cards"]) for l in out.read_text(encoding="utf-8").splitlines() if l.strip()}
+    if a.locks:
+        out.parent.mkdir(parents=True, exist_ok=True)
+        hits = []
+        for c in [x for x in cands if x["period"] == "lock" and tuple(x["cards"]) not in done][:a.locks]:
+            v = verify_lock(rules, c["cards"], range(1, a.seeds + 1), turns=3, budget=a.budget)
+            rec = {**c, **v, "turns": 3, "verified": "lock_setup"}
+            with out.open("a", encoding="utf-8") as f:
+                f.write(json.dumps(rec, ensure_ascii=False) + "\n")
+            if v["lock_wins"]:
+                hits.append(rec)
+                print(f"lock {v['lock_wins']}/{v['games']} lost={v['self_lost']} {' + '.join(c['names'])} {v['kinds']}", flush=True)
+        print(f"ロック成立 {len(hits)} 組", flush=True)
+        return
     todo, used = [], {}      # 同じ札ばかりの候補に偏らないよう、1枚につき最大2組まで
-    for c in cands:
+    locks = [c for c in cands if c["period"] == "lock"]
+    others = [c for c in cands if c["period"] != "lock"]
+    mixed = [x for pair in zip(locks, others) for x in pair] + locks[len(others):] + others[len(locks):]   # ロックと循環を交互に（片方に偏らない）
+    for c in mixed:
         if tuple(c["cards"]) in done or any(used.get(x, 0) >= 2 for x in c["cards"]):
             continue
         for x in c["cards"]:
@@ -156,6 +230,13 @@ def main(argv=None):
     out.parent.mkdir(parents=True, exist_ok=True)
     for c in todo:
         t0 = time.time()
+        if c["period"] == "lock":
+            v = verify_lock(rules, c["cards"], range(1, a.seeds + 1), turns=3, budget=a.budget)
+            rec = {**c, **v, "turns": 3, "seconds": round(time.time() - t0, 1), "verified": "lock_setup"}
+            with out.open("a", encoding="utf-8") as f:
+                f.write(json.dumps(rec, ensure_ascii=False) + "\n")
+            print(f"lock {v['lock_wins']}/{v['games']} lost={v['self_lost']} err={v['errors']} {' + '.join(c['names'])} ({rec['seconds']}s) {v['kinds']}", flush=True)
+            continue
         deck = build_deck(rules, c["cards"], random.Random(1))
         rs = measure(deck, ["T001"] * 40, range(1, a.seeds + 1), rules=rules, workers=a.workers, max_turn=a.turns, budget=a.budget)
         kills = [r for r in rs if r.kill_turn is not None]

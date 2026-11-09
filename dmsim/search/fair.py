@@ -10,13 +10,14 @@ from collections import Counter
 from ..engine import Engine
 from ..solitaire import TurnSearch, charge_only_policy
 from .infoset import determinize
+from ..engine_view import active_of, inject_state, state_of
 
 
 def _own_decision(eng: Engine, me: int, opp_policy):
     """相手の決定を相手役に答えさせて、自分の決定かターン終了まで進める。"""
     while True:
         d = eng.advance()
-        if d is None or eng.s.active != me:
+        if d is None or active_of(eng) != me:
             return None
         if d["player"] == me:
             return d
@@ -42,7 +43,7 @@ class FairTurnSearch:
             if i and self._decided(votes, self.n_det - i, avail):
                 break                               # 残りの決定化が全部2位に入っても首位は変わらない
             e = eng.clone()
-            e.s = determinize(eng.s, self.me, self.seed * 1_000_003 + k * 1009 + i, self.known)
+            inject_state(e, determinize(state_of(eng), self.me, self.seed * 1_000_003 + k * 1009 + i, self.known))
             leaf, st = TurnSearch(self.me, self.budget, self.weights, opp_policy=self.opp_policy,
                                 value_fn=self.value_fn).run(e)
             self.nodes += st.nodes

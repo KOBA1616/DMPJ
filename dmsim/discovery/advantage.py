@@ -11,6 +11,7 @@ import yaml
 
 from ..defs import DATA
 from ..engine.core import Engine
+from ..engine_view import trace_of, trace_on
 
 RES = ("hand", "shield", "mana", "board", "board_power", "graveyard", "deck")
 
@@ -139,13 +140,13 @@ def traced_turn(rules, spec: dict, w: dict | None = None, turns: int = 1, budget
                        value_fn=lambda e, me: board_value(e, me, w))
     steps = replay.steps_of(eng)
     again = scenario.build(rules, spec)
-    again.s.trace = []
+    trace_on(again)
     for kind, keys, idx in steps:               # 選ばれた手順を、記録を入れて再生する
         d = again.advance()
         if d is None:
             break
         again.answer(list(idx))
-    return board_value(eng, 0, w), resource_vector(eng, 0), causal_links(again.s.trace), again.s.trace
+    return board_value(eng, 0, w), resource_vector(eng, 0), causal_links(trace_of(again)), trace_of(again)
 
 
 def detect_conversion(mean: dict) -> list[str]:

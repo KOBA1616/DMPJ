@@ -9,6 +9,7 @@ import json
 
 from .. import scenario
 from ..engine.core import IllegalAnswer
+from ..engine_view import result_of
 
 
 def steps_of(engine) -> list[tuple[str, tuple[str, ...], tuple[int, ...]]]:
@@ -34,7 +35,7 @@ def replay_test(rules, steps, prepare=None, me: int = 0, build=None):
                 prepare(e)
             for kind, keys, idx in steps:
                 d = e.advance()
-                if d is None or e.s.result is not None:
+                if d is None or result_of(e) is not None:
                     break
                 if d["kind"] != kind:
                     break
@@ -52,7 +53,7 @@ def replay_test(rules, steps, prepare=None, me: int = 0, build=None):
                 e.answer(list(idx))
             else:
                 e.advance()
-            ok = e.s.result is not None and e.s.result["winner"] == me
+            ok = result_of(e) is not None and result_of(e)["winner"] == me
         except (IllegalAnswer, KeyError, StopIteration, IndexError, ValueError):
             ok = False
         cache[k] = ok

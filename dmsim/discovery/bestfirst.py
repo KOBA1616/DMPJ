@@ -13,6 +13,7 @@ from dataclasses import dataclass
 from ..engine import Engine
 from ..loop import abstract
 from ..solitaire import Weights, candidates, evaluate, goal_distance
+from ..engine_view import defn_of, pending_of, result_of, tapped_of, turn_of, zone_of
 
 
 @dataclass
@@ -26,7 +27,7 @@ class BFResult:
 def _goal_cards(eng: Engine, me: int) -> bool:
     for z in ("bz", "hand"):
         for c in eng.zlist(z, me):
-            if eng.rules.cards[eng.s.cards[c].defn].abilities and any(a["kind"] == "state" for a in eng.rules.cards[eng.s.cards[c].defn].abilities):
+            if eng.rules.cards[defn_of(eng, c)].abilities and any(a["kind"] == "state" for a in eng.rules.cards[defn_of(eng, c)].abilities):
                 return True
     return False
 
@@ -42,7 +43,7 @@ class _Settler:
             d = eng.advance()
             if d is None:
                 return None
-            if self.max_turn is not None and eng.s.turn > self.max_turn:
+            if self.max_turn is not None and turn_of(eng) > self.max_turn:
                 return None
             if d["player"] == self.me:
                 return d
@@ -51,7 +52,7 @@ class _Settler:
 
 def priority(eng: Engine, me: int, w: Weights, pend_w: float = 40.0, own_shield_w: float = 5.0) -> float:
     v = evaluate(eng, me, w)
-    v += pend_w * sum(1 for p in eng.s.pending if p["controller"] == me)
+    v += pend_w * sum(1 for p in pending_of(eng) if p["controller"] == me)
     if _goal_cards(eng, me):
         v += own_shield_w * len(eng.zlist("shield", me))
     return v
@@ -69,15 +70,15 @@ def search(eng: Engine, me: int = 0, budget: int = 20000, w: Weights | None = No
     while heap and nodes < budget:
         _, _, cur = heapq.heappop(heap)
         d = ts._settle(cur)
-        if cur.s.result is not None:
-            if cur.s.result["winner"] == me:
+        if result_of(cur) is not None:
+            if result_of(cur)["winner"] == me:
                 return BFResult(True, nodes, cur, len(cur.log))
             continue
         if d is None:
             continue
         h, ctr = abstract(cur, "in_turn")
-        deck_order = tuple(cur.s.cards[c].defn for c in cur.s.zones["deck"][me])   # 山札の並びは次に引く・積むカードを決める
-        key = (h, deck_order, tuple(sorted(ctr.items())), tuple(sorted((c.defn, c.tapped) for p in (0, 1) for x in cur.s.zones["mana"][p] for c in [cur.s.cards[x]])))
+        deck_order = tuple(defn_of(cur, c) for c in zone_of(cur, "deck", me))   # 山札の並びは次に引く・積むカードを決める
+        key = (h, deck_order, tuple(sorted(ctr.items())), tuple(sorted((defn_of(cur, x), tapped_of(cur, x)) for p in (0, 1) for x in zone_of(cur, "mana", p))))
         if key in seen:
             continue
         seen.add(key)
@@ -110,15 +111,15 @@ def beam(eng: Engine, me: int = 0, width: int = 200, max_depth: int = 80, w: Wei
         nxt = []
         for cur in layer:
             d = ts._settle(cur)
-            if cur.s.result is not None:
-                if cur.s.result["winner"] == me:
+            if result_of(cur) is not None:
+                if result_of(cur)["winner"] == me:
                     return BFResult(True, nodes, cur, len(cur.log))
                 continue
             if d is None:
                 continue
             h, ctr = abstract(cur, "in_turn")
-            deck_order = tuple(cur.s.cards[c].defn for c in cur.s.zones["deck"][me])
-            key = (h, deck_order, tuple(sorted(ctr.items())), tuple(sorted(cur.s.cards[x].defn + str(cur.s.cards[x].tapped) for p in (0, 1) for x in cur.s.zones["mana"][p])))
+            deck_order = tuple(defn_of(cur, c) for c in zone_of(cur, "deck", me))
+            key = (h, deck_order, tuple(sorted(ctr.items())), tuple(sorted(defn_of(cur, x) + str(tapped_of(cur, x)) for p in (0, 1) for x in zone_of(cur, "mana", p))))
             if key in seen:
                 continue
             seen.add(key)
@@ -127,7 +128,7 @@ def beam(eng: Engine, me: int = 0, width: int = 200, max_depth: int = 80, w: Wei
                 child = cur.clone()
                 child.answer(ch)
                 ts._settle(child)
-                if child.s.result is not None and child.s.result["winner"] == me:
+                if result_of(child) is not None and result_of(child)["winner"] == me:
                     return BFResult(True, nodes, child, len(child.log))
                 pr = priority(child, me, w)
                 nxt.append((pr, nodes, child))
