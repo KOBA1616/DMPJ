@@ -8,6 +8,9 @@
 - 探索・チューナー・自動実行は Python のまま始める（プロファイルでは時間の約85〜90%がエンジンと状態の複製）。エンジンを数十倍にしても全体は約4〜5倍が上限なので、その先は候補生成・抽象化・評価の移植を計測してから決める。
 - Python 版エンジンは削除しない。差分テストの基準（oracle）として残し、語彙の追加・自動修正は当面 Python 版に先に入れる。
 
+## 1.5 疑似API（先に定義する）
+Rust 版と Python 版は、同じ「エンジン疑似API」（プロセス内ライブラリ。`open / decision / apply / fork / checkpoint / rollback / expand / observe / read / digest / trace / log / run / lockstep`）を満たす形で作る。ネットワークのサーバーにはしない（速度を失うため。熱い経路は JSON 化しない）。詳細は `notes/engine-api-v0.md`、Python 参照実装は `dmsim/engine_api.py`。探索・チューナー・自動診断・カード検証は、順次この API 経由に寄せる。
+
 ## 2. 互換性の契約（これが API）
 1. 状態の JSON: Python の `GameState.to_json()`（sort_keys、区切り `,` `:`、非 ASCII そのまま）とバイト列で一致。digest は blake2b(16)。
 2. 選択肢: 決定は `{player, kind, options[], min, max, prompt}`。答えは「選択肢の番号」なので、**選択肢の順序・key 文字列・cid などの中身**が一致しないとログ再生が壊れる。差分テストで 1 決定ごとに比べる。
@@ -19,13 +22,13 @@
 
 ## 3. 段階
 - 段階0（完了）: State の serde（Python と同形）、canonical JSON、digest、splitmix64、準備（new_game: シャッフル・シールド5・手札5・最初のターンタスク）。
-- 段階1: ルール JSON の書き出しと Rust 側ローダ。タスクスタックと `advance`、ターン進行（start / draw / charge / end）、イベント適用（move / draw / tap / untap）、`_distinct_hand_options` 相当。差分テスト基盤（下記）を先に作る。
+- 段階1: ルール JSON の書き出しと Rust 側ローダ。タスクスタックと `advance`、ターン進行（start / draw / charge / end）、イベント適用（move / draw / tap / untap）、`_distinct_hand_options` 相当。疑似API（`open / decision / apply / fork / digest / observe`）を Rust 版が満たし、`lockstep(Python, Rust)` を通す。未移植の語彙は `Unsupported` で返す。
 - 段階2: セレクタ・式・条件・特性（chars）、op 44種、誘発、戦闘。実カード 9002 枚のコーパスで、op ごとに差分テストを通してから次へ。
 - 段階3: 探索が使う読み出し API（zlist / bz_tops / chars / cdef / 状態の読み書き口）を Rust 側に用意し、solitaire・loop・eval を Rust のエンジンで回す。境界の呼び出し回数が多い所は一括取得にする。
 - 段階4: 計測して、候補生成・`loop.abstract`・評価の移植を判断。
 
 ## 4. 差分テスト（段階1で最初に作る）
-`tools/rust_diff.py`（予定）: 固定シードの乱択ポリシーで、Python 版と Rust 版を 1 決定ずつ並走させる。毎決定で ①決定の kind・選択肢（key と順序）②状態の digest を比べ、最初のずれた決定のログと JSON 差分を出す。デッキはコーパスから多様に取る（実デッキ5種＋ランダム抽出）。CI では Rust 未ビルドなら飛ばす。
+`engine_api.lockstep`（実装済み。`tools/rust_diff.py` はその CLI にする予定）: 固定シードの乱択ポリシーで、Python 版と Rust 版を 1 決定ずつ並走させる。毎決定で ①決定の kind・選択肢（key と順序）②状態の digest を比べ、最初のずれた決定のログと JSON 差分を出す。デッキはコーパスから多様に取る（実デッキ5種＋ランダム抽出）。CI では Rust 未ビルドなら飛ばす。
 
 ## 5. 試作の計測（2026-11-09、tenmon デッキの初期状態、32KB の JSON）
 - 初期状態: 5デッキ × 20シード × 先後 = 200 局面で、Python 版と JSON が完全一致（digest も一致）。シード 2^63 超でも一致。
