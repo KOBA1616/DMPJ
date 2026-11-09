@@ -36,7 +36,8 @@ def run_batch(a, combos):
     t0 = time.time()
     ts = yaml.safe_load(Path(a.targets).read_text(encoding="utf-8"))["targets"]
     rules = load_rules()
-    specs = load_specs()
+    from dmsim.autofix.partsgenome import load_specs_evolved
+    specs = load_specs_evolved()                              # 進化で採用した部品の重み倍率を反映（data/autofix/parts.yaml）
 
     def mk(t):
         from dmsim.autofix.batch import default_board, default_need
