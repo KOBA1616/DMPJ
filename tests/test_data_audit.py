@@ -41,5 +41,5 @@ def test_audit_counts_structural_fields_and_twin_faces():
     from dmsim.defs import load_rules
     from dmsim.dataaudit import audit_card
     r = load_rules()
-    assert "text_but_no_effect" not in audit_card(r, r.cards["dm23rp1-054"])      # G・ゼロ
+    assert "text_but_no_effect" not in audit_card(r, next(c for c in r.cards.values() if c.free_if))      # G・ゼロ
     assert r.cards["dm26rp3-069"].faces                                            # ツインパクトの呪文側が落ちていない
