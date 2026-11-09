@@ -39,9 +39,18 @@ def mutate(k: Knobs, rng: random.Random, n_change: int = 2, space: dict = SPACE)
     return replace(k, **ch)
 
 
-def _score(m: dict, rule: Rule) -> list[float]:
-    """キルターンが早いほど高い（未到達は max_turn+1）。3〜4ターンキル重視は rule.turn で決まる。"""
-    return [-(float(rule.turn + 1) if x is None else float(x)) for x in m["kill"]]
+def _vec(xs, rule: Rule):
+    return [-(float(rule.turn + 1) if x is None else float(x)) for x in xs]
+
+
+def _score(m: dict, rule: Rule, w_board: float = 0.3, w_cards: float = 0.1) -> list[float]:
+    """局ごとの滑らかな点（高いほど良い）。キルの早さが主で、盤面・部品の到達の早さを小さく加える
+    （キルが出ない間も改善が見えるようにするため。段階指標は順位付けの補助で、足切りには使わない）。"""
+    s = _vec(m["kill"], rule)
+    for key, w in (("board", w_board), ("cards", w_cards)):
+        if m.get(key) and len(m[key]) == len(s):
+            s = [a + w * b for a, b in zip(s, _vec(m[key], rule))]
+    return s
 
 
 def tune(measure, k0: Knobs, tune_seeds, confirm_seeds, rule: Rule = Rule(), generations: int = 5,
