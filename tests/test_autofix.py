@@ -188,3 +188,14 @@ def test_budget_allocation_and_order(tmp_path):
     assert h["x"]["complete"] is False and h["x"]["cands"] == 20
     B.save_history(tmp_path / "h.yaml", h)
     assert B.load_history(tmp_path / "h.yaml") == h
+
+
+def test_analytic_p_cards_monotone_and_crn():
+    from dmsim.deckplan.analytic import p_cards
+    deck = ["A"] * 2 + ["F"] * 38
+    more = ["A"] * 4 + ["F"] * 36
+    need = {"A": 1}
+    assert p_cards(more, need) > p_cards(deck, need) > 0                    # 部品が多いほど揃いやすい
+    assert p_cards(deck, need) == p_cards(deck, need)                        # 同じ乱数なので再現する
+    assert p_cards(deck, {}) == 0.0
+    assert abs(p_cards(deck, need, trials=20000) - (1 - (38 / 40) * (37 / 39) * (36 / 38) * (35 / 37) * (34 / 36) * (33 / 35) * (32 / 34) * (31 / 33) * (30 / 32))) < 0.02
