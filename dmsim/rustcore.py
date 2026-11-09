@@ -40,6 +40,8 @@ def _is_plain(d) -> bool:
     from .defs import CardDef
     if d.types != ["creature"] or d.power <= 0:
         return False
+    if any("コマンド" in r for r in d.races):   # 出た時に封印の解放（seal_release）が走る
+        return False
     skip = {"id", "name", "types", "civs", "cost", "power", "mana", "races", "text"}
     for f in dataclasses.fields(CardDef):
         if f.name in skip:

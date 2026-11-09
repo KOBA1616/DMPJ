@@ -30,10 +30,14 @@ def test_passive_game_matches_to_deckout(env, seed, fp):
     assert res["ok"] is True and res["steps"] > 20
 
 
-def test_unported_attack_is_structured_unsupported(env):
-    a, b = _pair(env, 1, 0)
-    res = lockstep(a, b, "first")
-    assert res["ok"] is None and "attack" in res["unsupported"]
+def test_non_plain_is_structured_unsupported(env):
+    """未移植の語彙は Unsupported として構造化して返る（ここでは、出た時に封印を解放するコマンド種族）"""
+    r, b, _ = env
+    cmd = [i for i, d in r.cards.items() if d.types == ["creature"] and d.power > 0 and any("コマンド" in x for x in d.races)
+           and not rustcore._is_plain(d)][:1]
+    assert cmd
+    with pytest.raises(rustcore.dmcore.Unsupported):
+        rustcore.RustSession.open(r, {"decks": [cmd * 40, cmd * 40], "seed": 1}, b)
 
 
 def test_non_plain_card_rejected_at_open(env):
@@ -44,11 +48,9 @@ def test_non_plain_card_rejected_at_open(env):
 
 
 @pytest.mark.parametrize("pol", ["first", "random:1", "random:2", "random:3"])
-@pytest.mark.parametrize("seed", [1, 2, 3])
-def test_play_matches_until_attack(env, pol, seed):
-    """召喚（コスト支払い→保留→バトルゾーン）まで 1 手ごとに digest が一致。攻撃できるクリーチャーが出たら 2-b（戦闘）の未移植として止まる。"""
+@pytest.mark.parametrize("seed", range(1, 21))
+def test_full_game_matches(env, pol, seed):
+    """召喚・攻撃・バトル・ブレイク・ダイレクトアタックを含む1局が、1手ごとに決定と digest まで一致して終局する。"""
     a, b = _pair(env, seed, seed % 2)
-    res = lockstep(a, b, pol)
-    assert res["divergence"] is None and res["ok"] in (True, None)
-    assert res["ok"] is True or "attack" in res["unsupported"]
-    assert res["steps"] >= 5
+    res = lockstep(a, b, f"random:{seed}" if pol == "first" else pol)
+    assert res["divergence"] is None and res["ok"] is True and res["steps"] >= 5
