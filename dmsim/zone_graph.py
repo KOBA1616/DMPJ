@@ -290,8 +290,14 @@ class Cycle:
 
 def find_cycles(rules, max_cards: int = 2, max_len: int = 4) -> list[Cycle]:
     bs = bundles_of(rules)
-    st = {(i, j): feeds(bs[i], b, rules) for i in range(len(bs)) for j, b in enumerate(bs)}
-    succ = {i: [j for j in range(len(bs)) if st[i, j]] for i in range(len(bs))}
+    st: dict = {}      # 受け渡せる組だけを持つ（全組を持つと札が多い時にメモリを使い切る）
+    succ: dict = {i: [] for i in range(len(bs))}
+    for i in range(len(bs)):
+        for j, b in enumerate(bs):
+            v = feeds(bs[i], b, rules)
+            if v:
+                st[i, j] = v
+                succ[i].append(j)
     seen, out = set(), []
 
     def dfs(start, path):
