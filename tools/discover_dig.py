@@ -7,6 +7,7 @@ import sys
 from dmsim import scenario as sc
 from dmsim.defs import load_rules
 from dmsim.solitaire import TurnSearch
+from dmsim.engine_view import active_of, defn_of, result_of, turn_of, zone_of  # noqa: E402
 
 SAGA, SHAKO, DRAG, IWA = "dm22ex2-021", "dmrp03-s03", "dm22ex1-007", "dmrp03-036"
 IZA, KODAMA, ET = "dm22ex1-025", "dmex10-020", "dm26ex2-071"
@@ -18,8 +19,8 @@ def start(rules, rng, deck_left=18):
                    "graveyard": [ET, SAGA], "deck": [DRAG, IWA, SHAKO]},
             "p1": {}, "deck_size": 40, "deck_left": [deck_left, 40], "seed": rng.randrange(1 << 30)}
     e = sc.build(rules, spec)
-    deck = e.s.zones["deck"][0]
-    key = [c for c in deck if e.s.cards[c].defn in (DRAG, IWA, SHAKO)]
+    deck = zone_of(e, "deck", 0)
+    key = [c for c in deck if defn_of(e, c) in (DRAG, IWA, SHAKO)]
     rest = [c for c in deck if c not in key]
     order = rest[:]
     for c in key:
@@ -32,12 +33,12 @@ def dig(eng, rng, stop_deck):
     """自分の決定を乱数で答えて、山札が stop_deck 枚以下になるか勝敗が決まるまで進める。"""
     for _ in range(4000):
         d = eng.advance()
-        if d is None or eng.s.result:
+        if d is None or result_of(eng):
             return
-        if d["player"] != ME or eng.s.active != ME:
+        if d["player"] != ME or active_of(eng) != ME:
             eng.answer([0] if d["min"] >= 1 else [])
             continue
-        if len(eng.s.zones["deck"][ME]) <= stop_deck:
+        if len(zone_of(eng, "deck", ME)) <= stop_deck:
             return
         keys = [o["key"] for o in d["options"]]
         k = d["kind"]
@@ -64,19 +65,19 @@ def main():
     wins = reached = 0
     for i in range(n):
         eng = start(rules, rng)
-        t0 = eng.s.turn
+        t0 = turn_of(eng)
         try:
             dig(eng, rng, stop)
         except Exception as ex:      # 乱数の答えが不正になった試行は捨てる
             continue
-        if eng.s.result:
-            wins += eng.s.result.get("winner") == ME and eng.s.result.get("turn") == t0
+        if result_of(eng):
+            wins += result_of(eng).get("winner") == ME and result_of(eng).get("turn") == t0
             continue
-        if len(eng.s.zones["deck"][ME]) > stop:
+        if len(zone_of(eng, "deck", ME)) > stop:
             continue
         reached += 1
         out, _ = TurnSearch(ME, budget).run(eng)
-        r = out.s.result
+        r = result_of(out)
         if r and r.get("winner") == ME and r.get("turn") == t0:      # そのターンのうちの勝ちだけ数える
             wins += 1
     print(f"試行{n}: 探索に到達{reached}, 勝ち{wins}")

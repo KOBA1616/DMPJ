@@ -9,6 +9,7 @@ from typing import Callable
 
 from .infolevel import InfoLevel, get_runner
 from .stats import boot_ci, paired_diff
+from ..engine_view import shuffle_deck
 
 
 @dataclass
@@ -88,7 +89,7 @@ def _start_kw(rules, cfg: EvalConfig, seed: int, fp: int) -> dict:
     if cfg.start_spec.get("shuffle_deck"):            # 山札の並びをシードごとに変える（隠れ情報が効く局面用）
         import random
         for p in (0, 1):
-            random.Random(seed * 1009 + p).shuffle(start.s.zones["deck"][p])
+            shuffle_deck(start, p, random.Random(seed * 1009 + p))
     return {"start": start}
 
 

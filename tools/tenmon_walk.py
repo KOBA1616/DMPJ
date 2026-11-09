@@ -1,6 +1,7 @@
 """初期型天門ループの手順を、方針つきで一手ずつ回して確かめるスクリプト（探索ではなく手動方針）。python tools/tenmon_walk.py"""
 import sys
 from dmsim import load_rules, scenario
+from dmsim.engine_view import defn_of, order_zone, pending_of, result_of, under_of, zone_of  # noqa: E402
 rules=load_rules()
 HG,EM,MI,FA,MK="dm16-007","dm23bd7-022","dmx19-s06","dm31-025","dmx24-017"
 OO,HC,TS,AL="dmd24-024","dmx11-082","dm23ex2-cho018","dmx12b-031"
@@ -11,18 +12,18 @@ spec={"p0":{"hand":[FA,FA,AL]+[F]*8,"bz":[EM,MI,OO],"mana":W,"shield":[HG]*4+[MK
 assert not scenario.deck_limit_violations(rules,spec), scenario.deck_limit_violations(rules,spec)   # 同名カードは4枚まで
 STOP=globals().get('STOP')
 e=scenario.build(rules,spec)
-dk=e.s.zones["deck"][0]
-order=sorted(dk,key=lambda c:(e.s.cards[c].defn!=TS, e.s.cards[c].defn!=FA))   # TS, FA..., 先頭がTS
-e.s.zones["deck"][0][:]=order
-nm=lambda c: e.s.cards[c].defn
+dk=zone_of(e, "deck", 0)
+order=sorted(dk,key=lambda c:(defn_of(e, c)!=TS, defn_of(e, c)!=FA))   # TS, FA..., 先頭がTS
+order_zone(e, "deck", 0, order.index)
+nm=lambda c: defn_of(e, c)
 tgt=[MI]
 last=None
 yn=0
 for step in range(200):
     d=e.advance()
-    if d is None or e.s.result: break
+    if d is None or result_of(e): break
     keys=[o["key"] for o in d["options"]]; k=d["kind"]
-    pend=[(p["kind"][:3],p["defn"][-4:]) for p in e.s.pending]
+    pend=[(p["kind"][:3],p["defn"][-4:]) for p in pending_of(e)]
     sh=len(e.zlist("shield",0))
     print(step,k,keys[:5],{a:b for a,b in d.items() if a not in ("options","kind","min","max")} if k=="yes_no" else "","sh",sh,"pend",len(pend))
     if k in("attack",): break
@@ -40,11 +41,11 @@ for step in range(200):
         last=None
         ans=[next((i for i,x in enumerate(keys) if t in x),0)]
     elif k in("choose_cards","choose_shields") and keys and keys[0]=="shield":
-        ans=[next((i for i,o in enumerate(d["options"]) if e.s.cards[o["cid"]].under),0)]
+        ans=[next((i for i,o in enumerate(d["options"]) if under_of(e, o["cid"])),0)]
     elif k=="choose_cards" and any(AL in x for x in keys): ans=[next(i for i,x in enumerate(keys) if AL in x)]
     elif k=="choose_cards" and any("hand:"+F in x for x in keys): ans=[next(i for i,x in enumerate(keys) if "hand:"+F in x)]
     elif k=="choose_mode": ans=[next((i for i,x in enumerate(keys) if x=="mode:4"),0)]
     elif k=="yes_no":
-        ans=([0] if any(e.s.cards[c].under for c in e.zlist("shield",0)) else [1]) if "ブレイク" in d["prompt"] else [0]
+        ans=([0] if any(under_of(e, c) for c in e.zlist("shield",0)) else [1]) if "ブレイク" in d["prompt"] else [0]
     e.answer(ans)
-print("result",e.s.result,"shield",len(e.zlist("shield",0)))
+print("result",result_of(e),"shield",len(e.zlist("shield",0)))

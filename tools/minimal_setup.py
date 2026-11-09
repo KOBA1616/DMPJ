@@ -7,6 +7,7 @@ import sys
 from dmsim import scenario as sc
 from dmsim.defs import load_rules
 from dmsim.solitaire import TurnSearch
+from dmsim.engine_view import defn_of, result_of, turn_of, zone_of  # noqa: E402
 
 sys.path.insert(0, __file__.rsplit("/", 1)[0])
 from discover_dig import ME, dig  # noqa: E402
@@ -38,8 +39,8 @@ def build(rules, rng, hand, gy, mana, deckcards, deck_left=20):
     spec = {"p0": {"hand": hand, "mana": mana, "graveyard": gy, "deck": list(deckcards)}, "p1": {},
             "deck_size": 40, "deck_left": [deck_left, 40], "seed": rng.randrange(1 << 30)}
     e = sc.build(rules, spec)
-    deck = e.s.zones["deck"][0]
-    key = [c for c in deck if e.s.cards[c].defn in set(deckcards)]
+    deck = zone_of(e, "deck", 0)
+    key = [c for c in deck if defn_of(e, c) in set(deckcards)]
     order = [c for c in deck if c not in key]
     for c in key:
         order.insert(rng.randrange(len(order) + 1), c)
@@ -49,7 +50,7 @@ def build(rules, rng, hand, gy, mana, deckcards, deck_left=20):
 
 def _won(eng, t0):
     """そのターンのうちに自分が勝った（殴り勝ちなど後のターンの勝ちは数えない）"""
-    r = eng.s.result
+    r = result_of(eng)
     return bool(r and r.get("winner") == ME and r.get("turn") == t0)
 
 
@@ -59,15 +60,15 @@ def measure(rules, name, n, stop, budget, seed=1):
     wins = reached = 0
     for _ in range(n):
         eng = build(rules, rng, hand, gy, mana, dc)
-        t0 = eng.s.turn
+        t0 = turn_of(eng)
         try:
             dig(eng, rng, stop)
         except Exception:
             continue
-        if eng.s.result:
+        if result_of(eng):
             wins += _won(eng, t0)
             continue
-        if len(eng.s.zones["deck"][ME]) > stop:
+        if len(zone_of(eng, "deck", ME)) > stop:
             continue
         reached += 1
         out, _ = TurnSearch(ME, budget).run(eng)

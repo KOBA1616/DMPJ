@@ -44,3 +44,49 @@ def defns_of(e, zone: str, p: int) -> list[str]:
 
 def digest_of(e) -> str:
     return e.s.digest()
+
+
+def card_zone_of(e, cid) -> str:
+    return e.s.cards[cid].zone
+
+
+def under_of(e, cid):
+    """この札の下に重ねられている札（進化元など）。"""
+    return e.s.cards[cid].under
+
+
+def zones_of(e) -> dict:
+    """全ゾーン {zone: [[p0の札id...], [p1の札id...]]}（読み取り専用として扱う）。"""
+    return e.s.zones
+
+
+# ---- 状態を書き換える操作（疑似API v0.1 の追加。仕込み局面・決定化・因果記録のため。探索の熱い経路では使わない） ----
+
+def shuffle_deck(e, p: int, rng) -> None:
+    """p の山札を rng(random.Random 互換)で並べ替える。同じ rng 状態なら同じ並びになる。"""
+    rng.shuffle(e.s.zones["deck"][p])
+
+
+def order_zone(e, zone: str, p: int, key) -> None:
+    """ゾーンの並びを key(札id) の昇順に並べ替える（安定ソート。仕込み局面の山札の並び固定用）。"""
+    z = e.s.zones[zone][p]
+    z[:] = sorted(z, key=key)
+
+
+def state_of(e):
+    """状態そのもの（不透明なハンドルとして扱う。determinize など状態を丸ごと作り直す処理に渡す）。"""
+    return e.s
+
+
+def inject_state(e, state) -> None:
+    """状態を丸ごと差し替える（決定化した状態の注入）。"""
+    e.s = state
+
+
+def trace_on(e) -> None:
+    e.s.trace = []
+
+
+def trace_of(e):
+    """誘発の因果の記録（trace_on 後に溜まる。無効なら None）。"""
+    return e.s.trace
