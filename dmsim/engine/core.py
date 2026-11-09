@@ -26,6 +26,8 @@ from .turn import TurnMixin
 
 
 CHECK = os.environ.get("DMSIM_CHECK") == "1"
+_MUTABLE_CHARS = ("civs", "types", "races", "keywords", "allow", "deny", "require", "break_opts", "cost_may",
+                  "no_leave", "battle_indestructible_filters")   # chars() の結果のうち、呼び出し側が書き換えうる可変の値
 
 
 class IllegalAnswer(ValueError):
@@ -46,6 +48,8 @@ class Engine(SelectorMixin, EventMixin, InterpreterMixin, TurnMixin, CombatMixin
         self.check = CHECK if check is None else check   # タスクの形を毎回検査する（テスト・開発者モード用）
         self.s = state
         self._pw_busy = False
+        self._affc: tuple | None = None   # chars_scope() の間だけ有効: 他のカードに mod を及ぼす常在型の発生源（バトルゾーン・シールド）と能力の一覧
+        self._affc_building = False
         self._chcache: dict | None = None   # chars_scope() の間だけ有効な特性キャッシュ（状態が変わらない区間専用）
         self.step_limit = step_limit
         self.turn_limit = turn_limit
@@ -352,13 +356,27 @@ class Engine(SelectorMixin, EventMixin, InterpreterMixin, TurnMixin, CombatMixin
             yield
             return
         self._chcache = {}
+        self._affc = None
         try:
             yield
         finally:
             self._chcache = None
+            self._affc = None
 
     def chars(self, cid: int, face: int | None = None) -> dict:
         """特性の計算（chars_scope の間は同一状態の結果を使い回す）。返す辞書は呼び出し側が自由に書き換えてよい（コピーを返す）。"""
+        cc = self._chcache
+        if cc is None or self._in_static_cond or self._pw_busy:
+            return self._chars_calc(cid, face)
+        out = self.chars_ro(cid, face).copy()
+        for k2 in _MUTABLE_CHARS:
+            v = out.get(k2)
+            if v is not None:
+                out[k2] = v.copy()
+        return out
+
+    def chars_ro(self, cid: int, face: int | None = None) -> dict:
+        """chars() と同じ値を、書き換えない前提でコピーなしに返す（読み取り専用の呼び出し側向け。返した辞書を変更してはならない）。"""
         cc = self._chcache
         if cc is None or self._in_static_cond or self._pw_busy:
             return self._chars_calc(cid, face)
@@ -369,7 +387,26 @@ class Engine(SelectorMixin, EventMixin, InterpreterMixin, TurnMixin, CombatMixin
         elif self.check:
             fresh = self._chars_calc(cid, face)
             assert fresh == r, f"chars cache stale: cid={cid} face={face}"
-        return {k2: (v.copy() if type(v) in (list, set) else v) for k2, v in r.items()}
+        return r
+
+    def _aff_sources(self):
+        """他のカードに mod を及ぼす常在型の発生源。(バトルゾーン, シールド) それぞれ [(発生源, 能力)]。
+        chars_scope の間だけ使い回す（状態が変わらない区間）。入れ子の評価中や作成中は None（毎回その場で見る）。"""
+        if self._chcache is None or self._in_static_cond or self._pw_busy or self._affc_building:
+            return None
+        if self._affc is None:
+            self._affc_building = True
+            try:
+                cards = self.s.cards
+                aff = self._affects_others
+                bz = [(src, ab) for src in self.s.zones["bz"][0] if cards[src].top_of < 0 and aff(src)
+                      for _, ab in self.abilities(src, "static")]
+                sh = [(src, ab) for p in (0, 1) for src in self.s.zones["shield"][p] if aff(src)
+                      for _, ab in self.abilities(src, "static")]
+                self._affc = (bz, sh)
+            finally:
+                self._affc_building = False
+        return self._affc
 
     def _chars_calc(self, cid: int, face: int | None = None) -> dict:
         """特性の計算。複数の継続的効果は同時に適用する（608.1）。MTG のようなレイヤーはない。
@@ -400,32 +437,33 @@ class Engine(SelectorMixin, EventMixin, InterpreterMixin, TurnMixin, CombatMixin
                 and ("if" not in ab or self._static_cond(ab["if"], env_self))]   # 条件つきの常在型（例:「墓地が13枚より少なければ攻撃できない」）は常に見直す
         cards = self.s.cards
         aff_others = self._affects_others
-        for src in self.s.zones["bz"][0]:   # バトルゾーンの常在型能力（重ねたカードの下は除く）。affects.zone で他のゾーンのカードにも及ぶ
-            if cards[src].top_of >= 0 or not aff_others(src):
+        asrc = self._aff_sources()
+        if asrc is not None:
+            bz_list, sh_list = asrc
+        else:
+            bz_list = [(src, ab) for src in self.s.zones["bz"][0] if cards[src].top_of < 0 and aff_others(src)
+                       for _, ab in self.abilities(src, "static")]
+            sh_list = [(src, ab) for p in (0, 1) for src in self.s.zones["shield"][p] if aff_others(src)
+                       for _, ab in self.abilities(src, "static")]
+        for src, ab in bz_list:   # バトルゾーンの常在型能力（重ねたカードの下は除く）。affects.zone で他のゾーンのカードにも及ぶ
+            aff = ab.get("affects", {})
+            if ab.get("zone", "bz") != "bz":
+                continue   # 別のゾーンで働く常在型（シールド・ゴーの静的など）は、バトルゾーンの発生源からは働かない
+            if "mod" in ab and aff != "self" and (aff.get("zone", "bz") if isinstance(aff, dict) else "bz") == c.zone:
+                env = {"you": self.s.cards[src].controller, "self": self.s.ref(src)}
+                if self._subject_match(aff, cid, env, None, base=True) and \
+                        ("if" not in ab or self._static_cond(ab["if"], env)):
+                    mods.append(ab["mod"])
+        for src, ab in sh_list:   # シールドゾーンから働く常在型（G・城など。zone: shield を宣言した能力だけ）
+            aff = ab.get("affects", {})
+            if ab.get("zone") != "shield" or "mod" not in ab or aff == "self":
                 continue
-            for _, ab in self.abilities(src, "static"):
-                aff = ab.get("affects", {})
-                if ab.get("zone", "bz") != "bz":
-                    continue   # 別のゾーンで働く常在型（シールド・ゴーの静的など）は、バトルゾーンの発生源からは働かない
-                if "mod" in ab and aff != "self" and (aff.get("zone", "bz") if isinstance(aff, dict) else "bz") == c.zone:
-                    env = {"you": self.s.cards[src].controller, "self": self.s.ref(src)}
-                    if self._subject_match(aff, cid, env, None, base=True) and \
-                            ("if" not in ab or self._static_cond(ab["if"], env)):
-                        mods.append(ab["mod"])
-        for p in (0, 1):   # シールドゾーンから働く常在型（G・城など。zone: shield を宣言した能力だけ）
-            for src in self.s.zones["shield"][p]:
-                if not aff_others(src):
-                    continue
-                for _, ab in self.abilities(src, "static"):
-                    aff = ab.get("affects", {})
-                    if ab.get("zone") != "shield" or "mod" not in ab or aff == "self":
-                        continue
-                    if (aff.get("zone", "bz") if isinstance(aff, dict) else "bz") != c.zone:
-                        continue
-                    env = {"you": self.s.cards[src].controller, "self": self.s.ref(src)}
-                    if self._subject_match(aff, cid, env, None, base=True) and \
-                            ("if" not in ab or self._static_cond(ab["if"], env)):
-                        mods.append(ab["mod"])
+            if (aff.get("zone", "bz") if isinstance(aff, dict) else "bz") != c.zone:
+                continue
+            env = {"you": self.s.cards[src].controller, "self": self.s.ref(src)}
+            if self._subject_match(aff, cid, env, None, base=True) and \
+                    ("if" not in ab or self._static_cond(ab["if"], env)):
+                mods.append(ab["mod"])
         mods += [{**ce["mod"], "power": ce["mod"].get("power", 0) + ce["double_power"].get(cid, 0)}
                  if "double_power" in ce else ce["mod"]
                  for ce in self.s.continuous if self._ce_applies(ce, cid, ref)]
@@ -572,7 +610,7 @@ class Engine(SelectorMixin, EventMixin, InterpreterMixin, TurnMixin, CombatMixin
     def permits(self, cid: int, action: str, other: int | None = None, face: int | None = None) -> bool:
         """101.2:「できない」は「できる」に勝つ。禁止 → 許可 → 既定値の順に見る。
         other は相手側のカード（攻撃先・攻撃クリーチャー・ブロッカー）。要素の other フィルタはそれに当てる。"""
-        ch = self.chars(cid, face)
+        ch = self.chars_ro(cid, face)
 
         def hit(entries):
             for e in entries:

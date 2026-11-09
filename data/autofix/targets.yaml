@@ -1,7 +1,8 @@
+# deck_setup: deck_fix が使う仕込み済み開始局面（無ければ data/loops の LoopSpec から自動、それも無ければ冷たい開幕）。
 # 自動診断→改善の対象。combo は data/known_combos の id（holdout は自動で除外される）。
 # need を省くと core 部品、board を省くと leaf_parts の重み1.5以上の部品すべてで盤面の揃いを見る（一部だけ見ると診断が甘くなる）。
 targets:
-  - {combo: saga, deck: data/decks/saga_entry.yaml, seeds: 40}   # need=core部品、board=重み1.5以上の部品すべて(墓地サガ・シャコガイル、手札サガ・ドラゲリオン)
+  - {combo: saga, deck: data/decks/saga_entry.yaml, seeds: 40, deck_setup: tests/saga_prep_setup.yaml}   # need=core部品、board=重み1.5以上の部品すべて(墓地サガ・シャコガイル、手札サガ・ドラゲリオン)
   - {combo: tenmon, deck: data/decks/tenmon.yaml, seeds: 40}
   - {combo: knight_dmc, deck: data/decks/knight_dmc.yaml, seeds: 40}
   - {combo: akashic, deck: data/decks/akashic.yaml, seeds: 40}

@@ -71,8 +71,8 @@ def _rate(d: dict, turn: int) -> float:
 
 
 def two_stage(rules, deck_ids: list[str], opp_ids: list[str], combo: dict, seeds: list[int], ledger,
-              seed: int = 0, turn: int = 4, setup: dict | None = None, kinds=("add_parts", "add_prep", "cut_unused", "trim_parts"), n: int = 4,
-              unused: list[str] | None = None, adds: list[str] | None = None, coarse_budget: int = 40, top_k: int = 2, workers: int = 1, coarse_seeds: int | None = None, deadline: float | None = None, out_dir: str | Path | None = "data/deckplans/auto") -> dict:
+              seed: int = 0, turn: int = 4, setup: dict | None = None, kinds=("add_parts", "add_prep", "add_support", "cut_unused", "trim_parts"), n: int = 4,
+              support: dict | None = None, unused: list[str] | None = None, adds: list[str] | None = None, coarse_budget: int = 40, top_k: int = 2, workers: int = 1, coarse_seeds: int | None = None, deadline: float | None = None, out_dir: str | Path | None = "data/deckplans/auto") -> dict:
     """2段階: ①低い base_budget で全候補を同一シードで粗く比較 → ②粗い差が正の上位 top_k 件だけ通常予算で再比較し、
     有意に良ければ採用（採否は evaluate.decide のみ）。未変換カードを含む候補は粗比較にも回さない。"""
     rule = AcceptRule(turn=turn)
@@ -88,7 +88,7 @@ def two_stage(rules, deck_ids: list[str], opp_ids: list[str], combo: dict, seeds
     cands = []
     for k in kinds:
         for ch in C.PROPOSERS[k](base, rng, pool if k in ("add_parts", "trim_parts") else [], n=n, protect=set(pool),
-                                 unused=unused, adds=adds):
+                                 unused=unused, adds=adds, support=support):
             try:
                 cand = C.apply(base, ch)
             except ValueError:
@@ -161,3 +161,10 @@ def add_candidates(combo: dict, max_cost: int = 4) -> list[str]:
     """入れる側の候補: コンボの core 部品＋墓地への準備札（tools/suggest_prep）。"""
     from tools.suggest_prep import scan
     return core_names(combo) + [r["name"] for r in scan() if isinstance(r["cost"], int) and r["cost"] <= max_cost]
+
+
+def support_for(rules, deck_ids: list[str]) -> dict[str, list[str]]:
+    """デッキの文明に収まる加速・ドロー・サーチ札（カード全体から自動分類）。"""
+    from .pool import support_names
+    civs = {c for i in deck_ids if i in rules.cards for c in rules.cards[i].civs}
+    return support_names(civs)

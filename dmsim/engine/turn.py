@@ -5,10 +5,20 @@
 """
 from __future__ import annotations
 
+import functools
 import itertools
 
 from ..types import ActivateTask, CrossTask, HyperTask, PlayTask, TurnTask
 from .registry import STEPS, step, task
+
+
+def _read_only(fn):
+    """状態を読むだけのメソッド: 呼び出しの間は chars() の結果を使い回す（chars_scope）。"""
+    @functools.wraps(fn)
+    def w(self, *a, **k):
+        with self.chars_scope():
+            return fn(self, *a, **k)
+    return w
 
 
 class TurnMixin:
@@ -182,7 +192,7 @@ class TurnMixin:
                 bases = [c for c in self.bz_tops(p) if not self.s.cards[c].tapped]
                 if not bases:
                     continue
-                cheapest = max(fg.get("min", 1), fg["cost"] - max(self.chars(b)["cost"] for b in bases))
+                cheapest = max(fg.get("min", 1), fg["cost"] - max(self.chars_ro(b)["cost"] for b in bases))
                 if self._mana_choices(cid, p, fi, cost=cheapest, limit=1, civs=fg["civs"]):
                     seen_f.add(dn)
                     opt = {"key": f"play:{dn}:fushigi" if fi is None else f"play:{dn}:{fi}:fushigi",
@@ -215,7 +225,7 @@ class TurnMixin:
         """墓地から召喚する許可の状態。無制限なら {}、回数制限つき（ターン1回・未使用）なら {"once_src": 発生源}、
         許可が無い／使い切っていれば None。"""
         limited = None
-        for e in self.chars(cid)["allow"]:
+        for e in self.chars_ro(cid)["allow"]:
             if isinstance(e, str):
                 if e == "summon_from_graveyard":
                     return {}
@@ -231,7 +241,7 @@ class TurnMixin:
         無制限なら {}、回数制限つき（ターン1回・未使用）なら {"once_src": 発生源}、
         許可が無い／使い切っていれば None。"""
         limited = None
-        for e in self.chars(cid)["allow"]:
+        for e in self.chars_ro(cid)["allow"]:
             if isinstance(e, str):
                 if e == "summon_from_mana":
                     return {}
@@ -249,7 +259,7 @@ class TurnMixin:
         if not self.permits(cid, action):
             return False
         pool = [c for c in self.bz_tops(p) if not self.s.cards[c].tapped
-                and "creature" in self.chars(c)["types"]]
+                and "creature" in self.chars_ro(c)["types"]]
         return len(pool) >= mc["tap"] and bool(self._mana_choices(cid, p, fi, cost=mc["cost"], limit=1, civs=mc["civs"]))
 
     def _cross_options(self, p) -> list[dict]:
@@ -257,13 +267,13 @@ class TurnMixin:
         すでにクロスしているクリーチャー自身にはクロスしなおせない（303.4a）。"""
         out = []
         for g in self.bz_tops(p):
-            if "cross_gear" not in self.chars(g)["types"]:
+            if "cross_gear" not in self.chars_ro(g)["types"]:
                 continue
             cur = self.s.cards[g].crossed
             if not self._mana_choices(g, p, limit=1):
                 continue
             for c in self.bz_tops(p):
-                if "creature" in self.chars(c)["types"] and not (cur and cur == self.s.ref(c)):
+                if "creature" in self.chars_ro(c)["types"] and not (cur and cur == self.s.ref(c)):
                     out.append({"key": f"cross:{self.s.cards[g].defn}:{self.s.cards[c].defn}", "cid": g, "target": self.s.ref(c)})
         return out
 
@@ -315,7 +325,7 @@ class TurnMixin:
     def _opt_reduced(self, cid, face, d, cost):
         """任意の軽減（opt_reduce / cost_may）をすべて使った場合の最安コスト（実行可能かの判定用）。"""
         base = d.cost if cost is None else cost
-        o = self.chars(cid, face)["opt_reduce"]
+        o = self.chars_ro(cid, face)["opt_reduce"]
         if o:
             n = 1
             if o.get("do") and o.get("per"):   # 支払い時の行動1件につき軽減: 選べる最大数で見積もる
@@ -331,10 +341,11 @@ class TurnMixin:
         """実際に得る軽減量: per なら支払い時の行動の件数 × amount。"""
         return o["amount"] * (len(fuel) if o.get("per") else 1)
 
+    @_read_only
     def _cost_may_avail(self, cid, face=None) -> list[dict]:
         """今使える任意のコスト軽減（mod cost_may）。once のものは発生源ごとにターン中1回まで。"""
         out = []
-        for e in self.chars(cid, face)["cost_may"]:
+        for e in self.chars_ro(cid, face)["cost_may"]:
             if e.get("once") and self.s.turn_counters.get(f"cost_may:{e['src']}"):
                 continue
             out.append(e)
@@ -344,23 +355,24 @@ class TurnMixin:
         """ササゲール: ディスペクターを召喚する時、破壊してコストを減らせる自分のクリーチャー。"""
         if not any("ディスペクター" in r for r in d.races):
             return []
-        return [c for c in self.bz_tops(p) if self.chars(c)["sac_reduce"] > 0]
+        return [c for c in self.bz_tops(p) if self.chars_ro(c)["sac_reduce"] > 0]
 
     def _sac_reduced(self, d, cost, sacs):
         if not sacs:
             return cost
-        return max(0, (d.cost if cost is None else cost) - sum(self.chars(c)["sac_reduce"] for c in sacs))
+        return max(0, (d.cost if cost is None else cost) - sum(self.chars_ro(c)["sac_reduce"] for c in sacs))
 
     def _tap_pool(self, p) -> list[int]:
-        return [c for c in self.bz_tops(p) if "creature" in self.chars(c)["types"] and not self.s.cards[c].tapped]
+        return [c for c in self.bz_tops(p) if "creature" in self.chars_ro(c)["types"] and not self.s.cards[c].tapped]
 
     def _tap_reduced(self, d, p, cost, tapped):
         """ハイパーエナジー: タップしたクリーチャー1体につきコストを減らす（床は0）。tapped=None は最大限タップした場合。"""
         if not d.tap_reduce:
             return cost
-        n = len({self.chars(c)["cost"] for c in self._tap_pool(p)}) if tapped is None else len(tapped)
+        n = len({self.chars_ro(c)["cost"] for c in self._tap_pool(p)}) if tapped is None else len(tapped)
         return max(0, (d.cost if cost is None else cost) - n * d.tap_reduce)
 
+    @_read_only
     def _evo_sources(self, cid, p, face=None) -> list[int]:
         """適正な進化元（801.1a）。evolve_zone（既定は自分のバトルゾーン）のクリーチャーで
         evolve_from を満たすもの（超無限墓地進化は自分の墓地から選ぶ）。"""
@@ -377,7 +389,7 @@ class TurnMixin:
         f = self.cdef(cid).face(face)
         z = f.evolve_zone
         pool = self.bz_tops(p) if z == "bz" else self.zlist(z, p)
-        return [c for c in pool if ("creature" in self.chars(c)["types"] or self.permits(c, "evolve_base"))]
+        return [c for c in pool if ("creature" in self.chars_ro(c)["types"] or self.permits(c, "evolve_base"))]
 
     def _evo_v_ready(self, cid, p, face=None) -> bool:
         """進化V: フィルタごとに別々の進化元が確保できるか（貪欲に照合）。"""
@@ -392,6 +404,7 @@ class TurnMixin:
             used.add(hit)
         return True
 
+    @_read_only
     def _mana_choices(self, cid, p, face=None, cost: int | None = None, limit: int = 32, civs=None) -> list[list[int]]:
         """支払いに使うマナの組（112.2a）。文明は1文明につき別々の1枚で満たし、マナの数値の合計がコストに一致。
         cost: 実行時に確定したコスト（進化元数の軽減など）。指定なければカード定義のコスト。
@@ -407,7 +420,7 @@ class TurnMixin:
             return []
         groups: dict = {}
         for c in untapped:   # 裏向きマナは無色として別グループに分ける（水晶武装）。文明は特性（chars）で見る: 「マナゾーンにあるカードをすべての文明として扱う」等が効く（第123弾）
-            civkey = () if self.s.cards[c].face_down else tuple(sorted(self.chars(c)["civs"]))
+            civkey = () if self.s.cards[c].face_down else tuple(sorted(self.chars_ro(c)["civs"]))
             groups.setdefault((self.s.cards[c].defn, self.s.cards[c].face_down, civkey), []).append(c)
         names = sorted(groups)
         need = list(civs) if civs is not None else list(d.civs)
@@ -637,7 +650,7 @@ def st_attack(eng, t):                                  # 505
     s = eng.s
     a = s.active
     atk = eng._attack_options(a)
-    forced = {o["cid"] for o in atk if "attack" in eng.chars(o["cid"])["require"]}   # 506.1b 攻撃を強制されたクリーチャーは攻撃させなくてはいけない
+    forced = {o["cid"] for o in atk if "attack" in eng.chars_ro(o["cid"])["require"]}   # 506.1b 攻撃を強制されたクリーチャーは攻撃させなくてはいけない
     act = [o for o in eng._activate_options(a, atk) if o.get("tap") not in forced]       # タップ能力で攻撃を免れることはできない（タップしない under 形は免れないので可）
     opts = atk + act + ([] if forced else [{"key": "pass"}])
     ans, d = eng.ask(t, a, "attack", opts)
@@ -708,14 +721,16 @@ def h_play(eng, t):
         return None
     d = eng.cdef(cid).face(face)
     action = "summon" if d.is_creature() else "generate" if d.is_permanent() else "cast"
-    if not eng.permits(cid, action) or (d.is_creature() and not eng.permits(cid, "enter_bz")):
+    with eng.chars_scope():   # 読み取りだけの判定
+        denied = not eng.permits(cid, action) or (d.is_creature() and not eng.permits(cid, "enter_bz"))
+    if denied:
         eng._pop(t)
         return None
     # スーパー・S・トリガー: シールドが1つもない時に使ったら追加能力を得る（印は移動後に付ける）
-    sst_bonus = bool(t.get("st") and "super_s_trigger" in eng.chars(cid, face)["keywords"]
+    sst_bonus = bool(t.get("st") and "super_s_trigger" in eng.chars_ro(cid, face)["keywords"]
                      and not eng.zlist("shield", p))
     # S・トリガー・プラス: 相手のターンで、そのターンに自分のシールドが2つ以上ブレイクされていれば追加能力を得る
-    stp_bonus = bool(t.get("st") and "s_trigger_plus" in eng.chars(cid, face)["keywords"]
+    stp_bonus = bool(t.get("st") and "s_trigger_plus" in eng.chars_ro(cid, face)["keywords"]
                      and s.active != p and s.turn_counters.get(f"broken:{p}", 0) >= 2)
     if t.get("fushigi") and not t.get("fushigi_done"):   # フシギバース: 自分のクリーチャー1体をタップしてマナに置き、差額を払う
         fg = d.fushigi
@@ -727,7 +742,7 @@ def h_play(eng, t):
         if dd:
             return dd
         base = cands[ans[0]]
-        override = max(fg.get("min", 1), fg["cost"] - eng.chars(base)["cost"])
+        override = max(fg.get("min", 1), fg["cost"] - eng.chars_ro(base)["cost"])
         if not eng._mana_choices(cid, p, face, cost=override, limit=1, civs=fg["civs"]):
             eng._pop(t)   # 差額が払えない組み合わせでは始められない
             return None
@@ -792,8 +807,8 @@ def h_play(eng, t):
         t["evo"] = [s.ref(srcs[i]) for i in ans]
     if d.tap_reduce and not t["free"] and not t.get("tap_done"):     # ハイパーエナジー: コストが異なるクリーチャーを好きな数タップ
         chosen = t.setdefault("tap", [])
-        used = {eng.chars(c)["cost"] for c in chosen}
-        cands = [c for c in eng._tap_pool(p) if c not in chosen and eng.chars(c)["cost"] not in used]
+        used = {eng.chars_ro(c)["cost"] for c in chosen}
+        cands = [c for c in eng._tap_pool(p) if c not in chosen and eng.chars_ro(c)["cost"] not in used]
         if cands:
             ans, dd = eng.ask(t, p, "choose_cards", [eng._card_option(c) for c in cands], 0, 1)
             if dd:
@@ -815,7 +830,7 @@ def h_play(eng, t):
         t["sac_done"] = True
     if t.get("climb") and not t.get("climb_done"):   # ムゲンクライム: 自分のクリーチャーを指定数タップする
         mc = d.mugen_climb
-        pool = [c for c in eng.bz_tops(p) if not s.cards[c].tapped and "creature" in eng.chars(c)["types"]]
+        pool = [c for c in eng.bz_tops(p) if not s.cards[c].tapped and "creature" in eng.chars_ro(c)["types"]]
         if len(pool) < mc["tap"]:
             eng._pop(t)
             return None
@@ -948,7 +963,7 @@ def h_play(eng, t):
                     return True
                 (cv, n), rest = st[0], st[1:]
                 pool = [c for c in eng.zlist("mana", p) if not s.cards[c].tapped and c not in used
-                        and cv in eng.chars(c)["civs"]]
+                        and cv in eng.chars_ro(c)["civs"]]
                 from itertools import combinations
                 return any(_feasible(rest, used | set(comb)) for comb in combinations(pool, min(n, len(pool))) if len(pool) >= n)
             if t.get("od_yn") is None:
@@ -965,7 +980,7 @@ def h_play(eng, t):
                 while sub < len(step):
                     cv, n = step[sub]
                     pool = [c for c in eng.zlist("mana", p) if not s.cards[c].tapped
-                            and cv in eng.chars(c)["civs"]]
+                            and cv in eng.chars_ro(c)["civs"]]
                     ans, dd = eng.ask(t, p, "choose_cards", [eng._card_option(c) for c in pool], n, n)
                     if dd:
                         t["od_idx"], t["od_sub"] = idx, sub

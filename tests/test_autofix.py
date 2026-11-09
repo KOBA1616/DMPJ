@@ -176,13 +176,13 @@ def test_budget_allocation_and_order(tmp_path):
     # 重いデッキ(a: 2.5秒/候補/局)は同じ枠なら軽いデッキ(b: 0.33)より小さく配分される
     ca = B.allocate(hist["a"], 1200, 5, 30)
     cb = B.allocate(hist["b"], 1200, 5, 30)
-    assert ca[0] * ca[1] * ca[2] <= cb[0] * cb[1] * cb[2] and ca[1] >= 8 and ca[0] >= 3
+    assert ca[0] * ca[1] <= cb[0] * cb[1] and ca[1] >= 8 and ca[0] >= 3
     assert B.allocate(None, 1e9, 5, 30, probe=0.01) == (5, 30, 40, 2)                                      # 枠が十分なら上限のまま
     heavy = B.allocate(None, 1200, 6, 30, probe=8.5)                                        # 履歴なしでも実測が重ければ予算(深さ)から縮める
     light = B.allocate(None, 1200, 6, 30, probe=0.3)
-    assert heavy[2] < light[2] == 40 and heavy[0] >= 3 and heavy[1] >= 8
+    assert heavy[0] * heavy[1] < light[0] * light[1] and heavy[2] == light[2] == 40 and heavy[0] >= 3 and heavy[1] >= 8     # 重いほど局数・候補を縮める（予算は据え置き）
     ex = B.allocate(None, 500, 6, 8, probe=5.4, seeds=8, top_k=2)                           # knight_dmc 実測: 再比較（通常予算）が支配的
-    assert ex[3] <= 1 and ex[2] == 10                                                       # 再比較を減らし、粗比較の予算も最小まで
+    assert ex[3] <= 2 and ex[1] == 8 and ex[0] == 3
     h = {}
     B.update(h, "x", {"sec": 100.0, "evaluated": 20, "complete": False}, 5, 12, 1.0)
     assert h["x"]["complete"] is False and h["x"]["cands"] == 20
@@ -199,3 +199,27 @@ def test_analytic_p_cards_monotone_and_crn():
     assert p_cards(deck, need) == p_cards(deck, need)                        # 同じ乱数なので再現する
     assert p_cards(deck, {}) == 0.0
     assert abs(p_cards(deck, need, trials=20000) - (1 - (38 / 40) * (37 / 39) * (36 / 38) * (35 / 37) * (34 / 36) * (33 / 35) * (32 / 34) * (31 / 33) * (30 / 32))) < 0.02
+
+
+def test_deck_fix_resolve_setup():
+    import sys
+    sys.path.insert(0, "tools")
+    import deck_fix
+    from dmsim.defs import load_rules
+    r = load_rules()
+    sp, o = deck_fix.resolve_setup(r, {"combo": "saga", "deck_setup": "tests/saga_prep_setup.yaml"})
+    assert o == "tests/saga_prep_setup.yaml" and "p0" in sp
+    sp, o = deck_fix.resolve_setup(r, {"combo": "tenmon"})
+    assert o == "LoopSpec自動" and "deck_exact" not in sp
+    assert deck_fix.resolve_setup(r, {"combo": "nonexistent_combo"}) == (None, "冷たい開幕")
+
+
+def test_parts_setup_from_combo_table(rules):
+    from dmsim.deckplan.setup import parts_setup
+    ids = [i for i in rules.cards if i != "T001" and rules.cards[i].civs][:12]
+    key, others = ids[0], ids[1:]
+    combo = {"parts": [{"id": key, "role": "core"}]}
+    deck = [key] * 4 + others * 3
+    sp = parts_setup(rules, combo, deck)
+    assert sp["p0"]["hand"][0] == key and len(sp["p0"]["mana"]) == 5 and key not in sp["p0"]["mana"]
+    assert parts_setup(rules, combo, ["T001"] * 40) is None

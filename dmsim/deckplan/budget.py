@@ -34,6 +34,7 @@ def order_targets(names: list[str], hist: dict) -> list[str]:
     return sorted(names, key=key)
 
 
+FINE_FACTOR = 1.5          # 通常予算(200)の1局は粗比較(40)の何倍かかるかの目安（実測が少ないので控えめ）
 REF_BUDGET = 40            # unit（1候補×1局あたりの秒）は粗比較の base_budget=40 に換算した値で持つ（所要時間は探索予算にほぼ比例）
 MIN_BUDGET = 10
 
@@ -65,12 +66,12 @@ def allocate(h: dict | None, slot_sec: float, max_cands: int, max_cs: int, min_c
              probe: float | None = None, max_budget: int = REF_BUDGET, seeds: int = 30, top_k: int = 2, fine_budget: int = 200) -> tuple[int, int, int, int]:
     """枠 slot_sec に収まる (種類ごとの候補数, 粗比較の局数, 粗比較の探索予算, 通常予算で再比較する件数)。
     粗比較だけでなく、通常予算（既定200）の再比較（base＋上位 top_k 件 × seeds 局）の時間も先に確保する（重いデッキでは再比較が支配的）。
-    重いデッキほど、まず再比較の件数、次に粗比較の探索予算（深さ）を半分ずつ MIN_BUDGET まで、次に局数、最後に候補数を縮める。
+    重いデッキほど、まず再比較の件数、次に粗比較の局数、最後に候補数を縮める（探索予算は実測で時間にほぼ効かないので縮めない）。
     単価は 履歴と実測(probe)の大きい方（履歴なしで実測もなければ既定値）。cands は評価した候補の総数なので kinds 倍で数える。"""
     cands_u = [x for x in (unit_sec(h), probe) if x is not None]
     u1 = max(cands_u) if cands_u else DEFAULT_UNIT_SEC
     total = slot_sec * SAFETY
-    fine_one = u1 * seeds * fine_budget / REF_BUDGET                 # 通常予算で1デッキを seeds 局測る時間
+    fine_one = u1 * seeds * FINE_FACTOR                              # 通常予算で1デッキを seeds 局測る時間（予算にほぼ比例しないので固定倍率）
     k = top_k
     while k > 1 and (k + 1) * fine_one > total * 0.5:               # 再比較に枠の半分までしか使わない（まず件数を減らす）
         k -= 1
@@ -79,9 +80,7 @@ def allocate(h: dict | None, slot_sec: float, max_cands: int, max_cs: int, min_c
         k, budget = 0, total
     u = u1 * kinds
     cands, cs, b = max_cands, max_cs, max_budget
-    cost = lambda: u * cands * cs * b / REF_BUDGET
-    while b > MIN_BUDGET and cost() > budget:
-        b = max(MIN_BUDGET, b // 2)
+    cost = lambda: u * cands * cs                                    # 実測: base_budget を 40→10 にしても1局の時間はほとんど縮まない（knight_dmc）。予算は縮めず局数・候補数で調整する
     while cs > min_cs and cost() > budget:
         cs -= 1
     while cands > min_cands and cost() > budget:

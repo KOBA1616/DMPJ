@@ -259,8 +259,17 @@ class TurnSearch:
                 return d
             eng.answer(self.opp_policy(eng, d))
 
+    rollout_cap = 2000     # 貪欲な先読みの最大の決定数。通常は数手で終わる（実測 5 手以下）。超えたら終わらない繰り返しとみなす
+
     def _rollout(self, eng: Engine) -> Engine:
+        n = 0
         while (d := self._settle(eng)) is not None:
+            n += 1
+            if n > self.rollout_cap:
+                # 貪欲な手が同じ状況を繰り返して終わらない。エンジンの step_limit（約2万ステップ）まで回しても同じ結果
+                # （勝者なし・-WIN/2 の評価）になるので、数秒かかる空回しを打ち切る
+                eng.s.result = {"winner": None, "reason": "step_limit", "turn": eng.s.turn}
+                break
             eng.answer(candidates(eng, d, self.w, cap=1)[0])
         return eng
 

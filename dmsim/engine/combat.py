@@ -13,13 +13,13 @@ class CombatMixin:
     def _breaker(self, env) -> dict:
         """効果でブレイクする時の、ブレイクしたクリーチャー（効果の発生源がバトルゾーンのクリーチャーなら）。"""
         me = env.get("self")
-        if me and self.s.alive(me) and self.s.cards[me[0]].zone == "bz" and "creature" in self.chars(me[0])["types"]:
+        if me and self.s.alive(me) and self.s.cards[me[0]].zone == "bz" and "creature" in self.chars_ro(me[0])["types"]:
             return {"breaker": me}
         return {}
 
     def _can_attack(self, cid) -> bool:
         c = self.s.cards[cid]
-        if c.tapped or "creature" not in self.chars(cid)["types"]:
+        if c.tapped or "creature" not in self.chars_ro(cid)["types"]:
             return False
         return c.entered_turn != self.s.turn or self.permits(cid, "attack_summoning_sick")   # 506.1a
 
@@ -30,12 +30,12 @@ class CombatMixin:
             if not self._can_attack(cid):
                 # アビスラッシュで出たターンだけ、召喚酔いでもプレイヤーへの攻撃はできる（クリーチャーは不可）
                 if self.s.turn_counters.get(f"rush:{cid}") == self.s.turn and not self.s.cards[cid].tapped \
-                        and "creature" in self.chars(cid)["types"] and self.permits(cid, "attack_player"):
+                        and "creature" in self.chars_ro(cid)["types"] and self.permits(cid, "attack_player"):
                     out.append({"key": f"attack:{dfn}:player", "cid": cid, "target": "player"})
                 continue
             player_opt = {"key": f"attack:{dfn}:player", "cid": cid, "target": "player"} \
                 if self.permits(cid, "attack_player") else None
-            allow = [e for e in self.chars(cid)["allow"] if isinstance(e, dict) and e["action"] == "attack_creature"]
+            allow = [e for e in self.chars_ro(cid)["allow"] if isinstance(e, dict) and e["action"] == "attack_creature"]
             creature_opts = []
             for tc in self.bz_tops(1 - a):
                 # 505.2 既定ではタップ状態のクリーチャーだけ。「タップされていないクリーチャーを攻撃できる」(マッハファイター等)は allow で広げる
@@ -44,7 +44,7 @@ class CombatMixin:
                     creature_opts.append({"key": f"attack:{dfn}:{self.s.cards[tc].defn}", "cid": cid,
                                           "target": self.s.ref(tc)})
             # 「可能ならこのクリーチャーを攻撃する」（第51弾）: 合法な攻撃先になる誘引持ちがいれば、攻撃先はそれらに限る
-            taunts = [o for o in creature_opts if self.chars(o["target"][0])["must_be_attacked"]]
+            taunts = [o for o in creature_opts if self.chars_ro(o["target"][0])["must_be_attacked"]]
             if taunts:
                 out += taunts
             else:
@@ -151,11 +151,11 @@ class CombatMixin:
 
     def _battle(self, x, y):
         """バトル（701.13）。結果で誘発した効果はその場で解決してからバトルを終える。"""
-        px = self.chars(x[0])["power"] + self._battle_bonus(x, attacking=True, opponent=y)      # x は攻撃側
-        py = self.chars(y[0])["power"] + self._battle_bonus(y, opponent=x)
+        px = self.chars_ro(x[0])["power"] + self._battle_bonus(x, attacking=True, opponent=y)      # x は攻撃側
+        py = self.chars_ro(y[0])["power"] + self._battle_bonus(y, opponent=x)
         # 第61弾: すべてのバトルに勝つクリーチャーはパワーに関わらず勝つ
-        x_wins = self.chars(x[0])["win_all_battles"]
-        y_wins = self.chars(y[0])["win_all_battles"]
+        x_wins = self.chars_ro(x[0])["win_all_battles"]
+        y_wins = self.chars_ro(y[0])["win_all_battles"]
         if x_wins and y_wins:
             losers_by_power = []   # 両方勝つ場合は相打ちなし
         elif x_wins:
@@ -277,7 +277,7 @@ def h_attack(eng, t):
         guards = [] if t["target"] == "player" else [          # 507.1a ガードマン: 攻撃されている自分の他のクリーチャーがいる時だけ
             c for c in eng.bz_tops(1 - a) if not s.cards[c].tapped and [c, s.cards[c].gen] != t["target"]
             and eng.permits(c, "guardman", att[0])]
-        forced = [c for c in blockers if "block" in eng.chars(c)["require"]]   # 507.1b ブロックを強制されたクリーチャーは必ず選ぶ
+        forced = [c for c in blockers if "block" in eng.chars_ro(c)["require"]]   # 507.1b ブロックを強制されたクリーチャーは必ず選ぶ
         opts = [eng._card_option(c) for c in blockers] + \
                [eng._card_option(c, key=f"guard:{s.cards[c].defn}") for c in guards] + ([] if forced else [{"key": "no_block"}])
         ans, d = eng.ask(t, 1 - a, "block", opts)
@@ -309,7 +309,7 @@ def h_attack(eng, t):
     if ph == 4:                                               # 509 ダイレクトアタック
         if t["target"] == "player" and eng.zlist("shield", 1 - a):
             # 509.2c 複数のブレイカー能力を持つなら、どの能力を使うかを選ぶ（どれも使わずに1つだけは選べない）
-            counts = sorted(set(eng.chars(att[0])["break_opts"])) or [1]
+            counts = sorted(set(eng.chars_ro(att[0])["break_opts"])) or [1]
             opts = [{"key": f"breaks:{n}"} for n in counts]
             ans, d = eng.ask(t, a, "choose_breaker", opts)
             if d:
