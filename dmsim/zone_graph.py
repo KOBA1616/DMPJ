@@ -199,6 +199,8 @@ def _subject_ok(m: Move, a: Bundle, prem: Premise, bcd, rules) -> bool:
         if m.owner == "opp":   # 相手のカードを相手の手札などへ動かしても、自分のカードの前提は満たさない
             return False
         return (a.card == bcd.id) if m.ref_self else _match(m.flt, bcd)
+    if not isinstance(subj, dict):   # "self" 以外の文字列は主語を絞らない
+        return True
     sf = subj.get("filter", {})
     if (subj.get("owner") == "opp") != (m.owner == "opp") and subj.get("owner") in ("you", "opp"):
         return False
