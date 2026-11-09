@@ -46,7 +46,16 @@ jobs:
             run=$(gh run list --workflow tests.yml --branch "$b" --event workflow_dispatch --limit 1 --json databaseId,status,conclusion -q '.[0]')
             st=$(echo "$run" | python3 -c 'import sys,json; d=json.loads(sys.stdin.read() or "{}"); print(d.get("status",""), d.get("conclusion",""))')
             case "$st" in
-              "completed success") gh pr merge "$pr" --squash --delete-branch; exit 0 ;;
+              "completed success")
+                num="${pr##*/}"
+                # API でマージする（ローカルの git を触らない）。失敗したら、原因の文面を Issue に残す（ログが読めなくても直せるように）
+                if out=$(gh api -X PUT "repos/$GITHUB_REPOSITORY/pulls/$num/merge" -f merge_method=squash 2>&1); then
+                  gh api -X DELETE "repos/$GITHUB_REPOSITORY/git/refs/heads/$b" || true
+                  exit 0
+                fi
+                gh label create tests-failing --color B60205 2>/dev/null || true
+                gh issue create --label tests-failing --title "combo-hunt: tests 成功後のマージに失敗" --body "$pr: $out"
+                exit 1 ;;
               completed*) gh pr comment "$pr" --body "tests が失敗したのでマージしない（$st）。"; gh label create tests-failing --color B60205 2>/dev/null || true
                           gh issue create --label tests-failing --title "combo-hunt の PR で tests が失敗" --body "$pr の tests が失敗。実行一覧: $GITHUB_SERVER_URL/$GITHUB_REPOSITORY/actions/workflows/tests.yml"; exit 1 ;;
             esac
