@@ -1,6 +1,8 @@
 """セレクタ・式・条件の評価（効果DSLの「何を」「いくつ」「いつなら」）。"""
 from __future__ import annotations
 
+from .registry import read_only
+
 
 class SelectorMixin:
     def _expr_refs(self, v, env):
@@ -220,6 +222,7 @@ class SelectorMixin:
         refs = [r for r in refs if r and self.s.alive(r)]
         return refs[0][0] if refs else None
 
+    @read_only
     def candidates(self, sel: dict, env: dict) -> list[int]:
         s = self.s
         if "under_of" in sel:   # 「バトルゾーンのクリーチャーの下にあるカード」（メテオバーンなど）

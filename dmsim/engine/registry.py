@@ -55,3 +55,14 @@ def step(name: str):
         STEPS[name] = fn
         return fn
     return deco
+
+
+def read_only(fn):
+    """状態を読むだけのメソッド: 呼び出しの間は chars() の結果を使い回す（chars_scope）。状態を書き換える処理を呼んではならない。"""
+    import functools
+
+    @functools.wraps(fn)
+    def w(self, *a, **k):
+        with self.chars_scope():
+            return fn(self, *a, **k)
+    return w
