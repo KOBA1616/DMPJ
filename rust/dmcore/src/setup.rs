@@ -85,8 +85,8 @@ pub fn new_game(spec: &NewGameSpec) -> GameState {
         }
     }
     let mut s = GameState {
-        active: spec.first_player, cards, continuous: vec![], deck_emptied: vec![], delayed: vec![], ev_seq: 0,
-        extra_turns: vec![], first_player: spec.first_player, hold: vec![], pending: vec![], r#pub: vec![], result: None,
+        active: spec.first_player, cards, continuous: vec![], deck_emptied: vec![], declares: Map::new(), delayed: vec![], ev_seq: 0,
+        extra_turns: vec![], first_player: spec.first_player, game_counters: Map::new(), hold: vec![], pending: vec![], prev_counters: Map::new(), r#pub: vec![], result: None,
         rng: spec.seed, sba_held: vec![], seq: 0, skip_rest: false, step: "start".to_string(), step_mods: vec![],
         steps_this_turn: 0, tasks: vec![], trace: None, turn: 1, turn_counters: Map::new(), waiting: None,
         windows: vec![], zones,

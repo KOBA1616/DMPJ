@@ -15,6 +15,7 @@ pub struct Card {
     pub crossed: Option<Value>,
     pub defn: String,
     pub drawn_turn: i64,
+    pub dswitched: bool,
     pub entered_seq: i64,
     pub entered_turn: i64,
     pub exlife_of: Option<Value>,
@@ -32,6 +33,8 @@ pub struct Card {
     pub seals: Vec<i64>,
     pub sst: bool,
     pub stp: bool,
+    pub strigger_off: bool,
+    pub strigger_on: bool,
     pub tapped: bool,
     pub top_of: i64,
     pub under: Vec<i64>,
@@ -42,10 +45,10 @@ pub struct Card {
 impl Card {
     pub fn new(cid: i64, defn: &str, owner: i64) -> Card {
         Card {
-            bazurenda: 0, cid, controller: owner, crossed: None, defn: defn.to_string(), drawn_turn: -1,
+            bazurenda: 0, cid, controller: owner, crossed: None, defn: defn.to_string(), drawn_turn: -1, dswitched: false,
             entered_seq: 0, entered_turn: -1, exlife_of: None, face: -1, face_down: false, face_up: false,
             gen: 0, hyper: false, link: 0, no_untap_next: false, odrive: false, odrive_civs: vec![],
-            owner, seal_of: -1, seals: vec![], sst: false, stp: false, tapped: false, top_of: -1,
+            owner, seal_of: -1, seals: vec![], sst: false, stp: false, strigger_off: false, strigger_on: false, tapped: false, top_of: -1,
             under: vec![], vivid: false, zone: "deck".to_string(),
         }
     }
@@ -57,12 +60,15 @@ pub struct GameState {
     pub cards: Vec<Card>,
     pub continuous: Vec<Value>,
     pub deck_emptied: Vec<i64>,
+    pub declares: Map<String, Value>,
     pub delayed: Vec<Value>,
     pub ev_seq: i64,
     pub extra_turns: Vec<i64>,
     pub first_player: i64,
+    pub game_counters: Map<String, Value>,
     pub hold: Vec<i64>,
     pub pending: Vec<Value>,
+    pub prev_counters: Map<String, Value>,
     pub r#pub: Vec<Value>,
     pub result: Option<Value>,
     pub rng: u64,

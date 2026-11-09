@@ -58,3 +58,10 @@ Rust 版と Python 版は、同じ「エンジン疑似API」（プロセス内�
 - 「plain」の条件に、種族コマンド（出た時の seal_release が走る）を除外する条件を追加。lockstep が見つけた差で、段階を進めるたびに plain の定義を広げる運用が機能している。
 - 速度（plain の1局・約37手）: Python 約15 ms / Rust 約0.6 ms（約25倍、fork 込み）。
 - 次: 2-c セレクタ・式・条件・特性計算（能力を持つ札へ）。
+
+## 段階2-c（第1弾）の結果（2026-11-09）
+- 範囲: 自分自身にだけ及ぶ単純な常在型（allow: block / attack_summoning_sick / slayer / guardman、deny: attack_player / attack_creature / be_blocked / be_attacked、breaks）だけのクリーチャー。ブロッカー・スピードアタッカー・スレイヤー・W/T/Qブレイカー・攻撃不可などの札で約560枚。ブロック・ガードマン・スレイヤー・複数ブレイカーの選択が lockstep の対象になった。
+- 実カードのランダムなデッキ×360シードで、全局が決定と digest まで一致。速度は1局で Python 約40 ms / Rust 約1.5 ms（約27倍）。
+- Python 側が先へ進んでいた分に追従: 状態の新項目（dswitched / strigger_* / prev_counters / game_counters / declares）、履歴カウンタ（_record_history）、battle_end、attack_end.blocked、ハイパーの解除条件。
+- ドリフト対策: ①tests/test_rust_schema_sync.py（Rust の状態項目が Python の dataclass と一致するかをビルド無しで検査）②.github/workflows/rust-lockstep.yml（Rust をビルドして lockstep を回す。情報提供で必須ではない）。Python 側のエンジン変更に Rust が遅れると、PR に失敗の抜粋が出る。
+- 次: 誘発（trigger）と置換、選択肢をつくる式・条件・セレクタ（2-d）。札の約7割は誘発を持つので、ここが山場。

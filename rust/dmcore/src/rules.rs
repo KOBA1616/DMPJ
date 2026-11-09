@@ -12,6 +12,12 @@ pub struct CardDef {
     pub power: i64,
     pub mana: i64,
     pub plain: bool,
+    #[serde(default)]
+    pub allow: Vec<String>,
+    #[serde(default)]
+    pub deny: Vec<String>,
+    #[serde(default)]
+    pub breaks: Vec<i64>,
 }
 
 #[derive(Deserialize, Clone, Debug)]

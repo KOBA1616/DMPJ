@@ -42,7 +42,7 @@ def test_non_plain_is_structured_unsupported(env):
 
 def test_non_plain_card_rejected_at_open(env):
     r, b, _ = env
-    ids = [i for i in r.cards if i.startswith("dm")][:1] * 40
+    ids = [i for i, d in r.cards.items() if i.startswith("dm") and not rustcore._is_plain(d)][:1] * 40
     with pytest.raises(rustcore.dmcore.Unsupported):
         rustcore.RustSession.open(r, {"decks": [ids, ids], "seed": 1}, b)
 
@@ -54,3 +54,35 @@ def test_full_game_matches(env, pol, seed):
     a, b = _pair(env, seed, seed % 2)
     res = lockstep(a, b, f"random:{seed}" if pol == "first" else pol)
     assert res["divergence"] is None and res["ok"] is True and res["steps"] >= 5
+
+
+@pytest.fixture(scope="module")
+def real_env():
+    """確認前の変換結果（converted.yaml）も含めた全カード。テストの既定は除外しているが、エンジンの一致検査は広い札の集合で行う。"""
+    import os
+    old = os.environ.pop("DMSIM_SKIP_CONVERTED", None)
+    try:
+        r = load_rules()
+    finally:
+        if old is not None:
+            os.environ["DMSIM_SKIP_CONVERTED"] = old
+    return r, rustcore.rules_bundle(r)
+
+
+def _portable(r, cost_max=6):
+    return [i for i, d in r.cards.items() if i.startswith("dm") and rustcore._is_plain(d) and d.cost <= cost_max]
+
+
+@pytest.mark.parametrize("seed", range(1, 41))
+def test_real_cards_match(real_env, seed):
+    """実カード（自分自身への許可・禁止・ブレイク数だけを持つクリーチャー: ブロッカー・スピードアタッカー・スレイヤー・
+    W/T/Qブレイカー等）のランダムなデッキで、1局が決定と digest まで一致する。"""
+    import random
+    r, b = real_env
+    pool = _portable(r)
+    assert len(pool) > 200
+    rnd = random.Random(seed)
+    spec = {"kind": "new_game", "decks": [[rnd.choice(pool) for _ in range(40)] for _ in range(2)], "seed": seed,
+            "first_player": seed % 2}
+    res = lockstep(Session.open(r, spec), rustcore.RustSession.open(r, spec, b), f"random:{seed}")
+    assert res["divergence"] is None and res["ok"] is True

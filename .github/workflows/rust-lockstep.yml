@@ -1,0 +1,41 @@
+# Rust 版エンジン（rust/dmcore）が Python 版と1手ずつ一致するかの検査。
+# Python 側のエンジン・状態を変える PR で、Rust 版が追従していないとここが赤くなる（情報提供。tests の必須検査ではない）。
+# 赤くなったら: Rust 担当（Rust 化スレッド）へ知らせる。Python 側の変更を止める必要はない。
+name: rust-lockstep
+on:
+  workflow_dispatch:
+  pull_request:
+    paths: ["dmsim/**", "rust/**", "tests/test_rust*.py", ".github/workflows/rust-lockstep.yml"]
+  push:
+    branches: [main]
+    paths: ["dmsim/**", "rust/**", "tests/test_rust*.py"]
+permissions:
+  contents: read
+  pull-requests: write
+jobs:
+  lockstep:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: pip install -q pytest pyyaml jsonschema maturin
+      - name: Build dmcore
+        run: |
+          cd rust/dmcore
+          maturin build --release
+          pip install -q target/wheels/*.whl
+      - name: Lockstep (Python vs Rust)
+        run: |
+          set -o pipefail
+          python -m pytest -q tests/test_rust_engine.py tests/test_rustcore.py tests/test_rust_schema_sync.py -rf 2>&1 | tee /tmp/ls.log
+      - name: Report drift
+        if: failure() && github.event_name == 'pull_request'
+        env:
+          GH_TOKEN: ${{ github.token }}
+          PR: ${{ github.event.pull_request.number }}
+        run: |
+          { echo "## rust-lockstep 失敗（Rust 版が Python 版に追従していない可能性）"; echo '```'; grep -E "^(FAILED|ERROR)|^E  " /tmp/ls.log | head -30; echo '```'; echo "Python 側の変更を止める必要はありません。Rust 化スレッドが追従します。"; } > /tmp/report.md
+          gh pr comment "$PR" --repo "$GITHUB_REPOSITORY" --body-file /tmp/report.md || true
