@@ -23,7 +23,23 @@ MANA5 = ["T001", "T003", "T004", "T005", "T008"]
 OPP_DECK, OPP_MANA = 30, 6
 
 
-def trial(rules, cards, seed=1, turns=2, budget=60) -> dict:
+def trial(rules, cards, seed=1, turns=2, budget=60, deck_mode=True) -> dict:
+    """既定は通常の開幕: 候補カードを各4枚＋ダミーで40枚、手札5・盾5、マナは自分で貯める。相手は40枚（マナチャージだけ）。
+    deck_mode=False は従来の「手札に直接・マナ10枚」の甘い開始（強い札が何でも勝つので選別には使わない）。"""
+    if deck_mode:
+        deck = ([c for c in cards for _ in range(4)] + ["T013"] * 40)[:40]
+        res, eng = play_game(rules, deck, ["T001"] * 40, seed, first_player=seed % 2, max_turn=turns, budget=budget)
+        z = eng.s.zones
+        out = {"opp_deck": 30 - len(z["deck"][1]) if len(z["deck"][1]) <= 30 else 0, "opp_mana": len(z["mana"][1]),
+               "opp_shield": 5 - len(z["shield"][1]), "kill": res.kill_turn is not None}
+        out["score"] = out["opp_deck"] + 2 * out["opp_mana"] + 3 * out["opp_shield"] + (20 if out["kill"] else 0)
+        out["lock_score"] = out["opp_deck"] + 2 * out["opp_mana"]
+        out["kill_turn"] = res.kill_turn
+        return out
+    return trial_start(rules, cards, seed, turns, budget)
+
+
+def trial_start(rules, cards, seed=1, turns=2, budget=60) -> dict:
     spec = {"p0": {"hand": list(cards), "mana": MANA5 * 2}, "p1": {"mana": ["T001"] * OPP_MANA},
             "deck_size": OPP_DECK, "shuffle_deck": True, "seed": seed}
     st = build(rules, spec)
