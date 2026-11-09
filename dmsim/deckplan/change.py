@@ -115,3 +115,24 @@ def trim_parts(deck: DeckProposal, rng: random.Random, pool: list[str], n: int =
         return []
     return [Change("trim_parts", [(a, -1), (b, 1)], f"部品を減らす: {a} → {b}")
             for a, b in ((rng.choice(heavy), rng.choice(fill)) for _ in range(n))]
+
+
+@proposer("add_support")
+def add_support(deck: DeckProposal, rng: random.Random, pool: list[str] | None = None, n: int = 5, support: dict | None = None,
+                protect: set | None = None, unused: list[str] | None = None, **_) -> list[Change]:
+    """加速・ドロー・サーチ札（deckplan.pool がカード全体から自動分類。support={役割: [名前]}）を役割ごとに順番に1枚足し、
+    使われにくい札を優先して（無ければ保護外の札から）1枚抜く。採否は evaluate.decide だけが行う。"""
+    have = {e.name: e.count for e in deck.entries}
+    roles = [r for r, v in (support or {}).items() if any(have.get(x, 0) < 4 for x in v)]
+    keep = set(protect or ())
+    outs = [u for u in (unused or []) if have.get(u, 0) > 0 and u not in keep] or [e.name for e in deck.entries if e.name not in keep]
+    if not roles or not outs:
+        return []
+    out = []
+    for i in range(n):
+        role = roles[i % len(roles)]
+        ins = [x for x in support[role] if have.get(x, 0) < 4]
+        a, b = rng.choice(outs), (ins[min(len(ins) - 1, int(rng.random() ** 2 * len(ins)))])   # 軽い札寄りに選ぶ
+        if a != b:
+            out.append(Change("add_support", [(a, -1), (b, 1)], f"{role}札を追加: {a} → {b}"))
+    return out

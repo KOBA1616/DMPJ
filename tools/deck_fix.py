@@ -10,7 +10,7 @@ import yaml
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 from dmsim.defs import load_rules  # noqa: E402
-from dmsim.deckplan.auto import add_candidates, two_stage, unused_names  # noqa: E402
+from dmsim.deckplan.auto import add_candidates, support_for, two_stage, unused_names  # noqa: E402
 from dmsim.solitaire import load_deck  # noqa: E402
 
 
@@ -80,7 +80,7 @@ def main(argv=None):
             deadline = time.time() + slot * B.SAFETY * 0.5            # 粗比較の締め切りは枠の半分（残りは通常予算の再比較に残す）
         un = unused_names(rules, deck, opp, list(range(1, a.usage_seeds + 1))) if a.usage_seeds else []   # 抜く候補（usage 監査）
         r = two_stage(rules, deck, opp, c, list(range(1, a.seeds + 1)), a.out, turn=a.turns, setup=setup, workers=a.workers,
-                      unused=un, adds=add_candidates(c), n=cands, coarse_budget=cb, top_k=(tk if a.time_budget else a.top_k), coarse_seeds=cs, deadline=deadline)
+                      unused=un, adds=add_candidates(c), support=support_for(rules, deck), n=cands, coarse_budget=cb, top_k=(tk if a.time_budget else a.top_k), coarse_seeds=cs, deadline=deadline)
         print(t["combo"], r)
         if a.time_budget:
             if tk < a.top_k and r.get("passed_coarse"):
