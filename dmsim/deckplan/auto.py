@@ -71,8 +71,8 @@ def _rate(d: dict, turn: int) -> float:
 
 
 def two_stage(rules, deck_ids: list[str], opp_ids: list[str], combo: dict, seeds: list[int], ledger,
-              seed: int = 0, turn: int = 4, setup: dict | None = None, kinds=("add_parts", "add_prep", "cut_unused", "trim_parts"), n: int = 4,
-              unused: list[str] | None = None, adds: list[str] | None = None, coarse_budget: int = 40, top_k: int = 2, workers: int = 1, coarse_seeds: int | None = None, deadline: float | None = None, out_dir: str | Path | None = "data/deckplans/auto") -> dict:
+              seed: int = 0, turn: int = 4, setup: dict | None = None, kinds=("add_parts", "add_prep", "add_support", "cut_unused", "trim_parts"), n: int = 4,
+              support: dict | None = None, unused: list[str] | None = None, adds: list[str] | None = None, coarse_budget: int = 40, top_k: int = 2, workers: int = 1, coarse_seeds: int | None = None, deadline: float | None = None, out_dir: str | Path | None = "data/deckplans/auto") -> dict:
     """2段階: ①低い base_budget で全候補を同一シードで粗く比較 → ②粗い差が正の上位 top_k 件だけ通常予算で再比較し、
     有意に良ければ採用（採否は evaluate.decide のみ）。未変換カードを含む候補は粗比較にも回さない。"""
     rule = AcceptRule(turn=turn)
@@ -88,7 +88,7 @@ def two_stage(rules, deck_ids: list[str], opp_ids: list[str], combo: dict, seeds
     cands = []
     for k in kinds:
         for ch in C.PROPOSERS[k](base, rng, pool if k in ("add_parts", "trim_parts") else [], n=n, protect=set(pool),
-                                 unused=unused, adds=adds):
+                                 unused=unused, adds=adds, support=support):
             try:
                 cand = C.apply(base, ch)
             except ValueError:
@@ -98,6 +98,24 @@ def two_stage(rules, deck_ids: list[str], opp_ids: list[str], combo: dict, seeds
                 record(ledger, {"stage": "skip", "cand": cand.plan_id(), "change": ch.ops, "why": st["issues"] or "unverified"})
                 continue
             cands.append((ch, cand))
+    # 解析的な見積もり（エンジンなし）で cards 段階の到達率が高い順に並べ、時間切れでも有望な案から評価する。
+    # 上位の改善案を束ねた複数枚の変更も候補に足す（1枚の差は粗比較の局数では見えにくい）
+    from .analytic import p_cards
+    need = prog.cards
+    pb = p_cards(ids_of(base, resolver), need)
+    scored = sorted(((p_cards(ids_of(cand, resolver), need) - pb, ch, cand) for ch, cand in cands), key=lambda x: -x[0])
+    bundle, applied = base, []
+    for g, ch, _ in scored:
+        if g <= 0 or len(applied) >= 3:
+            break
+        try:
+            bundle = C.apply(bundle, ch); applied.append(ch)
+        except ValueError:
+            continue
+    if len(applied) >= 2:
+        scored.insert(0, (p_cards(ids_of(bundle, resolver), need) - pb, C.Change("bundle", [op for c in applied for op in c.ops], "解析上位の改善を束ねる"), bundle))
+    cands = [(ch, cand) for _, ch, cand in scored]
+    record(ledger, {"stage": "analytic", "p_base": pb, "top": [(round(g, 4), ch.reason) for g, ch, _ in scored[:5]]})
     t0 = time.time()
     cbase = coarse(ids_of(base, resolver))
     ranked, evaluated = [], 0
@@ -143,3 +161,10 @@ def add_candidates(combo: dict, max_cost: int = 4) -> list[str]:
     """入れる側の候補: コンボの core 部品＋墓地への準備札（tools/suggest_prep）。"""
     from tools.suggest_prep import scan
     return core_names(combo) + [r["name"] for r in scan() if isinstance(r["cost"], int) and r["cost"] <= max_cost]
+
+
+def support_for(rules, deck_ids: list[str]) -> dict[str, list[str]]:
+    """デッキの文明に収まる加速・ドロー・サーチ札（カード全体から自動分類）。"""
+    from .pool import support_names
+    civs = {c for i in deck_ids if i in rules.cards for c in rules.cards[i].civs}
+    return support_names(civs)

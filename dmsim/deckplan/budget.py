@@ -34,25 +34,77 @@ def order_targets(names: list[str], hist: dict) -> list[str]:
     return sorted(names, key=key)
 
 
-def unit_sec(h: dict | None) -> float:
+FINE_FACTOR = 1.5          # 通常予算(200)の1局は粗比較(40)の何倍かかるかの目安（実測が少ないので控えめ）
+REF_BUDGET = 40            # unit（1候補×1局あたりの秒）は粗比較の base_budget=40 に換算した値で持つ（所要時間は探索予算にほぼ比例）
+MIN_BUDGET = 10
+
+
+def unit_sec(h: dict | None) -> float | None:
+    """履歴から 1候補×1局あたりの所要秒（REF_BUDGET 換算）。履歴が無ければ None。"""
     if h and h.get("cands") and h.get("coarse_seeds") and h.get("sec"):
-        return max(0.05, h["sec"] / (h["cands"] * h["coarse_seeds"]))
-    return DEFAULT_UNIT_SEC
+        return max(0.05, h["sec"] / (h["cands"] * h["coarse_seeds"]) * REF_BUDGET / max(1, h.get("coarse_budget", REF_BUDGET)))
+    return None
 
 
-def allocate(h: dict | None, slot_sec: float, max_cands: int, max_cs: int, min_cands: int = 3, min_cs: int = 8, kinds: int = 4) -> tuple[int, int]:
-    """枠 slot_sec に収まる (種類ごとの候補数, 粗比較の局数)。まず局数を縮め、次に候補数を縮める。
-    履歴の cands は評価した候補の総数なので、見積もりは 種類ごとの候補数×kinds（deck_fix の既定は4種類）で数える。"""
-    u, budget = unit_sec(h) * kinds, slot_sec * SAFETY
-    cands, cs = max_cands, max_cs
-    while cs > min_cs and u * cands * cs > budget:
+def probe_unit(rules, deck, opp, setup, workers: int = 1, budget: int = REF_BUDGET, n_det: int = 4) -> float:
+    """1シード（先後で2局）を実測して、1候補×1局あたりの所要秒（REF_BUDGET 換算、並列を考慮）を返す。
+    重いデッキ（例 knight_dmc は1局が約30秒）を履歴なしでも先に見つけるための実測。"""
+    import time
+
+    from ..eval import fair_runner
+    from ..eval.harness import EvalConfig, run_eval
+    from ..eval.infolevel import InfoLevel
+    from .evaluate import spec_with_deck
+    fair_runner.register(n_det, 0)
+    kw = {"start_spec": spec_with_deck(setup, deck)} if setup else {}
+    t = time.time()
+    run_eval(rules, EvalConfig(decks={"d": deck}, opp_deck=opp, seeds=[1], levels=(InfoLevel.FAIR,), max_turn=4, base_budget=budget, n_det=n_det, **kw))
+    return max(0.05, (time.time() - t) / max(1, workers) * REF_BUDGET / max(1, budget))
+
+
+def allocate(h: dict | None, slot_sec: float, max_cands: int, max_cs: int, min_cands: int = 3, min_cs: int = 8, kinds: int = 4,
+             probe: float | None = None, max_budget: int = REF_BUDGET, seeds: int = 30, top_k: int = 2, fine_budget: int = 200) -> tuple[int, int, int, int]:
+    """枠 slot_sec に収まる (種類ごとの候補数, 粗比較の局数, 粗比較の探索予算, 通常予算で再比較する件数)。
+    粗比較だけでなく、通常予算（既定200）の再比較（base＋上位 top_k 件 × seeds 局）の時間も先に確保する（重いデッキでは再比較が支配的）。
+    重いデッキほど、まず再比較の件数、次に粗比較の局数、最後に候補数を縮める（探索予算は実測で時間にほぼ効かないので縮めない）。
+    単価は 履歴と実測(probe)の大きい方（履歴なしで実測もなければ既定値）。cands は評価した候補の総数なので kinds 倍で数える。"""
+    cands_u = [x for x in (unit_sec(h), probe) if x is not None]
+    u1 = max(cands_u) if cands_u else DEFAULT_UNIT_SEC
+    total = slot_sec * SAFETY
+    fine_one = u1 * seeds * FINE_FACTOR                              # 通常予算で1デッキを seeds 局測る時間（予算にほぼ比例しないので固定倍率）
+    k = top_k
+    while k > 1 and (k + 1) * fine_one > total * 0.5:               # 再比較に枠の半分までしか使わない（まず件数を減らす）
+        k -= 1
+    budget = total - (k + 1) * fine_one
+    if budget < total * 0.3:                                          # それでも粗比較の枠が足りない（極端に重い）なら再比較は次回へ回す
+        k, budget = 0, total
+    u = u1 * kinds
+    cands, cs, b = max_cands, max_cs, max_budget
+    cost = lambda: u * cands * cs                                    # 実測: base_budget を 40→10 にしても1局の時間はほとんど縮まない（knight_dmc）。予算は縮めず局数・候補数で調整する
+    while cs > min_cs and cost() > budget:
         cs -= 1
-    while cands > min_cands and u * cands * cs > budget:
+    while cands > min_cands and cost() > budget:
         cands -= 1
-    return cands, cs
+    return cands, cs, b, k
 
 
-def update(hist: dict, name: str, res: dict, cands: int, cs: int, now: float) -> None:
+def update(hist: dict, name: str, res: dict, cands: int, cs: int, now: float, coarse_budget: int = REF_BUDGET) -> None:
     """two_stage の結果で履歴を更新する。途中で終わった時は complete=False のままにして次回優先にする。"""
     hist[name] = {"sec": float(res.get("sec", 0.0)), "cands": int(res.get("evaluated", cands)) or cands, "coarse_seeds": cs,
-                  "complete": bool(res.get("complete", True)), "last_run": now}
+                  "complete": bool(res.get("complete", True)), "last_run": now, "coarse_budget": coarse_budget}
+
+
+TUNE_SHARE = 0.35        # 日次の残り時間のうち自動チューナーに回す割合（残りは deck_fix）
+MIN_PHASE_SEC = 300      # これ未満の枠は回さない
+
+
+def split_remaining(total: float, elapsed: float, want_deck_fix: bool = True, want_tune: bool = True) -> tuple[int, int]:
+    """日次の総枠(total秒)から、診断ループに使った時間(elapsed)を引いた残りを deck_fix と tune に配る。(deck_fix秒, tune秒) を返す。
+    片方が不要なら残りは全部もう片方へ。枠が MIN_PHASE_SEC に満たない側は 0（次回へ）。"""
+    rest = max(0.0, total * SAFETY - elapsed)
+    if want_deck_fix and want_tune:
+        tune = rest * TUNE_SHARE
+        fix = rest - tune
+    else:
+        fix, tune = (rest, 0.0) if want_deck_fix else (0.0, rest if want_tune else 0.0)
+    return (int(fix) if fix >= MIN_PHASE_SEC else 0, int(tune) if tune >= MIN_PHASE_SEC else 0)

@@ -10,7 +10,7 @@ import yaml
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 from dmsim.defs import load_rules  # noqa: E402
-from dmsim.deckplan.auto import add_candidates, two_stage, unused_names  # noqa: E402
+from dmsim.deckplan.auto import add_candidates, support_for, two_stage, unused_names  # noqa: E402
 from dmsim.solitaire import load_deck  # noqa: E402
 
 
@@ -25,6 +25,43 @@ def cards_stage_decks(path: str) -> set[str]:
         if e.get("stage") == "cards" and e.get("deck_hint"):
             out.add(e.get("combo", "*"))
     return out
+
+
+def auto_setup(rules, combo: str, root: Path = Path("data/loops")):
+    """仕込み局面が無いデッキ用: LoopSpec(data/loops/<コンボ名>*.json)の勝ち手順から、最初のターン頭の局面を作る（山札はデッキ側で差し替わる）。無ければ None。"""
+    from dmsim.discovery import evalstarts
+    from dmsim.discovery.loopspec import LoopSpec
+    for f in sorted(root.glob(f"{combo}*.json")):
+        try:
+            ls = LoopSpec.from_json(f.read_text(encoding="utf-8"))
+            bs = evalstarts.boundaries(rules, ls)
+        except Exception:
+            continue
+        if bs:
+            spec = dict(bs[0]["spec"])
+            spec.pop("deck_exact", None)
+            return spec
+    return None
+
+
+def parts_setup_for(rules, t: dict, deck: list[str]):
+    """LoopSpec が無いコンボ用: 部品表（known_combos）とデッキから作る。"""
+    from dmsim.deckplan.setup import parts_setup
+    combos = {c["id"]: c for c in yaml.safe_load(Path("data/known_combos/combos.yaml").read_text(encoding="utf-8"))["combos"]}
+    c = combos.get(t["combo"])
+    return parts_setup(rules, c, deck) if c else None
+
+
+def resolve_setup(rules, t: dict, cli_setup=None, deck=None):
+    """優先順: --setup > targets の deck_setup > setup > LoopSpec から自動生成 > None(冷たい開幕)。(setup, 由来)を返す。"""
+    path = cli_setup or t.get("deck_setup") or t.get("setup")
+    if path:
+        return yaml.safe_load(Path(path).read_text(encoding="utf-8")), path
+    sp = auto_setup(rules, t["combo"])
+    if sp:
+        return sp, "LoopSpec自動"
+    sp = parts_setup_for(rules, t, deck) if deck else None
+    return (sp, "部品表自動") if sp else (None, "冷たい開幕")
 
 
 def main(argv=None):
@@ -64,23 +101,28 @@ def main(argv=None):
     start = time.time()
     for i, t in enumerate(ts):
         c = combos[t["combo"]]
-        cands, cs, deadline = a.cands, a.coarse_seeds, None
+        cands, cs, deadline, cb, tk = a.cands, a.coarse_seeds, None, a.coarse_budget, a.top_k
+        deck = load_deck(t["deck"])
+        opp = load_deck(t["opp_deck"]) if t.get("opp_deck") else ["T001"] * 40
+        setup, origin = resolve_setup(rules, t, a.setup, deck)        # 仕込み済み開始局面（通常の開幕では4ターン以内キルに届かず差が見えないため）
+        print(t["combo"], "開始局面:", origin)
         if a.time_budget:
             slot = (a.time_budget - (time.time() - start)) / (len(ts) - i)
             if slot < B.MIN_SLOT_SEC:
                 print(t["combo"], "時間予算の残りが少ないので次回へ"); continue
-            cands, cs = B.allocate(hist.get(t["combo"]), slot, a.cands, a.coarse_seeds or a.seeds)
-            deadline = time.time() + slot * B.SAFETY
-        deck = load_deck(t["deck"])
-        opp = load_deck(t["opp_deck"]) if t.get("opp_deck") else ["T001"] * 40
-        setup_path = a.setup or t.get("setup")        # 仕込み済み開始局面（4ターン以内キル率を現実的に比べるため。無ければ冷たい開幕）
-        setup = yaml.safe_load(Path(setup_path).read_text(encoding="utf-8")) if setup_path else None
+            pu = B.probe_unit(rules, deck, opp, setup, a.workers, a.coarse_budget)      # 1シードの実測で重いデッキを自動検出
+            cands, cs, cb, tk = B.allocate(hist.get(t["combo"]), slot, a.cands, a.coarse_seeds or a.seeds, probe=pu,
+                                           max_budget=a.coarse_budget, seeds=a.seeds, top_k=a.top_k)
+            print(t["combo"], f"枠{slot:.0f}秒 実測{pu:.1f}秒/候補/局 → 候補{cands}/種類 粗比較{cs}局 予算{cb} 再比較{tk}件")
+            deadline = time.time() + slot * B.SAFETY * 0.5            # 粗比較の締め切りは枠の半分（残りは通常予算の再比較に残す）
         un = unused_names(rules, deck, opp, list(range(1, a.usage_seeds + 1))) if a.usage_seeds else []   # 抜く候補（usage 監査）
         r = two_stage(rules, deck, opp, c, list(range(1, a.seeds + 1)), a.out, turn=a.turns, setup=setup, workers=a.workers,
-                      unused=un, adds=add_candidates(c), n=cands, coarse_budget=a.coarse_budget, top_k=a.top_k, coarse_seeds=cs, deadline=deadline)
+                      unused=un, adds=add_candidates(c), support=support_for(rules, deck), n=cands, coarse_budget=cb, top_k=(tk if a.time_budget else a.top_k), coarse_seeds=cs, deadline=deadline)
         print(t["combo"], r)
         if a.time_budget:
-            B.update(hist, t["combo"], r, cands, cs or a.seeds, time.time())
+            if tk < a.top_k and r.get("passed_coarse"):
+                r = {**r, "complete": False}                  # 再比較を枠に入れられなかった（次回は先頭で回す）
+            B.update(hist, t["combo"], r, cands, cs or a.seeds, time.time(), cb)
             B.save_history(a.history, hist)
     return 0
 

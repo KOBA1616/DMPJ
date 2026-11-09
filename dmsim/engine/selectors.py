@@ -1,6 +1,8 @@
 """セレクタ・式・条件の評価（効果DSLの「何を」「いくつ」「いつなら」）。"""
 from __future__ import annotations
 
+from .registry import read_only
+
 
 class SelectorMixin:
     def _expr_refs(self, v, env):
@@ -18,7 +20,7 @@ class SelectorMixin:
             if "count" in x:
                 return len(self.candidates(x["count"], env))
             if "civ_count" in x:   # 対象カード群にある文明の種類数（多色カードは持つ文明をすべて数える）
-                return len({cv for c in self.candidates(x["civ_count"], env) for cv in self.chars(c)["civs"]})
+                return len({cv for c in self.candidates(x["civ_count"], env) for cv in self.chars_ro(c)["civs"]})
             if "distinct_cost_count" in x:   # 対象カード群にあるコストの種類数（同じコストは1つに数える。第145弾、バラバラエティ）
                 # 数える対象に発生源自身が含まれるのがこのファミリーの常形（「自分のエレメント」「自分のクリーチャー」）で、
                 # 素朴に chars を呼ぶと自身の常在条件・ブレイク数の評価から再入して無限再帰する（candidates の列挙中の
@@ -37,7 +39,7 @@ class SelectorMixin:
                             continue
                         self._distinct_costing.add(c)
                         try:
-                            costs.add(self.chars(c)["cost"])
+                            costs.add(self.chars_ro(c)["cost"])
                         finally:
                             self._distinct_costing.discard(c)
                     return len(costs)
@@ -64,16 +66,16 @@ class SelectorMixin:
                 v = env.get("vars", {}).get(x["var"], [])
                 return v if isinstance(v, int) else len(v)   # 数を数えた変数（ガチンコの勝ち数など）はそのまま
             if "cost_of" in x:   # 参照カード（複数なら最大）のコスト
-                return max((self.chars(c[0])["cost"] for c in self._expr_refs(x["cost_of"], env)), default=0)
+                return max((self.chars_ro(c[0])["cost"] for c in self._expr_refs(x["cost_of"], env)), default=0)
             if "power_of" in x:   # 参照カード（複数なら最大）の現在パワー（第116弾で追加。cost_of の対）
-                return max((self.chars(c[0])["power"] for c in self._expr_refs(x["power_of"], env)), default=0)
+                return max((self.chars_ro(c[0])["power"] for c in self._expr_refs(x["power_of"], env)), default=0)
             if "name_of" in x:   # 参照カードのカード名（「そのクリーチャーと同じ名前の〜」フィルタ用、第140弾。複数なら先頭）
                 refs = self._expr_refs(x["name_of"], env)
-                return self.chars(refs[0][0])["name"] if refs else ""
+                return self.chars_ro(refs[0][0])["name"] if refs else ""
             if "race" in x:   # choose_race で選んだ種族名
                 return [env.get("races", {})[x["race"]]]
             if "races_of" in x:   # 変数に束縛したカードの種族（「種族をひとつ選ぶ」の代わりに、場のカード1体を選んでその種族とする）
-                return sorted({r for c in env.get("vars", {}).get(x["races_of"], []) for r in self.chars(c[0])["races"]})
+                return sorted({r for c in env.get("vars", {}).get(x["races_of"], []) for r in self.chars_ro(c[0])["races"]})
             if "sum" in x:
                 return sum(self.eval_expr(v, env) for v in x["sum"])
         raise ValueError(f"bad expr {x}")
@@ -220,6 +222,7 @@ class SelectorMixin:
         refs = [r for r in refs if r and self.s.alive(r)]
         return refs[0][0] if refs else None
 
+    @read_only
     def candidates(self, sel: dict, env: dict) -> list[int]:
         s = self.s
         if "under_of" in sel:   # 「バトルゾーンのクリーチャーの下にあるカード」（メテオバーンなど）
@@ -336,8 +339,8 @@ class SelectorMixin:
                  or self.permits(c, "be_chosen")]
         if "distinct_from" in sel:   # 「自分のどのクリーチャーともコストが異なる」（第147弾・型1）: 参照集合のコストと重なる候補を外す。
             # 評価は選択開始時に1回だけ（＝出す前の場。選んだカードが出た後に場のコストが増えても残りの選択には影響しない）
-            ref_costs = {self.chars(c)["cost"] for c in self.candidates(sel["distinct_from"], env)}
-            cands = [c for c in cands if self.chars(c)["cost"] not in ref_costs]
+            ref_costs = {self.chars_ro(c)["cost"] for c in self.candidates(sel["distinct_from"], env)}
+            cands = [c for c in cands if self.chars_ro(c)["cost"] not in ref_costs]
         n = min(n, len(cands))
         if "total_cost_le" in sel or "total_cost_ge" in sel or "total_power_le" in sel or "total_power_ge" in sel \
                 or sel.get("distinct_costs"):   # 合計制限つきの「好きな数」選択: 1枚ずつ積み上げる。軸はコスト／パワー（第144弾で一般化）。distinct_costs は「コストが異なる」制約の述語として同じ分岐に乗る（第147弾・型2／型3）
@@ -353,15 +356,15 @@ class SelectorMixin:
                                self.eval_expr(sel["total_power_ge"], env) if "total_power_ge" in sel else None))
 
             def _totals(picked):
-                return {k: sum(self.chars(x)[k] for x in picked) for k, _, _ in limits}
+                return {k: sum(self.chars_ro(x)[k] for x in picked) for k, _, _ in limits}
 
             distinct = bool(sel.get("distinct_costs"))
 
             def _fits(picked, c, totals=None):
-                if distinct and self.chars(c)["cost"] in {self.chars(x)["cost"] for x in picked}:
+                if distinct and self.chars_ro(c)["cost"] in {self.chars_ro(x)["cost"] for x in picked}:
                     return False   # 「コストが異なる」: 既に選んだカードと同じコストは選べない（ハイパーエナジー支払いの used 述語と同じ形）
                 totals = totals if totals is not None else _totals(picked)
-                return all(le is None or totals[k] + self.chars(c)[k] <= le for k, le, _ in limits)
+                return all(le is None or totals[k] + self.chars_ro(c)[k] <= le for k, le, _ in limits)
 
             # 「N体まで」と併記された場合の枚数上限。count が無い「好きな数」は上限なし（従来どおり）
             cap = n if ("count" in sel and not any_n and sel.get("count") != "all") else None
@@ -387,13 +390,13 @@ class SelectorMixin:
                     rest = [c for c in rest if _fits(picked, c, totals)]
                     can_stop = all(ge is None or totals[k] >= ge for k, _, ge in limits)
                     if not can_stop and any(ge is not None and totals[k] < ge
-                                            and totals[k] + sum(self.chars(c)[k] for c in rest) < ge
+                                            and totals[k] + sum(self.chars_ro(c)[k] for c in rest) < ge
                                             for k, _, ge in limits):
                         can_stop = True   # どう選んでも下限に届かない時は打ち切る
                     if need is not None and len(picked) < need:
                         # 全コスト網羅（型3）: 必要数に達するまで止められない。rest は distinct 述語で絞り済みなので、
                         # 残りのコストの種類数は rest のコスト集合の大きさ。どう選んでも届かない時は打ち切る（ge の同型）
-                        can_stop = len(picked) + len({self.chars(c)["cost"] for c in rest}) < need
+                        can_stop = len(picked) + len({self.chars_ro(c)["cost"] for c in rest}) < need
                     if not rest:
                         break
                     a, d = self.ask(t, chooser, "choose_cards",

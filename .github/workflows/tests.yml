@@ -1,0 +1,53 @@
+# 全体テスト。自動マージ（自動ループ含む）は、この check が成功してからにする。
+# 失敗したら: 失敗したテスト名と原因の抜粋を要約に出し、PR にはコメント、main では Issue（label: tests-failing）を1件に集約して残す。
+# 自動ループはこの Issue / コメントを読んで修正 PR を作る（docs/offload.md「自動マージの条件」）。
+name: tests
+on:
+  workflow_dispatch:   # GITHUB_TOKEN が作った PR（combo-hunt 等）は pull_request が起動しないため、同じ検査を手動／自動で走らせる口
+  pull_request:
+  push:
+    branches: [main]
+permissions:
+  contents: read
+  issues: write
+  pull-requests: write
+jobs:
+  pytest:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: pip install -q pytest pyyaml jsonschema
+      - name: Run tests
+        run: |
+          set -o pipefail
+          python -m pytest -q tests -rf 2>&1 | tee /tmp/pytest.log
+      - name: Report failure (修正候補の素材を残す)
+        if: failure()
+        env:
+          GH_TOKEN: ${{ github.token }}
+          EVENT: ${{ github.event_name }}
+          PR: ${{ github.event.pull_request.number }}
+        run: |
+          { echo "## tests 失敗"; echo '```'; grep -E "^(FAILED|ERROR)|^E  " /tmp/pytest.log | head -40; echo '```'; } > /tmp/report.md
+          cat /tmp/report.md >> "$GITHUB_STEP_SUMMARY"
+          echo "実行: $GITHUB_SERVER_URL/$GITHUB_REPOSITORY/actions/runs/$GITHUB_RUN_ID" >> /tmp/report.md
+          if [ "$EVENT" = pull_request ]; then
+            gh pr comment "$PR" --repo "$GITHUB_REPOSITORY" --body-file /tmp/report.md || true
+          elif [ "$EVENT" = push ]; then
+            gh label create tests-failing --repo "$GITHUB_REPOSITORY" --color B60205 2>/dev/null || true
+            n=$(gh issue list --repo "$GITHUB_REPOSITORY" --label tests-failing --state open --json number -q '.[0].number')
+            if [ -n "$n" ]; then gh issue comment "$n" --repo "$GITHUB_REPOSITORY" --body-file /tmp/report.md
+            else gh issue create --repo "$GITHUB_REPOSITORY" --label tests-failing --title "main の全体テストが失敗" --body-file /tmp/report.md; fi
+          fi
+      - name: Close issue when green
+        if: success() && github.event_name == 'push'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          for n in $(gh issue list --repo "$GITHUB_REPOSITORY" --label tests-failing --state open --json number -q '.[].number'); do
+            gh issue close "$n" --repo "$GITHUB_REPOSITORY" --comment "main の全体テストが通ったので閉じます。"
+          done
