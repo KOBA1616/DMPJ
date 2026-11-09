@@ -77,6 +77,17 @@ impl PyEngine {
     fn answer(&mut self, choice: Vec<i64>) -> PyResult<()> {
         self.e.answer(choice).map_err(conv)
     }
+    /// 速度測定・探索の内側向け: 組み込み方策で終局（または未移植）まで進める。mode: "first" | "pass"（最後の選択肢=パス）
+    fn run(&mut self, mode: &str) -> PyResult<i64> {
+        let mut n = 0;
+        while let Some(d) = self.e.advance().map_err(conv)? {
+            let len = d["options"].as_array().map_or(1, |a| a.len()) as i64;
+            let i = if mode == "pass" { len - 1 } else { 0 };
+            self.e.answer(vec![i]).map_err(conv)?;
+            n += 1;
+        }
+        Ok(n)
+    }
     fn fork(&self) -> PyEngine {
         self.clone()
     }
