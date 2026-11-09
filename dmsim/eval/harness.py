@@ -53,6 +53,7 @@ def _cell(results, cfg: EvalConfig) -> dict:
     out["per_game"] = [[r.seed, r.first_player, r.kill_turn] for r in results]
     if results and hasattr(results[0], "curve"):
         out["per_game_progress"] = [[r.board_turn, r.cards_turn, r.curve[-1] if r.curve else None] for r in results]
+        out["per_game_curves"] = [r.curve for r in results]      # 各ターン終了時の局面（経験ログ。価値の学習用）
     return out
 
 

@@ -37,6 +37,7 @@ def run_batch(a, combos):
     ts = yaml.safe_load(Path(a.targets).read_text(encoding="utf-8"))["targets"]
     rules = load_rules()
     from dmsim.autofix.partsgenome import load_specs_evolved
+    from dmsim.autofix.valuelearn import load_model
     specs = load_specs_evolved()                              # 進化で採用した部品の重み倍率を反映（data/autofix/parts.yaml）
 
     def mk(t):
@@ -47,7 +48,8 @@ def run_batch(a, combos):
         deck, opp = load_deck(t["deck"]), load_deck(t["opp_deck"]) if t.get("opp_deck") else ["T001"] * 40
         return harness_measure(rules, deck, opp, list(range(1, t.get("seeds", a.seeds) + 1)), spec,
                                ProgressSpec(board=board, cards=cards) if (cards or board) else None, specs[t["combo"]], max_turn=a.turns, workers=a.workers,
-                               prep_ids=_prep_ids(combos[t["combo"]], rules, deck, opp, specs[t["combo"]]))
+                               prep_ids=_prep_ids(combos[t["combo"]], rules, deck, opp, specs[t["combo"]]),
+                               value_model=load_model(t["combo"]))
     for r in run_targets(ts, combos, mk, Rule(turn=a.turns), a.rounds, a.out, a.store):
         print(r)
     if a.total_seconds:                                       # 日次の総枠から、診断に使った残りを deck_fix と tune に自動で配る
