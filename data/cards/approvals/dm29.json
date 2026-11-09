@@ -17,7 +17,7 @@
 ],
 "verifier": 2,
 "verify": "26手・turn 11 まで正常に回った（result={'winner': 0, 'reason': 'direct_attack', 'turn': 11}）",
-"vocab_ver": "9bcaa8a2c3134788"
+"vocab_ver": "67160be924f5f38b"
 },
 "dm29-022": {
 "by": "rule",
@@ -34,7 +34,7 @@
 ],
 "verifier": 2,
 "verify": "43手・turn 30 まで正常に回った（result={'winner': 0, 'reason': 'deck_out', 'turn': 30}）",
-"vocab_ver": "4ed03563632f36e4"
+"vocab_ver": "25ac8dad7af014ee"
 },
 "dm29-030": {
 "by": "rule",
@@ -53,7 +53,7 @@
 ],
 "verifier": 2,
 "verify_error": "移動先 deck が原文に無い",
-"vocab_ver": "7fd36a3050c2febf"
+"vocab_ver": "ea26c5e3b3228c55"
 },
 "dm29-037": {
 "by": "rule",
@@ -72,7 +72,7 @@
 ],
 "verifier": 2,
 "verify_error": "移動先 deck が原文に無い",
-"vocab_ver": "d27eeacd785f5bb0"
+"vocab_ver": "d063864ce7c27b44"
 },
 "dm29-052": {
 "by": "rule",
@@ -88,6 +88,6 @@
 ],
 "verifier": 2,
 "verify": "43手・turn 30 まで正常に回った（result={'winner': 0, 'reason': 'deck_out', 'turn': 30}）",
-"vocab_ver": "12abad44ca6ddb9d"
+"vocab_ver": "66fff36a8284db59"
 }
 }

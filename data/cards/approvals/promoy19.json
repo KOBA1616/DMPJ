@@ -14,7 +14,7 @@
 ],
 "verifier": 2,
 "verify": "43手・turn 30 まで正常に回った（result={'winner': 0, 'reason': 'deck_out', 'turn': 30}）",
-"vocab_ver": "8f6c5f556f2eea6d"
+"vocab_ver": "813309acef383fc8"
 },
 "promoy19-007": {
 "by": "rule",
@@ -32,7 +32,7 @@
 ],
 "verifier": 2,
 "verify": "43手・turn 30 まで正常に回った（result={'winner': 0, 'reason': 'deck_out', 'turn': 30}）",
-"vocab_ver": "831df9e3222c7458"
+"vocab_ver": "a3ace9e9054ba91a"
 },
 "promoy19-032": {
 "by": "rule",
@@ -49,7 +49,7 @@
 ],
 "verifier": 2,
 "verify": "43手・turn 30 まで正常に回った（result={'winner': 0, 'reason': 'deck_out', 'turn': 30}）",
-"vocab_ver": "ceab80f14773fff1"
+"vocab_ver": "ef74ceeee91940a6"
 },
 "promoy19-075": {
 "by": "rule",
@@ -65,7 +65,7 @@
 ],
 "verifier": 2,
 "verify": "43手・turn 30 まで正常に回った（result={'winner': 0, 'reason': 'deck_out', 'turn': 30}）",
-"vocab_ver": "bad769c5def4ef08"
+"vocab_ver": "a42affdfb39d3cda"
 },
 "promoy19-077": {
 "by": "rule",
@@ -82,7 +82,7 @@
 ],
 "verifier": 2,
 "verify": "43手・turn 30 まで正常に回った（result={'winner': 0, 'reason': 'deck_out', 'turn': 30}）",
-"vocab_ver": "66eaf835ddc425ba"
+"vocab_ver": "58e43c01f13c4738"
 },
 "promoy19-079": {
 "by": "rule",
@@ -99,7 +99,7 @@
 ],
 "verifier": 2,
 "verify": "43手・turn 30 まで正常に回った（result={'winner': 0, 'reason': 'deck_out', 'turn': 30}）",
-"vocab_ver": "bb916ee58974566a"
+"vocab_ver": "3cf754082188f8a2"
 },
 "promoy19-spd702": {
 "by": "rule",
@@ -116,7 +116,7 @@
 ],
 "verifier": 2,
 "verify": "43手・turn 30 まで正常に回った（result={'winner': 0, 'reason': 'deck_out', 'turn': 30}）",
-"vocab_ver": "1a9326b7038fa281"
+"vocab_ver": "59258c739746170b"
 },
 "promoy19-spd703": {
 "by": "rule",
@@ -131,7 +131,7 @@
 ],
 "verifier": 2,
 "verify": "43手・turn 30 まで正常に回った（result={'winner': 0, 'reason': 'deck_out', 'turn': 30}）",
-"vocab_ver": "042ba51be4f60578"
+"vocab_ver": "eecf7bb8e066bca8"
 },
 "promoy19-spd704": {
 "by": "rule",
@@ -147,7 +147,7 @@
 ],
 "verifier": 2,
 "verify": "43手・turn 30 まで正常に回った（result={'winner': 0, 'reason': 'deck_out', 'turn': 30}）",
-"vocab_ver": "32aa6fcdd26ae1b6"
+"vocab_ver": "f1db927dfcefcf5c"
 },
 "promoy19-spd705": {
 "by": "rule",
@@ -164,7 +164,7 @@
 ],
 "verifier": 2,
 "verify": "43手・turn 30 まで正常に回った（result={'winner': 0, 'reason': 'deck_out', 'turn': 30}）",
-"vocab_ver": "1a9326b7038fa281"
+"vocab_ver": "59258c739746170b"
 },
 "promoy19-spd708": {
 "by": "rule",
@@ -181,7 +181,7 @@
 ],
 "verifier": 2,
 "verify": "43手・turn 30 まで正常に回った（result={'winner': 0, 'reason': 'deck_out', 'turn': 30}）",
-"vocab_ver": "8f6c5f556f2eea6d"
+"vocab_ver": "813309acef383fc8"
 },
 "promoy19-spd709": {
 "by": "rule",
@@ -197,7 +197,7 @@
 ],
 "verifier": 2,
 "verify": "43手・turn 30 まで正常に回った（result={'winner': 0, 'reason': 'deck_out', 'turn': 30}）",
-"vocab_ver": "696f8624e78ec84a"
+"vocab_ver": "40dc6d953fde61fa"
 },
 "promoy19-spd710": {
 "by": "rule",
@@ -212,7 +212,7 @@
 ],
 "verifier": 2,
 "verify": "43手・turn 30 まで正常に回った（result={'winner': 0, 'reason': 'deck_out', 'turn': 30}）",
-"vocab_ver": "042ba51be4f60578"
+"vocab_ver": "eecf7bb8e066bca8"
 },
 "promoy19-spd802": {
 "by": "rule",
@@ -227,7 +227,7 @@
 ],
 "verifier": 2,
 "verify": "43手・turn 30 まで正常に回った（result={'winner': 0, 'reason': 'deck_out', 'turn': 30}）",
-"vocab_ver": "042ba51be4f60578"
+"vocab_ver": "eecf7bb8e066bca8"
 },
 "promoy19-spd804": {
 "by": "rule",
@@ -244,7 +244,7 @@
 ],
 "verifier": 2,
 "verify": "43手・turn 30 まで正常に回った（result={'winner': 0, 'reason': 'deck_out', 'turn': 30}）",
-"vocab_ver": "1a9326b7038fa281"
+"vocab_ver": "59258c739746170b"
 },
 "promoy19-spd806": {
 "by": "rule",
@@ -261,7 +261,7 @@
 ],
 "verifier": 2,
 "verify": "43手・turn 30 まで正常に回った（result={'winner': 0, 'reason': 'deck_out', 'turn': 30}）",
-"vocab_ver": "08bbdcfdb114be67"
+"vocab_ver": "b2429bf4cae3f2cd"
 },
 "promoy19-spd808": {
 "by": "rule",
@@ -279,7 +279,7 @@
 ],
 "verifier": 2,
 "verify": "43手・turn 30 まで正常に回った（result={'winner': 0, 'reason': 'deck_out', 'turn': 30}）",
-"vocab_ver": "a8a1323a192f149b"
+"vocab_ver": "edd7e7c3f594949d"
 },
 "promoy19-spd810": {
 "by": "rule",
@@ -294,7 +294,7 @@
 ],
 "verifier": 2,
 "verify": "43手・turn 30 まで正常に回った（result={'winner': 0, 'reason': 'deck_out', 'turn': 30}）",
-"vocab_ver": "042ba51be4f60578"
+"vocab_ver": "eecf7bb8e066bca8"
 },
 "promoy19-spd811": {
 "by": "rule",
@@ -310,6 +310,6 @@
 ],
 "verifier": 2,
 "verify": "43手・turn 30 まで正常に回った（result={'winner': 0, 'reason': 'deck_out', 'turn': 30}）",
-"vocab_ver": "32aa6fcdd26ae1b6"
+"vocab_ver": "f1db927dfcefcf5c"
 }
 }

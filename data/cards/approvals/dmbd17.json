@@ -17,7 +17,7 @@
 ],
 "verifier": 2,
 "verify_error": "移動先 bz が原文に無い",
-"vocab_ver": "5012dfc8beb71c36"
+"vocab_ver": "0b6509b3ec0e0955"
 },
 "dmbd17-teki002": {
 "by": "rule",
@@ -32,7 +32,7 @@
 ],
 "verifier": 2,
 "verify": "43手・turn 30 まで正常に回った（result={'winner': 0, 'reason': 'deck_out', 'turn': 30}）",
-"vocab_ver": "042ba51be4f60578"
+"vocab_ver": "eecf7bb8e066bca8"
 },
 "dmbd17-teki005": {
 "by": "rule",
@@ -48,7 +48,7 @@
 ],
 "verifier": 2,
 "verify": "26手・turn 11 まで正常に回った（result={'winner': 0, 'reason': 'direct_attack', 'turn': 11}）",
-"vocab_ver": "ddd3deb31471d535"
+"vocab_ver": "d4621a47991eeacc"
 },
 "dmbd17-teki006": {
 "by": "rule",
@@ -64,7 +64,7 @@
 ],
 "verifier": 2,
 "verify": "43手・turn 30 まで正常に回った（result={'winner': 0, 'reason': 'deck_out', 'turn': 30}）",
-"vocab_ver": "12abad44ca6ddb9d"
+"vocab_ver": "66fff36a8284db59"
 },
 "dmbd17-teki009": {
 "by": "rule",
@@ -80,6 +80,6 @@
 ],
 "verifier": 2,
 "verify": "43手・turn 30 まで正常に回った（result={'winner': 0, 'reason': 'deck_out', 'turn': 30}）",
-"vocab_ver": "32aa6fcdd26ae1b6"
+"vocab_ver": "f1db927dfcefcf5c"
 }
 }
