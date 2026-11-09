@@ -14,7 +14,6 @@ permissions:
   pull-requests: write
   issues: write
   actions: write
-  actions: write
 jobs:
   hunt:
     runs-on: ubuntu-latest
