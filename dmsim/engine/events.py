@@ -508,8 +508,9 @@ class EventMixin:
             tops = [c for c in self.bz_tops(p) if self.fdef(c).s_max]
             if len(tops) >= 2:
                 return [{"t": "smax_reduce", "player": p}]
-        dead = [s.ref(c) for c in self.bz_tops()
-                if "creature" in self.chars_ro(c)["types"] and self.chars_ro(c)["power"] <= 0]   # 703.4c
+        with self.chars_scope():   # 読み取りだけ: 同じ状態での chars() の重複計算を省く
+            dead = [s.ref(c) for c in self.bz_tops()
+                    if "creature" in self.chars_ro(c)["types"] and self.chars_ro(c)["power"] <= 0]   # 703.4c
         # 「墓地に置かれるかわりにとどまる」置換で破壊できなかったものは、状態が動くまで同じ処理を繰り返さない
         # （繰り返すと無限ループになる）。パワーが0より大きくなれば対象から外れる
         s.sba_held = [r for r in s.sba_held if r in dead]

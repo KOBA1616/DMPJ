@@ -5,20 +5,10 @@
 """
 from __future__ import annotations
 
-import functools
 import itertools
 
 from ..types import ActivateTask, CrossTask, HyperTask, PlayTask, TurnTask
-from .registry import STEPS, step, task
-
-
-def _read_only(fn):
-    """状態を読むだけのメソッド: 呼び出しの間は chars() の結果を使い回す（chars_scope）。"""
-    @functools.wraps(fn)
-    def w(self, *a, **k):
-        with self.chars_scope():
-            return fn(self, *a, **k)
-    return w
+from .registry import STEPS, read_only, step, task
 
 
 class TurnMixin:
@@ -341,7 +331,7 @@ class TurnMixin:
         """実際に得る軽減量: per なら支払い時の行動の件数 × amount。"""
         return o["amount"] * (len(fuel) if o.get("per") else 1)
 
-    @_read_only
+    @read_only
     def _cost_may_avail(self, cid, face=None) -> list[dict]:
         """今使える任意のコスト軽減（mod cost_may）。once のものは発生源ごとにターン中1回まで。"""
         out = []
@@ -372,7 +362,7 @@ class TurnMixin:
         n = len({self.chars_ro(c)["cost"] for c in self._tap_pool(p)}) if tapped is None else len(tapped)
         return max(0, (d.cost if cost is None else cost) - n * d.tap_reduce)
 
-    @_read_only
+    @read_only
     def _evo_sources(self, cid, p, face=None) -> list[int]:
         """適正な進化元（801.1a）。evolve_zone（既定は自分のバトルゾーン）のクリーチャーで
         evolve_from を満たすもの（超無限墓地進化は自分の墓地から選ぶ）。"""
@@ -404,7 +394,7 @@ class TurnMixin:
             used.add(hit)
         return True
 
-    @_read_only
+    @read_only
     def _mana_choices(self, cid, p, face=None, cost: int | None = None, limit: int = 32, civs=None) -> list[list[int]]:
         """支払いに使うマナの組（112.2a）。文明は1文明につき別々の1枚で満たし、マナの数値の合計がコストに一致。
         cost: 実行時に確定したコスト（進化元数の軽減など）。指定なければカード定義のコスト。
