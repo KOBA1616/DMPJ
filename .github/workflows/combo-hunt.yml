@@ -28,6 +28,8 @@ jobs:
         with:
           path: .cache/combohunt_cycles.json
           key: combohunt-cycles-${{ hashFiles('data/cards/*.yaml') }}
+      # 組の選別は途中結果（pairs_state.json）から再開し、毎日少しずつ全組へ進める
+      - run: PYTHONPATH=. python tools/combo_screen.py --pairs --top 12 --budget 1500 --out data/combohunt/pairs.json
       - run: PYTHONPATH=. python tools/combo_hunt.py --top "${{ inputs.top || '20' }}" --seeds 6 --turns 4 --workers 2
       - name: "PR にして、tests の成功を確認してからマージ（無料プランでも動く。auto-merge・保護ルールは使わない）"
         env:
