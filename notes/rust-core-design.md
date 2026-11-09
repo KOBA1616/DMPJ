@@ -41,3 +41,9 @@ Rust 版と Python 版は、同じ「エンジン疑似API」（プロセス内�
 - エンジンが毎日変わる（語彙追加・自動修正）→ Python 版を先に変更し、Rust 版は差分テストが落ちた所を追う。語彙の追加は op 単位で小さく。
 - 境界の費用（Python から状態を読む回数）→ 段階3で一括取得と、探索側の移植を計測して判断。
 - ビルド環境（maturin、crates.io）→ このクラウド環境では利用可（cargo 1.97、maturin 1.16）。ローカルでは `cd rust/dmcore && maturin develop --release`。
+
+## 段階1の結果（2026-11-09）
+- Rust: タスクスタック・ターン進行・draw/untap/チャージ・パス・デッキ切れ・マナ選択肢（DFS）を移植（rust/dmcore/src/engine.rs）。
+- `lockstep(Python, Rust)` が plain デッキ（T001 など）で全手・全 digest 一致（パス方策でデッキ切れまで約59手）。
+- 未移植の語彙（play など）は `dmcore.Unsupported` で構造化して返り、lockstep は `ok: None, unsupported: …` を返す。
+- 次（段階2）: play/h_play・セレクタ・式・条件・chars・44 ops・誘発・戦闘。

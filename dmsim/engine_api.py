@@ -201,14 +201,25 @@ def lockstep(a: Session, b: Session, policy: str | Callable = "random:1", max_de
     毎決定で ①決定の kind・player・選択肢（key と順序と中身）②適用後の digest を比べ、最初のずれを返す。
     方策は a の決定から選び、同じ答えを b に適用する。戻り値: {ok, steps, divergence|None}"""
     pol = resolve_policy(policy) if isinstance(policy, str) else policy
-    da, db = a.decision(), b.decision()
+    try:
+        da, db = a.decision(), b.decision()
+    except Exception as e:
+        if type(e).__name__ == "Unsupported":
+            return {"ok": None, "steps": 0, "divergence": None, "unsupported": str(e)}
+        raise
     for step in range(max_decisions):
         if da != db:
             return {"ok": False, "steps": step, "divergence": {"at": "decision", "a": da, "b": db}}
         if da is None:
             return {"ok": a.digest() == b.digest() and a.result() == b.result(), "steps": step, "divergence": None}
         ans = pol(a.eng, da)
-        ra, rb = a.apply(ans, digest=True), b.apply(ans, digest=True)
+        ra = a.apply(ans, digest=True)
+        try:
+            rb = b.apply(ans, digest=True)
+        except Exception as e:
+            if type(e).__name__ == "Unsupported":
+                return {"ok": None, "steps": step, "divergence": None, "unsupported": str(e)}
+            raise
         if ra["digest"] != rb["digest"]:
             return {"ok": False, "steps": step + 1, "divergence": {
                 "at": "digest", "answer": ans, "diff": diff_states(a.observe(), b.observe())[:20]}}
