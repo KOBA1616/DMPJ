@@ -261,7 +261,7 @@ def op_modify(eng, t, op, env):
             return d
         ce["affected"] = [s.ref(c) for c in cids]
     if mod.get("double_power"):      # 「パワーを2倍にする」: 生成時点のパワーを対象ごとに控え、加算として適用する（第141弾。範囲固定の効果のみ）
-        ce["double_power"] = {r[0]: eng.chars(r[0])["power"] for r in ce.get("affected") or []}
+        ce["double_power"] = {r[0]: eng.chars_ro(r[0])["power"] for r in ce.get("affected") or []}
     s.continuous.append(ce)
     sba = eng._sba_tasks()
     if sba:   # パワー0以下になったら、この効果の続きより先に破壊する（703.4c, 111.2d）
@@ -494,7 +494,7 @@ def op_yobinion(eng, t, op, env):
     from ..state import rng_below
     s = eng.s
     p = env["you"]
-    threshold = eng.chars(env["self"][0])["cost"]
+    threshold = eng.chars_ro(env["self"][0])["cost"]
     revealed, found = [], None
     for c in list(s.zones["deck"][p]):
         revealed.append(c)
@@ -543,7 +543,7 @@ def op_gachinko(eng, t, op, env):
         a, b = mine[0], theirs[0]
         eng.note_public("reveal", a)
         eng.note_public("reveal", b)
-        win = eng.chars(a)["cost"] >= eng.chars(b)["cost"]
+        win = eng.chars_ro(a)["cost"] >= eng.chars_ro(b)["cost"]
         eng._raw_move(a, "deck", "bottom")
         eng._raw_move(b, "deck", "bottom")
         st["done"] += 1
