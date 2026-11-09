@@ -50,7 +50,8 @@ def run_batch(a, combos):
                                ProgressSpec(board=board, cards=cards) if (cards or board) else None, specs[t["combo"]], max_turn=a.turns, workers=a.workers,
                                prep_ids=_prep_ids(combos[t["combo"]], rules, deck, opp, specs[t["combo"]]),
                                value_model=load_model(t["combo"]))
-    for r in run_targets(ts, combos, mk, Rule(turn=a.turns), a.rounds, a.out, a.store):
+    from dmsim.autofix import selfheal
+    for r in run_targets(ts, combos, mk, Rule(turn=a.turns), a.rounds, a.out, a.store, health=a.health):
         print(r)
     if a.total_seconds:                                       # 日次の総枠から、診断に使った残りを deck_fix と tune に自動で配る
         from dmsim.deckplan import budget as B
@@ -58,12 +59,19 @@ def run_batch(a, combos):
         print(f"日次枠{a.total_seconds}秒: deck_fix {a.deck_fix_budget}秒 / tune {a.tune_seconds}秒")
     if a.deck_fix and a.out and (a.deck_fix_budget or not a.total_seconds):
         import deck_fix                                   # 同じ tools/ にある。cards 段階の記録があるコンボだけ回る
-        deck_fix.main(["--targets", a.targets, "--stage-from", a.out, "--seeds", str(a.seeds), "--turns", str(a.turns),
-                       "--workers", str(a.workers), "--cands", "6", "--time-budget", str(a.deck_fix_budget)])
+        selfheal.run_phase("deck_fix", lambda: deck_fix.main(["--targets", a.targets, "--stage-from", a.out, "--seeds", str(a.seeds), "--turns", str(a.turns),
+                           "--workers", str(a.workers), "--cands", "6", "--time-budget", str(a.deck_fix_budget)]), a.health)
     if a.tune_seconds:
         import auto_tune                                  # 進化戦略のノブ探索。採用は再確認シードで再現した時だけ（docs/autotune.md）
-        auto_tune.main(["--targets", a.targets, "--seeds", str(a.seeds), "--turns", str(a.turns), "--workers", str(a.workers),
-                        "--seconds", str(a.tune_seconds), "--store", a.store] + (["--out", a.out.replace(".jsonl", "") + "_tune.jsonl"] if a.out else []))
+        selfheal.run_phase("auto_tune", lambda: auto_tune.main(["--targets", a.targets, "--seeds", str(a.seeds), "--turns", str(a.turns), "--workers", str(a.workers),
+                           "--seconds", str(a.tune_seconds), "--store", a.store] + (["--out", a.out.replace(".jsonl", "") + "_tune.jsonl"] if a.out else [])), a.health)
+    body = selfheal.render_issue(selfheal.load(a.health))     # 失敗した段階があれば、Issue 用の要約を残す（日次ルーティンが Issue 化して直す）
+    if body:
+        Path(a.issue_file).parent.mkdir(parents=True, exist_ok=True)
+        Path(a.issue_file).write_text(body, encoding="utf-8")
+        print(f"失敗した段階あり → {a.issue_file}（label autofix-failing の Issue にする）")
+    elif Path(a.issue_file).exists():
+        Path(a.issue_file).unlink()
 
 
 def main(argv=None):
@@ -84,6 +92,8 @@ def main(argv=None):
     ap.add_argument("--deck-fix-budget", type=int, default=5400, help="--deck-fix の時間予算（秒）。対象ごとの候補数と粗比較の局数を自動配分し、前回途中のデッキを優先する（既定 90分）")
     ap.add_argument("--tune-seconds", type=int, default=0, help="0以外なら、終了後に tools/auto_tune.py をこの秒数の予算で続けて回す（--targets 指定時）。既定は無効")
     ap.add_argument("--total-seconds", type=int, default=0, help="0以外なら日次の総枠（秒）。診断ループの後、残り時間を deck_fix(65%%)と tune(35%%)へ自動配分する（--deck-fix-budget/--tune-seconds は上書きされる）")
+    ap.add_argument("--health", default="data/autofix/health.yaml", help="段階ごとの成否の記録（自己修復。連続失敗は隔離される）")
+    ap.add_argument("--issue-file", default="logs/autofix_issue.md", help="失敗した段階の要約（Issue 本文）の出力先。失敗が無ければ作らない")
     ap.add_argument("--out")
     a = ap.parse_args(argv)
     combos = {c["id"]: c for c in yaml.safe_load(Path("data/known_combos/combos.yaml").read_text(encoding="utf-8"))["combos"]}
