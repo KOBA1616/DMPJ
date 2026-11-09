@@ -12,6 +12,7 @@ on:
 permissions:
   contents: write
   pull-requests: write
+  issues: write
   actions: write
 jobs:
   hunt:
@@ -28,18 +29,27 @@ jobs:
           path: .cache/combohunt_cycles.json
           key: combohunt-cycles-${{ hashFiles('data/cards/*.yaml') }}
       - run: PYTHONPATH=. python tools/combo_hunt.py --top "${{ inputs.top || '20' }}" --seeds 6 --turns 4 --workers 2
-      - name: PR にして自動マージ
+      - name: "PR にして、tests の成功を確認してからマージ（無料プランでも動く。auto-merge・保護ルールは使わない）"
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
           git diff --quiet -- data/combohunt && exit 0
-          b="combohunt/$(date +%Y%m%d)"
+          b="combohunt/$(date +%Y%m%d-%H%M)"
           git config user.name "combo-hunt"; git config user.email "combo-hunt@users.noreply.github.com"
           git checkout -b "$b"; git add data/combohunt; git commit -m "combo-hunt: 登録外コンボ候補の検証結果を追記"
           git push -u origin "$b"
-          gh pr create --base main --head "$b" --title "combo-hunt: 検証結果 $(date +%Y-%m-%d)" --body "毎日の自動探索の結果（data/combohunt/results.jsonl）。"
-          # GITHUB_TOKEN で作った PR は tests が自動起動しない。ここで起動し、成功を待ってからマージする（--auto は必須チェック未設定だと即マージになる）
+          pr=$(gh pr create --base main --head "$b" --title "combo-hunt: 検証結果 $(date +%Y-%m-%d)" --body "毎日の自動探索の結果（data/combohunt/results.jsonl）。tests が成功したら自動でマージする。")
+          # GITHUB_TOKEN が作った PR は pull_request を起動しないので、tests を手動起動して結果を待つ
           gh workflow run tests.yml --ref "$b"
           sleep 30
-          id=$(gh run list --workflow tests.yml --branch "$b" --event workflow_dispatch --limit 1 --json databaseId -q '.[0].databaseId')
-          gh run watch "$id" --exit-status && gh pr merge "$b" --squash || { echo "tests が通らないのでマージしない"; exit 1; }
+          for i in $(seq 1 60); do
+            run=$(gh run list --workflow tests.yml --branch "$b" --limit 1 --json databaseId,status,conclusion -q '.[0]')
+            st=$(echo "$run" | python3 -c 'import sys,json; d=json.loads(sys.stdin.read() or "{}"); print(d.get("status",""), d.get("conclusion",""))')
+            case "$st" in
+              "completed success") gh pr merge "$pr" --squash --delete-branch; exit 0 ;;
+              completed*) gh pr comment "$pr" --body "tests が失敗したのでマージしない（$st）。"; gh label create tests-failing --color B60205 2>/dev/null || true
+                          gh issue create --label tests-failing --title "combo-hunt の PR で tests が失敗" --body "$pr の tests が失敗。実行一覧: $GITHUB_SERVER_URL/$GITHUB_REPOSITORY/actions/workflows/tests.yml"; exit 1 ;;
+            esac
+            sleep 30
+          done
+          gh pr comment "$pr" --body "tests の結果を待ちきれなかったのでマージしない。"; exit 1
