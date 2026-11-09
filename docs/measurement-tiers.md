@@ -33,3 +33,15 @@
 ## 未着手（複数ターンの仕込み評価）
 探索はターン内中心で、仕込みの価値は部品表（leaf_parts）と lookahead に頼っている。tenmon のように実行層が低い対象で、
 lookahead（0〜2）と準備札の加点の効果を、実行層の連続指標で測るのが次の一手（今は auto_tune のノブ探索が自動で試す）。
+
+## 目標局面への到達探索（通常の開幕から届けるか）— 2026-11-10 追加
+`dmsim/discovery/reachsearch.py`。仕込み局面の生成器（zone_graph の閉路など）が出した局面が「通常の開幕から本当に届くか」を判定する入口。
+- `reach_target(eng, target, me, width, max_depth, max_turn)`: target は `{ゾーン: {カード定義ID: 枚数}}`（下限。`eval/stage.board_met` と同じ意味）。bestfirst.beam と同じ骨格で、勝ちの代わりに目標の充足を探し、充足率を評価に足して導く。戻り値 `ReachResult(reached, nodes, engine, turn, best_fraction)`。到達した局面の手順は `engine.log`。
+- `reach_rate(rules, deck, target, seeds, opp_deck=None, **kw)`: seed ごとに通常の開幕（先後は seed の偶奇）から探索し、到達率・到達ターンを返す。
+- 素引きの下限は `dmsim/autofix/reach.py`（`reach_prob`）で先に見積もれる（探索を回す前の足切りではなく、結果の解釈用）。
+- 注意: 探索は真の山札順を見る（公平探索ではない）。到達「可能性」の判定用で、強さの評価には使わない。
+
+## 天門（通常の開幕）の現状 — 2026-11-10 調べ
+- tenmon デッキは 天門×2・ミルザム×2・エメラルーダ×4。3枚がそろう確率（素引き）は T4 までで 0.076、T6 までで 0.134。開幕手札に3枚そろう seed は 399 中 5（1.3%）。
+- 日次の実行層（LoopSpec 自動の開始局面）は、ループ途中の局面（部品が場に出て、盾の束が出来ている）を開始にする。ここからの TurnSearch は16局中0〜1勝（budget 400 で368秒）。
+- 評価の穴: `bestfirst.priority` の「自分の盾」加点は、アレフティナ等の勝利条件（kind: state）を持つカードが手札・場にある時だけ有効。3枚で盾の束を割って手札を増やす段階（勝利条件カードがまだ無い）では、自分の盾の束も連鎖の長さも評価に入らない。
