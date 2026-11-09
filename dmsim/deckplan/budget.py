@@ -62,13 +62,22 @@ def probe_unit(rules, deck, opp, setup, workers: int = 1, budget: int = REF_BUDG
 
 
 def allocate(h: dict | None, slot_sec: float, max_cands: int, max_cs: int, min_cands: int = 3, min_cs: int = 8, kinds: int = 4,
-             probe: float | None = None, max_budget: int = REF_BUDGET) -> tuple[int, int, int]:
-    """枠 slot_sec に収まる (種類ごとの候補数, 粗比較の局数, 粗比較の探索予算)。
-    重いデッキほど、まず探索予算（深さ）を半分ずつ MIN_BUDGET まで、次に局数、最後に候補数を縮める。
+             probe: float | None = None, max_budget: int = REF_BUDGET, seeds: int = 30, top_k: int = 2, fine_budget: int = 200) -> tuple[int, int, int, int]:
+    """枠 slot_sec に収まる (種類ごとの候補数, 粗比較の局数, 粗比較の探索予算, 通常予算で再比較する件数)。
+    粗比較だけでなく、通常予算（既定200）の再比較（base＋上位 top_k 件 × seeds 局）の時間も先に確保する（重いデッキでは再比較が支配的）。
+    重いデッキほど、まず再比較の件数、次に粗比較の探索予算（深さ）を半分ずつ MIN_BUDGET まで、次に局数、最後に候補数を縮める。
     単価は 履歴と実測(probe)の大きい方（履歴なしで実測もなければ既定値）。cands は評価した候補の総数なので kinds 倍で数える。"""
     cands_u = [x for x in (unit_sec(h), probe) if x is not None]
-    u = (max(cands_u) if cands_u else DEFAULT_UNIT_SEC) * kinds
-    budget = slot_sec * SAFETY
+    u1 = max(cands_u) if cands_u else DEFAULT_UNIT_SEC
+    total = slot_sec * SAFETY
+    fine_one = u1 * seeds * fine_budget / REF_BUDGET                 # 通常予算で1デッキを seeds 局測る時間
+    k = top_k
+    while k > 1 and (k + 1) * fine_one > total * 0.5:               # 再比較に枠の半分までしか使わない（まず件数を減らす）
+        k -= 1
+    budget = total - (k + 1) * fine_one
+    if budget < total * 0.3:                                          # それでも粗比較の枠が足りない（極端に重い）なら再比較は次回へ回す
+        k, budget = 0, total
+    u = u1 * kinds
     cands, cs, b = max_cands, max_cs, max_budget
     cost = lambda: u * cands * cs * b / REF_BUDGET
     while b > MIN_BUDGET and cost() > budget:
@@ -77,7 +86,7 @@ def allocate(h: dict | None, slot_sec: float, max_cands: int, max_cs: int, min_c
         cs -= 1
     while cands > min_cands and cost() > budget:
         cands -= 1
-    return cands, cs, b
+    return cands, cs, b, k
 
 
 def update(hist: dict, name: str, res: dict, cands: int, cs: int, now: float, coarse_budget: int = REF_BUDGET) -> None:
