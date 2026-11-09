@@ -220,7 +220,7 @@ class EventMixin:
                 return []   # 「破壊されない」（第127弾）: 置換を経た最終的な破壊に対して判定し、破壊自体が起こらない
             if from_zone == "bz" and ev["to"] != "bz":
                 # 「バトルゾーンを離れない」（第49弾）: 置換を経た最終的な移動に対して判定し、該当すれば移動自体が起こらない
-                for nl in self.chars(cid)["no_leave"]:
+                for nl in self.chars_ro(cid)["no_leave"]:
                     if nl.get("except_destroy") and ev["reason"] == "destroy":
                         continue   # 「破壊される以外は離れない」型: 破壊だけは通す
                     if nl.get("except_battle") and ev.get("battle"):
@@ -287,7 +287,7 @@ class EventMixin:
                     s.cards[u].top_of = cid
             if ev.get("face_down") and ev["to"] == "mana":   # 「裏向きのままマナゾーンに置く」（第128弾）: 置かれた時点で裏向き（別のイベントにしない）
                 c.face_down = True
-            if ev["to"] == "bz" and "enters_tapped" in self.chars(cid)["keywords"]:   # 「タップしてバトルゾーンに出る」
+            if ev["to"] == "bz" and "enters_tapped" in self.chars_ro(cid)["keywords"]:   # 「タップしてバトルゾーンに出る」
                 c.tapped = True
             for u in unders:   # クリーチャーとして離れたら下のカードも同じゾーンへ（109.2b, 316.3）
                 if s.cards[u].zone == "bz" or s.cards[u].top_of == cid:   # シールドの束も同時に動く（113.2）
@@ -338,12 +338,12 @@ class EventMixin:
                 out[0]["cause"] = ev["cause"]
             if ev.get("face_up"):
                 out[0]["face_up"] = True
-            if ev["to"] == "bz" and "ex_life" in self.chars(cid)["keywords"]:
+            if ev["to"] == "bz" and "ex_life" in self.chars_ro(cid)["keywords"]:
                 out += self._exlife_shield(cid)
             if ev["reason"] == "summon":
                 out.append({"ev": "summon", "subject": new, "controller": c.controller, "player": c.controller,
                             "unpaid": bool(ev.get("unpaid"))})
-            if ev["to"] == "bz" and "creature" in self.chars(cid)["types"]:   # 「このターンに出たクリーチャー」の記録（式 entered が数える）
+            if ev["to"] == "bz" and "creature" in self.chars_ro(cid)["types"]:   # 「このターンに出たクリーチャー」の記録（式 entered が数える）
                 s.turn_counters.setdefault(f"entered:{c.controller}", []).append(cid)
             if ev["to"] == "bz" and ev.get("seal"):
                 # 封印を付けた状態で出す（メモッタ等）: 誘発の収集より前に付くので、出た時能力は無視される
@@ -509,7 +509,7 @@ class EventMixin:
             if len(tops) >= 2:
                 return [{"t": "smax_reduce", "player": p}]
         dead = [s.ref(c) for c in self.bz_tops()
-                if "creature" in self.chars(c)["types"] and self.chars(c)["power"] <= 0]   # 703.4c
+                if "creature" in self.chars_ro(c)["types"] and self.chars_ro(c)["power"] <= 0]   # 703.4c
         # 「墓地に置かれるかわりにとどまる」置換で破壊できなかったものは、状態が動くまで同じ処理を繰り返さない
         # （繰り返すと無限ループになる）。パワーが0より大きくなれば対象から外れる
         s.sba_held = [r for r in s.sba_held if r in dead]
