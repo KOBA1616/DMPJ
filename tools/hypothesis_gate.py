@@ -13,6 +13,7 @@ import yaml
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 sys.path.insert(0, str(Path(__file__).resolve().parent))
+import exec_tier  # noqa: E402
 from dmsim.autofix import Knobs, Rule, harness_measure  # noqa: E402
 from dmsim.autofix.batch import default_board, default_need  # noqa: E402
 from dmsim.autofix.gate import check_paths, compare  # noqa: E402
@@ -33,9 +34,10 @@ def measure_all(a) -> dict:
     for t in ts:
         c = combos[t["combo"]]
         k = Knobs(**{**Knobs().__dict__, **store.get(t["combo"], {})})
-        spec = yaml.safe_load(Path(t["setup"]).read_text(encoding="utf-8")) if t.get("setup") else None
         opp = load_deck(t["opp_deck"]) if t.get("opp_deck") else ["T001"] * 40
-        m = harness_measure(rules, load_deck(t["deck"]), opp, list(range(1, a.seeds + 1)), spec,
+        deck = load_deck(t["deck"])
+        spec, _ = exec_tier.exec_spec(rules, t, deck, cold=a.cold)     # 実行層（仕込み済み開始）で測る
+        m = harness_measure(rules, deck, opp, list(range(1, a.seeds + 1)), spec,
                             ProgressSpec(board=default_board(c), cards=default_need(c)), specs[t["combo"]],
                             max_turn=a.turns, workers=a.workers, value_model=load_model(t["combo"]))(k)
         for key in out:
@@ -57,6 +59,7 @@ def main(argv=None):
     ap.add_argument("--turns", type=int, default=4)
     ap.add_argument("--workers", type=int, default=4)
     ap.add_argument("--store", default="data/autofix/knobs.yaml")
+    ap.add_argument("--cold", action="store_true", help="通常の開幕で測る（既定は仕込み済み開始の実行層）")
     ap.add_argument("--out")
     ap.add_argument("--baseline")
     ap.add_argument("--base-ref", default="origin/main")

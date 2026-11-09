@@ -25,10 +25,13 @@ def prep_unused(m: dict, floor: float = 0.5) -> bool:
     return bool(xs) and sum(1 for x in xs if x and x > 0) / len(xs) < floor
 
 
-def diagnose(m: dict, max_turn: int, target: float = 0.5, floor: float = 0.5) -> Diagnosis:
+def diagnose(m: dict, max_turn: int, target: float = 0.5, floor: float = 0.5, ceiling: float | None = None) -> Diagnosis:
     r = {k: _rate(m.get(k, []), max_turn) for k in ("kill", "board", "cards")}
     hints = ("prep_unused",) if prep_unused(m, floor) else ()
     d = _stage(m, r, target, floor)
+    if d.stage == "cards" and ceiling is not None and ceiling < floor:
+        # 部品がそろう確率がデッキだけで上限 ceiling。実測がそれに近ければ AI でなくデッキの引き込みの問題（探索や評価式の改善では上がらない）
+        d = Diagnosis("deck_limited", f"デッキの素引きで部品がそろう確率が{ceiling:.2f}（実測{r['cards']:.2f}。サーチ・ドローで補える分は実測に入る）。デッキ側の課題。探索側の診断は仕込み済み開始で行う", r)
     return replace(d, hints=hints) if hints else d
 
 
