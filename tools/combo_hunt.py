@@ -15,7 +15,8 @@ import yaml
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 from dmsim.defs import load_rules  # noqa: E402
-from dmsim.solitaire import measure  # noqa: E402
+from dmsim.scenario import build  # noqa: E402
+from dmsim.solitaire import measure, play_game  # noqa: E402
 from dmsim.zone_graph import Cycle, bundles_of, feeds  # noqa: E402
 
 REGISTERED = ("tenmon", "saga", "knight_dmc", "akashic")
@@ -45,6 +46,33 @@ def score(c, freq: dict | None = None) -> float:
     if freq:
         s -= sum(0.8 * math.log10(max(1, freq.get(x, 1))) for x in c.cards)
     return s
+
+
+OPP_DECK = 30     # 通常の開幕（40枚 − 手札5 − シールド5）に合わせる
+MANA5 = ["T001", "T003", "T004", "T005", "T008"]
+
+
+def verify_lock(rules, cards: list[str], seeds, turns: int = 3, budget: int = 100) -> dict:
+    """ロック候補の成立確認。手札に2枚＋十分なマナ（5文明）、相手は山札30枚・マナ6枚の局面から実エンジンで回し、
+    ロックの確立または山札切れ勝ちが出るかを見る。自分の山札切れ負けが出たら lost に数える（自分の山札切れ対策）。"""
+    spec = {"p0": {"hand": list(cards), "mana": MANA5 * 2}, "p1": {"mana": ["T001"] * 6}, "deck_size": OPP_DECK, "shuffle_deck": True}
+    ok = lost = err = 0
+    kinds: set = set()
+    for s in seeds:
+        try:
+            start = build(rules, {**spec, "seed": s})
+            res, _ = play_game(rules, [], [], s, max_turn=turns, budget=budget, start=start)
+        except Exception as ex:      # 1局の失敗で止めない
+            err += 1
+            kinds.add(f"error:{type(ex).__name__}")
+            continue
+        if res.kill_turn is not None and (res.kind in ("lock", "deck_out", "loop_deck_out") or res.origin == "lock"):
+            ok += 1
+            kinds.add(f"{res.origin}/{res.kind}")
+        if res.lost:
+            lost += 1
+    n = len(list(seeds)) if not isinstance(seeds, range) else len(seeds)
+    return {"games": n, "lock_wins": ok, "self_lost": lost, "errors": err, "kinds": sorted(kinds)}
 
 
 def build_deck(rules, cards: list[str], rng: random.Random, size: int = 40) -> list[str]:
@@ -148,6 +176,7 @@ def main(argv=None):
     ap.add_argument("--workers", type=int, default=1)
     ap.add_argument("--max-cards", type=int, default=2)
     ap.add_argument("--max-len", type=int, default=4)
+    ap.add_argument("--locks", type=int, default=0, help="ロック候補の成立確認だけを、上位この件数ぶん回す（軽いので多く回せる）")
     ap.add_argument("--list-only", action="store_true", help="候補の一覧だけ出す（測らない）")
     ap.add_argument("--cache", default=".cache/combohunt_cycles.json")
     ap.add_argument("--out", default="data/combohunt/results.jsonl")
@@ -169,6 +198,19 @@ def main(argv=None):
     done = set()
     if out.exists():
         done = {tuple(json.loads(l)["cards"]) for l in out.read_text(encoding="utf-8").splitlines() if l.strip()}
+    if a.locks:
+        out.parent.mkdir(parents=True, exist_ok=True)
+        hits = []
+        for c in [x for x in cands if x["period"] == "lock" and tuple(x["cards"]) not in done][:a.locks]:
+            v = verify_lock(rules, c["cards"], range(1, a.seeds + 1), turns=3, budget=a.budget)
+            rec = {**c, **v, "turns": 3, "verified": "lock_setup"}
+            with out.open("a", encoding="utf-8") as f:
+                f.write(json.dumps(rec, ensure_ascii=False) + "\n")
+            if v["lock_wins"]:
+                hits.append(rec)
+                print(f"lock {v['lock_wins']}/{v['games']} lost={v['self_lost']} {' + '.join(c['names'])} {v['kinds']}", flush=True)
+        print(f"ロック成立 {len(hits)} 組", flush=True)
+        return
     todo, used = [], {}      # 同じ札ばかりの候補に偏らないよう、1枚につき最大2組まで
     locks = [c for c in cands if c["period"] == "lock"]
     others = [c for c in cands if c["period"] != "lock"]
@@ -188,6 +230,13 @@ def main(argv=None):
     out.parent.mkdir(parents=True, exist_ok=True)
     for c in todo:
         t0 = time.time()
+        if c["period"] == "lock":
+            v = verify_lock(rules, c["cards"], range(1, a.seeds + 1), turns=3, budget=a.budget)
+            rec = {**c, **v, "turns": 3, "seconds": round(time.time() - t0, 1), "verified": "lock_setup"}
+            with out.open("a", encoding="utf-8") as f:
+                f.write(json.dumps(rec, ensure_ascii=False) + "\n")
+            print(f"lock {v['lock_wins']}/{v['games']} lost={v['self_lost']} err={v['errors']} {' + '.join(c['names'])} ({rec['seconds']}s) {v['kinds']}", flush=True)
+            continue
         deck = build_deck(rules, c["cards"], random.Random(1))
         rs = measure(deck, ["T001"] * 40, range(1, a.seeds + 1), rules=rules, workers=a.workers, max_turn=a.turns, budget=a.budget)
         kills = [r for r in rs if r.kill_turn is not None]
