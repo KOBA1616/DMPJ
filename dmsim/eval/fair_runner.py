@@ -8,6 +8,7 @@ from ..engine.core import Engine
 from ..search.fair import FairTurnSearch
 from ..solitaire import GameResult, _origin, charge_only_policy, own_turn
 from .infolevel import InfoLevel, register_runner
+from ..engine_view import active_of, result_of
 
 
 def make_fair_runner(n_det: int = 8, lookahead: int = 0):
@@ -22,7 +23,7 @@ def make_fair_runner(n_det: int = 8, lookahead: int = 0):
                 opp.setup(eng)
                 opp_pol = opp.policy
             while (d := eng.advance()) is not None:
-                if eng.s.active != me or d["player"] != me:
+                if active_of(eng) != me or d["player"] != me:
                     eng.answer(opp_pol(eng, d))
                     continue
                 ot = own_turn(eng, me)
@@ -31,7 +32,7 @@ def make_fair_runner(n_det: int = 8, lookahead: int = 0):
                 fs = FairTurnSearch(me, budget, n_det, seed * 7919 + ot, opp_policy=opp_pol, lookahead=lookahead)
                 eng = fs.run(eng)
                 res.nodes += fs.nodes
-            r = eng.s.result
+            r = result_of(eng)
             if r is not None:
                 if r["winner"] == me:
                     res.kill_turn = own_turn(eng, me, r["turn"])

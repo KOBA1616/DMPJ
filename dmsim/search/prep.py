@@ -7,6 +7,7 @@ from __future__ import annotations
 
 from ..engine import Engine
 from ..eval.stage import count_matching
+from ..engine_view import result_of
 
 
 def prep_used(eng: Engine, me: int, ids) -> int:
@@ -20,5 +21,5 @@ def with_prep_bonus(inner, ids, bonus: float, cap: int = 2):
 
     def value(eng: Engine, me: int) -> float:
         v = inner(eng, me)
-        return v if eng.s.result is not None else v + bonus * min(cap, prep_used(eng, me, ids))
+        return v if result_of(eng) is not None else v + bonus * min(cap, prep_used(eng, me, ids))
     return value

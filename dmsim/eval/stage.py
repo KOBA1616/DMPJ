@@ -10,20 +10,19 @@
 from __future__ import annotations
 
 from collections import Counter
+from ..engine_view import defn_of
 
 VISIBLE_ZONES = ("hand", "bz", "mana", "graveyard", "shield_bz")
 
 
 def zone_counts(eng, me: int, zone: str) -> Counter:
-    s = eng.s
-    return Counter(s.cards[c].defn for c in eng.zlist(zone, me))
+    return Counter(defn_of(eng, c) for c in eng.zlist(zone, me))
 
 
 def count_matching(eng, me: int, zone: str, ids=()) -> int:
-    s = eng.s
     n = 0
     for cid in eng.zlist(zone, me):
-        if (ids and s.cards[cid].defn in ids) or (not ids and "creature" in eng.chars(cid)["types"]):
+        if (ids and defn_of(eng, cid) in ids) or (not ids and "creature" in eng.chars(cid)["types"]):
             n += 1
     return n
 
