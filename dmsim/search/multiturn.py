@@ -10,6 +10,7 @@ from __future__ import annotations
 
 from ..engine import Engine
 from ..solitaire import TurnSearch, Weights, charge_only_policy, evaluate
+from ..engine_view import active_of, result_of
 
 
 def advance_to_own_turn(eng: Engine, me: int, opp_policy, limit: int = 400) -> bool:
@@ -18,7 +19,7 @@ def advance_to_own_turn(eng: Engine, me: int, opp_policy, limit: int = 400) -> b
         d = eng.advance()
         if d is None:
             return False
-        if d["player"] == me and eng.s.active == me:
+        if d["player"] == me and active_of(eng) == me:
             return True
         eng.answer(opp_policy(eng, d))
     return False
@@ -34,11 +35,11 @@ def make_lookahead_value_fn(inner=None, budget: int = 20, opp_policy=charge_only
 
     def value(eng: Engine, me: int) -> float:
         base = base_fn(eng, me)
-        if eng.s.result is not None or eng.s.active == me:
+        if result_of(eng) is not None or active_of(eng) == me:
             return base                              # 勝敗が決まった／自分のターンの途中（葉でない）
         e = eng.clone()
-        if not advance_to_own_turn(e, me, opp_policy) or e.s.result is not None:
-            return base if e.s.result is None else max(base, base_fn(e, me))
+        if not advance_to_own_turn(e, me, opp_policy) or result_of(e) is not None:
+            return base if result_of(e) is None else max(base, base_fn(e, me))
         ts = TurnSearch(me, budget, w, opp_policy=opp_policy, value_fn=base_fn)
         ts.burn_stock = burn_stock
         leaf, _ = ts.run(e)

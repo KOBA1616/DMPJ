@@ -17,6 +17,8 @@ from . import scenario as sc
 from .engine import Engine
 from .play import passive_policy, random_policy  # noqa: F401  (方策 id の解決用)
 
+from .engine_view import (active_of, defn_of, defns_of, digest_of, pending_of, result_of, tapped_of, turn_of, zone_of)  # noqa: E402,F401  (読み取り専用アクセサの再公開)
+
 API_VERSION = "0.1"
 
 

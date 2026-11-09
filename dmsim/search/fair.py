@@ -10,13 +10,14 @@ from collections import Counter
 from ..engine import Engine
 from ..solitaire import TurnSearch, charge_only_policy
 from .infoset import determinize
+from ..engine_view import active_of
 
 
 def _own_decision(eng: Engine, me: int, opp_policy):
     """相手の決定を相手役に答えさせて、自分の決定かターン終了まで進める。"""
     while True:
         d = eng.advance()
-        if d is None or eng.s.active != me:
+        if d is None or active_of(eng) != me:
             return None
         if d["player"] == me:
             return d

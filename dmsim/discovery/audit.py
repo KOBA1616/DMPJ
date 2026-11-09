@@ -8,6 +8,7 @@ from __future__ import annotations
 
 import re
 import unicodedata
+from ..engine_view import zone_of
 
 CIP = re.compile(r"このクリーチャーが(?:バトルゾーンに)?出た時[、,]?(.*)")
 SKIP_WORDS = ("てもよい", "場合", "なら", "ごとに", "かわりに", "相手の", "選び", "選ぶ", "ターン", "まで")
@@ -41,8 +42,7 @@ def measure_cip(rules, cid: str, mana=("T001", "T003", "T004", "T005", "T008") *
     from .. import scenario
     spec = {"p0": {"hand": [cid] + ["T001"] * hand_extra, "mana": list(mana)}, "p1": {"bz": ["T001"]}, "seed": 1, "deck_size": 30}
     e = scenario.build(rules, spec)
-    s = e.s
-    hand0, gy0 = len(s.zones["hand"][0]), len(s.zones["graveyard"][0])
+    hand0, gy0 = len(zone_of(e, "hand", 0)), len(zone_of(e, "graveyard", 0))
     played = False
     for _ in range(60):
         d = e.advance()
@@ -63,9 +63,9 @@ def measure_cip(rules, cid: str, mana=("T001", "T003", "T004", "T005", "T008") *
             e.answer(list(range(d["min"])))
     if not played:
         return None
-    discards = len(s.zones["graveyard"][0]) - gy0
+    discards = len(zone_of(e, "graveyard", 0)) - gy0
     # 引いた枚数 = 手札の増減（出した1枚を除く）+ 捨てた枚数。EXライフなど山札の上を盾にするカードに惑わされない
-    return {"draws": len(s.zones["hand"][0]) - (hand0 - 1) + discards, "discards": discards}
+    return {"draws": len(zone_of(e, "hand", 0)) - (hand0 - 1) + discards, "discards": discards}
 
 
 def audit_card(rules, cid: str) -> dict | None:

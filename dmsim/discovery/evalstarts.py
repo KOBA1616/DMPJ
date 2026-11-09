@@ -18,6 +18,7 @@ import json
 from .. import scenario
 from ..engine.core import IllegalAnswer
 from .loopspec import LoopSpec
+from ..engine_view import active_of, defn_of, result_of, turn_of, zone_of
 
 VERSION = 1
 
@@ -28,7 +29,7 @@ def _steps(ls: LoopSpec) -> list[tuple[str, tuple[str, ...], tuple[int, ...]]]:
 
 def _answer(e, kind, keys, idx) -> bool:
     d = e.advance()
-    if d is None or e.s.result is not None or d["kind"] != kind:
+    if d is None or result_of(e) is not None or d["kind"] != kind:
         return False
     ks = [o["key"] for o in d["options"]]
     pick, used = [], set()
@@ -49,7 +50,7 @@ def export_spec(rules, e, base: dict) -> dict:
     """エンジンの今の局面を scenario spec に写す（ゾーンの並びのみ）。base は元の spec（filler・seed・deck_size など）。"""
     spec = {k: v for k, v in base.items() if k not in ("p0", "p1", "deck_left")}
     for p in (0, 1):
-        spec[f"p{p}"] = {z: [e.s.cards[c].defn for c in e.s.zones[z][p]] for z in rules.zones if e.s.zones[z][p] and z not in ("gr",)}
+        spec[f"p{p}"] = {z: [defn_of(e, c) for c in zone_of(e, z, p)] for z in rules.zones if zone_of(e, z, p) and z not in ("gr",)}
     spec["deck_exact"] = [True, True]
     spec["deck_size"] = 0
     return spec
@@ -65,10 +66,10 @@ def boundaries(rules, ls: LoopSpec, prepare=None) -> list[dict]:
     out = []
     for i, (kind, keys, idx) in enumerate(steps):
         d = e.advance()
-        if d is None or e.s.result is not None:
+        if d is None or result_of(e) is not None:
             break
-        if d["kind"] == "charge" and e.s.active == 0 and (not out or e.s.turn != out[-1]["turn"]):
-            out.append({"step": i, "remaining": len(steps) - i, "turn": e.s.turn, "spec": export_spec(rules, e, board)})
+        if d["kind"] == "charge" and active_of(e) == 0 and (not out or turn_of(e) != out[-1]["turn"]):
+            out.append({"step": i, "remaining": len(steps) - i, "turn": turn_of(e), "spec": export_spec(rules, e, board)})
         if not _answer(e, kind, keys, idx):
             break
     return out

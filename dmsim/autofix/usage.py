@@ -12,17 +12,17 @@ from collections import Counter
 
 from ..engine import Engine
 from ..solitaire import TurnSearch, charge_only_policy, own_turn
+from ..engine_view import active_of, defn_of, tapped_of
 
 
 def castable_defs(eng: Engine, me: int) -> set[str]:
     """手札の呪文・クリーチャーで、コストが untapped マナ+1（チャージ分）以下の種類。コスト軽減は見ない近似。"""
-    s = eng.s
-    mana = sum(1 for c in eng.zlist("mana", me) if not s.cards[c].tapped) + 1
+    mana = sum(1 for c in eng.zlist("mana", me) if not tapped_of(eng, c)) + 1
     out = set()
     for c in eng.zlist("hand", me):
         ch = eng.chars(c)
         if ({"spell", "creature"} & set(ch["types"])) and ch["cost"] <= mana:
-            out.add(s.cards[c].defn)
+            out.add(defn_of(eng, c))
     return out
 
 
@@ -47,7 +47,7 @@ def collect_usage(rules, deck, opp_deck, seeds, fair: bool = False, max_turn: in
     for seed in seeds:
         eng = Engine.new_game(rules, [deck, opp_deck], seed, 0)
         while (d := eng.advance()) is not None:
-            if eng.s.active != me or d["player"] != me:
+            if active_of(eng) != me or d["player"] != me:
                 eng.answer(charge_only_policy(eng, d))
                 continue
             ot = own_turn(eng, me)

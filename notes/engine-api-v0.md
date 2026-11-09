@@ -50,3 +50,8 @@
 2. Rust 版が `open / decision / apply / fork / digest / observe` を満たす（段階1の移植と同時）。`lockstep(Python, Rust)` を通す。
 3. 探索・チューナー・自動診断を、エンジン本体の直接参照から API 経由へ順に移す（挙動は変えない。各移行で結果一致を確認）。
 4. 必要になったら JSON-RPC の薄いラッパ（devserver・外部ツール向け）。
+
+## 7. 段階3の進捗: 状態の読み取りは engine_view 経由
+- `dmsim/engine_view.py` に読み取り専用アクセサ（result_of / active_of / turn_of / pending_of / defn_of / tapped_of / zone_of / defns_of / digest_of）を置いた。Rust 版へ差し替える時はこの1ファイルを差し替える。
+- 置き換え済み（挙動不変、全テスト通過）: autofix/usage, search/{leaf_parts,multiturn,fair,prep}, eval/{fair_runner,progress,steplog,stage}, discovery/{replay,evalstarts,auto,audit,bestfirst}。
+- 未移行（状態を書き換えるため新しい操作が要る）: eval/harness の山札シャッフル（`shuffle_deck(p, rng)`）、search/fair の determinize による状態差し替え（`inject_state`）、discovery/advantage の trace 切り替え（`Session.trace` を使う）、discovery/evalstarts.export_spec の `cards`（`observe`）、tools/ の単発スクリプト（discover_dig, tenmon_walk, loopcheck_full_chain, discover_pipeline, minimal_setup）。
