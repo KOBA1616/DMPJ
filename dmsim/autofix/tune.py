@@ -53,25 +53,26 @@ def _score(m: dict, rule: Rule, w_board: float = 0.3, w_cards: float = 0.1) -> l
     return s
 
 
-def tune(measure, k0: Knobs, tune_seeds, confirm_seeds, rule: Rule = Rule(), generations: int = 5,
-         lam: int = 4, seed: int = 0, ledger=None) -> tuple[Knobs, list[dict]]:
-    """measure(Knobs, seeds)->{"kill":[...]}。採用した Knobs と履歴。tune_seeds と confirm_seeds は重ねない。"""
+def evolve(measure, g0, mutate_fn, to_dict, tune_seeds, confirm_seeds, rule: Rule = Rule(), generations: int = 5,
+           lam: int = 4, seed: int = 0, ledger=None):
+    """汎用の (1+λ) 進化戦略。g は任意の遺伝子（Knobs・部品の重みベクトル等）。measure(g, seeds)->{"kill",...}。
+    採用は、調整用シードで有意に改善 → 別の再確認シードでも有意に改善した時だけ。履歴を返す。"""
     if set(tune_seeds) & set(confirm_seeds):
         raise ValueError("調整用と再確認用のシードは分ける")
     rng = random.Random(seed)
-    cur, hist = k0, []
+    cur, hist = g0, []
     base_t = measure(cur, tune_seeds)
     base_c = None
     for g in range(generations):
         best = None
         for _ in range(lam):
-            cand = mutate(cur, rng)
+            cand = mutate_fn(cur, rng)
             if cand == cur:
                 continue
             r = paired_diff(_score(measure(cand, tune_seeds), rule), _score(base_t, rule), alpha=rule.alpha)
             if r["significant"] and r["diff"] > 0 and (best is None or r["diff"] > best[1]["diff"]):
                 best = (cand, r)
-        ent = {"gen": g, "from": cur.__dict__, "rule": rule.version}
+        ent = {"gen": g, "from": to_dict(cur), "rule": rule.version}
         if best is None:
             ent["verdict"] = "no_candidate"
             hist.append(ent)
@@ -83,13 +84,19 @@ def tune(measure, k0: Knobs, tune_seeds, confirm_seeds, rule: Rule = Rule(), gen
         mc = measure(cand, confirm_seeds)
         rc = paired_diff(_score(mc, rule), _score(base_c, rule), alpha=rule.alpha)
         ok = rc["significant"] and rc["diff"] > 0
-        ent.update(cand=cand.__dict__, tune_diff=r["diff"], confirm_diff=rc["diff"], confirm_ci=rc["ci"],
+        ent.update(cand=to_dict(cand), tune_diff=r["diff"], confirm_diff=rc["diff"], confirm_ci=rc["ci"],
                    verdict="accept" if ok else "reject_not_reproduced")
         hist.append(ent)
         _rec(ledger, ent)
         if ok:
             cur, base_t, base_c = cand, measure(cand, tune_seeds), mc
     return cur, hist
+
+
+def tune(measure, k0: Knobs, tune_seeds, confirm_seeds, rule: Rule = Rule(), generations: int = 5,
+         lam: int = 4, seed: int = 0, ledger=None) -> tuple[Knobs, list[dict]]:
+    """ノブの進化。measure(Knobs, seeds)->{"kill":[...]}。"""
+    return evolve(measure, k0, mutate, lambda k: k.__dict__, tune_seeds, confirm_seeds, rule, generations, lam, seed, ledger)
 
 
 def _rec(ledger, ent):

@@ -18,7 +18,7 @@ from dmsim.autofix.batch import default_board, default_need  # noqa: E402
 from dmsim.autofix.gate import check_paths, compare  # noqa: E402
 from dmsim.defs import load_rules  # noqa: E402
 from dmsim.eval.progress import ProgressSpec  # noqa: E402
-from dmsim.search.leaf_parts import load_specs  # noqa: E402
+from dmsim.autofix.partsgenome import load_specs_evolved  # noqa: E402
 from dmsim.solitaire import load_deck  # noqa: E402
 
 
@@ -28,7 +28,7 @@ def measure_all(a) -> dict:
     ts = [t for t in yaml.safe_load(Path(a.targets).read_text(encoding="utf-8"))["targets"]
           if combos.get(t["combo"], {}).get("split") != "holdout" and (not a.only or t["combo"] in a.only.split(","))]
     store = (yaml.safe_load(Path(a.store).read_text(encoding="utf-8")) or {}) if Path(a.store).exists() else {}
-    rules, specs, out = load_rules(), load_specs(), {"kill": [], "board": [], "cards": []}
+    rules, specs, out = load_rules(), load_specs_evolved(), {"kill": [], "board": [], "cards": []}
     for t in ts:
         c = combos[t["combo"]]
         k = Knobs(**{**Knobs().__dict__, **store.get(t["combo"], {})})
