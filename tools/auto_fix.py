@@ -32,6 +32,8 @@ def _prep_ids(combo, rules, deck, opp, spec):
 
 def run_batch(a, combos):
     from dmsim.autofix import run_targets
+    import time
+    t0 = time.time()
     ts = yaml.safe_load(Path(a.targets).read_text(encoding="utf-8"))["targets"]
     rules = load_rules()
     specs = load_specs()
@@ -47,7 +49,11 @@ def run_batch(a, combos):
                                prep_ids=_prep_ids(combos[t["combo"]], rules, deck, opp, specs[t["combo"]]))
     for r in run_targets(ts, combos, mk, Rule(turn=a.turns), a.rounds, a.out, a.store):
         print(r)
-    if a.deck_fix and a.out:
+    if a.total_seconds:                                       # 日次の総枠から、診断に使った残りを deck_fix と tune に自動で配る
+        from dmsim.deckplan import budget as B
+        a.deck_fix_budget, a.tune_seconds = B.split_remaining(a.total_seconds, time.time() - t0, bool(a.deck_fix and a.out), True)
+        print(f"日次枠{a.total_seconds}秒: deck_fix {a.deck_fix_budget}秒 / tune {a.tune_seconds}秒")
+    if a.deck_fix and a.out and (a.deck_fix_budget or not a.total_seconds):
         import deck_fix                                   # 同じ tools/ にある。cards 段階の記録があるコンボだけ回る
         deck_fix.main(["--targets", a.targets, "--stage-from", a.out, "--seeds", str(a.seeds), "--turns", str(a.turns),
                        "--workers", str(a.workers), "--cands", "6", "--time-budget", str(a.deck_fix_budget)])
@@ -74,6 +80,7 @@ def main(argv=None):
     ap.add_argument("--deck-fix", action="store_true", help="終了後、cards 段階の記録があれば tools/deck_fix.py --stage-from を続けて回す（--out 必須）")
     ap.add_argument("--deck-fix-budget", type=int, default=5400, help="--deck-fix の時間予算（秒）。対象ごとの候補数と粗比較の局数を自動配分し、前回途中のデッキを優先する（既定 90分）")
     ap.add_argument("--tune-seconds", type=int, default=0, help="0以外なら、終了後に tools/auto_tune.py をこの秒数の予算で続けて回す（--targets 指定時）。既定は無効")
+    ap.add_argument("--total-seconds", type=int, default=0, help="0以外なら日次の総枠（秒）。診断ループの後、残り時間を deck_fix(65%%)と tune(35%%)へ自動配分する（--deck-fix-budget/--tune-seconds は上書きされる）")
     ap.add_argument("--out")
     a = ap.parse_args(argv)
     combos = {c["id"]: c for c in yaml.safe_load(Path("data/known_combos/combos.yaml").read_text(encoding="utf-8"))["combos"]}
