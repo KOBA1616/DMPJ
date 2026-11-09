@@ -9,6 +9,7 @@ from typing import Callable
 
 from .infolevel import InfoLevel, get_runner
 from .stats import boot_ci, paired_diff
+from ..engine_view import shuffle_deck
 
 
 @dataclass
@@ -52,6 +53,7 @@ def _cell(results, cfg: EvalConfig) -> dict:
     out["per_game"] = [[r.seed, r.first_player, r.kill_turn] for r in results]
     if results and hasattr(results[0], "curve"):
         out["per_game_progress"] = [[r.board_turn, r.cards_turn, r.curve[-1] if r.curve else None] for r in results]
+        out["per_game_curves"] = [r.curve for r in results]      # 各ターン終了時の局面（経験ログ。価値の学習用）
     return out
 
 
@@ -88,7 +90,7 @@ def _start_kw(rules, cfg: EvalConfig, seed: int, fp: int) -> dict:
     if cfg.start_spec.get("shuffle_deck"):            # 山札の並びをシードごとに変える（隠れ情報が効く局面用）
         import random
         for p in (0, 1):
-            random.Random(seed * 1009 + p).shuffle(start.s.zones["deck"][p])
+            shuffle_deck(start, p, random.Random(seed * 1009 + p))
     return {"start": start}
 
 

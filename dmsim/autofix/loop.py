@@ -20,6 +20,7 @@ class Knobs:
     n_det: int = 4              # 公平探索の決定化数
     lookahead: int = 0          # 複数ターン探索の先読み（dmsim/search/multiturn）
     prep_bonus: float = 0.0     # 準備札が墓地に行く加点（dmsim/search/prep）。0 は無効
+    learned_mult: float = 0.0   # 経験ログから学習した価値の加点の倍率（dmsim/autofix/valuelearn）。0 は無効・順位付けのみ
 
 
 @dataclass(frozen=True)
@@ -109,7 +110,7 @@ def autofix(measure, k0: Knobs, combo: dict | None = None, rule: Rule = Rule(), 
     return cur, hist
 
 
-def harness_measure(rules, deck, opp_deck, seeds, spec=None, prog=None, parts_spec=None, max_turn=4, prep_ids=(), workers: int = 1):
+def harness_measure(rules, deck, opp_deck, seeds, spec=None, prog=None, parts_spec=None, max_turn=4, prep_ids=(), workers: int = 1, value_model=None):
     """実エンジンの測定（FAIR のみ）。workers>1 なら seeds を分けて fork で並列に回す（結果は seeds の順に連結。Claude のトークンは増えない）。parts_spec は dmsim.search.leaf_parts.PartsSpec。"""
     from ..eval import fair_runner
     from ..eval.harness import EvalConfig, cell_key, run_eval
@@ -128,11 +129,15 @@ def harness_measure(rules, deck, opp_deck, seeds, spec=None, prog=None, parts_sp
             if k.prep_bonus > 0 and prep_ids:
                 from ..search.prep import with_prep_bonus
                 vfn = with_prep_bonus(vfn, prep_ids, k.prep_bonus)
+            if k.learned_mult > 0 and value_model and vfn is not None:
+                from .valuelearn import with_learned
+                vfn = with_learned(vfn, value_model, ps, k.learned_mult)
         cfg = EvalConfig(decks={"d": deck}, opp_deck=opp_deck, seeds=seeds, levels=(InfoLevel.FAIR,), progress=prog,
                          start_spec=spec, n_det=n_det, value_fn=vfn, base_budget=k.budget, max_turn=max_turn)
         c = run_eval(rules, cfg)["cells"][cell_key("d", "fair", 1.0)]
         pp = c.get("per_game_progress", [])
         out = {"kill": [g[2] for g in c["per_game"]], "board": [p[0] for p in pp], "cards": [p[1] for p in pp]}
+        out["curves"] = c.get("per_game_curves", [])
         out["final"] = [(p[2] or {}).get("defs") or {} for p in pp]       # 各局の最終局面（ゾーン→{定義ID: 枚数}）。部品の自動発見用
         out["opp_shield"] = [(p[2] or {}).get("opp_shield") for p in pp]  # 各局の最終の相手の残り盾（少ないほど前進。勝ちが無い時の代用指標）
         if prep_ids:                      # 各局の最終局面で墓地に行った準備札の枚数（診断の prep_unused 用）

@@ -30,10 +30,10 @@ def test_passive_game_matches_to_deckout(env, seed, fp):
     assert res["ok"] is True and res["steps"] > 20
 
 
-def test_unported_play_is_structured_unsupported(env):
+def test_unported_attack_is_structured_unsupported(env):
     a, b = _pair(env, 1, 0)
     res = lockstep(a, b, "first")
-    assert res["ok"] is None and "play" in res["unsupported"]
+    assert res["ok"] is None and "attack" in res["unsupported"]
 
 
 def test_non_plain_card_rejected_at_open(env):
@@ -41,3 +41,14 @@ def test_non_plain_card_rejected_at_open(env):
     ids = [i for i in r.cards if i.startswith("dm")][:1] * 40
     with pytest.raises(rustcore.dmcore.Unsupported):
         rustcore.RustSession.open(r, {"decks": [ids, ids], "seed": 1}, b)
+
+
+@pytest.mark.parametrize("pol", ["first", "random:1", "random:2", "random:3"])
+@pytest.mark.parametrize("seed", [1, 2, 3])
+def test_play_matches_until_attack(env, pol, seed):
+    """召喚（コスト支払い→保留→バトルゾーン）まで 1 手ごとに digest が一致。攻撃できるクリーチャーが出たら 2-b（戦闘）の未移植として止まる。"""
+    a, b = _pair(env, seed, seed % 2)
+    res = lockstep(a, b, pol)
+    assert res["divergence"] is None and res["ok"] in (True, None)
+    assert res["ok"] is True or "attack" in res["unsupported"]
+    assert res["steps"] >= 5

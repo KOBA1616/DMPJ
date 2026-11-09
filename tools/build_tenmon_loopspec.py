@@ -14,6 +14,7 @@ sys.path.insert(0, str(ROOT))
 from dmsim import scenario  # noqa: E402
 from dmsim.discovery import bestfirst, replay, shrink  # noqa: E402
 from dmsim.discovery.loopspec import LoopSpec, Pred  # noqa: E402
+from dmsim.engine_view import defn_of, order_zone, zone_of  # noqa: E402
 
 ns = {"STOP": 0, "__name__": "tenmon_walk"}
 with contextlib.redirect_stdout(io.StringIO()):
@@ -22,8 +23,8 @@ rules, spec, TS, FA, AL = ns["rules"], ns["spec"], ns["TS"], ns["FA"], ns["AL"]
 
 
 def prepare(e):
-    dk = e.s.zones["deck"][0]
-    e.s.zones["deck"][0][:] = sorted(dk, key=lambda c: (e.s.cards[c].defn != TS, e.s.cards[c].defn != FA))   # 山札の上は 転生スイッチ、FA の順
+    dk = zone_of(e, "deck", 0)
+    order_zone(e, "deck", 0, lambda c: (defn_of(e, c) != TS, defn_of(e, c) != FA))   # 山札の上は 転生スイッチ、FA の順
 
 
 def main(width: int = 2000):

@@ -231,3 +231,34 @@ def test_split_remaining():
     assert fix > tune > 0 and fix + tune <= 6000 * B.SAFETY - 600
     assert B.split_remaining(6000, 6000) == (0, 0)
     assert B.split_remaining(6000, 600, want_deck_fix=False)[0] == 0
+
+
+def test_selfheal_phases(tmp_path):
+    from dmsim.autofix import selfheal as S
+    h = tmp_path / "health.yaml"
+    ok, v = S.run_phase("a", lambda: 5, h, "2026-11-09")
+    assert ok and v == 5 and S.render_issue(S.load(h)) is None
+
+    def boom():
+        raise ValueError("x")
+    for i in range(S.QUARANTINE_AFTER):
+        assert S.run_phase("b", boom, h, f"2026-11-1{i}")[0] is False
+    st = S.load(h)
+    assert st["b"]["consecutive_failures"] == S.QUARANTINE_AFTER and S.quarantined(st, "b") and "ValueError" in S.render_issue(st)
+    ran = []
+    assert S.run_phase("b", lambda: ran.append(1), h)[0] is False and not ran         # 隔離中は実行しない
+    st = S.load(h); st.pop("b"); S.save(h, st)                                          # 直したら消して再開
+    assert S.run_phase("b", lambda: 1, h)[0] and S.load(h)["b"]["consecutive_failures"] == 0
+
+
+def test_run_targets_isolates_failure(tmp_path):
+    from dmsim.autofix import Rule, run_targets, selfheal
+    combos = {"c1": {"id": "c1", "parts": []}, "c2": {"id": "c2", "parts": []}}
+
+    def mk(t):
+        if t["combo"] == "c1":
+            raise RuntimeError("boom")
+        return lambda k, n=30: {"kill": [None] * n, "board": [None] * n, "cards": [1] * n}
+    out = run_targets([{"combo": "c1"}, {"combo": "c2"}], combos, mk, Rule(), 1, None, None, health=str(tmp_path / "h.yaml"))
+    assert "selfheal" in out[0]["skipped"] and "final" in out[1]
+    assert selfheal.load(tmp_path / "h.yaml")["diagnose:c1"]["consecutive_failures"] == 1

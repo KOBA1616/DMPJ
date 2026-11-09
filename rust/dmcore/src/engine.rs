@@ -47,7 +47,7 @@ impl Engine {
 
     // ---- 基本の読み取り ----
     fn shared(&self, z: &str) -> bool {
-        self.rules.zone(z).shared
+        z != "hold" && self.rules.zone(z).shared
     }
     fn zl(&self, z: &str, p: i64) -> &Vec<i64> {
         &self.s.zones[z][if self.shared(z) { 0 } else { p as usize }]
@@ -99,6 +99,7 @@ impl Engine {
             let d = match tt.as_str() {
                 "turn" => self.h_turn()?,
                 "event" => self.h_event()?,
+                "play" => self.h_play()?,
                 other => return uns(format!("task {}", other)),
             };
             if let Some(d) = d {
@@ -294,7 +295,88 @@ impl Engine {
             self.step_done();
             return Ok(None);
         }
-        uns("play（カードの実行）")
+        let o = &opts[ans[0]];
+        let cid = o["cid"].as_i64().unwrap();
+        let gen = self.s.cards[cid as usize].gen;
+        let a = self.s.active;
+        self.push(vec![json!({"t": "play", "cid": cid, "player": a, "free": false, "phase": "start", "gen": gen})]);
+        Ok(None)
+    }
+
+    /// カードの実行（601）。段階2-a: 通常のクリーチャー召喚（コスト軽減・進化・代替コストなどは無い札だけ）
+    fn h_play(&mut self) -> R<Option<Value>> {
+        let (cid, p, gen) = {
+            let t = self.s.tasks.last().unwrap();
+            (t["cid"].as_i64().unwrap(), t["player"].as_i64().unwrap(), t["gen"].as_i64().unwrap())
+        };
+        let (g, z) = {
+            let c = &self.s.cards[cid as usize];
+            (c.gen, c.zone.clone())
+        };
+        if g != gen || z == "bz" || z == "hold" {
+            self.s.tasks.pop();
+            return Ok(None);
+        }
+        if !self.permits("summon") || !self.permits("enter_bz") {
+            self.s.tasks.pop();
+            return Ok(None);
+        }
+        let has = |t: &Value, k: &str| t.get(k).is_some();
+        // ササゲール（破壊してコスト軽減）: 候補なし → 空の sac と sac_done を残す
+        if !has(self.s.tasks.last().unwrap(), "sac_done") {
+            let t = self.s.tasks.last_mut().unwrap();
+            if !has(t, "sac") {
+                t["sac"] = json!([]);
+            }
+            t["sac_done"] = json!(true);
+        }
+        self.s.turn_counters.insert(format!("last_play_creature:{}", p), json!(1));
+        if !has(self.s.tasks.last().unwrap(), "cost_may_done") {
+            self.s.tasks.last_mut().unwrap()["cost_may_done"] = json!(true);
+        }
+        if !has(self.s.tasks.last().unwrap(), "paid_done") {
+            let choices = self.mana_choices(cid, p, None, 32);
+            if choices.is_empty() {
+                self.s.tasks.pop();
+                return Ok(None);
+            }
+            let opts: Vec<Value> = choices
+                .iter()
+                .map(|ch| {
+                    let mut names: Vec<String> = ch.iter().map(|&c| self.s.cards[c as usize].defn.clone()).collect();
+                    names.sort();
+                    json!({"key": format!("mana:{}", names.join(",")), "cids": ch})
+                })
+                .collect();
+            let ans = match self.ask(p, "pay_mana", opts.clone(), 1, 1) {
+                Ask::Decision(d) => return Ok(Some(d)),
+                Ask::Answer(x) => x,
+            };
+            for c in opts[ans[0]]["cids"].as_array().unwrap() {
+                self.s.cards[c.as_i64().unwrap() as usize].tapped = true;
+            }
+            self.s.tasks.last_mut().unwrap()["paid_done"] = json!(true);
+        }
+        self.s.tasks.pop();
+        // 保留状態へ（409, 601.1b）。gen は変えない
+        let from_zone = self.s.cards[cid as usize].zone.clone();
+        let owner = self.s.cards[cid as usize].owner as usize;
+        let sh = self.shared(&from_zone);
+        {
+            let lst = self.s.zones.get_mut(&from_zone).unwrap();
+            let idx = if sh { 0 } else { owner };
+            if let Some(pos) = lst[idx].iter().position(|&x| x == cid) {
+                lst[idx].remove(pos);
+            }
+        }
+        self.note_deck(cid);
+        self.s.cards[cid as usize].zone = "hold".to_string();
+        self.s.hold.push(cid);
+        let r = self.refv(cid);
+        let ev = json!({"ev": "move", "subject": r, "from": from_zone, "to": "bz", "reason": "summon", "controller": p, "unpaid": false});
+        let t = self.ev_task(vec![ev]);
+        self.push(vec![t]);
+        Ok(None)
     }
 
     fn play_options(&self, p: i64) -> Vec<Value> {
@@ -318,8 +400,12 @@ impl Engine {
 
     fn st_attack(&mut self) -> R<Option<Value>> {
         let a = self.s.active;
-        if !self.bz_tops(Some(a)).is_empty() {
-            return uns("attack（クリーチャーがいる）");
+        let turn = self.s.turn;
+        if self.bz_tops(Some(a)).iter().any(|&c| {
+            let k = &self.s.cards[c as usize];
+            !k.tapped && k.entered_turn != turn
+        }) {
+            return uns("attack（攻撃できるクリーチャーがいる）");
         }
         // 攻撃できるものが無ければ選択肢は pass だけ（1択は決定を出さない）
         let ans = match self.ask(a, "attack", vec![json!({"key": "pass"})], 1, 1) {
@@ -497,7 +583,7 @@ impl Engine {
                     return Ok(0);
                 }
                 let cid = deck[0];
-                self.raw_move(cid, "hand");
+                self.raw_move(cid, "hand", None);
                 self.s.cards[cid as usize].drawn_turn = self.s.turn;
                 let k = format!("drew:{}", p);
                 let n = self.s.turn_counters.get(&k).and_then(|v| v.as_i64()).unwrap_or(0) + 1;
@@ -523,11 +609,21 @@ impl Engine {
                 let cid = ev["subject"][0].as_i64().unwrap();
                 let to = ev["to"].as_str().unwrap_or("");
                 let from = self.s.cards[cid as usize].zone.clone();
-                if to != "mana" || from != "hand" || ev.get("reason").and_then(|v| v.as_str()) != Some("charge") {
-                    return uns(format!("move {}→{}", from, to));
+                let reason = ev.get("reason").and_then(|v| v.as_str()).unwrap_or("");
+                if to == "mana" && from == "hand" && reason == "charge" {
+                    self.raw_move(cid, to, None);
+                    return Ok(1);
                 }
-                self.raw_move(cid, to);
-                Ok(1)
+                if to == "bz" && from == "hold" && reason == "summon" {
+                    let ctl = ev["controller"].as_i64().unwrap();
+                    self.raw_move(cid, to, Some(ctl));
+                    let k = format!("entered:{}", ctl);
+                    let mut l = self.s.turn_counters.get(&k).and_then(|v| v.as_array().cloned()).unwrap_or_default();
+                    l.push(json!(cid));
+                    self.s.turn_counters.insert(k, Value::Array(l));
+                    return Ok(2); // move と summon
+                }
+                uns(format!("move {}→{}", from, to))
             }
             "turn_start" | "turn_end" => Ok(1),
             other => uns(format!("event {}", other)),
@@ -544,26 +640,31 @@ impl Engine {
     }
 
     /// イベントを通さない移動（Python 版 _raw_move の、plain の対戦で通る部分）
-    fn raw_move(&mut self, cid: i64, to: &str) {
+    fn raw_move(&mut self, cid: i64, to: &str, controller: Option<i64>) {
         let (owner, from) = {
             let c = &self.s.cards[cid as usize];
             (c.owner as usize, c.zone.clone())
         };
         let idx = if self.shared(&from) { 0 } else { owner };
-        {
+        if from == "hold" {
+            self.s.hold.retain(|&x| x != cid);
+        } else {
             let lst = self.s.zones.get_mut(&from).unwrap();
             if let Some(pos) = lst[idx].iter().position(|&x| x == cid) {
                 lst[idx].remove(pos);
             }
         }
-        if !(to == "deck" && from == "deck") {
+        if from != "hold" && !(to == "deck" && from == "deck") {
             self.note_deck(cid);
         }
         let multi = self.def(cid).civs.len() > 1;
         let public = self.rules.zone(to).public;
         {
             let turn = self.s.turn;
-            let _ = turn;
+            if to == "bz" {
+                self.s.seq += 1;
+            }
+            let seq = self.s.seq;
             let c = &mut self.s.cards[cid as usize];
             c.gen += 1;
             if to != "mana" {
@@ -572,8 +673,11 @@ impl Engine {
             c.zone = to.to_string();
             c.tapped = to == "mana" && multi;
             c.face_up = public;
-            c.controller = c.owner;
-            c.entered_turn = -1;
+            c.controller = controller.unwrap_or(c.owner);
+            c.entered_turn = if to == "bz" { turn } else { -1 };
+            if to == "bz" {
+                c.entered_seq = seq;
+            }
             c.face = -1;
             c.under.clear();
             c.top_of = -1;

@@ -54,4 +54,5 @@
 ## 7. 段階3の進捗: 状態の読み取りは engine_view 経由
 - `dmsim/engine_view.py` に読み取り専用アクセサ（result_of / active_of / turn_of / pending_of / defn_of / tapped_of / zone_of / defns_of / digest_of）を置いた。Rust 版へ差し替える時はこの1ファイルを差し替える。
 - 置き換え済み（挙動不変、全テスト通過）: autofix/usage, search/{leaf_parts,multiturn,fair,prep}, eval/{fair_runner,progress,steplog,stage}, discovery/{replay,evalstarts,auto,audit,bestfirst}。
-- 未移行（状態を書き換えるため新しい操作が要る）: eval/harness の山札シャッフル（`shuffle_deck(p, rng)`）、search/fair の determinize による状態差し替え（`inject_state`）、discovery/advantage の trace 切り替え（`Session.trace` を使う）、discovery/evalstarts.export_spec の `cards`（`observe`）、tools/ の単発スクリプト（discover_dig, tenmon_walk, loopcheck_full_chain, discover_pipeline, minimal_setup）。
+- 状態を書き換える操作も engine_view に追加（Rust 版が満たす追加操作）: `shuffle_deck(e, p, rng)`（rng.shuffle と同じ並びになること）、`order_zone(e, zone, p, key)`（キーの昇順の安定ソート）、`state_of(e)` / `inject_state(e, state)`（決定化した状態の丸ごと注入）、`trace_on(e)` / `trace_of(e)`、読み取りの `card_zone_of` / `under_of` / `zones_of`。
+- 移行済み: eval/harness（shuffle_deck）、search/fair（inject_state）、discovery/advantage（trace）、tools/ の単発スクリプト8本。dmsim の探索・評価・診断・発見・tools に、エンジン状態（`.s`）の直接参照は残っていない（エンジン内部と tests を除く）。

@@ -38,7 +38,7 @@ def _is_plain(d) -> bool:
     """能力・キーワード・特別な出し方を一切持たないクリーチャー（段階1で Rust が動かせる札）。"""
     import dataclasses
     from .defs import CardDef
-    if d.types != ["creature"]:
+    if d.types != ["creature"] or d.power <= 0:
         return False
     skip = {"id", "name", "types", "civs", "cost", "power", "mana", "races", "text"}
     for f in dataclasses.fields(CardDef):
