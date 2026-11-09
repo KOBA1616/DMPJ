@@ -1,0 +1,83 @@
+[
+ {
+  "combo": "tenmon",
+  "split": "tuning",
+  "k": 2,
+  "core_score": 4.0,
+  "random_median": 4.0,
+  "random_p95": 10.0,
+  "percentile": 0.3
+ },
+ {
+  "combo": "tenmon",
+  "split": "tuning",
+  "k": 3,
+  "core_score": 7.0,
+  "random_median": 4.0,
+  "random_p95": 13.0,
+  "percentile": 0.59
+ },
+ {
+  "combo": "saga",
+  "split": "tuning",
+  "k": 2,
+  "core_score": 7.0,
+  "random_median": 4.0,
+  "random_p95": 13.0,
+  "percentile": 0.77
+ },
+ {
+  "combo": "saga",
+  "split": "tuning",
+  "k": 3,
+  "core_score": 10.0,
+  "random_median": 4.0,
+  "random_p95": 13.0,
+  "percentile": 0.84
+ },
+ {
+  "combo": "knight_dmc",
+  "split": "tuning",
+  "k": 2,
+  "core_score": 10.0,
+  "random_median": 4.0,
+  "random_p95": 10.0,
+  "percentile": 0.95
+ },
+ {
+  "combo": "akashic",
+  "split": "tuning",
+  "k": 2,
+  "core_score": 8.0,
+  "random_median": 4.0,
+  "random_p95": 13.0,
+  "percentile": 0.87
+ },
+ {
+  "combo": "akashic",
+  "split": "tuning",
+  "k": 3,
+  "core_score": 11.0,
+  "random_median": 4.0,
+  "random_p95": 13.0,
+  "percentile": 0.91
+ },
+ {
+  "combo": "drill_lock",
+  "split": "holdout",
+  "k": 2,
+  "core_score": -2.0,
+  "random_median": 4.0,
+  "random_p95": 10.0,
+  "percentile": 0.0
+ },
+ {
+  "combo": "drill_lock",
+  "split": "holdout",
+  "k": 3,
+  "core_score": 0.0,
+  "random_median": 4.0,
+  "random_p95": 13.0,
+  "percentile": 0.04
+ }
+]
