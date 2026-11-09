@@ -44,13 +44,24 @@ def auto_setup(rules, combo: str, root: Path = Path("data/loops")):
     return None
 
 
-def resolve_setup(rules, t: dict, cli_setup=None):
+def parts_setup_for(rules, t: dict, deck: list[str]):
+    """LoopSpec が無いコンボ用: 部品表（known_combos）とデッキから作る。"""
+    from dmsim.deckplan.setup import parts_setup
+    combos = {c["id"]: c for c in yaml.safe_load(Path("data/known_combos/combos.yaml").read_text(encoding="utf-8"))["combos"]}
+    c = combos.get(t["combo"])
+    return parts_setup(rules, c, deck) if c else None
+
+
+def resolve_setup(rules, t: dict, cli_setup=None, deck=None):
     """優先順: --setup > targets の deck_setup > setup > LoopSpec から自動生成 > None(冷たい開幕)。(setup, 由来)を返す。"""
     path = cli_setup or t.get("deck_setup") or t.get("setup")
     if path:
         return yaml.safe_load(Path(path).read_text(encoding="utf-8")), path
     sp = auto_setup(rules, t["combo"])
-    return (sp, "LoopSpec自動") if sp else (None, "冷たい開幕")
+    if sp:
+        return sp, "LoopSpec自動"
+    sp = parts_setup_for(rules, t, deck) if deck else None
+    return (sp, "部品表自動") if sp else (None, "冷たい開幕")
 
 
 def main(argv=None):
@@ -93,7 +104,7 @@ def main(argv=None):
         cands, cs, deadline, cb, tk = a.cands, a.coarse_seeds, None, a.coarse_budget, a.top_k
         deck = load_deck(t["deck"])
         opp = load_deck(t["opp_deck"]) if t.get("opp_deck") else ["T001"] * 40
-        setup, origin = resolve_setup(rules, t, a.setup)        # 仕込み済み開始局面（通常の開幕では4ターン以内キルに届かず差が見えないため）
+        setup, origin = resolve_setup(rules, t, a.setup, deck)        # 仕込み済み開始局面（通常の開幕では4ターン以内キルに届かず差が見えないため）
         print(t["combo"], "開始局面:", origin)
         if a.time_budget:
             slot = (a.time_budget - (time.time() - start)) / (len(ts) - i)

@@ -212,3 +212,14 @@ def test_deck_fix_resolve_setup():
     sp, o = deck_fix.resolve_setup(r, {"combo": "tenmon"})
     assert o == "LoopSpec自動" and "deck_exact" not in sp
     assert deck_fix.resolve_setup(r, {"combo": "nonexistent_combo"}) == (None, "冷たい開幕")
+
+
+def test_parts_setup_from_combo_table(rules):
+    from dmsim.deckplan.setup import parts_setup
+    ids = [i for i in rules.cards if i != "T001" and rules.cards[i].civs][:12]
+    key, others = ids[0], ids[1:]
+    combo = {"parts": [{"id": key, "role": "core"}]}
+    deck = [key] * 4 + others * 3
+    sp = parts_setup(rules, combo, deck)
+    assert sp["p0"]["hand"][0] == key and len(sp["p0"]["mana"]) == 5 and key not in sp["p0"]["mana"]
+    assert parts_setup(rules, combo, ["T001"] * 40) is None
