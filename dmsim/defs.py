@@ -960,6 +960,25 @@ def _fix_evolution_type(raw: dict) -> None:
         raw["types"] = list(types) + ["evolution"]
 
 
+REPAIRED: dict[str, list[str]] = {}      # 読み込み時に補った変換の不備（違反コード → カードID）。dataaudit が基準線と照らす
+
+
+def _dedupe_abilities(raw: dict) -> None:
+    """変換の重複（同じ能力が二重に入る）を除く。残すと誘発が2回起き、パワー修整が二重にかかる。"""
+    abs_ = raw.get("abilities")
+    if not abs_:
+        return
+    seen, out = set(), []
+    for ab in abs_:
+        k = repr(sorted(ab.items(), key=lambda kv: kv[0])) if isinstance(ab, dict) else repr(ab)
+        if k not in seen:
+            seen.add(k)
+            out.append(ab)
+    if len(out) != len(abs_):
+        raw["abilities"] = out
+        REPAIRED.setdefault("duplicate_ability", []).append(str(raw.get("id")))
+
+
 def load_rules(card_files: list[Path] | None = None, only_approved: bool | None = None) -> Rules:
     """only_approved: 承認済みのカードだけ読む（converted.yaml の未確認分を除く）。省略時は環境変数 DMSIM_ONLY_APPROVED=1 に従う。"""
     tables = load_tables()
@@ -976,6 +995,7 @@ def load_rules(card_files: list[Path] | None = None, only_approved: bool | None 
             if only_approved and not approval.is_usable(raw, ledger, versions):
                 continue
             _fix_evolution_type(raw)
+            _dedupe_abilities(raw)
             cd = parse_card(raw, tables)
             if cd.id in cards:
                 raise DefError(f"duplicate card id {cd.id}")
