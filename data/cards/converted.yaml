@@ -63888,10 +63888,24 @@ cards:
       grant:
       - speed_attacker
       - triple_breaker
+  - kind: static
+    zone: shield
+    affects: self
+    if:
+      cmp:
+      - count:
+          zone: shield
+          owner: you
+      - <=
+      - 2
+    mod:
+      allow:
+      - s_trigger
   source:
     official: dm26rp2-tr001
     review: pending
-    notes: 革命０は条件つき常在型能力として表した。革命２（シールド２つ以下で S・トリガー付与）は手札経路の付与として扱い省略した
+    notes: '革命０は条件つき常在型能力。革命２（シールドが2つ以下の間は、シールドゾーンから手札に加える時に S・トリガーを使える）は zone: shield
+      の条件つき常在型で表した（数えるのは手札に加わる直前のシールド枚数）'
     aliases:
     - dm22ex1-cho02
     - dm22ex1-chog01
@@ -195804,19 +195818,6 @@ cards:
         ref: self
       to: hand
       reason: return
-  - kind: replace
-    when:
-      event: move
-      from: bz
-      to: graveyard
-      reason: destroy
-      subject: self
-    instead:
-    - op: move
-      select:
-        ref: self
-      to: hand
-      reason: return
   source:
     official: dm17-007
     review: pending
@@ -196325,16 +196326,6 @@ cards:
       - op: untap
         select:
           ref: self
-  - kind: trigger
-    when:
-      event: turn_end
-      player: you
-    effect:
-    - op: may
-      body:
-      - op: untap
-        select:
-          ref: self
   keywords:
   - dynamo
   source:
@@ -196407,12 +196398,6 @@ cards:
       power_when:
         amount: 2000
         when: attacking
-  - kind: static
-    affects: self
-    mod:
-      power_when:
-        amount: 2000
-        when: attacking
   keywords:
   - dynamo
   source:
@@ -196454,19 +196439,6 @@ cards:
 
     このクリーチャーが攻撃する時、バトルゾーンにある相手のクリーチャーを１体選び、タップする。(まず何を攻撃するかを選んでから、タップするクリーチャーを選ぶ)'
   abilities:
-  - kind: trigger
-    when:
-      event: attack
-      subject: self
-    effect:
-    - op: tap
-      select:
-        zone: bz
-        owner: opp
-        filter:
-          types:
-          - creature
-        count: 1
   - kind: trigger
     when:
       event: attack
@@ -198888,12 +198860,6 @@ cards:
     mod:
       require:
       - attack
-  - kind: static
-    affects: self
-    mod:
-      power_when:
-        amount: 3000
-        when: attacking
   source:
     official: dm11-028
     review: pending
@@ -199574,19 +199540,6 @@ cards:
     mod:
       require:
       - attack
-  - kind: replace
-    when:
-      event: move
-      from: bz
-      to: graveyard
-      reason: destroy
-      subject: self
-    instead:
-    - op: move
-      select:
-        ref: self
-      to: hand
-      reason: return
   source:
     official: dm13-053
     review: pending
@@ -201222,12 +201175,6 @@ cards:
 
     このクリーチャーは、可能であれば毎ターン攻撃する。'
   abilities:
-  - kind: static
-    affects: self
-    mod:
-      power_when:
-        amount: 2000
-        when: attacking
   - kind: static
     affects: self
     mod:
@@ -210053,14 +210000,6 @@ cards:
     - op: mill
       owner: you
       count: 2
-  - kind: trigger
-    when:
-      event: attack
-      subject: self
-    effect:
-    - op: mill
-      owner: you
-      count: 2
   source:
     official: dm25rp3-064
     review: pending
@@ -210264,15 +210203,6 @@ cards:
     - op: mill
       owner: you
       count: 2
-  - kind: trigger
-    when:
-      event: move
-      to: bz
-      subject: self
-    effect:
-    - op: mill
-      owner: you
-      count: 2
   source:
     official: dmbd10-007
     review: pending
@@ -210458,20 +210388,6 @@ cards:
 
     このクリーチャーを自分の墓地から召喚してもよい。'
   abilities:
-  - kind: trigger
-    when:
-      event: move
-      to: bz
-      subject: self
-    effect:
-    - op: destroy
-      select:
-        zone: bz
-        owner: opp
-        filter:
-          types:
-          - creature
-        count: 1
   - kind: trigger
     when:
       event: move
@@ -211049,10 +210965,6 @@ cards:
       allow:
       - action: summon_from_graveyard
         once: true
-  - kind: static
-    affects: self
-    mod:
-      sac_reduce: 3
   source:
     official: dm26rp3-040
     review: pending
@@ -212331,18 +212243,6 @@ cards:
           filter:
             types:
             - creature
-  - kind: static
-    zone: hand
-    affects: self
-    mod:
-      cost:
-        amount: -1
-        count:
-          zone: graveyard
-          owner: you
-          filter:
-            types:
-            - creature
   - kind: trigger
     when:
       event: move
@@ -212536,21 +212436,6 @@ cards:
 
     このクリーチャーがタップしていれば、自分は攻撃されない。'
   abilities:
-  - kind: trigger
-    when:
-      event: move
-      to: bz
-      subject: self
-    effect:
-    - op: modify
-      select:
-        ref: self
-      mod:
-        allow:
-        - action: attack_creature
-          other:
-            tapped: false
-      duration: end_of_turn
   - kind: trigger
     when:
       event: move
@@ -212888,21 +212773,6 @@ cards:
 
     相手の呪文の効果またはクリーチャーの能力によって、このクリーチャーが自分の手札から捨てられる時、墓地に置くかわりにバトルゾーンに出してもよい。'
   abilities:
-  - kind: trigger
-    when:
-      event: move
-      to: bz
-      subject: self
-    effect:
-    - op: modify
-      select:
-        ref: self
-      mod:
-        allow:
-        - action: attack_creature
-          other:
-            tapped: false
-      duration: end_of_turn
   - kind: trigger
     when:
       event: move
@@ -213351,13 +213221,6 @@ cards:
 
     このクリーチャーがバトルゾーンに出た時、自分の山札の上から３枚を表向きにする。その中からジョーカーズをすべて手札に加え、残りを好きな順序で山札の一番下に置く。'
   abilities:
-  - kind: static
-    affects: self
-    zone: hand
-    mod:
-      opt_reduce:
-        amount: 2
-        then: deck_bottom_draw
   - kind: static
     affects: self
     zone: hand
@@ -215531,16 +215394,6 @@ cards:
         reason: destroy
   - kind: trigger
     when:
-      event: move
-      to: bz
-      subject: self
-    effect:
-    - op: may
-      body:
-      - op: draw
-        count: 2
-  - kind: trigger
-    when:
       event: attack
       subject: self
     effect:
@@ -216651,7 +216504,7 @@ cards:
       event: move
       to: bz
       subject: self
-    effect: &id104
+    effect:
     - op: destroy
       select:
         zone: bz
@@ -216664,12 +216517,20 @@ cards:
     when:
       event: attack
       subject: self
-    effect: *id104
+    effect:
+    - op: destroy
+      select:
+        zone: bz
+        owner: opp
+        filter:
+          types:
+          - creature
+        count: 1
   - kind: trigger
     zone: hand
-    when: &id105
+    when:
       event: turn_end
-    if: &id106
+    if:
       cmp:
       - sum:
         - count:
@@ -216688,7 +216549,7 @@ cards:
               - ジョーカーズ
       - '>='
       - 6
-    effect: &id107
+    effect:
     - op: may
       body:
       - op: summon_on
@@ -216703,36 +216564,40 @@ cards:
             - ジョーカーズ
   - kind: trigger
     zone: graveyard
-    when: *id105
-    if: *id106
-    effect: *id107
-  - kind: trigger
     when:
-      event: move
-      to: bz
-      subject: self
+      event: turn_end
+    if:
+      cmp:
+      - sum:
+        - count:
+            zone: bz
+            owner: you
+            filter:
+              races:
+              - 魔導具
+              - ジョーカーズ
+        - count:
+            zone: graveyard
+            owner: you
+            filter:
+              races:
+              - 魔導具
+              - ジョーカーズ
+      - '>='
+      - 6
     effect:
-    - op: destroy
-      select:
-        zone: bz
-        owner: opp
-        filter:
-          types:
-          - creature
-        count: 1
-  - kind: trigger
-    when:
-      event: attack
-      subject: self
-    effect:
-    - op: destroy
-      select:
-        zone: bz
-        owner: opp
-        filter:
-          types:
-          - creature
-        count: 1
+    - op: may
+      body:
+      - op: summon_on
+        parts:
+        - zones:
+          - bz
+          - graveyard
+          count: 6
+          filter:
+            races:
+            - 魔導具
+            - ジョーカーズ
   source:
     official: dm26ex4-004
     review: pending
@@ -216768,7 +216633,7 @@ cards:
       event: move
       to: bz
       subject: self
-    effect: &id108
+    effect:
     - op: destroy
       select:
         zone: bz
@@ -216781,12 +216646,20 @@ cards:
     when:
       event: attack
       subject: self
-    effect: *id108
+    effect:
+    - op: destroy
+      select:
+        zone: bz
+        owner: opp
+        filter:
+          types:
+          - creature
+        count: 1
   - kind: trigger
     zone: hand
-    when: &id109
+    when:
       event: turn_end
-    if: &id110
+    if:
       cmp:
       - sum:
         - count:
@@ -216805,7 +216678,7 @@ cards:
               - ジョーカーズ
       - '>='
       - 6
-    effect: &id111
+    effect:
     - op: may
       body:
       - op: summon_on
@@ -216820,36 +216693,40 @@ cards:
             - ジョーカーズ
   - kind: trigger
     zone: graveyard
-    when: *id109
-    if: *id110
-    effect: *id111
-  - kind: trigger
     when:
-      event: move
-      to: bz
-      subject: self
+      event: turn_end
+    if:
+      cmp:
+      - sum:
+        - count:
+            zone: bz
+            owner: you
+            filter:
+              races:
+              - 魔導具
+              - ジョーカーズ
+        - count:
+            zone: graveyard
+            owner: you
+            filter:
+              races:
+              - 魔導具
+              - ジョーカーズ
+      - '>='
+      - 6
     effect:
-    - op: destroy
-      select:
-        zone: bz
-        owner: opp
-        filter:
-          types:
-          - creature
-        count: 1
-  - kind: trigger
-    when:
-      event: attack
-      subject: self
-    effect:
-    - op: destroy
-      select:
-        zone: bz
-        owner: opp
-        filter:
-          types:
-          - creature
-        count: 1
+    - op: may
+      body:
+      - op: summon_on
+        parts:
+        - zones:
+          - bz
+          - graveyard
+          count: 6
+          filter:
+            races:
+            - 魔導具
+            - ジョーカーズ
   source:
     official: dm26ex4-sec016
     review: pending
@@ -216876,7 +216753,7 @@ cards:
   abilities:
   - kind: trigger
     zone: hand
-    when: &id112
+    when: &id104
       event: move
       to: bz
       subject:
@@ -216885,7 +216762,7 @@ cards:
         filter:
           races:
           - 魔導具
-    if: &id113
+    if: &id105
       all:
       - cmp:
         - count:
@@ -216905,7 +216782,7 @@ cards:
               - 魔導具
         - '>='
         - 2
-    effect: &id114
+    effect: &id106
     - op: may
       body:
       - op: summon_on
@@ -216922,9 +216799,9 @@ cards:
             - 魔導具
   - kind: trigger
     zone: graveyard
-    when: *id112
-    if: *id113
-    effect: *id114
+    when: *id104
+    if: *id105
+    effect: *id106
   - kind: trigger
     when:
       event: move
@@ -216974,7 +216851,7 @@ cards:
   abilities:
   - kind: trigger
     zone: hand
-    when: &id115
+    when: &id107
       event: move
       to: bz
       subject:
@@ -216983,7 +216860,7 @@ cards:
         filter:
           races:
           - 魔導具
-    if: &id116
+    if: &id108
       all:
       - cmp:
         - count:
@@ -217003,7 +216880,7 @@ cards:
               - 魔導具
         - '>='
         - 2
-    effect: &id117
+    effect: &id109
     - op: may
       body:
       - op: summon_on
@@ -217020,9 +216897,9 @@ cards:
             - 魔導具
   - kind: trigger
     zone: graveyard
-    when: *id115
-    if: *id116
-    effect: *id117
+    when: *id107
+    if: *id108
+    effect: *id109
   - kind: trigger
     when:
       event: turn_start
@@ -217192,20 +217069,6 @@ cards:
           filter:
             races:
             - 魔導具
-  - kind: trigger
-    when:
-      event: move
-      to: bz
-      subject: self
-    effect:
-    - op: destroy
-      select:
-        zone: bz
-        owner: opp
-        filter:
-          types:
-          - creature
-        count: 1
   - kind: static
     affects:
       zone: bz
@@ -218804,10 +218667,6 @@ cards:
           types:
           - creature
         count: 1
-  - kind: static
-    affects: self
-    mod:
-      sac_reduce: 4
   source:
     official: dm26rp3-025
     review: pending
@@ -218850,7 +218709,7 @@ cards:
     mod:
       sac_reduce: 4
   - kind: trigger
-    when: &id118
+    when:
       event: move
       to: bz
       subject: self
@@ -218864,10 +218723,6 @@ cards:
           types:
           - creature
         count: 1
-  - kind: static
-    affects: self
-    mod:
-      sac_reduce: 4
   source:
     official: dm26rp3-sec018
     review: pending
@@ -218905,7 +218760,10 @@ cards:
     - darkness
   abilities:
   - kind: trigger
-    when: *id118
+    when: &id110
+      event: move
+      to: bz
+      subject: self
     effect:
     - op: modal
       modes:
@@ -219004,7 +218862,7 @@ cards:
     - darkness
   abilities:
   - kind: trigger
-    when: *id118
+    when: *id110
     effect:
     - op: modify
       select:
@@ -219107,7 +218965,7 @@ cards:
     - darkness
   abilities:
   - kind: trigger
-    when: *id118
+    when: *id110
     effect:
     - op: bounce
       select:
@@ -219634,20 +219492,6 @@ cards:
           types:
           - creature
         count: 1
-  - kind: trigger
-    when:
-      event: move
-      to: bz
-      subject: self
-    effect:
-    - op: bounce
-      select:
-        zone: bz
-        owner: opp
-        filter:
-          types:
-          - creature
-        count: 1
   source:
     official: dmrp16-034
     review: pending
@@ -219827,16 +219671,6 @@ cards:
         up_to: true
       to: hand
       reason: return
-  - kind: trigger
-    when:
-      event: attack
-      subject: self
-    effect:
-    - op: discard
-      select:
-        zone: hand
-        owner: opp
-        count: 3
   text: 'ムゲンクライム ４（自分のクリーチャーを４体タップし、 [wd04]支払って、このクリーチャーを自分の手札または墓地から召喚してもよい）
 
     T・ブレイカー
@@ -220423,12 +220257,6 @@ cards:
   - shield_go
   text: パワーアタッカー+1000（攻撃中、このクリーチャーのパワーは+1000される） {SG}シールド・ゴー（このクリーチャーが破壊された時、新しいシールドとして自分のシールドゾーンに表向きのまま加える。このクリーチャーが表向きで、シールドゾーンを離れる時、かわりに自分の墓地に置く）
   abilities:
-  - kind: static
-    affects: self
-    mod:
-      power_when:
-        amount: 1000
-        when: attacking
   - kind: static
     affects: self
     mod:
@@ -222598,20 +222426,6 @@ cards:
           - creature
         count: 1
   - kind: trigger
-    when:
-      event: move
-      to: bz
-      subject: self
-    effect:
-    - op: tap
-      select:
-        zone: bz
-        owner: opp
-        filter:
-          types:
-          - creature
-        count: 1
-  - kind: trigger
     odrive: true
     when:
       event: move
@@ -223724,12 +223538,6 @@ cards:
       power_when:
         amount: 2000
         when: attacking
-  - kind: static
-    affects: self
-    mod:
-      power_when:
-        amount: 2000
-        when: attacking
   - kind: trigger
     odrive: true
     when:
@@ -224218,10 +224026,6 @@ cards:
           - creature
         count: 1
       no_untap_next: true
-  - kind: static
-    affects: self
-    mod:
-      sac_reduce: 1
   source:
     official: dmsd18-003
     review: pending
@@ -226082,21 +225886,6 @@ cards:
       to: bz
       subject: self
     effect:
-    - op: modify
-      select:
-        ref: self
-      mod:
-        allow:
-        - action: attack_creature
-          other:
-            tapped: false
-      duration: end_of_turn
-  - kind: trigger
-    when:
-      event: move
-      to: bz
-      subject: self
-    effect:
     - op: may
       body:
       - op: choose
@@ -227024,13 +226813,13 @@ cards:
           - creature
           evolution: true
     then:
-    - &id119
+    - &id111
       op: mana_put
       select:
         zone: deck
         owner: you
         from_top: 3
-    - &id120
+    - &id112
       op: move
       select:
         zone: bz
@@ -227045,8 +226834,8 @@ cards:
     else:
     - op: modal
       modes:
-      - - *id119
-      - - *id120
+      - - *id111
+      - - *id112
   source:
     official: dm25ex3-tf08
     review: pending
@@ -230032,7 +229821,7 @@ cards:
     xBこのクリーチャーがバトルゾーンに出た時、自分の墓地からコストが４以下の呪文を２枚まで選び、コストを支払わずに唱える。'
   abilities:
   - kind: trigger
-    when: &id121
+    when: &id113
       event: move
       to: bz
       subject: self
@@ -230050,7 +229839,7 @@ cards:
         reason: discard
   - kind: trigger
     sst: true
-    when: *id121
+    when: *id113
     effect:
     - op: play_free
       select:
@@ -230136,7 +229925,7 @@ cards:
     xBこのクリーチャーがバトルゾーンに出た時、次の自分のターンのはじめまで、自分のジョーカーズすべてのパワーをバトル中+10000する。'
   abilities:
   - kind: trigger
-    when: *id121
+    when: *id113
     effect:
     - op: may
       body:
@@ -230157,7 +229946,7 @@ cards:
           count: 1
   - kind: trigger
     sst: true
-    when: *id121
+    when: *id113
     effect:
     - op: modify
       select:
@@ -230659,19 +230448,6 @@ cards:
         ref: self
       to: mana
       reason: put
-  - kind: replace
-    when:
-      event: move
-      from: bz
-      to: graveyard
-      reason: destroy
-      subject: self
-    instead:
-    - op: move
-      select:
-        ref: self
-      to: mana
-      reason: put
   - kind: trigger
     when:
       event: move
@@ -230748,7 +230524,7 @@ cards:
     このクリーチャーが出た時、またはこのクリーチャーの「EXライフ」シールドが自分のシールドゾーンを離れた時、相手のクリーチャーをすべてタップする。次の相手のターンのはじめに、それらのクリーチャーはアンタップしない。'
   abilities:
   - kind: trigger
-    when: &id122
+    when: &id114
       event: move
       to: bz
       subject: self
@@ -230820,10 +230596,6 @@ cards:
           - creature
         count: 1
       no_untap_next: true
-  - kind: static
-    affects: self
-    mod:
-      sac_reduce: 1
   source:
     official: dmrp18-063
     review: pending
@@ -230853,7 +230625,7 @@ cards:
     自分の呪文を唱えるコストを最大３少なくする。ただし、コストは０以下にはならない。'
   abilities:
   - kind: trigger
-    when: *id122
+    when: *id114
     effect:
     - op: tap
       select:
@@ -230928,7 +230700,10 @@ cards:
     - op: draw
       count: 1
   - kind: trigger
-    when: *id122
+    when:
+      event: move
+      to: bz
+      subject: self
     effect:
     - op: tap
       select:
@@ -230939,13 +230714,6 @@ cards:
           - creature
         count: 1
       no_untap_next: true
-  - kind: trigger
-    when:
-      event: attack
-      subject: self
-    effect:
-    - op: draw
-      count: 1
   source:
     official: dmrp20-026
     review: pending
@@ -231907,12 +231675,6 @@ cards:
       power_when:
         amount: 4000
         when: attacking
-  - kind: static
-    affects: self
-    mod:
-      power_when:
-        amount: 4000
-        when: attacking
   - kind: trigger
     when:
       event: attack
@@ -232219,15 +231981,6 @@ cards:
 
     各ターン、はじめてカードが自分の墓地から離れた時、相手のクリーチャーを１体選ぶ。このターン、そのクリーチャーのパワーを−4000する。（パワー０以下のクリーチャーは破壊される）'
   abilities:
-  - kind: trigger
-    when:
-      event: move
-      to: bz
-      subject: self
-    effect:
-    - op: mill
-      owner: you
-      count: 2
   - kind: trigger
     when:
       event: move
@@ -232752,20 +232505,6 @@ cards:
         ref: event.subject
       in:
         ref: self
-  - kind: declare
-    zone: hand
-    when:
-      event: attack
-      subject:
-        owner: you
-        filter:
-          race_has: メカ
-    effect:
-    - op: swap
-      out:
-        ref: event.subject
-      in:
-        ref: self
   - kind: trigger
     once_per_turn: true
     when:
@@ -232776,7 +232515,7 @@ cards:
         filter:
           types:
           - creature
-    effect: &id123
+    effect:
     - op: may
       body:
       - op: draw
@@ -232791,7 +232530,11 @@ cards:
         filter:
           types:
           - creature
-    effect: *id123
+    effect:
+    - op: may
+      body:
+      - op: draw
+        count: 1
   source:
     official: dm23rp3-003
     review: pending
@@ -232867,7 +232610,11 @@ cards:
         filter:
           types:
           - creature
-    effect: *id123
+    effect: &id115
+    - op: may
+      body:
+      - op: draw
+        count: 1
   - kind: trigger
     when:
       event: turn_end
@@ -233056,7 +232803,7 @@ cards:
           types:
           - creature
           race_has: メカ
-    effect: *id123
+    effect: *id115
   - kind: replace
     optional: true
     when:
@@ -233133,16 +232880,6 @@ cards:
 
     各ターンに一度、自分の墓地からドラゴン・クリーチャーを１体召喚してもよい。'
   abilities:
-  - kind: static
-    affects:
-      owner: you
-      zone: hand
-      filter:
-        types:
-        - creature
-        race_has: ドラゴン
-    mod:
-      cost: -2
   - kind: static
     affects:
       owner: you
@@ -233285,7 +233022,7 @@ cards:
         filter:
           types:
           - creature
-    effect: &id124
+    effect: &id116
     - op: may
       body:
       - op: draw
@@ -233320,7 +233057,7 @@ cards:
         filter:
           types:
           - creature
-    effect: *id124
+    effect: *id116
   - kind: trigger
     if:
       is_turn: opp
@@ -233753,7 +233490,7 @@ cards:
       event: move
       to: bz
       subject: self
-    effect: &id125
+    effect: &id117
     - op: may
       body:
       - op: repeat
@@ -233776,7 +233513,7 @@ cards:
       event: turn_start
     if:
       is_turn: you
-    effect: *id125
+    effect: *id117
   - kind: trigger
     first_time: true
     when:
@@ -234936,21 +234673,6 @@ cards:
       to: bz
       subject: self
     effect:
-    - op: modify
-      select:
-        ref: self
-      mod:
-        allow:
-        - action: attack_creature
-          other:
-            tapped: false
-      duration: end_of_turn
-  - kind: trigger
-    when:
-      event: move
-      to: bz
-      subject: self
-    effect:
     - op: move
       select:
         zone: deck
@@ -235337,20 +235059,6 @@ cards:
             types:
             - creature
       cost_min: 1
-  - kind: trigger
-    when:
-      event: move
-      to: bz
-      subject: self
-    effect:
-    - op: modify
-      select:
-        ref: self
-      mod:
-        deny:
-        - be_chosen
-        - be_attacked
-      duration: until_next_own_turn_start
   - kind: trigger
     once_per_turn: true
     when:
@@ -236136,7 +235844,7 @@ cards:
     このクリーチャーまたは自分の他のクリーチャーがバトルゾーンに出た時、それがこのターン、バトルゾーンに出た自分の１体目のクリーチャーなら、カードを１枚引いてもよい。'
   abilities:
   - kind: trigger
-    when: &id126
+    when: &id118
       event: cast
       subject:
         owner: you
@@ -236274,7 +235982,7 @@ cards:
     各ターン、自分がはじめて呪文を唱えた時、自分の山札の上から２枚を墓地に置く。'
   abilities:
   - kind: trigger
-    when: *id126
+    when: *id118
     first_time: true
     effect:
     - op: mill
@@ -236387,7 +236095,7 @@ cards:
   text: 各ターン、自分がはじめて呪文を唱えた時、そのターン、このクリーチャーのパワーを+4000する。
   abilities:
   - kind: trigger
-    when: *id126
+    when: *id118
     first_time: true
     effect:
     - op: modify
@@ -236586,21 +236294,6 @@ cards:
   - ex_life
   - double_breaker
   abilities:
-  - kind: trigger
-    when:
-      event: move
-      to: bz
-      subject: self
-    effect:
-    - op: modify
-      select:
-        ref: self
-      mod:
-        allow:
-        - action: attack_creature
-          other:
-            tapped: false
-      duration: end_of_turn
   - kind: trigger
     when:
       event: move
@@ -237651,62 +237344,6 @@ cards:
         to: deck
         reason: put
         position: bottom
-  - kind: declare
-    zone: hand
-    when:
-      event: attack
-      subject:
-        owner: opp
-    if:
-      cmp:
-      - count:
-          zone: mana
-          owner: you
-      - '>='
-      - 2
-    effect:
-    - op: play_free
-      select:
-        ref: self
-      as: ninja
-    - op: delayed_trigger
-      when:
-        event: turn_end
-      effect:
-      - op: move
-        select:
-          ref: ninja
-        to: deck
-        reason: put
-        position: bottom
-  - kind: declare
-    zone: hand
-    when:
-      event: block
-      subject:
-        owner: opp
-    if:
-      cmp:
-      - count:
-          zone: mana
-          owner: you
-      - '>='
-      - 2
-    effect:
-    - op: play_free
-      select:
-        ref: self
-      as: ninja
-    - op: delayed_trigger
-      when:
-        event: turn_end
-      effect:
-      - op: move
-        select:
-          ref: ninja
-        to: deck
-        reason: put
-        position: bottom
   - kind: trigger
     when:
       event: move
@@ -237923,62 +237560,6 @@ cards:
         to: deck
         reason: put
         position: bottom
-  - kind: declare
-    zone: hand
-    when:
-      event: attack
-      subject:
-        owner: opp
-    if:
-      cmp:
-      - count:
-          zone: mana
-          owner: you
-      - '>='
-      - 4
-    effect:
-    - op: play_free
-      select:
-        ref: self
-      as: ninja
-    - op: delayed_trigger
-      when:
-        event: turn_end
-      effect:
-      - op: move
-        select:
-          ref: ninja
-        to: deck
-        reason: put
-        position: bottom
-  - kind: declare
-    zone: hand
-    when:
-      event: block
-      subject:
-        owner: opp
-    if:
-      cmp:
-      - count:
-          zone: mana
-          owner: you
-      - '>='
-      - 4
-    effect:
-    - op: play_free
-      select:
-        ref: self
-      as: ninja
-    - op: delayed_trigger
-      when:
-        event: turn_end
-      effect:
-      - op: move
-        select:
-          ref: ninja
-        to: deck
-        reason: put
-        position: bottom
   - kind: trigger
     when:
       event: move
@@ -238120,20 +237701,6 @@ cards:
         ref: event.subject
       in:
         ref: self
-  - kind: declare
-    zone: hand
-    when:
-      event: attack
-      subject:
-        owner: you
-        filter:
-          race_has: スプラッシュ・クイーン
-    effect:
-    - op: swap
-      out:
-        ref: event.subject
-      in:
-        ref: self
   - kind: trigger
     when:
       event: move
@@ -238256,21 +237823,6 @@ cards:
 
     このクリーチャーが出た時、好きな枚数の呪文を自分の墓地から手札に戻してもよい。次の自分のターンのはじめまで、自分の手札の枚数以下のコストを持つ相手のクリーチャーはすべて、攻撃もブロックもできない。'
   abilities:
-  - kind: declare
-    zone: hand
-    when:
-      event: attack
-      subject:
-        owner: you
-        filter:
-          cost_ge: 5
-          race_has: マジック
-    effect:
-    - op: swap
-      out:
-        ref: event.subject
-      in:
-        ref: self
   - kind: declare
     zone: hand
     when:
@@ -238468,20 +238020,6 @@ cards:
 
     このクリーチャーがタップした時、相手のクリーチャーを１体選ぶ。次の自分のターンのはじめまで、そのクリーチャーは攻撃もブロックもできない。'
   abilities:
-  - kind: trigger
-    when:
-      event: move
-      to: bz
-      subject: self
-    effect:
-    - op: modify
-      select:
-        ref: self
-      mod:
-        deny:
-        - be_chosen
-        - be_attacked
-      duration: until_next_own_turn_start
   - kind: trigger
     when:
       event: move
@@ -238909,62 +238447,6 @@ cards:
         to: deck
         reason: put
         position: bottom
-  - kind: declare
-    zone: hand
-    when:
-      event: attack
-      subject:
-        owner: opp
-    if:
-      cmp:
-      - count:
-          zone: mana
-          owner: you
-      - '>='
-      - 8
-    effect:
-    - op: play_free
-      select:
-        ref: self
-      as: ninja
-    - op: delayed_trigger
-      when:
-        event: turn_end
-      effect:
-      - op: move
-        select:
-          ref: ninja
-        to: deck
-        reason: put
-        position: bottom
-  - kind: declare
-    zone: hand
-    when:
-      event: block
-      subject:
-        owner: opp
-    if:
-      cmp:
-      - count:
-          zone: mana
-          owner: you
-      - '>='
-      - 8
-    effect:
-    - op: play_free
-      select:
-        ref: self
-      as: ninja
-    - op: delayed_trigger
-      when:
-        event: turn_end
-      effect:
-      - op: move
-        select:
-          ref: ninja
-        to: deck
-        reason: put
-        position: bottom
   - kind: trigger
     when:
       event: move
@@ -239071,15 +238553,6 @@ cards:
           - creature
         count: 1
       no_untap_next: true
-  - kind: trigger
-    when:
-      event: attack
-      subject: self
-    effect:
-    - op: may
-      body:
-      - op: draw
-        count: 2
   source:
     official: dm26ex2-013
     review: pending
@@ -239328,20 +238801,6 @@ cards:
     effect:
     - op: modify
       select:
-        ref: self
-      mod:
-        deny:
-        - be_chosen
-        - be_attacked
-      duration: until_next_own_turn_start
-  - kind: trigger
-    when:
-      event: move
-      to: bz
-      subject: self
-    effect:
-    - op: modify
-      select:
         zone: bz
         owner: opp
         filter:
@@ -239516,20 +238975,6 @@ cards:
       to: bz
       subject: self
     effect:
-    - op: modify
-      select:
-        ref: self
-      mod:
-        deny:
-        - be_chosen
-        - be_attacked
-      duration: until_next_own_turn_start
-  - kind: trigger
-    when:
-      event: move
-      to: bz
-      subject: self
-    effect:
     - op: choose
       select:
         zone: bz
@@ -239666,35 +239111,6 @@ cards:
         - be_chosen
         - be_attacked
       duration: until_next_own_turn_start
-  - kind: declare
-    zone: hand
-    when:
-      event: attack
-      subject:
-        owner: you
-        filter:
-          civs:
-          - water
-    effect:
-    - op: swap
-      out:
-        ref: event.subject
-      in:
-        ref: self
-  - kind: trigger
-    when:
-      event: move
-      to: bz
-      subject: self
-    effect:
-    - op: modify
-      select:
-        ref: self
-      mod:
-        deny:
-        - be_chosen
-        - be_attacked
-      duration: until_next_own_turn_start
   - kind: trigger
     when:
       event: move
@@ -239705,12 +239121,12 @@ cards:
       select:
         zone: bz
         owner: opp
-        filter: &id127
+        filter:
           types:
           - creature
         count: 1
       mod:
-        deny: &id128
+        deny:
         - attack_player
         - attack_creature
         - block
@@ -239740,10 +239156,15 @@ cards:
     select:
       zone: bz
       owner: opp
-      filter: *id127
+      filter: &id119
+        types:
+        - creature
       count: 1
     mod:
-      deny: *id128
+      deny: &id120
+      - attack_player
+      - attack_creature
+      - block
     duration: until_next_own_turn_start
   - op: modify
     select:
@@ -239815,10 +239236,6 @@ cards:
         grant:
         - blocker
       duration: until_next_own_turn_start
-  - kind: static
-    affects: self
-    mod:
-      sac_reduce: 2
   source:
     official: dm26rp3-029
     review: pending
@@ -239848,10 +239265,10 @@ cards:
       select:
         zone: bz
         owner: opp
-        filter: *id127
+        filter: *id119
         count: 1
       mod:
-        deny: *id128
+        deny: *id120
       duration: until_next_own_turn_start
   - kind: trigger
     when:
@@ -239863,10 +239280,10 @@ cards:
       select:
         zone: bz
         owner: opp
-        filter: *id127
+        filter: *id119
         count: 1
       mod:
-        deny: *id128
+        deny: *id120
       duration: until_next_own_turn_start
   source:
     official: dm26rp3-060
@@ -239938,20 +239355,6 @@ cards:
 
     自分が呪文を唱えた時、相手のクリーチャーを１体選ぶ。次の自分のターンのはじめまで、そのクリーチャーは攻撃もブロックもできない。'
   abilities:
-  - kind: trigger
-    when:
-      event: move
-      to: bz
-      subject: self
-    effect:
-    - op: modify
-      select:
-        ref: self
-      mod:
-        deny:
-        - be_chosen
-        - be_attacked
-      duration: until_next_own_turn_start
   - kind: trigger
     when:
       event: move
@@ -240152,21 +239555,6 @@ cards:
 
     自分のターンの終わりに、コスト４以下のクリーチャーを最大１体ずつ、自分の手札と墓地から出してもよい。次の自分のターンのはじめまで、それらに「ブロッカー」を与える。'
   abilities:
-  - kind: declare
-    zone: hand
-    when:
-      event: attack
-      subject:
-        owner: you
-        filter:
-          cost_ge: 5
-          race_has: メカ
-    effect:
-    - op: swap
-      out:
-        ref: event.subject
-      in:
-        ref: self
   - kind: declare
     zone: hand
     when:
@@ -241396,10 +240784,6 @@ cards:
         - attack_creature
         - block
       duration: until_next_own_turn_start
-  - kind: static
-    affects: self
-    mod:
-      sac_reduce: 1
   source:
     official: dmrp17-037
     review: pending
@@ -244637,7 +244021,7 @@ cards:
         b:
           zone: bz
           owner: opp
-          filter: &id129
+          filter: &id121
             types:
             - creature
           count: 1
@@ -244686,14 +244070,14 @@ cards:
         a:
           zone: bz
           owner: you
-          filter: &id130
+          filter: &id122
             types:
             - creature
           count: 1
         b:
           zone: bz
           owner: opp
-          filter: *id129
+          filter: *id121
           count: 1
   source:
     official: dm25rp4-020
@@ -244745,7 +244129,7 @@ cards:
         b:
           zone: bz
           owner: opp
-          filter: *id129
+          filter: *id121
           count: 1
   - kind: trigger
     first_time: true
@@ -244921,7 +244305,7 @@ cards:
         b:
           zone: bz
           owner: opp
-          filter: *id129
+          filter: *id121
           count: 1
   - kind: static
     affects: self
@@ -244984,7 +244368,7 @@ cards:
         b:
           zone: bz
           owner: opp
-          filter: *id129
+          filter: *id121
           count: 1
   - kind: trigger
     when:
@@ -244999,7 +244383,7 @@ cards:
         b:
           zone: bz
           owner: opp
-          filter: *id129
+          filter: *id121
           count: 1
   - kind: trigger
     when:
@@ -245080,7 +244464,7 @@ cards:
         b:
           zone: bz
           owner: opp
-          filter: *id129
+          filter: *id121
           count: 1
   source:
     official: dm26ex3-091
@@ -245138,7 +244522,7 @@ cards:
           select:
             zone: bz
             owner: you
-            filter: *id130
+            filter: *id122
             count: 1
           as: ally
         - op: modify
@@ -245155,7 +244539,7 @@ cards:
             b:
               zone: bz
               owner: opp
-              filter: *id129
+              filter: *id121
               count: 1
       - - op: destroy
           select:
@@ -245205,7 +244589,7 @@ cards:
         b:
           zone: bz
           owner: opp
-          filter: *id129
+          filter: *id121
           count: 1
   source:
     official: dm26ex4-092
@@ -245310,19 +244694,19 @@ cards:
     when:
       event: attack
       subject: self
-    effect: &id131
+    effect: &id123
     - op: force_battle
       a:
         zone: bz
         owner: you
-        filter: &id132
+        filter: &id124
           types:
           - creature
         count: 1
       b:
         zone: bz
         owner: opp
-        filter: &id133
+        filter: &id125
           types:
           - creature
         count: 1
@@ -245331,7 +244715,7 @@ cards:
       event: move
       from: bz
       subject: self
-    effect: *id131
+    effect: *id123
   source:
     official: dm26rp1-052
     review: pending
@@ -245354,7 +244738,7 @@ cards:
     select:
       zone: bz
       owner: you
-      filter: *id132
+      filter: *id124
       count: 1
     as: ally
   - op: modify
@@ -245371,7 +244755,7 @@ cards:
       b:
         zone: bz
         owner: opp
-        filter: *id133
+        filter: *id125
         count: 1
   source:
     official: dm26rp2-072
@@ -245436,7 +244820,7 @@ cards:
         b:
           zone: bz
           owner: opp
-          filter: *id133
+          filter: *id125
           count: 1
   - kind: trigger
     when:
@@ -245494,7 +244878,7 @@ cards:
         b:
           zone: bz
           owner: opp
-          filter: *id133
+          filter: *id125
           count: 1
   - kind: static
     affects: self
@@ -245557,12 +244941,12 @@ cards:
     a:
       zone: bz
       owner: you
-      filter: *id132
+      filter: *id124
       count: 1
     b:
       zone: bz
       owner: opp
-      filter: *id133
+      filter: *id125
       count: 1
   source:
     official: dm26rp3-076
@@ -245625,7 +245009,7 @@ cards:
         b:
           zone: bz
           owner: opp
-          filter: *id133
+          filter: *id125
           count: 1
   - kind: trigger
     when:
@@ -245698,7 +245082,7 @@ cards:
         b:
           zone: bz
           owner: opp
-          filter: *id133
+          filter: *id125
           count: 1
   - kind: trigger
     when:
@@ -245771,7 +245155,7 @@ cards:
         b:
           zone: bz
           owner: opp
-          filter: *id133
+          filter: *id125
           count: 1
   - kind: trigger
     when:
@@ -246831,22 +246215,6 @@ cards:
           other:
             tapped: false
       duration: end_of_turn
-  - &id134
-    kind: trigger
-    when:
-      event: move
-      to: bz
-      subject: self
-    effect:
-    - op: modify
-      select:
-        ref: self
-      mod:
-        allow:
-        - action: attack_creature
-          other:
-            tapped: false
-      duration: end_of_turn
   - kind: trigger
     when:
       event: battle_win
@@ -246894,7 +246262,6 @@ cards:
           other:
             tapped: false
       duration: end_of_turn
-  - *id134
   - kind: trigger
     when:
       event: battle_win
@@ -247256,21 +246623,6 @@ cards:
 
     このクリーチャーがバトルに勝った時、相手のシールドを１つブレイクする。'
   abilities:
-  - kind: trigger
-    when:
-      event: move
-      to: bz
-      subject: self
-    effect:
-    - op: modify
-      select:
-        ref: self
-      mod:
-        allow:
-        - action: attack_creature
-          other:
-            tapped: false
-      duration: end_of_turn
   - kind: trigger
     when:
       event: move
@@ -251016,7 +250368,7 @@ cards:
     このクリーチャーがバトルゾーンに出た時、相手のシールドを２つブレイクする。自分のシールドが５つ以上なら、自分の光のクリーチャーはバトルゾーンを離れない。'
   abilities:
   - kind: trigger
-    when: &id135
+    when: &id126
       event: move
       to: bz
       subject: self
@@ -251067,7 +250419,7 @@ cards:
     xBこのクリーチャーがバトルゾーンに出た時、そのターン、自分のクリーチャーはバトルゾーンを離れず、次の自分のターンのはじめまで「ブロッカー」を得る。（「ブロッカー」を持つクリーチャーをタップして、相手クリーチャーの攻撃先をそのクリーチャーに変更してもよい）'
   abilities:
   - kind: trigger
-    when: *id135
+    when: *id126
     effect:
     - op: play_free
       select:
@@ -251080,14 +250432,14 @@ cards:
         count: 1
         up_to: true
   - kind: trigger
-    when: *id135
+    when: *id126
     sst: true
     effect:
     - op: modify
       select:
         zone: bz
         owner: you
-        filter: &id136
+        filter: &id127
           types:
           - creature
         count: all
@@ -251098,7 +250450,7 @@ cards:
       select:
         zone: bz
         owner: you
-        filter: *id136
+        filter: *id127
         count: all
       mod:
         grant:
@@ -251246,7 +250598,7 @@ cards:
     カードが自分のシールドゾーンから離れた時、このクリーチャーをアンタップする。'
   abilities:
   - kind: trigger
-    when: &id140
+    when: &id131
       event: move
       to: bz
       subject: self
@@ -251254,7 +250606,7 @@ cards:
     - op: modal
       modes:
       - - op: move
-          select: &id137
+          select: &id128
             zone: deck
             owner: you
             from_top: 1
@@ -251262,25 +250614,25 @@ cards:
           to: shield
           reason: charge
       - - op: modify
-          select: &id138
+          select: &id129
             ref: self
-          mod: &id139
+          mod: &id130
             no_leave: true
           duration: until_next_own_turn_start
   - kind: trigger
-    when: &id141
+    when: &id132
       event: attack
       subject: self
     effect:
     - op: modal
       modes:
       - - op: move
-          select: *id137
+          select: *id128
           to: shield
           reason: charge
       - - op: modify
-          select: *id138
-          mod: *id139
+          select: *id129
+          mod: *id130
           duration: until_next_own_turn_start
   - kind: trigger
     when:
@@ -251313,7 +250665,7 @@ cards:
     - メカ・デル・ディネロ
     abilities:
     - kind: trigger
-      when: *id140
+      when: *id131
       effect:
       - op: modify
         select:
@@ -251419,7 +250771,7 @@ cards:
     このクリーチャーが出た時、自分のエンジェル・コマンド１つにつき、カードを１枚引いてもよい。次の自分のターンのはじめまで、このクリーチャーは離れない。'
   abilities:
   - kind: trigger
-    when: *id140
+    when: *id131
     effect:
     - op: may
       body:
@@ -251528,9 +250880,9 @@ cards:
     このクリーチャーが出た時または攻撃する時、自分の他のクリーチャーを１体選んでもよい。次の自分のターンのはじめまで、そのクリーチャーは離れない。'
   abilities:
   - kind: trigger
-    when: *id140
+    when: *id131
     effect:
-    - &id142
+    - &id133
       op: may
       body:
       - op: modify
@@ -251546,9 +250898,9 @@ cards:
           no_leave: true
         duration: until_next_own_turn_start
   - kind: trigger
-    when: *id141
+    when: *id132
     effect:
-    - *id142
+    - *id133
   source:
     official: dm26ex4-cho032
     review: pending
@@ -257297,7 +256649,7 @@ cards:
   - fire
   cost: 2
   power: 1000
-  races: &id143
+  races: &id134
   - ジョーカーズ
   - チーム切札
   mana: 1
@@ -257350,7 +256702,7 @@ cards:
   - nature
   cost: 3
   power: 4000
-  races: *id143
+  races: *id134
   mana: 1
   text: 'キリフダッシュ [nn01]（自分のクリーチャーの攻撃の終わりに、そのクリーチャーがその攻撃中にシールドをブレイクしていれば、このクリーチャーを
     [nn01]支払って召喚してもよい）
@@ -257386,7 +256738,7 @@ cards:
   - nature
   cost: 4
   power: 6000
-  races: *id143
+  races: *id134
   mana: 1
   text: 'キリフダッシュ [fn03]（自分のクリーチャーの攻撃の終わりに、そのクリーチャーがその攻撃中にシールドをブレイクしていれば、このクリーチャーを
     [fn03]支払って召喚してもよい）
@@ -257425,7 +256777,7 @@ cards:
   - nature
   cost: 7
   power: 10000
-  races: *id143
+  races: *id134
   mana: 1
   text: 'キリフダッシュ [fn05]（自分のクリーチャーの攻撃の終わりに、そのクリーチャーがその攻撃中にシールドをブレイクしていれば、このクリーチャーを
     [fn05]支払って召喚してもよい）
@@ -257485,7 +256837,7 @@ cards:
   - fire
   cost: 6
   power: 7000
-  races: *id143
+  races: *id134
   mana: 1
   text: 'キリフダッシュ [ff04]（自分のクリーチャーの攻撃の終わりに、そのクリーチャーがその攻撃中にシールドをブレイクしていれば、このクリーチャーを[ff04]支払って召喚してもよい）
 
@@ -257629,7 +256981,7 @@ cards:
   - fire
   cost: 7
   power: 5000
-  races: *id143
+  races: *id134
   mana: 1
   text: 'S・トリガー（このクリーチャーをシールドゾーンから手札に加える時、コストを支払わずにすぐ召喚してもよい）
 
@@ -257685,7 +257037,7 @@ cards:
   - nature
   cost: 2
   power: 3000
-  races: *id143
+  races: *id134
   mana: 1
   text: キリフダッシュ [nn01]
   abilities:
@@ -257718,7 +257070,7 @@ cards:
   - nature
   cost: 3
   power: 5000
-  races: *id143
+  races: *id134
   mana: 1
   text: 'キリフダッシュ [fn02]（自分のクリーチャーの攻撃の終わりに、そのクリーチャーがその攻撃中にシールドをブレイクしていれば、このクリーチャーを[fn02]
     支払って召喚してもよい）
@@ -257766,7 +257118,7 @@ cards:
   - nature
   cost: 7
   power: 6000
-  races: &id144
+  races: &id135
   - ジョーカーズ
   - チーム切札
   mana: 1
@@ -257843,7 +257195,7 @@ cards:
   - fire
   cost: 3
   power: 3000
-  races: *id144
+  races: *id135
   mana: 1
   text: キリフダッシュ [ff02] / このクリーチャーがバトルゾーンに出た時、相手のマナゾーンにあるカードの枚数よりコストが大きい相手のクリーチャーをすべて破壊する。
   abilities:
@@ -257893,7 +257245,7 @@ cards:
   - fire
   cost: 4
   power: 4000
-  races: *id144
+  races: *id135
   mana: 1
   text: キリフダッシュ [ff02] / 自分のクリーチャーすべての、バトル中のパワーを+2000する。
   abilities:
@@ -257934,7 +257286,7 @@ cards:
   - nature
   cost: 4
   power: 5000
-  races: *id144
+  races: *id135
   mana: 1
   text: キリフダッシュ [fn02] / このクリーチャーがバトルゾーンに出た時、相手の「ブロッカー」を持つクリーチャーを１体選び、持ち主のマナゾーンに置いてもよい。
   abilities:
@@ -257982,7 +257334,7 @@ cards:
   - nature
   cost: 6
   power: 6000
-  races: *id144
+  races: *id135
   mana: 1
   text: 'キリフダッシュ [nn04]（自分のクリーチャーの攻撃の終わりに、そのクリーチャーがその攻撃中にシールドをブレイクしていれば、このクリーチャーを[nn04]支払って召喚してもよい）
 
@@ -260508,7 +259860,7 @@ cards:
       subject: self
     effect:
     - op: mekurade
-      filter: &id145
+      filter: &id136
         race_has: メカ
       cost_le: 5
   - kind: trigger
@@ -260517,7 +259869,7 @@ cards:
       subject: self
     effect:
     - op: mekurade
-      filter: *id145
+      filter: *id136
       cost_le: 5
   - kind: replace
     optional: true
@@ -260590,7 +259942,7 @@ cards:
           select:
             ref: t
         - op: mekurade
-          filter: *id145
+          filter: *id136
           cost_le: 5
   - name: 聖沌忍法 メカくしの術
     types:
@@ -267274,7 +266626,7 @@ cards:
         select:
           zone: bz
           owner: opp
-          filter: &id146
+          filter: &id137
             types:
             - creature
           count: 1
@@ -267411,7 +266763,7 @@ cards:
         select:
           zone: bz
           owner: you
-          filter: &id147
+          filter: &id138
             types:
             - creature
           count: 1
@@ -267483,7 +266835,7 @@ cards:
         select:
           zone: bz
           owner: opp
-          filter: *id146
+          filter: *id137
           count: 1
   - kind: trigger
     optional: true
@@ -267502,7 +266854,7 @@ cards:
         select:
           zone: bz
           owner: you
-          filter: *id147
+          filter: *id138
           count: 1
         mod:
           power: 2000
@@ -267610,7 +266962,7 @@ cards:
         select:
           zone: bz
           owner: opp
-          filter: *id146
+          filter: *id137
           count: 1
         mod:
           power: -1000
@@ -267680,7 +267032,7 @@ cards:
         select:
           zone: bz
           owner: you
-          filter: *id147
+          filter: *id138
           count: 1
         mod:
           power_when:
@@ -267704,7 +267056,7 @@ cards:
         select:
           zone: bz
           owner: you
-          filter: *id147
+          filter: *id138
           count: 1
         mod:
           breaks: 1
@@ -268048,7 +267400,7 @@ cards:
         select:
           zone: bz
           owner: you
-          filter: &id148
+          filter: &id139
             types:
             - creature
           count: 1
@@ -268073,7 +267425,7 @@ cards:
         select:
           zone: bz
           owner: you
-          filter: *id148
+          filter: *id139
           count: 1
         mod:
           power_when:
@@ -274881,7 +274233,7 @@ cards:
       event: move
       to: bz
       subject: self
-    effect: &id149
+    effect: &id140
     - op: destroy
       select:
         zone: bz
@@ -274895,7 +274247,7 @@ cards:
     when:
       event: attack
       subject: self
-    effect: *id149
+    effect: *id140
 - id: dm26ex2-065
   name: バクロ法師の封
   types:
@@ -275042,7 +274394,7 @@ cards:
       to: bz
       subject: self
     effect:
-    - &id150
+    - &id141
       op: may
       body:
       - op: tap
@@ -275058,7 +274410,7 @@ cards:
     cost:
       under: 1
     effect:
-    - *id150
+    - *id141
   source:
     official: dm23-s05
     review: pending
@@ -275269,7 +274621,7 @@ cards:
       event: move
       to: bz
       subject: self
-    effect: &id151
+    effect: &id142
     - op: shuffle
     - op: choose
       select:
@@ -275312,7 +274664,7 @@ cards:
     when:
       event: attack
       subject: self
-    effect: *id151
+    effect: *id142
   source:
     official: dmrp15-s02
     review: pending
@@ -288623,10 +287975,6 @@ cards:
     affects: self
     mod:
       sac_reduce: 2
-  - affects: self
-    kind: static
-    mod:
-      sac_reduce: 2
   - effect:
     - as: target
       op: choose
@@ -289410,12 +288758,6 @@ cards:
       - action: attack_creature
         other:
           tapped: false
-  - affects: self
-    kind: static
-    mod:
-      power_when:
-        amount: 3000
-        when: attacking
   civs:
   - fire
   cost: 4
@@ -290029,14 +289371,6 @@ cards:
     - op: untap
       select:
         ref: self
-  - effect:
-    - op: untap
-      select:
-        ref: self
-    kind: trigger
-    when:
-      event: turn_end
-      player: you
   - effect:
     - duration: until_next_own_turn_start
       mod:
@@ -292060,10 +291394,6 @@ cards:
           - creature
         owner: opp
       to: bz
-  - affects: self
-    kind: static
-    mod:
-      sac_reduce: 1
   civs:
   - light
   cost: 2
@@ -292108,10 +291438,6 @@ cards:
           - creature
         owner: opp
       to: bz
-  - affects: self
-    kind: static
-    mod:
-      sac_reduce: 2
   civs:
   - fire
   cost: 2
@@ -296458,10 +295784,6 @@ cards:
     affects: self
     mod:
       sac_reduce: 2
-  - affects: self
-    kind: static
-    mod:
-      sac_reduce: 2
   civs:
   - darkness
   - nature
@@ -297650,13 +296972,6 @@ cards:
       opt_reduce:
         amount: 2
         then: deck_bottom_draw
-  - affects: self
-    kind: static
-    mod:
-      opt_reduce:
-        amount: 2
-        then: deck_bottom_draw
-    zone: hand
   - effect:
     - op: move
       order: choose
@@ -298058,7 +297373,7 @@ cards:
       - count: 1
         op: draw
       op: may
-    if: &id152
+    if: &id143
       cmp:
       - count:
           filter:
@@ -298081,7 +297396,7 @@ cards:
       - count: 1
         op: draw
       op: may
-    if: *id152
+    if: *id143
     kind: trigger
     when:
       event: move
@@ -298152,7 +297467,7 @@ cards:
   types:
   - creature
 - abilities:
-  - effect: &id153
+  - effect: &id144
     - op: tap
       select:
         count: 1
@@ -298173,7 +297488,7 @@ cards:
           - creature
         owner: you
       to: bz
-  - effect: *id153
+  - effect: *id144
     kind: trigger
     when:
       event: cast
@@ -298409,13 +297724,6 @@ cards:
       opt_reduce:
         amount: 3
         then: destroy
-  - affects: self
-    kind: static
-    mod:
-      opt_reduce:
-        amount: 3
-        then: destroy
-    zone: hand
   - affects:
       filter:
         race_has: ビートジョッキー
@@ -306311,7 +305619,7 @@ cards:
   types:
   - creature
 - abilities:
-  - effect: &id154
+  - effect: &id145
     - no_untap_next: true
       op: tap
       select:
@@ -306326,7 +305634,7 @@ cards:
       event: move
       subject: self
       to: bz
-  - effect: *id154
+  - effect: *id145
     kind: trigger
     when:
       event: move
@@ -306707,7 +306015,7 @@ cards:
   types:
   - creature
 - abilities:
-  - effect: &id155
+  - effect: &id146
     - no_untap_next: true
       op: tap
       select:
@@ -306758,7 +306066,7 @@ cards:
       event: move
       subject: self
       to: bz
-  - effect: *id155
+  - effect: *id146
     kind: trigger
     when:
       event: attack
@@ -309816,10 +309124,6 @@ cards:
           - creature
         owner: opp
       to: bz
-  - affects: self
-    kind: static
-    mod:
-      sac_reduce: 1
   civs:
   - light
   cost: 2
@@ -315902,7 +315206,7 @@ cards:
 - abilities:
   - effect:
     - duration: end_of_turn
-      mod: &id156
+      mod: &id147
         allow:
         - action: attack_creature
           other:
@@ -315917,7 +315221,7 @@ cards:
       to: bz
   - effect:
     - duration: end_of_turn
-      mod: *id156
+      mod: *id147
       op: modify
       select:
         count: all
@@ -318430,10 +317734,6 @@ cards:
       reason: destroy
       subject: self
       to: graveyard
-  - affects: self
-    kind: static
-    mod:
-      sac_reduce: 2
   civs:
   - light
   - darkness
@@ -334914,7 +334214,7 @@ cards:
       event: move
       to: bz
       subject: self
-    effect: &id157
+    effect: &id148
     - op: move
       select:
         zone: deck
@@ -334926,7 +334226,7 @@ cards:
     when:
       event: attack
       subject: self
-    effect: *id157
+    effect: *id148
 - id: dmex12-067
   name: ブンブン万太郎
   types:
@@ -341020,7 +340320,7 @@ cards:
         reason: return
   - kind: static
     affects: self
-    if: &id158
+    if: &id149
       cmp:
       - link_count: self
       - ==
@@ -341098,7 +340398,7 @@ cards:
   abilities:
   - kind: static
     affects: self
-    if: *id158
+    if: *id149
     mod:
       deny:
       - attack_player
@@ -341163,7 +340463,7 @@ cards:
     when:
       event: turn_end
       player: you
-    if: &id159
+    if: &id150
       cmp:
       - link_count: self
       - '>='
@@ -341206,18 +340506,13 @@ cards:
       body:
       - op: draw
         count: 1
-  - kind: trigger
-    when:
-      event: attack
-      subject: self
-    effect:
-    - op: may
-      body:
-      - op: draw
-        count: 1
   - kind: static
     affects: self
-    if: *id159
+    if:
+      cmp:
+      - link_count: self
+      - '>='
+      - 2
     mod:
       breaks: 2
 - id: dm24-016
@@ -341259,7 +340554,7 @@ cards:
         count: 1
   - kind: static
     affects: self
-    if: *id159
+    if: *id150
     mod:
       breaks: 2
 - id: dm24-055
@@ -341283,7 +340578,7 @@ cards:
   abilities:
   - kind: static
     affects: self
-    if: *id159
+    if: *id150
     mod:
       power_when:
         amount: 3000
@@ -341309,7 +340604,7 @@ cards:
   abilities:
   - kind: static
     affects: self
-    if: *id159
+    if: *id150
     mod:
       breaks: 2
 - id: dm25-006
@@ -341348,14 +340643,14 @@ cards:
       power: 2000
   - kind: static
     affects: self
-    if: *id159
+    if: *id150
     mod:
       breaks: 2
   - kind: trigger
     when:
       event: attack
       subject: self
-    if: *id159
+    if: *id150
     effect:
     - op: may
       body:
@@ -341411,7 +340706,7 @@ cards:
       reason: put
   - kind: static
     affects: self
-    if: *id159
+    if: *id150
     mod:
       breaks: 3
 - id: dm25-014
@@ -341451,7 +340746,7 @@ cards:
           from_top: 1
   - kind: static
     affects: self
-    if: *id159
+    if: *id150
     mod:
       breaks: 2
 - id: dm25-016
@@ -341478,7 +340773,7 @@ cards:
   abilities:
   - kind: static
     affects: self
-    if: *id159
+    if: *id150
     mod:
       grant:
       - blocker
@@ -341489,7 +340784,7 @@ cards:
       filter:
         types:
         - creature
-    if: *id159
+    if: *id150
     mod:
       power: -1000
 - id: dm25-017
@@ -341518,7 +340813,7 @@ cards:
     when:
       event: turn_start
       player: you
-    if: *id159
+    if: *id150
     effect:
     - op: may
       body:
@@ -341575,7 +340870,7 @@ cards:
       event: tap
       subject:
         owner: opp
-    if: *id159
+    if: *id150
     effect:
     - op: may
       body:
@@ -341621,7 +340916,7 @@ cards:
     when:
       event: battle_win
       subject: self
-    if: *id159
+    if: *id150
     effect:
     - op: may
       body:
@@ -341683,7 +340978,7 @@ cards:
         owner: you
         filter:
           keyword: blocker
-    if: *id159
+    if: *id150
     optional: true
     instead:
     - op: bounce
@@ -341726,7 +341021,7 @@ cards:
           count: 1
   - kind: static
     affects: self
-    if: *id159
+    if: *id150
     mod:
       breaks: 2
 - id: dm26-014
@@ -341771,7 +341066,7 @@ cards:
         count: 1
   - kind: static
     affects: self
-    if: *id159
+    if: *id150
     mod:
       breaks: 3
 - id: dm26-015
@@ -341813,7 +341108,7 @@ cards:
     when:
       event: battle_win
       subject: self
-    if: *id159
+    if: *id150
     effect:
     - op: may
       body:
@@ -341914,7 +341209,7 @@ cards:
             count: 1
   - kind: static
     affects: self
-    if: &id160
+    if: &id151
       cmp:
       - link_count: self
       - '>='
@@ -342235,7 +341530,7 @@ cards:
       reason: put
   - kind: static
     affects: self
-    if: *id160
+    if: *id151
     mod:
       breaks: 3
 - id: dm26ex2-mc016
@@ -342379,7 +341674,7 @@ cards:
         player: you
   - kind: static
     affects: self
-    if: &id161
+    if: &id152
       cmp:
       - link_count: self
       - '>='
@@ -342434,7 +341729,7 @@ cards:
         player: you
   - kind: static
     affects: self
-    if: *id161
+    if: *id152
     mod:
       deny:
       - be_chosen
@@ -342485,7 +341780,7 @@ cards:
         player: you
   - kind: static
     affects: self
-    if: *id161
+    if: *id152
     mod:
       breaks: 2
 - id: dmc66-030
@@ -342530,7 +341825,7 @@ cards:
         count: all
   - kind: static
     affects: self
-    if: *id161
+    if: *id152
     mod:
       breaks: 4
 - id: dmc66-031
@@ -342583,7 +341878,7 @@ cards:
     when:
       event: attack
       subject: self
-    if: *id161
+    if: *id152
     effect:
     - op: may
       body:
@@ -342633,7 +341928,7 @@ cards:
   abilities:
   - kind: static
     affects: self
-    if: *id161
+    if: *id152
     mod:
       breaks: 3
 - id: dmd12-001
@@ -342662,7 +341957,7 @@ cards:
       subject: self
     effect:
     - op: if
-      cond: *id161
+      cond: *id152
       then:
       - op: choose
         select:
@@ -342690,7 +341985,7 @@ cards:
           count: 1
   - kind: static
     affects: self
-    if: *id161
+    if: *id152
     mod:
       breaks: 3
 - id: dmd12-002
@@ -342719,7 +342014,7 @@ cards:
       subject: self
     effect:
     - op: if
-      cond: *id161
+      cond: *id152
       then:
       - op: draw
         count: 1
@@ -342764,8 +342059,8 @@ cards:
       to: bz
       subject:
         owner: you
-        filter: &id162
-          any_of: &id164
+        filter: &id153
+          any_of: &id155
           - race_has: ゴッド・ノヴァ OMG
           - race_has: ゴッド・ノヴァOMG
     effect:
@@ -342923,13 +342218,13 @@ cards:
     affects:
       zone: shield
       owner: you
-      filter: *id162
+      filter: *id153
     mod:
       grant:
       - s_trigger
   - kind: static
     affects: self
-    if: &id163
+    if: &id154
       cmp:
       - link_count: self
       - '>='
@@ -342995,7 +342290,7 @@ cards:
             count: 1
   - kind: static
     affects: self
-    if: *id163
+    if: *id154
     mod:
       must_be_attacked: true
 - id: dmex17-068
@@ -343040,7 +342335,7 @@ cards:
     when:
       event: attack
       subject: self
-    if: *id163
+    if: *id154
     effect:
     - op: destroy
       select:
@@ -343154,27 +342449,6 @@ cards:
     - op: untap
       select:
         ref: self
-  - kind: trigger
-    when:
-      event: move
-      to: bz
-      subject: self
-    effect:
-    - op: move
-      select:
-        zone: deck
-        owner: you
-        from_top: 1
-      to: mana
-      reason: put
-  - kind: trigger
-    when:
-      event: turn_end
-      player: you
-    effect:
-    - op: untap
-      select:
-        ref: self
 - id: dmr09-001
   name: 悪魔右神ダフトパンク
   types:
@@ -343254,7 +342528,7 @@ cards:
     when:
       event: battle_win
       subject: self
-    if: *id163
+    if: *id154
     effect:
     - op: may
       body:
@@ -343291,14 +342565,14 @@ cards:
   abilities:
   - kind: static
     affects: self
-    if: *id163
+    if: *id154
     mod:
       breaks: 3
   - kind: trigger
     when:
       event: turn_end
       player: you
-    if: *id163
+    if: *id154
     effect:
     - op: untap
       select:
@@ -343443,7 +342717,7 @@ cards:
           count: 1
   - kind: static
     affects: self
-    if: *id163
+    if: *id154
     mod:
       breaks: 3
 - id: dmr12-002
@@ -343556,7 +342830,7 @@ cards:
     when:
       event: attack
       subject: self
-    if: *id163
+    if: *id154
     effect:
     - op: may
       body:
@@ -343595,14 +342869,14 @@ cards:
   abilities:
   - kind: static
     affects: self
-    if: *id163
+    if: *id154
     mod:
       breaks: 4
   - kind: trigger
     when:
       event: turn_end
       player: you
-    if: *id163
+    if: *id154
     effect:
     - op: untap
       select:
@@ -343757,7 +343031,7 @@ cards:
           count: 1
   - kind: static
     affects: self
-    if: *id163
+    if: *id154
     mod:
       breaks: 3
 - id: promoy12-079
@@ -343799,7 +343073,7 @@ cards:
             types:
             - creature
             cost_le: 5
-            any_of: *id164
+            any_of: *id155
           count: 1
         to: bz
         reason: put
@@ -343839,7 +343113,7 @@ cards:
         count: 1
   - kind: static
     affects: self
-    if: *id163
+    if: *id154
     mod:
       breaks: 3
 - id: promoy6-002
@@ -348780,16 +348054,6 @@ cards:
         - creature
     mod:
       cost: -2
-  - kind: static
-    affects:
-      owner: you
-      zone: hand
-      filter:
-        cost_ge: 8
-        types:
-        - creature
-    mod:
-      cost: -2
   - kind: trigger
     when:
       event: move
@@ -349072,7 +348336,7 @@ cards:
             zone: mana
             owner: you
       duration: end_of_turn
-    - &id165
+    - &id156
       op: may
       body:
       - op: put_under
@@ -349153,15 +348417,15 @@ cards:
         from_top: 2
       to: shield
       reason: charge
-    - *id165
-  - &id166
+    - *id156
+  - &id157
     kind: static
     choukon: true
     affects: self
     mod:
       grant:
       - powered_breaker
-  - &id167
+  - &id158
     kind: static
     choukon: true
     affects: self
@@ -349207,9 +348471,9 @@ cards:
       - op: break
         count: 1
         st_first: true
-    - *id165
-  - *id166
-  - *id167
+    - *id156
+  - *id157
+  - *id158
 - id: dm25rp4-047
   name: シェル・ファクトリーの地版
   types:
@@ -349256,9 +348520,9 @@ cards:
           count: 1
         to: mana
         reason: put
-    - *id165
-  - *id166
-  - *id167
+    - *id156
+  - *id157
+  - *id158
 - id: dm25rp4-058
   name: クルトの天宝
   types:
@@ -349543,7 +348807,7 @@ cards:
           select:
             ref: a
             count: all
-  - &id168
+  - &id159
     kind: trigger
     when:
       event: move
@@ -349608,7 +348872,7 @@ cards:
           count: 1
         to: bz
         reason: put
-  - *id168
+  - *id159
 - id: dm26ex1-050
   name: 邪爪の魔法陣
   types:
@@ -349710,7 +348974,7 @@ cards:
                 zone: deck
                 owner_of: x
                 from_top: 1
-  - *id168
+  - *id159
 - id: dm26ex1-n016
   name: 「正義の記念碑」
   types:
@@ -351164,14 +350428,6 @@ cards:
       - 2
     mod:
       cost: -2
-  - kind: trigger
-    when:
-      event: move
-      to: bz
-      subject: self
-    effect:
-    - op: draw
-      count: 1
 - faces:
   - name: 戦攻のシダン アカダシ
     types:
@@ -356232,7 +355488,7 @@ cards:
         body:
         - op: may
           body:
-          - &id169
+          - &id160
             op: move
             select:
               zone: deck
@@ -356242,7 +355498,7 @@ cards:
             to: mana
             reason: charge
       else:
-      - *id169
+      - *id160
   source:
     notes: 侵略はdeclare+invade。「上から5枚まで」は1枚ずつの任意の繰り返し（dm06-002先例）、分岐は under_of の count
       条件。原文どおり。
@@ -356917,12 +356173,6 @@ cards:
 
     このクリーチャーが破壊された時、相手のクリーチャーをパワーの合計が4000以下になるように好きな数選び、破壊する。'
   abilities:
-  - kind: static
-    affects: self
-    mod:
-      power_when:
-        amount: 2000
-        when: attacking
   - kind: static
     affects: self
     mod:
@@ -358000,7 +357250,7 @@ cards:
     - light
     - water
   abilities:
-  - &id170
+  - &id161
     kind: trigger
     zone: shield
     when:
@@ -358073,7 +357323,7 @@ cards:
     - light
     - water
   abilities:
-  - *id170
+  - *id161
   - kind: trigger
     zone: shield
     when:
@@ -358130,7 +357380,7 @@ cards:
     civs:
     - light
   abilities:
-  - *id170
+  - *id161
   spell:
   - op: tap
     select:
@@ -358172,7 +357422,7 @@ cards:
     civs:
     - light
   abilities:
-  - *id170
+  - *id161
 - id: dmex11-035
   name: 「流星の雫」
   types:
@@ -358200,7 +357450,7 @@ cards:
     civs:
     - water
   abilities:
-  - *id170
+  - *id161
 - id: dmex16-088
   name: 「青空の大波」
   types:
@@ -358247,7 +357497,7 @@ cards:
           types:
           - creature
         count: 1
-  - *id170
+  - *id161
 - id: dmrp13-034
   name: 「空の旗艦」
   types:
@@ -358281,7 +357531,7 @@ cards:
     effect:
     - op: draw
       count: 1
-  - *id170
+  - *id161
 - id: dmrp13-048
   name: 「希望の空兵」
   types:
@@ -358313,7 +357563,7 @@ cards:
     - light
     - water
   abilities:
-  - *id170
+  - *id161
 - id: dmrp13-058
   name: 「自由のクルト」
   types:
@@ -358337,7 +357587,7 @@ cards:
     civs:
     - light
   abilities:
-  - *id170
+  - *id161
 - id: dmrp14-030
   name: 「七色の残像」
   types:
@@ -358368,7 +357618,7 @@ cards:
     civs:
     - light
   abilities:
-  - *id170
+  - *id161
 - id: dm23bd7-039
   name: 「激情の福音」
   types:
@@ -359544,7 +358794,7 @@ cards:
         select:
           zone: bz
           owner: opp
-          filter: &id171
+          filter: &id162
             types:
             - creature
           count: 1
@@ -359721,7 +358971,7 @@ cards:
       select:
         zone: bz
         owner: opp
-        filter: *id171
+        filter: *id162
         count: 1
       to: mana
       reason: put
@@ -360123,7 +359373,7 @@ cards:
       select:
         zone: bz
         owner: opp
-        filter: &id172
+        filter: &id163
           types:
           - creature
         count: 1
@@ -360196,9 +359446,9 @@ cards:
       select:
         zone: bz
         owner: opp
-        filter: *id172
+        filter: *id163
         count: 1
-      mod: &id173
+      mod: &id164
         deny:
         - attack_player
         - attack_creature
@@ -360342,7 +359592,7 @@ cards:
         select:
           zone: bz
           owner: opp
-          filter: *id172
+          filter: *id163
           count: 1
         no_untap_next: true
   - name: 龍蒼者 ゼブルエ/ローゼス・ブルーム
@@ -360520,9 +359770,9 @@ cards:
       select:
         zone: bz
         owner: opp
-        filter: *id172
+        filter: *id163
         count: 1
-      mod: *id173
+      mod: *id164
       duration: until_next_own_turn_start
   mana: 1
   text: '銃宮逆夢 ザ・ネオニー / ジョリー・ザ・ブレイン: EXライフ（このクリーチャーを出す時、自分の山札の上から１枚をシールド化する。このクリーチャーが離れる時、かわりにそのシールドを墓地に置く）
@@ -360567,7 +359817,7 @@ cards:
       select:
         zone: bz
         owner: opp
-        filter: &id174
+        filter: &id165
           types:
           - creature
         count: 1
@@ -361020,7 +360270,7 @@ cards:
         select:
           zone: bz
           owner: opp
-          filter: *id174
+          filter: *id165
           count: 1
         mod:
           power: -2000
@@ -361177,7 +360427,7 @@ cards:
       event: move
       to: bz
       subject: self
-    effect: &id175
+    effect: &id166
     - op: may
       body:
       - op: choose
@@ -361200,7 +360450,7 @@ cards:
     when:
       event: attack
       subject: self
-    effect: *id175
+    effect: *id166
   source:
     official: dm24ex3-006
     review: pending
@@ -361280,7 +360530,7 @@ cards:
       event: move
       to: bz
       subject: self
-    effect: &id176
+    effect: &id167
     - op: may
       body:
       - op: choose
@@ -361301,7 +360551,7 @@ cards:
     when:
       event: attack
       subject: self
-    effect: *id176
+    effect: *id167
   source:
     official: dm24ex3-025
     review: pending
@@ -361876,7 +361126,7 @@ cards:
   - fire
   cost: 9
   power: 12000
-  races: &id177
+  races: &id168
   - アウトレイジMAX
   mana: 1
   keywords:
@@ -361917,7 +361167,7 @@ cards:
           owner: you
           filter:
             name_has: 暴剣
-            races: *id177
+            races: *id168
           count: 1
         to: bz
         reason: put
@@ -361927,7 +361177,7 @@ cards:
       owner: you
       filter:
         name_has: 暴剣
-        races: *id177
+        races: *id168
     mod:
       deny:
       - enter_bz
@@ -361937,7 +361187,7 @@ cards:
       owner: you
       filter:
         name_has: 暴剣
-        races: *id177
+        races: *id168
     mod:
       deny:
       - enter_bz
@@ -361947,7 +361197,7 @@ cards:
       owner: you
       filter:
         name_has: 暴剣
-        races: *id177
+        races: *id168
     mod:
       deny:
       - enter_bz
@@ -361957,7 +361207,7 @@ cards:
       owner: you
       filter:
         name_has: 暴剣
-        races: *id177
+        races: *id168
     mod:
       deny:
       - enter_bz
@@ -361967,7 +361217,7 @@ cards:
       owner: you
       filter:
         name_has: 暴剣
-        races: *id177
+        races: *id168
     mod:
       deny:
       - enter_bz
@@ -361983,7 +361233,7 @@ cards:
   - fire
   cost: 7
   power: 6000
-  races: *id177
+  races: *id168
   mana: 1
   keywords:
   - double_breaker
@@ -362026,7 +361276,7 @@ cards:
         exists:
           ref: back
           filter:
-            races: *id177
+            races: *id168
       then:
       - op: modify
         select:
@@ -362051,7 +361301,7 @@ cards:
           owner: you
           filter:
             name_has: 暴剣
-            races: *id177
+            races: *id168
           count: 1
         to: bz
         reason: put
@@ -362061,7 +361311,7 @@ cards:
       owner: you
       filter:
         name_has: 暴剣
-        races: *id177
+        races: *id168
     mod:
       deny:
       - enter_bz
@@ -362071,7 +361321,7 @@ cards:
       owner: you
       filter:
         name_has: 暴剣
-        races: *id177
+        races: *id168
     mod:
       deny:
       - enter_bz
@@ -362081,7 +361331,7 @@ cards:
       owner: you
       filter:
         name_has: 暴剣
-        races: *id177
+        races: *id168
     mod:
       deny:
       - enter_bz
@@ -362091,7 +361341,7 @@ cards:
       owner: you
       filter:
         name_has: 暴剣
-        races: *id177
+        races: *id168
     mod:
       deny:
       - enter_bz
@@ -362101,7 +361351,7 @@ cards:
       owner: you
       filter:
         name_has: 暴剣
-        races: *id177
+        races: *id168
     mod:
       deny:
       - enter_bz
@@ -362116,7 +361366,7 @@ cards:
   - water
   cost: 5
   power: 4000
-  races: *id177
+  races: *id168
   mana: 1
   text: このクリーチャーが攻撃する時、カードを3枚引いてもよい。そうした場合、自分の手札を2枚捨てる。 / ドロン・ゴー：このクリーチャーが破壊された時、名前に《合金》とあるエグザイル・クリーチャーを1体、自分の手札からバトルゾーンに出してもよい。
     / 自分の他の、名前に《合金》とあるエグザイル・クリーチャーをバトルゾーンに出すことはできない。
@@ -362151,7 +361401,7 @@ cards:
           owner: you
           filter:
             name_has: 合金
-            races: *id177
+            races: *id168
           count: 1
         to: bz
         reason: put
@@ -362161,7 +361411,7 @@ cards:
       owner: you
       filter:
         name_has: 合金
-        races: *id177
+        races: *id168
     mod:
       deny:
       - enter_bz
@@ -362171,7 +361421,7 @@ cards:
       owner: you
       filter:
         name_has: 合金
-        races: *id177
+        races: *id168
     mod:
       deny:
       - enter_bz
@@ -362181,7 +361431,7 @@ cards:
       owner: you
       filter:
         name_has: 合金
-        races: *id177
+        races: *id168
     mod:
       deny:
       - enter_bz
@@ -362191,7 +361441,7 @@ cards:
       owner: you
       filter:
         name_has: 合金
-        races: *id177
+        races: *id168
     mod:
       deny:
       - enter_bz
@@ -362201,7 +361451,7 @@ cards:
       owner: you
       filter:
         name_has: 合金
-        races: *id177
+        races: *id168
     mod:
       deny:
       - enter_bz
@@ -362218,7 +361468,7 @@ cards:
   - fire
   cost: 6
   power: 2000
-  races: *id177
+  races: *id168
   mana: 1
   keywords:
   - speed_attacker
@@ -362253,7 +361503,7 @@ cards:
           owner: you
           filter:
             name_has: 武闘
-            races: *id177
+            races: *id168
           count: 1
         to: bz
         reason: put
@@ -362263,7 +361513,7 @@ cards:
       owner: you
       filter:
         name_has: 武闘
-        races: *id177
+        races: *id168
     mod:
       deny:
       - enter_bz
@@ -362273,7 +361523,7 @@ cards:
       owner: you
       filter:
         name_has: 武闘
-        races: *id177
+        races: *id168
     mod:
       deny:
       - enter_bz
@@ -362283,7 +361533,7 @@ cards:
       owner: you
       filter:
         name_has: 武闘
-        races: *id177
+        races: *id168
     mod:
       deny:
       - enter_bz
@@ -362293,7 +361543,7 @@ cards:
       owner: you
       filter:
         name_has: 武闘
-        races: *id177
+        races: *id168
     mod:
       deny:
       - enter_bz
@@ -362303,7 +361553,7 @@ cards:
       owner: you
       filter:
         name_has: 武闘
-        races: *id177
+        races: *id168
     mod:
       deny:
       - enter_bz
@@ -362323,7 +361573,7 @@ cards:
   - light
   cost: 8
   power: 11000
-  races: *id177
+  races: *id168
   mana: 1
   keywords:
   - double_breaker
@@ -362377,7 +361627,7 @@ cards:
           owner: you
           filter:
             name_has: 宇宙
-            races: *id177
+            races: *id168
           count: 1
         to: bz
         reason: put
@@ -362387,7 +361637,7 @@ cards:
       owner: you
       filter:
         name_has: 宇宙
-        races: *id177
+        races: *id168
     mod:
       deny:
       - enter_bz
@@ -362397,7 +361647,7 @@ cards:
       owner: you
       filter:
         name_has: 宇宙
-        races: *id177
+        races: *id168
     mod:
       deny:
       - enter_bz
@@ -362407,7 +361657,7 @@ cards:
       owner: you
       filter:
         name_has: 宇宙
-        races: *id177
+        races: *id168
     mod:
       deny:
       - enter_bz
@@ -362417,7 +361667,7 @@ cards:
       owner: you
       filter:
         name_has: 宇宙
-        races: *id177
+        races: *id168
     mod:
       deny:
       - enter_bz
@@ -362427,7 +361677,7 @@ cards:
       owner: you
       filter:
         name_has: 宇宙
-        races: *id177
+        races: *id168
     mod:
       deny:
       - enter_bz
@@ -362442,7 +361692,7 @@ cards:
   - water
   cost: 7
   power: 6000
-  races: *id177
+  races: *id168
   mana: 1
   keywords:
   - double_breaker
@@ -362455,7 +361705,7 @@ cards:
       event: move
       to: bz
       subject: self
-    effect: &id178
+    effect: &id169
     - op: modal
       count: 1
       modes:
@@ -362473,7 +361723,7 @@ cards:
     when:
       event: attack
       subject: self
-    effect: *id178
+    effect: *id169
   - kind: trigger
     when:
       event: move
@@ -362490,7 +361740,7 @@ cards:
           owner: you
           filter:
             name_has: 合金
-            races: *id177
+            races: *id168
           count: 1
         to: bz
         reason: put
@@ -362500,7 +361750,7 @@ cards:
       owner: you
       filter:
         name_has: 合金
-        races: *id177
+        races: *id168
     mod:
       deny:
       - enter_bz
@@ -362510,7 +361760,7 @@ cards:
       owner: you
       filter:
         name_has: 合金
-        races: *id177
+        races: *id168
     mod:
       deny:
       - enter_bz
@@ -362520,7 +361770,7 @@ cards:
       owner: you
       filter:
         name_has: 合金
-        races: *id177
+        races: *id168
     mod:
       deny:
       - enter_bz
@@ -362530,7 +361780,7 @@ cards:
       owner: you
       filter:
         name_has: 合金
-        races: *id177
+        races: *id168
     mod:
       deny:
       - enter_bz
@@ -362540,7 +361790,7 @@ cards:
       owner: you
       filter:
         name_has: 合金
-        races: *id177
+        races: *id168
     mod:
       deny:
       - enter_bz
@@ -362555,7 +361805,7 @@ cards:
   - light
   cost: 6
   power: 6000
-  races: &id179
+  races: &id170
   - アウトレイジMAX
   mana: 1
   keywords:
@@ -362580,7 +361830,7 @@ cards:
           owner: you
           filter:
             name_has: 宇宙
-            races: *id179
+            races: *id170
           count: 1
         to: bz
         reason: put
@@ -362590,7 +361840,7 @@ cards:
       owner: you
       filter:
         name_has: 宇宙
-        races: *id179
+        races: *id170
     mod:
       deny:
       - enter_bz
@@ -362600,7 +361850,7 @@ cards:
       owner: you
       filter:
         name_has: 宇宙
-        races: *id179
+        races: *id170
     mod:
       deny:
       - enter_bz
@@ -362610,7 +361860,7 @@ cards:
       owner: you
       filter:
         name_has: 宇宙
-        races: *id179
+        races: *id170
     mod:
       deny:
       - enter_bz
@@ -362620,7 +361870,7 @@ cards:
       owner: you
       filter:
         name_has: 宇宙
-        races: *id179
+        races: *id170
     mod:
       deny:
       - enter_bz
@@ -362630,7 +361880,7 @@ cards:
       owner: you
       filter:
         name_has: 宇宙
-        races: *id179
+        races: *id170
     mod:
       deny:
       - enter_bz
@@ -362645,7 +361895,7 @@ cards:
   - darkness
   cost: 4
   power: 6000
-  races: *id179
+  races: *id170
   mana: 1
   keywords:
   - double_breaker
@@ -362675,7 +361925,7 @@ cards:
           owner: you
           filter:
             name_has: 魔槍
-            races: *id179
+            races: *id170
           count: 1
         to: bz
         reason: put
@@ -362685,7 +361935,7 @@ cards:
       owner: you
       filter:
         name_has: 魔槍
-        races: *id179
+        races: *id170
     mod:
       deny:
       - enter_bz
@@ -362695,7 +361945,7 @@ cards:
       owner: you
       filter:
         name_has: 魔槍
-        races: *id179
+        races: *id170
     mod:
       deny:
       - enter_bz
@@ -362705,7 +361955,7 @@ cards:
       owner: you
       filter:
         name_has: 魔槍
-        races: *id179
+        races: *id170
     mod:
       deny:
       - enter_bz
@@ -362715,7 +361965,7 @@ cards:
       owner: you
       filter:
         name_has: 魔槍
-        races: *id179
+        races: *id170
     mod:
       deny:
       - enter_bz
@@ -362725,7 +361975,7 @@ cards:
       owner: you
       filter:
         name_has: 魔槍
-        races: *id179
+        races: *id170
     mod:
       deny:
       - enter_bz
@@ -362740,7 +361990,7 @@ cards:
   - nature
   cost: 4
   power: 5000
-  races: *id179
+  races: *id170
   mana: 1
   keywords:
   - guardman
@@ -362762,7 +362012,7 @@ cards:
           owner: you
           filter:
             name_has: 鼓笛
-            races: *id179
+            races: *id170
           count: 1
         to: bz
         reason: put
@@ -362772,7 +362022,7 @@ cards:
       owner: you
       filter:
         name_has: 鼓笛
-        races: *id179
+        races: *id170
     mod:
       deny:
       - enter_bz
@@ -362782,7 +362032,7 @@ cards:
       owner: you
       filter:
         name_has: 鼓笛
-        races: *id179
+        races: *id170
     mod:
       deny:
       - enter_bz
@@ -362792,7 +362042,7 @@ cards:
       owner: you
       filter:
         name_has: 鼓笛
-        races: *id179
+        races: *id170
     mod:
       deny:
       - enter_bz
@@ -362802,7 +362052,7 @@ cards:
       owner: you
       filter:
         name_has: 鼓笛
-        races: *id179
+        races: *id170
     mod:
       deny:
       - enter_bz
@@ -362812,7 +362062,7 @@ cards:
       owner: you
       filter:
         name_has: 鼓笛
-        races: *id179
+        races: *id170
     mod:
       deny:
       - enter_bz
@@ -362829,7 +362079,7 @@ cards:
   - darkness
   cost: 7
   power: 8000
-  races: *id179
+  races: *id170
   mana: 1
   keywords:
   - double_breaker
@@ -362882,7 +362132,7 @@ cards:
           owner: you
           filter:
             name_has: 魔槍
-            races: *id179
+            races: *id170
           count: 1
         to: bz
         reason: put
@@ -362892,7 +362142,7 @@ cards:
       owner: you
       filter:
         name_has: 魔槍
-        races: *id179
+        races: *id170
     mod:
       deny:
       - enter_bz
@@ -362902,7 +362152,7 @@ cards:
       owner: you
       filter:
         name_has: 魔槍
-        races: *id179
+        races: *id170
     mod:
       deny:
       - enter_bz
@@ -362912,7 +362162,7 @@ cards:
       owner: you
       filter:
         name_has: 魔槍
-        races: *id179
+        races: *id170
     mod:
       deny:
       - enter_bz
@@ -362922,7 +362172,7 @@ cards:
       owner: you
       filter:
         name_has: 魔槍
-        races: *id179
+        races: *id170
     mod:
       deny:
       - enter_bz
@@ -362932,7 +362182,7 @@ cards:
       owner: you
       filter:
         name_has: 魔槍
-        races: *id179
+        races: *id170
     mod:
       deny:
       - enter_bz
@@ -362947,7 +362197,7 @@ cards:
   - nature
   cost: 8
   power: 8000
-  races: *id179
+  races: *id170
   mana: 1
   keywords:
   - double_breaker
@@ -363002,7 +362252,7 @@ cards:
           owner: you
           filter:
             name_has: 鼓笛
-            races: *id179
+            races: *id170
           count: 1
         to: bz
         reason: put
@@ -363012,7 +362262,7 @@ cards:
       owner: you
       filter:
         name_has: 鼓笛
-        races: *id179
+        races: *id170
     mod:
       deny:
       - enter_bz
@@ -363022,7 +362272,7 @@ cards:
       owner: you
       filter:
         name_has: 鼓笛
-        races: *id179
+        races: *id170
     mod:
       deny:
       - enter_bz
@@ -363032,7 +362282,7 @@ cards:
       owner: you
       filter:
         name_has: 鼓笛
-        races: *id179
+        races: *id170
     mod:
       deny:
       - enter_bz
@@ -363042,7 +362292,7 @@ cards:
       owner: you
       filter:
         name_has: 鼓笛
-        races: *id179
+        races: *id170
     mod:
       deny:
       - enter_bz
@@ -363052,7 +362302,7 @@ cards:
       owner: you
       filter:
         name_has: 鼓笛
-        races: *id179
+        races: *id170
     mod:
       deny:
       - enter_bz
@@ -363068,7 +362318,7 @@ cards:
   - darkness
   cost: 7
   power: 7000
-  races: *id179
+  races: *id170
   mana: 1
   keywords:
   - double_breaker
@@ -363117,9 +362367,9 @@ cards:
           filter:
             any_of:
             - name_has: 百仙
-              races: *id179
+              races: *id170
             - name_has: 閻魔
-              races: *id179
+              races: *id170
           count: 1
         to: bz
         reason: put
@@ -363129,7 +362379,7 @@ cards:
       owner: you
       filter:
         name_has: マジックマ瀧
-        races: *id179
+        races: *id170
     mod:
       deny:
       - enter_bz
@@ -363139,7 +362389,7 @@ cards:
       owner: you
       filter:
         name_has: マジックマ瀧
-        races: *id179
+        races: *id170
     mod:
       deny:
       - enter_bz
@@ -363149,7 +362399,7 @@ cards:
       owner: you
       filter:
         name_has: マジックマ瀧
-        races: *id179
+        races: *id170
     mod:
       deny:
       - enter_bz
@@ -363159,7 +362409,7 @@ cards:
       owner: you
       filter:
         name_has: マジックマ瀧
-        races: *id179
+        races: *id170
     mod:
       deny:
       - enter_bz
@@ -363169,7 +362419,7 @@ cards:
       owner: you
       filter:
         name_has: マジックマ瀧
-        races: *id179
+        races: *id170
     mod:
       deny:
       - enter_bz
@@ -363185,7 +362435,7 @@ cards:
   - nature
   cost: 7
   power: 6000
-  races: *id179
+  races: *id170
   mana: 1
   keywords:
   - double_breaker
@@ -363239,9 +362489,9 @@ cards:
           filter:
             any_of:
             - name_has: 極太
-              races: *id179
+              races: *id170
             - name_has: 太陽
-              races: *id179
+              races: *id170
           count: 1
         to: bz
         reason: put
@@ -363251,7 +362501,7 @@ cards:
       owner: you
       filter:
         name_has: シャイニング・キンジ
-        races: *id179
+        races: *id170
     mod:
       deny:
       - enter_bz
@@ -363261,7 +362511,7 @@ cards:
       owner: you
       filter:
         name_has: シャイニング・キンジ
-        races: *id179
+        races: *id170
     mod:
       deny:
       - enter_bz
@@ -363271,7 +362521,7 @@ cards:
       owner: you
       filter:
         name_has: シャイニング・キンジ
-        races: *id179
+        races: *id170
     mod:
       deny:
       - enter_bz
@@ -363281,7 +362531,7 @@ cards:
       owner: you
       filter:
         name_has: シャイニング・キンジ
-        races: *id179
+        races: *id170
     mod:
       deny:
       - enter_bz
@@ -363291,7 +362541,7 @@ cards:
       owner: you
       filter:
         name_has: シャイニング・キンジ
-        races: *id179
+        races: *id170
     mod:
       deny:
       - enter_bz
@@ -363308,7 +362558,7 @@ cards:
   - light
   cost: 4
   power: 3500
-  races: *id179
+  races: *id170
   mana: 1
   text: このクリーチャーが攻撃する時、自分の山札の上から1枚目を裏向きのまま、新しいシールドとして自分のシールドゾーンに加えてもよい。 / ドロン・ゴー：このクリーチャーが破壊された時、名前に《太陽》とあるエグザイル・クリーチャーを1体、自分の手札からバトルゾーンに出してもよい。
     / 自分の他の、名前に《太陽》とあるエグザイル・クリーチャーをバトルゾーンに出すことはできない。
@@ -363343,7 +362593,7 @@ cards:
           owner: you
           filter:
             name_has: 太陽
-            races: *id179
+            races: *id170
           count: 1
         to: bz
         reason: put
@@ -363353,7 +362603,7 @@ cards:
       owner: you
       filter:
         name_has: 太陽
-        races: *id179
+        races: *id170
     mod:
       deny:
       - enter_bz
@@ -363363,7 +362613,7 @@ cards:
       owner: you
       filter:
         name_has: 太陽
-        races: *id179
+        races: *id170
     mod:
       deny:
       - enter_bz
@@ -363373,7 +362623,7 @@ cards:
       owner: you
       filter:
         name_has: 太陽
-        races: *id179
+        races: *id170
     mod:
       deny:
       - enter_bz
@@ -363383,7 +362633,7 @@ cards:
       owner: you
       filter:
         name_has: 太陽
-        races: *id179
+        races: *id170
     mod:
       deny:
       - enter_bz
@@ -363393,7 +362643,7 @@ cards:
       owner: you
       filter:
         name_has: 太陽
-        races: *id179
+        races: *id170
     mod:
       deny:
       - enter_bz
@@ -363408,7 +362658,7 @@ cards:
   - water
   cost: 3
   power: 3000
-  races: &id180
+  races: &id171
   - アウトレイジMAX
   mana: 1
   keywords:
@@ -363432,7 +362682,7 @@ cards:
           owner: you
           filter:
             name_has: 百仙
-            races: *id180
+            races: *id171
           count: 1
         to: bz
         reason: put
@@ -363442,7 +362692,7 @@ cards:
       owner: you
       filter:
         name_has: しずく
-        races: *id180
+        races: *id171
     mod:
       deny:
       - enter_bz
@@ -363452,7 +362702,7 @@ cards:
       owner: you
       filter:
         name_has: しずく
-        races: *id180
+        races: *id171
     mod:
       deny:
       - enter_bz
@@ -363462,7 +362712,7 @@ cards:
       owner: you
       filter:
         name_has: しずく
-        races: *id180
+        races: *id171
     mod:
       deny:
       - enter_bz
@@ -363472,7 +362722,7 @@ cards:
       owner: you
       filter:
         name_has: しずく
-        races: *id180
+        races: *id171
     mod:
       deny:
       - enter_bz
@@ -363482,7 +362732,7 @@ cards:
       owner: you
       filter:
         name_has: しずく
-        races: *id180
+        races: *id171
     mod:
       deny:
       - enter_bz
@@ -363499,7 +362749,7 @@ cards:
   - darkness
   cost: 4
   power: 4000
-  races: *id180
+  races: *id171
   mana: 1
   text: このクリーチャーが攻撃する時、相手は自身の手札を1枚選び、捨てる。 / ドロン・ゴー：このクリーチャーが破壊された時、名前に《閻魔》とあるエグザイル・クリーチャーを1体、自分の手札からバトルゾーンに出してもよい。
     / 自分の他の、名前に《クーマン》とあるエグザイル・クリーチャーをバトルゾーンに出すことはできない。
@@ -363531,7 +362781,7 @@ cards:
           owner: you
           filter:
             name_has: 閻魔
-            races: *id180
+            races: *id171
           count: 1
         to: bz
         reason: put
@@ -363541,7 +362791,7 @@ cards:
       owner: you
       filter:
         name_has: クーマン
-        races: *id180
+        races: *id171
     mod:
       deny:
       - enter_bz
@@ -363551,7 +362801,7 @@ cards:
       owner: you
       filter:
         name_has: クーマン
-        races: *id180
+        races: *id171
     mod:
       deny:
       - enter_bz
@@ -363561,7 +362811,7 @@ cards:
       owner: you
       filter:
         name_has: クーマン
-        races: *id180
+        races: *id171
     mod:
       deny:
       - enter_bz
@@ -363571,7 +362821,7 @@ cards:
       owner: you
       filter:
         name_has: クーマン
-        races: *id180
+        races: *id171
     mod:
       deny:
       - enter_bz
@@ -363581,7 +362831,7 @@ cards:
       owner: you
       filter:
         name_has: クーマン
-        races: *id180
+        races: *id171
     mod:
       deny:
       - enter_bz
@@ -363598,7 +362848,7 @@ cards:
   - nature
   cost: 3
   power: 2000
-  races: *id180
+  races: *id171
   mana: 1
   text: このクリーチャーが攻撃する時、自分の山札の上から1枚目をマナゾーンに置いてもよい。 / ドロン・ゴー：このクリーチャーが破壊された時、名前に《極太》とあるエグザイル・クリーチャーを1体、自分の手札からバトルゾーンに出してもよい。
     / 自分の他の、名前に《菌次郎》とあるエグザイル・クリーチャーをバトルゾーンに出すことはできない。
@@ -363631,7 +362881,7 @@ cards:
           owner: you
           filter:
             name_has: 極太
-            races: *id180
+            races: *id171
           count: 1
         to: bz
         reason: put
@@ -363641,7 +362891,7 @@ cards:
       owner: you
       filter:
         name_has: 菌次郎
-        races: *id180
+        races: *id171
     mod:
       deny:
       - enter_bz
@@ -363651,7 +362901,7 @@ cards:
       owner: you
       filter:
         name_has: 菌次郎
-        races: *id180
+        races: *id171
     mod:
       deny:
       - enter_bz
@@ -363661,7 +362911,7 @@ cards:
       owner: you
       filter:
         name_has: 菌次郎
-        races: *id180
+        races: *id171
     mod:
       deny:
       - enter_bz
@@ -363671,7 +362921,7 @@ cards:
       owner: you
       filter:
         name_has: 菌次郎
-        races: *id180
+        races: *id171
     mod:
       deny:
       - enter_bz
@@ -363681,7 +362931,7 @@ cards:
       owner: you
       filter:
         name_has: 菌次郎
-        races: *id180
+        races: *id171
     mod:
       deny:
       - enter_bz
@@ -363746,7 +362996,7 @@ cards:
           owner: you
           filter:
             name_has: 神
-            races: *id180
+            races: *id171
           count: 1
         to: bz
         reason: put
@@ -363756,7 +363006,7 @@ cards:
       owner: you
       filter:
         name_has: 神
-        races: *id180
+        races: *id171
     mod:
       deny:
       - enter_bz
@@ -363766,7 +363016,7 @@ cards:
       owner: you
       filter:
         name_has: 神
-        races: *id180
+        races: *id171
     mod:
       deny:
       - enter_bz
@@ -363776,7 +363026,7 @@ cards:
       owner: you
       filter:
         name_has: 神
-        races: *id180
+        races: *id171
     mod:
       deny:
       - enter_bz
@@ -363786,7 +363036,7 @@ cards:
       owner: you
       filter:
         name_has: 神
-        races: *id180
+        races: *id171
     mod:
       deny:
       - enter_bz
@@ -363796,7 +363046,7 @@ cards:
       owner: you
       filter:
         name_has: 神
-        races: *id180
+        races: *id171
     mod:
       deny:
       - enter_bz
@@ -363813,7 +363063,7 @@ cards:
   - fire
   cost: 8
   power: 8000
-  races: *id180
+  races: *id171
   mana: 1
   keywords:
   - double_breaker
@@ -363884,7 +363134,7 @@ cards:
           owner: you
           filter:
             name_has: 法
-            races: *id180
+            races: *id171
           count: 1
         to: bz
         reason: put
@@ -363894,7 +363144,7 @@ cards:
       owner: you
       filter:
         name_has: 超法
-        races: *id180
+        races: *id171
     mod:
       deny:
       - enter_bz
@@ -363904,7 +363154,7 @@ cards:
       owner: you
       filter:
         name_has: 超法
-        races: *id180
+        races: *id171
     mod:
       deny:
       - enter_bz
@@ -363914,7 +363164,7 @@ cards:
       owner: you
       filter:
         name_has: 超法
-        races: *id180
+        races: *id171
     mod:
       deny:
       - enter_bz
@@ -363924,7 +363174,7 @@ cards:
       owner: you
       filter:
         name_has: 超法
-        races: *id180
+        races: *id171
     mod:
       deny:
       - enter_bz
@@ -363934,7 +363184,7 @@ cards:
       owner: you
       filter:
         name_has: 超法
-        races: *id180
+        races: *id171
     mod:
       deny:
       - enter_bz
@@ -363952,7 +363202,7 @@ cards:
   - fire
   cost: 5
   power: 4000
-  races: *id180
+  races: *id171
   mana: 1
   text: 相手がバトルゾーンにクリーチャーを出した時、このクリーチャーがタップされていれば、その2体をバトルさせる。 / ドロン・ゴー：このクリーチャーが破壊された時、名前に《超法》とあるエグザイル・クリーチャーを1体、自分の手札からバトルゾーンに出してもよい。
     / 自分の他の、名前に《超法》とあるエグザイル・クリーチャーをバトルゾーンに出すことはできない。
@@ -363993,7 +363243,7 @@ cards:
           owner: you
           filter:
             name_has: 超法
-            races: *id180
+            races: *id171
           count: 1
         to: bz
         reason: put
@@ -364003,7 +363253,7 @@ cards:
       owner: you
       filter:
         name_has: 超法
-        races: *id180
+        races: *id171
     mod:
       deny:
       - enter_bz
@@ -364013,7 +363263,7 @@ cards:
       owner: you
       filter:
         name_has: 超法
-        races: *id180
+        races: *id171
     mod:
       deny:
       - enter_bz
@@ -364023,7 +363273,7 @@ cards:
       owner: you
       filter:
         name_has: 超法
-        races: *id180
+        races: *id171
     mod:
       deny:
       - enter_bz
@@ -364033,7 +363283,7 @@ cards:
       owner: you
       filter:
         name_has: 超法
-        races: *id180
+        races: *id171
     mod:
       deny:
       - enter_bz
@@ -364043,7 +363293,7 @@ cards:
       owner: you
       filter:
         name_has: 超法
-        races: *id180
+        races: *id171
     mod:
       deny:
       - enter_bz
@@ -364060,7 +363310,7 @@ cards:
   - water
   cost: 4
   power: 4000
-  races: &id181
+  races: &id172
   - アウトレイジMAX
   mana: 1
   text: バトルゾーンにある自分の、名前に《友情》とあるエグザイル・クリーチャーはすべてブロックされない。 / ドロン・ゴー：このクリーチャーが破壊された時、名前に《R》とあるエグザイル・クリーチャーを1体、自分の手札からバトルゾーンに出してもよい。
@@ -364072,7 +363322,7 @@ cards:
       owner: you
       filter:
         name_has: 友情
-        races: *id181
+        races: *id172
     mod:
       deny:
       - be_blocked
@@ -364092,7 +363342,7 @@ cards:
           owner: you
           filter:
             name_has: R
-            races: *id181
+            races: *id172
           count: 1
         to: bz
         reason: put
@@ -364102,7 +363352,7 @@ cards:
       owner: you
       filter:
         name_has: 学友情 ロビー・R
-        races: *id181
+        races: *id172
     mod:
       deny:
       - enter_bz
@@ -364112,7 +363362,7 @@ cards:
       owner: you
       filter:
         name_has: 学友情 ロビー・R
-        races: *id181
+        races: *id172
     mod:
       deny:
       - enter_bz
@@ -364122,7 +363372,7 @@ cards:
       owner: you
       filter:
         name_has: 学友情 ロビー・R
-        races: *id181
+        races: *id172
     mod:
       deny:
       - enter_bz
@@ -364132,7 +363382,7 @@ cards:
       owner: you
       filter:
         name_has: 学友情 ロビー・R
-        races: *id181
+        races: *id172
     mod:
       deny:
       - enter_bz
@@ -364142,7 +363392,7 @@ cards:
       owner: you
       filter:
         name_has: 学友情 ロビー・R
-        races: *id181
+        races: *id172
     mod:
       deny:
       - enter_bz
@@ -364157,7 +363407,7 @@ cards:
   - light
   cost: 5
   power: 5000
-  races: *id181
+  races: *id172
   mana: 1
   text: バトルゾーンにある自分の、名前に《友情》とあるエグザイル・クリーチャーはすべて「ブロッカー」を得る。 / ドロン・ゴー：このクリーチャーが破壊された時、名前に《M》とあるエグザイル・クリーチャーを1体、自分の手札からバトルゾーンに出してもよい。
     / 自分の他の、名前に《愛友情 ニケ・M》とあるエグザイル・クリーチャーをバトルゾーンに出すことはできない。
@@ -364168,7 +363418,7 @@ cards:
       owner: you
       filter:
         name_has: 友情
-        races: *id181
+        races: *id172
     mod:
       grant:
       - blocker
@@ -364188,7 +363438,7 @@ cards:
           owner: you
           filter:
             name_has: M
-            races: *id181
+            races: *id172
           count: 1
         to: bz
         reason: put
@@ -364198,7 +363448,7 @@ cards:
       owner: you
       filter:
         name_has: 愛友情 ニケ・M
-        races: *id181
+        races: *id172
     mod:
       deny:
       - enter_bz
@@ -364208,7 +363458,7 @@ cards:
       owner: you
       filter:
         name_has: 愛友情 ニケ・M
-        races: *id181
+        races: *id172
     mod:
       deny:
       - enter_bz
@@ -364218,7 +363468,7 @@ cards:
       owner: you
       filter:
         name_has: 愛友情 ニケ・M
-        races: *id181
+        races: *id172
     mod:
       deny:
       - enter_bz
@@ -364228,7 +363478,7 @@ cards:
       owner: you
       filter:
         name_has: 愛友情 ニケ・M
-        races: *id181
+        races: *id172
     mod:
       deny:
       - enter_bz
@@ -364238,7 +363488,7 @@ cards:
       owner: you
       filter:
         name_has: 愛友情 ニケ・M
-        races: *id181
+        races: *id172
     mod:
       deny:
       - enter_bz
@@ -364254,7 +363504,7 @@ cards:
   - nature
   cost: 8
   power: 8000
-  races: *id181
+  races: *id172
   mana: 1
   keywords:
   - double_breaker
@@ -364304,7 +363554,7 @@ cards:
           owner: you
           filter:
             name_has: 無
-            races: *id181
+            races: *id172
           count: 1
         to: bz
         reason: put
@@ -364314,7 +363564,7 @@ cards:
       owner: you
       filter:
         name_has: 無敵
-        races: *id181
+        races: *id172
     mod:
       deny:
       - enter_bz
@@ -364324,7 +363574,7 @@ cards:
       owner: you
       filter:
         name_has: 無敵
-        races: *id181
+        races: *id172
     mod:
       deny:
       - enter_bz
@@ -364334,7 +363584,7 @@ cards:
       owner: you
       filter:
         name_has: 無敵
-        races: *id181
+        races: *id172
     mod:
       deny:
       - enter_bz
@@ -364344,7 +363594,7 @@ cards:
       owner: you
       filter:
         name_has: 無敵
-        races: *id181
+        races: *id172
     mod:
       deny:
       - enter_bz
@@ -364354,7 +363604,7 @@ cards:
       owner: you
       filter:
         name_has: 無敵
-        races: *id181
+        races: *id172
     mod:
       deny:
       - enter_bz
@@ -364373,7 +363623,7 @@ cards:
   - nature
   cost: 5
   power: 2000
-  races: *id181
+  races: *id172
   mana: 1
   text: マナゾーンに置く時、このカードはタップして置く。 / パワーアタッカー+3000 / このクリーチャーがバトルゾーンに出た時または攻撃する時、自分の山札の上から1枚目をマナゾーンに置いてもよい。
     / ドロン・ゴー：このクリーチャーが破壊された時、名前に《無敵》とあるエグザイル・クリーチャーを1体、自分の手札からバトルゾーンに出してもよい。 / 自分の他の、名前に《無敵》とあるエグザイル・クリーチャーをバトルゾーンに出すことはできない。
@@ -364425,7 +363675,7 @@ cards:
           owner: you
           filter:
             name_has: 無敵
-            races: *id181
+            races: *id172
           count: 1
         to: bz
         reason: put
@@ -364435,7 +363685,7 @@ cards:
       owner: you
       filter:
         name_has: 無敵
-        races: *id181
+        races: *id172
     mod:
       deny:
       - enter_bz
@@ -364445,7 +363695,7 @@ cards:
       owner: you
       filter:
         name_has: 無敵
-        races: *id181
+        races: *id172
     mod:
       deny:
       - enter_bz
@@ -364455,7 +363705,7 @@ cards:
       owner: you
       filter:
         name_has: 無敵
-        races: *id181
+        races: *id172
     mod:
       deny:
       - enter_bz
@@ -364465,7 +363715,7 @@ cards:
       owner: you
       filter:
         name_has: 無敵
-        races: *id181
+        races: *id172
     mod:
       deny:
       - enter_bz
@@ -364475,7 +363725,7 @@ cards:
       owner: you
       filter:
         name_has: 無敵
-        races: *id181
+        races: *id172
     mod:
       deny:
       - enter_bz
@@ -364493,7 +363743,8 @@ cards:
   - fire
   cost: 7
   power: 8000
-  races: *id181
+  races:
+  - アウトレイジMAX
   mana: 1
   keywords:
   - double_breaker
@@ -364521,20 +363772,6 @@ cards:
         count: 1
   - kind: trigger
     when:
-      event: attack
-      subject: self
-    effect:
-    - op: destroy
-      select:
-        zone: bz
-        owner: opp
-        filter:
-          types:
-          - creature
-          power_le: 6000
-        count: 1
-  - kind: trigger
-    when:
       event: move
       from: bz
       to: graveyard
@@ -364549,7 +363786,8 @@ cards:
           owner: you
           filter:
             name_has: 拳銃
-            races: *id181
+            races:
+            - アウトレイジMAX
           count: 1
         to: bz
         reason: put
@@ -364559,7 +363797,8 @@ cards:
       owner: you
       filter:
         name_has: 拳銃
-        races: *id181
+        races:
+        - アウトレイジMAX
     mod:
       deny:
       - enter_bz
@@ -364569,7 +363808,8 @@ cards:
       owner: you
       filter:
         name_has: 拳銃
-        races: *id181
+        races:
+        - アウトレイジMAX
     mod:
       deny:
       - enter_bz
@@ -364579,7 +363819,8 @@ cards:
       owner: you
       filter:
         name_has: 拳銃
-        races: *id181
+        races:
+        - アウトレイジMAX
     mod:
       deny:
       - enter_bz
@@ -364589,7 +363830,8 @@ cards:
       owner: you
       filter:
         name_has: 拳銃
-        races: *id181
+        races:
+        - アウトレイジMAX
     mod:
       deny:
       - enter_bz
@@ -364599,7 +363841,8 @@ cards:
       owner: you
       filter:
         name_has: 拳銃
-        races: *id181
+        races:
+        - アウトレイジMAX
     mod:
       deny:
       - enter_bz
@@ -364616,7 +363859,8 @@ cards:
   - fire
   cost: 4
   power: 4000
-  races: *id181
+  races:
+  - アウトレイジMAX
   mana: 1
   text: 'このクリーチャーが攻撃する時、相手のパワー3000以下のクリーチャーを１体破壊する。
 
@@ -364640,20 +363884,6 @@ cards:
         count: 1
   - kind: trigger
     when:
-      event: attack
-      subject: self
-    effect:
-    - op: destroy
-      select:
-        zone: bz
-        owner: opp
-        filter:
-          types:
-          - creature
-          power_le: 3000
-        count: 1
-  - kind: trigger
-    when:
       event: move
       from: bz
       to: graveyard
@@ -364668,7 +363898,8 @@ cards:
           owner: you
           filter:
             name_has: 拳銃
-            races: *id181
+            races:
+            - アウトレイジMAX
           count: 1
         to: bz
         reason: put
@@ -364678,7 +363909,8 @@ cards:
       owner: you
       filter:
         name_has: 拳銃
-        races: *id181
+        races:
+        - アウトレイジMAX
     mod:
       deny:
       - enter_bz
@@ -364688,7 +363920,8 @@ cards:
       owner: you
       filter:
         name_has: 拳銃
-        races: *id181
+        races:
+        - アウトレイジMAX
     mod:
       deny:
       - enter_bz
@@ -364698,7 +363931,8 @@ cards:
       owner: you
       filter:
         name_has: 拳銃
-        races: *id181
+        races:
+        - アウトレイジMAX
     mod:
       deny:
       - enter_bz
@@ -364708,7 +363942,8 @@ cards:
       owner: you
       filter:
         name_has: 拳銃
-        races: *id181
+        races:
+        - アウトレイジMAX
     mod:
       deny:
       - enter_bz
@@ -364718,7 +363953,8 @@ cards:
       owner: you
       filter:
         name_has: 拳銃
-        races: *id181
+        races:
+        - アウトレイジMAX
     mod:
       deny:
       - enter_bz
@@ -369431,20 +368667,6 @@ cards:
       duration: until_next_own_turn_start
   - kind: trigger
     when:
-      event: move
-      to: bz
-      subject: self
-    effect:
-    - op: modify
-      select:
-        ref: self
-      mod:
-        deny:
-        - be_chosen
-        - be_attacked
-      duration: until_next_own_turn_start
-  - kind: trigger
-    when:
       event: attack
       subject: self
     effect:
@@ -369488,20 +368710,6 @@ cards:
   - スチーム・ナイト
   - フュージョナー
   abilities:
-  - kind: trigger
-    when:
-      event: move
-      to: bz
-      subject: self
-    effect:
-    - op: modify
-      select:
-        ref: self
-      mod:
-        deny:
-        - be_chosen
-        - be_attacked
-      duration: until_next_own_turn_start
   - kind: trigger
     when:
       event: move
@@ -369641,20 +368849,6 @@ cards:
   keywords:
   - g_strike
   abilities:
-  - kind: trigger
-    when:
-      event: move
-      to: bz
-      subject: self
-    effect:
-    - op: modify
-      select:
-        ref: self
-      mod:
-        deny:
-        - be_chosen
-        - be_attacked
-      duration: until_next_own_turn_start
   - kind: trigger
     when:
       event: move
@@ -369904,7 +369098,7 @@ cards:
       grant:
       - powered_breaker
     choukon: true
-    if: &id182
+    if: &id173
       cmp:
       - sum:
         - count:
@@ -369948,7 +369142,7 @@ cards:
       player: you
     effect:
     - op: if
-      cond: *id182
+      cond: *id173
       then:
       - op: may
         body:
@@ -369998,7 +369192,7 @@ cards:
       subject: self
     effect:
     - op: if
-      cond: *id182
+      cond: *id173
       then:
       - op: destroy
         select:
@@ -370044,7 +369238,7 @@ cards:
       subject: self
     effect:
     - op: if
-      cond: *id182
+      cond: *id173
       then:
       - op: tap
         select:
@@ -370099,7 +369293,7 @@ cards:
       subject: self
     effect:
     - op: if
-      cond: *id182
+      cond: *id173
       then:
       - op: modify
         select:
@@ -370589,12 +369783,6 @@ cards:
       power_when:
         amount: 4000
         when: attacking
-  - kind: static
-    affects: self
-    mod:
-      power_when:
-        amount: 4000
-        when: attacking
       grant:
       - powered_breaker
     choukon: true
@@ -370694,21 +369882,6 @@ cards:
   - テクノ・サムライ
   - フュージョナー
   abilities:
-  - kind: trigger
-    when:
-      event: move
-      to: bz
-      subject: self
-    effect:
-    - op: modify
-      select:
-        ref: self
-      mod:
-        allow:
-        - action: attack_creature
-          other:
-            tapped: false
-      duration: end_of_turn
   - kind: trigger
     when:
       event: move
@@ -371185,20 +370358,6 @@ cards:
   - speed_attacker
   - double_breaker
   abilities:
-  - kind: trigger
-    when:
-      event: move
-      to: bz
-      subject: self
-    effect:
-    - op: destroy
-      select:
-        zone: bz
-        owner: opp
-        filter:
-          types:
-          - creature
-        count: 1
   - kind: trigger
     when:
       event: move
@@ -372007,23 +371166,6 @@ cards:
         ref: event.subject
       in:
         ref: self
-  - kind: declare
-    zone: hand
-    when:
-      event: attack
-      subject:
-        owner: you
-        filter:
-          civs:
-          - light
-          - water
-          race_has: ドラゴン
-    effect:
-    - op: swap
-      out:
-        ref: event.subject
-      in:
-        ref: self
   - kind: trigger
     when:
       event: move
@@ -372735,20 +371877,6 @@ cards:
 
     このクリーチャーが破壊される時、墓地に置くかわりに、表向きのまま新しいシールドとしてシールドゾーンに置く。'
   abilities:
-  - kind: trigger
-    when:
-      event: move
-      to: bz
-      subject: self
-    effect:
-    - op: tap
-      select:
-        zone: bz
-        owner: opp
-        filter:
-          types:
-          - creature
-        count: 1
   - kind: trigger
     when:
       event: move
@@ -374243,7 +373371,7 @@ cards:
         filter:
           not_types:
           - creature
-    effect: &id183
+    effect: &id174
     - op: untap
       select:
         ref: self
@@ -374261,7 +373389,7 @@ cards:
         filter:
           not_types:
           - creature
-    effect: *id183
+    effect: *id174
   source:
     official: dm25ex3-rp3001
     review: pending
@@ -374724,7 +373852,7 @@ cards:
         - darkness
         - fire
         - nature
-  - &id184
+  - &id175
     kind: trigger
     when:
       event: attack_end
@@ -374826,7 +373954,7 @@ cards:
         - darkness
         - fire
         - nature
-  - *id184
+  - *id175
   source:
     official: dm26ex4-cho020
     review: pending
@@ -377007,7 +376135,7 @@ cards:
     then:
     - op: modal
       count: 3
-      modes: &id185
+      modes: &id176
       - - op: choose
           select:
             zone: bz
@@ -377049,7 +376177,7 @@ cards:
     - op: modal
       count: 2
       repeat: true
-      modes: *id185
+      modes: *id176
   source:
     official: dm25ex3-rp3011
     review: pending
@@ -377126,7 +376254,7 @@ cards:
     - op: modal
       count: 3
       repeat: true
-      modes: &id186
+      modes: &id177
       - - op: draw
           count: 2
         - op: choose
@@ -377169,7 +376297,7 @@ cards:
     - op: modal
       count: 2
       repeat: true
-      modes: *id186
+      modes: *id177
   source:
     official: dm25ex3-rp3s08
     review: pending
@@ -383763,20 +382891,6 @@ cards:
           types:
           - creature
         count: 1
-  - kind: trigger
-    when:
-      event: move
-      to: bz
-      subject: self
-    effect:
-    - op: destroy
-      select:
-        zone: bz
-        owner: opp
-        filter:
-          types:
-          - creature
-        count: 1
 - id: dm24sp2-005
   name: 聖斬のコード アシッド
   types:
@@ -386108,17 +385222,6 @@ cards:
         count: 1
   - kind: trigger
     when:
-      event: move
-      to: bz
-      subject: self
-    effect:
-    - op: discard
-      select:
-        zone: hand
-        owner: opp
-        count: 1
-  - kind: trigger
-    when:
       event: attack
       subject: self
     effect:
@@ -386155,7 +385258,7 @@ cards:
     - ジャイアント・ハンター
     - エイリアン
     abilities:
-    - &id187
+    - &id178
       kind: trigger
       when:
         event: move
@@ -386251,7 +385354,7 @@ cards:
     keywords:
     - double_breaker
     abilities:
-    - *id187
+    - *id178
   - name: 「我が力となれ!!」
     types:
     - spell
@@ -386295,7 +385398,7 @@ cards:
     keywords:
     - double_breaker
     abilities:
-    - *id187
+    - *id178
     - kind: static
       zone: hand
       affects: self
@@ -386346,7 +385449,7 @@ cards:
     races:
     - ジャイアント
     abilities:
-    - *id187
+    - *id178
   - name: サイバー免許皆伝
     types:
     - spell
@@ -386393,7 +385496,7 @@ cards:
     keywords:
     - triple_breaker
     abilities:
-    - *id187
+    - *id178
     - kind: static
       affects:
         zone: bz
@@ -386669,7 +385772,7 @@ cards:
     races:
     - ジャイアント
     abilities:
-    - &id188
+    - &id179
       kind: trigger
       when:
         event: move
@@ -386783,7 +385886,7 @@ cards:
         ref: event.subject
       in:
         ref: self
-  - *id188
+  - *id179
   - kind: trigger
     when:
       event: move
@@ -386864,7 +385967,7 @@ cards:
   - サイバー・コマンド
   - サバイバー
   abilities:
-  - *id188
+  - *id179
   - kind: static
     affects:
       zone: bz
@@ -386873,7 +385976,7 @@ cards:
         race_has: サバイバー
     mod:
       gain:
-      - *id188
+      - *id179
   - kind: static
     affects:
       zone: bz
@@ -386917,7 +386020,7 @@ cards:
         race_has: ディスタス
     mod:
       gain:
-      - *id188
+      - *id179
 - id: dm32-046
   name: 進秘の使徒ラティウス
   types:
@@ -386936,7 +386039,7 @@ cards:
   - オリジン
   abilities:
   - kind: trigger
-    when: &id189
+    when: &id180
       event: summon
       subject:
         owner: you
@@ -386989,7 +386092,7 @@ cards:
   - オリジン
   abilities:
   - kind: trigger
-    when: *id189
+    when: *id180
     effect:
     - op: may
       body:
@@ -387021,7 +386124,7 @@ cards:
   - リヴァイアサン
   abilities:
   - kind: trigger
-    when: *id189
+    when: *id180
     effect:
     - op: may
       body:
@@ -387060,7 +386163,7 @@ cards:
   - cannot_attack
   abilities:
   - kind: trigger
-    when: *id189
+    when: *id180
     effect:
     - op: may
       body:
@@ -387092,7 +386195,7 @@ cards:
   - オリジン
   abilities:
   - kind: trigger
-    when: *id189
+    when: *id180
     effect:
     - op: choose
       select:
@@ -387259,7 +386362,7 @@ cards:
   - サムライ
   abilities:
   - kind: trigger
-    when: &id190
+    when: &id181
       event: move
       to: bz
       subject: self
@@ -387313,7 +386416,7 @@ cards:
   - s_trigger
   abilities:
   - kind: trigger
-    when: *id190
+    when: *id181
     effect:
     - op: may
       body:
@@ -387357,7 +386460,7 @@ cards:
   - cannot_attack_player
   abilities:
   - kind: trigger
-    when: *id190
+    when: *id181
     effect:
     - op: may
       body:
@@ -387571,7 +386674,7 @@ cards:
   - サムライ
   abilities:
   - kind: trigger
-    when: *id190
+    when: *id181
     effect:
     - op: choose
       select:
@@ -387723,7 +386826,7 @@ cards:
   abilities:
   - kind: static
     affects: self
-    if: &id191
+    if: &id182
       cmp:
       - count:
           zone: shield
@@ -387763,7 +386866,7 @@ cards:
       to: graveyard
       subject: self
       reason: destroy
-    if: *id191
+    if: *id182
     instead:
     - op: move
       select:
@@ -387843,7 +386946,7 @@ cards:
   keywords:
   - double_breaker
   abilities:
-  - &id192
+  - &id183
     kind: trigger
     when:
       event: move
@@ -387889,7 +386992,7 @@ cards:
   - リキッド・ピープル
   - サムライ
   abilities:
-  - *id192
+  - *id183
 - id: dmpcd02-a03
   name: ボルバルザーク・紫電・ドラゴンP'S
   types:
@@ -387913,7 +387016,7 @@ cards:
   keywords:
   - double_breaker
   abilities:
-  - *id192
+  - *id183
   - kind: trigger
     first_time: true
     when:
@@ -387971,7 +387074,7 @@ cards:
   abilities:
   - kind: static
     affects: self
-    if: &id193
+    if: &id184
       exists:
         zone: bz
         owner: you
@@ -387984,13 +387087,13 @@ cards:
     when:
       event: turn_end
       player: you
-    if: *id193
+    if: *id184
     effect:
     - op: untap
       select:
         ref: self
   - kind: trigger
-    when: &id195
+    when: &id186
       event: move
       to: bz
       subject: self
@@ -388124,7 +387227,7 @@ cards:
         filter:
           types:
           - spell
-    effect: &id194
+    effect: &id185
     - op: modify
       select:
         ref: self
@@ -388140,7 +387243,7 @@ cards:
         filter:
           types:
           - tamaseed
-    effect: *id194
+    effect: *id185
 - id: dmrp22-012
   name: 戦カウ駆ルマ「輪断罪」
   types:
@@ -388162,7 +387265,7 @@ cards:
   - 鬼レクスターズ
   abilities:
   - kind: trigger
-    when: *id195
+    when: *id186
     effect:
     - op: draw
       count: 3
@@ -388234,10 +387337,10 @@ cards:
         count:
           zone: hand
           owner: any
-  - &id196
+  - &id187
     kind: static
     affects: self
-    mod: &id197
+    mod: &id188
       deny:
       - action: be_blocked
         other:
@@ -388263,7 +387366,7 @@ cards:
   keywords:
   - dynamo
   abilities:
-  - *id196
+  - *id187
   source:
     official: dm21-034
     review: pending
@@ -388290,7 +387393,7 @@ cards:
     keywords:
     - dynamo
     abilities:
-    - *id196
+    - *id187
   - name: 鼓動する石版
     types:
     - spell
@@ -388383,7 +387486,7 @@ cards:
     affects: self
     if:
       hyper: true
-    mod: *id197
+    mod: *id188
   source:
     official: dm24rp2-024
     review: pending
@@ -393905,7 +393008,7 @@ cards:
   - レクスターズ
   mana: 1
   star: true
-  evolve_from: &id198
+  evolve_from:
     any_of:
     - race_has: レクスターズ
     - civs:
@@ -393922,13 +393025,6 @@ cards:
 
     このクリーチャーが離れた時、その下にあったクリーチャーをアンタップする。'
   abilities:
-  - kind: static
-    affects: self
-    zone: hand
-    mod:
-      opt_reduce:
-        amount: 2
-        then: destroy
   - kind: static
     affects: self
     zone: hand
@@ -393982,8 +393078,7 @@ cards:
                 race_has: ドラゴン
             to: bz
             reason: put
-  - &id199
-    kind: trigger
+  - kind: trigger
     when:
       event: move
       from: bz
@@ -394013,7 +393108,11 @@ cards:
   - レクスターズ
   mana: 1
   star: true
-  evolve_from: *id198
+  evolve_from:
+    any_of:
+    - race_has: レクスターズ
+    - civs:
+      - fire
   keywords:
   - double_breaker
   text: 'B・A・D ２
@@ -394026,13 +393125,6 @@ cards:
 
     このクリーチャーが離れた時、その下にあったクリーチャーをアンタップする。'
   abilities:
-  - kind: static
-    affects: self
-    zone: hand
-    mod:
-      opt_reduce:
-        amount: 2
-        then: destroy
   - kind: static
     affects: self
     zone: hand
@@ -394086,7 +393178,15 @@ cards:
                 race_has: ドラゴン
             to: bz
             reason: put
-  - *id199
+  - kind: trigger
+    when:
+      event: move
+      from: bz
+      subject: self
+    effect:
+    - op: untap
+      select:
+        ref: event.under
   source:
     official: dm26rp3-std011
     review: pending
@@ -394106,7 +393206,11 @@ cards:
   - レクスターズ
   mana: 1
   star: true
-  evolve_from: *id198
+  evolve_from:
+    any_of:
+    - race_has: レクスターズ
+    - civs:
+      - fire
   keywords:
   - double_breaker
   text: 'B・A・D ２
@@ -394119,13 +393223,6 @@ cards:
 
     このクリーチャーが離れた時、その下にあったクリーチャーをアンタップする。'
   abilities:
-  - kind: static
-    affects: self
-    zone: hand
-    mod:
-      opt_reduce:
-        amount: 2
-        then: destroy
   - kind: static
     affects: self
     zone: hand
@@ -394179,7 +393276,15 @@ cards:
                 race_has: ドラゴン
             to: bz
             reason: put
-  - *id199
+  - kind: trigger
+    when:
+      event: move
+      from: bz
+      subject: self
+    effect:
+    - op: untap
+      select:
+        ref: event.under
   source:
     official: dm26rp3-stdchosec011
     review: pending
@@ -394199,7 +393304,11 @@ cards:
   - レクスターズ
   mana: 1
   star: true
-  evolve_from: *id198
+  evolve_from:
+    any_of:
+    - race_has: レクスターズ
+    - civs:
+      - fire
   keywords:
   - double_breaker
   text: 'B・A・D ２
@@ -394212,13 +393321,6 @@ cards:
 
     このクリーチャーが離れた時、その下にあったクリーチャーをアンタップする。'
   abilities:
-  - kind: static
-    affects: self
-    zone: hand
-    mod:
-      opt_reduce:
-        amount: 2
-        then: destroy
   - kind: static
     affects: self
     zone: hand
@@ -394272,7 +393374,15 @@ cards:
                 race_has: ドラゴン
             to: bz
             reason: put
-  - *id199
+  - kind: trigger
+    when:
+      event: move
+      from: bz
+      subject: self
+    effect:
+    - op: untap
+      select:
+        ref: event.under
   source:
     official: dm26rp3-stdsec011
     review: pending
@@ -394291,7 +393401,7 @@ cards:
   - レクスターズ
   mana: 1
   star: true
-  evolve_from: &id200
+  evolve_from: &id189
     any_of:
     - race_has: レクスターズ
     - civs:
@@ -394327,7 +393437,7 @@ cards:
         - op: destroy
           select:
             ref: self
-  - &id201
+  - &id190
     kind: trigger
     when:
       event: move
@@ -394357,7 +393467,7 @@ cards:
   - レクスターズ
   mana: 1
   star: true
-  evolve_from: *id200
+  evolve_from: *id189
   keywords:
   - powered_breaker
   text: 'スター進化：レクスターズまたは火のクリーチャー１体の上に置く。（このクリーチャーが離れる時、かわりに一番上のカードが離れる）
@@ -394389,7 +393499,7 @@ cards:
         - op: destroy
           select:
             ref: self
-  - *id201
+  - *id190
   source:
     official: promoy20-025
     review: pending
@@ -394408,7 +393518,11 @@ cards:
   - レクスターズ
   mana: 1
   star: true
-  evolve_from: *id200
+  evolve_from:
+    any_of:
+    - race_has: レクスターズ
+    - civs:
+      - fire
   keywords:
   - double_breaker
   text: 'スター進化：レクスターズまたは火のクリーチャー１体の上に置く。（このクリーチャーが離れる時、かわりに一番上のカードが離れる）
@@ -394425,13 +393539,15 @@ cards:
       power_when:
         amount: 6000
         when: attacking
-  - kind: static
-    affects: self
-    mod:
-      power_when:
-        amount: 6000
-        when: attacking
-  - *id201
+  - kind: trigger
+    when:
+      event: move
+      from: bz
+      subject: self
+    effect:
+    - op: untap
+      select:
+        ref: event.under
   source:
     official: dmrp18-080
     review: pending
@@ -394450,7 +393566,11 @@ cards:
   - レクスターズ
   mana: 1
   star: true
-  evolve_from: *id200
+  evolve_from:
+    any_of:
+    - race_has: レクスターズ
+    - civs:
+      - fire
   keywords:
   - double_breaker
   text: 'スター進化：レクスターズまたは火のクリーチャー１体の上に置く。（このクリーチャーが離れる時、かわりに一番上のカードが離れる）
@@ -394467,13 +393587,15 @@ cards:
       power_when:
         amount: 6000
         when: attacking
-  - kind: static
-    affects: self
-    mod:
-      power_when:
-        amount: 6000
-        when: attacking
-  - *id201
+  - kind: trigger
+    when:
+      event: move
+      from: bz
+      subject: self
+    effect:
+    - op: untap
+      select:
+        ref: event.under
   source:
     official: promoy20-060
     review: pending
@@ -394926,7 +394048,7 @@ cards:
       subject: self
     effect:
     - op: hyper_release
-      select: &id202
+      select: &id191
         zone: bz
         owner: you
         count: 1
@@ -394956,7 +394078,7 @@ cards:
       subject: self
     effect:
     - op: hyper_release
-      select: *id202
+      select: *id191
   - kind: trigger
     when:
       event: tap
@@ -395188,7 +394310,7 @@ cards:
       count: 1
       chooser: opp
   - op: hyper_release
-    select: *id202
+    select: *id191
   source:
     official: dm24rp2-065
     review: pending
