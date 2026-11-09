@@ -334755,7 +334755,6 @@ cards:
   mana: 1
   neo: true
   evolve_from:
-    owner: you
     civs:
     - darkness
     types:
@@ -334801,7 +334800,6 @@ cards:
   mana: 1
   neo: true
   evolve_from:
-    owner: you
     civs:
     - nature
     types:
@@ -334846,7 +334844,6 @@ cards:
   mana: 1
   neo: true
   evolve_from:
-    owner: you
     races:
     - ジョーカーズ
     types:
@@ -334975,10 +334972,10 @@ cards:
     - creature
   abilities:
   - kind: trigger
+    first_time: true
     when:
       event: attack
       subject: self
-      first_time: true
     effect:
     - op: may
       body:
@@ -335027,7 +335024,6 @@ cards:
   mana: 1
   neo: true
   evolve_from:
-    owner: you
     civs:
     - light
     types:
@@ -335095,7 +335091,6 @@ cards:
   mana: 1
   neo: true
   evolve_from:
-    owner: you
     civs:
     - light
     types:
@@ -357941,8 +357936,7 @@ cards:
       select:
         zone: hand
         owner: you
-        count:
-          max: 99
+        count: any
       to: shield
       reason: put
       face_up: true
@@ -358006,8 +358000,7 @@ cards:
       select:
         zone: hand
         owner: you
-        count:
-          max: 99
+        count: any
       to: shield
       reason: put
       face_up: true
@@ -358967,8 +358960,8 @@ cards:
         filter:
           types:
           - creature
-        count:
-          max: 2
+        count: 2
+        up_to: true
       mod:
         deny:
         - attack_player
@@ -360827,8 +360820,8 @@ cards:
         filter:
           types:
           - creature
-        count:
-          max: 3
+        count: 3
+        up_to: true
   mana: 1
   text: 'ブルー・インパルス: 相手のターンの終わりに、その相手のクリーチャーが自分より４体以上多く、自分の《ブルー・インパルス》がなければ、このクリーチャーをコストを支払わずに召喚してもよい。
     / T・ブレイカー / スマッシュ・バースト／「真実を見極めよ、ジョニー！」: S・トリガー / クリーチャーを３体まで選び、持ち主の手札に戻す。'
@@ -370719,12 +370712,12 @@ cards:
       - powered_breaker
     choukon: true
   - kind: trigger
+    first_time: true
     when:
       event: move
       from: graveyard
       subject:
         owner: you
-      first_time: true
     effect:
     - op: modify
       select:
@@ -370776,12 +370769,12 @@ cards:
         power: -2000
       duration: end_of_turn
   - kind: trigger
+    first_time: true
     when:
       event: move
       from: graveyard
       subject:
         owner: you
-      first_time: true
     effect:
     - op: may
       body:
@@ -371002,10 +370995,10 @@ cards:
         to: hand
         reason: put
   - kind: trigger
+    first_time: true
     when:
       event: attack_end
       subject: self
-      first_time: true
     effect:
     - op: untap
       select:
