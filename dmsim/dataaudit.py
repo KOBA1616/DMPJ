@@ -15,6 +15,11 @@ _BREAKS = {"double_breaker": 2, "triple_breaker": 3, "quad_breaker": 4}     # �
 _GRANT = re.compile(r"[「『]([^」』]{2,12})[」』]を(?:与える|得る)")
 
 
+_FIXTURE = re.compile(r"T\d+")
+_STRUCT_FIELDS = ("free_if", "alt_cost", "mugen_climb", "vividraw", "fushigi", "galaxy_shield", "bazurenda", "o_drive", "s_back",
+                  "evolve_from", "evolve_any", "neo", "grave_evo", "star", "s_max", "hyper", "crystal_soul", "tap_reduce")
+
+
 def _dump(*xs) -> str:
     return json.dumps(xs, ensure_ascii=False, default=str)
 
@@ -30,8 +35,11 @@ def audit_card(rules, cd) -> list[str]:
         out.append("creature_no_power")
     if cd.cost is None and not ({"gr", "psychic"} & types):
         out.append("no_cost")
-    has_effect = bool(cd.abilities or cd.spell or cd.keywords or cd.sst_spell)
-    if text.strip() and not has_effect:
+    # 能力の並びだけでなく、構造化された特性（G・ゼロ=free_if、ムゲンクライム、進化の型など）も「効果あり」と数える
+    note_only = bool(re.fullmatch(r"(?:【[A-Z] Souls】)+", text.strip()) or _FIXTURE.fullmatch(cd.id))   # 【H Souls】は種族の宣言記号（種族欄に反映済み）、T\d+ は試験用の札（原文は説明文）。効果の有無は問わない
+    has_effect = bool(cd.abilities or cd.spell or cd.keywords or cd.sst_spell or cd.stp_spell or cd.odrive_spell
+                      or any(getattr(cd, f) for f in _STRUCT_FIELDS))
+    if text.strip() and not note_only and not has_effect:
         out.append("text_but_no_effect")
     if _EVO.search(text) and "evolution" not in types and not (cd.neo or cd.grave_evo or cd.s_max):
         out.append("evo_text_no_type")
@@ -46,7 +54,7 @@ def audit_card(rules, cd) -> list[str]:
         if k and k not in kws:
             out.append(f"kw_line_missing:{k}")
     # 「「X」を与える／得る」があるのに、効果のどこにも X に対応するキーワード付与が無い
-    body = _dump(cd.abilities, cd.spell, cd.sst_spell)
+    body = _dump(cd.abilities, cd.spell, cd.sst_spell, cd.stp_spell, cd.odrive_spell)
     for m in _GRANT.finditer(text):
         k = ja2id.get(m.group(1))
         if k and k not in body and not (k in _BREAKS and f'"breaks": {_BREAKS[k]}' in body):

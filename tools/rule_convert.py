@@ -431,7 +431,7 @@ def convert(row: dict) -> dict | None:
         return None
     if _TABLE is None:
         _TABLE = _table()
-    text = re.sub(r"[（(][^）)]*[）)]", "", _prenorm(row.get("text", "")))   # 注釈（カッコ内）を除く
+    text = re.sub(r"[（(][^）)]*[）)]", " ", _prenorm(row.get("text", "")))   # 注釈（カッコ内）を除く。空白に置き換え、「スレイヤー（…）W・ブレイカー」が1語にくっつかないようにする
     kws, extra = [], []
     for line in re.split(r"\s*[\n/／]\s*", text):      # 行（スラッシュ・改行）ごとに、空白・句点でキーワードを区切る
         clauses = [c for c in _glue(re.split(r"[\s。]+", line)) if norm(c) and norm(c) not in _noise()]
@@ -500,7 +500,7 @@ def split(row: dict) -> tuple[list[str], str, list[dict]] | None:
     extra: list[dict] = []
     rest: list[str] = []
     for line in re.split(r"\s*[\n/／]\s*", _prenorm(row["text"])):
-        tokens = [x for x in _glue(re.sub(r"[（(][^）)]*[）)]", "", line).split()) if norm(x) not in _noise()]
+        tokens = [x for x in _glue(re.sub(r"[（(][^）)]*[）)]", " ", line).split()) if norm(x) not in _noise()]
         sents = [x for t_ in tokens for x in re.split(r"(?<=。)", t_) if x]    # 句点で終わる文も1つずつ照合する
         tokens = [x for x in sents if norm(x) not in _noise()]       # 文の途中にある記号・ルールの念押し文も除く
         def take(i: int) -> bool:

@@ -64161,21 +64161,41 @@ cards:
   keywords:
   - double_breaker
 - id: dm26rp3-069
-  name: 龍装者 プロチュリス / 「主役を目指すッス！」
-  types:
-  - creature
-  civs:
-  - fire
-  cost: 3
-  power: 4000
-  races:
-  - ドラゴンギルド
-  - ビートジョッキー
+  faces:
+  - name: 龍装者 プロチュリス
+    types:
+    - creature
+    civs:
+    - fire
+    cost: 3
+    power: 4000
+    races:
+    - ドラゴンギルド
+    - ビートジョッキー
+    keywords:
+    - speed_attacker
+  - name: 「主役を目指すッス！」
+    types:
+    - spell
+    civs:
+    - fire
+    cost: 1
+    spell:
+    - op: destroy
+      select:
+        zone: bz
+        owner: opp
+        filter:
+          types:
+          - creature
+          power_le: 1000
+        count: all
   mana: 1
-  text: スピードアタッカー
+  text: '龍装者 プロチュリス: スピードアタッカー（このクリーチャーは召喚酔いしない） ／ 「主役を目指すッス！」: 相手のパワー1000以下のクリーチャーをすべて破壊する。'
   source:
     official: dm26rp3-069
     review: pending
+    notes: ツインパクト。元データは片面のみ（呪文側の欠落）だったので両面を手で補った
 - id: dm26rp3-070
   name: どうだいジンセー
   types:
@@ -83309,10 +83329,14 @@ cards:
   - ドラゴノイド
   - エイリアン
   mana: 1
-  text: スピードアタッカー。スレイヤー。
+  keywords:
+  - speed_attacker
+  - slayer
+  text: マナゾーンに置く時、このカードはタップして置く。スピードアタッカー（このクリーチャーは召喚酔いしない）スレイヤー（このクリーチャーがバトルする時、バトルの後、相手クリーチャーを破壊する）
   source:
     official: dmd31-011
     review: pending
+    notes: ルールのみで変換（モデル不使用）
     aliases:
     - dmd04-007
     - dmx12a-037
@@ -107407,11 +107431,14 @@ cards:
   - グランド・デビル
   - ドラゴン・ゾンビ
   mana: 1
+  keywords:
+  - slayer
+  - double_breaker
   text: スレイヤー（このクリーチャーがバトルする時、バトルの後、相手クリーチャーを破壊する）W・ブレイカー（このクリーチャーはシールドを２枚ブレイクする）
   source:
     official: dmr09-057
     review: pending
-    notes: キーワードの説明文のみで、能力はキーワードとして注入される
+    notes: ルールのみで変換（モデル不使用）
 - id: dmr09-059
   name: 封魔フーマー
   types:
@@ -107880,11 +107907,20 @@ cards:
   races:
   - アース・ドラゴン
   mana: 1
+  abilities:
+  - kind: static
+    affects: self
+    mod:
+      power_when:
+        amount: 3000
+        when: attacking
+  keywords:
+  - double_breaker
   text: パワーアタッカー+3000（攻撃中、このクリーチャーのパワーは+3000される）W・ブレイカー（このクリーチャーはシールドを２枚ブレイクする）
   source:
     official: dmr09-103
     review: pending
-    notes: キーワードの説明文のみで、能力はキーワードとして注入される
+    notes: ルールのみで変換（モデル不使用）
 - id: dmr09-104
   name: 勇狩の蛮人
   types:
@@ -109436,11 +109472,20 @@ cards:
   races:
   - アウトレイジ
   mana: 1
+  abilities:
+  - kind: static
+    affects: self
+    mod:
+      power_when:
+        amount: 2000
+        when: attacking
+  keywords:
+  - double_breaker
   text: パワーアタッカー+2000（攻撃中、このクリーチャーのパワーは+2000される）W・ブレイカー（このクリーチャーはシールドを２枚ブレイクする）
   source:
     official: dmr11-044
     review: pending
-    notes: キーワードの説明文のみで、能力はキーワードとして注入される
+    notes: ルールのみで変換（モデル不使用）
 - id: dmr11-046
   name: 火焔特攻弾
   types:
@@ -109528,11 +109573,20 @@ cards:
   races:
   - ガイアール・コマンド・ドラゴン
   mana: 1
+  abilities:
+  - kind: static
+    affects: self
+    mod:
+      power_when:
+        amount: 2000
+        when: attacking
+  keywords:
+  - double_breaker
   text: パワーアタッカー+2000（攻撃中、このクリーチャーのパワーは+2000される）W・ブレイカー（このクリーチャーはシールドを２枚ブレイクする）
   source:
     official: dmr13-095
     review: pending
-    notes: 原文が同じ dmr11-044 の変換結果を写した（モデル不使用）。能力は元カードの確認に従う
+    notes: ルールのみで変換（モデル不使用）
 - id: dmr11-052
   name: 爆裂霊騎ドイネーション
   types:
@@ -109648,11 +109702,14 @@ cards:
   races:
   - アウトレイジ
   mana: 1
-  text: ガードマン（自分の他のクリーチャーが攻撃される時、このクリーチャーをタップしてもよい。そうした場合、攻撃クリーチャーはかわりにこのクリーチャーを攻撃する）スレイヤー（このクリーチャーがバトルする時、バトルの後、相手クリーチャーを破壊する）
+  keywords:
+  - guardman
+  - slayer
+  text: マナゾーンに置く時、このカードはタップして置く。ガードマン（自分の他のクリーチャーが攻撃される時、このクリーチャーをタップしてもよい。そうした場合、攻撃クリーチャーはかわりにこのクリーチャーを攻撃する）スレイヤー（このクリーチャーがバトルする時、バトルの後、相手クリーチャーを破壊する）
   source:
     official: dmr11-055
     review: pending
-    notes: キーワードの説明文のみで、能力はキーワードとして注入される
+    notes: ルールのみで変換（モデル不使用）
 - id: dmr12-003
   name: 爆走マントラ シラヌイ
   types:
@@ -112333,11 +112390,20 @@ cards:
   races:
   - ガイアール・コマンド・ドラゴン
   mana: 1
+  abilities:
+  - kind: static
+    affects: self
+    mod:
+      power_when:
+        amount: 1000
+        when: attacking
+  keywords:
+  - double_breaker
   text: パワーアタッカー+1000（攻撃中、このクリーチャーのパワーは+1000される）W・ブレイカー（このクリーチャーはシールドを２枚ブレイクする）
   source:
     official: dmr14-047
     review: pending
-    notes: キーワードの説明文のみで、能力はキーワードとして注入される
+    notes: ルールのみで変換（モデル不使用）
 - id: dmr14-048
   name: 爆撃走 スペイサイド
   types:
@@ -120570,11 +120636,14 @@ cards:
   races:
   - ジャスティス・オーブ
   mana: 1
-  text: S・トリガー。ブロッカー。
+  keywords:
+  - s_trigger
+  - blocker
+  text: マナゾーンに置く時、このカードはタップして置く。 S・トリガー（このクリーチャーをシールドゾーンから手札に加える時、コストを支払わずにすぐ召喚してもよい）ブロッカー（このクリーチャーをタップして、相手クリーチャーの攻撃先をこのクリーチャーに変更してもよい）
   source:
     official: dmr21-085
     review: pending
-    notes: キーワードのみ
+    notes: ルールのみで変換（モデル不使用）
 - id: dmr21-086
   name: タイム１ ドレミ・レード
   types:
@@ -121467,11 +121536,22 @@ cards:
   - ガーディアン
   - ビーストフォーク號
   mana: 1
-  text: S・トリガー。ブロッカー。パワーアタッカー+2000。このクリーチャーは、相手プレイヤーを攻撃できない。
+  abilities:
+  - kind: static
+    affects: self
+    mod:
+      power_when:
+        amount: 2000
+        when: attacking
+  keywords:
+  - s_trigger
+  - blocker
+  - cannot_attack_player
+  text: マナゾーンに置く時、このカードはタップして置く。 S・トリガー（このクリーチャーをシールドゾーンから手札に加える時、コストを支払わずにすぐ召喚してもよい）ブロッカー（このクリーチャーをタップして、相手クリーチャーの攻撃先をこのクリーチャーに変更してもよい）パワーアタッカー+2000（攻撃中、このクリーチャーのパワーを+2000する）このクリーチャーは、相手プレイヤーを攻撃できない。
   source:
     official: dmr22-067
     review: pending
-    notes: キーワードのみ（パワーアタッカーは battle_power として注入される）
+    notes: ルールのみで変換（モデル不使用）
 - id: dmr22-069
   name: 幕の内秘宝キャラベーン
   types:
@@ -121484,11 +121564,16 @@ cards:
   races:
   - パンドラボックス
   mana: 1
-  text: S・トリガー。ブロッカー。スレイヤー。このクリーチャーは攻撃できない。
+  keywords:
+  - s_trigger
+  - blocker
+  - slayer
+  - cannot_attack
+  text: マナゾーンに置く時、このカードはタップして置く。 S・トリガー（このクリーチャーをシールドゾーンから手札に加える時、コストを支払わずにすぐ召喚してもよい）ブロッカー（このクリーチャーをタップして、相手クリーチャーの攻撃先をこのクリーチャーに変更してもよい）スレイヤー（このクリーチャーがバトルする時、バトルの後、相手クリーチャーを破壊する）このクリーチャーは攻撃できない。
   source:
     official: dmr22-069
     review: pending
-    notes: キーワードのみ
+    notes: ルールのみで変換（モデル不使用）
 - id: dmr22-071
   name: 禁断C トビゲール
   types:
@@ -122501,11 +122586,14 @@ cards:
   races:
   - メガ・コマンド・ドラゴン
   mana: 1
-  text: スピードアタッカー。W・ブレイカー。
+  keywords:
+  - speed_attacker
+  - double_breaker
+  text: マナゾーンに置く時、このカードはタップして置く。スピードアタッカー（このクリーチャーは召喚酔いしない）W・ブレイカー（このクリーチャーはシールドを２つブレイクする）
   source:
     official: dmr23-072
     review: pending
-    notes: キーワードのみ
+    notes: ルールのみで変換（モデル不使用）
 - id: dmr23-074
   name: エール・ライフ
   types:
