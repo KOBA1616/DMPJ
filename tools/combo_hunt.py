@@ -83,7 +83,7 @@ def main(argv=None):
     ap.add_argument("--max-len", type=int, default=4)
     ap.add_argument("--list-only", action="store_true", help="候補の一覧だけ出す（測らない）")
     ap.add_argument("--cache", default=".cache/combohunt_cycles.json")
-    ap.add_argument("--out", default="logs/combohunt.jsonl")
+    ap.add_argument("--out", default="data/combohunt/results.jsonl")
     a = ap.parse_args(argv)
     rules = load_rules()
     cache = Path(a.cache)

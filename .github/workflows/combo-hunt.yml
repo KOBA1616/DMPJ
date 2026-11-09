@@ -1,0 +1,40 @@
+# 毎日: 登録デッキ外のコンボ候補を自動で拾い、1人回しで検証し、結果を PR にして自動マージする（tools/combo_hunt.py）。LLM・課金なし。
+# 結果は data/combohunt/results.jsonl に追記（測った組は次回飛ばす）。失敗しても既存の定期処理には影響しない。
+name: combo-hunt
+on:
+  schedule:
+    - cron: "30 19 * * *"
+  workflow_dispatch:
+    inputs:
+      top:
+        description: 今回測る候補数
+        default: "20"
+permissions:
+  contents: write
+  pull-requests: write
+jobs:
+  hunt:
+    runs-on: ubuntu-latest
+    timeout-minutes: 150
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: pip install pyyaml
+      - uses: actions/cache@v4
+        with:
+          path: .cache/combohunt_cycles.json
+          key: combohunt-cycles-${{ hashFiles('data/cards/*.yaml') }}
+      - run: PYTHONPATH=. python tools/combo_hunt.py --top "${{ inputs.top || '20' }}" --seeds 6 --turns 4 --workers 2
+      - name: PR にして自動マージ
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          git diff --quiet -- data/combohunt && exit 0
+          b="combohunt/$(date +%Y%m%d)"
+          git config user.name "combo-hunt"; git config user.email "combo-hunt@users.noreply.github.com"
+          git checkout -b "$b"; git add data/combohunt; git commit -m "combo-hunt: 登録外コンボ候補の検証結果を追記"
+          git push -u origin "$b"
+          gh pr create --base main --head "$b" --title "combo-hunt: 検証結果 $(date +%Y-%m-%d)" --body "毎日の自動探索の結果（data/combohunt/results.jsonl）。"
+          gh pr merge "$b" --squash --auto
