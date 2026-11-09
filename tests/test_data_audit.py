@@ -34,12 +34,13 @@ def test_keyword_annotations_do_not_glue_together():
     assert card is not None and set(card["keywords"]) == {"slayer", "double_breaker"}
 
 
-def test_audit_counts_structural_fields_and_twin_faces():
-    """G・ゼロ（free_if）などの構造化特性は効果ありと数える。基準線に text_but_no_effect を戻さない。"""
-    base = audit_cards.load_baseline()
-    assert not base.get("text_but_no_effect")
+def test_audit_counts_structural_fields_and_twin_faces(monkeypatch):
+    """converted.yaml（テストでは既定で除外）も含めて、効果が空の札が無い。G・ゼロ等の構造化特性は効果ありと数える。"""
+    monkeypatch.delenv("DMSIM_SKIP_CONVERTED", raising=False)
+    from dmsim.dataaudit import audit_rules
     from dmsim.defs import load_rules
-    from dmsim.dataaudit import audit_card
     r = load_rules()
-    assert "text_but_no_effect" not in audit_card(r, next(c for c in r.cards.values() if c.free_if))      # G・ゼロ
-    assert r.cards["dm26rp3-069"].faces                                            # ツインパクトの呪文側が落ちていない
+    found = audit_rules(r)
+    assert not found.get("text_but_no_effect"), found.get("text_but_no_effect")
+    assert not audit_cards.load_baseline().get("text_but_no_effect")
+    assert r.cards["dm26rp3-069"].faces                      # ツインパクトの呪文側が落ちていない
