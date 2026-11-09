@@ -199,6 +199,8 @@ def _subject_ok(m: Move, a: Bundle, prem: Premise, bcd, rules) -> bool:
         if m.owner == "opp":   # 相手のカードを相手の手札などへ動かしても、自分のカードの前提は満たさない
             return False
         return (a.card == bcd.id) if m.ref_self else _match(m.flt, bcd)
+    if not isinstance(subj, dict):   # "self" 以外の文字列は主語を絞らない
+        return True
     sf = subj.get("filter", {})
     if (subj.get("owner") == "opp") != (m.owner == "opp") and subj.get("owner") in ("you", "opp"):
         return False
@@ -268,8 +270,9 @@ class Cycle:
             for m in b.moves:
                 if m.owner == "opp":
                     continue
-                d[m.src] = d.get(m.src, 0) - 1
-                d[m.dst] = d.get(m.dst, 0) + 1
+                s, e = (m.src if isinstance(m.src, str) else "/".join(map(str, m.src))), (m.dst if isinstance(m.dst, str) else "/".join(map(str, m.dst)))
+                d[s] = d.get(s, 0) - 1
+                d[e] = d.get(e, 0) + 1
         return {k: v for k, v in d.items() if v}
 
     def opp_delta(self) -> dict[str, int]:
@@ -278,8 +281,9 @@ class Cycle:
         for b in self.bundles:
             for m in b.moves:
                 if m.owner == "opp":
-                    d[m.src] = d.get(m.src, 0) - 1
-                    d[m.dst] = d.get(m.dst, 0) + 1
+                    s, e = (m.src if isinstance(m.src, str) else "/".join(map(str, m.src))), (m.dst if isinstance(m.dst, str) else "/".join(map(str, m.dst)))
+                    d[s] = d.get(s, 0) - 1
+                    d[e] = d.get(e, 0) + 1
         return {k: v for k, v in d.items() if v}
 
     def conditional(self) -> bool:
@@ -288,8 +292,14 @@ class Cycle:
 
 def find_cycles(rules, max_cards: int = 2, max_len: int = 4) -> list[Cycle]:
     bs = bundles_of(rules)
-    st = {(i, j): feeds(bs[i], b, rules) for i in range(len(bs)) for j, b in enumerate(bs)}
-    succ = {i: [j for j in range(len(bs)) if st[i, j]] for i in range(len(bs))}
+    st: dict = {}      # 受け渡せる組だけを持つ（全組を持つと札が多い時にメモリを使い切る）
+    succ: dict = {i: [] for i in range(len(bs))}
+    for i in range(len(bs)):
+        for j, b in enumerate(bs):
+            v = feeds(bs[i], b, rules)
+            if v:
+                st[i, j] = v
+                succ[i].append(j)
     seen, out = set(), []
 
     def dfs(start, path):
