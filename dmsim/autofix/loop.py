@@ -79,9 +79,14 @@ def autofix(measure, k0: Knobs, combo: dict | None = None, rule: Rule = Rule(), 
     cur, hist = k0, []
     base = measure(cur)
     for rd in range(rounds):
-        d = diagnose(base, rule.turn)
-        ent = {"round": rd, "knobs": cur.__dict__, "stage": d.stage, "cause": d.cause, "rates": d.rates, "rule": rule.version, "hints": list(d.hints), "combo": (combo or {}).get("id")}
-        if d.stage == "cards":
+        info = getattr(measure, "info", None) or {}              # 測定器が付ける補足（例: cards_ceiling=デッキだけで決まる到達率の理論上限）
+        d = diagnose(base, rule.turn, ceiling=info.get("cards_ceiling") if info.get("tier") == "cold" else None)
+        ent = {"round": rd, "knobs": cur.__dict__, "stage": d.stage, "cause": d.cause, "rates": d.rates, "rule": rule.version, "hints": list(d.hints), "combo": (combo or {}).get("id"), **info}
+        if info.get("cards_ceiling") is not None and info.get("tier") == "exec":
+            # 分解: 推定キル率 ≈ 到達層(デッキの素引き確率) × 実行層(仕込み済みからのキル率)。小さい方が律速（効く対策の置き場）
+            ent["est_kill"] = round(info["cards_ceiling"] * d.rates["kill"], 4)
+            ent["bottleneck"] = "ai" if d.rates["kill"] < info["cards_ceiling"] else "deck"
+        if d.stage in ("cards", "deck_limited"):
             ent["deck_hint"] = {"proposer": "add_parts", "note": "デッキ側の改善が必要。deckplan.improve(kinds=(\"add_parts\", \"add_prep\"), pool=コンボのcore名) で候補を評価する。自動採用はしない"}
         cands = propose(d.stage, cur, rule, d.hints)       # cards でも準備札の加点(prep_bonus)は探索側の設定なので試す
         if d.stage == "ok" or not cands:
@@ -139,6 +144,7 @@ def harness_measure(rules, deck, opp_deck, seeds, spec=None, prog=None, parts_sp
         out = {"kill": [g[2] for g in c["per_game"]], "board": [p[0] for p in pp], "cards": [p[1] for p in pp]}
         out["curves"] = c.get("per_game_curves", [])
         out["final"] = [(p[2] or {}).get("defs") or {} for p in pp]       # 各局の最終局面（ゾーン→{定義ID: 枚数}）。部品の自動発見用
+        out["opp_deck"] = [(p[2] or {}).get("opp_deck") for p in pp]      # 各局の最終の相手の残り山札（連続指標用）
         out["opp_shield"] = [(p[2] or {}).get("opp_shield") for p in pp]  # 各局の最終の相手の残り盾（少ないほど前進。勝ちが無い時の代用指標）
         if prep_ids:                      # 各局の最終局面で墓地に行った準備札の枚数（診断の prep_unused 用）
             out["prep"] = [sum(n for d, n in ((p[2] or {}).get("gy_defs") or {}).items() if d in prep_ids) for p in pp]

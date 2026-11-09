@@ -38,18 +38,23 @@ def run_batch(a, combos):
     rules = load_rules()
     from dmsim.autofix.partsgenome import load_specs_evolved
     from dmsim.autofix.valuelearn import load_model
+    from dmsim.autofix.reach import cards_ceiling
+    import exec_tier
     specs = load_specs_evolved()                              # 進化で採用した部品の重み倍率を反映（data/autofix/parts.yaml）
 
     def mk(t):
         from dmsim.autofix.batch import default_board, default_need
         cards = {x.split(":")[0]: int(x.split(":")[1]) if ":" in x else 1 for x in t["need"]} if t.get("need") else default_need(combos[t["combo"]])
         board = _board(t["board"]) if t.get("board") else default_board(combos[t["combo"]])
-        spec = yaml.safe_load(Path(t["setup"]).read_text(encoding="utf-8")) if t.get("setup") else None
         deck, opp = load_deck(t["deck"]), load_deck(t["opp_deck"]) if t.get("opp_deck") else ["T001"] * 40
-        return harness_measure(rules, deck, opp, list(range(1, t.get("seeds", a.seeds) + 1)), spec,
+        spec, origin = exec_tier.exec_spec(rules, t, deck, cold=a.cold)      # 既定は実行層（仕込み済み開始）。到達層は理論上限で別に記録
+        meas = harness_measure(rules, deck, opp, list(range(1, t.get("seeds", a.seeds) + 1)), spec,
                                ProgressSpec(board=board, cards=cards) if (cards or board) else None, specs[t["combo"]], max_turn=a.turns, workers=a.workers,
                                prep_ids=_prep_ids(combos[t["combo"]], rules, deck, opp, specs[t["combo"]]),
                                value_model=load_model(t["combo"]))
+        meas.info = {"tier": "cold" if a.cold else "exec", "setup_origin": origin,
+                     "cards_ceiling": round(cards_ceiling(deck, cards, a.turns), 4)}   # デッキだけで決まる「部品がそろう」確率の上限
+        return meas
     from dmsim.autofix import selfheal
     for r in run_targets(ts, combos, mk, Rule(turn=a.turns), a.rounds, a.out, a.store, health=a.health):
         print(r)
@@ -90,6 +95,7 @@ def main(argv=None):
     ap.add_argument("--workers", type=int, default=1, help="並列プロセス数（seeds を分けて回す。CPU数まで）")
     ap.add_argument("--deck-fix", action="store_true", help="終了後、cards 段階の記録があれば tools/deck_fix.py --stage-from を続けて回す（--out 必須）")
     ap.add_argument("--deck-fix-budget", type=int, default=5400, help="--deck-fix の時間予算（秒）。対象ごとの候補数と粗比較の局数を自動配分し、前回途中のデッキを優先する（既定 90分）")
+    ap.add_argument("--cold", action="store_true", help="実行層（仕込み済み開始）でなく通常の開幕で測る（到達層の確認用）")
     ap.add_argument("--tune-seconds", type=int, default=0, help="0以外なら、終了後に tools/auto_tune.py をこの秒数の予算で続けて回す（--targets 指定時）。既定は無効")
     ap.add_argument("--total-seconds", type=int, default=0, help="0以外なら日次の総枠（秒）。診断ループの後、残り時間を deck_fix(65%%)と tune(35%%)へ自動配分する（--deck-fix-budget/--tune-seconds は上書きされる）")
     ap.add_argument("--health", default="data/autofix/health.yaml", help="段階ごとの成否の記録（自己修復。連続失敗は隔離される）")
