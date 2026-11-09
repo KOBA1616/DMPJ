@@ -14,6 +14,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parent))
 from auto_fix import _prep_ids  # noqa: E402
 from dmsim.autofix import Knobs, Rule, harness_measure  # noqa: E402
 from dmsim.autofix.batch import default_board, default_need  # noqa: E402
+from dmsim.autofix import partdiscovery as PD  # noqa: E402
 from dmsim.autofix import partsgenome as PG  # noqa: E402
 from dmsim.autofix.tune import evolve, tune  # noqa: E402
 from dmsim.defs import load_rules  # noqa: E402
@@ -35,6 +36,8 @@ def main(argv=None):
     ap.add_argument("--store", default="data/autofix/knobs.yaml")
     ap.add_argument("--parts-store", default="data/autofix/parts.yaml", help="部品ごとの重み倍率（評価式の進化）の保存先")
     ap.add_argument("--parts-share", type=float, default=0.5, help="対象ごとの世代のうち部品の重みの進化に回す割合（0で無効）")
+    ap.add_argument("--edits-store", default="data/autofix/parts_edits.yaml", help="部品の自動追加・削除の保存先")
+    ap.add_argument("--discover-gens", type=int, default=2, help="部品の自動追加・削除に回す世代数（0で無効）")
     ap.add_argument("--out")
     a = ap.parse_args(argv)
     combos = {c["id"]: c for c in yaml.safe_load(Path("data/known_combos/combos.yaml").read_text(encoding="utf-8"))["combos"]}
@@ -43,6 +46,7 @@ def main(argv=None):
     rules, specs = load_rules(), load_specs()
     store = (yaml.safe_load(Path(a.store).read_text(encoding="utf-8")) or {}) if Path(a.store).exists() else {}
     pstore = (yaml.safe_load(Path(a.parts_store).read_text(encoding="utf-8")) or {}) if Path(a.parts_store).exists() else {}
+    estore = (yaml.safe_load(Path(a.edits_store).read_text(encoding="utf-8")) or {}) if Path(a.edits_store).exists() else {}
     t0, rule = time.time(), Rule(turn=a.turns)
     for t in ts:
         c = combos.get(t["combo"])
@@ -55,6 +59,7 @@ def main(argv=None):
         opp = load_deck(t["opp_deck"]) if t.get("opp_deck") else ["T001"] * 40
         spec = yaml.safe_load(Path(t["setup"]).read_text(encoding="utf-8")) if t.get("setup") else None
         ps = specs[t["combo"]]
+        ps = PD.apply_store(ps, estore.get(t["combo"]))                 # 採用済みの部品の追加・削除を反映
         ps_cur = PG.apply(ps, tuple(pstore.get(t["combo"]) or ()))     # 採用済みの重み倍率を反映してノブを探す
         prog = ProgressSpec(board=default_board(c), cards=default_need(c))
         prep = _prep_ids(c, rules, deck, opp, ps)
@@ -70,6 +75,26 @@ def main(argv=None):
         if k != k0:
             store[t["combo"]] = dict(k.__dict__)
             Path(a.store).write_text(yaml.safe_dump(store, allow_unicode=True), encoding="utf-8")
+        if a.discover_gens > 0 and time.time() - t0 <= a.seconds:        # 部品の自動追加・削除: 勝った局と負けた局の最終局面の差から候補→進化で採否
+            ps0 = PG.apply(ps, tuple(pstore.get(t["combo"]) or ()))
+            m0 = harness_measure(rules, deck, opp, list(range(1, n + 1)), spec, prog, ps0, max_turn=a.turns, workers=a.workers, prep_ids=prep)(k)
+            cands = PD.discover(m0, ps, a.turns)
+            if cands:
+                def measure_e(g, seeds, _c=(rules, deck, opp, spec, prog, prep)):
+                    return harness_measure(_c[0], _c[1], _c[2], list(seeds), _c[3], _c[4], PG.apply(PD.apply_edits(ps, cands, g), tuple(pstore.get(t["combo"]) or ())),
+                                           max_turn=a.turns, workers=a.workers, prep_ids=_c[5])(k)
+                g, ehist = evolve(measure_e, frozenset(), lambda x, r: PD.mutate_genes(x, r, len(cands)), lambda x: {"parts_edit": PD.to_store(cands, x)},
+                                  range(1, n + 1), range(1000, 1000 + n), rule, a.discover_gens, a.lam, seed=2, ledger=a.out)
+                print(t["combo"], f"部品候補{len(cands)}件 採用", [h["verdict"] for h in ehist].count("accept"), "回", PD.to_store(cands, g) if g else "（変更なし）")
+                if g:
+                    new = PD.to_store(cands, g)
+                    old = estore.get(t["combo"]) or {"add": [], "drop": []}
+                    estore[t["combo"]] = {"add": old["add"] + [x for x in new["add"] if x not in old["add"]], "drop": old["drop"] + [x for x in new["drop"] if x not in old["drop"]]}
+                    Path(a.edits_store).write_text(yaml.safe_dump(estore, allow_unicode=True), encoding="utf-8")
+                    pstore.pop(t["combo"], None)                          # 部品表の長さが変わるので重み倍率は作り直す
+                    if Path(a.parts_store).exists():
+                        Path(a.parts_store).write_text(yaml.safe_dump(pstore, allow_unicode=True), encoding="utf-8")
+                    ps = PD.apply_store(specs[t["combo"]], estore[t["combo"]])
         gp = round(a.generations * a.parts_share)
         if gp > 0 and ps.parts and time.time() - t0 <= a.seconds:        # 評価式の進化: 採用したノブのまま、部品ごとの重み倍率を動かす
             base_ps = ps

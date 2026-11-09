@@ -133,6 +133,8 @@ def harness_measure(rules, deck, opp_deck, seeds, spec=None, prog=None, parts_sp
         c = run_eval(rules, cfg)["cells"][cell_key("d", "fair", 1.0)]
         pp = c.get("per_game_progress", [])
         out = {"kill": [g[2] for g in c["per_game"]], "board": [p[0] for p in pp], "cards": [p[1] for p in pp]}
+        out["final"] = [(p[2] or {}).get("defs") or {} for p in pp]       # 各局の最終局面（ゾーン→{定義ID: 枚数}）。部品の自動発見用
+        out["opp_shield"] = [(p[2] or {}).get("opp_shield") for p in pp]  # 各局の最終の相手の残り盾（少ないほど前進。勝ちが無い時の代用指標）
         if prep_ids:                      # 各局の最終局面で墓地に行った準備札の枚数（診断の prep_unused 用）
             out["prep"] = [sum(n for d, n in ((p[2] or {}).get("gy_defs") or {}).items() if d in prep_ids) for p in pp]
         return out
