@@ -100,6 +100,47 @@ impl Engine {
                 "turn" => self.h_turn()?,
                 "event" => self.h_event()?,
                 "play" => self.h_play()?,
+                "declare" => {
+                    // 使用宣言できる能力（declare）は能力を持つカードだけ。plain では候補なし
+                    self.s.tasks.pop();
+                    None
+                }
+                "attack" => self.h_attack()?,
+                "break" => self.h_break()?,
+                "enqueue_st" => {
+                    let t = self.s.tasks.pop().unwrap();
+                    if !t["cids"].as_array().map_or(true, |a| a.is_empty()) {
+                        return uns("enqueue_st（S・トリガー）");
+                    }
+                    None
+                }
+                "open_win" => {
+                    let t = self.s.tasks.pop().unwrap();
+                    self.s.windows.push(t["win"].as_i64().unwrap());
+                    None
+                }
+                "close_win" => {
+                    self.s.tasks.pop();
+                    self.s.windows.pop();
+                    if !self.s.pending.is_empty() {
+                        return uns("close_win（待機中の効果）");
+                    }
+                    None
+                }
+                "resolve_pending" => {
+                    self.s.tasks.pop();
+                    if !self.s.pending.is_empty() {
+                        return uns("resolve_pending");
+                    }
+                    None
+                }
+                "battle_run" => {
+                    let t = self.s.tasks.pop().unwrap();
+                    if self.alive(&t["att"]) && self.alive(&t["tgt"]) {
+                        self.battle(&t["att"], &t["tgt"])?;
+                    }
+                    None
+                }
                 other => return uns(format!("task {}", other)),
             };
             if let Some(d) = d {
@@ -401,19 +442,229 @@ impl Engine {
     fn st_attack(&mut self) -> R<Option<Value>> {
         let a = self.s.active;
         let turn = self.s.turn;
-        if self.bz_tops(Some(a)).iter().any(|&c| {
+        let mut opts: Vec<Value> = vec![];
+        for c in self.bz_tops(Some(a)) {
             let k = &self.s.cards[c as usize];
-            !k.tapped && k.entered_turn != turn
-        }) {
-            return uns("attack（攻撃できるクリーチャーがいる）");
+            if k.tapped || k.entered_turn == turn {
+                continue;
+            }
+            let dfn = k.defn.clone();
+            if self.permits("attack_player") {
+                opts.push(json!({"key": format!("attack:{}:player", dfn), "cid": c, "target": "player"}));
+            }
+            for tc in self.bz_tops(Some(1 - a)) {
+                if self.s.cards[tc as usize].tapped && self.permits("attack_creature") && self.permits("be_attacked") {
+                    opts.push(json!({"key": format!("attack:{}:{}", dfn, self.s.cards[tc as usize].defn), "cid": c, "target": self.refv(tc)}));
+                }
+            }
         }
-        // 攻撃できるものが無ければ選択肢は pass だけ（1択は決定を出さない）
-        let ans = match self.ask(a, "attack", vec![json!({"key": "pass"})], 1, 1) {
+        opts.push(json!({"key": "pass"}));
+        let ans = match self.ask(a, "attack", opts.clone(), 1, 1) {
             Ask::Decision(d) => return Ok(Some(d)),
             Ask::Answer(x) => x,
         };
-        let _ = ans;
-        self.step_done();
+        let o = opts[ans[0]].clone();
+        if o["key"] == json!("pass") {
+            self.step_done();
+            return Ok(None);
+        }
+        self.s.turn_counters.insert("attacked".into(), json!(true));
+        let att = self.refv(o["cid"].as_i64().unwrap());
+        self.push(vec![json!({"t": "attack", "attacker": att, "target": o["target"], "phase": 0, "cp": true})]);
+        Ok(None)
+    }
+
+    fn window(&mut self, inner: Vec<Value>) -> Vec<Value> {
+        self.s.seq += 1;
+        let w = self.s.seq;
+        let mut v = vec![json!({"t": "open_win", "win": w})];
+        v.extend(inner);
+        v.push(json!({"t": "resolve_pending", "win": w, "only_st": false}));
+        v.push(json!({"t": "close_win"}));
+        v
+    }
+
+    fn decl(player: i64, window: &str, rec: &Value) -> Value {
+        json!({"t": "declare", "player": player, "window": window, "ctx": rec})
+    }
+
+    fn tset(&mut self, k: &str, v: Value) {
+        self.s.tasks.last_mut().unwrap()[k] = v;
+    }
+
+    /// 攻撃ステップのサブステップ（506〜510）。ブロッカー・バトル置換・使用宣言は能力を持つカードだけなので plain では空振り
+    fn h_attack(&mut self) -> R<Option<Value>> {
+        let a = self.s.active;
+        let (att, target, ph) = {
+            let t = self.s.tasks.last().unwrap();
+            (t["attacker"].clone(), t["target"].clone(), t["phase"].as_i64().unwrap())
+        };
+        if self.s.skip_rest {
+            return uns("skip_rest");
+        }
+        if ph == 0 {
+            self.tset("phase", json!(1));
+            let n = self.s.turn_counters.get("attack_no").and_then(|v| v.as_i64()).unwrap_or(0) + 1;
+            self.s.turn_counters.insert("attack_no".into(), json!(n));
+            self.tset("ano", json!(n));
+            self.s.turn_counters.insert("current_attack".into(), json!(n));
+            self.s.cards[att[0].as_i64().unwrap() as usize].tapped = true;
+            let rec = json!({"ev": "attack", "subject": att, "target": target, "controller": a});
+            let e = self.ev_task(vec![rec.clone()]);
+            self.push(vec![e, Self::decl(a, "attack", &rec)]);
+            return Ok(None);
+        }
+        if ph == 1 {
+            self.tset("phase", json!(2));
+            if self.alive(&att) {
+                let rec = json!({"ev": "attack", "subject": att, "target": target, "controller": a});
+                self.push(vec![Self::decl(1 - a, "attack", &rec)]);
+            }
+            return Ok(None);
+        }
+        if ph < 5 && (!self.alive(&att) || (target != json!("player") && !self.alive(&target))) {
+            self.tset("phase", json!(5));
+            return Ok(None);
+        }
+        if ph == 2 {
+            // ブロック: block / guardman の許可は plain には無い → 選択肢は no_block だけ（自動）
+            if self.permits("block") || self.permits("guardman") {
+                return uns("block");
+            }
+            self.tset("phase", json!(3));
+            return Ok(None);
+        }
+        if ph == 3 {
+            self.tset("phase", json!(4));
+            if target != json!("player") {
+                if self.s.tasks.last().unwrap().get("subbed").is_none() {
+                    self.tset("subbed", json!([]));
+                }
+                let bs = json!({"ev": "battle_start", "subject": att, "opponent": target, "controller": a});
+                let e = self.ev_task(vec![bs]);
+                let mut ts = self.window(vec![e]);
+                ts.push(json!({"t": "battle_run", "att": att, "tgt": target}));
+                self.push(ts);
+            }
+            return Ok(None);
+        }
+        if ph == 4 {
+            // 509 ダイレクトアタック（ブレイカーの選択は plain では 1 つだけ＝自動）
+            self.tset("phase", json!(5));
+            if target == json!("player") {
+                if !self.zl("shield", 1 - a).is_empty() {
+                    self.push(vec![json!({"t": "break", "victim": 1 - a, "by": a, "count": 1, "phase": 0, "in_effect": false, "breaker": att})]);
+                } else {
+                    self.game_lose(1 - a, "direct_attack");
+                }
+            }
+            return Ok(None);
+        }
+        let end_fired = self.s.tasks.last().unwrap().get("end_fired").is_some();
+        if !end_fired && self.s.result.is_none() {
+            self.tset("end_fired", json!(true));
+            let ano = self.s.tasks.last().unwrap().get("ano").cloned().unwrap_or(Value::Null);
+            let broke = self.s.turn_counters.get(&format!("broke_in:{}", att[0].as_i64().unwrap())).cloned() == Some(ano);
+            let e = self.ev_task(vec![json!({"ev": "attack_end", "subject": att, "target": target, "controller": a, "broke": broke})]);
+            self.push(vec![e]);
+            return Ok(None);
+        }
+        self.s.tasks.pop();
+        if !self.s.continuous.is_empty() || !self.s.delayed.is_empty() {
+            return uns("expire during_attack");
+        }
+        Ok(None)
+    }
+
+    fn game_lose(&mut self, loser: i64, reason: &str) {
+        if self.s.result.is_none() {
+            self.s.result = Some(json!({"winner": 1 - loser, "reason": reason, "turn": self.s.turn}));
+        }
+    }
+
+    /// バトル（701.13）: plain はパワーだけで勝敗が決まる
+    fn battle(&mut self, x: &Value, y: &Value) -> R<()> {
+        let (xc, yc) = (x[0].as_i64().unwrap(), y[0].as_i64().unwrap());
+        let (px, py) = (self.def(xc).power, self.def(yc).power);
+        let mut losers: Vec<&Value> = vec![];
+        if px <= py {
+            losers.push(x);
+        }
+        if py <= px {
+            losers.push(y);
+        }
+        let mut evs: Vec<Value> = losers
+            .iter()
+            .map(|r| json!({"ev": "move", "subject": r, "to": "graveyard", "reason": "destroy", "battle": true}))
+            .collect();
+        for r in [x, y] {
+            if !losers.contains(&r) {
+                let c = self.s.cards[r[0].as_i64().unwrap() as usize].controller;
+                evs.push(json!({"ev": "battle_win", "subject": r, "controller": c}));
+            }
+        }
+        let e = self.ev_task(evs);
+        let ts = self.window(vec![e]);
+        self.push(ts);
+        Ok(())
+    }
+
+    /// ブレイク（509.3〜509.5）。置換・S・トリガー・S・バックは能力を持つカードだけなので plain では空振り
+    fn h_break(&mut self) -> R<Option<Value>> {
+        let (victim, by, ph) = {
+            let t = self.s.tasks.last().unwrap();
+            (t["victim"].as_i64().unwrap(), t["by"].as_i64().unwrap(), t["phase"].as_i64().unwrap())
+        };
+        if ph == 0 {
+            let shields = self.zl("shield", victim).clone();
+            let n = (self.s.tasks.last().unwrap()["count"].as_i64().unwrap() as usize).min(shields.len());
+            let opts: Vec<Value> = shields.iter().map(|&c| json!({"cid": c, "key": "shield", "name": "?"})).collect();
+            let ans = match self.ask(by, "choose_shields", opts, n, n) {
+                Ask::Decision(d) => return Ok(Some(d)),
+                Ask::Answer(x) => x,
+            };
+            let chosen: Vec<i64> = ans.iter().map(|&i| shields[i]).collect();
+            self.tset("chosen", json!(chosen));
+            self.tset("phase", json!(1));
+            return Ok(None);
+        }
+        if ph == 1 {
+            let t = self.s.tasks.last().unwrap();
+            if t.get("brk_done").is_none() {
+                // ブレイクの置換の諮問: 候補なし。印だけ残す
+                let chosen = t["chosen"].clone();
+                let n = chosen.as_array().unwrap().len();
+                let t = self.s.tasks.last_mut().unwrap();
+                t["brk_list"] = chosen;
+                t["brk_i"] = json!(n);
+                t["brk_p"] = json!(0);
+                t["brk_cancelled"] = json!([]);
+                t["brk_done"] = json!(true);
+            }
+            if self.permits("s_trigger") {
+                return uns("s_trigger");
+            }
+            self.tset("declared", json!([]));
+            self.tset("phase", json!(2));
+            return Ok(None);
+        }
+        // phase 2: S・バックなし → 手札へ
+        let tk = self.s.tasks.pop().unwrap();
+        let chosen: Vec<i64> = tk["chosen"].as_array().unwrap().iter().map(|v| v.as_i64().unwrap()).filter(|&c| self.s.cards[c as usize].zone == "shield").collect();
+        let reason = tk.get("reason").and_then(|v| v.as_str()).unwrap_or("break").to_string();
+        let mut seq = vec![self.ev_task(chosen.iter().map(|&c| json!({"ev": "move", "subject": self.refv(c), "to": "hand", "reason": reason})).collect())];
+        seq.push(json!({"t": "enqueue_st", "cids": tk["declared"], "player": victim}));
+        if !chosen.is_empty() {
+            let mut ev = json!({"ev": "break", "player": victim, "count": chosen.len()});
+            let br = tk.get("breaker").cloned().unwrap_or(Value::Null);
+            if !br.is_null() && self.alive(&br) {
+                ev["subject"] = br.clone();
+                let cur = self.s.turn_counters.get("current_attack").cloned().unwrap_or(json!(0));
+                self.s.turn_counters.insert(format!("broke_in:{}", br[0].as_i64().unwrap()), cur);
+            }
+            seq.push(self.ev_task(vec![ev]));
+        }
+        self.push(seq);
         Ok(None)
     }
 
@@ -610,10 +861,6 @@ impl Engine {
                 let to = ev["to"].as_str().unwrap_or("");
                 let from = self.s.cards[cid as usize].zone.clone();
                 let reason = ev.get("reason").and_then(|v| v.as_str()).unwrap_or("");
-                if to == "mana" && from == "hand" && reason == "charge" {
-                    self.raw_move(cid, to, None);
-                    return Ok(1);
-                }
                 if to == "bz" && from == "hold" && reason == "summon" {
                     let ctl = ev["controller"].as_i64().unwrap();
                     self.raw_move(cid, to, Some(ctl));
@@ -623,9 +870,21 @@ impl Engine {
                     self.s.turn_counters.insert(k, Value::Array(l));
                     return Ok(2); // move と summon
                 }
-                uns(format!("move {}→{}", from, to))
+                if to == "bz" || from == "hold" {
+                    return uns(format!("move {}→{}", from, to));
+                }
+                // 離れる・置かれる側に能力（破壊されない・離れない等）は無いので、そのまま動く
+                self.raw_move(cid, to, None);
+                Ok(1)
             }
-            "turn_start" | "turn_end" => Ok(1),
+            "turn_start" | "turn_end" | "attack" | "block" | "battle_start" | "battle_win" | "attack_end" => Ok(1),
+            "break" => {
+                let p = ev["player"].as_i64().unwrap();
+                let k = format!("broken:{}", p);
+                let n = self.s.turn_counters.get(&k).and_then(|v| v.as_i64()).unwrap_or(0) + ev.get("count").and_then(|v| v.as_i64()).unwrap_or(0);
+                self.s.turn_counters.insert(k, json!(n));
+                Ok(1)
+            }
             other => uns(format!("event {}", other)),
         }
     }

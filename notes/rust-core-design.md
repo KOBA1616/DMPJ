@@ -52,3 +52,9 @@ Rust 版と Python 版は、同じ「エンジン疑似API」（プロセス内�
 - 通常のカード実行（h_play: 保留→コスト支払い→召喚 move→bz）、攻撃できる者がいなければ attack は pass のみ、を移植。plain の lockstep が攻撃できるクリーチャーが出るまで全手・全 digest 一致。
 - 速度（plain の約59手の対戦をパス方策で）: Python 約16 ms / Rust 約0.9 ms（fork 込み、約18倍）。Python 経由で1手ずつ JSON を往復する RustSession は 28 ms と遅い → 探索の内側は `Engine.run`（組み込み方策）や expand のように境界を跨がない形にする。
 - 次: 2-b 攻撃・戦闘・シールドブレイク・勝敗。
+
+## 段階2-b の結果（2026-11-09）
+- 攻撃・バトル・シールドブレイク・ダイレクトアタック・窓（open/close/resolve_pending）・attack_end・break 後処理を plain 範囲で移植。ランダム方策4種×20シードの完全な1局（最大約110手）が決定・digest まで一致して終局。
+- 「plain」の条件に、種族コマンド（出た時の seal_release が走る）を除外する条件を追加。lockstep が見つけた差で、段階を進めるたびに plain の定義を広げる運用が機能している。
+- 速度（plain の1局・約37手）: Python 約15 ms / Rust 約0.6 ms（約25倍、fork 込み）。
+- 次: 2-c セレクタ・式・条件・特性計算（能力を持つ札へ）。
