@@ -31,13 +31,19 @@ def registered_cards(root: Path = Path("data/decks")) -> set[str]:
     return out
 
 
-def score(c) -> float:
+def score(c, freq: dict | None = None) -> float:
+    """勝ち筋に直結する効果（山札・シールドを削る／マナを削るロック）を高く、汎用札（多くの候補に出る札）と自分の山札切れを低く見る。"""
+    import math
     opp = c.opp_delta()
-    s = 3.0 * sum(1 for k, v in opp.items() if v < 0 and k in ("deck", "shield", "mana", "hand"))
+    s = 4.0 * (opp.get("deck", 0) < 0) + 3.0 * (opp.get("shield", 0) < 0) + 2.0 * (opp.get("mana", 0) < 0)
+    s += 1.0 * (opp.get("graveyard", 0) > 0)
     s += 2.0 if c.period == "in_turn" else 0.0
     s += 1.0 if c.sure else 0.0
     s -= 0.5 * c.mana()
     s -= 1.0 if c.conditional() else 0.0
+    s -= 1.0 if c.delta().get("deck", 0) < 0 else 0.0      # 自分の山札を削る（山札切れの恐れ）
+    if freq:
+        s -= sum(0.8 * math.log10(max(1, freq.get(x, 1))) for x in c.cards)
     return s
 
 
@@ -88,12 +94,17 @@ def fast_cycles(rules) -> list:
 def candidates(rules, max_cards: int = 2, max_len: int = 2) -> list[dict]:
     known = registered_cards()
     seen, out = set(), []
-    for c in fast_cycles(rules):
+    cyc = fast_cycles(rules)
+    freq: dict = {}
+    for c in cyc:
+        for x in c.cards:
+            freq[x] = freq.get(x, 0) + 1
+    for c in cyc:
         cards = tuple(c.cards)
         if cards in seen or set(cards) <= known or any(x.startswith(("T", "R", "L")) for x in cards):
             continue
         seen.add(cards)
-        out.append({"cards": list(cards), "names": [rules.cards[x].name for x in cards], "score": score(c), "period": c.period,
+        out.append({"cards": list(cards), "names": [rules.cards[x].name for x in cards], "score": round(score(c, freq), 2), "period": c.period,
                     "sure": c.sure, "delta": c.delta(), "opp_delta": c.opp_delta(), "mana": c.mana()})
     out.sort(key=lambda d: -d["score"])
     return out
