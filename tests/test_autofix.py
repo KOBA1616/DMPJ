@@ -199,3 +199,16 @@ def test_analytic_p_cards_monotone_and_crn():
     assert p_cards(deck, need) == p_cards(deck, need)                        # 同じ乱数なので再現する
     assert p_cards(deck, {}) == 0.0
     assert abs(p_cards(deck, need, trials=20000) - (1 - (38 / 40) * (37 / 39) * (36 / 38) * (35 / 37) * (34 / 36) * (33 / 35) * (32 / 34) * (31 / 33) * (30 / 32))) < 0.02
+
+
+def test_deck_fix_resolve_setup():
+    import sys
+    sys.path.insert(0, "tools")
+    import deck_fix
+    from dmsim.defs import load_rules
+    r = load_rules()
+    sp, o = deck_fix.resolve_setup(r, {"combo": "saga", "deck_setup": "tests/saga_prep_setup.yaml"})
+    assert o == "tests/saga_prep_setup.yaml" and "p0" in sp
+    sp, o = deck_fix.resolve_setup(r, {"combo": "tenmon"})
+    assert o == "LoopSpec自動" and "deck_exact" not in sp
+    assert deck_fix.resolve_setup(r, {"combo": "nonexistent_combo"}) == (None, "冷たい開幕")
