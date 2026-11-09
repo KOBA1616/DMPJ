@@ -963,17 +963,24 @@ def _fix_evolution_type(raw: dict) -> None:
 REPAIRED: dict[str, list[str]] = {}      # 読み込み時に補った変換の不備（違反コード → カードID）。dataaudit が基準線と照らす
 
 
-def _dedupe_abilities(raw: dict) -> None:
-    """変換の重複（同じ能力が二重に入る）を除く。残すと誘発が2回起き、パワー修整が二重にかかる。"""
-    abs_ = raw.get("abilities")
-    if not abs_:
-        return
+def dedupe_list(abs_: list) -> list:
+    """完全に同じ能力の2つ目以降を除く（順序は保つ）。変換器（convert_cards.validate / merge_split）と読み込みの両方が使う。"""
     seen, out = set(), []
     for ab in abs_:
         k = repr(sorted(ab.items(), key=lambda kv: kv[0])) if isinstance(ab, dict) else repr(ab)
         if k not in seen:
             seen.add(k)
             out.append(ab)
+    return out
+
+
+def _dedupe_abilities(raw: dict) -> None:
+    """変換の重複（同じ能力が二重に入る）を除く。残すと誘発が2回起き、パワー修整が二重にかかる。
+    変換器側でも除いている（validate）ので、ここで直すのは古い変換結果だけ。直したら REPAIRED に記録して監査が数える。"""
+    abs_ = raw.get("abilities")
+    if not abs_:
+        return
+    out = dedupe_list(abs_)
     if len(out) != len(abs_):
         raw["abilities"] = out
         REPAIRED.setdefault("duplicate_ability", []).append(str(raw.get("id")))

@@ -44,3 +44,25 @@ def test_audit_counts_structural_fields_and_twin_faces(monkeypatch):
     assert not found.get("text_but_no_effect"), found.get("text_but_no_effect")
     assert not audit_cards.load_baseline().get("text_but_no_effect")
     assert r.cards["dm26rp3-069"].faces                      # ツインパクトの呪文側が落ちていない
+
+
+def test_converter_validate_dedupes_abilities():
+    """変換器の入口（validate）で同じ能力の二重化を除く。元データ88枚の重複の再発防止。"""
+    import convert_cards as cc
+    from dmsim.defs import load_tables
+    ab = {"kind": "static", "affects": "self", "mod": {"power_when": {"amount": 3000, "when": "attacking"}}}
+    raw = {"id": "dup-1", "name": "重複", "types": ["creature"], "civs": ["fire"], "cost": 3, "power": 3000,
+           "abilities": [ab, dict(ab)]}
+    out = cc.validate(raw, {"id": "dup-1", "name": "重複"}, load_tables())
+    assert len(out["abilities"]) == 1
+    card = cc.merge_split({"abilities": [dict(ab)]}, {"text": "x"}, ([], "", [dict(ab)]))
+    assert len(card["abilities"]) == 1
+
+
+def test_no_duplicate_abilities_in_converted_data(monkeypatch):
+    import dmsim.defs as defs
+    monkeypatch.setattr(defs, "REPAIRED", {})       # 他のテストが記録した読み込み時の修復を持ち込まない
+    monkeypatch.delenv("DMSIM_SKIP_CONVERTED", raising=False)
+    from dmsim.dataaudit import audit_rules
+    from dmsim.defs import load_rules
+    assert not audit_rules(load_rules()).get("duplicate_ability")
