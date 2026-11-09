@@ -51,6 +51,10 @@ def run_batch(a, combos):
         import deck_fix                                   # 同じ tools/ にある。cards 段階の記録があるコンボだけ回る
         deck_fix.main(["--targets", a.targets, "--stage-from", a.out, "--seeds", str(a.seeds), "--turns", str(a.turns),
                        "--workers", str(a.workers), "--cands", "6", "--time-budget", str(a.deck_fix_budget)])
+    if a.tune_seconds:
+        import auto_tune                                  # 進化戦略のノブ探索。採用は再確認シードで再現した時だけ（docs/autotune.md）
+        auto_tune.main(["--targets", a.targets, "--seeds", str(a.seeds), "--turns", str(a.turns), "--workers", str(a.workers),
+                        "--seconds", str(a.tune_seconds), "--store", a.store] + (["--out", a.out.replace(".jsonl", "") + "_tune.jsonl"] if a.out else []))
 
 
 def main(argv=None):
@@ -69,6 +73,7 @@ def main(argv=None):
     ap.add_argument("--workers", type=int, default=1, help="並列プロセス数（seeds を分けて回す。CPU数まで）")
     ap.add_argument("--deck-fix", action="store_true", help="終了後、cards 段階の記録があれば tools/deck_fix.py --stage-from を続けて回す（--out 必須）")
     ap.add_argument("--deck-fix-budget", type=int, default=5400, help="--deck-fix の時間予算（秒）。対象ごとの候補数と粗比較の局数を自動配分し、前回途中のデッキを優先する（既定 90分）")
+    ap.add_argument("--tune-seconds", type=int, default=0, help="0以外なら、終了後に tools/auto_tune.py をこの秒数の予算で続けて回す（--targets 指定時）。既定は無効")
     ap.add_argument("--out")
     a = ap.parse_args(argv)
     combos = {c["id"]: c for c in yaml.safe_load(Path("data/known_combos/combos.yaml").read_text(encoding="utf-8"))["combos"]}
