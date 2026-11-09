@@ -7,6 +7,7 @@ from __future__ import annotations
 
 import copy
 import os
+import re
 from dataclasses import dataclass, field
 from pathlib import Path
 
@@ -813,6 +814,16 @@ def card_yaml_files() -> list[Path]:
     return [f for f in card_files() if not (skip and (f.name == "converted.yaml" or f.parent.name == "converted"))]
 
 
+def _fix_evolution_type(raw: dict) -> None:
+    """カードテキストに「進化：／進化-」の行があり evolve_from もあるのに types に evolution が無い札（変換漏れ）を補う。
+    抜けるとエンジンが進化元なしで出せてしまい、強いカードが過大評価される。"""
+    types = raw.get("types") or []
+    if "evolution" in types or raw.get("neo") or raw.get("grave_evo") or raw.get("s_max") or not raw.get("evolve_from"):
+        return
+    if any(re.match(r"(スター)?進化[：:\-－ー―]", ln.lstrip()) for ln in str(raw.get("text") or "").splitlines()):
+        raw["types"] = list(types) + ["evolution"]
+
+
 def load_rules(card_files: list[Path] | None = None, only_approved: bool | None = None) -> Rules:
     """only_approved: 承認済みのカードだけ読む（converted.yaml の未確認分を除く）。省略時は環境変数 DMSIM_ONLY_APPROVED=1 に従う。"""
     tables = load_tables()
@@ -828,6 +839,7 @@ def load_rules(card_files: list[Path] | None = None, only_approved: bool | None 
         for raw in yaml.load(Path(f).read_text(encoding="utf-8"), Loader=_YamlLoader).get("cards") or []:
             if only_approved and not approval.is_usable(raw, ledger, versions):
                 continue
+            _fix_evolution_type(raw)
             cd = parse_card(raw, tables)
             if cd.id in cards:
                 raise DefError(f"duplicate card id {cd.id}")
