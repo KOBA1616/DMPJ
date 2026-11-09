@@ -204,3 +204,7 @@ schtasks /Create /SC MINUTE /MO 5 /TN "dmpj-worker" /TR C:\path\DMPJ\tools\run_w
 - `enqueue convert --target cloud --order newest` のように投入できる。
 - `pack: N`（`auto_convert.py --pack N`、`convert_cards.py --pack N`）: N枚を1回の呼び出しでまとめて変換する（既定1＝1枚ずつ）。指示文を共有してトークンを減らす。検査に落ちた分・応答に無かった分は単独で呼び直す。精度は `tools/eval_convert.py` で単独と比べてから使う。
 - クラウドのエージェントに回させる手順は docs/cloud-worker.md。
+
+## 自動マージの条件
+自動マージ（自動ループ含む）は、GitHub Actions の `tests` ワークフロー（全体テスト `pytest tests`）が成功してから行う。失敗したままマージしない。
+失敗時の自動検知: `tests` が落ちると、PR にはコメント、main では Issue（label `tests-failing`、1件に集約）に失敗したテスト名と原因の抜粋が残る。自動ループはこれを読んで修正 PR を作り、`tests` が成功するまでマージしない。main が通れば Issue は自動で閉じる。

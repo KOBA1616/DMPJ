@@ -92,3 +92,19 @@ def update(hist: dict, name: str, res: dict, cands: int, cs: int, now: float, co
     """two_stage の結果で履歴を更新する。途中で終わった時は complete=False のままにして次回優先にする。"""
     hist[name] = {"sec": float(res.get("sec", 0.0)), "cands": int(res.get("evaluated", cands)) or cands, "coarse_seeds": cs,
                   "complete": bool(res.get("complete", True)), "last_run": now, "coarse_budget": coarse_budget}
+
+
+TUNE_SHARE = 0.35        # 日次の残り時間のうち自動チューナーに回す割合（残りは deck_fix）
+MIN_PHASE_SEC = 300      # これ未満の枠は回さない
+
+
+def split_remaining(total: float, elapsed: float, want_deck_fix: bool = True, want_tune: bool = True) -> tuple[int, int]:
+    """日次の総枠(total秒)から、診断ループに使った時間(elapsed)を引いた残りを deck_fix と tune に配る。(deck_fix秒, tune秒) を返す。
+    片方が不要なら残りは全部もう片方へ。枠が MIN_PHASE_SEC に満たない側は 0（次回へ）。"""
+    rest = max(0.0, total * SAFETY - elapsed)
+    if want_deck_fix and want_tune:
+        tune = rest * TUNE_SHARE
+        fix = rest - tune
+    else:
+        fix, tune = (rest, 0.0) if want_deck_fix else (0.0, rest if want_tune else 0.0)
+    return (int(fix) if fix >= MIN_PHASE_SEC else 0, int(tune) if tune >= MIN_PHASE_SEC else 0)

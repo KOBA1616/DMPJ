@@ -223,3 +223,11 @@ def test_parts_setup_from_combo_table(rules):
     sp = parts_setup(rules, combo, deck)
     assert sp["p0"]["hand"][0] == key and len(sp["p0"]["mana"]) == 5 and key not in sp["p0"]["mana"]
     assert parts_setup(rules, combo, ["T001"] * 40) is None
+
+
+def test_split_remaining():
+    from dmsim.deckplan import budget as B
+    fix, tune = B.split_remaining(6000, 600)
+    assert fix > tune > 0 and fix + tune <= 6000 * B.SAFETY - 600
+    assert B.split_remaining(6000, 6000) == (0, 0)
+    assert B.split_remaining(6000, 600, want_deck_fix=False)[0] == 0
