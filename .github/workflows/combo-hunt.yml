@@ -43,7 +43,7 @@ jobs:
           gh workflow run tests.yml --ref "$b"
           sleep 30
           for i in $(seq 1 60); do
-            run=$(gh run list --workflow tests.yml --branch "$b" --limit 1 --json databaseId,status,conclusion -q '.[0]')
+            run=$(gh run list --workflow tests.yml --branch "$b" --event workflow_dispatch --limit 1 --json databaseId,status,conclusion -q '.[0]')
             st=$(echo "$run" | python3 -c 'import sys,json; d=json.loads(sys.stdin.read() or "{}"); print(d.get("status",""), d.get("conclusion",""))')
             case "$st" in
               "completed success") gh pr merge "$pr" --squash --delete-branch; exit 0 ;;
