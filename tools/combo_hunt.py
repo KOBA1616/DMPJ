@@ -16,7 +16,7 @@ import yaml
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 from dmsim.defs import load_rules  # noqa: E402
 from dmsim.solitaire import measure  # noqa: E402
-from dmsim.zone_graph import find_cycles  # noqa: E402
+from dmsim.zone_graph import Cycle, bundles_of, feeds  # noqa: E402
 
 REGISTERED = ("tenmon", "saga", "knight_dmc", "akashic")
 
@@ -58,10 +58,37 @@ def build_deck(rules, cards: list[str], rng: random.Random, size: int = 40) -> l
     return deck
 
 
-def candidates(rules, max_cards: int, max_len: int) -> list[dict]:
+def fast_cycles(rules) -> list:
+    """長さ1〜2の循環（自己ループと2枚の相互受け渡し）だけを、前提で絞ってから調べる。全組を総当たりしないのでメモリも時間も小さい。"""
+    bs = bundles_of(rules)
+    by_to: dict = {}      # 前提の種類・行き先ごとの受け手
+    for j, b in enumerate(bs):
+        p = b.prem
+        if p is not None:
+            by_to.setdefault((p.kind, p.to if p.kind == "move" else None), []).append(j)
+    succ: dict = {}
+    for i, a in enumerate(bs):
+        keys = {("move", m.dst) for m in a.moves} | {("draw", None), ("cast", None)}
+        cand = {j for k, js in by_to.items() if k in keys or k[0] not in ("move", "draw", "cast") for j in js}
+        succ[i] = {j: v for j in cand if (v := feeds(a, bs[j], rules))}
+    out, seen = [], set()
+    for i in range(len(bs)):
+        for j, v in succ[i].items():
+            if j < i or (j != i and i not in succ.get(j, {})):
+                continue
+            key = (i, j)
+            if key in seen:
+                continue
+            seen.add(key)
+            path = [bs[i]] if i == j else [bs[i], bs[j]]
+            out.append(Cycle(path, v == 2 and (i == j or succ[j][i] == 2)))
+    return out
+
+
+def candidates(rules, max_cards: int = 2, max_len: int = 2) -> list[dict]:
     known = registered_cards()
     seen, out = set(), []
-    for c in find_cycles(rules, max_cards, max_len):
+    for c in fast_cycles(rules):
         cards = tuple(c.cards)
         if cards in seen or set(cards) <= known or any(x.startswith(("T", "R", "L")) for x in cards):
             continue
@@ -102,7 +129,15 @@ def main(argv=None):
     done = set()
     if out.exists():
         done = {tuple(json.loads(l)["cards"]) for l in out.read_text(encoding="utf-8").splitlines() if l.strip()}
-    todo = [c for c in cands if tuple(c["cards"]) not in done][:a.top]
+    todo, used = [], {}      # 同じ札ばかりの候補に偏らないよう、1枚につき最大2組まで
+    for c in cands:
+        if tuple(c["cards"]) in done or any(used.get(x, 0) >= 2 for x in c["cards"]):
+            continue
+        for x in c["cards"]:
+            used[x] = used.get(x, 0) + 1
+        todo.append(c)
+        if len(todo) >= a.top:
+            break
     if a.list_only:
         for c in todo:
             print(f"{c['score']:5.1f} {' + '.join(c['names'])} [{c['period']}] 相手={c['opp_delta']} マナ={c['mana']}")

@@ -270,8 +270,9 @@ class Cycle:
             for m in b.moves:
                 if m.owner == "opp":
                     continue
-                d[m.src] = d.get(m.src, 0) - 1
-                d[m.dst] = d.get(m.dst, 0) + 1
+                s, e = (m.src if isinstance(m.src, str) else "/".join(map(str, m.src))), (m.dst if isinstance(m.dst, str) else "/".join(map(str, m.dst)))
+                d[s] = d.get(s, 0) - 1
+                d[e] = d.get(e, 0) + 1
         return {k: v for k, v in d.items() if v}
 
     def opp_delta(self) -> dict[str, int]:
@@ -280,8 +281,9 @@ class Cycle:
         for b in self.bundles:
             for m in b.moves:
                 if m.owner == "opp":
-                    d[m.src] = d.get(m.src, 0) - 1
-                    d[m.dst] = d.get(m.dst, 0) + 1
+                    s, e = (m.src if isinstance(m.src, str) else "/".join(map(str, m.src))), (m.dst if isinstance(m.dst, str) else "/".join(map(str, m.dst)))
+                    d[s] = d.get(s, 0) - 1
+                    d[e] = d.get(e, 0) + 1
         return {k: v for k, v in d.items() if v}
 
     def conditional(self) -> bool:
