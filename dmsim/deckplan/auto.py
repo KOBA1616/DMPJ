@@ -98,6 +98,24 @@ def two_stage(rules, deck_ids: list[str], opp_ids: list[str], combo: dict, seeds
                 record(ledger, {"stage": "skip", "cand": cand.plan_id(), "change": ch.ops, "why": st["issues"] or "unverified"})
                 continue
             cands.append((ch, cand))
+    # 解析的な見積もり（エンジンなし）で cards 段階の到達率が高い順に並べ、時間切れでも有望な案から評価する。
+    # 上位の改善案を束ねた複数枚の変更も候補に足す（1枚の差は粗比較の局数では見えにくい）
+    from .analytic import p_cards
+    need = prog.cards
+    pb = p_cards(ids_of(base, resolver), need)
+    scored = sorted(((p_cards(ids_of(cand, resolver), need) - pb, ch, cand) for ch, cand in cands), key=lambda x: -x[0])
+    bundle, applied = base, []
+    for g, ch, _ in scored:
+        if g <= 0 or len(applied) >= 3:
+            break
+        try:
+            bundle = C.apply(bundle, ch); applied.append(ch)
+        except ValueError:
+            continue
+    if len(applied) >= 2:
+        scored.insert(0, (p_cards(ids_of(bundle, resolver), need) - pb, C.Change("bundle", [op for c in applied for op in c.ops], "解析上位の改善を束ねる"), bundle))
+    cands = [(ch, cand) for _, ch, cand in scored]
+    record(ledger, {"stage": "analytic", "p_base": pb, "top": [(round(g, 4), ch.reason) for g, ch, _ in scored[:5]]})
     t0 = time.time()
     cbase = coarse(ids_of(base, resolver))
     ranked, evaluated = [], 0
