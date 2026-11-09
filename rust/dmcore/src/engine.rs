@@ -55,9 +55,25 @@ impl Engine {
     fn def(&self, cid: i64) -> &crate::rules::CardDef {
         &self.rules.cards[&self.s.cards[cid as usize].defn]
     }
-    /// plain なカードの permits は既定値（許可・禁止の修整は無い）
-    fn permits(&self, action: &str) -> bool {
+    /// 101.2: 禁止 → 許可 → 既定値。自分自身への常在型はバトルゾーンにある間だけ働く
+    fn permits(&self, cid: i64, action: &str) -> bool {
+        if self.s.cards[cid as usize].zone == "bz" {
+            let d = self.def(cid);
+            if d.deny.iter().any(|x| x == action) {
+                return false;
+            }
+            if d.allow.iter().any(|x| x == action) {
+                return true;
+            }
+        }
         *self.rules.actions.get(action).unwrap_or(&false)
+    }
+    /// バトルゾーンにある間のブレイク数の候補（509.2c）。能力が無ければ [1]
+    fn break_opts(&self, cid: i64) -> Vec<i64> {
+        let mut v: Vec<i64> = self.def(cid).breaks.clone();
+        v.sort();
+        v.dedup();
+        if v.is_empty() { vec![1] } else { v }
     }
     fn bz_tops(&self, controller: Option<i64>) -> Vec<i64> {
         self.s.zones["bz"][0]
@@ -131,6 +147,17 @@ impl Engine {
                     self.s.tasks.pop();
                     if !self.s.pending.is_empty() {
                         return uns("resolve_pending");
+                    }
+                    None
+                }
+                "slayer" => {
+                    let t = self.s.tasks.pop().unwrap();
+                    let evs: Vec<Value> = t["pairs"].as_array().unwrap().iter()
+                        .map(|p| p[1].clone()).filter(|o| self.alive(o))
+                        .map(|o| json!({"ev": "move", "subject": o, "to": "graveyard", "reason": "destroy"})).collect();
+                    if !evs.is_empty() {
+                        let e = self.ev_task(evs);
+                        self.push(vec![e]);
                     }
                     None
                 }
@@ -253,9 +280,12 @@ impl Engine {
     fn st_start(&mut self) -> R<Option<Value>> {
         let a = self.s.active;
         for c in self.zl("bz", a).clone() {
-            self.s.cards[c as usize].hyper = false;
+            if self.s.cards[c as usize].controller == a {
+                self.s.cards[c as usize].hyper = false;
+            }
         }
         self.s.steps_this_turn = 0;
+        self.s.prev_counters = self.s.turn_counters.clone();
         self.s.turn_counters = Map::new();
         // 継続的効果・遅延効果の期限切れ（plain の対戦では空）
         if !self.s.continuous.is_empty() || !self.s.delayed.is_empty() {
@@ -271,7 +301,7 @@ impl Engine {
         let untap: Vec<Value> = zs
             .iter()
             .copied()
-            .filter(|&c| self.s.cards[c as usize].tapped && self.permits("untap_at_start") && !frozen.contains(&c))
+            .filter(|&c| self.s.cards[c as usize].tapped && self.permits(c, "untap_at_start") && !frozen.contains(&c))
             .map(|c| json!({"ev": "untap", "subject": self.refv(c)}))
             .collect();
         self.step_done();
@@ -358,7 +388,7 @@ impl Engine {
             self.s.tasks.pop();
             return Ok(None);
         }
-        if !self.permits("summon") || !self.permits("enter_bz") {
+        if !self.permits(cid, "summon") || !self.permits(cid, "enter_bz") {
             self.s.tasks.pop();
             return Ok(None);
         }
@@ -433,7 +463,7 @@ impl Engine {
     }
 
     fn can_play(&self, cid: i64, p: i64) -> bool {
-        if !self.permits("summon") || !self.permits("enter_bz") {
+        if !self.permits(cid, "summon") || !self.permits(cid, "enter_bz") {
             return false;
         }
         !self.mana_choices(cid, p, None, 1).is_empty()
@@ -445,15 +475,15 @@ impl Engine {
         let mut opts: Vec<Value> = vec![];
         for c in self.bz_tops(Some(a)) {
             let k = &self.s.cards[c as usize];
-            if k.tapped || k.entered_turn == turn {
+            if k.tapped || (k.entered_turn == turn && !self.permits(c, "attack_summoning_sick")) {
                 continue;
             }
             let dfn = k.defn.clone();
-            if self.permits("attack_player") {
+            if self.permits(c, "attack_player") {
                 opts.push(json!({"key": format!("attack:{}:player", dfn), "cid": c, "target": "player"}));
             }
             for tc in self.bz_tops(Some(1 - a)) {
-                if self.s.cards[tc as usize].tapped && self.permits("attack_creature") && self.permits("be_attacked") {
+                if self.s.cards[tc as usize].tapped && self.permits(c, "attack_creature") && self.permits(tc, "be_attacked") {
                     opts.push(json!({"key": format!("attack:{}:{}", dfn, self.s.cards[tc as usize].defn), "cid": c, "target": self.refv(tc)}));
                 }
             }
@@ -527,11 +557,41 @@ impl Engine {
             return Ok(None);
         }
         if ph == 2 {
-            // ブロック: block / guardman の許可は plain には無い → 選択肢は no_block だけ（自動）
-            if self.permits("block") || self.permits("guardman") {
-                return uns("block");
+            // 507 ブロッククリーチャー指定
+            let attc = att[0].as_i64().unwrap();
+            let blockers: Vec<i64> = self.bz_tops(Some(1 - a)).into_iter().filter(|&c| {
+                !self.s.cards[c as usize].tapped && self.permits(c, "block") && self.permits(attc, "be_blocked")
+                    && json!([c, self.s.cards[c as usize].gen]) != target
+            }).collect();
+            let guards: Vec<i64> = if target == json!("player") { vec![] } else {
+                self.bz_tops(Some(1 - a)).into_iter().filter(|&c| {
+                    !self.s.cards[c as usize].tapped && json!([c, self.s.cards[c as usize].gen]) != target && self.permits(c, "guardman")
+                }).collect()
+            };
+            let mut opts: Vec<Value> = blockers.iter().map(|&c| self.card_option(c, None)).collect();
+            for &c in &guards {
+                opts.push(self.card_option(c, Some(format!("guard:{}", self.s.cards[c as usize].defn))));
             }
+            opts.push(json!({"key": "no_block"}));
+            let ans = match self.ask(1 - a, "block", opts.clone(), 1, 1) {
+                Ask::Decision(d) => return Ok(Some(d)),
+                Ask::Answer(x) => x,
+            };
             self.tset("phase", json!(3));
+            let o = opts[ans[0]].clone();
+            if o["key"] != json!("no_block") {
+                let c = o["cid"].as_i64().unwrap();
+                self.s.cards[c as usize].tapped = true;
+                let r = self.refv(c);
+                self.tset("target", r.clone());
+                if o["key"].as_str().unwrap().starts_with("guard:") {
+                    return Ok(None);
+                }
+                self.tset("blocked", json!(true));
+                let rec = json!({"ev": "block", "subject": r, "attacker": att, "controller": 1 - a});
+                let e = self.ev_task(vec![rec.clone()]);
+                self.push(vec![e, Self::decl(a, "block", &rec), Self::decl(1 - a, "block", &rec)]);
+            }
             return Ok(None);
         }
         if ph == 3 {
@@ -549,11 +609,23 @@ impl Engine {
             return Ok(None);
         }
         if ph == 4 {
-            // 509 ダイレクトアタック（ブレイカーの選択は plain では 1 つだけ＝自動）
+            // 509 ダイレクトアタック: 複数のブレイカー能力ならどれを使うか選ぶ
+            let mut n = 1;
+            if target == json!("player") && !self.zl("shield", 1 - a).is_empty() {
+                let counts = self.break_opts(att[0].as_i64().unwrap());
+                let opts: Vec<Value> = counts.iter().map(|n| json!({"key": format!("breaks:{}", n)})).collect();
+                let ans = match self.ask(a, "choose_breaker", opts, 1, 1) {
+                    Ask::Decision(d) => return Ok(Some(d)),
+                    Ask::Answer(x) => x,
+                };
+                n = counts[ans[0]];
+            }
             self.tset("phase", json!(5));
             if target == json!("player") {
                 if !self.zl("shield", 1 - a).is_empty() {
-                    self.push(vec![json!({"t": "break", "victim": 1 - a, "by": a, "count": 1, "phase": 0, "in_effect": false, "breaker": att})]);
+                    if n > 0 {
+                        self.push(vec![json!({"t": "break", "victim": 1 - a, "by": a, "count": n, "phase": 0, "in_effect": false, "breaker": att})]);
+                    }
                 } else {
                     self.game_lose(1 - a, "direct_attack");
                 }
@@ -565,7 +637,7 @@ impl Engine {
             self.tset("end_fired", json!(true));
             let ano = self.s.tasks.last().unwrap().get("ano").cloned().unwrap_or(Value::Null);
             let broke = self.s.turn_counters.get(&format!("broke_in:{}", att[0].as_i64().unwrap())).cloned() == Some(ano);
-            let e = self.ev_task(vec![json!({"ev": "attack_end", "subject": att, "target": target, "controller": a, "broke": broke})]);
+            let e = self.ev_task(vec![json!({"ev": "attack_end", "subject": att, "target": target, "controller": a, "broke": broke, "blocked": self.s.tasks.last().unwrap().get("blocked").and_then(|v| v.as_bool()).unwrap_or(false)})]);
             self.push(vec![e]);
             return Ok(None);
         }
@@ -593,6 +665,11 @@ impl Engine {
         if py <= px {
             losers.push(y);
         }
+        let slay: Vec<Value> = losers
+            .iter()
+            .filter(|r| self.permits(r[0].as_i64().unwrap(), "slayer"))
+            .map(|r| json!([r, if *r == x { y } else { x }]))
+            .collect();
         let mut evs: Vec<Value> = losers
             .iter()
             .map(|r| json!({"ev": "move", "subject": r, "to": "graveyard", "reason": "destroy", "battle": true}))
@@ -604,9 +681,24 @@ impl Engine {
             }
         }
         let e = self.ev_task(evs);
-        let ts = self.window(vec![e]);
+        let mut ts = self.window(vec![e]);
+        if !slay.is_empty() {
+            ts.extend(self.window(vec![json!({"t": "slayer", "pairs": slay})]));
+        }
+        let (cx, cy) = (self.s.cards[xc as usize].controller, self.s.cards[yc as usize].controller);
+        ts.push(self.ev_task(vec![
+            json!({"ev": "battle_end", "subject": x, "opponent": y, "controller": cx}),
+            json!({"ev": "battle_end", "subject": y, "opponent": x, "controller": cy}),
+        ]));
         self.push(ts);
         Ok(())
+    }
+
+    fn card_option(&self, cid: i64, key: Option<String>) -> Value {
+        let c = &self.s.cards[cid as usize];
+        let hidden = c.zone == "shield" || c.zone == "deck";
+        let k = key.unwrap_or_else(|| if hidden { c.zone.clone() } else { format!("{}:{}:{}", c.zone, c.defn, c.tapped as i32) });
+        json!({"cid": cid, "key": k, "name": if hidden { "?".to_string() } else { self.def(cid).name.clone() }})
     }
 
     /// ブレイク（509.3〜509.5）。置換・S・トリガー・S・バックは能力を持つカードだけなので plain では空振り
@@ -641,7 +733,8 @@ impl Engine {
                 t["brk_cancelled"] = json!([]);
                 t["brk_done"] = json!(true);
             }
-            if self.permits("s_trigger") {
+            let ch: Vec<i64> = self.s.tasks.last().unwrap()["chosen"].as_array().unwrap().iter().map(|v| v.as_i64().unwrap()).collect();
+            if ch.iter().any(|&c| self.permits(c, "s_trigger")) {
                 return uns("s_trigger");
             }
             self.tset("declared", json!([]));
@@ -811,27 +904,113 @@ impl Engine {
         if !evs.is_empty() && !evs.iter().any(|e| e.get("sba").and_then(|v| v.as_bool()).unwrap_or(false)) {
             self.s.sba_held.clear();
         }
-        let mut records = 0usize;
+        let mut records: Vec<Value> = vec![];
         for ev in &evs {
-            records += self.apply_one(ev)?;
+            records.extend(self.apply_one(ev)?);
         }
+        for r in &records {
+            if r["ev"] == json!("break") {
+                let k = format!("broken:{}", r["player"].as_i64().unwrap());
+                let n = self.s.turn_counters.get(&k).and_then(|v| v.as_i64()).unwrap_or(0) + r.get("count").and_then(|v| v.as_i64()).unwrap_or(0);
+                self.s.turn_counters.insert(k, json!(n));
+            }
+        }
+        self.record_history(&records);
         self.sba()?;
-        // 誘発の収集: plain では誘発しないが、イベントごとに通し番号が進む
-        for _ in 0..records {
-            self.s.ev_seq += 1;
-        }
+        // 誘発の収集: 能力を持つ札が無いので何も誘発しないが、レコードごとに通し番号が進む
+        self.s.ev_seq += records.len() as i64;
         Ok(())
     }
 
-    /// 適用して、生まれたレコードの数を返す
-    fn apply_one(&mut self, ev: &Value) -> R<usize> {
+    fn hist_bump(&mut self, kind: &str, player: i64, n: i64) {
+        let k = format!("hist:{}:{}", kind, player);
+        let v = self.s.turn_counters.get(&k).and_then(|v| v.as_i64()).unwrap_or(0) + n;
+        self.s.turn_counters.insert(k, json!(v));
+    }
+
+    fn push_list(&mut self, k: String, v: i64) {
+        let mut l = self.s.turn_counters.get(&k).and_then(|v| v.as_array().cloned()).unwrap_or_default();
+        l.push(json!(v));
+        self.s.turn_counters.insert(k, Value::Array(l));
+    }
+
+    /// 履歴カウンタ（Python 版 _record_history。ここで扱うのは plain の対戦で起きる種類だけ）
+    fn record_history(&mut self, records: &[Value]) {
+        for rec in records {
+            match rec["ev"].as_str().unwrap_or("") {
+                "move" => {
+                    let ctrl = if rec["lki"].is_null() { rec["controller"].as_i64().unwrap() } else { rec["lki"]["controller"].as_i64().unwrap() };
+                    let rc = rec["controller"].as_i64().unwrap();
+                    let (frm, to) = (rec["from"].as_str().unwrap_or(""), rec["to"].as_str().unwrap_or(""));
+                    if to == "shield" {
+                        self.hist_bump("shield_put", rc, 1);
+                    }
+                    if frm == "shield" && to != "shield" {
+                        self.hist_bump("shield_left", ctrl, 1);
+                    }
+                    if to == "mana" {
+                        self.hist_bump("mana_put", rc, 1);
+                    }
+                    if to == "bz" {
+                        self.hist_bump("enter", rc, 1);
+                        if rec.get("unpaid").and_then(|v| v.as_bool()).unwrap_or(false) {
+                            self.hist_bump("enter_unpaid", rc, 1);
+                        }
+                    }
+                    if frm == "bz" && to != "bz" {
+                        self.hist_bump("leave", ctrl, 1);
+                        if to == "graveyard" && rec["reason"] == json!("destroy") {
+                            self.hist_bump("destroyed", ctrl, 1);
+                        }
+                    }
+                    if to == "graveyard" && rec["reason"] == json!("discard") {
+                        self.hist_bump("discard", ctrl, 1);
+                    }
+                }
+                "summon" => self.hist_bump("summon", rec["controller"].as_i64().unwrap(), 1),
+                "draw" => self.hist_bump("draw", rec["player"].as_i64().unwrap(), 1),
+                "break" => {
+                    let cnt = rec.get("count").and_then(|v| v.as_i64()).unwrap_or(1);
+                    self.hist_bump("broken", rec["player"].as_i64().unwrap(), cnt);
+                    if let Some(s) = rec.get("subject") {
+                        if !s.is_null() {
+                            let k = format!("hist:broke_by:{}", s[0].as_i64().unwrap());
+                            let v = self.s.turn_counters.get(&k).and_then(|v| v.as_i64()).unwrap_or(0) + cnt;
+                            self.s.turn_counters.insert(k, json!(v));
+                        }
+                    }
+                }
+                "attack" => {
+                    let a = rec["controller"].as_i64().unwrap();
+                    let att = rec["subject"][0].as_i64().unwrap();
+                    self.hist_bump("attack", a, 1);
+                    self.push_list(format!("hist:attackers:{}", a), att);
+                    let k = format!("hist:attack_by:{}", att);
+                    let v = self.s.turn_counters.get(&k).and_then(|v| v.as_i64()).unwrap_or(0) + 1;
+                    self.s.turn_counters.insert(k, json!(v));
+                    if let Some(tg) = rec["target"].as_array() {
+                        let k2 = format!("hist:attack_on:{}", tg[0].as_i64().unwrap());
+                        let v = self.s.turn_counters.get(&k2).and_then(|v| v.as_i64()).unwrap_or(0) + 1;
+                        self.s.turn_counters.insert(k2, json!(v));
+                    }
+                }
+                "block" => self.hist_bump("block", rec["controller"].as_i64().unwrap(), 1),
+                "tap" => self.hist_bump("tap", rec["controller"].as_i64().unwrap(), 1),
+                "untap" => self.hist_bump("untap", rec["controller"].as_i64().unwrap(), 1),
+                _ => {}
+            }
+        }
+    }
+
+    /// 適用して、生まれたレコードを返す
+    fn apply_one(&mut self, ev: &Value) -> R<Vec<Value>> {
         let kind = ev["ev"].as_str().unwrap_or("");
         match kind {
             "draw" => {
                 let p = ev["player"].as_i64().unwrap();
                 let deck = &self.s.zones["deck"][p as usize];
                 if deck.is_empty() {
-                    return Ok(0);
+                    return Ok(vec![]);
                 }
                 let cid = deck[0];
                 self.raw_move(cid, "hand", None);
@@ -839,51 +1018,55 @@ impl Engine {
                 let k = format!("drew:{}", p);
                 let n = self.s.turn_counters.get(&k).and_then(|v| v.as_i64()).unwrap_or(0) + 1;
                 self.s.turn_counters.insert(k, json!(n));
-                Ok(2)
+                let r = self.refv(cid);
+                Ok(vec![
+                    json!({"ev": "draw", "player": p, "subject": r}),
+                    json!({"ev": "move", "subject": r, "lki": null, "from": "deck", "to": "hand", "reason": "draw", "controller": p}),
+                ])
             }
             "tap" | "untap" => {
                 if !self.alive(&ev["subject"]) {
-                    return Ok(0);
+                    return Ok(vec![]);
                 }
                 let cid = ev["subject"][0].as_i64().unwrap();
                 let c = &mut self.s.cards[cid as usize];
                 if c.tapped == (kind == "tap") {
-                    return Ok(0);
+                    return Ok(vec![]);
                 }
                 c.tapped = kind == "tap";
-                Ok(1)
+                Ok(vec![json!({"ev": kind, "subject": ev["subject"], "controller": c.controller})])
             }
             "move" => {
                 if !self.alive(&ev["subject"]) {
-                    return Ok(0);
+                    return Ok(vec![]);
                 }
                 let cid = ev["subject"][0].as_i64().unwrap();
                 let to = ev["to"].as_str().unwrap_or("");
-                let from = self.s.cards[cid as usize].zone.clone();
+                let czone = self.s.cards[cid as usize].zone.clone();
+                let from = if czone == "hold" { ev["from"].as_str().unwrap_or("").to_string() } else { czone.clone() };
                 let reason = ev.get("reason").and_then(|v| v.as_str()).unwrap_or("");
-                if to == "bz" && from == "hold" && reason == "summon" {
-                    let ctl = ev["controller"].as_i64().unwrap();
-                    self.raw_move(cid, to, Some(ctl));
-                    let k = format!("entered:{}", ctl);
-                    let mut l = self.s.turn_counters.get(&k).and_then(|v| v.as_array().cloned()).unwrap_or_default();
-                    l.push(json!(cid));
-                    self.s.turn_counters.insert(k, Value::Array(l));
-                    return Ok(2); // move と summon
-                }
-                if to == "bz" || from == "hold" {
+                let ctl_before = self.s.cards[cid as usize].controller;
+                let summon_hold = to == "bz" && czone == "hold" && reason == "summon";
+                if (to == "bz" && !summon_hold) || (czone == "hold" && !summon_hold) {
                     return uns(format!("move {}→{}", from, to));
                 }
-                // 離れる・置かれる側に能力（破壊されない・離れない等）は無いので、そのまま動く
-                self.raw_move(cid, to, None);
-                Ok(1)
+                let ctl = if summon_hold { Some(ev["controller"].as_i64().unwrap()) } else { None };
+                self.raw_move(cid, to, ctl);
+                let after = self.s.cards[cid as usize].controller;
+                let mut out = vec![json!({"ev": "move", "subject": self.refv(cid), "lki": {"controller": ctl_before}, "from": from, "to": to,
+                    "reason": reason, "controller": after})];
+                if ev.get("unpaid").and_then(|v| v.as_bool()).unwrap_or(false) {
+                    out[0]["unpaid"] = json!(true);
+                }
+                if summon_hold {
+                    self.push_list(format!("entered:{}", after), cid);
+                    out.push(json!({"ev": "summon", "subject": self.refv(cid), "controller": after, "player": after,
+                        "unpaid": ev.get("unpaid").and_then(|v| v.as_bool()).unwrap_or(false)}));
+                }
+                Ok(out)
             }
-            "turn_start" | "turn_end" | "attack" | "block" | "battle_start" | "battle_win" | "attack_end" => Ok(1),
-            "break" => {
-                let p = ev["player"].as_i64().unwrap();
-                let k = format!("broken:{}", p);
-                let n = self.s.turn_counters.get(&k).and_then(|v| v.as_i64()).unwrap_or(0) + ev.get("count").and_then(|v| v.as_i64()).unwrap_or(0);
-                self.s.turn_counters.insert(k, json!(n));
-                Ok(1)
+            "turn_start" | "turn_end" | "attack" | "block" | "battle_start" | "battle_win" | "battle_end" | "attack_end" | "break" => {
+                Ok(vec![ev.clone()])
             }
             other => uns(format!("event {}", other)),
         }
