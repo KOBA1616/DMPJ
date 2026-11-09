@@ -208,3 +208,4 @@ schtasks /Create /SC MINUTE /MO 5 /TN "dmpj-worker" /TR C:\path\DMPJ\tools\run_w
 ## 自動マージの条件
 自動マージ（自動ループ含む）は、GitHub Actions の `tests` ワークフロー（全体テスト `pytest tests`）が成功してから行う。失敗したままマージしない。
 失敗時の自動検知: `tests` が落ちると、PR にはコメント、main では Issue（label `tests-failing`、1件に集約）に失敗したテスト名と原因の抜粋が残る。自動ループはこれを読んで修正 PR を作り、`tests` が成功するまでマージしない。main が通れば Issue は自動で閉じる。
+注意（#269・#274 で全体テストが「走らなかった」ように見えた原因）: tests は PR ごとに起動していたが、必須チェックが未設定のため、完了（約10分）を待たずにマージされていた。対策は2つ。(1) 自動マージする側は `gh run watch --exit-status` などで tests の成功を待ってからマージする。(2) GitHub の設定で main のブランチ保護に必須チェック `pytest` を入れる（設定は koba のみ可）。また GITHUB_TOKEN が作った PR は pull_request が起動しないため、`tests.yml` は workflow_dispatch でも動く（combo-hunt が起動）。

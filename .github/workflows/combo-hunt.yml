@@ -12,10 +12,11 @@ on:
 permissions:
   contents: write
   pull-requests: write
+  actions: write
 jobs:
   hunt:
     runs-on: ubuntu-latest
-    timeout-minutes: 150
+    timeout-minutes: 180
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
@@ -37,4 +38,8 @@ jobs:
           git checkout -b "$b"; git add data/combohunt; git commit -m "combo-hunt: 登録外コンボ候補の検証結果を追記"
           git push -u origin "$b"
           gh pr create --base main --head "$b" --title "combo-hunt: 検証結果 $(date +%Y-%m-%d)" --body "毎日の自動探索の結果（data/combohunt/results.jsonl）。"
-          gh pr merge "$b" --squash --auto
+          # GITHUB_TOKEN で作った PR は tests が自動起動しない。ここで起動し、成功を待ってからマージする（--auto は必須チェック未設定だと即マージになる）
+          gh workflow run tests.yml --ref "$b"
+          sleep 30
+          id=$(gh run list --workflow tests.yml --branch "$b" --event workflow_dispatch --limit 1 --json databaseId -q '.[0].databaseId')
+          gh run watch "$id" --exit-status && gh pr merge "$b" --squash || { echo "tests が通らないのでマージしない"; exit 1; }
