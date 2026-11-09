@@ -240,6 +240,7 @@ class BreakTask(TypedDict):
     brk_cancelled: NotRequired[list[int]]   # 置換でブレイクが取り消されたシールド
     brk_waiting: NotRequired[list]          # instead を実行中の [シールドの cid, continue か]
     brk_done: NotRequired[bool]             # 諮問が終わったか
+    strigger: NotRequired[str]              # 手札に加わるカードへの S・トリガーの印（"off" / "on"。op move の strigger 引数から。バンドC2 U68）
 
 
 class CrossTask(TypedDict):
@@ -283,6 +284,7 @@ class PlayTask(TypedDict):
     bz_count: NotRequired[int]           # バズレンダ: 追加で支払った回数
     alt: NotRequired[bool]               # 代替コストで実行する
     vivid: NotRequired[bool]             # ビビッドローで実行する（第54弾: イベント・条件への伝播用）
+    via: NotRequired[str]                # 出し方の印（第149弾: play_self の via。イベント・条件への伝播用）
     alt_step: NotRequired[int]           # 代替コスト（行動形式）で済んだ段階
     evo_v: NotRequired[list]             # 進化V: フィルタごとに選んだ進化元
     fushigi: NotRequired[bool]           # フシギバースとして実行する
@@ -321,6 +323,7 @@ class EnqueueStTask(TypedDict):
     t: Literal["enqueue_st"]
     cids: list[list]                     # [cid, face | None]
     player: int
+    strigger: NotRequired[bool]          # S・トリガー宣言経由（True の時だけ use_s_trigger レコードを出す。S・バック経由は付けない。バンドB U7）
 
 
 class OpenWinTask(TypedDict):
@@ -401,6 +404,21 @@ class PutUnderTask(TypedDict):
     cid: int
     gen: int
     onto: Ref
+
+
+class PutStackedTask(TypedDict):
+    t: Literal["put_stacked"]
+    cids: list[int]              # 残りのカード（選んだ順に1体ずつ出す）
+    all_cids: list[int]          # 選んだ全体（bind 用）
+    player: int
+    env: Env
+    reason: str
+    tapped: bool
+    face_up: bool
+    seal: NotRequired[int]       # 封印を付けた状態で出す（move の seal の転送）
+    bind: NotRequired[str]       # move の as の転送（全員出し終わった後に bind する）
+    evo_v: NotRequired[list]     # 進化V: フィルタごとに選んだ進化元
+    answer: NotRequired[list[int]]
 
 
 class SlayerTask(TypedDict):

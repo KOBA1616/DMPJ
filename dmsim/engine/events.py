@@ -12,9 +12,12 @@ class EventMixin:
             evs = [evs]
         if env and isinstance(env.get("you"), int):   # 効果の解決者が起こす移動には、起こしたプレイヤーを記録する（「相手の効果によって捨てられる時」等の照合用）
             evs = [dict(e, by=env["you"]) if e.get("ev") == "move" and "by" not in e else e for e in evs]
-            if self.s.trace is not None and env.get("self"):   # 因果の記録: その移動を起こした効果のカード名
-                cause = self.s.cards[env["self"][0]].defn
-                evs = [dict(e, cause=cause) if e.get("ev") == "move" and "cause" not in e else e for e in evs]
+            if env.get("self"):   # 効果帰属レコード（基盤B1）: その移動を起こした効果の発生源（defn 名と、呪文か能力かの種別）を常時記録する
+                src = env["self"][0]
+                cause = self.s.cards[src].defn
+                ckind = "spell" if "spell" in self.fdef(src).types else "ability"
+                evs = [dict(e, cause=cause, cause_defn=cause, cause_kind=ckind)
+                       if e.get("ev") == "move" and "cause_defn" not in e else e for e in evs]
         if env and env.get("capture"):   # 置換効果の中で起こすイベントは、元の束に加えて同時に適用する（609.9）
             return {"t": "capture", "evs": [dict(e, replaced=True) for e in evs]}
         if env and env.get("no_replace"):
@@ -177,6 +180,9 @@ class EventMixin:
                    "to": ev["to"], "reason": ev["reason"], "controller": c.controller}
             if ev.get("cause"):
                 rec["cause"] = ev["cause"]
+            if ev.get("cause_defn"):   # 効果帰属（基盤B1）: 発生源の defn 名と種別（呪文／能力）
+                rec["cause_defn"] = ev["cause_defn"]
+                rec["cause_kind"] = ev["cause_kind"]
             if "by" in ev:        # その移動を起こした効果の解決者（無ければ記録しない: 状況起因・コスト等は「相手の効果」扱いにしない）
                 rec["by"] = ev["by"]
             if ev.get("stack_on"):   # 進化として重ねて出た（シンカパワーの照合用）
@@ -185,6 +191,16 @@ class EventMixin:
                 rec["alt"] = True
             if ev.get("vivid"):      # ビビッドローで実行された（第54弾。「ビビッドローを使って召喚した時」の照合用）
                 rec["vivid"] = True
+            if ev.get("unpaid"):     # コストを支払わずに出た（「コストを支払わずに召喚した時」等の照合用）
+                rec["unpaid"] = True
+            if c.zone == "bz" and c.top_of >= 0 and c.seal_of < 0:
+                # 下にあったカードが単独で動く: 宿主（上にいたカード）の移動直前の姿を載せる（from_under 照合用）
+                h = s.cards[c.top_of]
+                href = s.ref(c.top_of)
+                rec["host"] = href
+                rec["host_lki"] = {"defn": h.defn, "face": h.face, "controller": h.controller,
+                                   "zone": "bz", "tapped": h.tapped, "chars": self.chars(c.top_of),
+                                   "ref": href}
             return rec
         if ev["ev"] == "draw":
             return {"ev": "draw", "player": ev["player"]}
@@ -200,9 +216,97 @@ class EventMixin:
             if r.get("ev") == "break":
                 k = f"broken:{r['player']}"
                 self.s.turn_counters[k] = self.s.turn_counters.get(k, 0) + r.get("count", 0)
+        self._record_history(records)
         self._sba()
         for r in records:
             self._collect_triggers(r)
+
+    def _hist_bump(self, kind: str, player: int, n: int = 1) -> int:
+        """履歴カウンタ（turn_counters の hist:<kind>:{player}）を加算し、新しい値を返す。"""
+        k = f"hist:{kind}:{player}"
+        v = self.s.turn_counters.get(k, 0) + n
+        self.s.turn_counters[k] = v
+        return v
+
+    def _used_snapshot(self, cid: int) -> dict:
+        """「使った」履歴に残す印刷特性のスナップショット（カードはその後ゾーンを移るため値で持つ）。"""
+        d = self.fdef(cid)
+        return {"cost": d.cost, "types": list(d.types), "civs": list(d.civs)}
+
+    def _record_history(self, records: list[dict]):
+        """履歴カウンタ基盤（バンドC1 U19＋統一で追加した kind）の記録器。
+        適用済みレコードを並び順に走査し、turn_counters の hist: キーへ集約する。あわせて
+        対象レコードに rec["ord"] = {kind: その出来事のこのターン通し番号} を刻む
+        （when の {ord: {kind, 比較}} 照合用。同時適用の束内の順序は records の並び順）。
+        既存キー（entered／drew／broken／broke_in）は従来どおり別途維持され、ここでは触らない。
+        攻撃の記録は combat の phase 0 が出す attack レコード（適用はここを一度だけ通る）から拾う。"""
+        s = self.s
+        tc = s.turn_counters
+        for rec in records:
+            ev = rec.get("ev")
+            if ev == "move":
+                lki = rec.get("lki")
+                ctrl = lki["controller"] if lki else rec["controller"]   # 離れる側は移動前のコントローラで数える
+                frm, to = rec.get("from"), rec.get("to")
+                if to == "shield":
+                    self._hist_bump("shield_put", rec["controller"])
+                if frm == "shield" and to != "shield":
+                    self._hist_bump("shield_left", ctrl)
+                if to == "mana":
+                    n = self._hist_bump("mana_put", rec["controller"])
+                    rec.setdefault("ord", {})["mana_put"] = n
+                if to == "bz":
+                    n = self._hist_bump("enter", rec["controller"])
+                    rec.setdefault("ord", {})["enter"] = n
+                    if rec.get("unpaid"):
+                        self._hist_bump("enter_unpaid", rec["controller"])
+                    if rec.get("via") == "generate":   # 実行したタマシード／フィールド／クロスギアは「使った」履歴
+                        tc.setdefault(f"hist:used:{rec['controller']}", []).append(
+                            self._used_snapshot(rec["subject"][0]))
+                if frm == "bz" and to != "bz":
+                    if not rec.get("host"):   # 下にあったカードは「特性を持たないカード」の移動であり、クリーチャーとして離れた／破壊された数には入れない（from_under 機構）
+                        self._hist_bump("leave", ctrl)
+                        if to == "graveyard" and rec.get("reason") == "destroy":
+                            self._hist_bump("destroyed", ctrl)
+                if to == "graveyard" and rec.get("reason") == "discard":
+                    self._hist_bump("discard", ctrl)
+            elif ev == "summon":
+                n = self._hist_bump("summon", rec["controller"])
+                rec.setdefault("ord", {})["summon"] = n
+            elif ev == "cast":
+                p = rec["player"]
+                n = self._hist_bump("cast", p)
+                rec.setdefault("ord", {})["cast"] = n
+                if rec.get("subject") is not None:   # 唱えた呪文は「使った」履歴（印刷特性のスナップショット）
+                    tc.setdefault(f"hist:used:{p}", []).append(self._used_snapshot(rec["subject"][0]))
+            elif ev == "draw":
+                n = self._hist_bump("draw", rec["player"])
+                rec.setdefault("ord", {})["draw"] = n   # draw の ord は枚単位（レコードは1枚ずつ）
+            elif ev == "break":
+                cnt = rec.get("count", 1)
+                self._hist_bump("broken", rec["player"], cnt)
+                if rec.get("subject") is not None:   # ブレイクしたクリーチャー単位（broke_by_self の読み先）
+                    k = f"hist:broke_by:{rec['subject'][0]}"
+                    tc[k] = tc.get(k, 0) + cnt
+            elif ev == "attack":
+                a = rec["controller"]
+                att = rec["subject"][0]
+                n = self._hist_bump("attack", a)
+                rec.setdefault("ord", {})["attack"] = n
+                tc.setdefault(f"hist:attackers:{a}", []).append(att)   # other / filter つきの数え用
+                k = f"hist:attack_by:{att}"
+                tc[k] = tc.get(k, 0) + 1
+                rec["ord"]["attack_by"] = tc[k]
+                tgt = rec.get("target")   # 攻撃先は宣言時点で記録する（ブロック／ガードマンで変わっても遡らない。バンドA の設計既定）
+                if isinstance(tgt, list):
+                    k2 = f"hist:attack_on:{tgt[0]}"
+                    tc[k2] = tc.get(k2, 0) + 1
+            elif ev == "block":   # ブロックの宣言1回（＝ブロックしたクリーチャー1体）につき1
+                self._hist_bump("block", rec["controller"])
+            elif ev == "tap":
+                self._hist_bump("tap", rec["controller"])
+            elif ev == "untap":   # 状態が実際に変わったアンタップだけがレコードになる（ターン開始の一括アンタップも数える。バンドB U18 の設計既定）
+                self._hist_bump("untap", rec["controller"])
 
     def _apply_one(self, ev: dict) -> list[dict]:
         s = self.s
@@ -237,18 +341,35 @@ class EventMixin:
                     host.seals.remove(cid)
                 sealed_from = s.ref(c.seal_of)
                 c.seal_of = -1
+            host_ref = host_lki = None   # このカード自身が他のカードの下にあった場合の宿主（移動直前の姿。from_under 照合用）
+            if from_zone == "bz" and c.top_of >= 0 and c.seal_of < 0:
+                hc = s.cards[c.top_of]
+                host_ref = s.ref(c.top_of)
+                host_lki = {"defn": hc.defn, "face": hc.face, "controller": hc.controller, "zone": "bz",
+                            "tapped": hc.tapped, "chars": self.chars(c.top_of), "ref": host_ref}
             my_seals = list(c.seals) if ev["to"] != "bz" else []   # 封印されたカードが離れる時、封印は墓地に置く
             if my_seals:
                 c.seals = []
             unders = list(c.under)
+            under_snap = None   # 離れる時に下にあったクリーチャー（leave_under_untap）: 再構築で場に残る最初のクリーチャー1体
             if unders and ev["to"] != "bz" and (ev.get("card_only") or self.fdef(cid, c.face if c.face >= 0 else None).star):
                 # カードとして離れる（801.4）/ スター進化（離れる時は一番上のカードだけ）: 下のカードを再構築して残す
+                uc = next((u for u in unders if "creature" in self.cdef(u).types), None)
+                if uc is not None:
+                    under_snap = s.ref(uc)
                 self._rebuild(cid)
                 unders = []
             stack_unders = []
             if unders and ev["to"] == "shield" and ev.get("shield_stack"):
                 # シールドの上に重ねて置く（第148弾）: 自分の下のカードは別のシールドにせず、束の一部として連れて行く
                 stack_unders, unders = unders, []
+            under_lkis = []   # 一緒に離れる下のカードの移動直前の姿（from_under レコード用。移動前に取る）
+            if from_zone == "bz" and ev["to"] != "bz":
+                for u in unders:
+                    uc = s.cards[u]
+                    under_lkis.append((u, {"defn": uc.defn, "face": uc.face, "controller": uc.controller,
+                                           "zone": from_zone, "tapped": uc.tapped, "chars": self.chars(u),
+                                           "ref": s.ref(u)}))
             self._raw_move(cid, ev["to"], ev.get("position", "top"), ev.get("controller"))
             if ev.get("sst"):
                 c.sst = True         # スーパー・S・トリガーの印は移動した先で付ける（移動で消えるため）
@@ -303,18 +424,27 @@ class EventMixin:
             if ev["to"] == "bz" and self.link_side(cid) is not None:   # ゴッドが出たらリンク手順を行う
                 self._push({"t": "g_link", "cid": cid, "player": c.controller, "step": "start"})
             if ev["to"] == "bz" and "field" in self.fdef(cid).types:
-                # フィールドはバトルゾーンに1枚だけ: 新しいフィールドが出たら、他のフィールドはすべて破壊される（308.4）
+                # 一意性はプール分離（第151弾。公式裏取り済み）: D2フィールドは D2フィールド同士だけが
+                # 数え合い（703.4l。両プレイヤー合わせて1つだけ。行き先は破壊＝701.6＋109.1＋公式 QA 47896）、
+                # 通常フィールド同士は第25弾の挙動を温存する。通常フィールドと D2 は互いに影響しない。
+                # 適用は出現イベントごとに1回だけ（このフックは move の適用時にだけ走る）: 置換で生き残った
+                # D2 は、次の新しい D2 が出るまで残る（QA 47896）
+                d2 = "d2_field" in self.fdef(cid).types
                 others = [x for p in (0, 1) for x in self.bz_tops(p)
-                          if x != cid and "field" in self.fdef(x).types]
+                          if x != cid and "field" in self.fdef(x).types
+                          and ("d2_field" in self.fdef(x).types) == d2]
                 if others:
                     self._push(self.ev_task([{"ev": "move", "subject": s.ref(x), "to": "graveyard",
                                               "reason": "destroy"} for x in others]))
             stack_on = ev.get("stack_on")
+            evo_bases = []   # 進化元になったカード（第150弾: 進化印がある時だけ evolve_base レコードを出す）
             if ev["to"] == "bz" and stack_on and s.alive(stack_on):
                 base = stack_on[0]
                 if s.cards[base].zone != "bz":      # 超無限墓地進化など: 進化元も自分のゾーンから移す
                     self._raw_move(base, "bz")
                 self._stack(cid, base)
+                if ev.get("evolution"):
+                    evo_bases.append(base)
                 for x in ev.get("stack_more", []):   # 進化元の残り（801.1b。超無限墓地進化やバトルゾーンの複数の進化元）
                     if not s.alive(x):
                         continue
@@ -322,6 +452,8 @@ class EventMixin:
                         self._raw_move(x[0], "bz")
                     if s.cards[x[0]].zone == "bz":
                         self._stack(cid, x[0], more=True)
+                        if ev.get("evolution"):
+                            evo_bases.append(x[0])
             out = [{"ev": "move", "subject": new, "lki": lki, "from": from_zone, "to": ev["to"],
                     "reason": ev["reason"], "controller": c.controller}]
             if sealed_from is not None:
@@ -334,15 +466,42 @@ class EventMixin:
                             "reason": "seal", "controller": so.controller, "sealed_from": new})
             if ev.get("via"):
                 out[0]["via"] = ev["via"]
+            if ev.get("alt"):        # 代替コストで実行された（誘発の if: {alt_paid} の照合用）
+                out[0]["alt"] = True
+            if ev.get("vivid"):      # ビビッドローで実行された（when: {vivid: true} と誘発の if: {vivid_paid} の照合用）
+                out[0]["vivid"] = True
+            if ev.get("unpaid"):     # コストを支払わずに出た（when: {unpaid: true} の照合用。summon レコードには従来から載せていたが、move レコード側に無く move 誘発がすべて不発だった）
+                out[0]["unpaid"] = True
+            if ev.get("stack_on"):   # 進化として重ねて出た（「進化して出た時」の照合用。第150弾で収集レコードへの伝播を追加。シールドの束は shield_stack キーで別）
+                out[0]["stacked"] = True
             if ev.get("cause"):
                 out[0]["cause"] = ev["cause"]
+            if ev.get("cause_defn"):   # 効果帰属（基盤B1）: 収集レコードにも発生源の defn 名と種別を載せる
+                out[0]["cause_defn"] = ev["cause_defn"]
+                out[0]["cause_kind"] = ev["cause_kind"]
+            if ev.get("by") is not None:   # その移動を起こした効果の解決者（バンドC1 U26: 収集レコードに無く、when の by 照合が move 誘発で使えなかった）
+                out[0]["by"] = ev["by"]
+            if ev.get("strigger") in ("off", "on") and ev["to"] == "hand":
+                # S・トリガーの印（バンドC2 U68）: 手札に加わったカード（束の下のカードも含む）に印を付ける
+                for u in [cid] + [u for u in unders if s.cards[u].zone == "hand"]:
+                    if ev["strigger"] == "off":
+                        s.cards[u].strigger_off = True
+                    else:
+                        s.cards[u].strigger_on = True
             if ev.get("face_up"):
                 out[0]["face_up"] = True
+            if under_snap is not None:
+                out[0]["under"] = under_snap   # 離れる時に下にあったクリーチャー（解決時に {ref: event.under} で指せる。leave_under_untap）
             if ev["to"] == "bz" and "ex_life" in self.chars_ro(cid)["keywords"]:
                 out += self._exlife_shield(cid)
             if ev["reason"] == "summon":
-                out.append({"ev": "summon", "subject": new, "controller": c.controller, "player": c.controller,
-                            "unpaid": bool(ev.get("unpaid"))})
+                srec = {"ev": "summon", "subject": new, "controller": c.controller, "player": c.controller,
+                        "unpaid": bool(ev.get("unpaid"))}
+                if ev.get("via"):
+                    srec["via"] = ev["via"]   # 出し方の印も summon レコードに載せる（第149弾）
+                out.append(srec)
+            for b in evo_bases:   # 「進化元になる時」（第150弾）: 進化元を subject、出たクリーチャーを top とする合成レコード
+                out.append({"ev": "evolve_base", "subject": s.ref(b), "top": new, "controller": s.cards[b].controller})
             if ev["to"] == "bz" and "creature" in self.chars_ro(cid)["types"]:   # 「このターンに出たクリーチャー」の記録（式 entered が数える）
                 s.turn_counters.setdefault(f"entered:{c.controller}", []).append(cid)
             if ev["to"] == "bz" and ev.get("seal"):
@@ -361,6 +520,30 @@ class EventMixin:
             if ev["to"] == "bz" and any("コマンド" in r for r in self.fdef(cid).races):
                 # コマンドが出た時、その持ち主はそのコマンドと同じ文明を持つ自身のカードから封印を1つ墓地に置く
                 self._push({"t": "seal_release", "player": c.controller, "civs": list(self.fdef(cid).civs)})
+            if host_ref is not None:
+                out[0]["host"] = host_ref   # このカード自身が下にあって単独で動いた（from_under 照合用）
+                out[0]["host_lki"] = host_lki
+            for u, u_lki in under_lkis:
+                # 一緒に離れた下のカードにも move レコードを出す（from_under 機構）。下のカードは
+                # 「特性を持たないカード」として置かれる（総合ルールの進化の扱い）ため、レコードには
+                # 宿主（上にいたカード）の移動直前の姿を host / host_lki として必ず載せ、通常の
+                # クリーチャーの移動と区別できるようにする。実際に一緒に動いたものだけが対象
+                # （再構築で場に残る分は unders から外れており、ここには来ない）
+                if s.cards[u].zone != ev["to"]:
+                    continue
+                r = {"ev": "move", "subject": s.ref(u), "lki": u_lki, "from": from_zone, "to": ev["to"],
+                     "reason": ev["reason"], "controller": u_lki["controller"],
+                     "host": lki["ref"], "host_lki": lki}
+                if ev.get("via"):
+                    r["via"] = ev["via"]
+                if ev.get("cause"):
+                    r["cause"] = ev["cause"]
+                if ev.get("cause_defn"):   # 効果帰属（基盤B1）: スタック全体を動かした効果の帰属を下のカードにも載せる
+                    r["cause_defn"] = ev["cause_defn"]
+                    r["cause_kind"] = ev["cause_kind"]
+                if ev.get("by") is not None:
+                    r["by"] = ev["by"]
+                out.append(r)
             return out
         if kind == "draw":
             p = ev["player"]
@@ -385,7 +568,7 @@ class EventMixin:
                 for m in self.link_members(ev["subject"][0]):
                     s.cards[m].tapped = c.tapped
             return [{"ev": kind, "subject": ev["subject"], "controller": c.controller}]
-        if kind in ("attack", "block", "cast", "turn_start", "turn_end", "break", "battle_win", "battle_start", "attack_end", "mugon_used"):
+        if kind in ("attack", "block", "cast", "turn_start", "turn_end", "break", "battle_win", "battle_start", "attack_end", "mugon_used", "link_established", "battle_end"):
             return [dict(ev)]
         raise ValueError(kind)
 
@@ -579,20 +762,57 @@ class EventMixin:
         if "opponent" in when:   # バトルの相手（battle_start の対戦クリーチャー）。self なら「このクリーチャーが攻撃された側でバトルする時」
             if rec.get("opponent") is None or not self._ref_match(when["opponent"], rec["opponent"], env):
                 return False
+        if "ord" in when:   # その出来事のこのターンでの通し番号（「そのターン最初の〜」「2枚目以降の〜」。履歴基盤が rec に刻む）
+            spec = when["ord"]
+            v = (rec.get("ord") or {}).get(spec["kind"])
+            if v is None:
+                return False
+            for k, fn in (("eq", int.__eq__), ("ge", int.__ge__), ("gt", int.__gt__),
+                          ("le", int.__le__), ("lt", int.__lt__)):
+                if k in spec and not fn(v, spec[k]):
+                    return False
         if "unpaid" in when and bool(rec.get("unpaid")) != when["unpaid"]:   # マナをタップせずに（コストを支払わずに）
             return False
         if "broke" in when and bool(rec.get("broke")) != when["broke"]:   # 攻撃の終わりに、その攻撃でシールドをブレイクしたか（キリフダッシュ）
+            return False
+        if "blocked" in when and bool(rec.get("blocked")) != when["blocked"]:   # その攻撃がブロックされたか（attack_end レコードのみが持つ。「ブロックされなかった時」用）
             return False
         if "face_up" in when and bool(rec.get("face_up")) != when["face_up"]:   # 表向きで置かれたか（ギャラクシールド）
             return False
         if "vivid" in when and bool(rec.get("vivid")) != when["vivid"]:   # ビビッドローで実行されたか（第54弾）
             return False
+        if "stacked" in when and bool(rec.get("stacked")) != when["stacked"]:   # 進化として重ねて出たか（第150弾で照合を有効化。第28弾の未実装分）
+            return False
         if "player" in when and rec.get("player") != self._rel(when["player"], env):
             return False
         if "by" in when and rec.get("by") != self._rel(when["by"], env):   # そのイベントを起こした効果の解決者（「相手の効果によって〜」）
             return False
+        if "cause" in when:   # そのイベントを起こした効果の帰属（基盤B1）: by は発生源コントローラーから見た相対指定、kind は呪文／能力。発生源のない移動（状況起因・コスト）は cause_kind が無く一致しない
+            cw = when["cause"]
+            if "by" in cw and rec.get("by") != self._rel(cw["by"], env):
+                return False
+            if "kind" in cw and rec.get("cause_kind") != cw["kind"]:
+                return False
         if "sealed_from" in when:   # 封印が離れた時: どのカードに付いていた封印か（「このカードの封印がすべてなくなった時」用）
             if rec.get("sealed_from") is None or not self._ref_match(when["sealed_from"], rec["sealed_from"], env):
+                return False
+        if "from_under" in when:   # 移動直前に他のカードの下にあったか（from_under 機構）: true=下にあった / false=下になかった / self=発生源自身の下にあった / {owner, filter}=宿主への条件（subject と同じ形で宿主の lki に当てる）
+            host = rec.get("host")
+            fu = when["from_under"]
+            if fu is False:   # 「下から」ではない通常の移動だけを見る（例: 破壊された時と下から墓地に置かれた時を分ける）
+                if host is not None:
+                    return False
+            elif host is None:
+                return False
+            elif fu is True:
+                pass
+            elif fu == "self":
+                if not self._ref_match("self", host, env):
+                    return False
+            elif isinstance(fu, dict):
+                if not self._subject_match(fu, host[0], env, rec.get("host_lki")):
+                    return False
+            else:
                 return False
         if "subject" in when:
             if "subject" not in rec:
@@ -610,23 +830,40 @@ class EventMixin:
         if "_eid" not in rec:      # このイベントの通し番号（first_time の「同じイベント」判定に使う）
             s.ev_seq += 1
             rec["_eid"] = s.ev_seq
-        sources = [(c, None) for c in self.bz_tops()]
+        # 発生源は (cid, lki か None, host_only か) の3つ組。host_only は from_under の宿主専用（下記）
+        sources = [(c, None, False) for c in self.bz_tops()]
         for c in list(sources):   # G・リンク: グループの全員の誘発型能力が、グループ（1体）として誘発する
             if self.s.cards[c[0]].link:
-                sources += [(m, None) for m in self.link_members(c[0]) if m != c[0]]
+                sources += [(m, None, False) for m in self.link_members(c[0]) if m != c[0]]
         zt = self.rules.zone_trigger_defs
         if zt:   # 墓地などで機能する誘発型能力（《黒神龍グールジェネレイド》など）
             for z in sorted({z for v in zt.values() for z in v}):
-                sources += [(c, None) for p in (0, 1) for c in self.zlist(z, p) if s.cards[c].defn in zt]
+                sources += [(c, None, False) for p in (0, 1) for c in self.zlist(z, p) if s.cards[c].defn in zt]
         lki = rec.get("lki")
         if lki and lki["zone"] == "bz" and rec.get("to") != "bz":
-            sources.append((rec["subject"][0], lki))
+            sources.append((rec["subject"][0], lki, False))
+        elif lki and lki["zone"] != "bz" and s.cards[rec["subject"][0]].zone != lki["zone"]:
+            # 手札等から離れたカード自身の誘発（バンドC1 U26: 「手札から捨てられた時」等）。
+            # 移動後のゾーンで zone_trigger として拾われる能力（zone が現在ゾーンと一致するもの）は
+            # 通常経路で拾われるため、lki 経路は「能力の zone ＝ 離れる前のゾーン」のものだけを見る
+            # （下の発生源フィルタ）。shield→hand の自己誘発（G・ストライク等。能力は zone: hand）は
+            # lki の zone（shield）と一致しないので二重発火しない
+            sources.append((rec["subject"][0], lki, False))
+        host_lki = rec.get("host_lki")
+        if host_lki and host_lki["zone"] == "bz" and rec.get("host"):
+            # 下にあったカードの移動では、宿主（上にいたカード）も離れた側として発生源に加える
+            # （from_under 機構: 「カードがこのクリーチャーの下を離れた時」）。宿主自身の移動は
+            # 宿主自身のレコードで通常どおり収集されるため、ここでは when に from_under を書いた
+            # 能力だけを見る（host_only）: 宿主の通常の観測誘発が下のカードの枚数だけ重複しない
+            sources.append((rec["host"][0], host_lki, True))
+        if rec["ev"] == "evolve_base":   # 進化元になる時（第150弾）: 重ねられた側は bz_tops から外れているので、進化元自身を発生源に加える
+            sources.append((rec["subject"][0], None, False))
         win = s.windows[-1] if s.windows else 0
-        for src, lsrc in sources:
+        for src, lsrc, host_only in sources:
             if lsrc:
                 face = lsrc["face"]
                 abs_ = list(enumerate(self.rules.cards[lsrc["defn"]].face(None if face < 0 else face).abilities))
-                abs_ = [(i, ab) for i, ab in abs_ if ab["kind"] == "trigger" and ab.get("zone", "bz") == "bz"]
+                abs_ = [(i, ab) for i, ab in abs_ if ab["kind"] == "trigger" and ab.get("zone", "bz") == lsrc["zone"]]
                 defn = lsrc["defn"]
             else:
                 face = s.cards[src].face
@@ -634,6 +871,8 @@ class EventMixin:
                         if ab.get("zone", "bz") == s.cards[src].zone]
                 defn = s.cards[src].defn
             for i, ab in abs_:
+                if host_only and "from_under" not in ab["when"]:
+                    continue   # 宿主の lki 発生源は from_under 誘発専用（上の host_lki の注記参照）
                 if not self._pattern_match(ab["when"], rec, src, lsrc):
                     continue
                 ctrl = lsrc["controller"] if lsrc else s.cards[src].controller
@@ -800,7 +1039,18 @@ def h_g_link(eng, t):
             gid = s.seq
             s.cards[tgt].link = gid
         s.cards[cid].link = gid
+        members = eng.link_members(cid)
+    else:
+        members = None
     eng._pop(t)
+    if members:
+        # リンク成立（第155弾）: 手順の完了時点で、成立したグループの全員を subject とする
+        # 合成レコード link_established を出す（第150弾 evolve_base と同型）。誘発収集では
+        # グループ全員が発生源になり（_collect_triggers のリンク展開）、「リンクされる側
+        # （既に場にいたゴッド）」の「リンクした時」も拾える。リンクを外しただけ・パスした
+        # 場合は成立ではないので出さない。
+        eng._push(eng.ev_task([{"ev": "link_established", "subject": s.ref(m),
+                                "controller": s.cards[m].controller} for m in members]))
     return None
 
 
@@ -960,6 +1210,9 @@ def h_enqueue_st(eng, t):
     win = s.windows[-1] if s.windows else 0
     for c, face in t["cids"]:
         if s.cards[c].zone == "hand":
+            if t.get("strigger"):   # S・トリガーとして宣言された（S・バック経由は付けない）: 「相手がS・トリガーを使った時」の合成レコード（バンドB U7）
+                eng._collect_triggers({"ev": "use_s_trigger", "player": t["player"],
+                                       "subject": s.ref(c), "controller": t["player"]})
             s.seq += 1
             p = {"pid": s.seq, "kind": "strigger", "win": win, "controller": t["player"],
                  "src": s.ref(c), "defn": s.cards[c].defn, "ab": -1, "env": {}}

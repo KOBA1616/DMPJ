@@ -28,6 +28,7 @@
     "enum": [
      "creature",
      "cross_gear",
+     "d2_field",
      "evolution",
      "field",
      "spell",
@@ -88,6 +89,7 @@
      "hunting",
      "hyper_energy",
      "kizuna",
+     "kizuna_plus",
      "last_burst",
      "left_g_link",
      "mana_boost_cip",
@@ -97,6 +99,7 @@
      "null_breaker",
      "powered_breaker",
      "quad_breaker",
+     "rensa",
      "right_g_link",
      "s_back_darkness",
      "s_back_fire",
@@ -227,6 +230,10 @@
   "hyper": {
    "type": "boolean"
   },
+  "crystal_soul": {
+   "type": "integer",
+   "minimum": 1
+  },
   "evolve_count": {},
   "evolve_zone": {},
   "evolve_any": {},
@@ -259,6 +266,7 @@
       "enum": [
        "creature",
        "cross_gear",
+       "d2_field",
        "evolution",
        "field",
        "spell",
@@ -319,6 +327,7 @@
        "hunting",
        "hyper_energy",
        "kizuna",
+       "kizuna_plus",
        "last_burst",
        "left_g_link",
        "mana_boost_cip",
@@ -328,6 +337,7 @@
        "null_breaker",
        "powered_breaker",
        "quad_breaker",
+       "rensa",
        "right_g_link",
        "s_back_darkness",
        "s_back_fire",
@@ -458,6 +468,10 @@
     "hyper": {
      "type": "boolean"
     },
+    "crystal_soul": {
+     "type": "integer",
+     "minimum": 1
+    },
     "text": {},
     "mana": {},
     "evolve_count": {},
@@ -568,6 +582,9 @@
        "select": {
         "$ref": "#/$defs/selector"
        },
+       "reveal": {
+        "type": "boolean"
+       },
        "as": {
         "type": "string"
        }
@@ -575,6 +592,60 @@
       "required": [
        "op",
        "select",
+       "as"
+      ],
+      "additionalProperties": false
+     },
+     {
+      "type": "object",
+      "properties": {
+       "op": {
+        "const": "choose_civ"
+       },
+       "as": {
+        "type": "string"
+       }
+      },
+      "required": [
+       "op",
+       "as"
+      ],
+      "additionalProperties": false
+     },
+     {
+      "type": "object",
+      "properties": {
+       "op": {
+        "const": "choose_name"
+       },
+       "as": {
+        "type": "string"
+       }
+      },
+      "required": [
+       "op",
+       "as"
+      ],
+      "additionalProperties": false
+     },
+     {
+      "type": "object",
+      "properties": {
+       "op": {
+        "const": "choose_number"
+       },
+       "min": {
+        "type": "integer"
+       },
+       "max": {
+        "type": "integer"
+       },
+       "as": {
+        "type": "string"
+       }
+      },
+      "required": [
+       "op",
        "as"
       ],
       "additionalProperties": false
@@ -639,6 +710,18 @@
        },
        "count": {
         "$ref": "#/$defs/expr"
+       }
+      },
+      "required": [
+       "op"
+      ],
+      "additionalProperties": false
+     },
+     {
+      "type": "object",
+      "properties": {
+       "op": {
+        "const": "dswitch"
        }
       },
       "required": [
@@ -755,6 +838,22 @@
       "type": "object",
       "properties": {
        "op": {
+        "const": "hyper_release"
+       },
+       "select": {
+        "$ref": "#/$defs/selector"
+       }
+      },
+      "required": [
+       "op",
+       "select"
+      ],
+      "additionalProperties": false
+     },
+     {
+      "type": "object",
+      "properties": {
+       "op": {
         "const": "if"
        },
        "cond": {
@@ -839,6 +938,9 @@
        },
        "of_self": {
         "type": "boolean"
+       },
+       "scope": {
+        "type": "string"
        }
       },
       "required": [
@@ -1017,6 +1119,12 @@
        "stack_on": {
         "$ref": "#/$defs/selector"
        },
+       "stack_evo": {
+        "type": "boolean"
+       },
+       "strigger": {
+        "type": "string"
+       },
        "as": {
         "type": "string"
        }
@@ -1110,7 +1218,8 @@
        "cost": {
         "type": "integer"
        },
-       "civs": {}
+       "civs": {},
+       "via": {}
       },
       "required": [
        "op",
@@ -1265,6 +1374,26 @@
       "type": "object",
       "properties": {
        "op": {
+        "const": "strigger"
+       },
+       "select": {
+        "$ref": "#/$defs/selector"
+       },
+       "mode": {
+        "type": "string"
+       }
+      },
+      "required": [
+       "op",
+       "select",
+       "mode"
+      ],
+      "additionalProperties": false
+     },
+     {
+      "type": "object",
+      "properties": {
+       "op": {
         "const": "summon_on"
        },
        "parts": {},
@@ -1379,6 +1508,15 @@
       "properties": {
        "op": {
         "const": "use_partner"
+       },
+       "of": {
+        "type": "string"
+       },
+       "exclude_self": {
+        "type": "boolean"
+       },
+       "pending": {
+        "type": "boolean"
        }
       },
       "required": [
@@ -1632,6 +1770,19 @@
     "distinct_from": {
      "$ref": "#/$defs/selector"
     },
+    "exclude": {
+     "anyOf": [
+      {
+       "$ref": "#/$defs/selector"
+      },
+      {
+       "type": "array",
+       "items": {
+        "$ref": "#/$defs/selector"
+       }
+      }
+     ]
+    },
     "other": {
      "type": "boolean"
     },
@@ -1658,6 +1809,12 @@
       "distinct_cost_count": {
        "$ref": "#/$defs/selector"
       },
+      "total_cost": {
+       "$ref": "#/$defs/selector"
+      },
+      "total_power": {
+       "$ref": "#/$defs/selector"
+      },
       "entered": {
        "type": "object",
        "properties": {
@@ -1670,13 +1827,54 @@
        },
        "additionalProperties": false
       },
+      "bundles": {
+       "type": "object",
+       "properties": {
+        "owner": {
+         "type": "string"
+        },
+        "face_up": {
+         "type": "boolean"
+        }
+       },
+       "additionalProperties": false
+      },
       "var": {
        "type": "string"
       },
       "cost_of": {
-       "type": "string"
+       "anyOf": [
+        {
+         "type": "string"
+        },
+        {
+         "type": "object",
+         "properties": {
+          "ref": {
+           "type": "string"
+          }
+         },
+         "additionalProperties": false
+        }
+       ]
       },
       "power_of": {
+       "anyOf": [
+        {
+         "type": "string"
+        },
+        {
+         "type": "object",
+         "properties": {
+          "ref": {
+           "type": "string"
+          }
+         },
+         "additionalProperties": false
+        }
+       ]
+      },
+      "name_of": {
        "type": "string"
       },
       "races_of": {
@@ -1693,6 +1891,54 @@
        "items": {
         "$ref": "#/$defs/expr"
        }
+      },
+      "turn_count": {
+       "type": "object",
+       "properties": {
+        "kind": {
+         "type": "string"
+        },
+        "owner": {
+         "type": "string"
+        },
+        "other": {
+         "type": "boolean"
+        },
+        "filter": {
+         "$ref": "#/$defs/filter"
+        },
+        "ref": {
+         "type": "string"
+        }
+       },
+       "required": [
+        "kind"
+       ],
+       "additionalProperties": false
+      },
+      "used_count": {
+       "type": "object",
+       "properties": {
+        "owner": {
+         "type": "string"
+        },
+        "filter": {
+         "$ref": "#/$defs/filter"
+        }
+       },
+       "additionalProperties": false
+      },
+      "prev_shield_added": {
+       "type": "object",
+       "properties": {
+        "owner": {
+         "type": "string"
+        }
+       },
+       "additionalProperties": false
+      },
+      "declared": {
+       "type": "string"
       }
      },
      "minProperties": 1,
@@ -1736,7 +1982,30 @@
      ]
     },
     "marked": {
-     "type": "string"
+     "anyOf": [
+      {
+       "type": "string"
+      },
+      {
+       "type": "object",
+       "properties": {
+        "name": {
+         "type": "string"
+        },
+        "scope": {
+         "enum": [
+          "turn",
+          "attack",
+          "game"
+         ]
+        }
+       },
+       "required": [
+        "name"
+       ],
+       "additionalProperties": false
+      }
+     ]
     },
     "self_marked": {
      "type": "string"
@@ -1746,8 +2015,12 @@
     },
     "vivid_paid": {},
     "alt_paid": {},
+    "ddd_paid": {},
     "hyper": {
      "type": "boolean"
+    },
+    "power_ge": {
+     "type": "integer"
     }
    },
    "additionalProperties": false
@@ -1812,6 +2085,7 @@
        "hunting",
        "hyper_energy",
        "kizuna",
+       "kizuna_plus",
        "last_burst",
        "left_g_link",
        "mana_boost_cip",
@@ -1821,6 +2095,7 @@
        "null_breaker",
        "powered_breaker",
        "quad_breaker",
+       "rensa",
        "right_g_link",
        "s_back_darkness",
        "s_back_fire",
@@ -1864,6 +2139,7 @@
          "block",
          "cast",
          "cast_free",
+         "d_switch",
          "enter_bz",
          "evolve_base",
          "generate",
@@ -1890,6 +2166,7 @@
            "block",
            "cast",
            "cast_free",
+           "d_switch",
            "enter_bz",
            "evolve_base",
            "generate",
@@ -1932,6 +2209,7 @@
          "block",
          "cast",
          "cast_free",
+         "d_switch",
          "enter_bz",
          "evolve_base",
          "generate",
@@ -1958,6 +2236,7 @@
            "block",
            "cast",
            "cast_free",
+           "d_switch",
            "enter_bz",
            "evolve_base",
            "generate",
@@ -2013,6 +2292,13 @@
       ]
      }
     },
+    "add_names": {
+     "type": "array",
+     "items": {
+      "type": "string"
+     },
+     "minItems": 1
+    },
     "breaks": {
      "anyOf": [
       {
@@ -2022,6 +2308,9 @@
        "type": "object"
       }
      ]
+    },
+    "breaks_add": {
+     "type": "integer"
     },
     "breaks_per_power": {
      "type": "integer"
@@ -2067,6 +2356,10 @@
        "type": "object"
       }
      ]
+    },
+    "crystal_soul": {
+     "type": "integer",
+     "minimum": 1
     },
     "power_when": {
      "type": "object",
@@ -2247,16 +2540,19 @@
    "propertyNames": {
     "enum": [
      "add_civs",
+     "add_names",
      "add_of",
      "add_races",
      "allow",
      "battle_indestructible",
      "battle_power",
      "breaks",
+     "breaks_add",
      "breaks_per_power",
      "cost",
      "cost_may",
      "cost_min",
+     "crystal_soul",
      "deny",
      "double_power",
      "gain",
@@ -2283,6 +2579,7 @@
       "attack",
       "attack_end",
       "battle",
+      "battle_end",
       "battle_start",
       "battle_win",
       "block",
@@ -2290,6 +2587,8 @@
       "cast",
       "choose",
       "draw",
+      "evolve_base",
+      "link_established",
       "lose",
       "move",
       "mugon_used",
@@ -2297,7 +2596,8 @@
       "tap",
       "turn_end",
       "turn_start",
-      "untap"
+      "untap",
+      "use_s_trigger"
      ]
     },
     "from": {
@@ -2421,14 +2721,60 @@
       "opp"
      ]
     },
+    "cause": {
+     "type": "object",
+     "properties": {
+      "by": {
+       "enum": [
+        "you",
+        "opp"
+       ]
+      },
+      "kind": {
+       "enum": [
+        "spell",
+        "ability"
+       ]
+      }
+     },
+     "additionalProperties": false
+    },
     "unpaid": {
      "type": "boolean"
     },
     "target": {},
     "attacker": {},
     "opponent": {},
+    "ord": {
+     "type": "object",
+     "properties": {
+      "kind": {
+       "type": "string"
+      },
+      "eq": {
+       "type": "integer"
+      },
+      "ge": {
+       "type": "integer"
+      },
+      "gt": {
+       "type": "integer"
+      },
+      "le": {
+       "type": "integer"
+      },
+      "lt": {
+       "type": "integer"
+      }
+     },
+     "required": [
+      "kind"
+     ],
+     "additionalProperties": false
+    },
     "via": {
      "enum": [
+      "d_d_d",
       "generate",
       "revolution_change"
      ]
@@ -2436,8 +2782,10 @@
     "subject": {},
     "stacked": {},
     "sealed_from": {},
+    "from_under": {},
     "face_up": {},
     "broke": {},
+    "blocked": {},
     "vivid": {}
    },
    "required": [
@@ -2517,6 +2865,7 @@
     "any_attacker": {},
     "bazurenda": {},
     "choukon": {},
+    "dswitch": {},
     "keyword": {},
     "odrive": {},
     "sst": {},

@@ -173,6 +173,11 @@ class CombatMixin:
         out = self._window(self.ev_task(evs))
         if slay:   # 701.13d バトルの後に誘発する「スレイヤー」
             out += self._window({"t": "slayer", "pairs": slay})
+        # 「バトルの後」（バンドB U7）: 両参加者を subject とする合成レコードを末尾に出す。
+        # 既に場を離れた参加者の誘発は発生源が場に無いため拾われない（対象文面の範囲では足りるという設計の範囲）
+        out.append(self.ev_task([
+            {"ev": "battle_end", "subject": x, "opponent": y, "controller": self.s.cards[x[0]].controller},
+            {"ev": "battle_end", "subject": y, "opponent": x, "controller": self.s.cards[y[0]].controller}]))
         return out
 
     def _declarable(self, player, rec) -> list[dict]:
@@ -328,7 +333,7 @@ def h_attack(eng, t):
         t["end_fired"] = True
         broke = s.turn_counters.get(f"broke_in:{att[0]}") == t.get("ano")
         eng._push(eng.ev_task({"ev": "attack_end", "subject": att, "target": t["target"],
-                               "controller": a, "broke": broke}))
+                               "controller": a, "broke": broke, "blocked": bool(t.get("blocked"))}))
         return None
     eng._pop(t)
     eng._expire("during_attack")                             # 510.2
@@ -361,7 +366,14 @@ def h_break(eng, t):
         for c in [x for ch in t["chosen"] for x in [ch] + list(s.cards[ch].under)]:   # シールドの束は、重なったカードのどれも宣言できる（113.2）
             d = eng.cdef(c)
             for fi in ([None] if not d.faces else range(len(d.faces))):
-                if eng._permits_face(c, "s_trigger", fi):
+                ok = eng._permits_face(c, "s_trigger", fi)
+                card = s.cards[c]
+                if t.get("strigger") == "off" or card.strigger_off:
+                    ok = False   # S・トリガーの印（使用不可）: この移動で手札に加わるカード／印つきのカードは宣言できない（バンドC2 U68）
+                elif t.get("strigger") == "on" or card.strigger_on:
+                    fd = d.face(fi)
+                    ok = ok or fd.is_creature() or "spell" in fd.types   # S・トリガーの印（付与）: 実行可能な種別の面なら宣言できる
+                if ok:
                     o = {"key": f"strigger:{s.cards[c].defn}" + ("" if fi is None else f":{fi}"), "cid": c}
                     if fi is not None:
                         o["face"] = fi
@@ -404,11 +416,12 @@ def h_break(eng, t):
                 sback.append((sopts[i]["cid"], sopts[i]["shield"]))
     eng._pop(t)
     chosen = [c for c in t["chosen"] if s.cards[c].zone == "shield"]   # 宣言の間に別のゾーンへ移っていたら加えない
-    seq = [eng.ev_task([{"ev": "move", "subject": s.ref(c), "to": "hand", "reason": t.get("reason", "break")}
+    seq = [eng.ev_task([{"ev": "move", "subject": s.ref(c), "to": "hand", "reason": t.get("reason", "break"),
+                         **({"strigger": t["strigger"]} if t.get("strigger") else {})}
                          for c in chosen])]
     if sback:       # 手札に加わったカードを捨てる → そうした場合だけ、コストを支払わずに実行する
         seq.append({"t": "sback", "pairs": [[h, x] for h, x in sback], "player": victim})
-    seq.append({"t": "enqueue_st", "cids": declared, "player": victim})
+    seq.append({"t": "enqueue_st", "cids": declared, "player": victim, "strigger": True})
     if t.get("fire_break", True) and chosen:   # 実際にブレイクされるシールドが無いならブレイク自体が起こらなかった（QA 33466。第146弾）
         ev = {"ev": "break", "player": victim, "count": len(chosen)}
         if t.get("breaker") and s.alive(t["breaker"]):      # ブレイクしたクリーチャー（「他のクリーチャーがシールドをブレイクした」）

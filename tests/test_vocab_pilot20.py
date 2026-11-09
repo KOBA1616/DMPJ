@@ -51,6 +51,32 @@ def test_z_rush_window_opens_on_opponents_shield_and_expires_literally(rules):
     assert closed, "次の自分のターンのはじめに戻らなかった"
 
 
+def test_z_rush_released_on_own_turn_lasts_through_opponents_turn(rules):
+    # 自分のターンに相手のシールドをブレイクして解放された場合も、相手ターン中は
+    # 解放されたままで、次の自分のターンのはじめに閉じる（公式 QA 48760 の前提）
+    e = setup(rules, {"bz": ["T060", "T001"]}, {"shield": ["T001", "T001"]})
+    beast = next(c for c in e.bz_tops(0) if e.s.cards[c].defn == "T060")
+    turn0 = None
+    opp_samples = []
+    closed = False
+    for _ in range(160):
+        if turn0 is not None:
+            if e.s.active == 1 and e.s.turn == turn0 + 1:
+                opp_samples.append(e.is_hyper(beast))
+            if e.s.turn >= turn0 + 2 and e.s.active == 0:
+                closed = not e.is_hyper(beast)
+                break
+        d = e.advance()
+        if d is None:
+            break
+        if e.is_hyper(beast) and turn0 is None:
+            turn0 = e.s.turn
+        _answer(e, d, [("attack", "attack:T001:player"), ("attack", "attack:T060:player")])
+    assert turn0 is not None, "相手のシールドが離れても解放されなかった"
+    assert opp_samples and all(opp_samples), "相手ターン中に解けてしまった"
+    assert closed, "次の自分のターンのはじめに戻らなかった"
+
+
 def test_z_rush_window_closes_at_own_turn_start_when_broken_by_opponent(rules):
     # 相手のターンに自分のシールドがブレイクされても窓は開くが、自分のターンのはじめに閉じる（文字通り）。
     # 相手の2体目の攻撃の判断時点（まだ相手のターン）で開いていることを確認する

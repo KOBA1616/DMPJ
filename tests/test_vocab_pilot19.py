@@ -70,3 +70,49 @@ def test_hyper_mode_cycle(rules):
             drew = True
     assert drew                                       # ハイパーモード中の攻撃で引けた
     assert released                                   # 次の自分のターンのはじめに解けた
+
+
+def test_hyper_mode_lasts_through_opponents_turn(rules):
+    """公式 QA 44820 型: 自分のターンにハイパー化で解放したクリーチャーは、
+    次の相手ターン中もハイパーモードのまま（パワーもハイパー面の値）で、
+    次の自分のターンのはじめに解ける。"""
+    e = setup(rules, {"hand": ["T215"], "bz": ["T001", "T003"], "mana": ["T001"] * 5}, {})
+    _find_main(e, "play:T215")
+    e.answer([[o["key"] for o in e.s.waiting["options"]].index("play:T215")])
+    beast = None
+    for _ in range(15):
+        tops = [c for c in e.bz_tops(0) if e.s.cards[c].defn == "T215"]
+        if tops:
+            beast = tops[0]
+            break
+        d = e.advance()
+        assert d is not None
+        keys = [o["key"] for o in d["options"]]
+        e.answer([keys.index("pass")] if "pass" in keys else list(range(d["min"])))
+    assert beast is not None and not e.is_hyper(beast)
+    # メインステップでハイパー化する（他のクリーチャーをタップする）
+    d, keys = _find_main(e, "hyper:T215")
+    e.answer([keys.index("hyper:T215")])
+    for _ in range(10):
+        d = e.advance()
+        if d is None or e.is_hyper(beast):
+            break
+        keys = [o["key"] for o in d["options"]]
+        e.answer(list(range(d["min"])))
+    assert e.is_hyper(beast) and e.chars(beast)["power"] == 9000
+    release_turn = e.s.turn
+    samples = []   # 解放後の (turn, active, hyper, power) 観測
+    cleared = False
+    for _ in range(300):
+        samples.append((e.s.turn, e.s.active, e.is_hyper(beast), e.chars(beast)["power"]))
+        if e.s.turn >= release_turn + 2 and e.s.active == 0:
+            cleared = not e.is_hyper(beast)          # 次の自分のターンのはじめに解けた
+            break
+        d = e.advance()
+        if d is None:
+            break
+        keys = [o["key"] for o in d["options"]]
+        e.answer([keys.index("pass")] if "pass" in keys else list(range(d["min"])))
+    opp = [(h, p) for t, a, h, p in samples if t == release_turn + 1]
+    assert opp and all(h and p == 9000 for h, p in opp)   # 相手ターン中も解放状態でパワー9000のまま（QA 44820）
+    assert cleared

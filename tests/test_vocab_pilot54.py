@@ -40,15 +40,30 @@ def _vivid_drive(target_defn, state):
 
 
 def test_trigger_fires_on_vivid_summon(rules):
-    """T149: 自分のクリーチャーがビビッドローで召喚された時、1ドロー。"""
+    """T149: 自分のクリーチャーがビビッドローで召喚された時、1ドロー。
+
+    判別形（第149弾で補強）: 手札の枚数は「入場直後の Decision 提示時点」で見る。
+    以前の形（入場後に手札が1枚になるまで進める）は、次の自分のターンのドローでも
+    満たされてしまい、誘発が発火しなくても通る非判別なものだった。実際、誘発収集
+    レコードに vivid の印が写らない潜在バグでこの誘発は発火していなかった。"""
     e = setup(rules, {"bz": ["T149"], "hand": ["T092"], "mana": ["T003", "T005"]}, {})
     t092 = next(c for c in e.zlist("hand", 0) if e.s.cards[c].defn == "T092")
     e._raw_move(t092, "deck", "top")   # 最初のドローで引かせる
     state = {}
-    ok = _settle(e, lambda: any(e.s.cards[c].defn == "T092" for c in e.zlist("bz", 0))
-                 and len(e.zlist("hand", 0)) == 1, _vivid_drive("T092", state))
+    hand_at_entry = None
+    for _ in range(300):
+        d = e.advance()
+        if d is None:
+            break
+        if any(e.s.cards[c].defn == "T092" for c in e.zlist("bz", 0)):
+            hand_at_entry = len(e.zlist("hand", 0))   # 誘発は Decision 提示前に解決済み
+            break
+        keys = [o["key"] for o in d["options"]]
+        if _vivid_drive("T092", state)(e, d, keys):
+            continue
+        e.answer([keys.index("pass")] if "pass" in keys else list(range(d["min"])))
     assert state.get("revealed") and state.get("vivid_opt")
-    assert ok   # 召喚後に誘発で1枚引いた（手札0→1）
+    assert hand_at_entry == 1   # 入場直後に誘発で1枚引いた（手札0→1）
 
 
 def test_trigger_silent_on_normal_summon(rules):

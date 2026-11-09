@@ -23,26 +23,34 @@ def core_ops() -> dict[str, dict[str, str]]:
     return OP_ARGS
 
 EVENTS = {"move", "draw", "cast", "summon", "attack", "block", "break", "tap", "untap",
-          "turn_start", "turn_end", "battle_win", "choose", "battle", "battle_start", "attack_end", "lose", "mugon_used"}
+          "turn_start", "turn_end", "battle_win", "choose", "battle", "battle_start", "attack_end", "lose", "mugon_used", "evolve_base", "link_established",
+          "use_s_trigger", "battle_end"}
 ABILITY_KINDS = {"trigger", "replace", "static", "declare", "activate", "silent", "state", "partner"}   # state: 状態を常に見て、満たされたら勝敗が決まる常在効果（if と effect: [win/lose]）。partner: [P]能力（単独では機能せず、キズナ等で「使う」ことで解決する）
 ABILITY_KEYS = {"kind", "when", "if", "effect", "instead", "optional", "affects", "mod", "zone", "keyword", "cost", "id",
-                "once_per_turn", "first_time", "sst", "stp", "odrive", "choukon", "bazurenda", "any_attacker", "continue"}
+                "once_per_turn", "first_time", "sst", "stp", "odrive", "choukon", "bazurenda", "any_attacker", "continue", "dswitch"}
 REASONS = {"put", "destroy", "return", "discard", "charge", "summon", "cast", "break",
            "draw", "battle", "sba", "resolve", "evolve", "seal"}
-VIAS = {"revolution_change", "generate"}   # 出し方の印（「革命チェンジによって出た時」など）
+VIAS = {"revolution_change", "generate", "d_d_d"}   # 出し方の印（「革命チェンジによって出た時」「D・D・Dによって出た時」など）
 DURATIONS_FIXED = {"end_of_turn", "during_attack", "permanent", "until_next_own_turn_start"}
-MOD_KEYS = {"power", "grant", "allow", "deny", "breaks", "breaks_per_power", "battle_power", "power_when", "cost", "cost_min", "cost_may", "sac_reduce", "opt_reduce", "ignore", "ignore_ids", "gain", "require", "add_of", "add_races", "no_leave", "must_be_attacked", "battle_indestructible", "win_all_battles", "add_civs", "indestructible", "double_power"}
+MOD_KEYS = {"power", "grant", "allow", "deny", "breaks", "breaks_add", "breaks_per_power", "battle_power", "power_when", "cost", "cost_min", "cost_may", "sac_reduce", "opt_reduce", "ignore", "ignore_ids", "gain", "require", "add_of", "add_races", "add_names", "no_leave", "must_be_attacked", "battle_indestructible", "win_all_battles", "add_civs", "indestructible", "double_power", "crystal_soul"}
 REQUIRES = {"attack", "block"}   # 強制（506.1b 攻撃しなければならない, 507.1b ブロックしなければならない）
 POSITIONS = {"top", "bottom"}
 PERMANENT_TYPES = {"tamaseed", "field", "cross_gear"}   # 手札から実行してバトルゾーンに出るクリーチャー以外のカード（315, 308, 303）
-CARD_TYPES = {"creature", "spell", "evolution"} | PERMANENT_TYPES
+CARD_TYPES = {"creature", "spell", "evolution", "d2_field"} | PERMANENT_TYPES   # d2_field: D2フィールドの型印（特殊タイプ D2。types には field と併記する。第151弾）
 CIVS = {"light", "water", "darkness", "fire", "nature", "zero"}
 SELECTOR_KEYS = {"zone", "owner", "owner_of", "filter", "count", "up_to", "from_top", "chooser", "ref", "other",
                  "under_of", "bundle_of", "look", "exlife_of", "total_cost_le", "total_cost_ge", "total_power_le", "total_power_ge",
-                 "distinct_costs", "distinct_from"}   # look: 非公開ゾーン（山札など）の中身を見て選ぶ。total_cost_* / total_power_*: コスト／パワーの合計が上限以下／下限以上になるように好きな数選ぶ。distinct_costs / distinct_from: 「コストが異なる」選択の制約（第147弾）。bundle_of: シールドの束に含まれるカードすべて（第148弾）
+                 "distinct_costs", "distinct_from", "exclude"}   # look: 非公開ゾーン（山札など）の中身を見て選ぶ。total_cost_* / total_power_*: コスト／パワーの合計が上限以下／下限以上になるように好きな数選ぶ。distinct_costs / distinct_from: 「コストが異なる」選択の制約（第147弾）。bundle_of: シールドの束に含まれるカードすべて（第148弾）。exclude: 「〜以外の」参照除外（セレクタまたはそのリスト。第3段・共通基盤）
 FILTER_KEYS = {"any_of", "types", "not_types", "civs", "civs_all", "not_civs", "races", "race_has", "not_race_has", "name", "name_has", "not_name",
                "cost_le", "cost_ge", "power_le", "power_ge", "tapped", "keyword", "multicolor", "colorless", "face_down", "face_up", "neo", "vanilla", "sealed", "evolution", "mugen_climb", "twinpact", "vividraw", "fushigi", "linked_god", "entered_this_turn"}
-FILTER_EXPR_KEYS = {"cost_le", "cost_ge", "power_le", "power_ge", "races"}   # 値に式を書ける（解決時に計算）
+FILTER_EXPR_KEYS = {"cost_le", "cost_ge", "power_le", "power_ge", "races", "civs", "not_civs", "name"}   # 値に式を書ける（解決時に計算）。civs / not_civs / name は宣言プリミティブ（{declared:}）の受け口（バンドB U3／バンドC2 U97）
+# 履歴カウンタ（式 {turn_count: ...}）の kind 列挙（バンドC1 U19＋統一で追加した分）。
+# owner に any を許すのは destroyed と attack だけ（他は you/opp）
+TURN_COUNT_KINDS = {"shield_put", "shield_left", "mana_put", "cast", "summon", "attack", "destroyed",
+                    "broke_by_self", "draw", "broken", "enter", "discard", "leave", "tap", "untap",
+                    "block", "enter_unpaid", "attack_by", "attack_on"}
+TURN_COUNT_ANY_KINDS = {"destroyed", "attack"}
+ORD_KINDS = {"mana_put", "enter", "cast", "summon", "draw", "attack", "attack_by"}   # when の {ord: ...} で照合できる kind
 
 
 def split_races(races) -> list[str]:
@@ -89,6 +97,7 @@ class Face:
     star: bool = False                                    # スター進化: 離れる時は一番上のカードだけが離れ、下は残る
     s_max: bool = False                                   # S-MAX進化: 進化元を必要とせず、通常のクリーチャーとして召喚できる
     hyper: bool = False                                   # ハイパー化（他の自分のクリーチャー1体をタップしてハイパーモードを解放できる）
+    crystal_soul: int = 0                                 # 水晶ソウルN: 召喚／唱える時に裏向きマナの数字が N になる（0＝持たない）
     resolve_to: str = "graveyard"                         # 呪文の解決後の置き場所（チャージャー等）
     after_resolve: list[dict] = field(default_factory=list)
 
@@ -140,6 +149,7 @@ class CardDef:
     star: bool = False
     s_max: bool = False
     hyper: bool = False
+    crystal_soul: int = 0                                 # 水晶ソウルN（面の宣言。0＝持たない）
     resolve_to: str = "graveyard"
     after_resolve: list[dict] = field(default_factory=list)
     faces: list[Face] = field(default_factory=list)      # ツインパクト: [0]=クリーチャー側, [1]=呪文側
@@ -256,6 +266,19 @@ class Checker:
                 so = op["stack_on"]
                 if isinstance(so, dict) and "count" in so and so["count"] != 1:
                     raise DefError(f"{where}: move.stack_on selector count must be 1")
+            if name == "move" and "stack_evo" in op:
+                # 重ね出し（put_evolution_stacking）: 真値のみ、行き先はバトルゾーンだけ、
+                # シールド用の stack_on とは併記しない（あちらは束の上に置く別機構）
+                if op["stack_evo"] is not True:
+                    raise DefError(f"{where}: move.stack_evo must be true")
+                if op.get("to") != "bz":
+                    raise DefError(f"{where}: move.stack_evo needs to: bz")
+                if "stack_on" in op:
+                    raise DefError(f"{where}: move.stack_evo cannot combine with stack_on")
+            if name == "play_self" and "via" in op:
+                # 出し方の印（第149弾）: 値は when の via と同じ VIAS のものだけ
+                if op["via"] not in VIAS:
+                    raise DefError(f"{where}: play_self.via unknown via '{op['via']}'")
 
     def value(self, ty, v, where):
         if ty == "filter":
@@ -325,6 +348,12 @@ class Checker:
             raise DefError(f"{where}: distinct_costs must be true")
         if "distinct_from" in sel:
             self.selector(sel["distinct_from"], where)   # 参照集合は通常のセレクタとして再帰検証する
+        if "exclude" in sel:
+            ex = sel["exclude"]
+            if not isinstance(ex, (dict, list)):
+                raise DefError(f"{where}: exclude must be a selector or a list of selectors")
+            for sub in (ex if isinstance(ex, list) else [ex]):
+                self.selector(sub, where)   # 除外指定（単体または リスト形）も通常のセレクタとして再帰検証する
         if "bundle_of" in sel and isinstance(sel["bundle_of"], dict):
             self.selector(sel["bundle_of"], where)   # 束のトップを指すセレクタとして再帰検証する（文字列なら "self" / 変数名）
         if "distinct_costs" in sel or "distinct_from" in sel:
@@ -346,13 +375,18 @@ class Checker:
             for sub in f["any_of"]:
                 self.filter(sub, where)
         for k in ("civs", "not_civs"):
-            if k in f and set(f[k]) - CIVS:
+            if k in f and not isinstance(f[k], dict) and set(f[k]) - CIVS:   # 辞書値は式として扱い、リテラル照合を素通りさせる（バンドB U3 の追加ガード）
                 raise DefError(f"{where}: unknown civs {f[k]}")
         if "keyword" in f and f["keyword"] not in self.keywords:
             raise DefError(f"{where}: unknown keyword '{f['keyword']}'")
         for k in FILTER_EXPR_KEYS & set(f):
-            if not (k == "races" and isinstance(f[k], list)):
-                self.expr(f[k], where)
+            if k in ("races", "civs", "not_civs") and isinstance(f[k], list):
+                continue   # リテラル（種族・文明のリスト）は上の照合で検証済み
+            if k == "name" and isinstance(f[k], str):
+                continue   # リテラル（カード名の文字列）
+            if isinstance(f[k], dict) and set(f[k]) == {"ref"} and isinstance(f[k]["ref"], str):
+                continue   # {ref: 変数名} の参照指定形（既存の変換データの形。式ではないので検証対象外）
+            self.expr(f[k], where)
 
     def expr(self, x, where):
         if isinstance(x, int):
@@ -365,6 +399,8 @@ class Checker:
                 return self.selector(v, where)
             if k == "distinct_cost_count":   # 対象カード群にあるコストの種類数（同じコストは1つに数える。第145弾）
                 return self.selector(v, where)
+            if k in ("total_cost", "total_power"):   # 対象カード群のコスト／パワーの合計（公開集合の保持。バンドC1 U39）
+                return self.selector(v, where)
             if k == "entered":   # このターンに出したクリーチャーの数 {owner, other?}
                 if not isinstance(v, dict) or set(v) - {"owner", "other"} or v.get("owner", "you") not in ("you", "opp"):
                     raise DefError(f"{where}: entered needs {{owner: you/opp, other?: bool}}")
@@ -373,7 +409,51 @@ class Checker:
                 if not isinstance(v, dict) or set(v) - {"owner"} or v.get("owner", "you") not in ("you", "opp"):
                     raise DefError(f"{where}: drew needs {{owner: you/opp}}")
                 return
-            if k in ("var", "cost_of", "power_of", "races_of", "race"):
+            if k == "bundles":   # シールドの束の数 {owner, face_up?}（束の中身のカードは数えない。113.2。face_up は「表向きのカードを含む束か」）
+                if not isinstance(v, dict) or set(v) - {"owner", "face_up"} or v.get("owner", "you") not in ("you", "opp") \
+                        or ("face_up" in v and not isinstance(v["face_up"], bool)):
+                    raise DefError(f"{where}: bundles needs {{owner: you/opp, face_up?: bool}}")
+                return
+            if k == "turn_count":   # このターンに〜した回数 {kind, owner?, other?, filter?, ref?}（履歴カウンタ基盤。バンドC1 U19）
+                if not isinstance(v, dict) or set(v) - {"kind", "owner", "other", "filter", "ref"} \
+                        or v.get("kind") not in TURN_COUNT_KINDS:
+                    raise DefError(f"{where}: turn_count needs {{kind: <history kind>, owner?: you/opp/any, other?: bool, filter?: <filter>, ref?: str}}")
+                kind = v["kind"]
+                if kind in ("attack_by", "attack_on"):
+                    if set(v) - {"kind", "ref"} or not isinstance(v.get("ref"), (str, dict)):
+                        raise DefError(f"{where}: turn_count kind {kind} needs {{kind, ref}} (ref は \"self\" か変数名)")
+                    if isinstance(v.get("ref"), dict) and set(v["ref"]) != {"ref"}:
+                        raise DefError(f"{where}: turn_count ref must be \"self\", a var name, or {{ref: name}}")
+                else:
+                    if "ref" in v:
+                        raise DefError(f"{where}: turn_count ref is only for attack_by / attack_on")
+                    owner = v.get("owner", "you")
+                    if owner not in ("you", "opp", "any") or (owner == "any" and kind not in TURN_COUNT_ANY_KINDS):
+                        raise DefError(f"{where}: turn_count owner must be you/opp (any は destroyed / attack だけ)")
+                    if kind == "broke_by_self" and set(v) != {"kind"}:
+                        raise DefError(f"{where}: turn_count broke_by_self takes no owner/other/filter (self 固定)")
+                    if "other" in v and (kind != "attack" or not isinstance(v["other"], bool)):
+                        raise DefError(f"{where}: turn_count other is only for kind: attack, as a bool")
+                    if "filter" in v:
+                        if kind != "attack":
+                            raise DefError(f"{where}: turn_count filter is only for kind: attack")
+                        self.filter(v["filter"], where)
+                return
+            if k == "used_count":   # 「使った」履歴の特性つき数え {owner?, filter?}（バンドC1 U19）
+                if not isinstance(v, dict) or set(v) - {"owner", "filter"} or v.get("owner", "you") not in ("you", "opp"):
+                    raise DefError(f"{where}: used_count needs {{owner?: you/opp, filter?: <filter>}}")
+                if "filter" in v:
+                    self.filter(v["filter"], where)
+                return
+            if k == "prev_shield_added":   # 前のターンにシールドを加えた回数 {owner}（バンドB U18）
+                if not isinstance(v, dict) or set(v) - {"owner"} or v.get("owner", "you") not in ("you", "opp"):
+                    raise DefError(f"{where}: prev_shield_added needs {{owner: you/opp}}")
+                return
+            if k == "declared":   # 宣言した値 {declared: 名前}（バンドC2 U97。値は宣言 op の as の名前）
+                if not isinstance(v, str):
+                    raise DefError(f"{where}: declared needs a name")
+                return
+            if k in ("var", "cost_of", "power_of", "name_of", "races_of", "race"):   # name_of は従来 filter 経由で未検証だった分（T169）。他と同じく受理する
                 return
             if k == "link_count":   # リンクしているカードの枚数（値は self 固定で無視される）
                 return
@@ -408,6 +488,11 @@ class Checker:
                 self.cond(x, where)
             return
         if k in ("marked", "self_marked"):
+            if k == "marked" and isinstance(v, dict):   # スコープつき {name, scope?: turn/attack/game}（バンドB 基盤 mark-scope）
+                if set(v) - {"name", "scope"} or not isinstance(v.get("name"), str) \
+                        or v.get("scope", "turn") not in ("turn", "attack", "game"):
+                    raise DefError(f"{where}: marked dict needs {{name: str, scope?: turn/attack/game}}")
+                return
             if not isinstance(v, str):
                 raise DefError(f"{where}: marked needs a name")
             return
@@ -431,11 +516,21 @@ class Checker:
             if not isinstance(v, bool):
                 raise DefError(f"{where}: vivid_paid must be bool")
             return
+        if k == "ddd_paid":
+            if not isinstance(v, bool):
+                raise DefError(f"{where}: ddd_paid must be bool")
+            return
+        if k == "power_ge":
+            if not isinstance(v, int) or isinstance(v, bool):
+                raise DefError(f"{where}: power_ge must be an int")
+            return
         raise DefError(f"{where}: unknown cond '{k}'")
 
     def count_spec(self, v, where):
-        """mod の count: セレクタ（体数）か、civ_count / distinct_cost_count / sum を含む式（文明・コストの種類数など）。"""
-        if isinstance(v, dict) and ("civ_count" in v or "distinct_cost_count" in v or "sum" in v):
+        """mod の count: セレクタ（体数）か、civ_count / distinct_cost_count / sum / bundles / 履歴式を含む式（文明・コストの種類数、束の数、このターン〜した数など）。"""
+        if isinstance(v, dict) and any(k in v for k in ("civ_count", "distinct_cost_count", "sum", "bundles",
+                                                         "turn_count", "used_count", "prev_shield_added", "declared",
+                                                         "total_cost", "total_power")):
             return self.expr(v, where)
         return self.selector(v, where)
 
@@ -454,6 +549,9 @@ class Checker:
         if "add_races" in m:
             if not isinstance(m["add_races"], list) or not all(isinstance(x, (str, dict)) for x in m["add_races"]):
                 raise DefError(f"{where}: add_races must be a list of race names or expressions")
+        if "add_names" in m:
+            if not isinstance(m["add_names"], list) or not m["add_names"] or not all(isinstance(x, str) for x in m["add_names"]):
+                raise DefError(f"{where}: add_names must be a non-empty list of card names")
         if "breaks" in m:
             b = m["breaks"]
             if isinstance(b, dict):
@@ -470,6 +568,9 @@ class Checker:
                     self.count_spec(b[next(iter(keys))], where)
             elif not isinstance(b, int):
                 raise DefError(f"{where}: breaks must be an int or a dict (base + value)")
+        if "breaks_add" in m:
+            if not isinstance(m["breaks_add"], int) or isinstance(m["breaks_add"], bool):
+                raise DefError(f"{where}: breaks_add must be an int")
         if "cost_may" in m:
             cm = m["cost_may"]
             if not isinstance(cm, dict) or set(cm) - {"amount", "once", "min", "must"} or not isinstance(cm.get("amount"), int) \
@@ -540,6 +641,8 @@ class Checker:
                 raise DefError(f"{where}: cost must be int or {{amount, count}}")
         if "cost_min" in m and not isinstance(m["cost_min"], int):
             raise DefError(f"{where}: cost_min must be int")
+        if "crystal_soul" in m and not (isinstance(m["crystal_soul"], int) and not isinstance(m["crystal_soul"], bool) and m["crystal_soul"] >= 1):
+            raise DefError(f"{where}: crystal_soul must be an int >= 1")
         if "power_when" in m:   # 攻撃中／ブロック中のパワー修整: {amount: N, count: <selector>, when: attacking|blocking}。バトルをしていない間（プレイヤーを攻撃中など）も含む
             pw = m["power_when"]
             if not isinstance(pw, dict) or set(pw) - {"amount", "count", "when"} or not isinstance(pw.get("amount"), int) \
@@ -592,8 +695,34 @@ class Checker:
             raise DefError(f"{where}: unknown via '{w['via']}'")
         if "by" in w and w["by"] not in ("you", "opp"):
             raise DefError(f"{where}: bad by '{w['by']}'")
+        if "cause" in w:   # そのイベントを起こした効果の帰属 {by?: you/opp, kind?: spell/ability}（効果帰属レコード基盤B1。バンドC2 U108）
+            cw = w["cause"]
+            if not isinstance(cw, dict) or not cw or set(cw) - {"by", "kind"} \
+                    or cw.get("by", "you") not in ("you", "opp") or cw.get("kind", "spell") not in ("spell", "ability"):
+                raise DefError(f"{where}: cause needs {{by?: you/opp, kind?: spell/ability}}")
+        if "blocked" in w and not isinstance(w["blocked"], bool):
+            raise DefError(f"{where}: blocked must be bool")
+        if "ord" in w:   # その出来事のこのターンでの通し番号 {kind, 比較1つ}（履歴カウンタ基盤。バンドC1 U19）
+            o = w["ord"]
+            cmps = [k for k in ("eq", "ge", "gt", "le", "lt") if k in o]
+            if not isinstance(o, dict) or set(o) - {"kind", "eq", "ge", "gt", "le", "lt"} \
+                    or o.get("kind") not in ORD_KINDS or len(cmps) != 1 \
+                    or not isinstance(o[cmps[0]], int) or isinstance(o[cmps[0]], bool) or o[cmps[0]] < 1:
+                raise DefError(f"{where}: ord needs {{kind: <ord kind>, <one of eq/ge/gt/le/lt>: <positive int>}}")
         if w.get("sealed_from") is not None and w["sealed_from"] not in ("self",) and not isinstance(w["sealed_from"], dict):
             raise DefError(f"{where}: bad sealed_from '{w['sealed_from']}'")
+        if "from_under" in w:   # 移動直前に他のカードの下にあったか: true / false（下になかった）/ self / {owner?, filter?, other?}（from_under 機構。第156弾の event.under と対）
+            fu = w["from_under"]
+            if isinstance(fu, dict):
+                bad = set(fu) - {"owner", "filter", "other"}
+                if bad:
+                    raise DefError(f"{where}: bad from_under keys {sorted(bad)}")
+                if fu.get("owner", "any") not in ("you", "opp", "any"):
+                    raise DefError(f"{where}: bad from_under owner '{fu.get('owner')}'")
+                if "filter" in fu:
+                    self.filter(fu["filter"], where)
+            elif fu is not True and fu is not False and fu != "self":
+                raise DefError(f"{where}: bad from_under '{fu}'")
 
     def ability(self, ab, where):
         kind = ab.get("kind")
@@ -609,6 +738,9 @@ class Checker:
         if "continue" in ab:   # ブレイクの割り込み型（第146弾）: 置換の instead の後もブレイクが続く。break の置換だけに書ける
             if kind != "replace" or ab.get("when", {}).get("event") != "break" or not isinstance(ab["continue"], bool):
                 raise DefError(f"{where}: continue is only for replace of break, as a bool")
+        if "dswitch" in ab:   # Dスイッチ（第151弾）: trigger に true を付け、効果の先頭に may＋{op: dswitch} を置く型だけ
+            if kind != "trigger" or ab["dswitch"] is not True:
+                raise DefError(f"{where}: dswitch is only for trigger, as true")
         if kind == "state":
             if "if" not in ab or not all(o.get("op") in ("win", "lose") for o in ab.get("effect", [])) or not ab.get("effect"):
                 raise DefError(f"{where}: state は if と effect（win / lose だけ）が要る")
@@ -758,6 +890,10 @@ def _load_face(raw, keywords, macros, chk: Checker, where) -> dict:
         if not isinstance(fg, dict) or not isinstance(fg.get("cost"), int) or set(fg.get("civs", [])) - CIVS \
                 or not isinstance(fg.get("min", 1), int):
             raise DefError(f"{where}: fushigi needs {{cost: int, civs: [...], min: int}}")
+    if "crystal_soul" in raw:
+        cs = raw["crystal_soul"]
+        if not isinstance(cs, int) or isinstance(cs, bool) or cs < 1:
+            raise DefError(f"{where}: crystal_soul must be an int >= 1")
     return dict(name=raw["name"], types=raw["types"], civs=raw["civs"], cost=raw["cost"],
                 power=raw.get("power", 0), races=split_races(raw.get("races", [])), keywords=names,
                 abilities=abilities, spell=spell, sst_spell=sst_spell, stp_spell=stp_spell, odrive_spell=odrive_spell, o_drive=raw.get("o_drive"), mugen_climb=raw.get("mugen_climb"), alt_cost=raw.get("alt_cost"), vividraw=raw.get("vividraw"), fushigi=raw.get("fushigi"), evolve_from=raw.get("evolve_from"),
@@ -765,7 +901,7 @@ def _load_face(raw, keywords, macros, chk: Checker, where) -> dict:
                 evolve_count=(len(raw["evolve_from"]) if isinstance(raw.get("evolve_from"), list)
                               else int(raw.get("evolve_count", 1))),
                 cost_reduce_per_evo=int(raw.get("cost_reduce_per_evo", 0)),
-                free_if=raw.get("free_if"), galaxy_shield=raw.get("galaxy_shield"), bazurenda=raw.get("bazurenda"), neo=bool(raw.get("neo", False)), grave_evo=bool(raw.get("grave_evo", False)), star=bool(raw.get("star", False)), s_max=bool(raw.get("s_max", False)), hyper=bool(raw.get("hyper", False)), **{"tap_reduce": 0, "s_back": None, **props})
+                free_if=raw.get("free_if"), galaxy_shield=raw.get("galaxy_shield"), bazurenda=raw.get("bazurenda"), neo=bool(raw.get("neo", False)), grave_evo=bool(raw.get("grave_evo", False)), star=bool(raw.get("star", False)), s_max=bool(raw.get("s_max", False)), hyper=bool(raw.get("hyper", False)), crystal_soul=int(raw.get("crystal_soul", 0)), **{"tap_reduce": 0, "s_back": None, **props})
 
 
 def load_tables():

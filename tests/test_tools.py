@@ -455,6 +455,14 @@ def test_system_prompt_picks_similar_examples():
     assert len(yaml.safe_load(cc.examples_for(row, 8))["cards"]) == 8
 
 
+def test_prompt_rules_text_strips_only_comments():
+    """プロンプト用にコメント行を除いても、ルールのデータ（パース結果）は変わらない。"""
+    import convert_cards as cc
+    for n in ("zones.yaml", "keywords.yaml", "op_macros.yaml", "permissions.yaml", "turn.yaml"):
+        assert yaml.safe_load(cc._prompt_rules_text(n)) == yaml.safe_load(cc._rules_text(n)), n
+        assert len(cc._prompt_rules_text(n)) < len(cc._rules_text(n)), n
+
+
 def test_openrouter_uses_only_verified_free_models(monkeypatch):
     """OpenRouter は公式の一覧で ':free' かつ入出力単価0のものだけ使う。費用つきの応答は停止。全滅したら OpenCode 側の外部切替に使える。"""
     from llm_offload import providers as pv

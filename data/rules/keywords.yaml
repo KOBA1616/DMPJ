@@ -23,6 +23,23 @@ keywords:
         when: {event: move, to: bz, subject: self}
         effect:
           - {op: use_partner}
+  # キズナプラス（第153弾）: 支払い（下のカード1枚を墓地に置く）を行ったら、2つの[P]は
+  # その時点でそれぞれ確定した待機効果になる（603.3a）。use_partner に pending: true を付けると
+  # その場では解決せず待機に登録され、解決順は使う側が好きな順番で選べる（605.1）。
+  # 他の[P]持ちがいなくても支払いだけ行って自分の[P]だけ使える（101.3／605.2b）ので、
+  # 誘発の if は「下のカード1枚以上」だけにする（exclude_self 側は候補なしで何もしない）。
+  kizuna_plus:
+    ja: キズナプラス（このクリーチャーが攻撃する時、その下にあるカードを1枚、自分の墓地に置いてもよい。そうしたら、このクリーチャーと自分の他のクリーチャー1体の[P]能力を使う）
+    abilities:
+      - kind: trigger
+        when: {event: attack, subject: self}
+        if: {cmp: [{count: {under_of: self}}, ">=", 1]}
+        effect:
+          - op: may
+            body:
+              - {op: move, select: {under_of: self, count: 1}, to: graveyard, reason: put}
+              - {op: use_partner, of: self, pending: true}
+              - {op: use_partner, exclude_self: true, pending: true}
   abyss_rush:
     ja: アビスラッシュ
     abilities:
@@ -240,7 +257,7 @@ keywords:
         when: {event: move, from: bz, to: graveyard, reason: destroy, subject: self}
         if: {exists: {zone: shield, owner: you}}
         instead:
-          - {op: move, select: {zone: shield, owner: you, count: 1}, to: hand, reason: return}
+          - {op: move, select: {zone: shield, owner: you, count: 1}, to: hand, reason: return, strigger: "off"}
   eternal_omega:      # このクリーチャーがバトルゾーンを離れる時、かわりに手札に戻す（強制の置換）
     ja: エターナル・Ω
     abilities:
@@ -343,3 +360,14 @@ keywords:
   z_rush:      # Zラッシュ: 常在型。シールドが離れた際、その時点でバトルゾーンにいる Zラッシュ持ちのハイパーモードを即座に解放する（適用はイベント適用側。公式Q&A 48466）
     ja: Zラッシュ（シールドが離れたら、次の自分のターンのはじめまで、このクリーチャーのハイパーモードを解放する）
     abilities: []
+  rensa:       # 連鎖（バンドB U2 の精査で追加。設計書 design-full-bandB §3 の定義どおり）
+    ja: 連鎖（このクリーチャーをバトルゾーンに出した時、自分の山札の上から１枚目を見る。そのカードが、このクリーチャーよりコストが小さいクリーチャーであれば、バトルゾーンに出してもよい）
+    abilities:
+      - kind: trigger
+        when: {event: move, to: bz, subject: self}
+        effect:
+          - op: may
+            body:
+              - op: play_free
+                select: {zone: deck, owner: you, from_top: 1, count: 1,
+                         filter: {types: [creature], cost_le: {sum: [{cost_of: "self"}, -1]}}}
