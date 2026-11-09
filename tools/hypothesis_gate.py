@@ -19,6 +19,7 @@ from dmsim.autofix.gate import check_paths, compare  # noqa: E402
 from dmsim.defs import load_rules  # noqa: E402
 from dmsim.eval.progress import ProgressSpec  # noqa: E402
 from dmsim.autofix.partsgenome import load_specs_evolved  # noqa: E402
+from dmsim.autofix.valuelearn import load_model  # noqa: E402
 from dmsim.solitaire import load_deck  # noqa: E402
 
 
@@ -36,7 +37,7 @@ def measure_all(a) -> dict:
         opp = load_deck(t["opp_deck"]) if t.get("opp_deck") else ["T001"] * 40
         m = harness_measure(rules, load_deck(t["deck"]), opp, list(range(1, a.seeds + 1)), spec,
                             ProgressSpec(board=default_board(c), cards=default_need(c)), specs[t["combo"]],
-                            max_turn=a.turns, workers=a.workers)(k)
+                            max_turn=a.turns, workers=a.workers, value_model=load_model(t["combo"]))(k)
         for key in out:
             out[key] += m[key]
     return out
