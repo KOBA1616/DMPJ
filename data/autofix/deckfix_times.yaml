@@ -1,0 +1,28 @@
+akashic:
+  cands: 13
+  coarse_budget: 40
+  coarse_seeds: 20
+  complete: false
+  last_run: 1794251164.6710086
+  sec: 219.1
+knight_dmc:
+  cands: 5
+  coarse_budget: 40
+  coarse_seeds: 8
+  complete: false
+  last_run: 1794250879.348427
+  sec: 108.3
+saga:
+  cands: 1
+  coarse_budget: 40
+  coarse_seeds: 14
+  complete: false
+  last_run: 1794249453.7532492
+  sec: 818.6
+tenmon:
+  cands: 4
+  coarse_budget: 40
+  coarse_seeds: 8
+  complete: false
+  last_run: 1794250700.909303
+  sec: 1163.1
