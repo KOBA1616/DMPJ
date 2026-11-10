@@ -41,13 +41,43 @@ _OK_KW = {"blocker", "cannot_attack_player", "cannot_attack", "double_breaker", 
           "s_trigger", "s_trigger_plus", "super_s_trigger"}
 
 
+_FILTER_LISTS = ("types", "not_types", "civs", "not_civs", "races")
+_FILTER_INTS = ("cost_le", "cost_ge", "power_le", "power_ge")
+_FILTER_BOOLS = ("tapped", "multicolor", "colorless")
+
+
+def _simple_filter(f) -> bool:
+    """Rust の filter_ok が Python の filter_match と同じ結果になるキー（値が式でないもの）だけ。"""
+    if not isinstance(f, dict):
+        return False
+    for k, v in f.items():
+        if k in _FILTER_LISTS:
+            if not (isinstance(v, list) and all(isinstance(x, str) for x in v)) and not (k in ("civs", "not_civs") and isinstance(v, str)):
+                return False
+        elif k in _FILTER_INTS:
+            if not isinstance(v, int) or isinstance(v, bool):
+                return False
+        elif k in _FILTER_BOOLS:
+            if not isinstance(v, bool):
+                return False
+        elif k in ("race_has", "keyword"):
+            if not isinstance(v, str):
+                return False
+        elif k == "any_of":
+            if not (isinstance(v, list) and all(_simple_filter(x) for x in v)):
+                return False
+        else:
+            return False
+    return True
+
+
 def _simple_selector(sel) -> bool:
     """段階2-d: Rust の select が扱えるセレクタ（自身／ゾーン・持ち主・枚数・上から・選ぶ人・types 絞り込み）。"""
     if not isinstance(sel, dict):
         return False
     if sel == {"ref": "self"}:
         return True
-    if not set(sel) <= {"zone", "owner", "count", "from_top", "filter", "chooser", "look", "ref"}:
+    if not set(sel) <= {"zone", "owner", "count", "from_top", "filter", "chooser", "look", "ref", "up_to", "other"}:
         return False
     if "look" in sel and not isinstance(sel["look"], bool):
         return False
@@ -66,8 +96,12 @@ def _simple_selector(sel) -> bool:
     ft = sel.get("from_top", 0)
     if not (isinstance(ft, int) and not isinstance(ft, bool)):
         return False
-    f = sel.get("filter", {})
-    if not isinstance(f, dict) or not set(f) <= {"types"} or not all(isinstance(x, str) for x in f.get("types", [])):
+    if not _simple_filter(sel.get("filter", {})):
+        return False
+    up = sel.get("up_to", False)
+    if not isinstance(up, bool) or (up and c == "all") or (up and "count" not in sel):
+        return False
+    if "other" in sel and (not isinstance(sel["other"], bool) or "ref" in sel):
         return False
     return True
 
@@ -85,7 +119,7 @@ def _simple_effect(ops, top=True) -> bool:
             continue
         if k in ("tap", "untap") and set(o) <= {"op", "select"} and _simple_selector(o.get("select")):
             continue
-        if k == "move" and set(o) <= {"op", "select", "to", "reason", "position"} and o.get("to") in ("hand", "graveyard", "mana", "deck") \
+        if k == "move" and set(o) <= {"op", "select", "to", "reason", "position", "tapped"} and isinstance(o.get("tapped", False), bool) and o.get("to") in ("hand", "graveyard", "mana", "deck", "shield", "bz") \
                 and isinstance(o.get("reason"), str) and o.get("position", "top") in ("top", "bottom") and _simple_selector(o.get("select")):
             continue
         return False

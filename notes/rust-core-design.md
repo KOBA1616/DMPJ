@@ -95,3 +95,14 @@ Rust 版と Python 版は、同じ「エンジン疑似API」（プロセス内�
   スーパー・S・トリガー／S・トリガー・プラスの追加印（sst／stp）も実装したが、該当する札が今の通る札に無く、実戦ではまだ検証されていない。
 - 通る札は 1119 枚（S・トリガー持ちは 162 枚）。declare_strigger 362 回を含む 60 ゲーム＋混在 80 ゲームで全手一致。
 - S・トリガー持ちの札の多くは、他の語彙（置換・複雑な常在型など）のために通らない。常在型の特性計算が引き続き最大の壁。
+
+## 段階2-d 第5弾の結果（2026-11-10）: フィルタ・up_to・出す／シールド化
+
+- 洗い出しの訂正: 通らない札の「唯一の障害」を数え直すと、最大は常在型ではなく **誘発の効果の形**（セレクタのフィルタ・up_to・移動先。542 枚）だった。
+  先に数えた「常在型 約1640 枚」は、他の障害と重なるものを含む過大な数字。常在型だけが障害の札は 90 枚（power_when）ほど。
+- 追加: フィルタ（types/not_types/civs/not_civs/races/race_has/keyword/cost_le・ge/power_le・ge/tapped/multicolor/colorless/any_of）、
+  `up_to`、`other`、move の `tapped`、移動先 `shield` と `bz`（効果で出す: 1枚ずつ。`enter_bz` の許可確認、`entered:` の記録）。
+- 通る札は 1354 枚。350 ゲームで全手一致。
+- 見つかった差: Python の chars に `must_be_attacked_first` が増えていた（Rust の lki に無く、移動した札のダイジェストが食い違った）→ 追加。
+  Python 側の chars のキー追加は Rust の `chars_json` と必ず同時に直すこと（rust-lockstep が検出する）。
+- 次の壁（唯一の障害の札数）: if 171・modify 133・墓地へ行く時などの誘発条件 117・置換 208・起動 64・play_free 61・repeat 56・modal 51。

@@ -141,3 +141,36 @@ def test_s_trigger_creatures_match(real_env, seed):
     spec = {"kind": "new_game", "decks": [deck(), deck()], "seed": seed, "first_player": seed % 2}
     res = lockstep(Session.open(r, spec), rustcore.RustSession.open(r, spec, b), f"random:{seed}")
     assert res["divergence"] is None and res["ok"] is True
+
+
+@pytest.mark.parametrize("seed", range(1, 21))
+def test_filter_put_cards_match(real_env, seed):
+    """段階2-d 第5弾: フィルタ（コスト・パワー・文明・種族・キーワード・タップ等）と up_to、バトルゾーン／シールドへの移動
+    を含む札を多く入れたデッキで1局が一致する。"""
+    import random
+    r, b = real_env
+    pool = _portable(r)
+
+    def has(i):
+        out = []
+
+        def w(ops):
+            for o in ops:
+                out.append(o)
+                for k in ("body", "then", "else"):
+                    if isinstance(o.get(k), list):
+                        w(o[k])
+        for a in r.cards[i].abilities:
+            if a["kind"] == "trigger":
+                w(a["effect"])
+        return any((o["op"] == "move" and o.get("to") in ("bz", "shield")) or
+                   (isinstance(o.get("select"), dict) and (o["select"].get("filter") or o["select"].get("up_to"))) for o in out)
+    sel = [i for i in pool if has(i)]
+    assert len(sel) >= 40
+    rnd = random.Random(seed)
+
+    def deck():
+        return [rnd.choice(sel) if rnd.random() < 0.6 else rnd.choice(pool) for _ in range(40)]
+    spec = {"kind": "new_game", "decks": [deck(), deck()], "seed": seed, "first_player": seed % 2}
+    res = lockstep(Session.open(r, spec), rustcore.RustSession.open(r, spec, b), f"random:{seed}")
+    assert res["divergence"] is None and res["ok"] is True
