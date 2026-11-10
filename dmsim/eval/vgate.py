@@ -8,6 +8,7 @@ from functools import partial
 
 import yaml
 from .cost_perf import make_term as cost_term
+from .lock_terms import make_term as lock_make
 from .key_terms import make_term
 
 from ..discovery.bestfirst import priority
@@ -18,7 +19,7 @@ from ..plan.macro import macro_prio
 from .vfeatures import v_priority
 
 GRID = ((3.0, 1.0), (6.0, 1.0), (6.0, 3.0), (10.0, 3.0),
-        (0.0, 0.0, -0.1), (0.0, 0.0, -0.3), (0.0, 0.0, -1.0))     # (under_w, res_w[, plan_w[, key_pen[, cost_scale]]])。(0, 0) は base と同じ。plan_w<0 は計画項を基本スコアの標準偏差の -plan_w 倍にする（正規化、macro_prio）
+        (0.0, 0.0, -0.1), (0.0, 0.0, -0.3), (0.0, 0.0, -1.0))     # (under_w, res_w[, plan_w[, key_pen[, cost_scale[, lock_w]]]])。(0, 0) は base と同じ。plan_w<0 は計画項を基本スコアの標準偏差の -plan_w 倍にする（正規化、macro_prio）
 
 
 def stage_path(combo: str, root: str = "data/eval/stages") -> str | None:
@@ -71,7 +72,8 @@ def run_gate(rules, deck, opp_deck, keys, stages, seeds, grid=GRID, deadline=Non
         pw = ex[0] if ex else 0.0
         kp = ex[1] if len(ex) > 1 else 0.0          # 4つ目: 部品札をマナに置く減点（key_terms、枚あたり）。0=なし
         cs = ex[2] if len(ex) > 2 else 0.0          # 5つ目: コスト対パフォーマンス項の倍率(cost_perf)。0=なし
-        terms = ((make_term(stages, kp),) if kp else ()) + ((cost_term(scale=cs),) if cs else ())
+        lw = ex[3] if len(ex) > 3 else 0.0          # 6つ目: 継続効果ロック項の係数 lock_w（lock_terms、recur_w も同じ値）。0=なし
+        terms = ((make_term(stages, kp),) if kp else ()) + ((cost_term(scale=cs),) if cs else ()) + ((lock_make(lock_w=lw, recur_w=lw),) if lw else ())
         prio = macro_prio(stages, pw, under_w=u, res_w=r, terms=terms) if pw else partial(_vp, under_w=u, res_w=r, terms=terms)
         rows.append({"under_w": u, "res_w": r, "plan_w": pw, "key_pen": kp, **chain_score(rules, deck, opp_deck, keys, stages, seeds, prio, deadline=dl(gi), **kw)})
     n = min([len(base["stages"])] + [len(x["stages"]) for x in rows])

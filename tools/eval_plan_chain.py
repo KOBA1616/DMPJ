@@ -16,7 +16,7 @@ from dmsim.plan.macro import macro_prio  # noqa: E402
 from dmsim.solitaire import load_deck  # noqa: E402
 
 
-def run(combo, pw, seeds, width=150, max_turn=14, targets="data/autofix/targets.yaml"):
+def run(combo, pw, seeds, start=1, width=150, max_turn=14, targets="data/autofix/targets.yaml"):
     t = next(x for x in yaml.safe_load(Path(targets).read_text(encoding="utf-8"))["targets"] if x["combo"] == combo)
     st = vgate.load_stages(vgate.stage_path(combo))
     stages = [s["target"] for s in st["stages"][1:]]
@@ -24,7 +24,7 @@ def run(combo, pw, seeds, width=150, max_turn=14, targets="data/autofix/targets.
     rules, deck = load_rules(), load_deck(t["deck"])
     prio = macro_prio(stages, pw, under_w=0, res_w=0) if pw else None
     games = []
-    for sd in range(1, seeds + 1):
+    for sd in range(start, seeds + 1):
         e = vgate.start_engine(rules, deck, ["T001"] * 40, keys, sd)
         if e is None:
             continue
@@ -41,10 +41,11 @@ def main(argv=None):
     ap.add_argument("--combo", required=True)
     ap.add_argument("--plan-w", type=float, nargs="+", default=[0.0, 30.0])
     ap.add_argument("--seeds", type=int, default=12)
+    ap.add_argument("--start", type=int, default=1, help="開始 seed（長い測定を分割して回す用）")
     ap.add_argument("--out", default="logs/plan_chain.jsonl")
     a = ap.parse_args(argv)
     for pw in a.plan_w:
-        r = run(a.combo, pw, a.seeds)
+        r = run(a.combo, pw, a.seeds, a.start)
         Path(a.out).parent.mkdir(parents=True, exist_ok=True)
         with open(a.out, "a", encoding="utf-8") as f:
             f.write(json.dumps(r, ensure_ascii=False) + "\n")
