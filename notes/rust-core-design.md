@@ -71,3 +71,12 @@ Rust 版と Python 版は、同じ「エンジン疑似API」（プロセス内�
 - 動く op: draw（枚数固定）・may（yes/no）・tap/untap（自身）。これらだけで書ける誘発を持つ札を追加して、動かせる札は約710枚。
 - 実カードのランダムデッキ（誘発札を半分混ぜる）で 80 局が、yes_no を含む全決定・digest まで一致。
 - 次: セレクタ（ゾーン・フィルタ・count・chooser）・式・条件、そして move / modify / tap（相手）などを頻度順に追加。
+
+## 段階2-d 第2弾の結果（2026-11-10）: セレクタ＋移動／タップ
+
+- Rust に `select`（ゾーン hand/deck/graveyard/mana/bz・持ち主 you/opp・枚数 int/all・from_top・chooser・types 絞り込み・`be_chosen` 禁止）と、
+  op `move`（to: hand/graveyard/mana/deck、position）・`tap`/`untap`（任意セレクタ）・`shuffle`・`draw` の player を追加。
+  効果が起こす移動には Python と同じく `by` と効果帰属（cause/cause_defn/cause_kind）を載せる（`ev_task_env`）。
+- 通る札: 931 枚（うち誘発に move/tap/untap/shuffle を持つ 174 枚）。選択肢つき決定（choose_cards）を含む 150 ゲームで全手一致。
+- 見つかった差: lki の chars.keywords は Python が sort＋重複除去（Rust は定義順だった）→ 修正。
+- 未対応（Unsupported のまま）: 絞り込みの types 以外、count の式、up_to／any、`as`、シールド起点の移動（ブレイク経路）、バトルゾーンへ出す移動、choose/if/modify 等。
