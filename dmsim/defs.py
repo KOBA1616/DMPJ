@@ -468,7 +468,7 @@ class Checker:
                 return
             if k == "seals_on":   # self に付いている封印の数（値は self 固定で無視される）
                 return
-            if k == "sum":
+            if k in ("sum", "mul"):   # 加算・乗算（mul は「2 - X」を sum:[2, mul:[-1, X]] と書くため）
                 for e in v:
                     self.expr(e, where)
                 return
@@ -533,7 +533,7 @@ class Checker:
 
     def count_spec(self, v, where):
         """mod の count: セレクタ（体数）か、civ_count / distinct_cost_count / sum / bundles / 履歴式を含む式（文明・コストの種類数、束の数、このターン〜した数など）。"""
-        if isinstance(v, dict) and any(k in v for k in ("civ_count", "distinct_cost_count", "sum", "bundles",
+        if isinstance(v, dict) and any(k in v for k in ("civ_count", "distinct_cost_count", "sum", "mul", "bundles",
                                                          "turn_count", "used_count", "prev_shield_added", "declared",
                                                          "total_cost", "total_power")):
             return self.expr(v, where)
