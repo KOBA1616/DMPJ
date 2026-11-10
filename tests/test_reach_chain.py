@@ -36,3 +36,22 @@ def test_keep_excludes_cards_in_current_stage(rules):
     held = e.s.cards[e.s.zones["hand"][0][0]].defn
     stages = [{"graveyard": {held: 1}}, {"bz": {held: 1}}]
     assert "hand" not in _with_keep(e, 0, stages, 0)          # この段の目標に出る札を手札に残す矛盾は作らない
+
+
+def test_chain_lookahead_prefers_merging_when_single_steps_dead_end(rules, monkeypatch):
+    """単独で1段ずつ進むと次で詰まる局面では、先読みが『次段と合わせる』手を選ぶ。"""
+    from dmsim.discovery import reachsearch as R
+    from dmsim.discovery.reachsearch import ReachResult
+    e = Engine.new_game(rules, [["T001"] * 40, ["T001"] * 40], 1, first_player=0)
+    stages = [{"hand": {"a": 1}}, {"hand": {"b": 1}}, {"hand": {"c": 1}}]
+    calls = []
+
+    def fake(eng, target, me=0, **kw):
+        calls.append(target)
+        merged = {"hand": {"b": 1, "c": 1}}
+        ok = target in (stages[0], merged) or target.get("hand", {}).get("a") == 1
+        return ReachResult(ok, 1, eng if ok else None, 1, 1.0 if ok else 0.0)
+    monkeypatch.setattr(R, "reach_target", fake)
+    r = R.reach_chain(e, stages, 0, keep_later=True)
+    assert r["stages"] == 3                           # 段0 → （段1・段2を合わせて）
+    assert {"hand": {"b": 1}} not in calls or r["stages"] == 3
