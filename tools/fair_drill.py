@@ -24,7 +24,7 @@ def run(rules, seed, use_term, turns, budget, n_det, copies, filler="T001", extr
     eng = Engine.new_game(rules, [deck, ["T001"] * 40], seed, first_player=0)
     w = Weights()
     vf = (lambda e, me: evaluate(e, me, w) + opp_pressure(e, me)) if use_term else None
-    low, dk = 6, 40
+    low, dk = 0, 40
     while (d := eng.advance()) is not None:
         if active_of(eng) != 0 or d["player"] != 0:
             eng.answer(charge_only_policy(eng, d))
@@ -32,7 +32,7 @@ def run(rules, seed, use_term, turns, budget, n_det, copies, filler="T001", extr
         if own_turn(eng, 0) > turns:
             break
         eng = FairTurnSearch(0, budget, n_det, seed * 7919 + own_turn(eng, 0), value_fn=vf).run(eng)
-        low = min(low, len(eng.zlist("mana", 1)))
+        low = max(low, len(eng.zlist("graveyard", 1)))  # 開幕は相手マナ0。墓地の最大枚数で測る
         dk = min(dk, len(eng.zlist("deck", 1)))
     return low, dk, result_of(eng)
 
@@ -54,8 +54,8 @@ def main(argv=None):
         for s in range(1, a.seeds + 1):
             low, dk, r = run(rules, s, use, a.turns, a.budget, a.n_det, a.copies, a.filler, extra)
             res.append(low)
-            print(f"  term={use} seed={s} 相手マナ最小={low} 相手山札最小={dk} 結果={r}", flush=True)
-        print(f"[公平] opp_pressure={'あり' if use else 'なし'}: 相手マナ最小値 {res}", flush=True)
+            print(f"  term={use} seed={s} 相手墓地最大={low} 相手山札最小={dk} 結果={r}", flush=True)
+        print(f"[公平] opp_pressure={'あり' if use else 'なし'}: 相手墓地の最大枚数 {res}", flush=True)
 
 
 if __name__ == "__main__":
