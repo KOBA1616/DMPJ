@@ -1,0 +1,3 @@
+# ロック項の調整用（日次の診断対象 data/autofix/targets.yaml には入れない）
+targets:
+  - {combo: lock_tune, deck: data/decks/lock_tune.yaml, seeds: 40}
