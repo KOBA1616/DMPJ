@@ -141,40 +141,50 @@ def _with_keep(eng: Engine, me: int, stages: list[dict], k: int) -> dict:
     return tg
 
 
-def reach_chain(eng: Engine, stages: list[dict], me: int = 0, keep_later: bool = False, **kw) -> dict:
+def reach_chain(eng: Engine, stages: list[dict], me: int = 0, keep_later: bool = False, lookahead: int = 3, **kw) -> dict:
     """段階目標を順に到達させる（勝利条件から分解した中継点を、前の段階の到達局面から続けて探す）。
     keep_later=True: 次の段と合わせて一度に届く経路、次に後ろの段が要る札を手札に残したまま届く局面を先に探す（届かなければ元の目標で探す）。
     前段の最短経路が後ろの段の札を使い切ってしまい、鎖が途中で止まるのを防ぐ。
     {"stages": 到達した段階数, "turns": [各段階の到達ターン], "nodes", "engine": 最後に届いた局面}"""
     cur, turns, nodes = eng, [], 0
     k = 0
-    while k < len(stages):
-        r = None
-        if keep_later and k + 1 < len(stages):
-            r = reach_target(cur, _with_keep(cur, me, stages, k), me, **kw)       # 後ろの段が要る札を手札に残して届く経路
-            nodes += r.nodes
+    cnt = [0]
+
+    def moves(c, i):
+        """段 i から進める手の候補: [(到達局面, 進む段数, ターン)]。keep（後ろの段の札を残す）→ 素直に1段 →（keep_later のとき）次段と合わせた目標。"""
+        out = []
+        r = reach_target(c, _with_keep(c, me, stages, i), me, **kw) if keep_later and i + 1 < len(stages) else None
+        if r is not None:
+            cnt[0] += r.nodes
         if r is None or not r.reached:
-            r = reach_target(cur, stages[k], me, **kw)
-            nodes += r.nodes
-        if not r.reached:
+            r = reach_target(c, stages[i], me, **kw)
+            cnt[0] += r.nodes
+        if r.reached:
+            out.append((r.engine, 1, r.turn))
+        if keep_later and i + 1 < len(stages):
+            mg = reach_target(c, _merge(stages[i], stages[i + 1]), me, **kw)
+            cnt[0] += mg.nodes
+            if mg.reached:
+                out.append((mg.engine, 2, mg.turn))
+        return out
+
+    def plan(c, i, depth):
+        """depth 手先まで読んで、進める段数が最大の最初の手を返す（(進んだ合計, 手)）。同点は手前の候補（keep の1段）を優先。"""
+        if i >= len(stages) or depth == 0:
+            return 0, None
+        best = (0, None)
+        for mv in moves(c, i):
+            tot = mv[1] + (plan(mv[0], i + mv[1], depth - 1)[0] if depth > 1 else 0)
+            if tot > best[0]:
+                best = (tot, mv)
+        return best
+
+    while k < len(stages):
+        _, mv = plan(cur, k, lookahead if keep_later else 1)
+        if mv is None:
             break
-        if keep_later and k + 1 < len(stages):
-            nx = reach_target(r.engine, stages[k + 1], me, **kw)                   # 次の段へ続けられるか確かめる
-            nodes += nx.nodes
-            if not nx.reached:
-                mg = reach_target(cur, _merge(stages[k], stages[k + 1]), me, **kw)  # 続けられないなら、前段の手が次段の手を兼ねる経路（天門で札を場に出す等）を一度に探す
-                nodes += mg.nodes
-                if mg.reached:
-                    cur = mg.engine
-                    turns.extend([mg.turn, mg.turn])
-                    k += 2
-                    continue
-            else:
-                cur = nx.engine
-                turns.extend([r.turn, nx.turn])
-                k += 2
-                continue
-        cur = r.engine
-        turns.append(r.turn)
-        k += 1
+        cur, took, t = mv
+        turns.extend([t] * took)
+        k += took
+    nodes = cnt[0]
     return {"stages": len(turns), "turns": turns, "nodes": nodes, "engine": cur}
