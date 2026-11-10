@@ -20,6 +20,8 @@ ANY = "*"      # target の ID に "*" を書くと、そのゾーンの枚数�
 
 
 def _have(eng: Engine, me: int, z: str, i: str) -> int:
+    if z == "shield_under":   # 盾の下に置かれたカードの合計枚数（ID は "*" のみ）。盾の束の大きさ
+        return sum(len(eng.s.cards[c].under) for c in eng.zlist("shield", me))
     return len(eng.zlist(z, me)) if i == ANY else zone_counts(eng, me, z).get(i, 0)
 
 

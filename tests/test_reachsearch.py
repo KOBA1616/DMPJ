@@ -27,3 +27,11 @@ def test_any_wildcard_counts_zone_size(rules):
     e = _game(rules)
     assert board_met(e, 0, {"shield": {"*": 5}}) and not board_met(e, 0, {"shield": {"*": 6}})
     assert board_met(e, 0, {"hand": {"*": 5}})
+
+
+def test_shield_under_counts_bundle():
+    from dmsim.defs import load_rules
+    from dmsim.engine.core import Engine
+    from dmsim.discovery.reachsearch import _have
+    e = Engine.new_game(load_rules(), [["T001"] * 40, ["T001"] * 40], 1, first_player=0)
+    assert _have(e, 0, "shield_under", "*") == 0
