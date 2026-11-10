@@ -6,9 +6,9 @@ on:
   workflow_dispatch:
   pull_request:
     paths: ["dmsim/**", "rust/**", "tests/test_rust*.py", ".github/workflows/rust-lockstep.yml"]
-  push:
-    branches: [main]
-    paths: ["dmsim/**", "rust/**", "tests/test_rust*.py"]
+concurrency:
+  group: rust-lockstep-${{ github.ref }}
+  cancel-in-progress: true
 permissions:
   contents: read
   pull-requests: write
