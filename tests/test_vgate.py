@@ -45,3 +45,22 @@ def test_runstd_and_normalized_plan():
     for x in (0.0, 10.0, 20.0, 30.0):
         rs.add(x)
     assert abs(rs.std - 12.9099) < 1e-3   # 標本標準偏差
+
+
+def test_accumulate_across_days_reaches_min_n():
+    rows = [{"under_w": 3.0, "res_w": 1.0, "plan_w": 0.0, "key_pen": 0.0}]
+    acc = {}
+    for lo in (1, 5):          # 1日目 seed1-4、2日目 seed5-8（1日では4局で small_n）
+        res = {"base_by_seed": {s: 1 for s in range(lo, lo + 4)}, "rows": [{**rows[0], "by_seed": {s: 2 for s in range(lo, lo + 4)}}]}
+        vgate.accumulate(acc, res)
+        j = vgate.judge_acc(acc, rows, 8)
+        if lo == 1:
+            assert j["rows"][0]["verdict"] == "small_n" and j["best"] is None and vgate.next_seed(acc) == 5
+    assert j["rows"][0]["verdict"] == "adopt" and j["rows"][0]["n"] == 8 and j["best"]["total_n"] == 16
+
+
+def test_judge_acc_uses_only_common_seeds():
+    rows = [{"under_w": 3.0, "res_w": 1.0, "plan_w": 0.0, "key_pen": 0.0}]
+    acc = {"base": {1: 1, 2: 1}, "3.0:1.0:0.0:0.0": {2: 1, 3: 5}}
+    j = vgate.judge_acc(acc, rows, 1)
+    assert j["rows"][0]["n"] == 1 and j["rows"][0]["verdict"] == "tie"

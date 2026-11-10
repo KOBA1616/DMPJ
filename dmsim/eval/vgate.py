@@ -40,7 +40,7 @@ def start_engine(rules, deck, opp_deck, keys, seed):
 
 def chain_score(rules, deck, opp_deck, keys, stages, seeds, prio, width=150, max_depth=80, max_turn=14, deadline=None, keep_later=True, lookahead=2) -> dict:
     """seed ごとの到達段階数。deadline(time.time()) を過ぎたら残りの seed は測らない（打ち切り）。"""
-    out = []
+    out, by_seed = [], {}
     for sd in seeds:
         if deadline and time.time() > deadline:
             break
@@ -48,7 +48,8 @@ def chain_score(rules, deck, opp_deck, keys, stages, seeds, prio, width=150, max
         if e is None:   # この seed は強制開始の札が山札に無い（盾などに落ちた）。測れないので飛ばす（全 seed で同じ seed が飛ぶ）
             continue
         out.append(reach_chain(e, stages, 0, keep_later=keep_later, lookahead=lookahead, width=width, max_depth=max_depth, max_turn=max_turn, prio=prio)["stages"])
-    return {"stages": out, "total": sum(out)}
+        by_seed[sd] = out[-1]
+    return {"stages": out, "total": sum(out), "by_seed": by_seed}
 
 
 MIN_ADOPT_N = 8   # 採用候補にする最小局数。時間切れで n がこれ未満なら verdict は "adopt" にせず "small_n"（n=2 の偶然で手入力値を上書きしないため）
@@ -77,8 +78,44 @@ def run_gate(rules, deck, opp_deck, keys, stages, seeds, grid=GRID, deadline=Non
         x["total_n"] = sum(x["stages"][:n])
         x["verdict"] = ("adopt" if n >= min_n else "small_n") if (n and x["total_n"] > b) else ("tie" if x["total_n"] == b else "worse")
     best = max((x for x in rows if x["verdict"] == "adopt"), key=lambda x: x["total_n"], default=None)
-    return {"n": n, "base_total": b, "base": base["stages"][:n], "rows": rows, "best": best}
+    return {"n": n, "base_total": b, "base": base["stages"][:n], "rows": rows, "best": best, "base_by_seed": base.get("by_seed", {})}
 
 
 def _vp(eng, me, w, under_w, res_w, terms=()):
     return v_priority(eng, me, w, priority, under_w=under_w, res_w=res_w, terms=terms)
+
+
+# ---- 日をまたいだ積み上げ（1日の枠では MIN_ADOPT_N 局に届かないため。data/autofix/vgate_acc.yaml）----
+MAX_ACC_N = 24      # どの候補も積み上げがこの局数に達したら判定して積み上げを作り直す
+
+
+def cand_key(row) -> str:
+    return ":".join(str(row.get(k, 0.0)) for k in ("under_w", "res_w", "plan_w", "key_pen"))
+
+
+def accumulate(acc: dict, result: dict) -> dict:
+    """run_gate の結果（by_seed 付き）を acc（{"base": {seed: 段数}, <cand_key>: {seed: 段数}}）へ足す。同じ seed は上書き。"""
+    acc.setdefault("base", {}).update({int(k): v for k, v in (result.get("base_by_seed") or {}).items()})
+    for x in result["rows"]:
+        acc.setdefault(cand_key(x), {}).update({int(k): v for k, v in (x.get("by_seed") or {}).items()})
+    return acc
+
+
+def judge_acc(acc: dict, rows, min_n: int = MIN_ADOPT_N) -> dict:
+    """積み上げた結果から候補ごとに base と同じ seed だけで比べる。採用は『その候補の共通局数 >= min_n かつ base を厳密に上回る』もののみ。"""
+    base = {int(k): v for k, v in (acc.get("base") or {}).items()}
+    out = []
+    for x in rows:
+        c = {int(k): v for k, v in (acc.get(cand_key(x)) or {}).items()}
+        common = sorted(set(base) & set(c))
+        b, t = sum(base[i] for i in common), sum(c[i] for i in common)
+        v = ("adopt" if len(common) >= min_n else "small_n") if (common and t > b) else ("tie" if t == b else "worse")
+        out.append({**{k: x.get(k, 0.0) for k in ("under_w", "res_w", "plan_w", "key_pen")}, "n": len(common), "base_total": b, "total_n": t, "verdict": v})
+    best = max((x for x in out if x["verdict"] == "adopt"), key=lambda x: x["total_n"] - x["base_total"], default=None)
+    return {"rows": out, "best": best, "n": min((x["n"] for x in out), default=0)}
+
+
+def next_seed(acc: dict) -> int:
+    """次に測る最初の seed。各系列（base と候補）の最大 seed のうち一番小さいものの次（無ければ 1）。遅れている候補に合わせる（時間切れで候補ごとに進み方が違うため）。"""
+    tops = [max(int(k) for k in v) for v in acc.values() if v]
+    return (min(tops) if tops else 0) + 1
