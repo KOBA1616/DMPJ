@@ -114,15 +114,25 @@ def reach_rate(rules, deck: list[str], target: dict, seeds, opp_deck: list[str] 
     return out
 
 
+def _merge(a: dict, b: dict) -> dict:
+    """2つの段の目標を1つにまとめる（同じ (ゾーン, 札) は大きい方の枚数）。"""
+    out = {z: dict(v) for z, v in a.items()}
+    for z, v in b.items():
+        for i, n in v.items():
+            out.setdefault(z, {})[i] = max(out.get(z, {}).get(i, 0), n)
+    return out
+
+
 def _with_keep(eng: Engine, me: int, stages: list[dict], k: int) -> dict:
     """段 k の目標に、「後ろの段が要る札で今手札にあるものを手札に残す」条件を足す（先に使い切る手を選ばせない）。
     後ろの段のゾーンが hand 以外（場・墓地・盾）の札が対象。既に目標に手札で入っているものは足さない。"""
     tg = {z: dict(v) for z, v in stages[k].items()}
+    here = {i for v in stages[k].values() for i in v}            # この段の目標に出る札は残さない（同じ札が目標と手札に二重に要る矛盾を避ける）
     later: dict[str, int] = {}
     for st in stages[k + 1:]:
         for z, want in st.items():
             for i, n in want.items():
-                if z != "hand" and i != "*":
+                if z != "hand" and i != "*" and i not in here:
                     later[i] = max(later.get(i, 0), n)
     for i, n in later.items():
         have = _have(eng, me, "hand", i)
@@ -133,20 +143,38 @@ def _with_keep(eng: Engine, me: int, stages: list[dict], k: int) -> dict:
 
 def reach_chain(eng: Engine, stages: list[dict], me: int = 0, keep_later: bool = False, **kw) -> dict:
     """段階目標を順に到達させる（勝利条件から分解した中継点を、前の段階の到達局面から続けて探す）。
-    keep_later=True: 後ろの段が要る札を手札に残したまま届く局面を先に探す（届かなければ元の目標で探す）。
+    keep_later=True: 次の段と合わせて一度に届く経路、次に後ろの段が要る札を手札に残したまま届く局面を先に探す（届かなければ元の目標で探す）。
     前段の最短経路が後ろの段の札を使い切ってしまい、鎖が途中で止まるのを防ぐ。
     {"stages": 到達した段階数, "turns": [各段階の到達ターン], "nodes", "engine": 最後に届いた局面}"""
     cur, turns, nodes = eng, [], 0
-    for k, tg in enumerate(stages):
+    k = 0
+    while k < len(stages):
         r = None
         if keep_later and k + 1 < len(stages):
-            r = reach_target(cur, _with_keep(cur, me, stages, k), me, **kw)
+            r = reach_target(cur, _with_keep(cur, me, stages, k), me, **kw)       # 後ろの段が要る札を手札に残して届く経路
             nodes += r.nodes
         if r is None or not r.reached:
-            r = reach_target(cur, tg, me, **kw)
+            r = reach_target(cur, stages[k], me, **kw)
             nodes += r.nodes
         if not r.reached:
             break
+        if keep_later and k + 1 < len(stages):
+            nx = reach_target(r.engine, stages[k + 1], me, **kw)                   # 次の段へ続けられるか確かめる
+            nodes += nx.nodes
+            if not nx.reached:
+                mg = reach_target(cur, _merge(stages[k], stages[k + 1]), me, **kw)  # 続けられないなら、前段の手が次段の手を兼ねる経路（天門で札を場に出す等）を一度に探す
+                nodes += mg.nodes
+                if mg.reached:
+                    cur = mg.engine
+                    turns.extend([mg.turn, mg.turn])
+                    k += 2
+                    continue
+            else:
+                cur = nx.engine
+                turns.extend([r.turn, nx.turn])
+                k += 2
+                continue
         cur = r.engine
         turns.append(r.turn)
+        k += 1
     return {"stages": len(turns), "turns": turns, "nodes": nodes, "engine": cur}

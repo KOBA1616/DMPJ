@@ -20,3 +20,19 @@ def test_keep_later_keeps_cards_for_later_stages(rules):
     tg = _with_keep(e, 0, stages, 0)
     assert tg["bz"] == {ids[0]: 1} and tg["hand"][held] >= 1        # 後ろの段が要る手札の札を残す条件が足される
     assert _with_keep(e, 0, stages, 1) == stages[1]                  # 最後の段は変えない
+
+
+def test_merge_targets():
+    from dmsim.discovery.reachsearch import _merge
+    assert _merge({"bz": {"a": 1}, "hand": {"b": 1}}, {"bz": {"a": 2, "c": 1}, "graveyard": {"d": 1}}) == \
+        {"bz": {"a": 2, "c": 1}, "hand": {"b": 1}, "graveyard": {"d": 1}}
+
+
+def test_keep_excludes_cards_in_current_stage(rules):
+    from dmsim.discovery.reachsearch import _with_keep
+    ids = [i for i in rules.cards if i != "T001"][:12]
+    deck = (ids * 4)[:40]
+    e = Engine.new_game(rules, [deck, ["T001"] * 40], 1, first_player=0)
+    held = e.s.cards[e.s.zones["hand"][0][0]].defn
+    stages = [{"graveyard": {held: 1}}, {"bz": {held: 1}}]
+    assert "hand" not in _with_keep(e, 0, stages, 0)          # この段の目標に出る札を手札に残す矛盾は作らない
