@@ -23,3 +23,17 @@ def test_write_ops(rules):
     assert list(zone_of(a, "deck", 0)) == sorted(ref, reverse=True)
     c = mk(); inject_state(c, state_of(b)); assert c.s is b.s
     trace_on(c); assert trace_of(c) == []
+
+
+def test_force_hand(rules):
+    from dmsim.engine.core import Engine
+    from dmsim.engine_view import force_hand
+    ids = [i for i in rules.cards if i != "T001"][:14]
+    deck = (ids * 3)[:40]
+    keys = ids[:3]
+    e = Engine.new_game(rules, [deck, ["T001"] * 40], 3, first_player=0)
+    nd = len(zone_of(e, "deck", 0))
+    assert force_hand(e, 0, keys)
+    hand = defns_of(e, "hand", 0)
+    assert all(k in hand for k in keys) and len(hand) == 5 and len(zone_of(e, "deck", 0)) == nd
+    assert not force_hand(e, 0, ["no-such-card"])
