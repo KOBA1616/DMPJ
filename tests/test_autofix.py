@@ -262,3 +262,16 @@ def test_run_targets_isolates_failure(tmp_path):
     out = run_targets([{"combo": "c1"}, {"combo": "c2"}], combos, mk, Rule(), 1, None, None, health=str(tmp_path / "h.yaml"))
     assert "selfheal" in out[0]["skipped"] and "final" in out[1]
     assert selfheal.load(tmp_path / "h.yaml")["diagnose:c1"]["consecutive_failures"] == 1
+
+
+def test_deck_fix_gate_includes_deck_bottleneck(tmp_path):
+    import json
+    import sys
+    sys.path.insert(0, "tools")
+    import deck_fix
+    led = tmp_path / "l.jsonl"
+    rows = [{"combo": "a", "stage": "ok", "bottleneck": "deck", "est_kill": 0.06},
+            {"combo": "b", "stage": "ok", "bottleneck": "deck", "est_kill": 0.9},
+            {"combo": "c", "stage": "board", "bottleneck": "ai", "est_kill": 0.01}]
+    led.write_text("\n".join(json.dumps(r) for r in rows), encoding="utf-8")
+    assert deck_fix.cards_stage_decks(str(led)) == {"a"}

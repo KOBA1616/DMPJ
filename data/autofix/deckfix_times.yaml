@@ -13,12 +13,12 @@ knight_dmc:
   last_run: 1794250879.348427
   sec: 108.3
 saga:
-  cands: 1
+  cands: 10
   coarse_budget: 40
-  coarse_seeds: 14
+  coarse_seeds: 8
   complete: false
-  last_run: 1794249453.7532492
-  sec: 818.6
+  last_run: 1794346057.1196134
+  sec: 318.8
 tenmon:
   cands: 4
   coarse_budget: 40

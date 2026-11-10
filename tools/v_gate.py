@@ -30,6 +30,8 @@ def main(argv=None):
     ap.add_argument("--seconds", type=int, default=0, help="時間の上限（0=無制限）。超えたら残りの seed を測らない")
     ap.add_argument("--store", default="data/autofix/vweights.yaml")
     ap.add_argument("--out", default="logs/v_gate.jsonl")
+    ap.add_argument("--acc", default="data/autofix/vgate_acc.yaml", help="日をまたいで積み上げる seed 別の結果。合計 MIN_ADOPT_N 局以上で判定する")
+    ap.add_argument("--min-n", type=int, default=vgate.MIN_ADOPT_N)
     a = ap.parse_args(argv)
     t = next(x for x in yaml.safe_load(Path(a.targets).read_text(encoding="utf-8"))["targets"] if x["combo"] == a.combo)
     st = vgate.load_stages(a.stages or vgate.stage_path(a.combo))
@@ -38,23 +40,35 @@ def main(argv=None):
     rules = load_rules()
     deck = load_deck(t["deck"])
     t0 = time.time()
-    r = vgate.run_gate(rules, deck, ["T001"] * 40, keys, stages, range(1, a.seeds + 1), width=a.width,
+    accp = Path(a.acc)
+    accs = (yaml.safe_load(accp.read_text(encoding="utf-8")) or {}) if accp.exists() else {}
+    acc = accs.get(a.combo) or {}
+    s0 = vgate.next_seed(acc)                                  # 前回までに測った次の seed から（同じ seed を測り直さない）
+    r = vgate.run_gate(rules, deck, ["T001"] * 40, keys, stages, range(s0, s0 + a.seeds), width=a.width, min_n=a.min_n,
                        grid=_grid(a.grid) if a.grid else vgate.GRID,
                        deadline=(t0 + a.seconds) if a.seconds else None)
-    r.update(combo=a.combo, sec=round(time.time() - t0))
+    r.update(combo=a.combo, sec=round(time.time() - t0), seeds_from=s0)
+    acc = vgate.accumulate(acc, r)
+    j = vgate.judge_acc(acc, r["rows"], a.min_n)               # 判定は積み上げ全体（base と同じ seed だけ）で行う
+    r["acc"] = j
     Path(a.out).parent.mkdir(parents=True, exist_ok=True)
     with open(a.out, "a", encoding="utf-8") as f:
         f.write(json.dumps(r, ensure_ascii=False) + "\n")
-    print(a.combo, f"n={r['n']} base={r['base_total']}", [(x["under_w"], x["res_w"], x.get("plan_w", 0.0), x["total_n"], x["verdict"]) for x in r["rows"]])
-    if r["best"]:
+    print(a.combo, f"今回n={r['n']} 積み上げn={j['n']} (seed {s0}〜)", [(x["under_w"], x["res_w"], x["plan_w"], x["n"], x["total_n"] - x["base_total"], x["verdict"]) for x in j["rows"]])
+    best = j["best"]
+    if best:
         p = Path(a.store)
         cur = (yaml.safe_load(p.read_text(encoding="utf-8")) or {}) if p.exists() else {}
-        cur[a.combo] = {"under_w": r["best"]["under_w"], "res_w": r["best"]["res_w"], "plan_w": r["best"].get("plan_w", 0.0), "base_total": r["base_total"], "total": r["best"]["total_n"], "n": r["n"]}
+        cur[a.combo] = {"under_w": best["under_w"], "res_w": best["res_w"], "plan_w": best["plan_w"], "base_total": best["base_total"], "total": best["total_n"], "n": best["n"]}
         p.parent.mkdir(parents=True, exist_ok=True)
         p.write_text(yaml.safe_dump(cur, allow_unicode=True), encoding="utf-8")
         print("採用:", cur[a.combo])
     else:
-        print("採用なし（base と同点か下回り）")
+        print("採用なし（base と同点か下回り、または局数不足 n<%d）" % a.min_n)
+    done = best or (j["rows"] and all(x["n"] >= vgate.MAX_ACC_N for x in j["rows"]))
+    accs[a.combo] = {} if done else acc                        # 採用した／十分に測って採用なしなら、次回は新しく積み上げる
+    accp.parent.mkdir(parents=True, exist_ok=True)
+    accp.write_text(yaml.safe_dump(accs, allow_unicode=True), encoding="utf-8")
     return r
 
 

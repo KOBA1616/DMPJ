@@ -14,6 +14,9 @@ from dmsim.deckplan.auto import add_candidates, support_for, two_stage, unused_n
 from dmsim.solitaire import load_deck  # noqa: E402
 
 
+DECK_BOTTLENECK_KILL = 0.5   # bottleneck=deck で推定キル率がこれ未満なら deck_fix の対象（2026-11-10: cards 段階の記録が無く毎日0件だった）
+
+
 def cards_stage_decks(path: str) -> set[str]:
     """autofix の履歴から、直近の診断が cards 段階（deck_hint 付き）のデッキ名の目印を返す。履歴にコンボ名があれば使う。"""
     out = set()
@@ -24,6 +27,8 @@ def cards_stage_decks(path: str) -> set[str]:
             continue
         if e.get("stage") == "cards" and e.get("deck_hint"):
             out.add(e.get("combo", "*"))
+        elif e.get("bottleneck") == "deck" and e.get("est_kill") is not None and e["est_kill"] < DECK_BOTTLENECK_KILL:
+            out.add(e.get("combo", "*"))      # 実行層は仕込み済みで cards 段階にならない。到達層の推定キル率(素引き確率)が低いデッキも対象
     return out
 
 

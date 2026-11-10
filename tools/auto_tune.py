@@ -44,6 +44,7 @@ def main(argv=None):
     ap.add_argument("--learn-gens", type=int, default=2, help="経験ログからの価値の学習の採否に回す世代数（0で無効）")
     ap.add_argument("--value-data", default="data/autofix/value_data", help="自己対戦の経験ログ（追記）の置き場")
     ap.add_argument("--cold", action="store_true", help="実行層でなく通常の開幕で測る")
+    ap.add_argument("--history", default="data/autofix/tune_history.yaml", help="対象ごとの前回実行の記録。前回時間切れで回せなかった対象を次回の先頭にする")
     ap.add_argument("--out")
     a = ap.parse_args(argv)
     combos = {c["id"]: c for c in yaml.safe_load(Path("data/known_combos/combos.yaml").read_text(encoding="utf-8"))["combos"]}
@@ -54,13 +55,22 @@ def main(argv=None):
     pstore = (yaml.safe_load(Path(a.parts_store).read_text(encoding="utf-8")) or {}) if Path(a.parts_store).exists() else {}
     estore = (yaml.safe_load(Path(a.edits_store).read_text(encoding="utf-8")) or {}) if Path(a.edits_store).exists() else {}
     t0, rule = time.time(), Rule(turn=a.turns)
+    from dmsim.deckplan import budget as B
+    hist = B.load_history(a.history)
+    names = B.order_targets([t["combo"] for t in ts], hist)          # 前回時間切れ・未実行の対象が先頭、あとは前回実行の古い順
+    ts = sorted(ts, key=lambda t: names.index(t["combo"]))
+
+    def mark(name, complete):
+        hist[name] = {"complete": complete, "last_run": time.time()}
+        B.save_history(a.history, hist)
     for t in ts:
         c = combos.get(t["combo"])
         if c is None or c.get("split") == "holdout" or (only and t["combo"] not in only):
             continue
         if time.time() - t0 > a.seconds:
             print("時間切れ:", t["combo"], "以降は次回")
-            break
+            mark(t["combo"], False)
+            continue                                              # 残りの対象も未完として記録する（次回の先頭になる）
         deck = load_deck(t["deck"])
         opp = load_deck(t["opp_deck"]) if t.get("opp_deck") else ["T001"] * 40
         spec, origin = exec_tier.exec_spec(rules, t, deck, cold=a.cold)    # 既定は実行層（仕込み済み開始）。通常の開幕はキルまで届かず差が見えない
@@ -84,6 +94,7 @@ def main(argv=None):
             if a.out:
                 from dmsim.deckplan.evaluate import record
                 record(a.out, {"combo": t["combo"], "verdict": "skip_saturated", "tier": "cold" if a.cold else "exec", "setup_origin": origin})
+            mark(t["combo"], True)
             continue
         k, hist = tune(measure, k0, range(1, n + 1), range(1000, 1000 + n), rule, a.generations, a.lam, ledger=a.out)
         acc = [h["verdict"] for h in hist].count("accept")
@@ -150,6 +161,7 @@ def main(argv=None):
                     k = replace(k, learned_mult=g[1])
                     store[t["combo"]] = dict(k.__dict__)
                     Path(a.store).write_text(yaml.safe_dump(store, allow_unicode=True), encoding="utf-8")
+        mark(t["combo"], True)
 
 
 if __name__ == "__main__":
