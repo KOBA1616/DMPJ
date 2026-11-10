@@ -13,6 +13,14 @@ pub struct CardDef {
     pub mana: i64,
     pub plain: bool,
     #[serde(default)]
+    pub types: Vec<String>,
+    #[serde(default)]
+    pub races: Vec<String>,
+    #[serde(default)]
+    pub keywords: Vec<String>,
+    #[serde(default)]
+    pub abil: Vec<serde_json::Value>,
+    #[serde(default)]
     pub allow: Vec<String>,
     #[serde(default)]
     pub deny: Vec<String>,

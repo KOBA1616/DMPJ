@@ -110,7 +110,8 @@ impl Engine {
             let tt = self.s.tasks.last().unwrap()["t"].as_str().unwrap_or("").to_string();
             let cp = self.s.tasks.last().unwrap().get("cp").and_then(|v| v.as_bool()).unwrap_or(false);
             if cp && self.s.pending.iter().any(|p| p["win"] == json!(0)) {
-                return uns("resolve_pending");
+                self.s.tasks.push(json!({"t": "resolve_pending", "win": 0, "only_st": false}));
+                continue;
             }
             let d = match tt.as_str() {
                 "turn" => self.h_turn()?,
@@ -137,19 +138,17 @@ impl Engine {
                 }
                 "close_win" => {
                     self.s.tasks.pop();
-                    self.s.windows.pop();
-                    if !self.s.pending.is_empty() {
-                        return uns("close_win（待機中の効果）");
+                    let w = self.s.windows.pop().unwrap_or(0);
+                    let outer = self.s.windows.last().copied().unwrap_or(0);
+                    for p in self.s.pending.iter_mut() {
+                        if p["win"] == json!(w) {
+                            p["win"] = json!(outer);
+                        }
                     }
                     None
                 }
-                "resolve_pending" => {
-                    self.s.tasks.pop();
-                    if !self.s.pending.is_empty() {
-                        return uns("resolve_pending");
-                    }
-                    None
-                }
+                "resolve_pending" => self.h_resolve_pending()?,
+                "effect" => self.h_effect()?,
                 "slayer" => {
                     let t = self.s.tasks.pop().unwrap();
                     let evs: Vec<Value> = t["pairs"].as_array().unwrap().iter()
@@ -648,6 +647,162 @@ impl Engine {
         Ok(None)
     }
 
+    /// 101.4 / 605.1: ターン・プレイヤーの待機中の効果から順に、1つずつ解決する（S・トリガー系・遅延は plain に無い）
+    fn h_resolve_pending(&mut self) -> R<Option<Value>> {
+        let (win, only_st) = {
+            let t = self.s.tasks.last().unwrap();
+            (t["win"].clone(), t["only_st"].as_bool().unwrap_or(false))
+        };
+        let here: Vec<Value> = self.s.pending.iter().filter(|p| p["win"] == win).cloned().collect();
+        if here.iter().any(|p| p["kind"] != json!("normal")) {
+            return uns("pending kind");
+        }
+        let active = self.s.active;
+        let mine: Vec<Value> = here.iter().filter(|p| p["controller"] == json!(active)).cloned().collect();
+        let pool: Vec<Value> = if only_st { vec![] } else if !mine.is_empty() { mine } else { here };
+        if pool.is_empty() {
+            self.s.tasks.pop();
+            return Ok(None);
+        }
+        let player = pool[0]["controller"].as_i64().unwrap();
+        let opts: Vec<Value> = pool
+            .iter()
+            .map(|p| json!({"key": format!("pending:{}:{}:{}", p["kind"].as_str().unwrap(), p["defn"].as_str().unwrap(), p["ab"]), "pid": p["pid"]}))
+            .collect();
+        let ans = match self.ask(player, "order_pending", opts.clone(), 1, 1) {
+            Ask::Decision(d) => return Ok(Some(d)),
+            Ask::Answer(x) => x,
+        };
+        let pid = opts[ans[0]]["pid"].clone();
+        let idx = self.s.pending.iter().position(|p| p["pid"] == pid).unwrap();
+        let p = self.s.pending.remove(idx);
+        let defn = p["defn"].as_str().unwrap().to_string();
+        let ab = self.rules.cards[&defn].abil[p["ab"].as_i64().unwrap() as usize].clone();
+        let eff = ab["effect"].clone();
+        self.push(vec![json!({"t": "effect", "ops": eff, "pc": 0, "env": p["env"], "os": {}})]);
+        Ok(None)
+    }
+
+    /// 効果の解釈（ops の1つずつ）。段階2-d の範囲: draw / may / tap・untap（自身）
+    fn h_effect(&mut self) -> R<Option<Value>> {
+        let (pc, n) = {
+            let t = self.s.tasks.last().unwrap();
+            (t["pc"].as_i64().unwrap() as usize, t["ops"].as_array().unwrap().len())
+        };
+        if pc >= n || self.s.result.is_some() {
+            self.s.tasks.pop();
+            return Ok(None);
+        }
+        let (op, env) = {
+            let t = self.s.tasks.last().unwrap();
+            (t["ops"][pc].clone(), t["env"].clone())
+        };
+        let mut deferred = false;
+        match op["op"].as_str().unwrap_or("") {
+            "draw" => {
+                if op.get("player").is_some() {
+                    return uns("draw player");
+                }
+                let cnt = op.get("count").and_then(|v| v.as_i64()).unwrap_or(1);
+                let you = env["you"].as_i64().unwrap();
+                let mut ch = vec![];
+                for _ in 0..cnt {
+                    ch.push(self.ev_task(vec![json!({"ev": "draw", "player": you})]));
+                }
+                self.defer(ch);
+                deferred = true;
+            }
+            "may" => {
+                if op.get("label").is_some() || op.get("player").is_some() || op.get("else").is_some() {
+                    return uns("may options");
+                }
+                let you = env["you"].as_i64().unwrap();
+                let ans = match self.ask(you, "yes_no", vec![json!({"key": "yes"}), json!({"key": "no"})], 1, 1) {
+                    Ask::Decision(d) => return Ok(Some(d)),
+                    Ask::Answer(x) => x,
+                };
+                if ans[0] == 0 {
+                    let child = json!({"t": "effect", "ops": op["body"], "pc": 0, "env": env, "os": {}});
+                    self.defer(vec![child]);
+                    deferred = true;
+                }
+            }
+            k @ ("tap" | "untap") => {
+                let me = env["self"].clone();
+                if self.alive(&me) {
+                    let e = self.ev_task(vec![json!({"ev": k, "subject": me})]);
+                    self.defer(vec![e]);
+                    deferred = true;
+                }
+            }
+            other => return uns(format!("op {}", other)),
+        }
+        if !deferred {
+            let t = self.s.tasks.last_mut().unwrap();
+            t["pc"] = json!(pc as i64 + 1);
+            t["os"] = json!({});
+        }
+        Ok(None)
+    }
+
+    /// t の次の op を children が終わった後に回す（書かれた順に解決する 605.2c）
+    fn defer(&mut self, children: Vec<Value>) {
+        let t = self.s.tasks.last_mut().unwrap();
+        t["pc"] = json!(t["pc"].as_i64().unwrap() + 1);
+        t["os"] = json!({});
+        self.push(children);
+    }
+
+    /// 誘発チェック（Python 版 _collect_triggers の、バトルゾーンの「出た時」「攻撃する時」だけを扱う版）
+    fn collect_triggers(&mut self, rec: &mut Value) {
+        self.s.ev_seq += 1;
+        rec["_eid"] = json!(self.s.ev_seq);
+        let win = self.s.windows.last().copied().unwrap_or(0);
+        for src in self.bz_tops(None) {
+            let defn = self.s.cards[src as usize].defn.clone();
+            let ctrl = self.s.cards[src as usize].controller;
+            let n = self.rules.cards[&defn].abil.len();
+            for i in 0..n {
+                let ab = self.rules.cards[&defn].abil[i].clone();
+                if ab["kind"] != json!("trigger") {
+                    continue;
+                }
+                let w = &ab["when"];
+                if w["event"] != rec["ev"] {
+                    continue;
+                }
+                if let Some(to) = w.get("to") {
+                    if rec.get("to") != Some(to) {
+                        continue;
+                    }
+                }
+                // subject: self
+                if rec.get("subject").map_or(true, |s| s[0].as_i64() != Some(src)) {
+                    continue;
+                }
+                self.s.seq += 1;
+                let sref = self.refv(src);
+                let p = json!({"pid": self.s.seq, "kind": "normal", "win": win, "controller": ctrl, "src": sref, "defn": defn, "ab": i,
+                    "env": {"you": ctrl, "self": sref, "event": rec.clone(), "vars": {}}});
+                self.s.pending.push(p);
+            }
+        }
+    }
+
+    /// chars の JSON（lki に載せる。Python 版 _chars_calc の、能力が自身への単純な常在型だけの札の結果）
+    fn chars_json(&self, cid: i64) -> Value {
+        let d = self.def(cid);
+        let in_bz = self.s.cards[cid as usize].zone == "bz";
+        let (allow, deny, bo): (Vec<String>, Vec<String>, Vec<i64>) =
+            if in_bz { (d.allow.clone(), d.deny.clone(), d.breaks.clone()) } else { (vec![], vec![], vec![]) };
+        let breaks = bo.iter().copied().max().unwrap_or(1).max(1);
+        json!({"power": d.power, "cost": d.cost, "civs": d.civs, "types": d.types, "races": d.races, "keywords": d.keywords,
+            "name": d.name, "names": [d.name], "allow": allow, "deny": deny, "require": [], "breaks": breaks, "break_opts": bo,
+            "breaks_add": 0, "pay_cost": d.cost, "sac_reduce": 0, "opt_reduce": null, "cost_may": [], "no_leave": [],
+            "must_be_attacked": false, "battle_indestructible": false, "battle_indestructible_filters": [],
+            "win_all_battles": false, "indestructible": false, "crystal_soul": 0})
+    }
+
     fn game_lose(&mut self, loser: i64, reason: &str) {
         if self.s.result.is_none() {
             self.s.result = Some(json!({"winner": 1 - loser, "reason": reason, "turn": self.s.turn}));
@@ -915,17 +1070,19 @@ impl Engine {
                 self.s.turn_counters.insert(k, json!(n));
             }
         }
-        self.record_history(&records);
+        self.record_history(&mut records);
         self.sba()?;
-        // 誘発の収集: 能力を持つ札が無いので何も誘発しないが、レコードごとに通し番号が進む
-        self.s.ev_seq += records.len() as i64;
+        for r in records.iter_mut() {
+            self.collect_triggers(r);
+        }
         Ok(())
     }
 
-    fn hist_bump(&mut self, kind: &str, player: i64, n: i64) {
+    fn hist_bump(&mut self, kind: &str, player: i64, n: i64) -> i64 {
         let k = format!("hist:{}:{}", kind, player);
         let v = self.s.turn_counters.get(&k).and_then(|v| v.as_i64()).unwrap_or(0) + n;
         self.s.turn_counters.insert(k, json!(v));
+        v
     }
 
     fn push_list(&mut self, k: String, v: i64) {
@@ -935,13 +1092,14 @@ impl Engine {
     }
 
     /// 履歴カウンタ（Python 版 _record_history。ここで扱うのは plain の対戦で起きる種類だけ）
-    fn record_history(&mut self, records: &[Value]) {
-        for rec in records {
+    fn record_history(&mut self, records: &mut [Value]) {
+        for rec in records.iter_mut() {
             match rec["ev"].as_str().unwrap_or("") {
                 "move" => {
                     let ctrl = if rec["lki"].is_null() { rec["controller"].as_i64().unwrap() } else { rec["lki"]["controller"].as_i64().unwrap() };
                     let rc = rec["controller"].as_i64().unwrap();
-                    let (frm, to) = (rec["from"].as_str().unwrap_or(""), rec["to"].as_str().unwrap_or(""));
+                    let (frm, to) = (rec["from"].as_str().unwrap_or("").to_string(), rec["to"].as_str().unwrap_or("").to_string());
+                    let (frm, to) = (frm.as_str(), to.as_str());
                     if to == "shield" {
                         self.hist_bump("shield_put", rc, 1);
                     }
@@ -949,10 +1107,12 @@ impl Engine {
                         self.hist_bump("shield_left", ctrl, 1);
                     }
                     if to == "mana" {
-                        self.hist_bump("mana_put", rc, 1);
+                        let n = self.hist_bump("mana_put", rc, 1);
+                        rec["ord"] = json!({"mana_put": n});
                     }
                     if to == "bz" {
-                        self.hist_bump("enter", rc, 1);
+                        let n = self.hist_bump("enter", rc, 1);
+                        rec["ord"] = json!({"enter": n});
                         if rec.get("unpaid").and_then(|v| v.as_bool()).unwrap_or(false) {
                             self.hist_bump("enter_unpaid", rc, 1);
                         }
@@ -967,8 +1127,14 @@ impl Engine {
                         self.hist_bump("discard", ctrl, 1);
                     }
                 }
-                "summon" => self.hist_bump("summon", rec["controller"].as_i64().unwrap(), 1),
-                "draw" => self.hist_bump("draw", rec["player"].as_i64().unwrap(), 1),
+                "summon" => {
+                    let n = self.hist_bump("summon", rec["controller"].as_i64().unwrap(), 1);
+                    rec["ord"] = json!({"summon": n});
+                }
+                "draw" => {
+                    let n = self.hist_bump("draw", rec["player"].as_i64().unwrap(), 1);
+                    rec["ord"] = json!({"draw": n});
+                }
                 "break" => {
                     let cnt = rec.get("count").and_then(|v| v.as_i64()).unwrap_or(1);
                     self.hist_bump("broken", rec["player"].as_i64().unwrap(), cnt);
@@ -983,20 +1149,21 @@ impl Engine {
                 "attack" => {
                     let a = rec["controller"].as_i64().unwrap();
                     let att = rec["subject"][0].as_i64().unwrap();
-                    self.hist_bump("attack", a, 1);
+                    let n = self.hist_bump("attack", a, 1);
                     self.push_list(format!("hist:attackers:{}", a), att);
                     let k = format!("hist:attack_by:{}", att);
                     let v = self.s.turn_counters.get(&k).and_then(|v| v.as_i64()).unwrap_or(0) + 1;
                     self.s.turn_counters.insert(k, json!(v));
+                    rec["ord"] = json!({"attack": n, "attack_by": v});
                     if let Some(tg) = rec["target"].as_array() {
                         let k2 = format!("hist:attack_on:{}", tg[0].as_i64().unwrap());
                         let v = self.s.turn_counters.get(&k2).and_then(|v| v.as_i64()).unwrap_or(0) + 1;
                         self.s.turn_counters.insert(k2, json!(v));
                     }
                 }
-                "block" => self.hist_bump("block", rec["controller"].as_i64().unwrap(), 1),
-                "tap" => self.hist_bump("tap", rec["controller"].as_i64().unwrap(), 1),
-                "untap" => self.hist_bump("untap", rec["controller"].as_i64().unwrap(), 1),
+                "block" => { self.hist_bump("block", rec["controller"].as_i64().unwrap(), 1); }
+                "tap" => { self.hist_bump("tap", rec["controller"].as_i64().unwrap(), 1); }
+                "untap" => { self.hist_bump("untap", rec["controller"].as_i64().unwrap(), 1); }
                 _ => {}
             }
         }
@@ -1046,6 +1213,12 @@ impl Engine {
                 let from = if czone == "hold" { ev["from"].as_str().unwrap_or("").to_string() } else { czone.clone() };
                 let reason = ev.get("reason").and_then(|v| v.as_str()).unwrap_or("");
                 let ctl_before = self.s.cards[cid as usize].controller;
+                let (tapped_before, gen_before, face_before) = {
+                    let c = &self.s.cards[cid as usize];
+                    (c.tapped, c.gen, c.face)
+                };
+                let chars_before = self.chars_json(cid);
+                let defn_before = self.s.cards[cid as usize].defn.clone();
                 let summon_hold = to == "bz" && czone == "hold" && reason == "summon";
                 if (to == "bz" && !summon_hold) || (czone == "hold" && !summon_hold) {
                     return uns(format!("move {}→{}", from, to));
@@ -1053,7 +1226,8 @@ impl Engine {
                 let ctl = if summon_hold { Some(ev["controller"].as_i64().unwrap()) } else { None };
                 self.raw_move(cid, to, ctl);
                 let after = self.s.cards[cid as usize].controller;
-                let mut out = vec![json!({"ev": "move", "subject": self.refv(cid), "lki": {"controller": ctl_before}, "from": from, "to": to,
+                let mut out = vec![json!({"ev": "move", "subject": self.refv(cid), "lki": {"defn": defn_before, "face": face_before, "controller": ctl_before, "zone": from, "tapped": tapped_before,
+                        "chars": chars_before, "ref": [cid, gen_before]}, "from": from, "to": to,
                     "reason": reason, "controller": after})];
                 if ev.get("unpaid").and_then(|v| v.as_bool()).unwrap_or(false) {
                     out[0]["unpaid"] = json!(true);

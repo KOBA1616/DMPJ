@@ -40,10 +40,35 @@ _OK_KW = {"blocker", "cannot_attack_player", "cannot_attack", "double_breaker", 
           "triple_breaker", "cannot_be_attacked", "guardman", "world_breaker", "quad_breaker", "null_breaker"}
 
 
+def _simple_effect(ops) -> bool:
+    for o in ops:
+        k = o["op"]
+        if k == "draw" and set(o) <= {"op", "count"} and isinstance(o.get("count", 1), int):
+            continue
+        if k == "may" and set(o) <= {"op", "body"} and _simple_effect(o["body"]):
+            continue
+        if k in ("tap", "untap") and o.get("select") == {"ref": "self"} and set(o) <= {"op", "select"}:
+            continue
+        return False
+    return True
+
+
+_OK_WHEN = ({"event": "move", "to": "bz", "subject": "self"}, {"event": "attack", "subject": "self"})
+
+
+def _simple_trigger(ab) -> bool:
+    """段階2-d: 「出た時」「攻撃する時」の誘発で、効果が 引く・（任意で）引く・自身のタップ/アンタップ だけのもの。"""
+    return ab["kind"] == "trigger" and set(ab) <= {"kind", "when", "effect"} and ab["when"] in _OK_WHEN \
+        and _simple_effect(ab["effect"])
+
+
 def _self_mods(d):
-    """段階2-c: 自分自身にだけ及ぶ単純な常在型（許可・禁止・ブレイク数）だけの札の (allow, deny, breaks)。他は None。"""
+    """段階2-c: 自分自身にだけ及ぶ単純な常在型（許可・禁止・ブレイク数）だけの札の (allow, deny, breaks)。他は None。
+    段階2-d: 単純な誘発（_simple_trigger）は許す（誘発の中身は Rust 側の effect インタプリタが動かす）。"""
     allow, deny, breaks = [], [], []
     for ab in d.abilities:
+        if _simple_trigger(ab):
+            continue
         if ab["kind"] != "static" or ab.get("affects") != "self" or "if" in ab or ab.get("zone", "bz") != "bz":
             return None
         for k, v in ab.get("mod", {}).items():
@@ -84,7 +109,8 @@ def rules_bundle(rules) -> dict:
                       for k, v in rules.zones.items()],
             "steps": list(rules.steps),
             "cards": {i: {"name": d.name, "civs": list(d.civs), "cost": d.cost, "power": d.power,
-                          "mana": d.mana, "plain": _is_plain(d),
+                          "mana": d.mana, "plain": _is_plain(d), "types": list(d.types), "races": list(d.races),
+                          "keywords": list(d.keywords), "abil": d.abilities if _is_plain(d) else [],
                           **dict(zip(("allow", "deny", "breaks"), (_self_mods(d) or ([], [], []))))}
                       for i, d in rules.cards.items()}}
 

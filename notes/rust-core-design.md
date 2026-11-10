@@ -65,3 +65,9 @@ Rust 版と Python 版は、同じ「エンジン疑似API」（プロセス内�
 - Python 側が先へ進んでいた分に追従: 状態の新項目（dswitched / strigger_* / prev_counters / game_counters / declares）、履歴カウンタ（_record_history）、battle_end、attack_end.blocked、ハイパーの解除条件。
 - ドリフト対策: ①tests/test_rust_schema_sync.py（Rust の状態項目が Python の dataclass と一致するかをビルド無しで検査）②.github/workflows/rust-lockstep.yml（Rust をビルドして lockstep を回す。情報提供で必須ではない）。Python 側のエンジン変更に Rust が遅れると、PR に失敗の抜粋が出る。
 - 次: 誘発（trigger）と置換、選択肢をつくる式・条件・セレクタ（2-d）。札の約7割は誘発を持つので、ここが山場。
+
+## 段階2-d 第1弾の結果（2026-11-10）
+- 誘発の仕組みを移植: 履歴の ord 付与、誘発の収集（出た時・攻撃する時／自身）、待機（pending）、resolve_pending（ターン側から先、複数なら order_pending の決定）、効果インタプリタ（effect タスク）、lki（離れる前の姿。chars を含む）。
+- 動く op: draw（枚数固定）・may（yes/no）・tap/untap（自身）。これらだけで書ける誘発を持つ札を追加して、動かせる札は約710枚。
+- 実カードのランダムデッキ（誘発札を半分混ぜる）で 80 局が、yes_no を含む全決定・digest まで一致。
+- 次: セレクタ（ゾーン・フィルタ・count・chooser）・式・条件、そして move / modify / tap（相手）などを頻度順に追加。
