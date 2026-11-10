@@ -6,12 +6,23 @@ akashic:
   last_run: 1794251164.6710086
   sec: 219.1
 knight_dmc:
-  cands: 5
+  cands: 24
   coarse_budget: 40
-  coarse_seeds: 8
+  coarse_seeds: 11
   complete: false
-  last_run: 1794250879.348427
-  sec: 108.3
+  last_run: 1794346756.2905743
+  pending:
+  - diff: 0.0
+    kind: trim_parts
+    ops:
+    - - ～地獄帰りの騎士～
+      - -1
+    - - 琥珀草
+      - 1
+    reason: '部品を減らす: ～地獄帰りの騎士～ → 琥珀草'
+    sdiff: 0.011363636363636364
+  pending_base: 95f04717076c
+  sec: 375.9
 saga:
   cands: 10
   coarse_budget: 40
