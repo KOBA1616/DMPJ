@@ -743,6 +743,22 @@ impl Engine {
                     deferred = true;
                 }
             }
+            "shuffle" => {
+                let you = env["you"].as_i64().unwrap();
+                let p = match op.get("player").and_then(|v| v.as_str()).unwrap_or("you") {
+                    "you" => you,
+                    "opp" => 1 - you,
+                    _ => return uns("shuffle player"),
+                };
+                let n = self.s.pub_len();
+                let turn = self.s.turn;
+                self.s.r#pub.push(json!({"n": n, "turn": turn, "kind": "shuffle", "viewers": [0, 1], "player": p, "zone": "deck"}));
+                let len = self.s.zones["deck"][p as usize].len();
+                for i in (1..len).rev() {
+                    let j = self.s.rng_below((i + 1) as u64) as usize;
+                    self.s.zones.get_mut("deck").unwrap()[p as usize].swap(i, j);
+                }
+            }
             other => return uns(format!("op {}", other)),
         }
         if !deferred {

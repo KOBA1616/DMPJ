@@ -45,6 +45,8 @@ def _simple_effect(ops) -> bool:
         k = o["op"]
         if k == "draw" and set(o) <= {"op", "count", "player"} and o.get("player", "you") in ("you", "opp", "each") and isinstance(o.get("count", 1), int):
             continue
+        if k == "shuffle" and set(o) <= {"op", "player"} and o.get("player", "you") in ("you", "opp"):
+            continue
         if k == "may" and set(o) <= {"op", "body"} and _simple_effect(o["body"]):
             continue
         if k in ("tap", "untap") and o.get("select") == {"ref": "self"} and set(o) <= {"op", "select"}:
