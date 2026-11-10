@@ -12,9 +12,11 @@ from ..discovery.bestfirst import priority
 from ..discovery.reachsearch import reach_chain
 from ..engine.core import Engine
 from ..engine_view import force_hand
+from ..plan.macro import macro_prio
 from .vfeatures import v_priority
 
-GRID = ((3.0, 1.0), (6.0, 1.0), (6.0, 3.0), (10.0, 3.0))     # (under_w, res_w)。(0, 0) は base と同じ
+GRID = ((3.0, 1.0), (6.0, 1.0), (6.0, 3.0), (10.0, 3.0),
+        (0.0, 0.0, 1500.0), (3.0, 1.0, 1500.0))     # (under_w, res_w[, plan_w])。(0, 0) は base と同じ。plan_w>0 は大局観の計画項（macro_prio）
 
 
 def load_stages(path) -> dict:
@@ -43,9 +45,10 @@ def run_gate(rules, deck, opp_deck, keys, stages, seeds, grid=GRID, deadline=Non
     """base と各重みを同じ seed で測る。打ち切られて seed 数が違うときは短い方に揃えて比べる。"""
     base = chain_score(rules, deck, opp_deck, keys, stages, seeds, None, deadline=deadline, **kw)
     rows = []
-    for u, r in grid:
-        prio = partial(_vp, under_w=u, res_w=r)
-        rows.append({"under_w": u, "res_w": r, **chain_score(rules, deck, opp_deck, keys, stages, seeds, prio, deadline=deadline, **kw)})
+    for u, r, *pw in grid:
+        pw = pw[0] if pw else 0.0
+        prio = macro_prio(stages, pw, under_w=u, res_w=r) if pw else partial(_vp, under_w=u, res_w=r)
+        rows.append({"under_w": u, "res_w": r, "plan_w": pw, **chain_score(rules, deck, opp_deck, keys, stages, seeds, prio, deadline=deadline, **kw)})
     n = min([len(base["stages"])] + [len(x["stages"]) for x in rows])
     b = sum(base["stages"][:n])
     for x in rows:

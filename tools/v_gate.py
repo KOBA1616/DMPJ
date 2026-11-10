@@ -39,11 +39,11 @@ def main(argv=None):
     Path(a.out).parent.mkdir(parents=True, exist_ok=True)
     with open(a.out, "a", encoding="utf-8") as f:
         f.write(json.dumps(r, ensure_ascii=False) + "\n")
-    print(a.combo, f"n={r['n']} base={r['base_total']}", [(x["under_w"], x["res_w"], x["total_n"], x["verdict"]) for x in r["rows"]])
+    print(a.combo, f"n={r['n']} base={r['base_total']}", [(x["under_w"], x["res_w"], x.get("plan_w", 0.0), x["total_n"], x["verdict"]) for x in r["rows"]])
     if r["best"]:
         p = Path(a.store)
         cur = (yaml.safe_load(p.read_text(encoding="utf-8")) or {}) if p.exists() else {}
-        cur[a.combo] = {"under_w": r["best"]["under_w"], "res_w": r["best"]["res_w"], "base_total": r["base_total"], "total": r["best"]["total_n"], "n": r["n"]}
+        cur[a.combo] = {"under_w": r["best"]["under_w"], "res_w": r["best"]["res_w"], "plan_w": r["best"].get("plan_w", 0.0), "base_total": r["base_total"], "total": r["best"]["total_n"], "n": r["n"]}
         p.parent.mkdir(parents=True, exist_ok=True)
         p.write_text(yaml.safe_dump(cur, allow_unicode=True), encoding="utf-8")
         print("採用:", cur[a.combo])
