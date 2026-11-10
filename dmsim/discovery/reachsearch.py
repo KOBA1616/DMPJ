@@ -57,7 +57,9 @@ def _quiet(d, settled: bool) -> bool:
 
 
 def reach_target(eng: Engine, target: dict, me: int = 0, width: int = 300, max_depth: int = 80, max_turn: int = 6,
-                 w: Weights | None = None, opp_policy=None, prio=None, settled: bool = False) -> ReachResult:
+                 w: Weights | None = None, opp_policy=None, prio=None, settled: bool = False,
+                 reserve: int = 0, reserve_target: dict | None = None) -> ReachResult:
+    """reserve>0 かつ reserve_target: 幅のうち reserve 枠を「計画の次の段 reserve_target の充足率が高い局面」に予約する（点数に足さず、枝刈りで残す）。"""
     w = w or Weights()
     prio = prio or priority
     ts = _Settler(me, opp_policy or charge_only_policy, max_turn)
@@ -95,7 +97,13 @@ def reach_target(eng: Engine, target: dict, me: int = 0, width: int = 300, max_d
         if not nxt:
             break
         nxt.sort(key=lambda x: (-x[0], x[1]))
-        layer = [c for _, _, c in nxt[:width]]
+        if reserve and reserve_target and len(nxt) > width:
+            head, tail = nxt[:max(width - reserve, 1)], nxt[max(width - reserve, 1):]
+            tail.sort(key=lambda x: (-fraction(x[2], me, reserve_target), -x[0], x[1]))     # 次の段に近い順（同点は元の点数順）
+            nxt = head + tail[:reserve]
+            layer = [c for _, _, c in nxt]
+        else:
+            layer = [c for _, _, c in nxt[:width]]
     return ReachResult(False, nodes, None, None, best)
 
 
@@ -153,16 +161,19 @@ def reach_chain(eng: Engine, stages: list[dict], me: int = 0, keep_later: bool =
     def moves(c, i):
         """段 i から進める手の候補: [(到達局面, 進む段数, ターン)]。keep（後ろの段の札を残す）→ 素直に1段 →（keep_later のとき）次段と合わせた目標。"""
         out = []
-        r = reach_target(c, _with_keep(c, me, stages, i), me, **kw) if keep_later and i + 1 < len(stages) else None
+        kw2 = dict(kw)
+        if kw2.get("reserve"):
+            kw2["reserve_target"] = stages[i + 1] if i + 1 < len(stages) else None
+        r = reach_target(c, _with_keep(c, me, stages, i), me, **kw2) if keep_later and i + 1 < len(stages) else None
         if r is not None:
             cnt[0] += r.nodes
         if r is None or not r.reached:
-            r = reach_target(c, stages[i], me, **kw)
+            r = reach_target(c, stages[i], me, **kw2)
             cnt[0] += r.nodes
         if r.reached:
             out.append((r.engine, 1, r.turn))
         if keep_later and i + 1 < len(stages):
-            mg = reach_target(c, _merge(stages[i], stages[i + 1]), me, **kw)
+            mg = reach_target(c, _merge(stages[i], stages[i + 1]), me, **{**kw2, "reserve_target": stages[i + 2] if i + 2 < len(stages) else None})
             cnt[0] += mg.nodes
             if mg.reached:
                 out.append((mg.engine, 2, mg.turn))

@@ -1,0 +1,25 @@
+# tools/gen_stages.py による自動生成（dmsim/plan/stagegen.py）。手で直さず、元データを直して作り直す。
+stages:
+- name: hand:dmrp12-s01x1
+  target:
+    hand:
+      dmrp12-s01: 1
+- name: hand:dm23bd7-035x2
+  target:
+    hand:
+      dmrp12-s01: 1
+      dm23bd7-035: 2
+- name: hand:dm24ex1-038x2
+  target:
+    hand:
+      dmrp12-s01: 1
+      dm23bd7-035: 2
+      dm24ex1-038: 2
+- name: bz:dm23ex2-009x1
+  target:
+    hand:
+      dmrp12-s01: 1
+      dm23bd7-035: 2
+      dm24ex1-038: 2
+    bz:
+      dm23ex2-009: 1
