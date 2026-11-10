@@ -113,13 +113,31 @@ def test_select_move_cards_match(real_env, seed):
     import random
     r, b = real_env
     pool = _portable(r)
-    sel = [i for i in pool if any(o["op"] in ("move", "tap", "untap", "shuffle")
+    sel = [i for i in pool if any(o["op"] in ("move", "tap", "untap", "shuffle", "choose")
                                   for a in r.cards[i].abilities if a["kind"] == "trigger" for o in a["effect"])]
     assert len(sel) >= 40
     rnd = random.Random(seed)
 
     def deck():
         return [rnd.choice(sel) if rnd.random() < 0.5 else rnd.choice(pool) for _ in range(40)]
+    spec = {"kind": "new_game", "decks": [deck(), deck()], "seed": seed, "first_player": seed % 2}
+    res = lockstep(Session.open(r, spec), rustcore.RustSession.open(r, spec, b), f"random:{seed}")
+    assert res["divergence"] is None and res["ok"] is True
+
+
+@pytest.mark.parametrize("seed", range(1, 21))
+def test_s_trigger_creatures_match(real_env, seed):
+    """段階2-d: S・トリガーを持つクリーチャー（ブレイク→宣言→手札→待機→コストなしの召喚）を多く入れたデッキで、
+    declare_strigger の決定を含めて1局が一致する。"""
+    import random
+    r, b = real_env
+    pool = _portable(r)
+    st = [i for i in pool if any(k in r.cards[i].keywords for k in ("s_trigger", "s_trigger_plus", "super_s_trigger"))]
+    assert len(st) >= 40
+    rnd = random.Random(seed)
+
+    def deck():
+        return [rnd.choice(st) if rnd.random() < 0.75 else rnd.choice(pool) for _ in range(40)]
     spec = {"kind": "new_game", "decks": [deck(), deck()], "seed": seed, "first_player": seed % 2}
     res = lockstep(Session.open(r, spec), rustcore.RustSession.open(r, spec, b), f"random:{seed}")
     assert res["divergence"] is None and res["ok"] is True

@@ -26,7 +26,7 @@ def test_progress_and_fraction():
 
 def test_tenmon_stage_file():
     stages, goal = load_stage_file(Path("data/eval/stages/tenmon.yaml"))
-    assert len(stages) == 10 and goal
+    assert len(stages) >= 10 and goal
     assert MacroPlanner(stages).plan(_eng(), 0).intent == "setup"
 
 

@@ -37,7 +37,8 @@ def new_game(rules, decks: list[list[str]], seed: int, first_player: int = 0):
 _OK_ALLOW = {"block", "attack_summoning_sick", "slayer", "guardman"}
 _OK_DENY = {"attack_player", "attack_creature", "be_blocked", "be_attacked"}
 _OK_KW = {"blocker", "cannot_attack_player", "cannot_attack", "double_breaker", "speed_attacker", "slayer", "unblockable",
-          "triple_breaker", "cannot_be_attacked", "guardman", "world_breaker", "quad_breaker", "null_breaker"}
+          "triple_breaker", "cannot_be_attacked", "guardman", "world_breaker", "quad_breaker", "null_breaker",
+          "s_trigger", "s_trigger_plus", "super_s_trigger"}
 
 
 def _simple_selector(sel) -> bool:
@@ -46,10 +47,18 @@ def _simple_selector(sel) -> bool:
         return False
     if sel == {"ref": "self"}:
         return True
-    if not set(sel) <= {"zone", "owner", "count", "from_top", "filter", "chooser"}:
+    if not set(sel) <= {"zone", "owner", "count", "from_top", "filter", "chooser", "look", "ref"}:
         return False
-    if sel.get("zone") not in ("hand", "deck", "graveyard", "mana", "bz") or sel.get("owner", "you") not in ("you", "opp") \
-            or sel.get("chooser", "you") not in ("you", "opp"):
+    if "look" in sel and not isinstance(sel["look"], bool):
+        return False
+    if "ref" in sel:   # 変数（choose の as）を指す形。特殊な参照名は未対応
+        r = sel["ref"]
+        if not isinstance(r, str) or r in ("self", "self_moved", "self_entered", "crossed", "subject") or r.startswith("event.") \
+                or {"zone", "owner", "from_top"} & set(sel):
+            return False
+    elif sel.get("zone") not in ("hand", "deck", "graveyard", "mana", "bz") or sel.get("owner", "you") not in ("you", "opp"):
+        return False
+    if sel.get("chooser", "you") not in ("you", "opp"):
         return False
     c = sel.get("count", 1)
     if not (c == "all" or (isinstance(c, int) and not isinstance(c, bool))):
@@ -63,14 +72,16 @@ def _simple_selector(sel) -> bool:
     return True
 
 
-def _simple_effect(ops) -> bool:
+def _simple_effect(ops, top=True) -> bool:
     for o in ops:
         k = o["op"]
         if k == "draw" and set(o) <= {"op", "count", "player"} and o.get("player", "you") in ("you", "opp", "each") and isinstance(o.get("count", 1), int):
             continue
         if k == "shuffle" and set(o) <= {"op", "player"} and o.get("player", "you") in ("you", "opp"):
             continue
-        if k == "may" and set(o) <= {"op", "body"} and _simple_effect(o["body"]):
+        if k == "choose" and top and set(o) <= {"op", "select", "as"} and isinstance(o.get("as"), str) and _simple_selector(o.get("select")):
+            continue   # 変数への束縛は最上段だけ（Python は子タスクと env を共有するが、Rust は複製するため）
+        if k == "may" and set(o) <= {"op", "body"} and _simple_effect(o["body"], False):
             continue
         if k in ("tap", "untap") and set(o) <= {"op", "select"} and _simple_selector(o.get("select")):
             continue
@@ -93,9 +104,13 @@ def _simple_trigger(ab) -> bool:
 def _self_mods(d):
     """段階2-c: 自分自身にだけ及ぶ単純な常在型（許可・禁止・ブレイク数）だけの札の (allow, deny, breaks)。他は None。
     段階2-d: 単純な誘発（_simple_trigger）は許す（誘発の中身は Rust 側の effect インタプリタが動かす）。"""
-    allow, deny, breaks = [], [], []
+    allow, deny, breaks, shield_allow = [], [], [], []
     for ab in d.abilities:
         if _simple_trigger(ab):
+            continue
+        if ab["kind"] == "static" and ab.get("zone") == "shield" and ab.get("affects") == "self" and "if" not in ab \
+                and ab.get("mod") == {"allow": ["s_trigger"]}:
+            shield_allow.append("s_trigger")   # S・トリガー（シールドゾーンにある間だけ働く許可）
             continue
         if ab["kind"] != "static" or ab.get("affects") != "self" or "if" in ab or ab.get("zone", "bz") != "bz":
             return None
@@ -108,7 +123,7 @@ def _self_mods(d):
                 breaks.append(v)
             else:
                 return None
-    return allow, deny, breaks
+    return allow, deny, breaks, shield_allow
 
 
 def _is_plain(d) -> bool:
@@ -139,7 +154,7 @@ def rules_bundle(rules) -> dict:
             "cards": {i: {"name": d.name, "civs": list(d.civs), "cost": d.cost, "power": d.power,
                           "mana": d.mana, "plain": _is_plain(d), "types": list(d.types), "races": list(d.races),
                           "keywords": list(d.keywords), "abil": d.abilities if _is_plain(d) else [],
-                          **dict(zip(("allow", "deny", "breaks"), (_self_mods(d) or ([], [], []))))}
+                          **dict(zip(("allow", "deny", "breaks", "shield_allow"), (_self_mods(d) or ([], [], [], []))))}
                       for i, d in rules.cards.items()}}
 
 

@@ -44,7 +44,12 @@ class CombatMixin:
                     creature_opts.append({"key": f"attack:{dfn}:{self.s.cards[tc].defn}", "cid": cid,
                                           "target": self.s.ref(tc)})
             # 「可能ならこのクリーチャーを攻撃する」（第51弾）: 合法な攻撃先になる誘引持ちがいれば、攻撃先はそれらに限る
-            taunts = [o for o in creature_opts if self.chars_ro(o["target"][0])["must_be_attacked"]]
+            # 「はじめて攻撃するなら」（第160弾）は、そのクリーチャーがこのターンまだ攻撃していなければ（履歴カウンタ hist:attack_by が 0）制限する
+            _attacked = self.s.turn_counters.get(f"hist:attack_by:{cid}", 0)
+            def _taunt(o):
+                _tch = self.chars_ro(o["target"][0])
+                return _tch["must_be_attacked"] or (_tch.get("must_be_attacked_first") and _attacked == 0)
+            taunts = [o for o in creature_opts if _taunt(o)]
             if taunts:
                 out += taunts
             else:

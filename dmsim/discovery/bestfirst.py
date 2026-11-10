@@ -50,6 +50,16 @@ class _Settler:
             eng.answer(self.opp_policy(eng, d))
 
 
+MID_RESOLUTION_KEY = True   # 解決途中の決定点では、直前の答えを重複除外のキーに足す（同じ骨格でも選んだモードなどが違えば別の局面）
+_TOP_LEVEL = ("main", "charge", "attack")
+
+
+def _mid_key(cur, d) -> tuple:
+    if not MID_RESOLUTION_KEY or d["kind"] in _TOP_LEVEL:
+        return ()
+    return (d["kind"], tuple(tuple(x.get("keys", ())) for x in cur.log[-3:]))
+
+
 def priority(eng: Engine, me: int, w: Weights, pend_w: float = 40.0, own_shield_w: float = 5.0) -> float:
     v = evaluate(eng, me, w)
     v += pend_w * sum(1 for p in pending_of(eng) if p["controller"] == me)
@@ -78,7 +88,7 @@ def search(eng: Engine, me: int = 0, budget: int = 20000, w: Weights | None = No
             continue
         h, ctr = abstract(cur, "in_turn")
         deck_order = tuple(defn_of(cur, c) for c in zone_of(cur, "deck", me))   # 山札の並びは次に引く・積むカードを決める
-        key = (h, deck_order, tuple(sorted(ctr.items())), tuple(sorted((defn_of(cur, x), tapped_of(cur, x)) for p in (0, 1) for x in zone_of(cur, "mana", p))))
+        key = (h, deck_order, tuple(sorted(ctr.items())), tuple(sorted((defn_of(cur, x), tapped_of(cur, x)) for p in (0, 1) for x in zone_of(cur, "mana", p)))) + _mid_key(cur, d)
         if key in seen:
             continue
         seen.add(key)
@@ -119,7 +129,7 @@ def beam(eng: Engine, me: int = 0, width: int = 200, max_depth: int = 80, w: Wei
                 continue
             h, ctr = abstract(cur, "in_turn")
             deck_order = tuple(defn_of(cur, c) for c in zone_of(cur, "deck", me))
-            key = (h, deck_order, tuple(sorted(ctr.items())), tuple(sorted(defn_of(cur, x) + str(tapped_of(cur, x)) for p in (0, 1) for x in zone_of(cur, "mana", p))))
+            key = (h, deck_order, tuple(sorted(ctr.items())), tuple(sorted(defn_of(cur, x) + str(tapped_of(cur, x)) for p in (0, 1) for x in zone_of(cur, "mana", p)))) + _mid_key(cur, d)
             if key in seen:
                 continue
             seen.add(key)
