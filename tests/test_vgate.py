@@ -36,3 +36,12 @@ def test_gate_small_n_is_not_adopted(rules, monkeypatch):
     monkeypatch.setattr(vgate, "chain_score", lambda *a, **k: {"stages": next(scores), "total": 0})
     r = vgate.run_gate(rules, [], [], [], [], [1, 2], grid=((3.0, 1.0),))      # n=2 < MIN_ADOPT_N
     assert r["rows"][0]["verdict"] == "small_n" and r["best"] is None
+
+
+def test_runstd_and_normalized_plan():
+    from dmsim.plan.macro import RunStd
+    rs = RunStd(floor=1.0, warm=3)
+    assert rs.std == 1.0               # 少数のうちは floor
+    for x in (0.0, 10.0, 20.0, 30.0):
+        rs.add(x)
+    assert abs(rs.std - 12.9099) < 1e-3   # 標本標準偏差
