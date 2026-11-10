@@ -113,7 +113,7 @@ def test_select_move_cards_match(real_env, seed):
     import random
     r, b = real_env
     pool = _portable(r)
-    sel = [i for i in pool if any(o["op"] in ("move", "tap", "untap", "shuffle")
+    sel = [i for i in pool if any(o["op"] in ("move", "tap", "untap", "shuffle", "choose")
                                   for a in r.cards[i].abilities if a["kind"] == "trigger" for o in a["effect"])]
     assert len(sel) >= 40
     rnd = random.Random(seed)

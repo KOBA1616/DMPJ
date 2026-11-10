@@ -46,10 +46,18 @@ def _simple_selector(sel) -> bool:
         return False
     if sel == {"ref": "self"}:
         return True
-    if not set(sel) <= {"zone", "owner", "count", "from_top", "filter", "chooser"}:
+    if not set(sel) <= {"zone", "owner", "count", "from_top", "filter", "chooser", "look", "ref"}:
         return False
-    if sel.get("zone") not in ("hand", "deck", "graveyard", "mana", "bz") or sel.get("owner", "you") not in ("you", "opp") \
-            or sel.get("chooser", "you") not in ("you", "opp"):
+    if "look" in sel and not isinstance(sel["look"], bool):
+        return False
+    if "ref" in sel:   # 変数（choose の as）を指す形。特殊な参照名は未対応
+        r = sel["ref"]
+        if not isinstance(r, str) or r in ("self", "self_moved", "self_entered", "crossed", "subject") or r.startswith("event.") \
+                or {"zone", "owner", "from_top"} & set(sel):
+            return False
+    elif sel.get("zone") not in ("hand", "deck", "graveyard", "mana", "bz") or sel.get("owner", "you") not in ("you", "opp"):
+        return False
+    if sel.get("chooser", "you") not in ("you", "opp"):
         return False
     c = sel.get("count", 1)
     if not (c == "all" or (isinstance(c, int) and not isinstance(c, bool))):
@@ -63,14 +71,16 @@ def _simple_selector(sel) -> bool:
     return True
 
 
-def _simple_effect(ops) -> bool:
+def _simple_effect(ops, top=True) -> bool:
     for o in ops:
         k = o["op"]
         if k == "draw" and set(o) <= {"op", "count", "player"} and o.get("player", "you") in ("you", "opp", "each") and isinstance(o.get("count", 1), int):
             continue
         if k == "shuffle" and set(o) <= {"op", "player"} and o.get("player", "you") in ("you", "opp"):
             continue
-        if k == "may" and set(o) <= {"op", "body"} and _simple_effect(o["body"]):
+        if k == "choose" and top and set(o) <= {"op", "select", "as"} and isinstance(o.get("as"), str) and _simple_selector(o.get("select")):
+            continue   # 変数への束縛は最上段だけ（Python は子タスクと env を共有するが、Rust は複製するため）
+        if k == "may" and set(o) <= {"op", "body"} and _simple_effect(o["body"], False):
             continue
         if k in ("tap", "untap") and set(o) <= {"op", "select"} and _simple_selector(o.get("select")):
             continue
