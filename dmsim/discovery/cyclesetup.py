@@ -24,7 +24,11 @@ def setup_from_cycle(rules, cycle, mana_n: int | None = None, opp_mana: int = 6,
     zones: dict[str, list[str]] = {"hand": [], "graveyard": [], "mana": [], "bz": []}
     civs: list[str] = []
     cost = 0
+    placed: set = set()
     for b in cycle.bundles:
+        if b.card in placed:            # 1枚の札が複数の束を持つ（誘発が2つ等）。仕込みは1枚だけ
+            continue
+        placed.add(b.card)
         cd = rules.cards[b.card]
         for v in cd.civs:
             if v not in civs:
