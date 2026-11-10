@@ -19,6 +19,15 @@ GRID = ((3.0, 1.0), (6.0, 1.0), (6.0, 3.0), (10.0, 3.0),
         (0.0, 0.0, 1500.0), (3.0, 1.0, 1500.0))     # (under_w, res_w[, plan_w])。(0, 0) は base と同じ。plan_w>0 は大局観の計画項（macro_prio）
 
 
+def stage_path(combo: str, root: str = "data/eval/stages") -> str | None:
+    """手書きの <combo>.yaml を優先し、無ければ自動生成の <combo>.generated.yaml（tools/gen_stages.py）。どちらも無ければ None。"""
+    from pathlib import Path
+    for name in (f"{combo}.yaml", f"{combo}.generated.yaml"):
+        if (Path(root) / name).exists():
+            return str(Path(root) / name)
+    return None
+
+
 def load_stages(path) -> dict:
     return yaml.safe_load(open(path, encoding="utf-8"))
 
@@ -35,8 +44,8 @@ def chain_score(rules, deck, opp_deck, keys, stages, seeds, prio, width=150, max
         if deadline and time.time() > deadline:
             break
         e = start_engine(rules, deck, opp_deck, keys, sd)
-        if e is None:
-            return {"stages": [], "total": 0, "error": "強制開始の札が山札に足りない"}
+        if e is None:   # この seed は強制開始の札が山札に無い（盾などに落ちた）。測れないので飛ばす（全 seed で同じ seed が飛ぶ）
+            continue
         out.append(reach_chain(e, stages, 0, keep_later=keep_later, width=width, max_depth=max_depth, max_turn=max_turn, prio=prio)["stages"])
     return {"stages": out, "total": sum(out)}
 

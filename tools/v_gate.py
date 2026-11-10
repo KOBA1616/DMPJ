@@ -27,7 +27,7 @@ def main(argv=None):
     ap.add_argument("--out", default="logs/v_gate.jsonl")
     a = ap.parse_args(argv)
     t = next(x for x in yaml.safe_load(Path(a.targets).read_text(encoding="utf-8"))["targets"] if x["combo"] == a.combo)
-    st = vgate.load_stages(a.stages or f"data/eval/stages/{a.combo}.yaml")
+    st = vgate.load_stages(a.stages or vgate.stage_path(a.combo))
     stages = [s["target"] for s in st["stages"][1:]]
     keys = list(st["stages"][0]["target"]["hand"])             # 先頭の段（keys_in_hand）を強制開始にする
     rules = load_rules()
