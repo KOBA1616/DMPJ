@@ -58,9 +58,11 @@ def run_batch(a, combos):
     from dmsim.autofix import selfheal
     for r in run_targets(ts, combos, mk, Rule(turn=a.turns), a.rounds, a.out, a.store, health=a.health):
         print(r)
+    vg = [t["combo"] for t in ts if t["combo"] in combos and combos[t["combo"]].get("split") != "holdout" and Path(f"data/eval/stages/{t['combo']}.yaml").exists()]
+    VGATE_SEC = 300                                           # 評価関数 V の採否ゲート（段階目標のあるコンボだけ。docs/value-function-design.md §7）
     if a.total_seconds:                                       # 日次の総枠から、診断に使った残りを deck_fix と tune に自動で配る
         from dmsim.deckplan import budget as B
-        a.deck_fix_budget, a.tune_seconds = B.split_remaining(a.total_seconds, time.time() - t0, bool(a.deck_fix and a.out), True)
+        a.deck_fix_budget, a.tune_seconds = B.split_remaining(a.total_seconds - (VGATE_SEC * len(vg)), time.time() - t0, bool(a.deck_fix and a.out), True)
         print(f"日次枠{a.total_seconds}秒: deck_fix {a.deck_fix_budget}秒 / tune {a.tune_seconds}秒")
     if a.deck_fix and a.out and (a.deck_fix_budget or not a.total_seconds):
         import deck_fix                                   # 同じ tools/ にある。cards 段階の記録があるコンボだけ回る
@@ -70,6 +72,11 @@ def run_batch(a, combos):
         import auto_tune                                  # 進化戦略のノブ探索。採用は再確認シードで再現した時だけ（docs/autotune.md）
         selfheal.run_phase("auto_tune", lambda: auto_tune.main(["--targets", a.targets, "--seeds", str(a.seeds), "--turns", str(a.turns), "--workers", str(a.workers),
                            "--seconds", str(a.tune_seconds), "--store", a.store] + (["--out", a.out.replace(".jsonl", "") + "_tune.jsonl"] if a.out else [])), a.health)
+    if vg and a.total_seconds:
+        import v_gate
+        for cb in vg:
+            selfheal.run_phase(f"v_gate:{cb}", lambda cb=cb: v_gate.main(["--combo", cb, "--targets", a.targets, "--seeds", "8", "--seconds", str(VGATE_SEC - 30),
+                                                                         "--out", (a.out.replace(".jsonl", "") + "_vgate.jsonl") if a.out else "logs/v_gate.jsonl"]), a.health)
     body = selfheal.render_issue(selfheal.load(a.health))     # 失敗した段階があれば、Issue 用の要約を残す（日次ルーティンが Issue 化して直す）
     if body:
         Path(a.issue_file).parent.mkdir(parents=True, exist_ok=True)
