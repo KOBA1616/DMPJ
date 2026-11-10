@@ -224,6 +224,126 @@ impl Engine {
         json!({"t": "event", "evs": evs, "i": 0, "rp": 0, "skip": [], "instead": [], "captured": [], "applying": false})
     }
 
+    /// 効果の解決者が起こす移動に、起こしたプレイヤーと発生源（効果帰属）を記録する（Python 版 ev_task(evs, env)）
+    fn ev_task_env(&self, evs: Vec<Value>, env: &Value) -> Value {
+        let you = env["you"].as_i64();
+        let evs: Vec<Value> = evs
+            .into_iter()
+            .map(|mut e| {
+                if e["ev"] == json!("move") {
+                    if let Some(y) = you {
+                        if e.get("by").is_none() {
+                            e["by"] = json!(y);
+                        }
+                        if let Some(sr) = env.get("self").and_then(|v| v.as_array()) {
+                            let src = sr[0].as_i64().unwrap();
+                            if e.get("cause_defn").is_none() {
+                                let cause = self.s.cards[src as usize].defn.clone();
+                                e["cause"] = json!(cause);
+                                e["cause_defn"] = json!(cause);
+                                e["cause_kind"] = json!("ability");
+                            }
+                        }
+                    }
+                }
+                e
+            })
+            .collect();
+        self.ev_task(evs)
+    }
+
+    /// セレクタの解決（Python 版 select の、ゾーン指定・枚数・選ぶ人・types 絞り込みだけの版）。
+    /// Ok(Ok(cids)) か Ok(Err(decision))。
+    fn select(&mut self, sel: &Value, env: &Value) -> R<Result<Vec<i64>, Value>> {
+        if let Some(c) = self.s.tasks.last().unwrap()["os"].get("chosen") {
+            return Ok(Ok(c.as_array().unwrap().iter().map(|v| v.as_i64().unwrap()).collect()));
+        }
+        let obj = sel.as_object().unwrap();
+        let you = env["you"].as_i64().unwrap();
+        if obj.len() == 1 && sel.get("ref") == Some(&json!("self")) {
+            let me = env["self"].clone();
+            return Ok(Ok(if self.alive(&me) { vec![me[0].as_i64().unwrap()] } else { vec![] }));
+        }
+        for k in obj.keys() {
+            if !["zone", "owner", "count", "from_top", "filter", "chooser"].contains(&k.as_str()) {
+                return uns(format!("selector key {}", k));
+            }
+        }
+        let p = match sel.get("owner").and_then(|v| v.as_str()).unwrap_or("you") {
+            "you" => you,
+            "opp" => 1 - you,
+            _ => return uns("selector owner"),
+        };
+        let zone = sel["zone"].as_str().unwrap_or("");
+        if !["hand", "deck", "graveyard", "mana", "bz"].contains(&zone) {
+            return uns(format!("selector zone {}", zone));
+        }
+        let mut lst: Vec<i64> = if zone == "bz" { self.bz_tops(Some(p)) } else { self.zl(zone, p).clone() };
+        if let Some(n) = sel.get("from_top") {
+            let n = match n.as_i64() {
+                Some(n) => n.max(0) as usize,
+                None => return uns("from_top expr"),
+            };
+            lst.truncate(n);
+        }
+        if let Some(f) = sel.get("filter") {
+            let fo = f.as_object().unwrap();
+            for k in fo.keys() {
+                if k != "types" {
+                    return uns(format!("filter key {}", k));
+                }
+            }
+            if let Some(ts) = fo.get("types") {
+                let ts: Vec<String> = ts.as_array().unwrap().iter().map(|v| v.as_str().unwrap().to_string()).collect();
+                lst.retain(|&c| self.def(c).types.iter().any(|t| ts.contains(t)));
+            }
+        }
+        let cnt = sel.get("count");
+        if (sel.get("from_top").is_some() && cnt.is_none()) || cnt == Some(&json!("all")) {
+            return Ok(Ok(lst));
+        }
+        let n = match cnt {
+            None => 1usize,
+            Some(v) => match v.as_i64() {
+                Some(n) => n.max(0) as usize,
+                None => return uns("count expr"),
+            },
+        };
+        if n.min(lst.len()) == 0 {
+            return Ok(Ok(vec![]));
+        }
+        let chooser = match sel.get("chooser").and_then(|v| v.as_str()).unwrap_or("you") {
+            "you" => you,
+            "opp" => 1 - you,
+            _ => return uns("chooser"),
+        };
+        let cands: Vec<i64> = lst
+            .into_iter()
+            .filter(|&c| {
+                let k = &self.s.cards[c as usize];
+                k.zone != "bz" || k.controller == chooser || self.permits(c, "be_chosen")
+            })
+            .collect();
+        let n = n.min(cands.len());
+        if n == 0 {
+            return Ok(Ok(vec![]));
+        }
+        let opts: Vec<Value> = cands.iter().map(|&c| self.card_option(c, None)).collect();
+        let a = match self.ask(chooser, "choose_cards", opts, n, n) {
+            Ask::Decision(d) => return Ok(Err(d)),
+            Ask::Answer(a) => a,
+        };
+        let chosen: Vec<i64> = a.iter().map(|&i| cands[i]).collect();
+        self.s.tasks.last_mut().unwrap()["os"]["chosen"] = json!(chosen);
+        for &c in &chosen {
+            let k = &self.s.cards[c as usize];
+            if k.zone == "bz" && k.controller != chooser {
+                self.s.ev_seq += 1;   // 「相手がこのクリーチャーを選んだ時」の収集（plain には該当する誘発が無いので通し番号だけ進む）
+            }
+        }
+        Ok(Ok(chosen))
+    }
+
     fn build_steps(&self, _p: i64) -> R<Vec<Value>> {
         if !self.s.step_mods.is_empty() {
             return uns("step_mods");
@@ -736,9 +856,36 @@ impl Engine {
                 }
             }
             k @ ("tap" | "untap") => {
-                let me = env["self"].clone();
-                if self.alive(&me) {
-                    let e = self.ev_task(vec![json!({"ev": k, "subject": me})]);
+                if op.get("no_untap_next").is_some() {
+                    return uns("no_untap_next");
+                }
+                let cids = match self.select(&op["select"], &env)? {
+                    Ok(c) => c,
+                    Err(d) => return Ok(Some(d)),
+                };
+                if !cids.is_empty() {
+                    let evs: Vec<Value> = cids.iter().map(|&c| json!({"ev": k, "subject": self.refv(c)})).collect();
+                    let e = self.ev_task(evs);
+                    self.defer(vec![e]);
+                    deferred = true;
+                }
+            }
+            "move" => {
+                let to = op["to"].as_str().unwrap_or("");
+                if !["hand", "graveyard", "mana", "deck"].contains(&to) {
+                    return uns(format!("move to {}", to));
+                }
+                let cids = match self.select(&op["select"], &env)? {
+                    Ok(c) => c,
+                    Err(d) => return Ok(Some(d)),
+                };
+                let pos = op.get("position").and_then(|v| v.as_str()).unwrap_or("top");
+                let evs: Vec<Value> = cids
+                    .iter()
+                    .map(|&c| json!({"ev": "move", "subject": self.refv(c), "to": to, "reason": op["reason"], "position": pos}))
+                    .collect();
+                if !evs.is_empty() {
+                    let e = self.ev_task_env(evs, &env);
                     self.defer(vec![e]);
                     deferred = true;
                 }
@@ -820,7 +967,10 @@ impl Engine {
         let (allow, deny, bo): (Vec<String>, Vec<String>, Vec<i64>) =
             if in_bz { (d.allow.clone(), d.deny.clone(), d.breaks.clone()) } else { (vec![], vec![], vec![]) };
         let breaks = bo.iter().copied().max().unwrap_or(1).max(1);
-        json!({"power": d.power, "cost": d.cost, "civs": d.civs, "types": d.types, "races": d.races, "keywords": d.keywords,
+        let mut kw = d.keywords.clone();
+        kw.sort();
+        kw.dedup();
+        json!({"power": d.power, "cost": d.cost, "civs": d.civs, "types": d.types, "races": d.races, "keywords": kw,
             "name": d.name, "names": [d.name], "allow": allow, "deny": deny, "require": [], "breaks": breaks, "break_opts": bo,
             "breaks_add": 0, "pay_cost": d.cost, "sac_reduce": 0, "opt_reduce": null, "cost_may": [], "no_leave": [],
             "must_be_attacked": false, "battle_indestructible": false, "battle_indestructible_filters": [],
@@ -1204,7 +1354,7 @@ impl Engine {
                     return Ok(vec![]);
                 }
                 let cid = deck[0];
-                self.raw_move(cid, "hand", None);
+                self.raw_move(cid, "hand", "top", None);
                 self.s.cards[cid as usize].drawn_turn = self.s.turn;
                 let k = format!("drew:{}", p);
                 let n = self.s.turn_counters.get(&k).and_then(|v| v.as_i64()).unwrap_or(0) + 1;
@@ -1248,13 +1398,26 @@ impl Engine {
                     return uns(format!("move {}→{}", from, to));
                 }
                 let ctl = if summon_hold { Some(ev["controller"].as_i64().unwrap()) } else { None };
-                self.raw_move(cid, to, ctl);
+                let pos = ev.get("position").and_then(|v| v.as_str()).unwrap_or("top").to_string();
+                self.raw_move(cid, to, &pos, ctl);
                 let after = self.s.cards[cid as usize].controller;
                 let mut out = vec![json!({"ev": "move", "subject": self.refv(cid), "lki": {"defn": defn_before, "face": face_before, "controller": ctl_before, "zone": from, "tapped": tapped_before,
                         "chars": chars_before, "ref": [cid, gen_before]}, "from": from, "to": to,
                     "reason": reason, "controller": after})];
                 if ev.get("unpaid").and_then(|v| v.as_bool()).unwrap_or(false) {
                     out[0]["unpaid"] = json!(true);
+                }
+                for k in ["cause", "cause_defn", "cause_kind"] {
+                    if let Some(v) = ev.get(k) {
+                        if v.as_str().map_or(false, |x| !x.is_empty()) {
+                            out[0][k] = v.clone();
+                        }
+                    }
+                }
+                if let Some(b) = ev.get("by") {
+                    if !b.is_null() {
+                        out[0]["by"] = b.clone();
+                    }
                 }
                 if summon_hold {
                     self.push_list(format!("entered:{}", after), cid);
@@ -1280,7 +1443,7 @@ impl Engine {
     }
 
     /// イベントを通さない移動（Python 版 _raw_move の、plain の対戦で通る部分）
-    fn raw_move(&mut self, cid: i64, to: &str, controller: Option<i64>) {
+    fn raw_move(&mut self, cid: i64, to: &str, position: &str, controller: Option<i64>) {
         let (owner, from) = {
             let c = &self.s.cards[cid as usize];
             (c.owner as usize, c.zone.clone())
@@ -1334,7 +1497,7 @@ impl Engine {
         let ordered = self.rules.zone(to).ordered;
         let didx = if self.shared(to) { 0 } else { owner };
         let dest = &mut self.s.zones.get_mut(to).unwrap()[didx];
-        if ordered {
+        if ordered && position == "top" {
             dest.insert(0, cid);
         } else {
             dest.push(cid);

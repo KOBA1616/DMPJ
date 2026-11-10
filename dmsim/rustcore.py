@@ -40,6 +40,29 @@ _OK_KW = {"blocker", "cannot_attack_player", "cannot_attack", "double_breaker", 
           "triple_breaker", "cannot_be_attacked", "guardman", "world_breaker", "quad_breaker", "null_breaker"}
 
 
+def _simple_selector(sel) -> bool:
+    """段階2-d: Rust の select が扱えるセレクタ（自身／ゾーン・持ち主・枚数・上から・選ぶ人・types 絞り込み）。"""
+    if not isinstance(sel, dict):
+        return False
+    if sel == {"ref": "self"}:
+        return True
+    if not set(sel) <= {"zone", "owner", "count", "from_top", "filter", "chooser"}:
+        return False
+    if sel.get("zone") not in ("hand", "deck", "graveyard", "mana", "bz") or sel.get("owner", "you") not in ("you", "opp") \
+            or sel.get("chooser", "you") not in ("you", "opp"):
+        return False
+    c = sel.get("count", 1)
+    if not (c == "all" or (isinstance(c, int) and not isinstance(c, bool))):
+        return False
+    ft = sel.get("from_top", 0)
+    if not (isinstance(ft, int) and not isinstance(ft, bool)):
+        return False
+    f = sel.get("filter", {})
+    if not isinstance(f, dict) or not set(f) <= {"types"} or not all(isinstance(x, str) for x in f.get("types", [])):
+        return False
+    return True
+
+
 def _simple_effect(ops) -> bool:
     for o in ops:
         k = o["op"]
@@ -49,7 +72,10 @@ def _simple_effect(ops) -> bool:
             continue
         if k == "may" and set(o) <= {"op", "body"} and _simple_effect(o["body"]):
             continue
-        if k in ("tap", "untap") and o.get("select") == {"ref": "self"} and set(o) <= {"op", "select"}:
+        if k in ("tap", "untap") and set(o) <= {"op", "select"} and _simple_selector(o.get("select")):
+            continue
+        if k == "move" and set(o) <= {"op", "select", "to", "reason", "position"} and o.get("to") in ("hand", "graveyard", "mana", "deck") \
+                and isinstance(o.get("reason"), str) and o.get("position", "top") in ("top", "bottom") and _simple_selector(o.get("select")):
             continue
         return False
     return True

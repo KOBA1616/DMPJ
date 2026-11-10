@@ -104,3 +104,22 @@ def test_trigger_cards_match(real_env, seed):
     spec = {"kind": "new_game", "decks": [deck(), deck()], "seed": seed, "first_player": seed % 2}
     res = lockstep(Session.open(r, spec), rustcore.RustSession.open(r, spec, b), f"random:{seed}")
     assert res["divergence"] is None and res["ok"] is True
+
+
+@pytest.mark.parametrize("seed", range(1, 31))
+def test_select_move_cards_match(real_env, seed):
+    """段階2-d: セレクタ（ゾーン・持ち主・枚数・選ぶ人・types）と 移動／タップ／アンタップ／シャッフル の op を持つ札を
+    多く入れたデッキで、choose_cards の決定を含めて1局が一致する。"""
+    import random
+    r, b = real_env
+    pool = _portable(r)
+    sel = [i for i in pool if any(o["op"] in ("move", "tap", "untap", "shuffle")
+                                  for a in r.cards[i].abilities if a["kind"] == "trigger" for o in a["effect"])]
+    assert len(sel) >= 40
+    rnd = random.Random(seed)
+
+    def deck():
+        return [rnd.choice(sel) if rnd.random() < 0.5 else rnd.choice(pool) for _ in range(40)]
+    spec = {"kind": "new_game", "decks": [deck(), deck()], "seed": seed, "first_player": seed % 2}
+    res = lockstep(Session.open(r, spec), rustcore.RustSession.open(r, spec, b), f"random:{seed}")
+    assert res["divergence"] is None and res["ok"] is True
