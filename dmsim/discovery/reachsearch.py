@@ -123,13 +123,13 @@ def _merge(a: dict, b: dict) -> dict:
     return out
 
 
-def _with_keep(eng: Engine, me: int, stages: list[dict], k: int) -> dict:
-    """段 k の目標に、「後ろの段が要る札で今手札にあるものを手札に残す」条件を足す（先に使い切る手を選ばせない）。
+def _keep_for(eng: Engine, me: int, target: dict, rest: list[dict]) -> dict:
+    """目標 target に、「rest（これより後ろの段）が要る札で今手札にあるものを手札に残す」条件を足す（先に使い切る手を選ばせない）。
     後ろの段のゾーンが hand 以外（場・墓地・盾）の札が対象。既に目標に手札で入っているものは足さない。"""
-    tg = {z: dict(v) for z, v in stages[k].items()}
-    here = {i for v in stages[k].values() for i in v}            # この段の目標に出る札は残さない（同じ札が目標と手札に二重に要る矛盾を避ける）
+    tg = {z: dict(v) for z, v in target.items()}
+    here = {i for v in target.values() for i in v}               # この目標に出る札は残さない（同じ札が目標と手札に二重に要る矛盾を避ける）
     later: dict[str, int] = {}
-    for st in stages[k + 1:]:
+    for st in rest:
         for z, want in st.items():
             for i, n in want.items():
                 if z != "hand" and i != "*" and i not in here:
@@ -139,6 +139,11 @@ def _with_keep(eng: Engine, me: int, stages: list[dict], k: int) -> dict:
         if have and i not in tg.get("hand", {}):
             tg.setdefault("hand", {})[i] = min(have, n)
     return tg
+
+
+def _with_keep(eng: Engine, me: int, stages: list[dict], k: int) -> dict:
+    """段 k の目標に、後ろの段が要る札で今手札にあるものを残す条件を足す。"""
+    return _keep_for(eng, me, stages[k], stages[k + 1:])
 
 
 def reach_chain(eng: Engine, stages: list[dict], me: int = 0, keep_later: bool = False, lookahead: int = 3, **kw) -> dict:
@@ -162,8 +167,13 @@ def reach_chain(eng: Engine, stages: list[dict], me: int = 0, keep_later: bool =
         if r.reached:
             out.append((r.engine, 1, r.turn))
         if keep_later and i + 1 < len(stages):
-            mg = reach_target(c, _merge(stages[i], stages[i + 1]), me, **kw)
-            cnt[0] += mg.nodes
+            mtg = _merge(stages[i], stages[i + 1])
+            mg = reach_target(c, _keep_for(c, me, mtg, stages[i + 2:]), me, **kw) if i + 2 < len(stages) else None   # 合わせた目標でも、後ろの段の札を残して先に探す
+            if mg is not None:
+                cnt[0] += mg.nodes
+            if mg is None or not mg.reached:
+                mg = reach_target(c, mtg, me, **kw)
+                cnt[0] += mg.nodes
             if mg.reached:
                 out.append((mg.engine, 2, mg.turn))
         return out
@@ -188,3 +198,30 @@ def reach_chain(eng: Engine, stages: list[dict], me: int = 0, keep_later: bool =
         k += took
     nodes = cnt[0]
     return {"stages": len(turns), "turns": turns, "nodes": nodes, "engine": cur}
+
+
+def reach_set(eng: Engine, stages: list[dict], me: int = 0, **kw) -> dict:
+    """段の順序を固定しない版。残っている段のうち、今の局面から届くものを全部試し、最も早い（ターンが小さい）段を取って続ける。
+    後ろの段（残りの全部）が要る札は手札に残す条件を先に試す。順序は探索が決める（人が順を書かない）。
+    「手札8枚」「盾8枚」のような枚数だけの段（札を指定しない "*"）は、早く届いても後ろの段の札を使い切らせるので、札を指定した段が届く間は後回しにする。
+    {"stages": 到達した段数, "order": 取った順の段の番号, "turns": ターン, "engine": 最後の局面}"""
+    cur, left, order, turns = eng, list(range(len(stages))), [], []
+    while left:
+        best = None
+        for j in left:
+            rest = [stages[x] for x in left if x != j]
+            r = reach_target(cur, _keep_for(cur, me, stages[j], rest), me, **kw)
+            if not r.reached:
+                r = reach_target(cur, stages[j], me, **kw)
+            if r.reached:
+                key = (any(i == "*" for v in stages[j].values() for i in v), r.turn)   # 札を指定した段を先、同じなら早いターン
+                if best is None or key < best[2]:
+                    best = (j, r, key)
+        if best is None:
+            break
+        j, r, _ = best
+        order.append(j)
+        turns.append(r.turn)
+        left.remove(j)
+        cur = r.engine
+    return {"stages": len(order), "order": order, "turns": turns, "engine": cur}
