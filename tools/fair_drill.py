@@ -18,8 +18,9 @@ from dmsim.solitaire import Weights, charge_only_policy, evaluate, own_turn  # n
 D, J = "dm16-051", "dm36-015"
 
 
-def run(rules, seed, use_term, turns, budget, n_det, copies, filler="T001"):
-    deck = [D] * copies + [J] * copies + [filler] * (40 - 2 * copies)
+def run(rules, seed, use_term, turns, budget, n_det, copies, filler="T001", extra=()):
+    deck = [D] * copies + [J] * copies + [c for c, n in extra for _ in range(n)]
+    deck += [filler] * (40 - len(deck))
     eng = Engine.new_game(rules, [deck, ["T001"] * 40], seed, first_player=0)
     w = Weights()
     vf = (lambda e, me: evaluate(e, me, w) + opp_pressure(e, me)) if use_term else None
@@ -44,12 +45,14 @@ def main(argv=None):
     ap.add_argument("--n-det", type=int, default=4)
     ap.add_argument("--filler", default="T001", help="穴埋めカード（既定は効果なしのダミー）")
     ap.add_argument("--copies", type=int, default=4)
+    ap.add_argument("--extra", default="", help="追加カード 例 T012:4（ID:枚数をカンマ区切り）。攻撃しない呪文だけで組むと殴り勝ちを除ける")
     a = ap.parse_args(argv)
+    extra = tuple((x.split(":")[0], int(x.split(":")[1])) for x in a.extra.split(",") if x)
     rules = load_rules()
     for use in (False, True):
         res = []
         for s in range(1, a.seeds + 1):
-            low, dk, r = run(rules, s, use, a.turns, a.budget, a.n_det, a.copies, a.filler)
+            low, dk, r = run(rules, s, use, a.turns, a.budget, a.n_det, a.copies, a.filler, extra)
             res.append(low)
             print(f"  term={use} seed={s} 相手マナ最小={low} 相手山札最小={dk} 結果={r}", flush=True)
         print(f"[公平] opp_pressure={'あり' if use else 'なし'}: 相手マナ最小値 {res}", flush=True)
