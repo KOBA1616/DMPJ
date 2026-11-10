@@ -116,12 +116,17 @@ class SelectorMixin:
                 return sorted({r for c in env.get("vars", {}).get(x["races_of"], []) for r in self.chars_ro(c[0])["races"]})
             if "sum" in x:
                 return sum(self.eval_expr(v, env) for v in x["sum"])
+            if "mul" in x:
+                r = 1
+                for v in x["mul"]:
+                    r *= self.eval_expr(v, env)
+                return r
         raise ValueError(f"bad expr {x}")
 
     # count_of が式として評価する単一キーの辞書（バンドB U18 の一般化: 履歴式も mod の count に書ける）
     _EXPR_KEYS = {"count", "civ_count", "distinct_cost_count", "link_count", "seals", "seals_on",
                   "entered", "drew", "turn_count", "used_count", "prev_shield_added",
-                  "var", "cost_of", "power_of", "name_of", "race", "races_of", "sum", "bundles", "declared",
+                  "var", "cost_of", "power_of", "name_of", "race", "races_of", "sum", "mul", "bundles", "declared",
                   "total_cost", "total_power"}
 
     # 従来から複合キー辞書（{distinct_cost_count: ..., base: 0} 等）でも式として読んでいたキー。

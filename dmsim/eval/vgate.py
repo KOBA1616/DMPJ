@@ -52,12 +52,19 @@ def chain_score(rules, deck, opp_deck, keys, stages, seeds, prio, width=150, max
 
 def run_gate(rules, deck, opp_deck, keys, stages, seeds, grid=GRID, deadline=None, **kw) -> dict:
     """base と各重みを同じ seed で測る。打ち切られて seed 数が違うときは短い方に揃えて比べる。"""
-    base = chain_score(rules, deck, opp_deck, keys, stages, seeds, None, deadline=deadline, **kw)
+    # 時間の上限は base と各重みで等分する（先頭の base が全部使うと他が 0 seed になり n=0 になる）
+    k = 1 + len(grid)
+    t_start = time.time()
+    slice_ = ((deadline - t_start) / k) if deadline else 0
+
+    def dl(i):
+        return (t_start + slice_ * (i + 1)) if deadline else None
+    base = chain_score(rules, deck, opp_deck, keys, stages, seeds, None, deadline=dl(0), **kw)
     rows = []
-    for u, r, *pw in grid:
+    for gi, (u, r, *pw) in enumerate(grid, 1):
         pw = pw[0] if pw else 0.0
         prio = macro_prio(stages, pw, under_w=u, res_w=r) if pw else partial(_vp, under_w=u, res_w=r)
-        rows.append({"under_w": u, "res_w": r, "plan_w": pw, **chain_score(rules, deck, opp_deck, keys, stages, seeds, prio, deadline=deadline, **kw)})
+        rows.append({"under_w": u, "res_w": r, "plan_w": pw, **chain_score(rules, deck, opp_deck, keys, stages, seeds, prio, deadline=dl(gi), **kw)})
     n = min([len(base["stages"])] + [len(x["stages"]) for x in rows])
     b = sum(base["stages"][:n])
     for x in rows:
