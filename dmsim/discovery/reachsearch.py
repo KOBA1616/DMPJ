@@ -47,8 +47,17 @@ def fraction(eng: Engine, me: int, target: dict) -> float:
     return have / need
 
 
+QUIET_KINDS = ("main", "charge")   # 自分のターンの通常の選択点（効果の解決中でない）
+
+
+def _quiet(d, settled: bool) -> bool:
+    """settled=True の時は、効果の解決（モード選択・対象選択など）が終わった通常の選択点でだけ到達と数える。
+    ミルザムの『出た時』の効果のように、出た直後に未解決の効果が残る目標（盾の下の枚数など）を、解決後に測るため。"""
+    return (not settled) or d is None or d.get("kind") in QUIET_KINDS
+
+
 def reach_target(eng: Engine, target: dict, me: int = 0, width: int = 300, max_depth: int = 80, max_turn: int = 6,
-                 w: Weights | None = None, opp_policy=None, prio=None) -> ReachResult:
+                 w: Weights | None = None, opp_policy=None, prio=None, settled: bool = False) -> ReachResult:
     w = w or Weights()
     prio = prio or priority
     ts = _Settler(me, opp_policy or charge_only_policy, max_turn)
@@ -59,13 +68,15 @@ def reach_target(eng: Engine, target: dict, me: int = 0, width: int = 300, max_d
         nxt = []
         for cur in layer:
             d = ts._settle(cur)
-            if board_met(cur, me, target):
+            if board_met(cur, me, target) and _quiet(d, settled):
                 return ReachResult(True, nodes, cur, turn_of(cur), 1.0)
             if result_of(cur) is not None or d is None:
                 continue
             h, ctr = abstract(cur, "in_turn")
             deck_order = tuple(defn_of(cur, c) for c in zone_of(cur, "deck", me))
             key = (h, deck_order, tuple(sorted(ctr.items())), tuple(sorted(defn_of(cur, x) + str(tapped_of(cur, x)) for p in (0, 1) for x in zone_of(cur, "mana", p))))
+            if d["kind"] not in QUIET_KINDS:   # 効果の解決の途中: 直前の答え（選んだモードなど）が未解決の効果の引数になるので、同じ局面とみなさない
+                key += (d["kind"], tuple(tuple(x.get("keys", ())) for x in cur.log[-3:]))
             if key in seen:
                 continue
             seen.add(key)
@@ -73,8 +84,8 @@ def reach_target(eng: Engine, target: dict, me: int = 0, width: int = 300, max_d
                 nodes += 1
                 child = cur.clone()
                 child.answer(ch)
-                ts._settle(child)
-                if board_met(child, me, target):
+                cd = ts._settle(child)
+                if board_met(child, me, target) and _quiet(cd, settled):
                     return ReachResult(True, nodes, child, turn_of(child), 1.0)
                 if result_of(child) is not None:
                     continue

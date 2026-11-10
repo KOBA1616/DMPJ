@@ -35,3 +35,10 @@ def test_shield_under_counts_bundle():
     from dmsim.discovery.reachsearch import _have
     e = Engine.new_game(load_rules(), [["T001"] * 40, ["T001"] * 40], 1, first_player=0)
     assert _have(e, 0, "shield_under", "*") == 0
+
+
+def test_quiet_only_at_top_level_when_settled():
+    from dmsim.discovery.reachsearch import _quiet
+    assert _quiet({"kind": "modal"}, False)
+    assert not _quiet({"kind": "modal"}, True)
+    assert _quiet({"kind": "main"}, True) and _quiet(None, True)
