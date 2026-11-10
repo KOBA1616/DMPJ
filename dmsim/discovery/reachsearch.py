@@ -98,3 +98,17 @@ def reach_rate(rules, deck: list[str], target: dict, seeds, opp_deck: list[str] 
             out["turns"][sd] = r.turn
     out["rate"] = len(out["reached"]) / len(seeds) if seeds else 0.0
     return out
+
+
+def reach_chain(eng: Engine, stages: list[dict], me: int = 0, **kw) -> dict:
+    """段階目標を順に到達させる（勝利条件から分解した中継点を、前の段階の到達局面から続けて探す）。
+    {"stages": 到達した段階数, "turns": [各段階の到達ターン], "nodes", "engine": 最後に届いた局面}"""
+    cur, turns, nodes = eng, [], 0
+    for tg in stages:
+        r = reach_target(cur, tg, me, **kw)
+        nodes += r.nodes
+        if not r.reached:
+            break
+        cur = r.engine
+        turns.append(r.turn)
+    return {"stages": len(turns), "turns": turns, "nodes": nodes, "engine": cur}
