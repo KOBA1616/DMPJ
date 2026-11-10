@@ -104,3 +104,24 @@ def lap_bound(c: Cycle, stock: dict | None = None):
     opp = c.opp_delta()
     total = {k: v * (laps if laps is not None else 1) for k, v in opp.items()}
     return laps, total
+
+
+def finite_pairs(rules, min_laps: int = 3) -> list[dict]:
+    """全カードから、相手の資源を動かす束 A と、それを手札へ戻す／繰り返せる束 B の2枚組で、有限ループになるものを数える。"""
+    bs = bundles_of(rules)
+    A = [b for b in bs if any(m.owner == "opp" and m.src in ("mana", "deck", "shield", "hand") for m in b.moves)]
+    B = [b for b in bs if any(m.owner != "opp" and m.dst == "hand" and m.src in ("graveyard", "mana", "deck", "shield") for m in b.moves)]
+    out = []
+    for a in A:
+        for b in B:
+            if a.card == b.card:
+                continue
+            ab = feeds(a, b, rules) or (1 if b.prem is not None and b.prem.kind in TICKS else 0)
+            ba = feeds(b, a, rules) or (1 if a.prem is not None and a.prem.kind in TICKS else 0)
+            if not (ab and ba):
+                continue
+            c = Cycle([a, b], ab == 2 and ba == 2)
+            laps, opp = lap_bound(c)
+            if opp and (laps is None or laps >= min_laps):
+                out.append({"cards": [a.card, b.card], "names": [a.name, b.name], "laps": laps, "opp": opp, "sure": c.sure})
+    return out
