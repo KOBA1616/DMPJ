@@ -29,3 +29,12 @@ def test_stage_path_prefers_handwritten(tmp_path):
     (tmp_path / "a.yaml").write_text("stages: []")
     assert vgate.stage_path("a", str(tmp_path)).endswith("a.yaml") and not vgate.stage_path("a", str(tmp_path)).endswith("generated.yaml")
     assert vgate.stage_path("zz", str(tmp_path)) is None
+
+
+def test_runstd_and_normalized_plan():
+    from dmsim.plan.macro import RunStd
+    rs = RunStd(floor=1.0, warm=3)
+    assert rs.std == 1.0               # 少数のうちは floor
+    for x in (0.0, 10.0, 20.0, 30.0):
+        rs.add(x)
+    assert abs(rs.std - 12.9099) < 1e-3   # 標本標準偏差

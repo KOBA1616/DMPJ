@@ -15,7 +15,7 @@ from dmsim.defs import load_rules  # noqa: E402
 from dmsim.discovery.bestfirst import priority  # noqa: E402
 from dmsim.discovery.reachsearch import reach_chain  # noqa: E402
 from dmsim.eval import vgate  # noqa: E402
-from dmsim.plan.macro import MacroPlanner, stage_fraction  # noqa: E402
+from dmsim.plan.macro import MacroPlanner, RunStd, stage_fraction  # noqa: E402
 from dmsim.solitaire import load_deck  # noqa: E402
 
 
@@ -24,7 +24,8 @@ def main(argv=None):
     ap.add_argument("--combo", default="tenmon")
     ap.add_argument("--targets", default="data/autofix/targets.yaml")
     ap.add_argument("--seeds", type=int, default=3)
-    ap.add_argument("--plan-w", type=float, default=3.0)
+    ap.add_argument("--plan-w", type=float, default=3.0, help="負なら基本スコアの標準偏差に対する倍率（正規化）")
+    ap.add_argument("--term", default="plan", choices=["plan", "lock", "opp"], help="測る項。plan=計画項、lock=継続効果ロック(PR #346)、opp=相手の資源減少")
     ap.add_argument("--width", type=int, default=40)
     a = ap.parse_args(argv)
     t = next(x for x in yaml.safe_load(Path(a.targets).read_text(encoding="utf-8"))["targets"] if x["combo"] == a.combo)
@@ -35,9 +36,24 @@ def main(argv=None):
     planner = MacroPlanner(stages)
     rec: list[tuple[float, float]] = []
 
+    rs = RunStd()
+    if a.term == "lock":
+        from dmsim.eval.lock_terms import make_term as _mk
+        ext = _mk()
+    elif a.term == "opp":
+        from dmsim.eval.opp_pressure import make_term as _mk
+        ext = _mk()
+    else:
+        ext = None
+
     def prio(eng, me, w):
         b = priority(eng, me, w)
-        p = a.plan_w * stage_fraction(eng, me, planner.plan(eng, me))
+        if ext is not None:
+            p = ext(eng, me)
+        else:
+            rs.add(b)
+            k = a.plan_w if a.plan_w >= 0 else -a.plan_w * rs.std
+            p = k * stage_fraction(eng, me, planner.plan(eng, me))
         rec.append((b, p))
         return b + p
 
@@ -52,7 +68,7 @@ def main(argv=None):
         (b1, p1), (b2, p2) = rnd.choice(rec), rnd.choice(rec)
         if (b1 - b2) * ((b1 + p1) - (b2 + p2)) < 0:
             flips += 1
-    print(f"{a.combo} plan_w={a.plan_w} 局面{n} 計画項が0でない割合={nonzero / n:.3f} 無作為な対で順位が入れ替わる割合={flips / pairs:.3f}")
+    print(f"{a.combo} {a.term} w={a.plan_w} 局面{n} 計画項が0でない割合={nonzero / n:.3f} 無作為な対で順位が入れ替わる割合={flips / pairs:.3f}")
 
 
 if __name__ == "__main__":

@@ -64,14 +64,39 @@ def stage_fraction(eng, me: int, plan: Plan) -> float:
     return plan.idx + fraction(eng, me, cur) + (NEXT_W * fraction(eng, me, nxt) if nxt else 0.0)
 
 
+class RunStd:
+    """基本スコアの標準偏差を探索中にオンラインで推定する（Welford）。計画項の大きさを基本スコアの散らばりに合わせる。"""
+
+    def __init__(self, floor: float = 1.0, warm: int = 30):
+        self.n, self.mean, self.m2, self.floor, self.warm = 0, 0.0, 0.0, floor, warm
+
+    def add(self, x: float) -> None:
+        self.n += 1
+        d = x - self.mean
+        self.mean += d / self.n
+        self.m2 += d * (x - self.mean)
+
+    @property
+    def std(self) -> float:
+        if self.n < self.warm:
+            return self.floor
+        return max(self.floor, (self.m2 / (self.n - 1)) ** 0.5)
+
+
 def macro_prio(stages: list, plan_w: float, under_w: float = 3.0, res_w: float = 1.0, base=None, terms=()):
     """reach_chain/reach_target の prio に渡せる順位づけ。局面ごとに MacroPlanner が現在の段を決め直し、V の計画項に使う
-    （段をまたぐ鎖でも1つの関数で済む）。plan_w=0 は計画なしと同じ。"""
+    （段をまたぐ鎖でも1つの関数で済む）。plan_w=0 は計画なしと同じ。
+    plan_w<0 は「基本スコアの標準偏差に対する倍率 k=-plan_w」（正規化。局面ごとの散らばりに計画項の大きさを合わせる）。"""
     from ..discovery.bestfirst import priority
     from ..eval.vfeatures import v_priority
     planner = MacroPlanner(stages)
     b = base or priority
+    rs = RunStd() if plan_w < 0 else None
 
     def prio(eng, me, w):
-        return v_priority(eng, me, w, b, under_w=under_w, res_w=res_w, plan=planner.plan(eng, me), plan_w=plan_w, terms=terms)
+        if rs is None:
+            return v_priority(eng, me, w, b, under_w=under_w, res_w=res_w, plan=planner.plan(eng, me), plan_w=plan_w, terms=terms)
+        v0 = v_priority(eng, me, w, b, under_w=under_w, res_w=res_w, terms=terms)
+        rs.add(v0)
+        return v0 + (-plan_w) * rs.std * stage_fraction(eng, me, planner.plan(eng, me))
     return prio
