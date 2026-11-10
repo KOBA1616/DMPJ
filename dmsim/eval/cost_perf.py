@@ -35,9 +35,18 @@ def mana_used(eng, me: int) -> int:
     return sum(1 for c in zone_of(eng, "mana", me) if tapped_of(eng, c))
 
 
+NET_W = 2.0   # 差型（scale<0）での使用マナ1あたりの減点
+
+
 def cost_perf(eng, me: int, scale: float = 1.0, hand_cost_w: float = 0.0, w: dict | None = None) -> float:
-    cost = 1 + mana_used(eng, me) + hand_cost_w * max(0, 5 - len(zone_of(eng, "hand", me)))
-    return scale * performance(eng, me, w) / cost
+    """scale>0: 割り算型 性能/(1+使用マナ)。性能がほぼ一定の局面では、使用マナ0（何もしない）が最良になり行動を罰する
+    （天門で 使用マナ0=132、3〜6=18〜36。V gate は 38→26 と悪化）。
+    scale<0: 差型 |scale|×(性能 − NET_W×使用マナ)。行動を罰する度合いが使用マナに比例するだけで済む。"""
+    used = mana_used(eng, me)
+    hand_cost = hand_cost_w * max(0, 5 - len(zone_of(eng, "hand", me)))
+    if scale < 0:
+        return -scale * (performance(eng, me, w) - NET_W * (used + hand_cost))
+    return scale * performance(eng, me, w) / (1 + used + hand_cost)
 
 
 def make_term(**kw):

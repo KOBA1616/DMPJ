@@ -72,3 +72,22 @@ def test_cost_perf_breakdown_and_term(monkeypatch):
     monkeypatch.setattr(cost_perf, "zone_of", lambda e, z, m: [0] * 5)
     assert cost_perf.performance(None, 0) == 5 * 5.0 + 5 * 10.0
     assert abs(cost_perf.cost_perf(None, 0, scale=2.0) - 2.0 * 75.0 / 4) < 1e-9   # 分母 = 1 + 使用マナ3
+
+
+def test_lock_recur_classification():
+    from types import SimpleNamespace as NS
+    from dmsim.eval.lock_terms import is_drain_spell, is_recursion_engine
+    gio = NS(types=["creature"], spell=[], abilities=[{"kind": "trigger", "when": {"event": "turn_end"}, "effect": [
+        {"op": "move", "select": {"zone": "graveyard", "owner": "you", "filter": {"types": ["spell"]}}, "to": "hand"}]}])
+    drill = NS(types=["spell"], abilities=[], spell=[
+        {"op": "move", "select": {"zone": "mana", "owner": "opp", "count": 1}, "to": "graveyard"}])
+    assert is_recursion_engine(gio) and not is_drain_spell(gio)
+    assert is_drain_spell(drill) and not is_recursion_engine(drill)
+
+
+def test_stage_files_load():
+    from pathlib import Path
+    from dmsim.eval.vgate import load_stages
+    for p in Path("data/eval/stages").glob("*.yaml"):
+        st = load_stages(str(p))
+        assert st["stages"] and all("target" in s for s in st["stages"]), p
