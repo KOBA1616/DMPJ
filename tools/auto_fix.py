@@ -58,8 +58,9 @@ def run_batch(a, combos):
     from dmsim.autofix import selfheal
     for r in run_targets(ts, combos, mk, Rule(turn=a.turns), a.rounds, a.out, a.store, health=a.health):
         print(r)
-    vg = [t["combo"] for t in ts if t["combo"] in combos and combos[t["combo"]].get("split") != "holdout" and Path(f"data/eval/stages/{t['combo']}.yaml").exists()]
-    VGATE_SEC = 720                                           # 評価関数 V の採否ゲート（段階目標のあるコンボだけ。docs/value-function-design.md §7）
+    from dmsim.eval.vgate import stage_path as vgate_stage_path
+    vg = [t["combo"] for t in ts if t["combo"] in combos and combos[t["combo"]].get("split") != "holdout" and vgate_stage_path(t["combo"])]
+    VGATE_SEC = 600                                           # 評価関数 V の採否ゲート（段階目標のあるコンボ1件あたり。時間切れは seed 数を減らして比べる）
     if a.total_seconds:                                       # 日次の総枠から、診断に使った残りを deck_fix と tune に自動で配る
         from dmsim.deckplan import budget as B
         a.deck_fix_budget, a.tune_seconds = B.split_remaining(a.total_seconds - (VGATE_SEC * len(vg)), time.time() - t0, bool(a.deck_fix and a.out), True)

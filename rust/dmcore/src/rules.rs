@@ -26,6 +26,8 @@ pub struct CardDef {
     pub deny: Vec<String>,
     #[serde(default)]
     pub breaks: Vec<i64>,
+    #[serde(default)]
+    pub shield_allow: Vec<String>,
 }
 
 #[derive(Deserialize, Clone, Debug)]

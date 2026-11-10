@@ -57,6 +57,12 @@ impl Engine {
     }
     /// 101.2: 禁止 → 許可 → 既定値。自分自身への常在型はバトルゾーンにある間だけ働く
     fn permits(&self, cid: i64, action: &str) -> bool {
+        if self.s.cards[cid as usize].zone == "shield" {
+            // シールドゾーンで働く自身への許可（S・トリガー）
+            if self.def(cid).shield_allow.iter().any(|x| x == action) {
+                return true;
+            }
+        }
         if self.s.cards[cid as usize].zone == "bz" {
             let d = self.def(cid);
             if d.deny.iter().any(|x| x == action) {
@@ -126,8 +132,22 @@ impl Engine {
                 "break" => self.h_break()?,
                 "enqueue_st" => {
                     let t = self.s.tasks.pop().unwrap();
-                    if !t["cids"].as_array().map_or(true, |a| a.is_empty()) {
-                        return uns("enqueue_st（S・トリガー）");
+                    let win = self.s.windows.last().copied().unwrap_or(0);
+                    let player = t["player"].as_i64().unwrap();
+                    for pr in t["cids"].as_array().unwrap() {
+                        let c = pr[0].as_i64().unwrap();
+                        if !pr[1].is_null() {
+                            return uns("enqueue_st face");
+                        }
+                        if self.s.cards[c as usize].zone == "hand" {
+                            if t.get("strigger").and_then(|v| v.as_bool()).unwrap_or(false) {
+                                self.s.ev_seq += 1;   // 「相手がS・トリガーを使った時」の合成レコード（plain には該当する誘発が無いので通し番号だけ進む）
+                            }
+                            self.s.seq += 1;
+                            let p = json!({"pid": self.s.seq, "kind": "strigger", "win": win, "controller": player,
+                                "src": self.refv(c), "defn": self.s.cards[c as usize].defn.clone(), "ab": -1, "env": {}});
+                            self.s.pending.push(p);
+                        }
                     }
                     None
                 }
@@ -525,8 +545,16 @@ impl Engine {
             return Ok(None);
         }
         let has = |t: &Value, k: &str| t.get(k).is_some();
-        // ササゲール（破壊してコスト軽減）: 候補なし → 空の sac と sac_done を残す
-        if !has(self.s.tasks.last().unwrap(), "sac_done") {
+        let (free, st) = {
+            let t = self.s.tasks.last().unwrap();
+            (t["free"].as_bool().unwrap_or(false), t.get("st").and_then(|v| v.as_bool()).unwrap_or(false))
+        };
+        let kws = self.def(cid).keywords.clone();
+        let sst_bonus = st && kws.iter().any(|k| k == "super_s_trigger") && self.zl("shield", p).is_empty();
+        let broken = self.s.turn_counters.get(&format!("broken:{}", p)).and_then(|v| v.as_i64()).unwrap_or(0);
+        let stp_bonus = st && kws.iter().any(|k| k == "s_trigger_plus") && self.s.active != p && broken >= 2;
+        // ササゲール（破壊してコスト軽減）: 候補なし → 空の sac と sac_done を残す（コストを払わない実行では聞かない）
+        if !free && !has(self.s.tasks.last().unwrap(), "sac_done") {
             let t = self.s.tasks.last_mut().unwrap();
             if !has(t, "sac") {
                 t["sac"] = json!([]);
@@ -534,10 +562,10 @@ impl Engine {
             t["sac_done"] = json!(true);
         }
         self.s.turn_counters.insert(format!("last_play_creature:{}", p), json!(1));
-        if !has(self.s.tasks.last().unwrap(), "cost_may_done") {
+        if !free && !has(self.s.tasks.last().unwrap(), "cost_may_done") {
             self.s.tasks.last_mut().unwrap()["cost_may_done"] = json!(true);
         }
-        if !has(self.s.tasks.last().unwrap(), "paid_done") {
+        if !free && !has(self.s.tasks.last().unwrap(), "paid_done") {
             let choices = self.mana_choices(cid, p, None, 32);
             if choices.is_empty() {
                 self.s.tasks.pop();
@@ -576,7 +604,19 @@ impl Engine {
         self.s.cards[cid as usize].zone = "hold".to_string();
         self.s.hold.push(cid);
         let r = self.refv(cid);
-        let ev = json!({"ev": "move", "subject": r, "from": from_zone, "to": "bz", "reason": "summon", "controller": p, "unpaid": false});
+        if sst_bonus {
+            self.s.cards[cid as usize].sst = true;
+        }
+        if stp_bonus {
+            self.s.cards[cid as usize].stp = true;
+        }
+        let mut ev = json!({"ev": "move", "subject": r, "from": from_zone, "to": "bz", "reason": "summon", "controller": p, "unpaid": free});
+        if sst_bonus {
+            ev["sst"] = json!(true);
+        }
+        if stp_bonus {
+            ev["stp"] = json!(true);
+        }
         let t = self.ev_task(vec![ev]);
         self.push(vec![t]);
         Ok(None)
@@ -787,12 +827,20 @@ impl Engine {
             (t["win"].clone(), t["only_st"].as_bool().unwrap_or(false))
         };
         let here: Vec<Value> = self.s.pending.iter().filter(|p| p["win"] == win).cloned().collect();
-        if here.iter().any(|p| p["kind"] != json!("normal")) {
+        if here.iter().any(|p| p["kind"] != json!("normal") && p["kind"] != json!("strigger")) {
             return uns("pending kind");
         }
         let active = self.s.active;
-        let mine: Vec<Value> = here.iter().filter(|p| p["controller"] == json!(active)).cloned().collect();
-        let pool: Vec<Value> = if only_st { vec![] } else if !mine.is_empty() { mine } else { here };
+        let st: Vec<Value> = here.iter().filter(|p| p["kind"] == json!("strigger")).cloned().collect();
+        let pool: Vec<Value> = if !st.is_empty() {
+            let mine: Vec<Value> = st.iter().filter(|p| p["controller"] == json!(active)).cloned().collect();
+            if mine.is_empty() { st } else { mine }
+        } else if only_st {
+            vec![]
+        } else {
+            let mine: Vec<Value> = here.iter().filter(|p| p["controller"] == json!(active)).cloned().collect();
+            if mine.is_empty() { here } else { mine }
+        };
         if pool.is_empty() {
             self.s.tasks.pop();
             return Ok(None);
@@ -809,6 +857,14 @@ impl Engine {
         let pid = opts[ans[0]]["pid"].clone();
         let idx = self.s.pending.iter().position(|p| p["pid"] == pid).unwrap();
         let p = self.s.pending.remove(idx);
+        if p["kind"] == json!("strigger") {
+            if self.alive(&p["src"]) {
+                let c = p["src"][0].as_i64().unwrap();
+                let gen = self.s.cards[c as usize].gen;
+                self.push(vec![json!({"t": "play", "cid": c, "player": player, "free": true, "phase": "start", "gen": gen, "st": true})]);
+            }
+            return Ok(None);
+        }
         let defn = p["defn"].as_str().unwrap().to_string();
         let ab = self.rules.cards[&defn].abil[p["ab"].as_i64().unwrap() as usize].clone();
         let eff = ab["effect"].clone();
@@ -1098,10 +1154,34 @@ impl Engine {
                 t["brk_done"] = json!(true);
             }
             let ch: Vec<i64> = self.s.tasks.last().unwrap()["chosen"].as_array().unwrap().iter().map(|v| v.as_i64().unwrap()).collect();
-            if ch.iter().any(|&c| self.permits(c, "s_trigger")) {
-                return uns("s_trigger");
+            let victim_p = victim;
+            let mut opts: Vec<Value> = vec![];
+            for &c in &ch {
+                let k = &self.s.cards[c as usize];
+                if k.strigger_off || k.strigger_on {
+                    return uns("strigger mark");
+                }
+                if self.permits(c, "s_trigger") {
+                    opts.push(json!({"key": format!("strigger:{}", k.defn), "cid": c}));
+                }
             }
-            self.tset("declared", json!([]));
+            let mut declared: Vec<Value> = vec![];
+            if !opts.is_empty() {
+                let n = opts.len();
+                let ans = match self.ask(victim_p, "declare_strigger", opts.clone(), 0, n) {
+                    Ask::Decision(d) => return Ok(Some(d)),
+                    Ask::Answer(x) => x,
+                };
+                let mut seen: Vec<i64> = vec![];
+                for i in ans {
+                    let cid = opts[i]["cid"].as_i64().unwrap();
+                    if !seen.contains(&cid) {
+                        seen.push(cid);
+                        declared.push(json!([cid, null]));
+                    }
+                }
+            }
+            self.tset("declared", json!(declared));
             self.tset("phase", json!(2));
             return Ok(None);
         }
@@ -1110,7 +1190,7 @@ impl Engine {
         let chosen: Vec<i64> = tk["chosen"].as_array().unwrap().iter().map(|v| v.as_i64().unwrap()).filter(|&c| self.s.cards[c as usize].zone == "shield").collect();
         let reason = tk.get("reason").and_then(|v| v.as_str()).unwrap_or("break").to_string();
         let mut seq = vec![self.ev_task(chosen.iter().map(|&c| json!({"ev": "move", "subject": self.refv(c), "to": "hand", "reason": reason})).collect())];
-        seq.push(json!({"t": "enqueue_st", "cids": tk["declared"], "player": victim}));
+        seq.push(json!({"t": "enqueue_st", "cids": tk["declared"], "player": victim, "strigger": true}));
         if !chosen.is_empty() {
             let mut ev = json!({"ev": "break", "player": victim, "count": chosen.len()});
             let br = tk.get("breaker").cloned().unwrap_or(Value::Null);
@@ -1435,6 +1515,12 @@ impl Engine {
                 let ctl = if summon_hold { Some(ev["controller"].as_i64().unwrap()) } else { None };
                 let pos = ev.get("position").and_then(|v| v.as_str()).unwrap_or("top").to_string();
                 self.raw_move(cid, to, &pos, ctl);
+                if ev.get("sst").and_then(|v| v.as_bool()).unwrap_or(false) {
+                    self.s.cards[cid as usize].sst = true;
+                }
+                if ev.get("stp").and_then(|v| v.as_bool()).unwrap_or(false) {
+                    self.s.cards[cid as usize].stp = true;
+                }
                 let after = self.s.cards[cid as usize].controller;
                 let mut out = vec![json!({"ev": "move", "subject": self.refv(cid), "lki": {"defn": defn_before, "face": face_before, "controller": ctl_before, "zone": from, "tapped": tapped_before,
                         "chars": chars_before, "ref": [cid, gen_before]}, "from": from, "to": to,
