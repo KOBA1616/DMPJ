@@ -1,0 +1,12 @@
+# 天門の小目標の鎖(勝利条件=自分の盾10枚以上 から逆算)。reach_chain に渡す形 {ゾーン: {ID or "*": 枚数}}
+# 強制3枚(手札)開始・14ターン上限・幅150・8seed の到達数を measured に記録(2026-11-10)
+goal: {bz: {dmx12b-031: 1}, shield: {"*": 10}}
+stages:
+  - {name: keys_in_hand, target: {hand: {dm16-007: 1, dmx19-s06: 1, dm23bd7-022: 1}}, natural_reach_T4: 0.076}
+  - {name: emeraluda_on_bz, target: {bz: {dm23bd7-022: 1}}, measured: "8/8"}
+  - {name: tenmon_cast, target: {graveyard: {dm16-007: 1}}, measured: "8/8"}
+  - {name: mirzam_on_bz, target: {bz: {dmx19-s06: 1}}, measured: "6/8"}
+  - {name: emeraluda_and_mirzam, target: {bz: {dm23bd7-022: 1, dmx19-s06: 1}}, measured: "3/8"}
+  - {name: shield_8, target: {shield: {"*": 8}}, measured: "0/8 (最大7)"}
+  - {name: shield_10, target: {shield: {"*": 10}}}
+  - {name: aleftina_win, target: {bz: {dmx12b-031: 1}, shield: {"*": 10}}}
