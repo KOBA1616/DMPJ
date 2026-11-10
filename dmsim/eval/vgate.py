@@ -51,7 +51,10 @@ def chain_score(rules, deck, opp_deck, keys, stages, seeds, prio, width=150, max
     return {"stages": out, "total": sum(out)}
 
 
-def run_gate(rules, deck, opp_deck, keys, stages, seeds, grid=GRID, deadline=None, **kw) -> dict:
+MIN_ADOPT_N = 8   # 採用候補にする最小局数。時間切れで n がこれ未満なら verdict は "adopt" にせず "small_n"（n=2 の偶然で手入力値を上書きしないため）
+
+
+def run_gate(rules, deck, opp_deck, keys, stages, seeds, grid=GRID, deadline=None, min_n=MIN_ADOPT_N, **kw) -> dict:
     """base と各重みを同じ seed で測る。打ち切られて seed 数が違うときは短い方に揃えて比べる。"""
     # 時間の上限は base と各重みで等分する（先頭の base が全部使うと他が 0 seed になり n=0 になる）
     k = 1 + len(grid)
@@ -72,7 +75,7 @@ def run_gate(rules, deck, opp_deck, keys, stages, seeds, grid=GRID, deadline=Non
     b = sum(base["stages"][:n])
     for x in rows:
         x["total_n"] = sum(x["stages"][:n])
-        x["verdict"] = "adopt" if (n and x["total_n"] > b) else ("tie" if x["total_n"] == b else "worse")
+        x["verdict"] = ("adopt" if n >= min_n else "small_n") if (n and x["total_n"] > b) else ("tie" if x["total_n"] == b else "worse")
     best = max((x for x in rows if x["verdict"] == "adopt"), key=lambda x: x["total_n"], default=None)
     return {"n": n, "base_total": b, "base": base["stages"][:n], "rows": rows, "best": best}
 
