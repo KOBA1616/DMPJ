@@ -14,3 +14,10 @@ def test_gate_adopts_only_strictly_better(rules, monkeypatch):
     monkeypatch.setattr(vgate, "chain_score", lambda *a, **k: {"stages": next(scores), "total": 0})
     r = vgate.run_gate(rules, [], [], [], [], [1, 2], grid=((3.0, 1.0), (6.0, 1.0)))
     assert [x["verdict"] for x in r["rows"]] == ["adopt", "worse"] and r["best"]["under_w"] == 3.0
+
+
+def test_gate_accepts_plan_w_candidate(rules, monkeypatch):
+    scores = iter([[1, 1], [2, 2]])
+    monkeypatch.setattr(vgate, "chain_score", lambda *a, **k: {"stages": next(scores), "total": 0})
+    r = vgate.run_gate(rules, [], [], [], [{"hand": {"*": 1}}], [1, 2], grid=((0.0, 0.0, 1500.0),))
+    assert r["best"]["plan_w"] == 1500.0 and r["rows"][0]["verdict"] == "adopt"
