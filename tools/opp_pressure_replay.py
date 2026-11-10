@@ -18,7 +18,7 @@ from dmsim.eval.vfeatures import v_priority  # noqa: E402
 DRILL, JOHANNI = "dm16-051", "dm36-015"
 
 
-def run(rules, seed, w, width, max_turn, mana_cards):
+def run(rules, seed, w, width, max_turn, mana_cards, depth=80):
     e = Engine.new_game(rules, [[DRILL, JOHANNI] + mana_cards * 6 + ["T013"] * 30, ["T001"] * 40], seed, first_player=0)
     pick = lambda d: next(c for c in e.zlist("deck", 0) if e.s.cards[c].defn == d)
     e._raw_move(pick(DRILL), "hand", controller=0)
@@ -34,7 +34,7 @@ def run(rules, seed, w, width, max_turn, mana_cards):
     def prio(en, me, wt):
         low[0] = min(low[0], len(en.zlist("mana", 1)))
         return v_priority(en, me, wt, priority, under_w=0, res_w=0, terms=[term] if term else ())
-    reach_target(e, {"graveyard": {"*": 99}}, 0, width=width, max_turn=max_turn, prio=prio)
+    reach_target(e, {"graveyard": {"*": 99}}, 0, width=width, max_turn=max_turn, max_depth=depth, prio=prio)
     return low[0]
 
 
@@ -43,12 +43,13 @@ def main(argv=None):
     ap.add_argument("--w", type=float, nargs="+", default=[0.0, 3.0, 100.0])
     ap.add_argument("--width", type=int, default=100)
     ap.add_argument("--max-turn", type=int, default=6)
+    ap.add_argument("--depth", type=int, default=80)
     ap.add_argument("--seeds", type=int, default=3)
     ap.add_argument("--mana", nargs="+", default=["dm16-051", "T013"])
     a = ap.parse_args(argv)
     rules = load_rules()
     for w in a.w:
-        res = [run(rules, s, w, a.width, a.max_turn, a.mana) for s in range(1, a.seeds + 1)]
+        res = [run(rules, s, w, a.width, a.max_turn, a.mana, a.depth) for s in range(1, a.seeds + 1)]
         print(f"mana_w={w}: 探索中の相手マナ最小値 {res}", flush=True)
 
 
