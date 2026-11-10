@@ -5,10 +5,3 @@ saga:
   res_w: 0.0
   total: 28
   under_w: 0.0
-tenmon:
-  base_total: 38
-  n: 12
-  plan_w: -0.1
-  res_w: 0.0
-  total: 40
-  under_w: 0.0
