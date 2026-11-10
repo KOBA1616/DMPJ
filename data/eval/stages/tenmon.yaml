@@ -7,6 +7,8 @@ stages:
   - {name: tenmon_cast, target: {graveyard: {dm16-007: 1}}, measured: "8/8"}
   - {name: mirzam_on_bz, target: {bz: {dmx19-s06: 1}}, measured: "6/8"}
   - {name: emeraluda_and_mirzam, target: {bz: {dm23bd7-022: 1, dmx19-s06: 1}}, measured: "3/8"}
+  - {name: tenmon_in_shield, target: {shield: {dm16-007: 1}}, measured: "6/8", note: "エメラルーダの『手札をシールド化』で入れる。次にエメラルーダで自盾をブレイクすると S・トリガーで出る"}
+  - {name: tenmon_and_mirzam_in_shield, target: {shield: {dm16-007: 1, dmx19-s06: 1}}, measured: "3/8"}
   - {name: shield_8, target: {shield: {"*": 8}}, measured: "0/8 (最大7)"}
   - {name: shield_10, target: {shield: {"*": 10}}}
   - {name: aleftina_win, target: {bz: {dmx12b-031: 1}, shield: {"*": 10}}}
