@@ -34,3 +34,25 @@ def test_tune_improves_and_logs():
     assert any(h.get("verdict") == "accept" for h in hist)
     s = lambda kk: sum(x is not None for x in fake(kk, range(300, 400))["kill"])
     assert s(k) >= s(k0)
+
+
+def test_tune_stops_at_deadline_and_keeps_progress():
+    import time
+    k0 = Knobs(coef=15.0, budget=200)
+    k, hist = tune(fake, k0, list(range(100)), list(range(100, 200)), generations=8, lam=6, deadline=time.time() - 1)
+    assert hist[-1]["verdict"] == "timeout" and k == k0          # 枠切れなら測定に入らず現状を返す
+
+
+def test_tune_deadline_midway_returns_accepted_so_far(monkeypatch):
+    import time
+    import dmsim.autofix.tune as T
+    t = {"now": 0.0}
+    monkeypatch.setattr(time, "time", lambda: t["now"])
+    calls = []
+
+    def slow(k, seeds):
+        calls.append(1)
+        t["now"] += 1.0                                          # 1測定ごとに1秒進む
+        return fake(k, seeds)
+    k, hist = T.tune(slow, Knobs(coef=15.0, budget=200), list(range(100)), list(range(100, 200)), generations=8, lam=6, deadline=15.0)
+    assert hist[-1]["verdict"] == "timeout" and len(calls) <= 18
