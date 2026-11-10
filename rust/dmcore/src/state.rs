@@ -97,6 +97,10 @@ impl GameState {
         z ^ (z >> 31)
     }
 
+    pub fn pub_len(&self) -> usize {
+        self.r#pub.len()
+    }
+
     pub fn rng_below(&mut self, n: u64) -> u64 {
         self.rng_next() % n
     }
