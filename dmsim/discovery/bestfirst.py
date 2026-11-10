@@ -105,11 +105,12 @@ def search(eng: Engine, me: int = 0, budget: int = 20000, w: Weights | None = No
 
 
 def beam(eng: Engine, me: int = 0, width: int = 200, max_depth: int = 80, w: Weights | None = None, opp_policy=None,
-         max_turn: int | None = None) -> BFResult:
+         max_turn: int | None = None, prio=None) -> BFResult:
     """ビーム探索: 決定の深さごとに、評価の高い width 個だけを残して進める。最良優先探索が「いま良く見える枝」に偏って
     谷（盾をいったん減らしてから増やす、など）を越えられない盤面向け。同じ局面（骨格＋山札の並び＋カウンタ）は1度だけ展開する。"""
     from ..solitaire import TurnSearch, charge_only_policy
     w = w or Weights()
+    prio = prio or priority        # 順位づけ (eng, me, w) -> 点。大局観つき: dmsim.plan.macro.macro_prio
     ts = TurnSearch(me, 1, w, opp_policy or charge_only_policy)
     if max_turn is not None:       # 複数ターンの探索: 相手のターンもまたいで、max_turn ターン目までに勝てるかを見る
         ts = _Settler(me, opp_policy or charge_only_policy, max_turn)
@@ -140,7 +141,7 @@ def beam(eng: Engine, me: int = 0, width: int = 200, max_depth: int = 80, w: Wei
                 ts._settle(child)
                 if result_of(child) is not None and result_of(child)["winner"] == me:
                     return BFResult(True, nodes, child, len(child.log))
-                pr = priority(child, me, w)
+                pr = prio(child, me, w)
                 nxt.append((pr, nodes, child))
                 if pr > best[0]:
                     best = (pr, child)
