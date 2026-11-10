@@ -86,3 +86,21 @@ def test_real_cards_match(real_env, seed):
             "first_player": seed % 2}
     res = lockstep(Session.open(r, spec), rustcore.RustSession.open(r, spec, b), f"random:{seed}")
     assert res["divergence"] is None and res["ok"] is True
+
+
+@pytest.mark.parametrize("seed", range(1, 31))
+def test_trigger_cards_match(real_env, seed):
+    """誘発（出た時・攻撃する時の、引く／任意で引く／自身のタップ・アンタップ）を持つ札を多く入れたデッキで、
+    待機・解決順・効果インタプリタ・yes/no の決定まで含めて1局が一致する。"""
+    import random
+    r, b = real_env
+    pool = _portable(r)
+    trig = [i for i in pool if any(a["kind"] == "trigger" for a in r.cards[i].abilities)]
+    assert len(trig) >= 40
+    rnd = random.Random(seed)
+
+    def deck():
+        return [rnd.choice(trig) if rnd.random() < 0.5 else rnd.choice(pool) for _ in range(40)]
+    spec = {"kind": "new_game", "decks": [deck(), deck()], "seed": seed, "first_player": seed % 2}
+    res = lockstep(Session.open(r, spec), rustcore.RustSession.open(r, spec, b), f"random:{seed}")
+    assert res["divergence"] is None and res["ok"] is True
