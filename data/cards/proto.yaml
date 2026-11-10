@@ -3717,3 +3717,331 @@ cards:
         when: {event: move, to: graveyard, subject: {owner: you, filter: {race_has: テスト}}, from_under: true}
         effect:
           - {op: draw, count: 1}
+
+  # ---- 語彙パイロット第159弾: first_attack_of_turn（ord 照合） ----
+  - id: T289
+    name: 煽動試験獣
+    types: [creature]
+    civs: [nature]
+    cost: 3
+    power: 2500
+    races: [テスト]
+    text: 自分のクリーチャーが攻撃する時、それがそのターンはじめての攻撃であれば、カードを1枚引く。（煽動型。when の ord は kind attack の eq 1）
+    abilities:
+      - kind: trigger
+        when: {event: attack, subject: {owner: you, filter: {types: [creature]}}, ord: {kind: attack, eq: 1}}
+        effect:
+          - {op: draw, count: 1}
+
+  - id: T290
+    name: 初撃試験獣
+    types: [creature]
+    civs: [fire]
+    cost: 3
+    power: 2500
+    races: [テスト]
+    text: 各ターン、このクリーチャーがはじめて攻撃する時、カードを1枚引く。（ナレーター型。when の ord は kind attack_by の eq 1。ターンの最初の攻撃でなくても、このクリーチャー自身の初回なら発火する）
+    abilities:
+      - kind: trigger
+        when: {event: attack, subject: self, ord: {kind: attack_by, eq: 1}}
+        effect:
+          - {op: draw, count: 1}
+
+  # ---- 語彙パイロット第160弾: must_be_attacked の first_only 形（はじめて攻撃するなら） ----
+  - id: T291
+    name: 初撃誘引獣
+    types: [creature]
+    civs: [darkness]
+    cost: 5
+    power: 4000
+    races: [テスト]
+    text: 各ターン、相手のクリーチャーがはじめて攻撃するなら、可能ならこのクリーチャーを攻撃する。
+    abilities:
+      - kind: static
+        affects: self
+        mod: {must_be_attacked: {first_only: true}}
+
+  # ---- 語彙パイロット第161弾: attacked_this_turn_condition（履歴カウンタの条件） ----
+  - id: T292
+    name: 様子見獣
+    types: [creature]
+    civs: [light]
+    cost: 3
+    power: 2500
+    races: [テスト]
+    text: このターン、他のクリーチャーが攻撃していなければ、このクリーチャーは攻撃できない。
+    abilities:
+      - kind: static
+        affects: self
+        if: {cmp: [{turn_count: {kind: attack, owner: any, other: true}}, "==", 0]}
+        mod: {deny: [attack_player, attack_creature]}
+
+  - id: T293
+    name: 条件誘引獣
+    types: [creature]
+    civs: [nature]
+    cost: 4
+    power: 5000
+    races: [テスト]
+    text: このクリーチャーが、相手のターン中にタップしていて、そのターンまだ攻撃されていなければ、相手のクリーチャーは可能ならこのクリーチャーを攻撃する。
+    abilities:
+      - kind: static
+        affects: self
+        if: {all: [{is_turn: opp}, {exists: {ref: self, filter: {tapped: true}}}, {cmp: [{turn_count: {kind: attack_on, ref: self}}, "==", 0]}]}
+        mod: {must_be_attacked: true}
+
+  - id: T294
+    name: 終末スレイヤー呪文
+    types: [spell]
+    civs: [darkness]
+    cost: 3
+    text: クリーチャーを1体選ぶ。このターン、そのクリーチャーに「スレイヤー」を与える。このターンの終わりに、選んだクリーチャーがこのターン中に攻撃していたら、それを破壊する。
+    spell:
+      - {op: choose, select: {zone: bz, owner: any, filter: {types: [creature]}, count: 1}, as: t}
+      - {op: modify, select: {ref: t}, mod: {grant: [slayer]}, duration: end_of_turn}
+      - op: delayed_trigger
+        when: {event: turn_end}
+        effect:
+          - {op: if, cond: {cmp: [{turn_count: {kind: attack_by, ref: t}}, ">=", 1]}, then: [{op: destroy, select: {ref: t}}]}
+
+  # ---- 語彙パイロット第162弾: extremal（パワーが一番小さい／大きい） ----
+  - id: T295
+    name: 断罪試験獣
+    types: [creature]
+    civs: [fire]
+    cost: 4
+    power: 3000
+    races: [テスト]
+    text: このクリーチャーが出た時、パワーが一番小さい相手のクリーチャーを1体破壊する。2体以上ある場合、自分がどちらを破壊するか選ぶ。
+    abilities:
+      - kind: trigger
+        when: {event: move, to: bz, subject: self}
+        effect:
+          - {op: destroy, select: {zone: bz, owner: opp, filter: {types: [creature]}, extremal: min_power, count: 1}}
+
+  - id: T296
+    name: 巨獣狩り試験獣
+    types: [creature]
+    civs: [nature]
+    cost: 5
+    power: 4000
+    races: [テスト]
+    text: このクリーチャーが出た時、相手のパワーが一番大きいクリーチャーをすべて破壊する。
+    abilities:
+      - kind: trigger
+        when: {event: move, to: bz, subject: self}
+        effect:
+          - {op: destroy, select: {zone: bz, owner: opp, filter: {types: [creature]}, extremal: max_power, count: all}}
+
+  - id: T297
+    name: 凍結試験獣
+    types: [creature]
+    civs: [light]
+    cost: 3
+    power: 2000
+    races: [テスト]
+    text: このクリーチャーが出た時、バトルゾーンにある相手の、パワーが一番小さいタップされているクリーチャーを1体選ぶ。次の相手のターンのはじめに、そのクリーチャーはアンタップされない。
+    abilities:
+      - kind: trigger
+        when: {event: move, to: bz, subject: self}
+        effect:
+          - {op: choose, select: {zone: bz, owner: opp, filter: {types: [creature], tapped: true}, extremal: min_power, count: 1}, as: t}
+          - {op: tap, select: {ref: t}, no_untap_next: true}
+
+  - id: T298
+    name: 公開試験獣
+    types: [creature]
+    civs: [nature]
+    cost: 3
+    power: 2000
+    races: [テスト]
+    text: このクリーチャーが出た時、自分の山札の上から、進化ではないクリーチャーが出るまで表向きにする。そのクリーチャーを出し、残りを墓地に置く。
+    abilities:
+      - kind: trigger
+        when: {event: move, to: bz, subject: self}
+        effect:
+          - {op: reveal_until, filter: {types: [creature], evolution: false}, as: hit, rest_as: rest}
+          - {op: move, select: {ref: hit, count: all}, to: bz, reason: put}
+          - {op: move, select: {ref: rest, count: all}, to: graveyard, reason: put}
+
+  - id: T299
+    name: 双竜公開試験獣
+    types: [creature]
+    civs: [fire]
+    cost: 5
+    power: 4000
+    races: [テスト]
+    text: このクリーチャーが出た時、自分の山札の上からドラゴンが2体出るまで表向きにし、その2体を出す。その後、山札をシャッフルする。
+    abilities:
+      - kind: trigger
+        when: {event: move, to: bz, subject: self}
+        effect:
+          - {op: reveal_until, filter: {types: [creature], race_has: ドラゴン}, count: 2, as: hit}
+          - {op: move, select: {ref: hit, count: all}, to: bz, reason: put}
+          - {op: shuffle}
+
+  - id: T300
+    name: 相対公開の呪文
+    types: [spell]
+    civs: [water]
+    cost: 3
+    text: クリーチャーを1体選び、破壊する。その後、その持ち主は、自身の山札の上から、破壊したクリーチャーよりコストが小さいクリーチャーが出るまでカードを表向きにする。その持ち主は、そのクリーチャーを出し、山札をシャッフルする。
+    spell:
+      - {op: choose, select: {zone: bz, owner: any, filter: {types: [creature]}, count: 1}, as: t}
+      - {op: destroy, select: {ref: t}, as: d}
+      - {op: reveal_until, player_from: d, filter: {types: [creature], cost_le: {sum: [{cost_of: {ref: d}}, -1]}}, as: hit}
+      - {op: move, select: {ref: hit, count: all}, to: bz, reason: put}
+      - {op: shuffle, player_from: d}
+
+  - id: T301
+    name: 同数公開試験獣
+    types: [creature]
+    civs: [fire]
+    cost: 6
+    power: 5000
+    races: [テスト・ドラゴン]
+    text: このクリーチャーが出た時、自分の、ドラゴンではないクリーチャーをすべて破壊する。その後、自分の山札の上から、こうして破壊したクリーチャーと同じ数の、進化ではないドラゴンが出るまで表向きにする。こうして表向きにした進化ではないドラゴンをすべて出し、残りを墓地に置く。
+    abilities:
+      - kind: trigger
+        when: {event: move, to: bz, subject: self}
+        effect:
+          - {op: destroy, select: {zone: bz, owner: you, filter: {types: [creature], not_race_has: ドラゴン}, count: all}, as: d}
+          - {op: reveal_until, filter: {types: [creature], race_has: ドラゴン, evolution: false}, count: {var: d}, as: hit, rest_as: rest}
+          - {op: move, select: {ref: hit, count: all}, to: bz, reason: put}
+          - {op: move, select: {ref: rest, count: all}, to: graveyard, reason: put}
+
+  - id: T302
+    name: 呪文避け試験獣
+    types: [creature]
+    civs: [light]
+    cost: 3
+    power: 2000
+    races: [テスト]
+    text: このクリーチャーは、呪文の効果によって相手に選ばれない。
+    abilities:
+      - kind: static
+        affects: self
+        mod: {deny: [{action: be_chosen, other: {types: [spell]}}]}
+
+  - id: T303
+    name: 低コスト呪文避け試験獣
+    types: [creature]
+    civs: [water]
+    cost: 3
+    power: 2000
+    races: [テスト]
+    text: このクリーチャーは、コスト4以下の呪文の効果によって相手に選ばれない。
+    abilities:
+      - kind: static
+        affects: self
+        mod: {deny: [{action: be_chosen, other: {types: [spell], cost_le: 4}}]}
+
+  - id: T304
+    name: 多色避け試験獣
+    types: [creature]
+    civs: [fire]
+    cost: 4
+    power: 3000
+    races: [テスト]
+    text: 相手は、多色ではない、クリーチャーの能力または呪文でこのクリーチャーを選べない。
+    abilities:
+      - kind: static
+        affects: self
+        mod: {deny: [{action: be_chosen, other: {any_of: [{types: [creature]}, {types: [spell]}], multicolor: false}}]}
+
+  - id: T305
+    name: 相対避け試験獣
+    types: [creature]
+    civs: [nature]
+    cost: 5
+    power: 4000
+    races: [テスト]
+    text: このクリーチャーは、このクリーチャー以下のコストのカードによって相手に選ばれない。
+    abilities:
+      - kind: static
+        affects: self
+        mod: {deny: [{action: be_chosen, other: {cost_le: {cost_of: {ref: self}}}}]}
+
+  - id: T306
+    name: 群れ避け試験獣
+    types: [creature]
+    civs: [nature]
+    cost: 4
+    power: 3000
+    races: [テスト]
+    text: 自分のテスト・クリーチャーは、呪文の効果によって相手に選ばれない。
+    abilities:
+      - kind: static
+        affects: {zone: bz, owner: you, filter: {types: [creature], races: [テスト]}}
+        mod: {deny: [{action: be_chosen, other: {types: [spell]}}]}
+
+  - id: T307
+    name: 多色破壊試験呪文
+    types: [spell]
+    civs: [fire, water]
+    cost: 7
+    text: クリーチャーを1体選び、破壊する。
+    spell:
+      - {op: destroy, select: {zone: bz, owner: any, filter: {types: [creature]}, count: 1}}
+
+  - id: T308
+    name: ウラ忍者試験シノビ
+    types: [creature]
+    civs: [water]
+    cost: 4
+    power: 4000
+    races: [テスト, シノビ]
+    text: ウラ・ニンジャ・ストライク3（水）（相手のクリーチャーが攻撃またはブロックした時、自分のマナゾーンのカードが3枚以上で水文明があり、その攻撃中に「ニンジャ・ストライク」を使っていなければ、このシノビをコストを支払わずに召喚してもよい。そのターンの終わりに、このシノビを山札の下に置く）/ ブロッカー
+    keywords: [blocker]
+    abilities:
+      - kind: declare
+        zone: hand
+        when: {event: attack, subject: {owner: opp}}
+        if: {all: [{cmp: [{count: {zone: mana, owner: you}}, ">=", 3]}, {exists: {zone: mana, owner: you, filter: {civs: [water]}}}]}
+        effect:
+          - {op: play_free, select: {ref: self}, as: ninja}
+          - op: delayed_trigger
+            when: {event: turn_end}
+            effect:
+              - {op: move, select: {ref: ninja}, to: deck, reason: put, position: bottom}
+      - kind: declare
+        zone: hand
+        when: {event: block, subject: {owner: opp}}
+        if: {all: [{cmp: [{count: {zone: mana, owner: you}}, ">=", 3]}, {exists: {zone: mana, owner: you, filter: {civs: [water]}}}]}
+        effect:
+          - {op: play_free, select: {ref: self}, as: ninja}
+          - op: delayed_trigger
+            when: {event: turn_end}
+            effect:
+              - {op: move, select: {ref: ninja}, to: deck, reason: put, position: bottom}
+
+  - id: T309
+    name: ウラ忍者双文明シノビ
+    types: [creature]
+    civs: [light, water]
+    cost: 6
+    power: 5000
+    races: [テスト, シノビ]
+    text: ウラ・ニンジャ・ストライク6（光/水）（相手のクリーチャーが攻撃またはブロックした時、自分のマナゾーンのカードが6枚以上で光と水文明があり、その攻撃中に「ニンジャ・ストライク」を使っていなければ、このシノビをコストを支払わずに召喚してもよい。そのターンの終わりに、このシノビを山札の下に置く）/ ブロッカー
+    keywords: [blocker]
+    abilities:
+      - kind: declare
+        zone: hand
+        when: {event: attack, subject: {owner: opp}}
+        if: {all: [{cmp: [{count: {zone: mana, owner: you}}, ">=", 6]}, {exists: {zone: mana, owner: you, filter: {civs: [light]}}}, {exists: {zone: mana, owner: you, filter: {civs: [water]}}}]}
+        effect:
+          - {op: play_free, select: {ref: self}, as: ninja}
+          - op: delayed_trigger
+            when: {event: turn_end}
+            effect:
+              - {op: move, select: {ref: ninja}, to: deck, reason: put, position: bottom}
+      - kind: declare
+        zone: hand
+        when: {event: block, subject: {owner: opp}}
+        if: {all: [{cmp: [{count: {zone: mana, owner: you}}, ">=", 6]}, {exists: {zone: mana, owner: you, filter: {civs: [light]}}}, {exists: {zone: mana, owner: you, filter: {civs: [water]}}}]}
+        effect:
+          - {op: play_free, select: {ref: self}, as: ninja}
+          - op: delayed_trigger
+            when: {event: turn_end}
+            effect:
+              - {op: move, select: {ref: ninja}, to: deck, reason: put, position: bottom}

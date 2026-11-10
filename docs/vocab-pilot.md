@@ -1543,3 +1543,59 @@ G・リンクの手順（h_g_link、第16弾）は Card.link の状態変更の�
 
 ### 残る不足
 - 再構築パス（card_only／スター進化で最上位だけが離れる時）で場に残らず墓地へ落ちる非クリーチャーの下カード（タマシード等）は _rebuild の内部で raw_move され、レコードが出ないまま。対象10件には不要（dm34 系はスタックごと離脱、邪眼帝は G-NEO 置換で下が個別の move イベントになる）ため未実装のまま残す。必要になった時点で _rebuild 側にもレコード発行が要る。
+
+## 第159弾: first_attack_of_turn（そのターンはじめての攻撃）— 新語彙なし（2026-11-10）
+「そのターンはじめての攻撃であれば」は、攻撃レコードに刻まれる通し番号（第3段・履歴基盤の ord）を when で照合して表す。新語彙・エンジン変更なし。
+- 煽動型（ターンの初回攻撃）: {kind: trigger, when: {event: attack, subject: {owner: you, filter: {types: [creature]}}, ord: {kind: attack, eq: 1}}, effect: [...]}。ord の attack は攻撃側プレイヤーごとの通し番号なので、subject の owner と合わせて「自分のクリーチャーによる、そのターンの最初の攻撃」になる。相手のクリーチャーが対象なら subject owner: opp（ord も相手側で数える。dmr14-003）。
+- 自分型（このクリーチャーがはじめて攻撃する時）: when の subject: self ＋ ord: {kind: attack_by, eq: 1}。attack_by はクリーチャー単位の通し番号なので、ターンの最初の攻撃でなくても自身の初回なら発火する（dmr20-005、dmrp03-s06。条件は if に置く）。
+- 全体型（各ターン、はじめてクリーチャーが攻撃する時）: subject owner: any ＋ ord: {kind: attack, eq: 1}。攻撃は通常ターンプレイヤーだけが行うため、プレイヤーごとの eq 1 がターンの初回と一致する（dmsp01-036。効果は modify の breaks_add を duration: during_attack でその攻撃だけに与える）。
+- proto T289（煽動型）/ T290（自分型）。tests/test_vocab_pilot159.py 3件（parse、煽動型は1回目の攻撃でだけ発火、自分型は他が先に攻撃しても自身の初回で発火し同ターン2回目は発火しない）。
+- tests/test_vocab_pilot159_cards.py 1件（対象19件すべての手変換 parse）: 煽動型14件、自分型2件、全体型1件、相手型1件（dmr14-003。ターン開始の「可能であれば攻撃する」は dmrp15-006 と同型の modify require、初回攻撃で出したファンキー・ナイトメアは delayed_trigger でターン終わりに破壊）。dmrp03-s06 は連結表記で split が効かなかったキーワードとパワーアタッカー+1000000（static power_when）も補った。
+- 差し戻し1件: dm26sd1-m001 はマッハファイター付与（第139弾の常在形）とターン終わりの墓地／マナからの出し（modal）まで書いたが、「各ターン、相手のクリーチャーがはじめて攻撃するなら、可能ならこのクリーチャーを攻撃する」が残る。must_be_attacked は攻撃側の通し番号で条件づけられないため、新 gap first_attack_taunt として rejects に残す（combat の攻撃先制限に attack_by 次数の条件を足す小規模拡張が候補）。
+- 待機19枚（first_attack_of_turn のみが gap のもの。dm15-004 は accel も付くため対象外）。再変換ラウンド195で18件を新規登録、dm26sd1-m001 は first_attack_taunt で差し戻し（converted 9,107枚、rejects 3,424件、漏れゼロ）。
+
+## 第160弾: must_be_attacked の first_only 形（はじめて攻撃するなら）— mod 拡張（2026-11-10）
+「各ターン、相手のクリーチャーがはじめて攻撃するなら、可能ならこのクリーチャーを攻撃する」は、第51弾の mod must_be_attacked の辞書形 {first_only: true} で表す（defs は true または {first_only: true} のみ許可）。
+- 判定は combat の攻撃先制限: 対象の特性 must_be_attacked_first が立ち、攻撃側クリーチャーの履歴カウンタ hist:attack_by が 0 の時だけ誘引として扱う。クリーチャー単位の条件なので、別のクリーチャーが先に攻撃していても、まだ攻撃していない個体の初回攻撃は制限される（ターン単位ではない）。
+- 特性は chars に must_be_attacked_first として集約する（進化の重ね merge・封印時の空特性も対応）。op modify で付与する形も同じ mod で書ける。
+- proto T291（初撃誘引獣）。tests/test_vocab_pilot160.py 5件（parse、不正形の拒否、初回は制限される、一度攻撃した後は制限されない＝履歴カウンタの種付けで確認、制限はクリーチャー単位＝実戦で確認）。
+- 対象は gap first_attack_taunt の dm26sd1-m001（単独1件）。dm25ex3-rp4s05「K」-9+9+9 の must_be_attacked_first_only も同じ形で解けるが、enter_effects_ignored が残るため対象外。
+- 再変換ラウンド196で dm26sd1-m001 を新規登録（converted 9,108枚、rejects 3,423件、重なり0、漏れゼロ）。tests/test_vocab_pilot160_cards.py で登録形を検証し、test_vocab_pilot159_cards.py の差し戻し検証は登録検証に更新した。
+
+## 第161弾: attacked_this_turn_condition（このターン攻撃したか）— 新語彙なし（2026-11-10）
+「このターン、〜が攻撃していなければ／攻撃していれば」は、履歴カウンタ式 {turn_count: ...}（第3段・共通基盤）を条件に置いて表す。新語彙・エンジン変更なし。
+- 攻撃できない形: 常在型の if に {cmp: [{turn_count: {kind: attack, owner, other?, filter?}}, "==", 0]} を置き、mod {deny: [attack_player, attack_creature]}（実カード dmbd17-009「墓地13枚より少なければ攻撃できない」と同じ条件つき常在型の型）。other: true で自分以外の攻撃を数える。原文に「自分の」とあれば owner: you、無ければ owner: any。「自分のパワー12000以上のクリーチャーが」は filter: {power_ge: 12000}（other なし＝自分も含む）。
+- 条件つき誘引形: 「相手のターン中にタップしていて、そのターンまだ攻撃されていなければ、可能ならこのクリーチャーを攻撃する」は常在型の if {all: [{is_turn: opp}, {exists: {ref: self, filter: {tapped: true}}}, {cmp: [{turn_count: {kind: attack_on, ref: self}}, "==", 0]}]} ＋ mod {must_be_attacked: true}（第51弾）。
+- 効果の条件形: 呪文・誘発の if / op if の cond に {cmp: [{turn_count: {kind: attack, owner: any}}, ">=", 1]}。「選んだクリーチャーがこのターン中に攻撃していたら、ターンの終わりに破壊する」は delayed_trigger の効果に {cmp: [{turn_count: {kind: attack_by, ref: <選択変数>}}, ">=", 1]} を置く。
+- proto T292（様子見獣）/ T293（条件誘引獣）/ T294（終末スレイヤー呪文）。tests/test_vocab_pilot161.py 5件（parse、攻撃できない形は他の攻撃後に解ける、条件つき誘引は一度攻撃されたら解ける、遅延破壊は攻撃した場合のみ）。
+- 再変換ラウンド197: 対象11件（単独 gap）のうち8件を新規登録（dmrp14-089、dmrp14-s04、dmrp21-067、dm26sd1-p008、dmr17-s09、dmrp06-079、dm25rp4-044、dm25rp4-048）。差し戻し3件: dmrp08-023 は「他のクリーチャーが2体以上」が攻撃したクリーチャーの distinct な数えを要するため attacked_this_turn_condition_distinct に、dm25ex3-020 は「自分がカードを実行した時」の統合トリガーが無いため card_executed_trigger に、dm36-038 は「このクリーチャーを攻撃できるクリーチャーは自分を攻撃できない」という攻撃先スコープの禁止が無く attack_on_scoped_player_denial に、それぞれ gap を絞り込んだ（dm36-038 は rejects 行に名前・partial が無いため再提出せず gap 名のみ差し替え）。converted 9,116枚、rejects 3,415件、重なり0、漏れゼロ。attacked_this_turn_condition の残りは shield_placement_restriction と重なる dm24ex3-tf16 のみ。
+
+## 第162弾: extremal（パワーが一番小さい／大きいクリーチャー）— セレクタ拡張（2026-11-10）
+「パワーが一番小さい／大きいクリーチャーを選ぶ」は、セレクタの新キー extremal: min_power / max_power で表す。候補（zone / owner / filter で絞った後）の中で現在パワー（常在型の修整込み）が最小／最大のものだけが残る。同点はすべて候補に残り、どちらを選ぶかは chooser の選択に委ねられる（dm31-046「2体以上ある場合、自分がどちらを破壊するか選ぶ」、相手に選ばせる形は chooser: opp）。count: all なら同点のすべてが対象（「一番大きいクリーチャーをすべて破壊する」）。
+- 実装: defs の SELECTOR_KEYS と検証（値は min_power / max_power のみ。ref / under_of / bundle_of / exlife_of とは併用不可）、schema.py と card.schema.json、selectors.candidates のゾーン経路（exclude の後）に extremal の絞り込みを追加。count 式の評価にも同じ候補が使われる。
+- proto T295（最小・1体）/ T296（最大・すべて）/ T297（タップしている中で最小＋次の相手ターンにアンタップしない。dm32-014 と同型で、tap の no_untap_next はタップ済み対象にも印を付ける）。tests/test_vocab_pilot162.py 6件（parse、不正形の拒否、最小が1体だけなら自動で決まる、同点なら選択肢は同点の2体だけ、最大すべて、同点でない凍結形の実挙動）。
+- 併せて使った既存の型: dm25ex3-sp5 の条件つき S・トリガー付与は zone: shield の self 常在型（dmx23-031 と同型。条件は cost_ge に sum 式で「相手のマナ枚数より大きい」）、「2回選ぶ（同じものを選んでもよい）」は modal の repeat、見たカードの振り分けは choose count: all で束ねて move {ref, count: 1} → move {ref, count: all} の残り型。dm32-064 の2体目は extremal の choose を exclude: {ref: 先の変数} でつないだ。
+- 再変換ラウンド198: 対象10件（単独 gap。dm23sp1-007 は同一 gap が2条項分）すべて新規登録、差し戻し0（dm24bd4-010、dm24ex3-024、dm25ex3-rp4011、dm25ex3-sp5、dm25ex3-td14、dm31-046、dm32-014、dm32-064、dm23sp1-007、dm26sd1-w002f）。converted 9,126枚、rejects 3,405件、重なり0、漏れゼロ。extremal_power_selection の残り5件は他の gap と重なるもの（lose_prevention、god_slayer、invasion_zero、up_to_cost_reduction）。
+
+## 第163弾: reveal_until（「〜が出るまで表向きにする」）— 新 op（2026-11-10）
+「自分の山札の上から、＜条件＞が出るまで表向きにする」を新 op reveal_until で表す。対象プレイヤー（player。既定 you。player_from = 変数名なら、その最初のカードの持ち主 = 「その持ち主は自身の山札の上から」）の山札を上から1枚ずつ公開し、filter に合うカードが count 枚（既定1）出た時点で止める。合ったカード群を as に、出なかった公開カード群を rest_as（既定 as + "_rest"）に束縛する。公開したカードは山札に残るので、行き先は後続の op が決める（move で出す／手札に加える／墓地に置く／山札の下に置く、shuffle で山札に戻す）。count は式で、{var: 先に破壊・移動した変数} を渡すと「破壊した数と同じ数」になる。相対条件は filter の式値に cost_of / power_of を置く（「破壊されたクリーチャーよりコストが小さい」= cost_le: {sum: [{cost_of: {ref: d}}, -1]}）。count が 0 以下のときは何も公開しない。
+- 併せた小拡張: shuffle に player_from（「その持ち主は山札をシャッフルする」）、move の order に shuffle（「残りのカードをすべてシャッフルし、山札の下に置く」。動かす集合だけを Fisher-Yates で混ぜる。ヨビニオンの残り処理と同方式）。
+- proto T298（基本形: 出す＋残りは墓地）/ T299（2体＋シャッフルで戻す）/ T300（持ち主＋相対コスト、dmex17-053 と同型）/ T301（破壊した数と同じ数、dm26ex3-061 と同型）。tests/test_vocab_pilot163.py 7件（parse、不正形の拒否、基本形、複数ヒット＋シャッフル、持ち主の相対コスト、動的な数、ヒット無しで山札が尽きて敗北する（総合ルール104.2b）まで実挙動で確認）。
+- ヨビニオン（op yobinion）は従来どおり専用 op のまま（発生源のコスト基準＋残りをシャッフルして下に置くまでが一体の宣言効果のため）。今回の reveal_until は宣言効果ではなく通常の効果文のための汎用形。
+- 再変換ラウンド199: reopen できた18件のうち16件を新規登録、2件を差し戻し（dmx22b-043 ヒラメキ・プログラム → psychic_filter: 破壊対象の「サイキックではない」の区別が要る。GR・超次元・サイキック関連は実装しない方針のため見送り。dm24ex2-040 運命の境界線 → first_cast_spell_trigger: 「各ターン、自分がはじめて呪文を唱えた時」の誘発＋その呪文基準の相対条件＋無料詠唱の複合）。dm24ex2-chog03 は rejects 行に id / gaps / text しか無く reopen の対象にならないため手を付けていない。converted 9,142枚、rejects 3,389件、重なり0、漏れゼロ。reveal_until の残りはこの2件のみ（dm24bd6-011 は他の gap と重なるもの）。
+
+## 第164弾: chosen_protection_scoped（範囲つきの「選ばれない」）— select の発生源照合（2026-11-10）
+「呪文の効果によって相手に選ばれない」「コスト4以下の呪文によって選ばれない」「多色ではない、クリーチャーの能力または呪文で選べない」「このクリーチャー以下のコストのカードによって選ばれない」など、発生源で範囲を限った「選ばれない」。表現は従来の deny の辞書形 {action: be_chosen, other: <発生源フィルタ>}（other フィルタの式値は保護される側を self として評価される。第126弾の基盤がそのまま使える）:
+- 呪文からだけ: other: {types: [spell]}。コスト4以下の呪文から: {types: [spell], cost_le: 4}。多色でない発生源から: {any_of: [{types: [creature]}, {types: [spell]}], multicolor: false}。自分以下のコストから: {cost_le: {cost_of: {ref: self}}}。
+- エンジン変更は1点だけ: selectors の選択候補の除外（be_chosen 判定）が、発生源なしで permits を見ていたのを、解決中のカード（env の self）を other として渡すようにした。発生源フィルタのない deny（文字列形）は従来どおり無範囲に効く。
+- 発生源は「その選択を行っている効果のカード」。呪文の解決中は呪文自身、クリーチャーの能力の解決中はそのクリーチャー。タマシードやフィールドの能力は types で区別される（呪文範囲には入らない）。
+- 攻撃中だけの保護（dm24bd3-007）は、攻撃誘発で modify により during_attack の間だけ付与する形で表した。超魂X のホストへの付与は choukon: true の常在型（第126弾の先例は誘発型）。
+- proto T302（呪文範囲）/ T303（コスト範囲）/ T304（多色範囲）/ T305（相対コスト範囲）/ T306（集団への常在型）/ T307（多色・高コストの破壊呪文＝検証用の発生源）。tests/test_vocab_pilot164.py 8件（各範囲で「選べない／選べる」を呪文・クリーチャー・多色呪文の発生源ごとに実挙動で確認。集団形は相手ターンで検証）。
+- 再変換ラウンド200: 16件のうち14件を新規登録、1件を差し戻し（dm15-022 聖騎士ウラヌス → crossed_gear_chosen_protection: 保護対象がこのクリーチャーにクロスされたギアで、常在型の affects では指せない。affects: crossed はギア側からホストを指す逆向き）。残る1件 dm24ex3-rp3tr6 フィオナ・フォレストは real_akashic.yaml に手書き変換（同じ2能力）が既にあり、rejects の行は古い残りだったため、converted へは登録せず行の掃除のみ（登録すると duplicate card id で全体が読めなくなる。教訓: 対象が real_akashic.yaml 等の他ファイルに無いかも提出前に見る）。converted 9,156枚、rejects 3,374件、重なり0、漏れゼロ。chosen_protection_scoped の残りは他の gap と重なる2件のみ。
+
+## 第165弾: ura_ninja_strike（ウラ・ニンジャ・ストライク）— 新語彙なし（2026-11-10）
+ウラ・ニンジャ・ストライク N（文明）は、通常のニンジャ・ストライクの declare 2本（相手の攻撃時／ブロック時。マナが N 枚以上で無償召喚し、ターンの終わりに山札の下へ）の条件に「自分のマナゾーンに指定文明がある」を足したもの。指定が2文明（光/水）のものは exists を2つ並べる。エンジン変更は無し。変換ツール側の keyword_patterns.yaml に ura_ninja_strike_<文明> の6パターン（闇・水・火・光・自然・光/水）を追加し、今後の自動変換でも展開できるようにした。
+- proto T308（水3）/ T309（光/水6）。tests/test_vocab_pilot165.py 6件（宣言→召喚→ブロック→山札の下まで、文明が無い／枚数が足りないと宣言できないこと、2文明の片欠けを実挙動で確認）。
+- 「その攻撃中にニンジャ・ストライクを使っていなければ」は、通常のニンジャ・ストライクと同じく宣言ウィンドウ自体が攻撃ごとに1回という既存の扱いに揃えた。
+- 再変換ラウンド201: 16件のうち14件を新規登録、2件を差し戻し（dm26ex4-010 / sec007 切札混成 光隼 蒼斬丸 → attack_cancel: 「攻撃を中止する」が未実装。ウラ declare と出た時のドローは partial に入れたので、残りは中止条項のみ）。converted 9,170枚、rejects 3,360件、重なり0、漏れゼロ。ura_ninja_strike は全解消。提出前に対象を real.yaml / real_akashic.yaml / proto.yaml とも照合し、重複は無いことを確認した（ラウンド200の教訓）。
+- 対象の残りの能力で使った形: 相手が自分のシールドをブレイクした時の誘発は when {event: break, player: you}＋相手自身に選ばせる破壊（chooser: opp）。捨てたカードと同じコストは cost_le と cost_ge の重ねがけ（cost_eq は無い）。相手のマナ枚数より大きいコストは cost_ge に {sum: [count, 1]}。「2枚まで引く」は repeat times 2＋may draw（変換済みの先例どおり）。手札を2枚、山札の上か下に置く形（dm26ex3-049）は「上に入れる分を選ぶ（up_to）→残りを下へ」の2段で表した。

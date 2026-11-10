@@ -494,10 +494,11 @@ class Engine(SelectorMixin, EventMixin, InterpreterMixin, TurnMixin, CombatMixin
                     "keywords": set(), "name": d.name, "names": [d.name], "allow": [], "deny": [], "require": [],
                     "breaks": 0, "break_opts": [], "breaks_add": 0, "pay_cost": d.cost, "sac_reduce": 0,
                     "opt_reduce": None, "cost_may": [], "no_leave": [], "must_be_attacked": False,
+                    "must_be_attacked_first": False,
                     "battle_indestructible": False, "win_all_battles": False, "crystal_soul": 0}
         ch = {"power": d.power, "cost": d.cost, "civs": list(d.civs), "types": list(d.types),
               "races": list(d.races), "keywords": set(d.keywords), "name": d.name, "names": [d.name],
-              "allow": [], "deny": [], "require": [], "breaks": 1, "break_opts": [], "breaks_add": 0, "pay_cost": d.cost, "sac_reduce": 0, "opt_reduce": None, "cost_may": [], "no_leave": [], "must_be_attacked": False,
+              "allow": [], "deny": [], "require": [], "breaks": 1, "break_opts": [], "breaks_add": 0, "pay_cost": d.cost, "sac_reduce": 0, "opt_reduce": None, "cost_may": [], "no_leave": [], "must_be_attacked": False, "must_be_attacked_first": False,
               "battle_indestructible": False, "battle_indestructible_filters": [], "win_all_battles": False,
               "indestructible": False, "crystal_soul": d.crystal_soul}
         if (d.neo or d.grave_evo) and c.zone == "bz" and c.under and "evolution" not in ch["types"]:
@@ -579,7 +580,10 @@ class Engine(SelectorMixin, EventMixin, InterpreterMixin, TurnMixin, CombatMixin
             if "no_leave" in m:   # 「バトルゾーンを離れない」（第49弾）。true は無条件、辞書は例外の指定
                 nl = m["no_leave"]
                 ch["no_leave"].append({} if nl is True else dict(nl))
-            if m.get("must_be_attacked"):   # 「相手のクリーチャーが攻撃する時、可能ならこのクリーチャーを攻撃する」（第51弾）
+            _mba = m.get("must_be_attacked")
+            if isinstance(_mba, dict):   # 「各ターン、相手のクリーチャーがはじめて攻撃するなら、可能ならこのクリーチャーを攻撃する」（第160弾）: そのクリーチャーの初回攻撃だけ攻撃先を制限する
+                ch["must_be_attacked_first"] = True
+            elif _mba:   # 「相手のクリーチャーが攻撃する時、可能ならこのクリーチャーを攻撃する」（第51弾）
                 ch["must_be_attacked"] = True
             if m.get("battle_indestructible") is True:   # 「バトル中、このクリーチャーは破壊されない」（第59弾）
                 ch["battle_indestructible"] = True
@@ -630,6 +634,7 @@ class Engine(SelectorMixin, EventMixin, InterpreterMixin, TurnMixin, CombatMixin
                     ch[k] += sc[k]
                 ch["no_leave"] += sc["no_leave"]
                 ch["must_be_attacked"] = ch["must_be_attacked"] or sc["must_be_attacked"]
+                ch["must_be_attacked_first"] = ch["must_be_attacked_first"] or sc.get("must_be_attacked_first", False)
                 ch["battle_indestructible"] = ch["battle_indestructible"] or sc["battle_indestructible"]
                 ch["battle_indestructible_filters"] += sc.get("battle_indestructible_filters", [])
                 ch["win_all_battles"] = ch["win_all_battles"] or sc["win_all_battles"]

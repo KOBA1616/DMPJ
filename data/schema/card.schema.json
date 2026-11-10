@@ -1290,6 +1290,41 @@
       "type": "object",
       "properties": {
        "op": {
+        "const": "reveal_until"
+       },
+       "player": {
+        "enum": [
+         "you",
+         "opp"
+        ]
+       },
+       "player_from": {
+        "type": "string"
+       },
+       "filter": {
+        "$ref": "#/$defs/filter"
+       },
+       "count": {
+        "$ref": "#/$defs/expr"
+       },
+       "as": {
+        "type": "string"
+       },
+       "rest_as": {
+        "type": "string"
+       }
+      },
+      "required": [
+       "op",
+       "filter",
+       "as"
+      ],
+      "additionalProperties": false
+     },
+     {
+      "type": "object",
+      "properties": {
+       "op": {
         "const": "set_var"
        },
        "name": {
@@ -1326,6 +1361,9 @@
          "you",
          "opp"
         ]
+       },
+       "player_from": {
+        "type": "string"
        }
       },
       "required": [
@@ -1769,6 +1807,12 @@
     },
     "distinct_from": {
      "$ref": "#/$defs/selector"
+    },
+    "extremal": {
+     "enum": [
+      "min_power",
+      "max_power"
+     ]
     },
     "exclude": {
      "anyOf": [
