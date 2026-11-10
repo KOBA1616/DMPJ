@@ -55,3 +55,19 @@ def test_chain_lookahead_prefers_merging_when_single_steps_dead_end(rules, monke
     r = R.reach_chain(e, stages, 0, keep_later=True)
     assert r["stages"] == 3                           # 段0 → （段1・段2を合わせて）
     assert {"hand": {"b": 1}} not in calls or r["stages"] == 3
+
+
+def test_reach_set_prefers_specific_stages_and_orders_by_turn(monkeypatch):
+    from types import SimpleNamespace as NS
+    from dmsim.discovery import reachsearch as rs
+    stages = [{"hand": {"*": 8}}, {"bz": {"A": 1}}, {"graveyard": {"B": 1}}]
+    turns = {0: 3, 1: 9, 2: 7}      # 枚数だけの段が一番早く届く
+
+    def fake_target(eng, tg, me, **kw):
+        j = stages.index({k: v for k, v in tg.items() if k != "hand"} or tg) if tg in stages else next(
+            i for i, s in enumerate(stages) if all(z in tg for z in s))
+        return NS(reached=True, turn=turns[j], engine=eng, nodes=1)
+    monkeypatch.setattr(rs, "reach_target", fake_target)
+    monkeypatch.setattr(rs, "_have", lambda *a, **k: 0)
+    out = rs.reach_set(object(), stages, 0)
+    assert out["order"] == [2, 1, 0]     # 札を指定した段を先（早い順）、枚数だけの段は最後
