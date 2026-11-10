@@ -10,12 +10,21 @@ from dataclasses import dataclass
 
 from ..engine import Engine
 from ..engine_view import defn_of, result_of, tapped_of, turn_of, zone_of
-from ..eval.stage import board_met, zone_counts
+from ..eval.stage import zone_counts
 from ..loop import abstract
 from ..solitaire import Weights, candidates, charge_only_policy
 from .bestfirst import _Settler, priority
 
 GOAL_W = 1000.0
+ANY = "*"      # target の ID に "*" を書くと、そのゾーンの枚数の合計（例 {"shield": {"*": 10}} = 自分の盾が10枚以上）
+
+
+def _have(eng: Engine, me: int, z: str, i: str) -> int:
+    return len(eng.zlist(z, me)) if i == ANY else zone_counts(eng, me, z).get(i, 0)
+
+
+def board_met(eng: Engine, me: int, target: dict) -> bool:
+    return all(_have(eng, me, z, i) >= n for z, want in target.items() for i, n in want.items())
 
 
 @dataclass
@@ -32,10 +41,7 @@ def fraction(eng: Engine, me: int, target: dict) -> float:
     need = sum(n for z in target.values() for n in z.values())
     if not need:
         return 1.0
-    have = 0
-    for z, want in target.items():
-        c = zone_counts(eng, me, z)
-        have += sum(min(c.get(i, 0), n) for i, n in want.items())
+    have = sum(min(_have(eng, me, z, i), n) for z, want in target.items() for i, n in want.items())
     return have / need
 
 
