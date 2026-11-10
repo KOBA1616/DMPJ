@@ -46,8 +46,9 @@ def fraction(eng: Engine, me: int, target: dict) -> float:
 
 
 def reach_target(eng: Engine, target: dict, me: int = 0, width: int = 300, max_depth: int = 80, max_turn: int = 6,
-                 w: Weights | None = None, opp_policy=None) -> ReachResult:
+                 w: Weights | None = None, opp_policy=None, prio=None) -> ReachResult:
     w = w or Weights()
+    prio = prio or priority
     ts = _Settler(me, opp_policy or charge_only_policy, max_turn)
     layer = [eng.clone()]
     seen: set = set()
@@ -77,7 +78,7 @@ def reach_target(eng: Engine, target: dict, me: int = 0, width: int = 300, max_d
                     continue
                 fr = fraction(child, me, target)
                 best = max(best, fr)
-                nxt.append((priority(child, me, w) + GOAL_W * fr, nodes, child))
+                nxt.append((prio(child, me, w) + GOAL_W * fr, nodes, child))
         if not nxt:
             break
         nxt.sort(key=lambda x: (-x[0], x[1]))
