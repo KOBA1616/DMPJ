@@ -19,12 +19,13 @@ DRILL, JOHANNI = "dm16-051", "dm36-015"
 
 
 def run(rules, seed, w, width, max_turn, mana_cards):
-    e = Engine.new_game(rules, [[DRILL, JOHANNI] + mana_cards * 3 + ["T013"] * 40, ["T001"] * 40], seed, first_player=0)
+    e = Engine.new_game(rules, [[DRILL, JOHANNI] + mana_cards * 6 + ["T013"] * 30, ["T001"] * 40], seed, first_player=0)
     pick = lambda d: next(c for c in e.zlist("deck", 0) if e.s.cards[c].defn == d)
     e._raw_move(pick(DRILL), "hand", controller=0)
     e._raw_move(pick(JOHANNI), "bz", controller=0)
-    for _ in range(6):
-        e._raw_move(next(c for c in e.zlist("deck", 0) if e.s.cards[c].defn in mana_cards), "mana", controller=0)
+    for k in range(6):             # 文明を満たすため、指定の札を交互に置く（片方の文明だけにならないように）
+        want = mana_cards[k % len(mana_cards)]
+        e._raw_move(next(c for c in e.zlist("deck", 0) if e.s.cards[c].defn == want), "mana", controller=0)
     for o in range(1, 7):          # 相手マナ6
         e._raw_move(e.zlist("deck", 1)[0], "mana", controller=1)
     low = [99]
