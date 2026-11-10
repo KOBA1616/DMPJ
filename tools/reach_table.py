@@ -46,6 +46,7 @@ def main(argv=None):
     ap = argparse.ArgumentParser()
     ap.add_argument("--known", action="store_true")
     ap.add_argument("--cards")
+    ap.add_argument("--target", help="到達目標のJSON（{ゾーン:{ID:枚数}}。IDに * でゾーン合計。--cards のデッキに対して）")
     ap.add_argument("--seeds", type=int, default=6)
     ap.add_argument("--width", type=int, default=200)
     ap.add_argument("--max-turn", type=int, default=5)
@@ -62,7 +63,12 @@ def main(argv=None):
             cores = [i for i in cores if i in rules.cards][:10]
             r = run(rules, cores, seeds, **kw)
             print(c["id"], c["split"], f"到達率 {r['rate']:.2f}", f"ターン {sorted(r['turns'].values())}", f"{r['sec']}s", flush=True)
-    if a.cards:
+    if a.cards and a.target:
+        import json
+        cards = a.cards.split(",")
+        r = reach_rate(rules, deck_of(cards), json.loads(a.target), seeds, **kw)
+        print({"target": json.loads(a.target), "rate": r["rate"], "turns": sorted(r["turns"].values())})
+    elif a.cards:
         r = run(rules, a.cards.split(","), seeds, **kw)
         print(r)
 
