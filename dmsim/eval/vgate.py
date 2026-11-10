@@ -44,8 +44,8 @@ def chain_score(rules, deck, opp_deck, keys, stages, seeds, prio, width=150, max
         if deadline and time.time() > deadline:
             break
         e = start_engine(rules, deck, opp_deck, keys, sd)
-        if e is None:
-            return {"stages": [], "total": 0, "error": "強制開始の札が山札に足りない"}
+        if e is None:   # この seed は強制開始の札が山札に無い（盾などに落ちた）。測れないので飛ばす（全 seed で同じ seed が飛ぶ）
+            continue
         out.append(reach_chain(e, stages, 0, keep_later=keep_later, width=width, max_depth=max_depth, max_turn=max_turn, prio=prio)["stages"])
     return {"stages": out, "total": sum(out)}
 
