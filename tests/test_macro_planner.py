@@ -28,3 +28,13 @@ def test_tenmon_stage_file():
     stages, goal = load_stage_file(Path("data/eval/stages/tenmon.yaml"))
     assert len(stages) == 10 and goal
     assert MacroPlanner(stages).plan(_eng(), 0).intent == "setup"
+
+
+def test_macro_prio_is_callable_and_plan_w_zero_equals_no_plan():
+    from dmsim.discovery.bestfirst import priority
+    from dmsim.plan.macro import macro_prio
+    from dmsim.solitaire import Weights
+    e, w = _eng(), Weights()
+    a = macro_prio(STAGES, 0.0)(e, 0, w)
+    assert a == v_priority(e, 0, w, priority)
+    assert macro_prio(STAGES, 10.0)(e, 0, w) > a

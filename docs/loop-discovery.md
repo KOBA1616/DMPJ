@@ -78,3 +78,5 @@ AIが、独自のループを発見し、初期盤面からループ導入とル
 - 測定: `python tools/eval_macro.py --stages data/eval/stages/tenmon.yaml --deck data/decks/tenmon.yaml`（強制3枚・14ターン・幅150）。
   天門の到達段数(8seed平均 /10): plan_w=0 → 2.62、30 → 2.62（同一）。1500 も先頭4seedで基準と同一(3,2,3,3)。**改善なし → 既定は不採用(0)**。
 - 所見: 段階ごとの到達探索が段4(ミルザム着地)で止まる。計画項は段を進める情報を足せていない。次は逆算側(手順3)の中継点の細分化。
+- 大局観 v2.1(2026-11-10): `macro_prio(stages, plan_w)`。局面ごとに MacroPlanner が現在の段を決め直して V の計画項に使うので、段をまたぐ reach_chain でも1つの prio で足りる。
+  測定(vgate.chain_score と同じ force_hand 開始・天門・幅150・14ターン・8seed、合計到達段数、under_w=res_w=0): 基準20(3,2,3,3,3,2,2,2) → plan_w=300/1500/5000 いずれも24(全seedで3段)。vgate の採否基準(基準を上回る)を満たす。ただし差は「段2(エメラルーダ着地)を安定させる」分で、段4以降は未突破(別スレッドの shield_under 調査待ち)。plan_w の既定採用は日次ゲートで確認してから。
