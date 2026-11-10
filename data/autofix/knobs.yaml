@@ -1,0 +1,9 @@
+saga:
+  budget: 174
+  coef: 10.0
+  finish_mult: 0.735
+  gy_mult: 1.0
+  learned_mult: 0.0
+  lookahead: 0
+  n_det: 4
+  prep_bonus: 0.0
