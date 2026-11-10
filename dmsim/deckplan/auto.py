@@ -72,7 +72,8 @@ def _rate(d: dict, turn: int) -> float:
 
 def two_stage(rules, deck_ids: list[str], opp_ids: list[str], combo: dict, seeds: list[int], ledger,
               seed: int = 0, turn: int = 4, setup: dict | None = None, kinds=("add_parts", "add_prep", "add_support", "cut_unused", "trim_parts"), n: int = 4,
-              support: dict | None = None, unused: list[str] | None = None, adds: list[str] | None = None, coarse_budget: int = 40, top_k: int = 2, workers: int = 1, coarse_seeds: int | None = None, deadline: float | None = None, out_dir: str | Path | None = "data/deckplans/auto") -> dict:
+              support: dict | None = None, unused: list[str] | None = None, adds: list[str] | None = None, coarse_budget: int = 40, top_k: int = 2, workers: int = 1, coarse_seeds: int | None = None, deadline: float | None = None, out_dir: str | Path | None = "data/deckplans/auto",
+              coarse_n_det: int = 2, resume: dict | None = None) -> dict:
     """2段階: ①低い base_budget で全候補を同一シードで粗く比較 → ②粗い差が正の上位 top_k 件だけ通常予算で再比較し、
     有意に良ければ採用（採否は evaluate.decide のみ）。未変換カードを含む候補は粗比較にも回さない。"""
     rule = AcceptRule(turn=turn)
@@ -83,7 +84,7 @@ def two_stage(rules, deck_ids: list[str], opp_ids: list[str], combo: dict, seeds
     from ..eval.progress import ProgressSpec
     prog = ProgressSpec(board=default_board(combo), cards=default_need(combo))
     cs = seeds[:coarse_seeds] if coarse_seeds else seeds                  # 粗比較は局数を減らしてよい（時間上限に収める）
-    coarse = harness_scorer(rules, opp_ids, cs, rule, setup=setup, workers=workers, stage_spec=prog, base_budget=coarse_budget)
+    coarse = harness_scorer(rules, opp_ids, cs, rule, setup=setup, workers=workers, stage_spec=prog, base_budget=coarse_budget, n_det=coarse_n_det)   # 粗比較は決定化数を減らす（knight_dmc は n_det=8 だと1局が重い）
     fine = mk()
     cands = []
     for k in kinds:
@@ -117,9 +118,22 @@ def two_stage(rules, deck_ids: list[str], opp_ids: list[str], combo: dict, seeds
     cands = [(ch, cand) for _, ch, cand in scored]
     record(ledger, {"stage": "analytic", "p_base": pb, "top": [(round(g, 4), ch.reason) for g, ch, _ in scored[:5]]})
     t0 = time.time()
-    cbase = coarse(ids_of(base, resolver))
     ranked, evaluated = [], 0
-    for ch, cand in cands:
+    if resume and resume.get("base") == base.plan_id() and resume.get("items"):
+        # 前回、粗比較を通ったが通常予算の再比較に進めなかった候補から再開する（粗比較は省く）
+        for it in resume["items"]:
+            ch = C.Change(it["kind"], [tuple(o) for o in it["ops"]], it.get("reason", ""))
+            try:
+                ranked.append(((it["diff"], it["sdiff"]), ch, C.apply(base, ch)))
+            except ValueError:
+                continue
+        evaluated = len(cands)                                  # 粗比較は前回までに済んでいる
+        record(ledger, {"stage": "resume", "n": len(ranked)})
+        cands_run = []
+    else:
+        cands_run = cands
+        cbase = coarse(ids_of(base, resolver))
+    for ch, cand in cands_run:
         if deadline is not None and time.time() > deadline:       # 時間予算を使い切ったら粗比較を打ち切る（次回に回す）
             break
         evaluated += 1
@@ -131,7 +145,7 @@ def two_stage(rules, deck_ids: list[str], opp_ids: list[str], combo: dict, seeds
             ranked.append(((diff, sdiff), ch, cand))
     ranked.sort(key=lambda x: x[0], reverse=True)
     final, best = base, None
-    if ranked:
+    if ranked and top_k > 0:                                      # 再比較を枠に入れられない時(top_k=0)は base の通常予算測定も省く
         fbase = fine(ids_of(base, resolver))
         for _, ch, cand in ranked[:top_k]:
             res = decide(fbase, fine(ids_of(cand, resolver)), rule, False)
@@ -146,7 +160,9 @@ def two_stage(rules, deck_ids: list[str], opp_ids: list[str], combo: dict, seeds
         Path(out_dir).mkdir(parents=True, exist_ok=True)
         path = Path(out_dir) / f"{final.name}.yaml"
         save(final, path)
-    return {"base": base.plan_id(), "final": final.plan_id(), "adopted": final is not base, "path": str(path) if path else None,
+    pending = [] if final is not base else [{"kind": ch.kind, "ops": [list(o) for o in ch.ops], "reason": ch.reason, "diff": d[0], "sdiff": d[1]}
+                                            for d, ch, _ in ranked[top_k:]]      # 粗比較を通ったが再比較に進めなかった候補。次回は再比較から再開する
+    return {"base": base.plan_id(), "pending": pending, "final": final.plan_id(), "adopted": final is not base, "path": str(path) if path else None,
             "candidates": len(cands), "evaluated": evaluated, "complete": evaluated == len(cands), "passed_coarse": len(ranked), "sec": round(time.time() - t0, 1)}
 
 

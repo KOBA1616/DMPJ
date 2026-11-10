@@ -119,3 +119,35 @@ def test_cut_unused_and_trim_parts():
     assert cu and all(c.ops[0][0] == "B" and c.ops[1][0] in ("A", "X") for c in cu)     # 保護札は抜かない・4枚ある札は足さない
     tp = C.PROPOSERS["trim_parts"](p, rng, ["A", "B"], n=3)
     assert tp and all(c.ops == [("A", -1), ("C", 1)] for c in tp)
+
+
+def test_two_stage_resumes_fine_from_pending(tmp_path, monkeypatch):
+    from dmsim.deckplan import auto as A
+    from dmsim.defs import load_rules
+    rules = load_rules()
+    ids = list(rules.cards)
+    core = ids[0]
+    deck = [i for i in ids[1:10] for _ in range(4)] + [core] + [ids[10]] * 3
+    combo = {"id": "t", "parts": [{"name": rules.cards[core].name, "role": "core"}]}
+    calls = []
+
+    def fake(rules_, opp, seeds, rule, setup=None, workers=1, base_budget=200, **kw):
+        def sc(d):
+            calls.append(base_budget)
+            kt = {(s, 0): (3 if s % 5 >= 4 - d.count(core) else None) for s in range(60)}
+            return {k: (v, 0.0 if v is None else 1.0) for k, v in kt.items()} if kw.get("stage_spec") is not None else kt
+        return sc
+    monkeypatch.setattr(A, "harness_scorer", fake)
+    day1 = A.two_stage(rules, deck, [], combo, [], tmp_path / "l.jsonl", kinds=("add_parts",), n=8, coarse_budget=10, top_k=0, out_dir=tmp_path)
+    assert not day1["adopted"] and day1["pending"] and 200 not in calls            # 再比較に進めず候補が残る
+    calls.clear()
+    day2 = A.two_stage(rules, deck, [], combo, [], tmp_path / "l.jsonl", kinds=("add_parts",), n=8, coarse_budget=10, top_k=2, out_dir=tmp_path,
+                       resume={"base": day1["base"], "items": day1["pending"]})
+    assert day2["adopted"] and 10 not in calls and 200 in calls                     # 粗比較をやり直さず再比較から
+
+
+def test_budget_update_keeps_pending():
+    from dmsim.deckplan import budget as B
+    h = {}
+    B.update(h, "x", {"sec": 10.0, "evaluated": 3, "complete": False, "base": "abc", "pending": [{"kind": "k"}]}, 3, 8, 1.0)
+    assert h["x"]["pending_base"] == "abc" and h["x"]["pending"] == [{"kind": "k"}]

@@ -91,7 +91,8 @@ def allocate(h: dict | None, slot_sec: float, max_cands: int, max_cs: int, min_c
 def update(hist: dict, name: str, res: dict, cands: int, cs: int, now: float, coarse_budget: int = REF_BUDGET) -> None:
     """two_stage の結果で履歴を更新する。途中で終わった時は complete=False のままにして次回優先にする。"""
     hist[name] = {"sec": float(res.get("sec", 0.0)), "cands": int(res.get("evaluated", cands)) or cands, "coarse_seeds": cs,
-                  "complete": bool(res.get("complete", True)), "last_run": now, "coarse_budget": coarse_budget}
+                  "complete": bool(res.get("complete", True)), "last_run": now, "coarse_budget": coarse_budget,
+                  "pending_base": res.get("base"), "pending": res.get("pending", [])}
 
 
 TUNE_SHARE = 0.35        # 日次の残り時間のうち自動チューナーに回す割合（残りは deck_fix）
