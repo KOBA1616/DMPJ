@@ -7,6 +7,7 @@ import time
 from functools import partial
 
 import yaml
+from .key_terms import make_term
 
 from ..discovery.bestfirst import priority
 from ..discovery.reachsearch import reach_chain
@@ -61,10 +62,12 @@ def run_gate(rules, deck, opp_deck, keys, stages, seeds, grid=GRID, deadline=Non
         return (t_start + slice_ * (i + 1)) if deadline else None
     base = chain_score(rules, deck, opp_deck, keys, stages, seeds, None, deadline=dl(0), **kw)
     rows = []
-    for gi, (u, r, *pw) in enumerate(grid, 1):
-        pw = pw[0] if pw else 0.0
-        prio = macro_prio(stages, pw, under_w=u, res_w=r) if pw else partial(_vp, under_w=u, res_w=r)
-        rows.append({"under_w": u, "res_w": r, "plan_w": pw, **chain_score(rules, deck, opp_deck, keys, stages, seeds, prio, deadline=dl(gi), **kw)})
+    for gi, (u, r, *ex) in enumerate(grid, 1):
+        pw = ex[0] if ex else 0.0
+        kp = ex[1] if len(ex) > 1 else 0.0          # 4つ目: 部品札をマナに置く減点（key_terms、枚あたり）。0=なし
+        terms = (make_term(stages, kp),) if kp else ()
+        prio = macro_prio(stages, pw, under_w=u, res_w=r, terms=terms) if pw else partial(_vp, under_w=u, res_w=r, terms=terms)
+        rows.append({"under_w": u, "res_w": r, "plan_w": pw, "key_pen": kp, **chain_score(rules, deck, opp_deck, keys, stages, seeds, prio, deadline=dl(gi), **kw)})
     n = min([len(base["stages"])] + [len(x["stages"]) for x in rows])
     b = sum(base["stages"][:n])
     for x in rows:
@@ -74,5 +77,5 @@ def run_gate(rules, deck, opp_deck, keys, stages, seeds, grid=GRID, deadline=Non
     return {"n": n, "base_total": b, "base": base["stages"][:n], "rows": rows, "best": best}
 
 
-def _vp(eng, me, w, under_w, res_w):
-    return v_priority(eng, me, w, priority, under_w=under_w, res_w=res_w)
+def _vp(eng, me, w, under_w, res_w, terms=()):
+    return v_priority(eng, me, w, priority, under_w=under_w, res_w=res_w, terms=terms)

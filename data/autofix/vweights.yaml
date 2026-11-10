@@ -1,11 +1,7 @@
-# 評価関数 V の採用重み(コンボ別)。tools/v_gate.py が日次で上書きする。無い項目は「計画なし・従来の priority」。
-# 2026-11-10 手元の測定(12局・tools/eval_plan_chain.py、data/eval/plan_chain_20261110.jsonl)から手で入れた初期値:
-#   計画項を「最初の未達の段・先読み0」に直した後(macro.py)の測定: サガ plan_w=300 で 30→33(11局)。
-#   天門は 30/300 とも 47 で計画なしと同じ(直す前は 43/39 で逆効果)ので項目なし。
 saga:
-  under_w: 0.0
-  res_w: 0.0
-  plan_w: 300.0
-  base_total: 30
-  total: 33
+  base_total: 26
   n: 11
+  plan_w: 0.0
+  res_w: 0.0
+  total: 27
+  under_w: 0.0
