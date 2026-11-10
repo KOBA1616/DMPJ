@@ -83,3 +83,11 @@ def test_lock_recur_classification():
         {"op": "move", "select": {"zone": "mana", "owner": "opp", "count": 1}, "to": "graveyard"}])
     assert is_recursion_engine(gio) and not is_drain_spell(gio)
     assert is_drain_spell(drill) and not is_recursion_engine(drill)
+
+
+def test_stage_files_load():
+    from pathlib import Path
+    from dmsim.eval.vgate import load_stages
+    for p in Path("data/eval/stages").glob("*.yaml"):
+        st = load_stages(str(p))
+        assert st["stages"] and all("target" in s for s in st["stages"]), p
