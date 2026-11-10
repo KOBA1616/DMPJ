@@ -12,3 +12,9 @@ def test_features_and_plan():
     assert p.current == {"hand": {"*": 1}}
     p.idx = 9
     assert p.current is None
+
+
+def test_extra_terms_are_added():
+    e = Engine.new_game(load_rules(), [["T001"] * 40, ["T001"] * 40], 1, first_player=0)
+    base = lambda *a: 1.0
+    assert v_priority(e, 0, None, base, under_w=0, res_w=0, terms=[lambda eng, me: 5.0, lambda eng, me: 2.0]) == 8.0

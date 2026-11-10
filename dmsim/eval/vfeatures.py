@@ -34,7 +34,7 @@ def resource_total(eng, me: int) -> int:
 
 
 def v_priority(eng, me: int, w, base, under_w: float = 3.0, res_w: float = 1.0, plan: Plan | None = None,
-               plan_w: float = 0.0) -> float:
+               plan_w: float = 0.0, terms=()) -> float:
     """base は bestfirst.priority。盾の束と資源総量を足す（係数 0 なら base と同じ）。"""
     v = base(eng, me, w)
     if under_w:
@@ -44,4 +44,6 @@ def v_priority(eng, me: int, w, base, under_w: float = 3.0, res_w: float = 1.0, 
     if plan is not None and plan_w and plan.stages:
         from ..plan.macro import stage_fraction   # 循環を避けるため遅延 import
         v += plan_w * stage_fraction(eng, me, plan)
+    for t in terms:   # 追加項（別ファイルで定義した (eng, me) -> 加点 の関数。例: 相手の資源減少の項）
+        v += t(eng, me)
     return v
