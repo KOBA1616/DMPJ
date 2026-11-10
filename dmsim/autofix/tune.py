@@ -43,13 +43,24 @@ def _vec(xs, rule: Rule):
     return [-(float(rule.turn + 1) if x is None else float(x)) for x in xs]
 
 
-def _score(m: dict, rule: Rule, w_board: float = 0.3, w_cards: float = 0.1) -> list[float]:
+def _remaining(shield, deck):
+    """相手があと何割で負けるか（0=負け確定、1=手つかず）。勝ち筋（盾を割る／山札切れ）の近い方で測る。"""
+    if shield is None or deck is None:
+        return None
+    return min(1.0, min(shield / 5.0, deck / 30.0))
+
+
+def _score(m: dict, rule: Rule, w_board: float = 0.3, w_cards: float = 0.1, w_prog: float = 0.4) -> list[float]:
     """局ごとの滑らかな点（高いほど良い）。キルの早さが主で、盤面・部品の到達の早さを小さく加える
     （キルが出ない間も改善が見えるようにするため。段階指標は順位付けの補助で、足切りには使わない）。"""
     s = _vec(m["kill"], rule)
     for key, w in (("board", w_board), ("cards", w_cards)):
         if m.get(key) and len(m[key]) == len(s):
             s = [a + w * b for a, b in zip(s, _vec(m[key], rule))]
+    if m.get("opp_shield") and m.get("opp_deck") and len(m["opp_shield"]) == len(s):
+        # 連続の進捗（0/1に潰れた指標でも差が出るように）。最大でも w_prog ターン分。キルの早さが常に主。
+        rem = [_remaining(a, b) for a, b in zip(m["opp_shield"], m["opp_deck"])]
+        s = [x + w_prog * (1.0 - (r if r is not None else 1.0)) for x, r in zip(s, rem)]
     return s
 
 

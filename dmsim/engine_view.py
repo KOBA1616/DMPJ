@@ -90,3 +90,25 @@ def trace_on(e) -> None:
 def trace_of(e):
     """誘発の因果の記録（trace_on 後に溜まる。無効なら None）。"""
     return e.s.trace
+
+
+def force_hand(e, p: int, defns: list[str]) -> bool:
+    """p の手札に defns の札がそろうよう、山札の同じ定義の札と入れ替える（既に手札にあるものは動かさない）。
+    測定の「強制3枚開始」用。そろえられなければ False（山札に足りない）。入れ替えで手札の枚数・山札の枚数は変わらない。"""
+    need = list(defns)
+    hand = list(e.s.zones["hand"][p])
+    keep = []
+    for c in hand:
+        d = e.s.cards[c].defn
+        if d in need:
+            need.remove(d)
+            keep.append(c)
+    spare = [c for c in hand if c not in keep]
+    for d in need:
+        src = next((c for c in e.s.zones["deck"][p] if e.s.cards[c].defn == d), None)
+        if src is None or not spare:
+            return False
+        out = spare.pop()
+        e._raw_move(out, "deck")
+        e._raw_move(src, "hand")
+    return True

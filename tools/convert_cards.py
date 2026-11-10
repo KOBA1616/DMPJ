@@ -32,7 +32,7 @@ sys.path.insert(0, str(ROOT))
 sys.path.insert(0, str(ROOT / "tools"))
 
 from dmsim import cardstore, identity, schema  # noqa: E402
-from dmsim.defs import DATA, DefError, load_tables, parse_card  # noqa: E402
+from dmsim.defs import DATA, DefError, dedupe_list, load_tables, parse_card  # noqa: E402
 import rule_convert  # noqa: E402
 from llm_offload.providers import CallTimeout  # noqa: E402
 from llm_offload.providers import (  # noqa: E402,F401  無料モデル呼び出しは llm_offload に集約
@@ -162,6 +162,8 @@ def extract(text: str) -> dict:
 def validate(raw: dict, row: dict, tables) -> dict:
     if raw.get("id") != row["id"]:
         raise DefError(f"id が {row['id']} になっていない: {raw.get('id')}")
+    if raw.get("abilities"):
+        raw["abilities"] = dedupe_list(raw["abilities"])    # 同じ能力が二重に入る変換（誘発が2回起きる）を、どの変換経路でも入口で除く
     parse_card(raw, tables)
     src = raw.setdefault("source", {})
     src["official"] = row["id"]
@@ -262,7 +264,7 @@ def merge_split(card: dict, r: dict, part) -> dict:
     if not card["keywords"]:
         del card["keywords"]
     if part[2]:
-        card["abilities"] = [*part[2], *(card.get("abilities") or [])]
+        card["abilities"] = dedupe_list([*part[2], *(card.get("abilities") or [])])     # モデルがルール処理済みの能力を重ねて返しても二重にしない
     card["text"] = r["text"]
     return card
 

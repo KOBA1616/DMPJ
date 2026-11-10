@@ -15,6 +15,7 @@ from pathlib import Path
 import yaml
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
+from dmsim import validity  # noqa: E402
 from dmsim.defs import load_rules  # noqa: E402
 from dmsim.scenario import build  # noqa: E402
 from dmsim.solitaire import play_game  # noqa: E402
@@ -185,12 +186,18 @@ def main(argv=None):
     rules = load_rules()
     t0 = time.time()
     if a.verify:
-        res = verify(rules, a.verify.split(","), turns=a.turns)
+        res = validity.annotate(verify(rules, a.verify.split(","), turns=a.turns))
         print(res)
     elif a.pairs:
         res = pairs(rules, top_a=a.top, budget_s=a.budget)
     else:
         res = control(rules) if a.control else singles(rules, a.top) if a.singles else None
+    if a.control and res is not None:
+        st = validity.write_stamp(res)
+        print("陽性対照:", "合格" if st["passed"] else "不合格 — " + st["reason"], "（data/eval/control_stamp.json）")
+    elif a.pairs:
+        ok, why = validity.status()
+        print("測定の妥当性:", "有効" if ok else f"採用不可 — {why}")
     if res is not None and a.out:
         Path(a.out).parent.mkdir(parents=True, exist_ok=True)
         Path(a.out).write_text(json.dumps(res, ensure_ascii=False, indent=1), encoding="utf-8")

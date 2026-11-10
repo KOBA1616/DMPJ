@@ -13,12 +13,13 @@ import yaml
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 from auto_fix import _prep_ids  # noqa: E402
+import exec_tier  # noqa: E402
 from dmsim.autofix import Knobs, Rule, harness_measure  # noqa: E402
 from dmsim.autofix.batch import default_board, default_need  # noqa: E402
 from dmsim.autofix import partdiscovery as PD  # noqa: E402
 from dmsim.autofix import partsgenome as PG  # noqa: E402
 from dmsim.autofix import valuelearn as VL  # noqa: E402
-from dmsim.autofix.tune import evolve, tune  # noqa: E402
+from dmsim.autofix.tune import _score, evolve, tune  # noqa: E402
 from dmsim.defs import load_rules  # noqa: E402
 from dmsim.eval.progress import ProgressSpec  # noqa: E402
 from dmsim.search.leaf_parts import load_specs  # noqa: E402
@@ -42,6 +43,7 @@ def main(argv=None):
     ap.add_argument("--discover-gens", type=int, default=2, help="部品の自動追加・削除に回す世代数（0で無効）")
     ap.add_argument("--learn-gens", type=int, default=2, help="経験ログからの価値の学習の採否に回す世代数（0で無効）")
     ap.add_argument("--value-data", default="data/autofix/value_data", help="自己対戦の経験ログ（追記）の置き場")
+    ap.add_argument("--cold", action="store_true", help="実行層でなく通常の開幕で測る")
     ap.add_argument("--out")
     a = ap.parse_args(argv)
     combos = {c["id"]: c for c in yaml.safe_load(Path("data/known_combos/combos.yaml").read_text(encoding="utf-8"))["combos"]}
@@ -61,7 +63,7 @@ def main(argv=None):
             break
         deck = load_deck(t["deck"])
         opp = load_deck(t["opp_deck"]) if t.get("opp_deck") else ["T001"] * 40
-        spec = yaml.safe_load(Path(t["setup"]).read_text(encoding="utf-8")) if t.get("setup") else None
+        spec, origin = exec_tier.exec_spec(rules, t, deck, cold=a.cold)    # 既定は実行層（仕込み済み開始）。通常の開幕はキルまで届かず差が見えない
         ps = specs[t["combo"]]
         model0 = VL.load_model(t["combo"])
         ps = PD.apply_store(ps, estore.get(t["combo"]))                 # 採用済みの部品の追加・削除を反映
@@ -74,6 +76,15 @@ def main(argv=None):
                                    workers=a.workers, prep_ids=_c[6], value_model=model0)(k)
         k0 = Knobs(**{**Knobs().__dict__, **store.get(t["combo"], {})})
         n = a.seeds
+        base = measure(k0, range(1, n + 1))
+        sc = _score(base, rule)
+        if len(sc) >= 20 and (len(set(round(x, 6) for x in sc)) <= 1 or sum(x is not None and x <= a.turns for x in base["kill"]) >= 0.95 * len(base["kill"])):
+            # 飽和（実行層で全局同点、または95%以上キル）: 探索側に改善余地が無い。残りの課題は到達層（デッキの引き込み）
+            print(t["combo"], f"実行層が飽和（{origin}）: ノブ・評価式の調整は不要。課題は到達層（deck_fix）")
+            if a.out:
+                from dmsim.deckplan.evaluate import record
+                record(a.out, {"combo": t["combo"], "verdict": "skip_saturated", "tier": "cold" if a.cold else "exec", "setup_origin": origin})
+            continue
         k, hist = tune(measure, k0, range(1, n + 1), range(1000, 1000 + n), rule, a.generations, a.lam, ledger=a.out)
         acc = [h["verdict"] for h in hist].count("accept")
         print(t["combo"], "採用", acc, "回", k.__dict__ if k != k0 else "（変更なし）", f"{time.time() - t0:.0f}s")
