@@ -43,7 +43,7 @@ _OK_KW = {"blocker", "cannot_attack_player", "cannot_attack", "double_breaker", 
 def _simple_effect(ops) -> bool:
     for o in ops:
         k = o["op"]
-        if k == "draw" and set(o) <= {"op", "count"} and isinstance(o.get("count", 1), int):
+        if k == "draw" and set(o) <= {"op", "count", "player"} and o.get("player", "you") in ("you", "opp", "each") and isinstance(o.get("count", 1), int):
             continue
         if k == "may" and set(o) <= {"op", "body"} and _simple_effect(o["body"]):
             continue

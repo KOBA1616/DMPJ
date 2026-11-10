@@ -700,14 +700,22 @@ impl Engine {
         let mut deferred = false;
         match op["op"].as_str().unwrap_or("") {
             "draw" => {
-                if op.get("player").is_some() {
-                    return uns("draw player");
-                }
                 let cnt = op.get("count").and_then(|v| v.as_i64()).unwrap_or(1);
                 let you = env["you"].as_i64().unwrap();
+                let ps: Vec<i64> = match op.get("player").and_then(|v| v.as_str()).unwrap_or("you") {
+                    "you" => vec![you],
+                    "opp" => vec![1 - you],
+                    "each" => {
+                        let a = self.s.active;
+                        vec![a, 1 - a]
+                    }
+                    _ => return uns("draw player"),
+                };
                 let mut ch = vec![];
-                for _ in 0..cnt {
-                    ch.push(self.ev_task(vec![json!({"ev": "draw", "player": you})]));
+                for p in ps {
+                    for _ in 0..cnt {
+                        ch.push(self.ev_task(vec![json!({"ev": "draw", "player": p})]));
+                    }
                 }
                 self.defer(ch);
                 deferred = true;
