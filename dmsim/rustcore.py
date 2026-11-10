@@ -106,9 +106,44 @@ def _simple_selector(sel) -> bool:
     return True
 
 
+def _simple_cands(sel) -> bool:
+    """数えるだけのセレクタ（Rust の candidates_ro）。"""
+    if not isinstance(sel, dict) or not set(sel) <= {"zone", "owner", "from_top", "filter", "ref", "other"}:
+        return False
+    if "ref" in sel:
+        return isinstance(sel["ref"], str) and not sel["ref"].startswith("event.") and sel["ref"] not in ("self_moved", "self_entered", "crossed", "subject") \
+            and set(sel) <= {"ref", "filter"} and ("filter" not in sel or _simple_filter(sel["filter"]))
+    return sel.get("zone") in ("hand", "deck", "graveyard", "mana", "bz") and sel.get("owner", "you") in ("you", "opp") \
+        and isinstance(sel.get("from_top", 0), int) and ("filter" not in sel or _simple_filter(sel["filter"])) and isinstance(sel.get("other", False), bool)
+
+
+def _simple_expr(x) -> bool:
+    return (isinstance(x, int) and not isinstance(x, bool)) or (isinstance(x, dict) and set(x) == {"count"} and _simple_cands(x["count"]))
+
+
+def _simple_cond(c) -> bool:
+    if not isinstance(c, dict) or len(c) != 1:
+        return False
+    k, v = next(iter(c.items()))
+    if k == "exists":
+        return _simple_cands(v)
+    if k == "cmp":
+        return isinstance(v, list) and len(v) == 3 and _simple_expr(v[0]) and _simple_expr(v[2]) and v[1] in ("<", "<=", "==", ">=", ">")
+    if k == "not":
+        return _simple_cond(v)
+    if k in ("all", "any"):
+        return isinstance(v, list) and all(_simple_cond(x) for x in v)
+    if k == "is_turn":
+        return v in ("you", "opp")
+    return False
+
+
 def _simple_effect(ops, top=True) -> bool:
     for o in ops:
         k = o["op"]
+        if k == "if" and set(o) <= {"op", "cond", "then", "else"} and _simple_cond(o.get("cond")) \
+                and _simple_effect(o.get("then", []), False) and _simple_effect(o.get("else", []), False):
+            continue
         if k == "draw" and set(o) <= {"op", "count", "player"} and o.get("player", "you") in ("you", "opp", "each") and isinstance(o.get("count", 1), int):
             continue
         if k == "shuffle" and set(o) <= {"op", "player"} and o.get("player", "you") in ("you", "opp"):

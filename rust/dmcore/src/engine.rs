@@ -272,6 +272,125 @@ impl Engine {
         self.ev_task(evs)
     }
 
+    /// 数えるだけのセレクタ（Python の candidates）。選ばせない。ref 変数／ゾーン(owner you,opp・from_top 整数・filter・other)だけ。
+    fn candidates_ro(&self, sel: &Value, env: &Value) -> R<Vec<i64>> {
+        let obj = match sel.as_object() {
+            Some(o) => o,
+            None => return uns("cands sel"),
+        };
+        for k in obj.keys() {
+            if !["zone", "owner", "from_top", "filter", "ref", "other"].contains(&k.as_str()) {
+                return uns(format!("cands key {}", k));
+            }
+        }
+        let you = env["you"].as_i64().unwrap();
+        let mut lst: Vec<i64>;
+        if let Some(name) = sel.get("ref").and_then(|v| v.as_str()) {
+            let refs: Vec<Value> = if name == "self" {
+                vec![env["self"].clone()]
+            } else if name == "self_moved" || name == "self_entered" || name == "crossed" || name == "subject" || name.starts_with("event.") {
+                return uns("cands ref");
+            } else {
+                env["vars"].get(name).and_then(|v| v.as_array()).cloned().unwrap_or_default()
+            };
+            lst = refs.iter().filter(|r| self.alive(r)).map(|r| r[0].as_i64().unwrap()).collect();
+        } else {
+            let p = match sel.get("owner").and_then(|v| v.as_str()).unwrap_or("you") {
+                "you" => you,
+                "opp" => 1 - you,
+                _ => return uns("cands owner"),
+            };
+            let zone = sel["zone"].as_str().unwrap_or("");
+            if !["hand", "deck", "graveyard", "mana", "bz"].contains(&zone) {
+                return uns(format!("cands zone {}", zone));
+            }
+            lst = if zone == "bz" { self.bz_tops(Some(p)) } else { self.zl(zone, p).clone() };
+            if let Some(n) = sel.get("from_top") {
+                match n.as_i64() {
+                    Some(n) => lst.truncate(n.max(0) as usize),
+                    None => return uns("from_top expr"),
+                }
+            }
+            if sel.get("other").and_then(|v| v.as_bool()).unwrap_or(false) {
+                if let Some(me) = env.get("self").and_then(|v| v.as_array()) {
+                    let m = me[0].as_i64().unwrap();
+                    lst.retain(|&c| c != m);
+                }
+            }
+        }
+        if let Some(f) = sel.get("filter") {
+            let mut keep = vec![];
+            for &c in &lst {
+                if self.filter_ok(c, f)? {
+                    keep.push(c);
+                }
+            }
+            lst = keep;
+        }
+        Ok(lst)
+    }
+
+    fn eval_num(&self, x: &Value, env: &Value) -> R<i64> {
+        if let Some(n) = x.as_i64() {
+            return Ok(n);
+        }
+        if x.is_object() && x.as_object().unwrap().len() == 1 {
+            if let Some(sel) = x.get("count") {
+                return Ok(self.candidates_ro(sel, env)?.len() as i64);
+            }
+        }
+        uns("expr")
+    }
+
+    fn eval_cond(&self, c: &Value, env: &Value) -> R<bool> {
+        let o = match c.as_object() {
+            Some(o) if o.len() == 1 => o,
+            _ => return uns("cond shape"),
+        };
+        let (k, v) = o.iter().next().unwrap();
+        match k.as_str() {
+            "exists" => Ok(!self.candidates_ro(v, env)?.is_empty()),
+            "cmp" => {
+                let a = v.as_array().filter(|a| a.len() == 3);
+                let a = match a {
+                    Some(a) => a,
+                    None => return uns("cmp shape"),
+                };
+                let (x, y) = (self.eval_num(&a[0], env)?, self.eval_num(&a[2], env)?);
+                Ok(match a[1].as_str().unwrap_or("") {
+                    "<" => x < y,
+                    "<=" => x <= y,
+                    "==" => x == y,
+                    ">=" => x >= y,
+                    ">" => x > y,
+                    _ => return uns("cmp op"),
+                })
+            }
+            "not" => Ok(!self.eval_cond(v, env)?),
+            "all" | "any" => {
+                let l = match v.as_array() {
+                    Some(l) => l,
+                    None => return uns("cond list"),
+                };
+                let mut rs = vec![];
+                for x in l {
+                    rs.push(self.eval_cond(x, env)?);
+                }
+                Ok(if k == "all" { rs.iter().all(|&b| b) } else { rs.iter().any(|&b| b) })
+            }
+            "is_turn" => {
+                let you = env["you"].as_i64().unwrap();
+                let p = match v.as_str() {
+                    Some("you") => you,
+                    Some("opp") => 1 - you,
+                    _ => return uns("is_turn"),
+                };
+                Ok(self.s.active == p)
+            }
+            _ => uns(format!("cond {}", k)),
+        }
+    }
+
     /// セレクタの解決（Python 版 select の、ゾーン指定・枚数・選ぶ人・types 絞り込みだけの版）。
     /// Ok(Ok(cids)) か Ok(Err(decision))。
     fn select(&mut self, sel: &Value, env: &Value) -> R<Result<Vec<i64>, Value>> {
@@ -955,6 +1074,16 @@ impl Engine {
                     }
                 }
                 self.defer(ch);
+                deferred = true;
+            }
+            "if" => {
+                if op.as_object().unwrap().keys().any(|k| !["op", "cond", "then", "else"].contains(&k.as_str())) {
+                    return uns("if options");
+                }
+                let br = if self.eval_cond(&op["cond"], &env)? { op.get("then") } else { op.get("else") };
+                let ops = br.cloned().unwrap_or(json!([]));
+                let child = json!({"t": "effect", "ops": ops, "pc": 0, "env": env, "os": {}});
+                self.defer(vec![child]);
                 deferred = true;
             }
             "may" => {

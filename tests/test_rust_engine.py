@@ -174,3 +174,20 @@ def test_filter_put_cards_match(real_env, seed):
     spec = {"kind": "new_game", "decks": [deck(), deck()], "seed": seed, "first_player": seed % 2}
     res = lockstep(Session.open(r, spec), rustcore.RustSession.open(r, spec, b), f"random:{seed}")
     assert res["divergence"] is None and res["ok"] is True
+
+
+@pytest.mark.parametrize("seed", [1, 2, 3])
+def test_if_cards_match(real_env, seed):
+    """段階2-d 第6弾: if（exists / cmp / not / all / any）を含む札を多く入れたデッキで1局が一致する。"""
+    import random
+    r, b = real_env
+    pool = _portable(r)
+    sel = [i for i in pool if any(o["op"] == "if" for a in r.cards[i].abilities if a["kind"] == "trigger" for o in a["effect"])]
+    assert len(sel) >= 40
+    rnd = random.Random(seed)
+
+    def deck():
+        return [rnd.choice(sel) if rnd.random() < 0.6 else rnd.choice(pool) for _ in range(40)]
+    spec = {"kind": "new_game", "decks": [deck(), deck()], "seed": seed, "first_player": seed % 2}
+    res = lockstep(Session.open(r, spec), rustcore.RustSession.open(r, spec, b), f"random:{seed}")
+    assert res["divergence"] is None and res["ok"] is True
