@@ -20,3 +20,10 @@ def test_unreachable_target_reports_fraction(rules):
 def test_reach_rate_over_seeds(rules):
     out = reach_rate(rules, ["T001"] * 40, {"mana": {"T001": 1}}, [1, 2, 3], width=10, max_depth=20, max_turn=2)
     assert out["rate"] == 1.0 and set(out["reached"]) == {1, 2, 3}
+
+
+def test_any_wildcard_counts_zone_size(rules):
+    from dmsim.discovery.reachsearch import board_met
+    e = _game(rules)
+    assert board_met(e, 0, {"shield": {"*": 5}}) and not board_met(e, 0, {"shield": {"*": 6}})
+    assert board_met(e, 0, {"hand": {"*": 5}})
