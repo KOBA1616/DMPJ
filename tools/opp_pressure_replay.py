@@ -40,7 +40,7 @@ def run(rules, seed, w, width, max_turn, mana_cards):
 
 def main(argv=None):
     ap = argparse.ArgumentParser()
-    ap.add_argument("--w", type=float, nargs="+", default=[0.0, 1.0, 3.0])
+    ap.add_argument("--w", type=float, nargs="+", default=[0.0, 3.0, 100.0])
     ap.add_argument("--width", type=int, default=100)
     ap.add_argument("--max-turn", type=int, default=6)
     ap.add_argument("--seeds", type=int, default=3)
