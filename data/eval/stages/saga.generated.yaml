@@ -1,0 +1,44 @@
+# tools/gen_stages.py による自動生成（dmsim/plan/stagegen.py）。手で直さず、元データを直して作り直す。
+stages:
+- name: hand:dm22ex1-007x1
+  target:
+    hand:
+      dm22ex1-007: 1
+- name: hand:dm22ex2-021x1
+  target:
+    hand:
+      dm22ex1-007: 1
+      dm22ex2-021: 1
+- name: hand:dm26ex2-071x1
+  target:
+    hand:
+      dm22ex1-007: 1
+      dm22ex2-021: 1
+      dm26ex2-071: 1
+- name: graveyard:dm22ex2-021x1
+  target:
+    hand:
+      dm22ex1-007: 1
+      dm22ex2-021: 1
+      dm26ex2-071: 1
+    graveyard:
+      dm22ex2-021: 1
+- name: graveyard:dmrp03-s03x1
+  target:
+    hand:
+      dm22ex1-007: 1
+      dm22ex2-021: 1
+      dm26ex2-071: 1
+    graveyard:
+      dm22ex2-021: 1
+      dmrp03-s03: 1
+- name: graveyard:*x2
+  target:
+    hand:
+      dm22ex1-007: 1
+      dm22ex2-021: 1
+      dm26ex2-071: 1
+    graveyard:
+      dm22ex2-021: 1
+      dmrp03-s03: 1
+      '*': 2
