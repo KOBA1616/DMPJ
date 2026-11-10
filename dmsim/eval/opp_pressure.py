@@ -7,9 +7,10 @@ def _n(eng, zone: str, p: int) -> int:
     return len(eng.zlist(zone, p))
 
 
-def opp_pressure(eng, me: int, mana_w: float = 1.0, deck_w: float = 0.3, shield_w: float = 1.0,
+def opp_pressure(eng, me: int, mana_w: float = 100.0, deck_w: float = 30.0, shield_w: float = 100.0,
                  mana0: int = 6, deck0: int = 30, shield0: int = 5) -> float:
-    """相手の減少量 = 初期値からの不足分 × 係数。初期値は標準開始局面の目安。"""
+    """相手の減少量 = 初期値からの不足分 × 係数。初期値は標準開始局面の目安。
+    係数は bestfirst.priority の値の大きさ（数百）に合わせる。重み1〜3では順位が変わらず、100 以上で効く（ドリル＋ジョバンニの再生で確認）。"""
     o = 1 - me
     return (mana_w * max(0, mana0 - _n(eng, "mana", o))
             + deck_w * max(0, deck0 - _n(eng, "deck", o))
