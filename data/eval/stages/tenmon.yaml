@@ -14,3 +14,6 @@ stages:
   - {name: shield_8, target: {shield: {"*": 8}}, measured: "連鎖で 1/8 (ターン21)。単独探索は 0/8 (最大7)"}
   - {name: shield_10, target: {shield: {"*": 10}}}
   - {name: aleftina_win, target: {bz: {dmx12b-031: 1}, shield: {"*": 10}}}
+
+# 早い経路の鎖(2026-11-10): 盾の中に天門 → エメラルーダ登場で天門が墓地(S・トリガー) → ミルザム登場 → 盾の下5 → 手札8 → 盾8
+# 部品札をマナに置く減点(dmsim/eval/key_terms.py, 300/枚)なしで 12 seed 中 1、ありで 7 が4段完遂(最速 通しターン9=後攻でなく先手の自分の5ターン目)、手札8まで 7、盾8は 0。
