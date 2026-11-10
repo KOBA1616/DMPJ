@@ -1936,6 +1936,22 @@
         "$ref": "#/$defs/expr"
        }
       },
+      "mul": {
+       "type": "array",
+       "items": {
+        "$ref": "#/$defs/expr"
+       }
+      },
+      "seals": {
+       "type": "object",
+       "properties": {
+        "owner": {
+         "type": "string"
+        }
+       },
+       "additionalProperties": false
+      },
+      "seals_on": {},
       "turn_count": {
        "type": "object",
        "properties": {
