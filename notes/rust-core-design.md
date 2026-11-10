@@ -80,3 +80,10 @@ Rust 版と Python 版は、同じ「エンジン疑似API」（プロセス内�
 - 通る札: 931 枚（うち誘発に move/tap/untap/shuffle を持つ 174 枚）。選択肢つき決定（choose_cards）を含む 150 ゲームで全手一致。
 - 見つかった差: lki の chars.keywords は Python が sort＋重複除去（Rust は定義順だった）→ 修正。
 - 未対応（Unsupported のまま）: 絞り込みの types 以外、count の式、up_to／any、`as`、シールド起点の移動（ブレイク経路）、バトルゾーンへ出す移動、choose/if/modify 等。
+
+## 段階2-d 第3弾の結果（2026-11-10）: choose と変数参照
+
+- `choose`（最上段のみ。as で変数に束縛）、セレクタの変数参照 `{ref: 名前}`（count／chooser／types 絞り込み）、`look` を追加。通る札は 957 枚。
+- 変数の束縛を最上段に限る理由: Python は子タスク（may の本体など）と env を同じ辞書で共有するが、Rust は状態が JSON のため複製になり、子での束縛が親の env に出ない（ダイジェストが食い違う）。入れ子の束縛を通すには共有の再現が要る。
+- 120 ゲームで全手一致。
+- 次の壁（Rust 化できない札の、唯一の障害になっている語彙の数）: 複雑な常在型 約1640 枚、`when` が move/attack/turn_end/cast の他形 約530 枚、セレクタの他形 約270 枚、置換 約140 枚、if 約100 枚、modify 約70 枚。常在型（特性計算 chars）の移植が最大の山。

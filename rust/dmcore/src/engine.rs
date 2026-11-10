@@ -265,41 +265,54 @@ impl Engine {
             return Ok(Ok(if self.alive(&me) { vec![me[0].as_i64().unwrap()] } else { vec![] }));
         }
         for k in obj.keys() {
-            if !["zone", "owner", "count", "from_top", "filter", "chooser"].contains(&k.as_str()) {
+            if !["zone", "owner", "count", "from_top", "filter", "chooser", "look", "ref"].contains(&k.as_str()) {
                 return uns(format!("selector key {}", k));
             }
         }
-        let p = match sel.get("owner").and_then(|v| v.as_str()).unwrap_or("you") {
-            "you" => you,
-            "opp" => 1 - you,
-            _ => return uns("selector owner"),
-        };
-        let zone = sel["zone"].as_str().unwrap_or("");
-        if !["hand", "deck", "graveyard", "mana", "bz"].contains(&zone) {
-            return uns(format!("selector zone {}", zone));
-        }
-        let mut lst: Vec<i64> = if zone == "bz" { self.bz_tops(Some(p)) } else { self.zl(zone, p).clone() };
-        if let Some(n) = sel.get("from_top") {
-            let n = match n.as_i64() {
-                Some(n) => n.max(0) as usize,
-                None => return uns("from_top expr"),
-            };
-            lst.truncate(n);
-        }
-        if let Some(f) = sel.get("filter") {
-            let fo = f.as_object().unwrap();
-            for k in fo.keys() {
-                if k != "types" {
-                    return uns(format!("filter key {}", k));
+        let look = sel.get("look").and_then(|v| v.as_bool()).unwrap_or(false);
+        let types_filter: Option<Vec<String>> = match sel.get("filter") {
+            None => None,
+            Some(f) => {
+                let fo = f.as_object().unwrap();
+                for k in fo.keys() {
+                    if k != "types" {
+                        return uns(format!("filter key {}", k));
+                    }
                 }
+                fo.get("types").map(|ts| ts.as_array().unwrap().iter().map(|v| v.as_str().unwrap().to_string()).collect())
             }
-            if let Some(ts) = fo.get("types") {
-                let ts: Vec<String> = ts.as_array().unwrap().iter().map(|v| v.as_str().unwrap().to_string()).collect();
-                lst.retain(|&c| self.def(c).types.iter().any(|t| ts.contains(t)));
+        };
+        let mut lst: Vec<i64>;
+        if let Some(name) = sel.get("ref").and_then(|v| v.as_str()) {
+            if name == "self" || name == "self_moved" || name == "self_entered" || name == "crossed" || name == "subject" || name.starts_with("event.") {
+                return uns("selector ref");
             }
+            let refs: Vec<Value> = env["vars"].get(name).and_then(|v| v.as_array()).cloned().unwrap_or_default();
+            lst = refs.iter().filter(|r| self.alive(r)).map(|r| r[0].as_i64().unwrap()).collect();
+        } else {
+            let p = match sel.get("owner").and_then(|v| v.as_str()).unwrap_or("you") {
+                "you" => you,
+                "opp" => 1 - you,
+                _ => return uns("selector owner"),
+            };
+            let zone = sel["zone"].as_str().unwrap_or("");
+            if !["hand", "deck", "graveyard", "mana", "bz"].contains(&zone) {
+                return uns(format!("selector zone {}", zone));
+            }
+            lst = if zone == "bz" { self.bz_tops(Some(p)) } else { self.zl(zone, p).clone() };
+            if let Some(n) = sel.get("from_top") {
+                let n = match n.as_i64() {
+                    Some(n) => n.max(0) as usize,
+                    None => return uns("from_top expr"),
+                };
+                lst.truncate(n);
+            }
+        }
+        if let Some(ts) = &types_filter {
+            lst.retain(|&c| self.def(c).types.iter().any(|t| ts.contains(t)));
         }
         let cnt = sel.get("count");
-        if (sel.get("from_top").is_some() && cnt.is_none()) || cnt == Some(&json!("all")) {
+        if ((sel.get("from_top").is_some() || sel.get("ref").is_some()) && cnt.is_none()) || cnt == Some(&json!("all")) {
             return Ok(Ok(lst));
         }
         let n = match cnt {
@@ -328,7 +341,7 @@ impl Engine {
         if n == 0 {
             return Ok(Ok(vec![]));
         }
-        let opts: Vec<Value> = cands.iter().map(|&c| self.card_option(c, None)).collect();
+        let opts: Vec<Value> = cands.iter().map(|&c| if look { self.card_option_look(c) } else { self.card_option(c, None) }).collect();
         let a = match self.ask(chooser, "choose_cards", opts, n, n) {
             Ask::Decision(d) => return Ok(Err(d)),
             Ask::Answer(a) => a,
@@ -890,6 +903,22 @@ impl Engine {
                     deferred = true;
                 }
             }
+            "choose" => {
+                if op.get("reveal").is_some() {
+                    return uns("choose reveal");
+                }
+                let cids = match self.select(&op["select"], &env)? {
+                    Ok(c) => c,
+                    Err(d) => return Ok(Some(d)),
+                };
+                let refs: Vec<Value> = cids.iter().map(|&c| self.refv(c)).collect();
+                let name = op["as"].as_str().unwrap_or("").to_string();
+                let t = self.s.tasks.last_mut().unwrap();
+                if !t["env"]["vars"].is_object() {
+                    t["env"]["vars"] = json!({});
+                }
+                t["env"]["vars"][name.as_str()] = json!(refs);
+            }
             "shuffle" => {
                 let you = env["you"].as_i64().unwrap();
                 let p = match op.get("player").and_then(|v| v.as_str()).unwrap_or("you") {
@@ -1021,6 +1050,12 @@ impl Engine {
         ]));
         self.push(ts);
         Ok(())
+    }
+
+    /// look: true の時の選択肢（Python の _card_option(c, look=True): 山札・シールドでも名前を見せる）
+    fn card_option_look(&self, cid: i64) -> Value {
+        let c = &self.s.cards[cid as usize];
+        json!({"cid": cid, "key": format!("{}:{}:{}", c.zone, c.defn, c.tapped as i32), "name": self.def(cid).name.clone()})
     }
 
     fn card_option(&self, cid: i64, key: Option<String>) -> Value {
