@@ -71,3 +71,10 @@ AIが、独自のループを発見し、初期盤面からループ導入とル
 - マクロの狙い選択自体の学習（狙いごとの到達率を報酬にする）
 - expert iteration：学習方策が集めた勝ち手順を教師に足して再学習する
 - 妨害（disrupt）の本格化は、相手モデルの拡張が前提
+
+## 大局観 v2（段階目標の鎖から Plan を出す）— 2026-11-10
+- `dmsim/plan/macro.py` の `MacroPlanner(stages)`: 満たされている最後の段の次を狙いにし、`Plan`(dmsim/eval/vfeatures.py と共通)を返す。intent は setup/chain/execute/done、budget は残り段数に比例。自分の見える情報だけを使う。
+- V への接続: `v_priority(..., plan=, plan_w=)`。計画項 = 達成段数 + 現在の段の充足率 + 0.5×次の段の充足率。`plan_w` 既定 0（採用前）。
+- 測定: `python tools/eval_macro.py --stages data/eval/stages/tenmon.yaml --deck data/decks/tenmon.yaml`（強制3枚・14ターン・幅150）。
+  天門の到達段数(8seed平均 /10): plan_w=0 → 2.62、30 → 2.62（同一）。1500 も先頭4seedで基準と同一(3,2,3,3)。**改善なし → 既定は不採用(0)**。
+- 所見: 段階ごとの到達探索が段4(ミルザム着地)で止まる。計画項は段を進める情報を足せていない。次は逆算側(手順3)の中継点の細分化。
