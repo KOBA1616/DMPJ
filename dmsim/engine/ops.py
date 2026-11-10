@@ -13,6 +13,7 @@ def op_move(eng, t, op, env):
     card_only: カードとして動かす（109.2a）。進化クリーチャーの一番上だけが離れ、下は再構築される（801.4）。
     order: choose なら、2枚以上を山札に置く時の並びをプレイヤーが決める（「好きな順序で」）。
     答えの先頭が、置いたカードの中で一番上になる。
+    order: shuffle なら、動かす集合だけをシャッフルしてから置く（「残りをシャッフルし、山札の下に置く」）。
     tapped: タップして置く（置かれた時点でタップ状態）。
     face_down: 裏向きのまま置く（マナゾーンのみ意味を持つ。水晶武装の裏向きマナになる）。
     strigger: off/on = 手札に加わるカードへの S・トリガーの印（off はその S・トリガーを使えない＝
@@ -42,6 +43,11 @@ def op_move(eng, t, op, env):
         cids, d = eng.select(t, op["select"], env)
         if d:
             return d
+    if op.get("order") == "shuffle" and len(cids) > 1:
+        from ..state import rng_below
+        for i in range(len(cids) - 1, 0, -1):   # ヨビニオンの残り処理と同じ Fisher-Yates
+            j = rng_below(eng.s, i + 1)
+            cids[i], cids[j] = cids[j], cids[i]
     if op.get("stack_evo"):
         # 重ね出し（put_evolution_stacking）: 選んだカードを1体ずつ順に出し、進化クリーチャーは
         # その都度選んだ進化元に重ねる（put_stacked タスクへ引き渡す）
@@ -350,8 +356,14 @@ def op_mark(eng, t, op, env):
     store[key] = store.get(key, 0) + 1
 
 
-@op("shuffle", player="player?")
+@op("shuffle", player="player?", player_from="str?")
 def op_shuffle(eng, t, op, env):
+    """player_from: その変数の最初のカードの持ち主の山札をシャッフルする（「その持ち主は山札をシャッフルする」）。"""
+    if "player_from" in op:
+        refs = env.get("vars", {}).get(op["player_from"], [])
+        if refs:
+            eng._shuffle(eng.s.cards[refs[0][0]].controller)
+        return
     eng._shuffle(eng._rel(op.get("player", "you"), env))
 
 
@@ -587,6 +599,46 @@ def op_yobinion(eng, t, op, env):
     if found is not None:
         eng._defer(t, [eng.ev_task({"ev": "move", "subject": s.ref(found), "to": "bz",
                                      "reason": "put", "controller": p}, env)])
+    return None
+
+
+@op("reveal_until", player="player?", player_from="str?", filter="filter", count="expr?",
+    **{"as": "str", "rest_as": "str?"})
+def op_reveal_until(eng, t, op, env):
+    """「〜が出るまで表向きにする」: 対象プレイヤー（player。既定 you。player_from があれば、その変数の
+    最初のカードの持ち主 = 「その持ち主」）の山札を上から1枚ずつ公開し、filter に合うカードが
+    count 枚（既定1）出た時点で止める。合ったカード群を as に、出なかった公開カード群を
+    rest_as（既定 as + "_rest"）に束縛する。公開したカードは山札に残るので、行き先は後続の
+    op（move で出す／墓地に置く／山札の下に置く、shuffle で山札に戻す）が決める。
+    count が 0 以下のときは何も公開しない（「破壊した数と同じ数」が 0 の場合）。"""
+    s = eng.s
+    vars_ = env.setdefault("vars", {})
+    rest_name = op.get("rest_as") or (op["as"] + "_rest")
+    if "player_from" in op:
+        refs = vars_.get(op["player_from"], [])
+        if not refs:
+            vars_[op["as"]], vars_[rest_name] = [], []
+            return None
+        p = s.cards[refs[0][0]].controller
+    else:
+        p = eng._rel(op.get("player", "you"), env)
+    want = eng.eval_expr(op["count"], env) if "count" in op else 1
+    if want <= 0:
+        vars_[op["as"]], vars_[rest_name] = [], []
+        return None
+    f = {k: (eng.eval_expr(v, env) if isinstance(v, dict) else v)
+         for k, v in (op.get("filter") or {}).items()}
+    hit, rest = [], []
+    for c in list(s.zones["deck"][p]):
+        eng.note_public("reveal", c)
+        if eng.filter_match(c, f):
+            hit.append(c)
+            if len(hit) >= want:
+                break
+        else:
+            rest.append(c)
+    vars_[op["as"]] = [s.ref(c) for c in hit]
+    vars_[rest_name] = [s.ref(c) for c in rest]
     return None
 
 

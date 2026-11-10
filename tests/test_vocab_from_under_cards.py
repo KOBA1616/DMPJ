@@ -1,7 +1,7 @@
-"""from_under 機構: rejects の対象10件の手変換 parse。
+"""from_under 機構: 対象10件の登録済みカードの検証（再変換ラウンド194で登録）。
 
-手変換は rejects の partial に from_under 誘発を足し、unsupported から
-from_under_trigger を外したもの。登録（submit）は行わない（実装と変換は分ける）。
+登録形は rejects の partial に from_under 誘発を足し、unsupported から
+from_under_trigger を外したもの（submit が split のキーワード等を統合した形）。
 
 変換の型:
 - dm34 系5件（カード自身＋宿主フィルタ）:
@@ -19,13 +19,14 @@ from_under_trigger を外したもの。登録（submit）は行わない（実�
   effect の select は {ref: event.subject}
 """
 import copy
-import json
 from pathlib import Path
+
+import yaml
 
 from dmsim.defs import load_tables, parse_card
 
 TABLES = load_tables()
-REJECTS = Path(__file__).parent.parent / "data" / "cards" / "raw" / "rejects.jsonl"
+CONVERTED = Path(__file__).parent.parent / "data" / "cards" / "converted.yaml"
 
 DRAW_MAY = [{"op": "may", "body": [{"op": "draw", "count": 1}]}]
 
@@ -89,24 +90,19 @@ CASES = {
 }
 
 
-def _partials():
-    out = {}
-    for line in open(REJECTS, encoding="utf-8"):
-        row = json.loads(line)
-        if row["id"] in CASES:
-            out[row["id"]] = row["partial"]
-    return out
+def _registered():
+    data = yaml.safe_load(CONVERTED.read_text(encoding="utf-8"))
+    return {c["id"]: c for c in data["cards"] if c["id"] in CASES}
 
 
 def test_all_ten_targets_parse():
-    partials = _partials()
-    assert set(partials) == set(CASES), f"rejects に無い対象: {set(CASES) - set(partials)}"
+    registered = _registered()
+    assert set(registered) == set(CASES), f"converted に無い対象: {set(CASES) - set(registered)}"
     for cid, added in CASES.items():
-        card = copy.deepcopy(partials[cid])
-        card["abilities"] = list(card.get("abilities") or []) + copy.deepcopy(added)
-        uns = card["source"]["unsupported"]
-        card["source"]["unsupported"] = [u for u in uns if u["need"] != "from_under_trigger"]
-        assert card["source"]["unsupported"] == [], f"{cid}: unsupported が残る"
+        card = copy.deepcopy(registered[cid])
+        assert not (card.get("source") or {}).get("unsupported"), f"{cid}: unsupported が残る"
+        for trig in added:
+            assert trig in (card.get("abilities") or []), f"{cid}: from_under 誘発が登録形と違う"
         parsed = parse_card(card, TABLES)
         whens = [a["when"] for a in parsed.abilities if a["kind"] == "trigger"]
         assert any("from_under" in w for w in whens), f"{cid}: from_under 誘発が無い"

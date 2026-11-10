@@ -56,6 +56,145 @@ patterns:
             when: {event: turn_end}
             effect:
               - {op: move, select: {ref: ninja}, to: deck, reason: put, position: bottom}
+  # ウラ・ニンジャ・ストライク: 通常のニンジャ・ストライクに「マナに指定文明があること」の条件が付いたもの（第165弾。文明ごとに1種＋光/水）
+  ura_ninja_strike_darkness:
+    re: 'ウラ・ニンジャ・ストライク(\d+)（闇）'
+    abilities:
+      - kind: declare
+        zone: hand
+        when: {event: attack, subject: {owner: opp}}
+        if: {all: [{cmp: [{count: {zone: mana, owner: you}}, ">=", "{1}"]}, {exists: {zone: mana, owner: you, filter: {civs: [darkness]}}}]}
+        effect:
+          - {op: play_free, select: {ref: self}, as: ninja}
+          - op: delayed_trigger
+            when: {event: turn_end}
+            effect:
+              - {op: move, select: {ref: ninja}, to: deck, reason: put, position: bottom}
+      - kind: declare
+        zone: hand
+        when: {event: block, subject: {owner: opp}}
+        if: {all: [{cmp: [{count: {zone: mana, owner: you}}, ">=", "{1}"]}, {exists: {zone: mana, owner: you, filter: {civs: [darkness]}}}]}
+        effect:
+          - {op: play_free, select: {ref: self}, as: ninja}
+          - op: delayed_trigger
+            when: {event: turn_end}
+            effect:
+              - {op: move, select: {ref: ninja}, to: deck, reason: put, position: bottom}
+  ura_ninja_strike_water:
+    re: 'ウラ・ニンジャ・ストライク(\d+)（水）'
+    abilities:
+      - kind: declare
+        zone: hand
+        when: {event: attack, subject: {owner: opp}}
+        if: {all: [{cmp: [{count: {zone: mana, owner: you}}, ">=", "{1}"]}, {exists: {zone: mana, owner: you, filter: {civs: [water]}}}]}
+        effect:
+          - {op: play_free, select: {ref: self}, as: ninja}
+          - op: delayed_trigger
+            when: {event: turn_end}
+            effect:
+              - {op: move, select: {ref: ninja}, to: deck, reason: put, position: bottom}
+      - kind: declare
+        zone: hand
+        when: {event: block, subject: {owner: opp}}
+        if: {all: [{cmp: [{count: {zone: mana, owner: you}}, ">=", "{1}"]}, {exists: {zone: mana, owner: you, filter: {civs: [water]}}}]}
+        effect:
+          - {op: play_free, select: {ref: self}, as: ninja}
+          - op: delayed_trigger
+            when: {event: turn_end}
+            effect:
+              - {op: move, select: {ref: ninja}, to: deck, reason: put, position: bottom}
+  ura_ninja_strike_fire:
+    re: 'ウラ・ニンジャ・ストライク(\d+)（火）'
+    abilities:
+      - kind: declare
+        zone: hand
+        when: {event: attack, subject: {owner: opp}}
+        if: {all: [{cmp: [{count: {zone: mana, owner: you}}, ">=", "{1}"]}, {exists: {zone: mana, owner: you, filter: {civs: [fire]}}}]}
+        effect:
+          - {op: play_free, select: {ref: self}, as: ninja}
+          - op: delayed_trigger
+            when: {event: turn_end}
+            effect:
+              - {op: move, select: {ref: ninja}, to: deck, reason: put, position: bottom}
+      - kind: declare
+        zone: hand
+        when: {event: block, subject: {owner: opp}}
+        if: {all: [{cmp: [{count: {zone: mana, owner: you}}, ">=", "{1}"]}, {exists: {zone: mana, owner: you, filter: {civs: [fire]}}}]}
+        effect:
+          - {op: play_free, select: {ref: self}, as: ninja}
+          - op: delayed_trigger
+            when: {event: turn_end}
+            effect:
+              - {op: move, select: {ref: ninja}, to: deck, reason: put, position: bottom}
+  ura_ninja_strike_light:
+    re: 'ウラ・ニンジャ・ストライク(\d+)（光）'
+    abilities:
+      - kind: declare
+        zone: hand
+        when: {event: attack, subject: {owner: opp}}
+        if: {all: [{cmp: [{count: {zone: mana, owner: you}}, ">=", "{1}"]}, {exists: {zone: mana, owner: you, filter: {civs: [light]}}}]}
+        effect:
+          - {op: play_free, select: {ref: self}, as: ninja}
+          - op: delayed_trigger
+            when: {event: turn_end}
+            effect:
+              - {op: move, select: {ref: ninja}, to: deck, reason: put, position: bottom}
+      - kind: declare
+        zone: hand
+        when: {event: block, subject: {owner: opp}}
+        if: {all: [{cmp: [{count: {zone: mana, owner: you}}, ">=", "{1}"]}, {exists: {zone: mana, owner: you, filter: {civs: [light]}}}]}
+        effect:
+          - {op: play_free, select: {ref: self}, as: ninja}
+          - op: delayed_trigger
+            when: {event: turn_end}
+            effect:
+              - {op: move, select: {ref: ninja}, to: deck, reason: put, position: bottom}
+  ura_ninja_strike_nature:
+    re: 'ウラ・ニンジャ・ストライク(\d+)（自然）'
+    abilities:
+      - kind: declare
+        zone: hand
+        when: {event: attack, subject: {owner: opp}}
+        if: {all: [{cmp: [{count: {zone: mana, owner: you}}, ">=", "{1}"]}, {exists: {zone: mana, owner: you, filter: {civs: [nature]}}}]}
+        effect:
+          - {op: play_free, select: {ref: self}, as: ninja}
+          - op: delayed_trigger
+            when: {event: turn_end}
+            effect:
+              - {op: move, select: {ref: ninja}, to: deck, reason: put, position: bottom}
+      - kind: declare
+        zone: hand
+        when: {event: block, subject: {owner: opp}}
+        if: {all: [{cmp: [{count: {zone: mana, owner: you}}, ">=", "{1}"]}, {exists: {zone: mana, owner: you, filter: {civs: [nature]}}}]}
+        effect:
+          - {op: play_free, select: {ref: self}, as: ninja}
+          - op: delayed_trigger
+            when: {event: turn_end}
+            effect:
+              - {op: move, select: {ref: ninja}, to: deck, reason: put, position: bottom}
+  ura_ninja_strike_light_water:
+    re: 'ウラ・ニンジャ・ストライク(\d+)（光/水）'
+    abilities:
+      - kind: declare
+        zone: hand
+        when: {event: attack, subject: {owner: opp}}
+        if: {all: [{cmp: [{count: {zone: mana, owner: you}}, ">=", "{1}"]}, {exists: {zone: mana, owner: you, filter: {civs: [light]}}}, {exists: {zone: mana, owner: you, filter: {civs: [water]}}}]}
+        effect:
+          - {op: play_free, select: {ref: self}, as: ninja}
+          - op: delayed_trigger
+            when: {event: turn_end}
+            effect:
+              - {op: move, select: {ref: ninja}, to: deck, reason: put, position: bottom}
+      - kind: declare
+        zone: hand
+        when: {event: block, subject: {owner: opp}}
+        if: {all: [{cmp: [{count: {zone: mana, owner: you}}, ">=", "{1}"]}, {exists: {zone: mana, owner: you, filter: {civs: [light]}}}, {exists: {zone: mana, owner: you, filter: {civs: [water]}}}]}
+        effect:
+          - {op: play_free, select: {ref: self}, as: ninja}
+          - op: delayed_trigger
+            when: {event: turn_end}
+            effect:
+              - {op: move, select: {ref: ninja}, to: deck, reason: put, position: bottom}
   # ○ステルス: 相手のマナゾーンに○のカードが1枚でもあれば、このクリーチャーはブロックされない（条件つきの常在型能力。文明ごとに1種）
   stealth_light:
     re: '光ステルス'

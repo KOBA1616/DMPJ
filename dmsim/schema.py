@@ -75,6 +75,7 @@ def _build() -> dict:
                 "total_cost_le": ref("expr"), "total_cost_ge": ref("expr"),
                 "total_power_le": ref("expr"), "total_power_ge": ref("expr"),
                 "distinct_costs": {"type": "boolean"}, "distinct_from": ref("selector"),
+                "extremal": {"enum": ["min_power", "max_power"]},
                 "exclude": {"anyOf": [ref("selector"), {"type": "array", "items": ref("selector")}]},
                 "other": {"type": "boolean"}, "look": {"type": "boolean"}}, "additionalProperties": False},
             "expr": {"anyOf": [{"type": "integer"}, {"type": "object", "properties": {
