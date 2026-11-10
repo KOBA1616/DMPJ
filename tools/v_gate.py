@@ -21,7 +21,7 @@ def main(argv=None):
     ap.add_argument("--targets", default="data/autofix/targets.yaml")
     ap.add_argument("--stages", help="段階目標のYAML（既定 data/eval/stages/<combo>.yaml）")
     ap.add_argument("--seeds", type=int, default=6)
-    ap.add_argument("--width", type=int, default=150)
+    ap.add_argument("--width", type=int, default=40)
     ap.add_argument("--seconds", type=int, default=0, help="時間の上限（0=無制限）。超えたら残りの seed を測らない")
     ap.add_argument("--store", default="data/autofix/vweights.yaml")
     ap.add_argument("--out", default="logs/v_gate.jsonl")
