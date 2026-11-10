@@ -19,6 +19,15 @@ GRID = ((3.0, 1.0), (6.0, 1.0), (6.0, 3.0), (10.0, 3.0),
         (0.0, 0.0, 1500.0), (3.0, 1.0, 1500.0))     # (under_w, res_w[, plan_w])。(0, 0) は base と同じ。plan_w>0 は大局観の計画項（macro_prio）
 
 
+def stage_path(combo: str, root: str = "data/eval/stages") -> str | None:
+    """手書きの <combo>.yaml を優先し、無ければ自動生成の <combo>.generated.yaml（tools/gen_stages.py）。どちらも無ければ None。"""
+    from pathlib import Path
+    for name in (f"{combo}.yaml", f"{combo}.generated.yaml"):
+        if (Path(root) / name).exists():
+            return str(Path(root) / name)
+    return None
+
+
 def load_stages(path) -> dict:
     return yaml.safe_load(open(path, encoding="utf-8"))
 

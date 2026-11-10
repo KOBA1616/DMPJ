@@ -21,3 +21,11 @@ def test_gate_accepts_plan_w_candidate(rules, monkeypatch):
     monkeypatch.setattr(vgate, "chain_score", lambda *a, **k: {"stages": next(scores), "total": 0})
     r = vgate.run_gate(rules, [], [], [], [{"hand": {"*": 1}}], [1, 2], grid=((0.0, 0.0, 1500.0),))
     assert r["best"]["plan_w"] == 1500.0 and r["rows"][0]["verdict"] == "adopt"
+
+
+def test_stage_path_prefers_handwritten(tmp_path):
+    (tmp_path / "a.generated.yaml").write_text("stages: []")
+    assert vgate.stage_path("a", str(tmp_path)).endswith("a.generated.yaml")
+    (tmp_path / "a.yaml").write_text("stages: []")
+    assert vgate.stage_path("a", str(tmp_path)).endswith("a.yaml") and not vgate.stage_path("a", str(tmp_path)).endswith("generated.yaml")
+    assert vgate.stage_path("zz", str(tmp_path)) is None
