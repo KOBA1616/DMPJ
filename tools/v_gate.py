@@ -15,12 +15,17 @@ from dmsim.eval import vgate  # noqa: E402
 from dmsim.solitaire import load_deck  # noqa: E402
 
 
+def _grid(text):
+    return tuple(tuple(float(x) for x in g.split(":")) for g in text.split(","))
+
+
 def main(argv=None):
     ap = argparse.ArgumentParser()
     ap.add_argument("--combo", default="tenmon")
     ap.add_argument("--targets", default="data/autofix/targets.yaml")
     ap.add_argument("--stages", help="段階目標のYAML（既定 data/eval/stages/<combo>.yaml）")
     ap.add_argument("--seeds", type=int, default=6)
+    ap.add_argument("--grid", default="", help="重みの候補 例 3:1,6:1,0:0:1（under:res[:plan]）。空なら既定")
     ap.add_argument("--width", type=int, default=40)
     ap.add_argument("--seconds", type=int, default=0, help="時間の上限（0=無制限）。超えたら残りの seed を測らない")
     ap.add_argument("--store", default="data/autofix/vweights.yaml")
@@ -34,6 +39,7 @@ def main(argv=None):
     deck = load_deck(t["deck"])
     t0 = time.time()
     r = vgate.run_gate(rules, deck, ["T001"] * 40, keys, stages, range(1, a.seeds + 1), width=a.width,
+                       grid=_grid(a.grid) if a.grid else vgate.GRID,
                        deadline=(t0 + a.seconds) if a.seconds else None)
     r.update(combo=a.combo, sec=round(time.time() - t0))
     Path(a.out).parent.mkdir(parents=True, exist_ok=True)

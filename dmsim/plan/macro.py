@@ -64,7 +64,7 @@ def stage_fraction(eng, me: int, plan: Plan) -> float:
     return plan.idx + fraction(eng, me, cur) + (NEXT_W * fraction(eng, me, nxt) if nxt else 0.0)
 
 
-def macro_prio(stages: list, plan_w: float, under_w: float = 3.0, res_w: float = 1.0, base=None):
+def macro_prio(stages: list, plan_w: float, under_w: float = 3.0, res_w: float = 1.0, base=None, terms=()):
     """reach_chain/reach_target の prio に渡せる順位づけ。局面ごとに MacroPlanner が現在の段を決め直し、V の計画項に使う
     （段をまたぐ鎖でも1つの関数で済む）。plan_w=0 は計画なしと同じ。"""
     from ..discovery.bestfirst import priority
@@ -73,5 +73,5 @@ def macro_prio(stages: list, plan_w: float, under_w: float = 3.0, res_w: float =
     b = base or priority
 
     def prio(eng, me, w):
-        return v_priority(eng, me, w, b, under_w=under_w, res_w=res_w, plan=planner.plan(eng, me), plan_w=plan_w)
+        return v_priority(eng, me, w, b, under_w=under_w, res_w=res_w, plan=planner.plan(eng, me), plan_w=plan_w, terms=terms)
     return prio
