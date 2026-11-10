@@ -85,3 +85,39 @@ def main(argv=None):
 
 if __name__ == "__main__":
     main()
+
+
+# ---- 使用回数 x つきの列挙（閉路でなく「束の多重集合」: 全員の前提を誰かが満たし、1周の収支が負でない）----
+def bundle_delta(b) -> dict:
+    return Cycle([b]).delta()
+
+
+def solve_x(rules, cards: list[str], max_x: int = 2, max_used: int = 5) -> list[dict]:
+    """cards の束から、使用回数 x（各 0..max_x、使う束は max_used 個まで）を選び、
+    (1) 前提を持つ束は、使う束のどれかから受け渡しがある（feeds>0）か、自分から起動できる束がある
+    (2) Σ x·delta の自分の資源が負にならない（山札だけは可）かつ、相手の資源が動くか自分のどれかが増える
+    を満たす組を返す。"""
+    bs = [b for b in bundles_of(rules) if b.card in cards]
+    n = len(bs)
+    fed = [[feeds(a, c, rules) > 0 for c in bs] for a in bs]
+    dl = [bundle_delta(b) for b in bs]
+    od = [Cycle([b]).opp_delta() for b in bs]
+    out = []
+    for used in itertools.chain.from_iterable(itertools.combinations(range(n), k) for k in range(1, max_used + 1)):
+        # 前提の閉包: 前提を持つ束は、使う束の誰かから受け渡しがある
+        if any(bs[i].prem is not None and not any(fed[j][i] for j in used) for i in used):
+            continue
+        for xs in itertools.product(range(1, max_x + 1), repeat=len(used)):
+            tot, opp = {}, {}
+            for i, x in zip(used, xs):
+                for k, v in dl[i].items():
+                    tot[k] = tot.get(k, 0) + x * v
+                for k, v in od[i].items():
+                    opp[k] = opp.get(k, 0) + x * v
+            if any(v < 0 for k, v in tot.items() if k != "deck"):
+                continue
+            if any(v > 0 for v in tot.values()) or any(opp.values()):
+                out.append({"bundles": [bs[i].name for i in used], "x": list(xs), "delta": {k: v for k, v in tot.items() if v},
+                            "opp": {k: v for k, v in opp.items() if v}})
+                break
+    return out
