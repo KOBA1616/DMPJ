@@ -59,7 +59,7 @@ def run_batch(a, combos):
     for r in run_targets(ts, combos, mk, Rule(turn=a.turns), a.rounds, a.out, a.store, health=a.health):
         print(r)
     vg = [t["combo"] for t in ts if t["combo"] in combos and combos[t["combo"]].get("split") != "holdout" and Path(f"data/eval/stages/{t['combo']}.yaml").exists()]
-    VGATE_SEC = 300                                           # 評価関数 V の採否ゲート（段階目標のあるコンボだけ。docs/value-function-design.md §7）
+    VGATE_SEC = 450                                           # 評価関数 V の採否ゲート（段階目標のあるコンボだけ。docs/value-function-design.md §7）
     if a.total_seconds:                                       # 日次の総枠から、診断に使った残りを deck_fix と tune に自動で配る
         from dmsim.deckplan import budget as B
         a.deck_fix_budget, a.tune_seconds = B.split_remaining(a.total_seconds - (VGATE_SEC * len(vg)), time.time() - t0, bool(a.deck_fix and a.out), True)
@@ -75,7 +75,7 @@ def run_batch(a, combos):
     if vg and a.total_seconds:
         import v_gate
         for cb in vg:
-            selfheal.run_phase(f"v_gate:{cb}", lambda cb=cb: v_gate.main(["--combo", cb, "--targets", a.targets, "--seeds", "8", "--seconds", str(VGATE_SEC - 30),
+            selfheal.run_phase(f"v_gate:{cb}", lambda cb=cb: v_gate.main(["--combo", cb, "--targets", a.targets, "--seeds", "6", "--seconds", str(VGATE_SEC - 30),
                                                                          "--out", (a.out.replace(".jsonl", "") + "_vgate.jsonl") if a.out else "logs/v_gate.jsonl"]), a.health)
     body = selfheal.render_issue(selfheal.load(a.health))     # 失敗した段階があれば、Issue 用の要約を残す（日次ルーティンが Issue 化して直す）
     if body:

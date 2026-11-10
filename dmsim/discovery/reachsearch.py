@@ -103,13 +103,37 @@ def reach_rate(rules, deck: list[str], target: dict, seeds, opp_deck: list[str] 
     return out
 
 
-def reach_chain(eng: Engine, stages: list[dict], me: int = 0, **kw) -> dict:
+def _with_keep(eng: Engine, me: int, stages: list[dict], k: int) -> dict:
+    """段 k の目標に、「後ろの段が要る札で今手札にあるものを手札に残す」条件を足す（先に使い切る手を選ばせない）。
+    後ろの段のゾーンが hand 以外（場・墓地・盾）の札が対象。既に目標に手札で入っているものは足さない。"""
+    tg = {z: dict(v) for z, v in stages[k].items()}
+    later: dict[str, int] = {}
+    for st in stages[k + 1:]:
+        for z, want in st.items():
+            for i, n in want.items():
+                if z != "hand" and i != "*":
+                    later[i] = max(later.get(i, 0), n)
+    for i, n in later.items():
+        have = _have(eng, me, "hand", i)
+        if have and i not in tg.get("hand", {}):
+            tg.setdefault("hand", {})[i] = min(have, n)
+    return tg
+
+
+def reach_chain(eng: Engine, stages: list[dict], me: int = 0, keep_later: bool = False, **kw) -> dict:
     """段階目標を順に到達させる（勝利条件から分解した中継点を、前の段階の到達局面から続けて探す）。
+    keep_later=True: 後ろの段が要る札を手札に残したまま届く局面を先に探す（届かなければ元の目標で探す）。
+    前段の最短経路が後ろの段の札を使い切ってしまい、鎖が途中で止まるのを防ぐ。
     {"stages": 到達した段階数, "turns": [各段階の到達ターン], "nodes", "engine": 最後に届いた局面}"""
     cur, turns, nodes = eng, [], 0
-    for tg in stages:
-        r = reach_target(cur, tg, me, **kw)
-        nodes += r.nodes
+    for k, tg in enumerate(stages):
+        r = None
+        if keep_later and k + 1 < len(stages):
+            r = reach_target(cur, _with_keep(cur, me, stages, k), me, **kw)
+            nodes += r.nodes
+        if r is None or not r.reached:
+            r = reach_target(cur, tg, me, **kw)
+            nodes += r.nodes
         if not r.reached:
             break
         cur = r.engine
