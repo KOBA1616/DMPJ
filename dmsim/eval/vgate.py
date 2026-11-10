@@ -37,7 +37,7 @@ def start_engine(rules, deck, opp_deck, keys, seed):
     return e if force_hand(e, 0, keys) else None
 
 
-def chain_score(rules, deck, opp_deck, keys, stages, seeds, prio, width=150, max_depth=80, max_turn=14, deadline=None, keep_later=True) -> dict:
+def chain_score(rules, deck, opp_deck, keys, stages, seeds, prio, width=150, max_depth=80, max_turn=14, deadline=None, keep_later=True, lookahead=2) -> dict:
     """seed ごとの到達段階数。deadline(time.time()) を過ぎたら残りの seed は測らない（打ち切り）。"""
     out = []
     for sd in seeds:
@@ -46,7 +46,7 @@ def chain_score(rules, deck, opp_deck, keys, stages, seeds, prio, width=150, max
         e = start_engine(rules, deck, opp_deck, keys, sd)
         if e is None:   # この seed は強制開始の札が山札に無い（盾などに落ちた）。測れないので飛ばす（全 seed で同じ seed が飛ぶ）
             continue
-        out.append(reach_chain(e, stages, 0, keep_later=keep_later, width=width, max_depth=max_depth, max_turn=max_turn, prio=prio)["stages"])
+        out.append(reach_chain(e, stages, 0, keep_later=keep_later, lookahead=lookahead, width=width, max_depth=max_depth, max_turn=max_turn, prio=prio)["stages"])
     return {"stages": out, "total": sum(out)}
 
 
