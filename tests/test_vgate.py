@@ -64,3 +64,11 @@ def test_judge_acc_uses_only_common_seeds():
     acc = {"base": {1: 1, 2: 1}, "3.0:1.0:0.0:0.0": {2: 1, 3: 5}}
     j = vgate.judge_acc(acc, rows, 1)
     assert j["rows"][0]["n"] == 1 and j["rows"][0]["verdict"] == "tie"
+def test_cost_perf_breakdown_and_term(monkeypatch):
+    from dmsim.eval import cost_perf
+    b = {"hand": 5, "shield": 5, "mana": 0, "grave": 0, "board": 0, "disrupt": 0.0, "lock": 0.0}
+    monkeypatch.setattr(cost_perf, "breakdown", lambda e, m: b)
+    monkeypatch.setattr(cost_perf, "mana_used", lambda e, m: 3)
+    monkeypatch.setattr(cost_perf, "zone_of", lambda e, z, m: [0] * 5)
+    assert cost_perf.performance(None, 0) == 5 * 5.0 + 5 * 10.0
+    assert abs(cost_perf.cost_perf(None, 0, scale=2.0) - 2.0 * 75.0 / 4) < 1e-9   # 分母 = 1 + 使用マナ3

@@ -23,16 +23,17 @@ def main(argv=None):
     ap = argparse.ArgumentParser()
     ap.add_argument("--combo", default="tenmon")
     ap.add_argument("--targets", default="data/autofix/targets.yaml")
+    ap.add_argument("--deck", default="", help="デッキ YAML（既定は対象のデッキ）")
     ap.add_argument("--seeds", type=int, default=3)
     ap.add_argument("--plan-w", type=float, default=3.0, help="負なら基本スコアの標準偏差に対する倍率（正規化）")
-    ap.add_argument("--term", default="plan", choices=["plan", "lock", "opp"], help="測る項。plan=計画項、lock=継続効果ロック(PR #346)、opp=相手の資源減少")
+    ap.add_argument("--term", default="plan", choices=["plan", "lock", "opp", "cost"], help="測る項。plan=計画項、lock=継続効果ロック(PR #346)、opp=相手の資源減少、cost=コスト対パフォーマンス")
     ap.add_argument("--width", type=int, default=40)
     a = ap.parse_args(argv)
     t = next(x for x in yaml.safe_load(Path(a.targets).read_text(encoding="utf-8"))["targets"] if x["combo"] == a.combo)
     st = vgate.load_stages(vgate.stage_path(a.combo))
     stages = [s["target"] for s in st["stages"][1:]]
-    keys = list(st["stages"][0]["target"]["hand"])
-    rules, deck = load_rules(), load_deck(t["deck"])
+    keys = [] if a.deck else list(st["stages"][0]["target"]["hand"])
+    rules, deck = load_rules(), load_deck(a.deck or t["deck"])
     planner = MacroPlanner(stages)
     rec: list[tuple[float, float]] = []
 
@@ -43,6 +44,9 @@ def main(argv=None):
     elif a.term == "opp":
         from dmsim.eval.opp_pressure import make_term as _mk
         ext = _mk()
+    elif a.term == "cost":
+        from dmsim.eval.cost_perf import make_term as _mk
+        ext = _mk(scale=a.plan_w if a.plan_w > 0 else 1.0)
     else:
         ext = None
 
