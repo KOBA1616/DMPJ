@@ -30,6 +30,14 @@ def load_stage_graph(path):
     return StageGraph.from_stage_dicts(d["stages"]), d.get("goal", {})
 
 
+def load_plan_graph(path_or_plan):
+    """登録簿の計画（PlanSpec か、JSONL ファイルの1行目〜の最初の計画）→ StageGraph。コンボ手順型も loop 型も同じ入口。"""
+    from .spec import PlanSpec, load_jsonl
+    from .stagegen import graph_from_planspec
+    plan = path_or_plan if isinstance(path_or_plan, PlanSpec) else load_jsonl(path_or_plan)[0]
+    return graph_from_planspec(plan)
+
+
 @dataclass
 class MacroPlanner:
     """規則ベース v1（共通）: 段階の鎖のうち未達の最初の段を現在の狙いにする。

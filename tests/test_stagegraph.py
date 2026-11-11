@@ -100,3 +100,28 @@ def test_reach_graph_skips_stages_met_at_start(rules):
     g = StageGraph([Node("a", {"hand": {"T001": 1}}), Node("b", {"mana": {"T001": 1}}, ("a",)), Node("c", {"hand": {"T001": 1}}, ())])
     r = reach_graph(e, g, 0, width=10, max_depth=30, max_turn=3)
     assert r["order"][0] != "a" and "a" not in r["order"]       # 開始の手札で済んでいる段は数えない
+
+
+def test_combo_sequence_plan_loads_as_graph(tmp_path):
+    from dmsim.plan.macro import load_plan_graph
+    from dmsim.plan.spec import PlanSpec, dump_jsonl
+    plan = PlanSpec(kind="combo_sequence", params={
+        "stages": [{"id": "a", "target": {"hand": {"x": 1}}}, {"id": "b", "target": {"hand": {"y": 1}}, "requires": []},
+                   {"id": "c", "target": {"bz": {"z": 1}}, "requires": ["a", "b"]}],
+        "goal": {"shield": {"*": 10}}})
+    g = load_plan_graph(plan)
+    assert not g.is_chain() and {n.id for n in g.ready(set())} == {"a", "b"}
+    assert g.by_id()["goal"].requires == ("c",)            # 出口は最後の段（他の段の前提になっていない c）の後
+    f = tmp_path / "p.jsonl"
+    dump_jsonl([plan], f)
+    assert [n.id for n in load_plan_graph(f).nodes] == [n.id for n in g.nodes]    # 記録形式（JSONL）を経由しても同じ
+
+
+def test_plan_without_stages_uses_minimal_board():
+    from dmsim.discovery.loopspec import Pred
+    from dmsim.plan.macro import load_plan_graph
+    from dmsim.plan.spec import PlanSpec
+    plan = PlanSpec(kind="loop", minimal=[Pred(owner=0, match={"name": "p"}, n=1, op=">=", zone="hand", zones=()),
+                                         Pred(owner=0, match={"name": "f"}, n=1, op=">=", zone="bz", zones=())])
+    g = load_plan_graph(plan)
+    assert [n.id for n in g.nodes] == ["hand:px1", "bz:fx1"] and g.by_id()["bz:fx1"].requires == ("hand:px1",)

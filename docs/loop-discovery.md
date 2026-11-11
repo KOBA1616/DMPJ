@@ -137,3 +137,9 @@ koba の指示（計画変更）: 段階目標を固定順の鎖ではなく、�
 - `MacroPlanner` は `StageGraph` も受ける。済んだ段 → 今狙える段のうち充足率最大の段 → 残り、に並べ替えて、V と共通の `Plan`（鎖の形）で返すので、V 側は変更なし。
 - 自動生成: `python tools/gen_stages.py <combo> --graph` が `<combo>.graph.yaml` を出す（同じゾーンの部品は並列、次のゾーンの部品は前のゾーンの部品がすべて済んでいることが前提、出口があれば最後）。`eval_plan_chain.py --graph` で測れる。
 - 既存の `*.generated.yaml`（鎖）と tools（v_gate など）はそのまま。順序が本当に自由な部品（アカシックの手札の3組）だけが並列になる。
+
+### 登録簿の計画（コンボ手順型）を大局観が読む（2026-11-11）
+koba の指示: 検証済みのコンボ手順を、計画の1種類（`combo_sequence`、計画仕様 v0 §4.7）として登録簿に入れる（登録側は「未知のコンボを自動探索する」スレッド）。大局観側の入口は `dmsim.plan.macro.load_plan_graph(PlanSpec か JSONL)` → `StageGraph`（`MacroPlanner` / `reach_graph` / `macro_prio` にそのまま渡せる）。
+- `combo_sequence` で `params["stages"]` があれば、それを段の記述として読む。形は data/eval/stages/*.yaml の stages と同じ（`[{id?, name?, requires?, target}]`、target は `{ゾーン: {札ID or "*": 枚数}}`、id / requires が無ければ鎖）。`params["goal"]`（同じ target 形式）があれば、末端の段の後の「出口」の段として足す。
+- それ以外（`loop` や、stages の無い計画）は、`minimal`（と `goal`）の部品から作る（同じゾーンの部品は並列、ゾーン順に前提）。
+- 計画のファイル（JSONL）を経由しても同じグラフになる（テストあり）。山札や相手側の述語は、自分側の見える情報だけを使う方針のため、段に入れない（minimal から作る時）。

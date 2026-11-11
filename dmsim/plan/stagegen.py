@@ -95,3 +95,27 @@ def graph_from_loopspec(ls):
     for z, i, n in _pred_items(ls.goal):
         goal.setdefault(z, {})[i] = n
     return graph_from_items(_pred_items(ls.minimal), goal or None)
+
+
+def graph_from_planspec(plan):
+    """登録簿の計画（dmsim.plan.spec.PlanSpec）から段階目標のグラフ（StageGraph）を作る。大局観が計画の種類を問わず読む入口。
+    1. kind が combo_sequence（コンボ手順）で params["stages"] があれば、それを段の記述として読む
+       （data/eval/stages/*.yaml の stages と同じ形: [{id?, name?, requires?, target}]。id / requires が無ければ鎖）。
+       params["goal"]（reach_target 形式）があれば、最後に出口の段として足す。
+    2. それ以外（loop など）や params["stages"] が無いときは、最小盤面 minimal（と出口 goal）の部品から
+       graph_from_items と同じ作り方（同じゾーンの部品は並列、ゾーン順に前提）。"""
+    from .stagegraph import Node, StageGraph
+    stages = (plan.params or {}).get("stages")
+    if plan.kind == "combo_sequence" and stages:
+        g = StageGraph.from_stage_dicts(stages)
+        goal = (plan.params or {}).get("goal")
+        if goal:
+            used = {x for m in g.nodes for r in m.requires for x in (r if isinstance(r, (list, tuple)) else (r,))}
+            last = [n.id for n in g.nodes if n.id not in used]       # 他の段の前提になっていない段（末端）
+            g = StageGraph(list(g.nodes) + [Node("goal", goal, tuple(last), "goal")])
+        return g
+    goal_items = _pred_items(plan.goal)
+    goal: dict = {}
+    for z, i, n in goal_items:
+        goal.setdefault(z, {})[i] = n
+    return graph_from_items(_pred_items(plan.minimal), goal or None)
