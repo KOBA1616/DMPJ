@@ -1,0 +1,30 @@
+# tools/gen_stages.py --graph による自動生成（dmsim/plan/stagegen.py）。手で直さず、元データを直して作り直す。
+# 段は前提つきの有向グラフ（dmsim/plan/stagegraph.py）。requires が無い段どうしは並列。
+stages:
+- id: hand:dmrp12-s01x1
+  name: hand:dmrp12-s01x1
+  requires: []
+  target:
+    hand:
+      dmrp12-s01: 1
+- id: hand:dm23bd7-035x2
+  name: hand:dm23bd7-035x2
+  requires: []
+  target:
+    hand:
+      dm23bd7-035: 2
+- id: hand:dm24ex1-038x2
+  name: hand:dm24ex1-038x2
+  requires: []
+  target:
+    hand:
+      dm24ex1-038: 2
+- id: bz:dm23ex2-009x1
+  name: bz:dm23ex2-009x1
+  requires:
+  - hand:dmrp12-s01x1
+  - hand:dm23bd7-035x2
+  - hand:dm24ex1-038x2
+  target:
+    bz:
+      dm23ex2-009: 1

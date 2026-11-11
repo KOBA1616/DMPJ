@@ -31,6 +31,13 @@ def stage_path(combo: str, root: str = "data/eval/stages") -> str | None:
     return None
 
 
+def stage_graph_path(combo: str, root: str = "data/eval/stages") -> str | None:
+    """前提つきの段の集合（tools/gen_stages.py --graph が作る <combo>.graph.yaml）。無ければ None。"""
+    from pathlib import Path
+    p = Path(root) / f"{combo}.graph.yaml"
+    return str(p) if p.exists() else None
+
+
 def load_stages(path) -> dict:
     return yaml.safe_load(open(path, encoding="utf-8"))
 

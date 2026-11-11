@@ -1,0 +1,48 @@
+# tools/gen_stages.py --graph による自動生成（dmsim/plan/stagegen.py）。手で直さず、元データを直して作り直す。
+# 段は前提つきの有向グラフ（dmsim/plan/stagegraph.py）。requires が無い段どうしは並列。
+stages:
+- id: hand:dm22ex1-007x1
+  name: hand:dm22ex1-007x1
+  requires: []
+  target:
+    hand:
+      dm22ex1-007: 1
+- id: hand:dm22ex2-021x1
+  name: hand:dm22ex2-021x1
+  requires: []
+  target:
+    hand:
+      dm22ex2-021: 1
+- id: hand:dm26ex2-071x1
+  name: hand:dm26ex2-071x1
+  requires: []
+  target:
+    hand:
+      dm26ex2-071: 1
+- id: graveyard:dm22ex2-021x1
+  name: graveyard:dm22ex2-021x1
+  requires:
+  - hand:dm22ex1-007x1
+  - hand:dm22ex2-021x1
+  - hand:dm26ex2-071x1
+  target:
+    graveyard:
+      dm22ex2-021: 1
+- id: graveyard:dmrp03-s03x1
+  name: graveyard:dmrp03-s03x1
+  requires:
+  - hand:dm22ex1-007x1
+  - hand:dm22ex2-021x1
+  - hand:dm26ex2-071x1
+  target:
+    graveyard:
+      dmrp03-s03: 1
+- id: graveyard:*x2
+  name: graveyard:*x2
+  requires:
+  - hand:dm22ex1-007x1
+  - hand:dm22ex2-021x1
+  - hand:dm26ex2-071x1
+  target:
+    graveyard:
+      '*': 2

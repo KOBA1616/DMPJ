@@ -128,3 +128,12 @@ tenmon: base 47 → plan_w 1 / 3 とも 47（中立）。saga: base 30 → plan_
 - エンジンで最小盤面 `tools/eval_specs/akashic_loop_min.yaml`（アカシック3が場、手札にオルゼキア2・ナウ・オア・ネバー・ウォカンナ2）が1ターンで山札切れ勝ち（loop_deck_out）になることを確認。対照 `akashic_no_orzekia.yaml`（オルゼキア無し）は勝てない。
 - `data/known_combos/combos.yaml` の akashic を `status: verified` にし、この最小盤面から `leaf_parts` を用意。`python tools/gen_stages.py akashic` で `data/eval/stages/akashic.generated.yaml`（4段）を生成できる。
 - 段階目標が最小盤面で最終段まで満たされることを `tests/test_stagegen.py` で検査する。
+
+### 段階目標を前提つきの段の集合（有向グラフ）に（2026-11-11）
+koba の指示（計画変更）: 段階目標を固定順の鎖ではなく、前提関係つきの段の集合として持ち、順序の前後・並列・選択肢を表せるようにする（reach_set の方向）。
+- `dmsim/plan/stagegraph.py`: `StageGraph` / `Node(id, target, requires)`。`requires` は前提の段の id の列で、要素がリストなら「どれか1つ」（選択肢）。前提が無い段どうしは並列。循環と未定義の前提は読み込み時に弾く。
+- ファイル形式（data/eval/stages/*.yaml）: 段に `id` / `requires` が無ければ従来の鎖（累積の target）のまま読める。1つでもあれば、`requires` を省いた段は前提なし。段の `target` はその段の部品だけで、探索は済んだ段の目標を足して狙う（`search_target`）。
+- `reach_graph(eng, graph, ...)`（reachsearch.py）: 鎖なら従来の `reach_chain` に任せる（結果は同じ）。そうでなければ、前提が済んだ段のうち届くものを全部試して最も早い段を取る（`reach_set` の前提つき版）。開始局面で済んでいる段は数えない。
+- `MacroPlanner` は `StageGraph` も受ける。済んだ段 → 今狙える段のうち充足率最大の段 → 残り、に並べ替えて、V と共通の `Plan`（鎖の形）で返すので、V 側は変更なし。
+- 自動生成: `python tools/gen_stages.py <combo> --graph` が `<combo>.graph.yaml` を出す（同じゾーンの部品は並列、次のゾーンの部品は前のゾーンの部品がすべて済んでいることが前提、出口があれば最後）。`eval_plan_chain.py --graph` で測れる。
+- 既存の `*.generated.yaml`（鎖）と tools（v_gate など）はそのまま。順序が本当に自由な部品（アカシックの手札の3組）だけが並列になる。

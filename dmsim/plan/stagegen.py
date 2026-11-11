@@ -57,3 +57,41 @@ def stages_from_leaf_parts(parts) -> list[dict]:
         for i in (p.get("ids") or ["*"]):
             items.append((p["zone"], i, p.get("need", 1)))
     return _chain(items)
+
+
+def graph_from_items(items: list[tuple[str, str, int]], goal: dict | None = None):
+    """部品 [(zone, id, n)] から前提つきの段の集合（StageGraph）を作る。
+    同じゾーンの部品は並列（前提なし。引く順・出す順は探索が決める）。次のゾーンの部品は、前のゾーンの部品がすべて済んでいることが前提
+    （ゾーン順 手札 → 場 → 墓地 → 盾 → マナ）。勝ちの出口 goal があれば、最後の部品がすべて済んでいることを前提に足す。
+    各段の target はその部品だけ（済んだ段の目標は探索側で足す）。"""
+    from .stagegraph import Node, StageGraph
+    items = sorted({(z, i, n) for z, i, n in items if z in ZONE_ORDER}, key=lambda t: (ZONE_ORDER.index(t[0]), t[2], t[1]))
+    nodes, prev, cur_zone, cur = [], [], None, []
+    for z, i, n in items:
+        if z != cur_zone:
+            prev, cur, cur_zone = cur, [], z
+        nid = f"{z}:{i}x{n}"
+        nodes.append(Node(nid, {z: {i: n}}, tuple(prev), nid))
+        cur.append(nid)
+    if goal:
+        nodes.append(Node("goal", goal, tuple(cur), "goal"))
+    return StageGraph(nodes)
+
+
+def graph_from_leaf_parts(parts):
+    """combos.yaml の leaf_parts から（stages_from_leaf_parts の前提つき版）。"""
+    items = []
+    for p in parts:
+        if p.get("weight", 1.0) < 1.0:
+            continue
+        for i in (p.get("ids") or ["*"]):
+            items.append((p["zone"], i, p.get("need", 1)))
+    return graph_from_items(items)
+
+
+def graph_from_loopspec(ls):
+    """LoopSpec の最小盤面 M（と出口 G）から。"""
+    goal: dict = {}
+    for z, i, n in _pred_items(ls.goal):
+        goal.setdefault(z, {})[i] = n
+    return graph_from_items(_pred_items(ls.minimal), goal or None)

@@ -237,3 +237,39 @@ def reach_set(eng: Engine, stages: list[dict], me: int = 0, **kw) -> dict:
         left.remove(j)
         cur = r.engine
     return {"stages": len(order), "order": order, "turns": turns, "engine": cur}
+
+
+def reach_graph(eng: Engine, graph, me: int = 0, keep_later: bool = True, lookahead: int = 2, **kw) -> dict:
+    """段階目標の有向グラフ（dmsim.plan.stagegraph.StageGraph）を、前提関係を守って到達させる。
+    鎖（各段が直前の段だけが前提）なら従来の reach_chain に任せる。そうでなければ、前提が済んだ段（並列・選択肢を含む）のうち
+    今の局面から届くものを全部試し、最も早い段を取って続ける（reach_set の前提つき版）。済んだ段の目標も足して狙い、
+    残りの段が要る札（手札）は残す条件を先に試す。枚数だけの段（"*"）は札を指定した段より後回し。
+    {"stages": 到達した段数（開始局面で済んでいた段は数えない）, "order": 取った順の段の id, "turns": ターン, "engine": 最後の局面}"""
+    from ..plan.stagegraph import search_target
+    if graph.is_chain():
+        r = reach_chain(eng, graph.targets(), me, keep_later=keep_later, lookahead=lookahead, **kw)
+        return {**r, "order": [n.id for n in graph.nodes][:r["stages"]]}
+    cur, done, order, turns = eng, set(), [], []
+    for n in graph.nodes:     # 開始局面で既に満たされている段（前提も済み）は済みとして始める
+        if graph.req_met(n, done) and board_met(cur, me, n.target):
+            done.add(n.id)
+    while len(done) < len(graph.nodes):
+        best = None
+        for n in graph.ready(done):
+            base = search_target(graph, n, done)
+            rest = [m.target for m in graph.nodes if m.id not in done and m.id != n.id]
+            r = reach_target(cur, _keep_for(cur, me, base, rest), me, **kw)
+            if not r.reached:
+                r = reach_target(cur, base, me, **kw)
+            if r.reached:
+                key = (any(i == "*" for v in n.target.values() for i in v), r.turn)
+                if best is None or key < best[2]:
+                    best = (n, r, key)
+        if best is None:
+            break
+        n, r, _ = best
+        order.append(n.id)
+        turns.append(r.turn)
+        done.add(n.id)
+        cur = r.engine
+    return {"stages": len(order), "order": order, "turns": turns, "engine": cur}

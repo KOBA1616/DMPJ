@@ -23,23 +23,50 @@ def load_stage_file(path) -> tuple[list[dict], dict]:
     return [s["target"] for s in d["stages"]], d.get("goal", {})
 
 
+def load_stage_graph(path):
+    """data/eval/stages/*.yaml → (StageGraph, 勝利条件)。id / requires が無いファイルは従来の鎖として読む。"""
+    from .stagegraph import StageGraph
+    d = yaml.safe_load(Path(path).read_text(encoding="utf-8"))
+    return StageGraph.from_stage_dicts(d["stages"]), d.get("goal", {})
+
+
 @dataclass
 class MacroPlanner:
     """規則ベース v1（共通）: 段階の鎖のうち未達の最初の段を現在の狙いにする。
     intent: setup（最初の段へ）/ chain（中間の段）/ execute（最後の段）/ done。
     budget: 残り段数に比例して探索の幅を増やす（遠いほど広く探す）。"""
-    stages: list = field(default_factory=list)
+    stages: list = field(default_factory=list)    # 目標の列、または StageGraph（前提つき。並列・選択肢の段を含んでもよい）
     base_budget: int = BASE_BUDGET
+
+    def __post_init__(self):
+        from .stagegraph import StageGraph
+        self.graph = None
+        if isinstance(self.stages, StageGraph):
+            self.graph = None if self.stages.is_chain() else self.stages
+            self.stages = self.stages.targets()
+
+    def _graph_state(self, eng, me: int):
+        """(済んだ段の列, 今狙える段の列)。段は、局面で満たされていて前提も済んでいれば済み。"""
+        sat, done = [], set()
+        for n in self.graph.nodes:
+            if self.graph.req_met(n, done) and board_met(eng, me, n.target):
+                sat.append(n)
+                done.add(n.id)
+        return sat, [n for n in self.graph.nodes if n.id not in done and self.graph.req_met(n, done)]
 
     def progress(self, eng, me: int = 0) -> int:
         """最初の未達の段の番号（全段達成で len(stages)）。後ろの段が先に満たされても、手前が未達なら手前を狙う。
         以前の「満たされた最後の段の次」は、手前の段の盤面を崩すと番号が下がって減点になり、天門で段を進められなくなった(2026-11-10)。"""
+        if self.graph is not None:
+            return len(self._graph_state(eng, me)[0])
         for i, tg in enumerate(self.stages):
             if not board_met(eng, me, tg):
                 return i
         return len(self.stages)
 
     def plan(self, eng, me: int = 0) -> Plan:
+        if self.graph is not None:
+            return self._plan_graph(eng, me)
         n = len(self.stages)
         idx = self.progress(eng, me)
         if idx >= n:
@@ -52,6 +79,20 @@ class MacroPlanner:
             intent = "chain"
         remain = max(0, n - idx)
         return Plan(intent=intent, stages=list(self.stages), idx=idx, version=PLAN_VERSION,
+                    budget=self.base_budget * (1 + remain // 4))
+
+    def _plan_graph(self, eng, me: int) -> Plan:
+        """前提つきの段の集合: 済んだ段 → 今狙える段のうち充足率が最大の段 → 残り（前提の順）に並べ替えて、Plan（鎖の形）で返す。"""
+        sat, ready = self._graph_state(eng, me)
+        n = len(self.graph.nodes)
+        done_ids = {x.id for x in sat}
+        cur = max(ready, key=lambda x: fraction(eng, me, x.target)) if ready else None
+        rest = [x for x in self.graph.nodes if x.id not in done_ids and (cur is None or x.id != cur.id)]
+        order = sat + ([cur] if cur else []) + rest
+        idx = len(sat)
+        intent = "done" if idx >= n else "setup" if idx == 0 else "execute" if idx == n - 1 else "chain"
+        remain = max(0, n - idx)
+        return Plan(intent=intent, stages=[x.target for x in order], idx=idx, version=PLAN_VERSION,
                     budget=self.base_budget * (1 + remain // 4))
 
 
