@@ -3,7 +3,8 @@
 # need を省くと core 部品、board を省くと leaf_parts の重み1.5以上の部品すべてで盤面の揃いを見る（一部だけ見ると診断が甘くなる）。
 targets:
   - {combo: saga, deck: data/decks/saga_entry.yaml, seeds: 40, deck_setup: tests/saga_prep_setup.yaml}   # need=core部品、board=重み1.5以上の部品すべて(墓地サガ・シャコガイル、手札サガ・ドラゲリオン)
-  - {combo: tenmon, deck: data/decks/tenmon.yaml, seeds: 40}
+  # tenmon（天門）は koba の判断で開発中止（2026-11-10）。日次の対象から外した。再開する場合はこの行を戻す
+  # - {combo: tenmon, deck: data/decks/tenmon.yaml, seeds: 40}
   - {combo: knight_dmc, deck: data/decks/knight_dmc.yaml, seeds: 40}
-  - {combo: akashic, deck: data/decks/akashic.yaml, seeds: 40}
+  - {combo: akashic, deck: data/decks/akashic.yaml, seeds: 40, vgate: false}   # vgate: false = V ゲートの対象外（実行層が飽和。saga の局数積み上げを優先）
   - {combo: drill_lock, deck: data/decks/saga.yaml}   # holdout: 自動で除外されることの確認用

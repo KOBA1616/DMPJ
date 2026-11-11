@@ -20,7 +20,7 @@ from dmsim.defs import load_rules  # noqa: E402
 from dmsim.discovery.cyclesetup import setup_from_cycle  # noqa: E402
 from dmsim.scenario import build  # noqa: E402
 from dmsim.solitaire import play_game  # noqa: E402
-from dmsim.zone_graph import Cycle, bundles_of, feeds  # noqa: E402
+from dmsim.zone_graph import TICKS, Cycle, bundles_of, feeds  # noqa: E402
 
 
 def lap_ok(c: Cycle) -> bool:
@@ -31,7 +31,9 @@ def lap_ok(c: Cycle) -> bool:
 def cycles_among(rules, cards: list[str], max_len: int = 3) -> list[Cycle]:
     """指定カードだけの網で、長さ max_len までの閉路（束の列）を数える。"""
     bs = [b for b in bundles_of(rules) if b.card in cards]
-    succ = {i: {j: v for j, b2 in enumerate(bs) if (v := feeds(a, b2, rules))} for i, a in enumerate(bs)}
+    # 時計（ターン終了など）が前提の束は、時間が進めば起きる。どの束からも受け渡し可能として扱う（sure は 1 = 時間頼み）
+    succ = {i: {j: v for j, b2 in enumerate(bs) if (v := feeds(a, b2, rules) or (1 if b2.prem is not None and b2.prem.kind in TICKS else 0))}
+            for i, a in enumerate(bs)}
     out, seen = [], set()
     for L in range(1, max_len + 1):
         for path in itertools.product(range(len(bs)), repeat=L):
@@ -85,3 +87,20 @@ def main(argv=None):
 
 if __name__ == "__main__":
     main()
+
+
+# ---- 有限ループ: 1周で減る資源は「在庫÷消費」周まで回せる。相手の資源への効果 × 周数 を価値とする ----
+STOCK = {"mana": 6, "hand": 3, "graveyard": 0, "bz": 0, "shield": 5, "deck": 30}   # 目安の在庫（仕込み局面の想定）
+
+
+def lap_bound(c: Cycle, stock: dict | None = None):
+    """(周数の上限, 相手側の総効果)。減る資源が無ければ周数は None（無限）。"""
+    stock = stock or STOCK
+    laps = None
+    for k, v in c.delta().items():
+        if v < 0:
+            n = stock.get(k, 0) // -v
+            laps = n if laps is None else min(laps, n)
+    opp = c.opp_delta()
+    total = {k: v * (laps if laps is not None else 1) for k, v in opp.items()}
+    return laps, total

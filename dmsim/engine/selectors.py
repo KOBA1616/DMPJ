@@ -116,12 +116,17 @@ class SelectorMixin:
                 return sorted({r for c in env.get("vars", {}).get(x["races_of"], []) for r in self.chars_ro(c[0])["races"]})
             if "sum" in x:
                 return sum(self.eval_expr(v, env) for v in x["sum"])
+            if "mul" in x:
+                r = 1
+                for v in x["mul"]:
+                    r *= self.eval_expr(v, env)
+                return r
         raise ValueError(f"bad expr {x}")
 
     # count_of が式として評価する単一キーの辞書（バンドB U18 の一般化: 履歴式も mod の count に書ける）
     _EXPR_KEYS = {"count", "civ_count", "distinct_cost_count", "link_count", "seals", "seals_on",
                   "entered", "drew", "turn_count", "used_count", "prev_shield_added",
-                  "var", "cost_of", "power_of", "name_of", "race", "races_of", "sum", "bundles", "declared",
+                  "var", "cost_of", "power_of", "name_of", "race", "races_of", "sum", "mul", "bundles", "declared",
                   "total_cost", "total_power"}
 
     # 従来から複合キー辞書（{distinct_cost_count: ..., base: 0} 等）でも式として読んでいたキー。
@@ -416,6 +421,10 @@ class SelectorMixin:
             for sub in (ex if isinstance(ex, list) else [ex]):
                 excluded.update(self.candidates(sub, env))
             out = [c for c in out if c not in excluded]
+        if "extremal" in sel and out:   # 「パワーが一番小さい／大きいクリーチャー」（第162弾）: 候補の中で現在パワー（常在型の修整込み）が最小／最大のものだけに絞る。同点はすべて残し、どちらを選ぶかは chooser の選択に委ねる
+            pw = {c: self.chars_ro(c)["power"] for c in out}
+            edge = min(pw.values()) if sel["extremal"] == "min_power" else max(pw.values())
+            out = [c for c in out if pw[c] == edge]
         return out
 
     def _card_option(self, cid: int, look: bool = False, **extra) -> dict:
@@ -444,9 +453,14 @@ class SelectorMixin:
         if mx == 0:
             return [], None
         chooser = self._rel(sel.get("chooser", "you"), env)
-        # 相手に選ばれないクリーチャーは候補から外す（be_chosen）。自分のカードを自分が選ぶ時は関係ない
+        # 相手に選ばれないクリーチャーは候補から外す（be_chosen）。自分のカードを自分が選ぶ時は関係ない。
+        # 範囲つきの保護（deny の {action: be_chosen, other: <発生源フィルタ>}）は、選択の発生源
+        # （解決中のカード = env の self）を other として照合する（第164弾。それ以外は発生源なし）
+        src = env.get("self") or []
+        first = src[0] if src else None
+        src_cid = first[0] if isinstance(first, (list, tuple)) else first   # self は cid の列（参照 [cid, gen] の場合もある）
         cands = [c for c in cands if self.s.cards[c].zone != "bz" or self.s.cards[c].controller == chooser
-                 or self.permits(c, "be_chosen")]
+                 or self.permits(c, "be_chosen", other=src_cid)]
         if "distinct_from" in sel:   # 「自分のどのクリーチャーともコストが異なる」（第147弾・型1）: 参照集合のコストと重なる候補を外す。
             # 評価は選択開始時に1回だけ（＝出す前の場。選んだカードが出た後に場のコストが増えても残りの選択には影響しない）
             ref_costs = {self.chars_ro(c)["cost"] for c in self.candidates(sel["distinct_from"], env)}

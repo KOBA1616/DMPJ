@@ -159,12 +159,30 @@ def extract(text: str) -> dict:
     return raw
 
 
+_SCHEMA_V = None
+
+
+def _schema_check(raw: dict) -> None:
+    """parse_card を通っても、data/schema の型に合わないカードを入口で止める（型とエンジンのずれを main に持ち込まない）。jsonschema が無ければ省略。"""
+    global _SCHEMA_V
+    try:
+        import jsonschema
+    except ImportError:
+        return
+    if _SCHEMA_V is None:
+        _SCHEMA_V = jsonschema.Draft202012Validator(json.loads((DATA / "schema" / "card.schema.json").read_text(encoding="utf-8")))
+    errs = [e.message[:200] for e in _SCHEMA_V.iter_errors(raw)][:2]
+    if errs:
+        raise DefError("スキーマ不一致: " + " / ".join(errs))
+
+
 def validate(raw: dict, row: dict, tables) -> dict:
     if raw.get("id") != row["id"]:
         raise DefError(f"id が {row['id']} になっていない: {raw.get('id')}")
     if raw.get("abilities"):
         raw["abilities"] = dedupe_list(raw["abilities"])    # 同じ能力が二重に入る変換（誘発が2回起きる）を、どの変換経路でも入口で除く
     parse_card(raw, tables)
+    _schema_check(raw)
     src = raw.setdefault("source", {})
     src["official"] = row["id"]
     src["review"] = "pending"      # LLM の出力は必ず人の確認待ちにする

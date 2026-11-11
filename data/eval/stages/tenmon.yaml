@@ -7,6 +7,13 @@ stages:
   - {name: tenmon_cast, target: {graveyard: {dm16-007: 1}}, measured: "8/8"}
   - {name: mirzam_on_bz, target: {bz: {dmx19-s06: 1}}, measured: "6/8"}
   - {name: emeraluda_and_mirzam, target: {bz: {dm23bd7-022: 1, dmx19-s06: 1}}, measured: "3/8"}
-  - {name: shield_8, target: {shield: {"*": 8}}, measured: "0/8 (最大7)"}
+  - {name: tenmon_in_shield, target: {shield: {dm16-007: 1}}, measured: "6/8", note: "エメラルーダの『手札をシールド化』で入れる。次にエメラルーダで自盾をブレイクすると S・トリガーで出る"}
+  - {name: tenmon_and_mirzam_in_shield, target: {shield: {dm16-007: 1, dmx19-s06: 1}}, measured: "3/8"}
+  - {name: mirzam_under5, target: {bz: {dmx19-s06: 1}, shield_under: {"*": 5}}, measured: "4/8 (settled, 修正後。ターン上限14)"}
+  - {name: hand_8_after_under5, target: {hand: {"*": 8}}, measured: "4/8 (連鎖。ターン上限14〜20)"}
+  - {name: shield_8, target: {shield: {"*": 8}}, measured: "連鎖で 1/8 (ターン21)。単独探索は 0/8 (最大7)"}
   - {name: shield_10, target: {shield: {"*": 10}}}
   - {name: aleftina_win, target: {bz: {dmx12b-031: 1}, shield: {"*": 10}}}
+
+# 早い経路の鎖(2026-11-10): 盾の中に天門 → エメラルーダ登場で天門が墓地(S・トリガー) → ミルザム登場 → 盾の下5 → 手札8 → 盾8
+# 部品札をマナに置く減点(dmsim/eval/key_terms.py, 300/枚)なしで 12 seed 中 1、ありで 7 が4段完遂(最速 通しターン9=後攻でなく先手の自分の5ターン目)、手札8まで 7、盾8は 0。

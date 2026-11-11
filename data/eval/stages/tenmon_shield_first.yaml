@@ -1,0 +1,12 @@
+# 天門の別順の鎖（2026-11-10）: 天門を先に盾へ入れ（エメラルーダの手札シールド化）、2枚目のエメラルーダの登場で自盾をブレイクして S・トリガーで唱える。
+# 通常の鎖(tenmon.yaml)は天門を先に唱えて墓地へ送るため、残る天門は山札に1枚で、「盾の中に天門」には 天門とエメラルーダの2枚を引く必要があり、ほぼ届かない。
+goal: {bz: {dmx12b-031: 1}, shield: {"*": 10}}
+stages:
+  - {name: keys_in_hand, target: {hand: {dm16-007: 1, dmx19-s06: 1, dm23bd7-022: 1}}}
+  - {name: emeraluda_on_bz, target: {bz: {dm23bd7-022: 1}}}
+  - {name: tenmon_in_shield, target: {shield: {dm16-007: 1}}}
+  - {name: tenmon_cast, target: {graveyard: {dm16-007: 1}}}
+  - {name: mirzam_on_bz, target: {bz: {dmx19-s06: 1}}}
+  - {name: mirzam_under5, target: {bz: {dmx19-s06: 1}, shield_under: {"*": 5}}}
+  - {name: hand_8_after_under5, target: {hand: {"*": 8}}}
+  - {name: shield_8, target: {shield: {"*": 8}}}

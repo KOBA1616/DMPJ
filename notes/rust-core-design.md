@@ -71,3 +71,38 @@ Rust 版と Python 版は、同じ「エンジン疑似API」（プロセス内�
 - 動く op: draw（枚数固定）・may（yes/no）・tap/untap（自身）。これらだけで書ける誘発を持つ札を追加して、動かせる札は約710枚。
 - 実カードのランダムデッキ（誘発札を半分混ぜる）で 80 局が、yes_no を含む全決定・digest まで一致。
 - 次: セレクタ（ゾーン・フィルタ・count・chooser）・式・条件、そして move / modify / tap（相手）などを頻度順に追加。
+
+## 段階2-d 第2弾の結果（2026-11-10）: セレクタ＋移動／タップ
+
+- Rust に `select`（ゾーン hand/deck/graveyard/mana/bz・持ち主 you/opp・枚数 int/all・from_top・chooser・types 絞り込み・`be_chosen` 禁止）と、
+  op `move`（to: hand/graveyard/mana/deck、position）・`tap`/`untap`（任意セレクタ）・`shuffle`・`draw` の player を追加。
+  効果が起こす移動には Python と同じく `by` と効果帰属（cause/cause_defn/cause_kind）を載せる（`ev_task_env`）。
+- 通る札: 931 枚（うち誘発に move/tap/untap/shuffle を持つ 174 枚）。選択肢つき決定（choose_cards）を含む 150 ゲームで全手一致。
+- 見つかった差: lki の chars.keywords は Python が sort＋重複除去（Rust は定義順だった）→ 修正。
+- 未対応（Unsupported のまま）: 絞り込みの types 以外、count の式、up_to／any、`as`、シールド起点の移動（ブレイク経路）、バトルゾーンへ出す移動、choose/if/modify 等。
+
+## 段階2-d 第3弾の結果（2026-11-10）: choose と変数参照
+
+- `choose`（最上段のみ。as で変数に束縛）、セレクタの変数参照 `{ref: 名前}`（count／chooser／types 絞り込み）、`look` を追加。通る札は 957 枚。
+- 変数の束縛を最上段に限る理由: Python は子タスク（may の本体など）と env を同じ辞書で共有するが、Rust は状態が JSON のため複製になり、子での束縛が親の env に出ない（ダイジェストが食い違う）。入れ子の束縛を通すには共有の再現が要る。
+- 120 ゲームで全手一致。
+- 次の壁（Rust 化できない札の、唯一の障害になっている語彙の数）: 複雑な常在型 約1640 枚、`when` が move/attack/turn_end/cast の他形 約530 枚、セレクタの他形 約270 枚、置換 約140 枚、if 約100 枚、modify 約70 枚。常在型（特性計算 chars）の移植が最大の山。
+
+## 段階2-d 第4弾の結果（2026-11-10）: S・トリガー
+
+- シールドゾーンで働く自身への許可（S・トリガー）を `shield_allow` として持ち、ブレイクの `declare_strigger` 宣言、`enqueue_st`、
+  待機（kind: strigger）の解決、コストを払わない召喚（`free`／`st`。`unpaid` を載せる）を Rust に追加。
+  スーパー・S・トリガー／S・トリガー・プラスの追加印（sst／stp）も実装したが、該当する札が今の通る札に無く、実戦ではまだ検証されていない。
+- 通る札は 1119 枚（S・トリガー持ちは 162 枚）。declare_strigger 362 回を含む 60 ゲーム＋混在 80 ゲームで全手一致。
+- S・トリガー持ちの札の多くは、他の語彙（置換・複雑な常在型など）のために通らない。常在型の特性計算が引き続き最大の壁。
+
+## 段階2-d 第5弾の結果（2026-11-10）: フィルタ・up_to・出す／シールド化
+
+- 洗い出しの訂正: 通らない札の「唯一の障害」を数え直すと、最大は常在型ではなく **誘発の効果の形**（セレクタのフィルタ・up_to・移動先。542 枚）だった。
+  先に数えた「常在型 約1640 枚」は、他の障害と重なるものを含む過大な数字。常在型だけが障害の札は 90 枚（power_when）ほど。
+- 追加: フィルタ（types/not_types/civs/not_civs/races/race_has/keyword/cost_le・ge/power_le・ge/tapped/multicolor/colorless/any_of）、
+  `up_to`、`other`、move の `tapped`、移動先 `shield` と `bz`（効果で出す: 1枚ずつ。`enter_bz` の許可確認、`entered:` の記録）。
+- 通る札は 1354 枚。350 ゲームで全手一致。
+- 見つかった差: Python の chars に `must_be_attacked_first` が増えていた（Rust の lki に無く、移動した札のダイジェストが食い違った）→ 追加。
+  Python 側の chars のキー追加は Rust の `chars_json` と必ず同時に直すこと（rust-lockstep が検出する）。
+- 次の壁（唯一の障害の札数）: if 171・modify 133・墓地へ行く時などの誘発条件 117・置換 208・起動 64・play_free 61・repeat 56・modal 51。

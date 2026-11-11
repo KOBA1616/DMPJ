@@ -1,0 +1,7 @@
+# ロック項の調整用の鎖（ロック札だけの lock_tune デッキ）。強制3枚の手札開始から、ロック札を場に1枚→2枚→3枚と並べる。ドリル＋ジョバンニ（検証専用）は使わない。
+goal: {bz: {dm24ex3-tf04: 1, dmrp20-032: 1, dmd19-020: 1}}
+stages:
+  - {name: locks_in_hand, target: {hand: {dm24ex3-tf04: 1, dmrp20-032: 1, dmd19-020: 1}}}
+  - {name: one_lock_on_bz, target: {bz: {dm24ex3-tf04: 1}}}
+  - {name: two_locks_on_bz, target: {bz: {dm24ex3-tf04: 1, dmrp20-032: 1}}}
+  - {name: three_locks_on_bz, target: {bz: {dm24ex3-tf04: 1, dmrp20-032: 1, dmd19-020: 1}}}

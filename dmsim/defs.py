@@ -40,7 +40,7 @@ CARD_TYPES = {"creature", "spell", "evolution", "d2_field"} | PERMANENT_TYPES   
 CIVS = {"light", "water", "darkness", "fire", "nature", "zero"}
 SELECTOR_KEYS = {"zone", "owner", "owner_of", "filter", "count", "up_to", "from_top", "chooser", "ref", "other",
                  "under_of", "bundle_of", "look", "exlife_of", "total_cost_le", "total_cost_ge", "total_power_le", "total_power_ge",
-                 "distinct_costs", "distinct_from", "exclude"}   # look: 非公開ゾーン（山札など）の中身を見て選ぶ。total_cost_* / total_power_*: コスト／パワーの合計が上限以下／下限以上になるように好きな数選ぶ。distinct_costs / distinct_from: 「コストが異なる」選択の制約（第147弾）。bundle_of: シールドの束に含まれるカードすべて（第148弾）。exclude: 「〜以外の」参照除外（セレクタまたはそのリスト。第3段・共通基盤）
+                 "distinct_costs", "distinct_from", "exclude", "extremal"}   # look: 非公開ゾーン（山札など）の中身を見て選ぶ。total_cost_* / total_power_*: コスト／パワーの合計が上限以下／下限以上になるように好きな数選ぶ。distinct_costs / distinct_from: 「コストが異なる」選択の制約（第147弾）。bundle_of: シールドの束に含まれるカードすべて（第148弾）。exclude: 「〜以外の」参照除外（セレクタまたはそのリスト。第3段・共通基盤）。extremal: 「パワーが一番小さい／大きい」候補の絞り込み（min_power / max_power。第162弾）
 FILTER_KEYS = {"any_of", "types", "not_types", "civs", "civs_all", "not_civs", "races", "race_has", "not_race_has", "name", "name_has", "not_name",
                "cost_le", "cost_ge", "power_le", "power_ge", "tapped", "keyword", "multicolor", "colorless", "face_down", "face_up", "neo", "vanilla", "sealed", "evolution", "mugen_climb", "twinpact", "vividraw", "fushigi", "linked_god", "entered_this_turn"}
 FILTER_EXPR_KEYS = {"cost_le", "cost_ge", "power_le", "power_ge", "races", "civs", "not_civs", "name"}   # 値に式を書ける（解決時に計算）。civs / not_civs / name は宣言プリミティブ（{declared:}）の受け口（バンドB U3／バンドC2 U97）
@@ -356,6 +356,11 @@ class Checker:
                 self.selector(sub, where)   # 除外指定（単体または リスト形）も通常のセレクタとして再帰検証する
         if "bundle_of" in sel and isinstance(sel["bundle_of"], dict):
             self.selector(sel["bundle_of"], where)   # 束のトップを指すセレクタとして再帰検証する（文字列なら "self" / 変数名）
+        if "extremal" in sel:
+            if sel["extremal"] not in ("min_power", "max_power"):
+                raise DefError(f"{where}: extremal must be min_power or max_power")
+            if any(k in sel for k in ("ref", "under_of", "bundle_of", "exlife_of")):
+                raise DefError(f"{where}: extremal needs a zone selector")
         if "distinct_costs" in sel or "distinct_from" in sel:
             # 「コストが異なる」制約は選択にだけ付く。count: all 単独は「選んだことにならない」ため不可
             # （count: all + up_to: true は any 相当の選択になるので許す）
@@ -463,7 +468,7 @@ class Checker:
                 return
             if k == "seals_on":   # self に付いている封印の数（値は self 固定で無視される）
                 return
-            if k == "sum":
+            if k in ("sum", "mul"):   # 加算・乗算（mul は「2 - X」を sum:[2, mul:[-1, X]] と書くため）
                 for e in v:
                     self.expr(e, where)
                 return
@@ -528,7 +533,7 @@ class Checker:
 
     def count_spec(self, v, where):
         """mod の count: セレクタ（体数）か、civ_count / distinct_cost_count / sum / bundles / 履歴式を含む式（文明・コストの種類数、束の数、このターン〜した数など）。"""
-        if isinstance(v, dict) and any(k in v for k in ("civ_count", "distinct_cost_count", "sum", "bundles",
+        if isinstance(v, dict) and any(k in v for k in ("civ_count", "distinct_cost_count", "sum", "mul", "bundles",
                                                          "turn_count", "used_count", "prev_shield_added", "declared",
                                                          "total_cost", "total_power")):
             return self.expr(v, where)
@@ -582,8 +587,10 @@ class Checker:
             if nl is not True and not (isinstance(nl, dict) and set(nl) <= {"except_destroy", "by_opp", "except_battle"}
                                        and all(isinstance(v, bool) for v in nl.values())):
                 raise DefError(f"{where}: no_leave must be true or {{except_destroy?: bool, by_opp?: bool, except_battle?: bool}}")
-        if "must_be_attacked" in m and m["must_be_attacked"] is not True:
-            raise DefError(f"{where}: must_be_attacked must be true")
+        if "must_be_attacked" in m:
+            mba = m["must_be_attacked"]
+            if mba is not True and not (isinstance(mba, dict) and set(mba) == {"first_only"} and mba["first_only"] is True):
+                raise DefError(f"{where}: must_be_attacked must be true or {{first_only: true}}")
         if "battle_indestructible" in m:
             bi = m["battle_indestructible"]
             if bi is not True and not (isinstance(bi, dict) and set(bi) == {"opponent_filter"}):

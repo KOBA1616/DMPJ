@@ -37,17 +37,125 @@ def new_game(rules, decks: list[list[str]], seed: int, first_player: int = 0):
 _OK_ALLOW = {"block", "attack_summoning_sick", "slayer", "guardman"}
 _OK_DENY = {"attack_player", "attack_creature", "be_blocked", "be_attacked"}
 _OK_KW = {"blocker", "cannot_attack_player", "cannot_attack", "double_breaker", "speed_attacker", "slayer", "unblockable",
-          "triple_breaker", "cannot_be_attacked", "guardman", "world_breaker", "quad_breaker", "null_breaker"}
+          "triple_breaker", "cannot_be_attacked", "guardman", "world_breaker", "quad_breaker", "null_breaker",
+          "s_trigger", "s_trigger_plus", "super_s_trigger"}
 
 
-def _simple_effect(ops) -> bool:
+_FILTER_LISTS = ("types", "not_types", "civs", "not_civs", "races")
+_FILTER_INTS = ("cost_le", "cost_ge", "power_le", "power_ge")
+_FILTER_BOOLS = ("tapped", "multicolor", "colorless")
+
+
+def _simple_filter(f) -> bool:
+    """Rust の filter_ok が Python の filter_match と同じ結果になるキー（値が式でないもの）だけ。"""
+    if not isinstance(f, dict):
+        return False
+    for k, v in f.items():
+        if k in _FILTER_LISTS:
+            if not (isinstance(v, list) and all(isinstance(x, str) for x in v)) and not (k in ("civs", "not_civs") and isinstance(v, str)):
+                return False
+        elif k in _FILTER_INTS:
+            if not isinstance(v, int) or isinstance(v, bool):
+                return False
+        elif k in _FILTER_BOOLS:
+            if not isinstance(v, bool):
+                return False
+        elif k in ("race_has", "keyword"):
+            if not isinstance(v, str):
+                return False
+        elif k == "any_of":
+            if not (isinstance(v, list) and all(_simple_filter(x) for x in v)):
+                return False
+        else:
+            return False
+    return True
+
+
+def _simple_selector(sel) -> bool:
+    """段階2-d: Rust の select が扱えるセレクタ（自身／ゾーン・持ち主・枚数・上から・選ぶ人・types 絞り込み）。"""
+    if not isinstance(sel, dict):
+        return False
+    if sel == {"ref": "self"}:
+        return True
+    if not set(sel) <= {"zone", "owner", "count", "from_top", "filter", "chooser", "look", "ref", "up_to", "other"}:
+        return False
+    if "look" in sel and not isinstance(sel["look"], bool):
+        return False
+    if "ref" in sel:   # 変数（choose の as）を指す形。特殊な参照名は未対応
+        r = sel["ref"]
+        if not isinstance(r, str) or r in ("self", "self_moved", "self_entered", "crossed", "subject") or r.startswith("event.") \
+                or {"zone", "owner", "from_top"} & set(sel):
+            return False
+    elif sel.get("zone") not in ("hand", "deck", "graveyard", "mana", "bz") or sel.get("owner", "you") not in ("you", "opp"):
+        return False
+    if sel.get("chooser", "you") not in ("you", "opp"):
+        return False
+    c = sel.get("count", 1)
+    if not (c == "all" or (isinstance(c, int) and not isinstance(c, bool))):
+        return False
+    ft = sel.get("from_top", 0)
+    if not (isinstance(ft, int) and not isinstance(ft, bool)):
+        return False
+    if not _simple_filter(sel.get("filter", {})):
+        return False
+    up = sel.get("up_to", False)
+    if not isinstance(up, bool) or (up and c == "all") or (up and "count" not in sel):
+        return False
+    if "other" in sel and (not isinstance(sel["other"], bool) or "ref" in sel):
+        return False
+    return True
+
+
+def _simple_cands(sel) -> bool:
+    """数えるだけのセレクタ（Rust の candidates_ro）。"""
+    if not isinstance(sel, dict) or not set(sel) <= {"zone", "owner", "from_top", "filter", "ref", "other"}:
+        return False
+    if "ref" in sel:
+        return isinstance(sel["ref"], str) and not sel["ref"].startswith("event.") and sel["ref"] not in ("self_moved", "self_entered", "crossed", "subject") \
+            and set(sel) <= {"ref", "filter"} and ("filter" not in sel or _simple_filter(sel["filter"]))
+    return sel.get("zone") in ("hand", "deck", "graveyard", "mana", "bz") and sel.get("owner", "you") in ("you", "opp") \
+        and isinstance(sel.get("from_top", 0), int) and ("filter" not in sel or _simple_filter(sel["filter"])) and isinstance(sel.get("other", False), bool)
+
+
+def _simple_expr(x) -> bool:
+    return (isinstance(x, int) and not isinstance(x, bool)) or (isinstance(x, dict) and set(x) == {"count"} and _simple_cands(x["count"]))
+
+
+def _simple_cond(c) -> bool:
+    if not isinstance(c, dict) or len(c) != 1:
+        return False
+    k, v = next(iter(c.items()))
+    if k == "exists":
+        return _simple_cands(v)
+    if k == "cmp":
+        return isinstance(v, list) and len(v) == 3 and _simple_expr(v[0]) and _simple_expr(v[2]) and v[1] in ("<", "<=", "==", ">=", ">")
+    if k == "not":
+        return _simple_cond(v)
+    if k in ("all", "any"):
+        return isinstance(v, list) and all(_simple_cond(x) for x in v)
+    if k == "is_turn":
+        return v in ("you", "opp")
+    return False
+
+
+def _simple_effect(ops, top=True) -> bool:
     for o in ops:
         k = o["op"]
-        if k == "draw" and set(o) <= {"op", "count"} and isinstance(o.get("count", 1), int):
+        if k == "if" and set(o) <= {"op", "cond", "then", "else"} and _simple_cond(o.get("cond")) \
+                and _simple_effect(o.get("then", []), False) and _simple_effect(o.get("else", []), False):
             continue
-        if k == "may" and set(o) <= {"op", "body"} and _simple_effect(o["body"]):
+        if k == "draw" and set(o) <= {"op", "count", "player"} and o.get("player", "you") in ("you", "opp", "each") and isinstance(o.get("count", 1), int):
             continue
-        if k in ("tap", "untap") and o.get("select") == {"ref": "self"} and set(o) <= {"op", "select"}:
+        if k == "shuffle" and set(o) <= {"op", "player"} and o.get("player", "you") in ("you", "opp"):
+            continue
+        if k == "choose" and top and set(o) <= {"op", "select", "as"} and isinstance(o.get("as"), str) and _simple_selector(o.get("select")):
+            continue   # 変数への束縛は最上段だけ（Python は子タスクと env を共有するが、Rust は複製するため）
+        if k == "may" and set(o) <= {"op", "body"} and _simple_effect(o["body"], False):
+            continue
+        if k in ("tap", "untap") and set(o) <= {"op", "select"} and _simple_selector(o.get("select")):
+            continue
+        if k == "move" and set(o) <= {"op", "select", "to", "reason", "position", "tapped"} and isinstance(o.get("tapped", False), bool) and o.get("to") in ("hand", "graveyard", "mana", "deck", "shield", "bz") \
+                and isinstance(o.get("reason"), str) and o.get("position", "top") in ("top", "bottom") and _simple_selector(o.get("select")):
             continue
         return False
     return True
@@ -65,9 +173,13 @@ def _simple_trigger(ab) -> bool:
 def _self_mods(d):
     """段階2-c: 自分自身にだけ及ぶ単純な常在型（許可・禁止・ブレイク数）だけの札の (allow, deny, breaks)。他は None。
     段階2-d: 単純な誘発（_simple_trigger）は許す（誘発の中身は Rust 側の effect インタプリタが動かす）。"""
-    allow, deny, breaks = [], [], []
+    allow, deny, breaks, shield_allow = [], [], [], []
     for ab in d.abilities:
         if _simple_trigger(ab):
+            continue
+        if ab["kind"] == "static" and ab.get("zone") == "shield" and ab.get("affects") == "self" and "if" not in ab \
+                and ab.get("mod") == {"allow": ["s_trigger"]}:
+            shield_allow.append("s_trigger")   # S・トリガー（シールドゾーンにある間だけ働く許可）
             continue
         if ab["kind"] != "static" or ab.get("affects") != "self" or "if" in ab or ab.get("zone", "bz") != "bz":
             return None
@@ -80,7 +192,7 @@ def _self_mods(d):
                 breaks.append(v)
             else:
                 return None
-    return allow, deny, breaks
+    return allow, deny, breaks, shield_allow
 
 
 def _is_plain(d) -> bool:
@@ -111,7 +223,7 @@ def rules_bundle(rules) -> dict:
             "cards": {i: {"name": d.name, "civs": list(d.civs), "cost": d.cost, "power": d.power,
                           "mana": d.mana, "plain": _is_plain(d), "types": list(d.types), "races": list(d.races),
                           "keywords": list(d.keywords), "abil": d.abilities if _is_plain(d) else [],
-                          **dict(zip(("allow", "deny", "breaks"), (_self_mods(d) or ([], [], []))))}
+                          **dict(zip(("allow", "deny", "breaks", "shield_allow"), (_self_mods(d) or ([], [], [], []))))}
                       for i, d in rules.cards.items()}}
 
 

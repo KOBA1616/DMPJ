@@ -1,24 +1,24 @@
 auto_tune:
   consecutive_failures: 0
-  last_ok: '2026-11-09'
-  seconds: 1608.6
+  last_ok: '2026-11-10'
+  seconds: 875.2
 deck_fix:
   consecutive_failures: 0
-  last_ok: '2026-11-09'
-  seconds: 2613.3
+  last_ok: '2026-11-10'
+  seconds: 1118.0
 diagnose:akashic:
   consecutive_failures: 0
-  last_ok: '2026-11-09'
-  seconds: 8.6
+  last_ok: '2026-11-10'
+  seconds: 18.7
 diagnose:knight_dmc:
   consecutive_failures: 0
-  last_ok: '2026-11-09'
-  seconds: 92.4
+  last_ok: '2026-11-10'
+  seconds: 78.3
 diagnose:saga:
   consecutive_failures: 0
-  last_ok: '2026-11-09'
-  seconds: 152.0
-diagnose:tenmon:
+  last_ok: '2026-11-10'
+  seconds: 82.5
+v_gate:saga:
   consecutive_failures: 0
-  last_ok: '2026-11-09'
-  seconds: 17.6
+  last_ok: '2026-11-10'
+  seconds: 589.6
