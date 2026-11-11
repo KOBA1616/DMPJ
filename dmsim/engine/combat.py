@@ -50,8 +50,14 @@ class CombatMixin:
                 _tch = self.chars_ro(o["target"][0])
                 return _tch["must_be_attacked"] or (_tch.get("must_be_attacked_first") and _attacked == 0)
             taunts = [o for o in creature_opts if _taunt(o)]
+            # 「可能ならクリーチャーを攻撃する」（第171弾）: 攻撃できるクリーチャーがいればプレイヤーは攻撃できない。
+            # first_only は第160弾と同じく攻撃側クリーチャー単位の初回攻撃だけ。特定の誘引（taunts）があればそちらが優先する
+            _ch = self.chars_ro(cid)
+            _mac = _ch["must_attack_creature"] or (_ch.get("must_attack_creature_first") and _attacked == 0)
             if taunts:
                 out += taunts
+            elif _mac and creature_opts:
+                out += creature_opts
             else:
                 if player_opt:
                     out.append(player_opt)
@@ -75,13 +81,21 @@ class CombatMixin:
                 if "under" in cost and len(self.s.cards[cid].under) < cost["under"]:
                     continue   # 下のカードが足りなければコストを払えない
                 if "tap" not in cost:   # under のみ: タップしないので選択肢はクリーチャー自身に付く
+                    # untap コスト（第171弾のリダイレクト）は攻撃ステップの起動では使わない
+                    # （ブロック時の redirect 決定で使う）。tap も under も無い形はここでは出さない
+                    if "under" not in cost:
+                        continue
                     # 原文が「自分のクリーチャーが攻撃できる時」の形は any_attacker: true（保持者自身でなくてもよい）
                     if cid in can or (ab.get("any_attacker") and can):
                         out.append({"key": f"activate:{dfn}:{i}", "cid": cid, "ab": i,
                                     "under_cost": cost["under"]})
                     continue
-                who = [cid] if cost["tap"] == "self" else \
-                    [x for x in self.bz_tops(a) if self.filter_match(x, cost["tap"])]
+                if isinstance(cost["tap"], dict) and "ref" in cost["tap"]:   # {ref: crossed}（第170弾）: このギアをクロスしているクリーチャーをタップする（dm15-014 型）
+                    g = self.s.cards[cid].crossed
+                    who = [g[0]] if g and self.s.alive(g) and g[0] in self.bz_tops(a) else []
+                else:
+                    who = [cid] if cost["tap"] == "self" else \
+                        [x for x in self.bz_tops(a) if self.filter_match(x, cost["tap"])]
                 for x in who:
                     if x in can:
                         key = f"activate:{dfn}:{i}" + ("" if x == cid else f":{self.s.cards[x].defn}")
@@ -94,6 +108,38 @@ class CombatMixin:
                         if "under" in cost:
                             o["under_cost"] = cost["under"]
                         out.append(o)
+        return out
+
+    def _redirect_options(self, t):
+        """攻撃先の変更（第171弾）: 防御側の起動型能力のうち、アンタップをコストに攻撃先を
+        変更するもの（activate + cost.untap + redirect）。選択肢は（能力を持つクリーチャー、
+        コストでアンタップするクリーチャー、新しい攻撃先）の組。新しい攻撃先は、コストの
+        クリーチャー（redirect が true か include_cost が真の時）と自分のタップしている
+        クリーチャー。能力の if（「自分のクリーチャーの数が相手より多ければ」等）も見る。
+        攻撃の使用宣言の後・ブロックの前に諮る（h_attack ph 2）。"""
+        d = 1 - self.s.active
+        out = []
+        for cid in self.bz_tops(d):
+            for i, ab in self.abilities(cid, "activate"):
+                if "redirect" not in ab or "untap" not in ab.get("cost", {}):
+                    continue
+                env = {"you": d, "self": self.s.ref(cid), "vars": {}}
+                if "if" in ab and not self.eval_cond(ab["if"], env):
+                    continue
+                cost = ab["cost"]
+                if cost["untap"] == "self":
+                    payers = [cid] if self.s.cards[cid].tapped else []
+                else:
+                    payers = [x for x in self.bz_tops(d)
+                              if self.s.cards[x].tapped and self.filter_match(x, cost["untap"])]
+                include_cost = ab["redirect"] is True or ab["redirect"].get("include_cost", True)
+                for p in payers:
+                    targets = [p] if include_cost else []
+                    targets += [x for x in self.bz_tops(d)
+                                if x != p and self.s.cards[x].tapped]
+                    for tgt in targets:
+                        out.append({"key": f"redirect:{self.s.cards[cid].defn}:{i}:{self.s.cards[p].defn}:{self.s.cards[tgt].defn}",
+                                    "cid": cid, "ab": i, "payer": p, "target": self.s.ref(tgt)})
         return out
 
     def _battle_substitute(self, t, att, tgt):
@@ -133,12 +179,15 @@ class CombatMixin:
 
     def _battle_bonus(self, ref, attacking: bool = False, opponent=None) -> int:
         """バトル中だけのパワー修整（mod battle_power。ハンティング: 自分のハンター1体につき+1000）。only: attacking は攻撃側のときだけ。
-        opponent_filter（第122弾）: バトルの相手がフィルタに合う時だけ。「攻撃中」「ブロック中」のパワー修整は mod power_when（バトルをしていない間も含む）。"""
+        opponent_filter（第122弾）: バトルの相手がフィルタに合う時だけ。「攻撃中」「ブロック中」のパワー修整は mod power_when（バトルをしていない間も含む）。
+        条件つき常在型の if（第167弾）: chars の集約と同じく _static_cond で見る。見ないと「相手のターン、バトル中+4000」（dmr09-031）等が常に効いてしまう。"""
         cid = ref[0]
         env = {"you": self.s.cards[cid].controller, "self": ref}
         total = 0
         for _, ab in self.abilities(cid, "static"):
             bp = ab.get("mod", {}).get("battle_power")
+            if bp and "if" in ab and not self._static_cond(ab["if"], env):
+                continue
             if bp and bp.get("only") == "attacking" and not attacking:
                 continue
             if bp and "opponent_filter" in bp and (opponent is None or not self.filter_match(opponent[0], bp["opponent_filter"])):
@@ -281,6 +330,18 @@ def h_attack(eng, t):
         t["phase"] = 5                                        # 505.6a 攻撃から取り除かれたら攻撃終了へ
         return None
     if ph == 2:                                               # 507 ブロッククリーチャー指定
+        if not t.get("redirect_done"):   # 攻撃先の変更（第171弾）: ブロックの前に、防御側の起動型能力で攻撃先を変えられる。断ればブロックへ進む
+            opts = eng._redirect_options(t)
+            if opts:
+                ans, d = eng.ask(t, 1 - a, "redirect", opts + [{"key": "decline"}])
+                if d:
+                    return d
+                if ans[0] < len(opts):
+                    o = opts[ans[0]]
+                    s.cards[o["payer"]].tapped = False   # コスト: アンタップする（タップのコストと同じくイベントは出さない）
+                    t["target"] = o["target"]
+                    return None   # もう一度諮る（別のクリーチャーの変更も使える）
+            t["redirect_done"] = True
         blockers = [c for c in eng.bz_tops(1 - a)
                     if not s.cards[c].tapped and eng.permits(c, "block", att[0])
                     and eng.permits(att[0], "be_blocked", c) and [c, s.cards[c].gen] != t["target"]]

@@ -250,7 +250,9 @@ class EventMixin:
                 frm, to = rec.get("from"), rec.get("to")
                 if to == "shield":
                     self._hist_bump("shield_put", rec["controller"])
-                if frm == "shield" and to != "shield":
+                if frm == "shield" and to != "shield" and not rec.get("host"):
+                    # 束の下のカードは host 付き（第169弾）。シールドの数は束で1つなので、
+                    # 下のカードの分は数えない（トップのレコードで1回だけ数える）
                     self._hist_bump("shield_left", ctrl)
                 if to == "mana":
                     n = self._hist_bump("mana_put", rec["controller"])
@@ -334,6 +336,7 @@ class EventMixin:
                     return []
             lki = {"defn": c.defn, "face": c.face, "controller": c.controller, "zone": from_zone,
                    "tapped": c.tapped, "chars": self.chars(cid), "ref": list(ev["subject"])}   # 過去の状態を見る（603.5c）
+            was_face_up = c.face_up   # 移動前の表向き状態（手札に加わると face_up は消える。裁きの紋章の判定用。第169弾）
             sealed_from = None
             if c.seal_of >= 0:   # 封印そのものが動く: 対象から外し、記録に「どのカードの封印だったか」を残す
                 host = s.cards[c.seal_of]
@@ -364,12 +367,17 @@ class EventMixin:
                 # シールドの上に重ねて置く（第148弾）: 自分の下のカードは別のシールドにせず、束の一部として連れて行く
                 stack_unders, unders = unders, []
             under_lkis = []   # 一緒に離れる下のカードの移動直前の姿（from_under レコード用。移動前に取る）
-            if from_zone == "bz" and ev["to"] != "bz":
+            if (from_zone == "bz" and ev["to"] != "bz") or \
+                    (from_zone == "shield" and ev["to"] not in ("bz", "shield")):
+                # シールドの束も一緒に動く（第169弾）: 束の下のカードにも move レコードを出す。
+                # バトルゾーンへ出る時とシールド内の置き直しは除く（前者は下のカードが場の一部に
+                # なる別経路、後者はシールドの置かれた数に影響するため）。face_up も snapshot に
+                # 載せ、裁きの紋章（シールドの上に表向きに置かれていたカード）の判定に使う
                 for u in unders:
                     uc = s.cards[u]
                     under_lkis.append((u, {"defn": uc.defn, "face": uc.face, "controller": uc.controller,
                                            "zone": from_zone, "tapped": uc.tapped, "chars": self.chars(u),
-                                           "ref": s.ref(u)}))
+                                           "ref": s.ref(u), "face_up": uc.face_up}))
             self._raw_move(cid, ev["to"], ev.get("position", "top"), ev.get("controller"))
             if ev.get("sst"):
                 c.sst = True         # スーパー・S・トリガーの印は移動した先で付ける（移動で消えるため）
@@ -378,6 +386,9 @@ class EventMixin:
             if ev.get("odrive"):
                 c.odrive = True
                 c.odrive_civs = list(ev.get("odrive_civs", []))
+            if ev.get("summon_tapped"):   # フォートE（第168弾）: 移動で消えた召喚時タップ記録を出し直す
+                c.summon_tapped = [{"ref": list(e["ref"]), "races": list(e.get("races", []))}
+                                   for e in ev["summon_tapped"]]
             if ev.get("bazurenda"):
                 c.bazurenda = ev["bazurenda"]
             if ev.get("tapped"):   # 「タップして置く」: 置かれた時点でタップ状態（別のタップ イベントにしない）
@@ -490,6 +501,11 @@ class EventMixin:
                         s.cards[u].strigger_on = True
             if ev.get("face_up"):
                 out[0]["face_up"] = True
+            if from_zone == "shield" and was_face_up and unders:
+                # 裁きの紋章（第169弾）: シールドの上に表向きに置かれていたカード。束のトップで
+                # 下にカードがある（＝何かの上に置かれている）場合だけ。単独の表向きシールド
+                # （ギャラクシールド）は紋章ではない。覆われて下にいる紋章は下のカードのレコードで扱う
+                out[0]["emblem"] = True
             if under_snap is not None:
                 out[0]["under"] = under_snap   # 離れる時に下にあったクリーチャー（解決時に {ref: event.under} で指せる。leave_under_untap）
             if ev["to"] == "bz" and "ex_life" in self.chars_ro(cid)["keywords"]:
@@ -534,6 +550,10 @@ class EventMixin:
                 r = {"ev": "move", "subject": s.ref(u), "lki": u_lki, "from": from_zone, "to": ev["to"],
                      "reason": ev["reason"], "controller": u_lki["controller"],
                      "host": lki["ref"], "host_lki": lki}
+                if from_zone == "shield" and u_lki.get("face_up"):
+                    # 束の下にいた表向きのカードも裁きの紋章（第169弾）。下にいる時点で何かの
+                    # 上に置かれているので、束の有無は問わない
+                    r["emblem"] = True
                 if ev.get("via"):
                     r["via"] = ev["via"]
                 if ev.get("cause"):
@@ -779,6 +799,8 @@ class EventMixin:
             return False
         if "face_up" in when and bool(rec.get("face_up")) != when["face_up"]:   # 表向きで置かれたか（ギャラクシールド）
             return False
+        if "emblem" in when and bool(rec.get("emblem")) != when["emblem"]:   # 裁きの紋章だったか（第169弾）
+            return False
         if "vivid" in when and bool(rec.get("vivid")) != when["vivid"]:   # ビビッドローで実行されたか（第54弾）
             return False
         if "stacked" in when and bool(rec.get("stacked")) != when["stacked"]:   # 進化として重ねて出たか（第150弾で照合を有効化。第28弾の未実装分）
@@ -824,6 +846,44 @@ class EventMixin:
             return self._subject_match(when["subject"], subj, env, lki)
         return True
 
+    def _trigger_abs(self, defn, face, zone, src=None):
+        """誘発型能力の列挙。[(添字, 能力, 面)] を返す（面は pending_ability の解決用）。
+        面が決まっている時はその面の能力、未定（手札等）のツインパクトは各面の能力を
+        面つきで返す（第169弾）。面未定のカードに継続的効果のゲート類は働かないので
+        素の面能力で十分。面を持たないカードは面 None で従来どおり。"""
+        d = self.rules.cards[defn]
+        if src is not None:
+            if face >= 0:
+                # 通常経路: ゲート・継続的効果つきの abilities()（面はカードの面）
+                return [(i, ab, face) for i, ab in self.abilities(src, "trigger")
+                        if ab.get("zone", "bz") == zone]
+            if not d.faces:
+                # 面を持たないカードはバトルゾーンでも face が -1 のまま（第169弾の欠陥:
+                # 素の能力に落ちると fort_e 等のゲートが素通りする）。ゲートつき abilities()
+                return [(i, ab, None) for i, ab in self.abilities(src, "trigger")
+                        if ab.get("zone", "bz") == zone]
+            # 面未定のツインパクト: 各面の能力を面つきで列挙（ゲート類は働かない）
+            out = []
+            for fi, f in enumerate(d.faces):
+                for i, ab in enumerate(f.abilities):
+                    if ab["kind"] == "trigger" and ab.get("zone", "bz") == zone:
+                        out.append((i, ab, fi))
+            return out
+        if face >= 0:
+            # lki 経路（離れたカード）: その面の能力
+            return [(i, ab, face) for i, ab in enumerate(d.face(face).abilities)
+                    if ab["kind"] == "trigger" and ab.get("zone", "bz") == zone]
+        out = []
+        for fi, f in enumerate(d.faces):
+            for i, ab in enumerate(f.abilities):
+                if ab["kind"] == "trigger" and ab.get("zone", "bz") == zone:
+                    out.append((i, ab, fi))
+        if not d.faces:
+            for i, ab in enumerate(d.abilities):
+                if ab["kind"] == "trigger" and ab.get("zone", "bz") == zone:
+                    out.append((i, ab, None))
+        return out
+
     def _collect_triggers(self, rec):
         """誘発チェック。離れた時の誘発で過去の状態を見るのは、その能力を持つカード自身だけ（603.5d）。"""
         s = self.s
@@ -862,15 +922,13 @@ class EventMixin:
         for src, lsrc, host_only in sources:
             if lsrc:
                 face = lsrc["face"]
-                abs_ = list(enumerate(self.rules.cards[lsrc["defn"]].face(None if face < 0 else face).abilities))
-                abs_ = [(i, ab) for i, ab in abs_ if ab["kind"] == "trigger" and ab.get("zone", "bz") == lsrc["zone"]]
+                abs_ = self._trigger_abs(lsrc["defn"], face, lsrc["zone"])
                 defn = lsrc["defn"]
             else:
                 face = s.cards[src].face
-                abs_ = [(i, ab) for i, ab in self.abilities(src, "trigger")
-                        if ab.get("zone", "bz") == s.cards[src].zone]
+                abs_ = self._trigger_abs(s.cards[src].defn, face, s.cards[src].zone, src)
                 defn = s.cards[src].defn
-            for i, ab in abs_:
+            for i, ab, ab_face in abs_:
                 if host_only and "from_under" not in ab["when"]:
                     continue   # 宿主の lki 発生源は from_under 誘発専用（上の host_lki の注記参照）
                 if not self._pattern_match(ab["when"], rec, src, lsrc):
@@ -882,12 +940,12 @@ class EventMixin:
                 if "if" in ab and not lsrc and not self.eval_cond(ab["if"], {"you": ctrl, "self": sref, "event": rec, "vars": {}}):
                     continue          # 誘発条件つき（「〜場合」）の能力は、誘発時にも条件を見る（603.4）。離れた時の誘発は解決時だけ
                 if ab.get("once_per_turn"):   # 「各ターンに一度」: このカード（オブジェクト）のこの能力は1ターンに1回だけ誘発する
-                    key = f"once:{sref[0]}:{sref[1]}:{i}"
+                    key = f"once:{sref[0]}:{sref[1]}:{ab_face if ab_face is not None else ''}:{i}"
                     if s.turn_counters.get(key):
                         continue
                     s.turn_counters[key] = 1
                 if ab.get("first_time"):      # 「各ターン、はじめて〜した時」: その出来事がこのターン最初に起きた時だけ誘発する
-                    key = f"first:{ctrl}:{defn}:{i}"   # 同名カード・同能力で共有する（最初の出来事では全コピーが誘発する）
+                    key = f"first:{ctrl}:{defn}:{ab_face if ab_face is not None else ''}:{i}"   # 同名カード・同能力で共有する（最初の出来事では全コピーが誘発する）
                     seen = s.turn_counters.get(key)
                     if seen is not None and seen != rec["_eid"]:
                         continue
@@ -896,7 +954,14 @@ class EventMixin:
                 # 待機中の効果は発生源から独立する（110.5a）。発生源の情報は env に持つ
                 p = {"pid": s.seq, "kind": "normal", "win": win, "controller": ctrl, "src": sref,
                      "defn": defn, "ab": i, "env": {"you": ctrl, "self": sref, "event": rec, "vars": {}}}
-                if face >= 0:
+                fe = ab.get("fort_e")
+                if isinstance(fe, dict) and fe.get("as") and lsrc is None and not host_only:
+                    # フォートE（第168弾）: 条件に合ったタップ済みマナを変数に束ねる
+                    # （「タップした〜のいずれかよりパワーが小さい」等の効果で power_of が最大値を読む）
+                    p["env"]["vars"][fe["as"]] = self._fort_e_tapped(src, fe)
+                if ab_face is not None:
+                    p["face"] = ab_face
+                elif face >= 0:
                     p["face"] = face
                 if i < 0:          # 継続的効果で得た能力は、能力そのものを持たせる
                     p["inline"] = ab
