@@ -52,34 +52,3 @@ saga:
     sdiff: 0.0625
   pending_base: 2fa70255e741
   sec: 631.5
-tenmon:
-  cands: 2
-  coarse_budget: 40
-  coarse_seeds: 8
-  complete: false
-  last_run: 1794351299.6566315
-  pending:
-  - diff: 0.125
-    kind: add_parts
-    ops:
-    - - 黄昏の守護者シーブス・キーン
-      - -1
-    - - 奇跡の精霊ミルザム
-      - 1
-    reason: '部品不足: 黄昏の守護者シーブス・キーン → 奇跡の精霊ミルザム'
-    sdiff: 0.078125
-  - diff: 0.125
-    kind: bundle
-    ops:
-    - - 黄昏の守護者シーブス・キーン
-      - -1
-    - - 奇跡の精霊ミルザム
-      - 1
-    - - クリスタル・ランサー
-      - -1
-    - - 奇跡の精霊ミルザム
-      - 1
-    reason: 解析上位の改善を束ねる
-    sdiff: 0.046875
-  pending_base: 96015b55dd4a
-  sec: 57.3

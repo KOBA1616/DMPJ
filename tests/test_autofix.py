@@ -275,3 +275,15 @@ def test_deck_fix_gate_includes_deck_bottleneck(tmp_path):
             {"combo": "c", "stage": "board", "bottleneck": "ai", "est_kill": 0.01}]
     led.write_text("\n".join(json.dumps(r) for r in rows), encoding="utf-8")
     assert deck_fix.cards_stage_decks(str(led)) == {"a"}
+
+
+def test_win_stats_records_8_turn_rate_and_fastest(tmp_path, monkeypatch):
+    import sys
+    sys.path.insert(0, "tools")
+    import auto_fix
+    from types import SimpleNamespace
+    kills = [3, 5, None, 8, 9, None]          # 9 は8ターン超（max_turn=8 では出ないが念のため除外されること）
+    mk = lambda t, turns=None: (lambda k: {"kill": kills})
+    a = SimpleNamespace(store=str(tmp_path / "none.yaml"))
+    out = auto_fix._win_stats(a, [{"combo": "x", "deck": "d"}, {"combo": "h", "deck": "d"}], {"x": {}, "h": {"split": "holdout"}}, mk)
+    assert set(out) == {"x"} and out["x"]["win_8t"] == round(3 / 6, 3) and out["x"]["win_4t"] == round(1 / 6, 3) and out["x"]["fastest_turn"] == 3
