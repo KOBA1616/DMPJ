@@ -9,24 +9,16 @@ deck_fix:
 diagnose:akashic:
   consecutive_failures: 0
   last_ok: '2026-11-10'
-  seconds: 19.8
+  seconds: 18.7
 diagnose:knight_dmc:
   consecutive_failures: 0
   last_ok: '2026-11-10'
-  seconds: 79.7
+  seconds: 78.3
 diagnose:saga:
   consecutive_failures: 0
   last_ok: '2026-11-10'
-  seconds: 82.3
-diagnose:tenmon:
-  consecutive_failures: 0
-  last_ok: '2026-11-10'
-  seconds: 1815.6
+  seconds: 82.5
 v_gate:saga:
   consecutive_failures: 0
   last_ok: '2026-11-10'
-  seconds: 603.1
-v_gate:tenmon:
-  consecutive_failures: 0
-  last_ok: '2026-11-10'
-  seconds: 583.9
+  seconds: 589.6
