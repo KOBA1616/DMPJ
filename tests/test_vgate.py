@@ -91,3 +91,21 @@ def test_stage_files_load():
     for p in Path("data/eval/stages").glob("*.yaml"):
         st = load_stages(str(p))
         assert st["stages"] and all("target" in s for s in st["stages"]), p
+
+
+def test_win_stats_and_key():
+    from dmsim.eval.vgate import win_key, win_stats
+    a = win_stats({1: 7, 2: 11, 3: None, 4: 9}, early=8)
+    assert a["n"] == 4 and a["wins"] == 3 and a["early"] == 1 and a["fastest"] == 7
+    b = win_stats({1: 9, 2: 9, 3: 9, 4: 9}, early=8)       # 勝ちは多いが早い勝ちが無い
+    assert win_key(a) > win_key(b)                           # 辞書式: 早い勝ちが先
+    assert win_stats({1: None})["mean_win_turn"] is None
+
+
+def test_load_prio(tmp_path):
+    from dmsim.eval.vgate import load_prio
+    p = tmp_path / "w.yaml"
+    p.write_text("saga: {under_w: 0.0, res_w: 0.0, plan_w: 0.0, key_pen: 30.0}\nzero: {under_w: 0, res_w: 0, plan_w: 0, key_pen: 0}\n", encoding="utf-8")
+    stages = [{"hand": {"A": 1}}, {"bz": {"B": 1}}]
+    assert callable(load_prio("saga", stages, str(p)))
+    assert load_prio("zero", stages, str(p)) is None and load_prio("none", stages, str(p)) is None

@@ -1,7 +1,7 @@
 saga:
-  base_total: 26
-  n: 11
-  plan_w: -0.1
+  key_pen: 30.0
+  note: '勝ちゲート(v_gate.py --win、サガ・幅40・通しターン12以内、各24seed): base 7→13(seed1-24)、6→10(seed25-48)。到達段ゲートの
+    plan_w=-0.1 は勝ちでは上積みなしのため外した(2026-11-11)'
+  plan_w: 0.0
   res_w: 0.0
-  total: 28
   under_w: 0.0
