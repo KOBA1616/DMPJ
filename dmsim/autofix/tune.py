@@ -65,8 +65,8 @@ def _score(m: dict, rule: Rule, w_board: float = 0.3, w_cards: float = 0.1, w_pr
 
 
 def evolve(measure, g0, mutate_fn, to_dict, tune_seeds, confirm_seeds, rule: Rule = Rule(), generations: int = 5,
-           lam: int = 4, seed: int = 0, ledger=None):
-    """汎用の (1+λ) 進化戦略。g は任意の遺伝子（Knobs・部品の重みベクトル等）。measure(g, seeds)->{"kill",...}。
+           lam: int = 4, seed: int = 0, ledger=None, deadline: float | None = None):
+    """汎用の (1+λ) 進化戦略。deadline(time.time())を過ぎたら次の測定に入らず打ち切り、履歴の末尾に {"verdict": "timeout"} を足す（それまでに採用した g は cur に入っている）。g は任意の遺伝子（Knobs・部品の重みベクトル等）。measure(g, seeds)->{"kill",...}。
     採用は、調整用シードで有意に改善 → 別の再確認シードでも有意に改善した時だけ。履歴を返す。"""
     if set(tune_seeds) & set(confirm_seeds):
         raise ValueError("調整用と再確認用のシードは分ける")
@@ -74,9 +74,16 @@ def evolve(measure, g0, mutate_fn, to_dict, tune_seeds, confirm_seeds, rule: Rul
     cur, hist = g0, []
     base_t = measure(cur, tune_seeds)
     base_c = None
+    import time
+    over = lambda: deadline is not None and time.time() > deadline
     for g in range(generations):
         best = None
+        if over():
+            hist.append({"gen": g, "verdict": "timeout"})
+            break
         for _ in range(lam):
+            if over():
+                break
             cand = mutate_fn(cur, rng)
             if cand == cur:
                 continue
@@ -90,6 +97,9 @@ def evolve(measure, g0, mutate_fn, to_dict, tune_seeds, confirm_seeds, rule: Rul
             _rec(ledger, ent)
             continue
         cand, r = best
+        if over():                                    # 再確認の測定に入る前に枠切れ。次回に回す（未採用のまま）
+            hist.append({"gen": g, "verdict": "timeout"})
+            break
         if base_c is None:
             base_c = measure(cur, confirm_seeds)
         mc = measure(cand, confirm_seeds)
@@ -105,9 +115,9 @@ def evolve(measure, g0, mutate_fn, to_dict, tune_seeds, confirm_seeds, rule: Rul
 
 
 def tune(measure, k0: Knobs, tune_seeds, confirm_seeds, rule: Rule = Rule(), generations: int = 5,
-         lam: int = 4, seed: int = 0, ledger=None) -> tuple[Knobs, list[dict]]:
+         lam: int = 4, seed: int = 0, ledger=None, deadline: float | None = None) -> tuple[Knobs, list[dict]]:
     """ノブの進化。measure(Knobs, seeds)->{"kill":[...]}。"""
-    return evolve(measure, k0, mutate, lambda k: k.__dict__, tune_seeds, confirm_seeds, rule, generations, lam, seed, ledger)
+    return evolve(measure, k0, mutate, lambda k: k.__dict__, tune_seeds, confirm_seeds, rule, generations, lam, seed, ledger, deadline)
 
 
 def _rec(ledger, ent):

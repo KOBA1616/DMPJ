@@ -1,0 +1,1 @@
+{"date": "2026-11-10", "total_alloc": 6000, "total": 5187, "phases": {"diagnose": {"sec": 1997}, "deck_fix": {"sec": 1118, "alloc": 1191}, "auto_tune": {"sec": 875, "alloc": 641}, "v_gate:saga": {"sec": 603, "alloc": 600}, "v_gate:tenmon": {"sec": 584, "alloc": 600}}}

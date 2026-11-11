@@ -1,39 +1,85 @@
 akashic:
-  cands: 13
-  coarse_budget: 40
-  coarse_seeds: 20
-  complete: false
-  last_run: 1794251164.6710086
-  sec: 219.1
-knight_dmc:
   cands: 24
   coarse_budget: 40
-  coarse_seeds: 11
+  coarse_seeds: 10
   complete: false
-  last_run: 1794346756.2905743
+  last_run: 1794351442.2136467
+  pending: []
+  pending_base: 3b07974f7a40
+  sec: 75.9
+knight_dmc:
+  cands: 12
+  coarse_budget: 40
+  coarse_seeds: 8
+  complete: true
+  last_run: 1794352277.4152222
+  pending: []
+  pending_base: 95f04717076c
+  sec: 62.5
+saga:
+  cands: 9
+  coarse_budget: 40
+  coarse_seeds: 8
+  complete: false
+  last_run: 1794352141.5008123
   pending:
   - diff: 0.0
-    kind: trim_parts
+    kind: add_parts
     ops:
-    - - ～地獄帰りの騎士～
+    - - ウォルタ
       - -1
-    - - 琥珀草
+    - - 水上第九院 シャコガイル
       - 1
-    reason: '部品を減らす: ～地獄帰りの騎士～ → 琥珀草'
-    sdiff: 0.011363636363636364
-  pending_base: 95f04717076c
-  sec: 375.9
-saga:
-  cands: 10
-  coarse_budget: 40
-  coarse_seeds: 8
-  complete: false
-  last_run: 1794346057.1196134
-  sec: 318.8
+    reason: '部品不足: ウォルタ → 水上第九院 シャコガイル'
+    sdiff: 0.078125
+  - diff: 0.0
+    kind: add_prep
+    ops:
+    - - アクア・ガード
+      - -1
+    - - ガルデス・ドラグーン
+      - 1
+    reason: '仕込み手段: アクア・ガード → ガルデス・ドラグーン'
+    sdiff: 0.0625
+  - diff: 0.0
+    kind: add_support
+    ops:
+    - - ウォルタ
+      - -1
+    - - セイレーン・コンチェルト
+      - 1
+    reason: 'accel札を追加: ウォルタ → セイレーン・コンチェルト'
+    sdiff: 0.0625
+  pending_base: 2fa70255e741
+  sec: 631.5
 tenmon:
-  cands: 4
+  cands: 2
   coarse_budget: 40
   coarse_seeds: 8
   complete: false
-  last_run: 1794250700.909303
-  sec: 1163.1
+  last_run: 1794351299.6566315
+  pending:
+  - diff: 0.125
+    kind: add_parts
+    ops:
+    - - 黄昏の守護者シーブス・キーン
+      - -1
+    - - 奇跡の精霊ミルザム
+      - 1
+    reason: '部品不足: 黄昏の守護者シーブス・キーン → 奇跡の精霊ミルザム'
+    sdiff: 0.078125
+  - diff: 0.125
+    kind: bundle
+    ops:
+    - - 黄昏の守護者シーブス・キーン
+      - -1
+    - - 奇跡の精霊ミルザム
+      - 1
+    - - クリスタル・ランサー
+      - -1
+    - - 奇跡の精霊ミルザム
+      - 1
+    reason: 解析上位の改善を束ねる
+    sdiff: 0.046875
+  pending_base: 96015b55dd4a
+  sec: 57.3
