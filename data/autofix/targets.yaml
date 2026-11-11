@@ -6,5 +6,5 @@ targets:
   # tenmon（天門）は koba の判断で開発中止（2026-11-10）。日次の対象から外した。再開する場合はこの行を戻す
   # - {combo: tenmon, deck: data/decks/tenmon.yaml, seeds: 40}
   - {combo: knight_dmc, deck: data/decks/knight_dmc.yaml, seeds: 40}
-  - {combo: akashic, deck: data/decks/akashic.yaml, seeds: 40}
+  - {combo: akashic, deck: data/decks/akashic.yaml, seeds: 40, vgate: false}   # vgate: false = V ゲートの対象外（実行層が飽和。saga の局数積み上げを優先）
   - {combo: drill_lock, deck: data/decks/saga.yaml}   # holdout: 自動で除外されることの確認用

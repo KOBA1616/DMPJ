@@ -97,7 +97,7 @@ def run_batch(a, combos):
     stats = _win_stats(a, ts, combos, mk) if a.total_seconds else {}                      # 記録用: 通しターン STATS_TURNS 以内の勝ち率と最速勝ちターン（評価指標の4ターンは変えない）
     timing["win_stats"] = {"sec": round(time.time() - td0 - timing["diagnose"]["sec"])}
     from dmsim.eval.vgate import stage_path as vgate_stage_path
-    vg = [t["combo"] for t in ts if t["combo"] in combos and combos[t["combo"]].get("split") != "holdout" and vgate_stage_path(t["combo"])]
+    vg = [t["combo"] for t in ts if t["combo"] in combos and combos[t["combo"]].get("split") != "holdout" and t.get("vgate", True) and vgate_stage_path(t["combo"])]
     VGATE_TOTAL = min(2400, int((a.total_seconds or 6000) * 0.4))                                        # 評価関数 V の採否ゲートの日次枠（段階目標のあるコンボで等分。1件あたり最低600秒）。局数は日をまたいで積み上げる
     VGATE_SEC = max(600, VGATE_TOTAL // max(1, len(vg)))
     if a.total_seconds:                                       # 日次の総枠から、診断に使った残りを deck_fix と tune に自動で配る
