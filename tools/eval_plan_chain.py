@@ -16,7 +16,7 @@ from dmsim.plan.macro import macro_prio  # noqa: E402
 from dmsim.solitaire import load_deck  # noqa: E402
 
 
-def run(combo, pw, seeds, start=1, width=150, max_turn=14, targets="data/autofix/targets.yaml"):
+def run(combo, pw, seeds, start=1, reserve=0, width=150, max_turn=14, targets="data/autofix/targets.yaml"):
     t = next(x for x in yaml.safe_load(Path(targets).read_text(encoding="utf-8"))["targets"] if x["combo"] == combo)
     st = vgate.load_stages(vgate.stage_path(combo))
     stages = [s["target"] for s in st["stages"][1:]]
@@ -28,12 +28,13 @@ def run(combo, pw, seeds, start=1, width=150, max_turn=14, targets="data/autofix
         e = vgate.start_engine(rules, deck, ["T001"] * 40, keys, sd)
         if e is None:
             continue
-        r = reach_chain(e, stages, 0, keep_later=True, width=width, max_turn=max_turn, prio=prio)
+        r = reach_chain(e, stages, 0, keep_later=True, width=width, max_turn=max_turn, prio=prio, reserve=reserve)
         games.append({"seed": sd, "stages": r["stages"], "turns": r["turns"]})
     n = len(stages)
     reached = [sum(1 for g in games if g["stages"] > k) for k in range(n)]    # 段 k 以降に届いた局数
     return {"combo": combo, "plan_w": pw, "n_games": len(games), "n_stages": n, "reached_per_stage": reached,
-            "total": sum(g["stages"] for g in games), "games": games}
+            "total": sum(g["stages"] for g in games), "reserve": reserve,
+            "fastest_turn": {k: min((g["turns"][k] for g in games if g["stages"] > k), default=None) for k in range(n)}, "games": games}
 
 
 def main(argv=None):
@@ -42,14 +43,15 @@ def main(argv=None):
     ap.add_argument("--plan-w", type=float, nargs="+", default=[0.0, 30.0])
     ap.add_argument("--seeds", type=int, default=12)
     ap.add_argument("--start", type=int, default=1, help="開始 seed（長い測定を分割して回す用）")
+    ap.add_argument("--reserve", type=int, default=0, help="幅のうち次の段に近い局面へ予約する枠（0=なし）")
     ap.add_argument("--out", default="logs/plan_chain.jsonl")
     a = ap.parse_args(argv)
     for pw in a.plan_w:
-        r = run(a.combo, pw, a.seeds, a.start)
+        r = run(a.combo, pw, a.seeds, a.start, a.reserve)
         Path(a.out).parent.mkdir(parents=True, exist_ok=True)
         with open(a.out, "a", encoding="utf-8") as f:
             f.write(json.dumps(r, ensure_ascii=False) + "\n")
-        print(a.combo, pw, "局", r["n_games"], "合計", r["total"], "段別", r["reached_per_stage"], flush=True)
+        print(a.combo, pw, "予約", a.reserve, "局", r["n_games"], "合計", r["total"], "段別", r["reached_per_stage"], flush=True)
 
 
 if __name__ == "__main__":

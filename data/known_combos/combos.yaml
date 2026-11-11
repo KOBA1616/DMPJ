@@ -66,8 +66,11 @@ combos:
       - {id: dm25ex3-055, name: DARK MEMORY CONTAINER, role: core}
   - id: akashic
     split: tuning
-    status: hypothesis
-    summary: アカシック3 を5マナ踏み倒し経路で場に出し、呪文を無償連打。ナウ・オア・ネバー+ウォカンナ、または H.D.2. で相手の山札を削る（計画書 §10.2、机上の仮説）。
+    status: verified
+    # 検証（2026-11-10）: エンジンで最小盤面 tools/eval_specs/akashic_loop_min.yaml（アカシック場・手札オルゼキア2+NoN+ウォカンナ2）が
+    # 1ターンで山札切れ勝ち(loop_deck_out)になることを確認（tests/test_eval_reach.py）。対照 akashic_no_orzekia.yaml（オルゼキア無し）は勝てない。
+    # ※ 通常の開幕からこの盤面に届くかは別問題（到達層 0.05 程度）。段階目標はこの最小盤面から gen_stages で作る。
+    summary: アカシック3 を5マナ踏み倒し経路で場に出し、呪文を無償連打。ナウ・オア・ネバー+ウォカンナ、または H.D.2. で相手の山札を削る（計画書 §10.2）。最小盤面はエンジンで検証済み。
     parts:
       - {id: dm23ex2-cho005, name: 完全水中要塞 アカシック3, role: core}
       - {id: dm24ex3-rp3tr6, name: 森夢龍 フィオナ・フォレスト, role: core}
@@ -76,6 +79,12 @@ combos:
       - {id: dm24ex1-038, name: 冥土人形ウォカンナ・ピエール, role: core}
       - {id: dmrp07-009, name: ラルド・ワースピーダ／H.D.2., role: core}
       - {id: dm23bd7-035, name: 魔刻の斬将オルゼキア／訪れる魔の時刻, role: core}
+    # 探索の段階目標の元（dmsim/plan/stagegen.py）。検証済みの最小盤面 akashic_loop_min の部品（weight>=1.0 の札が段になる）
+    leaf_parts:
+      - {zone: hand, ids: [dm24ex1-038], need: 2, weight: 1.0}
+      - {zone: hand, ids: [dm23bd7-035], need: 2, weight: 2.0}
+      - {zone: hand, ids: [dmrp12-s01], need: 1, weight: 2.0}
+      - {zone: bz, ids: [dm23ex2-009], need: 1, weight: 3.0}
   - id: drill_lock
     split: holdout
     status: draft
