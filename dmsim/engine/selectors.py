@@ -204,7 +204,7 @@ class SelectorMixin:
                 if f:
                     if any(isinstance(v, dict) for v in f.values()):   # 式の値は問い合わせ時点の env で計算する
                         f = {k: self.eval_expr(v, env) if isinstance(v, dict) else v for k, v in f.items()}
-                    lst = [c for c in lst if self.filter_match(c, f)]   # フィルタは問い合わせ時点の特性で照合する（バンドA の設計既定）
+                    lst = [c for c in lst if self.filter_match(c, f, env=env)]   # フィルタは問い合わせ時点の特性で照合する（バンドA の設計既定）
                 total += len(lst)
             return total
         return sum(s.turn_counters.get(f"hist:{kind}:{p}", 0) for p in players)
@@ -266,7 +266,8 @@ class SelectorMixin:
             return paid == bool(c["ddd_paid"])
         raise ValueError(f"bad cond {c}")
 
-    def filter_match(self, cid: int, f: dict, lki: dict | None = None, base: bool = False) -> bool:
+    def filter_match(self, cid: int, f: dict, lki: dict | None = None, base: bool = False,
+                     env: dict | None = None) -> bool:
         if base or self._in_static_cond > 1 or cid in self._distinct_costing or cid in self._chars_busy:   # 常在型能力の範囲・入れ子の条件の判定中は特性計算を再帰させない（_distinct_costing は第145弾の数え中。_chars_busy は第170弾: 自身の常在型の if が自身をフィルタで見る時）
             d = self.fdef(cid)
             ch = {"power": d.power, "cost": d.cost, "civs": d.civs, "types": d.types, "races": d.races,
@@ -281,7 +282,7 @@ class SelectorMixin:
                 return False
         elif is_sealed and lki is None and not base and not getattr(self, "_seal_ok", 0):
             return False   # 封印されているクリーチャーは無視される（封印を対象にする効果だけが sealed で指す）
-        if "any_of" in f and not any(self.filter_match(cid, sub, lki, base) for sub in f["any_of"]):
+        if "any_of" in f and not any(self.filter_match(cid, sub, lki, base, env) for sub in f["any_of"]):
             return False
         if "types" in f and not set(f["types"]) & set(ch["types"]):
             return False
@@ -356,10 +357,41 @@ class SelectorMixin:
             return False
         if "evolution" in f and ("evolution" in self.fdef(cid).types) != bool(f["evolution"]):
             return False   # 「進化ではないクリーチャー」等（進化はタイプで表す）
+        if "evo_source_of" in f:   # 「そのクリーチャーの進化元になれるカード」（第177弾・超魂レイド）。
+            # 対象は env の参照（"self" / 変数名）で指定する。env が無い文脈（常在型の条件・
+            # when の照合など）では解決できないので一致しない。判定は _evo_sources と同型:
+            # クリーチャーであること＋対象の evolve_from（zone を除く）のいずれかに合うこと。
+            if env is None:
+                return False
+            refs = self._refs_of(f["evo_source_of"], env)
+            if not refs:
+                return False
+            if "creature" not in ch["types"]:
+                if base or cid in self._chars_busy or self._in_static_cond > 1:
+                    return False
+                if not self.permits(cid, "evolve_base"):
+                    return False
+            ef = self.fdef(refs[0][0]).evolve_from
+            if ef is None:
+                return False
+            efs = ef if isinstance(ef, list) else [ef]
+            if not any(self.filter_match(cid, {k: v for k, v in sub.items() if k != "zone"},
+                                         lki, base, env) for sub in efs):
+                return False
         if "linked_god" in f:
             linked = self.link_side(cid) is not None and len(self.link_members(cid)) >= 2
             if linked != bool(f["linked_god"]):
                 return False   # 「リンクしているゴッド」: リンク位置を持ち、実際に2体以上でリンクしている
+        if "fortifying" in f:   # 「シールドを要塞化している城」（第178弾）: この城が今シールドを要塞化している
+            is_f = c.fortifies is not None and self.s.alive(c.fortifies) \
+                and self.s.cards[c.fortifies[0]].zone == "shield"
+            if is_f != bool(f["fortifying"]):
+                return False
+        if "fortified" in f:   # 「要塞化されたシールド」（第178弾）: どの城かに要塞化されている
+            forts = [x for x in self.bz_tops()
+                     if self.s.cards[x].fortifies is not None and list(self.s.cards[x].fortifies) == list(self.s.ref(cid))]
+            if bool(forts) != bool(f["fortified"]):
+                return False
         if "entered_this_turn" in f:
             if (c.entered_turn == self.s.turn) != bool(f["entered_this_turn"]):
                 return False   # 「このターン中に出た」: entered_turn はバトルゾーンに出たターン（それ以外は -1）
@@ -403,7 +435,7 @@ class SelectorMixin:
             f = sel.get("filter", {})
             if any(isinstance(v, dict) for v in f.values()):   # 式の値は解決時に計算する
                 f = {k: self.eval_expr(v, env) if isinstance(v, dict) else v for k, v in f.items()}
-            return [c for c in out if self.filter_match(c, f)]
+            return [c for c in out if self.filter_match(c, f, env=env)]
         if "bundle_of" in sel:   # 「シールドの束に含まれるカード」（第148弾）: 解決した束（トップ）ごとに [トップ]＋その下すべてを候補にする。覆われている表向きカードも数え・選択の対象になる（ユーザー決定 2026-11-08）
             v = sel["bundle_of"]
             if isinstance(v, dict):
@@ -421,12 +453,21 @@ class SelectorMixin:
             f = sel.get("filter", {})
             if any(isinstance(x, dict) for x in f.values()):   # 式の値は解決時に計算する
                 f = {k: self.eval_expr(x, env) if isinstance(x, dict) else x for k, x in f.items()}
-            return [c for c in out if self.filter_match(c, f)]
+            return [c for c in out if self.filter_match(c, f, env=env)]
         if "exlife_of" in sel:   # 「EXライフ」シールド: そのクリーチャーに紐付いた、今もシールドゾーンにあるカード
             refs = [env["self"]] if sel["exlife_of"] == "self" else env.get("vars", {}).get(sel["exlife_of"], [])
             refs = [r for r in refs if r and s.alive(r)]
             return [c for p in (0, 1) for c in self.zlist("shield", p)
                     if s.cards[c].exlife_of is not None and list(s.cards[c].exlife_of) in [list(r) for r in refs]]
+        if "castle_of" in sel:   # 「その城が要塞化しているシールド」（第178弾）: 城の fortifies が今もシールドゾーンにあるもの
+            refs = [env["self"]] if sel["castle_of"] == "self" else env.get("vars", {}).get(sel["castle_of"], [])
+            refs = [r for r in refs if r and s.alive(r)]
+            out = []
+            for r in refs:
+                f = s.cards[r[0]].fortifies
+                if f is not None and s.alive(f) and s.cards[f[0]].zone == "shield" and f[0] not in out:
+                    out.append(f[0])
+            return out
         if "crossed_to" in sel:   # 「そのクリーチャーにクロスされているクロスギア」（第170弾）。値は "self" / 変数名 / セレクタ
             out = []
             for r in self._refs_of(sel["crossed_to"], env):
@@ -436,7 +477,7 @@ class SelectorMixin:
             f = sel.get("filter", {})
             if any(isinstance(v, dict) for v in f.values()):   # 式の値は解決時に計算する
                 f = {k: self.eval_expr(v, env) if isinstance(v, dict) else v for k, v in f.items()}
-            return [c for c in out if self.filter_match(c, f)]
+            return [c for c in out if self.filter_match(c, f, env=env)]
         if "host_of" in sel:   # 「そのクロスギアをクロスしているクリーチャー」（第170弾）。値は "self" / 変数名 / セレクタ
             out = []
             for r in self._refs_of(sel["host_of"], env):
@@ -446,7 +487,7 @@ class SelectorMixin:
             f = sel.get("filter", {})
             if any(isinstance(v, dict) for v in f.values()):   # 式の値は解決時に計算する
                 f = {k: self.eval_expr(v, env) if isinstance(v, dict) else v for k, v in f.items()}
-            return [c for c in out if self.filter_match(c, f)]
+            return [c for c in out if self.filter_match(c, f, env=env)]
         if "ref" in sel:
             r = sel["ref"]
             if r == "self":
@@ -472,7 +513,7 @@ class SelectorMixin:
             # のような、移動済みかどうかを区別する選択に使う。従来は zone が無視されていたが、
             # ref＋zone の併記は実データに無く、素の読みどおりに絞る）
             zs = self.zones_of(sel["zone"]) if "zone" in sel else None
-            return [x[0] for x in refs if s.alive(x) and (not f or self.filter_match(x[0], f))
+            return [x[0] for x in refs if s.alive(x) and (not f or self.filter_match(x[0], f, env=env))
                     and (zs is None or s.cards[x[0]].zone in zs)]
         if "owner_of" in sel:   # 「持ち主の〜」「そのプレイヤーの〜」: 変数のカードの持ち主
             refs = env.get("vars", {}).get(sel["owner_of"], [])
@@ -498,7 +539,7 @@ class SelectorMixin:
             for cid in lst:
                 if sel.get("other") and env.get("self") and cid == env["self"][0]:
                     continue
-                if self.filter_match(cid, f):
+                if self.filter_match(cid, f, env=env):
                     out.append(cid)
         if "exclude" in sel:   # 「〜以外の」参照除外（C1 U35）: ゾーン経路の候補（filter 適用後）から、exclude が指すカードをすべて引く。ref／under_of 等の特殊経路には適用しない
             ex = sel["exclude"]

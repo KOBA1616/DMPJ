@@ -344,6 +344,7 @@ def h_attack(eng, t):
             t["redirect_done"] = True
         blockers = [c for c in eng.bz_tops(1 - a)
                     if not s.cards[c].tapped and eng.permits(c, "block", att[0])
+                    and "creature" in eng.chars_ro(c)["types"]   # 507.1: ブロックできるのはクリーチャーだけ（第179弾: 条件を満たさないACEタマシード等を除外）
                     and eng.permits(att[0], "be_blocked", c) and [c, s.cards[c].gen] != t["target"]]
         guards = [] if t["target"] == "player" else [          # 507.1a ガードマン: 攻撃されている自分の他のクリーチャーがいる時だけ
             c for c in eng.bz_tops(1 - a) if not s.cards[c].tapped and [c, s.cards[c].gen] != t["target"]

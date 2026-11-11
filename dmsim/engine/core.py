@@ -277,6 +277,7 @@ class Engine(SelectorMixin, EventMixin, InterpreterMixin, TurnMixin, CombatMixin
                and (not ab.get("dswitch")
                     or (not self.s.cards[cid].dswitched and self.permits(cid, "d_switch")))   # Dスイッチ（第151弾）: 使用済み・禁止中は能力自体が出ない（kind 照合の後ろで permits を見るので chars 計算とは再帰しない）
                and (not ab.get("sforce") or self._sforce_active(cid))   # シールド・フォース（第166弾）: 紐付いたシールドがシールドゾーンにある間だけ機能する
+               and (not ab.get("accel") or self._accel_active(cid))   # アクセル（第175弾）: クロスギアがクロスされている間だけ機能する
                and (not ab.get("fort_e") or self._fort_e_active(cid, ab["fort_e"]))   # フォートE（第168弾）: 召喚時に指定種族のマナをタップしていた時だけ機能する
                and (not ab.get("odrive")
                     or (ab["odrive"] is True and self.s.cards[cid].odrive)
@@ -326,6 +327,29 @@ class Engine(SelectorMixin, EventMixin, InterpreterMixin, TurnMixin, CombatMixin
         if not isinstance(spec, dict):
             return False
         return bool(self._fort_e_tapped(cid, spec))
+
+    def _accel_active(self, cid: int) -> bool:
+        """アクセル: このクリーチャーにクロスギアが1枚でもクロスされているか（第175弾）。
+        状態だけを見るので chars() の評価中でも再帰しない。"""
+        return bool(self.crossed_gears(self.s.ref(cid)))
+
+    def _ace_active(self, cid: int) -> bool:
+        """ACEタマシード（第179弾）: 自分の、同じ文明のクリーチャーまたはタマシードが
+        バトルゾーンに合計4つ以上あればクリーチャーとして扱う。自分自身も数える。
+        定義の特性（fdef）だけで数えるので chars() の評価中でも再帰しない。"""
+        c = self.s.cards[cid]
+        if c.zone != "bz":
+            return False
+        civs = set(self.fdef(cid).civs)
+        n = 0
+        for other in self.s.zones["bz"][0]:   # bz は共有ゾーン: controller で絞る
+            oc = self.s.cards[other]
+            if oc.controller != c.controller:
+                continue
+            od = self.fdef(other)
+            if (("creature" in od.types) or ("tamaseed" in od.types)) and (set(od.civs) & civs):
+                n += 1
+        return n >= 4
 
     def _sforce_active(self, cid: int) -> bool:
         """シールド・フォース: このクリーチャーに紐付いたシールドが今もシールドゾーンにあるか。"""
@@ -542,6 +566,8 @@ class Engine(SelectorMixin, EventMixin, InterpreterMixin, TurnMixin, CombatMixin
         """_chars_calc の本体（_chars_busy に cid を入れた状態で呼ぶ）。"""
         if (d.neo or d.grave_evo) and c.zone == "bz" and c.under and "evolution" not in ch["types"]:
             ch["types"].append("evolution")   # NEO進化・墓地進化: カードが下にあれば進化クリーチャーとして扱う
+        if d.ace and c.zone == "bz" and "creature" not in ch["types"] and self._ace_active(cid):
+            ch["types"].append("creature")   # ACEタマシード（第179弾）: 条件を満たす間だけクリーチャーとして扱う
         own = self.abilities(cid, "static") if face is None else list(enumerate(d.abilities))
         ref = self.s.ref(cid)
         env_self = {"you": c.controller, "self": ref}
@@ -873,6 +899,7 @@ class Engine(SelectorMixin, EventMixin, InterpreterMixin, TurnMixin, CombatMixin
         c.under, c.top_of = [], -1
         c.exlife_of = None                          # 一度離れたシールドは紐付けが外れる
         c.sforce_of = None                          # シールド・フォースの紐付けも同様
+        c.fortifies = None                          # 城の要塞化先も同様（第178弾）
         c.no_untap_next = False                     # ゾーン移動で新しいオブジェクトになるので凍結の印も消える
         c.hyper = False                             # ハイパーモードも新しいオブジェクトでは解ける
         if to != "hand" and frm in ("hand", "hold"):
