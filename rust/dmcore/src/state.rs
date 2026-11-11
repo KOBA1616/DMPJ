@@ -31,10 +31,12 @@ pub struct Card {
     pub owner: i64,
     pub seal_of: i64,
     pub seals: Vec<i64>,
+    pub sforce_of: Option<Value>,
     pub sst: bool,
     pub stp: bool,
     pub strigger_off: bool,
     pub strigger_on: bool,
+    pub summon_tapped: Vec<Value>,
     pub tapped: bool,
     pub top_of: i64,
     pub under: Vec<i64>,
@@ -48,7 +50,7 @@ impl Card {
             bazurenda: 0, cid, controller: owner, crossed: None, defn: defn.to_string(), drawn_turn: -1, dswitched: false,
             entered_seq: 0, entered_turn: -1, exlife_of: None, face: -1, face_down: false, face_up: false,
             gen: 0, hyper: false, link: 0, no_untap_next: false, odrive: false, odrive_civs: vec![],
-            owner, seal_of: -1, seals: vec![], sst: false, stp: false, strigger_off: false, strigger_on: false, tapped: false, top_of: -1,
+            owner, seal_of: -1, seals: vec![], sforce_of: None, sst: false, stp: false, strigger_off: false, strigger_on: false, summon_tapped: vec![], tapped: false, top_of: -1,
             under: vec![], vivid: false, zone: "deck".to_string(),
         }
     }

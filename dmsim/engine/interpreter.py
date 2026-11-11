@@ -91,15 +91,25 @@ def h_put_stacked(eng, t: PutStackedTask):
             ev["evolution"] = True
             t.pop("evo_v", None)
         else:
-            srcs = eng._evo_sources(cid, you)
-            if not srcs:
-                t["cids"] = t["cids"][1:]   # 進化元が無い: このカードは出さない（残りは続ける）
-                return None
-            ans, d = eng.ask(t, you, "choose_evo_source", [eng._card_option(x) for x in srcs], 1, 1)
-            if d:
-                return d
-            ev["stack_on"] = s.ref(srcs[ans[0]])
-            ev["evolution"] = True
+            if t.get("evo_source"):   # 重ね先を固定する（第173弾）: 適格性を照合し、不適格なら出さない
+                src = t["evo_source"]
+                ef = {k: v for k, v in (f.evolve_from or {}).items() if k != "zone"} or {}
+                if (not s.alive(src) or s.cards[src[0]].zone != "bz"
+                        or not eng.filter_match(src[0], ef)):
+                    t["cids"] = t["cids"][1:]   # 固定の進化元が適格でない: このカードは出さない（残りは続ける）
+                    return None
+                ev["stack_on"] = src
+                ev["evolution"] = True
+            else:
+                srcs = eng._evo_sources(cid, you)
+                if not srcs:
+                    t["cids"] = t["cids"][1:]   # 進化元が無い: このカードは出さない（残りは続ける）
+                    return None
+                ans, d = eng.ask(t, you, "choose_evo_source", [eng._card_option(x) for x in srcs], 1, 1)
+                if d:
+                    return d
+                ev["stack_on"] = s.ref(srcs[ans[0]])
+                ev["evolution"] = True
     eng._pop(t)
     rest = dict(t, cids=t["cids"][1:])
     rest.pop("answer", None)

@@ -68,10 +68,15 @@ class TurnMixin:
                     opt["face"] = fi
                 out.append(opt)
             for fi, f in ([(None, d)] if not d.faces else list(enumerate(d.faces))):
-                if f.free_if and f.is_creature() and self.permits(cid, "summon") \
-                        and self.eval_cond(f.free_if, {"you": p, "self": self.s.ref(cid), "vars": {}}):
+                # G・ゼロ: コストを支払わずに召喚／唱える。従来はクリーチャーだけだったが、
+                # 呪文も free_if で登録されている（dm23rp1-t10 等15枚）のに選択肢が出ず、
+                # 無料で唱えられなかったため、呪文も同じ条件で :free を出す（第167弾）。
+                # 下の cast_free 許可の分岐が重複を弾くので、キーは同じ :free でよい。
+                if f.free_if and self.eval_cond(f.free_if, {"you": p, "self": self.s.ref(cid), "vars": {}}) \
+                        and ((f.is_creature() and self.permits(cid, "summon"))
+                             or ("spell" in f.types and self.permits(cid, "cast"))):
                     opt = {"key": f"{o['key']}:free" if fi is None else f"{o['key']}:{fi}:free", "cid": cid,
-                           "name": f.name, "free": True}   # G・ゼロ: コストを支払わずに召喚
+                           "name": f.name, "free": True}   # G・ゼロ: コストを支払わずに召喚／唱える
                     if fi is not None:
                         opt["face"] = fi
                     out.append(opt)
@@ -190,6 +195,23 @@ class TurnMixin:
                     if fi is not None:
                         opt["face"] = fi
                     out.append(opt)
+        seen_r = set()   # リサイクル（第172弾）: 墓地から代替コストで唱える。civs 省略時はカード自身の文明
+        for cid in self.zlist("graveyard", p):
+            dn = self.s.cards[cid].defn
+            if dn in seen_r:
+                continue
+            d = self.cdef(cid)
+            for fi, f in ([(None, d)] if not d.faces else list(enumerate(d.faces))):
+                rc = f.recycle
+                if not rc or "spell" not in f.types or not self.permits(cid, "cast"):
+                    continue
+                if self._mana_choices(cid, p, fi, cost=rc["cost"], limit=1, civs=rc.get("civs")):
+                    seen_r.add(dn)
+                    opt = {"key": f"play:{dn}:recycle" if fi is None else f"play:{dn}:{fi}:recycle",
+                           "cid": cid, "name": f.name, "recycle": True}
+                    if fi is not None:
+                        opt["face"] = fi
+                    out.append(opt)
         seen_m = set()   # マナゾーンから召喚できるカードも選択肢に出す（通常コスト）
         for cid in self.zlist("mana", p):
             dn = self.s.cards[cid].defn
@@ -299,6 +321,12 @@ class TurnMixin:
         if not self.permits(cid, action) or (d.is_creature() and not self.permits(cid, "enter_bz")):
             return False
         if "evolution" in d.types and not d.s_max:   # S-MAX進化は進化元を必要としない（通常召喚として扱う）
+            if d.deck_evolution:   # デッキ進化（第173弾）: 山札が空でなければ、めくりの結果にかかわらず召喚を試みられる
+                if not self.zlist("deck", p):
+                    return False
+                n = 1
+                cost = max(0, d.cost - n * d.cost_reduce_per_evo) if d.cost_reduce_per_evo else None
+                return bool(self._mana_choices(cid, p, face, cost=self._opt_reduced(cid, face, d, self._sac_reduced(d, self._tap_reduced(d, p, cost, None), self._sac_pool(d, p))), limit=1))
             if isinstance(d.evolve_from, list):   # 進化V: フィルタごとに進化元が要る
                 if not self._evo_v_ready(cid, p, face):
                     return False
@@ -578,6 +606,11 @@ def st_main(eng, t):                                    # 504
             if fd.alt_cost and "cost" in fd.alt_cost:
                 task["cost_override"] = fd.alt_cost["cost"]
                 task["cost_civs"] = fd.alt_cost.get("civs", fd.civs)
+        if o.get("recycle"):   # リサイクル（第172弾）: 墓地から代替コストで唱える（alt_cost と同じ支払い規約）
+            fd = eng.cdef(o["cid"]).face(o.get("face"))
+            task["recycle"] = True
+            task["cost_override"] = fd.recycle["cost"]
+            task["cost_civs"] = fd.recycle.get("civs", fd.civs)
         if o.get("vivid"):
             fd = eng.cdef(o["cid"]).face(o.get("face"))
             task["vivid"] = True   # 第54弾: 唱えた/召喚した経路をイベントと解決 env へ伝える
@@ -772,7 +805,41 @@ def h_play(eng, t):
         t["as_paid"] = True
     if ("evolution" in d.types or t.get("evo_mode")) and "evo" not in t and not eng.cdef(cid).face(face).s_max:
         face_def = eng.cdef(cid).face(face)
-        if isinstance(face_def.evolve_from, list):   # 進化V: フィルタごとに1体ずつ選ぶ
+        if face_def.deck_evolution:   # デッキ進化（第173弾）: 山札の上からめくって重ねる。支払いの前に行う
+            de = face_def.deck_evolution
+            if de.get("shuffle_first"):
+                eng._shuffle(p)
+            revealed = list(eng.zlist("deck", p)[: de.get("count", 1)])
+            if de.get("blind"):   # OMGデッキ進化: 裏向きのまま、種類を問わず一番上に重ねる
+                if not revealed:
+                    eng._pop(t)
+                    return None
+                t["evo"] = [s.ref(revealed[0])]
+            else:
+                for c in revealed:
+                    eng.note_public("reveal", c)
+                efs = face_def.evolve_from if isinstance(face_def.evolve_from, list) else [face_def.evolve_from or {}]
+                cands = [c for c in revealed
+                         if any(eng.filter_match(c, {k: v for k, v in ef.items() if k != "zone"}) for ef in efs)]
+                if not cands:   # クリーチャーがなければ手札に戻る（この時点では未払い。カードは手札に残る）
+                    eng._pop(t)   # 先に pop してから残りの移動を積む（_push 後に _pop すると assert が壊れる）
+                    if revealed and de.get("rest_to"):
+                        eng._push(eng.ev_task([{"ev": "move", "subject": s.ref(c), "to": de["rest_to"],
+                                                "reason": "put"} for c in revealed]))
+                    return None
+                if len(cands) == 1:   # 1候補だけなら選択は出ない
+                    t["evo"] = [s.ref(cands[0])]
+                else:
+                    ans, dd = eng.ask(t, p, "choose_cards", [eng._card_option(c) for c in cands], 1, 1)
+                    if dd:
+                        return dd
+                    t["evo"] = [s.ref(cands[ans[0]])]
+                rest = [c for c in revealed if c != t["evo"][0][0]]
+                if rest and de.get("rest_to"):   # Mデッキ進化: 選ばなかった分は墓地へ（支払いの前に済ませる）
+                    eng._push(eng.ev_task([{"ev": "move", "subject": s.ref(c), "to": de["rest_to"],
+                                            "reason": "put"} for c in rest]))
+                    return None
+        elif isinstance(face_def.evolve_from, list):   # 進化V: フィルタごとに1体ずつ選ぶ
             chosen = t.setdefault("evo_v", [])
             if len(chosen) < len(face_def.evolve_from):
                 ef = {k: v for k, v in face_def.evolve_from[len(chosen)].items() if k != "zone"}
@@ -788,16 +855,17 @@ def h_play(eng, t):
                 if len(chosen) == len(face_def.evolve_from):
                     t["evo"] = list(chosen)
                 return None
-        srcs = eng._evo_sources(cid, p, face)
-        if len(srcs) < d.evolve_count:
-            eng._pop(t)
-            return None
-        opts = [eng._card_option(c) for c in srcs]
-        mn, mx = (1, len(srcs)) if d.evolve_any else (d.evolve_count, d.evolve_count)
-        ans, dd = eng.ask(t, p, "choose_evo_source", opts, mn, mx)
-        if dd:
-            return dd
-        t["evo"] = [s.ref(srcs[i]) for i in ans]
+        else:   # 通常の進化: バトルゾーン（evolve_zone）の進化元を選ぶ
+            srcs = eng._evo_sources(cid, p, face)
+            if len(srcs) < d.evolve_count:
+                eng._pop(t)
+                return None
+            opts = [eng._card_option(c) for c in srcs]
+            mn, mx = (1, len(srcs)) if d.evolve_any else (d.evolve_count, d.evolve_count)
+            ans, dd = eng.ask(t, p, "choose_evo_source", opts, mn, mx)
+            if dd:
+                return dd
+            t["evo"] = [s.ref(srcs[i]) for i in ans]
     if d.tap_reduce and not t["free"] and not t.get("tap_done"):     # ハイパーエナジー: コストが異なるクリーチャーを好きな数タップ
         chosen = t.setdefault("tap", [])
         used = {eng.chars_ro(c)["cost"] for c in chosen}
@@ -914,6 +982,9 @@ def h_play(eng, t):
             return dd
         for c in opts[ans[0]]["cids"] + t.get("tap", []):
             s.cards[c].tapped = True
+        # フォートE（第168弾）: 召喚コストとしてタップしたマナを記録する。
+        # t["tap"] はハイパーエナジーでタップしたバトルゾーンのクリーチャー（マナではない）なので含めない
+        t["summon_paid"] = list(opts[ans[0]]["cids"])
         t["paid_done"] = True   # 後段（バズレンダ等）の決定で再入しても二重に支払わない
     if d.bazurenda and not t["free"]:   # バズレンダ: 追加でこのコストを好きな回数支払ってもよい
         while not t.get("bz_done"):
@@ -939,6 +1010,7 @@ def h_play(eng, t):
                     return dd
                 for c in opts[ans[0]]["cids"]:
                     s.cards[c].tapped = True
+                t.setdefault("summon_paid", []).extend(opts[ans[0]]["cids"])   # バズレンダの追加支払いも召喚のためのタップ
                 t["bz_paid_for"] = cnt
             t["bz_count"] = cnt + 1
     if d.o_drive and not t["free"] and not t.get("od_done"):   # O・ドライブ: 追加で指定文明のマナをタップしてもよい
@@ -980,6 +1052,7 @@ def h_play(eng, t):
                         return dd
                     for i in ans:
                         s.cards[pool[i]].tapped = True
+                    t.setdefault("summon_paid", []).extend(pool[i] for i in ans)   # O・ドライブの追加タップも召喚のためのタップ
                     tapped_civs.append(cv)
                     sub += 1
                 t["od_sub"] = 0
@@ -998,6 +1071,11 @@ def h_play(eng, t):
     if t.get("odrive"):
         s.cards[cid].odrive = True
         s.cards[cid].odrive_civs = list(t.get("odrive_civs", []))
+    # フォートE（第168弾）: 召喚時にタップしたマナを種族のスナップショットつきで刻む
+    paid_snapshot = [{"ref": s.ref(c), "races": list(eng.chars_ro(c)["races"])}
+                     for c in t.get("summon_paid", [])]
+    if paid_snapshot:
+        s.cards[cid].summon_tapped = [dict(e, ref=list(e["ref"])) for e in paid_snapshot]
     if d.bazurenda:
         s.cards[cid].bazurenda = t.get("bz_count", 0)
     if face is not None:
@@ -1017,6 +1095,8 @@ def h_play(eng, t):
         if t.get("odrive"):
             ev["odrive"] = True
             ev["odrive_civs"] = list(t.get("odrive_civs", []))
+        if paid_snapshot:   # フォートE: 移動で印が消えるためイベントに載せて出し直す（odrive と同じ作法）
+            ev["summon_tapped"] = [dict(e, ref=list(e["ref"])) for e in paid_snapshot]
         if t.get("alt"):
             ev["alt"] = True
         if t.get("vivid"):
@@ -1041,6 +1121,9 @@ def h_play(eng, t):
             ev["bazurenda"] = t.get("bz_count", 0)
         eng._push(eng.ev_task(ev))
     else:   # 呪文: 唱えた → 書かれた順に解決 → 最終段階として墓地へ（605.2f）
+        if t.get("recycle"):   # リサイクル（第172弾）: 唱えた後は墓地に置くかわりに山札の一番下へ
+            t["resolve_to"] = "deck"
+            t["resolve_position"] = "bottom"
         env = {"you": p, "self": ref, "vars": {}}
         if t.get("st"):
             env["in_st"] = True
@@ -1048,6 +1131,8 @@ def h_play(eng, t):
             env["alt_paid"] = True
         if t.get("vivid"):
             env["vivid_paid"] = True
+        if t.get("recycle"):
+            env["recycle_paid"] = True
         if t.get("via") == "d_d_d":
             env["ddd_paid"] = True   # D・D・D で唱えた（第149弾。「この呪文を『D・D・D』で唱えたなら」）
         spell_ops = list(d.spell) + (list(d.sst_spell) if s.cards[cid].sst else []) \
@@ -1057,6 +1142,8 @@ def h_play(eng, t):
         cev = {"ev": "cast", "player": p, "subject": ref, "unpaid": bool(t["free"])}
         if t.get("vivid"):
             cev["vivid"] = True
+        if t.get("recycle"):
+            cev["recycle"] = True
         if t.get("via"):
             cev["via"] = t["via"]   # 出し方の印（第149弾。when: {event: cast, via: d_d_d} の照合用）
         eng._push(eng.ev_task(cev),

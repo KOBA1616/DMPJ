@@ -5,9 +5,21 @@ from __future__ import annotations
 from .registry import op
 
 
+@op("uncross", select="selector")
+def op_uncross(eng, t, op, env):
+    """クロスを外す（第170弾）: 選んだクロスギアの crossed を外す。ギアはバトルゾーンに残る（303.5）。
+    「クリーチャーにクロスしてあるクロスギアをすべて、クリーチャーから外す」（dm17-012 型）。"""
+    cids, d = eng.select(t, op["select"], env)
+    if d:
+        return d
+    for cid in cids:
+        eng.s.cards[cid].crossed = None
+    return None
+
+
 @op("move", select="selector", to="zone", reason="reason", position="position?", card_only="bool?",
     order="str?", tapped="bool?", face_up="bool?", face_down="bool?", seal="int?", stack_on="selector?",
-    stack_evo="bool?", strigger="str?", **{"as": "str?"})
+    stack_evo="bool?", evo_source="selector?", strigger="str?", **{"as": "str?"})
 def op_move(eng, t, op, env):
     """ゾーン移動。as を付けると、移動した後のカード（新しいオブジェクト）を変数に入れる（「その〜」で使う）。
     card_only: カードとして動かす（109.2a）。進化クリーチャーの一番上だけが離れ、下は再構築される（801.4）。
@@ -22,6 +34,8 @@ def op_move(eng, t, op, env):
     （セレクタの owner は候補の絞り込み。相手のシールドに重ねる時は owner: opp と書く）。
     重ねる先のシールドが無い場合は置けないので、移動自体を行わない。"""
     target_ref = None
+    evo_source_ref = None
+    evo_source_done = False
     if "stack_on" in op:
         os_ = t.setdefault("os", {})
         if "move_cids" not in os_:
@@ -39,6 +53,24 @@ def op_move(eng, t, op, env):
                 target_ref = eng.s.ref(tgt[0])
             else:
                 cids = []   # 重ねる先のシールドが無い: 置けないので移動しない
+    elif op.get("stack_evo") and "evo_source" in op:
+        # 重ね先を固定する（第173弾）: 「このクリーチャーの上に置く」等。選択を2段に分け、
+        # 1段目の答えを残す（stack_on と同じ型）。重ね先が無ければ置けないので移動しない
+        os_ = t.setdefault("os", {})
+        if "move_cids" not in os_:
+            cids, d = eng.select(t, op["select"], env)
+            if d:
+                return d
+            os_["move_cids"] = list(cids)
+            os_.pop("chosen", None)
+        cids = os_["move_cids"]
+        if "evo_source_ref" not in os_:
+            srcs, d = eng.select(t, op["evo_source"], env)
+            if d:
+                return d
+            os_["evo_source_ref"] = eng.s.ref(srcs[0]) if srcs else None
+        evo_source_ref = os_["evo_source_ref"]
+        evo_source_done = True
     else:
         cids, d = eng.select(t, op["select"], env)
         if d:
@@ -54,6 +86,10 @@ def op_move(eng, t, op, env):
         task = {"t": "put_stacked", "cids": list(cids), "all_cids": list(cids), "player": env["you"],
                 "env": env, "reason": op["reason"], "tapped": bool(op.get("tapped")),
                 "face_up": bool(op.get("face_up"))}
+        if op.get("evo_source"):   # 重ね先を固定する（第173弾）: 解決時に進化元の適格性も照合する
+            if not evo_source_done or evo_source_ref is None:
+                return None   # 重ね先が無い: 置けないので移動しない
+            task["evo_source"] = evo_source_ref
         if op.get("seal"):
             task["seal"] = op["seal"]
         if "as" in op:
@@ -555,6 +591,29 @@ def op_shield_plus(eng, t, op, env):
         lst.remove(tucked)   # 束の下のカードはゾーンの並びに入らない（113.2）
     s.cards[target].under.append(tucked)
     s.cards[tucked].top_of = target
+    return None
+
+
+@op("sforce_link")
+def op_sforce_link(eng, t, op, env):
+    """シールド・フォース: 自分のシールドを1枚選んでもよい。選んだシールドに自分への
+    紐付け（sforce_of）を刻む。そのシールドがシールドゾーンにある間、自分の
+    sforce 印つき能力が機能する。選ばなければ何も起きない。"""
+    s = eng.s
+    p = env["you"]
+    shields = eng.zlist("shield", p)
+    if not shields:
+        return None
+    a, d = eng.ask(t, p, "choose_cards", [eng._card_option(c) for c in shields], 0, 1)
+    if d:
+        return d
+    if not a:
+        return None
+    me = list(env["self"])
+    for c in shields:
+        if s.cards[c].sforce_of is not None and list(s.cards[c].sforce_of) == me:
+            s.cards[c].sforce_of = None
+    s.cards[shields[a[0]]].sforce_of = me
     return None
 
 

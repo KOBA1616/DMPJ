@@ -49,7 +49,7 @@ def _build() -> dict:
         "galaxy_shield": {"type": "object", "properties": {"cost": {"type": "integer"}, "civs": {"type": "array", "items": {"enum": sorted(CIVS)}}}, "required": ["cost", "civs"], "additionalProperties": False}, "neo": {"type": "boolean"}, "grave_evo": {"type": "boolean"}, "star": {"type": "boolean"}, "s_max": {"type": "boolean"}, "hyper": {"type": "boolean"}, "crystal_soul": {"type": "integer", "minimum": 1},
     }
     for k in ("text", "mana", "evolve_count", "evolve_zone", "evolve_any", "cost_reduce_per_evo", "resolve_to", "alt_cost", "s_back", "bazurenda",
-              "fushigi", "vividraw", "mugen_climb", "o_drive", "odrive_spell", "sst_spell", "stp_spell"):   # defs.parse_card が読む面の項目
+              "fushigi", "vividraw", "mugen_climb", "o_drive", "odrive_spell", "sst_spell", "stp_spell", "recycle", "deck_evolution"):   # defs.parse_card が読む面の項目
         face_props.setdefault(k, {})
     return {
         "$schema": "https://json-schema.org/draft/2020-12/schema",
@@ -69,6 +69,7 @@ def _build() -> dict:
             "selector": {"type": "object", "properties": {
                 "zone": {"anyOf": [{"enum": sorted(zones) + ["any"]}, {"type": "array", "items": {"enum": sorted(zones)}}]},
                 "exlife_of": {"type": "string"}, "under_of": {}, "bundle_of": {}, "owner": {"enum": ["you", "opp", "any"]}, "owner_of": {"type": "string"},
+                "crossed_to": {}, "host_of": {},
                 "filter": ref("filter"),
                 "count": {"anyOf": [ref("expr"), {"type": "object", "properties": {"upto": ref("expr")}, "additionalProperties": False}, {"const": "all"}, {"const": "any"}, {"const": "rest"}]}, "up_to": {"type": "boolean"},
                 "from_top": ref("expr"), "chooser": {"enum": ["you", "opp", "opponent", "random"]}, "ref": {"type": "string"},
@@ -80,7 +81,7 @@ def _build() -> dict:
                 "other": {"type": "boolean"}, "look": {"type": "boolean"}}, "additionalProperties": False},
             "expr": {"anyOf": [{"type": "integer"}, {"type": "object", "properties": {
                 "count": ref("selector"), "civ_count": ref("selector"), "distinct_cost_count": ref("selector"), "total_cost": ref("selector"), "total_power": ref("selector"), "entered": {"type": "object", "properties": {"owner": {"type": "string"}, "other": {"type": "boolean"}}, "additionalProperties": False}, "bundles": {"type": "object", "properties": {"owner": {"type": "string"}, "face_up": {"type": "boolean"}}, "additionalProperties": False}, "var": {"type": "string"}, "cost_of": {"anyOf": [{"type": "string"}, {"type": "object", "properties": {"ref": {"type": "string"}}, "additionalProperties": False}]}, "power_of": {"anyOf": [{"type": "string"}, {"type": "object", "properties": {"ref": {"type": "string"}}, "additionalProperties": False}]}, "name_of": {"type": "string"}, "races_of": {"type": "string"}, "race": {"type": "string"}, "link_count": {"type": "string"}, "sum": {"type": "array", "items": ref("expr")}, "mul": {"type": "array", "items": ref("expr")}, "seals": {"type": "object", "properties": {"owner": {"type": "string"}}, "additionalProperties": False}, "seals_on": {},
-                "turn_count": {"type": "object", "properties": {"kind": {"type": "string"}, "owner": {"type": "string"}, "other": {"type": "boolean"}, "filter": ref("filter"), "ref": {"type": "string"}}, "required": ["kind"], "additionalProperties": False}, "used_count": {"type": "object", "properties": {"owner": {"type": "string"}, "filter": ref("filter")}, "additionalProperties": False}, "prev_shield_added": {"type": "object", "properties": {"owner": {"type": "string"}}, "additionalProperties": False}, "declared": {"type": "string"}},
+                "turn_count": {"type": "object", "properties": {"kind": {"type": "string"}, "owner": {"type": "string"}, "other": {"type": "boolean"}, "filter": ref("filter"), "ref": {"type": "string"}}, "required": ["kind"], "additionalProperties": False}, "used_count": {"type": "object", "properties": {"owner": {"type": "string"}, "filter": ref("filter")}, "additionalProperties": False}, "prev_shield_added": {"type": "object", "properties": {"owner": {"type": "string"}}, "additionalProperties": False}, "declared": {"type": "string"}, "crossed_count": {"anyOf": [{"type": "string"}, {"type": "object", "properties": {"ref": {"type": "string"}}, "additionalProperties": False}]}},
                 "minProperties": 1, "maxProperties": 1, "additionalProperties": False}]},
             "cond": {"type": "object", "minProperties": 1, "maxProperties": 1, "properties": {
                 "exists": ref("selector"), "cmp": {"type": "array", "minItems": 3, "maxItems": 3},
@@ -92,7 +93,7 @@ def _build() -> dict:
                 "power": {"anyOf": [{"type": "integer"}, {"type": "object", "properties": {"amount": {"type": "integer"}, "count": {"anyOf": [ref("selector"), ref("expr")]}}, "required": ["amount"], "additionalProperties": False}]}, "grant": {"type": "array", "items": {"enum": sorted(keywords)}},
                 "allow": {"type": "array", "items": perm}, "deny": {"type": "array", "items": perm},
                 "require": {"type": "array", "items": {"enum": ["attack", "block"]}}, "add_of": {"const": "self"}, "double_power": {"type": "boolean"}, "add_races": {"type": "array", "items": {"anyOf": [{"type": "string"}, {"type": "object"}]}}, "add_names": {"type": "array", "items": {"type": "string"}, "minItems": 1},
-                "breaks": {"type": "integer"}, "breaks_add": {"type": "integer"}, "breaks_per_power": {"type": "integer"},
+                "breaks": {"type": "integer"}, "breaks_add": {"anyOf": [{"type": "integer"}, {"type": "object", "properties": {"amount": {"type": "integer"}, "count": {"anyOf": [ref("selector"), ref("expr")]}}, "required": ["amount"], "additionalProperties": False}]}, "breaks_per_power": {"type": "integer"},
                 "cost": {"anyOf": [{"type": "integer"}, {"type": "object", "properties": {"amount": {"type": "integer"}, "cost_min": {"type": "integer"}, "count": {"anyOf": [ref("selector"), ref("expr")]}}, "required": ["amount"], "additionalProperties": False}]},
                 "cost_min": {"type": "integer"}, "crystal_soul": {"type": "integer", "minimum": 1},
                 "power_when": {"type": "object", "properties": {"amount": {"type": "integer"}, "count": {"anyOf": [ref("selector"), ref("expr")]}, "when": {"enum": ["attacking", "blocking"]}}, "required": ["amount", "when"], "additionalProperties": False},
@@ -105,14 +106,14 @@ def _build() -> dict:
             "when": {"type": "object", "properties": {
                 "event": {"enum": sorted(EVENTS)}, "from": {"anyOf": [{"enum": sorted(zones)}, {"type": "array", "items": {"enum": sorted(zones)}}]}, "to": {"anyOf": [{"enum": sorted(zones)}, {"type": "array", "items": {"enum": sorted(zones)}}]},
                 "reason": {"anyOf": [{"enum": sorted(REASONS)}, {"type": "array", "items": {"enum": sorted(REASONS)}}]}, "player": {"enum": ["you", "opp"]}, "by": {"enum": ["you", "opp"]}, "cause": {"type": "object", "properties": {"by": {"enum": ["you", "opp"]}, "kind": {"enum": ["spell", "ability"]}}, "additionalProperties": False}, "unpaid": {"type": "boolean"}, "target": {}, "attacker": {}, "opponent": {}, "ord": {"type": "object", "properties": {"kind": {"type": "string"}, "eq": {"type": "integer"}, "ge": {"type": "integer"}, "gt": {"type": "integer"}, "le": {"type": "integer"}, "lt": {"type": "integer"}}, "required": ["kind"], "additionalProperties": False},
-                "via": {"enum": sorted(VIAS)}, "subject": {}, "stacked": {}, "sealed_from": {}, "from_under": {}, "face_up": {}, "broke": {}, "blocked": {}, "vivid": {}},
+                "via": {"enum": sorted(VIAS)}, "subject": {}, "stacked": {}, "sealed_from": {}, "from_under": {}, "face_up": {}, "broke": {}, "blocked": {}, "vivid": {}, "emblem": {"type": "boolean"}},
                 "required": ["event"], "additionalProperties": False},
             "ability": {"type": "object", "properties": {
                 "kind": {"enum": ["trigger", "replace", "static", "declare", "activate", "silent", "state", "partner"]}, "when": ref("when"),
                 "if": ref("cond"), "effect": ref("ops"), "instead": ref("ops"), "optional": {"type": "boolean"},
                 "continue": {"type": "boolean"},
                 "once_per_turn": {"type": "boolean"}, "first_time": {"type": "boolean"}, "id": {"type": "string"},
-                "affects": {}, "mod": ref("mod"), "cost": {"type": "object", "properties": {"tap": {}, "tap_mana": {}, "under": {}}, "additionalProperties": False}, "zone": {"enum": sorted(set(zones) | {"hold"})}},
+                "affects": {}, "mod": ref("mod"), "cost": {"type": "object", "properties": {"tap": {}, "tap_mana": {}, "under": {}, "untap": {}}, "additionalProperties": False}, "zone": {"enum": sorted(set(zones) | {"hold"})}},
                 "required": ["kind"], "additionalProperties": False},
         },
     }

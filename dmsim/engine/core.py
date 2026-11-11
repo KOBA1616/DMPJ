@@ -43,6 +43,7 @@ class Engine(SelectorMixin, EventMixin, InterpreterMixin, TurnMixin, CombatMixin
         self._in_static_cond = 0
         self._threshold_busy = set()   # {power_ge: N} の評価中にパワーを見ているカード（再入防止。第3段・共通基盤）
         self._distinct_costing = set()   # distinct_cost_count の評価中に特性を見ているカード（再入防止、第145弾）
+        self._chars_busy = set()   # chars() の評価中に特性を計算しているカード（再入防止。第170弾。参照先が評価中の時は印刷特性で見る）
         self._adding = set()
         self._link_merging = False
         self._xcache = rules.__dict__.setdefault("_affects_others_cache", {})   # 定義だけで決まるので複製間で共有
@@ -275,6 +276,8 @@ class Engine(SelectorMixin, EventMixin, InterpreterMixin, TurnMixin, CombatMixin
                and (not ab.get("stp") or self.s.cards[cid].stp)   # S・トリガー・プラスも同様
                and (not ab.get("dswitch")
                     or (not self.s.cards[cid].dswitched and self.permits(cid, "d_switch")))   # Dスイッチ（第151弾）: 使用済み・禁止中は能力自体が出ない（kind 照合の後ろで permits を見るので chars 計算とは再帰しない）
+               and (not ab.get("sforce") or self._sforce_active(cid))   # シールド・フォース（第166弾）: 紐付いたシールドがシールドゾーンにある間だけ機能する
+               and (not ab.get("fort_e") or self._fort_e_active(cid, ab["fort_e"]))   # フォートE（第168弾）: 召喚時に指定種族のマナをタップしていた時だけ機能する
                and (not ab.get("odrive")
                     or (ab["odrive"] is True and self.s.cards[cid].odrive)
                     or (isinstance(ab.get("odrive"), str) and ab["odrive"] in self.s.cards[cid].odrive_civs))]   # O・ドライブで得る能力（odrive: <文明> はその文明をタップした時だけ）
@@ -307,6 +310,32 @@ class Engine(SelectorMixin, EventMixin, InterpreterMixin, TurnMixin, CombatMixin
             if iids:
                 out = [(i, ab) for i, ab in out if ab.get("id") not in iids]
         return out
+
+    def _fort_e_tapped(self, cid: int, spec: dict) -> list:
+        """フォートE: 召喚時にタップしたマナのうち、指定種族に合うものの参照（[cid, gen] の列）。
+
+        種族は召喚時のスナップショットで照合する（タップしたマナが後から動いても、
+        召喚という出来事の条件は変わらない）。power_of は複数参照で最大値を返すため、
+        「タップした〜のいずれかよりパワーが小さい」は power_le: {sum: [power_of, -1]} で書ける。
+        """
+        races = set(spec.get("races", []))
+        return [list(e["ref"]) for e in self.s.cards[cid].summon_tapped
+                if races & set(e.get("races", [])) and self.s.alive(e["ref"])]
+
+    def _fort_e_active(self, cid: int, spec) -> bool:
+        if not isinstance(spec, dict):
+            return False
+        return bool(self._fort_e_tapped(cid, spec))
+
+    def _sforce_active(self, cid: int) -> bool:
+        """シールド・フォース: このクリーチャーに紐付いたシールドが今もシールドゾーンにあるか。"""
+        s = self.s
+        ref = list(s.ref(cid))
+        for sh in s.zones["shield"][s.cards[cid].controller]:
+            sf = s.cards[sh].sforce_of
+            if sf is not None and list(sf) == ref:
+                return True
+        return False
 
     def _ignored_ids(self, cid: int) -> set[str]:
         """id で指定して無視されている能力（「真上の▪️能力を無視する」など）。
@@ -494,13 +523,23 @@ class Engine(SelectorMixin, EventMixin, InterpreterMixin, TurnMixin, CombatMixin
                     "keywords": set(), "name": d.name, "names": [d.name], "allow": [], "deny": [], "require": [],
                     "breaks": 0, "break_opts": [], "breaks_add": 0, "pay_cost": d.cost, "sac_reduce": 0,
                     "opt_reduce": None, "cost_may": [], "no_leave": [], "must_be_attacked": False,
-                    "must_be_attacked_first": False,
+                    "must_be_attacked_first": False, "must_attack_creature": False,
+                    "must_attack_creature_first": False,
                     "battle_indestructible": False, "win_all_battles": False, "crystal_soul": 0}
         ch = {"power": d.power, "cost": d.cost, "civs": list(d.civs), "types": list(d.types),
               "races": list(d.races), "keywords": set(d.keywords), "name": d.name, "names": [d.name],
               "allow": [], "deny": [], "require": [], "breaks": 1, "break_opts": [], "breaks_add": 0, "pay_cost": d.cost, "sac_reduce": 0, "opt_reduce": None, "cost_may": [], "no_leave": [], "must_be_attacked": False, "must_be_attacked_first": False,
+              "must_attack_creature": False, "must_attack_creature_first": False,
               "battle_indestructible": False, "battle_indestructible_filters": [], "win_all_battles": False,
               "indestructible": False, "crystal_soul": d.crystal_soul}
+        self._chars_busy.add(cid)
+        try:
+            return self._chars_calc_body(cid, face, c, d, ch)
+        finally:
+            self._chars_busy.discard(cid)
+
+    def _chars_calc_body(self, cid: int, face: int | None, c, d, ch: dict) -> dict:
+        """_chars_calc の本体（_chars_busy に cid を入れた状態で呼ぶ）。"""
         if (d.neo or d.grave_evo) and c.zone == "bz" and c.under and "evolution" not in ch["types"]:
             ch["types"].append("evolution")   # NEO進化・墓地進化: カードが下にあれば進化クリーチャーとして扱う
         own = self.abilities(cid, "static") if face is None else list(enumerate(d.abilities))
@@ -585,6 +624,11 @@ class Engine(SelectorMixin, EventMixin, InterpreterMixin, TurnMixin, CombatMixin
                 ch["must_be_attacked_first"] = True
             elif _mba:   # 「相手のクリーチャーが攻撃する時、可能ならこのクリーチャーを攻撃する」（第51弾）
                 ch["must_be_attacked"] = True
+            _mac = m.get("must_attack_creature")
+            if isinstance(_mac, dict):   # 「可能ならクリーチャーを攻撃する」（第171弾）: そのクリーチャーの初回攻撃だけ、攻撃できるクリーチャーがいればプレイヤーを攻撃できない
+                ch["must_attack_creature_first"] = True
+            elif _mac:   # 常時: 攻撃できるクリーチャーがいればプレイヤーを攻撃できない
+                ch["must_attack_creature"] = True
             if m.get("battle_indestructible") is True:   # 「バトル中、このクリーチャーは破壊されない」（第59弾）
                 ch["battle_indestructible"] = True
             elif isinstance(m.get("battle_indestructible"), dict):   # 「〜とのバトル中、破壊されない」（第122弾）: 相手はバトル時に判定
@@ -605,7 +649,12 @@ class Engine(SelectorMixin, EventMixin, InterpreterMixin, TurnMixin, CombatMixin
                 if nm not in ch["names"]:
                     ch["names"].append(nm)
             if "breaks_add" in m:   # 「シールドをさらにN枚ブレイクする／N枚少なくブレイクする」相対指定（負値も可）。集約の最後に break_opts の各値へ加算する
-                ch["breaks_add"] += m["breaks_add"]
+                # 辞書形 {amount, count}（第170弾）: 「〜1枚につき、さらに1枚ブレイクする」（dmc59-006 型）
+                ba = m["breaks_add"]
+                if isinstance(ba, dict):
+                    ch["breaks_add"] += ba["amount"] * self.count_of(ba["count"], env_self)
+                else:
+                    ch["breaks_add"] += ba
             if "breaks" in m:   # ブレイカー能力ごとのブレイク数（509.2b）。使う能力は攻撃時に選ぶ（509.2c）
                 b = m["breaks"]
                 if isinstance(b, dict):   # dict 形式はすべて「base + 値」（base は既定1、第145弾）: {count} は base+数（クルー・ブレイカー、第130弾）、
@@ -635,6 +684,8 @@ class Engine(SelectorMixin, EventMixin, InterpreterMixin, TurnMixin, CombatMixin
                 ch["no_leave"] += sc["no_leave"]
                 ch["must_be_attacked"] = ch["must_be_attacked"] or sc["must_be_attacked"]
                 ch["must_be_attacked_first"] = ch["must_be_attacked_first"] or sc.get("must_be_attacked_first", False)
+                ch["must_attack_creature"] = ch["must_attack_creature"] or sc["must_attack_creature"]
+                ch["must_attack_creature_first"] = ch["must_attack_creature_first"] or sc.get("must_attack_creature_first", False)
                 ch["battle_indestructible"] = ch["battle_indestructible"] or sc["battle_indestructible"]
                 ch["battle_indestructible_filters"] += sc.get("battle_indestructible_filters", [])
                 ch["win_all_battles"] = ch["win_all_battles"] or sc["win_all_battles"]
@@ -821,6 +872,7 @@ class Engine(SelectorMixin, EventMixin, InterpreterMixin, TurnMixin, CombatMixin
                 t.under.remove(cid)
         c.under, c.top_of = [], -1
         c.exlife_of = None                          # 一度離れたシールドは紐付けが外れる
+        c.sforce_of = None                          # シールド・フォースの紐付けも同様
         c.no_untap_next = False                     # ゾーン移動で新しいオブジェクトになるので凍結の印も消える
         c.hyper = False                             # ハイパーモードも新しいオブジェクトでは解ける
         if to != "hand" and frm in ("hand", "hold"):
@@ -830,6 +882,7 @@ class Engine(SelectorMixin, EventMixin, InterpreterMixin, TurnMixin, CombatMixin
         c.stp = False                               # S・トリガー・プラスの印も消える
         c.odrive = False                            # O・ドライブの印も消える
         c.odrive_civs = []
+        c.summon_tapped = []                        # フォートEの召喚時タップ記録も消える
         c.bazurenda = 0                             # バズレンダの追加支払い回数も消える
         c.vivid = False                             # ビビッドローの表向きも消える（引いたターンの記録 drawn_turn は残す）
         c.dswitched = False                         # Dスイッチの使用済みも消える（新しいオブジェクトとして出直したら再び使える。第151弾）

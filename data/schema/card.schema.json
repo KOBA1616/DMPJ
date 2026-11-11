@@ -148,6 +148,10 @@
       "colorless": {},
       "cost_ge": {},
       "cost_le": {},
+      "crossed": {},
+      "crossed_ge": {},
+      "crossed_le": {},
+      "crossed_name": {},
       "entered_this_turn": {},
       "evolution": {},
       "face_down": {},
@@ -248,7 +252,9 @@
   "o_drive": {},
   "odrive_spell": {},
   "sst_spell": {},
-  "stp_spell": {}
+  "stp_spell": {},
+  "recycle": {},
+  "deck_evolution": {}
  },
  "required": [
   "id"
@@ -386,6 +392,10 @@
         "colorless": {},
         "cost_ge": {},
         "cost_le": {},
+        "crossed": {},
+        "crossed_ge": {},
+        "crossed_le": {},
+        "crossed_name": {},
         "entered_this_turn": {},
         "evolution": {},
         "face_down": {},
@@ -488,7 +498,9 @@
     "o_drive": {},
     "odrive_spell": {},
     "sst_spell": {},
-    "stp_spell": {}
+    "stp_spell": {},
+    "recycle": {},
+    "deck_evolution": {}
    },
    "required": [
     "name",
@@ -1122,6 +1134,9 @@
        "stack_evo": {
         "type": "boolean"
        },
+       "evo_source": {
+        "$ref": "#/$defs/selector"
+       },
        "strigger": {
         "type": "string"
        },
@@ -1342,6 +1357,18 @@
       "type": "object",
       "properties": {
        "op": {
+        "const": "sforce_link"
+       }
+      },
+      "required": [
+       "op"
+      ],
+      "additionalProperties": false
+     },
+     {
+      "type": "object",
+      "properties": {
+       "op": {
         "const": "shield_plus"
        }
       },
@@ -1529,6 +1556,22 @@
       "type": "object",
       "properties": {
        "op": {
+        "const": "uncross"
+       },
+       "select": {
+        "$ref": "#/$defs/selector"
+       }
+      },
+      "required": [
+       "op",
+       "select"
+      ],
+      "additionalProperties": false
+     },
+     {
+      "type": "object",
+      "properties": {
+       "op": {
         "const": "untap"
        },
        "select": {
@@ -1664,6 +1707,10 @@
     "colorless": {},
     "cost_ge": {},
     "cost_le": {},
+    "crossed": {},
+    "crossed_ge": {},
+    "crossed_le": {},
+    "crossed_name": {},
     "entered_this_turn": {},
     "evolution": {},
     "face_down": {},
@@ -1745,6 +1792,8 @@
     "owner_of": {
      "type": "string"
     },
+    "crossed_to": {},
+    "host_of": {},
     "filter": {
      "$ref": "#/$defs/filter"
     },
@@ -1999,6 +2048,22 @@
       },
       "declared": {
        "type": "string"
+      },
+      "crossed_count": {
+       "anyOf": [
+        {
+         "type": "string"
+        },
+        {
+         "type": "object",
+         "properties": {
+          "ref": {
+           "type": "string"
+          }
+         },
+         "additionalProperties": false
+        }
+       ]
       }
      },
      "minProperties": 1,
@@ -2370,7 +2435,33 @@
      ]
     },
     "breaks_add": {
-     "type": "integer"
+     "anyOf": [
+      {
+       "type": "integer"
+      },
+      {
+       "type": "object",
+       "properties": {
+        "amount": {
+         "type": "integer"
+        },
+        "count": {
+         "anyOf": [
+          {
+           "$ref": "#/$defs/selector"
+          },
+          {
+           "$ref": "#/$defs/expr"
+          }
+         ]
+        }
+       },
+       "required": [
+        "amount"
+       ],
+       "additionalProperties": false
+      }
+     ]
     },
     "breaks_per_power": {
      "type": "integer"
@@ -2592,6 +2683,7 @@
     "add_civs": {},
     "battle_indestructible": {},
     "indestructible": {},
+    "must_attack_creature": {},
     "must_be_attacked": {},
     "no_leave": {},
     "win_all_battles": {}
@@ -2620,6 +2712,7 @@
      "ignore",
      "ignore_ids",
      "indestructible",
+     "must_attack_creature",
      "must_be_attacked",
      "no_leave",
      "opt_reduce",
@@ -2846,7 +2939,10 @@
     "face_up": {},
     "broke": {},
     "blocked": {},
-    "vivid": {}
+    "vivid": {},
+    "emblem": {
+     "type": "boolean"
+    }
    },
    "required": [
     "event"
@@ -2904,7 +3000,8 @@
      "properties": {
       "tap": {},
       "tap_mana": {},
-      "under": {}
+      "under": {},
+      "untap": {}
      },
      "additionalProperties": false
     },
@@ -2926,8 +3023,11 @@
     "bazurenda": {},
     "choukon": {},
     "dswitch": {},
+    "fort_e": {},
     "keyword": {},
     "odrive": {},
+    "redirect": {},
+    "sforce": {},
     "sst": {},
     "stp": {}
    },

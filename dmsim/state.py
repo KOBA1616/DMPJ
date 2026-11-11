@@ -47,6 +47,7 @@ class Card:
     entered_seq: int = 0                              # バトルゾーンに出た時刻（608.5 無視効果の優先）
     crossed: list | None = None                       # クロスギアがクロスしているクリーチャーの参照 [cid, gen]（303.3）。離れていれば無効
     exlife_of: list | None = None                     # 「EXライフ」シールドの紐付け先クリーチャーの参照 [cid, gen]。離れたら外れる
+    sforce_of: list | None = None                     # シールド・フォース: このシールドが力を与えているクリーチャーの参照 [cid, gen]。シールドゾーンを離れたら外れる
     no_untap_next: bool = False                       # フリーズ等: 次の持ち主のターン開始時にアンタップしない（1回だけ。開始時に消費）
     link: int = 0
     hyper: bool = False                                     # G・リンクのグループID（0=リンクしていない）。同じIDのカード同士がリンクしている
@@ -56,6 +57,7 @@ class Card:
     stp: bool = False                                       # S・トリガー・プラス: 条件を満たして使った時に追加能力（stp印つき）を得た
     odrive: bool = False                                    # O・ドライブ: 追加のマナタップをして召喚した
     odrive_civs: list = field(default_factory=list)         # O・ドライブ: 実際にタップした文明（文明別の能力用）
+    summon_tapped: list = field(default_factory=list)       # フォートE: 召喚時にタップしたマナ [{ref: [cid, gen], races: [種族...]}]。ゾーン移動で消える
     bazurenda: int = 0                                      # バズレンダ: 追加で支払った回数
     drawn_turn: int = -1                                    # このターンにドローしたか（ビビッドロー）
     vivid: bool = False                                     # ビビッドロー: 表向きにした

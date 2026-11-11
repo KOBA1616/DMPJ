@@ -22,6 +22,7 @@ class Option(TypedDict, total=False):
     face: int
     shield: int                     # S・バック: 捨てるシールドのカード
     tap: int                             # 起動型能力のコストでタップするクリーチャー
+    payer: int                           # 攻撃先変更（第171弾）: コストでアンタップするクリーチャー
     tap_mana: int                        # 起動型能力の複合コストで追加でタップするマナの枚数
     under_cost: int                      # 起動型能力のコストで墓地に置く下のカードの枚数（第53弾）
     grave_evo: bool                      # 墓地進化（自分の墓地のクリーチャーの上に重ねて出す選択肢）
@@ -36,6 +37,7 @@ class Option(TypedDict, total=False):
     vivid: NotRequired[bool]             # ビビッドロー（代替コストで実行する選択肢）
     reveal: NotRequired[bool]            # ビビッドロー（表向きにする選択肢）
     fushigi: NotRequired[bool]           # フシギバース（墓地から召喚する選択肢）
+    recycle: NotRequired[bool]           # リサイクル（墓地から代替コストで唱える選択肢。第172弾）
 
 
 class Decision(TypedDict):
@@ -218,6 +220,7 @@ class AttackTask(TypedDict):
     end_fired: NotRequired[bool]         # attack_end イベントを発火済みか
     decl: NotRequired[int]               # 使用宣言の段階（506.3b〜）
     subbed: NotRequired[list[int]]       # 身代わりバトルの置換を済ませた側（0=攻撃側, 1=攻撃先）
+    redirect_done: NotRequired[bool]     # 攻撃先変更（第171弾）の諮問を済ませたか
     answer: NotRequired[list[int]]
 
 
@@ -280,6 +283,7 @@ class PlayTask(TypedDict):
     cost_civs: NotRequired[list]         # 代替コストで必要な文明（省略時はカードの文明）
     st: NotRequired[bool]                # S・トリガーとして実行する（101.4g）
     paid_done: NotRequired[bool]         # 本体のコストを支払い済み（後段の決定での再入対策）
+    summon_paid: NotRequired[list[int]]  # フォートE（第168弾）: 召喚コストとしてタップしたマナ
     bz_done: NotRequired[bool]           # バズレンダ: 追加支払いの確認が終わった
     bz_count: NotRequired[int]           # バズレンダ: 追加で支払った回数
     alt: NotRequired[bool]               # 代替コストで実行する
@@ -302,6 +306,7 @@ class PlayTask(TypedDict):
     odrive_civs: NotRequired[list]       # O・ドライブ: タップした文明（イベント/印への引き渡し用）
     climb: NotRequired[bool]             # ムゲンクライムとして実行する
     climb_done: NotRequired[bool]        # ムゲンクライム: クリーチャーのタップが済んだ
+    recycle: NotRequired[bool]           # リサイクルとして実行する（第172弾: 解決後は山札の一番下へ）
     resolve_to: NotRequired[str]         # 解決後の置き場所（play_free の resolve_to）
     resolve_position: NotRequired[str]   # resolve_to が山札のときの top / bottom
     answer: NotRequired[list[int]]
@@ -418,6 +423,7 @@ class PutStackedTask(TypedDict):
     seal: NotRequired[int]       # 封印を付けた状態で出す（move の seal の転送）
     bind: NotRequired[str]       # move の as の転送（全員出し終わった後に bind する）
     evo_v: NotRequired[list]     # 進化V: フィルタごとに選んだ進化元
+    evo_source: NotRequired[list]  # 固定の進化元（第173弾。move の evo_source の転送）
     answer: NotRequired[list[int]]
 
 
