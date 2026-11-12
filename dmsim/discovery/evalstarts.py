@@ -17,7 +17,7 @@ import json
 
 from .. import scenario
 from ..engine.core import IllegalAnswer
-from .loopspec import LoopSpec
+from ..base.loopspec import LoopSpec
 from ..engine_view import active_of, defn_of, result_of, turn_of, zone_of
 
 VERSION = 1

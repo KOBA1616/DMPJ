@@ -17,7 +17,7 @@ from pathlib import Path
 
 from .. import loop_first as lf
 from .. import scenario as sc
-from .loopspec import LoopSpec, Pred, Route
+from ..base.loopspec import LoopSpec, Pred, Route
 
 ZONES = ("hand", "graveyard", "mana", "bz")
 Test = "Callable[[dict], bool]"

@@ -1,7 +1,7 @@
 """イベント・パイプライン（置換→同時適用→状況起因処理→誘発）と待機・解決窓。"""
 from __future__ import annotations
 
-from ..types import CaptureTask, CloseWinTask, BattleRunTask, EnqueueStTask, EventTask, GLinkTask, LoseReplaceTask, OpenWinTask, ResolvePendingTask, SbackTask, SealReleaseTask, SmaxReduceTask
+from ..base.types import CaptureTask, CloseWinTask, BattleRunTask, EnqueueStTask, EventTask, GLinkTask, LoseReplaceTask, OpenWinTask, ResolvePendingTask, SbackTask, SealReleaseTask, SmaxReduceTask
 from .registry import task
 
 

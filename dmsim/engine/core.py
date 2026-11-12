@@ -19,7 +19,7 @@ from ..state import Card, GameState, rng_below
 from .combat import CombatMixin
 from .events import EventMixin
 from .interpreter import InterpreterMixin
-from ..types import Option, check_shape
+from ..base.types import Option, check_shape
 from .registry import TASK_SHAPES, TASKS
 from .selectors import SelectorMixin
 from .turn import TurnMixin
