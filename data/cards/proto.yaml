@@ -7806,3 +7806,91 @@ cards:
     text: 試験用のジョーカーズ。
     abilities: []
     source: {official: T519, review: pending}
+  - id: T520
+    name: 試験用代替獣
+    types: [creature]
+    civs: [fire]
+    cost: 6
+    power: 5000
+    races: [テスト]
+    mana: 1
+    alt_cost: {cost: 2, civs: [fire, fire], if: {cmp: [{count: {zone: mana, owner: you}}, ">=", 3]}}
+    text: 自分のマナゾーンにカードが3枚以上あれば、このクリーチャーを[ff02]支払って召喚してもよい。そうしたら、このターンの終わりにこのクリーチャーを破壊し、カードを1枚引く。
+    abilities:
+      - kind: trigger
+        when: {event: move, to: bz, subject: self}
+        if: {alt_paid: true}
+        effect:
+          - op: delayed_trigger
+            when: {event: turn_end}
+            effect:
+              - {op: move, select: {ref: self}, to: graveyard, reason: destroy}
+              - {op: draw, count: 1}
+    source: {official: T520, review: pending}
+  - id: T521
+    name: 試験用数字呪文
+    types: [spell]
+    civs: [water]
+    cost: 2
+    mana: 1
+    text: 数字を1つ選ぶ。次の自分のターンのはじめまで、その数字と同じコストの相手のエレメントの能力を無視し、相手はその数字と同じコストの呪文を唱えられず、同じコストの相手のクリーチャーは攻撃もブロックもできない。
+    spell:
+      - {op: choose_number, as: n}
+      - {op: modify, select: {zone: bz, owner: opp, filter: {cost_le: {declared: n}, cost_ge: {declared: n}}, count: all}, mod: {ignore: [all]}, duration: until_next_own_turn_start}
+      - {op: modify, select: {zone: hand, owner: opp, filter: {types: [spell], cost_le: {declared: n}, cost_ge: {declared: n}}, count: all}, mod: {deny: [cast]}, duration: until_next_own_turn_start}
+      - {op: modify, select: {zone: bz, owner: opp, filter: {types: [creature], cost_le: {declared: n}, cost_ge: {declared: n}}, count: all}, mod: {deny: [attack_player, attack_creature, block]}, duration: until_next_own_turn_start}
+    source: {official: T521, review: pending}
+  - id: T522
+    name: 試験用強化獣
+    types: [creature]
+    civs: [fire]
+    cost: 3
+    power: 3000
+    races: [テスト]
+    mana: 1
+    text: このクリーチャーのパワーを+2000する。
+    abilities:
+      - {kind: static, affects: self, mod: {power: 2000}}
+    source: {official: T522, review: pending}
+  - id: T523
+    name: 試験用3コスト呪文
+    types: [spell]
+    civs: [fire]
+    cost: 3
+    mana: 1
+    text: カードを1枚引く。
+    spell:
+      - {op: draw, count: 1}
+    source: {official: T523, review: pending}
+  - id: T524
+    name: 試験用バトル後自壊獣
+    types: [creature]
+    civs: [fire]
+    cost: 4
+    power: 4000
+    races: [テスト]
+    mana: 1
+    text: このクリーチャーがバトルする時、バトルの後、このクリーチャーを破壊する。
+    abilities:
+      - kind: trigger
+        when: {event: battle_end, subject: self}
+        effect:
+          - {op: move, select: {ref: self}, to: graveyard, reason: destroy}
+    source: {official: T524, review: pending}
+  - id: T525
+    name: 試験用ブロック後回復獣
+    types: [creature]
+    civs: [light]
+    cost: 6
+    power: 8000
+    races: [テスト]
+    mana: 1
+    keywords: [blocker]
+    text: ブロッカー。このクリーチャーがブロックした時、バトルの後でアンタップする。
+    abilities:
+      - kind: trigger
+        when: {event: battle_end, subject: self}
+        if: {is_turn: opp}
+        effect:
+          - {op: untap, select: {ref: self}}
+    source: {official: T525, review: pending}

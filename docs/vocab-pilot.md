@@ -2013,3 +2013,24 @@ EXライフ本体（出す時のシールド化・離脱置換）は実装済み
 JクライムN は「攻撃誘発 → may［swap {out: {ref: self}, in: {zone: graveyard, filter: {races: [ジョーカーズ], cost_le: N}, count: 1}, out_to: graveyard}］」のイディオムで書ける。op swap（701.26）は入ったクリーチャーにタップ状態と攻撃中の状態を引き継がせる。新規エンジン語彙なし。
 - proto T518（Jクライム獣、入れ替え/辞退の対照つき）/ T519（墓地ジョーカーズ）。tests/test_vocab_pilot208.py 3件＋test_vocab_pilot208_cards.py 2件。
 - 再変換はラウンド244で実施（登録8件の見込み）。
+
+## 第209弾: alternative_summon_cost（代替コスト）のイディオム確認（2026-11-12）
+代替コストは面の alt_cost フィールド（既存）で書く。新規エンジン語彙なし。
+- マナ形式: {cost, civs, if?}（[ff02] = {cost: 2, civs: [fire, fire]}。if は提示条件）。行動形式: {do: [{zone, filter?, count, to, reason}]}（自分のクリーチャーを4体破壊する等）。
+- 「そうしたら」の後続は条件 {alt_paid: true} で受ける（dm26ex2-075 の先例）。「ターンの終わりに破壊し1枚引く」は CIP 誘発（if alt_paid）から delayed_trigger {when: turn_end} に載せる。
+- 未対応: 条件つきの追加軽減＋「その攻撃の後で破壊する」後続（after_attack_destroy として差し戻し）。
+- proto T520（代替獣。代替提示/代替時の後続/通常支払いの判別/条件未成立で不提示）。tests/test_vocab_pilot209.py 4件＋test_vocab_pilot209_cards.py 2件。
+- 再変換はラウンド245で実施（登録5件＋差し戻し3件の見込み）。
+
+## 第210弾: number_choice（数字を1つ選ぶ）のイディオム確認（2026-11-12）
+数字選択の op choose_number は既存（宣言プリミティブ。選んだ整数は GameState.declares に入り {declared: 名前} で読む）。新規エンジン語彙なし。
+- コスト一致は filter の cost_le と cost_ge に同じ {declared: n} を置く。効果は modify ＋ duration until_next_own_turn_start で: 能力を無視する = {ignore: [all]}（バトルゾーンの相手エレメント全体）、唱えられない = 手札の相手呪文への {deny: [cast]}、攻撃もブロックもできない = {deny: [attack_player, attack_creature, block]}（action に単独の attack はない）。
+- 宣言の決定は kind choose_one、キーは "num:<n>"。範囲の既定は 0〜10、上限つきの原文は max で指定する。
+- proto T521（数字呪文。3効果すべてを行動で検証）/ T522（強化獣）/ T523（3コスト呪文）。tests/test_vocab_pilot210.py 3件＋test_vocab_pilot210_cards.py 2件。
+- 再変換はラウンド246で実施（登録7件＋差し戻し1件の見込み。dm26ex1-n006 は数字選択ではなく登場反応のラベルずれ、dmrp21-002 は攻撃の終わりの処理が残る）。
+
+## 第211弾: battle_end_trigger（バトルの後）のイディオム確認（2026-11-12）
+バトルの終了時に両参加者を subject とする battle_end レコードが出る（combat.py。バトルで場を離れた参加者の誘発は拾われないが、「バトルの後に破壊する」は勝てば場に残っており負ければ既に破壊されているため意味が一致する）。新規エンジン語彙なし。
+- 形: trigger {when: {event: battle_end, subject: self}}。「ブロックした時」は相手のターン = 防御側として if {is_turn: opp} を添える。
+- proto T524（バトルの後に自壊。勝ちバトル/バトルなしの対照つき）/ T525（ブロック後にアンタップ）。tests/test_vocab_pilot211.py 4件＋test_vocab_pilot211_cards.py 1件。
+- 再変換はラウンド247で実施（登録6件の見込み。dmd02-004 の partial には「クリーチャーを攻撃できない」が落ちていたため deny [attack_creature] の static を足して登録する）。
