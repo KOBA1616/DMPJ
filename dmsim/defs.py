@@ -27,9 +27,10 @@ EVENTS = {"move", "draw", "cast", "summon", "attack", "block", "break", "tap", "
           "use_s_trigger", "battle_end"}
 ABILITY_KINDS = {"trigger", "replace", "static", "declare", "activate", "silent", "state", "partner"}   # state: 状態を常に見て、満たされたら勝敗が決まる常在効果（if と effect: [win/lose]）。partner: [P]能力（単独では機能せず、キズナ等で「使う」ことで解決する）
 ABILITY_KEYS = {"kind", "when", "if", "effect", "instead", "optional", "affects", "mod", "zone", "keyword", "cost", "id",
-                "once_per_turn", "first_time", "sst", "stp", "odrive", "choukon", "bazurenda", "any_attacker", "continue", "dswitch", "sforce", "fort_e", "redirect", "accel"}
+                "once_per_turn", "first_time", "sst", "stp", "odrive", "choukon", "bazurenda", "any_attacker", "continue", "dswitch", "sforce", "fort_e", "redirect", "accel", "no_lose"}
 REASONS = {"put", "destroy", "return", "discard", "charge", "summon", "cast", "break",
            "draw", "battle", "sba", "resolve", "evolve", "seal"}
+LOSE_REASONS = {"direct_attack", "deck_out", "state", "effect"}   # 第188弾: 敗北イベントの reason（when の照合用。移動の reason とは別）
 VIAS = {"revolution_change", "generate", "d_d_d"}   # 出し方の印（「革命チェンジによって出た時」「D・D・Dによって出た時」など）
 DURATIONS_FIXED = {"end_of_turn", "during_attack", "permanent", "until_next_own_turn_start"}
 MOD_KEYS = {"power", "grant", "allow", "deny", "breaks", "breaks_add", "breaks_per_power", "battle_power", "power_when", "cost", "cost_min", "cost_may", "sac_reduce", "opt_reduce", "ignore", "ignore_ids", "gain", "require", "add_of", "add_races", "add_names", "no_leave", "must_be_attacked", "must_attack_creature", "battle_indestructible", "win_all_battles", "add_civs", "indestructible", "double_power", "crystal_soul"}
@@ -44,12 +45,13 @@ SELECTOR_KEYS = {"zone", "owner", "owner_of", "filter", "count", "up_to", "from_
                  "crossed_to", "host_of"}   # crossed_to: 「そのクリーチャーにクロスされているギア」。host_of: 「そのギアをクロスしているクリーチャー」（第170弾）。castle_of: 「その城が要塞化しているシールド」（第178弾）
 FILTER_KEYS = {"any_of", "types", "not_types", "civs", "civs_all", "not_civs", "races", "race_has", "not_race_has", "name", "name_has", "not_name",
                "cost_le", "cost_ge", "power_le", "power_ge", "tapped", "keyword", "multicolor", "colorless", "face_down", "face_up", "neo", "vanilla", "sealed", "evolution", "mugen_climb", "twinpact", "vividraw", "fushigi", "linked_god", "entered_this_turn",
+               "spell_cost_le", "spell_cost_ge",   # 呪文面（ツインパクトの呪文側）のコスト（第184弾）
                "crossed", "crossed_ge", "crossed_le", "crossed_name", "evo_source_of", "fortifying", "fortified"}   # クロス状態（第170弾）: crossed はギアがクロスされているか、crossed_ge/le はその枚数、crossed_name はその名前のギアがクロスされているか。evo_source_of（第177弾）: そのクリーチャーの進化元になれるカード（値は "self" / 変数名）。fortifying（第178弾）: シールドを要塞化している城。fortified（第178弾）: 要塞化されたシールド
-FILTER_EXPR_KEYS = {"cost_le", "cost_ge", "power_le", "power_ge", "races", "civs", "not_civs", "name", "crossed_ge", "crossed_le"}   # 値に式を書ける（解決時に計算）。civs / not_civs / name は宣言プリミティブ（{declared:}）の受け口（バンドB U3／バンドC2 U97）
+FILTER_EXPR_KEYS = {"cost_le", "cost_ge", "power_le", "power_ge", "races", "civs", "not_civs", "name", "crossed_ge", "crossed_le", "spell_cost_le", "spell_cost_ge"}   # 値に式を書ける（解決時に計算）。civs / not_civs / name は宣言プリミティブ（{declared:}）の受け口（バンドB U3／バンドC2 U97）
 # 履歴カウンタ（式 {turn_count: ...}）の kind 列挙（バンドC1 U19＋統一で追加した分）。
 # owner に any を許すのは destroyed と attack だけ（他は you/opp）
 TURN_COUNT_KINDS = {"shield_put", "shield_left", "mana_put", "cast", "summon", "attack", "destroyed",
-                    "broke_by_self", "draw", "broken", "enter", "discard", "leave", "tap", "untap",
+                    "broke_by_self", "broke_by_self_attack", "draw", "broken", "enter", "discard", "leave", "tap", "untap",
                     "block", "enter_unpaid", "attack_by", "attack_on"}
 TURN_COUNT_ANY_KINDS = {"destroyed", "attack"}
 ORD_KINDS = {"mana_put", "enter", "cast", "summon", "draw", "attack", "attack_by"}   # when の {ord: ...} で照合できる kind
@@ -363,6 +365,8 @@ class Checker:
                 raise DefError(f"{where}: unknown zone '{z}'")
         if sel.get("owner", "you") not in ("you", "opp", "any"):
             raise DefError(f"{where}: bad owner '{sel['owner']}'")
+        if "chooser" in sel and sel["chooser"] not in ("you", "opp", "opponent", "random"):
+            raise DefError(f"{where}: bad chooser '{sel['chooser']}'")
         for k in ("total_cost_le", "total_cost_ge", "total_power_le", "total_power_ge"):
             if k in sel:
                 self.expr(sel[k], where)
@@ -463,8 +467,8 @@ class Checker:
                     owner = v.get("owner", "you")
                     if owner not in ("you", "opp", "any") or (owner == "any" and kind not in TURN_COUNT_ANY_KINDS):
                         raise DefError(f"{where}: turn_count owner must be you/opp (any は destroyed / attack だけ)")
-                    if kind == "broke_by_self" and set(v) != {"kind"}:
-                        raise DefError(f"{where}: turn_count broke_by_self takes no owner/other/filter (self 固定)")
+                    if kind in ("broke_by_self", "broke_by_self_attack") and set(v) != {"kind"}:
+                        raise DefError(f"{where}: turn_count {kind} takes no owner/other/filter (self 固定)")
                     if "other" in v and (kind != "attack" or not isinstance(v["other"], bool)):
                         raise DefError(f"{where}: turn_count other is only for kind: attack, as a bool")
                     if "filter" in v:
@@ -662,11 +666,23 @@ class Checker:
                 raise DefError(f"{where}: opt_reduce.then must be destroy / deck_bottom_draw")
             if "do" in o:
                 do = o["do"]
-                if not isinstance(do, dict) or "select" not in do or set(do) - {"select", "move_to", "shuffle", "min", "max", "tap"}:
-                    raise DefError(f"{where}: opt_reduce.do needs select and optional move_to/shuffle/min/max/tap")
-                self.selector(do["select"], where)
+                if not isinstance(do, dict) or set(do) - {"select", "selects", "move_to", "shuffle", "min", "max", "tap", "strigger_off"}:
+                    raise DefError(f"{where}: opt_reduce.do needs select/selects and optional move_to/shuffle/min/max/tap/strigger_off")
+                if ("select" in do) == ("selects" in do):
+                    raise DefError(f"{where}: opt_reduce.do needs exactly one of select / selects")
+                if "select" in do:
+                    self.selector(do["select"], where)
+                else:
+                    if not isinstance(do["selects"], list) or not do["selects"]:
+                        raise DefError(f"{where}: opt_reduce.do.selects must be a non-empty list")
+                    for e in do["selects"]:
+                        if not isinstance(e, dict) or set(e) - {"select", "min", "max"} or "select" not in e:
+                            raise DefError(f"{where}: opt_reduce.do.selects entry needs select and optional min/max")
+                        self.selector(e["select"], where)
                 if "move_to" in do and do["move_to"] not in self.zones:
                     raise DefError(f"{where}: opt_reduce.do.move_to must be a zone")
+                if "strigger_off" in do and not isinstance(do["strigger_off"], bool):
+                    raise DefError(f"{where}: opt_reduce.do.strigger_off must be a bool")
         for kw in m.get("grant", []):
             if kw not in self.keywords:
                 raise DefError(f"{where}: unknown keyword '{kw}'")
@@ -681,6 +697,13 @@ class Checker:
                     self.filter(e.get("other", {}), where)
                     if "once" in e and not isinstance(e["once"], bool):
                         raise DefError(f"{where}: allow/deny entry 'once' must be a boolean")
+                    if "max_per_turn" in e and not (isinstance(e["max_per_turn"], int) and not isinstance(e["max_per_turn"], bool)
+                                                     and e["max_per_turn"] >= 1):
+                        raise DefError(f"{where}: allow/deny entry 'max_per_turn' must be an int >= 1")
+                    if "count" in e and e["count"] not in TURN_COUNT_KINDS:
+                        raise DefError(f"{where}: allow/deny entry 'count' must be a history kind")
+                    if set(e) - {"action", "other", "once", "max_per_turn", "count"}:
+                        raise DefError(f"{where}: allow/deny entry has unknown keys {sorted(set(e) - {'action', 'other', 'once', 'max_per_turn', 'count'})}")
         if "cost" in m:   # 支払うコストの増減: 整数、または {amount: N, count: <selector>}（1体につきN。amount が負なら軽減）
             cm = m["cost"]
             if isinstance(cm, dict):
@@ -732,8 +755,9 @@ class Checker:
                         raise DefError(f"{where}: unknown zone '{v}'")
         if "reason" in w:
             vals = w["reason"] if isinstance(w["reason"], list) else [w["reason"]]
+            allowed = REASONS | LOSE_REASONS if ev == "lose" else REASONS
             for v in vals:
-                if v not in REASONS:
+                if v not in allowed:
                     raise DefError(f"{where}: unknown reason '{v}'")
         tg = w.get("target")
         if tg is not None and tg not in ("player", "creature", "self") and not isinstance(tg, dict):
@@ -797,6 +821,13 @@ class Checker:
         if "accel" in ab:   # アクセル（第175弾）: クロスギアがクロスされている間だけ得る能力。true だけ
             if ab["accel"] is not True:
                 raise DefError(f"{where}: accel is only for abilities, as true")
+        if "no_lose" in ab:   # 第188弾: 敗北の防止（常在型）。static だけ。true か {deck_out_only?: bool}
+            if kind != "static":
+                raise DefError(f"{where}: no_lose is only for static")
+            nl = ab["no_lose"]
+            if nl is not True and not (isinstance(nl, dict) and set(nl) <= {"deck_out_only"}
+                                       and isinstance(nl.get("deck_out_only", False), bool)):
+                raise DefError(f"{where}: no_lose must be true or {{deck_out_only?: bool}}")
         if "fort_e" in ab:   # フォートE（第168弾）: 召喚時にタップしたマナの種族で得る能力
             fe = ab["fort_e"]
             if not isinstance(fe, dict) or not isinstance(fe.get("races"), list) or not fe["races"] \

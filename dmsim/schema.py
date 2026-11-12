@@ -9,7 +9,7 @@ from __future__ import annotations
 
 import json
 
-from .defs import ABILITY_KEYS, CARD_TYPES, CIVS, DURATIONS_FIXED, EVENTS, FILTER_KEYS, MOD_KEYS, POSITIONS, REASONS, VIAS, \
+from .defs import ABILITY_KEYS, CARD_TYPES, CIVS, DURATIONS_FIXED, EVENTS, FILTER_KEYS, LOSE_REASONS, MOD_KEYS, POSITIONS, REASONS, TURN_COUNT_KINDS, VIAS, \
     core_ops, load_tables
 
 
@@ -37,7 +37,9 @@ def _build() -> dict:
         op_schemas.append({"type": "object", "properties": {"op": {"const": name}}, "required": ["op"],
                            "description": f"macro: {json.dumps(macros[name], ensure_ascii=False)}"})
     perm = {"anyOf": [{"enum": sorted(actions)},
-                      {"type": "object", "properties": {"action": {"enum": sorted(actions)}, "other": ref("filter"), "once": {"type": "boolean"}},
+                      {"type": "object", "properties": {"action": {"enum": sorted(actions)}, "other": ref("filter"), "once": {"type": "boolean"},
+                                                       "max_per_turn": {"type": "integer", "minimum": 1},
+                                                       "count": {"enum": sorted(TURN_COUNT_KINDS)}},
                        "required": ["action"], "additionalProperties": False}]}
     face_props = {
         "name": {"type": "string"}, "types": {"type": "array", "items": {"enum": sorted(CARD_TYPES)}},
@@ -98,14 +100,14 @@ def _build() -> dict:
                 "cost_min": {"type": "integer"}, "crystal_soul": {"type": "integer", "minimum": 1},
                 "power_when": {"type": "object", "properties": {"amount": {"type": "integer"}, "count": {"anyOf": [ref("selector"), ref("expr")]}, "when": {"enum": ["attacking", "blocking"]}}, "required": ["amount", "when"], "additionalProperties": False},
                 "battle_power": {"type": "object", "properties": {"amount": {"type": "integer"}, "count": {"anyOf": [ref("selector"), ref("expr")]}, "only": {"enum": ["attacking"]}, "opponent_filter": ref("filter")}, "required": ["amount"], "additionalProperties": False},
-                "sac_reduce": {"type": "integer"}, "cost_may": {"type": "object", "properties": {"amount": {"type": "integer"}, "once": {"type": "boolean"}, "must": {"type": "boolean"}, "min": {"type": "integer", "minimum": 0}}, "required": ["amount"], "additionalProperties": False}, "opt_reduce": {"type": "object", "properties": {"amount": {"type": "integer"}, "then": {"enum": ["destroy", "deck_bottom_draw"]}, "floor": {"type": "integer", "minimum": 0}, "per": {"type": "boolean"}, "do": {"type": "object", "properties": {"select": ref("selector"), "move_to": {"type": "string"}, "shuffle": {"type": "boolean"}, "tap": {"type": "boolean"}, "min": {"type": "integer", "minimum": 0}, "max": {"type": "integer", "minimum": 0}}, "required": ["select"], "additionalProperties": False}}, "required": ["amount"], "additionalProperties": False},
+                "sac_reduce": {"type": "integer"}, "cost_may": {"type": "object", "properties": {"amount": {"type": "integer"}, "once": {"type": "boolean"}, "must": {"type": "boolean"}, "min": {"type": "integer", "minimum": 0}}, "required": ["amount"], "additionalProperties": False}, "opt_reduce": {"type": "object", "properties": {"amount": {"type": "integer"}, "then": {"enum": ["destroy", "deck_bottom_draw"]}, "floor": {"type": "integer", "minimum": 0}, "per": {"type": "boolean"}, "do": {"type": "object", "properties": {"select": ref("selector"), "selects": {"type": "array", "items": {"type": "object", "properties": {"select": ref("selector"), "min": {"type": "integer", "minimum": 0}, "max": {"type": "integer", "minimum": 0}}, "required": ["select"], "additionalProperties": False}}, "move_to": {"type": "string"}, "shuffle": {"type": "boolean"}, "tap": {"type": "boolean"}, "strigger_off": {"type": "boolean"}, "min": {"type": "integer", "minimum": 0}, "max": {"type": "integer", "minimum": 0}}, "additionalProperties": False}}, "required": ["amount"], "additionalProperties": False},
                 "ignore": {"type": "array", "items": {"enum": ["trigger", "static", "replace", "all"]}},
                 "ignore_ids": {"type": "array", "items": {"type": "string"}},
                 "gain": {"type": "array", "items": ref("ability")}},
                 "additionalProperties": False, "propertyNames": {"enum": sorted(MOD_KEYS)}},
             "when": {"type": "object", "properties": {
                 "event": {"enum": sorted(EVENTS)}, "from": {"anyOf": [{"enum": sorted(zones)}, {"type": "array", "items": {"enum": sorted(zones)}}]}, "to": {"anyOf": [{"enum": sorted(zones)}, {"type": "array", "items": {"enum": sorted(zones)}}]},
-                "reason": {"anyOf": [{"enum": sorted(REASONS)}, {"type": "array", "items": {"enum": sorted(REASONS)}}]}, "player": {"enum": ["you", "opp"]}, "by": {"enum": ["you", "opp"]}, "cause": {"type": "object", "properties": {"by": {"enum": ["you", "opp"]}, "kind": {"enum": ["spell", "ability"]}}, "additionalProperties": False}, "unpaid": {"type": "boolean"}, "target": {}, "attacker": {}, "opponent": {}, "ord": {"type": "object", "properties": {"kind": {"type": "string"}, "eq": {"type": "integer"}, "ge": {"type": "integer"}, "gt": {"type": "integer"}, "le": {"type": "integer"}, "lt": {"type": "integer"}}, "required": ["kind"], "additionalProperties": False},
+                "reason": {"anyOf": [{"enum": sorted(REASONS | LOSE_REASONS)}, {"type": "array", "items": {"enum": sorted(REASONS | LOSE_REASONS)}}]}, "player": {"enum": ["you", "opp"]}, "by": {"enum": ["you", "opp"]}, "cause": {"type": "object", "properties": {"by": {"enum": ["you", "opp"]}, "kind": {"enum": ["spell", "ability"]}}, "additionalProperties": False}, "unpaid": {"type": "boolean"}, "target": {}, "attacker": {}, "opponent": {}, "ord": {"type": "object", "properties": {"kind": {"type": "string"}, "eq": {"type": "integer"}, "ge": {"type": "integer"}, "gt": {"type": "integer"}, "le": {"type": "integer"}, "lt": {"type": "integer"}}, "required": ["kind"], "additionalProperties": False},
                 "via": {"enum": sorted(VIAS)}, "subject": {}, "shield": {}, "stacked": {}, "sealed_from": {}, "from_under": {}, "face_up": {}, "broke": {}, "blocked": {}, "vivid": {}, "emblem": {"type": "boolean"}},
                 "required": ["event"], "additionalProperties": False},
             "ability": {"type": "object", "properties": {

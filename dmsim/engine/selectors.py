@@ -1,6 +1,7 @@
 """セレクタ・式・条件の評価（効果DSLの「何を」「いくつ」「いつなら」）。"""
 from __future__ import annotations
 
+from ..state import rng_below
 from .registry import read_only
 
 
@@ -192,6 +193,8 @@ class SelectorMixin:
                        for r in self._expr_refs(spec.get("ref"), env))
         if kind == "broke_by_self":
             return s.turn_counters.get(f"hist:broke_by:{env['self'][0]}", 0) if env.get("self") else 0
+        if kind == "broke_by_self_attack":   # 第185弾: その攻撃中に self がブレイクした枚数（broke_count の攻撃番号区切り）
+            return s.turn_counters.get(f"broke_count:{env['self'][0]}:atk{s.turn_counters.get('current_attack', 0)}", 0) if env.get("self") else 0
         owner = spec.get("owner", "you")
         players = (0, 1) if owner == "any" else (self._rel(owner, env),)
         if kind == "attack":
@@ -323,6 +326,15 @@ class SelectorMixin:
         for k, key, cmp in (("cost_le", "cost", int.__le__), ("cost_ge", "cost", int.__ge__),
                             ("power_le", "power", int.__le__), ("power_ge", "power", int.__ge__)):
             if k in f and not cmp(ch[key], f[k]):
+                return False
+        if "spell_cost_le" in f or "spell_cost_ge" in f:   # 呪文面（ツインパクトの呪文側）のコスト（第184弾）
+            d = self.cdef(cid)
+            sp = next((fc for fc in d.faces if "spell" in fc.types), None)
+            if sp is None:
+                return False
+            if "spell_cost_le" in f and not sp.cost <= f["spell_cost_le"]:
+                return False
+            if "spell_cost_ge" in f and not sp.cost >= f["spell_cost_ge"]:
                 return False
         if "multicolor" in f and (len(ch["civs"]) > 1) != f["multicolor"]:
             return False
@@ -498,6 +510,8 @@ class SelectorMixin:
             elif r == "self_entered":   # 実行されてバトルゾーンに出たこのカード自身（B・A・D / J・O・E の終了時処理）
                 c = s.cards[env["self"][0]]
                 return [c.cid] if c.gen == env["self"][1] + 1 and c.zone == "bz" else []
+            elif r == "fuel":   # 第189弾: 召喚時の支払い行動（opt_reduce.do）で選んだカード
+                refs = [list(x) for x in s.cards[env["self"][0]].summon_fuel]
             elif r == "crossed":   # このクロスギアをクロスしているクリーチャー（303.3a）
                 g = s.cards[env["self"][0]].crossed
                 refs = [g] if g else []
@@ -579,7 +593,13 @@ class SelectorMixin:
         mn = 0 if sel.get("up_to") or any_n else mx
         if mx == 0:
             return [], None
-        chooser = self._rel(sel.get("chooser", "you"), env)
+        # 第185弾: chooser: random（「見ないで選ぶ」）は決定を出さず、効果の使用者が
+        # 無作為に選ぶ（従来は _rel が KeyError になり、先行カードも実行時に壊れていた）。
+        # opponent は opp の同義語（dm06-005 の既存形）。be_chosen の照合は
+        # 効果の使用者（random 時は you）基準で行う。
+        ch = sel.get("chooser", "you")
+        chooser = env["you"] if ch == "random" else (1 - env["you"] if ch == "opponent"
+                                                      else self._rel(ch, env))
         # 相手に選ばれないクリーチャーは候補から外す（be_chosen）。自分のカードを自分が選ぶ時は関係ない。
         # 範囲つきの保護（deny の {action: be_chosen, other: <発生源フィルタ>}）は、選択の発生源
         # （解決中のカード = env の self）を other として照合する（第164弾。それ以外は発生源なし）
@@ -593,6 +613,11 @@ class SelectorMixin:
             ref_costs = {self.chars_ro(c)["cost"] for c in self.candidates(sel["distinct_from"], env)}
             cands = [c for c in cands if self.chars_ro(c)["cost"] not in ref_costs]
         n = min(n, len(cands))
+        if sel.get("chooser") == "random":   # 第185弾: 「見ないで選ぶ」。決定を出さず無作為に n 枚選ぶ
+            pool = list(cands)
+            picked = [pool.pop(rng_below(self.s, len(pool))) for _ in range(min(n, len(pool)))]
+            t.setdefault("os", {})["chosen"] = picked
+            return picked, None
         if "total_cost_le" in sel or "total_cost_ge" in sel or "total_power_le" in sel or "total_power_ge" in sel \
                 or sel.get("distinct_costs"):   # 合計制限つきの「好きな数」選択: 1枚ずつ積み上げる。軸はコスト／パワー（第144弾で一般化）。distinct_costs は「コストが異なる」制約の述語として同じ分岐に乗る（第147弾・型2／型3）
             # 軸ごとの (特性キー, 上限, 下限)。パワーは chars の現在パワー（常在型の修整込み）を使う
