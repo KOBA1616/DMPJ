@@ -15,7 +15,8 @@ import yaml
 from dmsim.defs import load_tables, parse_card
 
 ROOT = Path(__file__).parent.parent
-BACKUP = Path.home() / "workspace/DMPJ-work/DMPJ-main.old-round201-20261110/data/cards/raw/rejects.jsonl"
+from _rejects_snapshot import snapshot_path
+BACKUP = snapshot_path()
 TABLES = load_tables()
 
 TARGETS = ["dm30-030", "dm30-054", "dm31-037", "dmc42-050", "dmc64-002",

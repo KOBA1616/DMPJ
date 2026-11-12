@@ -78,5 +78,7 @@ def test_from_mana_trigger_registered():
 
 def test_dm37s05_bounced_with_banked_bakutan():
     r = _reject("dm37-s05")
-    assert r["gaps"] == ["marshal_touch"]
+    # ラウンド227 では marshal_touch で差し戻し。第193弾で marshal_touch を実装した後、
+    # 残る障害は能力所持フィルタ has_ability_filter に細分された（tests/test_vocab_pilot193_cards.py）
+    assert r["gaps"] == ["has_ability_filter"]
     assert r["partial"].get("mana_bakutan") == 9, "解けた節（マナ爆誕9）が残っていない"

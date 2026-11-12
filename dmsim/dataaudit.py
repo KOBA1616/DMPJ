@@ -17,7 +17,11 @@ _GRANT = re.compile(r"[「『]([^」』]{2,12})[」』]を(?:与える|得る)")
 
 _FIXTURE = re.compile(r"T\d+")
 _STRUCT_FIELDS = ("free_if", "alt_cost", "mugen_climb", "vividraw", "fushigi", "galaxy_shield", "bazurenda", "o_drive", "s_back",
-                  "evolve_from", "evolve_any", "neo", "grave_evo", "star", "s_max", "hyper", "crystal_soul", "tap_reduce")
+                  "evolve_from", "evolve_any", "neo", "grave_evo", "star", "s_max", "hyper", "crystal_soul", "tap_reduce", "mana_bakutan",
+                  "recycle", "deck_evolution", "ace", "link_to", "declare", "evolve_zone", "evolve_count")
+# 効果を持たないカードの基本欄。変換データの最上位キーはこの集合か _STRUCT_FIELDS のどちらかに入っていること（tests/test_data_audit.py で検査）
+BASIC_FIELDS = ("id", "source", "mana", "name", "text", "cost", "types", "civs", "races", "power", "abilities", "keywords",
+                "spell", "sst_spell", "stp_spell", "odrive_spell", "faces", "resolve_to", "after_resolve")
 
 
 def _dump(*xs) -> str:
@@ -38,7 +42,7 @@ def audit_card(rules, cd) -> list[str]:
     # 能力の並びだけでなく、構造化された特性（G・ゼロ=free_if、ムゲンクライム、進化の型など）も「効果あり」と数える
     note_only = bool(re.fullmatch(r"(?:【[A-Z] Souls】)+", text.strip()) or _FIXTURE.fullmatch(cd.id))   # 【H Souls】は種族の宣言記号（種族欄に反映済み）、T\d+ は試験用の札（原文は説明文）。効果の有無は問わない
     has_effect = bool(cd.abilities or cd.spell or cd.keywords or cd.sst_spell or cd.stp_spell or cd.odrive_spell
-                      or any(getattr(cd, f) for f in _STRUCT_FIELDS))
+                      or any(getattr(cd, f, None) for f in _STRUCT_FIELDS))
     if text.strip() and not note_only and not has_effect:
         out.append("text_but_no_effect")
     if _EVO.search(text) and "evolution" not in types and not (cd.neo or cd.grave_evo or cd.s_max):

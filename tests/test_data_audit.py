@@ -66,3 +66,19 @@ def test_no_duplicate_abilities_in_converted_data(monkeypatch):
     from dmsim.dataaudit import audit_rules
     from dmsim.defs import load_rules
     assert not audit_rules(load_rules()).get("duplicate_ability")
+
+
+def test_every_converted_top_level_field_is_known_to_the_audit():
+    """新しい語彙で最上位の欄（mana_bakutan など）が増えたら、監査の「効果あり」判定にも登録させる。
+
+    登録漏れだと、その欄だけで効果を表すカードが text_but_no_effect と誤判定される（2026-11 に5件発生）。"""
+    from pathlib import Path
+    import yaml
+    from dmsim import dataaudit
+    known = set(dataaudit.BASIC_FIELDS) | set(dataaudit._STRUCT_FIELDS)
+    root = Path(__file__).parent.parent / "data/cards"
+    unknown = set()
+    for name in ("converted.yaml",):
+        for c in yaml.safe_load(open(root / name))["cards"]:
+            unknown |= set(c) - known
+    assert not unknown, sorted(unknown)

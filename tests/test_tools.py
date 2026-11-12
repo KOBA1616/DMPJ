@@ -450,7 +450,11 @@ def test_system_prompt_picks_similar_examples():
     import convert_cards as cc
     row = {"id": "zz-001", "text": "このクリーチャーをバトルゾーンに出した時、相手の手札を見てその中から１枚選び、捨てさせる。"}
     small, full = cc.system_prompt(row=row, n_examples=8), cc.system_prompt()
-    assert len(small) < len(full) * 0.6
+    # 規則・語彙の固定部（2026-11 時点で約5.5万字）が育つと全体比は縮まらなくなるので、例の部分どうしで比べる
+    ex = cc.examples_for(row, 8)
+    all_examples = len(full) - len(small) + len(ex)
+    assert len(small) < len(full)
+    assert len(ex) < all_examples * 0.2
     assert yaml.safe_load(cc.examples_for(row, 8))["cards"][0]["id"] == "dmx03-035"
     assert len(yaml.safe_load(cc.examples_for(row, 8))["cards"]) == 8
 
