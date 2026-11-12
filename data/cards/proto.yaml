@@ -5849,3 +5849,1149 @@ cards:
                           select: {zone: graveyard, owner: you, filter: {types: [spell], cost_le: {sum: [{cost_of: {ref: jt1}}, {cost_of: {ref: jt2}}]}}, count: 1}
                           resolve_to: deck
                           resolve_position: bottom
+  - id: T413
+    name: 試作のロスト・プリズム獣
+    types: [creature]
+    civs: [light, nature]
+    cost: 4
+    power: 2000
+    races: [ロスト・クルセイダー]
+    text: "マナゾーンに置く時、このカードはタップして置く。ロスト・プリズム（このクリーチャーをバトルゾーンに出した時、自分の山札の上から１枚目を表向きにしてもよい。それが多色カードであれば、手札に加える）（第181弾・dm24-063型）"
+    abilities:
+      - kind: trigger
+        when: {event: move, to: bz, subject: self}
+        effect:
+          - op: may
+            body:
+              - op: reveal_until
+                filter: {multicolor: true}
+                count: 1
+                limit: 1
+                as: hit
+              - op: move
+                select: {ref: hit, count: all}
+                to: hand
+                reason: put
+  - id: T414
+    name: 試作のロスト・プリズム疾走獣
+    types: [creature]
+    civs: [light, fire]
+    cost: 6
+    power: 4000
+    races: [ロスト・クルセイダー]
+    text: "マナゾーンに置く時、このカードはタップして置く。ロスト・プリズム（このクリーチャーをバトルゾーンに出した時、自分の山札の上から１枚目を表向きにしてもよい。それが多色カードであれば、手札に加える）スピードアタッカー（このクリーチャーは召喚酔いしない）自分のターンの終わりに、このクリーチャーをアンタップする。（第181弾・dm24-033型）"
+    keywords: [speed_attacker]
+    abilities:
+      - kind: trigger
+        when: {event: move, to: bz, subject: self}
+        effect:
+          - op: may
+            body:
+              - op: reveal_until
+                filter: {multicolor: true}
+                count: 1
+                limit: 1
+                as: hit
+              - op: move
+                select: {ref: hit, count: all}
+                to: hand
+                reason: put
+      - kind: trigger
+        when: {event: turn_end, player: you}
+        effect:
+          - op: untap
+            select: {ref: self}
+  - id: T415
+    name: 試作のロスト・プリズム帰還獣
+    types: [creature]
+    civs: [water, darkness]
+    cost: 5
+    power: 3000
+    races: [ロスト・クルセイダー]
+    text: "マナゾーンに置く時、このカードはタップして置く。ロスト・プリズム（このクリーチャーをバトルゾーンに出した時、自分の山札の上から１枚目を表向きにしてもよい。それが多色カードであれば、手札に加える）このクリーチャーが破壊される時、墓地に置くかわりに手札に戻す。（第181弾・dm24-065型）"
+    abilities:
+      - kind: trigger
+        when: {event: move, to: bz, subject: self}
+        effect:
+          - op: may
+            body:
+              - op: reveal_until
+                filter: {multicolor: true}
+                count: 1
+                limit: 1
+                as: hit
+              - op: move
+                select: {ref: hit, count: all}
+                to: hand
+                reason: put
+      - kind: replace
+        when: {event: move, from: bz, to: graveyard, reason: destroy, subject: self}
+        instead:
+          - op: move
+            select: {ref: self}
+            to: hand
+            reason: return
+  - id: T416
+    name: 試作のロスト・プリズム閃光獣
+    types: [creature]
+    civs: [fire, nature]
+    cost: 5
+    power: 2000
+    races: [ロスト・クルセイダー]
+    text: "マナゾーンに置く時、このカードはタップして置く。S・トリガー（このクリーチャーをシールドゾーンから手札に加える時、コストを支払わずにすぐ召喚してもよい）ロスト・プリズム（このクリーチャーをバトルゾーンに出した時、自分の山札の上から１枚目を表向きにしてもよい。それが多色カードであれば、手札に加える）（第181弾・dm24-069型）"
+    keywords: [s_trigger]
+    abilities:
+      - kind: trigger
+        when: {event: move, to: bz, subject: self}
+        effect:
+          - op: may
+            body:
+              - op: reveal_until
+                filter: {multicolor: true}
+                count: 1
+                limit: 1
+                as: hit
+              - op: move
+                select: {ref: hit, count: all}
+                to: hand
+                reason: put
+  - id: T417
+    name: 試作のロスト・プリズム捜索獣
+    types: [creature]
+    civs: [water, nature]
+    cost: 6
+    power: 2000
+    races: [ロスト・クルセイダー]
+    text: "マナゾーンに置く時、このカードはタップして置く。ロスト・プリズム（このクリーチャーをバトルゾーンに出した時、自分の山札の上から１枚目を表向きにしてもよい。それが多色カードであれば、手札に加える）このクリーチャーが破壊された時、自分の山札を見る。その中から自然または水の、コスト３以下のクリーチャーを２体まで選び、バトルゾーンに出してもよい。その後、山札をシャッフルする。（第181弾・dm24-s09型）"
+    abilities:
+      - kind: trigger
+        when: {event: move, to: bz, subject: self}
+        effect:
+          - op: may
+            body:
+              - op: reveal_until
+                filter: {multicolor: true}
+                count: 1
+                limit: 1
+                as: hit
+              - op: move
+                select: {ref: hit, count: all}
+                to: hand
+                reason: put
+      - kind: trigger
+        zone: graveyard
+        when: {event: move, to: graveyard, reason: destroy, subject: self}
+        effect:
+          - op: choose
+            select: {zone: deck, owner: you, look: true, count: all}
+            as: pile
+          - op: may
+            body:
+              - op: choose
+                select: {ref: pile, filter: {types: [creature], civs: [water, nature], cost_le: 3}, count: 2, up_to: true}
+                as: found
+              - op: move
+                select: {ref: found, count: all}
+                to: bz
+                reason: put
+          - op: shuffle
+  - id: T418
+    name: 試作の聖霊王
+    types: [creature]
+    civs: [light]
+    cost: 10
+    power: 11000
+    races: [エンジェル・コマンド]
+    text: "T・ブレイカー（このクリーチャーはシールドを３枚ブレイクする）すべてのプレイヤーは、光ではない、クリーチャーまたは呪文を実行できない。（第182弾・dm25ex3-rp2tr3型）"
+    keywords: [triple_breaker]
+    abilities:
+      - kind: static
+        affects: {zone: hand, owner: any, filter: {types: [creature, spell], not_civs: [light]}}
+        mod: {deny: [summon, cast]}
+  - id: T419
+    name: 試作のサファイア・ウィズダム
+    types: [creature]
+    civs: [light, water]
+    cost: 9
+    power: 9000
+    races: [エンジェル・コマンド]
+    text: "T・ブレイカー 相手がクリーチャーまたは呪文を実行した時、自分はカードを２枚引く。相手は、自分の手札の枚数以下のコストを持つクリーチャーまたは呪文を実行できない。（第182弾・dm25bd2-006型）"
+    keywords: [triple_breaker]
+    abilities:
+      - kind: static
+        affects: {zone: hand, owner: opp, filter: {types: [creature, spell], cost_le: {count: {zone: hand, owner: opp}}}}
+        mod: {deny: [summon, cast]}
+      - kind: trigger
+        when: {event: summon, player: opp}
+        effect:
+          - {op: draw, count: 2}
+      - kind: trigger
+        when: {event: cast, player: opp}
+        effect:
+          - {op: draw, count: 2}
+  - id: T420
+    name: 試作の飛翔龍
+    types: [creature]
+    civs: [water]
+    cost: 8
+    power: 8000
+    races: [サイバー・ドラゴン]
+    text: "T・ブレイカー このクリーチャーが出た時、相手のパワー5000以下のクリーチャーをすべて、持ち主の手札に戻す。次の相手のターン中、相手はパワー5000以下のクリーチャーを出せない。（第182弾・dm26ex2-001型）"
+    keywords: [triple_breaker]
+    abilities:
+      - kind: trigger
+        when: {event: move, to: bz, subject: self}
+        effect:
+          - op: move
+            select: {zone: bz, owner: opp, filter: {power_le: 5000}, count: all}
+            to: hand
+            reason: put
+          - op: modify
+            select: {zone: hand, owner: opp, filter: {types: [creature], power_le: 5000}}
+            mod: {deny: [summon, enter_bz]}
+            duration: until_next_own_turn_start
+            dynamic: true
+  - id: T421
+    name: 試作の頂上連結龍
+    types: [creature]
+    civs: [light, fire]
+    cost: 7
+    power: 8000
+    races: [アーマード・ドラゴン]
+    text: "W・ブレイカー このクリーチャーが出た時、次の相手のターン中、相手はクリーチャーを１体までしか出せない。（第182弾・dm26rp1-std004型）"
+    keywords: [double_breaker]
+    abilities:
+      - kind: trigger
+        when: {event: move, to: bz, subject: self}
+        effect:
+          - op: modify
+            select: {zone: any, owner: opp, filter: {types: [creature]}}
+            mod: {deny: [{action: summon, max_per_turn: 1, count: enter}, {action: enter_bz, max_per_turn: 1, count: enter}]}
+            duration: until_next_own_turn_start
+            dynamic: true
+  - id: T422
+    name: 試作の切札接続獣
+    types: [creature]
+    civs: [light, darkness, nature]
+    cost: 7
+    power: 7000
+    races: [アーマード・ドラゴン]
+    text: "ブロッカー W・ブレイカー 自分のターン中、相手は多色ではないクリーチャーを出せない。（第182弾・dm26ex4-035型）"
+    keywords: [blocker, double_breaker]
+    abilities:
+      - kind: static
+        if: {is_turn: you}
+        affects: {zone: hand, owner: opp, filter: {types: [creature], multicolor: false}}
+        mod: {deny: [summon, enter_bz]}
+  - id: T423
+    name: 試作のはずれポン
+    types: [creature]
+    civs: [zero]
+    cost: 1
+    power: 1000
+    races: [テスト]
+    text: "自分は「S・トリガー」能力を使えない。（第182弾・dmex08-128の第2節だけ。ブレイク不可・デッキ枚数節は対象外）"
+    abilities:
+      - kind: static
+        affects: {zone: shield, owner: you}
+        mod: {deny: [s_trigger]}
+
+  # ---- 語彙パイロット第183弾（2026-11-11）: S級侵略 ----
+  - id: T424
+    name: 試験用闇コマンド
+    types: [creature]
+    civs: [darkness]
+    cost: 4
+    power: 4000
+    races: [ソニック・コマンド]
+    text: "バニラ（S級侵略の攻撃者・闇コマンド）。"
+  - id: T425
+    name: 試験用S級侵略獣（墓地）
+    types: [creature, evolution]
+    civs: [darkness]
+    cost: 5
+    power: 5000
+    races: [ソニック・コマンド, S級侵略者]
+    evolve_from: {civs: [darkness]}
+    text: "進化：闇のクリーチャー１体の上に置く。S級侵略 [不死]：闇のコマンド（自分の闇のコマンドが攻撃する時、自分の墓地にあるこのクリーチャーをその上に重ねてもよい）このクリーチャーが出た時、カードを１枚引く。（第183弾・dmr19-017型・墓地経路）"
+    abilities:
+      - kind: declare
+        zone: graveyard
+        when: {event: attack, subject: {owner: you, filter: {civs: [darkness], race_has: コマンド}}}
+        effect:
+          - op: may
+            body:
+              - {op: invade, onto: {ref: event.subject}}
+      - kind: trigger
+        when: {event: move, to: bz, subject: self}
+        effect:
+          - {op: draw, count: 1}
+  - id: T426
+    name: 試験用S級侵略獣（手札・墓地）
+    types: [creature, evolution]
+    civs: [darkness]
+    cost: 5
+    power: 5000
+    races: [マジック・コマンド, S級侵略者]
+    evolve_from: {civs: [darkness]}
+    text: "進化：闇のクリーチャー１体の上に置く。S級侵略 [不死]：闇のコマンド（自分の闇のコマンドが攻撃する時、自分の手札または墓地にあるこのクリーチャーをその上に重ねてもよい）このクリーチャーが出た時、カードを１枚引く。（第183弾・dmr19-018型・手札＋墓地）"
+    abilities:
+      - kind: declare
+        zone: hand
+        when: {event: attack, subject: {owner: you, filter: {civs: [darkness], race_has: コマンド}}}
+        effect:
+          - op: may
+            body:
+              - {op: invade, onto: {ref: event.subject}}
+      - kind: declare
+        zone: graveyard
+        when: {event: attack, subject: {owner: you, filter: {civs: [darkness], race_has: コマンド}}}
+        effect:
+          - op: may
+            body:
+              - {op: invade, onto: {ref: event.subject}}
+      - kind: trigger
+        when: {event: move, to: bz, subject: self}
+        effect:
+          - {op: draw, count: 1}
+  - id: T427
+    name: 試験用S級侵略獣（マナ・コスト3）
+    types: [creature, evolution]
+    civs: [nature]
+    cost: 3
+    power: 3000
+    races: [ゲリラ・コマンド, S級侵略者]
+    evolve_from: {civs: [nature], cost_le: 3}
+    text: "進化：自然のコスト３のクリーチャー１体の上に置く。S級侵略 [原始]：自然のコスト３のクリーチャー（自分の自然のコスト３のクリーチャーが攻撃する時、自分の手札またはマナゾーンにあるこのクリーチャーをその上に重ねてもよい）このクリーチャーが出た時、カードを１枚引く。（第183弾・dmr19-s09型・マナ経路）"
+    abilities:
+      - kind: declare
+        zone: mana
+        when: {event: attack, subject: {owner: you, filter: {civs: [nature], cost_le: 3, cost_ge: 3}}}
+        effect:
+          - op: may
+            body:
+              - {op: invade, onto: {ref: event.subject}}
+      - kind: trigger
+        when: {event: move, to: bz, subject: self}
+        effect:
+          - {op: draw, count: 1}
+  - id: T428
+    name: 試験用自然コスト3獣
+    types: [creature]
+    civs: [nature]
+    cost: 3
+    power: 3000
+    races: [ゲリラ・コマンド]
+    text: "バニラ（S級侵略の攻撃者・自然コスト3）。"
+  - id: T429
+    name: 試験用S級侵略獣（バトルゾーン）
+    types: [creature, evolution]
+    civs: [darkness, fire]
+    cost: 6
+    power: 8000
+    races: [ソニック・コマンド, S級侵略者]
+    evolve_from: {civs: [darkness, fire]}
+    text: "進化：闇または火のクリーチャー１体の上に置く。S級侵略 [轟速]：闇または火のコマンド（自分の闇または火のコマンドが攻撃する時、自分の手札か墓地、またはバトルゾーンにあるこのクリーチャーをその上に重ねてもよい）このクリーチャーが出た時、カードを１枚引く。このクリーチャーがバトルゾーンを離れた時、カードを１枚引く。（第183弾・dmex16-027型・バトルゾーン経路）"
+    abilities:
+      - kind: declare
+        zone: bz
+        when: {event: attack, subject: {owner: you, filter: {civs: [darkness, fire], race_has: コマンド}}}
+        effect:
+          - op: may
+            body:
+              - {op: invade, onto: {ref: event.subject}}
+      - kind: trigger
+        when: {event: move, to: bz, subject: self}
+        effect:
+          - {op: draw, count: 1}
+      - kind: trigger
+        when: {event: move, from: bz, subject: self}
+        effect:
+          - {op: draw, count: 1}
+  - id: T430
+    name: 試験用ツインパクト獣・壱／試験の呪い・壱
+    mana: 1
+    text: "クリーチャー側: パワー4000 / 呪文側（コスト2）: カードを１枚引く（第184弾・呪文面コスト2の対象）"
+    faces:
+      - name: 試験用ツインパクト獣・壱
+        types: [creature]
+        civs: [water]
+        cost: 5
+        power: 4000
+        races: [テスト]
+      - name: 試験の呪い・壱
+        types: [spell]
+        civs: [water]
+        cost: 2
+        spell:
+          - {op: draw, count: 1}
+  - id: T431
+    name: 試験用ツインパクト獣・弐／試験の呪い・弐
+    mana: 1
+    text: "クリーチャー側: パワー5000 / 呪文側（コスト4）: 相手のクリーチャーを１体選び、持ち主の手札に戻す（第184弾・呪文面コスト4の対象）"
+    faces:
+      - name: 試験用ツインパクト獣・弐
+        types: [creature]
+        civs: [fire]
+        cost: 6
+        power: 5000
+        races: [テスト]
+      - name: 試験の呪い・弐
+        types: [spell]
+        civs: [fire]
+        cost: 4
+        spell:
+          - {op: bounce, select: {zone: bz, owner: opp, filter: {types: [creature]}, count: 1}}
+  - id: T432
+    name: 試験用呪文側唱者
+    types: [creature]
+    civs: [water]
+    cost: 4
+    power: 3000
+    races: [テスト]
+    text: "このクリーチャーが攻撃する時、バトルゾーンにある自分のツインパクト・クリーチャー１体の呪文側を、バトルゾーンに置いたままコストを支払わずに唱えてもよい。（第184弾・dm23bd6-018型）"
+    abilities:
+      - kind: trigger
+        when: {event: attack, subject: self}
+        effect:
+          - op: may
+            body:
+              - {op: cast_face, select: {zone: bz, owner: you, filter: {twinpact: true, types: [creature]}, count: 1}}
+  - id: T433
+    name: 試験用攻撃時呪文側唱者
+    types: [creature]
+    civs: [water, fire, nature]
+    cost: 5
+    power: 4000
+    races: [テスト]
+    text: "各ターンに１度、自分のツインパクトクリーチャーが攻撃する時、そのクリーチャーの呪文側を、バトルゾーンに置いたままコストを支払わずに唱えてもよい。（第184弾・dm26sd1-u005型）"
+    abilities:
+      - kind: trigger
+        once_per_turn: true
+        when: {event: attack, subject: {owner: you, filter: {twinpact: true, types: [creature]}}}
+        effect:
+          - op: may
+            body:
+              - {op: cast_face, select: {ref: event.subject}}
+  - id: T434
+    name: 試験用呪文面コスト唱者
+    types: [creature]
+    civs: [nature]
+    cost: 3
+    power: 3000
+    races: [テスト]
+    text: "このクリーチャーが攻撃する時、自分のツインパクトクリーチャーを１体選んでもよい。そのカードの呪文側のコストが、自分のマナゾーンにあるカードの枚数以下なら、バトルゾーンに置いたままコストを支払わずに唱えてもよい。（第184弾・dm25ex4-063型）"
+    abilities:
+      - kind: trigger
+        when: {event: attack, subject: self}
+        effect:
+          - op: may
+            body:
+              - {op: cast_face, select: {zone: bz, owner: you, filter: {twinpact: true, types: [creature], spell_cost_le: {count: {zone: mana, owner: you}}}, count: 1}}
+  - id: T435
+    name: 試験用対呪文唱者
+    types: [creature]
+    civs: [light, water, fire]
+    cost: 5
+    power: 4000
+    races: [テスト]
+    text: "ブロッカー。各ターンに１度、相手が呪文を唱えた時、自分のツインパクトクリーチャー１体の呪文側を、バトルゾーンに置いたままコストを支払わずに唱えてもよい。（第184弾・dm26ex4-057型）"
+    keywords: [blocker]
+    abilities:
+      - kind: trigger
+        once_per_turn: true
+        when: {event: cast, subject: {owner: opp, filter: {types: [spell]}}}
+        effect:
+          - op: may
+            body:
+              - {op: cast_face, select: {zone: bz, owner: you, filter: {twinpact: true, types: [creature]}, count: 1}}
+
+  # ---- 語彙パイロット第185弾（2026-11-12）: ブレイク・ボーナス ----
+  - id: T436
+    name: 試作のブレイク・ボーナス粉砕獣
+    types: [creature]
+    civs: [darkness]
+    cost: 5
+    power: 3000
+    races: [ブレイク・ボーナス試験体]
+    text: "W・ブレイカー（このクリーチャーはシールドを２つブレイクする）ブレイク・ボーナス（このクリーチャーの攻撃が終わった時、このクリーチャーがまだバトルゾーンにあれば、その攻撃中にブレイクしたシールド１枚につき、次の能力を１回使ってもよい）相手は自身の山札の上から４枚を墓地に置く。（第185弾・dm33-025型）"
+    keywords: [double_breaker]
+    abilities:
+      - kind: trigger
+        when: {event: attack_end, subject: self, broke: true}
+        effect:
+          - op: repeat
+            times: {turn_count: {kind: broke_by_self_attack}}
+            body:
+              - op: may
+                body:
+                  - op: move
+                    select: {zone: deck, owner: opp, from_top: 4, count: all}
+                    to: graveyard
+                    reason: put
+
+  - id: T437
+    name: 試作のブレイク・ボーナス進化竜
+    types: [creature, evolution]
+    civs: [fire]
+    cost: 6
+    power: 7000
+    races: [アーマード・ドラゴン]
+    text: "進化―自分のアーマード・ドラゴンまたはオリジン１体の上に置く。W・ブレイカー（このクリーチャーはシールドを２つブレイクする）ブレイク・ボーナス（このクリーチャーの攻撃が終わった時、このクリーチャーがまだバトルゾーンにあれば、その攻撃中にブレイクしたシールド１枚につき、次の能力を１回使ってもよい）相手のパワー7000以下のクリーチャーを１体破壊する。（第185弾・dm33-004型）"
+    keywords: [double_breaker]
+    evolve_from: {races: [アーマード・ドラゴン, オリジン]}
+    abilities:
+      - kind: trigger
+        when: {event: attack_end, subject: self, broke: true}
+        effect:
+          - op: repeat
+            times: {turn_count: {kind: broke_by_self_attack}}
+            body:
+              - op: may
+                body:
+                  - op: destroy
+                    select: {zone: bz, owner: opp, filter: {types: [creature], power_le: 7000}, count: 1}
+
+  - id: T438
+    name: 試作のブレイク・ボーナス手札破壊獣
+    types: [creature]
+    civs: [darkness]
+    cost: 6
+    power: 6000
+    races: [デーモン・コマンド]
+    text: "T・ブレイカー（このクリーチャーはシールドを３つブレイクする）ブレイク・ボーナス（このクリーチャーの攻撃が終わった時、このクリーチャーがまだバトルゾーンにあれば、その攻撃中にブレイクしたシールド１枚につき、次の能力を１回使ってもよい）相手の手札を１枚見ないで選び、捨てさせる。（第185弾・dm33-s03型）"
+    keywords: [triple_breaker]
+    abilities:
+      - kind: trigger
+        when: {event: attack_end, subject: self, broke: true}
+        effect:
+          - op: repeat
+            times: {turn_count: {kind: broke_by_self_attack}}
+            body:
+              - op: may
+                body:
+                  - op: choose
+                    select: {zone: hand, owner: opp, chooser: random, count: 1}
+                    as: d
+                  - op: move
+                    select: {ref: d, count: all}
+                    to: graveyard
+                    reason: discard
+
+  - id: T439
+    name: 試作のブレイク・ボーナス増幅獣
+    types: [creature]
+    civs: [nature]
+    cost: 5
+    power: 4000
+    races: [ビーストフォーク]
+    text: "W・ブレイカー（このクリーチャーはシールドを２つブレイクする）ブレイク・ボーナス（このクリーチャーの攻撃が終わった時、このクリーチャーがまだバトルゾーンにあれば、その攻撃中にブレイクしたシールド１枚につき、次の能力を１回使ってもよい）自分の山札の上から２枚をマナゾーンに置く。（第185弾・dm33-034型）"
+    keywords: [double_breaker]
+    abilities:
+      - kind: trigger
+        when: {event: attack_end, subject: self, broke: true}
+        effect:
+          - op: repeat
+            times: {turn_count: {kind: broke_by_self_attack}}
+            body:
+              - op: may
+                body:
+                  - op: move
+                    select: {zone: deck, owner: you, from_top: 2, count: all}
+                    to: mana
+                    reason: put
+
+  - id: T440
+    name: 試作の効果ブレイク区別獣
+    types: [creature]
+    civs: [water]
+    cost: 4
+    power: 3000
+    races: [サイバー・コマンド]
+    text: "スピードアタッカー W・ブレイカー（このクリーチャーはシールドを２つブレイクする）このクリーチャーが出た時、相手のシールドを１つブレイクしてもよい。ブレイク・ボーナス（このクリーチャーの攻撃が終わった時、このクリーチャーがまだバトルゾーンにあれば、その攻撃中にブレイクしたシールド１枚につき、次の能力を１回使ってもよい）カードを１枚引く。（第185弾・判別用）"
+    keywords: [speed_attacker, double_breaker]
+    abilities:
+      - kind: trigger
+        when: {event: move, to: bz, subject: self}
+        effect:
+          - op: may
+            body:
+              - {op: break, count: 1}
+      - kind: trigger
+        when: {event: attack_end, subject: self, broke: true}
+        effect:
+          - op: repeat
+            times: {turn_count: {kind: broke_by_self_attack}}
+            body:
+              - op: may
+                body:
+                  - {op: draw, count: 1}
+
+  - id: T441
+    name: 試作のスーパーガードマン獣
+    types: [creature]
+    civs: [nature]
+    cost: 5
+    power: 8000
+    races: [スノーフェアリー風]
+    text: "スーパーガードマン（自分の他のクリーチャーがバトルする時、かわりにこのクリーチャーをタップしてバトルさせてもよい）（第186弾・dm26rp2-069型）"
+    abilities:
+      - kind: replace
+        when: {event: battle, subject: {owner: you, filter: {types: [creature]}, other: true}}
+        instead:
+          - {op: battle_substitute, tap: true}
+
+  - id: T442
+    name: 試作のスーパーガードマン小型獣
+    types: [creature]
+    civs: [light]
+    cost: 2
+    power: 2000
+    races: [スノーフェアリー風]
+    text: "スーパーガードマン（自分の他のクリーチャーがバトルする時、かわりにこのクリーチャーをタップしてバトルさせてもよい）（第186弾・判別用）"
+    abilities:
+      - kind: replace
+        when: {event: battle, subject: {owner: you, filter: {types: [creature]}, other: true}}
+        instead:
+          - {op: battle_substitute, tap: true}
+
+  - id: T443
+    name: 試作のスーパーガードマン重装獣
+    types: [creature]
+    civs: [fire]
+    cost: 4
+    power: 6000
+    races: [スノーフェアリー風]
+    text: "スーパーガードマン（自分の他のクリーチャーがバトルする時、かわりにこのクリーチャーをタップしてバトルさせてもよい）W・ブレイカー（このクリーチャーはシールドを２つブレイクする）（第186弾・dm26rp2-069型）"
+    keywords: [double_breaker]
+    abilities:
+      - kind: replace
+        when: {event: battle, subject: {owner: you, filter: {types: [creature]}, other: true}}
+        instead:
+          - {op: battle_substitute, tap: true}
+
+  - id: T444
+    name: 試作のスーパーガードマン封印獣
+    types: [creature]
+    civs: [nature]
+    cost: 2
+    power: 8000
+    races: [スノーフェアリー風]
+    text: "スーパーガードマン（自分の他のクリーチャーがバトルする時、かわりにこのクリーチャーをタップしてバトルさせてもよい）このクリーチャーは攻撃できない。（第186弾・dm26rp2-046型）"
+    keywords: [cannot_attack]
+    abilities:
+      - kind: replace
+        when: {event: battle, subject: {owner: you, filter: {types: [creature]}, other: true}}
+        instead:
+          - {op: battle_substitute, tap: true}
+
+  - id: T445
+    name: 試作のスーパーガードマン巨獣
+    types: [creature]
+    civs: [nature]
+    cost: 7
+    power: 12000
+    races: [スノーフェアリー風]
+    text: "スーパーガードマン（自分の他のクリーチャーがバトルする時、かわりにこのクリーチャーをタップしてバトルさせてもよい）T・ブレイカー（このクリーチャーはシールドを３つブレイクする）（第186弾・dm26rp2-073型）"
+    keywords: [triple_breaker]
+    abilities:
+      - kind: replace
+        when: {event: battle, subject: {owner: you, filter: {types: [creature]}, other: true}}
+        instead:
+          - {op: battle_substitute, tap: true}
+
+  # ---- 語彙パイロット第187弾（2026-11-12）: フレンド・バースト ----
+  - id: T446
+    name: 試験用マジック獣／試験の呪い・参
+    mana: 1
+    text: "マジック・フレンド・バースト（このクリーチャーが出た時、自分の他のマジック・クリーチャーを１体タップしてもよい。そうしたら、このクリーチャーの呪文側を、バトルゾーンに置いたままコストを支払わずに唱える。）（第187弾・dm23rp2x-057型）"
+    faces:
+      - name: 試験用マジック獣
+        types: [creature]
+        civs: [water]
+        cost: 4
+        power: 3000
+        races: [マジック・マーメイド]
+        abilities:
+          - kind: trigger
+            when: {event: move, to: bz, subject: self}
+            effect:
+              - op: if
+                cond: {exists: {zone: bz, owner: you, filter: {types: [creature], race_has: マジック, tapped: false}, exclude: {ref: self}}}
+                then:
+                  - op: may
+                    body:
+                      - {op: tap, select: {zone: bz, owner: you, filter: {types: [creature], race_has: マジック, tapped: false}, exclude: {ref: self}, count: 1}}
+                      - {op: cast_face}
+      - name: 試験の呪い・参
+        types: [spell]
+        civs: [water]
+        cost: 5
+        spell:
+          - {op: draw, count: 3}
+  - id: T447
+    name: 試験用アーマード鳥／試験の呪い・四
+    mana: 1
+    text: "アーマード・フレンド・バースト（このクリーチャーが出た時、自分の他のアーマード・クリーチャーを１体タップしてもよい。そうしたら、このクリーチャーの呪文側を、バトルゾーンに置いたままコストを支払わずに唱える。）自分の他のファイアー・バードのパワーを+2000する。（第187弾・dm23rp2x-020型）"
+    faces:
+      - name: 試験用アーマード鳥
+        types: [creature]
+        civs: [fire]
+        cost: 2
+        power: 2000
+        races: [アーマード・ファイアー・バード]
+        abilities:
+          - kind: trigger
+            when: {event: move, to: bz, subject: self}
+            effect:
+              - op: if
+                cond: {exists: {zone: bz, owner: you, filter: {types: [creature], race_has: アーマード, tapped: false}, exclude: {ref: self}}}
+                then:
+                  - op: may
+                    body:
+                      - {op: tap, select: {zone: bz, owner: you, filter: {types: [creature], race_has: アーマード, tapped: false}, exclude: {ref: self}, count: 1}}
+                      - {op: cast_face}
+          - kind: static
+            affects: {zone: bz, owner: you, filter: {types: [creature], race_has: ファイアー・バード}, other: true}
+            mod: {power: 2000}
+      - name: 試験の呪い・四
+        types: [spell]
+        civs: [fire]
+        cost: 2
+        spell:
+          - {op: discard, select: {zone: hand, owner: you, count: 1}}
+          - {op: draw, count: 2}
+  - id: T448
+    name: 試験用メカ姫／試験の呪い・五
+    mana: 1
+    text: "ブロッカー W・ブレイカー メカ・フレンド・バースト（このクリーチャーが出た時、自分の他のメカ・クリーチャーを１体タップしてもよい。そうしたら、このクリーチャーの呪文側を、バトルゾーンに置いたままコストを支払わずに唱える。）（第187弾・dm23rp2x-009型）"
+    faces:
+      - name: 試験用メカ姫
+        types: [creature]
+        civs: [light]
+        cost: 6
+        power: 8000
+        races: [メカ・デル・ステラ]
+        keywords: [blocker, double_breaker]
+        abilities:
+          - kind: trigger
+            when: {event: move, to: bz, subject: self}
+            effect:
+              - op: if
+                cond: {exists: {zone: bz, owner: you, filter: {types: [creature], race_has: メカ, tapped: false}, exclude: {ref: self}}}
+                then:
+                  - op: may
+                    body:
+                      - {op: tap, select: {zone: bz, owner: you, filter: {types: [creature], race_has: メカ, tapped: false}, exclude: {ref: self}, count: 1}}
+                      - {op: cast_face}
+      - name: 試験の呪い・五
+        types: [spell]
+        civs: [light]
+        cost: 4
+        spell:
+          - op: repeat
+            times: {count: {zone: bz, owner: you, filter: {types: [creature]}}}
+            body:
+              - op: modal
+                modes:
+                  - - {op: tap, select: {zone: bz, owner: opp, filter: {types: [creature]}, count: 1}}
+                  - - {op: draw, count: 1}
+  - id: T449
+    name: 試験用雪妖精／試験の呪い・六
+    mana: 1
+    text: "スノーフェアリー・フレンド・バースト（このクリーチャーが出た時、自分の他のスノーフェアリー・クリーチャーを１体タップしてもよい。そうしたら、このクリーチャーの呪文側を、バトルゾーンに置いたままコストを支払わずに唱える。）自分のスノーフェアリー・クリーチャーの召喚コストを２少なくする。ただし、コストは０以下にはならない。ブロッカー（第187弾・dm23ex2-040型）"
+    faces:
+      - name: 試験用雪妖精
+        types: [creature]
+        civs: [light, water, nature]
+        cost: 5
+        power: 5000
+        races: [スノーフェアリー]
+        keywords: [blocker]
+        abilities:
+          - kind: trigger
+            when: {event: move, to: bz, subject: self}
+            effect:
+              - op: if
+                cond: {exists: {zone: bz, owner: you, filter: {types: [creature], race_has: スノーフェアリー, tapped: false}, exclude: {ref: self}}}
+                then:
+                  - op: may
+                    body:
+                      - {op: tap, select: {zone: bz, owner: you, filter: {types: [creature], race_has: スノーフェアリー, tapped: false}, exclude: {ref: self}, count: 1}}
+                      - {op: cast_face}
+          - kind: static
+            affects: {zone: hand, owner: you, filter: {types: [creature], race_has: スノーフェアリー}}
+            mod: {cost: -2}
+      - name: 試験の呪い・六
+        types: [spell]
+        civs: [darkness, fire]
+        cost: 6
+        spell:
+          - op: play_free
+            select: {zone: graveyard, owner: you, filter: {types: [creature], race_has: スノーフェアリー}, count: 1}
+            as: sf
+          - op: modify
+            select: {ref: sf}
+            mod: {grant: [speed_attacker]}
+            duration: end_of_turn
+  - id: T450
+    name: 試験用巨人妖精／試験の呪い・七
+    mana: 1
+    text: "ジャイアント・フレンド・バースト（このクリーチャーが出た時、自分の他のジャイアント・クリーチャーを１体タップしてもよい。そうしたら、このクリーチャーの呪文側を、バトルゾーンに置いたままコストを支払わずに唱える。）このクリーチャーがバトルに勝った時、カードを１枚引き、その後、相手のシールドを１つブレイクする。ガードマン W・ブレイカー（第187弾・dm23rp2x-023型）"
+    faces:
+      - name: 試験用巨人妖精
+        types: [creature]
+        civs: [nature]
+        cost: 5
+        power: 7000
+        races: [ジャイアント・スノーフェアリー]
+        keywords: [guardman, double_breaker]
+        abilities:
+          - kind: trigger
+            when: {event: move, to: bz, subject: self}
+            effect:
+              - op: if
+                cond: {exists: {zone: bz, owner: you, filter: {types: [creature], race_has: ジャイアント, tapped: false}, exclude: {ref: self}}}
+                then:
+                  - op: may
+                    body:
+                      - {op: tap, select: {zone: bz, owner: you, filter: {types: [creature], race_has: ジャイアント, tapped: false}, exclude: {ref: self}, count: 1}}
+                      - {op: cast_face}
+          - kind: trigger
+            when: {event: battle_win, subject: self}
+            effect:
+              - {op: draw, count: 1}
+              - {op: break, count: 1}
+      - name: 試験の呪い・七
+        types: [spell]
+        civs: [nature]
+        cost: 3
+        spell:
+          - op: choose
+            select: {zone: bz, owner: you, filter: {types: [creature]}, count: 1}
+            as: a
+          - op: modify
+            select: {ref: a}
+            mod: {power: 4000}
+            duration: end_of_turn
+          - op: may
+            body:
+              - op: force_battle
+                a: {ref: a}
+                b: {zone: bz, owner: opp, filter: {types: [creature]}, count: 1}
+
+  - id: T451
+    name: 試験用不死鳥
+    types: [creature]
+    civs: [nature]
+    cost: 5
+    power: 5000
+    races: [フェニックス]
+    mana: 1
+    text: "自分の山札にカードがなくても、自分はゲームに負けない。自分がカードを引く時、自分の山札にカードがなければ、かわりにクリーチャーを１体、自分の墓地から出してもよい。（第188弾・dm26sd1-j008型）"
+    abilities:
+      - kind: static
+        no_lose: {deck_out_only: true}
+      - kind: replace
+        optional: true
+        when: {event: draw, player: you}
+        if: {cmp: [{count: {zone: deck, owner: you}}, ==, 0]}
+        instead:
+          - op: may
+            body:
+              - op: play_free
+                select: {zone: graveyard, owner: you, filter: {types: [creature]}, count: 1}
+
+  - id: T452
+    name: 試験用不敗竜
+    types: [creature]
+    civs: [fire]
+    cost: 6
+    power: 6000
+    races: [ドラゴン]
+    mana: 1
+    text: "自分がゲームに負ける時、かわりにこのクリーチャーを破壊する。このクリーチャーが破壊された時、そのターン、自分はゲームに負けない。（第188弾・dm26sd1-l003型）"
+    abilities:
+      - kind: replace
+        optional: true
+        when: {event: lose}
+        instead:
+          - op: move
+            select: {ref: self}
+            to: graveyard
+            reason: destroy
+      - kind: trigger
+        when: {event: move, from: bz, to: graveyard, reason: destroy, subject: self}
+        effect:
+          - {op: no_lose, player: you, duration: end_of_turn}
+
+  - id: T453
+    name: 試験用極凰呪文
+    types: [spell]
+    civs: [water]
+    cost: 4
+    mana: 1
+    text: "相手のパワー5000以下のクリーチャーを１体選び、破壊する。このターン中に一度、自分がゲームに負ける時、かわりに負けない。（第188弾・dm23rp1-022型）"
+    spell:
+      - op: destroy
+        select: {zone: bz, owner: opp, filter: {types: [creature], power_le: 5000}, count: 1}
+      - {op: no_lose, player: you, duration: end_of_turn, once: true}
+
+  - id: T454
+    name: 試験用火守呪文
+    types: [spell]
+    civs: [fire]
+    cost: 4
+    mana: 1
+    text: "次の自分のターンのはじめまで、自分はゲームに負けず、相手は勝たない。（第188弾・dmex15-b017型）"
+    spell:
+      - {op: no_lose, player: you, duration: until_next_own_turn_start}
+
+  - id: T455
+    name: 試験用不敗英雄
+    types: [creature]
+    civs: [light]
+    cost: 6
+    power: 6000
+    races: [ナイト]
+    mana: 1
+    text: "マナ武装 ２：自分のマナゾーンに光のカードが２枚以上あれば、自分はゲームに負けず、相手はゲームに勝てない。（第188弾・dmex08-221型。実カードは武装９）"
+    abilities:
+      - kind: static
+        if: {cmp: [{count: {zone: mana, owner: you, filter: {civs: [light]}}}, ">=", 2]}
+        no_lose: true
+
+  - id: T456
+    name: 試験用虹帝
+    types: [creature]
+    civs: [nature]
+    cost: 8
+    power: 9000
+    races: [アーク・セラフィム]
+    mana: 1
+    text: "自分がゲームに負ける時、かわりに自分のマナゾーンにあるカードを２枚、シャッフルしてから山札の下に置く。（第188弾・dmex19-m39型。実カードは８枚）"
+    abilities:
+      - kind: replace
+        optional: true
+        when: {event: lose}
+        instead:
+          - op: move
+            select: {zone: mana, owner: you, count: 2}
+            to: deck
+            position: bottom
+            reason: put
+            order: shuffle
+
+  - id: T457
+    name: 試験用勝利条件
+    types: [creature]
+    civs: [nature]
+    cost: 2
+    power: 2000
+    races: [テスト]
+    mana: 1
+    text: "自分のクリーチャーが３体以上あれば、自分はゲームに勝つ。（第188弾・常在勝利と敗北防止の干渉確認用）"
+    abilities:
+      - kind: state
+        if: {cmp: [{count: {zone: bz, owner: you, filter: {types: [creature]}}}, ">=", 3]}
+        effect:
+          - {op: win, player: you}
+
+  # ---- 語彙パイロット第189弾（2026-11-12）: opt_reduce の複数選択・S・トリガー不可・召喚時燃料 ----
+  - id: T458
+    name: 試験用献納竜
+    types: [creature]
+    civs: [darkness]
+    cost: 7
+    power: 7000
+    races: [テスト]
+    mana: 1
+    text: このクリーチャーを召喚する時、自分の、手札、クリーチャー、タマシード、シールドを、最大１つずつ選び、墓地に置いてもよい。こうして選んだ数だけ、このクリーチャーの召喚コストを１少なくする。
+    abilities:
+      - kind: static
+        affects: self
+        zone: hand
+        mod: {opt_reduce: {amount: 1, per: true, floor: 0, do: {selects: [{select: {zone: hand, owner: you, other: true}, min: 0, max: 1}, {select: {zone: bz, owner: you, filter: {types: [creature]}}, min: 0, max: 1}, {select: {zone: bz, owner: you, filter: {types: [tamaseed]}}, min: 0, max: 1}, {select: {zone: shield, owner: you}, min: 0, max: 1}], move_to: graveyard}}}
+  - id: T459
+    name: 試験用智将
+    types: [creature]
+    civs: [darkness]
+    cost: 6
+    power: 6000
+    races: [テスト]
+    mana: 1
+    text: このクリーチャーを召喚する時、自分のシールドを１つ手札に加えてもよい。そうしたら、このクリーチャーの召喚コストを３少なくする。ただし、その「S・トリガー」は使えない。
+    abilities:
+      - kind: static
+        affects: self
+        zone: hand
+        mod: {opt_reduce: {amount: 3, floor: 0, do: {select: {zone: shield, owner: you}, min: 1, max: 1, move_to: hand, strigger_off: true}}}
+  - id: T460
+    name: 試験用鬼黒皇
+    types: [creature]
+    civs: [darkness]
+    cost: 5
+    power: 7000
+    races: [テスト]
+    mana: 1
+    text: このクリーチャーを召喚する時、自分のシールドを２つまで選ぶ。選んだシールド１つにつき、このクリーチャーの召喚コストを１少なくする。このクリーチャーが出た時、選んだシールドを手札に加える。その「S・トリガー」は使えない。
+    abilities:
+      - kind: static
+        affects: self
+        zone: hand
+        mod: {opt_reduce: {amount: 1, per: true, floor: 0, do: {select: {zone: shield, owner: you}, min: 0, max: 2}}}
+      - kind: trigger
+        when: {event: move, to: bz, subject: self}
+        effect:
+          - {op: move, select: {ref: fuel}, to: hand, reason: return, strigger: "off"}
+
+  - id: T461
+    name: 試験用EXライフ・タップ
+    types: [creature]
+    civs: [darkness]
+    cost: 6
+    power: 6000
+    races: [テスト]
+    mana: 1
+    text: EXライフ / ブロッカー / Q・ブレイカー / このクリーチャーがタップした時またはこのクリーチャーの「EXライフ」シールドが離れた時、カードを１枚、自分のマナゾーンまたは墓地から手札に戻してもよい。その後、相手は自身の手札を１枚選んで捨てる。
+    keywords: [ex_life, blocker, quad_breaker]
+    abilities:
+      - kind: trigger
+        when: {event: tap, subject: self}
+        effect:
+          - op: may
+            body:
+              - op: move
+                select: {zone: [mana, graveyard], owner: you, count: 1, up_to: true}
+                to: hand
+                reason: return
+          - op: move
+            select: {zone: hand, owner: opp, count: 1, chooser: opp}
+            to: graveyard
+            reason: discard
+      - kind: trigger
+        when: {event: move, from: shield, subject: {exlife_of: self}}
+        effect:
+          - op: may
+            body:
+              - op: move
+                select: {zone: [mana, graveyard], owner: you, count: 1, up_to: true}
+                to: hand
+                reason: return
+          - op: move
+            select: {zone: hand, owner: opp, count: 1, chooser: opp}
+            to: graveyard
+            reason: discard
+
+  - id: T462
+    name: 試験用EXライフ・選ばれない
+    types: [creature]
+    civs: [darkness]
+    cost: 6
+    power: 6000
+    races: [テスト]
+    mana: 1
+    text: EXライフ / T・ブレイカー / 多色ではない呪文の効果によって、相手がクリーチャーを選ぶ時、このクリーチャーは選ばれない。 / このクリーチャーが出た時、またはこのクリーチャーの「EXライフ」シールドが自分のシールドゾーンを離れた時、相手のクリーチャーを１体破壊する。
+    keywords: [ex_life, triple_breaker]
+    abilities:
+      - kind: static
+        affects: self
+        mod:
+          deny:
+            - action: be_chosen
+              other: {types: [spell], multicolor: false}
+      - kind: trigger
+        when: {event: move, to: bz, subject: self}
+        effect:
+          - op: destroy
+            select: {zone: bz, owner: opp, filter: {types: [creature]}, count: 1, up_to: true}
+      - kind: trigger
+        when: {event: move, from: shield, subject: {exlife_of: self}}
+        effect:
+          - op: destroy
+            select: {zone: bz, owner: opp, filter: {types: [creature]}, count: 1, up_to: true}
+
+  - id: T463
+    name: 試験用EXライフ・シールド数パワー
+    types: [creature]
+    civs: [darkness]
+    cost: 6
+    power: 6000
+    races: [テスト]
+    mana: 1
+    text: EXライフ / ブロッカー / パワード・ブレイカー / 自分のシールド１つにつき、このクリーチャーのパワーを+1000する。 / このクリーチャーが出た時、相手のクリーチャーを１体選ぶ。相手はそれを山札の下に置く。 / このクリーチャーが攻撃する時、自分の山札の上から２枚を見てもよい。そうしたら、そのうちの１枚をシールド化し、もう１枚を手札に加える。
+    keywords: [ex_life, blocker, powered_breaker]
+    abilities:
+      - kind: static
+        affects: self
+        mod: {power: {amount: 1000, count: {zone: shield, owner: you}}}
+      - kind: trigger
+        when: {event: move, to: bz, subject: self}
+        effect:
+          - op: move
+            select: {zone: bz, owner: opp, filter: {types: [creature]}, count: 1, up_to: true}
+            to: deck
+            reason: put
+            position: bottom
+      - kind: trigger
+        when: {event: attack, subject: self}
+        effect:
+          - op: may
+            body:
+              - op: reveal_until
+                filter: {}
+                count: 2
+                as: seen
+              - op: choose
+                select: {ref: seen, count: 1}
+                as: toshield
+              - op: move
+                select: {ref: toshield}
+                to: shield
+                reason: put
+              - op: move
+                select: {ref: seen, exclude: {ref: toshield}}
+                to: hand
+                reason: put
+
+  - id: T464
+    name: 試験用EXライフ・能力無視
+    types: [creature]
+    civs: [darkness]
+    cost: 6
+    power: 6000
+    races: [テスト]
+    mana: 1
+    text: EXライフ / T・ブレイカー / このクリーチャーが出た時、次の自分のターンのはじめまで、相手のクリーチャーの能力をすべて無視する。 / 相手のターン中、相手がコスト９以下のクリーチャーを召喚した時またはコスト９以下の呪文を唱えた時、自分はカードを１枚引いてもよい。その後、コスト９以下の呪文を１枚、自分の手札からコストを支払わずに唱えてもよい。
+    keywords: [ex_life, triple_breaker]
+    abilities:
+      - kind: trigger
+        when: {event: move, to: bz, subject: self}
+        effect:
+          - op: modify
+            select: {zone: bz, owner: opp, filter: {types: [creature]}}
+            mod: {ignore: [all]}
+            duration: until_next_own_turn_start
+            dynamic: true
+      - kind: trigger
+        when: {event: summon, subject: {owner: opp, filter: {cost_le: 9}}}
+        if: {is_turn: opp}
+        effect:
+          - op: may
+            body:
+              - {op: draw, count: 1}
+          - op: may
+            body:
+              - op: play_free
+                select: {zone: hand, owner: you, filter: {types: [spell], cost_le: 9}, count: 1, up_to: true}
+      - kind: trigger
+        when: {event: cast, subject: {owner: opp, filter: {cost_le: 9}}}
+        if: {is_turn: opp}
+        effect:
+          - op: may
+            body:
+              - {op: draw, count: 1}
+          - op: may
+            body:
+              - op: play_free
+                select: {zone: hand, owner: you, filter: {types: [spell], cost_le: 9}, count: 1, up_to: true}

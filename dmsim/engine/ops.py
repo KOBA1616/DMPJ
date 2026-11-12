@@ -405,7 +405,10 @@ def op_shuffle(eng, t, op, env):
 
 @op("win", player="player?")
 def op_win(eng, t, op, env):
-    eng.s.result = {"winner": eng._rel(op.get("player", "you"), env), "reason": "effect", "turn": eng.s.turn}
+    winner = eng._rel(op.get("player", "you"), env)
+    if eng._lose_immune(1 - winner, "effect"):   # 第188弾: 「相手はゲームに勝てない」は勝利効果も防ぐ
+        return None
+    eng.s.result = {"winner": winner, "reason": "effect", "turn": eng.s.turn}
 
 
 @op("lose", player="player?")
@@ -414,6 +417,26 @@ def op_lose(eng, t, op, env):
     tasks = eng.game_lose(p, "effect")   # 敗北の置換（S-MAX進化など）を諮ってから確定する
     if tasks:
         eng._defer(t, tasks)
+
+
+@op("no_lose", player="players?", duration="duration?", once="bool?", deck_out_only="bool?")
+def op_no_lose(eng, t, op, env):
+    """敗北の防止（第188弾）: player は duration の間ゲームに負けない（＝相手はゲームに勝てない）。
+    once: 一度だけ（敗北を防いだら消費する。「このターン中に一度、自分がゲームに負ける時、かわりに負けない」）。
+    deck_out_only: 山札切れによる敗北だけを防ぐ（「自分の山札にカードがなくても、自分はゲームに負けない」）。
+    継続的効果として s.continuous に載せ、duration の期限切れ（end_of_turn / until_next_own_turn_start /
+    permanent）は既存の仕組みに任せる。mod は空で affected は空集合（特性には影響しない）。"""
+    s = eng.s
+    s.seq += 1
+    who = op.get("player", "you")
+    targets = (env["you"], 1 - env["you"]) if who == "each" else (eng._rel(who, env),)
+    for p in targets:
+        s.continuous.append({"id": s.seq, "mod": {}, "duration": eng._duration(op.get("duration", "end_of_turn"), env),
+                             "controller": env["you"], "src": env["self"][0] if env.get("self") else None,
+                             "affected": [],
+                             "no_lose": {"player": p, "once": bool(op.get("once", False)),
+                                         "deck_out_only": bool(op.get("deck_out_only", False))}})
+    return None
 
 
 @op("set_var", name="str", value="any?")
@@ -680,14 +703,18 @@ def op_yobinion(eng, t, op, env):
 
 
 @op("reveal_until", player="player?", player_from="str?", filter="filter", count="expr?",
-    **{"as": "str", "rest_as": "str?"})
+    limit="expr?", **{"as": "str", "rest_as": "str?"})
 def op_reveal_until(eng, t, op, env):
     """「〜が出るまで表向きにする」: 対象プレイヤー（player。既定 you。player_from があれば、その変数の
     最初のカードの持ち主 = 「その持ち主」）の山札を上から1枚ずつ公開し、filter に合うカードが
     count 枚（既定1）出た時点で止める。合ったカード群を as に、出なかった公開カード群を
     rest_as（既定 as + "_rest"）に束縛する。公開したカードは山札に残るので、行き先は後続の
     op（move で出す／墓地に置く／山札の下に置く、shuffle で山札に戻す）が決める。
-    count が 0 以下のときは何も公開しない（「破壊した数と同じ数」が 0 の場合）。"""
+    count が 0 以下のときは何も公開しない（「破壊した数と同じ数」が 0 の場合）。
+    limit（第181弾）: 公開する合計枚数の上限。limit 枚公開した時点で、合うカードが
+    count 枚に満たなくても止める。「山札の上から1枚目を表向きにし、それが多色なら手札に
+    加える」（ロスト・プリズム）は limit: 1, count: 1, filter: {multicolor: true} で書く。
+    limit が 0 以下のときも何も公開しない。"""
     s = eng.s
     vars_ = env.setdefault("vars", {})
     rest_name = op.get("rest_as") or (op["as"] + "_rest")
@@ -703,10 +730,16 @@ def op_reveal_until(eng, t, op, env):
     if want <= 0:
         vars_[op["as"]], vars_[rest_name] = [], []
         return None
+    limit = eng.eval_expr(op["limit"], env) if "limit" in op else None
+    if limit is not None and limit <= 0:
+        vars_[op["as"]], vars_[rest_name] = [], []
+        return None
     f = {k: (eng.eval_expr(v, env) if isinstance(v, dict) else v)
          for k, v in (op.get("filter") or {}).items()}
     hit, rest = [], []
     for c in list(s.zones["deck"][p]):
+        if limit is not None and len(hit) + len(rest) >= limit:
+            break
         eng.note_public("reveal", c)
         if eng.filter_match(c, f, env=env):
             hit.append(c)
@@ -757,17 +790,30 @@ def op_gachinko(eng, t, op, env):
     return None
 
 
-@op("cast_face", face="expr")
+@op("cast_face", face="expr?", select="selector?")
 def op_cast_face(eng, t, op, env):
     """ツインパクトの呪文面を、カードをバトルゾーンに置いたまま唱える（スマッシュ・バースト）。
     唱えたことにはなる（cast イベント、コストは支払わない）が、カード自体は動かず、
-    解決後に墓地へも行かない。face: "spell" なら呪文面を探す（ラスト・バースト）。"""
+    解決後に墓地へも行かない。face: "spell" なら呪文面を探す（ラスト・バースト）。
+    第184弾: select を付けると選んだツインパクト・クリーチャーの呪文面を唱える
+    （「バトルゾーンにある自分のツインパクト・クリーチャー1体の呪文側を、バトルゾーンに
+    置いたままコストを支払わずに唱えてもよい」）。select が無い時は従来どおり自分自身。
+    face の既定は -1（呪文面を探す）。"""
     s = eng.s
-    if not s.alive(env["self"]):
-        return
-    cid = env["self"][0]
+    if "select" in op:
+        cids, d = eng.select(t, op["select"], env)
+        if d:
+            return d
+        if not cids:
+            return None
+        ref = s.ref(cids[0])
+    else:
+        if not s.alive(env["self"]):
+            return
+        ref = env["self"]
+    cid = ref[0]
     d = eng.cdef(cid)
-    fi = op["face"]
+    fi = op.get("face", -1)
     if fi == -1:   # 呪文面を探す（ラスト・バースト）
         fi = next((i for i, f in enumerate(d.faces) if f.spell), None)
         if fi is None:
@@ -845,6 +891,8 @@ def op_invade(eng, t, op, env):
     if not eng.permits(me, "enter_bz"):
         return None
     a = ontos[0]
+    if a == me:   # 第183弾: 自分自身の上には重ねられない（S級侵略の自己攻撃除外の受け皿）
+        return None
     eng._defer(t, [eng.ev_task({"ev": "move", "subject": eng.s.ref(me), "to": "bz", "reason": "put", "via": "invasion"}, env),
                    {"t": "invade_fix", "cid": me, "onto": eng.s.ref(a), "tapped": eng.s.cards[a].tapped}])
     return None
@@ -1110,9 +1158,10 @@ def op_put_under(eng, t, op, env):
     return None
 
 
-@op("battle_substitute")
+@op("battle_substitute", tap="bool?")
 def op_battle_substitute(eng, t, op, env):
-    """バトル相手の置換（when: {event: battle}）の印。実際の入れ替えは combat の _battle_substitute が行う。"""
+    """バトル相手の置換（when: {event: battle}）の印。実際の入れ替えは combat の _battle_substitute が行う。
+    tap: true なら、代わりにバトルするクリーチャーをタップする（スーパーガードマン。第186弾）。"""
     return None
 
 

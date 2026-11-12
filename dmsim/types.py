@@ -270,6 +270,8 @@ class PlayTask(TypedDict):
     reduce_done: NotRequired[bool]
     fuel: NotRequired[list[int]]         # 支払い時の行動（opt_reduce.do）で選んだカード
     fuel_done: NotRequired[bool]
+    fuel_idx: NotRequired[int]           # 第189弾: 複数選択（do.selects）で次に選ぶ項目の番号（再入時の再開位置）
+    fuel_asked: NotRequired[bool]        # 第189弾: 燃料の選択肢を一度でも提示したか（選ばなかった場合との区別用）
     cost_may_i: NotRequired[int]         # cost_may の確認が済んだ発生源の数
     cost_may_total: NotRequired[int]     # cost_may で得た軽減の合計
     cost_may_min: NotRequired[int]       # cost_may の下限（使った発生源の最大）

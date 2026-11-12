@@ -335,7 +335,8 @@ class EventMixin:
                         continue   # 「相手の効果では離れない」型: by の無い移動（状況起因・バトル）と自分の効果は通す
                     return []
             lki = {"defn": c.defn, "face": c.face, "controller": c.controller, "zone": from_zone,
-                   "tapped": c.tapped, "chars": self.chars(cid), "ref": list(ev["subject"])}   # 過去の状態を見る（603.5c）
+                   "tapped": c.tapped, "chars": self.chars(cid), "ref": list(ev["subject"]),
+                   "exlife_of": list(c.exlife_of) if c.exlife_of is not None else None}   # 過去の状態を見る（603.5c）
             was_face_up = c.face_up   # 移動前の表向き状態（手札に加わると face_up は消える。裁きの紋章の判定用。第169弾）
             sealed_from = None
             if c.seal_of >= 0:   # 封印そのものが動く: 対象から外し、記録に「どのカードの封印だったか」を残す
@@ -389,6 +390,8 @@ class EventMixin:
             if ev.get("summon_tapped"):   # フォートE（第168弾）: 移動で消えた召喚時タップ記録を出し直す
                 c.summon_tapped = [{"ref": list(e["ref"]), "races": list(e.get("races", []))}
                                    for e in ev["summon_tapped"]]
+            if ev.get("summon_fuel"):   # 第189弾: 移動で消えた召喚時燃料の記録を出し直す
+                c.summon_fuel = [list(r) for r in ev["summon_fuel"]]
             if ev.get("bazurenda"):
                 c.bazurenda = ev["bazurenda"]
             if ev.get("tapped"):   # 「タップして置く」: 置かれた時点でタップ状態（別のタップ イベントにしない）
@@ -656,14 +659,54 @@ class EventMixin:
             if ce["affected"] is not None and old in ce["affected"]:
                 ce["affected"].append(new)
 
-    def _lose_candidates(self, loser: int) -> list[tuple[int, int, dict]]:
-        """敗北を置換できる能力（when: {event: lose} の kind: replace）を持つ、敗北する側のバトルゾーンのカード。"""
+    def _lose_immune(self, loser: int, reason: str) -> bool:
+        """第188弾: 敗北の防止。loser が reason による敗北を防がれているか。
+        (1) op no_lose の継続的効果（once なら防いだ時に消費する）。(2) バトルゾーンの
+        常在型能力 no_lose（if があれば評価する。deck_out_only は山札切れだけ）。
+        「相手はゲームに勝てない」は「自分はゲームに負けない」と同じことなので、勝敗の
+        両側はこの1つの判定で足りる。"""
+        s = self.s
+        consumed = []
+        for ce in s.continuous:
+            nl = ce.get("no_lose")
+            if not nl or nl["player"] != loser:
+                continue
+            if nl["deck_out_only"] and reason != "deck_out":
+                continue
+            if nl["once"]:
+                consumed.append(ce)
+            else:
+                return True
+        if consumed:
+            for ce in consumed:
+                s.continuous.remove(ce)
+            return True
+        for c in self.bz_tops(loser):
+            for _, ab in self.abilities(c, "static"):
+                if "no_lose" not in ab:
+                    continue
+                nl = ab["no_lose"]
+                if isinstance(nl, dict) and nl.get("deck_out_only") and reason != "deck_out":
+                    continue
+                if "if" in ab:
+                    env = {"you": loser, "self": s.ref(c), "vars": {}}
+                    if not self._static_cond(ab["if"], env):
+                        continue
+                return True
+        return False
+
+    def _lose_candidates(self, loser: int, reason: str | None = None) -> list[tuple[int, int, dict]]:
+        """敗北を置換できる能力（when: {event: lose} の kind: replace）を持つ、敗北する側のバトルゾーンのカード。
+        when.reason があれば敗北の reason（direct_attack / deck_out / state / effect）と照合する（第188弾）。"""
         s = self.s
         out = []
-        rec = {"ev": "lose", "controller": loser}
+        rec = {"ev": "lose", "controller": loser, "reason": reason}
         for c in self.bz_tops(loser):
             for i, ab in self.abilities(c, "replace"):
                 if ab.get("when", {}).get("event") != "lose":
+                    continue
+                wr = ab.get("when", {}).get("reason")
+                if wr is not None and reason is not None and reason not in (wr if isinstance(wr, list) else [wr]):
                     continue
                 env = {"you": loser, "self": s.ref(c), "event": rec, "vars": {}}
                 if "if" in ab and not self.eval_cond(ab["if"], env):
@@ -672,12 +715,14 @@ class EventMixin:
         return out
 
     def game_lose(self, loser: int, reason: str) -> list[dict]:
-        """敗北の確定口: 置換できる能力があれば諮問タスクを返し、無ければその場で敗北を確定する。
+        """敗北の確定口: 防止されていれば何もしない。置換できる能力があれば諮問タスクを返し、無ければその場で敗北を確定する。
         ダイレクトアタック・デッキ切れ・状況起因の勝敗・効果による敗北は、すべてここを通す。"""
         s = self.s
         if s.result is not None:
             return []
-        if not self._lose_candidates(loser):
+        if self._lose_immune(loser, reason):   # 第188弾: 敗北の防止（op no_lose / 常在型 no_lose）
+            return []
+        if not self._lose_candidates(loser, reason):
             s.result = {"winner": 1 - loser, "reason": reason, "turn": s.turn}
             return []
         return [{"t": "lose_replace", "loser": loser, "reason": reason, "phase": 0}]
@@ -705,10 +750,14 @@ class EventMixin:
                         win = o["op"] == "win"
                         who = self._rel(o.get("player", "you"), env)
                         if win:
+                            if self._lose_immune(1 - who, "state"):   # 第188弾: 負けない側がいればその常在勝利は働かない
+                                break
                             s.result = {"winner": who, "reason": "state", "turn": s.turn}
                             return []
                         return self.game_lose(who, "state")
-                    return []
+                    else:
+                        return []
+                    continue
         for p in (0, 1):   # S-MAX進化の2体制限: 自分のS-MAX進化クリーチャーが2体以上あれば、1体を残して残りを手札に戻す
             tops = [c for c in self.bz_tops(p) if self.fdef(c).s_max]
             if len(tops) >= 2:
@@ -762,6 +811,12 @@ class EventMixin:
             forts = self._castle_fortifiers(cid)
             if not forts or any(list(f) not in [list(r) for r in refs if r] for f in forts):
                 return False
+        if "exlife_of" in pat:   # 「EXライフ」シールド（第190弾）: subject のカードが移動前に紐付けていたクリーチャー
+            v = pat["exlife_of"]
+            refs = [env["self"]] if v == "self" else env.get("vars", {}).get(v, [])
+            linked = lki.get("exlife_of") if lki is not None else self.s.cards[cid].exlife_of
+            if linked is None or not any(list(r) == list(linked) for r in refs if r):
+                return False
         ctrl = lki["controller"] if lki else self.s.cards[cid].controller
         if "owner" in pat and pat["owner"] != "any" and ctrl != self._rel(pat["owner"], env):
             return False
@@ -797,6 +852,12 @@ class EventMixin:
                         return False
                 elif rec.get(k) != wv:
                     return False
+        if rec.get("ev") == "move" and rec.get("from") == "bz" and rec.get("to") == "bz" \
+                and "from" in when and "to" not in when:
+            # 第183弾: バトルゾーン内の移動（S級侵略で既に場にいるカードを重ねる等）は
+            # 「離れた時」ではない（公式Q&A・DARK MATERIAL COMPLEX の裁定）。「出た時」側は
+            # 「置くは出すと同義」の扱いで to: bz の照合は通す。
+            return False
         if "target" in when:   # 攻撃先: player（シールドも含む）か creature。self や {owner, filter} なら、そのクリーチャーが攻撃された時
             tg, w = rec.get("target"), when["target"]
             if w in ("player", "creature"):
@@ -873,7 +934,7 @@ class EventMixin:
             subj = rec["subject"][0]
             if when["subject"] == "self":
                 return env.get("self") is not None and subj == env["self"][0]
-            lki = rec.get("lki") if rec.get("from") == "bz" else None
+            lki = rec.get("lki") if rec.get("from") == "bz" or (isinstance(when.get("subject"), dict) and "exlife_of" in when["subject"]) else None
             return self._subject_match(when["subject"], subj, env, lki)
         return True
 
@@ -1254,7 +1315,7 @@ def h_lose_replace(eng, t):
         eng._pop(t)
         return None
     if t["phase"] == 0:
-        cands = eng._lose_candidates(t["loser"])
+        cands = eng._lose_candidates(t["loser"], t["reason"])
         if not cands:
             s.result = {"winner": 1 - t["loser"], "reason": t["reason"], "turn": s.turn}
             eng._pop(t)

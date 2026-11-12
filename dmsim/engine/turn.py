@@ -348,7 +348,12 @@ class TurnMixin:
             n = 1
             if o.get("do") and o.get("per"):   # 支払い時の行動1件につき軽減: 選べる最大数で見積もる
                 env = {"you": self.s.cards[cid].controller, "self": self.s.ref(cid)}
-                n = min(o["do"].get("max", 99), len([c for c in self.candidates(o["do"]["select"], env) if c != cid]))
+                do = o["do"]
+                if "selects" in do:   # 第189弾: 複数の選択肢の合計で見積もる
+                    n = sum(min(e.get("max", 99), len([c for c in self.candidates(e["select"], env) if c != cid]))
+                            for e in do["selects"])
+                else:
+                    n = min(do.get("max", 99), len([c for c in self.candidates(do["select"], env) if c != cid]))
             base = max(o.get("floor", 0), base - o["amount"] * n)
         cm = self._cost_may_avail(cid, face)
         if cm:
@@ -913,27 +918,54 @@ def h_play(eng, t):
         t["reduce_done"] = True
     if t.get("reduced") and ch0["opt_reduce"].get("do") and not t.get("fuel_done"):
         # 支払い時の行動（手札を見せる・捨てる、シールドを手札に加える、墓地の呪文を山札に戻す等）を先に行う
+        # 第189弾: selects なら複数の選択肢（手札・クリーチャー・タマシード・シールドを最大1つずつ等）を
+        # 順に選ぶ。ask は再入ごとに先頭の1回だけ保存された回答を消費するため、項目ごとの進捗を
+        # t["fuel_idx"] / t["fuel"] / t["fuel_asked"] に刻んで再入時にそこから再開する。
         spec = ch0["opt_reduce"]["do"]
         env = {"you": p, "self": s.ref(cid)}
-        cands = [c for c in eng.candidates(spec["select"], env) if c != cid]   # 実行中のカード自身は対象にしない
-        mx = min(spec.get("max", len(cands)), len(cands))
-        if mx <= 0:
+        entries = spec["selects"] if "selects" in spec else [spec]
+        idx = t.get("fuel_idx", 0)
+        fuel = list(t.get("fuel", []))
+        asked = t.get("fuel_asked", False)
+        failed = False
+        while idx < len(entries):
+            entry = entries[idx]
+            cands = [c for c in eng.candidates(entry["select"], env) if c != cid and c not in fuel]   # 実行中のカード自身は対象にしない
+            mx = min(entry.get("max", len(cands)), len(cands))
+            if mx <= 0:
+                if entry.get("min", 0) > 0:
+                    failed = True          # 必須の燃料が選べないなら軽減も得られない
+                idx += 1
+                continue
+            ans, dd = eng.ask(t, p, "choose_cards", [eng._card_option(c) for c in cands],
+                              min(entry.get("min", 0), mx), mx)
+            if dd:
+                t["fuel_idx"] = idx
+                t["fuel"] = fuel
+                t["fuel_asked"] = True
+                return dd
+            asked = True
+            fuel.extend(cands[i] for i in ans)
+            idx += 1
+        t["fuel_idx"] = idx
+        t["fuel"] = fuel
+        t["fuel_asked"] = asked
+        if failed or (len(entries) == 1 and not asked):
             t["reduced"] = False          # 行動できないなら軽減も得られない
             t["fuel_done"] = True
         else:
-            ans, dd = eng.ask(t, p, "choose_cards", [eng._card_option(c) for c in cands],
-                              min(spec.get("min", 0), mx), mx)
-            if dd:
-                return dd
-            t["fuel"] = [cands[i] for i in ans]
             t["fuel_done"] = True
             if spec.get("tap"):   # 燃料としてタップする（コストの支払い。ゾーンは動かない）
                 for c in t["fuel"]:
                     s.cards[c].tapped = True
-            if spec.get("move_to"):
+            if spec.get("move_to") and (fuel or asked):
                 reason = {"graveyard": "discard", "hand": "return", "deck": "put"}.get(spec["move_to"], "put")
-                seq = [eng.ev_task([{"ev": "move", "subject": s.ref(c), "to": spec["move_to"],
-                                     "reason": reason} for c in t["fuel"]])]
+                moves = [{"ev": "move", "subject": s.ref(c), "to": spec["move_to"], "reason": reason}
+                         for c in t["fuel"]]
+                if spec.get("strigger_off") and spec["move_to"] == "hand":   # 第189弾: 手札に加わる燃料の S・トリガーは使えない
+                    for m in moves:
+                        m["strigger"] = "off"
+                seq = [eng.ev_task(moves)]
                 if spec.get("shuffle"):
                     seq.append(eng._child([{"op": "shuffle"}], {"you": p, "self": s.ref(cid), "vars": {}}))
                 eng._push(*seq)
@@ -1076,6 +1108,10 @@ def h_play(eng, t):
                      for c in t.get("summon_paid", [])]
     if paid_snapshot:
         s.cards[cid].summon_tapped = [dict(e, ref=list(e["ref"])) for e in paid_snapshot]
+    # 第189弾: 召喚時の支払い行動で選んだカードを刻む（出た時の誘発が ref: fuel で参照する）
+    fuel_snapshot = [list(s.ref(c)) for c in t.get("fuel", [])]
+    if fuel_snapshot:
+        s.cards[cid].summon_fuel = [list(r) for r in fuel_snapshot]
     if d.bazurenda:
         s.cards[cid].bazurenda = t.get("bz_count", 0)
     if face is not None:
@@ -1097,6 +1133,8 @@ def h_play(eng, t):
             ev["odrive_civs"] = list(t.get("odrive_civs", []))
         if paid_snapshot:   # フォートE: 移動で印が消えるためイベントに載せて出し直す（odrive と同じ作法）
             ev["summon_tapped"] = [dict(e, ref=list(e["ref"])) for e in paid_snapshot]
+        if fuel_snapshot:   # 第189弾: 同上
+            ev["summon_fuel"] = [list(r) for r in fuel_snapshot]
         if t.get("alt"):
             ev["alt"] = True
         if t.get("vivid"):
@@ -1117,6 +1155,8 @@ def h_play(eng, t):
         # 出し方の印（第149弾）: play_self の via があればそちらを優先し、無ければ従来どおり generate
         if sst_bonus:
             ev["sst"] = True
+        if fuel_snapshot:   # 第189弾: 移動で消える召喚時燃料の記録を出し直す
+            ev["summon_fuel"] = [list(r) for r in fuel_snapshot]
         if d.bazurenda:
             ev["bazurenda"] = t.get("bz_count", 0)
         eng._push(eng.ev_task(ev))

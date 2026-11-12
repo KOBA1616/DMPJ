@@ -64,6 +64,7 @@ fn raw_move(s: &mut GameState, spec: &NewGameSpec, cid: i64, to: &str) {
         c.stp = false;
         c.odrive = false;
         c.odrive_civs.clear();
+        c.summon_fuel.clear();
         c.summon_tapped.clear();
         c.bazurenda = 0;
         c.vivid = false;

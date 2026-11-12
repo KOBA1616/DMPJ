@@ -146,6 +146,8 @@ class CombatMixin:
         """バトル相手の置換（「かわりにこのクリーチャーにバトルさせてもよい」）。ターン・プレイヤー側から順に選ぶ（609.8）。
         置換効果 when: {event: battle, subject: <置き換えられる側>}、instead: [{op: battle_substitute}] を持つ
         バトルゾーンのクリーチャーが、その側の代わりにバトルする。1回のバトルで同じ側は1度だけ。
+        instead の battle_substitute に tap: true があれば、代わりにバトルするクリーチャーをタップする
+        （スーパーガードマン。第186弾。タップ済みのクリーチャーは選択肢に出ない。タップにイベントは出さない）。
         戻り値: (att, tgt, Decision|None)。"""
         s = self.s
         sides = t.setdefault("subbed", [])
@@ -160,7 +162,11 @@ class CombatMixin:
                     continue
                 for i, ab in self.abilities(src, "replace"):
                     if ab["when"]["event"] == "battle" and self._pattern_match(ab["when"], rec, src, None):
-                        opts.append({"key": f"battle_sub:{s.cards[src].defn}:{i}", "cid": src})
+                        tap = any(o.get("op") == "battle_substitute" and o.get("tap") is True
+                                  for o in ab.get("instead", []))
+                        if tap and s.cards[src].tapped:
+                            continue   # タップしてバトルさせる置換は、タップ済みでは使えない
+                        opts.append({"key": f"battle_sub:{s.cards[src].defn}:{i}", "cid": src, "tap": tap})
             if not opts:
                 continue
             a, d = self.ask(t, ctrl, "choose_replacement", opts + [{"key": "decline"}])
@@ -168,7 +174,10 @@ class CombatMixin:
                 return att, tgt, d
             sides.append(k)
             if a[0] < len(opts):
-                new = s.ref(opts[a[0]]["cid"])
+                o = opts[a[0]]
+                new = s.ref(o["cid"])
+                if o["tap"]:
+                    s.cards[o["cid"]].tapped = True
                 if k == 0:
                     att = new
                 else:
@@ -235,11 +244,23 @@ class CombatMixin:
         return out
 
     def _declarable(self, player, rec) -> list[dict]:
-        """使用宣言できる能力（603.2e/f）。手札（または ab.zone）にあり、when が rec に合い、if を満たすもの。"""
+        """使用宣言できる能力（603.2e/f）。手札（または ab.zone）にあり、when が rec に合い、if を満たすもの。
+        第183弾: S級侵略のため bz も走査する。bz は共有ゾーンなので controller で絞り、
+        下のカード（top_of >= 0）は宣言できない。攻撃中のクリーチャー自身は自分の上に重ねられない
+        （「自分以外のクリーチャーが攻撃する時」）ので、イベントの subject は除外する。"""
         s = self.s
         out = []
-        for z in ("hand", "mana", "graveyard"):
+        subj = rec.get("subject")
+        subj_cid = subj[0] if isinstance(subj, (list, tuple)) else None
+        for z in ("hand", "mana", "graveyard", "bz"):
             for cid in self.zlist(z, player):
+                if z == "bz":
+                    if s.cards[cid].controller != player:
+                        continue
+                    if s.cards[cid].top_of >= 0:
+                        continue
+                    if subj_cid is not None and cid == subj_cid:
+                        continue
                 d = self.cdef(cid)
                 faces = [(None, d)] if not d.faces else list(enumerate(d.faces))
                 for fi, f in faces:
@@ -316,9 +337,12 @@ def h_attack(eng, t):
         s.turn_counters["attack_no"] = s.turn_counters.get("attack_no", 0) + 1
         t["ano"] = s.turn_counters["attack_no"]
         s.turn_counters["current_attack"] = t["ano"]
-        s.cards[att[0]].tapped = True
         rec = {"ev": "attack", "subject": att, "target": t["target"], "controller": a}
         eng._push(eng.ev_task(rec), _decl(eng, a, "attack", rec))
+        # 第190弾: 攻撃宣言のタップは tap イベントを出す（「タップした時」誘発用）。
+        # _apply_one の tap 処理が tapped=True にする。既にタップ済みなら記録は出ない
+        if not s.cards[att[0]].tapped:
+            eng._push(eng.ev_task({"ev": "tap", "subject": att}))
         return None
     if ph == 1:                                               # 506.3d 非ターン・プレイヤーの使用宣言
         t["phase"] = 2
@@ -358,15 +382,20 @@ def h_attack(eng, t):
         t["phase"] = 3
         o = opts[ans[0]]
         if o["key"] != "no_block":
-            for c in forced:      # 強制された全員が能力を使用する（タップ）。最後に解決する1体が攻撃先になる（507.2）
-                s.cards[c].tapped = True
-            s.cards[o["cid"]].tapped = True
+            # 第190弾: ブロック宣言のタップも tap イベントを出す（「タップした時」誘発用）。
+            # ガードマン（ブロックにならない）でもタップは起きる。後から積むほど先に実行される
+            # ため、tap イベントは block イベントより後に積んで先に実行させる
+            to_tap = [c for c in list(forced) + [o["cid"]] if not s.cards[c].tapped]
             t["target"] = s.ref(o["cid"])
             if o["key"].startswith("guard:"):      # 507.2b ガードマンで変更された場合、ブロッククリーチャーにはならない
+                for c in to_tap:
+                    eng._push(eng.ev_task({"ev": "tap", "subject": s.ref(c)}))
                 return None
             t["blocked"] = True
             rec = {"ev": "block", "subject": t["target"], "attacker": att, "controller": 1 - a}
             eng._push(eng.ev_task(rec), _decl(eng, a, "block", rec), _decl(eng, 1 - a, "block", rec))
+            for c in to_tap:
+                eng._push(eng.ev_task({"ev": "tap", "subject": s.ref(c)}))
         return None
     if ph == 3:                                               # 508 バトル
         t["phase"] = 4
@@ -494,6 +523,9 @@ def h_break(eng, t):
         if t.get("breaker") and s.alive(t["breaker"]):      # ブレイクしたクリーチャー（「他のクリーチャーがシールドをブレイクした」）
             ev["subject"] = t["breaker"]
             s.turn_counters[f"broke_in:{t['breaker'][0]}"] = s.turn_counters.get("current_attack", 0)
+            # 第185弾: その攻撃中にそのクリーチャーがブレイクした枚数（ブレイク・ボーナスの読み先。攻撃番号で区切る）
+            k = f"broke_count:{t['breaker'][0]}:atk{s.turn_counters.get('current_attack', 0)}"
+            s.turn_counters[k] = s.turn_counters.get(k, 0) + len(chosen)
         seq.append(eng.ev_task(ev))
     if t["in_effect"]:   # S・トリガーの解決中のブレイクは、新しい S・トリガーをその場で解決する（101.4g）
         seq = eng._window(*seq, only_st=True)

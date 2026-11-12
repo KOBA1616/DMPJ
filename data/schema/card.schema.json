@@ -178,6 +178,8 @@
       "race_has": {},
       "races": {},
       "sealed": {},
+      "spell_cost_ge": {},
+      "spell_cost_le": {},
       "tapped": {},
       "twinpact": {},
       "types": {},
@@ -430,6 +432,8 @@
         "race_has": {},
         "races": {},
         "sealed": {},
+        "spell_cost_ge": {},
+        "spell_cost_le": {},
         "tapped": {},
         "twinpact": {},
         "types": {},
@@ -554,6 +558,9 @@
       "properties": {
        "op": {
         "const": "battle_substitute"
+       },
+       "tap": {
+        "type": "boolean"
        }
       },
       "required": [
@@ -593,11 +600,13 @@
        },
        "face": {
         "$ref": "#/$defs/expr"
+       },
+       "select": {
+        "$ref": "#/$defs/selector"
        }
       },
       "required": [
-       "op",
-       "face"
+       "op"
       ],
       "additionalProperties": false
      },
@@ -1196,6 +1205,39 @@
       "type": "object",
       "properties": {
        "op": {
+        "const": "no_lose"
+       },
+       "player": {
+        "enum": [
+         "you",
+         "opp",
+         "each"
+        ]
+       },
+       "duration": {
+        "enum": [
+         "during_attack",
+         "end_of_turn",
+         "permanent",
+         "until_next_own_turn_start"
+        ]
+       },
+       "once": {
+        "type": "boolean"
+       },
+       "deck_out_only": {
+        "type": "boolean"
+       }
+      },
+      "required": [
+       "op"
+      ],
+      "additionalProperties": false
+     },
+     {
+      "type": "object",
+      "properties": {
+       "op": {
         "const": "opp_may"
        },
        "body": {
@@ -1348,6 +1390,9 @@
         "$ref": "#/$defs/filter"
        },
        "count": {
+        "$ref": "#/$defs/expr"
+       },
+       "limit": {
         "$ref": "#/$defs/expr"
        },
        "as": {
@@ -1763,6 +1808,8 @@
     "race_has": {},
     "races": {},
     "sealed": {},
+    "spell_cost_ge": {},
+    "spell_cost_le": {},
     "tapped": {},
     "twinpact": {},
     "types": {},
@@ -2343,6 +2390,34 @@
          },
          "once": {
           "type": "boolean"
+         },
+         "max_per_turn": {
+          "type": "integer",
+          "minimum": 1
+         },
+         "count": {
+          "enum": [
+           "attack",
+           "attack_by",
+           "attack_on",
+           "block",
+           "broke_by_self",
+           "broke_by_self_attack",
+           "broken",
+           "cast",
+           "destroyed",
+           "discard",
+           "draw",
+           "enter",
+           "enter_unpaid",
+           "leave",
+           "mana_put",
+           "shield_left",
+           "shield_put",
+           "summon",
+           "tap",
+           "untap"
+          ]
          }
         },
         "required": [
@@ -2413,6 +2488,34 @@
          },
          "once": {
           "type": "boolean"
+         },
+         "max_per_turn": {
+          "type": "integer",
+          "minimum": 1
+         },
+         "count": {
+          "enum": [
+           "attack",
+           "attack_by",
+           "attack_on",
+           "block",
+           "broke_by_self",
+           "broke_by_self_attack",
+           "broken",
+           "cast",
+           "destroyed",
+           "discard",
+           "draw",
+           "enter",
+           "enter_unpaid",
+           "leave",
+           "mana_put",
+           "shield_left",
+           "shield_put",
+           "summon",
+           "tap",
+           "untap"
+          ]
          }
         },
         "required": [
@@ -2662,6 +2765,29 @@
         "select": {
          "$ref": "#/$defs/selector"
         },
+        "selects": {
+         "type": "array",
+         "items": {
+          "type": "object",
+          "properties": {
+           "select": {
+            "$ref": "#/$defs/selector"
+           },
+           "min": {
+            "type": "integer",
+            "minimum": 0
+           },
+           "max": {
+            "type": "integer",
+            "minimum": 0
+           }
+          },
+          "required": [
+           "select"
+          ],
+          "additionalProperties": false
+         }
+        },
         "move_to": {
          "type": "string"
         },
@@ -2669,6 +2795,9 @@
          "type": "boolean"
         },
         "tap": {
+         "type": "boolean"
+        },
+        "strigger_off": {
          "type": "boolean"
         },
         "min": {
@@ -2680,9 +2809,6 @@
          "minimum": 0
         }
        },
-       "required": [
-        "select"
-       ],
        "additionalProperties": false
       }
      },
@@ -2861,15 +2987,19 @@
         "break",
         "cast",
         "charge",
+        "deck_out",
         "destroy",
+        "direct_attack",
         "discard",
         "draw",
+        "effect",
         "evolve",
         "put",
         "resolve",
         "return",
         "sba",
         "seal",
+        "state",
         "summon"
        ]
       },
@@ -2881,15 +3011,19 @@
          "break",
          "cast",
          "charge",
+         "deck_out",
          "destroy",
+         "direct_attack",
          "discard",
          "draw",
+         "effect",
          "evolve",
          "put",
          "resolve",
          "return",
          "sba",
          "seal",
+         "state",
          "summon"
         ]
        }
@@ -3061,6 +3195,7 @@
     "dswitch": {},
     "fort_e": {},
     "keyword": {},
+    "no_lose": {},
     "odrive": {},
     "redirect": {},
     "sforce": {},

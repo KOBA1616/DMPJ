@@ -788,7 +788,13 @@ class Engine(SelectorMixin, EventMixin, InterpreterMixin, TurnMixin, CombatMixin
                     if e == action:
                         return True
                 elif e["action"] == action and (other is None or self.filter_match(other, self._other_filter(e.get("other", {}), cid))):
-                    return True
+                    if "max_per_turn" in e:   # 第182弾（実行制限・回数型）: そのターンに count 種の出来事を
+                        # max_per_turn 回以上していれば禁止。count 省略時は action 名を履歴 kind とする
+                        kind = e.get("count", e["action"])
+                        if self.s.turn_counters.get(f"hist:{kind}:{self.s.cards[cid].controller}", 0) >= e["max_per_turn"]:
+                            return True
+                    else:
+                        return True
             return False
         if hit(ch["deny"]):
             return False
@@ -910,6 +916,7 @@ class Engine(SelectorMixin, EventMixin, InterpreterMixin, TurnMixin, CombatMixin
         c.odrive = False                            # O・ドライブの印も消える
         c.odrive_civs = []
         c.summon_tapped = []                        # フォートEの召喚時タップ記録も消える
+        c.summon_fuel = []                          # 第189弾: 召喚時の支払い行動で選んだカードも消える
         c.bazurenda = 0                             # バズレンダの追加支払い回数も消える
         c.vivid = False                             # ビビッドローの表向きも消える（引いたターンの記録 drawn_turn は残す）
         c.dswitched = False                         # Dスイッチの使用済みも消える（新しいオブジェクトとして出直したら再び使える。第151弾）
