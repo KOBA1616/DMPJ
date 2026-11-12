@@ -16,6 +16,33 @@ def op_uncross(eng, t, op, env):
         eng.s.cards[cid].crossed = None
     return None
 
+@op("cross_free", gear="selector", to="selector")
+def op_cross_free(eng, t, op, env):
+    """コストを支払わずにクロスする（第195弾）: gear セレクタで選んだクロスギア
+    すべてを、to セレクタで選んだクリーチャー1体にクロスする。効果によるクロスで、
+    メインステップの通常クロス（cross_free 許可）とは別系統。支払いは無い。"""
+    # 参照系セレクタ（ref / crossed_to 等）は決定を出さないので candidates で引く
+    # （op_swap と同じ作法。select を2回呼ぶと os の chosen が衝突する）
+    ref_like = ("ref", "crossed_to", "host_of", "under_of", "bundle_of")
+    if any(k in op["gear"] for k in ref_like):
+        gears = eng.candidates(op["gear"], env)
+    else:
+        gears, d = eng.select(t, op["gear"], env)
+        if d:
+            return d
+    if any(k in op["to"] for k in ref_like):
+        targets = eng.candidates(op["to"], env)
+    else:
+        targets, d = eng.select(t, op["to"], env)
+        if d:
+            return d
+    if not gears or not targets:
+        return None
+    tg = eng.s.ref(targets[0])
+    for cid in gears:
+        eng.s.cards[cid].crossed = list(tg)
+    return None
+
 
 @op("move", select="selector", to="zone", reason="reason", position="position?", card_only="bool?",
     order="str?", tapped="bool?", face_up="bool?", face_down="bool?", seal="int?", stack_on="selector?",
@@ -1049,6 +1076,20 @@ def op_use_partner(eng, t, op, env):
         s.pending.append(p)
         return None
     eng._defer(t, [eng._child(ab["effect"], dict(env, self=eng.s.ref(c)))])
+    return None
+
+
+@op("choose_player", **{"as": "str"})
+def op_choose_player(eng, t, op, env):
+    """プレイヤーを1人選んで変数に入れる（「プレイヤーを1人選ぶ。そのプレイヤーは〜」第192弾）。
+    選ぶのは効果の使用者。変数には相対指定 "you"/"opp" を入れ、player / owner / chooser の
+    {var: 名前} が _rel 経由で解決する。「選んでもよい」は may の body に入れて表す。"""
+    a, d = eng.ask(t, env["you"], "choose_player",
+                   [{"key": "you", "player": env["you"]},
+                    {"key": "opp", "player": 1 - env["you"]}], 1, 1)
+    if d:
+        return d
+    env.setdefault("vars", {})[op["as"]] = "you" if a[0] == 0 else "opp"
     return None
 
 

@@ -23,6 +23,7 @@ class Option(TypedDict, total=False):
     shield: int                     # S・バック: 捨てるシールドのカード
     tap: int                             # 起動型能力のコストでタップするクリーチャー
     payer: int                           # 攻撃先変更（第171弾）: コストでアンタップするクリーチャー
+    player: int                          # choose_player 決定（第192弾）: その選択肢が指すプレイヤー
     tap_mana: int                        # 起動型能力の複合コストで追加でタップするマナの枚数
     under_cost: int                      # 起動型能力のコストで墓地に置く下のカードの枚数（第53弾）
     grave_evo: bool                      # 墓地進化（自分の墓地のクリーチャーの上に重ねて出す選択肢）
@@ -38,6 +39,7 @@ class Option(TypedDict, total=False):
     reveal: NotRequired[bool]            # ビビッドロー（表向きにする選択肢）
     fushigi: NotRequired[bool]           # フシギバース（墓地から召喚する選択肢）
     recycle: NotRequired[bool]           # リサイクル（墓地から代替コストで唱える選択肢。第172弾）
+    bakutan: NotRequired[bool]           # マナ爆誕（マナゾーンから固定コストで召喚する選択肢。第191弾）
 
 
 class Decision(TypedDict):
@@ -251,6 +253,7 @@ class CrossTask(TypedDict):
     gear: Ref                            # クロスするクロスギア（バトルゾーン）
     target: Ref                          # クロス先のクリーチャー
     player: int
+    free: NotRequired[bool]              # コストを支払わないクロス（第195弾。cross_free 許可）
 
 
 class PlayTask(TypedDict):
@@ -309,6 +312,7 @@ class PlayTask(TypedDict):
     climb: NotRequired[bool]             # ムゲンクライムとして実行する
     climb_done: NotRequired[bool]        # ムゲンクライム: クリーチャーのタップが済んだ
     recycle: NotRequired[bool]           # リサイクルとして実行する（第172弾: 解決後は山札の一番下へ）
+    bakutan: NotRequired[bool]           # マナ爆誕として実行する（第191弾: マナゾーンから固定コストで召喚）
     resolve_to: NotRequired[str]         # 解決後の置き場所（play_free の resolve_to）
     resolve_position: NotRequired[str]   # resolve_to が山札のときの top / bottom
     answer: NotRequired[list[int]]

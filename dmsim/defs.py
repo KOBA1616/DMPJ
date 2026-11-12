@@ -33,7 +33,7 @@ REASONS = {"put", "destroy", "return", "discard", "charge", "summon", "cast", "b
 LOSE_REASONS = {"direct_attack", "deck_out", "state", "effect"}   # 第188弾: 敗北イベントの reason（when の照合用。移動の reason とは別）
 VIAS = {"revolution_change", "generate", "d_d_d"}   # 出し方の印（「革命チェンジによって出た時」「D・D・Dによって出た時」など）
 DURATIONS_FIXED = {"end_of_turn", "during_attack", "permanent", "until_next_own_turn_start"}
-MOD_KEYS = {"power", "grant", "allow", "deny", "breaks", "breaks_add", "breaks_per_power", "battle_power", "power_when", "cost", "cost_min", "cost_may", "sac_reduce", "opt_reduce", "ignore", "ignore_ids", "gain", "require", "add_of", "add_races", "add_names", "no_leave", "must_be_attacked", "must_attack_creature", "battle_indestructible", "win_all_battles", "add_civs", "indestructible", "double_power", "crystal_soul"}
+MOD_KEYS = {"power", "grant", "allow", "deny", "breaks", "breaks_add", "breaks_per_power", "battle_power", "power_when", "cost", "cost_min", "cost_may", "sac_reduce", "opt_reduce", "ignore", "ignore_ids", "gain", "require", "add_of", "add_races", "add_names", "no_leave", "must_be_attacked", "must_be_chosen", "must_attack_creature", "battle_indestructible", "win_all_battles", "add_civs", "indestructible", "double_power", "crystal_soul"}
 REQUIRES = {"attack", "block"}   # 強制（506.1b 攻撃しなければならない, 507.1b ブロックしなければならない）
 POSITIONS = {"top", "bottom"}
 PERMANENT_TYPES = {"tamaseed", "field", "cross_gear"}   # 手札から実行してバトルゾーンに出るクリーチャー以外のカード（315, 308, 303）
@@ -87,6 +87,8 @@ class Face:
     vividraw: dict | None = None                          # ビビッドロー: {cost, civs} 引いたターンに表向きにすると代替コストで実行できる
     fushigi: dict | None = None                           # フシギバース: {cost, civs, min} 自分のクリーチャー1体をタップしてマナに置き、差額を払って墓地から召喚
     recycle: dict | None = None                           # リサイクル: {cost, civs?} 墓地から代替コストで唱え、解決後は山札の一番下へ（第172弾）
+    mana_bakutan: int | None = None                       # マナ爆誕: 自分のマナゾーンから固定コストで召喚できる（第191弾。0 は支払わずに召喚）
+    link_to: list | None = None                           # G・リンク（名前指定・4方向。第197弾）: [{name, pos}]。pos は相手から見た自分の位置
     deck_evolution: dict | None = None                    # デッキ進化: {count?, rest_to?, blind?, shuffle_first?} 山札の上からめくって重ねて出す（第173弾）
     evolve_from: dict | None = None                       # 進化元の条件（801.1a）。filter 形式
     evolve_zone: str = "bz"                               # 進化元を探すゾーン（超無限墓地進化は graveyard）
@@ -146,6 +148,8 @@ class CardDef:
     vividraw: dict | None = None                        # ビビッドロー: {cost, civs}
     fushigi: dict | None = None                         # フシギバース: {cost, civs, min}
     recycle: dict | None = None                         # リサイクル: {cost, civs?}（第172弾）
+    mana_bakutan: int | None = None                     # マナ爆誕: 固定コスト（第191弾）
+    link_to: list | None = None                         # G・リンク（名前指定・4方向。第197弾）: [{name, pos}]
     deck_evolution: dict | None = None                  # デッキ進化: {count?, rest_to?, blind?, shuffle_first?}（第173弾）
     evolve_from: dict | None = None
     evolve_zone: str = "bz"
@@ -255,6 +259,11 @@ def expand_ops(ops: list[dict], macros: dict, where: str) -> list[dict]:
     return out
 
 
+def _is_var_ref(v) -> bool:
+    """プレイヤー指定の変数参照 {var: 名前}（第192弾。choose_player が入れた相対指定を引く）。"""
+    return isinstance(v, dict) and set(v) == {"var"} and isinstance(v.get("var"), str)
+
+
 class Checker:
     """展開済みの op 列・能力・mod の型検査。"""
 
@@ -310,10 +319,10 @@ class Checker:
             raise DefError(f"{where}: unknown zone '{v}'")
         if ty == "reason" and v not in REASONS:
             raise DefError(f"{where}: unknown reason '{v}'")
-        if ty == "player" and v not in ("you", "opp"):
-            raise DefError(f"{where}: player must be you/opp, got '{v}'")
-        if ty == "players" and v not in ("you", "opp", "each"):
-            raise DefError(f"{where}: players must be you/opp/each, got '{v}'")
+        if ty == "player" and v not in ("you", "opp") and not _is_var_ref(v):
+            raise DefError(f"{where}: player must be you/opp or {{var: name}}, got '{v}'")
+        if ty == "players" and v not in ("you", "opp", "each") and not _is_var_ref(v):
+            raise DefError(f"{where}: players must be you/opp/each or {{var: name}}, got '{v}'")
         if ty == "position" and v not in POSITIONS:
             raise DefError(f"{where}: unknown position '{v}'")
         if ty == "step" and v not in self.steps:
@@ -363,9 +372,10 @@ class Checker:
         for z in ([sel["zone"]] if isinstance(sel.get("zone"), str) else sel.get("zone", [])):
             if z != "any" and z not in self.zones:   # any = すべてのゾーン、配列 = そのうちのどれか
                 raise DefError(f"{where}: unknown zone '{z}'")
-        if sel.get("owner", "you") not in ("you", "opp", "any"):
+        if sel.get("owner", "you") not in ("you", "opp", "any") and not _is_var_ref(sel.get("owner")):
             raise DefError(f"{where}: bad owner '{sel['owner']}'")
-        if "chooser" in sel and sel["chooser"] not in ("you", "opp", "opponent", "random"):
+        if "chooser" in sel and sel["chooser"] not in ("you", "opp", "opponent", "random") \
+                and not _is_var_ref(sel["chooser"]):
             raise DefError(f"{where}: bad chooser '{sel['chooser']}'")
         for k in ("total_cost_le", "total_cost_ge", "total_power_le", "total_power_ge"):
             if k in sel:
@@ -635,6 +645,9 @@ class Checker:
             mba = m["must_be_attacked"]
             if mba is not True and not (isinstance(mba, dict) and set(mba) == {"first_only"} and mba["first_only"] is True):
                 raise DefError(f"{where}: must_be_attacked must be true or {{first_only: true}}")
+        if "must_be_chosen" in m:   # 「相手が選ぶ時、可能ならこのクリーチャーを選ぶ」（第199弾）: 選択先の強制
+            if m["must_be_chosen"] is not True:
+                raise DefError(f"{where}: must_be_chosen must be true")
         if "must_attack_creature" in m:   # 「可能ならクリーチャーを攻撃する」（第171弾）: 攻撃できるクリーチャーがいればプレイヤーを攻撃できない
             mac = m["must_attack_creature"]
             if mac is not True and not (isinstance(mac, dict) and set(mac) == {"first_only"} and mac["first_only"] is True):
@@ -1025,6 +1038,17 @@ def _load_face(raw, keywords, macros, chk: Checker, where) -> dict:
         rc = raw["recycle"]
         if not isinstance(rc, dict) or not isinstance(rc.get("cost"), int) or set(rc.get("civs", [])) - CIVS:
             raise DefError(f"{where}: recycle needs {{cost: int, civs: [...]}}")
+    if "mana_bakutan" in raw:   # マナ爆誕（第191弾）: 自分のマナゾーンから固定コストで召喚する代替コスト（0 も可）
+        mb = raw["mana_bakutan"]
+        if not isinstance(mb, int) or isinstance(mb, bool) or mb < 0:
+            raise DefError(f"{where}: mana_bakutan must be an int >= 0")
+    if "link_to" in raw:   # G・リンク（名前指定・4方向。第197弾）: 「《A》の右横、《B》の上側」の形
+        lt = raw["link_to"]
+        if not isinstance(lt, list) or not lt or any(
+                not isinstance(e, dict) or set(e) - {"name", "pos"}
+                or not isinstance(e.get("name"), str)
+                or e.get("pos") not in ("right", "left", "up", "down") for e in lt):
+            raise DefError(f"{where}: link_to needs [{{name: str, pos: right|left|up|down}}]")
     de = None
     if "deck_evolution" in raw:   # デッキ進化（第173弾）: 山札の上から count 枚めくり、進化元にできる
         # クリーチャーがいれば重ねて出す。いなければ手札に戻る（支払い前にめくる。801.1a の進化元
@@ -1052,7 +1076,7 @@ def _load_face(raw, keywords, macros, chk: Checker, where) -> dict:
             raise DefError(f"{where}: ace must be true")
     return dict(name=raw["name"], types=raw["types"], civs=raw["civs"], cost=raw["cost"],
                 power=raw.get("power", 0), races=split_races(raw.get("races", [])), keywords=names,
-                abilities=abilities, spell=spell, sst_spell=sst_spell, stp_spell=stp_spell, odrive_spell=odrive_spell, o_drive=raw.get("o_drive"), mugen_climb=raw.get("mugen_climb"), alt_cost=raw.get("alt_cost"), vividraw=raw.get("vividraw"), fushigi=raw.get("fushigi"), recycle=raw.get("recycle"), deck_evolution=de, evolve_from=raw.get("evolve_from"),
+                abilities=abilities, spell=spell, sst_spell=sst_spell, stp_spell=stp_spell, odrive_spell=odrive_spell, o_drive=raw.get("o_drive"), mugen_climb=raw.get("mugen_climb"), alt_cost=raw.get("alt_cost"), vividraw=raw.get("vividraw"), fushigi=raw.get("fushigi"), recycle=raw.get("recycle"), mana_bakutan=raw.get("mana_bakutan"), link_to=raw.get("link_to"), deck_evolution=de, evolve_from=raw.get("evolve_from"),
                 evolve_zone=zone, evolve_any=bool(raw.get("evolve_any", False)),
                 evolve_count=(len(raw["evolve_from"]) if isinstance(raw.get("evolve_from"), list)
                               else int(raw.get("evolve_count", 1))),
