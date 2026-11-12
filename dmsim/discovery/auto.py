@@ -19,8 +19,9 @@ from dataclasses import dataclass, field
 from pathlib import Path
 
 from .. import scenario
-from . import bestfirst, replay, shrink
-from .bestfirst import Weights
+from . import replay, shrink
+from ..search import bestfirst
+from ..search.bestfirst import Weights
 from ..base.loopspec import LoopSpec, Pred
 from ..engine_view import result_of
 from ..base import store

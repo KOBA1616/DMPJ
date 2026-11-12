@@ -43,12 +43,12 @@ LAYER_OF = {
     "dmsim.play": "S2",              # 旧名の互換（dmsim.engine.play と同じモジュール。1局の最小進行と既定方策）
     # S3 探索・プレイ（大局観を含む）
     "dmsim.play_api": "S3",                # 探索・プレイの窓口 play(局面, 設定, 情報水準)（P0-2）
-    "dmsim.opponent": "S3",
-    "dmsim.loop_first": "S3",
-    "dmsim.search": "S3",
-    "dmsim.plan": "S3",
-    "dmsim.discovery.bestfirst": "S3",     # 汎用の最良優先・ビーム探索（search/ へ移す予定）
-    "dmsim.discovery.reachsearch": "S3",   # 段階目標への到達探索 reach_chain（search/ へ移す予定）
+    "dmsim.search": "S3",                  # 定義元（P1-S3: 1ターン・公平・複数ターン探索、相手役 opponent、loop_first、bestfirst、reachsearch）
+    "dmsim.plan": "S3",                    # 大局観
+    "dmsim.opponent": "S3",          # 旧名の互換（dmsim.search.opponent と同じモジュール）
+    "dmsim.loop_first": "S3",        # 旧名の互換（dmsim.search.loop_first と同じモジュール）
+    "dmsim.discovery.bestfirst": "S3",     # 旧名の互換（dmsim.search.bestfirst と同じモジュール）
+    "dmsim.discovery.reachsearch": "S3",   # 旧名の互換（dmsim.search.reachsearch と同じモジュール）
     # S4 評価
     "dmsim.eval": "S4",
     "dmsim.solitaire": "S4",              # 旧名の互換モジュール（search/turn・leaf_eval・game と eval/measure を再エクスポート、P0-3）
@@ -67,7 +67,6 @@ LAYER_OF = {
 # 今回解消できなかった逆流: (import する側, される側) → 理由
 ALLOWED = {
     ("dmsim.deckplan.auto", "dmsim.autofix.usage"): "使われにくい札の監査 collect_usage が autofix にある（遅延 import）。usage 監査を S4 へ移す手順で解消",
-    ("dmsim.plan.macro", "dmsim.eval.vfeatures"): "旧名 plan.macro.macro_prio の互換（モジュール __getattr__ の遅延 import のみ）。呼び出し側の移行後に削除",
 }
 
 
@@ -155,13 +154,24 @@ def test_cards_imports_only_base():
     assert not bad, bad
 
 
+def test_search_plan_import_only_lower_layers():
+    """S3 の定義元 dmsim.search・dmsim.plan は base・cards・engine（と旧名の互換）と S3 自身だけを import する。"""
+    bad = sorted(f"{a} -> {b}" for a, b in edges()
+                 if (a.startswith("dmsim.search") or a.startswith("dmsim.plan"))
+                 and ORDER.index(layer(b)) > ORDER.index("S3") and (a, b) not in ALLOWED)
+    assert not bad, bad
+
+
 def test_old_names_are_the_same_module():
     """旧名は定義元と同一オブジェクト（旧名への monkeypatch が定義元に効く）。"""
     import importlib
     for old, new in [("dmsim.types", "dmsim.base.types"), ("dmsim.cardid", "dmsim.base.cardid"),
                      ("dmsim.discovery.loopspec", "dmsim.base.loopspec")] + \
             [(f"dmsim.{m}", f"dmsim.cards.{m}") for m in
-             ("defs", "canonical", "cardfiles", "cardstore", "approval", "identity", "schema", "dataaudit")]:
+             ("defs", "canonical", "cardfiles", "cardstore", "approval", "identity", "schema", "dataaudit")] + \
+            [("dmsim.opponent", "dmsim.search.opponent"), ("dmsim.loop_first", "dmsim.search.loop_first"),
+             ("dmsim.discovery.bestfirst", "dmsim.search.bestfirst"),
+             ("dmsim.discovery.reachsearch", "dmsim.search.reachsearch")]:
         assert importlib.import_module(old) is importlib.import_module(new)
 
 

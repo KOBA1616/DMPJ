@@ -9,7 +9,7 @@ from pathlib import Path
 
 import yaml
 
-from ..discovery.reachsearch import board_met, fraction
+from ..search.reachsearch import board_met, fraction
 
 BASE_BUDGET = 150          # reach_target の幅の基準
 PLAN_VERSION = 1
@@ -95,10 +95,3 @@ class RunStd:
             return self.floor
         return max(self.floor, (self.m2 / (self.n - 1)) ** 0.5)
 
-
-def __getattr__(name):
-    """旧名 plan.macro.macro_prio の互換（実体は eval.vfeatures。V を使うので S4 に置く）。層テストの許可リストに載せてある。"""
-    if name == "macro_prio":
-        from ..eval.vfeatures import macro_prio
-        return macro_prio
-    raise AttributeError(name)

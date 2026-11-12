@@ -5,9 +5,10 @@ S4 以上（評価・発見・自動改善・デッキ構築・tools）は、探
 - 局面: 開始局面の Engine（None ならデッキとシードから新しく始める。mode="game" のみ）。渡した Engine は書き換えない。
 - 設定: PlayConfig（不変）。mode で中身の探索を選ぶ。探索ロジック自体はここでは変えない（振り分けるだけ）。
     game  : 1局を回す。CHEAT は search.game.play_game（TurnSearch）、FAIR は search.fair.FairTurnSearch（n_det・lookahead=複数ターン探索）
-    chain : 段階目標の鎖への到達 discovery.reachsearch.reach_chain（大局観の prio を渡せる）
-    beam  : 勝ちまでのビーム探索 discovery.bestfirst.beam
+    chain : 段階目標の鎖への到達 search.reachsearch.reach_chain（大局観の prio を渡せる）
+    beam  : 勝ちまでのビーム探索 search.bestfirst.beam
 - 情報水準: InfoLevel。既定 FAIR。chain / beam は真の山札順を見る探索なので CHEAT を明示したときだけ動く（FAIR は未実装）。
+1ターンごとに処理を挟みたい呼び出し側（評価の盤面記録・使用率の監査など）は play_turns(局面, 設定, 情報水準, on_turn=...) を使う。
 同じ入力なら同じ出力（エンジン・探索とも乱数は seed と局面に入っている。time_limit 等の実時間打ち切りは使わない）。
 """
 from __future__ import annotations
@@ -45,7 +46,7 @@ class PlayConfig:
     lock_rounds: int = 2                   # CHEAT のロック判定の周回（0 で判定しない）
     weights: Any = None                    # search.leaf_eval.Weights
     value_fn: Callable | None = None       # 葉の評価の差し替え f(eng, me)（CHEAT のみ）
-    opp: Any = None                        # dmsim.opponent.OppModel（None は何もしない相手）
+    opp: Any = None                        # dmsim.search.opponent.OppModel（None は何もしない相手）
     # chain / beam
     stages: tuple = ()                     # chain: 段階目標（dict）の並び
     width: int = 150
@@ -118,7 +119,7 @@ def play(start, cfg: PlayConfig, info: InfoLevel = InfoLevel.FAIR, *, rules=None
         raise NotImplementedError(f"mode={cfg.mode} は真の山札順を見る探索。FAIR 版は未実装（info=InfoLevel.CHEAT を明示する）")
     eng = start if start is not None else _new_engine(rules, cfg)
     if cfg.mode == "chain":
-        from .discovery.reachsearch import reach_chain
+        from .search.reachsearch import reach_chain
         kw = {"reserve": cfg.reserve} if cfg.reserve else {}
         r = reach_chain(eng, list(cfg.stages), cfg.me, keep_later=cfg.keep_later, lookahead=cfg.chain_lookahead,
                         width=cfg.width, max_depth=cfg.max_depth, max_turn=cfg.max_turn, prio=cfg.prio, **kw)
@@ -126,8 +127,49 @@ def play(start, cfg: PlayConfig, info: InfoLevel = InfoLevel.FAIR, *, rules=None
         return PlayResult(mode="chain", info=info, won=r["stages"] == len(cfg.stages) and len(cfg.stages) > 0, kill_turn=None,
                           stages=r["stages"], turns=list(r["turns"]), nodes=r["nodes"], actions=list(end.log),
                           log={"stages": r["stages"], "turns": list(r["turns"])}, engine=end, seconds=time.perf_counter() - t0)
-    from .discovery.bestfirst import beam
+    from .search.bestfirst import beam
     from .engine_view import turn_of
     r = beam(eng, cfg.me, width=cfg.width, max_depth=cfg.max_depth, max_turn=cfg.max_turn, prio=cfg.prio)
     return PlayResult(mode="beam", info=info, won=r.won, kill_turn=turn_of(r.engine) if r.won else None, nodes=r.nodes,
                       actions=list(r.engine.log), log={"log_len": r.log_len}, engine=r.engine, seconds=time.perf_counter() - t0)
+
+
+def play_turns(eng, cfg: PlayConfig, info: InfoLevel = InfoLevel.FAIR, *, opp_policy=None, before_turn=None,
+               on_turn=None, reuse_search: bool = True, holder: list | None = None):
+    """1局の手番ループ（search.game.run_turns）を、自分のターンごとに呼び出し側の処理を挟んで回す。最後の局面を返す。
+    - eng: 開始局面。そのまま進める（clone しない。必要なら呼び出し側で clone）。
+    - 設定で使う項目: max_turn・budget・value_fn、FAIR は n_det・lookahead・seed（各ターンの決定化の種は seed*7919+ターン）。
+    - opp_policy: 相手の決定 f(eng, d)。None は何もしない相手（charge_only）。妨害モデルの setup は呼び出し側で済ませる。
+    - before_turn(eng, ot): 自分のターンの探索の前。on_turn(eng, ot, nodes): 探索の後（eng はそのターン後の局面）。
+      どちらかが True を返すとそこで打ち切る。
+    - reuse_search: CHEAT の TurnSearch を全ターンで使い回す（False はターンごとに作り直す）。
+    - holder: 渡すと holder[0] に常に最新の局面を入れる（途中で例外が出ても呼び出し側が最新の局面を見られる）。"""
+    from .search.game import run_turns
+    from .search.turn import TurnSearch, charge_only_policy
+    info = InfoLevel(info)
+    me = cfg.me
+    opp_pol = opp_policy or charge_only_policy
+    cur = holder if holder is not None else [None]
+    cur[:1] = [eng]
+    shared = [None]
+
+    def take_turn(e, ot):
+        if before_turn is not None and before_turn(e, ot):
+            return e, True
+        if info is InfoLevel.CHEAT:
+            if not reuse_search or shared[0] is None:
+                shared[0] = TurnSearch(me, cfg.budget, opp_policy=opp_pol, value_fn=cfg.value_fn)
+            e, st = shared[0].run(e)
+            nodes = st.nodes
+        else:
+            from .search.fair import FairTurnSearch
+            fs = FairTurnSearch(me, cfg.budget, cfg.n_det, cfg.seed * 7919 + ot, opp_policy=opp_pol,
+                                value_fn=cfg.value_fn, lookahead=cfg.lookahead)
+            e = fs.run(e)
+            nodes = fs.nodes
+        cur[0] = e
+        stop = on_turn(e, ot, nodes) if on_turn is not None else False
+        return e, bool(stop)
+
+    run_turns(cur, me, cfg.max_turn, opp_pol, take_turn)
+    return cur[0]

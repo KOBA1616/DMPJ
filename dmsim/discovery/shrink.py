@@ -15,7 +15,7 @@ import json
 from dataclasses import dataclass, field
 from pathlib import Path
 
-from .. import loop_first as lf
+from ..search import loop_first as lf
 from .. import scenario as sc
 from ..base.loopspec import LoopSpec, Pred, Route
 
