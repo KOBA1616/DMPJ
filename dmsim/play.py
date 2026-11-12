@@ -103,7 +103,7 @@ def main(argv=None):
 
     import yaml
 
-    from .defs import load_rules
+    from .cards.defs import load_rules
     ap = argparse.ArgumentParser(description="対戦を1局実行して記録を保存する／記録を再生して確かめる")
     ap.add_argument("--seed", type=int, default=1)
     ap.add_argument("--decks", help='YAML: {decks: [[id, ...], [id, ...]]}。省略時は実カードを繰り返した40枚')

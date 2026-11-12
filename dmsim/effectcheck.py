@@ -10,10 +10,10 @@ from __future__ import annotations
 
 import re
 from . import scenario as sc
-from .canonical import normalize_text as norm
+from .cards.canonical import normalize_text as norm
 from .verify import greedy_policy
 
-from .approval import VERIFIER  # noqa: F401  検証の版（実体は approval。旧名の再公開）
+from .cards.approval import VERIFIER  # noqa: F401  検証の版（実体は approval。旧名の再公開）
 
 _ZONE_WORDS = {"墓地": "graveyard", "マナゾーン": "mana", "手札": "hand", "シールド": "shield", "山札": "deck",
                "バトルゾーン": "bz"}

@@ -22,7 +22,7 @@ from pathlib import Path
 import yaml
 
 from . import scenario as sc
-from .defs import DATA, load_rules
+from .cards.defs import DATA, load_rules
 from .engine import Engine, IllegalAnswer
 from .play import deck_lists, make_record, passive_policy, replay
 from .verify import verify_all
@@ -63,7 +63,7 @@ def _official_texts() -> dict[str, dict]:
 
 def card_list(rules) -> list[dict]:
     blocks = {}
-    from .cardfiles import card_files
+    from .cards.cardfiles import card_files
     for f in card_files():
         blocks.update({k: (f.name, v) for k, v in _card_blocks(f).items()})
     official = _official_texts()
@@ -82,7 +82,7 @@ def card_list(rules) -> list[dict]:
 def locate_card(card_id: str, root: Path | None = None) -> Path:
     """カード定義が書かれている YAML（real.yaml / converted.yaml など）を探す。"""
     root = root or DATA / "cards"
-    from .cardfiles import card_files
+    from .cards.cardfiles import card_files
     for f in card_files(root):
         if card_id in _card_blocks(f):
             return f
@@ -116,7 +116,7 @@ def set_review(card_id: str, status: str, note: str = "", path: Path | None = No
     doc = yaml.safe_load(new)      # 壊していないことを確かめてから書く
     path.write_text(new, encoding="utf-8")
     if record:
-        from . import approval
+        from .cards import approval
         raw = next(c for c in doc["cards"] if c["id"] == card_id)
         led = approval.load()
         led[card_id] = approval.entry(raw, status, "human", approval.vocab_versions(), **({"note": note} if note else {}))

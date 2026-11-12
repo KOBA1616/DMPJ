@@ -16,9 +16,9 @@ python -m dmsim.solitaire --deck deck.yaml --games 1000 --turns 4 --workers 4   
   - `core.py` 進行ループと Decision、`registry.py` 拡張ポイント（task / op の登録表）
   - `selectors.py` セレクタ・式・条件、`events.py` イベント→置換→適用→状況起因→誘発→待機（解決窓）
   - `interpreter.py` 効果DSLの実行、`ops.py` DSLのコア語彙、`turn.py` ターン構造とカードの実行、`combat.py` 攻撃・バトル・ブレイク
-- `dmsim/defs.py`   カード定義の読み込みと効果DSLの検証（閉じた語彙＋マクロ展開、op 引数の型検査）
+- `dmsim/cards/defs.py`   カード定義の読み込みと効果DSLの検証（閉じた語彙＋マクロ展開、op 引数の型検査）
 - `dmsim/types.py`  タスク・イベント・Decision などの形（TypedDict）。`DMSIM_CHECK=1` で実行時に検査
-- `dmsim/schema.py` カードDSLの JSON Schema を生成（`data/schema/card.schema.json`。LLM変換に渡す）
+- `dmsim/cards/schema.py` カードDSLの JSON Schema を生成（`data/schema/card.schema.json`。LLM変換に渡す）
 - `dmsim/loop.py`   骨格＋カウンタによるループ／ロック検出とストック証明
 - `dmsim/play.py`   方策・対戦実行・シード付き記録の保存と再生（`python -m dmsim.play --seed 1 --out g.json` / `--replay g.json`）
 - `dmsim/solitaire.py` 1人回しAI（自分のターン内を探索、ループはストック、ロックは試し回しで確認）と、
