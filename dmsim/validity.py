@@ -31,6 +31,13 @@ def judge(rows: list[dict], min_percentile: float = MIN_PERCENTILE) -> tuple[boo
     tune = [r for r in rows if r.get("split") == "tuning"]
     if not tune:
         return False, "調整用の既知コンボの対照結果がない"
+    # 張り付きの自己検知: 既知コンボとランダム組の点が全部同じ（分散ゼロ）なら、測定が何も区別していない
+    vals = {r.get(k) for r in rows for k in ("core_score", "random_median", "random_p95") if r.get(k) is not None}
+    if len(vals) == 1:
+        return False, f"測定が張り付いている: 既知コンボもランダム組も全行 {vals.pop()} で区別がない（点の計算か開始条件を疑う）"
+    flat = [r["combo"] for r in tune if r.get("random_p95") is not None and r.get("random_p95") == r.get("random_median") == r.get("core_score")]
+    if flat:
+        return False, f"測定が張り付いている: {sorted(set(flat))} で既知コンボとランダム組の点が同じ（区別がない）"
     bad = [r["combo"] for r in tune if r["percentile"] < min_percentile]
     if bad:
         return False, f"陽性対照に届かない既知コンボ: {sorted(set(bad))}（基準 {min_percentile}）"
