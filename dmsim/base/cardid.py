@@ -15,6 +15,7 @@ import re
 from functools import lru_cache
 from pathlib import Path
 from urllib.parse import quote
+from .store import REPO
 
 _SET_SIMPLE = re.compile(r"^([a-z]+)(\d+)$")
 _NUM = re.compile(r"^([a-z]*)(\d+)$")
@@ -57,7 +58,7 @@ def canonical_id(official: str) -> str:
     return official.strip().lower()
 
 
-LEDGER_IDS = Path(__file__).resolve().parents[2] / "data" / "cards" / "ledger_ids.txt"
+LEDGER_IDS = REPO / "data" / "cards" / "ledger_ids.txt"
 
 
 @lru_cache(maxsize=1)

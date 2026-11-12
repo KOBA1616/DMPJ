@@ -1,7 +1,7 @@
 """カード・ゾーン・キーワード定義の読み込みと検証。
 
 効果DSLは閉じた語彙（設計判断④）。ここで未知の op / 引数 / イベント / 能力種別 / mod を弾くことで、
-LLM が変換したカードデータの機械チェックを兼ねる。op の引数の型は registry の OP_ARGS が正。
+LLM が変換したカードデータの機械チェックを兼ねる。op の引数の型は base/opvocab.py の OP_ARGS が正。
 """
 from __future__ import annotations
 
@@ -12,14 +12,14 @@ from dataclasses import dataclass, field
 from pathlib import Path
 
 import yaml
+from .base.store import REPO
 
-DATA = Path(__file__).resolve().parent.parent / "data"
+DATA = REPO / "data"
 
 
 def core_ops() -> dict[str, dict[str, str]]:
-    """コア語彙 = エンジンに登録された op と引数の型。ここに無い op はマクロ（op_macros.yaml）で定義されていなければエラー。"""
-    from .engine.registry import OP_ARGS
-    from .engine import ops  # noqa: F401  登録を確実にする
+    """コア語彙 = base/opvocab.py の op と引数の型（実装はエンジンが登録する）。ここに無い op はマクロ（op_macros.yaml）で定義されていなければエラー。"""
+    from .base.opvocab import OP_ARGS
     return OP_ARGS
 
 EVENTS = {"move", "draw", "cast", "summon", "attack", "block", "break", "tap", "untap",

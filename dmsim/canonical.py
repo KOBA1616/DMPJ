@@ -11,8 +11,9 @@ import re
 import unicodedata
 from functools import lru_cache
 from pathlib import Path
+from .base.store import REPO
 
-DATA = Path(__file__).resolve().parent.parent / "data" / "cards"
+DATA = REPO / "data" / "cards"
 _OLD_MULTI = re.compile(r"(?:このカードを)?マナゾーンに置く(?:時|場合)[、,]?\s*(?:この|その)?カードはタップして置く[。.]?")
 _PAREN = re.compile(r"[（(][^）)]*[）)]")
 

@@ -65,8 +65,6 @@ LAYER_OF = {
 
 # 今回解消できなかった逆流: (import する側, される側) → 理由
 ALLOWED = {
-    ("dmsim.defs", "dmsim.engine.registry"): "core_ops はエンジンの op 語彙を読む（遅延 import）。語彙の正本を S2 engine/vocab に分ける手順で解消",
-    ("dmsim.defs", "dmsim.engine.ops"): "同上（op 登録を確実にするための import）",
     ("dmsim.deckplan.auto", "dmsim.autofix.usage"): "使われにくい札の監査 collect_usage が autofix にある（遅延 import）。usage 監査を S4 へ移す手順で解消",
     ("dmsim.plan.macro", "dmsim.eval.vfeatures"): "旧名 plan.macro.macro_prio の互換（モジュール __getattr__ の遅延 import のみ）。呼び出し側の移行後に削除",
 }
@@ -155,3 +153,12 @@ def test_old_names_are_the_same_module():
     for old, new in [("dmsim.types", "dmsim.base.types"), ("dmsim.cardid", "dmsim.base.cardid"),
                      ("dmsim.discovery.loopspec", "dmsim.base.loopspec")]:
         assert importlib.import_module(old) is importlib.import_module(new)
+
+
+def test_op_vocab_matches_engine_implementations():
+    """op 語彙の正本 base/opvocab と engine の実装登録が1対1で、型の宣言も一致する。"""
+    from dmsim.base import opvocab
+    from dmsim.engine import ops  # noqa: F401
+    from dmsim.engine.registry import OP_ARGS, OPS
+    assert OP_ARGS is opvocab.OP_ARGS
+    assert set(opvocab.OP_ARGS) - set(OPS) == set(), "語彙にあるのに実装が無い op"

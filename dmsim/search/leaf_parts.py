@@ -14,6 +14,7 @@ import yaml
 from ..engine import Engine
 from .leaf_eval import Weights, evaluate
 from ..engine_view import count_matching, result_of
+from ..base.store import REPO
 
 
 @dataclass(frozen=True)
@@ -67,7 +68,7 @@ def make_value_fn(spec: PartsSpec, weights: Weights | None = None):
 # 絶望神サガ: キル手前(T3開始)の最小局面は、墓地にサガ+シャコガイル+クリーチャー1体、手札にサガ+ドラゲリオン、
 # 水・闇のマナ3（data/eval/saga_near_kill を縮めて確認: シャコガイルが墓地に無い/ドラゲリオンかサガが手札に無いと起動しない）。
 # coef=10: evaluate の打点項（場のクリーチャー1体で+40）に勝てる大きさが必要。1〜5 では saga_entry の T2 墓地サガ率が 4/40 のまま、10 で 12/40
-KNOWN_COMBOS = Path(__file__).resolve().parents[2] / "data" / "known_combos" / "combos.yaml"
+KNOWN_COMBOS = REPO / "data" / "known_combos" / "combos.yaml"
 # 既定の導出: core 部品（id あり）を手札・場に置くほど加点、墓地は少なめ、マナは0（チャージで潰さないよう手札優先）
 DEFAULT_ZONE_WEIGHTS = (("hand", 1.0), ("bz", 1.0), ("graveyard", 0.5))
 
