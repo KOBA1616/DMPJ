@@ -27,7 +27,7 @@ EVENTS = {"move", "draw", "cast", "summon", "attack", "block", "break", "tap", "
           "use_s_trigger", "battle_end"}
 ABILITY_KINDS = {"trigger", "replace", "static", "declare", "activate", "silent", "state", "partner"}   # state: 状態を常に見て、満たされたら勝敗が決まる常在効果（if と effect: [win/lose]）。partner: [P]能力（単独では機能せず、キズナ等で「使う」ことで解決する）
 ABILITY_KEYS = {"kind", "when", "if", "effect", "instead", "optional", "affects", "mod", "zone", "keyword", "cost", "id",
-                "once_per_turn", "first_time", "sst", "stp", "odrive", "choukon", "bazurenda", "any_attacker", "continue", "dswitch", "sforce", "fort_e", "redirect"}
+                "once_per_turn", "first_time", "sst", "stp", "odrive", "choukon", "bazurenda", "any_attacker", "continue", "dswitch", "sforce", "fort_e", "redirect", "accel"}
 REASONS = {"put", "destroy", "return", "discard", "charge", "summon", "cast", "break",
            "draw", "battle", "sba", "resolve", "evolve", "seal"}
 VIAS = {"revolution_change", "generate", "d_d_d"}   # 出し方の印（「革命チェンジによって出た時」「D・D・Dによって出た時」など）
@@ -36,15 +36,15 @@ MOD_KEYS = {"power", "grant", "allow", "deny", "breaks", "breaks_add", "breaks_p
 REQUIRES = {"attack", "block"}   # 強制（506.1b 攻撃しなければならない, 507.1b ブロックしなければならない）
 POSITIONS = {"top", "bottom"}
 PERMANENT_TYPES = {"tamaseed", "field", "cross_gear"}   # 手札から実行してバトルゾーンに出るクリーチャー以外のカード（315, 308, 303）
-CARD_TYPES = {"creature", "spell", "evolution", "d2_field"} | PERMANENT_TYPES   # d2_field: D2フィールドの型印（特殊タイプ D2。types には field と併記する。第151弾）
+CARD_TYPES = {"creature", "spell", "evolution", "d2_field", "dream_creature", "g_castle"} | PERMANENT_TYPES   # d2_field: D2フィールドの型印（特殊タイプ D2。types には field と併記する。第151弾）。dream_creature: ドリーム・クリーチャーの型印（第174弾）。g_castle: G城の型印（第176弾）
 CIVS = {"light", "water", "darkness", "fire", "nature", "zero"}
 SELECTOR_KEYS = {"zone", "owner", "owner_of", "filter", "count", "up_to", "from_top", "chooser", "ref", "other",
-                 "under_of", "bundle_of", "look", "exlife_of", "total_cost_le", "total_cost_ge", "total_power_le", "total_power_ge",
+                 "under_of", "bundle_of", "look", "exlife_of", "castle_of", "total_cost_le", "total_cost_ge", "total_power_le", "total_power_ge",
                  "distinct_costs", "distinct_from", "exclude", "extremal",
-                 "crossed_to", "host_of"}   # crossed_to: 「そのクリーチャーにクロスされているギア」。host_of: 「そのギアをクロスしているクリーチャー」（第170弾）
+                 "crossed_to", "host_of"}   # crossed_to: 「そのクリーチャーにクロスされているギア」。host_of: 「そのギアをクロスしているクリーチャー」（第170弾）。castle_of: 「その城が要塞化しているシールド」（第178弾）
 FILTER_KEYS = {"any_of", "types", "not_types", "civs", "civs_all", "not_civs", "races", "race_has", "not_race_has", "name", "name_has", "not_name",
                "cost_le", "cost_ge", "power_le", "power_ge", "tapped", "keyword", "multicolor", "colorless", "face_down", "face_up", "neo", "vanilla", "sealed", "evolution", "mugen_climb", "twinpact", "vividraw", "fushigi", "linked_god", "entered_this_turn",
-               "crossed", "crossed_ge", "crossed_le", "crossed_name"}   # クロス状態（第170弾）: crossed はギアがクロスされているか、crossed_ge/le はその枚数、crossed_name はその名前のギアがクロスされているか
+               "crossed", "crossed_ge", "crossed_le", "crossed_name", "evo_source_of", "fortifying", "fortified"}   # クロス状態（第170弾）: crossed はギアがクロスされているか、crossed_ge/le はその枚数、crossed_name はその名前のギアがクロスされているか。evo_source_of（第177弾）: そのクリーチャーの進化元になれるカード（値は "self" / 変数名）。fortifying（第178弾）: シールドを要塞化している城。fortified（第178弾）: 要塞化されたシールド
 FILTER_EXPR_KEYS = {"cost_le", "cost_ge", "power_le", "power_ge", "races", "civs", "not_civs", "name", "crossed_ge", "crossed_le"}   # 値に式を書ける（解決時に計算）。civs / not_civs / name は宣言プリミティブ（{declared:}）の受け口（バンドB U3／バンドC2 U97）
 # 履歴カウンタ（式 {turn_count: ...}）の kind 列挙（バンドC1 U19＋統一で追加した分）。
 # owner に any を許すのは destroyed と attack だけ（他は you/opp）
@@ -100,6 +100,7 @@ class Face:
     grave_evo: bool = False                               # 墓地進化: 通常召喚も、自分の墓地のクリーチャーの上に重ねて出すこともできる（evolve_zone: graveyard と併用）
     star: bool = False                                    # スター進化: 離れる時は一番上のカードだけが離れ、下は残る
     s_max: bool = False                                   # S-MAX進化: 進化元を必要とせず、通常のクリーチャーとして召喚できる
+    ace: bool = False                                     # ACEタマシード: 条件を満たす間だけクリーチャーとして扱う（第179弾）
     hyper: bool = False                                   # ハイパー化（他の自分のクリーチャー1体をタップしてハイパーモードを解放できる）
     crystal_soul: int = 0                                 # 水晶ソウルN: 召喚／唱える時に裏向きマナの数字が N になる（0＝持たない）
     resolve_to: str = "graveyard"                         # 呪文の解決後の置き場所（チャージャー等）
@@ -114,6 +115,10 @@ class Face:
     def is_permanent(self) -> bool:
         """クリーチャーでなく、実行するとバトルゾーンに出るカード（タマシード・フィールド・クロスギア）。"""
         return not self.is_creature() and bool(PERMANENT_TYPES & set(self.types))
+
+    def is_castle(self) -> bool:
+        """G城: 実行するとシールドゾーンに表向きで置かれる（第176弾）。バトルゾーンには出ない。"""
+        return "g_castle" in self.types
 
 
 @dataclass
@@ -154,6 +159,7 @@ class CardDef:
     grave_evo: bool = False
     star: bool = False
     s_max: bool = False
+    ace: bool = False                                     # ACEタマシード（第179弾）
     hyper: bool = False
     crystal_soul: int = 0                                 # 水晶ソウルN（面の宣言。0＝持たない）
     resolve_to: str = "graveyard"
@@ -170,6 +176,10 @@ class CardDef:
     def is_permanent(self) -> bool:
         """クリーチャーでなく、実行するとバトルゾーンに出るカード（タマシード・フィールド・クロスギア）。"""
         return not self.is_creature() and bool(PERMANENT_TYPES & set(self.types))
+
+    def is_castle(self) -> bool:
+        """G城: 実行するとシールドゾーンに表向きで置かれる（第176弾）。バトルゾーンには出ない。"""
+        return "g_castle" in self.types
 
     def face(self, i: int | None) -> "CardDef | Face":
         return self if i is None or not self.faces else self.faces[i]
@@ -345,7 +355,7 @@ class Checker:
             raise DefError(f"{where}: unknown selector keys {sorted(bad)}")
         if "owner" in sel and "owner_of" in sel:
             raise DefError(f"{where}: owner and owner_of are exclusive")
-        if "under_of" not in sel and "bundle_of" not in sel and "exlife_of" not in sel and "ref" not in sel \
+        if "under_of" not in sel and "bundle_of" not in sel and "exlife_of" not in sel and "castle_of" not in sel and "ref" not in sel \
                 and "crossed_to" not in sel and "host_of" not in sel and "zone" not in sel:
             raise DefError(f"{where}: selector needs zone or ref")
         for z in ([sel["zone"]] if isinstance(sel.get("zone"), str) else sel.get("zone", [])):
@@ -371,7 +381,7 @@ class Checker:
         if "extremal" in sel:
             if sel["extremal"] not in ("min_power", "max_power"):
                 raise DefError(f"{where}: extremal must be min_power or max_power")
-            if any(k in sel for k in ("ref", "under_of", "bundle_of", "exlife_of", "crossed_to", "host_of")):
+            if any(k in sel for k in ("ref", "under_of", "bundle_of", "exlife_of", "castle_of", "crossed_to", "host_of")):
                 raise DefError(f"{where}: extremal needs a zone selector")
         if "distinct_costs" in sel or "distinct_from" in sel:
             # 「コストが異なる」制約は選択にだけ付く。count: all 単独は「選んだことにならない」ため不可
@@ -400,6 +410,8 @@ class Checker:
             raise DefError(f"{where}: crossed must be a bool")
         if "crossed_name" in f and not isinstance(f["crossed_name"], str):
             raise DefError(f"{where}: crossed_name must be a card name")
+        if "evo_source_of" in f and not isinstance(f["evo_source_of"], str):
+            raise DefError(f"{where}: evo_source_of must be 'self' or a variable name")
         for k in FILTER_EXPR_KEYS & set(f):
             if k in ("races", "civs", "not_civs") and isinstance(f[k], list):
                 continue   # リテラル（種族・文明のリスト）は上の照合で検証済み
@@ -782,6 +794,9 @@ class Checker:
         if "dswitch" in ab:   # Dスイッチ（第151弾）: trigger に true を付け、効果の先頭に may＋{op: dswitch} を置く型だけ
             if kind != "trigger" or ab["dswitch"] is not True:
                 raise DefError(f"{where}: dswitch is only for trigger, as true")
+        if "accel" in ab:   # アクセル（第175弾）: クロスギアがクロスされている間だけ得る能力。true だけ
+            if ab["accel"] is not True:
+                raise DefError(f"{where}: accel is only for abilities, as true")
         if "fort_e" in ab:   # フォートE（第168弾）: 召喚時にタップしたマナの種族で得る能力
             fe = ab["fort_e"]
             if not isinstance(fe, dict) or not isinstance(fe.get("races"), list) or not fe["races"] \
@@ -854,6 +869,17 @@ class Checker:
                 self.ops(ab[k], where)
 
 
+# G城の型ルール（第176弾）: 表向きでシールドゾーンを離れる時、かわりに墓地に置く。
+# シールド・ゴー（data/rules/keywords.yaml）の2つ目の置換と同型。types に g_castle を
+# 含む面すべてに _load_face で自動で付くため、データ側に書かない
+_G_CASTLE_LEAVE = [
+    {"kind": "replace", "zone": "shield",
+     "when": {"event": "move", "from": "shield", "subject": "self"},
+     "if": {"face_up": True},
+     "instead": [{"op": "move", "select": {"ref": "self"}, "to": "graveyard", "reason": "put"}]},
+]
+
+
 def _expand_ability(ab, macros, where):
     ab = dict(ab)
     for k in ("effect", "instead"):
@@ -887,6 +913,9 @@ def _load_face(raw, keywords, macros, chk: Checker, where) -> dict:
             chk.filter(sb, where)
         else:
             raise DefError(f"{where}: s_back must be a civ name or a filter")
+    if "g_castle" in raw.get("types", []):
+        # G城の型ルール（第176弾）: 表向きでシールドゾーンを離れる時、かわりに墓地に置く
+        abilities += [dict(_expand_ability(a, macros, where), keyword="g_castle") for a in _G_CASTLE_LEAVE]
     abilities += [_expand_ability(a, macros, where) for a in raw.get("abilities", [])]
     for a in abilities:
         chk.ability(a, where)
@@ -985,6 +1014,11 @@ def _load_face(raw, keywords, macros, chk: Checker, where) -> dict:
         cs = raw["crystal_soul"]
         if not isinstance(cs, int) or isinstance(cs, bool) or cs < 1:
             raise DefError(f"{where}: crystal_soul must be an int >= 1")
+    if raw.get("ace"):   # ACEタマシード（第179弾）: タマシードの面にだけ付く
+        if "tamaseed" not in raw["types"]:
+            raise DefError(f"{where}: ace needs tamaseed in types")
+        if raw["ace"] is not True:
+            raise DefError(f"{where}: ace must be true")
     return dict(name=raw["name"], types=raw["types"], civs=raw["civs"], cost=raw["cost"],
                 power=raw.get("power", 0), races=split_races(raw.get("races", [])), keywords=names,
                 abilities=abilities, spell=spell, sst_spell=sst_spell, stp_spell=stp_spell, odrive_spell=odrive_spell, o_drive=raw.get("o_drive"), mugen_climb=raw.get("mugen_climb"), alt_cost=raw.get("alt_cost"), vividraw=raw.get("vividraw"), fushigi=raw.get("fushigi"), recycle=raw.get("recycle"), deck_evolution=de, evolve_from=raw.get("evolve_from"),
@@ -992,7 +1026,7 @@ def _load_face(raw, keywords, macros, chk: Checker, where) -> dict:
                 evolve_count=(len(raw["evolve_from"]) if isinstance(raw.get("evolve_from"), list)
                               else int(raw.get("evolve_count", 1))),
                 cost_reduce_per_evo=int(raw.get("cost_reduce_per_evo", 0)),
-                free_if=raw.get("free_if"), galaxy_shield=raw.get("galaxy_shield"), bazurenda=raw.get("bazurenda"), neo=bool(raw.get("neo", False)), grave_evo=bool(raw.get("grave_evo", False)), star=bool(raw.get("star", False)), s_max=bool(raw.get("s_max", False)), hyper=bool(raw.get("hyper", False)), crystal_soul=int(raw.get("crystal_soul", 0)), **{"tap_reduce": 0, "s_back": None, **props})
+                free_if=raw.get("free_if"), galaxy_shield=raw.get("galaxy_shield"), bazurenda=raw.get("bazurenda"), neo=bool(raw.get("neo", False)), grave_evo=bool(raw.get("grave_evo", False)), star=bool(raw.get("star", False)), s_max=bool(raw.get("s_max", False)), ace=bool(raw.get("ace", False)), hyper=bool(raw.get("hyper", False)), crystal_soul=int(raw.get("crystal_soul", 0)), **{"tap_reduce": 0, "s_back": None, **props})
 
 
 def load_tables():

@@ -29,8 +29,10 @@
      "creature",
      "cross_gear",
      "d2_field",
+     "dream_creature",
      "evolution",
      "field",
+     "g_castle",
      "spell",
      "tamaseed"
     ]
@@ -153,9 +155,12 @@
       "crossed_le": {},
       "crossed_name": {},
       "entered_this_turn": {},
+      "evo_source_of": {},
       "evolution": {},
       "face_down": {},
       "face_up": {},
+      "fortified": {},
+      "fortifying": {},
       "fushigi": {},
       "keyword": {},
       "linked_god": {},
@@ -231,6 +236,9 @@
   "s_max": {
    "type": "boolean"
   },
+  "ace": {
+   "type": "boolean"
+  },
   "hyper": {
    "type": "boolean"
   },
@@ -273,8 +281,10 @@
        "creature",
        "cross_gear",
        "d2_field",
+       "dream_creature",
        "evolution",
        "field",
+       "g_castle",
        "spell",
        "tamaseed"
       ]
@@ -397,9 +407,12 @@
         "crossed_le": {},
         "crossed_name": {},
         "entered_this_turn": {},
+        "evo_source_of": {},
         "evolution": {},
         "face_down": {},
         "face_up": {},
+        "fortified": {},
+        "fortifying": {},
         "fushigi": {},
         "keyword": {},
         "linked_god": {},
@@ -473,6 +486,9 @@
      "type": "boolean"
     },
     "s_max": {
+     "type": "boolean"
+    },
+    "ace": {
      "type": "boolean"
     },
     "hyper": {
@@ -582,6 +598,18 @@
       "required": [
        "op",
        "face"
+      ],
+      "additionalProperties": false
+     },
+     {
+      "type": "object",
+      "properties": {
+       "op": {
+        "const": "castle_link"
+       }
+      },
+      "required": [
+       "op"
       ],
       "additionalProperties": false
      },
@@ -1712,9 +1740,12 @@
     "crossed_le": {},
     "crossed_name": {},
     "entered_this_turn": {},
+    "evo_source_of": {},
     "evolution": {},
     "face_down": {},
     "face_up": {},
+    "fortified": {},
+    "fortifying": {},
     "fushigi": {},
     "keyword": {},
     "linked_god": {},
@@ -1778,6 +1809,9 @@
      ]
     },
     "exlife_of": {
+     "type": "string"
+    },
+    "castle_of": {
      "type": "string"
     },
     "under_of": {},
@@ -2933,6 +2967,7 @@
      ]
     },
     "subject": {},
+    "shield": {},
     "stacked": {},
     "sealed_from": {},
     "from_under": {},
@@ -3019,6 +3054,7 @@
       "shield"
      ]
     },
+    "accel": {},
     "any_attacker": {},
     "bazurenda": {},
     "choukon": {},

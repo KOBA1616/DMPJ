@@ -1803,6 +1803,7 @@ impl Engine {
             c.top_of = -1;
             c.exlife_of = None;
             c.sforce_of = None;
+            c.fortifies = None;
             c.no_untap_next = false;
             c.hyper = false;
             c.sst = false;

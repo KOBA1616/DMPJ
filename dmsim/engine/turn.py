@@ -267,7 +267,7 @@ class TurnMixin:
     def _climb_ready(self, cid, p, fi, mc) -> bool:
         """ムゲンクライムの前提: 代替コストが払えて、タップできる自分のクリーチャーが足りる。"""
         f = self.cdef(cid).face(fi)
-        action = "summon" if f.is_creature() else "generate" if f.is_permanent() else "cast"
+        action = "summon" if f.is_creature() else "generate" if f.is_permanent() or f.is_castle() else "cast"
         if not self.permits(cid, action):
             return False
         pool = [c for c in self.bz_tops(p) if not self.s.cards[c].tapped
@@ -317,7 +317,7 @@ class TurnMixin:
 
     def _can_play_face(self, cid, p, face) -> bool:
         d = self.cdef(cid).face(face)
-        action = "summon" if d.is_creature() else "generate" if d.is_permanent() else "cast"
+        action = "summon" if d.is_creature() else "generate" if d.is_permanent() or d.is_castle() else "cast"
         if not self.permits(cid, action) or (d.is_creature() and not self.permits(cid, "enter_bz")):
             return False
         if "evolution" in d.types and not d.s_max:   # S-MAX進化は進化元を必要としない（通常召喚として扱う）
@@ -746,7 +746,7 @@ def h_play(eng, t):
         eng._pop(t)
         return None
     d = eng.cdef(cid).face(face)
-    action = "summon" if d.is_creature() else "generate" if d.is_permanent() else "cast"
+    action = "summon" if d.is_creature() else "generate" if d.is_permanent() or d.is_castle() else "cast"
     with eng.chars_scope():   # 読み取りだけの判定
         denied = not eng.permits(cid, action) or (d.is_creature() and not eng.permits(cid, "enter_bz"))
     if denied:
@@ -1081,7 +1081,7 @@ def h_play(eng, t):
     if face is not None:
         s.cards[cid].face = face
     ref = s.ref(cid)
-    if t.get("to_shield"):   # ギャラクシールド: 代替コストを払って表向きにシールド化する（召喚ではない）
+    if t.get("to_shield") or d.is_castle():   # ギャラクシールド / G城: 代替コストを払って、または通常の実行で表向きにシールド化する（召喚ではない）
         eng._push(eng.ev_task({"ev": "move", "subject": ref, "from": from_zone, "to": "shield", "reason": "put",
                                "controller": p, "face_up": True}))
         return None

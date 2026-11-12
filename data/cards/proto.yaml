@@ -5126,3 +5126,726 @@ cards:
     mana: 1
     evolve_from: {races: [ビートジョッキー]}
     text: "進化：自分のビートジョッキー１体の上に置く。（第173弾・T376の重ね先）"
+
+  # 第174弾 dream_creature（ドリーム・クリーチャーの型印）
+  - id: T378
+    name: 試作のドリーム・クリーチャー
+    types: [creature, dream_creature]
+    civs: [fire]
+    cost: 3
+    power: 3000
+    races: [ドリームメイト]
+    mana: 1
+    text: "ドリーム・クリーチャー / このクリーチャーが出た時、カードを1枚引く。（第174弾）"
+    abilities:
+      - kind: trigger
+        when: {event: move, to: bz, subject: self}
+        effect:
+          - {op: draw, player: you, count: 1}
+
+  - id: T379
+    name: 試作の進化ドリーム・クリーチャー
+    types: [creature, evolution, dream_creature]
+    civs: [fire]
+    cost: 5
+    power: 6000
+    races: [アーマード・ドラゴン]
+    mana: 1
+    evolve_from: {civs: [fire]}
+    keywords: [double_breaker]
+    text: "進化ドリーム・クリーチャー / 進化：火のクリーチャー１体の上に置く。 / W・ブレイカー / このクリーチャーが出た時、カードを1枚引く。（第174弾）"
+    abilities:
+      - kind: trigger
+        when: {event: move, to: bz, subject: self}
+        effect:
+          - {op: draw, player: you, count: 1}
+
+  - id: T380
+    name: 試作のドリーム言及クリーチャー
+    types: [creature]
+    civs: [fire]
+    cost: 4
+    power: 4000
+    races: [ヒューマノイド]
+    mana: 1
+    text: "自分のドリーム・クリーチャーすべてのパワーを+1000する。 / このクリーチャーが出た時、自分のドリーム・クリーチャーがあれば、カードを1枚引く。（第174弾）"
+    abilities:
+      - kind: static
+        affects: {zone: bz, owner: you, filter: {types: [dream_creature]}}
+        mod: {power: 1000}
+      - kind: trigger
+        when: {event: move, to: bz, subject: self}
+        effect:
+          - op: if
+            cond: {exists: {zone: bz, owner: you, filter: {types: [dream_creature]}}}
+            then:
+              - {op: draw, player: you, count: 1}
+
+  - id: T381
+    name: 試作のG-NEOドリーム・クリーチャー
+    types: [creature, dream_creature]
+    civs: [fire]
+    cost: 6
+    power: 8000
+    races: [アーマード・ドラゴン]
+    mana: 1
+    neo: true
+    evolve_from: {races: [アーマード・ドラゴン]}
+    keywords: [double_breaker]
+    text: "G-NEOドリーム・クリーチャー / G-NEO進化：自分のアーマード・ドラゴン１体の上に置いてもよい。 / W・ブレイカー（第174弾。NEOは types に evolution を含めない。dm25ex3-011 の実例どおり）"
+
+  - id: T382
+    name: 試作のアクセル・パワー獣
+    types: [creature]
+    civs: [fire]
+    cost: 3
+    power: 2000
+    races: [アーマロイド, サムライ]
+    mana: 1
+    text: "アクセル（このクリーチャーにクロスギアがクロスされている時、このクリーチャーは次の能力を得る） / このクリーチャーのパワーは+3000され、「スピードアタッカー」を得る。（第175弾・dm28-097型）"
+    abilities:
+      - kind: static
+        accel: true
+        mod: {power: 3000, grant: [speed_attacker]}
+
+  - id: T383
+    name: 試作のアクセル・種族獣
+    types: [creature]
+    civs: [light]
+    cost: 3
+    power: 2000
+    races: [イニシエート]
+    mana: 1
+    text: "アクセル（このクリーチャーにクロスギアがクロスされている時、このクリーチャーは次の能力を得る） / このクリーチャーのパワーは+3000され、種族にエンジェル・コマンドを追加する。（第175弾・dm15-037型）"
+    abilities:
+      - kind: static
+        accel: true
+        mod: {power: 3000, add_races: [エンジェル・コマンド]}
+
+  - id: T384
+    name: 試作のアクセル・攻撃ドロー獣
+    types: [creature]
+    civs: [water]
+    cost: 2
+    power: 1000
+    races: [リキッド・ピープル, サムライ]
+    mana: 1
+    text: "アクセル（このクリーチャーにクロスギアがクロスされている時、このクリーチャーに次の能力を与える） / このクリーチャーが攻撃する時、カードを１枚引く。（第175弾・dmpcd02-a10型）"
+    abilities:
+      - kind: trigger
+        accel: true
+        when: {event: attack, subject: self}
+        effect:
+          - {op: draw, player: you, count: 1}
+
+  - id: T385
+    name: 試作のアクセル・跳ね返し獣
+    types: [creature]
+    civs: [water]
+    cost: 3
+    power: 2000
+    races: [ブルー・モンスター, サムライ]
+    mana: 1
+    text: "アクセル（このクリーチャーにクロスギアがクロスされている時、このクリーチャーは次の能力を得る） / このクリーチャーが相手プレイヤーを攻撃してブロックされなかった時、このクリーチャーよりパワーの小さいクリーチャーを１体、バトルゾーンから持ち主の手札に戻してもよい。（第175弾・dm28-083型）"
+    abilities:
+      - kind: trigger
+        accel: true
+        optional: true
+        when: {event: attack_end, subject: self, target: player, blocked: false}
+        effect:
+          - op: move
+            select: {zone: bz, owner: opp, filter: {types: [creature], power_le: {sum: [{power_of: self}, -1]}}, count: 1}
+            to: hand
+            reason: return
+
+  - id: T386
+    name: 試作のアクセル・身代わり獣
+    types: [creature]
+    civs: [water]
+    cost: 4
+    power: 3000
+    races: [スプラッシュ・クイーン]
+    mana: 1
+    text: "アクセル（このクリーチャーにクロスギアがクロスされている時、このクリーチャーは次の能力を得る） / このクリーチャーはブロックされない。 / このクリーチャーが破壊される時、かわりに、このクリーチャーにクロスしてあるクロスギアを１枚墓地に置いてもよい。（第175弾・dm15-009型）"
+    abilities:
+      - kind: static
+        accel: true
+        mod: {grant: [unblockable]}
+      - kind: replace
+        accel: true
+        optional: true
+        when: {event: move, from: bz, to: graveyard, reason: destroy, subject: self}
+        instead:
+          - op: move
+            select: {crossed_to: self, count: 1}
+            to: graveyard
+            reason: put
+
+  - id: T387
+    name: 試作のアクセル・ブレイク置換獣
+    types: [creature]
+    civs: [nature]
+    cost: 6
+    power: 6000
+    races: [アース・ドラゴン]
+    mana: 1
+    keywords: [double_breaker]
+    text: "W・ブレイカー / アクセル（このクリーチャーにクロスギアがクロスされている時、このクリーチャーは次の能力を得る） / このクリーチャーがシールドをブレイクする時、相手はそのシールドを手札ではなく持ち主のマナゾーンに置く。（第175弾・dm15-018型）"
+    abilities:
+      - kind: replace
+        accel: true
+        when: {event: break, subject: self}
+        instead:
+          - {op: move, select: {ref: event.shield, count: 1}, to: mana, reason: put}
+
+  - id: T388
+    name: 試作のG城・非クリーチャー軽減城
+    types: [g_castle]
+    civs: [light]
+    cost: 3
+    mana: 1
+    text: "（G城は実行したら、表向きでシールド化される。このカードが表向きで自分のシールドゾーンを離れる時、かわりに墓地に置く）/ 自分の、クリーチャーではないカードの実行コストを１少なくする。ただしコストは０以下にならない。（第176弾・dm26ex4-085型）"
+    abilities:
+      - kind: static
+        zone: shield
+        if: {face_up: true}
+        affects: {zone: hand, owner: you, filter: {not_types: [creature]}}
+        mod: {cost: -1}
+
+  - id: T389
+    name: 試作のG城・置かれた時ドロー城
+    types: [g_castle]
+    civs: [water]
+    cost: 4
+    mana: 1
+    text: "（G城は実行したら、表向きでシールド化される。このカードが表向きで自分のシールドゾーンを離れる時、かわりに墓地に置く）/ このG城が表向きで自分のシールドゾーンに置かれた時、カードを１枚引く。（第176弾・dm26rp1-023型）"
+    abilities:
+      - kind: trigger
+        zone: shield
+        when: {event: move, to: shield, subject: self, face_up: true}
+        effect:
+          - {op: draw, count: 1}
+
+  - id: T390
+    name: 試作のG城・出入りバウンス城
+    types: [g_castle]
+    civs: [darkness]
+    cost: 4
+    mana: 1
+    text: "（G城は実行したら、表向きでシールド化される。このカードが表向きで自分のシールドゾーンを離れる時、かわりに墓地に置く）/ このG城が表向きで、自分のシールドゾーンに置かれた時または離れた時、相手のタップしているクリーチャーを１体選び、持ち主の手札に戻してもよい。（第176弾・dm26rp1-002型。原文は「好きな数」だが proto は１体に簡略化）"
+    abilities:
+      - kind: trigger
+        zone: shield
+        when: {event: move, to: shield, subject: self, face_up: true}
+        effect:
+          - op: may
+            body:
+              - {op: move, select: {zone: bz, owner: opp, filter: {types: [creature], tapped: true}, count: 1}, to: hand, reason: return}
+      - kind: trigger
+        zone: shield
+        when: {event: move, from: shield, subject: self, face_up: true}
+        effect:
+          - op: may
+            body:
+              - {op: move, select: {zone: bz, owner: opp, filter: {types: [creature], tapped: true}, count: 1}, to: hand, reason: return}
+
+  - id: T391
+    name: 試作のG城・下置き城
+    types: [g_castle]
+    civs: [light]
+    cost: 4
+    mana: 1
+    text: "（G城は実行したら、表向きでシールド化される。このカードが表向きで自分のシールドゾーンを離れる時、かわりに墓地に置く）/ このG城が表向きで自分のシールドゾーンに置かれた時、自分の山札の上から２枚を裏向きでこのシールドの下に置く。（第176弾・dm26rp1-001型）"
+    abilities:
+      - kind: trigger
+        zone: shield
+        when: {event: move, to: shield, subject: self, face_up: true}
+        effect:
+          - op: put_under
+            select: {zone: deck, owner: you, from_top: 2}
+            onto: {ref: self}
+
+  - id: T392
+    name: 試作のG城・迎撃城
+    types: [g_castle]
+    civs: [light, darkness]
+    cost: 4
+    mana: 1
+    text: "（G城は実行したら、表向きでシールド化される。このカードが表向きで自分のシールドゾーンを離れる時、かわりに墓地に置く）/ 相手のクリーチャーが攻撃する時、このG城を墓地に置いてもよい。そうしたら、コスト５以下のクリーチャーを１体、自分の手札から出してもよい。（第176弾・dm26ex1-n022型。ブロッカー／スレイヤー付与とメカ指定は省略）"
+    abilities:
+      - kind: trigger
+        zone: shield
+        if: {face_up: true}
+        when: {event: attack, subject: {owner: opp, filter: {types: [creature]}}}
+        effect:
+          - op: may
+            body:
+              - {op: move, select: {ref: self}, to: graveyard, reason: put}
+              - op: may
+                body:
+                  - {op: move, select: {zone: hand, owner: you, filter: {types: [creature], cost_le: 5}, count: 1}, to: bz, reason: put}
+
+  - id: T393
+    name: 試作のG城・初回破壊ドロー城
+    types: [g_castle]
+    civs: [nature]
+    cost: 3
+    mana: 1
+    text: "（G城は実行したら、表向きでシールド化される。このカードが表向きで自分のシールドゾーンを離れる時、かわりに墓地に置く）/ 各ターン、はじめてクリーチャーが破壊された時、自分はカードを１枚引いてもよい。（第176弾・dm26rp1-067型）"
+    abilities:
+      - kind: trigger
+        zone: shield
+        if: {face_up: true}
+        when: {event: move, from: bz, to: graveyard, reason: destroy, subject: {filter: {types: [creature]}}}
+        first_time: true
+        effect:
+          - op: may
+            body:
+              - {op: draw, count: 1}
+
+  - id: T394
+    name: 試作の超魂レイド・魔誕竜凰型
+    types: [creature]
+    civs: [fire]
+    cost: 3
+    power: 4000
+    races: [ティラノ・ドレイク]
+    mana: 1
+    neo: true
+    evolve_from: {civs: [darkness, fire, nature]}
+    text: "NEO進化：闇、火、または自然のクリーチャー１体の上に置いてもよい。/ 超魂レイド（このクリーチャーが出た時、山札の上から３枚を表向きにする。その中からこのクリーチャーの進化元になれるカードを１枚、この下に置いてもよい。残りを好きな順序で山札の下に置く）（第177弾・dm25ex3-046型）"
+    abilities:
+      - kind: trigger
+        when: {event: move, to: bz, subject: self}
+        effect:
+          - {op: reveal_until, as: pile, filter: {}, count: 3}
+          - op: if
+            cond: {exists: {ref: pile, filter: {evo_source_of: self}}}
+            then:
+              - op: may
+                body:
+                  - {op: put_under, select: {count: 1, up_to: true, ref: pile, filter: {evo_source_of: self}}, onto: {ref: self}}
+          - {op: move, select: {count: all, ref: pile}, to: deck, position: bottom, order: choose, reason: put}
+
+  - id: T395
+    name: 試作の超魂レイド・種族型
+    types: [creature]
+    civs: [light, fire]
+    cost: 7
+    power: 9000
+    races: [アーマード・ドラゴン, エンジェル・コマンド, ハンター]
+    mana: 1
+    neo: true
+    evolve_from: {races: [テスト]}
+    text: "NEO進化：ドラゴン・クリーチャー１体の上に置いてもよい。/ 超魂レイド（このクリーチャーが出た時、山札の上から３枚を表向きにする。その中からこのクリーチャーの進化元になれるカードを１枚、この下に置いてもよい。残りを好きな順序で山札の下に置く）（第177弾・dm25bd1-005型。種族形 evolve_from。メテオバーン節は省略）"
+    abilities:
+      - kind: trigger
+        when: {event: move, to: bz, subject: self}
+        effect:
+          - {op: reveal_until, as: pile, filter: {}, count: 3}
+          - op: if
+            cond: {exists: {ref: pile, filter: {evo_source_of: self}}}
+            then:
+              - op: may
+                body:
+                  - {op: put_under, select: {count: 1, up_to: true, ref: pile, filter: {evo_source_of: self}}, onto: {ref: self}}
+          - {op: move, select: {count: all, ref: pile}, to: deck, position: bottom, order: choose, reason: put}
+
+  - id: T396
+    name: 試作の超魂レイド・進化V型
+    types: [creature]
+    civs: [fire]
+    cost: 5
+    power: 7000
+    races: [デーモン・コマンド]
+    mana: 1
+    neo: true
+    evolve_from: [{civs: [fire]}, {races: [テスト]}]
+    text: "NEO進化：闇、火、または自然のクリーチャー１体の上に置いてもよい。/ 超魂レイド（このクリーチャーが出た時、山札の上から３枚を表向きにする。その中からこのクリーチャーの進化元になれるカードを１枚、この下に置いてもよい。残りを好きな順序で山札の下に置く）/ このクリーチャーが出た時、相手のコスト３以下のクリーチャーを１体選び、破壊する。（第177弾・dm25ex3-rp2s04型。リスト形 evolve_from）"
+    abilities:
+      - kind: trigger
+        when: {event: move, to: bz, subject: self}
+        effect:
+          - {op: reveal_until, as: pile, filter: {}, count: 3}
+          - op: if
+            cond: {exists: {ref: pile, filter: {evo_source_of: self}}}
+            then:
+              - op: may
+                body:
+                  - {op: put_under, select: {count: 1, up_to: true, ref: pile, filter: {evo_source_of: self}}, onto: {ref: self}}
+          - {op: move, select: {count: all, ref: pile}, to: deck, position: bottom, order: choose, reason: put}
+      - kind: trigger
+        when: {event: move, to: bz, subject: self}
+        effect:
+          - {op: destroy, select: {count: 1, filter: {cost_le: 3, types: [creature]}, owner: opp, zone: bz}}
+
+  - id: T397
+    name: 試作の超魂レイド・攻撃時型
+    types: [creature]
+    civs: [water, darkness, fire, nature]
+    cost: 7
+    power: 12000
+    races: [ディスペクター, アビスロイヤル, デーモン・コマンド]
+    mana: 1
+    neo: true
+    evolve_from: {races: [アビスロイヤル]}
+    text: "NEO進化：アビス・クリーチャー１体の上に置いてもよい。/ 超魂レイド（このクリーチャーが出た時、山札の上から３枚を表向きにする。その中からこのクリーチャーの進化元になれるカードを１枚、この下に置いてもよい。残りを好きな順序で山札の下に置く）/ このクリーチャーが攻撃する時、カードを２枚引き、自分の手札を２枚捨てる。（第177弾・dm26ex4-sec025型。墓地からの出し節は省略）"
+    abilities:
+      - kind: trigger
+        when: {event: move, to: bz, subject: self}
+        effect:
+          - {op: reveal_until, as: pile, filter: {}, count: 3}
+          - op: if
+            cond: {exists: {ref: pile, filter: {evo_source_of: self}}}
+            then:
+              - op: may
+                body:
+                  - {op: put_under, select: {count: 1, up_to: true, ref: pile, filter: {evo_source_of: self}}, onto: {ref: self}}
+          - {op: move, select: {count: all, ref: pile}, to: deck, position: bottom, order: choose, reason: put}
+      - kind: trigger
+        when: {event: attack, subject: self}
+        effect:
+          - {op: draw, count: 2}
+          - {op: discard, select: {chooser: you, count: 2, owner: you, zone: hand}}
+
+  # ---- 語彙パイロット第178弾（2026-11-11）: 城・要塞化 ----
+  - id: T398
+    name: 試作の城・聖
+    types: [field]
+    civs: [light]
+    cost: 2
+    mana: 1
+    text: "城：自分のシールドをひとつ選び、このカードを付けて要塞化する。その要塞化されたシールドがシールドゾーンから離れた時、このカードを自分の墓地に置く。バトルゾーンにある自分のクリーチャーすべてのパワーは+1000され、「ブロッカー」を得る。（第178弾・dm30-023型）"
+    abilities:
+      - kind: trigger
+        when: {event: move, to: bz, subject: self}
+        effect:
+          - {op: castle_link}
+      - kind: static
+        affects: {zone: bz, owner: you, filter: {types: [creature]}}
+        mod: {power: 1000, grant: [blocker]}
+
+  - id: T399
+    name: 試作の城・置換
+    types: [field]
+    civs: [fire]
+    cost: 3
+    mana: 1
+    text: "城：自分のシールドをひとつ選び、このカードを付けて要塞化する。その要塞化されたシールドがシールドゾーンから離れた時、このカードを自分の墓地に置く。この城を付けて要塞化したシールドが他の城によって要塞化されていなければ、そのシールドが相手のクリーチャーにブレイクされる時、かわりに自分のシールドを１枚手札に加えてもよい。（第178弾・dmex01-033型）"
+    abilities:
+      - kind: trigger
+        when: {event: move, to: bz, subject: self}
+        effect:
+          - {op: castle_link}
+      - kind: replace
+        when: {event: break, player: you, shield: {castle_of: self, castle_only: self}}
+        optional: true
+        instead:
+          - {op: move, select: {count: 1, zone: shield, owner: you, exclude: {ref: event.shield}}, to: hand, reason: put}
+
+  - id: T400
+    name: 試作の城・死神
+    types: [field]
+    civs: [darkness]
+    cost: 4
+    mana: 1
+    text: "城：自分のシールドをひとつ選び、このカードを付けて要塞化する。その要塞化されたシールドがシールドゾーンから離れた時、このカードを自分の墓地に置く。この城を自分のシールドゾーンに置いて、シールドを１枚要塞化した時、相手の手札を１枚見ないで選び、捨てさせる。（第178弾・dm34-029型）"
+    abilities:
+      - kind: trigger
+        when: {event: move, to: bz, subject: self}
+        effect:
+          - {op: castle_link}
+          - op: if
+            cond: {exists: {castle_of: self}}
+            then:
+              - {op: discard, select: {zone: hand, owner: opp, count: 1}}
+
+  - id: T401
+    name: 試作のルナ・ミステリーマンション
+    types: [creature]
+    civs: [water]
+    cost: 4
+    mana: 1
+    power: 4000
+    races: [サイバー・ムーン]
+    text: "このクリーチャーがバトルゾーンに出た時、次のうちいずれか１つを選んでもよい。▶シールドを要塞化している城を１枚選び、その城を持ち主の手札に戻す。（第178弾・dmex08-223型。第2モードは省略）"
+    abilities:
+      - kind: trigger
+        when: {event: move, to: bz, subject: self}
+        effect:
+          - op: may
+            body:
+              - {op: move, select: {count: 1, zone: bz, owner: any, filter: {types: [field], fortifying: true}}, to: hand, reason: return}
+
+  - id: T402
+    name: 試作の城・海魔
+    types: [field]
+    civs: [water]
+    cost: 4
+    mana: 1
+    text: "城：自分のシールドをひとつ選び、このカードを付けて要塞化する。その要塞化されたシールドがシールドゾーンから離れた時、このカードを自分の墓地に置く。この城を付けて要塞化されたシールドから、自分の手札に加えられるカードは「S・トリガー」を得る。（第178弾・dm31-011型）"
+    abilities:
+      - kind: trigger
+        when: {event: move, to: bz, subject: self}
+        effect:
+          - {op: castle_link}
+      - kind: static
+        affects: {zone: shield, owner: you, filter: {fortified: true}}
+        mod: {allow: [s_trigger]}
+
+  - id: T403
+    name: 試作のACE・緑牙
+    types: [tamaseed]
+    civs: [nature]
+    cost: 5
+    power: 14000
+    races: [テスト]
+    text: "このタマシードが出た時、自分のマナゾーンのカードを4枚アンタップする。自分の自然のクリーチャーまたは自然のタマシードが合計4つ以上なければ、バトルゾーンにあるこのタマシードはクリーチャーとして扱わない。T・ブレイカー。このクリーチャーが攻撃する時、自分の山札の上から1枚目をマナゾーンに置く。（第179弾・dm22rp1-10b型）"
+    ace: true
+    keywords: [triple_breaker]
+    abilities:
+      - kind: trigger
+        when: {event: move, to: bz, subject: self}
+        effect:
+          - {op: untap, select: {zone: mana, owner: you, count: 4}}
+      - kind: trigger
+        when: {event: attack, subject: self}
+        effect:
+          - {op: move, select: {zone: deck, owner: you, from_top: 1}, to: mana, reason: put}
+
+  - id: T404
+    name: 試作のACE・白翼
+    types: [tamaseed]
+    civs: [light]
+    cost: 4
+    power: 11500
+    races: [テスト]
+    text: "このタマシードが出た時、相手のクリーチャーを2体まで選んでタップする。自分の光のクリーチャーまたは光のタマシードが合計4つ以上なければ、バトルゾーンにあるこのタマシードはクリーチャーとして扱わない。ブロッカー。W・ブレイカー。（第179弾・dm22rp1-2b型）"
+    ace: true
+    keywords: [blocker, double_breaker]
+    abilities:
+      - kind: trigger
+        when: {event: move, to: bz, subject: self}
+        effect:
+          - {op: tap, select: {zone: bz, owner: opp, filter: {types: [creature]}, count: 2, up_to: true}}
+
+  - id: T405
+    name: 試作のACE・赤牙
+    types: [tamaseed]
+    civs: [fire]
+    cost: 3
+    power: 9000
+    races: [テスト]
+    text: "このタマシードが出た時、相手のパワー4000以下のクリーチャーを1体破壊する。自分の火のクリーチャーまたは火のタマシードが合計4つ以上なければ、バトルゾーンにあるこのタマシードはクリーチャーとして扱わない。スピードアタッカー。W・ブレイカー。このクリーチャーが攻撃する時、このターン、自分の他のクリーチャーすべてのパワーを+6000する。（第179弾・dm22rp1-6a型）"
+    ace: true
+    keywords: [speed_attacker, double_breaker]
+    abilities:
+      - kind: trigger
+        when: {event: move, to: bz, subject: self}
+        effect:
+          - {op: destroy, select: {zone: bz, owner: opp, filter: {types: [creature], power_le: 4000}, count: 1}}
+      - kind: trigger
+        when: {event: attack, subject: self}
+        effect:
+          - op: modify
+            select: {zone: bz, owner: you, filter: {types: [creature]}, exclude: {ref: self}, count: all}
+            mod: {power: 6000}
+            duration: end_of_turn
+
+  - id: T406
+    name: 試作のACE・黒吼
+    types: [tamaseed]
+    civs: [darkness]
+    cost: 4
+    power: 13000
+    races: [テスト]
+    text: "このタマシードが出た時、自分の山札の上から4枚を墓地に置いてもよい。自分の闇のクリーチャーまたは闇のタマシードが合計4つ以上なければ、バトルゾーンにあるこのタマシードはクリーチャーとして扱わない。ブロッカー。T・ブレイカー。このクリーチャーが攻撃する時、相手のクリーチャーを1体選び、破壊する。自分のターン中、このタマシードは破壊以外の方法で離れない。（第179弾・dm23sp1-006型）"
+    ace: true
+    keywords: [blocker, triple_breaker]
+    abilities:
+      - kind: trigger
+        when: {event: move, to: bz, subject: self}
+        effect:
+          - op: may
+            body:
+              - {op: move, select: {zone: deck, owner: you, from_top: 4}, to: graveyard, reason: put}
+      - kind: trigger
+        when: {event: attack, subject: self}
+        effect:
+          - {op: destroy, select: {zone: bz, owner: opp, filter: {types: [creature]}, count: 1}}
+      - kind: static
+        affects: self
+        if: {is_turn: you}
+        mod: {no_leave: {except_destroy: true}}
+
+  - id: T407
+    name: 試作のACE・青流
+    types: [tamaseed]
+    civs: [water]
+    cost: 4
+    power: 11000
+    races: [テスト]
+    text: "このタマシードが出た時、カードを3枚引いてもよい。そうしたら、自分の手札を2枚捨てる。自分の水のクリーチャーまたは水のタマシードが合計4つ以上なければ、バトルゾーンにあるこのタマシードはクリーチャーとして扱わない。ブロッカー。W・ブレイカー。（第179弾・dm22rp1-3a型）"
+    ace: true
+    keywords: [blocker, double_breaker]
+    abilities:
+      - kind: trigger
+        when: {event: move, to: bz, subject: self}
+        effect:
+          - op: may
+            body:
+              - {op: draw, player: you, count: 3}
+              - {op: discard, select: {zone: hand, owner: you, count: 2}}
+  - id: T408
+    name: 試作のJ・バブるーと
+    types: [creature]
+    civs: [water]
+    cost: 2
+    power: 2000
+    races: [ジョーカーズ]
+    text: "このクリーチャーが攻撃する時、Jトルネードしてもよい。そうしたら、カードを２枚引く。（Jトルネード：自分の他のジョーカーズを１体、手札に戻す）（第180弾・dmsd13-013型）"
+    abilities:
+      - kind: trigger
+        when: {event: attack, subject: self}
+        effect:
+          - op: if
+            cond: {exists: {zone: bz, owner: you, filter: {races: [ジョーカーズ]}, exclude: {ref: self}}}
+            then:
+              - op: may
+                body:
+                  - op: move
+                    select: {zone: bz, owner: you, filter: {races: [ジョーカーズ]}, exclude: {ref: self}, count: 1}
+                    to: hand
+                    reason: put
+                    as: jtornado
+                  - {op: draw, player: you, count: 2}
+  - id: T409
+    name: 試作のJ・ゾウニ
+    types: [creature]
+    civs: [water]
+    cost: 3
+    power: 5000
+    races: [ジョーカーズ]
+    text: "ブロッカー。このクリーチャーは攻撃できない。このクリーチャーがブロックした時、Jトルネードしてもよい。そうしたら、このクリーチャーをアンタップする。（Jトルネード：自分の他のジョーカーズを１体、手札に戻す）（第180弾・dmrp12-042型）"
+    keywords: [blocker, cannot_attack]
+    abilities:
+      - kind: trigger
+        when: {event: block, subject: self}
+        effect:
+          - op: if
+            cond: {exists: {zone: bz, owner: you, filter: {races: [ジョーカーズ]}, exclude: {ref: self}}}
+            then:
+              - op: may
+                body:
+                  - op: move
+                    select: {zone: bz, owner: you, filter: {races: [ジョーカーズ]}, exclude: {ref: self}, count: 1}
+                    to: hand
+                    reason: put
+                    as: jtornado
+                  - {op: untap, select: {ref: self}}
+  - id: T410
+    name: 試作のJ・スマントガワ
+    types: [creature]
+    civs: [water]
+    cost: 6
+    power: 6000
+    races: [ジョーカーズ]
+    text: "W・ブレイカー。このクリーチャーが攻撃する時、Jトルネードを最大２回する。そのJトルネード１回につき、自分の手札からコスト６以下の呪文を１枚選んで相手に見せ、コストを支払わずに唱えてもよい。（Jトルネード：自分の他のジョーカーズを１体、手札に戻す）（第180弾・dmrp11-004型）"
+    keywords: [double_breaker]
+    abilities:
+      - kind: trigger
+        when: {event: attack, subject: self}
+        effect:
+          - op: repeat
+            times: 2
+            body:
+              - op: if
+                cond: {exists: {zone: bz, owner: you, filter: {races: [ジョーカーズ]}, exclude: {ref: self}}}
+                then:
+                  - op: may
+                    body:
+                      - op: move
+                        select: {zone: bz, owner: you, filter: {races: [ジョーカーズ]}, exclude: {ref: self}, count: 1}
+                        to: hand
+                        reason: put
+                        as: jtornado
+                      - op: if
+                        cond: {exists: {zone: hand, owner: you, filter: {types: [spell], cost_le: 6}}}
+                        then:
+                          - op: may
+                            body:
+                              - op: play_free
+                                select: {zone: hand, owner: you, filter: {types: [spell], cost_le: 6}, count: 1}
+  - id: T411
+    name: 試作のJ・スイドー
+    types: [creature]
+    civs: [water]
+    cost: 4
+    power: 3000
+    races: [ジョーカーズ]
+    text: "S・トリガー。このクリーチャーが攻撃する時、Jトルネードしてもよい。そうしたら、カードを３枚引き、自分の手札を１枚捨てる。（Jトルネード：自分の他のジョーカーズを１体、手札に戻す）（第180弾・dm26rp3-033型。CIP節は省略）"
+    keywords: [s_trigger]
+    abilities:
+      - kind: trigger
+        when: {event: attack, subject: self}
+        effect:
+          - op: if
+            cond: {exists: {zone: bz, owner: you, filter: {races: [ジョーカーズ]}, exclude: {ref: self}}}
+            then:
+              - op: may
+                body:
+                  - op: move
+                    select: {zone: bz, owner: you, filter: {races: [ジョーカーズ]}, exclude: {ref: self}, count: 1}
+                    to: hand
+                    reason: put
+                    as: jtornado
+                  - {op: draw, player: you, count: 3}
+                  - {op: discard, select: {zone: hand, owner: you, count: 1}}
+  - id: T412
+    name: 試作のJ・ダンダリバン
+    types: [creature]
+    civs: [water]
+    cost: 4
+    power: 3000
+    races: [ジョーカーズ, ワンダフォース]
+    text: "{GS} G・ストライク。このクリーチャーが攻撃する時、Jトルネードを２回までする。そのJトルネードされたクリーチャーのコストの合計以下のコストを持つ呪文を１枚、自分の手札または墓地からコストを支払わずに唱えてもよい。それを唱えた後、墓地のかわりに山札の下に置く。（Jトルネード：自分の他のジョーカーズ・クリーチャーを１体、手札に戻す）（第180弾・dm26ex4-020型）"
+    keywords: [g_strike]
+    abilities:
+      - kind: trigger
+        when: {event: attack, subject: self}
+        effect:
+          - op: if
+            cond: {exists: {zone: bz, owner: you, filter: {races: [ジョーカーズ]}, exclude: {ref: self}}}
+            then:
+              - op: may
+                body:
+                  - op: move
+                    select: {zone: bz, owner: you, filter: {races: [ジョーカーズ]}, exclude: {ref: self}, count: 1}
+                    to: hand
+                    reason: put
+                    as: jt1
+          - op: if
+            cond: {exists: {zone: bz, owner: you, filter: {races: [ジョーカーズ]}, exclude: {ref: self}}}
+            then:
+              - op: may
+                body:
+                  - op: move
+                    select: {zone: bz, owner: you, filter: {races: [ジョーカーズ]}, exclude: {ref: self}, count: 1}
+                    to: hand
+                    reason: put
+                    as: jt2
+          - op: if
+            cond: {any: [{exists: {ref: jt1}}, {exists: {ref: jt2}}]}
+            then:
+              - op: may
+                body:
+                  - op: modal
+                    modes:
+                      - - op: play_free
+                          select: {zone: hand, owner: you, filter: {types: [spell], cost_le: {sum: [{cost_of: {ref: jt1}}, {cost_of: {ref: jt2}}]}}, count: 1}
+                          resolve_to: deck
+                          resolve_position: bottom
+                      - - op: play_free
+                          select: {zone: graveyard, owner: you, filter: {types: [spell], cost_le: {sum: [{cost_of: {ref: jt1}}, {cost_of: {ref: jt2}}]}}, count: 1}
+                          resolve_to: deck
+                          resolve_position: bottom

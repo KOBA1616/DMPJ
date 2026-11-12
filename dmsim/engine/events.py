@@ -499,7 +499,9 @@ class EventMixin:
                         s.cards[u].strigger_off = True
                     else:
                         s.cards[u].strigger_on = True
-            if ev.get("face_up"):
+            if ev.get("face_up") or (from_zone == "shield" and was_face_up):
+                # 表向きで置かれたか（ギャラクシールド）。シールドを表向きで離れた時もレコードに
+                # 載せる（G城の「表向きで離れた時」誘発用。第176弾。when の face_up 照合はレコードを見る）
                 out[0]["face_up"] = True
             if from_zone == "shield" and was_face_up and unders:
                 # 裁きの紋章（第169弾）: シールドの上に表向きに置かれていたカード。束のトップで
@@ -722,7 +724,22 @@ class EventMixin:
             s.sba_held += [r for r in dead if r not in s.sba_held]
             return [self.ev_task([{"ev": "move", "subject": r, "to": "graveyard", "reason": "destroy", "sba": True}
                                   for r in dead])]
+        castles = [s.ref(c) for c in self.bz_tops()   # 城（第178弾）: 要塞化したシールドがシールドゾーンを離れたら墓地へ
+                   if s.cards[c].fortifies is not None
+                   and not (s.alive(s.cards[c].fortifies)
+                            and s.cards[s.cards[c].fortifies[0]].zone == "shield")]
+        if castles:
+            return [self.ev_task([{"ev": "move", "subject": r, "to": "graveyard", "reason": "put", "sba": True}
+                                  for r in castles])]
         return []
+
+    def _castle_fortifiers(self, shield_cid: int) -> list:
+        """shield_cid を要塞化している城の参照の列（[cid, gen]）。城側の fortifies から逆引きする。
+        cid だけで比べる（gen は見ない）: シールドが動いた直後の誘発照合では gen が進んでいるため。
+        城がバトルゾーンを離れれば fortifies 自体が消えるので、古い参照が残ることはない。"""
+        s = self.s
+        return [s.ref(c) for c in self.bz_tops()
+                if s.cards[c].fortifies is not None and s.cards[c].fortifies[0] == shield_cid]
 
     def _subject_match(self, pat, cid, env, lki, base=False) -> bool:
         if pat == "self":
@@ -734,6 +751,17 @@ class EventMixin:
             return False
         if "refs" in pat:   # 遅延誘発型能力が「その〜」で指すカード
             return [cid, self.s.cards[cid].gen] in pat["refs"] or (lki is not None and lki["ref"] in pat["refs"])
+        if "castle_of" in pat:   # 「その城が要塞化しているシールド」（第178弾）: subject のシールドを要塞化している城が指定の参照に含まれる
+            v = pat["castle_of"]
+            refs = [env["self"]] if v == "self" else env.get("vars", {}).get(v, [])
+            if not any(list(r) == list(f) for r in refs if r for f in self._castle_fortifiers(cid)):
+                return False
+        if "castle_only" in pat:   # 「他の城によって要塞化されていなければ」（第178弾）: subject のシールドを要塞化している城が指定の参照だけ
+            v = pat["castle_only"]
+            refs = [env["self"]] if v == "self" else env.get("vars", {}).get(v, [])
+            forts = self._castle_fortifiers(cid)
+            if not forts or any(list(f) not in [list(r) for r in refs if r] for f in forts):
+                return False
         ctrl = lki["controller"] if lki else self.s.cards[cid].controller
         if "owner" in pat and pat["owner"] != "any" and ctrl != self._rel(pat["owner"], env):
             return False
@@ -775,6 +803,9 @@ class EventMixin:
                 if (tg == "player") != (w == "player"):
                     return False
             elif tg is None or tg == "player" or not self._ref_match(w, tg, env):
+                return False
+        if "shield" in when:   # ブレイクされるシールドの条件（第178弾・城）: rec["shield"] は束のトップの参照
+            if rec.get("shield") is None or not self._ref_match(when["shield"], rec["shield"], env):
                 return False
         if "attacker" in when:   # ブロックされた時などの、攻撃クリーチャーの条件（self なら「このクリーチャーがブロックされた時」）
             if rec.get("attacker") is None or not self._ref_match(when["attacker"], rec["attacker"], env):

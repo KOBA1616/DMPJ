@@ -22,6 +22,7 @@ pub struct Card {
     pub face: i64,
     pub face_down: bool,
     pub face_up: bool,
+    pub fortifies: Option<Value>,
     pub gen: i64,
     pub hyper: bool,
     pub link: i64,
@@ -49,7 +50,7 @@ impl Card {
         Card {
             bazurenda: 0, cid, controller: owner, crossed: None, defn: defn.to_string(), drawn_turn: -1, dswitched: false,
             entered_seq: 0, entered_turn: -1, exlife_of: None, face: -1, face_down: false, face_up: false,
-            gen: 0, hyper: false, link: 0, no_untap_next: false, odrive: false, odrive_civs: vec![],
+            fortifies: None, gen: 0, hyper: false, link: 0, no_untap_next: false, odrive: false, odrive_civs: vec![],
             owner, seal_of: -1, seals: vec![], sforce_of: None, sst: false, stp: false, strigger_off: false, strigger_on: false, summon_tapped: vec![], tapped: false, top_of: -1,
             under: vec![], vivid: false, zone: "deck".to_string(),
         }

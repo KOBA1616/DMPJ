@@ -57,6 +57,7 @@ fn raw_move(s: &mut GameState, spec: &NewGameSpec, cid: i64, to: &str) {
         c.top_of = -1;
         c.exlife_of = None;
         c.sforce_of = None;
+        c.fortifies = None;
         c.no_untap_next = false;
         c.hyper = false;
         c.sst = false;

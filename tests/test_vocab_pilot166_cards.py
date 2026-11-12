@@ -3,8 +3,10 @@
 生成は rejects の partial に「出す時の選択（sforce_link 誘発）＋ sforce 印の
 獲得能力」を足す決定的な変換。partial に印刷キーワードとして紛れていた獲得分
 （dm28-046 の unblockable、dm28-096 の cannot_be_attacked）は印つき常在型へ移す。
-dm26rp1-s001 / dm28-049 / dm31-s01 は残りの節が別語彙のため、解けた分を
+dm26rp1-s001 / dm28-049 は残りの節が別語彙のため、解けた分を
 partial に残して差し戻す（unsupported を差し替える）。
+dm31-s01 はラウンド202では g_castle のため差し戻したが、ラウンド212で
+g_castle が解決して登録されたため、BOUNCED からは外してある。
 """
 import json
 from pathlib import Path
@@ -24,8 +26,8 @@ TARGETS = ["28-sec001", "dm26rp1-s001", "dm28-026", "dm28-031", "dm28-032", "dm2
            "dm28-046", "dm28-049", "dm28-075", "dm28-091", "dm28-096", "dm29-036",
            "dm31-s01", "dmbd18-se06", "dmex03-004", "dmc68-010"]
 BOUNCED = {"dm26rp1-s001": "shield_hand_shieldize_trigger",
-           "dm28-049": "draw_replacement_double",
-           "dm31-s01": "g_castle"}
+           "dm28-049": "draw_replacement_double"}
+# dm31-s01 はラウンド212で登録済み（g_castle 解決）のため BOUNCED から除外。
 NOTES = "再変換ラウンド202。第166弾 shield_force の再変換。"
 
 

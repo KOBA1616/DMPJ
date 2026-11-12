@@ -503,7 +503,7 @@ def op_mekurade(eng, t, op, env):
     f = dict(op.get("filter") or {})
     if "cost_le" in op:
         f["cost_le"] = op["cost_le"]
-    cands = [c for c in looked if s.cards[c].zone == "deck" and eng.filter_match(c, f)]
+    cands = [c for c in looked if s.cards[c].zone == "deck" and eng.filter_match(c, f, env=env)]
     if cands and "picked" not in os_:
         ans, d = eng.ask(t, p, "choose_cards", [eng._card_option(c, True) for c in cands], 0, 1)
         if d:
@@ -617,6 +617,24 @@ def op_sforce_link(eng, t, op, env):
     return None
 
 
+@op("castle_link")
+def op_castle_link(eng, t, op, env):
+    """城（第178弾）: 自分のシールドを1枚選び、このカードを付けて要塞化する。
+    シールドがなければ何も起きない。選んだシールドへの参照（fortifies）を自分に刻む。
+    要塞化されたシールドがシールドゾーンを離れると、城は状況起因処理で墓地に置かれる。"""
+    s = eng.s
+    p = env["you"]
+    shields = eng.zlist("shield", p)
+    if not shields:
+        return None
+    a, d = eng.ask(t, p, "choose_cards", [eng._card_option(c) for c in shields], 1, 1)
+    if d:
+        return d
+    me = list(env["self"])
+    s.cards[me[0]].fortifies = list(s.ref(shields[a[0]]))
+    return None
+
+
 @op("opp_may", body="ops", label="str?")
 def op_opp_may(eng, t, op, env):
     """「相手は〜してもよい」: 相手が yes/no を選び、yes なら body を相手の視点で実行する。"""
@@ -690,7 +708,7 @@ def op_reveal_until(eng, t, op, env):
     hit, rest = [], []
     for c in list(s.zones["deck"][p]):
         eng.note_public("reveal", c)
-        if eng.filter_match(c, f):
+        if eng.filter_match(c, f, env=env):
             hit.append(c)
             if len(hit) >= want:
                 break
@@ -848,7 +866,7 @@ def op_summon_on(eng, t, op, env):
         zones = part.get("zones") or [part["zone"]]
         return [c for z in zones for c in eng.zlist(z, you)
                 if c != me and c not in picked and s.cards[c].top_of == -1
-                and eng.filter_match(c, part.get("filter", {}))]
+                and eng.filter_match(c, part.get("filter", {}), env=env)]
 
     os_ = t["os"]
     if "picked" not in os_:
