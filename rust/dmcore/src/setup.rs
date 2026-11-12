@@ -4,7 +4,7 @@ use serde::Deserialize;
 use serde_json::{json, Map, Value};
 use std::collections::{BTreeMap, HashMap};
 
-/// Python 側（dmsim/rustcore.py）がルール・カード定義から作る、準備に必要な情報。
+/// Python 側（dmsim/engine/rustcore.py）がルール・カード定義から作る、準備に必要な情報。
 #[derive(Deserialize)]
 pub struct NewGameSpec {
     pub decks: Vec<Vec<String>>,

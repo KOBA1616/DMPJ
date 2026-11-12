@@ -1,4 +1,4 @@
-//! ルール・カード定義（Python 側 dmsim/rustcore.py の rules_bundle が書き出す JSON を読む）。
+//! ルール・カード定義（Python 側 dmsim/engine/rustcore.py の rules_bundle が書き出す JSON を読む）。
 //! 段階1では「plain」なカード（能力・キーワード・特殊な札の仕組みを一切持たないクリーチャー）だけを動かす。
 //! plain でないカードが対戦に入っていたら、open の時点で Unsupported を返す（落とさず、移植の進み具合として数える）。
 use serde::Deserialize;

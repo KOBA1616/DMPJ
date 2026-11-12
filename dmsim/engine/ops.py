@@ -103,7 +103,7 @@ def op_move(eng, t, op, env):
         if d:
             return d
     if op.get("order") == "shuffle" and len(cids) > 1:
-        from ..state import rng_below
+        from .state import rng_below
         for i in range(len(cids) - 1, 0, -1):   # ヨビニオンの残り処理と同じ Fisher-Yates
             j = rng_below(eng.s, i + 1)
             cids[i], cids[j] = cids[j], cids[i]
@@ -703,7 +703,7 @@ def op_opp_may(eng, t, op, env):
 def op_yobinion(eng, t, op, env):
     """ヨビニオン: 自分の山札の上から、これ（発生源）よりコストが小さいクリーチャーが出るまで
     表向きにする。そのクリーチャーを出す。残りはシャッフルし、山札の下に置く。"""
-    from ..state import rng_below
+    from .state import rng_below
     s = eng.s
     p = env["you"]
     threshold = eng.chars_ro(env["self"][0])["cost"]

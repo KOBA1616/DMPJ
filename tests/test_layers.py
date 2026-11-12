@@ -30,17 +30,17 @@ LAYER_OF = {
     "dmsim.dataaudit": "S1",         # 旧名の互換（dmsim.cards.dataaudit と同じモジュール）
     # S2 ゲームエンジン
     "dmsim": "S2",                         # パッケージ直下 __init__（load_rules と Engine の再公開）
-    "dmsim.engine": "S2",
-    "dmsim.state": "S2",
-    "dmsim.engine_view": "S2",
-    "dmsim.engine_api": "S2",
-    "dmsim.scenario": "S2",
-    "dmsim.verify": "S2",
-    "dmsim.effectcheck": "S2",
-    "dmsim.loop": "S2",
-    "dmsim.rustcore": "S2",
-    "dmsim.zone_graph": "S2",
-    "dmsim.play": "S2",                    # 1局を回す最小の進行と既定方策（passive/random）。窓口 play/api(S3) は後の手順
+    "dmsim.engine": "S2",                  # 定義元（P1: state・view・api・scenario・verify・effectcheck・loop・rustcore・zone_graph・play）
+    "dmsim.state": "S2",             # 旧名の互換（dmsim.engine.state と同じモジュール）
+    "dmsim.engine_view": "S2",       # 旧名の互換（dmsim.engine.view と同じモジュール）
+    "dmsim.engine_api": "S2",        # 旧名の互換（dmsim.engine.api と同じモジュール）
+    "dmsim.scenario": "S2",          # 旧名の互換（dmsim.engine.scenario と同じモジュール）
+    "dmsim.verify": "S2",            # 旧名の互換（dmsim.engine.verify と同じモジュール）
+    "dmsim.effectcheck": "S2",       # 旧名の互換（dmsim.engine.effectcheck と同じモジュール）
+    "dmsim.loop": "S2",              # 旧名の互換（dmsim.engine.loop と同じモジュール）
+    "dmsim.rustcore": "S2",          # 旧名の互換（dmsim.engine.rustcore と同じモジュール）
+    "dmsim.zone_graph": "S2",        # 旧名の互換（dmsim.engine.zone_graph と同じモジュール）
+    "dmsim.play": "S2",              # 旧名の互換（dmsim.engine.play と同じモジュール。1局の最小進行と既定方策）
     # S3 探索・プレイ（大局観を含む）
     "dmsim.play_api": "S3",                # 探索・プレイの窓口 play(局面, 設定, 情報水準)（P0-2）
     "dmsim.opponent": "S3",
