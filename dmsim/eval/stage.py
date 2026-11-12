@@ -9,7 +9,7 @@
 """
 from __future__ import annotations
 
-from ..engine_view import (VISIBLE_ZONES, board_met, cards_met, count_matching,  # noqa: F401  旧名の再公開（実体は engine_view）
+from ..engine.view import (VISIBLE_ZONES, board_met, cards_met, count_matching,  # noqa: F401  旧名の再公開（実体は engine_view）
                            defn_of, zone_counts)
 
 

@@ -2,7 +2,7 @@
 v_priority は bestfirst.priority に「盾の束」「資源の総量」を足したもの。足切りには使わない（順位づけの補助）。"""
 from __future__ import annotations
 
-from ..engine_view import zone_of
+from ..engine.view import zone_of
 from ..plan.macro import Plan, RunStd, MacroPlanner, stage_fraction  # noqa: F401  Plan は旧名の再公開（実体は plan.macro）
 
 

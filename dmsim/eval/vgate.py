@@ -13,7 +13,7 @@ from .key_terms import make_term
 
 from ..search.bestfirst import priority
 from ..engine.core import Engine
-from ..engine_view import force_hand
+from ..engine.view import force_hand
 from ..play_api import InfoLevel, PlayConfig, play
 from .vfeatures import macro_prio, v_priority
 

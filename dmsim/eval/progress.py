@@ -17,7 +17,7 @@ from ..play_api import PlayConfig, play_turns
 from ..search.turn import charge_only_policy, own_turn
 from .infolevel import InfoLevel
 from .stage import VISIBLE_ZONES, board_met, cards_met, zone_counts  # noqa: F401  段階指標の共通部品
-from ..engine_view import result_of
+from ..engine.view import result_of
 
 
 @dataclass(frozen=True)

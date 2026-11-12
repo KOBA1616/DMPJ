@@ -12,7 +12,7 @@ from pathlib import Path
 
 from ..engine.core import Engine
 from .explog import LogWriter
-from ..engine_view import digest_of, turn_of
+from ..engine.view import digest_of, turn_of
 
 
 @dataclass
