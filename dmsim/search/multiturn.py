@@ -9,7 +9,8 @@ FairTurnSearch の決定化した局面の上で動くので、山札の真の�
 from __future__ import annotations
 
 from ..engine import Engine
-from ..solitaire import TurnSearch, Weights, charge_only_policy, evaluate
+from .leaf_eval import Weights, evaluate
+from .turn import TurnSearch, charge_only_policy
 from ..engine_view import active_of, result_of
 
 

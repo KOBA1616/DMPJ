@@ -12,7 +12,8 @@ from dataclasses import dataclass
 
 from ..engine import Engine
 from ..loop import abstract
-from ..solitaire import Weights, candidates, evaluate, goal_distance
+from ..search.leaf_eval import Weights, evaluate, goal_distance
+from ..search.turn import candidates
 from ..engine_view import defn_of, pending_of, result_of, tapped_of, turn_of, zone_of
 
 
@@ -69,7 +70,7 @@ def priority(eng: Engine, me: int, w: Weights, pend_w: float = 40.0, own_shield_
 
 
 def search(eng: Engine, me: int = 0, budget: int = 20000, w: Weights | None = None, opp_policy=None) -> BFResult:
-    from ..solitaire import TurnSearch, charge_only_policy
+    from ..search.turn import TurnSearch, charge_only_policy
     w = w or Weights()
     ts = TurnSearch(me, 1, w, opp_policy or charge_only_policy)
     tie = itertools.count()
@@ -108,7 +109,7 @@ def beam(eng: Engine, me: int = 0, width: int = 200, max_depth: int = 80, w: Wei
          max_turn: int | None = None, prio=None) -> BFResult:
     """ビーム探索: 決定の深さごとに、評価の高い width 個だけを残して進める。最良優先探索が「いま良く見える枝」に偏って
     谷（盾をいったん減らしてから増やす、など）を越えられない盤面向け。同じ局面（骨格＋山札の並び＋カウンタ）は1度だけ展開する。"""
-    from ..solitaire import TurnSearch, charge_only_policy
+    from ..search.turn import TurnSearch, charge_only_policy
     w = w or Weights()
     prio = prio or priority        # 順位づけ (eng, me, w) -> 点。大局観つき: dmsim.eval.vfeatures.macro_prio
     ts = TurnSearch(me, 1, w, opp_policy or charge_only_policy)

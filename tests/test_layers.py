@@ -40,7 +40,6 @@ LAYER_OF = {
     "dmsim.zone_graph": "S2",
     "dmsim.play": "S2",                    # 1局を回す最小の進行と既定方策（passive/random）。窓口 play/api(S3) は後の手順
     # S3 探索・プレイ（大局観を含む）
-    "dmsim.solitaire": "S3",
     "dmsim.play_api": "S3",                # 探索・プレイの窓口 play(局面, 設定, 情報水準)（P0-2）
     "dmsim.opponent": "S3",
     "dmsim.loop_first": "S3",
@@ -50,6 +49,7 @@ LAYER_OF = {
     "dmsim.discovery.reachsearch": "S3",   # 段階目標への到達探索 reach_chain（search/ へ移す予定）
     # S4 評価
     "dmsim.eval": "S4",
+    "dmsim.solitaire": "S4",              # 旧名の互換モジュール（search/turn・leaf_eval・game と eval/measure を再エクスポート、P0-3）
     "dmsim.pool_metrics": "S4",
     # S5 発見（デッキ構築を含む）
     "dmsim.discovery": "S5",

@@ -11,7 +11,7 @@ from __future__ import annotations
 from collections import Counter
 
 from ..engine import Engine
-from ..solitaire import TurnSearch, charge_only_policy, own_turn
+from ..search.turn import TurnSearch, charge_only_policy, own_turn
 from ..engine_view import active_of, defn_of, tapped_of
 
 

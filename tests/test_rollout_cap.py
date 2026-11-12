@@ -21,7 +21,7 @@ def test_rollout_cap_marks_step_limit(monkeypatch):
     ts.w = None
     ts.rollout_cap = 5
     monkeypatch.setattr(TurnSearch, "_settle", lambda self, eng: {"player": 0})
-    monkeypatch.setattr("dmsim.solitaire.candidates", lambda eng, d, w, cap=1: [[0]])
+    monkeypatch.setattr("dmsim.search.turn.candidates", lambda eng, d, w, cap=1: [[0]])
     e = _E()
     ts._rollout(e)
     assert e.answers == 5
@@ -33,7 +33,7 @@ def test_rollout_normal_untouched(monkeypatch):
     ts.w = None
     seq = iter([{"player": 0}, {"player": 0}, None])
     monkeypatch.setattr(TurnSearch, "_settle", lambda self, eng: next(seq))
-    monkeypatch.setattr("dmsim.solitaire.candidates", lambda eng, d, w, cap=1: [[0]])
+    monkeypatch.setattr("dmsim.search.turn.candidates", lambda eng, d, w, cap=1: [[0]])
     e = _E()
     ts._rollout(e)
     assert e.answers == 2 and e.s.result is None

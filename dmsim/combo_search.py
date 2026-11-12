@@ -21,7 +21,7 @@ import sys
 import time
 from dataclasses import dataclass
 
-from .solitaire import measure, summarize
+from .eval.measure import measure, summarize
 
 
 @dataclass
@@ -94,7 +94,8 @@ def search(rules, fixed: dict[str, int], pool: list[str], *, slots: int = 2, cop
 
 def _setup_job(args):
     from . import scenario
-    from .solitaire import _W, play_game
+    from .eval.measure import W as _W
+    from .search.game import play_game
     spec, seed, turns, budget = args
     eng = scenario.build(_W["rules"], dict(spec, seed=seed))
     return play_game(_W["rules"], None, None, seed, max_turn=turns, budget=budget, start=eng, lock_rounds=2)[0]
@@ -104,7 +105,8 @@ def search_setup(rules, spec: dict, zone: str, pool: list[str], *, slots: int = 
                  max_decks: int = 200, workers: int = 1, budget: int = 200, seed: int = 1,
                  progress=None) -> list[Candidate]:
     """配置 spec を固定し、zone（手札など）に pool から slots 枚（種類）足した局面を、それぞれ games 局ずつ測る。"""
-    from .solitaire import _W, _init_worker
+    from .eval.measure import W as _W
+    from .eval.measure import init_worker as _init_worker
     _W["rules"] = rules
     cands = []
     for x in enumerate_extras(pool, slots, max_decks, seed):

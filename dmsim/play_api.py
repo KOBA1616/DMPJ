@@ -4,7 +4,7 @@ S4 以上（評価・発見・自動改善・デッキ構築・tools）は、探
     play(局面, 設定, 情報水準) -> PlayResult
 - 局面: 開始局面の Engine（None ならデッキとシードから新しく始める。mode="game" のみ）。渡した Engine は書き換えない。
 - 設定: PlayConfig（不変）。mode で中身の探索を選ぶ。探索ロジック自体はここでは変えない（振り分けるだけ）。
-    game  : 1局を回す。CHEAT は solitaire.play_game（TurnSearch）、FAIR は search.fair.FairTurnSearch（n_det・lookahead=複数ターン探索）
+    game  : 1局を回す。CHEAT は search.game.play_game（TurnSearch）、FAIR は search.fair.FairTurnSearch（n_det・lookahead=複数ターン探索）
     chain : 段階目標の鎖への到達 discovery.reachsearch.reach_chain（大局観の prio を渡せる）
     beam  : 勝ちまでのビーム探索 discovery.bestfirst.beam
 - 情報水準: InfoLevel。既定 FAIR。chain / beam は真の山札順を見る探索なので CHEAT を明示したときだけ動く（FAIR は未実装）。
@@ -43,7 +43,7 @@ class PlayConfig:
     n_det: int = 8                         # FAIR の決定化数
     lookahead: int = 0                     # FAIR の複数ターン探索の予算（0 で無効）
     lock_rounds: int = 2                   # CHEAT のロック判定の周回（0 で判定しない）
-    weights: Any = None                    # solitaire.Weights
+    weights: Any = None                    # search.leaf_eval.Weights
     value_fn: Callable | None = None       # 葉の評価の差し替え f(eng, me)（CHEAT のみ）
     opp: Any = None                        # dmsim.opponent.OppModel（None は何もしない相手）
     # chain / beam
@@ -75,7 +75,7 @@ class PlayResult:
     nodes: int = 0
     actions: list = field(default_factory=list)
     log: dict = field(default_factory=dict)     # 探索ごとの詳細（game は GameResult の中身）
-    game: Any = None                       # game: solitaire.GameResult（従来の呼び出し元の互換用）
+    game: Any = None                       # game: search.game.GameResult（従来の呼び出し元の互換用）
     engine: Any = None                     # 終局（打ち切り）時の局面
     seconds: float = 0.0
     version: int = API_VERSION
@@ -86,45 +86,7 @@ def _new_engine(rules, cfg: PlayConfig):
     return Engine.new_game(rules, [list(cfg.deck), list(cfg.opp_deck)], cfg.seed, cfg.first_player)
 
 
-def fair_game(rules, deck, opp_deck, seed, first_player, max_turn, budget, start=None, opp=None,
-              n_det: int = 8, lookahead: int = 0):
-    """FAIR の1局（FairTurnSearch の1人回し。ロック判定 lock_probe は含めない）。(GameResult, Engine) を返す。"""
-    from .engine.core import Engine
-    from .engine_view import active_of, result_of
-    from .search.fair import FairTurnSearch
-    from .solitaire import GameResult, _origin, charge_only_policy, own_turn
-    me = 0
-    t0 = time.perf_counter()
-    res = GameResult(seed=seed, first_player=first_player)
-    eng = start.clone() if start is not None else Engine.new_game(rules, [deck, opp_deck], seed, first_player)
-    opp_pol = charge_only_policy
-    try:
-        if opp is not None:
-            opp.setup(eng)
-            opp_pol = opp.policy
-        while (d := eng.advance()) is not None:
-            if active_of(eng) != me or d["player"] != me:
-                eng.answer(opp_pol(eng, d))
-                continue
-            ot = own_turn(eng, me)
-            if ot > max_turn:
-                break
-            fs = FairTurnSearch(me, budget, n_det, seed * 7919 + ot, opp_policy=opp_pol, lookahead=lookahead)
-            eng = fs.run(eng)
-            res.nodes += fs.nodes
-        r = result_of(eng)
-        if r is not None:
-            if r["winner"] == me:
-                res.kill_turn = own_turn(eng, me, r["turn"])
-                res.kind = r["reason"]
-                res.origin = _origin(res)
-            else:
-                res.lost = r["reason"]
-    except Exception as ex:
-        res.error = f"{type(ex).__name__}: {ex}"
-    res.decisions = len(eng.log)
-    res.seconds = time.perf_counter() - t0
-    return res, eng
+from .search.game import fair_game  # noqa: E402,F401  P0-3 で search/game.py へ移した（旧名の互換）
 
 
 def _from_game(cfg, info, res, eng, t0) -> PlayResult:
@@ -142,7 +104,7 @@ def play(start, cfg: PlayConfig, info: InfoLevel = InfoLevel.FAIR, *, rules=None
         if start is None and rules is None:
             raise ValueError("start が None のときは rules が要る")
         if info is InfoLevel.CHEAT:
-            from .solitaire import play_game
+            from .search.game import play_game
             res, eng = play_game(rules, list(cfg.deck), list(cfg.opp_deck), cfg.seed, first_player=cfg.first_player,
                                  max_turn=cfg.max_turn, budget=cfg.budget, weights=cfg.weights, lock_rounds=cfg.lock_rounds,
                                  start=start, opp=cfg.opp, value_fn=cfg.value_fn)

@@ -60,7 +60,7 @@ def main(argv=None):
     import argparse
 
     from .defs import load_rules
-    from .solitaire import load_deck
+    from .eval.measure import load_deck
     ap = argparse.ArgumentParser(description="カードごとの dig / speed、デッキの dig_total")
     ap.add_argument("--deck")
     ap.add_argument("--top", type=int, default=15)
