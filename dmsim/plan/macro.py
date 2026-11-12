@@ -1,5 +1,5 @@
 """大局観（MacroPlanner）: 局面と段階目標の鎖から、いま狙う段と探索の動かし方を Plan として出す。
-Plan の形は dmsim.eval.vfeatures.Plan（V と共通）。自分側の見える情報だけを使う（公平探索）。
+Plan の形はここで定義（V と共通。dmsim.eval.vfeatures.Plan からも参照できる）。自分側の見える情報だけを使う（公平探索）。
 段階目標は reach_target の形 {ゾーン: {ID or "*": 枚数}}。段階は途中で崩れうる（手札の札を使う等）ので、
 最初の未達の段を狙う。"""
 from __future__ import annotations
@@ -10,11 +10,24 @@ from pathlib import Path
 import yaml
 
 from ..discovery.reachsearch import board_met, fraction
-from ..eval.vfeatures import Plan
 
 BASE_BUDGET = 150          # reach_target の幅の基準
 PLAN_VERSION = 1
 NEXT_W = 0.0               # 次の段の充足率を先読みで足す重み。0.5 だと今の段を終える前に次の段へ寄って天門で逆効果(2026-11-10)
+
+
+@dataclass
+class Plan:
+    """大局観などが出す計画（版つき・どの出し手でも同じ形）。stages は reach_target 形式の目標の列、idx は現在狙う段。"""
+    intent: str = ""
+    stages: list = field(default_factory=list)
+    idx: int = 0
+    version: int = 1
+    budget: int = 0     # 探索の幅などの目安（0 は指定なし）
+
+    @property
+    def current(self) -> dict | None:
+        return self.stages[self.idx] if 0 <= self.idx < len(self.stages) else None
 
 
 def load_stage_file(path) -> tuple[list[dict], dict]:
@@ -83,20 +96,9 @@ class RunStd:
         return max(self.floor, (self.m2 / (self.n - 1)) ** 0.5)
 
 
-def macro_prio(stages: list, plan_w: float, under_w: float = 3.0, res_w: float = 1.0, base=None, terms=()):
-    """reach_chain/reach_target の prio に渡せる順位づけ。局面ごとに MacroPlanner が現在の段を決め直し、V の計画項に使う
-    （段をまたぐ鎖でも1つの関数で済む）。plan_w=0 は計画なしと同じ。
-    plan_w<0 は「基本スコアの標準偏差に対する倍率 k=-plan_w」（正規化。局面ごとの散らばりに計画項の大きさを合わせる）。"""
-    from ..discovery.bestfirst import priority
-    from ..eval.vfeatures import v_priority
-    planner = MacroPlanner(stages)
-    b = base or priority
-    rs = RunStd() if plan_w < 0 else None
-
-    def prio(eng, me, w):
-        if rs is None:
-            return v_priority(eng, me, w, b, under_w=under_w, res_w=res_w, plan=planner.plan(eng, me), plan_w=plan_w, terms=terms)
-        v0 = v_priority(eng, me, w, b, under_w=under_w, res_w=res_w, terms=terms)
-        rs.add(v0)
-        return v0 + (-plan_w) * rs.std * stage_fraction(eng, me, planner.plan(eng, me))
-    return prio
+def __getattr__(name):
+    """旧名 plan.macro.macro_prio の互換（実体は eval.vfeatures。V を使うので S4 に置く）。層テストの許可リストに載せてある。"""
+    if name == "macro_prio":
+        from ..eval.vfeatures import macro_prio
+        return macro_prio
+    raise AttributeError(name)

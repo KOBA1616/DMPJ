@@ -110,7 +110,7 @@ def beam(eng: Engine, me: int = 0, width: int = 200, max_depth: int = 80, w: Wei
     谷（盾をいったん減らしてから増やす、など）を越えられない盤面向け。同じ局面（骨格＋山札の並び＋カウンタ）は1度だけ展開する。"""
     from ..solitaire import TurnSearch, charge_only_policy
     w = w or Weights()
-    prio = prio or priority        # 順位づけ (eng, me, w) -> 点。大局観つき: dmsim.plan.macro.macro_prio
+    prio = prio or priority        # 順位づけ (eng, me, w) -> 点。大局観つき: dmsim.eval.vfeatures.macro_prio
     ts = TurnSearch(me, 1, w, opp_policy or charge_only_policy)
     if max_turn is not None:       # 複数ターンの探索: 相手のターンもまたいで、max_turn ターン目までに勝てるかを見る
         ts = _Settler(me, opp_policy or charge_only_policy, max_turn)

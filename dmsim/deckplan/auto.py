@@ -80,7 +80,7 @@ def two_stage(rules, deck_ids: list[str], opp_ids: list[str], combo: dict, seeds
     base = proposal_from_ids(rules, deck_ids, f"{combo['id']}_base")
     pool, resolver, rng = core_names(combo), make_resolver(rules), random.Random(seed)
     mk = lambda **kw: harness_scorer(rules, opp_ids, seeds, rule, setup=setup, workers=workers, **kw)
-    from ..autofix.batch import default_board, default_need
+    from ..search.leaf_parts import default_board, default_need
     from ..eval.progress import ProgressSpec
     prog = ProgressSpec(board=default_board(combo), cards=default_need(combo))
     cs = seeds[:coarse_seeds] if coarse_seeds else seeds                  # 粗比較は局数を減らしてよい（時間上限に収める）

@@ -5,6 +5,8 @@
 依存を持たない（循環 import を避けるため engine_api とは別ファイルにしてある。engine_api からも再公開する）。"""
 from __future__ import annotations
 
+from collections import Counter
+
 
 def result_of(e):
     """終局なら {winner, reason, turn...}、そうでなければ None。"""
@@ -112,3 +114,36 @@ def force_hand(e, p: int, defns: list[str]) -> bool:
         e._raw_move(out, "deck")
         e._raw_move(src, "hand")
     return True
+
+
+# ---- 盤面を数える読み取り（もとは eval/stage。探索 S3 と評価 S4 の両方が使うので S2 に置く）----
+# 山札・盾の中身は公開情報ではないので VISIBLE_ZONES に含めない。
+VISIBLE_ZONES = ("hand", "bz", "mana", "graveyard", "shield_bz")
+
+
+def zone_counts(eng, me: int, zone: str) -> Counter:
+    return Counter(defn_of(eng, c) for c in eng.zlist(zone, me))
+
+
+def count_matching(eng, me: int, zone: str, ids=()) -> int:
+    n = 0
+    for cid in eng.zlist(zone, me):
+        if (ids and defn_of(eng, cid) in ids) or (not ids and "creature" in eng.chars(cid)["types"]):
+            n += 1
+    return n
+
+
+def board_met(eng, me: int, board: dict) -> bool:
+    return all(not (Counter(need) - zone_counts(eng, me, z)) for z, need in board.items())
+
+
+def cards_met(eng, me: int, cards: dict) -> bool:
+    if not cards:
+        return False
+    have: Counter = Counter()
+    for z in VISIBLE_ZONES:
+        try:
+            have += zone_counts(eng, me, z)
+        except KeyError:
+            pass
+    return not (Counter(cards) - have)

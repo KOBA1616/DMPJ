@@ -13,7 +13,7 @@ from . import scenario as sc
 from .canonical import normalize_text as norm
 from .verify import greedy_policy
 
-VERIFIER = 2          # 検証の版。上げると、これより古い版で承認されたカードは再検証に回る（approval.stale_reason）
+from .approval import VERIFIER  # noqa: F401  検証の版（実体は approval。旧名の再公開）
 
 _ZONE_WORDS = {"墓地": "graveyard", "マナゾーン": "mana", "手札": "hand", "シールド": "shield", "山札": "deck",
                "バトルゾーン": "bz"}

@@ -2,23 +2,8 @@
 v_priority は bestfirst.priority に「盾の束」「資源の総量」を足したもの。足切りには使わない（順位づけの補助）。"""
 from __future__ import annotations
 
-from dataclasses import dataclass, field
-
 from ..engine_view import zone_of
-
-
-@dataclass
-class Plan:
-    """大局観などが出す計画（版つき・どの出し手でも同じ形）。stages は reach_target 形式の目標の列、idx は現在狙う段。"""
-    intent: str = ""
-    stages: list = field(default_factory=list)
-    idx: int = 0
-    version: int = 1
-    budget: int = 0     # 探索の幅などの目安（0 は指定なし）
-
-    @property
-    def current(self) -> dict | None:
-        return self.stages[self.idx] if 0 <= self.idx < len(self.stages) else None
+from ..plan.macro import Plan, RunStd, MacroPlanner, stage_fraction  # noqa: F401  Plan は旧名の再公開（実体は plan.macro）
 
 
 def shield_bundle(eng, me: int) -> tuple[int, int, int]:
@@ -42,8 +27,25 @@ def v_priority(eng, me: int, w, base, under_w: float = 3.0, res_w: float = 1.0, 
     if res_w:
         v += res_w * resource_total(eng, me)
     if plan is not None and plan_w and plan.stages:
-        from ..plan.macro import stage_fraction   # 循環を避けるため遅延 import
         v += plan_w * stage_fraction(eng, me, plan)
     for t in terms:   # 追加項（別ファイルで定義した (eng, me) -> 加点 の関数。例: 相手の資源減少の項）
         v += t(eng, me)
     return v
+
+
+def macro_prio(stages: list, plan_w: float, under_w: float = 3.0, res_w: float = 1.0, base=None, terms=()):
+    """reach_chain/reach_target の prio に渡せる順位づけ。局面ごとに MacroPlanner が現在の段を決め直し、V の計画項に使う
+    （段をまたぐ鎖でも1つの関数で済む）。plan_w=0 は計画なしと同じ。
+    plan_w<0 は「基本スコアの標準偏差に対する倍率 k=-plan_w」（正規化。局面ごとの散らばりに計画項の大きさを合わせる）。"""
+    from ..discovery.bestfirst import priority
+    planner = MacroPlanner(stages)
+    b = base or priority
+    rs = RunStd() if plan_w < 0 else None
+
+    def prio(eng, me, w):
+        if rs is None:
+            return v_priority(eng, me, w, b, under_w=under_w, res_w=res_w, plan=planner.plan(eng, me), plan_w=plan_w, terms=terms)
+        v0 = v_priority(eng, me, w, b, under_w=under_w, res_w=res_w, terms=terms)
+        rs.add(v0)
+        return v0 + (-plan_w) * rs.std * stage_fraction(eng, me, planner.plan(eng, me))
+    return prio

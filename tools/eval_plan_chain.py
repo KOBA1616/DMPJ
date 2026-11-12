@@ -12,7 +12,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 from dmsim.defs import load_rules  # noqa: E402
 from dmsim.discovery.reachsearch import reach_chain  # noqa: E402
 from dmsim.eval import vgate  # noqa: E402
-from dmsim.plan.macro import macro_prio  # noqa: E402
+from dmsim.eval.vfeatures import macro_prio  # noqa: E402
 from dmsim.solitaire import load_deck  # noqa: E402
 
 

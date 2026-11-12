@@ -17,6 +17,9 @@ LEDGER = DATA / "cards" / "approvals"        # 弾ごとの <弾>.json を置く
 _SKIP_SRC = {"review", "review_note"}
 
 
+VERIFIER = 2          # 検証の版。上げると、これより古い版で承認されたカードは再検証に回る（approval.stale_reason）
+
+
 def _h(obj) -> str:
     return hashlib.blake2b(json.dumps(obj, sort_keys=True, ensure_ascii=False).encode(), digest_size=8).hexdigest()
 
@@ -103,7 +106,6 @@ def entry(raw: dict, status: str, by: str, versions: dict, **extra) -> dict:
 
 
 def _verifier() -> int:
-    from .effectcheck import VERIFIER
     return VERIFIER
 
 
