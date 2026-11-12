@@ -2,24 +2,24 @@
 
 - TASKS: 処理スタック上のタスク種別 → (ハンドラ (eng, task) -> Decision | None, 形の TypedDict)
 - OPS:   効果DSLの op 名 → ハンドラ (eng, task, op, env) -> Decision | None
-- OP_ARGS: op 名 → 引数の型（defs.py の検証と JSON Schema の生成に使う）
+- OP_ARGS: op 名 → 引数の型。正本は base/opvocab.py（defs.py の検証と JSON Schema の生成はそちらを読む）
 - STEPS: ターンのステップ名 → ハンドラ (eng, turn_task) -> Decision | None
 新しいルール手順はタスクとして、新しい効果の動詞は op として、新しいステップは step として登録する。
-エンジン本体は変更しない。defs.py の語彙検証は OPS / OP_ARGS を正とするので、登録すればそのまま YAML で使える。
+エンジン本体は変更しない。defs.py の語彙検証は base/opvocab.py の OP_ARGS を正とする。新しい op はそこに型を足してから登録する。
 
 op の引数の型（末尾 ? は省略可）:
   selector, zone, reason, expr, cond, ops, player, mod, duration, position, step, str, int, bool, any
 """
 from __future__ import annotations
 
+# op の語彙（名前と引数の型）の正本は S0 の base/opvocab.py。OP_ARGS は同じ dict を指す別名。
+from ..base.opvocab import ARG_TYPES, OP_ARGS  # noqa: F401
+from ..base.opvocab import declare as _declare_op
+
 TASKS: dict = {}
 TASK_SHAPES: dict = {}
 OPS: dict = {}
-OP_ARGS: dict[str, dict[str, str]] = {}
 STEPS: dict = {}
-
-ARG_TYPES = {"selector", "zone", "reason", "expr", "cond", "ops", "player", "players", "mod", "duration",
-             "position", "step", "str", "int", "bool", "any", "ability", "oplists", "filter"}
 
 
 def task(name: str, shape=None):
@@ -42,8 +42,8 @@ def op(op_name: str, /, **args: str):
     def deco(fn):
         if name in OPS:
             raise ValueError(f"op '{name}' already registered")
+        _declare_op(name, args)
         OPS[name] = fn
-        OP_ARGS[name] = dict(args)
         return fn
     return deco
 

@@ -9,8 +9,9 @@ from __future__ import annotations
 import hashlib
 import json
 from pathlib import Path
+from .base.store import REPO
 
-ROOT = Path(__file__).resolve().parent.parent
+ROOT = REPO
 STAMP = ROOT / "data" / "eval" / "control_stamp.json"
 MIN_PERCENTILE = 0.9        # 調整用コンボの中核が、ランダムな組のこの割合より高い点を取ること
 
