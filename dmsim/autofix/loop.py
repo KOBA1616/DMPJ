@@ -117,14 +117,11 @@ def autofix(measure, k0: Knobs, combo: dict | None = None, rule: Rule = Rule(), 
 
 def harness_measure(rules, deck, opp_deck, seeds, spec=None, prog=None, parts_spec=None, max_turn=4, prep_ids=(), workers: int = 1, value_model=None):
     """実エンジンの測定（FAIR のみ）。workers>1 なら seeds を分けて fork で並列に回す（結果は seeds の順に連結。Claude のトークンは増えない）。parts_spec は dmsim.search.leaf_parts.PartsSpec。"""
-    from ..eval import fair_runner
-    from ..eval.harness import EvalConfig, cell_key, run_eval
-    from ..eval.infolevel import InfoLevel
+    from ..eval.api import Candidate, EvalSettings, run_eval
     from ..search.leaf_parts import Part, PartsSpec, make_value_fn
 
     def measure_seeds(k: Knobs, seeds) -> dict:
         n_det = k.n_det
-        fair_runner.register(n_det, k.lookahead)
         vfn = None
         if parts_spec is not None:
             ps = replace(parts_spec, parts=tuple(replace(p, weight=p.weight * k.gy_mult) if p.zone == "graveyard" else p for p in parts_spec.parts), coef=k.coef)
@@ -137,9 +134,10 @@ def harness_measure(rules, deck, opp_deck, seeds, spec=None, prog=None, parts_sp
             if k.learned_mult > 0 and value_model and vfn is not None:
                 from .valuelearn import with_learned
                 vfn = with_learned(vfn, value_model, ps, k.learned_mult)
-        cfg = EvalConfig(decks={"d": deck}, opp_deck=opp_deck, seeds=seeds, levels=(InfoLevel.FAIR,), progress=prog,
-                         start_spec=spec, n_det=n_det, value_fn=vfn, base_budget=k.budget, max_turn=max_turn)
-        c = run_eval(rules, cfg)["cells"][cell_key("d", "fair", 1.0)]
+        st = EvalSettings(opp_deck=tuple(opp_deck), progress=prog, n_det=n_det, value_fn=vfn, base_budget=k.budget, max_turn=max_turn,
+                          register_fair=True, fair_lookahead=k.lookahead)
+        r = run_eval(rules, Candidate(deck=tuple(deck), start_spec=spec), st, seeds)
+        c = r.report["cells"][r.cell_key]
         pp = c.get("per_game_progress", [])
         out = {"kill": [g[2] for g in c["per_game"]], "board": [p[0] for p in pp], "cards": [p[1] for p in pp]}
         out["curves"] = c.get("per_game_curves", [])

@@ -16,7 +16,8 @@ import yaml
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 from dmsim.defs import load_rules  # noqa: E402
 from dmsim.scenario import build  # noqa: E402
-from dmsim.solitaire import measure, play_game  # noqa: E402
+from dmsim.play_api import InfoLevel, PlayConfig, play  # noqa: E402
+from dmsim.solitaire import measure  # noqa: E402
 from dmsim.zone_graph import Cycle, bundles_of, feeds  # noqa: E402
 
 REGISTERED = ("tenmon", "saga", "knight_dmc", "akashic")
@@ -61,7 +62,7 @@ def verify_lock(rules, cards: list[str], seeds, turns: int = 3, budget: int = 10
     for s in seeds:
         try:
             start = build(rules, {**spec, "seed": s})
-            res, _ = play_game(rules, [], [], s, max_turn=turns, budget=budget, start=start)
+            res = play(start, PlayConfig(seed=s, max_turn=turns, budget=budget), InfoLevel.CHEAT, rules=rules).game   # ロック判定つきの1人回し（真の山札順）
         except Exception as ex:      # 1局の失敗で止めない
             err += 1
             kinds.add(f"error:{type(ex).__name__}")
