@@ -425948,3 +425948,1458 @@ cards:
           filter:
             name: バグル・パズル
   keywords: []
+- id: dm26rp3-016
+  name: ゲラッチョ重役 / 「ミーのチョーおすすめゲラ！」
+  types:
+  - creature
+  civs:
+  - darkness
+  cost: 6
+  mana: 1
+  text: '{GS} G・ストライク
+
+    W・ブレイカー
+
+    このクリーチャーが出た時、相手のクリーチャーを１体選び、破壊する。
+
+    Jクライム８（このクリーチャーが攻撃する時、これと自分の墓地にあるコスト８以下のジョーカーズ・クリーチャー１体を入れ替えてもよい）'
+  source:
+    official: dm26rp3-016
+    review: pending
+    notes: 再変換ラウンド244。第208弾 j_crime の再変換。入れ替えは op swap で表す。
+  power: 6000
+  races:
+  - ジョーカーズ
+  abilities:
+  - kind: trigger
+    when:
+      event: move
+      to: bz
+      subject: self
+    effect:
+    - op: move
+      select:
+        zone: bz
+        owner: opp
+        filter:
+          types:
+          - creature
+        count: 1
+      to: graveyard
+      reason: destroy
+  - kind: trigger
+    when:
+      event: attack
+      subject: self
+    effect:
+    - op: may
+      body:
+      - op: swap
+        out:
+          ref: self
+        in:
+          zone: graveyard
+          owner: you
+          filter:
+            types:
+            - creature
+            races:
+            - ジョーカーズ
+            cost_le: 8
+          count: 1
+        out_to: graveyard
+  keywords:
+  - g_strike
+  - double_breaker
+- id: dm26rp3-037
+  name: ワーク騎士
+  types:
+  - creature
+  civs:
+  - darkness
+  cost: 4
+  mana: 1
+  text: 'このクリーチャーが出た時、自分の山札の上から４枚を墓地に置いてもよい。その後、ジョーカーズ・カードを１枚、自分の墓地から手札に戻してもよい。
+
+    Jクライム６（このクリーチャーが攻撃する時、これと自分の墓地にあるコスト６以下のジョーカーズ・クリーチャー１体を入れ替えてもよい）'
+  source:
+    official: dm26rp3-037
+    review: pending
+    notes: 再変換ラウンド244。第208弾 j_crime の再変換。入れ替えは op swap で表す。
+  power: 4000
+  races:
+  - ジョーカーズ
+  abilities:
+  - kind: trigger
+    when:
+      event: move
+      to: bz
+      subject: self
+    effect:
+    - op: may
+      body:
+      - op: move
+        select:
+          zone: deck
+          owner: you
+          from_top: 4
+          count: all
+        to: graveyard
+        reason: put
+    - op: may
+      body:
+      - op: move
+        select:
+          zone: graveyard
+          owner: you
+          filter:
+            races:
+            - ジョーカーズ
+          count: 1
+        to: hand
+        reason: return
+  - kind: trigger
+    when:
+      event: attack
+      subject: self
+    effect:
+    - op: may
+      body:
+      - op: swap
+        out:
+          ref: self
+        in:
+          zone: graveyard
+          owner: you
+          filter:
+            types:
+            - creature
+            races:
+            - ジョーカーズ
+            cost_le: 6
+          count: 1
+        out_to: graveyard
+  keywords: []
+- id: dm26rp3-062
+  name: バイナラベーター
+  types:
+  - creature
+  civs:
+  - darkness
+  cost: 6
+  mana: 1
+  text: 'S・トリガー（このカードを自分のシールドゾーンから手札に加える時、コストを支払わずにすぐ実行してもよい）
+
+    このクリーチャーが出た時、相手のクリーチャーを１体選び、持ち主の山札の下に置く。
+
+    Jクライム４（このクリーチャーが攻撃する時、これと自分の墓地にあるコスト４以下のジョーカーズ・クリーチャー１体を入れ替えてもよい）'
+  source:
+    official: dm26rp3-062
+    review: pending
+    notes: 再変換ラウンド244。第208弾 j_crime の再変換。入れ替えは op swap で表す。
+  power: 3000
+  races:
+  - ジョーカーズ
+  keywords:
+  - s_trigger
+  abilities:
+  - kind: trigger
+    when:
+      event: move
+      to: bz
+      subject: self
+    effect:
+    - op: move
+      select:
+        zone: bz
+        owner: opp
+        filter:
+          types:
+          - creature
+        count: 1
+      to: deck
+      position: bottom
+      reason: return
+  - kind: trigger
+    when:
+      event: attack
+      subject: self
+    effect:
+    - op: may
+      body:
+      - op: swap
+        out:
+          ref: self
+        in:
+          zone: graveyard
+          owner: you
+          filter:
+            types:
+            - creature
+            races:
+            - ジョーカーズ
+            cost_le: 4
+          count: 1
+        out_to: graveyard
+- id: dm26rp3-064
+  name: ツーキンカイソッQ
+  types:
+  - creature
+  civs:
+  - darkness
+  cost: 3
+  mana: 1
+  text: 'Jクライム６（このクリーチャーが攻撃する時、これと自分の墓地にあるコスト６以下のジョーカーズ・クリーチャー１体を入れ替えてもよい）
+
+    このクリーチャーが離れた時、相手のクリーチャーを１体選ぶ。このターン、そのクリーチャーのパワーを－4000する。（パワー０以下のクリーチャーは破壊される）'
+  source:
+    official: dm26rp3-064
+    review: pending
+    notes: 再変換ラウンド244。第208弾 j_crime の再変換。入れ替えは op swap で表す。
+  power: 4000
+  races:
+  - ジョーカーズ
+  abilities:
+  - kind: trigger
+    when:
+      event: attack
+      subject: self
+    effect:
+    - op: may
+      body:
+      - op: swap
+        out:
+          ref: self
+        in:
+          zone: graveyard
+          owner: you
+          filter:
+            types:
+            - creature
+            races:
+            - ジョーカーズ
+            cost_le: 6
+          count: 1
+        out_to: graveyard
+  - kind: trigger
+    when:
+      event: move
+      from: bz
+      subject: self
+    effect:
+    - op: modify
+      select:
+        zone: bz
+        owner: opp
+        filter:
+          types:
+          - creature
+        count: 1
+      mod:
+        power: -4000
+      duration: end_of_turn
+  keywords: []
+- id: dm26rp3-065
+  name: ツミタテンカーネン
+  types:
+  - creature
+  civs:
+  - darkness
+  cost: 2
+  mana: 1
+  text: 'このクリーチャーが出た時、自分の山札の上から２枚を墓地に置く。
+
+    Jクライム４（このクリーチャーが攻撃する時、これと自分の墓地にあるコスト４以下のジョーカーズ・クリーチャー１体を入れ替えてもよい）'
+  source:
+    official: dm26rp3-065
+    review: pending
+    notes: 再変換ラウンド244。第208弾 j_crime の再変換。入れ替えは op swap で表す。
+  power: 2000
+  races:
+  - ジョーカーズ
+  abilities:
+  - kind: trigger
+    when:
+      event: move
+      to: bz
+      subject: self
+    effect:
+    - op: mill
+      owner: you
+      count: 2
+  - kind: trigger
+    when:
+      event: attack
+      subject: self
+    effect:
+    - op: may
+      body:
+      - op: swap
+        out:
+          ref: self
+        in:
+          zone: graveyard
+          owner: you
+          filter:
+            types:
+            - creature
+            races:
+            - ジョーカーズ
+            cost_le: 4
+          count: 1
+        out_to: graveyard
+- id: dm26rp3-s004
+  name: アイシャセー神
+  types:
+  - creature
+  civs:
+  - darkness
+  cost: 4
+  mana: 1
+  text: 'スレイヤー
+
+    このクリーチャーが出た時、相手の手札を１枚見ないで選び、捨てさせる。その後、自分の手札を１枚捨ててもよい。そうしたら、相手のクリーチャーを１体選ぶ。このターン、そのクリーチャーのパワーを－4000する。
+
+    Jクライム８（このクリーチャーが攻撃する時、これと自分の墓地にあるコスト８以下のジョーカーズ・クリーチャー１体を入れ替えてもよい）'
+  source:
+    official: dm26rp3-s004
+    review: pending
+    notes: 再変換ラウンド244。第208弾 j_crime の再変換。入れ替えは op swap で表す。
+  power: 4000
+  races:
+  - ジョーカーズ
+  keywords:
+  - slayer
+  abilities:
+  - kind: trigger
+    when:
+      event: move
+      to: bz
+      subject: self
+    effect:
+    - op: discard
+      select:
+        zone: hand
+        owner: opp
+        count: 1
+    - op: may
+      body:
+      - op: move
+        select:
+          zone: hand
+          owner: you
+          count: 1
+        to: graveyard
+        reason: discard
+        as: d
+    - op: if
+      cond:
+        exists:
+          ref: d
+      then:
+      - op: modify
+        select:
+          zone: bz
+          owner: opp
+          filter:
+            types:
+            - creature
+          count: 1
+        mod:
+          power: -4000
+        duration: end_of_turn
+  - kind: trigger
+    when:
+      event: attack
+      subject: self
+    effect:
+    - op: may
+      body:
+      - op: swap
+        out:
+          ref: self
+        in:
+          zone: graveyard
+          owner: you
+          filter:
+            types:
+            - creature
+            races:
+            - ジョーカーズ
+            cost_le: 8
+          count: 1
+        out_to: graveyard
+- id: dm26rp3-sec005
+  name: アイシャセー神
+  types:
+  - creature
+  civs:
+  - darkness
+  cost: 4
+  mana: 1
+  text: 'スレイヤー
+
+    このクリーチャーが出た時、相手の手札を１枚見ないで選び、捨てさせる。その後、自分の手札を１枚捨ててもよい。そうしたら、相手のクリーチャーを１体選ぶ。このターン、そのクリーチャーのパワーを－4000する。
+
+    Jクライム８'
+  source:
+    official: dm26rp3-sec005
+    review: pending
+    notes: 再変換ラウンド244。第208弾 j_crime の再変換。入れ替えは op swap で表す。
+  power: 4000
+  races:
+  - ジョーカーズ
+  keywords:
+  - slayer
+  abilities:
+  - kind: trigger
+    when:
+      event: move
+      to: bz
+      subject: self
+    effect:
+    - op: discard
+      select:
+        zone: hand
+        owner: opp
+        count: 1
+    - op: may
+      body:
+      - op: move
+        select:
+          zone: hand
+          owner: you
+          count: 1
+        to: graveyard
+        reason: discard
+        as: d
+    - op: if
+      cond:
+        exists:
+          ref: d
+      then:
+      - op: modify
+        select:
+          zone: bz
+          owner: opp
+          filter:
+            types:
+            - creature
+          count: 1
+        mod:
+          power: -4000
+        duration: end_of_turn
+  - kind: trigger
+    when:
+      event: attack
+      subject: self
+    effect:
+    - op: may
+      body:
+      - op: swap
+        out:
+          ref: self
+        in:
+          zone: graveyard
+          owner: you
+          filter:
+            types:
+            - creature
+            races:
+            - ジョーカーズ
+            cost_le: 8
+          count: 1
+        out_to: graveyard
+- id: dm26rp3-sec023
+  name: ツミタテンカーネン
+  types:
+  - creature
+  civs:
+  - darkness
+  cost: 2
+  mana: 1
+  text: 'このクリーチャーが出た時、自分の山札の上から２枚を墓地に置く。
+
+    Jクライム４'
+  source:
+    official: dm26rp3-sec023
+    review: pending
+    notes: 再変換ラウンド244。第208弾 j_crime の再変換。入れ替えは op swap で表す。
+  power: 2000
+  races:
+  - ジョーカーズ
+  abilities:
+  - kind: trigger
+    when:
+      event: move
+      to: bz
+      subject: self
+    effect:
+    - op: mill
+      owner: you
+      count: 2
+  - kind: trigger
+    when:
+      event: attack
+      subject: self
+    effect:
+    - op: may
+      body:
+      - op: swap
+        out:
+          ref: self
+        in:
+          zone: graveyard
+          owner: you
+          filter:
+            types:
+            - creature
+            races:
+            - ジョーカーズ
+            cost_le: 4
+          count: 1
+        out_to: graveyard
+- id: dm22rp1-018
+  name: ドッペルデッカー・ワイバーン
+  types:
+  - creature
+  civs:
+  - fire
+  cost: 5
+  power: 6000
+  races:
+  - アーマード・ワイバーン
+  mana: 1
+  text: '自分のマナゾーンにカードが５枚以上あれば、このクリーチャーを [ff02]支払って召喚してもよい。そうしたら、このターンの終わりにこのクリーチャーを破壊し、カードを１枚引く。
+
+    スピードアタッカー（このクリーチャーは召喚酔いしない）
+
+    W・ブレイカー（このクリーチャーはシールドを２つブレイクする）'
+  source:
+    official: dm22rp1-018
+    review: pending
+    notes: 再変換ラウンド245。第209弾 alternative_summon_cost の再変換。
+  keywords:
+  - speed_attacker
+  - double_breaker
+  abilities:
+  - kind: trigger
+    when:
+      event: move
+      to: bz
+      subject: self
+    if:
+      alt_paid: true
+    effect:
+    - op: delayed_trigger
+      when:
+        event: turn_end
+      effect:
+      - op: move
+        select:
+          ref: self
+        to: graveyard
+        reason: destroy
+      - op: draw
+        count: 1
+  alt_cost:
+    cost: 2
+    civs:
+    - fire
+    - fire
+    if:
+      cmp:
+      - count:
+          zone: mana
+          owner: you
+      - '>='
+      - 5
+- id: dm22rp1-065
+  name: 先陣兵アインデッカー
+  types:
+  - creature
+  civs:
+  - fire
+  cost: 3
+  power: 4000
+  races:
+  - ドラゴノイド
+  mana: 1
+  text: 自分のマナゾーンにカードが３枚以上あれば、このクリーチャーを [ff01]支払って召喚してもよい。そうしたら、このターンの終わりにこのクリーチャーを破壊し、その後、カードを１枚引く。
+  source:
+    official: dm22rp1-065
+    review: pending
+    notes: 再変換ラウンド245。第209弾 alternative_summon_cost の再変換。
+    aliases:
+    - promoy21-043
+  abilities:
+  - kind: trigger
+    when:
+      event: move
+      to: bz
+      subject: self
+    if:
+      alt_paid: true
+    effect:
+    - op: delayed_trigger
+      when:
+        event: turn_end
+      effect:
+      - op: move
+        select:
+          ref: self
+        to: graveyard
+        reason: destroy
+      - op: draw
+        count: 1
+  keywords: []
+  alt_cost:
+    cost: 1
+    civs:
+    - fire
+    if:
+      cmp:
+      - count:
+          zone: mana
+          owner: you
+      - '>='
+      - 3
+- id: dm22rp1-042
+  name: 爆神兵ツヴァイラッド
+  types:
+  - creature
+  civs:
+  - fire
+  cost: 5
+  power: 5000
+  races:
+  - アーマロイド
+  mana: 1
+  text: '自分のマナゾーンにカードが５枚以上あれば、このクリーチャーを [ff02]支払って召喚してもよい。そうしたら、このターンの終わりにこのクリーチャーを破壊し、その後、カードを１枚引く。
+
+    このクリーチャーが出た時、相手のクリーチャーを１体選んでもよい。このクリーチャーとその選んだクリーチャーをバトルさせる。'
+  abilities:
+  - kind: trigger
+    when:
+      event: move
+      to: bz
+      subject: self
+    effect:
+    - op: may
+      body:
+      - op: force_battle
+        a:
+          ref: self
+        b:
+          zone: bz
+          owner: opp
+          filter:
+            types:
+            - creature
+          count: 1
+  - kind: trigger
+    when:
+      event: move
+      to: bz
+      subject: self
+    if:
+      alt_paid: true
+    effect:
+    - op: delayed_trigger
+      when:
+        event: turn_end
+      effect:
+      - op: move
+        select:
+          ref: self
+        to: graveyard
+        reason: destroy
+      - op: draw
+        count: 1
+  source:
+    official: dm22rp1-042
+    review: pending
+    notes: 再変換ラウンド245。第209弾 alternative_summon_cost の再変換。
+  keywords: []
+  alt_cost:
+    cost: 2
+    civs:
+    - fire
+    - fire
+    if:
+      cmp:
+      - count:
+          zone: mana
+          owner: you
+      - '>='
+      - 5
+- id: dm22rp1-5a
+  name: ボルシャック・ヴァルケリー
+  types:
+  - creature
+  civs:
+  - fire
+  cost: 6
+  power: 8000
+  races:
+  - アーマード・ドラゴン
+  mana: 1
+  text: '自分のマナゾーンにカードが６枚以上あれば、このクリーチャーを [ff03]支払って召喚してもよい。そうしたら、このターンの終わりにこのクリーチャーを破壊し、その後、カードを１枚引く。
+
+    スピードアタッカー
+
+    パワード・ブレイカー
+
+    シビルカウント３：このクリーチャーが攻撃する時、自分の火のクリーチャーまたは火のタマシードが合計３つ以上あれば、自分の手札をすべて捨ててもよい。そうしたら、カードを３枚引く。こうして捨てたカード１枚につき、このターン、このクリーチャーのパワーを+4000する。'
+  source:
+    official: dm22rp1-5a
+    review: pending
+    notes: 再変換ラウンド245。第209弾 alternative_summon_cost の再変換。
+    aliases:
+    - dm22rp1-7b
+    - dm22rp1-s5
+  keywords:
+  - speed_attacker
+  - powered_breaker
+  abilities:
+  - kind: trigger
+    when:
+      event: move
+      to: bz
+      subject: self
+    if:
+      alt_paid: true
+    effect:
+    - op: delayed_trigger
+      when:
+        event: turn_end
+      effect:
+      - op: move
+        select:
+          ref: self
+        to: graveyard
+        reason: destroy
+      - op: draw
+        count: 1
+  - kind: trigger
+    when:
+      event: attack
+      subject: self
+    if:
+      cmp:
+      - count:
+          zone: bz
+          owner: you
+          filter:
+            any_of:
+            - types:
+              - creature
+              civs:
+              - fire
+            - types:
+              - tamaseed
+              civs:
+              - fire
+      - '>='
+      - 3
+    effect:
+    - op: may
+      body:
+      - op: move
+        select:
+          zone: hand
+          owner: you
+          count: all
+        to: graveyard
+        reason: discard
+        as: d
+      - op: if
+        cond:
+          exists:
+            ref: d
+        then:
+        - op: draw
+          count: 3
+        - op: repeat
+          times:
+            var: d
+          body:
+          - op: modify
+            select:
+              ref: self
+            mod:
+              power: 4000
+            duration: end_of_turn
+  alt_cost:
+    cost: 3
+    civs:
+    - fire
+    - fire
+    - fire
+    if:
+      cmp:
+      - count:
+          zone: mana
+          owner: you
+      - '>='
+      - 6
+- id: dm23rp2x-tr06
+  name: ジョルジュ・バタイユ
+  types:
+  - creature
+  civs:
+  - darkness
+  cost: 8
+  power: 12000
+  races:
+  - マフィ・ギャング
+  mana: 1
+  text: 'コストを支払うかわりに自分のクリーチャーを４体破壊して、このクリーチャーを召喚してもよい。
+
+    T・ブレイカー
+
+    このクリーチャーが出た時、自分の墓地にあるカードを数える。それと同じ枚数のカードを、自分の山札の上から墓地に置いてもよい。
+
+    このクリーチャーが離れる時、かわりにカードを６枚、自分の墓地から好きな順序で山札の下に置いてもよい。'
+  source:
+    official: dm23rp2x-tr06
+    review: pending
+    notes: 再変換ラウンド245。第209弾 alternative_summon_cost の再変換。
+    aliases:
+    - dm23rp2-tr06
+    - dmrp01-s05
+  keywords:
+  - triple_breaker
+  abilities:
+  - kind: trigger
+    when:
+      event: move
+      to: bz
+      subject: self
+    effect:
+    - op: may
+      body:
+      - op: move
+        select:
+          zone: deck
+          owner: you
+          from_top:
+            count:
+              zone: graveyard
+              owner: you
+          count: all
+        to: graveyard
+        reason: put
+  - kind: replace
+    when:
+      event: move
+      from: bz
+      subject: self
+    optional: true
+    instead:
+    - op: move
+      select:
+        zone: graveyard
+        owner: you
+        count: 6
+      to: deck
+      position: bottom
+      order: choose
+      reason: put
+  alt_cost:
+    do:
+    - zone: bz
+      filter:
+        types:
+        - creature
+      count: 4
+      to: graveyard
+      reason: destroy
+- id: dm26ex1-n006
+  name: ガチャンコ ガジェロボ / ガチャンコ・チャージャー
+  types:
+  - creature
+  civs:
+  - water
+  cost: 8
+  mana: 1
+  text: '{GS} G・ストライク
+
+    W・ブレイカー
+
+    相手のクリーチャーが出た時、自分のクリーチャーが３体以上あれば、そのターン、相手のクリーチャーは攻撃もブロックもできない。'
+  source:
+    official: dm26ex1-n006
+    review: pending
+    notes: 再変換ラウンド246。第210弾 number_choice の再変換。数字選択ではなく登場反応（ラベルずれ）。
+    aliases:
+    - dm26ex1-secn006
+  power: 9000
+  races:
+  - グレートメカオー
+  - 侵略者
+  abilities:
+  - kind: trigger
+    when:
+      event: move
+      to: bz
+      subject:
+        owner: opp
+        filter:
+          types:
+          - creature
+    if:
+      cmp:
+      - count:
+          zone: bz
+          owner: you
+          filter:
+            types:
+            - creature
+      - '>='
+      - 3
+    effect:
+    - op: modify
+      select:
+        zone: bz
+        owner: opp
+        filter:
+          types:
+          - creature
+        count: all
+      mod:
+        deny: &id215
+        - attack_player
+        - attack_creature
+        - block
+      duration: end_of_turn
+  keywords:
+  - g_strike
+  - double_breaker
+- id: dm26ex4-cho023
+  name: ♪立ち上がる 悪魔に天使 堕ちるかな
+  types:
+  - spell
+  civs:
+  - water
+  cost: 4
+  mana: 1
+  text: 'S・トリガー
+
+    カードを１枚引き、数字を１つ選ぶ。次の自分のターンのはじめまで、その数字と同じコストの相手のエレメントの能力を無視し、相手はその数字と同じコストの呪文を唱えられない。'
+  source:
+    official: dm26ex4-cho023
+    review: pending
+    notes: 再変換ラウンド246。第210弾 number_choice の再変換。
+  races:
+  - マジック・ソング
+  keywords:
+  - s_trigger
+  abilities: []
+  spell:
+  - op: draw
+    count: 1
+  - op: choose_number
+    as: n
+  - op: modify
+    select:
+      zone: bz
+      owner: opp
+      filter:
+        cost_le:
+          declared: n
+        cost_ge:
+          declared: n
+      count: all
+    mod:
+      ignore:
+      - all
+    duration: until_next_own_turn_start
+  - op: modify
+    select:
+      zone: hand
+      owner: opp
+      filter:
+        types:
+        - spell
+        cost_le:
+          declared: n
+        cost_ge:
+          declared: n
+      count: all
+    mod:
+      deny:
+      - cast
+    duration: until_next_own_turn_start
+- id: dm26rp2-sp003
+  name: ♪立ち上がる 悪魔に天使 堕ちるかな
+  types:
+  - spell
+  civs:
+  - water
+  cost: 4
+  mana: 1
+  text: 'S・トリガー
+
+    カードを１枚引き、数字を１つ選ぶ。次の自分のターンのはじめまで、その数字と同じコストの相手のエレメントの能力を無視し、相手はその数字と同じコストの呪文を唱えられない。'
+  source:
+    official: dm26rp2-sp003
+    review: pending
+    notes: 再変換ラウンド246。第210弾 number_choice の再変換。
+    aliases:
+    - dm24ex3-rp4002
+    - dm24rp4-002
+    - dm26sd1-c008
+    - dm26sd1-i003
+  races:
+  - マジック・ソング
+  keywords:
+  - s_trigger
+  abilities: []
+  spell:
+  - op: draw
+    count: 1
+  - op: choose_number
+    as: n
+  - op: modify
+    select:
+      zone: bz
+      owner: opp
+      filter:
+        cost_le:
+          declared: n
+        cost_ge:
+          declared: n
+      count: all
+    mod:
+      ignore:
+      - all
+    duration: until_next_own_turn_start
+  - op: modify
+    select:
+      zone: hand
+      owner: opp
+      filter:
+        types:
+        - spell
+        cost_le:
+          declared: n
+        cost_ge:
+          declared: n
+      count: all
+    mod:
+      deny:
+      - cast
+    duration: until_next_own_turn_start
+- id: dm26rp2-tr008
+  name: 奇天烈 シャッフ
+  types:
+  - creature
+  civs:
+  - water
+  cost: 4
+  mana: 1
+  text: このクリーチャーが出た時または攻撃する時、数字を１つ選ぶ。次の自分のターンのはじめまで、相手はその数字と同じコストの呪文を唱えられず、同じコストの相手のクリーチャーは攻撃もブロックもできない。
+  source:
+    official: dm26rp2-tr008
+    review: pending
+    notes: 再変換ラウンド246。第210弾 number_choice の再変換。
+    aliases:
+    - dm22bd2-013
+    - dm26ex1-035
+    - dmbd10-005
+    - dmbd15-se8
+    - dmbd19-005
+    - dmr19-004
+    - dmrp18-a18
+    - dmrp18-b18
+  power: 4000
+  races:
+  - マジック・コマンド
+  - グレートメカオー
+  - 侵略者
+  abilities:
+  - kind: trigger
+    when:
+      event: move
+      to: bz
+      subject: self
+    effect:
+    - op: choose_number
+      as: n
+    - op: modify
+      select:
+        zone: hand
+        owner: opp
+        filter:
+          types:
+          - spell
+          cost_le:
+            declared: n
+          cost_ge:
+            declared: n
+        count: all
+      mod:
+        deny:
+        - cast
+      duration: until_next_own_turn_start
+    - op: modify
+      select:
+        zone: bz
+        owner: opp
+        filter:
+          types:
+          - creature
+          cost_le:
+            declared: n
+          cost_ge:
+            declared: n
+        count: all
+      mod:
+        deny:
+        - attack_player
+        - attack_creature
+        - block
+      duration: until_next_own_turn_start
+  - kind: trigger
+    when:
+      event: attack
+      subject: self
+    effect:
+    - op: choose_number
+      as: n
+    - op: modify
+      select:
+        zone: hand
+        owner: opp
+        filter:
+          types:
+          - spell
+          cost_le:
+            declared: n
+          cost_ge:
+            declared: n
+        count: all
+      mod:
+        deny:
+        - cast
+      duration: until_next_own_turn_start
+    - op: modify
+      select:
+        zone: bz
+        owner: opp
+        filter:
+          types:
+          - creature
+          cost_le:
+            declared: n
+          cost_ge:
+            declared: n
+        count: all
+      mod:
+        deny:
+        - attack_player
+        - attack_creature
+        - block
+      duration: until_next_own_turn_start
+  keywords: []
+- id: promoy13-011
+  name: 英傑の精獣 バアル・バララーク
+  types:
+  - creature
+  civs:
+  - fire
+  cost: 6
+  mana: 1
+  text: 'このクリーチャーをバトルゾーンに出した時、６以下の数字をひとつ選ぶ。選んだ数字と同じコストを持つクリーチャーをすべて破壊する。
+
+    W・ブレイカー（このクリーチャーはシールドを２枚ブレイクする）'
+  source:
+    official: promoy13-011
+    review: pending
+    notes: 再変換ラウンド246。第210弾 number_choice の再変換。
+  power: 6000
+  races:
+  - マジカル・モンスター
+  keywords:
+  - double_breaker
+  abilities:
+  - kind: trigger
+    when:
+      event: move
+      to: bz
+      subject: self
+    effect:
+    - op: choose_number
+      as: n
+      max: 6
+    - op: move
+      select:
+        zone: bz
+        owner: any
+        filter:
+          types:
+          - creature
+          cost_le:
+            declared: n
+          cost_ge:
+            declared: n
+        count: all
+      to: graveyard
+      reason: destroy
+- id: dmrp17-015
+  name: オニカマス ＜シャッフ.Star＞
+  types:
+  - creature
+  - evolution
+  civs:
+  - water
+  cost: 4
+  power: 7000
+  races:
+  - ムートピア
+  - マジック・コマンド
+  - レクスターズ
+  mana: 1
+  star: true
+  evolve_from:
+    any_of:
+    - race_has: レクスターズ
+    - civs:
+      - water
+  text: 'スター進化：レクスターズまたは水のクリーチャー１体の上に置く。（このクリーチャーが離れる時、かわりに一番上のカードが離れる）
+
+    W・ブレイカー（このクリーチャーはシールドを２つブレイクする）
+
+    このクリーチャーが攻撃する時、数字を１つ選ぶ。次の自分のターンのはじめまで、選んだ数字と同じコストを持つ相手のクリーチャーは、攻撃もブロックもできない。'
+  source:
+    official: dmrp17-015
+    review: pending
+    notes: 再変換ラウンド246。第210弾 number_choice の再変換。
+  keywords:
+  - double_breaker
+  abilities:
+  - kind: trigger
+    when:
+      event: attack
+      subject: self
+    effect:
+    - op: choose_number
+      as: n
+    - op: modify
+      select:
+        zone: bz
+        owner: opp
+        filter:
+          types:
+          - creature
+          cost_le:
+            declared: n
+          cost_ge:
+            declared: n
+        count: all
+      mod:
+        deny: *id215
+      duration: until_next_own_turn_start
+- id: dm24rp1-015
+  name: 文藍月 スナイパー
+  types:
+  - creature
+  civs:
+  - water
+  cost: 3
+  mana: 1
+  text: 'ジャストダイバー（このクリーチャーが出た時、次の自分のターンのはじめまで、このクリーチャーは相手に選ばれず、攻撃されない）
+
+    ハイパー化：自分の他のクリーチャーを１体タップする。（自分のメインステップ中に、ハイパーモードを解放できる。ハイパーモードは次の自分のターンのはじめまで続く）'
+  power: 2000
+  races:
+  - リキッド・ピープル
+  - 超化獣
+  hyper: true
+  abilities:
+  - kind: static
+    affects: self
+    mod:
+      power: 4000
+    if:
+      hyper: true
+  - kind: trigger
+    when:
+      event: move
+      to: bz
+      subject: self
+    effect:
+    - op: modify
+      select:
+        ref: self
+      mod:
+        deny:
+        - be_chosen
+        - be_attacked
+      duration: until_next_own_turn_start
+  - kind: static
+    affects: self
+    mod:
+      grant:
+      - double_breaker
+    if:
+      hyper: true
+  - kind: trigger
+    when:
+      event: attack
+      subject: self
+    if:
+      hyper: true
+    effect:
+    - op: choose_number
+      as: n
+    - op: modify
+      select:
+        zone: hand
+        owner: opp
+        filter:
+          types:
+          - spell
+          cost_le:
+            declared: n
+          cost_ge:
+            declared: n
+        count: all
+      mod:
+        deny:
+        - cast
+      duration: until_next_own_turn_start
+    - op: modify
+      select:
+        zone: bz
+        owner: opp
+        filter:
+          types:
+          - creature
+          cost_le:
+            declared: n
+          cost_ge:
+            declared: n
+        count: all
+      mod:
+        deny: *id215
+      duration: until_next_own_turn_start
+  source:
+    official: dm24rp1-015
+    review: pending
+    notes: 再変換ラウンド246。第210弾 number_choice の再変換。数字能力はハイパーモード側として if hyper で受ける。
+    aliases:
+    - dm24rp1-sec14
+  keywords: []
+- id: dmbd16-teki005
+  name: 黒神龍ギランド
+  types:
+  - creature
+  civs:
+  - darkness
+  cost: 4
+  mana: 1
+  text: 'W・ブレイカー（このクリーチャーはシールドを２つブレイクする）
+
+    このクリーチャーがバトルする時、バトルの後、このクリーチャーを破壊する。'
+  source:
+    official: dmbd16-teki005
+    review: pending
+    notes: 再変換ラウンド247。第211弾 battle_end_trigger の再変換。
+    aliases:
+    - dm08-045
+    - dmc27-044
+    - dmc55-077
+    - dmx10-050
+  power: 6000
+  races:
+  - ドラゴン・ゾンビ
+  keywords:
+  - double_breaker
+  abilities:
+  - kind: trigger
+    when:
+      event: battle_end
+      subject: self
+    effect:
+    - op: move
+      select:
+        ref: self
+      to: graveyard
+      reason: destroy
+- id: dmc44-017
+  name: 黒神龍ジャグラヴィーン
+  types:
+  - creature
+  civs:
+  - darkness
+  cost: 6
+  mana: 1
+  text: 'ブロッカー(相手クリーチャーが攻撃する時、このクリーチャーをタップして、その攻撃を阻止してもよい。その後、その相手クリーチャーとバトルする)
+
+    このクリーチャーがブロックした時、バトルの後でこのクリーチャーを破壊する。
+
+    W・ブレイカー(このクリーチャーはシールドを２枚ブレイクする)'
+  source:
+    official: dmc44-017
+    review: pending
+    notes: 再変換ラウンド247。第211弾 battle_end_trigger の再変換。
+    aliases:
+    - dm12-003
+  power: 6000
+  races:
+  - ドラゴン・ゾンビ
+  keywords:
+  - blocker
+  - double_breaker
+  abilities:
+  - kind: trigger
+    when:
+      event: battle_end
+      subject: self
+    effect:
+    - op: move
+      select:
+        ref: self
+      to: graveyard
+      reason: destroy
+    if:
+      is_turn: opp
+- id: dmc61-075
+  name: ブラッディ・ドラグーン
+  types:
+  - creature
+  civs:
+  - darkness
+  cost: 2
+  mana: 1
+  text: 'ブロッカー
+
+    このクリーチャーは攻撃することができない。
+
+    このクリーチャーがバトルする時、バトルの後、このクリーチャーを破壊する。'
+  source:
+    official: dmc61-075
+    review: pending
+    notes: 再変換ラウンド247。第211弾 battle_end_trigger の再変換。
+    aliases:
+    - dmc40-004
+    - dmc48-037
+  power: 4000
+  races:
+  - ティラノ・ドレイク
+  keywords:
+  - blocker
+  - cannot_attack
+  abilities:
+  - kind: trigger
+    when:
+      event: battle_end
+      subject: self
+    effect:
+    - op: move
+      select:
+        ref: self
+      to: graveyard
+      reason: destroy
