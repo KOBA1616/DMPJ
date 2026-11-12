@@ -1867,3 +1867,149 @@ EXライフ本体（出す時のシールド化・離脱置換）は実装済み
 - 判別確認: エンジン変更（events.py＋combat.py）を退避すると pilot190 は 2 failed（タップ誘発、通常シールド不発の判別。EXライフ離脱の肯定試験は退避時も通るが、それは subject パターンが空フィルタ扱いになり「どのシールドでも」発火する偽陽性のためで、通常シールド試験がそれを捕捉する）。復元後11件全通過。回帰は file_schemas＋mechanics＋rules＋engine＋pilot14/31＋rust_schema_sync＋data_audit＋dogiradante＋pilot185/186/187/188/189/190 で 159 passed / 1 skipped。Rust 側の変更なし（lki は実行時レコードのみ。Card フィールドの追加なし）。
 - テスト作成の注意: 攻撃宣言のタップは直接代入だったため、タップ誘発は攻撃では発火しなかった（第190弾で修正）。`_play` は手札が空だとメイン・攻撃が自動パスして相手チャージまで進んでから止まる（T003 は水マナが無くて出せないため同じ）。ターン開始ドローはチャージ決定の前に起きるため、手札枚数の assert はドロー分を数えること。無視の duration は次の自分のターンのはじめまでなので、相手の召喚誘発を試す時は相手ターン1に召喚すること（相手ターン2では期限切れ）。`_drive` の停止条件は plan が空の時の charge/main/attack で、待機中の決定があると ev_task が走る前に止まるため、ev_task 注入試験では charge を1回消費する計画を入れること。
 - 待機9件（ex_life 単独）。再変換はラウンド226で実施。差し戻し見込み：dmex18-014（攻撃終了時の「手札か墓地からコストを支払って唱える/召喚する」は支払い付き実行の語彙が無く、新ギャップ見込み。第1節は書けるので partial に残す）、dmsd19-001（「プレイヤーを１人選ぶ」はプレイヤー選択の語彙が無く、既存ギャップ choose_player_effect へ）。次候補：ggg_condition 9、cast_resolution_destination 9、cip_reuse 9、mana_number_change 9、chosen_trigger 9、henrei 9、battle_replacement 9、marshal_touch 9。
+
+## 第191弾: マナ爆誕（mana_bakutan）（2026-11-12）
+「マナ爆誕N（このクリーチャーを自分のマナゾーンから、コストNを支払って召喚してもよい）」。カード自身の能力による代替コスト召喚で、第50弾の許可（summon_from_mana・通常コスト）とは別系統。
+- 新語彙は面フィールド `mana_bakutan: int >= 0` の1点。メインステップの選択肢 `play:<id>:bakutan`（rush 印でマナゾーンからの召喚として処理し、支払いは recycle（第172弾）と同じ cost_override 方式＝固定コストで軽減は乗らない）。permits(cid, "summon") が必要で、進化クリーチャーは対象外。コスト0はマナをタップしないため、支払いの文明要求も無い（cost_civs = []）。
+- 副次修正（既存バグ）: `_mana_choices` が支払いプールに実行するカード自身を含んでいた。マナゾーンから出すカードが「自分をタップして自分のコストを払う」組み合わせが列挙され、第50弾の msum 経路でも選択肢の見積もりが甘かった。プールから cid を除外した（手札・墓地から出す場合は元々プールに無いので無影響）。
+- 「自分のマナゾーンから召喚していたら」の出た時誘発は既存語彙で書ける：召喚の移動イベントへの trigger `when: {event: move, from: mana, to: bz, reason: summon, subject: self}`（陰陽の舞 dmex08-072 型）。「自然のカードを置けない場合、このクリーチャーを破壊する」は op if（cond exists＋else destroy）で表す。
+- dm37-s05（大地竜機シロガシラ・ジュカイ）の「マナゾーンに置く時タップして置く」は多色カードのルール（405.1、core の移動処理で自動）のため語彙不要。残る障害は召喚誘発の「マーシャル・タッチ能力を持つクリーチャーがあればバトルゾーンに出してもよい」節のみで、能力所持フィルタ＋marshal_touch が必要 → ラウンド227で差し戻し（refined gap `marshal_touch`、partial に mana_bakutan: 9 を残す）。
+- proto T465（爆誕3・印字6）/ T466（爆誕0）/ T467（爆誕2＋マナから召喚時のドロー誘発）/ T468（火・爆誕2、文明要求の判別用）。tests/test_vocab_pilot191.py 9件（parse、不正形の拒否、固定コスト召喚と支払い3枚タップ、マナ不足で不出、コスト0はマナ無しで可、文明不足で不出＋火マナで可、マナから召喚でドロー、手札からは誘発せず爆誕も出ない、墓地では不出）＋tests/test_vocab_pilot191_cards.py 3件（登録8件の変換形が partial＋mana_bakutan で parse 可、dm37-s05 は対象外の確認）。
+- 判別確認: エンジン変更（defs.py＋schema.py＋types.py＋turn.py）を退避すると pilot191 は 6 failed / 3 passed。復元後9件全通過。回帰は pilot50＋pilot172 系27件、mechanics＋cost＋engine＋file_schemas＋pilot37/149/173/189/190 で 88 passed / 1 skipped。schema 再生成済み（差分は mana_bakutan のみ）。Rust 側の変更なし（面フィールドは defs のみ。Card の状態フィールドは追加していない）。
+- 待機9件（mana_bakutan 単独）。再変換はラウンド227で実施（登録見込み8件＋差し戻し1件）。
+
+## 第192弾: choose_player（プレイヤーを1人選ぶ）（2026-11-12）
+「プレイヤーを1人選ぶ。そのプレイヤーは〜」を表す語彙。対象は choose_player_effect 単独9件＋複合1件（dm26sd1-p005）。
+- 新 op `choose_player {as: 名前}`: 効果の使用者がプレイヤーを1人選び、変数に相対指定 "you"/"opp" を入れる（決定 kind は choose_player、選択肢キー you/opp＋絶対 player 番号。Option に player フィールドを追加）。「選んでもよい」は may の body に choose_player を入れて表す（T471 で検証）。
+- プレイヤー指定の変数参照 `{var: 名前}`: op の player / players、セレクタの owner / chooser で使える。解決は `Engine._rel` が変数を引く1か所に集約（selector の owner は元々 _rel 経由、chooser も _rel に落ちる）。defs Checker は {var: 文字列} のみ許可し、それ以外（数値・別キー）は DefError。schema.py も VAR_REF で追随（player / players / owner / chooser）。
+- 既存語彙で書けた周辺節: 「コストを支払わずに出た時」は `when: {unpaid: true}`＋効果側は `select: {ref: event.subject}`（dm24bd2-007 第2節）。「マナゾーンのカードを裏向きにする」は op `flip_down`（dm24ex4-025 第2節）。「山札の上からマナへ」は op `mana_put`。dm26sd1-p005 は ace: true（第179弾、types は [tamaseed] に正規化）＋第50弾の once マナ召喚静的（affects mana＋if is_turn＋allow summon_from_mana once）も併せて解消し、複合3ギャップごと登録見込み。※同カードの partial の unsupported 記述（「手札をすべて捨てる」）は原文と食い違っていたため、reject 行の原文（墓地をシャッフルし山札の下へ）を正とした。
+- 差し戻し見込み1件: dm24ex1-sp7。「その持ち主は選ばれたカードを好きな順序で山札の下に置く」は並び順を決めるのが持ち主だが、move の order: choose は効果の使用者に聞くため表せない → refined gap `owner_ordered_deck_put`（choose_player 形は partial に残す）。なお dm25ex3-017（同型文面の既登録カード）は owner: any＋位置指定なしの粗い形で登録されていたが、本弾では真似ない。
+- proto T469（CIP・プレイヤー選択→そのプレイヤーの墓地を山札に戻しシャッフル）/ T470（呪文・選択→そのプレイヤーが2ドロー1捨て。捨てる札は chooser {var} で本人が選ぶ）/ T471（CIP・may 内で選択→墓地をシャッフルして山札の下）/ T472（CIP・選択したプレイヤーの墓地から1枚選んで持ち主の山札の下→1ドロー）。tests/test_vocab_pilot192.py 9件（parse、不正形の拒否、自分を選ぶ／相手を選ぶの判別、呪文のドロー＆本人が捨てる、may 承諾／辞退、選んだプレイヤーの墓地から選ぶ、選ばなければ引かない）＋tests/test_vocab_pilot192_cards.py 2件（登録9件＋差し戻し1件の変換形が parse 可）。
+- 判別確認: エンジン変更（defs.py＋schema.py＋types.py＋core.py＋ops.py）を退避すると pilot192 は 1 failed / 7 errors（choose_player が未知 op）。復元後9件全通過。回帰は pilot191/163/164/190＋file_schemas＋engine＋mechanics＋cost で 78 passed / 1 skipped。schema 再生成済み（差分は choose_player op と VAR_REF の伝播のみ）。Rust 側の変更なし。
+- テスト作成の注意: 駆動（_drive）は攻撃決定が出ない盤面では相手ターンのチャージ決定まで進むため、相手の手札・山札の assert はターン開始ドロー分を数えること（第190弾の教訓どおり）。唱えた呪文自身も解決後に墓地へ行く。
+- 待機10件（choose_player_effect 単独9件＋dm26sd1-p005 の複合）。再変換はラウンド228で実施（登録見込み9件＋差し戻し1件 dm24ex1-sp7）。
+
+## 第193弾: marshal_touch（マーシャル・タッチ）のイディオム（2026-11-12）
+「マーシャル・タッチ（このクリーチャーをバトルゾーンに出した時、自分の他のクリーチャーを1体、バトルゾーンから手札に戻してもよい。そうした場合、このクリーチャーの能力を使う）＋後続効果」は、ニンジャ・ストライク（第165弾）と同じくエンジンのキーワード能力にはせず、カード定義への展開形で表せる（新規エンジン語彙なし）。対象は marshal_touch 単独9件。
+- イディオム: 出た時誘発 → `may` の body に [ `move`（自分の他のクリーチャー1体。selector の `other: true` で自身を除く → 手札、reason: return、`as: bounced`）, `if {exists: {ref: bounced}}` → 後続効果 ]。may を断る／戻せるクリーチャーがいない場合は後続効果を使えない、がそのまま出る。
+- 後続効果のバリエーションは既存語彙で全部書けた: ブロッカー破壊（filter `keyword: blocker`）、戻したクリーチャー以下のコストを破壊（filter `cost_le: {cost_of: bounced}`。「戻すために選んだクリーチャー」は手札へ移動後も変数で参照できる）、自身へスピードアタッカー付与（modify grant＋duration end_of_turn）、パワー以下をすべて破壊、光または水のパワー以下破壊（filter civs）、他の自分のクリーチャー1体に「タップされていないクリーチャーを攻撃できる」（modify の allow attack_creature＋other {tapped: false}。第39弾 dm01-031 の静的形と同じ mod）、山札の上からマナへ（mana_put）、自分のクリーチャーすべてにスピードアタッカー付与。
+- 併せて解消: dm37-031 のマナ爆誕7、dmex08-060 のマナ爆誕5 は第191弾のフィールドで付ける。dmex12-098 の【K・ソウル】は種族として扱う（dm36-029 の登録形と同じ。partial に欠けていたので足した）。
+- proto T473（→ブロッカー破壊）/ T474（→戻したコスト以下を破壊）/ T475（→自身がスピードアタッカーを得る）。tests/test_vocab_pilot193.py 6件（parse、戻して破壊、may を断ると何も起きない、他のクリーチャーがいないと承諾しても後続なし、コスト相対の判別＝コスト3が残り候補が自動確定する、SA を得て出たターンに攻撃できる）＋tests/test_vocab_pilot193_cards.py 1件（登録9件の変換形が parse 可）。
+- テスト作成の注意: (1) 召喚の支払いには出したカードの文明を持つマナが要る（T030 は光/水の双色。火の T473 には火のマナを置く）。(2) バトルゾーンは共有ゾーンで `zlist("bz", p)` は全件を返すため、所有の判定は Card.controller で絞る。(3) セレクタの候補が1件だけの時は選択の決定が出ず自動確定する（コスト相対フィルタの判別はこの性質と最終状態で確認した）。
+- dm37-s05（第227弾で marshal_touch に差し戻し）は本弾の対象外: その誘発に残るのは「『マナ爆誕』能力を持つ／『マーシャル・タッチ』能力を持つクリーチャー」という能力持ちフィルタで、ラウンド229で refined gap `has_ability_filter` に差し戻す（mana_bakutan: 9 は partial に保存済み）。
+- 待機9件。再変換はラウンド229で実施（登録見込み9件＋差し戻し1件 dm37-s05）。
+
+## 第194弾: must_attack_creature_if_able のイディオム確認（2026-11-12）
+「相手のクリーチャーが攻撃する時、可能ならクリーチャーを攻撃する」系のギャップ名は第171弾より前の命名で、構成要素は既に揃っていた（新規エンジン語彙なし）。対象は単独5件＋attack_untapped との複合1件。
+- 対応表: 「可能ならクリーチャーを攻撃する」= mod `must_attack_creature`（第171弾。攻撃できるクリーチャーがいればプレイヤーへの攻撃選択肢が落ちる）。「可能であれば攻撃し」= キーワード `must_attack`（第30弾。require [attack] で攻撃ステップの pass が消える）。「可能であればそのクリーチャーを攻撃する」= mod `must_be_attacked`（第51弾）。期間「次の自分のターンのはじめまで」= modify の duration `until_next_own_turn_start`。
+- カード形: dmrp18-087 は choose した相手1体に grant [must_attack]＋must_attack_creature。dmr14-054 は partial の modify（パワー+4000）に must_be_attacked を足すだけ。dmr23-022 は partial の第1モード（山札の上→シールド）を modal に包み直し、第2モードに相手全員への must_attack_creature 付与。dmrp04s-093 は相手全員付与のみ。dmex14-017（attack_untapped との複合）は CIP で全クリーチャーに allow attack_creature（other {tapped: false}、第39弾 dm01-031 の形）＋must_attack_creature を期間付き付与。
+- 差し戻し1件: dmr10-016。「このカードが自分のシールドゾーンに表向きであれば」の常在型はシールドゾーンから効く静的で、静的の収集がバトルゾーン起点のエンジンでは表せない → refined gap `shield_zone_static`（キーワード類は partial に保存済み）。
+- proto T476（1体に強制＋対象制限）/ T477（相手全員に対象制限、期間切れで解除）/ T478（タップ＋パワー+4000＋誘引）。tests/test_vocab_pilot194.py 4件＋tests/test_vocab_pilot194_cards.py 2件。
+- テスト作成の注意: (1) 攻撃先の制限は「攻撃できるタップ状態のクリーチャー」がいる時だけ効く（いなければプレイヤー攻撃が残る）。検証では自分のクリーチャーに先に攻撃させてタップしておく。(2) 選択肢が1つだけの決定はエンジンが自動確定する（強制攻撃で対象がプレイヤーのみになると攻撃決定自体が出ない）。(3) シナリオは相手のターンから始まる周回があり、捕捉は「唱えた後」に限る。(4) 唱えた呪文自身も自分の墓地に入る。
+- 待機6件（単独5＋複合1）。再変換はラウンド230で実施（登録見込み5件＋差し戻し1件 dmr10-016）。
+
+## 第195弾: cross_free（コストを支払わずにクロスする）（2026-11-12）
+対象は cross_free_permission 単独9件＋cross_free_op 単独5件。
+- 許可（permission）: 新アクション `cross_free`（data/rules/permissions.yaml、default false）。`_cross_options` は支払い可否に加えて、ギア側 permits(gear, cross_free, creature) またはクリーチャー側 permits(creature, cross_free, gear) が通れば無料の選択肢 `cross:<ギア>:<クリーチャー>:free` を併記する（h_cross は free の時、支払いを飛ばして crossed を付ける。CrossTask に free を追加）。カード形は static の mod allow [cross_free] で、発生源は4形: クリーチャー自身（affects: self)、ギア自身（affects: self＋other フィルタ。other は進化なら {evolution: true}、リンクしているゴッドと併記なら any_of、名前は name_has、種族は race_has)、ギアから宿主へ（affects: crossed。宿主の特性に allow が載る）、全体付与（affects で自分のギア全体へ。dmex17-051)。
+- 効果（op）: 新 op `cross_free {gear, to}`。gear セレクタのギアすべてを to セレクタのクリーチャー1体に支払いなしでクロスする。2つの選択が衝突しないよう、参照系セレクタ（ref / crossed_to / host_of / under_of / bundle_of）は op_swap と同じく candidates で引き、残りを select で引く（select を2回呼ぶと os の chosen が衝突する）。
+- ついでに直した不具合: selectors の `_refs_of` が LKI 参照を alive で落としていたため、「破壊されたクリーチャーにクロスしてあったギア」を crossed_to: self で拾えなかった（crossed_gears 自体は LKI 照合が用途）。alive フィルタを外した（照合は crossed_gears の gen 完全一致が担う）。第170弾・第177弾の回帰は通過。
+- dmex16-042 の「山札の上から3枚を見る」は choose {from_top: 3, look: true, count: all} as: pile の既存イディオム（束から選んで出し、残りを下へ）。dmc42-010 は partial の move（as: gear）の後ろに cross_free {ref: gear} を足す。
+- proto T479（クリーチャー側許可）/ T480（ギア側許可・進化フィルタ。※フィルタの types は「いずれかを含む」照合なので、進化指定は {evolution: true} を使う）/ T481（タップ起動。choose でギアを束縛してから cross_free)/ T482（CIP で自分に）/ T483（破壊時に crossed_to で付け替え）。tests/test_vocab_pilot195.py 9件（parse、不正形、許可あり/なし、ギア側フィルタ、支払うクロスの回帰、起動、CIP、破壊時付け替え）＋tests/test_vocab_pilot195_cards.py 1件（登録14件の変換形が parse 可）。
+- テスト作成の注意: (1) メインステップの決定は意味のある選択肢がある時だけ提示される（何もできない時は自動で進む）。(2) マナのタップ確認はクロス直後（次のターン開始でアンタップされる）。(3) bz は共有ゾーン: cid 引きは controller でも絞る。(4) 選択肢が1つだけの決定は自動確定する。
+- 待機14件。再変換はラウンド231で実施（登録見込み14件）。
+
+## 第196弾: eternal_kappa（エターナル・Κ）のイディオム確認＋置換の once_per_turn 対応（2026-11-12）
+対象は eternal_kappa 単独5件。「このクリーチャーが離れる時、かわりに自分のマナゾーンにある裏向きのカードをN枚、表向きにしてもよい」は既存の置換 machinery で表せる（新規カード語彙なし）。
+- カード形: {kind: replace, when: {event: move, from: bz, subject: self}（行き先を書かない＝どこへ離れる時でも）, optional: true（断れば元の移動が進む）, if: {cmp: [{count: {zone: mana, owner: you, filter: {face_down: true}}}, ">=", N]}（第23弾の水晶武装と同じ数え方）, instead: [{op: flip_up, select: {zone: mana, owner: you, filter: {face_down: true}, count: N}}]}。「各ターンに一度」版（dm24bd6-001、N=2）は once_per_turn: true を足す。
+- ついでに直した不具合: once_per_turn は誘発の収集でしか見ておらず、置換側（_replacement）では無視されていた。登録済みの移動置換4件（dm26ex1-n008、dm25ex1-019、dm26rp1-016、dm24ex3-rp3s07）も「各ターンに一度」が効いていなかった。_replacement で候補収集時に印（turn_counters の once:replace:<cid>:<gen>:<添字>）を見て、選ばれた時に印を付けるよう修正した（断った場合は消費しない）。
+- 注意: セレクタの「〜まで」は {count: N, up_to: true} と書く。{count: {upto: N}} は parse を通っても実行時に bad expr で壊れる（dm24ex2-041 の partial に保存されていた形を登録時に修正）。flip_down の候補には裏向きのカードも含まれるので、表向きだけを対象にする時は filter {face_down: false} を付ける。
+- proto T484（Κ・3枚）/ T485（裏向き化の仕込み呪文）/ T486（各ターンに一度・2枚）。tests/test_vocab_pilot196.py 5件（parse、置換で残る、断ると離れる、裏向き不足では諮問自体が出ない、各ターンに一度）＋test_vocab_pilot196_cards.py 2件。回帰は第187・190・40弾＋mechanics＋engine で通過。
+- 待機5件（全単独）。再変換はラウンド232で実施（登録見込み5件）。
+
+## 第197弾: g_link_four_way（名前指定・4方向 G・リンク）（2026-11-12）
+起源神・神帝・神王グループのリンクは位置キーワード（左/中央/右）では決まらず、「《A》の右横、《B》の上側」のように相手の名前と方向で決まる。面フィールドとリンク手順の分岐を足した。
+- 面フィールド `link_to: [{name, pos}]`（pos は相手から見た自分の位置: right / left / up / down）。defs の Face/CardDef＋検証＋schema に追加（第191弾 mana_bakutan と同じ4点同期。定義フィールドは Rust state の対象外）。
+- リンク手順（h_g_link）に名前指定の分岐を追加: 位置キーワードを持たず link_to を持つゴッドは、指定名のゴッドがいるグループ（選択肢は代表で提示される）にリンクする。同じ名前のカードは1グループに1枚まで（星座が一意に決まる）。リンク成立時は既存の link_established レコード（第155弾）を出すので、「リンクした時」誘発もそのまま受ける。特性統合・離脱置換（choose_link_leave）・link_count は既存のグループ機構を共用する。
+- proto T487–T490（相互指定の2体＋3体目＋リンク誘発持ち）。tests/test_vocab_pilot197.py 9件（parse、不正な link_to、名前リンクと特性統合、相手なし、名前違いの判別、3体グループ、同名いるグループへの判別、離脱置換、link_established 誘発）。判別は events/core を stash すると5件失敗。回帰は第16・155弾＋engine＋mechanics＋schemas＋rust 同期で通過。
+- 注意: rejects の行ギャップ名には付替え漏れがある（link_establish_event とだけ付いた行の実不足が gachinko_judge 等、別物の例を確認）。reopen のプール計算は行ギャップで行うため、複合ギャップの行は安易に reopen できない。ラウンド233は単独4件のみ reopen し、複合6件は submit の挙動を確認してから扱う。
+
+## 第198弾: ggg_condition（G・G・G の条件違い）のイディオム確認（2026-11-12）
+第167弾で G・G・G 本体（手札1枚以下）を実装した後に残った9件。unsupported は全件「G・G・G」の文言のみで、不足は GGG の当て方とカードごとの他条項だった。新規エンジン語彙なし。
+- 当て方: 自己軽減は static {zone: hand, affects: self, if: 手札<=1, mod: {cost: -N}}。付与は static {affects, if: 手札<=1, mod: {grant}}（「マッハファイター」の付与はキーワードではなく allow attack_creature {other: {tapped: false}} で表す）。マスターG・G・G と複合条件は face の free_if（{all: [手札<=1, {not: {exists: 指定名}}]} の形も可）。
+- 「各ターン、相手のクリーチャーがはじめて攻撃する時、可能ならこのクリーチャーを攻撃する」は static {affects: self, if: {cmp: [{turn_count: {kind: attack, owner: opp}}, "==", 0]}, mod: {must_be_attacked: true}}。第160弾の first_only（攻撃側ごとの初回）とは別物で、こちらはターン単位の初回を履歴カウンタで見る。
+- 攻撃時の「上から1枚を表向きにし、種族とコストの条件を満たせば出す」は、choose で event.subject を変数に束ね（cost_of の引数にする）、look の pile から filter（any_of の種族＋cost_le {cost_of: 変数}）で hit を分ける（dm21-013 の骨格）。
+- 「自分のターンの終わりに、アンタップしていれば手札に戻す」の条件は {exists: {ref: self, filter: {tapped: false}}}（T497 で判別確認）。
+- proto T491（自己軽減）/ T492（自己付与）/ T493（複合 free_if）/ T494（初回攻撃タウント）/ T496（攻撃時公開）/ T497（ターン終わり帰還）。tests/test_vocab_pilot198.py 8件＋test_vocab_pilot198_cards.py 2件。
+- 再変換はラウンド234で実施（登録見込み9件）。
+
+## 第199弾: chosen_trigger（相手に選ばれた時）＋ must_be_chosen（2026-11-12）
+「相手がこのクリーチャーを選んだ時」の誘発は既存だった（セレクタの決定経路が {ev: choose, subject, player: chooser} を誘発収集へ流す）。本弾は挙動の固定と、対になる選択強制の追加。
+- choose 誘発の範囲: 対象が1体だけだと選択決定は自動解決されるが誘発はする。「すべて破壊」のような数え上げ経路は選んだことにならない。自分の効果で選んだ時は誘発しない。選ばれて破壊されても誘発は解決する（発生源から独立）。filter の power_le に {power_of: self} を渡すと「自分のパワー以下」の全体破壊になる。
+- 新規 mod `must_be_chosen: true`（「相手が自分のクリーチャーを選ぶ時、相手は可能ならこのクリーチャーを選ぶ」）: defs の MOD_KEYS＋検証、chars へ集約し、セレクタの be_chosen フィルタ直後で、must_be_chosen を持つ候補がいるコントローラーの他のクリーチャーを候補から外す。このクリーチャー自身が候補にいない効果（フィルタ不一致）や、be_chosen 保護で先に外れた場合は制限しない。スキーマは MOD_KEYS から生成されるため再生成のみ。
+- 併せて使う形: 選ばれた側の「相手はマナを3枚残して他を墓地へ」は choose {chooser: opp, count: 3, up_to: true} as keep ＋ move {count: all, exclude: {ref: keep}}（exclude は変数名ではなくセレクタ {ref: 名前} で書く）。EXライフシールド離脱の誘発は第190弾の subject {exlife_of: self}。
+- proto T498（must_be_chosen）/ T499（choose 誘発ドロー）/ T500（全体破壊・対照）/ T501（自壊呪文・対照）/ T502（自パワー以下の全体破壊）。tests/test_vocab_pilot199.py 8件＋test_vocab_pilot199_cards.py 2件。判別は defs/core/selectors を stash すると崩れることを確認。回帰は第164・185弾＋engine＋mechanics＋schemas で通過。
+- 再変換はラウンド235で実施（登録見込み9件）。
+
+## 第200弾: cast_resolution_destination（唱えた後の置き場所）のイディオム確認（2026-11-12）
+「唱えた後、墓地に置くかわりに〜に置く」は既存の2形で書ける。新規エンジン語彙なし。
+- 他のカードの効果で唱える場合: op play_free の resolve_to / resolve_position（docstring に用例そのものがある）。行き先は hand / mana / deck（+ position: bottom）。
+- 呪文自身の恒常的な行き先は面の resolve_to（チャージャー等）。条件つきの自己帰還（解決中の結果に依存するもの）は、置換の if が解決中の変数を読めないため未対応（ギャップ cast_destination_conditional として分離）。
+- 誤ラベル発見: dm25ex1-021「水のクリーチャーが11体以上あればゲームに勝つ」は cast と無関係の常在勝利で、{kind: state, if: 条件, effect: [{op: win}]}（SBA で評価）で書ける（T505 で挙動確認）。
+- 範囲外・未対応の分離: 超次元ゾーンへの配置（hyperdimensional_zone、範囲外）、シールドの束の上への配置（shield_pile_attach）、ブレイク前に唱える（before_break_cast）、跳次元召喚（choujigen_shoukan）は、それぞれ精緻化ギャップとして差し戻し、解けた節は partial に残した。
+- proto T503（resolve_to: hand）/ T504（resolve_to: deck, bottom）/ T505（常在勝利）。tests/test_vocab_pilot200.py 4件＋test_vocab_pilot200_cards.py 2件。
+- 再変換はラウンド236で実施（登録4件＋差し戻し5件の見込み）。
+
+## 第201弾: sasageeru（ササゲール）のイディオム確認（2026-11-12）
+ササゲール本体は既存だった（mod sac_reduce を持つ場のカードが、ディスペクター召喚時の軽減プールになる）。新規エンジン語彙なし。
+- 純粋なササゲール・タマシードは static {affects: self, mod: {sac_reduce: N}} のみでよい（T506 で「マナ5＋ササゲール2でコスト7を召喚でき、生贄は破壊される」ことを確認）。
+- 「ディスタス/ディスペクター・カードを自分のマナゾーンに置いた時、そのカードをアンタップする」は move（to: mana）誘発＋ {ref: event.subject} の untap で書ける。両カテゴリは種族名なので filter は any_of の races。多色カードはマナにタップで置かれる（405.1）ため挙動を観測できる（T507）。
+- 「ササゲールを使った時、軽減したディスペクターに付与する」節は、生贄の破壊と召喚先を結ぶ印が無く未対応（ギャップ sac_reduce_followup）。
+- proto T506（ササゲール玉）/ T507（マナ置き反応）。tests/test_vocab_pilot201.py 3件＋test_vocab_pilot201_cards.py 2件。
+- 再変換はラウンド237で実施（登録6件＋差し戻し1件の見込み）。
+
+## 第202弾: trigger_when_opponent_uses_s_trigger（相手がS・トリガーを使った時）のイディオム確認（2026-11-12）
+「相手がS・トリガーを使った時」の誘発は既存だった（宣言時に合成レコード {ev: use_s_trigger, player: 使用者} が誘発収集へ流れる）。新規エンジン語彙なし。
+- 受け方は {when: {event: use_s_trigger, player: opp}}。「2枚まで引く」は repeat 2 の may ドロー。「山札からS・トリガー呪文を探し、シャッフルしてから唱える」は choose（look, filter keyword: s_trigger）→ shuffle → play_free {ref}（シャッフルは参照を無効化しない）。
+- 混同注意: 「相手がS・トリガーを持つカードを使った時」（唱える/召喚する）は use_s_trigger ではなく、cast レコードと召喚 move への subject フィルタ {keyword: s_trigger} で受ける（dmbd22-017）。
+- テスト上の注意: declare_strigger 決定に空答えを返すと宣言しなかったことになる（min 0 のため）。宣言させるには選択肢を明示的に選ぶ。
+- proto T508（盾反応獣）。tests/test_vocab_pilot202.py 3件＋test_vocab_pilot202_cards.py 2件。
+- 再変換はラウンド238で実施（登録見込み8件）。
+
+## 第203弾: unblocked_trigger（ブロックされなかった時）のイディオム確認（2026-11-12）
+「攻撃してブロックされなかった時」は、攻撃宣言の誘発から {op: delayed_trigger, when: {event: break, player: 守る側}, duration: during_attack} を仕掛ける形で表す（dm23-045 の登録先例を一般化）。新規エンジン語彙なし。
+- ブロックされればブレイクは起きず発火しない。ブレイク・レコードの subject はブレイクしたクリーチャーなので、遅延効果内では {ref: event.subject} で攻撃側を指せる。「攻撃の後、そのターンを終了する」は {op: end_turn}。「ブロック中パワー+N」は mod power_when {amount: N, when: blocking}。
+- 「離れるかわりにとどまる」（条件つき）は kind: replace ＋ if（体数条件と {power_ge: 1}）＋ instead: [] で書ける。
+- 範囲外: クリーチャーへの攻撃がブロックされなかった場合（ブレイクが無い）はこの形では拾えない → ギャップ unblocked_creature_attack に分離（dmex10-041。プレイヤー攻撃の形は partial に保存）。
+- proto T509（未ブロック反応・ドロー、ブロック対照つき）/ T510（攻撃後ターン終了）。tests/test_vocab_pilot203.py 4件＋test_vocab_pilot203_cards.py 2件。テスト注意: ブロック決定の選択肢キーは guard: ではなく対象の bz:… キー。
+- 再変換はラウンド239で実施（登録7件＋差し戻し1件の見込み）。
+
+## 第204弾: henrei（返霊）のイディオム確認（2026-11-12）
+返霊N は「攻撃誘発 → may［墓地からN枚を好きな順序で山札の一番下へ（move、order: choose、reason: put、as: paid）→ {cmp: [{var: paid}, "==", N]} の場合のみ本体効果］」のイディオムで書ける。新規エンジン語彙なし。墓地がN枚未満なら支払えず本体は発動しない。
+- dm36-006 の「シールドを1枚選び、残りをすべてブレイク」は break の count を {sum: [{count: シールド数}, -1]} とし、ブレイク側が割る盾を選ぶことで等価に表す。ランダム手札捨ては {op: discard}（chooser 無し。dm12-025 先例）。
+- 地獄返霊（「またはその能力を使った時」。dm36-005）は分岐の意味が別途必要なため新ギャップ jigoku_henrei に分離（攻撃時の形は partial に保存）。
+- proto T511（返霊2→ドロー、支払い/辞退の対照つき）。tests/test_vocab_pilot204.py 3件＋test_vocab_pilot204_cards.py 2件。
+- 再変換はラウンド240で実施（登録8件＋差し戻し1件の見込み）。
+
+## 第205弾: labyrinth（ラビリンス）のイディオム確認（2026-11-12）
+ラビリンスは条件名で、本体は {cmp: [{count: {zone: shield, owner: you}}, ">", {count: {zone: shield, owner: opp}}]} を static / trigger の if に置くイディオム。新規エンジン語彙なし。条件は評価のたびに読まれるためシールド数の変化に追随する。
+- ファミリーの他条項の既存形: 攻撃先変更は起動型 {kind: activate, cost: {untap: self}, redirect: true}（第171弾）、モード選択は {op: modal, modes: [...]}、バトル勝利は {event: battle_win, subject: self}、「そのターン攻撃が無かった」は {turn_count: {kind: attack}} の条件、「次の自分のターンまで離れない」は modify の no_leave ＋ duration: until_next_own_turn_start。
+- 範囲外（分離）: 効果で手札に加えたシールドの S・トリガー宣言（宣言の機会はブレイク処理にしか無い）→ shield_hand_strigger_use。誘発型の攻撃先変更（起動型 redirect と別）→ labyrinth_trigger_redirect。
+- proto T512（静的パワー）/ T513（CIP ドロー）。tests/test_vocab_pilot205.py 4件＋test_vocab_pilot205_cards.py 2件。テスト注意: パワーは e.chars(cid)["power"] で読む。召喚の成否は「召喚直後の最初の決定」時点の手札で測る（攻撃ステップは自動で飛ぶことがある）。
+- 再変換はラウンド241で実施（登録6件＋差し戻し2件の見込み）。
+
+## 第206弾: rainbonus（レインボーナス）のイディオム確認（2026-11-12）
+レインボーナスは条件付き能力の接頭辞で、本体は {exists: {zone: bz, owner: you, filter: {types: [creature], multicolor: true}}} を if に置くイディオム。新規エンジン語彙なし。
+- 「攻撃できない能力を無視する」は鬼タイムの先例（dmrp14-079）と同型に書く: キーワードの展開形を id: above つき静的として直接書き、条件つき静的が mod {ignore_ids: [above]} で無視する。注意: submit はカードテキストからキーワードを補完するため、cannot_attack_player を keywords に残すと展開形の deny が二重になり ignore_ids が効かない（deny は id を持たない方も残る）。dmex14-042 は登録後にこの形へ修正し、多色あり/なしでの permits まで確認した。「次の相手のターンのはじめにアンタップしない」は tap op の no_untap_next（条件分岐は choose で束ねてから if/else で tap し分ける）。「はじめて攻撃する時」は when の ord {kind: attack_by, eq: 1}（第159弾）。
+- proto T514（破壊誘発ドロー、多色あり/なし対照つき）/ T515（多色の試験獣）。tests/test_vocab_pilot206.py 3件＋test_vocab_pilot206_cards.py 2件。テスト注意: 攻撃対象にできるのはタップ状態のクリーチャーだけなので、相手の大型を先に攻撃させてタップさせる。
+- 再変換はラウンド242で実施（登録7件の見込み）。
+
+## 第207弾: deck_limit_exception（デッキ枚数制限の例外）の扱いの確認（2026-11-12）
+「4枚以上デッキに入れることができる」はデッキ構築のルールで対戦中の能力ではないため、コーパスの先例（dmex13-057 等）どおり defs には表さず、残りの条項だけで変換する。新規エンジン語彙なし。
+- ファミリーの形: 名前カウント条件の自己強化（{count: {filter: {name_has: …}}} の if ＋ mod {power, breaks}）、パワー閾値のブレイカー獲得（if {power_ge: N}。自己参照は _threshold_power が再帰を回避）、体数比例のパワーアタッカー（power_when {amount, count: <selector>, when: attacking}。selector の other: true で「自分の他の」）、2ゾーンにまたがるカウントの召喚コスト軽減（selector の zone はリスト可）。
+- proto T516（遊撃師団 テスト兵）/ T517（閾値獣）。tests/test_vocab_pilot207.py 3件＋test_vocab_pilot207_cards.py 1件。
+- 再変換はラウンド243で実施（登録8件の見込み）。
+
+## 第208弾: j_crime（Jクライム）のイディオム確認（2026-11-12）
+JクライムN は「攻撃誘発 → may［swap {out: {ref: self}, in: {zone: graveyard, filter: {races: [ジョーカーズ], cost_le: N}, count: 1}, out_to: graveyard}］」のイディオムで書ける。op swap（701.26）は入ったクリーチャーにタップ状態と攻撃中の状態を引き継がせる。新規エンジン語彙なし。
+- proto T518（Jクライム獣、入れ替え/辞退の対照つき）/ T519（墓地ジョーカーズ）。tests/test_vocab_pilot208.py 3件＋test_vocab_pilot208_cards.py 2件。
+- 再変換はラウンド244で実施（登録8件の見込み）。

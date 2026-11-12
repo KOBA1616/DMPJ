@@ -176,6 +176,11 @@ class Engine(SelectorMixin, EventMixin, InterpreterMixin, TurnMixin, CombatMixin
                 return side
         return None
 
+    def link_spec(self, cid: int) -> list:
+        """名前指定 G・リンク（第197弾）のリンク先指定 [{name, pos}]。無ければ空リスト。
+        位置キーワード（左/中央/右）とは別系統で、対象はカード名で決まる。"""
+        return self.fdef(cid).link_to or []
+
     def link_members(self, cid: int) -> list[int]:
         """cid がリンクしているグループの全カード（左→中央→右の順）。リンクしていなければ [cid]。"""
         c = self.s.cards[cid]
@@ -547,13 +552,13 @@ class Engine(SelectorMixin, EventMixin, InterpreterMixin, TurnMixin, CombatMixin
                     "keywords": set(), "name": d.name, "names": [d.name], "allow": [], "deny": [], "require": [],
                     "breaks": 0, "break_opts": [], "breaks_add": 0, "pay_cost": d.cost, "sac_reduce": 0,
                     "opt_reduce": None, "cost_may": [], "no_leave": [], "must_be_attacked": False,
-                    "must_be_attacked_first": False, "must_attack_creature": False,
+                    "must_be_attacked_first": False, "must_be_chosen": False, "must_attack_creature": False,
                     "must_attack_creature_first": False,
                     "battle_indestructible": False, "win_all_battles": False, "crystal_soul": 0}
         ch = {"power": d.power, "cost": d.cost, "civs": list(d.civs), "types": list(d.types),
               "races": list(d.races), "keywords": set(d.keywords), "name": d.name, "names": [d.name],
               "allow": [], "deny": [], "require": [], "breaks": 1, "break_opts": [], "breaks_add": 0, "pay_cost": d.cost, "sac_reduce": 0, "opt_reduce": None, "cost_may": [], "no_leave": [], "must_be_attacked": False, "must_be_attacked_first": False,
-              "must_attack_creature": False, "must_attack_creature_first": False,
+              "must_be_chosen": False, "must_attack_creature": False, "must_attack_creature_first": False,
               "battle_indestructible": False, "battle_indestructible_filters": [], "win_all_battles": False,
               "indestructible": False, "crystal_soul": d.crystal_soul}
         self._chars_busy.add(cid)
@@ -650,6 +655,8 @@ class Engine(SelectorMixin, EventMixin, InterpreterMixin, TurnMixin, CombatMixin
                 ch["must_be_attacked_first"] = True
             elif _mba:   # 「相手のクリーチャーが攻撃する時、可能ならこのクリーチャーを攻撃する」（第51弾）
                 ch["must_be_attacked"] = True
+            if m.get("must_be_chosen"):   # 「相手が選ぶ時、可能ならこのクリーチャーを選ぶ」（第199弾）
+                ch["must_be_chosen"] = True
             _mac = m.get("must_attack_creature")
             if isinstance(_mac, dict):   # 「可能ならクリーチャーを攻撃する」（第171弾）: そのクリーチャーの初回攻撃だけ、攻撃できるクリーチャーがいればプレイヤーを攻撃できない
                 ch["must_attack_creature_first"] = True
@@ -940,6 +947,8 @@ class Engine(SelectorMixin, EventMixin, InterpreterMixin, TurnMixin, CombatMixin
             self.s.deck_emptied.append(c.owner)
 
     @staticmethod
-    def _rel(who: str, env: dict) -> int:
+    def _rel(who, env: dict) -> int:
+        if isinstance(who, dict):   # {var: 名前}: choose_player（第192弾）が入れた相対指定を引く
+            return Engine._rel(env["vars"][who["var"]], env)
         you = env["you"]
         return {"you": you, "opp": 1 - you}[who]

@@ -37,7 +37,10 @@ class SelectorMixin:
         if isinstance(v, dict):
             return [self.s.ref(c) for c in self.candidates(v, env)]
         refs = [env.get("self")] if v == "self" else env.get("vars", {}).get(v, [])
-        return [r for r in refs if r and self.s.alive(r)]
+        # alive で落とさない: crossed_to / host_of は宿主が離れた後の LKI 参照で
+        # 引くのが用途（crossed_gears が gen 完全一致で照合する。第195弾:
+        # 破壊されたクリーチャーにクロスしてあったギアを拾うため）
+        return [r for r in refs if r]
 
     def _expr_refs(self, v, env):
         """cost_of / power_of の参照先を ref のリストにする。
@@ -608,6 +611,19 @@ class SelectorMixin:
         src_cid = first[0] if isinstance(first, (list, tuple)) else first   # self は cid の列（参照 [cid, gen] の場合もある）
         cands = [c for c in cands if self.s.cards[c].zone != "bz" or self.s.cards[c].controller == chooser
                  or self.permits(c, "be_chosen", other=src_cid)]
+        # 「可能ならこのクリーチャーを選ぶ」（第199弾）: 選ぶ側と別のコントローラーの候補の中に
+        # must_be_chosen を持つクリーチャーがいれば、そのコントローラーの他のクリーチャーは
+        # 候補から外す（このクリーチャー自体が候補にいない効果では制限しない）
+        must_by_ctrl: dict[int, set[int]] = {}
+        for c in cands:
+            card = self.s.cards[c]
+            if card.zone == "bz" and card.controller != chooser and self.chars_ro(c).get("must_be_chosen"):
+                must_by_ctrl.setdefault(card.controller, set()).add(c)
+        if must_by_ctrl:
+            cands = [c for c in cands
+                     if self.s.cards[c].zone != "bz"
+                     or self.s.cards[c].controller not in must_by_ctrl
+                     or c in must_by_ctrl[self.s.cards[c].controller]]
         if "distinct_from" in sel:   # 「自分のどのクリーチャーともコストが異なる」（第147弾・型1）: 参照集合のコストと重なる候補を外す。
             # 評価は選択開始時に1回だけ（＝出す前の場。選んだカードが出た後に場のコストが増えても残りの選択には影響しない）
             ref_costs = {self.chars_ro(c)["cost"] for c in self.candidates(sel["distinct_from"], env)}

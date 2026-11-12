@@ -231,6 +231,24 @@ class TurnMixin:
                     if fi is not None:
                         opt["face"] = fi
                     out.append(opt)
+        seen_b = set()   # マナ爆誕（第191弾）: カード自身の能力で、自分のマナゾーンから固定コストで召喚できる
+        for cid in self.zlist("mana", p):
+            dn = self.s.cards[cid].defn
+            if dn in seen_b or not self.permits(cid, "summon"):
+                continue
+            d = self.cdef(cid)
+            for fi, f in ([(None, d)] if not d.faces else list(enumerate(d.faces))):
+                mb = f.mana_bakutan
+                if mb is None or "creature" not in f.types or "evolution" in f.types:
+                    continue
+                # コスト0はマナをタップしないので文明の要求も無い。それ以外はカード自身の文明を含む支払い
+                if self._mana_choices(cid, p, fi, cost=mb, limit=1, civs=f.civs if mb > 0 else []):
+                    seen_b.add(dn)
+                    opt = {"key": f"play:{dn}:bakutan" if fi is None else f"play:{dn}:{fi}:bakutan",
+                           "cid": cid, "name": f.name, "rush": True, "bakutan": True}
+                    if fi is not None:
+                        opt["face"] = fi
+                    out.append(opt)
         return out
 
     def _grave_summon_grant(self, cid) -> dict | None:
@@ -282,11 +300,15 @@ class TurnMixin:
             if "cross_gear" not in self.chars_ro(g)["types"]:
                 continue
             cur = self.s.cards[g].crossed
-            if not self._mana_choices(g, p, limit=1):
-                continue
+            payable = bool(self._mana_choices(g, p, limit=1))
             for c in self.bz_tops(p):
                 if "creature" in self.chars_ro(c)["types"] and not (cur and cur == self.s.ref(c)):
-                    out.append({"key": f"cross:{self.s.cards[g].defn}:{self.s.cards[c].defn}", "cid": g, "target": self.s.ref(c)})
+                    if payable:
+                        out.append({"key": f"cross:{self.s.cards[g].defn}:{self.s.cards[c].defn}", "cid": g, "target": self.s.ref(c)})
+                    # コストを支払わずにクロスできる許可（第195弾）: ギア側・クリーチャー側
+                    # どちらの allow でもよい（other は相手側カードに当てる）
+                    if self.permits(g, "cross_free", c) or self.permits(c, "cross_free", g):
+                        out.append({"key": f"cross:{self.s.cards[g].defn}:{self.s.cards[c].defn}:free", "cid": g, "target": self.s.ref(c), "free": True})
         return out
 
     def _reveal_options(self, p: int) -> list[dict]:
@@ -439,7 +461,7 @@ class TurnMixin:
         if eff == 0 and not (civs if civs is not None else d.civs):
             return [[]]
         cs = ch.get("crystal_soul", 0)   # 水晶ソウル（第154弾）: このカードの支払いでは裏向きマナの数字が cs になる（置換。文明は得ない）
-        untapped = [c for c in self.zlist("mana", p) if not self.s.cards[c].tapped]
+        untapped = [c for c in self.zlist("mana", p) if c != cid and not self.s.cards[c].tapped]   # 実行するカード自身は支払いに使えない（第191弾: マナゾーンから出す時、自分をタップして払えてしまっていた）
         if len(untapped) < len(d.civs) or sum(cs if (cs and self.s.cards[c].face_down) else self.cdef(c).mana for c in untapped) < eff:
             return []
         groups: dict = {}
@@ -588,7 +610,8 @@ def st_main(eng, t):                                    # 504
     elif o.get("hyper_act"):
         eng._push({"t": "hyper", "cid": o["cid"], "player": a})
     elif o["key"].startswith("cross:"):
-        eng._push({"t": "cross", "gear": eng.s.ref(o["cid"]), "target": o["target"], "player": a})
+        eng._push({"t": "cross", "gear": eng.s.ref(o["cid"]), "target": o["target"], "player": a,
+                   **({"free": True} if o.get("free") else {})})
     else:
         task = eng.play_task(o["cid"], a, o.get("free", False), o.get("face"))
         if o.get("rush"):
@@ -616,6 +639,11 @@ def st_main(eng, t):                                    # 504
             task["recycle"] = True
             task["cost_override"] = fd.recycle["cost"]
             task["cost_civs"] = fd.recycle.get("civs", fd.civs)
+        if o.get("bakutan"):   # マナ爆誕（第191弾）: マナゾーンから固定コストで召喚する（支払い規約は recycle と同じ）
+            fd = eng.cdef(o["cid"]).face(o.get("face"))
+            task["bakutan"] = True
+            task["cost_override"] = fd.mana_bakutan
+            task["cost_civs"] = fd.civs if fd.mana_bakutan > 0 else []
         if o.get("vivid"):
             fd = eng.cdef(o["cid"]).face(o.get("face"))
             task["vivid"] = True   # 第54弾: 唱えた/召喚した経路をイベントと解決 env へ伝える
@@ -723,6 +751,10 @@ def h_cross(eng, t):
     s = eng.s
     g, tg, p = t["gear"], t["target"], t["player"]
     if not (s.alive(g) and s.alive(tg)) or s.cards[g[0]].zone != "bz" or s.cards[tg[0]].zone != "bz":
+        eng._pop(t)
+        return None
+    if t.get("free"):   # cross_free 許可によるクロス（第195弾）: 支払いは無い
+        s.cards[g[0]].crossed = list(tg)
         eng._pop(t)
         return None
     choices = eng._mana_choices(g[0], p)

@@ -248,6 +248,34 @@
    "type": "integer",
    "minimum": 1
   },
+  "mana_bakutan": {
+   "type": "integer",
+   "minimum": 0
+  },
+  "link_to": {
+   "type": "array",
+   "items": {
+    "type": "object",
+    "properties": {
+     "name": {
+      "type": "string"
+     },
+     "pos": {
+      "enum": [
+       "right",
+       "left",
+       "up",
+       "down"
+      ]
+     }
+    },
+    "required": [
+     "name",
+     "pos"
+    ],
+    "additionalProperties": false
+   }
+  },
   "evolve_count": {},
   "evolve_zone": {},
   "evolve_any": {},
@@ -502,6 +530,34 @@
      "type": "integer",
      "minimum": 1
     },
+    "mana_bakutan": {
+     "type": "integer",
+     "minimum": 0
+    },
+    "link_to": {
+     "type": "array",
+     "items": {
+      "type": "object",
+      "properties": {
+       "name": {
+        "type": "string"
+       },
+       "pos": {
+        "enum": [
+         "right",
+         "left",
+         "up",
+         "down"
+        ]
+       }
+      },
+      "required": [
+       "name",
+       "pos"
+      ],
+      "additionalProperties": false
+     }
+    },
     "text": {},
     "mana": {},
     "evolve_count": {},
@@ -575,9 +631,25 @@
         "const": "break"
        },
        "player": {
-        "enum": [
-         "you",
-         "opp"
+        "anyOf": [
+         {
+          "enum": [
+           "you",
+           "opp"
+          ]
+         },
+         {
+          "type": "object",
+          "properties": {
+           "var": {
+            "type": "string"
+           }
+          },
+          "required": [
+           "var"
+          ],
+          "additionalProperties": false
+         }
         ]
        },
        "count": {
@@ -703,6 +775,22 @@
       "type": "object",
       "properties": {
        "op": {
+        "const": "choose_player"
+       },
+       "as": {
+        "type": "string"
+       }
+      },
+      "required": [
+       "op",
+       "as"
+      ],
+      "additionalProperties": false
+     },
+     {
+      "type": "object",
+      "properties": {
+       "op": {
         "const": "choose_race"
        },
        "as": {
@@ -712,6 +800,26 @@
       "required": [
        "op",
        "as"
+      ],
+      "additionalProperties": false
+     },
+     {
+      "type": "object",
+      "properties": {
+       "op": {
+        "const": "cross_free"
+       },
+       "gear": {
+        "$ref": "#/$defs/selector"
+       },
+       "to": {
+        "$ref": "#/$defs/selector"
+       }
+      },
+      "required": [
+       "op",
+       "gear",
+       "to"
       ],
       "additionalProperties": false
      },
@@ -751,10 +859,26 @@
         "const": "draw"
        },
        "player": {
-        "enum": [
-         "you",
-         "opp",
-         "each"
+        "anyOf": [
+         {
+          "enum": [
+           "you",
+           "opp",
+           "each"
+          ]
+         },
+         {
+          "type": "object",
+          "properties": {
+           "var": {
+            "type": "string"
+           }
+          },
+          "required": [
+           "var"
+          ],
+          "additionalProperties": false
+         }
         ]
        },
        "count": {
@@ -797,9 +921,25 @@
         "const": "extra_turn"
        },
        "player": {
-        "enum": [
-         "you",
-         "opp"
+        "anyOf": [
+         {
+          "enum": [
+           "you",
+           "opp"
+          ]
+         },
+         {
+          "type": "object",
+          "properties": {
+           "var": {
+            "type": "string"
+           }
+          },
+          "required": [
+           "var"
+          ],
+          "additionalProperties": false
+         }
         ]
        }
       },
@@ -965,9 +1105,25 @@
         "const": "lose"
        },
        "player": {
-        "enum": [
-         "you",
-         "opp"
+        "anyOf": [
+         {
+          "enum": [
+           "you",
+           "opp"
+          ]
+         },
+         {
+          "type": "object",
+          "properties": {
+           "var": {
+            "type": "string"
+           }
+          },
+          "required": [
+           "var"
+          ],
+          "additionalProperties": false
+         }
         ]
        }
       },
@@ -1208,10 +1364,26 @@
         "const": "no_lose"
        },
        "player": {
-        "enum": [
-         "you",
-         "opp",
-         "each"
+        "anyOf": [
+         {
+          "enum": [
+           "you",
+           "opp",
+           "each"
+          ]
+         },
+         {
+          "type": "object",
+          "properties": {
+           "var": {
+            "type": "string"
+           }
+          },
+          "required": [
+           "var"
+          ],
+          "additionalProperties": false
+         }
         ]
        },
        "duration": {
@@ -1378,9 +1550,25 @@
         "const": "reveal_until"
        },
        "player": {
-        "enum": [
-         "you",
-         "opp"
+        "anyOf": [
+         {
+          "enum": [
+           "you",
+           "opp"
+          ]
+         },
+         {
+          "type": "object",
+          "properties": {
+           "var": {
+            "type": "string"
+           }
+          },
+          "required": [
+           "var"
+          ],
+          "additionalProperties": false
+         }
         ]
        },
        "player_from": {
@@ -1457,9 +1645,25 @@
         "const": "shuffle"
        },
        "player": {
-        "enum": [
-         "you",
-         "opp"
+        "anyOf": [
+         {
+          "enum": [
+           "you",
+           "opp"
+          ]
+         },
+         {
+          "type": "object",
+          "properties": {
+           "var": {
+            "type": "string"
+           }
+          },
+          "required": [
+           "var"
+          ],
+          "additionalProperties": false
+         }
         ]
        },
        "player_from": {
@@ -1478,9 +1682,25 @@
         "const": "step_mod"
        },
        "player": {
-        "enum": [
-         "you",
-         "opp"
+        "anyOf": [
+         {
+          "enum": [
+           "you",
+           "opp"
+          ]
+         },
+         {
+          "type": "object",
+          "properties": {
+           "var": {
+            "type": "string"
+           }
+          },
+          "required": [
+           "var"
+          ],
+          "additionalProperties": false
+         }
         ]
        },
        "step": {
@@ -1685,9 +1905,25 @@
         "const": "win"
        },
        "player": {
-        "enum": [
-         "you",
-         "opp"
+        "anyOf": [
+         {
+          "enum": [
+           "you",
+           "opp"
+          ]
+         },
+         {
+          "type": "object",
+          "properties": {
+           "var": {
+            "type": "string"
+           }
+          },
+          "required": [
+           "var"
+          ],
+          "additionalProperties": false
+         }
         ]
        }
       },
@@ -1864,10 +2100,26 @@
     "under_of": {},
     "bundle_of": {},
     "owner": {
-     "enum": [
-      "you",
-      "opp",
-      "any"
+     "anyOf": [
+      {
+       "enum": [
+        "you",
+        "opp",
+        "any"
+       ]
+      },
+      {
+       "type": "object",
+       "properties": {
+        "var": {
+         "type": "string"
+        }
+       },
+       "required": [
+        "var"
+       ],
+       "additionalProperties": false
+      }
      ]
     },
     "owner_of": {
@@ -1910,11 +2162,27 @@
      "$ref": "#/$defs/expr"
     },
     "chooser": {
-     "enum": [
-      "you",
-      "opp",
-      "opponent",
-      "random"
+     "anyOf": [
+      {
+       "enum": [
+        "you",
+        "opp",
+        "opponent",
+        "random"
+       ]
+      },
+      {
+       "type": "object",
+       "properties": {
+        "var": {
+         "type": "string"
+        }
+       },
+       "required": [
+        "var"
+       ],
+       "additionalProperties": false
+      }
      ]
     },
     "ref": {
@@ -2345,6 +2613,7 @@
          "block",
          "cast",
          "cast_free",
+         "cross_free",
          "d_switch",
          "enter_bz",
          "evolve_base",
@@ -2372,6 +2641,7 @@
            "block",
            "cast",
            "cast_free",
+           "cross_free",
            "d_switch",
            "enter_bz",
            "evolve_base",
@@ -2443,6 +2713,7 @@
          "block",
          "cast",
          "cast_free",
+         "cross_free",
          "d_switch",
          "enter_bz",
          "evolve_base",
@@ -2470,6 +2741,7 @@
            "block",
            "cast",
            "cast_free",
+           "cross_free",
            "d_switch",
            "enter_bz",
            "evolve_base",
@@ -2845,6 +3117,7 @@
     "indestructible": {},
     "must_attack_creature": {},
     "must_be_attacked": {},
+    "must_be_chosen": {},
     "no_leave": {},
     "win_all_battles": {}
    },
@@ -2874,6 +3147,7 @@
      "indestructible",
      "must_attack_creature",
      "must_be_attacked",
+     "must_be_chosen",
      "no_leave",
      "opt_reduce",
      "power",

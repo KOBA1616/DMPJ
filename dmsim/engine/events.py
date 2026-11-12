@@ -48,6 +48,11 @@ class EventMixin:
                                "event": rec, "vars": {}}
                         if not self.eval_cond(ab["if"], env):
                             continue
+                    if ab.get("once_per_turn"):   # 「各ターンに一度」の置換（第196弾。誘発側は
+                        # events の誘発収集で見るが、置換側はここで見る。印は選ばれた時に付ける）
+                        r = self.s.ref(src)
+                        if self.s.turn_counters.get(f"once:replace:{r[0]}:{r[1]}:{i}"):
+                            continue
                     cands.append((src, i, ab))
         cands_ab = [((s_, i), ab) for s_, i, ab in cands]
         if cands:
@@ -63,6 +68,9 @@ class EventMixin:
                 env = {"you": self.s.cards[src].controller, "self": self.s.ref(src), "event": rec,
                        "vars": {}, "no_replace": True, "capture": True}
                 ab = next(a for j, a in cands_ab if j == (src, i))
+                if ab.get("once_per_turn"):
+                    r = self.s.ref(src)
+                    self.s.turn_counters[f"once:replace:{r[0]}:{r[1]}:{i}"] = 1
                 return self._child(ab["instead"], env)
         return None
 
@@ -435,7 +443,7 @@ class EventMixin:
                         if "z_rush" in self.fdef(x).keywords:
                             s.cards[x].hyper = True
             new = s.ref(cid)
-            if ev["to"] == "bz" and self.link_side(cid) is not None:   # ゴッドが出たらリンク手順を行う
+            if ev["to"] == "bz" and (self.link_side(cid) is not None or self.link_spec(cid)):   # ゴッドが出たらリンク手順を行う
                 self._push({"t": "g_link", "cid": cid, "player": c.controller, "step": "start"})
             if ev["to"] == "bz" and "field" in self.fdef(cid).types:
                 # 一意性はプール分離（第151弾。公式裏取り済み）: D2フィールドは D2フィールド同士だけが
@@ -1153,6 +1161,39 @@ def h_g_link(eng, t):
         eng._pop(t)
         return None
     side = eng.link_side(cid)
+    spec = eng.link_spec(cid)
+    if side is None and spec:
+        # 名前指定リンク（第197弾）: 指定名のゴッドがいるグループにリンクする。
+        # 同じ名前のカードは1グループに1枚まで（星座が一意に決まる）。
+        names = {e["name"] for e in spec}
+        my_name = eng.fdef(cid).name
+        targets = []
+        for c in eng.bz_tops(p):
+            if c == cid or eng.fdef(c).name not in names:
+                continue
+            if any(eng.fdef(m).name == my_name for m in eng.link_members(c)):
+                continue
+            targets.append(c)
+        if not targets:
+            eng._pop(t)
+            return None
+        opts = [eng._card_option(c, True) for c in targets] + [{"key": "pass"}]
+        a, d = eng.ask(t, p, "choose_link_target", opts)
+        if d:
+            return d
+        eng._pop(t)
+        if opts[a[0]]["key"] != "pass":
+            tgt = targets[a[0]]
+            gid = s.cards[tgt].link
+            if not gid:
+                s.seq += 1
+                gid = s.seq
+                s.cards[tgt].link = gid
+            s.cards[cid].link = gid
+            members = eng.link_members(cid)
+            eng._push(eng.ev_task([{"ev": "link_established", "subject": s.ref(m),
+                                    "controller": s.cards[m].controller} for m in members]))
+        return None
     if t["step"] == "start":
         t["step"] = "unlink" if side == 1 else "link"
     if t["step"] == "unlink":   # 中央のみ: リンクを外すカードを1枚ずつ選ぶ（終えたら link へ）

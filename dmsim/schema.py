@@ -13,14 +13,18 @@ from .defs import ABILITY_KEYS, CARD_TYPES, CIVS, DURATIONS_FIXED, EVENTS, FILTE
     core_ops, load_tables
 
 
+VAR_REF = {"type": "object", "properties": {"var": {"type": "string"}},
+           "required": ["var"], "additionalProperties": False}   # プレイヤー指定の変数参照 {var: 名前}（第192弾）
+
+
 def _build() -> dict:
     zones, keywords, macros, actions, steps = load_tables()
     ops = core_ops()
     ref = lambda n: {"$ref": f"#/$defs/{n}"}  # noqa: E731
     arg = {
         "selector": ref("selector"), "zone": {"enum": sorted(zones)}, "reason": {"enum": sorted(REASONS)},
-        "expr": ref("expr"), "cond": ref("cond"), "ops": ref("ops"), "oplists": {"type": "array", "minItems": 2, "items": ref("ops")}, "player": {"enum": ["you", "opp"]},
-        "players": {"enum": ["you", "opp", "each"]}, "mod": ref("mod"), "duration": {"enum": sorted(DURATIONS_FIXED)}, "position": {"enum": sorted(POSITIONS)},
+        "expr": ref("expr"), "cond": ref("cond"), "ops": ref("ops"), "oplists": {"type": "array", "minItems": 2, "items": ref("ops")}, "player": {"anyOf": [{"enum": ["you", "opp"]}, VAR_REF]},
+        "players": {"anyOf": [{"enum": ["you", "opp", "each"]}, VAR_REF]}, "mod": ref("mod"), "duration": {"enum": sorted(DURATIONS_FIXED)}, "position": {"enum": sorted(POSITIONS)},
         "step": {"enum": steps}, "str": {"type": "string"}, "int": {"type": "integer"},
         "bool": {"type": "boolean"}, "any": {}, "ability": ref("ability"), "filter": ref("filter"),
     }
@@ -48,7 +52,7 @@ def _build() -> dict:
         "keywords": {"type": "array", "items": {"enum": sorted(keywords)}},
         "abilities": {"type": "array", "items": ref("ability")}, "spell": ref("ops"),
         "evolve_from": {"anyOf": [{"type": "object", "properties": {k: {} for k in sorted(FILTER_KEYS | {"zone"})}, "additionalProperties": False}, {"type": "array", "items": {"type": "object"}}]}, "free_if": ref("cond"),
-        "galaxy_shield": {"type": "object", "properties": {"cost": {"type": "integer"}, "civs": {"type": "array", "items": {"enum": sorted(CIVS)}}}, "required": ["cost", "civs"], "additionalProperties": False}, "neo": {"type": "boolean"}, "grave_evo": {"type": "boolean"}, "star": {"type": "boolean"}, "s_max": {"type": "boolean"}, "ace": {"type": "boolean"}, "hyper": {"type": "boolean"}, "crystal_soul": {"type": "integer", "minimum": 1},
+        "galaxy_shield": {"type": "object", "properties": {"cost": {"type": "integer"}, "civs": {"type": "array", "items": {"enum": sorted(CIVS)}}}, "required": ["cost", "civs"], "additionalProperties": False}, "neo": {"type": "boolean"}, "grave_evo": {"type": "boolean"}, "star": {"type": "boolean"}, "s_max": {"type": "boolean"}, "ace": {"type": "boolean"}, "hyper": {"type": "boolean"}, "crystal_soul": {"type": "integer", "minimum": 1}, "mana_bakutan": {"type": "integer", "minimum": 0}, "link_to": {"type": "array", "items": {"type": "object", "properties": {"name": {"type": "string"}, "pos": {"enum": ["right", "left", "up", "down"]}}, "required": ["name", "pos"], "additionalProperties": False}},
     }
     for k in ("text", "mana", "evolve_count", "evolve_zone", "evolve_any", "cost_reduce_per_evo", "resolve_to", "alt_cost", "s_back", "bazurenda",
               "fushigi", "vividraw", "mugen_climb", "o_drive", "odrive_spell", "sst_spell", "stp_spell", "recycle", "deck_evolution"):   # defs.parse_card が読む面の項目
@@ -70,11 +74,11 @@ def _build() -> dict:
                        "additionalProperties": False},
             "selector": {"type": "object", "properties": {
                 "zone": {"anyOf": [{"enum": sorted(zones) + ["any"]}, {"type": "array", "items": {"enum": sorted(zones)}}]},
-                "exlife_of": {"type": "string"}, "castle_of": {"type": "string"}, "under_of": {}, "bundle_of": {}, "owner": {"enum": ["you", "opp", "any"]}, "owner_of": {"type": "string"},
+                "exlife_of": {"type": "string"}, "castle_of": {"type": "string"}, "under_of": {}, "bundle_of": {}, "owner": {"anyOf": [{"enum": ["you", "opp", "any"]}, VAR_REF]}, "owner_of": {"type": "string"},
                 "crossed_to": {}, "host_of": {},
                 "filter": ref("filter"),
                 "count": {"anyOf": [ref("expr"), {"type": "object", "properties": {"upto": ref("expr")}, "additionalProperties": False}, {"const": "all"}, {"const": "any"}, {"const": "rest"}]}, "up_to": {"type": "boolean"},
-                "from_top": ref("expr"), "chooser": {"enum": ["you", "opp", "opponent", "random"]}, "ref": {"type": "string"},
+                "from_top": ref("expr"), "chooser": {"anyOf": [{"enum": ["you", "opp", "opponent", "random"]}, VAR_REF]}, "ref": {"type": "string"},
                 "total_cost_le": ref("expr"), "total_cost_ge": ref("expr"),
                 "total_power_le": ref("expr"), "total_power_ge": ref("expr"),
                 "distinct_costs": {"type": "boolean"}, "distinct_from": ref("selector"),
