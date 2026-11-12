@@ -16,7 +16,7 @@ from dmsim.defs import load_tables, parse_card
 
 ROOT = Path(__file__).parent.parent
 # reopen 前の rejects は第173弾コミットの親ツリーに残っている
-PILOT_COMMIT = "8060b9e"
+PILOT_COMMIT = "acd8dec"
 TABLES = load_tables()
 
 NOTES = "再変換ラウンド209。第173弾 deck_evolution の再変換。"

@@ -7005,7 +7005,6 @@ cards:
     mana: 1
     mana_bakutan: 3
     text: マナ爆誕３（このクリーチャーを自分のマナゾーンから、コスト３を支払って召喚してもよい）
-    source: {official: T465, review: pending}
   - id: T466
     name: 試験用無償爆誕
     types: [creature]
@@ -7016,7 +7015,6 @@ cards:
     mana: 1
     mana_bakutan: 0
     text: マナ爆誕０（このクリーチャーを自分のマナゾーンから、コストを支払わずに召喚してもよい）
-    source: {official: T466, review: pending}
   - id: T467
     name: 試験用爆誕信号手
     types: [creature]
@@ -7032,7 +7030,6 @@ cards:
         when: {event: move, from: mana, to: bz, reason: summon, subject: self}
         effect:
           - {op: draw, count: 1}
-    source: {official: T467, review: pending}
   - id: T468
     name: 試験用爆誕炎兵
     types: [creature]
@@ -7043,7 +7040,6 @@ cards:
     mana: 1
     mana_bakutan: 2
     text: マナ爆誕２（このクリーチャーを自分のマナゾーンから、コスト２を支払って召喚してもよい）
-    source: {official: T468, review: pending}
   - id: T469
     name: 試験用選別竜
     types: [creature]
@@ -7063,7 +7059,6 @@ cards:
             to: deck
             reason: put
           - {op: shuffle, player: {var: tp}}
-    source: {official: T469, review: pending}
   - id: T470
     name: 試験用選別呪文
     types: [spell]
@@ -7078,7 +7073,6 @@ cards:
         select: {zone: hand, owner: {var: tp}, chooser: {var: tp}, count: 1}
         to: graveyard
         reason: discard
-    source: {official: T470, review: pending}
   - id: T471
     name: 試験用選別兎
     types: [creature]
@@ -7101,7 +7095,6 @@ cards:
                 reason: put
                 position: bottom
                 order: shuffle
-    source: {official: T471, review: pending}
   - id: T472
     name: 試験用選別鳥
     types: [creature]
@@ -7128,7 +7121,6 @@ cards:
                 reason: put
                 position: bottom
               - {op: draw, count: 1}
-    source: {official: T472, review: pending}
   - id: T473
     name: 試験用マーシャル獣
     types: [creature]
@@ -7149,7 +7141,6 @@ cards:
                 cond: {exists: {ref: bounced}}
                 then:
                   - {op: destroy, select: {zone: bz, owner: opp, filter: {types: [creature], keyword: blocker}, count: 1}}
-    source: {official: T473, review: pending}
   - id: T474
     name: 試験用マーシャル計量獣
     types: [creature]
@@ -7170,7 +7161,6 @@ cards:
                 cond: {exists: {ref: bounced}}
                 then:
                   - {op: destroy, select: {zone: bz, owner: opp, filter: {types: [creature], cost_le: {cost_of: bounced}}, count: 1}}
-    source: {official: T474, review: pending}
   - id: T475
     name: 試験用マーシャル速攻獣
     types: [creature]
@@ -7191,7 +7181,6 @@ cards:
                 cond: {exists: {ref: bounced}}
                 then:
                   - {op: modify, select: {ref: self}, mod: {grant: [speed_attacker]}, duration: end_of_turn}
-    source: {official: T475, review: pending}
   - id: T476
     name: 試験用強制呪文
     types: [spell]
@@ -7202,7 +7191,6 @@ cards:
     spell:
       - {op: choose, select: {zone: bz, owner: opp, filter: {types: [creature]}, count: 1}, as: t}
       - {op: modify, select: {ref: t}, mod: {grant: [must_attack], must_attack_creature: true}, duration: until_next_own_turn_start}
-    source: {official: T476, review: pending}
   - id: T477
     name: 試験用誘導呪文
     types: [spell]
@@ -7212,7 +7200,6 @@ cards:
     text: 次の自分のターンのはじめまで、相手のクリーチャーが攻撃する時、可能ならクリーチャーを攻撃する。
     spell:
       - {op: modify, select: {zone: bz, owner: opp, filter: {types: [creature]}, count: all}, mod: {must_attack_creature: true}, duration: until_next_own_turn_start}
-    source: {official: T477, review: pending}
   - id: T478
     name: 試験用誘引呪文
     types: [spell]
@@ -7224,7 +7211,6 @@ cards:
       - {op: choose, select: {zone: bz, owner: you, filter: {types: [creature]}, count: 1}, as: c}
       - {op: tap, select: {ref: c}}
       - {op: modify, select: {ref: c}, mod: {power: 4000, must_be_attacked: true}, duration: until_next_own_turn_start}
-    source: {official: T478, review: pending}
   - id: T479
     name: 試験用フリークロス獣
     types: [creature]
@@ -7238,7 +7224,6 @@ cards:
       - kind: static
         affects: self
         mod: {allow: [{action: cross_free}]}
-    source: {official: T479, review: pending}
   - id: T480
     name: 試験用フリークロスギア
     types: [cross_gear]
@@ -7250,7 +7235,6 @@ cards:
       - kind: static
         affects: self
         mod: {allow: [{action: cross_free, other: {evolution: true}}]}
-    source: {official: T480, review: pending}
   - id: T481
     name: 試験用クロス使い
     types: [creature]
@@ -7266,7 +7250,6 @@ cards:
         effect:
           - {op: choose, select: {zone: bz, owner: you, filter: {types: [cross_gear]}, count: 1}, as: g}
           - {op: cross_free, gear: {ref: g}, to: {zone: bz, owner: you, filter: {types: [creature]}, count: 1}}
-    source: {official: T481, review: pending}
   - id: T482
     name: 試験用クロス召喚士
     types: [creature]
@@ -7283,7 +7266,6 @@ cards:
           - op: may
             body:
               - {op: cross_free, gear: {zone: bz, owner: you, filter: {types: [cross_gear]}, count: 1}, to: {ref: self}}
-    source: {official: T482, review: pending}
   - id: T483
     name: 試験用継承獣
     types: [creature]
@@ -7300,7 +7282,6 @@ cards:
           - op: may
             body:
               - {op: cross_free, gear: {crossed_to: self, count: all}, to: {zone: bz, owner: you, filter: {types: [creature]}, other: true, count: 1}}
-    source: {official: T483, review: pending}
   - id: T484
     name: 試験用エターナル獣
     types: [creature]
@@ -7317,7 +7298,6 @@ cards:
         if: {cmp: [{count: {zone: mana, owner: you, filter: {face_down: true}}}, ">=", 3]}
         instead:
           - {op: flip_up, select: {zone: mana, owner: you, filter: {face_down: true}, count: 3}}
-    source: {official: T484, review: pending}
   - id: T485
     name: 試験用裏向き呪文
     types: [spell]
@@ -7327,7 +7307,6 @@ cards:
     text: 自分のマナゾーンにあるカードを3枚まで選び、裏向きにする。
     spell:
       - {op: flip_down, select: {zone: mana, owner: you, filter: {face_down: false}, count: 3, up_to: true}}
-    source: {official: T485, review: pending}
   - id: T486
     name: 試験用エターナル単発獣
     types: [creature]
@@ -7345,7 +7324,6 @@ cards:
         if: {cmp: [{count: {zone: mana, owner: you, filter: {face_down: true}}}, ">=", 2]}
         instead:
           - {op: flip_up, select: {zone: mana, owner: you, filter: {face_down: true}, count: 2}}
-    source: {official: T486, review: pending}
   - id: T487
     name: 試験神アクア
     types: [creature]
@@ -7356,7 +7334,6 @@ cards:
     mana: 1
     text: G・リンク《試験神ブレイズ》の右横（バトルゾーンに自分の指定ゴッドがあれば、このカードをリンクしてもよい。リンクしたゴッドは、各ゴッドの特性〔パワーや能力〕を持つ1体のクリーチャーとなる。バトルゾーンを離れる時は、どちらか1枚を選ぶ）
     link_to: [{name: 試験神ブレイズ, pos: right}]
-    source: {official: T487, review: pending}
   - id: T488
     name: 試験神ブレイズ
     types: [creature]
@@ -7367,7 +7344,6 @@ cards:
     mana: 1
     text: G・リンク《試験神アクア》の左横（バトルゾーンに自分の指定ゴッドがあれば、このカードをリンクしてもよい。リンクしたゴッドは、各ゴッドの特性〔パワーや能力〕を持つ1体のクリーチャーとなる。バトルゾーンを離れる時は、どちらか1枚を選ぶ）
     link_to: [{name: 試験神アクア, pos: left}]
-    source: {official: T488, review: pending}
   - id: T489
     name: 試験神テラ
     types: [creature]
@@ -7378,7 +7354,6 @@ cards:
     mana: 1
     text: G・リンク《試験神アクア》の上側、または《試験神ブレイズ》の下側（バトルゾーンに自分の指定ゴッドがあれば、このカードをリンクしてもよい。リンクしたゴッドは、各ゴッドの特性〔パワーや能力〕を持つ1体のクリーチャーとなる。バトルゾーンを離れる時は、どちらか1枚を選ぶ）
     link_to: [{name: 試験神アクア, pos: up}, {name: 試験神ブレイズ, pos: down}]
-    source: {official: T489, review: pending}
   - id: T490
     name: 試験神ルナ
     types: [creature]
@@ -7393,7 +7368,6 @@ cards:
       - kind: trigger
         when: {event: link_established, subject: self}
         effect: [{op: draw, count: 1}]
-    source: {official: T490, review: pending}
   - id: T491
     name: 試験用軽減獣
     types: [creature]
@@ -7409,7 +7383,6 @@ cards:
         affects: self
         if: {cmp: [{count: {zone: hand, owner: you}}, "<=", 1]}
         mod: {cost: -6}
-    source: {official: T491, review: pending}
   - id: T492
     name: 試験用付与獣
     types: [creature]
@@ -7424,7 +7397,6 @@ cards:
         affects: self
         if: {cmp: [{count: {zone: hand, owner: you}}, "<=", 1]}
         mod: {grant: [speed_attacker]}
-    source: {official: T492, review: pending}
   - id: T493
     name: 試験用複合フリー獣
     types: [creature]
@@ -7435,7 +7407,6 @@ cards:
     mana: 1
     text: G・G・G：自分の手札が1枚以下で、自分の《試験神アクア》がなければ、このクリーチャーをコストを支払わずに召喚してもよい。
     free_if: {all: [{cmp: [{count: {zone: hand, owner: you}}, "<=", 1]}, {not: {exists: {zone: bz, owner: you, filter: {name: 試験神アクア}}}}]}
-    source: {official: T493, review: pending}
   - id: T494
     name: 試験用誘引獣
     types: [creature]
@@ -7451,7 +7422,6 @@ cards:
         affects: self
         if: {cmp: [{turn_count: {kind: attack, owner: opp}}, "==", 0]}
         mod: {must_be_attacked: true}
-    source: {official: T494, review: pending}
   - id: T496
     name: 試験用公開獣
     types: [creature]
@@ -7474,7 +7444,6 @@ cards:
             cond: {exists: {ref: hit}}
             then: [{op: move, select: {ref: hit}, to: bz, reason: put}]
           - {op: move, select: {ref: t, count: all}, to: deck, reason: put, position: bottom}
-    source: {official: T496, review: pending}
   - id: T497
     name: 試験用帰還獣
     types: [creature]
@@ -7489,7 +7458,6 @@ cards:
         when: {event: turn_end, player: you}
         if: {exists: {ref: self, filter: {tapped: false}}}
         effect: [{op: move, select: {ref: self}, to: hand, reason: return}]
-    source: {official: T497, review: pending}
   - id: T498
     name: 試験用誘引選択獣
     types: [creature]
@@ -7503,7 +7471,6 @@ cards:
       - kind: static
         affects: self
         mod: {must_be_chosen: true}
-    source: {official: T498, review: pending}
   - id: T499
     name: 試験用反応獣
     types: [creature]
@@ -7517,7 +7484,6 @@ cards:
       - kind: trigger
         when: {event: choose, subject: self}
         effect: [{op: draw, count: 1}]
-    source: {official: T499, review: pending}
   - id: T500
     name: 試験用全体破壊呪文
     types: [spell]
@@ -7527,7 +7493,6 @@ cards:
     text: 相手のクリーチャーをすべて破壊する。
     spell:
       - {op: move, select: {zone: bz, owner: opp, filter: {types: [creature]}, count: all}, to: graveyard, reason: destroy}
-    source: {official: T500, review: pending}
   - id: T501
     name: 試験用自壊呪文
     types: [spell]
@@ -7537,7 +7502,6 @@ cards:
     text: 自分のクリーチャーを1体破壊する。
     spell:
       - {op: move, select: {zone: bz, owner: you, filter: {types: [creature]}, count: 1}, to: graveyard, reason: destroy}
-    source: {official: T501, review: pending}
   - id: T502
     name: 試験用報復獣
     types: [creature]
@@ -7551,7 +7515,6 @@ cards:
       - kind: trigger
         when: {event: choose, subject: self}
         effect: [{op: move, select: {zone: bz, owner: opp, filter: {types: [creature], power_le: {power_of: self}}, count: all}, to: graveyard, reason: destroy}]
-    source: {official: T502, review: pending}
   - id: T503
     name: 試験用帰還付与獣
     types: [creature]
@@ -7565,7 +7528,6 @@ cards:
       - kind: trigger
         when: {event: move, to: bz, subject: self}
         effect: [{op: may, body: [{op: play_free, select: {zone: graveyard, owner: you, filter: {types: [spell], cost_le: 7}, count: 1}, resolve_to: hand}]}]
-    source: {official: T503, review: pending}
   - id: T504
     name: 試験用底送り獣
     types: [creature]
@@ -7579,7 +7541,6 @@ cards:
       - kind: trigger
         when: {event: move, to: bz, subject: self}
         effect: [{op: may, body: [{op: play_free, select: {zone: [hand, graveyard], owner: you, filter: {types: [spell], cost_le: 5}, count: 1}, resolve_to: deck, resolve_position: bottom}]}]
-    source: {official: T504, review: pending}
   - id: T505
     name: 試験用勝利条件獣
     types: [creature]
@@ -7593,7 +7554,6 @@ cards:
       - kind: state
         if: {cmp: [{count: {zone: bz, owner: you, filter: {types: [creature], civs: [water]}}}, ">=", 3]}
         effect: [{op: win}]
-    source: {official: T505, review: pending}
   - id: T506
     name: 試験用ササゲール玉
     types: [tamaseed]
@@ -7606,7 +7566,6 @@ cards:
       - kind: static
         affects: self
         mod: {sac_reduce: 2}
-    source: {official: T506, review: pending}
   - id: T507
     name: 試験用マナ置き反応獣
     types: [creature]
@@ -7620,7 +7579,6 @@ cards:
       - kind: trigger
         when: {event: move, to: mana, subject: {owner: you, filter: {any_of: [{races: [ディスペクター]}, {races: [ディスタス]}]}}}
         effect: [{op: untap, select: {ref: event.subject}}]
-    source: {official: T507, review: pending}
   - id: T508
     name: 試験用盾反応獣
     types: [creature]
@@ -7634,7 +7592,6 @@ cards:
       - kind: trigger
         when: {event: use_s_trigger, player: opp}
         effect: [{op: draw, count: 1}]
-    source: {official: T508, review: pending}
   - id: T509
     name: 試験用未ブロック反応獣
     types: [creature]
@@ -7652,7 +7609,6 @@ cards:
             when: {event: break, player: opp}
             duration: during_attack
             effect: [{op: draw, count: 1}]
-    source: {official: T509, review: pending}
   - id: T510
     name: 試験用攻撃後終了獣
     types: [creature]
@@ -7670,7 +7626,6 @@ cards:
             when: {event: break, player: you}
             duration: during_attack
             effect: [{op: end_turn}]
-    source: {official: T510, review: pending}
   - id: T511
     name: 試験用返霊獣
     types: [creature]
@@ -7690,7 +7645,6 @@ cards:
               - op: if
                 cond: {cmp: [{var: paid}, "==", 2]}
                 then: [{op: draw, count: 1}]
-    source: {official: T511, review: pending}
   - id: T512
     name: 試験用迷宮獣
     types: [creature]
@@ -7705,7 +7659,6 @@ cards:
         affects: self
         if: {cmp: [{count: {zone: shield, owner: you}}, ">", {count: {zone: shield, owner: opp}}]}
         mod: {power: 4000}
-    source: {official: T512, review: pending}
   - id: T513
     name: 試験用迷宮誘発獣
     types: [creature]
@@ -7720,7 +7673,6 @@ cards:
         when: {event: move, to: bz, subject: self}
         if: {cmp: [{count: {zone: shield, owner: you}}, ">", {count: {zone: shield, owner: opp}}]}
         effect: [{op: draw, count: 1}]
-    source: {official: T513, review: pending}
   - id: T514
     name: 試験用雨誘発獣
     types: [creature]
@@ -7735,7 +7687,6 @@ cards:
         when: {event: move, to: graveyard, reason: destroy, subject: {filter: {types: [creature]}}}
         if: {exists: {zone: bz, owner: you, filter: {types: [creature], multicolor: true}}}
         effect: [{op: may, body: [{op: draw, count: 1}]}]
-    source: {official: T514, review: pending}
   - id: T515
     name: 試験用多色獣
     types: [creature]
@@ -7746,7 +7697,6 @@ cards:
     mana: 1
     text: 試験用の多色クリーチャー。
     abilities: []
-    source: {official: T515, review: pending}
   - id: T516
     name: 遊撃師団 テスト兵
     types: [creature]
@@ -7761,7 +7711,6 @@ cards:
         affects: self
         if: {cmp: [{count: {zone: bz, owner: you, filter: {name_has: 遊撃師団}}}, ">=", 5]}
         mod: {power: 5000, breaks: 2}
-    source: {official: T516, review: pending}
   - id: T517
     name: 試験用閾値獣
     types: [creature]
@@ -7777,7 +7726,6 @@ cards:
         affects: self
         if: {power_ge: 6000}
         mod: {breaks: 2}
-    source: {official: T517, review: pending}
   - id: T518
     name: 試験用Jクライム獣
     types: [creature]
@@ -7794,7 +7742,6 @@ cards:
           - op: may
             body:
               - {op: swap, out: {ref: self}, in: {zone: graveyard, owner: you, filter: {types: [creature], races: [ジョーカーズ], cost_le: 4}, count: 1}, out_to: graveyard}
-    source: {official: T518, review: pending}
   - id: T519
     name: 試験用墓地ジョーカーズ獣
     types: [creature]
@@ -7805,7 +7752,6 @@ cards:
     mana: 1
     text: 試験用のジョーカーズ。
     abilities: []
-    source: {official: T519, review: pending}
   - id: T520
     name: 試験用代替獣
     types: [creature]
@@ -7826,7 +7772,6 @@ cards:
             effect:
               - {op: move, select: {ref: self}, to: graveyard, reason: destroy}
               - {op: draw, count: 1}
-    source: {official: T520, review: pending}
   - id: T521
     name: 試験用数字呪文
     types: [spell]
@@ -7839,7 +7784,6 @@ cards:
       - {op: modify, select: {zone: bz, owner: opp, filter: {cost_le: {declared: n}, cost_ge: {declared: n}}, count: all}, mod: {ignore: [all]}, duration: until_next_own_turn_start}
       - {op: modify, select: {zone: hand, owner: opp, filter: {types: [spell], cost_le: {declared: n}, cost_ge: {declared: n}}, count: all}, mod: {deny: [cast]}, duration: until_next_own_turn_start}
       - {op: modify, select: {zone: bz, owner: opp, filter: {types: [creature], cost_le: {declared: n}, cost_ge: {declared: n}}, count: all}, mod: {deny: [attack_player, attack_creature, block]}, duration: until_next_own_turn_start}
-    source: {official: T521, review: pending}
   - id: T522
     name: 試験用強化獣
     types: [creature]
@@ -7851,7 +7795,6 @@ cards:
     text: このクリーチャーのパワーを+2000する。
     abilities:
       - {kind: static, affects: self, mod: {power: 2000}}
-    source: {official: T522, review: pending}
   - id: T523
     name: 試験用3コスト呪文
     types: [spell]
@@ -7861,7 +7804,6 @@ cards:
     text: カードを1枚引く。
     spell:
       - {op: draw, count: 1}
-    source: {official: T523, review: pending}
   - id: T524
     name: 試験用バトル後自壊獣
     types: [creature]
@@ -7876,7 +7818,6 @@ cards:
         when: {event: battle_end, subject: self}
         effect:
           - {op: move, select: {ref: self}, to: graveyard, reason: destroy}
-    source: {official: T524, review: pending}
   - id: T525
     name: 試験用ブロック後回復獣
     types: [creature]
@@ -7893,4 +7834,3 @@ cards:
         if: {is_turn: opp}
         effect:
           - {op: untap, select: {ref: self}}
-    source: {official: T525, review: pending}

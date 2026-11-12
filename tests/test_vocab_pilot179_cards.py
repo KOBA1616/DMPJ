@@ -48,6 +48,7 @@ def test_ace_bounced_card_keeps_refined_gaps():
     assert rej["dm22rp2x-4a"]["gaps"] == [
         "tamaseed_attack_reuse_cip", "add_types_power_set"]
     assert rej["dm22rp2x-4a"]["partial"]["ace"] is True
-    # 複合ギャップの dm26sd1-p005 は本ラウンドの対象外で rejects に残る
-    assert "dm26sd1-p005" in rej
-    assert "ace_tamaseed_conditional_creature" in rej["dm26sd1-p005"]["gaps"]
+    # 複合ギャップの dm26sd1-p005 は本ラウンドの対象外だった。その後ラウンド228（第192弾
+    # choose_player_effect）で ace: true を含めて登録済み（tests/test_vocab_pilot192_cards.py）
+    assert "dm26sd1-p005" not in rej
+    assert "dm26sd1-p005" in _converted()

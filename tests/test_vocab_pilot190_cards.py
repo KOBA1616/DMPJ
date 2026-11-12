@@ -155,9 +155,10 @@ def test_ex_life_bounces_keep_solved_clauses():
     r = _reject("dmex18-014")
     assert r["gaps"] == ["paid_play_from_hand_graveyard"]
     assert r["partial"].get("abilities"), "dmex18-014: 文明数コスト軽減が残っていない"
-    r = _reject("dmsd19-001")
-    assert r["gaps"] == ["choose_player_effect"]
-    assert r["partial"].get("abilities"), "dmsd19-001: CIP アンタップが残っていない"
+    # dmsd19-001 は choose_player_effect で差し戻した後、ラウンド228（第192弾）で登録済み。
+    # 解けていた CIP アンタップの節は登録後のカードに残っている
+    assert _converted("dmsd19-001")["id"] == "dmsd19-001"
+    assert _converted("dmsd19-001").get("abilities"), "dmsd19-001: CIP アンタップが残っていない"
 
 
 def test_cost_per_civ_parses():
