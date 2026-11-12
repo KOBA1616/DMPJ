@@ -12,8 +12,8 @@ from dataclasses import dataclass, field
 
 from ..engine import Engine
 from ..engine.core import IllegalAnswer
-from ..loop import LoopCertificate, LoopDetector, abstract, draw_keys, fast_forward, is_burn, verify
-from ..play import passive_policy
+from ..engine.loop import LoopCertificate, LoopDetector, abstract, draw_keys, fast_forward, is_burn, verify
+from ..engine.play import passive_policy
 from .leaf_eval import WIN, Weights, evaluate
 
 

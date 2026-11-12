@@ -32,7 +32,7 @@ def test_tenmon_stage_file():
 
 def test_macro_prio_is_callable_and_plan_w_zero_equals_no_plan():
     from dmsim.discovery.bestfirst import priority
-    from dmsim.plan.macro import macro_prio
+    from dmsim.eval.vfeatures import macro_prio
     from dmsim.solitaire import Weights
     e, w = _eng(), Weights()
     a = macro_prio(STAGES, 0.0)(e, 0, w)

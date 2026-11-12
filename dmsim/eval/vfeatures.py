@@ -37,7 +37,7 @@ def macro_prio(stages: list, plan_w: float, under_w: float = 3.0, res_w: float =
     """reach_chain/reach_target の prio に渡せる順位づけ。局面ごとに MacroPlanner が現在の段を決め直し、V の計画項に使う
     （段をまたぐ鎖でも1つの関数で済む）。plan_w=0 は計画なしと同じ。
     plan_w<0 は「基本スコアの標準偏差に対する倍率 k=-plan_w」（正規化。局面ごとの散らばりに計画項の大きさを合わせる）。"""
-    from ..discovery.bestfirst import priority
+    from ..search.bestfirst import priority
     planner = MacroPlanner(stages)
     b = base or priority
     rs = RunStd() if plan_w < 0 else None

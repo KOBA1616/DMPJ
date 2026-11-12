@@ -11,7 +11,7 @@ from __future__ import annotations
 from ..engine import Engine
 from .leaf_eval import Weights, evaluate
 from .turn import TurnSearch, charge_only_policy
-from ..engine_view import active_of, result_of
+from ..engine.view import active_of, result_of
 
 
 def advance_to_own_turn(eng: Engine, me: int, opp_policy, limit: int = 400) -> bool:

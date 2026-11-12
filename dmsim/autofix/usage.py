@@ -11,8 +11,7 @@ from __future__ import annotations
 from collections import Counter
 
 from ..engine import Engine
-from ..search.turn import TurnSearch, charge_only_policy, own_turn
-from ..engine_view import active_of, defn_of, tapped_of
+from ..engine_view import defn_of, tapped_of
 
 
 def castable_defs(eng: Engine, me: int) -> set[str]:
@@ -40,27 +39,25 @@ def played_defs(log: list, me: int) -> set[str]:
 def collect_usage(rules, deck, opp_deck, seeds, fair: bool = False, max_turn: int = 3, budget: int = 100,
                   n_det: int = 2, value_fn=None) -> dict:
     """{"avail": Counter, "played": Counter, "games": n}。fair=True は公平探索、False はずるい探索。"""
-    from ..search.fair import FairTurnSearch
+    from ..play_api import InfoLevel, PlayConfig, play_turns
     avail: Counter = Counter()
     played: Counter = Counter()
     me = 0
+    info = InfoLevel.FAIR if fair else InfoLevel.CHEAT
     for seed in seeds:
         eng = Engine.new_game(rules, [deck, opp_deck], seed, 0)
-        while (d := eng.advance()) is not None:
-            if active_of(eng) != me or d["player"] != me:
-                eng.answer(charge_only_policy(eng, d))
-                continue
-            ot = own_turn(eng, me)
-            if ot > max_turn:
-                break
-            av, pre = castable_defs(eng, me), len(eng.log)
-            if fair:
-                eng = FairTurnSearch(me, budget, n_det, seed * 7919 + ot, value_fn=value_fn).run(eng)
-            else:
-                eng, _ = TurnSearch(me, budget, value_fn=value_fn).run(eng)
-            pl = played_defs(eng.log[pre:], me)
-            avail.update(av)
-            played.update(pl & av)
+        cfg = PlayConfig(seed=seed, max_turn=max_turn, budget=budget, n_det=n_det, value_fn=value_fn, me=me)
+        pre_turn = {}
+
+        def before(e, ot):
+            pre_turn["av"], pre_turn["pre"] = castable_defs(e, me), len(e.log)
+
+        def after(e, ot, nodes):
+            pl = played_defs(e.log[pre_turn["pre"]:], me)
+            avail.update(pre_turn["av"])
+            played.update(pl & pre_turn["av"])
+
+        play_turns(eng, cfg, info, before_turn=before, on_turn=after, reuse_search=False)
     return {"avail": avail, "played": played, "games": len(list(seeds))}
 
 

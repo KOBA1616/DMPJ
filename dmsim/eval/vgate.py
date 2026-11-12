@@ -11,7 +11,7 @@ from .cost_perf import make_term as cost_term
 from .lock_terms import make_term as lock_make
 from .key_terms import make_term
 
-from ..discovery.bestfirst import priority
+from ..search.bestfirst import priority
 from ..engine.core import Engine
 from ..engine_view import force_hand
 from ..play_api import InfoLevel, PlayConfig, play

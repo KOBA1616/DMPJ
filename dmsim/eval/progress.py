@@ -13,10 +13,11 @@ from dataclasses import dataclass, field
 from ..engine.core import Engine
 from ..search.game import GameResult
 from ..search.game import origin as _origin
-from ..search.turn import TurnSearch, charge_only_policy, own_turn
+from ..play_api import PlayConfig, play_turns
+from ..search.turn import charge_only_policy, own_turn
 from .infolevel import InfoLevel
 from .stage import VISIBLE_ZONES, board_met, cards_met, zone_counts  # noqa: F401  段階指標の共通部品
-from ..engine_view import active_of, result_of
+from ..engine_view import result_of
 
 
 @dataclass(frozen=True)
@@ -75,23 +76,20 @@ def make_progress_runner(level: InfoLevel, spec: ProgressSpec, n_det: int = 8, v
         try:
             eng.advance()
             record(0)
-            search = TurnSearch(me, budget, opp_policy=opp_pol, value_fn=value_fn) if level is InfoLevel.CHEAT else None
-            while (d := eng.advance()) is not None:
-                if active_of(eng) != me or d["player"] != me:
-                    eng.answer(opp_pol(eng, d))
-                    continue
-                ot = own_turn(eng, me)
-                if ot > max_turn:
-                    break
-                if search is not None:
-                    eng, st = search.run(eng)
-                    res.nodes += st.nodes
-                else:
-                    from ..search.fair import FairTurnSearch
-                    fs = FairTurnSearch(me, budget, n_det, seed * 7919 + ot, opp_policy=opp_pol, value_fn=value_fn, lookahead=lookahead)
-                    eng = fs.run(eng)
-                    res.nodes += fs.nodes
+            cfg = PlayConfig(seed=seed, max_turn=max_turn, budget=budget, n_det=n_det, lookahead=lookahead,
+                             value_fn=value_fn, me=me)
+            holder = [eng]
+
+            def on_turn(e, ot, nodes):
+                nonlocal eng
+                eng = e
+                res.nodes += nodes
                 record(ot)
+
+            try:
+                eng = play_turns(eng, cfg, level, opp_policy=opp_pol, on_turn=on_turn, holder=holder)
+            finally:
+                eng = holder[0]
             r = result_of(eng)
             if r is not None:
                 if r["winner"] == me:
