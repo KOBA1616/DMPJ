@@ -198,7 +198,7 @@ def _self_mods(d):
 def _is_plain(d) -> bool:
     """Rust が動かせる札（段階2-c）: 常在型は自分自身への単純な許可・禁止・ブレイク数だけ（誘発・置換・起動・特別な出し方は無い）のクリーチャー。"""
     import dataclasses
-    from .defs import CardDef
+    from .cards.defs import CardDef
     if d.types != ["creature"] or d.power <= 0:
         return False
     if any("コマンド" in r for r in d.races):   # 出た時に封印の解放（seal_release）が走る

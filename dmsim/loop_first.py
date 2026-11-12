@@ -95,7 +95,7 @@ def main(argv=None):
     import yaml
 
     from . import scenario
-    from .defs import load_rules
+    from .cards.defs import load_rules
     ap = argparse.ArgumentParser(description="ループ発見→勝ち筋探索の2段探索")
     ap.add_argument("--setup", required=True, help="配置 spec（YAML。dmsim.scenario の形）")
     ap.add_argument("--discover-budget", type=int, default=1500)

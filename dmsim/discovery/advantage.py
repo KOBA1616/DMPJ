@@ -9,7 +9,7 @@ from pathlib import Path
 
 import yaml
 
-from ..defs import DATA
+from ..cards.defs import DATA
 from ..engine.core import Engine
 from ..engine_view import trace_of, trace_on
 

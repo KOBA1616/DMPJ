@@ -19,14 +19,15 @@ LAYER_OF = {
     "dmsim.cardid": "S0",                  # 旧名の互換（dmsim.base.cardid と同じモジュール）
     "dmsim.discovery.loopspec": "S0",      # 旧名の互換（dmsim.base.loopspec と同じモジュール）
     # S1 カードデータ
-    "dmsim.defs": "S1",
-    "dmsim.canonical": "S1",
-    "dmsim.cardfiles": "S1",
-    "dmsim.cardstore": "S1",
-    "dmsim.approval": "S1",
-    "dmsim.identity": "S1",
-    "dmsim.schema": "S1",
-    "dmsim.dataaudit": "S1",
+    "dmsim.cards": "S1",                   # 定義元（P1: defs・canonical・cardfiles・cardstore・approval・identity・schema・dataaudit）
+    "dmsim.defs": "S1",              # 旧名の互換（dmsim.cards.defs と同じモジュール）
+    "dmsim.canonical": "S1",         # 旧名の互換（dmsim.cards.canonical と同じモジュール）
+    "dmsim.cardfiles": "S1",         # 旧名の互換（dmsim.cards.cardfiles と同じモジュール）
+    "dmsim.cardstore": "S1",         # 旧名の互換（dmsim.cards.cardstore と同じモジュール）
+    "dmsim.approval": "S1",          # 旧名の互換（dmsim.cards.approval と同じモジュール）
+    "dmsim.identity": "S1",          # 旧名の互換（dmsim.cards.identity と同じモジュール）
+    "dmsim.schema": "S1",            # 旧名の互換（dmsim.cards.schema と同じモジュール）
+    "dmsim.dataaudit": "S1",         # 旧名の互換（dmsim.cards.dataaudit と同じモジュール）
     # S2 ゲームエンジン
     "dmsim": "S2",                         # パッケージ直下 __init__（load_rules と Engine の再公開）
     "dmsim.engine": "S2",
@@ -147,11 +148,20 @@ def test_base_imports_no_other_layer():
     assert not bad, bad
 
 
+def test_cards_imports_only_base():
+    """S1 の定義元 dmsim.cards は dmsim.base（S0）と自分自身だけを import する。"""
+    ok = lambda b: any(b == p or b.startswith(p + ".") for p in ("dmsim.cards", "dmsim.base"))  # noqa: E731
+    bad = sorted(f"{a} -> {b}" for a, b in edges() if (a == "dmsim.cards" or a.startswith("dmsim.cards.")) and not ok(b))
+    assert not bad, bad
+
+
 def test_old_names_are_the_same_module():
     """旧名は定義元と同一オブジェクト（旧名への monkeypatch が定義元に効く）。"""
     import importlib
     for old, new in [("dmsim.types", "dmsim.base.types"), ("dmsim.cardid", "dmsim.base.cardid"),
-                     ("dmsim.discovery.loopspec", "dmsim.base.loopspec")]:
+                     ("dmsim.discovery.loopspec", "dmsim.base.loopspec")] + \
+            [(f"dmsim.{m}", f"dmsim.cards.{m}") for m in
+             ("defs", "canonical", "cardfiles", "cardstore", "approval", "identity", "schema", "dataaudit")]:
         assert importlib.import_module(old) is importlib.import_module(new)
 
 

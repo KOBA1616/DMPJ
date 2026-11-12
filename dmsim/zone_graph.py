@@ -323,7 +323,7 @@ def find_cycles(rules, max_cards: int = 2, max_len: int = 4) -> list[Cycle]:
 def main(argv=None):
     import argparse
 
-    from .defs import load_rules
+    from .cards.defs import load_rules
     ap = argparse.ArgumentParser(description="ゾーン変換の循環（ループ候補）を列挙する")
     ap.add_argument("--max-cards", type=int, default=2)
     ap.add_argument("--max-len", type=int, default=4)

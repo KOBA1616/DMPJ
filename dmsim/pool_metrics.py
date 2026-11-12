@@ -59,7 +59,7 @@ def table(rules) -> list[dict]:
 def main(argv=None):
     import argparse
 
-    from .defs import load_rules
+    from .cards.defs import load_rules
     from .eval.measure import load_deck
     ap = argparse.ArgumentParser(description="カードごとの dig / speed、デッキの dig_total")
     ap.add_argument("--deck")

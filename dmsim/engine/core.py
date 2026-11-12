@@ -14,7 +14,7 @@ from __future__ import annotations
 import contextlib
 import os
 
-from ..defs import CardDef, Face, Rules
+from ..cards.defs import CardDef, Face, Rules
 from ..state import Card, GameState, rng_below
 from .combat import CombatMixin
 from .events import EventMixin

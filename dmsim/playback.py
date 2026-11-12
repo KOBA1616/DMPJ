@@ -201,7 +201,7 @@ def main(argv=None):
     import argparse
     from pathlib import Path
 
-    from .defs import load_rules
+    from .cards.defs import load_rules
     ap = argparse.ArgumentParser(description="対戦記録の手順・ループ・勝ち筋を要約する（画面は dmsim.devserver の「再生」タブ）")
     ap.add_argument("record")
     a = ap.parse_args(argv)

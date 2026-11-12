@@ -147,7 +147,7 @@ def main(argv=None):
     import argparse
     from pathlib import Path
 
-    from .defs import load_rules
+    from .cards.defs import load_rules
     ap = argparse.ArgumentParser(description="部品を固定して残りのカードを探索する")
     ap.add_argument("--fix", action="append", default=[], metavar="ID:枚数", help="固定する部品（複数可）")
     ap.add_argument("--pool", help="候補プール（カードIDをカンマ区切り）。省略時は実カード全部")
