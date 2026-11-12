@@ -34,7 +34,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parent.parent))   # リポジト
 from discover_dig import ME, start as saga_start  # noqa: E402
 from loopcheck_full_chain import policy as script_policy  # noqa: E402
 
-import dmsim.solitaire as sol  # noqa: E402
+import dmsim.search.turn as sol  # noqa: E402  TurnSearch と candidates の定義元（差し替えは定義元に対して行う）
 from dmsim.defs import load_rules  # noqa: E402
 from dmsim.loop_first import discover_loops  # noqa: E402
 from dmsim.zone_graph import find_cycles  # noqa: E402

@@ -11,7 +11,9 @@ import time
 from dataclasses import dataclass, field
 
 from ..engine.core import Engine
-from ..solitaire import GameResult, TurnSearch, _origin, charge_only_policy, own_turn
+from ..search.game import GameResult
+from ..search.game import origin as _origin
+from ..search.turn import TurnSearch, charge_only_policy, own_turn
 from .infolevel import InfoLevel
 from .stage import VISIBLE_ZONES, board_met, cards_met, zone_counts  # noqa: F401  段階指標の共通部品
 from ..engine_view import active_of, result_of

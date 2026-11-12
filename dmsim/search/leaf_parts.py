@@ -12,7 +12,7 @@ from pathlib import Path
 import yaml
 
 from ..engine import Engine
-from ..solitaire import Weights, evaluate
+from .leaf_eval import Weights, evaluate
 from ..engine_view import count_matching, result_of
 
 

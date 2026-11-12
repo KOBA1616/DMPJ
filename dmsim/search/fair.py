@@ -8,7 +8,7 @@ from __future__ import annotations
 from collections import Counter
 
 from ..engine import Engine
-from ..solitaire import TurnSearch, charge_only_policy
+from .turn import TurnSearch, charge_only_policy
 from .infoset import determinize
 from ..engine_view import active_of, inject_state, state_of
 

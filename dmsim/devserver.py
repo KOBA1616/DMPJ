@@ -355,7 +355,7 @@ class App:
         if rec is not None and body.get("cert"):
             rec = record_with_cert(self.rules, rec, int(body["at"]), cert_from_dict(body["cert"]), int(body.get("laps", 1)))
         elif rec is None:
-            from .solitaire import play_game
+            from .search.game import play_game
             fp = int(body.get("first", 0))
             deck = list(body["deck"])
             opp = list(body.get("opp_deck") or ["T001"] * len(deck))

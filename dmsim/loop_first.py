@@ -15,7 +15,8 @@ from dataclasses import dataclass, field
 from .engine import Engine
 from .engine.core import IllegalAnswer
 from .loop import LoopCertificate, fast_forward, verify
-from .solitaire import WIN, TurnSearch
+from .search.leaf_eval import WIN
+from .search.turn import TurnSearch
 
 
 @dataclass
