@@ -11,6 +11,7 @@ from pathlib import Path
 from typing import Callable
 
 from ..eval.stats import paired_diff
+from ..base import store
 
 
 @dataclass(frozen=True)
@@ -103,6 +104,5 @@ def decide(base: dict, cand: dict, rule: AcceptRule, unverified: bool) -> dict:
 
 
 def record(ledger: str | Path, entry: dict) -> None:
-    """採否の記録（追記のみ）。"""
-    with open(ledger, "a", encoding="utf-8") as f:
-        f.write(json.dumps({"t": time.time(), **entry}, ensure_ascii=False) + "\n")
+    """採否の記録（追記のみ）。調整用の経路なので split=holdout の記録は書けない（base.store）。"""
+    store.append_json(ledger, {"t": time.time(), **entry}, purpose="tuning")
