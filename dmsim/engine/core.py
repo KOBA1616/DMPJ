@@ -15,7 +15,7 @@ import contextlib
 import os
 
 from ..cards.defs import CardDef, Face, Rules
-from ..state import Card, GameState, rng_below
+from .state import Card, GameState, rng_below
 from .combat import CombatMixin
 from .events import EventMixin
 from .interpreter import InterpreterMixin

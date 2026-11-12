@@ -54,7 +54,7 @@ tools/auto_sync.py: 1
 tools/audit_cards.py: 1
 tools/analyze_ids.py: 1
 dmsim/validity.py: 1
-dmsim/play.py: 1
+dmsim/engine/play.py: 1
 dmsim/plan/spec.py: 1
 dmsim/eval/explog.py: 1
 dmsim/devserver.py: 1

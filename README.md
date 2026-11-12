@@ -11,7 +11,7 @@ python -m dmsim.devserver    # 開発者モード http://127.0.0.1:8765/
 python -m dmsim.solitaire --deck deck.yaml --games 1000 --turns 4 --workers 4   # 1人回しのキル率
 ```
 
-- `dmsim/state.py`  純データのゲーム状態（乱数状態・実行中タスク・決定待ちも含む）
+- `dmsim/engine/state.py`  純データのゲーム状態（乱数状態・実行中タスク・決定待ちも含む）
 - `dmsim/engine/` タスクスタック式のエンジン
   - `core.py` 進行ループと Decision、`registry.py` 拡張ポイント（task / op の登録表）
   - `selectors.py` セレクタ・式・条件、`events.py` イベント→置換→適用→状況起因→誘発→待機（解決窓）
@@ -19,11 +19,11 @@ python -m dmsim.solitaire --deck deck.yaml --games 1000 --turns 4 --workers 4   
 - `dmsim/cards/defs.py`   カード定義の読み込みと効果DSLの検証（閉じた語彙＋マクロ展開、op 引数の型検査）
 - `dmsim/types.py`  タスク・イベント・Decision などの形（TypedDict）。`DMSIM_CHECK=1` で実行時に検査
 - `dmsim/cards/schema.py` カードDSLの JSON Schema を生成（`data/schema/card.schema.json`。LLM変換に渡す）
-- `dmsim/loop.py`   骨格＋カウンタによるループ／ロック検出とストック証明
-- `dmsim/play.py`   方策・対戦実行・シード付き記録の保存と再生（`python -m dmsim.play --seed 1 --out g.json` / `--replay g.json`）
+- `dmsim/engine/loop.py`   骨格＋カウンタによるループ／ロック検出とストック証明
+- `dmsim/engine/play.py`   方策・対戦実行・シード付き記録の保存と再生（`python -m dmsim.play --seed 1 --out g.json` / `--replay g.json`）
 - `dmsim/solitaire.py` 1人回しAI（自分のターン内を探索、ループはストック、ロックは試し回しで確認）と、
   シード付きの大量試行で「自分の Nターン目までのキル率」（95%信頼区間・キルの種類別）を出すハーネス
-- `dmsim/scenario.py` 配置を指定した局面の作成（テストと開発者モードで共用）
+- `dmsim/engine/scenario.py` 配置を指定した局面の作成（テストと開発者モードで共用）
 - `dmsim/devserver.py`＋`dmsim/web/` 開発者モード（標準ライブラリのHTTPサーバー）
 - `dmsim/playback.py` 対戦記録の再生解析（ループの骨格・周回数・ストック量・勝ち筋）。開発者モードの「再生」タブが使う（読み取り専用）
 - `data/rules/*.yaml` ゾーン・キーワード・DSLマクロ・許可/禁止できる行為（permissions）・ターンのステップ列（turn）の定義
@@ -70,7 +70,7 @@ docker run --rm -p 8765:8765 dmsim python -m dmsim.devserver --host 0.0.0.0
    結果（件数・トークン・失敗理由の種類別）は `data/cards/raw/convert_report.json`。語彙を足したあとは `--retry-rejects` で落ちたものだけやり直す。
    `python tools/report_gaps.py` で足りない語彙を枚数順に集計
 3. `python -m dmsim.devserver` の「カード」タブで「試す」→ 動かして確かめ、approve / reject を付ける
-   （「一括検証」ボタン: 全カードの「試す」シナリオを探索方策で自動回しし、例外・ループを報告する。`dmsim/verify.py`）
+   （「一括検証」ボタン: 全カードの「試す」シナリオを探索方策で自動回しし、例外・ループを報告する。`dmsim/engine/verify.py`）
 4. 確かめたカードを `real.yaml` に移す。動作をテストに残すなら `tests/test_real_cards.py` に足す
 
 ## 【絶望神サガループ】の検証
@@ -116,7 +116,7 @@ TCGテキストから変換している。
 
 ## ゾーン変換グラフ（ループ候補の静的な列挙）
 
-`python -m dmsim.zone_graph --max-cards 2`（`dmsim/zone_graph.py`）。各カードの効果から「どのゾーンからどのゾーンへ動くか」を取り、
+`python -m dmsim.zone_graph --max-cards 2`（`dmsim/engine/zone_graph.py`）。各カードの効果から「どのゾーンからどのゾーンへ動くか」を取り、
 互いの移動が相手の誘発の前提を満たす閉路をループ候補として列挙する。閉路の差分は動的な検出と一致する（サガ: 山札-1・墓地+1）。
 現在は「ゾーンに入った時」の誘発だけを扱う（唱える・ターン開始・攻撃などで回るループは未対応）。
 候補は実際にループするか確かめるため、`dmsim.loop_first` や `dmsim.combo_search` の部品固定に渡す。

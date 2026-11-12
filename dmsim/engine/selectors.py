@@ -1,7 +1,7 @@
 """セレクタ・式・条件の評価（効果DSLの「何を」「いくつ」「いつなら」）。"""
 from __future__ import annotations
 
-from ..state import rng_below
+from .state import rng_below
 from .registry import read_only
 
 

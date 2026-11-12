@@ -1,4 +1,4 @@
-//! ゲーム状態。Python 版 dmsim/state.py と同じ形の純データ（JSON で相互に変換できる）。
+//! ゲーム状態。Python 版 dmsim/engine/state.py と同じ形の純データ（JSON で相互に変換できる）。
 //! フィールドはアルファベット順に宣言する: Python の digest は sort_keys=True の JSON を取るので、
 //! 構造体の出力順をそれに合わせれば、バイト列が一致する。
 use blake2::digest::{Update, VariableOutput};
