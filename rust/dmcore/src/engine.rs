@@ -1385,7 +1385,11 @@ impl Engine {
             if !br.is_null() && self.alive(&br) {
                 ev["subject"] = br.clone();
                 let cur = self.s.turn_counters.get("current_attack").cloned().unwrap_or(json!(0));
-                self.s.turn_counters.insert(format!("broke_in:{}", br[0].as_i64().unwrap()), cur);
+                self.s.turn_counters.insert(format!("broke_in:{}", br[0].as_i64().unwrap()), cur.clone());
+                // 第185弾: その攻撃中にそのクリーチャーがブレイクした枚数（Python 側 h_break と同じキー）
+                let k = format!("broke_count:{}:atk{}", br[0].as_i64().unwrap(), cur.as_i64().unwrap_or(0));
+                let v = self.s.turn_counters.get(&k).and_then(|v| v.as_i64()).unwrap_or(0) + chosen.len() as i64;
+                self.s.turn_counters.insert(k, json!(v));
             }
             seq.push(self.ev_task(vec![ev]));
         }
@@ -1810,6 +1814,7 @@ impl Engine {
             c.stp = false;
             c.odrive = false;
             c.odrive_civs.clear();
+            c.summon_fuel.clear();
             c.summon_tapped.clear();
             c.bazurenda = 0;
             c.vivid = false;

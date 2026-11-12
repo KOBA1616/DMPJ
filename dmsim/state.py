@@ -59,6 +59,7 @@ class Card:
     odrive: bool = False                                    # O・ドライブ: 追加のマナタップをして召喚した
     odrive_civs: list = field(default_factory=list)         # O・ドライブ: 実際にタップした文明（文明別の能力用）
     summon_tapped: list = field(default_factory=list)       # フォートE: 召喚時にタップしたマナ [{ref: [cid, gen], races: [種族...]}]。ゾーン移動で消える
+    summon_fuel: list = field(default_factory=list)         # 第189弾: 召喚時の支払い行動（opt_reduce.do）で選んだカード [[cid, gen], ...]。ゾーン移動で消える
     bazurenda: int = 0                                      # バズレンダ: 追加で支払った回数
     drawn_turn: int = -1                                    # このターンにドローしたか（ビビッドロー）
     vivid: bool = False                                     # ビビッドロー: 表向きにした
