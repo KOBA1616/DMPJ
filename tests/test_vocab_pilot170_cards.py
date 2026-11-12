@@ -27,12 +27,20 @@ BOUNCED = {}
 NOTES = "再変換ラウンド206。第170弾 crossed_state の再変換。"
 
 
+# 対象は後のラウンドで rejects から抜けたので、対象を含む main 上の版から読む（BACKUP も併用）
+PILOT_COMMIT = "194b05c"
+
+
 def _rows():
+    import subprocess
     out = {}
-    for path in (ROOT / "data/cards/raw/rejects.jsonl", BACKUP):
-        if not path.exists():
-            continue
-        for line in open(path):
+    text = subprocess.check_output(["git", "show", f"{PILOT_COMMIT}:data/cards/raw/rejects.jsonl"], cwd=ROOT, text=True)
+    for line in text.splitlines():
+        if line.strip():
+            r = json.loads(line)
+            out.setdefault(r["id"], r)
+    if BACKUP.exists():
+        for line in open(BACKUP):
             r = json.loads(line)
             out.setdefault(r["id"], r)
     return out

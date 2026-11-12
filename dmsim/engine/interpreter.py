@@ -1,7 +1,7 @@
 """効果DSLのインタプリタ。op は ops.py で registry に登録する。"""
 from __future__ import annotations
 
-from ..types import BindTask, EffectTask, InvadeFixTask, PutStackedTask, PutUnderTask, SummonOnFixTask, SwapFixTask, SwapInTask
+from ..base.types import BindTask, EffectTask, InvadeFixTask, PutStackedTask, PutUnderTask, SummonOnFixTask, SwapFixTask, SwapInTask
 from .registry import OPS, task
 
 

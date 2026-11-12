@@ -7,7 +7,7 @@ from __future__ import annotations
 
 import itertools
 
-from ..types import ActivateTask, CrossTask, HyperTask, PlayTask, TurnTask
+from ..base.types import ActivateTask, CrossTask, HyperTask, PlayTask, TurnTask
 from .registry import STEPS, read_only, step, task
 
 

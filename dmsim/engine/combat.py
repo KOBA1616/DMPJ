@@ -5,7 +5,7 @@ breaks で判定する。キーワードは keywords.yaml でそれらを与え�
 """
 from __future__ import annotations
 
-from ..types import AttackTask, BreakTask, DeclareTask, SlayerTask
+from ..base.types import AttackTask, BreakTask, DeclareTask, SlayerTask
 from .registry import task
 
 

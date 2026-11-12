@@ -21,7 +21,7 @@ from pathlib import Path
 from .. import scenario
 from . import bestfirst, replay, shrink
 from .bestfirst import Weights
-from .loopspec import LoopSpec, Pred
+from ..base.loopspec import LoopSpec, Pred
 from ..engine_view import result_of
 
 MUT_ZONES = ("hand", "mana", "bz", "graveyard", "shield", "deck")

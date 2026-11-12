@@ -14,9 +14,10 @@ ORDER = ["S0", "S1", "S2", "S3", "S4", "S5", "S6", "APP"]
 
 LAYER_OF = {
     # S0 共通基盤: 型・ID・記録の形
-    "dmsim.types": "S0",
-    "dmsim.cardid": "S0",
-    "dmsim.discovery.loopspec": "S0",      # LoopSpec は記録の形（依存なし）。登録簿(S0)へ移す予定
+    "dmsim.base": "S0",                    # 定義元（P1: types・cardid・loopspec をここへ集めた）
+    "dmsim.types": "S0",                   # 旧名の互換（dmsim.base.types と同じモジュール）
+    "dmsim.cardid": "S0",                  # 旧名の互換（dmsim.base.cardid と同じモジュール）
+    "dmsim.discovery.loopspec": "S0",      # 旧名の互換（dmsim.base.loopspec と同じモジュール）
     # S1 カードデータ
     "dmsim.defs": "S1",
     "dmsim.canonical": "S1",
@@ -139,3 +140,18 @@ def test_allowlist_is_not_stale():
     es = edges()
     stale = [k for k in ALLOWED if k not in es or ORDER.index(layer(k[1])) <= ORDER.index(layer(k[0]))]
     assert not stale, f"もう不要な許可: {stale}"
+
+
+def test_base_imports_no_other_layer():
+    """S0 の定義元 dmsim.base は他の層（dmsim.base 以外の dmsim.*）を import しない。"""
+    bad = sorted(f"{a} -> {b}" for a, b in edges() if (a == "dmsim.base" or a.startswith("dmsim.base."))
+                 and not (b == "dmsim.base" or b.startswith("dmsim.base.")))
+    assert not bad, bad
+
+
+def test_old_names_are_the_same_module():
+    """旧名は定義元と同一オブジェクト（旧名への monkeypatch が定義元に効く）。"""
+    import importlib
+    for old, new in [("dmsim.types", "dmsim.base.types"), ("dmsim.cardid", "dmsim.base.cardid"),
+                     ("dmsim.discovery.loopspec", "dmsim.base.loopspec")]:
+        assert importlib.import_module(old) is importlib.import_module(new)
