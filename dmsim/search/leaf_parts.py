@@ -13,7 +13,7 @@ import yaml
 
 from ..engine import Engine
 from .leaf_eval import Weights, evaluate
-from ..engine_view import count_matching, result_of
+from ..engine.view import count_matching, result_of
 from ..base.store import REPO
 
 

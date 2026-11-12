@@ -97,7 +97,7 @@ def main(argv=None):
     from pathlib import Path
 
     from ..cards.defs import load_rules
-    from ..play import default_decks, make_record
+    from ..engine.play import default_decks, make_record
     ap = argparse.ArgumentParser(description="1人回しで N ターン目までのキル率を測る")
     ap.add_argument("--deck", help="自分のデッキ（YAML）。省略時は実カードを繰り返した40枚")
     ap.add_argument("--opp-deck", help="相手のデッキ（YAML）。省略時は T001×40")
@@ -114,7 +114,7 @@ def main(argv=None):
     rules = load_rules()
     deck = load_deck(a.deck) if a.deck else default_decks(rules, "dm")[0]
     opp_deck = load_deck(a.opp_deck) if a.opp_deck else ["T001"] * 40
-    from ..opponent import PRESETS
+    from ..search.opponent import PRESETS
     kw = {"max_turn": a.turns, "budget": a.budget, "opp": PRESETS[a.opp]}
     if a.record:
         fp = 1 if a.first == "second" else 0

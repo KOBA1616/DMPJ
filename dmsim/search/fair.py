@@ -10,7 +10,7 @@ from collections import Counter
 from ..engine import Engine
 from .turn import TurnSearch, charge_only_policy
 from .infoset import determinize
-from ..engine_view import active_of, inject_state, state_of
+from ..engine.view import active_of, inject_state, state_of
 
 
 def _own_decision(eng: Engine, me: int, opp_policy):

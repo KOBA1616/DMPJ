@@ -9,8 +9,8 @@ import time
 from dataclasses import dataclass, field
 
 from ..engine import Engine
-from ..loop import LoopCertificate, LoopDetector, verify
-from ..play import passive_policy
+from ..engine.loop import LoopCertificate, LoopDetector, verify
+from ..engine.play import passive_policy
 from .leaf_eval import Weights
 from .turn import TurnSearch, charge_only_policy, own_turn
 

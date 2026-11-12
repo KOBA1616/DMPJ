@@ -43,16 +43,22 @@ LAYER_OF = {
     "dmsim.play": "S2",              # 旧名の互換（dmsim.engine.play と同じモジュール。1局の最小進行と既定方策）
     # S3 探索・プレイ（大局観を含む）
     "dmsim.play_api": "S3",                # 探索・プレイの窓口 play(局面, 設定, 情報水準)（P0-2）
-    "dmsim.opponent": "S3",
-    "dmsim.loop_first": "S3",
-    "dmsim.search": "S3",
-    "dmsim.plan": "S3",
-    "dmsim.discovery.bestfirst": "S3",     # 汎用の最良優先・ビーム探索（search/ へ移す予定）
-    "dmsim.discovery.reachsearch": "S3",   # 段階目標への到達探索 reach_chain（search/ へ移す予定）
+    "dmsim.search": "S3",                  # 定義元（P1-S3: 1ターン・公平・複数ターン探索、相手役 opponent、loop_first、bestfirst、reachsearch）
+    "dmsim.plan": "S3",                    # 大局観
+    "dmsim.opponent": "S3",          # 旧名の互換（dmsim.search.opponent と同じモジュール）
+    "dmsim.loop_first": "S3",        # 旧名の互換（dmsim.search.loop_first と同じモジュール）
+    "dmsim.discovery.bestfirst": "S3",     # 旧名の互換（dmsim.search.bestfirst と同じモジュール）
+    "dmsim.discovery.reachsearch": "S3",   # 旧名の互換（dmsim.search.reachsearch と同じモジュール）
     # S4 評価
-    "dmsim.eval": "S4",
+    "dmsim.eval": "S4",                    # 定義元（P1-S4: 測定 measure・到達率 reach・構造検証 replay/shrink・再現性・妥当性 validity・開始局面 evalstarts・pool_metrics）
     "dmsim.solitaire": "S4",              # 旧名の互換モジュール（search/turn・leaf_eval・game と eval/measure を再エクスポート、P0-3）
-    "dmsim.pool_metrics": "S4",
+    "dmsim.pool_metrics": "S4",          # 旧名の互換（dmsim.eval.pool_metrics と同じモジュール）
+    "dmsim.validity": "S4",              # 旧名の互換（dmsim.eval.validity と同じモジュール）
+    "dmsim.discovery.replay": "S4",      # 旧名の互換（dmsim.eval.replay と同じモジュール）
+    "dmsim.discovery.shrink": "S4",      # 旧名の互換（dmsim.eval.shrink と同じモジュール）
+    "dmsim.discovery.reproducibility": "S4",  # 旧名の互換（dmsim.eval.reproducibility と同じモジュール）
+    "dmsim.discovery.evalstarts": "S4",  # 旧名の互換（dmsim.eval.evalstarts と同じモジュール）
+    "dmsim.autofix.reach": "S4",         # 旧名の互換（dmsim.eval.reach と同じモジュール）
     # S5 発見（デッキ構築を含む）
     "dmsim.discovery": "S5",
     "dmsim.combo_search": "S5",
@@ -67,7 +73,6 @@ LAYER_OF = {
 # 今回解消できなかった逆流: (import する側, される側) → 理由
 ALLOWED = {
     ("dmsim.deckplan.auto", "dmsim.autofix.usage"): "使われにくい札の監査 collect_usage が autofix にある（遅延 import）。usage 監査を S4 へ移す手順で解消",
-    ("dmsim.plan.macro", "dmsim.eval.vfeatures"): "旧名 plan.macro.macro_prio の互換（モジュール __getattr__ の遅延 import のみ）。呼び出し側の移行後に削除",
 }
 
 
@@ -155,13 +160,24 @@ def test_cards_imports_only_base():
     assert not bad, bad
 
 
+def test_search_plan_import_only_lower_layers():
+    """S3 の定義元 dmsim.search・dmsim.plan は base・cards・engine（と旧名の互換）と S3 自身だけを import する。"""
+    bad = sorted(f"{a} -> {b}" for a, b in edges()
+                 if (a.startswith("dmsim.search") or a.startswith("dmsim.plan"))
+                 and ORDER.index(layer(b)) > ORDER.index("S3") and (a, b) not in ALLOWED)
+    assert not bad, bad
+
+
 def test_old_names_are_the_same_module():
     """旧名は定義元と同一オブジェクト（旧名への monkeypatch が定義元に効く）。"""
     import importlib
     for old, new in [("dmsim.types", "dmsim.base.types"), ("dmsim.cardid", "dmsim.base.cardid"),
                      ("dmsim.discovery.loopspec", "dmsim.base.loopspec")] + \
             [(f"dmsim.{m}", f"dmsim.cards.{m}") for m in
-             ("defs", "canonical", "cardfiles", "cardstore", "approval", "identity", "schema", "dataaudit")]:
+             ("defs", "canonical", "cardfiles", "cardstore", "approval", "identity", "schema", "dataaudit")] + \
+            [("dmsim.opponent", "dmsim.search.opponent"), ("dmsim.loop_first", "dmsim.search.loop_first"),
+             ("dmsim.discovery.bestfirst", "dmsim.search.bestfirst"),
+             ("dmsim.discovery.reachsearch", "dmsim.search.reachsearch")]:
         assert importlib.import_module(old) is importlib.import_module(new)
 
 
@@ -172,3 +188,37 @@ def test_op_vocab_matches_engine_implementations():
     from dmsim.engine.registry import OP_ARGS, OPS
     assert OP_ARGS is opvocab.OP_ARGS
     assert set(opvocab.OP_ARGS) - set(OPS) == set(), "語彙にあるのに実装が無い op"
+
+
+# P1-S4: 旧名 → 定義元（同じモジュールオブジェクトであること）
+S4_ALIASES = {
+    "dmsim.pool_metrics": "dmsim.eval.pool_metrics",
+    "dmsim.validity": "dmsim.eval.validity",
+    "dmsim.discovery.replay": "dmsim.eval.replay",
+    "dmsim.discovery.shrink": "dmsim.eval.shrink",
+    "dmsim.discovery.reproducibility": "dmsim.eval.reproducibility",
+    "dmsim.discovery.evalstarts": "dmsim.eval.evalstarts",
+    "dmsim.autofix.reach": "dmsim.eval.reach",
+}
+
+
+def test_eval_imports_only_s4_or_below():
+    bad = [f"{a} -> {b}({layer(b)})" for a, b in sorted(edges())
+           if a.startswith("dmsim.eval") and ORDER.index(layer(b)) > ORDER.index("S4")]
+    assert not bad, "eval が S5 以上を import している:\n" + "\n".join(bad)
+
+
+def test_s4_old_names_are_same_module():
+    import importlib
+    for old, new in S4_ALIASES.items():
+        assert importlib.import_module(old) is importlib.import_module(new), old
+
+
+def test_solitaire_reexports_definitions():
+    import importlib
+    import dmsim.solitaire as sol
+    homes = ["dmsim.eval.measure", "dmsim.search.game", "dmsim.search.leaf_eval", "dmsim.search.turn"]
+    for name in [n for n in vars(sol) if not n.startswith("__") and n != "annotations"]:
+        obj = getattr(sol, name)
+        if callable(obj) or isinstance(obj, type):
+            assert any(getattr(importlib.import_module(h), name, None) is obj for h in homes), name

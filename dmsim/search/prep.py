@@ -6,7 +6,7 @@
 from __future__ import annotations
 
 from ..engine import Engine
-from ..engine_view import count_matching, result_of
+from ..engine.view import count_matching, result_of
 
 
 def prep_used(eng: Engine, me: int, ids) -> int:
