@@ -8,6 +8,7 @@ from __future__ import annotations
 from pathlib import Path
 
 import yaml
+from ..base import store
 
 DEFAULT_UNIT_SEC = 3.0     # 履歴が無いデッキの 1候補×1局あたりの所要秒（保守的な初期値）
 MIN_SLOT_SEC = 120         # これ未満の枠しか残っていなければそのデッキは次回へ回す
@@ -20,8 +21,7 @@ def load_history(path) -> dict:
 
 
 def save_history(path, hist: dict) -> None:
-    Path(path).parent.mkdir(parents=True, exist_ok=True)
-    Path(path).write_text(yaml.safe_dump(hist, allow_unicode=True, sort_keys=True), encoding="utf-8")
+    store.write_text(path, yaml.safe_dump(hist, allow_unicode=True, sort_keys=True))
 
 
 def order_targets(names: list[str], hist: dict) -> list[str]:
