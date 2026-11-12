@@ -15,8 +15,7 @@ from ..discovery.bestfirst import priority
 from ..discovery.reachsearch import reach_chain
 from ..engine.core import Engine
 from ..engine_view import turn_of, force_hand
-from ..plan.macro import macro_prio
-from .vfeatures import v_priority
+from .vfeatures import macro_prio, v_priority
 
 GRID = ((3.0, 1.0), (6.0, 1.0), (6.0, 3.0), (10.0, 3.0),
         (0.0, 0.0, -0.1), (0.0, 0.0, -0.3), (0.0, 0.0, -1.0))     # (under_w, res_w[, plan_w[, key_pen[, cost_scale[, lock_w]]]])。(0, 0) は base と同じ。plan_w<0 は計画項を基本スコアの標準偏差の -plan_w 倍にする（正規化、macro_prio）

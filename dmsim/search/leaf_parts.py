@@ -12,9 +12,8 @@ from pathlib import Path
 import yaml
 
 from ..engine import Engine
-from ..eval.stage import count_matching
 from ..solitaire import Weights, evaluate
-from ..engine_view import result_of
+from ..engine_view import count_matching, result_of
 
 
 @dataclass(frozen=True)
@@ -153,3 +152,25 @@ def parts_id_for_decks(deck_paths, parts: str = "auto"):
         return None
     ids = (yaml.safe_load(Path(deck_paths[0]).read_text(encoding="utf-8")) or {}).get("combos") or []
     return ids[0] if len(ids) == 1 and ids[0] in load_specs() else None
+
+
+def default_board(combo: dict, min_weight: float = 1.5) -> dict:
+    """最小盤面Mを部品表から作る: 重みが min_weight 以上で ID 指定の部品を、ゾーンごとに全部そろえる。
+    一部の部品だけを見ると診断が甘くなる（盤面が揃った＝仕込み完了と誤判定する）ので、指定がなければ全部品で見る。"""
+    board: dict = {}
+    for p in spec_from_combo(combo).parts:
+        if p.ids and p.weight >= min_weight:
+            for i in p.ids:
+                board.setdefault(p.zone, {})[i] = max(board.get(p.zone, {}).get(i, 0), p.need)
+    return board
+
+
+def default_need(combo: dict, min_weight: float = 1.5) -> dict:
+    """cards 段階（部品が見える所にそろう）の必要カード。leaf_parts の重い部品（重み min_weight 以上・ID指定）の和集合。
+    それが無い時は core 部品すべて（厳しい。天門のように core が多いコンボは cards で止まりやすい）。"""
+    need: dict = {}
+    for p in spec_from_combo(combo).parts:
+        if p.ids and p.weight >= min_weight:
+            for i in p.ids:
+                need[i] = max(need.get(i, 0), p.need)
+    return need or {canon(p["id"]): 1 for p in combo["parts"] if p.get("role") == "core" and p.get("id")}

@@ -9,8 +9,7 @@ from collections import Counter
 from dataclasses import dataclass
 
 from ..engine import Engine
-from ..engine_view import defn_of, result_of, tapped_of, turn_of, zone_of
-from ..eval.stage import zone_counts
+from ..engine_view import defn_of, result_of, tapped_of, turn_of, zone_counts, zone_of
 from ..loop import abstract
 from ..solitaire import Weights, candidates, charge_only_policy
 from .bestfirst import _Settler, priority
