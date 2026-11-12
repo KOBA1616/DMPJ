@@ -10,9 +10,9 @@ import yaml
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 from dmsim.defs import load_rules  # noqa: E402
-from dmsim.discovery.reachsearch import reach_chain  # noqa: E402
 from dmsim.eval import vgate  # noqa: E402
 from dmsim.eval.vfeatures import macro_prio  # noqa: E402
+from dmsim.play_api import InfoLevel, PlayConfig, play  # noqa: E402
 from dmsim.solitaire import load_deck  # noqa: E402
 
 
@@ -28,8 +28,9 @@ def run(combo, pw, seeds, start=1, reserve=0, width=150, max_turn=14, targets="d
         e = vgate.start_engine(rules, deck, ["T001"] * 40, keys, sd)
         if e is None:
             continue
-        r = reach_chain(e, stages, 0, keep_later=True, width=width, max_turn=max_turn, prio=prio, reserve=reserve)
-        games.append({"seed": sd, "stages": r["stages"], "turns": r["turns"]})
+        r = play(e, PlayConfig(mode="chain", stages=tuple(stages), keep_later=True, chain_lookahead=3, width=width, max_turn=max_turn,
+                               prio=prio, reserve=reserve), InfoLevel.CHEAT)
+        games.append({"seed": sd, "stages": r.stages, "turns": r.turns})
     n = len(stages)
     reached = [sum(1 for g in games if g["stages"] > k) for k in range(n)]    # 段 k 以降に届いた局数
     return {"combo": combo, "plan_w": pw, "n_games": len(games), "n_stages": n, "reached_per_stage": reached,

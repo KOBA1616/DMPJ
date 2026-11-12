@@ -51,14 +51,11 @@ def probe_unit(rules, deck, opp, setup, workers: int = 1, budget: int = REF_BUDG
     重いデッキ（例 knight_dmc は1局が約30秒）を履歴なしでも先に見つけるための実測。"""
     import time
 
-    from ..eval import fair_runner
-    from ..eval.harness import EvalConfig, run_eval
-    from ..eval.infolevel import InfoLevel
+    from ..eval.api import Candidate, EvalSettings, run_eval
     from .evaluate import spec_with_deck
-    fair_runner.register(n_det, 0)
-    kw = {"start_spec": spec_with_deck(setup, deck)} if setup else {}
+    cand = Candidate(deck=tuple(deck), start_spec=spec_with_deck(setup, deck) if setup else None)
     t = time.time()
-    run_eval(rules, EvalConfig(decks={"d": deck}, opp_deck=opp, seeds=[1], levels=(InfoLevel.FAIR,), max_turn=4, base_budget=budget, n_det=n_det, **kw))
+    run_eval(rules, cand, EvalSettings(opp_deck=tuple(opp), max_turn=4, base_budget=budget, n_det=n_det, register_fair=True), [1])
     return max(0.05, (time.time() - t) / max(1, workers) * REF_BUDGET / max(1, budget))
 
 

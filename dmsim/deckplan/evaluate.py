@@ -59,14 +59,14 @@ def stage_value(kill, board, cards, turn: int) -> float:
 def harness_scorer(rules, opp_deck: list[str], seeds: list[int], rule: AcceptRule = AcceptRule(), setup: dict | None = None, workers: int = 1,
                    stage_spec=None, **cfg_kw) -> Scorer:
     """stage_spec（eval.progress.ProgressSpec）を渡すと、値が (キルターン, 段階進捗) の組になる（粗比較用）。"""
-    from ..eval.harness import EvalConfig, cell_key, run_eval
-    from ..eval.infolevel import InfoLevel
+    from ..eval.api import Candidate, EvalSettings, run_eval
+    from ..eval.harness import cell_key
+    from ..play_api import InfoLevel
 
     def one(deck: list[str], sd: list[int]) -> dict:
-        kw = {"start_spec": spec_with_deck(setup, deck)} if setup else {}
-        cfg = EvalConfig(decks={"d": deck}, opp_deck=opp_deck, seeds=sd, levels=(InfoLevel(rule.level),),
-                         max_turn=rule.turn, progress=stage_spec, **kw, **cfg_kw)
-        cell = run_eval(rules, cfg)["cells"][cell_key("d", rule.level, 1.0)]
+        cand = Candidate(deck=tuple(deck), start_spec=spec_with_deck(setup, deck) if setup else None)
+        st = EvalSettings(opp_deck=tuple(opp_deck), levels=(InfoLevel(rule.level),), max_turn=rule.turn, progress=stage_spec, **cfg_kw)
+        cell = run_eval(rules, cand, st, sd).report["cells"][cell_key("d", rule.level, 1.0)]
         if stage_spec is not None:
             return {(s, fp): (kt, stage_value(kt, p[0], p[1], rule.turn))
                     for (s, fp, kt), p in zip(cell["per_game"], cell["per_game_progress"])}

@@ -12,9 +12,9 @@ from .lock_terms import make_term as lock_make
 from .key_terms import make_term
 
 from ..discovery.bestfirst import priority
-from ..discovery.reachsearch import reach_chain
 from ..engine.core import Engine
-from ..engine_view import turn_of, force_hand
+from ..engine_view import force_hand
+from ..play_api import InfoLevel, PlayConfig, play
 from .vfeatures import macro_prio, v_priority
 
 GRID = ((3.0, 1.0), (6.0, 1.0), (6.0, 3.0), (10.0, 3.0),
@@ -48,7 +48,9 @@ def chain_score(rules, deck, opp_deck, keys, stages, seeds, prio, width=150, max
         e = start_engine(rules, deck, opp_deck, keys, sd)
         if e is None:   # この seed は強制開始の札が山札に無い（盾などに落ちた）。測れないので飛ばす（全 seed で同じ seed が飛ぶ）
             continue
-        out.append(reach_chain(e, stages, 0, keep_later=keep_later, lookahead=lookahead, width=width, max_depth=max_depth, max_turn=max_turn, prio=prio)["stages"])
+        cfg = PlayConfig(mode="chain", stages=tuple(stages), keep_later=keep_later, chain_lookahead=lookahead, width=width,
+                         max_depth=max_depth, max_turn=max_turn, prio=prio)
+        out.append(play(e, cfg, InfoLevel.CHEAT).stages)   # 段階探索は真の山札順を見る（CHEAT）。V の順位づけ比較のみに使う
         by_seed[sd] = out[-1]
     return {"stages": out, "total": sum(out), "by_seed": by_seed}
 
@@ -138,7 +140,6 @@ EARLY_TURN = 8     # 「早い勝ち」の基準（通しターン）
 
 def win_score(rules, deck, opp_deck, keys, seeds, prio, width=40, max_depth=80, max_turn=WIN_TURN, deadline=None) -> dict:
     """seed ごとの勝ちターン（勝てなければ None）。{seed: turn|None}"""
-    from ..discovery.bestfirst import beam
     out = {}
     for sd in seeds:
         if deadline and time.time() > deadline:
@@ -146,8 +147,8 @@ def win_score(rules, deck, opp_deck, keys, seeds, prio, width=40, max_depth=80, 
         e = start_engine(rules, deck, opp_deck, keys, sd)
         if e is None:
             continue
-        r = beam(e, 0, width=width, max_depth=max_depth, max_turn=max_turn, prio=prio)
-        out[sd] = turn_of(r.engine) if r.won else None
+        r = play(e, PlayConfig(mode="beam", width=width, max_depth=max_depth, max_turn=max_turn, prio=prio), InfoLevel.CHEAT)
+        out[sd] = r.kill_turn
     return out
 
 
