@@ -50,9 +50,15 @@ LAYER_OF = {
     "dmsim.discovery.bestfirst": "S3",     # 旧名の互換（dmsim.search.bestfirst と同じモジュール）
     "dmsim.discovery.reachsearch": "S3",   # 旧名の互換（dmsim.search.reachsearch と同じモジュール）
     # S4 評価
-    "dmsim.eval": "S4",
+    "dmsim.eval": "S4",                    # 定義元（P1-S4: 測定 measure・到達率 reach・構造検証 replay/shrink・再現性・妥当性 validity・開始局面 evalstarts・pool_metrics）
     "dmsim.solitaire": "S4",              # 旧名の互換モジュール（search/turn・leaf_eval・game と eval/measure を再エクスポート、P0-3）
-    "dmsim.pool_metrics": "S4",
+    "dmsim.pool_metrics": "S4",          # 旧名の互換（dmsim.eval.pool_metrics と同じモジュール）
+    "dmsim.validity": "S4",              # 旧名の互換（dmsim.eval.validity と同じモジュール）
+    "dmsim.discovery.replay": "S4",      # 旧名の互換（dmsim.eval.replay と同じモジュール）
+    "dmsim.discovery.shrink": "S4",      # 旧名の互換（dmsim.eval.shrink と同じモジュール）
+    "dmsim.discovery.reproducibility": "S4",  # 旧名の互換（dmsim.eval.reproducibility と同じモジュール）
+    "dmsim.discovery.evalstarts": "S4",  # 旧名の互換（dmsim.eval.evalstarts と同じモジュール）
+    "dmsim.autofix.reach": "S4",         # 旧名の互換（dmsim.eval.reach と同じモジュール）
     # S5 発見（デッキ構築を含む）
     "dmsim.discovery": "S5",
     "dmsim.combo_search": "S5",
@@ -182,3 +188,37 @@ def test_op_vocab_matches_engine_implementations():
     from dmsim.engine.registry import OP_ARGS, OPS
     assert OP_ARGS is opvocab.OP_ARGS
     assert set(opvocab.OP_ARGS) - set(OPS) == set(), "語彙にあるのに実装が無い op"
+
+
+# P1-S4: 旧名 → 定義元（同じモジュールオブジェクトであること）
+S4_ALIASES = {
+    "dmsim.pool_metrics": "dmsim.eval.pool_metrics",
+    "dmsim.validity": "dmsim.eval.validity",
+    "dmsim.discovery.replay": "dmsim.eval.replay",
+    "dmsim.discovery.shrink": "dmsim.eval.shrink",
+    "dmsim.discovery.reproducibility": "dmsim.eval.reproducibility",
+    "dmsim.discovery.evalstarts": "dmsim.eval.evalstarts",
+    "dmsim.autofix.reach": "dmsim.eval.reach",
+}
+
+
+def test_eval_imports_only_s4_or_below():
+    bad = [f"{a} -> {b}({layer(b)})" for a, b in sorted(edges())
+           if a.startswith("dmsim.eval") and ORDER.index(layer(b)) > ORDER.index("S4")]
+    assert not bad, "eval が S5 以上を import している:\n" + "\n".join(bad)
+
+
+def test_s4_old_names_are_same_module():
+    import importlib
+    for old, new in S4_ALIASES.items():
+        assert importlib.import_module(old) is importlib.import_module(new), old
+
+
+def test_solitaire_reexports_definitions():
+    import importlib
+    import dmsim.solitaire as sol
+    homes = ["dmsim.eval.measure", "dmsim.search.game", "dmsim.search.leaf_eval", "dmsim.search.turn"]
+    for name in [n for n in vars(sol) if not n.startswith("__") and n != "annotations"]:
+        obj = getattr(sol, name)
+        if callable(obj) or isinstance(obj, type):
+            assert any(getattr(importlib.import_module(h), name, None) is obj for h in homes), name

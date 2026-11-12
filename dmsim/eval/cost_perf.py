@@ -5,7 +5,7 @@
 - 項 = scale × 分子 / 分母。scale は基本スコアの散らばりに合わせるため呼び出し側で決める（tools/plan_effect.py --term cost）。"""
 from __future__ import annotations
 
-from ..engine_view import tapped_of, zone_of
+from ..engine.view import tapped_of, zone_of
 from .lock_terms import lock_term
 from .opp_pressure import opp_pressure
 
