@@ -30680,6 +30680,8 @@ cards:
     power: 6000
     races:
     - デーモン・コマンド
+    keywords:
+    - double_breaker
     abilities:
     - kind: trigger
       when:
