@@ -45,6 +45,9 @@ class Candidate:
     seeds: list[int] = field(default_factory=lambda: list(range(1, 9)))
     max_turn: int = 2
     budget: int | None = None                 # None は入口局面の既定
+    setup: str | None = None                  # 能動ロック: ロックが成立した局面（scenario の spec、JSON）。entry の代わり
+    policy: list[str] = field(default_factory=list)   # 能動ロック: 与えた自分の方針（lockcheck.prefer_policy の key の先頭、優先順）。手順の記述として残す
+    route_stages: list | None = None          # 入口への経路の段（形式は「サガがループの入口に届くようにする」作業に合わせる。今は空欄）
     note: str = ""
 
     def __post_init__(self):
@@ -57,6 +60,8 @@ class Candidate:
             raise RegistryError(f"win は {WINS}: {self.win!r}")
         if self.lock_mode not in ("passive", "active"):
             raise RegistryError(f"lock_mode: {self.lock_mode!r}")
+        if self.lock_mode == "active" and "lock" not in self.types:
+            raise RegistryError("lock_mode=active はロック型だけ")
 
     def core_ids(self) -> set[str]:
         return {c["id"] for c in self.core if c.get("id")}
