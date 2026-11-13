@@ -13,11 +13,23 @@ from __future__ import annotations
 
 from itertools import product
 
-from ..discovery.candidates import _walk_ops
 
 UNREAD = ("cost_reduce_per_evo", "tap_reduce", "fushigi", "free_if", "mugen_climb", "recycle", "vividraw")
 PUT_FROM = ("hand", "graveyard", "deck", "mana", "shield")
 
+
+
+def _walk_ops(ops):
+    # discovery.candidates._walk_ops と同じ（S4 から S5 を import しないための写し）
+    for op in ops or []:
+        if not isinstance(op, dict):
+            continue
+        yield op
+        for key in ("body", "then", "else", "win", "lose", "draw", "effect"):
+            if isinstance(op.get(key), list):
+                yield from _walk_ops(op[key])
+        for m in op.get("modes") or []:
+            yield from _walk_ops(m)
 
 def _faces(d):
     return list(getattr(d, "faces", None) or []) or [d]
