@@ -30728,7 +30728,8 @@ cards:
     好きな数のクリーチャーを、自分の墓地から手札に戻す。'
   source:
     official: dm23bd7-035
-    review: pending
+    review: approved
+    review_note: "2026-11-13 koba 承認（公式テキストと一致を確認済み、新規コンボ akashic_hd2 の部品）"
     notes: 'ツインパクト。相手の破壊分は相手が選ぶ（chooser: opp）。'
     aliases:
     - dmex04-011
