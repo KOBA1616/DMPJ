@@ -24,6 +24,7 @@ from ..engine.view import cards_met, result_of
 from ..play_api import InfoLevel, PlayConfig, play_turns
 from ..search.game import GameResult
 from ..search.opponent import resistance
+from ..search import route_goal as RG
 from ..search.game import finish_result
 from . import loop_entry as L
 from .measure import wilson
@@ -69,9 +70,11 @@ def raw_table(ls, turns=(3, 4, 6), deck=None) -> dict:
 
 
 def run_one(rules, ls, seed: int, *, deck=None, opp_deck=None, max_turn: int = 6, budget: int = 200, n_det: int = 8,
-            opp_level: int = 0):
+            opp_level: int = 0, route: str | None = None, route_log: str | None = None):
     """1局。戻り値 dict: seed, first, opp, cards_turn, entry_turn（0=開始時、未到達 None）, verdict（ruler.judge）, res。
-    opp_level: 相手の抵抗の段階（search.opponent.resistance）。0 は従来の無抵抗。opp_deck を渡すとデッキだけ差し替える。"""
+    opp_level: 相手の抵抗の段階（search.opponent.resistance）。0 は従来の無抵抗。opp_deck を渡すとデッキだけ差し替える。
+    route: 経路の名前（data/loops/route/）。渡すと葉の評価に経路の段の点を足す（search.route_goal、既定 None は従来どおり）。
+    段の到達は route を渡さなくても名前があれば記録したいので、記録だけは route_log で別に指定できる。"""
     deck = list(deck or L.deck_of(ls))
     opp_model, lvl_deck = resistance(opp_level)
     opp_deck = list(opp_deck or lvl_deck)
@@ -80,7 +83,8 @@ def run_one(rules, ls, seed: int, *, deck=None, opp_deck=None, max_turn: int = 6
     me = 0
     t0 = time.perf_counter()
     res = GameResult(seed=seed, first_player=first, opp=opp_model.name if opp_model else "none")
-    rec = {"cards_turn": None, "entry_turn": None, "entry_mana": None}
+    rec = {"cards_turn": None, "entry_turn": None, "entry_mana": None, "route": route, "stage_turn": {}}
+    stages = RG.load(route_log or route) if (route_log or route) else ()
     eng = Engine.new_game(rules, [deck, opp_deck], seed, first)
     if opp_model is not None:
         opp_model.setup(eng)
@@ -91,10 +95,15 @@ def run_one(rules, ls, seed: int, *, deck=None, opp_deck=None, max_turn: int = 6
         if rec["entry_turn"] is None and not L.unmet(e, ls):
             rec["entry_turn"] = t
             rec["entry_mana"] = len(e.s.zones["mana"][me])
+        if stages:
+            for i, st in enumerate(stages, 1):
+                if i not in rec["stage_turn"] and all(RG.holds(e, p, me) for p in st.preds):
+                    rec["stage_turn"][i] = t
 
     holder = [eng]
     try:
-        cfg = PlayConfig(seed=seed, max_turn=max_turn, budget=budget, n_det=n_det, me=me)
+        cfg = PlayConfig(seed=seed, max_turn=max_turn, budget=budget, n_det=n_det, me=me,
+                         value_fn=RG.make_value_fn(stages) if route else None)
 
         def on_turn(e, ot, nodes):
             res.nodes += nodes

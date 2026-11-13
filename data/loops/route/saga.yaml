@@ -1,0 +1,24 @@
+# コンボの経路を「段の列」で書く（探索の葉の目標。dmsim/search/route_goal.py）。
+# 段は局面の状態の述語（入口 data/loops/entry/ の minimal と同じ形: zone / zones, match, n, op, owner）。
+# 局面の点 = 満たしている段のうち最も後ろの段までの weight の合計（後の段が前の段の状態を消してもよい。
+# 例: ドラゲリオンが出ると墓地のクリーチャーは進化元として場に移る）。最後の段は入口 M。
+name: saga
+via: 超神星DOOM・ドラゲリオン（墓地進化）のメテオバーンでシャコガイルを墓地から出す
+stages:
+  - name: シャコガイルが墓地にある
+    weight: 30
+    all:
+      - {zone: graveyard, match: {name: dmrp03-s03}, n: 1}
+  - name: シャコガイルが墓地にあり、墓地のクリーチャーが8体以上
+    weight: 60
+    all:
+      - {zone: graveyard, match: {name: dmrp03-s03}, n: 1}
+      - {zone: graveyard, match: {types: [creature]}, n: 8}
+  - name: ドラゲリオンが場にあり、シャコガイルが場（進化元を含む）にある
+    weight: 150
+    all:
+      - {zone: bz, match: {name: dm22ex1-007}, n: 1}
+      - {zone: bz, match: {name: dmrp03-s03}, n: 1}
+  - name: 入口（シャコガイルが場、サガが手札と墓地、墓地のクリーチャー3体以上）
+    weight: 300
+    entry: saga
