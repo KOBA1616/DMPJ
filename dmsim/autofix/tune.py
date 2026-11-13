@@ -122,5 +122,5 @@ def tune(measure, k0: Knobs, tune_seeds, confirm_seeds, rule: Rule = Rule(), gen
 
 def _rec(ledger, ent):
     if ledger:
-        from ..deckplan.evaluate import record
+        from ..eval.deckeval import record
         record(ledger, ent)

@@ -60,6 +60,7 @@ LAYER_OF = {
     "dmsim.discovery.evalstarts": "S4",  # 旧名の互換（dmsim.eval.evalstarts と同じモジュール）
     "dmsim.autofix.reach": "S4",         # 旧名の互換（dmsim.eval.reach と同じモジュール）
     "dmsim.autofix.usage": "S4",         # 旧名の互換（dmsim.eval.usage と同じモジュール、P1-S5）
+    "dmsim.deckplan.evaluate": "S4",     # 旧名の互換（dmsim.eval.deckeval と同じモジュール、P1-S6）
     # S5 発見（デッキ構築を含む）
     "dmsim.discovery": "S5",               # 定義元（P1-S5: ループ発見・候補・監査・combo_search。S0/S3/S4 の旧名は上の個別指定）
     "dmsim.combo_search": "S5",          # 旧名の互換（dmsim.discovery.combo_search と同じモジュール）
@@ -251,3 +252,34 @@ def test_play_api_has_single_turn_entry():
     """tools の1ターン探索は play_api.search_turn を通す（P1-S5）。"""
     from dmsim import play_api
     assert callable(play_api.search_turn)
+
+
+# P1-S6: 旧名 → 定義元
+S6_ALIASES = {
+    "dmsim.deckplan.evaluate": "dmsim.eval.deckeval",
+}
+
+
+def test_s6_old_names_are_same_module():
+    import importlib
+    for old, new in S6_ALIASES.items():
+        assert importlib.import_module(old) is importlib.import_module(new), old
+
+
+def test_s6_does_not_import_s5():
+    bad = [f"{a} -> {b}" for a, b in sorted(edges()) if layer(a) == "S6" and layer(b) == "S5"]
+    assert not bad, "S6 が S5 を import している:\n" + "\n".join(bad)
+
+
+def test_s5_and_below_do_not_import_s6():
+    bad = [f"{a}({layer(a)}) -> {b}" for a, b in sorted(edges())
+           if layer(b) == "S6" and ORDER.index(layer(a)) <= ORDER.index("S5")]
+    assert not bad, "S5 以下が S6 を import している:\n" + "\n".join(bad)
+
+
+def test_s6_search_goes_through_api():
+    """S6 は探索器を直接呼ばず play_api / run_eval を通す（P1-S6）。"""
+    bad = [f"{a} -> {b}" for a, b in sorted(edges())
+           if layer(a) == "S6" and (b.startswith("dmsim.search.turn") or b.startswith("dmsim.search.fair")
+                                   or b == "dmsim.solitaire" or b.startswith("dmsim.eval.measure"))]
+    assert not bad, "S6 が探索器を直接 import している:\n" + "\n".join(bad)
