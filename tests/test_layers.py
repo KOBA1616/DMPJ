@@ -51,6 +51,7 @@ LAYER_OF = {
     "dmsim.discovery.reachsearch": "S3",   # 旧名の互換（dmsim.search.reachsearch と同じモジュール）
     # S4 評価
     "dmsim.eval": "S4",                    # 定義元（P1-S4: 測定 measure・到達率 reach・構造検証 replay/shrink・再現性・妥当性 validity・開始局面 evalstarts・pool_metrics）
+    "dmsim.eval.lockcheck": "S4",          # ロック判定 lock_probe・round_probe・lock_ok（P2 タスク2 で search.game から移動）
     "dmsim.solitaire": "S4",              # 旧名の互換モジュール（search/turn・leaf_eval・game と eval/measure を再エクスポート、P0-3）
     "dmsim.pool_metrics": "S4",          # 旧名の互換（dmsim.eval.pool_metrics と同じモジュール）
     "dmsim.validity": "S4",              # 旧名の互換（dmsim.eval.validity と同じモジュール）
@@ -217,7 +218,7 @@ def test_s4_old_names_are_same_module():
 def test_solitaire_reexports_definitions():
     import importlib
     import dmsim.solitaire as sol
-    homes = ["dmsim.eval.measure", "dmsim.search.game", "dmsim.search.leaf_eval", "dmsim.search.turn"]
+    homes = ["dmsim.eval.measure", "dmsim.eval.lockcheck", "dmsim.search.game", "dmsim.search.leaf_eval", "dmsim.search.turn"]
     for name in [n for n in vars(sol) if not n.startswith("__") and n != "annotations"]:
         obj = getattr(sol, name)
         if callable(obj) or isinstance(obj, type):
@@ -283,3 +284,15 @@ def test_s6_search_goes_through_api():
            if layer(a) == "S6" and (b.startswith("dmsim.search.turn") or b.startswith("dmsim.search.fair")
                                    or b == "dmsim.solitaire" or b.startswith("dmsim.eval.measure"))]
     assert not bad, "S6 が探索器を直接 import している:\n" + "\n".join(bad)
+
+
+def test_lock_judge_moved_to_s4():
+    """ロック判定は S4 の eval.lockcheck が定義元。旧名 solitaire.* は同一オブジェクト、play_game の既定の判定役は lock_probe。"""
+    from dmsim import solitaire
+    from dmsim.eval import lockcheck
+    from dmsim.search import game
+    for n in ("lock_probe", "round_probe", "lock_ok", "_lock_ok"):
+        assert getattr(solitaire, n) is getattr(lockcheck, n)
+    assert lockcheck.lock_probe.__module__ == "dmsim.eval.lockcheck"
+    assert game._default_lock_judge is lockcheck.lock_probe
+    assert not hasattr(game, "lock_probe")

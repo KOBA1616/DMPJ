@@ -47,6 +47,7 @@ class PlayConfig:
     weights: Any = None                    # search.leaf_eval.Weights
     value_fn: Callable | None = None       # 葉の評価の差し替え f(eng, me)（CHEAT のみ）
     opp: Any = None                        # dmsim.search.opponent.OppModel（None は何もしない相手）
+    lock_judge: Callable | None = None     # CHEAT のロック判定役 f(eng, me, rounds)（None は登録済みの既定 = eval.lockcheck.lock_probe）
     # chain / beam
     stages: tuple = ()                     # chain: 段階目標（dict）の並び
     width: int = 150
@@ -108,7 +109,8 @@ def play(start, cfg: PlayConfig, info: InfoLevel = InfoLevel.FAIR, *, rules=None
             from .search.game import play_game
             res, eng = play_game(rules, list(cfg.deck), list(cfg.opp_deck), cfg.seed, first_player=cfg.first_player,
                                  max_turn=cfg.max_turn, budget=cfg.budget, weights=cfg.weights, lock_rounds=cfg.lock_rounds,
-                                 start=start, opp=cfg.opp, value_fn=cfg.value_fn)
+                                 start=start, opp=cfg.opp, value_fn=cfg.value_fn,
+                                 lock_judge=cfg.lock_judge)
         else:
             if cfg.value_fn is not None or cfg.weights is not None:
                 raise NotImplementedError("FAIR の game は value_fn / weights の差し替え未対応（eval.progress 経由で使う）")

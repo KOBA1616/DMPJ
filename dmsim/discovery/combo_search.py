@@ -95,10 +95,12 @@ def search(rules, fixed: dict[str, int], pool: list[str], *, slots: int = 2, cop
 def _setup_job(args):
     from ..engine import scenario
     from ..eval.measure import W as _W
+    from ..eval.lockcheck import lock_probe
     from ..search.game import play_game
     spec, seed, turns, budget = args
     eng = scenario.build(_W["rules"], dict(spec, seed=seed))
-    return play_game(_W["rules"], None, None, seed, max_turn=turns, budget=budget, start=eng, lock_rounds=2)[0]
+    return play_game(_W["rules"], None, None, seed, max_turn=turns, budget=budget, start=eng, lock_rounds=2,
+                     lock_judge=lock_probe)[0]
 
 
 def search_setup(rules, spec: dict, zone: str, pool: list[str], *, slots: int = 1, turns: int = 1, games: int = 4,

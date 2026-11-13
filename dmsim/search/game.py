@@ -1,16 +1,17 @@
 """1局の進行（S3、P0-3 で solitaire.py から分割）。CHEAT の play_game（TurnSearch＋ロック判定）と FAIR の fair_game
 （FairTurnSearch）は、共通の手番ループ run_turns を使う。
 
-ロックの試し回し round_probe / lock_probe は構造検証に当たるが、play_game が毎ターン使うので S3 に残す（S4 構造検証の新設は P2）。
+ロックの試し回し round_probe / lock_probe / lock_ok は S4 の dmsim.eval.lockcheck へ移した（P2 タスク2）。
+play_game は判定役 lock_judge(eng, me, rounds) を引数で受け取る。省略時は lockcheck が import 時に登録した lock_probe を使う。
 """
 from __future__ import annotations
 
 import time
 from dataclasses import dataclass, field
+from typing import Callable
 
 from ..engine import Engine
-from ..engine.loop import LoopCertificate, LoopDetector, verify
-from ..engine.play import passive_policy
+from ..engine.loop import LoopCertificate
 from .leaf_eval import Weights
 from .turn import TurnSearch, charge_only_policy, own_turn
 
@@ -31,15 +32,6 @@ class GameResult:
     error: str | None = None
 
 
-def lock_ok(cert: LoopCertificate, me: int) -> bool:
-    """相手の資源が周回ごとに増えない（山札と墓地以外の相手側カウンタの差分が 0 以下）ロックだけを認める。"""
-    opp = f":{1 - me}"
-    grows = any(v > 0 for k, v in cert.delta.items()
-                if k.endswith(opp) and not k.startswith(("deck:", "graveyard:")))
-    return cert.win_by == "opp_deck_out" and not grows
-
-
-
 def origin(res: GameResult) -> str:
     """勝ち方の由来。ループで相手の山札・シールドを削ってから決めたものを、殴り勝ちや効果だけの勝ちと分ける。"""
     if any(lp["win_by"] for lp in res.loops):
@@ -49,36 +41,25 @@ def origin(res: GameResult) -> str:
     return "combat" if res.kind == "direct_attack" else "effect"
 
 
-_lock_ok = lock_ok    # 旧名（互換）
 _origin = origin      # 旧名（互換）
 
 
-def round_probe(eng: Engine, me: int, rounds: int = 2) -> LoopCertificate | None:
-    """自分が何もしなくなっても、ターン開始・終了の誘発などで毎ラウンド同じ骨格に戻る周期（時計）を見つける。
-    ロックかどうか（相手が動けないか）は見ない。それは lock_probe が lock_ok で絞る。"""
-    e = eng.clone()
-    det = LoopDetector(me=me, period="round", hand_keys=set(), report_all=True)
-    seen_turns, last = 0, None
-    while (d := e.advance()) is not None:
-        if e.s.active == me and d["player"] == me and e.s.turn != last:
-            last = e.s.turn
-            seen_turns += 1
-            cert = det.observe(e)
-            if cert is not None:
-                return cert if verify(e, cert, times=2).verified == 2 else None
-            if seen_turns > rounds:
-                return None
-        e.answer(passive_policy(e, d) if d["player"] == me else charge_only_policy(e, d))
-    return None
+LockJudge = Callable[[Engine, int, int], "LoopCertificate | None"]
+_default_lock_judge: LockJudge | None = None
 
 
-def lock_probe(eng: Engine, me: int, rounds: int = 2) -> LoopCertificate | None:
-    """「ここで自分が何もしなくなっても、相手は山札切れまで何もできないか」を確かめる。
-    自分は何もしない（passive）、相手はマナチャージだけして rounds+1 周回し、ラウンド周期の骨格の回帰を探す。
-    自分が動き続ける本番の対戦では骨格が毎ターン変わるので、ロックはこの別の試し回しで見る。"""
-    cert = round_probe(eng, me, rounds)
-    return cert if cert is not None and lock_ok(cert, me) else None
+def set_default_lock_judge(fn: LockJudge | None) -> None:
+    """play_game の既定のロック判定役を登録する（S4 の dmsim.eval.lockcheck が import 時に lock_probe を登録する）。
+    S3 は S4 を import できないので、既定値はこの登録で受け取る。"""
+    global _default_lock_judge
+    _default_lock_judge = fn
 
+
+def _resolve_lock_judge(lock_judge: LockJudge | None) -> LockJudge:
+    fn = lock_judge if lock_judge is not None else _default_lock_judge
+    if fn is None:
+        raise RuntimeError("ロック判定役が未登録。dmsim.eval.lockcheck を import するか lock_judge を渡すか lock_rounds=0 にする")
+    return fn
 
 
 def run_turns(cur: list, me: int, max_turn: int, opp_pol, take_turn) -> None:
@@ -101,8 +82,9 @@ def run_turns(cur: list, me: int, max_turn: int, opp_pol, take_turn) -> None:
 
 def play_game(rules, deck: list[str], opp_deck: list[str], seed: int, *, first_player: int = 0,
               max_turn: int = 4, budget: int = 200, weights: Weights | None = None,
-              lock_rounds: int = 2, start: Engine | None = None, opp=None, value_fn=None) -> tuple[GameResult, Engine]:
-    """自分 = プレイヤー0。自分の max_turn ターン目が終わるまで回す。各ターンの後に lock_probe でロックを確かめる。
+              lock_rounds: int = 2, start: Engine | None = None, opp=None, value_fn=None,
+              lock_judge: LockJudge | None = None) -> tuple[GameResult, Engine]:
+    """自分 = プレイヤー0。自分の max_turn ターン目が終わるまで回す。各ターンの後に判定役 lock_judge（既定 dmsim.eval.lockcheck.lock_probe）でロックを確かめる。
     start（dmsim.scenario.build で作った局面など）を渡すとそこから始める（deck / opp_deck / seed は使わない）。"""
     me = 0
     t0 = time.perf_counter()
@@ -113,13 +95,14 @@ def play_game(rules, deck: list[str], opp_deck: list[str], seed: int, *, first_p
         opp.setup(eng)
         opp_pol = opp.policy
     search = TurnSearch(me, budget, weights, opp_policy=opp_pol, value_fn=value_fn)
+    judge = _resolve_lock_judge(lock_judge) if lock_rounds > 0 else None
 
     def take_turn(eng, ot):
         eng, st = search.run(eng)
         res.nodes += st.nodes
         res.loops += [dict(lp, own_turn=ot) for lp in st.loops]
         if eng.s.result is None and lock_rounds > 0:
-            cert = lock_probe(eng, me, lock_rounds)
+            cert = judge(eng, me, lock_rounds)
             if cert is not None:
                 res.kind, res.kill_turn = "lock", ot
                 res.lock = {"delta": cert.delta, "needed_rounds": cert.needed, "limit": cert.limit}

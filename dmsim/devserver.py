@@ -355,12 +355,14 @@ class App:
         if rec is not None and body.get("cert"):
             rec = record_with_cert(self.rules, rec, int(body["at"]), cert_from_dict(body["cert"]), int(body.get("laps", 1)))
         elif rec is None:
+            from .eval.lockcheck import lock_probe
             from .search.game import play_game
             fp = int(body.get("first", 0))
             deck = list(body["deck"])
             opp = list(body.get("opp_deck") or ["T001"] * len(deck))
             res, eng = play_game(self.rules, deck, opp, int(body.get("seed", 1)), first_player=fp,
-                                 max_turn=int(body.get("turns", 4)), budget=int(body.get("budget", 200)))
+                                 max_turn=int(body.get("turns", 4)), budget=int(body.get("budget", 200)),
+                                 lock_judge=lock_probe)
             rec = make_record(eng, [deck, opp], int(body.get("seed", 1)), fp, note=json.dumps(asdict(res), ensure_ascii=False))
         pid = self.next_id
         self.next_id += 1
