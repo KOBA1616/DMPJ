@@ -13,6 +13,7 @@ from typing import Callable
 from ..engine import Engine
 from ..engine.loop import LoopCertificate
 from .leaf_eval import Weights
+from .pattern_loop import find as find_pattern_loops
 from .turn import TurnSearch, charge_only_policy, own_turn
 
 
@@ -24,7 +25,8 @@ class GameResult:
     origin: str | None = None         # lock / loop（ループで山札・シールドを削った）/ engine（資源ループの後に殴った・決めた）/ combat / effect
     kind: str | None = None           # direct_attack / deck_out / loop_deck_out / effect / lock
     lost: str | None = None           # 自分が負けた理由（deck_out など）
-    loops: list[dict] = field(default_factory=list)
+    loops: list[dict] = field(default_factory=list)            # 採った手順で使ったループだけ（証明書 source=certificate／繰り返しの記録 source=pattern）
+    loop_candidates: list[dict] = field(default_factory=list)  # 探索で試したループの候補すべて（選ばなかった線を含む。旧 loops の中身）
     lock: dict | None = None
     nodes: int = 0
     decisions: int = 0
@@ -83,7 +85,7 @@ def run_turns(cur: list, me: int, max_turn: int, opp_pol, take_turn) -> None:
 def play_game(rules, deck: list[str], opp_deck: list[str], seed: int, *, first_player: int = 0,
               max_turn: int = 4, budget: int = 200, weights: Weights | None = None,
               lock_rounds: int = 2, start: Engine | None = None, opp=None, value_fn=None,
-              lock_judge: LockJudge | None = None) -> tuple[GameResult, Engine]:
+              lock_judge: LockJudge | None = None, pattern_loops: bool = True) -> tuple[GameResult, Engine]:
     """自分 = プレイヤー0。自分の max_turn ターン目が終わるまで回す。各ターンの後に判定役 lock_judge（既定 dmsim.eval.lockcheck.lock_probe）でロックを確かめる。
     start（dmsim.scenario.build で作った局面など）を渡すとそこから始める（deck / opp_deck / seed は使わない）。"""
     me = 0
@@ -98,9 +100,13 @@ def play_game(rules, deck: list[str], opp_deck: list[str], seed: int, *, first_p
     judge = _resolve_lock_judge(lock_judge) if lock_rounds > 0 else None
 
     def take_turn(eng, ot):
+        before, at = eng, len(eng.log)
         eng, st = search.run(eng)
         res.nodes += st.nodes
-        res.loops += [dict(lp, own_turn=ot) for lp in st.loops]
+        res.loop_candidates += [dict(lp, own_turn=ot) for lp in st.loops]
+        res.loops += [dict(lp, own_turn=ot) for lp in st.chosen]
+        if pattern_loops and not st.chosen:
+            res.loops += [dict(lp, own_turn=ot) for lp in find_pattern_loops(before, eng.log[at:], me, at)]
         if eng.s.result is None and lock_rounds > 0:
             cert = judge(eng, me, lock_rounds)
             if cert is not None:

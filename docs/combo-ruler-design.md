@@ -209,6 +209,17 @@
 | アカシック | 同上 | 200 | 0/8 | 0/8 | 探索がループを見つけない（S3 の予算の問題。1500 で見つかる） |
 | 騎士＋DMC | 対象外 | — | — | — | ループの仕組みが無い（騎士が再び出る手段が無い）。リソース型（§11） |
 
+## 8.3 ループの記録の形（2026-11-13、タスク4で実装）
+
+`GameResult.loops` は**採った手順で使ったループだけ**。探索が試した候補（選ばなかった線を含む、旧 `loops` の中身）は `GameResult.loop_candidates`。`TurnSearch` は `_search` の戻り値に「その葉に至る線で使ったループ」を持たせ、最善の線のものだけを `TurnStats.chosen` に入れる（`TurnStats.loops` は候補のまま）。勝敗・手順は変わらない（同じ評価で同じ葉を選ぶ）。
+
+1件の欄（共通）: `source`（`certificate`＝ループ証明書／`pattern`＝実際の手順の繰り返し）、`verified`（True。証明書は verify 済み、pattern は実際に N 周指した）、`kind`、`delta`（1周の差分、`ゾーン:プレイヤー`）、`stocked`（回した周回数 N）、`length`（1周の手数）、`win_by`、`needed`、`own_turn`。
+- certificate: `limit`（`inf` なら無限）。
+- pattern（サガ型の有限ループ、`dmsim/search/pattern_loop.py`）: `kind: finite`、`infinite: False`、`laps`（= stocked）、`stock`（delta×laps）、`limit_est`（減る資源が尽きるまでの見積もり。確かめていない）、`log_start`/`log_end`（eng.log の位置。勝ちの瞬間 `len(log)` と比べて「勝ちに使われたか」の材料）、`lap_actions`、`anchor`。
+
+pattern の検出条件（誤検出対策）は `pattern_loop.py` の冒頭: 手札・山札の札の種類は問わず、それ以外の鍵は完全一致で3周以上／毎周、墓地・場・マナの同じ札（錨）を選ぶ／1周ごとの枚数差分（両者の各ゾーンと未タップのマナ）が全周で同じ／自分について差分が0でない／そのターンに証明書のループを採っていれば調べない。
+`origin()` は pattern も数える（ループの後の殴り勝ちは `engine`）。
+
 ## 8.2 ロック勝ちを最後まで回した結果（2026-11-13、タスク3）
 
 `dmsim/eval/lockcheck.py` に `run_lock_to_end`（結果 `LockRun`: 成立ターン・勝ちまでのターン数・自分の山札残り・破れた理由とターン）、能動ロック用の自分の方針 `prefer_policy`、`play_game(lock_judge=...)` に差し込める `make_full_lock_judge` を足した。play_game の既定の判定役は lock_probe のまま。
