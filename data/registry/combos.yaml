@@ -124,8 +124,8 @@ entries:
       via: loop
       win_turn: 1
   version:
-    fingerprint: f4c16f8730725683
-    commit: 42a4c3f
+    fingerprint: aae8dd13d963eaed
+    commit: af62f90
     measured_at: '2026-11-13'
 - id: drill_lock
   name: ドリルスコール＋ジョバンニ＋クルト
@@ -254,8 +254,8 @@ entries:
       own_deck_left: 1
       broken: null
   version:
-    fingerprint: f4c16f8730725683
-    commit: 42a4c3f
+    fingerprint: aae8dd13d963eaed
+    commit: af62f90
     measured_at: '2026-11-13'
 rejected:
 - id: akashic_hd2
@@ -378,8 +378,8 @@ rejected:
       via: loop
       win_turn: 1
   version:
-    fingerprint: f4c16f8730725683
-    commit: 42a4c3f
+    fingerprint: aae8dd13d963eaed
+    commit: af62f90
     measured_at: '2026-11-13'
   failed_at: ruler
 - id: knight_dmc
@@ -410,24 +410,126 @@ rejected:
   - 8
   max_turn: 2
   budget: null
-  setup: null
+  setup: data/registry/setups/knight_dmc.json
   policy: []
   route_stages: null
   note: ''
-  digest: f809aa0fbb1bb2ef
+  digest: 3cdb6738ca084ec4
   checks:
   - name: cards
     ok: true
     detail: 中核の札がカードデータにある
   - name: type
+    ok: true
+    detail: resource としてコスト対アドバンテージを測る（resource.py）
+  - name: entry
+    ok: true
+    detail: data/registry/setups/knight_dmc.json
+  - name: resource
     ok: false
-    detail: 型 ['resource'] は今の物差しで測れない（リソース型はタスク12、攻撃型はタスク11 が前提）
-  measured: {}
+    detail: 効率 adv 中央値 1.8（1.2〜2.4）・得た量中央値 9.0。合格線が未定のため登録しない（docs/combo-ruler-design.md §15）
+  measured:
+    seeds:
+    - 1
+    - 2
+    - 3
+    - 4
+    - 5
+    - 6
+    - 7
+    - 8
+    resource:
+      n: 8
+      adv_median: 1.8
+      adv_min: 1.2
+      adv_max: 2.4
+      gain_median: 9.0
+    rows:
+    - seed: 1
+      start: 0e0e6ec8e557
+      mana_used: 3
+      cards_spent: 2
+      d_hand: 3
+      d_board: 3
+      d_shield: 1
+      gain: 9
+      adv: 1.8
+      error: null
+    - seed: 2
+      start: a532a9bb0ff1
+      mana_used: 3
+      cards_spent: 2
+      d_hand: 3
+      d_board: 3
+      d_shield: 1
+      gain: 9
+      adv: 1.8
+      error: null
+    - seed: 3
+      start: 0c20002c999a
+      mana_used: 3
+      cards_spent: 2
+      d_hand: 5
+      d_board: 4
+      d_shield: 1
+      gain: 12
+      adv: 2.4
+      error: null
+    - seed: 4
+      start: a3cf2ca1eddd
+      mana_used: 3
+      cards_spent: 2
+      d_hand: 1
+      d_board: 2
+      d_shield: 1
+      gain: 6
+      adv: 1.2
+      error: null
+    - seed: 5
+      start: ce2d248ab848
+      mana_used: 3
+      cards_spent: 2
+      d_hand: 3
+      d_board: 3
+      d_shield: 1
+      gain: 9
+      adv: 1.8
+      error: null
+    - seed: 6
+      start: 98c3e6cf8fc9
+      mana_used: 3
+      cards_spent: 2
+      d_hand: 3
+      d_board: 3
+      d_shield: 1
+      gain: 9
+      adv: 1.8
+      error: null
+    - seed: 7
+      start: e6a045dd493c
+      mana_used: 3
+      cards_spent: 2
+      d_hand: 3
+      d_board: 3
+      d_shield: 1
+      gain: 9
+      adv: 1.8
+      error: null
+    - seed: 8
+      start: 765aecca3fa3
+      mana_used: 3
+      cards_spent: 2
+      d_hand: 1
+      d_board: 2
+      d_shield: 1
+      gain: 6
+      adv: 1.2
+      error: null
   version:
-    fingerprint: f4c16f8730725683
-    commit: 42a4c3f
+    fingerprint: aae8dd13d963eaed
+    commit: af62f90
     measured_at: '2026-11-13'
-  failed_at: type
+  failed_at: resource
 - id: saga
   name: 絶望神サガの蘇生ループ
   split: tuning
@@ -549,7 +651,7 @@ rejected:
       via: loop
       win_turn: 1
   version:
-    fingerprint: f4c16f8730725683
-    commit: 42a4c3f
+    fingerprint: aae8dd13d963eaed
+    commit: af62f90
     measured_at: '2026-11-13'
   failed_at: ruler

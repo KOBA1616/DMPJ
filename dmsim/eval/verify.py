@@ -60,7 +60,10 @@ def verify(rules, cand: Candidate, *, known_min: float = KNOWN_MIN) -> Evidence:
     if not step("cards", not missing and bool(cand.core), "中核の札がカードデータにある" if not missing else f"ID が無いかカードデータに無い: {missing}"):
         return done(False)
     if not set(cand.types) & set(MEASURABLE):
-        step("type", False, f"型 {cand.types} は今の物差しで測れない（リソース型はタスク12、攻撃型はタスク11 が前提）")
+        if "resource" in cand.types:
+            step("type", True, "resource としてコスト対アドバンテージを測る（resource.py）")
+            return done(_resource(rules, cand, step, measured))
+        step("type", False, f"型 {cand.types} は今の物差しで測れない（攻撃型はタスク11 が前提）")
         return done(False)
     if cand.lock_mode == "active":
         step("type", True, "lock（能動）として相手の山札切れまで回す")
@@ -131,6 +134,20 @@ def _active_lock(rules, cand: Candidate, step, measured: dict, known_min: float)
     again = [_lock_row(rules, spec, s, cand.policy) for s in cand.seeds[:REPLAY_SEEDS]]
     diff = [a["seed"] for a, b in zip(again, rows) if _key(a) != _key(b)]
     return step("replay", not diff, f"seed {cand.seeds[:REPLAY_SEEDS]} を回し直して一致" if not diff else f"回し直すと結果が変わる seed {diff}")
+
+
+def _resource(rules, cand: Candidate, step, measured: dict) -> bool:
+    """リソース型: 測って記録するが、合格線が未定なので通さない（resource 検証で落ちる。線は指揮役とユーザーが決める）。"""
+    from . import resource as rs
+    if not cand.setup:
+        return step("entry", False, "リソース型には setup（入口の局面）が要る")
+    spec, deck = rs.load_setup(cand.setup)
+    step("entry", True, cand.setup)
+    rows = [rs.measure_one(rules, spec, deck, s, budget=cand.budget or 200) for s in cand.seeds]
+    measured.update({"seeds": cand.seeds, "resource": rs.summarize(rows), "rows": rows})
+    sm = measured["resource"]
+    return step("resource", False, f"効率 adv 中央値 {sm['adv_median']}（{sm['adv_min']}〜{sm['adv_max']}）・得た量中央値 {sm['gain_median']}。"
+                                   "合格線が未定のため登録しない（docs/combo-ruler-design.md §15）")
 
 
 def register(rules, cand: Candidate, *, path=registry.PATH, purpose: str = "eval") -> tuple[Evidence, dict]:
