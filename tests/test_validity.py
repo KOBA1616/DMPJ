@@ -29,3 +29,11 @@ def test_stamp_expires_when_instrument_changes(tmp_path):
     v.write_stamp(_rows(0.1), stamp, root)
     assert "届かない" in v.status(stamp, root)[1]
     assert v.annotate({"n": 1}, stamp, root)["validity"]["valid"] is False
+
+
+def test_judge_detects_flat_scores():
+    from dmsim.validity import judge
+    rows = [{"combo": c, "split": "tuning", "k": 2, "core_score": 7.0, "random_median": 7.0, "random_p95": 7.0, "percentile": 0.0}
+            for c in ("a", "b")]
+    ok, why = judge(rows)
+    assert not ok and "張り付" in why
