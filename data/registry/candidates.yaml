@@ -1,0 +1,62 @@
+# 登録簿への候補（tools/registry.py が dmsim/eval/verify.py の検証に通して data/registry/combos.yaml へ書く）。
+# 元: data/known_combos/combos.yaml（tuning / holdout）と data/discovered_combos/combos.yaml（discovered）。どちらも形は変えない。
+# core は既知コンボの parts の role: core と同じ札（新規性判定 registry.novelty と区分の重なり検査の対象）。
+# holdout の候補は検証（purpose=eval）だけに通し、照会 query(for_tuning=True) には出さない。
+candidates:
+  - id: saga
+    name: 絶望神サガの蘇生ループ
+    split: tuning
+    types: [loop]
+    win: effect           # シャコガイル（山札の最後の1枚を引いて勝つ）
+    entry: data/loops/entry/saga.json
+    core:
+      - {id: dm22ex2-021, name: 絶望神サガ, role: エンジン（蘇生）}
+      - {id: dmrp03-s03, name: 水上第九院 シャコガイル, role: 勝ち手段}
+      - {id: dm22ex1-007, name: 超神星DOOM・ドラゲリオン, role: 入口への経路}
+    procedure:
+      - 手札のサガを3マナで出し、墓地のサガとの蘇生で1周1枚引く。山札の最後の1枚を引いてシャコガイルの効果で勝つ。
+  - id: knight_dmc
+    name: ～地獄帰りの騎士～＋DARK MEMORY CONTAINER
+    split: tuning
+    types: [resource]
+    win: beat
+    core:
+      - {id: dm25ex3-028, name: ～地獄帰りの騎士～, role: エンジン}
+      - {id: dm25ex3-055, name: DARK MEMORY CONTAINER, role: エンジン}
+    procedure:
+      - 盾が置かれた時に墓地から騎士が出る。3マナで体3つと手札を得る（リソース型、設計書 §11）。
+  - id: akashic
+    name: アカシック ナウ・オア・ネバー＋ウォカンナ
+    split: tuning
+    types: [loop]
+    win: opp_deck_out
+    entry: data/loops/entry/akashic.json
+    core:
+      - {id: dm23ex2-009, name: 完全水中要塞 アカシック3, role: エンジン（呪文の無償詠唱）}
+      - {id: dm23bd7-035, name: 魔刻の斬将オルゼキア／訪れる魔の時刻, role: 回収}
+      - {id: dmrp12-s01, name: 天命龍装 ホーリーエンド／ナウ・オア・ネバー, role: 勝ち手段}
+      - {id: dm24ex1-038, name: 冥土人形ウォカンナ・ピエール, role: 勝ち手段}
+  - id: akashic_hd2
+    name: アカシック H.D.2. 短縮ループ
+    split: discovered
+    types: [loop]
+    win: opp_deck_out
+    entry: data/loops/entry/akashic_hd2.json
+    core:
+      - {id: dm23ex2-009, name: 完全水中要塞 アカシック3, role: エンジン（呪文の無償詠唱）}
+      - {id: dm23bd7-035, name: 魔刻の斬将オルゼキア／訪れる魔の時刻, role: 回収}
+      - {id: dmrp07-009, name: ラルド・ワースピーダ／H.D.2., role: 勝ち手段}
+    procedure:
+      - アカシック3 で H.D.2. を相手に向けて無償で唱え（相手の山札の上2枚をマナへ）、訪れる魔の時刻で墓地のラルドともう1枚の訪れる魔の時刻を回収、を繰り返す。
+  - id: drill_lock
+    name: ドリルスコール＋ジョバンニ＋クルト
+    split: holdout
+    types: [lock]
+    win: lock
+    lock_mode: active
+    core:
+      - {id: null, name: ドリルスコール, role: ロック}
+      - {id: dm36-015, name: 天雷王機ジョバンニX世, role: 回収}
+      - {id: dm36-078, name: クルトの気合釣り, role: 山札の回復}
+    procedure:
+      - 毎ターン自分がドリルスコールで相手マナを墓地へ、ジョバンニがターン終了時に回収、クルトの気合釣りで自分の山札を回復し、相手を山札切れへ（能動ロック）。
