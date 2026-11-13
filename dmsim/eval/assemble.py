@@ -71,8 +71,9 @@ def raw_table(ls, turns=(3, 4, 6), deck=None) -> dict:
 
 def run_one(rules, ls, seed: int, *, deck=None, opp_deck=None, max_turn: int = 6, budget: int = 200, n_det: int = 8,
             opp_level: int = 0, route: str | None = None, route_log: str | None = None,
-            route_opts: dict | None = None):
-    """1局。戻り値 dict: seed, first, opp, cards_turn, entry_turn（0=開始時、未到達 None）, verdict（ruler.judge）, res。
+            route_opts: dict | None = None, trace=None):
+    """1局。trace(eng, turn): 自分の各ターン終了時（と開始時 0）に呼ぶ観測用の口（既定 None、解剖ツール用）。
+    戻り値 dict: seed, first, opp, cards_turn, entry_turn（0=開始時、未到達 None）, verdict（ruler.judge）, res。
     opp_level: 相手の抵抗の段階（search.opponent.resistance）。0 は従来の無抵抗。opp_deck を渡すとデッキだけ差し替える。
     route: 経路の名前（data/loops/route/）。渡すと葉の評価に経路の段の点を足す（search.route_goal、既定 None は従来どおり）。
     route_opts: search.route_goal.make_value_fn の切り替え（mult / partial / elsewhere / away）。
@@ -101,6 +102,8 @@ def run_one(rules, ls, seed: int, *, deck=None, opp_deck=None, max_turn: int = 6
             for i, st in enumerate(stages, 1):
                 if i not in rec["stage_turn"] and all(RG.holds(e, p, me) for p in st.preds):
                     rec["stage_turn"][i] = t
+        if trace is not None:
+            trace(e, t)
 
     opts = dict(route_opts or {})
     ratchet = [0] if opts.pop("ratchet", False) else None   # route_opts={"ratchet": True}: 達成済みの段を下げない

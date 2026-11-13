@@ -1,0 +1,806 @@
+{
+ "entry": "saga",
+ "deck": "data/decks/basebuild_saga.yaml",
+ "games": 40,
+ "reasons": {
+  "必要札が山札・盾（引けていない）": 17,
+  "場のシャコガイルだけ未達": 2
+ },
+ "rows": [
+  {
+   "seed": 1,
+   "cards_turn": 6,
+   "entry_turn": null,
+   "kind": "direct_attack",
+   "win_turn": 6,
+   "error": null
+  },
+  {
+   "seed": 2,
+   "cards_turn": null,
+   "entry_turn": null,
+   "kind": "direct_attack",
+   "win_turn": 6,
+   "error": null
+  },
+  {
+   "seed": 3,
+   "cards_turn": null,
+   "entry_turn": null,
+   "kind": "direct_attack",
+   "win_turn": 6,
+   "error": null
+  },
+  {
+   "seed": 4,
+   "cards_turn": 4,
+   "entry_turn": null,
+   "kind": "direct_attack",
+   "win_turn": 6,
+   "error": null,
+   "best": {
+    "turn": 6,
+    "unmet": [
+     "bz:{\"name\": \"dmrp03-s03\"}>=1",
+     "hand:{\"name\": \"dm22ex2-021\"}>=1"
+    ],
+    "mana": 7,
+    "where": {
+     "dm22ex1-007": {
+      "graveyard": 1,
+      "mana": 1,
+      "deck": 2
+     },
+     "dm22ex2-021": {
+      "graveyard": 4
+     },
+     "dmrp03-s03": {
+      "hand": 1,
+      "graveyard": 1,
+      "mana": 1,
+      "shield": 1
+     }
+    }
+   },
+   "reason": "必要札が山札・盾（引けていない）"
+  },
+  {
+   "seed": 5,
+   "cards_turn": 3,
+   "entry_turn": null,
+   "kind": "direct_attack",
+   "win_turn": 5,
+   "error": null,
+   "best": {
+    "turn": 5,
+    "unmet": [
+     "bz:{\"name\": \"dmrp03-s03\"}>=1",
+     "hand:{\"name\": \"dm22ex2-021\"}>=1"
+    ],
+    "mana": 5,
+    "where": {
+     "dm22ex1-007": {
+      "mana": 2,
+      "shield": 2
+     },
+     "dm22ex2-021": {
+      "graveyard": 3,
+      "deck": 1
+     },
+     "dmrp03-s03": {
+      "graveyard": 3,
+      "mana": 1
+     }
+    }
+   },
+   "reason": "必要札が山札・盾（引けていない）"
+  },
+  {
+   "seed": 6,
+   "cards_turn": 3,
+   "entry_turn": null,
+   "kind": null,
+   "win_turn": null,
+   "error": null,
+   "best": {
+    "turn": 6,
+    "unmet": [
+     "bz:{\"name\": \"dmrp03-s03\"}>=1",
+     "hand:{\"name\": \"dm22ex2-021\"}>=1"
+    ],
+    "mana": 7,
+    "where": {
+     "dm22ex1-007": {
+      "graveyard": 2,
+      "mana": 1,
+      "shield": 1
+     },
+     "dm22ex2-021": {
+      "graveyard": 4
+     },
+     "dmrp03-s03": {
+      "graveyard": 3,
+      "deck": 1
+     }
+    }
+   },
+   "reason": "必要札が山札・盾（引けていない）"
+  },
+  {
+   "seed": 7,
+   "cards_turn": null,
+   "entry_turn": null,
+   "kind": "direct_attack",
+   "win_turn": 6,
+   "error": null
+  },
+  {
+   "seed": 8,
+   "cards_turn": null,
+   "entry_turn": null,
+   "kind": null,
+   "win_turn": null,
+   "error": null
+  },
+  {
+   "seed": 9,
+   "cards_turn": null,
+   "entry_turn": null,
+   "kind": "direct_attack",
+   "win_turn": 5,
+   "error": null
+  },
+  {
+   "seed": 10,
+   "cards_turn": null,
+   "entry_turn": null,
+   "kind": "direct_attack",
+   "win_turn": 6,
+   "error": null
+  },
+  {
+   "seed": 11,
+   "cards_turn": 3,
+   "entry_turn": null,
+   "kind": "direct_attack",
+   "win_turn": 5,
+   "error": null,
+   "best": {
+    "turn": 3,
+    "unmet": [
+     "bz:{\"name\": \"dmrp03-s03\"}>=1"
+    ],
+    "mana": 4,
+    "where": {
+     "dm22ex1-007": {
+      "graveyard": 1,
+      "deck": 3
+     },
+     "dm22ex2-021": {
+      "hand": 1,
+      "graveyard": 1,
+      "deck": 2
+     },
+     "dmrp03-s03": {
+      "mana": 1,
+      "deck": 3
+     }
+    }
+   },
+   "reason": "場のシャコガイルだけ未達"
+  },
+  {
+   "seed": 12,
+   "cards_turn": null,
+   "entry_turn": null,
+   "kind": "direct_attack",
+   "win_turn": 5,
+   "error": null
+  },
+  {
+   "seed": 13,
+   "cards_turn": null,
+   "entry_turn": null,
+   "kind": "direct_attack",
+   "win_turn": 5,
+   "error": null
+  },
+  {
+   "seed": 14,
+   "cards_turn": 6,
+   "entry_turn": null,
+   "kind": "direct_attack",
+   "win_turn": 6,
+   "error": null
+  },
+  {
+   "seed": 15,
+   "cards_turn": null,
+   "entry_turn": null,
+   "kind": "direct_attack",
+   "win_turn": 6,
+   "error": null
+  },
+  {
+   "seed": 16,
+   "cards_turn": 4,
+   "entry_turn": null,
+   "kind": null,
+   "win_turn": null,
+   "error": null,
+   "best": {
+    "turn": 6,
+    "unmet": [
+     "bz:{\"name\": \"dmrp03-s03\"}>=1",
+     "hand:{\"name\": \"dm22ex2-021\"}>=1"
+    ],
+    "mana": 5,
+    "where": {
+     "dm22ex1-007": {
+      "graveyard": 2,
+      "mana": 1,
+      "deck": 1
+     },
+     "dm22ex2-021": {
+      "graveyard": 2,
+      "mana": 1,
+      "deck": 1
+     },
+     "dmrp03-s03": {
+      "mana": 1,
+      "deck": 2,
+      "shield": 1
+     }
+    }
+   },
+   "reason": "必要札が山札・盾（引けていない）"
+  },
+  {
+   "seed": 17,
+   "cards_turn": 4,
+   "entry_turn": null,
+   "kind": "direct_attack",
+   "win_turn": 5,
+   "error": null,
+   "best": {
+    "turn": 5,
+    "unmet": [
+     "bz:{\"name\": \"dmrp03-s03\"}>=1",
+     "hand:{\"name\": \"dm22ex2-021\"}>=1"
+    ],
+    "mana": 5,
+    "where": {
+     "dm22ex1-007": {
+      "hand": 1,
+      "graveyard": 2,
+      "shield": 1
+     },
+     "dm22ex2-021": {
+      "graveyard": 3,
+      "mana": 1
+     },
+     "dmrp03-s03": {
+      "graveyard": 1,
+      "mana": 3
+     }
+    }
+   },
+   "reason": "必要札が山札・盾（引けていない）"
+  },
+  {
+   "seed": 18,
+   "cards_turn": 5,
+   "entry_turn": null,
+   "kind": null,
+   "win_turn": null,
+   "error": null
+  },
+  {
+   "seed": 19,
+   "cards_turn": 4,
+   "entry_turn": null,
+   "kind": "direct_attack",
+   "win_turn": 5,
+   "error": null,
+   "best": {
+    "turn": 5,
+    "unmet": [
+     "bz:{\"name\": \"dmrp03-s03\"}>=1",
+     "hand:{\"name\": \"dm22ex2-021\"}>=1"
+    ],
+    "mana": 6,
+    "where": {
+     "dm22ex1-007": {
+      "hand": 1,
+      "graveyard": 2,
+      "mana": 1
+     },
+     "dm22ex2-021": {
+      "graveyard": 2,
+      "bz": 1,
+      "shield": 1
+     },
+     "dmrp03-s03": {
+      "graveyard": 2,
+      "mana": 2
+     }
+    }
+   },
+   "reason": "必要札が山札・盾（引けていない）"
+  },
+  {
+   "seed": 20,
+   "cards_turn": 0,
+   "entry_turn": null,
+   "kind": null,
+   "win_turn": null,
+   "error": null,
+   "best": {
+    "turn": 6,
+    "unmet": [
+     "bz:{\"name\": \"dmrp03-s03\"}>=1",
+     "hand:{\"name\": \"dm22ex2-021\"}>=1"
+    ],
+    "mana": 6,
+    "where": {
+     "dm22ex1-007": {
+      "hand": 1,
+      "mana": 1,
+      "deck": 1,
+      "shield": 1
+     },
+     "dm22ex2-021": {
+      "graveyard": 3,
+      "deck": 1
+     },
+     "dmrp03-s03": {
+      "hand": 1,
+      "mana": 3
+     }
+    }
+   },
+   "reason": "必要札が山札・盾（引けていない）"
+  },
+  {
+   "seed": 21,
+   "cards_turn": 4,
+   "entry_turn": null,
+   "kind": "direct_attack",
+   "win_turn": 5,
+   "error": null,
+   "best": {
+    "turn": 5,
+    "unmet": [
+     "bz:{\"name\": \"dmrp03-s03\"}>=1",
+     "hand:{\"name\": \"dm22ex2-021\"}>=1"
+    ],
+    "mana": 6,
+    "where": {
+     "dm22ex1-007": {
+      "graveyard": 2,
+      "deck": 2
+     },
+     "dm22ex2-021": {
+      "graveyard": 1,
+      "mana": 1,
+      "deck": 2
+     },
+     "dmrp03-s03": {
+      "mana": 1,
+      "deck": 1,
+      "shield": 2
+     }
+    }
+   },
+   "reason": "必要札が山札・盾（引けていない）"
+  },
+  {
+   "seed": 22,
+   "cards_turn": null,
+   "entry_turn": null,
+   "kind": "direct_attack",
+   "win_turn": 6,
+   "error": null
+  },
+  {
+   "seed": 23,
+   "cards_turn": null,
+   "entry_turn": null,
+   "kind": "direct_attack",
+   "win_turn": 5,
+   "error": null
+  },
+  {
+   "seed": 24,
+   "cards_turn": 3,
+   "entry_turn": null,
+   "kind": null,
+   "win_turn": null,
+   "error": null,
+   "best": {
+    "turn": 3,
+    "unmet": [
+     "bz:{\"name\": \"dmrp03-s03\"}>=1"
+    ],
+    "mana": 3,
+    "where": {
+     "dm22ex1-007": {
+      "deck": 3,
+      "shield": 1
+     },
+     "dm22ex2-021": {
+      "hand": 1,
+      "graveyard": 1,
+      "deck": 2
+     },
+     "dmrp03-s03": {
+      "graveyard": 1,
+      "mana": 1,
+      "deck": 1,
+      "shield": 1
+     }
+    }
+   },
+   "reason": "場のシャコガイルだけ未達"
+  },
+  {
+   "seed": 25,
+   "cards_turn": 4,
+   "entry_turn": null,
+   "kind": "direct_attack",
+   "win_turn": 5,
+   "error": null,
+   "best": {
+    "turn": 5,
+    "unmet": [
+     "bz:{\"name\": \"dmrp03-s03\"}>=1",
+     "hand:{\"name\": \"dm22ex2-021\"}>=1"
+    ],
+    "mana": 5,
+    "where": {
+     "dm22ex1-007": {
+      "hand": 1,
+      "mana": 1,
+      "deck": 1,
+      "shield": 1
+     },
+     "dm22ex2-021": {
+      "graveyard": 1,
+      "mana": 1,
+      "deck": 1,
+      "shield": 1
+     },
+     "dmrp03-s03": {
+      "graveyard": 1,
+      "deck": 3
+     }
+    }
+   },
+   "reason": "必要札が山札・盾（引けていない）"
+  },
+  {
+   "seed": 26,
+   "cards_turn": null,
+   "entry_turn": null,
+   "kind": null,
+   "win_turn": null,
+   "error": null
+  },
+  {
+   "seed": 27,
+   "cards_turn": 4,
+   "entry_turn": null,
+   "kind": "direct_attack",
+   "win_turn": 5,
+   "error": null,
+   "best": {
+    "turn": 5,
+    "unmet": [
+     "bz:{\"name\": \"dmrp03-s03\"}>=1",
+     "hand:{\"name\": \"dm22ex2-021\"}>=1"
+    ],
+    "mana": 5,
+    "where": {
+     "dm22ex1-007": {
+      "mana": 1,
+      "deck": 3
+     },
+     "dm22ex2-021": {
+      "graveyard": 2,
+      "deck": 2
+     },
+     "dmrp03-s03": {
+      "graveyard": 1,
+      "mana": 1,
+      "deck": 1,
+      "shield": 1
+     }
+    }
+   },
+   "reason": "必要札が山札・盾（引けていない）"
+  },
+  {
+   "seed": 28,
+   "cards_turn": null,
+   "entry_turn": null,
+   "kind": "direct_attack",
+   "win_turn": 6,
+   "error": null
+  },
+  {
+   "seed": 29,
+   "cards_turn": 4,
+   "entry_turn": null,
+   "kind": "direct_attack",
+   "win_turn": 5,
+   "error": null,
+   "best": {
+    "turn": 5,
+    "unmet": [
+     "bz:{\"name\": \"dmrp03-s03\"}>=1",
+     "hand:{\"name\": \"dm22ex2-021\"}>=1"
+    ],
+    "mana": 7,
+    "where": {
+     "dm22ex1-007": {
+      "graveyard": 1,
+      "mana": 2,
+      "deck": 1
+     },
+     "dm22ex2-021": {
+      "graveyard": 3,
+      "deck": 1
+     },
+     "dmrp03-s03": {
+      "graveyard": 3,
+      "mana": 1
+     }
+    }
+   },
+   "reason": "必要札が山札・盾（引けていない）"
+  },
+  {
+   "seed": 30,
+   "cards_turn": null,
+   "entry_turn": null,
+   "kind": "direct_attack",
+   "win_turn": 5,
+   "error": null
+  },
+  {
+   "seed": 31,
+   "cards_turn": 2,
+   "entry_turn": null,
+   "kind": null,
+   "win_turn": null,
+   "error": "IndexError: list index out of range",
+   "best": {
+    "turn": 4,
+    "unmet": [
+     "bz:{\"name\": \"dmrp03-s03\"}>=1",
+     "hand:{\"name\": \"dm22ex2-021\"}>=1"
+    ],
+    "mana": 4,
+    "where": {
+     "dm22ex1-007": {
+      "graveyard": 1,
+      "mana": 2,
+      "deck": 1
+     },
+     "dm22ex2-021": {
+      "graveyard": 1,
+      "bz": 1,
+      "mana": 1,
+      "deck": 1
+     },
+     "dmrp03-s03": {
+      "mana": 1,
+      "deck": 3
+     }
+    }
+   },
+   "reason": "必要札が山札・盾（引けていない）"
+  },
+  {
+   "seed": 32,
+   "cards_turn": 4,
+   "entry_turn": null,
+   "kind": "direct_attack",
+   "win_turn": 6,
+   "error": null,
+   "best": {
+    "turn": 6,
+    "unmet": [
+     "hand:{\"name\": \"dm22ex2-021\"}>=1",
+     "graveyard:{\"name\": \"dm22ex2-021\"}>=1"
+    ],
+    "mana": 7,
+    "where": {
+     "dm22ex1-007": {
+      "bz": 1,
+      "mana": 1,
+      "deck": 1,
+      "shield": 1
+     },
+     "dm22ex2-021": {
+      "bz": 3,
+      "deck": 1
+     },
+     "dmrp03-s03": {
+      "bz": 1,
+      "mana": 1,
+      "deck": 2
+     }
+    }
+   },
+   "reason": "必要札が山札・盾（引けていない）"
+  },
+  {
+   "seed": 33,
+   "cards_turn": 2,
+   "entry_turn": null,
+   "kind": null,
+   "win_turn": null,
+   "error": null,
+   "best": {
+    "turn": 6,
+    "unmet": [
+     "bz:{\"name\": \"dmrp03-s03\"}>=1",
+     "hand:{\"name\": \"dm22ex2-021\"}>=1"
+    ],
+    "mana": 6,
+    "where": {
+     "dm22ex1-007": {
+      "graveyard": 2,
+      "mana": 1,
+      "deck": 1
+     },
+     "dm22ex2-021": {
+      "graveyard": 1,
+      "mana": 2,
+      "deck": 1
+     },
+     "dmrp03-s03": {
+      "mana": 2,
+      "deck": 1,
+      "shield": 1
+     }
+    }
+   },
+   "reason": "必要札が山札・盾（引けていない）"
+  },
+  {
+   "seed": 34,
+   "cards_turn": null,
+   "entry_turn": null,
+   "kind": null,
+   "win_turn": null,
+   "error": null
+  },
+  {
+   "seed": 35,
+   "cards_turn": null,
+   "entry_turn": null,
+   "kind": "direct_attack",
+   "win_turn": 5,
+   "error": null
+  },
+  {
+   "seed": 36,
+   "cards_turn": 3,
+   "entry_turn": null,
+   "kind": "direct_attack",
+   "win_turn": 6,
+   "error": null,
+   "best": {
+    "turn": 6,
+    "unmet": [
+     "bz:{\"name\": \"dmrp03-s03\"}>=1",
+     "hand:{\"name\": \"dm22ex2-021\"}>=1"
+    ],
+    "mana": 6,
+    "where": {
+     "dm22ex1-007": {
+      "graveyard": 2,
+      "mana": 1,
+      "shield": 1
+     },
+     "dm22ex2-021": {
+      "graveyard": 2,
+      "deck": 1,
+      "shield": 1
+     },
+     "dmrp03-s03": {
+      "mana": 3,
+      "deck": 1
+     }
+    }
+   },
+   "reason": "必要札が山札・盾（引けていない）"
+  },
+  {
+   "seed": 37,
+   "cards_turn": 3,
+   "entry_turn": null,
+   "kind": "direct_attack",
+   "win_turn": 6,
+   "error": null,
+   "best": {
+    "turn": 6,
+    "unmet": [
+     "bz:{\"name\": \"dmrp03-s03\"}>=1",
+     "hand:{\"name\": \"dm22ex2-021\"}>=1"
+    ],
+    "mana": 7,
+    "where": {
+     "dm22ex1-007": {
+      "mana": 1,
+      "deck": 3
+     },
+     "dm22ex2-021": {
+      "graveyard": 1,
+      "bz": 1,
+      "deck": 1,
+      "shield": 1
+     },
+     "dmrp03-s03": {
+      "mana": 3,
+      "deck": 1
+     }
+    }
+   },
+   "reason": "必要札が山札・盾（引けていない）"
+  },
+  {
+   "seed": 38,
+   "cards_turn": null,
+   "entry_turn": null,
+   "kind": null,
+   "win_turn": null,
+   "error": null
+  },
+  {
+   "seed": 39,
+   "cards_turn": null,
+   "entry_turn": null,
+   "kind": null,
+   "win_turn": null,
+   "error": null
+  },
+  {
+   "seed": 40,
+   "cards_turn": 4,
+   "entry_turn": null,
+   "kind": "direct_attack",
+   "win_turn": 6,
+   "error": null,
+   "best": {
+    "turn": 6,
+    "unmet": [
+     "bz:{\"name\": \"dmrp03-s03\"}>=1",
+     "hand:{\"name\": \"dm22ex2-021\"}>=1"
+    ],
+    "mana": 7,
+    "where": {
+     "dm22ex1-007": {
+      "graveyard": 1,
+      "mana": 1,
+      "deck": 1,
+      "shield": 1
+     },
+     "dm22ex2-021": {
+      "graveyard": 1,
+      "mana": 1,
+      "deck": 2
+     },
+     "dmrp03-s03": {
+      "graveyard": 1,
+      "deck": 2,
+      "shield": 1
+     }
+    }
+   },
+   "reason": "必要札が山札・盾（引けていない）"
+  }
+ ]
+}
