@@ -34,7 +34,8 @@ sys.path.insert(0, str(Path(__file__).resolve().parent.parent))   # リポジト
 from discover_dig import ME, start as saga_start  # noqa: E402
 from loopcheck_full_chain import policy as script_policy  # noqa: E402
 
-import dmsim.search.turn as sol  # noqa: E402  TurnSearch と candidates の定義元（差し替えは定義元に対して行う）
+import dmsim.search.turn as sol  # noqa: E402  candidates の定義元（差し替えは定義元に対して行う）
+from dmsim.play_api import InfoLevel, PlayConfig, search_turn  # noqa: E402
 from dmsim.defs import load_rules  # noqa: E402
 from dmsim.loop_first import discover_loops  # noqa: E402
 from dmsim.zone_graph import find_cycles  # noqa: E402
@@ -202,14 +203,13 @@ class Pipeline:
         sol.candidates = candidates_fn
         eng = self.build(seed)
         t0 = turn_of(eng)
-        ts = sol.TurnSearch(ME, (intent.budget if intent else BUDGET))
-        if intent:
-            ts.burn_stock = intent.burn_stock
-            ts.stock_offsets = tuple(intent.stock_offsets)
-        out, st = ts.run(eng)
+        cfg = PlayConfig(me=ME, budget=(intent.budget if intent else BUDGET))
+        out, nodes = search_turn(eng, cfg, InfoLevel.CHEAT,
+                                 burn_stock=intent.burn_stock if intent else None,
+                                 stock_offsets=intent.stock_offsets if intent else None)
         r = result_of(out)
         won = bool(r and r.get("winner") == ME and r.get("turn") == t0)
-        return won, out, st.nodes
+        return won, out, nodes
 
     # 段階3
     def harvest(self, seeds: list[int]):

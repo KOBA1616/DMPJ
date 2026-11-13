@@ -59,9 +59,10 @@ LAYER_OF = {
     "dmsim.discovery.reproducibility": "S4",  # 旧名の互換（dmsim.eval.reproducibility と同じモジュール）
     "dmsim.discovery.evalstarts": "S4",  # 旧名の互換（dmsim.eval.evalstarts と同じモジュール）
     "dmsim.autofix.reach": "S4",         # 旧名の互換（dmsim.eval.reach と同じモジュール）
+    "dmsim.autofix.usage": "S4",         # 旧名の互換（dmsim.eval.usage と同じモジュール、P1-S5）
     # S5 発見（デッキ構築を含む）
-    "dmsim.discovery": "S5",
-    "dmsim.combo_search": "S5",
+    "dmsim.discovery": "S5",               # 定義元（P1-S5: ループ発見・候補・監査・combo_search。S0/S3/S4 の旧名は上の個別指定）
+    "dmsim.combo_search": "S5",          # 旧名の互換（dmsim.discovery.combo_search と同じモジュール）
     "dmsim.deckplan": "S5",
     # S6 学習・改善
     "dmsim.autofix": "S6",
@@ -71,9 +72,7 @@ LAYER_OF = {
 }
 
 # 今回解消できなかった逆流: (import する側, される側) → 理由
-ALLOWED = {
-    ("dmsim.deckplan.auto", "dmsim.autofix.usage"): "使われにくい札の監査 collect_usage が autofix にある（遅延 import）。usage 監査を S4 へ移す手順で解消",
-}
+ALLOWED: dict = {}   # P1-S5 で最後の1件（deckplan.auto→autofix.usage）を usage の S4 移行で解消
 
 
 def _modules():
@@ -222,3 +221,33 @@ def test_solitaire_reexports_definitions():
         obj = getattr(sol, name)
         if callable(obj) or isinstance(obj, type):
             assert any(getattr(importlib.import_module(h), name, None) is obj for h in homes), name
+
+
+# P1-S5: 旧名 → 定義元
+S5_ALIASES = {
+    "dmsim.combo_search": "dmsim.discovery.combo_search",
+    "dmsim.autofix.usage": "dmsim.eval.usage",
+}
+
+
+def test_s5_old_names_are_same_module():
+    import importlib
+    for old, new in S5_ALIASES.items():
+        assert importlib.import_module(old) is importlib.import_module(new), old
+
+
+def test_s5_does_not_import_s6():
+    bad = [f"{a} -> {b}" for a, b in sorted(edges()) if layer(a) == "S5" and layer(b) == "S6"]
+    assert not bad, "S5 が S6 を import している:\n" + "\n".join(bad)
+
+
+def test_s4_and_below_do_not_import_s5():
+    bad = [f"{a}({layer(a)}) -> {b}" for a, b in sorted(edges())
+           if layer(b) == "S5" and ORDER.index(layer(a)) <= ORDER.index("S4")]
+    assert not bad, "S4 以下が S5 を import している:\n" + "\n".join(bad)
+
+
+def test_play_api_has_single_turn_entry():
+    """tools の1ターン探索は play_api.search_turn を通す（P1-S5）。"""
+    from dmsim import play_api
+    assert callable(play_api.search_turn)
