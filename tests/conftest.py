@@ -34,3 +34,15 @@ def answer(e, kind, key):
     assert d is not None and d["kind"] == kind, (d and d["kind"], kind, d and [o["key"] for o in d["options"]])
     e.answer([find_option(d, key)])
     return d
+
+
+@pytest.fixture(autouse=True)
+def _registry_macro_off(monkeypatch):
+    """登録簿の手（search.macro）は既定有効だが、テストは探索そのものの挙動を見るので切っておく。
+    手の効き目を見るテスト（test_search_macro.py）は ts.macros や macro.enable で明示的に入れる。"""
+    from dmsim.search import macro
+    monkeypatch.setenv("DMSIM_REGISTRY_MACRO", "0")
+    was = macro._ENABLED
+    macro._ENABLED = None
+    yield
+    macro._ENABLED = was
