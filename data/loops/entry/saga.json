@@ -1,0 +1,134 @@
+{
+ "deck_floor": 1,
+ "delta": {},
+ "goal": [],
+ "hazards": [
+  "counter",
+  "graveyard_hate"
+ ],
+ "kind": "deterministic",
+ "limit": null,
+ "minimal": [
+  {
+   "match": {
+    "name": "dmrp03-s03"
+   },
+   "n": 1,
+   "op": ">=",
+   "owner": 0,
+   "zone": "bz",
+   "zones": []
+  },
+  {
+   "match": {
+    "name": "dm22ex2-021"
+   },
+   "n": 1,
+   "op": ">=",
+   "owner": 0,
+   "zone": "hand",
+   "zones": []
+  },
+  {
+   "match": {
+    "name": "dm22ex2-021"
+   },
+   "n": 1,
+   "op": ">=",
+   "owner": 0,
+   "zone": "graveyard",
+   "zones": []
+  },
+  {
+   "match": {
+    "types": [
+     "creature"
+    ]
+   },
+   "n": 3,
+   "op": ">=",
+   "owner": 0,
+   "zone": "graveyard",
+   "zones": []
+  },
+  {
+   "match": {
+    "civs": [
+     "water"
+    ]
+   },
+   "n": 1,
+   "op": ">=",
+   "owner": 0,
+   "zone": "mana",
+   "zones": []
+  },
+  {
+   "match": {
+    "civs": [
+     "darkness"
+    ]
+   },
+   "n": 1,
+   "op": ">=",
+   "owner": 0,
+   "zone": "mana",
+   "zones": []
+  }
+ ],
+ "name": "サガ蘇生ループ（入口）",
+ "routes": [],
+ "source": {
+  "board": {
+   "opp_deck": 27,
+   "opp_deck_total": 40,
+   "p0": {
+    "bz": [
+     "dmrp03-s03"
+    ],
+    "graveyard": [
+     "dm22ex2-021",
+     "dmrp03-036",
+     "dm22ex1-025",
+     "dmrp03-036"
+    ],
+    "hand": [
+     "dm22ex2-021",
+     "dm01-027",
+     "dmd08-015",
+     "dm26ex2-071"
+    ],
+    "mana": [
+     "dm01-080",
+     "dm01-080",
+     "dm01-027",
+     "dmex10-020"
+    ],
+    "shield": [
+     "dmex10-020",
+     "dmex10-020",
+     "dm26ex2-071",
+     "dmd08-015",
+     "dm22ex1-025"
+    ]
+   },
+   "p1": {
+    "hand": [
+     "T001",
+     "T001",
+     "T001",
+     "T001",
+     "T001"
+    ],
+    "mana": [
+     "T001",
+     "T001",
+     "T001"
+    ]
+   }
+  },
+  "budget": 200,
+  "deck": "data/decks/saga_entry.yaml",
+  "note": "自分の4ターン目のはじめ相当（マナ4）。シャコガイルは前のターンまでに場に出ている。手札のサガを3マナで出すと、墓地のサガとの蘇生ループで1周1枚引き、山札の最後の1枚を引いてシャコガイルの効果で勝つ。シャコガイルのTブレイカーだけでは同じターンに盾5枚を割り切れない"
+ }
+}
