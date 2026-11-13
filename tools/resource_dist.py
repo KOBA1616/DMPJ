@@ -1,4 +1,4 @@
-"""リソース型の目盛りの分布（docs/combo-ruler-design.md §15）: 既知（騎士＋DMC）と、中核1種類だけ差し替えたランダム組。
+"""リソース型の目盛りの分布（docs/combo-ruler-design.md §17）: 既知（騎士＋DMC）と、中核1種類だけ差し替えたランダム組。
   python tools/resource_dist.py [--seeds 8] [--per-core 4] [--out data/eval/resource_dist.json]"""
 from __future__ import annotations
 
