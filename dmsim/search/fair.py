@@ -24,6 +24,10 @@ def _own_decision(eng: Engine, me: int, opp_policy):
         eng.answer(opp_policy(eng, d))
 
 
+def _loop_sig(lp: dict) -> tuple:
+    return (lp.get("kind"), lp.get("length"), lp.get("win_by"), tuple(sorted((lp.get("delta") or {}).items())))
+
+
 class FairTurnSearch:
     def __init__(self, me: int, budget: int = 200, n_det: int = 8, seed: int = 0, weights=None,
                  opp_policy=charge_only_policy, known=(), value_fn=None, lookahead: int = 0):
@@ -34,6 +38,9 @@ class FairTurnSearch:
             from .multiturn import make_lookahead_value_fn
             self.value_fn = make_lookahead_value_fn(value_fn, lookahead, opp_policy, weights)
         self.nodes = 0
+        self.loops: list[dict] = []         # 決定化の探索で試したループの候補（記録のみ。手の選び方には使わない）
+        self.chosen: list[dict] = []        # 採った手に投票した決定化の探索が、その手順で使ったループ（証明書）
+        self._plans: dict = {}              # 手（keys）→ その手に最初に投票した決定化の st.chosen
 
     def _vote(self, eng: Engine, d: dict, k: int) -> Counter:
         votes: Counter = Counter()
@@ -47,9 +54,13 @@ class FairTurnSearch:
             leaf, st = TurnSearch(self.me, self.budget, self.weights, opp_policy=self.opp_policy,
                                 value_fn=self.value_fn).run(e)
             self.nodes += st.nodes
+            self.loops += [dict(lp, decision=k) for lp in st.loops]
             for ent in leaf.log[base:]:
                 if ent["p"] == self.me:
-                    votes[tuple(ent["keys"])] += 1
+                    keys = tuple(ent["keys"])
+                    votes[keys] += 1
+                    if st.chosen and keys not in self._plans:
+                        self._plans[keys] = st.chosen
                     break
         return votes
 
@@ -62,18 +73,28 @@ class FairTurnSearch:
         second = mc[1][1] if len(mc) > 1 else 0
         return mc[0][1] - second > remaining
 
+    def _record_plan(self, keys, k: int) -> None:
+        """採った手の計画にあった証明書のループを chosen に残す（同じループは最初の1回だけ。手の選び方は変えない）。"""
+        seen = {_loop_sig(lp) for lp in self.chosen}
+        for lp in self._plans.get(keys, ()):
+            if _loop_sig(lp) not in seen:
+                seen.add(_loop_sig(lp))
+                self.chosen.append(dict(lp, evidence="determinized", decision=k))
+
     def run(self, eng: Engine) -> Engine:
         """eng（自分の決定待ち）から自分のターンを最後まで進めた Engine を返す。eng は変更しない。"""
         eng = eng.clone()
         k = 0
         while (d := _own_decision(eng, self.me, self.opp_policy)) is not None:
+            self._plans = {}
             votes = self._vote(eng, d, k)
-            k += 1
             avail = [o["key"] for o in d["options"]]
             for keys, _ in votes.most_common():
                 if all(x in avail for x in keys):
+                    self._record_plan(keys, k)
                     eng.answer_by_keys(list(keys))
                     break
             else:                                   # 投票が使えない時は先頭の選択肢（最小数）
                 eng.answer(list(range(d["min"])) if d["min"] else [0])
+            k += 1
         return eng
