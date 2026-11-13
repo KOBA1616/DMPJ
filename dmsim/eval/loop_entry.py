@@ -117,13 +117,26 @@ def build(rules, ls: LoopSpec, seed: int = 1):
     return scenario.build(rules, entry_spec(ls, seed), first_player=0)
 
 
+# 物差しの測定（陽性対照・登録簿の検証）の標準予算。物差しが測るのは札の組で探索の速さではないので、
+# 入口局面ごとの budget がこれより小さくても、この値まで上げて測る（docs/combo-ruler-design.md §15、2026-11-13 指揮役決定）。
+# 日次の経路（auto_fix の予算100 など）はこの値を使わない。
+RULER_BUDGET = 1500
+
+
+def measure_budget(ls, budget: int | None = None) -> int:
+    """物差しの測定で使う予算。budget を明示すればそれ、なければ max(入口局面の budget, RULER_BUDGET)。"""
+    if budget is not None:
+        return budget
+    return max(int(ls.source.get("budget", 0) or 0), RULER_BUDGET)
+
+
 def measure(rules, name: str, seeds, max_turn: int = 2, budget: int | None = None) -> list[dict]:
     """入口局面から play_game（相手はマナチャージだけ）を回す。budget 省略時は LoopSpec.source の既定。"""
     from dmsim.eval.lockcheck import lock_probe
     from dmsim.search.game import play_game
     ls = load(name)
     deck = deck_of(ls)
-    bud = budget if budget is not None else ls.source.get("budget", 200)
+    bud = measure_budget(ls, budget)
     rows = []
     for sd in seeds:
         e = build(rules, ls, sd)

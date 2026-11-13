@@ -247,7 +247,7 @@ def run_one(rules, ls, seed: int, max_turn: int = 2, budget: int | None = None) 
     spec = _entry_spec(v, deck, seed)
     e = scenario.build(rules, spec, first_player=0)
     key = start_key(e)
-    bud = budget if budget is not None else ls.source.get("budget", 200)
+    bud = le.measure_budget(ls, budget)
     res, eng = play_game(rules, deck, [], seed, first_player=0, max_turn=max_turn, budget=bud, start=e, lock_judge=lock_probe)
     vd = judge(res, eng)
     return {"seed": seed, "start": key, "stage1": vd.stage1.ok, "stage2": vd.stage2.ok, "via": vd.stage2.via,
