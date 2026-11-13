@@ -42,6 +42,7 @@ def test_ruler_measures_without_macros(full_rules, monkeypatch):
     seen = []
     orig = macro.active
     monkeypatch.setattr(macro, "active", lambda: seen.append(macro.enabled()) or orig())
+    monkeypatch.delenv("DMSIM_REGISTRY_MACRO", raising=False)
     macro.enable(None)
     rc.run_one(full_rules, le.load("saga"), 1, budget=20)
     assert seen and not any(seen)
