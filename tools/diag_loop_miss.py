@@ -21,7 +21,7 @@ def vf(eng,cert,times=1):
     if c.verified<1: stat['ng:'+(c.notes[-1][:40] if c.notes else '?')]+=1
     return c
 T.verify=vf
-for sd in range(0, int(sys.argv[3]) if len(sys.argv) > 3 else 13):
+for sd in ([int(x) for x in sys.argv[3].split(",")] if len(sys.argv) > 3 else range(13)):
     stat.clear()
     v=rc.vary(r,ls,sd); e=scenario.build(r,rc._entry_spec(v,deck,sd),first_player=0)
     leaf,st=T.TurnSearch(0,int(sys.argv[2])).run(e)

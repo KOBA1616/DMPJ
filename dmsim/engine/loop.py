@@ -80,6 +80,46 @@ class LoopCertificate:
     verified: int = 0                 # 実際に再生して確認できた周回数
     notes: list[str] = field(default_factory=list)
     hand_keys: set[str] | None = None
+    wild: bool = False                # actions に抽象キー（WILD_HAND）を含む。再生は replay_keys で解決する
+
+
+# 「引いて捨てる」型のループ（引く札が毎周違う）用の抽象キー。手札の札を選ぶ決定のうち、
+# 骨格に入らない札（hand_keys 外 = 検出開始時の手札に無い名前の札）を選んだものをこのキーに置き換える。
+# 再生では hand_keys 外の札のうち、いちばん最近手札に入った札を選ぶ（入口時点の手札の札は選ばない）。
+WILD_HAND = "hand:*"
+
+
+def wild_keys(keys: list[str], hand_keys: set[str]) -> list[str]:
+    out = []
+    for k in keys:
+        parts = k.split(":")
+        out.append(WILD_HAND if len(parts) >= 3 and parts[0] == "hand" and parts[1] not in hand_keys else k)
+    return out
+
+
+def replay_keys(eng: Engine, keys: list[str], hand_keys: set[str] | None = None):
+    """answer_by_keys と同じだが、WILD_HAND を hand_keys 外の手札の札（最近手札に入った順）で解決する。"""
+    if WILD_HAND not in keys:
+        return eng.answer_by_keys(keys)
+    d = eng.s.waiting
+    if d is None:
+        raise IllegalAnswer("no decision pending")
+    opts = d["options"]
+    hk = hand_keys or set()
+    order = {c: i for i, c in enumerate(eng.s.zones["hand"][d["player"]])}
+    choice, used = [], set()
+    for k in sorted(keys, key=lambda k: k == WILD_HAND):     # 具体的なキーを先に取る
+        if k == WILD_HAND:
+            cand = [i for i, o in enumerate(opts) if i not in used and o["key"].startswith("hand:")
+                    and o["key"].split(":")[1] not in hk]
+            cand.sort(key=lambda i: -order.get(opts[i].get("cid"), -1))
+        else:
+            cand = [i for i, o in enumerate(opts) if i not in used and o["key"] == k]
+        if not cand:
+            raise IllegalAnswer(f"key {k} not available in {[o['key'] for o in opts]}")
+        choice.append(cand[0])
+        used.add(cand[0])
+    eng.answer(sorted(choice))
 
 
 def analyze(delta: dict[str, int], counters: dict[str, int], me: int) -> tuple[float, str | None, int | None]:
@@ -130,8 +170,10 @@ class LoopDetector:
     """1人回し中に呼び出し、同じ骨格への回帰を見つける。"""
 
     def __init__(self, me: int = 0, period: str = "in_turn", hand_keys: set[str] | None = None,
-                 engine_loops: bool = False, report_all: bool = False, burn_loops: bool = False):
+                 engine_loops: bool = False, report_all: bool = False, burn_loops: bool = False,
+                 wild: bool = False):
         self.me = me
+        self.wild = wild and hand_keys is not None   # 手札の選択を抽象キーで記録する（hand_keys を渡す検出器だけ）
         self.report_all = report_all
         self.burn_loops = burn_loops
         self.period = period
@@ -140,7 +182,7 @@ class LoopDetector:
         self.seen: dict[str, tuple[dict[str, int], int]] = {}
 
     def fork(self) -> "LoopDetector":
-        d = LoopDetector(self.me, self.period, self.hand_keys, self.engine_loops, self.report_all, self.burn_loops)
+        d = LoopDetector(self.me, self.period, self.hand_keys, self.engine_loops, self.report_all, self.burn_loops, self.wild)
         d.seen = dict(self.seen)
         return d
 
@@ -156,8 +198,13 @@ class LoopDetector:
                         or (self.engine_loops and is_engine(delta, self.me)) or self.report_all
                         or (self.burn_loops and is_burn(delta, self.me))):
                     acts = eng.log[at:now]
-                    return LoopCertificate(h, [a["keys"] for a in acts], [a["p"] for a in acts], delta,
-                                           limit, self.period, win_by, needed, hand_keys=self.hand_keys)
+                    keys = [a["keys"] for a in acts]
+                    wild = False
+                    if self.wild:
+                        keys = [wild_keys(k, self.hand_keys) for k in keys]
+                        wild = any(WILD_HAND in k for k in keys)
+                    return LoopCertificate(h, keys, [a["p"] for a in acts], delta,
+                                           limit, self.period, win_by, needed, hand_keys=self.hand_keys, wild=wild)
         self.seen[h] = (ctr, now)
         return None
 
@@ -173,7 +220,7 @@ def verify(eng: Engine, cert: LoopCertificate, times: int = 2) -> LoopCertificat
                 cert.notes.append("game ended during replay")
                 return cert
             try:
-                e.answer_by_keys(keys)
+                replay_keys(e, keys, cert.hand_keys)
             except IllegalAnswer as ex:
                 cert.notes.append(f"diverged: {ex}")     # 引いたカードが違うなど、同じ選択ができなかった
                 return cert
@@ -188,10 +235,19 @@ def verify(eng: Engine, cert: LoopCertificate, times: int = 2) -> LoopCertificat
 
 
 def fast_forward(eng: Engine, cert: LoopCertificate, n: int):
-    """競技ルール4.3 の「回数を宣言して省略」に相当。ここでは決定的に n 周を実際に再生する。"""
+    """競技ルール4.3 の「回数を宣言して省略」に相当。ここでは決定的に n 周を実際に再生する。
+    抽象キーを含む証明書（wild）は、周ごとに骨格と差分が証明書どおりかを確かめ、ずれたら IllegalAnswer を出す
+    （引いた札しだいで続かなくなる手順を、早送りの途中で見逃さないため）。"""
     for _ in range(n):
+        if cert.wild:
+            h0, c0 = abstract(eng, cert.period, cert.hand_keys)
         for keys in cert.actions:
             if eng.advance() is None:
                 return
-            eng.answer_by_keys(keys)
+            replay_keys(eng, keys, cert.hand_keys)
+        if cert.wild:
+            eng.advance()
+            h1, c1 = abstract(eng, cert.period, cert.hand_keys)
+            if h1 != cert.start_skeleton or {k: c1[k] - c0[k] for k in c1 if c1[k] != c0[k]} != cert.delta:
+                raise IllegalAnswer("fast_forward diverged from certificate")
     eng.advance()

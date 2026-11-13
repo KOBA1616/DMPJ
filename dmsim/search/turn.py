@@ -7,6 +7,7 @@ from __future__ import annotations
 
 import itertools
 import math
+import os
 import time
 from dataclasses import dataclass, field
 
@@ -130,6 +131,10 @@ _is_burn = is_burn_loop        # 旧名（互換）
 _is_engine = is_engine_loop    # 旧名（互換）
 
 
+# 「引いて捨てる」型のループ検出の既定（TurnSearch.draw_discard で局ごとに切り替え可）。環境変数 DMSIM_DRAW_DISCARD=0 で切る
+DRAW_DISCARD = os.environ.get("DMSIM_DRAW_DISCARD", "1") != "0"
+
+
 class Detectors:
     """ターン内ループの検出器の組。手札の中身まで見る厳密なものと、ドローを含むループ用に
     手札の中身をぼかす（draw_keys 以外は枚数だけ数える）ものを並べて走らせる。"""
@@ -138,9 +143,13 @@ class Detectors:
         self.dets = dets
 
     @classmethod
-    def new(cls, eng: Engine, me: int) -> "Detectors":
+    def new(cls, eng: Engine, me: int, draw_discard: bool | None = None) -> "Detectors":
+        """draw_discard: 手札をぼかす検出器で山札削り（is_burn）のループも受け付け、手札の選択を抽象キーで記録する
+        （「引いて捨てる」型、docs/saga-loop-miss-20261113.md 案 A）。None は DRAW_DISCARD に従う。"""
+        dd = DRAW_DISCARD if draw_discard is None else draw_discard
         return cls([LoopDetector(me=me, period="in_turn"),
-                    LoopDetector(me=me, period="in_turn", hand_keys=draw_keys(eng, me), engine_loops=True),
+                    LoopDetector(me=me, period="in_turn", hand_keys=draw_keys(eng, me), engine_loops=True,
+                                 burn_loops=dd, wild=dd),
                     LoopDetector(me=me, period="in_turn", burn_loops=True)])
 
     def fork(self) -> "Detectors":
@@ -176,6 +185,7 @@ class TurnSearch:
         self.combo_cap = combo_cap
         self.stock_offsets: tuple[int, ...] = (0, 1)   # ストックする周回数: 上限から何周手前までを試すか（山札の残りを1枚・2枚にする等）
         self.burn_stock = True                # 山札を削るだけのループを自動で残り1枚までストックする（2段探索の2段目では切る）
+        self.draw_discard: bool | None = None   # 引いて捨てる型のループ検出（None は DRAW_DISCARD）
         self.collect: list | None = None      # ループ発見モード: 見つけたループ（局面の複製, 証明書）をここへ集めて、ストックはしない
 
     def _eval(self, eng: Engine) -> float:
@@ -211,7 +221,7 @@ class TurnSearch:
         self._deadline = None if self.time_limit is None else time.monotonic() + self.time_limit
         self.seen: set = set()
         self.stats = TurnStats()
-        det = Detectors.new(eng, self.me)
+        det = Detectors.new(eng, self.me, self.draw_discard)
         best = self._search(eng.clone(), det)
         self.stats.chosen = [dict(lp) for lp in best[2]]
         return best[1], self.stats
@@ -246,7 +256,7 @@ class TurnSearch:
             # 親の局面で試されるので、ここでループの続きは辿らない
             best: tuple | None = None
             for ff, lp in self._stocks(eng, cert):
-                r = self._search(ff, Detectors.new(ff, self.me))
+                r = self._search(ff, Detectors.new(ff, self.me, self.draw_discard))
                 r = (r[0], r[1], (lp,) + r[2])
                 if best is None or r[0] > best[0]:
                     best = r
@@ -323,7 +333,7 @@ class TurnSearch:
             lp = {"win_by": cert.win_by, "needed": cert.needed, "limit": cert.limit,
                   "delta": cert.delta, "length": len(cert.actions), "stocked": m,
                   "kind": "burn" if burn else "engine" if engine else "kill",
-                  "source": "certificate", "verified": True}
+                  "source": "certificate", "verified": True, "wild": cert.wild}
             self.stats.loops.append(lp)       # 候補（選ばなかった線を含む）
             out.append((ff, lp))
         return out
