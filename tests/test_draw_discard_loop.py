@@ -116,3 +116,18 @@ def test_repeat_first_orders_previous_choice_first(saga0):
     e.log.append({"p": 0, "kind": "choose_cards", "choice": [0], "keys": ["zzz"]})   # 今の選択肢に無いキーの決定は飛ばす
     assert ts._repeat_order(e, d, [[0], [1]]) == [[1], [0]]
 
+
+
+def test_charge_keeps_free_playable_cards(rules, monkeypatch):
+    """マナチャージで、今コストを払わずに出せる札は後回しにする（カード名は見ない、§18）。"""
+    ls = le.load("akashic_hd2")
+    v = rc.vary(rules, ls, 5)
+    e = scenario.build(rules, rc._entry_spec(v, rc._deck(ls), 5), first_player=0)
+    d = e.advance()
+    assert d["kind"] == "charge"
+    free = {e.s.cards[o["cid"]].defn for o in e._play_options(0) if o.get("free")}
+    assert free
+    first = lambda: d["options"][T.candidates(e, d, T.Weights())[0][0]]
+    assert e.s.cards[first()["cid"]].defn not in free
+    monkeypatch.setattr(T, "CHARGE_KEEP_FREE", False)
+    assert e.s.cards[first()["cid"]].defn in free        # 切ると従来どおりコストの高い順（無償で出せる札が先）
