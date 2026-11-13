@@ -74,14 +74,15 @@ def opp_resources(eng: Engine, me: int) -> dict[str, int]:
             if k.endswith(opp) and not k.startswith(("deck:", "graveyard:"))}
 
 
-def prefer_policy(*prefixes: str) -> Policy:
+def prefer_policy(*prefixes: str, avoid: tuple[str, ...] = ()) -> Policy:
     """能動ロック用の自分の方針: 選択肢の key が prefixes のどれかで始まればそれを選び、なければ何もしない（passive）。
-    例 prefer_policy("play:dm16-051") は毎ターン使えるだけドリル・スコールを唱える。"""
+    例 prefer_policy("play:dm16-051") は毎ターン使えるだけドリル・スコールを唱える。
+    avoid の先頭に合う key は prefixes に合っても選ばない（例: "charge:" で何でもチャージするがコンボの札は除く）。"""
     def pol(eng: Engine, d: dict) -> list[int]:
         keys = [o["key"] for o in d["options"]]
         for pre in prefixes:
             for i, k in enumerate(keys):
-                if k.startswith(pre):
+                if k.startswith(pre) and not k.startswith(avoid or ("\0",)):
                     return [i]
         return passive_policy(eng, d)
     return pol
