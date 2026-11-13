@@ -51,6 +51,7 @@ LAYER_OF = {
     "dmsim.discovery.reachsearch": "S3",   # 旧名の互換（dmsim.search.reachsearch と同じモジュール）
     # S4 評価
     "dmsim.eval": "S4",                    # 定義元（P1-S4: 測定 measure・到達率 reach・構造検証 replay/shrink・再現性・妥当性 validity・開始局面 evalstarts・pool_metrics）
+    "dmsim.eval.ruler": "S4",              # 物差しの本体 段1・段2（P2 タスク5）
     "dmsim.eval.lockcheck": "S4",          # ロック判定 lock_probe・round_probe・lock_ok（P2 タスク2 で search.game から移動）
     "dmsim.solitaire": "S4",              # 旧名の互換モジュール（search/turn・leaf_eval・game と eval/measure を再エクスポート、P0-3）
     "dmsim.pool_metrics": "S4",          # 旧名の互換（dmsim.eval.pool_metrics と同じモジュール）
