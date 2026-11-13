@@ -2,7 +2,7 @@
 
 「自分の手札が相手より少ない場合」は既存の cmp + count（owner: you / opp）で表す。新語彙なし。
 """
-from dmsim.defs import load_tables, parse_card
+from dmsim.cards.defs import load_tables, parse_card
 
 TABLES = load_tables()
 

@@ -2,7 +2,7 @@
 
 「マナ進化」は evolve_from + evolve_zone: mana で表す。新語彙なし。
 """
-from dmsim.defs import load_tables, parse_card
+from dmsim.cards.defs import load_tables, parse_card
 
 TABLES = load_tables()
 

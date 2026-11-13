@@ -5,7 +5,7 @@ stages は大局観側（dmsim.plan.macro.load_plan_graph）が読む段の記�
 勝ち筋の中継点（盾の束・手札の増加など）は、発見した手順から段階目標を作る後続の仕事で足す。"""
 from __future__ import annotations
 
-from ..discovery.loopspec import Pred
+from dmsim.base.loopspec import Pred
 from .spec import PlanSpec
 
 

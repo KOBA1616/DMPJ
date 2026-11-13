@@ -7,7 +7,7 @@ link_count 式で書く形を、実カードの手変換で固定する。登録
 取れていないため）のため、ここには含めない。
 """
 import yaml
-from dmsim.defs import load_tables, parse_card
+from dmsim.cards.defs import load_tables, parse_card
 
 TABLES = load_tables()
 

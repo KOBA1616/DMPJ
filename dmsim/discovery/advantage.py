@@ -11,7 +11,7 @@ import yaml
 
 from ..cards.defs import DATA
 from ..engine.core import Engine
-from ..engine_view import trace_of, trace_on
+from dmsim.engine.view import trace_of, trace_on
 
 RES = ("hand", "shield", "mana", "board", "board_power", "graveyard", "deck")
 
@@ -40,7 +40,7 @@ def board_value(eng: Engine, me: int, w: dict | None = None) -> float:
 
 def turn_value(rules, spec: dict, w: dict | None = None, turns: int = 1, budget: int = 200) -> tuple[float, dict]:
     """spec（scenario.build 形式）の局面から自分の turns ターンを AI に回させ、終了時の V と自分の資源ベクトルを返す。"""
-    from .. import scenario
+    from dmsim.engine import scenario
     w = w or load_weights()
     from ..search.game import play_game
     start = scenario.build(rules, spec)
@@ -88,7 +88,7 @@ def combo_report(rules, a: dict, b: dict, base: dict, opp: dict | None = None, w
     """コンボの定義（手順あり/なしの差分）。基準線 = 各カード単体（A のみ、B のみ）の最善手順。
     S = V(A,B) − V(A) − V(B) + V(なし)。因果の連鎖があり、全シードで S>0 なら combo（閾値は使わない。lift は順位付け用）。
     gain = 両方あるときと A のみのときの資源ベクトルの差（「手札+n、バトルゾーン+n」の形）を、シードの平均で返す。"""
-    from .. import scenario
+    from dmsim.engine import scenario
     from ..search.game import play_game
     w = w or load_weights()
 
@@ -131,8 +131,8 @@ def causal_links(trace: list) -> list[tuple[str, str]]:
 
 def traced_turn(rules, spec: dict, w: dict | None = None, turns: int = 1, budget: int = 200):
     """turn_value と同じだが、最善手順を選んだ後に再生して誘発の因果を記録する。(V, 資源ベクトル, 因果の連鎖, trace) を返す。"""
-    from .. import scenario
-    from . import replay
+    from dmsim.engine import scenario
+    from dmsim.eval import replay
     from ..search.game import play_game
     w = w or load_weights()
     start = scenario.build(rules, spec)

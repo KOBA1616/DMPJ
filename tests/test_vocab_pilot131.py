@@ -3,7 +3,7 @@
 「パワード・ブロッカー +N（ブロック中、このクリーチャーのパワーを+Nする）」は
 mod: {power_when: {amount: N, when: blocking}} で表す。新語彙なし。
 """
-from dmsim.defs import load_tables, parse_card
+from dmsim.cards.defs import load_tables, parse_card
 
 TABLES = load_tables()
 

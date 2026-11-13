@@ -16,7 +16,7 @@ import pytest
 import yaml
 from conftest import setup
 
-from dmsim.defs import DefError, card_yaml_files, load_rules, load_tables, parse_card
+from dmsim.cards.defs import DefError, card_yaml_files, load_rules, load_tables, parse_card
 
 TABLES = load_tables()
 

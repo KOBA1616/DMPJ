@@ -20,7 +20,7 @@ import pytest
 import yaml
 from conftest import setup
 
-from dmsim.defs import load_rules, load_tables, parse_card
+from dmsim.cards.defs import load_rules, load_tables, parse_card
 
 TABLES = load_tables()
 IDS = ("T476", "T477", "T478")

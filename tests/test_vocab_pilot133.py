@@ -3,7 +3,7 @@
 「その捨てたカードよりコストが小さい相手のクリーチャーを破壊する」は
 filter: {cost_le: {sum: [{cost_of: {ref: X}}, -1]}} で表す。新語彙なし（第82・85弾の応用）。
 """
-from dmsim.defs import load_tables, parse_card
+from dmsim.cards.defs import load_tables, parse_card
 
 TABLES = load_tables()
 

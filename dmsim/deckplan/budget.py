@@ -52,7 +52,7 @@ def probe_unit(rules, deck, opp, setup, workers: int = 1, budget: int = REF_BUDG
     import time
 
     from ..eval.api import Candidate, EvalSettings, run_eval
-    from .evaluate import spec_with_deck
+    from dmsim.eval.deckeval import spec_with_deck
     cand = Candidate(deck=tuple(deck), start_spec=spec_with_deck(setup, deck) if setup else None)
     t = time.time()
     run_eval(rules, cand, EvalSettings(opp_deck=tuple(opp), max_turn=4, base_budget=budget, n_det=n_det, register_fair=True), [1])

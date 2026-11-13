@@ -2,7 +2,7 @@
 
 ソウルは種族（H・ソウル等）として any_of の race_has で表す。新語彙なし。
 """
-from dmsim.defs import load_tables, parse_card
+from dmsim.cards.defs import load_tables, parse_card
 
 TABLES = load_tables()
 

@@ -8,7 +8,8 @@ sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 os.environ["DMSIM_CHECK"] = "1"   # タスク・選択肢の形を毎回検査する
 os.environ["DMSIM_SKIP_CONVERTED"] = "1"   # 確認前の変換結果（converted.yaml、約1,600枚）はテストの対象にしない（全カードを回すテストが遅くなる）
 
-from dmsim import load_rules, scenario  # noqa: E402
+from dmsim import load_rules  # noqa: E402
+from dmsim.engine import scenario  # noqa: E402
 
 
 @pytest.fixture(scope="session")

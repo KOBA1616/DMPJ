@@ -8,7 +8,7 @@
 設計ノート: pilot155-leave-under-untap-design.md（ツリー内では第156弾）。
 """
 import yaml
-from dmsim.defs import load_tables, parse_card
+from dmsim.cards.defs import load_tables, parse_card
 
 TABLES = load_tables()
 

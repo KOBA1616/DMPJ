@@ -3,7 +3,7 @@
 「相手は可能ならこのクリーチャーを攻撃する」は既存の mod: {must_be_attacked: true} で表す。
 新語彙なし。第51弾で実装済み。
 """
-from dmsim.defs import load_tables, parse_card
+from dmsim.cards.defs import load_tables, parse_card
 
 TABLES = load_tables()
 

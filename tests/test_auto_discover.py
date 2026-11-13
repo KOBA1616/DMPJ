@@ -3,9 +3,10 @@ import json
 
 import pytest
 
-from dmsim import load_rules, scenario
+from dmsim import load_rules
+from dmsim.engine import scenario
 from dmsim.discovery.auto import AutoConfig, mutate, run
-from dmsim.discovery.loopspec import LoopSpec
+from dmsim.base.loopspec import LoopSpec
 
 AL, EM, HG = "dmx12b-031", "dm23bd7-022", "dm16-007"
 SEED = {"p0": {"hand": [EM, "T013"], "bz": [AL], "mana": [HG] * 4 + ["dm01-080"], "shield": ["T013"] * 9}, "p1": {"bz": ["T001"]},
@@ -42,7 +43,7 @@ def test_mutations_stay_inside_zone_limits():
 
 
 def test_deck_mode_finds_a_win_from_the_normal_opening_and_saves_it(tmp_path):
-    from dmsim.discovery import replay
+    from dmsim.eval import replay
     from dmsim.discovery.auto import build_game, run_decks
     rules = load_rules()
     cfg = AutoConfig(pool=[], seeds=[{"deck": ["T001"] * 40}], filler="T013", width=60, eval_seeds=2, max_turn=14, seconds=1, out_dir=tmp_path)

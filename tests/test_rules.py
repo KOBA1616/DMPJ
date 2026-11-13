@@ -8,8 +8,8 @@ from pathlib import Path
 import pytest
 from conftest import answer, setup
 
-from dmsim.defs import DATA, load_rules
-from dmsim.defs import card_yaml_files  # noqa: E402
+from dmsim.cards.defs import load_rules
+from dmsim.cards.defs import card_yaml_files  # noqa: E402
 from dmsim.engine import Engine
 
 
@@ -539,7 +539,7 @@ def test_113_2_bundle_moves_together_to_hand_and_every_card_can_be_declared(rr):
 
 def test_loop_skeleton_distinguishes_bundle_contents_but_not_plain_shield_count(rr):
     """束の中身が違えば骨格は別（ループの判定に効く）。単独のシールドは従来どおり枚数だけ（counter）。"""
-    from dmsim import loop
+    from dmsim.engine import loop
     e = _bundle(rr)
     h1, c1 = loop.abstract(e)
     top = next(c for c in e.zlist("shield", 0) if e.s.cards[c].under)
@@ -575,7 +575,7 @@ def test_break_st_first_resolves_declared_s_trigger_before_following_step(rr):
 
 
 def test_deck_limit_violations_counts_same_name_over_four():
-    from dmsim import scenario
+    from dmsim.engine import scenario
     spec = {"p0": {"hand": ["R001"] * 3, "deck": ["R001"] * 2, "mana": ["T001"] * 9}, "p1": {}, "filler": "T001"}
     assert scenario.deck_limit_violations(None, spec) == [(0, "R001", 5)]
     spec["p0"]["deck"] = ["R001"]

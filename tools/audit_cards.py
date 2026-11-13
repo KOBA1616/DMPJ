@@ -10,8 +10,8 @@ import sys
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
-from dmsim.dataaudit import audit_rules, new_violations  # noqa: E402
-from dmsim.defs import load_rules  # noqa: E402
+from dmsim.cards.dataaudit import audit_rules, new_violations  # noqa: E402
+from dmsim.cards.defs import load_rules  # noqa: E402
 
 BASELINE = Path(__file__).resolve().parent.parent / "data" / "audit" / "baseline.json"
 

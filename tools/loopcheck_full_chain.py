@@ -5,9 +5,9 @@
 実行: PYTHONPATH=. python tools/loopcheck_full_chain.py [ドラゲリオンの山札位置 ...]"""
 import sys
 
-from dmsim import scenario as sc
-from dmsim.defs import load_rules
-from dmsim.engine_view import card_zone_of, defn_of, result_of, zone_of  # noqa: E402
+from dmsim.engine import scenario as sc
+from dmsim.cards.defs import load_rules
+from dmsim.engine.view import card_zone_of, defn_of, result_of, zone_of  # noqa: E402
 
 SAGA, SHAKO, DRAG, IWA = "dm22ex2-021", "dmrp03-s03", "dm22ex1-007", "dmrp03-036"
 IZA, KODAMA, ET = "dm22ex1-025", "dmex10-020", "dm26ex2-071"

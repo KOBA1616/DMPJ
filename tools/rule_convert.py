@@ -17,7 +17,7 @@ from pathlib import Path
 import yaml
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
-from dmsim.defs import DATA  # noqa: E402
+from dmsim.cards.defs import DATA  # noqa: E402
 
 CIVS = {"光": "light", "水": "water", "闇": "darkness", "火": "fire", "自然": "nature", "ゼロ": "zero"}
 NOTE = "ルールのみで変換（モデル不使用）"

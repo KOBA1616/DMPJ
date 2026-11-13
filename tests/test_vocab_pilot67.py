@@ -3,7 +3,7 @@
 「このクリーチャーで攻撃するかわりに、タップして次の能力を使ってもよい」は
 既存の kind: activate, cost: {tap: self} で表す。新語彙なし。
 """
-from dmsim.defs import load_tables, parse_card
+from dmsim.cards.defs import load_tables, parse_card
 
 TABLES = load_tables()
 
@@ -37,6 +37,6 @@ def test_tap_activated_ability_parses():
 
 def test_tap_activated_ability_cost():
     # tap: self が activate の cost として有効であることを確認
-    from dmsim.defs import load_tables
+    from dmsim.cards.defs import load_tables
     t = load_tables()
     assert t is not None

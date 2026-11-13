@@ -16,7 +16,7 @@ from urllib.parse import quote
 
 ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(ROOT))
-from dmsim.cardid import detail_url, normalize_id  # noqa: E402
+from dmsim.base.cardid import normalize_id  # noqa: E402
 
 OUT = ROOT / "docs" / "card-ids.md"
 

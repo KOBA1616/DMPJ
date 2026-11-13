@@ -5,10 +5,13 @@ import pytest
 from conftest import find_option, setup
 
 from dmsim import load_rules
-from dmsim.defs import card_yaml_files  # noqa: E402
-from dmsim.defs import DATA
-from dmsim.play import make_record, replay_record
-from dmsim.solitaire import TurnSearch, Weights, lock_probe, measure, play_game, summarize
+from dmsim.cards.defs import card_yaml_files  # noqa: E402
+from dmsim.engine.play import make_record, replay_record
+from dmsim.search.turn import TurnSearch
+from dmsim.search.leaf_eval import Weights
+from dmsim.search.game import play_game
+from dmsim.eval.lockcheck import lock_probe
+from dmsim.eval.measure import measure, summarize
 
 
 def test_in_turn_loop_is_found_by_search_and_stocked(rules):
@@ -99,7 +102,7 @@ def test_combat_win_is_not_counted_as_loop(rules):
 # ---- 相手の妨害モデル --------------------------------------------------------------------------
 
 def test_opp_none_matches_default(rules):
-    from dmsim.opponent import PRESETS
+    from dmsim.search.opponent import PRESETS
     deck, opp = ["T005"] * 20 + ["T002"] * 20, ["T001"] * 40
     a = measure(deck, opp, range(1, 4), rules=rules, max_turn=5, budget=60)
     b = measure(deck, opp, range(1, 4), rules=rules, max_turn=5, budget=60, opp=PRESETS["none"])
@@ -107,7 +110,7 @@ def test_opp_none_matches_default(rules):
 
 
 def test_opp_model_setup_and_blocker_policy(rules):
-    from dmsim.opponent import OppModel
+    from dmsim.search.opponent import OppModel
     deck, opp = ["T005"] * 40, ["T001"] * 20 + ["T004"] * 20
     m = OppModel(shields=3, bz=("T004",), block=True, play="blockers")
     res, eng = play_game(rules, deck, opp, 1, max_turn=1, budget=20, opp=m)
@@ -117,7 +120,7 @@ def test_opp_model_setup_and_blocker_policy(rules):
 
 
 def test_opp_blockers_lower_kill_rate(rules):
-    from dmsim.opponent import PRESETS
+    from dmsim.search.opponent import PRESETS
     deck, opp = ["T005"] * 20 + ["T002"] * 20, ["T001"] * 20 + ["T004"] * 20
     base = summarize(measure(deck, opp, range(1, 9), rules=rules, max_turn=5, budget=60), 5)
     blk = summarize(measure(deck, opp, range(1, 9), rules=rules, max_turn=5, budget=60, opp=PRESETS["blockers"]), 5)
@@ -126,7 +129,7 @@ def test_opp_blockers_lower_kill_rate(rules):
 
 
 def test_beat_deck_spec_reports_unconverted(rules):
-    from dmsim.opponent import BEAT_DECK_PATH, PRESETS, deck_from_spec
+    from dmsim.search.opponent import BEAT_DECK_PATH, PRESETS, deck_from_spec
     deck, missing = deck_from_spec(BEAT_DECK_PATH, known=set(rules.cards))
     assert len(deck) == 40 and PRESETS["beat"].play == "all"
     assert all(m["id"] is None or m["id"] not in rules.cards for m in missing)

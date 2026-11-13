@@ -4,8 +4,8 @@ from pathlib import Path
 import pytest
 from conftest import answer, setup
 
-from dmsim.defs import DATA, load_rules
-from dmsim.defs import card_yaml_files  # noqa: E402
+from dmsim.cards.defs import load_rules
+from dmsim.cards.defs import card_yaml_files  # noqa: E402
 
 SAMOHAN = "dmrp01-003"
 DOTSUKING = "dmrp01-001"

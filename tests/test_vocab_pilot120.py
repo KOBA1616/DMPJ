@@ -4,7 +4,7 @@
 {sum: [1, {count: {under_of: <変数名>}}]} で表す（under_of は下のカード、
 本体1枚を加える）。新語彙なし。
 """
-from dmsim.defs import load_tables, parse_card
+from dmsim.cards.defs import load_tables, parse_card
 
 TABLES = load_tables()
 

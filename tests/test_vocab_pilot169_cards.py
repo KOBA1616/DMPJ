@@ -10,7 +10,7 @@ import pytest
 import yaml
 from conftest import setup
 
-from dmsim.defs import card_yaml_files, load_rules, load_tables, parse_card
+from dmsim.cards.defs import card_yaml_files, load_rules, load_tables, parse_card
 
 ROOT = Path(__file__).parent.parent
 TABLES = load_tables()

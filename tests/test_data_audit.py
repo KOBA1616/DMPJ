@@ -3,8 +3,8 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent / "tools"))
 import audit_cards
-from dmsim.dataaudit import new_violations
-from dmsim.defs import _dedupe_abilities
+from dmsim.cards.dataaudit import new_violations
+from dmsim.cards.defs import _dedupe_abilities
 
 
 def test_no_new_data_violations():
@@ -37,8 +37,8 @@ def test_keyword_annotations_do_not_glue_together():
 def test_audit_counts_structural_fields_and_twin_faces(monkeypatch):
     """converted.yaml（テストでは既定で除外）も含めて、効果が空の札が無い。G・ゼロ等の構造化特性は効果ありと数える。"""
     monkeypatch.delenv("DMSIM_SKIP_CONVERTED", raising=False)
-    from dmsim.dataaudit import audit_rules
-    from dmsim.defs import load_rules
+    from dmsim.cards.dataaudit import audit_rules
+    from dmsim.cards.defs import load_rules
     r = load_rules()
     found = audit_rules(r)
     assert not found.get("text_but_no_effect"), found.get("text_but_no_effect")
@@ -49,7 +49,7 @@ def test_audit_counts_structural_fields_and_twin_faces(monkeypatch):
 def test_converter_validate_dedupes_abilities():
     """変換器の入口（validate）で同じ能力の二重化を除く。元データ88枚の重複の再発防止。"""
     import convert_cards as cc
-    from dmsim.defs import load_tables
+    from dmsim.cards.defs import load_tables
     ab = {"kind": "static", "affects": "self", "mod": {"power_when": {"amount": 3000, "when": "attacking"}}}
     raw = {"id": "dup-1", "name": "重複", "types": ["creature"], "civs": ["fire"], "cost": 3, "power": 3000,
            "abilities": [ab, dict(ab)]}
@@ -60,11 +60,11 @@ def test_converter_validate_dedupes_abilities():
 
 
 def test_no_duplicate_abilities_in_converted_data(monkeypatch):
-    import dmsim.defs as defs
+    import dmsim.cards.defs as defs
     monkeypatch.setattr(defs, "REPAIRED", {})       # 他のテストが記録した読み込み時の修復を持ち込まない
     monkeypatch.delenv("DMSIM_SKIP_CONVERTED", raising=False)
-    from dmsim.dataaudit import audit_rules
-    from dmsim.defs import load_rules
+    from dmsim.cards.dataaudit import audit_rules
+    from dmsim.cards.defs import load_rules
     assert not audit_rules(load_rules()).get("duplicate_ability")
 
 
@@ -74,7 +74,7 @@ def test_every_converted_top_level_field_is_known_to_the_audit():
     登録漏れだと、その欄だけで効果を表すカードが text_but_no_effect と誤判定される（2026-11 に5件発生）。"""
     from pathlib import Path
     import yaml
-    from dmsim import dataaudit
+    from dmsim.cards import dataaudit
     known = set(dataaudit.BASIC_FIELDS) | set(dataaudit._STRUCT_FIELDS)
     root = Path(__file__).parent.parent / "data/cards"
     unknown = set()

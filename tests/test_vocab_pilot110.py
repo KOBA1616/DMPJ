@@ -3,7 +3,7 @@
 「このクリーチャーはすべてのバトルに勝つ」は第61弾の
 mod: {win_all_battles: true} で表す。新語彙なし。
 """
-from dmsim.defs import load_tables, parse_card
+from dmsim.cards.defs import load_tables, parse_card
 
 TABLES = load_tables()
 

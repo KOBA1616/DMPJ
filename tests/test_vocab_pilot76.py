@@ -2,7 +2,7 @@
 
 ダイナモは keywords.yaml に定義済みのキーワードとして表す。新語彙なし。
 """
-from dmsim.defs import load_tables, parse_card
+from dmsim.cards.defs import load_tables, parse_card
 
 TABLES = load_tables()
 

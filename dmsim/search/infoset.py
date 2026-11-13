@@ -9,7 +9,7 @@ from __future__ import annotations
 import random
 from collections.abc import Iterable
 
-from ..state import GameState
+from dmsim.engine.state import GameState
 
 HIDDEN_ZONES = ("deck", "shield")   # 手札は相手のものだけ（viewer 自身の手札は見える）
 

@@ -11,12 +11,12 @@ from pathlib import Path
 import yaml
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
-from dmsim.defs import load_rules  # noqa: E402
-from dmsim.discovery.bestfirst import priority  # noqa: E402
-from dmsim.discovery.reachsearch import reach_chain  # noqa: E402
+from dmsim.cards.defs import load_rules  # noqa: E402
+from dmsim.search.bestfirst import priority  # noqa: E402
+from dmsim.search.reachsearch import reach_chain  # noqa: E402
 from dmsim.eval import vgate  # noqa: E402
 from dmsim.plan.macro import MacroPlanner, RunStd, stage_fraction  # noqa: E402
-from dmsim.solitaire import load_deck  # noqa: E402
+from dmsim.eval.measure import load_deck  # noqa: E402
 
 
 def main(argv=None):

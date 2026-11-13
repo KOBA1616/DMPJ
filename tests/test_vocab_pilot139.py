@@ -4,7 +4,7 @@
 mod: {allow: [{action: attack_creature, other: {tapped: false}}]}（第58弾の展開形）。
 新語彙なし。
 """
-from dmsim.defs import load_tables, parse_card
+from dmsim.cards.defs import load_tables, parse_card
 
 TABLES = load_tables()
 

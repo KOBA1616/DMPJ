@@ -1,12 +1,11 @@
 """LoopSpec から作った評価開始局面: 残りの手順を再生すると勝つ。調整用のみ・未確認の印・検証専用は拒否。"""
-import json
 from pathlib import Path
 
 import pytest
 
 from dmsim import load_rules
-from dmsim.discovery import evalstarts, replay
-from dmsim.discovery.loopspec import LoopSpec
+from dmsim.eval import evalstarts, replay
+from dmsim.base.loopspec import LoopSpec
 
 PATH = Path(__file__).parent.parent / "data" / "loops" / "tenmon_initial.json"
 

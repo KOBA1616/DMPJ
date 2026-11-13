@@ -1,6 +1,6 @@
 from dmsim import deckplan as D
 from dmsim.deckplan import change as C
-from dmsim.deckplan.evaluate import AcceptRule, decide
+from dmsim.eval.deckeval import AcceptRule, decide
 from dmsim.deckplan.spec import from_dict
 import random
 
@@ -54,7 +54,7 @@ def test_improve_loop_with_fake_scorer(tmp_path):
 
 def test_auto_improve_adopts_and_protects(tmp_path, monkeypatch):
     from dmsim.deckplan import auto as A
-    from dmsim.defs import load_rules
+    from dmsim.cards.defs import load_rules
     rules = load_rules()
     ids = list(rules.cards)[:10]
     deck = [i for i in ids[1:] for _ in range(4)] + [ids[0]] + [ids[1]] * 0 + [ids[2]] * 0 + [ids[3]] * 0
@@ -74,7 +74,7 @@ def test_auto_improve_adopts_and_protects(tmp_path, monkeypatch):
 
 
 def test_spec_with_deck_replaces_deck_only():
-    from dmsim.deckplan.evaluate import spec_with_deck
+    from dmsim.eval.deckeval import spec_with_deck
     setup = {"p0": {"hand": ["a", "T"], "mana": ["m"], "graveyard": ["g"], "deck": ["x"]}, "p1": {}, "deck_size": 1}
     s = spec_with_deck(setup, ["a", "a", "m", "z", "z"])
     assert s["p0"]["hand"] == ["a", "T"] and s["p0"]["deck"] == ["a", "z", "z"] and s["deck_size"] == 3
@@ -83,7 +83,7 @@ def test_spec_with_deck_replaces_deck_only():
 
 def test_scorer_workers_merge(monkeypatch):
     import dmsim.eval.harness as H
-    from dmsim.deckplan.evaluate import harness_scorer
+    from dmsim.eval.deckeval import harness_scorer
     monkeypatch.setattr(H, "run_eval", lambda rules, cfg: {"cells": {H.cell_key("d", "fair", 1.0): {"per_game": [(s, 0, 3) for s in cfg.seeds]}}})
     out = harness_scorer(None, [], list(range(10)), workers=3)(["x"])
     assert sorted(out) == [(s, 0) for s in range(10)]
@@ -91,7 +91,7 @@ def test_scorer_workers_merge(monkeypatch):
 
 def test_two_stage_screens_then_adopts(tmp_path, monkeypatch):
     from dmsim.deckplan import auto as A
-    from dmsim.defs import load_rules
+    from dmsim.cards.defs import load_rules
     rules = load_rules()
     ids = list(rules.cards)
     core = ids[0]
@@ -123,7 +123,7 @@ def test_cut_unused_and_trim_parts():
 
 def test_two_stage_resumes_fine_from_pending(tmp_path, monkeypatch):
     from dmsim.deckplan import auto as A
-    from dmsim.defs import load_rules
+    from dmsim.cards.defs import load_rules
     rules = load_rules()
     ids = list(rules.cards)
     core = ids[0]

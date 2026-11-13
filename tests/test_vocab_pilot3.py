@@ -46,7 +46,7 @@ def test_subject_filter_expr_cost_lt_graveyard_count(rules):
 
     cost_gt_count（「マナの枚数よりコストが大きい」）も同じ仕組みで、cost_ge に {sum: [count, 1]} を渡す。
     """
-    from dmsim.defs import load_tables, parse_card
+    from dmsim.cards.defs import load_tables, parse_card
     card = {"id": "TX01", "name": "試験用門番", "types": ["creature"], "civs": ["light"], "cost": 2,
             "power": 1000, "races": ["テスト"],
             "abilities": [{"kind": "trigger",

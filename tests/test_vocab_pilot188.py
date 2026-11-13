@@ -39,10 +39,9 @@ from pathlib import Path
 
 import pytest
 import yaml
-from conftest import setup
 
-from dmsim import scenario
-from dmsim.defs import DefError, load_tables, parse_card
+from dmsim.engine import scenario
+from dmsim.cards.defs import DefError, load_tables, parse_card
 from dmsim.engine.ops import op_no_lose
 
 TABLES = load_tables()

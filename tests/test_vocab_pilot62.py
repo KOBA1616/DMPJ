@@ -3,7 +3,7 @@
 「〜は〜のクリーチャーでもある」「文明に〜を追加する」は static の
 mod: {add_civs: [...]} で表す。
 """
-from dmsim.defs import load_tables, parse_card
+from dmsim.cards.defs import load_tables, parse_card
 
 TABLES = load_tables()
 

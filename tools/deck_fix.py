@@ -9,9 +9,9 @@ from pathlib import Path
 import yaml
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
-from dmsim.defs import load_rules  # noqa: E402
+from dmsim.cards.defs import load_rules  # noqa: E402
 from dmsim.deckplan.auto import add_candidates, support_for, two_stage, unused_names  # noqa: E402
-from dmsim.solitaire import load_deck  # noqa: E402
+from dmsim.eval.measure import load_deck  # noqa: E402
 
 
 DECK_BOTTLENECK_KILL = 0.5   # bottleneck=deck で推定キル率がこれ未満なら deck_fix の対象（2026-11-10: cards 段階の記録が無く毎日0件だった）
@@ -34,8 +34,8 @@ def cards_stage_decks(path: str) -> set[str]:
 
 def auto_setup(rules, combo: str, root: Path = Path("data/loops")):
     """仕込み局面が無いデッキ用: LoopSpec(data/loops/<コンボ名>*.json)の勝ち手順から、最初のターン頭の局面を作る（山札はデッキ側で差し替わる）。無ければ None。"""
-    from dmsim.discovery import evalstarts
-    from dmsim.discovery.loopspec import LoopSpec
+    from dmsim.eval import evalstarts
+    from dmsim.base.loopspec import LoopSpec
     for f in sorted(root.glob(f"{combo}*.json")):
         try:
             ls = LoopSpec.from_json(f.read_text(encoding="utf-8"))

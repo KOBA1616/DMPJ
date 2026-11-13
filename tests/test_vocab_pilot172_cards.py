@@ -12,7 +12,7 @@ import subprocess
 
 import yaml
 
-from dmsim.defs import load_tables, parse_card
+from dmsim.cards.defs import load_tables, parse_card
 
 ROOT = __import__("pathlib").Path(__file__).parent.parent
 # reopen 前の rejects は第172弾コミットの親ツリーに残っている

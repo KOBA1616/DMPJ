@@ -9,10 +9,10 @@ from pathlib import Path
 
 import yaml
 
-from dmsim import scenario as sc
-from dmsim.combo_search import search_setup
-from dmsim.loop import LoopDetector, is_burn, verify
-from dmsim.solitaire import play_game
+from dmsim.engine import scenario as sc
+from dmsim.discovery.combo_search import search_setup
+from dmsim.engine.loop import LoopDetector, is_burn, verify
+from dmsim.search.game import play_game
 
 from test_saga_loop import DRAG, IWASHIN, SAGA, SHAKO, saga_policy
 
@@ -164,7 +164,7 @@ def test_ai_finds_izanagi_revived_by_saga(rules):
 
 def test_stock_amount_is_searched_not_fixed(rules):
     """山札を削るループは、上限（残り1枚）だけでなく、あと1周手前（残り2枚）もストックして探索する。"""
-    from dmsim.solitaire import TurnSearch
+    from dmsim.search.turn import TurnSearch
 
     def stocked(offsets):
         eng = sc.build(rules, spec(8, **{"bz": [SHAKO]}))

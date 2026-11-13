@@ -4,7 +4,7 @@
 {civ_count: <selector>} は対象カード群にある文明の種類数（多色は持つ文明をすべて数える）。
 mod の count、filter の式、cmp の項で使える。
 """
-from dmsim.defs import load_tables, parse_card
+from dmsim.cards.defs import load_tables, parse_card
 
 TABLES = load_tables()
 CIVS_IN_MY_MANA = {"civ_count": {"zone": "mana", "owner": "you"}}

@@ -8,7 +8,7 @@ import pytest
 import yaml
 from conftest import answer, setup
 
-from dmsim.defs import DATA, card_yaml_files, load_rules
+from dmsim.cards.defs import DATA, card_yaml_files, load_rules
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent / "tools"))
 import rule_convert  # noqa: E402
@@ -67,7 +67,7 @@ def test_rentia_gets_no_bonus_when_attacking(rr):
 
 
 def test_battle_power_only_must_be_known(rr):
-    from dmsim.defs import DefError
+    from dmsim.cards.defs import DefError
     bad = {"id": "Q001", "name": "x", "types": ["creature"], "civs": ["fire"], "cost": 1, "power": 1000, "races": ["テスト"],
            "abilities": [{"kind": "static", "affects": "self", "mod": {"battle_power": {"amount": 1, "only": "defending"}}}]}
     f = Path(__file__).parent / "_q_bad.yaml"
@@ -244,7 +244,7 @@ def test_power_when_spell_lasts_for_the_turn_but_only_while_attacking(rr):
 
 
 def test_power_when_is_validated(rr):
-    from dmsim.defs import DefError
+    from dmsim.cards.defs import DefError
     for pw in ({"amount": 1}, {"amount": 1, "when": "defending"}, {"when": "attacking"}):
         bad = {"id": "Q002", "name": "x", "types": ["creature"], "civs": ["fire"], "cost": 1, "power": 1000, "races": ["テスト"],
                "abilities": [{"kind": "static", "affects": "self", "mod": {"power_when": pw}}]}

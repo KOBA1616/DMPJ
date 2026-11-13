@@ -4,8 +4,8 @@ import random
 from conftest import answer, setup
 
 from dmsim import Engine
-from dmsim.loop import LoopDetector, fast_forward, verify
-from dmsim.play import random_policy, replay, run
+from dmsim.engine.loop import LoopDetector, fast_forward, verify
+from dmsim.engine.play import random_policy, replay, run
 
 
 def zone_names(e, z, p):
@@ -138,7 +138,7 @@ def test_two_card_loop_is_stocked_and_wins(rules):
 
 def test_new_op_is_added_without_touching_the_engine(rules):
     """拡張ポイント: op を registry に登録すれば、カードデータからそのまま使える。"""
-    from dmsim.defs import expand_ops
+    from dmsim.cards.defs import expand_ops
     from dmsim.engine.registry import OPS, op
 
     if "gain_mana_from_top" not in OPS:
@@ -155,7 +155,7 @@ def test_new_op_is_added_without_touching_the_engine(rules):
 
 def test_state_clone_matches_deepcopy_and_is_independent(rules):
     import copy
-    from dmsim.play import default_decks
+    from dmsim.engine.play import default_decks
     e = Engine.new_game(rules, [default_decks(rules, "dm")[0], ["T001"] * 40], 3, 0)
     for _ in range(6):
         d = e.advance()

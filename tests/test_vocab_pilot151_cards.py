@@ -11,7 +11,7 @@ parse_card（検証込み）を通ることと、型印・Dスイッチ・禁止
   より広い禁止（play_free 経路を含む）で、本弾の範囲外（親判断）。unsupported に細分して残す。
 """
 import yaml
-from dmsim.defs import load_tables, parse_card
+from dmsim.cards.defs import load_tables, parse_card
 
 TABLES = load_tables()
 

@@ -13,13 +13,13 @@ from pathlib import Path
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 
-from dmsim.defs import load_rules  # noqa: E402
-from dmsim.discovery.bestfirst import priority  # noqa: E402
+from dmsim.cards.defs import load_rules  # noqa: E402
+from dmsim.search.bestfirst import priority  # noqa: E402
 from dmsim.discovery.cyclesetup import setup_from_cycle  # noqa: E402
-from dmsim.discovery.reachsearch import reach_target  # noqa: E402
+from dmsim.search.reachsearch import reach_target  # noqa: E402
 from dmsim.eval.opp_pressure import make_term  # noqa: E402
 from dmsim.eval.vfeatures import v_priority  # noqa: E402
-from dmsim.scenario import build  # noqa: E402
+from dmsim.engine.scenario import build  # noqa: E402
 from loop_enum import cycles_among, lap_bound, lap_ok  # noqa: E402
 
 

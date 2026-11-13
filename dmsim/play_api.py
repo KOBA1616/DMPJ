@@ -130,7 +130,7 @@ def play(start, cfg: PlayConfig, info: InfoLevel = InfoLevel.FAIR, *, rules=None
                           stages=r["stages"], turns=list(r["turns"]), nodes=r["nodes"], actions=list(end.log),
                           log={"stages": r["stages"], "turns": list(r["turns"])}, engine=end, seconds=time.perf_counter() - t0)
     from .search.bestfirst import beam
-    from .engine_view import turn_of
+    from dmsim.engine.view import turn_of
     r = beam(eng, cfg.me, width=cfg.width, max_depth=cfg.max_depth, max_turn=cfg.max_turn, prio=cfg.prio)
     return PlayResult(mode="beam", info=info, won=r.won, kill_turn=turn_of(r.engine) if r.won else None, nodes=r.nodes,
                       actions=list(r.engine.log), log={"log_len": r.log_len}, engine=r.engine, seconds=time.perf_counter() - t0)

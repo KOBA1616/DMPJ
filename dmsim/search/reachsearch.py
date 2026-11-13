@@ -5,7 +5,6 @@ bestfirst.beam と同じ骨格（同じ局面は1度だけ展開、相手のタ�
 目標が満たされていく割合を評価に大きく足して導く（山札・盾の中身は見ない公平な探索ではなく、真の山札順を見る探索である点に注意）。"""
 from __future__ import annotations
 
-from collections import Counter
 from dataclasses import dataclass
 
 from ..engine import Engine

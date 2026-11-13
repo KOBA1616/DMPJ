@@ -1,6 +1,6 @@
 from pathlib import Path
 
-from dmsim.defs import load_rules
+from dmsim.cards.defs import load_rules
 from dmsim.engine.core import Engine
 from dmsim.eval.vfeatures import Plan, v_priority
 from dmsim.plan.macro import MacroPlanner, load_stage_file, stage_fraction
@@ -31,9 +31,9 @@ def test_tenmon_stage_file():
 
 
 def test_macro_prio_is_callable_and_plan_w_zero_equals_no_plan():
-    from dmsim.discovery.bestfirst import priority
+    from dmsim.search.bestfirst import priority
     from dmsim.eval.vfeatures import macro_prio
-    from dmsim.solitaire import Weights
+    from dmsim.search.leaf_eval import Weights
     e, w = _eng(), Weights()
     a = macro_prio(STAGES, 0.0)(e, 0, w)
     assert a == v_priority(e, 0, w, priority)

@@ -6,10 +6,8 @@
 3. 実戦ルート: サガループ → 超神星DOOM・ドラゲリオン（超無限墓地進化＋メテオバーン）で
    シャコガイルを踏み倒し、イワシンの誘発（メテオバーンの解決後に解決）で最後の1枚を引き置換勝利
 """
-import pytest
 
-from dmsim import scenario as sc
-from dmsim.defs import load_rules
+from dmsim.engine import scenario as sc
 
 SAGA = "dm22ex2-021"       # 絶望神サガ
 SHAKO = "dmrp03-s03"       # 水上第九院 シャコガイル

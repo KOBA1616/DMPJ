@@ -406,7 +406,6 @@ class OpenCodeCLI:
 
     def _complete_one(self, model: str, sysp: str, messages: list[dict], usage: dict | None) -> str:
         import shutil
-        import subprocess
         import tempfile
         import time
         prompt = sysp + "\n\n" + "\n\n".join(f"[{m['role']}]\n{m['content']}" for m in messages)

@@ -7,11 +7,11 @@ from pathlib import Path
 
 import pytest
 import yaml
-from conftest import answer, setup
+from conftest import answer
 
-from dmsim import scenario as sc
-from dmsim.devserver import App, Session, set_review
-from dmsim.play import default_decks, make_record, random_policy, replay_record, run
+from dmsim.engine import scenario as sc
+from dmsim.devserver import App, set_review
+from dmsim.engine.play import default_decks, make_record, random_policy, replay_record, run
 
 ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(ROOT / "tools"))
@@ -39,7 +39,7 @@ def test_record_from_scenario(rules):
     answer(e, "main", "play:dm01-080")
     e.advance()
     e.s.digest()                         # 誘発の待機中（LKI がタスクに入っている）
-    from dmsim.play import deck_lists
+    from dmsim.engine.play import deck_lists
     rec = json.loads(json.dumps(make_record(e, deck_lists(e), 1, scenario=spec)))
     assert replay_record(rules, rec, strict=False).s.digest() == rec["digest"]
 
@@ -113,7 +113,7 @@ class _FakeStream:
 def test_convert_retries_once_with_error():
     """LLM の出力は parse_card で検査し、通らなければエラーを返して1回だけ直させる。review は必ず pending。"""
     import convert_cards
-    from dmsim.defs import load_tables
+    from dmsim.cards.defs import load_tables
     bad = "```yaml\nid: x001\nname: 例\ntypes: [creature]\ncivs: [water]\ncost: 2\npower: 1000\nkeywords: [no_such]\n```"
     good = "```yaml\nid: x001\nname: 例\ntypes: [creature]\ncivs: [water]\ncost: 2\npower: 1000\n" \
            "keywords: [blocker]\nsource: {official: x001, review: approved}\n```"
@@ -205,7 +205,7 @@ def test_set_review_finds_file_and_converted_format(tmp_path, monkeypatch):
 def test_convert_run_triage_and_resume(tmp_path):
     """バッチ変換: 成功は保存、検査落ちは rejects と種類別集計、API失敗は記録せず再実行で拾う。"""
     import convert_cards
-    from dmsim.defs import load_tables
+    from dmsim.cards.defs import load_tables
     good = "```yaml\nid: {i}\nname: 例\ntypes: [creature]\ncivs: [water]\ncost: 2\npower: 1000\nkeywords: [blocker]\n```"
     bad = "```yaml\nid: {i}\nname: 例\ntypes: [creature]\ncivs: [water]\ncost: 2\npower: 1000\nkeywords: [no_such]\n```"
 
@@ -236,7 +236,7 @@ def test_convert_run_triage_and_resume(tmp_path):
 def test_convert_pack_shares_one_call_and_falls_back_per_card(tmp_path):
     """pack=3: 1回の呼び出しで3枚。1枚は検査落ち→単独で直す、1枚は応答に無い→単独の呼び出し。"""
     import convert_cards
-    from dmsim.defs import load_tables
+    from dmsim.cards.defs import load_tables
     card = "- id: {i}\n  name: 例\n  types: [creature]\n  civs: [water]\n  cost: 2\n  power: 1000\n  keywords: [{k}]\n"
     single = "```yaml\nid: {i}\nname: 例\ntypes: [creature]\ncivs: [water]\ncost: 2\npower: 1000\nkeywords: [blocker]\n```"
     calls = []
@@ -289,7 +289,7 @@ def test_agent_convert_next_and_submit(tmp_path, monkeypatch, capsys):
 def test_out_of_format_and_vocab_gap_cards_are_not_registered(tmp_path):
     """サイキック・GR・超次元・ドラグハートは変換しない。unsupported があるカードは登録せず rejects に vocab で残す。"""
     import convert_cards
-    from dmsim.defs import load_tables
+    from dmsim.cards.defs import load_tables
     base = {"name": "例", "civilization": "水", "cost": "2", "power": "1000", "text": "x"}
     for t in ("GRクリーチャー", "サイキック・クリーチャー", "ドラグハート・ウエポン", "超次元呪文"):
         assert convert_cards.precheck({**base, "id": "g", "card_type": t})["reason"] == "out_of_format"
@@ -355,7 +355,6 @@ def test_auto_convert_limit_status_and_retry_only_on_vocab_change(tmp_path, monk
     import json
 
     import auto_convert as ac
-    import convert_cards as cc
     raw = tmp_path / "raw"
     raw.mkdir()
     ids = ["ta_a", "ta_b", "ta_c"]
@@ -703,7 +702,7 @@ def test_rule_convert_keyword_only_and_vanilla(tmp_path):
     """キーワードだけ・バニラのクリーチャーは、モデルを呼ばずにルールで変換する。能力文があるものは None。"""
     import convert_cards as cc
     import rule_convert as rc
-    from dmsim.defs import load_tables, parse_card
+    from dmsim.cards.defs import load_tables, parse_card
     base = {"card_type": "クリーチャー", "civilization": "光/水", "cost": "3", "power": "2000", "race": "ガーディアン/ナイト", "name": "n"}
     r = rc.convert({**base, "id": "t1", "text": "ブロッカー（相手クリーチャーが攻撃する時、…）\nＷ・ブレイカー（…）\nこのクリーチャーは攻撃されない。 / Q・ブレイカー"})
     assert r["keywords"] == ["blocker", "double_breaker", "cannot_be_attacked", "quad_breaker"] and r["civs"] == ["light", "water"]
@@ -731,7 +730,7 @@ def test_rule_convert_keyword_only_and_vanilla(tmp_path):
 def test_rule_convert_parameterized_keywords():
     """数値つき・注釈つきキーワード（パワーアタッカー+N、マッハファイター）もルールで変換し、検査に通る。"""
     import rule_convert as rc
-    from dmsim.defs import load_tables, parse_card
+    from dmsim.cards.defs import load_tables, parse_card
     base = {"card_type": "クリーチャー", "civilization": "火", "cost": "4", "power": "3000", "race": "ドラゴン", "name": "n"}
     r = rc.convert({**base, "id": "p1", "text": "パワーアタッカー＋２０００（攻撃中、…） / マッハファイター（…） / スピードアタッカー"})
     assert r["keywords"] == ["speed_attacker"] and len(r["abilities"]) == 2
@@ -746,7 +745,7 @@ def test_rule_split_keywords_and_model_gets_only_the_rest(tmp_path):
     """キーワードはルールで処理し、モデルには残りの原文と known_keywords だけを渡す。結果の keywords はルール分が先。"""
     import convert_cards as cc
     import rule_convert as rc
-    from dmsim.defs import load_tables
+    from dmsim.cards.defs import load_tables
     assert rc.split({"id": "x", "text": "ブロッカー（…） / 出た時、カードを１枚引く。 チャージャー"}) == (["blocker", "charger"], "出た時、カードを１枚引く。", [])
     assert rc.split({"id": "x", "text": "S・トリガー ブロッカー\nＷ・ブレイカー\nこのクリーチャーが出た時、相手の手札を１枚捨てさせる。"}) == (
         ["s_trigger", "blocker", "double_breaker"], "このクリーチャーが出た時、相手の手札を１枚捨てさせる。", [])
@@ -770,7 +769,7 @@ def test_rule_split_keywords_and_model_gets_only_the_rest(tmp_path):
 def test_convert_timeout_breaker(tmp_path):
     """タイムアウトは次のカードが成功して初めて reason: timeout で確定。連続2回は障害として打ち切り、記録しない。"""
     import convert_cards
-    from dmsim.defs import load_tables
+    from dmsim.cards.defs import load_tables
     from llm_offload.providers import CallTimeout
     good = "```yaml\nid: {i}\nname: 例\ntypes: [creature]\ncivs: [water]\ncost: 2\npower: 1000\n```"
 
@@ -935,7 +934,6 @@ def test_local_worker_two_workers_do_not_take_the_same_job(tmp_path):
 
 def test_local_worker_target_and_stale_running(tmp_path):
     """target が違うワーカーは拾わない。止まった running は pending に戻る。"""
-    import subprocess
 
     import local_worker as lw
     import yaml as _yaml
@@ -1115,7 +1113,7 @@ def test_rule_convert_named_effects_with_notes():
 def test_rule_convert_revolution_change_and_ninja_strike():
     """革命チェンジ：<条件> とニンジャ・ストライク N（数字が空白で離れていても）をルールで変換し、検査に通る。"""
     import rule_convert as rc
-    from dmsim.defs import load_tables, parse_card
+    from dmsim.cards.defs import load_tables, parse_card
     base = {"card_type": "クリーチャー", "civilization": "火", "cost": "6", "power": "6000", "race": "アーマード・ドラゴン", "name": "n"}
     r = rc.convert({**base, "id": "rc1", "text": "革命チェンジ：光または火の、コスト５以上のドラゴン（…） / W・ブレイカー"})
     f = r["abilities"][0]["when"]["subject"]["filter"]
@@ -1131,7 +1129,7 @@ def test_rule_convert_revolution_change_and_ninja_strike():
 def test_reuse_same_text_copies_abilities_without_model():
     """原文が同じ変換済みクリーチャーがあれば、能力だけ写して id・名前・ステータスは新しいカードのものにする。"""
     import rule_convert as rc
-    from dmsim.defs import load_tables, parse_card
+    from dmsim.cards.defs import load_tables, parse_card
     base = {"card_type": "クリーチャー", "civilization": "水", "cost": "2", "power": "1000", "race": "リキッド・ピープル"}
     donor = {"id": "d1", "name": "元", "types": ["creature"], "civs": ["water"], "cost": 4, "power": 2000, "text": "出た時、カードを1枚引く。",
              "abilities": [{"kind": "trigger", "when": {"event": "move", "to": "bz", "subject": "self"}, "effect": [{"op": "draw", "count": 1}]}],
@@ -1148,7 +1146,7 @@ def test_reuse_same_text_copies_abilities_without_model():
 def test_run_rules_registers_rule_convertible_cards_without_model(tmp_path):
     """ルールだけで変換できる行（キーワードのみ・同一原文の写し・定型呪文）はモデルなしで登録し、残りには触らない。再実行しても増えない。"""
     import convert_cards as cc
-    from dmsim.defs import load_tables
+    from dmsim.cards.defs import load_tables
     base = {"card_type": "クリーチャー", "civilization": "自然", "cost": "3", "power": "2000", "race": "テスト", "mana": "1"}
     rows = [{**base, "id": "r1", "name": "a", "text": "ブロッカー"},
             {**base, "id": "r2", "name": "b", "text": "ブロッカー"},

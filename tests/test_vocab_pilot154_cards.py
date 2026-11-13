@@ -7,7 +7,7 @@ dm24bd6-001（付与側）は eternal_kappa 未実装のため本体の手変換
 proto T200（test_vocab_pilot154.py）で代表させる。
 """
 import yaml
-from dmsim.defs import load_tables, parse_card
+from dmsim.cards.defs import load_tables, parse_card
 
 TABLES = load_tables()
 

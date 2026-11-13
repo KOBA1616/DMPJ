@@ -6,13 +6,13 @@ from pathlib import Path
 import pytest
 from conftest import find_option, setup
 
-from dmsim.defs import load_rules
-from dmsim.defs import card_yaml_files  # noqa: E402
-from dmsim.loop import LoopDetector, abstract, draw_keys, verify
-from dmsim.loop_first import discover_loops
-from dmsim.play import passive_policy
-from dmsim.solitaire import round_probe
-from dmsim.zone_graph import find_cycles
+from dmsim.cards.defs import load_rules
+from dmsim.cards.defs import card_yaml_files  # noqa: E402
+from dmsim.engine.loop import LoopDetector, abstract, draw_keys, verify
+from dmsim.search.loop_first import discover_loops
+from dmsim.engine.play import passive_policy
+from dmsim.eval.lockcheck import round_probe
+from dmsim.engine.zone_graph import find_cycles
 
 DATA = Path(__file__).resolve().parent.parent / "data"
 MAD = "dmrp06-006"          # マッド・デーモン閣下／デーモン・ハンド

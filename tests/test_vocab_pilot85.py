@@ -2,7 +2,7 @@
 
 「より小さい」は cost_le: {sum: [{cost_of: {ref: t}}, -1]} のイディオムで表す。新語彙なし。
 """
-from dmsim.defs import load_tables, parse_card
+from dmsim.cards.defs import load_tables, parse_card
 
 TABLES = load_tables()
 

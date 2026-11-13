@@ -1,7 +1,7 @@
 """ゾーン変換グラフ（静的な解析）が、動的に検出したループと同じ差分を出すこと。"""
-from dmsim import scenario as sc
-from dmsim.loop import LoopDetector, verify
-from dmsim.zone_graph import find_cycles
+from dmsim.engine import scenario as sc
+from dmsim.engine.loop import LoopDetector, verify
+from dmsim.engine.zone_graph import find_cycles
 
 from test_saga_loop import SAGA, saga_policy
 
@@ -34,7 +34,7 @@ def test_no_cycle_for_cards_that_do_not_feed_each_other(rules):
 
 
 def test_package_search_uses_cycle_cards_as_fixed_parts(rules):
-    from dmsim.combo_search import package_search
+    from dmsim.discovery.combo_search import package_search
     out = package_search(rules, ["T001", "dm01-001"], max_packages=1, slots=1, copies=2, games=1,
                          finalists=1, finalist_games=1, turns=1, budget=20)
     cards, res = out[0]
@@ -43,7 +43,7 @@ def test_package_search_uses_cycle_cards_as_fixed_parts(rules):
 
 
 def test_dig_and_speed_metrics(rules):
-    from dmsim.pool_metrics import dig, dig_total, speed
+    from dmsim.eval.pool_metrics import dig, dig_total, speed
     assert dig(rules.cards["dm22ex1-025"]) >= 5            # イザナギテラス: 山札の上5枚
     assert speed(rules.cards["dm22ex1-025"]) == 4
     assert dig_total(rules, ["dm22ex1-025"] * 2) == 2 * dig(rules.cards["dm22ex1-025"])

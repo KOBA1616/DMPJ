@@ -6,7 +6,6 @@
 採否の根拠は FAIR 水準の値のみ（CHEAT は上限値として併記するだけ）。"""
 from __future__ import annotations
 
-import json
 import time
 from dataclasses import dataclass
 from pathlib import Path

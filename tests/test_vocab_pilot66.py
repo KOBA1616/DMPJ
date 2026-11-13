@@ -3,7 +3,7 @@
 「無色カード」は filter: {colorless: true} で表す。
 文明を持たないカード（civs が空）を対象とする。
 """
-from dmsim.defs import load_tables, parse_card
+from dmsim.cards.defs import load_tables, parse_card
 
 TABLES = load_tables()
 
@@ -36,5 +36,5 @@ def test_colorless_parses():
 
 def test_colorless_filter_key():
     # colorless が FILTER_KEYS に含まれることを確認
-    from dmsim.defs import FILTER_KEYS
+    from dmsim.cards.defs import FILTER_KEYS
     assert "colorless" in FILTER_KEYS

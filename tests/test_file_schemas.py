@@ -1,6 +1,5 @@
 """データファイルの型（data/schema/*.schema.json）に実データが合っていること。"""
 import json
-from pathlib import Path
 
 import pytest
 import yaml
@@ -8,9 +7,9 @@ import yaml
 jsonschema = pytest.importorskip("jsonschema")
 referencing = pytest.importorskip("referencing")
 
-from dmsim import approval as ap  # noqa: E402
-from dmsim.cardfiles import card_files  # noqa: E402
-from dmsim.defs import DATA, load_tables  # noqa: E402
+from dmsim.cards import approval as ap  # noqa: E402
+from dmsim.cards.cardfiles import card_files  # noqa: E402
+from dmsim.cards.defs import DATA, load_tables  # noqa: E402
 
 SCH = DATA / "schema"
 

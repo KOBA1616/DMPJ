@@ -10,7 +10,7 @@ dm25ex3-rp4s05「K」-9+9+9 の同型条項（need: must_be_attacked_first_only�
 import yaml
 from pathlib import Path
 
-from dmsim.defs import load_tables, parse_card
+from dmsim.cards.defs import load_tables, parse_card
 
 TABLES = load_tables()
 CONVERTED = Path(__file__).parent.parent / "data" / "cards" / "converted.yaml"

@@ -3,7 +3,7 @@
 「相手のマナゾーンにあるカードの枚数よりコストが大きい」は
 既存の if: {cmp: [{cost_of: ...}, ">", {count: ...}]} で表す。新語彙なし。
 """
-from dmsim.defs import load_tables, parse_card
+from dmsim.cards.defs import load_tables, parse_card
 
 TABLES = load_tables()
 

@@ -4,7 +4,7 @@
 mod: {battle_indestructible: true} で表す。
 combat._battle で敗者から除外する（勝敗判定はパワーどおり）。
 """
-from dmsim.defs import load_tables, parse_card
+from dmsim.cards.defs import load_tables, parse_card
 
 TABLES = load_tables()
 

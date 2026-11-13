@@ -6,7 +6,7 @@ if: {cmp: [{count: {zone: shield, owner: you}}, ">=", {count: {zone: shield, own
 を付けて表す（新語彙なし。第73弾のゾーン枚数比較＋第97弾の条件つき能力）。
 静的なら static の if、誘発なら trigger の if に付ける。
 """
-from dmsim.defs import load_tables, parse_card
+from dmsim.cards.defs import load_tables, parse_card
 
 TABLES = load_tables()
 HF = {"cmp": [{"count": {"zone": "shield", "owner": "you"}}, ">=",

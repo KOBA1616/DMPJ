@@ -3,7 +3,7 @@
 「クリーチャーが攻撃する時、条件を満たせば手札からコストを支払わずに召喚してもよい」は
 ニンジャ・ストライクと同じ declare（zone: hand）+ if 条件 + play_free で表す。新語彙なし。
 """
-from dmsim.defs import load_tables, parse_card
+from dmsim.cards.defs import load_tables, parse_card
 
 TABLES = load_tables()
 

@@ -4,7 +4,7 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent / "tools"))
 from loop_enum import cycles_among, lap_ok  # noqa: E402
-from dmsim.zone_graph import bundles_of  # noqa: E402
+from dmsim.engine.zone_graph import bundles_of  # noqa: E402
 
 
 def test_cycles_among_returns_cycles_with_delta(rules):

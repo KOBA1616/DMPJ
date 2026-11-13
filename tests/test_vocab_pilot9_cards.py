@@ -5,7 +5,7 @@ mod {cost_may: {amount, once?, min}} を持たせ、affects で対象（手札�
 """
 import pytest
 
-from dmsim.defs import load_tables, parse_card
+from dmsim.cards.defs import load_tables, parse_card
 
 TABLES = load_tables()
 

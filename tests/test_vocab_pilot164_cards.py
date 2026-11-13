@@ -19,7 +19,7 @@ from pathlib import Path
 
 import yaml
 
-from dmsim.defs import load_tables, parse_card
+from dmsim.cards.defs import load_tables, parse_card
 
 TABLES = load_tables()
 REJECTS = Path(__file__).parent.parent / "data" / "cards" / "raw" / "rejects.jsonl"

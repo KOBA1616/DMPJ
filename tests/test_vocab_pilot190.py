@@ -14,7 +14,7 @@ from pathlib import Path
 import yaml
 from conftest import setup
 
-from dmsim.defs import load_tables, parse_card
+from dmsim.cards.defs import load_tables, parse_card
 
 TABLES = load_tables()
 PROTOS = ("T461", "T462", "T463", "T464")

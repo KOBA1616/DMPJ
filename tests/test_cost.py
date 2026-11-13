@@ -9,8 +9,8 @@ from conftest import answer, setup
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent / "tools"))
 import rule_convert as rc  # noqa: E402
 
-from dmsim.defs import DATA, load_rules, load_tables, parse_card  # noqa: E402
-from dmsim.defs import card_yaml_files  # noqa: E402
+from dmsim.cards.defs import load_rules, load_tables, parse_card  # noqa: E402
+from dmsim.cards.defs import card_yaml_files  # noqa: E402
 
 BASE = {"card_type": "クリーチャー", "civilization": "自然", "cost": "5", "power": "3000", "race": "テスト", "name": "試験"}
 

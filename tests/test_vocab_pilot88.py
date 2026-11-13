@@ -2,7 +2,7 @@
 
 「パワーがN以上のとき〜を得る」は static + if: {exists: {ref: self, filter: {power_ge: N}}} で表す。新語彙なし。
 """
-from dmsim.defs import load_tables, parse_card
+from dmsim.cards.defs import load_tables, parse_card
 
 TABLES = load_tables()
 

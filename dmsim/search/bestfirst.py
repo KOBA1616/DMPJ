@@ -12,7 +12,7 @@ from dataclasses import dataclass
 
 from ..engine import Engine
 from ..engine.loop import abstract
-from .leaf_eval import Weights, evaluate, goal_distance
+from .leaf_eval import Weights, evaluate
 from .turn import candidates
 from ..engine.view import defn_of, pending_of, result_of, tapped_of, turn_of, zone_of
 

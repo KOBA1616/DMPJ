@@ -21,8 +21,8 @@ sys.path.insert(0, str(Path(__file__).resolve().parent))
 import convert_cards as cc  # noqa: E402
 import rule_convert  # noqa: E402
 from auto_convert import newest_key  # noqa: E402
-from dmsim import cardstore  # noqa: E402
-from dmsim.defs import DATA, load_tables  # noqa: E402
+from dmsim.cards import cardstore  # noqa: E402
+from dmsim.cards.defs import DATA, load_tables  # noqa: E402
 
 RAW = DATA / "cards" / "raw"
 OUT, REJ = cardstore.converted_path(DATA), RAW / "rejects.jsonl"

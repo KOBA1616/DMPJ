@@ -9,7 +9,7 @@ import hashlib
 import json
 from dataclasses import dataclass, field
 
-from ..discovery.loopspec import Pred, Route
+from dmsim.base.loopspec import Pred, Route
 from .registry import KINDS, ROLES
 
 SCHEMA_VERSION = 1   # v1 = 記録形式の確定版（notes/plan-record-format.md）。v0 は MIGRATIONS で読める。

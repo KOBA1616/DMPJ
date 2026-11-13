@@ -3,7 +3,7 @@
 「相手のターン中に、相手のクリーチャーが召喚以外の方法で出た時」は
 move イベント（to: bz, reason: put）の誘発で表す。新語彙なし。
 """
-from dmsim.defs import load_tables, parse_card
+from dmsim.cards.defs import load_tables, parse_card
 
 TABLES = load_tables()
 

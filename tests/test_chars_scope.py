@@ -4,7 +4,7 @@ import random
 from conftest import setup
 
 from dmsim import Engine
-from dmsim.play import random_policy, run
+from dmsim.engine.play import random_policy, run
 
 
 def test_scope_returns_same_as_uncached_and_copies(rules):

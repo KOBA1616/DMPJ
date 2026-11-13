@@ -3,7 +3,7 @@
 「ゴッド」は種族 race_has: ゴッド で扱う。「そのクリーチャーがゴッドであれば」は
 exists: {ref: X, filter: {race_has: ゴッド}} を op: if の cond に置く。新語彙なし。
 """
-from dmsim.defs import load_tables, parse_card
+from dmsim.cards.defs import load_tables, parse_card
 
 TABLES = load_tables()
 

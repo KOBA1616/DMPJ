@@ -1,6 +1,6 @@
 import pytest
 
-from dmsim.discovery.loopspec import LoopSpec, Pred, Route
+from dmsim.base.loopspec import LoopSpec, Pred, Route
 from dmsim.plan import PlanSpec, from_loopspec, register_role, to_loopspec
 
 

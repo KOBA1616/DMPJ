@@ -14,11 +14,10 @@ T270 強制バトル試験呪文。既存 proto: T207 / T256 除去試験呪文�
 """
 from pathlib import Path
 
-import pytest
 import yaml
 from conftest import setup
 
-from dmsim.defs import load_tables, parse_card
+from dmsim.cards.defs import load_tables, parse_card
 
 TABLES = load_tables()
 

@@ -7,7 +7,7 @@ from pathlib import Path
 import yaml
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
-from dmsim.discovery.loopspec import LoopSpec  # noqa: E402
+from dmsim.base.loopspec import LoopSpec  # noqa: E402
 from dmsim.plan.stagegen import stages_from_leaf_parts, stages_from_loopspec  # noqa: E402
 
 

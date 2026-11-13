@@ -21,11 +21,11 @@ from pathlib import Path
 
 import yaml
 
-from . import scenario as sc
+from dmsim.engine import scenario as sc
 from .cards.defs import DATA, load_rules
 from .engine import Engine, IllegalAnswer
-from .play import deck_lists, make_record, passive_policy, replay
-from .verify import verify_all
+from dmsim.engine.play import deck_lists, make_record, passive_policy, replay
+from dmsim.engine.verify import verify_all
 
 WEB = Path(__file__).resolve().parent / "web"
 REAL = DATA / "cards" / "real.yaml"

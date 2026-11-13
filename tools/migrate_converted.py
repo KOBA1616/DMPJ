@@ -14,8 +14,8 @@ import tempfile
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
-from dmsim import cardstore  # noqa: E402
-from dmsim.defs import DATA  # noqa: E402
+from dmsim.cards import cardstore  # noqa: E402
+from dmsim.cards.defs import DATA  # noqa: E402
 
 HEADER = "# convert_cards.py の出力（review: pending）。確認後に real.yaml へ移す。\n"
 

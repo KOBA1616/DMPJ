@@ -3,7 +3,7 @@
 filter の cost_le は式を受け付ける（FILTER_EXPR_KEYS）。{cost_of: {ref: ...}} で
 束縛したカードのコスト以下を表す。新語彙なし。
 """
-from dmsim.defs import load_tables, parse_card
+from dmsim.cards.defs import load_tables, parse_card
 
 TABLES = load_tables()
 

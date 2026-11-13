@@ -5,7 +5,7 @@ defs.py の FILTER_KEYS と engine/selectors.py の filter_match に対応。
 """
 from conftest import setup
 
-from dmsim.defs import load_tables, parse_card
+from dmsim.cards.defs import load_tables, parse_card
 
 TABLES = load_tables()
 

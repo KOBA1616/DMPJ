@@ -8,7 +8,7 @@ from __future__ import annotations
 
 import re
 import unicodedata
-from ..engine_view import zone_of
+from dmsim.engine.view import zone_of
 
 CIP = re.compile(r"このクリーチャーが(?:バトルゾーンに)?出た時[、,]?(.*)")
 SKIP_WORDS = ("てもよい", "場合", "なら", "ごとに", "かわりに", "相手の", "選び", "選ぶ", "ターン", "まで")
@@ -39,7 +39,7 @@ def predict_cip(text: str) -> dict | None:
 
 def measure_cip(rules, cid: str, mana=("T001", "T003", "T004", "T005", "T008") * 2, hand_extra: int = 6) -> dict | None:
     """cid を手札から出し、山札・墓地の増減を測る。出せなければ None。"""
-    from .. import scenario
+    from dmsim.engine import scenario
     spec = {"p0": {"hand": [cid] + ["T001"] * hand_extra, "mana": list(mana)}, "p1": {"bz": ["T001"]}, "seed": 1, "deck_size": 30}
     e = scenario.build(rules, spec)
     hand0, gy0 = len(zone_of(e, "hand", 0)), len(zone_of(e, "graveyard", 0))

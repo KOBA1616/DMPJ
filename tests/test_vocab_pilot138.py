@@ -3,7 +3,7 @@
 「ゴッドまたは呪文を１枚選ぶ」は filter: {any_of: [{race_has: ゴッド}, {types: [spell]}]}。
 新語彙なし。
 """
-from dmsim.defs import load_tables, parse_card
+from dmsim.cards.defs import load_tables, parse_card
 
 TABLES = load_tables()
 

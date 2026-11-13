@@ -1,4 +1,4 @@
-from dmsim import scenario
+from dmsim.engine import scenario
 from dmsim.search import determinize, hidden_cids
 
 

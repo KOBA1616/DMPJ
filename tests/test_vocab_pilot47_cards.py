@@ -3,7 +3,7 @@ import os
 
 os.environ.setdefault("DMSIM_SKIP_CONVERTED", "1")
 
-from dmsim.defs import load_tables, parse_card
+from dmsim.cards.defs import load_tables, parse_card
 
 T = load_tables()
 

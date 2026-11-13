@@ -1,4 +1,4 @@
-from dmsim.defs import load_rules
+from dmsim.cards.defs import load_rules
 from dmsim.engine.core import Engine
 from dmsim.eval.lock_terms import classify_static, lock_term, static_counts
 from dmsim.eval.vfeatures import v_priority

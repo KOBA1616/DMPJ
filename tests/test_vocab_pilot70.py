@@ -2,7 +2,7 @@
 
 「〜の能力を無視する」は既存の mod: {ignore: [all]} で表す（modify で付与）。新語彙なし。
 """
-from dmsim.defs import load_tables, parse_card
+from dmsim.cards.defs import load_tables, parse_card
 
 TABLES = load_tables()
 
@@ -39,5 +39,5 @@ def test_ability_ignore_parses():
 
 
 def test_ability_ignore_mod_key():
-    from dmsim.defs import MOD_KEYS
+    from dmsim.cards.defs import MOD_KEYS
     assert "ignore" in MOD_KEYS

@@ -13,9 +13,9 @@ def test_reach_monotone_and_bounds():
 
 def test_loop_min_start_wins():
     import yaml
-    from dmsim.defs import load_rules
-    from dmsim.scenario import build
-    from dmsim.solitaire import play_game
+    from dmsim.cards.defs import load_rules
+    from dmsim.engine.scenario import build
+    from dmsim.search.game import play_game
     rules = load_rules()
     if "dm23bd7-035" not in rules.cards:   # オルゼキアは converted.yaml（テストでは読まない）にある
         import pytest

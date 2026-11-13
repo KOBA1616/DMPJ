@@ -20,10 +20,10 @@ from dmsim.autofix import partdiscovery as PD  # noqa: E402
 from dmsim.autofix import partsgenome as PG  # noqa: E402
 from dmsim.autofix import valuelearn as VL  # noqa: E402
 from dmsim.autofix.tune import _score, evolve, tune  # noqa: E402
-from dmsim.defs import load_rules  # noqa: E402
+from dmsim.cards.defs import load_rules  # noqa: E402
 from dmsim.eval.progress import ProgressSpec  # noqa: E402
 from dmsim.search.leaf_parts import load_specs  # noqa: E402
-from dmsim.solitaire import load_deck  # noqa: E402
+from dmsim.eval.measure import load_deck  # noqa: E402
 
 
 def main(argv=None):
@@ -99,7 +99,7 @@ def main(argv=None):
             # 飽和（実行層で全局同点、または95%以上キル）: 探索側に改善余地が無い。残りの課題は到達層（デッキの引き込み）
             print(t["combo"], f"実行層が飽和（{origin}）: ノブ・評価式の調整は不要。課題は到達層（deck_fix）")
             if a.out:
-                from dmsim.deckplan.evaluate import record
+                from dmsim.eval.deckeval import record
                 record(a.out, {"combo": t["combo"], "verdict": "skip_saturated", "tier": "cold" if a.cold else "exec", "setup_origin": origin})
             mark(t["combo"], True)
             continue

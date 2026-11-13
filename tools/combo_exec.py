@@ -10,9 +10,9 @@ import time
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
-from dmsim.defs import load_rules  # noqa: E402
-from dmsim.scenario import build  # noqa: E402
-from dmsim.solitaire import play_game  # noqa: E402
+from dmsim.cards.defs import load_rules  # noqa: E402
+from dmsim.engine.scenario import build  # noqa: E402
+from dmsim.search.game import play_game  # noqa: E402
 
 
 def mana_for(rules, cards, n):
@@ -33,7 +33,7 @@ BLOCKERS = ["dm01-076", "dm01-076"]       # 蒼天の守護者ラ・ウラ・ギ
 
 
 def exec_trial(rules, cards, seed=1, mana_n=6, turns=3, budget=60, opp_deck=30, blockers=True):
-    from dmsim.opponent import OppModel
+    from dmsim.search.opponent import OppModel
     opp = OppModel(name="blockers", bz=tuple(BLOCKERS), block=True, strigger=True, play="blockers") if blockers else None
     spec = {"p0": {"hand": list(cards), "mana": mana_for(rules, cards, mana_n)},
             "p1": {"mana": ["T001"] * 6, "deck": list(BLOCKERS) if blockers else []},

@@ -8,7 +8,7 @@ from collections import Counter
 from pathlib import Path
 
 from . import change as C
-from .evaluate import AcceptRule, decide, harness_scorer, record
+from dmsim.eval.deckeval import AcceptRule, decide, harness_scorer, record
 from .loop import ids_of, improve
 import random
 from .spec import check

@@ -3,7 +3,7 @@
 「自分のメカまたはアーマードが離れる時、かわりにこのクリーチャーを破壊してもよい」は
 replace（move from bz、optional、instead で self を破壊）で表す。新語彙なし。
 """
-from dmsim.defs import load_tables, parse_card
+from dmsim.cards.defs import load_tables, parse_card
 
 TABLES = load_tables()
 

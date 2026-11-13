@@ -2,7 +2,7 @@
 
 「マナゾーンまたは墓地から召喚してもよい」は既存キーワード2つの併記で表す。新語彙なし。
 """
-from dmsim.defs import load_tables, parse_card
+from dmsim.cards.defs import load_tables, parse_card
 
 TABLES = load_tables()
 

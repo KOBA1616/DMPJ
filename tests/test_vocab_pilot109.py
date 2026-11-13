@@ -4,7 +4,7 @@
 static の affects + mod grant: [s_trigger] で表す（dm24ex4-015 先例）。
 新語彙なし。
 """
-from dmsim.defs import load_tables, parse_card
+from dmsim.cards.defs import load_tables, parse_card
 
 TABLES = load_tables()
 

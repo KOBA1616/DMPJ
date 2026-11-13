@@ -5,7 +5,7 @@ count（filter: face_down）で数える条件（if）で書き、常在型・�
 """
 import pytest
 
-from dmsim.defs import load_tables, parse_card
+from dmsim.cards.defs import load_tables, parse_card
 
 TABLES = load_tables()
 

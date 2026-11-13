@@ -4,9 +4,9 @@ import json
 from conftest import setup
 
 from dmsim.devserver import App
-from dmsim.play import deck_lists, make_record
+from dmsim.engine.play import deck_lists, make_record
 from dmsim.playback import Playback, analyze_record, cert_from_dict, cert_to_dict, record_with_cert
-from dmsim.solitaire import play_game
+from dmsim.search.game import play_game
 
 
 def _loop_record(rules):
@@ -42,7 +42,7 @@ def test_view_at_matches_replay_and_marks_choice(rules):
 def test_cert_roundtrip_and_replay(rules):
     rec, _ = _loop_record(rules)
     lp = analyze_record(rules, rec)["loops"][0]
-    from dmsim.loop import LoopCertificate
+    from dmsim.engine.loop import LoopCertificate
     cert = LoopCertificate("x", lp["actions"], lp["deciders"], lp["delta"], float("inf"), "in_turn")
     cert = cert_from_dict(json.loads(json.dumps(cert_to_dict(cert))))
     assert cert.limit == float("inf") and cert.actions == lp["actions"]

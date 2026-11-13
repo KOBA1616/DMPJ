@@ -9,8 +9,8 @@ from conftest import answer, setup
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent / "tools"))
 import rule_convert as rc  # noqa: E402
 
-from dmsim.defs import DATA, load_rules  # noqa: E402
-from dmsim.defs import card_yaml_files  # noqa: E402
+from dmsim.cards.defs import load_rules  # noqa: E402
+from dmsim.cards.defs import card_yaml_files  # noqa: E402
 
 BASE = {"card_type": "クリーチャー", "civilization": "自然", "cost": "1", "power": "3000", "race": "テスト", "name": "試験"}
 
@@ -129,7 +129,7 @@ def test_magic_bomber_cost_limit(build):
 
 def test_spell_converts_from_keywords_and_known_effect_lines():
     import rule_convert as rc
-    from dmsim.defs import load_tables, parse_card
+    from dmsim.cards.defs import load_tables, parse_card
     row = {"id": "sp1", "name": "試験呪文", "card_type": "呪文", "civilization": "水", "cost": "3", "mana": "1",
            "text": "S・トリガー（この呪文をシールドゾーンから手札に加える時、コストを支払わずにすぐ唱えてもよい）\nカードを２枚引く。\n相手のクリーチャーを１体選ぶ。このターン、そのクリーチャーのパワーを－3000する。"}
     row["text"] = row["text"].replace("\\\n", "\n")
@@ -159,7 +159,7 @@ def test_peel_keeps_annotation_with_its_keyword():
 
 def test_trigger_prefix_variants_and_spell_sentences_reused_for_creatures():
     import rule_convert as rc
-    from dmsim.defs import load_tables, parse_card
+    from dmsim.cards.defs import load_tables, parse_card
     base = {"card_type": "クリーチャー", "civilization": "水", "cost": "3", "power": "2000", "race": "テスト"}
     both = rc.convert({**base, "id": "t1", "text": "このクリーチャーが出た時または攻撃する時、カードを１枚引く。"})
     assert [a["when"]["event"] for a in both["abilities"]] == ["move", "attack"]
@@ -182,7 +182,7 @@ def test_grant_keyword_to_all_my_creatures():
 
 def test_twinpact_converts_when_both_faces_are_rule_convertible():
     import rule_convert as rc
-    from dmsim.defs import load_tables, parse_card
+    from dmsim.cards.defs import load_tables, parse_card
     row = {"id": "tw1", "name": "A／B", "mana": "1", "text": "x", "faces": [
         {"name": "A", "card_type": "クリーチャー", "civilization": "光", "cost": "6", "power": "7500", "race": "テスト", "mana": "1", "text": "ブロッカー\nW・ブレイカー"},
         {"name": "B", "card_type": "呪文", "civilization": "光", "cost": "6", "power": "", "race": "", "mana": "1", "text": "S・トリガー\n相手のクリーチャーをすべてタップする。"}]}

@@ -1,6 +1,6 @@
 import pytest
 
-from dmsim.autofix import Knobs, Rule, autofix, diagnose
+from dmsim.autofix import Knobs, autofix, diagnose
 
 
 def fake(k: Knobs, n=30):
@@ -100,7 +100,7 @@ def test_prep_unused_hint_and_candidate():
 
 
 def test_prep_bonus_value(rules):
-    from dmsim import scenario
+    from dmsim.engine import scenario
     from dmsim.search.prep import prep_used, with_prep_bonus
     e = scenario.build(rules, {"p0": {"graveyard": ["dmd08-015", "dmd08-015", "dmd08-015", "T001"]}, "p1": {}, "filler": "T001",
                                "seed": 1, "deck_size": 10, "deck_left": None})
@@ -149,7 +149,7 @@ def test_alias_makes_akashic_parts_match_deck():
     import yaml
 
     from dmsim.autofix.batch import default_need
-    from dmsim.solitaire import load_deck
+    from dmsim.eval.measure import load_deck
     c = {x["id"]: x for x in yaml.safe_load(open("data/known_combos/combos.yaml", encoding="utf-8"))["combos"]}["akashic"]
     need = default_need(c)
     assert "dm23ex2-cho005" not in need and "dm23ex2-009" in need
@@ -158,7 +158,7 @@ def test_alias_makes_akashic_parts_match_deck():
 
 
 def test_stage_value_is_continuous_and_monotone():
-    from dmsim.deckplan.evaluate import stage_value
+    from dmsim.eval.deckeval import stage_value
     assert stage_value(None, None, None, 4) == 0.0
     a = stage_value(None, None, 3, 4)
     b = stage_value(None, None, 1, 4)
@@ -205,7 +205,7 @@ def test_deck_fix_resolve_setup():
     import sys
     sys.path.insert(0, "tools")
     import deck_fix
-    from dmsim.defs import load_rules
+    from dmsim.cards.defs import load_rules
     r = load_rules()
     sp, o = deck_fix.resolve_setup(r, {"combo": "saga", "deck_setup": "tests/saga_prep_setup.yaml"})
     assert o == "tests/saga_prep_setup.yaml" and "p0" in sp

@@ -3,7 +3,7 @@
 「可能であれば攻撃する」は既存の require: ["attack"] で表す。
 新語彙なし。エンジン（turn.py）が強制攻撃を処理済み。
 """
-from dmsim.defs import load_tables, parse_card
+from dmsim.cards.defs import load_tables, parse_card
 
 TABLES = load_tables()
 
