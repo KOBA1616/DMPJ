@@ -1,0 +1,22 @@
+# アカシックの経路（形式は saga.yaml を参照）。森夢龍 フィオナ・フォレストでアカシック3を場に出し、手札の呪文を回す。
+name: akashic
+via: 森夢龍 フィオナ・フォレストの踏み倒しでアカシック3を場に出す
+stages:
+  - name: アカシック3と森夢龍が手札かマナにある
+    weight: 30
+    all:
+      - {zones: [hand, mana], match: {name: dm23ex2-009}, n: 1}
+      - {zones: [hand, mana], match: {name: dm24ex3-rp3tr6}, n: 1}
+  - name: アカシック3が場にある
+    weight: 120
+    all:
+      - {zone: bz, match: {name: dm23ex2-009}, n: 1}
+  - name: アカシック3が場にあり、手札にナウ・オア・ネバーとウォカンナ
+    weight: 200
+    all:
+      - {zone: bz, match: {name: dm23ex2-009}, n: 1}
+      - {zone: hand, match: {name: dmrp12-s01}, n: 1}
+      - {zone: hand, match: {name: dm24ex1-038}, n: 1}
+  - name: 入口
+    weight: 300
+    entry: akashic
