@@ -41,8 +41,11 @@ def test_registry_macros_load():
     assert all(m.steps and m.preds and m.core for m in ms)
 
 
-def test_macro_wins_from_unseen_entry(full_rules):
-    """登録に使っていないシード（9）の入口局面で、手ありの探索（予算200）が手を採ってそのターンに勝つ。"""
+def test_macro_wins_from_unseen_entry(full_rules, monkeypatch):
+    """登録に使っていないシード（9）の入口局面で、手ありの探索（予算200）が手を採ってそのターンに勝つ。
+    マナチャージの一般則（CHARGE_KEEP_FREE、§18）を入れると手なしでも勝てるので、ここでは切って手の効き目を見る。"""
+    import dmsim.search.turn as T
+    monkeypatch.setattr(T, "CHARGE_KEEP_FREE", False)
     e = _entry(full_rules, "akashic", 9)
     out, st = TurnSearch(0, 200).run(e)
     assert out.s.result is None or out.s.result["winner"] != 0       # 手なしでは勝てない

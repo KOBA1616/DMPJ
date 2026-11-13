@@ -47,13 +47,21 @@ def _rank(eng: Engine, d: dict, w: Weights) -> list[int]:
     def cost(o):
         return eng.cdef(o["cid"]).face(o.get("face")).cost if "cid" in o else 0
 
+    free_now = set()
+    if kind == "charge" and CHARGE_KEEP_FREE:
+        # 今コストを払わずに出せる札（無償詠唱・G・ゼロ）はマナに置くと損をする（出せば効果が得られる）ので後回し
+        try:
+            free_now = {eng.s.cards[o["cid"]].defn for o in eng._play_options(p) if o.get("free")}
+        except Exception:
+            free_now = set()
+
     def key(i):
         o = opts[i]
         k = o["key"]
         if kind == "charge":
             if k == "pass":
                 return (0 if len(eng.zlist("mana", p)) >= w.max_mana else 2, 0)
-            return (1, -cost(o))
+            return (1, 1 if "cid" in o and eng.s.cards[o["cid"]].defn in free_now else 0, -cost(o))
         if kind == "main":
             return (1, 0) if k == "pass" else (0, -cost(o))
         if kind == "attack":
@@ -133,6 +141,7 @@ _is_engine = is_engine_loop    # 旧名（互換）
 
 # 「引いて捨てる」型のループ検出の既定（TurnSearch.draw_discard で局ごとに切り替え可）。環境変数 DMSIM_DRAW_DISCARD=0 で切る
 DRAW_DISCARD = os.environ.get("DMSIM_DRAW_DISCARD", "1") != "0"
+CHARGE_KEEP_FREE = os.environ.get("DMSIM_CHARGE_KEEP_FREE", "1") != "0"   # マナチャージで、今無償で出せる札を後回しにする（既定有効、0 で切る）
 REPEAT_FIRST = os.environ.get("DMSIM_REPEAT_FIRST", "1") != "0"   # 案 E の既定。DMSIM_REPEAT_FIRST=0 で切る
 
 
