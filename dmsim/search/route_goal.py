@@ -50,7 +50,11 @@ def count(eng, p: dict, me: int = 0) -> int:
     m = p.get("match", {})
     n = 0
     for z in zones:
-        for c in s.zones[z][owner]:
+        cids = s.zones[z][owner]
+        if p.get("top") and z == "bz":       # 場の一番上の札だけ（進化元として下にある札を除く）
+            below = {u for c in cids for u in s.cards[c].under}
+            cids = [c for c in cids if c not in below]
+        for c in cids:
             defn = s.cards[c].defn
             d = rules.cards[defn]
             if "name" in m and m["name"] not in (defn, d.id):
@@ -78,8 +82,9 @@ def reached(eng, stages, me: int = 0) -> int:
     return k
 
 
-def route_score(eng, stages, me: int = 0) -> float:
-    k = reached(eng, stages, me)
+def route_score(eng, stages, me: int = 0, floor: int = 0) -> float:
+    """floor: その対局で既に達成した段（ラチェット）。局面が前の段の状態を消しても、達成済みの段の点は下げない。"""
+    k = max(reached(eng, stages, me), floor)
     return sum(st.weight for st in stages[:k])
 
 
@@ -101,9 +106,9 @@ def _frac(eng, p: dict, me: int, elsewhere: float) -> float:
     return f
 
 
-def partial_score(eng, stages, me: int = 0, elsewhere: float = 0.25) -> float:
-    """次の段（満たした最も後ろの段の次）の進み具合 × その段の weight。"""
-    k = reached(eng, stages, me)
+def partial_score(eng, stages, me: int = 0, elsewhere: float = 0.25, floor: int = 0) -> float:
+    """次の未達成の段（満たした最も後ろの段か floor の次）の進み具合 × その段の weight。"""
+    k = max(reached(eng, stages, me), floor)
     if k >= len(stages):
         return 0.0
     preds = stages[k].preds
@@ -135,9 +140,13 @@ def away_penalty(eng, need: dict, me: int = 0) -> float:
 
 
 def make_value_fn(stages, weights: Weights | None = None, *, mult: float = 1.0, partial: bool = False,
-                  elsewhere: float = 0.25, away: float = 0.0):
+                  elsewhere: float = 0.25, away: float = 0.0, ratchet: list | None = None,
+                  lookahead_last: int = 0, opp_policy=None):
     """evaluate + mult × (経路の点 [+ 次の段の部分点] − away × 使えないゾーンへ送った経路の札の枚数)。
-    既定（partial=False, away=0, mult=1）は段を満たした分だけ（PR #423 と同じ）。勝敗が決まった局面には足さない。"""
+    既定（partial=False, away=0, mult=1）は段を満たした分だけ（PR #423 と同じ）。勝敗が決まった局面には足さない。
+    lookahead_last: >0 なら、入口の直前の段まで達成した葉に限り、次の自分のターンを予算 lookahead_last で探索して良い方を採る
+      （search.multiturn.make_lookahead_value_fn と同じ。全部の葉にかけないので計算量の増加が小さい）。
+    ratchet: [k] を渡すと、その対局で達成済みの段 k を下限にする（呼び出し側が各ターンの後に k を更新する。note_reached）。"""
     w = weights or Weights()
     need = needed_cards(stages) if away else {}
 
@@ -145,10 +154,27 @@ def make_value_fn(stages, weights: Weights | None = None, *, mult: float = 1.0, 
         v = evaluate(eng, me, w)
         if result_of(eng) is not None:
             return v
-        r = route_score(eng, stages, me)
+        fl = ratchet[0] if ratchet else 0
+        r = route_score(eng, stages, me, fl)
         if partial:
-            r += partial_score(eng, stages, me, elsewhere)
+            r += partial_score(eng, stages, me, elsewhere, fl)
         if away:
             r -= away * away_penalty(eng, need, me)
         return v + mult * r
-    return value
+    if not lookahead_last:
+        return value
+    from .multiturn import make_lookahead_value_fn
+    from .turn import charge_only_policy
+    deep = make_lookahead_value_fn(value, lookahead_last, opp_policy or charge_only_policy, w)
+    last = len(stages) - 1
+
+    def gated(eng, me: int) -> float:
+        if result_of(eng) is None and max(reached(eng, stages, me), ratchet[0] if ratchet else 0) >= last:
+            return deep(eng, me)
+        return value(eng, me)
+    return gated
+
+
+def note_reached(eng, stages, ratchet: list, me: int = 0) -> None:
+    """ラチェットの更新: 真の局面で満たした段が今の下限より後ろなら上げる（下げない）。"""
+    ratchet[0] = max(ratchet[0], reached(eng, stages, me))
