@@ -60,7 +60,13 @@ candidates:
       - {id: dm36-015, name: 天雷王機ジョバンニX世, role: 回収}
       - {id: dm36-078, name: クルトの気合釣り, role: 山札の回復}
     setup: data/registry/setups/drill_lock.json
-    policy: ["charge:T001", "play:dm16-051", "mana:T001", "graveyard:dm16-051"]   # 試験札をチャージ→ドリルを唱える→自分のマナから試験札を墓地へ→ジョバンニでドリルを戻す
+    # 与えた方針（優先順）: マナ置き用の札をチャージ（光→火）→ ドリル・スコール → クルト（墓地のドリルを山札の上へ）→
+    # ドリルで自分のマナから捨てるのはマナ置き用（光→火）→ ジョバンニで墓地のクルト・ドリルを手札へ。コンボの札はチャージしない
+    policy: ["charge:dm02-038", "charge:dm01-042", "charge:dm01-072", "charge:dm01-077", "charge:dm01-075", "charge:dm01-033", "charge:dm01-097",
+             "play:dm16-051", "play:dm36-078", "graveyard:dm16-051:",
+             "mana:dm02-038", "mana:dm01-042", "mana:dm01-072", "mana:dm01-077", "mana:dm01-075", "mana:dm01-033", "mana:dm01-097",
+             "graveyard:dm36-078", "graveyard:dm16-051"]
+    policy_avoid: ["charge:dm16-051", "charge:dm36-015", "charge:dm36-078"]
+    opp_levels: [0, 1]
     procedure:
       - 毎ターン自分がドリル・スコールで相手マナを墓地へ、ジョバンニがターン終了時に回収、クルトの気合釣りで自分の山札を回復し、相手を山札切れへ（能動ロック）。
-    note: 成立局面にクルトは入れていない（§8.2 と同じ形）。クルト無しでも自分の山札残り1枚で先に相手が尽きる。クルトの役割は確かめていない

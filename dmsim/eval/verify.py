@@ -27,6 +27,7 @@ from .ruler_control import KNOWN_MIN, run_one
 
 MEASURABLE = ("loop", "lock")
 REPLAY_SEEDS = 2
+MAX_MACROS = 8      # 勝った局の手順を何本まで残すか（search.macro が1本ずつ手にする）
 
 
 def _commit() -> str | None:
@@ -95,6 +96,8 @@ def verify(rules, cand: Candidate, *, known_min: float = KNOWN_MIN) -> Evidence:
     ok = n > 0 and not errs and s2 / n >= known_min
     if not step("ruler", ok, f"段1 {s1}/{n}・段2 {s2}/{n}（基準 {known_min}）勝ち方 {vias}" + (f"、対局の失敗 seed {errs}" if errs else "")):
         return done(False)
+    measured["macros"] = [m for m in (_macro_steps(rules, ls, r["seed"], cand) for r in rows if r["stage2"] and r["win_turn"] == 1)
+                          if m is not None][:MAX_MACROS]
     again = [run_one(rules, ls, s, max_turn=cand.max_turn, budget=cand.budget) for s in cand.seeds[:REPLAY_SEEDS]]
     diff = [a["seed"] for a, b in zip(again, rows) if _key(a) != _key(b)]
     if not step("replay", not diff, f"seed {cand.seeds[:REPLAY_SEEDS]} を回し直して一致" if not diff else f"回し直すと結果が変わる seed {diff}"):
@@ -102,37 +105,92 @@ def verify(rules, cand: Candidate, *, known_min: float = KNOWN_MIN) -> Evidence:
     return done(True)
 
 
-def _lock_row(rules, spec: dict, seed: int, policy: list[str]) -> dict:
+def _macro_steps(rules, ls, seed: int, cand: Candidate) -> dict:
+    """勝った局の手順（自分の決定の (種類, 選んだ意味キー)）。最初のマナチャージは除き、その後の決定から勝つまで。入口のターン（自分の1ターン目）に勝った局だけ。
+    探索がこの手順を1手として使う（search.macro）。ruler_control.run_one と同じ局面・同じ設定で回し直して取る。"""
+    from ..engine import scenario
+    from ..search.game import play_game
+    from .lockcheck import lock_probe
+    from .ruler_control import _deck, _entry_spec, vary
+    deck = _deck(ls)
+    e = scenario.build(rules, _entry_spec(vary(rules, ls, seed), deck, seed), first_player=0)
+    res, eng = play_game(rules, deck, [], seed, first_player=0, max_turn=cand.max_turn, budget=le.measure_budget(ls, cand.budget),
+                         start=e, lock_judge=lock_probe)
+    if res.kill_turn != 1:
+        return None            # 手順は入口のターンの中だけ（ターンをまたぐ手順は1手にしない）
+    steps = [[x["kind"], list(x["keys"])] for x in eng.log if x["p"] == 0]
+    while steps and steps[0][0] == "charge":
+        steps.pop(0)
+    return {"seed": seed, "win_kind": res.kind, "n_steps": len(steps), "steps": steps}
+
+
+def _lock_spec(rules, spec: dict, seed: int, opp_level: int):
+    """成立局面の spec。deck（実デッキ）があれば手札の残り・盾・山札をシードで配る（resource._deal と同じ流儀）。
+    相手は search.opponent.resistance(opp_level) のデッキ。opp_mana 枚を相手のマナに置く。"""
+    from ..search.opponent import resistance
+    from . import resource as rs
+    model, odeck = resistance(opp_level)
+    if spec.get("deck"):
+        import yaml
+        deck = yaml.safe_load((REPO / spec["deck"]).read_text(encoding="utf-8"))["deck"]
+        out = rs._deal(spec, deck, seed)
+        out["p1"] = {"mana": odeck[-int(spec.get("opp_mana", 6)):]}
+        out["deck_size"] = len(odeck) - int(spec.get("opp_mana", 6))
+        out["filler"] = odeck[-1]
+    else:
+        out = {**{k: v for k, v in spec.items() if k not in ("note", "hand_fill", "opp_mana")}, "seed": seed}
+    return out, model
+
+
+def _lock_row(rules, spec: dict, seed: int, cand: Candidate, opp_level: int = 0) -> dict:
     from ..engine import scenario
     from .lockcheck import prefer_policy, run_lock_to_end
     from .ruler_control import start_key
-    e = scenario.build(rules, {**spec, "seed": seed}, first_player=0)
-    run = run_lock_to_end(e, 0, my_policy=prefer_policy(*policy))
-    return {"seed": seed, "start": start_key(e), "stage1": False, "stage2": run.won, "via": "lock" if run.won else None,
-            "win_turn": run.win_turn, "error": None, "own_deck_left": run.own_deck_left, "broken": run.broken}
+    sp, model = _lock_spec(rules, spec, seed, opp_level)
+    e = scenario.build(rules, sp, first_player=0)
+    if model is not None:
+        model.setup(e)
+    run = run_lock_to_end(e, 0, my_policy=prefer_policy(*cand.policy, avoid=tuple(cand.policy_avoid)),
+                          opp_policy=model.policy if model is not None else None)
+    return {"seed": seed, "opp_level": opp_level, "start": start_key(e), "stage1": False, "stage2": run.won, "via": "lock" if run.won else None,
+            "win_turn": run.win_turn, "error": None, "own_deck_left": run.own_deck_left, "broken": run.broken,
+            "broken_turn": run.broken_turn, "opp_mana_end": len(e.zlist("mana", 1))}
 
 
 def _active_lock(rules, cand: Candidate, step, measured: dict, known_min: float) -> bool:
+    """能動ロック。相手の段階 cand.opp_levels のそれぞれで、勝てた割合が known_min 以上なら通す（全段階で）。"""
     import json
     if not cand.setup or not cand.policy:
         return step("entry", False, "能動ロックには setup（成立局面）と policy（与える方針）が要る")
     try:
-        spec = {k: v for k, v in json.loads((REPO / cand.setup).read_text(encoding="utf-8")).items() if k != "note"}
+        spec = json.loads((REPO / cand.setup).read_text(encoding="utf-8"))
     except Exception as ex:   # noqa: BLE001
         return step("entry", False, f"成立局面を読めない: {ex}")
-    step("entry", True, f"{cand.setup}、与えた方針 {cand.policy}")
-    rows = [_lock_row(rules, spec, s, cand.policy) for s in cand.seeds]
-    n, won = len(rows), sum(r["stage2"] for r in rows)
-    starts = len({r["start"] for r in rows})
-    measured.update({"seeds": cand.seeds, "lock_mode": "active", "policy": cand.policy, "stage1": "対象外（ロックは段2の経路）",
-                     "stage2": f"{won}/{n}", "stage2_rate": round(won / n, 3) if n else 0.0, "threshold": known_min,
-                     "distinct_starts": starts, "rows": [{k: r[k] for k in ("seed", "start", "stage2", "win_turn", "own_deck_left", "broken")} for r in rows]})
-    if not step("lock", n > 0 and won / n >= known_min,
-                f"相手の山札切れまで勝ち {won}/{n}（基準 {known_min}）、開始局面 {starts} 種、勝ったターン {sorted({r['win_turn'] for r in rows if r['stage2']})}、"
-                f"自分の山札残り {sorted({r['own_deck_left'] for r in rows})}"):
+    step("entry", True, f"{cand.setup}、与えた方針 {cand.policy}（除く {cand.policy_avoid}）")
+    measured.update({"seeds": cand.seeds, "lock_mode": "active", "policy": cand.policy, "policy_avoid": cand.policy_avoid,
+                     "stage1": "対象外（ロックは段2の経路）", "threshold": known_min, "by_opp_level": {}})
+    ok_all, rows_all = True, []
+    for lvl in cand.opp_levels:
+        rows = [_lock_row(rules, spec, s, cand, lvl) for s in cand.seeds]
+        rows_all += rows
+        n, won = len(rows), sum(r["stage2"] for r in rows)
+        why: dict[str, int] = {}
+        for r in rows:
+            if r["broken"]:
+                k = r["broken"].split("（")[0].split(":")[0]
+                why[k] = why.get(k, 0) + 1
+        measured["by_opp_level"][lvl] = {"stage2": f"{won}/{n}", "stage2_rate": round(won / n, 3) if n else 0.0,
+                                         "distinct_starts": len({r["start"] for r in rows}), "broken": why,
+                                         "own_deck_left": sorted({r["own_deck_left"] for r in rows})}
+        ok_all &= n > 0 and won / n >= known_min
+    measured["rows"] = rows_all
+    lv = measured["by_opp_level"]
+    measured["stage2"] = " / ".join(f"段階{k} {v['stage2']}" for k, v in lv.items())
+    if not step("lock", ok_all, f"相手の山札切れまで勝ち {measured['stage2']}（基準 {known_min}）。破れた理由 "
+                + "、".join(f"段階{k} {v['broken']}" for k, v in lv.items())):
         return False
-    again = [_lock_row(rules, spec, s, cand.policy) for s in cand.seeds[:REPLAY_SEEDS]]
-    diff = [a["seed"] for a, b in zip(again, rows) if _key(a) != _key(b)]
+    again = [_lock_row(rules, spec, s, cand, cand.opp_levels[0]) for s in cand.seeds[:REPLAY_SEEDS]]
+    diff = [a["seed"] for a, b in zip(again, rows_all) if _key(a) != _key(b)]
     return step("replay", not diff, f"seed {cand.seeds[:REPLAY_SEEDS]} を回し直して一致" if not diff else f"回し直すと結果が変わる seed {diff}")
 
 
