@@ -124,8 +124,8 @@ entries:
       via: loop
       win_turn: 1
   version:
-    fingerprint: aae8dd13d963eaed
-    commit: af62f90
+    fingerprint: 3ad85ba393606d57
+    commit: 9b7cb8e
     measured_at: '2026-11-13'
 - id: drill_lock
   name: ドリルスコール＋ジョバンニ＋クルト
@@ -254,8 +254,133 @@ entries:
       own_deck_left: 1
       broken: null
   version:
-    fingerprint: aae8dd13d963eaed
-    commit: af62f90
+    fingerprint: 3ad85ba393606d57
+    commit: 9b7cb8e
+    measured_at: '2026-11-13'
+- id: saga
+  name: 絶望神サガの蘇生ループ
+  split: tuning
+  types:
+  - loop
+  core:
+  - id: dm22ex2-021
+    name: 絶望神サガ
+    role: エンジン（蘇生）
+  - id: dmrp03-s03
+    name: 水上第九院 シャコガイル
+    role: 勝ち手段
+  - id: dm22ex1-007
+    name: 超神星DOOM・ドラゲリオン
+    role: 入口への経路
+  win: effect
+  entry: data/loops/entry/saga.json
+  procedure:
+  - 手札のサガを3マナで出し、墓地のサガとの蘇生で1周1枚引く。山札の最後の1枚を引いてシャコガイルの効果で勝つ。
+  lock_mode: passive
+  seeds:
+  - 1
+  - 2
+  - 3
+  - 4
+  - 5
+  - 6
+  - 7
+  - 8
+  max_turn: 2
+  budget: null
+  setup: null
+  policy: []
+  route_stages: null
+  note: ''
+  digest: 7ae7f3d6a556985b
+  checks:
+  - name: cards
+    ok: true
+    detail: 中核の札がカードデータにある
+  - name: type
+    ok: true
+    detail: loop として段1・段2で測る
+  - name: entry
+    ok: true
+    detail: data/loops/entry/saga.json（サガ蘇生ループ（入口））
+  - name: ruler
+    ok: true
+    detail: '段1 8/8・段2 8/8（基準 0.8）勝ち方 {''loop'': 8}'
+  - name: replay
+    ok: true
+    detail: seed [1, 2] を回し直して一致
+  measured:
+    seeds:
+    - 1
+    - 2
+    - 3
+    - 4
+    - 5
+    - 6
+    - 7
+    - 8
+    max_turn: 2
+    budget: 1500
+    stage1: 8/8
+    stage2: 8/8
+    stage2_rate: 1.0
+    via:
+      loop: 8
+    win_turns:
+    - 1
+    threshold: 0.8
+    rows:
+    - seed: 1
+      start: b453e2406177
+      stage1: true
+      stage2: true
+      via: loop
+      win_turn: 1
+    - seed: 2
+      start: 414026f0ea33
+      stage1: true
+      stage2: true
+      via: loop
+      win_turn: 1
+    - seed: 3
+      start: 6710e6cde9ed
+      stage1: true
+      stage2: true
+      via: loop
+      win_turn: 1
+    - seed: 4
+      start: ac7d4172fdac
+      stage1: true
+      stage2: true
+      via: loop
+      win_turn: 1
+    - seed: 5
+      start: 073a28cd8fe8
+      stage1: true
+      stage2: true
+      via: loop
+      win_turn: 1
+    - seed: 6
+      start: b91960057490
+      stage1: true
+      stage2: true
+      via: loop
+      win_turn: 1
+    - seed: 7
+      start: 5bf640fbf3b4
+      stage1: true
+      stage2: true
+      via: loop
+      win_turn: 1
+    - seed: 8
+      start: f5d2930d2ea5
+      stage1: true
+      stage2: true
+      via: loop
+      win_turn: 1
+  version:
+    fingerprint: 3ad85ba393606d57
+    commit: 9b7cb8e
     measured_at: '2026-11-13'
 rejected:
 - id: akashic_hd2
@@ -378,8 +503,8 @@ rejected:
       via: loop
       win_turn: 1
   version:
-    fingerprint: aae8dd13d963eaed
-    commit: af62f90
+    fingerprint: 3ad85ba393606d57
+    commit: 9b7cb8e
     measured_at: '2026-11-13'
   failed_at: ruler
 - id: knight_dmc
@@ -427,7 +552,7 @@ rejected:
     detail: data/registry/setups/knight_dmc.json
   - name: resource
     ok: false
-    detail: 効率 adv 中央値 1.8（1.2〜2.4）・得た量中央値 9.0。合格線が未定のため登録しない（docs/combo-ruler-design.md §15）
+    detail: 効率 adv 中央値 1.8（1.2〜2.4）・得た量中央値 9.0。合格線が未定のため登録しない（docs/combo-ruler-design.md §17）
   measured:
     seeds:
     - 1
@@ -526,132 +651,7 @@ rejected:
       adv: 1.2
       error: null
   version:
-    fingerprint: aae8dd13d963eaed
-    commit: af62f90
+    fingerprint: 3ad85ba393606d57
+    commit: 9b7cb8e
     measured_at: '2026-11-13'
   failed_at: resource
-- id: saga
-  name: 絶望神サガの蘇生ループ
-  split: tuning
-  types:
-  - loop
-  core:
-  - id: dm22ex2-021
-    name: 絶望神サガ
-    role: エンジン（蘇生）
-  - id: dmrp03-s03
-    name: 水上第九院 シャコガイル
-    role: 勝ち手段
-  - id: dm22ex1-007
-    name: 超神星DOOM・ドラゲリオン
-    role: 入口への経路
-  win: effect
-  entry: data/loops/entry/saga.json
-  procedure:
-  - 手札のサガを3マナで出し、墓地のサガとの蘇生で1周1枚引く。山札の最後の1枚を引いてシャコガイルの効果で勝つ。
-  lock_mode: passive
-  seeds:
-  - 1
-  - 2
-  - 3
-  - 4
-  - 5
-  - 6
-  - 7
-  - 8
-  max_turn: 2
-  budget: null
-  setup: null
-  policy: []
-  route_stages: null
-  note: ''
-  digest: 7ae7f3d6a556985b
-  checks:
-  - name: cards
-    ok: true
-    detail: 中核の札がカードデータにある
-  - name: type
-    ok: true
-    detail: loop として段1・段2で測る
-  - name: entry
-    ok: true
-    detail: data/loops/entry/saga.json（サガ蘇生ループ（入口））
-  - name: ruler
-    ok: false
-    detail: '段1 6/8・段2 6/8（基準 0.8）勝ち方 {''loop'': 6, ''None'': 1, ''beat'': 1}'
-  measured:
-    seeds:
-    - 1
-    - 2
-    - 3
-    - 4
-    - 5
-    - 6
-    - 7
-    - 8
-    max_turn: 2
-    budget: 200
-    stage1: 6/8
-    stage2: 6/8
-    stage2_rate: 0.75
-    via:
-      loop: 6
-      None: 1
-      beat: 1
-    win_turns:
-    - 1
-    threshold: 0.8
-    rows:
-    - seed: 1
-      start: b453e2406177
-      stage1: true
-      stage2: true
-      via: loop
-      win_turn: 1
-    - seed: 2
-      start: 414026f0ea33
-      stage1: true
-      stage2: true
-      via: loop
-      win_turn: 1
-    - seed: 3
-      start: 6710e6cde9ed
-      stage1: false
-      stage2: false
-      via: null
-      win_turn: null
-    - seed: 4
-      start: ac7d4172fdac
-      stage1: true
-      stage2: true
-      via: loop
-      win_turn: 1
-    - seed: 5
-      start: 073a28cd8fe8
-      stage1: true
-      stage2: true
-      via: loop
-      win_turn: 1
-    - seed: 6
-      start: b91960057490
-      stage1: false
-      stage2: false
-      via: beat
-      win_turn: 2
-    - seed: 7
-      start: 5bf640fbf3b4
-      stage1: true
-      stage2: true
-      via: loop
-      win_turn: 1
-    - seed: 8
-      start: f5d2930d2ea5
-      stage1: true
-      stage2: true
-      via: loop
-      win_turn: 1
-  version:
-    fingerprint: aae8dd13d963eaed
-    commit: af62f90
-    measured_at: '2026-11-13'
-  failed_at: ruler
