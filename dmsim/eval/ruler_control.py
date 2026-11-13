@@ -6,12 +6,14 @@
 入口局面のばらつき（vary）: 入口 M に要る札（LoopSpec.minimal を満たす最小の札）と場・墓地・マナはそのまま。
 手札の残り（M に要らない札）と盾は、山札の残りと混ぜてシードで配り直す。山札の並びもシードで変わる。相手の山札の枚数もシードで ±OPP_SPREAD 変える。
 
-ランダムな対照組（make_randoms）: ループの部品（入口 M が名前で要求する札。loop_parts）を1種類選び、その全コピー（デッキと局面の両方）を
-カードプールの別の札1種類に置き換える。置き換え先は同じ種別（クリーチャー／呪文）・コスト差 1 以内・文明を1つ以上共有・進化でない・既知コンボの中核でない札。
+ランダムな対照組（make_randoms）: 中核の組（loop_entry.core_groups。「どれか1組でよい」代わりを含む、§14）を1つ選び、
+その組に出てくる札（代わりの札も含む）の全コピー（デッキと局面の両方）を、札ごとにカードプールの別の札1種類に置き換える。置き換え先は同じ種別（クリーチャー／呪文）・コスト差 1 以内・文明を1つ以上共有・進化でない・既知コンボの中核でない札。
 マナ・盾に置かれただけの中核（コダマ・フィオナ等、入口へ届くための札）は入口局面では働かないので差し替えない（差し替えても結果が変わらず対照にならない。実測で確認）。
 1種類だけ差し替えるのは、全部差し替えると自明に 0 になり物差しの区別の力を確かめられないため（1部品欠けた組でもループ勝ちを数えるなら、物差しが緩い）。
 
 合否（judge_control）: 既知コンボごとの段2到達率 >= KNOWN_MIN、ランダム組の段2到達率の中央値 <= RANDOM_MAX。
+段2 >= EXPLAIN_MIN のランダム組は要説明（EXPLAIN に a〜d の説明を記録するまで保留。a/b は対照から外す、c/d は不合格）。
+取り除き試験（removal_cases / judge_removal）: 中核の札1種類を全部抜いて段2が落ちない札を見つけ、定義と食い違えば理由を付けて知らせる。
 自己点検（張り付き検知に相当）: 既知・ランダムの全行が同じ値／ランダム組の最大値が既知コンボの最小値以上（区別がない）／
 入口局面のばらつきが効いていない（既知コンボの開始局面がシード間ですべて同じ）／対局の失敗が混ざる、を理由付きで不合格にする。
 """
@@ -31,12 +33,16 @@ from ..base.store import REPO
 from . import loop_entry as le
 from .ruler import judge
 
-KNOWN = ("saga", "akashic")          # ループ型の陽性対照（騎士+DMC はリソース型、ドリル+ジョバンニは検証専用）
+KNOWN = ("saga", "akashic", "akashic_hd2")   # ループ型の陽性対照（騎士+DMC はリソース型、ドリル+ジョバンニは検証専用）。akashic_hd2 は既知の別版（§13）
 HOLDOUT = ()                         # 参考値として別欄に出すもの（入口局面ができたら足す。調整には使わない）
 KNOWN_MIN = 0.8
 RANDOM_MAX = 0.05
 OPP_SPREAD = 3
+EXPLAIN_MIN = 0.25                   # ランダム組の段2がこれ以上なら「要説明」（説明が記録されるまで合格の印を保留）
+REMOVAL_KEEP = 0.25                  # 取り除き試験: 抜いても段2がこれ以上なら「落ちない」
+LABELS = {"a": "本物の別ループ", "b": "中核でない札だった", "c": "物差しの不具合", "d": "データやエンジンの誤り"}
 STAMP = REPO / "data" / "eval" / "ruler_control_stamp.json"
+EXPLAIN = Path("data/eval/ruler_control_explain.yaml")
 COMBOS = Path("data/known_combos/combos.yaml")
 
 
@@ -112,9 +118,10 @@ def start_key(eng) -> str:
 
 def candidates(rules, card_id: str, banned: set[str]) -> list[str]:
     d = rules.cards[card_id]
+    names = {rules.cards[b].name for b in banned if b in rules.cards} | {d.name}   # 再録（同名で別ID）も中核と同じ札として除く
     out = []
     for i, c in rules.cards.items():
-        if i in banned or i == card_id or i.startswith("T"):
+        if i in banned or i == card_id or i.startswith("T") or c.name in names:
             continue
         if bool(c.is_creature) != bool(d.is_creature) or bool(c.is_spell) != bool(d.is_spell):
             continue
@@ -137,24 +144,94 @@ def swap(ls, deck: list[str], old: str, new: str):
 
 
 def loop_parts(ls) -> list[str]:
-    """ループの部品 = 入口 M が名前で要求する札。マナ・盾・墓地に置かれただけの中核（入口へ届くための札）は差し替えない。"""
-    return sorted({p.match["name"] for p in ls.minimal if p.owner == 0 and "name" in p.match})
+    """ループの部品 = 中核の組に出てくる札（代わりの札も含む。loop_entry.core_groups）。"""
+    return le.core_ids(ls)
+
+
+def swap_many(ls, deck: list[str], pairs: list[tuple[str, str]]):
+    for old, new in pairs:
+        ls, deck = swap(ls, deck, old, new)
+    return ls, deck
 
 
 def make_randoms(rules, name: str, per_core: int, seed: int = 0) -> list[dict]:
-    """中核1種類を差し替えたランダム組。{"combo", "old", "new", "spec", "deck"}。"""
+    """中核の組1つを、代わりの札も含めて組ごと差し替えたランダム組。{"combo", "group", "old", "new", "pairs", "spec", "deck"}。
+    old / new は差し替えた札を「+」でつないだ文字列（代わりのない組なら1札）。"""
     ls = le.load(name)
     deck = le.deck_of(ls)
-    cores = core_ids()
-    on_board = loop_parts(ls) or sorted({i for ids in ls.source["board"]["p0"].values() for i in ids if i in cores})
+    cores = core_ids() | set(le.core_ids(ls))
     rng = random.Random(f"{name}:{seed}")
     out = []
-    for old in on_board:
-        cand = candidates(rules, old, cores)
-        for new in rng.sample(cand, min(per_core, len(cand))):
-            ls2, d2 = swap(ls, deck, old, new)
-            out.append({"combo": name, "old": old, "new": new, "spec": ls2, "deck": d2})
+    groups = sorted(le.core_groups(ls), key=lambda g: sorted({i for o in g["any"] for i in o})[0])
+    for g in groups:
+        olds = sorted({i for o in g["any"] for i in o})
+        cands = {o: candidates(rules, o, cores) for o in olds}
+        n = min([per_core] + [len(c) for c in cands.values()])
+        picks = {o: rng.sample(cands[o], n) for o in olds}
+        for k in range(n):
+            pairs = [(o, picks[o][k]) for o in olds]
+            ls2, d2 = swap_many(ls, deck, pairs)
+            out.append({"combo": name, "group": g["role"], "old": "+".join(o for o, _ in pairs),
+                        "new": "+".join(nw for _, nw in pairs), "pairs": pairs, "spec": ls2, "deck": d2})
     return out
+
+
+def removal_cases(rules, name: str, seed: int = 0) -> list[dict]:
+    """取り除き試験の組: 中核の札1種類の全コピーを、中核でない札1種類に置き換える（代わりの札は残す）。
+    expected_drop は定義上「どの代わりを選んでも要る」札（抜くと段2が落ちるはず）。"""
+    ls = le.load(name)
+    deck = le.deck_of(ls)
+    cores = core_ids() | set(le.core_ids(ls))
+    req = set(le.required_ids(ls))
+    rng = random.Random(f"removal:{name}:{seed}")
+    out = []
+    for old in le.core_ids(ls):
+        cand = candidates(rules, old, cores)
+        if not cand:
+            continue
+        new = rng.choice(cand)
+        ls2, d2 = swap(ls, deck, old, new)
+        out.append({"combo": name, "old": old, "new": new, "expected_drop": old in req, "spec": ls2, "deck": d2})
+    return out
+
+
+def judge_removal(cases: list[dict], keep: float = REMOVAL_KEEP) -> list[dict]:
+    """取り除き試験の判定。cases は removal_cases に rows を足したもの。定義と食い違う札に理由を付ける（定義は書き換えない）。"""
+    out = []
+    for c in cases:
+        r = rate(c["rows"])
+        dropped = r < keep
+        why = None
+        if c["expected_drop"] and not dropped:
+            why = f"定義では代わりのない中核だが、抜いても段2 {r:.2f}（中核でないか、定義にない代わりがある）"
+        elif not c["expected_drop"] and dropped:
+            why = f"定義では代わりがあるが、抜くと段2 {r:.2f} に落ちる（代わりの組が入口から届いていない）"
+        out.append({"combo": c["combo"], "old": c["old"], "new": c["new"], "rate": r, "expected_drop": c["expected_drop"],
+                    "dropped": dropped, "mismatch": why})
+    return out
+
+
+def load_explanations(path: Path = EXPLAIN) -> list[dict]:
+    try:
+        d = yaml.safe_load(Path(path).read_text(encoding="utf-8")) or {}
+    except FileNotFoundError:
+        return []
+    return d.get("explanations", [])
+
+
+def explanation_for(row: dict, expl: list[dict]) -> dict | None:
+    """要説明の組（combo, old, new）に当たる説明。説明の old は差し替えた札の集合、new は省略（どの札へでも）か集合。"""
+    old = set(row["old"].split("+"))
+    new = set(row["new"].split("+"))
+    for e in expl:
+        if e.get("combo") != row["combo"] or set(e.get("old", [])) != old:
+            continue
+        if e.get("new") and set(e["new"]) != new:
+            continue
+        if e.get("label") not in LABELS:
+            continue
+        return e
+    return None
 
 
 def _deck(ls) -> list[str]:
@@ -195,10 +272,27 @@ def rate(rows: list[dict]) -> float:
 
 
 def judge_control(known: dict[str, list[dict]], randoms: list[dict], known_min: float = KNOWN_MIN,
-                  random_max: float = RANDOM_MAX) -> tuple[bool, str, dict]:
-    """known: コンボ名→各シードの行。randoms: {"combo","old","new","rows"}。合否・理由・集計を返す。"""
-    summ = {"known": {k: rate(v) for k, v in known.items()},
-            "random": [{"combo": r["combo"], "old": r["old"], "new": r["new"], "rate": rate(r["rows"])} for r in randoms]}
+                  random_max: float = RANDOM_MAX, explanations: list[dict] | None = None,
+                  explain_min: float = EXPLAIN_MIN) -> tuple[bool, str, dict]:
+    """known: コンボ名→各シードの行。randoms: {"combo","old","new","rows"}。合否・理由・集計を返す。
+    段2 >= explain_min のランダム組は「要説明」。説明（explanations、既定は EXPLAIN のファイル）が a/b なら対照から外して記録、
+    c/d なら不合格、説明がなければ合格の印を保留（passed=False、reason は「保留」で始まる）。"""
+    expl = load_explanations() if explanations is None else explanations
+    allr = [{"combo": r["combo"], "old": r["old"], "new": r["new"], "rate": rate(r["rows"])} for r in randoms]
+    summ = {"known": {k: rate(v) for k, v in known.items()}, "random": [], "explained": [], "pending": [], "bad": []}
+    for x in allr:
+        if x["rate"] < explain_min:
+            summ["random"].append(x)
+            continue
+        e = explanation_for(x, expl)
+        if e is None:
+            summ["pending"].append(x)
+            summ["random"].append(x)
+        elif e["label"] in ("a", "b"):
+            summ["explained"].append({**x, "label": e["label"], "note": e.get("note", "")})
+        else:
+            summ["bad"].append({**x, "label": e["label"], "note": e.get("note", "")})
+            summ["random"].append(x)
     rr = [x["rate"] for x in summ["random"]]
     summ["random_median"] = statistics.median(rr) if rr else None
     summ["random_max"] = max(rr) if rr else None
@@ -227,6 +321,12 @@ def judge_control(known: dict[str, list[dict]], randoms: list[dict], known_min: 
         return False, f"ランダム組の中央値 {summ['random_median']:.2f} が基準 {random_max} を超える（物差しが緩い）", summ
     if errs:
         return False, f"対局の失敗が {errs} 局ある", summ
+    if summ["bad"]:
+        return False, "要説明の組が物差しの不具合・データの誤りと判定済み: " + ", ".join(
+            f"{x['combo']} {x['old']}→{x['new']}（{x['label']} {LABELS[x['label']]}）" for x in summ["bad"]), summ
+    if summ["pending"]:
+        return False, f"保留: 段2 {explain_min} 以上のランダム組 {len(summ['pending'])} 組に説明がない（{EXPLAIN} に記録する）: " + ", ".join(
+            f"{x['combo']} {x['old']}→{x['new']} {x['rate']:.2f}" for x in summ["pending"]), summ
     return True, "ok", summ
 
 

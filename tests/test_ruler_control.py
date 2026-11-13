@@ -75,3 +75,43 @@ def test_randoms_swap_one_core(rules):
         assert abs((a.cost or 0) - (b.cost or 0)) <= 1 and set(a.civs) & set(b.civs)
         spec = rc._entry_spec(g["spec"], g["deck"], 1)
         assert sum(len(v) for v in spec["p0"].values()) == 40
+
+
+def test_core_alternatives_and_group_swap(rules):
+    ls = le.load("akashic")
+    alts = le.core_alternatives(ls)
+    assert {"dm23ex2-009": 1, "dm23bd7-035": 2, "dmrp12-s01": 1, "dm24ex1-038": 1} in alts
+    assert {"dm23ex2-009": 1, "dm23bd7-035": 2, "dmrp07-009": 1} in alts
+    assert le.required_ids(ls) == ["dm23bd7-035", "dm23ex2-009"]
+    gs = rc.make_randoms(rules, "akashic", per_core=1)
+    win = [g for g in gs if g["group"] == "勝ち手段"]
+    assert win and set(win[0]["old"].split("+")) == {"dmrp12-s01", "dm24ex1-038", "dmrp07-009"}
+    for o in ("dmrp12-s01", "dm24ex1-038", "dmrp07-009"):
+        assert o not in win[0]["deck"]
+    cs = rc.removal_cases(rules, "akashic")
+    assert {c["old"]: c["expected_drop"] for c in cs}["dmrp07-009"] is False
+    assert {c["old"]: c["expected_drop"] for c in cs}["dm23ex2-009"] is True
+
+
+def test_explanations_hold_and_exclude():
+    known = {"a": _rows([1] * 8)}
+    low = [{"combo": "a", "old": "x", "new": "y", "rows": _rows([0] * 8)} for _ in range(5)]
+    hi = {"combo": "a", "old": "p+q", "new": "r+s", "rows": _rows([1, 0, 0, 0])}
+    ok, why, s = rc.judge_control(known, low + [hi], explanations=[])
+    assert not ok and why.startswith("保留") and s["pending"]
+    ok, why, s = rc.judge_control(known, low + [hi], explanations=[{"combo": "a", "old": ["q", "p"], "label": "a"}])
+    assert ok and s["explained"] and len(s["random"]) == 5
+    ok, why, s = rc.judge_control(known, low + [hi], explanations=[{"combo": "a", "old": ["p", "q"], "label": "c"}])
+    assert not ok and "不具合" in why
+
+
+def test_judge_removal_reports_mismatch():
+    cs = [{"combo": "a", "old": "x", "new": "y", "expected_drop": True, "rows": _rows([1] * 4)},
+          {"combo": "a", "old": "z", "new": "y", "expected_drop": False, "rows": _rows([1] * 4)}]
+    r = rc.judge_removal(cs)
+    assert r[0]["mismatch"] and r[1]["mismatch"] is None
+
+
+def test_candidates_exclude_reprints(rules):
+    cand = rc.candidates(rules, "dm23ex2-009", rc.core_ids())
+    assert "dm25ex2-cho005" not in cand and all(rules.cards[c].name != rules.cards["dm23ex2-009"].name for c in cand)

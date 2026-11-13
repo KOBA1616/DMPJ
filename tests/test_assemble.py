@@ -53,3 +53,12 @@ def test_run_one_matches_fair_game(rules):
     r = A.run_one(rules, ls, 3, max_turn=2, budget=40, n_det=2)
     g, _ = fair_game(rules, L.deck_of(ls), ["T001"] * 40, 3, 1, 2, 40, n_det=2)
     assert (r["res"].kill_turn, r["res"].kind, r["res"].decisions) == (g.kill_turn, g.kind, g.decisions)
+
+
+def test_core_alternatives_any_ceiling():
+    ls = L.load("akashic")
+    alts = A.core_alts(ls)
+    deck = L.deck_of(ls)
+    p = A.any_ceiling(deck, alts, 4)
+    from dmsim.eval.reach import cards_ceiling
+    assert max(cards_ceiling(deck, a, 4) for a in alts) <= p + 1e-12 <= sum(cards_ceiling(deck, a, 4) for a in alts) + 1e-12
