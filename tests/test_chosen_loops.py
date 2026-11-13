@@ -27,9 +27,26 @@ def _entry(rules, name, sd):
 
 
 @pytest.mark.parametrize("sd", [0, 1])
+def test_saga_entry_records_finite_loop_pattern_when_off(rules, sd, monkeypatch):
+    import dmsim.search.turn as T
+    monkeypatch.setattr(T, "DRAW_DISCARD", False)
+    res = _entry(rules, "saga", sd)
+    lps = [lp for lp in res.loops if lp["source"] == "pattern"]
+    assert res.kind == "effect" and lps and lps[0]["laps"] >= 3
+
+
+@pytest.mark.parametrize("sd", [0, 1])
 def test_saga_entry_records_finite_loop(rules, sd):
     res = _entry(rules, "saga", sd)
     assert res.kind == "effect"
+    # 引いて捨てる型の証明書（案 A）が入ってからは、探索中の証明書（wild の burn）として記録される。
+    # 切った設定（draw_discard=False）では従来どおり事後検出（pattern）になる
+    cert = [lp for lp in res.loops if lp["source"] == "certificate"]
+    if cert:
+        lp = cert[0]
+        assert lp["kind"] == "burn" and lp["wild"] and lp["verified"] and lp["stocked"] >= 1
+        assert lp["delta"].get("deck:0", 0) < 0
+        return
     lps = [lp for lp in res.loops if lp["source"] == "pattern"]
     assert lps, res.loops
     lp = lps[0]
