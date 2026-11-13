@@ -78,6 +78,10 @@ def _pinned_hand(rules, ls, hand: list[str]) -> list[str]:
             left.remove(i)
             keep.append(i)
             k += 1
+    for i in ls.source.get("pin_hand", []):   # 取り除き試験で置いた代わりの札（vary で動かさない）
+        if i in left:
+            left.remove(i)
+            keep.append(i)
     return keep
 
 
@@ -191,8 +195,42 @@ def removal_cases(rules, name: str, seed: int = 0) -> list[dict]:
             continue
         new = rng.choice(cand)
         ls2, d2 = swap(ls, deck, old, new)
+        if old not in req:
+            ls2, d2 = _place_alternative(rules, ls, ls2, d2, old, new)
         out.append({"combo": name, "old": old, "new": new, "expected_drop": old in req, "spec": ls2, "deck": d2})
     return out
+
+
+def _place_alternative(rules, ls, ls2, d2: list[str], old: str, new: str):
+    """代わりのある札を抜いたとき、入口局面のその札の位置に、old を含まない代わりの組を置く。
+    入口局面は「中核が揃った」局面なので、代わりがあるという定義を確かめるには代わりの組も揃えて置く必要がある
+    （置かないと、山札から2ターン以内に引けるかどうかを測ってしまう。§17）。足りない分は手札の中核でない札と入れ替える。"""
+    alt = next((o for g in le.core_groups(ls) if any(old in o for o in g["any"])
+                for o in g["any"] if old not in o), None)
+    if not alt:
+        return ls2, d2
+    b = json.loads(json.dumps(ls2.source["board"]))
+    p0 = b["p0"]
+    placed = Counter(i for ids in p0.values() for i in ids)
+    need = [i for i, k in alt.items() for _ in range(max(0, k - placed[i]))]
+    deck = list(d2)
+    cores = set(le.core_ids(ls))
+    pins = []
+    for i in need:
+        if i not in deck:
+            return ls2, d2                 # デッキに代わりの札が無い（置けない）
+        z = next((z for z, ids in p0.items() if new in ids), None)
+        if z is not None:
+            p0[z][p0[z].index(new)] = i    # 抜いた札の位置へ
+        else:
+            hand = p0.setdefault("hand", [])
+            j = next((j for j in range(len(hand) - 1, -1, -1) if hand[j] not in cores and hand[j] != new), None)
+            if j is None:
+                return ls2, d2
+            hand[j] = i
+        pins.append(i)
+    ls3 = replace(ls2, source=dict(ls2.source, board=b, pin_hand=[i for i in pins if i in p0.get("hand", [])]))
+    return ls3, deck
 
 
 def judge_removal(cases: list[dict], keep: float = REMOVAL_KEEP) -> list[dict]:
