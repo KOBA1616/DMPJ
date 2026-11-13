@@ -39,7 +39,8 @@ def enable(on: bool = True) -> None:
 
 
 def enabled() -> bool:
-    return _ENABLED if _ENABLED is not None else os.environ.get("DMSIM_REGISTRY_MACRO") == "1"
+    # 既定有効（2026-11-13、設計書 §19）。DMSIM_REGISTRY_MACRO=0 で切る
+    return _ENABLED if _ENABLED is not None else os.environ.get("DMSIM_REGISTRY_MACRO", "1") != "0"
 
 
 def load(path=registry.PATH) -> list[Macro]:
