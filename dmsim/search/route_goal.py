@@ -83,11 +83,72 @@ def route_score(eng, stages, me: int = 0) -> float:
     return sum(st.weight for st in stages[:k])
 
 
-def make_value_fn(stages, weights: Weights | None = None):
-    """evaluate + 経路の点。FairTurnSearch / TurnSearch の value_fn に渡す。勝敗が決まった局面には足さない。"""
+LIVE_ZONES = ("hand", "graveyard", "bz")   # 名前の札が「まだ経路で使える」とみなす公開・手元のゾーン（部分点用）
+AWAY_ZONES = ("mana",)                     # 経路の段がそのゾーンを指していなければ「使えない場所」とみなす（減点用）
+
+
+def _frac(eng, p: dict, me: int, elsewhere: float) -> float:
+    """述語 p の進み具合 0..1。>= の枚数条件は count/n。名前の札が指すゾーンに無くても使える場所にあれば elsewhere。"""
+    if p.get("op", ">=") != ">=":
+        return 1.0 if holds(eng, p, me) else 0.0
+    n = max(1, p.get("n", 1))
+    f = min(count(eng, p, me) / n, 1.0)
+    if f < 1.0 and "name" in p.get("match", {}) and elsewhere > 0:
+        zones = set((p["zone"],) if p.get("zone") else tuple(p.get("zones") or ()))
+        other = {**p, "zone": None, "zones": [z for z in LIVE_ZONES if z not in zones]}
+        if other["zones"] and count(eng, other, me) > 0:
+            f = max(f, elsewhere)
+    return f
+
+
+def partial_score(eng, stages, me: int = 0, elsewhere: float = 0.25) -> float:
+    """次の段（満たした最も後ろの段の次）の進み具合 × その段の weight。"""
+    k = reached(eng, stages, me)
+    if k >= len(stages):
+        return 0.0
+    preds = stages[k].preds
+    return stages[k].weight * sum(_frac(eng, p, me, elsewhere) for p in preds) / len(preds)
+
+
+def needed_cards(stages) -> dict[str, tuple[int, set]]:
+    """経路の段から導く {札の名前: (必要枚数の最大, その札を指すゾーンの集合)}。"""
+    out: dict[str, tuple[int, set]] = {}
+    for st in stages:
+        for p in st.preds:
+            nm = p.get("match", {}).get("name")
+            if nm is None or p.get("owner", 0) != 0:
+                continue
+            zones = set((p["zone"],) if p.get("zone") else tuple(p.get("zones") or ()))
+            n0, z0 = out.get(nm, (0, set()))
+            out[nm] = (max(n0, p.get("n", 1)), z0 | zones)
+    return out
+
+
+def away_penalty(eng, need: dict, me: int = 0) -> float:
+    """経路に要る札が、経路の段が指さないゾーン（マナ）に置かれた枚数（必要枚数まで）。"""
+    tot = 0
+    for nm, (n, zones) in need.items():
+        for z in AWAY_ZONES:
+            if z not in zones:
+                tot += min(count(eng, {"zone": z, "match": {"name": nm}}, me), n)
+    return float(tot)
+
+
+def make_value_fn(stages, weights: Weights | None = None, *, mult: float = 1.0, partial: bool = False,
+                  elsewhere: float = 0.25, away: float = 0.0):
+    """evaluate + mult × (経路の点 [+ 次の段の部分点] − away × 使えないゾーンへ送った経路の札の枚数)。
+    既定（partial=False, away=0, mult=1）は段を満たした分だけ（PR #423 と同じ）。勝敗が決まった局面には足さない。"""
     w = weights or Weights()
+    need = needed_cards(stages) if away else {}
 
     def value(eng, me: int) -> float:
         v = evaluate(eng, me, w)
-        return v if result_of(eng) is not None else v + route_score(eng, stages, me)
+        if result_of(eng) is not None:
+            return v
+        r = route_score(eng, stages, me)
+        if partial:
+            r += partial_score(eng, stages, me, elsewhere)
+        if away:
+            r -= away * away_penalty(eng, need, me)
+        return v + mult * r
     return value
