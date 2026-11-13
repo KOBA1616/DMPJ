@@ -1,0 +1,456 @@
+# 検証済みコンボの登録簿（dmsim/base/registry.py）。手で書き換えない: tools/registry.py が dmsim/eval/verify.py を通して書く。
+entries:
+- id: akashic
+  name: アカシック ナウ・オア・ネバー＋ウォカンナ
+  split: tuning
+  types:
+  - loop
+  core:
+  - id: dm23ex2-009
+    name: 完全水中要塞 アカシック3
+    role: エンジン（呪文の無償詠唱）
+  - id: dm23bd7-035
+    name: 魔刻の斬将オルゼキア／訪れる魔の時刻
+    role: 回収
+  - id: dmrp12-s01
+    name: 天命龍装 ホーリーエンド／ナウ・オア・ネバー
+    role: 勝ち手段
+  - id: dm24ex1-038
+    name: 冥土人形ウォカンナ・ピエール
+    role: 勝ち手段
+  win: opp_deck_out
+  entry: data/loops/entry/akashic.json
+  procedure: []
+  lock_mode: passive
+  seeds:
+  - 1
+  - 2
+  - 3
+  - 4
+  - 5
+  - 6
+  - 7
+  - 8
+  max_turn: 2
+  budget: null
+  note: ''
+  digest: 680a93459fed4cf0
+  checks:
+  - name: cards
+    ok: true
+    detail: 中核の札がカードデータにある
+  - name: type
+    ok: true
+    detail: loop として段1・段2で測る
+  - name: entry
+    ok: true
+    detail: data/loops/entry/akashic.json（アカシック ナウ・オア・ネバー＋ウォカンナ（入口））
+  - name: ruler
+    ok: true
+    detail: '段1 8/8・段2 8/8（基準 0.8）勝ち方 {''loop'': 8}'
+  - name: replay
+    ok: true
+    detail: seed [1, 2] を回し直して一致
+  measured:
+    seeds:
+    - 1
+    - 2
+    - 3
+    - 4
+    - 5
+    - 6
+    - 7
+    - 8
+    max_turn: 2
+    budget: 1500
+    stage1: 8/8
+    stage2: 8/8
+    stage2_rate: 1.0
+    via:
+      loop: 8
+    win_turns:
+    - 1
+    threshold: 0.8
+    rows:
+    - seed: 1
+      start: 07143f8d6b8c
+      stage1: true
+      stage2: true
+      via: loop
+      win_turn: 1
+    - seed: 2
+      start: 2320e385020a
+      stage1: true
+      stage2: true
+      via: loop
+      win_turn: 1
+    - seed: 3
+      start: a2d1d5ddd7fd
+      stage1: true
+      stage2: true
+      via: loop
+      win_turn: 1
+    - seed: 4
+      start: 147f3275f8dd
+      stage1: true
+      stage2: true
+      via: loop
+      win_turn: 1
+    - seed: 5
+      start: 13dfdbd4ada3
+      stage1: true
+      stage2: true
+      via: loop
+      win_turn: 1
+    - seed: 6
+      start: 57a62d13b662
+      stage1: true
+      stage2: true
+      via: loop
+      win_turn: 1
+    - seed: 7
+      start: cfaea884d251
+      stage1: true
+      stage2: true
+      via: loop
+      win_turn: 1
+    - seed: 8
+      start: 8b4d2ac18e9b
+      stage1: true
+      stage2: true
+      via: loop
+      win_turn: 1
+  version:
+    fingerprint: 16330c25ac8fe65b
+    commit: 03548b7
+    measured_at: '2026-11-13'
+rejected:
+- id: akashic_hd2
+  name: アカシック H.D.2. 短縮ループ
+  split: discovered
+  types:
+  - loop
+  core:
+  - id: dm23ex2-009
+    name: 完全水中要塞 アカシック3
+    role: エンジン（呪文の無償詠唱）
+  - id: dm23bd7-035
+    name: 魔刻の斬将オルゼキア／訪れる魔の時刻
+    role: 回収
+  - id: dmrp07-009
+    name: ラルド・ワースピーダ／H.D.2.
+    role: 勝ち手段
+  win: opp_deck_out
+  entry: data/loops/entry/akashic_hd2.json
+  procedure:
+  - アカシック3 で H.D.2. を相手に向けて無償で唱え（相手の山札の上2枚をマナへ）、訪れる魔の時刻で墓地のラルドともう1枚の訪れる魔の時刻を回収、を繰り返す。
+  lock_mode: passive
+  seeds:
+  - 1
+  - 2
+  - 3
+  - 4
+  - 5
+  - 6
+  - 7
+  - 8
+  max_turn: 2
+  budget: null
+  note: ''
+  digest: 186286681098b9c8
+  checks:
+  - name: cards
+    ok: true
+    detail: 中核の札がカードデータにある
+  - name: type
+    ok: true
+    detail: loop として段1・段2で測る
+  - name: entry
+    ok: true
+    detail: data/loops/entry/akashic_hd2.json（アカシック H.D.2.（入口））
+  - name: ruler
+    ok: false
+    detail: '段1 5/8・段2 5/8（基準 0.8）勝ち方 {''loop'': 5, ''None'': 3}'
+  measured:
+    seeds:
+    - 1
+    - 2
+    - 3
+    - 4
+    - 5
+    - 6
+    - 7
+    - 8
+    max_turn: 2
+    budget: 1500
+    stage1: 5/8
+    stage2: 5/8
+    stage2_rate: 0.625
+    via:
+      loop: 5
+      None: 3
+    win_turns:
+    - 1
+    threshold: 0.8
+    rows:
+    - seed: 1
+      start: 155ba59cf5c4
+      stage1: true
+      stage2: true
+      via: loop
+      win_turn: 1
+    - seed: 2
+      start: cd035a48f055
+      stage1: true
+      stage2: true
+      via: loop
+      win_turn: 1
+    - seed: 3
+      start: 027ebb987cb5
+      stage1: true
+      stage2: true
+      via: loop
+      win_turn: 1
+    - seed: 4
+      start: be9dae245a9f
+      stage1: true
+      stage2: true
+      via: loop
+      win_turn: 1
+    - seed: 5
+      start: '573666538568'
+      stage1: false
+      stage2: false
+      via: null
+      win_turn: null
+    - seed: 6
+      start: 083f7e927609
+      stage1: false
+      stage2: false
+      via: null
+      win_turn: null
+    - seed: 7
+      start: e2ef9f5b4e96
+      stage1: false
+      stage2: false
+      via: null
+      win_turn: null
+    - seed: 8
+      start: 6f465b550ccb
+      stage1: true
+      stage2: true
+      via: loop
+      win_turn: 1
+  version:
+    fingerprint: 16330c25ac8fe65b
+    commit: 03548b7
+    measured_at: '2026-11-13'
+  failed_at: ruler
+- id: drill_lock
+  name: ドリルスコール＋ジョバンニ＋クルト
+  split: holdout
+  types:
+  - lock
+  core:
+  - id: null
+    name: ドリルスコール
+    role: ロック
+  - id: dm36-015
+    name: 天雷王機ジョバンニX世
+    role: 回収
+  - id: dm36-078
+    name: クルトの気合釣り
+    role: 山札の回復
+  win: lock
+  entry: null
+  procedure:
+  - 毎ターン自分がドリルスコールで相手マナを墓地へ、ジョバンニがターン終了時に回収、クルトの気合釣りで自分の山札を回復し、相手を山札切れへ（能動ロック）。
+  lock_mode: active
+  seeds:
+  - 1
+  - 2
+  - 3
+  - 4
+  - 5
+  - 6
+  - 7
+  - 8
+  max_turn: 2
+  budget: null
+  note: ''
+  digest: 141d83166ef0040b
+  checks:
+  - name: cards
+    ok: false
+    detail: 'ID が無いかカードデータに無い: [''ドリルスコール'']'
+  measured: {}
+  version:
+    fingerprint: 16330c25ac8fe65b
+    commit: 03548b7
+    measured_at: '2026-11-13'
+  failed_at: cards
+- id: knight_dmc
+  name: ～地獄帰りの騎士～＋DARK MEMORY CONTAINER
+  split: tuning
+  types:
+  - resource
+  core:
+  - id: dm25ex3-028
+    name: ～地獄帰りの騎士～
+    role: エンジン
+  - id: dm25ex3-055
+    name: DARK MEMORY CONTAINER
+    role: エンジン
+  win: beat
+  entry: null
+  procedure:
+  - 盾が置かれた時に墓地から騎士が出る。3マナで体3つと手札を得る（リソース型、設計書 §11）。
+  lock_mode: passive
+  seeds:
+  - 1
+  - 2
+  - 3
+  - 4
+  - 5
+  - 6
+  - 7
+  - 8
+  max_turn: 2
+  budget: null
+  note: ''
+  digest: bfdacbf7c6ff17c1
+  checks:
+  - name: cards
+    ok: true
+    detail: 中核の札がカードデータにある
+  - name: type
+    ok: false
+    detail: 型 ['resource'] は今の物差しで測れない（リソース型はタスク12、攻撃型はタスク11 が前提）
+  measured: {}
+  version:
+    fingerprint: 16330c25ac8fe65b
+    commit: 03548b7
+    measured_at: '2026-11-13'
+  failed_at: type
+- id: saga
+  name: 絶望神サガの蘇生ループ
+  split: tuning
+  types:
+  - loop
+  core:
+  - id: dm22ex2-021
+    name: 絶望神サガ
+    role: エンジン（蘇生）
+  - id: dmrp03-s03
+    name: 水上第九院 シャコガイル
+    role: 勝ち手段
+  - id: dm22ex1-007
+    name: 超神星DOOM・ドラゲリオン
+    role: 入口への経路
+  win: effect
+  entry: data/loops/entry/saga.json
+  procedure:
+  - 手札のサガを3マナで出し、墓地のサガとの蘇生で1周1枚引く。山札の最後の1枚を引いてシャコガイルの効果で勝つ。
+  lock_mode: passive
+  seeds:
+  - 1
+  - 2
+  - 3
+  - 4
+  - 5
+  - 6
+  - 7
+  - 8
+  max_turn: 2
+  budget: null
+  note: ''
+  digest: fab3885a4550c905
+  checks:
+  - name: cards
+    ok: true
+    detail: 中核の札がカードデータにある
+  - name: type
+    ok: true
+    detail: loop として段1・段2で測る
+  - name: entry
+    ok: true
+    detail: data/loops/entry/saga.json（サガ蘇生ループ（入口））
+  - name: ruler
+    ok: false
+    detail: '段1 2/8・段2 1/8（基準 0.8）勝ち方 {''beat'': 6, ''loop'': 1, ''None'': 1}'
+  measured:
+    seeds:
+    - 1
+    - 2
+    - 3
+    - 4
+    - 5
+    - 6
+    - 7
+    - 8
+    max_turn: 2
+    budget: 200
+    stage1: 2/8
+    stage2: 1/8
+    stage2_rate: 0.125
+    via:
+      beat: 6
+      loop: 1
+      None: 1
+    win_turns:
+    - 2
+    threshold: 0.8
+    rows:
+    - seed: 1
+      start: b453e2406177
+      stage1: true
+      stage2: false
+      via: beat
+      win_turn: 2
+    - seed: 2
+      start: 414026f0ea33
+      stage1: true
+      stage2: true
+      via: loop
+      win_turn: 2
+    - seed: 3
+      start: 6710e6cde9ed
+      stage1: false
+      stage2: false
+      via: null
+      win_turn: null
+    - seed: 4
+      start: ac7d4172fdac
+      stage1: false
+      stage2: false
+      via: beat
+      win_turn: 2
+    - seed: 5
+      start: 073a28cd8fe8
+      stage1: false
+      stage2: false
+      via: beat
+      win_turn: 2
+    - seed: 6
+      start: b91960057490
+      stage1: false
+      stage2: false
+      via: beat
+      win_turn: 2
+    - seed: 7
+      start: 5bf640fbf3b4
+      stage1: false
+      stage2: false
+      via: beat
+      win_turn: 2
+    - seed: 8
+      start: f5d2930d2ea5
+      stage1: false
+      stage2: false
+      via: beat
+      win_turn: 2
+  version:
+    fingerprint: 16330c25ac8fe65b
+    commit: 03548b7
+    measured_at: '2026-11-13'
+  failed_at: ruler
