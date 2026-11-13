@@ -1,0 +1,22 @@
+{
+ "note": "drill_lock.json と同じ形で、デッキだけ基盤選び（tools/basebuild.py、設定は saga・akashic と同じ）が選んだもの。マナは同じ枚数（火2・光3）をそのデッキのチャージ用の札で。holdout、1回だけ適用。",
+ "deck": "data/decks/basebuild_drill_lock.yaml",
+ "p0": {
+  "bz": [
+   "dm36-015"
+  ],
+  "hand": [
+   "dm16-051",
+   "dm36-078"
+  ],
+  "mana": [
+   "dm01-102",
+   "dm01-102",
+   "dm04-040",
+   "dm04-040",
+   "dm04-040"
+  ]
+ },
+ "hand_fill": 3,
+ "opp_mana": 6
+}

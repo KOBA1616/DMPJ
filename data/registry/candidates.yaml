@@ -70,3 +70,21 @@ candidates:
     opp_levels: [0, 1]
     procedure:
       - 毎ターン自分がドリル・スコールで相手マナを墓地へ、ジョバンニがターン終了時に回収、クルトの気合釣りで自分の山札を回復し、相手を山札切れへ（能動ロック）。
+  - id: drill_lock_basebuild
+    name: ドリル・スコール＋ジョバンニ＋クルト（基盤選びのデッキ）
+    split: holdout
+    types: [lock]
+    win: lock
+    lock_mode: active
+    core:
+      - {id: dm16-051, name: ドリル・スコール, role: ロック}
+      - {id: dm36-015, name: 天雷王機ジョバンニX世, role: 回収}
+      - {id: dm36-078, name: クルトの気合釣り, role: 山札の回復}
+    setup: data/registry/setups/drill_lock_basebuild.json
+    # drill_lock と同じ方針を、札の名前に依らない形にしたもの: コンボ以外の札をチャージ → ドリル → クルト（墓地のドリルを山札の上へ）→
+    # ドリルで捨てる自分のマナはコンボ以外 → ジョバンニで墓地のクルト・ドリルを手札へ
+    policy: ["charge:", "play:dm16-051", "play:dm36-078", "graveyard:dm16-051:", "mana:", "graveyard:dm36-078", "graveyard:dm16-051"]
+    policy_avoid: ["charge:dm16-051", "charge:dm36-015", "charge:dm36-078", "mana:dm16-051", "mana:dm36-015", "mana:dm36-078"]
+    opp_levels: [0, 1]
+    procedure:
+      - drill_lock と同じ。デッキは tools/basebuild.py が中核3種を固定して選んだもの（data/decks/basebuild_drill_lock.yaml）。
