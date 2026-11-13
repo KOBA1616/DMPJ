@@ -137,7 +137,7 @@ def play(start, cfg: PlayConfig, info: InfoLevel = InfoLevel.FAIR, *, rules=None
 
 
 def play_turns(eng, cfg: PlayConfig, info: InfoLevel = InfoLevel.FAIR, *, opp_policy=None, before_turn=None,
-               on_turn=None, reuse_search: bool = True, holder: list | None = None):
+               on_turn=None, reuse_search: bool = True, holder: list | None = None, record=None):
     """1局の手番ループ（search.game.run_turns）を、自分のターンごとに呼び出し側の処理を挟んで回す。最後の局面を返す。
     - eng: 開始局面。そのまま進める（clone しない。必要なら呼び出し側で clone）。
     - 設定で使う項目: max_turn・budget・value_fn、FAIR は n_det・lookahead・seed（各ターンの決定化の種は seed*7919+ターン）。
@@ -145,8 +145,10 @@ def play_turns(eng, cfg: PlayConfig, info: InfoLevel = InfoLevel.FAIR, *, opp_po
     - before_turn(eng, ot): 自分のターンの探索の前。on_turn(eng, ot, nodes): 探索の後（eng はそのターン後の局面）。
       どちらかが True を返すとそこで打ち切る。
     - reuse_search: CHEAT の TurnSearch を全ターンで使い回す（False はターンごとに作り直す）。
-    - holder: 渡すと holder[0] に常に最新の局面を入れる（途中で例外が出ても呼び出し側が最新の局面を見られる）。"""
-    from .search.game import run_turns
+    - holder: 渡すと holder[0] に常に最新の局面を入れる（途中で例外が出ても呼び出し側が最新の局面を見られる）。
+    - record: GameResult を渡すと、各ターンのループ（採った手順の証明書、無ければ指した手順のパターン検出）を
+      record.loops / loop_candidates に足す（search.game.record_turn_loops。手順は変えない）。"""
+    from .search.game import record_turn_loops, run_turns
     from .search.turn import TurnSearch, charge_only_policy
     info = InfoLevel(info)
     me = cfg.me
@@ -158,17 +160,20 @@ def play_turns(eng, cfg: PlayConfig, info: InfoLevel = InfoLevel.FAIR, *, opp_po
     def take_turn(e, ot):
         if before_turn is not None and before_turn(e, ot):
             return e, True
+        before, at = e, len(e.log)
         if info is InfoLevel.CHEAT:
             if not reuse_search or shared[0] is None:
                 shared[0] = TurnSearch(me, cfg.budget, opp_policy=opp_pol, value_fn=cfg.value_fn)
             e, st = shared[0].run(e)
-            nodes = st.nodes
+            nodes, chosen, cands = st.nodes, st.chosen, st.loops
         else:
             from .search.fair import FairTurnSearch
             fs = FairTurnSearch(me, cfg.budget, cfg.n_det, cfg.seed * 7919 + ot, opp_policy=opp_pol,
                                 value_fn=cfg.value_fn, lookahead=cfg.lookahead)
             e = fs.run(e)
-            nodes = fs.nodes
+            nodes, chosen, cands = fs.nodes, fs.chosen, fs.loops
+        if record is not None:
+            record_turn_loops(record, before, e, at, chosen, cands, ot, me)
         cur[0] = e
         stop = on_turn(e, ot, nodes) if on_turn is not None else False
         return e, bool(stop)

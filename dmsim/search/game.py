@@ -82,6 +82,44 @@ def run_turns(cur: list, me: int, max_turn: int, opp_pol, take_turn) -> None:
             break
 
 
+def record_turn_loops(res: GameResult, before: Engine, after: Engine, at: int, chosen, candidates, ot: int, me: int,
+                      pattern_loops: bool = True) -> None:
+    """1ターン分のループの記録を res に足す（play_game・fair_game・play_api.play_turns 共通）。局面は変えない。
+    chosen（採った手順で使った証明書のループ）があればそれを、無ければ実際に指した記録 after.log[at:] にパターン検出をかける。"""
+    res.loop_candidates += [dict(lp, own_turn=ot) for lp in candidates]
+    res.loops += [dict(lp, own_turn=ot) for lp in chosen]
+    if pattern_loops and not chosen:
+        res.loops += [dict(lp, own_turn=ot) for lp in find_pattern_loops(before, after.log[at:], me, at)]
+
+
+def check_lock(res: GameResult, eng: Engine, ot: int, me: int, judge, lock_rounds: int) -> bool:
+    """判定役 judge でロックを確かめ、成立なら res に記録して True（打ち切り）。judge が None なら何もしない。"""
+    if judge is None or eng.s.result is not None or lock_rounds <= 0:
+        return False
+    cert = judge(eng, me, lock_rounds)
+    if cert is None:
+        return False
+    res.kind, res.kill_turn = "lock", ot
+    res.lock = {"delta": cert.delta, "needed_rounds": cert.needed, "limit": cert.limit}
+    return True
+
+
+def finish_result(res: GameResult, eng: Engine, me: int) -> None:
+    """終局の勝敗を res に書く（play_game・fair_game 共通）。"""
+    if res.kind == "lock":
+        res.origin = "lock"
+    r = eng.s.result
+    if r is not None and res.kind is None:
+        if r["winner"] == me:
+            res.kill_turn = own_turn(eng, me, r["turn"])
+            res.kind = r["reason"]
+            if r["reason"] == "deck_out" and any(lp["win_by"] == "opp_deck_out" for lp in res.loops):
+                res.kind = "loop_deck_out"
+            res.origin = origin(res)
+        elif r["winner"] == 1 - me:
+            res.lost = r["reason"]
+
+
 def play_game(rules, deck: list[str], opp_deck: list[str], seed: int, *, first_player: int = 0,
               max_turn: int = 4, budget: int = 200, weights: Weights | None = None,
               lock_rounds: int = 2, start: Engine | None = None, opp=None, value_fn=None,
@@ -103,34 +141,13 @@ def play_game(rules, deck: list[str], opp_deck: list[str], seed: int, *, first_p
         before, at = eng, len(eng.log)
         eng, st = search.run(eng)
         res.nodes += st.nodes
-        res.loop_candidates += [dict(lp, own_turn=ot) for lp in st.loops]
-        res.loops += [dict(lp, own_turn=ot) for lp in st.chosen]
-        if pattern_loops and not st.chosen:
-            res.loops += [dict(lp, own_turn=ot) for lp in find_pattern_loops(before, eng.log[at:], me, at)]
-        if eng.s.result is None and lock_rounds > 0:
-            cert = judge(eng, me, lock_rounds)
-            if cert is not None:
-                res.kind, res.kill_turn = "lock", ot
-                res.lock = {"delta": cert.delta, "needed_rounds": cert.needed, "limit": cert.limit}
-                return eng, True
-        return eng, False
+        record_turn_loops(res, before, eng, at, st.chosen, st.loops, ot, me, pattern_loops)
+        return eng, check_lock(res, eng, ot, me, judge, lock_rounds)
 
     cur = [eng]
     try:
         run_turns(cur, me, max_turn, opp_pol, take_turn)
-        eng = cur[0]
-        r = eng.s.result
-        if res.kind == "lock":
-            res.origin = "lock"
-        if r is not None and res.kind is None:
-            if r["winner"] == me:
-                res.kill_turn = own_turn(eng, me, r["turn"])
-                res.kind = r["reason"]
-                if r["reason"] == "deck_out" and any(lp["win_by"] == "opp_deck_out" for lp in res.loops):
-                    res.kind = "loop_deck_out"
-                res.origin = origin(res)
-            elif r["winner"] == 1 - me:
-                res.lost = r["reason"]
+        finish_result(res, cur[0], me)
     except Exception as ex:          # 1局の失敗で全体を止めない。seed で再現できる
         res.error = f"{type(ex).__name__}: {ex}"
     eng = cur[0]
@@ -140,8 +157,12 @@ def play_game(rules, deck: list[str], opp_deck: list[str], seed: int, *, first_p
 
 
 def fair_game(rules, deck, opp_deck, seed, first_player, max_turn, budget, start=None, opp=None,
-              n_det: int = 8, lookahead: int = 0):
-    """FAIR の1局（FairTurnSearch の1人回し。ロック判定 lock_probe は含めない）。(GameResult, Engine) を返す。"""
+              n_det: int = 8, lookahead: int = 0, *, lock_judge: LockJudge | None = None, lock_rounds: int = 0,
+              pattern_loops: bool = True):
+    """FAIR の1局（FairTurnSearch の1人回し）。(GameResult, Engine) を返す。
+    ループの記録（P2 案 F）: 採った手に投票した決定化の探索が使った証明書のループ（evidence=determinized）と、
+    それが無いターンは実際に指した手順のパターン検出（evidence=executed）を GameResult.loops に残す。手順・勝敗は変えない。
+    ロック判定は既定でしない（lock_rounds=0）。lock_rounds>0 なら lock_judge（省略時は登録済みの既定）で確かめる。"""
     from .fair import FairTurnSearch
     me = 0
     t0 = time.perf_counter()
@@ -154,22 +175,21 @@ def fair_game(rules, deck, opp_deck, seed, first_player, max_turn, budget, start
             opp.setup(eng)
             opp_pol = opp.policy
 
+        judge = _resolve_lock_judge(lock_judge) if lock_rounds > 0 else None
+
         def take_turn(eng, ot):
+            before, at = eng, len(eng.log)
             fs = FairTurnSearch(me, budget, n_det, seed * 7919 + ot, opp_policy=opp_pol, lookahead=lookahead)
             eng = fs.run(eng)
             res.nodes += fs.nodes
-            return eng, False
+            record_turn_loops(res, before, eng, at, fs.chosen, fs.loops, ot, me, pattern_loops)
+            return eng, check_lock(res, eng, ot, me, judge, lock_rounds)
 
         run_turns(cur, me, max_turn, opp_pol, take_turn)
-        eng = cur[0]
-        r = eng.s.result
-        if r is not None:
-            if r["winner"] == me:
-                res.kill_turn = own_turn(eng, me, r["turn"])
-                res.kind = r["reason"]
-                res.origin = origin(res)
-            else:
-                res.lost = r["reason"]
+        finish_result(res, cur[0], me)
+        r = cur[0].s.result
+        if r is not None and r["winner"] is None:      # 従来どおり引き分け系（step_limit など）も lost に書く
+            res.lost = r["reason"]
     except Exception as ex:
         res.error = f"{type(ex).__name__}: {ex}"
     eng = cur[0]
