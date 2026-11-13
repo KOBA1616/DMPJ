@@ -11,6 +11,7 @@ from collections import Counter
 from dataclasses import asdict
 
 from ..search.game import GameResult, play_game
+from . import lockcheck  # noqa: F401  （import 時に play_game の既定のロック判定役 lock_probe を登録する）
 
 
 def wilson(k: int, n: int, z: float = 1.96) -> tuple[float, float]:

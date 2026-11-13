@@ -17,7 +17,7 @@ from .devserver import Session, _diff, _label, _snapshot
 from .engine import Engine
 from .loop import LoopCertificate, fast_forward
 from .play import replay
-from .search.game import lock_probe
+from .eval.lockcheck import lock_probe
 from .search.turn import Detectors
 
 ZONES = ("hand", "bz", "mana", "shield", "deck", "graveyard")
