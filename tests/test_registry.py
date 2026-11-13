@@ -87,8 +87,10 @@ def test_verify_stops_at_first_failure(full_rules):
     rules = full_rules
     ev = verify(rules, _cand(core=[{"id": None, "name": "無い札"}]))
     assert not ev.passed and ev.failed_at() == "cards" and len(ev.checks) == 1
-    ev = verify(rules, _cand(types=["resource"], core=[{"id": "dm25ex3-028"}]))
+    ev = verify(rules, _cand(types=["attack"], core=[{"id": "dm25ex3-028"}]))
     assert ev.failed_at() == "type"
+    ev = verify(rules, _cand(types=["resource"], core=[{"id": "dm25ex3-028"}]))
+    assert ev.failed_at() == "entry"
     ev = verify(rules, _cand(types=["lock"], lock_mode="active", core=[{"id": "dm25ex3-028"}]))
     assert ev.failed_at() == "entry"          # 能動ロックは setup と policy が要る
     ev = verify(rules, _cand(core=[{"id": "dm25ex3-028"}]))
@@ -131,3 +133,16 @@ def test_active_lock_drill(full_rules):
 def test_active_needs_lock_type():
     with pytest.raises(RegistryError):
         _cand(lock_mode="active")
+
+
+def test_resource_knight(full_rules):
+    """リソース型の目盛り: 騎士＋DMC は騎士を差し替えた組より効率が高い。合格線が未定なので resource 検証で止まる。"""
+    from dmsim.eval import resource as rs
+    spec, deck = rs.load_setup("data/registry/setups/knight_dmc.json")
+    known = rs.measure_one(full_rules, spec, deck, 1)
+    assert known["mana_used"] == 3 and known["d_shield"] == 1 and known["d_board"] >= 2
+    s2, d2 = rs.swap(spec, deck, "dm25ex3-055", "dm18-053")
+    assert rs.measure_one(full_rules, s2, d2, 1)["adv"] < known["adv"]
+    ev = verify(full_rules, _cand(types=["resource"], win="beat", seeds=[1], setup="data/registry/setups/knight_dmc.json",
+                                  core=[{"id": "dm25ex3-028"}, {"id": "dm25ex3-055"}]))
+    assert ev.failed_at() == "resource" and ev.measured["resource"]["n"] == 1
