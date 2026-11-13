@@ -133,6 +133,7 @@ _is_engine = is_engine_loop    # 旧名（互換）
 
 # 「引いて捨てる」型のループ検出の既定（TurnSearch.draw_discard で局ごとに切り替え可）。環境変数 DMSIM_DRAW_DISCARD=0 で切る
 DRAW_DISCARD = os.environ.get("DMSIM_DRAW_DISCARD", "1") != "0"
+REPEAT_FIRST = os.environ.get("DMSIM_REPEAT_FIRST", "1") != "0"   # 案 E の既定。DMSIM_REPEAT_FIRST=0 で切る
 
 
 class Detectors:
@@ -185,7 +186,10 @@ class TurnSearch:
         self.combo_cap = combo_cap
         self.stock_offsets: tuple[int, ...] = (0, 1)   # ストックする周回数: 上限から何周手前までを試すか（山札の残りを1枚・2枚にする等）
         self.burn_stock = True                # 山札を削るだけのループを自動で残り1枚までストックする（2段探索の2段目では切る）
-        self.draw_discard: bool | None = None   # 引いて捨てる型のループ検出（None は DRAW_DISCARD）
+        self.draw_discard: bool | None = None
+        # 案 E: 同じターンの手順で前に採った手（同じ種類・同じ意味キーの決定）を候補の先頭に回す。ループの2周目で
+        # 1周目と同じ手を先に試す一般則（カード名は見ない）。None は REPEAT_FIRST
+        self.repeat_first: bool | None = None   # 引いて捨てる型のループ検出（None は DRAW_DISCARD）
         self.collect: list | None = None      # ループ発見モード: 見つけたループ（局面の複製, 証明書）をここへ集めて、ストックはしない
 
     def _eval(self, eng: Engine) -> float:
@@ -218,6 +222,8 @@ class TurnSearch:
     def run(self, eng: Engine) -> tuple[Engine, TurnStats]:
         """eng（自分の決定待ち）から探索し、一番評価の高いターン終了局面の Engine を返す。eng は変更しない。"""
         self.left = self.budget
+        self._root_log = len(eng.log)
+        self._rf = REPEAT_FIRST if self.repeat_first is None else self.repeat_first
         self._deadline = None if self.time_limit is None else time.monotonic() + self.time_limit
         self.seen: set = set()
         self.stats = TurnStats()
@@ -274,6 +280,8 @@ class TurnSearch:
         cands = candidates(eng, d, self.w, self.combo_cap)
         if self.w.lookahead and len(cands) > 1:
             cands = self._lookahead_order(eng, cands)
+        if self._rf and len(cands) > 1:
+            cands = self._repeat_order(eng, d, cands)
         for choice in cands:
             if self.left <= 0 and best is not None:
                 break
@@ -287,6 +295,17 @@ class TurnSearch:
             if best[0] >= WIN - 1000:
                 break                 # このターンで勝てる線が見つかった
         return best
+
+    def _repeat_order(self, eng: Engine, d: dict, cands: list[list[int]]) -> list[list[int]]:
+        """このターンの手順で、同じ種類の決定に前回答えた意味キーと同じ候補を先頭へ（安定な並べ替え）。"""
+        keys = [o["key"] for o in d["options"]]
+        ks = set(keys)
+        for a in reversed(eng.log[self._root_log:]):
+            # 同じ種類で、前に選んだ意味キーが今の選択肢にもある決定（同じ効果の2周目とみなす）
+            if a["kind"] == d["kind"] and a["p"] == d["player"] and a["keys"] and set(a["keys"]) <= ks:
+                prev = sorted(a["keys"])
+                return sorted(cands, key=lambda ch: sorted(keys[i] for i in ch) != prev)
+        return cands
 
     def _lookahead_order(self, eng: Engine, cands: list[list[int]]) -> list[list[int]]:
         """各候補を貪欲に先まで進めた局面の評価で並べ替える（同点は元の順）。ノード数には数えない軽い見積もり。"""
