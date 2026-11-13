@@ -41,6 +41,15 @@ def _test(i: str) -> bool:
     return i.startswith(("T", "R", "L"))
 
 
+def missing_effect(c) -> bool:
+    """効果データの欠け（札データの詰まり）。呪文側の効果が空、またはテキストがあるのに能力・キーワードが空のクリーチャー。
+    欠けた札は効果のない札として振る舞うので、基盤候補にもチャージ札（埋め札）にも使わない。"""
+    for f in (c.faces or [c]):
+        if "spell" in (f.types or []) and not (f.spell or f.sst_spell or f.stp_spell or f.abilities):
+            return True
+    return not c.faces and "spell" not in c.types and not (c.abilities or c.keywords) and bool((c.text or "").strip())
+
+
 def _raw_cards(rules) -> dict:
     """ID -> カードデータの生の辞書（役割の分類に使う）。"""
     import yaml
@@ -65,7 +74,7 @@ def candidates(rules, core: dict, raw: dict | None = None) -> dict[str, list[str
     seen: set[str] = set()
     for i in sorted(raw, key=lambda i: (rules.cards[i].cost or 0, i)):
         c = rules.cards[i]
-        if _test(i) or i in core or c.name in names or c.name in seen or not c.cost or c.cost > MAX_COST:
+        if _test(i) or missing_effect(c) or i in core or c.name in names or c.name in seen or not c.cost or c.cost > MAX_COST:
             continue
         if not set(c.civs) - {"zero"} or not set(c.civs) <= civs or c.evolve_from:
             continue
@@ -85,7 +94,7 @@ def fillers(rules, core: dict, raw: dict | None = None) -> list[str]:
         best = None
         for i in sorted(raw):
             c = rules.cards[i]
-            if _test(i) or not c.is_creature or c.abilities or c.keywords or c.evolve_from or list(c.civs) != [v] or not c.cost:
+            if _test(i) or not c.is_creature() or missing_effect(c) or c.abilities or c.keywords or c.evolve_from or list(c.civs) != [v] or not c.cost:
                 continue
             if classify(raw[i]):
                 continue
