@@ -63,3 +63,29 @@ def test_doom_cheats_shakogail_into_play(rules):
     e.advance()
     bz = _names(e, "bz")
     assert bz.count(SHAKO) == 1 and bz[-1] == SHAKO, bz
+
+
+def _board12(rules, mana):
+    deck = L.deck_of(L.load("saga"))
+    gy = [SHAKO, SAGA, SAGA, SAGA, IWASHIN, IWASHIN, IWASHIN, IWASHIN, IZANAGI, IZANAGI, IZANAGI, IZANAGI]
+    p0 = {"hand": [DOOM], "graveyard": gy, "mana": mana,
+          "shield": ["dmex10-020", "dmex10-020", "dm26ex2-071", "dmd08-015", "dm01-027"], "bz": []}
+    left = Counter(deck)
+    for v in p0.values():
+        left.subtract(v)
+    p0["deck"] = sorted(left.elements())
+    spec = {"p0": p0, "p1": {"hand": ["T001"] * 5, "mana": ["T001"] * 3}, "deck_size": 40,
+            "deck_exact": [True, False], "deck_left": [None, 27], "seed": 1}
+    return scenario.build(rules, spec, first_player=0)
+
+
+def test_doom_cost_never_below_one(rules):
+    """「ただし、コストは0以下にはならない」: 進化元12体でもコストは1（0マナでは出せない）。"""
+    e = _board12(rules, [])
+    _pick(e, "pass")
+    d = e.s.waiting or e.advance()
+    assert f"play:{DOOM}" not in [o["key"] for o in d["options"]]
+    e = _board12(rules, ["dm01-027"])
+    _pick(e, "pass")
+    d = e.s.waiting or e.advance()
+    assert f"play:{DOOM}" in [o["key"] for o in d["options"]]
