@@ -1,0 +1,29 @@
+# saga.yaml の段の区切りを直した版（2026-11-13）。旧版の段3「ドラゲリオンとシャコガイルが場」は、シャコガイルが進化元として
+# 下にあるだけの局面とサガまで全部進化元に入れた局面も満たしてしまい、入口へ進めない（docs/saga-loop-miss-20261113.md §10）。
+# top: true は場の一番上の札だけを数える（進化元を除く）。
+name: saga_v2
+via: 超神星DOOM・ドラゲリオン（墓地進化）のメテオバーンでシャコガイルを墓地から出す
+stages:
+  - name: シャコガイルが墓地にある
+    weight: 30
+    all:
+      - {zone: graveyard, match: {name: dmrp03-s03}, n: 1}
+  - name: シャコガイルが墓地にあり、墓地のクリーチャーが8体以上
+    weight: 60
+    all:
+      - {zone: graveyard, match: {name: dmrp03-s03}, n: 1}
+      - {zone: graveyard, match: {types: [creature]}, n: 8}
+  - name: ドラゲリオンが場、シャコガイルが進化元、サガを1枚以上手札か墓地に残す
+    weight: 150
+    all:
+      - {zone: bz, match: {name: dm22ex1-007}, n: 1}
+      - {zone: bz, match: {name: dmrp03-s03}, n: 1}
+      - {zones: [hand, graveyard], match: {name: dm22ex2-021}, n: 1}
+  - name: シャコガイルが場に出ている（進化元でない）、サガが手札にある
+    weight: 200
+    all:
+      - {zone: bz, match: {name: dmrp03-s03}, n: 1, top: true}
+      - {zone: hand, match: {name: dm22ex2-021}, n: 1}
+  - name: 入口
+    weight: 300
+    entry: saga

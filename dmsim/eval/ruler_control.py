@@ -211,7 +211,7 @@ def _place_alternative(rules, ls, ls2, d2: list[str], old: str, new: str):
         return ls2, d2
     b = json.loads(json.dumps(ls2.source["board"]))
     p0 = b["p0"]
-    placed = Counter(i for ids in p0.values() for i in ids)
+    placed = Counter(i for z in ("hand", "bz") for i in p0.get(z, []))   # 盾・山札にあるだけでは使えない
     need = [i for i, k in alt.items() for _ in range(max(0, k - placed[i]))]
     deck = list(d2)
     cores = set(le.core_ids(ls))
@@ -276,7 +276,7 @@ def _deck(ls) -> list[str]:
     return ls.source.get("deck_list") or le.deck_of(ls)
 
 
-def run_one(rules, ls, seed: int, max_turn: int = 2, budget: int | None = None) -> dict:
+def run_one(rules, ls, seed: int, max_turn: int = 2, budget: int | None = None, macros: bool = False) -> dict:
     from dmsim.engine import scenario
     from dmsim.search.game import play_game
     from .lockcheck import lock_probe
@@ -286,7 +286,14 @@ def run_one(rules, ls, seed: int, max_turn: int = 2, budget: int | None = None) 
     e = scenario.build(rules, spec, first_player=0)
     key = start_key(e)
     bud = le.measure_budget(ls, budget)
-    res, eng = play_game(rules, deck, [], seed, first_player=0, max_turn=max_turn, budget=bud, start=e, lock_judge=lock_probe)
+    # 物差しは探索の力で測る: 登録簿の手（search.macro）は使わない（使うと登録簿が自分自身を検証する）
+    from dmsim.search import macro
+    was = macro._ENABLED
+    macro.enable(macros)
+    try:
+        res, eng = play_game(rules, deck, [], seed, first_player=0, max_turn=max_turn, budget=bud, start=e, lock_judge=lock_probe)
+    finally:
+        macro._ENABLED = was
     vd = judge(res, eng)
     return {"seed": seed, "start": key, "stage1": vd.stage1.ok, "stage2": vd.stage2.ok, "via": vd.stage2.via,
             "win_turn": vd.stage2.win_turn, "error": res.error, "reason": vd.reason}

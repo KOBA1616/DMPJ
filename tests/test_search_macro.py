@@ -28,10 +28,25 @@ def _entry(rules, name, seed):
     return e
 
 
-def test_off_by_default(monkeypatch):
+def test_on_by_default_and_switch(monkeypatch):
     monkeypatch.delenv("DMSIM_REGISTRY_MACRO", raising=False)
     macro.enable(None)
+    assert macro.enabled() and macro.active()            # 既定有効（設計書 §19）
+    monkeypatch.setenv("DMSIM_REGISTRY_MACRO", "0")
     assert not macro.enabled() and macro.active() == []
+
+
+def test_ruler_measures_without_macros(full_rules, monkeypatch):
+    """物差し（陽性対照・登録簿の検証）は登録簿の手を使わずに測る。"""
+    from dmsim.eval import loop_entry as le, ruler_control as rc
+    seen = []
+    orig = macro.active
+    monkeypatch.setattr(macro, "active", lambda: seen.append(macro.enabled()) or orig())
+    monkeypatch.delenv("DMSIM_REGISTRY_MACRO", raising=False)
+    macro.enable(None)
+    rc.run_one(full_rules, le.load("saga"), 1, budget=20)
+    assert seen and not any(seen)
+    assert macro.enabled()                                  # 終わったら元に戻る
 
 
 def test_registry_macros_load():
@@ -41,10 +56,15 @@ def test_registry_macros_load():
     assert all(m.steps and m.preds and m.core for m in ms)
 
 
-def test_macro_wins_from_unseen_entry(full_rules):
-    """登録に使っていないシード（9）の入口局面で、手ありの探索（予算200）が手を採ってそのターンに勝つ。"""
+def test_macro_wins_from_unseen_entry(full_rules, monkeypatch):
+    """登録に使っていないシード（9）の入口局面で、手ありの探索（予算200）が手を採ってそのターンに勝つ。
+    マナチャージの一般則（CHARGE_KEEP_FREE、§18）を入れると手なしでも勝てるので、ここでは切って手の効き目を見る。"""
+    import dmsim.search.turn as T
+    monkeypatch.setattr(T, "CHARGE_KEEP_FREE", False)
     e = _entry(full_rules, "akashic", 9)
-    out, st = TurnSearch(0, 200).run(e)
+    ts0 = TurnSearch(0, 200)
+    ts0.macros = []
+    out, st = ts0.run(e)
     assert out.s.result is None or out.s.result["winner"] != 0       # 手なしでは勝てない
     ts = TurnSearch(0, 200)
     ts.macros = macro.load()
