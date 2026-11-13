@@ -23,6 +23,7 @@ from ..engine.core import Engine
 from ..engine.view import cards_met, result_of
 from ..play_api import InfoLevel, PlayConfig, play_turns
 from ..search.game import GameResult
+from ..search.opponent import resistance
 from ..search.game import finish_result
 from . import loop_entry as L
 from .measure import wilson
@@ -67,17 +68,22 @@ def raw_table(ls, turns=(3, 4, 6), deck=None) -> dict:
     return {t: any_ceiling(deck, alts, t) for t in turns}
 
 
-def run_one(rules, ls, seed: int, *, deck=None, opp_deck=None, max_turn: int = 6, budget: int = 200, n_det: int = 8):
-    """1局。戻り値 dict: seed, first, cards_turn, entry_turn（0=開始時、未到達 None）, verdict（ruler.judge）, res。"""
+def run_one(rules, ls, seed: int, *, deck=None, opp_deck=None, max_turn: int = 6, budget: int = 200, n_det: int = 8,
+            opp_level: int = 0):
+    """1局。戻り値 dict: seed, first, opp, cards_turn, entry_turn（0=開始時、未到達 None）, verdict（ruler.judge）, res。
+    opp_level: 相手の抵抗の段階（search.opponent.resistance）。0 は従来の無抵抗。opp_deck を渡すとデッキだけ差し替える。"""
     deck = list(deck or L.deck_of(ls))
-    opp_deck = list(opp_deck or ["T001"] * 40)
+    opp_model, lvl_deck = resistance(opp_level)
+    opp_deck = list(opp_deck or lvl_deck)
     first = seed % 2
     alts = core_alts(ls)
     me = 0
     t0 = time.perf_counter()
-    res = GameResult(seed=seed, first_player=first)
+    res = GameResult(seed=seed, first_player=first, opp=opp_model.name if opp_model else "none")
     rec = {"cards_turn": None, "entry_turn": None, "entry_mana": None}
     eng = Engine.new_game(rules, [deck, opp_deck], seed, first)
+    if opp_model is not None:
+        opp_model.setup(eng)
 
     def record(e, t):
         if rec["cards_turn"] is None and alts and any_met(e, me, alts):
@@ -96,7 +102,8 @@ def run_one(rules, ls, seed: int, *, deck=None, opp_deck=None, max_turn: int = 6
 
         eng.advance()
         record(eng, 0)
-        eng = play_turns(eng, cfg, InfoLevel.FAIR, on_turn=on_turn, holder=holder, record=res)
+        eng = play_turns(eng, cfg, InfoLevel.FAIR, on_turn=on_turn, holder=holder, record=res,
+                         opp_policy=opp_model.policy if opp_model else None)
         finish_result(res, eng, me)
         r = result_of(eng)
         if r is not None and r["winner"] is None:
@@ -107,7 +114,7 @@ def run_one(rules, ls, seed: int, *, deck=None, opp_deck=None, max_turn: int = 6
     rec["entry_unmet"] = [f"{q.zone or '/'.join(q.zones)}:{q.match}{q.op}{q.n}" for q in L.unmet(eng, ls)]   # 終局（打ち切り）時に満たしていない入口の述語
     res.decisions = len(eng.log)
     res.seconds = time.perf_counter() - t0
-    return dict(seed=seed, first=first, **rec, verdict=judge(res, eng), res=res)
+    return dict(seed=seed, first=first, opp=res.opp, **rec, verdict=judge(res, eng), res=res)
 
 
 def measure(rules, name: str, seeds, **kw) -> list[dict]:
@@ -124,7 +131,7 @@ def summarize(rows, *, ls=None, turns=(3, 4, 6), kill_turns=(3, 4)) -> dict:
     """揃う（素引き・実測の割合とターン分布）と速さ（T ターン目までのキル率、別欄）を1つの辞書にまとめる。"""
     n = len(rows)
     horizon = max(turns)
-    out = {"games": n, "note": NOTE, "core": core_alts(ls) if ls is not None else None,
+    out = {"games": n, "note": NOTE, "opp": sorted({r.get("opp", "none") for r in rows}), "core": core_alts(ls) if ls is not None else None,
            "raw": raw_table(ls, turns) if ls is not None else None,
            "cards_by_turn": {}, "entry_by_turn": {}, "kill": {},
            "cards_turn_dist": _dist([r["cards_turn"] for r in rows], horizon),
