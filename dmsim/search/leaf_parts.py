@@ -85,7 +85,7 @@ def auto_finish(combo: dict) -> tuple[Bundle, ...]:
 
 # known_combos 側の収録IDとエンジン登録IDが違う同一カード。combos.yaml は触らず、部品表の導出でエンジン側のIDに読み替える
 # （読み替えないと、デッキに入っているカードが部品として数えられず、cards 段階が常に未達になる。例: アカシック3 が 0 枚扱い）
-ID_ALIAS = {"dm23ex2-cho005": "dm23ex2-009"}  # 完全水中要塞 アカシック3
+ID_ALIAS = {"dm23ex2-cho005": "dm23ex2-009"}  # 完全水中要塞 アカシック3（combos.yaml は 2026-11-13 に dm23ex2-009 へ直した。古い記録の読み替え用に残す）
 
 
 def canon(i: str) -> str:
