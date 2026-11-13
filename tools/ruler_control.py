@@ -38,9 +38,24 @@ def main(argv=None):
     for n in rc.KNOWN:
         for g in rc.make_randoms(rules, n, a.per_core):
             g["rows"] = [rc.run_one(rules, g["spec"], sd, budget=a.budget) for sd in seeds]
-            print(f"  ランダム {n} {g['old']}→{g['new']} ({rules.cards[g['new']].name}): 段2 {rc.rate(g['rows']):.2f}", flush=True)
+            print(f"  ランダム {n} {g['old']}→{g['new']} ({'+'.join(rules.cards[x].name for x in g['new'].split('+'))}): 段2 {rc.rate(g['rows']):.2f}", flush=True)
             randoms.append(g)
+    removal = []
+    for n in rc.KNOWN:
+        for c in rc.removal_cases(rules, n):
+            c["rows"] = [rc.run_one(rules, c["spec"], sd, budget=a.budget) for sd in seeds]
+            removal.append(c)
+    rem = rc.judge_removal(removal)
+    print("取り除き試験（中核の札1種類を全部抜く）:")
+    for x in rem:
+        print(f"  {x['combo']} {x['old']}→{x['new']}: 段2 {x['rate']:.2f}"
+              f"（定義: {'代わりなし' if x['expected_drop'] else '代わりあり'}）" + (f" ※食い違い: {x['mismatch']}" if x["mismatch"] else ""), flush=True)
     ok, why, summ = rc.judge_control(known, randoms)
+    summ["removal"] = rem
+    for x in summ["explained"]:
+        print(f"  要説明（説明済み {x['label']}、対照から外す）: {x['combo']} {x['old']}→{x['new']} {x['rate']:.2f}")
+    for x in summ["pending"]:
+        print(f"  要説明（説明なし、保留）: {x['combo']} {x['old']}→{x['new']} {x['rate']:.2f}")
     summ["seconds"] = round(time.time() - t0)
     print(f"ランダム組 中央値 {summ['random_median']:.3f} 最大 {summ['random_max']:.2f}（{len(randoms)} 組）")
     print("物差しの陽性対照:", "合格" if ok else "不合格 — " + why)
