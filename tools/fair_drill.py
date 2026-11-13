@@ -12,7 +12,7 @@ from dmsim.defs import load_rules  # noqa: E402
 from dmsim.engine.core import Engine  # noqa: E402
 from dmsim.engine_view import active_of, result_of  # noqa: E402
 from dmsim.eval.opp_pressure import opp_pressure  # noqa: E402
-from dmsim.search.fair import FairTurnSearch  # noqa: E402
+from dmsim.play_api import InfoLevel, PlayConfig, search_turn  # noqa: E402
 from dmsim.solitaire import Weights, charge_only_policy, evaluate, own_turn  # noqa: E402
 
 D, J = "dm16-051", "dm36-015"
@@ -31,7 +31,8 @@ def run(rules, seed, use_term, turns, budget, n_det, copies, filler="T001", extr
             continue
         if own_turn(eng, 0) > turns:
             break
-        eng = FairTurnSearch(0, budget, n_det, seed * 7919 + own_turn(eng, 0), value_fn=vf).run(eng)
+        eng, _ = search_turn(eng, PlayConfig(me=0, budget=budget, n_det=n_det, seed=seed * 7919 + own_turn(eng, 0),
+                                             value_fn=vf), InfoLevel.FAIR)
         low = max(low, len(eng.zlist("graveyard", 1)))  # 開幕は相手マナ0。墓地の最大枚数で測る
         dk = min(dk, len(eng.zlist("deck", 1)))
     return low, dk, result_of(eng)

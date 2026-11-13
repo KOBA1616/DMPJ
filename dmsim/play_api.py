@@ -173,3 +173,30 @@ def play_turns(eng, cfg: PlayConfig, info: InfoLevel = InfoLevel.FAIR, *, opp_po
 
     run_turns(cur, me, cfg.max_turn, opp_pol, take_turn)
     return cur[0]
+
+
+def search_turn(eng, cfg: PlayConfig, info: InfoLevel = InfoLevel.FAIR, *, opp_policy=None,
+                burn_stock=None, stock_offsets=None):
+    """自分の1ターンだけを探索する（P1-S5: tools の TurnSearch / FairTurnSearch 直接呼び出しをここへ寄せた）。
+    返り値は (そのターン後の局面, 探索ノード数)。渡した eng は探索器と同じ扱い（従来の直接呼び出しと同一の結果）。
+    - 設定で使う項目: me・budget・weights・value_fn、FAIR は n_det・lookahead・seed（seed はそのまま決定化の種）。
+    - opp_policy: 相手の決定 f(eng, d)。None は何もしない相手（charge_only）。
+    - burn_stock / stock_offsets: CHEAT の TurnSearch の同名属性（None なら既定のまま）。"""
+    from .search.turn import TurnSearch, charge_only_policy
+    info = InfoLevel(info)
+    opp_pol = opp_policy or charge_only_policy
+    if info is InfoLevel.CHEAT:
+        ts = TurnSearch(cfg.me, cfg.budget, weights=cfg.weights, opp_policy=opp_pol, value_fn=cfg.value_fn)
+        if burn_stock is not None:
+            ts.burn_stock = burn_stock
+        if stock_offsets is not None:
+            ts.stock_offsets = tuple(stock_offsets)
+        out, st = ts.run(eng)
+        return out, st.nodes
+    if burn_stock is not None or stock_offsets is not None:
+        raise NotImplementedError("burn_stock / stock_offsets は CHEAT の TurnSearch のみ")
+    from .search.fair import FairTurnSearch
+    fs = FairTurnSearch(cfg.me, cfg.budget, cfg.n_det, cfg.seed, weights=cfg.weights, opp_policy=opp_pol,
+                        value_fn=cfg.value_fn, lookahead=cfg.lookahead)
+    out = fs.run(eng)
+    return out, fs.nodes

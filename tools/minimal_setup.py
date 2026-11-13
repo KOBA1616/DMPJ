@@ -6,7 +6,7 @@ import sys
 
 from dmsim import scenario as sc
 from dmsim.defs import load_rules
-from dmsim.solitaire import TurnSearch
+from dmsim.play_api import InfoLevel, PlayConfig, search_turn
 from dmsim.engine_view import defn_of, result_of, turn_of, zone_of  # noqa: E402
 
 sys.path.insert(0, __file__.rsplit("/", 1)[0])
@@ -71,7 +71,7 @@ def measure(rules, name, n, stop, budget, seed=1):
         if len(zone_of(eng, "deck", ME)) > stop:
             continue
         reached += 1
-        out, _ = TurnSearch(ME, budget).run(eng)
+        out, _ = search_turn(eng, PlayConfig(me=ME, budget=budget), InfoLevel.CHEAT)
         wins += _won(out, t0)
     return reached, wins
 

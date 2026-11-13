@@ -167,8 +167,8 @@ def two_stage(rules, deck_ids: list[str], opp_ids: list[str], combo: dict, seeds
 
 
 def unused_names(rules, deck_ids: list[str], opp_ids: list[str], seeds: list[int], turns: int = 3, budget: int = 60) -> list[str]:
-    """usage 監査（dmsim.autofix.usage）で使われにくい札の名前。抜く候補に使う。"""
-    from ..autofix.usage import collect_usage, unused_cards
+    """usage 監査（dmsim.eval.usage）で使われにくい札の名前。抜く候補に使う。"""
+    from ..eval.usage import collect_usage, unused_cards
     u = collect_usage(rules, deck_ids, opp_ids, seeds, max_turn=turns, budget=budget)
     return [rules.cards[r["id"]].name for r in unused_cards(u) if r["id"] in rules.cards]
 
