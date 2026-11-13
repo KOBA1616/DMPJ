@@ -13,7 +13,7 @@ import yaml
 ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(ROOT / "tools"))
 
-from dmsim.autofix.reach import cards_ceiling, reach_prob  # noqa: E402
+from dmsim.eval.reach import cards_ceiling, reach_prob  # noqa: E402
 
 
 def test_reach_prob_matches_enumeration():
@@ -34,10 +34,10 @@ def knight():
     from dmsim.autofix import Knobs, Rule, harness_measure
     from dmsim.autofix.batch import default_board, default_need
     from dmsim.autofix.tune import _score
-    from dmsim.defs import load_rules
+    from dmsim.cards.defs import load_rules
     from dmsim.eval.progress import ProgressSpec
     from dmsim.search.leaf_parts import load_specs
-    from dmsim.solitaire import load_deck
+    from dmsim.eval.measure import load_deck
     old = os.environ.pop("DMSIM_SKIP_CONVERTED", None)     # 実カード（converted.yaml 含む）が要る。他のテストへ影響しないよう戻す
     try:
         rules = load_rules()

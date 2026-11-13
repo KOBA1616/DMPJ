@@ -1,5 +1,5 @@
 """dmsim.canonical: 同名カードは最新の版を採用し、古い ID は別名として控える。"""
-from dmsim import canonical as c
+from dmsim.cards import canonical as c
 
 
 def test_normalize_absorbs_notation_and_old_multicolor_note():

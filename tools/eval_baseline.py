@@ -6,12 +6,12 @@ import sys
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
-from dmsim.defs import load_rules  # noqa: E402
+from dmsim.cards.defs import load_rules  # noqa: E402
 from dmsim.eval import fair_runner  # noqa: E402
-from dmsim.opponent import PRESETS  # noqa: E402
+from dmsim.search.opponent import PRESETS  # noqa: E402
 from dmsim.eval.harness import EvalConfig, hidden_info_cost, run_eval  # noqa: E402
-from dmsim.play import default_decks  # noqa: E402
-from dmsim.solitaire import load_deck  # noqa: E402
+from dmsim.engine.play import default_decks  # noqa: E402
+from dmsim.eval.measure import load_deck  # noqa: E402
 
 
 def main(argv=None):

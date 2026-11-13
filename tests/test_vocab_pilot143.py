@@ -3,7 +3,7 @@
 「相手のナイトがある時、離れるかわりにとどまる」は条件付き static の
 mod: {no_leave: true}（第49弾）で表す。新語彙なし。
 """
-from dmsim.defs import load_tables, parse_card
+from dmsim.cards.defs import load_tables, parse_card
 
 TABLES = load_tables()
 

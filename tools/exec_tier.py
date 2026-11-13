@@ -9,7 +9,7 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 import deck_fix  # noqa: E402
-from dmsim.deckplan.evaluate import spec_with_deck  # noqa: E402
+from dmsim.eval.deckeval import spec_with_deck  # noqa: E402
 
 
 def exec_spec(rules, t: dict, deck: list[str], cold: bool = False):

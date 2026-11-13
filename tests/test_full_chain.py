@@ -19,7 +19,7 @@ def test_izanagi_free_cast_uses_the_spell_face_of_a_twinpact(rules):
     """イザナギの「コスト3以下の呪文を唱える」は、ツインパクトの呪文面で唱える（ブルースの呪文面で墓地のサガを出す）。
     サガ→蘇生でイザナギ→手札のブルース呪文面を踏み倒す→墓地のサガを出す→サガが再び場に出る（導入）。"""
     import loopcheck_full_chain as L
-    from dmsim import scenario as sc
+    from dmsim.engine import scenario as sc
     BRUCE = "dmbd17-009"
 
     def pol(eng, d):

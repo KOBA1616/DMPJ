@@ -1,5 +1,5 @@
 """貪欲な先読み(_rollout)が終わらない繰り返しに入ったら、step_limit と同じ扱いで打ち切る。"""
-from dmsim.solitaire import TurnSearch
+from dmsim.search.turn import TurnSearch
 
 
 class _S:

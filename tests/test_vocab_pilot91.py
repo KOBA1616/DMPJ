@@ -2,7 +2,7 @@
 
 「このターン、次に召喚する自分の〜のコストをN少なくする」は cost_may（once）の modify で表す。新語彙なし。
 """
-from dmsim.defs import load_tables, parse_card
+from dmsim.cards.defs import load_tables, parse_card
 
 TABLES = load_tables()
 

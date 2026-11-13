@@ -11,7 +11,7 @@ from pathlib import Path
 import pytest
 from conftest import setup
 
-from dmsim.defs import card_yaml_files, load_rules, load_tables, parse_card
+from dmsim.cards.defs import card_yaml_files, load_rules, load_tables, parse_card
 
 TABLES = load_tables()
 LESS_THAN_SELF = {"power_le": {"sum": [{"power_of": {"ref": "self"}}, -1]}}

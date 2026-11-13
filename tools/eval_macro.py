@@ -11,9 +11,9 @@ sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
 import yaml  # noqa: E402
 
-from dmsim.defs import load_rules  # noqa: E402
-from dmsim.discovery.bestfirst import priority  # noqa: E402
-from dmsim.discovery.reachsearch import reach_target  # noqa: E402
+from dmsim.cards.defs import load_rules  # noqa: E402
+from dmsim.search.bestfirst import priority  # noqa: E402
+from dmsim.search.reachsearch import reach_target  # noqa: E402
 from dmsim.engine.core import Engine  # noqa: E402
 from dmsim.eval.vfeatures import Plan, v_priority  # noqa: E402
 from dmsim.plan.macro import load_stage_file  # noqa: E402

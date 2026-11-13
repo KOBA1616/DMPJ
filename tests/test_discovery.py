@@ -4,8 +4,8 @@ from pathlib import Path
 import pytest
 import yaml
 
-from dmsim.discovery import shrink as sh
-from dmsim.discovery.loopspec import LoopSpec, Pred, hit_prob_within, reroll_success_prob
+from dmsim.eval import shrink as sh
+from dmsim.base.loopspec import LoopSpec, Pred, hit_prob_within, reroll_success_prob
 
 SAGA_SETUP = Path(__file__).parent / "saga_loop_first_setup.yaml"
 SAGA, DRAGE, KODAMA = "dm22ex2-021", "dm22ex1-007", "dmex10-020"
@@ -103,7 +103,7 @@ def test_route_probability_matches_brute_force():
     """文明が揃う確率は、包含と排除の結果が全列挙と一致する。経路は LoopSpec の JSON に往復できる。"""
     from itertools import combinations
 
-    from dmsim.discovery.loopspec import Route, all_civs_prob, route_prob
+    from dmsim.base.loopspec import Route, all_civs_prob, route_prob
     w, d, f = frozenset({"water"}), frozenset({"darkness"}), frozenset({"fire"})
     deck = [w, w, d, f, f, frozenset({"water", "darkness"})]
     need = ("water", "darkness")

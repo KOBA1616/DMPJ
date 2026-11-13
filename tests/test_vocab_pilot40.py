@@ -9,7 +9,7 @@ by が付かないので、「相手の効果」扱いにはならない。
 import yaml
 
 from conftest import setup
-from dmsim.defs import load_tables, parse_card
+from dmsim.cards.defs import load_tables, parse_card
 
 MAGNUM = """
 id: dm26sd1-i011

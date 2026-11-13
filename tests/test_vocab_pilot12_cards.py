@@ -5,7 +5,7 @@ allow: summon_from_graveyard に展開され、付随処理はエンジン側が
 """
 import pytest
 
-from dmsim.defs import load_tables, parse_card
+from dmsim.cards.defs import load_tables, parse_card
 
 TABLES = load_tables()
 

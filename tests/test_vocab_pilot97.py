@@ -4,7 +4,7 @@
 spell の効果の後に if（exists ナイト）+ may で効果を再実行する形で表す。新語彙なし。
 先例: dm28-016 魔弾プラス・ワン。
 """
-from dmsim.defs import load_tables, parse_card
+from dmsim.cards.defs import load_tables, parse_card
 
 TABLES = load_tables()
 

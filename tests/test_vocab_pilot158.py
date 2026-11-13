@@ -12,7 +12,7 @@ import pytest
 import yaml
 
 from dmsim import load_rules
-from dmsim.defs import DefError, card_yaml_files, load_tables, parse_card
+from dmsim.cards.defs import DefError, card_yaml_files, load_tables, parse_card
 from conftest import setup
 
 

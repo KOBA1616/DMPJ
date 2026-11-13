@@ -4,7 +4,7 @@ import json
 import pytest
 
 from dmsim.base import store
-from dmsim.deckplan.evaluate import record
+from dmsim.eval.deckeval import record
 
 
 def test_root_env(monkeypatch, tmp_path):

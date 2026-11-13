@@ -1,7 +1,7 @@
 """既存の LoopSpec と PlanSpec の変換。"""
 from __future__ import annotations
 
-from ..discovery.loopspec import LoopSpec
+from dmsim.base.loopspec import LoopSpec
 from .spec import PlanSpec
 
 

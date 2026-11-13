@@ -4,7 +4,7 @@ from dmsim.eval import explog
 from dmsim.eval.harness import EvalConfig, compare, hidden_info_cost, run_eval
 from dmsim.eval.infolevel import InfoLevel, get_runner, register_runner
 from dmsim.eval.stats import boot_ci, paired_diff
-from dmsim.solitaire import GameResult
+from dmsim.search.game import GameResult
 
 
 def _fake(kill_by_seed):
@@ -63,7 +63,7 @@ def test_opp_axis_and_keys():
 
     register_runner(InfoLevel.CHEAT, run)
     register_runner(InfoLevel.FAIR, run)
-    from dmsim.opponent import PRESETS
+    from dmsim.search.opponent import PRESETS
     cfg = EvalConfig(decks={"d": ["x"]}, opp_deck=["y"], seeds=list(range(1, 5)), first="first",
                      opps={"none": None, "blockers": PRESETS["blockers"]})
     rep = run_eval(None, cfg)
@@ -83,7 +83,7 @@ def test_progress_metrics_real_engine():
     """実エンジンで段階指標が記録され、harness 集計と対比較に流れる（サガのキル手前の局面）。"""
     import yaml
     from pathlib import Path
-    from dmsim.defs import load_rules
+    from dmsim.cards.defs import load_rules
     from dmsim.eval.harness import hidden_info_cost_progress
     from dmsim.eval.progress import ProgressSpec
     spec = yaml.safe_load(Path("tests/saga_setup.yaml").read_text(encoding="utf-8"))
@@ -118,7 +118,7 @@ def test_explog_connected_to_harness(tmp_path):
     """ハーネスの対局を1手ごとに版つきログへ記録し、上限が効く。段階指標と同時に使える。"""
     import yaml
     from pathlib import Path
-    from dmsim.defs import load_rules
+    from dmsim.cards.defs import load_rules
     from dmsim.eval.progress import ProgressSpec
     from dmsim.eval.steplog import ExpLogSpec
     spec = yaml.safe_load(Path("tests/saga_setup.yaml").read_text(encoding="utf-8"))

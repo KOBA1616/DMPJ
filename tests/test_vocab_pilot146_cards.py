@@ -8,7 +8,7 @@
 """
 import yaml
 
-from dmsim.defs import load_tables, parse_card
+from dmsim.cards.defs import load_tables, parse_card
 
 TABLES = load_tables()
 

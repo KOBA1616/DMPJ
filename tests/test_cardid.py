@@ -1,7 +1,7 @@
 """カードIDの正規化と、実カードが公式の形式のIDで管理されていること。"""
 import pytest
 
-from dmsim.cardid import is_official_id, ledger_ids, normalize_id, pack_ids, set_code
+from dmsim.base.cardid import is_official_id, ledger_ids, normalize_id, pack_ids, set_code
 
 
 @pytest.mark.parametrize("raw,want", [

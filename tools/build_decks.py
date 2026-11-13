@@ -11,7 +11,7 @@ import yaml
 ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(ROOT))
 sys.path.insert(0, str(ROOT / "tools"))
-from dmsim.defs import load_rules  # noqa: E402
+from dmsim.cards.defs import load_rules  # noqa: E402
 import known_combos  # noqa: E402
 
 

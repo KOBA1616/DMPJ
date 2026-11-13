@@ -1,4 +1,4 @@
-from dmsim.defs import load_rules
+from dmsim.cards.defs import load_rules
 from dmsim.engine.core import Engine
 from dmsim.eval.vfeatures import Plan, resource_total, shield_bundle, v_priority
 

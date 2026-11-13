@@ -6,7 +6,7 @@ from __future__ import annotations
 
 from collections import Counter
 
-from ..search.leaf_parts import canon, heavy_ids
+from ..search.leaf_parts import heavy_ids
 
 MANA_N = 5
 HAND_N = 5

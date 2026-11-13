@@ -4,7 +4,7 @@
 （select zone: hand, owner: opp）で表す。手札は秘匿ゾーンのため
 選択は見ないで行われる。新語彙なし。
 """
-from dmsim.defs import load_tables, parse_card
+from dmsim.cards.defs import load_tables, parse_card
 
 TABLES = load_tables()
 

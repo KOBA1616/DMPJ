@@ -1,9 +1,9 @@
 """追加カード（タイフーン2種・イザナギ・ブルース・サガ）を配置から探索させ、ループと勝ちが出るか見る。
 実行: PYTHONPATH=. python tools/loopcheck_cards.py"""
 import sys; sys.path.insert(0,'tests')
-from dmsim.defs import load_rules
-from dmsim import scenario as sc
-from dmsim.solitaire import play_game
+from dmsim.cards.defs import load_rules
+from dmsim.engine import scenario as sc
+from dmsim.search.game import play_game
 r=load_rules()
 IZ="dm22ex1-025"; ET="dm26ex2-071"; LT="dmpromoy22-p51"; BR="dmbd17-009"; SAGA="dm22ex2-021"
 def run(name, p0, deck_left=30, budget=3000, turns=1):

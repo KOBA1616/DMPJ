@@ -3,8 +3,8 @@ import pytest
 import yaml
 from conftest import answer, setup
 
-from dmsim.defs import DATA, load_rules
-from dmsim.defs import card_yaml_files  # noqa: E402
+from dmsim.cards.defs import load_rules
+from dmsim.cards.defs import card_yaml_files  # noqa: E402
 
 
 def mk(i, types, kw=None, cost=1, power=0, extra=None):

@@ -31,8 +31,8 @@ ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(ROOT))
 sys.path.insert(0, str(ROOT / "tools"))
 
-from dmsim import cardstore, identity, schema  # noqa: E402
-from dmsim.defs import DATA, DefError, dedupe_list, load_tables, parse_card  # noqa: E402
+from dmsim.cards import cardstore, identity, schema  # noqa: E402
+from dmsim.cards.defs import DATA, DefError, dedupe_list, load_tables, parse_card  # noqa: E402
 import rule_convert  # noqa: E402
 from llm_offload.providers import CallTimeout  # noqa: E402
 from llm_offload.providers import (  # noqa: E402,F401  無料モデル呼び出しは llm_offload に集約
@@ -312,7 +312,7 @@ def load_rows(inputs: list[str]) -> list[dict]:
 
 def known_ids(out: Path) -> set[str]:
     ids: set[str] = set()
-    from dmsim.cardfiles import card_files
+    from dmsim.cards.cardfiles import card_files
     for f in card_files():
         ids |= {c["id"] for c in (yaml.safe_load(f.read_text(encoding="utf-8")) or {}).get("cards") or []}
     return ids

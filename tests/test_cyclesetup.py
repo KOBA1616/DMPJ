@@ -1,8 +1,8 @@
 import pytest
 
 from dmsim.discovery.cyclesetup import setup_from_cycle
-from dmsim.scenario import build
-from dmsim.zone_graph import Cycle, bundles_of
+from dmsim.engine.scenario import build
+from dmsim.engine.zone_graph import Cycle, bundles_of
 
 
 def test_setup_from_cycle_builds(rules):

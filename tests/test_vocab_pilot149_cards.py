@@ -6,7 +6,7 @@ parse_card（検証込み）を通ることと、declare の via / ライダー�
 複合4枚は残る unsupported の内訳まで固定する。
 """
 import yaml
-from dmsim.defs import load_tables, parse_card
+from dmsim.cards.defs import load_tables, parse_card
 
 TABLES = load_tables()
 

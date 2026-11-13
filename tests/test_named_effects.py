@@ -5,8 +5,8 @@ from pathlib import Path
 import pytest
 from conftest import answer, setup
 
-from dmsim.defs import DATA, load_rules
-from dmsim.defs import card_yaml_files  # noqa: E402
+from dmsim.cards.defs import load_rules
+from dmsim.cards.defs import card_yaml_files  # noqa: E402
 
 
 @pytest.fixture(scope="module")
@@ -143,7 +143,7 @@ def test_escape_unavailable_without_shields(rr):
 def test_modal_choose_one_runs_only_chosen_mode(tmp_path):
     """「次のうちいずれか1つを選ぶ」: 選んだモードだけを解決する。"""
     import yaml
-    from dmsim.defs import DATA, load_rules
+    from dmsim.cards.defs import load_rules
     f = tmp_path / "m.yaml"
     f.write_text(yaml.safe_dump({"cards": [{"id": "M001", "name": "選択呪文", "types": ["spell"], "civs": ["nature"], "cost": 1, "text": "x",
                  "spell": [{"op": "modal", "modes": [[{"op": "draw", "count": 1}], [{"op": "draw", "count": 3}]]}]}]}, allow_unicode=True))
@@ -158,7 +158,7 @@ def test_modal_choose_one_runs_only_chosen_mode(tmp_path):
 
 def test_modal_repeat_allows_same_mode_twice(tmp_path):
     import yaml
-    from dmsim.defs import DATA, load_rules
+    from dmsim.cards.defs import load_rules
     f = tmp_path / "m.yaml"
     f.write_text(yaml.safe_dump({"cards": [{"id": "M002", "name": "二回選ぶ呪文", "types": ["spell"], "civs": ["nature"], "cost": 1, "text": "x",
                  "spell": [{"op": "modal", "count": 2, "repeat": True, "modes": [[{"op": "draw", "count": 1}], [{"op": "mark", "name": "b"}]]}]}]}, allow_unicode=True))

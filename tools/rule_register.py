@@ -15,8 +15,8 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 import convert_cards as cc  # noqa: E402
-from dmsim import cardstore  # noqa: E402
-from dmsim.defs import DATA, load_tables  # noqa: E402
+from dmsim.cards import cardstore  # noqa: E402
+from dmsim.cards.defs import DATA, load_tables  # noqa: E402
 
 
 def main(argv=None):

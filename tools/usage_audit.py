@@ -8,11 +8,11 @@ import sys
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
-from dmsim.autofix.usage import collect_usage, unused_cards  # noqa: E402
-from dmsim.defs import load_rules  # noqa: E402
+from dmsim.eval.usage import collect_usage, unused_cards  # noqa: E402
+from dmsim.cards.defs import load_rules  # noqa: E402
 from dmsim.engine.core import Engine  # noqa: E402
 from dmsim.search.leaf_parts import load_specs, make_value_fn, parts_id_for_decks  # noqa: E402
-from dmsim.solitaire import load_deck  # noqa: E402
+from dmsim.eval.measure import load_deck  # noqa: E402
 
 
 def main(argv=None):

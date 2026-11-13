@@ -2,9 +2,9 @@
 import pytest
 from conftest import answer, setup
 
-from dmsim.defs import DefError, load_tables, parse_card
-from dmsim.loop import LoopDetector, verify
-from dmsim.play import passive_policy
+from dmsim.cards.defs import DefError, load_tables, parse_card
+from dmsim.engine.loop import LoopDetector, verify
+from dmsim.engine.play import passive_policy
 
 
 def names(e, z, p):

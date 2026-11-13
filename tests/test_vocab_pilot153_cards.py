@@ -6,7 +6,7 @@
 （実装と変換は分ける）。手変換は rejects の partial にキズナプラスと[P]を足したもの。
 """
 import yaml
-from dmsim.defs import load_tables, parse_card
+from dmsim.cards.defs import load_tables, parse_card
 
 TABLES = load_tables()
 

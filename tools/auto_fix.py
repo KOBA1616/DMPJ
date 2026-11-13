@@ -8,10 +8,10 @@ import yaml
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 from dmsim.autofix import Knobs, Rule, autofix, harness_measure  # noqa: E402
-from dmsim.defs import load_rules  # noqa: E402
+from dmsim.cards.defs import load_rules  # noqa: E402
 from dmsim.eval.progress import ProgressSpec  # noqa: E402
 from dmsim.search.leaf_parts import load_specs  # noqa: E402
-from dmsim.solitaire import load_deck  # noqa: E402
+from dmsim.eval.measure import load_deck  # noqa: E402
 
 
 def _board(xs):
@@ -26,7 +26,7 @@ def _prep_ids(combo, rules, deck, opp, spec):
     """準備札: combos.yaml の prep_ids があればそれ、無ければプレイログから自動検出（dmsim.autofix.usage）。"""
     if combo.get("prep_ids"):
         return tuple(combo["prep_ids"])
-    from dmsim.autofix.usage import auto_prep_ids
+    from dmsim.eval.usage import auto_prep_ids
     return auto_prep_ids(rules, deck, opp, spec)
 
 
@@ -64,7 +64,7 @@ def run_batch(a, combos):
     rules = load_rules()
     from dmsim.autofix.partsgenome import load_specs_evolved
     from dmsim.autofix.valuelearn import load_model
-    from dmsim.autofix.reach import cards_ceiling
+    from dmsim.eval.reach import cards_ceiling
     import exec_tier
     specs = load_specs_evolved()                              # 進化で採用した部品の重み倍率を反映（data/autofix/parts.yaml）
 

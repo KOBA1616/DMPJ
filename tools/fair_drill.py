@@ -8,12 +8,13 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
-from dmsim.defs import load_rules  # noqa: E402
+from dmsim.cards.defs import load_rules  # noqa: E402
 from dmsim.engine.core import Engine  # noqa: E402
-from dmsim.engine_view import active_of, result_of  # noqa: E402
+from dmsim.engine.view import active_of, result_of  # noqa: E402
 from dmsim.eval.opp_pressure import opp_pressure  # noqa: E402
 from dmsim.play_api import InfoLevel, PlayConfig, search_turn  # noqa: E402
-from dmsim.solitaire import Weights, charge_only_policy, evaluate, own_turn  # noqa: E402
+from dmsim.search.leaf_eval import Weights, evaluate  # noqa: E402
+from dmsim.search.turn import charge_only_policy, own_turn  # noqa: E402
 
 D, J = "dm16-051", "dm36-015"
 

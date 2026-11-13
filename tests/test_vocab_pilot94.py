@@ -2,7 +2,7 @@
 
 「相手のクリーチャーが出る時、かわりに墓地に置く」は replace（move to bz）で表す。新語彙なし。
 """
-from dmsim.defs import load_tables, parse_card
+from dmsim.cards.defs import load_tables, parse_card
 
 TABLES = load_tables()
 

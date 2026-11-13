@@ -10,7 +10,7 @@
 - 封印されたカードが離れる時、封印は持ち主の墓地に置かれる。封印の移動記録には sealed_from が付き、
   「このカードの封印がすべてなくなった時」は when の sealed_from: self ＋ if の seals_on で表す
 """
-from conftest import answer, setup
+from conftest import setup
 
 
 def _answer_default(e, d):

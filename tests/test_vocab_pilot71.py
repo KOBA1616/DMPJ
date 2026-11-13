@@ -3,7 +3,7 @@
 「L・ゲート：種族」は既存の kind: replace で表す。新語彙なし。
 破壊される時、かわりに墓地からその種族を手札に戻してもよい。そうしたら山札の一番下へ。
 """
-from dmsim.defs import load_tables, parse_card
+from dmsim.cards.defs import load_tables, parse_card
 
 TABLES = load_tables()
 
@@ -44,6 +44,6 @@ def test_l_gate_parses():
 
 def test_l_gate_replace_kind():
     # replace が有効な kind であることを確認
-    from dmsim.defs import load_tables
+    from dmsim.cards.defs import load_tables
     t = load_tables()
     assert t is not None

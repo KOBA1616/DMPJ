@@ -18,12 +18,12 @@ import time
 from dataclasses import dataclass, field
 from pathlib import Path
 
-from .. import scenario
-from . import replay, shrink
+from dmsim.engine import scenario
+from dmsim.eval import replay, shrink
 from ..search import bestfirst
 from ..search.bestfirst import Weights
 from ..base.loopspec import LoopSpec, Pred
-from ..engine_view import result_of
+from dmsim.engine.view import result_of
 from ..base import store
 
 MUT_ZONES = ("hand", "mana", "bz", "graveyard", "shield", "deck")

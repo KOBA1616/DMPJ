@@ -9,7 +9,8 @@ alt_cost に if（条件式）を付けられ、条件成立時のみ :alt の�
 """
 import sys
 sys.path.insert(0, '.')
-from dmsim import load_rules, scenario
+from dmsim import load_rules
+from dmsim.engine import scenario
 
 
 def _setup():

@@ -9,11 +9,10 @@ may [move (exclude self, as: jtornado), 後続]。「２回まで」は repeat {
 """
 from pathlib import Path
 
-import pytest
 import yaml
 from conftest import setup
 
-from dmsim.defs import load_tables, parse_card
+from dmsim.cards.defs import load_tables, parse_card
 
 TABLES = load_tables()
 PROTOS = ("T408", "T409", "T410", "T411", "T412")

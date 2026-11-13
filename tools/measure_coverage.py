@@ -2,7 +2,7 @@
   python tools/measure_coverage.py [--json]
 data/cards/{converted,real}.yaml の枚数を、文明・種類・確認状態・効果の種類・未対応申告で数える。
 台帳（cards_total）に対する変換率も出す。"""
-import argparse, json, sys
+import argparse, json
 from collections import Counter
 from pathlib import Path
 import yaml

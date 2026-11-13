@@ -1,10 +1,9 @@
 """保存した天門(初期型)の LoopSpec: 手順を再生すると勝つ（エンジンの変更で壊れていないことの回帰テスト）。"""
-import json
 from pathlib import Path
 
 from dmsim import load_rules
-from dmsim.discovery import replay
-from dmsim.discovery.loopspec import LoopSpec
+from dmsim.eval import replay
+from dmsim.base.loopspec import LoopSpec
 
 PATH = Path(__file__).parent.parent / "data" / "loops" / "tenmon_initial.json"
 
@@ -19,7 +18,7 @@ def test_saved_tenmon_loopspec_replays_to_a_win_and_respects_the_four_copy_limit
     rules = load_rules()
     ls = LoopSpec.from_json(PATH.read_text())
     board = ls.source["board"]
-    from dmsim import scenario
+    from dmsim.engine import scenario
     assert not scenario.deck_limit_violations(rules, board)
     steps = [(k, tuple(keys), tuple(idx)) for k, keys, idx in ls.source["steps"]]
     assert replay.replay_test(rules, steps, _prepare)(board)

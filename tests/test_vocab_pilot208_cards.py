@@ -7,8 +7,8 @@ import copy
 import json
 from pathlib import Path
 
-from dmsim import cardstore
-from dmsim.defs import DATA, load_tables, parse_card
+from dmsim.cards import cardstore
+from dmsim.cards.defs import DATA, load_tables, parse_card
 
 TABLES = load_tables()
 CONVERTED = cardstore.converted_path(DATA)

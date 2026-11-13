@@ -17,11 +17,11 @@ import exec_tier  # noqa: E402
 from dmsim.autofix import Knobs, Rule, harness_measure  # noqa: E402
 from dmsim.autofix.batch import default_board, default_need  # noqa: E402
 from dmsim.autofix.gate import check_paths, compare  # noqa: E402
-from dmsim.defs import load_rules  # noqa: E402
+from dmsim.cards.defs import load_rules  # noqa: E402
 from dmsim.eval.progress import ProgressSpec  # noqa: E402
 from dmsim.autofix.partsgenome import load_specs_evolved  # noqa: E402
 from dmsim.autofix.valuelearn import load_model  # noqa: E402
-from dmsim.solitaire import load_deck  # noqa: E402
+from dmsim.eval.measure import load_deck  # noqa: E402
 
 
 def measure_all(a) -> dict:

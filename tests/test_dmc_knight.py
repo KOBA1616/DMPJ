@@ -1,9 +1,8 @@
 """～地獄帰りの騎士～ と DARK MEMORY CONTAINER: 盾が置かれた時に墓地から出る。"""
-from pathlib import Path
 
 from conftest import setup
-from dmsim.cardfiles import card_files
-from dmsim.defs import DATA, load_rules
+from dmsim.cards.cardfiles import card_files
+from dmsim.cards.defs import DATA, load_rules
 
 K, D = "dm25ex3-028", "dm25ex3-055"
 

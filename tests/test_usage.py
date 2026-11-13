@@ -1,6 +1,6 @@
 from collections import Counter
 
-from dmsim.autofix.usage import detect_prep_ids, played_defs, unused_cards
+from dmsim.eval.usage import detect_prep_ids, played_defs, unused_cards
 
 
 def U(avail, played):
@@ -22,7 +22,7 @@ def test_played_defs():
 
 
 def test_collect_usage_runs(rules):
-    from dmsim.autofix.usage import collect_usage
+    from dmsim.eval.usage import collect_usage
     u = collect_usage(rules, ["T001", "T073"] * 20, ["T001"] * 40, [1, 2], False, 2, 20)
     assert u["games"] == 2 and sum(u["avail"].values()) > 0
     assert all(u["played"][k] <= u["avail"][k] for k in u["played"])

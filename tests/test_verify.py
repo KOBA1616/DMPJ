@@ -1,6 +1,5 @@
 """一括検証ハーネス（dmsim.verify）の検査。"""
-from dmsim.defs import load_rules
-from dmsim.verify import greedy_policy, verify_all, verify_card
+from dmsim.engine.verify import greedy_policy, verify_all, verify_card
 
 
 def test_verify_all_real_cards_run_without_error(rules):

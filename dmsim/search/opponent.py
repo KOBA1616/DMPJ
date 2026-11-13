@@ -10,7 +10,7 @@ OppModel は設定で切り替える:
 """
 from __future__ import annotations
 
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 
 from ..engine import Engine
 from ..engine.play import passive_policy

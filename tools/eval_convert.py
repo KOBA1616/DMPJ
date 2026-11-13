@@ -11,14 +11,13 @@ from __future__ import annotations
 import argparse
 import json
 import sys
-import tempfile
 from pathlib import Path
 
 import yaml
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 import convert_cards as cc  # noqa: E402
-from dmsim.defs import DATA, load_tables  # noqa: E402
+from dmsim.cards.defs import DATA, load_tables  # noqa: E402
 
 SKIP = {"source", "text"}
 

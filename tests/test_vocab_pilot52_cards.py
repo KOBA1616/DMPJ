@@ -5,7 +5,7 @@
 （{race_has: アウトレイジ}）で表せるようになった。ツインパクトでは
 カード全体の s_back に面の値が集約されることも確認する。
 """
-from dmsim.defs import load_tables, parse_card
+from dmsim.cards.defs import load_tables, parse_card
 
 TABLES = load_tables()
 

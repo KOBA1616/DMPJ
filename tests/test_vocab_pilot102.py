@@ -3,7 +3,7 @@
 「出た時、クロスギアを１枚、自分の手札からコストを支払わずにジェネレートしてもよい」は
 may + play_free（クロスギアのプレイ＝ジェネレート）で表す。新語彙なし。
 """
-from dmsim.defs import load_tables, parse_card
+from dmsim.cards.defs import load_tables, parse_card
 
 TABLES = load_tables()
 

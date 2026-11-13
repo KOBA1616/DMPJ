@@ -1,6 +1,7 @@
 """最良優先探索（dmsim/discovery/bestfirst.py）が、簡単な盤面で常在の勝利条件までたどり着く。"""
-from dmsim import load_rules, scenario
-from dmsim.discovery import bestfirst
+from dmsim import load_rules
+from dmsim.engine import scenario
+from dmsim.search import bestfirst
 
 AL, EM, HG = "dmx12b-031", "dm23bd7-022", "dm16-007"
 

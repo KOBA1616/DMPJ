@@ -6,7 +6,7 @@ mod {ignore_ids: [その id]} を持つ。キーワード由来の能力を無�
 """
 import pytest
 
-from dmsim.defs import load_tables, parse_card
+from dmsim.cards.defs import load_tables, parse_card
 
 TABLES = load_tables()
 ONI = {"cmp": [{"sum": [{"count": {"zone": "shield", "owner": "you"}},

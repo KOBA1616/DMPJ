@@ -6,7 +6,7 @@ unsupported から hyper_release を外したもの。登録（submit）は行�
 設計ノート: pilot156-hyper-release-design.md（ツリー内では第157弾）。
 """
 import yaml
-from dmsim.defs import load_tables, parse_card
+from dmsim.cards.defs import load_tables, parse_card
 
 TABLES = load_tables()
 

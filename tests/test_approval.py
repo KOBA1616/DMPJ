@@ -5,8 +5,8 @@ import yaml
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent / "tools"))
 import auto_approve as aa  # noqa: E402
-from dmsim import approval as ap  # noqa: E402
-from dmsim.defs import DATA, load_tables  # noqa: E402
+from dmsim.cards import approval as ap  # noqa: E402
+from dmsim.cards.defs import DATA, load_tables  # noqa: E402
 
 CARD = {"id": "dm01-s01", "name": "x", "types": ["creature"], "civs": ["light"], "cost": 3, "power": 1000,
         "keywords": ["blocker"], "text": "ブロッカー",
@@ -49,7 +49,7 @@ def test_vocab_change_invalidates_only_users():
 
 def test_split_cards_roundtrip(tmp_path):
     import split_cards
-    from dmsim.cardfiles import card_files
+    from dmsim.cards.cardfiles import card_files
     src = tmp_path / "converted.yaml"
     cards = [{**CARD, "id": "dm01-s01"}, {**CARD, "id": "dm01-s02"}, {**CARD, "id": "dm02-001"}]
     src.write_text(yaml.safe_dump({"cards": cards}, allow_unicode=True), encoding="utf-8")
@@ -60,7 +60,7 @@ def test_split_cards_roundtrip(tmp_path):
 
 
 def test_cardstore_file_and_sharded(tmp_path):
-    from dmsim import cardstore
+    from dmsim.cards import cardstore
     cards = [{**CARD, "id": i} for i in ("dm02-001", "dm01-s01", "dm01-001")]
     one = tmp_path / "converted.yaml"
     cardstore.write(one, cards, "# h\n")
@@ -88,8 +88,8 @@ def test_ledger_sharded_roundtrip(tmp_path):
 
 
 def test_load_rules_only_approved(tmp_path, monkeypatch):
-    from dmsim import approval
-    from dmsim.defs import load_rules
+    from dmsim.cards import approval
+    from dmsim.cards.defs import load_rules
     a, b = {**CARD, "id": "dm01-s01"}, {**CARD, "id": "dm01-s02"}
     f = tmp_path / "c.yaml"
     f.write_text(yaml.safe_dump({"cards": [a, b]}, allow_unicode=True), encoding="utf-8")
@@ -105,7 +105,7 @@ def test_load_rules_only_approved(tmp_path, monkeypatch):
 
 def test_migrate_converted_and_path(tmp_path):
     import migrate_converted
-    from dmsim import cardstore
+    from dmsim.cards import cardstore
     cards = [{**CARD, "id": i} for i in ("dm02-001", "dm01-s01")]
     src = tmp_path / "cards" / "converted.yaml"
     cardstore.write(src, cards, "# h\n")

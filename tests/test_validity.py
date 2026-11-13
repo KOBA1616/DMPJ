@@ -1,6 +1,5 @@
-import json
 
-from dmsim import validity as v
+from dmsim.eval import validity as v
 
 
 def _rows(p):
@@ -32,7 +31,7 @@ def test_stamp_expires_when_instrument_changes(tmp_path):
 
 
 def test_judge_detects_flat_scores():
-    from dmsim.validity import judge
+    from dmsim.eval.validity import judge
     rows = [{"combo": c, "split": "tuning", "k": 2, "core_score": 7.0, "random_median": 7.0, "random_p95": 7.0, "percentile": 0.0}
             for c in ("a", "b")]
     ok, why = judge(rows)

@@ -12,7 +12,7 @@ from pathlib import Path
 
 import yaml
 
-from dmsim.defs import load_tables, parse_card
+from dmsim.cards.defs import load_tables, parse_card
 
 ROOT = Path(__file__).parent.parent
 # reopen 前の rejects は第173弾コミットの親ツリーに残っている

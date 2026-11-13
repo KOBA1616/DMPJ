@@ -1,4 +1,4 @@
-from dmsim.discovery.reachsearch import fraction, reach_rate, reach_target
+from dmsim.search.reachsearch import fraction, reach_rate, reach_target
 from dmsim.engine import Engine
 
 
@@ -23,22 +23,22 @@ def test_reach_rate_over_seeds(rules):
 
 
 def test_any_wildcard_counts_zone_size(rules):
-    from dmsim.discovery.reachsearch import board_met
+    from dmsim.search.reachsearch import board_met
     e = _game(rules)
     assert board_met(e, 0, {"shield": {"*": 5}}) and not board_met(e, 0, {"shield": {"*": 6}})
     assert board_met(e, 0, {"hand": {"*": 5}})
 
 
 def test_shield_under_counts_bundle():
-    from dmsim.defs import load_rules
+    from dmsim.cards.defs import load_rules
     from dmsim.engine.core import Engine
-    from dmsim.discovery.reachsearch import _have
+    from dmsim.search.reachsearch import _have
     e = Engine.new_game(load_rules(), [["T001"] * 40, ["T001"] * 40], 1, first_player=0)
     assert _have(e, 0, "shield_under", "*") == 0
 
 
 def test_quiet_only_at_top_level_when_settled():
-    from dmsim.discovery.reachsearch import _quiet
+    from dmsim.search.reachsearch import _quiet
     assert _quiet({"kind": "modal"}, False)
     assert not _quiet({"kind": "modal"}, True)
     assert _quiet({"kind": "main"}, True) and _quiet(None, True)

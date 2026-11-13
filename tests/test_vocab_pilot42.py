@@ -12,7 +12,7 @@ import sys
 
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-from dmsim import scenario  # noqa: E402
+from dmsim.engine import scenario  # noqa: E402
 
 
 def _game(rules, shields):

@@ -3,9 +3,8 @@ from pathlib import Path
 
 import yaml
 
-from dmsim import loop_first as lf
-from dmsim import scenario as sc
-from dmsim.loop import verify
+from dmsim.search import loop_first as lf
+from dmsim.engine import scenario as sc
 
 
 def test_two_stage_finds_saga_loop_then_a_win_after_n_cycles(rules):

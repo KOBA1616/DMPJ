@@ -18,11 +18,11 @@ from pathlib import Path
 import yaml
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
-from dmsim import approval as ap  # noqa: E402
-from dmsim.cardfiles import card_files  # noqa: E402
-from dmsim.defs import DATA, load_rules, load_tables  # noqa: E402
-from dmsim import effectcheck as ec  # noqa: E402
-from dmsim.verify import verify_card  # noqa: E402
+from dmsim.cards import approval as ap  # noqa: E402
+from dmsim.cards.cardfiles import card_files  # noqa: E402
+from dmsim.cards.defs import load_rules, load_tables  # noqa: E402
+from dmsim.engine import effectcheck as ec  # noqa: E402
+from dmsim.engine.verify import verify_card  # noqa: E402
 
 RULE_NOTE = "ルールのみで変換"
 

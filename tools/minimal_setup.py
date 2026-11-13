@@ -4,10 +4,10 @@
 import random
 import sys
 
-from dmsim import scenario as sc
-from dmsim.defs import load_rules
+from dmsim.engine import scenario as sc
+from dmsim.cards.defs import load_rules
 from dmsim.play_api import InfoLevel, PlayConfig, search_turn
-from dmsim.engine_view import defn_of, result_of, turn_of, zone_of  # noqa: E402
+from dmsim.engine.view import defn_of, result_of, turn_of, zone_of  # noqa: E402
 
 sys.path.insert(0, __file__.rsplit("/", 1)[0])
 from discover_dig import ME, dig  # noqa: E402

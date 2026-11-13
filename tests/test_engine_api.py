@@ -1,8 +1,8 @@
 """エンジン疑似API（dmsim.engine_api）: 従来の Engine の使い方と同じ結果になり、fork・巻き戻し・差分検証が働くこと。"""
 import pytest
 
-from dmsim import engine_api as api
-from dmsim.defs import load_rules
+from dmsim.engine import api
+from dmsim.cards.defs import load_rules
 from dmsim.engine.core import Engine
 
 

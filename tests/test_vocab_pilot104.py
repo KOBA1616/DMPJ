@@ -3,7 +3,7 @@
 「このクリーチャーの攻撃の終わりに、〜」は既存の attack_end イベント
 （攻撃クリーチャーが subject）で表す。新語彙なし。
 """
-from dmsim.defs import load_tables, parse_card
+from dmsim.cards.defs import load_tables, parse_card
 
 TABLES = load_tables()
 

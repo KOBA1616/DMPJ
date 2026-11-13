@@ -3,7 +3,7 @@
 「ウェーブストライカー」は既存のキーワード。条件付き能力は
 if: {cmp: [{count: {..., filter: {keyword: wave_striker}}}, ">=", 2]} で表す。新語彙なし。
 """
-from dmsim.defs import load_tables, parse_card
+from dmsim.cards.defs import load_tables, parse_card
 
 TABLES = load_tables()
 

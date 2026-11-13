@@ -1,5 +1,5 @@
-from dmsim import scenario
-from dmsim.engine_view import active_of, defn_of, defns_of, digest_of, result_of, tapped_of, turn_of, zone_of
+from dmsim.engine import scenario
+from dmsim.engine.view import active_of, defn_of, defns_of, digest_of, result_of, tapped_of, turn_of, zone_of
 
 
 def test_view_matches_state(rules):
@@ -13,7 +13,7 @@ def test_view_matches_state(rules):
 
 def test_write_ops(rules):
     import random
-    from dmsim.engine_view import inject_state, order_zone, shuffle_deck, state_of, trace_of, trace_on
+    from dmsim.engine.view import inject_state, order_zone, shuffle_deck, state_of, trace_of, trace_on
     mk = lambda: scenario.build(rules, {"p0": {"hand": ["T001"]}, "p1": {}, "seed": 1, "deck_size": 12})
     a, b = mk(), mk()
     shuffle_deck(a, 0, random.Random(5))
@@ -27,7 +27,7 @@ def test_write_ops(rules):
 
 def test_force_hand(rules):
     from dmsim.engine.core import Engine
-    from dmsim.engine_view import force_hand
+    from dmsim.engine.view import force_hand
     ids = [i for i in rules.cards if i != "T001"][:14]
     deck = (ids * 3)[:40]
     keys = ids[:3]

@@ -25,7 +25,6 @@
 """
 from __future__ import annotations
 
-import itertools
 from dataclasses import dataclass, field
 
 CHILD_KEYS = ("then", "else", "body")

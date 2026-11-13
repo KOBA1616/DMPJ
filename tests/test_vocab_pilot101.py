@@ -4,7 +4,7 @@
 affects を手札ゾーンに向けた static の deny: [summon] で表す。新語彙なし。
 先例: 34-sec001。
 """
-from dmsim.defs import load_tables, parse_card
+from dmsim.cards.defs import load_tables, parse_card
 
 TABLES = load_tables()
 

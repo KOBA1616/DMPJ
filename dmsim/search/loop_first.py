@@ -15,7 +15,6 @@ from dataclasses import dataclass, field
 from ..engine import Engine
 from ..engine.core import IllegalAnswer
 from ..engine.loop import LoopCertificate, fast_forward, verify
-from .leaf_eval import WIN
 from .turn import TurnSearch
 
 

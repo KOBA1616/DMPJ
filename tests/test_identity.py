@@ -5,9 +5,9 @@ import yaml
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent / "tools"))
 import canonicalize  # noqa: E402
-from dmsim import approval as ap  # noqa: E402
-from dmsim import cardstore, identity  # noqa: E402
-from dmsim.defs import DATA, load_rules, load_tables  # noqa: E402
+from dmsim.cards import approval as ap  # noqa: E402
+from dmsim.cards import cardstore, identity  # noqa: E402
+from dmsim.cards.defs import DATA, load_rules, load_tables  # noqa: E402
 
 CARD = {"name": "テスト", "types": ["creature"], "civs": ["light"], "cost": 3, "power": 1000, "keywords": ["blocker"],
         "text": "ブロッカー", "source": {"review": "pending"}}
@@ -18,7 +18,7 @@ def card(i, **kw):
 
 
 def fake_index(monkeypatch, text="ブロッカー"):
-    from dmsim import canonical
+    from dmsim.cards import canonical
     idx = {"テスト": {"id": "dm05-001", "text": text, "aliases": ["dm01-001"], "product": "5", "text_variants": 1}}
     monkeypatch.setattr(canonical, "canonical_index", lambda: idx)
     monkeypatch.setattr(canonical, "alias_to_canonical", lambda: {"dm05-001": "dm05-001", "dm01-001": "dm05-001"})
@@ -77,7 +77,7 @@ def test_old_id_resolves_at_load(monkeypatch, tmp_path):
 
 
 def test_deep_checks_catch_mismatch_and_effect(tmp_path):
-    from dmsim import effectcheck as ec
+    from dmsim.engine import effectcheck as ec
     good = {"id": "dm01-901", "name": "デーモン", "types": ["spell"], "civs": ["darkness"], "cost": 2, "keywords": [],
             "text": "バトルゾーンにある相手のクリーチャーを１体選び、破壊する。",
             "spell": [{"op": "destroy", "select": {"zone": "bz", "owner": "opp", "filter": {"types": ["creature"]}, "count": 1}}],
@@ -94,8 +94,8 @@ def test_deep_checks_catch_mismatch_and_effect(tmp_path):
 
 def test_count_any_lets_player_choose_any_number():
     """count: any（好きな枚数）は 0枚から候補の全部まで選べる。"""
-    from dmsim import scenario as sc
-    from dmsim.cardfiles import card_files
+    from dmsim.engine import scenario as sc
+    from dmsim.cards.cardfiles import card_files
     r = load_rules(card_files())
     eng = sc.build(r, sc.try_card(r, "dm04-049"), check=True)
     seen = None

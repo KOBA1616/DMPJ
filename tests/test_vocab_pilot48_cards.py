@@ -1,7 +1,7 @@
 """語彙パイロット第48弾: 実カードの parse 確認（cost_may must へ直した3枚）。"""
 import yaml
 
-from dmsim.defs import load_tables, parse_card
+from dmsim.cards.defs import load_tables, parse_card
 
 TABLES = load_tables()
 

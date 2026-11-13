@@ -15,7 +15,7 @@ from pathlib import Path
 import yaml
 from conftest import setup, answer
 
-from dmsim.defs import DefError, load_tables, parse_card
+from dmsim.cards.defs import DefError, load_tables, parse_card
 
 TABLES = load_tables()
 

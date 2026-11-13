@@ -4,7 +4,7 @@
 召喚してもよい」が第50弾の回数制限つき許可（modify の allow に once）で表せるようになった。
 マッハファイター付与は、マナゾーンからの召喚を待つ遅延誘発でそのクリーチャーに与える。
 """
-from dmsim.defs import load_tables, parse_card
+from dmsim.cards.defs import load_tables, parse_card
 
 TABLES = load_tables()
 

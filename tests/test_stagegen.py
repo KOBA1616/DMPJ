@@ -1,4 +1,4 @@
-from dmsim.discovery.loopspec import LoopSpec
+from dmsim.base.loopspec import LoopSpec
 from dmsim.plan.macro import MacroPlanner
 from dmsim.plan.stagegen import stages_from_leaf_parts, stages_from_loopspec
 
@@ -24,9 +24,9 @@ def test_akashic_stages_are_met_by_verified_min_board(monkeypatch):
     """アカシックの段階目標は、エンジンで検証済みの最小盤面（akashic_loop_min）で最終段まで満たされる。部品表が最小盤面からずれたら落ちる。"""
     import pytest
     import yaml
-    from dmsim.defs import load_rules
-    from dmsim.discovery.reachsearch import board_met
-    from dmsim.scenario import build
+    from dmsim.cards.defs import load_rules
+    from dmsim.search.reachsearch import board_met
+    from dmsim.engine.scenario import build
 
     monkeypatch.delenv("DMSIM_SKIP_CONVERTED", raising=False)    # オルゼキア・NoN は converted.yaml にある
     rules = load_rules()

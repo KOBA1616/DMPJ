@@ -80,7 +80,7 @@ class Git:
         origin の最新の上に1コミット作り直す（作業ツリーの tools/ 等の上書きはそのまま残す）。成功扱い（変換済み）が優先。"""
         import yaml as _y
         sys.path.insert(0, str(ROOT))
-        from dmsim import cardstore
+        from dmsim.cards import cardstore
         conv_rel = "data/cards/converted" if (d / "data/cards/converted").is_dir() else "data/cards/converted.yaml"
         conv, rej = d / conv_rel, d / "data/cards/raw/rejects.jsonl"
 

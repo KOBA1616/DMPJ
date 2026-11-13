@@ -4,7 +4,7 @@ import random
 from conftest import answer, setup
 
 from dmsim import Engine
-from dmsim.play import random_policy, replay, run
+from dmsim.engine.play import random_policy, replay, run
 
 
 def names(e, z, p):
@@ -182,7 +182,7 @@ def test_olive_oil_returns_graveyard_to_deck(rules):
 
 
 def test_races_are_split_by_slash_into_single_races():
-    from dmsim.defs import split_races
+    from dmsim.cards.defs import split_races
     assert split_races(["デーモン・コマンド/スチーム・ナイト/フュージョナー"]) == ["デーモン・コマンド", "スチーム・ナイト", "フュージョナー"]
     assert split_races(["オラクル", "グレートメカオー"]) == ["オラクル", "グレートメカオー"]
 
@@ -196,7 +196,7 @@ def test_aleftina_wins_when_ten_or_more_shields_and_not_with_nine(rules):
 
 
 def test_aleftina_costs_one_more_per_own_shield_while_in_hand(rules):
-    from dmsim import scenario
+    from dmsim.engine import scenario
     for shields, mana, playable in ((0, 4, True), (3, 6, False), (3, 7, True)):
         spec = {"p0": {"hand": ["dmx12b-031"], "mana": ["dm16-007"] * mana, "shield": ["dm06-085"] * shields}, "p1": {}, "filler": "dm06-085"}
         e = scenario.build(rules, spec)

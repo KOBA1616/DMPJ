@@ -3,7 +3,7 @@
 マッハファイターの効果部分と同じ語彙（第58弾）。
 違いは「出たターンの間」の制限が無い点。
 """
-from dmsim.defs import load_tables, parse_card
+from dmsim.cards.defs import load_tables, parse_card
 
 TABLES = load_tables()
 

@@ -23,8 +23,8 @@ sys.path.insert(0, str(Path(__file__).resolve().parent))
 import convert_cards as cc  # noqa: E402
 import rule_convert  # noqa: E402
 from llm_offload import providers  # noqa: E402
-from dmsim import cardstore, schema  # noqa: E402
-from dmsim.defs import DATA, load_tables  # noqa: E402
+from dmsim.cards import cardstore, schema  # noqa: E402
+from dmsim.cards.defs import DATA, load_tables  # noqa: E402
 
 RAW = DATA / "cards" / "raw"
 STATUS = RAW / "convert_status.json"

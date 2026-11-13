@@ -1,5 +1,5 @@
 import yaml
-from dmsim import scenario
+from dmsim.engine import scenario
 from dmsim.search import FairTurnSearch
 from dmsim.search.leaf_parts import SAGA, SAGA_SPEC, Part, PartsSpec, make_value_fn, parts_score
 

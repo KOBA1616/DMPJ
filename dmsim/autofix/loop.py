@@ -118,7 +118,7 @@ def autofix(measure, k0: Knobs, combo: dict | None = None, rule: Rule = Rule(), 
 def harness_measure(rules, deck, opp_deck, seeds, spec=None, prog=None, parts_spec=None, max_turn=4, prep_ids=(), workers: int = 1, value_model=None):
     """実エンジンの測定（FAIR のみ）。workers>1 なら seeds を分けて fork で並列に回す（結果は seeds の順に連結。Claude のトークンは増えない）。parts_spec は dmsim.search.leaf_parts.PartsSpec。"""
     from ..eval.api import Candidate, EvalSettings, run_eval
-    from ..search.leaf_parts import Part, PartsSpec, make_value_fn
+    from ..search.leaf_parts import make_value_fn
 
     def measure_seeds(k: Knobs, seeds) -> dict:
         n_det = k.n_det

@@ -5,7 +5,7 @@
 選択は op に select を埋め込む形（move + select + as で束縛）。
 新語彙なし。
 """
-from dmsim.defs import load_tables, parse_card
+from dmsim.cards.defs import load_tables, parse_card
 
 TABLES = load_tables()
 

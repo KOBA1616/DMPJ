@@ -3,7 +3,7 @@
 「上から3枚を表向きにし、該当1体につき能力を1回、その後すべて山札の下へ」は
 choose(look) + repeat(times=count式) + move で表す。新語彙なし。
 """
-from dmsim.defs import load_tables, parse_card
+from dmsim.cards.defs import load_tables, parse_card
 
 TABLES = load_tables()
 

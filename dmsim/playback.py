@@ -15,8 +15,8 @@ import math
 
 from .devserver import Session, _diff, _label, _snapshot
 from .engine import Engine
-from .loop import LoopCertificate, fast_forward
-from .play import replay
+from dmsim.engine.loop import LoopCertificate, fast_forward
+from dmsim.engine.play import replay
 from .search.game import lock_probe
 from .search.turn import Detectors
 

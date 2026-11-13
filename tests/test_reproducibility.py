@@ -3,7 +3,7 @@ import pathlib
 import tempfile
 
 import test_dmc_knight as t
-from dmsim.discovery.reproducibility import play_ready_prob
+from dmsim.eval.reproducibility import play_ready_prob
 
 
 def _rules():

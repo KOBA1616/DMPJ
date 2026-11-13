@@ -3,7 +3,7 @@
 対象: 《指示虫アロー・ワーム》DMRP16-016 — 唯一の能力が攻撃先の強制そのもの。
 static {affects: self, mod: {must_be_attacked: true}} で表す。
 """
-from dmsim.defs import load_tables, parse_card
+from dmsim.cards.defs import load_tables, parse_card
 
 TABLES = load_tables()
 

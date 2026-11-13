@@ -4,7 +4,7 @@
 mod: {allow: [{action: attack_creature, other: {tapped: false}}]} を
 duration: end_of_turn で付与する（第50弾の dm24rp3-076 が先例）。
 """
-from dmsim.defs import load_tables, parse_card
+from dmsim.cards.defs import load_tables, parse_card
 
 TABLES = load_tables()
 

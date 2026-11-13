@@ -4,8 +4,8 @@ import json
 
 import pytest
 
-from dmsim import rustcore
-from dmsim.defs import load_rules
+from dmsim.engine import rustcore
+from dmsim.cards.defs import load_rules
 from dmsim.engine.core import Engine
 
 pytestmark = pytest.mark.skipif(not rustcore.available(), reason="dmcore 未ビルド")
@@ -41,7 +41,7 @@ def test_json_roundtrip_and_clone(rules):
 
 
 def test_rng_matches_python(rules):
-    from dmsim.state import rng_next
+    from dmsim.engine.state import rng_next
     py = Engine.new_game(rules, [_deck(rules), ["T001"] * 40], 99, 0).s
     rs = rustcore.dmcore.State.from_json(py.to_json())
     for _ in range(100):

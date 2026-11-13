@@ -3,7 +3,7 @@
 「コスト7以下の呪文を1枚、自分の墓地からコストを支払わずに唱える」は
 play_free（select zone: graveyard, types: [spell]）で表す。新語彙なし。
 """
-from dmsim.defs import load_tables, parse_card
+from dmsim.cards.defs import load_tables, parse_card
 
 TABLES = load_tables()
 

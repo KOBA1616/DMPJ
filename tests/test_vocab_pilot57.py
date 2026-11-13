@@ -5,8 +5,7 @@ alt_cost の do ステップに tap: true を指定でき、ゾーン移動で�
 """
 import sys
 sys.path.insert(0, '.')
-from dmsim import load_rules, scenario
-from dmsim.defs import load_tables, parse_card
+from dmsim.cards.defs import load_tables, parse_card
 
 TABLES = load_tables()
 

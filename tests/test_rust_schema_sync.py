@@ -4,7 +4,7 @@ import dataclasses
 import re
 from pathlib import Path
 
-from dmsim.state import Card, GameState
+from dmsim.engine.state import Card, GameState
 
 SRC = Path(__file__).resolve().parents[1] / "rust" / "dmcore" / "src" / "state.rs"
 

@@ -1,4 +1,4 @@
-from dmsim import scenario
+from dmsim.engine import scenario
 from dmsim.search import FairTurnSearch
 
 
@@ -51,7 +51,7 @@ def test_early_stop_decided():
 
 
 def test_time_limit_zero_still_finishes(rules):
-    from dmsim.solitaire import TurnSearch
+    from dmsim.search.turn import TurnSearch
     e = _reach_own(_eng(rules, None))
     leaf, st = TurnSearch(0, budget=500, time_limit=0.0).run(e)
     assert st.nodes <= 2 and leaf is not e

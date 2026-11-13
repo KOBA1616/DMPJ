@@ -3,7 +3,7 @@
 「タップされていない光のクリーチャーを攻撃できる」は第60弾の allow に
 other フィルタ（civs 等）を付けて表す。新語彙なし。
 """
-from dmsim.defs import load_tables, parse_card
+from dmsim.cards.defs import load_tables, parse_card
 
 TABLES = load_tables()
 

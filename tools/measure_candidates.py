@@ -12,7 +12,7 @@ import time
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
-from dmsim.defs import load_rules  # noqa: E402
+from dmsim.cards.defs import load_rules  # noqa: E402
 from dmsim.discovery import candidates as cd  # noqa: E402
 from dmsim.discovery.advantage import scan_pair_report  # noqa: E402
 

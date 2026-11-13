@@ -2,9 +2,9 @@
 段階1の範囲: ターン進行・ドロー・マナチャージ・パス・デッキ切れ。プレイ（play）は未移植 → Unsupported が構造化されて返ること。"""
 import pytest
 
-from dmsim import rustcore
-from dmsim.defs import load_rules
-from dmsim.engine_api import Session, lockstep
+from dmsim.engine import rustcore
+from dmsim.cards.defs import load_rules
+from dmsim.engine.api import Session, lockstep
 
 pytestmark = pytest.mark.skipif(not rustcore.available(), reason="dmcore 未ビルド")
 

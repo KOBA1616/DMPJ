@@ -15,10 +15,10 @@ from pathlib import Path
 import yaml
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
-from dmsim import validity  # noqa: E402
-from dmsim.defs import load_rules  # noqa: E402
-from dmsim.scenario import build  # noqa: E402
-from dmsim.solitaire import play_game  # noqa: E402
+from dmsim.eval import validity  # noqa: E402
+from dmsim.cards.defs import load_rules  # noqa: E402
+from dmsim.engine.scenario import build  # noqa: E402
+from dmsim.search.game import play_game  # noqa: E402
 
 MANA5 = ["T001", "T003", "T004", "T005", "T008"]
 OPP_DECK, OPP_MANA = 30, 6
@@ -118,7 +118,7 @@ def singles(rules, top=40, key="score") -> list[dict]:
 
 def recovery_pool(rules) -> list[str]:
     """自分のゾーンから手札・場へ動かす札（回収・蘇生・踏み倒し）。相手を動かす札の相棒の候補。"""
-    from dmsim.zone_graph import bundles_of
+    from dmsim.engine.zone_graph import bundles_of
     out = set()
     for b in bundles_of(rules):
         for m in b.moves:

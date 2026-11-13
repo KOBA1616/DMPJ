@@ -1,10 +1,10 @@
 """窓口 play_api（S3）と eval.api.run_eval（S4）の約束（ロードマップ P0-2）。"""
 import pytest
 
-from dmsim.defs import load_rules
+from dmsim.cards.defs import load_rules
 from dmsim.eval.api import Candidate, EvalSettings, run_eval
 from dmsim.play_api import API_VERSION, InfoLevel, PlayConfig, play
-from dmsim.solitaire import play_game
+from dmsim.search.game import play_game
 
 
 @pytest.fixture(scope="module")

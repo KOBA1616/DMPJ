@@ -10,8 +10,8 @@ import sys
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
-from dmsim.defs import load_rules  # noqa: E402
-from dmsim.solitaire import measure  # noqa: E402
+from dmsim.cards.defs import load_rules  # noqa: E402
+from dmsim.eval.measure import measure  # noqa: E402
 
 
 def random_deck(ids: list[str], rng: random.Random, size: int = 40, kinds: int = 14) -> list[str]:

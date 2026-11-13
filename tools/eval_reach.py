@@ -31,9 +31,9 @@ def reach(parts, turns, second=False, trials=40000, deck_size=40, seed=1):
 
 def start(spec_path, budget, seeds, turns):
     import yaml
-    from dmsim.defs import load_rules
-    from dmsim.scenario import build
-    from dmsim.solitaire import play_game
+    from dmsim.cards.defs import load_rules
+    from dmsim.engine.scenario import build
+    from dmsim.search.game import play_game
     rules = load_rules()
     spec = yaml.safe_load(Path(spec_path).read_text(encoding="utf-8"))
     for seed in range(1, seeds + 1):

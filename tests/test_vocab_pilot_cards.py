@@ -17,7 +17,7 @@ defs.parse_card（登録時の検証）を通ることを示す。
 """
 import pytest
 
-from dmsim.defs import load_tables, parse_card
+from dmsim.cards.defs import load_tables, parse_card
 
 TABLES = load_tables()
 

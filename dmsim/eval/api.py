@@ -7,7 +7,7 @@ CHEAT を levels に入れても上限値として report に載るだけ。V（
 """
 from __future__ import annotations
 
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 from typing import Any, Callable, Sequence
 
 from ..play_api import InfoLevel

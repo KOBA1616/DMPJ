@@ -6,7 +6,7 @@ parse_card（検証込み）を通ることと、when: {event: evolve_base, subj
 手変換は rejects の partial（出た時側・CIP 側）に evolve_base 側を足したもの。
 """
 import yaml
-from dmsim.defs import load_tables, parse_card
+from dmsim.cards.defs import load_tables, parse_card
 
 TABLES = load_tables()
 

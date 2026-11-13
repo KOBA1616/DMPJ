@@ -7,7 +7,7 @@ dmrp03-007 は count 式の中のフィルタからも not_types を外す（設
 登録（submit）は行わない。設計ノート: pilot157-put-evolution-stacking-design.md（ツリー内では第158弾）。
 """
 import yaml
-from dmsim.defs import load_tables, parse_card
+from dmsim.cards.defs import load_tables, parse_card
 
 TABLES = load_tables()
 

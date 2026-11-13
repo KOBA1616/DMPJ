@@ -7,7 +7,7 @@ from urllib.parse import parse_qs, urlparse
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent / "tools"))
 
 import analyze_ids  # noqa: E402
-from dmsim.cardid import cache_name, canonical_id, detail_url, ledger_ids, normalize_id, resolve_id  # noqa: E402
+from dmsim.base.cardid import cache_name, canonical_id, detail_url, ledger_ids, normalize_id, resolve_id  # noqa: E402
 
 ROWS = analyze_ids.load()
 IDS = [i for _, i in ROWS]

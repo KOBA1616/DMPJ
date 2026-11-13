@@ -4,7 +4,7 @@ from pathlib import Path
 import pytest
 from conftest import answer, setup
 
-from dmsim.defs import card_yaml_files, load_rules
+from dmsim.cards.defs import card_yaml_files, load_rules
 
 
 @pytest.fixture(scope="module")

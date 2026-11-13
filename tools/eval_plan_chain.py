@@ -9,11 +9,11 @@ from pathlib import Path
 import yaml
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
-from dmsim.defs import load_rules  # noqa: E402
+from dmsim.cards.defs import load_rules  # noqa: E402
 from dmsim.eval import vgate  # noqa: E402
 from dmsim.eval.vfeatures import macro_prio  # noqa: E402
 from dmsim.play_api import InfoLevel, PlayConfig, play  # noqa: E402
-from dmsim.solitaire import load_deck  # noqa: E402
+from dmsim.eval.measure import load_deck  # noqa: E402
 
 
 def run(combo, pw, seeds, start=1, reserve=0, width=150, max_turn=14, targets="data/autofix/targets.yaml"):

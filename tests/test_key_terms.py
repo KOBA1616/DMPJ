@@ -1,4 +1,4 @@
-from dmsim.defs import load_rules
+from dmsim.cards.defs import load_rules
 from dmsim.engine.core import Engine
 from dmsim.eval.key_terms import key_in_mana_penalty, make_term, stage_ids
 

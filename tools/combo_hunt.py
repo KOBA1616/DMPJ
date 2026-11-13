@@ -14,11 +14,11 @@ from pathlib import Path
 import yaml
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
-from dmsim.defs import load_rules  # noqa: E402
-from dmsim.scenario import build  # noqa: E402
+from dmsim.cards.defs import load_rules  # noqa: E402
+from dmsim.engine.scenario import build  # noqa: E402
 from dmsim.play_api import InfoLevel, PlayConfig, play  # noqa: E402
-from dmsim.solitaire import measure  # noqa: E402
-from dmsim.zone_graph import Cycle, bundles_of, feeds  # noqa: E402
+from dmsim.eval.measure import measure  # noqa: E402
+from dmsim.engine.zone_graph import Cycle, bundles_of, feeds  # noqa: E402
 
 REGISTERED = ("tenmon", "saga", "knight_dmc", "akashic")
 

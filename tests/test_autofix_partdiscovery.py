@@ -1,4 +1,3 @@
-import random
 from dmsim.autofix import partdiscovery as PD
 from dmsim.autofix.tune import evolve
 from dmsim.search.leaf_parts import Part, PartsSpec

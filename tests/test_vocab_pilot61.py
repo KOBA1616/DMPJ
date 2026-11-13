@@ -4,7 +4,7 @@
 mod: {win_all_battles: true} で表す。
 combat._battle でパワー比較より優先して勝敗を決める。
 """
-from dmsim.defs import load_tables, parse_card
+from dmsim.cards.defs import load_tables, parse_card
 
 TABLES = load_tables()
 

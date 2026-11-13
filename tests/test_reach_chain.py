@@ -1,6 +1,6 @@
-from dmsim.defs import load_rules
+from dmsim.cards.defs import load_rules
 from dmsim.engine.core import Engine
-from dmsim.discovery.reachsearch import reach_chain
+from dmsim.search.reachsearch import reach_chain
 
 
 def test_chain_stops_at_unreachable_stage():
@@ -11,7 +11,7 @@ def test_chain_stops_at_unreachable_stage():
 
 
 def test_keep_later_keeps_cards_for_later_stages(rules):
-    from dmsim.discovery.reachsearch import _with_keep
+    from dmsim.search.reachsearch import _with_keep
     ids = [i for i in rules.cards if i != "T001"][:12]
     deck = (ids * 4)[:40]
     e = Engine.new_game(rules, [deck, ["T001"] * 40], 1, first_player=0)
@@ -23,13 +23,13 @@ def test_keep_later_keeps_cards_for_later_stages(rules):
 
 
 def test_merge_targets():
-    from dmsim.discovery.reachsearch import _merge
+    from dmsim.search.reachsearch import _merge
     assert _merge({"bz": {"a": 1}, "hand": {"b": 1}}, {"bz": {"a": 2, "c": 1}, "graveyard": {"d": 1}}) == \
         {"bz": {"a": 2, "c": 1}, "hand": {"b": 1}, "graveyard": {"d": 1}}
 
 
 def test_keep_excludes_cards_in_current_stage(rules):
-    from dmsim.discovery.reachsearch import _with_keep
+    from dmsim.search.reachsearch import _with_keep
     ids = [i for i in rules.cards if i != "T001"][:12]
     deck = (ids * 4)[:40]
     e = Engine.new_game(rules, [deck, ["T001"] * 40], 1, first_player=0)
@@ -40,8 +40,8 @@ def test_keep_excludes_cards_in_current_stage(rules):
 
 def test_chain_lookahead_prefers_merging_when_single_steps_dead_end(rules, monkeypatch):
     """単独で1段ずつ進むと次で詰まる局面では、先読みが『次段と合わせる』手を選ぶ。"""
-    from dmsim.discovery import reachsearch as R
-    from dmsim.discovery.reachsearch import ReachResult
+    from dmsim.search import reachsearch as R
+    from dmsim.search.reachsearch import ReachResult
     e = Engine.new_game(rules, [["T001"] * 40, ["T001"] * 40], 1, first_player=0)
     stages = [{"hand": {"a": 1}}, {"hand": {"b": 1}}, {"hand": {"c": 1}}]
     calls = []
@@ -59,7 +59,7 @@ def test_chain_lookahead_prefers_merging_when_single_steps_dead_end(rules, monke
 
 def test_reach_set_prefers_specific_stages_and_orders_by_turn(monkeypatch):
     from types import SimpleNamespace as NS
-    from dmsim.discovery import reachsearch as rs
+    from dmsim.search import reachsearch as rs
     stages = [{"hand": {"*": 8}}, {"bz": {"A": 1}}, {"graveyard": {"B": 1}}]
     turns = {0: 3, 1: 9, 2: 7}      # 枚数だけの段が一番早く届く
 

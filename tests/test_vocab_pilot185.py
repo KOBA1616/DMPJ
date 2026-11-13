@@ -16,7 +16,7 @@ from conftest import setup
 import yaml
 from pathlib import Path
 
-from dmsim.defs import load_tables, parse_card
+from dmsim.cards.defs import load_tables, parse_card
 
 
 def _keys(d):
