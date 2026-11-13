@@ -6,7 +6,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass, replace
 
-from ..deckplan.evaluate import record
+from ..eval.deckeval import record
 from ..eval.stats import paired_diff
 from .diagnose import diagnose
 
