@@ -1,8 +1,9 @@
 """物差しの「① 揃う」と「④ 速さ」（S4、docs/combo-ruler-design.md §6 タスク6）。
 
 入口局面の定義 data/loops/entry/<コンボ>.json（LoopSpec.minimal）から条件を機械的に取る。コンボごとの手書き条件は増やさない。
-- 中核 core_need: minimal のうち札の名前（match.name）で指した述語の {ID: 枚数}（ゾーンを問わず合計）。基盤札は数えない（§9）。
-- 揃う（cards）: 中核が山札・盾以外の自分のゾーンに揃った（eval.stage.cards_met と同じ意味）。
+- 中核 core_alts: 入口局面の中核の組（loop_entry.core_groups。source.core に「どれか1組でよい」代わりを書ける、§14）から作った
+  {ID: 枚数} の候補。source.core がなければ minimal のうち札の名前で指した述語（ゾーンを問わず合計）。基盤札は数えない（§9）。
+- 揃う（cards）: 候補のどれか1つが山札・盾以外の自分のゾーンに揃った（eval.stage.cards_met と同じ意味）。
 - 入口（entry）: minimal の全述語（ゾーン・文明・墓地のクリーチャー数など）を満たした（loop_entry.unmet が空）。
 (a) 素引き確率 raw_table: eval.reach.cards_ceiling（サーチ・ドローなし、先後平均の厳密計算。下限の理論値）。
 (b) 実測 measure: 通常の開幕から FAIR（山札は見えない公平探索、search.fair.FairTurnSearch）で回し、自分の各ターン終了時に
@@ -33,17 +34,37 @@ NOTE = "相手はマナチャージだけ（ブロッカー・S・トリガー�
 
 
 def core_need(ls) -> dict:
-    need: Counter = Counter()
-    for p in ls.minimal:
-        if p.owner == 0 and "name" in p.match and p.op in (">=", "=="):
-            need[p.match["name"]] += p.n
-    return dict(need)
+    """代わりの組の1つめ（表示・互換用）。揃ったかの判定は core_alts のどれか1つで行う。"""
+    alts = L.core_alternatives(ls)
+    return alts[0] if alts else {}
+
+
+def core_alts(ls) -> list[dict]:
+    return L.core_alternatives(ls)
+
+
+def any_met(eng, me: int, alts: list[dict]) -> bool:
+    return any(cards_met(eng, me, a) for a in alts)
+
+
+def any_ceiling(deck, alts: list[dict], turn: int) -> float:
+    """代わりの組のどれか1つが揃う素引き確率（包除原理。2組が両方揃う = 札ごとの必要枚数の最大が揃う）。"""
+    from itertools import combinations
+    tot = 0.0
+    for r in range(1, len(alts) + 1):
+        for sub in combinations(alts, r):
+            need: Counter = Counter()
+            for a in sub:
+                for i, k in a.items():
+                    need[i] = max(need[i], k)
+            tot += (-1) ** (r + 1) * cards_ceiling(deck, dict(need), turn)
+    return tot
 
 
 def raw_table(ls, turns=(3, 4, 6), deck=None) -> dict:
     deck = deck or L.deck_of(ls)
-    need = core_need(ls)
-    return {t: cards_ceiling(deck, need, t) for t in turns}
+    alts = core_alts(ls)
+    return {t: any_ceiling(deck, alts, t) for t in turns}
 
 
 def run_one(rules, ls, seed: int, *, deck=None, opp_deck=None, max_turn: int = 6, budget: int = 200, n_det: int = 8):
@@ -51,7 +72,7 @@ def run_one(rules, ls, seed: int, *, deck=None, opp_deck=None, max_turn: int = 6
     deck = list(deck or L.deck_of(ls))
     opp_deck = list(opp_deck or ["T001"] * 40)
     first = seed % 2
-    need = core_need(ls)
+    alts = core_alts(ls)
     me = 0
     t0 = time.perf_counter()
     res = GameResult(seed=seed, first_player=first)
@@ -59,7 +80,7 @@ def run_one(rules, ls, seed: int, *, deck=None, opp_deck=None, max_turn: int = 6
     eng = Engine.new_game(rules, [deck, opp_deck], seed, first)
 
     def record(e, t):
-        if rec["cards_turn"] is None and need and cards_met(e, me, need):
+        if rec["cards_turn"] is None and alts and any_met(e, me, alts):
             rec["cards_turn"] = t
         if rec["entry_turn"] is None and not L.unmet(e, ls):
             rec["entry_turn"] = t
@@ -107,7 +128,7 @@ def summarize(rows, *, ls=None, turns=(3, 4, 6), kill_turns=(3, 4)) -> dict:
     """揃う（素引き・実測の割合とターン分布）と速さ（T ターン目までのキル率、別欄）を1つの辞書にまとめる。"""
     n = len(rows)
     horizon = max(turns)
-    out = {"games": n, "note": NOTE, "core": core_need(ls) if ls is not None else None,
+    out = {"games": n, "note": NOTE, "core": core_alts(ls) if ls is not None else None,
            "raw": raw_table(ls, turns) if ls is not None else None,
            "cards_by_turn": {}, "entry_by_turn": {}, "kill": {},
            "cards_turn_dist": _dist([r["cards_turn"] for r in rows], horizon),
