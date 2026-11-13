@@ -22,3 +22,9 @@ def test_saga_entry_board_reaches_last_stage():
     st = RG.load("saga")
     assert RG.reached(e, st, 0) == 4          # 入口局面は最後の段（入口）を満たす
     assert RG.route_score(e, st, 0) == sum(s.weight for s in st)
+
+
+def test_needed_cards_and_partial():
+    st = RG.load("saga")
+    need = RG.needed_cards(st)
+    assert "mana" not in need["dmrp03-s03"][1] and need["dmrp03-s03"][0] == 1   # 経路の段から導く: シャコガイルはマナで使わない

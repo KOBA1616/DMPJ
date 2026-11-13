@@ -70,10 +70,12 @@ def raw_table(ls, turns=(3, 4, 6), deck=None) -> dict:
 
 
 def run_one(rules, ls, seed: int, *, deck=None, opp_deck=None, max_turn: int = 6, budget: int = 200, n_det: int = 8,
-            opp_level: int = 0, route: str | None = None, route_log: str | None = None):
+            opp_level: int = 0, route: str | None = None, route_log: str | None = None,
+            route_opts: dict | None = None):
     """1局。戻り値 dict: seed, first, opp, cards_turn, entry_turn（0=開始時、未到達 None）, verdict（ruler.judge）, res。
     opp_level: 相手の抵抗の段階（search.opponent.resistance）。0 は従来の無抵抗。opp_deck を渡すとデッキだけ差し替える。
     route: 経路の名前（data/loops/route/）。渡すと葉の評価に経路の段の点を足す（search.route_goal、既定 None は従来どおり）。
+    route_opts: search.route_goal.make_value_fn の切り替え（mult / partial / elsewhere / away）。
     段の到達は route を渡さなくても名前があれば記録したいので、記録だけは route_log で別に指定できる。"""
     deck = list(deck or L.deck_of(ls))
     opp_model, lvl_deck = resistance(opp_level)
@@ -103,7 +105,7 @@ def run_one(rules, ls, seed: int, *, deck=None, opp_deck=None, max_turn: int = 6
     holder = [eng]
     try:
         cfg = PlayConfig(seed=seed, max_turn=max_turn, budget=budget, n_det=n_det, me=me,
-                         value_fn=RG.make_value_fn(stages) if route else None)
+                         value_fn=RG.make_value_fn(stages, **(route_opts or {})) if route else None)
 
         def on_turn(e, ot, nodes):
             res.nodes += nodes
