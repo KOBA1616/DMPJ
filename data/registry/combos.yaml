@@ -2628,8 +2628,8 @@ entries:
       - - choose_cards
         - - hand:dm24ex1-038:0
   version:
-    fingerprint: ce7559c2efe14ce5
-    commit: 3aae1af
+    fingerprint: 03dae0af4c2e8eb5
+    commit: e645093
     measured_at: '2026-11-13'
 - id: saga
   name: 絶望神サガの蘇生ループ
@@ -3829,8 +3829,8 @@ entries:
       - - choose_cards
         - - graveyard:dm22ex2-021:0
   version:
-    fingerprint: ce7559c2efe14ce5
-    commit: 3aae1af
+    fingerprint: 03dae0af4c2e8eb5
+    commit: e645093
     measured_at: '2026-11-13'
 rejected:
 - id: akashic_hd2
@@ -3956,8 +3956,8 @@ rejected:
       via: loop
       win_turn: 1
   version:
-    fingerprint: ce7559c2efe14ce5
-    commit: 3aae1af
+    fingerprint: 03dae0af4c2e8eb5
+    commit: e645093
     measured_at: '2026-11-13'
   failed_at: ruler
 - id: drill_lock
@@ -4298,8 +4298,325 @@ rejected:
       opp_mana_end: 6
     stage2: 段階0 0/8 / 段階1 0/8
   version:
-    fingerprint: ce7559c2efe14ce5
-    commit: 3aae1af
+    fingerprint: 03dae0af4c2e8eb5
+    commit: e645093
+    measured_at: '2026-11-13'
+  failed_at: lock
+- id: drill_lock_basebuild
+  name: ドリル・スコール＋ジョバンニ＋クルト（基盤選びのデッキ）
+  split: holdout
+  types:
+  - lock
+  core:
+  - id: dm16-051
+    name: ドリル・スコール
+    role: ロック
+  - id: dm36-015
+    name: 天雷王機ジョバンニX世
+    role: 回収
+  - id: dm36-078
+    name: クルトの気合釣り
+    role: 山札の回復
+  win: lock
+  entry: null
+  procedure:
+  - drill_lock と同じ。デッキは tools/basebuild.py が中核3種を固定して選んだもの（data/decks/basebuild_drill_lock.yaml）。
+  lock_mode: active
+  seeds:
+  - 1
+  - 2
+  - 3
+  - 4
+  - 5
+  - 6
+  - 7
+  - 8
+  max_turn: 2
+  budget: null
+  setup: data/registry/setups/drill_lock_basebuild.json
+  policy:
+  - 'charge:'
+  - play:dm16-051
+  - play:dm36-078
+  - 'graveyard:dm16-051:'
+  - 'mana:'
+  - graveyard:dm36-078
+  - graveyard:dm16-051
+  policy_avoid:
+  - charge:dm16-051
+  - charge:dm36-015
+  - charge:dm36-078
+  - mana:dm16-051
+  - mana:dm36-015
+  - mana:dm36-078
+  opp_levels:
+  - 0
+  - 1
+  route_stages: null
+  note: ''
+  digest: 1ef6632fbe368ebd
+  checks:
+  - name: cards
+    ok: true
+    detail: 中核の札がカードデータにある
+  - name: type
+    ok: true
+    detail: lock（能動）として相手の山札切れまで回す
+  - name: entry
+    ok: true
+    detail: data/registry/setups/drill_lock_basebuild.json、与えた方針 ['charge:', 'play:dm16-051', 'play:dm36-078', 'graveyard:dm16-051:', 'mana:', 'graveyard:dm36-078', 'graveyard:dm16-051']（除く ['charge:dm16-051',
+      'charge:dm36-015', 'charge:dm36-078', 'mana:dm16-051', 'mana:dm36-015', 'mana:dm36-078']）
+  - name: lock
+    ok: false
+    detail: '相手の山札切れまで勝ち 段階0 0/8 / 段階1 0/8（基準 0.8）。破れた理由 段階0 {''相手の資源が増えた'': 8}、段階1 {''相手の資源が増えた'': 8}'
+  measured:
+    seeds:
+    - 1
+    - 2
+    - 3
+    - 4
+    - 5
+    - 6
+    - 7
+    - 8
+    lock_mode: active
+    policy:
+    - 'charge:'
+    - play:dm16-051
+    - play:dm36-078
+    - 'graveyard:dm16-051:'
+    - 'mana:'
+    - graveyard:dm36-078
+    - graveyard:dm16-051
+    policy_avoid:
+    - charge:dm16-051
+    - charge:dm36-015
+    - charge:dm36-078
+    - mana:dm16-051
+    - mana:dm36-015
+    - mana:dm36-078
+    stage1: 対象外（ロックは段2の経路）
+    threshold: 0.8
+    by_opp_level:
+      0:
+        stage2: 0/8
+        stage2_rate: 0.0
+        distinct_starts: 8
+        broken:
+          相手の資源が増えた: 8
+        own_deck_left:
+        - 19
+        - 22
+        - 24
+        - 26
+      1:
+        stage2: 0/8
+        stage2_rate: 0.0
+        distinct_starts: 8
+        broken:
+          相手の資源が増えた: 8
+        own_deck_left:
+        - 19
+        - 22
+        - 24
+        - 26
+    rows:
+    - seed: 1
+      opp_level: 0
+      start: b862f630cb0f
+      stage1: false
+      stage2: false
+      via: null
+      win_turn: null
+      error: null
+      own_deck_left: 22
+      broken: '相手の資源が増えた: mana:1 +1, mana_untapped:1 +1'
+      broken_turn: 10
+      opp_mana_end: 6
+    - seed: 2
+      opp_level: 0
+      start: 070c8ed971c6
+      stage1: false
+      stage2: false
+      via: null
+      win_turn: null
+      error: null
+      own_deck_left: 24
+      broken: '相手の資源が増えた: mana:1 +1, mana_untapped:1 +1'
+      broken_turn: 9
+      opp_mana_end: 6
+    - seed: 3
+      opp_level: 0
+      start: 9d55f936b782
+      stage1: false
+      stage2: false
+      via: null
+      win_turn: null
+      error: null
+      own_deck_left: 22
+      broken: '相手の資源が増えた: mana:1 +1, mana_untapped:1 +1'
+      broken_turn: 11
+      opp_mana_end: 6
+    - seed: 4
+      opp_level: 0
+      start: 39d1ecf50dad
+      stage1: false
+      stage2: false
+      via: null
+      win_turn: null
+      error: null
+      own_deck_left: 26
+      broken: '相手の資源が増えた: mana:1 +1, mana_untapped:1 +1'
+      broken_turn: 3
+      opp_mana_end: 6
+    - seed: 5
+      opp_level: 0
+      start: ddf660f7e339
+      stage1: false
+      stage2: false
+      via: null
+      win_turn: null
+      error: null
+      own_deck_left: 24
+      broken: '相手の資源が増えた: mana:1 +1, mana_untapped:1 +1'
+      broken_turn: 8
+      opp_mana_end: 6
+    - seed: 6
+      opp_level: 0
+      start: dcef8b9dae50
+      stage1: false
+      stage2: false
+      via: null
+      win_turn: null
+      error: null
+      own_deck_left: 19
+      broken: '相手の資源が増えた: mana:1 +1, mana_untapped:1 +1'
+      broken_turn: 9
+      opp_mana_end: 6
+    - seed: 7
+      opp_level: 0
+      start: e876c610346b
+      stage1: false
+      stage2: false
+      via: null
+      win_turn: null
+      error: null
+      own_deck_left: 24
+      broken: '相手の資源が増えた: mana:1 +1, mana_untapped:1 +1'
+      broken_turn: 9
+      opp_mana_end: 6
+    - seed: 8
+      opp_level: 0
+      start: e37fa5ca9a2b
+      stage1: false
+      stage2: false
+      via: null
+      win_turn: null
+      error: null
+      own_deck_left: 24
+      broken: '相手の資源が増えた: mana:1 +1, mana_untapped:1 +1'
+      broken_turn: 4
+      opp_mana_end: 6
+    - seed: 1
+      opp_level: 1
+      start: b862f630cb0f
+      stage1: false
+      stage2: false
+      via: null
+      win_turn: null
+      error: null
+      own_deck_left: 22
+      broken: '相手の資源が増えた: mana:1 +1, mana_untapped:1 +1'
+      broken_turn: 10
+      opp_mana_end: 6
+    - seed: 2
+      opp_level: 1
+      start: 070c8ed971c6
+      stage1: false
+      stage2: false
+      via: null
+      win_turn: null
+      error: null
+      own_deck_left: 24
+      broken: '相手の資源が増えた: mana:1 +1, mana_untapped:1 +1'
+      broken_turn: 9
+      opp_mana_end: 6
+    - seed: 3
+      opp_level: 1
+      start: 9d55f936b782
+      stage1: false
+      stage2: false
+      via: null
+      win_turn: null
+      error: null
+      own_deck_left: 22
+      broken: '相手の資源が増えた: mana:1 +1, mana_untapped:1 +1'
+      broken_turn: 11
+      opp_mana_end: 6
+    - seed: 4
+      opp_level: 1
+      start: 39d1ecf50dad
+      stage1: false
+      stage2: false
+      via: null
+      win_turn: null
+      error: null
+      own_deck_left: 26
+      broken: '相手の資源が増えた: mana:1 +1, mana_untapped:1 +1'
+      broken_turn: 3
+      opp_mana_end: 6
+    - seed: 5
+      opp_level: 1
+      start: ddf660f7e339
+      stage1: false
+      stage2: false
+      via: null
+      win_turn: null
+      error: null
+      own_deck_left: 24
+      broken: '相手の資源が増えた: mana:1 +1, mana_untapped:1 +1'
+      broken_turn: 8
+      opp_mana_end: 6
+    - seed: 6
+      opp_level: 1
+      start: dcef8b9dae50
+      stage1: false
+      stage2: false
+      via: null
+      win_turn: null
+      error: null
+      own_deck_left: 19
+      broken: '相手の資源が増えた: mana:1 +1, mana_untapped:1 +1'
+      broken_turn: 9
+      opp_mana_end: 6
+    - seed: 7
+      opp_level: 1
+      start: e876c610346b
+      stage1: false
+      stage2: false
+      via: null
+      win_turn: null
+      error: null
+      own_deck_left: 24
+      broken: '相手の資源が増えた: mana:1 +1, mana_untapped:1 +1'
+      broken_turn: 9
+      opp_mana_end: 6
+    - seed: 8
+      opp_level: 1
+      start: e37fa5ca9a2b
+      stage1: false
+      stage2: false
+      via: null
+      win_turn: null
+      error: null
+      own_deck_left: 24
+      broken: '相手の資源が増えた: mana:1 +1, mana_untapped:1 +1'
+      broken_turn: 4
+      opp_mana_end: 6
+    stage2: 段階0 0/8 / 段階1 0/8
+  version:
+    fingerprint: 03dae0af4c2e8eb5
+    commit: e645093
     measured_at: '2026-11-13'
   failed_at: lock
 - id: knight_dmc
@@ -4449,7 +4766,7 @@ rejected:
       adv: 1.2
       error: null
   version:
-    fingerprint: ce7559c2efe14ce5
-    commit: 3aae1af
+    fingerprint: 03dae0af4c2e8eb5
+    commit: e645093
     measured_at: '2026-11-13'
   failed_at: resource

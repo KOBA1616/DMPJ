@@ -1,0 +1,112 @@
+{
+ "combo": "drill_lock",
+ "entry": "drill_lock",
+ "core": {
+  "dm16-051": 4,
+  "dm36-015": 4,
+  "dm36-078": 4
+ },
+ "added": [
+  {
+   "id": "dm24rp4-071",
+   "name": "ロウゴク童子",
+   "roles": [
+    "prep"
+   ],
+   "score_before": 4.0,
+   "score_after": 10.71
+  },
+  {
+   "id": "dm24sd1-007",
+   "name": "クミタテ・チュリス",
+   "roles": [
+    "draw"
+   ],
+   "score_before": 10.71,
+   "score_after": 15.0
+  },
+  {
+   "id": "dm25rp1-031",
+   "name": "借魂",
+   "roles": [
+    "draw"
+   ],
+   "score_before": 15.0,
+   "score_after": 24.71
+  },
+  {
+   "id": "dmr16g-033",
+   "name": "冒険の翼 アドベンチュオ(DMR16極 33/54)",
+   "roles": [
+    "prep"
+   ],
+   "score_before": 24.71,
+   "score_after": 32.29
+  }
+ ],
+ "score": 32.28571428571428,
+ "fillers": [
+  "dm01-102",
+  "dm04-040"
+ ],
+ "candidates": {
+  "search": [
+   "dm02-039",
+   "dm23ex1-048",
+   "dmx12a-032"
+  ],
+  "draw": [
+   "dm22rp1-069",
+   "dm24sd1-007",
+   "dm25rp1-031"
+  ],
+  "prep": [
+   "dm01-099",
+   "dm24rp4-071",
+   "dmr16g-033"
+  ],
+  "accel": [
+   "dmx06-015",
+   "dm14-044",
+   "dm23ex2-043"
+  ]
+ },
+ "settings": {
+  "budget": 20,
+  "n_det": 1,
+  "max_turn": 6
+ },
+ "seeds": [
+  1,
+  2,
+  3,
+  4,
+  5,
+  6,
+  7,
+  8,
+  9,
+  10,
+  11,
+  12,
+  13,
+  14,
+  15,
+  16,
+  17,
+  18,
+  19,
+  20
+ ],
+ "approval": {
+  "dm01-102": false,
+  "dm04-040": false,
+  "dm16-051": false,
+  "dm24rp4-071": false,
+  "dm24sd1-007": false,
+  "dm25rp1-031": false,
+  "dm36-015": false,
+  "dm36-078": false,
+  "dmr16g-033": false
+ }
+}

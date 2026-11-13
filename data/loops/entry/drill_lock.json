@@ -1,0 +1,73 @@
+{
+ "deck_floor": 1,
+ "delta": {},
+ "goal": [],
+ "hazards": [
+  "removal"
+ ],
+ "kind": "deterministic",
+ "limit": null,
+ "minimal": [
+  {
+   "match": {
+    "name": "dm36-015"
+   },
+   "n": 1,
+   "op": ">=",
+   "owner": 0,
+   "zone": "bz",
+   "zones": []
+  },
+  {
+   "match": {
+    "name": "dm16-051"
+   },
+   "n": 1,
+   "op": ">=",
+   "owner": 0,
+   "zone": "hand",
+   "zones": []
+  },
+  {
+   "match": {
+    "name": "dm36-078"
+   },
+   "n": 1,
+   "op": ">=",
+   "owner": 0,
+   "zone": "hand",
+   "zones": []
+  },
+  {
+   "match": {
+    "civs": [
+     "fire"
+    ]
+   },
+   "n": 1,
+   "op": ">=",
+   "owner": 0,
+   "zone": "mana",
+   "zones": []
+  },
+  {
+   "match": {
+    "civs": [
+     "light"
+    ]
+   },
+   "n": 1,
+   "op": ">=",
+   "owner": 0,
+   "zone": "mana",
+   "zones": []
+  }
+ ],
+ "name": "ドリル・スコール＋ジョバンニ＋クルト（成立局面の入口、holdout）",
+ "routes": [],
+ "source": {
+  "deck": "data/decks/drill_lock.yaml",
+  "note": "検証専用（holdout）。基盤選び（basebuild）の「揃う」・入口の判定にだけ使う。data/registry/setups/drill_lock.json の成立局面と同じ条件（場にジョバンニ、手札にドリルとクルト、マナに火と光）。調整には使わない。",
+  "split": "holdout"
+ }
+}
