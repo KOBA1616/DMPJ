@@ -154,7 +154,8 @@ class Detectors:
 @dataclass
 class TurnStats:
     nodes: int = 0
-    loops: list[dict] = field(default_factory=list)
+    loops: list[dict] = field(default_factory=list)      # 試したループの候補すべて（選ばなかった線を含む）
+    chosen: list[dict] = field(default_factory=list)     # 採った手順で使ったループだけ
 
 
 class TurnSearch:
@@ -212,17 +213,19 @@ class TurnSearch:
         self.stats = TurnStats()
         det = Detectors.new(eng, self.me)
         best = self._search(eng.clone(), det)
+        self.stats.chosen = [dict(lp) for lp in best[2]]
         return best[1], self.stats
 
-    def _search(self, eng: Engine, det: Detectors) -> tuple[float, Engine]:
+    def _search(self, eng: Engine, det: Detectors) -> tuple[float, Engine, tuple]:
+        """(評価, 葉の局面, その葉に至る手順で使ったループの記録) を返す。ループの記録は採った線のものだけが親へ伝わる。"""
         d = self._settle(eng)
         if d is None:
-            return self._eval(eng), eng
+            return self._eval(eng), eng, ()
         if self._deadline is not None and self.left > 0 and time.monotonic() > self._deadline:
             self.left = 0                     # 時間切れ: 以降は予算切れと同じ扱い
         if self.left <= 0:
             leaf = self._rollout(eng)
-            return self._eval(leaf), leaf
+            return self._eval(leaf), leaf, ()
         h, ctr = abstract(eng, "in_turn")
         # マナは枚数だけでなく何が残っているか（文明）も区別する。払い方の違いで闇マナが残るか否かが変わる
         mana_left = tuple(sorted((c.defn, c.tapped) for c in (eng.s.cards[x] for p in (0, 1) for x in eng.s.zones["mana"][p])))
@@ -232,7 +235,7 @@ class TurnSearch:
         if cert is not None and self.collect is not None:
             if all(c.start_skeleton != cert.start_skeleton for _, c in self.collect):
                 self.collect.append((eng.clone(), cert))
-            return -WIN, eng              # ループの先は辿らない（ループの発見だけを行う）
+            return -WIN, eng, ()          # ループの先は辿らない（ループの発見だけを行う）
         if cert is not None and _is_burn(cert, self.me) and not self.burn_stock:
             cert = None                       # 周回数は呼び出し側が決める
         elif cert is not None and verify(eng, cert, times=1).verified < 1:
@@ -241,9 +244,10 @@ class TurnSearch:
             # 周回数（ストック量）を選ぶ: 上限まで回す線のほか、あと数周手前で止める線（stock_offsets）も試す。
             # 山札を削るループは勝ちにつながるか分からないので上限（残り1枚）の線を試す。ループに入った直後に抜ける線は
             # 親の局面で試されるので、ここでループの続きは辿らない
-            best: tuple[float, Engine] | None = None
-            for ff in self._stocks(eng, cert):
+            best: tuple | None = None
+            for ff, lp in self._stocks(eng, cert):
                 r = self._search(ff, Detectors.new(ff, self.me))
+                r = (r[0], r[1], (lp,) + r[2])
                 if best is None or r[0] > best[0]:
                     best = r
                 if best[0] >= WIN - 1000:
@@ -251,12 +255,12 @@ class TurnSearch:
             if best is not None:
                 return best
             if _is_engine(cert, self.me) and not _is_burn(cert, self.me):
-                return -WIN, eng      # 資源ループはストックし切った。同じ周回を1つずつ辿り直さない（山札を減らすだけ）
+                return -WIN, eng, ()  # 資源ループはストックし切った。同じ周回を1つずつ辿り直さない（山札を減らすだけ）
             cert = None
         if tkey in self.seen:
-            return -WIN, eng          # 既に展開した局面（ループの途中で戻ってきた場合もここ）
+            return -WIN, eng, ()      # 既に展開した局面（ループの途中で戻ってきた場合もここ）
         self.seen.add(tkey)
-        best: tuple[float, Engine] | None = None
+        best: tuple | None = None
         cands = candidates(eng, d, self.w, self.combo_cap)
         if self.w.lookahead and len(cands) > 1:
             cands = self._lookahead_order(eng, cands)
@@ -289,8 +293,8 @@ class TurnSearch:
             scored.append((-self._eval(leaf), i, ch))
         return [ch for _, _, ch in sorted(scored)]
 
-    def _stocks(self, eng: Engine, cert: LoopCertificate) -> list[Engine]:
-        """ループを確かめてストックした局面（周回数の違うもの）を返す。勝ちにつながらない・確かめられないなら空。
+    def _stocks(self, eng: Engine, cert: LoopCertificate) -> list[tuple[Engine, dict]]:
+        """ループを確かめてストックした局面（周回数の違うもの）と、その記録の組を返す。勝ちにつながらない・確かめられないなら空。
         周回数は上限 n から stock_offsets だけ手前までを試す（山札を残り1枚／2枚にする、など）。"""
         engine = _is_engine(cert, self.me)
         burn = _is_burn(cert, self.me)
@@ -316,9 +320,11 @@ class TurnSearch:
                 fast_forward(ff, cert, m)
             except IllegalAnswer:
                 continue
-            self.stats.loops.append({"win_by": cert.win_by, "needed": cert.needed, "limit": cert.limit,
-                                     "delta": cert.delta, "length": len(cert.actions), "stocked": m,
-                                     "kind": "burn" if burn else "engine" if engine else "kill"})
-            out.append(ff)
+            lp = {"win_by": cert.win_by, "needed": cert.needed, "limit": cert.limit,
+                  "delta": cert.delta, "length": len(cert.actions), "stocked": m,
+                  "kind": "burn" if burn else "engine" if engine else "kill",
+                  "source": "certificate", "verified": True}
+            self.stats.loops.append(lp)       # 候補（選ばなかった線を含む）
+            out.append((ff, lp))
         return out
 
