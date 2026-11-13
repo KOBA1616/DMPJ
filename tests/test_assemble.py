@@ -31,7 +31,8 @@ def test_summarize_columns():
     s = A.summarize(rows, ls=L.load("saga"))
     assert s["kill"][3]["kill"] == 1 and s["kill"][3]["beat_win"] == 1
     k4 = s["kill"][4]
-    assert (k4["kill"], k4["beat_win"], k4["loop_win"], k4["effect_win"]) == (3, 1, 1, 1)
+    assert (k4["kill"], k4["beat_win"], k4["loop_win"], k4["effect_win"]) == (3, 1, 1, 2)
+    assert (k4["effect_loop"], k4["effect_other"]) == (1, 1)      # 効果・山札切れの勝ちをループ由来とそれ以外に分ける
     assert s["cards_by_turn"][3]["k"] == 2 and s["entry_by_turn"][4]["k"] == 2
     assert s["cards_turn_dist"][2] == 1 and "甘く" in s["note"]
 

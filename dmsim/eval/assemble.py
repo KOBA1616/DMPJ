@@ -8,8 +8,9 @@
 (b) 実測 measure: 通常の開幕から FAIR（山札は見えない公平探索、search.fair.FairTurnSearch）で回し、自分の各ターン終了時に
     揃う・入口を判定して最初のターンを記録する。回し方は search.game.fair_game と同じ（同じ seed なら同じ手順）。
 ④ 速さ: 同じ対局を ruler.judge にかけ、勝ったターンと勝ち方を別欄で集計する（summarize）。
-注意: FAIR はループの記録（GameResult.loops）を残さないので、勝利効果での勝ち（effect / state）は judge で other になる。
-     ここでは kind で「ループ勝ち相当」を別欄 effect_win に出す（ループを使ったかは確かめていない）。lock_probe も含めない。
+ループの記録: play_turns(record=res) で、FAIR でも採った手のループ（決定化の探索が使った証明書、無ければ指した手順の
+     パターン検出）を GameResult.loops に残す（案 F）。勝利効果・山札切れの勝ち effect_win を、ループ由来 effect_loop と
+     それ以外 effect_other に分けて出す。lock_probe は含めない。
      相手はマナチャージだけ（決定事項 §7-5）なので殴り勝ちは甘く出る。
 """
 from __future__ import annotations
@@ -21,15 +22,14 @@ from ..engine.core import Engine
 from ..engine.view import cards_met, result_of
 from ..play_api import InfoLevel, PlayConfig, play_turns
 from ..search.game import GameResult
-from ..search.game import origin as _origin
-from ..search.turn import own_turn
+from ..search.game import finish_result
 from . import loop_entry as L
 from .measure import wilson
 from .reach import cards_ceiling
 from .ruler import judge
 
 EFFECT_KINDS = ("effect", "state", "deck_out", "loop_deck_out")
-NOTE = "相手はマナチャージだけ（ブロッカー・S・トリガーなし）なので殴り勝ちは甘く出る。FAIR はループ記録なし: effect_win はループ使用を確かめていない勝利効果・山札切れ勝ち"
+NOTE = "相手はマナチャージだけ（ブロッカー・S・トリガーなし）なので殴り勝ちは甘く出る。effect_win（勝利効果・山札切れ勝ち）= effect_loop（勝ちより前にループを回した）+ effect_other"
 
 
 def core_need(ls) -> dict:
@@ -75,15 +75,11 @@ def run_one(rules, ls, seed: int, *, deck=None, opp_deck=None, max_turn: int = 6
 
         eng.advance()
         record(eng, 0)
-        eng = play_turns(eng, cfg, InfoLevel.FAIR, on_turn=on_turn, holder=holder)
+        eng = play_turns(eng, cfg, InfoLevel.FAIR, on_turn=on_turn, holder=holder, record=res)
+        finish_result(res, eng, me)
         r = result_of(eng)
-        if r is not None:
-            if r["winner"] == me:
-                res.kill_turn = own_turn(eng, me, r["turn"])
-                res.kind = r["reason"]
-                res.origin = _origin(res)
-            else:
-                res.lost = r["reason"]
+        if r is not None and r["winner"] is None:
+            res.lost = r["reason"]
     except Exception as ex:
         res.error = f"{type(ex).__name__}: {ex}"
         eng = holder[0]
@@ -122,7 +118,9 @@ def summarize(rows, *, ls=None, turns=(3, 4, 6), kill_turns=(3, 4)) -> dict:
         won = [r for r in rows if r["verdict"].stage2.kill and r["verdict"].stage2.win_turn <= t]
         col = {"kill": len(won),
                "loop_win": sum(1 for r in won if r["verdict"].stage2.loop_win),
-               "effect_win": sum(1 for r in won if r["verdict"].stage2.via == "other" and r["res"].kind in EFFECT_KINDS),
+               "effect_win": sum(1 for r in won if r["res"].kind in EFFECT_KINDS),
+               "effect_loop": sum(1 for r in won if r["res"].kind in EFFECT_KINDS and r["verdict"].stage2.via == "loop"),
+               "effect_other": sum(1 for r in won if r["res"].kind in EFFECT_KINDS and r["verdict"].stage2.via != "loop"),
                "beat_win": sum(1 for r in won if r["verdict"].stage2.beat_win)}
         col["rate"] = col["kill"] / n if n else 0.0
         col["ci95"] = wilson(col["kill"], n) if n else (0.0, 0.0)
