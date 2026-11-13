@@ -209,25 +209,88 @@ class LoopDetector:
         return None
 
 
+import os as _os
+
+# 再生の同一視（2026-11-13、設計書 §20）。同じ札を同じ結果になる形で使う手を同じ手とみなす:
+# 払って出す手 ↔ 同じ札を無償で出す手、支払い（mana:…）は今の支払いの候補の先頭で代える、払わずに済んだ周の支払いは飛ばす。
+# 同一視した周は必ず骨格と差分を確かめ直し、ずれたら捨てる。DMSIM_REPLAY_EQUIV=0 で切る
+REPLAY_EQUIV = _os.environ.get("DMSIM_REPLAY_EQUIV", "1") != "0"
+
+
+def _equiv_keys(d: dict, keys: list[str]) -> list[str] | None:
+    opts = {o["key"] for o in d["options"]}
+    out = []
+    for k in keys:
+        if k in opts:
+            out.append(k)
+        elif k.startswith("play:") and not k.endswith(":free") and k + ":free" in opts:
+            out.append(k + ":free")
+        elif k.startswith("mana:") and d["kind"] == "pay_mana" and d["options"]:
+            out.append(d["options"][0]["key"])
+        else:
+            return None
+    return out
+
+
+def _delta_ok(delta: dict, cert: LoopCertificate, subst: bool) -> bool:
+    """差分が証明書どおりか。同一視した周は、自分の未タップのマナが証明書より多く残るだけの違いを許す（払わずに済んだ分）。"""
+    if delta == cert.delta:
+        return True
+    if not subst:
+        return False
+    keys = set(delta) | set(cert.delta)
+    for k in keys:
+        a, b = delta.get(k, 0), cert.delta.get(k, 0)
+        if a == b:
+            continue
+        if k.startswith("mana_untapped:") and a > b:
+            continue
+        return False
+    return True
+
+
+def _replay_lap(e: Engine, cert: LoopCertificate) -> tuple[str | None, bool]:
+    """1周を再生する。(None か "ended", 同一視したか) を返す。同じ選択ができなければ IllegalAnswer。"""
+    subst = False
+    i = 0
+    while i < len(cert.actions):
+        keys = cert.actions[i]
+        d = e.advance()
+        if d is None:
+            return "ended", subst
+        if REPLAY_EQUIV and keys and d["kind"] != "pay_mana" and all(k.startswith("mana:") for k in keys):
+            subst = True                       # 無償に代えたので支払いの決定が来ない
+            i += 1
+            continue
+        try:
+            replay_keys(e, keys, cert.hand_keys)
+        except IllegalAnswer:
+            alt = _equiv_keys(d, keys) if REPLAY_EQUIV and WILD_HAND not in keys else None
+            if alt is None:
+                raise
+            e.answer_by_keys(alt)
+            subst = True
+        i += 1
+    return None, subst
+
+
 def verify(eng: Engine, cert: LoopCertificate, times: int = 2) -> LoopCertificate:
     """証明書の行動列を実際に再生し、同じ骨格に戻って同じ差分が出ることを確かめる。"""
     e = eng.clone()
     for _ in range(times):
         h0, c0 = abstract(e, cert.period, cert.hand_keys)
-        for keys in cert.actions:
-            d = e.advance()
-            if d is None:
-                cert.notes.append("game ended during replay")
-                return cert
-            try:
-                replay_keys(e, keys, cert.hand_keys)
-            except IllegalAnswer as ex:
-                cert.notes.append(f"diverged: {ex}")     # 引いたカードが違うなど、同じ選択ができなかった
-                return cert
+        try:
+            end, subst = _replay_lap(e, cert)
+        except IllegalAnswer as ex:
+            cert.notes.append(f"diverged: {ex}")     # 引いたカードが違うなど、同じ選択ができなかった
+            return cert
+        if end:
+            cert.notes.append("game ended during replay")
+            return cert
         e.advance()
         h1, c1 = abstract(e, cert.period, cert.hand_keys)
         delta = {k: c1[k] - c0[k] for k in c1 if c1[k] != c0[k]}
-        if h1 != cert.start_skeleton or delta != cert.delta:
+        if h1 != cert.start_skeleton or not _delta_ok(delta, cert, subst):
             cert.notes.append(f"diverged: delta={delta}")
             return cert
         cert.verified += 1
@@ -239,15 +302,13 @@ def fast_forward(eng: Engine, cert: LoopCertificate, n: int):
     抽象キーを含む証明書（wild）は、周ごとに骨格と差分が証明書どおりかを確かめ、ずれたら IllegalAnswer を出す
     （引いた札しだいで続かなくなる手順を、早送りの途中で見逃さないため）。"""
     for _ in range(n):
-        if cert.wild:
-            h0, c0 = abstract(eng, cert.period, cert.hand_keys)
-        for keys in cert.actions:
-            if eng.advance() is None:
-                return
-            replay_keys(eng, keys, cert.hand_keys)
-        if cert.wild:
+        h0, c0 = abstract(eng, cert.period, cert.hand_keys)
+        end, subst = _replay_lap(eng, cert)
+        if end:
+            return
+        if cert.wild or subst:
             eng.advance()
             h1, c1 = abstract(eng, cert.period, cert.hand_keys)
-            if h1 != cert.start_skeleton or {k: c1[k] - c0[k] for k in c1 if c1[k] != c0[k]} != cert.delta:
+            if h1 != cert.start_skeleton or not _delta_ok({k: c1[k] - c0[k] for k in c1 if c1[k] != c0[k]}, cert, subst):
                 raise IllegalAnswer("fast_forward diverged from certificate")
     eng.advance()
