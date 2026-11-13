@@ -29,6 +29,42 @@ def load(name: str, root: Path = ROOT) -> LoopSpec:
     return LoopSpec.from_json((root / f"{name}.json").read_text(encoding="utf-8"))
 
 
+def core_groups(ls: LoopSpec) -> list[dict]:
+    """中核の組（docs/combo-ruler-design.md §14）。各組は {"role", "any": [{ID: 枚数}, ...]} で、any のどれか1つが揃えばその役が揃う。
+    source.core がなければ、minimal のうち札の名前で指した述語を1札1組（代わりなし）として作る（従来の決め方）。"""
+    if ls.source.get("core"):
+        return [{"role": g.get("role", ""), "any": [dict(o) for o in g["any"]]} for g in ls.source["core"]]
+    need: Counter = Counter()
+    for p in ls.minimal:
+        if p.owner == 0 and "name" in p.match and p.op in (">=", "=="):
+            need[p.match["name"]] += p.n
+    return [{"role": i, "any": [{i: k}]} for i, k in need.items()]
+
+
+def core_alternatives(ls: LoopSpec) -> list[dict]:
+    """中核が揃ったとみなす札の組 {ID: 枚数} の一覧（組ごとに代わりを1つずつ選んだ全組み合わせ）。どれか1つが揃えばよい。"""
+    from itertools import product
+    out = []
+    for pick in product(*[g["any"] for g in core_groups(ls)]):
+        need: Counter = Counter()
+        for o in pick:
+            for i, k in o.items():
+                need[i] = max(need[i], k)
+        out.append(dict(need))
+    return out
+
+
+def core_ids(ls: LoopSpec) -> list[str]:
+    """中核の組に出てくる札（代わりの札も含む）。"""
+    return sorted({i for g in core_groups(ls) for o in g["any"] for i in o})
+
+
+def required_ids(ls: LoopSpec) -> list[str]:
+    """どの代わりを選んでも要る札（取り除き試験で、抜くと到達率が落ちるはずの札）。"""
+    alts = core_alternatives(ls)
+    return sorted(set.intersection(*[set(a) for a in alts])) if alts else []
+
+
 def deck_of(ls: LoopSpec) -> list[str]:
     return yaml.safe_load(Path(ls.source["deck"]).read_text(encoding="utf-8"))["deck"]
 
