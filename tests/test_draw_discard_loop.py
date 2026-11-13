@@ -103,3 +103,16 @@ def test_replay_keys_raises_when_only_hand_keys_cards(saga0):
 def test_switch_off_restores_old_behaviour(saga0):
     _, st, _ = _first_cert(saga0, draw_discard=False)
     assert all(not lp.get("wild") for lp in st.chosen)
+
+
+def test_repeat_first_orders_previous_choice_first(saga0):
+    """案 E: 同じ種類の決定で前に選んだ意味キーが今の選択肢にあれば、その候補を先頭へ（カード名は見ない）。"""
+    ts = T.TurnSearch(0, 1)
+    ts._root_log = 0
+    e = saga0.clone()
+    d = {"kind": "choose_cards", "player": 0, "options": [{"key": "a"}, {"key": "b"}]}
+    e.log.append({"p": 0, "kind": "choose_cards", "choice": [1], "keys": ["b"]})
+    assert ts._repeat_order(e, d, [[0], [1]]) == [[1], [0]]
+    e.log.append({"p": 0, "kind": "choose_cards", "choice": [0], "keys": ["zzz"]})   # 今の選択肢に無いキーの決定は飛ばす
+    assert ts._repeat_order(e, d, [[0], [1]]) == [[1], [0]]
+
