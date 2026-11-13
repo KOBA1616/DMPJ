@@ -28,3 +28,22 @@ def test_needed_cards_and_partial():
     st = RG.load("saga")
     need = RG.needed_cards(st)
     assert "mana" not in need["dmrp03-s03"][1] and need["dmrp03-s03"][0] == 1   # 経路の段から導く: シャコガイルはマナで使わない
+
+
+def test_ratchet_keeps_floor():
+    st = RG.load("saga_v2")
+    assert len(st) == 5 and any(p.get("top") for p in st[3].preds)
+    # floor を渡すと局面が段を満たさなくても段3までの点が残る
+    from dmsim.eval import loop_entry as L
+    import os
+    from dmsim.cards.defs import load_rules
+    old = os.environ.pop("DMSIM_SKIP_CONVERTED", None)
+    try:
+        rules = load_rules()
+    finally:
+        if old is not None:
+            os.environ["DMSIM_SKIP_CONVERTED"] = old
+    from dmsim.engine.core import Engine
+    e = Engine.new_game(rules, [L.deck_of(L.load("saga")), ["T001"] * 40], 0, 0)
+    assert RG.reached(e, st) == 0
+    assert RG.route_score(e, st, 0, floor=3) == sum(s.weight for s in st[:3])

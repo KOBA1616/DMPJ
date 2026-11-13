@@ -102,14 +102,19 @@ def run_one(rules, ls, seed: int, *, deck=None, opp_deck=None, max_turn: int = 6
                 if i not in rec["stage_turn"] and all(RG.holds(e, p, me) for p in st.preds):
                     rec["stage_turn"][i] = t
 
+    opts = dict(route_opts or {})
+    ratchet = [0] if opts.pop("ratchet", False) else None   # route_opts={"ratchet": True}: 達成済みの段を下げない
     holder = [eng]
     try:
         cfg = PlayConfig(seed=seed, max_turn=max_turn, budget=budget, n_det=n_det, me=me,
-                         value_fn=RG.make_value_fn(stages, **(route_opts or {})) if route else None)
+                         value_fn=RG.make_value_fn(stages, ratchet=ratchet, opp_policy=opp_model.policy if opp_model else None,
+                                                  **opts) if route else None)
 
         def on_turn(e, ot, nodes):
             res.nodes += nodes
             record(e, ot)
+            if ratchet is not None:
+                RG.note_reached(e, stages, ratchet, me)
 
         eng.advance()
         record(eng, 0)
