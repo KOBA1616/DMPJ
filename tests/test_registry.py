@@ -90,7 +90,7 @@ def test_verify_stops_at_first_failure(full_rules):
     ev = verify(rules, _cand(types=["resource"], core=[{"id": "dm25ex3-028"}]))
     assert ev.failed_at() == "type"
     ev = verify(rules, _cand(types=["lock"], lock_mode="active", core=[{"id": "dm25ex3-028"}]))
-    assert ev.failed_at() == "type"
+    assert ev.failed_at() == "entry"          # 能動ロックは setup と policy が要る
     ev = verify(rules, _cand(core=[{"id": "dm25ex3-028"}]))
     assert ev.failed_at() == "entry"
 
@@ -115,3 +115,19 @@ def test_registry_file_matches_candidates():
     rows = reg["entries"] + reg["rejected"]
     assert {r["id"]: r["digest"] for r in rows} == cands
     assert not [r for r in reg["entries"] if any(not c["ok"] for c in r["checks"])]
+
+
+def test_active_lock_drill(full_rules):
+    """能動ロック（ドリル・スコール＋ジョバンニ、holdout）: 与えた方針で相手の山札切れまで勝つ。方針を外すと勝てない。"""
+    kw = dict(id="d", split="holdout", types=["lock"], win="lock", lock_mode="active", seeds=[1, 2],
+              core=[{"id": "dm16-051"}, {"id": "dm36-015"}], setup="data/registry/setups/drill_lock.json")
+    ev = verify(full_rules, _cand(**kw, policy=["charge:T001", "play:dm16-051", "mana:T001", "graveyard:dm16-051"]))
+    assert ev.passed, ev.checks
+    assert ev.measured["stage2"] == "2/2" and ev.measured["policy"][1] == "play:dm16-051"
+    ev = verify(full_rules, _cand(**kw, policy=["charge:T001"]))
+    assert ev.failed_at() == "lock"
+
+
+def test_active_needs_lock_type():
+    with pytest.raises(RegistryError):
+        _cand(lock_mode="active")

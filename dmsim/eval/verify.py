@@ -3,8 +3,10 @@
 検証は順に行い、最初に落ちた所で止める（どこで落ちたかを rejected に残す）:
 1. cards   … 中核の札に ID があり、カードデータにある。
 2. type    … 今の物差しで測れる型か。ループ型・ロック型（受け身）は測れる。リソース型・攻撃型だけの候補は目盛りが未実装（設計書 §6 タスク11・12）。
-             能動ロック（lock_mode="active"）は、ロック中の自分の方針を判定役に渡す仕組みが無いので未対応（§8.2）。
 3. entry   … 入口局面（data/loops/entry/*.json）があって読める。手順の文だけでは再生できない。
+   能動ロック（lock_mode="active"）は entry の代わりに setup（ロック成立の局面）と policy（与えた自分の方針）を使い、
+   4 を lock に置き換える: lockcheck.run_lock_to_end を prefer_policy(*policy) で回し、相手の山札切れまで勝てた割合が KNOWN_MIN 以上。
+   受け身の lock_probe を前提にする make_full_lock_judge は能動ロックを見つけられないので使わない（§8.2）。
 4. ruler   … 物差し（ruler.judge）で、入口をシードで配り直した局面を各シード1局（ruler_control.run_one と同じ測り方）。
              段2（ループ・ロックによる勝ち）の到達率が KNOWN_MIN 以上。対局の失敗が混ざれば不合格。
 5. replay  … 同じシードをもう一度回して、開始局面の指紋・段1・段2・勝ち方・勝ったターンが一致する（再現性）。
@@ -61,8 +63,8 @@ def verify(rules, cand: Candidate, *, known_min: float = KNOWN_MIN) -> Evidence:
         step("type", False, f"型 {cand.types} は今の物差しで測れない（リソース型はタスク12、攻撃型はタスク11 が前提）")
         return done(False)
     if cand.lock_mode == "active":
-        step("type", False, "能動ロック: ロック中の自分の方針を判定役に渡す仕組みが未実装（設計書 §8.2）")
-        return done(False)
+        step("type", True, "lock（能動）として相手の山札切れまで回す")
+        return done(_active_lock(rules, cand, step, measured, known_min))
     step("type", True, f"{'/'.join(t for t in cand.types if t in MEASURABLE)} として段1・段2で測る")
     if not cand.entry:
         step("entry", False, "入口局面が無い（手順の文だけでは再生できない）")
@@ -95,6 +97,40 @@ def verify(rules, cand: Candidate, *, known_min: float = KNOWN_MIN) -> Evidence:
     if not step("replay", not diff, f"seed {cand.seeds[:REPLAY_SEEDS]} を回し直して一致" if not diff else f"回し直すと結果が変わる seed {diff}"):
         return done(False)
     return done(True)
+
+
+def _lock_row(rules, spec: dict, seed: int, policy: list[str]) -> dict:
+    from ..engine import scenario
+    from .lockcheck import prefer_policy, run_lock_to_end
+    from .ruler_control import start_key
+    e = scenario.build(rules, {**spec, "seed": seed}, first_player=0)
+    run = run_lock_to_end(e, 0, my_policy=prefer_policy(*policy))
+    return {"seed": seed, "start": start_key(e), "stage1": False, "stage2": run.won, "via": "lock" if run.won else None,
+            "win_turn": run.win_turn, "error": None, "own_deck_left": run.own_deck_left, "broken": run.broken}
+
+
+def _active_lock(rules, cand: Candidate, step, measured: dict, known_min: float) -> bool:
+    import json
+    if not cand.setup or not cand.policy:
+        return step("entry", False, "能動ロックには setup（成立局面）と policy（与える方針）が要る")
+    try:
+        spec = {k: v for k, v in json.loads((REPO / cand.setup).read_text(encoding="utf-8")).items() if k != "note"}
+    except Exception as ex:   # noqa: BLE001
+        return step("entry", False, f"成立局面を読めない: {ex}")
+    step("entry", True, f"{cand.setup}、与えた方針 {cand.policy}")
+    rows = [_lock_row(rules, spec, s, cand.policy) for s in cand.seeds]
+    n, won = len(rows), sum(r["stage2"] for r in rows)
+    starts = len({r["start"] for r in rows})
+    measured.update({"seeds": cand.seeds, "lock_mode": "active", "policy": cand.policy, "stage1": "対象外（ロックは段2の経路）",
+                     "stage2": f"{won}/{n}", "stage2_rate": round(won / n, 3) if n else 0.0, "threshold": known_min,
+                     "distinct_starts": starts, "rows": [{k: r[k] for k in ("seed", "start", "stage2", "win_turn", "own_deck_left", "broken")} for r in rows]})
+    if not step("lock", n > 0 and won / n >= known_min,
+                f"相手の山札切れまで勝ち {won}/{n}（基準 {known_min}）、開始局面 {starts} 種、勝ったターン {sorted({r['win_turn'] for r in rows if r['stage2']})}、"
+                f"自分の山札残り {sorted({r['own_deck_left'] for r in rows})}"):
+        return False
+    again = [_lock_row(rules, spec, s, cand.policy) for s in cand.seeds[:REPLAY_SEEDS]]
+    diff = [a["seed"] for a, b in zip(again, rows) if _key(a) != _key(b)]
+    return step("replay", not diff, f"seed {cand.seeds[:REPLAY_SEEDS]} を回し直して一致" if not diff else f"回し直すと結果が変わる seed {diff}")
 
 
 def register(rules, cand: Candidate, *, path=registry.PATH, purpose: str = "eval") -> tuple[Evidence, dict]:
