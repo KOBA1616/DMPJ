@@ -115,3 +115,16 @@ def test_judge_removal_reports_mismatch():
 def test_candidates_exclude_reprints(rules):
     cand = rc.candidates(rules, "dm23ex2-009", rc.core_ids())
     assert "dm25ex2-cho005" not in cand and all(rules.cards[c].name != rules.cards["dm23ex2-009"].name for c in cand)
+
+
+def test_removal_places_alternative_group(rules):
+    """代わりのある札を抜く取り除き試験は、入口局面にその代わりの組を置く（§17）。"""
+    from collections import Counter
+    cases = {c["old"]: c for c in rc.removal_cases(rules, "akashic_hd2")}
+    c = cases["dmrp07-009"]                      # H.D.2. の代わり = ウォカンナ + ナウ・オア・ネバー
+    p0 = c["spec"].source["board"]["p0"]
+    placed = Counter(i for ids in p0.values() for i in ids)
+    assert placed["dm24ex1-038"] >= 1 and placed["dmrp12-s01"] >= 1 and placed["dmrp07-009"] == 0
+    v = rc.vary(rules, c["spec"], 3)              # ばらつきを入れても代わりの札は手札に残る
+    assert {"dm24ex1-038", "dmrp12-s01"} <= set(v.source["board"]["p0"]["hand"])
+    assert not cases["dm23ex2-009"]["spec"].source.get("pin_hand")   # 代わりの無い札は従来どおり

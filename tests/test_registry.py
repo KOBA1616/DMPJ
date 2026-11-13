@@ -87,10 +87,12 @@ def test_verify_stops_at_first_failure(full_rules):
     rules = full_rules
     ev = verify(rules, _cand(core=[{"id": None, "name": "無い札"}]))
     assert not ev.passed and ev.failed_at() == "cards" and len(ev.checks) == 1
+    ev = verify(rules, _cand(types=["attack"], core=[{"id": "dm25ex3-028"}]))
+    assert ev.failed_at() == "type"
     ev = verify(rules, _cand(types=["resource"], core=[{"id": "dm25ex3-028"}]))
-    assert ev.failed_at() == "type"
+    assert ev.failed_at() == "entry"
     ev = verify(rules, _cand(types=["lock"], lock_mode="active", core=[{"id": "dm25ex3-028"}]))
-    assert ev.failed_at() == "type"
+    assert ev.failed_at() == "entry"          # 能動ロックは setup と policy が要る
     ev = verify(rules, _cand(core=[{"id": "dm25ex3-028"}]))
     assert ev.failed_at() == "entry"
 
@@ -115,3 +117,50 @@ def test_registry_file_matches_candidates():
     rows = reg["entries"] + reg["rejected"]
     assert {r["id"]: r["digest"] for r in rows} == cands
     assert not [r for r in reg["entries"] if any(not c["ok"] for c in r["checks"])]
+
+
+def test_active_lock_drill(full_rules):
+    """能動ロック（ドリル・スコール＋ジョバンニ、holdout）: 与えた方針で相手の山札切れまで勝つ。方針を外すと勝てない。"""
+    kw = dict(id="d", split="holdout", types=["lock"], win="lock", lock_mode="active", seeds=[1, 2],
+              core=[{"id": "dm16-051"}, {"id": "dm36-015"}], setup="data/registry/setups/drill_lock_dummy.json")
+    ev = verify(full_rules, _cand(**kw, policy=["charge:T001", "play:dm16-051", "mana:T001", "graveyard:dm16-051"]))
+    assert ev.passed, ev.checks
+    assert ev.measured["by_opp_level"][0]["stage2"] == "2/2" and ev.measured["policy"][1] == "play:dm16-051"
+    ev = verify(full_rules, _cand(**kw, policy=["charge:T001"]))
+    assert ev.failed_at() == "lock"
+
+
+def test_active_needs_lock_type():
+    with pytest.raises(RegistryError):
+        _cand(lock_mode="active")
+
+
+def test_resource_knight(full_rules):
+    """リソース型の目盛り: 騎士＋DMC は騎士を差し替えた組より効率が高い。合格線が未定なので resource 検証で止まる。"""
+    from dmsim.eval import resource as rs
+    spec, deck = rs.load_setup("data/registry/setups/knight_dmc.json")
+    known = rs.measure_one(full_rules, spec, deck, 1)
+    assert known["mana_used"] == 3 and known["d_shield"] == 1 and known["d_board"] >= 2
+    s2, d2 = rs.swap(spec, deck, "dm25ex3-055", "dm18-053")
+    assert rs.measure_one(full_rules, s2, d2, 1)["adv"] < known["adv"]
+    ev = verify(full_rules, _cand(types=["resource"], win="beat", seeds=[1], setup="data/registry/setups/knight_dmc.json",
+                                  core=[{"id": "dm25ex3-028"}, {"id": "dm25ex3-055"}]))
+    assert ev.failed_at() == "resource" and ev.measured["resource"]["n"] == 1
+
+
+def test_drill_real_deck_breaks(full_rules):
+    """実デッキの成立局面では、与えた方針の能動ロックは途中で破れる（2026-11-13 の実測。docs/registry-design.md §8）。"""
+    import yaml
+    c = next(Candidate.from_dict(d) for d in yaml.safe_load((ROOT / "data/registry/candidates.yaml").read_text(encoding="utf-8"))["candidates"]
+             if d["id"] == "drill_lock")
+    c.seeds, c.opp_levels = [1, 2], [0]
+    ev = verify(full_rules, c)
+    assert ev.failed_at() == "lock" and ev.measured["by_opp_level"][0]["stage2"] == "0/2"
+    assert {r["opp_mana_end"] for r in ev.measured["rows"]} == {6}
+
+
+def test_route_stages():
+    st = registry.route_stages("saga")
+    assert st and st[-1]["entry"] == "saga" and "all" in st[0]
+    assert registry.route_stages("data/loops/route/akashic.yaml")
+    assert registry.route_stages(None) is None and registry.route_stages([{"entry": "x"}]) == [{"entry": "x"}]

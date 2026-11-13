@@ -45,6 +45,11 @@ class Candidate:
     seeds: list[int] = field(default_factory=lambda: list(range(1, 9)))
     max_turn: int = 2
     budget: int | None = None                 # None は入口局面の既定
+    setup: str | None = None                  # 能動ロック: ロックが成立した局面（scenario の spec、JSON）。entry の代わり
+    policy: list[str] = field(default_factory=list)   # 能動ロック: 与えた自分の方針（lockcheck.prefer_policy の key の先頭、優先順）。手順の記述として残す
+    policy_avoid: list[str] = field(default_factory=list)   # 能動ロック: policy に合っても選ばない key の先頭（コンボの札をチャージしない等）
+    opp_levels: list[int] = field(default_factory=lambda: [0])   # 能動ロック: 測る相手の抵抗の段階（search.opponent.resistance）
+    route_stages: list | str | None = None    # 入口への経路の段。data/loops/route/ の名前かパス、または段のリスト（route_stages() で読む）
     note: str = ""
 
     def __post_init__(self):
@@ -57,6 +62,8 @@ class Candidate:
             raise RegistryError(f"win は {WINS}: {self.win!r}")
         if self.lock_mode not in ("passive", "active"):
             raise RegistryError(f"lock_mode: {self.lock_mode!r}")
+        if self.lock_mode == "active" and "lock" not in self.types:
+            raise RegistryError("lock_mode=active はロック型だけ")
 
     def core_ids(self) -> set[str]:
         return {c["id"] for c in self.core if c.get("id")}
@@ -158,3 +165,19 @@ def novelty(cand: Candidate, *, path: Path = PATH, include_holdout: bool = True)
             out.append({"id": r["id"], "status": status, "relation": rel, "common": sorted(common),
                         "same_win": r["win"] == cand.win})
     return out
+
+
+ROUTE_DIR = store.REPO / "data" / "loops" / "route"
+
+
+def route_stages(ref) -> list[dict] | None:
+    """候補・項目の route_stages を段の列にする。None はそのまま。文字列は data/loops/route/<名前>.yaml（またはそのパス）を読み、
+    その stages（各段は name・weight と、「ゾーン・札の条件・枚数」の組 all か入口の名前 entry）を返す。リストはそのまま返す。"""
+    if ref is None or isinstance(ref, list):
+        return ref
+    p = Path(ref)
+    if not p.suffix:
+        p = ROUTE_DIR / f"{ref}.yaml"
+    elif not p.is_absolute():
+        p = store.REPO / p
+    return list((yaml.safe_load(p.read_text(encoding="utf-8")) or {}).get("stages") or [])

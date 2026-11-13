@@ -23,6 +23,7 @@ candidates:
     core:
       - {id: dm25ex3-028, name: ～地獄帰りの騎士～, role: エンジン}
       - {id: dm25ex3-055, name: DARK MEMORY CONTAINER, role: エンジン}
+    setup: data/registry/setups/knight_dmc.json
     procedure:
       - 盾が置かれた時に墓地から騎士が出る。3マナで体3つと手札を得る（リソース型、設計書 §11）。
   - id: akashic
@@ -55,8 +56,17 @@ candidates:
     win: lock
     lock_mode: active
     core:
-      - {id: null, name: ドリルスコール, role: ロック}
+      - {id: dm16-051, name: ドリル・スコール, role: ロック}   # 旧候補は名前の「・」抜けと id 未記入で引き当てられなかった
       - {id: dm36-015, name: 天雷王機ジョバンニX世, role: 回収}
       - {id: dm36-078, name: クルトの気合釣り, role: 山札の回復}
+    setup: data/registry/setups/drill_lock.json
+    # 与えた方針（優先順）: マナ置き用の札をチャージ（光→火）→ ドリル・スコール → クルト（墓地のドリルを山札の上へ）→
+    # ドリルで自分のマナから捨てるのはマナ置き用（光→火）→ ジョバンニで墓地のクルト・ドリルを手札へ。コンボの札はチャージしない
+    policy: ["charge:dm02-038", "charge:dm01-042", "charge:dm01-072", "charge:dm01-077", "charge:dm01-075", "charge:dm01-033", "charge:dm01-097",
+             "play:dm16-051", "play:dm36-078", "graveyard:dm16-051:",
+             "mana:dm02-038", "mana:dm01-042", "mana:dm01-072", "mana:dm01-077", "mana:dm01-075", "mana:dm01-033", "mana:dm01-097",
+             "graveyard:dm36-078", "graveyard:dm16-051"]
+    policy_avoid: ["charge:dm16-051", "charge:dm36-015", "charge:dm36-078"]
+    opp_levels: [0, 1]
     procedure:
-      - 毎ターン自分がドリルスコールで相手マナを墓地へ、ジョバンニがターン終了時に回収、クルトの気合釣りで自分の山札を回復し、相手を山札切れへ（能動ロック）。
+      - 毎ターン自分がドリル・スコールで相手マナを墓地へ、ジョバンニがターン終了時に回収、クルトの気合釣りで自分の山札を回復し、相手を山札切れへ（能動ロック）。

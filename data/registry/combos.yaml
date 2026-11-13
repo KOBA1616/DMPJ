@@ -33,8 +33,14 @@ entries:
   - 8
   max_turn: 2
   budget: null
+  setup: null
+  policy: []
+  policy_avoid: []
+  opp_levels:
+  - 0
+  route_stages: null
   note: ''
-  digest: 680a93459fed4cf0
+  digest: 841ff43fb0073dca
   checks:
   - name: cards
     ok: true
@@ -120,9 +126,3711 @@ entries:
       stage2: true
       via: loop
       win_turn: 1
+    macros:
+    - seed: 1
+      win_kind: loop_deck_out
+      n_steps: 136
+      steps:
+      - - main
+        - - play:dm23bd7-035:1:free
+      - - choose_cards
+        - - graveyard:dm24ex3-rp3tr6:0
+      - - main
+        - - play:dmrp12-s01:1
+      - - pay_mana
+        - - mana:dm01-019,dm01-038,dm01-048,dm05-022,dm24ex1-043
+      - - yes_no
+        - - 'yes'
+      - - choose_cards
+        - - hand:dm24ex1-038:0
+      - - main
+        - - play:dm23bd7-035:1:free
+      - - choose_cards
+        - - graveyard:dm23bd7-035:0
+          - graveyard:dmrp12-s01:0
+      - - main
+        - - play:dmrp12-s01:1:free
+      - - yes_no
+        - - 'yes'
+      - - choose_cards
+        - - hand:dm24ex1-038:0
+      - - main
+        - - play:dm23bd7-035:1:free
+      - - choose_cards
+        - - graveyard:dm23bd7-035:0
+          - graveyard:dmrp12-s01:0
+      - - main
+        - - play:dmrp12-s01:1:free
+      - - yes_no
+        - - 'yes'
+      - - choose_cards
+        - - hand:dm24ex1-038:0
+      - - main
+        - - play:dm23bd7-035:1:free
+      - - choose_cards
+        - - graveyard:dm23bd7-035:0
+          - graveyard:dmrp12-s01:0
+      - - main
+        - - play:dmrp12-s01:1:free
+      - - yes_no
+        - - 'yes'
+      - - choose_cards
+        - - hand:dm24ex1-038:0
+      - - main
+        - - play:dm23bd7-035:1:free
+      - - choose_cards
+        - - graveyard:dm23bd7-035:0
+          - graveyard:dmrp12-s01:0
+      - - main
+        - - play:dmrp12-s01:1:free
+      - - yes_no
+        - - 'yes'
+      - - choose_cards
+        - - hand:dm24ex1-038:0
+      - - main
+        - - play:dm23bd7-035:1:free
+      - - choose_cards
+        - - graveyard:dm23bd7-035:0
+          - graveyard:dmrp12-s01:0
+      - - main
+        - - play:dmrp12-s01:1:free
+      - - yes_no
+        - - 'yes'
+      - - choose_cards
+        - - hand:dm24ex1-038:0
+      - - main
+        - - play:dm23bd7-035:1:free
+      - - choose_cards
+        - - graveyard:dm23bd7-035:0
+          - graveyard:dmrp12-s01:0
+      - - main
+        - - play:dmrp12-s01:1:free
+      - - yes_no
+        - - 'yes'
+      - - choose_cards
+        - - hand:dm24ex1-038:0
+      - - main
+        - - play:dm23bd7-035:1:free
+      - - choose_cards
+        - - graveyard:dm23bd7-035:0
+          - graveyard:dmrp12-s01:0
+      - - main
+        - - play:dmrp12-s01:1:free
+      - - yes_no
+        - - 'yes'
+      - - choose_cards
+        - - hand:dm24ex1-038:0
+      - - main
+        - - play:dm23bd7-035:1:free
+      - - choose_cards
+        - - graveyard:dm23bd7-035:0
+          - graveyard:dmrp12-s01:0
+      - - main
+        - - play:dmrp12-s01:1:free
+      - - yes_no
+        - - 'yes'
+      - - choose_cards
+        - - hand:dm24ex1-038:0
+      - - main
+        - - play:dm23bd7-035:1:free
+      - - choose_cards
+        - - graveyard:dm23bd7-035:0
+          - graveyard:dmrp12-s01:0
+      - - main
+        - - play:dmrp12-s01:1:free
+      - - yes_no
+        - - 'yes'
+      - - choose_cards
+        - - hand:dm24ex1-038:0
+      - - main
+        - - play:dm23bd7-035:1:free
+      - - choose_cards
+        - - graveyard:dm23bd7-035:0
+          - graveyard:dmrp12-s01:0
+      - - main
+        - - play:dmrp12-s01:1:free
+      - - yes_no
+        - - 'yes'
+      - - choose_cards
+        - - hand:dm24ex1-038:0
+      - - main
+        - - play:dm23bd7-035:1:free
+      - - choose_cards
+        - - graveyard:dm23bd7-035:0
+          - graveyard:dmrp12-s01:0
+      - - main
+        - - play:dmrp12-s01:1:free
+      - - yes_no
+        - - 'yes'
+      - - choose_cards
+        - - hand:dm24ex1-038:0
+      - - main
+        - - play:dm23bd7-035:1:free
+      - - choose_cards
+        - - graveyard:dm23bd7-035:0
+          - graveyard:dmrp12-s01:0
+      - - main
+        - - play:dmrp12-s01:1:free
+      - - yes_no
+        - - 'yes'
+      - - choose_cards
+        - - hand:dm24ex1-038:0
+      - - main
+        - - play:dm23bd7-035:1:free
+      - - choose_cards
+        - - graveyard:dm23bd7-035:0
+          - graveyard:dmrp12-s01:0
+      - - main
+        - - play:dmrp12-s01:1:free
+      - - yes_no
+        - - 'yes'
+      - - choose_cards
+        - - hand:dm24ex1-038:0
+      - - main
+        - - play:dm23bd7-035:1:free
+      - - choose_cards
+        - - graveyard:dm23bd7-035:0
+          - graveyard:dmrp12-s01:0
+      - - main
+        - - play:dmrp12-s01:1:free
+      - - yes_no
+        - - 'yes'
+      - - choose_cards
+        - - hand:dm24ex1-038:0
+      - - main
+        - - play:dm23bd7-035:1:free
+      - - choose_cards
+        - - graveyard:dm23bd7-035:0
+          - graveyard:dmrp12-s01:0
+      - - main
+        - - play:dmrp12-s01:1:free
+      - - yes_no
+        - - 'yes'
+      - - choose_cards
+        - - hand:dm24ex1-038:0
+      - - main
+        - - play:dm23bd7-035:1:free
+      - - choose_cards
+        - - graveyard:dm23bd7-035:0
+          - graveyard:dmrp12-s01:0
+      - - main
+        - - play:dmrp12-s01:1:free
+      - - yes_no
+        - - 'yes'
+      - - choose_cards
+        - - hand:dm24ex1-038:0
+      - - main
+        - - play:dm23bd7-035:1:free
+      - - choose_cards
+        - - graveyard:dm23bd7-035:0
+          - graveyard:dmrp12-s01:0
+      - - main
+        - - play:dmrp12-s01:1:free
+      - - yes_no
+        - - 'yes'
+      - - choose_cards
+        - - hand:dm24ex1-038:0
+      - - main
+        - - play:dm23bd7-035:1:free
+      - - choose_cards
+        - - graveyard:dm23bd7-035:0
+          - graveyard:dmrp12-s01:0
+      - - main
+        - - play:dmrp12-s01:1:free
+      - - yes_no
+        - - 'yes'
+      - - choose_cards
+        - - hand:dm24ex1-038:0
+      - - main
+        - - play:dm23bd7-035:1:free
+      - - choose_cards
+        - - graveyard:dm23bd7-035:0
+          - graveyard:dmrp12-s01:0
+      - - main
+        - - play:dmrp12-s01:1:free
+      - - yes_no
+        - - 'yes'
+      - - choose_cards
+        - - hand:dm24ex1-038:0
+      - - main
+        - - play:dm23bd7-035:1:free
+      - - choose_cards
+        - - graveyard:dm23bd7-035:0
+          - graveyard:dmrp12-s01:0
+      - - main
+        - - play:dmrp12-s01:1:free
+      - - yes_no
+        - - 'yes'
+      - - choose_cards
+        - - hand:dm24ex1-038:0
+      - - main
+        - - play:dm23bd7-035:1:free
+      - - choose_cards
+        - - graveyard:dm23bd7-035:0
+          - graveyard:dmrp12-s01:0
+      - - main
+        - - play:dmrp12-s01:1:free
+      - - yes_no
+        - - 'yes'
+      - - choose_cards
+        - - hand:dm24ex1-038:0
+      - - main
+        - - play:dm23bd7-035:1:free
+      - - choose_cards
+        - - graveyard:dm23bd7-035:0
+          - graveyard:dmrp12-s01:0
+      - - main
+        - - play:dmrp12-s01:1:free
+      - - yes_no
+        - - 'yes'
+      - - choose_cards
+        - - hand:dm24ex1-038:0
+      - - main
+        - - play:dm23bd7-035:1:free
+      - - choose_cards
+        - - graveyard:dm23bd7-035:0
+          - graveyard:dmrp12-s01:0
+      - - main
+        - - play:dmrp12-s01:1:free
+      - - yes_no
+        - - 'yes'
+      - - choose_cards
+        - - hand:dm24ex1-038:0
+      - - main
+        - - play:dm23bd7-035:1:free
+      - - choose_cards
+        - - graveyard:dm23bd7-035:0
+          - graveyard:dmrp12-s01:0
+      - - main
+        - - play:dmrp12-s01:1:free
+      - - yes_no
+        - - 'yes'
+      - - choose_cards
+        - - hand:dm24ex1-038:0
+      - - main
+        - - play:dm23bd7-035:1:free
+      - - choose_cards
+        - - graveyard:dm23bd7-035:0
+          - graveyard:dmrp12-s01:0
+      - - main
+        - - play:dmrp12-s01:1:free
+      - - yes_no
+        - - 'yes'
+      - - choose_cards
+        - - hand:dm24ex1-038:0
+      - - main
+        - - play:dm23bd7-035:1:free
+      - - choose_cards
+        - - graveyard:dm23bd7-035:0
+          - graveyard:dmrp12-s01:0
+      - - main
+        - - play:dmrp12-s01:1:free
+      - - yes_no
+        - - 'yes'
+      - - choose_cards
+        - - hand:dm24ex1-038:0
+    - seed: 2
+      win_kind: loop_deck_out
+      n_steps: 136
+      steps:
+      - - main
+        - - play:dm23bd7-035:1:free
+      - - choose_cards
+        - - graveyard:dm24ex3-rp3tr6:0
+      - - main
+        - - play:dmrp12-s01:1
+      - - pay_mana
+        - - mana:dm01-019,dm01-038,dm01-048,dm24ex1-038,dm24ex1-043
+      - - yes_no
+        - - 'yes'
+      - - choose_cards
+        - - hand:dm24ex1-038:0
+      - - main
+        - - play:dm23bd7-035:1:free
+      - - choose_cards
+        - - graveyard:dm23bd7-035:0
+          - graveyard:dmrp12-s01:0
+      - - main
+        - - play:dmrp12-s01:1:free
+      - - yes_no
+        - - 'yes'
+      - - choose_cards
+        - - hand:dm24ex1-038:0
+      - - main
+        - - play:dm23bd7-035:1:free
+      - - choose_cards
+        - - graveyard:dm23bd7-035:0
+          - graveyard:dmrp12-s01:0
+      - - main
+        - - play:dmrp12-s01:1:free
+      - - yes_no
+        - - 'yes'
+      - - choose_cards
+        - - hand:dm24ex1-038:0
+      - - main
+        - - play:dm23bd7-035:1:free
+      - - choose_cards
+        - - graveyard:dm23bd7-035:0
+          - graveyard:dmrp12-s01:0
+      - - main
+        - - play:dmrp12-s01:1:free
+      - - yes_no
+        - - 'yes'
+      - - choose_cards
+        - - hand:dm24ex1-038:0
+      - - main
+        - - play:dm23bd7-035:1:free
+      - - choose_cards
+        - - graveyard:dm23bd7-035:0
+          - graveyard:dmrp12-s01:0
+      - - main
+        - - play:dmrp12-s01:1:free
+      - - yes_no
+        - - 'yes'
+      - - choose_cards
+        - - hand:dm24ex1-038:0
+      - - main
+        - - play:dm23bd7-035:1:free
+      - - choose_cards
+        - - graveyard:dm23bd7-035:0
+          - graveyard:dmrp12-s01:0
+      - - main
+        - - play:dmrp12-s01:1:free
+      - - yes_no
+        - - 'yes'
+      - - choose_cards
+        - - hand:dm24ex1-038:0
+      - - main
+        - - play:dm23bd7-035:1:free
+      - - choose_cards
+        - - graveyard:dm23bd7-035:0
+          - graveyard:dmrp12-s01:0
+      - - main
+        - - play:dmrp12-s01:1:free
+      - - yes_no
+        - - 'yes'
+      - - choose_cards
+        - - hand:dm24ex1-038:0
+      - - main
+        - - play:dm23bd7-035:1:free
+      - - choose_cards
+        - - graveyard:dm23bd7-035:0
+          - graveyard:dmrp12-s01:0
+      - - main
+        - - play:dmrp12-s01:1:free
+      - - yes_no
+        - - 'yes'
+      - - choose_cards
+        - - hand:dm24ex1-038:0
+      - - main
+        - - play:dm23bd7-035:1:free
+      - - choose_cards
+        - - graveyard:dm23bd7-035:0
+          - graveyard:dmrp12-s01:0
+      - - main
+        - - play:dmrp12-s01:1:free
+      - - yes_no
+        - - 'yes'
+      - - choose_cards
+        - - hand:dm24ex1-038:0
+      - - main
+        - - play:dm23bd7-035:1:free
+      - - choose_cards
+        - - graveyard:dm23bd7-035:0
+          - graveyard:dmrp12-s01:0
+      - - main
+        - - play:dmrp12-s01:1:free
+      - - yes_no
+        - - 'yes'
+      - - choose_cards
+        - - hand:dm24ex1-038:0
+      - - main
+        - - play:dm23bd7-035:1:free
+      - - choose_cards
+        - - graveyard:dm23bd7-035:0
+          - graveyard:dmrp12-s01:0
+      - - main
+        - - play:dmrp12-s01:1:free
+      - - yes_no
+        - - 'yes'
+      - - choose_cards
+        - - hand:dm24ex1-038:0
+      - - main
+        - - play:dm23bd7-035:1:free
+      - - choose_cards
+        - - graveyard:dm23bd7-035:0
+          - graveyard:dmrp12-s01:0
+      - - main
+        - - play:dmrp12-s01:1:free
+      - - yes_no
+        - - 'yes'
+      - - choose_cards
+        - - hand:dm24ex1-038:0
+      - - main
+        - - play:dm23bd7-035:1:free
+      - - choose_cards
+        - - graveyard:dm23bd7-035:0
+          - graveyard:dmrp12-s01:0
+      - - main
+        - - play:dmrp12-s01:1:free
+      - - yes_no
+        - - 'yes'
+      - - choose_cards
+        - - hand:dm24ex1-038:0
+      - - main
+        - - play:dm23bd7-035:1:free
+      - - choose_cards
+        - - graveyard:dm23bd7-035:0
+          - graveyard:dmrp12-s01:0
+      - - main
+        - - play:dmrp12-s01:1:free
+      - - yes_no
+        - - 'yes'
+      - - choose_cards
+        - - hand:dm24ex1-038:0
+      - - main
+        - - play:dm23bd7-035:1:free
+      - - choose_cards
+        - - graveyard:dm23bd7-035:0
+          - graveyard:dmrp12-s01:0
+      - - main
+        - - play:dmrp12-s01:1:free
+      - - yes_no
+        - - 'yes'
+      - - choose_cards
+        - - hand:dm24ex1-038:0
+      - - main
+        - - play:dm23bd7-035:1:free
+      - - choose_cards
+        - - graveyard:dm23bd7-035:0
+          - graveyard:dmrp12-s01:0
+      - - main
+        - - play:dmrp12-s01:1:free
+      - - yes_no
+        - - 'yes'
+      - - choose_cards
+        - - hand:dm24ex1-038:0
+      - - main
+        - - play:dm23bd7-035:1:free
+      - - choose_cards
+        - - graveyard:dm23bd7-035:0
+          - graveyard:dmrp12-s01:0
+      - - main
+        - - play:dmrp12-s01:1:free
+      - - yes_no
+        - - 'yes'
+      - - choose_cards
+        - - hand:dm24ex1-038:0
+      - - main
+        - - play:dm23bd7-035:1:free
+      - - choose_cards
+        - - graveyard:dm23bd7-035:0
+          - graveyard:dmrp12-s01:0
+      - - main
+        - - play:dmrp12-s01:1:free
+      - - yes_no
+        - - 'yes'
+      - - choose_cards
+        - - hand:dm24ex1-038:0
+      - - main
+        - - play:dm23bd7-035:1:free
+      - - choose_cards
+        - - graveyard:dm23bd7-035:0
+          - graveyard:dmrp12-s01:0
+      - - main
+        - - play:dmrp12-s01:1:free
+      - - yes_no
+        - - 'yes'
+      - - choose_cards
+        - - hand:dm24ex1-038:0
+      - - main
+        - - play:dm23bd7-035:1:free
+      - - choose_cards
+        - - graveyard:dm23bd7-035:0
+          - graveyard:dmrp12-s01:0
+      - - main
+        - - play:dmrp12-s01:1:free
+      - - yes_no
+        - - 'yes'
+      - - choose_cards
+        - - hand:dm24ex1-038:0
+      - - main
+        - - play:dm23bd7-035:1:free
+      - - choose_cards
+        - - graveyard:dm23bd7-035:0
+          - graveyard:dmrp12-s01:0
+      - - main
+        - - play:dmrp12-s01:1:free
+      - - yes_no
+        - - 'yes'
+      - - choose_cards
+        - - hand:dm24ex1-038:0
+      - - main
+        - - play:dm23bd7-035:1:free
+      - - choose_cards
+        - - graveyard:dm23bd7-035:0
+          - graveyard:dmrp12-s01:0
+      - - main
+        - - play:dmrp12-s01:1:free
+      - - yes_no
+        - - 'yes'
+      - - choose_cards
+        - - hand:dm24ex1-038:0
+      - - main
+        - - play:dm23bd7-035:1:free
+      - - choose_cards
+        - - graveyard:dm23bd7-035:0
+          - graveyard:dmrp12-s01:0
+      - - main
+        - - play:dmrp12-s01:1:free
+      - - yes_no
+        - - 'yes'
+      - - choose_cards
+        - - hand:dm24ex1-038:0
+      - - main
+        - - play:dm23bd7-035:1:free
+      - - choose_cards
+        - - graveyard:dm23bd7-035:0
+          - graveyard:dmrp12-s01:0
+      - - main
+        - - play:dmrp12-s01:1:free
+      - - yes_no
+        - - 'yes'
+      - - choose_cards
+        - - hand:dm24ex1-038:0
+      - - main
+        - - play:dm23bd7-035:1:free
+      - - choose_cards
+        - - graveyard:dm23bd7-035:0
+          - graveyard:dmrp12-s01:0
+      - - main
+        - - play:dmrp12-s01:1:free
+      - - yes_no
+        - - 'yes'
+      - - choose_cards
+        - - hand:dm24ex1-038:0
+      - - main
+        - - play:dm23bd7-035:1:free
+      - - choose_cards
+        - - graveyard:dm23bd7-035:0
+          - graveyard:dmrp12-s01:0
+      - - main
+        - - play:dmrp12-s01:1:free
+      - - yes_no
+        - - 'yes'
+      - - choose_cards
+        - - hand:dm24ex1-038:0
+      - - main
+        - - play:dm23bd7-035:1:free
+      - - choose_cards
+        - - graveyard:dm23bd7-035:0
+          - graveyard:dmrp12-s01:0
+      - - main
+        - - play:dmrp12-s01:1:free
+      - - yes_no
+        - - 'yes'
+      - - choose_cards
+        - - hand:dm24ex1-038:0
+    - seed: 3
+      win_kind: loop_deck_out
+      n_steps: 151
+      steps:
+      - - main
+        - - play:dm23bd7-035:1:free
+      - - choose_cards
+        - - graveyard:dm24ex3-rp3tr6:0
+      - - main
+        - - play:dmrp12-s01:1
+      - - pay_mana
+        - - mana:dm01-019,dm01-038,dm01-048,dm05-022,dm24ex1-043
+      - - yes_no
+        - - 'yes'
+      - - choose_cards
+        - - hand:dm24ex1-038:0
+      - - main
+        - - play:dm23bd7-035:1:free
+      - - choose_cards
+        - - graveyard:dm23bd7-035:0
+          - graveyard:dmrp12-s01:0
+      - - main
+        - - play:dmrp12-s01:1:free
+      - - yes_no
+        - - 'yes'
+      - - choose_cards
+        - - hand:dm24ex1-038:0
+      - - main
+        - - play:dm23bd7-035:1:free
+      - - choose_cards
+        - - graveyard:dm23bd7-035:0
+          - graveyard:dmrp12-s01:0
+      - - main
+        - - play:dmrp12-s01:1:free
+      - - yes_no
+        - - 'yes'
+      - - choose_cards
+        - - hand:dm24ex1-038:0
+      - - main
+        - - play:dm23bd7-035:1:free
+      - - choose_cards
+        - - graveyard:dm23bd7-035:0
+          - graveyard:dmrp12-s01:0
+      - - main
+        - - play:dmrp12-s01:1:free
+      - - yes_no
+        - - 'yes'
+      - - choose_cards
+        - - hand:dm24ex1-038:0
+      - - main
+        - - play:dm23bd7-035:1:free
+      - - choose_cards
+        - - graveyard:dm23bd7-035:0
+          - graveyard:dmrp12-s01:0
+      - - main
+        - - play:dmrp12-s01:1:free
+      - - yes_no
+        - - 'yes'
+      - - choose_cards
+        - - hand:dm24ex1-038:0
+      - - main
+        - - play:dm23bd7-035:1:free
+      - - choose_cards
+        - - graveyard:dm23bd7-035:0
+          - graveyard:dmrp12-s01:0
+      - - main
+        - - play:dmrp12-s01:1:free
+      - - yes_no
+        - - 'yes'
+      - - choose_cards
+        - - hand:dm24ex1-038:0
+      - - main
+        - - play:dm23bd7-035:1:free
+      - - choose_cards
+        - - graveyard:dm23bd7-035:0
+          - graveyard:dmrp12-s01:0
+      - - main
+        - - play:dmrp12-s01:1:free
+      - - yes_no
+        - - 'yes'
+      - - choose_cards
+        - - hand:dm24ex1-038:0
+      - - main
+        - - play:dm23bd7-035:1:free
+      - - choose_cards
+        - - graveyard:dm23bd7-035:0
+          - graveyard:dmrp12-s01:0
+      - - main
+        - - play:dmrp12-s01:1:free
+      - - yes_no
+        - - 'yes'
+      - - choose_cards
+        - - hand:dm24ex1-038:0
+      - - main
+        - - play:dm23bd7-035:1:free
+      - - choose_cards
+        - - graveyard:dm23bd7-035:0
+          - graveyard:dmrp12-s01:0
+      - - main
+        - - play:dmrp12-s01:1:free
+      - - yes_no
+        - - 'yes'
+      - - choose_cards
+        - - hand:dm24ex1-038:0
+      - - main
+        - - play:dm23bd7-035:1:free
+      - - choose_cards
+        - - graveyard:dm23bd7-035:0
+          - graveyard:dmrp12-s01:0
+      - - main
+        - - play:dmrp12-s01:1:free
+      - - yes_no
+        - - 'yes'
+      - - choose_cards
+        - - hand:dm24ex1-038:0
+      - - main
+        - - play:dm23bd7-035:1:free
+      - - choose_cards
+        - - graveyard:dm23bd7-035:0
+          - graveyard:dmrp12-s01:0
+      - - main
+        - - play:dmrp12-s01:1:free
+      - - yes_no
+        - - 'yes'
+      - - choose_cards
+        - - hand:dm24ex1-038:0
+      - - main
+        - - play:dm23bd7-035:1:free
+      - - choose_cards
+        - - graveyard:dm23bd7-035:0
+          - graveyard:dmrp12-s01:0
+      - - main
+        - - play:dmrp12-s01:1:free
+      - - yes_no
+        - - 'yes'
+      - - choose_cards
+        - - hand:dm24ex1-038:0
+      - - main
+        - - play:dm23bd7-035:1:free
+      - - choose_cards
+        - - graveyard:dm23bd7-035:0
+          - graveyard:dmrp12-s01:0
+      - - main
+        - - play:dmrp12-s01:1:free
+      - - yes_no
+        - - 'yes'
+      - - choose_cards
+        - - hand:dm24ex1-038:0
+      - - main
+        - - play:dm23bd7-035:1:free
+      - - choose_cards
+        - - graveyard:dm23bd7-035:0
+          - graveyard:dmrp12-s01:0
+      - - main
+        - - play:dmrp12-s01:1:free
+      - - yes_no
+        - - 'yes'
+      - - choose_cards
+        - - hand:dm24ex1-038:0
+      - - main
+        - - play:dm23bd7-035:1:free
+      - - choose_cards
+        - - graveyard:dm23bd7-035:0
+          - graveyard:dmrp12-s01:0
+      - - main
+        - - play:dmrp12-s01:1:free
+      - - yes_no
+        - - 'yes'
+      - - choose_cards
+        - - hand:dm24ex1-038:0
+      - - main
+        - - play:dm23bd7-035:1:free
+      - - choose_cards
+        - - graveyard:dm23bd7-035:0
+          - graveyard:dmrp12-s01:0
+      - - main
+        - - play:dmrp12-s01:1:free
+      - - yes_no
+        - - 'yes'
+      - - choose_cards
+        - - hand:dm24ex1-038:0
+      - - main
+        - - play:dm23bd7-035:1:free
+      - - choose_cards
+        - - graveyard:dm23bd7-035:0
+          - graveyard:dmrp12-s01:0
+      - - main
+        - - play:dmrp12-s01:1:free
+      - - yes_no
+        - - 'yes'
+      - - choose_cards
+        - - hand:dm24ex1-038:0
+      - - main
+        - - play:dm23bd7-035:1:free
+      - - choose_cards
+        - - graveyard:dm23bd7-035:0
+          - graveyard:dmrp12-s01:0
+      - - main
+        - - play:dmrp12-s01:1:free
+      - - yes_no
+        - - 'yes'
+      - - choose_cards
+        - - hand:dm24ex1-038:0
+      - - main
+        - - play:dm23bd7-035:1:free
+      - - choose_cards
+        - - graveyard:dm23bd7-035:0
+          - graveyard:dmrp12-s01:0
+      - - main
+        - - play:dmrp12-s01:1:free
+      - - yes_no
+        - - 'yes'
+      - - choose_cards
+        - - hand:dm24ex1-038:0
+      - - main
+        - - play:dm23bd7-035:1:free
+      - - choose_cards
+        - - graveyard:dm23bd7-035:0
+          - graveyard:dmrp12-s01:0
+      - - main
+        - - play:dmrp12-s01:1:free
+      - - yes_no
+        - - 'yes'
+      - - choose_cards
+        - - hand:dm24ex1-038:0
+      - - main
+        - - play:dm23bd7-035:1:free
+      - - choose_cards
+        - - graveyard:dm23bd7-035:0
+          - graveyard:dmrp12-s01:0
+      - - main
+        - - play:dmrp12-s01:1:free
+      - - yes_no
+        - - 'yes'
+      - - choose_cards
+        - - hand:dm24ex1-038:0
+      - - main
+        - - play:dm23bd7-035:1:free
+      - - choose_cards
+        - - graveyard:dm23bd7-035:0
+          - graveyard:dmrp12-s01:0
+      - - main
+        - - play:dmrp12-s01:1:free
+      - - yes_no
+        - - 'yes'
+      - - choose_cards
+        - - hand:dm24ex1-038:0
+      - - main
+        - - play:dm23bd7-035:1:free
+      - - choose_cards
+        - - graveyard:dm23bd7-035:0
+          - graveyard:dmrp12-s01:0
+      - - main
+        - - play:dmrp12-s01:1:free
+      - - yes_no
+        - - 'yes'
+      - - choose_cards
+        - - hand:dm24ex1-038:0
+      - - main
+        - - play:dm23bd7-035:1:free
+      - - choose_cards
+        - - graveyard:dm23bd7-035:0
+          - graveyard:dmrp12-s01:0
+      - - main
+        - - play:dmrp12-s01:1:free
+      - - yes_no
+        - - 'yes'
+      - - choose_cards
+        - - hand:dm24ex1-038:0
+      - - main
+        - - play:dm23bd7-035:1:free
+      - - choose_cards
+        - - graveyard:dm23bd7-035:0
+          - graveyard:dmrp12-s01:0
+      - - main
+        - - play:dmrp12-s01:1:free
+      - - yes_no
+        - - 'yes'
+      - - choose_cards
+        - - hand:dm24ex1-038:0
+      - - main
+        - - play:dm23bd7-035:1:free
+      - - choose_cards
+        - - graveyard:dm23bd7-035:0
+          - graveyard:dmrp12-s01:0
+      - - main
+        - - play:dmrp12-s01:1:free
+      - - yes_no
+        - - 'yes'
+      - - choose_cards
+        - - hand:dm24ex1-038:0
+      - - main
+        - - play:dm23bd7-035:1:free
+      - - choose_cards
+        - - graveyard:dm23bd7-035:0
+          - graveyard:dmrp12-s01:0
+      - - main
+        - - play:dmrp12-s01:1:free
+      - - yes_no
+        - - 'yes'
+      - - choose_cards
+        - - hand:dm24ex1-038:0
+      - - main
+        - - play:dm23bd7-035:1:free
+      - - choose_cards
+        - - graveyard:dm23bd7-035:0
+          - graveyard:dmrp12-s01:0
+      - - main
+        - - play:dmrp12-s01:1:free
+      - - yes_no
+        - - 'yes'
+      - - choose_cards
+        - - hand:dm24ex1-038:0
+      - - main
+        - - play:dm23bd7-035:1:free
+      - - choose_cards
+        - - graveyard:dm23bd7-035:0
+          - graveyard:dmrp12-s01:0
+      - - main
+        - - play:dmrp12-s01:1:free
+      - - yes_no
+        - - 'yes'
+      - - choose_cards
+        - - hand:dm24ex1-038:0
+      - - main
+        - - play:dm23bd7-035:1:free
+      - - choose_cards
+        - - graveyard:dm23bd7-035:0
+          - graveyard:dmrp12-s01:0
+      - - main
+        - - play:dmrp12-s01:1:free
+      - - yes_no
+        - - 'yes'
+      - - choose_cards
+        - - hand:dm24ex1-038:0
+    - seed: 4
+      win_kind: loop_deck_out
+      n_steps: 150
+      steps:
+      - - main
+        - - play:dm23bd7-035:1
+      - - choose_cards
+        - - graveyard:dm24ex3-rp3tr6:0
+      - - main
+        - - play:dmrp12-s01:1:free
+      - - yes_no
+        - - 'yes'
+      - - choose_cards
+        - - hand:dm24ex1-038:0
+      - - main
+        - - play:dm23bd7-035:1:free
+      - - choose_cards
+        - - graveyard:dm23bd7-035:0
+          - graveyard:dmrp12-s01:0
+      - - main
+        - - play:dmrp12-s01:1:free
+      - - yes_no
+        - - 'yes'
+      - - choose_cards
+        - - hand:dm24ex1-038:0
+      - - main
+        - - play:dm23bd7-035:1:free
+      - - choose_cards
+        - - graveyard:dm23bd7-035:0
+          - graveyard:dmrp12-s01:0
+      - - main
+        - - play:dmrp12-s01:1:free
+      - - yes_no
+        - - 'yes'
+      - - choose_cards
+        - - hand:dm24ex1-038:0
+      - - main
+        - - play:dm23bd7-035:1:free
+      - - choose_cards
+        - - graveyard:dm23bd7-035:0
+          - graveyard:dmrp12-s01:0
+      - - main
+        - - play:dmrp12-s01:1:free
+      - - yes_no
+        - - 'yes'
+      - - choose_cards
+        - - hand:dm24ex1-038:0
+      - - main
+        - - play:dm23bd7-035:1:free
+      - - choose_cards
+        - - graveyard:dm23bd7-035:0
+          - graveyard:dmrp12-s01:0
+      - - main
+        - - play:dmrp12-s01:1:free
+      - - yes_no
+        - - 'yes'
+      - - choose_cards
+        - - hand:dm24ex1-038:0
+      - - main
+        - - play:dm23bd7-035:1:free
+      - - choose_cards
+        - - graveyard:dm23bd7-035:0
+          - graveyard:dmrp12-s01:0
+      - - main
+        - - play:dmrp12-s01:1:free
+      - - yes_no
+        - - 'yes'
+      - - choose_cards
+        - - hand:dm24ex1-038:0
+      - - main
+        - - play:dm23bd7-035:1:free
+      - - choose_cards
+        - - graveyard:dm23bd7-035:0
+          - graveyard:dmrp12-s01:0
+      - - main
+        - - play:dmrp12-s01:1:free
+      - - yes_no
+        - - 'yes'
+      - - choose_cards
+        - - hand:dm24ex1-038:0
+      - - main
+        - - play:dm23bd7-035:1:free
+      - - choose_cards
+        - - graveyard:dm23bd7-035:0
+          - graveyard:dmrp12-s01:0
+      - - main
+        - - play:dmrp12-s01:1:free
+      - - yes_no
+        - - 'yes'
+      - - choose_cards
+        - - hand:dm24ex1-038:0
+      - - main
+        - - play:dm23bd7-035:1:free
+      - - choose_cards
+        - - graveyard:dm23bd7-035:0
+          - graveyard:dmrp12-s01:0
+      - - main
+        - - play:dmrp12-s01:1:free
+      - - yes_no
+        - - 'yes'
+      - - choose_cards
+        - - hand:dm24ex1-038:0
+      - - main
+        - - play:dm23bd7-035:1:free
+      - - choose_cards
+        - - graveyard:dm23bd7-035:0
+          - graveyard:dmrp12-s01:0
+      - - main
+        - - play:dmrp12-s01:1:free
+      - - yes_no
+        - - 'yes'
+      - - choose_cards
+        - - hand:dm24ex1-038:0
+      - - main
+        - - play:dm23bd7-035:1:free
+      - - choose_cards
+        - - graveyard:dm23bd7-035:0
+          - graveyard:dmrp12-s01:0
+      - - main
+        - - play:dmrp12-s01:1:free
+      - - yes_no
+        - - 'yes'
+      - - choose_cards
+        - - hand:dm24ex1-038:0
+      - - main
+        - - play:dm23bd7-035:1:free
+      - - choose_cards
+        - - graveyard:dm23bd7-035:0
+          - graveyard:dmrp12-s01:0
+      - - main
+        - - play:dmrp12-s01:1:free
+      - - yes_no
+        - - 'yes'
+      - - choose_cards
+        - - hand:dm24ex1-038:0
+      - - main
+        - - play:dm23bd7-035:1:free
+      - - choose_cards
+        - - graveyard:dm23bd7-035:0
+          - graveyard:dmrp12-s01:0
+      - - main
+        - - play:dmrp12-s01:1:free
+      - - yes_no
+        - - 'yes'
+      - - choose_cards
+        - - hand:dm24ex1-038:0
+      - - main
+        - - play:dm23bd7-035:1:free
+      - - choose_cards
+        - - graveyard:dm23bd7-035:0
+          - graveyard:dmrp12-s01:0
+      - - main
+        - - play:dmrp12-s01:1:free
+      - - yes_no
+        - - 'yes'
+      - - choose_cards
+        - - hand:dm24ex1-038:0
+      - - main
+        - - play:dm23bd7-035:1:free
+      - - choose_cards
+        - - graveyard:dm23bd7-035:0
+          - graveyard:dmrp12-s01:0
+      - - main
+        - - play:dmrp12-s01:1:free
+      - - yes_no
+        - - 'yes'
+      - - choose_cards
+        - - hand:dm24ex1-038:0
+      - - main
+        - - play:dm23bd7-035:1:free
+      - - choose_cards
+        - - graveyard:dm23bd7-035:0
+          - graveyard:dmrp12-s01:0
+      - - main
+        - - play:dmrp12-s01:1:free
+      - - yes_no
+        - - 'yes'
+      - - choose_cards
+        - - hand:dm24ex1-038:0
+      - - main
+        - - play:dm23bd7-035:1:free
+      - - choose_cards
+        - - graveyard:dm23bd7-035:0
+          - graveyard:dmrp12-s01:0
+      - - main
+        - - play:dmrp12-s01:1:free
+      - - yes_no
+        - - 'yes'
+      - - choose_cards
+        - - hand:dm24ex1-038:0
+      - - main
+        - - play:dm23bd7-035:1:free
+      - - choose_cards
+        - - graveyard:dm23bd7-035:0
+          - graveyard:dmrp12-s01:0
+      - - main
+        - - play:dmrp12-s01:1:free
+      - - yes_no
+        - - 'yes'
+      - - choose_cards
+        - - hand:dm24ex1-038:0
+      - - main
+        - - play:dm23bd7-035:1:free
+      - - choose_cards
+        - - graveyard:dm23bd7-035:0
+          - graveyard:dmrp12-s01:0
+      - - main
+        - - play:dmrp12-s01:1:free
+      - - yes_no
+        - - 'yes'
+      - - choose_cards
+        - - hand:dm24ex1-038:0
+      - - main
+        - - play:dm23bd7-035:1:free
+      - - choose_cards
+        - - graveyard:dm23bd7-035:0
+          - graveyard:dmrp12-s01:0
+      - - main
+        - - play:dmrp12-s01:1:free
+      - - yes_no
+        - - 'yes'
+      - - choose_cards
+        - - hand:dm24ex1-038:0
+      - - main
+        - - play:dm23bd7-035:1:free
+      - - choose_cards
+        - - graveyard:dm23bd7-035:0
+          - graveyard:dmrp12-s01:0
+      - - main
+        - - play:dmrp12-s01:1:free
+      - - yes_no
+        - - 'yes'
+      - - choose_cards
+        - - hand:dm24ex1-038:0
+      - - main
+        - - play:dm23bd7-035:1:free
+      - - choose_cards
+        - - graveyard:dm23bd7-035:0
+          - graveyard:dmrp12-s01:0
+      - - main
+        - - play:dmrp12-s01:1:free
+      - - yes_no
+        - - 'yes'
+      - - choose_cards
+        - - hand:dm24ex1-038:0
+      - - main
+        - - play:dm23bd7-035:1:free
+      - - choose_cards
+        - - graveyard:dm23bd7-035:0
+          - graveyard:dmrp12-s01:0
+      - - main
+        - - play:dmrp12-s01:1:free
+      - - yes_no
+        - - 'yes'
+      - - choose_cards
+        - - hand:dm24ex1-038:0
+      - - main
+        - - play:dm23bd7-035:1:free
+      - - choose_cards
+        - - graveyard:dm23bd7-035:0
+          - graveyard:dmrp12-s01:0
+      - - main
+        - - play:dmrp12-s01:1:free
+      - - yes_no
+        - - 'yes'
+      - - choose_cards
+        - - hand:dm24ex1-038:0
+      - - main
+        - - play:dm23bd7-035:1:free
+      - - choose_cards
+        - - graveyard:dm23bd7-035:0
+          - graveyard:dmrp12-s01:0
+      - - main
+        - - play:dmrp12-s01:1:free
+      - - yes_no
+        - - 'yes'
+      - - choose_cards
+        - - hand:dm24ex1-038:0
+      - - main
+        - - play:dm23bd7-035:1:free
+      - - choose_cards
+        - - graveyard:dm23bd7-035:0
+          - graveyard:dmrp12-s01:0
+      - - main
+        - - play:dmrp12-s01:1:free
+      - - yes_no
+        - - 'yes'
+      - - choose_cards
+        - - hand:dm24ex1-038:0
+      - - main
+        - - play:dm23bd7-035:1:free
+      - - choose_cards
+        - - graveyard:dm23bd7-035:0
+          - graveyard:dmrp12-s01:0
+      - - main
+        - - play:dmrp12-s01:1:free
+      - - yes_no
+        - - 'yes'
+      - - choose_cards
+        - - hand:dm24ex1-038:0
+      - - main
+        - - play:dm23bd7-035:1:free
+      - - choose_cards
+        - - graveyard:dm23bd7-035:0
+          - graveyard:dmrp12-s01:0
+      - - main
+        - - play:dmrp12-s01:1:free
+      - - yes_no
+        - - 'yes'
+      - - choose_cards
+        - - hand:dm24ex1-038:0
+      - - main
+        - - play:dm23bd7-035:1:free
+      - - choose_cards
+        - - graveyard:dm23bd7-035:0
+          - graveyard:dmrp12-s01:0
+      - - main
+        - - play:dmrp12-s01:1:free
+      - - yes_no
+        - - 'yes'
+      - - choose_cards
+        - - hand:dm24ex1-038:0
+      - - main
+        - - play:dm23bd7-035:1:free
+      - - choose_cards
+        - - graveyard:dm23bd7-035:0
+          - graveyard:dmrp12-s01:0
+      - - main
+        - - play:dmrp12-s01:1:free
+      - - yes_no
+        - - 'yes'
+      - - choose_cards
+        - - hand:dm24ex1-038:0
+    - seed: 5
+      win_kind: loop_deck_out
+      n_steps: 136
+      steps:
+      - - main
+        - - play:dm23bd7-035:1:free
+      - - choose_cards
+        - - graveyard:dm24ex3-rp3tr6:0
+      - - main
+        - - play:dmrp12-s01:1
+      - - pay_mana
+        - - mana:dm01-019,dm01-038,dm01-048,dm24ex1-043,dm24ex1-043
+      - - yes_no
+        - - 'yes'
+      - - choose_cards
+        - - hand:dm24ex1-038:0
+      - - main
+        - - play:dm23bd7-035:1:free
+      - - choose_cards
+        - - graveyard:dm23bd7-035:0
+          - graveyard:dmrp12-s01:0
+      - - main
+        - - play:dmrp12-s01:1:free
+      - - yes_no
+        - - 'yes'
+      - - choose_cards
+        - - hand:dm24ex1-038:0
+      - - main
+        - - play:dm23bd7-035:1:free
+      - - choose_cards
+        - - graveyard:dm23bd7-035:0
+          - graveyard:dmrp12-s01:0
+      - - main
+        - - play:dmrp12-s01:1:free
+      - - yes_no
+        - - 'yes'
+      - - choose_cards
+        - - hand:dm24ex1-038:0
+      - - main
+        - - play:dm23bd7-035:1:free
+      - - choose_cards
+        - - graveyard:dm23bd7-035:0
+          - graveyard:dmrp12-s01:0
+      - - main
+        - - play:dmrp12-s01:1:free
+      - - yes_no
+        - - 'yes'
+      - - choose_cards
+        - - hand:dm24ex1-038:0
+      - - main
+        - - play:dm23bd7-035:1:free
+      - - choose_cards
+        - - graveyard:dm23bd7-035:0
+          - graveyard:dmrp12-s01:0
+      - - main
+        - - play:dmrp12-s01:1:free
+      - - yes_no
+        - - 'yes'
+      - - choose_cards
+        - - hand:dm24ex1-038:0
+      - - main
+        - - play:dm23bd7-035:1:free
+      - - choose_cards
+        - - graveyard:dm23bd7-035:0
+          - graveyard:dmrp12-s01:0
+      - - main
+        - - play:dmrp12-s01:1:free
+      - - yes_no
+        - - 'yes'
+      - - choose_cards
+        - - hand:dm24ex1-038:0
+      - - main
+        - - play:dm23bd7-035:1:free
+      - - choose_cards
+        - - graveyard:dm23bd7-035:0
+          - graveyard:dmrp12-s01:0
+      - - main
+        - - play:dmrp12-s01:1:free
+      - - yes_no
+        - - 'yes'
+      - - choose_cards
+        - - hand:dm24ex1-038:0
+      - - main
+        - - play:dm23bd7-035:1:free
+      - - choose_cards
+        - - graveyard:dm23bd7-035:0
+          - graveyard:dmrp12-s01:0
+      - - main
+        - - play:dmrp12-s01:1:free
+      - - yes_no
+        - - 'yes'
+      - - choose_cards
+        - - hand:dm24ex1-038:0
+      - - main
+        - - play:dm23bd7-035:1:free
+      - - choose_cards
+        - - graveyard:dm23bd7-035:0
+          - graveyard:dmrp12-s01:0
+      - - main
+        - - play:dmrp12-s01:1:free
+      - - yes_no
+        - - 'yes'
+      - - choose_cards
+        - - hand:dm24ex1-038:0
+      - - main
+        - - play:dm23bd7-035:1:free
+      - - choose_cards
+        - - graveyard:dm23bd7-035:0
+          - graveyard:dmrp12-s01:0
+      - - main
+        - - play:dmrp12-s01:1:free
+      - - yes_no
+        - - 'yes'
+      - - choose_cards
+        - - hand:dm24ex1-038:0
+      - - main
+        - - play:dm23bd7-035:1:free
+      - - choose_cards
+        - - graveyard:dm23bd7-035:0
+          - graveyard:dmrp12-s01:0
+      - - main
+        - - play:dmrp12-s01:1:free
+      - - yes_no
+        - - 'yes'
+      - - choose_cards
+        - - hand:dm24ex1-038:0
+      - - main
+        - - play:dm23bd7-035:1:free
+      - - choose_cards
+        - - graveyard:dm23bd7-035:0
+          - graveyard:dmrp12-s01:0
+      - - main
+        - - play:dmrp12-s01:1:free
+      - - yes_no
+        - - 'yes'
+      - - choose_cards
+        - - hand:dm24ex1-038:0
+      - - main
+        - - play:dm23bd7-035:1:free
+      - - choose_cards
+        - - graveyard:dm23bd7-035:0
+          - graveyard:dmrp12-s01:0
+      - - main
+        - - play:dmrp12-s01:1:free
+      - - yes_no
+        - - 'yes'
+      - - choose_cards
+        - - hand:dm24ex1-038:0
+      - - main
+        - - play:dm23bd7-035:1:free
+      - - choose_cards
+        - - graveyard:dm23bd7-035:0
+          - graveyard:dmrp12-s01:0
+      - - main
+        - - play:dmrp12-s01:1:free
+      - - yes_no
+        - - 'yes'
+      - - choose_cards
+        - - hand:dm24ex1-038:0
+      - - main
+        - - play:dm23bd7-035:1:free
+      - - choose_cards
+        - - graveyard:dm23bd7-035:0
+          - graveyard:dmrp12-s01:0
+      - - main
+        - - play:dmrp12-s01:1:free
+      - - yes_no
+        - - 'yes'
+      - - choose_cards
+        - - hand:dm24ex1-038:0
+      - - main
+        - - play:dm23bd7-035:1:free
+      - - choose_cards
+        - - graveyard:dm23bd7-035:0
+          - graveyard:dmrp12-s01:0
+      - - main
+        - - play:dmrp12-s01:1:free
+      - - yes_no
+        - - 'yes'
+      - - choose_cards
+        - - hand:dm24ex1-038:0
+      - - main
+        - - play:dm23bd7-035:1:free
+      - - choose_cards
+        - - graveyard:dm23bd7-035:0
+          - graveyard:dmrp12-s01:0
+      - - main
+        - - play:dmrp12-s01:1:free
+      - - yes_no
+        - - 'yes'
+      - - choose_cards
+        - - hand:dm24ex1-038:0
+      - - main
+        - - play:dm23bd7-035:1:free
+      - - choose_cards
+        - - graveyard:dm23bd7-035:0
+          - graveyard:dmrp12-s01:0
+      - - main
+        - - play:dmrp12-s01:1:free
+      - - yes_no
+        - - 'yes'
+      - - choose_cards
+        - - hand:dm24ex1-038:0
+      - - main
+        - - play:dm23bd7-035:1:free
+      - - choose_cards
+        - - graveyard:dm23bd7-035:0
+          - graveyard:dmrp12-s01:0
+      - - main
+        - - play:dmrp12-s01:1:free
+      - - yes_no
+        - - 'yes'
+      - - choose_cards
+        - - hand:dm24ex1-038:0
+      - - main
+        - - play:dm23bd7-035:1:free
+      - - choose_cards
+        - - graveyard:dm23bd7-035:0
+          - graveyard:dmrp12-s01:0
+      - - main
+        - - play:dmrp12-s01:1:free
+      - - yes_no
+        - - 'yes'
+      - - choose_cards
+        - - hand:dm24ex1-038:0
+      - - main
+        - - play:dm23bd7-035:1:free
+      - - choose_cards
+        - - graveyard:dm23bd7-035:0
+          - graveyard:dmrp12-s01:0
+      - - main
+        - - play:dmrp12-s01:1:free
+      - - yes_no
+        - - 'yes'
+      - - choose_cards
+        - - hand:dm24ex1-038:0
+      - - main
+        - - play:dm23bd7-035:1:free
+      - - choose_cards
+        - - graveyard:dm23bd7-035:0
+          - graveyard:dmrp12-s01:0
+      - - main
+        - - play:dmrp12-s01:1:free
+      - - yes_no
+        - - 'yes'
+      - - choose_cards
+        - - hand:dm24ex1-038:0
+      - - main
+        - - play:dm23bd7-035:1:free
+      - - choose_cards
+        - - graveyard:dm23bd7-035:0
+          - graveyard:dmrp12-s01:0
+      - - main
+        - - play:dmrp12-s01:1:free
+      - - yes_no
+        - - 'yes'
+      - - choose_cards
+        - - hand:dm24ex1-038:0
+      - - main
+        - - play:dm23bd7-035:1:free
+      - - choose_cards
+        - - graveyard:dm23bd7-035:0
+          - graveyard:dmrp12-s01:0
+      - - main
+        - - play:dmrp12-s01:1:free
+      - - yes_no
+        - - 'yes'
+      - - choose_cards
+        - - hand:dm24ex1-038:0
+      - - main
+        - - play:dm23bd7-035:1:free
+      - - choose_cards
+        - - graveyard:dm23bd7-035:0
+          - graveyard:dmrp12-s01:0
+      - - main
+        - - play:dmrp12-s01:1:free
+      - - yes_no
+        - - 'yes'
+      - - choose_cards
+        - - hand:dm24ex1-038:0
+      - - main
+        - - play:dm23bd7-035:1:free
+      - - choose_cards
+        - - graveyard:dm23bd7-035:0
+          - graveyard:dmrp12-s01:0
+      - - main
+        - - play:dmrp12-s01:1:free
+      - - yes_no
+        - - 'yes'
+      - - choose_cards
+        - - hand:dm24ex1-038:0
+      - - main
+        - - play:dm23bd7-035:1:free
+      - - choose_cards
+        - - graveyard:dm23bd7-035:0
+          - graveyard:dmrp12-s01:0
+      - - main
+        - - play:dmrp12-s01:1:free
+      - - yes_no
+        - - 'yes'
+      - - choose_cards
+        - - hand:dm24ex1-038:0
+    - seed: 6
+      win_kind: loop_deck_out
+      n_steps: 126
+      steps:
+      - - main
+        - - play:dm23bd7-035:1:free
+      - - choose_cards
+        - - graveyard:dm24ex3-rp3tr6:0
+      - - main
+        - - play:dmrp12-s01:1
+      - - pay_mana
+        - - mana:dm01-019,dm01-038,dm01-048,dm24ex1-043,dm24ex1-043
+      - - yes_no
+        - - 'yes'
+      - - choose_cards
+        - - hand:dm24ex1-038:0
+      - - main
+        - - play:dm23bd7-035:1:free
+      - - choose_cards
+        - - graveyard:dm23bd7-035:0
+          - graveyard:dmrp12-s01:0
+      - - main
+        - - play:dmrp12-s01:1:free
+      - - yes_no
+        - - 'yes'
+      - - choose_cards
+        - - hand:dm24ex1-038:0
+      - - main
+        - - play:dm23bd7-035:1:free
+      - - choose_cards
+        - - graveyard:dm23bd7-035:0
+          - graveyard:dmrp12-s01:0
+      - - main
+        - - play:dmrp12-s01:1:free
+      - - yes_no
+        - - 'yes'
+      - - choose_cards
+        - - hand:dm24ex1-038:0
+      - - main
+        - - play:dm23bd7-035:1:free
+      - - choose_cards
+        - - graveyard:dm23bd7-035:0
+          - graveyard:dmrp12-s01:0
+      - - main
+        - - play:dmrp12-s01:1:free
+      - - yes_no
+        - - 'yes'
+      - - choose_cards
+        - - hand:dm24ex1-038:0
+      - - main
+        - - play:dm23bd7-035:1:free
+      - - choose_cards
+        - - graveyard:dm23bd7-035:0
+          - graveyard:dmrp12-s01:0
+      - - main
+        - - play:dmrp12-s01:1:free
+      - - yes_no
+        - - 'yes'
+      - - choose_cards
+        - - hand:dm24ex1-038:0
+      - - main
+        - - play:dm23bd7-035:1:free
+      - - choose_cards
+        - - graveyard:dm23bd7-035:0
+          - graveyard:dmrp12-s01:0
+      - - main
+        - - play:dmrp12-s01:1:free
+      - - yes_no
+        - - 'yes'
+      - - choose_cards
+        - - hand:dm24ex1-038:0
+      - - main
+        - - play:dm23bd7-035:1:free
+      - - choose_cards
+        - - graveyard:dm23bd7-035:0
+          - graveyard:dmrp12-s01:0
+      - - main
+        - - play:dmrp12-s01:1:free
+      - - yes_no
+        - - 'yes'
+      - - choose_cards
+        - - hand:dm24ex1-038:0
+      - - main
+        - - play:dm23bd7-035:1:free
+      - - choose_cards
+        - - graveyard:dm23bd7-035:0
+          - graveyard:dmrp12-s01:0
+      - - main
+        - - play:dmrp12-s01:1:free
+      - - yes_no
+        - - 'yes'
+      - - choose_cards
+        - - hand:dm24ex1-038:0
+      - - main
+        - - play:dm23bd7-035:1:free
+      - - choose_cards
+        - - graveyard:dm23bd7-035:0
+          - graveyard:dmrp12-s01:0
+      - - main
+        - - play:dmrp12-s01:1:free
+      - - yes_no
+        - - 'yes'
+      - - choose_cards
+        - - hand:dm24ex1-038:0
+      - - main
+        - - play:dm23bd7-035:1:free
+      - - choose_cards
+        - - graveyard:dm23bd7-035:0
+          - graveyard:dmrp12-s01:0
+      - - main
+        - - play:dmrp12-s01:1:free
+      - - yes_no
+        - - 'yes'
+      - - choose_cards
+        - - hand:dm24ex1-038:0
+      - - main
+        - - play:dm23bd7-035:1:free
+      - - choose_cards
+        - - graveyard:dm23bd7-035:0
+          - graveyard:dmrp12-s01:0
+      - - main
+        - - play:dmrp12-s01:1:free
+      - - yes_no
+        - - 'yes'
+      - - choose_cards
+        - - hand:dm24ex1-038:0
+      - - main
+        - - play:dm23bd7-035:1:free
+      - - choose_cards
+        - - graveyard:dm23bd7-035:0
+          - graveyard:dmrp12-s01:0
+      - - main
+        - - play:dmrp12-s01:1:free
+      - - yes_no
+        - - 'yes'
+      - - choose_cards
+        - - hand:dm24ex1-038:0
+      - - main
+        - - play:dm23bd7-035:1:free
+      - - choose_cards
+        - - graveyard:dm23bd7-035:0
+          - graveyard:dmrp12-s01:0
+      - - main
+        - - play:dmrp12-s01:1:free
+      - - yes_no
+        - - 'yes'
+      - - choose_cards
+        - - hand:dm24ex1-038:0
+      - - main
+        - - play:dm23bd7-035:1:free
+      - - choose_cards
+        - - graveyard:dm23bd7-035:0
+          - graveyard:dmrp12-s01:0
+      - - main
+        - - play:dmrp12-s01:1:free
+      - - yes_no
+        - - 'yes'
+      - - choose_cards
+        - - hand:dm24ex1-038:0
+      - - main
+        - - play:dm23bd7-035:1:free
+      - - choose_cards
+        - - graveyard:dm23bd7-035:0
+          - graveyard:dmrp12-s01:0
+      - - main
+        - - play:dmrp12-s01:1:free
+      - - yes_no
+        - - 'yes'
+      - - choose_cards
+        - - hand:dm24ex1-038:0
+      - - main
+        - - play:dm23bd7-035:1:free
+      - - choose_cards
+        - - graveyard:dm23bd7-035:0
+          - graveyard:dmrp12-s01:0
+      - - main
+        - - play:dmrp12-s01:1:free
+      - - yes_no
+        - - 'yes'
+      - - choose_cards
+        - - hand:dm24ex1-038:0
+      - - main
+        - - play:dm23bd7-035:1:free
+      - - choose_cards
+        - - graveyard:dm23bd7-035:0
+          - graveyard:dmrp12-s01:0
+      - - main
+        - - play:dmrp12-s01:1:free
+      - - yes_no
+        - - 'yes'
+      - - choose_cards
+        - - hand:dm24ex1-038:0
+      - - main
+        - - play:dm23bd7-035:1:free
+      - - choose_cards
+        - - graveyard:dm23bd7-035:0
+          - graveyard:dmrp12-s01:0
+      - - main
+        - - play:dmrp12-s01:1:free
+      - - yes_no
+        - - 'yes'
+      - - choose_cards
+        - - hand:dm24ex1-038:0
+      - - main
+        - - play:dm23bd7-035:1:free
+      - - choose_cards
+        - - graveyard:dm23bd7-035:0
+          - graveyard:dmrp12-s01:0
+      - - main
+        - - play:dmrp12-s01:1:free
+      - - yes_no
+        - - 'yes'
+      - - choose_cards
+        - - hand:dm24ex1-038:0
+      - - main
+        - - play:dm23bd7-035:1:free
+      - - choose_cards
+        - - graveyard:dm23bd7-035:0
+          - graveyard:dmrp12-s01:0
+      - - main
+        - - play:dmrp12-s01:1:free
+      - - yes_no
+        - - 'yes'
+      - - choose_cards
+        - - hand:dm24ex1-038:0
+      - - main
+        - - play:dm23bd7-035:1:free
+      - - choose_cards
+        - - graveyard:dm23bd7-035:0
+          - graveyard:dmrp12-s01:0
+      - - main
+        - - play:dmrp12-s01:1:free
+      - - yes_no
+        - - 'yes'
+      - - choose_cards
+        - - hand:dm24ex1-038:0
+      - - main
+        - - play:dm23bd7-035:1:free
+      - - choose_cards
+        - - graveyard:dm23bd7-035:0
+          - graveyard:dmrp12-s01:0
+      - - main
+        - - play:dmrp12-s01:1:free
+      - - yes_no
+        - - 'yes'
+      - - choose_cards
+        - - hand:dm24ex1-038:0
+      - - main
+        - - play:dm23bd7-035:1:free
+      - - choose_cards
+        - - graveyard:dm23bd7-035:0
+          - graveyard:dmrp12-s01:0
+      - - main
+        - - play:dmrp12-s01:1:free
+      - - yes_no
+        - - 'yes'
+      - - choose_cards
+        - - hand:dm24ex1-038:0
+      - - main
+        - - play:dm23bd7-035:1:free
+      - - choose_cards
+        - - graveyard:dm23bd7-035:0
+          - graveyard:dmrp12-s01:0
+      - - main
+        - - play:dmrp12-s01:1:free
+      - - yes_no
+        - - 'yes'
+      - - choose_cards
+        - - hand:dm24ex1-038:0
+      - - main
+        - - play:dm23bd7-035:1:free
+      - - choose_cards
+        - - graveyard:dm23bd7-035:0
+          - graveyard:dmrp12-s01:0
+      - - main
+        - - play:dmrp12-s01:1:free
+      - - yes_no
+        - - 'yes'
+      - - choose_cards
+        - - hand:dm24ex1-038:0
+    - seed: 7
+      win_kind: loop_deck_out
+      n_steps: 141
+      steps:
+      - - main
+        - - play:dm23bd7-035:1:free
+      - - choose_cards
+        - - graveyard:dm24ex3-rp3tr6:0
+      - - main
+        - - play:dmrp12-s01:1
+      - - pay_mana
+        - - mana:dm01-019,dm01-038,dm01-048,dm24ex1-043,dm24ex1-043
+      - - yes_no
+        - - 'yes'
+      - - choose_cards
+        - - hand:dm24ex1-038:0
+      - - main
+        - - play:dm23bd7-035:1:free
+      - - choose_cards
+        - - graveyard:dm23bd7-035:0
+          - graveyard:dmrp12-s01:0
+      - - main
+        - - play:dmrp12-s01:1:free
+      - - yes_no
+        - - 'yes'
+      - - choose_cards
+        - - hand:dm24ex1-038:0
+      - - main
+        - - play:dm23bd7-035:1:free
+      - - choose_cards
+        - - graveyard:dm23bd7-035:0
+          - graveyard:dmrp12-s01:0
+      - - main
+        - - play:dmrp12-s01:1:free
+      - - yes_no
+        - - 'yes'
+      - - choose_cards
+        - - hand:dm24ex1-038:0
+      - - main
+        - - play:dm23bd7-035:1:free
+      - - choose_cards
+        - - graveyard:dm23bd7-035:0
+          - graveyard:dmrp12-s01:0
+      - - main
+        - - play:dmrp12-s01:1:free
+      - - yes_no
+        - - 'yes'
+      - - choose_cards
+        - - hand:dm24ex1-038:0
+      - - main
+        - - play:dm23bd7-035:1:free
+      - - choose_cards
+        - - graveyard:dm23bd7-035:0
+          - graveyard:dmrp12-s01:0
+      - - main
+        - - play:dmrp12-s01:1:free
+      - - yes_no
+        - - 'yes'
+      - - choose_cards
+        - - hand:dm24ex1-038:0
+      - - main
+        - - play:dm23bd7-035:1:free
+      - - choose_cards
+        - - graveyard:dm23bd7-035:0
+          - graveyard:dmrp12-s01:0
+      - - main
+        - - play:dmrp12-s01:1:free
+      - - yes_no
+        - - 'yes'
+      - - choose_cards
+        - - hand:dm24ex1-038:0
+      - - main
+        - - play:dm23bd7-035:1:free
+      - - choose_cards
+        - - graveyard:dm23bd7-035:0
+          - graveyard:dmrp12-s01:0
+      - - main
+        - - play:dmrp12-s01:1:free
+      - - yes_no
+        - - 'yes'
+      - - choose_cards
+        - - hand:dm24ex1-038:0
+      - - main
+        - - play:dm23bd7-035:1:free
+      - - choose_cards
+        - - graveyard:dm23bd7-035:0
+          - graveyard:dmrp12-s01:0
+      - - main
+        - - play:dmrp12-s01:1:free
+      - - yes_no
+        - - 'yes'
+      - - choose_cards
+        - - hand:dm24ex1-038:0
+      - - main
+        - - play:dm23bd7-035:1:free
+      - - choose_cards
+        - - graveyard:dm23bd7-035:0
+          - graveyard:dmrp12-s01:0
+      - - main
+        - - play:dmrp12-s01:1:free
+      - - yes_no
+        - - 'yes'
+      - - choose_cards
+        - - hand:dm24ex1-038:0
+      - - main
+        - - play:dm23bd7-035:1:free
+      - - choose_cards
+        - - graveyard:dm23bd7-035:0
+          - graveyard:dmrp12-s01:0
+      - - main
+        - - play:dmrp12-s01:1:free
+      - - yes_no
+        - - 'yes'
+      - - choose_cards
+        - - hand:dm24ex1-038:0
+      - - main
+        - - play:dm23bd7-035:1:free
+      - - choose_cards
+        - - graveyard:dm23bd7-035:0
+          - graveyard:dmrp12-s01:0
+      - - main
+        - - play:dmrp12-s01:1:free
+      - - yes_no
+        - - 'yes'
+      - - choose_cards
+        - - hand:dm24ex1-038:0
+      - - main
+        - - play:dm23bd7-035:1:free
+      - - choose_cards
+        - - graveyard:dm23bd7-035:0
+          - graveyard:dmrp12-s01:0
+      - - main
+        - - play:dmrp12-s01:1:free
+      - - yes_no
+        - - 'yes'
+      - - choose_cards
+        - - hand:dm24ex1-038:0
+      - - main
+        - - play:dm23bd7-035:1:free
+      - - choose_cards
+        - - graveyard:dm23bd7-035:0
+          - graveyard:dmrp12-s01:0
+      - - main
+        - - play:dmrp12-s01:1:free
+      - - yes_no
+        - - 'yes'
+      - - choose_cards
+        - - hand:dm24ex1-038:0
+      - - main
+        - - play:dm23bd7-035:1:free
+      - - choose_cards
+        - - graveyard:dm23bd7-035:0
+          - graveyard:dmrp12-s01:0
+      - - main
+        - - play:dmrp12-s01:1:free
+      - - yes_no
+        - - 'yes'
+      - - choose_cards
+        - - hand:dm24ex1-038:0
+      - - main
+        - - play:dm23bd7-035:1:free
+      - - choose_cards
+        - - graveyard:dm23bd7-035:0
+          - graveyard:dmrp12-s01:0
+      - - main
+        - - play:dmrp12-s01:1:free
+      - - yes_no
+        - - 'yes'
+      - - choose_cards
+        - - hand:dm24ex1-038:0
+      - - main
+        - - play:dm23bd7-035:1:free
+      - - choose_cards
+        - - graveyard:dm23bd7-035:0
+          - graveyard:dmrp12-s01:0
+      - - main
+        - - play:dmrp12-s01:1:free
+      - - yes_no
+        - - 'yes'
+      - - choose_cards
+        - - hand:dm24ex1-038:0
+      - - main
+        - - play:dm23bd7-035:1:free
+      - - choose_cards
+        - - graveyard:dm23bd7-035:0
+          - graveyard:dmrp12-s01:0
+      - - main
+        - - play:dmrp12-s01:1:free
+      - - yes_no
+        - - 'yes'
+      - - choose_cards
+        - - hand:dm24ex1-038:0
+      - - main
+        - - play:dm23bd7-035:1:free
+      - - choose_cards
+        - - graveyard:dm23bd7-035:0
+          - graveyard:dmrp12-s01:0
+      - - main
+        - - play:dmrp12-s01:1:free
+      - - yes_no
+        - - 'yes'
+      - - choose_cards
+        - - hand:dm24ex1-038:0
+      - - main
+        - - play:dm23bd7-035:1:free
+      - - choose_cards
+        - - graveyard:dm23bd7-035:0
+          - graveyard:dmrp12-s01:0
+      - - main
+        - - play:dmrp12-s01:1:free
+      - - yes_no
+        - - 'yes'
+      - - choose_cards
+        - - hand:dm24ex1-038:0
+      - - main
+        - - play:dm23bd7-035:1:free
+      - - choose_cards
+        - - graveyard:dm23bd7-035:0
+          - graveyard:dmrp12-s01:0
+      - - main
+        - - play:dmrp12-s01:1:free
+      - - yes_no
+        - - 'yes'
+      - - choose_cards
+        - - hand:dm24ex1-038:0
+      - - main
+        - - play:dm23bd7-035:1:free
+      - - choose_cards
+        - - graveyard:dm23bd7-035:0
+          - graveyard:dmrp12-s01:0
+      - - main
+        - - play:dmrp12-s01:1:free
+      - - yes_no
+        - - 'yes'
+      - - choose_cards
+        - - hand:dm24ex1-038:0
+      - - main
+        - - play:dm23bd7-035:1:free
+      - - choose_cards
+        - - graveyard:dm23bd7-035:0
+          - graveyard:dmrp12-s01:0
+      - - main
+        - - play:dmrp12-s01:1:free
+      - - yes_no
+        - - 'yes'
+      - - choose_cards
+        - - hand:dm24ex1-038:0
+      - - main
+        - - play:dm23bd7-035:1:free
+      - - choose_cards
+        - - graveyard:dm23bd7-035:0
+          - graveyard:dmrp12-s01:0
+      - - main
+        - - play:dmrp12-s01:1:free
+      - - yes_no
+        - - 'yes'
+      - - choose_cards
+        - - hand:dm24ex1-038:0
+      - - main
+        - - play:dm23bd7-035:1:free
+      - - choose_cards
+        - - graveyard:dm23bd7-035:0
+          - graveyard:dmrp12-s01:0
+      - - main
+        - - play:dmrp12-s01:1:free
+      - - yes_no
+        - - 'yes'
+      - - choose_cards
+        - - hand:dm24ex1-038:0
+      - - main
+        - - play:dm23bd7-035:1:free
+      - - choose_cards
+        - - graveyard:dm23bd7-035:0
+          - graveyard:dmrp12-s01:0
+      - - main
+        - - play:dmrp12-s01:1:free
+      - - yes_no
+        - - 'yes'
+      - - choose_cards
+        - - hand:dm24ex1-038:0
+      - - main
+        - - play:dm23bd7-035:1:free
+      - - choose_cards
+        - - graveyard:dm23bd7-035:0
+          - graveyard:dmrp12-s01:0
+      - - main
+        - - play:dmrp12-s01:1:free
+      - - yes_no
+        - - 'yes'
+      - - choose_cards
+        - - hand:dm24ex1-038:0
+      - - main
+        - - play:dm23bd7-035:1:free
+      - - choose_cards
+        - - graveyard:dm23bd7-035:0
+          - graveyard:dmrp12-s01:0
+      - - main
+        - - play:dmrp12-s01:1:free
+      - - yes_no
+        - - 'yes'
+      - - choose_cards
+        - - hand:dm24ex1-038:0
+      - - main
+        - - play:dm23bd7-035:1:free
+      - - choose_cards
+        - - graveyard:dm23bd7-035:0
+          - graveyard:dmrp12-s01:0
+      - - main
+        - - play:dmrp12-s01:1:free
+      - - yes_no
+        - - 'yes'
+      - - choose_cards
+        - - hand:dm24ex1-038:0
+    - seed: 8
+      win_kind: loop_deck_out
+      n_steps: 150
+      steps:
+      - - main
+        - - play:dm23bd7-035:1:free
+      - - choose_cards
+        - - graveyard:dm24ex3-rp3tr6:0
+      - - main
+        - - play:dmrp12-s01:1
+      - - yes_no
+        - - 'yes'
+      - - choose_cards
+        - - hand:dm24ex1-038:0
+      - - main
+        - - play:dm23bd7-035:1:free
+      - - choose_cards
+        - - graveyard:dm23bd7-035:0
+          - graveyard:dmrp12-s01:0
+      - - main
+        - - play:dmrp12-s01:1:free
+      - - yes_no
+        - - 'yes'
+      - - choose_cards
+        - - hand:dm24ex1-038:0
+      - - main
+        - - play:dm23bd7-035:1:free
+      - - choose_cards
+        - - graveyard:dm23bd7-035:0
+          - graveyard:dmrp12-s01:0
+      - - main
+        - - play:dmrp12-s01:1:free
+      - - yes_no
+        - - 'yes'
+      - - choose_cards
+        - - hand:dm24ex1-038:0
+      - - main
+        - - play:dm23bd7-035:1:free
+      - - choose_cards
+        - - graveyard:dm23bd7-035:0
+          - graveyard:dmrp12-s01:0
+      - - main
+        - - play:dmrp12-s01:1:free
+      - - yes_no
+        - - 'yes'
+      - - choose_cards
+        - - hand:dm24ex1-038:0
+      - - main
+        - - play:dm23bd7-035:1:free
+      - - choose_cards
+        - - graveyard:dm23bd7-035:0
+          - graveyard:dmrp12-s01:0
+      - - main
+        - - play:dmrp12-s01:1:free
+      - - yes_no
+        - - 'yes'
+      - - choose_cards
+        - - hand:dm24ex1-038:0
+      - - main
+        - - play:dm23bd7-035:1:free
+      - - choose_cards
+        - - graveyard:dm23bd7-035:0
+          - graveyard:dmrp12-s01:0
+      - - main
+        - - play:dmrp12-s01:1:free
+      - - yes_no
+        - - 'yes'
+      - - choose_cards
+        - - hand:dm24ex1-038:0
+      - - main
+        - - play:dm23bd7-035:1:free
+      - - choose_cards
+        - - graveyard:dm23bd7-035:0
+          - graveyard:dmrp12-s01:0
+      - - main
+        - - play:dmrp12-s01:1:free
+      - - yes_no
+        - - 'yes'
+      - - choose_cards
+        - - hand:dm24ex1-038:0
+      - - main
+        - - play:dm23bd7-035:1:free
+      - - choose_cards
+        - - graveyard:dm23bd7-035:0
+          - graveyard:dmrp12-s01:0
+      - - main
+        - - play:dmrp12-s01:1:free
+      - - yes_no
+        - - 'yes'
+      - - choose_cards
+        - - hand:dm24ex1-038:0
+      - - main
+        - - play:dm23bd7-035:1:free
+      - - choose_cards
+        - - graveyard:dm23bd7-035:0
+          - graveyard:dmrp12-s01:0
+      - - main
+        - - play:dmrp12-s01:1:free
+      - - yes_no
+        - - 'yes'
+      - - choose_cards
+        - - hand:dm24ex1-038:0
+      - - main
+        - - play:dm23bd7-035:1:free
+      - - choose_cards
+        - - graveyard:dm23bd7-035:0
+          - graveyard:dmrp12-s01:0
+      - - main
+        - - play:dmrp12-s01:1:free
+      - - yes_no
+        - - 'yes'
+      - - choose_cards
+        - - hand:dm24ex1-038:0
+      - - main
+        - - play:dm23bd7-035:1:free
+      - - choose_cards
+        - - graveyard:dm23bd7-035:0
+          - graveyard:dmrp12-s01:0
+      - - main
+        - - play:dmrp12-s01:1:free
+      - - yes_no
+        - - 'yes'
+      - - choose_cards
+        - - hand:dm24ex1-038:0
+      - - main
+        - - play:dm23bd7-035:1:free
+      - - choose_cards
+        - - graveyard:dm23bd7-035:0
+          - graveyard:dmrp12-s01:0
+      - - main
+        - - play:dmrp12-s01:1:free
+      - - yes_no
+        - - 'yes'
+      - - choose_cards
+        - - hand:dm24ex1-038:0
+      - - main
+        - - play:dm23bd7-035:1:free
+      - - choose_cards
+        - - graveyard:dm23bd7-035:0
+          - graveyard:dmrp12-s01:0
+      - - main
+        - - play:dmrp12-s01:1:free
+      - - yes_no
+        - - 'yes'
+      - - choose_cards
+        - - hand:dm24ex1-038:0
+      - - main
+        - - play:dm23bd7-035:1:free
+      - - choose_cards
+        - - graveyard:dm23bd7-035:0
+          - graveyard:dmrp12-s01:0
+      - - main
+        - - play:dmrp12-s01:1:free
+      - - yes_no
+        - - 'yes'
+      - - choose_cards
+        - - hand:dm24ex1-038:0
+      - - main
+        - - play:dm23bd7-035:1:free
+      - - choose_cards
+        - - graveyard:dm23bd7-035:0
+          - graveyard:dmrp12-s01:0
+      - - main
+        - - play:dmrp12-s01:1:free
+      - - yes_no
+        - - 'yes'
+      - - choose_cards
+        - - hand:dm24ex1-038:0
+      - - main
+        - - play:dm23bd7-035:1:free
+      - - choose_cards
+        - - graveyard:dm23bd7-035:0
+          - graveyard:dmrp12-s01:0
+      - - main
+        - - play:dmrp12-s01:1:free
+      - - yes_no
+        - - 'yes'
+      - - choose_cards
+        - - hand:dm24ex1-038:0
+      - - main
+        - - play:dm23bd7-035:1:free
+      - - choose_cards
+        - - graveyard:dm23bd7-035:0
+          - graveyard:dmrp12-s01:0
+      - - main
+        - - play:dmrp12-s01:1:free
+      - - yes_no
+        - - 'yes'
+      - - choose_cards
+        - - hand:dm24ex1-038:0
+      - - main
+        - - play:dm23bd7-035:1:free
+      - - choose_cards
+        - - graveyard:dm23bd7-035:0
+          - graveyard:dmrp12-s01:0
+      - - main
+        - - play:dmrp12-s01:1:free
+      - - yes_no
+        - - 'yes'
+      - - choose_cards
+        - - hand:dm24ex1-038:0
+      - - main
+        - - play:dm23bd7-035:1:free
+      - - choose_cards
+        - - graveyard:dm23bd7-035:0
+          - graveyard:dmrp12-s01:0
+      - - main
+        - - play:dmrp12-s01:1:free
+      - - yes_no
+        - - 'yes'
+      - - choose_cards
+        - - hand:dm24ex1-038:0
+      - - main
+        - - play:dm23bd7-035:1:free
+      - - choose_cards
+        - - graveyard:dm23bd7-035:0
+          - graveyard:dmrp12-s01:0
+      - - main
+        - - play:dmrp12-s01:1:free
+      - - yes_no
+        - - 'yes'
+      - - choose_cards
+        - - hand:dm24ex1-038:0
+      - - main
+        - - play:dm23bd7-035:1:free
+      - - choose_cards
+        - - graveyard:dm23bd7-035:0
+          - graveyard:dmrp12-s01:0
+      - - main
+        - - play:dmrp12-s01:1:free
+      - - yes_no
+        - - 'yes'
+      - - choose_cards
+        - - hand:dm24ex1-038:0
+      - - main
+        - - play:dm23bd7-035:1:free
+      - - choose_cards
+        - - graveyard:dm23bd7-035:0
+          - graveyard:dmrp12-s01:0
+      - - main
+        - - play:dmrp12-s01:1:free
+      - - yes_no
+        - - 'yes'
+      - - choose_cards
+        - - hand:dm24ex1-038:0
+      - - main
+        - - play:dm23bd7-035:1:free
+      - - choose_cards
+        - - graveyard:dm23bd7-035:0
+          - graveyard:dmrp12-s01:0
+      - - main
+        - - play:dmrp12-s01:1:free
+      - - yes_no
+        - - 'yes'
+      - - choose_cards
+        - - hand:dm24ex1-038:0
+      - - main
+        - - play:dm23bd7-035:1:free
+      - - choose_cards
+        - - graveyard:dm23bd7-035:0
+          - graveyard:dmrp12-s01:0
+      - - main
+        - - play:dmrp12-s01:1:free
+      - - yes_no
+        - - 'yes'
+      - - choose_cards
+        - - hand:dm24ex1-038:0
+      - - main
+        - - play:dm23bd7-035:1:free
+      - - choose_cards
+        - - graveyard:dm23bd7-035:0
+          - graveyard:dmrp12-s01:0
+      - - main
+        - - play:dmrp12-s01:1:free
+      - - yes_no
+        - - 'yes'
+      - - choose_cards
+        - - hand:dm24ex1-038:0
+      - - main
+        - - play:dm23bd7-035:1:free
+      - - choose_cards
+        - - graveyard:dm23bd7-035:0
+          - graveyard:dmrp12-s01:0
+      - - main
+        - - play:dmrp12-s01:1:free
+      - - yes_no
+        - - 'yes'
+      - - choose_cards
+        - - hand:dm24ex1-038:0
+      - - main
+        - - play:dm23bd7-035:1:free
+      - - choose_cards
+        - - graveyard:dm23bd7-035:0
+          - graveyard:dmrp12-s01:0
+      - - main
+        - - play:dmrp12-s01:1:free
+      - - yes_no
+        - - 'yes'
+      - - choose_cards
+        - - hand:dm24ex1-038:0
+      - - main
+        - - play:dm23bd7-035:1:free
+      - - choose_cards
+        - - graveyard:dm23bd7-035:0
+          - graveyard:dmrp12-s01:0
+      - - main
+        - - play:dmrp12-s01:1:free
+      - - yes_no
+        - - 'yes'
+      - - choose_cards
+        - - hand:dm24ex1-038:0
+      - - main
+        - - play:dm23bd7-035:1:free
+      - - choose_cards
+        - - graveyard:dm23bd7-035:0
+          - graveyard:dmrp12-s01:0
+      - - main
+        - - play:dmrp12-s01:1:free
+      - - yes_no
+        - - 'yes'
+      - - choose_cards
+        - - hand:dm24ex1-038:0
+      - - main
+        - - play:dm23bd7-035:1:free
+      - - choose_cards
+        - - graveyard:dm23bd7-035:0
+          - graveyard:dmrp12-s01:0
+      - - main
+        - - play:dmrp12-s01:1:free
+      - - yes_no
+        - - 'yes'
+      - - choose_cards
+        - - hand:dm24ex1-038:0
   version:
-    fingerprint: 16330c25ac8fe65b
-    commit: 03548b7
+    fingerprint: ce7559c2efe14ce5
+    commit: 3aae1af
+    measured_at: '2026-11-13'
+- id: saga
+  name: 絶望神サガの蘇生ループ
+  split: tuning
+  types:
+  - loop
+  core:
+  - id: dm22ex2-021
+    name: 絶望神サガ
+    role: エンジン（蘇生）
+  - id: dmrp03-s03
+    name: 水上第九院 シャコガイル
+    role: 勝ち手段
+  - id: dm22ex1-007
+    name: 超神星DOOM・ドラゲリオン
+    role: 入口への経路
+  win: effect
+  entry: data/loops/entry/saga.json
+  procedure:
+  - 手札のサガを3マナで出し、墓地のサガとの蘇生で1周1枚引く。山札の最後の1枚を引いてシャコガイルの効果で勝つ。
+  lock_mode: passive
+  seeds:
+  - 1
+  - 2
+  - 3
+  - 4
+  - 5
+  - 6
+  - 7
+  - 8
+  max_turn: 2
+  budget: null
+  setup: null
+  policy: []
+  policy_avoid: []
+  opp_levels:
+  - 0
+  route_stages: null
+  note: ''
+  digest: 446c885dee0b060c
+  checks:
+  - name: cards
+    ok: true
+    detail: 中核の札がカードデータにある
+  - name: type
+    ok: true
+    detail: loop として段1・段2で測る
+  - name: entry
+    ok: true
+    detail: data/loops/entry/saga.json（サガ蘇生ループ（入口））
+  - name: ruler
+    ok: true
+    detail: '段1 8/8・段2 8/8（基準 0.8）勝ち方 {''loop'': 8}'
+  - name: replay
+    ok: true
+    detail: seed [1, 2] を回し直して一致
+  measured:
+    seeds:
+    - 1
+    - 2
+    - 3
+    - 4
+    - 5
+    - 6
+    - 7
+    - 8
+    max_turn: 2
+    budget: 1500
+    stage1: 8/8
+    stage2: 8/8
+    stage2_rate: 1.0
+    via:
+      loop: 8
+    win_turns:
+    - 1
+    threshold: 0.8
+    rows:
+    - seed: 1
+      start: b453e2406177
+      stage1: true
+      stage2: true
+      via: loop
+      win_turn: 1
+    - seed: 2
+      start: 414026f0ea33
+      stage1: true
+      stage2: true
+      via: loop
+      win_turn: 1
+    - seed: 3
+      start: 6710e6cde9ed
+      stage1: true
+      stage2: true
+      via: loop
+      win_turn: 1
+    - seed: 4
+      start: ac7d4172fdac
+      stage1: true
+      stage2: true
+      via: loop
+      win_turn: 1
+    - seed: 5
+      start: 073a28cd8fe8
+      stage1: true
+      stage2: true
+      via: loop
+      win_turn: 1
+    - seed: 6
+      start: b91960057490
+      stage1: true
+      stage2: true
+      via: loop
+      win_turn: 1
+    - seed: 7
+      start: 5bf640fbf3b4
+      stage1: true
+      stage2: true
+      via: loop
+      win_turn: 1
+    - seed: 8
+      start: f5d2930d2ea5
+      stage1: true
+      stage2: true
+      via: loop
+      win_turn: 1
+    macros:
+    - seed: 1
+      win_kind: effect
+      n_steps: 65
+      steps:
+      - - main
+        - - play:dm22ex2-021
+      - - pay_mana
+        - - mana:dm01-017,dm01-027,dm01-080
+      - - choose_cards
+        - - hand:dm02-041:0
+      - - yes_no
+        - - 'yes'
+      - - choose_cards
+        - - graveyard:dm22ex2-021:0
+      - - choose_cards
+        - - hand:dm01-056:0
+      - - yes_no
+        - - 'yes'
+      - - choose_cards
+        - - graveyard:dm22ex2-021:0
+      - - choose_cards
+        - - hand:dmrp03-s03:0
+      - - yes_no
+        - - 'yes'
+      - - choose_cards
+        - - graveyard:dm22ex2-021:0
+      - - choose_cards
+        - - hand:dmrp03-036:0
+      - - yes_no
+        - - 'yes'
+      - - choose_cards
+        - - graveyard:dm22ex2-021:0
+      - - order_pending
+        - - pending:normal:dmrp03-036:0
+      - - yes_no
+        - - 'yes'
+      - - choose_cards
+        - - hand:dmrp03-036:0
+      - - order_pending
+        - - pending:normal:dmrp03-036:0
+      - - yes_no
+        - - 'yes'
+      - - choose_cards
+        - - hand:dmex10-020:0
+      - - choose_cards
+        - - hand:dmex10-020:0
+      - - yes_no
+        - - 'yes'
+      - - choose_cards
+        - - graveyard:dm22ex2-021:0
+      - - choose_cards
+        - - hand:dmd08-015:0
+      - - yes_no
+        - - 'yes'
+      - - choose_cards
+        - - graveyard:dm22ex2-021:0
+      - - choose_cards
+        - - hand:dmd08-015:0
+      - - yes_no
+        - - 'yes'
+      - - choose_cards
+        - - graveyard:dm22ex2-021:0
+      - - choose_cards
+        - - hand:dmd08-015:0
+      - - yes_no
+        - - 'yes'
+      - - choose_cards
+        - - graveyard:dm22ex2-021:0
+      - - choose_cards
+        - - hand:dm26ex2-071:0
+      - - yes_no
+        - - 'yes'
+      - - choose_cards
+        - - graveyard:dm22ex2-021:0
+      - - choose_cards
+        - - hand:dm26ex2-071:0
+      - - yes_no
+        - - 'yes'
+      - - choose_cards
+        - - graveyard:dm22ex2-021:0
+      - - choose_cards
+        - - hand:dm26ex2-071:0
+      - - yes_no
+        - - 'yes'
+      - - choose_cards
+        - - graveyard:dm22ex2-021:0
+      - - choose_cards
+        - - hand:dm22ex1-025:0
+      - - yes_no
+        - - 'yes'
+      - - choose_cards
+        - - graveyard:dm22ex2-021:0
+      - - choose_cards
+        - - hand:dm22ex1-025:0
+      - - yes_no
+        - - 'yes'
+      - - choose_cards
+        - - graveyard:dm22ex2-021:0
+      - - choose_cards
+        - - hand:dm22ex1-025:0
+      - - yes_no
+        - - 'yes'
+      - - choose_cards
+        - - graveyard:dm22ex2-021:0
+      - - choose_cards
+        - - hand:dm22ex1-007:0
+      - - yes_no
+        - - 'yes'
+      - - choose_cards
+        - - graveyard:dm22ex2-021:0
+      - - choose_cards
+        - - hand:dm02-011:0
+      - - yes_no
+        - - 'yes'
+      - - choose_cards
+        - - graveyard:dm22ex2-021:0
+      - - choose_cards
+        - - hand:dm01-080:0
+      - - yes_no
+        - - 'yes'
+      - - choose_cards
+        - - graveyard:dm22ex2-021:0
+      - - choose_cards
+        - - hand:dm01-047:0
+      - - yes_no
+        - - 'yes'
+      - - choose_cards
+        - - graveyard:dm22ex2-021:0
+      - - choose_cards
+        - - hand:dm22ex2-021:0
+      - - yes_no
+        - - 'yes'
+      - - choose_cards
+        - - graveyard:dm22ex2-021:0
+    - seed: 2
+      win_kind: effect
+      n_steps: 65
+      steps:
+      - - main
+        - - play:dm22ex2-021
+      - - pay_mana
+        - - mana:dm01-027,dm01-080,dm01-080
+      - - choose_cards
+        - - hand:dm22ex2-021:0
+      - - yes_no
+        - - 'yes'
+      - - choose_cards
+        - - graveyard:dm22ex2-021:0
+      - - choose_cards
+        - - hand:dmex10-020:0
+      - - yes_no
+        - - 'yes'
+      - - choose_cards
+        - - graveyard:dm22ex2-021:0
+      - - choose_cards
+        - - hand:dmrp03-s03:0
+      - - yes_no
+        - - 'yes'
+      - - choose_cards
+        - - graveyard:dm22ex2-021:0
+      - - choose_cards
+        - - hand:dmex10-020:0
+      - - yes_no
+        - - 'yes'
+      - - choose_cards
+        - - graveyard:dm22ex2-021:0
+      - - choose_cards
+        - - hand:dmex10-020:0
+      - - yes_no
+        - - 'yes'
+      - - choose_cards
+        - - graveyard:dm22ex2-021:0
+      - - choose_cards
+        - - hand:dmrp03-036:0
+      - - yes_no
+        - - 'yes'
+      - - choose_cards
+        - - graveyard:dm22ex2-021:0
+      - - order_pending
+        - - pending:normal:dmrp03-036:0
+      - - yes_no
+        - - 'yes'
+      - - choose_cards
+        - - hand:dmrp03-036:0
+      - - order_pending
+        - - pending:normal:dmrp03-036:0
+      - - yes_no
+        - - 'yes'
+      - - choose_cards
+        - - hand:dmd08-015:0
+      - - choose_cards
+        - - hand:dmd08-015:0
+      - - yes_no
+        - - 'yes'
+      - - choose_cards
+        - - graveyard:dm22ex2-021:0
+      - - choose_cards
+        - - hand:dmd08-015:0
+      - - yes_no
+        - - 'yes'
+      - - choose_cards
+        - - graveyard:dm22ex2-021:0
+      - - choose_cards
+        - - hand:dmd08-015:0
+      - - yes_no
+        - - 'yes'
+      - - choose_cards
+        - - graveyard:dm22ex2-021:0
+      - - choose_cards
+        - - hand:dm26ex2-071:0
+      - - yes_no
+        - - 'yes'
+      - - choose_cards
+        - - graveyard:dm22ex2-021:0
+      - - choose_cards
+        - - hand:dm26ex2-071:0
+      - - yes_no
+        - - 'yes'
+      - - choose_cards
+        - - graveyard:dm22ex2-021:0
+      - - choose_cards
+        - - hand:dm26ex2-071:0
+      - - yes_no
+        - - 'yes'
+      - - choose_cards
+        - - graveyard:dm22ex2-021:0
+      - - choose_cards
+        - - hand:dm26ex2-071:0
+      - - yes_no
+        - - 'yes'
+      - - choose_cards
+        - - graveyard:dm22ex2-021:0
+      - - choose_cards
+        - - hand:dm22ex1-007:0
+      - - yes_no
+        - - 'yes'
+      - - choose_cards
+        - - graveyard:dm22ex2-021:0
+      - - choose_cards
+        - - hand:dm02-041:0
+      - - yes_no
+        - - 'yes'
+      - - choose_cards
+        - - graveyard:dm22ex2-021:0
+      - - choose_cards
+        - - hand:dm02-011:0
+      - - yes_no
+        - - 'yes'
+      - - choose_cards
+        - - graveyard:dm22ex2-021:0
+      - - choose_cards
+        - - hand:dm01-084:0
+      - - yes_no
+        - - 'yes'
+      - - choose_cards
+        - - graveyard:dm22ex2-021:0
+      - - choose_cards
+        - - hand:dm01-056:0
+      - - yes_no
+        - - 'yes'
+      - - choose_cards
+        - - graveyard:dm22ex2-021:0
+      - - choose_cards
+        - - hand:dm22ex2-021:0
+      - - yes_no
+        - - 'yes'
+      - - choose_cards
+        - - graveyard:dm22ex2-021:0
+    - seed: 3
+      win_kind: effect
+      n_steps: 65
+      steps:
+      - - main
+        - - play:dm22ex2-021
+      - - pay_mana
+        - - mana:dm01-027,dm01-080,dm01-080
+      - - choose_cards
+        - - hand:dmd08-015:0
+      - - yes_no
+        - - 'yes'
+      - - choose_cards
+        - - graveyard:dm22ex2-021:0
+      - - choose_cards
+        - - hand:dmex10-020:0
+      - - yes_no
+        - - 'yes'
+      - - choose_cards
+        - - graveyard:dm22ex2-021:0
+      - - choose_cards
+        - - hand:dmex10-020:0
+      - - yes_no
+        - - 'yes'
+      - - choose_cards
+        - - graveyard:dm22ex2-021:0
+      - - choose_cards
+        - - hand:dmex10-020:0
+      - - yes_no
+        - - 'yes'
+      - - choose_cards
+        - - graveyard:dm22ex2-021:0
+      - - choose_cards
+        - - hand:dmd08-015:0
+      - - yes_no
+        - - 'yes'
+      - - choose_cards
+        - - graveyard:dm22ex2-021:0
+      - - choose_cards
+        - - hand:dmd08-015:0
+      - - yes_no
+        - - 'yes'
+      - - choose_cards
+        - - graveyard:dm22ex2-021:0
+      - - choose_cards
+        - - hand:dmd08-015:0
+      - - yes_no
+        - - 'yes'
+      - - choose_cards
+        - - graveyard:dm22ex2-021:0
+      - - choose_cards
+        - - hand:dmrp03-036:0
+      - - yes_no
+        - - 'yes'
+      - - choose_cards
+        - - graveyard:dm22ex2-021:0
+      - - order_pending
+        - - pending:normal:dmrp03-036:0
+      - - yes_no
+        - - 'yes'
+      - - choose_cards
+        - - hand:dmrp03-036:0
+      - - order_pending
+        - - pending:normal:dmrp03-036:0
+      - - yes_no
+        - - 'yes'
+      - - choose_cards
+        - - hand:dm26ex2-071:0
+      - - choose_cards
+        - - hand:dm26ex2-071:0
+      - - yes_no
+        - - 'yes'
+      - - choose_cards
+        - - graveyard:dm22ex2-021:0
+      - - choose_cards
+        - - hand:dm26ex2-071:0
+      - - yes_no
+        - - 'yes'
+      - - choose_cards
+        - - graveyard:dm22ex2-021:0
+      - - choose_cards
+        - - hand:dm22ex1-025:0
+      - - yes_no
+        - - 'yes'
+      - - choose_cards
+        - - graveyard:dm22ex2-021:0
+      - - choose_cards
+        - - hand:dm22ex1-025:0
+      - - yes_no
+        - - 'yes'
+      - - choose_cards
+        - - graveyard:dm22ex2-021:0
+      - - choose_cards
+        - - hand:dm22ex1-025:0
+      - - yes_no
+        - - 'yes'
+      - - choose_cards
+        - - graveyard:dm22ex2-021:0
+      - - choose_cards
+        - - hand:dm22ex1-007:0
+      - - yes_no
+        - - 'yes'
+      - - choose_cards
+        - - graveyard:dm22ex2-021:0
+      - - choose_cards
+        - - hand:dm22ex1-007:0
+      - - yes_no
+        - - 'yes'
+      - - choose_cards
+        - - graveyard:dm22ex2-021:0
+      - - choose_cards
+        - - hand:dm02-041:0
+      - - yes_no
+        - - 'yes'
+      - - choose_cards
+        - - graveyard:dm22ex2-021:0
+      - - choose_cards
+        - - hand:dm01-084:0
+      - - yes_no
+        - - 'yes'
+      - - choose_cards
+        - - graveyard:dm22ex2-021:0
+      - - choose_cards
+        - - hand:dm01-080:0
+      - - yes_no
+        - - 'yes'
+      - - choose_cards
+        - - graveyard:dm22ex2-021:0
+      - - choose_cards
+        - - hand:dm22ex2-021:0
+      - - yes_no
+        - - 'yes'
+      - - choose_cards
+        - - graveyard:dm22ex2-021:0
+    - seed: 4
+      win_kind: effect
+      n_steps: 65
+      steps:
+      - - main
+        - - play:dm22ex2-021
+      - - pay_mana
+        - - mana:dm01-027,dm01-080,dm01-080
+      - - choose_cards
+        - - hand:dm01-080:0
+      - - yes_no
+        - - 'yes'
+      - - choose_cards
+        - - graveyard:dm22ex2-021:0
+      - - choose_cards
+        - - hand:dm01-056:0
+      - - yes_no
+        - - 'yes'
+      - - choose_cards
+        - - graveyard:dm22ex2-021:0
+      - - choose_cards
+        - - hand:dmrp03-s03:0
+      - - yes_no
+        - - 'yes'
+      - - choose_cards
+        - - graveyard:dm22ex2-021:0
+      - - choose_cards
+        - - hand:dmrp03-036:0
+      - - yes_no
+        - - 'yes'
+      - - choose_cards
+        - - graveyard:dm22ex2-021:0
+      - - order_pending
+        - - pending:normal:dmrp03-036:0
+      - - yes_no
+        - - 'yes'
+      - - choose_cards
+        - - hand:dmrp03-036:0
+      - - order_pending
+        - - pending:normal:dmrp03-036:0
+      - - yes_no
+        - - 'yes'
+      - - choose_cards
+        - - hand:dmex10-020:0
+      - - choose_cards
+        - - hand:dmex10-020:0
+      - - yes_no
+        - - 'yes'
+      - - choose_cards
+        - - graveyard:dm22ex2-021:0
+      - - choose_cards
+        - - hand:dmex10-020:0
+      - - yes_no
+        - - 'yes'
+      - - choose_cards
+        - - graveyard:dm22ex2-021:0
+      - - choose_cards
+        - - hand:dmd08-015:0
+      - - yes_no
+        - - 'yes'
+      - - choose_cards
+        - - graveyard:dm22ex2-021:0
+      - - choose_cards
+        - - hand:dmd08-015:0
+      - - yes_no
+        - - 'yes'
+      - - choose_cards
+        - - graveyard:dm22ex2-021:0
+      - - choose_cards
+        - - hand:dmd08-015:0
+      - - yes_no
+        - - 'yes'
+      - - choose_cards
+        - - graveyard:dm22ex2-021:0
+      - - choose_cards
+        - - hand:dm26ex2-071:0
+      - - yes_no
+        - - 'yes'
+      - - choose_cards
+        - - graveyard:dm22ex2-021:0
+      - - choose_cards
+        - - hand:dm26ex2-071:0
+      - - yes_no
+        - - 'yes'
+      - - choose_cards
+        - - graveyard:dm22ex2-021:0
+      - - choose_cards
+        - - hand:dm26ex2-071:0
+      - - yes_no
+        - - 'yes'
+      - - choose_cards
+        - - graveyard:dm22ex2-021:0
+      - - choose_cards
+        - - hand:dm26ex2-071:0
+      - - yes_no
+        - - 'yes'
+      - - choose_cards
+        - - graveyard:dm22ex2-021:0
+      - - choose_cards
+        - - hand:dm22ex2-021:0
+      - - yes_no
+        - - 'yes'
+      - - choose_cards
+        - - graveyard:dm22ex2-021:0
+      - - choose_cards
+        - - hand:dm22ex2-021:0
+      - - yes_no
+        - - 'yes'
+      - - choose_cards
+        - - graveyard:dm22ex2-021:0
+      - - choose_cards
+        - - hand:dm22ex1-025:0
+      - - yes_no
+        - - 'yes'
+      - - choose_cards
+        - - graveyard:dm22ex2-021:0
+      - - choose_cards
+        - - hand:dm22ex1-007:0
+      - - yes_no
+        - - 'yes'
+      - - choose_cards
+        - - graveyard:dm22ex2-021:0
+      - - choose_cards
+        - - hand:dm22ex1-007:0
+      - - yes_no
+        - - 'yes'
+      - - choose_cards
+        - - graveyard:dm22ex2-021:0
+      - - choose_cards
+        - - hand:dm02-011:0
+      - - yes_no
+        - - 'yes'
+      - - choose_cards
+        - - graveyard:dm22ex2-021:0
+    - seed: 5
+      win_kind: effect
+      n_steps: 65
+      steps:
+      - - main
+        - - play:dm22ex2-021
+      - - pay_mana
+        - - mana:dm01-027,dm01-080,dm01-080
+      - - choose_cards
+        - - hand:dm22ex2-021:0
+      - - yes_no
+        - - 'yes'
+      - - choose_cards
+        - - graveyard:dm22ex2-021:0
+      - - choose_cards
+        - - hand:dmrp03-036:0
+      - - yes_no
+        - - 'yes'
+      - - choose_cards
+        - - graveyard:dm22ex2-021:0
+      - - order_pending
+        - - pending:normal:dmrp03-036:0
+      - - yes_no
+        - - 'yes'
+      - - choose_cards
+        - - hand:dmrp03-036:0
+      - - order_pending
+        - - pending:normal:dmrp03-036:0
+      - - yes_no
+        - - 'yes'
+      - - choose_cards
+        - - hand:dmex10-020:0
+      - - choose_cards
+        - - hand:dmex10-020:0
+      - - yes_no
+        - - 'yes'
+      - - choose_cards
+        - - graveyard:dm22ex2-021:0
+      - - choose_cards
+        - - hand:dmd08-015:0
+      - - yes_no
+        - - 'yes'
+      - - choose_cards
+        - - graveyard:dm22ex2-021:0
+      - - choose_cards
+        - - hand:dmd08-015:0
+      - - yes_no
+        - - 'yes'
+      - - choose_cards
+        - - graveyard:dm22ex2-021:0
+      - - choose_cards
+        - - hand:dmd08-015:0
+      - - yes_no
+        - - 'yes'
+      - - choose_cards
+        - - graveyard:dm22ex2-021:0
+      - - choose_cards
+        - - hand:dmd08-015:0
+      - - yes_no
+        - - 'yes'
+      - - choose_cards
+        - - graveyard:dm22ex2-021:0
+      - - choose_cards
+        - - hand:dm26ex2-071:0
+      - - yes_no
+        - - 'yes'
+      - - choose_cards
+        - - graveyard:dm22ex2-021:0
+      - - choose_cards
+        - - hand:dm26ex2-071:0
+      - - yes_no
+        - - 'yes'
+      - - choose_cards
+        - - graveyard:dm22ex2-021:0
+      - - choose_cards
+        - - hand:dm26ex2-071:0
+      - - yes_no
+        - - 'yes'
+      - - choose_cards
+        - - graveyard:dm22ex2-021:0
+      - - choose_cards
+        - - hand:dm22ex2-021:0
+      - - yes_no
+        - - 'yes'
+      - - choose_cards
+        - - graveyard:dm22ex2-021:0
+      - - choose_cards
+        - - hand:dm22ex1-025:0
+      - - yes_no
+        - - 'yes'
+      - - choose_cards
+        - - graveyard:dm22ex2-021:0
+      - - choose_cards
+        - - hand:dm22ex1-025:0
+      - - yes_no
+        - - 'yes'
+      - - choose_cards
+        - - graveyard:dm22ex2-021:0
+      - - choose_cards
+        - - hand:dm22ex1-025:0
+      - - yes_no
+        - - 'yes'
+      - - choose_cards
+        - - graveyard:dm22ex2-021:0
+      - - choose_cards
+        - - hand:dm22ex1-007:0
+      - - yes_no
+        - - 'yes'
+      - - choose_cards
+        - - graveyard:dm22ex2-021:0
+      - - choose_cards
+        - - hand:dm02-041:0
+      - - yes_no
+        - - 'yes'
+      - - choose_cards
+        - - graveyard:dm22ex2-021:0
+      - - choose_cards
+        - - hand:dm02-011:0
+      - - yes_no
+        - - 'yes'
+      - - choose_cards
+        - - graveyard:dm22ex2-021:0
+      - - choose_cards
+        - - hand:dm01-080:0
+      - - yes_no
+        - - 'yes'
+      - - choose_cards
+        - - graveyard:dm22ex2-021:0
+      - - choose_cards
+        - - hand:dm01-056:0
+      - - yes_no
+        - - 'yes'
+      - - choose_cards
+        - - graveyard:dm22ex2-021:0
+    - seed: 6
+      win_kind: effect
+      n_steps: 65
+      steps:
+      - - main
+        - - play:dm22ex2-021
+      - - pay_mana
+        - - mana:dm01-027,dm01-080,dm01-080
+      - - choose_cards
+        - - hand:dm01-027:0
+      - - yes_no
+        - - 'yes'
+      - - choose_cards
+        - - graveyard:dm22ex2-021:0
+      - - choose_cards
+        - - hand:dm22ex1-025:0
+      - - yes_no
+        - - 'yes'
+      - - choose_cards
+        - - graveyard:dm22ex2-021:0
+      - - choose_cards
+        - - hand:dmrp03-s03:0
+      - - yes_no
+        - - 'yes'
+      - - choose_cards
+        - - graveyard:dm22ex2-021:0
+      - - choose_cards
+        - - hand:dmrp03-036:0
+      - - yes_no
+        - - 'yes'
+      - - choose_cards
+        - - graveyard:dm22ex2-021:0
+      - - order_pending
+        - - pending:normal:dmrp03-036:0
+      - - yes_no
+        - - 'yes'
+      - - choose_cards
+        - - hand:dmrp03-036:0
+      - - order_pending
+        - - pending:normal:dmrp03-036:0
+      - - yes_no
+        - - 'yes'
+      - - choose_cards
+        - - hand:dmex10-020:0
+      - - choose_cards
+        - - hand:dmex10-020:0
+      - - yes_no
+        - - 'yes'
+      - - choose_cards
+        - - graveyard:dm22ex2-021:0
+      - - choose_cards
+        - - hand:dmd08-015:0
+      - - yes_no
+        - - 'yes'
+      - - choose_cards
+        - - graveyard:dm22ex2-021:0
+      - - choose_cards
+        - - hand:dmd08-015:0
+      - - yes_no
+        - - 'yes'
+      - - choose_cards
+        - - graveyard:dm22ex2-021:0
+      - - choose_cards
+        - - hand:dmd08-015:0
+      - - yes_no
+        - - 'yes'
+      - - choose_cards
+        - - graveyard:dm22ex2-021:0
+      - - choose_cards
+        - - hand:dm26ex2-071:0
+      - - yes_no
+        - - 'yes'
+      - - choose_cards
+        - - graveyard:dm22ex2-021:0
+      - - choose_cards
+        - - hand:dm26ex2-071:0
+      - - yes_no
+        - - 'yes'
+      - - choose_cards
+        - - graveyard:dm22ex2-021:0
+      - - choose_cards
+        - - hand:dm26ex2-071:0
+      - - yes_no
+        - - 'yes'
+      - - choose_cards
+        - - graveyard:dm22ex2-021:0
+      - - choose_cards
+        - - hand:dm22ex1-025:0
+      - - yes_no
+        - - 'yes'
+      - - choose_cards
+        - - graveyard:dm22ex2-021:0
+      - - choose_cards
+        - - hand:dm22ex1-025:0
+      - - yes_no
+        - - 'yes'
+      - - choose_cards
+        - - graveyard:dm22ex2-021:0
+      - - choose_cards
+        - - hand:dm22ex2-021:0
+      - - yes_no
+        - - 'yes'
+      - - choose_cards
+        - - graveyard:dm22ex2-021:0
+      - - choose_cards
+        - - hand:dm22ex1-007:0
+      - - yes_no
+        - - 'yes'
+      - - choose_cards
+        - - graveyard:dm22ex2-021:0
+      - - choose_cards
+        - - hand:dm02-041:0
+      - - yes_no
+        - - 'yes'
+      - - choose_cards
+        - - graveyard:dm22ex2-021:0
+      - - choose_cards
+        - - hand:dm02-011:0
+      - - yes_no
+        - - 'yes'
+      - - choose_cards
+        - - graveyard:dm22ex2-021:0
+      - - choose_cards
+        - - hand:dm01-080:0
+      - - yes_no
+        - - 'yes'
+      - - choose_cards
+        - - graveyard:dm22ex2-021:0
+      - - choose_cards
+        - - hand:dm01-027:0
+      - - yes_no
+        - - 'yes'
+      - - choose_cards
+        - - graveyard:dm22ex2-021:0
+    - seed: 7
+      win_kind: effect
+      n_steps: 65
+      steps:
+      - - main
+        - - play:dm22ex2-021
+      - - pay_mana
+        - - mana:dm01-027,dm01-080,dm01-080
+      - - choose_cards
+        - - hand:dm22ex2-021:0
+      - - yes_no
+        - - 'yes'
+      - - choose_cards
+        - - graveyard:dm22ex2-021:0
+      - - choose_cards
+        - - hand:dmex10-020:0
+      - - yes_no
+        - - 'yes'
+      - - choose_cards
+        - - graveyard:dm22ex2-021:0
+      - - choose_cards
+        - - hand:dmex10-020:0
+      - - yes_no
+        - - 'yes'
+      - - choose_cards
+        - - graveyard:dm22ex2-021:0
+      - - choose_cards
+        - - hand:dmrp03-s03:0
+      - - yes_no
+        - - 'yes'
+      - - choose_cards
+        - - graveyard:dm22ex2-021:0
+      - - choose_cards
+        - - hand:dmrp03-036:0
+      - - yes_no
+        - - 'yes'
+      - - choose_cards
+        - - graveyard:dm22ex2-021:0
+      - - order_pending
+        - - pending:normal:dmrp03-036:0
+      - - yes_no
+        - - 'yes'
+      - - choose_cards
+        - - hand:dmd08-015:0
+      - - choose_cards
+        - - hand:dmd08-015:0
+      - - yes_no
+        - - 'yes'
+      - - choose_cards
+        - - graveyard:dm22ex2-021:0
+      - - choose_cards
+        - - hand:dmd08-015:0
+      - - yes_no
+        - - 'yes'
+      - - choose_cards
+        - - graveyard:dm22ex2-021:0
+      - - choose_cards
+        - - hand:dm26ex2-071:0
+      - - yes_no
+        - - 'yes'
+      - - choose_cards
+        - - graveyard:dm22ex2-021:0
+      - - choose_cards
+        - - hand:dm26ex2-071:0
+      - - yes_no
+        - - 'yes'
+      - - choose_cards
+        - - graveyard:dm22ex2-021:0
+      - - choose_cards
+        - - hand:dm26ex2-071:0
+      - - yes_no
+        - - 'yes'
+      - - choose_cards
+        - - graveyard:dm22ex2-021:0
+      - - choose_cards
+        - - hand:dm22ex1-007:0
+      - - yes_no
+        - - 'yes'
+      - - choose_cards
+        - - graveyard:dm22ex2-021:0
+      - - choose_cards
+        - - hand:dm22ex1-007:0
+      - - yes_no
+        - - 'yes'
+      - - choose_cards
+        - - graveyard:dm22ex2-021:0
+      - - choose_cards
+        - - hand:dm02-041:0
+      - - yes_no
+        - - 'yes'
+      - - choose_cards
+        - - graveyard:dm22ex2-021:0
+      - - choose_cards
+        - - hand:dm02-011:0
+      - - yes_no
+        - - 'yes'
+      - - choose_cards
+        - - graveyard:dm22ex2-021:0
+      - - choose_cards
+        - - hand:dm01-084:0
+      - - yes_no
+        - - 'yes'
+      - - choose_cards
+        - - graveyard:dm22ex2-021:0
+      - - choose_cards
+        - - hand:dm01-080:0
+      - - yes_no
+        - - 'yes'
+      - - choose_cards
+        - - graveyard:dm22ex2-021:0
+      - - choose_cards
+        - - hand:dm01-056:0
+      - - yes_no
+        - - 'yes'
+      - - choose_cards
+        - - graveyard:dm22ex2-021:0
+      - - choose_cards
+        - - hand:dm01-047:0
+      - - yes_no
+        - - 'yes'
+      - - choose_cards
+        - - graveyard:dm22ex2-021:0
+      - - choose_cards
+        - - hand:dm01-027:0
+      - - yes_no
+        - - 'yes'
+      - - choose_cards
+        - - graveyard:dm22ex2-021:0
+      - - choose_cards
+        - - hand:dm01-027:0
+      - - yes_no
+        - - 'yes'
+      - - choose_cards
+        - - graveyard:dm22ex2-021:0
+    - seed: 8
+      win_kind: effect
+      n_steps: 65
+      steps:
+      - - main
+        - - play:dm22ex2-021
+      - - pay_mana
+        - - mana:dm01-027,dm01-080,dm01-080
+      - - choose_cards
+        - - hand:dm22ex2-021:0
+      - - yes_no
+        - - 'yes'
+      - - choose_cards
+        - - graveyard:dm22ex2-021:0
+      - - choose_cards
+        - - hand:dmd08-015:0
+      - - yes_no
+        - - 'yes'
+      - - choose_cards
+        - - graveyard:dm22ex2-021:0
+      - - choose_cards
+        - - hand:dmrp03-s03:0
+      - - yes_no
+        - - 'yes'
+      - - choose_cards
+        - - graveyard:dm22ex2-021:0
+      - - choose_cards
+        - - hand:dmrp03-036:0
+      - - yes_no
+        - - 'yes'
+      - - choose_cards
+        - - graveyard:dm22ex2-021:0
+      - - order_pending
+        - - pending:normal:dmrp03-036:0
+      - - yes_no
+        - - 'yes'
+      - - choose_cards
+        - - hand:dmrp03-036:0
+      - - order_pending
+        - - pending:normal:dmrp03-036:0
+      - - yes_no
+        - - 'yes'
+      - - choose_cards
+        - - hand:dmex10-020:0
+      - - choose_cards
+        - - hand:dmex10-020:0
+      - - yes_no
+        - - 'yes'
+      - - choose_cards
+        - - graveyard:dm22ex2-021:0
+      - - choose_cards
+        - - hand:dmex10-020:0
+      - - yes_no
+        - - 'yes'
+      - - choose_cards
+        - - graveyard:dm22ex2-021:0
+      - - choose_cards
+        - - hand:dmd08-015:0
+      - - yes_no
+        - - 'yes'
+      - - choose_cards
+        - - graveyard:dm22ex2-021:0
+      - - choose_cards
+        - - hand:dmd08-015:0
+      - - yes_no
+        - - 'yes'
+      - - choose_cards
+        - - graveyard:dm22ex2-021:0
+      - - choose_cards
+        - - hand:dmd08-015:0
+      - - yes_no
+        - - 'yes'
+      - - choose_cards
+        - - graveyard:dm22ex2-021:0
+      - - choose_cards
+        - - hand:dm26ex2-071:0
+      - - yes_no
+        - - 'yes'
+      - - choose_cards
+        - - graveyard:dm22ex2-021:0
+      - - choose_cards
+        - - hand:dm26ex2-071:0
+      - - yes_no
+        - - 'yes'
+      - - choose_cards
+        - - graveyard:dm22ex2-021:0
+      - - choose_cards
+        - - hand:dm26ex2-071:0
+      - - yes_no
+        - - 'yes'
+      - - choose_cards
+        - - graveyard:dm22ex2-021:0
+      - - choose_cards
+        - - hand:dm22ex1-007:0
+      - - yes_no
+        - - 'yes'
+      - - choose_cards
+        - - graveyard:dm22ex2-021:0
+      - - choose_cards
+        - - hand:dm22ex1-007:0
+      - - yes_no
+        - - 'yes'
+      - - choose_cards
+        - - graveyard:dm22ex2-021:0
+      - - choose_cards
+        - - hand:dm02-041:0
+      - - yes_no
+        - - 'yes'
+      - - choose_cards
+        - - graveyard:dm22ex2-021:0
+      - - choose_cards
+        - - hand:dm01-084:0
+      - - yes_no
+        - - 'yes'
+      - - choose_cards
+        - - graveyard:dm22ex2-021:0
+      - - choose_cards
+        - - hand:dm01-047:0
+      - - yes_no
+        - - 'yes'
+      - - choose_cards
+        - - graveyard:dm22ex2-021:0
+      - - choose_cards
+        - - hand:dm01-027:0
+      - - yes_no
+        - - 'yes'
+      - - choose_cards
+        - - graveyard:dm22ex2-021:0
+      - - choose_cards
+        - - hand:dm01-027:0
+      - - yes_no
+        - - 'yes'
+      - - choose_cards
+        - - graveyard:dm22ex2-021:0
+  version:
+    fingerprint: ce7559c2efe14ce5
+    commit: 3aae1af
     measured_at: '2026-11-13'
 rejected:
 - id: akashic_hd2
@@ -156,8 +3864,14 @@ rejected:
   - 8
   max_turn: 2
   budget: null
+  setup: null
+  policy: []
+  policy_avoid: []
+  opp_levels:
+  - 0
+  route_stages: null
   note: ''
-  digest: 186286681098b9c8
+  digest: 1f805d9b3844331b
   checks:
   - name: cards
     ok: true
@@ -242,8 +3956,8 @@ rejected:
       via: loop
       win_turn: 1
   version:
-    fingerprint: 16330c25ac8fe65b
-    commit: 03548b7
+    fingerprint: ce7559c2efe14ce5
+    commit: 3aae1af
     measured_at: '2026-11-13'
   failed_at: ruler
 - id: drill_lock
@@ -252,8 +3966,8 @@ rejected:
   types:
   - lock
   core:
-  - id: null
-    name: ドリルスコール
+  - id: dm16-051
+    name: ドリル・スコール
     role: ロック
   - id: dm36-015
     name: 天雷王機ジョバンニX世
@@ -264,7 +3978,7 @@ rejected:
   win: lock
   entry: null
   procedure:
-  - 毎ターン自分がドリルスコールで相手マナを墓地へ、ジョバンニがターン終了時に回収、クルトの気合釣りで自分の山札を回復し、相手を山札切れへ（能動ロック）。
+  - 毎ターン自分がドリル・スコールで相手マナを墓地へ、ジョバンニがターン終了時に回収、クルトの気合釣りで自分の山札を回復し、相手を山札切れへ（能動ロック）。
   lock_mode: active
   seeds:
   - 1
@@ -277,18 +3991,317 @@ rejected:
   - 8
   max_turn: 2
   budget: null
+  setup: data/registry/setups/drill_lock.json
+  policy:
+  - charge:dm02-038
+  - charge:dm01-042
+  - charge:dm01-072
+  - charge:dm01-077
+  - charge:dm01-075
+  - charge:dm01-033
+  - charge:dm01-097
+  - play:dm16-051
+  - play:dm36-078
+  - 'graveyard:dm16-051:'
+  - mana:dm02-038
+  - mana:dm01-042
+  - mana:dm01-072
+  - mana:dm01-077
+  - mana:dm01-075
+  - mana:dm01-033
+  - mana:dm01-097
+  - graveyard:dm36-078
+  - graveyard:dm16-051
+  policy_avoid:
+  - charge:dm16-051
+  - charge:dm36-015
+  - charge:dm36-078
+  opp_levels:
+  - 0
+  - 1
+  route_stages: null
   note: ''
-  digest: 141d83166ef0040b
+  digest: 31fe8474c40795da
   checks:
   - name: cards
+    ok: true
+    detail: 中核の札がカードデータにある
+  - name: type
+    ok: true
+    detail: lock（能動）として相手の山札切れまで回す
+  - name: entry
+    ok: true
+    detail: data/registry/setups/drill_lock.json、与えた方針 ['charge:dm02-038', 'charge:dm01-042', 'charge:dm01-072', 'charge:dm01-077', 'charge:dm01-075', 'charge:dm01-033', 'charge:dm01-097', 'play:dm16-051',
+      'play:dm36-078', 'graveyard:dm16-051:', 'mana:dm02-038', 'mana:dm01-042', 'mana:dm01-072', 'mana:dm01-077', 'mana:dm01-075', 'mana:dm01-033', 'mana:dm01-097', 'graveyard:dm36-078', 'graveyard:dm16-051']（除く
+      ['charge:dm16-051', 'charge:dm36-015', 'charge:dm36-078']）
+  - name: lock
     ok: false
-    detail: 'ID が無いかカードデータに無い: [''ドリルスコール'']'
-  measured: {}
+    detail: '相手の山札切れまで勝ち 段階0 0/8 / 段階1 0/8（基準 0.8）。破れた理由 段階0 {''相手の資源が増えた'': 8}、段階1 {''相手の資源が増えた'': 8}'
+  measured:
+    seeds:
+    - 1
+    - 2
+    - 3
+    - 4
+    - 5
+    - 6
+    - 7
+    - 8
+    lock_mode: active
+    policy:
+    - charge:dm02-038
+    - charge:dm01-042
+    - charge:dm01-072
+    - charge:dm01-077
+    - charge:dm01-075
+    - charge:dm01-033
+    - charge:dm01-097
+    - play:dm16-051
+    - play:dm36-078
+    - 'graveyard:dm16-051:'
+    - mana:dm02-038
+    - mana:dm01-042
+    - mana:dm01-072
+    - mana:dm01-077
+    - mana:dm01-075
+    - mana:dm01-033
+    - mana:dm01-097
+    - graveyard:dm36-078
+    - graveyard:dm16-051
+    policy_avoid:
+    - charge:dm16-051
+    - charge:dm36-015
+    - charge:dm36-078
+    stage1: 対象外（ロックは段2の経路）
+    threshold: 0.8
+    by_opp_level:
+      0:
+        stage2: 0/8
+        stage2_rate: 0.0
+        distinct_starts: 8
+        broken:
+          相手の資源が増えた: 8
+        own_deck_left:
+        - 9
+        - 11
+        - 16
+        - 17
+        - 18
+        - 21
+        - 25
+      1:
+        stage2: 0/8
+        stage2_rate: 0.0
+        distinct_starts: 8
+        broken:
+          相手の資源が増えた: 8
+        own_deck_left:
+        - 9
+        - 11
+        - 16
+        - 17
+        - 18
+        - 21
+        - 25
+    rows:
+    - seed: 1
+      opp_level: 0
+      start: e5c28b2dac63
+      stage1: false
+      stage2: false
+      via: null
+      win_turn: null
+      error: null
+      own_deck_left: 17
+      broken: '相手の資源が増えた: mana:1 +1, mana_untapped:1 +1'
+      broken_turn: 14
+      opp_mana_end: 6
+    - seed: 2
+      opp_level: 0
+      start: e817d6124f5b
+      stage1: false
+      stage2: false
+      via: null
+      win_turn: null
+      error: null
+      own_deck_left: 21
+      broken: '相手の資源が増えた: mana:1 +1, mana_untapped:1 +1'
+      broken_turn: 10
+      opp_mana_end: 6
+    - seed: 3
+      opp_level: 0
+      start: 525323914fce
+      stage1: false
+      stage2: false
+      via: null
+      win_turn: null
+      error: null
+      own_deck_left: 11
+      broken: '相手の資源が増えた: mana:1 +1, mana_untapped:1 +1'
+      broken_turn: 19
+      opp_mana_end: 6
+    - seed: 4
+      opp_level: 0
+      start: 23482aff829a
+      stage1: false
+      stage2: false
+      via: null
+      win_turn: null
+      error: null
+      own_deck_left: 25
+      broken: '相手の資源が増えた: mana:1 +1, mana_untapped:1 +1'
+      broken_turn: 3
+      opp_mana_end: 6
+    - seed: 5
+      opp_level: 0
+      start: 95a3365b0447
+      stage1: false
+      stage2: false
+      via: null
+      win_turn: null
+      error: null
+      own_deck_left: 9
+      broken: '相手の資源が増えた: mana:1 +1, mana_untapped:1 +1'
+      broken_turn: 19
+      opp_mana_end: 6
+    - seed: 6
+      opp_level: 0
+      start: d5513ef85f82
+      stage1: false
+      stage2: false
+      via: null
+      win_turn: null
+      error: null
+      own_deck_left: 16
+      broken: '相手の資源が増えた: mana:1 +1, mana_untapped:1 +1'
+      broken_turn: 10
+      opp_mana_end: 6
+    - seed: 7
+      opp_level: 0
+      start: 65eaad837323
+      stage1: false
+      stage2: false
+      via: null
+      win_turn: null
+      error: null
+      own_deck_left: 16
+      broken: '相手の資源が増えた: mana:1 +1, mana_untapped:1 +1'
+      broken_turn: 14
+      opp_mana_end: 6
+    - seed: 8
+      opp_level: 0
+      start: c99d336a259f
+      stage1: false
+      stage2: false
+      via: null
+      win_turn: null
+      error: null
+      own_deck_left: 18
+      broken: '相手の資源が増えた: mana:1 +1, mana_untapped:1 +1'
+      broken_turn: 12
+      opp_mana_end: 6
+    - seed: 1
+      opp_level: 1
+      start: e5c28b2dac63
+      stage1: false
+      stage2: false
+      via: null
+      win_turn: null
+      error: null
+      own_deck_left: 17
+      broken: '相手の資源が増えた: mana:1 +1, mana_untapped:1 +1'
+      broken_turn: 14
+      opp_mana_end: 6
+    - seed: 2
+      opp_level: 1
+      start: e817d6124f5b
+      stage1: false
+      stage2: false
+      via: null
+      win_turn: null
+      error: null
+      own_deck_left: 21
+      broken: '相手の資源が増えた: mana:1 +1, mana_untapped:1 +1'
+      broken_turn: 10
+      opp_mana_end: 6
+    - seed: 3
+      opp_level: 1
+      start: 525323914fce
+      stage1: false
+      stage2: false
+      via: null
+      win_turn: null
+      error: null
+      own_deck_left: 11
+      broken: '相手の資源が増えた: mana:1 +1, mana_untapped:1 +1'
+      broken_turn: 19
+      opp_mana_end: 6
+    - seed: 4
+      opp_level: 1
+      start: 23482aff829a
+      stage1: false
+      stage2: false
+      via: null
+      win_turn: null
+      error: null
+      own_deck_left: 25
+      broken: '相手の資源が増えた: mana:1 +1, mana_untapped:1 +1'
+      broken_turn: 3
+      opp_mana_end: 6
+    - seed: 5
+      opp_level: 1
+      start: 95a3365b0447
+      stage1: false
+      stage2: false
+      via: null
+      win_turn: null
+      error: null
+      own_deck_left: 9
+      broken: '相手の資源が増えた: mana:1 +1, mana_untapped:1 +1'
+      broken_turn: 19
+      opp_mana_end: 6
+    - seed: 6
+      opp_level: 1
+      start: d5513ef85f82
+      stage1: false
+      stage2: false
+      via: null
+      win_turn: null
+      error: null
+      own_deck_left: 16
+      broken: '相手の資源が増えた: mana:1 +1, mana_untapped:1 +1'
+      broken_turn: 10
+      opp_mana_end: 6
+    - seed: 7
+      opp_level: 1
+      start: 65eaad837323
+      stage1: false
+      stage2: false
+      via: null
+      win_turn: null
+      error: null
+      own_deck_left: 16
+      broken: '相手の資源が増えた: mana:1 +1, mana_untapped:1 +1'
+      broken_turn: 14
+      opp_mana_end: 6
+    - seed: 8
+      opp_level: 1
+      start: c99d336a259f
+      stage1: false
+      stage2: false
+      via: null
+      win_turn: null
+      error: null
+      own_deck_left: 18
+      broken: '相手の資源が増えた: mana:1 +1, mana_untapped:1 +1'
+      broken_turn: 12
+      opp_mana_end: 6
+    stage2: 段階0 0/8 / 段階1 0/8
   version:
-    fingerprint: 16330c25ac8fe65b
-    commit: 03548b7
+    fingerprint: ce7559c2efe14ce5
+    commit: 3aae1af
     measured_at: '2026-11-13'
-  failed_at: cards
+  failed_at: lock
 - id: knight_dmc
   name: ～地獄帰りの騎士～＋DARK MEMORY CONTAINER
   split: tuning
@@ -317,67 +4330,27 @@ rejected:
   - 8
   max_turn: 2
   budget: null
+  setup: data/registry/setups/knight_dmc.json
+  policy: []
+  policy_avoid: []
+  opp_levels:
+  - 0
+  route_stages: null
   note: ''
-  digest: bfdacbf7c6ff17c1
-  checks:
-  - name: cards
-    ok: true
-    detail: 中核の札がカードデータにある
-  - name: type
-    ok: false
-    detail: 型 ['resource'] は今の物差しで測れない（リソース型はタスク12、攻撃型はタスク11 が前提）
-  measured: {}
-  version:
-    fingerprint: 16330c25ac8fe65b
-    commit: 03548b7
-    measured_at: '2026-11-13'
-  failed_at: type
-- id: saga
-  name: 絶望神サガの蘇生ループ
-  split: tuning
-  types:
-  - loop
-  core:
-  - id: dm22ex2-021
-    name: 絶望神サガ
-    role: エンジン（蘇生）
-  - id: dmrp03-s03
-    name: 水上第九院 シャコガイル
-    role: 勝ち手段
-  - id: dm22ex1-007
-    name: 超神星DOOM・ドラゲリオン
-    role: 入口への経路
-  win: effect
-  entry: data/loops/entry/saga.json
-  procedure:
-  - 手札のサガを3マナで出し、墓地のサガとの蘇生で1周1枚引く。山札の最後の1枚を引いてシャコガイルの効果で勝つ。
-  lock_mode: passive
-  seeds:
-  - 1
-  - 2
-  - 3
-  - 4
-  - 5
-  - 6
-  - 7
-  - 8
-  max_turn: 2
-  budget: null
-  note: ''
-  digest: fab3885a4550c905
+  digest: f4a4d151eebea108
   checks:
   - name: cards
     ok: true
     detail: 中核の札がカードデータにある
   - name: type
     ok: true
-    detail: loop として段1・段2で測る
+    detail: resource としてコスト対アドバンテージを測る（resource.py）
   - name: entry
     ok: true
-    detail: data/loops/entry/saga.json（サガ蘇生ループ（入口））
-  - name: ruler
+    detail: data/registry/setups/knight_dmc.json
+  - name: resource
     ok: false
-    detail: '段1 2/8・段2 1/8（基準 0.8）勝ち方 {''beat'': 6, ''loop'': 1, ''None'': 1}'
+    detail: 効率 adv 中央値 1.8（1.2〜2.4）・得た量中央値 9.0。合格線が未定のため登録しない（docs/combo-ruler-design.md §17）
   measured:
     seeds:
     - 1
@@ -388,69 +4361,95 @@ rejected:
     - 6
     - 7
     - 8
-    max_turn: 2
-    budget: 200
-    stage1: 2/8
-    stage2: 1/8
-    stage2_rate: 0.125
-    via:
-      beat: 6
-      loop: 1
-      None: 1
-    win_turns:
-    - 2
-    threshold: 0.8
+    resource:
+      n: 8
+      adv_median: 1.8
+      adv_min: 1.2
+      adv_max: 2.4
+      gain_median: 9.0
     rows:
     - seed: 1
-      start: b453e2406177
-      stage1: true
-      stage2: false
-      via: beat
-      win_turn: 2
+      start: 0e0e6ec8e557
+      mana_used: 3
+      cards_spent: 2
+      d_hand: 3
+      d_board: 3
+      d_shield: 1
+      gain: 9
+      adv: 1.8
+      error: null
     - seed: 2
-      start: 414026f0ea33
-      stage1: true
-      stage2: true
-      via: loop
-      win_turn: 2
+      start: a532a9bb0ff1
+      mana_used: 3
+      cards_spent: 2
+      d_hand: 3
+      d_board: 3
+      d_shield: 1
+      gain: 9
+      adv: 1.8
+      error: null
     - seed: 3
-      start: 6710e6cde9ed
-      stage1: false
-      stage2: false
-      via: null
-      win_turn: null
+      start: 0c20002c999a
+      mana_used: 3
+      cards_spent: 2
+      d_hand: 5
+      d_board: 4
+      d_shield: 1
+      gain: 12
+      adv: 2.4
+      error: null
     - seed: 4
-      start: ac7d4172fdac
-      stage1: false
-      stage2: false
-      via: beat
-      win_turn: 2
+      start: a3cf2ca1eddd
+      mana_used: 3
+      cards_spent: 2
+      d_hand: 1
+      d_board: 2
+      d_shield: 1
+      gain: 6
+      adv: 1.2
+      error: null
     - seed: 5
-      start: 073a28cd8fe8
-      stage1: false
-      stage2: false
-      via: beat
-      win_turn: 2
+      start: ce2d248ab848
+      mana_used: 3
+      cards_spent: 2
+      d_hand: 3
+      d_board: 3
+      d_shield: 1
+      gain: 9
+      adv: 1.8
+      error: null
     - seed: 6
-      start: b91960057490
-      stage1: false
-      stage2: false
-      via: beat
-      win_turn: 2
+      start: 98c3e6cf8fc9
+      mana_used: 3
+      cards_spent: 2
+      d_hand: 3
+      d_board: 3
+      d_shield: 1
+      gain: 9
+      adv: 1.8
+      error: null
     - seed: 7
-      start: 5bf640fbf3b4
-      stage1: false
-      stage2: false
-      via: beat
-      win_turn: 2
+      start: e6a045dd493c
+      mana_used: 3
+      cards_spent: 2
+      d_hand: 3
+      d_board: 3
+      d_shield: 1
+      gain: 9
+      adv: 1.8
+      error: null
     - seed: 8
-      start: f5d2930d2ea5
-      stage1: false
-      stage2: false
-      via: beat
-      win_turn: 2
+      start: 765aecca3fa3
+      mana_used: 3
+      cards_spent: 2
+      d_hand: 1
+      d_board: 2
+      d_shield: 1
+      gain: 6
+      adv: 1.2
+      error: null
   version:
-    fingerprint: 16330c25ac8fe65b
-    commit: 03548b7
+    fingerprint: ce7559c2efe14ce5
+    commit: 3aae1af
     measured_at: '2026-11-13'
-  failed_at: ruler
+  failed_at: resource
