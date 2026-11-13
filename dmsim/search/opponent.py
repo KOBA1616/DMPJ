@@ -98,3 +98,31 @@ PRESETS: dict[str, OppModel | None] = {
     "full": OppModel("full", block=True, strigger=True, play="all"),
     "beat": BEAT,
 }
+
+
+# 相手の抵抗の段階（物差し タスク11、docs/combo-ruler-design.md §11-2）。評価用の汎用設定で、コンボ専用にしない。
+# 0: 無抵抗（既定。従来の数字と同じ）。1: 盾に実在の S・トリガー（除去・タップ・攻撃禁止・ターンを飛ばす・ブロッカー）が一定割合で入り、
+#    相手はトリガーを使いブロッカーでブロックする。自分からは何も出さない。2: 相手も出して殴り返す（設計のみ、未実装）。
+RESIST_TRIGGERS = (          # すべて data/cards/real.yaml（確認済み）の札
+    "dm01-027",     # デーモン・ハンド（1体破壊）
+    "dm01-086",     # スパイラル・ゲート（1体手札へ）
+    "dm01-039",     # ナチュラル・トラップ（1体マナへ）
+    "dm01-015",     # ホーリー・スパーク（すべてタップ）
+    "dm20-008",     # スローリー・チェーン（このターン攻撃できない）
+    "dmr09-021",    # 終末の時計 ザ・クロック（ターンの残りを飛ばす）
+    "dmd24-024",    # 埋没のカルマ オリーブオイル（ブロッカー）
+    "dmbd21-013",   # 終断γ ドルブロ（ブロッカー）
+)
+RESIST_COPIES = 12          # 40枚中12枚（盾5枚に平均1.5枚）。実戦のトリガー入りデッキの典型的な枚数
+RESIST_FILLER = "T001"
+RESIST_LEVELS = {0: "none", 1: "strigger12"}
+
+
+def resistance(level: int, size: int = 40) -> tuple[OppModel | None, list[str]]:
+    """段階 level の (相手モデル, 相手のデッキ)。0 は (None, ダミー40枚) で従来どおり。"""
+    if level == 0:
+        return None, [RESIST_FILLER] * size
+    if level == 1:
+        trig = [RESIST_TRIGGERS[i % len(RESIST_TRIGGERS)] for i in range(RESIST_COPIES)]
+        return OppModel(RESIST_LEVELS[1], block=True, strigger=True), trig + [RESIST_FILLER] * (size - len(trig))
+    raise NotImplementedError(f"相手の段階 {level} は未実装（0 と 1 だけ）")

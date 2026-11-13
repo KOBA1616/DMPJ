@@ -64,6 +64,7 @@ class Verdict:
     stage1: Stage1
     stage2: Stage2
     reason: str
+    opp: str = "none"     # 測った時の相手の抵抗の段階（GameResult.opp の写し）
 
     def to_dict(self) -> dict:
         return asdict(self)
@@ -148,4 +149,4 @@ def judge(res, eng, *, me: int = 0, lock_mode: str = "passive") -> Verdict:
     b = stage2(res, eng, me, lock_mode)
     if b.via == "lock" and not a.ok:
         a.reason += "（ロックは段1に数えず段2の経路として記録）"
-    return Verdict(a, b, f"段1: {a.reason} / 段2: {b.reason}")
+    return Verdict(a, b, f"段1: {a.reason} / 段2: {b.reason}", getattr(res, "opp", "none"))

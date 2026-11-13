@@ -32,6 +32,7 @@ class GameResult:
     decisions: int = 0
     seconds: float = 0.0
     error: str | None = None
+    opp: str = "none"                 # 相手の抵抗の段階（search.opponent.resistance の名前。"none" は無抵抗）
 
 
 def origin(res: GameResult) -> str:
