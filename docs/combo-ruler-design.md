@@ -153,7 +153,7 @@
 2. **ロック判定を S4 へ移す**: lock_probe / round_probe / lock_ok を `dmsim/eval/lockcheck.py` へ。play_game は判定役を引数で受ける（既定は今と同じ動き）。旧名は別名で残す。同一シード一致を確認。
 3. **ロック勝ちの最後までの確認**: ロック確立後、相手の山札切れまで回して自分が先に尽きないかを確かめる関数を足す（既定ではまだ play_game に組み込まない）。
 4. **探索のループ記録を「選んだ手順」に絞る**: いまの `search/turn.py` はストック候補を作るたびに記録し、選ばなかった枝の分も混ざる。実際に採った手順に入ったループだけを GameResult に残す（候補の記録は別名で残す）。同一シードで勝敗が変わらないことを確認。物差しの段1はこの記録を使う。
-5. **物差しの本体 `dmsim/eval/ruler.py`（段1・段2）**: 仕込み局面から回して、段1（再生確認・回数 N・ストック）と段2（N が勝ちに足りるか・勝った瞬間の勝ち方がループの蓄積由来か・自分の山札切れなし）を判定し、ループ勝ちと殴り勝ちを別欄で返す。単体テストは小さな手作りの局面で。
+5. **物差しの本体 `dmsim/eval/ruler.py`（段1・段2）**（済み、§8.4）: 仕込み局面から回して、段1（再生確認・回数 N・ストック）と段2（N が勝ちに足りるか・勝った瞬間の勝ち方がループの蓄積由来か・自分の山札切れなし）を判定し、ループ勝ちと殴り勝ちを別欄で返す。単体テストは小さな手作りの局面で。
 6. **揃う・速さを ruler に載せる**: 既存の progress（cards_turn、中核だけ）・reach と、run_eval の FAIR セルを呼んで同じ形で返す。キル率は殴り勝ちを含めて数え、ループ勝ちを別欄に出す。
 7. **登録簿への記録**: S0 の書き込み口に測定結果と指紋を書く。
 8. **陽性対照（校正）**: §4 の手順（1 の開始局面、中核だけ差し替えたランダム組、0.8 / 0.05）を `tools/ruler_control.py`（仮）と `tests/test_measure_control.py` に。合格の印を登録簿へ。
@@ -233,6 +233,27 @@ pattern の検出条件（誤検出対策）は `pattern_loop.py` の冒頭: 手
 5. 自分の方針に「ドリルを唱える・戻す・マナに置いたダミーを墓地へ・ダミーをチャージ」を与えると、自分の25ターン目に相手の山札切れで勝ち、自分の山札残りは1枚（ぎりぎり）。文明の札を墓地へ送る方針では途中で唱えられなくなり破れる。
 
 **タスク5への注意**: 能動ロックを段2に数えるには、ロック中の自分の方針（探索または prefer_policy）を判定役に渡す必要がある。lock_probe 単独の None は「ロックでない」ではなく「受け身のロックでない」。
+
+## 8.4 物差しの本体（2026-11-13、タスク5で実装）
+
+`dmsim/eval/ruler.py` の `judge(res, eng, *, lock_mode="passive")` が play_game の (GameResult, Engine) を読み、`Verdict(stage1, stage2, reason)` を返す（`to_dict()` で辞書）。記録を読むだけで、測定の挙動は変えない。
+
+- **段1** `Stage1`: `ok`・`n_loops`・`verified`・`infinite`（certificate の limit=="inf"）・`n`（certificate は stocked、pattern は laps。最大のループ）・`limit_est`（pattern の見積もり、別欄）・`delta`（1周の差分）・`stocked`・`sources`・`reason`。採った手順の `loops` だけを見る（`loop_candidates` は理由文に件数を出すだけ）。
+- **段2** `Stage2`: `ok`（ループかロックで勝ち、かつ自分の山札切れなし）・`engine_win`・`win_kind`・`win_turn`（自分の何ターン目）・`via`（loop / lock / beat / other）・`loop_win`・`beat_win`・`kill`（キル率に数える勝ち。beat と other も含む）・`self_deck_out`・`attacks_after_loop`・`lock`（`mode` passive/active、`opp_mana`、`opp_mana_zero`）・`reason`。
+- **勝ち方の分類**: direct_attack は常に beat（ループの後でも）。loop_deck_out、または勝ちのターンに相手の山札を減らすループがある deck_out は loop。effect / state は、勝ちのターンに勝ちより前に終わったループ（pattern は log_end ≤ 勝ち時点の len(log)）があれば loop。それ以外の勝ちは other。ロックは lock（山札切れ勝ちの経路）。受け身か能動かは呼び出し側が渡した判定役で決まるので `lock_mode` で受ける。
+- **certificate のログ位置は足していない**: 今の certificate は「勝ちのターンに使ったか」（own_turn）で足りた（アカシックは loop_deck_out で win_by も付く）。effect 勝ちの certificate が出たら、`search/turn.py` で log 位置を足す。
+
+実測（各8シード、play_game、相手はマナチャージだけ）:
+
+| 局面 | 上限 | 段1 | N | 段2 | 勝ち方 | 勝ったターン |
+|---|---|---|---|---|---|---|
+| サガ 入口 | 2ターン | 8/8 | 有限 7 周（pattern） | 8/8 | loop（effect: シャコガイル。ループ後に攻撃1回、攻撃時ドローが勝利効果の引き金） | 1 |
+| アカシック 入口（budget 1500） | 1ターン | 8/8 | 無限（certificate、26 周） | 8/8 | loop（loop_deck_out） | 1 |
+| 騎士＋DMC 通常対局（相手ダミー40枚） | 4ターン | 0/8 | — | 0/8 | 勝ちなし | — |
+| サガ 旧仕込み tests/saga_prep_setup.yaml | 4ターン | 0/8（候補11件は選ばれず） | — | 0/8 | beat（direct_attack） | 4 |
+
+8シードとも同じ手順になった（入口局面の山札の並びが勝ち筋に効いていない）。
+「サガ入口のシード0はループ後の殴り勝ち」という見立ては、勝ちの理由が effect（相手の盾は2枚残る）なので loop に分類した。ループ後の殴り勝ちの判定は手作りの記録で単体テストにした（tests/test_ruler.py）。
 
 ## 9. 中核と基盤、アドバンテージの扱い（koba さんの質問への回答）
 
