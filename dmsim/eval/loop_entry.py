@@ -83,6 +83,7 @@ def build(rules, ls: LoopSpec, seed: int = 1):
 
 def measure(rules, name: str, seeds, max_turn: int = 2, budget: int | None = None) -> list[dict]:
     """入口局面から play_game（相手はマナチャージだけ）を回す。budget 省略時は LoopSpec.source の既定。"""
+    from dmsim.eval.lockcheck import lock_probe
     from dmsim.search.game import play_game
     ls = load(name)
     deck = deck_of(ls)
@@ -90,7 +91,7 @@ def measure(rules, name: str, seeds, max_turn: int = 2, budget: int | None = Non
     rows = []
     for sd in seeds:
         e = build(rules, ls, sd)
-        res, _ = play_game(rules, deck, [], sd, first_player=0, max_turn=max_turn, budget=bud, start=e)
+        res, _ = play_game(rules, deck, [], sd, first_player=0, max_turn=max_turn, budget=bud, start=e, lock_judge=lock_probe)
         rows.append({"seed": sd, "kill_turn": res.kill_turn, "kind": res.kind, "origin": res.origin,
                      "loops": len(res.loops), "lost": res.lost, "error": res.error})
     return rows

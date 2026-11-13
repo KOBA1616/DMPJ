@@ -11,6 +11,7 @@ from dataclasses import dataclass, field
 from typing import Any, Callable, Sequence
 
 from ..play_api import InfoLevel
+from . import lockcheck  # noqa: F401  （import 時に play_game の既定のロック判定役 lock_probe を登録する）
 
 API_VERSION = 1
 

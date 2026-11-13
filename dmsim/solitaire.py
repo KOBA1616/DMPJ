@@ -20,14 +20,15 @@
 # P0-3 で責務ごとに分割した。ここは旧名を全て再エクスポートする互換モジュール（CLI の入口も維持）。
 #   探索        dmsim.search.turn      TurnSearch・Detectors・candidates・charge_only_policy・own_turn
 #   局面精度    dmsim.search.leaf_eval Weights・evaluate・goal_distance・WIN
-#   1局の進行   dmsim.search.game      play_game・fair_game・GameResult・lock_probe・round_probe
+#   1局の進行   dmsim.search.game      play_game・fair_game・GameResult
+#   ロック判定   dmsim.eval.lockcheck   lock_probe・round_probe・lock_ok（P2 タスク2）
 #   大量試行    dmsim.eval.measure     measure・summarize・load_deck・main
 # 注意: 関数を差し替える（monkeypatch）ときは、ここではなく定義元のモジュールを差し替えること。
 from __future__ import annotations
 
 from .eval.measure import W, _one, _init_worker, _W, init_worker, load_deck, main, measure, summarize, wilson  # noqa: F401
-from .search.game import (GameResult, _lock_ok, _origin, fair_game, lock_ok, lock_probe, origin,  # noqa: F401
-                          play_game, round_probe, run_turns)
+from .eval.lockcheck import _lock_ok, lock_ok, lock_probe, round_probe  # noqa: F401
+from .search.game import GameResult, _origin, fair_game, origin, play_game, run_turns  # noqa: F401
 from .search.leaf_eval import WIN, Weights, evaluate, goal_distance  # noqa: F401
 from .search.turn import (Detectors, TurnSearch, TurnStats, _is_burn, _is_engine, _rank, candidates,  # noqa: F401
                           charge_only_policy, greedy_policy, is_burn_loop, is_engine_loop, own_turn)
