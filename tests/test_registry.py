@@ -157,3 +157,10 @@ def test_drill_real_deck_breaks(full_rules):
     ev = verify(full_rules, c)
     assert ev.failed_at() == "lock" and ev.measured["by_opp_level"][0]["stage2"] == "0/2"
     assert {r["opp_mana_end"] for r in ev.measured["rows"]} == {6}
+
+
+def test_route_stages():
+    st = registry.route_stages("saga")
+    assert st and st[-1]["entry"] == "saga" and "all" in st[0]
+    assert registry.route_stages("data/loops/route/akashic.yaml")
+    assert registry.route_stages(None) is None and registry.route_stages([{"entry": "x"}]) == [{"entry": "x"}]

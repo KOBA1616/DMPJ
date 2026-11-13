@@ -27,6 +27,7 @@ from .ruler_control import KNOWN_MIN, run_one
 
 MEASURABLE = ("loop", "lock")
 REPLAY_SEEDS = 2
+MAX_MACROS = 8      # 勝った局の手順を何本まで残すか（search.macro が1本ずつ手にする）
 
 
 def _commit() -> str | None:
@@ -95,11 +96,32 @@ def verify(rules, cand: Candidate, *, known_min: float = KNOWN_MIN) -> Evidence:
     ok = n > 0 and not errs and s2 / n >= known_min
     if not step("ruler", ok, f"段1 {s1}/{n}・段2 {s2}/{n}（基準 {known_min}）勝ち方 {vias}" + (f"、対局の失敗 seed {errs}" if errs else "")):
         return done(False)
+    measured["macros"] = [m for m in (_macro_steps(rules, ls, r["seed"], cand) for r in rows if r["stage2"] and r["win_turn"] == 1)
+                          if m is not None][:MAX_MACROS]
     again = [run_one(rules, ls, s, max_turn=cand.max_turn, budget=cand.budget) for s in cand.seeds[:REPLAY_SEEDS]]
     diff = [a["seed"] for a, b in zip(again, rows) if _key(a) != _key(b)]
     if not step("replay", not diff, f"seed {cand.seeds[:REPLAY_SEEDS]} を回し直して一致" if not diff else f"回し直すと結果が変わる seed {diff}"):
         return done(False)
     return done(True)
+
+
+def _macro_steps(rules, ls, seed: int, cand: Candidate) -> dict:
+    """勝った局の手順（自分の決定の (種類, 選んだ意味キー)）。最初のマナチャージは除き、その後の決定から勝つまで。入口のターン（自分の1ターン目）に勝った局だけ。
+    探索がこの手順を1手として使う（search.macro）。ruler_control.run_one と同じ局面・同じ設定で回し直して取る。"""
+    from ..engine import scenario
+    from ..search.game import play_game
+    from .lockcheck import lock_probe
+    from .ruler_control import _deck, _entry_spec, vary
+    deck = _deck(ls)
+    e = scenario.build(rules, _entry_spec(vary(rules, ls, seed), deck, seed), first_player=0)
+    res, eng = play_game(rules, deck, [], seed, first_player=0, max_turn=cand.max_turn, budget=le.measure_budget(ls, cand.budget),
+                         start=e, lock_judge=lock_probe)
+    if res.kill_turn != 1:
+        return None            # 手順は入口のターンの中だけ（ターンをまたぐ手順は1手にしない）
+    steps = [[x["kind"], list(x["keys"])] for x in eng.log if x["p"] == 0]
+    while steps and steps[0][0] == "charge":
+        steps.pop(0)
+    return {"seed": seed, "win_kind": res.kind, "n_steps": len(steps), "steps": steps}
 
 
 def _lock_spec(rules, spec: dict, seed: int, opp_level: int):

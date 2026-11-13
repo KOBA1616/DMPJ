@@ -190,6 +190,7 @@ class TurnSearch:
         # 案 E: 同じターンの手順で前に採った手（同じ種類・同じ意味キーの決定）を候補の先頭に回す。ループの2周目で
         # 1周目と同じ手を先に試す一般則（カード名は見ない）。None は REPEAT_FIRST
         self.repeat_first: bool | None = None   # 引いて捨てる型のループ検出（None は DRAW_DISCARD）
+        self.macros: list | None = None       # 登録簿の手順（search.macro）。None は macro.active()（既定は無効で空）
         self.collect: list | None = None      # ループ発見モード: 見つけたループ（局面の複製, 証明書）をここへ集めて、ストックはしない
 
     def _eval(self, eng: Engine) -> float:
@@ -226,6 +227,7 @@ class TurnSearch:
         self._rf = REPEAT_FIRST if self.repeat_first is None else self.repeat_first
         self._deadline = None if self.time_limit is None else time.monotonic() + self.time_limit
         self.seen: set = set()
+        self._macro_nodes = 0
         self.stats = TurnStats()
         det = Detectors.new(eng, self.me, self.draw_discard)
         best = self._search(eng.clone(), det)
@@ -277,6 +279,15 @@ class TurnSearch:
             return -WIN, eng, ()      # 既に展開した局面（ループの途中で戻ってきた場合もここ）
         self.seen.add(tkey)
         best: tuple | None = None
+        for child, lp in self._macro_children(eng, d):   # 登録簿の手順を1手として先に試す（既定は無効で何もしない）
+            self.left -= 1
+            self.stats.nodes += 1
+            r = self._search(child, det.fork())
+            r = (r[0], r[1], (lp,) + r[2])
+            if best is None or r[0] > best[0]:
+                best = r
+            if best[0] >= WIN - 1000:
+                return best
         cands = candidates(eng, d, self.w, self.combo_cap)
         if self.w.lookahead and len(cands) > 1:
             cands = self._lookahead_order(eng, cands)
@@ -295,6 +306,25 @@ class TurnSearch:
             if best[0] >= WIN - 1000:
                 break                 # このターンで勝てる線が見つかった
         return best
+
+    def _macro_children(self, eng: Engine, d: dict) -> list[tuple[Engine, dict]]:
+        from . import macro
+        ms = macro.active() if self.macros is None else self.macros
+        out = []
+        if not ms or self._macro_nodes >= macro.MAX_NODES:
+            return out
+        if any(macro.applies(m, eng, d, self.me) for m in ms):
+            self._macro_nodes += 1
+        else:
+            return out
+        for m in ms:
+            if macro.applies(m, eng, d, self.me):
+                child = macro.replay(m, eng, self.me, self.opp_policy, lambda e, d2: candidates(e, d2, self.w, self.combo_cap))
+                self.stats.macro_tries = getattr(self.stats, "macro_tries", 0) + 1
+                if child is not None:
+                    self.stats.macro_hits = getattr(self.stats, "macro_hits", 0) + 1
+                    out.append((child, macro.record(m)))
+        return out
 
     def _repeat_order(self, eng: Engine, d: dict, cands: list[list[int]]) -> list[list[int]]:
         """このターンの手順で、同じ種類の決定に前回答えた意味キーと同じ候補を先頭へ（安定な並べ替え）。"""
