@@ -35,9 +35,12 @@ entries:
   budget: null
   setup: null
   policy: []
+  policy_avoid: []
+  opp_levels:
+  - 0
   route_stages: null
   note: ''
-  digest: d6882d404a54be2a
+  digest: 841ff43fb0073dca
   checks:
   - name: cards
     ok: true
@@ -124,138 +127,8 @@ entries:
       via: loop
       win_turn: 1
   version:
-    fingerprint: 3ad85ba393606d57
-    commit: 9b7cb8e
-    measured_at: '2026-11-13'
-- id: drill_lock
-  name: ドリルスコール＋ジョバンニ＋クルト
-  split: holdout
-  types:
-  - lock
-  core:
-  - id: dm16-051
-    name: ドリル・スコール
-    role: ロック
-  - id: dm36-015
-    name: 天雷王機ジョバンニX世
-    role: 回収
-  - id: dm36-078
-    name: クルトの気合釣り
-    role: 山札の回復
-  win: lock
-  entry: null
-  procedure:
-  - 毎ターン自分がドリル・スコールで相手マナを墓地へ、ジョバンニがターン終了時に回収、クルトの気合釣りで自分の山札を回復し、相手を山札切れへ（能動ロック）。
-  lock_mode: active
-  seeds:
-  - 1
-  - 2
-  - 3
-  - 4
-  - 5
-  - 6
-  - 7
-  - 8
-  max_turn: 2
-  budget: null
-  setup: data/registry/setups/drill_lock.json
-  policy:
-  - charge:T001
-  - play:dm16-051
-  - mana:T001
-  - graveyard:dm16-051
-  route_stages: null
-  note: 成立局面にクルトは入れていない（§8.2 と同じ形）。クルト無しでも自分の山札残り1枚で先に相手が尽きる。クルトの役割は確かめていない
-  digest: 847d544dd4c2e629
-  checks:
-  - name: cards
-    ok: true
-    detail: 中核の札がカードデータにある
-  - name: type
-    ok: true
-    detail: lock（能動）として相手の山札切れまで回す
-  - name: entry
-    ok: true
-    detail: data/registry/setups/drill_lock.json、与えた方針 ['charge:T001', 'play:dm16-051', 'mana:T001', 'graveyard:dm16-051']
-  - name: lock
-    ok: true
-    detail: 相手の山札切れまで勝ち 8/8（基準 0.8）、開始局面 1 種、勝ったターン [35]、自分の山札残り [1]
-  - name: replay
-    ok: true
-    detail: seed [1, 2] を回し直して一致
-  measured:
-    seeds:
-    - 1
-    - 2
-    - 3
-    - 4
-    - 5
-    - 6
-    - 7
-    - 8
-    lock_mode: active
-    policy:
-    - charge:T001
-    - play:dm16-051
-    - mana:T001
-    - graveyard:dm16-051
-    stage1: 対象外（ロックは段2の経路）
-    stage2: 8/8
-    stage2_rate: 1.0
-    threshold: 0.8
-    distinct_starts: 1
-    rows:
-    - seed: 1
-      start: 6777a3b88d90
-      stage2: true
-      win_turn: 35
-      own_deck_left: 1
-      broken: null
-    - seed: 2
-      start: 6777a3b88d90
-      stage2: true
-      win_turn: 35
-      own_deck_left: 1
-      broken: null
-    - seed: 3
-      start: 6777a3b88d90
-      stage2: true
-      win_turn: 35
-      own_deck_left: 1
-      broken: null
-    - seed: 4
-      start: 6777a3b88d90
-      stage2: true
-      win_turn: 35
-      own_deck_left: 1
-      broken: null
-    - seed: 5
-      start: 6777a3b88d90
-      stage2: true
-      win_turn: 35
-      own_deck_left: 1
-      broken: null
-    - seed: 6
-      start: 6777a3b88d90
-      stage2: true
-      win_turn: 35
-      own_deck_left: 1
-      broken: null
-    - seed: 7
-      start: 6777a3b88d90
-      stage2: true
-      win_turn: 35
-      own_deck_left: 1
-      broken: null
-    - seed: 8
-      start: 6777a3b88d90
-      stage2: true
-      win_turn: 35
-      own_deck_left: 1
-      broken: null
-  version:
-    fingerprint: 3ad85ba393606d57
-    commit: 9b7cb8e
+    fingerprint: 9fb8cc98d7d916b3
+    commit: 6f5f46f
     measured_at: '2026-11-13'
 - id: saga
   name: 絶望神サガの蘇生ループ
@@ -290,9 +163,12 @@ entries:
   budget: null
   setup: null
   policy: []
+  policy_avoid: []
+  opp_levels:
+  - 0
   route_stages: null
   note: ''
-  digest: 7ae7f3d6a556985b
+  digest: 446c885dee0b060c
   checks:
   - name: cards
     ok: true
@@ -379,8 +255,8 @@ entries:
       via: loop
       win_turn: 1
   version:
-    fingerprint: 3ad85ba393606d57
-    commit: 9b7cb8e
+    fingerprint: 9fb8cc98d7d916b3
+    commit: 6f5f46f
     measured_at: '2026-11-13'
 rejected:
 - id: akashic_hd2
@@ -416,9 +292,12 @@ rejected:
   budget: null
   setup: null
   policy: []
+  policy_avoid: []
+  opp_levels:
+  - 0
   route_stages: null
   note: ''
-  digest: 72b3ce1502e36e2e
+  digest: 1f805d9b3844331b
   checks:
   - name: cards
     ok: true
@@ -503,10 +382,352 @@ rejected:
       via: loop
       win_turn: 1
   version:
-    fingerprint: 3ad85ba393606d57
-    commit: 9b7cb8e
+    fingerprint: 9fb8cc98d7d916b3
+    commit: 6f5f46f
     measured_at: '2026-11-13'
   failed_at: ruler
+- id: drill_lock
+  name: ドリルスコール＋ジョバンニ＋クルト
+  split: holdout
+  types:
+  - lock
+  core:
+  - id: dm16-051
+    name: ドリル・スコール
+    role: ロック
+  - id: dm36-015
+    name: 天雷王機ジョバンニX世
+    role: 回収
+  - id: dm36-078
+    name: クルトの気合釣り
+    role: 山札の回復
+  win: lock
+  entry: null
+  procedure:
+  - 毎ターン自分がドリル・スコールで相手マナを墓地へ、ジョバンニがターン終了時に回収、クルトの気合釣りで自分の山札を回復し、相手を山札切れへ（能動ロック）。
+  lock_mode: active
+  seeds:
+  - 1
+  - 2
+  - 3
+  - 4
+  - 5
+  - 6
+  - 7
+  - 8
+  max_turn: 2
+  budget: null
+  setup: data/registry/setups/drill_lock.json
+  policy:
+  - charge:dm02-038
+  - charge:dm01-042
+  - charge:dm01-072
+  - charge:dm01-077
+  - charge:dm01-075
+  - charge:dm01-033
+  - charge:dm01-097
+  - play:dm16-051
+  - play:dm36-078
+  - 'graveyard:dm16-051:'
+  - mana:dm02-038
+  - mana:dm01-042
+  - mana:dm01-072
+  - mana:dm01-077
+  - mana:dm01-075
+  - mana:dm01-033
+  - mana:dm01-097
+  - graveyard:dm36-078
+  - graveyard:dm16-051
+  policy_avoid:
+  - charge:dm16-051
+  - charge:dm36-015
+  - charge:dm36-078
+  opp_levels:
+  - 0
+  - 1
+  route_stages: null
+  note: ''
+  digest: 31fe8474c40795da
+  checks:
+  - name: cards
+    ok: true
+    detail: 中核の札がカードデータにある
+  - name: type
+    ok: true
+    detail: lock（能動）として相手の山札切れまで回す
+  - name: entry
+    ok: true
+    detail: data/registry/setups/drill_lock.json、与えた方針 ['charge:dm02-038', 'charge:dm01-042', 'charge:dm01-072', 'charge:dm01-077', 'charge:dm01-075', 'charge:dm01-033', 'charge:dm01-097', 'play:dm16-051',
+      'play:dm36-078', 'graveyard:dm16-051:', 'mana:dm02-038', 'mana:dm01-042', 'mana:dm01-072', 'mana:dm01-077', 'mana:dm01-075', 'mana:dm01-033', 'mana:dm01-097', 'graveyard:dm36-078', 'graveyard:dm16-051']（除く
+      ['charge:dm16-051', 'charge:dm36-015', 'charge:dm36-078']）
+  - name: lock
+    ok: false
+    detail: '相手の山札切れまで勝ち 段階0 0/8 / 段階1 0/8（基準 0.8）。破れた理由 段階0 {''相手の資源が増えた'': 8}、段階1 {''相手の資源が増えた'': 8}'
+  measured:
+    seeds:
+    - 1
+    - 2
+    - 3
+    - 4
+    - 5
+    - 6
+    - 7
+    - 8
+    lock_mode: active
+    policy:
+    - charge:dm02-038
+    - charge:dm01-042
+    - charge:dm01-072
+    - charge:dm01-077
+    - charge:dm01-075
+    - charge:dm01-033
+    - charge:dm01-097
+    - play:dm16-051
+    - play:dm36-078
+    - 'graveyard:dm16-051:'
+    - mana:dm02-038
+    - mana:dm01-042
+    - mana:dm01-072
+    - mana:dm01-077
+    - mana:dm01-075
+    - mana:dm01-033
+    - mana:dm01-097
+    - graveyard:dm36-078
+    - graveyard:dm16-051
+    policy_avoid:
+    - charge:dm16-051
+    - charge:dm36-015
+    - charge:dm36-078
+    stage1: 対象外（ロックは段2の経路）
+    threshold: 0.8
+    by_opp_level:
+      0:
+        stage2: 0/8
+        stage2_rate: 0.0
+        distinct_starts: 8
+        broken:
+          相手の資源が増えた: 8
+        own_deck_left:
+        - 9
+        - 11
+        - 16
+        - 17
+        - 18
+        - 21
+        - 25
+      1:
+        stage2: 0/8
+        stage2_rate: 0.0
+        distinct_starts: 8
+        broken:
+          相手の資源が増えた: 8
+        own_deck_left:
+        - 9
+        - 11
+        - 16
+        - 17
+        - 18
+        - 21
+        - 25
+    rows:
+    - seed: 1
+      opp_level: 0
+      start: e5c28b2dac63
+      stage1: false
+      stage2: false
+      via: null
+      win_turn: null
+      error: null
+      own_deck_left: 17
+      broken: '相手の資源が増えた: mana:1 +1, mana_untapped:1 +1'
+      broken_turn: 14
+      opp_mana_end: 6
+    - seed: 2
+      opp_level: 0
+      start: e817d6124f5b
+      stage1: false
+      stage2: false
+      via: null
+      win_turn: null
+      error: null
+      own_deck_left: 21
+      broken: '相手の資源が増えた: mana:1 +1, mana_untapped:1 +1'
+      broken_turn: 10
+      opp_mana_end: 6
+    - seed: 3
+      opp_level: 0
+      start: 525323914fce
+      stage1: false
+      stage2: false
+      via: null
+      win_turn: null
+      error: null
+      own_deck_left: 11
+      broken: '相手の資源が増えた: mana:1 +1, mana_untapped:1 +1'
+      broken_turn: 19
+      opp_mana_end: 6
+    - seed: 4
+      opp_level: 0
+      start: 23482aff829a
+      stage1: false
+      stage2: false
+      via: null
+      win_turn: null
+      error: null
+      own_deck_left: 25
+      broken: '相手の資源が増えた: mana:1 +1, mana_untapped:1 +1'
+      broken_turn: 3
+      opp_mana_end: 6
+    - seed: 5
+      opp_level: 0
+      start: 95a3365b0447
+      stage1: false
+      stage2: false
+      via: null
+      win_turn: null
+      error: null
+      own_deck_left: 9
+      broken: '相手の資源が増えた: mana:1 +1, mana_untapped:1 +1'
+      broken_turn: 19
+      opp_mana_end: 6
+    - seed: 6
+      opp_level: 0
+      start: d5513ef85f82
+      stage1: false
+      stage2: false
+      via: null
+      win_turn: null
+      error: null
+      own_deck_left: 16
+      broken: '相手の資源が増えた: mana:1 +1, mana_untapped:1 +1'
+      broken_turn: 10
+      opp_mana_end: 6
+    - seed: 7
+      opp_level: 0
+      start: 65eaad837323
+      stage1: false
+      stage2: false
+      via: null
+      win_turn: null
+      error: null
+      own_deck_left: 16
+      broken: '相手の資源が増えた: mana:1 +1, mana_untapped:1 +1'
+      broken_turn: 14
+      opp_mana_end: 6
+    - seed: 8
+      opp_level: 0
+      start: c99d336a259f
+      stage1: false
+      stage2: false
+      via: null
+      win_turn: null
+      error: null
+      own_deck_left: 18
+      broken: '相手の資源が増えた: mana:1 +1, mana_untapped:1 +1'
+      broken_turn: 12
+      opp_mana_end: 6
+    - seed: 1
+      opp_level: 1
+      start: e5c28b2dac63
+      stage1: false
+      stage2: false
+      via: null
+      win_turn: null
+      error: null
+      own_deck_left: 17
+      broken: '相手の資源が増えた: mana:1 +1, mana_untapped:1 +1'
+      broken_turn: 14
+      opp_mana_end: 6
+    - seed: 2
+      opp_level: 1
+      start: e817d6124f5b
+      stage1: false
+      stage2: false
+      via: null
+      win_turn: null
+      error: null
+      own_deck_left: 21
+      broken: '相手の資源が増えた: mana:1 +1, mana_untapped:1 +1'
+      broken_turn: 10
+      opp_mana_end: 6
+    - seed: 3
+      opp_level: 1
+      start: 525323914fce
+      stage1: false
+      stage2: false
+      via: null
+      win_turn: null
+      error: null
+      own_deck_left: 11
+      broken: '相手の資源が増えた: mana:1 +1, mana_untapped:1 +1'
+      broken_turn: 19
+      opp_mana_end: 6
+    - seed: 4
+      opp_level: 1
+      start: 23482aff829a
+      stage1: false
+      stage2: false
+      via: null
+      win_turn: null
+      error: null
+      own_deck_left: 25
+      broken: '相手の資源が増えた: mana:1 +1, mana_untapped:1 +1'
+      broken_turn: 3
+      opp_mana_end: 6
+    - seed: 5
+      opp_level: 1
+      start: 95a3365b0447
+      stage1: false
+      stage2: false
+      via: null
+      win_turn: null
+      error: null
+      own_deck_left: 9
+      broken: '相手の資源が増えた: mana:1 +1, mana_untapped:1 +1'
+      broken_turn: 19
+      opp_mana_end: 6
+    - seed: 6
+      opp_level: 1
+      start: d5513ef85f82
+      stage1: false
+      stage2: false
+      via: null
+      win_turn: null
+      error: null
+      own_deck_left: 16
+      broken: '相手の資源が増えた: mana:1 +1, mana_untapped:1 +1'
+      broken_turn: 10
+      opp_mana_end: 6
+    - seed: 7
+      opp_level: 1
+      start: 65eaad837323
+      stage1: false
+      stage2: false
+      via: null
+      win_turn: null
+      error: null
+      own_deck_left: 16
+      broken: '相手の資源が増えた: mana:1 +1, mana_untapped:1 +1'
+      broken_turn: 14
+      opp_mana_end: 6
+    - seed: 8
+      opp_level: 1
+      start: c99d336a259f
+      stage1: false
+      stage2: false
+      via: null
+      win_turn: null
+      error: null
+      own_deck_left: 18
+      broken: '相手の資源が増えた: mana:1 +1, mana_untapped:1 +1'
+      broken_turn: 12
+      opp_mana_end: 6
+    stage2: 段階0 0/8 / 段階1 0/8
+  version:
+    fingerprint: 9fb8cc98d7d916b3
+    commit: 6f5f46f
+    measured_at: '2026-11-13'
+  failed_at: lock
 - id: knight_dmc
   name: ～地獄帰りの騎士～＋DARK MEMORY CONTAINER
   split: tuning
@@ -537,9 +758,12 @@ rejected:
   budget: null
   setup: data/registry/setups/knight_dmc.json
   policy: []
+  policy_avoid: []
+  opp_levels:
+  - 0
   route_stages: null
   note: ''
-  digest: 3cdb6738ca084ec4
+  digest: f4a4d151eebea108
   checks:
   - name: cards
     ok: true
@@ -651,7 +875,7 @@ rejected:
       adv: 1.2
       error: null
   version:
-    fingerprint: 3ad85ba393606d57
-    commit: 9b7cb8e
+    fingerprint: 9fb8cc98d7d916b3
+    commit: 6f5f46f
     measured_at: '2026-11-13'
   failed_at: resource

@@ -47,6 +47,8 @@ class Candidate:
     budget: int | None = None                 # None は入口局面の既定
     setup: str | None = None                  # 能動ロック: ロックが成立した局面（scenario の spec、JSON）。entry の代わり
     policy: list[str] = field(default_factory=list)   # 能動ロック: 与えた自分の方針（lockcheck.prefer_policy の key の先頭、優先順）。手順の記述として残す
+    policy_avoid: list[str] = field(default_factory=list)   # 能動ロック: policy に合っても選ばない key の先頭（コンボの札をチャージしない等）
+    opp_levels: list[int] = field(default_factory=lambda: [0])   # 能動ロック: 測る相手の抵抗の段階（search.opponent.resistance）
     route_stages: list | None = None          # 入口への経路の段（形式は「サガがループの入口に届くようにする」作業に合わせる。今は空欄）
     note: str = ""
 
