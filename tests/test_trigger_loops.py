@@ -11,7 +11,7 @@ from dmsim.cards.defs import card_yaml_files  # noqa: E402
 from dmsim.engine.loop import LoopDetector, abstract, draw_keys, verify
 from dmsim.search.loop_first import discover_loops
 from dmsim.engine.play import passive_policy
-from dmsim.search.game import round_probe
+from dmsim.eval.lockcheck import round_probe
 from dmsim.engine.zone_graph import find_cycles
 
 DATA = Path(__file__).resolve().parent.parent / "data"

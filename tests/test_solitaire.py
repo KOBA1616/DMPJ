@@ -9,7 +9,8 @@ from dmsim.cards.defs import card_yaml_files  # noqa: E402
 from dmsim.engine.play import make_record, replay_record
 from dmsim.search.turn import TurnSearch
 from dmsim.search.leaf_eval import Weights
-from dmsim.search.game import lock_probe, play_game
+from dmsim.search.game import play_game
+from dmsim.eval.lockcheck import lock_probe
 from dmsim.eval.measure import measure, summarize
 
 
