@@ -7,7 +7,10 @@ from dmsim.search import loop_first as lf
 from dmsim.engine import scenario as sc
 
 
-def test_two_stage_finds_saga_loop_then_a_win_after_n_cycles(rules):
+def test_two_stage_finds_saga_loop_then_a_win_after_n_cycles(rules, monkeypatch):
+    # 2段目でループを回さずに勝つ（案 E で2段目の探索が自分でループを回す）と cycles=0 になるので、ここでは切って見る
+    import dmsim.search.turn as T
+    monkeypatch.setattr(T, "REPEAT_FIRST", False)
     spec = yaml.safe_load((Path(__file__).parent / "saga_loop_first_setup.yaml").read_text(encoding="utf-8"))
     eng = sc.build(rules, spec)
     found = lf.two_stage(eng, 0, discover_budget=1500, seek_budget=1500)
@@ -24,3 +27,9 @@ def test_two_stage_finds_saga_loop_then_a_win_after_n_cycles(rules):
     assert [f.wins for f in again] == [f.wins for f in found]
     allw = lf.two_stage(sc.build(rules, spec), 0, 1500, 1500, first_win_only=False)
     assert sum(1 for f in allw if f.wins) >= 1
+
+
+def test_two_stage_still_wins_with_repeat_first(rules):
+    spec = yaml.safe_load((Path(__file__).parent / "saga_loop_first_setup.yaml").read_text(encoding="utf-8"))
+    found = lf.two_stage(sc.build(rules, spec), 0, discover_budget=1500, seek_budget=1500)
+    assert any(f.wins for f in found)
