@@ -78,6 +78,10 @@ def _admits(flt: dict, x) -> bool:
         return False
     if "cost_le" in flt and not (isinstance(flt["cost_le"], int) and x.cost <= flt["cost_le"]):
         return False
+    if "total_cost_le" in flt and not (isinstance(flt["total_cost_le"], int) and x.cost <= flt["total_cost_le"]):
+        return False     # 合計コストの上限（1枚ならその札のコストの上限）
+    if "name" in flt and flt["name"] not in (x.name, x.id):
+        return False     # 名前で指す（自分と同じ名前の札だけ、など）
     return True
 
 

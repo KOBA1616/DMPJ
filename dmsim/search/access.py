@@ -1,4 +1,4 @@
-"""ループの後にアクセスできる札（S3、設計書 §25）。
+"""ループの後にアクセスできる札（S3、設計書 §26）。
 
 ループの記録（1周の増減 delta と周数 laps / limit）から、自分の山札をどこまで掘れるか（dug）と、掘った札がどのゾーンを経由して
 手に入るか（via）を導き、山札の中身（デッキの構成。並びは見ない公平な見積もり）から「ループ後に使える札」の期待枚数を出す。
@@ -124,7 +124,7 @@ def access(eng, loop: dict, me: int = 0, win_ids=()) -> dict:
            "usable": usable}
     dw = {i: drawout(eng, i, me) for i in win_ids if draw_win(rules, i)}
     if dw:
-        out["drawout"] = dw  # ドロー置換の勝ち手段: 出す前に掘る枚数 / 出した後に引く枚数（§25.2）
+        out["drawout"] = dw  # ドロー置換の勝ち手段: 出す前に掘る枚数 / 出した後に引く枚数（§26.2）
     return out
 
 
@@ -136,7 +136,7 @@ def reachable(eng, loop: dict, ids, me: int = 0, need: float = 0.5) -> list[str]
     return [i for i in ids if i in have or (a["expected"].get(i, 0) >= need and i in a["usable"])]
 
 
-# --- ドロー置換の勝ち手段（設計書 §25.2）。カード名は見ず、効果データの形で読む。
+# --- ドロー置換の勝ち手段（設計書 §26.2）。カード名は見ず、効果データの形で読む。
 def _walk(effect):
     for op in effect or []:
         yield op
