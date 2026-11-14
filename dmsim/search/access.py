@@ -102,7 +102,7 @@ def usable_from(rules, cid: str, zone: str, users: list[dict]) -> bool:
     return False
 
 
-def access(eng, loop: dict, me: int = 0) -> dict:
+def access(eng, loop: dict, me: int = 0, win_ids=()) -> dict:
     """ループの後にアクセスできる札の見積もり。戻り値:
     {"dug": 掘れる枚数, "deck_left": 山札の枚数, "via": [ゾーン], "expected": {ID: 期待枚数}, "usable": {ID: [使えるゾーン]}}。
     山札の並びは見ない（中身の構成 × dug / deck_left）。"""
@@ -120,8 +120,12 @@ def access(eng, loop: dict, me: int = 0) -> dict:
         zs = [z for z in via if usable_from(rules, i, z, users)]
         if zs:
             usable[i] = zs
-    return {"dug": dug, "deck_left": n, "via": via, "expected": {i: round(k * frac, 3) for i, k in comp.items()},
-            "usable": usable}
+    out = {"dug": dug, "deck_left": n, "via": via, "expected": {i: round(k * frac, 3) for i, k in comp.items()},
+           "usable": usable}
+    dw = {i: drawout(eng, i, me) for i in win_ids if draw_win(rules, i)}
+    if dw:
+        out["drawout"] = dw  # ドロー置換の勝ち手段: 出す前に掘る枚数 / 出した後に引く枚数（§25.2）
+    return out
 
 
 def reachable(eng, loop: dict, ids, me: int = 0, need: float = 0.5) -> list[str]:
@@ -130,3 +134,64 @@ def reachable(eng, loop: dict, ids, me: int = 0, need: float = 0.5) -> list[str]
     have = {s.cards[c].defn for z in ("hand", "bz", "graveyard") for c in s.zones[z][me]}
     a = access(eng, loop, me)
     return [i for i in ids if i in have or (a["expected"].get(i, 0) >= need and i in a["usable"])]
+
+
+# --- ドロー置換の勝ち手段（設計書 §25.2）。カード名は見ず、効果データの形で読む。
+def _walk(effect):
+    for op in effect or []:
+        yield op
+        for k in ("body", "then", "else", "instead"):
+            if isinstance(op.get(k), list):
+                yield from _walk(op[k])
+
+
+def draw_win(rules, cid: str) -> dict | None:
+    """「自分が引く時、山札が k 枚なら代わりに勝つ」置換を持つ札の形。無ければ None。
+    戻り値 {"k": 山札の枚数条件, "refill": [出た時に山札へ加えるゾーン], "scheduled": 相手のターンのはじめに引く枚数}。"""
+    d = rules.cards.get(cid) if hasattr(rules, "cards") else None
+    if d is None:
+        return None
+    abil = d.get("abilities", []) if isinstance(d, dict) else getattr(d, "abilities", [])
+    k = None
+    refill, sched = [], 0
+    for a in abil:
+        w = a.get("when", {})
+        if a.get("kind") == "replace" and w.get("event") == "draw" and any(o.get("op") == "win" for o in _walk(a.get("instead"))):
+            c = (a.get("if") or {}).get("cmp")
+            k = c[2] if c and isinstance(c[0], dict) and c[0].get("count", {}).get("zone") == "deck" else 0
+        elif a.get("kind") == "trigger" and w.get("event") == "move" and w.get("to") == "bz" and w.get("subject") == "self":
+            refill += [o["select"]["zone"] for o in _walk(a.get("effect")) if o.get("op") == "move" and o.get("to") == "deck"
+                       and isinstance(o.get("select"), dict) and o["select"].get("owner") == "you"]
+        elif a.get("kind") == "trigger" and w.get("event") == "turn_start" and w.get("player") == "opp":
+            sched += sum(o.get("count", 0) for o in _walk(a.get("effect")) if o.get("op") == "draw" and o.get("player") == "you"
+                         and isinstance(o.get("count"), int))
+    return None if k is None else {"k": k, "refill": refill, "scheduled": sched}
+
+
+def grave_draws(rules, cid: str) -> int:
+    """その札が墓地に置かれた時に自分が引く枚数（「どこからでも墓地に置かれた時、引く」の形）。"""
+    d = rules.cards.get(cid) if hasattr(rules, "cards") else None
+    abil = (d.get("abilities", []) if isinstance(d, dict) else getattr(d, "abilities", [])) if d is not None else []
+    n = 0
+    for a in abil:
+        w = a.get("when", {})
+        if a.get("kind") == "trigger" and w.get("event") == "move" and w.get("to") == "graveyard" and w.get("subject") == "self":
+            n += sum(o.get("count", 0) for o in _walk(a.get("effect")) if o.get("op") == "draw" and isinstance(o.get("count"), int))
+    return n
+
+
+def drawout(eng, win_id: str, me: int = 0, extra_draws: int = 0) -> dict | None:
+    """ドロー置換の勝ち手段を今出したとき、勝つのに引く必要がある枚数と、引ける見込み。
+    need = 出た後の山札（山札 + 出た時に戻るゾーン）− k + 1。
+    own_turn = 自分のターン中の追加ドロー源（手札・場の「墓地に置かれた時に引く」札の枚数 + extra_draws）。
+    ok_same_turn: 自分のターン中に引き切れる。ok_next: 相手のターンのはじめの分を足せば引き切れる。
+    dig_before: 出す前に山札を何枚減らせば相手のターンのはじめに引き切れるか（refill で戻る分も減らす必要がある）。"""
+    rules, s = eng.rules, eng.s
+    f = draw_win(rules, win_id)
+    if f is None:
+        return None
+    after = len(s.zones["deck"][me]) + sum(len(s.zones[z][me]) for z in f["refill"])
+    need = max(0, after - f["k"] + 1)
+    own = extra_draws + sum(grave_draws(rules, s.cards[c].defn) for z in ("hand", "bz") for c in s.zones[z][me])
+    return {"need": need, "own_turn": own, "scheduled": f["scheduled"], "ok_same_turn": own >= need,
+            "ok_next": own + f["scheduled"] >= need, "dig_before": max(0, need - own - f["scheduled"])}
