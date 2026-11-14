@@ -180,6 +180,19 @@ def grave_draws(rules, cid: str) -> int:
     return n
 
 
+def grave_discards(rules, cid: str) -> bool:
+    """「墓地に置かれた時」の誘発に自分の手札を捨てる手順が入っているか（連鎖の見積もり用）。"""
+    d = rules.cards.get(cid) if hasattr(rules, "cards") else None
+    abil = (d.get("abilities", []) if isinstance(d, dict) else getattr(d, "abilities", [])) if d is not None else []
+    for a in abil:
+        w = a.get("when", {})
+        if a.get("kind") == "trigger" and w.get("event") == "move" and w.get("to") == "graveyard" and w.get("subject") == "self":
+            if any(o.get("op") == "discard" or (o.get("op") == "move" and o.get("reason") == "discard"
+                                                 and (o.get("select") or {}).get("zone") == "hand") for o in _walk(a.get("effect"))):
+                return True
+    return False
+
+
 def drawout(eng, win_id: str, me: int = 0, extra_draws: int = 0) -> dict | None:
     """ドロー置換の勝ち手段を今出したとき、勝つのに引く必要がある枚数と、引ける見込み。
     need = 出た後の山札（山札 + 出た時に戻るゾーン）− k + 1。
@@ -220,8 +233,18 @@ def remaining(eng, win_id: str, me: int = 0) -> int | None:
         return None
     rules, s = eng.rules, eng.s
     f = draw_win(rules, win_id)
-    pool = [s.cards[c].defn for z in ("bz", "graveyard", "hand") for c in s.zones[z][me]]
-    pool += [s.cards[u].defn for c in s.zones["bz"][me] for u in s.cards[c].under]
-    pre = 1 if any(grave_draws(rules, i) for i in pool) else 0
-    line_b = max(0, len(s.zones["deck"][me]) - f["k"] + 1 - pre) if pre else None
+    def gd(c):
+        return grave_draws(rules, s.cards[c].defn)
+    under = [u for c in s.zones["bz"][me] for u in s.cards[c].under]
+    hand = list(s.zones["hand"][me])
+    win_in_grave = any(s.cards[c].defn == win_id for c in s.zones["graveyard"][me])
+    # 引いて捨てる誘発なら、手札の同じ形の札を捨てて続けて引ける（連鎖）。
+    chain = sum(1 for c in hand if gd(c) and grave_discards(rules, s.cards[c].defn))
+    need_b = len(s.zones["deck"][me]) - f["k"] + 1
+    if win_in_grave and any(gd(u) for u in under):          # 今すぐ取れる: 下の引く札を墓地へ置き、墓地の勝ち手段を出す
+        line_b = max(0, need_b - max(gd(u) for u in under) - chain)
+    elif any(gd(c) for z in ("graveyard", "hand") for c in s.zones[z][me]) or any(gd(u) for u in under):
+        line_b = max(0, need_b - 1 - chain) + 1              # あと1手（引く札を進化元へ／勝ち手段を墓地へ）
+    else:
+        line_b = None
     return d["dig_before"] if line_b is None else min(d["dig_before"], line_b)

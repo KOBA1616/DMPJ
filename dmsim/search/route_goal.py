@@ -216,7 +216,7 @@ def make_value_fn(stages, weights: Weights | None = None, *, mult: float = 1.0, 
 
 
 # --- 入口より後ろの連続点（§30、DMSIM_DRAWOUT=1 のときだけ）
-DIG_W = 15.0     # 勝ちに必要な残り1枚あたりの点（段の weight 350〜500 に対し、ループ1周＝1枚で手の差がつく大きさ）
+DIG_W = float(__import__("os").environ.get("DMSIM_DIG_W", "15"))     # 勝ちに必要な残り1枚あたりの点（段の weight 350〜500 に対し、ループ1周＝1枚で手の差がつく大きさ）
 EARLY_W = 200.0  # 勝ち手段を早く出しすぎた（場にあるのに残り>0）ときの減点
 
 
