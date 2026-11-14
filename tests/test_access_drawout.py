@@ -27,3 +27,76 @@ def test_drawout_counts_refill_and_own_turn_draws():
     d = A.drawout(e, "dmrp03-s03")
     n = len(e.s.zones["deck"][0]) + len(e.s.zones["graveyard"][0])
     assert d["need"] == n and d["dig_before"] == n - 5 and not d["ok_same_turn"]
+
+
+def test_route_drawout_switch_adds_pred_only_when_on():
+    from dmsim.search import route_goal as RG
+    off = RG.load("saga_v3", drawout=False)
+    on = RG.load("saga_v3", drawout=True)
+    assert not any("drawout" in p for st in off for p in st.preds)
+    added = [p for st in on for p in st.preds if "drawout" in p]
+    assert added == [{"drawout": "dmrp03-s03"}]   # 効果データでドロー置換の勝ち手段と読める札だけ
+
+
+def test_route_drawout_pred_progress():
+    from dmsim.search import route_goal as RG
+    r, e = _eng(["dm22ex1-007"] * 3, ["dm22ex1-007"] * 2, ["dmrp03-036"] * 2)
+    p = {"drawout": "dmrp03-s03"}
+    n = len(e.s.zones["deck"][0]) + len(e.s.zones["graveyard"][0])
+    f = RG._frac(e, p, 0, 0.25)
+    assert f == (1.0 if n <= 7 else 1 - (n - 7) / n)
+    assert RG.holds(e, p, 0) == (n <= 7)
+
+
+def test_drawout_pre_refill_line_with_trigger_order():
+    """山札1枚・進化元にイワシン: 戻す効果より先にイワシンで引けば勝てる（dig_before 0）。"""
+    r = load_rules()
+    spec = {"p0": {"hand": ["dm22ex1-007"], "mana": ["dmex10-020"] * 4,
+                   "graveyard": ["dmrp03-036"] * 8 + ["dmrp03-s03"] + ["dmex10-020"] * 10, "deck": ["dm22ex2-021"]},
+            "p1": {}, "seed": 1, "deck_exact": [True, False]}
+    e = scenario.build(r, spec, first_player=0)
+    d = e.advance()
+    while d["kind"] != "main":
+        e.answer([[o["key"] for o in d["options"]].index("pass")]); d = e.advance()
+    e.answer_by_keys(["play:dm22ex1-007"]); d = e.advance()
+    keys = [o["key"] for o in d["options"]]
+    e.answer([i for i, k in enumerate(keys) if "dmrp03-036" in k][:d["max"]])
+    e.advance()
+    out = A.drawout(e, "dmrp03-s03")
+    assert out["pre"] == 1 and out["need_pre"] == 1 and out["ok_pre"] and out["dig_before"] == 0
+    assert not out["ok_next"]   # 戻す効果の後では墓地の10枚が戻って届かない
+
+
+def test_engine_lets_player_order_pending_triggers():
+    """メテオバーンでイワシンを墓地に置き、墓地からシャコガイルを出すと、両方の誘発の順を選べ、イワシンが先なら勝つ。"""
+    from dmsim.engine.view import result_of
+    r = load_rules()
+    spec = {"p0": {"hand": ["dm22ex1-007"], "mana": ["dmex10-020"] * 4,
+                   "graveyard": ["dmrp03-036"] * 8 + ["dmrp03-s03"] + ["dmex10-020"] * 10, "deck": ["dm22ex2-021"]},
+            "p1": {}, "seed": 1, "deck_exact": [True, False]}
+    e = scenario.build(r, spec, first_player=0)
+    d = e.advance(); seen = []
+    for _ in range(60):
+        if d is None or result_of(e):
+            break
+        keys = [o["key"] for o in d["options"]]
+        seen.append(d["kind"])
+        if d["kind"] in ("charge",):
+            e.answer([keys.index("pass")])
+        elif d["kind"] == "main":
+            e.answer([keys.index("play:dm22ex1-007")] if "play:dm22ex1-007" in keys else [keys.index("pass")])
+        elif d["kind"] == "choose_evo_source":
+            e.answer([i for i, k in enumerate(keys) if "dmrp03-036" in k][:d["max"]])
+        elif d["kind"] == "attack":
+            e.answer([keys.index("attack:dm22ex1-007:player")])
+        elif d["kind"] == "choose_cards" and any("dmrp03-s03" in k for k in keys):
+            e.answer([next(i for i, k in enumerate(keys) if "dmrp03-s03" in k)])
+        elif d["kind"] == "choose_cards" and any("dmrp03-036" in k for k in keys):
+            e.answer([next(i for i, k in enumerate(keys) if "dmrp03-036" in k)])
+        elif d["kind"] == "order_pending":
+            e.answer([next(i for i, k in enumerate(keys) if "dmrp03-036" in k)])
+        else:
+            e.answer(list(range(d["min"])) if d["min"] else [0])
+        d = e.advance()
+    assert "order_pending" in seen
+    assert result_of(e)["winner"] == 0 and result_of(e)["reason"] == "effect" and e.s.turn == 1

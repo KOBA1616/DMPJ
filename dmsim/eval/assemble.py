@@ -180,6 +180,9 @@ def run_one(rules, ls, seed: int, *, deck=None, opp_deck=None, max_turn: int = 6
     finally:
         TS.KEEP_HAND = old_keep
     rec["entry_unmet"] = [f"{q.zone or '/'.join(q.zones)}:{q.match}{q.op}{q.n}" for q in L.unmet(eng, ls)]   # 終局（打ち切り）時に満たしていない入口の述語
+    from collections import Counter
+    rec["my_keys"] = dict(Counter(f"{x['kind']}|{k}" for x in eng.log if x["p"] == me for k in x["keys"]))   # 観測用（手の数え上げ）
+    rec["end_mana"] = dict(Counter(eng.s.cards[c].defn for c in eng.s.zones["mana"][me]))
     res.decisions = len(eng.log)
     res.seconds = time.perf_counter() - t0
     return dict(seed=seed, first=first, opp=res.opp, **rec, verdict=judge(res, eng), res=res)

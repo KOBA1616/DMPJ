@@ -33,13 +33,42 @@ def _entry_preds(name: str) -> tuple[dict, ...]:
     return tuple(d["minimal"])
 
 
-def load(name: str) -> tuple[Stage, ...]:
+def drawout_on() -> bool:
+    """DMSIM_DRAWOUT=1: ドロー置換の勝ち手段を場に出す段に「出した後に引き切れる」条件を足す（設計書 §28）。"""
+    import os
+    return os.environ.get("DMSIM_DRAWOUT", "0") == "1"
+
+
+def _with_drawout(preds: tuple[dict, ...]) -> tuple[dict, ...]:
+    """場に出す述語の札がドロー置換の勝ち手段なら {drawout: その札} を足す。札の形は効果データから読む（名前は見ない）。"""
+    from dmsim.cards.defs import load_rules
+    from dmsim.search.access import draw_win
+    rules = load_rules()
+    add = [{"drawout": p["match"]["name"]} for p in preds
+           if p.get("zone") == "bz" and "name" in p.get("match", {}) and draw_win(rules, p["match"]["name"])]
+    return preds + tuple(add)
+
+
+def load(name: str, drawout: bool | None = None) -> tuple[Stage, ...]:
     y = yaml.safe_load((ROUTE_DIR / f"{name}.yaml").read_text(encoding="utf-8"))
+    dw = drawout_on() if drawout is None else drawout
     out = []
     for s in y["stages"]:
-        preds = _entry_preds(s["entry"]) if "entry" in s else tuple(s["all"])
+        preds = (_entry_preds(s["entry"]) if "entry" in s else ()) + tuple(s.get("all", ()))   # entry と all は併記できる（入口に加えて…の段）
+        if dw:
+            preds = _with_drawout(preds)
         out.append(Stage(s["name"], float(s["weight"]), preds))
     return tuple(out)
+
+
+def _drawout_frac(eng, cid: str, me: int) -> float:
+    """引き切りの進み 0..1。今その札を出したとして、相手のターンのはじめまでに引き切れるなら 1。"""
+    from dmsim.search.access import drawout
+    d = drawout(eng, cid, me)
+    if d is None or d["need"] == 0 or d["dig_before"] == 0:
+        return 1.0
+    base = d["need_pre"] if d["pre"] and d["dig_before"] < d["need"] - d["own_turn"] - d["scheduled"] else d["need"]
+    return max(0.0, 1.0 - d["dig_before"] / max(1, base))
 
 
 def count(eng, p: dict, me: int = 0) -> int:
@@ -70,6 +99,8 @@ def count(eng, p: dict, me: int = 0) -> int:
 
 
 def holds(eng, p: dict, me: int = 0) -> bool:
+    if "drawout" in p:
+        return _drawout_frac(eng, p["drawout"], me) >= 1.0
     return OPS[p.get("op", ">=")](count(eng, p, me), p.get("n", 1))
 
 
@@ -94,6 +125,8 @@ AWAY_ZONES = ("mana",)                     # 経路の段がそのゾーンを�
 
 def _frac(eng, p: dict, me: int, elsewhere: float) -> float:
     """述語 p の進み具合 0..1。>= の枚数条件は count/n。名前の札が指すゾーンに無くても使える場所にあれば elsewhere。"""
+    if "drawout" in p:
+        return _drawout_frac(eng, p["drawout"], me)
     if p.get("op", ">=") != ">=":
         return 1.0 if holds(eng, p, me) else 0.0
     n = max(1, p.get("n", 1))
