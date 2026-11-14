@@ -47,6 +47,18 @@ def _rank(eng: Engine, d: dict, w: Weights) -> list[int]:
     def cost(o):
         return eng.cdef(o["cid"]).face(o.get("face")).cost if "cid" in o else 0
 
+    keep = set()
+    if KEEP_HAND is not None and kind in ("charge", "choose_cards"):
+        # 経路に要る札を手札に残す（search.route_goal.keep_hand。並べ替えだけで候補は消さない。既定 None は従来どおり）
+        try:
+            if kind == "charge" or _from_hand_to_grave(eng, d):
+                keep = KEEP_HAND(eng, p)
+        except Exception:
+            keep = set()
+
+    def kept(o):
+        return 1 if keep and "cid" in o and eng.s.cards[o["cid"]].defn in keep else 0
+
     free_now = set()
     if kind == "charge" and CHARGE_KEEP_FREE:
         # 今コストを払わずに出せる札（無償詠唱・G・ゼロ）はマナに置くと損をする（出せば効果が得られる）ので後回し
@@ -61,7 +73,7 @@ def _rank(eng: Engine, d: dict, w: Weights) -> list[int]:
         if kind == "charge":
             if k == "pass":
                 return (0 if len(eng.zlist("mana", p)) >= w.max_mana else 2, 0)
-            return (1, 1 if "cid" in o and eng.s.cards[o["cid"]].defn in free_now else 0, -cost(o))
+            return (1, kept(o), 1 if "cid" in o and eng.s.cards[o["cid"]].defn in free_now else 0, -cost(o))
         if kind == "main":
             return (1, 0) if k == "pass" else (0, -cost(o))
         if kind == "attack":
@@ -72,8 +84,27 @@ def _rank(eng: Engine, d: dict, w: Weights) -> list[int]:
             return (0 if k == "yes" else 1, 0)
         if k in ("pass", "decline", "no", "no_block"):
             return (1, 0)
-        return (0, 0)
+        return (0, kept(o))
     return sorted(range(len(opts)), key=key)
+
+
+# 経路に要る札を手札に残す口（search.route_goal.keep_hand を eval.assemble が経路つきの測定の間だけ差す）。
+# callable(eng, player) -> その手番の選択で後回しにする札の定義ID の集合。None（既定）は従来どおり
+KEEP_HAND = None
+
+
+def _from_hand_to_grave(eng, d) -> bool:
+    """この choose_cards が「手札から墓地へ捨てる札を選ぶ」か（選択肢が全部その手番のプレイヤーの手札にあり、
+    待っている処理の行き先が墓地）。"""
+    p = d["player"]
+    if not d["options"] or not all("cid" in o and eng.s.cards[o["cid"]].zone == "hand" and eng.s.cards[o["cid"]].owner == p
+                                    for o in d["options"]):
+        return False
+    t = eng.s.tasks[-1] if eng.s.tasks else {}
+    if t.get("t") != "effect" or not (0 <= t.get("pc", -1) < len(t.get("ops") or ())):
+        return False
+    op = t["ops"][t["pc"]]
+    return isinstance(op, dict) and op.get("to") == "graveyard"
 
 
 def candidates(eng: Engine, d: dict, w: Weights, cap: int = 6) -> list[list[int]]:
@@ -333,6 +364,11 @@ class TurnSearch:
                 if child is not None:
                     self.stats.macro_hits = getattr(self.stats, "macro_hits", 0) + 1
                     out.append((child, macro.record(m)))
+                    continue
+                child = macro.replay_loop(m, eng, self.me, self.opp_policy, lambda e, d2: candidates(e, d2, self.w, self.combo_cap))
+                if child is not None:     # 勝ちへの変換が再生できない: ループ部分だけ使って続きは探索に任せる（§23）
+                    self.stats.macro_loop_hits = getattr(self.stats, "macro_loop_hits", 0) + 1
+                    out.append((child, macro.record(m, loop_only=True)))
         return out
 
     def _repeat_order(self, eng: Engine, d: dict, cands: list[list[int]]) -> list[list[int]]:

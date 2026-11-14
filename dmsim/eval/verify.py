@@ -121,7 +121,10 @@ def _macro_steps(rules, ls, seed: int, cand: Candidate) -> dict:
     steps = [[x["kind"], list(x["keys"])] for x in eng.log if x["p"] == 0]
     while steps and steps[0][0] == "charge":
         steps.pop(0)
-    return {"seed": seed, "win_kind": res.kind, "n_steps": len(steps), "steps": steps}
+    win_ids = cand.core_ids("win")
+    loop_end = next((j for j, (_, ks) in enumerate(steps) if any(w in k for k in ks for w in win_ids)), None)
+    # loop_end: 勝ち手段の札に初めて触れる手の位置。そこまでがループ部分、以降が勝ちへの変換部分（§23）
+    return {"seed": seed, "win_kind": res.kind, "n_steps": len(steps), "steps": steps, "loop_end": loop_end}
 
 
 def _lock_spec(rules, spec: dict, seed: int, opp_level: int):

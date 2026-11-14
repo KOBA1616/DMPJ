@@ -178,3 +178,45 @@ def make_value_fn(stages, weights: Weights | None = None, *, mult: float = 1.0, 
 def note_reached(eng, stages, ratchet: list, me: int = 0) -> None:
     """ラチェットの更新: 真の局面で満たした段が今の下限より後ろなら上げる（下げない）。"""
     ratchet[0] = max(ratchet[0], reached(eng, stages, me))
+
+
+def hand_needs(eng, stages, me: int = 0, floor: int = 0) -> set[str]:
+    """まだ達成していない段が手札に要求する札（§21）。段の述語から導き、カード名は見ない。
+    - 手札を指す名前の述語（zone: hand、zones に hand を含む）。
+    - 場を指す名前の述語で、まだ場に足りない札（手札から出す札）。
+    手札にある枚数が必要枚数以下の札だけを返す（必要枚数より多い分は手放してよい）。"""
+    k = max(reached(eng, stages, me), floor)
+    need: dict[str, int] = {}
+    away: set[str] = set()   # 先に墓地・マナなど手札・場以外へ送る段がまだ満たされていない札は残さない（例: 段1「シャコガイルが墓地」）
+    for st in stages[k:]:
+        for p in st.preds:
+            nm = p.get("match", {}).get("name")
+            if nm is None or p.get("owner", 0) != 0 or p.get("op", ">=") != ">=":
+                continue
+            zones = set((p["zone"],) if p.get("zone") else tuple(p.get("zones") or ()))
+            n = p.get("n", 1)
+            if not zones & {"hand", "bz"} and not holds(eng, p, me) and nm not in need:
+                away.add(nm)
+                continue
+            if nm in away:
+                continue
+            if "hand" in zones:
+                need[nm] = max(need.get(nm, 0), n)
+            elif "bz" in zones and count(eng, {"zone": "bz", "match": {"name": nm}}, me) < n:
+                need[nm] = max(need.get(nm, 0), n - count(eng, {"zone": "bz", "match": {"name": nm}}, me))
+    out = set()
+    for nm, n in need.items():
+        h = count(eng, {"zone": "hand", "match": {"name": nm}}, me)
+        if 0 < h <= n:
+            out |= {eng.s.cards[c].defn for c in eng.s.zones["hand"][me]
+                    if nm in (eng.s.cards[c].defn, eng.rules.cards[eng.s.cards[c].defn].id)}
+    return out
+
+
+def keep_hand(stages, me: int = 0, ratchet: list | None = None):
+    """search.turn.KEEP_HAND に差す関数。自分の選択だけで、hand_needs の札を後回しにする。"""
+    def f(eng, p):
+        if p != me or not stages:
+            return set()
+        return hand_needs(eng, stages, me, ratchet[0] if ratchet else 0)
+    return f

@@ -1,0 +1,16 @@
+# 新しい入口（ループ部品だけ、2026-11-14）への経路。勝ち手段（ナウ・オア・ネバー＋ウォカンナ、H.D.2.）は入口の後（段2）で見る。
+name: akashic_v2
+via: 森夢龍 フィオナ・フォレストの踏み倒しでアカシック3を場に出し、訪れる魔の時刻を2枚手札にそろえる
+stages:
+  - name: アカシック3と森夢龍が手札かマナにある
+    weight: 30
+    all:
+      - {zones: [hand, mana], match: {name: dm23ex2-009}, n: 1}
+      - {zones: [hand, mana], match: {name: dm24ex3-rp3tr6}, n: 1}
+  - name: アカシック3が場にある
+    weight: 120
+    all:
+      - {zone: bz, match: {name: dm23ex2-009}, n: 1}
+  - name: 入口
+    weight: 300
+    entry: akashic

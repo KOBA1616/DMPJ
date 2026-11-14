@@ -11,17 +11,22 @@ def full_rules():
     from dmsim.cards.defs import load_rules
     old = os.environ.pop("DMSIM_SKIP_CONVERTED", None)
     try:
-        yield load_rules()   # _raw_cards も converted.yaml を読むよう、モジュールの間は外したままにする
+        rules = load_rules()
+        RAW.update(B._raw_cards(rules))   # converted.yaml も読む生データ（環境変数は外したままにしない: 他のモジュールへ漏れる）
+        return rules
     finally:
         if old is not None:
             os.environ["DMSIM_SKIP_CONVERTED"] = old
+
+
+RAW: dict = {}
 
 
 SAGA = {"dm22ex2-021": 4, "dmrp03-s03": 4}
 
 
 def test_candidates_are_mechanical(full_rules):
-    cands = B.candidates(full_rules, SAGA)
+    cands = B.candidates(full_rules, SAGA, RAW)
     civs = B.core_civs(full_rules, SAGA)
     ids = [i for v in cands.values() for i in v]
     assert ids and all(not B._test(i) and i not in SAGA for i in ids)
@@ -30,7 +35,7 @@ def test_candidates_are_mechanical(full_rules):
 
 
 def test_base_deck_and_swap(full_rules):
-    fill = B.fillers(full_rules, SAGA)
+    fill = B.fillers(full_rules, SAGA, RAW)
     assert fill and all(full_rules.cards[f].is_creature() and not full_rules.cards[f].abilities for f in fill)
     d = B.base_deck(SAGA, fill)
     assert len(d) == 40 and d.count("dm22ex2-021") == 4
@@ -49,10 +54,10 @@ def test_fillers_are_vanilla_creatures_and_skip_missing_effect(full_rules):
     from dmsim.discovery import basebuild as B
     rules = full_rules
     core = {"dm22ex2-021": 4, "dmrp03-s03": 4}
-    for i in B.fillers(rules, core):
+    for i in B.fillers(rules, core, RAW):
         c = rules.cards[i]
         assert c.is_creature() and not B.missing_effect(c)
-    for ids in B.candidates(rules, core).values():
+    for ids in B.candidates(rules, core, RAW).values():
         assert not any(B.missing_effect(rules.cards[i]) for i in ids)
 
 

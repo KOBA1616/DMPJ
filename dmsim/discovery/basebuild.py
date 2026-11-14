@@ -20,7 +20,7 @@ from dataclasses import dataclass, field
 from ..deckplan.pool import classify
 from ..eval.api import measure_assembly
 
-ROLES = ("search", "draw", "prep", "accel")
+ROLES = ("search", "draw", "prep", "accel", "recover")   # recover: 自分の墓地から手札へ戻す（狙って守れない落ち方への対策）
 MAX_COST = 4
 PER_ROLE = 3
 COPIES = 4
@@ -39,6 +39,16 @@ class Build:
 
 def _test(i: str) -> bool:
     return i.startswith(("T", "R", "L"))
+
+
+def roles_of(raw: dict) -> set[str]:
+    """deckplan.pool.classify の役割に、墓地から手札への回収（recover）を足す（pool の分類は他でも使うので変えない）。"""
+    from ..deckplan.pool import _mine, _walk, _zone
+    out = set(classify(raw))
+    for d in _walk(raw.get("abilities", []) + [raw.get("spell", [])] if isinstance(raw.get("abilities"), list) else raw):
+        if d.get("op") == "move" and d.get("to") == "hand" and _mine(d.get("select")) and _zone(d.get("select")) == "graveyard":
+            out.add("recover")
+    return out
 
 
 def missing_effect(c) -> bool:
@@ -78,7 +88,7 @@ def candidates(rules, core: dict, raw: dict | None = None) -> dict[str, list[str
             continue
         if not set(c.civs) - {"zero"} or not set(c.civs) <= civs or c.evolve_from:
             continue
-        roles = classify(raw[i])
+        roles = roles_of(raw[i])
         for r in ROLES:
             if r in roles and len(out[r]) < PER_ROLE:
                 out[r].append(i)
@@ -96,7 +106,7 @@ def fillers(rules, core: dict, raw: dict | None = None) -> list[str]:
             c = rules.cards[i]
             if _test(i) or not c.is_creature() or missing_effect(c) or c.abilities or c.keywords or c.evolve_from or list(c.civs) != [v] or not c.cost:
                 continue
-            if classify(raw[i]):
+            if roles_of(raw[i]):
                 continue
             if best is None or (c.cost, i) < (rules.cards[best].cost, best):
                 best = i
@@ -114,20 +124,33 @@ def base_deck(core: dict, fill: list[str]) -> list[str]:
     return deck
 
 
-def score(rows: list[dict], horizon: int) -> float:
+def score(rows: list[dict], horizon: int, n_stages: int = 0) -> float:
+    """入口 3 点＋揃う（使えるゾーンだけで数える）1〜2 点。n_stages（経路の段の数、最後の段が入口）を渡すと、
+    入口直前の段に届いた局に 2 点、届いた段の進み（最も後ろの段 / 段の数）に 1 点を足す（§22）。"""
     s = 0.0
     for r in rows:
         if r["entry_turn"] is not None:
             s += 3
         if r["cards_turn"] is not None:
             s += 1 + (horizon + 1 - r["cards_turn"]) / (horizon + 1)
+        if n_stages:
+            got = [int(k) for k in (r.get("stage_turn") or {})]
+            if n_stages - 1 in got or n_stages in got:
+                s += 2
+            s += (max(got) if got else 0) / n_stages
     return s
 
 
 def summary(rows: list[dict]) -> dict:
     n = len(rows)
     ct = [r["cards_turn"] for r in rows if r["cards_turn"] is not None]
+    ca = [r.get("cards_turn_any") for r in rows if r.get("cards_turn_any") is not None]
+    st = Counter(int(k) for r in rows for k in (r.get("stage_turn") or {}))
     return {"games": n, "cards": f"{len(ct)}/{n}", "cards_turns": dict(sorted(Counter(ct).items())),
+            "cards_any": f"{len(ca)}/{n}", "cards_any_turns": dict(sorted(Counter(ca).items())),
+            "stages": dict(sorted(st.items())),
+            "kill_3_4": sum(1 for r in rows if r.get("kill") and r.get("win_turn") is not None and r["win_turn"] <= 4),
+            "beat": sum(1 for r in rows if r.get("beat")),
             "entry": f"{sum(r['entry_turn'] is not None for r in rows)}/{n}", "stage2": f"{sum(r['stage2'] for r in rows)}/{n}",
             "via": dict(Counter(str(r["via"]) for r in rows))}
 
@@ -144,7 +167,12 @@ def _swap(deck: list[str], fill: list[str], new: str) -> list[str] | None:
     return d if k == COPIES else None
 
 
-def build(rules, core: dict, entry: str, *, seeds=None, settings: dict | None = None, max_steps: int = 6, log=None) -> Build:
+ROUTE_OPTS = {"partial": True, "away": 40, "keep_hand": True}   # route を渡したときの探索の設定（測定と同じ）
+
+
+def build(rules, core: dict, entry: str, *, seeds=None, settings: dict | None = None, max_steps: int = 6, log=None,
+          route: str | None = None) -> Build:
+    """route（経路の名前）を渡すと、その経路を目標・経路札の温存つきで回し、段の進みも基準に入れる（§22）。"""
     settings = dict(FAST, **(settings or {}))
     seeds = list(seeds or range(1, FAST_GAMES + 1))
     raw = _raw_cards(rules)
@@ -154,10 +182,18 @@ def build(rules, core: dict, entry: str, *, seeds=None, settings: dict | None = 
     deck = base_deck(core, fill)
     hz = settings["max_turn"]
 
+    n_st = 0
+    extra = {}
+    if route:
+        from ..search import route_goal as RG
+        n_st = len(RG.load(route))
+        extra = {"route": route, "route_opts": dict(ROUTE_OPTS)}
+
     def meas(d):
-        return score(measure_assembly(rules, entry, d, seeds, **settings), hz)
+        return score(measure_assembly(rules, entry, d, seeds, **settings, **extra), hz, n_st)
     cur = meas(deck)
-    b = Build(deck, score=cur, measured={"fillers": fill, "candidates": cands, "settings": settings, "seeds": seeds})
+    b = Build(deck, score=cur, measured={"fillers": fill, "candidates": cands, "settings": settings, "seeds": seeds,
+                                                     "route": route})
     for _ in range(max_steps):
         best = None
         for i in pool:
@@ -174,7 +210,7 @@ def build(rules, core: dict, entry: str, *, seeds=None, settings: dict | None = 
         if best is None:
             break
         s, i, d2 = best
-        b.added.append({"id": i, "name": rules.cards[i].name, "roles": sorted(classify(raw[i])), "score_before": round(cur, 2), "score_after": round(s, 2)})
+        b.added.append({"id": i, "name": rules.cards[i].name, "roles": sorted(roles_of(raw[i])), "score_before": round(cur, 2), "score_after": round(s, 2)})
         if log:
             log(f"採用 {i} {rules.cards[i].name} {cur:.2f} → {s:.2f}")
         deck, cur = d2, s

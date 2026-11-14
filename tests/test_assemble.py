@@ -11,8 +11,10 @@ from dmsim.search.game import GameResult
 
 
 def test_core_need_from_entry_spec():
-    assert A.core_need(L.load("saga")) == {"dmrp03-s03": 1, "dm22ex2-021": 2}
-    assert A.core_need(L.load("akashic")) == {"dm23ex2-009": 1, "dmrp12-s01": 1, "dm24ex1-038": 1, "dm23bd7-035": 2}
+    # 揃うはループ部品だけ（§23）。勝ち手段（シャコガイル、ナウ・オア・ネバー＋ウォカンナ）は含めない
+    assert A.core_need(L.load("saga")) == {"dm22ex2-021": 2}
+    assert A.core_need(L.load("akashic")) == {"dm23ex2-009": 1, "dm23bd7-035": 2}
+    assert A.core_need(L.load("saga_v1")) == {"dmrp03-s03": 1, "dm22ex2-021": 2}
 
 
 def test_raw_table_monotone():

@@ -36,7 +36,7 @@ def rules():
 @pytest.fixture(scope="module")
 def saga0(rules):
     r = rules
-    ls = le.load("saga")
+    ls = le.load("saga_v1")
     v = rc.vary(r, ls, 0)
     return scenario.build(r, rc._entry_spec(v, rc._deck(ls), 0), first_player=0)
 
@@ -120,7 +120,7 @@ def test_repeat_first_orders_previous_choice_first(saga0):
 
 def test_charge_keeps_free_playable_cards(rules, monkeypatch):
     """マナチャージで、今コストを払わずに出せる札は後回しにする（カード名は見ない、§18）。"""
-    ls = le.load("akashic_hd2")
+    ls = le.load("akashic_hd2_v1")
     v = rc.vary(rules, ls, 5)
     e = scenario.build(rules, rc._entry_spec(v, rc._deck(ls), 5), first_player=0)
     d = e.advance()

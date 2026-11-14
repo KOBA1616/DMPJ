@@ -1,0 +1,114 @@
+{
+ "combo": "saga",
+ "entry": "saga",
+ "core": {
+  "dm22ex2-021": 4,
+  "dm22ex1-007": 4,
+  "dmex10-020": 4,
+  "dm22ex1-025": 4,
+  "dmrp03-036": 4,
+  "dmrp03-s03": 4
+ },
+ "added": [
+  {
+   "id": "dm24rp2-041",
+   "name": "霊淵 アガルーム＝プルーフ",
+   "roles": [
+    "prep"
+   ],
+   "score_before": 8.43,
+   "score_after": 13.57
+  },
+  {
+   "id": "dm23ex3-035",
+   "name": "戦攻のシダン アカダシ／「いいダシがとれそうだ」",
+   "roles": [
+    "draw"
+   ],
+   "score_before": 13.57,
+   "score_after": 15.14
+  },
+  {
+   "id": "dm22ex1-cho47",
+   "name": "ブラッディ・クロス",
+   "roles": [
+    "prep"
+   ],
+   "score_before": 15.14,
+   "score_after": 20.57
+  },
+  {
+   "id": "dm22ex1-cho14",
+   "name": "ザババン・ジョーカーズ",
+   "roles": [
+    "draw"
+   ],
+   "score_before": 20.57,
+   "score_after": 21.29
+  }
+ ],
+ "score": 21.28571428571428,
+ "fillers": [
+  "dm18-036",
+  "dm13-041"
+ ],
+ "candidates": {
+  "search": [
+   "dm20-043",
+   "dm23ex1-069",
+   "dmx11-079"
+  ],
+  "draw": [
+   "dm14-028",
+   "dm22ex1-cho14",
+   "dm23ex3-035"
+  ],
+  "prep": [
+   "dm22ex1-cho47",
+   "dm22ex2-067",
+   "dm24rp2-041"
+  ],
+  "accel": [
+   "dm10-048"
+  ]
+ },
+ "settings": {
+  "budget": 20,
+  "n_det": 1,
+  "max_turn": 6
+ },
+ "seeds": [
+  1,
+  2,
+  3,
+  4,
+  5,
+  6,
+  7,
+  8,
+  9,
+  10,
+  11,
+  12,
+  13,
+  14,
+  15,
+  16,
+  17,
+  18,
+  19,
+  20
+ ],
+ "approval": {
+  "dm22ex1-007": false,
+  "dm22ex1-025": false,
+  "dm22ex1-cho14": false,
+  "dm22ex1-cho47": false,
+  "dm22ex2-021": false,
+  "dm23ex3-035": false,
+  "dm24rp2-041": false,
+  "dmex10-020": false,
+  "dmrp03-036": false,
+  "dmrp03-s03": false
+ }
+}

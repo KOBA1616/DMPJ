@@ -100,7 +100,7 @@ def test_verify_stops_at_first_failure(full_rules):
 def test_verify_known_akashic_passes(full_rules):
     rules = full_rules
     """既知のアカシック（tuning）は入口局面から検証を通る（2シードに縮めた版）。"""
-    c = _cand(id="akashic", entry="data/loops/entry/akashic.json", seeds=[1, 2],
+    c = _cand(id="akashic", entry="data/loops/entry/akashic_v1.json", seeds=[1, 2],
               core=[{"id": "dm23ex2-009"}, {"id": "dm23bd7-035"}])
     ev = verify(rules, c)
     assert ev.passed, ev.checks

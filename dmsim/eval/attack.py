@@ -1,4 +1,4 @@
-"""攻撃型の目盛り（S4、docs/combo-ruler-design.md §21、2026-11-14）。
+"""攻撃型の目盛り（S4、docs/combo-ruler-design.md §24、2026-11-14）。
 
 ループ型の段1・段2とは別欄。足切りはせず、値を記録して順位づけに使う。
 - 測り方: 通常開幕・山札が見えない公平探索（eval.assemble.run_one、InfoLevel.FAIR）。相手は抵抗あり（search.opponent.resistance(1)

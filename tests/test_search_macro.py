@@ -61,7 +61,7 @@ def test_macro_wins_from_unseen_entry(full_rules, monkeypatch):
     マナチャージの一般則（CHARGE_KEEP_FREE、§18）を入れると手なしでも勝てるので、ここでは切って手の効き目を見る。"""
     import dmsim.search.turn as T
     monkeypatch.setattr(T, "CHARGE_KEEP_FREE", False)
-    e = _entry(full_rules, "akashic", 9)
+    e = _entry(full_rules, "akashic_v1", 9)
     ts0 = TurnSearch(0, 200)
     ts0.macros = []
     out, st = ts0.run(e)
@@ -77,7 +77,7 @@ def test_replay_discards_when_core_missing(full_rules):
     """中核の札が足りない局面では手順が続かず、手は不成立（None）。"""
     from dmsim.search.turn import candidates, charge_only_policy
     from dmsim.search.leaf_eval import Weights
-    e = _entry(full_rules, "akashic", 9)
+    e = _entry(full_rules, "akashic_v1", 9)
     m = next(x for x in macro.load() if x.id == "akashic")
     w = Weights()
     hand = [c for c in e.zlist("hand", 0) if e.s.cards[c].defn == "dm23bd7-035"]

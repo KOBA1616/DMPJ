@@ -1,0 +1,85 @@
+{
+ "saga@2": {
+  "passed": false,
+  "stage1": "8/8",
+  "stage2": "1/8",
+  "via": {
+   "beat": 6,
+   "None": 1,
+   "loop": 1
+  },
+  "win_turns": [
+   1
+  ],
+  "macros": []
+ },
+ "saga@4": {
+  "passed": false,
+  "stage1": "8/8",
+  "stage2": "1/8",
+  "via": {
+   "beat": 7,
+   "loop": 1
+  },
+  "win_turns": [
+   1
+  ],
+  "macros": []
+ },
+ "akashic@2": {
+  "passed": false,
+  "stage1": "3/8",
+  "stage2": "3/8",
+  "via": {
+   "None": 5,
+   "loop": 3
+  },
+  "win_turns": [
+   1,
+   2
+  ],
+  "macros": []
+ },
+ "akashic@4": {
+  "passed": false,
+  "stage1": "3/8",
+  "stage2": "3/8",
+  "via": {
+   "beat": 5,
+   "loop": 3
+  },
+  "win_turns": [
+   1,
+   2
+  ],
+  "macros": []
+ },
+ "akashic_hd2@2": {
+  "passed": false,
+  "stage1": "6/8",
+  "stage2": "6/8",
+  "via": {
+   "loop": 6,
+   "None": 2
+  },
+  "win_turns": [
+   1,
+   2
+  ],
+  "macros": []
+ },
+ "akashic_hd2@4": {
+  "passed": false,
+  "stage1": "6/8",
+  "stage2": "6/8",
+  "via": {
+   "loop": 6,
+   "beat": 2
+  },
+  "win_turns": [
+   1,
+   2
+  ],
+  "macros": []
+ }
+}

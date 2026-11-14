@@ -67,7 +67,7 @@ def rules():
             os.environ["DMSIM_SKIP_CONVERTED"] = old
 
 
-@pytest.mark.parametrize("name,turns", [("saga", 2), ("akashic", 1)])
+@pytest.mark.parametrize("name,turns", [("saga_v1", 2), ("akashic_v1", 1)])
 def test_entries_pass_both_stages(rules, name, turns):
     ls = L.load(name)
     for sd in (0, 1):
@@ -75,7 +75,7 @@ def test_entries_pass_both_stages(rules, name, turns):
                              start=L.build(rules, ls, sd), lock_judge=lock_probe)
         v = judge(res, eng)
         assert v.stage1.ok and v.stage2.ok and v.stage2.via == "loop", v.reason
-        assert v.stage1.infinite == (name == "akashic")
+        assert v.stage1.infinite == (name == "akashic_v1")
 
 
 def test_knight_normal_game_has_no_loop(rules):

@@ -1,0 +1,45 @@
+name: basebuild_akashic_v3
+note: tools/basebuild.py build が選んだデッキ（中核固定・基盤を貪欲に選択）
+combos:
+- akashic
+deck:
+- dm23ex2-009
+- dm23ex2-009
+- dm23ex2-009
+- dm23ex2-009
+- dm24ex3-rp3tr6
+- dm24ex3-rp3tr6
+- dm24ex3-rp3tr6
+- dm24ex3-rp3tr6
+- dmrp12-s01
+- dmrp12-s01
+- dmrp12-s01
+- dmrp12-s01
+- dm24ex1-043
+- dm24ex1-043
+- dm24ex1-043
+- dm24ex1-043
+- dm24ex1-038
+- dm24ex1-038
+- dm24ex1-038
+- dm24ex1-038
+- dmrp07-009
+- dmrp07-009
+- dmrp07-009
+- dmrp07-009
+- dm23bd7-035
+- dm23bd7-035
+- dm23bd7-035
+- dm23bd7-035
+- dm20-043
+- dm20-043
+- dm20-043
+- dm20-043
+- dm22rp1-073
+- dm22rp1-073
+- dm22rp1-073
+- dm22rp1-073
+- dm01-108
+- dm01-108
+- dm01-108
+- dm01-108
