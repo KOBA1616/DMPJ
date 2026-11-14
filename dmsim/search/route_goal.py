@@ -26,6 +26,7 @@ class Stage:
     name: str
     weight: float
     preds: tuple[dict, ...]
+    has_entry: bool = False   # 段の述語に入口（entry:）を含む
 
 
 def _entry_preds(name: str) -> tuple[dict, ...]:
@@ -57,7 +58,7 @@ def load(name: str, drawout: bool | None = None) -> tuple[Stage, ...]:
         preds = (_entry_preds(s["entry"]) if "entry" in s else ()) + tuple(s.get("all", ()))   # entry と all は併記できる（入口に加えて…の段）
         if dw:
             preds = _with_drawout(preds)
-        out.append(Stage(s["name"], float(s["weight"]), preds))
+        out.append(Stage(s["name"], float(s["weight"]), preds, "entry" in s))
     return tuple(out)
 
 
@@ -182,12 +183,18 @@ def make_value_fn(stages, weights: Weights | None = None, *, mult: float = 1.0, 
     ratchet: [k] を渡すと、その対局で達成済みの段 k を下限にする（呼び出し側が各ターンの後に k を更新する。note_reached）。"""
     w = weights or Weights()
     need = needed_cards(stages) if away else {}
+    cont = drawout_on() and bool(drawout_wins(stages))
+    if cont:
+        wins = drawout_wins(stages)
+        e_idx = entry_index(stages)
 
     def value(eng, me: int) -> float:
         v = evaluate(eng, me, w)
         if result_of(eng) is not None:
             return v
         fl = ratchet[0] if ratchet else 0
+        if cont:
+            return v + mult * continuous_score(eng, stages, me, fl, wins, e_idx, partial, elsewhere)
         r = route_score(eng, stages, me, fl)
         if partial:
             r += partial_score(eng, stages, me, elsewhere, fl)
@@ -208,9 +215,55 @@ def make_value_fn(stages, weights: Weights | None = None, *, mult: float = 1.0, 
     return gated
 
 
+# --- 入口より後ろの連続点（§29、DMSIM_DRAWOUT=1 のときだけ）
+DIG_W = 15.0     # 勝ちに必要な残り1枚あたりの点（段の weight 350〜500 に対し、ループ1周＝1枚で手の差がつく大きさ）
+EARLY_W = 200.0  # 勝ち手段を早く出しすぎた（場にあるのに残り>0）ときの減点
+
+
+def drawout_wins(stages) -> list[str]:
+    return sorted({p["drawout"] for st in stages for p in st.preds if "drawout" in p})
+
+
+def entry_index(stages) -> int:
+    """入口の述語を含む最初の段（1始まり）。無ければ 0。"""
+    for i, st in enumerate(stages, 1):
+        if getattr(st, "has_entry", False):
+            return i
+    return 0
+
+
+def continuous_score(eng, stages, me, floor, wins, e_idx, partial, elsewhere) -> float:
+    """入口に届くまでは今まで通り。入口より後ろの段は、その対局で入口に届いた（floor ≥ 入口の段）か今入口を満たすときだけ数え、
+    さらに勝ちに必要な残り（access.remaining）が少ないほど点を上げる。勝ち手段が場にあるのに残りが0でなければ減点（早出しの抑え）。"""
+    from .access import remaining
+    k_now = reached(eng, stages, me)
+    seen = e_idx == 0 or floor >= e_idx or all(holds(eng, p, me) for p in stages[e_idx - 1].preds)
+    if not seen:   # 入口を経ずに後ろの段を満たしても数えない（§29 の穴ふさぎ）
+        k_now = max([i for i, st in enumerate(stages[:e_idx - 1], 1) if all(holds(eng, p, me) for p in st.preds)], default=0)
+    k = max(k_now, floor if seen else min(floor, max(0, e_idx - 1)))
+    r = sum(st.weight for st in stages[:k])
+    if partial and k < len(stages) and (seen or k + 1 < e_idx):
+        preds = stages[k].preds
+        r += stages[k].weight * sum(_frac(eng, p, me, elsewhere) for p in preds) / len(preds)
+    if seen and e_idx:
+        rem = [x for x in (remaining(eng, i, me) for i in wins) if x is not None]
+        if rem:
+            best = min(rem)
+            r -= DIG_W * best
+            on_bz = any(count(eng, {"zone": "bz", "match": {"name": i}, "top": True}, me) for i in wins)
+            if on_bz and best > 0:
+                r -= EARLY_W
+    return r
+
+
 def note_reached(eng, stages, ratchet: list, me: int = 0) -> None:
     """ラチェットの更新: 真の局面で満たした段が今の下限より後ろなら上げる（下げない）。"""
-    ratchet[0] = max(ratchet[0], reached(eng, stages, me))
+    k = reached(eng, stages, me)
+    if drawout_on() and drawout_wins(stages):   # §29: 入口を経ていなければ入口より後ろへは上げない
+        e = entry_index(stages)
+        if e and ratchet[0] < e and not all(holds(eng, p, me) for p in stages[e - 1].preds):
+            k = min(k, max([i for i, st in enumerate(stages[:e - 1], 1) if all(holds(eng, p, me) for p in st.preds)], default=0))
+    ratchet[0] = max(ratchet[0], k)
 
 
 def hand_needs(eng, stages, me: int = 0, floor: int = 0) -> set[str]:
