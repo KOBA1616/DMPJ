@@ -195,7 +195,38 @@ def _self_mods(d):
     return allow, deny, breaks, shield_allow
 
 
+def _is_plain_spell(d) -> bool:
+    """Rust が動かせる呪文（段階3-a）: 効果が単純（_simple_effect）で、S・トリガー以外のキーワード・常在型・特別な唱え方を持たない。"""
+    import dataclasses
+    from ..cards.defs import CardDef
+    if d.types != ["spell"] or not d.spell or not _simple_effect(d.spell):
+        return False
+    if not set(d.keywords) <= {"s_trigger"}:
+        return False
+    for ab in d.abilities:
+        if not (ab["kind"] == "static" and ab.get("zone") == "shield" and ab.get("affects") == "self" and "if" not in ab
+                and ab.get("mod") == {"allow": ["s_trigger"]}):
+            return False
+    skip = {"id", "name", "types", "civs", "cost", "power", "mana", "races", "text", "abilities", "keywords", "source", "spell"}
+    for f in dataclasses.fields(CardDef):
+        if f.name in skip:
+            continue
+        dv = f.default if f.default is not dataclasses.MISSING else f.default_factory()
+        if getattr(d, f.name) != dv:
+            return False
+    return True
+
+
+SPELLS = True   # 段階3-a の呪文を plain に含めるか（False で従来どおりクリーチャーだけ）
+
+
 def _is_plain(d) -> bool:
+    if SPELLS and d.types == ["spell"]:
+        return _is_plain_spell(d)
+    return _is_plain_creature(d)
+
+
+def _is_plain_creature(d) -> bool:
     """Rust が動かせる札（段階2-c）: 常在型は自分自身への単純な許可・禁止・ブレイク数だけ（誘発・置換・起動・特別な出し方は無い）のクリーチャー。"""
     import dataclasses
     from ..cards.defs import CardDef
@@ -223,6 +254,7 @@ def rules_bundle(rules) -> dict:
             "cards": {i: {"name": d.name, "civs": list(d.civs), "cost": d.cost, "power": d.power,
                           "mana": d.mana, "plain": _is_plain(d), "types": list(d.types), "races": list(d.races),
                           "keywords": list(d.keywords), "abil": d.abilities if _is_plain(d) else [],
+                          "spell": list(d.spell) if _is_plain(d) and d.types == ["spell"] else [],
                           **dict(zip(("allow", "deny", "breaks", "shield_allow"), (_self_mods(d) or ([], [], [], []))))}
                       for i, d in rules.cards.items()}}
 

@@ -261,7 +261,8 @@ impl Engine {
                                 let cause = self.s.cards[src as usize].defn.clone();
                                 e["cause"] = json!(cause);
                                 e["cause_defn"] = json!(cause);
-                                e["cause_kind"] = json!("ability");
+                                let ck = if self.def(src).types.iter().any(|t| t == "spell") { "spell" } else { "ability" };
+                                e["cause_kind"] = json!(ck);
                             }
                         }
                     }
@@ -707,7 +708,9 @@ impl Engine {
             self.s.tasks.pop();
             return Ok(None);
         }
-        if !self.permits(cid, "summon") || !self.permits(cid, "enter_bz") {
+        let is_spell = self.def(cid).types.iter().any(|t| t == "spell");
+        let denied = if is_spell { !self.permits(cid, "cast") } else { !self.permits(cid, "summon") || !self.permits(cid, "enter_bz") };
+        if denied {
             self.s.tasks.pop();
             return Ok(None);
         }
@@ -728,7 +731,7 @@ impl Engine {
             }
             t["sac_done"] = json!(true);
         }
-        self.s.turn_counters.insert(format!("last_play_creature:{}", p), json!(1));
+        self.s.turn_counters.insert(format!("last_play_creature:{}", p), json!(if is_spell { 0 } else { 1 }));
         if !free && !has(self.s.tasks.last().unwrap(), "cost_may_done") {
             self.s.tasks.last_mut().unwrap()["cost_may_done"] = json!(true);
         }
@@ -753,9 +756,15 @@ impl Engine {
             for c in opts[ans[0]]["cids"].as_array().unwrap() {
                 self.s.cards[c.as_i64().unwrap() as usize].tapped = true;
             }
+            self.s.tasks.last_mut().unwrap()["summon_paid"] = opts[ans[0]]["cids"].clone();
             self.s.tasks.last_mut().unwrap()["paid_done"] = json!(true);
         }
+        let paid: Vec<i64> = self.s.tasks.last().unwrap().get("summon_paid")
+            .and_then(|v| v.as_array()).map(|a| a.iter().filter_map(|x| x.as_i64()).collect()).unwrap_or_default();
         self.s.tasks.pop();
+        // フォートE（Python 第168弾と同じ）: 召喚時にタップしたマナを種族のスナップショットつきで刻む
+        let paid_snapshot: Vec<Value> = paid.iter()
+            .map(|&c| json!({"ref": self.refv(c), "races": self.chars_json(c)["races"].clone()})).collect();
         // 保留状態へ（409, 601.1b）。gen は変えない
         let from_zone = self.s.cards[cid as usize].zone.clone();
         let owner = self.s.cards[cid as usize].owner as usize;
@@ -784,6 +793,24 @@ impl Engine {
         if stp_bonus {
             ev["stp"] = json!(true);
         }
+        if !paid_snapshot.is_empty() {
+            self.s.cards[cid as usize].summon_tapped = paid_snapshot.clone();
+            if !is_spell {
+                ev["summon_tapped"] = json!(paid_snapshot);
+            }
+        }
+        if is_spell {
+            // 呪文（Python と同じ）: 唱えた → 書かれた順に解決 → 最終段階として墓地へ（605.2f）
+            let mut env = json!({"you": p, "self": r, "vars": {}});
+            if st {
+                env["in_st"] = json!(true);
+            }
+            let ops = json!(self.def(cid).spell.clone());
+            let cev = self.ev_task(vec![json!({"ev": "cast", "player": p, "subject": r, "unpaid": free})]);
+            let mv = self.ev_task(vec![json!({"ev": "move", "subject": r, "from": from_zone, "to": "graveyard", "reason": "resolve", "position": "top"})]);
+            self.push(vec![cev, json!({"t": "effect", "ops": ops, "pc": 0, "env": env, "os": {}}), mv]);
+            return Ok(None);
+        }
         let t = self.ev_task(vec![ev]);
         self.push(vec![t]);
         Ok(None)
@@ -802,7 +829,11 @@ impl Engine {
     }
 
     fn can_play(&self, cid: i64, p: i64) -> bool {
-        if !self.permits(cid, "summon") || !self.permits(cid, "enter_bz") {
+        if self.def(cid).types.iter().any(|t| t == "spell") {
+            if !self.permits(cid, "cast") {
+                return false;
+            }
+        } else if !self.permits(cid, "summon") || !self.permits(cid, "enter_bz") {
             return false;
         }
         !self.mana_choices(cid, p, None, 1).is_empty()
@@ -877,10 +908,14 @@ impl Engine {
             self.s.turn_counters.insert("attack_no".into(), json!(n));
             self.tset("ano", json!(n));
             self.s.turn_counters.insert("current_attack".into(), json!(n));
-            self.s.cards[att[0].as_i64().unwrap() as usize].tapped = true;
             let rec = json!({"ev": "attack", "subject": att, "target": target, "controller": a});
             let e = self.ev_task(vec![rec.clone()]);
             self.push(vec![e, Self::decl(a, "attack", &rec)]);
+            // 第190弾（Python と同じ）: 攻撃宣言のタップは tap イベント。後から積むので先に実行される
+            if !self.s.cards[att[0].as_i64().unwrap() as usize].tapped {
+                let te = self.ev_task(vec![json!({"ev": "tap", "subject": att})]);
+                self.push(vec![te]);
+            }
             return Ok(None);
         }
         if ph == 1 {
@@ -896,6 +931,10 @@ impl Engine {
             return Ok(None);
         }
         if ph == 2 {
+            // 攻撃先の変更（第171弾）: plain には変更の能力が無いので済みの印だけ付ける（Python と同じ状態）
+            if self.s.tasks.last().unwrap().get("redirect_done").is_none() {
+                self.tset("redirect_done", json!(true));
+            }
             // 507 ブロッククリーチャー指定
             let attc = att[0].as_i64().unwrap();
             let blockers: Vec<i64> = self.bz_tops(Some(1 - a)).into_iter().filter(|&c| {
@@ -920,16 +959,24 @@ impl Engine {
             let o = opts[ans[0]].clone();
             if o["key"] != json!("no_block") {
                 let c = o["cid"].as_i64().unwrap();
-                self.s.cards[c as usize].tapped = true;
+                let was_tapped = self.s.cards[c as usize].tapped;
                 let r = self.refv(c);
                 self.tset("target", r.clone());
                 if o["key"].as_str().unwrap().starts_with("guard:") {
+                    if !was_tapped {
+                        let te = self.ev_task(vec![json!({"ev": "tap", "subject": r})]);
+                        self.push(vec![te]);
+                    }
                     return Ok(None);
                 }
                 self.tset("blocked", json!(true));
                 let rec = json!({"ev": "block", "subject": r, "attacker": att, "controller": 1 - a});
                 let e = self.ev_task(vec![rec.clone()]);
                 self.push(vec![e, Self::decl(a, "block", &rec), Self::decl(1 - a, "block", &rec)]);
+                if !was_tapped {   // 第190弾: ブロック宣言のタップも tap イベント（block より先に実行）
+                    let te = self.ev_task(vec![json!({"ev": "tap", "subject": r})]);
+                    self.push(vec![te]);
+                }
             }
             return Ok(None);
         }
@@ -1246,7 +1293,8 @@ impl Engine {
         json!({"power": d.power, "cost": d.cost, "civs": d.civs, "types": d.types, "races": d.races, "keywords": kw,
             "name": d.name, "names": [d.name], "allow": allow, "deny": deny, "require": [], "breaks": breaks, "break_opts": bo,
             "breaks_add": 0, "pay_cost": d.cost, "sac_reduce": 0, "opt_reduce": null, "cost_may": [], "no_leave": [],
-            "must_be_attacked": false, "must_be_attacked_first": false, "battle_indestructible": false, "battle_indestructible_filters": [],
+            "must_be_attacked": false, "must_be_attacked_first": false, "must_be_chosen": false, "must_attack_creature": false,
+            "must_attack_creature_first": false, "battle_indestructible": false, "battle_indestructible_filters": [],
             "win_all_battles": false, "indestructible": false, "crystal_soul": 0})
     }
 
@@ -1642,6 +1690,18 @@ impl Engine {
                         self.s.turn_counters.insert(k2, json!(v));
                     }
                 }
+                "cast" => {
+                    let p = rec["player"].as_i64().unwrap();
+                    let n = self.hist_bump("cast", p, 1);
+                    rec["ord"] = json!({"cast": n});
+                    if let Some(c) = rec["subject"][0].as_i64() {
+                        let d = self.def(c);
+                        let snap = json!({"cost": d.cost, "types": d.types, "civs": d.civs});
+                        let k = format!("hist:used:{}", p);
+                        let e = self.s.turn_counters.entry(k).or_insert(json!([]));
+                        e.as_array_mut().unwrap().push(snap);
+                    }
+                }
                 "block" => { self.hist_bump("block", rec["controller"].as_i64().unwrap(), 1); }
                 "tap" => { self.hist_bump("tap", rec["controller"].as_i64().unwrap(), 1); }
                 "untap" => { self.hist_bump("untap", rec["controller"].as_i64().unwrap(), 1); }
@@ -1701,7 +1761,8 @@ impl Engine {
                 let chars_before = self.chars_json(cid);
                 let defn_before = self.s.cards[cid as usize].defn.clone();
                 let summon_hold = to == "bz" && czone == "hold" && reason == "summon";
-                if czone == "hold" && !summon_hold {
+                let resolve_hold = czone == "hold" && to == "graveyard" && reason == "resolve";   // 唱え終えた呪文
+                if czone == "hold" && !summon_hold && !resolve_hold {
                     return uns(format!("move {}→{}", from, to));
                 }
                 if to == "bz" && czone != "hold" && !self.permits(cid, "enter_bz") {
@@ -1719,9 +1780,15 @@ impl Engine {
                 if ev.get("stp").and_then(|v| v.as_bool()).unwrap_or(false) {
                     self.s.cards[cid as usize].stp = true;
                 }
+                if let Some(st) = ev.get("summon_tapped").and_then(|v| v.as_array()) {
+                    if !st.is_empty() {
+                        self.s.cards[cid as usize].summon_tapped = st.iter()
+                            .map(|e| json!({"ref": e["ref"].clone(), "races": e.get("races").cloned().unwrap_or(json!([]))})).collect();
+                    }
+                }
                 let after = self.s.cards[cid as usize].controller;
                 let mut out = vec![json!({"ev": "move", "subject": self.refv(cid), "lki": {"defn": defn_before, "face": face_before, "controller": ctl_before, "zone": from, "tapped": tapped_before,
-                        "chars": chars_before, "ref": [cid, gen_before]}, "from": from, "to": to,
+                        "chars": chars_before, "ref": [cid, gen_before], "exlife_of": null}, "from": from, "to": to,
                     "reason": reason, "controller": after})];
                 if ev.get("unpaid").and_then(|v| v.as_bool()).unwrap_or(false) {
                     out[0]["unpaid"] = json!(true);
@@ -1747,7 +1814,7 @@ impl Engine {
                 }
                 Ok(out)
             }
-            "turn_start" | "turn_end" | "attack" | "block" | "battle_start" | "battle_win" | "battle_end" | "attack_end" | "break" => {
+            "cast" | "turn_start" | "turn_end" | "attack" | "block" | "battle_start" | "battle_win" | "battle_end" | "attack_end" | "break" => {
                 Ok(vec![ev.clone()])
             }
             other => uns(format!("event {}", other)),
