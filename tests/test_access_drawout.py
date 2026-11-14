@@ -100,3 +100,17 @@ def test_engine_lets_player_order_pending_triggers():
         d = e.advance()
     assert "order_pending" in seen
     assert result_of(e)["winner"] == 0 and result_of(e)["reason"] == "effect" and e.s.turn == 1
+
+
+def test_continuous_score_gates_after_entry_and_counts_remaining(monkeypatch):
+    from dmsim.search import route_goal as RG
+    monkeypatch.setenv("DMSIM_DRAWOUT", "1")
+    st = RG.load("saga_v3")
+    e_idx = RG.entry_index(st)
+    assert e_idx > 0 and RG.drawout_wins(st) == ["dmrp03-s03"]
+    r, e = _eng(["dm22ex1-007"] * 3, [], [])
+    # 入口に届いていない局面では入口より後ろの段の点・残りの減点は付かない
+    v0 = RG.continuous_score(e, st, 0, 0, ["dmrp03-s03"], e_idx, False, 0.25)
+    v1 = RG.continuous_score(e, st, 0, e_idx, ["dmrp03-s03"], e_idx, False, 0.25)
+    assert v1 < sum(s.weight for s in st[:e_idx]) + 1e-9   # 入口後は残りの分だけ減点
+    assert v0 <= sum(s.weight for s in st[:e_idx - 1]) + 1e-9

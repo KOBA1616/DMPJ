@@ -65,7 +65,8 @@ def main(argv=None):
         deck = B.base_deck(core, B.fillers(rules, core))
     if a.macro:
         macro.enable(a.macro == "on")
-    opts = {"partial": True, "away": a.away, "keep_hand": a.keep} if a.route else None
+    from dmsim.search.route_goal import drawout_on
+    opts = {"partial": True, "away": a.away, "keep_hand": a.keep, "ratchet": drawout_on()} if a.route else None
     rows = []
     for s in range(a.start, a.start + a.games):
         r = measure_assembly(rules, a.entry, deck, [s], route=a.route, route_log=a.log, route_opts=opts)[0]

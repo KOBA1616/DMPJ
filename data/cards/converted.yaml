@@ -427897,3 +427897,3002 @@ cards:
     official: dmart10-005
     review: pending
     notes: 原文が同じ dm26rp2-tr008 の変換結果を写した（モデル不使用）。能力は元カードの確認に従う
+- id: dmrp05-036
+  faces:
+  - name: 貝の理解者 カチカッチン/サンキュー・ホタッテ
+    types:
+    - creature
+    civs:
+    - water
+    cost: 6
+    power: 6000
+    races:
+    - ムートピア
+    keywords:
+    - double_breaker
+  - name: 貝の理解者 カチカッチン/サンキュー・ホタッテ
+    types:
+    - spell
+    civs:
+    - water
+    cost: 4
+    spell:
+    - op: draw
+      count: 3
+    - op: discard
+      select:
+        zone: hand
+        owner: you
+        count: 1
+  mana: 1
+  text: '貝の理解者 カチカッチン/サンキュー・ホタッテ: W・ブレイカー（このクリーチャーはシールドを２つブレイクする） ／ 貝の理解者 カチカッチン/サンキュー・ホタッテ:
+    カードを３枚引く。その後、自分の手札を１枚捨てる。'
+  source:
+    official: dmrp05-036
+    review: pending
+    notes: ルールのみで変換（モデル不使用）（ツインパクト）
+- id: dmrp05-066
+  faces:
+  - name: 貝獣 ゴマキ/突撃ゴッチン・ヘッド
+    types:
+    - creature
+    civs:
+    - water
+    cost: 4
+    power: 3000
+    races:
+    - ムートピア
+    keywords:
+    - unblockable
+  - name: 貝獣 ゴマキ/突撃ゴッチン・ヘッド
+    types:
+    - spell
+    civs:
+    - water
+    cost: 2
+    spell:
+    - op: bounce
+      select:
+        zone: bz
+        owner: any
+        filter:
+          types:
+          - creature
+        count: 1
+  mana: 1
+  text: '貝獣 ゴマキ/突撃ゴッチン・ヘッド: このクリーチャーはブロックされない。 ／ 貝獣 ゴマキ/突撃ゴッチン・ヘッド: クリーチャーを１体選び、持ち主の手札に戻す。'
+  source:
+    official: dmrp05-066
+    review: pending
+    notes: ルールのみで変換（モデル不使用）（ツインパクト）
+- id: dmrp05-080
+  faces:
+  - name: キリモミ・チュリス/キリモミ昇チュー拳
+    types:
+    - creature
+    civs:
+    - fire
+    cost: 6
+    power: 6000
+    races:
+    - ビートジョッキー
+    keywords:
+    - double_breaker
+  - name: キリモミ・チュリス/キリモミ昇チュー拳
+    types:
+    - spell
+    civs:
+    - fire
+    cost: 1
+    spell:
+    - op: choose
+      select:
+        zone: bz
+        owner: you
+        filter:
+          types:
+          - creature
+        count: 1
+      as: target
+    - op: modify
+      select:
+        ref: target
+      mod:
+        grant:
+        - speed_attacker
+      duration: end_of_turn
+  mana: 1
+  text: 'キリモミ・チュリス/キリモミ昇チュー拳: W・ブレイカー（このクリーチャーはシールドを２つブレイクする） ／ キリモミ・チュリス/キリモミ昇チュー拳:
+    このターン、自分のクリーチャー１体に「スピードアタッカー」を与える。（「スピードアタッカー」を持つクリーチャーは召喚酔いしない）'
+  source:
+    official: dmrp05-080
+    review: pending
+    notes: ルールのみで変換（モデル不使用）（ツインパクト）
+- id: dmrp05-087
+  faces:
+  - name: ケタノッコ・タンク/ケタノビール・ランサー
+    types:
+    - creature
+    civs:
+    - nature
+    cost: 8
+    power: 13000
+    races:
+    - グランセクト
+    keywords:
+    - triple_breaker
+  - name: ケタノッコ・タンク/ケタノビール・ランサー
+    types:
+    - spell
+    civs:
+    - nature
+    cost: 1
+    spell:
+    - op: choose
+      select:
+        zone: bz
+        owner: you
+        filter:
+          types:
+          - creature
+        count: 1
+      as: target
+    - op: modify
+      select:
+        ref: target
+      mod:
+        power: 4000
+      duration: end_of_turn
+  mana: 1
+  text: 'ケタノッコ・タンク/ケタノビール・ランサー: T・ブレイカー（このクリーチャーはシールドを３つブレイクする） ／ ケタノッコ・タンク/ケタノビール・ランサー:
+    このターン、自分のクリーチャー１体のパワーを+4000する。'
+  source:
+    official: dmrp05-087
+    review: pending
+    notes: ルールのみで変換（モデル不使用）（ツインパクト）
+- id: dmrp06-020
+  faces:
+  - name: 凶鬼92号 デンカ/世紀末ハンド
+    types:
+    - creature
+    civs:
+    - darkness
+    cost: 3
+    power: 3000
+    races:
+    - マフィ・ギャング
+    abilities:
+    - kind: trigger
+      when:
+        event: move
+        to: bz
+        subject: self
+      effect:
+      - op: discard
+        select:
+          zone: hand
+          owner: opp
+          chooser: opp
+          count: 1
+  - name: 凶鬼92号 デンカ/世紀末ハンド
+    types:
+    - spell
+    civs:
+    - darkness
+    cost: 5
+    keywords:
+    - s_trigger
+    spell:
+    - op: destroy
+      select:
+        zone: bz
+        owner: opp
+        filter:
+          types:
+          - creature
+          tapped: false
+        count: 1
+  mana: 1
+  text: '凶鬼92号 デンカ/世紀末ハンド: このクリーチャーがバトルゾーンに出た時、相手は自身の手札を１枚選び、捨てる。 ／ 凶鬼92号 デンカ/世紀末ハンド:
+    S・トリガー（この呪文をシールドゾーンから手札に加える時、コストを支払わずにすぐ唱えてもよい）相手のアンタップしているクリーチャーを１体破壊する。'
+  source:
+    official: dmrp06-020
+    review: pending
+    notes: ルールのみで変換（モデル不使用）（ツインパクト）
+- id: dmrp10-047
+  faces:
+  - name: 凶鬼30号 カーン/オッケー・パンチ
+    types:
+    - creature
+    civs:
+    - darkness
+    cost: 3
+    power: 3000
+    races:
+    - マフィ・ギャング
+    keywords:
+    - summon_from_graveyard
+  - name: 凶鬼30号 カーン/オッケー・パンチ
+    types:
+    - spell
+    civs:
+    - light
+    cost: 2
+    spell:
+    - op: tap
+      select:
+        zone: bz
+        owner: opp
+        filter:
+          types:
+          - creature
+        count: 1
+      no_untap_next: true
+  mana: 1
+  text: '凶鬼30号 カーン/オッケー・パンチ: このクリーチャーを自分の墓地から召喚してもよい。 ／ 凶鬼30号 カーン/オッケー・パンチ: 相手のクリーチャーを１体選び、タップする。次の相手のターンのはじめに、そのクリーチャーはアンタップしない。'
+  source:
+    official: dmrp10-047
+    review: pending
+    notes: ルールのみで変換（モデル不使用）（ツインパクト）
+- id: dmex15-a027
+  faces:
+  - name: ボルメテウス・ホワイト・ドラゴン
+    types:
+    - creature
+    civs:
+    - fire
+    cost: 7
+    power: 7000
+    races:
+    - アーマード・ドラゴン
+    abilities:
+    - kind: replace
+      when:
+        event: break
+        subject: self
+      instead:
+      - op: move
+        select:
+          ref: event.shield
+          count: 1
+        to: graveyard
+        reason: put
+    keywords:
+    - double_breaker
+  - name: ボルメテウス・レジェンド・フレア
+    types:
+    - spell
+    civs:
+    - fire
+    cost: 6
+    spell:
+    - op: destroy
+      select:
+        zone: bz
+        owner: opp
+        filter:
+          types:
+          - creature
+          power_le: 3000
+        count: all
+    - op: move
+      select:
+        zone: shield
+        owner: opp
+        count: 1
+      to: graveyard
+      reason: put
+  mana: 1
+  text: 'ボルメテウス・ホワイト・ドラゴン : W・ブレイカー / このクリーチャーがシールドをブレイクする時、相手はそのシールドを手札に加えるかわりに墓地に置く。
+    ／  ボルメテウス・レジェンド・フレア: 相手のパワー3000以下のクリーチャーをすべて破壊する。 / 相手のシールドを１つ選び、持ち主の墓地に置く。'
+  source:
+    official: dmex15-a027
+    review: pending
+    aliases:
+    - dmex04-001
+- id: dmrp05-073
+  faces:
+  - name: 凶鬼96号 ガースー
+    types:
+    - creature
+    civs:
+    - darkness
+    cost: 3
+    power: 2000
+    races:
+    - マフィ・ギャング
+    keywords:
+    - slayer
+  - name: 黒光りの毒ガス
+    types:
+    - spell
+    civs:
+    - darkness
+    cost: 1
+    spell:
+    - op: choose
+      select:
+        zone: bz
+        owner: opp
+        filter:
+          types:
+          - creature
+        count: 1
+      as: target
+    - op: modify
+      select:
+        ref: target
+      mod:
+        power: -2000
+      duration: end_of_turn
+  mana: 1
+  text: '凶鬼96号 ガースー : スレイヤー（このクリーチャーがバトルする時、バトルの後、相手クリーチャーを破壊する） ／  黒光りの毒ガス: 相手のクリーチャーを１体選ぶ。このターン、そのクリーチャーのパワーを?2000
+    する。（パワー０以下のクリーチャーは破壊される）'
+  source:
+    official: dmrp05-073
+    review: pending
+    notes: 原文の「?2000」は「－2000」の文字化けとして読んだ（パワー０以下で破壊の注釈あり）
+- id: dmrp06-033
+  faces:
+  - name: 百全の備え 品紅
+    types:
+    - creature
+    civs:
+    - light
+    cost: 4
+    power: 3000
+    races:
+    - メタリカ
+    abilities:
+    - kind: trigger
+      when:
+        event: turn_end
+        player: you
+      effect:
+      - op: untap
+        select:
+          ref: self
+  - name: モモンド・コール
+    types:
+    - spell
+    civs:
+    - light
+    cost: 1
+    spell:
+    - op: choose
+      select:
+        zone: bz
+        owner: you
+        filter:
+          types:
+          - creature
+        count: 1
+      as: target
+    - op: modify
+      select:
+        ref: target
+      mod:
+        power: 3000
+      duration: end_of_turn
+    - op: delayed_trigger
+      when:
+        event: turn_end
+      effect:
+      - op: untap
+        select:
+          ref: target
+  mana: 1
+  text: '百全の備え 品紅: 自分のターンの終わりに、このクリーチャーをアンタップする。 ／ モモンド・コール: このターン、自分のクリーチャー１体のパワーを+3000し、ターンの終わりにアンタップする。'
+  source:
+    official: dmrp06-033
+    review: pending
+- id: dmrp06-039
+  faces:
+  - name: 貝獣 カイバシラ
+    types:
+    - creature
+    civs:
+    - water
+    cost: 3
+    power: 2000
+    races:
+    - ムートピア
+    keywords:
+    - unblockable
+  - name: コバシーラ・ポコポーコ
+    types:
+    - spell
+    civs:
+    - water
+    cost: 2
+    spell:
+    - op: choose
+      select:
+        zone: bz
+        owner: you
+        filter:
+          types:
+          - creature
+        count: 1
+      as: target
+    - op: modify
+      select:
+        ref: target
+      mod:
+        power: 2000
+        grant:
+        - unblockable
+      duration: end_of_turn
+  mana: 1
+  text: '貝獣 カイバシラ: このクリーチャーはブロックされない。 ／ コバシーラ・ポコポーコ: このターン、自分のクリーチャー１体はパワーを+2000され、ブロックされない。'
+  source:
+    official: dmrp06-039
+    review: pending
+- id: dmrp06-048
+  faces:
+  - name: 暴走 ザクルマ
+    types:
+    - creature
+    civs:
+    - fire
+    cost: 5
+    power: 5000
+    races:
+    - ソニック・コマンド
+    keywords:
+    - speed_attacker
+  - name: 「緊急発進だ!!」
+    types:
+    - spell
+    civs:
+    - fire
+    cost: 2
+    spell:
+    - op: choose
+      select:
+        zone: bz
+        owner: you
+        filter:
+          types:
+          - creature
+        count: 1
+      as: target
+    - op: modify
+      select:
+        ref: target
+      mod:
+        power: 5000
+        grant:
+        - speed_attacker
+      duration: end_of_turn
+  mana: 1
+  text: '暴走 ザクルマ: スピードアタッカー（このクリーチャーは召喚酔いしない） ／ 「緊急発進だ!!」: このターン、自分のクリーチャー１体のパワーを+5000し、「スピードアタッカー」を与える。'
+  source:
+    official: dmrp06-048
+    review: pending
+- id: promoy17-002
+  faces:
+  - name: ハザード・オウ禍武斗
+    types:
+    - creature
+    civs:
+    - nature
+    cost: 9
+    power: 14000
+    races:
+    - グランセクト
+    abilities:
+    - kind: trigger
+      when:
+        event: move
+        to: bz
+        subject: self
+      effect:
+      - op: modify
+        select:
+          ref: self
+        mod:
+          allow:
+          - action: attack_creature
+            other:
+              tapped: false
+        duration: end_of_turn
+    keywords:
+    - triple_breaker
+  - name: 禍武斗の轟印
+    types:
+    - spell
+    civs:
+    - nature
+    cost: 7
+    spell:
+    - op: modify
+      select:
+        zone: bz
+        owner: you
+        filter:
+          types:
+          - creature
+        count: all
+      mod:
+        power: 12000
+        grant:
+        - triple_breaker
+      duration: end_of_turn
+  mana: 1
+  text: 'ハザード・オウ禍武斗: マッハファイター（このクリーチャーは、バトルゾーンに出たターンの間、タップまたはアンタップしているクリーチャーを攻撃できる）
+    / T・ブレイカー ／ 禍武斗の轟印: このターン、自分のクリーチャーすべてのパワーを+12000し、「T・ブレイカー」を与える。'
+  source:
+    official: promoy17-002
+    review: pending
+- id: dmrp05-037
+  faces:
+  - name: 暴君 アーザラン
+    types:
+    - creature
+    civs:
+    - water
+    cost: 4
+    power: 3000
+    races:
+    - ムートピア
+    abilities:
+    - kind: trigger
+      when:
+        event: move
+        to: bz
+        subject: self
+      effect:
+      - op: draw
+        count: 2
+      - op: discard
+        select:
+          zone: hand
+          owner: you
+          count: 1
+  - name: コザラン攪乱大混乱
+    types:
+    - spell
+    civs:
+    - water
+    cost: 1
+    spell:
+    - op: choose
+      select:
+        zone: bz
+        owner: opp
+        filter:
+          types:
+          - creature
+        count: 1
+      as: target
+    - op: modify
+      select:
+        ref: target
+      mod:
+        deny:
+        - attack_player
+        - attack_creature
+        - block
+      duration: until_next_own_turn_start
+  mana: 1
+  text: '暴君 アーザラン: このクリーチャーがバトルゾーンに出た時、カードを２枚引く。その後、自分の手札を１枚捨てる。 ／ コザラン攪乱大混乱: 相手のクリーチャーを１体選ぶ。次の自分のターンのはじめまで、そのクリーチャーは攻撃もブロックもできない。'
+  source:
+    official: dmrp05-037
+    review: pending
+- id: dmrp10-053
+  faces:
+  - name: 龍装者“JET”レミング
+    types:
+    - creature
+    civs:
+    - fire
+    cost: 3
+    power: 2000
+    races:
+    - ドラゴンギルド
+    - ビートジョッキー
+    abilities:
+    - kind: trigger
+      when:
+        event: move
+        from: hand
+        to: graveyard
+        reason: discard
+        subject:
+          owner: you
+      effect:
+      - op: modify
+        select:
+          ref: self
+        mod:
+          power: 4000
+          grant:
+          - double_breaker
+        duration: end_of_turn
+  - name: ローレンツ・タイフーン
+    types:
+    - spell
+    civs:
+    - water
+    cost: 2
+    spell:
+    - op: draw
+      count: 2
+    - op: discard
+      select:
+        zone: hand
+        owner: you
+        count: 1
+  mana: 1
+  text: '龍装者“JET”レミング : 自分の手札を捨てた時、このターン、このクリーチャーのパワーを+4000し、「W・ブレイカー」を与える。（「W・ブレイカー」を持つクリーチャーはシールドを２つブレイクする）
+    ／  ローレンツ・タイフーン: カードを２枚引く。その後、自分の手札を１枚捨てる。'
+  source:
+    official: dmrp10-053
+    review: pending
+    aliases:
+    - promoy22-051
+- id: dmrp12-006
+  faces:
+  - name: 凶鬼01号 ドケイダイモス
+    types:
+    - creature
+    civs:
+    - darkness
+    cost: 7
+    power: 9000
+    races:
+    - マフィ・ギャング
+    - デーモン・コマンド
+    keywords:
+    - summon_from_graveyard
+    - double_breaker
+    abilities:
+    - kind: trigger
+      when:
+        event: move
+        to: bz
+        subject: self
+      effect:
+      - op: discard
+        select:
+          zone: hand
+          owner: opp
+          chooser: opp
+          count: 2
+  - name: アレックス・ギアーズ
+    types:
+    - spell
+    civs:
+    - nature
+    cost: 5
+    keywords:
+    - s_trigger
+    spell:
+    - op: move
+      select:
+        zone: bz
+        owner: opp
+        filter:
+          types:
+          - creature
+          tapped: false
+        count: 1
+      to: mana
+      reason: put
+  mana: 1
+  text: '凶鬼01号 ドケイダイモス: このクリーチャーを墓地から召喚してもよい。 / W・ブレイカー / このクリーチャーがバトルゾーンに出た時、相手は自身の手札を２枚選び、捨てる。
+    ／ アレックス・ギアーズ: S・トリガー / 相手のアンタップしているクリーチャーを１体選び、持ち主のマナゾーンに置く。'
+  source:
+    official: dmrp12-006
+    review: pending
+- id: dmrp09-015
+  faces:
+  - name: 貝獣 パリフ
+    types:
+    - creature
+    civs:
+    - water
+    cost: 3
+    power: 3000
+    races:
+    - ムートピア
+    keywords:
+    - blocker
+    - cannot_attack
+    abilities:
+    - kind: replace
+      when:
+        event: move
+        from: bz
+        to: graveyard
+        reason: destroy
+        subject: self
+      instead:
+      - op: move
+        select:
+          ref: self
+        to: hand
+        reason: return
+  - name: トゥインクル・フラッシュ
+    types:
+    - spell
+    civs:
+    - light
+    cost: 3
+    spell:
+    - op: move
+      select:
+        zone: deck
+        owner: you
+        from_top: 1
+        count: 1
+      to: shield
+      reason: charge
+  mana: 1
+  text: '貝獣 パリフ: ブロッカー（このクリーチャーをタップして、相手クリーチャーの攻撃先をこのクリーチャーに変更してもよい） / このクリーチャーは攻撃できない。
+    / このクリーチャーが破壊される時、墓地に置くかわりに手札に戻す。 ／ トゥインクル・フラッシュ: 自分の山札の上から１枚目を、裏向きにして、新しいシールドとして、自分のシールドゾーンに置く。'
+  source:
+    official: dmrp09-015
+    review: pending
+- id: dmrp10-002
+  faces:
+  - name: 赤攻銀 サハラン
+    types:
+    - creature
+    civs:
+    - light
+    cost: 3
+    power: 3000
+    races:
+    - メタリカ
+    abilities:
+    - kind: trigger
+      when: &id216
+        event: move
+        to: bz
+        subject: self
+      effect:
+      - op: move
+        select:
+          zone: graveyard
+          owner: you
+          filter:
+            types:
+            - spell
+          count: 1
+        to: hand
+        reason: return
+  - name: レッド・マジック
+    types:
+    - spell
+    civs:
+    - fire
+    cost: 1
+    spell:
+    - op: modify
+      select:
+        zone: bz
+        owner: you
+        filter:
+          types:
+          - creature
+        count: all
+      mod:
+        grant:
+        - speed_attacker
+      duration: end_of_turn
+  mana: 1
+  text: '赤攻銀 サハラン: このクリーチャーがバトルゾーンに出た時、呪文を１枚、自分の墓地から手札に戻す。 ／ レッド・マジック: このターン、自分のクリーチャーすべてに「スピードアタッカー」を与える。'
+  source:
+    official: dmrp10-002
+    review: pending
+- id: dmrp10-035
+  faces:
+  - name: 奇石 ジャーリー
+    types:
+    - creature
+    civs:
+    - light
+    cost: 6
+    power: 6500
+    races:
+    - メタリカ
+    keywords:
+    - blocker
+    - double_breaker
+    abilities:
+    - kind: trigger
+      when:
+        event: move
+        to: bz
+        subject:
+          owner: opp
+          filter:
+            types:
+            - creature
+      effect:
+      - op: untap
+        select:
+          ref: self
+  - name: センチメンタル・ジャーリー
+    types:
+    - spell
+    civs:
+    - fire
+    cost: 2
+    spell:
+    - op: destroy
+      select:
+        zone: bz
+        owner: opp
+        filter:
+          types:
+          - creature
+          keyword: blocker
+        count: 1
+  mana: 1
+  text: '奇石 ジャーリー: ブロッカー（このクリーチャーをタップして、相手クリーチャーの攻撃先をこのクリーチャーに変更してもよい） / W・ブレイカー（このクリーチャーはシールドを２つブレイクする）
+    / 相手のクリーチャーがバトルゾーンに出た時、このクリーチャーをアンタップする。 ／ センチメンタル・ジャーリー: 相手の「ブロッカー」を持つクリーチャーを１体、破壊する。'
+  source:
+    official: dmrp10-035
+    review: pending
+- id: dmrp10-023
+  faces:
+  - name: 終端の闇 ウゴカ・ザルコ
+    types:
+    - creature
+    civs:
+    - darkness
+    cost: 2
+    power: 6000
+    races:
+    - デーモン・コマンド
+    keywords:
+    - double_breaker
+    abilities:
+    - kind: trigger
+      when: *id216
+      effect:
+      - op: move
+        select:
+          zone: mana
+          owner: you
+          count: 1
+        to: graveyard
+        reason: put
+  - name: 再誕の輝き
+    types:
+    - spell
+    civs:
+    - nature
+    cost: 1
+    spell:
+    - op: move
+      select:
+        zone: graveyard
+        owner: you
+        count: 1
+      to: mana
+      reason: put
+      tapped: true
+  mana: 1
+  text: '終端の闇 ウゴカ・ザルコ: W・ブレイカー（このクリーチャーはシールドを２つブレイクする） / このクリーチャーがバトルゾーンに出た時、カードを１枚、自分のマナゾーンから墓地に置く。
+    ／ 再誕の輝き: カードを１枚、自分の墓地からタップしてマナゾーンに置く。'
+  source:
+    official: dmrp10-023
+    review: pending
+- id: dmex12-063
+  faces:
+  - name: レイノ・ウッシ
+    types:
+    - creature
+    civs:
+    - darkness
+    cost: 2
+    power: 1000
+    races:
+    - ファンキー・ナイトメア
+    abilities:
+    - kind: trigger
+      when:
+        event: turn_end
+        player: you
+      effect:
+      - op: may
+        body:
+        - op: mill
+          owner: you
+          count: 1
+  - name: 「また引きずり込まれる～」
+    types:
+    - spell
+    civs:
+    - darkness
+    cost: 4
+    keywords:
+    - s_trigger
+    spell:
+    - op: choose
+      select:
+        zone: bz
+        owner: opp
+        filter:
+          types:
+          - creature
+        count: 1
+      as: target
+    - op: modify
+      select:
+        ref: target
+      mod:
+        power: -2000
+      duration: end_of_turn
+  mana: 1
+  text: 'レイノ・ウッシ: 自分のターンの終わりに、自分の山札の上から１枚目を墓地に置いてもよい。 ／ 「また引きずり込まれる～」: S・トリガー（この呪文をシールドゾーンから手札に加える時、コストを支払わずにすぐ唱えてもよい）
+    / 相手のクリーチャーを１体選ぶ。このターン、そのクリーチャーのパワーを－2000する。（パワー０以下のクリーチャーは破壊される）'
+  source:
+    official: dmex12-063
+    review: pending
+- id: dmex15-b015
+  faces:
+  - name: 魔刻の騎士オルゲイト
+    types:
+    - creature
+    civs:
+    - darkness
+    cost: 7
+    power: 6000
+    races:
+    - デーモン・コマンド
+    keywords:
+    - double_breaker
+    abilities:
+    - kind: trigger
+      when:
+        event: move
+        from: bz
+        to: graveyard
+        reason: destroy
+        subject:
+          owner: you
+          filter:
+            types:
+            - creature
+      effect:
+      - op: may
+        body:
+        - op: untap
+          select:
+            ref: self
+  - name: 「全員、地獄送りだ!!」
+    types:
+    - spell
+    civs:
+    - darkness
+    cost: 6
+    keywords:
+    - s_trigger
+    spell:
+    - op: destroy
+      select:
+        zone: bz
+        owner: opp
+        filter:
+          types:
+          - creature
+        count: 1
+  mana: 1
+  text: '魔刻の騎士オルゲイト: W・ブレイカー / 自分のクリーチャーが破壊された時、このクリーチャーをアンタップしてもよい。 ／ 「全員、地獄送りだ!!」:
+    S・トリガー / 相手のクリーチャーを１体破壊する。'
+  source:
+    official: dmex15-b015
+    review: pending
+- id: dmex17-034
+  faces:
+  - name: 龍装医 ルギヌス
+    types:
+    - creature
+    civs:
+    - darkness
+    cost: 8
+    power: 11000
+    races:
+    - ドラゴンギルド
+    - マフィ・ギャング
+    keywords:
+    - double_breaker
+    abilities:
+    - kind: trigger
+      when: &id217
+        event: move
+        to: bz
+        subject: self
+      effect:
+      - op: move
+        select:
+          zone: graveyard
+          owner: you
+          filter:
+            types:
+            - creature
+            cost_le: 7
+            not_types:
+            - evolution
+          count: 1
+        to: bz
+        reason: put
+    - kind: trigger
+      when:
+        event: attack
+        subject: self
+      effect:
+      - op: move
+        select:
+          zone: graveyard
+          owner: you
+          filter:
+            types:
+            - creature
+            cost_le: 7
+            not_types:
+            - evolution
+          count: 1
+        to: bz
+        reason: put
+  - name: 地獄のゴッド・ハンド
+    types:
+    - spell
+    civs:
+    - darkness
+    cost: 5
+    spell:
+    - op: destroy
+      select:
+        zone: bz
+        owner: opp
+        filter:
+          types:
+          - creature
+        count: 1
+  mana: 1
+  text: '龍装医 ルギヌス: W・ブレイカー / このクリーチャーが出た時または攻撃する時、コスト７以下の進化ではないクリーチャーを１体、自分の墓地から出す。
+    ／ 地獄のゴッド・ハンド: 相手のクリーチャーを１体破壊する。'
+  source:
+    official: dmex17-034
+    review: pending
+    aliases:
+    - dmrp05-005
+- id: dmex17-089
+  faces:
+  - name: 傀儡将ボルギーズ
+    types:
+    - creature
+    civs:
+    - darkness
+    cost: 5
+    power: 4000
+    races:
+    - デーモン・コマンド
+    abilities:
+    - kind: trigger
+      when: *id217
+      effect:
+      - op: choose
+        select:
+          zone: bz
+          owner: opp
+          filter:
+            types:
+            - creature
+          count: 1
+        as: target
+      - op: modify
+        select:
+          ref: target
+        mod:
+          power: -4000
+        duration: end_of_turn
+  - name: ジェニコの知らない世界
+    types:
+    - spell
+    civs:
+    - darkness
+    cost: 2
+    spell:
+    - op: discard
+      select:
+        zone: hand
+        owner: opp
+        count: 1
+        chooser: random
+  mana: 1
+  text: '傀儡将ボルギーズ: このクリーチャーが出た時、相手のクリーチャーを１体選ぶ。そのターン、そのクリーチャーのパワーを－4000 する。（パワー０以下のクリーチャーは破壊される）
+    ／ ジェニコの知らない世界: 相手の手札を１枚見ないで選び、捨てさせる。'
+  source:
+    official: dmex17-089
+    review: pending
+    aliases:
+    - dmrp05-042
+- id: dmex19-009
+  faces:
+  - name: 龍装05号 イヴィルヴィ
+    types:
+    - creature
+    civs:
+    - darkness
+    cost: 4
+    power: 4000
+    races:
+    - ドラゴンギルド
+    - マフィ・ギャング
+    - デーモン・コマンド
+    abilities:
+    - kind: trigger
+      when: *id217
+      effect:
+      - op: may
+        body:
+        - op: choose
+          select:
+            zone: bz
+            owner: you
+            filter:
+              types:
+              - creature
+            count: 1
+          as: s
+        - op: destroy
+          select:
+            ref: s
+            count: all
+        - op: if
+          cond:
+            exists:
+              ref: s
+          then:
+          - op: destroy
+            select:
+              zone: bz
+              owner: opp
+              filter:
+                types:
+                - creature
+              count: 1
+              chooser: opp
+  - name: イーヴィル・フォース
+    types:
+    - spell
+    civs:
+    - fire
+    cost: 3
+    spell:
+    - op: may
+      body:
+      - op: move
+        select:
+          zone: hand
+          owner: you
+          filter:
+            types:
+            - creature
+            civs:
+            - darkness
+            - fire
+            cost_le: 4
+          count: 1
+        to: bz
+        reason: put
+        as: c
+      - op: modify
+        select:
+          ref: c
+          count: all
+        mod:
+          grant:
+          - speed_attacker
+        duration: end_of_turn
+      - op: delayed_trigger
+        when:
+          event: turn_end
+        effect:
+        - op: destroy
+          select:
+            ref: c
+            count: all
+  mana: 1
+  text: '龍装05号 イヴィルヴィ: このクリーチャーが出た時、自分のクリーチャーを１体破壊してもよい。そうしたら、相手は自身のクリーチャーを１体選んで破壊する。
+    ／ イーヴィル・フォース: 闇または火の、コスト４以下のクリーチャーを１体、自分の手札から出してもよい。そのクリーチャーに「スピードアタッカー」を与える。このターンの終わりに、そのクリーチャーを破壊する。'
+  source:
+    official: dmex19-009
+    review: pending
+    aliases:
+    - dmrp09-005
+- id: dmrp05-s05
+  faces:
+  - name: ビシャモンス・デーケン
+    types:
+    - creature
+    civs:
+    - darkness
+    cost: 4
+    power: 4000
+    races:
+    - マフィ・ギャング
+    abilities:
+    - kind: trigger
+      when: *id217
+      effect:
+      - op: destroy
+        select:
+          zone: bz
+          owner: you
+          filter:
+            types:
+            - creature
+          count: 1
+      - op: destroy
+        select:
+          zone: bz
+          owner: opp
+          filter:
+            types:
+            - creature
+          count: 1
+          chooser: opp
+  - name: 「深淵より来たれ、魂よ」
+    types:
+    - spell
+    civs:
+    - darkness
+    cost: 9
+    spell:
+    - op: move
+      select:
+        zone: graveyard
+        owner: you
+        filter:
+          types:
+          - creature
+          not_types:
+          - evolution
+        count: all
+      to: bz
+      reason: put
+  mana: 1
+  text: 'ビシャモンス・デーケン: このクリーチャーがバトルゾーンに出た時、自分のクリーチャーを１体破壊する。その後、相手は自身のクリーチャーを１体選び、破壊する。
+    ／ 「深淵より来たれ、魂よ」: 進化ではないクリーチャーをすべて、自分の墓地からバトルゾーンに出す。'
+  source:
+    official: dmrp05-s05
+    review: pending
+- id: dmrp07-s05
+  faces:
+  - name: 牙修羅バット
+    types:
+    - creature
+    civs:
+    - darkness
+    cost: 7
+    power: 8000
+    races:
+    - ドラゴンギルド
+    - マフィ・ギャング
+    keywords:
+    - double_breaker
+    abilities:
+    - kind: trigger
+      when: *id217
+      effect:
+      - op: discard
+        select:
+          zone: hand
+          owner: opp
+          look: true
+          filter:
+            types:
+            - spell
+          count: 1
+    - kind: trigger
+      when:
+        event: turn_start
+        player: you
+      effect:
+      - op: move
+        select:
+          zone: graveyard
+          owner: you
+          filter:
+            types:
+            - creature
+            cost_le: 6
+          count: 1
+        to: bz
+        reason: put
+  - name: 真血染める闇牙
+    types:
+    - spell
+    civs:
+    - darkness
+    cost: 8
+    spell:
+    - op: discard
+      select:
+        zone: hand
+        owner: opp
+        chooser: opp
+        count: 2
+    - op: destroy
+      select:
+        zone: bz
+        owner: opp
+        filter:
+          types:
+          - creature
+        count: 2
+        chooser: opp
+  mana: 1
+  text: '牙修羅バット: W・ブレイカー / このクリーチャーがバトルゾーンに出た時、相手の手札を見てその中から呪文を１枚選び、捨てさせる。 / 自分のターンのはじめに、コスト６以下のクリーチャーを１体、自分の墓地からバトルゾーンに出す。
+    ／ 真血染める闇牙: 相手は自身の手札を２枚選んで捨てる。その後、相手は自身のクリーチャーを２体選んで破壊する。'
+  source:
+    official: dmrp07-s05
+    review: pending
+- id: dmrp09-020
+  faces:
+  - name: ヘラルド・ルドゥーテ
+    types:
+    - creature
+    civs:
+    - darkness
+    cost: 4
+    power: 13000
+    races:
+    - マフィ・ギャング
+    keywords:
+    - triple_breaker
+    abilities:
+    - kind: static
+      affects: self
+      if:
+        cmp:
+        - count:
+            zone: graveyard
+            owner: you
+            filter:
+              types:
+              - creature
+        - <
+        - 6
+      mod:
+        deny:
+        - attack_player
+        - attack_creature
+  - name: ローズ・セレモニー
+    types:
+    - spell
+    civs:
+    - fire
+    cost: 3
+    spell:
+    - op: set_var
+      name: n
+      value:
+        count:
+          zone: hand
+          owner: you
+    - op: discard
+      select:
+        zone: hand
+        owner: you
+        count: all
+    - op: draw
+      count:
+        var: n
+  mana: 1
+  text: 'ヘラルド・ルドゥーテ: T・ブレイカー（このクリーチャーはシールドを３つブレイクする） / 自分の墓地にクリーチャーが６体以上なければ、このクリーチャーは攻撃できない。
+    ／ ローズ・セレモニー: 自分の手札をすべて捨て、その後、それと同じ枚数、カードを引く。'
+  source:
+    official: dmrp09-020
+    review: pending
+- id: dmrp09-055
+  faces:
+  - name: タラトゥイユ・パンツァー
+    types:
+    - creature
+    civs:
+    - nature
+    cost: 6
+    power: 7000
+    races:
+    - グランセクト
+    keywords:
+    - double_breaker
+    abilities:
+    - kind: replace
+      when:
+        event: move
+        from: bz
+        to: graveyard
+        reason: destroy
+        subject:
+          owner: you
+          filter:
+            types:
+            - creature
+      instead:
+      - op: move
+        select:
+          ref: event.subject
+        to: mana
+        reason: put
+  - name: デリシャ・スパーク
+    types:
+    - spell
+    civs:
+    - light
+    cost: 4
+    spell:
+    - op: tap
+      select:
+        zone: bz
+        owner: opp
+        filter:
+          types:
+          - creature
+        count: all
+      no_untap_next: true
+  mana: 1
+  text: 'タラトゥイユ・パンツァー: W・ブレイカー（このクリーチャーはシールドを２つブレイクする） / このクリーチャーまたは自分の他のクリーチャーが破壊される時、墓地に置くかわりにマナゾーンに置く。
+    ／ デリシャ・スパーク: 相手のクリーチャーをすべてタップする。次の相手のターンのはじめに、それらはアンタップしない。'
+  source:
+    official: dmrp09-055
+    review: pending
+- id: dmrp11-008
+  faces:
+  - name: ピー・タンパン
+    types:
+    - creature
+    civs:
+    - nature
+    cost: 6
+    power: 7000
+    races:
+    - ジョーカーズ
+    - スペシャルズ
+    keywords:
+    - double_breaker
+    abilities:
+    - kind: trigger
+      when:
+        event: move
+        to: bz
+        subject: self
+      effect:
+      - op: modify
+        select:
+          ref: self
+        mod:
+          allow:
+          - action: attack_creature
+            other:
+              tapped: false
+        duration: end_of_turn
+    - kind: trigger
+      when:
+        event: battle_win
+        subject: self
+      effect:
+      - op: break
+        player: opp
+        count: 1
+  - name: 「はいちゃダメ💢」
+    types:
+    - spell
+    civs:
+    - fire
+    cost: 2
+    keywords:
+    - s_trigger
+    spell:
+    - op: choose
+      select:
+        zone: bz
+        owner: you
+        filter:
+          types:
+          - creature
+        count: 1
+      as: a
+    - op: choose
+      select:
+        zone: bz
+        owner: opp
+        filter:
+          types:
+          - creature
+        count: 1
+      as: b
+    - op: force_battle
+      a:
+        ref: a
+      b:
+        ref: b
+  mana: 1
+  text: 'ピー・タンパン: マッハファイター（このクリーチャーは、バトルゾーンに出たターンの間、タップまたはアンタップしているクリーチャーを攻撃できる） /
+    W・ブレイカー / このクリーチャーがバトルに勝った時、相手のシールドを１つブレイクする。 ／ 「はいちゃダメ💢」: S・トリガー / 自分と相手のクリーチャーを１体ずつ選び、その２体をバトルさせる。'
+  source:
+    official: dmrp11-008
+    review: pending
+- id: dmex15-b022
+  faces:
+  - name: 超幽龍アブゾ・ドルバ
+    types:
+    - creature
+    - evolution
+    civs:
+    - darkness
+    cost: 6
+    power: 11000
+    races:
+    - ドラゴン・ゾンビ
+    evolve_from:
+      races:
+      - ドラゴン
+    keywords:
+    - powered_breaker
+    abilities:
+    - kind: static
+      affects: self
+      mod:
+        power:
+          amount: 2000
+          count:
+            zone: graveyard
+            owner: you
+            filter:
+              types:
+              - creature
+  - name: 切り札をねらう悪魔!!
+    types:
+    - spell
+    civs:
+    - darkness
+    cost: 4
+    keywords:
+    - s_trigger
+    spell:
+    - op: mill
+      owner: you
+      count: 3
+    - op: destroy
+      select:
+        zone: bz
+        owner: opp
+        filter:
+          types:
+          - creature
+          race_has: ドラゴン
+        count: 1
+  mana: 1
+  text: '超幽龍アブゾ・ドルバ: 進化：ドラゴン１体の上に置く。 / パワード・ブレイカー（このクリーチャーは、そのパワー6000ごとにシールドをさらに１つブレイクする）
+    / 自分の墓地にあるクリーチャー１体につき、このクリーチャーのパワーを+2000する。 ／ 切り札をねらう悪魔!!: S・トリガー / 自分の山札の上から３枚を墓地に置く。
+    / 相手のドラゴンを１体破壊する。'
+  source:
+    official: dmex15-b022
+    review: pending
+- id: dmex15-b026
+  faces:
+  - name: 勝舞の機神装甲ヴァルボーグ
+    types:
+    - creature
+    - evolution
+    civs:
+    - fire
+    cost: 3
+    power: 5000
+    races:
+    - ヒューマノイド
+    evolve_from:
+      races:
+      - ヒューマノイド
+    keywords:
+    - powered_breaker
+    abilities:
+    - kind: static
+      affects: self
+      mod:
+        power_when:
+          amount: 1000
+          when: attacking
+          count:
+            zone: bz
+            owner: any
+            other: true
+            filter:
+              types:
+              - creature
+              civs:
+              - fire
+  - name: 火炎ヴァルバスター
+    types:
+    - spell
+    civs:
+    - fire
+    cost: 2
+    spell:
+    - op: modal
+      count: 1
+      modes:
+      - - op: destroy
+          select:
+            zone: bz
+            owner: opp
+            filter:
+              types:
+              - creature
+              power_le: 3000
+            count: 1
+      - - op: move
+          select:
+            zone: bz
+            owner: opp
+            filter:
+              not_types:
+              - creature
+            count: 1
+          to: graveyard
+          reason: put
+  mana: 1
+  text: '勝舞の機神装甲ヴァルボーグ: 進化：ヒューマノイド１体の上に置く。 / 攻撃中、このクリーチャーのパワーを、バトルゾーンにある他の火のクリーチャー１体につき+1000する。
+    / パワード・ブレイカー（このクリーチャーは、そのパワー6000ごとにシールドをさらに１つブレイクする） ／ 火炎ヴァルバスター: 次のうちいずれか１つを選ぶ。
+    / ▶相手のパワー3000以下のクリーチャーを１体破壊する。 / ▶バトルゾーンにある相手のクリーチャーではないカードを１枚選び、持ち主の墓地に置く。'
+  source:
+    official: dmex15-b026
+    review: pending
+- id: dmex16-039
+  faces:
+  - name: 残虐覇王デスカール
+    types:
+    - creature
+    civs:
+    - darkness
+    cost: 8
+    power: 4000
+    races:
+    - ダークロード
+    abilities:
+    - kind: activate
+      cost:
+        tap: self
+      effect:
+      - op: discard
+        select:
+          zone: hand
+          owner: opp
+          chooser: random
+          count: 2
+  - name: ロスト・ソウル
+    types:
+    - spell
+    civs:
+    - darkness
+    cost: 7
+    spell:
+    - op: discard
+      select:
+        zone: hand
+        owner: opp
+        count: all
+  mana: 1
+  text: '残虐覇王デスカール: このクリーチャーで攻撃するかわりに、タップして次の t能力を使ってもよい。 / t相手の手札から２枚見ないで選び、捨てさせる。
+    ／ ロスト・ソウル: 相手は自身の手札をすべて捨てる。'
+  source:
+    official: dmex16-039
+    review: pending
+    aliases:
+    - dmex04-012
+- id: dmex19-s14
+  faces:
+  - name: 始全虹帝 ミノガミ
+    types:
+    - creature
+    civs:
+    - nature
+    cost: 6
+    power: 6000
+    races:
+    - グランセクト
+    keywords:
+    - double_breaker
+    abilities:
+    - kind: trigger
+      when:
+        event: move
+        to: bz
+        subject: self
+      effect:
+      - op: modify
+        select:
+          ref: self
+        mod:
+          allow:
+          - action: attack_creature
+            other:
+              tapped: false
+        duration: end_of_turn
+    - kind: trigger
+      when: &id218
+        event: move
+        to: bz
+        subject: self
+      effect:
+      - op: untap
+        select:
+          zone: mana
+          owner: you
+          filter:
+            twinpact: true
+          count: all
+  - name: 自然の肯定
+    types:
+    - spell
+    civs:
+    - nature
+    cost: 8
+    spell:
+    - op: move
+      select:
+        zone: graveyard
+        owner: you
+        filter:
+          twinpact: true
+        count: all
+      to: mana
+      reason: put
+    - op: may
+      body:
+      - op: move
+        select:
+          zone: mana
+          owner: you
+          filter:
+            types:
+            - creature
+            cost_le:
+              count:
+                zone: mana
+                owner: you
+          count: 1
+        to: bz
+        reason: put
+  mana: 1
+  text: '始全虹帝 ミノガミ: マッハファイター / W・ブレイカー / このクリーチャーが出た時、自分のマナゾーンにあるツインパクトカードをすべてアンタップする。
+    ／ 自然の肯定: ツインパクトカードをすべて、自分の墓地からマナゾーンに置く。その後、自分のマナゾーンにあるカードの枚数以下のコストを持つクリーチャーを１体、自分のマナゾーンから出してもよい。'
+  source:
+    official: dmex19-s14
+    review: pending
+- id: dmrp05-s09
+  faces:
+  - name: ハイパー・ギガタック
+    types:
+    - creature
+    civs:
+    - nature
+    cost: 6
+    power: 9000
+    races:
+    - グランセクト
+    keywords:
+    - double_breaker
+    - summon_from_mana
+    abilities:
+    - kind: trigger
+      when: *id218
+      effect:
+      - op: move
+        select:
+          zone: graveyard
+          owner: you
+          filter:
+            types:
+            - creature
+          count: 1
+        to: mana
+        reason: put
+  - name: ギガタック・ハイパー・トラップ
+    types:
+    - spell
+    civs:
+    - nature
+    cost: 8
+    spell:
+    - op: move
+      select:
+        zone: bz
+        owner: any
+        count: all
+      to: mana
+      reason: put
+  mana: 1
+  text: 'ハイパー・ギガタック: W・ブレイカー / このクリーチャーを自分のマナゾーンから召喚してもよい。 / このクリーチャーがバトルゾーンに出た時、クリーチャーを１体、自分の墓地からマナゾーンに置く。
+    ／ ギガタック・ハイパー・トラップ: 各プレイヤーは、バトルゾーンにある自身のカードをすべてマナゾーンに置く。'
+  source:
+    official: dmrp05-s09
+    review: pending
+- id: dmrp09-007
+  faces:
+  - name: 暴走 グロール
+    types:
+    - creature
+    civs:
+    - fire
+    cost: 5
+    power: 4000
+    races:
+    - ソニック・コマンド
+    keywords:
+    - speed_attacker
+    abilities:
+    - kind: trigger
+      when: *id218
+      effect:
+      - op: may
+        body:
+        - op: choose
+          select:
+            ref: self
+          as: a
+        - op: choose
+          select:
+            zone: bz
+            owner: opp
+            filter:
+              types:
+              - creature
+            count: 1
+          as: b
+        - op: force_battle
+          a:
+            ref: a
+          b:
+            ref: b
+  - name: カルド・コバーン
+    types:
+    - spell
+    civs:
+    - nature
+    cost: 2
+    spell:
+    - op: move
+      select:
+        zone: bz
+        owner: opp
+        filter:
+          not_types:
+          - creature
+        count: 1
+      to: mana
+      reason: put
+  mana: 1
+  text: '暴走 グロール: スピードアタッカー / このクリーチャーがバトルゾーンに出た時、相手のクリーチャーを１体選んでもよい。その選んだクリーチャーとこのクリーチャーをバトルさせる。
+    ／ カルド・コバーン: バトルゾーンにある相手の、クリーチャーではないカードを１枚選び、持ち主のマナゾーンに置く。'
+  source:
+    official: dmrp09-007
+    review: pending
+- id: dmrp09-009
+  faces:
+  - name: マナの長老 ジョウモン爺
+    types:
+    - creature
+    civs:
+    - nature
+    cost: 7
+    power: 13000
+    races:
+    - グランセクト
+    - スペシャルズ
+    keywords:
+    - triple_breaker
+    abilities:
+    - kind: trigger
+      when:
+        event: move
+        to: bz
+        subject: self
+      effect:
+      - op: modify
+        select:
+          ref: self
+        mod:
+          allow:
+          - action: attack_creature
+            other:
+              tapped: false
+        duration: end_of_turn
+    - kind: static
+      affects:
+        zone: bz
+        owner: opp
+        filter:
+          types:
+          - creature
+          power_le: 3000
+      mod:
+        deny:
+        - attack_player
+  - name: 枯れ葉マナ隠し
+    types:
+    - spell
+    civs:
+    - light
+    cost: 2
+    spell:
+    - op: move
+      select:
+        zone: bz
+        owner: any
+        filter:
+          types:
+          - creature
+          power_le: 3000
+          not_types:
+          - evolution
+        count: 1
+      to: shield
+      reason: put
+      face_down: true
+  mana: 1
+  text: 'マナの長老 ジョウモン爺: マッハファイター（このクリーチャーは、バトルゾーンに出たターンの間、タップまたはアンタップしているクリーチャーを攻撃できる）
+    / T・ブレイカー / 相手のパワー3000以下のクリーチャーはすべて、プレイヤーを攻撃できない。 ／ 枯れ葉マナ隠し: パワー3000以下の進化ではないクリーチャーを１体選び、裏向きにして、新しいシールドとして持ち主のシールドゾーンに置く。'
+  source:
+    official: dmrp09-009
+    review: pending
+- id: dmrp11-020
+  faces:
+  - name: テンマ・ジャオー
+    types:
+    - creature
+    civs:
+    - darkness
+    cost: 5
+    power: 7000
+    races:
+    - マフィ・ギャング
+    keywords:
+    - double_breaker
+    abilities:
+    - kind: trigger
+      when: *id218
+      effect:
+      - op: move
+        select:
+          zone: shield
+          owner: you
+          chooser: opp
+          count: 1
+        to: hand
+        reason: break
+  - name: モメッティ・アサーチ
+    types:
+    - spell
+    civs:
+    - light
+    cost: 2
+    keywords:
+    - s_trigger
+    spell:
+    - op: move
+      select:
+        zone: deck
+        owner: you
+        from_top: 1
+        count: 1
+      to: shield
+      reason: charge
+    - op: delayed_trigger
+      when:
+        event: turn_start
+        player: you
+      once: true
+      effect:
+      - op: move
+        select:
+          zone: shield
+          owner: you
+          count: 1
+        to: graveyard
+        reason: put
+  mana: 1
+  text: 'テンマ・ジャオー: W・ブレイカー（このクリーチャーはシールドを２つブレイクする） / このクリーチャーがバトルゾーンに出た時、自分のシールドを１つ相手に選ばせ、手札に加える。（その「S・トリガー」を使ってもよい）
+    ／ モメッティ・アサーチ: S・トリガー / 自分の山札の上から１枚目を裏向きのまま、新しいシールドとして自分のシールドゾーンに置く。次の自分のターンのはじめに、自分のシールドを１つ、墓地に置く。'
+  source:
+    official: dmrp11-020
+    review: pending
+- id: dmrp11-021
+  faces:
+  - name: 龍装30号 シグルネ
+    types:
+    - creature
+    civs:
+    - darkness
+    cost: 4
+    power: 4000
+    races:
+    - ドラゴンギルド
+    - マフィ・ギャング
+    abilities:
+    - kind: trigger
+      when: *id218
+      effect:
+      - op: move
+        select:
+          zone: graveyard
+          owner: you
+          filter:
+            types:
+            - creature
+            name_has: 龍装30号 シグルネ
+          count: all
+        to: bz
+        reason: put
+  - name: グール・チューン
+    types:
+    - spell
+    civs:
+    - water
+    cost: 3
+    keywords:
+    - s_trigger
+    spell:
+    - op: draw
+      count: 2
+    - op: discard
+      select:
+        zone: hand
+        owner: you
+        count: 2
+  mana: 1
+  text: '龍装30号 シグルネ: このクリーチャーがバトルゾーンに出た時、名前に《龍装30号 シグルネ》とあるクリーチャーをすべて、自分の墓地からバトルゾーンに出す。
+    ／ グール・チューン: S・トリガー（この呪文をシールドゾーンから手札に加える時、コストを支払わずにすぐ唱えてもよい） / カードを２枚引き、その後、自分の手札を２枚捨てる。'
+  source:
+    official: dmrp11-021
+    review: pending
+- id: dmrp11-025
+  faces:
+  - name: 龍装者 “OGU”ヴァル
+    types:
+    - creature
+    civs:
+    - fire
+    cost: 4
+    power: 4000
+    races:
+    - ドラゴンギルド
+    - ビートジョッキー
+    abilities:
+    - kind: static
+      affects: self
+      if:
+        cmp:
+        - count:
+            zone: hand
+            owner: opp
+        - '>='
+        - 4
+      mod:
+        power: 4000
+        grant:
+        - speed_attacker
+        - double_breaker
+  - name: 「静謐よ、世界に満ちよ」
+    types:
+    - spell
+    civs:
+    - water
+    cost: 3
+    keywords:
+    - s_trigger
+    spell:
+    - op: bounce
+      select:
+        zone: bz
+        owner: opp
+        filter:
+          types:
+          - creature
+        count: 1
+  mana: 1
+  text: '龍装者 “OGU”ヴァル: 相手の手札が４枚以上あれば、このクリーチャーのパワーは+4000され、「スピードアタッカー」と「W・ブレイカー」を得る。（「スピードアタッカー」と「W・ブレイカー」を持つクリーチャーは召喚酔いせず、シールドを２つブレイクする）
+    ／ 「静謐よ、世界に満ちよ」: S・トリガー（この呪文をシールドゾーンから手札に加える時、コストを支払わずにすぐ唱えてもよい） / 相手のクリーチャーを１体選び、持ち主の手札に戻す。'
+  source:
+    official: dmrp11-025
+    review: pending
+- id: dmrp11-s10
+  faces:
+  - name: サマー・オジサマー
+    types:
+    - creature
+    civs:
+    - fire
+    cost: 3
+    power: 3000
+    races:
+    - ビートジョッキー
+    - スペシャルズ
+    abilities:
+    - kind: trigger
+      when:
+        event: attack
+        subject: self
+      effect:
+      - op: may
+        body:
+        - op: set_var
+          name: n
+          value:
+            count:
+              zone: hand
+              owner: you
+        - op: discard
+          select:
+            zone: hand
+            owner: you
+            count: all
+        - op: draw
+          count:
+            sum:
+            - var: n
+            - 1
+  - name: ムーン・オジサマー
+    types:
+    - spell
+    civs:
+    - darkness
+    cost: 5
+    keywords:
+    - s_trigger
+    spell:
+    - op: move
+      select:
+        zone: graveyard
+        owner: you
+        filter:
+          types:
+          - creature
+          cost_le: 3
+        count: 2
+      to: bz
+      reason: put
+  mana: 1
+  text: 'サマー・オジサマー: このクリーチャーが攻撃する時、自分の手札をすべて捨ててもよい。そうしたら、こうして捨てた手札の枚数に１枚加えて、カードを引く。
+    ／ ムーン・オジサマー: S・トリガー / コスト３以下のクリーチャーを２体、自分の墓地からバトルゾーンに出す。'
+  source:
+    official: dmrp11-s10
+    review: pending
+- id: dmrp12-007
+  faces:
+  - name: アドレック・ワークマン
+    types:
+    - creature
+    civs:
+    - darkness
+    cost: 4
+    power: 4000
+    races:
+    - マフィ・ギャング
+    abilities:
+    - kind: trigger
+      when:
+        event: move
+        from: bz
+        to: graveyard
+        reason: destroy
+        subject:
+          owner: any
+          other: true
+          filter:
+            types:
+            - creature
+      effect:
+      - op: discard
+        select:
+          zone: hand
+          owner: opp
+          chooser: opp
+          count: 1
+  - name: バイス・スクラッパー
+    types:
+    - spell
+    civs:
+    - fire
+    cost: 6
+    keywords:
+    - s_trigger
+    spell:
+    - op: destroy
+      select:
+        zone: bz
+        owner: opp
+        filter:
+          types:
+          - creature
+        total_power_le: 5000
+  mana: 1
+  text: 'アドレック・ワークマン: 他のクリーチャーが破壊された時、相手は自身の手札を１枚選んで捨てる。 ／ バイス・スクラッパー: S・トリガー / 相手のクリーチャーを好きな数、パワーの合計が5000以下になるように選び、破壊する。'
+  source:
+    official: dmrp12-007
+    review: pending
+- id: dmrp12-014
+  faces:
+  - name: 奇石 バリアン
+    types:
+    - creature
+    civs:
+    - light
+    cost: 3
+    power: 2000
+    races:
+    - メタリカ
+    keywords:
+    - blocker
+    - cannot_attack_player
+    abilities:
+    - kind: replace
+      when:
+        event: move
+        from: bz
+        to: graveyard
+        reason: destroy
+        subject: self
+      instead:
+      - op: move
+        select:
+          ref: self
+        to: shield
+        reason: put
+        face_down: true
+  - name: 背理の振り子鎌
+    types:
+    - spell
+    civs:
+    - darkness
+    cost: 4
+    keywords:
+    - s_trigger
+    spell:
+    - op: destroy
+      select:
+        zone: bz
+        owner: you
+        filter:
+          types:
+          - creature
+          tapped: false
+        count: 1
+    - op: destroy
+      select:
+        zone: bz
+        owner: opp
+        filter:
+          types:
+          - creature
+          tapped: false
+        count: 1
+        chooser: opp
+  mana: 1
+  text: '奇石 バリアン: ブロッカー（このクリーチャーをタップして、相手クリーチャーの攻撃先をこのクリーチャーに変更してもよい） / このクリーチャーは、相手プレイヤーを攻撃できない。
+    / このクリーチャーが破壊される時、墓地に置くかわりに裏向きにして、新しいシールドとして自分のシールドゾーンに置く。 ／ 背理の振り子鎌: S・トリガー（この呪文をシールドゾーンから手札に加える時、コストを支払わずにすぐ唱えてもよい）
+    / 自分のアンタップしているクリーチャーを１体破壊する。その後、相手は自身のアンタップしているクリーチャーを１体選び、破壊する。'
+  source:
+    official: dmrp12-014
+    review: pending
+- id: dmsd11-004
+  faces:
+  - name: ティアンゴ・ハーミィ
+    types:
+    - creature
+    civs:
+    - water
+    cost: 4
+    power: 1000
+    races:
+    - トリックス
+    - ワンダフォース
+    keywords:
+    - blocker
+    - powered_breaker
+    abilities:
+    - kind: trigger
+      when:
+        event: cast
+        player: you
+      effect:
+      - op: modify
+        select:
+          ref: self
+        mod:
+          power: 2000
+        duration: end_of_turn
+  - name: ティアビタンG
+    types:
+    - spell
+    civs:
+    - fire
+    cost: 1
+    spell:
+    - op: choose
+      select:
+        zone: bz
+        owner: you
+        filter:
+          types:
+          - creature
+        count: 1
+      as: target
+    - op: modify
+      select:
+        ref: target
+      mod:
+        grant:
+        - speed_attacker
+      duration: end_of_turn
+    - op: modify
+      select:
+        ref: target
+      mod:
+        deny:
+        - be_attacked
+      duration: until_next_own_turn_start
+  mana: 1
+  text: 'ティアンゴ・ハーミィ: ブロッカー（このクリーチャーをタップして、相手クリーチャーの攻撃先をこのクリーチャーに変更してもよい） / パワード・ブレイカー（このクリーチャーは、そのパワー6000ごとにシールドをさらに１つブレイクする）
+    / 自分が呪文を唱えた時、このターン、このクリーチャーのパワーを+2000する。 ／ ティアビタンG: このターン、自分のクリーチャー１体は「スピードアタッカー」を得、次の自分のターンのはじめまで攻撃されない。（「スピードアタッカー」を持つクリーチャーは召喚酔いしない）'
+  source:
+    official: dmsd11-004
+    review: pending
+- id: dmex12-038
+  faces:
+  - name: スニーク戦車 オーリー
+    types:
+    - creature
+    civs:
+    - fire
+    cost: 2
+    power: 1000
+    races:
+    - ビートジョッキー
+    abilities:
+    - kind: trigger
+      when: &id219
+        event: move
+        to: bz
+        subject: self
+      effect:
+      - op: choose
+        select:
+          zone: bz
+          owner: you
+          other: true
+          filter:
+            types:
+            - creature
+          count: 1
+        as: target
+      - op: modify
+        select:
+          ref: target
+        mod:
+          grant:
+          - speed_attacker
+        duration: end_of_turn
+    - kind: trigger
+      when:
+        event: attack
+        subject: self
+      effect:
+      - op: choose
+        select:
+          zone: bz
+          owner: you
+          other: true
+          filter:
+            types:
+            - creature
+          count: 1
+        as: target
+      - op: modify
+        select:
+          ref: target
+        mod:
+          grant:
+          - speed_attacker
+        duration: end_of_turn
+  - name: トゲ玉・キャノンボール
+    types:
+    - spell
+    civs:
+    - fire
+    cost: 6
+    spell:
+    - op: destroy
+      select:
+        zone: bz
+        owner: opp
+        filter:
+          types:
+          - creature
+          keyword: blocker
+        count: all
+  mana: 1
+  text: 'スニーク戦車 オーリー: このクリーチャーがバトルゾーンに出た時または攻撃する時、そのターン、自分の他のクリーチャー１体に「スピードアタッカー」を与える。（「スピードアタッカー」を持つクリーチャーは召喚酔いしない）
+    ／ トゲ玉・キャノンボール: 相手の、「ブロッカー」を持つクリーチャーをすべて破壊する。'
+  source:
+    official: dmex12-038
+    review: pending
+    aliases:
+    - dmrp05-023
+- id: dmex15-a024
+  faces:
+  - name: 悪魔神バロム
+    types:
+    - creature
+    - evolution
+    civs:
+    - darkness
+    cost: 8
+    power: 12000
+    races:
+    - デーモン・コマンド
+    evolve_from:
+      races:
+      - デーモン・コマンド
+    keywords:
+    - double_breaker
+    abilities:
+    - kind: trigger
+      when: *id219
+      effect:
+      - op: destroy
+        select:
+          zone: bz
+          owner: any
+          filter:
+            types:
+            - creature
+            not_civs:
+            - darkness
+          count: all
+  - name: バロム砲
+    types:
+    - spell
+    civs:
+    - darkness
+    cost: 10
+    spell:
+    - op: move
+      select:
+        zone: mana
+        owner: any
+        filter:
+          not_civs:
+          - darkness
+        count: all
+      to: graveyard
+      reason: put
+  mana: 1
+  text: '悪魔神バロム: 進化：デーモン・コマンド１体の上に置く。 / W・ブレイカー / このクリーチャーが出た時、闇以外のクリーチャーをすべて破壊する。
+    ／ バロム砲: 各プレイヤーは、闇以外のカードをすべて、自身のマナゾーンから墓地に置く。'
+  source:
+    official: dmex15-a024
+    review: pending
+    aliases:
+    - dmex04-031
+- id: dmex08-156
+  faces:
+  - name: キングダム・オウ禍武斗
+    types:
+    - creature
+    civs:
+    - nature
+    cost: 9
+    power: 14000
+    races:
+    - グランセクト
+    keywords:
+    - triple_breaker
+    abilities:
+    - kind: trigger
+      when:
+        event: move
+        to: bz
+        subject: self
+      effect:
+      - op: modify
+        select:
+          ref: self
+        mod:
+          allow:
+          - action: attack_creature
+            other:
+              tapped: false
+        duration: end_of_turn
+    - kind: trigger
+      when:
+        event: battle_win
+        subject: self
+      effect:
+      - op: break
+        player: opp
+        count: 9
+  - name: チャージ３回、フリーエントリー！
+    types:
+    - spell
+    civs:
+    - nature
+    cost: 10
+    spell:
+    - op: move
+      select:
+        zone: deck
+        owner: you
+        from_top: 3
+      to: mana
+      reason: put
+    - op: move
+      select:
+        zone: deck
+        owner: opp
+        from_top: 3
+      to: mana
+      reason: put
+    - op: move
+      select:
+        zone: mana
+        owner: you
+        filter:
+          types:
+          - creature
+        count: 1
+      to: bz
+      reason: put
+    - op: move
+      select:
+        zone: mana
+        owner: opp
+        filter:
+          types:
+          - creature
+        count: 1
+        chooser: opp
+      to: bz
+      reason: put
+  mana: 1
+  text: 'キングダム・オウ禍武斗: マッハファイター（このクリーチャーは、バトルゾーンに出たターンの間、タップまたはアンタップしているクリーチャーを攻撃できる）
+    / T・ブレイカー / 破天九語：このクリーチャーがバトルに勝った時、相手のシールドを９つブレイクする。 ／ チャージ３回、フリーエントリー！: 各プレイヤーは、自身の山札の上から３枚をマナゾーンに置く。
+    / クリーチャーを１体、自分のマナゾーンからバトルゾーンに出す。その後、相手はクリーチャーを１体、自身のマナゾーンからバトルゾーンに出す。'
+  source:
+    official: dmex08-156
+    review: pending
+- id: dmrp05-015
+  faces:
+  - name: 無法地帯 マクラーゲン
+    types:
+    - creature
+    civs:
+    - water
+    cost: 8
+    power: 11000
+    races:
+    - ムートピア
+    keywords:
+    - blocker
+    - double_breaker
+    abilities:
+    - kind: static
+      affects: self
+      mod:
+        deny:
+        - be_chosen
+  - name: 無法警報PSY
+    types:
+    - spell
+    civs:
+    - water
+    cost: 3
+    spell:
+    - op: draw
+      count: 1
+    - op: move
+      select:
+        zone: hand
+        owner: you
+        count: 1
+      to: shield
+      reason: put
+      face_down: true
+    - op: move
+      select:
+        zone: shield
+        owner: you
+        count: 1
+      to: graveyard
+      reason: put
+  mana: 1
+  text: '無法地帯 マクラーゲン: ブロッカー（このクリーチャーをタップして、相手クリーチャーの攻撃先をこのクリーチャーに変更してもよい） / W・ブレイカー（このクリーチャーはシールドを２つブレイクする）
+    / 呪文の効果やクリーチャーの能力によって相手がクリーチャーを選ぶ時、このクリーチャーは選ばれない。 ／ 無法警報PSY: カードを１枚引き、その後、自分の手札を１枚裏向きのまま、新しいシールドとして自分のシールドゾーンに置く。その後、カードを１枚、自分のシールドゾーンから墓地に置く。'
+  source:
+    official: dmrp05-015
+    review: pending
+    notes: 「呪文の効果やクリーチャーの能力によって相手がクリーチャーを選ぶ時、選ばれない」は deny be_chosen（ジャストダイバーと同じ、相手からの選択だけを防ぐ扱い）
+- id: dmrp05-031
+  faces:
+  - name: 鉄拳の構え 幻惚
+    types:
+    - creature
+    civs:
+    - light
+    cost: 7
+    power: 7000
+    races:
+    - メタリカ
+    keywords:
+    - double_breaker
+    abilities:
+    - kind: static
+      affects: self
+      if:
+        cmp:
+        - count:
+            zone: bz
+            owner: you
+            filter:
+              types:
+              - creature
+        - '>'
+        - count:
+            zone: bz
+            owner: opp
+            filter:
+              types:
+              - creature
+      mod:
+        no_leave: true
+  - name: テッケニア・スパーク
+    types:
+    - spell
+    civs:
+    - light
+    cost: 4
+    spell:
+    - op: tap
+      select:
+        zone: bz
+        owner: opp
+        filter:
+          types:
+          - creature
+        count:
+          upto: 2
+      no_untap_next: true
+  mana: 1
+  text: '鉄拳の構え 幻惚: W・ブレイカー（このクリーチャーはシールドを２つブレイクする） / バトルゾーンにある自分のクリーチャーの数が相手より多ければ、このクリーチャーはバトルゾーンを離れない。
+    ／ テッケニア・スパーク: 相手のクリーチャーを２体まで選び、タップする。次の相手のターンのはじめに、それらはアンタップしない。'
+  source:
+    official: dmrp05-031
+    review: pending
+    aliases:
+    - promoy17-007
+- id: dmrp05-s02
+  faces:
+  - name: 龍装の悟り 天命
+    types:
+    - creature
+    civs:
+    - light
+    cost: 7
+    power: 7500
+    races:
+    - ドラゴンギルド
+    - メタリカ
+    keywords:
+    - blocker
+    - double_breaker
+    abilities:
+    - kind: static
+      affects:
+        owner: opp
+        zone: hand
+        filter:
+          not_civs:
+          - light
+      mod:
+        cost: 1
+    - kind: static
+      affects:
+        owner: you
+        zone: hand
+        filter:
+          civs:
+          - light
+      mod:
+        cost: -1
+        cost_min: 1
+  - name: ヘブン・デ・エンドレーサ
+    types:
+    - spell
+    civs:
+    - light
+    cost: 4
+    spell:
+    - op: move
+      select:
+        zone: bz
+        owner: opp
+        filter:
+          types:
+          - creature
+        count: 1
+      to: shield
+      reason: put
+      face_down: true
+  mana: 1
+  text: '龍装の悟り 天命: ブロッカー　W・ブレイカー / 相手の光以外のクリーチャーと呪文は、召喚または唱えるコストが１多くなる。 / 自分の光のクリーチャーと呪文は、召喚または唱えるコストが１少なくなる。ただし、コストは０以下にならない。
+    ／ ヘブン・デ・エンドレーサ: 相手のクリーチャーを１体選び、裏向きにして、新しいシールドとして持ち主のシールドゾーンに置く。'
+  source:
+    official: dmrp05-s02
+    review: pending
+- id: dmrp11-029
+  faces:
+  - name: 龍装車 ピオドーロ
+    types:
+    - creature
+    civs:
+    - nature
+    cost: 4
+    power: 5000
+    races:
+    - ドラゴンギルド
+    - グランセクト
+    abilities:
+    - kind: trigger
+      when:
+        event: move
+        to: bz
+        subject: self
+      effect:
+      - op: modify
+        select:
+          ref: self
+        mod:
+          allow:
+          - action: attack_creature
+            other:
+              tapped: false
+        duration: end_of_turn
+    - kind: static
+      affects:
+        zone: bz
+        owner: any
+        filter:
+          types:
+          - creature
+          entered_this_turn: true
+      mod:
+        deny:
+        - attack_player
+  - name: 毒汁100％
+    types:
+    - spell
+    civs:
+    - darkness
+    cost: 3
+    keywords:
+    - s_trigger
+    spell:
+    - op: choose
+      select:
+        zone: bz
+        owner: opp
+        filter:
+          types:
+          - creature
+        count: 1
+      as: target
+    - op: modify
+      select:
+        ref: target
+      mod:
+        power: -4000
+      duration: end_of_turn
+  mana: 1
+  text: '龍装車 ピオドーロ: マッハファイター（このクリーチャーは、バトルゾーンに出たターンの間、タップまたはアンタップしているクリーチャーを攻撃できる）
+    / バトルゾーンに出たターンの間、クリーチャーは相手プレイヤーを攻撃できない。 ／ 毒汁100％: S・トリガー（この呪文をシールドゾーンから手札に加える時、コストを支払わずにすぐ唱えてもよい）
+    / 相手のクリーチャーを１体選ぶ。このターン、そのクリーチャーのパワーを－4000する。（パワー０以下のクリーチャーは破壊される）'
+  source:
+    official: dmrp11-029
+    review: pending
+- id: dmex08-193
+  faces:
+  - name: 拘束の影メリコミ・タマタマ
+    types:
+    - creature
+    civs:
+    - darkness
+    cost: 8
+    power: 4000
+    races:
+    - ゴースト
+    - エイリアン
+    keywords:
+    - slayer
+    abilities:
+    - kind: static
+      affects: self
+      mod:
+        cost:
+          amount: -1
+          count:
+            zone: mana
+            owner: you
+            filter:
+              types:
+              - creature
+        cost_min: 0
+  - name: グシャット・フィスト
+    types:
+    - spell
+    civs:
+    - fire
+    cost: 4
+    keywords:
+    - s_trigger
+    spell:
+    - op: destroy
+      select:
+        zone: bz
+        owner: opp
+        filter:
+          types:
+          - creature
+          power_le: 3000
+        count: 1
+  mana: 1
+  text: '拘束の影メリコミ・タマタマ: 自分のマナゾーンにあるクリーチャー１体につき、このクリーチャーの召喚コストを１少なくする。ただし、コストは０より少なくならない。
+    / スレイヤー（このクリーチャーがバトルする時、バトルの後、相手クリーチャーを破壊する） ／ グシャット・フィスト: S・トリガー（この呪文をシールドゾーンから手札に加える時、コストを支払わずにすぐ唱えてもよい）
+    / 相手のパワー3000以下のクリーチャーを１体破壊する。'
+  source:
+    official: dmex08-193
+    review: pending
+- id: dmex17-028
+  faces:
+  - name: 遣宮使 ネオンクス
+    types:
+    - creature
+    civs:
+    - water
+    cost: 8
+    power: 9000
+    races:
+    - ムートピア
+    - サイバー・コマンド
+    keywords:
+    - double_breaker
+    abilities:
+    - kind: trigger
+      when: *id219
+      effect:
+      - op: move
+        select:
+          zone: deck
+          owner: you
+          from_top: 1
+        to: graveyard
+        reason: put
+        as: m
+      - op: if
+        cond:
+          exists:
+            ref: m
+            filter:
+              types:
+              - spell
+        then:
+        - op: may
+          body:
+          - op: play_free
+            select:
+              ref: m
+              count: 1
+    - kind: trigger
+      when:
+        event: cast
+        player: you
+        subject:
+          filter:
+            name_has: ブレイン
+      effect:
+      - op: move
+        select:
+          zone: deck
+          owner: you
+          from_top: 1
+        to: graveyard
+        reason: put
+        as: m
+      - op: if
+        cond:
+          exists:
+            ref: m
+            filter:
+              types:
+              - spell
+        then:
+        - op: may
+          body:
+          - op: play_free
+            select:
+              ref: m
+              count: 1
+  - name: ネオ・ブレイン
+    types:
+    - spell
+    civs:
+    - water
+    cost: 4
+    keywords:
+    - s_trigger
+    spell:
+    - op: draw
+      count: 2
+  mana: 1
+  text: '遣宮使 ネオンクス: W・ブレイカー / このクリーチャーが出た時、または名前に《ブレイン》とある呪文を唱えた時、自分の山札の上から１枚目を墓地に置く。それが呪文なら、コストを支払わずに唱えてもよい。
+    ／ ネオ・ブレイン: S・トリガー / カードを２枚引く。'
+  source:
+    official: dmex17-028
+    review: pending
+    aliases:
+    - dmrp06-003
+- id: dmr21-009
+  name: 邪眼大帝 ラスト・ロマノフ
+  types:
+  - creature
+  civs:
+  - water
+  - darkness
+  cost: 8
+  power: 8000
+  races:
+  - クリスタル・コマンド・ドラゴン
+  - ダークロード
+  keywords:
+  - double_breaker
+  abilities:
+  - kind: trigger
+    when:
+      event: move
+      to: bz
+      subject: self
+    effect:
+    - op: mill
+      owner: you
+      count: 5
+  - kind: trigger
+    when:
+      event: attack
+      subject: self
+    effect:
+    - op: may
+      body:
+      - op: play_free
+        select:
+          zone: graveyard
+          owner: you
+          filter:
+            types:
+            - spell
+          count: 1
+        resolve_to: deck
+        resolve_position: bottom
+  mana: 1
+  text: マナゾーンに置く時、このカードはタップして置く。W・ブレイカーこのクリーチャーがバトルゾーンに出た時、自分の山札の上から５枚を墓地に置く。このクリーチャーが攻撃する時、自分の墓地にある呪文を１枚、コストを支払わずに唱えてもよい。そうしたら、その呪文を唱えた後、自分の墓地に置くかわりに山札の一番下に置く。
+  source:
+    official: dmr21-009
+    review: pending
