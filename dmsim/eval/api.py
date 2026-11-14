@@ -114,7 +114,7 @@ def measure_assembly(rules, entry: str, deck, seeds, *, max_turn: int = 6, budge
     戻り値は局ごとの {seed, cards_turn, entry_turn, stage2, via, win_turn}（未到達は None）。"""
     from . import assemble
     from . import loop_entry as L
-    ls = L.load(entry)
+    ls = L.load(entry) if isinstance(entry, str) else entry    # LoopSpec をそのまま渡してもよい（ファイルに無い入口、2026-11-14）
     out = []
     for s in seeds:
         r = assemble.run_one(rules, ls, s, deck=list(deck), max_turn=max_turn, budget=budget, n_det=n_det)
