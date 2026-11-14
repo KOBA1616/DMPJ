@@ -276,13 +276,22 @@ def _deck(ls) -> list[str]:
     return ls.source.get("deck_list") or le.deck_of(ls)
 
 
-def run_one(rules, ls, seed: int, max_turn: int = 2, budget: int | None = None, macros: bool = False) -> dict:
+def run_one(rules, ls, seed: int, max_turn: int = 2, budget: int | None = None, macros: bool = False,
+            opp_level: int = 0) -> dict:
+    """opp_level: 相手の抵抗の段階（search.opponent.resistance）。1 は盾に S・トリガー（相手のデッキ40枚から seed で5枚）と
+    ブロック・トリガーを使う相手。0（既定）は従来どおり。段2の定義は変えない。loop_beat: 段1（ループ）が成立したうえでの
+    殴り勝ち（ループで出した体による殴り勝ち、段2とは別の欄。設計書 §24）。"""
     from dmsim.engine import scenario
     from dmsim.search.game import play_game
     from .lockcheck import lock_probe
     deck = _deck(ls)
     v = vary(rules, ls, seed)
     spec = _entry_spec(v, deck, seed)
+    opp = None
+    if opp_level:
+        from dmsim.search.opponent import resistance
+        opp, odeck = resistance(opp_level)
+        spec["p1"] = dict(spec["p1"], shield=random.Random(seed * 104729 + opp_level).sample(odeck, opp.shields))
     e = scenario.build(rules, spec, first_player=0)
     key = start_key(e)
     bud = le.measure_budget(ls, budget)
@@ -291,12 +300,15 @@ def run_one(rules, ls, seed: int, max_turn: int = 2, budget: int | None = None, 
     was = macro._ENABLED
     macro.enable(macros)
     try:
-        res, eng = play_game(rules, deck, [], seed, first_player=0, max_turn=max_turn, budget=bud, start=e, lock_judge=lock_probe)
+        res, eng = play_game(rules, deck, [], seed, first_player=0, max_turn=max_turn, budget=bud, start=e, lock_judge=lock_probe,
+                             opp=opp)
     finally:
         macro._ENABLED = was
-    vd = judge(res, eng)
+    vd = judge(res, eng, win_ids=le.core_ids(ls, "win"))
     return {"seed": seed, "start": key, "stage1": vd.stage1.ok, "stage2": vd.stage2.ok, "via": vd.stage2.via,
-            "win_turn": vd.stage2.win_turn, "error": res.error, "reason": vd.reason}
+            "win_turn": vd.stage2.win_turn, "error": res.error, "reason": vd.reason,
+            "loop_beat": vd.stage2.loop_beat, "cross_turn": vd.stage2.cross_turn, "loop_turn": vd.stage2.loop_turn,
+            "unverified_cross": vd.stage2.unverified_cross}
 
 
 def _entry_spec(ls, deck: list[str], seed: int) -> dict:
