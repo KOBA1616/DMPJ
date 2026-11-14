@@ -288,3 +288,143 @@ def as_row(t: Triple) -> dict:
     d["gains"] = {f"{o}:{z}": v for (o, z), v in t.gains.items()}
     d.pop("rank_key", None)
     return d
+
+
+# ---- (i) 実エンジンの安い試し打ち（2026-11-14） ----------------------------------------------------
+
+def _once_per_turn(rules, cards) -> bool:
+    def walk(x):
+        if isinstance(x, dict):
+            if x.get("once_per_turn") or "max_per_turn" in x:
+                return True
+            return any(walk(v) for v in x.values())
+        if isinstance(x, list):
+            return any(walk(v) for v in x)
+        return False
+    for i in cards:
+        d = rules.cards[i]
+        for f in (getattr(d, "faces", None) or [d]):
+            if walk(f.abilities or []):
+                return True
+    return False
+
+
+def _free_any(rules, cards) -> bool:
+    return any(F.free_cast(rules.cards[i]) for i in cards)
+
+
+def static_flags(base: Base) -> list[str]:
+    """静的には閉じても実際に回りにくい形（試し打ちで多かった理由を、静的ふるいの側で先に印として付ける。落とさない）。
+    opp_target: 1周で相手の場の札を減らす（相手にクリーチャーがいないと回らない。今の相手はマナチャージだけ）。
+    copy_chain: 山札から場へ出す移動で回る（山札にある別のコピーを順に出すだけで、コピーの枚数で止まる）。
+    zero: 1周の増減が何もない（何も貯まらず、物差しの段1に数えられない）。"""
+    g = base.gains
+    out = []
+    if g.get(("opp", "bz"), 0) < 0:
+        out.append("opp_target")
+    if g.get(("you", "bz"), 0) > 0 and g.get(("you", "deck"), 0) < 0:
+        out.append("copy_chain")
+    if not g:
+        out.append("zero")
+    return out
+
+
+def why_not(rules, base: Base, rows: list[dict], T: int) -> str:
+    """静的には閉じるが実際は回らない理由（試し打ちの記録と効果データから。名前は見ない）。
+    error 対局が落ちた / not_played 部品を一度も使わない（cost: 部品のコストが入口のマナを超える、else: 使う手を選ばない）/
+    opp_target / copy_chain / zero は static_flags の印 / once 1ターンに1回などの回数制限 / target 閉路が墓地から拾う札がいない（素材が要る）/ cond 読めない条件がある /
+    once_only 部品は使ったが2周目に入らない（その他）。"""
+    if all(r.get("error") for r in rows):
+        return "error"
+    fl = static_flags(base)
+    if fl:
+        return fl[0]
+    if not any(r.get("uses") for r in rows):
+        costs = [rules.cards[i].cost for i in base.cards if isinstance(rules.cards[i].cost, int)]
+        if costs and min(costs) > T and not _free_any(rules, base.cards):
+            return "cost"
+        return "not_played"
+    if _once_per_turn(rules, base.cards):
+        return "once"
+    if base.unknown:
+        return "cond"
+    if base.grave:
+        return "target"
+    return "once_only"
+
+
+def trial(rules, base: Base, *, T: int = 4, seeds=(1, 2), budget: int = 100, raw=None) -> dict:
+    """入口（部品だけ）から1ターンだけ、小さい予算で実エンジンを回す。段1＝検証済みのループを2周以上。
+    記録: 周回数、1周の増減（実測）が静的な増減と同じ向きか、部品を使った回数（決定の記録に部品の ID が出た回数）。"""
+    from ..engine import scenario
+    from ..eval.lockcheck import lock_probe
+    from ..eval.ruler import judge
+    from ..search.game import play_game
+    deck = deck_of(rules, base.cards, raw)
+    rows = []
+    ids = set(base.cards) | {rules.cards[i].id for i in base.cards}
+    for sd in seeds:
+        try:
+            e = scenario.build(rules, entry_spec(rules, deck, base.cards, T, sd, base.layout, base.grave), first_player=0)
+            res, eng = play_game(rules, deck, [], sd, first_player=0, max_turn=1, budget=budget, start=e, lock_judge=lock_probe)
+            v = judge(res, eng)
+            uses = sum(1 for lg in eng.log if lg.get("p") == 0 and any(i in str(k) for k in lg.get("keys") or [] for i in ids))
+            rows.append({"seed": sd, "ok": v.stage1.ok and v.stage1.n >= 2, "laps": v.stage1.n, "infinite": v.stage1.infinite,
+                         "delta": v.stage1.delta, "uses": uses, "error": res.error})
+        except Exception as ex:
+            rows.append({"seed": sd, "ok": False, "laps": 0, "infinite": False, "delta": {}, "uses": 0,
+                         "error": f"{type(ex).__name__}: {ex}"[:200]})
+    ok = any(r["ok"] for r in rows)
+    return {"ok": ok, "rows": rows, "laps": max(r["laps"] for r in rows), "reason": None if ok else why_not(rules, base, rows, T)}
+
+
+# ---- (ii) 山札を掘るループ → デッキ内の任意の勝ち手段（2026-11-14） ----------------------------------
+
+def digs(base: Base) -> bool:
+    """1周で自分の山札に触れる（引く・墓地へ落とす・マナへ置く・山札から加える）量が正のループ。"""
+    return base.gains.get(("you", "deck"), 0) < 0
+
+
+def attach_dig(rules, bases: list[Base], *, per_base: int = 8, wins=None, max_cost: int = 8) -> list[Triple]:
+    """掘るループに、デッキに入れた勝ち手段なら掘って届くとみなして札を足す（索引の鍵は問わない）。
+    届いた札が使えるか: 掘った札が経由するゾーン（増えるゾーン、無ければ手札）から使えること（search.access.usable_from。
+    墓地なら墓地進化か、部品・勝ち手段に墓地から出す効果）。ドロー置換の勝ち（access.draw_win）は引くループ（手札が増える）なら
+    「引き切り」として先に並べる。順位: 引き切り・部品と文明が重なる・軽い・ID。"""
+    from ..search import access as A
+    wins = wins if wins is not None else win_cards(rules)
+    out = []
+    for b in bases:
+        if not digs(b):
+            continue
+        via = [z for z in A.VIA_ZONES if b.gains.get(("you", z), 0) > 0] or ["hand"]
+        civs = {c for i in b.cards for c in rules.cards[i].civs}
+        rows = []
+        for w in sorted(wins):
+            d = rules.cards[w]
+            if w in b.cards or not isinstance(d.cost, int) or d.cost > max_cost:
+                continue
+            users = A._grave_users(rules, list(b.cards) + [w])
+            zs = []
+            for z in via:
+                try:
+                    if A.usable_from(rules, w, z, users):
+                        zs.append(z)
+                except TypeError:      # 条件の形が読めない（cost_le が式など）。使えないとみなす
+                    pass
+            dw = A.draw_win(rules, w)
+            if not zs and not dw:
+                continue
+            why = []
+            if dw and b.gains.get(("you", "hand"), 0) > 0:
+                why.append("you:deck:- 引くループで山札を引き切る（ドロー置換の勝ち）")
+            if zs:
+                why.append(f"you:deck:- 掘って {'/'.join(zs)} から使える")
+            rows.append((not (dw and b.gains.get(("you", "hand"), 0) > 0), not (set(d.civs) & civs), d.cost, w, why))
+        rows.sort()
+        for _, _, cost, w, why in rows[:per_base]:
+            tr = Triple(base=list(b.cards), win=w, names=[rules.cards[x].name for x in list(b.cards) + [w]], gains=b.gains,
+                        why=why, static="dig", turn=b.turn, layout=dict(b.layout), grave=list(b.grave))
+            tr.rank_key = (b.turn if b.turn is not None else 99, len(why) and -len(why), cost)
+            out.append(tr)
+    out.sort(key=lambda t: t.rank_key)
+    return out

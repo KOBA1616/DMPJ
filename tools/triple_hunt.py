@@ -28,7 +28,7 @@ def _base_from(d):
 
 def main():
     ap = argparse.ArgumentParser()
-    ap.add_argument("cmd", choices=["collect", "attach", "measure"])
+    ap.add_argument("cmd", choices=["collect", "attach", "measure", "trial"])
     ap.add_argument("--out", required=True)
     ap.add_argument("--bases")
     ap.add_argument("--triples")
@@ -39,6 +39,9 @@ def main():
     ap.add_argument("--seeds", type=int, default=4)
     ap.add_argument("--budget", type=int, default=1500)
     ap.add_argument("--entry-turn", type=int, default=3)
+    ap.add_argument("--shard", default="0/1", help="trial: i/n（n 個に分けた i 番目）")
+    ap.add_argument("--trial-budget", type=int, default=50)
+    ap.add_argument("--trial-seeds", type=int, default=1)
     ap.add_argument("--time-limit", type=int, default=0)
     a = ap.parse_args()
     t0 = time.time()
@@ -56,6 +59,18 @@ def main():
         tr = X.attach(rules, by, bases, per_base=a.per_base, log=log)
         out = {"triples": [X.as_row(t) for t in tr], "static": dict(Counter(t.static for t in tr)),
                "bases_with_hits": len({tuple(t.base) for t in tr}), "bases": len(bases), "seconds": round(time.time() - t0)}
+    elif a.cmd == "trial":
+        from dmsim.discovery import basebuild as B
+        raw = B._raw_cards(rules)
+        i, n = map(int, a.shard.split("/"))
+        bases = [_base_from(d) for d in json.loads(Path(a.bases).read_text(encoding="utf-8"))["bases"]][i::n]
+        rows = []
+        for k, b in enumerate(bases):
+            r = X.trial(rules, b, T=4, seeds=range(1, a.trial_seeds + 1), budget=a.trial_budget, raw=raw)
+            rows.append({"cards": b.cards, "names": b.names, "turn": b.turn, **r})
+            if k % 20 == 0:
+                log(f"{k}/{len(bases)} 通過 {sum(x['ok'] for x in rows)} 理由 {dict(Counter(x['reason'] for x in rows if x['reason']))}")
+        out = {"rows": rows, "shard": a.shard, "seconds": round(time.time() - t0)}
     else:
         rows = json.loads(Path(a.triples).read_text(encoding="utf-8"))["triples"]
         per, pw, pick = Counter(), Counter(), []
