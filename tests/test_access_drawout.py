@@ -114,3 +114,15 @@ def test_continuous_score_gates_after_entry_and_counts_remaining(monkeypatch):
     v1 = RG.continuous_score(e, st, 0, e_idx, ["dmrp03-s03"], e_idx, False, 0.25)
     assert v1 < sum(s.weight for s in st[:e_idx]) + 1e-9   # 入口後は残りの分だけ減点
     assert v0 <= sum(s.weight for s in st[:e_idx - 1]) + 1e-9
+
+
+def test_remaining_pre_line_counts_chain_and_needs_win_in_grave():
+    r = load_rules()
+    from dmsim.search import access as A2
+    assert A2.grave_discards(r, "dmrp03-036") and not A2.grave_discards(r, "dm22ex2-021")
+    spec = {"p0": {"hand": ["dm22ex1-007"] + ["dmrp03-036"] * 2, "mana": ["dmex10-020"] * 4,
+                   "graveyard": ["dmrp03-036"] * 8 + ["dmrp03-s03"] + ["dmex10-020"] * 10, "deck": ["dm22ex2-021"] * 3},
+            "p1": {}, "seed": 1, "deck_exact": [True, False]}
+    e = scenario.build(r, spec, first_player=0)
+    # 山札3、手札に引いて捨てる札2枚（連鎖2）、墓地に引く札と勝ち手段: あと1手（進化元へ）で取れる → 残り 1
+    assert A2.remaining(e, "dmrp03-s03") == max(0, 3 - 1 + 1 - 1 - 2) + 1

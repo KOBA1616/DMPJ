@@ -7,6 +7,12 @@
 from __future__ import annotations
 
 import argparse
+import os
+
+# 経路つきの測定では、勝ち手段の引き切り点（§30）と予算切れ後の先読み（§31）を既定で有効にする（0 を渡せば無効）。
+# 日次の数字や経路を使わない測定（陽性対照・登録簿）には効かない
+os.environ.setdefault("DMSIM_DRAWOUT", "1")
+os.environ.setdefault("DMSIM_ROLLOUT_LOOKAHEAD", "1")
 import json
 import sys
 from collections import Counter
