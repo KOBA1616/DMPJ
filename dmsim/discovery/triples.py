@@ -198,9 +198,9 @@ def deck_of(rules, cards: list[str], raw=None) -> list[str]:
     return B.base_deck(core, fill)
 
 
-def entry_spec(rules, deck, parts: list[str], T: int, seed: int, layout: dict | None = None, grave=()) -> dict:
+def entry_spec(rules, deck, parts: list[str], T: int, seed: int, layout: dict | None = None, grave=(), opp_bz=()) -> dict:
     """入口: 部品を layout のゾーン（無ければクリーチャーは場、それ以外は手札）に1枚ずつ。閉路が墓地から拾うなら、
-    条件に合う札を2枚まで墓地へ（部品の別のコピーを先に）。残りはデッキから配る（マナ T 枚、手札は計5枚、盾5枚）。"""
+    条件に合う札を2枚まで墓地へ（部品以外を先に）。残りはデッキから配る（マナ T 枚、手札は計5枚、盾5枚）。"""
     rng = random.Random(seed * 7919 + T)
     layout = layout or {}
     zones = {"bz": [], "hand": [], "graveyard": [], "mana": []}
@@ -212,7 +212,7 @@ def entry_spec(rules, deck, parts: list[str], T: int, seed: int, layout: dict | 
         rest.remove(i)
     rng.shuffle(rest)
     for flt in list(grave)[:1]:
-        pref = [i for i in rest if i in parts] + [i for i in rest if i not in parts]
+        pref = [i for i in rest if i not in parts] + [i for i in rest if i in parts]   # 素材は部品以外を先に（部品のコピーは手札に残す）
         for i in pref:
             if len(zones["graveyard"]) >= 2:
                 break
@@ -236,8 +236,11 @@ def entry_spec(rules, deck, parts: list[str], T: int, seed: int, layout: dict | 
         hand.append(rest.pop())
     shield = [rest.pop() for _ in range(5)]
     p0 = {"bz": zones["bz"], "hand": hand, "mana": mana, "shield": shield, "graveyard": zones["graveyard"], "deck": sorted(rest)}
-    return {"p0": p0, "p1": {"hand": ["T001"] * 5, "mana": ["T001"] * max(0, T - 1)}, "deck_size": 40,
-            "deck_exact": [True, False], "deck_left": [None, 40 - 10 - max(0, T - 1)], "seed": seed}
+    p1 = {"hand": ["T001"] * 5, "mana": ["T001"] * max(0, T - 1)}
+    if opp_bz:
+        p1["bz"] = list(opp_bz)
+    return {"p0": p0, "p1": p1, "deck_size": 40,
+            "deck_exact": [True, False], "deck_left": [None, 40 - 10 - max(0, T - 1) - len(opp_bz)], "seed": seed}
 
 
 def measure(rules, deck, parts, *, T: int = 3, seeds=range(1, 5), budget: int = 1500, last_turn: int = 4, win_ids=None,
@@ -336,7 +339,7 @@ def why_not(rules, base: Base, rows: list[dict], T: int) -> str:
     once_only 部品は使ったが2周目に入らない（その他）。"""
     if all(r.get("error") for r in rows):
         return "error"
-    fl = static_flags(base)
+    fl = [f for f in static_flags(base) if not (f == "opp_target" and any(r.get("opp_bz") for r in rows))]
     if fl:
         return fl[0]
     if not any(r.get("uses") for r in rows):
@@ -353,29 +356,82 @@ def why_not(rules, base: Base, rows: list[dict], T: int) -> str:
     return "once_only"
 
 
-def trial(rules, base: Base, *, T: int = 4, seeds=(1, 2), budget: int = 100, raw=None) -> dict:
-    """入口（部品だけ）から1ターンだけ、小さい予算で実エンジンを回す。段1＝検証済みのループを2周以上。
-    記録: 周回数、1周の増減（実測）が静的な増減と同じ向きか、部品を使った回数（決定の記録に部品の ID が出た回数）。"""
+def helper_spell(rules, civs, raw=None) -> str | None:
+    """つなぎの呪文: 部品の文明に収まる最も軽い呪文（効果データが欠けていないもの。名前は見ない）。"""
+    from . import basebuild as B
+    raw = raw if raw is not None else B._raw_cards(rules)
+    best = None
+    for i, d in sorted(rules.cards.items()):
+        if B._test(i) or "spell" not in d.types or "creature" in d.types or not isinstance(d.cost, int):
+            continue
+        if not set(d.civs) <= set(civs) or (i in raw and B.missing_effect(d)):
+            continue
+        if best is None or d.cost < rules.cards[best].cost:
+            best = i
+    return best
+
+
+def layouts(rules, base: Base, raw=None) -> list[dict]:
+    """試し打ちの入口の置き方。cycle: 閉路の束から読んだ置き方。bz_spell: クリーチャーの部品は場、手札につなぎの呪文
+    （「呪文を唱えた時」で回る部品は、閉路が呪文の面＝ツインパクトを使うと読んでも、実際はクリーチャーの面で場にいて
+    別の呪文で回すことが多い。マチュー＋ベルリン）。"""
+    out = [{"name": "cycle", "parts": list(base.cards), "layout": dict(base.layout), "extra": []}]
+    cre = [i for i in base.cards if "creature" in rules.cards[i].types]
+    if cre:
+        civs = {c for i in base.cards for c in rules.cards[i].civs}
+        sp = helper_spell(rules, civs, raw)
+        lay = {i: ("bz" if i in cre else "hand") for i in base.cards}
+        if sp and sp not in base.cards:
+            lay[sp] = "hand"
+            out.append({"name": "bz_spell", "parts": list(base.cards) + [sp], "layout": lay, "extra": [sp]})
+        elif lay != base.layout:
+            out.append({"name": "bz", "parts": list(base.cards), "layout": lay, "extra": []})
+        # double: 閉路の置き方のまま、常在能力だけの部品（無償で唱えさせる等）は場、手札の部品は2枚ずつ
+        # （同じ札の別のコピー同士で回収し合うループ。アカシック3＋訪れる魔の時刻2枚）。ツインパクトは閉路の置き方に従う。
+    if True:
+        lay = dict(base.layout)
+        for i in base.cards:
+            if F.free_cast(rules.cards[i]):
+                lay[i] = "bz"
+        hand = [i for i in base.cards if lay.get(i) == "hand"]
+        if hand:
+            out.append({"name": "double", "parts": list(base.cards) + hand, "layout": lay, "extra": list(hand)})
+    return out
+
+
+def spends_hand(delta: dict, me: int = 0) -> bool:
+    """1周で自分の手札が減る繰り返し（手札の札を順に使うだけ。物差しの段1は数えるが、手札が尽きれば止まる有限の消費）。"""
+    return (delta or {}).get(f"hand:{me}", 0) < 0
+
+
+def trial(rules, base: Base, *, T: int = 4, seeds=(1, 2), budget: int = 100, raw=None, turns: int = 2, opp_bz=()) -> dict:
+    """入口（部品だけ）から turns ターン（既定2: 入口のターンに部品を出し、次のターンで回す形を拾う。マチュー＋ベルリン）、小さい予算で実エンジンを回す。段1＝検証済みのループを2周以上。
+    置き方（layouts）を順に試し、どれかで通れば通過。記録: 周回数、1周の増減、部品を使った回数。"""
     from ..engine import scenario
     from ..eval.lockcheck import lock_probe
     from ..eval.ruler import judge
     from ..search.game import play_game
-    deck = deck_of(rules, base.cards, raw)
     rows = []
     ids = set(base.cards) | {rules.cards[i].id for i in base.cards}
-    for sd in seeds:
-        try:
-            e = scenario.build(rules, entry_spec(rules, deck, base.cards, T, sd, base.layout, base.grave), first_player=0)
-            res, eng = play_game(rules, deck, [], sd, first_player=0, max_turn=1, budget=budget, start=e, lock_judge=lock_probe)
-            v = judge(res, eng)
-            uses = sum(1 for lg in eng.log if lg.get("p") == 0 and any(i in str(k) for k in lg.get("keys") or [] for i in ids))
-            rows.append({"seed": sd, "ok": v.stage1.ok and v.stage1.n >= 2, "laps": v.stage1.n, "infinite": v.stage1.infinite,
-                         "delta": v.stage1.delta, "uses": uses, "error": res.error})
-        except Exception as ex:
-            rows.append({"seed": sd, "ok": False, "laps": 0, "infinite": False, "delta": {}, "uses": 0,
-                         "error": f"{type(ex).__name__}: {ex}"[:200]})
+    for lo in layouts(rules, base, raw):
+        deck = deck_of(rules, lo["parts"], raw)
+        for sd in seeds:
+            try:
+                e = scenario.build(rules, entry_spec(rules, deck, lo["parts"], T, sd, lo["layout"], base.grave, opp_bz), first_player=0)
+                res, eng = play_game(rules, deck, [], sd, first_player=0, max_turn=turns, budget=budget, start=e, lock_judge=lock_probe)
+                v = judge(res, eng)
+                uses = sum(1 for lg in eng.log if lg.get("p") == 0 and any(i in str(k) for k in lg.get("keys") or [] for i in ids))
+                rows.append({"layout": lo["name"], "extra": lo["extra"], "seed": sd, "opp_bz": list(opp_bz), "ok": v.stage1.ok and v.stage1.n >= 2 and not spends_hand(v.stage1.delta),
+                             "laps": v.stage1.n, "infinite": v.stage1.infinite, "delta": v.stage1.delta, "uses": uses, "error": res.error})
+            except Exception as ex:
+                rows.append({"layout": lo["name"], "extra": lo["extra"], "seed": sd, "ok": False, "laps": 0, "infinite": False,
+                             "delta": {}, "uses": 0, "error": f"{type(ex).__name__}: {ex}"[:200]})
+        if any(r["ok"] for r in rows):
+            break
     ok = any(r["ok"] for r in rows)
-    return {"ok": ok, "rows": rows, "laps": max(r["laps"] for r in rows), "reason": None if ok else why_not(rules, base, rows, T)}
+    return {"ok": ok, "rows": rows, "laps": max(r["laps"] for r in rows),
+            "layout": next((r["layout"] for r in rows if r["ok"]), None),
+            "reason": None if ok else why_not(rules, base, rows, T)}
 
 
 # ---- (ii) 山札を掘るループ → デッキ内の任意の勝ち手段（2026-11-14） ----------------------------------
@@ -427,4 +483,191 @@ def attach_dig(rules, bases: list[Base], *, per_base: int = 8, wins=None, max_co
             tr.rank_key = (b.turn if b.turn is not None else 99, len(why) and -len(why), cost)
             out.append(tr)
     out.sort(key=lambda t: t.rank_key)
+    return out
+
+
+# ---- 2周目に入らない組の確認: 1周目の手順をそのまま再生する（2026-11-14） ---------------------------
+
+def replay_check(rules, base: Base, *, T: int = 4, seed: int = 1, budget: int = 100, turns: int = 2, layout: str = "cycle",
+                 raw=None, max_mains: int = 4, repeats: int = 3) -> dict:
+    """試し打ちの1局の決定の記録から、部品を使う最初の手（main）から始まる k 手（k=1..max_mains）を「1周」とみなし、
+    同じ意味キー（手札の札は WILD_HAND で引いた札に置き換え可）で repeats 回くり返せるかを、探索に選ばせず直接再生して確かめる。
+    くり返せて、各周の終わりの骨格（engine.loop.abstract）が同じで何かが変わる（増減がある）なら「探索が選べないだけ」。"""
+    from ..engine import scenario
+    from ..engine import loop as LP
+    from ..eval.lockcheck import lock_probe
+    from ..search.game import play_game
+    lo = next((x for x in layouts(rules, base, raw) if x["name"] == layout), None)
+    if lo is None:
+        return {"result": "no_layout"}
+    deck = deck_of(rules, lo["parts"], raw)
+    e0 = scenario.build(rules, entry_spec(rules, deck, lo["parts"], T, seed, lo["layout"], base.grave), first_player=0)
+    _, eng = play_game(rules, deck, [], seed, first_player=0, max_turn=turns, budget=budget, start=e0.clone(), lock_judge=lock_probe)
+    log = list(eng.log)
+    ids = set(base.cards) | {rules.cards[i].id for i in base.cards}
+    mains = [k for k, lg in enumerate(log) if lg.get("p") == 0 and lg.get("kind") == "main"]
+    first = next((k for k in mains if any(i in str(x) for x in lg_keys(log[k]) for i in ids)), None)
+    if first is None:
+        return {"result": "not_played"}
+    hand0 = None
+    best = {"result": "cannot_repeat", "k": None, "repeats": 0}
+    for n in range(1, max_mains + 1):
+        after = [k for k in mains if k > first]
+        end = after[n - 1] if len(after) >= n else len(log)
+        tmpl = log[first:end]
+        if any(lg.get("p") != 0 for lg in tmpl):
+            break                                  # 相手の決定が挟まる（ターンをまたぐ）手は1周に数えない
+        e = e0.clone()
+        try:
+            for lg in log[:end]:
+                e.answer_by_keys(list(lg["keys"]))
+        except Exception:
+            break
+        hand0 = {e.s.cards[c].defn for c in e.s.zones["hand"][0]}
+        sk0, ct0 = LP.abstract(e)
+        ok, changed = 0, False
+        for _ in range(repeats):
+            try:
+                for lg in tmpl:
+                    if e.s.waiting is None:
+                        raise LP.IllegalAnswer("no decision")
+                    LP.replay_keys(e, LP.wild_keys(list(lg["keys"]), hand0), hand0)
+            except Exception:
+                break
+            sk, ct = LP.abstract(e)
+            if sk != sk0:
+                break
+            changed = changed or ct != ct0
+            ok += 1
+        if ok > best["repeats"]:
+            best = {"result": "search_miss" if ok >= 2 and changed else ("repeat_no_gain" if ok >= 2 else "cannot_repeat"),
+                    "k": n, "repeats": ok}
+        if best["result"] == "search_miss":
+            break
+    return best
+
+
+def lg_keys(lg) -> list:
+    return list(lg.get("keys") or [])
+
+
+# ---- 3. ループ部品を3枚まで広げる（2026-11-14） ---------------------------------------------------
+
+def peaky(rules, ids) -> list[str]:
+    """ピーキーな効果を持つ札: 無償で唱えさせる・出させる常在能力、または効果で無償で使う（play_free: コスト踏み倒し、
+    出し直し・唱え直しを含む）。名前は見ない。"""
+    out = []
+    for i in ids:
+        d = rules.cards[i]
+        if F.free_cast(d):
+            out.append(i)
+            continue
+        for f in (getattr(d, "faces", None) or [d]):
+            effs = [ab.get("effect") or [] for ab in (f.abilities or [])] + [getattr(f, "spell", None) or []]
+            if any(op.get("op") == "play_free" for eff in effs for op, _ in C._all_ops_with_conds(eff)):
+                out.append(i)
+                break
+    return out
+
+
+def triangle_sets(rules, by_card, ids, seeds: list[str], log=None) -> list[list[str]]:
+    """a → b → c → a（3枚とも seeds の札）と束が狙って受け渡す（zone_graph.feeds == 2）3枚の組。2枚では閉じない3枚の閉路の候補。
+    受け渡しは束の前提を見るだけの過大近似で、組ごとに judge_set（3枚の静的判定）を通す。"""
+    from ..engine import zone_graph as Z
+    t0 = time.time()
+    # 3枚とも seeds（ピーキーな札）の中で探す。全札を相手にすると1枚目だけで数十万組になる（2026-11-14 実測）
+    allb = [(rules.cards[x].id, x, b) for x in seeds for b in by_card.get(rules.cards[x].id, [])]
+    succ_cache = {}
+
+    def succ(x):
+        if x not in succ_cache:
+            mine = by_card.get(rules.cards[x].id, [])
+            succ_cache[x] = {y for _, y, b in allb if y != x and any(Z.feeds(a, b, rules) == 2 for a in mine)}
+        return succ_cache[x]
+
+    out = set()
+    for n, a in enumerate(seeds):
+        sa = succ(a)
+        mine = by_card.get(rules.cards[a].id, [])
+        pred = {y for _, y, b in allb if y != a and any(Z.feeds(b, m, rules) == 2 for m in mine)}
+        for b in sa:
+            for c in succ(b) & pred:
+                if c != b:
+                    out.add(tuple(sorted((a, b, c))))
+        if log and n % 50 == 0:
+            log(f"  三角 {n}/{len(seeds)} 組 {len(out)} {time.time()-t0:.0f}s")
+    return [list(x) for x in sorted(out)]
+
+
+def collect3(rules, by_card, *, seeds=None, log=None) -> tuple[list[Base], Counter]:
+    """3枚の部品: triangle_sets の組を judge_set にかけ、閉じる組を Base にする（速さの上限は値として記録、足切りしない）。"""
+    from ..eval import speed_bound as S
+    ids, _ = F.usable_ids(rules)
+    seeds = seeds if seeds is not None else peaky(rules, ids)
+    sets = helper_sets(rules, by_card, ids, log=log)
+    seen = {tuple(x) for x in sets}
+    sets += [x for x in triangle_sets(rules, by_card, ids, [x for x in seeds if by_card.get(rules.cards[x].id)], log=log)
+             if tuple(x) not in seen]
+    if log:
+        log(f"(3) 三角の組 {len(sets)}（種 {len(seeds)}）")
+    out, drop = [], Counter()
+    for cs in sets:
+        r, cyc = F.judge_set(cs, by_card, rules)
+        if r not in (None, "no_win") or not cyc:
+            drop[r] += 1
+            continue
+        c = cyc[0]
+        lay, grave = layout_of(c, cs, rules)
+        out.append(Base(cards=cs, names=[rules.cards[x].name for x in cs], gains=_gains(c), has_win=r is None,
+                        unknown=getattr(c, "unknown", 0), turn=S.static_bound(rules, cs)["turn"], layout=lay, grave=grave))
+    return out, drop
+
+
+def helper_sets(rules, by_card, ids, log=None) -> list[list[str]]:
+    """無償で唱えさせる・出させる常在能力の札 h（アカシック3など）と、h が対象にする札どうしで束が狙って受け渡し合う2枚
+    （x→y→x、または x が自分を戻す）の3枚組。2枚では「マナが閉じない」で落ちる組を、マナの穴を埋める3枚目で補う形。"""
+    from ..engine import zone_graph as Z
+    t0 = time.time()
+    out = set()
+    for h in ids:
+        fl = F.free_cast(rules.cards[h])
+        if not fl:
+            continue
+        nodes = [x for x in ids if x != h and any(F._admits(f, rules.cards[x]) for f in fl) and by_card.get(rules.cards[x].id)]
+        bs = {x: by_card.get(rules.cards[x].id, []) for x in nodes}
+        # 回収する札（自分の墓地から手札・場へ狙って戻す束を持つ札）を片方に要る。総当たりを避ける
+        rec = [x for x in nodes if any(F._zone(m.src) == "graveyard" and m.dst in ("hand", "bz") and not m.blind
+                                       for b in bs[x] for m in b.moves)]
+        for x in rec:
+            for y in nodes:
+                if y == x:
+                    continue
+                if any(Z.feeds(a, b, rules) == 2 for a in bs[x] for b in bs[y]) and \
+                        any(Z.feeds(b, a, rules) == 2 for a in bs[x] for b in bs[y]):
+                    out.add(tuple(sorted((x, y, h))))
+        if log:
+            log(f"  補助 {rules.cards[h].name}: 対象 {len(nodes)} 回収 {len(rec)} 組 {len(out)} {time.time()-t0:.0f}s")
+    return [list(x) for x in sorted(out)]
+
+
+def zero_extend(rules, by_card, base: Base, wins, k: int = 10) -> list[Base]:
+    """1周の増減がない閉路（同じ状態に戻るだけ。アカシック3＋訪れる魔の時刻＋ナウ・オア・ネバー）に、閉路が毎周誘発させて
+    何かを動かす札（勝ち手段の札のうち、足すと静的判定を通るもの）を1枚足した部品。増減がないと物差しの段1に数えられないため。"""
+    out = []
+    for w in sorted(wins, key=lambda x: (rules.cards[x].cost if isinstance(rules.cards[x].cost, int) else 99, x)):   # 軽い順
+        if w in base.cards:
+            continue
+        cs = list(base.cards) + [w]
+        r, cyc = F.judge_set(cs, by_card, rules)
+        if r is not None or not cyc:
+            continue
+        g = _gains(cyc[0])
+        if not g:
+            continue
+        lay, grave = layout_of(cyc[0], cs, rules)
+        lay = {**base.layout, **{x: z for x, z in lay.items() if x not in base.layout}}
+        out.append(Base(cards=cs, names=[rules.cards[x].name for x in cs], gains=g, has_win=True, unknown=getattr(cyc[0], "unknown", 0),
+                        turn=base.turn, layout=lay, grave=list(base.grave)))
+        if len(out) >= k:
+            break
     return out

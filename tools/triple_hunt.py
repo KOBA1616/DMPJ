@@ -28,7 +28,7 @@ def _base_from(d):
 
 def main():
     ap = argparse.ArgumentParser()
-    ap.add_argument("cmd", choices=["collect", "attach", "measure", "trial"])
+    ap.add_argument("cmd", choices=["collect", "collect3", "attach", "measure", "trial"])
     ap.add_argument("--out", required=True)
     ap.add_argument("--bases")
     ap.add_argument("--triples")
@@ -40,6 +40,8 @@ def main():
     ap.add_argument("--budget", type=int, default=1500)
     ap.add_argument("--entry-turn", type=int, default=3)
     ap.add_argument("--shard", default="0/1", help="trial: i/n（n 個に分けた i 番目）")
+    ap.add_argument("--opp-bz", default="", help="trial: 相手の場に置く札（カンマ区切り）。2b の典型: dm19-073,dm01-051")
+    ap.add_argument("--only-flag", default="", help="trial: static_flags にこの印がある部品だけ")
     ap.add_argument("--trial-budget", type=int, default=50)
     ap.add_argument("--trial-seeds", type=int, default=1)
     ap.add_argument("--time-limit", type=int, default=0)
@@ -54,6 +56,11 @@ def main():
         out = {"bases": [{**b.__dict__, "gains": {f"{o}:{z}": v for (o, z), v in b.gains.items()}} for b in bases],
                "drop": dict(drop), "gain_keys": dict(gk.most_common()), "seconds": round(time.time() - t0)}
         log(f"(a) 部品 {len(bases)} 落ち {dict(drop)}")
+    elif a.cmd == "collect3":
+        bases, drop = X.collect3(rules, by, log=log)
+        out = {"bases": [{**b.__dict__, "gains": {f"{o}:{z}": v for (o, z), v in b.gains.items()}} for b in bases],
+               "drop": dict(drop), "seconds": round(time.time() - t0)}
+        log(f"(3) 部品 {len(bases)} 落ち {dict(drop)}")
     elif a.cmd == "attach":
         bases = [_base_from(d) for d in json.loads(Path(a.bases).read_text(encoding="utf-8"))["bases"]]
         tr = X.attach(rules, by, bases, per_base=a.per_base, log=log)
@@ -63,10 +70,14 @@ def main():
         from dmsim.discovery import basebuild as B
         raw = B._raw_cards(rules)
         i, n = map(int, a.shard.split("/"))
-        bases = [_base_from(d) for d in json.loads(Path(a.bases).read_text(encoding="utf-8"))["bases"]][i::n]
+        bases = [_base_from(d) for d in json.loads(Path(a.bases).read_text(encoding="utf-8"))["bases"]]
+        if a.only_flag:
+            bases = [b for b in bases if a.only_flag in X.static_flags(b)]
+        bases = bases[i::n]
+        opp_bz = [x for x in a.opp_bz.split(",") if x]
         rows = []
         for k, b in enumerate(bases):
-            r = X.trial(rules, b, T=4, seeds=range(1, a.trial_seeds + 1), budget=a.trial_budget, raw=raw)
+            r = X.trial(rules, b, T=4, seeds=range(1, a.trial_seeds + 1), budget=a.trial_budget, raw=raw, opp_bz=opp_bz)
             rows.append({"cards": b.cards, "names": b.names, "turn": b.turn, **r})
             if k % 20 == 0:
                 log(f"{k}/{len(bases)} 通過 {sum(x['ok'] for x in rows)} 理由 {dict(Counter(x['reason'] for x in rows if x['reason']))}")
