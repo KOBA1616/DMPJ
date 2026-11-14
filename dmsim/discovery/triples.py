@@ -353,29 +353,72 @@ def why_not(rules, base: Base, rows: list[dict], T: int) -> str:
     return "once_only"
 
 
-def trial(rules, base: Base, *, T: int = 4, seeds=(1, 2), budget: int = 100, raw=None) -> dict:
-    """入口（部品だけ）から1ターンだけ、小さい予算で実エンジンを回す。段1＝検証済みのループを2周以上。
-    記録: 周回数、1周の増減（実測）が静的な増減と同じ向きか、部品を使った回数（決定の記録に部品の ID が出た回数）。"""
+def helper_spell(rules, civs, raw=None) -> str | None:
+    """つなぎの呪文: 部品の文明に収まる最も軽い呪文（効果データが欠けていないもの。名前は見ない）。"""
+    from . import basebuild as B
+    raw = raw if raw is not None else B._raw_cards(rules)
+    best = None
+    for i, d in sorted(rules.cards.items()):
+        if B._test(i) or "spell" not in d.types or "creature" in d.types or not isinstance(d.cost, int):
+            continue
+        if not set(d.civs) <= set(civs) or (i in raw and B.missing_effect(d)):
+            continue
+        if best is None or d.cost < rules.cards[best].cost:
+            best = i
+    return best
+
+
+def layouts(rules, base: Base, raw=None) -> list[dict]:
+    """試し打ちの入口の置き方。cycle: 閉路の束から読んだ置き方。bz_spell: クリーチャーの部品は場、手札につなぎの呪文
+    （「呪文を唱えた時」で回る部品は、閉路が呪文の面＝ツインパクトを使うと読んでも、実際はクリーチャーの面で場にいて
+    別の呪文で回すことが多い。マチュー＋ベルリン）。"""
+    out = [{"name": "cycle", "parts": list(base.cards), "layout": dict(base.layout), "extra": []}]
+    cre = [i for i in base.cards if "creature" in rules.cards[i].types]
+    if cre:
+        civs = {c for i in base.cards for c in rules.cards[i].civs}
+        sp = helper_spell(rules, civs, raw)
+        lay = {i: ("bz" if i in cre else "hand") for i in base.cards}
+        if sp and sp not in base.cards:
+            lay[sp] = "hand"
+            out.append({"name": "bz_spell", "parts": list(base.cards) + [sp], "layout": lay, "extra": [sp]})
+        elif lay != base.layout:
+            out.append({"name": "bz", "parts": list(base.cards), "layout": lay, "extra": []})
+    return out
+
+
+def spends_hand(delta: dict, me: int = 0) -> bool:
+    """1周で自分の手札が減る繰り返し（手札の札を順に使うだけ。物差しの段1は数えるが、手札が尽きれば止まる有限の消費）。"""
+    return (delta or {}).get(f"hand:{me}", 0) < 0
+
+
+def trial(rules, base: Base, *, T: int = 4, seeds=(1, 2), budget: int = 100, raw=None, turns: int = 2) -> dict:
+    """入口（部品だけ）から turns ターン（既定2: 入口のターンに部品を出し、次のターンで回す形を拾う。マチュー＋ベルリン）、小さい予算で実エンジンを回す。段1＝検証済みのループを2周以上。
+    置き方（layouts）を順に試し、どれかで通れば通過。記録: 周回数、1周の増減、部品を使った回数。"""
     from ..engine import scenario
     from ..eval.lockcheck import lock_probe
     from ..eval.ruler import judge
     from ..search.game import play_game
-    deck = deck_of(rules, base.cards, raw)
     rows = []
     ids = set(base.cards) | {rules.cards[i].id for i in base.cards}
-    for sd in seeds:
-        try:
-            e = scenario.build(rules, entry_spec(rules, deck, base.cards, T, sd, base.layout, base.grave), first_player=0)
-            res, eng = play_game(rules, deck, [], sd, first_player=0, max_turn=1, budget=budget, start=e, lock_judge=lock_probe)
-            v = judge(res, eng)
-            uses = sum(1 for lg in eng.log if lg.get("p") == 0 and any(i in str(k) for k in lg.get("keys") or [] for i in ids))
-            rows.append({"seed": sd, "ok": v.stage1.ok and v.stage1.n >= 2, "laps": v.stage1.n, "infinite": v.stage1.infinite,
-                         "delta": v.stage1.delta, "uses": uses, "error": res.error})
-        except Exception as ex:
-            rows.append({"seed": sd, "ok": False, "laps": 0, "infinite": False, "delta": {}, "uses": 0,
-                         "error": f"{type(ex).__name__}: {ex}"[:200]})
+    for lo in layouts(rules, base, raw):
+        deck = deck_of(rules, lo["parts"], raw)
+        for sd in seeds:
+            try:
+                e = scenario.build(rules, entry_spec(rules, deck, lo["parts"], T, sd, lo["layout"], base.grave), first_player=0)
+                res, eng = play_game(rules, deck, [], sd, first_player=0, max_turn=turns, budget=budget, start=e, lock_judge=lock_probe)
+                v = judge(res, eng)
+                uses = sum(1 for lg in eng.log if lg.get("p") == 0 and any(i in str(k) for k in lg.get("keys") or [] for i in ids))
+                rows.append({"layout": lo["name"], "extra": lo["extra"], "seed": sd, "ok": v.stage1.ok and v.stage1.n >= 2 and not spends_hand(v.stage1.delta),
+                             "laps": v.stage1.n, "infinite": v.stage1.infinite, "delta": v.stage1.delta, "uses": uses, "error": res.error})
+            except Exception as ex:
+                rows.append({"layout": lo["name"], "extra": lo["extra"], "seed": sd, "ok": False, "laps": 0, "infinite": False,
+                             "delta": {}, "uses": 0, "error": f"{type(ex).__name__}: {ex}"[:200]})
+        if any(r["ok"] for r in rows):
+            break
     ok = any(r["ok"] for r in rows)
-    return {"ok": ok, "rows": rows, "laps": max(r["laps"] for r in rows), "reason": None if ok else why_not(rules, base, rows, T)}
+    return {"ok": ok, "rows": rows, "laps": max(r["laps"] for r in rows),
+            "layout": next((r["layout"] for r in rows if r["ok"]), None),
+            "reason": None if ok else why_not(rules, base, rows, T)}
 
 
 # ---- (ii) 山札を掘るループ → デッキ内の任意の勝ち手段（2026-11-14） ----------------------------------
@@ -428,3 +471,68 @@ def attach_dig(rules, bases: list[Base], *, per_base: int = 8, wins=None, max_co
             out.append(tr)
     out.sort(key=lambda t: t.rank_key)
     return out
+
+
+# ---- 2周目に入らない組の確認: 1周目の手順をそのまま再生する（2026-11-14） ---------------------------
+
+def replay_check(rules, base: Base, *, T: int = 4, seed: int = 1, budget: int = 100, turns: int = 2, layout: str = "cycle",
+                 raw=None, max_mains: int = 4, repeats: int = 3) -> dict:
+    """試し打ちの1局の決定の記録から、部品を使う最初の手（main）から始まる k 手（k=1..max_mains）を「1周」とみなし、
+    同じ意味キー（手札の札は WILD_HAND で引いた札に置き換え可）で repeats 回くり返せるかを、探索に選ばせず直接再生して確かめる。
+    くり返せて、各周の終わりの骨格（engine.loop.abstract）が同じで何かが変わる（増減がある）なら「探索が選べないだけ」。"""
+    from ..engine import scenario
+    from ..engine import loop as LP
+    from ..eval.lockcheck import lock_probe
+    from ..search.game import play_game
+    lo = next((x for x in layouts(rules, base, raw) if x["name"] == layout), None)
+    if lo is None:
+        return {"result": "no_layout"}
+    deck = deck_of(rules, lo["parts"], raw)
+    e0 = scenario.build(rules, entry_spec(rules, deck, lo["parts"], T, seed, lo["layout"], base.grave), first_player=0)
+    _, eng = play_game(rules, deck, [], seed, first_player=0, max_turn=turns, budget=budget, start=e0.clone(), lock_judge=lock_probe)
+    log = list(eng.log)
+    ids = set(base.cards) | {rules.cards[i].id for i in base.cards}
+    mains = [k for k, lg in enumerate(log) if lg.get("p") == 0 and lg.get("kind") == "main"]
+    first = next((k for k in mains if any(i in str(x) for x in lg_keys(log[k]) for i in ids)), None)
+    if first is None:
+        return {"result": "not_played"}
+    hand0 = None
+    best = {"result": "cannot_repeat", "k": None, "repeats": 0}
+    for n in range(1, max_mains + 1):
+        after = [k for k in mains if k > first]
+        end = after[n - 1] if len(after) >= n else len(log)
+        tmpl = log[first:end]
+        if any(lg.get("p") != 0 for lg in tmpl):
+            break                                  # 相手の決定が挟まる（ターンをまたぐ）手は1周に数えない
+        e = e0.clone()
+        try:
+            for lg in log[:end]:
+                e.answer_by_keys(list(lg["keys"]))
+        except Exception:
+            break
+        hand0 = {e.s.cards[c].defn for c in e.s.zones["hand"][0]}
+        sk0, ct0 = LP.abstract(e)
+        ok, changed = 0, False
+        for _ in range(repeats):
+            try:
+                for lg in tmpl:
+                    if e.s.waiting is None:
+                        raise LP.IllegalAnswer("no decision")
+                    LP.replay_keys(e, LP.wild_keys(list(lg["keys"]), hand0), hand0)
+            except Exception:
+                break
+            sk, ct = LP.abstract(e)
+            if sk != sk0:
+                break
+            changed = changed or ct != ct0
+            ok += 1
+        if ok > best["repeats"]:
+            best = {"result": "search_miss" if ok >= 2 and changed else ("repeat_no_gain" if ok >= 2 else "cannot_repeat"),
+                    "k": n, "repeats": ok}
+        if best["result"] == "search_miss":
+            break
+    return best
+
+
+def lg_keys(lg) -> list:
+    return list(lg.get("keys") or [])
