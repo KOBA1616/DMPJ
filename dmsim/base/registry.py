@@ -20,6 +20,7 @@ import yaml
 
 from . import store
 
+OPTIONAL_NONE = ("contrib",)   # 後から足した欄。None の時は to_dict・指紋に出さない
 TYPES = ("loop", "resource", "attack", "lock")        # 設計書 §11 の類型（重複可）
 SPLITS = ("tuning", "holdout", "discovered")         # discovered = システムが見つけた新規（調整に使ってよいかは tuning と同じ扱い）
 WINS = ("opp_deck_out", "effect", "lock", "beat")
@@ -54,6 +55,9 @@ class Candidate:
     opp_levels: list[int] = field(default_factory=lambda: [0])   # 能動ロック: 測る相手の抵抗の段階（search.opponent.resistance）
     route_stages: list | str | None = None    # 入口への経路の段。data/loops/route/ の名前かパス、または段のリスト（route_stages() で読む）
     note: str = ""
+    # 組の寄与を値として測る設定（eval.verify._contrib、§29/§30）。{deck, opp_level, seeds, max_turn, values}。None は測らない。
+    # 足切りには使わず measured.values に記録する。None の時は指紋に含めない（既存の候補の指紋を変えない）
+    contrib: dict | None = None
 
     def __post_init__(self):
         if self.split not in SPLITS:
@@ -76,7 +80,11 @@ class Candidate:
         return {c["id"] for c in self.core if c.get("id") and (part is None or c.get("part", "loop") == part)}
 
     def to_dict(self) -> dict:
-        return asdict(self)
+        d = asdict(self)
+        for k in OPTIONAL_NONE:
+            if d.get(k) is None:
+                d.pop(k, None)
+        return d
 
     def digest(self) -> str:
         return hashlib.sha1(json.dumps(self.to_dict(), sort_keys=True, ensure_ascii=False).encode()).hexdigest()[:16]
@@ -118,6 +126,8 @@ def record(cand: Candidate, ev: Evidence, *, path: Path = PATH, purpose: str = "
     if ev.passed and ev.failed_at():
         raise RegistryError("passed なのに落ちた検証がある")
     row = {**cand.to_dict(), "digest": ev.candidate_digest, "checks": ev.checks, "measured": ev.measured, "version": ev.version}
+    if ev.measured.get("values"):
+        row["values"] = ev.measured["values"]   # 足切りしない値（リソース型の効率・組の寄与）。順位づけに使う
     reg = load(path)
     for k in ("entries", "rejected"):
         reg[k] = [r for r in reg[k] if r["id"] != cand.id]
