@@ -36,6 +36,7 @@ candidates:
       - {id: dm25ex3-028, name: ～地獄帰りの騎士～, role: エンジン}
       - {id: dm25ex3-055, name: DARK MEMORY CONTAINER, role: エンジン}
     setup: data/registry/setups/knight_dmc.json
+    contrib: {deck: data/decks/knight_dmc.yaml, opp_level: 2b, seeds: 40, max_turn: 4}   # 組の寄与を値として記録（§30）
     procedure:
       - 盾が置かれた時に墓地から騎士が出る。3マナで体3つと手札を得る（リソース型、設計書 §11）。
   - id: akashic
