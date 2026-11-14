@@ -11,10 +11,15 @@ sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "tools"))
 
 @pytest.fixture(scope="module")
 def env():
-    os.environ.pop("DMSIM_SKIP_CONVERTED", None)
+    # 環境変数は必ず戻す（戻さないと同じワーカーの後のテストが converted.yaml を二重に読み「duplicate card id」になる）
     from dmsim.cards.defs import load_rules
     import loop_cond as C
-    rules = load_rules()
+    old = os.environ.pop("DMSIM_SKIP_CONVERTED", None)
+    try:
+        rules = load_rules()
+    finally:
+        if old is not None:
+            os.environ["DMSIM_SKIP_CONVERTED"] = old
     by = defaultdict(list)
     for b in C.bundles(rules):
         by[b.card].append(b)

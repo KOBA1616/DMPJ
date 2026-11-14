@@ -1176,6 +1176,8 @@ def load_rules(card_files: list[Path] | None = None, only_approved: bool | None 
         ledger, versions = approval.load(), approval.vocab_versions(tables)
     zones, keywords, macros, actions, steps = tables
     card_files = card_files or card_yaml_files()
+    seen_files: set = set()   # 同じファイルを二度渡されても一度だけ読む（呼び出し側の環境変数の差で converted.yaml が重なる場合）
+    card_files = [f for f in card_files if not (Path(f).resolve() in seen_files or seen_files.add(Path(f).resolve()))]
     cards: dict[str, CardDef] = {}
     for f in card_files:
         for raw in yaml.load(Path(f).read_text(encoding="utf-8"), Loader=_YamlLoader).get("cards") or []:
