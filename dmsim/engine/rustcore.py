@@ -86,7 +86,7 @@ def _simple_selector(sel) -> bool:
         if not isinstance(r, str) or r in ("self", "self_moved", "self_entered", "crossed", "subject") or r.startswith("event.") \
                 or {"zone", "owner", "from_top"} & set(sel):
             return False
-    elif sel.get("zone") not in ("hand", "deck", "graveyard", "mana", "bz") or sel.get("owner", "you") not in ("you", "opp"):
+    elif sel.get("zone") not in ("hand", "deck", "graveyard", "mana", "bz", "shield") or sel.get("owner", "you") not in ("you", "opp"):
         return False
     if sel.get("chooser", "you") not in ("you", "opp"):
         return False
@@ -113,7 +113,7 @@ def _simple_cands(sel) -> bool:
     if "ref" in sel:
         return isinstance(sel["ref"], str) and not sel["ref"].startswith("event.") and sel["ref"] not in ("self_moved", "self_entered", "crossed", "subject") \
             and set(sel) <= {"ref", "filter"} and ("filter" not in sel or _simple_filter(sel["filter"]))
-    return sel.get("zone") in ("hand", "deck", "graveyard", "mana", "bz") and sel.get("owner", "you") in ("you", "opp") \
+    return sel.get("zone") in ("hand", "deck", "graveyard", "mana", "bz", "shield") and sel.get("owner", "you") in ("you", "opp") \
         and isinstance(sel.get("from_top", 0), int) and ("filter" not in sel or _simple_filter(sel["filter"])) and isinstance(sel.get("other", False), bool)
 
 
@@ -150,6 +150,8 @@ def _simple_effect(ops, top=True) -> bool:
             continue
         if k == "choose" and top and set(o) <= {"op", "select", "as"} and isinstance(o.get("as"), str) and _simple_selector(o.get("select")):
             continue   # 変数への束縛は最上段だけ（Python は子タスクと env を共有するが、Rust は複製するため）
+        if k == "repeat" and set(o) <= {"op", "times", "body"} and isinstance(o.get("times"), int) and _simple_effect(o["body"], False):
+            continue
         if k == "may" and set(o) <= {"op", "body"} and _simple_effect(o["body"], False):
             continue
         if k in ("tap", "untap") and set(o) <= {"op", "select"} and _simple_selector(o.get("select")):
@@ -164,9 +166,27 @@ def _simple_effect(ops, top=True) -> bool:
 _OK_WHEN = ({"event": "move", "to": "bz", "subject": "self"}, {"event": "attack", "subject": "self"})
 
 
+_OK_EVENTS = {"move", "attack", "battle_win", "turn_start"}
+_OK_ZONES = {"hand", "deck", "graveyard", "mana", "bz", "shield"}
+
+
+def _simple_when(w) -> bool:
+    """Rust の when_match が Python の _match_when と同じ結果になる誘発条件（段階3-b）。"""
+    if not isinstance(w, dict) or not set(w) <= {"event", "from", "to", "reason", "player", "subject"}:
+        return False
+    if w.get("event") not in _OK_EVENTS or w.get("subject", "self") != "self" or w.get("player", "you") not in ("you", "opp"):
+        return False
+    for k in ("from", "to"):
+        v = w.get(k)
+        if v is not None and not (v in _OK_ZONES or (isinstance(v, list) and all(x in _OK_ZONES for x in v))):
+            return False
+    return "reason" not in w or isinstance(w["reason"], (str, list))
+
+
 def _simple_trigger(ab) -> bool:
-    """段階2-d: 「出た時」「攻撃する時」の誘発で、効果が 引く・（任意で）引く・自身のタップ/アンタップ だけのもの。"""
-    return ab["kind"] == "trigger" and set(ab) <= {"kind", "when", "effect"} and ab["when"] in _OK_WHEN \
+    """段階3-b: 単純な誘発条件（_simple_when）で、条件 if も単純、効果が単純（_simple_effect）なもの。バトルゾーンか墓地で働く。"""
+    return ab["kind"] == "trigger" and set(ab) <= {"kind", "when", "effect", "if", "zone"} and _simple_when(ab["when"]) \
+        and ab.get("zone", "bz") in ("bz", "graveyard") and ("if" not in ab or _simple_cond(ab["if"])) \
         and _simple_effect(ab["effect"])
 
 
@@ -201,13 +221,15 @@ def _is_plain_spell(d) -> bool:
     from ..cards.defs import CardDef
     if d.types != ["spell"] or not d.spell or not _simple_effect(d.spell):
         return False
-    if not set(d.keywords) <= {"s_trigger"}:
+    if not set(d.keywords) <= {"s_trigger", "charger"}:
+        return False
+    if d.resolve_to not in ("graveyard", "mana") or ("charger" in d.keywords) != (d.resolve_to == "mana"):
         return False
     for ab in d.abilities:
         if not (ab["kind"] == "static" and ab.get("zone") == "shield" and ab.get("affects") == "self" and "if" not in ab
                 and ab.get("mod") == {"allow": ["s_trigger"]}):
             return False
-    skip = {"id", "name", "types", "civs", "cost", "power", "mana", "races", "text", "abilities", "keywords", "source", "spell"}
+    skip = {"id", "name", "types", "civs", "cost", "power", "mana", "races", "text", "abilities", "keywords", "source", "spell", "resolve_to"}
     for f in dataclasses.fields(CardDef):
         if f.name in skip:
             continue
@@ -251,10 +273,12 @@ def rules_bundle(rules) -> dict:
             "zones": [[k, {"public": v["public"], "ordered": v["ordered"], "shared": v["shared"]}]
                       for k, v in rules.zones.items()],
             "steps": list(rules.steps),
+            "zt_zones": sorted({z for v in rules.zone_trigger_defs.values() for z in v}),
             "cards": {i: {"name": d.name, "civs": list(d.civs), "cost": d.cost, "power": d.power,
                           "mana": d.mana, "plain": _is_plain(d), "types": list(d.types), "races": list(d.races),
                           "keywords": list(d.keywords), "abil": d.abilities if _is_plain(d) else [],
                           "spell": list(d.spell) if _is_plain(d) and d.types == ["spell"] else [],
+                          "resolve_to": d.resolve_to, "zt": i in rules.zone_trigger_defs,
                           **dict(zip(("allow", "deny", "breaks", "shield_allow"), (_self_mods(d) or ([], [], [], []))))}
                       for i, d in rules.cards.items()}}
 

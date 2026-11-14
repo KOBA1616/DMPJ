@@ -30,6 +30,10 @@ pub struct CardDef {
     pub shield_allow: Vec<String>,
     #[serde(default)]
     pub spell: Vec<serde_json::Value>,      // 呪文の効果（plain な呪文だけ。Python の CardDef.spell）
+    #[serde(default)]
+    pub zt: bool,                           // バトルゾーン以外で働く誘発型能力を持つ（Python の zone_trigger_defs）
+    #[serde(default = "default_resolve_to")]
+    pub resolve_to: String,                 // 呪文の解決後の置き場所（チャージャーは mana）
 }
 
 #[derive(Deserialize, Clone, Debug)]
@@ -45,10 +49,16 @@ pub struct Rules {
     pub zones: Vec<(String, ZoneDef)>,
     pub steps: Vec<String>,
     pub cards: HashMap<String, CardDef>,
+    #[serde(default)]
+    pub zt_zones: Vec<String>,              // zone_trigger_defs の全ゾーン（並びは Python と同じ sorted）
 }
 
 impl Rules {
     pub fn zone(&self, name: &str) -> &ZoneDef {
         &self.zones.iter().find(|(n, _)| n == name).expect("zone").1
     }
+}
+
+fn default_resolve_to() -> String {
+    "graveyard".to_string()
 }

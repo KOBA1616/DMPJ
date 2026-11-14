@@ -167,6 +167,25 @@ impl Engine {
                     }
                     None
                 }
+                "bind" => {
+                    // 移動の後、移動先にあるカードの新しい参照を変数に入れる。Python は env の辞書を親子の効果で共有するので、
+                    // 同じ env（値が等しいもの）を持つ効果すべてに書く
+                    let t = self.s.tasks.pop().unwrap();
+                    let zone = t["zone"].as_str().unwrap_or("").to_string();
+                    let refs: Vec<Value> = t["cids"].as_array().unwrap().iter().filter_map(|v| v.as_i64())
+                        .filter(|&c| self.s.cards[c as usize].zone == zone).map(|c| self.refv(c)).collect();
+                    let name = t["name"].as_str().unwrap_or("").to_string();
+                    let env0 = t["env"].clone();
+                    for task in self.s.tasks.iter_mut() {
+                        if task.get("env") == Some(&env0) {
+                            if !task["env"]["vars"].is_object() {
+                                task["env"]["vars"] = json!({});
+                            }
+                            task["env"]["vars"][name.as_str()] = json!(refs.clone());
+                        }
+                    }
+                    None
+                }
                 "resolve_pending" => self.h_resolve_pending()?,
                 "effect" => self.h_effect()?,
                 "slayer" => {
@@ -302,7 +321,7 @@ impl Engine {
                 _ => return uns("cands owner"),
             };
             let zone = sel["zone"].as_str().unwrap_or("");
-            if !["hand", "deck", "graveyard", "mana", "bz"].contains(&zone) {
+            if !["hand", "deck", "graveyard", "mana", "bz", "shield"].contains(&zone) {
                 return uns(format!("cands zone {}", zone));
             }
             lst = if zone == "bz" { self.bz_tops(Some(p)) } else { self.zl(zone, p).clone() };
@@ -426,7 +445,7 @@ impl Engine {
                 _ => return uns("selector owner"),
             };
             let zone = sel["zone"].as_str().unwrap_or("");
-            if !["hand", "deck", "graveyard", "mana", "bz"].contains(&zone) {
+            if !["hand", "deck", "graveyard", "mana", "bz", "shield"].contains(&zone) {
                 return uns(format!("selector zone {}", zone));
             }
             lst = if zone == "bz" { self.bz_tops(Some(p)) } else { self.zl(zone, p).clone() };
@@ -807,7 +826,7 @@ impl Engine {
             }
             let ops = json!(self.def(cid).spell.clone());
             let cev = self.ev_task(vec![json!({"ev": "cast", "player": p, "subject": r, "unpaid": free})]);
-            let mv = self.ev_task(vec![json!({"ev": "move", "subject": r, "from": from_zone, "to": "graveyard", "reason": "resolve", "position": "top"})]);
+            let mv = self.ev_task(vec![json!({"ev": "move", "subject": r, "from": from_zone, "to": self.def(cid).resolve_to.clone(), "reason": "resolve", "position": "top"})]);
             self.push(vec![cev, json!({"t": "effect", "ops": ops, "pc": 0, "env": env, "os": {}}), mv]);
             return Ok(None);
         }
@@ -1081,6 +1100,11 @@ impl Engine {
         }
         let defn = p["defn"].as_str().unwrap().to_string();
         let ab = self.rules.cards[&defn].abil[p["ab"].as_i64().unwrap() as usize].clone();
+        if let Some(cond) = ab.get("if") {
+            if !self.eval_cond(cond, &p["env"])? {   // 条件は解決時に確認（603.4, 605.2a）
+                return Ok(None);
+            }
+        }
         let eff = ab["effect"].clone();
         self.push(vec![json!({"t": "effect", "ops": eff, "pc": 0, "env": p["env"], "os": {}})]);
         Ok(None)
@@ -1133,6 +1157,15 @@ impl Engine {
                 self.defer(vec![child]);
                 deferred = true;
             }
+            "repeat" => {
+                let n = op["times"].as_i64().ok_or_else(|| "repeat times".to_string());
+                let n = match n { Ok(n) => n, Err(e) => return uns(e) };
+                let kids: Vec<Value> = (0..n).map(|_| json!({"t": "effect", "ops": op["body"], "pc": 0, "env": env, "os": {}})).collect();
+                if !kids.is_empty() {
+                    self.defer(kids);
+                    deferred = true;
+                }
+            }
             "may" => {
                 if op.get("label").is_some() || op.get("player").is_some() || op.get("else").is_some() {
                     return uns("may options");
@@ -1174,8 +1207,25 @@ impl Engine {
                 };
                 let pos = op.get("position").and_then(|v| v.as_str()).unwrap_or("top");
                 let tapped = op.get("tapped").and_then(|v| v.as_bool()).unwrap_or(false);
+                // 効果でシールドを手札に加える時は、S・トリガー等の使用宣言ができる（113.6。Python と同じく break タスクで）
+                let shield_out: Vec<i64> = if to == "hand" { cids.iter().copied().filter(|&c| self.s.cards[c as usize].zone == "shield").collect() } else { vec![] };
+                let mut owners: Vec<i64> = vec![];
+                for &c in &shield_out {
+                    let o = self.s.cards[c as usize].controller;
+                    if !owners.contains(&o) {
+                        owners.push(o);
+                    }
+                }
+                owners.sort_by_key(|&o| (o != self.s.active, o));
+                let in_st = env.get("in_st").and_then(|v| v.as_bool()).unwrap_or(false);
+                let out_tasks: Vec<Value> = owners.iter().map(|&o| {
+                    let cs: Vec<i64> = shield_out.iter().copied().filter(|&c| self.s.cards[c as usize].controller == o).collect();
+                    json!({"t": "break", "victim": o, "by": env["you"], "count": cs.len(), "phase": 1, "chosen": cs,
+                           "in_effect": in_st, "reason": op["reason"], "fire_break": false})
+                }).collect();
                 let evs: Vec<Value> = cids
                     .iter()
+                    .filter(|c| !shield_out.contains(c))
                     .map(|&c| {
                         let mut e = json!({"ev": "move", "subject": self.refv(c), "to": to, "reason": op["reason"], "position": pos});
                         if tapped {
@@ -1184,12 +1234,30 @@ impl Engine {
                         e
                     })
                     .collect();
-                if !evs.is_empty() {
-                    let tasks: Vec<Value> = if to == "bz" {
+                let bind: Vec<Value> = match op.get("as").and_then(|v| v.as_str()) {
+                    Some(name) => vec![json!({"t": "bind", "env": env, "name": name, "cids": cids, "zone": to})],
+                    None => vec![],
+                };
+                if evs.is_empty() && out_tasks.is_empty() {
+                    if let Some(name) = op.get("as").and_then(|v| v.as_str()) {
+                        let t = self.s.tasks.last_mut().unwrap();
+                        if !t["env"]["vars"].is_object() {
+                            t["env"]["vars"] = json!({});
+                        }
+                        t["env"]["vars"][name] = json!([]);
+                    }
+                } else {
+                    let mut tasks: Vec<Value> = if to == "bz" {
                         evs.into_iter().map(|e| self.ev_task_env(vec![e], &env)).collect()   // バトルゾーンへ複数枚は1枚ずつ（409.1e）
-                    } else {
+                    } else if !evs.is_empty() {
                         vec![self.ev_task_env(evs, &env)]
+                    } else {
+                        vec![]
                     };
+                    if to != "bz" {
+                        tasks.extend(out_tasks);
+                    }
+                    tasks.extend(bind);
                     self.defer(tasks);
                     deferred = true;
                 }
@@ -1249,35 +1317,100 @@ impl Engine {
         self.s.ev_seq += 1;
         rec["_eid"] = json!(self.s.ev_seq);
         let win = self.s.windows.last().copied().unwrap_or(0);
-        for src in self.bz_tops(None) {
-            let defn = self.s.cards[src as usize].defn.clone();
-            let ctrl = self.s.cards[src as usize].controller;
+        // 発生源（Python 版 _collect_triggers と同じ並び）: バトルゾーン → 他のゾーンで働く誘発の札 → 離れたカード自身（LKI）
+        let mut sources: Vec<(i64, Option<Value>)> = self.bz_tops(None).into_iter().map(|c| (c, None)).collect();
+        for z in self.rules.zt_zones.clone() {
+            for p in 0..2i64 {
+                for &c in self.zl(&z, p).clone().iter() {
+                    if self.def(c).zt {
+                        sources.push((c, None));
+                    }
+                }
+            }
+        }
+        let lki = rec.get("lki").cloned().filter(|v| !v.is_null());
+        if let Some(l) = &lki {
+            let subj = rec["subject"][0].as_i64().unwrap();
+            let lz = l["zone"].as_str().unwrap_or("");
+            if lz == "bz" && rec.get("to").and_then(|v| v.as_str()) != Some("bz") {
+                sources.push((subj, Some(l.clone())));
+            } else if lz != "bz" && self.s.cards[subj as usize].zone != lz {
+                sources.push((subj, Some(l.clone())));
+            }
+        }
+        for (src, lsrc) in sources {
+            let (defn, zone, ctrl, sref) = match &lsrc {
+                Some(l) => (l["defn"].as_str().unwrap().to_string(), l["zone"].as_str().unwrap().to_string(),
+                            l["controller"].as_i64().unwrap(), l["ref"].clone()),
+                None => {
+                    let c = &self.s.cards[src as usize];
+                    (c.defn.clone(), c.zone.clone(), c.controller, json!([src, c.gen]))
+                }
+            };
             let n = self.rules.cards[&defn].abil.len();
             for i in 0..n {
                 let ab = self.rules.cards[&defn].abil[i].clone();
-                if ab["kind"] != json!("trigger") {
+                if ab["kind"] != json!("trigger") || ab.get("zone").and_then(|v| v.as_str()).unwrap_or("bz") != zone {
                     continue;
                 }
-                let w = &ab["when"];
-                if w["event"] != rec["ev"] {
+                if !self.when_match(&ab["when"], rec, src, ctrl) {
                     continue;
                 }
-                if let Some(to) = w.get("to") {
-                    if rec.get("to") != Some(to) {
-                        continue;
+                let env = json!({"you": ctrl, "self": sref, "event": rec.clone(), "vars": {}});
+                if lsrc.is_none() {
+                    if let Some(cond) = ab.get("if") {
+                        // 誘発条件つきの能力は誘発時にも条件を見る（603.4）。離れた時の誘発は解決時だけ
+                        if !self.eval_cond(cond, &json!({"you": ctrl, "self": sref, "event": rec.clone(), "vars": {}})).unwrap_or(false) {
+                            continue;
+                        }
                     }
                 }
-                // subject: self
-                if rec.get("subject").map_or(true, |s| s[0].as_i64() != Some(src)) {
-                    continue;
-                }
                 self.s.seq += 1;
-                let sref = self.refv(src);
                 let p = json!({"pid": self.s.seq, "kind": "normal", "win": win, "controller": ctrl, "src": sref, "defn": defn, "ab": i,
-                    "env": {"you": ctrl, "self": sref, "event": rec.clone(), "vars": {}}});
+                    "env": env});
                 self.s.pending.push(p);
             }
         }
+    }
+
+    /// 誘発条件の照合（Python 版 _match_when の、event / from / to / reason / player / subject: self の部分）
+    fn when_match(&self, w: &Value, rec: &Value, src: i64, ctrl: i64) -> bool {
+        if w["event"] != rec["ev"] {
+            return false;
+        }
+        for k in ["from", "to", "reason"] {
+            if let Some(wv) = w.get(k) {
+                match wv.as_array() {
+                    Some(l) => {
+                        if !l.contains(rec.get(k).unwrap_or(&Value::Null)) {
+                            return false;
+                        }
+                    }
+                    None => {
+                        if rec.get(k) != Some(wv) {
+                            return false;
+                        }
+                    }
+                }
+            }
+        }
+        if rec["ev"] == json!("move") && rec.get("from") == Some(&json!("bz")) && rec.get("to") == Some(&json!("bz"))
+            && w.get("from").is_some() && w.get("to").is_none() {
+            return false;
+        }
+        if let Some(pl) = w.get("player").and_then(|v| v.as_str()) {
+            let want = if pl == "you" { ctrl } else { 1 - ctrl };
+            if rec.get("player").and_then(|v| v.as_i64()) != Some(want) {
+                return false;
+            }
+        }
+        if w.get("subject").is_some() {
+            // subject: self だけ（Python の whitelist が保証する）
+            if rec.get("subject").map_or(true, |s| s[0].as_i64() != Some(src)) {
+                return false;
+            }
+        }
+        true
     }
 
     /// chars の JSON（lki に載せる。Python 版 _chars_calc の、能力が自身への単純な常在型だけの札の結果）
@@ -1378,7 +1511,8 @@ impl Engine {
         }
         if ph == 1 {
             let t = self.s.tasks.last().unwrap();
-            if t.get("brk_done").is_none() {
+            let fire = t.get("fire_break").and_then(|v| v.as_bool()).unwrap_or(true);
+            if fire && t.get("brk_done").is_none() {
                 // ブレイクの置換の諮問: 候補なし。印だけ残す
                 let chosen = t["chosen"].clone();
                 let n = chosen.as_array().unwrap().len();
@@ -1427,7 +1561,8 @@ impl Engine {
         let reason = tk.get("reason").and_then(|v| v.as_str()).unwrap_or("break").to_string();
         let mut seq = vec![self.ev_task(chosen.iter().map(|&c| json!({"ev": "move", "subject": self.refv(c), "to": "hand", "reason": reason})).collect())];
         seq.push(json!({"t": "enqueue_st", "cids": tk["declared"], "player": victim, "strigger": true}));
-        if !chosen.is_empty() {
+        let fire = tk.get("fire_break").and_then(|v| v.as_bool()).unwrap_or(true);
+        if fire && !chosen.is_empty() {
             let mut ev = json!({"ev": "break", "player": victim, "count": chosen.len()});
             let br = tk.get("breaker").cloned().unwrap_or(Value::Null);
             if !br.is_null() && self.alive(&br) {
@@ -1440,6 +1575,16 @@ impl Engine {
                 self.s.turn_counters.insert(k, json!(v));
             }
             seq.push(self.ev_task(vec![ev]));
+        }
+        if tk.get("in_effect").and_then(|v| v.as_bool()).unwrap_or(false) {
+            // S・トリガーの解決中のブレイクは、新しい S・トリガーをその場で解決する（101.4g）
+            self.s.seq += 1;
+            let w = self.s.seq;
+            let mut v = vec![json!({"t": "open_win", "win": w})];
+            v.extend(seq);
+            v.push(json!({"t": "resolve_pending", "win": w, "only_st": true}));
+            v.push(json!({"t": "close_win"}));
+            seq = v;
         }
         self.push(seq);
         Ok(None)
@@ -1761,7 +1906,7 @@ impl Engine {
                 let chars_before = self.chars_json(cid);
                 let defn_before = self.s.cards[cid as usize].defn.clone();
                 let summon_hold = to == "bz" && czone == "hold" && reason == "summon";
-                let resolve_hold = czone == "hold" && to == "graveyard" && reason == "resolve";   // 唱え終えた呪文
+                let resolve_hold = czone == "hold" && (to == "graveyard" || to == "mana") && reason == "resolve";   // 唱え終えた呪文
                 if czone == "hold" && !summon_hold && !resolve_hold {
                     return uns(format!("move {}→{}", from, to));
                 }
@@ -1808,7 +1953,7 @@ impl Engine {
                 if to == "bz" {
                     self.push_list(format!("entered:{}", after), cid);
                 }
-                if summon_hold {
+                if reason == "summon" {
                     out.push(json!({"ev": "summon", "subject": self.refv(cid), "controller": after, "player": after,
                         "unpaid": ev.get("unpaid").and_then(|v| v.as_bool()).unwrap_or(false)}));
                 }
