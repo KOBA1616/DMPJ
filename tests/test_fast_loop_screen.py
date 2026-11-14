@@ -13,10 +13,10 @@ sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "tools"))
 def env():
     os.environ.pop("DMSIM_SKIP_CONVERTED", None)
     from dmsim.cards.defs import load_rules
-    from dmsim.engine import zone_graph as Z
+    import loop_cond as C
     rules = load_rules()
     by = defaultdict(list)
-    for b in Z.bundles_of(rules):
+    for b in C.bundles(rules):
         by[b.card].append(b)
     return rules, by
 
@@ -39,3 +39,24 @@ def test_ref_move_and_many_in_net(env):
     assert F.net([b]) == {}
     c = Bundle("y", "y", None, [Move("hand", "graveyard", True), Move("graveyard", "hand", many=True), Move("hand", "graveyard")])
     assert F.net([c]).get("hand", 0) == 0
+
+
+def test_hd2_core_passes_with_cond(env):
+    """H.D.2. 版の中核（アカシック3＋訪れる魔の時刻＋H.D.2.）: modal の「相手の山札をマナへ」とラスト・バーストの自分を唱える移動を読む。"""
+    import fast_loop_screen as F
+    rules, by = env
+    core = ["dm23ex2-009", "dm23bd7-035", "dmrp07-009"]
+    if any(c not in rules.cards for c in core):
+        pytest.skip("札が読めない")
+    r, cyc = F.judge_set(core, by, rules, strict=True)
+    assert r is None, r
+
+
+def test_cond_reading():
+    import loop_cond as C
+    ctx = {"net": {"deck": -1, "graveyard": 0}, "opp_net": {}, "inflow": {"graveyard", "hand"}, "inflow_opp": set(),
+           "named_in": set(), "draws": True}
+    assert C.cond_state({"cmp": [{"count": {"zone": "graveyard", "owner": "you"}}, ">=", 3]}, ctx) == "yes"
+    assert C.cond_state({"cmp": [{"count": {"zone": "deck", "owner": "you"}}, "==", 1]}, ctx) == "yes"
+    assert C.cond_state({"cmp": [{"count": {"zone": "bz", "owner": "you", "filter": {"name": "X"}}}, ">=", 4]}, ctx) == "no"
+    assert C.cond_state({"weird": 1}, ctx) == "unknown"
