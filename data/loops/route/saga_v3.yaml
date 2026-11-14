@@ -15,3 +15,21 @@ stages:
   - name: 入口
     weight: 300
     entry: saga
+  # 入口の後（勝ちへの変換、物差しの段2）。ユーザー指摘（2026-11-14）: サガの効果で墓地のイザナギテラス（オリジン・コスト4）を出し、
+  # その効果でコダマダンス・チャージャーを唱え、チャージャーで闇マナを1枚増やす。墓地のクリーチャーを進化元にドラゲリオンを出し、
+  # 次のターンの攻撃（メテオバーン）で墓地のシャコガイルを出し、山札の最後の1枚で勝つ。
+  - name: 入口に加え、手札にドラゲリオンとコダマダンス・チャージャー、墓地にイザナギテラス
+    weight: 350
+    all:
+      - {zone: hand, match: {name: dm22ex1-007}, n: 1}
+      - {zone: hand, match: {name: dmex10-020}, n: 1}
+      - {zone: graveyard, match: {name: dm22ex1-025}, n: 1}
+      - {zone: hand, match: {name: dm22ex2-021}, n: 1}
+  - name: ドラゲリオンが場
+    weight: 400
+    all:
+      - {zone: bz, match: {name: dm22ex1-007}, n: 1}
+  - name: シャコガイルが場に出ている（進化元でない）
+    weight: 500
+    all:
+      - {zone: bz, match: {name: dmrp03-s03}, n: 1, top: true}

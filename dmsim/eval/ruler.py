@@ -56,6 +56,10 @@ class Stage2:
     self_deck_out: bool = False
     attacks_after_loop: int | None = None
     lock: dict | None = None          # {"mode": passive|active, "opp_mana": n, "opp_mana_zero": bool, ...}
+    cross_turn: bool = False          # 前のターンまでのループの蓄積で、勝ち手段の効果により勝った（§24。同じターンの勝ちは False）
+    loop_turn: int | None = None      # cross_turn のとき、蓄積したループの自分のターン（最後のもの）
+    loop_beat: bool = False           # 段1が成立したうえでの殴り勝ち（ループで出した体による殴り勝ち、段2とは別の欄。§24）
+    unverified_cross: bool = False    # ターンまたぎの勝ちだが蓄積への依存を確かめられない（段2にしない別欄）
     reason: str = ""
 
 
@@ -117,7 +121,57 @@ def _attacks(log, a: int, b: int) -> int:
     return sum(1 for x in log[a:b] if x.get("kind") == "attack" and any(k.startswith("attack:") and not k.endswith(":none") for k in x.get("keys", ())))
 
 
-def stage2(res, eng, me: int = 0, lock_mode: str = "passive") -> Stage2:
+_ZONE_WORDS = ("graveyard", "deck", "bz", "hand", "mana", "shield")
+
+
+def _zones_read(rules, cid: str) -> set[str]:
+    """勝ち手段の札の効果データが触れるゾーン（能力・呪文・進化の指定を文字列で見る）。"""
+    import json as _json
+    d = rules.cards[cid]
+    blob = _json.dumps([d.abilities, d.spell, d.evolve_zone if d.grave_evo or d.evolve_from else None,
+                        getattr(d, "cost_reduce_per_evo", 0) and "graveyard"], ensure_ascii=False, default=str)
+    out = {z for z in _ZONE_WORDS if f'"{z}"' in blob or f"'{z}'" in blob}
+    if d.grave_evo:
+        out.add("graveyard")
+    if "最後の１枚" in (d.text or "") or "最後の1枚" in (d.text or ""):
+        out.add("deck")
+    return out
+
+
+def _cross_turn(res, eng, me: int, win_ids) -> tuple[bool, bool, int | None]:
+    """(段2に数える, 依存を確かめられない別欄, ループのターン)。条件（§24）: (a) 勝ったターンより前に自分のループがある、
+    (b) 勝ち手段（part: win）の札が勝った時点で場にあるか、勝ったターンに使われた（勝ち手段の効果による勝ち）、
+    (c) 前のループの差分が、勝ち手段の効果が読むゾーン（墓地・山札・場など）を自分の側で動かしている（蓄積への依存）。"""
+    if not win_ids or eng is None or res.kind not in ("effect", "state", "deck_out", "loop_deck_out"):
+        return False, False, None
+    prev = [lp for lp in res.loops if lp.get("verified", True) and not consume_only(lp, me)
+            and lp.get("own_turn") is not None and lp["own_turn"] < res.kill_turn]
+    if not prev:
+        return False, False, None
+    s = eng.s
+    on_bz = {s.cards[c].defn for c in s.zones["bz"][me]} | {eng.rules.cards[s.cards[c].defn].id for c in s.zones["bz"][me]}
+    used = set()
+    for x in eng.log:
+        if x.get("p") == me and x.get("turn", res.kill_turn) == res.kill_turn:
+            for k in x.get("keys", ()):
+                used |= {w for w in win_ids if w in k}
+    by = [w for w in win_ids if w in on_bz or w in used]
+    lt = max(lp["own_turn"] for lp in prev)
+    if not by:
+        return False, False, None
+    zones = set().union(*(_zones_read(eng.rules, w) for w in by))
+    moved = set()
+    for lp in prev:
+        for k, v in (lp.get("delta") or {}).items():
+            z, _, who = str(k).partition(":")
+            if v and who == str(me) and z in zones:
+                moved.add(z)
+    if moved:
+        return True, False, lt
+    return False, True, lt
+
+
+def stage2(res, eng, me: int = 0, lock_mode: str = "passive", win_ids=None) -> Stage2:
     s = Stage2(ok=False, self_deck_out=res.lost == "deck_out")
     if res.error:
         s.reason = f"対局が失敗した（{res.error}）"
@@ -141,7 +195,9 @@ def stage2(res, eng, me: int = 0, lock_mode: str = "passive") -> Stage2:
         s.reason = f"ロック成立（{'能動' if lock_mode == 'active' else '受け身'}、相手マナ {opp_mana}）。山札切れ勝ちの経路として数える"
     elif res.kind == "direct_attack":
         s.via, s.beat_win = "beat", True
-        s.reason = "ループの後に殴り勝ち（ループ勝ちに数えない）" if res.loops else "殴り勝ち（ループなし）"
+        s.loop_beat = bool([lp for lp in res.loops if lp.get("verified", True) and not consume_only(lp, me)])
+        s.reason = "ループの後に殴り勝ち（ループ勝ちに数えない。別欄 loop_beat）" if s.loop_beat else (
+            "ループの後に殴り勝ち（ループ勝ちに数えない）" if res.loops else "殴り勝ち（ループなし）")
     elif res.kind == "loop_deck_out" or (res.kind == "deck_out" and any((lp.get("delta") or {}).get(f"deck:{1 - me}", 0) < 0 or lp.get("win_by") == "opp_deck_out" for lp in win_loops)):
         s.via, s.loop_win = "loop", True
         s.reason = "ループで相手の山札を削り切って勝ち"
@@ -151,16 +207,23 @@ def stage2(res, eng, me: int = 0, lock_mode: str = "passive") -> Stage2:
         if s.attacks_after_loop:
             s.reason += f"（ループ後に攻撃 {s.attacks_after_loop} 回、攻撃は勝利効果の引き金）"
     else:
-        s.via = "other"
-        s.reason = f"勝ちのターンにループが無い勝ち（{res.kind}）"
+        ok, unv, lt = _cross_turn(res, eng, me, win_ids)
+        if ok:
+            s.via, s.loop_win, s.cross_turn, s.loop_turn = "loop", True, True, lt
+            s.reason = f"{lt} ターン目のループの蓄積で、{res.kill_turn} ターン目に勝ち手段の効果で勝ち（ターンまたぎ）"
+        else:
+            s.via = "other"
+            s.unverified_cross = unv
+            s.reason = f"勝ちのターンにループが無い勝ち（{res.kind}）" + (
+                "。前のターンのループはあるが、勝ち手段がそれに依存するかを確かめられない（別欄）" if unv else "")
     s.ok = s.loop_win and not s.self_deck_out
     return s
 
 
-def judge(res, eng, *, me: int = 0, lock_mode: str = "passive") -> Verdict:
+def judge(res, eng, *, me: int = 0, lock_mode: str = "passive", win_ids=None) -> Verdict:
     """1局の (GameResult, Engine) を段1・段2で判定する。lock_mode は play_game に渡したロック判定役が受け身（lock_probe）か能動（prefer_policy・探索）か。"""
     a = stage1(res, me)
-    b = stage2(res, eng, me, lock_mode)
+    b = stage2(res, eng, me, lock_mode, win_ids)
     if b.via == "lock" and not a.ok:
         a.reason += "（ロックは段1に数えず段2の経路として記録）"
     return Verdict(a, b, f"段1: {a.reason} / 段2: {b.reason}", getattr(res, "opp", "none"))

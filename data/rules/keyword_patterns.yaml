@@ -7,7 +7,7 @@
 noise:
   - "{GS}"
   - マナゾーンに置く時、このカードはタップして置く。
-  # コスト軽減の下限の念押し（エンジンは常に0で止める）。モデルに渡しても情報が増えない
+  # コスト軽減の下限（最低1）。照合からは除き、rule_convert が原文にこの文があれば cost_min: 1 を付ける
   - ただし、コストは0以下にはならない。
   - ただし、コストは0以下にならない。
   - ただしコストは0以下にならない。
@@ -429,7 +429,7 @@ spell_effects:
     spell: [{op: move, select: {zone: graveyard, owner: you, filter: {types: [creature]}, count: "{1}"}, to: hand, reason: return}]
   opp_discard:
     re: '相手の手札を(\d)枚見ないで選び捨てさせる'
-    spell: [{op: discard, select: {zone: hand, owner: opp, count: "{1}"}}]
+    spell: [{op: discard, select: {zone: hand, owner: opp, count: "{1}", chooser: random}}]
   power_down:
     re: '相手のクリーチャーを(\d)体選ぶこのターンそのクリーチャーのパワーを-(\d+)する'
     spell:
