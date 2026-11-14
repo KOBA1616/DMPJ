@@ -1,4 +1,92 @@
 {
+"dmr13-002": {
+"by": "rule",
+"checks": {
+"effect": "skip",
+"text": "fail"
+},
+"def_hash": "916f12a2a77b5fbc",
+"status": "pending",
+"uses": [
+"core",
+"kw:double_breaker",
+"op:if",
+"op:move"
+],
+"verifier": 2,
+"verify_error": "原文に ブロッカー があるが blocker が定義に無い",
+"vocab_ver": "1e57eb3db78d1ae9"
+},
+"dmr13-021": {
+"by": "check",
+"checks": {
+"effect": "ok",
+"text": "ok"
+},
+"def_hash": "fc31b5a5596c65d5",
+"status": "approved",
+"uses": [
+"core",
+"op:draw",
+"op:move",
+"op:play_free",
+"op:shuffle"
+],
+"verifier": 2,
+"verify": "43手・turn 30 まで正常に回った（result={'winner': 0, 'reason': 'deck_out', 'turn': 30}）",
+"vocab_ver": "04fa5822da1467e3"
+},
+"dmr13-022": {
+"by": "check",
+"checks": {
+"effect": "ok",
+"text": "ok"
+},
+"def_hash": "095c33507cf18e28",
+"status": "approved",
+"uses": [
+"core",
+"kw:s_trigger",
+"op:bounce",
+"op:if"
+],
+"verifier": 2,
+"verify": "43手・turn 30 まで正常に回った（result={'winner': 0, 'reason': 'deck_out', 'turn': 30}）",
+"vocab_ver": "7a926a5603788b11"
+},
+"dmr13-046": {
+"by": "check",
+"checks": {
+"effect": "ok",
+"text": "ok"
+},
+"def_hash": "6fdd35a3a64d826c",
+"status": "approved",
+"uses": [
+"core",
+"op:choose",
+"op:move"
+],
+"verifier": 2,
+"verify": "43手・turn 30 まで正常に回った（result={'winner': 0, 'reason': 'deck_out', 'turn': 30}）",
+"vocab_ver": "b3657b3478a848ab"
+},
+"dmr13-052": {
+"by": "check",
+"checks": {
+"effect": "ok",
+"text": "ok"
+},
+"def_hash": "d9139c5253f9c565",
+"status": "approved",
+"uses": [
+"core",
+"op:draw"
+],
+"verifier": 2,
+"verify": "43手・turn 30 まで正常に回った（result={'winner': 0, 'reason': 'deck_out', 'turn': 30}）",
+"vocab_ver": "77cda07e62e901d1"
+},
 "dmr13-075": {
 "by": "rule",
 "checks": {
@@ -64,6 +152,22 @@
 "verify": "43手・turn 30 まで正常に回った（result={'winner': 0, 'reason': 'deck_out', 'turn': 30}）",
 "vocab_ver": "eecf7bb8e066bca8"
 },
+"dmr13-085": {
+"by": "check",
+"checks": {
+"effect": "ok",
+"text": "ok"
+},
+"def_hash": "8ca4cc13150913da",
+"status": "approved",
+"uses": [
+"core",
+"op:bounce"
+],
+"verifier": 2,
+"verify": "43手・turn 30 まで正常に回った（result={'winner': 0, 'reason': 'deck_out', 'turn': 30}）",
+"vocab_ver": "a1061a54a600d5f4"
+},
 "dmr13-087": {
 "by": "rule",
 "checks": {
@@ -78,6 +182,39 @@
 "verifier": 2,
 "verify": "43手・turn 30 まで正常に回った（result={'winner': 0, 'reason': 'deck_out', 'turn': 30}）",
 "vocab_ver": "eecf7bb8e066bca8"
+},
+"dmr13-094": {
+"by": "check",
+"checks": {
+"effect": "ok",
+"text": "ok"
+},
+"def_hash": "0e14ad21ee768223",
+"status": "approved",
+"uses": [
+"core",
+"kw:s_trigger",
+"op:move"
+],
+"verifier": 2,
+"verify": "43手・turn 30 まで正常に回った（result={'winner': 0, 'reason': 'deck_out', 'turn': 30}）",
+"vocab_ver": "5e561ad4ff9bda2f"
+},
+"dmr13-095": {
+"by": "rule",
+"checks": {
+"effect": "skip",
+"text": "ok"
+},
+"def_hash": "7c94740911a17d71",
+"status": "approved",
+"uses": [
+"core",
+"kw:double_breaker"
+],
+"verifier": 2,
+"verify": "43手・turn 30 まで正常に回った（result={'winner': 0, 'reason': 'deck_out', 'turn': 30}）",
+"vocab_ver": "76ace1d9e2ba7e59"
 },
 "dmr13-096": {
 "by": "rule",

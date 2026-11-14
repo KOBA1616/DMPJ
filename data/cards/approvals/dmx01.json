@@ -28,5 +28,38 @@
 "verifier": 2,
 "verify": "43手・turn 30 まで正常に回った（result={'winner': 0, 'reason': 'deck_out', 'turn': 30}）",
 "vocab_ver": "eecf7bb8e066bca8"
+},
+"dmx01-020": {
+"by": "rule",
+"checks": {},
+"def_hash": "668c373c9b9fe5b2",
+"status": "pending",
+"uses": [
+"core",
+"op:delayed_trigger",
+"op:modify",
+"op:move",
+"op:play_free"
+],
+"verifier": 2,
+"verify_error": "Traceback (most recent call last): |   File \"/home/claude/dmpj/dmsim/engine/verify.py\", line 42, in verify_card |     spec = sc.try_card(rules, card_id) |   File \"/home/claude/dmpj/dmsim/engine/scenario.py\", line 94, in try_card |     hit = next((probe.s.cards[c].defn for c in pool if probe.filter_match(c, f)), None) | TO",
+"vocab_ver": "5c23d6660a1478fa"
+},
+"dmx01-037": {
+"by": "check",
+"checks": {
+"effect": "ok",
+"text": "ok"
+},
+"def_hash": "5a8c23ee25245c80",
+"status": "approved",
+"uses": [
+"core",
+"op:destroy",
+"op:move"
+],
+"verifier": 2,
+"verify": "43手・turn 30 まで正常に回った（result={'winner': 0, 'reason': 'deck_out', 'turn': 30}）",
+"vocab_ver": "317eebdfcf1d7232"
 }
 }

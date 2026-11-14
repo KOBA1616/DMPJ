@@ -19,5 +19,23 @@
 "verifier": 2,
 "verify_error": "移動先 bz が原文に無い",
 "vocab_ver": "49f14d784113c551"
+},
+"dm22ex2-055": {
+"by": "check",
+"checks": {
+"effect": "ok",
+"text": "ok"
+},
+"def_hash": "b2b4fda99b97ab4a",
+"status": "approved",
+"uses": [
+"core",
+"op:choose",
+"op:mana_put",
+"op:move"
+],
+"verifier": 2,
+"verify": "43手・turn 30 まで正常に回った（result={'winner': 0, 'reason': 'deck_out', 'turn': 30}）",
+"vocab_ver": "4ade8c0f65c440a1"
 }
 }

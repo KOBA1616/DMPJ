@@ -1,4 +1,22 @@
 {
+"dmex07-020": {
+"by": "check",
+"checks": {
+"effect": "ok",
+"text": "ok"
+},
+"def_hash": "509238de0db954e2",
+"status": "approved",
+"uses": [
+"core",
+"kw:s_trigger",
+"op:choose",
+"op:move"
+],
+"verifier": 2,
+"verify": "43手・turn 30 まで正常に回った（result={'winner': 0, 'reason': 'deck_out', 'turn': 30}）",
+"vocab_ver": "71df0a39e0b1579b"
+},
 "dmex07-032": {
 "by": "rule",
 "checks": {
@@ -16,7 +34,7 @@
 ],
 "verifier": 2,
 "verify": "43手・turn 30 まで正常に回った（result={'winner': 0, 'reason': 'deck_out', 'turn': 30}）",
-"vocab_ver": "43dba54cfc511ab5"
+"vocab_ver": "c5bb9fd51ae727e9"
 },
 "dmex07-046": {
 "by": "rule",
@@ -25,7 +43,8 @@
 "text": "ok"
 },
 "def_hash": "ca1d33fb370a75a3",
-"status": "approved",
+"stale": "目視照合で誤り: 「見ないで選ぶ」が無作為(chooser: random)になっていない",
+"status": "pending",
 "uses": [
 "core",
 "op:discard",
@@ -33,6 +52,6 @@
 ],
 "verifier": 2,
 "verify": "43手・turn 30 まで正常に回った（result={'winner': 0, 'reason': 'deck_out', 'turn': 30}）",
-"vocab_ver": "ef74ceeee91940a6"
+"vocab_ver": "2675e522fd4d581c"
 }
 }

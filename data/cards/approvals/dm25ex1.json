@@ -6,7 +6,8 @@
 "text": "ok"
 },
 "def_hash": "fd1a4989bfb085ee",
-"status": "approved",
+"stale": "目視照合で誤り: 「コストは0以下にならない」の下限(cost_min: 1)が無い",
+"status": "pending",
 "uses": [
 "core",
 "kw:blocker",
@@ -15,7 +16,7 @@
 ],
 "verifier": 2,
 "verify": "43手・turn 30 まで正常に回った（result={'winner': 0, 'reason': 'deck_out', 'turn': 30}）",
-"vocab_ver": "03f82f27828dc2bf"
+"vocab_ver": "f05b06fc3c981abb"
 },
 "dm25ex1-083": {
 "by": "rule",
@@ -32,6 +33,38 @@
 ],
 "verifier": 2,
 "verify": "43手・turn 30 まで正常に回った（result={'winner': 0, 'reason': 'deck_out', 'turn': 30}）",
-"vocab_ver": "ef69216645735de7"
+"vocab_ver": "58a86ddee101517b"
+},
+"dm25ex1-087": {
+"by": "check",
+"checks": {
+"effect": "ok",
+"text": "ok"
+},
+"def_hash": "986f594bbd6e0eb4",
+"status": "approved",
+"uses": [
+"core",
+"op:choose",
+"op:if",
+"op:mana_put"
+],
+"verifier": 2,
+"verify": "43手・turn 30 まで正常に回った（result={'winner': 0, 'reason': 'deck_out', 'turn': 30}）",
+"vocab_ver": "6e13f8d91552da00"
+},
+"dm25ex1-mc008": {
+"by": "rule",
+"checks": {},
+"def_hash": "5c70677b64a589e9",
+"status": "pending",
+"uses": [
+"core",
+"op:draw",
+"op:may"
+],
+"verifier": 2,
+"verify_error": "Traceback (most recent call last): |   File \"/home/claude/dmpj/dmsim/engine/verify.py\", line 42, in verify_card |     spec = sc.try_card(rules, card_id) |   File \"/home/claude/dmpj/dmsim/engine/scenario.py\", line 94, in try_card |     hit = next((probe.s.cards[c].defn for c in pool if probe.filter_match(c, f)), None) | TO",
+"vocab_ver": "62a61e3cc84fb868"
 }
 }

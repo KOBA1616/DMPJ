@@ -1,0 +1,37 @@
+{
+"dmbd07-b-010": {
+"by": "rule",
+"checks": {
+"effect": "skip",
+"text": "fail"
+},
+"def_hash": "dea24b120162ab49",
+"status": "pending",
+"uses": [
+"core",
+"op:draw"
+],
+"verifier": 2,
+"verify_error": "原文に ブロッカー があるが blocker が定義に無い",
+"vocab_ver": "77cda07e62e901d1"
+},
+"dmbd07-b-012": {
+"by": "check",
+"checks": {
+"effect": "ok",
+"text": "ok"
+},
+"def_hash": "00afa3c1a17074be",
+"status": "approved",
+"uses": [
+"core",
+"kw:s_trigger",
+"op:delayed_trigger",
+"op:if",
+"op:move"
+],
+"verifier": 2,
+"verify": "43手・turn 30 まで正常に回った（result={'winner': 0, 'reason': 'deck_out', 'turn': 30}）",
+"vocab_ver": "47fcf602aff7e8cf"
+}
+}

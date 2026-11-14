@@ -1,4 +1,106 @@
 {
+"dm25ex3-044": {
+"by": "check",
+"checks": {
+"effect": "ok",
+"text": "ok"
+},
+"def_hash": "48cfca66c24c3497",
+"status": "approved",
+"uses": [
+"core",
+"op:may",
+"op:mill",
+"op:play_free"
+],
+"verifier": 2,
+"verify": "43手・turn 30 まで正常に回った（result={'winner': 0, 'reason': 'deck_out', 'turn': 30}）",
+"vocab_ver": "3d76265003f1d84a"
+},
+"dm25ex3-csp3": {
+"by": "check",
+"checks": {
+"effect": "ok",
+"text": "ok"
+},
+"def_hash": "ed3ec3af08f74025",
+"status": "approved",
+"uses": [
+"core",
+"op:move",
+"op:shuffle"
+],
+"verifier": 2,
+"verify": "43手・turn 30 まで正常に回った（result={'winner': 0, 'reason': 'deck_out', 'turn': 30}）",
+"vocab_ver": "4d6781fd744ba8be"
+},
+"dm25ex3-rp3tr3": {
+"by": "rule",
+"checks": {},
+"def_hash": "a46d36a67db0ac54",
+"status": "pending",
+"uses": [
+"core",
+"kw:double_breaker",
+"op:break",
+"op:may",
+"op:swap"
+],
+"verifier": 2,
+"verify_error": "Traceback (most recent call last): |   File \"/home/claude/dmpj/dmsim/engine/verify.py\", line 42, in verify_card |     spec = sc.try_card(rules, card_id) |   File \"/home/claude/dmpj/dmsim/engine/scenario.py\", line 94, in try_card |     hit = next((probe.s.cards[c].defn for c in pool if probe.filter_match(c, f)), None) | TO",
+"vocab_ver": "108e12e26aa8e4bb"
+},
+"dm25ex3-rp4010": {
+"by": "check",
+"checks": {
+"effect": "ok",
+"text": "ok"
+},
+"def_hash": "d9ac15f1b01261a7",
+"status": "approved",
+"uses": [
+"core",
+"kw:s_trigger",
+"op:break",
+"op:draw",
+"op:tap"
+],
+"verifier": 2,
+"verify": "43手・turn 30 まで正常に回った（result={'winner': 0, 'reason': 'deck_out', 'turn': 30}）",
+"vocab_ver": "2a2aba70d265dfde"
+},
+"dm25ex3-tf04": {
+"by": "rule",
+"checks": {},
+"def_hash": "e837049b6efac778",
+"status": "pending",
+"uses": [
+"core",
+"kw:triple_breaker"
+],
+"verifier": 2,
+"verify_error": "Traceback (most recent call last): |   File \"/home/claude/dmpj/dmsim/engine/verify.py\", line 42, in verify_card |     spec = sc.try_card(rules, card_id) |   File \"/home/claude/dmpj/dmsim/engine/scenario.py\", line 94, in try_card |     hit = next((probe.s.cards[c].defn for c in pool if probe.filter_match(c, f)), None) | TO",
+"vocab_ver": "91d9148ad6b9aa6f"
+},
+"dm25ex3-tf09": {
+"by": "check",
+"checks": {
+"effect": "ok",
+"text": "ok"
+},
+"def_hash": "240f15baca23b244",
+"status": "approved",
+"uses": [
+"core",
+"op:choose",
+"op:mana_put",
+"op:may",
+"op:put_under"
+],
+"verifier": 2,
+"verify": "43手・turn 30 まで正常に回った（result={'winner': 0, 'reason': 'deck_out', 'turn': 30}）",
+"vocab_ver": "fae776280f73633d"
+},
 "dm25ex3-tf32": {
 "by": "rule",
 "checks": {
@@ -15,6 +117,23 @@
 ],
 "verifier": 2,
 "verify": "43手・turn 30 まで正常に回った（result={'winner': 0, 'reason': 'deck_out', 'turn': 30}）",
-"vocab_ver": "18162277583e8ec7"
+"vocab_ver": "5f34b3565654dc71"
+},
+"dm25ex3-tf36": {
+"by": "check",
+"checks": {
+"effect": "ok",
+"text": "ok"
+},
+"def_hash": "4a1b572bfa59c1ff",
+"status": "approved",
+"uses": [
+"core",
+"kw:s_trigger",
+"op:bounce"
+],
+"verifier": 2,
+"verify": "43手・turn 30 まで正常に回った（result={'winner': 0, 'reason': 'deck_out', 'turn': 30}）",
+"vocab_ver": "8caca9d9c3b720ba"
 }
 }

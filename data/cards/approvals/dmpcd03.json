@@ -1,4 +1,21 @@
 {
+"dmpcd03-a09": {
+"by": "check",
+"checks": {
+"effect": "ok",
+"text": "ok"
+},
+"def_hash": "869b99b40f9f4a74",
+"status": "approved",
+"uses": [
+"core",
+"kw:s_trigger",
+"op:move"
+],
+"verifier": 2,
+"verify": "43手・turn 30 まで正常に回った（result={'winner': 0, 'reason': 'deck_out', 'turn': 30}）",
+"vocab_ver": "5e561ad4ff9bda2f"
+},
 "dmpcd03-a10": {
 "by": "rule",
 "checks": {
@@ -49,6 +66,24 @@
 "verifier": 2,
 "verify": "43手・turn 30 まで正常に回った（result={'winner': 0, 'reason': 'deck_out', 'turn': 30}）",
 "vocab_ver": "27c1af7e6136fbc1"
+},
+"dmpcd03-b09": {
+"by": "check",
+"checks": {
+"effect": "ok",
+"text": "ok"
+},
+"def_hash": "24cab28f1de43a35",
+"status": "approved",
+"uses": [
+"core",
+"kw:s_trigger",
+"op:mill",
+"op:move"
+],
+"verifier": 2,
+"verify": "43手・turn 30 まで正常に回った（result={'winner': 0, 'reason': 'deck_out', 'turn': 30}）",
+"vocab_ver": "77332025cd3702b2"
 },
 "dmpcd03-b13": {
 "by": "rule",

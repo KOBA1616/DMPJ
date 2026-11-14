@@ -16,5 +16,42 @@
 "verifier": 2,
 "verify_error": "キーワード double_breaker(W・ブレイカー) が原文に無い",
 "vocab_ver": "da7ceed3748535ba"
+},
+"dm24bd6-039": {
+"by": "check",
+"checks": {
+"effect": "ok",
+"text": "ok"
+},
+"def_hash": "7dceba0d32eeceb4",
+"status": "approved",
+"uses": [
+"core",
+"kw:s_trigger",
+"op:destroy",
+"op:tap"
+],
+"verifier": 2,
+"verify": "43手・turn 30 まで正常に回った（result={'winner': 0, 'reason': 'deck_out', 'turn': 30}）",
+"vocab_ver": "bf5698b23af23952"
+},
+"dm24bd6-056": {
+"by": "check",
+"checks": {
+"effect": "ok",
+"text": "ok"
+},
+"def_hash": "700d91a65ea5f2a2",
+"status": "approved",
+"uses": [
+"core",
+"kw:g_strike",
+"op:choose",
+"op:may",
+"op:move"
+],
+"verifier": 2,
+"verify": "43手・turn 30 まで正常に回った（result={'winner': 0, 'reason': 'deck_out', 'turn': 30}）",
+"vocab_ver": "07ee901bb62a6b49"
 }
 }

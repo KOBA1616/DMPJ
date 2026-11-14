@@ -29,5 +29,89 @@
 "verifier": 2,
 "verify": "43手・turn 30 まで正常に回った（result={'winner': 0, 'reason': 'deck_out', 'turn': 30}）",
 "vocab_ver": "1c9bf46f1322259a"
+},
+"dmr23-062": {
+"by": "check",
+"checks": {
+"effect": "ok",
+"text": "ok"
+},
+"def_hash": "1277f381cc6213b9",
+"status": "approved",
+"uses": [
+"core",
+"op:delayed_trigger",
+"op:draw",
+"op:untap"
+],
+"verifier": 2,
+"verify": "43手・turn 30 まで正常に回った（result={'winner': 0, 'reason': 'deck_out', 'turn': 30}）",
+"vocab_ver": "75810142f9207f37"
+},
+"dmr23-066": {
+"by": "rule",
+"checks": {
+"effect": "skip",
+"text": "fail"
+},
+"def_hash": "92e7b0534601de2b",
+"status": "pending",
+"uses": [
+"core",
+"op:draw"
+],
+"verifier": 2,
+"verify_error": "原文に スレイヤー があるが slayer が定義に無い",
+"vocab_ver": "77cda07e62e901d1"
+},
+"dmr23-069": {
+"by": "rule",
+"checks": {
+"effect": "skip",
+"text": "fail"
+},
+"def_hash": "f0d8bc20b21df275",
+"status": "pending",
+"uses": [
+"core",
+"op:modify"
+],
+"verifier": 2,
+"verify_error": "原文に スピードアタッカー があるが speed_attacker が定義に無い",
+"vocab_ver": "d522869b10d7baa2"
+},
+"dmr23-072": {
+"by": "rule",
+"checks": {
+"effect": "skip",
+"text": "ok"
+},
+"def_hash": "c42261e76e34feb2",
+"status": "approved",
+"uses": [
+"core",
+"kw:double_breaker",
+"kw:speed_attacker"
+],
+"verifier": 2,
+"verify": "43手・turn 30 まで正常に回った（result={'winner': 0, 'reason': 'deck_out', 'turn': 30}）",
+"vocab_ver": "22c32549d67b2732"
+},
+"dmr23-074": {
+"by": "check",
+"checks": {
+"effect": "ok",
+"text": "ok"
+},
+"def_hash": "b3eb937fb8a14a68",
+"status": "approved",
+"uses": [
+"core",
+"op:destroy",
+"op:mana_put"
+],
+"verifier": 2,
+"verify": "43手・turn 30 まで正常に回った（result={'winner': 0, 'reason': 'deck_out', 'turn': 30}）",
+"vocab_ver": "2fc29c1d98f8b33c"
 }
 }

@@ -1,0 +1,39 @@
+{
+"dm26ex1-044": {
+"by": "check",
+"checks": {
+"effect": "ok",
+"text": "ok"
+},
+"def_hash": "5bdbab714bfa03d5",
+"status": "approved",
+"uses": [
+"core",
+"kw:s_trigger",
+"op:discard",
+"op:draw",
+"op:play_free"
+],
+"verifier": 2,
+"verify": "43手・turn 30 まで正常に回った（result={'winner': 0, 'reason': 'deck_out', 'turn': 30}）",
+"vocab_ver": "11e66d8400c83428"
+},
+"dm26ex1-n025": {
+"by": "check",
+"checks": {
+"effect": "ok",
+"text": "ok"
+},
+"def_hash": "5746046e15556ae1",
+"status": "approved",
+"uses": [
+"core",
+"op:choose",
+"op:mana_put",
+"op:move"
+],
+"verifier": 2,
+"verify": "43手・turn 30 まで正常に回った（result={'winner': 0, 'reason': 'deck_out', 'turn': 30}）",
+"vocab_ver": "4ade8c0f65c440a1"
+}
+}

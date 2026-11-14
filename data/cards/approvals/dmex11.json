@@ -16,7 +16,26 @@
 ],
 "verifier": 2,
 "verify": "43手・turn 30 まで正常に回った（result={'winner': 0, 'reason': 'deck_out', 'turn': 30}）",
-"vocab_ver": "9849f901591d2595"
+"vocab_ver": "ad4215d40e8ed9d0"
+},
+"dmex11-019": {
+"by": "rule",
+"checks": {
+"effect": "skip",
+"text": "fail"
+},
+"def_hash": "f4c02f38d30d9549",
+"status": "pending",
+"uses": [
+"core",
+"op:discard",
+"op:draw",
+"op:may",
+"op:move"
+],
+"verifier": 2,
+"verify_error": "移動先 bz が原文に無い",
+"vocab_ver": "fbedd767e5da6162"
 },
 "dmex11-030": {
 "by": "rule",
@@ -35,7 +54,7 @@
 ],
 "verifier": 2,
 "verify": "43手・turn 30 まで正常に回った（result={'winner': 0, 'reason': 'deck_out', 'turn': 30}）",
-"vocab_ver": "9ac4b756fcbc5ea4"
+"vocab_ver": "f7b5f9599a5bf732"
 },
 "dmex11-031": {
 "by": "rule",
@@ -52,7 +71,7 @@
 ],
 "verifier": 2,
 "verify": "43手・turn 30 まで正常に回った（result={'winner': 0, 'reason': 'deck_out', 'turn': 30}）",
-"vocab_ver": "306b8ec19faf054f"
+"vocab_ver": "62a61e3cc84fb868"
 },
 "dmex11-033": {
 "by": "rule",
@@ -70,7 +89,7 @@
 ],
 "verifier": 2,
 "verify": "43手・turn 30 まで正常に回った（result={'winner': 0, 'reason': 'deck_out', 'turn': 30}）",
-"vocab_ver": "34121a3a7490699b"
+"vocab_ver": "a8028579106d5ca6"
 },
 "dmex11-041": {
 "by": "rule",
@@ -86,6 +105,6 @@
 ],
 "verifier": 2,
 "verify": "43手・turn 30 まで正常に回った（result={'winner': 0, 'reason': 'deck_out', 'turn': 30}）",
-"vocab_ver": "c5c635ced7516b5b"
+"vocab_ver": "77cda07e62e901d1"
 }
 }

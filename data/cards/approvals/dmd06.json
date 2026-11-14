@@ -1,0 +1,21 @@
+{
+"dmd06-014": {
+"by": "check",
+"checks": {
+"effect": "ok",
+"text": "ok"
+},
+"def_hash": "8c8a17f725f16090",
+"status": "approved",
+"uses": [
+"core",
+"op:bounce",
+"op:draw",
+"op:if",
+"op:may"
+],
+"verifier": 2,
+"verify": "43手・turn 30 まで正常に回った（result={'winner': 0, 'reason': 'deck_out', 'turn': 30}）",
+"vocab_ver": "0483b0b948a1243b"
+}
+}

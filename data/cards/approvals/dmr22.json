@@ -1,4 +1,21 @@
 {
+"dmr22-026": {
+"by": "check",
+"checks": {
+"effect": "ok",
+"text": "ok"
+},
+"def_hash": "36085e8f14fb9266",
+"status": "approved",
+"uses": [
+"core",
+"op:bounce",
+"op:modify"
+],
+"verifier": 2,
+"verify": "43手・turn 30 まで正常に回った（result={'winner': 0, 'reason': 'deck_out', 'turn': 30}）",
+"vocab_ver": "7f3d9ab633a06bea"
+},
 "dmr22-031": {
 "by": "rule",
 "checks": {
@@ -98,5 +115,58 @@
 "verifier": 2,
 "verify": "43手・turn 30 まで正常に回った（result={'winner': 0, 'reason': 'deck_out', 'turn': 30}）",
 "vocab_ver": "eecf7bb8e066bca8"
+},
+"dmr22-067": {
+"by": "rule",
+"checks": {
+"effect": "skip",
+"text": "ok"
+},
+"def_hash": "231fa7de9a6a9c7c",
+"status": "approved",
+"uses": [
+"core",
+"kw:blocker",
+"kw:cannot_attack_player",
+"kw:s_trigger"
+],
+"verifier": 2,
+"verify": "43手・turn 30 まで正常に回った（result={'winner': 0, 'reason': 'deck_out', 'turn': 30}）",
+"vocab_ver": "92f279f0930c829c"
+},
+"dmr22-069": {
+"by": "rule",
+"checks": {
+"effect": "skip",
+"text": "ok"
+},
+"def_hash": "98b9f89c366056b7",
+"status": "approved",
+"uses": [
+"core",
+"kw:blocker",
+"kw:cannot_attack",
+"kw:s_trigger",
+"kw:slayer"
+],
+"verifier": 2,
+"verify": "43手・turn 30 まで正常に回った（result={'winner': 0, 'reason': 'deck_out', 'turn': 30}）",
+"vocab_ver": "ea1bb60417dd6121"
+},
+"dmr22-073": {
+"by": "rule",
+"checks": {
+"effect": "skip",
+"text": "fail"
+},
+"def_hash": "163f4da4a1aea67a",
+"status": "pending",
+"uses": [
+"core",
+"op:destroy"
+],
+"verifier": 2,
+"verify_error": "原文に スピードアタッカー があるが speed_attacker が定義に無い",
+"vocab_ver": "5953a4174760806d"
 }
 }

@@ -1,4 +1,23 @@
 {
+"dmrp19-021": {
+"by": "check",
+"checks": {
+"effect": "ok",
+"text": "ok"
+},
+"def_hash": "d6116e66956cc16a",
+"status": "approved",
+"uses": [
+"core",
+"kw:s_trigger",
+"op:if",
+"op:mana_put",
+"op:move"
+],
+"verifier": 2,
+"verify": "43手・turn 30 まで正常に回った（result={'winner': 0, 'reason': 'deck_out', 'turn': 30}）",
+"vocab_ver": "347ec8cec86e31b0"
+},
 "dmrp19-037": {
 "by": "rule",
 "checks": {

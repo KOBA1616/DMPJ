@@ -15,6 +15,44 @@
 "verify": "43手・turn 30 まで正常に回った（result={'winner': 0, 'reason': 'deck_out', 'turn': 30}）",
 "vocab_ver": "5424ef3020ad4a8a"
 },
+"dmr04-023": {
+"by": "check",
+"checks": {
+"effect": "ok",
+"text": "ok"
+},
+"def_hash": "4cc7a28564310260",
+"status": "approved",
+"uses": [
+"core",
+"kw:s_trigger",
+"op:destroy",
+"op:if",
+"op:tap"
+],
+"verifier": 2,
+"verify": "43手・turn 30 まで正常に回った（result={'winner': 0, 'reason': 'deck_out', 'turn': 30}）",
+"vocab_ver": "7a6b04a3d3ea954f"
+},
+"dmr04-029": {
+"by": "rule",
+"checks": {
+"effect": "skip",
+"text": "fail"
+},
+"def_hash": "9c8dab57808c88d5",
+"status": "pending",
+"uses": [
+"core",
+"op:if",
+"op:modal",
+"op:modify",
+"op:move"
+],
+"verifier": 2,
+"verify_error": "移動先 shield が原文に無い",
+"vocab_ver": "a957f69025d24cb2"
+},
 "dmr04-036": {
 "by": "rule",
 "checks": {

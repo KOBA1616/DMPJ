@@ -1,12 +1,25 @@
 {
+"dm29-004": {
+"by": "rule",
+"checks": {},
+"def_hash": "783e2e1e947ad11f",
+"status": "pending",
+"uses": [
+"core",
+"op:delayed_trigger",
+"op:destroy",
+"op:move",
+"op:play_free"
+],
+"verifier": 2,
+"verify_error": "Traceback (most recent call last): |   File \"/home/claude/dmpj/dmsim/engine/verify.py\", line 42, in verify_card |     spec = sc.try_card(rules, card_id) |   File \"/home/claude/dmpj/dmsim/engine/scenario.py\", line 94, in try_card |     hit = next((probe.s.cards[c].defn for c in pool if probe.filter_match(c, f)), None) | TO",
+"vocab_ver": "5b7b7a9b6b2613a0"
+},
 "dm29-006": {
 "by": "rule",
-"checks": {
-"effect": "skip",
-"text": "ok"
-},
+"checks": {},
 "def_hash": "3350243d9e1b9b65",
-"status": "approved",
+"status": "pending",
 "uses": [
 "core",
 "kw:blocker",
@@ -16,8 +29,24 @@
 "op:play_free"
 ],
 "verifier": 2,
-"verify": "26手・turn 11 まで正常に回った（result={'winner': 0, 'reason': 'direct_attack', 'turn': 11}）",
-"vocab_ver": "67160be924f5f38b"
+"verify_error": "Traceback (most recent call last): |   File \"/home/claude/dmpj/dmsim/engine/verify.py\", line 42, in verify_card |     spec = sc.try_card(rules, card_id) |   File \"/home/claude/dmpj/dmsim/engine/scenario.py\", line 94, in try_card |     hit = next((probe.s.cards[c].defn for c in pool if probe.filter_match(c, f)), None) | TO",
+"vocab_ver": "9ca2d466855d8443"
+},
+"dm29-020": {
+"by": "rule",
+"checks": {},
+"def_hash": "8fd2ed7e6fa04499",
+"status": "pending",
+"uses": [
+"core",
+"op:delayed_trigger",
+"op:modify",
+"op:move",
+"op:play_free"
+],
+"verifier": 2,
+"verify_error": "Traceback (most recent call last): |   File \"/home/claude/dmpj/dmsim/engine/verify.py\", line 42, in verify_card |     spec = sc.try_card(rules, card_id) |   File \"/home/claude/dmpj/dmsim/engine/scenario.py\", line 94, in try_card |     hit = next((probe.s.cards[c].defn for c in pool if probe.filter_match(c, f)), None) | TO",
+"vocab_ver": "5c23d6660a1478fa"
 },
 "dm29-022": {
 "by": "rule",
@@ -34,14 +63,11 @@
 ],
 "verifier": 2,
 "verify": "43手・turn 30 まで正常に回った（result={'winner': 0, 'reason': 'deck_out', 'turn': 30}）",
-"vocab_ver": "25ac8dad7af014ee"
+"vocab_ver": "e902490ce9931013"
 },
 "dm29-030": {
 "by": "rule",
-"checks": {
-"effect": "skip",
-"text": "fail"
-},
+"checks": {},
 "def_hash": "4643668853aa53ed",
 "status": "pending",
 "uses": [
@@ -52,8 +78,8 @@
 "op:play_free"
 ],
 "verifier": 2,
-"verify_error": "移動先 deck が原文に無い",
-"vocab_ver": "ea26c5e3b3228c55"
+"verify_error": "Traceback (most recent call last): |   File \"/home/claude/dmpj/dmsim/engine/verify.py\", line 42, in verify_card |     spec = sc.try_card(rules, card_id) |   File \"/home/claude/dmpj/dmsim/engine/scenario.py\", line 94, in try_card |     hit = next((probe.s.cards[c].defn for c in pool if probe.filter_match(c, f)), None) | TO",
+"vocab_ver": "5b7b7a9b6b2613a0"
 },
 "dm29-037": {
 "by": "rule",
@@ -74,6 +100,39 @@
 "verify_error": "移動先 deck が原文に無い",
 "vocab_ver": "d063864ce7c27b44"
 },
+"dm29-043": {
+"by": "check",
+"checks": {
+"effect": "ok",
+"text": "ok"
+},
+"def_hash": "ec35bd60522b2a45",
+"status": "approved",
+"uses": [
+"core",
+"kw:s_trigger",
+"op:bounce"
+],
+"verifier": 2,
+"verify": "43手・turn 30 まで正常に回った（result={'winner': 0, 'reason': 'deck_out', 'turn': 30}）",
+"vocab_ver": "8caca9d9c3b720ba"
+},
+"dm29-045": {
+"by": "rule",
+"checks": {},
+"def_hash": "92120264937b8579",
+"status": "pending",
+"uses": [
+"core",
+"op:delayed_trigger",
+"op:modify",
+"op:move",
+"op:play_free"
+],
+"verifier": 2,
+"verify_error": "Traceback (most recent call last): |   File \"/home/claude/dmpj/dmsim/engine/verify.py\", line 42, in verify_card |     spec = sc.try_card(rules, card_id) |   File \"/home/claude/dmpj/dmsim/engine/scenario.py\", line 94, in try_card |     hit = next((probe.s.cards[c].defn for c in pool if probe.filter_match(c, f)), None) | TO",
+"vocab_ver": "5c23d6660a1478fa"
+},
 "dm29-052": {
 "by": "rule",
 "checks": {
@@ -88,6 +147,6 @@
 ],
 "verifier": 2,
 "verify": "43手・turn 30 まで正常に回った（result={'winner': 0, 'reason': 'deck_out', 'turn': 30}）",
-"vocab_ver": "66fff36a8284db59"
+"vocab_ver": "7639d687d0380f7c"
 }
 }

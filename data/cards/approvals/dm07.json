@@ -14,7 +14,7 @@
 ],
 "verifier": 2,
 "verify": "43手・turn 30 まで正常に回った（result={'winner': 0, 'reason': 'deck_out', 'turn': 30}）",
-"vocab_ver": "623a337d7a54ba38"
+"vocab_ver": "15a4d41ec8d21aed"
 },
 "dm07-026": {
 "by": "rule",
@@ -31,7 +31,7 @@
 ],
 "verifier": 2,
 "verify": "43手・turn 30 まで正常に回った（result={'winner': 0, 'reason': 'deck_out', 'turn': 30}）",
-"vocab_ver": "8c6dee6bd3a4017e"
+"vocab_ver": "be6ea20a50f48be6"
 },
 "dm07-030": {
 "by": "rule",
@@ -39,17 +39,16 @@
 "effect": "skip",
 "text": "ok"
 },
-"def_hash": "44df09c707214573",
+"def_hash": "182ef30b67ca0501",
 "status": "approved",
 "uses": [
 "core",
 "kw:cannot_be_attacked",
-"kw:double_breaker",
-"op:modify"
+"kw:double_breaker"
 ],
 "verifier": 2,
 "verify": "43手・turn 30 まで正常に回った（result={'winner': 0, 'reason': 'deck_out', 'turn': 30}）",
-"vocab_ver": "50b8784d1cc41cd5"
+"vocab_ver": "d1a2f2f4f2f30f58"
 },
 "dm07-041": {
 "by": "rule",
@@ -67,7 +66,7 @@
 ],
 "verifier": 2,
 "verify": "43手・turn 30 まで正常に回った（result={'winner': 0, 'reason': 'deck_out', 'turn': 30}）",
-"vocab_ver": "110e8dfe887cd9dc"
+"vocab_ver": "f02e16b672bd6a73"
 },
 "dm07-051": {
 "by": "rule",
@@ -83,6 +82,6 @@
 ],
 "verifier": 2,
 "verify": "43手・turn 30 まで正常に回った（result={'winner': 0, 'reason': 'deck_out', 'turn': 30}）",
-"vocab_ver": "c8b03458551a52ee"
+"vocab_ver": "a2695866ec8ae5c1"
 }
 }

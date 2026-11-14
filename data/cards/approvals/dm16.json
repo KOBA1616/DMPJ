@@ -1,0 +1,17 @@
+{
+"dm16-050": {
+"by": "rule",
+"checks": {
+"effect": "skip",
+"text": "ok"
+},
+"def_hash": "ff3c7657904c36cb",
+"status": "approved",
+"uses": [
+"core"
+],
+"verifier": 2,
+"verify": "43手・turn 30 まで正常に回った（result={'winner': 0, 'reason': 'deck_out', 'turn': 30}）",
+"vocab_ver": "080d8e7509b398eb"
+}
+}

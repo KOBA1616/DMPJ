@@ -1,4 +1,22 @@
 {
+"dmd08-011": {
+"by": "check",
+"checks": {
+"effect": "ok",
+"text": "ok"
+},
+"def_hash": "e01c85530e458228",
+"status": "approved",
+"uses": [
+"core",
+"op:destroy",
+"op:may",
+"op:move"
+],
+"verifier": 2,
+"verify": "43手・turn 30 まで正常に回った（result={'winner': 0, 'reason': 'deck_out', 'turn': 30}）",
+"vocab_ver": "32ef1f95eaf89f7d"
+},
 "dmd08-015": {
 "by": "check",
 "checks": {
@@ -34,7 +52,7 @@
 ],
 "verifier": 2,
 "verify": "43手・turn 30 まで正常に回った（result={'winner': 0, 'reason': 'deck_out', 'turn': 30}）",
-"vocab_ver": "b055572b949ed857"
+"vocab_ver": "3c1805573d458a97"
 },
 "dmd08-024": {
 "by": "rule",
@@ -51,6 +69,6 @@
 ],
 "verifier": 2,
 "verify": "43手・turn 30 まで正常に回った（result={'winner': 0, 'reason': 'deck_out', 'turn': 30}）",
-"vocab_ver": "59258c739746170b"
+"vocab_ver": "28c17ae78f4493f1"
 }
 }

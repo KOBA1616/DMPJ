@@ -14,7 +14,7 @@
 ],
 "verifier": 2,
 "verify": "43手・turn 30 まで正常に回った（result={'winner': 0, 'reason': 'deck_out', 'turn': 30}）",
-"vocab_ver": "9efaef347693282a"
+"vocab_ver": "9883a9edbeb5a9f5"
 },
 "dmbd05-012": {
 "by": "rule",
@@ -32,6 +32,26 @@
 ],
 "verifier": 2,
 "verify": "43手・turn 30 まで正常に回った（result={'winner': 0, 'reason': 'deck_out', 'turn': 30}）",
-"vocab_ver": "2c67f0ed440738c2"
+"vocab_ver": "4387f6420ee33edd"
+},
+"dmbd05-013": {
+"by": "rule",
+"checks": {
+"effect": "skip",
+"text": "fail"
+},
+"def_hash": "3ba9cc3093189ed1",
+"status": "pending",
+"uses": [
+"core",
+"kw:s_trigger",
+"op:if",
+"op:mana_put",
+"op:modal",
+"op:tap"
+],
+"verifier": 2,
+"verify_error": "定義の数値 count=2 が原文に無い",
+"vocab_ver": "d3a5e0549414879c"
 }
 }

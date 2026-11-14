@@ -1,4 +1,24 @@
 {
+"dm24ex4-036": {
+"by": "rule",
+"checks": {
+"effect": "skip",
+"text": "fail"
+},
+"def_hash": "761f0d07e910373f",
+"status": "pending",
+"uses": [
+"core",
+"kw:g_strike",
+"op:discard",
+"op:draw",
+"op:if",
+"op:modify"
+],
+"verifier": 2,
+"verify_error": "定義の数値 count=3 が原文に無い",
+"vocab_ver": "2cf660c037456658"
+},
 "dm24ex4-082": {
 "by": "rule",
 "checks": {
@@ -16,7 +36,7 @@
 ],
 "verifier": 2,
 "verify": "43手・turn 30 まで正常に回った（result={'winner': 0, 'reason': 'deck_out', 'turn': 30}）",
-"vocab_ver": "9ac4b756fcbc5ea4"
+"vocab_ver": "f7b5f9599a5bf732"
 },
 "dm24ex4-087": {
 "by": "rule",
@@ -33,7 +53,7 @@
 ],
 "verifier": 2,
 "verify": "43手・turn 30 まで正常に回った（result={'winner': 0, 'reason': 'deck_out', 'turn': 30}）",
-"vocab_ver": "c36046f1374cb52b"
+"vocab_ver": "fb62e589d2b7c6a5"
 },
 "dm24ex4-091": {
 "by": "rule",
@@ -50,7 +70,7 @@
 ],
 "verifier": 2,
 "verify": "43手・turn 30 まで正常に回った（result={'winner': 0, 'reason': 'deck_out', 'turn': 30}）",
-"vocab_ver": "07c2e6fd5671d5f2"
+"vocab_ver": "a9e3c71dafdb2364"
 },
 "dm24ex4-098": {
 "by": "rule",
@@ -59,13 +79,14 @@
 "text": "ok"
 },
 "def_hash": "e0de469aa41d9b9d",
-"status": "approved",
+"stale": "目視照合で誤り: 「コストは0以下にならない」の下限(cost_min: 1)が無い",
+"status": "pending",
 "uses": [
 "core"
 ],
 "verifier": 2,
 "verify": "43手・turn 30 まで正常に回った（result={'winner': 0, 'reason': 'deck_out', 'turn': 30}）",
-"vocab_ver": "eecf7bb8e066bca8"
+"vocab_ver": "080d8e7509b398eb"
 },
 "dm24ex4-099": {
 "by": "rule",
@@ -81,7 +102,7 @@
 ],
 "verifier": 2,
 "verify": "43手・turn 30 まで正常に回った（result={'winner': 0, 'reason': 'deck_out', 'turn': 30}）",
-"vocab_ver": "27c1af7e6136fbc1"
+"vocab_ver": "b1093fcc02a8471b"
 },
 "dm24ex4-pr042": {
 "by": "rule",
@@ -100,7 +121,7 @@
 ],
 "verifier": 2,
 "verify": "43手・turn 30 まで正常に回った（result={'winner': 0, 'reason': 'deck_out', 'turn': 30}）",
-"vocab_ver": "9ac4b756fcbc5ea4"
+"vocab_ver": "f7b5f9599a5bf732"
 },
 "dm24ex4-pr047": {
 "by": "rule",
@@ -117,7 +138,7 @@
 ],
 "verifier": 2,
 "verify": "43手・turn 30 まで正常に回った（result={'winner': 0, 'reason': 'deck_out', 'turn': 30}）",
-"vocab_ver": "c36046f1374cb52b"
+"vocab_ver": "fb62e589d2b7c6a5"
 },
 "dm24ex4-pr051": {
 "by": "rule",
@@ -134,7 +155,7 @@
 ],
 "verifier": 2,
 "verify": "43手・turn 30 まで正常に回った（result={'winner': 0, 'reason': 'deck_out', 'turn': 30}）",
-"vocab_ver": "07c2e6fd5671d5f2"
+"vocab_ver": "a9e3c71dafdb2364"
 },
 "dm24ex4-pr058": {
 "by": "rule",
@@ -143,13 +164,14 @@
 "text": "ok"
 },
 "def_hash": "04589a259a4c90d2",
-"status": "approved",
+"stale": "目視照合で誤り: 「コストは0以下にならない」の下限(cost_min: 1)が無い",
+"status": "pending",
 "uses": [
 "core"
 ],
 "verifier": 2,
 "verify": "43手・turn 30 まで正常に回った（result={'winner': 0, 'reason': 'deck_out', 'turn': 30}）",
-"vocab_ver": "eecf7bb8e066bca8"
+"vocab_ver": "080d8e7509b398eb"
 },
 "dm24ex4-pr059": {
 "by": "rule",
@@ -165,6 +187,6 @@
 ],
 "verifier": 2,
 "verify": "43手・turn 30 まで正常に回った（result={'winner': 0, 'reason': 'deck_out', 'turn': 30}）",
-"vocab_ver": "27c1af7e6136fbc1"
+"vocab_ver": "b1093fcc02a8471b"
 }
 }

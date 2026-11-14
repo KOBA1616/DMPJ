@@ -19,6 +19,23 @@
 "verify_error": "原文に このクリーチャーは攻撃できない があるが cannot_attack が定義に無い",
 "vocab_ver": "5ecd4b135e30a405"
 },
+"dmd24-025": {
+"by": "check",
+"checks": {
+"effect": "ok",
+"text": "ok"
+},
+"def_hash": "4c8576ce734a037c",
+"status": "approved",
+"uses": [
+"core",
+"op:destroy",
+"op:discard"
+],
+"verifier": 2,
+"verify": "43手・turn 30 まで正常に回った（result={'winner': 0, 'reason': 'deck_out', 'turn': 30}）",
+"vocab_ver": "5fecb2bcef0c6c78"
+},
 "dmd24-032": {
 "by": "rule",
 "checks": {
@@ -33,6 +50,6 @@
 ],
 "verifier": 2,
 "verify": "43手・turn 30 まで正常に回った（result={'winner': 0, 'reason': 'deck_out', 'turn': 30}）",
-"vocab_ver": "c5c635ced7516b5b"
+"vocab_ver": "77cda07e62e901d1"
 }
 }
