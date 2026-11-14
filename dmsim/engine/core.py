@@ -214,6 +214,12 @@ class Engine(SelectorMixin, EventMixin, InterpreterMixin, TurnMixin, CombatMixin
         無視の発生源をタイムスタンプ順（先にバトルゾーンに出た／先に解決された順）に適用し、
         すでに無視された発生源の無視効果は働かない。これで無視し合うループは起きない。"""
         s = self.s
+        ig = self.rules.ignore_defs
+        cards = s.cards
+        # 速い判定: 無視の発生源が無ければ空（バトルゾーンの全カードで見る。重なった下のカードを含む上位集合なので結果は同じ）
+        if not any(cards[o].defn in ig for o in s.zones["bz"][0]) and \
+                not any(ce["mod"].get("ignore") for ce in s.continuous):
+            return {}
         srcs = []
         tops = self.bz_tops()
         if not any(ce["mod"].get("ignore") for ce in s.continuous) and \
@@ -372,6 +378,13 @@ class Engine(SelectorMixin, EventMixin, InterpreterMixin, TurnMixin, CombatMixin
         s = self.s
         c = s.cards[cid]
         if c.zone != "bz":
+            return set()
+        k = ("ign_ids", c.defn, c.face)
+        has = self._xcache.get(k)
+        if has is None:   # 定義だけで決まる: この面に ignore_ids の常在型があるか
+            has = self._xcache[k] = any(ab["kind"] == "static" and ab.get("mod", {}).get("ignore_ids")
+                                        for ab in self.fdef(cid).abilities)
+        if not has and not s.continuous:
             return set()
         out: set[str] = set()
         env_self = {"you": c.controller, "self": s.ref(cid)}
