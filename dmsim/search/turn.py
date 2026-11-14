@@ -364,6 +364,11 @@ class TurnSearch:
                 if child is not None:
                     self.stats.macro_hits = getattr(self.stats, "macro_hits", 0) + 1
                     out.append((child, macro.record(m)))
+                    continue
+                child = macro.replay_loop(m, eng, self.me, self.opp_policy, lambda e, d2: candidates(e, d2, self.w, self.combo_cap))
+                if child is not None:     # 勝ちへの変換が再生できない: ループ部分だけ使って続きは探索に任せる（§23）
+                    self.stats.macro_loop_hits = getattr(self.stats, "macro_loop_hits", 0) + 1
+                    out.append((child, macro.record(m, loop_only=True)))
         return out
 
     def _repeat_order(self, eng: Engine, d: dict, cands: list[list[int]]) -> list[list[int]]:

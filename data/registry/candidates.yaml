@@ -10,11 +10,11 @@ candidates:
     win: effect           # シャコガイル（山札の最後の1枚を引いて勝つ）
     entry: data/loops/entry/saga.json
     core:
-      - {id: dm22ex2-021, name: 絶望神サガ, role: エンジン（蘇生）}
-      - {id: dmrp03-s03, name: 水上第九院 シャコガイル, role: 勝ち手段}
-      - {id: dm22ex1-007, name: 超神星DOOM・ドラゲリオン, role: 入口への経路}
+      - {id: dm22ex2-021, name: 絶望神サガ, role: エンジン（蘇生）, part: loop}
+      - {id: dmrp03-s03, name: 水上第九院 シャコガイル, role: 勝ち手段, part: win}
+      - {id: dm22ex1-007, name: 超神星DOOM・ドラゲリオン, role: 変換（墓地進化でシャコガイルを出す）, part: win}
     procedure:
-      - 手札のサガを3マナで出し、墓地のサガとの蘇生で1周1枚引く。山札の最後の1枚を引いてシャコガイルの効果で勝つ。
+      - ループ：手札のサガを3マナで出し、墓地のサガとの蘇生で1周1枚引いて1枚捨てる。勝ちへの変換：山札のシャコガイルを場に出し（ドラゲリオンの墓地進化・メテオバーン）、山札の最後の1枚を引いてシャコガイルの効果で勝つ。
   - id: knight_dmc
     name: ～地獄帰りの騎士～＋DARK MEMORY CONTAINER
     split: tuning
@@ -35,8 +35,8 @@ candidates:
     core:
       - {id: dm23ex2-009, name: 完全水中要塞 アカシック3, role: エンジン（呪文の無償詠唱）}
       - {id: dm23bd7-035, name: 魔刻の斬将オルゼキア／訪れる魔の時刻, role: 回収}
-      - {id: dmrp12-s01, name: 天命龍装 ホーリーエンド／ナウ・オア・ネバー, role: 勝ち手段}
-      - {id: dm24ex1-038, name: 冥土人形ウォカンナ・ピエール, role: 勝ち手段}
+      - {id: dmrp12-s01, name: 天命龍装 ホーリーエンド／ナウ・オア・ネバー, role: 勝ち手段, part: win}
+      - {id: dm24ex1-038, name: 冥土人形ウォカンナ・ピエール, role: 勝ち手段, part: win}
   - id: akashic_hd2
     name: アカシック H.D.2. 短縮ループ
     split: discovered
@@ -46,7 +46,7 @@ candidates:
     core:
       - {id: dm23ex2-009, name: 完全水中要塞 アカシック3, role: エンジン（呪文の無償詠唱）}
       - {id: dm23bd7-035, name: 魔刻の斬将オルゼキア／訪れる魔の時刻, role: 回収}
-      - {id: dmrp07-009, name: ラルド・ワースピーダ／H.D.2., role: 勝ち手段}
+      - {id: dmrp07-009, name: ラルド・ワースピーダ／H.D.2., role: 勝ち手段, part: win}
     procedure:
       - アカシック3 で H.D.2. を相手に向けて無償で唱え（相手の山札の上2枚をマナへ）、訪れる魔の時刻で墓地のラルドともう1枚の訪れる魔の時刻を回収、を繰り返す。
   - id: drill_lock

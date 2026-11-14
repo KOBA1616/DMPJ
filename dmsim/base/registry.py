@@ -31,13 +31,16 @@ class RegistryError(ValueError):
     pass
 
 
+PARTS = ("loop", "win")   # 中核の分け方: ループ部品（入口・段1）と勝ち手段（段2）
+
+
 @dataclass
 class Candidate:
     id: str
     name: str
     split: str
     types: list[str]
-    core: list[dict]                          # [{id, name, role}]。role は自由記述（エンジン・回収・勝ち手段 など）
+    core: list[dict]                          # [{id, name, role, part}]。role は自由記述。part は loop（ループ部品）/ win（勝ち手段、既定 loop）
     win: str                                  # WINS のどれか
     entry: str | None = None                  # 入口局面（data/loops/entry/*.json）。無ければ procedure だけ
     procedure: list[str] = field(default_factory=list)
@@ -64,9 +67,13 @@ class Candidate:
             raise RegistryError(f"lock_mode: {self.lock_mode!r}")
         if self.lock_mode == "active" and "lock" not in self.types:
             raise RegistryError("lock_mode=active はロック型だけ")
+        bad = [c.get("part") for c in self.core if c.get("part", "loop") not in PARTS]
+        if bad:
+            raise RegistryError(f"core の part は {PARTS}: {bad!r}")
 
-    def core_ids(self) -> set[str]:
-        return {c["id"] for c in self.core if c.get("id")}
+    def core_ids(self, part: str | None = None) -> set[str]:
+        """part="loop" / "win" でループ部品・勝ち手段に絞る（docs/registry-design.md §10）。"""
+        return {c["id"] for c in self.core if c.get("id") and (part is None or c.get("part", "loop") == part)}
 
     def to_dict(self) -> dict:
         return asdict(self)
