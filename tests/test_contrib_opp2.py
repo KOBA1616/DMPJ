@@ -32,3 +32,16 @@ def test_level2_models(lv, attack, block):
     m, deck = resistance(lv)
     assert m.name == RESIST_LEVELS[lv] and m.attack == attack and m.block == block and m.play == "all" and m.strigger
     assert len(deck) == 40
+
+
+def test_attack_values_from_snapshots():
+    from dmsim.eval import attack as A
+    snaps = {0: {"opp_shield": 5, "my_bz": 0, "opp_bz": 0, "my_shield": 5},
+             3: {"opp_shield": 3, "my_bz": 2, "opp_bz": 1, "my_shield": 5},
+             4: {"opp_shield": 1, "my_bz": 3, "opp_bz": 1, "my_shield": 4}}
+    r = {"seed": 1, "kill_turn": None, "snaps": snaps}
+    won = {"seed": 2, "kill_turn": 4, "snaps": {0: snaps[0]}}
+    assert A.left_by(4)(r) == -2 and A.broken_by(4)(r) == 4 and A.board_by(4)(r) == 2
+    assert A.broken_by(3)(r) == 2 and A.left_by(4)(won) == 0 and A.broken_by(4)(won) == 5
+    c = A.pair_contribution([r, won], [{**r, "seed": 2}, {**won, "seed": 1, "kill_turn": None}], 4, "broken")
+    assert c["n"] == 2
