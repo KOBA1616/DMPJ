@@ -26,6 +26,9 @@ from dmsim.discovery.candidates import candidate_pairs, card_io  # noqa: E402
 from dmsim.engine import zone_graph as Z  # noqa: E402
 from dmsim.eval import speed_bound as S  # noqa: E402
 
+sys.path.insert(0, str(Path(__file__).resolve().parent))
+import loop_cond as C  # noqa: E402
+
 
 def usable_ids(rules):
     ids, broken = [], 0
@@ -56,6 +59,8 @@ def cycles_of(bs, rules, max_len=4):
     succ = {i: [] for i in range(n)}
     for i in range(n):
         for j in range(n):
+            if COND and C.gate(bs[j]):
+                continue        # 移動では満たせない限定つきの誘発（via・unpaid・1ターンに1回）は閉路に入れない
             v = Z.feeds(bs[i], bs[j], rules)
             if v:
                 st[i, j] = v
@@ -137,20 +142,31 @@ def _zone(z):
     return z if isinstance(z, str) else "/".join(map(str, z))
 
 
-def side_bundles(c: Z.Cycle, bs, rules) -> list:
-    """閉路の束が狙って誘発させる、閉路の外の誘発（マナを払わずに毎周起きる付け足しの効果。例: 無償で出したクリーチャーの出た時）。"""
+def side_bundles(c: Z.Cycle, bs, rules, helpers=()) -> list:
+    """閉路の束が狙って誘発させる、閉路の外の誘発（マナを払わずに毎周起きる付け足しの効果。例: 無償で出したクリーチャーの出た時）。
+    helpers（組の中の無償で唱えさせる常在能力）があれば、閉路が手札に戻す呪文・クリーチャーを無償で使うことも付け足しに数える
+    （訪れる魔の時刻が回収した H.D.2. をアカシック3で唱える）。"""
     inside = {id(b) for b in c.bundles}
-    return [b for b in bs if id(b) not in inside and b.origin == "trigger" and b.prem and b.prem.kind not in Z.TICKS
-            and any(Z.feeds(a, b, rules) == 2 for a in c.bundles)]
+    out = []
+    for b in bs:
+        if id(b) in inside or not b.prem or b.prem.kind in Z.TICKS or (COND and C.gate(b)):
+            continue
+        if b.origin == "trigger" or (COND and helpers and b.origin in ("spell", "summon")
+                                     and cycle_mana(Z.Cycle([b]), rules, helpers) == 0):
+            if any(Z.feeds(a, b, rules) == 2 for a in c.bundles):
+                out.append(b)
+    return out
 
 
-def net(bundles, owner="you") -> dict:
+def net(bundles, owner="you", skip=frozenset()) -> dict:
     """束の移動の収支。名前を付けた札を後で動かす移動（select.ref）は、その札を置いたゾーンから動かす。
     複数枚を動かしうる移動（many）は、移動元に余りがあり移動先が足りないぶんを埋める。"""
     d, many = {}, []
     for b in bundles:
         placed = {}
         for m in b.moves:
+            if id(m) in skip:
+                continue
             src, dst = _zone(m.src), _zone(m.dst)
             if m.ref and m.ref in placed:
                 src = placed[m.ref]
@@ -169,13 +185,13 @@ def net(bundles, owner="you") -> dict:
     return {k: v for k, v in d.items() if v}
 
 
-def classify(c: Z.Cycle, rules=None, helpers=(), side=()) -> str | None:
+def classify(c: Z.Cycle, rules=None, helpers=(), side=(), skip=frozenset()) -> str | None:
     """閉路が残れば None、落ちれば理由。"""
     if c.period != "in_turn":
         return "gated"
     if not c.sure:
         return "blind"
-    d = net(list(c.bundles) + list(side))
+    d = net(list(c.bundles) + list(side), skip=skip)
     m = c.mana() if rules is None else cycle_mana(c, rules, helpers)
     if m > 0 and d.get("mana", 0) <= 0:
         return "mana"
@@ -184,16 +200,66 @@ def classify(c: Z.Cycle, rules=None, helpers=(), side=()) -> str | None:
     return None
 
 
-def wins(c: Z.Cycle, strict: bool = False, self_win: bool = False, side=()) -> bool:
+def wins(c: Z.Cycle, strict: bool = False, self_win: bool = False, side=(), skip=frozenset()) -> bool:
     """勝ち手段。strict=False: 相手のゾーンを動かす。strict=True: 相手の山札か盾を減らす、または自分の特殊勝利の札が組にあり
     1周で自分の山札が減る（引き切って勝つ）。"""
     allb = list(c.bundles) + list(side)
-    od = net(allb, "opp")
+    od = net(allb, "opp", skip)
     if not strict:
         return bool(od) or self_win
     if od.get("deck", 0) < 0 or od.get("shield", 0) < 0:
         return True
-    return self_win and net(allb).get("deck", 0) < 0
+    return self_win and net(allb, skip=skip).get("deck", 0) < 0
+
+
+COND = True     # 条件を読む（2026-11-14）。False で 2026-11-13 夜の判定（条件つきの移動は起きる前提、特殊勝利は条件を読まない）
+
+
+def make_ctx(allb, bs, skip=frozenset()):
+    """条件の評価に使う、ループ1周の収支と組の中の札の情報。"""
+    inflow, inflow_opp, named = set(), set(), set()
+    for b in bs:
+        for m in b.moves:
+            if id(m) in skip:
+                continue
+            (inflow_opp if m.owner == "opp" else inflow).add(_zone(m.dst))
+    for b in allb:
+        for m in b.moves:
+            if id(m) not in skip and m.ref_self:
+                named.add((_zone(m.dst), b.name))
+    draws = any(m.draw for b in allb for m in b.moves if id(m) not in skip)
+    return {"net": net(allb, skip=skip), "opp_net": net(allb, "opp", skip), "inflow": inflow, "inflow_opp": inflow_opp,
+            "named_in": named, "draws": draws}
+
+
+def cond_filter(c, side, bs, rules):
+    """条件を満たせない移動（skip）と読めない条件の数。閉路の受け渡しが満たせない移動にしか頼っていなければ None（落とす）。"""
+    allb = list(c.bundles) + list(side)
+    ctx = make_ctx(allb, bs)
+    skip, unk = set(), 0
+    for b in bs:
+        for m in b.moves:
+            st = C.conds_state(getattr(m, "conds", ()), ctx)
+            if st == "no":
+                skip.add(id(m))
+            elif st == "unknown" and any(b is x for x in allb):
+                unk += 1
+    bl = list(c.bundles)
+    d = net(allb, skip=skip)
+    for a, b in zip(bl, bl[1:] + bl[:1]):
+        ok = False
+        for m in a.moves:
+            if id(m) in skip:
+                continue
+            one = Z.Bundle(a.card, a.name, a.prem, [m], a.origin, a.cost, a.rearm)
+            if Z.feeds(one, b, rules):
+                if not m.ref_self and not m.blind and _zone(m.src) in ("deck", "shield") and d.get(_zone(m.src), 0) < 0:
+                    continue    # 山札・盾から別のコピーを狙って出し続ける受け渡し: 札が戻らないので枚数ぶんで止まる（有限）
+                ok = True
+                break
+        if not ok:
+            return None, unk
+    return frozenset(skip), unk
 
 
 def judge_set(cards, by_card, rules, strict=False, max_len=6):
@@ -204,30 +270,48 @@ def judge_set(cards, by_card, rules, strict=False, max_len=6):
     bs = [b for x in ids for b in by_card.get(x, [])]
     helpers = {x: free_cast(rules.cards[x]) for x in ids}
     winners = {x for x in ids if special_win(rules.cards[x])}
+    wpaths = {x: C.win_paths(rules.cards[x]) for x in winners}
     hl = [f for fs in helpers.values() for f in fs]
     cyc = cycles_of(bs, rules, max_len=max_len)
     if not cyc:
         return "no_cycle", None
     reasons, ok = Counter(), []
     for c in cyc:
-        side = side_bundles(c, bs, rules)
-        r = classify(c, rules, hl, side)
+        side = side_bundles(c, bs, rules, hl)
+        skip, unk = frozenset(), 0
+        sw = set(winners)
+        if COND:
+            skip, unk = cond_filter(c, side, bs, rules)
+            if skip is None:
+                reasons["cond"] += 1
+                continue
+            ctx = make_ctx(list(c.bundles) + list(side), bs, skip)
+            sw = set()
+            for x in winners:
+                st = C.win_state(wpaths[x], ctx)
+                if st == "yes":
+                    sw.add(x)
+                elif st == "unknown":
+                    sw.add(x)
+                    unk += 1
+        r = classify(c, rules, hl, side, skip)
         if r:
             reasons[r] += 1
             continue
         used = set(c.cards) | {b.card for b in side} | \
             {x for x in ids if helpers[x] and cycle_mana(c, rules, []) > cycle_mana(c, rules, helpers[x])}
-        if winners and not wins(c, strict, False, side) and wins(c, strict, True, side):
-            used |= winners
+        if sw and not wins(c, strict, False, side, skip) and wins(c, strict, True, side, skip):
+            used |= sw
         if used >= set(ids):
-            c.side = side
+            c.side, c.skip, c.unknown, c.self_win = side, skip, unk, bool(sw)
             ok.append(c)
         else:
             reasons["unused"] += 1
     if not ok:
-        order = ["unused", "drain", "mana", "blind", "gated"]   # 最も「惜しい」理由を代表にする
+        order = ["unused", "drain", "mana", "cond", "blind", "gated"]   # 最も「惜しい」理由を代表にする
         return next(r for r in order if reasons[r]), None
-    w = [c for c in ok if wins(c, strict, bool(winners), c.side)]
+    w = [c for c in ok if wins(c, strict, c.self_win, c.side, c.skip)]
+    w.sort(key=lambda c: c.unknown)
     if not w:
         return "no_win", ok
     return None, w
@@ -240,7 +324,7 @@ def judge_pair(cards, by_card, rules, strict=False):
 def describe(c: Z.Cycle, rules):
     side = getattr(c, "side", [])
     return {"cards": c.cards, "names": [rules.cards[x].name for x in c.cards], "delta": net(list(c.bundles) + side),
-            "opp": net(list(c.bundles) + side, "opp"), "side": [f"{b.name}:{b.premise}" for b in side], "mana": c.mana(), "conditional": c.conditional(), "steps": [f"{b.name}:{b.origin}:{b.premise}" for b in c.bundles]}
+            "opp": net(list(c.bundles) + side, "opp"), "side": [f"{b.name}:{b.premise}" for b in side], "mana": c.mana(), "conditional": c.conditional(), "unknown": getattr(c, "unknown", 0), "steps": [f"{b.name}:{b.origin}:{b.premise}" for b in c.bundles]}
 
 
 def win_card(rules, by_card, x, strict):
@@ -349,7 +433,7 @@ def main():
 
     fast.sort(key=lambda p: (-p["score"], p["a"], p["b"]))
     by_card = defaultdict(list)
-    for b in Z.bundles_of(rules):
+    for b in (C.bundles(rules) if COND else Z.bundles_of(rules)):
         by_card[b.card].append(b)
     known = known_check(rules, by_card, a.strict)
     for n, k in known.items():
@@ -391,6 +475,9 @@ def main():
             three.append({"a": p["a"], "b": p["b"], "c": x, "score": p["score"], "turn": t, "unapproved": un3,
                           "cycles": [describe(c, rules) for c in c3[:2]]})
     print(f"3枚組（4T以内・判定通過） {len(three)} 落ち {dict(three_drop)} {time.time()-t0:.0f}s", flush=True)
+    # 読めない条件がある組は落とさず順位を下げる（読めない条件の数が少ない順、次につながりの点の高い順）
+    passed.sort(key=lambda p: (p["cycles"][0].get("unknown", 0), -p["score"]))
+    three.sort(key=lambda t: (t["cycles"][0].get("unknown", 0), -t["score"]))
     out = {"pairs": len(pairs), "cards": len(ids), "skipped_cards": broken, "turn_dist": {str(k): v for k, v in sorted(tdist.items(), key=str)},
            "score": {"fast": summ(fast_scores), "slow": summ(slow_scores), "unknown": summ(unk_scores)},
            "fast": len(fast), "drop": dict(drop), "drop_unapproved": dict(drop_unapproved),
