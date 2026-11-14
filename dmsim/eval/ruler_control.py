@@ -33,7 +33,7 @@ from ..base.store import REPO
 from . import loop_entry as le
 from .ruler import judge
 
-KNOWN = ("saga", "akashic", "akashic_hd2")   # ループ型の陽性対照（騎士+DMC はリソース型、ドリル+ジョバンニは検証専用）。akashic_hd2 は既知の別版（§13）
+KNOWN = ("saga_v1", "akashic_v1", "akashic_hd2_v1")   # 旧い入口（勝ち手段を入口に含む誤った定義、§23。段2が直ったら新しい入口へ移して _v1 を消す）。 ループ型の陽性対照（騎士+DMC はリソース型、ドリル+ジョバンニは検証専用）。akashic_hd2 は既知の別版（§13）
 HOLDOUT = ()                         # 参考値として別欄に出すもの（入口局面ができたら足す。調整には使わない）
 KNOWN_MIN = 0.8
 RANDOM_MAX = 0.05

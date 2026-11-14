@@ -45,5 +45,5 @@ def test_akashic_wins_by_loop(rules):
 
 
 def test_saga_wins_by_shakogairu(rules):
-    r = L.measure(rules, "saga", [0], max_turn=1)[0]
+    r = L.measure(rules, "saga_v1", [0], max_turn=1)[0]   # 旧い入口（シャコガイルが場）からは1ターンで勝つ
     assert (r["kill_turn"], r["kind"]) == (1, "effect")

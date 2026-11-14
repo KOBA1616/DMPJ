@@ -8,7 +8,7 @@ candidates:
     split: tuning
     types: [loop]
     win: effect           # シャコガイル（山札の最後の1枚を引いて勝つ）
-    entry: data/loops/entry/saga.json
+    entry: data/loops/entry/saga_v1.json   # 旧い入口（誤った定義、§23）。段2が直ったら新しい入口へ
     core:
       - {id: dm22ex2-021, name: 絶望神サガ, role: エンジン（蘇生）, part: loop}
       - {id: dmrp03-s03, name: 水上第九院 シャコガイル, role: 勝ち手段, part: win}
@@ -31,7 +31,7 @@ candidates:
     split: tuning
     types: [loop]
     win: opp_deck_out
-    entry: data/loops/entry/akashic.json
+    entry: data/loops/entry/akashic_v1.json   # 旧い入口（誤った定義、§23）。段2が直ったら新しい入口へ
     core:
       - {id: dm23ex2-009, name: 完全水中要塞 アカシック3, role: エンジン（呪文の無償詠唱）}
       - {id: dm23bd7-035, name: 魔刻の斬将オルゼキア／訪れる魔の時刻, role: 回収}
@@ -42,7 +42,7 @@ candidates:
     split: discovered
     types: [loop]
     win: opp_deck_out
-    entry: data/loops/entry/akashic_hd2.json
+    entry: data/loops/entry/akashic_hd2_v1.json   # 旧い入口（誤った定義、§23）。段2が直ったら新しい入口へ
     core:
       - {id: dm23ex2-009, name: 完全水中要塞 アカシック3, role: エンジン（呪文の無償詠唱）}
       - {id: dm23bd7-035, name: 魔刻の斬将オルゼキア／訪れる魔の時刻, role: 回収}

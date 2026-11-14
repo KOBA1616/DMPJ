@@ -15,11 +15,13 @@ entries:
   - id: dmrp12-s01
     name: 天命龍装 ホーリーエンド／ナウ・オア・ネバー
     role: 勝ち手段
+    part: win
   - id: dm24ex1-038
     name: 冥土人形ウォカンナ・ピエール
     role: 勝ち手段
+    part: win
   win: opp_deck_out
-  entry: data/loops/entry/akashic.json
+  entry: data/loops/entry/akashic_v1.json
   procedure: []
   lock_mode: passive
   seeds:
@@ -40,7 +42,7 @@ entries:
   - 0
   route_stages: null
   note: ''
-  digest: 841ff43fb0073dca
+  digest: a2fabd278401db03
   checks:
   - name: cards
     ok: true
@@ -50,7 +52,7 @@ entries:
     detail: loop として段1・段2で測る
   - name: entry
     ok: true
-    detail: data/loops/entry/akashic.json（アカシック ナウ・オア・ネバー＋ウォカンナ（入口））
+    detail: data/loops/entry/akashic_v1.json（akashic_v1）
   - name: ruler
     ok: true
     detail: '段1 8/8・段2 7/8（基準 0.8）勝ち方 {''loop'': 7, ''None'': 1}'
@@ -430,6 +432,7 @@ entries:
         - - 'yes'
       - - choose_cards
         - - hand:dm24ex1-038:0
+      loop_end: 2
     - seed: 2
       win_kind: loop_deck_out
       n_steps: 135
@@ -730,6 +733,7 @@ entries:
         - - 'yes'
       - - choose_cards
         - - hand:dm24ex1-038:0
+      loop_end: 2
     - seed: 3
       win_kind: loop_deck_out
       n_steps: 151
@@ -1065,6 +1069,7 @@ entries:
         - - 'yes'
       - - choose_cards
         - - hand:dm24ex1-038:0
+      loop_end: 2
     - seed: 4
       win_kind: loop_deck_out
       n_steps: 151
@@ -1400,6 +1405,7 @@ entries:
         - - 'yes'
       - - choose_cards
         - - hand:dm24ex1-038:0
+      loop_end: 2
     - seed: 5
       win_kind: loop_deck_out
       n_steps: 136
@@ -1702,6 +1708,7 @@ entries:
         - - 'yes'
       - - choose_cards
         - - hand:dm24ex1-038:0
+      loop_end: 2
     - seed: 6
       win_kind: loop_deck_out
       n_steps: 126
@@ -1982,6 +1989,7 @@ entries:
         - - 'yes'
       - - choose_cards
         - - hand:dm24ex1-038:0
+      loop_end: 2
     - seed: 7
       win_kind: loop_deck_out
       n_steps: 141
@@ -2295,10 +2303,11 @@ entries:
         - - 'yes'
       - - choose_cards
         - - hand:dm24ex1-038:0
+      loop_end: 2
   version:
-    fingerprint: 2100777ff3169c76
-    commit: bb40e05
-    measured_at: '2026-11-13'
+    fingerprint: 54c64a134d3bc9bd
+    commit: 525f0c4
+    measured_at: '2026-11-14'
 - id: akashic_hd2
   name: アカシック H.D.2. 短縮ループ
   split: discovered
@@ -2314,8 +2323,9 @@ entries:
   - id: dmrp07-009
     name: ラルド・ワースピーダ／H.D.2.
     role: 勝ち手段
+    part: win
   win: opp_deck_out
-  entry: data/loops/entry/akashic_hd2.json
+  entry: data/loops/entry/akashic_hd2_v1.json
   procedure:
   - アカシック3 で H.D.2. を相手に向けて無償で唱え（相手の山札の上2枚をマナへ）、訪れる魔の時刻で墓地のラルドともう1枚の訪れる魔の時刻を回収、を繰り返す。
   lock_mode: passive
@@ -2337,7 +2347,7 @@ entries:
   - 0
   route_stages: null
   note: ''
-  digest: 1f805d9b3844331b
+  digest: d6193388f861afe8
   checks:
   - name: cards
     ok: true
@@ -2347,7 +2357,7 @@ entries:
     detail: loop として段1・段2で測る
   - name: entry
     ok: true
-    detail: data/loops/entry/akashic_hd2.json（アカシック H.D.2.（入口））
+    detail: data/loops/entry/akashic_hd2_v1.json（akashic_hd2_v1）
   - name: ruler
     ok: true
     detail: '段1 8/8・段2 8/8（基準 0.8）勝ち方 {''loop'': 8}'
@@ -2622,6 +2632,7 @@ entries:
         - - play:dmrp07-009:1:free
       - - choose_mode
         - - mode:1
+      loop_end: 2
     - seed: 2
       win_kind: loop_deck_out
       n_steps: 88
@@ -2822,6 +2833,7 @@ entries:
         - - play:dmrp07-009:1:free
       - - choose_mode
         - - mode:1
+      loop_end: 2
     - seed: 3
       win_kind: loop_deck_out
       n_steps: 91
@@ -3029,6 +3041,7 @@ entries:
         - - play:dmrp07-009:1:free
       - - choose_mode
         - - mode:1
+      loop_end: 2
     - seed: 4
       win_kind: loop_deck_out
       n_steps: 83
@@ -3218,6 +3231,7 @@ entries:
         - - play:dmrp07-009:1:free
       - - choose_mode
         - - mode:1
+      loop_end: 2
     - seed: 5
       win_kind: loop_deck_out
       n_steps: 88
@@ -3418,6 +3432,7 @@ entries:
         - - play:dmrp07-009:1:free
       - - choose_mode
         - - mode:1
+      loop_end: 2
     - seed: 6
       win_kind: loop_deck_out
       n_steps: 92
@@ -3627,6 +3642,7 @@ entries:
         - - play:dmrp07-009:1:free
       - - choose_mode
         - - mode:1
+      loop_end: 2
     - seed: 7
       win_kind: loop_deck_out
       n_steps: 88
@@ -3827,6 +3843,7 @@ entries:
         - - play:dmrp07-009:1:free
       - - choose_mode
         - - mode:1
+      loop_end: 2
     - seed: 8
       win_kind: loop_deck_out
       n_steps: 91
@@ -4034,10 +4051,11 @@ entries:
         - - play:dmrp07-009:1:free
       - - choose_mode
         - - mode:1
+      loop_end: 2
   version:
-    fingerprint: 2100777ff3169c76
-    commit: bb40e05
-    measured_at: '2026-11-13'
+    fingerprint: 54c64a134d3bc9bd
+    commit: 525f0c4
+    measured_at: '2026-11-14'
 - id: saga
   name: 絶望神サガの蘇生ループ
   split: tuning
@@ -4047,16 +4065,19 @@ entries:
   - id: dm22ex2-021
     name: 絶望神サガ
     role: エンジン（蘇生）
+    part: loop
   - id: dmrp03-s03
     name: 水上第九院 シャコガイル
     role: 勝ち手段
+    part: win
   - id: dm22ex1-007
     name: 超神星DOOM・ドラゲリオン
-    role: 入口への経路
+    role: 変換（墓地進化でシャコガイルを出す）
+    part: win
   win: effect
-  entry: data/loops/entry/saga.json
+  entry: data/loops/entry/saga_v1.json
   procedure:
-  - 手札のサガを3マナで出し、墓地のサガとの蘇生で1周1枚引く。山札の最後の1枚を引いてシャコガイルの効果で勝つ。
+  - ループ：手札のサガを3マナで出し、墓地のサガとの蘇生で1周1枚引いて1枚捨てる。勝ちへの変換：山札のシャコガイルを場に出し（ドラゲリオンの墓地進化・メテオバーン）、山札の最後の1枚を引いてシャコガイルの効果で勝つ。
   lock_mode: passive
   seeds:
   - 1
@@ -4076,7 +4097,7 @@ entries:
   - 0
   route_stages: null
   note: ''
-  digest: 446c885dee0b060c
+  digest: d85f1684649d4a05
   checks:
   - name: cards
     ok: true
@@ -4086,7 +4107,7 @@ entries:
     detail: loop として段1・段2で測る
   - name: entry
     ok: true
-    detail: data/loops/entry/saga.json（サガ蘇生ループ（入口））
+    detail: data/loops/entry/saga_v1.json（saga_v1）
   - name: ruler
     ok: true
     detail: '段1 8/8・段2 8/8（基準 0.8）勝ち方 {''loop'': 8}'
@@ -4297,6 +4318,7 @@ entries:
         - - 'yes'
       - - choose_cards
         - - graveyard:dm22ex2-021:0
+      loop_end: 8
     - seed: 2
       win_kind: effect
       n_steps: 65
@@ -4431,6 +4453,7 @@ entries:
         - - 'yes'
       - - choose_cards
         - - graveyard:dm22ex2-021:0
+      loop_end: 8
     - seed: 3
       win_kind: effect
       n_steps: 65
@@ -4565,6 +4588,7 @@ entries:
         - - 'yes'
       - - choose_cards
         - - graveyard:dm22ex2-021:0
+      loop_end: 47
     - seed: 4
       win_kind: effect
       n_steps: 65
@@ -4699,6 +4723,7 @@ entries:
         - - 'yes'
       - - choose_cards
         - - graveyard:dm22ex2-021:0
+      loop_end: 8
     - seed: 5
       win_kind: effect
       n_steps: 65
@@ -4833,6 +4858,7 @@ entries:
         - - 'yes'
       - - choose_cards
         - - graveyard:dm22ex2-021:0
+      loop_end: 50
     - seed: 6
       win_kind: effect
       n_steps: 65
@@ -4967,6 +4993,7 @@ entries:
         - - 'yes'
       - - choose_cards
         - - graveyard:dm22ex2-021:0
+      loop_end: 8
     - seed: 7
       win_kind: effect
       n_steps: 65
@@ -5101,6 +5128,7 @@ entries:
         - - 'yes'
       - - choose_cards
         - - graveyard:dm22ex2-021:0
+      loop_end: 11
     - seed: 8
       win_kind: effect
       n_steps: 65
@@ -5235,10 +5263,11 @@ entries:
         - - 'yes'
       - - choose_cards
         - - graveyard:dm22ex2-021:0
+      loop_end: 8
   version:
-    fingerprint: 2100777ff3169c76
-    commit: bb40e05
-    measured_at: '2026-11-13'
+    fingerprint: 54c64a134d3bc9bd
+    commit: 525f0c4
+    measured_at: '2026-11-14'
 rejected:
 - id: drill_lock
   name: ドリルスコール＋ジョバンニ＋クルト
