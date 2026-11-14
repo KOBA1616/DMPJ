@@ -109,16 +109,20 @@ def run_eval(rules, cand: Candidate, settings: EvalSettings, games: int | Sequen
                       report=report, cell_key=key)
 
 
-def measure_assembly(rules, entry: str, deck, seeds, *, max_turn: int = 6, budget: int = 200, n_det: int = 8) -> list[dict]:
+def measure_assembly(rules, entry: str, deck, seeds, *, max_turn: int = 6, budget: int = 200, n_det: int = 8,
+                     route: str | None = None, route_log: str | None = None, route_opts: dict | None = None) -> list[dict]:
     """「揃う」と入口到達の測定の窓口（eval.assemble.run_one の薄い包み、通常開幕・FAIR）。デッキ構築（S5）がここを通す。
-    戻り値は局ごとの {seed, cards_turn, entry_turn, stage2, via, win_turn}（未到達は None）。"""
+    戻り値は局ごとの {seed, cards_turn（使えるゾーンだけで数える）, cards_turn_any（旧い数え方）, entry_turn, stage_turn,
+    stage2, via, kill, beat, win_turn, kind}（未到達は None）。route / route_log / route_opts は assemble.run_one と同じ。"""
     from . import assemble
     from . import loop_entry as L
     ls = L.load(entry)
     out = []
     for s in seeds:
-        r = assemble.run_one(rules, ls, s, deck=list(deck), max_turn=max_turn, budget=budget, n_det=n_det)
+        r = assemble.run_one(rules, ls, s, deck=list(deck), max_turn=max_turn, budget=budget, n_det=n_det,
+                             route=route, route_log=route_log, route_opts=route_opts)
         v = r["verdict"].stage2
-        out.append({"seed": s, "cards_turn": r["cards_turn"], "entry_turn": r["entry_turn"], "stage2": v.ok, "via": v.via,
-                    "win_turn": v.win_turn, "error": r["res"].error})
+        out.append({"seed": s, "cards_turn": r["cards_turn"], "cards_turn_any": r["cards_turn_any"], "entry_turn": r["entry_turn"],
+                    "stage_turn": r["stage_turn"], "stage2": v.ok, "via": v.via, "kill": v.kill, "beat": v.beat_win,
+                    "win_turn": v.win_turn, "kind": r["res"].kind, "error": r["res"].error})
     return out

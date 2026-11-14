@@ -1,0 +1,116 @@
+{
+ "combo": "akashic",
+ "entry": "akashic_hd2",
+ "core": {
+  "dm23ex2-009": 4,
+  "dm24ex3-rp3tr6": 4,
+  "dmrp12-s01": 4,
+  "dm24ex1-043": 4,
+  "dm24ex1-038": 4,
+  "dmrp07-009": 4,
+  "dm23bd7-035": 4
+ },
+ "added": [
+  {
+   "id": "dm28-110",
+   "name": "覇翼フェアリー・アクセラー",
+   "roles": [
+    "accel"
+   ],
+   "score_before": 4.5,
+   "score_after": 5.0
+  },
+  {
+   "id": "dm20-043",
+   "name": "シークレット・クロックタワー",
+   "roles": [
+    "search"
+   ],
+   "score_before": 5.0,
+   "score_after": 5.25
+  },
+  {
+   "id": "dm01-110",
+   "name": "ディメンジョン・ゲート",
+   "roles": [
+    "search"
+   ],
+   "score_before": 5.25,
+   "score_after": 6.89
+  }
+ ],
+ "score": 6.892857142857142,
+ "fillers": [
+  "dm01-090",
+  "dm10-076",
+  "dm01-108",
+  "dm01-083"
+ ],
+ "candidates": {
+  "search": [
+   "dm20-043",
+   "dm23ex1-069",
+   "dm01-110"
+  ],
+  "draw": [
+   "dm14-028",
+   "dm22ex1-cho14",
+   "dm22rp1-073"
+  ],
+  "prep": [
+   "dm22ex1-cho47",
+   "dm22ex2-067",
+   "dm24rp2-041"
+  ],
+  "accel": [
+   "dm10-048",
+   "dm22ex1-095",
+   "dm28-110"
+  ],
+  "recover": [
+   "dm26rp3-t009",
+   "dm13-011",
+   "dm18-074"
+  ]
+ },
+ "settings": {
+  "budget": 20,
+  "n_det": 1,
+  "max_turn": 6
+ },
+ "seeds": [
+  1,
+  2,
+  3,
+  4,
+  5,
+  6,
+  7,
+  8,
+  9,
+  10,
+  11,
+  12,
+  13,
+  14,
+  15,
+  16,
+  17,
+  18,
+  19,
+  20
+ ],
+ "route": "akashic",
+ "approval": {
+  "dm01-110": false,
+  "dm20-043": false,
+  "dm23bd7-035": true,
+  "dm23ex2-009": false,
+  "dm24ex1-038": false,
+  "dm24ex1-043": false,
+  "dm24ex3-rp3tr6": false,
+  "dm28-110": false,
+  "dmrp07-009": false,
+  "dmrp12-s01": null
+ }
+}

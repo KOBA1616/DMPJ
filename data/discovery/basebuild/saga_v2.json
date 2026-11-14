@@ -1,0 +1,103 @@
+{
+ "combo": "saga",
+ "entry": "saga",
+ "core": {
+  "dm22ex2-021": 4,
+  "dm22ex1-007": 4,
+  "dmex10-020": 4,
+  "dm22ex1-025": 4,
+  "dmrp03-036": 4,
+  "dmrp03-s03": 4
+ },
+ "added": [
+  {
+   "id": "dm24rp2-041",
+   "name": "霊淵 アガルーム＝プルーフ",
+   "roles": [
+    "prep"
+   ],
+   "score_before": 9.83,
+   "score_after": 19.77
+  },
+  {
+   "id": "dm26rp3-t009",
+   "name": "ダムダム・ジョーカーズ",
+   "roles": [
+    "prep",
+    "recover"
+   ],
+   "score_before": 19.77,
+   "score_after": 25.63
+  }
+ ],
+ "score": 25.62857142857142,
+ "fillers": [
+  "dm01-090",
+  "dm01-083"
+ ],
+ "candidates": {
+  "search": [
+   "dm20-043",
+   "dm23ex1-069",
+   "dmx11-079"
+  ],
+  "draw": [
+   "dm14-028",
+   "dm22ex1-cho14",
+   "dm23ex3-035"
+  ],
+  "prep": [
+   "dm22ex1-cho47",
+   "dm22ex2-067",
+   "dm24rp2-041"
+  ],
+  "accel": [
+   "dm10-048"
+  ],
+  "recover": [
+   "dm26rp3-t009",
+   "dm13-011",
+   "dm18-074"
+  ]
+ },
+ "settings": {
+  "budget": 20,
+  "n_det": 1,
+  "max_turn": 6
+ },
+ "seeds": [
+  1,
+  2,
+  3,
+  4,
+  5,
+  6,
+  7,
+  8,
+  9,
+  10,
+  11,
+  12,
+  13,
+  14,
+  15,
+  16,
+  17,
+  18,
+  19,
+  20
+ ],
+ "route": "saga_v2",
+ "approval": {
+  "dm01-083": false,
+  "dm01-090": false,
+  "dm22ex1-007": false,
+  "dm22ex1-025": false,
+  "dm22ex2-021": false,
+  "dm24rp2-041": false,
+  "dm26rp3-t009": false,
+  "dmex10-020": false,
+  "dmrp03-036": false,
+  "dmrp03-s03": false
+ }
+}
