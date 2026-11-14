@@ -44,6 +44,9 @@ class Move:
     draw: bool = False        # ドロー（draw イベントも起こす）
     delayed: bool = False     # 遅延誘発の中（後のターンに起こる）
     blind: bool = False       # 山札の上から（引く・削る）。どのカードが動くか選べず、特定のカードを狙えない
+    many: bool = False        # 複数枚を動かしうる（count が any / all / 2以上）。収支の目安用で、閉路の判定には使わない
+    alias: str | None = None  # この移動で動かした札の名前（op の as）
+    ref: str | None = None    # 前の移動で名前を付けた札を動かす（select.ref、self 以外）
 
 
 @dataclass
@@ -94,6 +97,11 @@ def _rearms(ops) -> bool:
     return any(op["op"] == "untap" for op, _, _ in _walk(ops))
 
 
+def _many(sel: dict) -> bool:
+    c = sel.get("count", 1)
+    return c in ("any", "all") or (isinstance(c, int) and c > 1)
+
+
 def _moves_of(ops, zone: str = "bz") -> list[Move]:
     """zone: その効果を持つ能力が働くゾーン（「自分を動かす」の動かす前のゾーン）。"""
     out = []
@@ -109,12 +117,13 @@ def _moves_of(ops, zone: str = "bz") -> list[Move]:
             ref_self = sel.get("ref") == "self"
             src = zone if ref_self else sel.get("zone", "?")
             out.append(Move(src, op["to"], ref_self, dict(sel.get("filter", {})), cond, sel.get("owner", "you"),
-                            delayed=dl, blind=src == "deck" and "from_top" in sel))
+                            delayed=dl, blind=src == "deck" and "from_top" in sel, many=_many(sel),
+                            alias=op.get("as"), ref=None if ref_self else sel.get("ref")))
         elif o == "play_free":
             sel = op["select"]
             ref_self = sel.get("ref") == "self"
             out.append(Move(sel.get("zone", "hand"), op.get("resolve_to", "bz"), ref_self, dict(sel.get("filter", {})), cond,
-                            sel.get("owner", "you"), delayed=dl))
+                            sel.get("owner", "you"), delayed=dl, many=_many(sel), alias=op.get("as")))
         elif o == "swap":   # 革命チェンジ: out（攻撃クリーチャー）が手札へ、in（自分）がバトルゾーンへ
             out.append(Move("bz", "hand", False, {}, cond, delayed=dl))
             out.append(Move("hand", "bz", True, {}, cond, delayed=dl))
