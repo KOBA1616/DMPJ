@@ -12,6 +12,7 @@ import json
 import random
 import sys
 import time
+from collections import Counter
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
@@ -60,52 +61,70 @@ def ruler_rows(rules, parts, seeds, budget):
     return rows
 
 
+def random_set(rng, ids, k, keep, rules):
+    while True:
+        xs = rng.sample(ids, k)
+        if tuple(sorted(xs)) in keep:
+            continue
+        t = S.static_bound(rules, xs)["turn"]
+        if t is not None and t <= 4:
+            return xs, t
+
+
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--screen", required=True)
-    ap.add_argument("--top", type=int, default=25)
-    ap.add_argument("--three", type=int, default=5, help="3枚組も上位から何組測るか")
+    ap.add_argument("--top", type=int, default=25, help="2枚組の上位")
+    ap.add_argument("--three", type=int, default=5, help="3枚組を上位から何組測るか")
+    ap.add_argument("--per-base", type=int, default=1, help="3枚組: 同じ2枚の土台から何組まで")
+    ap.add_argument("--extra", action="append", default=[], help="必ず測る組（ID をカンマ区切り）")
     ap.add_argument("--seeds", type=int, default=4)
     ap.add_argument("--budget", type=int, default=1500)
     ap.add_argument("--bound-seeds", type=int, default=3)
     ap.add_argument("--bound-budget", type=int, default=300)
+    ap.add_argument("--time-limit", type=int, default=0, help="秒。超えたら打ち切り、打ち切った位置を記録する")
     ap.add_argument("--out", required=True)
     a = ap.parse_args()
     t0 = time.time()
     rules = load_rules()
     sc = json.loads(Path(a.screen).read_text(encoding="utf-8"))
-    groups = [{"kind": "passed", "parts": [p["a"], p["b"]], "rank": p["rank"], "turn": p["turn"], "unapproved": p["unapproved"]}
-              for p in sc["passed_top"][:a.top]]
-    seen3 = set()
+    groups = [{"kind": "extra", "parts": x.split(","), "turn": S.static_bound(rules, x.split(","))["turn"]} for x in a.extra]
+    groups += [{"kind": "passed", "parts": [p["a"], p["b"]], "rank": p["rank"], "turn": p["turn"], "unapproved": p["unapproved"]}
+               for p in sc["passed_top"][:a.top]]
+    per = Counter()
+    n3 = 0
     for t in sc["three"]:
         k = (t["a"], t["b"])
-        if k in seen3 or len(seen3) >= a.three:
+        if per[k] >= a.per_base or n3 >= a.three:
             continue
-        seen3.add(k)
+        per[k] += 1
+        n3 += 1
         groups.append({"kind": "three", "parts": [t["a"], t["b"], t["c"]], "turn": t["turn"], "unapproved": t["unapproved"]})
-    keep = {tuple(sorted(g["parts"][:2])) for g in groups}
+    keep = {tuple(sorted(g["parts"])) for g in groups}
     rng = random.Random(20261113)
     ids = sorted(c for c in rules.cards if not c.startswith("T") and rules.cards[c].cost is not None)
-    rnd = []
-    while len(rnd) < len(groups):
-        x, y = rng.sample(ids, 2)
-        if tuple(sorted((x, y))) in keep:
-            continue
-        t = S.static_bound(rules, [x, y])["turn"]
-        if t is None or t > 4:
-            continue
-        rnd.append({"kind": "random", "parts": [x, y], "turn": t})
-    out = []
-    for g in groups + rnd:
+    order = []
+    for g in groups:                       # 対象とランダム（同じ枚数）を交互に測る（打ち切っても数が揃う）
+        xs, t = random_set(rng, ids, len(g["parts"]), keep, rules)
+        order += [g, {"kind": "random", "parts": xs, "turn": t}]
+    out, cut = [], None
+    for idx, g in enumerate(order):
+        if a.time_limit and time.time() - t0 > a.time_limit:
+            cut = {"at": idx, "of": len(order), "next": g["parts"]}
+            print(f"打ち切り: {idx}/{len(order)}", flush=True)
+            break
         rows = ruler_rows(rules, g["parts"], range(1, a.seeds + 1), a.budget)
-        mb = S.measured_bound(rules, deck_of(g["parts"]), range(a.bound_seeds), budget=a.bound_budget, max_turn=4)
         g.update(names=[rules.cards[x].name for x in g["parts"]], stage1=sum(r["stage1"] for r in rows), stage2=sum(r["stage2"] for r in rows),
-                 errors=sum(1 for r in rows if r["error"]), vias=sorted({r["via"] for r in rows if r["via"]}),
-                 games=len(rows), best_turn=mb["best_turn"], kills=mb["kills"], bound_games=mb["games"])
+                 errors=sum(1 for r in rows if r["error"]), vias=sorted({r["via"] for r in rows if r["via"]}), games=len(rows),
+                 best_turn=None, kills=None, bound_games=0)
+        if g["stage1"] or g["stage2"] or g["kind"] == "extra":   # 上限ターンの実測は段1以上に届いた組だけ（時間の節約）
+            mb = S.measured_bound(rules, deck_of(g["parts"]), range(a.bound_seeds), budget=a.bound_budget, max_turn=4)
+            g.update(best_turn=mb["best_turn"], kills=mb["kills"], bound_games=mb["games"])
         out.append(g)
         print(f"{g['kind']:7s} {'+'.join(g['names'])}: 段1 {g['stage1']}/{len(rows)} 段2 {g['stage2']}/{len(rows)} 誤り{g['errors']} "
-              f"実測上限 {g['best_turn']}（{g['kills']}/{mb['games']}） {time.time()-t0:.0f}s", flush=True)
-    Path(a.out).write_text(json.dumps({"groups": out, "seconds": round(time.time() - t0), "args": vars(a)}, ensure_ascii=False, indent=1), encoding="utf-8")
+              f"実測上限 {g['best_turn']}（{g['kills']}/{g['bound_games']}） {time.time()-t0:.0f}s", flush=True)
+    Path(a.out).write_text(json.dumps({"groups": out, "cut": cut, "seconds": round(time.time() - t0), "args": vars(a)},
+                                      ensure_ascii=False, indent=1), encoding="utf-8")
 
 
 if __name__ == "__main__":

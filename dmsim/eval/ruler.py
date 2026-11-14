@@ -80,14 +80,28 @@ def _infinite(lp: dict) -> bool:
     return str(lp.get("limit")) == "inf"
 
 
-def stage1(res) -> Stage1:
-    loops = [lp for lp in res.loops if lp.get("verified", True)]
+def consume_only(lp: dict, me: int = 0) -> bool:
+    """有限のパターンループのうち、1周の差分が自分のマナの減り（untapped_mana / mana）だけで、何も増えず相手も減らないもの。
+    マナを払って同じ札を使い直すだけの繰り返しで、払える分で止まる（例: 墓地から手札に戻る呪文を毎周マナを払って唱え直す）。ループに数えない。
+    山札が減るだけのもの（掘り進める）はループのままにする。"""
+    if lp.get("source") != "pattern" or _infinite(lp):
+        return False
+    d = lp.get("delta") or {}
+    return bool(d) and all(v < 0 and str(k).endswith(f":{me}") and str(k).split(":")[0] in ("untapped_mana", "mana")
+                           for k, v in d.items())
+
+
+def stage1(res, me: int = 0) -> Stage1:
+    consumed = [lp for lp in res.loops if lp.get("verified", True) and consume_only(lp, me)]
+    loops = [lp for lp in res.loops if lp.get("verified", True) and not consume_only(lp, me)]
     if not res.loops:
         why = "採った手順にループが無い"
         if getattr(res, "loop_candidates", None):
             why += f"（探索の候補には {len(res.loop_candidates)} 件あったが選ばれていない）"
         return Stage1(ok=False, reason=why)
     if not loops:
+        if consumed:
+            return Stage1(ok=False, n_loops=len(res.loops), reason="自分の資源を払うだけの有限の繰り返ししかない（ループに数えない）")
         return Stage1(ok=False, n_loops=len(res.loops), reason="ループの記録はあるが検証されていない")
     best = max(loops, key=_n)
     inf = any(_infinite(lp) for lp in loops)
@@ -145,7 +159,7 @@ def stage2(res, eng, me: int = 0, lock_mode: str = "passive") -> Stage2:
 
 def judge(res, eng, *, me: int = 0, lock_mode: str = "passive") -> Verdict:
     """1局の (GameResult, Engine) を段1・段2で判定する。lock_mode は play_game に渡したロック判定役が受け身（lock_probe）か能動（prefer_policy・探索）か。"""
-    a = stage1(res)
+    a = stage1(res, me)
     b = stage2(res, eng, me, lock_mode)
     if b.via == "lock" and not a.ok:
         a.reason += "（ロックは段1に数えず段2の経路として記録）"
