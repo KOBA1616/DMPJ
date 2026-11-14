@@ -276,3 +276,726 @@ discovered_triples:
   why:
   - you:mana:+ コスト6の勝ち筋（増えたマナで払う）
   measured: 2026-11-14 入口3T→4T終わり 4シード 予算1500
+
+# 3〜4枚の部品（triples.collect3 / zero_extend、試し打ち通過→物差し）。値の記録のみ（登録の対象外）。
+discovered_parts34:
+- cards:
+  - dm23bd7-035
+  - dm23ex2-009
+  - dmrp08-074
+  - dmrp07-009
+  names:
+  - 魔刻の斬将オルゼキア／訪れる魔の時刻
+  - 完全水中要塞 アカシック3
+  - 被売医 タックン/喉から狙い打ち／被売医 タックン/喉から狙い打ち
+  - ラルド・ワースピーダ／H.D.2.
+  kind: parts3_4
+  stage1: 4/4
+  stage2: 4/4
+  best_turn: 3
+  vias:
+  - loop
+  entry_turn_bound: 10
+  layout: double
+  measured: 2026-11-15 入口3T→4T終わり 4シード 予算1500
+- cards:
+  - dm17-029
+  - dm25ex2-cho005
+  - dmrp08-030
+  - dm38-025
+  names:
+  - 煉獄陣
+  - 完全水中要塞 アカシック3
+  - 奇石 アンコバ/ブツブッツ・レイン／奇石 アンコバ/ブツブッツ・レイン
+  - サイバー・ハンド
+  kind: parts3_4
+  stage1: 4/4
+  stage2: 4/4
+  best_turn: 3
+  vias:
+  - loop
+  entry_turn_bound: 10
+  layout: double
+  measured: 2026-11-15 入口3T→4T終わり 4シード 予算1500
+- cards:
+  - dm22-013
+  - dm25ex2-cho005
+  - dmrp08-030
+  - dm38-025
+  names:
+  - 煉獄の開放
+  - 完全水中要塞 アカシック3
+  - 奇石 アンコバ/ブツブッツ・レイン／奇石 アンコバ/ブツブッツ・レイン
+  - サイバー・ハンド
+  kind: parts3_4
+  stage1: 4/4
+  stage2: 4/4
+  best_turn: 3
+  vias:
+  - loop
+  entry_turn_bound: 10
+  layout: double
+  measured: 2026-11-15 入口3T→4T終わり 4シード 予算1500
+- cards:
+  - dm23bd7-035
+  - dm23ex2-009
+  - dmrp08-030
+  - dm38-025
+  names:
+  - 魔刻の斬将オルゼキア／訪れる魔の時刻
+  - 完全水中要塞 アカシック3
+  - 奇石 アンコバ/ブツブッツ・レイン／奇石 アンコバ/ブツブッツ・レイン
+  - サイバー・ハンド
+  kind: parts3_4
+  stage1: 4/4
+  stage2: 4/4
+  best_turn: 3
+  vias:
+  - loop
+  entry_turn_bound: 10
+  layout: double
+  measured: 2026-11-15 入口3T→4T終わり 4シード 予算1500
+- cards:
+  - dm22-013
+  - dm23ex2-009
+  - dmrp08-030
+  - dmrp07-009
+  names:
+  - 煉獄の開放
+  - 完全水中要塞 アカシック3
+  - 奇石 アンコバ/ブツブッツ・レイン／奇石 アンコバ/ブツブッツ・レイン
+  - ラルド・ワースピーダ／H.D.2.
+  kind: parts3_4
+  stage1: 4/4
+  stage2: 4/4
+  best_turn: 3
+  vias:
+  - loop
+  entry_turn_bound: 10
+  layout: double
+  measured: 2026-11-15 入口3T→4T終わり 4シード 予算1500
+- cards:
+  - dm23bd7-035
+  - dm23ex2-009
+  - dmrp08-030
+  - dmrp07-009
+  names:
+  - 魔刻の斬将オルゼキア／訪れる魔の時刻
+  - 完全水中要塞 アカシック3
+  - 奇石 アンコバ/ブツブッツ・レイン／奇石 アンコバ/ブツブッツ・レイン
+  - ラルド・ワースピーダ／H.D.2.
+  kind: parts3_4
+  stage1: 4/4
+  stage2: 4/4
+  best_turn: 3
+  vias:
+  - loop
+  entry_turn_bound: 10
+  layout: double
+  measured: 2026-11-15 入口3T→4T終わり 4シード 予算1500
+- cards:
+  - dm04-044
+  - dm23bd6-007
+  - dm25ex2-cho005
+  - dmrp07-009
+  names:
+  - クローン・ファクトリー
+  - K・アトラン＆キング海賊団／アイアイサー・チャージャー
+  - 完全水中要塞 アカシック3
+  - ラルド・ワースピーダ／H.D.2.
+  kind: parts3_4
+  stage1: 4/4
+  stage2: 1/4
+  best_turn: 3
+  vias:
+  - loop
+  entry_turn_bound: 10
+  layout: double
+  measured: 2026-11-15 入口3T→4T終わり 4シード 予算1500
+- cards:
+  - dm03-008
+  - dm23ex2-009
+  - dmr19-057
+  - dmex18-038
+  names:
+  - プロテクト・キューブ
+  - 完全水中要塞 アカシック3
+  - デ・バウラ・チャージャー
+  - フューチャー・ブレイン
+  kind: parts3_4
+  stage1: 4/4
+  stage2: 0/4
+  best_turn: null
+  vias:
+  - beat
+  entry_turn_bound: 10
+  layout: double
+  measured: 2026-11-15 入口3T→4T終わり 4シード 予算1500
+- cards:
+  - dm05-011
+  - dm23ex2-009
+  - dmr19-057
+  - dmex18-038
+  names:
+  - 神々の逆流
+  - 完全水中要塞 アカシック3
+  - デ・バウラ・チャージャー
+  - フューチャー・ブレイン
+  kind: parts3_4
+  stage1: 4/4
+  stage2: 0/4
+  best_turn: null
+  vias:
+  - beat
+  entry_turn_bound: 10
+  layout: double
+  measured: 2026-11-15 入口3T→4T終わり 4シード 予算1500
+- cards:
+  - dm23bd6-007
+  - dm25ex2-cho005
+  - dmc34-042
+  - dmex18-038
+  names:
+  - K・アトラン＆キング海賊団／アイアイサー・チャージャー
+  - 完全水中要塞 アカシック3
+  - クローン・ファクトリー
+  - フューチャー・ブレイン
+  kind: parts3_4
+  stage1: 4/4
+  stage2: 0/4
+  best_turn: null
+  vias:
+  - beat
+  entry_turn_bound: 10
+  layout: double
+  measured: 2026-11-15 入口3T→4T終わり 4シード 予算1500
+- cards:
+  - dm22ex2-075
+  - dm23bd6-007
+  - dm23ex2-009
+  names:
+  - フェアリーの闇の子祭
+  - K・アトラン＆キング海賊団／アイアイサー・チャージャー
+  - 完全水中要塞 アカシック3
+  kind: parts3_4
+  stage1: 4/4
+  stage2: 0/4
+  best_turn: null
+  vias: []
+  entry_turn_bound: 10
+  layout: double
+  measured: 2026-11-15 入口3T→4T終わり 4シード 予算1500
+- cards:
+  - dm22ex2-075
+  - dm25ex2-cho005
+  - dmr19-057
+  names:
+  - フェアリーの闇の子祭
+  - 完全水中要塞 アカシック3
+  - デ・バウラ・チャージャー
+  kind: parts3_4
+  stage1: 4/4
+  stage2: 0/4
+  best_turn: null
+  vias: []
+  entry_turn_bound: 10
+  layout: double
+  measured: 2026-11-15 入口3T→4T終わり 4シード 予算1500
+- cards:
+  - dm24bd5-046
+  - dm25ex2-cho005
+  - dmr19-057
+  names:
+  - 【マニフェスト】チームウェイブを救いたい【聞け】
+  - 完全水中要塞 アカシック3
+  - デ・バウラ・チャージャー
+  kind: parts3_4
+  stage1: 4/4
+  stage2: 0/4
+  best_turn: null
+  vias: []
+  entry_turn_bound: 10
+  layout: double
+  measured: 2026-11-15 入口3T→4T終わり 4シード 予算1500
+- cards:
+  - dm23bd6-007
+  - dm23bd7-052
+  - dm25ex2-cho005
+  - dmrp07-009
+  names:
+  - K・アトラン＆キング海賊団／アイアイサー・チャージャー
+  - ミスティック・クリエーション
+  - 完全水中要塞 アカシック3
+  - ラルド・ワースピーダ／H.D.2.
+  kind: parts3_4
+  stage1: 4/4
+  stage2: 0/4
+  best_turn: null
+  vias:
+  - other
+  entry_turn_bound: 10
+  layout: double
+  measured: 2026-11-15 入口3T→4T終わり 4シード 予算1500
+- cards:
+  - dm23ex2-009
+  - dmbd08-a-002
+  - dmrp08-030
+  - dm23ex3-017
+  names:
+  - 完全水中要塞 アカシック3
+  - 虹出づる繭 ミノガミ／帝の目覚め
+  - 奇石 アンコバ/ブツブッツ・レイン／奇石 アンコバ/ブツブッツ・レイン
+  - Dの文殿 アルケミスト・ヒルズ
+  kind: parts3_4
+  stage1: 4/4
+  stage2: 0/4
+  best_turn: null
+  vias: []
+  entry_turn_bound: 10
+  layout: double
+  measured: 2026-11-15 入口3T→4T終わり 4シード 予算1500
+- cards:
+  - dm23bd7-052
+  - dm23ex2-009
+  - dmr19-057
+  - dmex18-038
+  names:
+  - ミスティック・クリエーション
+  - 完全水中要塞 アカシック3
+  - デ・バウラ・チャージャー
+  - フューチャー・ブレイン
+  kind: parts3_4
+  stage1: 4/4
+  stage2: 0/4
+  best_turn: null
+  vias:
+  - beat
+  entry_turn_bound: 10
+  layout: double
+  measured: 2026-11-15 入口3T→4T終わり 4シード 予算1500
+- cards:
+  - dm25ex2-cho005
+  - dmc34-042
+  - dmr19-057
+  - dm23ex3-017
+  names:
+  - 完全水中要塞 アカシック3
+  - クローン・ファクトリー
+  - デ・バウラ・チャージャー
+  - Dの文殿 アルケミスト・ヒルズ
+  kind: parts3_4
+  stage1: 4/4
+  stage2: 0/4
+  best_turn: null
+  vias:
+  - beat
+  entry_turn_bound: 10
+  layout: double
+  measured: 2026-11-15 入口3T→4T終わり 4シード 予算1500
+- cards:
+  - dm23bd7-035
+  - dm23ex2-009
+  - dm26sd1-n010
+  names:
+  - 魔刻の斬将オルゼキア／訪れる魔の時刻
+  - 完全水中要塞 アカシック3
+  - タイムピョンチキ／オラオラ・ジョーカーズ
+  kind: parts3_4
+  stage1: 4/4
+  stage2: 0/4
+  best_turn: null
+  vias: []
+  entry_turn_bound: 10
+  layout: double
+  measured: 2026-11-15 入口3T→4T終わり 4シード 予算1500
+- cards:
+  - dm25ex2-cho005
+  - dm26ex4-053
+  - dmr19-057
+  names:
+  - 完全水中要塞 アカシック3
+  - ペダンティック・ライフ
+  - デ・バウラ・チャージャー
+  kind: parts3_4
+  stage1: 4/4
+  stage2: 0/4
+  best_turn: null
+  vias: []
+  entry_turn_bound: 10
+  layout: double
+  measured: 2026-11-15 入口3T→4T終わり 4シード 予算1500
+- cards:
+  - dm01-058
+  - dm25ex2-cho005
+  - dmrp08-030
+  - dm23ex3-017
+  names:
+  - ダーク・リバース
+  - 完全水中要塞 アカシック3
+  - 奇石 アンコバ/ブツブッツ・レイン／奇石 アンコバ/ブツブッツ・レイン
+  - Dの文殿 アルケミスト・ヒルズ
+  kind: parts3_4
+  stage1: 4/4
+  stage2: 0/4
+  best_turn: null
+  vias: []
+  entry_turn_bound: 10
+  layout: double
+  measured: 2026-11-15 入口3T→4T終わり 4シード 予算1500
+- cards:
+  - dm05-011
+  - dm23bd6-007
+  - dm25ex2-cho005
+  - dm23rp2x-036
+  names:
+  - 神々の逆流
+  - K・アトラン＆キング海賊団／アイアイサー・チャージャー
+  - 完全水中要塞 アカシック3
+  - モノクル＝ドクトール／「すべてを見通す眼だ」
+  kind: parts3_4
+  stage1: 4/4
+  stage2: 0/4
+  best_turn: null
+  vias: []
+  entry_turn_bound: 10
+  layout: double
+  measured: 2026-11-15 入口3T→4T終わり 4シード 予算1500
+- cards:
+  - dm23bd7-052
+  - dm25ex2-cho005
+  - dmr19-057
+  - dmrp07-009
+  names:
+  - ミスティック・クリエーション
+  - 完全水中要塞 アカシック3
+  - デ・バウラ・チャージャー
+  - ラルド・ワースピーダ／H.D.2.
+  kind: parts3_4
+  stage1: 4/4
+  stage2: 0/4
+  best_turn: null
+  vias:
+  - beat
+  - other
+  entry_turn_bound: 10
+  layout: double
+  measured: 2026-11-15 入口3T→4T終わり 4シード 予算1500
+- cards:
+  - dm25ex2-cho005
+  - dmr19-057
+  - dmx22b-089
+  - dm23ex3-017
+  names:
+  - 完全水中要塞 アカシック3
+  - デ・バウラ・チャージャー
+  - メビウスの回廊
+  - Dの文殿 アルケミスト・ヒルズ
+  kind: parts3_4
+  stage1: 4/4
+  stage2: 0/4
+  best_turn: null
+  vias:
+  - beat
+  entry_turn_bound: 10
+  layout: double
+  measured: 2026-11-15 入口3T→4T終わり 4シード 予算1500
+- cards:
+  - dm23bd6-007
+  - dm25ex2-cho005
+  - dmrp04m-011
+  names:
+  - K・アトラン＆キング海賊団／アイアイサー・チャージャー
+  - 完全水中要塞 アカシック3
+  - 神々の逆流
+  kind: parts3_4
+  stage1: 4/4
+  stage2: 0/4
+  best_turn: null
+  vias: []
+  entry_turn_bound: 10
+  layout: double
+  measured: 2026-11-15 入口3T→4T終わり 4シード 予算1500
+- cards:
+  - dm03-026
+  - dm23ex2-009
+  - dmr19-057
+  - dmex18-038
+  names:
+  - ハイパー・ウェーブ
+  - 完全水中要塞 アカシック3
+  - デ・バウラ・チャージャー
+  - フューチャー・ブレイン
+  kind: parts3_4
+  stage1: 4/4
+  stage2: 0/4
+  best_turn: null
+  vias:
+  - beat
+  entry_turn_bound: 10
+  layout: double
+  measured: 2026-11-15 入口3T→4T終わり 4シード 予算1500
+- cards:
+  - dm22-013
+  - dm23ex2-009
+  - dmrp08-030
+  - dm23ex3-017
+  names:
+  - 煉獄の開放
+  - 完全水中要塞 アカシック3
+  - 奇石 アンコバ/ブツブッツ・レイン／奇石 アンコバ/ブツブッツ・レイン
+  - Dの文殿 アルケミスト・ヒルズ
+  kind: parts3_4
+  stage1: 4/4
+  stage2: 0/4
+  best_turn: null
+  vias: []
+  entry_turn_bound: 10
+  layout: double
+  measured: 2026-11-15 入口3T→4T終わり 4シード 予算1500
+- cards:
+  - dm23bd7-052
+  - dm23ex2-009
+  - dmr19-057
+  - dm23ex3-017
+  names:
+  - ミスティック・クリエーション
+  - 完全水中要塞 アカシック3
+  - デ・バウラ・チャージャー
+  - Dの文殿 アルケミスト・ヒルズ
+  kind: parts3_4
+  stage1: 4/4
+  stage2: 0/4
+  best_turn: null
+  vias:
+  - beat
+  entry_turn_bound: 10
+  layout: double
+  measured: 2026-11-15 入口3T→4T終わり 4シード 予算1500
+- cards:
+  - dm03-023
+  - dm25ex2-cho005
+  - dm27-039
+  - dmex18-038
+  names:
+  - ライト・ブーメラン
+  - 完全水中要塞 アカシック3
+  - リフレクティング・レイ
+  - フューチャー・ブレイン
+  kind: parts3_4
+  stage1: 4/4
+  stage2: 0/4
+  best_turn: null
+  vias:
+  - beat
+  entry_turn_bound: 10
+  layout: double
+  measured: 2026-11-15 入口3T→4T終わり 4シード 予算1500
+- cards:
+  - dm03-008
+  - dm23bd6-007
+  - dm23ex2-009
+  - dm23ex3-017
+  names:
+  - プロテクト・キューブ
+  - K・アトラン＆キング海賊団／アイアイサー・チャージャー
+  - 完全水中要塞 アカシック3
+  - Dの文殿 アルケミスト・ヒルズ
+  kind: parts3_4
+  stage1: 4/4
+  stage2: 0/4
+  best_turn: null
+  vias: []
+  entry_turn_bound: 10
+  layout: double
+  measured: 2026-11-15 入口3T→4T終わり 4シード 予算1500
+- cards:
+  - dm25ex2-cho005
+  - dmrp08-030
+  - dmrp08-074
+  - dm23ex3-017
+  names:
+  - 完全水中要塞 アカシック3
+  - 奇石 アンコバ/ブツブッツ・レイン／奇石 アンコバ/ブツブッツ・レイン
+  - 被売医 タックン/喉から狙い打ち／被売医 タックン/喉から狙い打ち
+  - Dの文殿 アルケミスト・ヒルズ
+  kind: parts3_4
+  stage1: 4/4
+  stage2: 0/4
+  best_turn: null
+  vias: []
+  entry_turn_bound: 10
+  layout: double
+  measured: 2026-11-15 入口3T→4T終わり 4シード 予算1500
+- cards:
+  - dm23bd5-045
+  - dm25ex2-cho005
+  - dmr19-057
+  names:
+  - 神聖で新生な霊樹
+  - 完全水中要塞 アカシック3
+  - デ・バウラ・チャージャー
+  kind: parts3_4
+  stage1: 4/4
+  stage2: 0/4
+  best_turn: null
+  vias: []
+  entry_turn_bound: 10
+  layout: double
+  measured: 2026-11-15 入口3T→4T終わり 4シード 予算1500
+- cards:
+  - dm25ex2-cho005
+  - dmr19-057
+  - dmx22b-089
+  - dmex18-038
+  names:
+  - 完全水中要塞 アカシック3
+  - デ・バウラ・チャージャー
+  - メビウスの回廊
+  - フューチャー・ブレイン
+  kind: parts3_4
+  stage1: 4/4
+  stage2: 0/4
+  best_turn: null
+  vias:
+  - beat
+  entry_turn_bound: 10
+  layout: double
+  measured: 2026-11-15 入口3T→4T終わり 4シード 予算1500
+- cards:
+  - dm22rp1-tr4
+  - dm23bd7-035
+  - dm23ex2-009
+  names:
+  - フェルナンド・ソシュール／プライマル・スクリーム
+  - 魔刻の斬将オルゼキア／訪れる魔の時刻
+  - 完全水中要塞 アカシック3
+  kind: parts3_4
+  stage1: 4/4
+  stage2: 0/4
+  best_turn: null
+  vias: []
+  entry_turn_bound: 10
+  layout: double
+  measured: 2026-11-15 入口3T→4T終わり 4シード 予算1500
+- cards:
+  - dm03-023
+  - dm23ex2-009
+  - dm27-039
+  - dm23ex3-017
+  names:
+  - ライト・ブーメラン
+  - 完全水中要塞 アカシック3
+  - リフレクティング・レイ
+  - Dの文殿 アルケミスト・ヒルズ
+  kind: parts3_4
+  stage1: 4/4
+  stage2: 0/4
+  best_turn: null
+  vias: []
+  entry_turn_bound: 10
+  layout: double
+  measured: 2026-11-15 入口3T→4T終わり 4シード 予算1500
+- cards:
+  - dm23bd5-045
+  - dm23bd6-007
+  - dm25ex2-cho005
+  names:
+  - 神聖で新生な霊樹
+  - K・アトラン＆キング海賊団／アイアイサー・チャージャー
+  - 完全水中要塞 アカシック3
+  kind: parts3_4
+  stage1: 4/4
+  stage2: 0/4
+  best_turn: null
+  vias: []
+  entry_turn_bound: 10
+  layout: double
+  measured: 2026-11-15 入口3T→4T終わり 4シード 予算1500
+- cards:
+  - dm05-011
+  - dm23bd6-007
+  - dm23ex2-009
+  - dmex18-038
+  names:
+  - 神々の逆流
+  - K・アトラン＆キング海賊団／アイアイサー・チャージャー
+  - 完全水中要塞 アカシック3
+  - フューチャー・ブレイン
+  kind: parts3_4
+  stage1: 4/4
+  stage2: 0/4
+  best_turn: null
+  vias:
+  - beat
+  entry_turn_bound: 10
+  layout: double
+  measured: 2026-11-15 入口3T→4T終わり 4シード 予算1500
+- cards:
+  - dm25ex2-cho005
+  - dmbd08-a-002
+  - dmex06-081
+  - dm23ex3-017
+  names:
+  - 完全水中要塞 アカシック3
+  - 虹出づる繭 ミノガミ／帝の目覚め
+  - 生死の天秤
+  - Dの文殿 アルケミスト・ヒルズ
+  kind: parts3_4
+  stage1: 4/4
+  stage2: 0/4
+  best_turn: null
+  vias: []
+  entry_turn_bound: 10
+  layout: double
+  measured: 2026-11-15 入口3T→4T終わり 4シード 予算1500
+- cards:
+  - dm21-039
+  - dm23ex2-009
+  - dmr19-057
+  names:
+  - ウィザード・リザレクション
+  - 完全水中要塞 アカシック3
+  - デ・バウラ・チャージャー
+  kind: parts3_4
+  stage1: 4/4
+  stage2: 0/4
+  best_turn: null
+  vias: []
+  entry_turn_bound: 10
+  layout: double
+  measured: 2026-11-15 入口3T→4T終わり 4シード 予算1500
+- cards:
+  - dm23bd7-035
+  - dm23ex2-009
+  - dm23ex3-074
+  names:
+  - 魔刻の斬将オルゼキア／訪れる魔の時刻
+  - 完全水中要塞 アカシック3
+  - 邪鎧 デ=アムド／「我が力となれ!!」
+  kind: parts3_4
+  stage1: 4/4
+  stage2: 0/4
+  best_turn: null
+  vias: []
+  entry_turn_bound: 10
+  layout: double
+  measured: 2026-11-15 入口3T→4T終わり 4シード 予算1500
+- cards:
+  - dm03-008
+  - dm23ex2-009
+  - dmr19-057
+  - dm23ex3-017
+  names:
+  - プロテクト・キューブ
+  - 完全水中要塞 アカシック3
+  - デ・バウラ・チャージャー
+  - Dの文殿 アルケミスト・ヒルズ
+  kind: parts3_4
+  stage1: 4/4
+  stage2: 0/4
+  best_turn: null
+  vias:
+  - beat
+  entry_turn_bound: 10
+  layout: double
+  measured: 2026-11-15 入口3T→4T終わり 4シード 予算1500
