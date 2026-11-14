@@ -88,6 +88,12 @@ def _rank(eng: Engine, d: dict, w: Weights) -> list[int]:
     return sorted(range(len(opts)), key=key)
 
 
+# 予算切れの後の打ち切りで1手先読みする（§31）。既定は無効（従来どおり並びの先頭）
+import os as _os
+ROLLOUT_LOOKAHEAD = _os.environ.get("DMSIM_ROLLOUT_LOOKAHEAD", "0") == "1"
+ROLLOUT_WIDTH = 4
+
+
 # 経路に要る札を手札に残す口（search.route_goal.keep_hand を eval.assemble が経路つきの測定の間だけ差す）。
 # callable(eng, player) -> その手番の選択で後回しにする札の定義ID の集合。None（既定）は従来どおり
 KEEP_HAND = None
@@ -257,8 +263,30 @@ class TurnSearch:
                 # （勝者なし・-WIN/2 の評価）になるので、数秒かかる空回しを打ち切る
                 eng.s.result = {"winner": None, "reason": "step_limit", "turn": eng.s.turn}
                 break
-            eng.answer(candidates(eng, d, self.w, cap=1)[0])
+            eng.answer(self._rollout_pick(eng, d))
         return eng
+
+    def _rollout_pick(self, eng: Engine, d: dict) -> list[int]:
+        """予算切れの後の1手。既定は並びの先頭（貪欲）。ROLLOUT_LOOKAHEAD（DMSIM_ROLLOUT_LOOKAHEAD=1、経路の点があるときだけ）なら、
+        1つ選ぶ決定は各候補を答えて次の自分の決定まで進めた局面を評価関数で比べる（1手先読み。深いループの途中の選択を並び順で決めない）。"""
+        cands = candidates(eng, d, self.w, cap=1 if not (ROLLOUT_LOOKAHEAD and self.value_fn) else 6)
+        if len(cands) == 1 or not (ROLLOUT_LOOKAHEAD and self.value_fn) or not (d["max"] == 1 and d["min"] == 1):
+            return cands[0]
+        best, bv = cands[0], None
+        for c in cands[:ROLLOUT_WIDTH]:
+            e2 = eng.clone()
+            try:
+                e2.answer(c)
+                n = 0
+                while (d2 := self._settle(e2)) is not None and n < self.rollout_cap:   # 残りは並びの先頭で最後まで
+                    e2.answer(candidates(e2, d2, self.w, cap=1)[0])
+                    n += 1
+                v = self._eval(e2)
+            except Exception:
+                continue
+            if bv is None or v > bv:
+                best, bv = c, v
+        return best
 
     def run(self, eng: Engine) -> tuple[Engine, TurnStats]:
         """eng（自分の決定待ち）から探索し、一番評価の高いターン終了局面の Engine を返す。eng は変更しない。"""
