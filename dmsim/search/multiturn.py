@@ -16,6 +16,8 @@ from ..engine.view import active_of, result_of
 
 def advance_to_own_turn(eng: Engine, me: int, opp_policy, limit: int = 400) -> bool:
     """相手のターンを相手役で進め、自分の次の決定まで進める。進められたら True（ゲーム終了・打ち切りは False）。"""
+    from . import defense
+    opp_policy = defense.wrap(opp_policy, me)
     for _ in range(limit):
         d = eng.advance()
         if d is None:
