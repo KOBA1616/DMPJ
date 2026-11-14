@@ -150,6 +150,41 @@ def cmd_control(a):
                                       ensure_ascii=False, indent=1, default=str), encoding="utf-8")
 
 
+def known_pairs() -> dict:
+    """既知デッキの中核（ループ・エンジンの札、勝ち手段は除く）。登録簿の候補 data/registry/candidates.yaml から。"""
+    y = yaml.safe_load((ROOT / "data/registry/candidates.yaml").read_text(encoding="utf-8"))
+    out = {}
+    for c in y.get("candidates") or y.get("combos") or []:
+        if c.get("id") in KNOWN_DECKS:
+            out[c["id"]] = [x["id"] for x in c.get("core") or [] if x.get("part", "loop") != "win"]
+    return out
+
+
+def contrib_lines(name, with_rows, without_rows, ts=(3, 4)) -> dict:
+    out = {v: {t: A.pair_contribution(with_rows, without_rows, t, v) for t in ts} for v in A.VALUES}
+    for v, x in out.items():
+        c = x[4]
+        print(f"  {name} 寄与[{v}]4T {c['diff']:+.2f} 95%{c['ci95']} 上{c['better']}/下{c['worse']} n={c['n']}", flush=True)
+    return out
+
+
+def cmd_known(a):
+    """既知デッキの中核を取り除いた対照と同じシードで比べる（組の寄与を既知デッキにも）。"""
+    from dmsim.eval.contrib import remove_pair
+    kp = known_pairs()
+    decks = {}
+    for n, core in kp.items():
+        d = deck_of(n)
+        decks[n] = d
+        decks[n + "#no_pair"] = remove_pair(d, core)
+    rows = measure_many(decks, range(1, a.seeds + 1), a.procs, opp_level=a.opp, max_turn=a.max_turn, budget=a.budget)
+    res = {}
+    for n in kp:
+        res[n] = {"core": kp[n], "summary": A.summarize(rows[n], a.max_turn), "base": A.summarize(rows[n + "#no_pair"], a.max_turn),
+                  "contribution_by": contrib_lines(n, rows[n], rows[n + "#no_pair"]), "rows": rows[n], "rows_no_pair": rows[n + "#no_pair"]}
+    Path(a.out).write_text(json.dumps({"args": vars(a), "results": res}, ensure_ascii=False, indent=1, default=str), encoding="utf-8")
+
+
 def cmd_search(a):
     from dmsim.base.loopspec import LoopSpec, Pred
     from dmsim.discovery import basebuild as B
@@ -205,6 +240,7 @@ def cmd_search(a):
             base = A.summarize(rows[n + "#no_pair"], a.max_turn)
             res[n]["pair_gain_4t"] = s["kill"][4]["k"] - base["kill"][4]["k"]
             res[n]["contribution"] = {t: A.pair_contribution(r, rows[n + "#no_pair"], t) for t in (3, 4, a.max_turn)}
+            res[n]["contribution_by"] = contrib_lines(n[:24], r, rows[n + "#no_pair"])
         nm = "+".join(built[n]["names"]) if n in built else n
         c = res[n].get("contribution", {}).get(4)
         cs = f" 寄与4T {c['diff']:+.2f} 95%{c['ci95']} 上{c['better']}/下{c['worse']}" if c else ""
@@ -216,7 +252,7 @@ def cmd_search(a):
 
 def main():
     ap = argparse.ArgumentParser()
-    ap.add_argument("mode", choices=["control", "search"])
+    ap.add_argument("mode", choices=["control", "search", "known"])
     ap.add_argument("--out", required=True)
     ap.add_argument("--seeds", type=int, default=20)
     ap.add_argument("--random", type=int, default=5)
@@ -228,7 +264,7 @@ def main():
     ap.add_argument("--budget", type=int, default=200)
     ap.add_argument("--procs", type=int, default=4)
     a = ap.parse_args()
-    {"control": cmd_control, "search": cmd_search}[a.mode](a)
+    {"control": cmd_control, "search": cmd_search, "known": cmd_known}[a.mode](a)
 
 
 if __name__ == "__main__":

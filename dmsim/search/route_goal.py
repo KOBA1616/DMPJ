@@ -215,7 +215,7 @@ def make_value_fn(stages, weights: Weights | None = None, *, mult: float = 1.0, 
     return gated
 
 
-# --- 入口より後ろの連続点（§29、DMSIM_DRAWOUT=1 のときだけ）
+# --- 入口より後ろの連続点（§30、DMSIM_DRAWOUT=1 のときだけ）
 DIG_W = 15.0     # 勝ちに必要な残り1枚あたりの点（段の weight 350〜500 に対し、ループ1周＝1枚で手の差がつく大きさ）
 EARLY_W = 200.0  # 勝ち手段を早く出しすぎた（場にあるのに残り>0）ときの減点
 
@@ -238,7 +238,7 @@ def continuous_score(eng, stages, me, floor, wins, e_idx, partial, elsewhere) ->
     from .access import remaining
     k_now = reached(eng, stages, me)
     seen = e_idx == 0 or floor >= e_idx or all(holds(eng, p, me) for p in stages[e_idx - 1].preds)
-    if not seen:   # 入口を経ずに後ろの段を満たしても数えない（§29 の穴ふさぎ）
+    if not seen:   # 入口を経ずに後ろの段を満たしても数えない（§30 の穴ふさぎ）
         k_now = max([i for i, st in enumerate(stages[:e_idx - 1], 1) if all(holds(eng, p, me) for p in st.preds)], default=0)
     k = max(k_now, floor if seen else min(floor, max(0, e_idx - 1)))
     r = sum(st.weight for st in stages[:k])
@@ -259,7 +259,7 @@ def continuous_score(eng, stages, me, floor, wins, e_idx, partial, elsewhere) ->
 def note_reached(eng, stages, ratchet: list, me: int = 0) -> None:
     """ラチェットの更新: 真の局面で満たした段が今の下限より後ろなら上げる（下げない）。"""
     k = reached(eng, stages, me)
-    if drawout_on() and drawout_wins(stages):   # §29: 入口を経ていなければ入口より後ろへは上げない
+    if drawout_on() and drawout_wins(stages):   # §30: 入口を経ていなければ入口より後ろへは上げない
         e = entry_index(stages)
         if e and ratchet[0] < e and not all(holds(eng, p, me) for p in stages[e - 1].preds):
             k = min(k, max([i for i, st in enumerate(stages[:e - 1], 1) if all(holds(eng, p, me) for p in st.preds)], default=0))
