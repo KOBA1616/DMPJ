@@ -1,4 +1,23 @@
 {
+"dmpcd02-b02": {
+"by": "check",
+"checks": {
+"effect": "ok",
+"text": "ok"
+},
+"def_hash": "4cf94da31e702059",
+"status": "approved",
+"uses": [
+"core",
+"op:choose",
+"op:if",
+"op:may",
+"op:move"
+],
+"verifier": 2,
+"verify": "43手・turn 30 まで正常に回った（result={'winner': 0, 'reason': 'deck_out', 'turn': 30}）",
+"vocab_ver": "38531ab379c8438d"
+},
 "dmpcd02-b03": {
 "by": "check",
 "checks": {
@@ -17,5 +36,36 @@
 "verifier": 2,
 "verify": "43手・turn 30 まで正常に回った（result={'winner': 0, 'reason': 'deck_out', 'turn': 30}）",
 "vocab_ver": "6bd32b2f6d86991e"
+},
+"dmpcd02-b08": {
+"by": "rule",
+"checks": {},
+"def_hash": "35e746570e3e0065",
+"status": "pending",
+"uses": [
+"core",
+"kw:double_breaker"
+],
+"verifier": 2,
+"verify_error": "Traceback (most recent call last): |   File \"/home/claude/dmpj/dmsim/engine/verify.py\", line 42, in verify_card |     spec = sc.try_card(rules, card_id) |   File \"/home/claude/dmpj/dmsim/engine/scenario.py\", line 94, in try_card |     hit = next((probe.s.cards[c].defn for c in pool if probe.filter_match(c, f)), None) | TO",
+"vocab_ver": "76ace1d9e2ba7e59"
+},
+"dmpcd02-b12": {
+"by": "check",
+"checks": {
+"effect": "ok",
+"text": "ok"
+},
+"def_hash": "2c3bcaa54af1ed06",
+"status": "approved",
+"uses": [
+"core",
+"op:if",
+"op:may",
+"op:move"
+],
+"verifier": 2,
+"verify": "43手・turn 30 まで正常に回った（result={'winner': 0, 'reason': 'deck_out', 'turn': 30}）",
+"vocab_ver": "202e69eb1ac92daf"
 }
 }

@@ -29,6 +29,21 @@
 "verify": "43手・turn 30 まで正常に回った（result={'winner': 0, 'reason': 'deck_out', 'turn': 30}）",
 "vocab_ver": "b1093fcc02a8471b"
 },
+"dmr20-028": {
+"by": "rule",
+"checks": {},
+"def_hash": "0ec949cf65719ace",
+"status": "pending",
+"uses": [
+"core",
+"kw:blocker",
+"op:draw",
+"op:may"
+],
+"verifier": 2,
+"verify_error": "Traceback (most recent call last): |   File \"/home/claude/dmpj/dmsim/engine/verify.py\", line 42, in verify_card |     spec = sc.try_card(rules, card_id) |   File \"/home/claude/dmpj/dmsim/engine/scenario.py\", line 94, in try_card |     hit = next((probe.s.cards[c].defn for c in pool if probe.filter_match(c, f)), None) | TO",
+"vocab_ver": "11c47ac7e8d28a99"
+},
 "dmr20-035": {
 "by": "check",
 "checks": {
@@ -61,7 +76,7 @@
 ],
 "verifier": 2,
 "verify": "43手・turn 30 まで正常に回った（result={'winner': 0, 'reason': 'deck_out', 'turn': 30}）",
-"vocab_ver": "30b8fc35110ca634"
+"vocab_ver": "92f279f0930c829c"
 },
 "dmr20-047": {
 "by": "rule",
@@ -76,7 +91,7 @@
 ],
 "verifier": 2,
 "verify": "43手・turn 30 まで正常に回った（result={'winner': 0, 'reason': 'deck_out', 'turn': 30}）",
-"vocab_ver": "eecf7bb8e066bca8"
+"vocab_ver": "080d8e7509b398eb"
 },
 "dmr20-051": {
 "by": "rule",
@@ -93,7 +108,7 @@
 ],
 "verifier": 2,
 "verify": "43手・turn 30 まで正常に回った（result={'winner': 0, 'reason': 'deck_out', 'turn': 30}）",
-"vocab_ver": "306b8ec19faf054f"
+"vocab_ver": "62a61e3cc84fb868"
 },
 "dmr20-053": {
 "by": "check",
@@ -125,7 +140,7 @@
 ],
 "verifier": 2,
 "verify": "43手・turn 30 まで正常に回った（result={'winner': 0, 'reason': 'deck_out', 'turn': 30}）",
-"vocab_ver": "eecf7bb8e066bca8"
+"vocab_ver": "080d8e7509b398eb"
 },
 "dmr20-068": {
 "by": "rule",
@@ -140,6 +155,21 @@
 ],
 "verifier": 2,
 "verify": "43手・turn 30 まで正常に回った（result={'winner': 0, 'reason': 'deck_out', 'turn': 30}）",
-"vocab_ver": "eecf7bb8e066bca8"
+"vocab_ver": "080d8e7509b398eb"
+},
+"dmr20-s06": {
+"by": "rule",
+"checks": {},
+"def_hash": "b87582b649974c57",
+"status": "pending",
+"uses": [
+"core",
+"kw:triple_breaker",
+"op:choose",
+"op:move"
+],
+"verifier": 2,
+"verify_error": "Traceback (most recent call last): |   File \"/home/claude/dmpj/dmsim/engine/verify.py\", line 42, in verify_card |     spec = sc.try_card(rules, card_id) |   File \"/home/claude/dmpj/dmsim/engine/scenario.py\", line 94, in try_card |     hit = next((probe.s.cards[c].defn for c in pool if probe.filter_match(c, f)), None) | TO",
+"vocab_ver": "c1851b7a92225e17"
 }
 }

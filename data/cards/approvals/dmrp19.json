@@ -1,4 +1,39 @@
 {
+"dmrp19-010": {
+"by": "rule",
+"checks": {},
+"def_hash": "f942735e35f3e92c",
+"status": "pending",
+"uses": [
+"core",
+"op:choose",
+"op:may",
+"op:modal",
+"op:move",
+"op:play_free"
+],
+"verifier": 2,
+"verify_error": "Traceback (most recent call last): |   File \"/home/claude/dmpj/dmsim/engine/verify.py\", line 42, in verify_card |     spec = sc.try_card(rules, card_id) |   File \"/home/claude/dmpj/dmsim/engine/scenario.py\", line 94, in try_card |     hit = next((probe.s.cards[c].defn for c in pool if probe.filter_match(c, f)), None) | TO",
+"vocab_ver": "0cc48349a6a1c9f9"
+},
+"dmrp19-017": {
+"by": "check",
+"checks": {
+"effect": "ok",
+"text": "ok"
+},
+"def_hash": "4646b2d262ee0140",
+"status": "approved",
+"uses": [
+"core",
+"kw:s_trigger",
+"op:destroy",
+"op:repeat"
+],
+"verifier": 2,
+"verify": "43手・turn 30 まで正常に回った（result={'winner': 0, 'reason': 'deck_out', 'turn': 30}）",
+"vocab_ver": "492cc9465f580d5d"
+},
 "dmrp19-021": {
 "by": "check",
 "checks": {
@@ -25,7 +60,8 @@
 "text": "ok"
 },
 "def_hash": "29094bbf5459dff1",
-"status": "approved",
+"stale": "目視照合で誤り: 「見ないで選ぶ」が無作為(chooser: random)になっていない",
+"status": "pending",
 "uses": [
 "core",
 "kw:s_trigger",
@@ -33,7 +69,7 @@
 ],
 "verifier": 2,
 "verify": "43手・turn 30 まで正常に回った（result={'winner': 0, 'reason': 'deck_out', 'turn': 30}）",
-"vocab_ver": "58e43c01f13c4738"
+"vocab_ver": "48bb93ed4359362a"
 },
 "dmrp19-043": {
 "by": "rule",
@@ -42,7 +78,8 @@
 "text": "ok"
 },
 "def_hash": "e8ec3942a0c859d5",
-"status": "approved",
+"stale": "目視照合で誤り: 「コストは0以下にならない」の下限(cost_min: 1)が無い",
+"status": "pending",
 "uses": [
 "core",
 "kw:cannot_attack",
@@ -50,7 +87,25 @@
 ],
 "verifier": 2,
 "verify": "43手・turn 30 まで正常に回った（result={'winner': 0, 'reason': 'deck_out', 'turn': 30}）",
-"vocab_ver": "37ec32a9ed5cc50c"
+"vocab_ver": "b448a59db57d2b84"
+},
+"dmrp19-052": {
+"by": "rule",
+"checks": {
+"effect": "skip",
+"text": "fail"
+},
+"def_hash": "c175b83f630d7f99",
+"status": "pending",
+"uses": [
+"core",
+"kw:speed_attacker",
+"op:modal",
+"op:move"
+],
+"verifier": 2,
+"verify_error": "移動先 bz が原文に無い",
+"vocab_ver": "2f7b0c3c033621dc"
 },
 "dmrp19-056": {
 "by": "rule",
@@ -69,7 +124,7 @@
 ],
 "verifier": 2,
 "verify": "43手・turn 30 まで正常に回った（result={'winner': 0, 'reason': 'deck_out', 'turn': 30}）",
-"vocab_ver": "5583c74fdc2a094b"
+"vocab_ver": "dfa5ed0e3030ac51"
 },
 "dmrp19-059": {
 "by": "rule",
@@ -78,13 +133,14 @@
 "text": "ok"
 },
 "def_hash": "9b7c1ad8ed36eea5",
-"status": "approved",
+"stale": "目視照合で誤り: 「コストは0以下にならない」の下限(cost_min: 1)が無い",
+"status": "pending",
 "uses": [
 "core"
 ],
 "verifier": 2,
 "verify": "43手・turn 30 まで正常に回った（result={'winner': 0, 'reason': 'deck_out', 'turn': 30}）",
-"vocab_ver": "eecf7bb8e066bca8"
+"vocab_ver": "080d8e7509b398eb"
 },
 "dmrp19-060": {
 "by": "rule",
@@ -100,7 +156,7 @@
 ],
 "verifier": 2,
 "verify": "43手・turn 30 まで正常に回った（result={'winner': 0, 'reason': 'deck_out', 'turn': 30}）",
-"vocab_ver": "66fff36a8284db59"
+"vocab_ver": "7639d687d0380f7c"
 },
 "dmrp19-063": {
 "by": "rule",
@@ -116,7 +172,27 @@
 ],
 "verifier": 2,
 "verify": "43手・turn 30 まで正常に回った（result={'winner': 0, 'reason': 'deck_out', 'turn': 30}）",
-"vocab_ver": "f72865c602e10f09"
+"vocab_ver": "4113b5690225f981"
+},
+"dmrp19-064": {
+"by": "check",
+"checks": {
+"effect": "ok",
+"text": "ok"
+},
+"def_hash": "d8f555403df6ffde",
+"status": "approved",
+"uses": [
+"core",
+"kw:s_trigger",
+"op:choose",
+"op:draw",
+"op:modify",
+"op:untap"
+],
+"verifier": 2,
+"verify": "43手・turn 30 まで正常に回った（result={'winner': 0, 'reason': 'deck_out', 'turn': 30}）",
+"vocab_ver": "ff54e0ea7a36fb47"
 },
 "dmrp19-067": {
 "by": "rule",
@@ -133,7 +209,42 @@
 ],
 "verifier": 2,
 "verify": "43手・turn 30 まで正常に回った（result={'winner': 0, 'reason': 'deck_out', 'turn': 30}）",
-"vocab_ver": "bcf1dd43fd6c521c"
+"vocab_ver": "fb332fed0bca62d0"
+},
+"dmrp19-070": {
+"by": "check",
+"checks": {
+"effect": "ok",
+"text": "ok"
+},
+"def_hash": "37f796d817da33b3",
+"status": "approved",
+"uses": [
+"core",
+"op:draw",
+"op:modify"
+],
+"verifier": 2,
+"verify": "43手・turn 30 まで正常に回った（result={'winner': 0, 'reason': 'deck_out', 'turn': 30}）",
+"vocab_ver": "5948f95124ff1105"
+},
+"dmrp19-071": {
+"by": "check",
+"checks": {
+"effect": "ok",
+"text": "ok"
+},
+"def_hash": "750a48cee87280c3",
+"status": "approved",
+"uses": [
+"core",
+"kw:s_trigger",
+"op:draw",
+"op:modify"
+],
+"verifier": 2,
+"verify": "43手・turn 30 まで正常に回った（result={'winner': 0, 'reason': 'deck_out', 'turn': 30}）",
+"vocab_ver": "52fac178e56859b2"
 },
 "dmrp19-073": {
 "by": "rule",
@@ -142,13 +253,14 @@
 "text": "ok"
 },
 "def_hash": "d1d6d01b5953810d",
-"status": "approved",
+"stale": "目視照合で誤り: 「コストは0以下にならない」の下限(cost_min: 1)が無い",
+"status": "pending",
 "uses": [
 "core"
 ],
 "verifier": 2,
 "verify": "43手・turn 30 まで正常に回った（result={'winner': 0, 'reason': 'deck_out', 'turn': 30}）",
-"vocab_ver": "eecf7bb8e066bca8"
+"vocab_ver": "080d8e7509b398eb"
 },
 "dmrp19-076": {
 "by": "rule",
@@ -164,7 +276,24 @@
 ],
 "verifier": 2,
 "verify": "43手・turn 30 まで正常に回った（result={'winner': 0, 'reason': 'deck_out', 'turn': 30}）",
-"vocab_ver": "c2c139e5f7b8f15d"
+"vocab_ver": "1f231fca670b97d9"
+},
+"dmrp19-079": {
+"by": "check",
+"checks": {
+"effect": "ok",
+"text": "ok"
+},
+"def_hash": "cde07a78f3970c36",
+"status": "approved",
+"uses": [
+"core",
+"op:mill",
+"op:move"
+],
+"verifier": 2,
+"verify": "43手・turn 30 まで正常に回った（result={'winner': 0, 'reason': 'deck_out', 'turn': 30}）",
+"vocab_ver": "f790d1ebfe425588"
 },
 "dmrp19-081": {
 "by": "rule",
@@ -180,7 +309,7 @@
 ],
 "verifier": 2,
 "verify": "43手・turn 30 まで正常に回った（result={'winner': 0, 'reason': 'deck_out', 'turn': 30}）",
-"vocab_ver": "a42affdfb39d3cda"
+"vocab_ver": "5953a4174760806d"
 },
 "dmrp19-088": {
 "by": "rule",
@@ -197,7 +326,7 @@
 ],
 "verifier": 2,
 "verify": "43手・turn 30 まで正常に回った（result={'winner': 0, 'reason': 'deck_out', 'turn': 30}）",
-"vocab_ver": "813309acef383fc8"
+"vocab_ver": "5e561ad4ff9bda2f"
 },
 "dmrp19-089": {
 "by": "rule",
@@ -213,7 +342,7 @@
 ],
 "verifier": 2,
 "verify": "43手・turn 30 まで正常に回った（result={'winner': 0, 'reason': 'deck_out', 'turn': 30}）",
-"vocab_ver": "40dc6d953fde61fa"
+"vocab_ver": "d522869b10d7baa2"
 },
 "dmrp19-a04": {
 "by": "rule",
@@ -229,7 +358,7 @@
 ],
 "verifier": 2,
 "verify": "43手・turn 30 まで正常に回った（result={'winner': 0, 'reason': 'deck_out', 'turn': 30}）",
-"vocab_ver": "f72865c602e10f09"
+"vocab_ver": "4113b5690225f981"
 },
 "dmrp19-b04": {
 "by": "rule",
@@ -245,7 +374,7 @@
 ],
 "verifier": 2,
 "verify": "43手・turn 30 まで正常に回った（result={'winner': 0, 'reason': 'deck_out', 'turn': 30}）",
-"vocab_ver": "f72865c602e10f09"
+"vocab_ver": "4113b5690225f981"
 },
 "dmrp19-coro02": {
 "by": "rule",
@@ -254,7 +383,8 @@
 "text": "ok"
 },
 "def_hash": "343b25d4552d2592",
-"status": "approved",
+"stale": "目視照合で誤り: 「見ないで選ぶ」が無作為(chooser: random)になっていない",
+"status": "pending",
 "uses": [
 "core",
 "kw:s_trigger",
@@ -262,7 +392,7 @@
 ],
 "verifier": 2,
 "verify": "43手・turn 30 まで正常に回った（result={'winner': 0, 'reason': 'deck_out', 'turn': 30}）",
-"vocab_ver": "58e43c01f13c4738"
+"vocab_ver": "48bb93ed4359362a"
 },
 "dmrp19-coro03": {
 "by": "rule",
@@ -278,7 +408,7 @@
 ],
 "verifier": 2,
 "verify": "43手・turn 30 まで正常に回った（result={'winner': 0, 'reason': 'deck_out', 'turn': 30}）",
-"vocab_ver": "c2c139e5f7b8f15d"
+"vocab_ver": "1f231fca670b97d9"
 },
 "dmrp19-coro10": {
 "by": "rule",
@@ -294,6 +424,6 @@
 ],
 "verifier": 2,
 "verify": "43手・turn 30 まで正常に回った（result={'winner': 0, 'reason': 'deck_out', 'turn': 30}）",
-"vocab_ver": "40dc6d953fde61fa"
+"vocab_ver": "d522869b10d7baa2"
 }
 }

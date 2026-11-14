@@ -1,4 +1,20 @@
 {
+"dmsd11-012": {
+"by": "check",
+"checks": {
+"effect": "ok",
+"text": "ok"
+},
+"def_hash": "95b4aabfc786bf0b",
+"status": "approved",
+"uses": [
+"core",
+"op:bounce"
+],
+"verifier": 2,
+"verify": "43手・turn 30 まで正常に回った（result={'winner': 0, 'reason': 'deck_out', 'turn': 30}）",
+"vocab_ver": "a1061a54a600d5f4"
+},
 "dmsd11-019": {
 "by": "check",
 "checks": {

@@ -30,6 +30,21 @@
 "verify_error": "Traceback (most recent call last): |   File \"/home/claude/dmpj/dmsim/engine/verify.py\", line 42, in verify_card |     spec = sc.try_card(rules, card_id) |   File \"/home/claude/dmpj/dmsim/engine/scenario.py\", line 94, in try_card |     hit = next((probe.s.cards[c].defn for c in pool if probe.filter_match(c, f)), None) | TO",
 "vocab_ver": "5fe162f4f33ac52d"
 },
+"dm24ex2-038": {
+"by": "rule",
+"checks": {},
+"def_hash": "c49b7e7596de20d8",
+"status": "pending",
+"uses": [
+"core",
+"op:may",
+"op:move",
+"op:play_free"
+],
+"verifier": 2,
+"verify_error": "Traceback (most recent call last): |   File \"/home/claude/dmpj/dmsim/engine/verify.py\", line 42, in verify_card |     spec = sc.try_card(rules, card_id) |   File \"/home/claude/dmpj/dmsim/engine/scenario.py\", line 94, in try_card |     hit = next((probe.s.cards[c].defn for c in pool if probe.filter_match(c, f)), None) | TO",
+"vocab_ver": "386d149071af829f"
+},
 "dm24ex2-054": {
 "by": "rule",
 "checks": {
@@ -72,6 +87,23 @@
 "verify_error": "定義の数値 count=2 が原文に無い",
 "vocab_ver": "7e910ed463a8eb49"
 },
+"dm24ex2-061": {
+"by": "rule",
+"checks": {
+"effect": "skip",
+"text": "ok"
+},
+"def_hash": "7677cd2a6d9cc6df",
+"status": "approved",
+"uses": [
+"core",
+"kw:s_trigger",
+"kw:yobinion"
+],
+"verifier": 2,
+"verify": "43手・turn 30 まで正常に回った（result={'winner': 0, 'reason': 'deck_out', 'turn': 30}）",
+"vocab_ver": "f18e7dacd3f04dee"
+},
 "dm24ex2-073": {
 "by": "rule",
 "checks": {
@@ -108,6 +140,24 @@
 "verifier": 2,
 "verify": "43手・turn 30 まで正常に回った（result={'winner': 0, 'reason': 'deck_out', 'turn': 30}）",
 "vocab_ver": "cd60736bf70ec91c"
+},
+"dm24ex2-080": {
+"by": "rule",
+"checks": {},
+"def_hash": "5d43f45674e7df56",
+"status": "pending",
+"uses": [
+"core",
+"op:choose",
+"op:draw",
+"op:force_battle",
+"op:may",
+"op:modify",
+"op:play_free"
+],
+"verifier": 2,
+"verify_error": "Traceback (most recent call last): |   File \"/home/claude/dmpj/dmsim/engine/verify.py\", line 42, in verify_card |     spec = sc.try_card(rules, card_id) |   File \"/home/claude/dmpj/dmsim/engine/scenario.py\", line 94, in try_card |     hit = next((probe.s.cards[c].defn for c in pool if probe.filter_match(c, f)), None) | TO",
+"vocab_ver": "266ccae93698b988"
 },
 "dm24ex2-081": {
 "by": "rule",
@@ -229,6 +279,25 @@
 "verify": "43手・turn 30 まで正常に回った（result={'winner': 0, 'reason': 'deck_out', 'turn': 30}）",
 "vocab_ver": "3e7d0546aa59e6a0"
 },
+"dm24ex2-cho014": {
+"by": "check",
+"checks": {
+"effect": "ok",
+"text": "ok"
+},
+"def_hash": "0b56cea3a76236ed",
+"status": "approved",
+"uses": [
+"core",
+"kw:s_trigger",
+"op:bounce",
+"op:may",
+"op:move"
+],
+"verifier": 2,
+"verify": "43手・turn 30 まで正常に回った（result={'winner': 0, 'reason': 'deck_out', 'turn': 30}）",
+"vocab_ver": "f53f6e86eaec50c4"
+},
 "dm24ex2-cho026": {
 "by": "check",
 "checks": {
@@ -281,6 +350,23 @@
 "verifier": 2,
 "verify": "43手・turn 30 まで正常に回った（result={'winner': 0, 'reason': 'deck_out', 'turn': 30}）",
 "vocab_ver": "77cda07e62e901d1"
+},
+"dm24ex2-cho044": {
+"by": "check",
+"checks": {
+"effect": "ok",
+"text": "ok"
+},
+"def_hash": "8ca944dd6588290f",
+"status": "approved",
+"uses": [
+"core",
+"op:choose",
+"op:move"
+],
+"verifier": 2,
+"verify": "43手・turn 30 まで正常に回った（result={'winner': 0, 'reason': 'deck_out', 'turn': 30}）",
+"vocab_ver": "b3657b3478a848ab"
 },
 "dm24ex2-cho047": {
 "by": "rule",

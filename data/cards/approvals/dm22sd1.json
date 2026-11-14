@@ -1,4 +1,22 @@
 {
+"dm22sd1-013": {
+"by": "rule",
+"checks": {
+"effect": "skip",
+"text": "fail"
+},
+"def_hash": "b2c2b5f1a171548b",
+"status": "pending",
+"uses": [
+"core",
+"op:choose",
+"op:may",
+"op:move"
+],
+"verifier": 2,
+"verify_error": "移動先 bz が原文に無い",
+"vocab_ver": "1e8fc3c92d0c29d3"
+},
 "dm22sd1-014": {
 "by": "rule",
 "checks": {

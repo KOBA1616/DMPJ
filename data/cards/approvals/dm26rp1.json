@@ -1,4 +1,23 @@
 {
+"dm26rp1-011": {
+"by": "rule",
+"checks": {
+"effect": "skip",
+"text": "fail"
+},
+"def_hash": "19b0973ec6ca0b2e",
+"status": "pending",
+"uses": [
+"core",
+"op:break",
+"op:force_battle",
+"op:modal",
+"op:move"
+],
+"verifier": 2,
+"verify_error": "移動先 bz が原文に無い",
+"vocab_ver": "688bd164e00163e8"
+},
 "dm26rp1-040": {
 "by": "rule",
 "checks": {
@@ -53,6 +72,23 @@
 "verify_error": "Traceback (most recent call last): |   File \"/home/claude/dmpj/dmsim/engine/verify.py\", line 42, in verify_card |     spec = sc.try_card(rules, card_id) |   File \"/home/claude/dmpj/dmsim/engine/scenario.py\", line 94, in try_card |     hit = next((probe.s.cards[c].defn for c in pool if probe.filter_match(c, f)), None) | TO",
 "vocab_ver": "22e0428477a14d63"
 },
+"dm26rp1-050": {
+"by": "rule",
+"checks": {},
+"def_hash": "f33bce60d8d80913",
+"status": "pending",
+"uses": [
+"core",
+"kw:double_breaker",
+"op:choose",
+"op:destroy",
+"op:may",
+"op:move"
+],
+"verifier": 2,
+"verify_error": "Traceback (most recent call last): |   File \"/home/claude/dmpj/dmsim/engine/verify.py\", line 42, in verify_card |     spec = sc.try_card(rules, card_id) |   File \"/home/claude/dmpj/dmsim/engine/scenario.py\", line 94, in try_card |     hit = next((probe.s.cards[c].defn for c in pool if probe.filter_match(c, f)), None) | TO",
+"vocab_ver": "2b14a78a1d7fe283"
+},
 "dm26rp1-051": {
 "by": "rule",
 "checks": {},
@@ -67,6 +103,20 @@
 "verifier": 2,
 "verify_error": "Traceback (most recent call last): |   File \"/home/claude/dmpj/dmsim/engine/verify.py\", line 42, in verify_card |     spec = sc.try_card(rules, card_id) |   File \"/home/claude/dmpj/dmsim/engine/scenario.py\", line 94, in try_card |     hit = next((probe.s.cards[c].defn for c in pool if probe.filter_match(c, f)), None) | TO",
 "vocab_ver": "e791790397ef61ba"
+},
+"dm26rp1-052": {
+"by": "rule",
+"checks": {},
+"def_hash": "3004aec401395ac8",
+"status": "pending",
+"uses": [
+"core",
+"kw:triple_breaker",
+"op:force_battle"
+],
+"verifier": 2,
+"verify_error": "Traceback (most recent call last): |   File \"/home/claude/dmpj/dmsim/engine/verify.py\", line 42, in verify_card |     spec = sc.try_card(rules, card_id) |   File \"/home/claude/dmpj/dmsim/engine/scenario.py\", line 94, in try_card |     hit = next((probe.s.cards[c].defn for c in pool if probe.filter_match(c, f)), None) | TO",
+"vocab_ver": "9e7599837795868d"
 },
 "dm26rp1-055": {
 "by": "rule",
@@ -122,6 +172,24 @@
 "verify": "43手・turn 30 まで正常に回った（result={'winner': 0, 'reason': 'deck_out', 'turn': 30}）",
 "vocab_ver": "680f9d8ea4a98d10"
 },
+"dm26rp1-073": {
+"by": "rule",
+"checks": {
+"effect": "skip",
+"text": "ok"
+},
+"def_hash": "44483c6b9c9741e4",
+"status": "approved",
+"uses": [
+"core",
+"kw:double_breaker",
+"kw:quad_breaker",
+"kw:z_rush"
+],
+"verifier": 2,
+"verify": "43手・turn 30 まで正常に回った（result={'winner': 0, 'reason': 'deck_out', 'turn': 30}）",
+"vocab_ver": "7e4d3958172aaa0b"
+},
 "dm26rp1-076": {
 "by": "check",
 "checks": {
@@ -140,6 +208,30 @@
 "verify": "43手・turn 30 まで正常に回った（result={'winner': 0, 'reason': 'deck_out', 'turn': 30}）",
 "vocab_ver": "173fb092e691bc81"
 },
+"dm26rp1-s011": {
+"by": "rule",
+"checks": {
+"effect": "skip",
+"text": "fail"
+},
+"def_hash": "9deb0b6dbcffcfa0",
+"status": "pending",
+"uses": [
+"core",
+"kw:blocker",
+"kw:double_breaker",
+"kw:speed_attacker",
+"op:battle_substitute",
+"op:choose",
+"op:discard",
+"op:draw",
+"op:may",
+"op:move"
+],
+"verifier": 2,
+"verify_error": "移動先 bz が原文に無い",
+"vocab_ver": "9b9548d74016d093"
+},
 "dm26rp1-sec023": {
 "by": "rule",
 "checks": {
@@ -157,6 +249,20 @@
 "verifier": 2,
 "verify": "43手・turn 30 まで正常に回った（result={'winner': 0, 'reason': 'deck_out', 'turn': 30}）",
 "vocab_ver": "0b2b4fdf3be28c71"
+},
+"dm26rp1-t004": {
+"by": "rule",
+"checks": {},
+"def_hash": "0e9f85ca310979c1",
+"status": "pending",
+"uses": [
+"core",
+"op:move",
+"op:play_free"
+],
+"verifier": 2,
+"verify_error": "Traceback (most recent call last): |   File \"/home/claude/dmpj/dmsim/engine/verify.py\", line 42, in verify_card |     spec = sc.try_card(rules, card_id) |   File \"/home/claude/dmpj/dmsim/engine/scenario.py\", line 94, in try_card |     hit = next((probe.s.cards[c].defn for c in pool if probe.filter_match(c, f)), None) | TO",
+"vocab_ver": "b792e7640d60f880"
 },
 "dm26rp1-t009": {
 "by": "check",

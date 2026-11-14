@@ -1,0 +1,39 @@
+{
+"dm25ex4-008": {
+"by": "rule",
+"checks": {
+"effect": "skip",
+"text": "fail"
+},
+"def_hash": "5e2f7c1804241250",
+"status": "pending",
+"uses": [
+"core",
+"kw:double_breaker",
+"kw:g_strike",
+"op:move"
+],
+"verifier": 2,
+"verify_error": "移動先 bz が原文に無い",
+"vocab_ver": "94239bb77f28319b"
+},
+"dm25ex4-022": {
+"by": "rule",
+"checks": {
+"effect": "skip",
+"text": "fail"
+},
+"def_hash": "981ccba0597e20f4",
+"status": "pending",
+"uses": [
+"core",
+"kw:blocker",
+"kw:s_back_light",
+"op:draw",
+"op:may"
+],
+"verifier": 2,
+"verify_error": "キーワード s_back_light(S・バック-光（光のカードを自分のシールドゾーンから手札に加える時、そのカードを捨ててもよい。そうした場合、コストを支払わずにこのカードを実行する）) が原文に無い",
+"vocab_ver": "49976902f46e0668"
+}
+}

@@ -36,6 +36,47 @@
 "verify_error": "Traceback (most recent call last): |   File \"/home/claude/dmpj/dmsim/engine/verify.py\", line 42, in verify_card |     spec = sc.try_card(rules, card_id) |   File \"/home/claude/dmpj/dmsim/engine/scenario.py\", line 94, in try_card |     hit = next((probe.s.cards[c].defn for c in pool if probe.filter_match(c, f)), None) | TO",
 "vocab_ver": "478fe4c78e5b4deb"
 },
+"dm22ex1-035": {
+"by": "rule",
+"checks": {
+"effect": "skip",
+"text": "fail"
+},
+"def_hash": "b2d20c20f04038e2",
+"status": "pending",
+"uses": [
+"core",
+"op:choose",
+"op:delayed_trigger",
+"op:destroy",
+"op:may",
+"op:modify",
+"op:move",
+"op:shuffle"
+],
+"verifier": 2,
+"verify_error": "移動先 bz が原文に無い",
+"vocab_ver": "77525ca6a4a87801"
+},
+"dm22ex1-051": {
+"by": "rule",
+"checks": {
+"effect": "skip",
+"text": "fail"
+},
+"def_hash": "b4cccb1b1e95a74e",
+"status": "pending",
+"uses": [
+"core",
+"kw:s_trigger",
+"op:force_battle",
+"op:may",
+"op:move"
+],
+"verifier": 2,
+"verify_error": "移動先 bz が原文に無い",
+"vocab_ver": "1db511d80a6f2f20"
+},
 "dm22ex1-060": {
 "by": "check",
 "checks": {
@@ -54,6 +95,125 @@
 "verifier": 2,
 "verify": "43手・turn 30 まで正常に回った（result={'winner': 0, 'reason': 'deck_out', 'turn': 30}）",
 "vocab_ver": "f6f34954c406a563"
+},
+"dm22ex1-069": {
+"by": "rule",
+"checks": {
+"effect": "ok",
+"text": "fail"
+},
+"def_hash": "54151e602e619a1c",
+"status": "pending",
+"uses": [
+"core",
+"kw:s_trigger",
+"op:choose",
+"op:force_battle",
+"op:may",
+"op:move"
+],
+"verifier": 2,
+"verify_error": "移動先 bz が原文に無い",
+"vocab_ver": "409031177fb3476e"
+},
+"dm22ex1-074": {
+"by": "rule",
+"checks": {
+"effect": "skip",
+"text": "fail"
+},
+"def_hash": "c7d33f1a26da0011",
+"status": "pending",
+"uses": [
+"core",
+"kw:s_trigger",
+"kw:wave_striker",
+"op:draw",
+"op:tap"
+],
+"verifier": 2,
+"verify_error": "キーワード s_trigger(S・トリガー) が原文に無い",
+"vocab_ver": "66ad905d53fef5dc"
+},
+"dm22ex1-082": {
+"by": "rule",
+"checks": {
+"effect": "skip",
+"text": "fail"
+},
+"def_hash": "6751461f48e845cf",
+"status": "pending",
+"uses": [
+"core",
+"kw:s_trigger",
+"kw:wave_striker",
+"op:choose",
+"op:destroy",
+"op:may",
+"op:move"
+],
+"verifier": 2,
+"verify_error": "キーワード s_trigger(S・トリガー) が原文に無い",
+"vocab_ver": "ce9b2c6f58eb4fa4"
+},
+"dm22ex1-088": {
+"by": "rule",
+"checks": {
+"effect": "skip",
+"text": "fail"
+},
+"def_hash": "7bbb4dd7090db59d",
+"status": "pending",
+"uses": [
+"core",
+"kw:s_trigger",
+"kw:wave_striker",
+"op:destroy",
+"op:draw",
+"op:if"
+],
+"verifier": 2,
+"verify_error": "キーワード s_trigger(S・トリガー) が原文に無い",
+"vocab_ver": "9137f7e3f3a2b789"
+},
+"dm22ex1-093": {
+"by": "rule",
+"checks": {
+"effect": "skip",
+"text": "fail"
+},
+"def_hash": "7dc5dc789c5b668e",
+"status": "pending",
+"uses": [
+"core",
+"kw:s_trigger",
+"kw:wave_striker",
+"op:choose",
+"op:draw",
+"op:move"
+],
+"verifier": 2,
+"verify_error": "キーワード s_trigger(S・トリガー) が原文に無い",
+"vocab_ver": "99b4498b250db1b8"
+},
+"dm22ex1-101": {
+"by": "rule",
+"checks": {
+"effect": "skip",
+"text": "fail"
+},
+"def_hash": "f7bade1fd6aa8680",
+"status": "pending",
+"uses": [
+"core",
+"kw:s_trigger",
+"kw:wave_striker",
+"op:if",
+"op:move"
+],
+"verifier": 2,
+"verify_error": "キーワード s_trigger(S・トリガー) が原文に無い",
+"vocab_ver": "7a77dd9227a6eb05"
 },
 "dm22ex1-115": {
 "by": "rule",
@@ -88,6 +248,42 @@
 "verifier": 2,
 "verify_error": "Traceback (most recent call last): |   File \"/home/claude/dmpj/dmsim/engine/verify.py\", line 42, in verify_card |     spec = sc.try_card(rules, card_id) |   File \"/home/claude/dmpj/dmsim/engine/scenario.py\", line 94, in try_card |     hit = next((probe.s.cards[c].defn for c in pool if probe.filter_match(c, f)), None) | TO",
 "vocab_ver": "f5b48ccd79f5bbb0"
+},
+"dm22ex1-cho10": {
+"by": "rule",
+"checks": {},
+"def_hash": "33b8ed465b9c7a77",
+"status": "pending",
+"uses": [
+"core",
+"op:destroy",
+"op:discard",
+"op:draw",
+"op:may",
+"op:modify",
+"op:play_free"
+],
+"verifier": 2,
+"verify_error": "Traceback (most recent call last): |   File \"/home/claude/dmpj/dmsim/engine/verify.py\", line 42, in verify_card |     spec = sc.try_card(rules, card_id) |   File \"/home/claude/dmpj/dmsim/engine/scenario.py\", line 94, in try_card |     hit = next((probe.s.cards[c].defn for c in pool if probe.filter_match(c, f)), None) | TO",
+"vocab_ver": "e4a882d5dcf49eb2"
+},
+"dm22ex1-cho13": {
+"by": "rule",
+"checks": {},
+"def_hash": "94a0a1a13489bc9c",
+"status": "pending",
+"uses": [
+"core",
+"op:choose",
+"op:force_battle",
+"op:may",
+"op:modify",
+"op:move",
+"op:play_free"
+],
+"verifier": 2,
+"verify_error": "Traceback (most recent call last): |   File \"/home/claude/dmpj/dmsim/engine/verify.py\", line 42, in verify_card |     spec = sc.try_card(rules, card_id) |   File \"/home/claude/dmpj/dmsim/engine/scenario.py\", line 94, in try_card |     hit = next((probe.s.cards[c].defn for c in pool if probe.filter_match(c, f)), None) | TO",
+"vocab_ver": "2c82eb933fabb54b"
 },
 "dm22ex1-cho14": {
 "by": "check",

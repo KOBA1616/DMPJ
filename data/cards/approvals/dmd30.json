@@ -1,4 +1,32 @@
 {
+"dmd30-001": {
+"by": "rule",
+"checks": {},
+"def_hash": "d2a17ccf3c9e5540",
+"status": "pending",
+"uses": [
+"core",
+"kw:double_breaker",
+"op:swap",
+"op:tap"
+],
+"verifier": 2,
+"verify_error": "Traceback (most recent call last): |   File \"/home/claude/dmpj/dmsim/engine/verify.py\", line 42, in verify_card |     spec = sc.try_card(rules, card_id) |   File \"/home/claude/dmpj/dmsim/engine/scenario.py\", line 94, in try_card |     hit = next((probe.s.cards[c].defn for c in pool if probe.filter_match(c, f)), None) | TO",
+"vocab_ver": "d547f62f21e568d6"
+},
+"dmd30-005": {
+"by": "rule",
+"checks": {},
+"def_hash": "690135715cddb6d9",
+"status": "pending",
+"uses": [
+"core",
+"op:swap"
+],
+"verifier": 2,
+"verify_error": "Traceback (most recent call last): |   File \"/home/claude/dmpj/dmsim/engine/verify.py\", line 42, in verify_card |     spec = sc.try_card(rules, card_id) |   File \"/home/claude/dmpj/dmsim/engine/scenario.py\", line 94, in try_card |     hit = next((probe.s.cards[c].defn for c in pool if probe.filter_match(c, f)), None) | TO",
+"vocab_ver": "e1d1e668ed36954e"
+},
 "dmd30-006": {
 "by": "rule",
 "checks": {

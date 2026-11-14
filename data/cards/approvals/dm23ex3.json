@@ -1,0 +1,126 @@
+{
+"dm23ex3-046": {
+"by": "rule",
+"checks": {},
+"def_hash": "71213c665b4b9fd1",
+"status": "pending",
+"uses": [
+"core",
+"op:destroy",
+"op:may",
+"op:play_free"
+],
+"verifier": 2,
+"verify_error": "Traceback (most recent call last): |   File \"/home/claude/dmpj/dmsim/engine/verify.py\", line 42, in verify_card |     spec = sc.try_card(rules, card_id) |   File \"/home/claude/dmpj/dmsim/engine/scenario.py\", line 94, in try_card |     hit = next((probe.s.cards[c].defn for c in pool if probe.filter_match(c, f)), None) | TO",
+"vocab_ver": "d87b3ecb36e6d6ac"
+},
+"dm23ex3-t02": {
+"by": "rule",
+"checks": {},
+"def_hash": "6bac2c17872ba966",
+"status": "pending",
+"uses": [
+"core",
+"op:draw",
+"op:if",
+"op:may",
+"op:move",
+"op:play_free"
+],
+"verifier": 2,
+"verify_error": "Traceback (most recent call last): |   File \"/home/claude/dmpj/dmsim/engine/verify.py\", line 42, in verify_card |     spec = sc.try_card(rules, card_id) |   File \"/home/claude/dmpj/dmsim/engine/scenario.py\", line 94, in try_card |     hit = next((probe.s.cards[c].defn for c in pool if probe.filter_match(c, f)), None) | TO",
+"vocab_ver": "ba38b4464b39c3dc"
+},
+"dm23ex3-t06": {
+"by": "rule",
+"checks": {},
+"def_hash": "ac7f26efb592b75e",
+"status": "pending",
+"uses": [
+"core",
+"op:choose",
+"op:if",
+"op:may",
+"op:move",
+"op:play_free",
+"op:shuffle"
+],
+"verifier": 2,
+"verify_error": "Traceback (most recent call last): |   File \"/home/claude/dmpj/dmsim/engine/verify.py\", line 42, in verify_card |     spec = sc.try_card(rules, card_id) |   File \"/home/claude/dmpj/dmsim/engine/scenario.py\", line 94, in try_card |     hit = next((probe.s.cards[c].defn for c in pool if probe.filter_match(c, f)), None) | TO",
+"vocab_ver": "0092300dd4a1a18d"
+},
+"dm23ex3-t19": {
+"by": "check",
+"checks": {
+"effect": "ok",
+"text": "ok"
+},
+"def_hash": "95e1a4f3f8085117",
+"status": "approved",
+"uses": [
+"core",
+"op:choose",
+"op:if",
+"op:mana_put"
+],
+"verifier": 2,
+"verify": "43手・turn 30 まで正常に回った（result={'winner': 0, 'reason': 'deck_out', 'turn': 30}）",
+"vocab_ver": "6e13f8d91552da00"
+},
+"dm23ex3-tf02": {
+"by": "rule",
+"checks": {
+"effect": "skip",
+"text": "fail"
+},
+"def_hash": "8aad177aabb9e92c",
+"status": "pending",
+"uses": [
+"core",
+"kw:double_breaker",
+"op:choose",
+"op:may",
+"op:move"
+],
+"verifier": 2,
+"verify_error": "移動先 bz が原文に無い",
+"vocab_ver": "9d65996584f50413"
+},
+"dm23ex3-tf10": {
+"by": "rule",
+"checks": {
+"effect": "skip",
+"text": "fail"
+},
+"def_hash": "ccf6f107b6d6f57a",
+"status": "pending",
+"uses": [
+"core",
+"kw:double_breaker",
+"op:choose",
+"op:may",
+"op:move"
+],
+"verifier": 2,
+"verify_error": "移動先 bz が原文に無い",
+"vocab_ver": "9d65996584f50413"
+},
+"dm23ex3-tr12": {
+"by": "rule",
+"checks": {
+"effect": "skip",
+"text": "fail"
+},
+"def_hash": "8230cf7f892aaad4",
+"status": "pending",
+"uses": [
+"core",
+"kw:eternal_omega",
+"kw:quad_breaker",
+"op:move"
+],
+"verifier": 2,
+"verify_error": "移動先 bz が原文に無い",
+"vocab_ver": "4ade6a84b15f2a2c"
+}
+}

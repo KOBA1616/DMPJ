@@ -36,6 +36,24 @@
 "verify": "43手・turn 30 まで正常に回った（result={'winner': 0, 'reason': 'deck_out', 'turn': 30}）",
 "vocab_ver": "5fecb2bcef0c6c78"
 },
+"dmd24-028": {
+"by": "rule",
+"checks": {
+"effect": "ok",
+"text": "ok"
+},
+"def_hash": "634f59b165e76c0a",
+"stale": "目視照合で誤り: 「見ないで選ぶ」が無作為(chooser: random)になっていない",
+"status": "pending",
+"uses": [
+"core",
+"op:discard",
+"op:move"
+],
+"verifier": 2,
+"verify": "43手・turn 30 まで正常に回った（result={'winner': 0, 'reason': 'deck_out', 'turn': 30}）",
+"vocab_ver": "35b8ddcb0e31e16b"
+},
 "dmd24-032": {
 "by": "rule",
 "checks": {

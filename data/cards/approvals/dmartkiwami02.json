@@ -1,0 +1,23 @@
+{
+"dmartkiwami02-001": {
+"by": "rule",
+"checks": {
+"effect": "skip",
+"text": "fail"
+},
+"def_hash": "8eac80c8f102a986",
+"status": "pending",
+"uses": [
+"core",
+"kw:blocker",
+"kw:ex_life",
+"kw:quad_breaker",
+"op:choose",
+"op:move",
+"op:win"
+],
+"verifier": 2,
+"verify_error": "移動先 bz が原文に無い",
+"vocab_ver": "dd6ea1fb15033060"
+}
+}

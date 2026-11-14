@@ -1,4 +1,21 @@
 {
+"dmc41-007": {
+"by": "rule",
+"checks": {
+"effect": "skip",
+"text": "ok"
+},
+"def_hash": "3616e0100c04f96d",
+"status": "approved",
+"uses": [
+"core",
+"kw:dynamo",
+"kw:speed_attacker"
+],
+"verifier": 2,
+"verify": "43手・turn 30 まで正常に回った（result={'winner': 0, 'reason': 'deck_out', 'turn': 30}）",
+"vocab_ver": "661cf66a2d9c69bc"
+},
 "dmc41-010": {
 "by": "rule",
 "checks": {

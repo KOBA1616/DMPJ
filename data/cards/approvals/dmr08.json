@@ -46,7 +46,7 @@
 ],
 "verifier": 2,
 "verify": "43手・turn 30 まで正常に回った（result={'winner': 0, 'reason': 'deck_out', 'turn': 30}）",
-"vocab_ver": "eecf7bb8e066bca8"
+"vocab_ver": "080d8e7509b398eb"
 },
 "dmr08-037": {
 "by": "rule",
@@ -64,7 +64,7 @@
 ],
 "verifier": 2,
 "verify": "43手・turn 30 まで正常に回った（result={'winner': 0, 'reason': 'deck_out', 'turn': 30}）",
-"vocab_ver": "30b8fc35110ca634"
+"vocab_ver": "92f279f0930c829c"
 },
 "dmr08-041": {
 "by": "rule",
@@ -83,7 +83,7 @@
 ],
 "verifier": 2,
 "verify": "43手・turn 30 まで正常に回った（result={'winner': 0, 'reason': 'deck_out', 'turn': 30}）",
-"vocab_ver": "35e0e77d54e3347d"
+"vocab_ver": "02894c83e20574f7"
 },
 "dmr08-042": {
 "by": "rule",
@@ -98,7 +98,7 @@
 ],
 "verifier": 2,
 "verify": "43手・turn 30 まで正常に回った（result={'winner': 0, 'reason': 'deck_out', 'turn': 30}）",
-"vocab_ver": "eecf7bb8e066bca8"
+"vocab_ver": "080d8e7509b398eb"
 },
 "dmr08-050": {
 "by": "rule",
@@ -114,7 +114,7 @@
 ],
 "verifier": 2,
 "verify": "43手・turn 30 まで正常に回った（result={'winner': 0, 'reason': 'deck_out', 'turn': 30}）",
-"vocab_ver": "50454e5a8b49e845"
+"vocab_ver": "569e5c76d2e3f55a"
 },
 "dmr08-052": {
 "by": "rule",
@@ -131,7 +131,7 @@
 ],
 "verifier": 2,
 "verify": "43手・turn 30 まで正常に回った（result={'winner': 0, 'reason': 'deck_out', 'turn': 30}）",
-"vocab_ver": "3081e9aca67e67b8"
+"vocab_ver": "d4bddb1d824da548"
 },
 "dmr08-053": {
 "by": "rule",
@@ -139,14 +139,34 @@
 "effect": "skip",
 "text": "ok"
 },
-"def_hash": "33095df42dfee549",
+"def_hash": "08d0f0c4baa57a41",
 "status": "approved",
 "uses": [
-"core",
-"op:modify"
+"core"
 ],
 "verifier": 2,
 "verify": "43手・turn 30 まで正常に回った（result={'winner': 0, 'reason': 'deck_out', 'turn': 30}）",
-"vocab_ver": "40dc6d953fde61fa"
+"vocab_ver": "080d8e7509b398eb"
+},
+"dmr08-sec001": {
+"by": "rule",
+"checks": {
+"effect": "skip",
+"text": "fail"
+},
+"def_hash": "ca01a112305fddc4",
+"status": "pending",
+"uses": [
+"core",
+"kw:blocker",
+"kw:double_breaker",
+"kw:silent_skill",
+"op:choose",
+"op:move",
+"op:shuffle"
+],
+"verifier": 2,
+"verify_error": "キーワード silent_skill(サイレントスキル) が原文に無い",
+"vocab_ver": "7d52fc6f1f6bd919"
 }
 }

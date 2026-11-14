@@ -16,6 +16,27 @@
 "verify_error": "Traceback (most recent call last): |   File \"/home/claude/dmpj/dmsim/engine/verify.py\", line 42, in verify_card |     spec = sc.try_card(rules, card_id) |   File \"/home/claude/dmpj/dmsim/engine/scenario.py\", line 94, in try_card |     hit = next((probe.s.cards[c].defn for c in pool if probe.filter_match(c, f)), None) | TO",
 "vocab_ver": "c607cff83fa80dc5"
 },
+"dmbd18-005": {
+"by": "rule",
+"checks": {
+"effect": "ok",
+"text": "fail"
+},
+"def_hash": "059f2ae6e06afe06",
+"status": "pending",
+"uses": [
+"core",
+"kw:s_trigger",
+"op:choose",
+"op:delayed_trigger",
+"op:force_battle",
+"op:may",
+"op:move"
+],
+"verifier": 2,
+"verify_error": "移動先 bz が原文に無い",
+"vocab_ver": "2a20b849c9c93ed4"
+},
 "dmbd18-013": {
 "by": "rule",
 "checks": {

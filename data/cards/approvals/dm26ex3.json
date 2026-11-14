@@ -1,4 +1,56 @@
 {
+"dm26ex3-015": {
+"by": "rule",
+"checks": {},
+"def_hash": "b25f9710ff691d6c",
+"status": "pending",
+"uses": [
+"core",
+"kw:double_breaker",
+"op:draw",
+"op:may",
+"op:modify",
+"op:play_free",
+"op:swap"
+],
+"verifier": 2,
+"verify_error": "Traceback (most recent call last): |   File \"/home/claude/dmpj/dmsim/engine/verify.py\", line 42, in verify_card |     spec = sc.try_card(rules, card_id) |   File \"/home/claude/dmpj/dmsim/engine/scenario.py\", line 94, in try_card |     hit = next((probe.s.cards[c].defn for c in pool if probe.filter_match(c, f)), None) | TO",
+"vocab_ver": "cf01c3435a1bb2c4"
+},
+"dm26ex3-031": {
+"by": "rule",
+"checks": {
+"effect": "ok",
+"text": "fail"
+},
+"def_hash": "4d91487295ee4e6d",
+"status": "pending",
+"uses": [
+"core",
+"op:move"
+],
+"verifier": 2,
+"verify_error": "移動先 bz が原文に無い",
+"vocab_ver": "b1093fcc02a8471b"
+},
+"dm26ex3-044": {
+"by": "rule",
+"checks": {
+"effect": "skip",
+"text": "fail"
+},
+"def_hash": "f30951afa7443478",
+"status": "pending",
+"uses": [
+"core",
+"kw:s_trigger",
+"op:modify",
+"op:move"
+],
+"verifier": 2,
+"verify_error": "移動先 bz が原文に無い",
+"vocab_ver": "656754b1b969f9bb"
+},
 "dm26ex3-045": {
 "by": "check",
 "checks": {
@@ -53,6 +105,43 @@
 "verifier": 2,
 "verify": "43手・turn 30 まで正常に回った（result={'winner': 0, 'reason': 'deck_out', 'turn': 30}）",
 "vocab_ver": "62a7d630bbda2428"
+},
+"dm26ex3-076": {
+"by": "rule",
+"checks": {
+"effect": "skip",
+"text": "fail"
+},
+"def_hash": "5fc8e4f10d7817d7",
+"status": "pending",
+"uses": [
+"core",
+"op:move"
+],
+"verifier": 2,
+"verify_error": "移動先 bz が原文に無い",
+"vocab_ver": "b1093fcc02a8471b"
+},
+"dm26ex3-082": {
+"by": "rule",
+"checks": {
+"effect": "ok",
+"text": "fail"
+},
+"def_hash": "1dcfa603810ef41d",
+"status": "pending",
+"uses": [
+"core",
+"kw:s_trigger",
+"op:choose",
+"op:force_battle",
+"op:if",
+"op:may",
+"op:move"
+],
+"verifier": 2,
+"verify_error": "移動先 bz が原文に無い",
+"vocab_ver": "b351a4a4eed32c37"
 },
 "dm26ex3-083": {
 "by": "check",
@@ -144,5 +233,39 @@
 "verifier": 2,
 "verify": "43手・turn 30 まで正常に回った（result={'winner': 0, 'reason': 'deck_out', 'turn': 30}）",
 "vocab_ver": "50685a5fc081be08"
+},
+"dm26ex3-dcr005": {
+"by": "rule",
+"checks": {
+"effect": "skip",
+"text": "fail"
+},
+"def_hash": "18aa7b8b16007b09",
+"status": "pending",
+"uses": [
+"core",
+"kw:blocker",
+"kw:double_breaker",
+"op:draw",
+"op:move",
+"op:shuffle"
+],
+"verifier": 2,
+"verify_error": "移動先 bz が原文に無い",
+"vocab_ver": "c468e9157ea9f7f4"
+},
+"dm26ex3-dcr007": {
+"by": "rule",
+"checks": {},
+"def_hash": "0732301722d782e7",
+"status": "pending",
+"uses": [
+"core",
+"kw:triple_breaker",
+"op:move"
+],
+"verifier": 2,
+"verify_error": "Traceback (most recent call last): |   File \"/home/claude/dmpj/dmsim/engine/verify.py\", line 42, in verify_card |     spec = sc.try_card(rules, card_id) |   File \"/home/claude/dmpj/dmsim/engine/scenario.py\", line 94, in try_card |     hit = next((probe.s.cards[c].defn for c in pool if probe.filter_match(c, f)), None) | TO",
+"vocab_ver": "58a86ddee101517b"
 }
 }

@@ -1,4 +1,94 @@
 {
+"dmex17-009": {
+"by": "rule",
+"checks": {},
+"def_hash": "80a6da0e3e0ba9be",
+"status": "pending",
+"uses": [
+"core",
+"kw:double_breaker",
+"op:destroy",
+"op:if",
+"op:may",
+"op:move",
+"op:repeat"
+],
+"verifier": 2,
+"verify_error": "Traceback (most recent call last): |   File \"/home/claude/dmpj/dmsim/engine/verify.py\", line 42, in verify_card |     spec = sc.try_card(rules, card_id) |   File \"/home/claude/dmpj/dmsim/engine/scenario.py\", line 94, in try_card |     hit = next((probe.s.cards[c].defn for c in pool if probe.filter_match(c, f)), None) | TO",
+"vocab_ver": "c6a382895a7f6a34"
+},
+"dmex17-024": {
+"by": "rule",
+"checks": {},
+"def_hash": "bfb6cfb0e941060c",
+"status": "pending",
+"uses": [
+"core",
+"kw:triple_breaker",
+"op:invade",
+"op:may",
+"op:modify"
+],
+"verifier": 2,
+"verify_error": "Traceback (most recent call last): |   File \"/home/claude/dmpj/dmsim/engine/verify.py\", line 42, in verify_card |     spec = sc.try_card(rules, card_id) |   File \"/home/claude/dmpj/dmsim/engine/scenario.py\", line 94, in try_card |     hit = next((probe.s.cards[c].defn for c in pool if probe.filter_match(c, f)), None) | TO",
+"vocab_ver": "64676c8893b3118e"
+},
+"dmex17-040": {
+"by": "rule",
+"checks": {},
+"def_hash": "66e8ff0d24e7b467",
+"status": "pending",
+"uses": [
+"core",
+"kw:quad_breaker",
+"op:invade",
+"op:may",
+"op:move"
+],
+"verifier": 2,
+"verify_error": "Traceback (most recent call last): |   File \"/home/claude/dmpj/dmsim/engine/verify.py\", line 42, in verify_card |     spec = sc.try_card(rules, card_id) |   File \"/home/claude/dmpj/dmsim/engine/scenario.py\", line 94, in try_card |     hit = next((probe.s.cards[c].defn for c in pool if probe.filter_match(c, f)), None) | TO",
+"vocab_ver": "55ec392541845e1c"
+},
+"dmex17-050": {
+"by": "check",
+"checks": {
+"effect": "ok",
+"text": "ok"
+},
+"def_hash": "c3bd01097f4843dd",
+"status": "approved",
+"uses": [
+"core",
+"kw:s_trigger",
+"op:choose",
+"op:draw",
+"op:if",
+"op:may",
+"op:play_free"
+],
+"verifier": 2,
+"verify": "43手・turn 30 まで正常に回った（result={'winner': 0, 'reason': 'deck_out', 'turn': 30}）",
+"vocab_ver": "7cfe1e3482e13b2c"
+},
+"dmex17-082": {
+"by": "check",
+"checks": {
+"effect": "ok",
+"text": "ok"
+},
+"def_hash": "842357be66e46b3c",
+"status": "approved",
+"uses": [
+"core",
+"kw:super_s_trigger",
+"op:delayed_trigger",
+"op:draw",
+"op:modify"
+],
+"verifier": 2,
+"verify": "43手・turn 30 まで正常に回った（result={'winner': 0, 'reason': 'deck_out', 'turn': 30}）",
+"vocab_ver": "2760f72fe8bb83d3"
+},
 "dmex17-101": {
 "by": "check",
 "checks": {

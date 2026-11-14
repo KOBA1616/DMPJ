@@ -1,4 +1,18 @@
 {
+"dm28-001": {
+"by": "rule",
+"checks": {},
+"def_hash": "9f896863ca9ad32a",
+"status": "pending",
+"uses": [
+"core",
+"op:may",
+"op:untap"
+],
+"verifier": 2,
+"verify_error": "Traceback (most recent call last): |   File \"/home/claude/dmpj/dmsim/engine/verify.py\", line 42, in verify_card |     spec = sc.try_card(rules, card_id) |   File \"/home/claude/dmpj/dmsim/engine/scenario.py\", line 94, in try_card |     hit = next((probe.s.cards[c].defn for c in pool if probe.filter_match(c, f)), None) | TO",
+"vocab_ver": "b3dbf9ba317c18e7"
+},
 "dm28-034": {
 "by": "rule",
 "checks": {},
@@ -14,6 +28,24 @@
 "verifier": 2,
 "verify_error": "Traceback (most recent call last): |   File \"/home/claude/dmpj/dmsim/engine/verify.py\", line 42, in verify_card |     spec = sc.try_card(rules, card_id) |   File \"/home/claude/dmpj/dmsim/engine/scenario.py\", line 94, in try_card |     hit = next((probe.s.cards[c].defn for c in pool if probe.filter_match(c, f)), None) | TO",
 "vocab_ver": "9ab2e330647798ab"
+},
+"dm28-050": {
+"by": "check",
+"checks": {
+"effect": "ok",
+"text": "ok"
+},
+"def_hash": "4ea9ee6322f618f0",
+"status": "approved",
+"uses": [
+"core",
+"op:bounce",
+"op:if",
+"op:may"
+],
+"verifier": 2,
+"verify": "43手・turn 30 まで正常に回った（result={'winner': 0, 'reason': 'deck_out', 'turn': 30}）",
+"vocab_ver": "5bf27fe6cd54b532"
 },
 "dm28-073": {
 "by": "rule",

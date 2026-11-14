@@ -31,6 +31,75 @@
 "verify": "43手・turn 30 まで正常に回った（result={'winner': 0, 'reason': 'deck_out', 'turn': 30}）",
 "vocab_ver": "77cda07e62e901d1"
 },
+"dmex01-017": {
+"by": "rule",
+"checks": {
+"effect": "skip",
+"text": "fail"
+},
+"def_hash": "06f5ea5d3025c9c5",
+"status": "pending",
+"uses": [
+"core",
+"kw:double_breaker",
+"kw:s_back_fire",
+"op:move"
+],
+"verifier": 2,
+"verify_error": "キーワード s_back_fire(S・バック-火（火のカードを自分のシールドゾーンから手札に加える時、そのカードを捨ててもよい。そうした場合、コストを支払わずにこのカードを実行する）) が原文に無い",
+"vocab_ver": "2d84d0a8902c7e89"
+},
+"dmex01-032": {
+"by": "rule",
+"checks": {},
+"def_hash": "497848fbceea8385",
+"status": "pending",
+"uses": [
+"core",
+"kw:enters_tapped",
+"kw:triple_breaker",
+"op:if",
+"op:may",
+"op:move",
+"op:play_free"
+],
+"verifier": 2,
+"verify_error": "Traceback (most recent call last): |   File \"/home/claude/dmpj/dmsim/engine/verify.py\", line 42, in verify_card |     spec = sc.try_card(rules, card_id) |   File \"/home/claude/dmpj/dmsim/engine/scenario.py\", line 94, in try_card |     hit = next((probe.s.cards[c].defn for c in pool if probe.filter_match(c, f)), None) | TO",
+"vocab_ver": "2a2a38819d5afa8d"
+},
+"dmex01-068": {
+"by": "rule",
+"checks": {},
+"def_hash": "970e7f77d199e57b",
+"status": "pending",
+"uses": [
+"core",
+"kw:triple_breaker",
+"op:tap"
+],
+"verifier": 2,
+"verify_error": "Traceback (most recent call last): |   File \"/home/claude/dmpj/dmsim/engine/verify.py\", line 42, in verify_card |     spec = sc.try_card(rules, card_id) |   File \"/home/claude/dmpj/dmsim/engine/scenario.py\", line 94, in try_card |     hit = next((probe.s.cards[c].defn for c in pool if probe.filter_match(c, f)), None) | TO",
+"vocab_ver": "8d3f3ff560939da4"
+},
+"dmex01-073": {
+"by": "rule",
+"checks": {},
+"def_hash": "22cda7bafe8b1f08",
+"status": "pending",
+"uses": [
+"core",
+"kw:double_breaker",
+"kw:speed_attacker",
+"op:discard",
+"op:if",
+"op:may",
+"op:swap",
+"op:untap"
+],
+"verifier": 2,
+"verify_error": "Traceback (most recent call last): |   File \"/home/claude/dmpj/dmsim/engine/verify.py\", line 42, in verify_card |     spec = sc.try_card(rules, card_id) |   File \"/home/claude/dmpj/dmsim/engine/scenario.py\", line 94, in try_card |     hit = next((probe.s.cards[c].defn for c in pool if probe.filter_match(c, f)), None) | TO",
+"vocab_ver": "fc4f7d759b05493b"
+},
 "dmex01-g03": {
 "by": "rule",
 "checks": {

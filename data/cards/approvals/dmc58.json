@@ -1,4 +1,21 @@
 {
+"dmc58-001": {
+"by": "rule",
+"checks": {},
+"def_hash": "3e82f5d48415fe47",
+"status": "pending",
+"uses": [
+"core",
+"kw:right_g_link",
+"op:if",
+"op:may",
+"op:move",
+"op:play_free"
+],
+"verifier": 2,
+"verify_error": "Traceback (most recent call last): |   File \"/home/claude/dmpj/dmsim/engine/verify.py\", line 42, in verify_card |     spec = sc.try_card(rules, card_id) |   File \"/home/claude/dmpj/dmsim/engine/scenario.py\", line 94, in try_card |     hit = next((probe.s.cards[c].defn for c in pool if probe.filter_match(c, f)), None) | TO",
+"vocab_ver": "5ef11fcefdfc0982"
+},
 "dmc58-011": {
 "by": "rule",
 "checks": {

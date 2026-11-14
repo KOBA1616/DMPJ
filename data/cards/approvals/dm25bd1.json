@@ -1,0 +1,24 @@
+{
+"dm25bd1-014": {
+"by": "rule",
+"checks": {
+"effect": "skip",
+"text": "fail"
+},
+"def_hash": "bad29695c363191c",
+"status": "pending",
+"uses": [
+"core",
+"kw:blocker",
+"kw:s_trigger",
+"kw:speed_attacker",
+"op:destroy",
+"op:modify",
+"op:move",
+"op:tap"
+],
+"verifier": 2,
+"verify_error": "移動先 bz が原文に無い",
+"vocab_ver": "45ee5680089d9402"
+}
+}

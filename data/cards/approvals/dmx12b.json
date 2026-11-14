@@ -12,7 +12,7 @@
 ],
 "verifier": 2,
 "verify": "43手・turn 30 まで正常に回った（result={'winner': 0, 'reason': 'deck_out', 'turn': 30}）",
-"vocab_ver": "eecf7bb8e066bca8"
+"vocab_ver": "080d8e7509b398eb"
 },
 "dmx12b-009": {
 "by": "rule",
@@ -27,7 +27,39 @@
 ],
 "verifier": 2,
 "verify": "43手・turn 30 まで正常に回った（result={'winner': 0, 'reason': 'deck_out', 'turn': 30}）",
-"vocab_ver": "eecf7bb8e066bca8"
+"vocab_ver": "080d8e7509b398eb"
+},
+"dmx12b-029": {
+"by": "rule",
+"checks": {},
+"def_hash": "af5372b3e1e1578f",
+"status": "pending",
+"uses": [
+"core",
+"kw:meteor_burn",
+"kw:triple_breaker"
+],
+"verifier": 2,
+"verify_error": "Traceback (most recent call last): |   File \"/home/claude/dmpj/dmsim/engine/verify.py\", line 42, in verify_card |     spec = sc.try_card(rules, card_id) |   File \"/home/claude/dmpj/dmsim/engine/scenario.py\", line 94, in try_card |     hit = next((probe.s.cards[c].defn for c in pool if probe.filter_match(c, f)), None) | TO",
+"vocab_ver": "7cbf950fab4ce1dd"
+},
+"dmx12b-032": {
+"by": "rule",
+"checks": {},
+"def_hash": "8e880e1aa12f9949",
+"status": "pending",
+"uses": [
+"core",
+"kw:triple_breaker",
+"op:bounce",
+"op:if",
+"op:may",
+"op:move",
+"op:put_under"
+],
+"verifier": 2,
+"verify_error": "Traceback (most recent call last): |   File \"/home/claude/dmpj/dmsim/engine/verify.py\", line 42, in verify_card |     spec = sc.try_card(rules, card_id) |   File \"/home/claude/dmpj/dmsim/engine/scenario.py\", line 94, in try_card |     hit = next((probe.s.cards[c].defn for c in pool if probe.filter_match(c, f)), None) | TO",
+"vocab_ver": "643514ebf4370f62"
 },
 "dmx12b-040": {
 "by": "rule",
@@ -43,7 +75,65 @@
 ],
 "verifier": 2,
 "verify": "43手・turn 30 まで正常に回った（result={'winner': 0, 'reason': 'deck_out', 'turn': 30}）",
-"vocab_ver": "b93c2952e9424006"
+"vocab_ver": "76ace1d9e2ba7e59"
+},
+"dmx12b-043": {
+"by": "rule",
+"checks": {},
+"def_hash": "32f81f20ba062b1f",
+"status": "pending",
+"uses": [
+"core",
+"kw:blocker",
+"kw:triple_breaker",
+"op:choose",
+"op:move",
+"op:play_free"
+],
+"verifier": 2,
+"verify_error": "Traceback (most recent call last): |   File \"/home/claude/dmpj/dmsim/engine/verify.py\", line 42, in verify_card |     spec = sc.try_card(rules, card_id) |   File \"/home/claude/dmpj/dmsim/engine/scenario.py\", line 94, in try_card |     hit = next((probe.s.cards[c].defn for c in pool if probe.filter_match(c, f)), None) | TO",
+"vocab_ver": "1d692dfff1c92f29"
+},
+"dmx12b-045": {
+"by": "rule",
+"checks": {},
+"def_hash": "92ddc57a607993a0",
+"status": "pending",
+"uses": [
+"core",
+"kw:double_breaker",
+"op:move"
+],
+"verifier": 2,
+"verify_error": "Traceback (most recent call last): |   File \"/home/claude/dmpj/dmsim/engine/verify.py\", line 42, in verify_card |     spec = sc.try_card(rules, card_id) |   File \"/home/claude/dmpj/dmsim/engine/scenario.py\", line 94, in try_card |     hit = next((probe.s.cards[c].defn for c in pool if probe.filter_match(c, f)), None) | TO",
+"vocab_ver": "1558855762771047"
+},
+"dmx12b-049": {
+"by": "rule",
+"checks": {},
+"def_hash": "aa3d2176a73588ca",
+"status": "pending",
+"uses": [
+"core",
+"kw:double_breaker",
+"op:destroy"
+],
+"verifier": 2,
+"verify_error": "Traceback (most recent call last): |   File \"/home/claude/dmpj/dmsim/engine/verify.py\", line 42, in verify_card |     spec = sc.try_card(rules, card_id) |   File \"/home/claude/dmpj/dmsim/engine/scenario.py\", line 94, in try_card |     hit = next((probe.s.cards[c].defn for c in pool if probe.filter_match(c, f)), None) | TO",
+"vocab_ver": "84bf5830dba33598"
+},
+"dmx12b-050": {
+"by": "rule",
+"checks": {},
+"def_hash": "a0843325e32b0fdb",
+"status": "pending",
+"uses": [
+"core",
+"op:move"
+],
+"verifier": 2,
+"verify_error": "Traceback (most recent call last): |   File \"/home/claude/dmpj/dmsim/engine/verify.py\", line 42, in verify_card |     spec = sc.try_card(rules, card_id) |   File \"/home/claude/dmpj/dmsim/engine/scenario.py\", line 94, in try_card |     hit = next((probe.s.cards[c].defn for c in pool if probe.filter_match(c, f)), None) | TO",
+"vocab_ver": "b1093fcc02a8471b"
 },
 "dmx12b-077": {
 "by": "rule",
@@ -60,7 +150,7 @@
 ],
 "verifier": 2,
 "verify": "43手・turn 30 まで正常に回った（result={'winner': 0, 'reason': 'deck_out', 'turn': 30}）",
-"vocab_ver": "59258c739746170b"
+"vocab_ver": "28c17ae78f4493f1"
 },
 "dmx12b-079": {
 "by": "rule",
@@ -75,7 +165,7 @@
 ],
 "verifier": 2,
 "verify": "43手・turn 30 まで正常に回った（result={'winner': 0, 'reason': 'deck_out', 'turn': 30}）",
-"vocab_ver": "eecf7bb8e066bca8"
+"vocab_ver": "080d8e7509b398eb"
 },
 "dmx12b-081": {
 "by": "rule",
@@ -91,7 +181,7 @@
 ],
 "verifier": 2,
 "verify": "43手・turn 30 まで正常に回った（result={'winner': 0, 'reason': 'deck_out', 'turn': 30}）",
-"vocab_ver": "27c1af7e6136fbc1"
+"vocab_ver": "b1093fcc02a8471b"
 },
 "dmx12b-096": {
 "by": "rule",
@@ -108,7 +198,7 @@
 ],
 "verifier": 2,
 "verify": "43手・turn 30 まで正常に回った（result={'winner': 0, 'reason': 'deck_out', 'turn': 30}）",
-"vocab_ver": "d6fe55ef05408dce"
+"vocab_ver": "10015b301df851ad"
 },
 "dmx12b-097": {
 "by": "rule",
@@ -124,7 +214,7 @@
 ],
 "verifier": 2,
 "verify": "43手・turn 30 まで正常に回った（result={'winner': 0, 'reason': 'deck_out', 'turn': 30}）",
-"vocab_ver": "c5c635ced7516b5b"
+"vocab_ver": "77cda07e62e901d1"
 },
 "dmx12b-103": {
 "by": "rule",
@@ -139,7 +229,7 @@
 ],
 "verifier": 2,
 "verify": "43手・turn 30 まで正常に回った（result={'winner': 0, 'reason': 'deck_out', 'turn': 30}）",
-"vocab_ver": "eecf7bb8e066bca8"
+"vocab_ver": "080d8e7509b398eb"
 },
 "dmx12b-104": {
 "by": "rule",
@@ -155,7 +245,7 @@
 ],
 "verifier": 2,
 "verify": "43手・turn 30 まで正常に回った（result={'winner': 0, 'reason': 'deck_out', 'turn': 30}）",
-"vocab_ver": "27c1af7e6136fbc1"
+"vocab_ver": "b1093fcc02a8471b"
 },
 "dmx12b-106": {
 "by": "rule",
@@ -171,6 +261,6 @@
 ],
 "verifier": 2,
 "verify": "43手・turn 30 まで正常に回った（result={'winner': 0, 'reason': 'deck_out', 'turn': 30}）",
-"vocab_ver": "b1657a3976404699"
+"vocab_ver": "5db125718666d148"
 }
 }

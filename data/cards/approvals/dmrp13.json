@@ -16,7 +16,7 @@
 ],
 "verifier": 2,
 "verify": "43手・turn 30 まで正常に回った（result={'winner': 0, 'reason': 'deck_out', 'turn': 30}）",
-"vocab_ver": "1dc00699adf940db"
+"vocab_ver": "1e803cad13057cbf"
 },
 "dmrp13-032": {
 "by": "rule",
@@ -33,7 +33,7 @@
 ],
 "verifier": 2,
 "verify": "43手・turn 30 まで正常に回った（result={'winner': 0, 'reason': 'deck_out', 'turn': 30}）",
-"vocab_ver": "ce44864e10745149"
+"vocab_ver": "8cc55181817c888f"
 },
 "dmrp13-036": {
 "by": "check",
@@ -67,7 +67,7 @@
 ],
 "verifier": 2,
 "verify": "43手・turn 30 まで正常に回った（result={'winner': 0, 'reason': 'deck_out', 'turn': 30}）",
-"vocab_ver": "3cf754082188f8a2"
+"vocab_ver": "2c8618d09ad3fda9"
 },
 "dmrp13-051": {
 "by": "rule",
@@ -85,7 +85,7 @@
 ],
 "verifier": 2,
 "verify": "43手・turn 30 まで正常に回った（result={'winner': 0, 'reason': 'deck_out', 'turn': 30}）",
-"vocab_ver": "ec9758d6fc3e5bb9"
+"vocab_ver": "bf5698b23af23952"
 },
 "dmrp13-053": {
 "by": "rule",
@@ -103,7 +103,7 @@
 ],
 "verifier": 2,
 "verify": "43手・turn 30 まで正常に回った（result={'winner': 0, 'reason': 'deck_out', 'turn': 30}）",
-"vocab_ver": "2c67f0ed440738c2"
+"vocab_ver": "4387f6420ee33edd"
 },
 "dmrp13-056": {
 "by": "rule",
@@ -121,7 +121,7 @@
 ],
 "verifier": 2,
 "verify": "43手・turn 30 まで正常に回った（result={'winner': 0, 'reason': 'deck_out', 'turn': 30}）",
-"vocab_ver": "524992c8ed041f45"
+"vocab_ver": "1c648875641ac284"
 },
 "dmrp13-059": {
 "by": "rule",
@@ -139,7 +139,7 @@
 ],
 "verifier": 2,
 "verify": "43手・turn 30 まで正常に回った（result={'winner': 0, 'reason': 'deck_out', 'turn': 30}）",
-"vocab_ver": "30b8fc35110ca634"
+"vocab_ver": "92f279f0930c829c"
 },
 "dmrp13-060": {
 "by": "rule",
@@ -154,7 +154,7 @@
 ],
 "verifier": 2,
 "verify": "43手・turn 30 まで正常に回った（result={'winner': 0, 'reason': 'deck_out', 'turn': 30}）",
-"vocab_ver": "eecf7bb8e066bca8"
+"vocab_ver": "080d8e7509b398eb"
 },
 "dmrp13-061": {
 "by": "rule",
@@ -171,7 +171,7 @@
 ],
 "verifier": 2,
 "verify": "43手・turn 30 まで正常に回った（result={'winner': 0, 'reason': 'deck_out', 'turn': 30}）",
-"vocab_ver": "f72a69828dfcd084"
+"vocab_ver": "0cf0085e2e722dca"
 },
 "dmrp13-063": {
 "by": "rule",
@@ -188,7 +188,7 @@
 ],
 "verifier": 2,
 "verify": "43手・turn 30 まで正常に回った（result={'winner': 0, 'reason': 'deck_out', 'turn': 30}）",
-"vocab_ver": "d9e122d8b0facee9"
+"vocab_ver": "d458823f1a16e644"
 },
 "dmrp13-064": {
 "by": "rule",
@@ -203,7 +203,7 @@
 ],
 "verifier": 2,
 "verify": "43手・turn 30 まで正常に回った（result={'winner': 0, 'reason': 'deck_out', 'turn': 30}）",
-"vocab_ver": "eecf7bb8e066bca8"
+"vocab_ver": "080d8e7509b398eb"
 },
 "dmrp13-065": {
 "by": "rule",
@@ -219,7 +219,7 @@
 ],
 "verifier": 2,
 "verify": "43手・turn 30 まで正常に回った（result={'winner': 0, 'reason': 'deck_out', 'turn': 30}）",
-"vocab_ver": "1c9bf46f1322259a"
+"vocab_ver": "090959c722a939fd"
 },
 "dmrp13-071": {
 "by": "rule",
@@ -234,7 +234,7 @@
 ],
 "verifier": 2,
 "verify": "43手・turn 30 まで正常に回った（result={'winner': 0, 'reason': 'deck_out', 'turn': 30}）",
-"vocab_ver": "eecf7bb8e066bca8"
+"vocab_ver": "080d8e7509b398eb"
 },
 "dmrp13-073": {
 "by": "rule",
@@ -250,7 +250,7 @@
 ],
 "verifier": 2,
 "verify": "43手・turn 30 まで正常に回った（result={'winner': 0, 'reason': 'deck_out', 'turn': 30}）",
-"vocab_ver": "b93c2952e9424006"
+"vocab_ver": "76ace1d9e2ba7e59"
 },
 "dmrp13-074": {
 "by": "rule",
@@ -267,7 +267,23 @@
 ],
 "verifier": 2,
 "verify": "43手・turn 30 まで正常に回った（result={'winner': 0, 'reason': 'deck_out', 'turn': 30}）",
-"vocab_ver": "f72a69828dfcd084"
+"vocab_ver": "0cf0085e2e722dca"
+},
+"dmrp13-076": {
+"by": "rule",
+"checks": {
+"effect": "skip",
+"text": "ok"
+},
+"def_hash": "d03402ea423f4983",
+"status": "approved",
+"uses": [
+"core",
+"kw:must_attack"
+],
+"verifier": 2,
+"verify": "43手・turn 30 まで正常に回った（result={'winner': 0, 'reason': 'deck_out', 'turn': 30}）",
+"vocab_ver": "c7d3ba1fbad08137"
 },
 "dmrp13-079": {
 "by": "rule",
@@ -283,7 +299,7 @@
 ],
 "verifier": 2,
 "verify": "43手・turn 30 まで正常に回った（result={'winner': 0, 'reason': 'deck_out', 'turn': 30}）",
-"vocab_ver": "66fff36a8284db59"
+"vocab_ver": "7639d687d0380f7c"
 },
 "dmrp13-083": {
 "by": "rule",
@@ -298,7 +314,7 @@
 ],
 "verifier": 2,
 "verify": "43手・turn 30 まで正常に回った（result={'winner': 0, 'reason': 'deck_out', 'turn': 30}）",
-"vocab_ver": "eecf7bb8e066bca8"
+"vocab_ver": "080d8e7509b398eb"
 },
 "dmrp13-084": {
 "by": "rule",
@@ -315,7 +331,25 @@
 ],
 "verifier": 2,
 "verify": "43手・turn 30 まで正常に回った（result={'winner': 0, 'reason': 'deck_out', 'turn': 30}）",
-"vocab_ver": "25ac8dad7af014ee"
+"vocab_ver": "e902490ce9931013"
+},
+"dmrp13-085": {
+"by": "check",
+"checks": {
+"effect": "ok",
+"text": "ok"
+},
+"def_hash": "7408f2d312bd57d3",
+"status": "approved",
+"uses": [
+"core",
+"op:choose",
+"op:draw",
+"op:modify"
+],
+"verifier": 2,
+"verify": "43手・turn 30 まで正常に回った（result={'winner': 0, 'reason': 'deck_out', 'turn': 30}）",
+"vocab_ver": "a3399f2e4fdeb15a"
 },
 "dmrp13-086": {
 "by": "rule",
@@ -333,7 +367,7 @@
 ],
 "verifier": 2,
 "verify": "43手・turn 30 まで正常に回った（result={'winner': 0, 'reason': 'deck_out', 'turn': 30}）",
-"vocab_ver": "a3ace9e9054ba91a"
+"vocab_ver": "657b77fa0536132c"
 },
 "dmrp13-087": {
 "by": "rule",
@@ -341,17 +375,16 @@
 "effect": "skip",
 "text": "ok"
 },
-"def_hash": "91176e2a44e325f3",
+"def_hash": "c5fffe20ac3ae783",
 "status": "approved",
 "uses": [
 "core",
 "kw:blocker",
-"kw:s_trigger",
-"op:modify"
+"kw:s_trigger"
 ],
 "verifier": 2,
 "verify": "43手・turn 30 まで正常に回った（result={'winner': 0, 'reason': 'deck_out', 'turn': 30}）",
-"vocab_ver": "cd256e28614511c7"
+"vocab_ver": "d458823f1a16e644"
 },
 "dmrp13-088": {
 "by": "rule",
@@ -368,7 +401,7 @@
 ],
 "verifier": 2,
 "verify": "43手・turn 30 まで正常に回った（result={'winner': 0, 'reason': 'deck_out', 'turn': 30}）",
-"vocab_ver": "4ac145f270a500c8"
+"vocab_ver": "3f9a37a8a70802ed"
 },
 "dmrp13-090": {
 "by": "rule",
@@ -385,7 +418,7 @@
 ],
 "verifier": 2,
 "verify": "43手・turn 30 まで正常に回った（result={'winner': 0, 'reason': 'deck_out', 'turn': 30}）",
-"vocab_ver": "ca52625a74955d67"
+"vocab_ver": "9559a2e98012e9f8"
 },
 "dmrp13-095": {
 "by": "rule",
@@ -401,6 +434,6 @@
 ],
 "verifier": 2,
 "verify": "43手・turn 30 まで正常に回った（result={'winner': 0, 'reason': 'deck_out', 'turn': 30}）",
-"vocab_ver": "c8b03458551a52ee"
+"vocab_ver": "a2695866ec8ae5c1"
 }
 }

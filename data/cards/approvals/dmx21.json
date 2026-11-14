@@ -1,4 +1,34 @@
 {
+"dmx21-029": {
+"by": "rule",
+"checks": {},
+"def_hash": "ac9bb67441789553",
+"status": "pending",
+"uses": [
+"core",
+"kw:triple_breaker"
+],
+"verifier": 2,
+"verify_error": "Traceback (most recent call last): |   File \"/home/claude/dmpj/dmsim/engine/verify.py\", line 42, in verify_card |     spec = sc.try_card(rules, card_id) |   File \"/home/claude/dmpj/dmsim/engine/scenario.py\", line 94, in try_card |     hit = next((probe.s.cards[c].defn for c in pool if probe.filter_match(c, f)), None) | TO",
+"vocab_ver": "91d9148ad6b9aa6f"
+},
+"dmx21-034": {
+"by": "check",
+"checks": {
+"effect": "ok",
+"text": "ok"
+},
+"def_hash": "9e3faec6c224cf50",
+"status": "approved",
+"uses": [
+"core",
+"op:move",
+"op:repeat"
+],
+"verifier": 2,
+"verify": "43手・turn 30 まで正常に回った（result={'winner': 0, 'reason': 'deck_out', 'turn': 30}）",
+"vocab_ver": "be5dff26455f4cf9"
+},
 "dmx21-035": {
 "by": "rule",
 "checks": {
@@ -14,7 +44,39 @@
 ],
 "verifier": 2,
 "verify": "43手・turn 30 まで正常に回った（result={'winner': 0, 'reason': 'deck_out', 'turn': 30}）",
-"vocab_ver": "ce44864e10745149"
+"vocab_ver": "8cc55181817c888f"
+},
+"dmx21-042": {
+"by": "check",
+"checks": {
+"effect": "ok",
+"text": "ok"
+},
+"def_hash": "8d59b358e061c074",
+"status": "approved",
+"uses": [
+"core",
+"kw:s_trigger",
+"op:mill",
+"op:move"
+],
+"verifier": 2,
+"verify": "43手・turn 30 まで正常に回った（result={'winner': 0, 'reason': 'deck_out', 'turn': 30}）",
+"vocab_ver": "77332025cd3702b2"
+},
+"dmx21-050": {
+"by": "rule",
+"checks": {},
+"def_hash": "7e4093845c114e22",
+"status": "pending",
+"uses": [
+"core",
+"op:draw",
+"op:may"
+],
+"verifier": 2,
+"verify_error": "Traceback (most recent call last): |   File \"/home/claude/dmpj/dmsim/engine/verify.py\", line 42, in verify_card |     spec = sc.try_card(rules, card_id) |   File \"/home/claude/dmpj/dmsim/engine/scenario.py\", line 94, in try_card |     hit = next((probe.s.cards[c].defn for c in pool if probe.filter_match(c, f)), None) | TO",
+"vocab_ver": "62a61e3cc84fb868"
 },
 "dmx21-056": {
 "by": "rule",
@@ -30,6 +92,6 @@
 ],
 "verifier": 2,
 "verify": "43手・turn 30 まで正常に回った（result={'winner': 0, 'reason': 'deck_out', 'turn': 30}）",
-"vocab_ver": "0772fb16764b1f12"
+"vocab_ver": "9803c0dbb11099a4"
 }
 }

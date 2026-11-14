@@ -18,5 +18,23 @@
 "verifier": 2,
 "verify_error": "移動先 bz が原文に無い",
 "vocab_ver": "2f210695f144ded2"
+},
+"dm25sp1-011": {
+"by": "rule",
+"checks": {
+"effect": "ok",
+"text": "fail"
+},
+"def_hash": "8a8304892921e743",
+"status": "pending",
+"uses": [
+"core",
+"op:choose",
+"op:may",
+"op:move"
+],
+"verifier": 2,
+"verify_error": "移動先 bz が原文に無い",
+"vocab_ver": "1e8fc3c92d0c29d3"
 }
 }

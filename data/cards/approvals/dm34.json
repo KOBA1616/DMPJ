@@ -1,4 +1,58 @@
 {
+"dm34-003": {
+"by": "rule",
+"checks": {},
+"def_hash": "b6573335593da65a",
+"status": "pending",
+"uses": [
+"core",
+"kw:double_breaker",
+"op:destroy",
+"op:discard",
+"op:if",
+"op:may",
+"op:move",
+"op:put_under"
+],
+"verifier": 2,
+"verify_error": "Traceback (most recent call last): |   File \"/home/claude/dmpj/dmsim/engine/verify.py\", line 42, in verify_card |     spec = sc.try_card(rules, card_id) |   File \"/home/claude/dmpj/dmsim/engine/scenario.py\", line 94, in try_card |     hit = next((probe.s.cards[c].defn for c in pool if probe.filter_match(c, f)), None) | TO",
+"vocab_ver": "fcdb68f6235c5820"
+},
+"dm34-018": {
+"by": "rule",
+"checks": {},
+"def_hash": "378be89940a5f9a3",
+"status": "pending",
+"uses": [
+"core",
+"op:if",
+"op:may",
+"op:modify",
+"op:move",
+"op:put_under"
+],
+"verifier": 2,
+"verify_error": "Traceback (most recent call last): |   File \"/home/claude/dmpj/dmsim/engine/verify.py\", line 42, in verify_card |     spec = sc.try_card(rules, card_id) |   File \"/home/claude/dmpj/dmsim/engine/scenario.py\", line 94, in try_card |     hit = next((probe.s.cards[c].defn for c in pool if probe.filter_match(c, f)), None) | TO",
+"vocab_ver": "82ed00967ca972dd"
+},
+"dm34-021": {
+"by": "rule",
+"checks": {},
+"def_hash": "d8767ffd5ce545fe",
+"status": "pending",
+"uses": [
+"core",
+"op:delayed_trigger",
+"op:if",
+"op:may",
+"op:modify",
+"op:move",
+"op:untap"
+],
+"verifier": 2,
+"verify_error": "Traceback (most recent call last): |   File \"/home/claude/dmpj/dmsim/engine/verify.py\", line 42, in verify_card |     spec = sc.try_card(rules, card_id) |   File \"/home/claude/dmpj/dmsim/engine/scenario.py\", line 94, in try_card |     hit = next((probe.s.cards[c].defn for c in pool if probe.filter_match(c, f)), None) | TO",
+"vocab_ver": "3e5662bda8f86dce"
+},
 "dm34-024": {
 "by": "rule",
 "checks": {
@@ -13,6 +67,38 @@
 "verifier": 2,
 "verify": "43手・turn 30 まで正常に回った（result={'winner': 0, 'reason': 'deck_out', 'turn': 30}）",
 "vocab_ver": "080d8e7509b398eb"
+},
+"dm34-027": {
+"by": "rule",
+"checks": {},
+"def_hash": "f5c5e9b2490cc9fe",
+"status": "pending",
+"uses": [
+"core",
+"op:destroy",
+"op:if",
+"op:may",
+"op:move"
+],
+"verifier": 2,
+"verify_error": "Traceback (most recent call last): |   File \"/home/claude/dmpj/dmsim/engine/verify.py\", line 42, in verify_card |     spec = sc.try_card(rules, card_id) |   File \"/home/claude/dmpj/dmsim/engine/scenario.py\", line 94, in try_card |     hit = next((probe.s.cards[c].defn for c in pool if probe.filter_match(c, f)), None) | TO",
+"vocab_ver": "7d8a83e8a622ce58"
+},
+"dm34-033": {
+"by": "rule",
+"checks": {},
+"def_hash": "9ad0686aa00abb43",
+"status": "pending",
+"uses": [
+"core",
+"op:if",
+"op:mana_put",
+"op:may",
+"op:move"
+],
+"verifier": 2,
+"verify_error": "Traceback (most recent call last): |   File \"/home/claude/dmpj/dmsim/engine/verify.py\", line 42, in verify_card |     spec = sc.try_card(rules, card_id) |   File \"/home/claude/dmpj/dmsim/engine/scenario.py\", line 94, in try_card |     hit = next((probe.s.cards[c].defn for c in pool if probe.filter_match(c, f)), None) | TO",
+"vocab_ver": "359a4d7c1e4c5bf4"
 },
 "dm34-052": {
 "by": "rule",

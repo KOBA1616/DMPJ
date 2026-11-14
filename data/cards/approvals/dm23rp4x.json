@@ -1,4 +1,88 @@
 {
+"dm23rp4x-004": {
+"by": "rule",
+"checks": {},
+"def_hash": "8c24fcbda7795933",
+"status": "pending",
+"uses": [
+"core",
+"kw:mega_last_burst",
+"op:discard",
+"op:modify",
+"op:swap"
+],
+"verifier": 2,
+"verify_error": "Traceback (most recent call last): |   File \"/home/claude/dmpj/dmsim/engine/verify.py\", line 42, in verify_card |     spec = sc.try_card(rules, card_id) |   File \"/home/claude/dmpj/dmsim/engine/scenario.py\", line 94, in try_card |     hit = next((probe.s.cards[c].defn for c in pool if probe.filter_match(c, f)), None) | TO",
+"vocab_ver": "f1bdcae45b428b90"
+},
+"dm23rp4x-006": {
+"by": "rule",
+"checks": {},
+"def_hash": "3fd7c3f685360def",
+"status": "pending",
+"uses": [
+"core",
+"kw:mega_last_burst",
+"kw:speed_attacker",
+"op:choose",
+"op:move",
+"op:swap"
+],
+"verifier": 2,
+"verify_error": "Traceback (most recent call last): |   File \"/home/claude/dmpj/dmsim/engine/verify.py\", line 42, in verify_card |     spec = sc.try_card(rules, card_id) |   File \"/home/claude/dmpj/dmsim/engine/scenario.py\", line 94, in try_card |     hit = next((probe.s.cards[c].defn for c in pool if probe.filter_match(c, f)), None) | TO",
+"vocab_ver": "3e9ac396c99e2c70"
+},
+"dm23rp4x-008": {
+"by": "rule",
+"checks": {},
+"def_hash": "be51b89a06b6ebdd",
+"status": "pending",
+"uses": [
+"core",
+"kw:mega_last_burst",
+"op:draw",
+"op:if",
+"op:may",
+"op:move",
+"op:swap"
+],
+"verifier": 2,
+"verify_error": "Traceback (most recent call last): |   File \"/home/claude/dmpj/dmsim/engine/verify.py\", line 42, in verify_card |     spec = sc.try_card(rules, card_id) |   File \"/home/claude/dmpj/dmsim/engine/scenario.py\", line 94, in try_card |     hit = next((probe.s.cards[c].defn for c in pool if probe.filter_match(c, f)), None) | TO",
+"vocab_ver": "c78d7bbb1ba668cb"
+},
+"dm23rp4x-021": {
+"by": "rule",
+"checks": {},
+"def_hash": "68461322cc7bb202",
+"status": "pending",
+"uses": [
+"core",
+"kw:double_breaker",
+"op:destroy",
+"op:draw",
+"op:may",
+"op:swap"
+],
+"verifier": 2,
+"verify_error": "Traceback (most recent call last): |   File \"/home/claude/dmpj/dmsim/engine/verify.py\", line 42, in verify_card |     spec = sc.try_card(rules, card_id) |   File \"/home/claude/dmpj/dmsim/engine/scenario.py\", line 94, in try_card |     hit = next((probe.s.cards[c].defn for c in pool if probe.filter_match(c, f)), None) | TO",
+"vocab_ver": "eabd1936fc023e76"
+},
+"dm23rp4x-025": {
+"by": "rule",
+"checks": {},
+"def_hash": "2cad5cabab77ffcc",
+"status": "pending",
+"uses": [
+"core",
+"kw:double_breaker",
+"op:may",
+"op:move",
+"op:swap"
+],
+"verifier": 2,
+"verify_error": "Traceback (most recent call last): |   File \"/home/claude/dmpj/dmsim/engine/verify.py\", line 42, in verify_card |     spec = sc.try_card(rules, card_id) |   File \"/home/claude/dmpj/dmsim/engine/scenario.py\", line 94, in try_card |     hit = next((probe.s.cards[c].defn for c in pool if probe.filter_match(c, f)), None) | TO",
+"vocab_ver": "1c5b9fb36225515c"
+},
 "dm23rp4x-042": {
 "by": "rule",
 "checks": {},

@@ -84,7 +84,7 @@
 ],
 "verifier": 2,
 "verify": "43手・turn 30 まで正常に回った（result={'winner': 0, 'reason': 'deck_out', 'turn': 30}）",
-"vocab_ver": "a3a402d244eeed00"
+"vocab_ver": "4ecf64eafe2db636"
 },
 "dmr16s-020": {
 "by": "check",
@@ -120,7 +120,7 @@
 ],
 "verifier": 2,
 "verify": "43手・turn 30 まで正常に回った（result={'winner': 0, 'reason': 'deck_out', 'turn': 30}）",
-"vocab_ver": "fbefdb773c2ad7b8"
+"vocab_ver": "1a75488a36f54e86"
 },
 "dmr16s-022": {
 "by": "rule",
@@ -150,6 +150,38 @@
 "verify_error": "Traceback (most recent call last): |   File \"/home/claude/dmpj/dmsim/engine/verify.py\", line 42, in verify_card |     spec = sc.try_card(rules, card_id) |   File \"/home/claude/dmpj/dmsim/engine/scenario.py\", line 94, in try_card |     hit = next((probe.s.cards[c].defn for c in pool if probe.filter_match(c, f)), None) | TO",
 "vocab_ver": "eefa05c93f36524e"
 },
+"dmr16s-026": {
+"by": "rule",
+"checks": {
+"effect": "skip",
+"text": "ok"
+},
+"def_hash": "980d957346adbfdf",
+"status": "approved",
+"uses": [
+"core",
+"kw:s_back_darkness"
+],
+"verifier": 2,
+"verify": "43手・turn 30 まで正常に回った（result={'winner': 0, 'reason': 'deck_out', 'turn': 30}）",
+"vocab_ver": "ee6dbb487703b8a9"
+},
+"dmr16s-028": {
+"by": "rule",
+"checks": {
+"effect": "skip",
+"text": "ok"
+},
+"def_hash": "59e8e7b061882d68",
+"status": "approved",
+"uses": [
+"core",
+"kw:s_back_fire"
+],
+"verifier": 2,
+"verify": "43手・turn 30 まで正常に回った（result={'winner': 0, 'reason': 'deck_out', 'turn': 30}）",
+"vocab_ver": "788b5abd97994aa7"
+},
 "dmr16s-036": {
 "by": "rule",
 "checks": {
@@ -163,7 +195,7 @@
 ],
 "verifier": 2,
 "verify": "43手・turn 30 まで正常に回った（result={'winner': 0, 'reason': 'deck_out', 'turn': 30}）",
-"vocab_ver": "eecf7bb8e066bca8"
+"vocab_ver": "080d8e7509b398eb"
 },
 "dmr16s-038": {
 "by": "rule",
@@ -180,7 +212,7 @@
 ],
 "verifier": 2,
 "verify": "43手・turn 30 まで正常に回った（result={'winner': 0, 'reason': 'deck_out', 'turn': 30}）",
-"vocab_ver": "d9e122d8b0facee9"
+"vocab_ver": "d458823f1a16e644"
 },
 "dmr16s-039": {
 "by": "rule",
@@ -197,7 +229,26 @@
 ],
 "verifier": 2,
 "verify": "43手・turn 30 まで正常に回った（result={'winner': 0, 'reason': 'deck_out', 'turn': 30}）",
-"vocab_ver": "7f80819cda97f977"
+"vocab_ver": "af8a94805a959685"
+},
+"dmr16s-041": {
+"by": "check",
+"checks": {
+"effect": "ok",
+"text": "ok"
+},
+"def_hash": "024f98196f5b9cde",
+"status": "approved",
+"uses": [
+"core",
+"op:bounce",
+"op:draw",
+"op:if",
+"op:may"
+],
+"verifier": 2,
+"verify": "43手・turn 30 まで正常に回った（result={'winner': 0, 'reason': 'deck_out', 'turn': 30}）",
+"vocab_ver": "0483b0b948a1243b"
 },
 "dmr16s-042": {
 "by": "check",
@@ -252,6 +303,25 @@
 "verify": "43手・turn 30 まで正常に回った（result={'winner': 0, 'reason': 'deck_out', 'turn': 30}）",
 "vocab_ver": "28c17ae78f4493f1"
 },
+"dmr16s-045": {
+"by": "check",
+"checks": {
+"effect": "ok",
+"text": "ok"
+},
+"def_hash": "51c39ffda533d4ad",
+"status": "approved",
+"uses": [
+"core",
+"op:draw",
+"op:if",
+"op:may",
+"op:move"
+],
+"verifier": 2,
+"verify": "43手・turn 30 まで正常に回った（result={'winner': 0, 'reason': 'deck_out', 'turn': 30}）",
+"vocab_ver": "489c1443ac7ee859"
+},
 "dmr16s-046": {
 "by": "rule",
 "checks": {
@@ -267,7 +337,7 @@
 ],
 "verifier": 2,
 "verify": "43手・turn 30 まで正常に回った（result={'winner': 0, 'reason': 'deck_out', 'turn': 30}）",
-"vocab_ver": "f1d92ae9be0cf26c"
+"vocab_ver": "c8d899f045667ce6"
 },
 "dmr16s-046d": {
 "by": "rule",
@@ -284,7 +354,7 @@
 ],
 "verifier": 2,
 "verify": "43手・turn 30 まで正常に回った（result={'winner': 0, 'reason': 'deck_out', 'turn': 30}）",
-"vocab_ver": "f1d92ae9be0cf26c"
+"vocab_ver": "c8d899f045667ce6"
 },
 "dmr16s-050": {
 "by": "rule",
@@ -300,7 +370,7 @@
 ],
 "verifier": 2,
 "verify": "43手・turn 30 まで正常に回った（result={'winner': 0, 'reason': 'deck_out', 'turn': 30}）",
-"vocab_ver": "27c1af7e6136fbc1"
+"vocab_ver": "b1093fcc02a8471b"
 },
 "dmr16s-052": {
 "by": "rule",
@@ -315,7 +385,7 @@
 ],
 "verifier": 2,
 "verify": "43手・turn 30 まで正常に回った（result={'winner': 0, 'reason': 'deck_out', 'turn': 30}）",
-"vocab_ver": "eecf7bb8e066bca8"
+"vocab_ver": "080d8e7509b398eb"
 },
 "dmr16s-053": {
 "by": "check",

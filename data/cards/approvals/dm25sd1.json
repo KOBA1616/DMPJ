@@ -1,0 +1,19 @@
+{
+"dm25sd1-010": {
+"by": "rule",
+"checks": {
+"effect": "ok",
+"text": "fail"
+},
+"def_hash": "725fac68f638d359",
+"status": "pending",
+"uses": [
+"core",
+"op:mill",
+"op:move"
+],
+"verifier": 2,
+"verify_error": "移動先 bz が原文に無い",
+"vocab_ver": "f790d1ebfe425588"
+}
+}

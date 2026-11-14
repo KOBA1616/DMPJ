@@ -1,4 +1,20 @@
 {
+"dm24ex4-016": {
+"by": "rule",
+"checks": {},
+"def_hash": "caac10cc43aff545",
+"status": "pending",
+"uses": [
+"core",
+"kw:summon_from_mana",
+"kw:triple_breaker",
+"op:may",
+"op:move"
+],
+"verifier": 2,
+"verify_error": "Traceback (most recent call last): |   File \"/home/claude/dmpj/dmsim/engine/verify.py\", line 42, in verify_card |     spec = sc.try_card(rules, card_id) |   File \"/home/claude/dmpj/dmsim/engine/scenario.py\", line 94, in try_card |     hit = next((probe.s.cards[c].defn for c in pool if probe.filter_match(c, f)), None) | TO",
+"vocab_ver": "2993cb4f5af60dda"
+},
 "dm24ex4-036": {
 "by": "rule",
 "checks": {
@@ -18,6 +34,107 @@
 "verifier": 2,
 "verify_error": "定義の数値 count=3 が原文に無い",
 "vocab_ver": "2cf660c037456658"
+},
+"dm24ex4-046": {
+"by": "rule",
+"checks": {
+"effect": "skip",
+"text": "fail"
+},
+"def_hash": "9310ef640880621d",
+"status": "pending",
+"uses": [
+"core",
+"kw:s_trigger",
+"op:choose",
+"op:destroy",
+"op:move"
+],
+"verifier": 2,
+"verify_error": "移動先 bz が原文に無い",
+"vocab_ver": "0af53c369d02f4ae"
+},
+"dm24ex4-051": {
+"by": "rule",
+"checks": {
+"effect": "skip",
+"text": "fail"
+},
+"def_hash": "8534c3757d1ca31e",
+"status": "pending",
+"uses": [
+"core",
+"kw:s_trigger",
+"op:destroy",
+"op:force_battle",
+"op:may",
+"op:modal",
+"op:modify",
+"op:move",
+"op:tap"
+],
+"verifier": 2,
+"verify_error": "移動先 bz が原文に無い",
+"vocab_ver": "c6ef3d0832a48a97"
+},
+"dm24ex4-052": {
+"by": "check",
+"checks": {
+"effect": "ok",
+"text": "ok"
+},
+"def_hash": "b715b3d4b471cacf",
+"status": "approved",
+"uses": [
+"core",
+"kw:s_trigger",
+"op:choose",
+"op:modify",
+"op:move",
+"op:play_free"
+],
+"verifier": 2,
+"verify": "43手・turn 30 まで正常に回った（result={'winner': 0, 'reason': 'deck_out', 'turn': 30}）",
+"vocab_ver": "0d95d1beb187ec6c"
+},
+"dm24ex4-056": {
+"by": "rule",
+"checks": {
+"effect": "ok",
+"text": "fail"
+},
+"def_hash": "904d13fd85eb8c36",
+"status": "pending",
+"uses": [
+"core",
+"kw:g_strike",
+"op:choose",
+"op:move"
+],
+"verifier": 2,
+"verify_error": "移動先 bz が原文に無い",
+"vocab_ver": "7223e0eef110645f"
+},
+"dm24ex4-064": {
+"by": "rule",
+"checks": {
+"effect": "skip",
+"text": "fail"
+},
+"def_hash": "41e059e279b3a41b",
+"status": "pending",
+"uses": [
+"core",
+"kw:s_trigger",
+"op:choose",
+"op:if",
+"op:may",
+"op:mekurade",
+"op:move"
+],
+"verifier": 2,
+"verify_error": "キーワード s_trigger(S・トリガー) が原文に無い",
+"vocab_ver": "37ee2c57cbfbc852"
 },
 "dm24ex4-082": {
 "by": "rule",
@@ -71,6 +188,22 @@
 "verifier": 2,
 "verify": "43手・turn 30 まで正常に回った（result={'winner': 0, 'reason': 'deck_out', 'turn': 30}）",
 "vocab_ver": "a9e3c71dafdb2364"
+},
+"dm24ex4-094": {
+"by": "rule",
+"checks": {
+"effect": "skip",
+"text": "ok"
+},
+"def_hash": "5ba91493ea278336",
+"status": "approved",
+"uses": [
+"core",
+"kw:must_attack"
+],
+"verifier": 2,
+"verify": "43手・turn 30 まで正常に回った（result={'winner': 0, 'reason': 'deck_out', 'turn': 30}）",
+"vocab_ver": "c7d3ba1fbad08137"
 },
 "dm24ex4-098": {
 "by": "rule",

@@ -17,6 +17,23 @@
 "verify": "43手・turn 30 まで正常に回った（result={'winner': 0, 'reason': 'deck_out', 'turn': 30}）",
 "vocab_ver": "14822804f21bc84b"
 },
+"dmex02-040": {
+"by": "rule",
+"checks": {
+"effect": "fail",
+"text": "ok"
+},
+"def_hash": "061246d2a1765c36",
+"status": "pending",
+"uses": [
+"core",
+"kw:s_trigger",
+"op:destroy"
+],
+"verifier": 2,
+"verify_error": "graveyard への移動が起きなかった",
+"vocab_ver": "28c17ae78f4493f1"
+},
 "dmex02-047": {
 "by": "check",
 "checks": {

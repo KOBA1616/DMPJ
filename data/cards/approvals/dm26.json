@@ -17,6 +17,20 @@
 "verify": "43手・turn 30 まで正常に回った（result={'winner': 0, 'reason': 'deck_out', 'turn': 30}）",
 "vocab_ver": "fc4adfd2da3c7edd"
 },
+"dm26-028": {
+"by": "rule",
+"checks": {},
+"def_hash": "f36e87b3d90963c0",
+"status": "pending",
+"uses": [
+"core",
+"kw:summon_from_mana",
+"kw:triple_breaker"
+],
+"verifier": 2,
+"verify_error": "Traceback (most recent call last): |   File \"/home/claude/dmpj/dmsim/engine/verify.py\", line 42, in verify_card |     spec = sc.try_card(rules, card_id) |   File \"/home/claude/dmpj/dmsim/engine/scenario.py\", line 94, in try_card |     hit = next((probe.s.cards[c].defn for c in pool if probe.filter_match(c, f)), None) | TO",
+"vocab_ver": "baa50b8c3e0a8a51"
+},
 "dm26-030": {
 "by": "rule",
 "checks": {

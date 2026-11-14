@@ -1,4 +1,17 @@
 {
+"dmx19-s03": {
+"by": "rule",
+"checks": {},
+"def_hash": "ebf449ffd69bb9c0",
+"status": "pending",
+"uses": [
+"core",
+"kw:double_breaker"
+],
+"verifier": 2,
+"verify_error": "Traceback (most recent call last): |   File \"/home/claude/dmpj/dmsim/engine/verify.py\", line 42, in verify_card |     spec = sc.try_card(rules, card_id) |   File \"/home/claude/dmpj/dmsim/engine/scenario.py\", line 94, in try_card |     hit = next((probe.s.cards[c].defn for c in pool if probe.filter_match(c, f)), None) | TO",
+"vocab_ver": "76ace1d9e2ba7e59"
+},
 "dmx19-s08": {
 "by": "rule",
 "checks": {
@@ -13,7 +26,52 @@
 ],
 "verifier": 2,
 "verify": "43手・turn 30 まで正常に回った（result={'winner': 0, 'reason': 'deck_out', 'turn': 30}）",
-"vocab_ver": "b93c2952e9424006"
+"vocab_ver": "76ace1d9e2ba7e59"
+},
+"dmx19-s13": {
+"by": "rule",
+"checks": {},
+"def_hash": "01a565c1a5ac3d36",
+"status": "pending",
+"uses": [
+"core",
+"kw:triple_breaker",
+"kw:unblockable"
+],
+"verifier": 2,
+"verify_error": "Traceback (most recent call last): |   File \"/home/claude/dmpj/dmsim/engine/verify.py\", line 42, in verify_card |     spec = sc.try_card(rules, card_id) |   File \"/home/claude/dmpj/dmsim/engine/scenario.py\", line 94, in try_card |     hit = next((probe.s.cards[c].defn for c in pool if probe.filter_match(c, f)), None) | TO",
+"vocab_ver": "a15cc83fe3e97dfc"
+},
+"dmx19-s19": {
+"by": "check",
+"checks": {
+"effect": "ok",
+"text": "ok"
+},
+"def_hash": "0a61d4232741c80e",
+"status": "approved",
+"uses": [
+"core",
+"op:bounce",
+"op:draw",
+"op:repeat"
+],
+"verifier": 2,
+"verify": "43手・turn 30 まで正常に回った（result={'winner': 0, 'reason': 'deck_out', 'turn': 30}）",
+"vocab_ver": "9a1df4009cdaf667"
+},
+"dmx19-s21": {
+"by": "rule",
+"checks": {},
+"def_hash": "fd1446080896ca7f",
+"status": "pending",
+"uses": [
+"core",
+"op:play_free"
+],
+"verifier": 2,
+"verify_error": "Traceback (most recent call last): |   File \"/home/claude/dmpj/dmsim/engine/verify.py\", line 42, in verify_card |     spec = sc.try_card(rules, card_id) |   File \"/home/claude/dmpj/dmsim/engine/scenario.py\", line 94, in try_card |     hit = next((probe.s.cards[c].defn for c in pool if probe.filter_match(c, f)), None) | TO",
+"vocab_ver": "9e34438fad7d04ab"
 },
 "dmx19-s23": {
 "by": "rule",
@@ -29,7 +87,7 @@
 ],
 "verifier": 2,
 "verify": "43手・turn 30 まで正常に回った（result={'winner': 0, 'reason': 'deck_out', 'turn': 30}）",
-"vocab_ver": "df1b5e3afae79913"
+"vocab_ver": "91d9148ad6b9aa6f"
 },
 "dmx19-s24": {
 "by": "rule",
@@ -45,7 +103,21 @@
 ],
 "verifier": 2,
 "verify": "43手・turn 30 まで正常に回った（result={'winner': 0, 'reason': 'deck_out', 'turn': 30}）",
-"vocab_ver": "b93c2952e9424006"
+"vocab_ver": "76ace1d9e2ba7e59"
+},
+"dmx19-s30": {
+"by": "rule",
+"checks": {},
+"def_hash": "da00082f0b9019d1",
+"status": "pending",
+"uses": [
+"core",
+"kw:double_breaker",
+"op:destroy"
+],
+"verifier": 2,
+"verify_error": "Traceback (most recent call last): |   File \"/home/claude/dmpj/dmsim/engine/verify.py\", line 42, in verify_card |     spec = sc.try_card(rules, card_id) |   File \"/home/claude/dmpj/dmsim/engine/scenario.py\", line 94, in try_card |     hit = next((probe.s.cards[c].defn for c in pool if probe.filter_match(c, f)), None) | TO",
+"vocab_ver": "84bf5830dba33598"
 },
 "dmx19-s31": {
 "by": "rule",
@@ -61,6 +133,37 @@
 ],
 "verifier": 2,
 "verify": "43手・turn 30 まで正常に回った（result={'winner': 0, 'reason': 'deck_out', 'turn': 30}）",
-"vocab_ver": "df1b5e3afae79913"
+"vocab_ver": "91d9148ad6b9aa6f"
+},
+"dmx19-s41": {
+"by": "rule",
+"checks": {},
+"def_hash": "7a754564ec65bf84",
+"status": "pending",
+"uses": [
+"core",
+"kw:double_breaker",
+"op:mana_put",
+"op:may"
+],
+"verifier": 2,
+"verify_error": "Traceback (most recent call last): |   File \"/home/claude/dmpj/dmsim/engine/verify.py\", line 42, in verify_card |     spec = sc.try_card(rules, card_id) |   File \"/home/claude/dmpj/dmsim/engine/scenario.py\", line 94, in try_card |     hit = next((probe.s.cards[c].defn for c in pool if probe.filter_match(c, f)), None) | TO",
+"vocab_ver": "25596db1434c49b0"
+},
+"dmx19-s52": {
+"by": "rule",
+"checks": {},
+"def_hash": "a861b2ba734d2027",
+"status": "pending",
+"uses": [
+"core",
+"kw:triple_breaker",
+"op:may",
+"op:move",
+"op:play_free"
+],
+"verifier": 2,
+"verify_error": "Traceback (most recent call last): |   File \"/home/claude/dmpj/dmsim/engine/verify.py\", line 42, in verify_card |     spec = sc.try_card(rules, card_id) |   File \"/home/claude/dmpj/dmsim/engine/scenario.py\", line 94, in try_card |     hit = next((probe.s.cards[c].defn for c in pool if probe.filter_match(c, f)), None) | TO",
+"vocab_ver": "13dbf4b551925354"
 }
 }

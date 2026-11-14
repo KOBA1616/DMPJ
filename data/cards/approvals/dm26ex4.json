@@ -1,4 +1,128 @@
 {
+"dm26ex4-008": {
+"by": "rule",
+"checks": {
+"effect": "skip",
+"text": "fail"
+},
+"def_hash": "c2cfe2987b7d1623",
+"status": "pending",
+"uses": [
+"core",
+"kw:double_breaker",
+"kw:speed_attacker",
+"op:choose",
+"op:delayed_trigger",
+"op:destroy",
+"op:discard",
+"op:draw",
+"op:if",
+"op:modify",
+"op:move"
+],
+"verifier": 2,
+"verify_error": "移動先 bz が原文に無い",
+"vocab_ver": "245bace77e47854a"
+},
+"dm26ex4-009": {
+"by": "rule",
+"checks": {
+"effect": "skip",
+"text": "fail"
+},
+"def_hash": "5c9622e7afa2c518",
+"status": "pending",
+"uses": [
+"core",
+"kw:triple_breaker",
+"op:if",
+"op:may",
+"op:modify",
+"op:move",
+"op:repeat"
+],
+"verifier": 2,
+"verify_error": "移動先 bz が原文に無い",
+"vocab_ver": "02c554befb916692"
+},
+"dm26ex4-043": {
+"by": "check",
+"checks": {
+"effect": "ok",
+"text": "ok"
+},
+"def_hash": "9270cde74223a41d",
+"status": "approved",
+"uses": [
+"core",
+"op:if",
+"op:move",
+"op:opp_may"
+],
+"verifier": 2,
+"verify": "43手・turn 30 まで正常に回った（result={'winner': 0, 'reason': 'deck_out', 'turn': 30}）",
+"vocab_ver": "535d7b1c11ec9240"
+},
+"dm26ex4-045": {
+"by": "check",
+"checks": {
+"effect": "ok",
+"text": "ok"
+},
+"def_hash": "7461499b985eb3fd",
+"status": "approved",
+"uses": [
+"core",
+"op:draw",
+"op:if",
+"op:opp_may"
+],
+"verifier": 2,
+"verify": "43手・turn 30 まで正常に回った（result={'winner': 0, 'reason': 'deck_out', 'turn': 30}）",
+"vocab_ver": "3b9ec4c3eea745af"
+},
+"dm26ex4-053": {
+"by": "check",
+"checks": {
+"effect": "ok",
+"text": "ok"
+},
+"def_hash": "b6e6657c6d1d54cc",
+"status": "approved",
+"uses": [
+"core",
+"op:if",
+"op:may",
+"op:move",
+"op:opp_may"
+],
+"verifier": 2,
+"verify": "43手・turn 30 まで正常に回った（result={'winner': 0, 'reason': 'deck_out', 'turn': 30}）",
+"vocab_ver": "4dadceaccb72d83d"
+},
+"dm26ex4-054": {
+"by": "rule",
+"checks": {
+"effect": "skip",
+"text": "fail"
+},
+"def_hash": "d39b68c50beb622b",
+"status": "pending",
+"uses": [
+"core",
+"kw:blocker",
+"kw:cannot_attack",
+"kw:double_breaker",
+"kw:s_trigger",
+"op:draw",
+"op:move",
+"op:play_free",
+"op:shuffle"
+],
+"verifier": 2,
+"verify_error": "キーワード double_breaker(W・ブレイカー) が原文に無い; 原文に Sトリガー があるが s_trigger が定義に無い; 原文に このクリーチャーは攻撃できない があるが cannot_attack が定義に無い; 原文に ブロッカー があるが blocker が定義に無い; 定義の数値 count=3 が原文に無い; 定義の数値 count=4 が原文に無い",
+"vocab_ver": "0f7d2c8c37f4954a"
+},
 "dm26ex4-082": {
 "by": "rule",
 "checks": {
@@ -101,6 +225,43 @@
 "verifier": 2,
 "verify": "43手・turn 30 まで正常に回った（result={'winner': 0, 'reason': 'deck_out', 'turn': 30}）",
 "vocab_ver": "c97568495eb2082a"
+},
+"dm26ex4-cho012": {
+"by": "rule",
+"checks": {},
+"def_hash": "12f52186d4f1e3f0",
+"status": "pending",
+"uses": [
+"core",
+"kw:double_breaker",
+"kw:g_strike",
+"op:delayed_trigger",
+"op:destroy",
+"op:draw",
+"op:modify",
+"op:move"
+],
+"verifier": 2,
+"verify_error": "Traceback (most recent call last): |   File \"/home/claude/dmpj/dmsim/engine/verify.py\", line 42, in verify_card |     spec = sc.try_card(rules, card_id) |   File \"/home/claude/dmpj/dmsim/engine/scenario.py\", line 94, in try_card |     hit = next((probe.s.cards[c].defn for c in pool if probe.filter_match(c, f)), None) | TO",
+"vocab_ver": "556e59f90584ffd2"
+},
+"dm26ex4-cho037": {
+"by": "check",
+"checks": {
+"effect": "ok",
+"text": "ok"
+},
+"def_hash": "69ba0f34a84f4242",
+"status": "approved",
+"uses": [
+"core",
+"op:may",
+"op:modify",
+"op:move"
+],
+"verifier": 2,
+"verify": "43手・turn 30 まで正常に回った（result={'winner': 0, 'reason': 'deck_out', 'turn': 30}）",
+"vocab_ver": "9671a4616e4083a3"
 },
 "dm26ex4-cho050": {
 "by": "check",

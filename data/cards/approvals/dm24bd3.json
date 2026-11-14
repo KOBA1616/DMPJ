@@ -1,0 +1,24 @@
+{
+"dm24bd3-014": {
+"by": "rule",
+"checks": {
+"effect": "ok",
+"text": "fail"
+},
+"def_hash": "0444e205287185a8",
+"status": "pending",
+"uses": [
+"core",
+"kw:s_trigger",
+"op:choose",
+"op:draw",
+"op:may",
+"op:modify",
+"op:move",
+"op:tap"
+],
+"verifier": 2,
+"verify_error": "移動先 bz が原文に無い",
+"vocab_ver": "299ddd7bf799944f"
+}
+}

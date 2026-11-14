@@ -1,4 +1,21 @@
 {
+"dm25rp1-031": {
+"by": "check",
+"checks": {
+"effect": "ok",
+"text": "ok"
+},
+"def_hash": "ef953cd5b8c17362",
+"status": "approved",
+"uses": [
+"core",
+"kw:g_strike",
+"op:draw"
+],
+"verifier": 2,
+"verify": "43手・turn 30 まで正常に回った（result={'winner': 0, 'reason': 'deck_out', 'turn': 30}）",
+"vocab_ver": "fb62e589d2b7c6a5"
+},
 "dm25rp1-035": {
 "by": "check",
 "checks": {

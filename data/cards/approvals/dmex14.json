@@ -1,4 +1,23 @@
 {
+"dmex14-014": {
+"by": "check",
+"checks": {
+"effect": "ok",
+"text": "ok"
+},
+"def_hash": "c8f852123fd98921",
+"status": "approved",
+"uses": [
+"core",
+"kw:s_trigger",
+"op:bounce",
+"op:discard",
+"op:draw"
+],
+"verifier": 2,
+"verify": "43手・turn 30 まで正常に回った（result={'winner': 0, 'reason': 'deck_out', 'turn': 30}）",
+"vocab_ver": "b29e1259814edfdb"
+},
 "dmex14-047": {
 "by": "check",
 "checks": {
@@ -36,6 +55,25 @@
 "verifier": 2,
 "verify": "43手・turn 30 まで正常に回った（result={'winner': 0, 'reason': 'deck_out', 'turn': 30}）",
 "vocab_ver": "09175e65ab0cba4c"
+},
+"dmex14-058": {
+"by": "check",
+"checks": {
+"effect": "ok",
+"text": "ok"
+},
+"def_hash": "3e717b2a0348cdcd",
+"status": "approved",
+"uses": [
+"core",
+"kw:s_trigger",
+"op:if",
+"op:mana_put",
+"op:move"
+],
+"verifier": 2,
+"verify": "43手・turn 30 まで正常に回った（result={'winner': 0, 'reason': 'deck_out', 'turn': 30}）",
+"vocab_ver": "347ec8cec86e31b0"
 },
 "dmex14-059": {
 "by": "check",

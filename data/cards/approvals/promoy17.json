@@ -14,7 +14,7 @@
 ],
 "verifier": 2,
 "verify": "43手・turn 30 まで正常に回った（result={'winner': 0, 'reason': 'deck_out', 'turn': 30}）",
-"vocab_ver": "0cd8fe8192c840a0"
+"vocab_ver": "5884d8b5072181a7"
 },
 "promoy17-041": {
 "by": "rule",
@@ -31,7 +31,7 @@
 ],
 "verifier": 2,
 "verify": "43手・turn 30 まで正常に回った（result={'winner': 0, 'reason': 'deck_out', 'turn': 30}）",
-"vocab_ver": "0cd8fe8192c840a0"
+"vocab_ver": "5884d8b5072181a7"
 },
 "promoy17-091": {
 "by": "rule",
@@ -48,7 +48,7 @@
 ],
 "verifier": 2,
 "verify": "43手・turn 30 まで正常に回った（result={'winner': 0, 'reason': 'deck_out', 'turn': 30}）",
-"vocab_ver": "b039729cdb44926c"
+"vocab_ver": "9d5684bf33a58bff"
 },
 "promoy17-092": {
 "by": "rule",
@@ -65,7 +65,7 @@
 ],
 "verifier": 2,
 "verify": "43手・turn 30 まで正常に回った（result={'winner': 0, 'reason': 'deck_out', 'turn': 30}）",
-"vocab_ver": "813309acef383fc8"
+"vocab_ver": "5e561ad4ff9bda2f"
 },
 "promoy17-098": {
 "by": "rule",
@@ -74,13 +74,14 @@
 "text": "ok"
 },
 "def_hash": "e66dfbdd171fee8e",
-"status": "approved",
+"stale": "目視照合で誤り: 「コストは0以下にならない」の下限(cost_min: 1)が無い",
+"status": "pending",
 "uses": [
 "core"
 ],
 "verifier": 2,
 "verify": "43手・turn 30 まで正常に回った（result={'winner': 0, 'reason': 'deck_out', 'turn': 30}）",
-"vocab_ver": "eecf7bb8e066bca8"
+"vocab_ver": "080d8e7509b398eb"
 },
 "promoy17-sp4d06": {
 "by": "rule",

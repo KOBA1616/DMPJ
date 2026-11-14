@@ -1,4 +1,22 @@
 {
+"dmex18-038": {
+"by": "check",
+"checks": {
+"effect": "ok",
+"text": "ok"
+},
+"def_hash": "876b42cc5f91413c",
+"status": "approved",
+"uses": [
+"core",
+"op:draw",
+"op:may",
+"op:play_free"
+],
+"verifier": 2,
+"verify": "43手・turn 30 まで正常に回った（result={'winner': 0, 'reason': 'deck_out', 'turn': 30}）",
+"vocab_ver": "cd60736bf70ec91c"
+},
 "dmex18-059": {
 "by": "check",
 "checks": {

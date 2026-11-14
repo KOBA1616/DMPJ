@@ -1,4 +1,20 @@
 {
+"dmr05-005": {
+"by": "rule",
+"checks": {},
+"def_hash": "ddcf99467db43dbc",
+"status": "pending",
+"uses": [
+"core",
+"kw:double_breaker",
+"op:destroy",
+"op:discard",
+"op:may"
+],
+"verifier": 2,
+"verify_error": "Traceback (most recent call last): |   File \"/home/claude/dmpj/dmsim/engine/verify.py\", line 42, in verify_card |     spec = sc.try_card(rules, card_id) |   File \"/home/claude/dmpj/dmsim/engine/scenario.py\", line 94, in try_card |     hit = next((probe.s.cards[c].defn for c in pool if probe.filter_match(c, f)), None) | TO",
+"vocab_ver": "44fb3ea132607ba9"
+},
 "dmr05-015": {
 "by": "check",
 "checks": {
@@ -16,6 +32,21 @@
 "verify": "43手・turn 30 まで正常に回った（result={'winner': 0, 'reason': 'deck_out', 'turn': 30}）",
 "vocab_ver": "5e561ad4ff9bda2f"
 },
+"dmr05-017": {
+"by": "rule",
+"checks": {},
+"def_hash": "8528331dc883308e",
+"status": "pending",
+"uses": [
+"core",
+"op:may",
+"op:move",
+"op:put_under"
+],
+"verifier": 2,
+"verify_error": "Traceback (most recent call last): |   File \"/home/claude/dmpj/dmsim/engine/verify.py\", line 42, in verify_card |     spec = sc.try_card(rules, card_id) |   File \"/home/claude/dmpj/dmsim/engine/scenario.py\", line 94, in try_card |     hit = next((probe.s.cards[c].defn for c in pool if probe.filter_match(c, f)), None) | TO",
+"vocab_ver": "7c1ac8e819e971bb"
+},
 "dmr05-030": {
 "by": "rule",
 "checks": {
@@ -31,7 +62,7 @@
 ],
 "verifier": 2,
 "verify": "43手・turn 30 まで正常に回った（result={'winner': 0, 'reason': 'deck_out', 'turn': 30}）",
-"vocab_ver": "6510fd3535692b16"
+"vocab_ver": "39f2b10a824b0dd1"
 },
 "dmr05-048": {
 "by": "rule",
@@ -48,7 +79,7 @@
 ],
 "verifier": 2,
 "verify": "43手・turn 30 まで正常に回った（result={'winner': 0, 'reason': 'deck_out', 'turn': 30}）",
-"vocab_ver": "211731d31d1ccf34"
+"vocab_ver": "cca08c4c1f0b14af"
 },
 "dmr05-069": {
 "by": "rule",
@@ -66,7 +97,7 @@
 ],
 "verifier": 2,
 "verify": "43手・turn 30 まで正常に回った（result={'winner': 0, 'reason': 'deck_out', 'turn': 30}）",
-"vocab_ver": "161e0acb0460e7cc"
+"vocab_ver": "3fe5392c18b0382a"
 },
 "dmr05-071": {
 "by": "rule",
@@ -83,7 +114,7 @@
 ],
 "verifier": 2,
 "verify": "43手・turn 30 まで正常に回った（result={'winner': 0, 'reason': 'deck_out', 'turn': 30}）",
-"vocab_ver": "25ac8dad7af014ee"
+"vocab_ver": "e902490ce9931013"
 },
 "dmr05-074": {
 "by": "rule",
@@ -99,7 +130,7 @@
 ],
 "verifier": 2,
 "verify": "43手・turn 30 まで正常に回った（result={'winner': 0, 'reason': 'deck_out', 'turn': 30}）",
-"vocab_ver": "0a3947124e530a99"
+"vocab_ver": "16d9241d8bbd77c9"
 },
 "dmr05-076": {
 "by": "rule",
@@ -114,7 +145,7 @@
 ],
 "verifier": 2,
 "verify": "43手・turn 30 まで正常に回った（result={'winner': 0, 'reason': 'deck_out', 'turn': 30}）",
-"vocab_ver": "eecf7bb8e066bca8"
+"vocab_ver": "080d8e7509b398eb"
 },
 "dmr05-079": {
 "by": "rule",
@@ -130,7 +161,7 @@
 ],
 "verifier": 2,
 "verify": "43手・turn 30 まで正常に回った（result={'winner': 0, 'reason': 'deck_out', 'turn': 30}）",
-"vocab_ver": "b93c2952e9424006"
+"vocab_ver": "76ace1d9e2ba7e59"
 },
 "dmr05-080": {
 "by": "rule",
@@ -147,7 +178,7 @@
 ],
 "verifier": 2,
 "verify": "43手・turn 30 まで正常に回った（result={'winner': 0, 'reason': 'deck_out', 'turn': 30}）",
-"vocab_ver": "d9e122d8b0facee9"
+"vocab_ver": "d458823f1a16e644"
 },
 "dmr05-081": {
 "by": "rule",
@@ -164,7 +195,7 @@
 ],
 "verifier": 2,
 "verify": "43手・turn 30 まで正常に回った（result={'winner': 0, 'reason': 'deck_out', 'turn': 30}）",
-"vocab_ver": "d6fe55ef05408dce"
+"vocab_ver": "10015b301df851ad"
 },
 "dmr05-083": {
 "by": "rule",
@@ -179,7 +210,7 @@
 ],
 "verifier": 2,
 "verify": "43手・turn 30 まで正常に回った（result={'winner': 0, 'reason': 'deck_out', 'turn': 30}）",
-"vocab_ver": "eecf7bb8e066bca8"
+"vocab_ver": "080d8e7509b398eb"
 },
 "dmr05-085": {
 "by": "rule",
@@ -195,7 +226,7 @@
 ],
 "verifier": 2,
 "verify": "43手・turn 30 まで正常に回った（result={'winner': 0, 'reason': 'deck_out', 'turn': 30}）",
-"vocab_ver": "0a3947124e530a99"
+"vocab_ver": "16d9241d8bbd77c9"
 },
 "dmr05-087": {
 "by": "rule",
@@ -211,7 +242,7 @@
 ],
 "verifier": 2,
 "verify": "43手・turn 30 まで正常に回った（result={'winner': 0, 'reason': 'deck_out', 'turn': 30}）",
-"vocab_ver": "b93c2952e9424006"
+"vocab_ver": "76ace1d9e2ba7e59"
 },
 "dmr05-088": {
 "by": "rule",
@@ -228,7 +259,7 @@
 ],
 "verifier": 2,
 "verify": "43手・turn 30 まで正常に回った（result={'winner': 0, 'reason': 'deck_out', 'turn': 30}）",
-"vocab_ver": "d6fe55ef05408dce"
+"vocab_ver": "10015b301df851ad"
 },
 "dmr05-091": {
 "by": "rule",
@@ -244,7 +275,7 @@
 ],
 "verifier": 2,
 "verify": "43手・turn 30 まで正常に回った（result={'winner': 0, 'reason': 'deck_out', 'turn': 30}）",
-"vocab_ver": "27c1af7e6136fbc1"
+"vocab_ver": "b1093fcc02a8471b"
 },
 "dmr05-093": {
 "by": "check",
@@ -269,16 +300,15 @@
 "effect": "skip",
 "text": "ok"
 },
-"def_hash": "717aa6f2c7ce5e59",
+"def_hash": "7802929de5feebc6",
 "status": "approved",
 "uses": [
 "core",
-"kw:double_breaker",
-"op:modify"
+"kw:double_breaker"
 ],
 "verifier": 2,
 "verify": "43手・turn 30 まで正常に回った（result={'winner': 0, 'reason': 'deck_out', 'turn': 30}）",
-"vocab_ver": "92d67edd9a081f0f"
+"vocab_ver": "76ace1d9e2ba7e59"
 },
 "dmr05-097": {
 "by": "rule",
@@ -294,7 +324,7 @@
 ],
 "verifier": 2,
 "verify": "43手・turn 30 まで正常に回った（result={'winner': 0, 'reason': 'deck_out', 'turn': 30}）",
-"vocab_ver": "50454e5a8b49e845"
+"vocab_ver": "569e5c76d2e3f55a"
 },
 "dmr05-099": {
 "by": "rule",
@@ -310,7 +340,7 @@
 ],
 "verifier": 2,
 "verify": "43手・turn 30 まで正常に回った（result={'winner': 0, 'reason': 'deck_out', 'turn': 30}）",
-"vocab_ver": "0a3947124e530a99"
+"vocab_ver": "16d9241d8bbd77c9"
 },
 "dmr05-101": {
 "by": "rule",
@@ -318,15 +348,14 @@
 "effect": "skip",
 "text": "ok"
 },
-"def_hash": "53d0ee90da6e3623",
+"def_hash": "c93f3cc9bf027b3c",
 "status": "approved",
 "uses": [
-"core",
-"op:modify"
+"core"
 ],
 "verifier": 2,
 "verify": "43手・turn 30 まで正常に回った（result={'winner': 0, 'reason': 'deck_out', 'turn': 30}）",
-"vocab_ver": "40dc6d953fde61fa"
+"vocab_ver": "080d8e7509b398eb"
 },
 "dmr05-103": {
 "by": "rule",
@@ -342,7 +371,7 @@
 ],
 "verifier": 2,
 "verify": "43手・turn 30 まで正常に回った（result={'winner': 0, 'reason': 'deck_out', 'turn': 30}）",
-"vocab_ver": "b93c2952e9424006"
+"vocab_ver": "76ace1d9e2ba7e59"
 },
 "dmr05-109": {
 "by": "check",

@@ -1,4 +1,28 @@
 {
+"dm23sd2-007": {
+"by": "rule",
+"checks": {
+"effect": "skip",
+"text": "fail"
+},
+"def_hash": "f1418607c909bad4",
+"status": "pending",
+"uses": [
+"core",
+"kw:s_trigger",
+"op:choose",
+"op:draw",
+"op:if",
+"op:may",
+"op:mekurade",
+"op:modal",
+"op:tap",
+"op:untap"
+],
+"verifier": 2,
+"verify_error": "キーワード s_trigger(S・トリガー) が原文に無い",
+"vocab_ver": "f0904d4e10eaf581"
+},
 "dm23sd2-008": {
 "by": "rule",
 "checks": {},

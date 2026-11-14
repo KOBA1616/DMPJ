@@ -14,7 +14,42 @@
 ],
 "verifier": 2,
 "verify": "43手・turn 30 まで正常に回った（result={'winner': 0, 'reason': 'deck_out', 'turn': 30}）",
-"vocab_ver": "306b8ec19faf054f"
+"vocab_ver": "62a61e3cc84fb868"
+},
+"dmx23-022": {
+"by": "check",
+"checks": {
+"effect": "ok",
+"text": "ok"
+},
+"def_hash": "99702639641614a0",
+"status": "approved",
+"uses": [
+"core",
+"op:choose",
+"op:move"
+],
+"verifier": 2,
+"verify": "43手・turn 30 まで正常に回った（result={'winner': 0, 'reason': 'deck_out', 'turn': 30}）",
+"vocab_ver": "b3657b3478a848ab"
+},
+"dmx23-027": {
+"by": "rule",
+"checks": {
+"effect": "skip",
+"text": "fail"
+},
+"def_hash": "253760f00eeb9399",
+"status": "pending",
+"uses": [
+"core",
+"kw:blocker",
+"op:may",
+"op:tap"
+],
+"verifier": 2,
+"verify_error": "原文に このクリーチャーは相手プレイヤーを攻撃できない があるが cannot_attack_player が定義に無い",
+"vocab_ver": "0155c2c3d456ceda"
 },
 "dmx23-029": {
 "by": "rule",
@@ -30,7 +65,26 @@
 ],
 "verifier": 2,
 "verify": "43手・turn 30 まで正常に回った（result={'winner': 0, 'reason': 'deck_out', 'turn': 30}）",
-"vocab_ver": "27c1af7e6136fbc1"
+"vocab_ver": "b1093fcc02a8471b"
+},
+"dmx23-036": {
+"by": "check",
+"checks": {
+"effect": "ok",
+"text": "ok"
+},
+"def_hash": "33cb1c67f262647e",
+"status": "approved",
+"uses": [
+"core",
+"op:draw",
+"op:if",
+"op:may",
+"op:move"
+],
+"verifier": 2,
+"verify": "43手・turn 30 まで正常に回った（result={'winner': 0, 'reason': 'deck_out', 'turn': 30}）",
+"vocab_ver": "489c1443ac7ee859"
 },
 "dmx23-042": {
 "by": "rule",
@@ -46,7 +100,42 @@
 ],
 "verifier": 2,
 "verify": "43手・turn 30 まで正常に回った（result={'winner': 0, 'reason': 'deck_out', 'turn': 30}）",
-"vocab_ver": "c2c139e5f7b8f15d"
+"vocab_ver": "1f231fca670b97d9"
+},
+"dmx23-045": {
+"by": "check",
+"checks": {
+"effect": "ok",
+"text": "ok"
+},
+"def_hash": "1f444dcccef82bba",
+"status": "approved",
+"uses": [
+"core",
+"kw:s_trigger",
+"op:destroy",
+"op:remove_seal"
+],
+"verifier": 2,
+"verify": "43手・turn 30 まで正常に回った（result={'winner': 0, 'reason': 'deck_out', 'turn': 30}）",
+"vocab_ver": "dfe470e86fa0f6e4"
+},
+"dmx23-047": {
+"by": "rule",
+"checks": {
+"effect": "skip",
+"text": "ok"
+},
+"def_hash": "ce19974870265cfd",
+"status": "approved",
+"uses": [
+"core",
+"kw:must_attack",
+"kw:s_trigger"
+],
+"verifier": 2,
+"verify": "43手・turn 30 まで正常に回った（result={'winner': 0, 'reason': 'deck_out', 'turn': 30}）",
+"vocab_ver": "7061104fb418591b"
 },
 "dmx23-048": {
 "by": "rule",
@@ -62,7 +151,7 @@
 ],
 "verifier": 2,
 "verify": "43手・turn 30 まで正常に回った（result={'winner': 0, 'reason': 'deck_out', 'turn': 30}）",
-"vocab_ver": "f1db927dfcefcf5c"
+"vocab_ver": "bd171928c7e1f484"
 },
 "dmx23-054": {
 "by": "rule",
@@ -78,6 +167,6 @@
 ],
 "verifier": 2,
 "verify": "43手・turn 30 まで正常に回った（result={'winner': 0, 'reason': 'deck_out', 'turn': 30}）",
-"vocab_ver": "c5c635ced7516b5b"
+"vocab_ver": "77cda07e62e901d1"
 }
 }

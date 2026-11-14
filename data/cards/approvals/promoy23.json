@@ -14,7 +14,7 @@
 ],
 "verifier": 2,
 "verify": "43手・turn 30 まで正常に回った（result={'winner': 0, 'reason': 'deck_out', 'turn': 30}）",
-"vocab_ver": "3a7e324ef1b2be34"
+"vocab_ver": "d306f128ed7c92db"
 },
 "promoy23-042": {
 "by": "rule",
@@ -23,13 +23,14 @@
 "text": "ok"
 },
 "def_hash": "9a29344aaa73f14f",
-"status": "approved",
+"stale": "目視照合で誤り: 「コストは0以下にならない」の下限(cost_min: 1)が無い",
+"status": "pending",
 "uses": [
 "core"
 ],
 "verifier": 2,
 "verify": "43手・turn 30 まで正常に回った（result={'winner': 0, 'reason': 'deck_out', 'turn': 30}）",
-"vocab_ver": "eecf7bb8e066bca8"
+"vocab_ver": "080d8e7509b398eb"
 },
 "promoy23-049": {
 "by": "rule",
@@ -47,7 +48,7 @@
 ],
 "verifier": 2,
 "verify": "43手・turn 30 まで正常に回った（result={'winner': 0, 'reason': 'deck_out', 'turn': 30}）",
-"vocab_ver": "18162277583e8ec7"
+"vocab_ver": "5f34b3565654dc71"
 },
 "promoy23-067": {
 "by": "rule",
@@ -65,7 +66,7 @@
 ],
 "verifier": 2,
 "verify": "43手・turn 30 まで正常に回った（result={'winner': 0, 'reason': 'deck_out', 'turn': 30}）",
-"vocab_ver": "1bce20b9bc727b0f"
+"vocab_ver": "407bf07b508c00b8"
 },
 "promoy23-078": {
 "by": "rule",
@@ -81,7 +82,37 @@
 ],
 "verifier": 2,
 "verify": "43手・turn 30 まで正常に回った（result={'winner': 0, 'reason': 'deck_out', 'turn': 30}）",
-"vocab_ver": "c5c635ced7516b5b"
+"vocab_ver": "77cda07e62e901d1"
+},
+"promoy23-082": {
+"by": "rule",
+"checks": {},
+"def_hash": "c16d65462ee29424",
+"status": "pending",
+"uses": [
+"core",
+"kw:triple_breaker"
+],
+"verifier": 2,
+"verify_error": "Traceback (most recent call last): |   File \"/home/claude/dmpj/dmsim/engine/verify.py\", line 42, in verify_card |     spec = sc.try_card(rules, card_id) |   File \"/home/claude/dmpj/dmsim/engine/scenario.py\", line 94, in try_card |     hit = next((probe.s.cards[c].defn for c in pool if probe.filter_match(c, f)), None) | TO",
+"vocab_ver": "91d9148ad6b9aa6f"
+},
+"promoy23-083": {
+"by": "rule",
+"checks": {
+"effect": "skip",
+"text": "ok"
+},
+"def_hash": "0611d756b2114310",
+"status": "approved",
+"uses": [
+"core",
+"kw:double_breaker",
+"kw:yobinion"
+],
+"verifier": 2,
+"verify": "43手・turn 30 まで正常に回った（result={'winner': 0, 'reason': 'deck_out', 'turn': 30}）",
+"vocab_ver": "7c81c851bf2a4310"
 },
 "promoy23-086": {
 "by": "rule",
@@ -99,7 +130,7 @@
 ],
 "verifier": 2,
 "verify": "43手・turn 30 まで正常に回った（result={'winner': 0, 'reason': 'deck_out', 'turn': 30}）",
-"vocab_ver": "cf4eca5aca80360e"
+"vocab_ver": "0c8945437d2c11b0"
 },
 "promoy23-099": {
 "by": "rule",
@@ -116,7 +147,7 @@
 ],
 "verifier": 2,
 "verify": "43手・turn 30 まで正常に回った（result={'winner': 0, 'reason': 'deck_out', 'turn': 30}）",
-"vocab_ver": "3dfe1d3fa1151c82"
+"vocab_ver": "0511e86a817cf606"
 },
 "promoy23-spd1106": {
 "by": "rule",
@@ -134,6 +165,6 @@
 ],
 "verifier": 2,
 "verify": "43手・turn 30 まで正常に回った（result={'winner': 0, 'reason': 'deck_out', 'turn': 30}）",
-"vocab_ver": "ed3228b11b8ea48f"
+"vocab_ver": "3a17a823528b583f"
 }
 }

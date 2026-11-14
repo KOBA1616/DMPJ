@@ -1,4 +1,21 @@
 {
+"dmex10-015": {
+"by": "rule",
+"checks": {
+"effect": "skip",
+"text": "fail"
+},
+"def_hash": "806348cc9fed66a2",
+"status": "pending",
+"uses": [
+"core",
+"kw:s_back_darkness",
+"op:modify"
+],
+"verifier": 2,
+"verify_error": "キーワード s_back_darkness(S・バック-闇（闇のカードを自分のシールドゾーンから手札に加える時、そのカードを捨ててもよい。そうした場合、コストを支払わずにこのカードを実行する）) が原文に無い",
+"vocab_ver": "fdb12153c586aa70"
+},
 "dmex10-019": {
 "by": "check",
 "checks": {
@@ -33,6 +50,23 @@
 "verifier": 2,
 "verify": "43手・turn 30 まで正常に回った（result={'winner': 0, 'reason': 'deck_out', 'turn': 30}）",
 "vocab_ver": "add11733818ec716"
+},
+"dmex10-021": {
+"by": "rule",
+"checks": {
+"effect": "skip",
+"text": "fail"
+},
+"def_hash": "c69ff61f85f9392d",
+"status": "pending",
+"uses": [
+"core",
+"kw:s_back_fire",
+"op:destroy"
+],
+"verifier": 2,
+"verify_error": "キーワード s_back_fire(S・バック-火（火のカードを自分のシールドゾーンから手札に加える時、そのカードを捨ててもよい。そうした場合、コストを支払わずにこのカードを実行する）) が原文に無い",
+"vocab_ver": "bb808666227261d5"
 },
 "dmex10-032": {
 "by": "check",

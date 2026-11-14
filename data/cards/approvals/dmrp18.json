@@ -1,4 +1,90 @@
 {
+"dmrp18-004": {
+"by": "rule",
+"checks": {
+"effect": "skip",
+"text": "fail"
+},
+"def_hash": "9075b3486382eee3",
+"status": "pending",
+"uses": [
+"core",
+"kw:g_strike",
+"op:choose",
+"op:draw",
+"op:if",
+"op:may",
+"op:move"
+],
+"verifier": 2,
+"verify_error": "移動先 bz が原文に無い",
+"vocab_ver": "1af58b40edd788c3"
+},
+"dmrp18-013": {
+"by": "rule",
+"checks": {},
+"def_hash": "ea1ae2bcbb264b0b",
+"status": "pending",
+"uses": [
+"core",
+"kw:g_strike",
+"op:may",
+"op:play_free",
+"op:tap"
+],
+"verifier": 2,
+"verify_error": "Traceback (most recent call last): |   File \"/home/claude/dmpj/dmsim/engine/verify.py\", line 42, in verify_card |     spec = sc.try_card(rules, card_id) |   File \"/home/claude/dmpj/dmsim/engine/scenario.py\", line 94, in try_card |     hit = next((probe.s.cards[c].defn for c in pool if probe.filter_match(c, f)), None) | TO",
+"vocab_ver": "ece7a36cbbe57f1b"
+},
+"dmrp18-015": {
+"by": "rule",
+"checks": {},
+"def_hash": "25bf07b176ce1085",
+"status": "pending",
+"uses": [
+"core",
+"kw:g_strike",
+"op:draw",
+"op:may",
+"op:modify",
+"op:play_free"
+],
+"verifier": 2,
+"verify_error": "Traceback (most recent call last): |   File \"/home/claude/dmpj/dmsim/engine/verify.py\", line 42, in verify_card |     spec = sc.try_card(rules, card_id) |   File \"/home/claude/dmpj/dmsim/engine/scenario.py\", line 94, in try_card |     hit = next((probe.s.cards[c].defn for c in pool if probe.filter_match(c, f)), None) | TO",
+"vocab_ver": "6925fa408fc994b2"
+},
+"dmrp18-017": {
+"by": "rule",
+"checks": {},
+"def_hash": "33d769a10724e5f3",
+"status": "pending",
+"uses": [
+"core",
+"kw:g_strike",
+"op:may",
+"op:modify",
+"op:play_free"
+],
+"verifier": 2,
+"verify_error": "Traceback (most recent call last): |   File \"/home/claude/dmpj/dmsim/engine/verify.py\", line 42, in verify_card |     spec = sc.try_card(rules, card_id) |   File \"/home/claude/dmpj/dmsim/engine/scenario.py\", line 94, in try_card |     hit = next((probe.s.cards[c].defn for c in pool if probe.filter_match(c, f)), None) | TO",
+"vocab_ver": "dae7e0b4c0c1b0e0"
+},
+"dmrp18-021": {
+"by": "rule",
+"checks": {},
+"def_hash": "7eb67f8275c8012e",
+"status": "pending",
+"uses": [
+"core",
+"kw:g_strike",
+"op:force_battle",
+"op:may",
+"op:play_free"
+],
+"verifier": 2,
+"verify_error": "Traceback (most recent call last): |   File \"/home/claude/dmpj/dmsim/engine/verify.py\", line 42, in verify_card |     spec = sc.try_card(rules, card_id) |   File \"/home/claude/dmpj/dmsim/engine/scenario.py\", line 94, in try_card |     hit = next((probe.s.cards[c].defn for c in pool if probe.filter_match(c, f)), None) | TO",
+"vocab_ver": "5636470627ad5da4"
+},
 "dmrp18-023": {
 "by": "rule",
 "checks": {
@@ -17,7 +103,7 @@
 ],
 "verifier": 2,
 "verify": "43手・turn 30 まで正常に回った（result={'winner': 0, 'reason': 'deck_out', 'turn': 30}）",
-"vocab_ver": "10de945041eafce4"
+"vocab_ver": "340aa37ef6a809db"
 },
 "dmrp18-030": {
 "by": "rule",
@@ -35,7 +121,7 @@
 ],
 "verifier": 2,
 "verify": "43手・turn 30 まで正常に回った（result={'winner': 0, 'reason': 'deck_out', 'turn': 30}）",
-"vocab_ver": "e8cdb0ec05cf50d6"
+"vocab_ver": "9432aece89b22f26"
 },
 "dmrp18-035": {
 "by": "rule",
@@ -53,7 +139,26 @@
 ],
 "verifier": 2,
 "verify": "43手・turn 30 まで正常に回った（result={'winner': 0, 'reason': 'deck_out', 'turn': 30}）",
-"vocab_ver": "2d2570e601bbb7b9"
+"vocab_ver": "1c87da1298807f57"
+},
+"dmrp18-039": {
+"by": "check",
+"checks": {
+"effect": "ok",
+"text": "ok"
+},
+"def_hash": "9944c073b64a4c9b",
+"status": "approved",
+"uses": [
+"core",
+"kw:s_trigger",
+"op:bounce",
+"op:draw",
+"op:if"
+],
+"verifier": 2,
+"verify": "43手・turn 30 まで正常に回った（result={'winner': 0, 'reason': 'deck_out', 'turn': 30}）",
+"vocab_ver": "1471bfaef34f2a44"
 },
 "dmrp18-043": {
 "by": "check",
@@ -74,6 +179,25 @@
 "verify": "43手・turn 30 まで正常に回った（result={'winner': 0, 'reason': 'deck_out', 'turn': 30}）",
 "vocab_ver": "7e0ce6467a205301"
 },
+"dmrp18-052": {
+"by": "check",
+"checks": {
+"effect": "ok",
+"text": "ok"
+},
+"def_hash": "1b581a33a26a4c1e",
+"status": "approved",
+"uses": [
+"core",
+"kw:s_trigger",
+"op:draw",
+"op:if",
+"op:move"
+],
+"verifier": 2,
+"verify": "43手・turn 30 まで正常に回った（result={'winner': 0, 'reason': 'deck_out', 'turn': 30}）",
+"vocab_ver": "6ff8103aac074248"
+},
 "dmrp18-060": {
 "by": "rule",
 "checks": {
@@ -89,7 +213,7 @@
 ],
 "verifier": 2,
 "verify": "43手・turn 30 まで正常に回った（result={'winner': 0, 'reason': 'deck_out', 'turn': 30}）",
-"vocab_ver": "25ac8dad7af014ee"
+"vocab_ver": "e902490ce9931013"
 },
 "dmrp18-061": {
 "by": "rule",
@@ -105,7 +229,7 @@
 ],
 "verifier": 2,
 "verify": "43手・turn 30 まで正常に回った（result={'winner': 0, 'reason': 'deck_out', 'turn': 30}）",
-"vocab_ver": "c5c635ced7516b5b"
+"vocab_ver": "77cda07e62e901d1"
 },
 "dmrp18-062": {
 "by": "rule",
@@ -123,7 +247,7 @@
 ],
 "verifier": 2,
 "verify": "43手・turn 30 まで正常に回った（result={'winner': 0, 'reason': 'deck_out', 'turn': 30}）",
-"vocab_ver": "30b8fc35110ca634"
+"vocab_ver": "92f279f0930c829c"
 },
 "dmrp18-068": {
 "by": "rule",
@@ -138,7 +262,7 @@
 ],
 "verifier": 2,
 "verify": "43手・turn 30 まで正常に回った（result={'winner': 0, 'reason': 'deck_out', 'turn': 30}）",
-"vocab_ver": "eecf7bb8e066bca8"
+"vocab_ver": "080d8e7509b398eb"
 },
 "dmrp18-070": {
 "by": "rule",
@@ -155,7 +279,7 @@
 ],
 "verifier": 2,
 "verify": "43手・turn 30 まで正常に回った（result={'winner': 0, 'reason': 'deck_out', 'turn': 30}）",
-"vocab_ver": "d6fe55ef05408dce"
+"vocab_ver": "10015b301df851ad"
 },
 "dmrp18-071": {
 "by": "rule",
@@ -173,7 +297,7 @@
 ],
 "verifier": 2,
 "verify": "43手・turn 30 まで正常に回った（result={'winner': 0, 'reason': 'deck_out', 'turn': 30}）",
-"vocab_ver": "51187b3b40d24c1e"
+"vocab_ver": "899b0faa0c4e073a"
 },
 "dmrp18-078": {
 "by": "rule",
@@ -191,7 +315,7 @@
 ],
 "verifier": 2,
 "verify": "43手・turn 30 まで正常に回った（result={'winner': 0, 'reason': 'deck_out', 'turn': 30}）",
-"vocab_ver": "918c5ccb3bafc309"
+"vocab_ver": "cc5821e13fd37ad4"
 },
 "dmrp18-079": {
 "by": "check",
@@ -226,7 +350,7 @@
 ],
 "verifier": 2,
 "verify": "43手・turn 30 まで正常に回った（result={'winner': 0, 'reason': 'deck_out', 'turn': 30}）",
-"vocab_ver": "5e6ac6d3d49e3dfc"
+"vocab_ver": "0f2750bb2387f67c"
 },
 "dmrp18-091": {
 "by": "rule",
@@ -243,7 +367,7 @@
 ],
 "verifier": 2,
 "verify": "43手・turn 30 まで正常に回った（result={'winner': 0, 'reason': 'deck_out', 'turn': 30}）",
-"vocab_ver": "813309acef383fc8"
+"vocab_ver": "5e561ad4ff9bda2f"
 },
 "dmrp18-093": {
 "by": "rule",
@@ -258,6 +382,20 @@
 ],
 "verifier": 2,
 "verify": "43手・turn 30 まで正常に回った（result={'winner': 0, 'reason': 'deck_out', 'turn': 30}）",
-"vocab_ver": "eecf7bb8e066bca8"
+"vocab_ver": "080d8e7509b398eb"
+},
+"dmrp18-a14": {
+"by": "rule",
+"checks": {},
+"def_hash": "083a3a534e8c678f",
+"status": "pending",
+"uses": [
+"core",
+"kw:double_breaker",
+"op:play_free"
+],
+"verifier": 2,
+"verify_error": "Traceback (most recent call last): |   File \"/home/claude/dmpj/dmsim/engine/verify.py\", line 42, in verify_card |     spec = sc.try_card(rules, card_id) |   File \"/home/claude/dmpj/dmsim/engine/scenario.py\", line 94, in try_card |     hit = next((probe.s.cards[c].defn for c in pool if probe.filter_match(c, f)), None) | TO",
+"vocab_ver": "162e6007290ff607"
 }
 }

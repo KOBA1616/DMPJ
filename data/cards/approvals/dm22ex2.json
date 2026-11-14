@@ -1,4 +1,21 @@
 {
+"dm22ex2-017": {
+"by": "check",
+"checks": {
+"effect": "ok",
+"text": "ok"
+},
+"def_hash": "aedc11ec7a69ad0f",
+"status": "approved",
+"uses": [
+"core",
+"kw:super_s_trigger",
+"op:move"
+],
+"verifier": 2,
+"verify": "43手・turn 30 まで正常に回った（result={'winner': 0, 'reason': 'deck_out', 'turn': 30}）",
+"vocab_ver": "b83db8fdd47a0922"
+},
 "dm22ex2-021": {
 "by": "rule",
 "checks": {
@@ -20,6 +37,22 @@
 "verify_error": "移動先 bz が原文に無い",
 "vocab_ver": "49f14d784113c551"
 },
+"dm22ex2-035": {
+"by": "rule",
+"checks": {},
+"def_hash": "e1eb86c933fa5dc4",
+"status": "pending",
+"uses": [
+"core",
+"op:choose",
+"op:may",
+"op:move",
+"op:play_free"
+],
+"verifier": 2,
+"verify_error": "Traceback (most recent call last): |   File \"/home/claude/dmpj/dmsim/engine/verify.py\", line 42, in verify_card |     spec = sc.try_card(rules, card_id) |   File \"/home/claude/dmpj/dmsim/engine/scenario.py\", line 94, in try_card |     hit = next((probe.s.cards[c].defn for c in pool if probe.filter_match(c, f)), None) | TO",
+"vocab_ver": "cc4ca0cd9a11c8e0"
+},
 "dm22ex2-055": {
 "by": "check",
 "checks": {
@@ -37,5 +70,21 @@
 "verifier": 2,
 "verify": "43手・turn 30 まで正常に回った（result={'winner': 0, 'reason': 'deck_out', 'turn': 30}）",
 "vocab_ver": "4ade8c0f65c440a1"
+},
+"dm22ex2-063": {
+"by": "rule",
+"checks": {},
+"def_hash": "5de88d9fa75d8588",
+"status": "pending",
+"uses": [
+"core",
+"op:choose",
+"op:may",
+"op:modify",
+"op:play_free"
+],
+"verifier": 2,
+"verify_error": "Traceback (most recent call last): |   File \"/home/claude/dmpj/dmsim/engine/verify.py\", line 42, in verify_card |     spec = sc.try_card(rules, card_id) |   File \"/home/claude/dmpj/dmsim/engine/scenario.py\", line 94, in try_card |     hit = next((probe.s.cards[c].defn for c in pool if probe.filter_match(c, f)), None) | TO",
+"vocab_ver": "7262568a11e228d8"
 }
 }
