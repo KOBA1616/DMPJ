@@ -83,3 +83,11 @@ def test_knight_normal_game_has_no_loop(rules):
     res, eng = play_game(rules, deck, ["T001"] * 40, 0, max_turn=4, budget=200, lock_judge=lock_probe)
     v = judge(res, eng)
     assert not v.stage1.ok and not v.stage2.ok
+
+
+def test_mana_only_finite_repeat_is_not_a_loop():
+    """マナを払って同じ札を使い直すだけの有限の繰り返し（差分が自分のマナの減りだけ）は段1に数えない（2026-11-14）。"""
+    lp = {"source": "pattern", "verified": True, "kind": "finite", "laps": 3, "stocked": 3, "delta": {"untapped_mana:0": -1},
+          "limit_est": 4, "own_turn": 2}
+    v = judge(GameResult(seed=0, first_player=0, loops=[lp]), _eng([]))
+    assert not v.stage1.ok and "払うだけ" in v.stage1.reason
