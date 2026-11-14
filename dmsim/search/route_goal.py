@@ -65,9 +65,10 @@ def _drawout_frac(eng, cid: str, me: int) -> float:
     """引き切りの進み 0..1。今その札を出したとして、相手のターンのはじめまでに引き切れるなら 1。"""
     from dmsim.search.access import drawout
     d = drawout(eng, cid, me)
-    if d is None or d["need"] == 0:
+    if d is None or d["need"] == 0 or d["dig_before"] == 0:
         return 1.0
-    return max(0.0, 1.0 - d["dig_before"] / d["need"])
+    base = d["need_pre"] if d["pre"] and d["dig_before"] < d["need"] - d["own_turn"] - d["scheduled"] else d["need"]
+    return max(0.0, 1.0 - d["dig_before"] / max(1, base))
 
 
 def count(eng, p: dict, me: int = 0) -> int:
