@@ -454,6 +454,12 @@ def convert(row: dict) -> dict | None:
             return None
         for ab in extra:
             ab["if"] = {"all": [ab["if"], WAVE_COND]} if "if" in ab else dict(WAVE_COND)
+    if re.search(r"[0０]以下に(は)?ならない|[1１]より少なくならない", row.get("text", "")):
+        for ab in extra:        # 「ただし、コストは0以下にはならない」= 軽減後の最低は1（noise で照合から除いた分をここで反映）
+            m = ab.get("mod") or {}
+            c = m.get("cost")
+            if (isinstance(c, int) and c < 0) or (isinstance(c, dict) and c.get("amount", 0) < 0):
+                m["cost_min"] = 1
     if extra:
         card["abilities"] = extra
     if kws or extra:

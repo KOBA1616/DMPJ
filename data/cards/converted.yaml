@@ -1600,6 +1600,7 @@ cards:
         zone: hand
         owner: opp
         count: 1
+        chooser: random
   keywords:
   - s_trigger
   text: 'S・トリガー(このクリーチャーをシールドゾーンから手札に加える時、コストを支払わずにすぐ召喚してもよい)
@@ -1740,6 +1741,7 @@ cards:
         zone: hand
         owner: opp
         count: 1
+        chooser: random
   text: このクリーチャーが攻撃する時、相手の手札を１枚見ないで選び、捨てさせる。
   source:
     official: dm12-046
@@ -2884,6 +2886,7 @@ cards:
         zone: hand
         owner: opp
         count: 1
+        chooser: random
   keywords:
   - s_trigger
   text: 'S・トリガー(このクリーチャーをシールドゾーンから手札に加える時、コストを支払わずにすぐ召喚してもよい)
@@ -3345,6 +3348,7 @@ cards:
         zone: hand
         owner: opp
         count: 1
+        chooser: random
   text: このクリーチャーが攻撃する時、相手の手札を１枚見ないで選び、捨てさせる。
   source:
     official: dm18-112
@@ -3420,6 +3424,7 @@ cards:
       zone: hand
       owner: opp
       count: 1
+      chooser: random
   text: 'S・トリガー(この呪文をシールドゾーンから手札に加える時、コストを支払わずにすぐ唱えてもよい)
 
     相手の手札を１枚見ないで選び、捨てさせる。'
@@ -5733,6 +5738,7 @@ cards:
         zone: hand
         owner: opp
         count: 1
+        chooser: random
   mana: 1
   text: '蛙紙の聖沌 fr09: ブロッカー（このクリーチャーをタップして、相手クリーチャーの攻撃先をこのクリーチャーに変更してもよい） / メガ・ラスト・バースト（このクリーチャーが離れて、手札、マナゾーン、または墓地に置かれた時、このカードの呪文側をコストを支払わずに唱えてもよい）
     ／ 聖沌忍法 メカ寄せの術: 相手の手札を１枚見ないで選び、捨てさせる。'
@@ -6319,6 +6325,7 @@ cards:
         zone: hand
         owner: opp
         count: 1
+        chooser: random
   keywords:
   - s_trigger
   text: 'S・トリガー（このクリーチャーをシールドゾーンから手札に加える時、コストを支払わずにすぐ召喚してもよい）
@@ -6488,6 +6495,7 @@ cards:
         zone: hand
         owner: opp
         count: 1
+        chooser: random
   keywords:
   - s_trigger
   text: 'S・トリガー（このクリーチャーをシールドゾーンから手札に加える時、コストを支払わずにすぐ召喚してもよい）
@@ -6877,6 +6885,7 @@ cards:
         race_has: ジョーカーズ
     mod:
       cost: -1
+      cost_min: 1
   text: 自分のジョーカーズ・クリーチャーの召喚コストを１少なくする。ただし、コストは０以下にはならない。
   source:
     official: dm24bd2-016
@@ -7096,6 +7105,7 @@ cards:
         race_has: ドラゴン
     mod:
       cost: -2
+      cost_min: 1
   text: 自分のドラゴン・クリーチャーの召喚コストを２少なくする。ただし、コストは０以下にはならない。
   source:
     official: dm24ex1-087
@@ -7116,6 +7126,7 @@ cards:
       zone: hand
       owner: opp
       count: 1
+      chooser: random
   - op: draw
     count: 1
   text: '相手の手札を１枚見ないで選び、捨てさせる。
@@ -7170,6 +7181,7 @@ cards:
         race_has: コマンド
     mod:
       cost: -2
+      cost_min: 1
   keywords:
   - blocker
   text: 'ブロッカー（このクリーチャーをタップして、相手クリーチャーの攻撃先をこのクリーチャーに変更してもよい）
@@ -7616,6 +7628,7 @@ cards:
         race_has: ドラゴン
     mod:
       cost: -2
+      cost_min: 1
   text: 自分のドラゴン・クリーチャーの召喚コストを２少なくする。ただし、コストは０以下にはならない。
   source:
     official: dm24ex4-pr058
@@ -7752,6 +7765,7 @@ cards:
         race_has: ドラゴン
     mod:
       cost: -2
+      cost_min: 1
   text: 自分のドラゴン・クリーチャーの召喚コストを２少なくする。ただし、コストは０以下にはならない。
   source:
     official: dm24ex4-098
@@ -7975,6 +7989,7 @@ cards:
         race_has: ドラゴン
     mod:
       cost: -2
+      cost_min: 1
   text: 自分のドラゴン・クリーチャーの召喚コストを２少なくする。ただし、コストは０以下にはならない。
   source:
     official: dm24rp3-td03
@@ -8294,6 +8309,7 @@ cards:
         race_has: ビートジョッキー
     mod:
       cost: -1
+      cost_min: 1
   text: 自分のビートジョッキーの召喚コストを１少なくする。ただしコストは０以下にはならない。
   source:
     official: dm24sd1-009
@@ -8605,6 +8621,7 @@ cards:
         race_has: コマンド
     mod:
       cost: -2
+      cost_min: 1
   keywords:
   - blocker
   text: 'ブロッカー（このクリーチャーをタップして、相手クリーチャーの攻撃先をこのクリーチャーに変更してもよい）
@@ -9216,6 +9233,7 @@ cards:
         race_has: ドラゴン
     mod:
       cost: -2
+      cost_min: 1
   text: 自分のドラゴン・クリーチャーの召喚コストを２少なくする。ただしコストは０以下にならない。
   source:
     official: dm26ex2-088
@@ -9755,6 +9773,7 @@ cards:
         race_has: ジョーカーズ
     mod:
       cost: -1
+      cost_min: 1
   keywords:
   - g_strike
   text: '{GS} G・ストライク（このカードを自分のシールドゾーンから手札に加える時、表向きにし、相手のクリーチャーを１体選んでもよい。このターン、そのクリーチャーは攻撃できない）
@@ -10046,6 +10065,7 @@ cards:
         race_has: ドラゴン
     mod:
       cost: -2
+      cost_min: 1
   text: 自分のドラゴン・クリーチャーの召喚コストを２少なくする。ただしコストは０以下にならない。
   source:
     official: dm26sd1-r012
@@ -10116,6 +10136,7 @@ cards:
         race_has: ドラゴン
     mod:
       cost: -2
+      cost_min: 1
   text: 自分のドラゴン・クリーチャーの召喚コストを２少なくする。ただしコストは０以下にならない。
   source:
     official: dm26sd1-g011
@@ -14538,6 +14559,7 @@ cards:
         zone: hand
         owner: opp
         count: 1
+        chooser: random
   text: このクリーチャーが攻撃する時、相手の手札を１枚見ないで選び、捨てさせる。
   source:
     official: dmc34-046
@@ -14919,6 +14941,7 @@ cards:
         zone: hand
         owner: opp
         count: 1
+        chooser: random
   keywords:
   - s_trigger
   text: 'S・トリガー(このクリーチャーをシールドゾーンから手札に加える時、コストを支払わずにすぐ召喚してもよい)
@@ -16292,6 +16315,7 @@ cards:
         zone: hand
         owner: opp
         count: 1
+        chooser: random
   text: このクリーチャーが攻撃する時、相手の手札を１枚見ないで選び、捨てさせる。
   source:
     official: dmc61-073
@@ -16341,6 +16365,7 @@ cards:
       zone: hand
       owner: opp
       count: 1
+      chooser: random
   text: 'S・トリガー(この呪文をシールドゾーンから手札に加える時、コストを支払わずにすぐ唱えてもよい)
 
     相手の手札を１枚見ないで選び、捨てさせる。'
@@ -17480,6 +17505,7 @@ cards:
         zone: hand
         owner: opp
         count: 1
+        chooser: random
   keywords:
   - s_trigger
   text: 'S・トリガー（このクリーチャーをシールドゾーンから手札に加える時、コストを支払わずにすぐ召喚してもよい）
@@ -17589,6 +17615,7 @@ cards:
         zone: hand
         owner: opp
         count: 1
+        chooser: random
   text: このクリーチャーが攻撃する時、相手の手札を１枚見ないで選び、捨てさせる。
   source:
     official: dmd02-012
@@ -19423,6 +19450,7 @@ cards:
       zone: hand
       owner: opp
       count: 1
+      chooser: random
   - op: draw
     count: 1
   text: '相手の手札を１枚見ないで選び、捨てさせる。
@@ -19488,6 +19516,7 @@ cards:
       zone: hand
       owner: opp
       count: 1
+      chooser: random
   - op: draw
     count: 1
   text: '相手の手札を１枚見ないで選び、捨てさせる。
@@ -20791,6 +20820,7 @@ cards:
       zone: hand
       owner: opp
       count: 1
+      chooser: random
   - op: draw
     count: 1
   text: '相手の手札を１枚見ないで選び、捨てさせる。
@@ -20863,6 +20893,7 @@ cards:
         race_has: ジョーカーズ
     mod:
       cost: -1
+      cost_min: 1
   text: 自分のジョーカーズの召喚コストを１少なくする。ただし、コストは０以下にはならない。
   source:
     official: dmex16-018
@@ -20890,6 +20921,7 @@ cards:
         race_has: メタリカ
     mod:
       cost: -1
+      cost_min: 1
   text: 自分のメタリカの召喚コストを１少なくする。ただしコストは０以下にはならない。
   source:
     official: dmex16-090
@@ -20917,6 +20949,7 @@ cards:
         race_has: ビートジョッキー
     mod:
       cost: -1
+      cost_min: 1
   text: 自分のビートジョッキーの召喚コストを１少なくする。ただしコストは０以下にはならない。
   source:
     official: dmex16-095
@@ -21108,6 +21141,7 @@ cards:
         race_has: ジョーカーズ
     mod:
       cost: -1
+      cost_min: 1
   text: 自分のジョーカーズの召喚コストを１少なくする。ただし、コストは０以下にはならない。
   source:
     official: dmex19-056
@@ -21149,6 +21183,7 @@ cards:
         race_has: ムートピア
     mod:
       cost: -2
+      cost_min: 1
   text: 'ジャストダイバー（このクリーチャーが出た時、次の自分のターンのはじめまで、このクリーチャーは相手に選ばれず、攻撃されない）
 
     自分のムートピアの召喚コストを２少なくする。ただし、コストは０以下にはならない。'
@@ -22404,6 +22439,7 @@ cards:
         zone: hand
         owner: opp
         count: 2
+        chooser: random
   source:
     official: dm21-045
     review: pending
@@ -24914,6 +24950,7 @@ cards:
               zone: hand
               owner: opp
               count: 1
+              chooser: random
         - - op: destroy
             select:
               zone: bz
@@ -25295,6 +25332,7 @@ cards:
         race_has: ドラゴン
     mod:
       cost: -1
+      cost_min: 1
   source:
     official: dm22ex2-074
     review: pending
@@ -26490,6 +26528,7 @@ cards:
         - tamaseed
     mod:
       cost: -2
+      cost_min: 1
   source:
     official: dm22rp2x-032
     review: pending
@@ -28300,6 +28339,7 @@ cards:
         zone: hand
         owner: opp
         count: 1
+        chooser: random
   - kind: trigger
     when:
       event: turn_end
@@ -29208,6 +29248,7 @@ cards:
         zone: hand
         owner: opp
         count: 1
+        chooser: random
   source:
     official: dm23bd5-007
     review: pending
@@ -32225,6 +32266,7 @@ cards:
         zone: hand
         owner: opp
         count: 1
+        chooser: random
   - kind: trigger
     when:
       event: move
@@ -34941,6 +34983,7 @@ cards:
         - ジャイアント
     mod:
       cost: -2
+      cost_min: 1
   - kind: trigger
     when:
       event: attack
@@ -42977,6 +43020,7 @@ cards:
       zone: hand
       owner: opp
       count: 1
+      chooser: random
   source:
     official: dm24ex1-076
     review: pending
@@ -43406,6 +43450,7 @@ cards:
             zone: hand
             owner: opp
             count: 1
+            chooser: random
   - name: クエイクス・ハンド
     types:
     - spell
@@ -45469,6 +45514,7 @@ cards:
             zone: hand
             owner: opp
             count: 1
+            chooser: random
   source:
     official: dm24ex3-078
     review: pending
@@ -45757,6 +45803,7 @@ cards:
   - kind: static
     affects: self
     mod:
+      cost_min: 1
       cost:
         amount: -1
         count:
@@ -46682,6 +46729,7 @@ cards:
           zone: hand
           owner: opp
           count: 1
+          chooser: random
   - kind: trigger
     when:
       event: move
@@ -47069,6 +47117,7 @@ cards:
         race_has: ドラゴン
     mod:
       cost: -1
+      cost_min: 1
   - kind: trigger
     when:
       event: move
@@ -47223,6 +47272,7 @@ cards:
         race_has: コマンド
     mod:
       cost: -1
+      cost_min: 1
   - kind: static
     affects:
       owner: you
@@ -47232,6 +47282,7 @@ cards:
         - spell
     mod:
       cost: -1
+      cost_min: 1
   source:
     official: dm24ex4-083
     review: pending
@@ -48511,6 +48562,7 @@ cards:
           zone: hand
           owner: opp
           count: 1
+          chooser: random
   source:
     official: dm24rp2-062
     review: pending
@@ -48907,6 +48959,7 @@ cards:
         cost_ge: 6
     mod:
       cost: -1
+      cost_min: 1
   - kind: trigger
     when:
       event: move
@@ -50406,6 +50459,7 @@ cards:
       zone: hand
       owner: opp
       count: 1
+      chooser: random
     as: d
   - op: if
     cond:
@@ -54693,6 +54747,7 @@ cards:
         race_has: ドラゴン
     mod:
       cost: -2
+      cost_min: 1
   - kind: replace
     when:
       event: move
@@ -55546,6 +55601,7 @@ cards:
         owner: opp
         count: 1
         chooser: opp
+        chooser: random
   source:
     official: dm25rp2-065
     review: pending
@@ -56178,6 +56234,7 @@ cards:
         zone: hand
         owner: opp
         count: 1
+        chooser: random
   - kind: trigger
     when:
       event: move
@@ -59226,6 +59283,7 @@ cards:
       filter:
         name_has: 真久間メガ
     mod:
+      cost_min: 1
       cost:
         amount: -1
         count:
@@ -60031,6 +60089,7 @@ cards:
       filter:
         name_has: メガ・マグマ・ドラゴン
     mod:
+      cost_min: 1
       cost:
         amount: -1
         count:
@@ -60617,6 +60676,7 @@ cards:
         cost_ge: 6
     mod:
       cost: -1
+      cost_min: 1
   - kind: trigger
     when:
       event: move
@@ -62072,6 +62132,7 @@ cards:
       filter:
         name_has: インビンシブル・タワー
     mod:
+      cost_min: 1
       cost:
         amount: -3
         count:
@@ -62153,6 +62214,7 @@ cards:
     zone: hand
     affects: self
     mod:
+      cost_min: 1
       cost:
         amount: -1
         count:
@@ -65220,6 +65282,7 @@ cards:
             zone: hand
             owner: opp
             count: 1
+            chooser: random
   source:
     official: dm26sd1-f010
     review: pending
@@ -65881,6 +65944,7 @@ cards:
                 zone: hand
                 owner: opp
                 count: 1
+                chooser: random
           - - op: mana_put
               select:
                 zone: deck
@@ -67689,6 +67753,7 @@ cards:
         zone: hand
         owner: opp
         count: 1
+        chooser: random
   source:
     official: dm28-027
     review: pending
@@ -69958,6 +70023,7 @@ cards:
         zone: hand
         owner: opp
         count: 1
+        chooser: random
   - kind: trigger
     when:
       event: move
@@ -71965,6 +72031,7 @@ cards:
         zone: hand
         owner: opp
         count: 1
+        chooser: random
   source:
     official: dm36-092
     review: pending
@@ -75187,6 +75254,7 @@ cards:
         zone: hand
         owner: opp
         count: 1
+        chooser: random
   source:
     official: dmbd16-teki008
     review: pending
@@ -75698,6 +75766,7 @@ cards:
         zone: hand
         owner: opp
         count: 1
+        chooser: random
   source:
     official: dmd04-004
     review: pending
@@ -75728,6 +75797,7 @@ cards:
         race_has: 魔導具
     mod:
       cost: -1
+      cost_min: 1
   - kind: trigger
     when:
       event: move
@@ -78865,6 +78935,7 @@ cards:
         zone: hand
         owner: opp
         count: 1
+        chooser: random
   source:
     official: dmc60-010
     review: pending
@@ -79794,6 +79865,7 @@ cards:
           zone: hand
           owner: opp
           count: 3
+          chooser: random
       - op: may
         body:
         - op: destroy
@@ -83798,6 +83870,7 @@ cards:
         zone: hand
         owner: opp
         count: 2
+        chooser: random
   source:
     official: dmd35-001
     review: pending
@@ -84688,6 +84761,7 @@ cards:
     affects:
       name: 光サス奇跡ノ裁徒
     mod:
+      cost_min: 1
       cost:
         amount: -1
         count:
@@ -86740,6 +86814,7 @@ cards:
         zone: hand
         owner: opp
         count: 1
+        chooser: random
   source:
     official: dmex06-091
     review: pending
@@ -87357,6 +87432,7 @@ cards:
     affects:
       name: 凶鬼14号 ヴェガングル
     mod:
+      cost_min: 1
       cost:
         amount: -2
         count:
@@ -89947,6 +90023,7 @@ cards:
     affects:
       name: 復讐のバイス・カイザーＺ
     mod:
+      cost_min: 1
       cost:
         amount: -1
         count:
@@ -90231,6 +90308,7 @@ cards:
         zone: hand
         owner: opp
         count: 1
+        chooser: random
   source:
     official: dmex10-022
     review: pending
@@ -90572,6 +90650,7 @@ cards:
         zone: hand
         owner: opp
         count: 1
+        chooser: random
   source:
     official: dmex10-042
     review: pending
@@ -91068,6 +91147,7 @@ cards:
     zone: hand
     affects: self
     mod:
+      cost_min: 1
       cost:
         amount: -1
         count:
@@ -91378,6 +91458,7 @@ cards:
         race_has: ファンキー・ナイトメア
     mod:
       cost: -1
+      cost_min: 1
   - kind: trigger
     when:
       event: move
@@ -93714,6 +93795,7 @@ cards:
         zone: hand
         owner: opp
         count: 1
+        chooser: random
   source:
     official: dmex13-075
     review: pending
@@ -94344,6 +94426,7 @@ cards:
         zone: hand
         owner: opp
         count: 1
+        chooser: random
     else:
     - op: modal
       count: 1
@@ -96804,6 +96887,7 @@ cards:
     zone: hand
     affects: self
     mod:
+      cost_min: 1
       cost:
         amount: -1
         count:
@@ -105668,6 +105752,7 @@ cards:
           zone: hand
           owner: opp
           count: 1
+          chooser: random
   source:
     official: dmr07-012
     review: pending
@@ -106740,6 +106825,7 @@ cards:
         zone: hand
         owner: opp
         count: 1
+        chooser: random
   source:
     official: dmr08-045
     review: pending
@@ -107482,6 +107568,7 @@ cards:
         zone: hand
         owner: opp
         count: 1
+        chooser: random
   source:
     official: dmr09-059
     review: pending
@@ -108424,6 +108511,7 @@ cards:
         zone: hand
         owner: opp
         count: 1
+        chooser: random
   source:
     official: dmr10-026
     review: pending
@@ -109462,6 +109550,7 @@ cards:
       zone: hand
       owner: opp
       count: 1
+      chooser: random
     as: gone
   - op: if
     cond:
@@ -110814,6 +110903,7 @@ cards:
           zone: hand
           owner: opp
           count: 1
+          chooser: random
   source:
     official: dmr13-026
     review: pending
@@ -112832,6 +112922,7 @@ cards:
             filter:
               races:
               - ファンキー・ナイトメア
+        chooser: random
   source:
     official: dmr15-012
     review: pending
@@ -117875,6 +117966,7 @@ cards:
           zone: hand
           owner: opp
           count: 1
+          chooser: random
   source:
     official: dmr18-058
     review: pending
@@ -118606,6 +118698,7 @@ cards:
           zone: hand
           owner: opp
           count: 1
+          chooser: random
   source:
     official: dmr19-069
     review: pending
@@ -126320,6 +126413,7 @@ cards:
         - spell
     mod:
       cost: -2
+      cost_min: 1
   - kind: trigger
     when:
       event: cast
@@ -129484,6 +129578,7 @@ cards:
     zone: hand
     affects: self
     mod:
+      cost_min: 1
       cost:
         amount: -1
         count:
@@ -137236,6 +137331,7 @@ cards:
         race_has: ディスタス
     mod:
       cost: -2
+      cost_min: 1
   - kind: static
     affects:
       zone: hand
@@ -137244,6 +137340,7 @@ cards:
         race_has: ディスペクター
     mod:
       cost: -2
+      cost_min: 1
   source:
     official: dmrp20-s09
     review: pending
@@ -151780,6 +151877,7 @@ cards:
       filter:
         name: 伝説の好敵手
     mod:
+      cost_min: 1
       cost:
         amount: -2
         count:
@@ -153596,6 +153694,7 @@ cards:
       zone: hand
       owner: opp
       count: 1
+      chooser: random
   text: S・トリガー（この呪文をシールドゾーンから手札に加える時、コストを支払わずにすぐ唱えてもよい）相手の手札を１枚見ないで選び、捨てさせる。
   source:
     official: promoy11-005
@@ -154256,6 +154355,7 @@ cards:
         race_has: グランセクト
     mod:
       cost: -1
+      cost_min: 1
   text: 自分のグランセクトの召喚コストを１少なくする。ただし、コストは０以下にならない。
   source:
     official: promoy16-101
@@ -154461,6 +154561,7 @@ cards:
         race_has: グランセクト
     mod:
       cost: -1
+      cost_min: 1
   text: 自分のグランセクトの召喚コストを１少なくする。ただし、コストは０以下にならない。
   source:
     official: promoy17-098
@@ -154638,6 +154739,7 @@ cards:
       zone: hand
       owner: opp
       count: 1
+      chooser: random
   - op: draw
     count: 1
   text: '相手の手札を１枚見ないで選び、捨てさせる。
@@ -154686,6 +154788,7 @@ cards:
       zone: hand
       owner: opp
       count: 1
+      chooser: random
   text: 'S・トリガー（この呪文をシールドゾーンから手札に加える時、コストを支払わずにすぐ唱えてもよい）
 
     相手の手札を１枚見ないで選び、捨てさせる。'
@@ -154901,6 +155004,7 @@ cards:
         race_has: ディスタス
     mod:
       cost: -1
+      cost_min: 1
   - kind: static
     affects: self
     mod:
@@ -155640,6 +155744,7 @@ cards:
         race_has: ドラゴン
     mod:
       cost: -2
+      cost_min: 1
   text: 自分のドラゴン・クリーチャーの召喚コストを２少なくする。ただし、コストは０以下にはならない。
   source:
     official: promoy23-042
@@ -159313,6 +159418,7 @@ cards:
       zone: hand
       owner: opp
       count: 1
+      chooser: random
   text: S・トリガー（この呪文をシールドゾーンから手札に加える時、コストを支払わずにすぐ唱えてもよい）相手の手札を１枚見ないで選び、捨てさせる。
   source:
     official: dmr17-079
@@ -160072,6 +160178,7 @@ cards:
       zone: hand
       owner: opp
       count: 1
+      chooser: random
   text: S・トリガー（この呪文をシールドゾーンから手札に加える時、コストを支払わずにすぐ唱えてもよい）相手の手札を１枚見ないで選び、捨てさせる。
   source:
     official: dmr21-073
@@ -160632,6 +160739,7 @@ cards:
         race_has: グランセクト
     mod:
       cost: -1
+      cost_min: 1
   text: 自分のグランセクトの召喚コストを１少なくする。ただし、コストは０以下にならない。
   source:
     official: dmrp01-092
@@ -160857,6 +160965,7 @@ cards:
         race_has: NEO
     mod:
       cost: -2
+      cost_min: 1
   text: 自分のNEOクリーチャーの召喚コストを２少なくする。ただし、コストは０以下にならない。
   source:
     official: dmrp03-054
@@ -162900,6 +163009,7 @@ cards:
     zone: hand
     affects: self
     mod:
+      cost_min: 1
       cost:
         amount: -1
         count:
@@ -163557,6 +163667,7 @@ cards:
     zone: hand
     affects: self
     mod:
+      cost_min: 1
       cost:
         amount: -1
         count:
@@ -165172,6 +165283,7 @@ cards:
         zone: hand
         owner: opp
         count: 2
+        chooser: random
   - kind: trigger
     when:
       event: attack
@@ -165821,6 +165933,7 @@ cards:
         zone: hand
         owner: opp
         count: 1
+        chooser: random
   - kind: static
     affects: self
     mod:
@@ -165867,6 +165980,7 @@ cards:
       zone: hand
       owner: opp
       count: 1
+      chooser: random
   text: '{GS} G・ストライク（この呪文を自分のシールドゾーンから手札に加える時、相手に見せ、相手のクリーチャーを１体選んでもよい。このターン、そのクリーチャーは攻撃できない）
 
     相手の手札を１枚見ないで選び、捨てさせる。'
@@ -166383,6 +166497,7 @@ cards:
         zone: hand
         owner: opp
         count: 1
+        chooser: random
   keywords:
   - s_trigger
   text: 'S・トリガー（このクリーチャーをシールドゾーンから手札に加える時、コストを支払わずにすぐ召喚してもよい）
@@ -166416,6 +166531,7 @@ cards:
         zone: hand
         owner: opp
         count: 1
+        chooser: random
   keywords:
   - s_trigger
   text: 'S・トリガー（このクリーチャーをシールドゾーンから手札に加える時、コストを支払わずにすぐ召喚してもよい）
@@ -166448,6 +166564,7 @@ cards:
         race_has: ディスタス
     mod:
       cost: -1
+      cost_min: 1
   - kind: static
     affects: self
     mod:
@@ -166589,6 +166706,7 @@ cards:
     zone: hand
     affects: self
     mod:
+      cost_min: 1
       cost:
         amount: -1
         count:
@@ -166703,6 +166821,7 @@ cards:
         race_has: 墓地にカードが2枚以上あればこの
     mod:
       cost: -2
+      cost_min: 1
   - kind: static
     affects: self
     mod:
@@ -168183,6 +168302,7 @@ cards:
         race_has: ディスタス
     mod:
       cost: -1
+      cost_min: 1
   - kind: static
     affects: self
     mod:
@@ -168557,6 +168677,7 @@ cards:
         race_has: グランセクト
     mod:
       cost: -1
+      cost_min: 1
   text: 自分のグランセクトの召喚コストを１少なくする。ただし、コストは０以下にならない。
   source:
     official: dmsp01-048
@@ -169038,6 +169159,7 @@ cards:
         zone: hand
         owner: opp
         count: 1
+        chooser: random
   keywords:
   - s_trigger
   text: 'S・トリガー（このクリーチャーをシールドゾーンから手札に加える時、コストを支払わずにすぐ召喚してもよい）
@@ -169069,6 +169191,7 @@ cards:
         zone: hand
         owner: opp
         count: 1
+        chooser: random
   text: このクリーチャーが攻撃する時、相手の手札を１枚見ないで選び、捨てさせる。
   source:
     official: promoy21-905
@@ -169332,6 +169455,7 @@ cards:
       zone: hand
       owner: opp
       count: 1
+      chooser: random
   text: 'S・トリガー(この呪文をシールドゾーンから手札に加える時、コストを支払わずにすぐ唱えてもよい)
 
     相手の手札を１枚見ないで選び、捨てさせる。'
@@ -170342,6 +170466,7 @@ cards:
       zone: hand
       owner: opp
       count: 1
+      chooser: random
   text: S・トリガー（この呪文をシールドゾーンから手札に加える時、コストを支払わずにすぐ唱えてもよい）　　　　　　　相手の手札を１枚見ないで選び、捨てさせる。
   source:
     official: dmx14-049
@@ -170688,6 +170813,7 @@ cards:
         zone: hand
         owner: opp
         count: 1
+        chooser: random
   keywords:
   - s_trigger
   text: S・トリガー（このクリーチャーをシールドゾーンから手札に加える時、コストを支払わずにすぐ召喚してもよい）このクリーチャーがバトルゾーンに出た時、相手の手札を１枚見ないで選び、捨てさせる。
@@ -170889,6 +171015,7 @@ cards:
         zone: hand
         owner: opp
         count: 1
+        chooser: random
   keywords:
   - s_trigger
   text: S・トリガー（このクリーチャーをシールドゾーンから手札に加える時、コストを支払わずにすぐ召喚してもよい）このクリーチャーがバトルゾーンに出た時、相手の手札を１枚見ないで選び、捨てさせる。
@@ -171641,6 +171768,7 @@ cards:
       zone: hand
       owner: opp
       count: 1
+      chooser: random
   text: S・トリガー（この呪文をシールドゾーンから手札に加える時、コストを支払わずにすぐ唱えてもよい）相手の手札を１枚見ないで選び、捨てさせる。
   source:
     official: dmx25-049
@@ -173473,6 +173601,7 @@ cards:
         zone: hand
         owner: opp
         count: 1
+        chooser: random
   source:
     official: dm01-054
     review: pending
@@ -174066,6 +174195,7 @@ cards:
       zone: hand
       owner: opp
       count: 1
+      chooser: random
   source:
     official: dm01-094
     review: pending
@@ -174316,6 +174446,7 @@ cards:
         zone: hand
         owner: opp
         count: 1
+        chooser: random
   source:
     official: dm02-003
     review: pending
@@ -174494,6 +174625,7 @@ cards:
         zone: hand
         owner: opp
         count: 1
+        chooser: random
   source:
     official: dm02-045
     review: pending
@@ -177861,6 +177993,7 @@ cards:
               civs:
               - darkness
             other: true
+        chooser: random
   source:
     official: dm04-003
     review: pending
@@ -178965,6 +179098,7 @@ cards:
         zone: hand
         owner: opp
         count: 1
+        chooser: random
   source:
     official: dm04-029
     review: pending
@@ -180494,6 +180628,7 @@ cards:
       owner: opp
       count: 1
       look: true
+      chooser: random
   source:
     official: dm05-029
     review: pending
@@ -183784,6 +183919,7 @@ cards:
       zone: hand
       owner: opp
       count: 2
+      chooser: random
   source:
     official: dm08-014
     review: pending
@@ -185505,6 +185641,7 @@ cards:
         zone: hand
         owner: opp
         count: 1
+        chooser: random
   source:
     official: dm10-049
     review: pending
@@ -185635,6 +185772,7 @@ cards:
         zone: hand
         owner: opp
         count: 1
+        chooser: random
   source:
     official: dm10-063
     review: pending
@@ -186874,6 +187012,7 @@ cards:
       zone: hand
       owner: opp
       count: 1
+      chooser: random
   - op: repeat
     times:
       count:
@@ -191206,6 +191345,7 @@ cards:
           zone: hand
           owner: opp
           count: 1
+          chooser: random
   source:
     official: dm18-008
     review: pending
@@ -196484,6 +196624,7 @@ cards:
         race_has: ゴッド
     mod:
       cost: -1
+      cost_min: 1
   keywords:
   - center_g_link
   text: '自分のゴッド・クリーチャーの召喚コストを１少なくする。ただし、コストは０以下にはならない。
@@ -198183,6 +198324,7 @@ cards:
         zone: hand
         owner: opp
         count: 1
+        chooser: random
   keywords:
   - slayer
   - yobinion
@@ -198336,6 +198478,7 @@ cards:
         zone: hand
         owner: opp
         count: 1
+        chooser: random
     - op: discard
       select:
         zone: hand
@@ -207351,6 +207494,7 @@ cards:
           zone: hand
           owner: opp
           count: 1
+          chooser: random
   - kind: trigger
     when:
       event: move
@@ -208018,6 +208162,7 @@ cards:
     zone: hand
     affects: self
     mod:
+      cost_min: 1
       cost:
         amount: -1
         count:
@@ -209908,6 +210053,7 @@ cards:
         zone: hand
         owner: opp
         count: 1
+        chooser: random
   source:
     official: dm22rp2x-tf18
     review: pending
@@ -210051,6 +210197,7 @@ cards:
           - link_count: self
           - count:
               under_of: self
+        chooser: random
   source:
     official: dm26ex2-006
     review: pending
@@ -212238,6 +212385,7 @@ cards:
     zone: hand
     affects: self
     mod:
+      cost_min: 1
       cost:
         amount: -1
         count:
@@ -219657,6 +219805,7 @@ cards:
         zone: hand
         owner: opp
         count: 3
+        chooser: random
   - kind: trigger
     when:
       event: move
@@ -219864,6 +220013,7 @@ cards:
         zone: hand
         owner: opp
         count: 1
+        chooser: random
   text: 'ムゲンクライム ３（自分のクリーチャーを３体タップし、 [wd03]支払って、このクリーチャーを自分の手札または墓地から召喚してもよい）
 
     S・トリガー（このクリーチャーをシールドゾーンから手札に加える時、コストを支払わずにすぐ召喚してもよい）
@@ -220552,6 +220702,7 @@ cards:
           zone: hand
           owner: opp
           count: 1
+          chooser: random
   source:
     official: dmr11-025
     review: pending
@@ -224663,6 +224814,7 @@ cards:
       zone: hand
       owner: opp
       count: 1
+      chooser: random
   source:
     official: dmd24-028
     review: pending
@@ -229612,6 +229764,7 @@ cards:
         zone: hand
         owner: opp
         count: 1
+        chooser: random
   - kind: trigger
     sst: true
     when:
@@ -230667,6 +230820,7 @@ cards:
         - spell
     mod:
       cost: -3
+      cost_min: 1
   source:
     official: dmrp20-001
     review: pending
@@ -231961,6 +232115,7 @@ cards:
         zone: hand
         owner: opp
         count: 1
+        chooser: random
   source:
     official: dm22rp1-061
     review: pending
@@ -232417,6 +232572,7 @@ cards:
         zone: hand
         owner: opp
         count: 1
+        chooser: random
   source:
     official: dm26ex3-057
     review: pending
@@ -232893,6 +233049,7 @@ cards:
         race_has: ドラゴン
     mod:
       cost: -2
+      cost_min: 1
   - kind: static
     affects:
       owner: you
@@ -235212,6 +235369,7 @@ cards:
           zone: hand
           owner: opp
           count: 1
+          chooser: random
     - kind: trigger
       when:
         event: move
@@ -238242,6 +238400,7 @@ cards:
         zone: hand
         owner: opp
         count: 1
+        chooser: random
     - op: move
       select:
         zone: shield
@@ -239381,6 +239540,7 @@ cards:
         - spell
     mod:
       cost: -1
+      cost_min: 1
   - kind: trigger
     when:
       event: cast
@@ -245579,6 +245739,7 @@ cards:
       filter:
         name_has: ボントボルト
     mod:
+      cost_min: 1
       cost:
         amount: -1
         count:
@@ -247400,6 +247561,7 @@ cards:
         race_has: ドラゴン
     mod:
       cost: -1
+      cost_min: 1
   - kind: trigger
     when:
       event: attack
@@ -247464,6 +247626,7 @@ cards:
         cost_ge: 6
     mod:
       cost: -1
+      cost_min: 1
   - kind: trigger
     when:
       event: move
@@ -250094,6 +250257,7 @@ cards:
         zone: hand
         owner: opp
         count: 1
+        chooser: random
   source:
     official: dm27-034
     review: pending
@@ -252880,6 +253044,7 @@ cards:
         zone: hand
         owner: opp
         count: 1
+        chooser: random
   mana: 1
   text: '革命チェンジ：アビス
 
@@ -253528,6 +253693,7 @@ cards:
         - creature
     mod:
       cost: -2
+      cost_min: 1
   - kind: declare
     zone: hand
     when:
@@ -268042,6 +268208,7 @@ cards:
         zone: hand
         owner: opp
         count: 1
+        chooser: random
   source:
     official: dm24ex2-030
     review: pending
@@ -277876,6 +278043,7 @@ cards:
         race_has: 進化
     mod:
       cost: -1
+      cost_min: 1
   - kind: trigger
     when:
       event: move
@@ -279098,6 +279266,7 @@ cards:
     zone: hand
     affects: self
     mod:
+      cost_min: 1
       cost:
         amount: -1
         count:
@@ -282214,6 +282383,7 @@ cards:
       zone: hand
       owner: opp
       count: 2
+      chooser: random
   text: この呪文を[dd04]支払って唱えてもよい。そうしたら、自分の手札を１枚捨てる。 / 相手の手札を２枚見ないで選び、捨てさせる。
   source:
     official: dm26ex4-048
@@ -286555,6 +286725,7 @@ cards:
     zone: hand
     affects: self
     mod:
+      cost_min: 1
       cost:
         amount: -1
         count:
@@ -291082,6 +291253,7 @@ cards:
         - creature
     mod:
       cost: -1
+      cost_min: 1
   - kind: static
     affects:
       owner: you
@@ -291093,6 +291265,7 @@ cards:
         - creature
     mod:
       cost: -1
+      cost_min: 1
   - kind: static
     affects:
       owner: you
@@ -291104,6 +291277,7 @@ cards:
         - creature
     mod:
       cost: -1
+      cost_min: 1
   - effect:
     - as: chosen
       op: choose
@@ -291136,6 +291310,7 @@ cards:
     kind: static
     mod:
       cost: -1
+      cost_min: 1
   - affects:
       filter:
         civs:
@@ -291147,6 +291322,7 @@ cards:
     kind: static
     mod:
       cost: -1
+      cost_min: 1
   - affects:
       filter:
         civs:
@@ -291158,6 +291334,7 @@ cards:
     kind: static
     mod:
       cost: -1
+      cost_min: 1
   civs:
   - light
   - darkness
@@ -292811,6 +292988,7 @@ cards:
         count: 2
         owner: opp
         zone: hand
+        chooser: random
     kind: activate
   civs:
   - darkness
@@ -293186,6 +293364,7 @@ cards:
         count: 3
         owner: opp
         zone: hand
+        chooser: random
     if:
       cmp:
       - count:
@@ -304406,6 +304585,7 @@ cards:
     kind: static
     mod:
       cost: -1
+      cost_min: 1
   - instead:
     - op: destroy
       select:
@@ -304463,6 +304643,7 @@ cards:
     kind: static
     mod:
       cost: -1
+      cost_min: 1
   - instead:
     - op: destroy
       select:
@@ -304519,6 +304700,7 @@ cards:
     kind: static
     mod:
       cost: -1
+      cost_min: 1
   - instead:
     - op: destroy
       select:
@@ -304679,6 +304861,7 @@ cards:
     kind: static
     mod:
       cost: -1
+      cost_min: 1
   - instead:
     - op: destroy
       select:
@@ -304790,6 +304973,7 @@ cards:
     kind: static
     mod:
       cost: -1
+      cost_min: 1
   - instead:
     - op: destroy
       select:
@@ -304847,6 +305031,7 @@ cards:
     kind: static
     mod:
       cost: -1
+      cost_min: 1
   - instead:
     - op: destroy
       select:
@@ -317671,6 +317856,7 @@ cards:
       count: 1
       owner: opp
       zone: hand
+      chooser: random
   - op: move
     reason: return
     select:
@@ -317690,6 +317876,7 @@ cards:
             count: 1
             owner: opp
             zone: hand
+            chooser: random
       - - op: discard
           select:
             count: 1
@@ -317731,6 +317918,7 @@ cards:
         count: 1
         owner: opp
         zone: hand
+        chooser: random
     kind: trigger
     when:
       event: move
@@ -317767,6 +317955,7 @@ cards:
         count: 1
         owner: opp
         zone: hand
+        chooser: random
     kind: trigger
     when:
       event: attack
@@ -317818,6 +318007,7 @@ cards:
       count: 1
       owner: opp
       zone: hand
+      chooser: random
   - op: discard
     select:
       count:
@@ -317898,6 +318088,7 @@ cards:
         count: 1
         owner: opp
         zone: hand
+        chooser: random
     - body:
       - op: move
         reason: put
@@ -323131,6 +323322,7 @@ cards:
     kind: static
     mod:
       cost: -2
+      cost_min: 1
   civs:
   - zero
   cost: 3
@@ -328063,6 +328255,7 @@ cards:
         count: 1
         owner: opp
         zone: hand
+        chooser: random
     kind: trigger
     when:
       event: attack
@@ -330223,6 +330416,7 @@ cards:
     - affects: self
       kind: static
       mod:
+        cost_min: 1
         cost:
           amount: -1
           count:
@@ -331949,6 +332143,7 @@ cards:
           count: 5
           owner: opp
           zone: hand
+          chooser: random
     kind: trigger
     when:
       event: move
@@ -332853,6 +333048,7 @@ cards:
   - affects: self
     kind: static
     mod:
+      cost_min: 1
       cost:
         amount: -2
         count:
@@ -334652,6 +334848,7 @@ cards:
           zone: hand
           owner: opp
           count: 5
+          chooser: random
   text: 'NEO進化：水または闇のクリーチャー１体の上に置いてもよい。
 
     EXライフ（このクリーチャーを出す時、自分の山札の上から１枚をシールド化する。このクリーチャーが離れる時、かわりにそのシールドを墓地に置く）
@@ -337634,6 +337831,7 @@ cards:
         zone: hand
         owner: opp
         count: 1
+        chooser: random
   - kind: declare
     zone: hand
     when:
@@ -338288,6 +338486,7 @@ cards:
     zone: hand
     affects: self
     mod:
+      cost_min: 1
       cost:
         amount: -1
         count:
@@ -346512,6 +346711,7 @@ cards:
         race_has: ドラゴン
     mod:
       cost: -1
+      cost_min: 1
   - kind: static
     affects:
       zone: hand
@@ -346523,6 +346723,7 @@ cards:
         race_has: 超化獣
     mod:
       cost: -1
+      cost_min: 1
   - kind: static
     affects:
       zone: bz
@@ -347606,6 +347807,7 @@ cards:
         zone: hand
         owner: opp
         count: 1
+        chooser: random
   keywords:
   - shinka_rise
 - id: dm24ex2-084
@@ -348057,6 +348259,7 @@ cards:
         - creature
     mod:
       cost: -2
+      cost_min: 1
   - kind: trigger
     when:
       event: move
@@ -350287,6 +350490,7 @@ cards:
         - race_has: ゼニス
     mod:
       cost: -3
+      cost_min: 1
   - kind: static
     affects:
       zone: bz
@@ -351918,6 +352122,7 @@ cards:
         - cross_gear
     mod:
       cost: -1
+      cost_min: 1
   source:
     official: dm23ex1-077
     review: pending
@@ -351972,6 +352177,7 @@ cards:
         race_has: サムライ
     mod:
       cost: -1
+      cost_min: 1
   - kind: static
     affects:
       zone: hand
@@ -351981,6 +352187,7 @@ cards:
         - cross_gear
     mod:
       cost: -1
+      cost_min: 1
   - kind: static
     affects:
       zone: bz
@@ -351990,6 +352197,7 @@ cards:
         - cross_gear
     mod:
       cost: -1
+      cost_min: 1
   - kind: static
     affects: crossed
     mod:
@@ -353217,6 +353425,7 @@ cards:
         zone: hand
         owner: opp
         count: 2
+        chooser: random
   - kind: declare
     zone: hand
     when:
@@ -358818,6 +359027,7 @@ cards:
         zone: hand
         owner: opp
         count: 1
+        chooser: random
   mana: 1
   text: 'ゲオルグ・バーボシュタイン: スマッシュ・バースト（このクリーチャーが攻撃する時、このカードの呪文側を、バトルゾーンに置いたままコストを支払わずに唱えてもよい）
     / 相手が手札を１枚捨てた時、相手のクリーチャーを１体選ぶ。そのターン、そのクリーチャーのパワーを－3000する。／ゴースト・タッチ: S・トリガー / 相手の手札を１枚見ないで選び、捨てさせる。'
@@ -368299,6 +368509,7 @@ cards:
         zone: hand
         owner: opp
         count: 1
+        chooser: random
   - kind: trigger
     when:
       event: move
@@ -368798,6 +369009,7 @@ cards:
         zone: hand
         owner: opp
         count: 1
+        chooser: random
   - kind: trigger
     when:
       event: move
@@ -368997,6 +369209,7 @@ cards:
   - kind: static
     affects: self
     mod:
+      cost_min: 1
       cost:
         amount: -1
         count:
@@ -369551,6 +369764,7 @@ cards:
         race_has: NEO
     mod:
       cost: -1
+      cost_min: 1
   - kind: trigger
     when:
       event: move
@@ -369573,6 +369787,7 @@ cards:
         neo: true
     mod:
       cost: -1
+      cost_min: 1
     choukon: true
 - id: dm25ex3-024
   name: ソウルスカーレット アカネ
@@ -370096,6 +370311,7 @@ cards:
         zone: hand
         owner: opp
         count: 1
+        chooser: random
       as: d
     - op: may
       body:
@@ -376750,6 +376966,7 @@ cards:
         count: 1
         owner: opp
         zone: hand
+        chooser: random
     kind: trigger
     when:
       event: move
@@ -377371,6 +377588,7 @@ cards:
         zone: hand
         owner: opp
         count: 1
+        chooser: random
       as: d
     - op: move
       select:
@@ -385223,6 +385441,7 @@ cards:
         zone: hand
         owner: opp
         count: 1
+        chooser: random
   - kind: trigger
     when:
       event: attack
@@ -387706,6 +387925,7 @@ cards:
       filter:
         race_has: 生徒会組
     mod:
+      cost_min: 1
       cost:
         amount: -1
         count:
@@ -390141,6 +390361,7 @@ cards:
         zone: hand
         owner: opp
         count: 1
+        chooser: random
   - kind: trigger
     when:
       event: choose
@@ -391697,6 +391918,7 @@ cards:
       zone: hand
       owner: opp
       count: 2
+      chooser: random
   - op: may
     body:
     - op: move
@@ -394158,6 +394380,7 @@ cards:
         race_has: 超化獣
     mod:
       cost: -3
+      cost_min: 1
   - kind: trigger
     when:
       event: attack
@@ -402250,6 +402473,7 @@ cards:
     if: *id201
     mod:
       cost: -2
+      cost_min: 1
 - id: dmrp07-084
   name: “Ｍ-瑠”ララッタ
   types:
@@ -402305,6 +402529,7 @@ cards:
     if: *id201
     mod:
       cost: -5
+      cost_min: 1
   - kind: trigger
     when:
       event: move
@@ -405261,6 +405486,7 @@ cards:
     zone: hand
     affects: self
     mod:
+      cost_min: 1
       cost:
         amount: -1
         count:
@@ -405949,6 +406175,7 @@ cards:
       zone: hand
       owner: opp
       count: 1
+      chooser: random
   recycle:
     cost: 6
     civs:
@@ -408343,6 +408570,7 @@ cards:
         - creature
     mod:
       cost: -1
+      cost_min: 1
 - id: dm26rp1-001
   name: 神羅の銀月 ザ・ラムーン
   types:
@@ -408905,6 +409133,7 @@ cards:
         keyword: blocker
     mod:
       cost: -1
+      cost_min: 1
 - id: dm26rp1-043
   name: 我竜塔第八層 バルザーク
   types:
@@ -411004,6 +411233,7 @@ cards:
           zone: hand
           owner: opp
           count: 1
+          chooser: random
   - kind: static
     affects:
       zone: hand
@@ -415644,6 +415874,7 @@ cards:
     zone: hand
     affects: self
     mod:
+      cost_min: 1
       cost:
         amount: -1
         count:
@@ -416153,6 +416384,7 @@ cards:
           race_has: スノーフェアリー
       mod:
         cost: -2
+        cost_min: 1
   - name: ハイビとビスカの印
     types:
     - spell
@@ -420617,6 +420849,7 @@ cards:
         - race_has: サムライ
     mod:
       cost: -1
+      cost_min: 1
   - kind: static
     if:
       exists:
@@ -424316,6 +424549,7 @@ cards:
     zone: hand
     affects: self
     mod:
+      cost_min: 1
       cost:
         amount: -1
         count:
@@ -424971,6 +425205,7 @@ cards:
             zone: hand
             owner: opp
             count: 1
+            chooser: random
   keywords: []
 - id: dm22bd2-010
   name: 正義の煌き オーリリア
@@ -425941,6 +426176,7 @@ cards:
     zone: hand
     affects: self
     mod:
+      cost_min: 1
       cost:
         amount: -1
         count:
@@ -426285,6 +426521,7 @@ cards:
         zone: hand
         owner: opp
         count: 1
+        chooser: random
     - op: may
       body:
       - op: move
@@ -426366,6 +426603,7 @@ cards:
         zone: hand
         owner: opp
         count: 1
+        chooser: random
     - op: may
       body:
       - op: move
