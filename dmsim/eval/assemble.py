@@ -45,8 +45,27 @@ def core_alts(ls) -> list[dict]:
     return L.core_alternatives(ls)
 
 
-def any_met(eng, me: int, alts: list[dict]) -> bool:
-    return any(cards_met(eng, me, a) for a in alts)
+def any_met(eng, me: int, alts: list[dict], usable: dict | None = None) -> bool:
+    """usable（loop_entry.usable_zones）を渡すと、札ごとの使えるゾーンにある枚数だけで数える（§21）。None は旧い数え方。"""
+    if usable is None:
+        return any(cards_met(eng, me, a) for a in alts)
+    return any(met_usable(eng, me, a, usable) for a in alts)
+
+
+def met_usable(eng, me: int, need: dict, usable: dict) -> bool:
+    if not need:
+        return False
+    from ..engine.view import zone_counts
+    for i, k in need.items():
+        n = 0
+        for z in usable.get(i, L.BASE_USABLE):
+            try:
+                n += zone_counts(eng, me, z)[i]
+            except KeyError:
+                pass
+        if n < k:
+            return False
+    return True
 
 
 def any_ceiling(deck, alts: list[dict], turn: int) -> float:
@@ -86,15 +105,18 @@ def run_one(rules, ls, seed: int, *, deck=None, opp_deck=None, max_turn: int = 6
     me = 0
     t0 = time.perf_counter()
     res = GameResult(seed=seed, first_player=first, opp=opp_model.name if opp_model else "none")
-    rec = {"cards_turn": None, "entry_turn": None, "entry_mana": None, "route": route, "stage_turn": {}}
+    rec = {"cards_turn": None, "cards_turn_any": None, "entry_turn": None, "entry_mana": None, "route": route, "stage_turn": {}}
     stages = RG.load(route_log or route) if (route_log or route) else ()
+    usable = L.usable_zones(rules, ls, stages)
     eng = Engine.new_game(rules, [deck, opp_deck], seed, first)
     if opp_model is not None:
         opp_model.setup(eng)
 
     def record(e, t):
-        if rec["cards_turn"] is None and alts and any_met(e, me, alts):
+        if rec["cards_turn"] is None and alts and any_met(e, me, alts, usable):
             rec["cards_turn"] = t
+        if rec["cards_turn_any"] is None and alts and any_met(e, me, alts):   # 旧い数え方（マナも数える、並記用）
+            rec["cards_turn_any"] = t
         if rec["entry_turn"] is None and not L.unmet(e, ls):
             rec["entry_turn"] = t
             rec["entry_mana"] = len(e.s.zones["mana"][me])
@@ -107,6 +129,11 @@ def run_one(rules, ls, seed: int, *, deck=None, opp_deck=None, max_turn: int = 6
 
     opts = dict(route_opts or {})
     ratchet = [0] if opts.pop("ratchet", False) else None   # route_opts={"ratchet": True}: 達成済みの段を下げない
+    keep = opts.pop("keep_hand", False)   # route_opts={"keep_hand": True}: 経路に要る札をマナ・捨て札で後回し（§21）
+    from ..search import turn as TS
+    old_keep = TS.KEEP_HAND
+    if keep and route:
+        TS.KEEP_HAND = RG.keep_hand(stages, me, ratchet)
     holder = [eng]
     try:
         cfg = PlayConfig(seed=seed, max_turn=max_turn, budget=budget, n_det=n_det, me=me,
@@ -130,6 +157,8 @@ def run_one(rules, ls, seed: int, *, deck=None, opp_deck=None, max_turn: int = 6
     except Exception as ex:
         res.error = f"{type(ex).__name__}: {ex}"
         eng = holder[0]
+    finally:
+        TS.KEEP_HAND = old_keep
     rec["entry_unmet"] = [f"{q.zone or '/'.join(q.zones)}:{q.match}{q.op}{q.n}" for q in L.unmet(eng, ls)]   # 終局（打ち切り）時に満たしていない入口の述語
     res.decisions = len(eng.log)
     res.seconds = time.perf_counter() - t0

@@ -54,6 +54,43 @@ def core_alternatives(ls: LoopSpec) -> list[dict]:
     return out
 
 
+BASE_USABLE = ("hand", "bz")   # どの中核札も手札と場にあれば使える
+
+
+def usable_zones(rules, ls: LoopSpec, stages=()) -> dict[str, set]:
+    """中核札ごとの「使えるゾーン」（docs/combo-ruler-design.md §21）。入口 minimal と経路の段の述語から機械的に導く。
+    - 手札・場は常に可。
+    - 札の名前で指した述語のゾーン（墓地・マナなど）はその札に可。
+    - 名前でなく種類・文明・種族で指した述語（例「墓地のクリーチャー3体」）のゾーンは、その条件に合う札に可。
+    マナは、述語がマナを指すときだけ可（マナに置いた中核を「揃った」と数えない）。"""
+    preds = [(p.zone, p.zones, p.match, p.owner) for p in ls.minimal]
+    for st in stages:
+        for q in st.preds:
+            preds.append((q.get("zone"), q.get("zones") or (), q.get("match", {}), q.get("owner", 0)))
+    out = {}
+    for i in core_ids(ls):
+        d = rules.cards[i]
+        z = set(BASE_USABLE)
+        for zone, zones, m, owner in preds:
+            if owner != 0:
+                continue
+            zs = {zone} if zone else set(zones)
+            if "name" in m:
+                if m["name"] in (i, d.id):
+                    z |= zs
+                continue
+            if "types" in m and not set(m["types"]) & set(d.types):
+                continue
+            if "civs" in m and not set(m["civs"]) & set(d.civs):
+                continue
+            if "races" in m and not set(m["races"]) & set(d.races):
+                continue
+            if any(k in m for k in ("types", "civs", "races")) and "mana" not in zs:
+                z |= zs
+        out[i] = z
+    return out
+
+
 def core_ids(ls: LoopSpec) -> list[str]:
     """中核の組に出てくる札（代わりの札も含む）。"""
     return sorted({i for g in core_groups(ls) for o in g["any"] for i in o})

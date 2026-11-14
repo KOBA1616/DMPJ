@@ -1,0 +1,45 @@
+name: basebuild_saga
+note: tools/basebuild.py build が選んだデッキ（中核固定・基盤を貪欲に選択）
+combos:
+- saga
+deck:
+- dm22ex2-021
+- dm22ex2-021
+- dm22ex2-021
+- dm22ex2-021
+- dm22ex1-007
+- dm22ex1-007
+- dm22ex1-007
+- dm22ex1-007
+- dmex10-020
+- dmex10-020
+- dmex10-020
+- dmex10-020
+- dm22ex1-025
+- dm22ex1-025
+- dm22ex1-025
+- dm22ex1-025
+- dmrp03-036
+- dmrp03-036
+- dmrp03-036
+- dmrp03-036
+- dmrp03-s03
+- dmrp03-s03
+- dmrp03-s03
+- dmrp03-s03
+- dm24rp2-041
+- dm24rp2-041
+- dm24rp2-041
+- dm24rp2-041
+- dm23ex3-035
+- dm23ex3-035
+- dm23ex3-035
+- dm23ex3-035
+- dm22ex1-cho47
+- dm22ex1-cho47
+- dm22ex1-cho47
+- dm22ex1-cho47
+- dm22ex1-cho14
+- dm22ex1-cho14
+- dm22ex1-cho14
+- dm22ex1-cho14
