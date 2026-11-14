@@ -33,7 +33,7 @@ import approval_stats as stats  # noqa: E402
 import convert_cards as cc  # noqa: E402
 from dmsim.cards.cardfiles import card_files  # noqa: E402
 
-OUT_TEXT = re.compile(r"GR召喚|GRクリーチャー|超GR|超次元|サイキック")
+OUT_TEXT = re.compile(r"GR召喚|GRクリーチャー|超GR|超次元|サイキック|オーラ")
 
 
 def _text(r: dict) -> str:
@@ -102,13 +102,16 @@ def run() -> dict:
         examples.setdefault(kind, f"{ids[0]} {name}")
 
     n, nn = len(tg), len(by_name)
+    oof = sum(kind_names[k] for k in ("形式外の種類", "形式外を本文で参照"))
     conv_ids = sum(1 for k in tg if k in conv)
     covered_ids = sum(len(v) for nm, v in by_name.items() if nm in conv_names)
     return {
         "targets": n, "target_names": nn,
         "converted_ids": conv_ids, "converted_names": len(conv_names),
         "covered_ids_incl_same_name": covered_ids,
+        "in_format_names": nn - oof,
         "rate": {"ids": round(conv_ids / n, 4), "names": round(len(conv_names) / nn, 4),
+                 "names_in_format": round(len(conv_names) / (nn - oof), 4),
                  "ids_incl_same_name": round(covered_ids / n, 4)},
         "kinds": [{"kind": k, "names": kind_names[k], "ids": kind_ids[k], "example": examples.get(k, "")}
                   for k in sorted(kind_ids, key=lambda k: (-kind_names[k], -kind_ids[k]))],
@@ -128,6 +131,7 @@ def main(argv=None):
     r = out["rate"]
     print(f"対象 {out['targets']} 枚 / 名前 {out['target_names']}")
     print(f"  変換済み: {out['converted_ids']} 枚 ({r['ids']:.1%}) / 名前 {out['converted_names']} ({r['names']:.1%})")
+    print(f"  対象外（GR・超次元・サイキック・オーラ・ドラグハート）を除いた名前 {out['in_format_names']} に対して {r['names_in_format']:.1%}")
     print(f"  同名の別収録を含めた枚数: {out['covered_ids_incl_same_name']} ({r['ids_incl_same_name']:.1%})")
     print("| 名前 | 枚数 | 型 | 例 |\n|---:|---:|---|---|")
     for k in out["kinds"][: a.top]:

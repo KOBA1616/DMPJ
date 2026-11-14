@@ -70,6 +70,8 @@ INSTRUCTIONS = """\
 - 攻撃・ブロックの強制は static の mod.require（[attack] / [block]）。「毎ターン攻撃しなければならない」「相手のクリーチャーが攻撃する時、可能であればブロックする」はルールで変換済み。条件つきの強制（次のターンだけ等）は mod.require に条件が書けないので unsupported。
 - text には原文から括弧書きの注釈を除いたものを「 / 」区切りで書く。
 - 「コストを支払わずに召喚する／唱える」は op: play_free（召喚・唱えたことになり、「召喚した時」「唱えた時」が誘発する）。「バトルゾーンに出す／置く」（ヘブンズ・ゲート型、墓地・マナ・手札から出す、置換で出す）は召喚ではないので op: move, to: bz, reason: put（play_free や reason: summon は使わない。112.3g, 603.5a）。
+- 墓地から唱える: 「この呪文を自分の墓地から唱えてもよい。そうしたら、唱えた後、墓地のかわりに山札の下に置く」は面の `recycle: {cost: <この呪文のコスト>}`（墓地からコストを支払って唱え、解決後は山札の一番下）。「墓地の呪文を1枚、コストを支払わずに唱えてもよい。唱えた後、墓地に置くかわりに山札の一番下に置く」は may の中で `{op: play_free, select: {zone: graveyard, owner: you, filter: {types: [spell], ...}, count: 1}, resolve_to: deck, resolve_position: bottom}`（cast_from_graveyard の語彙を作らない）。
+- ツインパクトの原文で、両面の name が「A/B」と同じ文字列になっていても取得の欠けではない。面ごとの name は「/」の前後に分けて書く（data_incomplete にしない）。
 - 近似・代用はしない。語彙で原文どおりに表せない効果は、似た別の語彙（op・mod・条件）で置き換えて書かない。その能力は abilities に書かず、source.unsupported に [{need: <足せばよい op・語彙の案（英語の識別子）>, text: <該当する原文>}] で書く。表せる他の能力は通常どおり変換する。
   「ほぼ同じ」「この場面では同じ結果」と思っても代用しない（例: 他のカードの効果の対象条件を書き換える置換を、無条件の置換や別の効果で書かない）。語彙の追加は人が行い、足りない語彙は unsupported の集計から決める。unsupported があるカードは登録されず（rejects に vocab として残る）、語彙が足りるようになってから変換し直す。
 - 表せない能力を黙って落とさない。落とした能力は必ず unsupported に残す。source.notes には、原文の曖昧さや確認してほしい点だけを日本語で具体的に書く（近似の言い訳には使わない）。
@@ -353,7 +355,7 @@ def classify(error: str) -> dict:
     return {"reason": "vocab_gap", "gaps": gaps} if gaps else {"reason": "other", "gaps": []}
 
 
-OUT_OF_FORMAT = ("サイキック", "GR", "ドラグハート", "超次元")      # オリジナルフォーマットでは使わない種類（実装しない）
+OUT_OF_FORMAT = ("サイキック", "GR", "ドラグハート", "超次元", "オーラ")      # オリジナルフォーマットでは使わない種類（実装しない）
 
 
 def vocab_reject(card: dict, row: dict) -> dict | None:

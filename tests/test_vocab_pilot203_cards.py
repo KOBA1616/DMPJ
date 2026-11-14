@@ -9,6 +9,8 @@ import json
 from pathlib import Path
 
 from dmsim.cards import cardstore
+
+import _conv_cache  # noqa: E402
 from dmsim.cards.defs import DATA, load_tables, parse_card
 
 TABLES = load_tables()
@@ -20,9 +22,9 @@ REGISTERED = ("dmex08-068", "dmr03-007", "dmr09-007", "dmrp09-s02",
 
 
 def _converted(cid):
-    for c in cardstore.read(CONVERTED):
-        if c["id"] == cid:
-            return c
+    c = _conv_cache.find(CONVERTED, cid)
+    if c is not None:
+        return c
     raise KeyError(cid)
 
 

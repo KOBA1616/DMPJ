@@ -45,6 +45,11 @@ def goal_distance(eng: Engine, me: int) -> tuple[int, int]:
 
 
 def evaluate(eng: Engine, me: int, w: Weights) -> float:
+    with eng.chars_scope():   # 評価は局面を変えない: 同じ状態での特性の計算を使い回す
+        return _evaluate(eng, me, w)
+
+
+def _evaluate(eng: Engine, me: int, w: Weights) -> float:
     s = eng.s
     opp = 1 - me
     if s.result is not None:
