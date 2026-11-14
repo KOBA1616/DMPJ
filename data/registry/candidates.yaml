@@ -107,3 +107,173 @@ candidates:
     opp_levels: [0, 1]
     procedure:
       - drill_lock と同じ。デッキは tools/basebuild.py が中核3種を固定して選んだもの（data/decks/basebuild_drill_lock.yaml）。
+
+# 3枚組の探索（dmsim/discovery/triples.py、tools/triple_hunt.py）で試し打ちを通った部品に勝ち手段をつないだ組の測定値。
+# 足切りせず値を記録する（tools/registry.py は candidates だけを読むので、ここは登録の対象にならない）。
+discovered_triples:
+- cards:
+  - dm22ex2-021
+  - dmrp03-s03
+  names:
+  - 絶望神サガ
+  - 水上第九院 シャコガイル
+  kind: index
+  entry_turn_bound: 3
+  set_turn_bound: 9
+  stage1: 4/4
+  stage2: 0/4
+  control_stage1: 3
+  why:
+  - you:deck:- 特殊勝利の条件
+  measured: 2026-11-14 入口3T→4T終わり 4シード 予算1500
+- cards:
+  - dm22ex2-021
+  - dmx17-013
+  names:
+  - 絶望神サガ
+  - 蒼神龍ヴェール・バビロニア
+  kind: dig
+  entry_turn_bound: 3
+  set_turn_bound: 3
+  stage1: 4/4
+  stage2: 0/4
+  control_stage1: 1
+  why:
+  - you:deck:- 掘って graveyard から使える
+  measured: 2026-11-14 入口3T→4T終わり 4シード 予算1500
+- cards:
+  - dm22ex2-021
+  - dm23-035
+  names:
+  - 絶望神サガ
+  - 曲芸メイド・リン・ララバイ
+  kind: dig
+  entry_turn_bound: 3
+  set_turn_bound: 4
+  stage1: 3/4
+  stage2: 0/4
+  control_stage1: 2
+  why:
+  - you:deck:- 掘って graveyard から使える
+  measured: 2026-11-14 入口3T→4T終わり 4シード 予算1500
+- cards:
+  - dmr19-057
+  - dmex03-s04
+  names:
+  - デ・バウラ・チャージャー
+  - スチームオクトパンク
+  kind: index
+  entry_turn_bound: 5
+  set_turn_bound: 8
+  stage1: 0/4
+  stage2: 0/4
+  control_stage1: 0
+  why:
+  - you:mana:+ 相手の山札・盾を動かす効果の条件
+  - you:mana:+ コスト8の勝ち筋（増えたマナで払う）
+  measured: 2026-11-14 入口3T→4T終わり 4シード 予算1500
+- cards:
+  - dmr19-057
+  - dm23bd6-012
+  names:
+  - デ・バウラ・チャージャー
+  - サイバー・Ｎ・ワールド
+  kind: index
+  entry_turn_bound: 5
+  set_turn_bound: 6
+  stage1: 0/4
+  stage2: 0/4
+  control_stage1: 0
+  why:
+  - you:mana:+ コスト6の勝ち筋（増えたマナで払う）
+  measured: 2026-11-14 入口3T→4T終わり 4シード 予算1500
+- cards:
+  - dmr19-057
+  - dm24-s03
+  names:
+  - デ・バウラ・チャージャー
+  - 呪怨秘宝バキューム
+  kind: index
+  entry_turn_bound: 5
+  set_turn_bound: 6
+  stage1: 0/4
+  stage2: 0/4
+  control_stage1: 0
+  why:
+  - you:mana:+ コスト6の勝ち筋（増えたマナで払う）
+  measured: 2026-11-14 入口3T→4T終わり 4シード 予算1500
+- cards:
+  - dmr19-057
+  - dm24ex2-035
+  names:
+  - デ・バウラ・チャージャー
+  - 復活の竜炎 ボルメテウス・サイクル
+  kind: index
+  entry_turn_bound: 5
+  set_turn_bound: 6
+  stage1: 0/4
+  stage2: 0/4
+  control_stage1: 0
+  why:
+  - you:mana:+ コスト6の勝ち筋（増えたマナで払う）
+  measured: 2026-11-14 入口3T→4T終わり 4シード 予算1500
+- cards:
+  - dmr19-057
+  - dm33-025
+  names:
+  - デ・バウラ・チャージャー
+  - 猛菌魚雷ヤサカノフカ
+  kind: index
+  entry_turn_bound: 5
+  set_turn_bound: 6
+  stage1: 0/4
+  stage2: 0/4
+  control_stage1: 2
+  why:
+  - you:mana:+ コスト6の勝ち筋（増えたマナで払う）
+  measured: 2026-11-14 入口3T→4T終わり 4シード 予算1500
+- cards:
+  - dmr19-057
+  - dmex03-s06
+  names:
+  - デ・バウラ・チャージャー
+  - 新世界 シューマッハ
+  kind: index
+  entry_turn_bound: 5
+  set_turn_bound: 6
+  stage1: 0/4
+  stage2: 0/4
+  control_stage1: 0
+  why:
+  - you:mana:+ コスト6の勝ち筋（増えたマナで払う）
+  measured: 2026-11-14 入口3T→4T終わり 4シード 予算1500
+- cards:
+  - dmr19-057
+  - dmr01-s03
+  names:
+  - デ・バウラ・チャージャー
+  - サイバー・Ｎ・ワールド
+  kind: index
+  entry_turn_bound: 5
+  set_turn_bound: 6
+  stage1: 0/4
+  stage2: 0/4
+  control_stage1: 0
+  why:
+  - you:mana:+ コスト6の勝ち筋（増えたマナで払う）
+  measured: 2026-11-14 入口3T→4T終わり 4シード 予算1500
+- cards:
+  - dmr19-057
+  - dmr04-016
+  names:
+  - デ・バウラ・チャージャー
+  - 飛翔の守護者ディス・アル・マーズ
+  kind: index
+  entry_turn_bound: 5
+  set_turn_bound: 6
+  stage1: 0/4
+  stage2: 0/4
+  control_stage1: 0
+  why:
+  - you:mana:+ コスト6の勝ち筋（増えたマナで払う）
+  measured: 2026-11-14 入口3T→4T終わり 4シード 予算1500

@@ -123,7 +123,14 @@ def cmd_reopen(gaps: list[str]) -> int:
     want = set(gaps)
     keep, opened = [], []
     for r in rejects:
-        g = set(r.get("gaps") or [])
+        g = r.get("gaps") or []
+        if isinstance(g, str):      # 古い記録は gaps が文字列（リストの repr）
+            import ast
+            try:
+                g = ast.literal_eval(g)
+            except (ValueError, SyntaxError):
+                g = [g]
+        g = {str(x) for x in g}
         if r.get("reason") == "vocab" and g and g <= want:
             opened.append(r["id"])
         else:

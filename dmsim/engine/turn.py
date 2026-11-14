@@ -708,9 +708,10 @@ def h_activate(eng, t):
 def st_attack(eng, t):                                  # 505
     s = eng.s
     a = s.active
-    atk = eng._attack_options(a)
-    forced = {o["cid"] for o in atk if "attack" in eng.chars_ro(o["cid"])["require"]}   # 506.1b 攻撃を強制されたクリーチャーは攻撃させなくてはいけない
-    act = [o for o in eng._activate_options(a, atk) if o.get("tap") not in forced]       # タップ能力で攻撃を免れることはできない（タップしない under 形は免れないので可）
+    with eng.chars_scope():   # 選択肢の列挙は読み取りだけ: 同じ状態での特性の計算を使い回す
+        atk = eng._attack_options(a)
+        forced = {o["cid"] for o in atk if "attack" in eng.chars_ro(o["cid"])["require"]}   # 506.1b 攻撃を強制されたクリーチャーは攻撃させなくてはいけない
+        act = [o for o in eng._activate_options(a, atk) if o.get("tap") not in forced]       # タップ能力で攻撃を免れることはできない（タップしない under 形は免れないので可）
     opts = atk + act + ([] if forced else [{"key": "pass"}])
     ans, d = eng.ask(t, a, "attack", opts)
     if d:

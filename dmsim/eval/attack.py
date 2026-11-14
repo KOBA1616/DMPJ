@@ -76,8 +76,9 @@ def run_one(rules, deck, seed: int, *, opp_level: int = DEFAULT_OPP, max_turn: i
             "error": res.error, "marks": m, "snaps": snaps}
 
 
-def measure(rules, deck, seeds, **kw) -> list[dict]:
-    return [run_one(rules, deck, s, **kw) for s in seeds]
+def measure(rules, deck, seeds, workers: int | None = None, **kw) -> list[dict]:
+    from .parallel import map_ordered
+    return map_ordered(lambda s: run_one(rules, deck, s, **kw), seeds, workers)
 
 
 def accumulated(m: dict) -> bool:

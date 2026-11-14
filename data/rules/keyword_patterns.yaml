@@ -236,6 +236,30 @@ patterns:
     re: '革命チェンジ[:：](.+)'
     builder: revolution_change
 
+  # ブレイクの置換「このクリーチャーがシールドをブレイクする時、相手はそのシールドを手札に加えるかわりに〈墓地／マナ／山札の下〉に置く」。
+  # 変換済みの札（dm24ex2-dm04, dmx13-002）と同じ形。ブレイクしたシールドの S・トリガーの扱いは tests/test_vocab_pilot146.py の前提に従う
+  break_shield_to_graveyard:
+    re: 'このクリーチャーが(?:相手の)?シールドをブレイクする時相手はそのシールドを手札に加えるかわりに(?:自身の)?墓地に置く'
+    whole_line: true
+    abilities:
+      - kind: replace
+        when: {event: break, subject: self}
+        instead: [{op: move, select: {ref: event.shield, count: 1}, to: graveyard, reason: put}]
+  break_shield_to_mana:
+    re: 'このクリーチャーが(?:相手の)?シールドをブレイクする時相手はそのシールドを手札に加えるかわりに(?:自身の)?マナゾーンに置く'
+    whole_line: true
+    abilities:
+      - kind: replace
+        when: {event: break, subject: self}
+        instead: [{op: move, select: {ref: event.shield, count: 1}, to: mana, reason: put}]
+  break_shield_to_deck_bottom:
+    re: 'このクリーチャーが(?:相手の)?シールドをブレイクする時相手はそのシールドを手札に加えるかわりに(?:自身の)?山札の(?:一番)?下に置く'
+    whole_line: true
+    abilities:
+      - kind: replace
+        when: {event: break, subject: self}
+        instead: [{op: move, select: {ref: event.shield, count: 1}, to: deck, position: bottom, reason: put}]
+
   # ---- 効果の1文（whole_line: その文が1行の全体の時だけ。続く文を取りこぼさないため）----
   etb_draw:
     re: '{TRG}カードを(\d)枚引く'
@@ -435,3 +459,68 @@ spell_effects:
     spell:
       - {op: choose, select: {zone: bz, owner: opp, filter: {types: [creature]}, count: "{1}"}, as: target}
       - {op: modify, select: {ref: target}, mod: {power: "-{2}"}, duration: end_of_turn}
+  # ---- 2026-11-14 追加: ツインパクトの呪文面に多い定型文（変換済みの札と同じ形） ----
+  draw_then_discard:
+    re: 'カードを(\d)枚引(?:く|き)(?:その後)?自分の手札を(\d)枚捨てる'
+    spell: [{op: draw, count: "{1}"}, {op: discard, select: {zone: hand, owner: you, count: "{2}"}}]
+  discard_then_draw:
+    re: '自分の手札を(\d)枚捨て(?:る)?その後カードを(\d)枚引く'
+    spell: [{op: discard, select: {zone: hand, owner: you, count: "{1}"}}, {op: draw, count: "{2}"}]
+  bounce_any_short:
+    re: 'クリーチャーを(\d)体選び持ち主の手札に戻す'
+    spell: [{op: bounce, select: {zone: bz, owner: any, filter: {types: [creature]}, count: "{1}"}}]
+  bounce_any_cost:
+    re: 'コスト(\d+)以下のクリーチャーを(\d)体選び持ち主の手札に戻す'
+    spell: [{op: bounce, select: {zone: bz, owner: any, filter: {types: [creature], cost_le: "{1}"}, count: "{2}"}}]
+  opp_self_discard:
+    re: '相手は自身の手札を(\d)枚選(?:び|んで)捨てる'
+    spell: [{op: discard, select: {zone: hand, owner: opp, chooser: opp, count: "{1}"}}]
+  destroy_all_power:
+    re: '相手のパワー(\d+)以下のクリーチャーをすべて破壊する'
+    spell: [{op: destroy, select: {zone: bz, owner: opp, filter: {types: [creature], power_le: "{1}"}, count: all}}]
+  opp_to_mana:
+    re: '(?:バトルゾーンにある)?相手のクリーチャーを(\d)体選び持ち主のマナゾーンに置く'
+    spell: [{op: move, select: {zone: bz, owner: opp, filter: {types: [creature]}, count: "{1}"}, to: mana, reason: put}]
+  opp_untapped_to_mana:
+    re: '相手のアンタップしているクリーチャーを(\d)体選び持ち主のマナゾーンに置く'
+    spell: [{op: move, select: {zone: bz, owner: opp, filter: {types: [creature], tapped: false}, count: "{1}"}, to: mana, reason: put}]
+  destroy_tapped:
+    re: '相手のタップしているクリーチャーを(\d)体(?:選び)?破壊する'
+    spell: [{op: destroy, select: {zone: bz, owner: opp, filter: {types: [creature], tapped: true}, count: "{1}"}}]
+  destroy_untapped:
+    re: '相手のアンタップしているクリーチャーを(\d)体(?:選び)?破壊する'
+    spell: [{op: destroy, select: {zone: bz, owner: opp, filter: {types: [creature], tapped: false}, count: "{1}"}}]
+  destroy_blocker_n:
+    re: '相手の「ブロッカー」を持つクリーチャーを(\d)体(?:選び)?破壊する'
+    spell: [{op: destroy, select: {zone: bz, owner: opp, filter: {types: [creature], keyword: blocker}, count: "{1}"}}]
+  destroy_blocker_all:
+    re: '相手の「ブロッカー」を持つクリーチャーをすべて破壊する'
+    spell: [{op: destroy, select: {zone: bz, owner: opp, filter: {types: [creature], keyword: blocker}, count: all}}]
+  pump_one:
+    re: 'このターン自分のクリーチャー(\d)体のパワーを\+(\d+)する'
+    spell:
+      - {op: choose, select: {zone: bz, owner: you, filter: {types: [creature]}, count: "{1}"}, as: target}
+      - {op: modify, select: {ref: target}, mod: {power: "{2}"}, duration: end_of_turn}
+  grant_sa_one:
+    re: 'このターン自分のクリーチャー(\d)体に「スピードアタッカー」を与える'
+    spell:
+      - {op: choose, select: {zone: bz, owner: you, filter: {types: [creature]}, count: "{1}"}, as: target}
+      - {op: modify, select: {ref: target}, mod: {grant: [speed_attacker]}, duration: end_of_turn}
+  grant_sa_all:
+    re: 'このターン自分のクリーチャーすべてに「スピードアタッカー」を与える'
+    spell: [{op: modify, select: {zone: bz, owner: you, filter: {types: [creature]}, count: all}, mod: {grant: [speed_attacker]}, duration: end_of_turn}]
+  tap_no_untap:
+    re: '相手のクリーチャーを(\d)体選びタップする次の相手のターンのはじめにそのクリーチャーはアンタップしない'
+    spell: [{op: tap, select: {zone: bz, owner: opp, filter: {types: [creature]}, count: "{1}"}, no_untap_next: true}]
+  tap_all_no_untap:
+    re: '相手のクリーチャーをすべてタップする次の相手のターンのはじめにそれらはアンタップしない'
+    spell: [{op: tap, select: {zone: bz, owner: opp, filter: {types: [creature]}, count: all}, no_untap_next: true}]
+  tap_any_n:
+    re: 'クリーチャーを(\d)体選びタップする'
+    spell: [{op: tap, select: {zone: bz, owner: any, filter: {types: [creature]}, count: "{1}"}}]
+  destroy_total_power:
+    re: '相手のクリーチャーをパワーの合計が(\d+)以下になるように好きな数選び破壊する'
+    spell: [{op: destroy, select: {zone: bz, owner: opp, filter: {types: [creature]}, total_power_le: "{1}"}}]
+  destroy_total_power2:
+    re: '相手のクリーチャーを好きな数パワーの合計が(\d+)以下になるように選び破壊する'
+    spell: [{op: destroy, select: {zone: bz, owner: opp, filter: {types: [creature]}, total_power_le: "{1}"}}]

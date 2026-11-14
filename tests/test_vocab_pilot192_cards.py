@@ -20,6 +20,8 @@ from pathlib import Path
 import yaml
 
 from dmsim.cards import cardstore
+
+import _conv_cache  # noqa: E402
 from dmsim.cards.defs import DATA, load_tables, parse_card
 
 TABLES = load_tables()
@@ -32,9 +34,9 @@ REGISTERED = ("dm24bd2-007", "dm24ex4-025", "dm24ex4-075", "dm25ex3-061",
 
 
 def _converted(cid):
-    for c in cardstore.read(CONVERTED):
-        if c["id"] == cid:
-            return c
+    c = _conv_cache.find(CONVERTED, cid)
+    if c is not None:
+        return c
     raise KeyError(cid)
 
 

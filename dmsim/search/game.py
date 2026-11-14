@@ -69,6 +69,8 @@ def run_turns(cur: list, me: int, max_turn: int, opp_pol, take_turn) -> None:
     """1局の手番ループ。cur[0] の Engine を進め、自分の決定になったら自分の何ターン目か（ot）で take_turn(eng, ot) を呼ぶ。
     take_turn は (次の Engine, 打ち切るか) を返す。自分の max_turn ターン目を過ぎるか終局で止まる。
     cur[0] は常に最新の局面（途中で例外が出ても呼び出し側が最新の局面を見られるよう、入れ物で受け渡す）。"""
+    from . import defense
+    opp_pol = defense.wrap(opp_pol, me)
     eng = cur[0]
     while (d := eng.advance()) is not None:
         if eng.s.active != me or d["player"] != me:
