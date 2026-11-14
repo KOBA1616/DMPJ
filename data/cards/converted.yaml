@@ -430896,3 +430896,520 @@ cards:
   source:
     official: dmr21-009
     review: pending
+- id: dmrp12-030
+  faces:
+  - name: スピナッチ・パンツァー
+    types:
+    - creature
+    civs:
+    - nature
+    cost: 6
+    power: 8000
+    races:
+    - グランセクト
+    keywords:
+    - double_breaker
+    abilities:
+    - kind: static
+      affects: self
+      mod:
+        must_be_attacked: true
+    - kind: trigger
+      when: &id220
+        event: battle_lose
+        subject: self
+      effect:
+      - op: move
+        select:
+          ref: event.opponent
+        to: mana
+        reason: put
+  - name: スピナー・ブル
+    types:
+    - spell
+    civs:
+    - light
+    cost: 1
+    keywords:
+    - s_trigger
+    spell:
+    - op: tap
+      select:
+        zone: bz
+        owner: any
+        filter:
+          types:
+          - creature
+        count: 1
+  mana: 1
+  text: 'スピナッチ・パンツァー: W・ブレイカー（このクリーチャーはシールドを２つブレイクする） / 相手のクリーチャーが攻撃する時、可能ならこのクリーチャーを攻撃する。
+    / このクリーチャーがバトルに負けた時、相手クリーチャーを持ち主のマナゾーンに置く。 ／ スピナー・ブル: S・トリガー（この呪文をシールドゾーンから手札に加える時、コストを支払わずにすぐ唱えてもよい）
+    / クリーチャーを１体選び、タップする。'
+  source:
+    official: dmrp12-030
+    review: pending
+- id: dmr06-036
+  name: 蔵禄の守護者カメンビー
+  types:
+  - creature
+  civs:
+  - light
+  cost: 2
+  power: 1500
+  races:
+  - ガーディアン
+  keywords:
+  - blocker
+  - cannot_attack_player
+  abilities:
+  - kind: trigger
+    when: *id220
+    effect:
+    - op: may
+      body:
+      - op: tap
+        select:
+          zone: bz
+          owner: opp
+          filter:
+            types:
+            - creature
+          count: 1
+    - op: may
+      body:
+      - op: draw
+        count: 1
+  mana: 1
+  text: 'ブロッカー(相手クリーチャーが攻撃する時、このクリーチャーをタップして、その攻撃を阻止してもよい。その後、その相手クリーチャーとバトルする)
+
+    このクリーチャーは、相手プレイヤーを攻撃できない。
+
+    このクリーチャーがバトルに負けた時、バトルゾーンにある相手のクリーチャーを１体選び、タップしてもよい。その後、カードを１枚引いてもよい。'
+  source:
+    official: dmr06-036
+    review: pending
+- id: dm26sd1-u009
+  faces:
+  - name: 天雷龍姫エリザベス
+    types:
+    - creature
+    civs:
+    - light
+    cost: 5
+    power: 5000
+    races:
+    - アポロニア・ドラゴン
+    - メカ・デル・ソル
+    - ナイト
+    abilities:
+    - kind: static
+      affects:
+        zone: shield
+        owner: you
+        filter:
+          types:
+          - spell
+      mod:
+        allow:
+        - s_trigger
+  - name: インビンシブル・フォートレス
+    types:
+    - spell
+    civs:
+    - fire
+    cost: 13
+    spell:
+    - op: move
+      select:
+        zone: shield
+        owner: opp
+        count:
+          upto: 3
+      to: graveyard
+      reason: put
+  mana: 1
+  text: '天雷龍姫エリザベス: 自分のシールドゾーンにある呪文すべてに「S・トリガー」を与える。（「S・トリガー」を持つカードを自分のシールドゾーンから手札に加える時、コストを支払わずにすぐ実行してもよい）
+    ／ インビンシブル・フォートレス: 相手のシールドを３つまで選び、持ち主の墓地に置く。'
+  source:
+    official: dm26sd1-u009
+    review: pending
+    aliases:
+    - dm22ex1-098
+- id: dm30-007
+  name: 天雷龍姫エリザベス
+  types:
+  - creature
+  civs:
+  - light
+  cost: 5
+  power: 5000
+  races:
+  - アポロニア・ドラゴン
+  - メカ・デル・ソル
+  - ナイト
+  abilities:
+  - kind: static
+    affects:
+      zone: shield
+      owner: you
+      filter:
+        types:
+        - spell
+    mod:
+      allow:
+      - s_trigger
+  mana: 1
+  text: シールドゾーンから自分の手札に加えられる呪文はすべて、「S・トリガー」を得る。
+  source:
+    official: dm30-007
+    review: pending
+    notes: 「シールドゾーンから自分の手札に加えられる呪文はすべてS・トリガーを得る」をシールドゾーンの自分の呪文への付与として書いた
+    aliases:
+    - dm30-007hc
+- id: dm33-008
+  name: 白騎士の光器ナターリア
+  types:
+  - creature
+  civs:
+  - light
+  cost: 6
+  power: 6000
+  races:
+  - メカ・デル・ソル
+  keywords:
+  - double_breaker
+  abilities:
+  - kind: static
+    affects:
+      zone: shield
+      owner: you
+      filter:
+        name_has: 白騎士
+    mod:
+      allow:
+      - s_trigger
+  mana: 1
+  text: 'W・ブレイカー(このクリーチャーはシールドを２枚ブレイクする)
+
+    自分の手札に加えられる、名前に《白騎士》とあるシールドカードはすべて「S・トリガー」を得る。'
+  source:
+    official: dm33-008
+    review: pending
+- id: dmrp11-013
+  faces:
+  - name: 審絆 ジェイラ
+    types:
+    - creature
+    civs:
+    - light
+    cost: 8
+    power: 7500
+    races:
+    - メタリカ
+    keywords:
+    - double_breaker
+    abilities:
+    - kind: static
+      zone: hand
+      affects: self
+      mod:
+        cost:
+          amount: -1
+          count:
+            zone: bz
+            owner: you
+            filter:
+              types:
+              - creature
+        cost_min: 1
+    - kind: static
+      affects:
+        zone: shield
+        owner: you
+        filter:
+          types:
+          - creature
+          cost_le: 3
+      mod:
+        allow:
+        - s_trigger
+    - kind: static
+      affects:
+        zone: shield
+        owner: you
+        filter:
+          types:
+          - spell
+          cost_le: 3
+      mod:
+        allow:
+        - s_trigger
+  - name: フレイム・ジェイル
+    types:
+    - spell
+    civs:
+    - fire
+    cost: 6
+    keywords:
+    - s_trigger
+    spell:
+    - op: destroy
+      select:
+        zone: bz
+        owner: opp
+        filter:
+          types:
+          - creature
+          power_le: 7000
+        count: 1
+  mana: 1
+  text: '審絆 ジェイラ: シンパシー：クリーチャー（このクリーチャーを召喚する時支払うコストは、バトルゾーンにある自分のクリーチャー１体につき１少なくなる。ただしコストは０以下にならない）
+    / W・ブレイカー（このクリーチャーはシールドを２つブレイクする） / 自分のシールドゾーンにある、コスト３以下のクリーチャーとコスト３以下の呪文すべてに「S・トリガー」を与える。
+    ／ フレイム・ジェイル: S・トリガー（この呪文をシールドゾーンから手札に加える時、コストを支払わずにすぐ唱えてもよい） / 相手のパワー7000以下のクリーチャーを
+    / １体、破壊する。'
+  source:
+    official: dmrp11-013
+    review: pending
+- id: dmex14-001
+  name: 「超感覚の聖狗」
+  types:
+  - creature
+  civs:
+  - light
+  cost: 5
+  power: 5500
+  races:
+  - メタリカ
+  - チーム銀河
+  abilities:
+  - kind: trigger
+    when:
+      event: move
+      to: bz
+      subject: self
+    effect:
+    - op: move
+      select:
+        zone: deck
+        owner: you
+        from_top: 1
+        count: 1
+      to: shield
+      reason: charge
+      face_up: true
+  - kind: static
+    affects:
+      zone: shield
+      owner: you
+      filter:
+        face_up: true
+    if:
+      all:
+      - is_turn: opp
+      - exists:
+          zone: bz
+          owner: you
+          filter:
+            types:
+            - creature
+            multicolor: true
+    mod:
+      allow:
+      - s_trigger
+  mana: 1
+  text: 'このクリーチャーがバトルゾーンに出た時、自分の山札の上から１枚目を表向きにし、新しいシールドとしてシールドゾーンに置く。
+
+    レインボーナス：バトルゾーンに自分の多色クリーチャーがあれば、相手のターン中、自分の手札に加える表向きのシールドカードすべてに「S・トリガー」を与える。'
+  source:
+    official: dmex14-001
+    review: pending
+- id: dm25rp4-069
+  name: 魔誕音像サーペント・ギター
+  types:
+  - creature
+  civs:
+  - fire
+  cost: 5
+  power: 6000
+  races:
+  - ガーゴイル
+  keywords:
+  - double_breaker
+  mana: 1
+  text: 'NEO進化：闇、火、または自然のクリーチャー１体の上に置いてもよい。（カードが下にあれば、これをNEO進化クリーチャーとして扱う）
+
+    NEO進化クリーチャーとして召喚するなら、このクリーチャーの召喚コストを２少なくする。
+
+    W・ブレイカー（このクリーチャーはシールドを２つブレイクする）'
+  source:
+    official: dm25rp4-069
+    review: pending
+    notes: '「NEO進化クリーチャーとして召喚するならN少なく」は cost_reduce_per_evo: N（NEO は進化元1体なので n=1 の時だけ軽減。通常召喚は
+      n=0）'
+  neo: true
+  evolve_from:
+    civs:
+    - darkness
+    - fire
+    - nature
+  cost_reduce_per_evo: 2
+- id: dmex17-036
+  name: 新爆竜 GENJI・XX
+  types:
+  - creature
+  civs:
+  - fire
+  cost: 4
+  power: 7000
+  races:
+  - アーマード・ドラゴン
+  - フレイム・コマンド
+  - ビートジョッキー
+  keywords:
+  - double_breaker
+  mana: 1
+  text: 'NEO進化：火のクリーチャー１体の上に置いてもよい。（クリーチャーが下にあれば、これをNEO進化クリーチャーとして扱う）
+
+    NEO進化クリーチャーとして召喚する場合、このクリーチャーの召喚コストを１少なくする。
+
+    W・ブレイカー
+
+    このクリーチャーが攻撃する時、相手の「ブロッカー」を持つクリーチャーを１体破壊する。'
+  source:
+    official: dmex17-036
+    review: pending
+    notes: '「NEO進化クリーチャーとして召喚するならN少なく」は cost_reduce_per_evo: N（NEO は進化元1体なので n=1 の時だけ軽減。通常召喚は
+      n=0）'
+  neo: true
+  evolve_from:
+    civs:
+    - fire
+  cost_reduce_per_evo: 1
+  abilities:
+  - kind: trigger
+    when:
+      event: attack
+      subject: self
+    effect:
+    - op: destroy
+      select:
+        zone: bz
+        owner: opp
+        filter:
+          types:
+          - creature
+          keyword: blocker
+        count: 1
+- id: dmrp02-s08
+  name: ランド覇車 ガンブルマン
+  types:
+  - creature
+  civs:
+  - fire
+  cost: 6
+  power: 8000
+  races:
+  - ビートジョッキー
+  keywords:
+  - double_breaker
+  abilities:
+  - kind: trigger
+    when:
+      event: attack
+      subject:
+        owner: you
+        filter:
+          neo: true
+    effect:
+    - op: destroy
+      select:
+        zone: bz
+        owner: opp
+        filter:
+          types:
+          - creature
+          power_le: 3000
+        count: 1
+  mana: 1
+  text: NEO進化：自分の火のクリーチャー１体の上に置いてもよい。（クリーチャーが下にあれば、これをNEO進化クリーチャーとして扱う）これをNEO進化クリーチャーとして召喚することを選んだなら、コストを３少なくする。W・ブレイカー自分のNEOクリーチャーが攻撃する時、相手のパワー3000以下のクリーチャーを１体破壊する。
+  source:
+    official: dmrp02-s08
+    review: pending
+    notes: '「NEO進化クリーチャーとして召喚するならN少なく」は cost_reduce_per_evo: N（NEO は進化元1体なので n=1 の時だけ軽減。通常召喚は
+      n=0）'
+  neo: true
+  evolve_from:
+    civs:
+    - fire
+  cost_reduce_per_evo: 3
+- id: dm25ex3-rp1001
+  name: 回転の精霊ナイッショエル
+  types:
+  - creature
+  civs:
+  - light
+  cost: 6
+  power: 7500
+  races:
+  - ジャイアント・エンジェル・コマンド
+  keywords:
+  - double_breaker
+  abilities:
+  - kind: trigger
+    when:
+      event: move
+      to: bz
+      subject: self
+    effect:
+    - op: tap
+      select:
+        zone: bz
+        owner: opp
+        filter:
+          types:
+          - creature
+        count: all
+      no_untap_next: true
+  - kind: replace
+    optional: true
+    when:
+      event: move
+      from: bz
+      to: graveyard
+      reason: destroy
+      subject:
+        owner: you
+        filter:
+          types:
+          - creature
+          evolution: true
+    instead:
+    - op: move
+      select:
+        ref: event.subject
+      to: shield
+      reason: charge
+  mana: 1
+  text: 'NEO進化：光、水、または自然のクリーチャー１体の上に置いてもよい。
+
+    NEO進化クリーチャーとして召喚するなら、このクリーチャーの召喚コストを２少なくする。
+
+    W・ブレイカー
+
+    このクリーチャーが出た時、相手のクリーチャーをすべてタップする。次の相手のターンのはじめに、それらはアンタップしない。
+
+    自分の進化クリーチャーが破壊される時、墓地に置くかわりにシールド化してもよい。'
+  source:
+    official: dm25ex3-rp1001
+    review: pending
+    notes: '「NEO進化クリーチャーとして召喚するならN少なく」は cost_reduce_per_evo: N（NEO は進化元1体なので n=1 の時だけ軽減。通常召喚は
+      n=0）'
+    aliases:
+    - dm25rp1-001
+  neo: true
+  evolve_from:
+    civs:
+    - light
+    - water
+    - nature
+  cost_reduce_per_evo: 2
