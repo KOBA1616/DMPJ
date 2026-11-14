@@ -157,16 +157,22 @@ def bz_need_of_entry(minimal: list[dict]) -> list[str]:
             if p.get("owner", 0) == 0 and p.get("zone") == "bz" and "name" in p.get("match", {})]
 
 
-def measured_bound(rules, deck: list[str], seeds, *, budget: int = 1000, max_turn: int = 4, opp_deck=None) -> dict:
-    """山札が見える探索で seeds の並び × 先攻・後攻を回し、max_turn 以内の最速勝ち（上限ターン）と内訳を返す。"""
+def measured_bound(rules, deck: list[str], seeds, *, budget: int = 1000, max_turn: int = 4, opp_deck=None, opp_level=0) -> dict:
+    """山札が見える探索で seeds の並び × 先攻・後攻を回し、max_turn 以内の最速勝ち（上限ターン）と内訳を返す。
+    opp_level: 相手の段階（search.opponent.resistance）。既定 0 は従来どおり何もしない相手。"""
     from .lockcheck import lock_probe
     from ..search.game import play_game
+    from ..search.opponent import resistance
+    model, lvl_deck = resistance(opp_level)
+    if opp_level != 0 and opp_deck is None:
+        opp_deck = lvl_deck
     rows = []
     for s in seeds:
         for first in (0, 1):
             res, _ = play_game(rules, list(deck), list(opp_deck or ["T001"] * 40), s, first_player=first,
-                               max_turn=max_turn, budget=budget, lock_judge=lock_probe)
-            rows.append({"seed": s, "first": first, "kill_turn": res.kill_turn, "origin": res.origin, "kind": res.kind})
+                               max_turn=max_turn, budget=budget, lock_judge=lock_probe, opp=model)
+            rows.append({"seed": s, "first": first, "kill_turn": res.kill_turn, "origin": res.origin, "kind": res.kind,
+                         "lost": res.lost})
     kills = [r for r in rows if r["kill_turn"]]
     return {"games": len(rows), "best_turn": min((r["kill_turn"] for r in kills), default=None),
             "kills": len(kills), "rows": rows}
