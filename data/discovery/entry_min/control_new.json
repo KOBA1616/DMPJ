@@ -1,0 +1,5565 @@
+{
+ "passed": false,
+ "reason": "既知コンボが基準 0.8 に届かない: saga 0.12, akashic 0.38, akashic_hd2 0.75",
+ "summary": {
+  "known": {
+   "saga": 0.125,
+   "akashic": 0.375,
+   "akashic_hd2": 0.75
+  },
+  "random": [
+   {
+    "combo": "saga",
+    "old": "dm22ex1-007",
+    "new": "dmx22b-011",
+    "rate": 0.0
+   },
+   {
+    "combo": "saga",
+    "old": "dm22ex1-007",
+    "new": "dmex01-053",
+    "rate": 0.0
+   },
+   {
+    "combo": "saga",
+    "old": "dm22ex1-007",
+    "new": "dmx19-s28",
+    "rate": 0.0
+   },
+   {
+    "combo": "saga",
+    "old": "dm22ex1-007",
+    "new": "dmx22b-052",
+    "rate": 0.0
+   },
+   {
+    "combo": "saga",
+    "old": "dm22ex2-021",
+    "new": "dmrp20-068",
+    "rate": 0.0
+   },
+   {
+    "combo": "saga",
+    "old": "dm22ex2-021",
+    "new": "dm02-044",
+    "rate": 0.0
+   },
+   {
+    "combo": "saga",
+    "old": "dm22ex2-021",
+    "new": "dm25rp1-033",
+    "rate": 0.0
+   },
+   {
+    "combo": "saga",
+    "old": "dm22ex2-021",
+    "new": "dmrp03-069",
+    "rate": 0.0
+   },
+   {
+    "combo": "saga",
+    "old": "dmrp03-s03",
+    "new": "dmc27-024",
+    "rate": 0.0
+   },
+   {
+    "combo": "saga",
+    "old": "dmrp03-s03",
+    "new": "dmrp04m-046",
+    "rate": 0.0
+   },
+   {
+    "combo": "saga",
+    "old": "dmrp03-s03",
+    "new": "dm26ex4-034",
+    "rate": 0.0
+   },
+   {
+    "combo": "saga",
+    "old": "dmrp03-s03",
+    "new": "dm01-s03",
+    "rate": 0.0
+   },
+   {
+    "combo": "akashic",
+    "old": "dm23bd7-035",
+    "new": "dm18-008",
+    "rate": 0.0
+   },
+   {
+    "combo": "akashic",
+    "old": "dm23bd7-035",
+    "new": "dmc34-003",
+    "rate": 0.0
+   },
+   {
+    "combo": "akashic",
+    "old": "dm23bd7-035",
+    "new": "dm23-027",
+    "rate": 0.0
+   },
+   {
+    "combo": "akashic",
+    "old": "dm23bd7-035",
+    "new": "dmc34-032",
+    "rate": 0.0
+   },
+   {
+    "combo": "akashic",
+    "old": "dm23ex2-009",
+    "new": "dmex08-269",
+    "rate": 0.0
+   },
+   {
+    "combo": "akashic",
+    "old": "dm23ex2-009",
+    "new": "dm26sd1-t003",
+    "rate": 0.0
+   },
+   {
+    "combo": "akashic",
+    "old": "dm23ex2-009",
+    "new": "dmex03-035",
+    "rate": 0.0
+   },
+   {
+    "combo": "akashic",
+    "old": "dm23ex2-009",
+    "new": "dm26ex4-sec023",
+    "rate": 0.0
+   },
+   {
+    "combo": "akashic",
+    "old": "dm24ex1-038+dmrp07-009+dmrp12-s01",
+    "new": "dmd26-010+dm35-052+dmc67-001",
+    "rate": 0.0
+   },
+   {
+    "combo": "akashic",
+    "old": "dm24ex1-038+dmrp07-009+dmrp12-s01",
+    "new": "dm16-041+dm24rp1-072+dm23bd7-049",
+    "rate": 0.0
+   },
+   {
+    "combo": "akashic",
+    "old": "dm24ex1-038+dmrp07-009+dmrp12-s01",
+    "new": "dm19-081+dmex09-041+dmrp06-036",
+    "rate": 0.0
+   },
+   {
+    "combo": "akashic",
+    "old": "dm24ex1-038+dmrp07-009+dmrp12-s01",
+    "new": "dm23rp3-057+dm24bd5-047+dm24bd6-032",
+    "rate": 0.0
+   },
+   {
+    "combo": "akashic_hd2",
+    "old": "dm23bd7-035",
+    "new": "dmx20-029",
+    "rate": 0.0
+   },
+   {
+    "combo": "akashic_hd2",
+    "old": "dm23bd7-035",
+    "new": "dm25ex2-cho014",
+    "rate": 0.0
+   },
+   {
+    "combo": "akashic_hd2",
+    "old": "dm23bd7-035",
+    "new": "dmrp04m-s05",
+    "rate": 0.0
+   },
+   {
+    "combo": "akashic_hd2",
+    "old": "dm23bd7-035",
+    "new": "dm24-032",
+    "rate": 0.0
+   },
+   {
+    "combo": "akashic_hd2",
+    "old": "dm23ex2-009",
+    "new": "dmex08-269",
+    "rate": 0.0
+   },
+   {
+    "combo": "akashic_hd2",
+    "old": "dm23ex2-009",
+    "new": "dm25ex3-rp3003",
+    "rate": 0.0
+   },
+   {
+    "combo": "akashic_hd2",
+    "old": "dm23ex2-009",
+    "new": "dm26sd1-l008",
+    "rate": 0.0
+   },
+   {
+    "combo": "akashic_hd2",
+    "old": "dm23ex2-009",
+    "new": "dmx19-s15",
+    "rate": 0.0
+   },
+   {
+    "combo": "akashic_hd2",
+    "old": "dm24ex1-038+dmrp07-009+dmrp12-s01",
+    "new": "dm24-083+dmbd11-b02+dmex08-232",
+    "rate": 0.0
+   },
+   {
+    "combo": "akashic_hd2",
+    "old": "dm24ex1-038+dmrp07-009+dmrp12-s01",
+    "new": "dmrp08-019+dmx20-066+dm26ex4-098",
+    "rate": 0.0
+   },
+   {
+    "combo": "akashic_hd2",
+    "old": "dm24ex1-038+dmrp07-009+dmrp12-s01",
+    "new": "dm24ex4-037+dm24ex4-033+dm24rp3-034",
+    "rate": 0.0
+   },
+   {
+    "combo": "akashic_hd2",
+    "old": "dm24ex1-038+dmrp07-009+dmrp12-s01",
+    "new": "dm26sd1-o011+dmart14-006+dm26rp3-024",
+    "rate": 0.0
+   }
+  ],
+  "explained": [],
+  "pending": [],
+  "bad": [],
+  "random_median": 0.0,
+  "random_max": 0.0,
+  "errors": 0,
+  "removal": [
+   {
+    "combo": "saga",
+    "old": "dm22ex1-007",
+    "new": "dmd19-014",
+    "rate": 0.0,
+    "expected_drop": true,
+    "dropped": true,
+    "mismatch": null
+   },
+   {
+    "combo": "saga",
+    "old": "dm22ex2-021",
+    "new": "dm03-041",
+    "rate": 0.0,
+    "expected_drop": true,
+    "dropped": true,
+    "mismatch": null
+   },
+   {
+    "combo": "saga",
+    "old": "dmrp03-s03",
+    "new": "dmx19-s15",
+    "rate": 0.0,
+    "expected_drop": true,
+    "dropped": true,
+    "mismatch": null
+   },
+   {
+    "combo": "akashic",
+    "old": "dm23bd7-035",
+    "new": "dmrp03-007",
+    "rate": 0.0,
+    "expected_drop": true,
+    "dropped": true,
+    "mismatch": null
+   },
+   {
+    "combo": "akashic",
+    "old": "dm23ex2-009",
+    "new": "dmex19-s18",
+    "rate": 0.0,
+    "expected_drop": true,
+    "dropped": true,
+    "mismatch": null
+   },
+   {
+    "combo": "akashic",
+    "old": "dm24ex1-038",
+    "new": "dm23-041",
+    "rate": 1.0,
+    "expected_drop": false,
+    "dropped": false,
+    "mismatch": null
+   },
+   {
+    "combo": "akashic",
+    "old": "dmrp07-009",
+    "new": "dm26-055",
+    "rate": 0.25,
+    "expected_drop": false,
+    "dropped": false,
+    "mismatch": null
+   },
+   {
+    "combo": "akashic",
+    "old": "dmrp12-s01",
+    "new": "dmrp04s-036",
+    "rate": 1.0,
+    "expected_drop": false,
+    "dropped": false,
+    "mismatch": null
+   },
+   {
+    "combo": "akashic_hd2",
+    "old": "dm23bd7-035",
+    "new": "promoy23-086",
+    "rate": 0.0,
+    "expected_drop": true,
+    "dropped": true,
+    "mismatch": null
+   },
+   {
+    "combo": "akashic_hd2",
+    "old": "dm23ex2-009",
+    "new": "dm26rp3-std012",
+    "rate": 0.0,
+    "expected_drop": true,
+    "dropped": true,
+    "mismatch": null
+   },
+   {
+    "combo": "akashic_hd2",
+    "old": "dm24ex1-038",
+    "new": "dm20-042",
+    "rate": 0.625,
+    "expected_drop": false,
+    "dropped": false,
+    "mismatch": null
+   },
+   {
+    "combo": "akashic_hd2",
+    "old": "dmrp07-009",
+    "new": "dm23bd3-016",
+    "rate": 1.0,
+    "expected_drop": false,
+    "dropped": false,
+    "mismatch": null
+   },
+   {
+    "combo": "akashic_hd2",
+    "old": "dmrp12-s01",
+    "new": "dm24-s09",
+    "rate": 0.875,
+    "expected_drop": false,
+    "dropped": false,
+    "mismatch": null
+   }
+  ],
+  "seconds": 796
+ },
+ "known_rows": {
+  "saga": [
+   {
+    "seed": 1,
+    "start": "f689982b2ee2",
+    "stage1": true,
+    "stage2": false,
+    "via": "beat",
+    "win_turn": 2,
+    "error": null,
+    "reason": "段1: ループ成立（有限 6 周、pattern） / 段2: ループの後に殴り勝ち（ループ勝ちに数えない）"
+   },
+   {
+    "seed": 2,
+    "start": "1bcc07b2feef",
+    "stage1": true,
+    "stage2": false,
+    "via": "beat",
+    "win_turn": 2,
+    "error": null,
+    "reason": "段1: ループ成立（有限 6 周、pattern） / 段2: ループの後に殴り勝ち（ループ勝ちに数えない）"
+   },
+   {
+    "seed": 3,
+    "start": "c91cdcb9979c",
+    "stage1": true,
+    "stage2": false,
+    "via": "beat",
+    "win_turn": 2,
+    "error": null,
+    "reason": "段1: ループ成立（有限 15 周、pattern） / 段2: ループの後に殴り勝ち（ループ勝ちに数えない）"
+   },
+   {
+    "seed": 4,
+    "start": "0de13ee184e8",
+    "stage1": true,
+    "stage2": false,
+    "via": "beat",
+    "win_turn": 2,
+    "error": null,
+    "reason": "段1: ループ成立（有限 12 周、pattern） / 段2: ループの後に殴り勝ち（ループ勝ちに数えない）"
+   },
+   {
+    "seed": 5,
+    "start": "523fdf2366a8",
+    "stage1": true,
+    "stage2": false,
+    "via": null,
+    "win_turn": null,
+    "error": null,
+    "reason": "段1: ループ成立（有限 8 周、pattern） / 段2: 上限のターンまでに勝てなかった"
+   },
+   {
+    "seed": 6,
+    "start": "d967328f5094",
+    "stage1": true,
+    "stage2": false,
+    "via": "beat",
+    "win_turn": 2,
+    "error": null,
+    "reason": "段1: ループ成立（有限 8 周、pattern） / 段2: ループの後に殴り勝ち（ループ勝ちに数えない）"
+   },
+   {
+    "seed": 7,
+    "start": "2e6c6636d028",
+    "stage1": true,
+    "stage2": false,
+    "via": "beat",
+    "win_turn": 2,
+    "error": null,
+    "reason": "段1: ループ成立（有限 10 周、pattern） / 段2: ループの後に殴り勝ち（ループ勝ちに数えない）"
+   },
+   {
+    "seed": 8,
+    "start": "bbae4eeb5916",
+    "stage1": true,
+    "stage2": true,
+    "via": "loop",
+    "win_turn": 1,
+    "error": null,
+    "reason": "段1: ループ成立（有限 13 周、pattern） / 段2: ループで蓄積した後に勝利効果で勝ち（ループ後に攻撃 1 回、攻撃は勝利効果の引き金）"
+   }
+  ],
+  "akashic": [
+   {
+    "seed": 1,
+    "start": "540ac000f833",
+    "stage1": false,
+    "stage2": false,
+    "via": null,
+    "win_turn": null,
+    "error": null,
+    "reason": "段1: 採った手順にループが無い（探索の候補には 2 件あったが選ばれていない） / 段2: 上限のターンまでに勝てなかった"
+   },
+   {
+    "seed": 2,
+    "start": "6b714aa5116f",
+    "stage1": true,
+    "stage2": true,
+    "via": "loop",
+    "win_turn": 2,
+    "error": null,
+    "reason": "段1: ループ成立（無限、certificate） / 段2: ループで相手の山札を削り切って勝ち"
+   },
+   {
+    "seed": 3,
+    "start": "78a97b94d10a",
+    "stage1": false,
+    "stage2": false,
+    "via": null,
+    "win_turn": null,
+    "error": null,
+    "reason": "段1: 採った手順にループが無い / 段2: 上限のターンまでに勝てなかった"
+   },
+   {
+    "seed": 4,
+    "start": "0e8a40e6c74e",
+    "stage1": false,
+    "stage2": false,
+    "via": null,
+    "win_turn": null,
+    "error": null,
+    "reason": "段1: 採った手順にループが無い / 段2: 上限のターンまでに勝てなかった"
+   },
+   {
+    "seed": 5,
+    "start": "c975f35079c5",
+    "stage1": true,
+    "stage2": true,
+    "via": "loop",
+    "win_turn": 2,
+    "error": null,
+    "reason": "段1: ループ成立（無限、certificate） / 段2: ループで相手の山札を削り切って勝ち"
+   },
+   {
+    "seed": 6,
+    "start": "9b15d73ec0b0",
+    "stage1": true,
+    "stage2": true,
+    "via": "loop",
+    "win_turn": 1,
+    "error": null,
+    "reason": "段1: ループ成立（無限、certificate） / 段2: ループで相手の山札を削り切って勝ち"
+   },
+   {
+    "seed": 7,
+    "start": "146017204aba",
+    "stage1": false,
+    "stage2": false,
+    "via": null,
+    "win_turn": null,
+    "error": null,
+    "reason": "段1: 採った手順にループが無い / 段2: 上限のターンまでに勝てなかった"
+   },
+   {
+    "seed": 8,
+    "start": "073b4c7d52ca",
+    "stage1": false,
+    "stage2": false,
+    "via": null,
+    "win_turn": null,
+    "error": null,
+    "reason": "段1: 採った手順にループが無い / 段2: 上限のターンまでに勝てなかった"
+   }
+  ],
+  "akashic_hd2": [
+   {
+    "seed": 1,
+    "start": "67af25759a39",
+    "stage1": true,
+    "stage2": true,
+    "via": "loop",
+    "win_turn": 2,
+    "error": null,
+    "reason": "段1: ループ成立（無限、certificate） / 段2: ループで相手の山札を削り切って勝ち"
+   },
+   {
+    "seed": 2,
+    "start": "ac16cf8bb08f",
+    "stage1": true,
+    "stage2": true,
+    "via": "loop",
+    "win_turn": 2,
+    "error": null,
+    "reason": "段1: ループ成立（無限、certificate） / 段2: ループで相手の山札を削り切って勝ち"
+   },
+   {
+    "seed": 3,
+    "start": "7a5715ff22e1",
+    "stage1": true,
+    "stage2": true,
+    "via": "loop",
+    "win_turn": 1,
+    "error": null,
+    "reason": "段1: ループ成立（無限、certificate） / 段2: ループで相手の山札を削り切って勝ち"
+   },
+   {
+    "seed": 4,
+    "start": "7dbd7fbc2227",
+    "stage1": false,
+    "stage2": false,
+    "via": null,
+    "win_turn": null,
+    "error": null,
+    "reason": "段1: 採った手順にループが無い / 段2: 上限のターンまでに勝てなかった"
+   },
+   {
+    "seed": 5,
+    "start": "9bc980362762",
+    "stage1": true,
+    "stage2": true,
+    "via": "loop",
+    "win_turn": 2,
+    "error": null,
+    "reason": "段1: ループ成立（無限、certificate） / 段2: ループで相手の山札を削り切って勝ち"
+   },
+   {
+    "seed": 6,
+    "start": "0fe7d3095269",
+    "stage1": false,
+    "stage2": false,
+    "via": null,
+    "win_turn": null,
+    "error": null,
+    "reason": "段1: 採った手順にループが無い / 段2: 上限のターンまでに勝てなかった"
+   },
+   {
+    "seed": 7,
+    "start": "0d9277ef23a2",
+    "stage1": true,
+    "stage2": true,
+    "via": "loop",
+    "win_turn": 1,
+    "error": null,
+    "reason": "段1: ループ成立（無限、certificate） / 段2: ループで相手の山札を削り切って勝ち"
+   },
+   {
+    "seed": 8,
+    "start": "aaa588351907",
+    "stage1": true,
+    "stage2": true,
+    "via": "loop",
+    "win_turn": 1,
+    "error": null,
+    "reason": "段1: ループ成立（無限、certificate） / 段2: ループで相手の山札を削り切って勝ち"
+   }
+  ]
+ },
+ "random_rows": [
+  {
+   "combo": "saga",
+   "group": "変換（墓地進化でシャコガイルを出す）",
+   "old": "dm22ex1-007",
+   "new": "dmx22b-011",
+   "pairs": [
+    [
+     "dm22ex1-007",
+     "dmx22b-011"
+    ]
+   ],
+   "deck": [
+    "dm22ex2-021",
+    "dm22ex2-021",
+    "dm22ex2-021",
+    "dm22ex2-021",
+    "dmx22b-011",
+    "dmx22b-011",
+    "dmex10-020",
+    "dmex10-020",
+    "dmex10-020",
+    "dmex10-020",
+    "dm22ex1-025",
+    "dm22ex1-025",
+    "dm22ex1-025",
+    "dm22ex1-025",
+    "dmrp03-036",
+    "dmrp03-036",
+    "dmrp03-036",
+    "dmrp03-036",
+    "dmrp03-s03",
+    "dmrp03-s03",
+    "dm26ex2-071",
+    "dm26ex2-071",
+    "dm26ex2-071",
+    "dm26ex2-071",
+    "dmd08-015",
+    "dmd08-015",
+    "dmd08-015",
+    "dmd08-015",
+    "dm01-027",
+    "dm01-027",
+    "dm01-027",
+    "dm01-080",
+    "dm01-080",
+    "dm01-080",
+    "dm01-017",
+    "dm01-047",
+    "dm01-056",
+    "dm01-084",
+    "dm02-011",
+    "dm02-041"
+   ],
+   "rows": [
+    {
+     "seed": 1,
+     "start": "84628a5ece9e",
+     "stage1": true,
+     "stage2": false,
+     "via": null,
+     "win_turn": null,
+     "error": null,
+     "reason": "段1: ループ成立（有限 6 周、pattern） / 段2: 上限のターンまでに勝てなかった"
+    },
+    {
+     "seed": 2,
+     "start": "17d041296f6d",
+     "stage1": true,
+     "stage2": false,
+     "via": null,
+     "win_turn": null,
+     "error": null,
+     "reason": "段1: ループ成立（有限 7 周、pattern） / 段2: 上限のターンまでに勝てなかった"
+    },
+    {
+     "seed": 3,
+     "start": "30b123d6ebab",
+     "stage1": true,
+     "stage2": false,
+     "via": null,
+     "win_turn": null,
+     "error": null,
+     "reason": "段1: ループ成立（有限 5 周、pattern） / 段2: 上限のターンまでに勝てなかった"
+    },
+    {
+     "seed": 4,
+     "start": "ed1a683f4e42",
+     "stage1": true,
+     "stage2": false,
+     "via": null,
+     "win_turn": null,
+     "error": null,
+     "reason": "段1: ループ成立（有限 7 周、pattern） / 段2: 上限のターンまでに勝てなかった"
+    },
+    {
+     "seed": 5,
+     "start": "db8dafb9aa26",
+     "stage1": true,
+     "stage2": false,
+     "via": null,
+     "win_turn": null,
+     "error": null,
+     "reason": "段1: ループ成立（有限 8 周、pattern） / 段2: 上限のターンまでに勝てなかった"
+    },
+    {
+     "seed": 6,
+     "start": "c23e83668ad9",
+     "stage1": true,
+     "stage2": false,
+     "via": null,
+     "win_turn": null,
+     "error": null,
+     "reason": "段1: ループ成立（有限 13 周、pattern） / 段2: 上限のターンまでに勝てなかった"
+    },
+    {
+     "seed": 7,
+     "start": "beb2eb19be51",
+     "stage1": true,
+     "stage2": false,
+     "via": null,
+     "win_turn": null,
+     "error": null,
+     "reason": "段1: ループ成立（有限 6 周、pattern） / 段2: 上限のターンまでに勝てなかった"
+    },
+    {
+     "seed": 8,
+     "start": "3457345f5024",
+     "stage1": true,
+     "stage2": false,
+     "via": null,
+     "win_turn": null,
+     "error": null,
+     "reason": "段1: ループ成立（有限 6 周、pattern） / 段2: 上限のターンまでに勝てなかった"
+    }
+   ]
+  },
+  {
+   "combo": "saga",
+   "group": "変換（墓地進化でシャコガイルを出す）",
+   "old": "dm22ex1-007",
+   "new": "dmex01-053",
+   "pairs": [
+    [
+     "dm22ex1-007",
+     "dmex01-053"
+    ]
+   ],
+   "deck": [
+    "dm22ex2-021",
+    "dm22ex2-021",
+    "dm22ex2-021",
+    "dm22ex2-021",
+    "dmex01-053",
+    "dmex01-053",
+    "dmex10-020",
+    "dmex10-020",
+    "dmex10-020",
+    "dmex10-020",
+    "dm22ex1-025",
+    "dm22ex1-025",
+    "dm22ex1-025",
+    "dm22ex1-025",
+    "dmrp03-036",
+    "dmrp03-036",
+    "dmrp03-036",
+    "dmrp03-036",
+    "dmrp03-s03",
+    "dmrp03-s03",
+    "dm26ex2-071",
+    "dm26ex2-071",
+    "dm26ex2-071",
+    "dm26ex2-071",
+    "dmd08-015",
+    "dmd08-015",
+    "dmd08-015",
+    "dmd08-015",
+    "dm01-027",
+    "dm01-027",
+    "dm01-027",
+    "dm01-080",
+    "dm01-080",
+    "dm01-080",
+    "dm01-017",
+    "dm01-047",
+    "dm01-056",
+    "dm01-084",
+    "dm02-011",
+    "dm02-041"
+   ],
+   "rows": [
+    {
+     "seed": 1,
+     "start": "08bbfd4d04b9",
+     "stage1": true,
+     "stage2": false,
+     "via": null,
+     "win_turn": null,
+     "error": null,
+     "reason": "段1: ループ成立（有限 7 周、pattern） / 段2: 上限のターンまでに勝てなかった"
+    },
+    {
+     "seed": 2,
+     "start": "08d937413178",
+     "stage1": true,
+     "stage2": false,
+     "via": null,
+     "win_turn": null,
+     "error": null,
+     "reason": "段1: ループ成立（有限 6 周、pattern） / 段2: 上限のターンまでに勝てなかった"
+    },
+    {
+     "seed": 3,
+     "start": "8982e6200b6b",
+     "stage1": true,
+     "stage2": false,
+     "via": null,
+     "win_turn": null,
+     "error": null,
+     "reason": "段1: ループ成立（有限 7 周、pattern） / 段2: 上限のターンまでに勝てなかった"
+    },
+    {
+     "seed": 4,
+     "start": "a8b1813f9312",
+     "stage1": true,
+     "stage2": false,
+     "via": null,
+     "win_turn": null,
+     "error": null,
+     "reason": "段1: ループ成立（有限 6 周、pattern） / 段2: 上限のターンまでに勝てなかった"
+    },
+    {
+     "seed": 5,
+     "start": "8f9bb1198e03",
+     "stage1": true,
+     "stage2": false,
+     "via": null,
+     "win_turn": null,
+     "error": null,
+     "reason": "段1: ループ成立（有限 8 周、pattern） / 段2: 上限のターンまでに勝てなかった"
+    },
+    {
+     "seed": 6,
+     "start": "0deabd02a786",
+     "stage1": true,
+     "stage2": false,
+     "via": null,
+     "win_turn": null,
+     "error": null,
+     "reason": "段1: ループ成立（有限 14 周、pattern） / 段2: 上限のターンまでに勝てなかった"
+    },
+    {
+     "seed": 7,
+     "start": "5d96bac3017b",
+     "stage1": true,
+     "stage2": false,
+     "via": null,
+     "win_turn": null,
+     "error": null,
+     "reason": "段1: ループ成立（有限 7 周、pattern） / 段2: 上限のターンまでに勝てなかった"
+    },
+    {
+     "seed": 8,
+     "start": "c6f749b341d9",
+     "stage1": true,
+     "stage2": false,
+     "via": null,
+     "win_turn": null,
+     "error": null,
+     "reason": "段1: ループ成立（有限 6 周、pattern） / 段2: 上限のターンまでに勝てなかった"
+    }
+   ]
+  },
+  {
+   "combo": "saga",
+   "group": "変換（墓地進化でシャコガイルを出す）",
+   "old": "dm22ex1-007",
+   "new": "dmx19-s28",
+   "pairs": [
+    [
+     "dm22ex1-007",
+     "dmx19-s28"
+    ]
+   ],
+   "deck": [
+    "dm22ex2-021",
+    "dm22ex2-021",
+    "dm22ex2-021",
+    "dm22ex2-021",
+    "dmx19-s28",
+    "dmx19-s28",
+    "dmex10-020",
+    "dmex10-020",
+    "dmex10-020",
+    "dmex10-020",
+    "dm22ex1-025",
+    "dm22ex1-025",
+    "dm22ex1-025",
+    "dm22ex1-025",
+    "dmrp03-036",
+    "dmrp03-036",
+    "dmrp03-036",
+    "dmrp03-036",
+    "dmrp03-s03",
+    "dmrp03-s03",
+    "dm26ex2-071",
+    "dm26ex2-071",
+    "dm26ex2-071",
+    "dm26ex2-071",
+    "dmd08-015",
+    "dmd08-015",
+    "dmd08-015",
+    "dmd08-015",
+    "dm01-027",
+    "dm01-027",
+    "dm01-027",
+    "dm01-080",
+    "dm01-080",
+    "dm01-080",
+    "dm01-017",
+    "dm01-047",
+    "dm01-056",
+    "dm01-084",
+    "dm02-011",
+    "dm02-041"
+   ],
+   "rows": [
+    {
+     "seed": 1,
+     "start": "3aa9defe1af8",
+     "stage1": true,
+     "stage2": false,
+     "via": null,
+     "win_turn": null,
+     "error": null,
+     "reason": "段1: ループ成立（有限 6 周、pattern） / 段2: 上限のターンまでに勝てなかった"
+    },
+    {
+     "seed": 2,
+     "start": "4130da14fe68",
+     "stage1": true,
+     "stage2": false,
+     "via": null,
+     "win_turn": null,
+     "error": null,
+     "reason": "段1: ループ成立（有限 7 周、pattern） / 段2: 上限のターンまでに勝てなかった"
+    },
+    {
+     "seed": 3,
+     "start": "c6227040eac9",
+     "stage1": true,
+     "stage2": false,
+     "via": null,
+     "win_turn": null,
+     "error": null,
+     "reason": "段1: ループ成立（有限 5 周、pattern） / 段2: 上限のターンまでに勝てなかった"
+    },
+    {
+     "seed": 4,
+     "start": "c8335f9921de",
+     "stage1": true,
+     "stage2": false,
+     "via": null,
+     "win_turn": null,
+     "error": null,
+     "reason": "段1: ループ成立（有限 7 周、pattern） / 段2: 上限のターンまでに勝てなかった"
+    },
+    {
+     "seed": 5,
+     "start": "7ce47d8d1187",
+     "stage1": true,
+     "stage2": false,
+     "via": null,
+     "win_turn": null,
+     "error": null,
+     "reason": "段1: ループ成立（有限 8 周、pattern） / 段2: 上限のターンまでに勝てなかった"
+    },
+    {
+     "seed": 6,
+     "start": "afe596171e5b",
+     "stage1": true,
+     "stage2": false,
+     "via": null,
+     "win_turn": null,
+     "error": null,
+     "reason": "段1: ループ成立（有限 13 周、pattern） / 段2: 上限のターンまでに勝てなかった"
+    },
+    {
+     "seed": 7,
+     "start": "dc573949f347",
+     "stage1": true,
+     "stage2": false,
+     "via": null,
+     "win_turn": null,
+     "error": null,
+     "reason": "段1: ループ成立（有限 6 周、pattern） / 段2: 上限のターンまでに勝てなかった"
+    },
+    {
+     "seed": 8,
+     "start": "334047747da9",
+     "stage1": true,
+     "stage2": false,
+     "via": null,
+     "win_turn": null,
+     "error": null,
+     "reason": "段1: ループ成立（有限 6 周、pattern） / 段2: 上限のターンまでに勝てなかった"
+    }
+   ]
+  },
+  {
+   "combo": "saga",
+   "group": "変換（墓地進化でシャコガイルを出す）",
+   "old": "dm22ex1-007",
+   "new": "dmx22b-052",
+   "pairs": [
+    [
+     "dm22ex1-007",
+     "dmx22b-052"
+    ]
+   ],
+   "deck": [
+    "dm22ex2-021",
+    "dm22ex2-021",
+    "dm22ex2-021",
+    "dm22ex2-021",
+    "dmx22b-052",
+    "dmx22b-052",
+    "dmex10-020",
+    "dmex10-020",
+    "dmex10-020",
+    "dmex10-020",
+    "dm22ex1-025",
+    "dm22ex1-025",
+    "dm22ex1-025",
+    "dm22ex1-025",
+    "dmrp03-036",
+    "dmrp03-036",
+    "dmrp03-036",
+    "dmrp03-036",
+    "dmrp03-s03",
+    "dmrp03-s03",
+    "dm26ex2-071",
+    "dm26ex2-071",
+    "dm26ex2-071",
+    "dm26ex2-071",
+    "dmd08-015",
+    "dmd08-015",
+    "dmd08-015",
+    "dmd08-015",
+    "dm01-027",
+    "dm01-027",
+    "dm01-027",
+    "dm01-080",
+    "dm01-080",
+    "dm01-080",
+    "dm01-017",
+    "dm01-047",
+    "dm01-056",
+    "dm01-084",
+    "dm02-011",
+    "dm02-041"
+   ],
+   "rows": [
+    {
+     "seed": 1,
+     "start": "416483181460",
+     "stage1": true,
+     "stage2": false,
+     "via": null,
+     "win_turn": null,
+     "error": null,
+     "reason": "段1: ループ成立（有限 6 周、pattern） / 段2: 上限のターンまでに勝てなかった"
+    },
+    {
+     "seed": 2,
+     "start": "ae521a749035",
+     "stage1": true,
+     "stage2": false,
+     "via": null,
+     "win_turn": null,
+     "error": null,
+     "reason": "段1: ループ成立（有限 7 周、pattern） / 段2: 上限のターンまでに勝てなかった"
+    },
+    {
+     "seed": 3,
+     "start": "1faf85a99844",
+     "stage1": true,
+     "stage2": false,
+     "via": null,
+     "win_turn": null,
+     "error": null,
+     "reason": "段1: ループ成立（有限 5 周、pattern） / 段2: 上限のターンまでに勝てなかった"
+    },
+    {
+     "seed": 4,
+     "start": "22ece3f73cc6",
+     "stage1": true,
+     "stage2": false,
+     "via": null,
+     "win_turn": null,
+     "error": null,
+     "reason": "段1: ループ成立（有限 7 周、pattern） / 段2: 上限のターンまでに勝てなかった"
+    },
+    {
+     "seed": 5,
+     "start": "e9fb2378f945",
+     "stage1": true,
+     "stage2": false,
+     "via": null,
+     "win_turn": null,
+     "error": null,
+     "reason": "段1: ループ成立（有限 8 周、pattern） / 段2: 上限のターンまでに勝てなかった"
+    },
+    {
+     "seed": 6,
+     "start": "ab5bfab3c8b3",
+     "stage1": true,
+     "stage2": false,
+     "via": null,
+     "win_turn": null,
+     "error": null,
+     "reason": "段1: ループ成立（有限 13 周、pattern） / 段2: 上限のターンまでに勝てなかった"
+    },
+    {
+     "seed": 7,
+     "start": "191d5cb13a7b",
+     "stage1": true,
+     "stage2": false,
+     "via": null,
+     "win_turn": null,
+     "error": null,
+     "reason": "段1: ループ成立（有限 6 周、pattern） / 段2: 上限のターンまでに勝てなかった"
+    },
+    {
+     "seed": 8,
+     "start": "d7ea1d82a696",
+     "stage1": true,
+     "stage2": false,
+     "via": null,
+     "win_turn": null,
+     "error": null,
+     "reason": "段1: ループ成立（有限 6 周、pattern） / 段2: 上限のターンまでに勝てなかった"
+    }
+   ]
+  },
+  {
+   "combo": "saga",
+   "group": "エンジン（サガの蘇生）",
+   "old": "dm22ex2-021",
+   "new": "dmrp20-068",
+   "pairs": [
+    [
+     "dm22ex2-021",
+     "dmrp20-068"
+    ]
+   ],
+   "deck": [
+    "dmrp20-068",
+    "dmrp20-068",
+    "dmrp20-068",
+    "dmrp20-068",
+    "dm22ex1-007",
+    "dm22ex1-007",
+    "dmex10-020",
+    "dmex10-020",
+    "dmex10-020",
+    "dmex10-020",
+    "dm22ex1-025",
+    "dm22ex1-025",
+    "dm22ex1-025",
+    "dm22ex1-025",
+    "dmrp03-036",
+    "dmrp03-036",
+    "dmrp03-036",
+    "dmrp03-036",
+    "dmrp03-s03",
+    "dmrp03-s03",
+    "dm26ex2-071",
+    "dm26ex2-071",
+    "dm26ex2-071",
+    "dm26ex2-071",
+    "dmd08-015",
+    "dmd08-015",
+    "dmd08-015",
+    "dmd08-015",
+    "dm01-027",
+    "dm01-027",
+    "dm01-027",
+    "dm01-080",
+    "dm01-080",
+    "dm01-080",
+    "dm01-017",
+    "dm01-047",
+    "dm01-056",
+    "dm01-084",
+    "dm02-011",
+    "dm02-041"
+   ],
+   "rows": [
+    {
+     "seed": 1,
+     "start": "c6043f500755",
+     "stage1": false,
+     "stage2": false,
+     "via": null,
+     "win_turn": null,
+     "error": null,
+     "reason": "段1: 採った手順にループが無い / 段2: 上限のターンまでに勝てなかった"
+    },
+    {
+     "seed": 2,
+     "start": "a3216d7df418",
+     "stage1": false,
+     "stage2": false,
+     "via": null,
+     "win_turn": null,
+     "error": null,
+     "reason": "段1: 採った手順にループが無い / 段2: 上限のターンまでに勝てなかった"
+    },
+    {
+     "seed": 3,
+     "start": "8a4a60240c30",
+     "stage1": false,
+     "stage2": false,
+     "via": null,
+     "win_turn": null,
+     "error": null,
+     "reason": "段1: 採った手順にループが無い / 段2: 上限のターンまでに勝てなかった"
+    },
+    {
+     "seed": 4,
+     "start": "a03abb6a2e5e",
+     "stage1": false,
+     "stage2": false,
+     "via": null,
+     "win_turn": null,
+     "error": null,
+     "reason": "段1: 採った手順にループが無い / 段2: 上限のターンまでに勝てなかった"
+    },
+    {
+     "seed": 5,
+     "start": "2f0a453ba1c7",
+     "stage1": false,
+     "stage2": false,
+     "via": null,
+     "win_turn": null,
+     "error": null,
+     "reason": "段1: 採った手順にループが無い / 段2: 上限のターンまでに勝てなかった"
+    },
+    {
+     "seed": 6,
+     "start": "f8ef4be87c52",
+     "stage1": false,
+     "stage2": false,
+     "via": null,
+     "win_turn": null,
+     "error": null,
+     "reason": "段1: 採った手順にループが無い / 段2: 上限のターンまでに勝てなかった"
+    },
+    {
+     "seed": 7,
+     "start": "f42fda5c37cf",
+     "stage1": false,
+     "stage2": false,
+     "via": null,
+     "win_turn": null,
+     "error": null,
+     "reason": "段1: 採った手順にループが無い / 段2: 上限のターンまでに勝てなかった"
+    },
+    {
+     "seed": 8,
+     "start": "a194635a31f1",
+     "stage1": false,
+     "stage2": false,
+     "via": null,
+     "win_turn": null,
+     "error": null,
+     "reason": "段1: 採った手順にループが無い / 段2: 上限のターンまでに勝てなかった"
+    }
+   ]
+  },
+  {
+   "combo": "saga",
+   "group": "エンジン（サガの蘇生）",
+   "old": "dm22ex2-021",
+   "new": "dm02-044",
+   "pairs": [
+    [
+     "dm22ex2-021",
+     "dm02-044"
+    ]
+   ],
+   "deck": [
+    "dm02-044",
+    "dm02-044",
+    "dm02-044",
+    "dm02-044",
+    "dm22ex1-007",
+    "dm22ex1-007",
+    "dmex10-020",
+    "dmex10-020",
+    "dmex10-020",
+    "dmex10-020",
+    "dm22ex1-025",
+    "dm22ex1-025",
+    "dm22ex1-025",
+    "dm22ex1-025",
+    "dmrp03-036",
+    "dmrp03-036",
+    "dmrp03-036",
+    "dmrp03-036",
+    "dmrp03-s03",
+    "dmrp03-s03",
+    "dm26ex2-071",
+    "dm26ex2-071",
+    "dm26ex2-071",
+    "dm26ex2-071",
+    "dmd08-015",
+    "dmd08-015",
+    "dmd08-015",
+    "dmd08-015",
+    "dm01-027",
+    "dm01-027",
+    "dm01-027",
+    "dm01-080",
+    "dm01-080",
+    "dm01-080",
+    "dm01-017",
+    "dm01-047",
+    "dm01-056",
+    "dm01-084",
+    "dm02-011",
+    "dm02-041"
+   ],
+   "rows": [
+    {
+     "seed": 1,
+     "start": "4a8a90c87d73",
+     "stage1": false,
+     "stage2": false,
+     "via": null,
+     "win_turn": null,
+     "error": null,
+     "reason": "段1: 採った手順にループが無い / 段2: 上限のターンまでに勝てなかった"
+    },
+    {
+     "seed": 2,
+     "start": "b7f9bd50414b",
+     "stage1": false,
+     "stage2": false,
+     "via": null,
+     "win_turn": null,
+     "error": null,
+     "reason": "段1: 採った手順にループが無い / 段2: 上限のターンまでに勝てなかった"
+    },
+    {
+     "seed": 3,
+     "start": "d30a1adaa3d3",
+     "stage1": false,
+     "stage2": false,
+     "via": null,
+     "win_turn": null,
+     "error": null,
+     "reason": "段1: 採った手順にループが無い / 段2: 上限のターンまでに勝てなかった"
+    },
+    {
+     "seed": 4,
+     "start": "f62e52308525",
+     "stage1": false,
+     "stage2": false,
+     "via": null,
+     "win_turn": null,
+     "error": null,
+     "reason": "段1: 採った手順にループが無い / 段2: 上限のターンまでに勝てなかった"
+    },
+    {
+     "seed": 5,
+     "start": "721386e3ed25",
+     "stage1": false,
+     "stage2": false,
+     "via": null,
+     "win_turn": null,
+     "error": null,
+     "reason": "段1: 採った手順にループが無い / 段2: 上限のターンまでに勝てなかった"
+    },
+    {
+     "seed": 6,
+     "start": "f2d635c1dbbe",
+     "stage1": false,
+     "stage2": false,
+     "via": null,
+     "win_turn": null,
+     "error": null,
+     "reason": "段1: 採った手順にループが無い / 段2: 上限のターンまでに勝てなかった"
+    },
+    {
+     "seed": 7,
+     "start": "24caf190dcdf",
+     "stage1": false,
+     "stage2": false,
+     "via": null,
+     "win_turn": null,
+     "error": null,
+     "reason": "段1: 採った手順にループが無い / 段2: 上限のターンまでに勝てなかった"
+    },
+    {
+     "seed": 8,
+     "start": "ff63dba089a6",
+     "stage1": false,
+     "stage2": false,
+     "via": null,
+     "win_turn": null,
+     "error": null,
+     "reason": "段1: 採った手順にループが無い / 段2: 上限のターンまでに勝てなかった"
+    }
+   ]
+  },
+  {
+   "combo": "saga",
+   "group": "エンジン（サガの蘇生）",
+   "old": "dm22ex2-021",
+   "new": "dm25rp1-033",
+   "pairs": [
+    [
+     "dm22ex2-021",
+     "dm25rp1-033"
+    ]
+   ],
+   "deck": [
+    "dm25rp1-033",
+    "dm25rp1-033",
+    "dm25rp1-033",
+    "dm25rp1-033",
+    "dm22ex1-007",
+    "dm22ex1-007",
+    "dmex10-020",
+    "dmex10-020",
+    "dmex10-020",
+    "dmex10-020",
+    "dm22ex1-025",
+    "dm22ex1-025",
+    "dm22ex1-025",
+    "dm22ex1-025",
+    "dmrp03-036",
+    "dmrp03-036",
+    "dmrp03-036",
+    "dmrp03-036",
+    "dmrp03-s03",
+    "dmrp03-s03",
+    "dm26ex2-071",
+    "dm26ex2-071",
+    "dm26ex2-071",
+    "dm26ex2-071",
+    "dmd08-015",
+    "dmd08-015",
+    "dmd08-015",
+    "dmd08-015",
+    "dm01-027",
+    "dm01-027",
+    "dm01-027",
+    "dm01-080",
+    "dm01-080",
+    "dm01-080",
+    "dm01-017",
+    "dm01-047",
+    "dm01-056",
+    "dm01-084",
+    "dm02-011",
+    "dm02-041"
+   ],
+   "rows": [
+    {
+     "seed": 1,
+     "start": "11d3cf95af2c",
+     "stage1": false,
+     "stage2": false,
+     "via": null,
+     "win_turn": null,
+     "error": null,
+     "reason": "段1: 採った手順にループが無い / 段2: 上限のターンまでに勝てなかった"
+    },
+    {
+     "seed": 2,
+     "start": "2e6204c9c3aa",
+     "stage1": false,
+     "stage2": false,
+     "via": null,
+     "win_turn": null,
+     "error": null,
+     "reason": "段1: 採った手順にループが無い / 段2: 上限のターンまでに勝てなかった"
+    },
+    {
+     "seed": 3,
+     "start": "c698baa48348",
+     "stage1": false,
+     "stage2": false,
+     "via": null,
+     "win_turn": null,
+     "error": null,
+     "reason": "段1: 採った手順にループが無い / 段2: 上限のターンまでに勝てなかった"
+    },
+    {
+     "seed": 4,
+     "start": "c62e6989bfb1",
+     "stage1": false,
+     "stage2": false,
+     "via": null,
+     "win_turn": null,
+     "error": null,
+     "reason": "段1: 採った手順にループが無い / 段2: 上限のターンまでに勝てなかった"
+    },
+    {
+     "seed": 5,
+     "start": "4d14852ef689",
+     "stage1": false,
+     "stage2": false,
+     "via": null,
+     "win_turn": null,
+     "error": null,
+     "reason": "段1: 採った手順にループが無い / 段2: 上限のターンまでに勝てなかった"
+    },
+    {
+     "seed": 6,
+     "start": "95010f5e98a8",
+     "stage1": false,
+     "stage2": false,
+     "via": null,
+     "win_turn": null,
+     "error": null,
+     "reason": "段1: 採った手順にループが無い / 段2: 上限のターンまでに勝てなかった"
+    },
+    {
+     "seed": 7,
+     "start": "d4bd3a3f2712",
+     "stage1": false,
+     "stage2": false,
+     "via": null,
+     "win_turn": null,
+     "error": null,
+     "reason": "段1: 採った手順にループが無い / 段2: 上限のターンまでに勝てなかった"
+    },
+    {
+     "seed": 8,
+     "start": "16ac0af484da",
+     "stage1": false,
+     "stage2": false,
+     "via": null,
+     "win_turn": null,
+     "error": null,
+     "reason": "段1: 採った手順にループが無い / 段2: 上限のターンまでに勝てなかった"
+    }
+   ]
+  },
+  {
+   "combo": "saga",
+   "group": "エンジン（サガの蘇生）",
+   "old": "dm22ex2-021",
+   "new": "dmrp03-069",
+   "pairs": [
+    [
+     "dm22ex2-021",
+     "dmrp03-069"
+    ]
+   ],
+   "deck": [
+    "dmrp03-069",
+    "dmrp03-069",
+    "dmrp03-069",
+    "dmrp03-069",
+    "dm22ex1-007",
+    "dm22ex1-007",
+    "dmex10-020",
+    "dmex10-020",
+    "dmex10-020",
+    "dmex10-020",
+    "dm22ex1-025",
+    "dm22ex1-025",
+    "dm22ex1-025",
+    "dm22ex1-025",
+    "dmrp03-036",
+    "dmrp03-036",
+    "dmrp03-036",
+    "dmrp03-036",
+    "dmrp03-s03",
+    "dmrp03-s03",
+    "dm26ex2-071",
+    "dm26ex2-071",
+    "dm26ex2-071",
+    "dm26ex2-071",
+    "dmd08-015",
+    "dmd08-015",
+    "dmd08-015",
+    "dmd08-015",
+    "dm01-027",
+    "dm01-027",
+    "dm01-027",
+    "dm01-080",
+    "dm01-080",
+    "dm01-080",
+    "dm01-017",
+    "dm01-047",
+    "dm01-056",
+    "dm01-084",
+    "dm02-011",
+    "dm02-041"
+   ],
+   "rows": [
+    {
+     "seed": 1,
+     "start": "a70924dc64ef",
+     "stage1": false,
+     "stage2": false,
+     "via": null,
+     "win_turn": null,
+     "error": null,
+     "reason": "段1: 採った手順にループが無い / 段2: 上限のターンまでに勝てなかった"
+    },
+    {
+     "seed": 2,
+     "start": "6a9bb37a768d",
+     "stage1": false,
+     "stage2": false,
+     "via": null,
+     "win_turn": null,
+     "error": null,
+     "reason": "段1: 採った手順にループが無い / 段2: 上限のターンまでに勝てなかった"
+    },
+    {
+     "seed": 3,
+     "start": "da5749b45205",
+     "stage1": false,
+     "stage2": false,
+     "via": null,
+     "win_turn": null,
+     "error": null,
+     "reason": "段1: 採った手順にループが無い / 段2: 上限のターンまでに勝てなかった"
+    },
+    {
+     "seed": 4,
+     "start": "7ab195fd7f61",
+     "stage1": false,
+     "stage2": false,
+     "via": null,
+     "win_turn": null,
+     "error": null,
+     "reason": "段1: 採った手順にループが無い / 段2: 上限のターンまでに勝てなかった"
+    },
+    {
+     "seed": 5,
+     "start": "6a6fe05d020e",
+     "stage1": false,
+     "stage2": false,
+     "via": null,
+     "win_turn": null,
+     "error": null,
+     "reason": "段1: 採った手順にループが無い / 段2: 上限のターンまでに勝てなかった"
+    },
+    {
+     "seed": 6,
+     "start": "f9180cc87c6e",
+     "stage1": false,
+     "stage2": false,
+     "via": null,
+     "win_turn": null,
+     "error": null,
+     "reason": "段1: 採った手順にループが無い / 段2: 上限のターンまでに勝てなかった"
+    },
+    {
+     "seed": 7,
+     "start": "a90eb476e55e",
+     "stage1": false,
+     "stage2": false,
+     "via": null,
+     "win_turn": null,
+     "error": null,
+     "reason": "段1: 採った手順にループが無い / 段2: 上限のターンまでに勝てなかった"
+    },
+    {
+     "seed": 8,
+     "start": "1340e743c6f0",
+     "stage1": false,
+     "stage2": false,
+     "via": null,
+     "win_turn": null,
+     "error": null,
+     "reason": "段1: 採った手順にループが無い / 段2: 上限のターンまでに勝てなかった"
+    }
+   ]
+  },
+  {
+   "combo": "saga",
+   "group": "勝ち手段（山札の最後の1枚で勝つ）",
+   "old": "dmrp03-s03",
+   "new": "dmc27-024",
+   "pairs": [
+    [
+     "dmrp03-s03",
+     "dmc27-024"
+    ]
+   ],
+   "deck": [
+    "dm22ex2-021",
+    "dm22ex2-021",
+    "dm22ex2-021",
+    "dm22ex2-021",
+    "dm22ex1-007",
+    "dm22ex1-007",
+    "dmex10-020",
+    "dmex10-020",
+    "dmex10-020",
+    "dmex10-020",
+    "dm22ex1-025",
+    "dm22ex1-025",
+    "dm22ex1-025",
+    "dm22ex1-025",
+    "dmrp03-036",
+    "dmrp03-036",
+    "dmrp03-036",
+    "dmrp03-036",
+    "dmc27-024",
+    "dmc27-024",
+    "dm26ex2-071",
+    "dm26ex2-071",
+    "dm26ex2-071",
+    "dm26ex2-071",
+    "dmd08-015",
+    "dmd08-015",
+    "dmd08-015",
+    "dmd08-015",
+    "dm01-027",
+    "dm01-027",
+    "dm01-027",
+    "dm01-080",
+    "dm01-080",
+    "dm01-080",
+    "dm01-017",
+    "dm01-047",
+    "dm01-056",
+    "dm01-084",
+    "dm02-011",
+    "dm02-041"
+   ],
+   "rows": [
+    {
+     "seed": 1,
+     "start": "138309bef41d",
+     "stage1": true,
+     "stage2": false,
+     "via": "beat",
+     "win_turn": 2,
+     "error": null,
+     "reason": "段1: ループ成立（有限 7 周、pattern） / 段2: ループの後に殴り勝ち（ループ勝ちに数えない）"
+    },
+    {
+     "seed": 2,
+     "start": "3239295a07ad",
+     "stage1": true,
+     "stage2": false,
+     "via": "beat",
+     "win_turn": 2,
+     "error": null,
+     "reason": "段1: ループ成立（有限 7 周、pattern） / 段2: ループの後に殴り勝ち（ループ勝ちに数えない）"
+    },
+    {
+     "seed": 3,
+     "start": "98ccedebe87a",
+     "stage1": true,
+     "stage2": false,
+     "via": null,
+     "win_turn": null,
+     "error": null,
+     "reason": "段1: ループ成立（有限 15 周、pattern） / 段2: 自分が先に山札切れで負けた"
+    },
+    {
+     "seed": 4,
+     "start": "fab413e53e74",
+     "stage1": true,
+     "stage2": false,
+     "via": null,
+     "win_turn": null,
+     "error": null,
+     "reason": "段1: ループ成立（有限 13 周、pattern） / 段2: 自分が先に山札切れで負けた"
+    },
+    {
+     "seed": 5,
+     "start": "3ffccc8e1da1",
+     "stage1": true,
+     "stage2": false,
+     "via": null,
+     "win_turn": null,
+     "error": null,
+     "reason": "段1: ループ成立（有限 9 周、pattern） / 段2: 上限のターンまでに勝てなかった"
+    },
+    {
+     "seed": 6,
+     "start": "6435de8b1821",
+     "stage1": true,
+     "stage2": false,
+     "via": "beat",
+     "win_turn": 2,
+     "error": null,
+     "reason": "段1: ループ成立（有限 10 周、pattern） / 段2: ループの後に殴り勝ち（ループ勝ちに数えない）"
+    },
+    {
+     "seed": 7,
+     "start": "22b4e67ddd40",
+     "stage1": true,
+     "stage2": false,
+     "via": "beat",
+     "win_turn": 2,
+     "error": null,
+     "reason": "段1: ループ成立（有限 10 周、pattern） / 段2: ループの後に殴り勝ち（ループ勝ちに数えない）"
+    },
+    {
+     "seed": 8,
+     "start": "35b6c436e9be",
+     "stage1": false,
+     "stage2": false,
+     "via": null,
+     "win_turn": null,
+     "error": null,
+     "reason": "段1: 採った手順にループが無い（探索の候補には 7 件あったが選ばれていない） / 段2: 上限のターンまでに勝てなかった"
+    }
+   ]
+  },
+  {
+   "combo": "saga",
+   "group": "勝ち手段（山札の最後の1枚で勝つ）",
+   "old": "dmrp03-s03",
+   "new": "dmrp04m-046",
+   "pairs": [
+    [
+     "dmrp03-s03",
+     "dmrp04m-046"
+    ]
+   ],
+   "deck": [
+    "dm22ex2-021",
+    "dm22ex2-021",
+    "dm22ex2-021",
+    "dm22ex2-021",
+    "dm22ex1-007",
+    "dm22ex1-007",
+    "dmex10-020",
+    "dmex10-020",
+    "dmex10-020",
+    "dmex10-020",
+    "dm22ex1-025",
+    "dm22ex1-025",
+    "dm22ex1-025",
+    "dm22ex1-025",
+    "dmrp03-036",
+    "dmrp03-036",
+    "dmrp03-036",
+    "dmrp03-036",
+    "dmrp04m-046",
+    "dmrp04m-046",
+    "dm26ex2-071",
+    "dm26ex2-071",
+    "dm26ex2-071",
+    "dm26ex2-071",
+    "dmd08-015",
+    "dmd08-015",
+    "dmd08-015",
+    "dmd08-015",
+    "dm01-027",
+    "dm01-027",
+    "dm01-027",
+    "dm01-080",
+    "dm01-080",
+    "dm01-080",
+    "dm01-017",
+    "dm01-047",
+    "dm01-056",
+    "dm01-084",
+    "dm02-011",
+    "dm02-041"
+   ],
+   "rows": [
+    {
+     "seed": 1,
+     "start": "503eb7af1245",
+     "stage1": true,
+     "stage2": false,
+     "via": "beat",
+     "win_turn": 2,
+     "error": null,
+     "reason": "段1: ループ成立（有限 6 周、pattern） / 段2: ループの後に殴り勝ち（ループ勝ちに数えない）"
+    },
+    {
+     "seed": 2,
+     "start": "f936792649cb",
+     "stage1": true,
+     "stage2": false,
+     "via": "beat",
+     "win_turn": 2,
+     "error": null,
+     "reason": "段1: ループ成立（有限 6 周、pattern） / 段2: ループの後に殴り勝ち（ループ勝ちに数えない）"
+    },
+    {
+     "seed": 3,
+     "start": "5655445e66c9",
+     "stage1": true,
+     "stage2": false,
+     "via": null,
+     "win_turn": null,
+     "error": null,
+     "reason": "段1: ループ成立（有限 14 周、pattern） / 段2: 自分が先に山札切れで負けた"
+    },
+    {
+     "seed": 4,
+     "start": "72f53387e16c",
+     "stage1": true,
+     "stage2": false,
+     "via": null,
+     "win_turn": null,
+     "error": null,
+     "reason": "段1: ループ成立（有限 11 周、pattern） / 段2: 自分が先に山札切れで負けた"
+    },
+    {
+     "seed": 5,
+     "start": "b2950af8cae8",
+     "stage1": true,
+     "stage2": false,
+     "via": null,
+     "win_turn": null,
+     "error": null,
+     "reason": "段1: ループ成立（有限 8 周、pattern） / 段2: 上限のターンまでに勝てなかった"
+    },
+    {
+     "seed": 6,
+     "start": "642860c020ea",
+     "stage1": true,
+     "stage2": false,
+     "via": "beat",
+     "win_turn": 2,
+     "error": null,
+     "reason": "段1: ループ成立（有限 8 周、pattern） / 段2: ループの後に殴り勝ち（ループ勝ちに数えない）"
+    },
+    {
+     "seed": 7,
+     "start": "36fb5c3c7a7c",
+     "stage1": true,
+     "stage2": false,
+     "via": "beat",
+     "win_turn": 2,
+     "error": null,
+     "reason": "段1: ループ成立（有限 10 周、pattern） / 段2: ループの後に殴り勝ち（ループ勝ちに数えない）"
+    },
+    {
+     "seed": 8,
+     "start": "997010c716b2",
+     "stage1": false,
+     "stage2": false,
+     "via": null,
+     "win_turn": null,
+     "error": null,
+     "reason": "段1: 採った手順にループが無い（探索の候補には 19 件あったが選ばれていない） / 段2: 上限のターンまでに勝てなかった"
+    }
+   ]
+  },
+  {
+   "combo": "saga",
+   "group": "勝ち手段（山札の最後の1枚で勝つ）",
+   "old": "dmrp03-s03",
+   "new": "dm26ex4-034",
+   "pairs": [
+    [
+     "dmrp03-s03",
+     "dm26ex4-034"
+    ]
+   ],
+   "deck": [
+    "dm22ex2-021",
+    "dm22ex2-021",
+    "dm22ex2-021",
+    "dm22ex2-021",
+    "dm22ex1-007",
+    "dm22ex1-007",
+    "dmex10-020",
+    "dmex10-020",
+    "dmex10-020",
+    "dmex10-020",
+    "dm22ex1-025",
+    "dm22ex1-025",
+    "dm22ex1-025",
+    "dm22ex1-025",
+    "dmrp03-036",
+    "dmrp03-036",
+    "dmrp03-036",
+    "dmrp03-036",
+    "dm26ex4-034",
+    "dm26ex4-034",
+    "dm26ex2-071",
+    "dm26ex2-071",
+    "dm26ex2-071",
+    "dm26ex2-071",
+    "dmd08-015",
+    "dmd08-015",
+    "dmd08-015",
+    "dmd08-015",
+    "dm01-027",
+    "dm01-027",
+    "dm01-027",
+    "dm01-080",
+    "dm01-080",
+    "dm01-080",
+    "dm01-017",
+    "dm01-047",
+    "dm01-056",
+    "dm01-084",
+    "dm02-011",
+    "dm02-041"
+   ],
+   "rows": [
+    {
+     "seed": 1,
+     "start": "a888e525f344",
+     "stage1": true,
+     "stage2": false,
+     "via": "beat",
+     "win_turn": 2,
+     "error": null,
+     "reason": "段1: ループ成立（有限 7 周、pattern） / 段2: ループの後に殴り勝ち（ループ勝ちに数えない）"
+    },
+    {
+     "seed": 2,
+     "start": "fd09285f0c67",
+     "stage1": true,
+     "stage2": false,
+     "via": "beat",
+     "win_turn": 2,
+     "error": null,
+     "reason": "段1: ループ成立（有限 7 周、pattern） / 段2: ループの後に殴り勝ち（ループ勝ちに数えない）"
+    },
+    {
+     "seed": 3,
+     "start": "1b8348e58fde",
+     "stage1": true,
+     "stage2": false,
+     "via": null,
+     "win_turn": null,
+     "error": null,
+     "reason": "段1: ループ成立（有限 15 周、pattern） / 段2: 自分が先に山札切れで負けた"
+    },
+    {
+     "seed": 4,
+     "start": "a2a8031b62c1",
+     "stage1": true,
+     "stage2": false,
+     "via": null,
+     "win_turn": null,
+     "error": null,
+     "reason": "段1: ループ成立（有限 13 周、pattern） / 段2: 自分が先に山札切れで負けた"
+    },
+    {
+     "seed": 5,
+     "start": "7153743e16e0",
+     "stage1": true,
+     "stage2": false,
+     "via": null,
+     "win_turn": null,
+     "error": null,
+     "reason": "段1: ループ成立（有限 9 周、pattern） / 段2: 上限のターンまでに勝てなかった"
+    },
+    {
+     "seed": 6,
+     "start": "fe891ce3c5a3",
+     "stage1": true,
+     "stage2": false,
+     "via": "beat",
+     "win_turn": 2,
+     "error": null,
+     "reason": "段1: ループ成立（有限 10 周、pattern） / 段2: ループの後に殴り勝ち（ループ勝ちに数えない）"
+    },
+    {
+     "seed": 7,
+     "start": "e3fc651cf493",
+     "stage1": true,
+     "stage2": false,
+     "via": "beat",
+     "win_turn": 2,
+     "error": null,
+     "reason": "段1: ループ成立（有限 10 周、pattern） / 段2: ループの後に殴り勝ち（ループ勝ちに数えない）"
+    },
+    {
+     "seed": 8,
+     "start": "402c4a73f52c",
+     "stage1": false,
+     "stage2": false,
+     "via": null,
+     "win_turn": null,
+     "error": null,
+     "reason": "段1: 採った手順にループが無い（探索の候補には 4 件あったが選ばれていない） / 段2: 上限のターンまでに勝てなかった"
+    }
+   ]
+  },
+  {
+   "combo": "saga",
+   "group": "勝ち手段（山札の最後の1枚で勝つ）",
+   "old": "dmrp03-s03",
+   "new": "dm01-s03",
+   "pairs": [
+    [
+     "dmrp03-s03",
+     "dm01-s03"
+    ]
+   ],
+   "deck": [
+    "dm22ex2-021",
+    "dm22ex2-021",
+    "dm22ex2-021",
+    "dm22ex2-021",
+    "dm22ex1-007",
+    "dm22ex1-007",
+    "dmex10-020",
+    "dmex10-020",
+    "dmex10-020",
+    "dmex10-020",
+    "dm22ex1-025",
+    "dm22ex1-025",
+    "dm22ex1-025",
+    "dm22ex1-025",
+    "dmrp03-036",
+    "dmrp03-036",
+    "dmrp03-036",
+    "dmrp03-036",
+    "dm01-s03",
+    "dm01-s03",
+    "dm26ex2-071",
+    "dm26ex2-071",
+    "dm26ex2-071",
+    "dm26ex2-071",
+    "dmd08-015",
+    "dmd08-015",
+    "dmd08-015",
+    "dmd08-015",
+    "dm01-027",
+    "dm01-027",
+    "dm01-027",
+    "dm01-080",
+    "dm01-080",
+    "dm01-080",
+    "dm01-017",
+    "dm01-047",
+    "dm01-056",
+    "dm01-084",
+    "dm02-011",
+    "dm02-041"
+   ],
+   "rows": [
+    {
+     "seed": 1,
+     "start": "887383dd05f1",
+     "stage1": true,
+     "stage2": false,
+     "via": "beat",
+     "win_turn": 2,
+     "error": null,
+     "reason": "段1: ループ成立（有限 6 周、pattern） / 段2: ループの後に殴り勝ち（ループ勝ちに数えない）"
+    },
+    {
+     "seed": 2,
+     "start": "72cf14afdf08",
+     "stage1": true,
+     "stage2": false,
+     "via": "beat",
+     "win_turn": 2,
+     "error": null,
+     "reason": "段1: ループ成立（有限 5 周、pattern） / 段2: ループの後に殴り勝ち（ループ勝ちに数えない）"
+    },
+    {
+     "seed": 3,
+     "start": "13f8b55a4a35",
+     "stage1": true,
+     "stage2": false,
+     "via": null,
+     "win_turn": null,
+     "error": null,
+     "reason": "段1: ループ成立（有限 15 周、pattern） / 段2: 自分が先に山札切れで負けた"
+    },
+    {
+     "seed": 4,
+     "start": "003267c7e131",
+     "stage1": true,
+     "stage2": false,
+     "via": null,
+     "win_turn": null,
+     "error": null,
+     "reason": "段1: ループ成立（有限 13 周、pattern） / 段2: 自分が先に山札切れで負けた"
+    },
+    {
+     "seed": 5,
+     "start": "e2b2e6bfa2ca",
+     "stage1": true,
+     "stage2": false,
+     "via": null,
+     "win_turn": null,
+     "error": null,
+     "reason": "段1: ループ成立（有限 9 周、pattern） / 段2: 上限のターンまでに勝てなかった"
+    },
+    {
+     "seed": 6,
+     "start": "5e914578c774",
+     "stage1": true,
+     "stage2": false,
+     "via": null,
+     "win_turn": null,
+     "error": null,
+     "reason": "段1: ループ成立（有限 1 周、certificate） / 段2: 上限のターンまでに勝てなかった"
+    },
+    {
+     "seed": 7,
+     "start": "4c6b58c861f7",
+     "stage1": true,
+     "stage2": false,
+     "via": "beat",
+     "win_turn": 2,
+     "error": null,
+     "reason": "段1: ループ成立（有限 8 周、pattern） / 段2: ループの後に殴り勝ち（ループ勝ちに数えない）"
+    },
+    {
+     "seed": 8,
+     "start": "5d92c952725d",
+     "stage1": false,
+     "stage2": false,
+     "via": null,
+     "win_turn": null,
+     "error": null,
+     "reason": "段1: 採った手順にループが無い（探索の候補には 1 件あったが選ばれていない） / 段2: 上限のターンまでに勝てなかった"
+    }
+   ]
+  },
+  {
+   "combo": "akashic",
+   "group": "回収（訪れる魔の時刻）",
+   "old": "dm23bd7-035",
+   "new": "dm18-008",
+   "pairs": [
+    [
+     "dm23bd7-035",
+     "dm18-008"
+    ]
+   ],
+   "deck": [
+    "dm23ex2-009",
+    "dm23ex2-009",
+    "dm24ex3-rp3tr6",
+    "dm24ex3-rp3tr6",
+    "dmrp12-s01",
+    "dmrp12-s01",
+    "dm24ex1-043",
+    "dm24ex1-043",
+    "dm24ex1-043",
+    "dm24ex1-043",
+    "dm24ex1-038",
+    "dm24ex1-038",
+    "dm24ex1-038",
+    "dm24ex1-038",
+    "dmrp07-009",
+    "dmrp07-009",
+    "dmrp07-009",
+    "dmrp07-009",
+    "dm18-008",
+    "dm18-008",
+    "dm01-010",
+    "dm01-019",
+    "dm01-038",
+    "dm01-048",
+    "dm01-057",
+    "dm01-072",
+    "dm01-081",
+    "dm01-090",
+    "dm01-107",
+    "dm02-012",
+    "dm02-028",
+    "dm02-042",
+    "dm03-019",
+    "dm03-037",
+    "dm03-046",
+    "dm04-007",
+    "dm04-029",
+    "dm04-039",
+    "dm04-048",
+    "dm05-022"
+   ],
+   "rows": [
+    {
+     "seed": 1,
+     "start": "8027c668ed7c",
+     "stage1": false,
+     "stage2": false,
+     "via": null,
+     "win_turn": null,
+     "error": null,
+     "reason": "段1: 採った手順にループが無い / 段2: 上限のターンまでに勝てなかった"
+    },
+    {
+     "seed": 2,
+     "start": "8b09220d9fd3",
+     "stage1": false,
+     "stage2": false,
+     "via": null,
+     "win_turn": null,
+     "error": null,
+     "reason": "段1: 採った手順にループが無い / 段2: 上限のターンまでに勝てなかった"
+    },
+    {
+     "seed": 3,
+     "start": "259a7249d8dc",
+     "stage1": false,
+     "stage2": false,
+     "via": null,
+     "win_turn": null,
+     "error": null,
+     "reason": "段1: 採った手順にループが無い / 段2: 上限のターンまでに勝てなかった"
+    },
+    {
+     "seed": 4,
+     "start": "0df79060c350",
+     "stage1": false,
+     "stage2": false,
+     "via": null,
+     "win_turn": null,
+     "error": null,
+     "reason": "段1: 採った手順にループが無い / 段2: 上限のターンまでに勝てなかった"
+    },
+    {
+     "seed": 5,
+     "start": "5a74cc141edb",
+     "stage1": false,
+     "stage2": false,
+     "via": null,
+     "win_turn": null,
+     "error": null,
+     "reason": "段1: 採った手順にループが無い / 段2: 上限のターンまでに勝てなかった"
+    },
+    {
+     "seed": 6,
+     "start": "6b76e0880a8e",
+     "stage1": false,
+     "stage2": false,
+     "via": null,
+     "win_turn": null,
+     "error": null,
+     "reason": "段1: 採った手順にループが無い / 段2: 上限のターンまでに勝てなかった"
+    },
+    {
+     "seed": 7,
+     "start": "a7a5ab9e9879",
+     "stage1": false,
+     "stage2": false,
+     "via": null,
+     "win_turn": null,
+     "error": null,
+     "reason": "段1: 採った手順にループが無い / 段2: 上限のターンまでに勝てなかった"
+    },
+    {
+     "seed": 8,
+     "start": "536290d19ca7",
+     "stage1": false,
+     "stage2": false,
+     "via": null,
+     "win_turn": null,
+     "error": null,
+     "reason": "段1: 採った手順にループが無い / 段2: 上限のターンまでに勝てなかった"
+    }
+   ]
+  },
+  {
+   "combo": "akashic",
+   "group": "回収（訪れる魔の時刻）",
+   "old": "dm23bd7-035",
+   "new": "dmc34-003",
+   "pairs": [
+    [
+     "dm23bd7-035",
+     "dmc34-003"
+    ]
+   ],
+   "deck": [
+    "dm23ex2-009",
+    "dm23ex2-009",
+    "dm24ex3-rp3tr6",
+    "dm24ex3-rp3tr6",
+    "dmrp12-s01",
+    "dmrp12-s01",
+    "dm24ex1-043",
+    "dm24ex1-043",
+    "dm24ex1-043",
+    "dm24ex1-043",
+    "dm24ex1-038",
+    "dm24ex1-038",
+    "dm24ex1-038",
+    "dm24ex1-038",
+    "dmrp07-009",
+    "dmrp07-009",
+    "dmrp07-009",
+    "dmrp07-009",
+    "dmc34-003",
+    "dmc34-003",
+    "dm01-010",
+    "dm01-019",
+    "dm01-038",
+    "dm01-048",
+    "dm01-057",
+    "dm01-072",
+    "dm01-081",
+    "dm01-090",
+    "dm01-107",
+    "dm02-012",
+    "dm02-028",
+    "dm02-042",
+    "dm03-019",
+    "dm03-037",
+    "dm03-046",
+    "dm04-007",
+    "dm04-029",
+    "dm04-039",
+    "dm04-048",
+    "dm05-022"
+   ],
+   "rows": [
+    {
+     "seed": 1,
+     "start": "d4a628d55c8d",
+     "stage1": false,
+     "stage2": false,
+     "via": null,
+     "win_turn": null,
+     "error": null,
+     "reason": "段1: 採った手順にループが無い / 段2: 上限のターンまでに勝てなかった"
+    },
+    {
+     "seed": 2,
+     "start": "716b7e0bcdde",
+     "stage1": false,
+     "stage2": false,
+     "via": null,
+     "win_turn": null,
+     "error": null,
+     "reason": "段1: 採った手順にループが無い / 段2: 上限のターンまでに勝てなかった"
+    },
+    {
+     "seed": 3,
+     "start": "45ffda8bdc86",
+     "stage1": false,
+     "stage2": false,
+     "via": null,
+     "win_turn": null,
+     "error": null,
+     "reason": "段1: 採った手順にループが無い / 段2: 上限のターンまでに勝てなかった"
+    },
+    {
+     "seed": 4,
+     "start": "a28f810f951d",
+     "stage1": false,
+     "stage2": false,
+     "via": null,
+     "win_turn": null,
+     "error": null,
+     "reason": "段1: 採った手順にループが無い / 段2: 上限のターンまでに勝てなかった"
+    },
+    {
+     "seed": 5,
+     "start": "f968bf8b2b75",
+     "stage1": false,
+     "stage2": false,
+     "via": null,
+     "win_turn": null,
+     "error": null,
+     "reason": "段1: 採った手順にループが無い / 段2: 上限のターンまでに勝てなかった"
+    },
+    {
+     "seed": 6,
+     "start": "7acdbcff3551",
+     "stage1": false,
+     "stage2": false,
+     "via": null,
+     "win_turn": null,
+     "error": null,
+     "reason": "段1: 採った手順にループが無い / 段2: 上限のターンまでに勝てなかった"
+    },
+    {
+     "seed": 7,
+     "start": "86e616dc1cde",
+     "stage1": false,
+     "stage2": false,
+     "via": null,
+     "win_turn": null,
+     "error": null,
+     "reason": "段1: 採った手順にループが無い / 段2: 上限のターンまでに勝てなかった"
+    },
+    {
+     "seed": 8,
+     "start": "405722f21b2d",
+     "stage1": false,
+     "stage2": false,
+     "via": null,
+     "win_turn": null,
+     "error": null,
+     "reason": "段1: 採った手順にループが無い / 段2: 上限のターンまでに勝てなかった"
+    }
+   ]
+  },
+  {
+   "combo": "akashic",
+   "group": "回収（訪れる魔の時刻）",
+   "old": "dm23bd7-035",
+   "new": "dm23-027",
+   "pairs": [
+    [
+     "dm23bd7-035",
+     "dm23-027"
+    ]
+   ],
+   "deck": [
+    "dm23ex2-009",
+    "dm23ex2-009",
+    "dm24ex3-rp3tr6",
+    "dm24ex3-rp3tr6",
+    "dmrp12-s01",
+    "dmrp12-s01",
+    "dm24ex1-043",
+    "dm24ex1-043",
+    "dm24ex1-043",
+    "dm24ex1-043",
+    "dm24ex1-038",
+    "dm24ex1-038",
+    "dm24ex1-038",
+    "dm24ex1-038",
+    "dmrp07-009",
+    "dmrp07-009",
+    "dmrp07-009",
+    "dmrp07-009",
+    "dm23-027",
+    "dm23-027",
+    "dm01-010",
+    "dm01-019",
+    "dm01-038",
+    "dm01-048",
+    "dm01-057",
+    "dm01-072",
+    "dm01-081",
+    "dm01-090",
+    "dm01-107",
+    "dm02-012",
+    "dm02-028",
+    "dm02-042",
+    "dm03-019",
+    "dm03-037",
+    "dm03-046",
+    "dm04-007",
+    "dm04-029",
+    "dm04-039",
+    "dm04-048",
+    "dm05-022"
+   ],
+   "rows": [
+    {
+     "seed": 1,
+     "start": "90f5d6a0f5a5",
+     "stage1": false,
+     "stage2": false,
+     "via": null,
+     "win_turn": null,
+     "error": null,
+     "reason": "段1: 採った手順にループが無い / 段2: 上限のターンまでに勝てなかった"
+    },
+    {
+     "seed": 2,
+     "start": "e2c3e63e467d",
+     "stage1": false,
+     "stage2": false,
+     "via": null,
+     "win_turn": null,
+     "error": null,
+     "reason": "段1: 採った手順にループが無い / 段2: 上限のターンまでに勝てなかった"
+    },
+    {
+     "seed": 3,
+     "start": "1e378d512b40",
+     "stage1": false,
+     "stage2": false,
+     "via": null,
+     "win_turn": null,
+     "error": null,
+     "reason": "段1: 採った手順にループが無い / 段2: 上限のターンまでに勝てなかった"
+    },
+    {
+     "seed": 4,
+     "start": "7e5664e54a71",
+     "stage1": false,
+     "stage2": false,
+     "via": null,
+     "win_turn": null,
+     "error": null,
+     "reason": "段1: 採った手順にループが無い / 段2: 上限のターンまでに勝てなかった"
+    },
+    {
+     "seed": 5,
+     "start": "eb27d568aae3",
+     "stage1": false,
+     "stage2": false,
+     "via": null,
+     "win_turn": null,
+     "error": null,
+     "reason": "段1: 採った手順にループが無い / 段2: 上限のターンまでに勝てなかった"
+    },
+    {
+     "seed": 6,
+     "start": "9d57f0f7c1a4",
+     "stage1": false,
+     "stage2": false,
+     "via": null,
+     "win_turn": null,
+     "error": null,
+     "reason": "段1: 採った手順にループが無い / 段2: 上限のターンまでに勝てなかった"
+    },
+    {
+     "seed": 7,
+     "start": "bec8a4855263",
+     "stage1": false,
+     "stage2": false,
+     "via": null,
+     "win_turn": null,
+     "error": null,
+     "reason": "段1: 採った手順にループが無い / 段2: 上限のターンまでに勝てなかった"
+    },
+    {
+     "seed": 8,
+     "start": "b800ce5a6bf5",
+     "stage1": false,
+     "stage2": false,
+     "via": null,
+     "win_turn": null,
+     "error": null,
+     "reason": "段1: 採った手順にループが無い / 段2: 上限のターンまでに勝てなかった"
+    }
+   ]
+  },
+  {
+   "combo": "akashic",
+   "group": "回収（訪れる魔の時刻）",
+   "old": "dm23bd7-035",
+   "new": "dmc34-032",
+   "pairs": [
+    [
+     "dm23bd7-035",
+     "dmc34-032"
+    ]
+   ],
+   "deck": [
+    "dm23ex2-009",
+    "dm23ex2-009",
+    "dm24ex3-rp3tr6",
+    "dm24ex3-rp3tr6",
+    "dmrp12-s01",
+    "dmrp12-s01",
+    "dm24ex1-043",
+    "dm24ex1-043",
+    "dm24ex1-043",
+    "dm24ex1-043",
+    "dm24ex1-038",
+    "dm24ex1-038",
+    "dm24ex1-038",
+    "dm24ex1-038",
+    "dmrp07-009",
+    "dmrp07-009",
+    "dmrp07-009",
+    "dmrp07-009",
+    "dmc34-032",
+    "dmc34-032",
+    "dm01-010",
+    "dm01-019",
+    "dm01-038",
+    "dm01-048",
+    "dm01-057",
+    "dm01-072",
+    "dm01-081",
+    "dm01-090",
+    "dm01-107",
+    "dm02-012",
+    "dm02-028",
+    "dm02-042",
+    "dm03-019",
+    "dm03-037",
+    "dm03-046",
+    "dm04-007",
+    "dm04-029",
+    "dm04-039",
+    "dm04-048",
+    "dm05-022"
+   ],
+   "rows": [
+    {
+     "seed": 1,
+     "start": "99afedfbafa7",
+     "stage1": false,
+     "stage2": false,
+     "via": null,
+     "win_turn": null,
+     "error": null,
+     "reason": "段1: 採った手順にループが無い / 段2: 上限のターンまでに勝てなかった"
+    },
+    {
+     "seed": 2,
+     "start": "68208f51d341",
+     "stage1": false,
+     "stage2": false,
+     "via": null,
+     "win_turn": null,
+     "error": null,
+     "reason": "段1: 採った手順にループが無い / 段2: 上限のターンまでに勝てなかった"
+    },
+    {
+     "seed": 3,
+     "start": "2795e7a10af6",
+     "stage1": false,
+     "stage2": false,
+     "via": null,
+     "win_turn": null,
+     "error": null,
+     "reason": "段1: 採った手順にループが無い / 段2: 上限のターンまでに勝てなかった"
+    },
+    {
+     "seed": 4,
+     "start": "487959b23348",
+     "stage1": false,
+     "stage2": false,
+     "via": null,
+     "win_turn": null,
+     "error": null,
+     "reason": "段1: 採った手順にループが無い / 段2: 上限のターンまでに勝てなかった"
+    },
+    {
+     "seed": 5,
+     "start": "2b61ae97d44c",
+     "stage1": false,
+     "stage2": false,
+     "via": null,
+     "win_turn": null,
+     "error": null,
+     "reason": "段1: 採った手順にループが無い / 段2: 上限のターンまでに勝てなかった"
+    },
+    {
+     "seed": 6,
+     "start": "4d279c0066ee",
+     "stage1": false,
+     "stage2": false,
+     "via": null,
+     "win_turn": null,
+     "error": null,
+     "reason": "段1: 採った手順にループが無い / 段2: 上限のターンまでに勝てなかった"
+    },
+    {
+     "seed": 7,
+     "start": "39c0cab55a95",
+     "stage1": false,
+     "stage2": false,
+     "via": null,
+     "win_turn": null,
+     "error": null,
+     "reason": "段1: 採った手順にループが無い / 段2: 上限のターンまでに勝てなかった"
+    },
+    {
+     "seed": 8,
+     "start": "599414adeb17",
+     "stage1": false,
+     "stage2": false,
+     "via": null,
+     "win_turn": null,
+     "error": null,
+     "reason": "段1: 採った手順にループが無い / 段2: 上限のターンまでに勝てなかった"
+    }
+   ]
+  },
+  {
+   "combo": "akashic",
+   "group": "エンジン（呪文の無償詠唱）",
+   "old": "dm23ex2-009",
+   "new": "dmex08-269",
+   "pairs": [
+    [
+     "dm23ex2-009",
+     "dmex08-269"
+    ]
+   ],
+   "deck": [
+    "dmex08-269",
+    "dmex08-269",
+    "dm24ex3-rp3tr6",
+    "dm24ex3-rp3tr6",
+    "dmrp12-s01",
+    "dmrp12-s01",
+    "dm24ex1-043",
+    "dm24ex1-043",
+    "dm24ex1-043",
+    "dm24ex1-043",
+    "dm24ex1-038",
+    "dm24ex1-038",
+    "dm24ex1-038",
+    "dm24ex1-038",
+    "dmrp07-009",
+    "dmrp07-009",
+    "dmrp07-009",
+    "dmrp07-009",
+    "dm23bd7-035",
+    "dm23bd7-035",
+    "dm01-010",
+    "dm01-019",
+    "dm01-038",
+    "dm01-048",
+    "dm01-057",
+    "dm01-072",
+    "dm01-081",
+    "dm01-090",
+    "dm01-107",
+    "dm02-012",
+    "dm02-028",
+    "dm02-042",
+    "dm03-019",
+    "dm03-037",
+    "dm03-046",
+    "dm04-007",
+    "dm04-029",
+    "dm04-039",
+    "dm04-048",
+    "dm05-022"
+   ],
+   "rows": [
+    {
+     "seed": 1,
+     "start": "7a374579b7a6",
+     "stage1": false,
+     "stage2": false,
+     "via": null,
+     "win_turn": null,
+     "error": null,
+     "reason": "段1: 採った手順にループが無い / 段2: 上限のターンまでに勝てなかった"
+    },
+    {
+     "seed": 2,
+     "start": "0a8b0661f7c2",
+     "stage1": false,
+     "stage2": false,
+     "via": null,
+     "win_turn": null,
+     "error": null,
+     "reason": "段1: 採った手順にループが無い / 段2: 上限のターンまでに勝てなかった"
+    },
+    {
+     "seed": 3,
+     "start": "2005d6140a08",
+     "stage1": false,
+     "stage2": false,
+     "via": null,
+     "win_turn": null,
+     "error": null,
+     "reason": "段1: 採った手順にループが無い / 段2: 上限のターンまでに勝てなかった"
+    },
+    {
+     "seed": 4,
+     "start": "4777920a2f3b",
+     "stage1": false,
+     "stage2": false,
+     "via": "beat",
+     "win_turn": 2,
+     "error": null,
+     "reason": "段1: 採った手順にループが無い / 段2: 殴り勝ち（ループなし）"
+    },
+    {
+     "seed": 5,
+     "start": "2a5250968898",
+     "stage1": false,
+     "stage2": false,
+     "via": "beat",
+     "win_turn": 2,
+     "error": null,
+     "reason": "段1: 採った手順にループが無い / 段2: 殴り勝ち（ループなし）"
+    },
+    {
+     "seed": 6,
+     "start": "0886e9832a35",
+     "stage1": false,
+     "stage2": false,
+     "via": null,
+     "win_turn": null,
+     "error": null,
+     "reason": "段1: 採った手順にループが無い / 段2: 上限のターンまでに勝てなかった"
+    },
+    {
+     "seed": 7,
+     "start": "ef0c5bf364ba",
+     "stage1": false,
+     "stage2": false,
+     "via": "beat",
+     "win_turn": 2,
+     "error": null,
+     "reason": "段1: 採った手順にループが無い / 段2: 殴り勝ち（ループなし）"
+    },
+    {
+     "seed": 8,
+     "start": "2341226a3921",
+     "stage1": false,
+     "stage2": false,
+     "via": null,
+     "win_turn": null,
+     "error": null,
+     "reason": "段1: 採った手順にループが無い / 段2: 上限のターンまでに勝てなかった"
+    }
+   ]
+  },
+  {
+   "combo": "akashic",
+   "group": "エンジン（呪文の無償詠唱）",
+   "old": "dm23ex2-009",
+   "new": "dm26sd1-t003",
+   "pairs": [
+    [
+     "dm23ex2-009",
+     "dm26sd1-t003"
+    ]
+   ],
+   "deck": [
+    "dm26sd1-t003",
+    "dm26sd1-t003",
+    "dm24ex3-rp3tr6",
+    "dm24ex3-rp3tr6",
+    "dmrp12-s01",
+    "dmrp12-s01",
+    "dm24ex1-043",
+    "dm24ex1-043",
+    "dm24ex1-043",
+    "dm24ex1-043",
+    "dm24ex1-038",
+    "dm24ex1-038",
+    "dm24ex1-038",
+    "dm24ex1-038",
+    "dmrp07-009",
+    "dmrp07-009",
+    "dmrp07-009",
+    "dmrp07-009",
+    "dm23bd7-035",
+    "dm23bd7-035",
+    "dm01-010",
+    "dm01-019",
+    "dm01-038",
+    "dm01-048",
+    "dm01-057",
+    "dm01-072",
+    "dm01-081",
+    "dm01-090",
+    "dm01-107",
+    "dm02-012",
+    "dm02-028",
+    "dm02-042",
+    "dm03-019",
+    "dm03-037",
+    "dm03-046",
+    "dm04-007",
+    "dm04-029",
+    "dm04-039",
+    "dm04-048",
+    "dm05-022"
+   ],
+   "rows": [
+    {
+     "seed": 1,
+     "start": "1e1d9004770b",
+     "stage1": false,
+     "stage2": false,
+     "via": null,
+     "win_turn": null,
+     "error": null,
+     "reason": "段1: 採った手順にループが無い / 段2: 上限のターンまでに勝てなかった"
+    },
+    {
+     "seed": 2,
+     "start": "23540cd182e4",
+     "stage1": false,
+     "stage2": false,
+     "via": "beat",
+     "win_turn": 2,
+     "error": null,
+     "reason": "段1: 採った手順にループが無い / 段2: 殴り勝ち（ループなし）"
+    },
+    {
+     "seed": 3,
+     "start": "907a9e1c99af",
+     "stage1": false,
+     "stage2": false,
+     "via": null,
+     "win_turn": null,
+     "error": null,
+     "reason": "段1: 採った手順にループが無い / 段2: 上限のターンまでに勝てなかった"
+    },
+    {
+     "seed": 4,
+     "start": "0bfc3b414d8d",
+     "stage1": false,
+     "stage2": false,
+     "via": "beat",
+     "win_turn": 2,
+     "error": null,
+     "reason": "段1: 採った手順にループが無い / 段2: 殴り勝ち（ループなし）"
+    },
+    {
+     "seed": 5,
+     "start": "e800ac39f7bd",
+     "stage1": false,
+     "stage2": false,
+     "via": null,
+     "win_turn": null,
+     "error": null,
+     "reason": "段1: 採った手順にループが無い / 段2: 上限のターンまでに勝てなかった"
+    },
+    {
+     "seed": 6,
+     "start": "79ba11e58799",
+     "stage1": false,
+     "stage2": false,
+     "via": "beat",
+     "win_turn": 2,
+     "error": null,
+     "reason": "段1: 採った手順にループが無い / 段2: 殴り勝ち（ループなし）"
+    },
+    {
+     "seed": 7,
+     "start": "23393e211ac1",
+     "stage1": false,
+     "stage2": false,
+     "via": "beat",
+     "win_turn": 2,
+     "error": null,
+     "reason": "段1: 採った手順にループが無い / 段2: 殴り勝ち（ループなし）"
+    },
+    {
+     "seed": 8,
+     "start": "2fdb450f7d2c",
+     "stage1": false,
+     "stage2": false,
+     "via": "beat",
+     "win_turn": 2,
+     "error": null,
+     "reason": "段1: 採った手順にループが無い / 段2: 殴り勝ち（ループなし）"
+    }
+   ]
+  },
+  {
+   "combo": "akashic",
+   "group": "エンジン（呪文の無償詠唱）",
+   "old": "dm23ex2-009",
+   "new": "dmex03-035",
+   "pairs": [
+    [
+     "dm23ex2-009",
+     "dmex03-035"
+    ]
+   ],
+   "deck": [
+    "dmex03-035",
+    "dmex03-035",
+    "dm24ex3-rp3tr6",
+    "dm24ex3-rp3tr6",
+    "dmrp12-s01",
+    "dmrp12-s01",
+    "dm24ex1-043",
+    "dm24ex1-043",
+    "dm24ex1-043",
+    "dm24ex1-043",
+    "dm24ex1-038",
+    "dm24ex1-038",
+    "dm24ex1-038",
+    "dm24ex1-038",
+    "dmrp07-009",
+    "dmrp07-009",
+    "dmrp07-009",
+    "dmrp07-009",
+    "dm23bd7-035",
+    "dm23bd7-035",
+    "dm01-010",
+    "dm01-019",
+    "dm01-038",
+    "dm01-048",
+    "dm01-057",
+    "dm01-072",
+    "dm01-081",
+    "dm01-090",
+    "dm01-107",
+    "dm02-012",
+    "dm02-028",
+    "dm02-042",
+    "dm03-019",
+    "dm03-037",
+    "dm03-046",
+    "dm04-007",
+    "dm04-029",
+    "dm04-039",
+    "dm04-048",
+    "dm05-022"
+   ],
+   "rows": [
+    {
+     "seed": 1,
+     "start": "bc8d6053d7d8",
+     "stage1": false,
+     "stage2": false,
+     "via": null,
+     "win_turn": null,
+     "error": null,
+     "reason": "段1: 採った手順にループが無い / 段2: 上限のターンまでに勝てなかった"
+    },
+    {
+     "seed": 2,
+     "start": "09fdc58829f8",
+     "stage1": false,
+     "stage2": false,
+     "via": null,
+     "win_turn": null,
+     "error": null,
+     "reason": "段1: 採った手順にループが無い / 段2: 上限のターンまでに勝てなかった"
+    },
+    {
+     "seed": 3,
+     "start": "56cbe918f84a",
+     "stage1": false,
+     "stage2": false,
+     "via": null,
+     "win_turn": null,
+     "error": null,
+     "reason": "段1: 採った手順にループが無い / 段2: 上限のターンまでに勝てなかった"
+    },
+    {
+     "seed": 4,
+     "start": "5583ecfbf56d",
+     "stage1": false,
+     "stage2": false,
+     "via": null,
+     "win_turn": null,
+     "error": null,
+     "reason": "段1: 採った手順にループが無い / 段2: 上限のターンまでに勝てなかった"
+    },
+    {
+     "seed": 5,
+     "start": "cf01e2c8ed6c",
+     "stage1": false,
+     "stage2": false,
+     "via": null,
+     "win_turn": null,
+     "error": null,
+     "reason": "段1: 採った手順にループが無い / 段2: 上限のターンまでに勝てなかった"
+    },
+    {
+     "seed": 6,
+     "start": "abc7093b5e77",
+     "stage1": false,
+     "stage2": false,
+     "via": null,
+     "win_turn": null,
+     "error": null,
+     "reason": "段1: 採った手順にループが無い / 段2: 上限のターンまでに勝てなかった"
+    },
+    {
+     "seed": 7,
+     "start": "35634177f7c9",
+     "stage1": false,
+     "stage2": false,
+     "via": null,
+     "win_turn": null,
+     "error": null,
+     "reason": "段1: 採った手順にループが無い / 段2: 上限のターンまでに勝てなかった"
+    },
+    {
+     "seed": 8,
+     "start": "f283cead147d",
+     "stage1": false,
+     "stage2": false,
+     "via": null,
+     "win_turn": null,
+     "error": null,
+     "reason": "段1: 採った手順にループが無い / 段2: 上限のターンまでに勝てなかった"
+    }
+   ]
+  },
+  {
+   "combo": "akashic",
+   "group": "エンジン（呪文の無償詠唱）",
+   "old": "dm23ex2-009",
+   "new": "dm26ex4-sec023",
+   "pairs": [
+    [
+     "dm23ex2-009",
+     "dm26ex4-sec023"
+    ]
+   ],
+   "deck": [
+    "dm26ex4-sec023",
+    "dm26ex4-sec023",
+    "dm24ex3-rp3tr6",
+    "dm24ex3-rp3tr6",
+    "dmrp12-s01",
+    "dmrp12-s01",
+    "dm24ex1-043",
+    "dm24ex1-043",
+    "dm24ex1-043",
+    "dm24ex1-043",
+    "dm24ex1-038",
+    "dm24ex1-038",
+    "dm24ex1-038",
+    "dm24ex1-038",
+    "dmrp07-009",
+    "dmrp07-009",
+    "dmrp07-009",
+    "dmrp07-009",
+    "dm23bd7-035",
+    "dm23bd7-035",
+    "dm01-010",
+    "dm01-019",
+    "dm01-038",
+    "dm01-048",
+    "dm01-057",
+    "dm01-072",
+    "dm01-081",
+    "dm01-090",
+    "dm01-107",
+    "dm02-012",
+    "dm02-028",
+    "dm02-042",
+    "dm03-019",
+    "dm03-037",
+    "dm03-046",
+    "dm04-007",
+    "dm04-029",
+    "dm04-039",
+    "dm04-048",
+    "dm05-022"
+   ],
+   "rows": [
+    {
+     "seed": 1,
+     "start": "8f887b665eaa",
+     "stage1": false,
+     "stage2": false,
+     "via": null,
+     "win_turn": null,
+     "error": null,
+     "reason": "段1: 採った手順にループが無い / 段2: 上限のターンまでに勝てなかった"
+    },
+    {
+     "seed": 2,
+     "start": "c33b827cc5cc",
+     "stage1": false,
+     "stage2": false,
+     "via": "beat",
+     "win_turn": 2,
+     "error": null,
+     "reason": "段1: 採った手順にループが無い / 段2: 殴り勝ち（ループなし）"
+    },
+    {
+     "seed": 3,
+     "start": "c0ce7562adb5",
+     "stage1": false,
+     "stage2": false,
+     "via": null,
+     "win_turn": null,
+     "error": null,
+     "reason": "段1: 採った手順にループが無い / 段2: 上限のターンまでに勝てなかった"
+    },
+    {
+     "seed": 4,
+     "start": "5545e40e3680",
+     "stage1": false,
+     "stage2": false,
+     "via": "beat",
+     "win_turn": 2,
+     "error": null,
+     "reason": "段1: 採った手順にループが無い / 段2: 殴り勝ち（ループなし）"
+    },
+    {
+     "seed": 5,
+     "start": "b4e07641275f",
+     "stage1": false,
+     "stage2": false,
+     "via": null,
+     "win_turn": null,
+     "error": null,
+     "reason": "段1: 採った手順にループが無い / 段2: 上限のターンまでに勝てなかった"
+    },
+    {
+     "seed": 6,
+     "start": "693bc21ac335",
+     "stage1": false,
+     "stage2": false,
+     "via": "beat",
+     "win_turn": 2,
+     "error": null,
+     "reason": "段1: 採った手順にループが無い / 段2: 殴り勝ち（ループなし）"
+    },
+    {
+     "seed": 7,
+     "start": "4738dc2994fa",
+     "stage1": false,
+     "stage2": false,
+     "via": "beat",
+     "win_turn": 2,
+     "error": null,
+     "reason": "段1: 採った手順にループが無い / 段2: 殴り勝ち（ループなし）"
+    },
+    {
+     "seed": 8,
+     "start": "fe4b13331d38",
+     "stage1": false,
+     "stage2": false,
+     "via": "beat",
+     "win_turn": 2,
+     "error": null,
+     "reason": "段1: 採った手順にループが無い / 段2: 殴り勝ち（ループなし）"
+    }
+   ]
+  },
+  {
+   "combo": "akashic",
+   "group": "勝ち手段",
+   "old": "dm24ex1-038+dmrp07-009+dmrp12-s01",
+   "new": "dmd26-010+dm35-052+dmc67-001",
+   "pairs": [
+    [
+     "dm24ex1-038",
+     "dmd26-010"
+    ],
+    [
+     "dmrp07-009",
+     "dm35-052"
+    ],
+    [
+     "dmrp12-s01",
+     "dmc67-001"
+    ]
+   ],
+   "deck": [
+    "dm23ex2-009",
+    "dm23ex2-009",
+    "dm24ex3-rp3tr6",
+    "dm24ex3-rp3tr6",
+    "dmc67-001",
+    "dmc67-001",
+    "dm24ex1-043",
+    "dm24ex1-043",
+    "dm24ex1-043",
+    "dm24ex1-043",
+    "dmd26-010",
+    "dmd26-010",
+    "dmd26-010",
+    "dmd26-010",
+    "dm35-052",
+    "dm35-052",
+    "dm35-052",
+    "dm35-052",
+    "dm23bd7-035",
+    "dm23bd7-035",
+    "dm01-010",
+    "dm01-019",
+    "dm01-038",
+    "dm01-048",
+    "dm01-057",
+    "dm01-072",
+    "dm01-081",
+    "dm01-090",
+    "dm01-107",
+    "dm02-012",
+    "dm02-028",
+    "dm02-042",
+    "dm03-019",
+    "dm03-037",
+    "dm03-046",
+    "dm04-007",
+    "dm04-029",
+    "dm04-039",
+    "dm04-048",
+    "dm05-022"
+   ],
+   "rows": [
+    {
+     "seed": 1,
+     "start": "0ed2fd51e3d0",
+     "stage1": false,
+     "stage2": false,
+     "via": null,
+     "win_turn": null,
+     "error": null,
+     "reason": "段1: 採った手順にループが無い / 段2: 上限のターンまでに勝てなかった"
+    },
+    {
+     "seed": 2,
+     "start": "17c07f458b5c",
+     "stage1": false,
+     "stage2": false,
+     "via": null,
+     "win_turn": null,
+     "error": null,
+     "reason": "段1: 採った手順にループが無い / 段2: 上限のターンまでに勝てなかった"
+    },
+    {
+     "seed": 3,
+     "start": "257d95f885e0",
+     "stage1": false,
+     "stage2": false,
+     "via": null,
+     "win_turn": null,
+     "error": null,
+     "reason": "段1: 採った手順にループが無い / 段2: 上限のターンまでに勝てなかった"
+    },
+    {
+     "seed": 4,
+     "start": "58000b52d6af",
+     "stage1": false,
+     "stage2": false,
+     "via": null,
+     "win_turn": null,
+     "error": null,
+     "reason": "段1: 採った手順にループが無い / 段2: 上限のターンまでに勝てなかった"
+    },
+    {
+     "seed": 5,
+     "start": "f17475be4f75",
+     "stage1": false,
+     "stage2": false,
+     "via": null,
+     "win_turn": null,
+     "error": null,
+     "reason": "段1: 採った手順にループが無い / 段2: 上限のターンまでに勝てなかった"
+    },
+    {
+     "seed": 6,
+     "start": "dd5590421723",
+     "stage1": false,
+     "stage2": false,
+     "via": null,
+     "win_turn": null,
+     "error": null,
+     "reason": "段1: 採った手順にループが無い / 段2: 上限のターンまでに勝てなかった"
+    },
+    {
+     "seed": 7,
+     "start": "af4d01d8e931",
+     "stage1": false,
+     "stage2": false,
+     "via": null,
+     "win_turn": null,
+     "error": null,
+     "reason": "段1: 採った手順にループが無い / 段2: 上限のターンまでに勝てなかった"
+    },
+    {
+     "seed": 8,
+     "start": "12861a0f881f",
+     "stage1": false,
+     "stage2": false,
+     "via": null,
+     "win_turn": null,
+     "error": null,
+     "reason": "段1: 採った手順にループが無い / 段2: 上限のターンまでに勝てなかった"
+    }
+   ]
+  },
+  {
+   "combo": "akashic",
+   "group": "勝ち手段",
+   "old": "dm24ex1-038+dmrp07-009+dmrp12-s01",
+   "new": "dm16-041+dm24rp1-072+dm23bd7-049",
+   "pairs": [
+    [
+     "dm24ex1-038",
+     "dm16-041"
+    ],
+    [
+     "dmrp07-009",
+     "dm24rp1-072"
+    ],
+    [
+     "dmrp12-s01",
+     "dm23bd7-049"
+    ]
+   ],
+   "deck": [
+    "dm23ex2-009",
+    "dm23ex2-009",
+    "dm24ex3-rp3tr6",
+    "dm24ex3-rp3tr6",
+    "dm23bd7-049",
+    "dm23bd7-049",
+    "dm24ex1-043",
+    "dm24ex1-043",
+    "dm24ex1-043",
+    "dm24ex1-043",
+    "dm16-041",
+    "dm16-041",
+    "dm16-041",
+    "dm16-041",
+    "dm24rp1-072",
+    "dm24rp1-072",
+    "dm24rp1-072",
+    "dm24rp1-072",
+    "dm23bd7-035",
+    "dm23bd7-035",
+    "dm01-010",
+    "dm01-019",
+    "dm01-038",
+    "dm01-048",
+    "dm01-057",
+    "dm01-072",
+    "dm01-081",
+    "dm01-090",
+    "dm01-107",
+    "dm02-012",
+    "dm02-028",
+    "dm02-042",
+    "dm03-019",
+    "dm03-037",
+    "dm03-046",
+    "dm04-007",
+    "dm04-029",
+    "dm04-039",
+    "dm04-048",
+    "dm05-022"
+   ],
+   "rows": [
+    {
+     "seed": 1,
+     "start": "0b7a9c17d21e",
+     "stage1": false,
+     "stage2": false,
+     "via": null,
+     "win_turn": null,
+     "error": null,
+     "reason": "段1: 採った手順にループが無い / 段2: 上限のターンまでに勝てなかった"
+    },
+    {
+     "seed": 2,
+     "start": "45432d2772f9",
+     "stage1": false,
+     "stage2": false,
+     "via": null,
+     "win_turn": null,
+     "error": null,
+     "reason": "段1: 採った手順にループが無い / 段2: 上限のターンまでに勝てなかった"
+    },
+    {
+     "seed": 3,
+     "start": "de0f67b8a6ad",
+     "stage1": false,
+     "stage2": false,
+     "via": null,
+     "win_turn": null,
+     "error": null,
+     "reason": "段1: 採った手順にループが無い / 段2: 上限のターンまでに勝てなかった"
+    },
+    {
+     "seed": 4,
+     "start": "081e8e66fa1d",
+     "stage1": false,
+     "stage2": false,
+     "via": null,
+     "win_turn": null,
+     "error": null,
+     "reason": "段1: 採った手順にループが無い / 段2: 上限のターンまでに勝てなかった"
+    },
+    {
+     "seed": 5,
+     "start": "1bcaeaf4ab96",
+     "stage1": false,
+     "stage2": false,
+     "via": null,
+     "win_turn": null,
+     "error": null,
+     "reason": "段1: 採った手順にループが無い / 段2: 上限のターンまでに勝てなかった"
+    },
+    {
+     "seed": 6,
+     "start": "497906c6512b",
+     "stage1": false,
+     "stage2": false,
+     "via": null,
+     "win_turn": null,
+     "error": null,
+     "reason": "段1: 採った手順にループが無い / 段2: 上限のターンまでに勝てなかった"
+    },
+    {
+     "seed": 7,
+     "start": "a8d69d31c70f",
+     "stage1": false,
+     "stage2": false,
+     "via": null,
+     "win_turn": null,
+     "error": null,
+     "reason": "段1: 採った手順にループが無い / 段2: 上限のターンまでに勝てなかった"
+    },
+    {
+     "seed": 8,
+     "start": "17008d532d0d",
+     "stage1": false,
+     "stage2": false,
+     "via": null,
+     "win_turn": null,
+     "error": null,
+     "reason": "段1: 採った手順にループが無い / 段2: 上限のターンまでに勝てなかった"
+    }
+   ]
+  },
+  {
+   "combo": "akashic",
+   "group": "勝ち手段",
+   "old": "dm24ex1-038+dmrp07-009+dmrp12-s01",
+   "new": "dm19-081+dmex09-041+dmrp06-036",
+   "pairs": [
+    [
+     "dm24ex1-038",
+     "dm19-081"
+    ],
+    [
+     "dmrp07-009",
+     "dmex09-041"
+    ],
+    [
+     "dmrp12-s01",
+     "dmrp06-036"
+    ]
+   ],
+   "deck": [
+    "dm23ex2-009",
+    "dm23ex2-009",
+    "dm24ex3-rp3tr6",
+    "dm24ex3-rp3tr6",
+    "dmrp06-036",
+    "dmrp06-036",
+    "dm24ex1-043",
+    "dm24ex1-043",
+    "dm24ex1-043",
+    "dm24ex1-043",
+    "dm19-081",
+    "dm19-081",
+    "dm19-081",
+    "dm19-081",
+    "dmex09-041",
+    "dmex09-041",
+    "dmex09-041",
+    "dmex09-041",
+    "dm23bd7-035",
+    "dm23bd7-035",
+    "dm01-010",
+    "dm01-019",
+    "dm01-038",
+    "dm01-048",
+    "dm01-057",
+    "dm01-072",
+    "dm01-081",
+    "dm01-090",
+    "dm01-107",
+    "dm02-012",
+    "dm02-028",
+    "dm02-042",
+    "dm03-019",
+    "dm03-037",
+    "dm03-046",
+    "dm04-007",
+    "dm04-029",
+    "dm04-039",
+    "dm04-048",
+    "dm05-022"
+   ],
+   "rows": [
+    {
+     "seed": 1,
+     "start": "3946c7c9492f",
+     "stage1": false,
+     "stage2": false,
+     "via": null,
+     "win_turn": null,
+     "error": null,
+     "reason": "段1: 採った手順にループが無い / 段2: 上限のターンまでに勝てなかった"
+    },
+    {
+     "seed": 2,
+     "start": "7af6075f3792",
+     "stage1": false,
+     "stage2": false,
+     "via": null,
+     "win_turn": null,
+     "error": null,
+     "reason": "段1: 採った手順にループが無い / 段2: 上限のターンまでに勝てなかった"
+    },
+    {
+     "seed": 3,
+     "start": "29eef282a939",
+     "stage1": false,
+     "stage2": false,
+     "via": null,
+     "win_turn": null,
+     "error": null,
+     "reason": "段1: 採った手順にループが無い / 段2: 上限のターンまでに勝てなかった"
+    },
+    {
+     "seed": 4,
+     "start": "472a98951d61",
+     "stage1": false,
+     "stage2": false,
+     "via": null,
+     "win_turn": null,
+     "error": null,
+     "reason": "段1: 採った手順にループが無い / 段2: 上限のターンまでに勝てなかった"
+    },
+    {
+     "seed": 5,
+     "start": "7ed0119d274a",
+     "stage1": false,
+     "stage2": false,
+     "via": null,
+     "win_turn": null,
+     "error": null,
+     "reason": "段1: 採った手順にループが無い / 段2: 上限のターンまでに勝てなかった"
+    },
+    {
+     "seed": 6,
+     "start": "bdcadb6bbce2",
+     "stage1": false,
+     "stage2": false,
+     "via": null,
+     "win_turn": null,
+     "error": null,
+     "reason": "段1: 採った手順にループが無い / 段2: 上限のターンまでに勝てなかった"
+    },
+    {
+     "seed": 7,
+     "start": "4af3c57ffbfe",
+     "stage1": false,
+     "stage2": false,
+     "via": null,
+     "win_turn": null,
+     "error": null,
+     "reason": "段1: 採った手順にループが無い / 段2: 上限のターンまでに勝てなかった"
+    },
+    {
+     "seed": 8,
+     "start": "d309808a0e86",
+     "stage1": false,
+     "stage2": false,
+     "via": null,
+     "win_turn": null,
+     "error": null,
+     "reason": "段1: 採った手順にループが無い / 段2: 上限のターンまでに勝てなかった"
+    }
+   ]
+  },
+  {
+   "combo": "akashic",
+   "group": "勝ち手段",
+   "old": "dm24ex1-038+dmrp07-009+dmrp12-s01",
+   "new": "dm23rp3-057+dm24bd5-047+dm24bd6-032",
+   "pairs": [
+    [
+     "dm24ex1-038",
+     "dm23rp3-057"
+    ],
+    [
+     "dmrp07-009",
+     "dm24bd5-047"
+    ],
+    [
+     "dmrp12-s01",
+     "dm24bd6-032"
+    ]
+   ],
+   "deck": [
+    "dm23ex2-009",
+    "dm23ex2-009",
+    "dm24ex3-rp3tr6",
+    "dm24ex3-rp3tr6",
+    "dm24bd6-032",
+    "dm24bd6-032",
+    "dm24ex1-043",
+    "dm24ex1-043",
+    "dm24ex1-043",
+    "dm24ex1-043",
+    "dm23rp3-057",
+    "dm23rp3-057",
+    "dm23rp3-057",
+    "dm23rp3-057",
+    "dm24bd5-047",
+    "dm24bd5-047",
+    "dm24bd5-047",
+    "dm24bd5-047",
+    "dm23bd7-035",
+    "dm23bd7-035",
+    "dm01-010",
+    "dm01-019",
+    "dm01-038",
+    "dm01-048",
+    "dm01-057",
+    "dm01-072",
+    "dm01-081",
+    "dm01-090",
+    "dm01-107",
+    "dm02-012",
+    "dm02-028",
+    "dm02-042",
+    "dm03-019",
+    "dm03-037",
+    "dm03-046",
+    "dm04-007",
+    "dm04-029",
+    "dm04-039",
+    "dm04-048",
+    "dm05-022"
+   ],
+   "rows": [
+    {
+     "seed": 1,
+     "start": "6187f99360f4",
+     "stage1": false,
+     "stage2": false,
+     "via": null,
+     "win_turn": null,
+     "error": null,
+     "reason": "段1: 採った手順にループが無い / 段2: 上限のターンまでに勝てなかった"
+    },
+    {
+     "seed": 2,
+     "start": "26b95a137c3f",
+     "stage1": false,
+     "stage2": false,
+     "via": null,
+     "win_turn": null,
+     "error": null,
+     "reason": "段1: 採った手順にループが無い / 段2: 上限のターンまでに勝てなかった"
+    },
+    {
+     "seed": 3,
+     "start": "2b8b0f0623a8",
+     "stage1": false,
+     "stage2": false,
+     "via": null,
+     "win_turn": null,
+     "error": null,
+     "reason": "段1: 採った手順にループが無い / 段2: 上限のターンまでに勝てなかった"
+    },
+    {
+     "seed": 4,
+     "start": "46849351de87",
+     "stage1": false,
+     "stage2": false,
+     "via": null,
+     "win_turn": null,
+     "error": null,
+     "reason": "段1: 採った手順にループが無い / 段2: 上限のターンまでに勝てなかった"
+    },
+    {
+     "seed": 5,
+     "start": "b9af950bae00",
+     "stage1": false,
+     "stage2": false,
+     "via": null,
+     "win_turn": null,
+     "error": null,
+     "reason": "段1: 採った手順にループが無い / 段2: 上限のターンまでに勝てなかった"
+    },
+    {
+     "seed": 6,
+     "start": "c8368a5afb38",
+     "stage1": false,
+     "stage2": false,
+     "via": null,
+     "win_turn": null,
+     "error": null,
+     "reason": "段1: 採った手順にループが無い / 段2: 上限のターンまでに勝てなかった"
+    },
+    {
+     "seed": 7,
+     "start": "2f7eeefed49f",
+     "stage1": false,
+     "stage2": false,
+     "via": null,
+     "win_turn": null,
+     "error": null,
+     "reason": "段1: 採った手順にループが無い / 段2: 上限のターンまでに勝てなかった"
+    },
+    {
+     "seed": 8,
+     "start": "fd7d1de96f35",
+     "stage1": false,
+     "stage2": false,
+     "via": null,
+     "win_turn": null,
+     "error": null,
+     "reason": "段1: 採った手順にループが無い / 段2: 上限のターンまでに勝てなかった"
+    }
+   ]
+  },
+  {
+   "combo": "akashic_hd2",
+   "group": "回収（訪れる魔の時刻）",
+   "old": "dm23bd7-035",
+   "new": "dmx20-029",
+   "pairs": [
+    [
+     "dm23bd7-035",
+     "dmx20-029"
+    ]
+   ],
+   "deck": [
+    "dm23ex2-009",
+    "dm23ex2-009",
+    "dm24ex3-rp3tr6",
+    "dm24ex3-rp3tr6",
+    "dmrp12-s01",
+    "dmrp12-s01",
+    "dm24ex1-043",
+    "dm24ex1-043",
+    "dm24ex1-043",
+    "dm24ex1-043",
+    "dm24ex1-038",
+    "dm24ex1-038",
+    "dm24ex1-038",
+    "dm24ex1-038",
+    "dmrp07-009",
+    "dmrp07-009",
+    "dmrp07-009",
+    "dmrp07-009",
+    "dmx20-029",
+    "dmx20-029",
+    "dm01-010",
+    "dm01-019",
+    "dm01-038",
+    "dm01-048",
+    "dm01-057",
+    "dm01-072",
+    "dm01-081",
+    "dm01-090",
+    "dm01-107",
+    "dm02-012",
+    "dm02-028",
+    "dm02-042",
+    "dm03-019",
+    "dm03-037",
+    "dm03-046",
+    "dm04-007",
+    "dm04-029",
+    "dm04-039",
+    "dm04-048",
+    "dm05-022"
+   ],
+   "rows": [
+    {
+     "seed": 1,
+     "start": "85894dc66e9b",
+     "stage1": false,
+     "stage2": false,
+     "via": null,
+     "win_turn": null,
+     "error": null,
+     "reason": "段1: 採った手順にループが無い / 段2: 上限のターンまでに勝てなかった"
+    },
+    {
+     "seed": 2,
+     "start": "3ec6c0a2d040",
+     "stage1": false,
+     "stage2": false,
+     "via": null,
+     "win_turn": null,
+     "error": null,
+     "reason": "段1: 採った手順にループが無い / 段2: 上限のターンまでに勝てなかった"
+    },
+    {
+     "seed": 3,
+     "start": "ab2055c622f1",
+     "stage1": false,
+     "stage2": false,
+     "via": null,
+     "win_turn": null,
+     "error": null,
+     "reason": "段1: 採った手順にループが無い / 段2: 上限のターンまでに勝てなかった"
+    },
+    {
+     "seed": 4,
+     "start": "e6cbeab507df",
+     "stage1": false,
+     "stage2": false,
+     "via": null,
+     "win_turn": null,
+     "error": null,
+     "reason": "段1: 採った手順にループが無い / 段2: 上限のターンまでに勝てなかった"
+    },
+    {
+     "seed": 5,
+     "start": "d820dcbd832f",
+     "stage1": false,
+     "stage2": false,
+     "via": null,
+     "win_turn": null,
+     "error": null,
+     "reason": "段1: 採った手順にループが無い / 段2: 上限のターンまでに勝てなかった"
+    },
+    {
+     "seed": 6,
+     "start": "57ba609bbd02",
+     "stage1": false,
+     "stage2": false,
+     "via": null,
+     "win_turn": null,
+     "error": null,
+     "reason": "段1: 採った手順にループが無い / 段2: 上限のターンまでに勝てなかった"
+    },
+    {
+     "seed": 7,
+     "start": "50ae25569b0e",
+     "stage1": false,
+     "stage2": false,
+     "via": null,
+     "win_turn": null,
+     "error": null,
+     "reason": "段1: 採った手順にループが無い / 段2: 上限のターンまでに勝てなかった"
+    },
+    {
+     "seed": 8,
+     "start": "3962ac9df512",
+     "stage1": false,
+     "stage2": false,
+     "via": null,
+     "win_turn": null,
+     "error": null,
+     "reason": "段1: 採った手順にループが無い / 段2: 上限のターンまでに勝てなかった"
+    }
+   ]
+  },
+  {
+   "combo": "akashic_hd2",
+   "group": "回収（訪れる魔の時刻）",
+   "old": "dm23bd7-035",
+   "new": "dm25ex2-cho014",
+   "pairs": [
+    [
+     "dm23bd7-035",
+     "dm25ex2-cho014"
+    ]
+   ],
+   "deck": [
+    "dm23ex2-009",
+    "dm23ex2-009",
+    "dm24ex3-rp3tr6",
+    "dm24ex3-rp3tr6",
+    "dmrp12-s01",
+    "dmrp12-s01",
+    "dm24ex1-043",
+    "dm24ex1-043",
+    "dm24ex1-043",
+    "dm24ex1-043",
+    "dm24ex1-038",
+    "dm24ex1-038",
+    "dm24ex1-038",
+    "dm24ex1-038",
+    "dmrp07-009",
+    "dmrp07-009",
+    "dmrp07-009",
+    "dmrp07-009",
+    "dm25ex2-cho014",
+    "dm25ex2-cho014",
+    "dm01-010",
+    "dm01-019",
+    "dm01-038",
+    "dm01-048",
+    "dm01-057",
+    "dm01-072",
+    "dm01-081",
+    "dm01-090",
+    "dm01-107",
+    "dm02-012",
+    "dm02-028",
+    "dm02-042",
+    "dm03-019",
+    "dm03-037",
+    "dm03-046",
+    "dm04-007",
+    "dm04-029",
+    "dm04-039",
+    "dm04-048",
+    "dm05-022"
+   ],
+   "rows": [
+    {
+     "seed": 1,
+     "start": "392147fc0790",
+     "stage1": false,
+     "stage2": false,
+     "via": null,
+     "win_turn": null,
+     "error": null,
+     "reason": "段1: 採った手順にループが無い / 段2: 上限のターンまでに勝てなかった"
+    },
+    {
+     "seed": 2,
+     "start": "7caca08c44f9",
+     "stage1": false,
+     "stage2": false,
+     "via": null,
+     "win_turn": null,
+     "error": null,
+     "reason": "段1: 採った手順にループが無い / 段2: 上限のターンまでに勝てなかった"
+    },
+    {
+     "seed": 3,
+     "start": "bdee47f4ec7a",
+     "stage1": false,
+     "stage2": false,
+     "via": null,
+     "win_turn": null,
+     "error": null,
+     "reason": "段1: 採った手順にループが無い / 段2: 上限のターンまでに勝てなかった"
+    },
+    {
+     "seed": 4,
+     "start": "2215d454be5f",
+     "stage1": false,
+     "stage2": false,
+     "via": null,
+     "win_turn": null,
+     "error": null,
+     "reason": "段1: 採った手順にループが無い / 段2: 上限のターンまでに勝てなかった"
+    },
+    {
+     "seed": 5,
+     "start": "4c2a14caf9c9",
+     "stage1": false,
+     "stage2": false,
+     "via": null,
+     "win_turn": null,
+     "error": null,
+     "reason": "段1: 採った手順にループが無い / 段2: 上限のターンまでに勝てなかった"
+    },
+    {
+     "seed": 6,
+     "start": "28b0d0f1eddb",
+     "stage1": false,
+     "stage2": false,
+     "via": null,
+     "win_turn": null,
+     "error": null,
+     "reason": "段1: 採った手順にループが無い / 段2: 上限のターンまでに勝てなかった"
+    },
+    {
+     "seed": 7,
+     "start": "5341f5ae0392",
+     "stage1": false,
+     "stage2": false,
+     "via": null,
+     "win_turn": null,
+     "error": null,
+     "reason": "段1: 採った手順にループが無い / 段2: 上限のターンまでに勝てなかった"
+    },
+    {
+     "seed": 8,
+     "start": "e6dfcfb7a9b5",
+     "stage1": false,
+     "stage2": false,
+     "via": null,
+     "win_turn": null,
+     "error": null,
+     "reason": "段1: 採った手順にループが無い / 段2: 上限のターンまでに勝てなかった"
+    }
+   ]
+  },
+  {
+   "combo": "akashic_hd2",
+   "group": "回収（訪れる魔の時刻）",
+   "old": "dm23bd7-035",
+   "new": "dmrp04m-s05",
+   "pairs": [
+    [
+     "dm23bd7-035",
+     "dmrp04m-s05"
+    ]
+   ],
+   "deck": [
+    "dm23ex2-009",
+    "dm23ex2-009",
+    "dm24ex3-rp3tr6",
+    "dm24ex3-rp3tr6",
+    "dmrp12-s01",
+    "dmrp12-s01",
+    "dm24ex1-043",
+    "dm24ex1-043",
+    "dm24ex1-043",
+    "dm24ex1-043",
+    "dm24ex1-038",
+    "dm24ex1-038",
+    "dm24ex1-038",
+    "dm24ex1-038",
+    "dmrp07-009",
+    "dmrp07-009",
+    "dmrp07-009",
+    "dmrp07-009",
+    "dmrp04m-s05",
+    "dmrp04m-s05",
+    "dm01-010",
+    "dm01-019",
+    "dm01-038",
+    "dm01-048",
+    "dm01-057",
+    "dm01-072",
+    "dm01-081",
+    "dm01-090",
+    "dm01-107",
+    "dm02-012",
+    "dm02-028",
+    "dm02-042",
+    "dm03-019",
+    "dm03-037",
+    "dm03-046",
+    "dm04-007",
+    "dm04-029",
+    "dm04-039",
+    "dm04-048",
+    "dm05-022"
+   ],
+   "rows": [
+    {
+     "seed": 1,
+     "start": "3dcfde6f0cdc",
+     "stage1": false,
+     "stage2": false,
+     "via": null,
+     "win_turn": null,
+     "error": null,
+     "reason": "段1: 採った手順にループが無い / 段2: 上限のターンまでに勝てなかった"
+    },
+    {
+     "seed": 2,
+     "start": "be92f144763c",
+     "stage1": false,
+     "stage2": false,
+     "via": null,
+     "win_turn": null,
+     "error": null,
+     "reason": "段1: 採った手順にループが無い / 段2: 上限のターンまでに勝てなかった"
+    },
+    {
+     "seed": 3,
+     "start": "8b4986d0123d",
+     "stage1": false,
+     "stage2": false,
+     "via": null,
+     "win_turn": null,
+     "error": null,
+     "reason": "段1: 採った手順にループが無い / 段2: 上限のターンまでに勝てなかった"
+    },
+    {
+     "seed": 4,
+     "start": "dae28717d081",
+     "stage1": false,
+     "stage2": false,
+     "via": null,
+     "win_turn": null,
+     "error": null,
+     "reason": "段1: 採った手順にループが無い / 段2: 上限のターンまでに勝てなかった"
+    },
+    {
+     "seed": 5,
+     "start": "9097f33df89c",
+     "stage1": false,
+     "stage2": false,
+     "via": null,
+     "win_turn": null,
+     "error": null,
+     "reason": "段1: 採った手順にループが無い / 段2: 上限のターンまでに勝てなかった"
+    },
+    {
+     "seed": 6,
+     "start": "35ad1365ab55",
+     "stage1": false,
+     "stage2": false,
+     "via": null,
+     "win_turn": null,
+     "error": null,
+     "reason": "段1: 採った手順にループが無い / 段2: 上限のターンまでに勝てなかった"
+    },
+    {
+     "seed": 7,
+     "start": "85c7436d407c",
+     "stage1": false,
+     "stage2": false,
+     "via": null,
+     "win_turn": null,
+     "error": null,
+     "reason": "段1: 採った手順にループが無い / 段2: 上限のターンまでに勝てなかった"
+    },
+    {
+     "seed": 8,
+     "start": "4f047dd6bb3b",
+     "stage1": false,
+     "stage2": false,
+     "via": null,
+     "win_turn": null,
+     "error": null,
+     "reason": "段1: 採った手順にループが無い / 段2: 上限のターンまでに勝てなかった"
+    }
+   ]
+  },
+  {
+   "combo": "akashic_hd2",
+   "group": "回収（訪れる魔の時刻）",
+   "old": "dm23bd7-035",
+   "new": "dm24-032",
+   "pairs": [
+    [
+     "dm23bd7-035",
+     "dm24-032"
+    ]
+   ],
+   "deck": [
+    "dm23ex2-009",
+    "dm23ex2-009",
+    "dm24ex3-rp3tr6",
+    "dm24ex3-rp3tr6",
+    "dmrp12-s01",
+    "dmrp12-s01",
+    "dm24ex1-043",
+    "dm24ex1-043",
+    "dm24ex1-043",
+    "dm24ex1-043",
+    "dm24ex1-038",
+    "dm24ex1-038",
+    "dm24ex1-038",
+    "dm24ex1-038",
+    "dmrp07-009",
+    "dmrp07-009",
+    "dmrp07-009",
+    "dmrp07-009",
+    "dm24-032",
+    "dm24-032",
+    "dm01-010",
+    "dm01-019",
+    "dm01-038",
+    "dm01-048",
+    "dm01-057",
+    "dm01-072",
+    "dm01-081",
+    "dm01-090",
+    "dm01-107",
+    "dm02-012",
+    "dm02-028",
+    "dm02-042",
+    "dm03-019",
+    "dm03-037",
+    "dm03-046",
+    "dm04-007",
+    "dm04-029",
+    "dm04-039",
+    "dm04-048",
+    "dm05-022"
+   ],
+   "rows": [
+    {
+     "seed": 1,
+     "start": "501002d47c5f",
+     "stage1": false,
+     "stage2": false,
+     "via": null,
+     "win_turn": null,
+     "error": null,
+     "reason": "段1: 採った手順にループが無い / 段2: 上限のターンまでに勝てなかった"
+    },
+    {
+     "seed": 2,
+     "start": "45f1df97768f",
+     "stage1": false,
+     "stage2": false,
+     "via": null,
+     "win_turn": null,
+     "error": null,
+     "reason": "段1: 採った手順にループが無い / 段2: 上限のターンまでに勝てなかった"
+    },
+    {
+     "seed": 3,
+     "start": "7be3c0a64bbb",
+     "stage1": false,
+     "stage2": false,
+     "via": null,
+     "win_turn": null,
+     "error": null,
+     "reason": "段1: 採った手順にループが無い / 段2: 上限のターンまでに勝てなかった"
+    },
+    {
+     "seed": 4,
+     "start": "cb10d874e43e",
+     "stage1": false,
+     "stage2": false,
+     "via": null,
+     "win_turn": null,
+     "error": null,
+     "reason": "段1: 採った手順にループが無い / 段2: 上限のターンまでに勝てなかった"
+    },
+    {
+     "seed": 5,
+     "start": "9821c9da5aec",
+     "stage1": false,
+     "stage2": false,
+     "via": null,
+     "win_turn": null,
+     "error": null,
+     "reason": "段1: 採った手順にループが無い / 段2: 上限のターンまでに勝てなかった"
+    },
+    {
+     "seed": 6,
+     "start": "f7c8e64b2d80",
+     "stage1": false,
+     "stage2": false,
+     "via": null,
+     "win_turn": null,
+     "error": null,
+     "reason": "段1: 採った手順にループが無い / 段2: 上限のターンまでに勝てなかった"
+    },
+    {
+     "seed": 7,
+     "start": "b669a490fbb7",
+     "stage1": false,
+     "stage2": false,
+     "via": null,
+     "win_turn": null,
+     "error": null,
+     "reason": "段1: 採った手順にループが無い / 段2: 上限のターンまでに勝てなかった"
+    },
+    {
+     "seed": 8,
+     "start": "e3f96784dbeb",
+     "stage1": false,
+     "stage2": false,
+     "via": null,
+     "win_turn": null,
+     "error": null,
+     "reason": "段1: 採った手順にループが無い / 段2: 上限のターンまでに勝てなかった"
+    }
+   ]
+  },
+  {
+   "combo": "akashic_hd2",
+   "group": "エンジン（呪文の無償詠唱）",
+   "old": "dm23ex2-009",
+   "new": "dmex08-269",
+   "pairs": [
+    [
+     "dm23ex2-009",
+     "dmex08-269"
+    ]
+   ],
+   "deck": [
+    "dmex08-269",
+    "dmex08-269",
+    "dm24ex3-rp3tr6",
+    "dm24ex3-rp3tr6",
+    "dmrp12-s01",
+    "dmrp12-s01",
+    "dm24ex1-043",
+    "dm24ex1-043",
+    "dm24ex1-043",
+    "dm24ex1-043",
+    "dm24ex1-038",
+    "dm24ex1-038",
+    "dm24ex1-038",
+    "dm24ex1-038",
+    "dmrp07-009",
+    "dmrp07-009",
+    "dmrp07-009",
+    "dmrp07-009",
+    "dm23bd7-035",
+    "dm23bd7-035",
+    "dm01-010",
+    "dm01-019",
+    "dm01-038",
+    "dm01-048",
+    "dm01-057",
+    "dm01-072",
+    "dm01-081",
+    "dm01-090",
+    "dm01-107",
+    "dm02-012",
+    "dm02-028",
+    "dm02-042",
+    "dm03-019",
+    "dm03-037",
+    "dm03-046",
+    "dm04-007",
+    "dm04-029",
+    "dm04-039",
+    "dm04-048",
+    "dm05-022"
+   ],
+   "rows": [
+    {
+     "seed": 1,
+     "start": "e41892686ad7",
+     "stage1": false,
+     "stage2": false,
+     "via": null,
+     "win_turn": null,
+     "error": null,
+     "reason": "段1: 採った手順にループが無い / 段2: 上限のターンまでに勝てなかった"
+    },
+    {
+     "seed": 2,
+     "start": "208140f0f8fa",
+     "stage1": false,
+     "stage2": false,
+     "via": null,
+     "win_turn": null,
+     "error": null,
+     "reason": "段1: 採った手順にループが無い / 段2: 上限のターンまでに勝てなかった"
+    },
+    {
+     "seed": 3,
+     "start": "73a723e92637",
+     "stage1": false,
+     "stage2": false,
+     "via": null,
+     "win_turn": null,
+     "error": null,
+     "reason": "段1: 採った手順にループが無い / 段2: 上限のターンまでに勝てなかった"
+    },
+    {
+     "seed": 4,
+     "start": "a59a94403cb9",
+     "stage1": false,
+     "stage2": false,
+     "via": "beat",
+     "win_turn": 2,
+     "error": null,
+     "reason": "段1: 採った手順にループが無い / 段2: 殴り勝ち（ループなし）"
+    },
+    {
+     "seed": 5,
+     "start": "941ccdbe4eeb",
+     "stage1": false,
+     "stage2": false,
+     "via": null,
+     "win_turn": null,
+     "error": null,
+     "reason": "段1: 採った手順にループが無い / 段2: 上限のターンまでに勝てなかった"
+    },
+    {
+     "seed": 6,
+     "start": "d72e738238c5",
+     "stage1": false,
+     "stage2": false,
+     "via": null,
+     "win_turn": null,
+     "error": null,
+     "reason": "段1: 採った手順にループが無い / 段2: 上限のターンまでに勝てなかった"
+    },
+    {
+     "seed": 7,
+     "start": "c0059452cd41",
+     "stage1": false,
+     "stage2": false,
+     "via": null,
+     "win_turn": null,
+     "error": null,
+     "reason": "段1: 採った手順にループが無い / 段2: 上限のターンまでに勝てなかった"
+    },
+    {
+     "seed": 8,
+     "start": "8c592858e88d",
+     "stage1": false,
+     "stage2": false,
+     "via": null,
+     "win_turn": null,
+     "error": null,
+     "reason": "段1: 採った手順にループが無い / 段2: 上限のターンまでに勝てなかった"
+    }
+   ]
+  },
+  {
+   "combo": "akashic_hd2",
+   "group": "エンジン（呪文の無償詠唱）",
+   "old": "dm23ex2-009",
+   "new": "dm25ex3-rp3003",
+   "pairs": [
+    [
+     "dm23ex2-009",
+     "dm25ex3-rp3003"
+    ]
+   ],
+   "deck": [
+    "dm25ex3-rp3003",
+    "dm25ex3-rp3003",
+    "dm24ex3-rp3tr6",
+    "dm24ex3-rp3tr6",
+    "dmrp12-s01",
+    "dmrp12-s01",
+    "dm24ex1-043",
+    "dm24ex1-043",
+    "dm24ex1-043",
+    "dm24ex1-043",
+    "dm24ex1-038",
+    "dm24ex1-038",
+    "dm24ex1-038",
+    "dm24ex1-038",
+    "dmrp07-009",
+    "dmrp07-009",
+    "dmrp07-009",
+    "dmrp07-009",
+    "dm23bd7-035",
+    "dm23bd7-035",
+    "dm01-010",
+    "dm01-019",
+    "dm01-038",
+    "dm01-048",
+    "dm01-057",
+    "dm01-072",
+    "dm01-081",
+    "dm01-090",
+    "dm01-107",
+    "dm02-012",
+    "dm02-028",
+    "dm02-042",
+    "dm03-019",
+    "dm03-037",
+    "dm03-046",
+    "dm04-007",
+    "dm04-029",
+    "dm04-039",
+    "dm04-048",
+    "dm05-022"
+   ],
+   "rows": [
+    {
+     "seed": 1,
+     "start": "0058c3c0a35f",
+     "stage1": false,
+     "stage2": false,
+     "via": null,
+     "win_turn": null,
+     "error": null,
+     "reason": "段1: 採った手順にループが無い / 段2: 上限のターンまでに勝てなかった"
+    },
+    {
+     "seed": 2,
+     "start": "5e6ba8622fc2",
+     "stage1": false,
+     "stage2": false,
+     "via": null,
+     "win_turn": null,
+     "error": null,
+     "reason": "段1: 採った手順にループが無い / 段2: 上限のターンまでに勝てなかった"
+    },
+    {
+     "seed": 3,
+     "start": "b7a52f8a6477",
+     "stage1": false,
+     "stage2": false,
+     "via": null,
+     "win_turn": null,
+     "error": null,
+     "reason": "段1: 採った手順にループが無い / 段2: 上限のターンまでに勝てなかった"
+    },
+    {
+     "seed": 4,
+     "start": "737c446a9624",
+     "stage1": false,
+     "stage2": false,
+     "via": null,
+     "win_turn": null,
+     "error": null,
+     "reason": "段1: 採った手順にループが無い / 段2: 上限のターンまでに勝てなかった"
+    },
+    {
+     "seed": 5,
+     "start": "1dc4a3339b41",
+     "stage1": false,
+     "stage2": false,
+     "via": null,
+     "win_turn": null,
+     "error": null,
+     "reason": "段1: 採った手順にループが無い / 段2: 上限のターンまでに勝てなかった"
+    },
+    {
+     "seed": 6,
+     "start": "85b198617a73",
+     "stage1": false,
+     "stage2": false,
+     "via": null,
+     "win_turn": null,
+     "error": null,
+     "reason": "段1: 採った手順にループが無い / 段2: 上限のターンまでに勝てなかった"
+    },
+    {
+     "seed": 7,
+     "start": "b87c1372a6d4",
+     "stage1": false,
+     "stage2": false,
+     "via": null,
+     "win_turn": null,
+     "error": null,
+     "reason": "段1: 採った手順にループが無い / 段2: 上限のターンまでに勝てなかった"
+    },
+    {
+     "seed": 8,
+     "start": "930f087c4c40",
+     "stage1": false,
+     "stage2": false,
+     "via": null,
+     "win_turn": null,
+     "error": null,
+     "reason": "段1: 採った手順にループが無い / 段2: 上限のターンまでに勝てなかった"
+    }
+   ]
+  },
+  {
+   "combo": "akashic_hd2",
+   "group": "エンジン（呪文の無償詠唱）",
+   "old": "dm23ex2-009",
+   "new": "dm26sd1-l008",
+   "pairs": [
+    [
+     "dm23ex2-009",
+     "dm26sd1-l008"
+    ]
+   ],
+   "deck": [
+    "dm26sd1-l008",
+    "dm26sd1-l008",
+    "dm24ex3-rp3tr6",
+    "dm24ex3-rp3tr6",
+    "dmrp12-s01",
+    "dmrp12-s01",
+    "dm24ex1-043",
+    "dm24ex1-043",
+    "dm24ex1-043",
+    "dm24ex1-043",
+    "dm24ex1-038",
+    "dm24ex1-038",
+    "dm24ex1-038",
+    "dm24ex1-038",
+    "dmrp07-009",
+    "dmrp07-009",
+    "dmrp07-009",
+    "dmrp07-009",
+    "dm23bd7-035",
+    "dm23bd7-035",
+    "dm01-010",
+    "dm01-019",
+    "dm01-038",
+    "dm01-048",
+    "dm01-057",
+    "dm01-072",
+    "dm01-081",
+    "dm01-090",
+    "dm01-107",
+    "dm02-012",
+    "dm02-028",
+    "dm02-042",
+    "dm03-019",
+    "dm03-037",
+    "dm03-046",
+    "dm04-007",
+    "dm04-029",
+    "dm04-039",
+    "dm04-048",
+    "dm05-022"
+   ],
+   "rows": [
+    {
+     "seed": 1,
+     "start": "684dab59cba2",
+     "stage1": false,
+     "stage2": false,
+     "via": null,
+     "win_turn": null,
+     "error": null,
+     "reason": "段1: 採った手順にループが無い / 段2: 上限のターンまでに勝てなかった"
+    },
+    {
+     "seed": 2,
+     "start": "cec59e54e8de",
+     "stage1": false,
+     "stage2": false,
+     "via": null,
+     "win_turn": null,
+     "error": null,
+     "reason": "段1: 採った手順にループが無い / 段2: 上限のターンまでに勝てなかった"
+    },
+    {
+     "seed": 3,
+     "start": "e5adb449df97",
+     "stage1": false,
+     "stage2": false,
+     "via": null,
+     "win_turn": null,
+     "error": null,
+     "reason": "段1: 採った手順にループが無い / 段2: 上限のターンまでに勝てなかった"
+    },
+    {
+     "seed": 4,
+     "start": "ff336dab147a",
+     "stage1": false,
+     "stage2": false,
+     "via": null,
+     "win_turn": null,
+     "error": null,
+     "reason": "段1: 採った手順にループが無い / 段2: 上限のターンまでに勝てなかった"
+    },
+    {
+     "seed": 5,
+     "start": "9c66e2e24d96",
+     "stage1": false,
+     "stage2": false,
+     "via": null,
+     "win_turn": null,
+     "error": null,
+     "reason": "段1: 採った手順にループが無い / 段2: 上限のターンまでに勝てなかった"
+    },
+    {
+     "seed": 6,
+     "start": "26b79dca6ce8",
+     "stage1": false,
+     "stage2": false,
+     "via": null,
+     "win_turn": null,
+     "error": null,
+     "reason": "段1: 採った手順にループが無い / 段2: 上限のターンまでに勝てなかった"
+    },
+    {
+     "seed": 7,
+     "start": "abbfa3b4f916",
+     "stage1": false,
+     "stage2": false,
+     "via": "beat",
+     "win_turn": 2,
+     "error": null,
+     "reason": "段1: 採った手順にループが無い / 段2: 殴り勝ち（ループなし）"
+    },
+    {
+     "seed": 8,
+     "start": "c579d1b40b07",
+     "stage1": false,
+     "stage2": false,
+     "via": null,
+     "win_turn": null,
+     "error": null,
+     "reason": "段1: 採った手順にループが無い / 段2: 上限のターンまでに勝てなかった"
+    }
+   ]
+  },
+  {
+   "combo": "akashic_hd2",
+   "group": "エンジン（呪文の無償詠唱）",
+   "old": "dm23ex2-009",
+   "new": "dmx19-s15",
+   "pairs": [
+    [
+     "dm23ex2-009",
+     "dmx19-s15"
+    ]
+   ],
+   "deck": [
+    "dmx19-s15",
+    "dmx19-s15",
+    "dm24ex3-rp3tr6",
+    "dm24ex3-rp3tr6",
+    "dmrp12-s01",
+    "dmrp12-s01",
+    "dm24ex1-043",
+    "dm24ex1-043",
+    "dm24ex1-043",
+    "dm24ex1-043",
+    "dm24ex1-038",
+    "dm24ex1-038",
+    "dm24ex1-038",
+    "dm24ex1-038",
+    "dmrp07-009",
+    "dmrp07-009",
+    "dmrp07-009",
+    "dmrp07-009",
+    "dm23bd7-035",
+    "dm23bd7-035",
+    "dm01-010",
+    "dm01-019",
+    "dm01-038",
+    "dm01-048",
+    "dm01-057",
+    "dm01-072",
+    "dm01-081",
+    "dm01-090",
+    "dm01-107",
+    "dm02-012",
+    "dm02-028",
+    "dm02-042",
+    "dm03-019",
+    "dm03-037",
+    "dm03-046",
+    "dm04-007",
+    "dm04-029",
+    "dm04-039",
+    "dm04-048",
+    "dm05-022"
+   ],
+   "rows": [
+    {
+     "seed": 1,
+     "start": "72e264b29b89",
+     "stage1": false,
+     "stage2": false,
+     "via": null,
+     "win_turn": null,
+     "error": null,
+     "reason": "段1: 採った手順にループが無い / 段2: 上限のターンまでに勝てなかった"
+    },
+    {
+     "seed": 2,
+     "start": "9f925173f9a3",
+     "stage1": false,
+     "stage2": false,
+     "via": null,
+     "win_turn": null,
+     "error": null,
+     "reason": "段1: 採った手順にループが無い / 段2: 上限のターンまでに勝てなかった"
+    },
+    {
+     "seed": 3,
+     "start": "0f94097bc735",
+     "stage1": false,
+     "stage2": false,
+     "via": null,
+     "win_turn": null,
+     "error": null,
+     "reason": "段1: 採った手順にループが無い / 段2: 上限のターンまでに勝てなかった"
+    },
+    {
+     "seed": 4,
+     "start": "09151da3b0a2",
+     "stage1": false,
+     "stage2": false,
+     "via": null,
+     "win_turn": null,
+     "error": null,
+     "reason": "段1: 採った手順にループが無い / 段2: 上限のターンまでに勝てなかった"
+    },
+    {
+     "seed": 5,
+     "start": "6bcc8bcc74cb",
+     "stage1": false,
+     "stage2": false,
+     "via": null,
+     "win_turn": null,
+     "error": null,
+     "reason": "段1: 採った手順にループが無い / 段2: 上限のターンまでに勝てなかった"
+    },
+    {
+     "seed": 6,
+     "start": "f55cdc8680c6",
+     "stage1": false,
+     "stage2": false,
+     "via": null,
+     "win_turn": null,
+     "error": null,
+     "reason": "段1: 採った手順にループが無い / 段2: 上限のターンまでに勝てなかった"
+    },
+    {
+     "seed": 7,
+     "start": "f7353846f55e",
+     "stage1": false,
+     "stage2": false,
+     "via": "beat",
+     "win_turn": 2,
+     "error": null,
+     "reason": "段1: 採った手順にループが無い / 段2: 殴り勝ち（ループなし）"
+    },
+    {
+     "seed": 8,
+     "start": "acdc1faf99f0",
+     "stage1": false,
+     "stage2": false,
+     "via": null,
+     "win_turn": null,
+     "error": null,
+     "reason": "段1: 採った手順にループが無い / 段2: 上限のターンまでに勝てなかった"
+    }
+   ]
+  },
+  {
+   "combo": "akashic_hd2",
+   "group": "勝ち手段",
+   "old": "dm24ex1-038+dmrp07-009+dmrp12-s01",
+   "new": "dm24-083+dmbd11-b02+dmex08-232",
+   "pairs": [
+    [
+     "dm24ex1-038",
+     "dm24-083"
+    ],
+    [
+     "dmrp07-009",
+     "dmbd11-b02"
+    ],
+    [
+     "dmrp12-s01",
+     "dmex08-232"
+    ]
+   ],
+   "deck": [
+    "dm23ex2-009",
+    "dm23ex2-009",
+    "dm24ex3-rp3tr6",
+    "dm24ex3-rp3tr6",
+    "dmex08-232",
+    "dmex08-232",
+    "dm24ex1-043",
+    "dm24ex1-043",
+    "dm24ex1-043",
+    "dm24ex1-043",
+    "dm24-083",
+    "dm24-083",
+    "dm24-083",
+    "dm24-083",
+    "dmbd11-b02",
+    "dmbd11-b02",
+    "dmbd11-b02",
+    "dmbd11-b02",
+    "dm23bd7-035",
+    "dm23bd7-035",
+    "dm01-010",
+    "dm01-019",
+    "dm01-038",
+    "dm01-048",
+    "dm01-057",
+    "dm01-072",
+    "dm01-081",
+    "dm01-090",
+    "dm01-107",
+    "dm02-012",
+    "dm02-028",
+    "dm02-042",
+    "dm03-019",
+    "dm03-037",
+    "dm03-046",
+    "dm04-007",
+    "dm04-029",
+    "dm04-039",
+    "dm04-048",
+    "dm05-022"
+   ],
+   "rows": [
+    {
+     "seed": 1,
+     "start": "5cc8e44970c7",
+     "stage1": false,
+     "stage2": false,
+     "via": null,
+     "win_turn": null,
+     "error": null,
+     "reason": "段1: 採った手順にループが無い / 段2: 上限のターンまでに勝てなかった"
+    },
+    {
+     "seed": 2,
+     "start": "df1d4219769d",
+     "stage1": false,
+     "stage2": false,
+     "via": null,
+     "win_turn": null,
+     "error": null,
+     "reason": "段1: 採った手順にループが無い / 段2: 上限のターンまでに勝てなかった"
+    },
+    {
+     "seed": 3,
+     "start": "d39e22d5b193",
+     "stage1": false,
+     "stage2": false,
+     "via": null,
+     "win_turn": null,
+     "error": null,
+     "reason": "段1: 採った手順にループが無い / 段2: 上限のターンまでに勝てなかった"
+    },
+    {
+     "seed": 4,
+     "start": "934b8a229b67",
+     "stage1": false,
+     "stage2": false,
+     "via": null,
+     "win_turn": null,
+     "error": null,
+     "reason": "段1: 採った手順にループが無い / 段2: 上限のターンまでに勝てなかった"
+    },
+    {
+     "seed": 5,
+     "start": "809e33544e30",
+     "stage1": false,
+     "stage2": false,
+     "via": null,
+     "win_turn": null,
+     "error": null,
+     "reason": "段1: 採った手順にループが無い / 段2: 上限のターンまでに勝てなかった"
+    },
+    {
+     "seed": 6,
+     "start": "397941465e81",
+     "stage1": false,
+     "stage2": false,
+     "via": null,
+     "win_turn": null,
+     "error": null,
+     "reason": "段1: 採った手順にループが無い / 段2: 上限のターンまでに勝てなかった"
+    },
+    {
+     "seed": 7,
+     "start": "2ef99b1a88bf",
+     "stage1": false,
+     "stage2": false,
+     "via": null,
+     "win_turn": null,
+     "error": null,
+     "reason": "段1: 採った手順にループが無い / 段2: 上限のターンまでに勝てなかった"
+    },
+    {
+     "seed": 8,
+     "start": "08337a45caf6",
+     "stage1": false,
+     "stage2": false,
+     "via": null,
+     "win_turn": null,
+     "error": null,
+     "reason": "段1: 採った手順にループが無い / 段2: 上限のターンまでに勝てなかった"
+    }
+   ]
+  },
+  {
+   "combo": "akashic_hd2",
+   "group": "勝ち手段",
+   "old": "dm24ex1-038+dmrp07-009+dmrp12-s01",
+   "new": "dmrp08-019+dmx20-066+dm26ex4-098",
+   "pairs": [
+    [
+     "dm24ex1-038",
+     "dmrp08-019"
+    ],
+    [
+     "dmrp07-009",
+     "dmx20-066"
+    ],
+    [
+     "dmrp12-s01",
+     "dm26ex4-098"
+    ]
+   ],
+   "deck": [
+    "dm23ex2-009",
+    "dm23ex2-009",
+    "dm24ex3-rp3tr6",
+    "dm24ex3-rp3tr6",
+    "dm26ex4-098",
+    "dm26ex4-098",
+    "dm24ex1-043",
+    "dm24ex1-043",
+    "dm24ex1-043",
+    "dm24ex1-043",
+    "dmrp08-019",
+    "dmrp08-019",
+    "dmrp08-019",
+    "dmrp08-019",
+    "dmx20-066",
+    "dmx20-066",
+    "dmx20-066",
+    "dmx20-066",
+    "dm23bd7-035",
+    "dm23bd7-035",
+    "dm01-010",
+    "dm01-019",
+    "dm01-038",
+    "dm01-048",
+    "dm01-057",
+    "dm01-072",
+    "dm01-081",
+    "dm01-090",
+    "dm01-107",
+    "dm02-012",
+    "dm02-028",
+    "dm02-042",
+    "dm03-019",
+    "dm03-037",
+    "dm03-046",
+    "dm04-007",
+    "dm04-029",
+    "dm04-039",
+    "dm04-048",
+    "dm05-022"
+   ],
+   "rows": [
+    {
+     "seed": 1,
+     "start": "7edcec11eb6a",
+     "stage1": false,
+     "stage2": false,
+     "via": null,
+     "win_turn": null,
+     "error": null,
+     "reason": "段1: 採った手順にループが無い / 段2: 上限のターンまでに勝てなかった"
+    },
+    {
+     "seed": 2,
+     "start": "1eb9e2f75759",
+     "stage1": false,
+     "stage2": false,
+     "via": null,
+     "win_turn": null,
+     "error": null,
+     "reason": "段1: 採った手順にループが無い / 段2: 上限のターンまでに勝てなかった"
+    },
+    {
+     "seed": 3,
+     "start": "6ac9d51f7ee5",
+     "stage1": false,
+     "stage2": false,
+     "via": null,
+     "win_turn": null,
+     "error": null,
+     "reason": "段1: 採った手順にループが無い / 段2: 上限のターンまでに勝てなかった"
+    },
+    {
+     "seed": 4,
+     "start": "cc65f1a9f67c",
+     "stage1": false,
+     "stage2": false,
+     "via": null,
+     "win_turn": null,
+     "error": null,
+     "reason": "段1: 採った手順にループが無い / 段2: 上限のターンまでに勝てなかった"
+    },
+    {
+     "seed": 5,
+     "start": "9395fbadb9d3",
+     "stage1": false,
+     "stage2": false,
+     "via": null,
+     "win_turn": null,
+     "error": null,
+     "reason": "段1: 採った手順にループが無い / 段2: 上限のターンまでに勝てなかった"
+    },
+    {
+     "seed": 6,
+     "start": "2fc1160b72bb",
+     "stage1": false,
+     "stage2": false,
+     "via": null,
+     "win_turn": null,
+     "error": null,
+     "reason": "段1: 採った手順にループが無い / 段2: 上限のターンまでに勝てなかった"
+    },
+    {
+     "seed": 7,
+     "start": "7efb3853c75d",
+     "stage1": false,
+     "stage2": false,
+     "via": null,
+     "win_turn": null,
+     "error": null,
+     "reason": "段1: 採った手順にループが無い / 段2: 上限のターンまでに勝てなかった"
+    },
+    {
+     "seed": 8,
+     "start": "e95464dd68d0",
+     "stage1": false,
+     "stage2": false,
+     "via": null,
+     "win_turn": null,
+     "error": null,
+     "reason": "段1: 採った手順にループが無い / 段2: 上限のターンまでに勝てなかった"
+    }
+   ]
+  },
+  {
+   "combo": "akashic_hd2",
+   "group": "勝ち手段",
+   "old": "dm24ex1-038+dmrp07-009+dmrp12-s01",
+   "new": "dm24ex4-037+dm24ex4-033+dm24rp3-034",
+   "pairs": [
+    [
+     "dm24ex1-038",
+     "dm24ex4-037"
+    ],
+    [
+     "dmrp07-009",
+     "dm24ex4-033"
+    ],
+    [
+     "dmrp12-s01",
+     "dm24rp3-034"
+    ]
+   ],
+   "deck": [
+    "dm23ex2-009",
+    "dm23ex2-009",
+    "dm24ex3-rp3tr6",
+    "dm24ex3-rp3tr6",
+    "dm24rp3-034",
+    "dm24rp3-034",
+    "dm24ex1-043",
+    "dm24ex1-043",
+    "dm24ex1-043",
+    "dm24ex1-043",
+    "dm24ex4-037",
+    "dm24ex4-037",
+    "dm24ex4-037",
+    "dm24ex4-037",
+    "dm24ex4-033",
+    "dm24ex4-033",
+    "dm24ex4-033",
+    "dm24ex4-033",
+    "dm23bd7-035",
+    "dm23bd7-035",
+    "dm01-010",
+    "dm01-019",
+    "dm01-038",
+    "dm01-048",
+    "dm01-057",
+    "dm01-072",
+    "dm01-081",
+    "dm01-090",
+    "dm01-107",
+    "dm02-012",
+    "dm02-028",
+    "dm02-042",
+    "dm03-019",
+    "dm03-037",
+    "dm03-046",
+    "dm04-007",
+    "dm04-029",
+    "dm04-039",
+    "dm04-048",
+    "dm05-022"
+   ],
+   "rows": [
+    {
+     "seed": 1,
+     "start": "213358b442e5",
+     "stage1": false,
+     "stage2": false,
+     "via": null,
+     "win_turn": null,
+     "error": null,
+     "reason": "段1: 採った手順にループが無い / 段2: 上限のターンまでに勝てなかった"
+    },
+    {
+     "seed": 2,
+     "start": "37f66307a101",
+     "stage1": false,
+     "stage2": false,
+     "via": null,
+     "win_turn": null,
+     "error": null,
+     "reason": "段1: 採った手順にループが無い / 段2: 上限のターンまでに勝てなかった"
+    },
+    {
+     "seed": 3,
+     "start": "0521ee34e78f",
+     "stage1": false,
+     "stage2": false,
+     "via": null,
+     "win_turn": null,
+     "error": null,
+     "reason": "段1: 採った手順にループが無い / 段2: 上限のターンまでに勝てなかった"
+    },
+    {
+     "seed": 4,
+     "start": "c9bcf03fe5ae",
+     "stage1": false,
+     "stage2": false,
+     "via": null,
+     "win_turn": null,
+     "error": null,
+     "reason": "段1: 採った手順にループが無い / 段2: 上限のターンまでに勝てなかった"
+    },
+    {
+     "seed": 5,
+     "start": "2bab25021aa4",
+     "stage1": false,
+     "stage2": false,
+     "via": null,
+     "win_turn": null,
+     "error": null,
+     "reason": "段1: 採った手順にループが無い / 段2: 上限のターンまでに勝てなかった"
+    },
+    {
+     "seed": 6,
+     "start": "e0a76cd4dc5b",
+     "stage1": false,
+     "stage2": false,
+     "via": null,
+     "win_turn": null,
+     "error": null,
+     "reason": "段1: 採った手順にループが無い / 段2: 上限のターンまでに勝てなかった"
+    },
+    {
+     "seed": 7,
+     "start": "9dfdbd13dd3a",
+     "stage1": false,
+     "stage2": false,
+     "via": null,
+     "win_turn": null,
+     "error": null,
+     "reason": "段1: 採った手順にループが無い / 段2: 上限のターンまでに勝てなかった"
+    },
+    {
+     "seed": 8,
+     "start": "ca978815b3c1",
+     "stage1": false,
+     "stage2": false,
+     "via": null,
+     "win_turn": null,
+     "error": null,
+     "reason": "段1: 採った手順にループが無い / 段2: 上限のターンまでに勝てなかった"
+    }
+   ]
+  },
+  {
+   "combo": "akashic_hd2",
+   "group": "勝ち手段",
+   "old": "dm24ex1-038+dmrp07-009+dmrp12-s01",
+   "new": "dm26sd1-o011+dmart14-006+dm26rp3-024",
+   "pairs": [
+    [
+     "dm24ex1-038",
+     "dm26sd1-o011"
+    ],
+    [
+     "dmrp07-009",
+     "dmart14-006"
+    ],
+    [
+     "dmrp12-s01",
+     "dm26rp3-024"
+    ]
+   ],
+   "deck": [
+    "dm23ex2-009",
+    "dm23ex2-009",
+    "dm24ex3-rp3tr6",
+    "dm24ex3-rp3tr6",
+    "dm26rp3-024",
+    "dm26rp3-024",
+    "dm24ex1-043",
+    "dm24ex1-043",
+    "dm24ex1-043",
+    "dm24ex1-043",
+    "dm26sd1-o011",
+    "dm26sd1-o011",
+    "dm26sd1-o011",
+    "dm26sd1-o011",
+    "dmart14-006",
+    "dmart14-006",
+    "dmart14-006",
+    "dmart14-006",
+    "dm23bd7-035",
+    "dm23bd7-035",
+    "dm01-010",
+    "dm01-019",
+    "dm01-038",
+    "dm01-048",
+    "dm01-057",
+    "dm01-072",
+    "dm01-081",
+    "dm01-090",
+    "dm01-107",
+    "dm02-012",
+    "dm02-028",
+    "dm02-042",
+    "dm03-019",
+    "dm03-037",
+    "dm03-046",
+    "dm04-007",
+    "dm04-029",
+    "dm04-039",
+    "dm04-048",
+    "dm05-022"
+   ],
+   "rows": [
+    {
+     "seed": 1,
+     "start": "0c0b24703084",
+     "stage1": false,
+     "stage2": false,
+     "via": null,
+     "win_turn": null,
+     "error": null,
+     "reason": "段1: 採った手順にループが無い / 段2: 上限のターンまでに勝てなかった"
+    },
+    {
+     "seed": 2,
+     "start": "b1cfbb22fa10",
+     "stage1": false,
+     "stage2": false,
+     "via": null,
+     "win_turn": null,
+     "error": null,
+     "reason": "段1: 採った手順にループが無い / 段2: 上限のターンまでに勝てなかった"
+    },
+    {
+     "seed": 3,
+     "start": "f96a8d28e7c9",
+     "stage1": false,
+     "stage2": false,
+     "via": null,
+     "win_turn": null,
+     "error": null,
+     "reason": "段1: 採った手順にループが無い / 段2: 上限のターンまでに勝てなかった"
+    },
+    {
+     "seed": 4,
+     "start": "a6379ca665d3",
+     "stage1": false,
+     "stage2": false,
+     "via": null,
+     "win_turn": null,
+     "error": null,
+     "reason": "段1: 採った手順にループが無い / 段2: 上限のターンまでに勝てなかった"
+    },
+    {
+     "seed": 5,
+     "start": "be070a114edf",
+     "stage1": false,
+     "stage2": false,
+     "via": null,
+     "win_turn": null,
+     "error": null,
+     "reason": "段1: 採った手順にループが無い / 段2: 上限のターンまでに勝てなかった"
+    },
+    {
+     "seed": 6,
+     "start": "ed2fd14cbbd2",
+     "stage1": false,
+     "stage2": false,
+     "via": null,
+     "win_turn": null,
+     "error": null,
+     "reason": "段1: 採った手順にループが無い / 段2: 上限のターンまでに勝てなかった"
+    },
+    {
+     "seed": 7,
+     "start": "4abda23da80c",
+     "stage1": false,
+     "stage2": false,
+     "via": null,
+     "win_turn": null,
+     "error": null,
+     "reason": "段1: 採った手順にループが無い（探索の候補には 3 件あったが選ばれていない） / 段2: 上限のターンまでに勝てなかった"
+    },
+    {
+     "seed": 8,
+     "start": "b5634d915ffd",
+     "stage1": false,
+     "stage2": false,
+     "via": null,
+     "win_turn": null,
+     "error": null,
+     "reason": "段1: 採った手順にループが無い / 段2: 上限のターンまでに勝てなかった"
+    }
+   ]
+  }
+ ]
+}
