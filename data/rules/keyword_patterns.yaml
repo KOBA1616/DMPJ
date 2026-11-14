@@ -236,6 +236,30 @@ patterns:
     re: '革命チェンジ[:：](.+)'
     builder: revolution_change
 
+  # ブレイクの置換「このクリーチャーがシールドをブレイクする時、相手はそのシールドを手札に加えるかわりに〈墓地／マナ／山札の下〉に置く」。
+  # 変換済みの札（dm24ex2-dm04, dmx13-002）と同じ形。ブレイクしたシールドの S・トリガーの扱いは tests/test_vocab_pilot146.py の前提に従う
+  break_shield_to_graveyard:
+    re: 'このクリーチャーが(?:相手の)?シールドをブレイクする時相手はそのシールドを手札に加えるかわりに(?:自身の)?墓地に置く'
+    whole_line: true
+    abilities:
+      - kind: replace
+        when: {event: break, subject: self}
+        instead: [{op: move, select: {ref: event.shield, count: 1}, to: graveyard, reason: put}]
+  break_shield_to_mana:
+    re: 'このクリーチャーが(?:相手の)?シールドをブレイクする時相手はそのシールドを手札に加えるかわりに(?:自身の)?マナゾーンに置く'
+    whole_line: true
+    abilities:
+      - kind: replace
+        when: {event: break, subject: self}
+        instead: [{op: move, select: {ref: event.shield, count: 1}, to: mana, reason: put}]
+  break_shield_to_deck_bottom:
+    re: 'このクリーチャーが(?:相手の)?シールドをブレイクする時相手はそのシールドを手札に加えるかわりに(?:自身の)?山札の(?:一番)?下に置く'
+    whole_line: true
+    abilities:
+      - kind: replace
+        when: {event: break, subject: self}
+        instead: [{op: move, select: {ref: event.shield, count: 1}, to: deck, position: bottom, reason: put}]
+
   # ---- 効果の1文（whole_line: その文が1行の全体の時だけ。続く文を取りこぼさないため）----
   etb_draw:
     re: '{TRG}カードを(\d)枚引く'

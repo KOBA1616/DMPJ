@@ -30770,7 +30770,7 @@ cards:
   source:
     official: dm23bd7-035
     review: approved
-    review_note: "2026-11-13 koba 承認（公式テキストと一致を確認済み、新規コンボ akashic_hd2 の部品）"
+    review_note: 2026-11-13 koba 承認（公式テキストと一致を確認済み、新規コンボ akashic_hd2 の部品）
     notes: 'ツインパクト。相手の破壊分は相手が選ぶ（chooser: opp）。'
     aliases:
     - dmex04-011
@@ -55600,7 +55600,6 @@ cards:
         zone: hand
         owner: opp
         count: 1
-        chooser: opp
         chooser: random
   source:
     official: dm25rp2-065
@@ -427644,3 +427643,257 @@ cards:
         ref: self
       to: graveyard
       reason: destroy
+- id: dm24ex2-chog06
+  name: ボルメテウス・ホワイト・ドラゴン
+  types:
+  - creature
+  civs:
+  - fire
+  cost: 7
+  power: 7000
+  races:
+  - アーマード・ドラゴン
+  mana: 1
+  abilities:
+  - kind: replace
+    when:
+      event: break
+      subject: self
+    instead:
+    - op: move
+      select:
+        ref: event.shield
+        count: 1
+      to: graveyard
+      reason: put
+  keywords:
+  - double_breaker
+  text: 'W・ブレイカー
+
+    このクリーチャーがシールドをブレイクする時、相手はそのシールドを手札に加えるかわりに墓地に置く。'
+  source:
+    official: dm24ex2-chog06
+    review: pending
+    notes: ルールのみで変換（モデル不使用）
+    aliases:
+    - dm06-s08
+    - dm20yrs-01
+    - dmc27-s04
+    - dmc36-004
+    - dmc42-006
+    - dmc53-010
+    - dmc65-006
+    - dmd24-003
+    - dmd24-004
+    - dmd24-005
+    - dmex01-006
+    - dmpcd01-r02
+    - dmx12b-042
+    - dmx14-024
+    - dmx16-005
+    - dmx22b-072
+    - promoy11-003
+    - promoy25-018
+    - promoy25-039
+    - promoy25-079
+- id: dm24ex2-014
+  name: ボルメテウス・ブラック・ドラゴン
+  types:
+  - creature
+  civs:
+  - darkness
+  - fire
+  cost: 8
+  power: 8000
+  races:
+  - アーマード・ドラゴン
+  - デーモン・コマンド
+  mana: 1
+  abilities:
+  - kind: trigger
+    when:
+      event: move
+      to: bz
+      subject: self
+    effect:
+    - op: destroy
+      select:
+        zone: bz
+        owner: opp
+        filter:
+          types:
+          - creature
+        count: 1
+  - kind: replace
+    when:
+      event: break
+      subject: self
+    instead:
+    - op: move
+      select:
+        ref: event.shield
+        count: 1
+      to: graveyard
+      reason: put
+  keywords:
+  - double_breaker
+  text: 'W・ブレイカー
+
+    このクリーチャーが出た時、相手のクリーチャーを１体選び、破壊する。
+
+    このクリーチャーがシールドをブレイクする時、相手はそのシールドを手札に加えるかわりに墓地に置く。'
+  source:
+    official: dm24ex2-014
+    review: pending
+    notes: ルールのみで変換（モデル不使用）
+    aliases:
+    - dmd24-001
+    - dmex03-030
+    - dmex16-048
+- id: dm25ex2-014
+  name: ボルメテウス・蒼炎・ドラゴン
+  types:
+  - creature
+  civs:
+  - water
+  - fire
+  cost: 8
+  power: 9000
+  races:
+  - アーマード・ドラゴン
+  - サイバー・コマンド
+  mana: 1
+  abilities:
+  - kind: replace
+    when:
+      event: break
+      subject: self
+    instead:
+    - op: move
+      select:
+        ref: event.shield
+        count: 1
+      to: graveyard
+      reason: put
+  keywords:
+  - speed_attacker
+  - double_breaker
+  - unblockable
+  text: 'スピードアタッカー
+
+    W・ブレイカー
+
+    このクリーチャーはブロックされない。
+
+    このクリーチャーがシールドをブレイクする時、相手はそのシールドを手札に加えるかわりに墓地に置く。'
+  source:
+    official: dm25ex2-014
+    review: pending
+    notes: ルールのみで変換（モデル不使用）
+    aliases:
+    - dmex07-s05
+    - dmx24-s03
+    - dmx24-secs3
+- id: dmart10-005
+  name: チーター [奇天烈 シャッフ]
+  types:
+  - creature
+  civs:
+  - water
+  cost: 4
+  power: 4000
+  races:
+  - マジック・コマンド
+  - グレートメカオー
+  - 侵略者
+  mana: 1
+  text: このクリーチャーが出た時または攻撃する時、数字を１つ選ぶ。次の自分のターンのはじめまで、相手はその数字と同じコストの呪文を唱えられず、同じコストの相手のクリーチャーは攻撃もブロックもできない。
+  abilities:
+  - kind: trigger
+    when:
+      event: move
+      to: bz
+      subject: self
+    effect:
+    - op: choose_number
+      as: n
+    - op: modify
+      select:
+        zone: hand
+        owner: opp
+        filter:
+          types:
+          - spell
+          cost_le:
+            declared: n
+          cost_ge:
+            declared: n
+        count: all
+      mod:
+        deny:
+        - cast
+      duration: until_next_own_turn_start
+    - op: modify
+      select:
+        zone: bz
+        owner: opp
+        filter:
+          types:
+          - creature
+          cost_le:
+            declared: n
+          cost_ge:
+            declared: n
+        count: all
+      mod:
+        deny:
+        - attack_player
+        - attack_creature
+        - block
+      duration: until_next_own_turn_start
+  - kind: trigger
+    when:
+      event: attack
+      subject: self
+    effect:
+    - op: choose_number
+      as: n
+    - op: modify
+      select:
+        zone: hand
+        owner: opp
+        filter:
+          types:
+          - spell
+          cost_le:
+            declared: n
+          cost_ge:
+            declared: n
+        count: all
+      mod:
+        deny:
+        - cast
+      duration: until_next_own_turn_start
+    - op: modify
+      select:
+        zone: bz
+        owner: opp
+        filter:
+          types:
+          - creature
+          cost_le:
+            declared: n
+          cost_ge:
+            declared: n
+        count: all
+      mod:
+        deny:
+        - attack_player
+        - attack_creature
+        - block
+      duration: until_next_own_turn_start
+  keywords: []
+  source:
+    official: dmart10-005
+    review: pending
+    notes: 原文が同じ dm26rp2-tr008 の変換結果を写した（モデル不使用）。能力は元カードの確認に従う

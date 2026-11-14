@@ -61,14 +61,19 @@ def run_one(rules, deck, seed: int, *, opp_level: int = DEFAULT_OPP, max_turn: i
     ls = LoopSpec(name="attack", kind="deterministic", minimal=[])
     hold = {}
 
+    snaps = {}
+
     def tr(e, t):
         hold["e"] = e
+        z = e.s.zones
+        snaps[t] = {"opp_shield": len(z["shield"][1]), "my_bz": len(z["bz"][0]), "opp_bz": len(z["bz"][1]),
+                    "my_shield": len(z["shield"][0])}
     r = assemble.run_one(rules, ls, seed, deck=list(deck), max_turn=max_turn, budget=budget, n_det=n_det, opp_level=opp_level, trace=tr)
     res, v = r["res"], r["verdict"]
     m = marks(hold["e"].log) if "e" in hold and res.kill_turn else {}
     return {"seed": seed, "first": r["first"], "opp": r["opp"], "kill_turn": res.kill_turn if v.stage2.kill else None,
             "kind": res.kind, "via": v.stage2.via, "lost": res.lost, "lost_turn": _lost_turn(hold.get("e")) if res.lost else None,
-            "error": res.error, "marks": m}
+            "error": res.error, "marks": m, "snaps": snaps}
 
 
 def measure(rules, deck, seeds, **kw) -> list[dict]:
@@ -85,9 +90,51 @@ def kill_by(t: int):
     return lambda r: 1 if r["kill_turn"] is not None and r["kill_turn"] <= t else 0
 
 
-def pair_contribution(with_rows, without_rows, t: int = 4) -> dict:
+def _snap(r, t):
+    ss = {int(k): v for k, v in (r.get("snaps") or {}).items()}
+    ks = [k for k in ss if k <= t]
+    return ss[max(ks)] if ks else None
+
+
+def left_by(t: int):
+    """t ターン目の終わりに、キルまでに残る打点（相手の盾 + とどめの1）。勝っていれば 0。値が小さいほど良いので符号を反転して返す。"""
+    def f(r):
+        if r["kill_turn"] is not None and r["kill_turn"] <= t:
+            return 0
+        s = _snap(r, t)
+        return -((s["opp_shield"] + 1) if s else 6)
+    return f
+
+
+def broken_by(t: int):
+    """t ターン目の終わりまでに割った相手の盾の枚数（勝っていれば開始時の枚数）。"""
+    def f(r):
+        s0 = _snap(r, 0)
+        start = s0["opp_shield"] if s0 else 5
+        if r["kill_turn"] is not None and r["kill_turn"] <= t:
+            return start
+        s = _snap(r, t)
+        return start - s["opp_shield"] if s else 0
+    return f
+
+
+def board_by(t: int):
+    """t ターン目の終わりの盤面の差（自分のバトルゾーンの体数 − 相手の体数）。"""
+    def f(r):
+        s = _snap(r, t)
+        return (s["my_bz"] - s["opp_bz"]) if s else 0
+    return f
+
+
+VALUES = {"kill": kill_by, "left": left_by, "broken": broken_by, "board": board_by}
+
+
+def pair_contribution(with_rows, without_rows, t: int = 4, value: str = "kill") -> dict:
+    """組の寄与。value: kill（t ターン以内の勝ち）/ left（残り打点、符号反転）/ broken（割った盾）/ board（盤面の差）。"""
     from .contrib import by_seed, paired
-    return paired(by_seed(with_rows, kill_by(t)), by_seed(without_rows, kill_by(t)))
+    f = VALUES[value](t)
+    ok = lambda rows: [r for r in rows if not r.get("error")]   # noqa: E731  誤りの局は対から外す
+    return paired(by_seed(ok(with_rows), f), by_seed(ok(without_rows), f))
 
 
 def summarize(rows, horizon: int = 6, kill_turns=(3, 4)) -> dict:
