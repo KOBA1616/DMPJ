@@ -166,7 +166,7 @@ def _simple_effect(ops, top=True) -> bool:
 _OK_WHEN = ({"event": "move", "to": "bz", "subject": "self"}, {"event": "attack", "subject": "self"})
 
 
-_OK_EVENTS = {"move", "attack", "battle_win", "turn_start"}
+_OK_EVENTS = {"move", "attack", "battle_win", "turn_start", "cast"}
 _OK_ZONES = {"hand", "deck", "graveyard", "mana", "bz", "shield"}
 
 
@@ -190,12 +190,18 @@ def _simple_trigger(ab) -> bool:
         and _simple_effect(ab["effect"])
 
 
+def _simple_replace(ab) -> bool:
+    """段階3-d: 移動の置換（「〜する時、かわりに」）。発生源はバトルゾーン（Rust の replacement が Python の _replacement と同じ候補を出す範囲）。"""
+    return ab["kind"] == "replace" and set(ab) <= {"kind", "when", "instead", "if"} and _simple_when(ab["when"]) \
+        and ab["when"].get("event") == "move" and ("if" not in ab or _simple_cond(ab["if"])) and _simple_effect(ab["instead"], False)
+
+
 def _self_mods(d):
     """段階2-c: 自分自身にだけ及ぶ単純な常在型（許可・禁止・ブレイク数）だけの札の (allow, deny, breaks)。他は None。
     段階2-d: 単純な誘発（_simple_trigger）は許す（誘発の中身は Rust 側の effect インタプリタが動かす）。"""
     allow, deny, breaks, shield_allow = [], [], [], []
     for ab in d.abilities:
-        if _simple_trigger(ab):
+        if _simple_trigger(ab) or _simple_replace(ab):
             continue
         if ab["kind"] == "static" and ab.get("zone") == "shield" and ab.get("affects") == "self" and "if" not in ab \
                 and ab.get("mod") == {"allow": ["s_trigger"]}:
@@ -230,6 +236,26 @@ def _is_plain_spell(d) -> bool:
                 and ab.get("mod") == {"allow": ["s_trigger"]}):
             return False
     skip = {"id", "name", "types", "civs", "cost", "power", "mana", "races", "text", "abilities", "keywords", "source", "spell", "resolve_to"}
+    for f in dataclasses.fields(type(d)):
+        if f.name in skip:
+            continue
+        dv = f.default if f.default is not dataclasses.MISSING else f.default_factory()
+        if getattr(d, f.name) != dv:
+            return False
+    return True
+
+
+TWINPACTS = True   # 段階3-c: クリーチャー面と呪文面がどちらも plain なツインパクト
+
+
+def _is_plain_twin(d) -> bool:
+    import dataclasses
+    from ..cards.defs import CardDef
+    if len(d.faces) != 2 or d.abilities or sorted(d.types) != ["creature", "spell"]:
+        return False
+    if d.faces[0].types != ["creature"] or not _is_plain_creature(d.faces[0]) or not _is_plain_spell(d.faces[1]):
+        return False
+    skip = {"id", "name", "types", "civs", "cost", "power", "mana", "races", "text", "abilities", "keywords", "source", "faces", "resolve_to"}
     for f in dataclasses.fields(CardDef):
         if f.name in skip:
             continue
@@ -243,6 +269,8 @@ SPELLS = True   # 段階3-a の呪文を plain に含めるか（False で従来
 
 
 def _is_plain(d) -> bool:
+    if getattr(d, "faces", None):
+        return TWINPACTS and _is_plain_twin(d)
     if SPELLS and d.types == ["spell"]:
         return _is_plain_spell(d)
     return _is_plain_creature(d)
@@ -259,7 +287,7 @@ def _is_plain_creature(d) -> bool:
     if not set(d.keywords) <= _OK_KW or _self_mods(d) is None:
         return False
     skip = {"id", "name", "types", "civs", "cost", "power", "mana", "races", "text", "abilities", "keywords", "source"}
-    for f in dataclasses.fields(CardDef):
+    for f in dataclasses.fields(type(d)):
         if f.name in skip:
             continue
         dv = f.default if f.default is not dataclasses.MISSING else f.default_factory()
@@ -274,13 +302,20 @@ def rules_bundle(rules) -> dict:
                       for k, v in rules.zones.items()],
             "steps": list(rules.steps),
             "zt_zones": sorted({z for v in rules.zone_trigger_defs.values() for z in v}),
-            "cards": {i: {"name": d.name, "civs": list(d.civs), "cost": d.cost, "power": d.power,
-                          "mana": d.mana, "plain": _is_plain(d), "types": list(d.types), "races": list(d.races),
-                          "keywords": list(d.keywords), "abil": d.abilities if _is_plain(d) else [],
-                          "spell": list(d.spell) if _is_plain(d) and d.types == ["spell"] else [],
-                          "resolve_to": d.resolve_to, "zt": i in rules.zone_trigger_defs,
-                          **dict(zip(("allow", "deny", "breaks", "shield_allow"), (_self_mods(d) or ([], [], [], []))))}
-                      for i, d in rules.cards.items()}}
+            "cards": {i: _card_bundle(d, i in rules.zone_trigger_defs) for i, d in rules.cards.items()}}
+
+
+def _card_bundle(d, zt=False, mana=None) -> dict:
+    plain = _is_plain(d) if mana is None else True
+    out = {"name": d.name, "civs": list(d.civs), "cost": d.cost, "power": d.power,
+           "mana": d.mana if mana is None else mana, "plain": plain, "types": list(d.types), "races": list(d.races),
+           "keywords": list(d.keywords), "abil": d.abilities if plain else [],
+           "spell": list(d.spell) if plain and d.types == ["spell"] else [],
+           "resolve_to": d.resolve_to, "zt": zt,
+           **dict(zip(("allow", "deny", "breaks", "shield_allow"), (_self_mods(d) or ([], [], [], []))))}
+    if plain and getattr(d, "faces", None):
+        out["faces"] = [_card_bundle(f, mana=d.mana) for f in d.faces]
+    return out
 
 
 class RustSession:

@@ -11,6 +11,7 @@ pub struct CardDef {
     pub cost: i64,
     pub power: i64,
     pub mana: i64,
+    #[serde(default)]
     pub plain: bool,
     #[serde(default)]
     pub types: Vec<String>,
@@ -34,6 +35,8 @@ pub struct CardDef {
     pub zt: bool,                           // バトルゾーン以外で働く誘発型能力を持つ（Python の zone_trigger_defs）
     #[serde(default = "default_resolve_to")]
     pub resolve_to: String,                 // 呪文の解決後の置き場所（チャージャーは mana）
+    #[serde(default)]
+    pub faces: Vec<CardDef>,                // ツインパクトの面（0: クリーチャー側, 1: 呪文側。810）
 }
 
 #[derive(Deserialize, Clone, Debug)]
