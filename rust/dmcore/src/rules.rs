@@ -28,6 +28,8 @@ pub struct CardDef {
     pub breaks: Vec<i64>,
     #[serde(default)]
     pub shield_allow: Vec<String>,
+    #[serde(default)]
+    pub spell: Vec<serde_json::Value>,      // 呪文の効果（plain な呪文だけ。Python の CardDef.spell）
 }
 
 #[derive(Deserialize, Clone, Debug)]
