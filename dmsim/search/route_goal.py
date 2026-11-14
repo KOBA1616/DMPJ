@@ -34,7 +34,7 @@ def _entry_preds(name: str) -> tuple[dict, ...]:
 
 
 def drawout_on() -> bool:
-    """DMSIM_DRAWOUT=1: ドロー置換の勝ち手段を場に出す段に「出した後に引き切れる」条件を足す（設計書 §27）。"""
+    """DMSIM_DRAWOUT=1: ドロー置換の勝ち手段を場に出す段に「出した後に引き切れる」条件を足す（設計書 §28）。"""
     import os
     return os.environ.get("DMSIM_DRAWOUT", "0") == "1"
 

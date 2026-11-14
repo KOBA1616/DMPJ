@@ -121,6 +121,13 @@ def deck_of(name):
     return yaml.safe_load((ROOT / "data/decks" / f"{name}.yaml").read_text(encoding="utf-8"))["deck"]
 
 
+VANILLA = ("dm01-075", "dm01-083", "dm01-090", "dm01-097")   # 2コストのバニラ（キーワードも効果もない札）を10枚ずつ＝「並べるだけ」の対照
+
+
+def opp_arg(x: str):
+    return int(x) if x.isdigit() else x
+
+
 def random_decks(rules, k, seed=20261114):
     from dmsim.discovery import basebuild as B
     rng = random.Random(seed)
@@ -132,12 +139,13 @@ def cmd_control(a):
     rules = _rules()
     decks = {n: deck_of(n) for n in KNOWN_DECKS}
     decks.update(random_decks(rules, a.random))
+    decks["vanilla"] = [x for x in VANILLA for _ in range(10)]
     t0 = time.time()
     rows = measure_many(decks, range(1, a.seeds + 1), a.procs, opp_level=a.opp, max_turn=a.max_turn, budget=a.budget)
     out = {n: {"summary": A.summarize(r, a.max_turn), "rows": r} for n, r in rows.items()}
     for n, x in out.items():
         s = x["summary"]
-        print(f"{n}: 3T {s['kill'][3]['k']}/{s['games']} 4T {s['kill'][4]['k']}/{s['games']} 分布 {s['dist']} 勝ち方 {s['via']} 誤り {s['errors']}", flush=True)
+        print(f"{n}: 3T {s['kill'][3]['k']}/{s['games']} 4T {s['kill'][4]['k']}/{s['games']} 分布 {s['dist']} 勝ち方 {s['via']} 負け {s['lost']} 誤り {s['errors']}", flush=True)
     Path(a.out).write_text(json.dumps({"args": vars(a), "seconds": round(time.time() - t0), "decks": decks, "results": out},
                                       ensure_ascii=False, indent=1, default=str), encoding="utf-8")
 
@@ -196,8 +204,11 @@ def cmd_search(a):
         if n in built:
             base = A.summarize(rows[n + "#no_pair"], a.max_turn)
             res[n]["pair_gain_4t"] = s["kill"][4]["k"] - base["kill"][4]["k"]
+            res[n]["contribution"] = {t: A.pair_contribution(r, rows[n + "#no_pair"], t) for t in (3, 4, a.max_turn)}
         nm = "+".join(built[n]["names"]) if n in built else n
-        print(f"{nm}: 3T {s['kill'][3]['k']}/{s['games']} 4T {s['kill'][4]['k']}/{s['games']}（蓄積 {s['kill'][4]['accumulated']}） 分布 {s['dist']} 誤り {s['errors']}", flush=True)
+        c = res[n].get("contribution", {}).get(4)
+        cs = f" 寄与4T {c['diff']:+.2f} 95%{c['ci95']} 上{c['better']}/下{c['worse']}" if c else ""
+        print(f"{nm}: 3T {s['kill'][3]['k']}/{s['games']} 4T {s['kill'][4]['k']}/{s['games']}（蓄積 {s['kill'][4]['accumulated']}） 分布 {s['dist']} 負け {s['lost']}{cs} 誤り {s['errors']}", flush=True)
     Path(a.out).write_text(json.dumps({"args": vars(a), "seconds": round(time.time() - t0), "pairs": len(ps), "checked": checked, "fast": len(fast),
                                        "fast_top": fast[:100], "decks": {**decks, **rnd}, "results": res},
                                       ensure_ascii=False, indent=1, default=str), encoding="utf-8")
@@ -212,7 +223,7 @@ def main():
     ap.add_argument("--top", type=int, default=12)
     ap.add_argument("--steps", type=int, default=3)
     ap.add_argument("--no-basebuild", action="store_true")
-    ap.add_argument("--opp", type=int, default=A.DEFAULT_OPP)
+    ap.add_argument("--opp", type=opp_arg, default=A.DEFAULT_OPP, help="相手の段階 0 / 1 / 2a（=2、速攻寄り）/ 2b（受け寄り）")
     ap.add_argument("--max-turn", type=int, default=6)
     ap.add_argument("--budget", type=int, default=200)
     ap.add_argument("--procs", type=int, default=4)

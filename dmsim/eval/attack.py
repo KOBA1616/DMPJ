@@ -50,6 +50,12 @@ def marks(log, me: int = 0) -> dict:
             "free": sum(1 for c in played if c not in paid)}
 
 
+def _lost_turn(e):
+    from ..search.turn import own_turn
+    r = e.s.result if e is not None else None
+    return own_turn(e, 0, r["turn"]) if r and r.get("turn") is not None else None
+
+
 def run_one(rules, deck, seed: int, *, opp_level: int = DEFAULT_OPP, max_turn: int = 6, budget: int = 200, n_det: int = 8) -> dict:
     from . import assemble
     ls = LoopSpec(name="attack", kind="deterministic", minimal=[])
@@ -61,7 +67,8 @@ def run_one(rules, deck, seed: int, *, opp_level: int = DEFAULT_OPP, max_turn: i
     res, v = r["res"], r["verdict"]
     m = marks(hold["e"].log) if "e" in hold and res.kill_turn else {}
     return {"seed": seed, "first": r["first"], "opp": r["opp"], "kill_turn": res.kill_turn if v.stage2.kill else None,
-            "kind": res.kind, "via": v.stage2.via, "lost": res.lost, "error": res.error, "marks": m}
+            "kind": res.kind, "via": v.stage2.via, "lost": res.lost, "lost_turn": _lost_turn(hold.get("e")) if res.lost else None,
+            "error": res.error, "marks": m}
 
 
 def measure(rules, deck, seeds, **kw) -> list[dict]:
@@ -73,12 +80,22 @@ def accumulated(m: dict) -> bool:
     return bool(m) and (m.get("haste", 0) > 0 or m.get("repeat", 0) > 0 or m.get("free", 0) > 0)
 
 
+def kill_by(t: int):
+    """組の寄与（eval.contrib.paired）に渡す1局の値: t ターン以内に勝ったら 1。"""
+    return lambda r: 1 if r["kill_turn"] is not None and r["kill_turn"] <= t else 0
+
+
+def pair_contribution(with_rows, without_rows, t: int = 4) -> dict:
+    from .contrib import by_seed, paired
+    return paired(by_seed(with_rows, kill_by(t)), by_seed(without_rows, kill_by(t)))
+
+
 def summarize(rows, horizon: int = 6, kill_turns=(3, 4)) -> dict:
     n = len(rows)
     kt = [r["kill_turn"] for r in rows if r["kill_turn"] is not None]
     c = Counter(kt)
     out = {"games": n, "dist": {t: c.get(t, 0) for t in range(1, horizon + 1)}, "no_kill": n - len(kt),
-           "errors": sum(1 for r in rows if r["error"]), "opp": sorted({r["opp"] for r in rows}),
+           "errors": sum(1 for r in rows if r["error"]), "lost": sum(1 for r in rows if r.get("lost")), "opp": sorted({r["opp"] for r in rows}),
            "via": dict(Counter(r["via"] for r in rows if r["kill_turn"] is not None)), "kill": {}}
     for t in kill_turns:
         won = [r for r in rows if r["kill_turn"] is not None and r["kill_turn"] <= t]
