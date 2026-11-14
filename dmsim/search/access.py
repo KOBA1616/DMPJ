@@ -207,3 +207,21 @@ def drawout(eng, win_id: str, me: int = 0, extra_draws: int = 0) -> dict | None:
             "ok_next": own + f["scheduled"] >= need, "need_pre": need_pre, "pre": pre,
             "ok_pre": bool(pre) and pre >= need_pre,
             "dig_before": dig_a if dig_b is None else min(dig_a, dig_b)}
+
+
+def remaining(eng, win_id: str, me: int = 0) -> int | None:
+    """勝ちに必要な残り（§30）。勝ち手段を出す前の今の局面で、二つの線のうち近い方の「あと何枚山札を減らせばよいか」。
+    - 引き切りの線: dig_before（出た時に戻るゾーンも数える）。
+    - 戻す前の線: 「墓地に置かれた時に引く」札を、勝ち手段が出るのと同時に墓地へ置ける見込みがあれば（場の下・墓地・手札にある。
+      墓地の札は墓地進化などで進化元に戻せる）、山札 − k + 1 − その枚数（1回に置くのは1枚とみなす）。
+    勝ち手段でない札は None。"""
+    d = drawout(eng, win_id, me)
+    if d is None:
+        return None
+    rules, s = eng.rules, eng.s
+    f = draw_win(rules, win_id)
+    pool = [s.cards[c].defn for z in ("bz", "graveyard", "hand") for c in s.zones[z][me]]
+    pool += [s.cards[u].defn for c in s.zones["bz"][me] for u in s.cards[c].under]
+    pre = 1 if any(grave_draws(rules, i) for i in pool) else 0
+    line_b = max(0, len(s.zones["deck"][me]) - f["k"] + 1 - pre) if pre else None
+    return d["dig_before"] if line_b is None else min(d["dig_before"], line_b)

@@ -302,25 +302,56 @@ def find_cycles(rules, max_cards: int = 2, max_len: int = 4) -> list[Cycle]:
     bs = bundles_of(rules)
     st: dict = {}      # 受け渡せる組だけを持つ（全組を持つと札が多い時にメモリを使い切る）
     succ: dict = {i: [] for i in range(len(bs))}
-    for i in range(len(bs)):
-        for j, b in enumerate(bs):
+    # feeds(a, b) が 0 でない必要条件で a を絞る（結果は総当たりと同じ。succ は j の昇順に並べ直す）
+    by_dst: dict = {}
+    drawers, spells = [], []
+    for i, a in enumerate(bs):
+        for z in {m.dst for m in a.moves}:
+            by_dst.setdefault(z, []).append(i)
+        if any(m.draw for m in a.moves):
+            drawers.append(i)
+        if a.origin == "spell":
+            spells.append(i)
+    for j, b in enumerate(bs):
+        p = b.prem
+        if p is None:
+            continue
+        if p.kind == "move":
+            cand = by_dst.get(p.to, [])
+        elif p.kind == "cast":
+            cand = spells
+        elif p.kind == "draw":
+            cand = drawers
+        else:
+            cand = sorted(set(by_dst.get(p.zone, [])) | {j})
+        for i in cand:
             v = feeds(bs[i], b, rules)
             if v:
                 st[i, j] = v
                 succ[i].append(j)
+    for i in succ:
+        succ[i].sort()
     seen, out = set(), []
+
+    from bisect import bisect_left
 
     def dfs(start, path):
         i = path[-1]
-        for j in succ[i]:
-            if j == start:
-                key = tuple(sorted(path))
-                if key not in seen:
-                    seen.add(key)
-                    out.append(Cycle([bs[k] for k in path], all(st[x, y] == 2 for x, y in zip(path, path[1:] + path[:1]))))
-            elif j > start and j not in path and len(path) < max_len:
-                if len({bs[k].card for k in path + [j]}) <= max_cards:
-                    dfs(start, path + [j])
+        sj = succ[i]
+        k0 = bisect_left(sj, start)            # succ は昇順: start より小さい j は何もしない
+        if k0 < len(sj) and sj[k0] == start:   # 閉じる（総当たりの順でも start は start より大きい j より先）
+            key = tuple(sorted(path))
+            if key not in seen:
+                seen.add(key)
+                out.append(Cycle([bs[k] for k in path], all(st[x, y] == 2 for x, y in zip(path, path[1:] + path[:1]))))
+            k0 += 1
+        if len(path) >= max_len:
+            return
+        pcards = {bs[k].card for k in path}
+        room = len(pcards) < max_cards
+        for j in sj[k0:]:
+            if j not in path and (room or bs[j].card in pcards):
+                dfs(start, path + [j])
 
     for s in range(len(bs)):
         dfs(s, [s])

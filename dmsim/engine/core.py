@@ -214,6 +214,12 @@ class Engine(SelectorMixin, EventMixin, InterpreterMixin, TurnMixin, CombatMixin
         無視の発生源をタイムスタンプ順（先にバトルゾーンに出た／先に解決された順）に適用し、
         すでに無視された発生源の無視効果は働かない。これで無視し合うループは起きない。"""
         s = self.s
+        ig = self.rules.ignore_defs
+        cards = s.cards
+        # 速い判定: 無視の発生源が無ければ空（バトルゾーンの全カードで見る。重なった下のカードを含む上位集合なので結果は同じ）
+        if not any(cards[o].defn in ig for o in s.zones["bz"][0]) and \
+                not any(ce["mod"].get("ignore") for ce in s.continuous):
+            return {}
         srcs = []
         tops = self.bz_tops()
         if not any(ce["mod"].get("ignore") for ce in s.continuous) and \
@@ -372,6 +378,13 @@ class Engine(SelectorMixin, EventMixin, InterpreterMixin, TurnMixin, CombatMixin
         s = self.s
         c = s.cards[cid]
         if c.zone != "bz":
+            return set()
+        k = ("ign_ids", c.defn, c.face)
+        has = self._xcache.get(k)
+        if has is None:   # 定義だけで決まる: この面に ignore_ids の常在型があるか
+            has = self._xcache[k] = any(ab["kind"] == "static" and ab.get("mod", {}).get("ignore_ids")
+                                        for ab in self.fdef(cid).abilities)
+        if not has and not s.continuous:
             return set()
         out: set[str] = set()
         env_self = {"you": c.controller, "self": s.ref(cid)}
@@ -561,11 +574,75 @@ class Engine(SelectorMixin, EventMixin, InterpreterMixin, TurnMixin, CombatMixin
               "must_be_chosen": False, "must_attack_creature": False, "must_attack_creature_first": False,
               "battle_indestructible": False, "battle_indestructible_filters": [], "win_all_battles": False,
               "indestructible": False, "crystal_soul": d.crystal_soul}
+        tkey = self._chars_template_key(cid, face, c, d)
+        if tkey is not None:
+            t = self._xcache.get(tkey)
+            if t is not None:
+                out = t.copy()
+                for k2 in _MUTABLE_CHARS:
+                    v = out.get(k2)
+                    if v is not None:
+                        out[k2] = v.copy()
+                if self.check:
+                    self._chars_busy.add(cid)
+                    try:
+                        fresh = self._chars_calc_body(cid, face, c, d, ch)
+                    finally:
+                        self._chars_busy.discard(cid)
+                    assert fresh == out, f"chars template stale: cid={cid} {tkey}"
+                return out
         self._chars_busy.add(cid)
         try:
-            return self._chars_calc_body(cid, face, c, d, ch)
+            r = self._chars_calc_body(cid, face, c, d, ch)
         finally:
             self._chars_busy.discard(cid)
+        if tkey is not None:
+            t = r.copy()
+            for k2 in _MUTABLE_CHARS:
+                v = t.get(k2)
+                if v is not None:
+                    t[k2] = v.copy()
+            self._xcache[tkey] = t
+        return r
+
+    def _chars_template_key(self, cid, face, c, d):
+        """特性が定義とゾーンだけで決まる時の使い回しの鍵（状態をまたいで使える）。決まらない時は None。
+        条件: 継続的効果が無い・他に及ぶ常在型の発生源が無い・この面に mod つきの常在型が無い・ACE／G・リンクでない。
+        この時 mod は空で、特性は (定義, 面, ゾーン, 下にカードがあるか) で決まる。DMSIM_CHECK=1 では毎回計算と比べる。"""
+        if self.s.continuous or c.link:
+            return None
+        fd = self.fdef(cid, face)
+        sk = ("static_mod", c.defn, c.face, face)
+        has = self._xcache.get(sk)
+        if has is None:
+            def fixed(ab):   # 自分自身への、条件もゲートも数え上げも無い定数の mod（ブロッカー等のキーワードの常在型）
+                if ab["kind"] != "static" or "mod" not in ab:
+                    return True
+                if ab.get("affects") != "self" or "if" in ab or any(ab.get(g) for g in ("sst", "stp", "dswitch", "sforce", "accel", "fort_e", "odrive")):
+                    return False
+                m = ab["mod"]
+                if "power_when" in m or "cost_may" in m or "ignore" in m or "ignore_ids" in m or "grant" in m:
+                    return False
+                if any(isinstance(m.get(k), dict) for k in ("power", "breaks", "breaks_add", "cost")):
+                    return False
+                return not any(isinstance(e, dict) and e.get("once") for e in m.get("allow", []))
+            abs_ = list(fd.abilities) + list(self.rules.cards[c.defn].abilities)
+            has = self._xcache[sk] = bool(getattr(d, "ace", False)) or not all(fixed(ab) for ab in abs_)
+        if has:
+            return None
+        ig = self.rules.ignore_defs
+        if ig and any(self.s.cards[o].defn in ig for o in self.s.zones["bz"][0]):
+            return None
+        asrc = self._aff_sources()
+        if asrc is None:
+            cards = self.s.cards
+            aff = self._affects_others
+            if any(cards[src].top_of < 0 and aff(src) for src in self.s.zones["bz"][0]) or \
+                    any(aff(src) for p in (0, 1) for src in self.s.zones["shield"][p]):
+                return None
+        elif asrc[0] or asrc[1]:
+            return None
+        return ("chars_t", c.defn, c.face, face, c.zone, bool(c.under), bool(c.seals))
 
     def _chars_calc_body(self, cid: int, face: int | None, c, d, ch: dict) -> dict:
         """_chars_calc の本体（_chars_busy に cid を入れた状態で呼ぶ）。"""
