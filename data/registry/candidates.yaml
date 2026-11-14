@@ -7,6 +7,12 @@ candidates:
     name: 絶望神サガの蘇生ループ
     split: tuning
     types: [loop]
+    contribution_2b:   # 組の寄与（中核をつなぎ札に置換した対照との同一シード差、相手 2b・4T終わり・40局、2026-11-14 tools/attack_screen.py known）。足切りに使わない
+      core_removed: ["dm22ex2-021"]
+      kill: {"diff": 0.0, "ci95": [0.0, 0.0], "better": 0, "worse": 0}
+      left: {"diff": 0.0, "ci95": [-0.0992, 0.0992], "better": 2, "worse": 2}
+      broken: {"diff": 0.0, "ci95": [-0.0992, 0.0992], "better": 2, "worse": 2}
+      board: {"diff": 0.45, "ci95": [0.2521, 0.6479], "better": 15, "worse": 0}
     win: effect           # シャコガイル（山札の最後の1枚を引いて勝つ）
     entry: data/loops/entry/saga_v1.json   # 旧い入口（誤った定義、§23）。段2が直ったら新しい入口へ
     core:
@@ -19,6 +25,12 @@ candidates:
     name: ～地獄帰りの騎士～＋DARK MEMORY CONTAINER
     split: tuning
     types: [resource]
+    contribution_2b:   # 組の寄与（中核をつなぎ札に置換した対照との同一シード差、相手 2b・4T終わり・40局、2026-11-14 tools/attack_screen.py known）。足切りに使わない
+      core_removed: ["dm25ex3-028", "dm25ex3-055"]
+      kill: {"diff": 0.0, "ci95": [0.0, 0.0], "better": 0, "worse": 0}
+      left: {"diff": 0.225, "ci95": [0.0939, 0.3561], "better": 9, "worse": 0}
+      broken: {"diff": 0.225, "ci95": [0.0939, 0.3561], "better": 9, "worse": 0}
+      board: {"diff": 0.275, "ci95": [0.0221, 0.5279], "better": 13, "worse": 4}
     win: beat
     core:
       - {id: dm25ex3-028, name: ～地獄帰りの騎士～, role: エンジン}
@@ -30,6 +42,12 @@ candidates:
     name: アカシック ナウ・オア・ネバー＋ウォカンナ
     split: tuning
     types: [loop]
+    contribution_2b:   # 組の寄与（中核をつなぎ札に置換した対照との同一シード差、相手 2b・4T終わり・40局、2026-11-14 tools/attack_screen.py known）。足切りに使わない
+      core_removed: ["dm23ex2-009", "dm23bd7-035"]
+      kill: {"diff": 0.0, "ci95": [0.0, 0.0], "better": 0, "worse": 0}
+      left: {"diff": 0.05, "ci95": [-0.0705, 0.1705], "better": 2, "worse": 1}
+      broken: {"diff": 0.05, "ci95": [-0.0705, 0.1705], "better": 2, "worse": 1}
+      board: {"diff": 0.075, "ci95": [-0.1157, 0.2657], "better": 6, "worse": 3}
     win: opp_deck_out
     entry: data/loops/entry/akashic_v1.json   # 旧い入口（誤った定義、§23）。段2が直ったら新しい入口へ
     core:

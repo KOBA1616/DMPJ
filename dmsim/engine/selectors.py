@@ -698,6 +698,9 @@ class SelectorMixin:
                     os.setdefault("tc_answers", []).append(a)
                     if not a:
                         break
+                    if a[0] >= len(rest):   # 上と同じ（隠れた札の中身が変わって候補が減った）。今の候補で聞き直す
+                        os["tc_answers"].pop()
+                        continue
                     picked.append(rest[a[0]])
             chosen = picked
             t.setdefault("os", {})["chosen"] = chosen
@@ -710,9 +713,18 @@ class SelectorMixin:
         mn = 0 if sel.get("up_to") or any_n else mx
         if mx == 0:
             return [], None
-        a, d = self.ask(t, chooser, "choose_cards", [self._card_option(c, sel.get("look", False)) for c in cands], mn, mx)
+        opts = [self._card_option(c, sel.get("look", False)) for c in cands]
+        a, d = self.ask(t, chooser, "choose_cards", opts, mn, mx)
         if d:
             return None, d
+        if any(i >= len(cands) for i in a):
+            # 隠れた札（山札の上など）を条件で絞る候補は、公平探索で隠れた中身が決定の時と答えの時で違うと数が変わる。
+            # 範囲外の答えは捨て、足りなければ今の候補で聞き直す
+            a = [i for i in a if i < len(cands)]
+            if len(a) < mn:
+                a, d = self.ask(t, chooser, "choose_cards", opts, mn, mx)
+                if d:
+                    return None, d
         chosen = [cands[i] for i in a]
         t.setdefault("os", {})["chosen"] = chosen
         picked = [c for c in chosen if self.s.cards[c].zone == "bz" and self.s.cards[c].controller != chooser]
