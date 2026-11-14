@@ -124,5 +124,6 @@ def measure_assembly(rules, entry: str, deck, seeds, *, max_turn: int = 6, budge
         v = r["verdict"].stage2
         out.append({"seed": s, "cards_turn": r["cards_turn"], "cards_turn_any": r["cards_turn_any"], "entry_turn": r["entry_turn"],
                     "stage_turn": r["stage_turn"], "stage2": v.ok, "via": v.via, "kill": v.kill, "beat": v.beat_win,
-                    "win_turn": v.win_turn, "kind": r["res"].kind, "error": r["res"].error})
+                    "win_turn": v.win_turn, "kind": r["res"].kind, "error": r["res"].error,
+                    "my_keys": r.get("my_keys"), "end_mana": r.get("end_mana")})
     return out

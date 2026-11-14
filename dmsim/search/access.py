@@ -190,8 +190,20 @@ def drawout(eng, win_id: str, me: int = 0, extra_draws: int = 0) -> dict | None:
     f = draw_win(rules, win_id)
     if f is None:
         return None
-    after = len(s.zones["deck"][me]) + sum(len(s.zones[z][me]) for z in f["refill"])
+    deck = len(s.zones["deck"][me])
+    after = deck + sum(len(s.zones[z][me]) for z in f["refill"])
     need = max(0, after - f["k"] + 1)
-    own = extra_draws + sum(grave_draws(rules, s.cards[c].defn) for z in ("hand", "bz") for c in s.zones[z][me])
+    under_all = {u for c in s.zones["bz"][me] for u in s.cards[c].under}
+    own = extra_draws + sum(grave_draws(rules, s.cards[c].defn) for z in ("hand", "bz") for c in s.zones[z][me]
+                            if c not in under_all)   # 進化元（下の札）は数えない（墓地へ置く手段が別に要る）
+    # 戻す前の線（§26.3）: 勝ち手段が出るのと同時に墓地へ置かれた札の「墓地に置かれた時に引く」誘発を、出た時の戻す効果より先に解決する
+    # （同時に待機した自分の誘発の順は自分で選べる、エンジンの order_pending）。同時に置かれる札の候補は場の札の下（進化元）。
+    under = sorted(under_all)
+    pre = max((grave_draws(rules, s.cards[u].defn) for u in under), default=0)
+    need_pre = max(0, deck - f["k"] + 1)
+    dig_a = max(0, need - own - f["scheduled"])
+    dig_b = max(0, need_pre - pre) if pre else None
     return {"need": need, "own_turn": own, "scheduled": f["scheduled"], "ok_same_turn": own >= need,
-            "ok_next": own + f["scheduled"] >= need, "dig_before": max(0, need - own - f["scheduled"])}
+            "ok_next": own + f["scheduled"] >= need, "need_pre": need_pre, "pre": pre,
+            "ok_pre": bool(pre) and pre >= need_pre,
+            "dig_before": dig_a if dig_b is None else min(dig_a, dig_b)}
