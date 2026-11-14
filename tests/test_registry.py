@@ -136,7 +136,7 @@ def test_active_needs_lock_type():
 
 
 def test_resource_knight(full_rules):
-    """リソース型の目盛り: 騎士＋DMC は騎士を差し替えた組より効率が高い。合格線が未定なので resource 検証で止まる。"""
+    """リソース型の目盛り: 騎士＋DMC は騎士を差し替えた組より効率が高い。足切りせず値（measured.values）を記録して通す（§30）。"""
     from dmsim.eval import resource as rs
     spec, deck = rs.load_setup("data/registry/setups/knight_dmc.json")
     known = rs.measure_one(full_rules, spec, deck, 1)
@@ -145,7 +145,16 @@ def test_resource_knight(full_rules):
     assert rs.measure_one(full_rules, s2, d2, 1)["adv"] < known["adv"]
     ev = verify(full_rules, _cand(types=["resource"], win="beat", seeds=[1], setup="data/registry/setups/knight_dmc.json",
                                   core=[{"id": "dm25ex3-028"}, {"id": "dm25ex3-055"}]))
-    assert ev.failed_at() == "resource" and ev.measured["resource"]["n"] == 1
+    assert ev.passed and ev.failed_at() is None and ev.measured["resource"]["n"] == 1
+    assert ev.measured["values"]["resource"]["adv_median"] == known["adv"]
+
+
+def test_optional_fields_keep_digest():
+    """後から足した欄（contrib）は None の時に指紋を変えない。"""
+    a = _cand()
+    assert "contrib" not in a.to_dict()
+    b = _cand(contrib={"deck": "data/decks/knight_dmc.yaml"})
+    assert b.digest() != a.digest()
 
 
 def test_drill_real_deck_breaks(full_rules):
