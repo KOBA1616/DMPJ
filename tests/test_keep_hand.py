@@ -14,7 +14,7 @@ def full_rules():
     from dmsim.cards.defs import load_rules
     old = os.environ.pop("DMSIM_SKIP_CONVERTED", None)
     try:
-        yield load_rules()
+        return load_rules()
     finally:
         if old is not None:
             os.environ["DMSIM_SKIP_CONVERTED"] = old
