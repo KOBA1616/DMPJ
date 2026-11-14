@@ -31,6 +31,7 @@ class Macro:
     win: str | None = None
     core: frozenset = frozenset()          # 中核の札 ID。これを含む意味キーの決定（錨）だけは同じ選択を要求する
     seed: int | None = None
+    loop_end: int | None = None            # steps[:loop_end] がループ部分、残りが勝ちへの変換部分（§23）。None は全体がひとまとまり
 
 
 def enable(on: bool = True) -> None:
@@ -55,7 +56,8 @@ def load(path=registry.PATH) -> list[Macro]:
             preds = tuple(json.loads((REPO / r["entry"]).read_text(encoding="utf-8"))["minimal"])
             core = frozenset(c["id"] for c in r["core"] if c.get("id"))
             for m in ms:
-                out.append(Macro(r["id"], preds, tuple((k, tuple(ks)) for k, ks in m["steps"]), r.get("win"), core, m.get("seed")))
+                out.append(Macro(r["id"], preds, tuple((k, tuple(ks)) for k, ks in m["steps"]), r.get("win"), core, m.get("seed"),
+                                 m.get("loop_end")))
         _CACHE[key] = out
     return _CACHE[key]
 
@@ -64,11 +66,15 @@ def active() -> list[Macro]:
     return load() if enabled() else []
 
 
-def record(m: Macro) -> dict:
+def record(m: Macro, loop_only: bool = False) -> dict:
     """採った線のループの記録（GameResult.loops に入る形）。登録時に S4 で検証済みのループなので verified。
-    周回数は再生した手順の分だけで、無限かは主張しない（limit なし、stocked 1）。勝ち方は登録簿の win。"""
-    return {"source": "registry", "id": m.id, "macro_seed": m.seed, "verified": True, "stocked": 1, "delta": {},
-            "win_by": "opp_deck_out" if m.win == "opp_deck_out" else m.win}
+    周回数は再生した手順の分だけで、無限かは主張しない（limit なし、stocked 1）。勝ち方は登録簿の win。
+    loop_only: ループ部分だけ再生して続きを探索に任せた線（勝ちへの変換は探索が見つけたもの）。"""
+    rec = {"source": "registry", "id": m.id, "macro_seed": m.seed, "verified": True, "stocked": 1, "delta": {},
+           "win_by": "opp_deck_out" if m.win == "opp_deck_out" else m.win}
+    if loop_only:
+        rec["loop_only"] = True
+    return rec
 
 
 def applies(m: Macro, eng, d: dict, me: int) -> bool:
@@ -95,7 +101,14 @@ def _pick(m: Macro, d: dict, ranked: list[list[int]]) -> list[int]:
     return ranked[0]
 
 
-def replay(m: Macro, eng, me: int, opp_policy, fallback):
+def replay_loop(m: Macro, eng, me: int, opp_policy, fallback):
+    """ループ部分（steps[:loop_end]）だけを再生し、続きを探索に任せる局面を返す（§23）。分け目が無い手・再生できない局面は None。"""
+    if not m.loop_end or m.loop_end >= len(m.steps):
+        return None
+    return replay(m, eng, me, opp_policy, fallback, upto=m.loop_end)
+
+
+def replay(m: Macro, eng, me: int, opp_policy, fallback, upto: int | None = None):
     """eng（自分の決定待ち、変更しない）の複製で手順を再生する。最後まで続いて自分が勝てば再生後の局面、それ以外は None。
     fallback(e, d) は探索の方策の候補（よい順の選択のリスト）。手順の決定と種類が違う決定が来たら、
     そのうち中核の札に触れない最初の選択で答えて読み飛ばす（MAX_EXTRA 回まで）。
@@ -103,12 +116,13 @@ def replay(m: Macro, eng, me: int, opp_policy, fallback):
     e = eng.clone()
     extra = 0
     turn = e.s.turn
+    steps = m.steps if upto is None else m.steps[:upto]
     try:
-        for kind, keys in m.steps:
+        for kind, keys in steps:
             while True:
                 d = e.advance()
                 if d is None or e.s.result is not None:
-                    return _won(e, me)
+                    return _won(e, me) if upto is None else None
                 if e.s.turn != turn or e.s.active != me:
                     return None           # 手順はこのターンの中だけ。ターンが終われば不成立
                 if d["player"] != me:
@@ -135,6 +149,8 @@ def replay(m: Macro, eng, me: int, opp_policy, fallback):
             e.answer(pick)
     except (IllegalAnswer, KeyError, IndexError, ValueError):
         return None
+    if upto is not None:
+        return e if e.s.result is None and e.s.turn == turn else None
     e.advance()
     return _won(e, me)
 

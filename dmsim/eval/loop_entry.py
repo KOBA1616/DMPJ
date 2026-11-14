@@ -33,19 +33,35 @@ def core_groups(ls: LoopSpec) -> list[dict]:
     """中核の組（docs/combo-ruler-design.md §14）。各組は {"role", "any": [{ID: 枚数}, ...]} で、any のどれか1つが揃えばその役が揃う。
     source.core がなければ、minimal のうち札の名前で指した述語を1札1組（代わりなし）として作る（従来の決め方）。"""
     if ls.source.get("core"):
-        return [{"role": g.get("role", ""), "any": [dict(o) for o in g["any"]]} for g in ls.source["core"]]
+        return [{"role": g.get("role", ""), "part": g.get("part", "loop"), "any": [dict(o) for o in g["any"]]}
+                for g in ls.source["core"]]
     need: Counter = Counter()
     for p in ls.minimal:
         if p.owner == 0 and "name" in p.match and p.op in (">=", "=="):
             need[p.match["name"]] += p.n
-    return [{"role": i, "any": [{i: k}]} for i, k in need.items()]
+    return [{"role": i, "part": "loop", "any": [{i: k}]} for i, k in need.items()]
 
 
-def core_alternatives(ls: LoopSpec) -> list[dict]:
-    """中核が揃ったとみなす札の組 {ID: 枚数} の一覧（組ごとに代わりを1つずつ選んだ全組み合わせ）。どれか1つが揃えばよい。"""
+PARTS = ("loop", "win")   # 中核の組の part: loop = ループ部品（入口・段1はこれだけで判定）、win = 勝ち手段（段2で見る。§23）
+
+
+def loop_groups(ls: LoopSpec) -> list[dict]:
+    return [g for g in core_groups(ls) if g.get("part", "loop") == "loop"]
+
+
+def win_groups(ls: LoopSpec) -> list[dict]:
+    return [g for g in core_groups(ls) if g.get("part") == "win"]
+
+
+def core_alternatives(ls: LoopSpec, part: str | None = None) -> list[dict]:
+    """中核が揃ったとみなす札の組 {ID: 枚数} の一覧（組ごとに代わりを1つずつ選んだ全組み合わせ）。どれか1つが揃えばよい。
+    part="loop" / "win" でその部分の組だけ（None は全部。取り除き試験・対照組は全部を使う）。"""
     from itertools import product
     out = []
-    for pick in product(*[g["any"] for g in core_groups(ls)]):
+    groups = core_groups(ls) if part is None else [g for g in core_groups(ls) if g.get("part", "loop") == part]
+    if not groups:
+        return []
+    for pick in product(*[g["any"] for g in groups]):
         need: Counter = Counter()
         for o in pick:
             for i, k in o.items():
@@ -58,7 +74,7 @@ BASE_USABLE = ("hand", "bz")   # どの中核札も手札と場にあれば使�
 
 
 def usable_zones(rules, ls: LoopSpec, stages=()) -> dict[str, set]:
-    """中核札ごとの「使えるゾーン」（docs/combo-ruler-design.md §21）。入口 minimal と経路の段の述語から機械的に導く。
+    """ループ部品ごとの「使えるゾーン」（docs/combo-ruler-design.md §21、§23 でループ部品だけに）。入口 minimal と経路の段の述語から機械的に導く。
     - 手札・場は常に可。
     - 札の名前で指した述語のゾーン（墓地・マナなど）はその札に可。
     - 名前でなく種類・文明・種族で指した述語（例「墓地のクリーチャー3体」）のゾーンは、その条件に合う札に可。
@@ -68,7 +84,7 @@ def usable_zones(rules, ls: LoopSpec, stages=()) -> dict[str, set]:
         for q in st.preds:
             preds.append((q.get("zone"), q.get("zones") or (), q.get("match", {}), q.get("owner", 0)))
     out = {}
-    for i in core_ids(ls):
+    for i in core_ids(ls, "loop"):
         d = rules.cards[i]
         z = set(BASE_USABLE)
         for zone, zones, m, owner in preds:
@@ -91,9 +107,9 @@ def usable_zones(rules, ls: LoopSpec, stages=()) -> dict[str, set]:
     return out
 
 
-def core_ids(ls: LoopSpec) -> list[str]:
-    """中核の組に出てくる札（代わりの札も含む）。"""
-    return sorted({i for g in core_groups(ls) for o in g["any"] for i in o})
+def core_ids(ls: LoopSpec, part: str | None = None) -> list[str]:
+    """中核の組に出てくる札（代わりの札も含む）。part で loop / win に絞る。"""
+    return sorted({i for g in core_groups(ls) if part is None or g.get("part", "loop") == part for o in g["any"] for i in o})
 
 
 def required_ids(ls: LoopSpec) -> list[str]:

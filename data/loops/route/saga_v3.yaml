@@ -1,0 +1,17 @@
+# 新しい入口（ループの最小パーツ、2026-11-14 ユーザー定義）への経路。シャコガイル・ドラゲリオンは勝ち手段で、入口の後（物差しの段2）で見る。
+name: saga_v3
+via: 墓地にクリーチャーを貯め、サガを2枚（手札に1枚、もう1枚は手札か墓地）そろえる
+stages:
+  - name: 墓地のクリーチャーが2体以上
+    weight: 60
+    all:
+      - {zone: graveyard, match: {types: [creature]}, n: 2}
+  - name: 墓地のクリーチャー2体以上、手札にサガ、サガが手札と墓地に合わせて2枚
+    weight: 150
+    all:
+      - {zone: graveyard, match: {types: [creature]}, n: 2}
+      - {zone: hand, match: {name: dm22ex2-021}, n: 1}
+      - {zones: [hand, graveyard], match: {name: dm22ex2-021}, n: 2}
+  - name: 入口
+    weight: 300
+    entry: saga

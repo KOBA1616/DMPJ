@@ -37,12 +37,29 @@ NOTE = "相手はマナチャージだけ（ブロッカー・S・トリガー�
 
 def core_need(ls) -> dict:
     """代わりの組の1つめ（表示・互換用）。揃ったかの判定は core_alts のどれか1つで行う。"""
-    alts = L.core_alternatives(ls)
+    alts = core_alts(ls)
     return alts[0] if alts else {}
 
 
 def core_alts(ls) -> list[dict]:
-    return L.core_alternatives(ls)
+    """揃うを判定するループ部品の組（§23。勝ち手段は含めない）。"""
+    return L.core_alternatives(ls, "loop")
+
+
+def win_in_deck(eng, me: int, ls) -> bool:
+    """勝ち手段の組がどれか1つ、自分の札のどこか（山札・盾を含む）にあるか（§23: 勝ち手段は「デッキにある」だけを条件にする）。
+    勝ち手段の組が無い入口は True。"""
+    alts = L.core_alternatives(ls, "win")
+    if not alts:
+        return True
+    from ..engine.view import zone_counts
+    have: Counter = Counter()
+    for z in eng.s.zones:
+        try:
+            have += zone_counts(eng, me, z)
+        except (KeyError, IndexError, TypeError):
+            pass
+    return any(not (Counter(a) - have) for a in alts)
 
 
 def any_met(eng, me: int, alts: list[dict], usable: dict | None = None) -> bool:
@@ -108,12 +125,13 @@ def run_one(rules, ls, seed: int, *, deck=None, opp_deck=None, max_turn: int = 6
     rec = {"cards_turn": None, "cards_turn_any": None, "entry_turn": None, "entry_mana": None, "route": route, "stage_turn": {}}
     stages = RG.load(route_log or route) if (route_log or route) else ()
     usable = L.usable_zones(rules, ls, stages)
+    win_ok = True   # 勝ち手段がデッキにあるか（開始時に1回判定する。デッキの構成で決まる）
     eng = Engine.new_game(rules, [deck, opp_deck], seed, first)
     if opp_model is not None:
         opp_model.setup(eng)
 
     def record(e, t):
-        if rec["cards_turn"] is None and alts and any_met(e, me, alts, usable):
+        if rec["cards_turn"] is None and alts and any_met(e, me, alts, usable) and win_ok:
             rec["cards_turn"] = t
         if rec["cards_turn_any"] is None and alts and any_met(e, me, alts):   # 旧い数え方（マナも数える、並記用）
             rec["cards_turn_any"] = t
@@ -147,6 +165,8 @@ def run_one(rules, ls, seed: int, *, deck=None, opp_deck=None, max_turn: int = 6
                 RG.note_reached(e, stages, ratchet, me)
 
         eng.advance()
+        win_ok = win_in_deck(eng, me, ls)
+        rec["win_in_deck"] = win_ok
         record(eng, 0)
         eng = play_turns(eng, cfg, InfoLevel.FAIR, on_turn=on_turn, holder=holder, record=res,
                          opp_policy=opp_model.policy if opp_model else None)

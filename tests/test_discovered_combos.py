@@ -35,7 +35,7 @@ def test_records_have_entry_and_parts_in_deck():
 
 
 def test_akashic_hd2_entry_wins_by_loop(rules):
-    r = rc.run_one(rules, le.load("akashic_hd2"), 1)
+    r = rc.run_one(rules, le.load("akashic_hd2_v1"), 1)
     assert r["stage1"] and r["stage2"] and r["via"] == "loop" and r["win_turn"] == 1
 
 
