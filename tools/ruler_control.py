@@ -28,6 +28,7 @@ def main(argv=None):
     ap.add_argument("--opp-level", type=int, default=0, help="相手の抵抗の段階（0 既定、1 は盾に S・トリガー）")
     ap.add_argument("--max-turn", type=int, default=2)
     ap.add_argument("--known", help="測る入口局面（カンマ区切り。既定は ruler_control.KNOWN）")
+    ap.add_argument("--workers", type=int, default=None, help="局ごとのプロセス並列（既定 DMSIM_WORKERS、1 は逐次。結果は逐次と同じ）")
     ap.add_argument("--stamp", action="store_true")
     ap.add_argument("--json")
     a = ap.parse_args(argv)
@@ -36,20 +37,34 @@ def main(argv=None):
         rc.KNOWN = tuple(a.known.split(","))
     seeds = list(range(1, a.seeds + 1))
     t0 = time.time()
-    known = {n: [rc.run_one(rules, le.load(n), sd, budget=a.budget, opp_level=a.opp_level, max_turn=a.max_turn) for sd in seeds] for n in rc.KNOWN}
+    from dmsim.eval.parallel import map_ordered
+    groups = [g for n in rc.KNOWN for g in rc.make_randoms(rules, n, a.per_core)]
+    removal = [c for n in rc.KNOWN for c in rc.removal_cases(rules, n)]
+    jobs = [("k", n, le.load(n), sd) for n in rc.KNOWN for sd in seeds] + \
+           [("r", i, g["spec"], sd) for i, g in enumerate(groups) for sd in seeds] + \
+           [("x", i, c["spec"], sd) for i, c in enumerate(removal) for sd in seeds]
+
+    def run(j):
+        kind, _, spec, sd = j
+        if kind == "x":
+            return rc.run_one(rules, spec, sd, budget=a.budget)
+        return rc.run_one(rules, spec, sd, budget=a.budget, opp_level=a.opp_level, max_turn=a.max_turn)
+    rows_all = map_ordered(run, jobs, a.workers)
+    known = {n: [] for n in rc.KNOWN}
+    for g in groups:
+        g["rows"] = []
+    for c in removal:
+        c["rows"] = []
+    for (kind, k, _, _), r in zip(jobs, rows_all):
+        (known[k] if kind == "k" else groups[k]["rows"] if kind == "r" else removal[k]["rows"]).append(r)
     for n, rows in known.items():
         print(f"既知 {n}: 段2 {rc.rate(rows):.2f}（開始局面 {len({r['start'] for r in rows})} 種）", flush=True)
     randoms = []
-    for n in rc.KNOWN:
-        for g in rc.make_randoms(rules, n, a.per_core):
-            g["rows"] = [rc.run_one(rules, g["spec"], sd, budget=a.budget, opp_level=a.opp_level, max_turn=a.max_turn) for sd in seeds]
+    for g in groups:
+        n = g.get("combo", "")
+        if True:
             print(f"  ランダム {n} {g['old']}→{g['new']} ({'+'.join(rules.cards[x].name for x in g['new'].split('+'))}): 段2 {rc.rate(g['rows']):.2f}", flush=True)
             randoms.append(g)
-    removal = []
-    for n in rc.KNOWN:
-        for c in rc.removal_cases(rules, n):
-            c["rows"] = [rc.run_one(rules, c["spec"], sd, budget=a.budget) for sd in seeds]
-            removal.append(c)
     rem = rc.judge_removal(removal)
     print("取り除き試験（中核の札1種類を全部抜く）:")
     for x in rem:
