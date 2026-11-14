@@ -15,6 +15,8 @@ from pathlib import Path
 import yaml
 
 from dmsim.cards import cardstore
+
+import _conv_cache  # noqa: E402
 from dmsim.cards.defs import DATA, load_tables, parse_card
 
 TABLES = load_tables()
@@ -32,9 +34,9 @@ BOUNCED = {"dm25ex2-070": "shield_pile_attach",
 
 
 def _converted(cid):
-    for c in cardstore.read(CONVERTED):
-        if c["id"] == cid:
-            return c
+    c = _conv_cache.find(CONVERTED, cid)
+    if c is not None:
+        return c
     raise KeyError(cid)
 
 
