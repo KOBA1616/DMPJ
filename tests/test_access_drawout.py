@@ -27,3 +27,22 @@ def test_drawout_counts_refill_and_own_turn_draws():
     d = A.drawout(e, "dmrp03-s03")
     n = len(e.s.zones["deck"][0]) + len(e.s.zones["graveyard"][0])
     assert d["need"] == n and d["dig_before"] == n - 5 and not d["ok_same_turn"]
+
+
+def test_route_drawout_switch_adds_pred_only_when_on():
+    from dmsim.search import route_goal as RG
+    off = RG.load("saga_v3", drawout=False)
+    on = RG.load("saga_v3", drawout=True)
+    assert not any("drawout" in p for st in off for p in st.preds)
+    added = [p for st in on for p in st.preds if "drawout" in p]
+    assert added == [{"drawout": "dmrp03-s03"}]   # 効果データでドロー置換の勝ち手段と読める札だけ
+
+
+def test_route_drawout_pred_progress():
+    from dmsim.search import route_goal as RG
+    r, e = _eng(["dm22ex1-007"] * 3, ["dm22ex1-007"] * 2, ["dmrp03-036"] * 2)
+    p = {"drawout": "dmrp03-s03"}
+    n = len(e.s.zones["deck"][0]) + len(e.s.zones["graveyard"][0])
+    f = RG._frac(e, p, 0, 0.25)
+    assert f == (1.0 if n <= 7 else 1 - (n - 7) / n)
+    assert RG.holds(e, p, 0) == (n <= 7)
