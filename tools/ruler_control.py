@@ -25,19 +25,24 @@ def main(argv=None):
     ap.add_argument("--seeds", type=int, default=8)
     ap.add_argument("--per-core", type=int, default=4)
     ap.add_argument("--budget", type=int, help="探索の予算を入口局面の既定から変える（参考測定用。合格の印は既定の予算でだけ書く）")
+    ap.add_argument("--opp-level", type=int, default=0, help="相手の抵抗の段階（0 既定、1 は盾に S・トリガー）")
+    ap.add_argument("--max-turn", type=int, default=2)
+    ap.add_argument("--known", help="測る入口局面（カンマ区切り。既定は ruler_control.KNOWN）")
     ap.add_argument("--stamp", action="store_true")
     ap.add_argument("--json")
     a = ap.parse_args(argv)
     rules = load_rules()
+    if a.known:
+        rc.KNOWN = tuple(a.known.split(","))
     seeds = list(range(1, a.seeds + 1))
     t0 = time.time()
-    known = {n: [rc.run_one(rules, le.load(n), sd, budget=a.budget) for sd in seeds] for n in rc.KNOWN}
+    known = {n: [rc.run_one(rules, le.load(n), sd, budget=a.budget, opp_level=a.opp_level, max_turn=a.max_turn) for sd in seeds] for n in rc.KNOWN}
     for n, rows in known.items():
         print(f"既知 {n}: 段2 {rc.rate(rows):.2f}（開始局面 {len({r['start'] for r in rows})} 種）", flush=True)
     randoms = []
     for n in rc.KNOWN:
         for g in rc.make_randoms(rules, n, a.per_core):
-            g["rows"] = [rc.run_one(rules, g["spec"], sd, budget=a.budget) for sd in seeds]
+            g["rows"] = [rc.run_one(rules, g["spec"], sd, budget=a.budget, opp_level=a.opp_level, max_turn=a.max_turn) for sd in seeds]
             print(f"  ランダム {n} {g['old']}→{g['new']} ({'+'.join(rules.cards[x].name for x in g['new'].split('+'))}): 段2 {rc.rate(g['rows']):.2f}", flush=True)
             randoms.append(g)
     removal = []
