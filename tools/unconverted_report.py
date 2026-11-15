@@ -33,6 +33,7 @@ sys.path.insert(0, str(ROOT / "tools"))
 import approval_stats as stats  # noqa: E402
 import convert_cards as cc  # noqa: E402
 from dmsim.cards.cardfiles import card_files  # noqa: E402
+from dmsim.cards.canonical import name_key  # noqa: E402
 
 OUT_TEXT = re.compile(r"GR召喚|GRクリーチャー|超GR|超次元|サイキック|オーラ")
 
@@ -64,10 +65,10 @@ def run() -> dict:
             if line.strip():
                 r = json.loads(line)
                 rj[r["id"]] = r
-    conv_names = {v["name"] for k, v in tg.items() if k in conv}
+    conv_names = {name_key(v["name"]) for k, v in tg.items() if k in conv}
     by_name: dict[str, list[str]] = collections.defaultdict(list)
     for k, v in tg.items():
-        by_name[v["name"]].append(k)
+        by_name[name_key(v["name"])].append(k)
 
     kind_ids, kind_names = collections.Counter(), collections.Counter()
     all_gaps = collections.Counter()

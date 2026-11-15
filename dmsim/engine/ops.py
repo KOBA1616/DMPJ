@@ -1224,3 +1224,44 @@ def op_force_battle(eng, t, op, env):
     if tasks:
         eng._defer(t, tasks)
     return None
+
+
+def _is_cip(ab: dict) -> bool:
+    w = ab.get("when") or {}
+    return ab.get("kind") == "trigger" and w.get("event") == "move" and w.get("to") == "bz" and w.get("subject") == "self"
+
+
+def _uses_cip(x) -> bool:
+    if isinstance(x, dict):
+        return x.get("op") == "use_cip" or any(_uses_cip(v) for v in x.values())
+    if isinstance(x, list):
+        return any(_uses_cip(v) for v in x)
+    return False
+
+
+@op("use_cip", select="selector", optional="bool?")
+def op_use_cip(eng, t, op, env):
+    """選んだカードの「出た時」にトリガーする能力（when: move to bz subject self）を1つ使う
+    （Jビッグ、マーダン=ロウ、Dr.富士山ッピングなど。どのゾーンのカードでもよい）。
+    使うのは効果の使用者で、効果の self は選んだカードに移る。トリガー条件の if は見ない
+    （能力を「使う」のでトリガーではない）。use_cip を含む能力は候補から除く（Jビッグ以外）。
+    optional: true = 使わないこともできる。候補が無ければ何もしない。"""
+    cids, d = eng.select(t, op["select"], env)
+    if d:
+        return d
+    you = env["you"]
+    cands = [(c, i, ab) for c in cids for i, ab in eng.abilities(c, "trigger")
+             if _is_cip(ab) and not _uses_cip(ab.get("effect"))]
+    if not cands:
+        return None
+    opts = [{"key": f"cip:{eng.s.cards[c].defn}:{i}", "cid": c, "ab": i} for c, i, _ in cands]
+    if op.get("optional"):
+        opts.append({"key": "none"})
+    a, d = eng.ask(t, you, "use_cip", opts)
+    if d:
+        return d
+    if a[0] >= len(cands):
+        return None
+    c, i, ab = cands[a[0]]
+    eng._defer(t, [eng._child(ab["effect"], dict(env, self=eng.s.ref(c), event=None, vars={}))])
+    return None
