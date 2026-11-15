@@ -437467,3 +437467,480 @@ cards:
   source:
     official: dmex12-059
     review: pending
+- id: dmrp06-006
+  faces:
+  - name: マッド・デーモン閣下
+    types:
+    - creature
+    civs:
+    - darkness
+    cost: 5
+    power: 5000
+    races:
+    - マフィ・ギャング
+    - デーモン・コマンド
+    abilities:
+    - kind: trigger
+      when: &id267
+        event: move
+        to: bz
+        subject: self
+      effect: &id265
+      - op: may
+        body:
+        - op: move
+          select:
+            zone: graveyard
+            owner: you
+            filter:
+              types:
+              - creature
+            count: 1
+          to: hand
+          reason: return
+    - kind: trigger
+      when:
+        event: cast
+        subject:
+          owner: you
+          filter:
+            types:
+            - spell
+            name_has: ハンド
+      effect: *id265
+  - name: デーモン・ハンド
+    types:
+    - spell
+    civs:
+    - darkness
+    cost: 6
+    keywords:
+    - s_trigger
+    spell:
+    - op: choose
+      select:
+        zone: bz
+        owner: opp
+        filter:
+          types:
+          - creature
+        count: 1
+      as: t
+    - op: destroy
+      select:
+        ref: t
+  mana: 1
+  text: 'マッド・デーモン閣下: このクリーチャーがバトルゾーンに出た時、あるいは自分が名前に《ハンド》とある呪文を唱えた時、クリーチャーを１体、自分の墓地から手札に戻してもよい。
+    ／ デーモン・ハンド: S・トリガー / 相手のクリーチャーを１体破壊する。'
+  source:
+    official: dmrp06-006
+    review: pending
+- id: dmrp08-017
+  faces:
+  - name: 満開軍艦 グラービエ
+    types:
+    - creature
+    civs:
+    - water
+    cost: 4
+    power: 7000
+    races:
+    - ムートピア
+    keywords:
+    - double_breaker
+    abilities:
+    - kind: static
+      affects: self
+      if:
+        cmp:
+        - turn_count:
+            kind: cast
+            owner: you
+        - <
+        - 2
+      mod:
+        deny:
+        - attack_player
+        - attack_creature
+    - &id266
+      kind: trigger
+      when: &id268
+        event: attack
+        subject: self
+      effect:
+      - op: may
+        body:
+        - op: cast_face
+          face: 1
+  - name: 過激カキアゲイン
+    types:
+    - spell
+    civs:
+    - water
+    cost: 4
+    spell:
+    - op: draw
+      count: 4
+    - op: discard
+      select:
+        zone: hand
+        owner: you
+        count: 2
+  mana: 1
+  text: '満開軍艦 グラービエ: このターン、自分が呪文を２枚以上唱えていなければ、このクリーチャーは攻撃できない。 / スマッシュ・バースト（このクリーチャーが攻撃する時、このカードの呪文側を、バトルゾーンに置いたままコストを支払わずに唱えてもよい）
+    / W・ブレイカー（このクリーチャーはシールドを２つブレイクする） ／ 過激カキアゲイン: カードを４枚引く。その後、自分の手札を２枚捨てる。'
+  source:
+    official: dmrp08-017
+    review: pending
+- id: dmrp08-023
+  faces:
+  - name: フット“FNT“ジスタ
+    types:
+    - creature
+    civs:
+    - fire
+    cost: 4
+    power: 6000
+    races:
+    - ビートジョッキー
+    keywords:
+    - speed_attacker
+    - double_breaker
+    abilities:
+    - kind: static
+      affects: self
+      if:
+        cmp:
+        - turn_count:
+            kind: attack
+            owner: you
+        - <
+        - 2
+      mod:
+        deny:
+        - attack_player
+        - attack_creature
+    - *id266
+  - name: 火の玉ドライシュート
+    types:
+    - spell
+    civs:
+    - fire
+    cost: 6
+    spell:
+    - op: choose
+      select:
+        zone: deck
+        owner: you
+        from_top: 3
+        look: true
+        count: all
+      as: a
+    - op: move
+      select:
+        ref: a
+        filter:
+          types:
+          - creature
+          cost_le: 3
+        count: all
+      to: bz
+      reason: put
+    - op: move
+      select:
+        ref: a
+        count: all
+      to: deck
+      reason: put
+      position: bottom
+  mana: 1
+  text: 'フット“FNT“ジスタ: このターン、他のクリーチャーが２体以上攻撃していなければ、このクリーチャーは攻撃できない。 / スピードアタッカー（このクリーチャーは召喚酔いしない）
+    / スマッシュ・バースト（このクリーチャーが攻撃する時、このカードの呪文側を、バトルゾーンに置いたままコストを支払わずに唱えてもよい） / W・ブレイカー
+    ／ 火の玉ドライシュート: 自分の山札の上から３枚を見る。その中からコスト３以下のクリーチャーをすべてバトルゾーンに出す。残りをすべて、好きな順序で山札の一番下に置く。'
+  source:
+    official: dmrp08-023
+    review: pending
+- id: dmrp12-s04
+  faces:
+  - name: 堕悪の覇王 シャークウガ
+    types:
+    - creature
+    civs:
+    - water
+    cost: 7
+    power: 6000
+    races:
+    - ムートピア
+    - サイバー・コマンド
+    keywords:
+    - blocker
+    - double_breaker
+    abilities:
+    - kind: trigger
+      when: *id267
+      effect:
+      - op: move
+        select:
+          zone: bz
+          owner: any
+          other: true
+          count: 2
+          up_to: true
+        to: hand
+        reason: return
+  - name: 闇の魔改造
+    types:
+    - spell
+    civs:
+    - water
+    cost: 4
+    keywords:
+    - s_trigger
+    spell:
+    - op: modify
+      select:
+        zone: bz
+        owner: opp
+        filter:
+          types:
+          - creature
+        count: all
+      mod:
+        power: -2000
+      duration: end_of_turn
+  mana: 1
+  text: '堕悪の覇王 シャークウガ: ブロッカー / W・ブレイカー / このクリーチャーがバトルゾーンに出た時、バトルゾーンにある他のカードを２枚まで選び、持ち主の手札に戻す。
+    ／ 闇の魔改造: S・トリガー / このターン、相手のクリーチャーすべてのパワーを－2000する。'
+  source:
+    official: dmrp12-s04
+    review: pending
+- id: dmsd12-004
+  faces:
+  - name: 凶鬼29号 ゾットバ
+    types:
+    - creature
+    civs:
+    - darkness
+    cost: 4
+    power: 3000
+    races:
+    - マフィ・ギャング
+    abilities:
+    - kind: trigger
+      when: *id267
+      effect:
+      - op: mill
+        owner: you
+        count: 1
+      - op: move
+        select:
+          zone: graveyard
+          owner: you
+          filter:
+            types:
+            - creature
+            civs:
+            - darkness
+          count: 1
+        to: hand
+        reason: return
+  - name: ゾットバ・ネッセンス
+    types:
+    - spell
+    civs:
+    - nature
+    cost: 2
+    spell:
+    - op: choose
+      select:
+        zone: bz
+        owner: you
+        filter:
+          types:
+          - creature
+        count: 1
+      as: a
+    - op: choose
+      select:
+        zone: bz
+        owner: opp
+        filter:
+          types:
+          - creature
+        count: 1
+      as: b
+    - op: force_battle
+      a:
+        ref: a
+      b:
+        ref: b
+  mana: 1
+  text: '凶鬼29号 ゾットバ: このクリーチャーがバトルゾーンに出た時、自分の山札の上から１枚目を墓地に置く。その後、闇のクリーチャー１体または闇のオーラを１枚、自分の墓地から手札に戻す。
+    ／ ゾットバ・ネッセンス: 自分と相手のクリーチャーをそれぞれ１体ずつ選び、バトルさせる。'
+  source:
+    official: dmsd12-004
+    review: pending
+- id: dmrp10-004
+  faces:
+  - name: 機動基盤 コア・キャリバー
+    types:
+    - creature
+    civs:
+    - water
+    cost: 3
+    power: 3000
+    races:
+    - トリックス
+    - デリートロン
+    abilities:
+    - kind: trigger
+      when:
+        event: cast
+        subject:
+          owner: you
+          filter:
+            types:
+            - spell
+      effect:
+      - op: may
+        body:
+        - op: draw
+          count: 1
+  - name: エレクトロ・シャワー
+    types:
+    - spell
+    civs:
+    - nature
+    cost: 4
+    spell:
+    - op: move
+      select:
+        zone: deck
+        owner: you
+        from_top: 2
+      to: mana
+      reason: put
+      tapped: true
+    - op: move
+      select:
+        zone: mana
+        owner: you
+        count: 1
+      to: hand
+      reason: return
+  mana: 1
+  text: '機動基盤 コア・キャリバー: 自分の呪文を唱えた時、またはオーラを使った時、カードを１枚引いてもよい。 ／ エレクトロ・シャワー: 自分の山札の上から２枚を、タップして自分のマナゾーンに置く。その後、カードを１枚、自分のマナゾーンから手札に戻す。'
+  source:
+    official: dmrp10-004
+    review: pending
+- id: dmsd09-012
+  faces:
+  - name: プロト・コア
+    types:
+    - creature
+    civs:
+    - water
+    cost: 4
+    power: 3000
+    races:
+    - トリックス
+    - デリートロン
+    abilities:
+    - &id269
+      kind: static
+      affects:
+        zone: hand
+        owner: you
+        filter:
+          types:
+          - spell
+      mod:
+        cost:
+          amount: -2
+        cost_min: 1
+  - name: 暗黒の不法侵入
+    types:
+    - spell
+    civs:
+    - darkness
+    cost: 3
+    spell:
+    - op: choose
+      select:
+        zone: bz
+        owner: opp
+        filter:
+          types:
+          - creature
+        count: 1
+      as: t
+    - op: modify
+      select:
+        ref: t
+      mod:
+        power: -5000
+      duration: end_of_turn
+  mana: 1
+  text: 'プロト・コア: 自分の呪文を唱えるコストまたはオーラを使うコストを最大２少なくする。ただし、コストは０以下にはならない。 ／ 暗黒の不法侵入: 相手のクリーチャーを１体選ぶ。このターン、そのクリーチャーのパワーを－5000する。（パワー０以下のクリーチャーは破壊される）'
+  source:
+    official: dmsd09-012
+    review: pending
+    aliases:
+    - dmrp09-039
+- id: dmrp12-019
+  faces:
+  - name: イルフィン・ザ・シルバー
+    types:
+    - creature
+    civs:
+    - water
+    cost: 6
+    power: 6000
+    races:
+    - ジョーカーズ
+    - ワンダフォース
+    keywords:
+    - double_breaker
+    abilities:
+    - kind: trigger
+      when: *id268
+      effect:
+      - op: draw
+        count: 3
+    - *id269
+  - name: メラメラ・チェイン
+    types:
+    - spell
+    civs:
+    - fire
+    cost: 5
+    keywords:
+    - s_trigger
+    spell:
+    - op: choose
+      select:
+        zone: hand
+        owner: you
+        count: any
+      as: d
+    - op: discard
+      select:
+        ref: d
+    - op: destroy
+      select:
+        zone: bz
+        owner: opp
+        filter:
+          types:
+          - creature
+          power_le: 6000
+        count:
+          count:
+            ref: d
+  mana: 1
+  text: 'イルフィン・ザ・シルバー: W・ブレイカー（このクリーチャーはシールドを２つブレイクする） / このクリーチャーが攻撃する時、カードを３枚引く。
+    / 自分の呪文を唱えるコストを最大２少なくする。ただし、コストは０以下にはならない。 ／ メラメラ・チェイン: S・トリガー（この呪文をシールドゾーンから手札に加える時、コストを支払わずにすぐ唱えてもよい）
+    / 自分の手札を好きな枚数捨ててもよい。こうして捨てた手札１枚につき、相手のパワー6000以下のクリーチャーを１体、破壊する。'
+  source:
+    official: dmrp12-019
+    review: pending
