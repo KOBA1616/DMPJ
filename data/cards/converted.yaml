@@ -435466,3 +435466,496 @@ cards:
     notes: 「可能なら各ターン２度攻撃」は、はじめてのタップでアンタップ＋攻撃強制で表した
     aliases:
     - promoy10-018
+- id: dmrp05-030
+  name: 満点ゼミナール
+  types:
+  - creature
+  civs:
+  - zero
+  cost: 5
+  power: 3000
+  races:
+  - ジョーカーズ
+  abilities:
+  - kind: trigger
+    when:
+      event: move
+      from: bz
+      subject:
+        owner: you
+        other: true
+        filter:
+          types:
+          - creature
+    effect:
+    - op: may
+      body:
+      - op: draw
+        count: 1
+    if:
+      is_turn: you
+  mana: 1
+  text: 自分のターン中に、自分の他のクリーチャーがバトルゾーンを離れた時、カードを１枚引いてもよい。
+  source:
+    official: dmrp05-030
+    review: pending
+- id: dmrp05-082
+  name: お邪魔菌トリオ
+  types:
+  - creature
+  civs:
+  - fire
+  cost: 4
+  power: 5000
+  races:
+  - ジョーカーズ
+  keywords:
+  - speed_attacker
+  abilities:
+  - kind: trigger
+    when:
+      event: attack
+      subject:
+        owner: you
+        other: true
+    effect:
+    - op: move
+      select:
+        ref: self
+      to: hand
+      reason: return
+  mana: 1
+  text: 'スピードアタッカー（このクリーチャーは召喚酔いしない）
+
+    自分の他のクリーチャーが攻撃する時、このクリーチャーを自分の手札に戻す。'
+  source:
+    official: dmrp05-082
+    review: pending
+- id: dmr21-064
+  name: U・ナーギ
+  types:
+  - creature
+  civs:
+  - water
+  cost: 4
+  power: 3000
+  races:
+  - サイバー・ウイルス海
+  - 革命軍
+  abilities:
+  - kind: trigger
+    when: &id254
+      event: move
+      to: bz
+      subject: self
+    effect:
+    - op: choose
+      select:
+        zone: hand
+        owner: you
+        count: 2
+        up_to: true
+      as: r
+    - op: if
+      cond:
+        all:
+        - exists:
+            ref: r
+            filter:
+              civs:
+              - water
+        - exists:
+            ref: r
+            filter:
+              civs:
+              - darkness
+      then:
+      - op: choose
+        select:
+          zone: bz
+          owner: any
+          filter:
+            types:
+            - creature
+          count: 1
+        as: t
+      - op: move
+        select:
+          ref: t
+        to: hand
+        reason: return
+  mana: 1
+  text: このクリーチャーがバトルゾーンに出た時、自分の手札を２枚まで相手に見せてもよい。それらのカードの文明に水と闇があれば、クリーチャーを１体選び、持ち主の手札に戻す。
+  source:
+    official: dmr21-064
+    review: pending
+- id: dmr21-070
+  name: 一夜のヒトヤミィ
+  types:
+  - creature
+  civs:
+  - darkness
+  cost: 5
+  power: 3000
+  races:
+  - ファンキー・ナイトメア
+  - 革命軍
+  abilities:
+  - kind: trigger
+    when: *id254
+    effect:
+    - op: choose
+      select:
+        zone: hand
+        owner: you
+        count: 2
+        up_to: true
+      as: r
+    - op: if
+      cond:
+        all:
+        - exists:
+            ref: r
+            filter:
+              civs:
+              - darkness
+        - exists:
+            ref: r
+            filter:
+              civs:
+              - fire
+      then:
+      - op: discard
+        select:
+          zone: hand
+          owner: opp
+          chooser: opp
+          count: 2
+  mana: 1
+  text: このクリーチャーがバトルゾーンに出た時、自分の手札を２枚まで相手に見せてもよい。それらのカードの文明に闇と火があれば、相手は自身の手札を２枚選び、捨てる。
+  source:
+    official: dmr21-070
+    review: pending
+- id: dmr21-074
+  name: メガ・ヒット・ドラゴン
+  types:
+  - creature
+  civs:
+  - fire
+  cost: 5
+  power: 5000
+  races:
+  - メガ・ドラゴン
+  - 革命軍
+  abilities:
+  - kind: trigger
+    when: *id254
+    effect:
+    - op: choose
+      select:
+        zone: hand
+        owner: you
+        count: 2
+        up_to: true
+      as: r
+    - op: if
+      cond:
+        all:
+        - exists:
+            ref: r
+            filter:
+              civs:
+              - fire
+        - exists:
+            ref: r
+            filter:
+              civs:
+              - nature
+      then:
+      - op: destroy
+        select:
+          zone: bz
+          owner: opp
+          filter:
+            types:
+            - creature
+            power_le: 4000
+          count: 1
+  mana: 1
+  text: このクリーチャーがバトルゾーンに出た時、自分の手札を２枚まで相手に見せてもよい。それらのカードの文明に火と自然があれば、相手のパワー4000以下のクリーチャーを１体、破壊する。
+  source:
+    official: dmr21-074
+    review: pending
+- id: dmrp15-066
+  name: 観測者 オハコガクヤ
+  types:
+  - creature
+  civs:
+  - water
+  cost: 2
+  power: 2000
+  races:
+  - グレートメカオー
+  - 美孔麗王国
+  abilities:
+  - kind: trigger
+    when: &id255
+      event: move
+      to: bz
+      subject: self
+    effect:
+    - op: choose
+      select:
+        zone: deck
+        owner: you
+        from_top: 3
+        look: true
+        count: all
+      as: pile
+    - op: move
+      select:
+        ref: pile
+        count: all
+      to: deck
+      reason: put
+      position: top
+  mana: 1
+  text: このクリーチャーがバトルゾーンに出た時、自分の山札の上から３枚を見る。その後、それらを好きな順序で戻す。
+  source:
+    official: dmrp15-066
+    review: pending
+- id: dmx10-045
+  name: 電磁封魔ロッキオ
+  types:
+  - creature
+  civs:
+  - water
+  cost: 2
+  power: 1000
+  races:
+  - サイバーロード
+  - グランド・デビル
+  - オリジン
+  abilities:
+  - kind: trigger
+    when: *id255
+    effect:
+    - op: choose
+      select:
+        zone: deck
+        owner: you
+        from_top: 2
+        look: true
+        count: all
+      as: pile
+    - op: move
+      select:
+        ref: pile
+        count: all
+      to: deck
+      reason: put
+      position: top
+  mana: 1
+  text: このクリーチャーをバトルゾーンに出した時、自分の山札の上から２枚を見る。その後、その２枚を好きな順序で元に戻す。
+  source:
+    official: dmx10-045
+    review: pending
+    aliases:
+    - dm32-084
+- id: dmrp08-045
+  name: クサーリ戦車 ナゲット
+  types:
+  - creature
+  civs:
+  - fire
+  cost: 4
+  power: 4000
+  races:
+  - ビートジョッキー
+  abilities:
+  - kind: trigger
+    when:
+      event: untap
+      subject: self
+    effect:
+    - op: break
+      player: opp
+      count: 1
+  mana: 1
+  text: このクリーチャーがアンタップした時、相手のシールドを１つブレイクする。
+  source:
+    official: dmrp08-045
+    review: pending
+- id: dmrp01-050
+  name: '"BC" ヒット'
+  types:
+  - creature
+  civs:
+  - fire
+  cost: 2
+  power: 6000
+  races:
+  - ビートジョッキー
+  keywords:
+  - double_breaker
+  abilities:
+  - &id256
+    kind: static
+    affects: self
+    zone: hand
+    if:
+      cmp:
+      - count:
+          zone: hand
+          owner: you
+      - '>'
+      - 2
+    mod:
+      deny:
+      - summon
+  mana: 1
+  text: このクリーチャーは、自分の手札が２枚以下なら召喚できる。W・ブレイカー（このクリーチャーはシールドを２つブレイクする）
+  source:
+    official: dmrp01-050
+    review: pending
+    notes: 手札が２枚以下なら召喚できる＝手札が３枚以上なら召喚を禁止（この札自身を含めて数える）
+    aliases:
+    - promoy16-074
+- id: dmsd03-010
+  name: \"BC\" ヒット
+  types:
+  - creature
+  civs:
+  - fire
+  cost: 2
+  power: 6000
+  races:
+  - ビートジョッキー
+  keywords:
+  - double_breaker
+  abilities:
+  - *id256
+  mana: 1
+  text: このクリーチャーは、自分の手札が２枚以下なら召喚できる。W・ブレイカー（このクリーチャーはシールドを２つブレイクする）
+  source:
+    official: dmsd03-010
+    review: pending
+    notes: 手札が２枚以下なら召喚できる＝手札が３枚以上なら召喚を禁止（この札自身を含めて数える）
+- id: dm25ex3-tf03
+  name: ZERO ハンド
+  types:
+  - spell
+  civs:
+  - darkness
+  cost: 6
+  abilities:
+  - &id257
+    kind: trigger
+    zone: hand
+    when:
+      event: turn_end
+    if:
+      all:
+      - is_turn: opp
+      - cmp:
+        - turn_count:
+            kind: enter_unpaid
+            owner: opp
+        - '>='
+        - 1
+    effect:
+    - op: may
+      body:
+      - op: play_free
+        select:
+          ref: self
+  spell:
+  - op: choose
+    select:
+      zone: bz
+      owner: opp
+      filter:
+        types:
+        - creature
+      count: 1
+    as: t
+  - op: destroy
+    select:
+      ref: t
+  mana: 1
+  text: '侵略ZERO：相手のターンの終わりに、そのターン、相手のクリーチャーがコストを支払わずに出ていたら、この呪文を自分の手札からコストを支払わずに唱えてもよい。
+
+    相手のクリーチャーを１体選び、破壊する。'
+  source:
+    official: dm25ex3-tf03
+    review: pending
+    notes: 侵略ZERO は手札で働く turn_end 誘発（相手のターンで、相手のクリーチャーがコストを支払わずに出ていれば play_free）
+    aliases:
+    - dm25rp3-t01
+    - dmd35-004
+    - dmex03-014
+- id: dm26ex2-045
+  name: 「オレたちのZEROの世界を造るまで」
+  types:
+  - spell
+  civs:
+  - fire
+  cost: 6
+  abilities:
+  - *id257
+  spell:
+  - op: destroy
+    select:
+      zone: bz
+      owner: opp
+      filter:
+        types:
+        - creature
+        power_le: 5000
+      count: all
+  mana: 1
+  text: '侵略ZERO：相手のターンの終わりに、そのターン、相手のクリーチャーがコストを支払わずに出ていたら、この呪文を自分の手札からコストを支払わずに唱えてもよい。
+
+    相手のパワー5000以下のクリーチャーをすべて破壊する。'
+  source:
+    official: dm26ex2-045
+    review: pending
+    notes: 侵略ZERO は手札で働く turn_end 誘発（相手のターンで、相手のクリーチャーがコストを支払わずに出ていれば play_free）
+- id: dmr22-054
+  name: 黒速 The ZERO
+  types:
+  - creature
+  civs:
+  - darkness
+  cost: 4
+  power: 5000
+  races:
+  - ソニック・コマンド
+  - 侵略者ZERO
+  abilities:
+  - kind: trigger
+    zone: hand
+    when:
+      event: turn_end
+    if:
+      all:
+      - is_turn: opp
+      - cmp:
+        - turn_count:
+            kind: enter_unpaid
+            owner: opp
+        - '>='
+        - 1
+    effect:
+    - op: may
+      body:
+      - op: move
+        select:
+          ref: self
+        to: bz
+        reason: put
+  mana: 1
+  text: 侵略ZERO：相手のターンの終わりに、そのターン相手がコストを支払わずにクリーチャーをバトルゾーンに出していたら、このクリーチャーを自分の手札からバトルゾーンに出してもよい。
+  source:
+    official: dmr22-054
+    review: pending
