@@ -60,3 +60,19 @@ def test_hand_evolution_needs_another_card(rr):
         assert "play:R115" not in ks
         e.answer([ks.index("pass")] if "pass" in ks else [0])
     assert next(c for c in e.s.cards if c.defn == "R115").zone == "hand"
+
+
+def test_opp_mana_enters_tapped(rr):
+    """opp_mana_tapped を持つクリーチャーがいる間、相手がマナに置いたカードはタップされている。自分のは影響なし。"""
+    e = setup(rr, {"hand": ["R113"]}, {"bz": ["R116"]})
+    d = e.advance()
+    assert d["kind"] == "charge"
+    e.answer([[o["key"] for o in d["options"]].index("charge:R113")])
+    e.advance()
+    m = [c for c in e.s.cards if c.zone == "mana" and c.owner == 0]
+    assert m and all(c.tapped for c in m)
+    e2 = setup(rr, {"hand": ["R113"], "bz": ["R116"]}, {})
+    d = e2.advance()
+    e2.answer([[o["key"] for o in d["options"]].index("charge:R113")])
+    e2.advance()
+    assert not any(c.tapped for c in e2.s.cards if c.zone == "mana" and c.owner == 0)

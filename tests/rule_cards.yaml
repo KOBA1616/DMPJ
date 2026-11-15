@@ -1149,3 +1149,12 @@ cards:
     evolve_from: {civs: [water]}
     evolve_zone: hand
     text: 手札進化：水のクリーチャーを１体自分の手札から選び、このクリーチャーをその上に重ねつつ出す。
+  - id: R116
+    name: 試験用相手マナタップ獣
+    types: [creature]
+    civs: [darkness]
+    cost: 3
+    power: 3000
+    races: [テスト]
+    keywords: [opp_mana_tapped]
+    text: 相手はカードをマナゾーンに置く時、タップして置く。

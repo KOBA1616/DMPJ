@@ -432,6 +432,8 @@ class EventMixin:
                 c.face_down = True
             if ev["to"] == "bz" and "enters_tapped" in self.chars_ro(cid)["keywords"]:   # 「タップしてバトルゾーンに出る」
                 c.tapped = True
+            if ev["to"] == "mana" and any("opp_mana_tapped" in self.chars_ro(x)["keywords"] for x in self.bz_tops(1 - c.owner)):
+                c.tapped = True   # 「相手はカードをマナゾーンに置く時、タップして置く」（置く時点でタップ。別のイベントにしない）
             for u in unders:   # クリーチャーとして離れたら下のカードも同じゾーンへ（109.2b, 316.3）
                 if s.cards[u].zone == "bz" or s.cards[u].top_of == cid:   # シールドの束も同時に動く（113.2）
                     self._raw_move(u, ev["to"])

@@ -431909,3 +431909,30 @@ cards:
     official: dmx22a-s06
     review: pending
     notes: 「マナゾーンに置く時、タップして置く」は 405.1 の旧注釈で能力として扱わない
+- id: dmex10-008
+  name: 停滞の影タイム・トリッパー
+  types:
+  - creature
+  civs:
+  - darkness
+  cost: 3
+  power: 1000
+  races:
+  - ゴースト
+  keywords:
+  - opp_mana_tapped
+  mana: 1
+  text: 相手はカードをマナゾーンに置く時、タップして置く。
+  source:
+    official: dmex10-008
+    review: pending
+    aliases:
+    - dm14-027
+    - dmc42-025
+    - dmd24-021
+    - dmex01-020
+    - dmx01-008
+    - dmx10-027
+    - dmx18-015
+    - dmx24-019
+    - promoy12-020
