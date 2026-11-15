@@ -100,6 +100,22 @@ impl PyEngine {
     fn result(&self) -> Option<String> {
         self.e.s.result.as_ref().map(|v| v.to_string())
     }
+    /// 最後の決定の記録（answer の直後に Python 側の log へ足す）
+    fn last_log(&self) -> Option<String> {
+        self.e.log.last().map(|v| v.to_string())
+    }
+    fn log_len(&self) -> usize {
+        self.e.log.len()
+    }
+    /// よく読む小さな値（状態全体の変換を避ける）: (active, turn, first_player, step)
+    fn quick(&self) -> (i64, i64, i64, String) {
+        (self.e.s.active, self.e.s.turn, self.e.s.first_player, self.e.s.step.clone())
+    }
+    /// 探索の打ち切り（勝者なしの結果を書く）
+    fn set_result(&mut self, js: &str) -> PyResult<()> {
+        self.e.s.result = Some(serde_json::from_str(js).map_err(|e| PyValueError::new_err(e.to_string()))?);
+        Ok(())
+    }
     fn log(&self) -> String {
         serde_json::Value::Array(self.e.log.clone()).to_string()
     }

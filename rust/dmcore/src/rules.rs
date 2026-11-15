@@ -36,7 +36,17 @@ pub struct CardDef {
     #[serde(default = "default_resolve_to")]
     pub resolve_to: String,                 // 呪文の解決後の置き場所（チャージャーは mana）
     #[serde(default)]
-    pub faces: Vec<CardDef>,                // ツインパクトの面（0: クリーチャー側, 1: 呪文側。810）
+    pub faces: Vec<CardDef>,
+    #[serde(default)]
+    pub evolve_from: Option<serde_json::Value>,   // 進化元の条件（zone を除く filter）。進化でなければ None
+    #[serde(default)]
+    pub evolve_zone: String,
+    #[serde(default)]
+    pub evolve_count: i64,
+    #[serde(default)]
+    pub evolve_any: bool,
+    #[serde(default)]
+    pub cost_reduce_per_evo: i64,                // ツインパクトの面（0: クリーチャー側, 1: 呪文側。810）
 }
 
 #[derive(Deserialize, Clone, Debug)]
