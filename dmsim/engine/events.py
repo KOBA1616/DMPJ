@@ -317,6 +317,9 @@ class EventMixin:
                 self._hist_bump("tap", rec["controller"])
             elif ev == "untap":   # 状態が実際に変わったアンタップだけがレコードになる（ターン開始の一括アンタップも数える。バンドB U18 の設計既定）
                 self._hist_bump("untap", rec["controller"])
+                uc = rec["subject"][0]
+                if s.alive(rec["subject"]) and s.cards[uc].zone == "bz" and "creature" in self.chars_ro(uc)["types"]:
+                    self._hist_bump("untap_creature", rec["controller"])   # 「このターンアンタップしたクリーチャー」（マナのアンタップを除く）
 
     def _apply_one(self, ev: dict) -> list[dict]:
         s = self.s
@@ -432,6 +435,8 @@ class EventMixin:
                 c.face_down = True
             if ev["to"] == "bz" and "enters_tapped" in self.chars_ro(cid)["keywords"]:   # 「タップしてバトルゾーンに出る」
                 c.tapped = True
+            if ev["to"] == "mana" and any("opp_mana_tapped" in self.chars_ro(x)["keywords"] for x in self.bz_tops(1 - c.owner)):
+                c.tapped = True   # 「相手はカードをマナゾーンに置く時、タップして置く」（置く時点でタップ。別のイベントにしない）
             for u in unders:   # クリーチャーとして離れたら下のカードも同じゾーンへ（109.2b, 316.3）
                 if s.cards[u].zone == "bz" or s.cards[u].top_of == cid:   # シールドの束も同時に動く（113.2）
                     self._raw_move(u, ev["to"])
@@ -601,7 +606,7 @@ class EventMixin:
                 for m in self.link_members(ev["subject"][0]):
                     s.cards[m].tapped = c.tapped
             return [{"ev": kind, "subject": ev["subject"], "controller": c.controller}]
-        if kind in ("attack", "block", "cast", "turn_start", "turn_end", "break", "battle_win", "battle_start", "attack_end", "mugon_used", "link_established", "battle_end"):
+        if kind in ("attack", "block", "cast", "turn_start", "turn_end", "break", "battle_win", "battle_lose", "battle_start", "attack_end", "mugon_used", "link_established", "battle_end"):
             return [dict(ev)]
         raise ValueError(kind)
 

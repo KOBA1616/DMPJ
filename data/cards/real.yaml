@@ -1054,6 +1054,7 @@ cards:
     text: "S・トリガー / ブロッカー / このクリーチャーは攻撃できない。このクリーチャーがバトルゾーンに出た時、プレイヤーを一人選ぶ。そのプレイヤーは、自身の墓地のカードをすべて山札に加え、シャッフルする。"
     abilities:
       - kind: static
+        affects: self
         mod: {deny: [attack_player, attack_creature]}
       - kind: trigger
         when: {event: move, to: bz, subject: self}

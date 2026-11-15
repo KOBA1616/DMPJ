@@ -22,7 +22,7 @@ def canonical_rows(rows: list[dict]) -> list[dict]:
 
 
 def aliases_for(name: str, card_id: str) -> list[str]:
-    e = canonical.canonical_index().get(name)
+    e = canonical.canonical_index().get(canonical.name_key(name))
     return list(e["aliases"]) if e and e["id"] == card_id else []
 
 
@@ -64,19 +64,19 @@ def relocate(cards: list[dict], ledger: dict, versions: dict) -> dict:
     - 本文が違う: 旧カードを消し、承認は取り消す。最新版の原文があらためて変換される（承認も再検証）
     付け替えた ID の弾が変わる場合の置き場所の移動は、cardstore.write が行う。"""
     idx = canonical.canonical_index()
-    by_name = {c["name"]: c for c in cards}
+    by_name = {canonical.name_key(c["name"]): c for c in cards}
     have = {c["id"] for c in cards}
     stats = {"renamed": 0, "dropped_dup": 0, "dropped_text_changed": 0, "inherited": 0}
     out = []
     for c in cards:
-        e = idx.get(c.get("name"))
+        e = idx.get(canonical.name_key(c.get("name") or ""))
         if not e or e["id"] == c["id"] or c["id"] not in e["aliases"]:
             out.append(c)
             continue
         new_id, old_id = e["id"], c["id"]
         old_entry = ledger.pop(old_id, None)
         if new_id in have:
-            tgt = by_name.get(c["name"])
+            tgt = by_name.get(canonical.name_key(c["name"]))
             if tgt and tgt["id"] == new_id:
                 src = tgt.setdefault("source", {})
                 src["aliases"] = sorted(set(src.get("aliases", [])) | {old_id} | set(c.get("source", {}).get("aliases", [])))

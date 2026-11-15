@@ -22,6 +22,7 @@ sys.path.insert(0, str(ROOT))
 from dmsim.cards import approval as ap  # noqa: E402
 from dmsim.cards.cardfiles import card_files  # noqa: E402
 from dmsim.cards.defs import load_tables, parse_card  # noqa: E402
+from dmsim.cards.canonical import name_key  # noqa: E402
 
 RAW = ROOT / "data" / "cards" / "raw"
 EXCLUDE = ("サイキック", "GR")
@@ -117,7 +118,7 @@ def run(ledger: dict) -> dict:
         else:
             why["動作検査・原文照合で不合格（台帳 pending）"] += 1
     n = len(tg)
-    return {"targets": n, "targets_unique_names": len({v.get("name") for v in tg.values()}),
+    return {"targets": n, "targets_unique_names": len({name_key(v.get("name") or "") for v in tg.values()}),
             "ledger_entries": len(ledger), **st,
             "rate": {k: round(st[k] / n, 4) for k in ("converted", "parsed", "approved")},
             "blocked": dict(why.most_common()), "top_gaps": dict(gaps.most_common(15))}

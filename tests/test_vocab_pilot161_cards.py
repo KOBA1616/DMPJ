@@ -65,8 +65,7 @@ ADD_048 = {"op": "if", "cond": _attacked_any(), "then": [
 
 REGISTER = ["dmrp14-089", "dmrp14-s04", "dmrp21-067", "dm26sd1-p008",
             "dmr17-s09", "dmrp06-079", "dm25rp4-044", "dm25rp4-048"]
-BOUNCE = {"dmrp08-023": "attacked_this_turn_condition_distinct",
-          "dm25ex3-020": "card_executed_trigger"}
+BOUNCE = {"dm25ex3-020": "card_executed_trigger"}
 
 NOTES = {
     "dmrp14-089": "「このターン、他のクリーチャーが攻撃していなければ攻撃できない」は常在型の if に turn_count（attack, owner: any, other）の cmp を置く形（第161弾）",
