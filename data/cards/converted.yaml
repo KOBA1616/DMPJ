@@ -433548,3 +433548,366 @@ cards:
   source:
     official: dm11-014
     review: pending
+- id: dm19-055
+  name: ノクターン・ドラグーン
+  types:
+  - creature
+  civs:
+  - darkness
+  cost: 5
+  power: 4000
+  races:
+  - ティラノ・ドレイク
+  abilities:
+  - kind: trigger
+    when: &id234
+      event: move
+      to: bz
+      subject: self
+    effect:
+    - op: choose_name
+      as: x
+    - op: discard
+      select:
+        zone: hand
+        owner: opp
+        filter:
+          name:
+            declared: x
+        count: all
+        look: true
+  mana: 1
+  text: このクリーチャーをバトルゾーンに出した時、カード名をひとつ選んで言う。その後、相手の手札を見る。相手は、その中から、選ばれたカードと同じ名前のカードをすべて捨てる。
+  source:
+    official: dm19-055
+    review: pending
+- id: dm23rp1-071
+  name: カート・ビートル
+  types:
+  - creature
+  civs:
+  - nature
+  cost: 4
+  power: 3000
+  races:
+  - ジャイアント・インセクト
+  abilities:
+  - kind: trigger
+    when: *id234
+    effect:
+    - op: choose_race
+      as: r
+    - op: choose
+      select:
+        zone: deck
+        owner: you
+        from_top: 2
+        count: all
+      as: top
+      reveal: true
+    - op: move
+      select:
+        ref: top
+        filter:
+          races:
+            declared: r
+        count: all
+      to: hand
+      reason: return
+    - op: move
+      select:
+        ref: top
+        count: all
+      to: deck
+      position: bottom
+      reason: put
+      order: choose
+  mana: 1
+  text: このクリーチャーが出た時、種族を１つ選び、その後、自分の山札の上から２枚を表向きにする。その中から、選んだ種族を持つカードをすべて手札に加え、残りを好きな順序で山札の下に置く。
+  source:
+    official: dm23rp1-071
+    review: pending
+- id: dm23rp1-t1
+  name: パーロックのミラクルフィーバー
+  types:
+  - spell
+  civs:
+  - water
+  cost: 7
+  spell:
+  - op: choose_name
+    as: x
+  - op: reveal_until
+    filter:
+      name:
+        declared: x
+    as: hit
+    rest_as: rest
+  - op: move
+    select:
+      ref: hit
+      count: all
+    to: hand
+    reason: return
+  - op: move
+    select:
+      ref: rest
+      count: all
+    to: hand
+    reason: return
+  mana: 1
+  text: カードの名前を１つ選んで言う。その後、自分の山札の上から、選んだ名前のカードが出るまで１枚ずつ表向きにする。表向きにしたカードをすべて手札に加える。
+  source:
+    official: dm23rp1-t1
+    review: pending
+    aliases:
+    - dm23rp1-tf1
+    - dmr01-021
+- id: dm23rp2x-028
+  name: 星姫械 エルナリク
+  types:
+  - creature
+  civs:
+  - light
+  cost: 4
+  power: 8000
+  races:
+  - メカ・デル・ステラ
+  - シノビ
+  keywords:
+  - blocker
+  - cannot_attack_player
+  abilities:
+  - kind: trigger
+    when: &id235
+      event: turn_end
+    effect:
+    - op: mekurade
+      filter:
+        race_has: メカ
+      cost_le: 8
+    if:
+      cmp:
+      - turn_count:
+          kind: shield_put
+          owner: you
+      - '>='
+      - 2
+  mana: 1
+  text: 'ブロッカー（このクリーチャーをタップして、相手クリーチャーの攻撃先をこのクリーチャーに変更してもよい）
+
+    このクリーチャーは、相手プレイヤーを攻撃できない。
+
+    各ターンの終わりに、このターン自分のシールドゾーンにカードが２枚以上置かれていたら、メカ・メクレイド８する。（メカ・メクレイド８：自分の山札の上から３枚を見る。その中から、コスト８以下のメカを１枚、コストを支払わずに使ってもよい。残りを好きな順序で山札の下に置く）'
+  source:
+    official: dm23rp2x-028
+    review: pending
+    aliases:
+    - dm23rp2-028
+- id: dm23rp2x-067
+  name: パーレン・煙・イエッピ
+  types:
+  - creature
+  civs:
+  - fire
+  cost: 4
+  power: 3000
+  races:
+  - アーマード・ファイアー・バード
+  keywords:
+  - speed_attacker
+  abilities:
+  - kind: trigger
+    when: *id235
+    effect:
+    - op: mekurade
+      filter:
+        race_has: アーマード
+      cost_le: 8
+    if:
+      all:
+      - is_turn: you
+      - cmp:
+        - sum:
+          - turn_count:
+              kind: broken
+              owner: you
+          - turn_count:
+              kind: broken
+              owner: opp
+        - '>='
+        - 3
+  mana: 1
+  text: 'スピードアタッカー（このクリーチャーは召喚酔いしない）
+
+    自分のターンの終わりに、このターン中にシールドが３つ以上ブレイクされていれば、アーマード・メクレイド８する。（アーマード・メクレイド８：自分の山札の上から３枚を見る。その中から、コスト８以下のアーマードを１枚、コストを支払わずに使ってもよい。残りを好きな順序で山札の下に置く）'
+  source:
+    official: dm23rp2x-067
+    review: pending
+    aliases:
+    - dm23rp2-067
+- id: dm23rp4x-019
+  name: 紅唱龍マグマイッピツ
+  types:
+  - creature
+  civs:
+  - fire
+  cost: 6
+  power: 9000
+  races:
+  - マジック・ボルケーノ・ドラゴン
+  keywords:
+  - s_trigger
+  - double_breaker
+  abilities:
+  - kind: trigger
+    when: *id234
+    effect:
+    - op: may
+      body:
+      - op: choose
+        select:
+          zone: bz
+          owner: any
+          filter:
+            types:
+            - creature
+          count: 2
+        as: pair
+      - op: force_battle
+        a:
+          ref: pair
+  - kind: trigger
+    when:
+      event: battle_win
+      subject: self
+    effect:
+    - op: draw
+      count: 1
+  - &id236
+    kind: trigger
+    when: *id234
+    effect:
+    - op: destroy
+      select:
+        ref: self
+    if:
+      all:
+      - is_turn: opp
+      - cmp:
+        - turn_count:
+            kind: broken
+            owner: you
+        - <
+        - 2
+  mana: 1
+  text: 'S・トリガー
+
+    W・ブレイカー
+
+    このクリーチャーが出た時、クリーチャーを２体選んでもよい。その２体をバトルさせる。
+
+    このクリーチャーがバトルに勝った時、カードを１枚引く。
+
+    相手のターン中に、このクリーチャーが出た時、このターンに２つ以上自分のシールドがブレイクされていなければ、このクリーチャーを破壊する。'
+  source:
+    official: dm23rp4x-019
+    review: pending
+    aliases:
+    - dm23rp4-019
+- id: dm23rp4x-023
+  name: ア:モグチッツ
+  types:
+  - creature
+  civs:
+  - nature
+  cost: 6
+  power: 7000
+  races:
+  - ヴェールアビス
+  keywords:
+  - s_trigger
+  - double_breaker
+  abilities:
+  - kind: trigger
+    when: *id234
+    effect:
+    - op: move
+      select:
+        zone: bz
+        owner: opp
+        filter:
+          types:
+          - creature
+        count: 1
+      to: mana
+      reason: put
+    - op: move
+      select:
+        zone: deck
+        owner: you
+        from_top: 1
+      to: mana
+      reason: put
+  - *id236
+  mana: 1
+  text: 'S・トリガー
+
+    W・ブレイカー
+
+    このクリーチャーが出た時、相手のクリーチャーを１体選び、持ち主のマナゾーンに置く。その後、自分の山札の上から１枚目をマナゾーンに置く。
+
+    相手のターン中に、このクリーチャーが出た時、このターンに２つ以上自分のシールドがブレイクされていなければ、このクリーチャーを破壊する。'
+  source:
+    official: dm23rp4x-023
+    review: pending
+    aliases:
+    - dm23rp4-023
+- id: dm24ex3-027
+  name: 芸魔桂馬 バセヌテレジ
+  types:
+  - creature
+  civs:
+  - fire
+  cost: 5
+  power: 5000
+  races:
+  - マジック・モンスター
+  - ゲーム・コマンド
+  keywords:
+  - speed_attacker
+  abilities:
+  - kind: static
+    affects: self
+    zone: hand
+    mod:
+      cost:
+        amount: -2
+        count:
+          turn_count:
+            kind: discard
+            owner: you
+      cost_min: 1
+  - kind: trigger
+    when: *id235
+    effect:
+    - op: may
+      body:
+      - op: draw
+        count:
+          turn_count:
+            kind: discard
+            owner: you
+    if:
+      is_turn: you
+  mana: 1
+  text: 'このターン中に捨てた自分の手札１枚につき、このクリーチャーの召喚コストを２少なくする。ただしコストは０以下にはならない。
+
+    スピードアタッカー
+
+    自分のターンの終わりに、このターン中に捨てた自分の手札と同じ枚数のカードを引いてもよい。'
+  source:
+    official: dm24ex3-027
+    review: pending
+    aliases:
+    - dm24rp2-020

@@ -86,6 +86,7 @@ INSTRUCTIONS = """\
 - 「自分の他のクリーチャーが相手のクリーチャーとバトルする時、かわりにこのクリーチャーにバトルさせてもよい」は `kind: replace, optional: true, when: {event: battle, subject: {owner: you, filter: {types: [creature]}}}, instead: [{op: battle_substitute}]`（「かわりにこのクリーチャーをタップしてもよい。そうした場合このクリーチャーがバトルする」は `tap: true`）。
 - 「カードを〜の下に置く」は `{op: put_under, select: <置くカード>, onto: <重ね先>}`（put_under_other の語彙を作らない）。
 - 「相手は〜してもよい」は `{op: opp_may, body: [...]}`。「相手がそうしなければ」は直後に if で状態を見るか、body の結果を as で受けて分岐する（opponent_may_action の語彙を作らない）。
+- フィルタの「または」は `any_of: [<フィルタ>, ...]`（race_or_filter / filter_race_or_keyword の語彙を作らない）。文明の種類数は式 `{civ_count: <セレクタ>}`、手札の枚数は `{count: {zone: hand, owner: you}}`。「山札を見て〜を手札に加え、山札をシャッフル」は `move select: {zone: deck, owner: you, filter: ..., count: 1}` の後 `{op: shuffle}`（search_deck の語彙を作らない）。「〜が出るまで山札の上から表向きにする」は op `reveal_until`。
 - 「自分のシールドゾーンにある〈条件〉すべてに『S・トリガー』を与える」は `kind: static, affects: {zone: shield, owner: you, filter: {...}}, mod: {allow: [s_trigger]}`（grant_s_trigger_zone の語彙を作らない）。
 - 「NEO進化クリーチャーとして召喚するなら（する場合）、このクリーチャーの召喚コストをN少なくする」は面の `cost_reduce_per_evo: N`（NEO の進化元は1体なので、重ねた時だけN軽減。neo_summon_cost_reduction の語彙を作らない）。「タマシードから進化するなら」は進化元の種類で変わるので unsupported。
 - 近似・代用はしない。語彙で原文どおりに表せない効果は、似た別の語彙（op・mod・条件）で置き換えて書かない。その能力は abilities に書かず、source.unsupported に [{need: <足せばよい op・語彙の案（英語の識別子）>, text: <該当する原文>}] で書く。表せる他の能力は通常どおり変換する。
