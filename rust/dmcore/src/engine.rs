@@ -1188,6 +1188,55 @@ impl Engine {
         };
         let mut deferred = false;
         match op["op"].as_str().unwrap_or("") {
+            "play_free" => {
+                // コストを支払わずに召喚する／唱える（112.3g）。ツインパクトは選択条件が呪文だけなら呪文面、他はクリーチャー面
+                let cids = match self.select(&op["select"], &env)? {
+                    Ok(c) => c,
+                    Err(d) => return Ok(Some(d)),
+                };
+                let want: Vec<String> = op["select"].get("filter").and_then(|f| f.get("types")).and_then(|v| v.as_array())
+                    .map(|a| a.iter().filter_map(|x| x.as_str().map(String::from)).collect()).unwrap_or_default();
+                let you = env["you"].as_i64().unwrap();
+                let mut ts = vec![];
+                for c in cids {
+                    let mut t = json!({"t": "play", "cid": c, "player": you, "free": true, "phase": "start", "gen": self.s.cards[c as usize].gen});
+                    let faces = &self.rules.cards[&self.s.cards[c as usize].defn].faces;
+                    if !faces.is_empty() {
+                        let mut f = 0;
+                        if want.iter().any(|x| x == "spell") && !want.iter().any(|x| x == "creature") {
+                            if let Some(i) = faces.iter().position(|fd| fd.types.iter().any(|x| x == "spell")) {
+                                f = i;
+                            }
+                        }
+                        t["face"] = json!(f);
+                    }
+                    ts.push(t);
+                }
+                if !ts.is_empty() {
+                    self.defer(ts);
+                    deferred = true;
+                }
+            }
+            "win" => {
+                let you = env["you"].as_i64().unwrap();
+                let w = match op.get("player").and_then(|v| v.as_str()).unwrap_or("you") { "you" => you, "opp" => 1 - you, _ => return uns("win player") };
+                self.s.result = Some(json!({"winner": w, "reason": "effect", "turn": self.s.turn}));
+                // Python は置換の instead に積んだ効果タスクと実行中のタスクが同じオブジェクト。対局がここで終わると
+                // 残ったタスクが digest に出るので、写しの pc も進めておく
+                if env.get("capture").is_some() {
+                    let ops = self.s.tasks.last().unwrap()["ops"].clone();
+                    for t in self.s.tasks.iter_mut().rev() {
+                        if t["t"] == json!("event") && t["applying"].as_bool().unwrap_or(false) {
+                            for e in t["instead"].as_array_mut().unwrap() {
+                                if e["ops"] == ops && e["env"] == env && e["pc"] == json!(pc) {
+                                    e["pc"] = json!(pc + 1);
+                                }
+                            }
+                            break;
+                        }
+                    }
+                }
+            }
             "draw" => {
                 let cnt = op.get("count").and_then(|v| v.as_i64()).unwrap_or(1);
                 let you = env["you"].as_i64().unwrap();
@@ -1263,11 +1312,26 @@ impl Engine {
                 if !["hand", "graveyard", "mana", "deck", "shield", "bz"].contains(&to) {
                     return uns(format!("move to {}", to));
                 }
-                let cids = match self.select(&op["select"], &env)? {
+                let mut cids = match self.select(&op["select"], &env)? {
                     Ok(c) => c,
                     Err(d) => return Ok(Some(d)),
                 };
                 let pos = op.get("position").and_then(|v| v.as_str()).unwrap_or("top");
+                if op.get("order").and_then(|v| v.as_str()) == Some("choose") && to == "deck" {
+                    let names: std::collections::BTreeSet<String> = cids.iter().map(|&c| self.s.cards[c as usize].defn.clone()).collect();
+                    if names.len() > 1 {
+                        let opts: Vec<Value> = cids.iter().map(|&c| self.card_option_look(c)).collect();
+                        let n = cids.len();
+                        let a = match self.ask(env["you"].as_i64().unwrap(), "order_cards", opts, n, n) {
+                            Ask::Decision(d) => return Ok(Some(d)),
+                            Ask::Answer(x) => x,
+                        };
+                        cids = a.iter().map(|&i| cids[i]).collect();
+                        if pos == "top" {
+                            cids.reverse();   // 1枚ずつ一番上に置かれるので、最後に置いたものが一番上になる
+                        }
+                    }
+                }
                 let tapped = op.get("tapped").and_then(|v| v.as_bool()).unwrap_or(false);
                 // 効果でシールドを手札に加える時は、S・トリガー等の使用宣言ができる（113.6。Python と同じく break タスクで）
                 let shield_out: Vec<i64> = if to == "hand" { cids.iter().copied().filter(|&c| self.s.cards[c as usize].zone == "shield").collect() } else { vec![] };
@@ -1492,7 +1556,9 @@ impl Engine {
         let d = self.def(cid);
         let in_bz = self.s.cards[cid as usize].zone == "bz";
         let (allow, deny, bo): (Vec<String>, Vec<String>, Vec<i64>) =
-            if in_bz { (d.allow.clone(), d.deny.clone(), d.breaks.clone()) } else { (vec![], vec![], vec![]) };
+            if in_bz { (d.allow.clone(), d.deny.clone(), d.breaks.clone()) }
+            else if self.s.cards[cid as usize].zone == "shield" { (d.shield_allow.clone(), vec![], vec![]) }   // シールドゾーンで働く自身への許可
+            else { (vec![], vec![], vec![]) };
         let breaks = bo.iter().copied().max().unwrap_or(1).max(1);
         let mut kw = d.keywords.clone();
         kw.sort();
@@ -1534,11 +1600,21 @@ impl Engine {
         for r in [x, y] {
             if !losers.contains(&r) {
                 let c = self.s.cards[r[0].as_i64().unwrap() as usize].controller;
-                evs.push(json!({"ev": "battle_win", "subject": r, "controller": c}));
+                evs.push(json!({"ev": "battle_win", "subject": r, "opponent": if r == x { y } else { x }, "controller": c}));
             }
         }
+        // 「バトルに負けた時」（Python #463）: 破壊の移動より前に拾い、同じ窓の終わりに解決する
+        let lose_evs: Vec<Value> = losers.iter().map(|r| {
+            let c = self.s.cards[r[0].as_i64().unwrap() as usize].controller;
+            json!({"ev": "battle_lose", "subject": r, "opponent": if *r == x { y } else { x }, "controller": c})
+        }).collect();
         let e = self.ev_task(evs);
-        let mut ts = self.window(vec![e]);
+        let mut inner = vec![];
+        if !lose_evs.is_empty() {
+            inner.push(self.ev_task(lose_evs));
+        }
+        inner.push(e);
+        let mut ts = self.window(inner);
         if !slay.is_empty() {
             ts.extend(self.window(vec![json!({"t": "slayer", "pairs": slay})]));
         }
@@ -1807,6 +1883,17 @@ impl Engine {
         // 置換効果の決定（609.9a）: まずターン・プレイヤーが束の全イベントについて決め、次に非ターン・プレイヤー。決め終えたら同時に適用する。
         // G・リンクの離脱置換は plain では起きない
         let order = [self.s.active, 1 - self.s.active];
+        {
+            // Python の G・リンク離脱の走査が残す印（対局が途中で終わると digest に出る）
+            let t = self.s.tasks.last_mut().unwrap();
+            let n = t["evs"].as_array().unwrap().len();
+            if t.get("link_chosen").is_none() {
+                t["link_chosen"] = json!([]);
+            }
+            if n > 0 {
+                t["link_i"] = json!(n);
+            }
+        }
         loop {
             let (rp, i, n) = {
                 let t = self.s.tasks.last().unwrap();
@@ -1861,6 +1948,9 @@ impl Engine {
 
     /// 適用前のイベントを、置換の照合用レコードにする（Python 版 _record_for の move の部分）
     fn record_for(&self, ev: &Value) -> Option<Value> {
+        if ev["ev"] == json!("draw") {
+            return Some(json!({"ev": "draw", "player": ev["player"]}));
+        }
         if ev["ev"] != json!("move") || !self.alive(&ev["subject"]) {
             return None;
         }
@@ -2177,7 +2267,7 @@ impl Engine {
                 }
                 Ok(out)
             }
-            "cast" | "turn_start" | "turn_end" | "attack" | "block" | "battle_start" | "battle_win" | "battle_end" | "attack_end" | "break" => {
+            "cast" | "turn_start" | "turn_end" | "attack" | "block" | "battle_start" | "battle_win" | "battle_lose" | "battle_end" | "attack_end" | "break" => {
                 Ok(vec![ev.clone()])
             }
             other => uns(format!("event {}", other)),

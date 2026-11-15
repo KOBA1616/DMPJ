@@ -150,13 +150,20 @@ def _simple_effect(ops, top=True) -> bool:
             continue
         if k == "choose" and top and set(o) <= {"op", "select", "as"} and isinstance(o.get("as"), str) and _simple_selector(o.get("select")):
             continue   # 変数への束縛は最上段だけ（Python は子タスクと env を共有するが、Rust は複製するため）
+        if k == "play_free" and set(o) <= {"op", "select"} and _simple_selector(o.get("select")) and o["select"].get("zone") == "hand":
+            continue
+        if k == "win" and set(o) <= {"op", "player"} and o.get("player", "you") in ("you", "opp"):
+            continue
         if k == "repeat" and set(o) <= {"op", "times", "body"} and isinstance(o.get("times"), int) and _simple_effect(o["body"], False):
             continue
         if k == "may" and set(o) <= {"op", "body"} and _simple_effect(o["body"], False):
             continue
         if k in ("tap", "untap") and set(o) <= {"op", "select"} and _simple_selector(o.get("select")):
             continue
-        if k == "move" and set(o) <= {"op", "select", "to", "reason", "position", "tapped"} and isinstance(o.get("tapped", False), bool) and o.get("to") in ("hand", "graveyard", "mana", "deck", "shield", "bz") \
+        if k == "move" and "order" in o and not (o["order"] == "choose" and o.get("to") == "deck" and isinstance(o.get("select"), dict)
+                                                  and set(o["select"]) == {"ref"}):
+            return False   # 並べ替えは、選ばせない参照（変数の全部）を山札へ置く時だけ
+        if k == "move" and set(o) <= {"op", "select", "to", "reason", "position", "tapped", "order"} and isinstance(o.get("tapped", False), bool) and o.get("to") in ("hand", "graveyard", "mana", "deck", "shield", "bz") \
                 and isinstance(o.get("reason"), str) and o.get("position", "top") in ("top", "bottom") and _simple_selector(o.get("select")):
             continue
         return False
@@ -192,8 +199,12 @@ def _simple_trigger(ab) -> bool:
 
 def _simple_replace(ab) -> bool:
     """段階3-d: 移動の置換（「〜する時、かわりに」）。発生源はバトルゾーン（Rust の replacement が Python の _replacement と同じ候補を出す範囲）。"""
+    w = ab.get("when")
+    if ab["kind"] == "replace" and isinstance(w, dict) and w.get("event") == "draw":   # 引く時の置換（シャコガイル）
+        return set(ab) <= {"kind", "when", "instead", "if"} and set(w) <= {"event", "player"} and w.get("player", "you") in ("you", "opp") \
+            and ("if" not in ab or _simple_cond(ab["if"])) and _simple_effect(ab["instead"], False)
     return ab["kind"] == "replace" and set(ab) <= {"kind", "when", "instead", "if"} and _simple_when(ab["when"]) \
-        and ab["when"].get("event") == "move" and ("if" not in ab or _simple_cond(ab["if"])) and _simple_effect(ab["instead"], False)
+        and ab["when"].get("event") in ("move", "draw") and ("if" not in ab or _simple_cond(ab["if"])) and _simple_effect(ab["instead"], False)
 
 
 def _self_mods(d):
