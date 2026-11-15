@@ -93,11 +93,12 @@ def _rank(eng: Engine, d: dict, w: Weights) -> list[int]:
 
 
 def DRAWOUT_ORDER() -> bool:
-    return _os.environ.get("DMSIM_DRAWOUT", "0") == "1"
+    """進化元・メテオバーンの並べ替え（§32）。段階1の40局で段2が改善しなかったので独立の切り替え DMSIM_EVO_ORDER（既定無効）。"""
+    return _os.environ.get("DMSIM_EVO_ORDER", "0") == "1"
 
 
 def _drawout_order(eng: Engine, d: dict):
-    """ドロー置換の勝ち手段の線の並べ替え（§32、DMSIM_DRAWOUT=1 のときだけ）。効果データの形だけを見る。
+    """ドロー置換の勝ち手段の線の並べ替え（§32、DMSIM_EVO_ORDER=1 のときだけ）。効果データの形だけを見る。
     - 進化元を選ぶ: 「墓地に置かれた時に引く」札を先に、ドロー置換の勝ち手段を後に（勝ち手段は墓地に残してメテオバーンで出す）。
     - 場の札の下から墓地へ置く札を選ぶ（メテオバーンなど）: 引く札を先に、勝ち手段を後に。
     - 墓地から場へ出す札を選ぶ: 勝ち手段を先に。
