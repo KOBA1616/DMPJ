@@ -493,6 +493,7 @@ class RustEngine:
         self._base, self._base_n = state, len(log)      # 起点（Python に戻す時の再生用）
         self._log = log
         self._py = None                                 # 読み取り用の Python Engine（状態が動いたら作り直す）
+        self._raw = None                                # skel_raw の写し（状態が動いたら捨てる）
         self._fb = None                                 # Python に戻した後の Engine（__init__ の最初で None にしておく: log が読む）
         self._c = _core if _core is not None else dmcore.Engine.open(state.to_json(), _bundle_json(rules))
 
@@ -543,8 +544,8 @@ class RustEngine:
             self._fb.s = state
             return
         try:
-            self._c = dmcore.Engine.open(state.to_json(), _bundle_json(self.rules))
-            self._base, self._base_n, self._py = state, len(self.log), None
+            self._c = self._c.with_state(state.to_json())
+            self._base, self._base_n, self._py, self._raw = state, len(self.log), None, None
         except Exception:
             from .core import Engine
             e = Engine(self.rules, state, step_limit=self.step_limit, turn_limit=self.turn_limit)
@@ -555,6 +556,50 @@ class RustEngine:
         if name.startswith("__"):
             raise AttributeError(name)
         return getattr(self._view(), name)
+
+    # -- 探索が局面ごとに読む欄（状態を作り直さずに Rust から直接引く。Python に戻した後は None） --
+    def skel_raw(self):
+        if self._fb is not None:
+            return None
+        if self._raw is None:
+            self._raw = json.loads(self._c.skel_raw())
+        return self._raw
+
+    def zone_ids(self, z, owner):
+        """区域の札の id の並び（Python に戻した後は None）。"""
+        return None if self._fb is not None else self._c.zone_ids(z, owner)
+
+    def card_sig(self, cid):
+        """(定義名, 下にある札の定義名の並べ替え済みタプル)。Python に戻した後は None。"""
+        if self._fb is not None:
+            return None
+        d, u = self._c.card_sig(cid)
+        return d, tuple(u)
+
+    def waiting_fast(self):
+        r = self.skel_raw()
+        return None if r is None else (r["waiting"], True)
+
+    def zone_names(self, z, owner, top=False):
+        """区域の札の定義名の並び（Python に戻した後は None）。"""
+        if self._fb is not None:
+            return None
+        return self._c.zone_names(z, owner, bool(top))
+
+    def tkey_extra(self):
+        """探索の局面の鍵の残り（search.turn の mana_left・sizes と同じ値）。Python に戻した後は None。"""
+        r = self.skel_raw()
+        if r is None:
+            return None
+        z = r["zones"]
+        return (tuple(sorted((d, t) for d, t in r["mana"])),
+                tuple(len(z[k][p]) if k != "bz" else r["bz_n"][p] for p in (0, 1) for k in ("hand", "shield", "graveyard", "bz")))
+
+    def eval_feats(self, me):
+        if self._fb is not None:
+            return None
+        r = self._c.result()
+        return (None if r is None else json.loads(r)), self._c.eval_feats(me)
 
     # -- 進行 --
     def clone(self):
@@ -574,7 +619,7 @@ class RustEngine:
             t = self._c.advance()
         except dmcore.Unsupported:
             return self._fallback().advance()
-        self._py = None
+        self._py = self._raw = None
         return None if t is None else json.loads(t)
 
     def answer(self, choice):
@@ -584,7 +629,7 @@ class RustEngine:
             choice = [choice]
         self._c.answer(list(choice))
         self.log.append(json.loads(self._c.last_log()))
-        self._py = None
+        self._py = self._raw = None
 
     def answer_by_keys(self, keys):
         if self._fb is not None:
