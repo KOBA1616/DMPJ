@@ -433911,3 +433911,310 @@ cards:
     review: pending
     aliases:
     - dm24rp2-020
+- id: dm25ex3-rp1009
+  name: KENJI-番練羅999
+  types:
+  - creature
+  civs:
+  - nature
+  cost: 6
+  power: 11000
+  races:
+  - ドリームメイト
+  - テクノ・サムライ
+  keywords:
+  - double_breaker
+  abilities:
+  - kind: trigger
+    when:
+      event: move
+      to: bz
+      subject: self
+    effect:
+    - op: modify
+      select:
+        ref: self
+      mod:
+        allow:
+        - action: attack_creature
+          other:
+            tapped: false
+      duration: end_of_turn
+  - kind: replace
+    optional: true
+    when:
+      event: battle
+      subject:
+        owner: you
+        filter:
+          types:
+          - creature
+    instead:
+    - op: battle_substitute
+  mana: 1
+  text: 'NEO進化：光、火、または自然のクリーチャー１体の上に置いてもよい。
+
+    NEO進化クリーチャーとして召喚するなら、このクリーチャーの召喚コストを２少なくする。
+
+    マッハファイター
+
+    W・ブレイカー
+
+    自分の他のクリーチャーがバトルする時、かわりにこのクリーチャーにバトルさせてもよい。'
+  source:
+    official: dm25ex3-rp1009
+    review: pending
+    aliases:
+    - dm25rp1-009
+  neo: true
+  evolve_from:
+    civs:
+    - light
+    - fire
+    - nature
+  cost_reduce_per_evo: 2
+- id: dm25ex3-rp1005
+  name: 深淵の怒貫 ファウン＝テイン
+  types:
+  - creature
+  civs:
+  - darkness
+  cost: 6
+  power: 6000
+  races:
+  - アビスロイヤル
+  keywords:
+  - double_breaker
+  abilities:
+  - kind: trigger
+    when:
+      event: attack
+      subject: self
+    effect:
+    - op: move
+      select:
+        zone: deck
+        owner: you
+        from_top: 2
+      to: graveyard
+      reason: put
+      as: m
+    - op: discard
+      select:
+        zone: hand
+        owner: opp
+        count:
+          count:
+            ref: m
+            filter:
+              race_has: アビス
+        chooser: opp
+  - kind: trigger
+    when:
+      event: move
+      to: graveyard
+      reason: destroy
+      subject: self
+    effect:
+    - op: move
+      select:
+        zone: graveyard
+        owner: you
+        filter:
+          types:
+          - creature
+          cost_le: 5
+        count: 1
+      to: bz
+      reason: put
+  mana: 1
+  text: 'NEO進化：水、闇、または火のクリーチャー１体の上に置いてもよい。
+
+    NEO進化クリーチャーとして召喚するなら、このクリーチャーの召喚コストを３少なくする。
+
+    W・ブレイカー
+
+    このクリーチャーが攻撃する時、自分の山札の上から２枚を墓地に置く。こうして墓地に置いたアビス・カード１枚につき、相手は自身の手札を１枚選び、捨てる。
+
+    このクリーチャーが破壊された時、コスト５以下のクリーチャーを１体、自分の墓地から出す。'
+  source:
+    official: dm25ex3-rp1005
+    review: pending
+    aliases:
+    - dm25rp1-005
+  neo: true
+  evolve_from:
+    civs:
+    - water
+    - darkness
+    - fire
+  cost_reduce_per_evo: 3
+- id: dm26ex3-020
+  name: 龍風混成 ザーディクリカ
+  types:
+  - creature
+  civs:
+  - light
+  - water
+  - fire
+  cost: 7
+  power: 6000
+  races:
+  - ディスペクター
+  - クリスタル・コマンド・ドラゴン
+  - エンジェル・コマンド
+  - メルト・ウォリアー
+  keywords:
+  - ex_life
+  - double_breaker
+  abilities:
+  - kind: trigger
+    when:
+      event: move
+      to: bz
+      subject: self
+    effect:
+    - op: may
+      body:
+      - op: play_free
+        select:
+          zone:
+          - hand
+          - graveyard
+          owner: you
+          filter:
+            types:
+            - spell
+            cost_le: 7
+          count: 1
+        resolve_to: deck
+        resolve_position: bottom
+  - kind: trigger
+    when:
+      event: turn_end
+    effect:
+    - op: may
+      body:
+      - op: destroy
+        select:
+          zone: bz
+          owner: opp
+          filter:
+            types:
+            - creature
+            power_le: 5500
+          count: 1
+      - op: draw
+        count: 1
+    if:
+      all:
+      - is_turn: you
+      - cmp:
+        - turn_count:
+            kind: cast
+            owner: you
+        - '>='
+        - 1
+  mana: 1
+  text: 'EXライフ（このクリーチャーを出す時、自分の山札の上から１枚をシールド化する。このクリーチャーが離れる時、かわりにそのシールドを墓地に置く）
+
+    W・ブレイカー
+
+    このクリーチャーが出た時、コスト７以下の呪文を１枚、自分の手札または墓地からコストを支払わずに唱えてもよい。それを唱えた後、墓地のかわりに山札の下に置く。
+
+    自分のターンの終わりに、そのターン自分が呪文を唱えていれば、相手のパワー5500以下のクリーチャーを１体選んで破壊し、カードを１枚引いてもよい。'
+  source:
+    official: dm26ex3-020
+    review: pending
+    aliases:
+    - dm22ex1-cho07
+    - dm22ex1-chog06
+    - dm23bd1-be001
+    - dm23bd1-se004
+    - dm25sp1-006
+    - dm26sd1-b001
+    - dm26sd1-b001star
+    - dmart09-002
+    - dmrp17-a10
+    - dmrp17-b10
+    - dmrp17-s07
+    - dmrp22-sp5
+- id: dm25-047
+  name: ヘル・チャリオット
+  types:
+  - spell
+  civs:
+  - darkness
+  cost: 5
+  spell:
+  - op: destroy
+    select:
+      zone: bz
+      owner: opp
+      filter:
+        types:
+        - creature
+        tapped: false
+      count: 1
+  - op: if
+    cond:
+      cmp:
+      - civ_count:
+          zone: graveyard
+          owner: opp
+      - <
+      - 2
+    then:
+    - op: discard
+      select:
+        zone: hand
+        owner: opp
+        count: 1
+        chooser: opp
+  mana: 1
+  text: 相手のタップされていないクリーチャーを１体破壊する。その後、相手は自分自身の墓地に文明が２つ以上なければ、手札を１枚選んで捨てる。
+  source:
+    official: dm25-047
+    review: pending
+- id: dm24rp2-055
+  name: 集結！夜の四天王!!
+  types:
+  - spell
+  civs:
+  - light
+  cost: 1
+  spell:
+  - op: choose
+    select:
+      zone: deck
+      owner: you
+      from_top: 4
+      count: all
+    as: top
+  - op: may
+    body:
+    - op: move
+      select:
+        ref: top
+        filter:
+          types:
+          - creature
+          any_of:
+          - race_has: 超化獣
+          - keyword: blocker
+        count: 1
+      to: hand
+      reason: return
+  - op: move
+    select:
+      ref: top
+      count: all
+    to: deck
+    position: bottom
+    reason: put
+    order: choose
+  mana: 1
+  text: 自分の山札の上から４枚を見る。その中から、超化獣クリーチャーまたは「ブロッカー」を持つクリーチャーを１体、相手に見せてから手札に加えてもよい。残りを好きな順序で山札の下に置く。
+  source:
+    official: dm24rp2-055
+    review: pending
