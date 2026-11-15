@@ -83,6 +83,9 @@ INSTRUCTIONS = """\
 - 「このターン、自分が呪文を２枚以上唱えていれば」は `{cmp: [{turn_count: {kind: cast, owner: you}}, ">=", 2]}`（casts_this_turn_condition の語彙を作らない）。
 - 「B・A・D N」は `static affects: self, zone: hand, mod: {opt_reduce: {amount: N, then: destroy}}`（bad の語彙を作らない）。
 - このターンの出来事の回数は式 `{turn_count: {kind: <種類>, owner: you|opp|any}}`。種類は attack / block / broken / cast / destroyed / discard / draw / enter / enter_unpaid / leave / mana_put / shield_left / shield_put / summon / tap / untap（turn_history_* や *_this_turn_condition の語彙を作らない）。「このターン、N回目の〜をした時」は when の `ord: {kind: <種類>, eq: N}`、「各ターン、はじめて〜した時」は能力の `first_time: true`（nth_event_per_turn_trigger / first_entry_per_turn の語彙を作らない）。「カードの名前を１つ言う」は `{op: choose_name, as: x}` とフィルタ `name: {declared: x}`（declare_name / name_a_card の語彙を作らない）。
+- 「自分の他のクリーチャーが相手のクリーチャーとバトルする時、かわりにこのクリーチャーにバトルさせてもよい」は `kind: replace, optional: true, when: {event: battle, subject: {owner: you, filter: {types: [creature]}}}, instead: [{op: battle_substitute}]`（「かわりにこのクリーチャーをタップしてもよい。そうした場合このクリーチャーがバトルする」は `tap: true`）。
+- 「カードを〜の下に置く」は `{op: put_under, select: <置くカード>, onto: <重ね先>}`（put_under_other の語彙を作らない）。
+- 「相手は〜してもよい」は `{op: opp_may, body: [...]}`。「相手がそうしなければ」は直後に if で状態を見るか、body の結果を as で受けて分岐する（opponent_may_action の語彙を作らない）。
 - 「自分のシールドゾーンにある〈条件〉すべてに『S・トリガー』を与える」は `kind: static, affects: {zone: shield, owner: you, filter: {...}}, mod: {allow: [s_trigger]}`（grant_s_trigger_zone の語彙を作らない）。
 - 「NEO進化クリーチャーとして召喚するなら（する場合）、このクリーチャーの召喚コストをN少なくする」は面の `cost_reduce_per_evo: N`（NEO の進化元は1体なので、重ねた時だけN軽減。neo_summon_cost_reduction の語彙を作らない）。「タマシードから進化するなら」は進化元の種類で変わるので unsupported。
 - 近似・代用はしない。語彙で原文どおりに表せない効果は、似た別の語彙（op・mod・条件）で置き換えて書かない。その能力は abilities に書かず、source.unsupported に [{need: <足せばよい op・語彙の案（英語の識別子）>, text: <該当する原文>}] で書く。表せる他の能力は通常どおり変換する。
