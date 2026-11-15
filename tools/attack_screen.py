@@ -185,6 +185,79 @@ def cmd_known(a):
     Path(a.out).write_text(json.dumps({"args": vars(a), "results": res}, ensure_ascii=False, indent=1, default=str), encoding="utf-8")
 
 
+def _sig(ci, d):
+    return ci is not None and ci[0] > 0
+
+
+def cmd_wide(a):
+    """静的ふるいの組を広く（--limit 組）測る。基盤選びは使わずつなぎ札で埋める（数百組を回すため）。
+    値は手前の値の寄与（kill / left / broken / board、自分の --turn ターン目の終わり）。同じ中身の対照デッキは1回だけ測る。
+    どれかの値の95%区間が0を超えた組だけ --confirm 局で測り直し、参考の相手（--ref、既定 2b）も併記する。
+    基準の相手は段階1（トリガーデッキ、ユーザー決定 2026-11-14）。"""
+    from collections import Counter
+    from dmsim.discovery import basebuild as B
+    from dmsim.eval.contrib import remove_pair
+    rules = _rules()
+    t0 = time.time()
+    ids = sorted(i for i, d in rules.cards.items() if not B._test(i) and isinstance(d.cost, int))
+    missing = {i for i in ids if B.missing_effect(rules.cards[i])}
+    ps = pairs(rules, ids, missing)
+    ps.sort(key=lambda p: (-p["score"], p["enabler"], p["payoff"]))
+    picked, cnt = [], Counter()
+    for p in ps:                       # 同じ札が並びすぎないよう、1枚あたり --per 組まで
+        if cnt[p["payoff"]] >= a.per or cnt[p["enabler"]] >= a.per:
+            continue
+        t = S.static_bound(rules, [p["enabler"], p["payoff"]])["turn"]
+        if t is None or t > 3:
+            continue
+        picked.append({**p, "turn": t})
+        cnt[p["payoff"]] += 1
+        cnt[p["enabler"]] += 1
+        if len(picked) >= a.limit:
+            break
+    print(f"組 {len(ps)}、選んだ組 {len(picked)} {time.time()-t0:.0f}s", flush=True)
+    decks, ctrl_of, uniq = {}, {}, {}
+    for p in picked:
+        core = {p["enabler"]: B.COPIES, p["payoff"]: B.COPIES}
+        d = B.base_deck(core, B.fillers(rules, core))
+        k = f"{p['enabler']}+{p['payoff']}"
+        decks[k] = d
+        ctrl = remove_pair(d, [p["enabler"], p["payoff"]])
+        h = json.dumps(sorted(ctrl))
+        uniq.setdefault(h, ctrl)
+        ctrl_of[k] = h
+    ctrl_names = {h: f"#ctrl{i}" for i, h in enumerate(uniq)}
+    print(f"対照デッキ {len(uniq)} 種", flush=True)
+    kw = dict(opp_level=a.opp, max_turn=a.turn, budget=a.budget)
+    seeds = range(1, a.seeds + 1)
+    rows = measure_many({**decks, **{ctrl_names[h]: d for h, d in uniq.items()}}, seeds, a.procs, **kw)
+    res, hits = {}, []
+    for k in decks:
+        base = rows[ctrl_names[ctrl_of[k]]]
+        cb = {v: A.pair_contribution(rows[k], base, a.turn, v) for v in A.VALUES}
+        p = next(x for x in picked if f"{x['enabler']}+{x['payoff']}" == k)
+        res[k] = {"pair": {**p, "names": [rules.cards[p["enabler"]].name, rules.cards[p["payoff"]].name]},
+                  "contribution": cb, "errors": sum(1 for r in rows[k] if r["error"])}
+        if any(_sig(x["ci95"], x["diff"]) for x in cb.values()):
+            hits.append(k)
+    print(f"区間が0を超えた組 {len(hits)} {time.time()-t0:.0f}s", flush=True)
+    conf = {}
+    if hits and a.confirm:
+        cs = range(1, a.confirm + 1)
+        need = {k: decks[k] for k in hits}
+        need.update({ctrl_names[ctrl_of[k]]: uniq[ctrl_of[k]] for k in hits})
+        r2 = measure_many(need, cs, a.procs, **kw)
+        r1 = measure_many(need, cs, a.procs, **{**kw, "opp_level": a.ref})
+        for k in hits:
+            c = ctrl_names[ctrl_of[k]]
+            conf[k] = {"opp": {str(a.opp): {v: A.pair_contribution(r2[k], r2[c], a.turn, v) for v in A.VALUES},
+                               str(a.ref): {v: A.pair_contribution(r1[k], r1[c], a.turn, v) for v in A.VALUES}}}
+            x = conf[k]["opp"][str(a.opp)]
+            print(f"確認 {'+'.join(res[k]['pair']['names'])}: " + " ".join(f"{v} {x[v]['diff']:+.2f}{x[v]['ci95']}" for v in A.VALUES), flush=True)
+    Path(a.out).write_text(json.dumps({"args": vars(a), "seconds": round(time.time() - t0), "picked": len(picked), "controls": len(uniq),
+                                       "results": res, "hits": hits, "confirm": conf}, ensure_ascii=False, indent=1, default=str), encoding="utf-8")
+
+
 def cmd_search(a):
     from dmsim.base.loopspec import LoopSpec, Pred
     from dmsim.discovery import basebuild as B
@@ -252,7 +325,7 @@ def cmd_search(a):
 
 def main():
     ap = argparse.ArgumentParser()
-    ap.add_argument("mode", choices=["control", "search", "known"])
+    ap.add_argument("mode", choices=["control", "search", "known", "wide"])
     ap.add_argument("--out", required=True)
     ap.add_argument("--seeds", type=int, default=20)
     ap.add_argument("--random", type=int, default=5)
@@ -263,8 +336,13 @@ def main():
     ap.add_argument("--max-turn", type=int, default=6)
     ap.add_argument("--budget", type=int, default=200)
     ap.add_argument("--procs", type=int, default=4)
+    ap.add_argument("--limit", type=int, default=300, help="wide: 測る組の数")
+    ap.add_argument("--per", type=int, default=3, help="wide: 1枚の札が入る組の上限")
+    ap.add_argument("--turn", type=int, default=4, help="wide: 値を読むターン（この先は回さない）")
+    ap.add_argument("--ref", type=opp_arg, default="2b", help="wide: 確認の時に併記する参考の相手")
+    ap.add_argument("--confirm", type=int, default=40, help="wide: 区間が0を超えた組を測り直す局数")
     a = ap.parse_args()
-    {"control": cmd_control, "search": cmd_search, "known": cmd_known}[a.mode](a)
+    {"control": cmd_control, "search": cmd_search, "known": cmd_known, "wide": cmd_wide}[a.mode](a)
 
 
 if __name__ == "__main__":

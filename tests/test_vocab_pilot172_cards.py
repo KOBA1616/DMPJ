@@ -92,8 +92,20 @@ def build():
                                "notes": NOTES_RP2, "unsupported": []}}
             if "aliases" in p.get("source", {}):
                 card["source"]["aliases"] = list(p["source"]["aliases"])
+        _random_discard(card)
         cards.append(card)
     return {"cards": cards}
+
+
+def _random_discard(card):
+    """「相手の手札を見ないで選び」は無作為（chooser: random）。#447 でルール変換の雛形の漏れを直し converted.yaml も直したので、
+    元の partial（直す前の形）から組み立てる時も同じ規則を当てる。"""
+    if "見ないで選" not in (card.get("text") or ""):
+        return
+    for op in card.get("spell") or []:
+        sel = op.get("select") or {}
+        if op.get("op") == "discard" and sel.get("owner") == "opp" and sel.get("zone") == "hand":
+            sel.setdefault("chooser", "random")
 
 
 def test_build_forms_parse():

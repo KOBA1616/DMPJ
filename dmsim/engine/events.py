@@ -771,8 +771,10 @@ class EventMixin:
             if len(tops) >= 2:
                 return [{"t": "smax_reduce", "player": p}]
         with self.chars_scope():   # 読み取りだけ: 同じ状態での chars() の重複計算を省く
+            glob = self._sba_power_safe_global()
             dead = [s.ref(c) for c in self.bz_tops()
-                    if "creature" in self.chars_ro(c)["types"] and self.chars_ro(c)["power"] <= 0]   # 703.4c
+                    if not self._sba_power_safe(c, glob)
+                    and "creature" in self.chars_ro(c)["types"] and self.chars_ro(c)["power"] <= 0]   # 703.4c
         # 「墓地に置かれるかわりにとどまる」置換で破壊できなかったものは、状態が動くまで同じ処理を繰り返さない
         # （繰り返すと無限ループになる）。パワーが0より大きくなれば対象から外れる
         s.sba_held = [r for r in s.sba_held if r in dead]
@@ -789,6 +791,50 @@ class EventMixin:
             return [self.ev_task([{"ev": "move", "subject": r, "to": "graveyard", "reason": "put", "sba": True}
                                   for r in castles])]
         return []
+
+    def _mod_nonneg(self, m: dict) -> bool:
+        """この mod がパワーを下げないと確定できるか（定義だけで決まる。保守的: 迷えば False）。"""
+        pw = m.get("power", 0)
+        if isinstance(pw, dict):
+            if not (isinstance(pw.get("amount"), (int, float)) and pw["amount"] >= 0):
+                return False
+        elif not isinstance(pw, (int, float)) or pw < 0:
+            return False
+        if "power_when" in m:
+            return False
+        for kw in m.get("grant", []):
+            ent = self.rules.keywords.get(kw)
+            if ent is None:
+                continue
+            for ab in ent["abilities"]:
+                if "mod" in ab and not self._mod_nonneg(ab["mod"]):
+                    return False
+        return True
+
+    def _sba_power_safe_global(self) -> bool:
+        """盤面のどの mod もパワーを下げないか（継続的効果・他に及ぶ常在型）。chars_scope の中で呼ぶ。"""
+        for ce in self.s.continuous:
+            if ce.get("add_from") or "double_power" in ce or not self._mod_nonneg(ce["mod"]):
+                return False
+        asrc = self._aff_sources()
+        if asrc is None:
+            return False
+        return all(self._mod_nonneg(ab["mod"]) for lst in asrc for _, ab in lst if "mod" in ab)
+
+    def _sba_power_safe(self, c: int, glob: bool) -> bool:
+        """パワー0以下の状況起因処理で、特性の計算を省いてよいか（パワーが印刷パワー以上で正と確定する時だけ True）。
+        パワーを変えうるのは mod（自分・他のカードの常在型、継続的効果、付与キーワード）とダイナモ・G・リンクだけ。
+        DMSIM_CHECK=1 では計算した値と比べる。"""
+        if not glob:
+            return False
+        card = self.s.cards[c]
+        if card.link or self.fdef(c).power <= 0:
+            return False
+        if not all(self._mod_nonneg(ab["mod"]) for _, ab in self.abilities(c, "static") if "mod" in ab):
+            return False
+        if self.check:
+            assert self.chars_ro(c)["power"] > 0, f"sba fast path: cid={c}"
+        return True
 
     def _castle_fortifiers(self, shield_cid: int) -> list:
         """shield_cid を要塞化している城の参照の列（[cid, gen]）。城側の fortifies から逆引きする。
@@ -984,6 +1030,16 @@ class EventMixin:
                     out.append((i, ab, None))
         return out
 
+    def _has_trigger_def(self, defn, face) -> bool:
+        """この定義（面が未定ならすべての面）に誘発型能力があるか（定義だけで決まるのでキャッシュする）。"""
+        k = ("trig", defn, face)
+        r = self._xcache.get(k)
+        if r is None:
+            d = self.rules.cards[defn]
+            fs = [d] + list(d.faces or ())
+            r = self._xcache[k] = any(ab["kind"] == "trigger" for f in fs for ab in f.abilities)
+        return r
+
     def _collect_triggers(self, rec):
         """誘発チェック。離れた時の誘発で過去の状態を見るのは、その能力を持つカード自身だけ（603.5d）。"""
         s = self.s
@@ -997,7 +1053,10 @@ class EventMixin:
                 sources += [(m, None, False) for m in self.link_members(c[0]) if m != c[0]]
         zt = self.rules.zone_trigger_defs
         if zt:   # 墓地などで機能する誘発型能力（《黒神龍グールジェネレイド》など）
-            for z in sorted({z for v in zt.values() for z in v}):
+            zs = self._xcache.get(("zt_zones", id(zt)))
+            if zs is None or zs[0] is not zt:   # 定義だけで決まる（ゾーンの並びはキャッシュする）
+                zs = self._xcache[("zt_zones", id(zt))] = (zt, sorted({z for v in zt.values() for z in v}))
+            for z in zs[1]:
                 sources += [(c, None, False) for p in (0, 1) for c in self.zlist(z, p) if s.cards[c].defn in zt]
         lki = rec.get("lki")
         if lki and lki["zone"] == "bz" and rec.get("to") != "bz":
@@ -1019,7 +1078,11 @@ class EventMixin:
         if rec["ev"] == "evolve_base":   # 進化元になる時（第150弾）: 重ねられた側は bz_tops から外れているので、進化元自身を発生源に加える
             sources.append((rec["subject"][0], None, False))
         win = s.windows[-1] if s.windows else 0
+        # 定義に誘発型能力が無く、継続的効果で能力を得る道（gain・ダイナモ）も無い発生源は、能力の列挙を省く（結果は同じ空）
+        gainable = any(ce["mod"].get("gain") or ce.get("add_from") for ce in s.continuous)
         for src, lsrc, host_only in sources:
+            if not lsrc and not gainable and not self._has_trigger_def(s.cards[src].defn, s.cards[src].face):
+                continue
             if lsrc:
                 face = lsrc["face"]
                 abs_ = self._trigger_abs(lsrc["defn"], face, lsrc["zone"])

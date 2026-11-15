@@ -78,7 +78,7 @@ def test_round212_registered_parse():
     assert cards["dm26rp1-047"]["source"]["aliases"] == ["dm26rp1-sec021"]
     # dm26ex4-085: T388 型（非クリーチャー実行コスト軽減）
     c85 = cards["dm26ex4-085"]["abilities"][0]
-    assert c85["kind"] == "static" and c85["mod"] == {"cost": -1}
+    assert c85["kind"] == "static" and c85["mod"] == {"cost": -1, "cost_min": 1}   # 軽減はコスト1が下限（#447 で雛形を直した）
     assert c85["affects"]["filter"] == {"not_types": ["creature"]}
     # dm26rp1-001: 置かれた時 put_under＋初回攻撃 no_leave＋ドロー
     c01 = cards["dm26rp1-001"]["abilities"]
