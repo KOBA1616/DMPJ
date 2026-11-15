@@ -165,7 +165,16 @@ class Run:
         def one(b):
             r = X.trial(self.rules, b, T=4, seeds=range(1, cfg.trial_seeds + 1), budget=cfg.trial_budget, raw=self.raw, turns=cfg.trial_turns)
             return {"base": _bdict(b), "ok": r["ok"], "laps": r["laps"], "layout": r["layout"], "reason": r["reason"]}
-        rows = map_ordered(one, pool, cfg.workers)
+        # 長い実行が途中で止まっても続きから回せるよう、500 組ごとに途中結果を書く。
+        part = self.out / "trial.part.json"
+        rows = json.loads(part.read_text(encoding="utf-8"))["rows"] if part.exists() else []
+        if rows:
+            self.log(f"試し打ち: 途中結果 {len(rows)} 組から再開")
+        step = 500
+        for k in range(len(rows), len(pool), step):
+            rows += map_ordered(one, pool[k:k + step], cfg.workers)
+            part.write_text(json.dumps({"rows": rows}, ensure_ascii=False), encoding="utf-8")
+            self.log(f"試し打ち {len(rows)}/{len(pool)} 通過 {sum(r['ok'] for r in rows)}")
         from collections import Counter
         return {"rows": rows, "passed": sum(r["ok"] for r in rows), "reasons": dict(Counter(r["reason"] for r in rows if r["reason"]))}
 
