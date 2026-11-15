@@ -3167,6 +3167,7 @@
       "attack_end",
       "battle",
       "battle_end",
+      "battle_lose",
       "battle_start",
       "battle_win",
       "block",
