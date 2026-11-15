@@ -317,6 +317,9 @@ class EventMixin:
                 self._hist_bump("tap", rec["controller"])
             elif ev == "untap":   # 状態が実際に変わったアンタップだけがレコードになる（ターン開始の一括アンタップも数える。バンドB U18 の設計既定）
                 self._hist_bump("untap", rec["controller"])
+                uc = rec["subject"][0]
+                if s.alive(rec["subject"]) and s.cards[uc].zone == "bz" and "creature" in self.chars_ro(uc)["types"]:
+                    self._hist_bump("untap_creature", rec["controller"])   # 「このターンアンタップしたクリーチャー」（マナのアンタップを除く）
 
     def _apply_one(self, ev: dict) -> list[dict]:
         s = self.s
