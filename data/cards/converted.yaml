@@ -434395,3 +434395,555 @@ cards:
   source:
     official: dm22-008
     review: pending
+- id: dm22rp2x-066
+  name: ドライザウルス
+  types:
+  - creature
+  civs:
+  - fire
+  cost: 3
+  power: 4000
+  races:
+  - ロック・ビースト
+  abilities:
+  - kind: static
+    affects: self
+    mod:
+      battle_power:
+        amount: 10000
+        opponent_filter:
+          keyword: blocker
+  mana: 1
+  text: 「ブロッカー」を持つクリーチャーとバトル中、このクリーチャーのパワーを+10000する。
+  source:
+    official: dm22rp2x-066
+    review: pending
+    aliases:
+    - dm22rp2-066
+- id: dm23rp4x-064
+  name: 拳装のピョンガル
+  types:
+  - creature
+  civs:
+  - fire
+  cost: 3
+  power: 2000
+  races:
+  - アーマード・ドリームメイト
+  keywords:
+  - speed_attacker
+  abilities:
+  - kind: static
+    affects: self
+    mod:
+      battle_power:
+        amount: 5000
+        opponent_filter:
+          keyword: blocker
+  mana: 1
+  text: 'スピードアタッカー（このクリーチャーは召喚酔いしない）
+
+    「ブロッカー」を持つクリーチャーとのバトル中、このクリーチャーのパワーを+5000する。'
+  source:
+    official: dm23rp4x-064
+    review: pending
+    aliases:
+    - dm23rp4-064
+- id: dm23bd7-016
+  name: イグゾースト・Ⅱ・フォー
+  types:
+  - creature
+  civs:
+  - water
+  cost: 4
+  power: 3000
+  races:
+  - ソニック・コマンド
+  abilities:
+  - kind: trigger
+    when:
+      event: move
+      to: bz
+      subject: self
+    effect:
+    - op: may
+      body:
+      - op: play_free
+        select:
+          zone: graveyard
+          owner: you
+          filter:
+            types:
+            - spell
+            cost_le: 4
+          count: 1
+        resolve_to: deck
+        resolve_position: bottom
+  - kind: trigger
+    when:
+      event: cast
+      subject:
+        owner: you
+        filter:
+          types:
+          - spell
+    effect:
+    - op: choose
+      select:
+        zone: bz
+        owner: opp
+        filter:
+          types:
+          - creature
+        count: 1
+      as: t
+    - op: modify
+      select:
+        ref: t
+      mod:
+        deny:
+        - attack_player
+        - attack_creature
+        - block
+      duration: until_next_own_turn_start
+  mana: 1
+  text: 'このクリーチャーが出た時、コスト４以下の呪文を１枚、自分の墓地からコストを支払わずに唱えてもよい。唱えた後、墓地に置くかわりに山札の下に置く。
+
+    自分が呪文を唱えた時、相手のクリーチャーを１体選ぶ。次の自分のターンのはじめまで、そのクリーチャーは攻撃もブロックもできない。'
+  source:
+    official: dm23bd7-016
+    review: pending
+    aliases:
+    - dm23bd3-005
+    - dmex17-029
+    - dmrp10-005
+- id: dm24rp4-063
+  name: コオニ鬼麗
+  types:
+  - creature
+  civs:
+  - darkness
+  cost: 4
+  power: 4000
+  races:
+  - デモニオ
+  abilities:
+  - kind: trigger
+    zone: graveyard
+    when:
+      event: summon
+      subject:
+        owner: you
+        filter:
+          types:
+          - creature
+          cost_ge: 6
+    effect:
+    - op: may
+      body:
+      - op: move
+        select:
+          ref: self
+        to: bz
+        reason: put
+  mana: 1
+  text: 自分のコスト６以上のクリーチャーが召喚によって出た時、このクリーチャーを自分の墓地から出してもよい。
+  source:
+    official: dm24rp4-063
+    review: pending
+- id: dm24rp3-066
+  name: 天邪羅数
+  types:
+  - spell
+  civs:
+  - darkness
+  cost: 4
+  spell:
+  - op: choose
+    select:
+      zone: bz
+      owner: opp
+      filter:
+        types:
+        - creature
+      count: 1
+    as: t
+  - op: destroy
+    select:
+      ref: t
+  - op: may
+    body:
+    - op: mill
+      owner: you
+      count:
+        cost_of: t
+  mana: 1
+  text: 相手のクリーチャーを１体選び、破壊する。その後、選んだクリーチャーのコストと同じ枚数、自分の山札の上から墓地に置いてもよい。
+  source:
+    official: dm24rp3-066
+    review: pending
+- id: dm24sd1-011
+  name: ブンブン・チュリス
+  types:
+  - creature
+  civs:
+  - fire
+  cost: 1
+  power: 1000
+  races:
+  - ビートジョッキー
+  - レクスターズ
+  keywords:
+  - cannot_untap
+  mana: 1
+  text: このクリーチャーは、自分のターンのはじめにアンタップしない。
+  source:
+    official: dm24sd1-011
+    review: pending
+    aliases:
+    - dm22ex1-117
+    - dmrp18-085
+- id: dm24bd5-027
+  name: 呪紋のカルマ インカ
+  types:
+  - creature
+  civs:
+  - nature
+  cost: 4
+  power: 3000
+  races:
+  - オラクル
+  - スノーフェアリー
+  abilities:
+  - kind: static
+    if:
+      is_turn: you
+    affects:
+      zone: hand
+      owner: opp
+      filter:
+        types:
+        - creature
+    mod:
+      deny:
+      - summon
+  mana: 1
+  text: 自分のターン中、相手はクリーチャーを召喚できない。
+  source:
+    official: dm24bd5-027
+    review: pending
+    aliases:
+    - dmex12-043
+    - dmx15-007
+- id: dm25ex3-072
+  name: 昇邪淵
+  types:
+  - spell
+  civs:
+  - darkness
+  cost: 4
+  keywords:
+  - s_trigger
+  spell:
+  - op: choose
+    select:
+      zone: bz
+      owner: opp
+      filter:
+        types:
+        - creature
+      count: 1
+    as: t
+  - op: destroy
+    select:
+      ref: t
+  - op: mill
+    owner: you
+    count:
+      cost_of: t
+  mana: 1
+  text: 'S・トリガー（このカードをシールドゾーンから手札に加える時、コストを支払わずにすぐ実行してもよい）
+
+    相手のクリーチャーを１体選び、破壊する。その後、選んだクリーチャーのコストと同じ枚数、自分の山札の上から墓地に置く。'
+  source:
+    official: dm25ex3-072
+    review: pending
+    aliases:
+    - dm25rp4-068
+- id: dm25ex1-074
+  name: 警鐘の聖沌 n4rc0
+  types:
+  - creature
+  civs:
+  - light
+  cost: 3
+  power: 3000
+  races:
+  - メカ・デル・ステラ
+  - シノビ
+  abilities:
+  - kind: trigger
+    when:
+      event: move
+      to: bz
+      subject: self
+    effect:
+    - op: choose
+      select:
+        zone: deck
+        owner: you
+        from_top: 5
+        look: true
+        count: all
+      as: a
+    - op: may
+      body:
+      - op: move
+        select:
+          ref: a
+          filter:
+            any_of:
+            - race_has: メカ
+            - race_has: シノビ
+          count: 1
+        to: hand
+        reason: draw
+    - op: move
+      select:
+        ref: a
+        count: all
+      to: deck
+      reason: put
+  mana: 1
+  text: このクリーチャーが出た時、自分の山札の上から５枚を見る。その中から、メカ・カードまたはシノビ・カードを１枚表向きにし、手札に加えてもよい。残りを好きな順序で山札の下に置く。
+  source:
+    official: dm25ex1-074
+    review: pending
+    aliases:
+    - dm23sd2-005
+- id: dm26ex1-n024
+  name: 芸魔猛牛 オックスチェッカー
+  types:
+  - creature
+  civs:
+  - water
+  - fire
+  cost: 5
+  power: 5000
+  races:
+  - マジック・モンスター
+  - ゲーム・コマンド
+  keywords:
+  - speed_attacker
+  abilities:
+  - kind: trigger
+    when:
+      event: attack
+      subject: self
+    effect:
+    - op: draw
+      count: 2
+    - op: discard
+      select:
+        zone: hand
+        owner: you
+        count: 1
+  - kind: static
+    affects: self
+    zone: hand
+    mod:
+      cost:
+        amount: -1
+        count:
+          turn_count:
+            kind: draw
+            owner: you
+      cost_min: 2
+  mana: 1
+  text: 'このクリーチャーの召喚コストを、このターン自分が引いたカード１枚につき１少なくする。ただしコストは１以下にならない。
+
+    スピードアタッカー
+
+    このクリーチャーが攻撃する時、カードを２枚引き、自分の手札を１枚捨てる。'
+  source:
+    official: dm26ex1-n024
+    review: pending
+    aliases:
+    - dm26ex1-secn024
+- id: dm26ex4-087
+  name: Disフィアット
+  types:
+  - creature
+  civs:
+  - water
+  cost: 3
+  power: 2000
+  races:
+  - グレートメカオー
+  - スチーム・ナイト
+  - ディスタス
+  abilities:
+  - kind: trigger
+    when: &id238
+      event: move
+      to: bz
+      subject: self
+    effect: &id237
+    - op: may
+      body:
+      - op: draw
+        count: 1
+  - kind: trigger
+    when: &id239
+      event: move
+      to: bz
+      subject:
+        owner: you
+        filter:
+          types:
+          - creature
+          cost_ge: 6
+    effect: *id237
+  mana: 1
+  text: このクリーチャーまたは自分のコスト６以上のクリーチャーが出た時、カードを１枚引いてもよい。
+  source:
+    official: dm26ex4-087
+    review: pending
+- id: dm26ex4-089
+  name: Disオニゾウ
+  types:
+  - creature
+  civs:
+  - darkness
+  cost: 2
+  power: 1000
+  races:
+  - ヒューマノイド
+  - スチーム・ナイト
+  - ディスタス
+  abilities:
+  - kind: trigger
+    when: *id238
+    effect: &id240
+    - op: choose
+      select:
+        zone: bz
+        owner: opp
+        filter:
+          types:
+          - creature
+        count: 1
+      as: t
+    - op: modify
+      select:
+        ref: t
+      mod:
+        power: -3000
+      duration: end_of_turn
+  - kind: trigger
+    when: *id239
+    effect: *id240
+  mana: 1
+  text: このクリーチャーまたは自分のコスト６以上のクリーチャーが出た時、相手のクリーチャーを１体選ぶ。このターン、そのクリーチャーのパワーを－3000する。（パワー０以下のクリーチャーは破壊される）
+  source:
+    official: dm26ex4-089
+    review: pending
+- id: dm26ex4-094
+  name: Disモエル
+  types:
+  - creature
+  civs:
+  - fire
+  cost: 2
+  power: 1000
+  races:
+  - ヒューマノイド
+  - スチーム・ナイト
+  - ディスタス
+  abilities:
+  - kind: trigger
+    when: *id238
+    effect: &id241
+    - op: choose
+      select:
+        zone: bz
+        owner: opp
+        filter:
+          types:
+          - creature
+          power_le: 4000
+        count: 1
+      as: t
+    - op: destroy
+      select:
+        ref: t
+  - kind: trigger
+    when: *id239
+    effect: *id241
+  mana: 1
+  text: このクリーチャーまたは自分のコスト６以上のクリーチャーが出た時、相手のパワー4000以下のクリーチャーを１体選び、破壊する。
+  source:
+    official: dm26ex4-094
+    review: pending
+- id: dm26ex4-096
+  name: Disシラウオ
+  types:
+  - creature
+  civs:
+  - nature
+  cost: 4
+  power: 3000
+  races:
+  - ジャイアント
+  - スチーム・ナイト
+  - ディスタス
+  abilities:
+  - kind: trigger
+    when: *id238
+    effect: &id242
+    - op: may
+      body:
+      - op: move
+        select:
+          zone: deck
+          owner: you
+          from_top: 1
+        to: mana
+        reason: put
+  - kind: trigger
+    when: *id239
+    effect: *id242
+  mana: 1
+  text: このクリーチャーまたは自分のコスト６以上のクリーチャーが出た時、自分の山札の上から１枚をマナゾーンに置いてもよい。
+  source:
+    official: dm26ex4-096
+    review: pending
+- id: dm28-s04
+  name: タイタンクラッシュ・クロウラー
+  types:
+  - creature
+  civs:
+  - water
+  cost: 6
+  power: 6000
+  races:
+  - アースイーター
+  keywords:
+  - blocker
+  abilities:
+  - kind: trigger
+    when:
+      event: tap
+      subject: self
+    effect:
+    - op: untap
+      select:
+        ref: self
+    first_time: true
+  mana: 1
+  text: 'ブロッカー
+
+    各ターン、このクリーチャーがはじめてタップした時、アンタップする。'
+  source:
+    official: dm28-s04
+    review: pending
