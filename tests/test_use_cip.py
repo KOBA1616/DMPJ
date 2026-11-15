@@ -39,3 +39,24 @@ def test_use_cip_excludes_abilities_that_use_cip(rr):
     h = _hand(e)
     play(e, "R114")
     assert _hand(e) == h - 1
+
+
+def test_hand_evolution_stacks_on_card_from_hand(rr):
+    """手札進化（evolve_zone: hand）: 手札の水クリーチャーの上に重ねて出す。自分自身は進化元にならない。"""
+    e = setup(rr, {"hand": ["R115", "R113"], "mana": ["R113", "R113"]}, {})
+    play(e, "R115")
+    top = next(c for c in e.s.cards if c.defn == "R115")
+    assert top.zone == "bz" and [e.s.cards[u].defn for u in top.under] == ["R113"]
+
+
+def test_hand_evolution_needs_another_card(rr):
+    """手札に他の水クリーチャーが無ければ出せない（出す選択肢が無いので判断なしでターンが進む）。"""
+    e = setup(rr, {"hand": ["R115"], "mana": ["R113", "R113"]}, {})
+    for _ in range(10):
+        d = e.advance()
+        if d is None:
+            break
+        ks = [o["key"] for o in d["options"]]
+        assert "play:R115" not in ks
+        e.answer([ks.index("pass")] if "pass" in ks else [0])
+    assert next(c for c in e.s.cards if c.defn == "R115").zone == "hand"

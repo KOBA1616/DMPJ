@@ -1139,3 +1139,13 @@ cards:
         when: {event: move, to: bz, subject: self}
         effect:
           - {op: use_cip, select: {zone: bz, owner: you, other: true, count: 1}}
+  - id: R115
+    name: 試験用手札進化獣
+    types: [creature, evolution]
+    civs: [water]
+    cost: 2
+    power: 7000
+    races: [テスト]
+    evolve_from: {civs: [water]}
+    evolve_zone: hand
+    text: 手札進化：水のクリーチャーを１体自分の手札から選び、このクリーチャーをその上に重ねつつ出す。

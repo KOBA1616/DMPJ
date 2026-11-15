@@ -74,6 +74,8 @@ INSTRUCTIONS = """\
 - ツインパクトの原文で、両面の name が「A/B」と同じ文字列になっていても取得の欠けではない。面ごとの name は「/」の前後に分けて書く（data_incomplete にしない）。
 - 「このクリーチャーがバトルに負けた時」は `when: {event: battle_lose, subject: self}`、バトルの相手は `{ref: event.opponent}`（解決はバトルの破壊の後。701.13b）。
 - 「（そのカードの）出た時にトリガーする能力を１つ使う」「Jビッグ１する」は `{op: use_cip, select: <そのカード>}`（使うのは自分、self は選んだカード。use_cip を含む能力は候補から自動で除く。cip_reuse / j_big の語彙を作らない）。Jビッグ１は `select: {zone: bz, owner: you, other: true, count: 1, filter: {race_has: ジョーカーズ}}`。
+- 「手札進化：〜を１体自分の手札から選び、このクリーチャーをその上に重ねつつ出す」は `evolve_zone: hand` ＋ `evolve_from: <フィルタ>`（自分自身は進化元にならない。hand_evolution の語彙を作らない）。手札進化V/GV（複数体）は unsupported。
+- 「自分のマナゾーンまたは墓地から」のように複数ゾーンから選ぶ時は、セレクタの `zone: [mana, graveyard]`（ゾーンの配列。zone_mixed_selection の語彙を作らない）。
 - 「自分のシールドゾーンにある〈条件〉すべてに『S・トリガー』を与える」は `kind: static, affects: {zone: shield, owner: you, filter: {...}}, mod: {allow: [s_trigger]}`（grant_s_trigger_zone の語彙を作らない）。
 - 「NEO進化クリーチャーとして召喚するなら（する場合）、このクリーチャーの召喚コストをN少なくする」は面の `cost_reduce_per_evo: N`（NEO の進化元は1体なので、重ねた時だけN軽減。neo_summon_cost_reduction の語彙を作らない）。「タマシードから進化するなら」は進化元の種類で変わるので unsupported。
 - 近似・代用はしない。語彙で原文どおりに表せない効果は、似た別の語彙（op・mod・条件）で置き換えて書かない。その能力は abilities に書かず、source.unsupported に [{need: <足せばよい op・語彙の案（英語の識別子）>, text: <該当する原文>}] で書く。表せる他の能力は通常どおり変換する。

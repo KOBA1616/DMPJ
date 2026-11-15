@@ -431674,3 +431674,238 @@ cards:
     - dm25rp1-tr04
     - dm25sd1-004
     - dmart25-003
+- id: dm32-003
+  name: クリスタル・アックス
+  types:
+  - creature
+  - evolution
+  civs:
+  - water
+  cost: 7
+  power: 11000
+  races:
+  - リキッド・ピープル
+  keywords:
+  - unblockable
+  - double_breaker
+  mana: 1
+  text: '手札進化-水のクリーチャーを１体自分の手札から選び、このクリーチャーをその上に重ねつつバトルゾーンに出す。
+
+    このクリーチャーはブロックされない。
+
+    W・ブレイカー(このクリーチャーはシールドを２枚ブレイクする)'
+  source:
+    official: dm32-003
+    review: pending
+  evolve_zone: hand
+  evolve_from: &id224
+    civs:
+    - water
+- id: dmex03-006
+  name: 賀二流忍者ザリガニンゾウ
+  types:
+  - creature
+  - evolution
+  civs:
+  - water
+  cost: 8
+  power: 13000
+  races:
+  - ムートピア
+  - スペシャルズ
+  keywords:
+  - triple_breaker
+  - unblockable
+  mana: 1
+  text: '手札進化：水のクリーチャーを１体自分の手札から選び、このクリーチャーをその上に重ねつつバトルゾーンに出す。
+
+    T・ブレイカー（このクリーチャーはシールドを３つブレイクする）
+
+    このクリーチャーはブロックされない。'
+  source:
+    official: dmex03-006
+    review: pending
+  evolve_zone: hand
+  evolve_from: *id224
+- id: dm35-040
+  name: 魔皇アンドラージ
+  types:
+  - creature
+  - evolution
+  civs:
+  - water
+  cost: 4
+  power: 3000
+  races:
+  - グランド・デビル
+  abilities:
+  - kind: trigger
+    when: &id225
+      event: move
+      to: bz
+      subject: self
+    effect:
+    - op: may
+      body:
+      - op: draw
+        count: 2
+      - op: discard
+        select:
+          zone: hand
+          owner: you
+          count: 2
+  mana: 1
+  text: '手札進化-水のクリーチャーを１体自分の手札から選び、このクリーチャーをその上に重ねつつバトルゾーンに出す。
+
+    このクリーチャーをバトルゾーンに出した時、カードを２枚引いてもよい。そうした場合、自分の手札を２枚捨てる。'
+  source:
+    official: dm35-040
+    review: pending
+  evolve_zone: hand
+  evolve_from: *id224
+- id: dmx12b-057
+  name: ダイヤモンド・ブリザード
+  types:
+  - creature
+  - evolution
+  civs:
+  - nature
+  cost: 3
+  power: 5000
+  races:
+  - スノーフェアリー
+  evolve_from:
+    race_has: スノーフェアリー
+  abilities:
+  - kind: trigger
+    when: *id225
+    effect:
+    - op: move
+      select:
+        zone:
+        - graveyard
+        - mana
+        owner: you
+        filter:
+          race_has: スノーフェアリー
+        count: all
+      to: hand
+      reason: put
+  mana: 1
+  text: '進化-自分のスノーフェアリー１体の上に置く。
+
+    このクリーチャーをバトルゾーンに出した時、スノーフェアリーをすべて、自分の墓地とマナゾーンから手札に戻す。'
+  source:
+    official: dmx12b-057
+    review: pending
+    aliases:
+    - dm11-003
+- id: dmx23-023
+  name: 未来の玉 ダンテ
+  types:
+  - creature
+  civs:
+  - light
+  cost: 5
+  power: 4000
+  races:
+  - ジャスティス・オーブ
+  - エンジェル・コマンド・ドラゴン
+  - 革命軍
+  keywords:
+  - blocker
+  - cannot_attack_player
+  abilities:
+  - kind: trigger
+    when: *id225
+    effect:
+    - op: may
+      body:
+      - op: move
+        select:
+          zone:
+          - mana
+          - graveyard
+          owner: you
+          filter:
+            types:
+            - spell
+          count: 1
+        to: hand
+        reason: put
+  - kind: replace
+    when:
+      event: move
+      subject: self
+      from: bz
+      to: graveyard
+      reason: destroy
+    instead:
+    - op: move
+      select:
+        ref: self
+      to: deck
+      position: top
+      reason: put
+  mana: 1
+  text: ブロッカー（このクリーチャーをタップして、相手クリーチャーの攻撃先をこのクリーチャーに変更してもよい）このクリーチャーは、相手プレイヤーを攻撃できない。このクリーチャーがバトルゾーンに出た時、呪文を１枚、自分のマナゾーンまたは墓地から手札に戻してもよい。このクリーチャーが破壊される時、かわりに自分の山札の上に置く。
+  source:
+    official: dmx23-023
+    review: pending
+    aliases:
+    - dmr20-012
+- id: dmx22a-s06
+  name: 偽りの王 ハチャトゥリアン
+  types:
+  - creature
+  civs:
+  - darkness
+  - nature
+  cost: 8
+  power: 11000
+  races:
+  - キング・コマンド・ドラゴン
+  keywords:
+  - double_breaker
+  abilities:
+  - kind: trigger
+    when:
+      event: move
+      to: bz
+      subject: self
+    effect:
+    - op: destroy
+      select:
+        zone: bz
+        owner: opp
+        filter:
+          types:
+          - creature
+        count: 1
+      as: d
+    - op: may
+      body:
+      - op: move
+        select:
+          zone:
+          - mana
+          - graveyard
+          owner: you
+          filter:
+            types:
+            - creature
+            cost_le:
+              cost_of:
+                ref: d
+            cost_ge:
+              cost_of:
+                ref: d
+          count: 1
+        to: bz
+        reason: put
+  mana: 1
+  text: マナゾーンに置く時、このカードはタップして置く。W・ブレイカーこのクリーチャーがバトルゾーンに出た時、相手のクリーチャーを１体破壊する。その後、そのクリーチャーとコストが同じクリーチャーを１体、自分のマナゾーンまたは墓地からバトルゾーンに出してもよい。
+  source:
+    official: dmx22a-s06
+    review: pending
+    notes: 「マナゾーンに置く時、タップして置く」は 405.1 の旧注釈で能力として扱わない
