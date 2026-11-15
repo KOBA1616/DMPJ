@@ -436315,3 +436315,603 @@ cards:
     - dmrp04m-057
     - dmsd03-007
     - promoy20-gum1-002
+- id: dmrp15-083
+  name: 冒険妖精ポレゴン
+  types:
+  - creature
+  civs:
+  - nature
+  cost: 1
+  power: 2000
+  races:
+  - スノーフェアリー
+  abilities:
+  - kind: trigger
+    when:
+      event: break
+      subject: self
+    effect:
+    - op: delayed_trigger
+      when:
+        event: turn_end
+      effect:
+      - op: move
+        select:
+          ref: self
+        to: hand
+        reason: return
+  mana: 1
+  text: 自分のターンの終わりに、そのターン、このクリーチャーがシールドをブレイクしていれば、手札に戻す。
+  source:
+    official: dmrp15-083
+    review: pending
+    aliases:
+    - dm11-054
+    - dmc34-055
+    - dmc41-014
+    - dmc61-087
+    - dmd01-012
+    - dmex09-037
+    - dmx20-068
+    - dmx24-051
+    - promoy17-sp5d10
+    - promoy3-015
+- id: dmrp14-085
+  name: ピクシー・コクーン
+  types:
+  - spell
+  civs:
+  - nature
+  cost: 2
+  keywords:
+  - s_trigger
+  - charger
+  spell:
+  - op: move
+    select:
+      zone: mana
+      owner: you
+      filter:
+        types:
+        - creature
+      count: 1
+    to: hand
+    reason: return
+  mana: 1
+  text: 'S・トリガー（この呪文をシールドゾーンから手札に加える時、コストを支払わずにすぐ唱えてもよい）
+
+    クリーチャーを１体、自分のマナゾーンから手札に戻す。
+
+    この呪文を唱えた後、墓地に置くかわりにタップしてマナゾーンに置く。'
+  source:
+    official: dmrp14-085
+    review: pending
+    aliases:
+    - dm13-050
+    - dmex07-045
+    - dmx12b-107
+- id: dm14-104
+  name: 奮闘の銅鑼
+  types:
+  - creature
+  civs:
+  - nature
+  cost: 3
+  power: 2000
+  races:
+  - ビーストフォーク
+  abilities:
+  - kind: static
+    affects: self
+    mod:
+      battle_power:
+        amount: 3000
+        opponent_filter:
+          civs:
+          - water
+          - darkness
+  mana: 1
+  text: 水または闇のクリーチャーとバトルする時、このクリーチャーのパワーは+3000される。
+  source:
+    official: dm14-104
+    review: pending
+- id: dm20-020
+  name: 偉大なる恵み
+  types:
+  - spell
+  civs:
+  - nature
+  cost: 4
+  keywords:
+  - s_trigger
+  spell:
+  - op: move
+    select:
+      zone: graveyard
+      owner: you
+      filter:
+        types:
+        - creature
+      count: 3
+      up_to: true
+    to: mana
+    reason: put
+  mana: 1
+  text: S・トリガー(この呪文をシールドゾーンから手札に加える時、コストを支払わずにすぐ唱えてもよい)    クリーチャーを３体まで、自分の墓地からマナゾーンに置く。
+  source:
+    official: dm20-020
+    review: pending
+- id: dm20-046
+  name: 毒霧のケンプラー
+  types:
+  - creature
+  civs:
+  - darkness
+  cost: 4
+  power: 2000
+  races:
+  - ブレイブ・スピリット
+  abilities:
+  - kind: trigger
+    when:
+      event: battle_win
+      subject:
+        owner: you
+        filter:
+          races:
+          - ティラノ・ドレイク
+    effect:
+    - op: may
+      body:
+      - op: move
+        select:
+          zone: graveyard
+          owner: you
+          filter:
+            types:
+            - creature
+          count: 1
+        to: hand
+        reason: return
+  mana: 1
+  text: 自分のティラノ・ドレイクがバトルに勝った時、クリーチャーを１体、自分の墓地から手札に戻してもよい。
+  source:
+    official: dm20-046
+    review: pending
+- id: dm20-053
+  name: 秘護精マニトゥス
+  types:
+  - creature
+  civs:
+  - nature
+  cost: 3
+  power: 2000
+  races:
+  - セイント・ヘッド
+  abilities:
+  - kind: trigger
+    when:
+      event: battle_win
+      subject:
+        owner: you
+        filter:
+          races:
+          - アーク・セラフィム
+    effect:
+    - op: move
+      select:
+        zone: deck
+        owner: you
+        from_top: 2
+      to: mana
+      reason: put
+  mana: 1
+  text: 自分のアーク・セラフィムがバトルに勝った時、自分の山札の上から２枚を自分のマナゾーンに加える。
+  source:
+    official: dm20-053
+    review: pending
+- id: dm16-043
+  name: パシフィック・ドミネイター
+  types:
+  - creature
+  civs:
+  - water
+  cost: 2
+  power: 1000
+  races:
+  - マーフォーク
+  abilities:
+  - kind: static
+    affects: self
+    if: &id262
+      cmp:
+      - count:
+          zone: mana
+          owner: you
+      - '>='
+      - 7
+    mod:
+      grant:
+      - unblockable
+  mana: 1
+  text: 'メタモーフ(自分のマナゾーンに７枚以上カードがあれば、このクリーチャーは次の能力を得る)
+
+    このクリーチャーはブロックされない。'
+  source:
+    official: dm16-043
+    review: pending
+  keywords:
+  - unblockable
+- id: dm14-073
+  name: 快癒の使徒リアス
+  types:
+  - creature
+  civs:
+  - light
+  cost: 3
+  power: 2500
+  races:
+  - イニシエート
+  abilities:
+  - kind: trigger
+    when:
+      event: move
+      to: bz
+      subject: self
+    effect:
+    - op: may
+      body:
+      - op: draw
+        count: 1
+  - kind: trigger
+    when:
+      event: move
+      to: bz
+      subject: self
+    effect:
+    - op: may
+      body:
+      - op: draw
+        count: 1
+    if: *id262
+  mana: 1
+  text: 'メタモーフ(自分のマナゾーンに７枚以上カードがあれば、このクリーチャーは次の能力を得る)
+
+    このクリーチャーをバトルゾーンに出した時、カードを１枚引いてもよい。'
+  source:
+    official: dm14-073
+    review: pending
+- id: dm26sd1-w012
+  name: 影速 ザ・トリッパー
+  types:
+  - creature
+  civs:
+  - darkness
+  - fire
+  cost: 3
+  power: 4000
+  races:
+  - ソニック・コマンド
+  - ゴースト
+  keywords:
+  - speed_attacker
+  - opp_mana_tapped
+  mana: 1
+  text: 'スピードアタッカー（このクリーチャーは召喚酔いしない）
+
+    相手のカードはマナゾーンにタップして置かれる。'
+  source:
+    official: dm26sd1-w012
+    review: pending
+    aliases:
+    - dm22ex1-cho43
+    - dm22ex2-048
+    - dm23bd2-014
+    - dm24ex4-080
+    - dm24ex4-pr040
+    - dm24rp2-sp5
+    - dm25ex3-tf29
+    - dm25rp3-t07
+    - dmex17-102
+    - promoy21-049
+- id: dm22ex1-072
+  name: 無法設計図
+  types:
+  - spell
+  civs:
+  - zero
+  cost: 2
+  spell:
+  - op: choose
+    select:
+      zone: deck
+      owner: you
+      from_top: 5
+      look: true
+      count: all
+    as: a
+  - op: move
+    select:
+      ref: a
+      filter:
+        types:
+        - creature
+        race_has: エグザイル
+      count: any
+    to: hand
+    reason: draw
+  - op: move
+    select:
+      ref: a
+      count: all
+    to: deck
+    reason: put
+    position: bottom
+  mana: 1
+  text: 自分の山札の上から５枚を表向きにする。その中から好きな数のエグザイル・クリーチャーを手札に加え、残りを好きな順序で山札の下に置く。
+  source:
+    official: dm22ex1-072
+    review: pending
+- id: dm22rp2x-tf19
+  name: 原始 サンナップ
+  types:
+  - creature
+  civs:
+  - nature
+  cost: 3
+  power: 3000
+  races:
+  - ビーストフォーク號
+  - 侵略者
+  abilities:
+  - kind: trigger
+    when: &id263
+      event: move
+      to: bz
+      subject: self
+    effect:
+    - op: untap
+      select:
+        zone: mana
+        owner: you
+        count: 3
+    if:
+      cmp:
+      - count:
+          zone: mana
+          owner: you
+          filter:
+            civs:
+            - nature
+      - '>='
+      - 3
+  mana: 1
+  text: マナ武装 ３：このクリーチャーが出た時、自分のマナゾーンに自然のカードが３枚以上あれば、自分のマナゾーンのカードを３枚アンタップする。
+  source:
+    official: dm22rp2x-tf19
+    review: pending
+    aliases:
+    - dm22rp1-t19
+    - dm22rp1-tf19
+    - dm22rp2-t19
+    - dm22rp2-tf19
+    - dmex17-135
+    - dmr20-067
+- id: dm23bd7-022
+  name: 音感の精霊龍 エメラルーダ
+  types:
+  - creature
+  civs:
+  - light
+  cost: 5
+  power: 5500
+  races:
+  - エンジェル・コマンド・ドラゴン
+  keywords:
+  - blocker
+  abilities:
+  - kind: trigger
+    when: *id263
+    effect:
+    - op: may
+      body:
+      - op: break
+        player: you
+        count: 1
+    - op: may
+      body:
+      - op: move
+        select:
+          zone: hand
+          owner: you
+          count: 1
+        to: shield
+        reason: put
+  mana: 1
+  text: 'ブロッカー
+
+    このクリーチャーが出た時、自分のシールドを１つブレイクしてもよい。その後、自分の手札を１枚、シールド化してもよい。'
+  source:
+    official: dm23bd7-022
+    review: pending
+    aliases:
+    - dmd32-011
+    - dmex01-064
+    - dmex06-055
+    - dmex13-021
+    - dmex16-055
+    - dmr19-012
+    - dmrp07-g01
+    - dmrp21-t6
+    - dmrp21-tf6
+    - dmrp22-t8
+    - dmrp22-tf8
+    - dmx18-007
+    - promoy13-096
+    - promoy25-080
+- id: dm26sd1-w007
+  name: 終末の時計 ザ・クロック
+  types:
+  - creature
+  civs:
+  - water
+  cost: 3
+  power: 3000
+  races:
+  - アウトレイジMAX
+  keywords:
+  - s_trigger
+  abilities:
+  - kind: trigger
+    when: *id263
+    effect:
+    - op: end_turn
+  mana: 1
+  text: 'S・トリガー（このカードを自分のシールドゾーンから手札に加える時、コストを支払わずにすぐ実行してもよい）
+
+    このクリーチャーが出た時、ターンの残りをとばす。'
+  source:
+    official: dm26sd1-w007
+    review: pending
+    aliases:
+    - dm23bd7-032
+    - dm23ex2-cho017
+    - dm25sd1-005
+    - dmbd10-011
+    - dmbd15-012
+    - dmbd17-012
+    - dmbd19-007
+    - dmd26-013
+    - dmex11-011
+    - dmr09-021
+    - dmr09-021m
+    - dmrp10-g06
+    - dmrp17-a12
+    - dmrp17-b12
+    - dmsd11-009
+    - dmsd16-009
+    - dmsp01-022
+    - dmx16-080
+    - dmx20-027
+    - dmx22b-156
+    - dmx23-016
+    - promoy12-018
+    - promoy15-005
+    - promoy17-017
+    - promoy17-020
+    - promoy18-083
+    - promoy22-kamip09
+    - promoy22-kamip10
+    - promoy22-kamip11
+    - promoy22-kamip12
+    - promoy22-kamip13
+    - promoy22-kamip14
+    - promoy22-kamip15
+    - promoy22-kamip16
+- id: dm23ex2-080
+  name: 新世代の旅立ち
+  types:
+  - spell
+  civs:
+  - fire
+  cost: 5
+  spell:
+  - op: discard
+    select:
+      zone: hand
+      owner: you
+      count: all
+  - op: discard
+    select:
+      zone: hand
+      owner: opp
+      count: all
+  - op: may
+    body:
+    - op: draw
+      count: 5
+  - op: may
+    body:
+    - op: draw
+      count: 5
+      player: opp
+  mana: 1
+  text: 各プレイヤーは自身の手札をすべて捨てる。その後、各プレイヤーはカードを５枚まで引く。
+  source:
+    official: dm23ex2-080
+    review: pending
+- id: dm23rp2x-073
+  name: 幕間の妖精
+  types:
+  - creature
+  civs:
+  - nature
+  cost: 2
+  power: 6000
+  races:
+  - ジャイアント・スノーフェアリー
+  abilities:
+  - kind: trigger
+    when:
+      event: attack
+      subject: self
+      target: player
+    effect:
+    - op: move
+      select:
+        ref: self
+      to: mana
+      reason: put
+  mana: 1
+  text: このクリーチャーが相手プレイヤーを攻撃する時、このクリーチャーをマナゾーンに置く。
+  source:
+    official: dm23rp2x-073
+    review: pending
+    aliases:
+    - dm23rp2-073
+- id: dm26ex2-mc022
+  name: ルシファー
+  types:
+  - spell
+  civs:
+  - light
+  - water
+  cost: 8
+  keywords:
+  - s_trigger
+  spell:
+  - op: if
+    cond:
+      is_turn: opp
+    then:
+    - op: end_turn
+    else:
+    - op: may
+      body:
+      - op: move
+        select:
+          zone: hand
+          owner: you
+          filter:
+            types:
+            - creature
+            civs:
+            - light
+            cost_le: 9
+          count: 1
+        to: bz
+        reason: put
+  mana: 1
+  text: 'S・トリガー
+
+    相手のターンなら、ターンの残りをとばす。
+
+    自分のターンなら、光のコスト９以下のクリーチャーを１体、自分の手札から出してもよい。'
+  source:
+    official: dm26ex2-mc022
+    review: pending
+    aliases:
+    - dm23rp1-t3
+    - dm23rp1-tf3
+    - dmex08-170
+    - dmex15-b047
