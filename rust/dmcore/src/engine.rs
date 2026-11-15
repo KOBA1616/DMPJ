@@ -2460,7 +2460,15 @@ impl Engine {
                 }
                 "block" => { self.hist_bump("block", rec["controller"].as_i64().unwrap(), 1); }
                 "tap" => { self.hist_bump("tap", rec["controller"].as_i64().unwrap(), 1); }
-                "untap" => { self.hist_bump("untap", rec["controller"].as_i64().unwrap(), 1); }
+                "untap" => {
+                    // 状態が実際に変わったアンタップだけ。場のクリーチャーは untap_creature も数える（マナのアンタップを除く）
+                    let p = rec["controller"].as_i64().unwrap();
+                    self.hist_bump("untap", p, 1);
+                    let uc = rec["subject"][0].as_i64().unwrap();
+                    if self.alive(&rec["subject"]) && self.s.cards[uc as usize].zone == "bz" && self.def(uc).types.iter().any(|t| t == "creature") {
+                        self.hist_bump("untap_creature", p, 1);
+                    }
+                }
                 _ => {}
             }
         }
