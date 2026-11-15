@@ -433329,3 +433329,222 @@ cards:
     - dm23rp4x-013
     - dm25rp1-td03
     - dm26sd1-h010
+- id: dmex08-198
+  name: シャドーウェーブ・サイクロン
+  types:
+  - spell
+  civs:
+  - water
+  cost: 5
+  keywords:
+  - cyclone
+  spell:
+  - op: move
+    select:
+      zone:
+      - bz
+      - mana
+      owner: any
+      count: 1
+    to: hand
+    reason: return
+  mana: 1
+  text: 'サイクロン（このターン、この呪文を唱える直前に自分のクリーチャーを召喚していれば、この呪文を唱えた後、墓地に置くかわりに手札に戻す）
+
+    バトルゾーン、またはいずれかのマナゾーンからカードを１枚選び、持ち主の手札に戻す。'
+  source:
+    official: dmex08-198
+    review: pending
+    aliases:
+    - dm19-022
+    - dmex03-045
+- id: dmr09-025
+  name: 減退の魔将スクリューマー
+  types:
+  - creature
+  civs:
+  - darkness
+  cost: 6
+  power: 7000
+  races:
+  - デーモン・コマンド
+  keywords:
+  - double_breaker
+  abilities:
+  - kind: trigger
+    when:
+      event: move
+      from: deck
+      to: mana
+      subject:
+        owner: opp
+    effect:
+    - op: discard
+      select:
+        zone: hand
+        owner: opp
+        count: 1
+        look: true
+  mana: 1
+  text: W・ブレイカー（このクリーチャーはシールドを２枚ブレイクする）相手が自身の山札の上からカードをマナゾーンに置いた時、相手の手札を見てカードを１枚選ぶ。相手はそれを捨てる。
+  source:
+    official: dmr09-025
+    review: pending
+- id: dm23rp2x-047
+  name: 推出の超人
+  types:
+  - creature
+  civs:
+  - nature
+  cost: 4
+  power: 5000
+  races:
+  - ジャイアント
+  abilities:
+  - kind: trigger
+    when:
+      event: move
+      to: mana
+      subject:
+        owner: you
+      ord:
+        kind: mana_put
+        eq: 2
+    effect:
+    - op: mekurade
+      filter:
+        race_has: ジャイアント
+      cost_le: 5
+  mana: 1
+  text: 各ターン２枚目のカードを自分のマナゾーンに置いた時、ジャイアント・メクレイド５する。（ジャイアント・メクレイド５：自分の山札の上から３枚を見る。その中から、コスト５以下のジャイアントを１枚、コストを支払わずに使ってもよい。残りを好きな順序で山札の下に置く）
+  source:
+    official: dm23rp2x-047
+    review: pending
+    aliases:
+    - dm23rp2-047
+- id: dm23rp2x-042
+  name: リトル・翔・バルピア
+  types:
+  - creature
+  civs:
+  - fire
+  cost: 3
+  power: 3000
+  races:
+  - アーマード・ファイアー・バード
+  abilities:
+  - kind: trigger
+    when:
+      event: attack
+      subject:
+        owner: you
+      ord:
+        kind: attack
+        eq: 2
+    effect:
+    - op: mekurade
+      filter:
+        race_has: アーマード
+      cost_le: 5
+  mana: 1
+  text: 自分のクリーチャーが攻撃する時、それがこのターンの２回目の攻撃であれば、アーマード・メクレイド５する。（アーマード・メクレイド５：自分の山札の上から３枚を見る。その中から、コスト５以下のアーマードを１枚、コストを支払わずに使ってもよい。残りを好きな順序で山札の下に置く）
+  source:
+    official: dm23rp2x-042
+    review: pending
+    aliases:
+    - dm23rp2-042
+- id: dm12-013
+  name: ドラゴン・シャウト
+  types:
+  - spell
+  civs:
+  - fire
+  cost: 6
+  spell:
+  - op: choose_number
+    min: 0
+    max: 6000
+    as: n
+  - op: destroy
+    select:
+      zone: bz
+      owner: any
+      filter:
+        types:
+        - creature
+        power_le:
+          declared: n
+        power_ge:
+          declared: n
+      count: all
+  mana: 1
+  text: 6000以下の数字をひとつ選ぶ。その数字と同じパワーを持つクリーチャーをすべて破壊する。
+  source:
+    official: dm12-013
+    review: pending
+    aliases:
+    - promoy3-025
+- id: dm16-010
+  name: クール・リアクション
+  types:
+  - spell
+  civs:
+  - water
+  cost: 5
+  keywords:
+  - s_trigger
+  spell:
+  - op: choose_civ
+    as: c
+  - op: draw
+    count:
+      count:
+        zone: bz
+        owner: opp
+        filter:
+          types:
+          - creature
+          civs:
+            declared: c
+  mana: 1
+  text: 'S・トリガー(この呪文をシールドゾーンから手札に加える時、コストを支払わずにすぐ唱えてもよい)
+
+    文明をひとつ選ぶ。バトルゾーンにある相手の、選んだ文明と同じ文明のクリーチャー１体につき１枚、カードを引く。'
+  source:
+    official: dm16-010
+    review: pending
+- id: dm11-014
+  name: 滅亡ルーレット
+  types:
+  - spell
+  civs:
+  - darkness
+  cost: 5
+  keywords:
+  - s_trigger
+  spell:
+  - op: choose_number
+    as: n
+  - op: discard
+    select:
+      zone: hand
+      owner: you
+      filter: &id233
+        cost_le:
+          declared: n
+        cost_ge:
+          declared: n
+      count: all
+  - op: discard
+    select:
+      zone: hand
+      owner: opp
+      filter: *id233
+      count: all
+  mana: 1
+  text: 'S・トリガー
+
+    数字をひとつ選ぶ。自分の手札を相手に見せ、その中から選んだ数字と同じコストのカードをすべて捨てる。その後、相手は自分自身の手札を見せ、その中から選んだ数字と同じコストのカードをすべて捨てる。'
+  source:
+    official: dm11-014
+    review: pending
