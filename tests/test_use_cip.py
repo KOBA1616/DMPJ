@@ -76,3 +76,14 @@ def test_opp_mana_enters_tapped(rr):
     e2.answer([[o["key"] for o in d["options"]].index("charge:R113")])
     e2.advance()
     assert not any(c.tapped for c in e2.s.cards if c.zone == "mana" and c.owner == 0)
+
+
+def test_untap_creature_counts_only_creatures(rr):
+    """turn_count kind untap_creature はバトルゾーンのクリーチャーのアンタップだけを数える（マナのアンタップは untap だけ）。"""
+    e = setup(rr, {"bz": ["R113"], "mana": ["R113"]}, {})
+    cre = e.bz_tops(0)[0]
+    mana = e.zlist("mana", 0)[0]
+    e._record_history([{"ev": "untap", "subject": e.s.ref(cre), "controller": 0},
+                       {"ev": "untap", "subject": e.s.ref(mana), "controller": 0}])
+    assert e.s.turn_counters.get("hist:untap_creature:0") == 1
+    assert e.s.turn_counters.get("hist:untap:0") == 2
