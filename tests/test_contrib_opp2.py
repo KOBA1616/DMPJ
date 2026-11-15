@@ -45,3 +45,12 @@ def test_attack_values_from_snapshots():
     assert A.broken_by(3)(r) == 2 and A.left_by(4)(won) == 0 and A.broken_by(4)(won) == 5
     c = A.pair_contribution([r, won], [{**r, "seed": 2}, {**won, "seed": 1, "kill_turn": None}], 4, "broken")
     assert c["n"] == 2
+
+
+def test_interaction_two_by_two():
+    from dmsim.eval.contrib import interaction
+    ab, a, b, n = {1: 3, 2: 2}, {1: 1, 2: 1}, {1: 1, 2: 0}, {1: 0, 2: 0}
+    x = interaction(ab, a, b, n)
+    assert x["n"] == 2 and x["diff"] == 1.0 and x["main_a"]["diff"] == 1.0 and x["main_b"]["diff"] == 0.5
+    add = interaction({1: 2}, {1: 1}, {1: 1}, {1: 0})      # 足し算どおりなら相乗分は 0
+    assert add["diff"] == 0.0

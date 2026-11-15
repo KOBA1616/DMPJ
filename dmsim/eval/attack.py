@@ -138,6 +138,14 @@ def pair_contribution(with_rows, without_rows, t: int = 4, value: str = "kill") 
     return paired(by_seed(ok(with_rows), f), by_seed(ok(without_rows), f))
 
 
+def pair_interaction(ab, a, b, none, t: int = 4, value: str = "kill") -> dict:
+    """組の相乗分（eval.contrib.interaction）。4つのデッキ（両方あり・Aだけ・Bだけ・両方なし）の同一シードの行から。"""
+    from .contrib import by_seed, interaction
+    f = VALUES[value](t)
+    ok = lambda rows: by_seed([r for r in rows if not r.get("error")], f)   # noqa: E731
+    return interaction(ok(ab), ok(a), ok(b), ok(none))
+
+
 def summarize(rows, horizon: int = 6, kill_turns=(3, 4)) -> dict:
     n = len(rows)
     kt = [r["kill_turn"] for r in rows if r["kill_turn"] is not None]

@@ -278,6 +278,72 @@ def _confirm(a, rules, res, hits, decks, ctrl_of, uniq, picked_n, t0):
                                        "results": res, "hits": hits, "confirm": conf}, ensure_ascii=False, indent=1, default=str), encoding="utf-8")
 
 
+def vanillas(rules) -> list[str]:
+    """効果もキーワードもないクリーチャー（テキストが空、ツインパクトでない）。相乗分の対照の置き換え札。"""
+    out = []
+    for i, d in sorted(rules.cards.items()):
+        if i.startswith("T") or "creature" not in d.types or getattr(d, "faces", None) or not isinstance(d.cost, int):
+            continue
+        if d.abilities or d.keywords or (d.text or "").strip() or "evolution" in d.types:
+            continue
+        out.append(i)
+    return out
+
+
+def vanilla_for(rules, cid, pool) -> str:
+    """cid と同じコスト（無ければ近いコスト）で、文明が重なるバニラ。同点は ID 順。"""
+    c = rules.cards[cid]
+    cost = c.cost if isinstance(c.cost, int) else 3
+    civ = set(c.civs)
+    return min(pool, key=lambda v: (abs(rules.cards[v].cost - cost), 0 if civ & set(rules.cards[v].civs) else 1, v))
+
+
+def cmd_synergy(a):
+    """組の相乗分（2×2 の取り除き、eval.contrib.interaction）。candidates.yaml の screened_attack（または --pairs）の組を、
+    両方あり・Aだけ・Bだけ・両方なしの4デッキで同じシードに測る。抜いた札は同じコスト・文明のバニラに置き換える。
+    基準の相手 --opp と参考 --ref の段ごとに途中保存し、--resume で続きから。"""
+    from dmsim.discovery import basebuild as B
+    rules = _rules()
+    t0 = time.time()
+    y = yaml.safe_load((ROOT / "data/registry/candidates.yaml").read_text(encoding="utf-8"))
+    prs = [(x["enabler"], x["payoff"]) for x in y.get("screened_attack") or []]
+    if a.pairs:
+        prs = [tuple(x.split("+")) for x in a.pairs.split(",")]
+    pool = vanillas(rules)
+    decks, meta = {}, {}
+    for ea, pb in prs:
+        core = {ea: B.COPIES, pb: B.COPIES}
+        d = B.base_deck(core, B.fillers(rules, core))
+        va, vb = vanilla_for(rules, ea, pool), vanilla_for(rules, pb, pool)
+        k = f"{ea}+{pb}"
+        decks[k + "#ab"] = d
+        decks[k + "#a"] = [vb if x == pb else x for x in d]
+        decks[k + "#b"] = [va if x == ea else x for x in d]
+        decks[k + "#none"] = [va if x == ea else vb if x == pb else x for x in d]
+        meta[k] = {"names": [rules.cards[ea].name, rules.cards[pb].name], "vanilla": [va, vb],
+                   "vanilla_names": [rules.cards[va].name, rules.cards[vb].name]}
+    print(f"組 {len(prs)}、デッキ {len(decks)}、バニラ候補 {len(pool)} {time.time()-t0:.0f}s", flush=True)
+    seeds = range(1, a.seeds + 1)
+    kw = dict(max_turn=a.turn, budget=a.budget)
+    out = {}
+    for tag, lvl in (("base", a.opp), ("ref", a.ref)):
+        f = Path(a.out).with_suffix(f".{tag}.json")
+        if a.resume and f.exists():
+            rows = json.loads(f.read_text(encoding="utf-8"))
+        else:
+            rows = measure_many(decks, seeds, a.procs, opp_level=lvl, **kw)
+            f.write_text(json.dumps(rows, ensure_ascii=False, default=str), encoding="utf-8")
+        for k in meta:
+            g = [rows[k + s] for s in ("#ab", "#a", "#b", "#none")]
+            out.setdefault(k, {**meta[k], "by_opp": {}})["by_opp"][str(lvl)] = {v: A.pair_interaction(*g, a.turn, v) for v in A.VALUES}
+            if tag == "base":
+                x = out[k]["by_opp"][str(lvl)]
+                print(f"{'+'.join(meta[k]['names'])[:40]}: " + " ".join(f"{v} {x[v]['diff']:+.2f}{x[v]['ci95']}" for v in A.VALUES), flush=True)
+        print(f"相手 {lvl} 済み {time.time()-t0:.0f}s", flush=True)
+    Path(a.out).write_text(json.dumps({"args": vars(a), "seconds": round(time.time() - t0), "results": out, "decks": decks},
+                                      ensure_ascii=False, indent=1, default=str), encoding="utf-8")
+
+
 def cmd_search(a):
     from dmsim.base.loopspec import LoopSpec, Pred
     from dmsim.discovery import basebuild as B
@@ -345,7 +411,7 @@ def cmd_search(a):
 
 def main():
     ap = argparse.ArgumentParser()
-    ap.add_argument("mode", choices=["control", "search", "known", "wide"])
+    ap.add_argument("mode", choices=["control", "search", "known", "wide", "synergy"])
     ap.add_argument("--out", required=True)
     ap.add_argument("--seeds", type=int, default=20)
     ap.add_argument("--random", type=int, default=5)
@@ -361,9 +427,10 @@ def main():
     ap.add_argument("--turn", type=int, default=4, help="wide: 値を読むターン（この先は回さない）")
     ap.add_argument("--ref", type=opp_arg, default="2b", help="wide: 確認の時に併記する参考の相手")
     ap.add_argument("--resume", action="store_true", help="wide: 途中保存（<out>.screen.json）があれば、ふるいを飛ばして確認から")
+    ap.add_argument("--pairs", default="", help="synergy: 組を明示（A+B をカンマ区切り）。省くと candidates.yaml の screened_attack")
     ap.add_argument("--confirm", type=int, default=40, help="wide: 区間が0を超えた組を測り直す局数")
     a = ap.parse_args()
-    {"control": cmd_control, "search": cmd_search, "known": cmd_known, "wide": cmd_wide}[a.mode](a)
+    {"control": cmd_control, "search": cmd_search, "known": cmd_known, "wide": cmd_wide, "synergy": cmd_synergy}[a.mode](a)
 
 
 if __name__ == "__main__":
