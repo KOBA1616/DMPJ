@@ -432706,3 +432706,240 @@ cards:
     aliases:
     - dm24ex3-sec07
     - dm24rp2-004
+- id: dm37-002
+  name: 死滅恐皇グラヴィッツZ
+  types:
+  - creature
+  civs:
+  - darkness
+  cost: 7
+  power: 6000
+  races:
+  - ダークロード
+  - ドラゴン・ゾンビ
+  keywords:
+  - double_breaker
+  abilities:
+  - kind: trigger
+    when:
+      event: move
+      to: bz
+      subject:
+        owner: opp
+        filter:
+          types:
+          - creature
+      ord:
+        kind: enter
+        eq: 1
+    effect:
+    - op: destroy
+      select:
+        zone: bz
+        owner: opp
+        filter:
+          types:
+          - creature
+        count: 1
+        chooser: opp
+  mana: 1
+  text: '相手がバトルゾーンに、そのターン最初のクリーチャーを出した時、相手は自身のクリーチャーを１体破壊する。
+
+    W・ブレイカー(このクリーチャーはシールドを２枚ブレイクする)'
+  source:
+    official: dm37-002
+    review: pending
+- id: dmrp12-027
+  name: ハヨダイス・フレア
+  types:
+  - spell
+  civs:
+  - fire
+  cost: 6
+  keywords:
+  - s_trigger
+  spell:
+  - op: choose_number
+    min: 1
+    max: 5
+    as: n
+  - op: destroy
+    select:
+      zone: bz
+      owner: opp
+      filter:
+        types:
+        - creature
+        cost_le:
+          declared: n
+        cost_ge:
+          declared: n
+      count: all
+  mana: 1
+  text: 'S・トリガー（この呪文をシールドゾーンから手札に加える時、コストを支払わずにすぐ唱えてもよい）
+
+    １から５までの数字を１つ選ぶ。その数字と同じコストを持つ相手のクリーチャーをすべて破壊する。'
+  source:
+    official: dmrp12-027
+    review: pending
+- id: dmsd13-006
+  name: 数ー字ーQ
+  types:
+  - creature
+  civs:
+  - water
+  cost: 3
+  power: 3000
+  races:
+  - ジョーカーズ
+  abilities:
+  - kind: trigger
+    when:
+      event: move
+      to: bz
+      subject: self
+    effect:
+    - op: choose_number
+      as: n
+    - op: modify
+      select:
+        zone: bz
+        owner: opp
+        filter:
+          types:
+          - creature
+          cost_le:
+            declared: n
+          cost_ge:
+            declared: n
+        count: all
+      mod:
+        deny:
+        - attack_player
+        - attack_creature
+        - block
+      duration: until_next_own_turn_start
+  mana: 1
+  text: このクリーチャーがバトルゾーンに出た時、数字を１つ言う。次の自分のターンのはじめまで、その数字と同じコストを持つ相手のクリーチャーはすべて、攻撃もブロックもできない。
+  source:
+    official: dmsd13-006
+    review: pending
+- id: dmpcd02-b18
+  name: 魔光騎聖ブラッディ・シャドウ
+  types:
+  - creature
+  civs:
+  - light
+  - darkness
+  cost: 2
+  power: 4500
+  races:
+  - イニシエート
+  - ゴースト
+  - ナイト
+  keywords:
+  - blocker
+  - cannot_attack
+  abilities:
+  - kind: trigger
+    when:
+      event: battle_win
+      subject: self
+    effect:
+    - op: destroy
+      select:
+        ref: self
+  mana: 1
+  text: 'G・ゼロ：このターンに自分が呪文を唱えていれば、このクリーチャーをコストを支払わずに召喚してもよい。
+
+    ブロッカー（このクリーチャーをタップして、相手クリーチャーの攻撃先をこのクリーチャーに変更してもよい）
+
+    このクリーチャーは攻撃できない。
+
+    このクリーチャーがバトルに勝った時、このクリーチャーを破壊する。'
+  source:
+    official: dmpcd02-b18
+    review: pending
+    aliases:
+    - dmc46-012
+    - dmc64-004
+    - dmex04-060
+    - dmex13-077
+    - dmex17-cho14
+    - dmx10-013
+    - dmx22a-055
+    - promoy11-075
+  free_if:
+    cmp:
+    - turn_count:
+        kind: cast
+        owner: you
+    - '>='
+    - 1
+- id: dmrp09-044
+  name: 犠牲の影オンリー・ウォーカー
+  types:
+  - creature
+  civs:
+  - darkness
+  cost: 1
+  power: 6000
+  races:
+  - ゴースト
+  keywords:
+  - double_breaker
+  abilities:
+  - kind: static
+    affects: self
+    if:
+      cmp:
+      - turn_count:
+          kind: destroyed
+          owner: any
+      - ==
+      - 0
+    mod:
+      deny:
+      - attack_player
+      - attack_creature
+  mana: 1
+  text: 'W・ブレイカー（このクリーチャーはシールドを２つブレイクする）
+
+    このターンに、クリーチャーが破壊されていなければ、このクリーチャーは攻撃できない。'
+  source:
+    official: dmrp09-044
+    review: pending
+- id: dmrp04s-065
+  name: 漫遊の神官 マンボボ
+  types:
+  - creature
+  civs:
+  - water
+  cost: 5
+  power: 4000
+  races:
+  - ムートピア
+  keywords:
+  - blocker
+  abilities:
+  - kind: trigger
+    when:
+      event: move
+      from: hand
+      to: graveyard
+      reason: discard
+      subject:
+        owner: you
+    effect:
+    - op: modify
+      select:
+        ref: self
+      mod:
+        grant:
+        - unblockable
+      duration: end_of_turn
+  mana: 1
+  text: ブロッカー（このクリーチャーをタップして、相手クリーチャーの攻撃先をこのクリーチャーに変更してもよい）自分の手札を捨てた時、そのターン、このクリーチャーはブロックされない。
+  source:
+    official: dmrp04s-065
+    review: pending
