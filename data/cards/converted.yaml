@@ -435959,3 +435959,359 @@ cards:
   source:
     official: dmr22-054
     review: pending
+- id: dm06-013
+  name: 綺羅星の精霊ガリアル
+  types:
+  - creature
+  civs:
+  - light
+  cost: 5
+  power: 7500
+  races:
+  - エンジェル・コマンド
+  keywords:
+  - double_breaker
+  abilities:
+  - &id258
+    kind: static
+    affects: self
+    zone: hand
+    if:
+      cmp:
+      - turn_count:
+          kind: cast
+          owner: you
+      - ==
+      - 0
+    mod:
+      deny:
+      - summon
+  mana: 1
+  text: '呪文を唱えたターンのみ、このクリーチャーを召喚できる。
+
+    W(ダブル)・ブレイカー(シールドを攻撃したとき、このクリーチャーはシールドを２枚ブレイクする)'
+  source:
+    official: dm06-013
+    review: pending
+- id: dm06-044
+  name: 聖騎士ムーンティアー
+  types:
+  - creature
+  civs:
+  - light
+  cost: 2
+  power: 3500
+  races:
+  - レインボー・ファントム
+  abilities:
+  - *id258
+  mana: 1
+  text: 呪文を唱えたターンのみ、このクリーチャーを召喚することができる。
+  source:
+    official: dm06-044
+    review: pending
+- id: dm06-076
+  name: 予言者ユーク
+  types:
+  - creature
+  civs:
+  - light
+  cost: 1
+  power: 2500
+  races:
+  - ライトブリンガー
+  abilities:
+  - *id258
+  mana: 1
+  text: 呪文を唱えたターンのみ、このクリーチャーを召喚することができる。
+  source:
+    official: dm06-076
+    review: pending
+- id: dm12-004
+  name: 殴神兵ブロンクス
+  types:
+  - creature
+  civs:
+  - fire
+  cost: 4
+  power: 3000
+  races:
+  - アーマロイド
+  abilities:
+  - kind: trigger
+    when:
+      event: move
+      to: bz
+      subject: self
+    effect:
+    - op: destroy
+      select:
+        zone: bz
+        owner: any
+        filter: &id259
+          types:
+          - creature
+        extremal: min_power
+        count: 1
+  mana: 1
+  text: このクリーチャーをバトルゾーンに出した時、バトルゾーンにあるパワーの一番小さいクリーチャーを１体破壊する。
+  source:
+    official: dm12-004
+    review: pending
+- id: dm08-013
+  name: 恐怖の影スクリーム・アサシン
+  types:
+  - creature
+  civs:
+  - darkness
+  cost: 6
+  power: 4000
+  races:
+  - ゴースト
+  abilities:
+  - kind: trigger
+    when:
+      event: move
+      to: bz
+      subject:
+        owner: you
+        filter:
+          types:
+          - creature
+          any_of:
+          - race_has: ドラゴン
+          - race_has: ドラゴノイド
+    effect:
+    - op: choose
+      select:
+        zone: bz
+        owner: any
+        filter: *id259
+        extremal: min_power
+        count: 1
+      as: t
+    - op: move
+      select:
+        ref: t
+      to: graveyard
+      reason: put
+  mana: 1
+  text: このクリーチャーがバトルゾーンにある間、自分のドラゴンまたはドラゴノイドがバトルゾーンに出たとき、バトルゾーンにあるパワーの一番小さいクリーチャーを１体選び、持ち主の墓地に置く。
+  source:
+    official: dm08-013
+    review: pending
+- id: dm23ex2-048
+  name: イプシロン・トゥレイト
+  types:
+  - creature
+  civs:
+  - darkness
+  cost: 8
+  power: 8000
+  races:
+  - サバイバー
+  keywords:
+  - double_breaker
+  abilities:
+  - kind: trigger
+    when:
+      event: attack
+      subject: self
+    effect:
+    - op: move
+      select:
+        zone: graveyard
+        owner: you
+        filter:
+          types:
+          - creature
+          evolution: false
+        count: 1
+      to: bz
+      reason: put
+  - kind: trigger
+    when:
+      event: move
+      to: graveyard
+      reason: destroy
+      subject:
+        owner: you
+        other: true
+        filter:
+          types:
+          - creature
+          race_has: サバイバー
+    effect:
+    - op: destroy
+      select:
+        zone: bz
+        owner: opp
+        filter: *id259
+        extremal: min_power
+        count: 1
+  mana: 1
+  text: '進化：サバイバー１体の上に置く。
+
+    W・ブレイカー（このクリーチャーはシールドを２つブレイクする）
+
+    このクリーチャーが攻撃する時、進化ではないクリーチャーを１体、自分の墓地から出す。
+
+    自分の他のサバイバーが破壊された時、相手のパワーが一番小さいクリーチャーを１体選び、破壊する。'
+  source:
+    official: dm23ex2-048
+    review: pending
+- id: dm26rp2-060
+  name: 熱血の親衛隊ペッパー
+  types:
+  - creature
+  civs:
+  - water
+  cost: 2
+  power: 4000
+  races:
+  - サイバーロード
+  - ハンター
+  - エイリアン
+  abilities:
+  - kind: trigger
+    when:
+      event: move
+      to: bz
+      subject: self
+    effect:
+    - op: modify
+      select:
+        ref: self
+      mod:
+        deny:
+        - be_chosen
+        - be_attacked
+      duration: until_next_own_turn_start
+  - kind: static
+    affects: self
+    if:
+      cmp:
+      - turn_count:
+          kind: draw
+          owner: you
+      - <
+      - 2
+    mod:
+      deny:
+      - attack_player
+      - attack_creature
+  mana: 1
+  text: 'ジャストダイバー（このクリーチャーが出た時、次の自分のターンのはじめまで、このクリーチャーは相手に選ばれず、攻撃されない）
+
+    このターンに自分がカードを２枚以上引いていなければ、このクリーチャーは攻撃できない。'
+  source:
+    official: dm26rp2-060
+    review: pending
+- id: dmpcd01-r17
+  name: 緑神龍ジオブリード
+  types:
+  - creature
+  civs:
+  - nature
+  cost: 6
+  power: 5000
+  races:
+  - アース・ドラゴン
+  abilities:
+  - kind: trigger
+    when: &id260
+      event: move
+      to: bz
+      subject: self
+    effect:
+    - op: may
+      body:
+      - op: move
+        select:
+          zone: bz
+          owner: any
+          filter: &id261
+            types:
+            - creature
+          extremal: min_power
+          count: 1
+        to: mana
+        reason: put
+  mana: 1
+  text: このクリーチャーがバトルゾーンに出た時、バトルゾーンにあるパワーが一番小さいクリーチャーを１体、持ち主のマナゾーンに置いてもよい。２体以上あれば、好きなほうを選ぶ。
+  source:
+    official: dmpcd01-r17
+    review: pending
+    aliases:
+    - dm22-052
+    - dmx17-036
+- id: dmsd04-006
+  name: ハクション・マスク
+  types:
+  - creature
+  civs:
+  - zero
+  cost: 5
+  power: 3000
+  races:
+  - ジョーカーズ
+  keywords:
+  - s_trigger
+  abilities:
+  - kind: trigger
+    when: *id260
+    effect:
+    - op: destroy
+      select:
+        zone: bz
+        owner: opp
+        chooser: opp
+        filter: *id261
+        extremal: min_power
+        count: 1
+  mana: 1
+  text: 'S・トリガー（このクリーチャーをシールドゾーンから手札に加える時、コストを支払わずにすぐ召喚してもよい）
+
+    このクリーチャーがバトルゾーンに出た時、相手はバトルゾーンにある自身の、パワーが一番小さいクリーチャーを１体選び、破壊する。'
+  source:
+    official: dmsd04-006
+    review: pending
+    aliases:
+    - dmsp01-007
+    - promoy17-037
+    - promoy17-sp4d04
+- id: dmex11-040
+  name: ホップ・チュリス
+  types:
+  - creature
+  civs:
+  - fire
+  cost: 1
+  power: 2000
+  races:
+  - ビートジョッキー
+  abilities:
+  - kind: static
+    affects: self
+    if:
+      cmp:
+      - turn_count:
+          kind: attack
+          owner: you
+      - ==
+      - 0
+    mod:
+      deny:
+      - attack_player
+      - attack_creature
+  mana: 1
+  text: このターン、他のクリーチャーが攻撃していなければ、このクリーチャーは攻撃できない。
+  source:
+    official: dmex11-040
+    review: pending
+    notes: 他のクリーチャーが攻撃していなければ攻撃できない＝このターン自分の攻撃回数0なら禁止
+    aliases:
+    - dmex02-055
+    - dmrp04m-057
+    - dmsd03-007
+    - promoy20-gum1-002
