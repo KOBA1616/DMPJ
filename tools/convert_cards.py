@@ -72,6 +72,13 @@ INSTRUCTIONS = """\
 - 「コストを支払わずに召喚する／唱える」は op: play_free（召喚・唱えたことになり、「召喚した時」「唱えた時」が誘発する）。「バトルゾーンに出す／置く」（ヘブンズ・ゲート型、墓地・マナ・手札から出す、置換で出す）は召喚ではないので op: move, to: bz, reason: put（play_free や reason: summon は使わない。112.3g, 603.5a）。
 - 墓地から唱える: 「この呪文を自分の墓地から唱えてもよい。そうしたら、唱えた後、墓地のかわりに山札の下に置く」は面の `recycle: {cost: <この呪文のコスト>}`（墓地からコストを支払って唱え、解決後は山札の一番下）。「墓地の呪文を1枚、コストを支払わずに唱えてもよい。唱えた後、墓地に置くかわりに山札の一番下に置く」は may の中で `{op: play_free, select: {zone: graveyard, owner: you, filter: {types: [spell], ...}, count: 1}, resolve_to: deck, resolve_position: bottom}`（cast_from_graveyard の語彙を作らない）。
 - ツインパクトの原文で、両面の name が「A/B」と同じ文字列になっていても取得の欠けではない。面ごとの name は「/」の前後に分けて書く（data_incomplete にしない）。
+- 「このクリーチャーがバトルに負けた時」は `when: {event: battle_lose, subject: self}`、バトルの相手は `{ref: event.opponent}`（解決はバトルの破壊の後。701.13b）。
+- 「（そのカードの）出た時にトリガーする能力を１つ使う」「Jビッグ１する」は `{op: use_cip, select: <そのカード>}`（使うのは自分、self は選んだカード。use_cip を含む能力は候補から自動で除く。cip_reuse / j_big の語彙を作らない）。Jビッグ１は `select: {zone: bz, owner: you, other: true, count: 1, filter: {race_has: ジョーカーズ}}`。
+- 「手札進化：〜を１体自分の手札から選び、このクリーチャーをその上に重ねつつ出す」は `evolve_zone: hand` ＋ `evolve_from: <フィルタ>`（自分自身は進化元にならない。hand_evolution の語彙を作らない）。手札進化V/GV（複数体）は unsupported。
+- 「自分のマナゾーンまたは墓地から」のように複数ゾーンから選ぶ時は、セレクタの `zone: [mana, graveyard]`（ゾーンの配列。zone_mixed_selection の語彙を作らない）。
+- 「相手はカードをマナゾーンに置く時、タップして置く」「相手のカードはマナゾーンにタップして置かれる」はキーワード `opp_mana_tapped`（mana_enters_tapped_rule の語彙を作らない）。
+- 「自分のシールドゾーンにある〈条件〉すべてに『S・トリガー』を与える」は `kind: static, affects: {zone: shield, owner: you, filter: {...}}, mod: {allow: [s_trigger]}`（grant_s_trigger_zone の語彙を作らない）。
+- 「NEO進化クリーチャーとして召喚するなら（する場合）、このクリーチャーの召喚コストをN少なくする」は面の `cost_reduce_per_evo: N`（NEO の進化元は1体なので、重ねた時だけN軽減。neo_summon_cost_reduction の語彙を作らない）。「タマシードから進化するなら」は進化元の種類で変わるので unsupported。
 - 近似・代用はしない。語彙で原文どおりに表せない効果は、似た別の語彙（op・mod・条件）で置き換えて書かない。その能力は abilities に書かず、source.unsupported に [{need: <足せばよい op・語彙の案（英語の識別子）>, text: <該当する原文>}] で書く。表せる他の能力は通常どおり変換する。
   「ほぼ同じ」「この場面では同じ結果」と思っても代用しない（例: 他のカードの効果の対象条件を書き換える置換を、無条件の置換や別の効果で書かない）。語彙の追加は人が行い、足りない語彙は unsupported の集計から決める。unsupported があるカードは登録されず（rejects に vocab として残る）、語彙が足りるようになってから変換し直す。
 - 表せない能力を黙って落とさない。落とした能力は必ず unsupported に残す。source.notes には、原文の曖昧さや確認してほしい点だけを日本語で具体的に書く（近似の言い訳には使わない）。

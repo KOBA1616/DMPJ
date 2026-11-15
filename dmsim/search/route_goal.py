@@ -72,30 +72,42 @@ def _drawout_frac(eng, cid: str, me: int) -> float:
     return max(0.0, 1.0 - d["dig_before"] / max(1, base))
 
 
+def _match(d, defn, m) -> bool:
+    if "name" in m and m["name"] not in (defn, d.id):
+        return False
+    if "types" in m and not set(m["types"]) & set(d.types):
+        return False
+    if "civs" in m and not set(m["civs"]) & set(d.civs):
+        return False
+    if "races" in m and not set(m["races"]) & set(d.races):
+        return False
+    return True
+
+
 def count(eng, p: dict, me: int = 0) -> int:
     """owner は 0=自分（me）, 1=相手。"""
-    s, rules = eng.s, eng.rules
+    rules = eng.rules
     owner = me if p.get("owner", 0) == 0 else 1 - me
     zones = (p["zone"],) if p.get("zone") else tuple(p.get("zones") or ())
     m = p.get("match", {})
     n = 0
+    zn = getattr(eng, "zone_names", None)
     for z in zones:
+        names = zn(z, owner, bool(p.get("top"))) if zn is not None else None
+        if names is not None:       # Rust の局面: 状態を作り直さず定義名だけ引く
+            for defn in names:
+                if _match(rules.cards[defn], defn, m):
+                    n += 1
+            continue
+        s = eng.s
         cids = s.zones[z][owner]
         if p.get("top") and z == "bz":       # 場の一番上の札だけ（進化元として下にある札を除く）
             below = {u for c in cids for u in s.cards[c].under}
             cids = [c for c in cids if c not in below]
         for c in cids:
             defn = s.cards[c].defn
-            d = rules.cards[defn]
-            if "name" in m and m["name"] not in (defn, d.id):
-                continue
-            if "types" in m and not set(m["types"]) & set(d.types):
-                continue
-            if "civs" in m and not set(m["civs"]) & set(d.civs):
-                continue
-            if "races" in m and not set(m["races"]) & set(d.races):
-                continue
-            n += 1
+            if _match(rules.cards[defn], defn, m):
+                n += 1
     return n
 
 

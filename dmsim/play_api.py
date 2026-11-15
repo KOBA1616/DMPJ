@@ -153,6 +153,8 @@ def play_turns(eng, cfg: PlayConfig, info: InfoLevel = InfoLevel.FAIR, *, opp_po
     info = InfoLevel(info)
     me = cfg.me
     opp_pol = opp_policy or charge_only_policy
+    from .engine import rustcore
+    eng = rustcore.maybe_rust(eng)   # DMSIM_RUST=1 かつ全札が Rust で動く局は Rust で進める（未対応に当たれば Python に戻る）
     cur = holder if holder is not None else [None]
     cur[:1] = [eng]
     shared = [None]
