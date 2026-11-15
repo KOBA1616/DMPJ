@@ -19,7 +19,6 @@ REGISTERED = [
 ]
 
 BOUNCED = {
-    "dm26ex4-021": ["cip_reuse"],
     "dmrp12-078": ["attack_cancel"],
     "dmsd13-007": ["gr_summon"],
     "dmrp11-040": ["attack_count_limit_next_turn"],

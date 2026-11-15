@@ -15,6 +15,13 @@ from ..base.store import REPO
 DATA = REPO / "data" / "cards"
 _OLD_MULTI = re.compile(r"(?:このカードを)?マナゾーンに置く(?:時|場合)[、,]?\s*(?:この|その)?カードはタップして置く[。.]?")
 _PAREN = re.compile(r"[（(][^）)]*[）)]")
+_PRINTING = re.compile(r"\s*[（(][^（）()]*\d+\s*/\s*[^（）()]*[）)]\s*$")
+
+
+def name_key(n: str) -> str:
+    """同名判定用のカード名。名前の末尾に付いた収録番号（「(DM26EX4 ㊙6/㊙25)」「(DMR16真 44/54)」）を除く。
+    シークレット版などは原文の名前に収録番号が付くが、同じカードなので最新版の別名として扱う。"""
+    return _PRINTING.sub("", n)
 
 
 def normalize_text(t: str) -> str:
@@ -61,6 +68,7 @@ def canonical_index() -> dict[str, dict]:
             n = d.get("name")
             if not n:
                 continue
+            n = name_key(n)
             variants.setdefault(n, set()).add(normalize_text(d["text"]))
             key = (r, d["id"])
             if n not in best or key < best[n][0]:

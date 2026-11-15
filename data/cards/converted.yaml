@@ -431936,3 +431936,48 @@ cards:
     - dmx18-015
     - dmx24-019
     - promoy12-020
+- id: dm26ex4-021
+  name: せんすいカンたろう
+  types:
+  - creature
+  civs:
+  - water
+  cost: 3
+  power: 2000
+  races:
+  - ジョーカーズ
+  - ワンダフォース
+  keywords:
+  - cannot_be_attacked
+  abilities:
+  - kind: trigger
+    when:
+      event: attack
+      subject: self
+    effect:
+    - op: may
+      body:
+      - op: move
+        select:
+          zone: bz
+          owner: you
+          other: true
+          filter:
+            types:
+            - creature
+            race_has: ジョーカーズ
+          count: 1
+        to: hand
+        reason: put
+        as: jt
+      - op: use_cip
+        select:
+          ref: jt
+  mana: 1
+  text: 'このクリーチャーは攻撃されない。
+
+    このクリーチャーが攻撃する時、Jトルネードしてもよい。そうしたら、そのJトルネードされたクリーチャーの「このクリーチャーが出た時」で始まる能力を１つ使う。（Jトルネード：自分の他のジョーカーズ・クリーチャーを１体、手札に戻す）'
+  source:
+    official: dm26ex4-021
+    review: pending
+    notes: 'Jトルネード＝自分の他のジョーカーズ・クリーチャー1体を手札に戻す（as: jt）。戻したカードの出た時の能力は use_cip（手札にあっても使える）'
