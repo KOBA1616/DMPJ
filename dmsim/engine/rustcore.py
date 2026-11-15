@@ -7,6 +7,7 @@ Python に残し、準備に必要な最小の情報（new_game_spec）だけを
 from __future__ import annotations
 
 import json
+import os
 
 try:
     import dmcore  # maturin develop / pip install rust/dmcore/target/wheels/*.whl
@@ -183,8 +184,8 @@ def _simple_effect(ops, top=True) -> bool:
         if k == "move" and "order" in o and not (o["order"] == "choose" and o.get("to") == "deck" and isinstance(o.get("select"), dict)
                                                   and set(o["select"]) == {"ref"}):
             return False   # 並べ替えは、選ばせない参照（変数の全部）を山札へ置く時だけ
-        if k == "move" and set(o) <= {"op", "select", "to", "reason", "position", "tapped", "order"} and isinstance(o.get("tapped", False), bool) and o.get("to") in ("hand", "graveyard", "mana", "deck", "shield", "bz") \
-                and isinstance(o.get("reason"), str) and o.get("position", "top") in ("top", "bottom") and _simple_selector(o.get("select")):
+        if k == "move" and set(o) <= {"op", "select", "to", "reason", "position", "tapped", "order", "as"} and isinstance(o.get("tapped", False), bool) and o.get("to") in ("hand", "graveyard", "mana", "deck", "shield", "bz") \
+                and isinstance(o.get("reason"), str) and o.get("position", "top") in ("top", "bottom") and _simple_selector(o.get("select")) and isinstance(o.get("as", ""), str):
             continue
         return False
     return True
@@ -450,7 +451,40 @@ def enabled() -> bool:
     """対局・探索のエンジンを Rust にするか。既定は有効（dmcore があり、全札が Rust で動く局だけ）。
     DMSIM_RUST=0 で無効（従来どおり Python だけ）。この1か所で切り替える。"""
     import os
-    return available() and os.environ.get("DMSIM_RUST", "1") != "0" and _fresh_build()
+    return available() and os.environ.get("DMSIM_RUST", "1") != "0" and _fresh_build() and _verified()
+
+
+# Rust が一致を確かめた Python エンジンの版（rust/dmcore/verified_engine.txt）。Python のエンジンのファイルが変わると
+# 一致の保証が無くなるので、確かめ直す（tools/rust_stamp.py）まで Rust を使わない。Rust の無い環境で Python だけ直した変更が
+# 黙って Rust とずれるのを防ぐ。
+ENGINE_FILES = ("combat.py", "core.py", "events.py", "interpreter.py", "ops.py", "selectors.py", "state.py", "turn.py", "rustcore.py")
+STAMP = os.path.join(os.path.dirname(__file__), "..", "..", "rust", "dmcore", "verified_engine.txt")
+_VERIFIED: bool | None = None
+
+
+def engine_hash() -> str:
+    import hashlib
+    h = hashlib.sha256()
+    for f in ENGINE_FILES:
+        with open(os.path.join(os.path.dirname(__file__), f), "rb") as fh:
+            h.update(f.encode() + b"\0" + fh.read().replace(b"\r\n", b"\n") + b"\0")
+    return h.hexdigest()[:16]
+
+
+def _verified() -> bool:
+    global _VERIFIED
+    if _VERIFIED is None:
+        import warnings
+        try:
+            with open(STAMP, encoding="utf-8") as fh:
+                want = fh.read().split()[0]
+        except (OSError, IndexError):
+            want = ""
+        _VERIFIED = want == engine_hash()
+        if not _VERIFIED:
+            warnings.warn("Python のエンジンが Rust で一致を確かめた版から変わっているので Rust を使わない"
+                          "（tests/test_rust_*.py を通してから python tools/rust_stamp.py で記録し直す）")
+    return _VERIFIED
 
 
 _FRESH: bool | None = None
