@@ -439094,3 +439094,678 @@ cards:
   source:
     official: dmr06-011
     review: pending
+- id: dmr22-057
+  name: ニジイロ・ホラニャン
+  types:
+  - creature
+  civs:
+  - darkness
+  cost: 2
+  power: 2000
+  races:
+  - ファンキー・ナイトメア
+  abilities:
+  - kind: trigger
+    when:
+      event: attack
+      subject: self
+    effect:
+    - op: discard
+      select:
+        zone: hand
+        owner: opp
+        chooser: random
+        count: 1
+    if:
+      cmp:
+      - count:
+          zone: mana
+          owner: you
+          filter:
+            multicolor: true
+      - '>='
+      - 2
+  mana: 1
+  text: マナ武装 ２：このクリーチャーが攻撃する時、自分のマナゾーンに多色カードが２枚以上あれば、相手の手札を１枚見ないで選び、捨てさせる。
+  source:
+    official: dmr22-057
+    review: pending
+- id: dmr20-050
+  name: 宇宙 トーパス
+  types:
+  - creature
+  civs:
+  - water
+  cost: 3
+  power: 2000
+  races:
+  - リキッド・ピープル閃
+  - 侵略者
+  abilities:
+  - kind: replace
+    optional: true
+    when:
+      event: move
+      to: graveyard
+      reason: destroy
+      subject: self
+    if:
+      exists:
+        zone: hand
+        owner: you
+        filter:
+          name: 宇宙 トーパス
+    instead:
+    - op: move
+      select:
+        zone: hand
+        owner: you
+        filter:
+          name: 宇宙 トーパス
+        count: 1
+      to: bz
+      reason: put
+  mana: 1
+  text: このクリーチャーが破壊される時、かわりに《宇宙 トーパス》を１体、自分の手札からバトルゾーンに出してもよい。
+  source:
+    official: dmr20-050
+    review: pending
+- id: dmr21-008
+  name: 虹色類 アミュレックス
+  types:
+  - creature
+  civs:
+  - light
+  - nature
+  cost: 4
+  power: 4500
+  races:
+  - ジュラシック・ドラゴン
+  abilities:
+  - kind: trigger
+    when:
+      event: move
+      to: bz
+      subject:
+        owner: you
+        other: true
+        filter:
+          types:
+          - creature
+          multicolor: true
+    effect:
+    - op: draw
+      count: 1
+  - kind: trigger
+    when:
+      event: move
+      to: mana
+      subject:
+        owner: you
+        filter:
+          multicolor: true
+    effect:
+    - op: untap
+      select:
+        ref: event.subject
+  mana: 1
+  text: マナゾーンに置く時、このカードはタップして置く。自分の他の多色クリーチャーがバトルゾーンに出た時、カードを１枚引く。自分の多色カードをマナゾーンに置いた時、そのカードをアンタップする。
+  source:
+    official: dmr21-008
+    review: pending
+    notes: 「マナゾーンに置く時、タップして置く」は 405.1 の旧注釈で能力として扱わない
+- id: dmr22-032
+  name: 改速 スパナードW
+  types:
+  - creature
+  civs:
+  - water
+  cost: 5
+  power: 4000
+  races:
+  - ソニック・コマンド
+  - イニシャルズ
+  abilities:
+  - kind: trigger
+    when:
+      event: move
+      to: bz
+      subject: self
+    effect:
+    - op: choose
+      select:
+        zone: deck
+        owner: you
+        from_top: 5
+        look: true
+        count: all
+      as: a
+    - op: may
+      body:
+      - op: move
+        select:
+          ref: a
+          filter:
+            any_of:
+            - types:
+              - creature
+              race_has: コマンド
+            - types:
+              - d2_field
+          count: 1
+        to: hand
+        reason: draw
+    - op: move
+      select:
+        ref: a
+        count: all
+      to: deck
+      reason: put
+      position: bottom
+  mana: 1
+  text: このクリーチャーがバトルゾーンに出た時、自分の山札の上から５枚を見る。その中から、コマンドを１体またはD２フィールドを１枚選び、相手に見せてから自分の手札に加えてもよい。その後、残りを好きな順序で自分の山札の一番下に置く。
+  source:
+    official: dmr22-032
+    review: pending
+- id: dmrp02-007
+  name: キラードン
+  types:
+  - creature
+  civs:
+  - darkness
+  cost: 6
+  power: 7000
+  races:
+  - マフィ・ギャング
+  - スペシャルズ
+  keywords:
+  - double_breaker
+  abilities:
+  - kind: trigger
+    when:
+      event: move
+      to: bz
+      subject: self
+    effect:
+    - op: choose
+      select:
+        zone: bz
+        owner: opp
+        filter: &id279
+          types:
+          - creature
+        chooser: opp
+        count: 1
+      as: keep
+    - op: destroy
+      select:
+        zone: bz
+        owner: opp
+        filter: *id279
+        count: all
+        exclude:
+          ref: keep
+  - kind: trigger
+    when:
+      event: move
+      to: graveyard
+      reason: destroy
+      subject: self
+    effect:
+    - op: choose
+      select:
+        zone: hand
+        owner: opp
+        chooser: opp
+        count: 1
+      as: keep
+    - op: discard
+      select:
+        zone: hand
+        owner: opp
+        count: all
+        exclude:
+          ref: keep
+  mana: 1
+  text: W・ブレイカーこのクリーチャーがバトルゾーンに出た時、相手は自身のクリーチャーの中から１体選び、残りを破壊する。このクリーチャーが破壊された時、相手は自身の手札を１枚選び、残りをすべて捨てる。
+  source:
+    official: dmrp02-007
+    review: pending
+- id: dmrp06-005
+  name: デミブラム・ストーカー
+  types:
+  - creature
+  civs:
+  - darkness
+  cost: 7
+  power: 9000
+  races:
+  - マフィ・ギャング
+  keywords:
+  - double_breaker
+  abilities:
+  - kind: trigger
+    when:
+      event: attack
+      subject: self
+    effect:
+    - op: destroy
+      select:
+        zone: bz
+        owner: opp
+        chooser: opp
+        filter:
+          types:
+          - creature
+          tapped: false
+        count: 1
+  - kind: trigger
+    zone: graveyard
+    when:
+      event: turn_end
+    if:
+      all:
+      - is_turn: you
+      - cmp:
+        - turn_count:
+            kind: destroyed
+            owner: opp
+        - '>='
+        - 2
+    effect:
+    - op: move
+      select:
+        ref: self
+      to: hand
+      reason: return
+  mana: 1
+  text: 'W・ブレイカー
+
+    このクリーチャーが攻撃する時、相手は自身のアンタップしているクリーチャーを１体破壊する。
+
+    自分のターンの終わりに、そのターン中に相手のクリーチャーが２体以上破壊されていたら、このクリーチャーを自分の墓地から手札に戻す。'
+  source:
+    official: dmrp06-005
+    review: pending
+- id: dmx19-s27
+  name: 壊滅の悪魔龍 カナシミドミノ
+  types:
+  - creature
+  civs:
+  - darkness
+  cost: 6
+  power: 6000
+  races:
+  - デーモン・コマンド・ドラゴン
+  keywords:
+  - double_breaker
+  abilities:
+  - kind: static
+    affects:
+      zone: bz
+      owner: opp
+      filter: *id279
+    mod:
+      power: -1000
+  - kind: trigger
+    when:
+      event: move
+      to: graveyard
+      reason: destroy
+      subject:
+        other: true
+        filter:
+          types:
+          - creature
+    effect:
+    - op: modify
+      select:
+        zone: bz
+        owner: opp
+        filter: *id279
+        count: all
+      mod:
+        power: -1000
+      duration: end_of_turn
+  mana: 1
+  text: バトルゾーンにある相手のクリーチャーすべてのパワーは-1000される。（パワー０以下のクリーチャーは破壊される）他のクリーチャーが破壊された時、そのターン、バトルゾーンにある相手のクリーチャーすべてのパワーは-1000される。W・ブレイカー
+  source:
+    official: dmx19-s27
+    review: pending
+- id: dmx20-012
+  name: 暗黒鎧 ギラン
+  types:
+  - creature
+  civs:
+  - darkness
+  cost: 3
+  power: 2000
+  races:
+  - ダーク・ナイトメア
+  - 革命軍
+  keywords:
+  - blocker
+  - cannot_attack
+  abilities:
+  - kind: trigger
+    when:
+      event: battle_lose
+      subject: self
+    effect:
+    - op: move
+      select:
+        ref: self
+        zone: graveyard
+      to: bz
+      reason: put
+      tapped: true
+  mana: 1
+  text: ブロッカー（このクリーチャーをタップして、相手クリーチャーの攻撃先をこのクリーチャーに変更してもよい）このクリーチャーは攻撃できない。このクリーチャーがバトルに負けた時、このクリーチャーを墓地からバトルゾーンにタップして出す。
+  source:
+    official: dmx20-012
+    review: pending
+- id: dmrp04s-048
+  name: ジャンプ・チュリス
+  types:
+  - creature
+  civs:
+  - fire
+  cost: 4
+  power: 7000
+  races:
+  - ビートジョッキー
+  keywords:
+  - double_breaker
+  abilities:
+  - kind: static
+    affects: self
+    if:
+      cmp:
+      - count:
+          zone: bz
+          owner: you
+          filter:
+            types:
+            - creature
+            tapped: true
+      - <
+      - 2
+    mod:
+      deny:
+      - attack_player
+      - attack_creature
+  mana: 1
+  text: W・ブレイカー（このクリーチャーはシールドを２つブレイクする）バトルゾーンに自分のタップしているクリーチャーが２体以上なければ、このクリーチャーは攻撃できない。
+  source:
+    official: dmrp04s-048
+    review: pending
+- id: dm24-075
+  name: 彩大闘機マックスガイザー
+  types:
+  - creature
+  civs:
+  - light
+  cost: 3
+  power: 2000
+  races:
+  - グレートメカオー
+  abilities:
+  - kind: trigger
+    when:
+      event: summon
+      subject:
+        owner: you
+        filter:
+          types:
+          - creature
+          civs: &id280
+          - water
+          - darkness
+          - fire
+          - nature
+    effect: &id281
+    - op: modify
+      select:
+        ref: self
+      mod:
+        power: 2000
+      duration: end_of_turn
+  - kind: trigger
+    when:
+      event: cast
+      subject:
+        owner: you
+        filter:
+          types:
+          - spell
+          civs: *id280
+    effect: *id281
+  mana: 1
+  text: 自分の水、闇、火、または自然のクリーチャーを召喚した時、あるいは、自分の水、闇、火、または自然の呪文を唱えた時、そのターン、このクリーチャーのパワーは+2000される。
+  source:
+    official: dm24-075
+    review: pending
+- id: dm24bd5-044
+  name: 白銀妖精コユキ
+  types:
+  - creature
+  civs:
+  - nature
+  cost: 2
+  power: 2000
+  races:
+  - スノーフェアリー
+  keywords:
+  - s_trigger
+  abilities:
+  - kind: static
+    affects: &id282
+      zone: bz
+      owner: opp
+      filter:
+        types:
+        - creature
+        entered_this_turn: true
+    mod:
+      deny:
+      - attack_player
+  mana: 1
+  text: 'S・トリガー（このクリーチャーをシールドゾーンから手札に加える時、コストを支払わずにすぐ召喚してもよい）
+
+    相手のクリーチャーは出たターン、自分を攻撃できない。'
+  source:
+    official: dm24bd5-044
+    review: pending
+    aliases:
+    - dm24ex3-075
+    - dm24rp2-050
+- id: dm26ex2-040
+  name: ワダカニノミコト
+  types:
+  - creature
+  civs:
+  - water
+  cost: 2
+  power: 1000
+  races:
+  - ミズガミ
+  - ロスト・クルセイダー
+  keywords:
+  - blocker
+  abilities:
+  - kind: static
+    affects: *id282
+    mod:
+      deny:
+      - attack_player
+      - attack_creature
+  - kind: static
+    affects: self
+    if:
+      is_turn: opp
+    mod:
+      power:
+        amount: 1000
+        count:
+          zone: hand
+          owner: you
+  mana: 1
+  text: 'ブロッカー
+
+    相手のクリーチャーは出たターンに攻撃できない。
+
+    相手のターン中、自分の手札１枚につき、このクリーチャーのパワーを+1000する。'
+  source:
+    official: dm26ex2-040
+    review: pending
+    aliases:
+    - promoy25-078
+- id: dmd01-004
+  name: レベリオン・クワキリ
+  types:
+  - creature
+  civs:
+  - nature
+  cost: 4
+  power: 1000
+  races:
+  - ジャイアント・インセクト
+  abilities:
+  - kind: static
+    affects: self
+    mod:
+      power:
+        amount: 2000
+        count:
+          zone: hand
+          owner: opp
+  - kind: static
+    affects: self
+    if:
+      exists:
+        ref: self
+        filter:
+          power_ge: 6000
+    mod:
+      grant:
+      - double_breaker
+  mana: 1
+  text: 'このクリーチャーのパワーは、相手の手札１枚につき+2000される。
+
+    このクリーチャーは、パワーが6000以上の時、「W・ブレイカー」を得る。（「W・ブレイカー」を得たクリーチャーはシールドを２枚ブレイクする）'
+  source:
+    official: dmd01-004
+    review: pending
+    aliases:
+    - dm12-014
+    - dmc34-016
+- id: dmx14-003
+  name: 七転八討 タント
+  types:
+  - creature
+  civs:
+  - fire
+  cost: 3
+  power: 2000
+  races:
+  - アウトレイジ
+  abilities:
+  - kind: static
+    affects: self
+    mod:
+      power:
+        amount: 1000
+        count:
+          zone: graveyard
+          owner: you
+          filter:
+            types:
+            - creature
+  - kind: static
+    affects: self
+    if:
+      exists:
+        ref: self
+        filter:
+          power_ge: 6000
+    mod:
+      grant:
+      - double_breaker
+  mana: 1
+  text: このクリーチャーのパワーは、自分の墓地にあるクリーチャー１体につき+1000される。このクリーチャーは、パワーが6000以上の時、「Ｗ・ブレイカー」を得る。
+  source:
+    official: dmx14-003
+    review: pending
+    aliases:
+    - promoy12-007
+- id: dmsd06-007
+  name: 堕魔 ドゥスン
+  types:
+  - creature
+  civs:
+  - darkness
+  cost: 2
+  power: 1000
+  races:
+  - マフィ・ギャング
+  - 魔導具
+  abilities:
+  - kind: static
+    affects:
+      zone: hand
+      owner: opp
+      filter:
+        types:
+        - spell
+    if:
+      cmp:
+      - turn_count:
+          kind: cast
+          owner: opp
+      - ==
+      - 0
+    mod:
+      cost:
+        amount: 1
+  mana: 1
+  text: 各ターン、相手が唱える１枚目の呪文のコストを１多くする。
+  source:
+    official: dmsd06-007
+    review: pending
+    notes: 各ターン相手の１枚目の呪文＝そのターン相手がまだ唱えていない間の呪文のコスト+1
+- id: dm38-020
+  name: 奇跡の予言者ラッキー・クルト
+  types:
+  - creature
+  civs:
+  - light
+  cost: 1
+  power: 1500
+  races:
+  - ライトブリンガー
+  keywords:
+  - blocker
+  abilities:
+  - kind: static
+    affects: self
+    if:
+      not:
+        exists:
+          zone: bz
+          owner: you
+          filter:
+            types:
+            - creature
+            any_of:
+            - race_has: エンジェル・コマンド
+            - race_has: デーモン・コマンド
+    mod:
+      deny:
+      - attack_player
+  mana: 1
+  text: 'ブロッカー
+
+    このクリーチャーは、バトルゾーンに自分のエンジェル・コマンドまたはデーモン・コマンドがあれば、相手プレイヤーを攻撃できる。'
+  source:
+    official: dm38-020
+    review: pending
