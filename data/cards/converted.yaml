@@ -434218,3 +434218,180 @@ cards:
   source:
     official: dm24rp2-055
     review: pending
+- id: dm22-016
+  name: 熱闘勇士マデュカス
+  types:
+  - creature
+  civs:
+  - fire
+  cost: 5
+  power: 2000
+  races:
+  - ヒューマノイド
+  abilities:
+  - kind: static
+    affects:
+      zone: bz
+      owner: you
+      filter:
+        types:
+        - creature
+    mod:
+      power_when:
+        amount: 4000
+        when: attacking
+      require:
+      - attack
+  mana: 1
+  text: '自分のクリーチャーはすべて「パワーアタッカー+4000」を得る。(攻撃中、「パワーアタッカー+4000」を得たクリーチャーのパワーは+4000される)
+
+    自分のクリーチャーはすべて、可能であれば毎ターン攻撃する。'
+  source:
+    official: dm22-016
+    review: pending
+- id: dm22-031
+  name: ドラゴンの執事ニャンパッタ
+  types:
+  - creature
+  civs:
+  - fire
+  cost: 4
+  power: 1000
+  races:
+  - ドリームメイト
+  keywords:
+  - speed_attacker
+  abilities:
+  - kind: static
+    affects: self
+    mod:
+      require:
+      - attack
+  - kind: trigger
+    when:
+      event: turn_start
+    if:
+      is_turn: you
+    effect:
+    - op: may
+      body:
+      - op: destroy
+        select:
+          ref: self
+      - op: may
+        body:
+        - op: move
+          select:
+            zone: hand
+            owner: you
+            filter:
+              types:
+              - creature
+              race_has: ドラゴン
+              not_types:
+              - evolution
+            count: 1
+          to: bz
+          reason: put
+  mana: 1
+  text: 'スピードアタッカー
+
+    このクリーチャーは、可能であれば毎ターン攻撃する。
+
+    自分のターンのはじめに、このクリーチャーを破壊してもよい。そうした場合、進化ではないドラゴンを１体、自分の手札からバトルゾーンに出してもよい。'
+  source:
+    official: dm22-031
+    review: pending
+- id: dmc34-036
+  name: 雲海の守護者メッサ・バーナ
+  types:
+  - creature
+  civs:
+  - light
+  cost: 3
+  power: 5000
+  races:
+  - ガーディアン
+  keywords:
+  - blocker
+  - cannot_attack_player
+  abilities:
+  - kind: static
+    affects: self
+    mod:
+      require:
+      - block
+  mana: 1
+  text: 'ブロッカー
+
+    このクリーチャーは、相手プレイヤーを攻撃できない。
+
+    相手のクリーチャーが攻撃する時、このクリーチャーは可能ならブロックする。'
+  source:
+    official: dmc34-036
+    review: pending
+    aliases:
+    - dm10-074
+- id: dm20-050
+  name: 追撃のライゼン
+  types:
+  - creature
+  civs:
+  - fire
+  cost: 1
+  power: 3000
+  races:
+  - ブレイブ・スピリット
+  abilities:
+  - kind: static
+    affects: self
+    if:
+      cmp:
+      - turn_count:
+          kind: attack
+          owner: you
+          filter:
+            race_has: ティラノ・ドレイク
+      - ==
+      - 0
+    mod:
+      deny:
+      - attack_player
+      - attack_creature
+  mana: 1
+  text: 自分のティラノ・ドレイクがこのターン攻撃していなければ、このクリーチャーは攻撃することができない。
+  source:
+    official: dm20-050
+    review: pending
+- id: dm22-008
+  name: リバース・トーン
+  types:
+  - spell
+  civs:
+  - light
+  cost: 4
+  keywords:
+  - s_trigger
+  spell:
+  - op: choose
+    select:
+      zone: bz
+      owner: any
+      filter:
+        types:
+        - creature
+        evolution: true
+      count: 1
+    as: e
+  - op: move
+    select:
+      under_of: e
+    to: hand
+    reason: return
+  mana: 1
+  text: 'S・トリガー(この呪文をシールドゾーンから手札に加える時、コストを支払わずにすぐ唱えてもよい)
+
+    バトルゾーンにある進化クリーチャーを１体選ぶ。そのクリーチャーの下にあるカードをすべて、持ち主の手札に戻す。'
+  source:
+    official: dm22-008
+    review: pending
