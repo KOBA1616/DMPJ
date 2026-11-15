@@ -132,6 +132,7 @@ def _drawout_order(eng: Engine, d: dict):
 import os as _os
 ROLLOUT_LOOKAHEAD = _os.environ.get("DMSIM_ROLLOUT_LOOKAHEAD", "0") == "1"
 ROLLOUT_WIDTH = 4
+ROLLOUT_TOTAL = 3000    # 1手の探索の中で先読みに使う総手数の上限。使い切ったら残りは並びの先頭（seed 39 が終わらなかった、§34）
 ROLLOUT_DEPTH = 60      # 先読みの各候補を貪欲に進める手数の上限（ループで2000手まで回ると1局が数時間かかった）
 
 
@@ -327,7 +328,8 @@ class TurnSearch:
         """予算切れの後の1手。既定は並びの先頭（貪欲）。ROLLOUT_LOOKAHEAD（DMSIM_ROLLOUT_LOOKAHEAD=1、経路の点があるときだけ）なら、
         1つ選ぶ決定は各候補を答えて次の自分の決定まで進めた局面を評価関数で比べる（1手先読み。深いループの途中の選択を並び順で決めない）。"""
         cands = candidates(eng, d, self.w, cap=1 if not (ROLLOUT_LOOKAHEAD and self.value_fn) else 6)
-        if len(cands) == 1 or not (ROLLOUT_LOOKAHEAD and self.value_fn) or not (d["max"] == 1 and d["min"] == 1):
+        if len(cands) == 1 or not (ROLLOUT_LOOKAHEAD and self.value_fn) or not (d["max"] == 1 and d["min"] == 1) \
+                or getattr(self, "_la_left", 0) <= 0:
             return cands[0]
         best, bv = cands[0], None
         for c in cands[:ROLLOUT_WIDTH]:
@@ -338,6 +340,7 @@ class TurnSearch:
                 while (d2 := self._settle(e2)) is not None and n < ROLLOUT_DEPTH:   # 残りは並びの先頭で（ROLLOUT_DEPTH 手まで）
                     e2.answer(candidates(e2, d2, self.w, cap=1)[0])
                     n += 1
+                self._la_left -= n + 1
                 v = self._eval(e2)
             except Exception:
                 continue
@@ -348,6 +351,7 @@ class TurnSearch:
     def run(self, eng: Engine) -> tuple[Engine, TurnStats]:
         """eng（自分の決定待ち）から探索し、一番評価の高いターン終了局面の Engine を返す。eng は変更しない。"""
         self.left = self.budget
+        self._la_left = ROLLOUT_TOTAL     # 先読みの総手数の残り（1手の探索あたり、§34）
         self._root_log = len(eng.log)
         self._rf = REPEAT_FIRST if self.repeat_first is None else self.repeat_first
         self._deadline = None if self.time_limit is None else time.monotonic() + self.time_limit

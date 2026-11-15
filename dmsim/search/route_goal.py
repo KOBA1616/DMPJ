@@ -27,6 +27,7 @@ class Stage:
     weight: float
     preds: tuple[dict, ...]
     has_entry: bool = False   # 段の述語に入口（entry:）を含む
+    entry_name: str | None = None
 
 
 def _entry_preds(name: str) -> tuple[dict, ...]:
@@ -58,7 +59,7 @@ def load(name: str, drawout: bool | None = None) -> tuple[Stage, ...]:
         preds = (_entry_preds(s["entry"]) if "entry" in s else ()) + tuple(s.get("all", ()))   # entry と all は併記できる（入口に加えて…の段）
         if dw:
             preds = _with_drawout(preds)
-        out.append(Stage(s["name"], float(s["weight"]), preds, "entry" in s))
+        out.append(Stage(s["name"], float(s["weight"]), preds, "entry" in s, s.get("entry")))
     return tuple(out)
 
 
@@ -175,14 +176,24 @@ def needed_cards(stages) -> dict[str, tuple[int, set]]:
     return out
 
 
-def away_penalty(eng, need: dict, me: int = 0) -> float:
-    """経路に要る札が、経路の段が指さないゾーン（マナ）に置かれた枚数（必要枚数まで）。"""
+def away_penalty(eng, need: dict, me: int = 0, grave_dead: set | None = None) -> float:
+    """経路に要る札が、経路の段が指さないゾーン（マナ）に置かれた枚数（必要枚数まで）。
+    grave_dead: 墓地に置くと経路で使えなくなる札（墓地から使う効果が自分の札に無く、段も墓地を指さない。§34）も墓地を数える。"""
     tot = 0
     for nm, (n, zones) in need.items():
-        for z in AWAY_ZONES:
+        for z in AWAY_ZONES + (("graveyard",) if grave_dead and nm in grave_dead else ()):
             if z not in zones:
                 tot += min(count(eng, {"zone": z, "match": {"name": nm}}, me), n)
     return float(tot)
+
+
+def grave_dead_cards(eng, need: dict, me: int = 0) -> set:
+    """経路に要る札のうち、墓地に置くと使えなくなる札（access.usable_from で墓地から使えない）。デッキ全体の札の効果から決める。"""
+    from .access import _grave_users, usable_from
+    s = eng.s
+    mine = [s.cards[c].defn for z in ("bz", "hand", "graveyard", "deck", "mana", "shield") for c in s.zones[z][me]]
+    users = _grave_users(eng.rules, mine)
+    return {nm for nm, (_, zones) in need.items() if "graveyard" not in zones and not usable_from(eng.rules, nm, "graveyard", users)}
 
 
 def make_value_fn(stages, weights: Weights | None = None, *, mult: float = 1.0, partial: bool = False,
@@ -196,6 +207,7 @@ def make_value_fn(stages, weights: Weights | None = None, *, mult: float = 1.0, 
     w = weights or Weights()
     need = needed_cards(stages) if away else {}
     cont = drawout_on() and bool(drawout_wins(stages))
+    dead = [None]
     if cont:
         wins = drawout_wins(stages)
         e_idx = entry_index(stages)
@@ -206,7 +218,12 @@ def make_value_fn(stages, weights: Weights | None = None, *, mult: float = 1.0, 
             return v
         fl = ratchet[0] if ratchet else 0
         if cont:
-            return v + mult * continuous_score(eng, stages, me, fl, wins, e_idx, partial, elsewhere)
+            r = continuous_score(eng, stages, me, fl, wins, e_idx, partial, elsewhere)
+            if away:   # §34: 連続点の経路でも、経路に要る札をマナ（と墓地で使えなくなる札は墓地）へ送った分を引く（#452 で抜けていた）
+                if dead[0] is None:
+                    dead[0] = grave_dead_cards(eng, need, me)
+                r -= away * away_penalty(eng, need, me, dead[0])
+            return v + mult * r
         r = route_score(eng, stages, me, fl)
         if partial:
             r += partial_score(eng, stages, me, elsewhere, fl)
@@ -244,12 +261,42 @@ def entry_index(stages) -> int:
     return 0
 
 
+LOOP_SEEN_N = 3   # ループ部品を墓地・山札から動かす選択がこの回数あれば「ループが実際に回った」とみなす（§34）
+
+
+def loop_ids(entry_name: str | None) -> frozenset:
+    """入口のループ部品（source.core の part: loop）。入口の定義（最小パーツ）は変えない。"""
+    if not entry_name:
+        return frozenset()
+    d = json.loads((ENTRY_DIR / f"{entry_name}.json").read_text(encoding="utf-8"))   # 入口の定義ファイルを直接読む（S4 を import しない）
+    return frozenset(i for g in d.get("source", {}).get("core", []) if g.get("part") == "loop"
+                     for alt in g.get("any", []) for i in alt)
+
+
+def loop_seen(eng, me: int, ids: frozenset) -> bool:
+    """入口の定義を満たさなくても、ループ部品を墓地・山札から動かす選択を LOOP_SEEN_N 回以上していれば開ける（§34）。"""
+    if not ids:
+        return False
+    n = 0
+    for x in eng.log:
+        if x["p"] != me:
+            continue
+        for k in x["keys"]:
+            z, _, rest = k.partition(":")
+            if z in ("graveyard", "deck") and rest.split(":")[0] in ids:
+                n += 1
+                if n >= LOOP_SEEN_N:
+                    return True
+    return False
+
+
 def continuous_score(eng, stages, me, floor, wins, e_idx, partial, elsewhere) -> float:
     """入口に届くまでは今まで通り。入口より後ろの段は、その対局で入口に届いた（floor ≥ 入口の段）か今入口を満たすときだけ数え、
     さらに勝ちに必要な残り（access.remaining）が少ないほど点を上げる。勝ち手段が場にあるのに残りが0でなければ減点（早出しの抑え）。"""
     from .access import remaining
     k_now = reached(eng, stages, me)
-    seen = e_idx == 0 or floor >= e_idx or all(holds(eng, p, me) for p in stages[e_idx - 1].preds)
+    seen = e_idx == 0 or floor >= e_idx or all(holds(eng, p, me) for p in stages[e_idx - 1].preds) \
+        or loop_seen(eng, me, loop_ids(stages[e_idx - 1].entry_name))
     if not seen:   # 入口を経ずに後ろの段を満たしても数えない（§30 の穴ふさぎ）
         k_now = max([i for i, st in enumerate(stages[:e_idx - 1], 1) if all(holds(eng, p, me) for p in st.preds)], default=0)
     k = max(k_now, floor if seen else min(floor, max(0, e_idx - 1)))
