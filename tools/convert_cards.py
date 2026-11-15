@@ -196,6 +196,19 @@ def _schema_check(raw: dict) -> None:
         raise DefError("スキーマ不一致: " + " / ".join(errs))
 
 
+def static_scope_errors(card: dict) -> list[str]:
+    """mod を持つ常在型に affects が無いと、エンジンは「場の全カード」に効かせる（affects の既定は {}）。
+    「このクリーチャーは攻撃できない」等の自己限定を書き漏らすと全体に効く誤りになる（dmd24-024 オリーブオイル、#471）。
+    対象は必ず明示させる: 自分だけなら affects: self、全体なら affects: {zone: bz, owner: any} のように書く。"""
+    out = []
+    for holder in [card, *(card.get("faces") or [])]:
+        for i, ab in enumerate(holder.get("abilities") or []):
+            if isinstance(ab, dict) and ab.get("kind") == "static" and "mod" in ab and "affects" not in ab:
+                out.append(f"{holder.get('name') or card.get('id')} の abilities[{i}] は mod のある常在型なのに affects が無い"
+                           "（自分だけなら affects: self、全体に効くなら affects に範囲を明示）")
+    return out
+
+
 def validate(raw: dict, row: dict, tables) -> dict:
     if raw.get("id") != row["id"]:
         raise DefError(f"id が {row['id']} になっていない: {raw.get('id')}")
@@ -203,6 +216,9 @@ def validate(raw: dict, row: dict, tables) -> dict:
         raw["abilities"] = dedupe_list(raw["abilities"])    # 同じ能力が二重に入る変換（誘発が2回起きる）を、どの変換経路でも入口で除く
     parse_card(raw, tables)
     _schema_check(raw)
+    scope = static_scope_errors(raw)
+    if scope:
+        raise DefError("; ".join(scope))
     src = raw.setdefault("source", {})
     src["official"] = row["id"]
     src["review"] = "pending"      # LLM の出力は必ず人の確認待ちにする
