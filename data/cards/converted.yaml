@@ -432505,3 +432505,204 @@ cards:
   source:
     official: dmrp08-069
     review: pending
+- id: dm24ex4-069
+  name: 轟血鬼 ザ・ナイト
+  types:
+  - creature
+  civs:
+  - darkness
+  cost: 2
+  power: 4000
+  races:
+  - ソニック・コマンド
+  - ヴァンパイア
+  abilities:
+  - kind: static
+    affects: self
+    if:
+      cmp:
+      - turn_count:
+          kind: shield_left
+          owner: you
+      - ==
+      - 0
+    mod:
+      deny:
+      - attack_player
+      - attack_creature
+  mana: 1
+  text: このターン、カードが自分のシールドゾーンを離れていなければ、このクリーチャーは攻撃できない。
+  source:
+    official: dm24ex4-069
+    review: pending
+    aliases:
+    - dm24ex4-pr029
+    - promoy24-047
+- id: dm23ex2-cho015
+  name: 貝獣 パウアー
+  types:
+  - creature
+  civs:
+  - water
+  cost: 7
+  power: 5000
+  races:
+  - ムートピア
+  keywords:
+  - blocker
+  abilities:
+  - kind: trigger
+    when:
+      event: move
+      to: bz
+      subject: self
+    effect:
+    - op: may
+      body:
+      - op: draw
+        count: 4
+  - kind: trigger
+    when:
+      event: move
+      from: hand
+      to: graveyard
+      reason: discard
+      subject: self
+      by: opp
+    effect:
+    - op: may
+      body:
+      - op: draw
+        count: 4
+    zone: hand
+  mana: 1
+  text: 'ブロッカー（このクリーチャーをタップして、相手クリーチャーの攻撃先をこのクリーチャーに変更してもよい）
+
+    このクリーチャーが出た時、あるいは、相手の呪文の効果または相手のクリーチャーの能力によってこのクリーチャーが自分の手札から捨てられた時、カードを４枚引いてもよい。'
+  source:
+    official: dm23ex2-cho015
+    review: pending
+    aliases:
+    - dmex02-072
+    - promoy22-026
+- id: dm24ex3-rp2003
+  name: 深淵の瘴炉 インシネ＝ロウ
+  types:
+  - creature
+  civs:
+  - darkness
+  cost: 5
+  power: 6000
+  races:
+  - アビスロイヤル
+  keywords:
+  - double_breaker
+  abilities:
+  - kind: trigger
+    when:
+      event: move
+      to: bz
+      subject: self
+    effect:
+    - op: discard
+      select:
+        zone: hand
+        owner: opp
+        count: 1
+        chooser: random
+  - &id229
+    kind: static
+    affects: self
+    zone: hand
+    mod:
+      cost:
+        amount: -2
+        count:
+          sum:
+          - turn_count:
+              kind: untap_creature
+              owner: you
+          - turn_count:
+              kind: untap_creature
+              owner: opp
+      cost_min: 1
+  - kind: trigger
+    when:
+      event: move
+      from: hand
+      to: graveyard
+      reason: discard
+      subject:
+        owner: opp
+    effect:
+    - op: modify
+      select:
+        zone: bz
+        owner: opp
+        filter:
+          types:
+          - creature
+        count: 1
+      mod:
+        power: -3000
+      duration: end_of_turn
+  mana: 1
+  text: 'このターンアンタップしたクリーチャー１体につき、このクリーチャーの召喚コストを２少なくする。ただし、コストは０以下にはならない。
+
+    W・ブレイカー
+
+    このクリーチャーが出た時、相手の手札を１枚見ないで選び、捨てさせる。
+
+    相手が自身の手札を１枚捨てた時、相手のクリーチャーを１体選ぶ。このターン、そのクリーチャーのパワーを－3000する。（パワー０以下のクリーチャーは破壊される）'
+  source:
+    official: dm24ex3-rp2003
+    review: pending
+    notes: 「このターンアンタップしたクリーチャー１体につき」は turn_count kind untap_creature（両プレイヤーの和）。「０以下にはならない」は
+      cost_min 1
+    aliases:
+    - dm24rp2-003
+- id: dm24ex3-rp2004
+  name: ネオ・アルティメット・ドラゴン
+  types:
+  - creature
+  civs:
+  - fire
+  cost: 5
+  power: 7000
+  races:
+  - アーマード・ドラゴン
+  keywords:
+  - speed_attacker
+  - double_breaker
+  abilities:
+  - *id229
+  - kind: trigger
+    when:
+      event: tap
+      subject: self
+    effect:
+    - op: may
+      body:
+      - op: discard
+        select:
+          zone: hand
+          owner: you
+          count: all
+      - op: draw
+        count: 3
+  mana: 1
+  text: 'このターンアンタップしたクリーチャー１体につき、このクリーチャーの召喚コストを２少なくする。ただし、コストは０以下にはならない。
+
+    スピードアタッカー
+
+    W・ブレイカー
+
+    このクリーチャーがタップした時、自分の手札をすべて捨ててもよい。そうしたら、カードを３枚引く。'
+  source:
+    official: dm24ex3-rp2004
+    review: pending
+    notes: 「このターンアンタップしたクリーチャー１体につき」は turn_count kind untap_creature（両プレイヤーの和）。「０以下にはならない」は
+      cost_min 1
+    aliases:
+    - dm24ex3-sec07
+    - dm24rp2-004

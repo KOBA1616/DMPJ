@@ -51,7 +51,7 @@ FILTER_EXPR_KEYS = {"cost_le", "cost_ge", "power_le", "power_ge", "races", "civs
 # 履歴カウンタ（式 {turn_count: ...}）の kind 列挙（バンドC1 U19＋統一で追加した分）。
 # owner に any を許すのは destroyed と attack だけ（他は you/opp）
 TURN_COUNT_KINDS = {"shield_put", "shield_left", "mana_put", "cast", "summon", "attack", "destroyed",
-                    "broke_by_self", "broke_by_self_attack", "draw", "broken", "enter", "discard", "leave", "tap", "untap",
+                    "broke_by_self", "broke_by_self_attack", "draw", "broken", "enter", "discard", "leave", "tap", "untap", "untap_creature",
                     "block", "enter_unpaid", "attack_by", "attack_on"}
 TURN_COUNT_ANY_KINDS = {"destroyed", "attack"}
 ORD_KINDS = {"mana_put", "enter", "cast", "summon", "draw", "attack", "attack_by"}   # when の {ord: ...} で照合できる kind
