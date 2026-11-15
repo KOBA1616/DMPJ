@@ -434947,3 +434947,522 @@ cards:
   source:
     official: dm28-s04
     review: pending
+- id: dm32-022
+  name: 爆進エナジー・スパイラル
+  types:
+  - spell
+  civs:
+  - water
+  cost: 4
+  spell:
+  - op: if
+    cond: &id246
+      exists:
+        zone: bz
+        owner: you
+        filter:
+          types:
+          - creature
+          evolution: true
+    then:
+    - &id243
+      op: draw
+      count: 2
+    - &id244
+      op: choose
+      select:
+        zone: bz
+        owner: any
+        filter:
+          types:
+          - creature
+        count: 1
+      as: t
+    - &id245
+      op: move
+      select:
+        ref: t
+      to: hand
+      reason: return
+    else:
+    - op: modal
+      modes:
+      - - *id243
+      - - *id244
+        - *id245
+  mana: 1
+  text: '次のうちいずれかひとつを選ぶ。
+
+    カードを２枚引く。
+
+    バトルゾーンにあるクリーチャーを１体選び、持ち主の手札に戻す。
+
+    爆進ダブル(バトルゾーンに自分の進化クリーチャーがあれば、この効果を両方とも選んでもよい)'
+  source:
+    official: dm32-022
+    review: pending
+    notes: 爆進ダブルは if（進化があれば両方、なければ modal）の型（dm25ex3-tf08 の先例）
+- id: dm32-028
+  name: 爆進ガブラ・ハンド
+  types:
+  - spell
+  civs:
+  - darkness
+  cost: 4
+  spell:
+  - op: if
+    cond: *id246
+    then:
+    - &id247
+      op: destroy
+      select:
+        zone: bz
+        owner: opp
+        chooser: opp
+        filter:
+          types:
+          - creature
+        count: 1
+    - &id248
+      op: discard
+      select:
+        zone: hand
+        owner: opp
+        chooser: opp
+        count: 1
+    else:
+    - op: modal
+      modes:
+      - - *id247
+      - - *id248
+  mana: 1
+  text: '次のうちいずれかひとつを選ぶ。
+
+    相手は自分自身のクリーチャーを１体選び、破壊する。
+
+    相手は自分自身の手札を１枚選んで捨てる。
+
+    爆進ダブル(バトルゾーンに自分の進化クリーチャーがあれば、この効果を両方とも選んでもよい)'
+  source:
+    official: dm32-028
+    review: pending
+    notes: 爆進ダブルは if（進化があれば両方、なければ modal）の型（dm25ex3-tf08 の先例）
+- id: dm32-034
+  name: 爆進メガバースト
+  types:
+  - spell
+  civs:
+  - fire
+  cost: 7
+  spell:
+  - op: if
+    cond: *id246
+    then:
+    - &id249
+      op: destroy
+      select:
+        zone: bz
+        owner: opp
+        filter:
+          types:
+          - creature
+          power_le: 6000
+        count: 1
+    - &id250
+      op: destroy
+      select:
+        zone: bz
+        owner: opp
+        filter:
+          types:
+          - creature
+          power_le: 2000
+        count: 3
+        up_to: true
+    else:
+    - op: modal
+      modes:
+      - - *id249
+      - - *id250
+  mana: 1
+  text: '次のうちいずれかひとつを選ぶ。
+
+    相手のパワー6000以下のクリーチャーを１体破壊する。
+
+    相手のパワー2000以下のクリーチャーを３体まで破壊する。
+
+    爆進ダブル(バトルゾーンに自分の進化クリーチャーがあれば、この効果を両方とも選んでもよい)'
+  source:
+    official: dm32-034
+    review: pending
+    notes: 爆進ダブルは if（進化があれば両方、なければ modal）の型（dm25ex3-tf08 の先例）
+- id: dmex06-085
+  name: 一極両得 マクノカ＆ヌクノカ
+  types:
+  - spell
+  civs:
+  - nature
+  cost: 3
+  spell:
+  - op: if
+    cond:
+      exists:
+        zone: bz
+        owner: you
+        filter:
+          types:
+          - creature
+          race_has: エグザイル
+    then:
+    - &id251
+      op: move
+      select:
+        zone: deck
+        owner: you
+        from_top: 1
+      to: mana
+      reason: put
+    - &id252
+      op: may
+      body:
+      - op: move
+        select:
+          zone: mana
+          owner: you
+          count: 1
+        to: hand
+        reason: return
+    else:
+    - op: modal
+      modes:
+      - - *id251
+      - - *id252
+  mana: 1
+  text: '次のうちいずれか１つを選ぶ。バトルゾーンに自分のエグザイル・クリーチャーがあれば、両方を選んでもよい。
+
+    →自分の山札の上から１枚目を、マナゾーンに置く。
+
+    →カードを１枚、自分のマナゾーンから手札に戻してもよい。'
+  source:
+    official: dmex06-085
+    review: pending
+    notes: 両方選べる条件は if で両方、なければ modal（爆進ダブルと同じ型）
+    aliases:
+    - dmr12-032
+- id: dmex08-197
+  name: The ネギミソ漢
+  types:
+  - creature
+  civs:
+  - nature
+  cost: 4
+  power: 3000
+  races:
+  - ジョーカーズ
+  abilities:
+  - kind: trigger
+    when:
+      event: move
+      to: bz
+      subject: self
+    effect:
+    - op: move
+      select:
+        zone: deck
+        owner: you
+        from_top: 1
+      to: mana
+      reason: put
+      tapped: true
+    - op: may
+      body:
+      - op: move
+        select:
+          zone: mana
+          owner: you
+          filter:
+            types:
+            - creature
+            any_of:
+            - name_has: 漢
+            - name_has: 名人
+          count: 1
+        to: hand
+        reason: return
+  mana: 1
+  text: このクリーチャーがバトルゾーンに出た時、自分の山札の上から１枚目を、タップしてマナゾーンに置く。その後、《漢》または《名人》と名前にあるクリーチャーを１体、自分のマナゾーンから手札に戻してもよい。
+  source:
+    official: dmex08-197
+    review: pending
+- id: dmd05-004
+  name: スーパー・ゴーオン・ピッピー
+  types:
+  - creature
+  civs:
+  - fire
+  cost: 3
+  power: 3000
+  races:
+  - ファイアー・バード
+  - ハンター
+  abilities:
+  - kind: static
+    affects:
+      zone: bz
+      owner: you
+      filter:
+        types:
+        - creature
+        race_has: ドラゴン
+        races:
+        - ハンター
+    mod:
+      grant:
+      - speed_attacker
+  mana: 1
+  text: バトルゾーンにある自分の、ドラゴンとハンター両方を種族に持つクリーチャーはすべて「スピードアタッカー」を得る。(「スピードアタッカー」を得たクリーチャーは召喚酔いしない)
+  source:
+    official: dmd05-004
+    review: pending
+    aliases:
+    - dmx02-004
+- id: dmd11-010
+  name: 死の獅子 ディオジープ
+  types:
+  - creature
+  civs:
+  - fire
+  cost: 6
+  power: 6000
+  races:
+  - アウトレイジ
+  keywords:
+  - double_breaker
+  abilities:
+  - kind: trigger
+    when:
+      event: attack
+      subject: self
+    effect:
+    - op: choose
+      select:
+        zone: bz
+        owner: you
+        filter:
+          types:
+          - creature
+        other: true
+        count: 1
+        up_to: true
+      as: d
+    - op: destroy
+      select:
+        ref: d
+    - op: if
+      cond:
+        cmp:
+        - count:
+            ref: d
+        - '>='
+        - 1
+      then:
+      - op: untap
+        select:
+          ref: self
+    first_time: true
+  mana: 1
+  text: このクリーチャーが各ターンはじめて攻撃する時、自分の他のクリーチャーを１体破壊してもよい。そうした場合、このクリーチャーをアンタップする。W・ブレイカー（このクリーチャーはシールドを２枚ブレイクする）
+  source:
+    official: dmd11-010
+    review: pending
+- id: dmd17-010
+  name: アクア・アナライザー
+  types:
+  - creature
+  civs:
+  - water
+  cost: 3
+  power: 2000
+  races:
+  - リキッド・ピープル
+  abilities:
+  - kind: trigger
+    when: &id253
+      event: move
+      to: bz
+      subject: self
+    effect:
+    - op: choose
+      select:
+        zone: deck
+        owner: you
+        from_top: 5
+        look: true
+        count: all
+      as: pile
+    - op: move
+      select:
+        ref: pile
+        count: all
+      to: deck
+      reason: put
+      position: top
+  mana: 1
+  text: このクリーチャーをバトルゾーンに出した時、自分の山札の上から５枚まで見て、好きな順序で山札に戻す。
+  source:
+    official: dmd17-010
+    review: pending
+    aliases:
+    - dm10-084
+    - dmc61-067
+    - dmx12b-095
+- id: dmex12-088
+  name: ロイヤル・アドニス
+  types:
+  - creature
+  civs:
+  - water
+  cost: 4
+  power: 2000
+  races:
+  - スプラッシュ・クイーン
+  keywords:
+  - s_trigger
+  abilities:
+  - kind: trigger
+    when: *id253
+    effect:
+    - op: choose
+      select:
+        zone: deck
+        owner: you
+        from_top: 3
+        look: true
+        count: all
+      as: pile
+    - op: move
+      select:
+        ref: pile
+        count: all
+      to: deck
+      reason: put
+      position: top
+  mana: 1
+  text: 'S・トリガー（このクリーチャーをシールドゾーンから手札に加える時、コストを支払わずにすぐ召喚してもよい）
+
+    このクリーチャーがバトルゾーンに出た時、自分の山札の上から３枚を見て、好きな順序で元に戻す。'
+  source:
+    official: dmex12-088
+    review: pending
+    aliases:
+    - dm24-082
+- id: dmex17-120
+  name: シナプス・キューブ
+  types:
+  - spell
+  civs:
+  - water
+  cost: 1
+  spell:
+  - op: choose
+    select:
+      zone: deck
+      owner: you
+      from_top: 4
+      look: true
+      count: all
+    as: pile
+  - op: move
+    select:
+      ref: pile
+      count: all
+    to: deck
+    reason: put
+    position: top
+  mana: 1
+  text: 自分の山札の上から４枚を見て、好きな順序で元に戻す。
+  source:
+    official: dmex17-120
+    review: pending
+    notes: 見て好きな順序で戻すは、見た束を上へ戻す（順序は選択）
+    aliases:
+    - dm17-043
+- id: dmex14-048
+  name: 「未来は努力で変えられる！」
+  types:
+  - spell
+  civs:
+  - water
+  cost: 1
+  spell:
+  - op: choose
+    select:
+      zone: deck
+      owner: you
+      from_top: 2
+      look: true
+      count: all
+    as: pile
+  - op: move
+    select:
+      ref: pile
+      count: all
+    to: deck
+    reason: put
+    position: top
+  - op: if
+    cond:
+      exists:
+        zone: bz
+        owner: you
+        filter:
+          types:
+          - creature
+          multicolor: true
+    then:
+    - op: draw
+      count: 1
+  mana: 1
+  text: '自分の山札の上から２枚を見て、好きな順序で元に戻す。
+
+    レインボーナス：バトルゾーンに自分の多色クリーチャーがあれば、カードを１枚引く。'
+  source:
+    official: dmex14-048
+    review: pending
+    notes: 見て好きな順序で戻すは、見た束を上へ戻す（順序は選択）
+- id: dmr01-031
+  name: ニドギリ・ドラゴン
+  types:
+  - creature
+  civs:
+  - fire
+  cost: 5
+  power: 5000
+  races:
+  - アーマード・ドラゴン
+  - ハンター
+  abilities:
+  - kind: trigger
+    when:
+      event: tap
+      subject: self
+    effect:
+    - op: untap
+      select:
+        ref: self
+    first_time: true
+  - kind: static
+    affects: self
+    mod:
+      require:
+      - attack
+  mana: 1
+  text: '各ターン、このクリーチャーがはじめてタップした時、アンタップする。
+
+    このクリーチャーは、可能なら各ターン２度攻撃する。'
+  source:
+    official: dmr01-031
+    review: pending
+    notes: 「可能なら各ターン２度攻撃」は、はじめてのタップでアンタップ＋攻撃強制で表した
+    aliases:
+    - promoy10-018
