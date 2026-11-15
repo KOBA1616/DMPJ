@@ -199,6 +199,10 @@ def cmd_wide(a):
     from dmsim.eval.contrib import remove_pair
     rules = _rules()
     t0 = time.time()
+    stage = Path(a.out).with_suffix(".screen.json")
+    if a.resume and stage.exists():
+        z = json.loads(stage.read_text(encoding="utf-8"))
+        return _confirm(a, rules, z["results"], z["hits"], z["decks"], z["ctrl_of"], z["uniq"], z["picked"], t0)
     ids = sorted(i for i, d in rules.cards.items() if not B._test(i) and isinstance(d.cost, int))
     missing = {i for i in ids if B.missing_effect(rules.cards[i])}
     ps = pairs(rules, ids, missing)
@@ -241,20 +245,36 @@ def cmd_wide(a):
         if any(_sig(x["ci95"], x["diff"]) for x in cb.values()):
             hits.append(k)
     print(f"区間が0を超えた組 {len(hits)} {time.time()-t0:.0f}s", flush=True)
+    stage = Path(a.out).with_suffix(".screen.json")   # 途中保存（確認の段で止まっても、ふるいの結果は残る）
+    stage.write_text(json.dumps({"args": vars(a), "picked": len(picked), "controls": len(uniq), "results": res, "hits": hits,
+                                 "decks": decks, "ctrl_of": ctrl_of, "uniq": uniq}, ensure_ascii=False, default=str), encoding="utf-8")
+    return _confirm(a, rules, res, hits, decks, ctrl_of, uniq, len(picked), t0)
+
+
+def _confirm(a, rules, res, hits, decks, ctrl_of, uniq, picked_n, t0):
+    ctrl_names = {h: f"#ctrl{i}" for i, h in enumerate(uniq)}
+    kw = dict(opp_level=a.opp, max_turn=a.turn, budget=a.budget)
     conf = {}
     if hits and a.confirm:
         cs = range(1, a.confirm + 1)
         need = {k: decks[k] for k in hits}
         need.update({ctrl_names[ctrl_of[k]]: uniq[ctrl_of[k]] for k in hits})
-        r2 = measure_many(need, cs, a.procs, **kw)
-        r1 = measure_many(need, cs, a.procs, **{**kw, "opp_level": a.ref})
+        def cached(tag, lvl):   # 段ごとに途中保存（止まっても済んだ段は測り直さない）
+            f = Path(a.out).with_suffix(f".confirm_{tag}.json")
+            if a.resume and f.exists():
+                return json.loads(f.read_text(encoding="utf-8"))
+            r = measure_many(need, cs, a.procs, **{**kw, "opp_level": lvl})
+            f.write_text(json.dumps(r, ensure_ascii=False, default=str), encoding="utf-8")
+            return r
+        r2 = cached("base", a.opp)
+        r1 = cached("ref", a.ref)
         for k in hits:
             c = ctrl_names[ctrl_of[k]]
             conf[k] = {"opp": {str(a.opp): {v: A.pair_contribution(r2[k], r2[c], a.turn, v) for v in A.VALUES},
                                str(a.ref): {v: A.pair_contribution(r1[k], r1[c], a.turn, v) for v in A.VALUES}}}
             x = conf[k]["opp"][str(a.opp)]
             print(f"確認 {'+'.join(res[k]['pair']['names'])}: " + " ".join(f"{v} {x[v]['diff']:+.2f}{x[v]['ci95']}" for v in A.VALUES), flush=True)
-    Path(a.out).write_text(json.dumps({"args": vars(a), "seconds": round(time.time() - t0), "picked": len(picked), "controls": len(uniq),
+    Path(a.out).write_text(json.dumps({"args": vars(a), "seconds": round(time.time() - t0), "picked": picked_n, "controls": len(uniq),
                                        "results": res, "hits": hits, "confirm": conf}, ensure_ascii=False, indent=1, default=str), encoding="utf-8")
 
 
@@ -340,6 +360,7 @@ def main():
     ap.add_argument("--per", type=int, default=3, help="wide: 1枚の札が入る組の上限")
     ap.add_argument("--turn", type=int, default=4, help="wide: 値を読むターン（この先は回さない）")
     ap.add_argument("--ref", type=opp_arg, default="2b", help="wide: 確認の時に併記する参考の相手")
+    ap.add_argument("--resume", action="store_true", help="wide: 途中保存（<out>.screen.json）があれば、ふるいを飛ばして確認から")
     ap.add_argument("--confirm", type=int, default=40, help="wide: 区間が0を超えた組を測り直す局数")
     a = ap.parse_args()
     {"control": cmd_control, "search": cmd_search, "known": cmd_known, "wide": cmd_wide}[a.mode](a)
