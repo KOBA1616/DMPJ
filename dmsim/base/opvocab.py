@@ -59,6 +59,7 @@ OP_ARGS: dict[str, dict[str, str]] = {
     'remove_seal': {'select': 'selector', 'count': 'int?'},
     'end_turn': {},
     'use_partner': {'of': 'str?', 'exclude_self': 'bool?', 'pending': 'bool?'},
+    'use_cip': {'select': 'selector', 'optional': 'bool?'},
     'choose_player': {'as': 'str'},
     'choose': {'select': 'selector', 'reveal': 'bool?', 'as': 'str'},
     'strigger': {'select': 'selector', 'mode': 'str'},

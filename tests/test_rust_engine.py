@@ -191,3 +191,23 @@ def test_if_cards_match(real_env, seed):
     spec = {"kind": "new_game", "decks": [deck(), deck()], "seed": seed, "first_player": seed % 2}
     res = lockstep(Session.open(r, spec), rustcore.RustSession.open(r, spec, b), f"random:{seed}")
     assert res["divergence"] is None and res["ok"] is True
+
+
+@pytest.mark.parametrize("seed", range(1, 61))
+def test_spell_decks_match(real_env, seed):
+    """段階3-a: 単純な呪文（引く・選ぶ・移動・タップ・if・may と S・トリガー）を半分入れた実カードのデッキで、
+    1局が決定と digest まで一致する。呪文を1枚以上唱えた局であること。"""
+    import random
+    r, b = real_env
+    spells = [i for i in _portable(r) if r.cards[i].types == ["spell"]]
+    creatures = [i for i in _portable(r) if r.cards[i].types == ["creature"]]
+    assert len(spells) > 100
+    rnd = random.Random(seed * 7 + 1)
+    decks = [[rnd.choice(spells) for _ in range(20)] + [rnd.choice(creatures) for _ in range(20)] for _ in range(2)]
+    spec = {"kind": "new_game", "decks": decks, "seed": seed, "first_player": seed % 2}
+    a, bb = Session.open(r, spec), rustcore.RustSession.open(r, spec, b)
+    res = lockstep(a, bb, f"random:{seed}")
+    assert res["divergence"] is None and res["ok"] is True, res.get("divergence")
+    sp = set(spells)
+    assert any(o.get("keys") and o["keys"][0].startswith("play:") and o["keys"][0].split(":")[1] in sp for o in a.eng.log) \
+        or any(e["kind"] == "declare_strigger" and e["keys"] for e in a.eng.log)

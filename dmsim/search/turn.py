@@ -93,12 +93,12 @@ def _rank(eng: Engine, d: dict, w: Weights) -> list[int]:
 
 
 def DRAWOUT_ORDER() -> bool:
-    """進化元・メテオバーンの並べ替え（§32）。段階1の40局で段2が改善しなかったので独立の切り替え DMSIM_EVO_ORDER（既定無効）。"""
+    """進化元・メテオバーンの並べ替え（§33）。段階1の40局で段2が改善しなかったので独立の切り替え DMSIM_EVO_ORDER（既定無効）。"""
     return _os.environ.get("DMSIM_EVO_ORDER", "0") == "1"
 
 
 def _drawout_order(eng: Engine, d: dict):
-    """ドロー置換の勝ち手段の線の並べ替え（§32、DMSIM_EVO_ORDER=1 のときだけ）。効果データの形だけを見る。
+    """ドロー置換の勝ち手段の線の並べ替え（§33、DMSIM_EVO_ORDER=1 のときだけ）。効果データの形だけを見る。
     - 進化元を選ぶ: 「墓地に置かれた時に引く」札を先に、ドロー置換の勝ち手段を後に（勝ち手段は墓地に残してメテオバーンで出す）。
     - 場の札の下から墓地へ置く札を選ぶ（メテオバーンなど）: 引く札を先に、勝ち手段を後に。
     - 墓地から場へ出す札を選ぶ: 勝ち手段を先に。
@@ -154,6 +154,14 @@ def _from_hand_to_grave(eng, d) -> bool:
     return isinstance(op, dict) and op.get("to") == "graveyard"
 
 
+def _card_sig(eng, cs, cid):
+    r = cs(cid) if cs is not None else None
+    if r is not None:
+        return r
+    c = eng.s.cards[cid]
+    return (c.defn, tuple(sorted(eng.s.cards[u].defn for u in c.under)))
+
+
 def candidates(eng: Engine, d: dict, w: Weights, cap: int = 6) -> list[list[int]]:
     """探索で試す答えの候補（良さそうな順）。複数選ぶ決定は組み合わせを cap 個まで。同じ意味キーの組は1つにまとめる。"""
     order = _rank(eng, d, w)
@@ -161,10 +169,10 @@ def candidates(eng: Engine, d: dict, w: Weights, cap: int = 6) -> list[list[int]
         # 区別できない選択肢（同じ種類のカード、同じ下のカードを持つシールドなど）は1つにまとめる。
         # マナの払い方は文明の組が同じなら同じとみなして、上位2通りまでにする
         out, seen = [], set()
+        cs = getattr(eng, "card_sig", None)
         for i in order:
             o = d["options"][i]
-            sig = (o["key"],) + ((eng.s.cards[o["cid"]].defn, tuple(sorted(eng.s.cards[u].defn for u in eng.s.cards[o["cid"]].under)))
-                                 if "cid" in o and o.get("name") == "?" else ())
+            sig = (o["key"],) + (_card_sig(eng, cs, o["cid"]) if "cid" in o and o.get("name") == "?" else ())
             if sig in seen:
                 continue
             seen.add(sig)
@@ -173,7 +181,7 @@ def candidates(eng: Engine, d: dict, w: Weights, cap: int = 6) -> list[list[int]
     keys = [o["key"] for o in d["options"]]
     out, seen = [], set()
     if d["kind"] == "choose_evo_source" and DRAWOUT_ORDER():
-        # §32: 勝ち手段（ドロー置換）を進化元に入れない組を先に試す（墓地に残してメテオバーンで出す）
+        # §33: 勝ち手段（ドロー置換）を進化元に入れない組を先に試す（墓地に残してメテオバーンで出す）
         from .access import draw_win
         keep = [i for i in order if not draw_win(eng.rules, eng.s.cards[d["options"][i]["cid"]].defn)] if all(
             "cid" in o for o in d["options"]) else []
@@ -363,8 +371,12 @@ class TurnSearch:
             return self._eval(leaf), leaf, ()
         h, ctr = abstract(eng, "in_turn")
         # マナは枚数だけでなく何が残っているか（文明）も区別する。払い方の違いで闇マナが残るか否かが変わる
-        mana_left = tuple(sorted((c.defn, c.tapped) for c in (eng.s.cards[x] for p in (0, 1) for x in eng.s.zones["mana"][p])))
-        sizes = tuple(len(eng.s.zones[z][p]) for p in (0, 1) for z in ("hand", "shield", "graveyard", "bz"))   # 骨格が同じでも枚数が違う局面は別（手札を引いて捨てた後など）
+        ex = eng.tkey_extra() if hasattr(eng, "tkey_extra") else None   # Rust で進めている局は状態を作り直さずに読む
+        if ex is not None:
+            mana_left, sizes = ex
+        else:
+            mana_left = tuple(sorted((c.defn, c.tapped) for c in (eng.s.cards[x] for p in (0, 1) for x in eng.s.zones["mana"][p])))
+            sizes = tuple(len(eng.s.zones[z][p]) for p in (0, 1) for z in ("hand", "shield", "graveyard", "bz"))   # 骨格が同じでも枚数が違う局面は別（手札を引いて捨てた後など）
         tkey = (h, tuple(sorted(ctr.items())), mana_left, sizes)
         cert = det.observe(eng)
         if cert is not None and self.collect is not None:

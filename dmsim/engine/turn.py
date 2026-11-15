@@ -433,7 +433,7 @@ class TurnMixin:
     def _evo_pool(self, cid, p, face=None) -> list[int]:
         f = self.cdef(cid).face(face)
         z = f.evolve_zone
-        pool = self.bz_tops(p) if z == "bz" else self.zlist(z, p)
+        pool = self.bz_tops(p) if z == "bz" else [c for c in self.zlist(z, p) if c != cid]   # 手札進化: 自分自身は進化元にしない
         return [c for c in pool if ("creature" in self.chars_ro(c)["types"] or self.permits(c, "evolve_base"))]
 
     def _evo_v_ready(self, cid, p, face=None) -> bool:

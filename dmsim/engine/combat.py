@@ -231,9 +231,13 @@ class CombatMixin:
         losers = [r for r in losers_by_power if not self._battle_indestructible(r, y if r == x else x)]
         winners = [r for r in (x, y) if r not in losers_by_power]
         slay = [[r, y if r == x else x] for r in losers if self.permits(r[0], "slayer")]
+        # 「バトルに負けた時」: パワーで負けた側（破壊されない場合も負けは負け。相打ちは両方）。相手は event.opponent。
+        # 破壊の移動より前に置き、負けて破壊されるクリーチャー自身の能力も誘発する（場にいる間に起きた出来事として拾う）
+        lose_evs = [{"ev": "battle_lose", "subject": r, "opponent": y if r == x else x, "controller": self.s.cards[r[0]].controller} for r in losers_by_power]
         evs = [{"ev": "move", "subject": r, "to": "graveyard", "reason": "destroy", "battle": True} for r in losers]
-        evs += [{"ev": "battle_win", "subject": r, "controller": self.s.cards[r[0]].controller} for r in winners]
-        out = self._window(self.ev_task(evs))
+        evs += [{"ev": "battle_win", "subject": r, "opponent": y if r == x else x, "controller": self.s.cards[r[0]].controller} for r in winners]
+        # 負けの誘発は破壊の前（場にいる間）に拾い、解決は同じ窓の終わり＝破壊の後（603.3: 誘発は次に解決できる時まで待機）
+        out = self._window(*([self.ev_task(lose_evs)] if lose_evs else []), self.ev_task(evs))
         if slay:   # 701.13d バトルの後に誘発する「スレイヤー」
             out += self._window({"t": "slayer", "pairs": slay})
         # 「バトルの後」（バンドB U7）: 両参加者を subject とする合成レコードを末尾に出す。

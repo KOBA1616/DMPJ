@@ -197,8 +197,31 @@ def _active_lock(rules, cand: Candidate, step, measured: dict, known_min: float)
     return step("replay", not diff, f"seed {cand.seeds[:REPLAY_SEEDS]} を回し直して一致" if not diff else f"回し直すと結果が変わる seed {diff}")
 
 
+def _contrib(rules, cand: Candidate, measured: dict) -> dict:
+    """組の寄与（中核のループ部品をつなぎ札に置き換えた対照との同一シード差）を measured["values"]["contribution"] に記録する。
+    相手 cand.contrib["opp_level"]、自分の cand.contrib["max_turn"] ターン目の終わりの値（eval.attack.VALUES）。足切りには使わない。"""
+    import yaml as _y
+    from ..base.store import REPO
+    from . import attack as A
+    from .contrib import remove_pair
+    c = dict(cand.contrib or {})
+    deck = _y.safe_load((REPO / c["deck"]).read_text(encoding="utf-8"))["deck"]
+    lvl, t = c.get("opp_level", "2b"), int(c.get("max_turn", 4))
+    seeds = range(1, int(c.get("seeds", 20)) + 1)
+    core = sorted(cand.core_ids("loop"))
+    base = remove_pair(deck, core)
+    kw = dict(opp_level=lvl, max_turn=max(t, 4), budget=cand.budget or 200)
+    w = [A.run_one(rules, deck, s, **kw) for s in seeds]
+    wo = [A.run_one(rules, base, s, **kw) for s in seeds]
+    out = {"opp_level": lvl, "turn": t, "core_removed": core, "seeds": len(seeds),
+           "by_value": {v: A.pair_contribution(w, wo, t, v) for v in c.get("values") or list(A.VALUES)}}
+    measured.setdefault("values", {})["contribution"] = out
+    return out
+
+
 def _resource(rules, cand: Candidate, step, measured: dict) -> bool:
-    """リソース型: 測って記録するが、合格線が未定なので通さない（resource 検証で落ちる。線は指揮役とユーザーが決める）。"""
+    """リソース型: 足切りせず値を記録して通す（ユーザー方針 2026-11-14: リソース型は値で順位づけ）。
+    値は measured["values"]: resource（効率 adv・得た量）と、contrib があれば組の寄与。"""
     from . import resource as rs
     if not cand.setup:
         return step("entry", False, "リソース型には setup（入口の局面）が要る")
@@ -207,8 +230,13 @@ def _resource(rules, cand: Candidate, step, measured: dict) -> bool:
     rows = [rs.measure_one(rules, spec, deck, s, budget=cand.budget or 200) for s in cand.seeds]
     measured.update({"seeds": cand.seeds, "resource": rs.summarize(rows), "rows": rows})
     sm = measured["resource"]
-    return step("resource", False, f"効率 adv 中央値 {sm['adv_median']}（{sm['adv_min']}〜{sm['adv_max']}）・得た量中央値 {sm['gain_median']}。"
-                                   "合格線が未定のため登録しない（docs/combo-ruler-design.md §17）")
+    measured.setdefault("values", {})["resource"] = sm
+    detail = f"効率 adv 中央値 {sm['adv_median']}（{sm['adv_min']}〜{sm['adv_max']}）・得た量中央値 {sm['gain_median']}"
+    if cand.contrib:
+        cb = _contrib(rules, cand, measured)["by_value"]
+        detail += "。寄与 " + "・".join(f"{v} {x['diff']:+.2f}{tuple(x['ci95']) if x['ci95'] else ''}" for v, x in cb.items())
+    ok = sm["n"] > 0 and sm["adv_median"] is not None
+    return step("resource", ok, detail + "（足切りなし、値で順位づけ）" if ok else "測れた局がない")
 
 
 def register(rules, cand: Candidate, *, path=registry.PATH, purpose: str = "eval") -> tuple[Evidence, dict]:
