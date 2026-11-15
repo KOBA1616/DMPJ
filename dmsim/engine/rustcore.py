@@ -588,9 +588,15 @@ class RustEngine:
             e.log = self.log
             self._fb, self._c, self._py = e, None, None
 
+    _MUTATORS = ("_raw_", "_push", "_defer", "_pop", "_expire", "_sba", "_move", "_put", "_set")
+
     def __getattr__(self, name):
         if name.startswith("__"):
             raise AttributeError(name)
+        if name.startswith(self._MUTATORS):
+            # 局面を直接書き換える内部の操作（準備用の移動など）は、読み取り用の写しに書いても Rust に届かないので、
+            # Python に戻してからそちらで行う（結果は Python と同じ。遅くなるだけ）
+            return getattr(self._fallback(), name)
         return getattr(self._view(), name)
 
     # -- 探索が局面ごとに読む欄（状態を作り直さずに Rust から直接引く。Python に戻した後は None） --
