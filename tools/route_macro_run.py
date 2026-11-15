@@ -56,6 +56,7 @@ def main(argv=None):
     ap.add_argument("--control", action="store_true")
     ap.add_argument("--away", type=float, default=40.0)
     ap.add_argument("--out")
+    ap.add_argument("--opp-level", type=int, default=0, help="相手の抵抗の段階（1=S・トリガー入りの相手）")
     a = ap.parse_args(argv)
     from dmsim import load_rules
     from dmsim.eval import loop_entry as L
@@ -75,7 +76,7 @@ def main(argv=None):
     opts = {"partial": True, "away": a.away, "keep_hand": a.keep, "ratchet": drawout_on()} if a.route else None
     rows = []
     for s in range(a.start, a.start + a.games):
-        r = measure_assembly(rules, a.entry, deck, [s], route=a.route, route_log=a.log, route_opts=opts)[0]
+        r = measure_assembly(rules, a.entry, deck, [s], route=a.route, route_log=a.log, route_opts=opts, opp_level=a.opp_level)[0]
         rows.append(r)
         print(json.dumps(r, ensure_ascii=False, default=str), flush=True)
     out = {"entry": a.entry, "deck": a.deck, "route": a.route, "keep": a.keep, "macro": a.macro, "control": a.control,

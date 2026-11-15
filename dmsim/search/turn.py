@@ -67,9 +67,13 @@ def _rank(eng: Engine, d: dict, w: Weights) -> list[int]:
         except Exception:
             free_now = set()
 
+    dw = _drawout_order(eng, d) if DRAWOUT_ORDER() else None
+
     def key(i):
         o = opts[i]
         k = o["key"]
+        if dw is not None and "cid" in o:
+            return dw(o)
         if kind == "charge":
             if k == "pass":
                 return (0 if len(eng.zlist("mana", p)) >= w.max_mana else 2, 0)
@@ -88,10 +92,46 @@ def _rank(eng: Engine, d: dict, w: Weights) -> list[int]:
     return sorted(range(len(opts)), key=key)
 
 
+def DRAWOUT_ORDER() -> bool:
+    return _os.environ.get("DMSIM_DRAWOUT", "0") == "1"
+
+
+def _drawout_order(eng: Engine, d: dict):
+    """ドロー置換の勝ち手段の線の並べ替え（§32、DMSIM_DRAWOUT=1 のときだけ）。効果データの形だけを見る。
+    - 進化元を選ぶ: 「墓地に置かれた時に引く」札を先に、ドロー置換の勝ち手段を後に（勝ち手段は墓地に残してメテオバーンで出す）。
+    - 場の札の下から墓地へ置く札を選ぶ（メテオバーンなど）: 引く札を先に、勝ち手段を後に。
+    - 墓地から場へ出す札を選ぶ: 勝ち手段を先に。
+    それ以外の決定は None（従来の並び）。"""
+    from .access import draw_win, grave_draws
+    rules, s = eng.rules, eng.s
+    opts = d["options"]
+    if not opts or not all("cid" in o for o in opts):
+        return None
+    kind = d["kind"]
+    zones = {s.cards[o["cid"]].zone for o in opts}
+    t = eng.s.tasks[-1] if eng.s.tasks else {}
+    op = (t.get("ops") or [None])[t.get("pc", 0)] if t.get("t") == "effect" and 0 <= t.get("pc", -1) < len(t.get("ops") or ()) else None
+    to = op.get("to") if isinstance(op, dict) else None
+    under_all = {u for c in s.zones["bz"][d["player"]] for u in s.cards[c].under}
+    from_under = all(o["cid"] in under_all for o in opts)
+
+    def win(o):
+        return 1 if draw_win(rules, s.cards[o["cid"]].defn) else 0
+
+    def drw(o):
+        return 1 if grave_draws(rules, s.cards[o["cid"]].defn) else 0
+    if kind == "choose_evo_source" or (kind == "choose_cards" and from_under and to == "graveyard"):
+        return lambda o: (win(o), -drw(o))
+    if kind == "choose_cards" and zones == {"graveyard"} and to == "bz":
+        return lambda o: (-win(o), 0)
+    return None
+
+
 # 予算切れの後の打ち切りで1手先読みする（§31）。既定は無効（従来どおり並びの先頭）
 import os as _os
 ROLLOUT_LOOKAHEAD = _os.environ.get("DMSIM_ROLLOUT_LOOKAHEAD", "0") == "1"
 ROLLOUT_WIDTH = 4
+ROLLOUT_DEPTH = 60      # 先読みの各候補を貪欲に進める手数の上限（ループで2000手まで回ると1局が数時間かかった）
 
 
 # 経路に要る札を手札に残す口（search.route_goal.keep_hand を eval.assemble が経路つきの測定の間だけ差す）。
@@ -131,7 +171,15 @@ def candidates(eng: Engine, d: dict, w: Weights, cap: int = 6) -> list[list[int]
         return out[:2] if d["kind"] == "pay_mana" else out
     keys = [o["key"] for o in d["options"]]
     out, seen = [], set()
-    if d["kind"] == "order_cards":          # 並べ替え: 元の順と次の順の2つまで（同じ意味キーの並びは1つ）
+    if d["kind"] == "choose_evo_source" and DRAWOUT_ORDER():
+        # §32: 勝ち手段（ドロー置換）を進化元に入れない組を先に試す（墓地に残してメテオバーンで出す）
+        from .access import draw_win
+        keep = [i for i in order if not draw_win(eng.rules, eng.s.cards[d["options"][i]["cid"]].defn)] if all(
+            "cid" in o for o in d["options"]) else []
+        if d["min"] <= len(keep[:d["max"]]) and len(keep) < len(order):
+            c = keep[:d["max"]]
+            seen.add(tuple(sorted(keys[i] for i in c)))
+            out.append(c)          # 並べ替え: 元の順と次の順の2つまで（同じ意味キーの並びは1つ）
         for perm in itertools.permutations(order):
             sig = tuple(keys[i] for i in perm)
             if sig not in seen:
@@ -278,7 +326,7 @@ class TurnSearch:
             try:
                 e2.answer(c)
                 n = 0
-                while (d2 := self._settle(e2)) is not None and n < self.rollout_cap:   # 残りは並びの先頭で最後まで
+                while (d2 := self._settle(e2)) is not None and n < ROLLOUT_DEPTH:   # 残りは並びの先頭で（ROLLOUT_DEPTH 手まで）
                     e2.answer(candidates(e2, d2, self.w, cap=1)[0])
                     n += 1
                 v = self._eval(e2)
