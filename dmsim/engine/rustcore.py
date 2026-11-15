@@ -89,7 +89,7 @@ def _simple_selector(sel) -> bool:
         if not isinstance(r, str) or r in ("self", "self_moved", "self_entered", "crossed", "subject") or r.startswith("event.") \
                 or {"zone", "owner", "from_top"} & set(sel):
             return False
-    elif sel.get("zone") not in ("hand", "deck", "graveyard", "mana", "bz", "shield") or sel.get("owner", "you") not in ("you", "opp"):
+    elif sel.get("zone") not in ("hand", "deck", "graveyard", "mana", "bz", "shield") or sel.get("owner", "you") not in ("you", "opp", "any"):
         return False
     if sel.get("chooser", "you") not in ("you", "opp"):
         return False
@@ -116,7 +116,7 @@ def _simple_cands(sel) -> bool:
     if "ref" in sel:
         return isinstance(sel["ref"], str) and not sel["ref"].startswith("event.") and sel["ref"] not in ("self_moved", "self_entered", "crossed", "subject") \
             and set(sel) <= {"ref", "filter"} and ("filter" not in sel or _simple_filter(sel["filter"]))
-    return sel.get("zone") in ("hand", "deck", "graveyard", "mana", "bz", "shield") and sel.get("owner", "you") in ("you", "opp") \
+    return sel.get("zone") in ("hand", "deck", "graveyard", "mana", "bz", "shield") and sel.get("owner", "you") in ("you", "opp", "any") \
         and isinstance(sel.get("from_top", 0), int) and ("filter" not in sel or _simple_filter(sel["filter"])) and isinstance(sel.get("other", False), bool)
 
 
@@ -155,9 +155,22 @@ def _simple_effect(ops, top=True) -> bool:
                 and isinstance(o["mod"]["power"], int) and not isinstance(o["mod"]["power"], bool) and isinstance(o.get("select"), dict) \
                 and set(o["select"]) == {"ref"} and isinstance(o["select"]["ref"], str) and o["select"]["ref"] not in ("self",):
             continue   # このターンの間のパワー修整（変数で指した対象）
+        if k == "modify" and o.get("dynamic") is True and set(o) <= {"op", "select", "mod", "dynamic", "duration"} \
+                and o.get("duration", "end_of_turn") == "end_of_turn" and isinstance(o.get("mod"), dict) and set(o["mod"]) == {"deny"} \
+                and isinstance(o["mod"]["deny"], list) and all(isinstance(x, str) for x in o["mod"]["deny"]) \
+                and isinstance(o.get("select"), dict) and set(o["select"]) <= {"zone", "owner", "filter", "count"} \
+                and o["select"].get("zone", "bz") == "bz" and o["select"].get("owner", "you") in ("you", "opp", "any") \
+                and o["select"].get("count", "all") == "all" and _simple_filter(o["select"].get("filter", {})):
+            continue   # このターンの間の「〜できない」（後から出たクリーチャーにも及ぶ）
         if k == "choose" and set(o) <= {"op", "select", "as"} and isinstance(o.get("as"), str) and _simple_selector(o.get("select")):
             continue   # 子の効果での束縛は、Rust が同じ env を持つタスクすべてに書く（Python の env 共有と同じ結果）
         if k == "play_free" and set(o) <= {"op", "select"} and _simple_selector(o.get("select")) and o["select"].get("zone") == "hand":
+            continue
+        if k == "modal" and set(o) <= {"op", "modes", "count"} and isinstance(o.get("count", 1), int) \
+                and isinstance(o.get("modes"), list) and 1 <= o.get("count", 1) <= len(o["modes"]) \
+                and all(isinstance(m, list) and _simple_effect(m, False) for m in o["modes"]):
+            continue
+        if k == "end_turn" and set(o) == {"op"}:
             continue
         if k == "win" and set(o) <= {"op", "player"} and o.get("player", "you") in ("you", "opp"):
             continue
@@ -247,7 +260,7 @@ def _is_plain_spell(d) -> bool:
         return False
     if not set(d.keywords) <= {"s_trigger", "charger"}:
         return False
-    if d.resolve_to not in ("graveyard", "mana") or ("charger" in d.keywords) != (d.resolve_to == "mana"):
+    if d.resolve_to not in ("graveyard", "mana", "shield") or ("charger" in d.keywords) != (d.resolve_to == "mana"):
         return False
     for ab in d.abilities:
         if not (ab["kind"] == "static" and ab.get("zone") == "shield" and ab.get("affects") == "self" and "if" not in ab
@@ -434,9 +447,32 @@ def _bundle_json(rules) -> str:
 
 
 def enabled() -> bool:
-    """DMSIM_RUST=1 で対局・探索のエンジンを Rust にする（既定は Python）。"""
+    """対局・探索のエンジンを Rust にするか。既定は有効（dmcore があり、全札が Rust で動く局だけ）。
+    DMSIM_RUST=0 で無効（従来どおり Python だけ）。この1か所で切り替える。"""
     import os
-    return available() and os.environ.get("DMSIM_RUST", "0") == "1"
+    return available() and os.environ.get("DMSIM_RUST", "1") != "0" and _fresh_build()
+
+
+_FRESH: bool | None = None
+
+
+def _fresh_build() -> bool:
+    """組み込まれた dmcore が rust/dmcore/src より新しいか（古いビルドで Python とずれた結果を出さないための安全弁）。
+    ソースが無い環境（配布物）では真。古ければ1度だけ警告して Rust を使わない（maturin develop で作り直す）。"""
+    global _FRESH
+    if _FRESH is None:
+        import os
+        import warnings
+        src = os.path.join(os.path.dirname(__file__), "..", "..", "rust", "dmcore", "src")
+        try:
+            newest = max(os.path.getmtime(os.path.join(src, f)) for f in os.listdir(src))
+            built = os.path.getmtime(dmcore.__file__) if getattr(dmcore, "__file__", None) else newest
+            _FRESH = built >= newest
+        except OSError:
+            _FRESH = True
+        if not _FRESH:
+            warnings.warn("dmcore のビルドが rust/dmcore/src より古いので Rust を使わない（maturin develop で作り直す）")
+    return _FRESH
 
 
 def supports(rules, state) -> bool:

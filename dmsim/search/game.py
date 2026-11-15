@@ -135,7 +135,7 @@ def play_game(rules, deck: list[str], opp_deck: list[str], seed: int, *, first_p
     t0 = time.perf_counter()
     res = GameResult(seed=seed, first_player=first_player)
     eng = start.clone() if start is not None else Engine.new_game(rules, [deck, opp_deck], seed, first_player)
-    eng = rustcore.maybe_rust(eng)   # DMSIM_RUST=1 かつ全札が Rust で動く局は Rust で進める（未対応に当たれば Python に戻る）
+    eng = rustcore.maybe_rust(eng)   # 全札が Rust で動く局は Rust で進める（既定で有効。DMSIM_RUST=0 で無効。未対応に当たれば Python に戻る）
     opp_pol = charge_only_policy
     if opp is not None:                      # 妨害モデル（dmsim.opponent.OppModel）。None なら従来の何もしない相手
         opp.setup(eng)
@@ -174,7 +174,7 @@ def fair_game(rules, deck, opp_deck, seed, first_player, max_turn, budget, start
     t0 = time.perf_counter()
     res = GameResult(seed=seed, first_player=first_player)
     eng = start.clone() if start is not None else Engine.new_game(rules, [deck, opp_deck], seed, first_player)
-    eng = rustcore.maybe_rust(eng)   # DMSIM_RUST=1 かつ全札が Rust で動く局は Rust で進める（未対応に当たれば Python に戻る）
+    eng = rustcore.maybe_rust(eng)   # 全札が Rust で動く局は Rust で進める（既定で有効。DMSIM_RUST=0 で無効。未対応に当たれば Python に戻る）
     cur = [eng]
     try:
         opp_pol = charge_only_policy
