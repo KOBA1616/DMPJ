@@ -431413,3 +431413,571 @@ cards:
     - water
     - nature
   cost_reduce_per_evo: 2
+- id: dm26rp3-077
+  name: 光る！流れる!!ベンザマン!!!
+  types:
+  - creature
+  civs:
+  - light
+  - water
+  cost: 2
+  power: 2000
+  races:
+  - ジョーカーズ
+  abilities:
+  - kind: trigger
+    when: &id221
+      event: move
+      to: bz
+      subject: self
+    effect:
+    - op: modal
+      modes:
+      - - op: draw
+          count: 1
+      - - &id222
+          op: use_cip
+          select:
+            zone: bz
+            owner: you
+            other: true
+            count: 1
+            filter:
+              race_has: ジョーカーズ
+  mana: 1
+  text: 'このクリーチャーが出た時、次の中から１回選ぶ。
+
+    ▶カードを１枚引く。
+
+    ▶Jビッグ１する。（自分の他のジョーカーズの、Jビッグ１以外の、出た時にトリガーする能力を１つ使う）'
+  source:
+    official: dm26rp3-077
+    review: pending
+    notes: 「Jビッグ１」は use_cip（自分の他のジョーカーズ1体の出た時の能力を1つ使う。use_cip を含む能力は除外）
+- id: dm26rp3-013
+  name: にやにYAH
+  types:
+  - creature
+  civs:
+  - light
+  cost: 6
+  power: 3000
+  races:
+  - ジョーカーズ
+  keywords:
+  - s_trigger
+  abilities:
+  - kind: trigger
+    when: *id221
+    effect:
+    - op: modal
+      modes:
+      - - op: tap
+          select:
+            zone: bz
+            owner: opp
+            filter:
+              types:
+              - creature
+            count: all
+      - - *id222
+  mana: 1
+  text: 'S・トリガー
+
+    このクリーチャーが出た時、次の中から１回選ぶ。
+
+    ▶相手のクリーチャーをすべてタップする。
+
+    ▶Jビッグ１する。（自分の他のジョーカーズの、Jビッグ１以外の、出た時にトリガーする能力を１つ使う）'
+  source:
+    official: dm26rp3-013
+    review: pending
+    notes: 「Jビッグ１」は use_cip（自分の他のジョーカーズ1体の出た時の能力を1つ使う。use_cip を含む能力は除外）
+- id: dm26rp3-055
+  name: ヒトリダチ モンキッド
+  types:
+  - creature
+  civs:
+  - light
+  cost: 4
+  power: 4000
+  races:
+  - ジョーカーズ
+  keywords:
+  - s_trigger
+  abilities:
+  - kind: trigger
+    when: *id221
+    effect:
+    - op: modal
+      modes:
+      - - op: choose
+          select: &id223
+            zone: bz
+            owner: any
+            filter:
+              types:
+              - creature
+            count: 1
+          as: target
+        - op: modal
+          modes:
+          - - op: tap
+              select:
+                ref: target
+          - - op: untap
+              select:
+                ref: target
+      - - *id222
+  mana: 1
+  text: 'S・トリガー（このカードを自分のシールドゾーンから手札に加える時、コストを支払わずにすぐ実行してもよい）
+
+    このクリーチャーが出た時、次の中から１回選ぶ。
+
+    ▶クリーチャーを１体選び、タップまたはアンタップする。
+
+    ▶Jビッグ１する。（自分の他のジョーカーズの、Jビッグ１以外の、出た時にトリガーする能力を１つ使う）'
+  source:
+    official: dm26rp3-055
+    review: pending
+    notes: 「Jビッグ１」は use_cip（自分の他のジョーカーズ1体の出た時の能力を1つ使う。use_cip を含む能力は除外）
+    aliases:
+    - promoy25-089
+- id: dm26rp3-sec022
+  name: ヒトリダチ モンキッド(DM26RP3 ㊙22/㊙24)
+  types:
+  - creature
+  civs:
+  - light
+  cost: 4
+  power: 4000
+  races:
+  - ジョーカーズ
+  keywords:
+  - s_trigger
+  abilities:
+  - kind: trigger
+    when: *id221
+    effect:
+    - op: modal
+      modes:
+      - - op: choose
+          select: *id223
+          as: target
+        - op: modal
+          modes:
+          - - op: tap
+              select:
+                ref: target
+          - - op: untap
+              select:
+                ref: target
+      - - *id222
+  mana: 1
+  text: 'S・トリガー
+
+    このクリーチャーが出た時、次の中から１回選ぶ。
+
+    ▶クリーチャーを１体選び、タップまたはアンタップする。
+
+    ▶Jビッグ１する。'
+  source:
+    official: dm26rp3-sec022
+    review: pending
+    notes: 「Jビッグ１」は use_cip（自分の他のジョーカーズ1体の出た時の能力を1つ使う。use_cip を含む能力は除外）
+- id: dm26sd1-m005
+  name: 深淵の壊炉 マーダン=ロウ
+  types:
+  - creature
+  civs:
+  - darkness
+  cost: 4
+  power: 4000
+  races:
+  - アビスロイヤル
+  keywords:
+  - slayer
+  abilities:
+  - kind: trigger
+    when:
+      event: move
+      to: bz
+      subject: self
+    effect:
+    - op: discard
+      select:
+        zone: hand
+        owner: opp
+        filter:
+          types:
+          - creature
+        count: 1
+        look: true
+  - kind: trigger
+    when:
+      event: attack
+      subject: self
+    effect:
+    - op: if
+      cond:
+        cmp:
+        - count:
+            zone: bz
+            owner: you
+            filter:
+              civs:
+              - darkness
+              types:
+              - creature
+              - tamaseed
+        - '>='
+        - 3
+      then:
+      - op: may
+        body:
+        - op: choose
+          select:
+            zone: graveyard
+            owner: opp
+            count: 1
+          as: g
+        - op: use_cip
+          select:
+            ref: g
+          optional: true
+        - op: move
+          select:
+            ref: g
+          to: deck
+          position: bottom
+          reason: put
+  mana: 1
+  text: 'スレイヤー（このクリーチャーがバトルする時、バトルの後、相手クリーチャーを破壊する）
+
+    このクリーチャーが出た時、相手の手札を見てクリーチャーを１体選び、捨てさせる。
+
+    シビルカウント３：このクリーチャーが攻撃する時、自分の闇の、クリーチャーまたはタマシードが合計３つ以上あれば、相手の墓地にあるカードを１枚選んでもよい。そのカードの、出た時にトリガーする能力を、自分が１つ使ってもよい。その後、そのカードを持ち主の山札の下に置く。'
+  source:
+    official: dm26sd1-m005
+    review: pending
+    notes: シビルカウント３は if cmp（闇の、クリーチャーかタマシードの数 >= 3）。出た時の能力は use_cip（自分が使う）
+    aliases:
+    - dm22rp2-5a
+    - dm22rp2-7b
+    - dm22rp2-s5
+    - dm22rp2x-5a
+    - dm22rp2x-7b
+    - dm22rp2x-s5
+    - dm22rp2x-s5x
+    - dm23sp1-004
+    - dm25ex3-rp1tr4
+    - dm25rp1-tr04
+    - dm25sd1-004
+    - dmart25-003
+- id: dm32-003
+  name: クリスタル・アックス
+  types:
+  - creature
+  - evolution
+  civs:
+  - water
+  cost: 7
+  power: 11000
+  races:
+  - リキッド・ピープル
+  keywords:
+  - unblockable
+  - double_breaker
+  mana: 1
+  text: '手札進化-水のクリーチャーを１体自分の手札から選び、このクリーチャーをその上に重ねつつバトルゾーンに出す。
+
+    このクリーチャーはブロックされない。
+
+    W・ブレイカー(このクリーチャーはシールドを２枚ブレイクする)'
+  source:
+    official: dm32-003
+    review: pending
+  evolve_zone: hand
+  evolve_from: &id224
+    civs:
+    - water
+- id: dmex03-006
+  name: 賀二流忍者ザリガニンゾウ
+  types:
+  - creature
+  - evolution
+  civs:
+  - water
+  cost: 8
+  power: 13000
+  races:
+  - ムートピア
+  - スペシャルズ
+  keywords:
+  - triple_breaker
+  - unblockable
+  mana: 1
+  text: '手札進化：水のクリーチャーを１体自分の手札から選び、このクリーチャーをその上に重ねつつバトルゾーンに出す。
+
+    T・ブレイカー（このクリーチャーはシールドを３つブレイクする）
+
+    このクリーチャーはブロックされない。'
+  source:
+    official: dmex03-006
+    review: pending
+  evolve_zone: hand
+  evolve_from: *id224
+- id: dm35-040
+  name: 魔皇アンドラージ
+  types:
+  - creature
+  - evolution
+  civs:
+  - water
+  cost: 4
+  power: 3000
+  races:
+  - グランド・デビル
+  abilities:
+  - kind: trigger
+    when: &id225
+      event: move
+      to: bz
+      subject: self
+    effect:
+    - op: may
+      body:
+      - op: draw
+        count: 2
+      - op: discard
+        select:
+          zone: hand
+          owner: you
+          count: 2
+  mana: 1
+  text: '手札進化-水のクリーチャーを１体自分の手札から選び、このクリーチャーをその上に重ねつつバトルゾーンに出す。
+
+    このクリーチャーをバトルゾーンに出した時、カードを２枚引いてもよい。そうした場合、自分の手札を２枚捨てる。'
+  source:
+    official: dm35-040
+    review: pending
+  evolve_zone: hand
+  evolve_from: *id224
+- id: dmx12b-057
+  name: ダイヤモンド・ブリザード
+  types:
+  - creature
+  - evolution
+  civs:
+  - nature
+  cost: 3
+  power: 5000
+  races:
+  - スノーフェアリー
+  evolve_from:
+    race_has: スノーフェアリー
+  abilities:
+  - kind: trigger
+    when: *id225
+    effect:
+    - op: move
+      select:
+        zone:
+        - graveyard
+        - mana
+        owner: you
+        filter:
+          race_has: スノーフェアリー
+        count: all
+      to: hand
+      reason: put
+  mana: 1
+  text: '進化-自分のスノーフェアリー１体の上に置く。
+
+    このクリーチャーをバトルゾーンに出した時、スノーフェアリーをすべて、自分の墓地とマナゾーンから手札に戻す。'
+  source:
+    official: dmx12b-057
+    review: pending
+    aliases:
+    - dm11-003
+- id: dmx23-023
+  name: 未来の玉 ダンテ
+  types:
+  - creature
+  civs:
+  - light
+  cost: 5
+  power: 4000
+  races:
+  - ジャスティス・オーブ
+  - エンジェル・コマンド・ドラゴン
+  - 革命軍
+  keywords:
+  - blocker
+  - cannot_attack_player
+  abilities:
+  - kind: trigger
+    when: *id225
+    effect:
+    - op: may
+      body:
+      - op: move
+        select:
+          zone:
+          - mana
+          - graveyard
+          owner: you
+          filter:
+            types:
+            - spell
+          count: 1
+        to: hand
+        reason: put
+  - kind: replace
+    when:
+      event: move
+      subject: self
+      from: bz
+      to: graveyard
+      reason: destroy
+    instead:
+    - op: move
+      select:
+        ref: self
+      to: deck
+      position: top
+      reason: put
+  mana: 1
+  text: ブロッカー（このクリーチャーをタップして、相手クリーチャーの攻撃先をこのクリーチャーに変更してもよい）このクリーチャーは、相手プレイヤーを攻撃できない。このクリーチャーがバトルゾーンに出た時、呪文を１枚、自分のマナゾーンまたは墓地から手札に戻してもよい。このクリーチャーが破壊される時、かわりに自分の山札の上に置く。
+  source:
+    official: dmx23-023
+    review: pending
+    aliases:
+    - dmr20-012
+- id: dmx22a-s06
+  name: 偽りの王 ハチャトゥリアン
+  types:
+  - creature
+  civs:
+  - darkness
+  - nature
+  cost: 8
+  power: 11000
+  races:
+  - キング・コマンド・ドラゴン
+  keywords:
+  - double_breaker
+  abilities:
+  - kind: trigger
+    when:
+      event: move
+      to: bz
+      subject: self
+    effect:
+    - op: destroy
+      select:
+        zone: bz
+        owner: opp
+        filter:
+          types:
+          - creature
+        count: 1
+      as: d
+    - op: may
+      body:
+      - op: move
+        select:
+          zone:
+          - mana
+          - graveyard
+          owner: you
+          filter:
+            types:
+            - creature
+            cost_le:
+              cost_of:
+                ref: d
+            cost_ge:
+              cost_of:
+                ref: d
+          count: 1
+        to: bz
+        reason: put
+  mana: 1
+  text: マナゾーンに置く時、このカードはタップして置く。W・ブレイカーこのクリーチャーがバトルゾーンに出た時、相手のクリーチャーを１体破壊する。その後、そのクリーチャーとコストが同じクリーチャーを１体、自分のマナゾーンまたは墓地からバトルゾーンに出してもよい。
+  source:
+    official: dmx22a-s06
+    review: pending
+    notes: 「マナゾーンに置く時、タップして置く」は 405.1 の旧注釈で能力として扱わない
+- id: dmex10-008
+  name: 停滞の影タイム・トリッパー
+  types:
+  - creature
+  civs:
+  - darkness
+  cost: 3
+  power: 1000
+  races:
+  - ゴースト
+  keywords:
+  - opp_mana_tapped
+  mana: 1
+  text: 相手はカードをマナゾーンに置く時、タップして置く。
+  source:
+    official: dmex10-008
+    review: pending
+    aliases:
+    - dm14-027
+    - dmc42-025
+    - dmd24-021
+    - dmex01-020
+    - dmx01-008
+    - dmx10-027
+    - dmx18-015
+    - dmx24-019
+    - promoy12-020
+- id: dm26ex4-021
+  name: せんすいカンたろう
+  types:
+  - creature
+  civs:
+  - water
+  cost: 3
+  power: 2000
+  races:
+  - ジョーカーズ
+  - ワンダフォース
+  keywords:
+  - cannot_be_attacked
+  abilities:
+  - kind: trigger
+    when:
+      event: attack
+      subject: self
+    effect:
+    - op: may
+      body:
+      - op: move
+        select:
+          zone: bz
+          owner: you
+          other: true
+          filter:
+            types:
+            - creature
+            race_has: ジョーカーズ
+          count: 1
+        to: hand
+        reason: put
+        as: jt
+      - op: use_cip
+        select:
+          ref: jt
+  mana: 1
+  text: 'このクリーチャーは攻撃されない。
+
+    このクリーチャーが攻撃する時、Jトルネードしてもよい。そうしたら、そのJトルネードされたクリーチャーの「このクリーチャーが出た時」で始まる能力を１つ使う。（Jトルネード：自分の他のジョーカーズ・クリーチャーを１体、手札に戻す）'
+  source:
+    official: dm26ex4-021
+    review: pending
+    notes: 'Jトルネード＝自分の他のジョーカーズ・クリーチャー1体を手札に戻す（as: jt）。戻したカードの出た時の能力は use_cip（手札にあっても使える）'

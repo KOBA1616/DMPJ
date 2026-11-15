@@ -1113,3 +1113,48 @@ cards:
     evolve_from: {civs: [fire]}
     cost_reduce_per_evo: 2
     text: NEO進化：火のクリーチャー１体の上に置いてもよい。 / NEO進化クリーチャーとして召喚するなら、このクリーチャーの召喚コストを２少なくする。
+  - id: R113
+    name: 試験用出た時ドロー獣
+    types: [creature]
+    civs: [water]
+    cost: 2
+    power: 1000
+    races: [テスト]
+    text: このクリーチャーが出た時、カードを１枚引く。
+    abilities:
+      - kind: trigger
+        when: {event: move, to: bz, subject: self}
+        effect:
+          - {op: draw, count: 1}
+  - id: R114
+    name: 試験用Jビッグ獣
+    types: [creature]
+    civs: [water]
+    cost: 1
+    power: 1000
+    races: [テスト]
+    text: このクリーチャーが出た時、自分の他のクリーチャーの、出た時にトリガーする能力を１つ使う。
+    abilities:
+      - kind: trigger
+        when: {event: move, to: bz, subject: self}
+        effect:
+          - {op: use_cip, select: {zone: bz, owner: you, other: true, count: 1}}
+  - id: R115
+    name: 試験用手札進化獣
+    types: [creature, evolution]
+    civs: [water]
+    cost: 2
+    power: 7000
+    races: [テスト]
+    evolve_from: {civs: [water]}
+    evolve_zone: hand
+    text: 手札進化：水のクリーチャーを１体自分の手札から選び、このクリーチャーをその上に重ねつつ出す。
+  - id: R116
+    name: 試験用相手マナタップ獣
+    types: [creature]
+    civs: [darkness]
+    cost: 3
+    power: 3000
+    races: [テスト]
+    keywords: [opp_mana_tapped]
+    text: 相手はカードをマナゾーンに置く時、タップして置く。

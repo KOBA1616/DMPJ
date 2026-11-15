@@ -99,6 +99,7 @@
      "meteor_burn",
      "must_attack",
      "null_breaker",
+     "opp_mana_tapped",
      "powered_breaker",
      "quad_breaker",
      "rensa",
@@ -381,6 +382,7 @@
        "meteor_burn",
        "must_attack",
        "null_breaker",
+       "opp_mana_tapped",
        "powered_breaker",
        "quad_breaker",
        "rensa",
@@ -1881,6 +1883,25 @@
       "type": "object",
       "properties": {
        "op": {
+        "const": "use_cip"
+       },
+       "select": {
+        "$ref": "#/$defs/selector"
+       },
+       "optional": {
+        "type": "boolean"
+       }
+      },
+      "required": [
+       "op",
+       "select"
+      ],
+      "additionalProperties": false
+     },
+     {
+      "type": "object",
+      "properties": {
+       "op": {
         "const": "use_partner"
        },
        "of": {
@@ -2567,6 +2588,7 @@
        "meteor_burn",
        "must_attack",
        "null_breaker",
+       "opp_mana_tapped",
        "powered_breaker",
        "quad_breaker",
        "rensa",
