@@ -86,7 +86,7 @@ def test_maybe_rust_switch(env, monkeypatch):
     r, deck, opp = env
     monkeypatch.setenv("DMSIM_RUST", "1")
     assert isinstance(rustcore.maybe_rust(Engine.new_game(r, [deck, opp], 1, 0)), rustcore.RustEngine)
-    assert not isinstance(rustcore.maybe_rust(Engine.new_game(r, [["dm05-013"] * 40, opp], 1, 0)), rustcore.RustEngine)
+    assert not isinstance(rustcore.maybe_rust(Engine.new_game(r, [["dm04-008"] * 40, opp], 1, 0)), rustcore.RustEngine)
     monkeypatch.setenv("DMSIM_RUST", "0")
     assert not isinstance(rustcore.maybe_rust(Engine.new_game(r, [deck, opp], 1, 0)), rustcore.RustEngine)
 

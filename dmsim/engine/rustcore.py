@@ -232,6 +232,8 @@ def _self_mods(d):
     """段階2-c: 自分自身にだけ及ぶ単純な常在型（許可・禁止・ブレイク数）だけの札の (allow, deny, breaks)。他は None。
     段階2-d: 単純な誘発（_simple_trigger）は許す（誘発の中身は Rust 側の effect インタプリタが動かす）。"""
     allow, deny, breaks, shield_allow = [], [], [], []
+    allow_x = []
+    cond_seen = False
     for ab in d.abilities:
         if _simple_trigger(ab) or _simple_replace(ab):
             continue
@@ -239,18 +241,40 @@ def _self_mods(d):
                 and ab.get("mod") == {"allow": ["s_trigger"]}:
             shield_allow.append("s_trigger")   # S・トリガー（シールドゾーンにある間だけ働く許可）
             continue
+        if ab["kind"] == "static" and isinstance(ab.get("affects"), dict) and set(ab.get("mod", {})) == {"gain"} and "if" not in ab:
+            continue   # 他のカードに能力を与える常在型（ダーク・ティアラγ）。Python のエンジンは常在型の gain を扱わず効果が無いので、同じく何もしない
+        if ab["kind"] == "static" and ab.get("affects") == "self" and "if" in ab and ab.get("zone", "bz") == "bz" \
+                and _simple_cond(ab["if"]) and set(ab.get("mod", {})) == {"deny"} \
+                and all(isinstance(x, str) and x in _OK_DENY for x in ab["mod"]["deny"]):
+            cond_seen = True   # 条件つきの自分への禁止（ギガゾウル）。Rust は deny_if として局面ごとに条件を見る
+            continue
         if ab["kind"] != "static" or ab.get("affects") != "self" or "if" in ab or ab.get("zone", "bz") != "bz":
             return None
+        if cond_seen:
+            return None   # 特性の deny の並びを Python と揃えるため、条件つきの禁止は無条件の常在型より後ろに書かれた札だけ
         for k, v in ab.get("mod", {}).items():
             if k == "allow" and all(isinstance(x, str) and x in _OK_ALLOW for x in v):
                 allow += v
+            elif k == "allow" and all(isinstance(x, dict) and set(x) <= {"action", "other"} and x.get("action") in _OK_DENY
+                                      and "tapped" not in x.get("other", {}) and x["action"] in deny + list(ab["mod"].get("deny", []))
+                                      for x in v) and not any(isinstance(y, str) for y in allow):
+                # 同じ行動の無条件の禁止がある「〜なら〜できる」（戦男）。禁止が勝つ（101.2）ので効かないが、特性の allow には並ぶ
+                allow_x.extend(v)
             elif k == "deny" and all(isinstance(x, str) and x in _OK_DENY for x in v):
                 deny += v
             elif k == "breaks" and isinstance(v, int) and not isinstance(v, bool):
                 breaks.append(v)
             else:
                 return None
+    if allow_x and allow:
+        return None   # 特性の allow の並び（文字列の後に辞書）を Python と揃えられる札だけ
     return allow, deny, breaks, shield_allow
+
+
+def _self_allow_x(d) -> list:
+    """_self_mods が許した辞書形の allow（戦男）。特性の allow にそのまま並べる。"""
+    return [x for ab in d.abilities if ab["kind"] == "static" and ab.get("affects") == "self" and "if" not in ab
+            for x in ab.get("mod", {}).get("allow", []) if isinstance(x, dict)]
 
 
 def _is_plain_spell(d) -> bool:
@@ -369,7 +393,10 @@ def _card_bundle(d, zt=False, mana=None) -> dict:
            "keywords": list(d.keywords), "abil": d.abilities if plain else [],
            "spell": list(d.spell) if plain and d.types == ["spell"] else [],
            "resolve_to": d.resolve_to, "zt": zt,
-           **dict(zip(("allow", "deny", "breaks", "shield_allow"), (_self_mods(d) or ([], [], [], []))))}
+           **dict(zip(("allow", "deny", "breaks", "shield_allow"), (_self_mods(d) or ([], [], [], [])))),
+           "allow_x": _self_allow_x(d) if plain else [],
+           "deny_if": [[ab["if"], list(ab["mod"]["deny"])] for ab in d.abilities
+                       if plain and ab["kind"] == "static" and ab.get("affects") == "self" and "if" in ab]}
     if plain and "evolution" in d.types:
         out.update(evolve_from={k: v for k, v in d.evolve_from.items() if k != "zone"}, evolve_zone=d.evolve_zone,
                    evolve_count=d.evolve_count, evolve_any=d.evolve_any, cost_reduce_per_evo=d.cost_reduce_per_evo)
