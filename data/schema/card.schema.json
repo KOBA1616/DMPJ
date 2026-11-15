@@ -1881,6 +1881,25 @@
       "type": "object",
       "properties": {
        "op": {
+        "const": "use_cip"
+       },
+       "select": {
+        "$ref": "#/$defs/selector"
+       },
+       "optional": {
+        "type": "boolean"
+       }
+      },
+      "required": [
+       "op",
+       "select"
+      ],
+      "additionalProperties": false
+     },
+     {
+      "type": "object",
+      "properties": {
+       "op": {
         "const": "use_partner"
        },
        "of": {

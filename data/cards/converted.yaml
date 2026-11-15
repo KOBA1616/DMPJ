@@ -431413,3 +431413,264 @@ cards:
     - water
     - nature
   cost_reduce_per_evo: 2
+- id: dm26rp3-077
+  name: 光る！流れる!!ベンザマン!!!
+  types:
+  - creature
+  civs:
+  - light
+  - water
+  cost: 2
+  power: 2000
+  races:
+  - ジョーカーズ
+  abilities:
+  - kind: trigger
+    when: &id221
+      event: move
+      to: bz
+      subject: self
+    effect:
+    - op: modal
+      modes:
+      - - op: draw
+          count: 1
+      - - &id222
+          op: use_cip
+          select:
+            zone: bz
+            owner: you
+            other: true
+            count: 1
+            filter:
+              race_has: ジョーカーズ
+  mana: 1
+  text: 'このクリーチャーが出た時、次の中から１回選ぶ。
+
+    ▶カードを１枚引く。
+
+    ▶Jビッグ１する。（自分の他のジョーカーズの、Jビッグ１以外の、出た時にトリガーする能力を１つ使う）'
+  source:
+    official: dm26rp3-077
+    review: pending
+    notes: 「Jビッグ１」は use_cip（自分の他のジョーカーズ1体の出た時の能力を1つ使う。use_cip を含む能力は除外）
+- id: dm26rp3-013
+  name: にやにYAH
+  types:
+  - creature
+  civs:
+  - light
+  cost: 6
+  power: 3000
+  races:
+  - ジョーカーズ
+  keywords:
+  - s_trigger
+  abilities:
+  - kind: trigger
+    when: *id221
+    effect:
+    - op: modal
+      modes:
+      - - op: tap
+          select:
+            zone: bz
+            owner: opp
+            filter:
+              types:
+              - creature
+            count: all
+      - - *id222
+  mana: 1
+  text: 'S・トリガー
+
+    このクリーチャーが出た時、次の中から１回選ぶ。
+
+    ▶相手のクリーチャーをすべてタップする。
+
+    ▶Jビッグ１する。（自分の他のジョーカーズの、Jビッグ１以外の、出た時にトリガーする能力を１つ使う）'
+  source:
+    official: dm26rp3-013
+    review: pending
+    notes: 「Jビッグ１」は use_cip（自分の他のジョーカーズ1体の出た時の能力を1つ使う。use_cip を含む能力は除外）
+- id: dm26rp3-055
+  name: ヒトリダチ モンキッド
+  types:
+  - creature
+  civs:
+  - light
+  cost: 4
+  power: 4000
+  races:
+  - ジョーカーズ
+  keywords:
+  - s_trigger
+  abilities:
+  - kind: trigger
+    when: *id221
+    effect:
+    - op: modal
+      modes:
+      - - op: choose
+          select: &id223
+            zone: bz
+            owner: any
+            filter:
+              types:
+              - creature
+            count: 1
+          as: target
+        - op: modal
+          modes:
+          - - op: tap
+              select:
+                ref: target
+          - - op: untap
+              select:
+                ref: target
+      - - *id222
+  mana: 1
+  text: 'S・トリガー（このカードを自分のシールドゾーンから手札に加える時、コストを支払わずにすぐ実行してもよい）
+
+    このクリーチャーが出た時、次の中から１回選ぶ。
+
+    ▶クリーチャーを１体選び、タップまたはアンタップする。
+
+    ▶Jビッグ１する。（自分の他のジョーカーズの、Jビッグ１以外の、出た時にトリガーする能力を１つ使う）'
+  source:
+    official: dm26rp3-055
+    review: pending
+    notes: 「Jビッグ１」は use_cip（自分の他のジョーカーズ1体の出た時の能力を1つ使う。use_cip を含む能力は除外）
+    aliases:
+    - promoy25-089
+- id: dm26rp3-sec022
+  name: ヒトリダチ モンキッド(DM26RP3 ㊙22/㊙24)
+  types:
+  - creature
+  civs:
+  - light
+  cost: 4
+  power: 4000
+  races:
+  - ジョーカーズ
+  keywords:
+  - s_trigger
+  abilities:
+  - kind: trigger
+    when: *id221
+    effect:
+    - op: modal
+      modes:
+      - - op: choose
+          select: *id223
+          as: target
+        - op: modal
+          modes:
+          - - op: tap
+              select:
+                ref: target
+          - - op: untap
+              select:
+                ref: target
+      - - *id222
+  mana: 1
+  text: 'S・トリガー
+
+    このクリーチャーが出た時、次の中から１回選ぶ。
+
+    ▶クリーチャーを１体選び、タップまたはアンタップする。
+
+    ▶Jビッグ１する。'
+  source:
+    official: dm26rp3-sec022
+    review: pending
+    notes: 「Jビッグ１」は use_cip（自分の他のジョーカーズ1体の出た時の能力を1つ使う。use_cip を含む能力は除外）
+- id: dm26sd1-m005
+  name: 深淵の壊炉 マーダン=ロウ
+  types:
+  - creature
+  civs:
+  - darkness
+  cost: 4
+  power: 4000
+  races:
+  - アビスロイヤル
+  keywords:
+  - slayer
+  abilities:
+  - kind: trigger
+    when:
+      event: move
+      to: bz
+      subject: self
+    effect:
+    - op: discard
+      select:
+        zone: hand
+        owner: opp
+        filter:
+          types:
+          - creature
+        count: 1
+        look: true
+  - kind: trigger
+    when:
+      event: attack
+      subject: self
+    effect:
+    - op: if
+      cond:
+        cmp:
+        - count:
+            zone: bz
+            owner: you
+            filter:
+              civs:
+              - darkness
+              types:
+              - creature
+              - tamaseed
+        - '>='
+        - 3
+      then:
+      - op: may
+        body:
+        - op: choose
+          select:
+            zone: graveyard
+            owner: opp
+            count: 1
+          as: g
+        - op: use_cip
+          select:
+            ref: g
+          optional: true
+        - op: move
+          select:
+            ref: g
+          to: deck
+          position: bottom
+          reason: put
+  mana: 1
+  text: 'スレイヤー（このクリーチャーがバトルする時、バトルの後、相手クリーチャーを破壊する）
+
+    このクリーチャーが出た時、相手の手札を見てクリーチャーを１体選び、捨てさせる。
+
+    シビルカウント３：このクリーチャーが攻撃する時、自分の闇の、クリーチャーまたはタマシードが合計３つ以上あれば、相手の墓地にあるカードを１枚選んでもよい。そのカードの、出た時にトリガーする能力を、自分が１つ使ってもよい。その後、そのカードを持ち主の山札の下に置く。'
+  source:
+    official: dm26sd1-m005
+    review: pending
+    notes: シビルカウント３は if cmp（闇の、クリーチャーかタマシードの数 >= 3）。出た時の能力は use_cip（自分が使う）
+    aliases:
+    - dm22rp2-5a
+    - dm22rp2-7b
+    - dm22rp2-s5
+    - dm22rp2x-5a
+    - dm22rp2x-7b
+    - dm22rp2x-s5
+    - dm22rp2x-s5x
+    - dm23sp1-004
+    - dm25ex3-rp1tr4
+    - dm25rp1-tr04
+    - dm25sd1-004
+    - dmart25-003
