@@ -1654,6 +1654,84 @@ impl Engine {
     }
 
     /// chars の JSON（lki に載せる。Python 版 _chars_calc の、能力が自身への単純な常在型だけの札の結果）
+    /// 探索の葉の評価に使う数（Python の search.leaf_eval._evaluate が読む欄だけ）:
+    /// [相手のシールド, 自分のクリーチャーのブレイク数の和, 自分の山札, マナ, 手札, 自分の場の数, 相手の山札]
+    pub fn eval_feats(&self, me: i64) -> Vec<i64> {
+        let opp = 1 - me;
+        let mine = self.bz_tops(Some(me));
+        let mut breaks = 0;
+        for &c in &mine {
+            if self.def(c).types.iter().any(|t| t == "creature") {
+                breaks += self.chars_json(c)["breaks"].as_i64().unwrap_or(1);
+            }
+        }
+        vec![self.zl("shield", opp).len() as i64, breaks, self.zl("deck", me).len() as i64, self.zl("mana", me).len() as i64,
+             self.zl("hand", me).len() as i64, mine.len() as i64, self.zl("deck", opp).len() as i64]
+    }
+
+    /// ループ検出の骨格の材料（Python の engine.loop.abstract が読む欄だけ。並べ替え・文字列化・ハッシュは Python 側）
+    /// 区域の札の id（Python の s.zones[z][owner] と同じ並び。zl と違い共有扱いの区域でも持ち主の欄をそのまま返す）
+    pub fn zone_ids(&self, z: &str, owner: i64) -> Vec<i64> {
+        self.s.zones[z][owner as usize].clone()
+    }
+
+    /// 札の定義名と、下にある札の定義名（並べ替え済み）
+    pub fn card_sig(&self, cid: i64) -> (String, Vec<String>) {
+        let k = &self.s.cards[cid as usize];
+        let mut u: Vec<String> = k.under.iter().map(|&c| self.s.cards[c as usize].defn.clone()).collect();
+        u.sort();
+        (k.defn.clone(), u)
+    }
+
+    /// 区域の札の定義名（route_goal.count 用。top なら場の札の下にある札を除く）
+    pub fn zone_names(&self, z: &str, owner: i64, top: bool) -> Vec<String> {
+        let cids = &self.s.zones[z][owner as usize];
+        let below: std::collections::HashSet<i64> = if top && z == "bz" {
+            cids.iter().flat_map(|&c| self.s.cards[c as usize].under.iter().copied()).collect()
+        } else { Default::default() };
+        cids.iter().filter(|c| !below.contains(c)).map(|&c| self.s.cards[c as usize].defn.clone()).collect()
+    }
+
+    pub fn skel_raw(&self) -> Value {
+        let name = |c: i64| self.s.cards[c as usize].defn.clone();
+        let turn = self.s.turn;
+        let bz: Vec<Value> = self.bz_tops(None).iter().map(|&c| {
+            let k = &self.s.cards[c as usize];
+            json!([k.controller, k.defn, k.tapped, k.entered_turn == turn, k.under.iter().map(|&u| name(u)).collect::<Vec<_>>()])
+        }).collect();
+        let cont: Vec<Value> = self.s.continuous.iter().map(|ce| {
+            let names: Vec<String> = ce["affected"].as_array().map(|a| a.iter().filter(|r| self.alive(r))
+                .map(|r| name(r[0].as_i64().unwrap())).collect()).unwrap_or_default();
+            json!([ce["mod"], ce["duration"], names, ce.get("filter").cloned().unwrap_or(Value::Null)])
+        }).collect();
+        let tasks: Vec<Value> = self.s.tasks.iter().map(|t| json!([t["t"], t.get("phase").cloned().unwrap_or(Value::Null),
+            t.get("pc").cloned().unwrap_or(Value::Null), t.get("i").cloned().unwrap_or(Value::Null), t.get("sub").cloned().unwrap_or(Value::Null)])).collect();
+        let mut zones = serde_json::Map::new();
+        for (z, zd) in &self.rules.zones {
+            if zd.shared || z == "hold" {
+                continue;
+            }
+            zones.insert(z.clone(), json!([self.zl(z, 0).iter().map(|&c| name(c)).collect::<Vec<_>>(),
+                                           self.zl(z, 1).iter().map(|&c| name(c)).collect::<Vec<_>>()]));
+        }
+        let mut bundles = vec![];
+        let mut under_n = vec![];
+        let mut mana_un = vec![];
+        for p in 0..2i64 {
+            bundles.push(Value::Array(self.zl("shield", p).iter().filter(|&&c| !self.s.cards[c as usize].under.is_empty())
+                .map(|&c| json!([name(c), self.s.cards[c as usize].under.iter().map(|&u| name(u)).collect::<Vec<_>>()])).collect()));
+            under_n.push(self.zl("shield", p).iter().map(|&c| self.s.cards[c as usize].under.len()).sum::<usize>());
+            mana_un.push(self.zl("mana", p).iter().filter(|&&c| !self.s.cards[c as usize].tapped).count());
+        }
+        json!({"active": self.s.active, "step": self.s.step, "turn": turn, "bz": bz,
+            "pending": self.s.pending.iter().map(|p| json!([p["kind"], p["defn"], p["ab"], p["controller"], p["win"]])).collect::<Vec<_>>(),
+            "cont": cont, "hold": self.s.hold.iter().map(|&c| name(c)).collect::<Vec<_>>(), "tasks": tasks,
+            "waiting": self.s.waiting.clone(), "delayed": self.s.delayed.clone(), "step_mods": self.s.step_mods.clone(),
+            "zones": zones, "bundles": bundles, "under": under_n, "mana_untapped": mana_un,
+            "mana": (0..2i64).flat_map(|p| self.zl("mana", p).iter().map(|&c| json!([name(c), self.s.cards[c as usize].tapped])).collect::<Vec<_>>()).collect::<Vec<_>>(),
+            "bz_n": [self.s.zones["bz"][0].len(), self.s.zones["bz"][1].len()]})
+    }
+
     /// パワー（印刷パワー＋継続的効果の修整）
     fn power(&self, cid: i64) -> i64 {
         let mut p = self.def(cid).power;

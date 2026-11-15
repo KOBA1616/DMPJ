@@ -89,3 +89,37 @@ def test_maybe_rust_switch(env, monkeypatch):
     assert not isinstance(rustcore.maybe_rust(Engine.new_game(r, [["dmd24-024"] * 40, opp], 1, 0)), rustcore.RustEngine)
     monkeypatch.setenv("DMSIM_RUST", "0")
     assert not isinstance(rustcore.maybe_rust(Engine.new_game(r, [deck, opp], 1, 0)), rustcore.RustEngine)
+
+
+@pytest.mark.parametrize("seed", range(4))
+def test_thin_readers_match_view(env, seed, monkeypatch):
+    """探索が読む欄の薄い読み取り口（zone_ids / zone_names / card_sig / tkey_extra / waiting_fast / eval_feats / skel_raw）が、
+    作り直した Python の状態から計算した値と一致する。決定化の注入（s の差し替え）の後も古い写しを返さない。"""
+    from dmsim.engine.core import Engine
+    from dmsim.engine import loop
+    r, deck, opp = env
+    monkeypatch.setenv("DMSIM_RUST", "1")
+    e = rustcore.maybe_rust(Engine.new_game(r, [deck, opp], seed, seed % 2))
+    assert isinstance(e, rustcore.RustEngine)
+    rnd = random.Random(seed)
+    n = 0
+    while (d := e.advance()) is not None and n < 300:
+        s = e._view().s
+        for p in (0, 1):
+            for z in ("hand", "bz", "mana", "graveyard", "shield"):
+                assert e.zone_ids(z, p) == s.zones[z][p]
+                assert e.zone_names(z, p) == [s.cards[c].defn for c in s.zones[z][p]]
+        for c in s.zones["bz"][0] + s.zones["bz"][1]:
+            assert e.card_sig(c) == (s.cards[c].defn, tuple(sorted(s.cards[u].defn for u in s.cards[c].under)))
+        assert e.waiting_fast()[0] == s.waiting
+        e2 = Engine(r, s.clone())
+        hk = set(e.zone_names("hand", 0)[:2])
+        for per in ("in_turn", "cross_turn"):
+            assert loop.abstract(e, per) == loop.abstract(e2, per)
+            assert loop.abstract(e, per, hk) == loop.abstract(e2, per, hk)
+        assert e.eval_feats(0)[1] is not None
+        mn, mx, k = d["min"], d["max"], len(d["options"])
+        e.answer(list(range(mn)) if mn == mx else [rnd.randrange(k)] if mn <= 1 <= mx else list(range(mn)))
+        n += 1
+        if n == 40:                                   # 注入の後に写しが捨てられること
+            e.s = e._view().s.clone()

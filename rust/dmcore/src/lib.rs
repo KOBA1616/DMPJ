@@ -88,6 +88,11 @@ impl PyEngine {
         }
         Ok(n)
     }
+    /// 規則はそのまま共有して、状態だけ差し替えた新しいエンジン（決定化の注入用。規則の JSON を読み直さない）
+    fn with_state(&self, state_json: &str) -> PyResult<PyEngine> {
+        let s: GameState = serde_json::from_str(state_json).map_err(|e| PyValueError::new_err(e.to_string()))?;
+        Ok(PyEngine { e: engine::Engine::new(s, self.e.rules.clone()).map_err(conv)? })
+    }
     fn fork(&self) -> PyEngine {
         self.clone()
     }
@@ -115,6 +120,21 @@ impl PyEngine {
     fn set_result(&mut self, js: &str) -> PyResult<()> {
         self.e.s.result = Some(serde_json::from_str(js).map_err(|e| PyValueError::new_err(e.to_string()))?);
         Ok(())
+    }
+    fn eval_feats(&self, me: i64) -> Vec<i64> {
+        self.e.eval_feats(me)
+    }
+    fn zone_ids(&self, z: &str, owner: i64) -> Vec<i64> {
+        self.e.zone_ids(z, owner)
+    }
+    fn card_sig(&self, cid: i64) -> (String, Vec<String>) {
+        self.e.card_sig(cid)
+    }
+    fn zone_names(&self, z: &str, owner: i64, top: bool) -> Vec<String> {
+        self.e.zone_names(z, owner, top)
+    }
+    fn skel_raw(&self) -> String {
+        self.e.skel_raw().to_string()
     }
     fn log(&self) -> String {
         serde_json::Value::Array(self.e.log.clone()).to_string()
