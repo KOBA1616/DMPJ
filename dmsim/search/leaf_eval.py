@@ -44,12 +44,31 @@ def goal_distance(eng: Engine, me: int) -> tuple[int, int]:
     return n_cards, (best if best is not None else 0)
 
 
+def _result_value(r, me):
+    if r["winner"] == me:
+        return WIN - r["turn"]
+    if r["winner"] == 1 - me:
+        return -WIN
+    return -WIN / 2
+
+
 def evaluate(eng: Engine, me: int, w: Weights) -> float:
+    if getattr(eng, "eval_feats", None) is not None and eng.eval_feats(me) is not None:
+        return _evaluate(eng, me, w)   # Rust で進めている局: 特性の計算を使わない
     with eng.chars_scope():   # 評価は局面を変えない: 同じ状態での特性の計算を使い回す
         return _evaluate(eng, me, w)
 
 
 def _evaluate(eng: Engine, me: int, w: Weights) -> float:
+    ef = getattr(eng, "eval_feats", None)
+    if ef is not None:
+        f = ef(me)
+        if f is not None:   # Rust で進めている局（RustEngine）: 読む数だけを直接引く（常在の勝利条件を持つ札は Rust 対応外なので gc=gd=0）
+            res, (sh, breaks, deck, mana, hand, board, odeck) = f
+            if res is not None:
+                return _result_value(res, me)
+            return (w.goal_card * 0 - w.goal_dist * 0 - w.shield * sh + w.threat * min(breaks, sh + 1) + w.mana * mana
+                    + w.hand * hand + w.board * board + w.opp_deck * (40 - odeck) - w.deck_danger * max(0, w.deck_keep - deck))
     s = eng.s
     opp = 1 - me
     if s.result is not None:

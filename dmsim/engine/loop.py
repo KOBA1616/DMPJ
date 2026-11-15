@@ -20,6 +20,11 @@ from .core import IllegalAnswer
 def abstract(eng: Engine, period: str = "in_turn", hand_keys: set[str] | None = None) -> tuple[str, dict[str, int]]:
     """hand_keys を渡すと、手札はその名前のカードだけを骨格に入れ、残りは枚数（hand:p）だけのカウンタにする。
     ドローを含むループ・ロックでは、引いたカードで骨格が変わらないようにこれを使う。"""
+    raw = getattr(eng, "skel_raw", None)
+    if raw is not None:
+        raw = raw()
+        if raw is not None:   # Rust で進めている局（RustEngine）: 状態を作り直さずに材料だけ読む
+            return _abstract_raw(raw, eng.rules.zones, period, hand_keys)
     s = eng.s
     zones = eng.rules.zones
 
@@ -67,6 +72,45 @@ def abstract(eng: Engine, period: str = "in_turn", hand_keys: set[str] | None = 
     return h, counters
 
 
+def _abstract_raw(r: dict, zones: dict, period: str, hand_keys) -> tuple[str, dict[str, int]]:
+    """abstract と同じ骨格・カウンタを、Rust の skel_raw（読む欄だけの材料）から作る。結果は abstract と完全に同じ。"""
+    w = r["waiting"]
+    skel = {
+        "active": r["active"], "step": r["step"],
+        "turn": r["turn"] if period == "in_turn" else None,
+        "bz": sorted([b[0], b[1], b[2], b[3], sorted(b[4])] for b in r["bz"]),
+        "pending": sorted(r["pending"]),
+        "cont": sorted([json.dumps(c[0], sort_keys=True), c[1], sorted(c[2]), json.dumps(c[3], sort_keys=True)] for c in r["cont"]),
+        "hold": sorted(r["hold"]),
+        "tasks": r["tasks"],
+        "waiting": None if w is None else [w["kind"], w["player"]] + (
+            [] if hand_keys is not None else [sorted(o["key"] for o in w["options"])]),
+        "delayed": sorted(json.dumps([d["when"], d["effect"], d["duration"]], sort_keys=True) for d in r["delayed"]),
+        "step_mods": sorted(json.dumps(m, sort_keys=True) for m in r["step_mods"]),
+    }
+    for p in (0, 1):
+        skel[f"bundles:{p}"] = sorted([b[0], sorted(set(b[1]))] for b in r["bundles"][p])
+    counters: dict[str, int] = {}
+    zl = r["zones"]
+    for z, zd in zones.items():
+        if zd["shared"]:
+            continue
+        for p in (0, 1):
+            names = zl[z][p]
+            if zd["counter"]:
+                counters[f"{z}:{p}"] = len(names)
+            elif z == "hand" and hand_keys is not None:
+                skel[f"{z}:{p}"] = sorted(n for n in names if n in hand_keys)
+                counters[f"{z}:{p}"] = sum(1 for n in names if n not in hand_keys)
+            else:
+                skel[f"{z}:{p}"] = sorted(names)
+    for p in (0, 1):
+        counters[f"under:{p}"] = r["under"][p]
+        counters[f"mana_untapped:{p}"] = r["mana_untapped"][p]
+    h = hashlib.blake2b(json.dumps(skel, sort_keys=True, ensure_ascii=False).encode(), digest_size=16).hexdigest()
+    return h, counters
+
+
 @dataclass
 class LoopCertificate:
     start_skeleton: str
@@ -101,12 +145,16 @@ def replay_keys(eng: Engine, keys: list[str], hand_keys: set[str] | None = None)
     """answer_by_keys と同じだが、WILD_HAND を hand_keys 外の手札の札（最近手札に入った順）で解決する。"""
     if WILD_HAND not in keys:
         return eng.answer_by_keys(keys)
-    d = eng.s.waiting
+    wf = getattr(eng, "waiting_fast", None)
+    wf = wf() if wf is not None else None
+    d = wf[0] if wf is not None else eng.s.waiting
     if d is None:
         raise IllegalAnswer("no decision pending")
     opts = d["options"]
     hk = hand_keys or set()
-    order = {c: i for i, c in enumerate(eng.s.zones["hand"][d["player"]])}
+    zi = getattr(eng, "zone_ids", None)
+    hand = zi("hand", d["player"]) if zi is not None else None
+    order = {c: i for i, c in enumerate(hand if hand is not None else eng.s.zones["hand"][d["player"]])}
     choice, used = [], set()
     for k in sorted(keys, key=lambda k: k == WILD_HAND):     # 具体的なキーを先に取る
         if k == WILD_HAND:
@@ -163,6 +211,10 @@ def is_burn(delta: dict[str, int], me: int) -> bool:
 def draw_keys(eng: Engine, me: int) -> set[str]:
     """ドローを含むループの検出で骨格に入れる手札のカード名。いま手札にあるカードだけを区別し、
     ループ中に引いた別のカードは名前を見ず枚数だけ数える（引いたカードで骨格が毎回変わるのを避ける）。"""
+    zn = getattr(eng, "zone_names", None)
+    names = zn("hand", me) if zn is not None else None
+    if names is not None:
+        return set(names)
     return {eng.s.cards[c].defn for c in eng.s.zones["hand"][me]}
 
 
