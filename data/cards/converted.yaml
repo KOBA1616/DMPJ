@@ -431790,7 +431790,7 @@ cards:
           race_has: スノーフェアリー
         count: all
       to: hand
-      reason: put
+      reason: return
   mana: 1
   text: '進化-自分のスノーフェアリー１体の上に置く。
 
@@ -431832,7 +431832,7 @@ cards:
             - spell
           count: 1
         to: hand
-        reason: put
+        reason: return
   - kind: replace
     when:
       event: move
@@ -431968,7 +431968,7 @@ cards:
             race_has: ジョーカーズ
           count: 1
         to: hand
-        reason: put
+        reason: return
         as: jt
       - op: use_cip
         select:
@@ -432198,7 +432198,7 @@ cards:
           - creature
         count: 2
       to: hand
-      reason: put
+      reason: return
   mana: 1
   text: '相手の、エレメントの能力または呪文によって、このクリーチャーが自分の手札から捨てられる時、墓地に置くかわりに出してもよい。
 
@@ -432412,7 +432412,7 @@ cards:
       count:
         upto: 3
     to: hand
-    reason: put
+    reason: return
 - id: dm24-073
   name: 紅蓮の守護者ラ・バル・プラトーン
   types:
@@ -433026,7 +433026,7 @@ cards:
             - creature
           count: 1
         to: hand
-        reason: put
+        reason: return
       - op: move
         select:
           zone: deck
@@ -433092,3 +433092,240 @@ cards:
   source:
     official: dm25rp3-040
     review: pending
+- id: dm21-029
+  name: ゾンビ・サイクロン
+  types:
+  - spell
+  civs:
+  - darkness
+  cost: 4
+  keywords:
+  - cyclone
+  spell:
+  - op: move
+    select:
+      zone: graveyard
+      owner: you
+      filter:
+        types:
+        - creature
+      count: 1
+    to: hand
+    reason: put
+  mana: 1
+  text: 'サイクロン(このターン、この呪文を唱える直前にクリーチャーを召喚していれば、この呪文を唱えた後、墓地に置くかわりに自分の手札に戻す)
+
+    クリーチャーを１体、自分の墓地から手札に戻す。'
+  source:
+    official: dm21-029
+    review: pending
+- id: dm25sd2-010
+  name: 冒険妖精ポレコ
+  types:
+  - creature
+  civs:
+  - nature
+  cost: 1
+  power: 2000
+  races:
+  - スノーフェアリー
+  - レクスターズ
+  abilities:
+  - kind: trigger
+    when: &id231
+      event: turn_end
+    effect:
+    - op: move
+      select:
+        ref: self
+      to: hand
+      reason: return
+    if:
+      all:
+      - is_turn: you
+      - cmp:
+        - turn_count:
+            kind: broke_by_self
+        - '>='
+        - 1
+  mana: 1
+  text: 自分のターンの終わりに、このターン、このクリーチャーがシールドをブレイクしていたら、このクリーチャーを手札に戻す。
+  source:
+    official: dm25sd2-010
+    review: pending
+    aliases:
+    - dmrp19-094
+    - promoy23-037
+- id: dm26sd1-g008
+  name: 光鎧龍ホーリーグレイス
+  types:
+  - creature
+  civs:
+  - light
+  cost: 6
+  power: 6500
+  races:
+  - アーマード・アポロニア・ドラゴン
+  keywords:
+  - s_trigger
+  - double_breaker
+  abilities:
+  - kind: trigger
+    when:
+      event: move
+      to: bz
+      subject: self
+    effect:
+    - op: tap
+      select:
+        zone: bz
+        owner: opp
+        filter:
+          types:
+          - creature
+        count: all
+  - kind: trigger
+    when:
+      event: move
+      to: bz
+      subject: self
+    effect:
+    - op: destroy
+      select:
+        ref: self
+    if:
+      all:
+      - is_turn: opp
+      - cmp:
+        - turn_count:
+            kind: broken
+            owner: you
+        - <
+        - 2
+  mana: 1
+  text: 'S・トリガー（このカードを自分のシールドゾーンから手札に加える時、コストを支払わずにすぐ実行してもよい）
+
+    W・ブレイカー（このクリーチャーはシールドを２つブレイクする）
+
+    このクリーチャーが出た時、相手のクリーチャーをすべてタップする。
+
+    相手のターンにこのクリーチャーが出た時、このターンに２つ以上自分のシールドがブレイクされていなければ、このクリーチャーを破壊する。'
+  source:
+    official: dm26sd1-g008
+    review: pending
+    aliases:
+    - dm23rp4-010
+    - dm23rp4-12a
+    - dm23rp4-14b
+    - dm23rp4x-010
+    - dm23rp4x-12a
+    - dm23rp4x-14b
+    - dm24bd1-011
+    - dm24ex4-041
+    - dm24ex4-pr001
+    - dm25sp2-007
+    - dm26rp1-sp004
+    - promoy24-111
+- id: dm37-034
+  name: 剛撃鎧冑カマキリ・ソード
+  types:
+  - creature
+  civs:
+  - nature
+  cost: 5
+  power: 6000
+  races:
+  - ジャイアント
+  - ジャイアント・インセクト
+  keywords:
+  - double_breaker
+  abilities:
+  - kind: trigger
+    when: *id231
+    effect:
+    - op: move
+      select:
+        ref: self
+      to: hand
+      reason: return
+    if:
+      all:
+      - is_turn: you
+      - cmp:
+        - turn_count:
+            kind: mana_put
+            owner: you
+        - ==
+        - 0
+  mana: 1
+  text: '自分のターン中にカードを１枚も自分のマナゾーンに置いていなければ、そのターンの終わりに、このクリーチャーを自分の手札に戻す。
+
+    W・ブレイカー(このクリーチャーはシールドを２枚ブレイクする)'
+  source:
+    official: dm37-034
+    review: pending
+- id: dm26ex3-048
+  name: 蒼神龍トライクラブ・トライショット
+  types:
+  - creature
+  civs:
+  - water
+  cost: 6
+  power: 7000
+  races:
+  - ジャイアント・ポセイディア・ドラゴン
+  keywords:
+  - s_trigger
+  - blocker
+  - double_breaker
+  abilities:
+  - kind: trigger
+    when: &id232
+      event: move
+      to: bz
+      subject: self
+    effect:
+    - op: move
+      select:
+        zone: bz
+        owner: opp
+        filter:
+          types:
+          - creature
+        count:
+          upto: 2
+      to: hand
+      reason: return
+  - kind: trigger
+    when: *id232
+    effect:
+    - op: destroy
+      select:
+        ref: self
+    if:
+      all:
+      - is_turn: opp
+      - cmp:
+        - turn_count:
+            kind: broken
+            owner: you
+        - <
+        - 2
+  mana: 1
+  text: 'S・トリガー
+
+    ブロッカー
+
+    W・ブレイカー
+
+    このクリーチャーが出た時、相手のクリーチャーを２体まで選び、持ち主の手札に戻す。
+
+    相手のターンにこのクリーチャーが出た時、このターンに２つ以上自分のシールドがブレイクされていなければ、このクリーチャーを破壊する。'
+  source:
+    official: dm26ex3-048
+    review: pending
+    aliases:
+    - dm23rp4-013
+    - dm23rp4x-013
+    - dm25rp1-td03
+    - dm26sd1-h010
