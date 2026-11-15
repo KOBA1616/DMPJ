@@ -77,6 +77,11 @@ INSTRUCTIONS = """\
 - 「手札進化：〜を１体自分の手札から選び、このクリーチャーをその上に重ねつつ出す」は `evolve_zone: hand` ＋ `evolve_from: <フィルタ>`（自分自身は進化元にならない。hand_evolution の語彙を作らない）。手札進化V/GV（複数体）は unsupported。
 - 「自分のマナゾーンまたは墓地から」のように複数ゾーンから選ぶ時は、セレクタの `zone: [mana, graveyard]`（ゾーンの配列。zone_mixed_selection の語彙を作らない）。
 - 「相手はカードをマナゾーンに置く時、タップして置く」「相手のカードはマナゾーンにタップして置かれる」はキーワード `opp_mana_tapped`（mana_enters_tapped_rule の語彙を作らない）。
+- 「〜の数以下のコスト」「マナゾーンにあるカードの枚数以下のコスト」はフィルタの `cost_le: {count: <セレクタ>}`（式を書ける。cost_le_count の語彙を作らない）。
+- 「相手の呪文またはクリーチャーの能力によって、このクリーチャーが自分の手札から捨てられる時、墓地に置くかわりに出してもよい」は `kind: replace, zone: hand, optional: true, when: {event: move, from: hand, to: graveyard, reason: discard, subject: self, by: opp}, instead: [{op: move, select: {ref: self, count: 1}, to: bz, reason: put}]`（「出す」なら optional を付けない。discard_by_opponent_effect_replacement の語彙を作らない）。
+- 宣言: 「数字を１つ選ぶ」は `{op: choose_number, as: n}`、「種族を１つ選ぶ」は `{op: choose_race, as: r}`、「文明をひとつ選ぶ」は `{op: choose_civ, as: c}`。参照はフィルタの `cost_le/cost_ge: {declared: n}`、`races: {declared: r}`、`civs` / `not_civs: {declared: c}`（choose_number / declare_race / choose_civilization_effect の語彙を作らない）。
+- 「このターン、自分が呪文を２枚以上唱えていれば」は `{cmp: [{turn_count: {kind: cast, owner: you}}, ">=", 2]}`（casts_this_turn_condition の語彙を作らない）。
+- 「B・A・D N」は `static affects: self, zone: hand, mod: {opt_reduce: {amount: N, then: destroy}}`（bad の語彙を作らない）。
 - 「自分のシールドゾーンにある〈条件〉すべてに『S・トリガー』を与える」は `kind: static, affects: {zone: shield, owner: you, filter: {...}}, mod: {allow: [s_trigger]}`（grant_s_trigger_zone の語彙を作らない）。
 - 「NEO進化クリーチャーとして召喚するなら（する場合）、このクリーチャーの召喚コストをN少なくする」は面の `cost_reduce_per_evo: N`（NEO の進化元は1体なので、重ねた時だけN軽減。neo_summon_cost_reduction の語彙を作らない）。「タマシードから進化するなら」は進化元の種類で変わるので unsupported。
 - 近似・代用はしない。語彙で原文どおりに表せない効果は、似た別の語彙（op・mod・条件）で置き換えて書かない。その能力は abilities に書かず、source.unsupported に [{need: <足せばよい op・語彙の案（英語の識別子）>, text: <該当する原文>}] で書く。表せる他の能力は通常どおり変換する。

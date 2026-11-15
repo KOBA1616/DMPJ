@@ -431981,3 +431981,527 @@ cards:
     official: dm26ex4-021
     review: pending
     notes: 'Jトルネード＝自分の他のジョーカーズ・クリーチャー1体を手札に戻す（as: jt）。戻したカードの出た時の能力は use_cip（手札にあっても使える）'
+- id: dmrp05-016
+  name: 魔法前線 ハリンセン
+  types:
+  - creature
+  civs:
+  - water
+  cost: 4
+  power: 4000
+  races:
+  - ムートピア
+  abilities:
+  - kind: trigger
+    when: &id226
+      event: attack
+      subject: self
+    effect:
+    - op: may
+      body:
+      - op: play_free
+        select:
+          zone: hand
+          owner: you
+          filter:
+            types:
+            - spell
+            cost_le:
+              count:
+                zone: bz
+                owner: you
+                filter:
+                  types:
+                  - creature
+          count: 1
+  mana: 1
+  text: 'NEO進化：自分の水のクリーチャー１体の上に置いてもよい。（クリーチャーが下にあれば、これをNEO進化クリーチャーとして扱う）
+
+    このクリーチャーが攻撃する時、バトルゾーンにある自分のクリーチャーの数以下のコストを持つ呪文を１枚、自分の手札からコストを支払わずに唱えてもよい。'
+  source:
+    official: dmrp05-016
+    review: pending
+  neo: true
+  evolve_from:
+    civs:
+    - water
+- id: dmrp05-020
+  name: デビット・ガーター
+  types:
+  - creature
+  civs:
+  - darkness
+  cost: 6
+  power: 6000
+  races:
+  - マフィ・ギャング
+  keywords:
+  - double_breaker
+  abilities:
+  - kind: trigger
+    when: *id226
+    effect:
+    - op: move
+      select:
+        zone: graveyard
+        owner: you
+        filter:
+          types:
+          - creature
+          not_types:
+          - evolution
+          cost_le:
+            count:
+              zone: mana
+              owner: you
+        count: 1
+      to: bz
+      reason: put
+  mana: 1
+  text: 'NEO進化：自分の闇のクリーチャー１体の上に置いてもよい。（クリーチャーが下にあれば、これをNEO進化クリーチャーとして扱う）
+
+    W・ブレイカー（このクリーチャーはシールドを２つブレイクする）
+
+    このクリーチャーが攻撃する時、自分のマナゾーンにあるカードの枚数以下のコストを持つ、進化ではないクリーチャーを１体、自分の墓地からバトルゾーンに出す。'
+  source:
+    official: dmrp05-020
+    review: pending
+  neo: true
+  evolve_from:
+    civs:
+    - darkness
+- id: dm25ex4-s15
+  name: 影炎のリュウセイ・シャドウ
+  types:
+  - creature
+  civs:
+  - darkness
+  - fire
+  - nature
+  cost: 5
+  power: 6000
+  races:
+  - レッド・コマンド・ドラゴン
+  - デーモン・コマンド
+  - ハンター
+  keywords:
+  - speed_attacker
+  - double_breaker
+  abilities:
+  - kind: replace
+    zone: hand
+    when:
+      event: move
+      from: hand
+      to: graveyard
+      reason: discard
+      subject: self
+      by: opp
+    instead:
+    - op: move
+      select:
+        ref: self
+        count: 1
+      to: bz
+      reason: put
+  - kind: trigger
+    when: &id227
+      event: move
+      to: bz
+      subject: self
+    effect:
+    - op: modal
+      modes:
+      - - op: modify
+          select:
+            zone: bz
+            owner: opp
+            filter:
+              types:
+              - creature
+            count: all
+          mod:
+            power: -3000
+          duration: end_of_turn
+      - - op: move
+          select:
+            zone: bz
+            owner: opp
+            filter:
+              types:
+              - creature
+            count: 1
+          to: mana
+          reason: put
+  mana: 1
+  text: '相手の、エレメントの能力または呪文によって、自分の手札にあるこのクリーチャーが捨てられる時、墓地に置くかわりに出す。
+
+    スピードアタッカー
+
+    W・ブレイカー
+
+    このクリーチャーが出た時、次の中から１回選ぶ。
+
+    ▶このターン、相手のクリーチャーすべてのパワーを－3000する。（パワー０以下のクリーチャーは破壊される）
+
+    ▶相手のクリーチャーを１体選び、持ち主のマナゾーンに置く。'
+  source:
+    official: dm25ex4-s15
+    review: pending
+- id: dm25ex2-079
+  name: 剛撃霊樹 タイタニス
+  types:
+  - creature
+  civs:
+  - nature
+  cost: 7
+  power: 7000
+  races:
+  - ジャイアント
+  - ミステリー・トーテム
+  keywords:
+  - double_breaker
+  abilities:
+  - kind: replace
+    zone: hand
+    optional: true
+    when:
+      event: move
+      from: hand
+      to: graveyard
+      reason: discard
+      subject: self
+      by: opp
+    instead:
+    - op: move
+      select:
+        ref: self
+        count: 1
+      to: bz
+      reason: put
+  - kind: trigger
+    when: *id227
+    effect:
+    - op: move
+      select:
+        zone: deck
+        owner: you
+        from_top: 2
+      to: mana
+      reason: put
+    - op: move
+      select:
+        zone: mana
+        owner: you
+        filter:
+          types:
+          - creature
+        count: 2
+      to: hand
+      reason: put
+  mana: 1
+  text: '相手の、エレメントの能力または呪文によって、このクリーチャーが自分の手札から捨てられる時、墓地に置くかわりに出してもよい。
+
+    W・ブレイカー（このクリーチャーはシールドを２つブレイクする）
+
+    このクリーチャーが出た時、自分の山札の上から２枚をマナゾーンに置く。その後、クリーチャーを２体、自分のマナゾーンから手札に戻す。'
+  source:
+    official: dm25ex2-079
+    review: pending
+- id: dmrp02-008
+  name: “魔刃”戦車 ゴーディオ
+  types:
+  - creature
+  civs:
+  - fire
+  cost: 6
+  power: 7000
+  races:
+  - ビートジョッキー
+  keywords:
+  - speed_attacker
+  - double_breaker
+  abilities:
+  - kind: static
+    affects: self
+    zone: hand
+    mod:
+      opt_reduce:
+        amount: 2
+        then: destroy
+  mana: 1
+  text: B・A・D２（このクリーチャーを、コストを２少なくして召喚してもよい。そうしたら、このターンの終わりにこのクリーチャーを破壊する）スピードアタッカーW・ブレイカー
+  source:
+    official: dmrp02-008
+    review: pending
+- id: dmrp02-024
+  name: “陽々”スピン
+  types:
+  - creature
+  civs:
+  - fire
+  cost: 5
+  power: 4000
+  races:
+  - ビートジョッキー
+  keywords:
+  - speed_attacker
+  abilities:
+  - kind: static
+    affects: self
+    zone: hand
+    mod:
+      opt_reduce:
+        amount: 2
+        then: destroy
+  - kind: trigger
+    when:
+      event: move
+      to: bz
+      subject: self
+    effect:
+    - op: destroy
+      select:
+        zone: bz
+        owner: opp
+        filter:
+          types:
+          - creature
+          keyword: blocker
+        count: 1
+  mana: 1
+  text: B・A・D２（このクリーチャーを、コストを２少なくして召喚してもよい。そうしたら、このターンの終わりにこのクリーチャーを破壊する）スピードアタッカー（このクリーチャーは召喚酔いしない）このクリーチャーがバトルゾーンに出た時、相手の「ブロッカー」を持つクリーチャーを１体破壊する。
+  source:
+    official: dmrp02-024
+    review: pending
+- id: dmrp03-081
+  name: “魔渋”チュリス
+  types:
+  - creature
+  civs:
+  - fire
+  cost: 5
+  power: 1000
+  races:
+  - ビートジョッキー
+  keywords:
+  - speed_attacker
+  abilities:
+  - kind: static
+    affects: self
+    zone: hand
+    mod:
+      opt_reduce:
+        amount: 2
+        then: destroy
+  - kind: static
+    affects: self
+    mod:
+      battle_power:
+        amount: 6000
+  mana: 1
+  text: B・A・D ２（このクリーチャーを、コストを２少なくして召喚してもよい。そうしたら、このターンの終わりにこのクリーチャーを破壊する）スピードアタッカー（このクリーチャーは召喚酔いしない）バトル中、このクリーチャーのパワーを+6000する。
+  source:
+    official: dmrp03-081
+    review: pending
+- id: dmrp04s-047
+  name: “襲斗”戦車 ガランガ
+  types:
+  - creature
+  civs:
+  - fire
+  cost: 5
+  power: 5000
+  races:
+  - ビートジョッキー
+  abilities:
+  - kind: static
+    affects: self
+    zone: hand
+    mod:
+      opt_reduce:
+        amount: 2
+        then: destroy
+  - kind: trigger
+    when:
+      event: move
+      to: graveyard
+      reason: destroy
+      subject: self
+    effect:
+    - op: break
+      player: opp
+      count: 1
+  mana: 1
+  text: B・A・D２（このクリーチャーを、コストを２少なくして召喚してもよい。そうしたら、このターンの終わりにこのクリーチャーを破壊する）このクリーチャーが破壊された時、相手のシールドを１つブレイクする。
+  source:
+    official: dmrp04s-047
+    review: pending
+- id: dmsd03-001
+  name: \"罰怒\"ブランド Ltd.
+  types:
+  - creature
+  civs:
+  - fire
+  cost: 7
+  power: 7000
+  races:
+  - ビートジョッキー
+  keywords:
+  - speed_attacker
+  - double_breaker
+  abilities:
+  - kind: static
+    affects: self
+    zone: hand
+    mod:
+      opt_reduce:
+        amount: 2
+        then: destroy
+  - kind: trigger
+    when: &id228
+      event: move
+      to: bz
+      subject: self
+    effect:
+    - op: destroy
+      select:
+        zone: bz
+        owner: opp
+        filter:
+          types:
+          - creature
+          power_le: 6000
+        count: 1
+  mana: 1
+  text: B・A・D２（このクリーチャーを、コストを２少なくして召喚してもよい。そうしたら、このターンの終わりにこのクリーチャーを破壊する）スピードアタッカー（このクリーチャーは召喚酔いしない）W・ブレイカーこのクリーチャーがバトルゾーンに出た時、相手のパワー6000以下のクリーチャーを１体破壊する。
+  source:
+    official: dmsd03-001
+    review: pending
+- id: dmc34-047
+  name: ゾンビ・カーニバル
+  types:
+  - spell
+  civs:
+  - darkness
+  cost: 5
+  keywords:
+  - s_trigger
+  mana: 1
+  text: 'S・トリガー(この呪文をシールドゾーンから手札に加える時、コストを支払わずにすぐ唱えてもよい)
+
+    種族を１つ選ぶ。自分の墓地から、その種族のクリーチャーを３体まで選び、自分の手札に加える。'
+  source:
+    official: dmc34-047
+    review: pending
+    aliases:
+    - dm09-047
+    - promoy2-027
+  spell:
+  - op: choose_race
+    as: r
+  - op: move
+    select:
+      zone: graveyard
+      owner: you
+      filter:
+        types:
+        - creature
+        races:
+          declared: r
+      count:
+        upto: 3
+    to: hand
+    reason: put
+- id: dm24-073
+  name: 紅蓮の守護者ラ・バル・プラトーン
+  types:
+  - creature
+  civs:
+  - light
+  cost: 4
+  power: 1000
+  races:
+  - ガーディアン
+  abilities:
+  - kind: trigger
+    when: *id228
+    effect:
+    - op: choose_civ
+      as: c
+    - op: tap
+      select:
+        zone: bz
+        owner: any
+        filter:
+          types:
+          - creature
+          not_civs:
+            declared: c
+        count: all
+  mana: 1
+  text: このクリーチャーをバトルゾーンに出した時、文明をひとつ選ぶ。それ以外の文明を持つクリーチャーをすべてタップする。
+  source:
+    official: dm24-073
+    review: pending
+    aliases:
+    - dm24-073cc
+- id: dmrp06-038
+  name: 貝獣 ラリア
+  types:
+  - creature
+  civs:
+  - water
+  cost: 4
+  power: 2000
+  races:
+  - ムートピア
+  keywords:
+  - blocker
+  mana: 1
+  text: 'G・ゼロ：このターン、自分が呪文を２枚以上唱えていれば、このクリーチャーをコストを支払わずに召喚してもよい。
+
+    ブロッカー（このクリーチャーをタップして、相手クリーチャーの攻撃先をこのクリーチャーに変更してもよい）'
+  source:
+    official: dmrp06-038
+    review: pending
+  free_if:
+    cmp:
+    - turn_count:
+        kind: cast
+        owner: you
+    - '>='
+    - 2
+- id: dmrp08-069
+  name: 貝獣 ビアワン
+  types:
+  - creature
+  civs:
+  - water
+  cost: 3
+  power: 4000
+  races:
+  - ムートピア
+  keywords:
+  - blocker
+  abilities:
+  - kind: static
+    affects: self
+    if:
+      cmp:
+      - turn_count:
+          kind: cast
+          owner: you
+      - ==
+      - 0
+    mod:
+      deny:
+      - attack_player
+      - attack_creature
+  mana: 1
+  text: 'ブロッカー（このクリーチャーをタップして、相手クリーチャーの攻撃先をこのクリーチャーに変更してもよい）
+
+    このターン、自分が呪文を唱えていなければ、このクリーチャーは攻撃できない。'
+  source:
+    official: dmrp08-069
+    review: pending
