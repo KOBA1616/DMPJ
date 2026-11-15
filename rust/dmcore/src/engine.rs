@@ -77,7 +77,37 @@ impl Engine {
     fn permits(&self, cid: i64, action: &str) -> bool {
         self.permits_face(cid, action, None)
     }
+    /// 継続的効果が cid に及ぶか（Python の _ce_applies）。範囲固定は affected、dynamic は生成時にベイクした filter
+    fn ce_applies(&self, ce: &Value, cid: i64) -> bool {
+        if let Some(a) = ce["affected"].as_array() {
+            return a.contains(&self.refv(cid));
+        }
+        let f = &ce["filter"];
+        let c = &self.s.cards[cid as usize];
+        if f["zone"].as_str() != Some(c.zone.as_str()) {
+            return false;
+        }
+        if f["owner"] != json!("any") && f["owner"].as_i64() != Some(c.controller) {
+            return false;
+        }
+        self.filter_ok(cid, &f["filter"]).unwrap_or(false)
+    }
+    /// 継続的効果の mod の allow / deny に action があるか
+    fn ce_lists(&self, cid: i64, key: &str) -> Vec<String> {
+        let mut out = vec![];
+        for ce in &self.s.continuous {
+            if let Some(l) = ce["mod"].get(key).and_then(|v| v.as_array()) {
+                if self.ce_applies(ce, cid) {
+                    out.extend(l.iter().filter_map(|x| x.as_str().map(String::from)));
+                }
+            }
+        }
+        out
+    }
     fn permits_face(&self, cid: i64, action: &str, face: Option<i64>) -> bool {
+        if face.is_none() && !self.s.continuous.is_empty() && self.ce_lists(cid, "deny").iter().any(|x| x == action) {
+            return false;   // 101.2:「できない」は「できる」に勝つ
+        }
         if self.s.cards[cid as usize].zone == "shield" {
             // シールドゾーンで働く自身への許可（S・トリガー）
             if self.fdef(cid, face).shield_allow.iter().any(|x| x == action) {
@@ -92,6 +122,9 @@ impl Engine {
             if d.allow.iter().any(|x| x == action) {
                 return true;
             }
+        }
+        if face.is_none() && !self.s.continuous.is_empty() && self.ce_lists(cid, "allow").iter().any(|x| x == action) {
+            return true;
         }
         *self.rules.actions.get(action).unwrap_or(&false)
     }
@@ -363,21 +396,27 @@ impl Engine {
             };
             lst = refs.iter().filter(|r| self.alive(r)).map(|r| r[0].as_i64().unwrap()).collect();
         } else {
-            let p = match sel.get("owner").and_then(|v| v.as_str()).unwrap_or("you") {
-                "you" => you,
-                "opp" => 1 - you,
+            // owner any: ターン・プレイヤーから順に両者（114.2a）
+            let players: Vec<i64> = match sel.get("owner").and_then(|v| v.as_str()).unwrap_or("you") {
+                "you" => vec![you],
+                "opp" => vec![1 - you],
+                "any" => vec![self.s.active, 1 - self.s.active],
                 _ => return uns("cands owner"),
             };
             let zone = sel["zone"].as_str().unwrap_or("");
             if !["hand", "deck", "graveyard", "mana", "bz", "shield"].contains(&zone) {
                 return uns(format!("cands zone {}", zone));
             }
-            lst = if zone == "bz" { self.bz_tops(Some(p)) } else { self.zl(zone, p).clone() };
-            if let Some(n) = sel.get("from_top") {
-                match n.as_i64() {
-                    Some(n) => lst.truncate(n.max(0) as usize),
-                    None => return uns("from_top expr"),
+            lst = vec![];
+            for p in players {
+                let mut part = if zone == "bz" { self.bz_tops(Some(p)) } else { self.zl(zone, p).clone() };
+                if let Some(n) = sel.get("from_top") {
+                    match n.as_i64() {
+                        Some(n) => part.truncate(n.max(0) as usize),
+                        None => return uns("from_top expr"),
+                    }
                 }
+                lst.extend(part);
             }
             if sel.get("other").and_then(|v| v.as_bool()).unwrap_or(false) {
                 if let Some(me) = env.get("self").and_then(|v| v.as_array()) {
@@ -494,22 +533,28 @@ impl Engine {
             let refs: Vec<Value> = env["vars"].get(name).and_then(|v| v.as_array()).cloned().unwrap_or_default();
             lst = refs.iter().filter(|r| self.alive(r)).map(|r| r[0].as_i64().unwrap()).collect();
         } else {
-            let p = match sel.get("owner").and_then(|v| v.as_str()).unwrap_or("you") {
-                "you" => you,
-                "opp" => 1 - you,
+            // owner any: ターン・プレイヤーから順に両者（114.2a）
+            let players: Vec<i64> = match sel.get("owner").and_then(|v| v.as_str()).unwrap_or("you") {
+                "you" => vec![you],
+                "opp" => vec![1 - you],
+                "any" => vec![self.s.active, 1 - self.s.active],
                 _ => return uns("selector owner"),
             };
             let zone = sel["zone"].as_str().unwrap_or("");
             if !["hand", "deck", "graveyard", "mana", "bz", "shield"].contains(&zone) {
                 return uns(format!("selector zone {}", zone));
             }
-            lst = if zone == "bz" { self.bz_tops(Some(p)) } else { self.zl(zone, p).clone() };
-            if let Some(n) = sel.get("from_top") {
-                let n = match n.as_i64() {
-                    Some(n) => n.max(0) as usize,
-                    None => return uns("from_top expr"),
-                };
-                lst.truncate(n);
+            lst = vec![];
+            for p in players {
+                let mut part = if zone == "bz" { self.bz_tops(Some(p)) } else { self.zl(zone, p).clone() };
+                if let Some(n) = sel.get("from_top") {
+                    let n = match n.as_i64() {
+                        Some(n) => n.max(0) as usize,
+                        None => return uns("from_top expr"),
+                    };
+                    part.truncate(n);
+                }
+                lst.extend(part);
             }
             if sel.get("other").and_then(|v| v.as_bool()).unwrap_or(false) {
                 if let Some(me) = env.get("self").and_then(|v| v.as_array()) {
@@ -629,7 +674,12 @@ impl Engine {
     // ---- ターン ----
     fn h_turn(&mut self) -> R<Option<Value>> {
         if self.s.skip_rest {
-            return uns("skip_rest");
+            // 残りのステップを行わずに次のターンへ（ターン終了時の誘発もなし）。状況起因処理と待機はこのターンのうちに
+            self.s.skip_rest = false;
+            let n = self.s.tasks.last().unwrap()["steps"].as_array().unwrap().len();
+            self.tset("i", json!(n));
+            self.expire("end_of_turn")?;
+            return Ok(None);
         }
         let (i, n) = {
             let t = self.s.tasks.last().unwrap();
@@ -1049,7 +1099,9 @@ impl Engine {
             (t["attacker"].clone(), t["target"].clone(), t["phase"].as_i64().unwrap())
         };
         if self.s.skip_rest {
-            return uns("skip_rest");
+            self.s.tasks.pop();
+            self.expire("during_attack")?;
+            return Ok(None);
         }
         if ph == 0 {
             self.tset("phase", json!(1));
@@ -1264,25 +1316,44 @@ impl Engine {
         match op["op"].as_str().unwrap_or("") {
             "modify" => {
                 // 継続的効果（パワーの修整・このターンの間）。対象は解決時に固定（110.2e）
-                if op.get("duration").is_some() || op.get("dynamic").is_some() {
-                    return uns("modify options");
+                if op.get("duration").map_or(false, |d| d != "end_of_turn") {
+                    return uns("modify duration");
                 }
-                self.s.seq += 1;
-                let cids = match self.select(&op["select"], &env)? {
-                    Ok(c) => c,
-                    Err(d) => {
-                        self.s.seq -= 1;
-                        return Ok(Some(d));
+                if op.get("dynamic").and_then(|v| v.as_bool()).unwrap_or(false) {
+                    // 後から入ったカードにも及ぶ範囲指定。範囲は生成時に持ち主を固定してベイクする
+                    let sel = &op["select"];
+                    let you = env["you"].as_i64().unwrap();
+                    let owner = match sel.get("owner").and_then(|v| v.as_str()).unwrap_or("you") {
+                        "you" => json!(you), "opp" => json!(1 - you), "any" => json!("any"), _ => return uns("dynamic owner") };
+                    self.s.seq += 1;
+                    let src = env.get("self").and_then(|v| v.as_array()).map(|a| a[0].clone()).unwrap_or(Value::Null);
+                    let ce = json!({"id": self.s.seq, "mod": op["mod"], "duration": "end_of_turn", "controller": env["you"], "src": src,
+                        "affected": Value::Null, "filter": {"zone": sel.get("zone").cloned().unwrap_or(json!("bz")), "owner": owner,
+                        "filter": sel.get("filter").cloned().unwrap_or(json!({}))}});
+                    self.s.continuous.push(ce);
+                    let sba = self.sba_power_tasks();
+                    if !sba.is_empty() {
+                        self.defer(sba);
+                        deferred = true;
                     }
-                };
-                let src = env.get("self").and_then(|v| v.as_array()).map(|a| a[0].clone()).unwrap_or(Value::Null);
-                let ce = json!({"id": self.s.seq, "mod": op["mod"], "duration": "end_of_turn", "controller": env["you"], "src": src,
-                    "affected": cids.iter().map(|&c| self.refv(c)).collect::<Vec<_>>()});
-                self.s.continuous.push(ce);
-                let sba = self.sba_power_tasks();
-                if !sba.is_empty() {
-                    self.defer(sba);   // パワー0以下になったら、この効果の続きより先に破壊する（703.4c）
-                    deferred = true;
+                } else {
+                    self.s.seq += 1;
+                    let cids = match self.select(&op["select"], &env)? {
+                        Ok(c) => c,
+                        Err(d) => {
+                            self.s.seq -= 1;
+                            return Ok(Some(d));
+                        }
+                    };
+                    let src = env.get("self").and_then(|v| v.as_array()).map(|a| a[0].clone()).unwrap_or(Value::Null);
+                    let ce = json!({"id": self.s.seq, "mod": op["mod"], "duration": "end_of_turn", "controller": env["you"], "src": src,
+                        "affected": cids.iter().map(|&c| self.refv(c)).collect::<Vec<_>>()});
+                    self.s.continuous.push(ce);
+                    let sba = self.sba_power_tasks();
+                    if !sba.is_empty() {
+                        self.defer(sba);   // パワー0以下になったら、この効果の続きより先に破壊する（703.4c）
+                        deferred = true;
+                    }
                 }
             }
             "play_free" => {
@@ -1313,6 +1384,10 @@ impl Engine {
                     self.defer(ts);
                     deferred = true;
                 }
+            }
+            "end_turn" => {
+                // ターンの残りをとばす（今の効果の解決は最後まで行う）
+                self.s.skip_rest = true;
             }
             "win" => {
                 let you = env["you"].as_i64().unwrap();
@@ -1369,6 +1444,32 @@ impl Engine {
                 let n = op["times"].as_i64().ok_or_else(|| "repeat times".to_string());
                 let n = match n { Ok(n) => n, Err(e) => return uns(e) };
                 let kids: Vec<Value> = (0..n).map(|_| json!({"t": "effect", "ops": op["body"], "pc": 0, "env": env, "os": {}})).collect();
+                if !kids.is_empty() {
+                    self.defer(kids);
+                    deferred = true;
+                }
+            }
+            "modal" => {
+                // 「次のうちいずれか count 個を選ぶ」（repeat なし）: 異なるモードを選び、書かれた順に解決する
+                if op.get("repeat").and_then(|v| v.as_bool()).unwrap_or(false) {
+                    return uns("modal repeat");
+                }
+                let n = op.get("count").and_then(|v| v.as_i64()).unwrap_or(1);
+                let modes = op["modes"].as_array().cloned().unwrap_or_default();
+                {
+                    let os = &mut self.s.tasks.last_mut().unwrap()["os"];
+                    if os.get("picked").is_none() {
+                        os["picked"] = json!([]);
+                    }
+                }
+                let you = env["you"].as_i64().unwrap();
+                let opts: Vec<Value> = (0..modes.len()).map(|i| json!({"key": format!("mode:{}", i)})).collect();
+                let mut ans = match self.ask(you, "choose_mode", opts, n as usize, n as usize) {
+                    Ask::Decision(d) => return Ok(Some(d)),
+                    Ask::Answer(x) => x,
+                };
+                ans.sort();
+                let kids: Vec<Value> = ans.iter().map(|&i| json!({"t": "effect", "ops": modes[i], "pc": 0, "env": env, "os": {}})).collect();
                 if !kids.is_empty() {
                     self.defer(kids);
                     deferred = true;
@@ -1736,9 +1837,8 @@ impl Engine {
     fn power(&self, cid: i64) -> i64 {
         let mut p = self.def(cid).power;
         if !self.s.continuous.is_empty() {
-            let r = self.refv(cid);
             for ce in &self.s.continuous {
-                if ce["affected"].as_array().map_or(false, |a| a.contains(&r)) {
+                if ce["mod"].get("power").is_some() && self.ce_applies(ce, cid) {
                     p += ce["mod"].get("power").and_then(|v| v.as_i64()).unwrap_or(0);
                 }
             }
@@ -1750,10 +1850,14 @@ impl Engine {
         let d = self.def(cid);
         let power = self.power(cid);
         let in_bz = self.s.cards[cid as usize].zone == "bz";
-        let (allow, deny, bo): (Vec<String>, Vec<String>, Vec<i64>) =
+        let (mut allow, mut deny, bo): (Vec<String>, Vec<String>, Vec<i64>) =
             if in_bz { (d.allow.clone(), d.deny.clone(), d.breaks.clone()) }
             else if self.s.cards[cid as usize].zone == "shield" { (d.shield_allow.clone(), vec![], vec![]) }   // シールドゾーンで働く自身への許可
             else { (vec![], vec![], vec![]) };
+        if !self.s.continuous.is_empty() {
+            allow.extend(self.ce_lists(cid, "allow"));
+            deny.extend(self.ce_lists(cid, "deny"));
+        }
         let breaks = bo.iter().copied().max().unwrap_or(1).max(1);
         let mut kw = d.keywords.clone();
         kw.sort();
@@ -2413,7 +2517,7 @@ impl Engine {
                 let chars_before = self.chars_json(cid);
                 let defn_before = self.s.cards[cid as usize].defn.clone();
                 let summon_hold = to == "bz" && czone == "hold" && reason == "summon";
-                let resolve_hold = czone == "hold" && (to == "graveyard" || to == "mana") && reason == "resolve";   // 唱え終えた呪文
+                let resolve_hold = czone == "hold" && ((to == "graveyard" || to == "mana" || to == "shield") && reason == "resolve" || to == "shield" && reason == "put");   // 唱え終えた呪文（スローリー・チェーンは自身をシールドへ）
                 if czone == "hold" && !summon_hold && !resolve_hold {
                     return uns(format!("move {}→{}", from, to));
                 }

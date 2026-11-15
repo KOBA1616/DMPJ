@@ -132,7 +132,7 @@ def _drawout_order(eng: Engine, d: dict):
 import os as _os
 ROLLOUT_LOOKAHEAD = _os.environ.get("DMSIM_ROLLOUT_LOOKAHEAD", "0") == "1"
 ROLLOUT_WIDTH = 4
-ROLLOUT_TOTAL = 3000    # 1手の探索の中で先読みに使う総手数の上限。使い切ったら残りは並びの先頭（seed 39 が終わらなかった、§34）
+ROLLOUT_TOTAL = 3000    # 1手の探索の中で先読みに使う総手数の上限。使い切ったら残りは並びの先頭（seed 39 が終わらなかった、§35）
 ROLLOUT_DEPTH = 60      # 先読みの各候補を貪欲に進める手数の上限（ループで2000手まで回ると1局が数時間かかった）
 
 
@@ -351,7 +351,7 @@ class TurnSearch:
     def run(self, eng: Engine) -> tuple[Engine, TurnStats]:
         """eng（自分の決定待ち）から探索し、一番評価の高いターン終了局面の Engine を返す。eng は変更しない。"""
         self.left = self.budget
-        self._la_left = ROLLOUT_TOTAL     # 先読みの総手数の残り（1手の探索あたり、§34）
+        self._la_left = ROLLOUT_TOTAL     # 先読みの総手数の残り（1手の探索あたり、§35）
         self._root_log = len(eng.log)
         self._rf = REPEAT_FIRST if self.repeat_first is None else self.repeat_first
         self._deadline = None if self.time_limit is None else time.monotonic() + self.time_limit

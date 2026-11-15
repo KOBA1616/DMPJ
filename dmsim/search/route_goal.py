@@ -178,7 +178,7 @@ def needed_cards(stages) -> dict[str, tuple[int, set]]:
 
 def away_penalty(eng, need: dict, me: int = 0, grave_dead: set | None = None) -> float:
     """経路に要る札が、経路の段が指さないゾーン（マナ）に置かれた枚数（必要枚数まで）。
-    grave_dead: 墓地に置くと経路で使えなくなる札（墓地から使う効果が自分の札に無く、段も墓地を指さない。§34）も墓地を数える。"""
+    grave_dead: 墓地に置くと経路で使えなくなる札（墓地から使う効果が自分の札に無く、段も墓地を指さない。§35）も墓地を数える。"""
     tot = 0
     for nm, (n, zones) in need.items():
         for z in AWAY_ZONES + (("graveyard",) if grave_dead and nm in grave_dead else ()):
@@ -219,7 +219,7 @@ def make_value_fn(stages, weights: Weights | None = None, *, mult: float = 1.0, 
         fl = ratchet[0] if ratchet else 0
         if cont:
             r = continuous_score(eng, stages, me, fl, wins, e_idx, partial, elsewhere)
-            if away:   # §34: 連続点の経路でも、経路に要る札をマナ（と墓地で使えなくなる札は墓地）へ送った分を引く（#452 で抜けていた）
+            if away:   # §35: 連続点の経路でも、経路に要る札をマナ（と墓地で使えなくなる札は墓地）へ送った分を引く（#452 で抜けていた）
                 if dead[0] is None:
                     dead[0] = grave_dead_cards(eng, need, me)
                 r -= away * away_penalty(eng, need, me, dead[0])
@@ -261,7 +261,7 @@ def entry_index(stages) -> int:
     return 0
 
 
-LOOP_SEEN_N = 3   # ループ部品を墓地・山札から動かす選択がこの回数あれば「ループが実際に回った」とみなす（§34）
+LOOP_SEEN_N = 3   # ループ部品を墓地・山札から動かす選択がこの回数あれば「ループが実際に回った」とみなす（§35）
 
 
 def loop_ids(entry_name: str | None) -> frozenset:
@@ -274,7 +274,7 @@ def loop_ids(entry_name: str | None) -> frozenset:
 
 
 def loop_seen(eng, me: int, ids: frozenset) -> bool:
-    """入口の定義を満たさなくても、ループ部品を墓地・山札から動かす選択を LOOP_SEEN_N 回以上していれば開ける（§34）。"""
+    """入口の定義を満たさなくても、ループ部品を墓地・山札から動かす選択を LOOP_SEEN_N 回以上していれば開ける（§35）。"""
     if not ids:
         return False
     n = 0
