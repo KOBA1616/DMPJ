@@ -438718,3 +438718,379 @@ cards:
   source:
     official: dm23sd1-003
     review: pending
+- id: dm37-038
+  name: まんまるロボタ
+  types:
+  - creature
+  civs:
+  - light
+  cost: 1
+  power: 500
+  races:
+  - グレートメカオー
+  keywords:
+  - blocker
+  - cannot_attack_player
+  abilities:
+  - kind: static
+    affects: self
+    mod:
+      power_when:
+        amount: 2000
+        when: blocking
+  mana: 1
+  text: 'ブロッカー(相手クリーチャーが攻撃する時、このクリーチャーをタップして、その攻撃を阻止してもよい。その後、その相手クリーチャーとバトルする)
+
+    このクリーチャーは、相手プレイヤーを攻撃できない。
+
+    ブロック中、このクリーチャーのパワーは+2000される。'
+  source:
+    official: dm37-038
+    review: pending
+- id: dmbd21-026
+  name: 終断α ドルーター
+  types:
+  - creature
+  civs:
+  - darkness
+  - fire
+  cost: 2
+  power: 1000
+  races:
+  - イニシャルズX
+  abilities:
+  - kind: trigger
+    when: &id278
+      event: move
+      to: bz
+      subject: self
+    effect:
+    - op: choose
+      select:
+        zone: hand
+        owner: you
+        count: 1
+        up_to: true
+      as: d
+    - op: discard
+      select:
+        ref: d
+    - op: if
+      cond:
+        cmp:
+        - count:
+            ref: d
+        - '>='
+        - 1
+      then:
+      - op: draw
+        count: 2
+    if:
+      exists:
+        zone: bz
+        owner: you
+        filter:
+          types:
+          - field
+  mana: 1
+  text: このクリーチャーが出た時、自分のフィールドがあれば、自分の手札を１枚捨ててもよい。そうしたら、カードを２枚引く。
+  source:
+    official: dmbd21-026
+    review: pending
+    aliases:
+    - dmr23-044
+- id: dmbd10-003
+  name: 凶鬼09号 ギャリベータ
+  types:
+  - creature
+  civs:
+  - darkness
+  cost: 5
+  power: 5000
+  races:
+  - マフィ・ギャング
+  - デーモン・コマンド
+  keywords:
+  - summon_from_graveyard
+  abilities:
+  - kind: trigger
+    when:
+      event: turn_end
+    effect:
+    - op: may
+      body:
+      - op: mill
+        owner: you
+        count: 2
+      - op: draw
+        count: 1
+    if:
+      is_turn: you
+  mana: 1
+  text: 'このクリーチャーを、自分の墓地から召喚してもよい。
+
+    自分のターンの終わりに、自分の山札の上から２枚を墓地に置いてもよい。そうしたら、カードを１枚引く。'
+  source:
+    official: dmbd10-003
+    review: pending
+    aliases:
+    - dmrp03-s05
+- id: dm32-051
+  name: ツクモ・スパーク
+  types:
+  - creature
+  civs:
+  - water
+  cost: 3
+  power: 2000
+  races:
+  - サイバー・ウイルス
+  - オリジン
+  abilities:
+  - kind: trigger
+    when:
+      event: move
+      to: bz
+      subject: self
+    effect:
+    - op: bounce
+      select:
+        zone: bz
+        owner: opp
+        filter:
+          types:
+          - creature
+        count: 1
+  - kind: trigger
+    when: *id278
+    effect:
+    - op: choose
+      select:
+        zone: bz
+        owner: opp
+        filter:
+          types:
+          - creature
+        count: 1
+      as: t
+    - op: move
+      select:
+        ref: t
+      to: hand
+      reason: return
+  - kind: trigger
+    when:
+      event: move
+      from: bz
+      subject: self
+    effect:
+    - op: opp_may
+      body:
+      - op: move
+        select:
+          zone: hand
+          owner: opp
+          chooser: opp
+          filter:
+            types:
+            - creature
+          count: 1
+        to: bz
+        reason: put
+  mana: 1
+  text: 'このクリーチャーをバトルゾーンに出した時、バトルゾーンにある相手のクリーチャーを１体選び、持ち主の手札に戻す。
+
+    このクリーチャーがバトルゾーンを離れた時、相手はクリーチャーを１体、自分自身の手札からバトルゾーンに出してもよい。'
+  source:
+    official: dm32-051
+    review: pending
+- id: dmex07-024
+  name: 失われし禁術の復元
+  types:
+  - spell
+  civs:
+  - water
+  cost: 4
+  keywords:
+  - s_trigger
+  spell:
+  - op: play_free
+    select:
+      zone: graveyard
+      owner: you
+      filter:
+        types:
+        - spell
+        cost_le: 4
+      count: 1
+    resolve_to: deck
+    resolve_position: bottom
+  mana: 1
+  text: 'S・トリガー（この呪文をシールドゾーンから手札に加える時、コストを支払わずにすぐ唱えてもよい）
+
+    コスト４以下の呪文を１枚、自分の墓地からコストを支払わずに唱える。唱えた後、墓地に置くかわりに山札の一番下に置く。'
+  source:
+    official: dmex07-024
+    review: pending
+    aliases:
+    - dmrp03-037
+- id: dmex08-078
+  name: 龍素記号 Og アマテ・ラジアル
+  types:
+  - creature
+  civs:
+  - water
+  cost: 7
+  power: 6000
+  races:
+  - クリスタル・コマンド・ドラゴン
+  keywords:
+  - double_breaker
+  abilities:
+  - kind: trigger
+    when:
+      event: move
+      to: bz
+      subject: self
+    effect:
+    - op: choose
+      select:
+        zone: deck
+        owner: you
+        filter:
+          types:
+          - spell
+          civs:
+          - water
+          cost_le: 4
+        count: 1
+        up_to: true
+      as: s
+    - op: shuffle
+    - op: may
+      body:
+      - op: play_free
+        select:
+          ref: s
+  mana: 1
+  text: 'W・ブレイカー
+
+    このクリーチャーがバトルゾーンに出た時、自分の山札を見て、その中から水のコスト４以下の呪文を１枚選び、山札をシャッフルしてからその呪文をコストを支払わずに唱えてもよい。'
+  source:
+    official: dmex08-078
+    review: pending
+    aliases:
+    - dmx17-006
+- id: dmex13-012
+  name: 撃速 ザ・グナム
+  types:
+  - creature
+  civs:
+  - fire
+  cost: 3
+  power: 3000
+  races:
+  - ソニック・コマンド
+  - 侵略者
+  abilities:
+  - kind: trigger
+    when:
+      event: move
+      to: bz
+      subject:
+        owner: opp
+        filter:
+          types:
+          - creature
+      unpaid: true
+    effect:
+    - op: destroy
+      select:
+        ref: event.subject
+    if:
+      is_turn: opp
+  mana: 1
+  text: 相手が、自身のターン中にコストを支払わずにクリーチャーをバトルゾーンに出した時、そのクリーチャーを破壊する。
+  source:
+    official: dmex13-012
+    review: pending
+    aliases:
+    - dmex06-025
+- id: dmex15-b067
+  name: 蝕王の晩餐
+  types:
+  - spell
+  civs:
+  - darkness
+  cost: 3
+  spell:
+  - op: choose
+    select:
+      zone: bz
+      owner: you
+      filter:
+        types:
+        - creature
+      count: 1
+    as: t
+  - op: destroy
+    select:
+      ref: t
+  - op: move
+    select:
+      zone: graveyard
+      owner: you
+      filter:
+        types:
+        - creature
+        cost_le:
+          sum:
+          - cost_of: t
+          - 1
+        cost_ge:
+          sum:
+          - cost_of: t
+          - 1
+      count: 1
+    to: bz
+    reason: put
+  mana: 1
+  text: 自分のクリーチャーを１体破壊する。その後、それよりコストが１大きいクリーチャーを１体、自分の墓地から出す。
+  source:
+    official: dmex15-b067
+    review: pending
+    aliases:
+    - dmex02-033
+    - dmrp03-020
+- id: dmr06-011
+  name: 破壊機装デリート・タンク
+  types:
+  - creature
+  civs:
+  - water
+  cost: 4
+  power: 2000
+  races:
+  - グレートメカオー
+  - アンノイズ
+  abilities:
+  - kind: static
+    affects: self
+    if:
+      cmp:
+      - count:
+          zone: hand
+          owner: you
+      - '>'
+      - count:
+          zone: hand
+          owner: opp
+    mod:
+      power: 6000
+      grant:
+      - double_breaker
+  mana: 1
+  text: 自分の手札の枚数が相手より多い場合、このクリーチャーのパワーは+6000され、「W・ブレイカー」を得る。(「W・ブレイカー」を得たクリーチャーはシールドを２枚ブレイクする)
+  source:
+    official: dmr06-011
+    review: pending
