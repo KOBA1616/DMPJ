@@ -77,6 +77,9 @@ def _simple_selector(sel) -> bool:
         return False
     if sel == {"ref": "self"}:
         return True
+    if "under_of" in sel:   # メテオバーン: 自分の下のカード
+        return sel["under_of"] == "self" and set(sel) <= {"under_of", "count"} and isinstance(sel.get("count", 1), int) \
+            and not isinstance(sel.get("count", 1), bool)
     if not set(sel) <= {"zone", "owner", "count", "from_top", "filter", "chooser", "look", "ref", "up_to", "other"}:
         return False
     if "look" in sel and not isinstance(sel["look"], bool):
@@ -148,15 +151,26 @@ def _simple_effect(ops, top=True) -> bool:
             continue
         if k == "shuffle" and set(o) <= {"op", "player"} and o.get("player", "you") in ("you", "opp"):
             continue
-        if k == "choose" and top and set(o) <= {"op", "select", "as"} and isinstance(o.get("as"), str) and _simple_selector(o.get("select")):
-            continue   # 変数への束縛は最上段だけ（Python は子タスクと env を共有するが、Rust は複製するため）
+        if k == "modify" and set(o) <= {"op", "select", "mod"} and isinstance(o.get("mod"), dict) and set(o["mod"]) == {"power"} \
+                and isinstance(o["mod"]["power"], int) and not isinstance(o["mod"]["power"], bool) and isinstance(o.get("select"), dict) \
+                and set(o["select"]) == {"ref"} and isinstance(o["select"]["ref"], str) and o["select"]["ref"] not in ("self",):
+            continue   # このターンの間のパワー修整（変数で指した対象）
+        if k == "choose" and set(o) <= {"op", "select", "as"} and isinstance(o.get("as"), str) and _simple_selector(o.get("select")):
+            continue   # 子の効果での束縛は、Rust が同じ env を持つタスクすべてに書く（Python の env 共有と同じ結果）
+        if k == "play_free" and set(o) <= {"op", "select"} and _simple_selector(o.get("select")) and o["select"].get("zone") == "hand":
+            continue
+        if k == "win" and set(o) <= {"op", "player"} and o.get("player", "you") in ("you", "opp"):
+            continue
         if k == "repeat" and set(o) <= {"op", "times", "body"} and isinstance(o.get("times"), int) and _simple_effect(o["body"], False):
             continue
         if k == "may" and set(o) <= {"op", "body"} and _simple_effect(o["body"], False):
             continue
         if k in ("tap", "untap") and set(o) <= {"op", "select"} and _simple_selector(o.get("select")):
             continue
-        if k == "move" and set(o) <= {"op", "select", "to", "reason", "position", "tapped"} and isinstance(o.get("tapped", False), bool) and o.get("to") in ("hand", "graveyard", "mana", "deck", "shield", "bz") \
+        if k == "move" and "order" in o and not (o["order"] == "choose" and o.get("to") == "deck" and isinstance(o.get("select"), dict)
+                                                  and set(o["select"]) == {"ref"}):
+            return False   # 並べ替えは、選ばせない参照（変数の全部）を山札へ置く時だけ
+        if k == "move" and set(o) <= {"op", "select", "to", "reason", "position", "tapped", "order"} and isinstance(o.get("tapped", False), bool) and o.get("to") in ("hand", "graveyard", "mana", "deck", "shield", "bz") \
                 and isinstance(o.get("reason"), str) and o.get("position", "top") in ("top", "bottom") and _simple_selector(o.get("select")):
             continue
         return False
@@ -192,8 +206,12 @@ def _simple_trigger(ab) -> bool:
 
 def _simple_replace(ab) -> bool:
     """段階3-d: 移動の置換（「〜する時、かわりに」）。発生源はバトルゾーン（Rust の replacement が Python の _replacement と同じ候補を出す範囲）。"""
+    w = ab.get("when")
+    if ab["kind"] == "replace" and isinstance(w, dict) and w.get("event") == "draw":   # 引く時の置換（シャコガイル）
+        return set(ab) <= {"kind", "when", "instead", "if"} and set(w) <= {"event", "player"} and w.get("player", "you") in ("you", "opp") \
+            and ("if" not in ab or _simple_cond(ab["if"])) and _simple_effect(ab["instead"], False)
     return ab["kind"] == "replace" and set(ab) <= {"kind", "when", "instead", "if"} and _simple_when(ab["when"]) \
-        and ab["when"].get("event") == "move" and ("if" not in ab or _simple_cond(ab["if"])) and _simple_effect(ab["instead"], False)
+        and ab["when"].get("event") in ("move", "draw") and ("if" not in ab or _simple_cond(ab["if"])) and _simple_effect(ab["instead"], False)
 
 
 def _self_mods(d):
@@ -271,9 +289,36 @@ SPELLS = True   # 段階3-a の呪文を plain に含めるか（False で従来
 def _is_plain(d) -> bool:
     if getattr(d, "faces", None):
         return TWINPACTS and _is_plain_twin(d)
+    if EVOLUTION and d.types == ["creature", "evolution"]:
+        return _is_plain_evo(d)
     if SPELLS and d.types == ["spell"]:
         return _is_plain_spell(d)
     return _is_plain_creature(d)
+
+
+EVOLUTION = True   # 段階3-e: 通常の進化（バトルゾーン）と超無限墓地進化（墓地の好きな数、1体ごとにコスト軽減）
+
+
+def _is_plain_evo(d) -> bool:
+    import dataclasses
+    if d.types != ["creature", "evolution"] or d.power <= 0:
+        return False
+    ef = d.evolve_from
+    if not isinstance(ef, dict) or not _simple_filter({k: v for k, v in ef.items() if k != "zone"}):
+        return False
+    if d.evolve_zone not in ("bz", "graveyard") or ef.get("zone", d.evolve_zone) != d.evolve_zone:
+        return False
+    if not set(d.keywords) <= _OK_KW or _self_mods(d) is None:
+        return False
+    skip = {"id", "name", "types", "civs", "cost", "power", "mana", "races", "text", "abilities", "keywords", "source",
+            "evolve_from", "evolve_zone", "evolve_count", "evolve_any", "cost_reduce_per_evo"}
+    for f in dataclasses.fields(type(d)):
+        if f.name in skip:
+            continue
+        dv = f.default if f.default is not dataclasses.MISSING else f.default_factory()
+        if getattr(d, f.name) != dv:
+            return False
+    return True
 
 
 def _is_plain_creature(d) -> bool:
@@ -281,8 +326,6 @@ def _is_plain_creature(d) -> bool:
     import dataclasses
     from ..cards.defs import CardDef
     if d.types != ["creature"] or d.power <= 0:
-        return False
-    if any("コマンド" in r for r in d.races):   # 出た時に封印の解放（seal_release）が走る
         return False
     if not set(d.keywords) <= _OK_KW or _self_mods(d) is None:
         return False
@@ -313,6 +356,9 @@ def _card_bundle(d, zt=False, mana=None) -> dict:
            "spell": list(d.spell) if plain and d.types == ["spell"] else [],
            "resolve_to": d.resolve_to, "zt": zt,
            **dict(zip(("allow", "deny", "breaks", "shield_allow"), (_self_mods(d) or ([], [], [], []))))}
+    if plain and "evolution" in d.types:
+        out.update(evolve_from={k: v for k, v in d.evolve_from.items() if k != "zone"}, evolve_zone=d.evolve_zone,
+                   evolve_count=d.evolve_count, evolve_any=d.evolve_any, cost_reduce_per_evo=d.cost_reduce_per_evo)
     if plain and getattr(d, "faces", None):
         out["faces"] = [_card_bundle(f, mana=d.mana) for f in d.faces]
     return out
@@ -364,3 +410,197 @@ class RustSession:
 
     def fork(self) -> "RustSession":
         return RustSession(self.eng.fork(), self._n)
+
+
+# ---- 段階4: 対局・探索への接続（扱えない札を含む局は Python のまま／途中で当たったら Python に戻す） ----
+
+def state_from_json(js: str):
+    """Rust の to_json（Python の GameState.to_json と同じ形）から GameState を作る。"""
+    from .state import Card, GameState
+    d = json.loads(js)
+    d["cards"] = [Card(**c) for c in d["cards"]]
+    return GameState(**d)
+
+
+_BUNDLES: dict = {}
+
+
+def _bundle_json(rules) -> str:
+    k = id(rules)
+    b = _BUNDLES.get(k)
+    if b is None or b[0] is not rules:
+        b = _BUNDLES[k] = (rules, json.dumps(rules_bundle(rules)))
+    return b[1]
+
+
+def enabled() -> bool:
+    """DMSIM_RUST=1 で対局・探索のエンジンを Rust にする（既定は Python）。"""
+    import os
+    return available() and os.environ.get("DMSIM_RUST", "0") == "1"
+
+
+def supports(rules, state) -> bool:
+    """この局の札がすべて Rust で動くか（_is_plain）。未対応の札が1枚でもあれば False。"""
+    cards = rules.cards
+    return all(_is_plain(cards[c.defn]) for c in state.cards)
+
+
+def maybe_rust(eng):
+    """eng（Python の Engine）を、Rust が扱える局なら RustEngine に包み直す。扱えなければ eng をそのまま返す。"""
+    if not enabled() or isinstance(eng, RustEngine) or eng.s.trace is not None or not supports(eng.rules, eng.s):
+        return eng
+    try:
+        return RustEngine(eng.rules, eng.s.clone(), list(eng.log), eng.step_limit, eng.turn_limit)
+    except Exception:   # dmcore.Unsupported（局面の途中状態など）: Python のまま
+        return eng
+
+
+class _LazyState:
+    """RustEngine.s の軽い代役: よく読む小さな値（active / turn / first_player / step / result）は Rust から直接読み、
+    それ以外に触れた時だけ状態全体を Python の GameState に変換する。result への代入は Rust に書く。"""
+    __slots__ = ("_e",)
+
+    def __init__(self, e):
+        object.__setattr__(self, "_e", e)
+
+    def __getattr__(self, name):
+        e = self._e
+        if e._fb is None and e._py is None and e._c is not None:
+            if name in ("active", "turn", "first_player", "step"):
+                q = e._c.quick()
+                return q[("active", "turn", "first_player", "step").index(name)]
+            if name == "result":
+                r = e._c.result()
+                return None if r is None else json.loads(r)
+        return getattr(e._view().s, name)
+
+    def __setattr__(self, name, value):
+        e = self._e
+        if name == "result" and e._fb is None and e._c is not None and value is not None:
+            e._c.set_result(json.dumps(value))
+            e._py = None
+            return
+        setattr(e._view().s, name, value)
+
+
+class RustEngine:
+    """Engine（dmsim.engine.core）と同じ使い方で、進行（advance / answer / clone）を Rust で行う。
+    読むだけの操作（s・zlist・chars_ro など）は、その時点の状態から作った Python の Engine に任せる（書き込みは反映しない）。
+    Rust が扱えない語彙に当たったら、起点の状態から決定を Python で再生して、以後は Python の Engine として振る舞う。"""
+
+    def __init__(self, rules, state, log, step_limit=20000, turn_limit=80, _core=None):
+        self.rules, self.step_limit, self.turn_limit = rules, step_limit, turn_limit
+        self._base, self._base_n = state, len(log)      # 起点（Python に戻す時の再生用）
+        self._log = log
+        self._py = None                                 # 読み取り用の Python Engine（状態が動いたら作り直す）
+        self._fb = None                                 # Python に戻した後の Engine（__init__ の最初で None にしておく: log が読む）
+        self._c = _core if _core is not None else dmcore.Engine.open(state.to_json(), _bundle_json(rules))
+
+    @property
+    def log(self):
+        return self._fb.log if self._fb is not None else self._log
+
+    @log.setter
+    def log(self, v):
+        if self._fb is not None:
+            self._fb.log = v
+        else:
+            self._log = v
+
+    # -- Python に戻す --
+    def _fallback(self):
+        if self._fb is None:
+            from .core import Engine
+            e = Engine(self.rules, self._base.clone(), step_limit=self.step_limit, turn_limit=self.turn_limit)
+            e.log = list(self.log[:self._base_n])
+            for ent in self.log[self._base_n:]:
+                e.advance()
+                e.answer(ent["choice"])
+            self._fb, self._c, self._py = e, None, None
+        return self._fb
+
+    def _view(self):
+        if self._fb is not None:
+            return self._fb
+        if self._py is None:
+            from .core import Engine
+            self._py = Engine(self.rules, state_from_json(self._c.to_json()), step_limit=self.step_limit,
+                              turn_limit=self.turn_limit)
+            self._py.log = self.log
+        return self._py
+
+    @property
+    def s(self):
+        if self._fb is not None:
+            return self._fb.s
+        if self._py is not None:
+            return self._py.s
+        return _LazyState(self)
+
+    @s.setter
+    def s(self, state):   # 状態の差し替え（決定化の注入）。新しい起点にする
+        if self._fb is not None:
+            self._fb.s = state
+            return
+        try:
+            self._c = dmcore.Engine.open(state.to_json(), _bundle_json(self.rules))
+            self._base, self._base_n, self._py = state, len(self.log), None
+        except Exception:
+            from .core import Engine
+            e = Engine(self.rules, state, step_limit=self.step_limit, turn_limit=self.turn_limit)
+            e.log = self.log
+            self._fb, self._c, self._py = e, None, None
+
+    def __getattr__(self, name):
+        if name.startswith("__"):
+            raise AttributeError(name)
+        return getattr(self._view(), name)
+
+    # -- 進行 --
+    def clone(self):
+        if self._fb is not None:
+            return self._fb.clone()
+        return RustEngine(self.rules, self._base, list(self.log), self.step_limit, self.turn_limit, _core=self._c.fork()) \
+            ._with_base_n(self._base_n)
+
+    def _with_base_n(self, n):
+        self._base_n = n
+        return self
+
+    def advance(self):
+        if self._fb is not None:
+            return self._fb.advance()
+        try:
+            t = self._c.advance()
+        except dmcore.Unsupported:
+            return self._fallback().advance()
+        self._py = None
+        return None if t is None else json.loads(t)
+
+    def answer(self, choice):
+        if self._fb is not None:
+            return self._fb.answer(choice)
+        if isinstance(choice, int):
+            choice = [choice]
+        self._c.answer(list(choice))
+        self.log.append(json.loads(self._c.last_log()))
+        self._py = None
+
+    def answer_by_keys(self, keys):
+        if self._fb is not None:
+            return self._fb.answer_by_keys(keys)
+        d = self.advance()
+        if self._fb is not None:
+            return self._fb.answer_by_keys(keys)
+        opts = [o["key"] for o in d["options"]]
+        choice, used = [], set()
+        for k in keys:
+            for i, ok in enumerate(opts):
+                if ok == k and i not in used:
+                    choice.append(i)
+                    used.add(i)
+                    break
+            else:
+                from .core import IllegalAnswer
+                raise IllegalAnswer(f"key {k} not available in {opts}")
+        self.answer(choice)

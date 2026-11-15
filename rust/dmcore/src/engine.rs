@@ -172,6 +172,14 @@ impl Engine {
                     }
                     None
                 }
+                "seal_release" => {
+                    let t = self.s.tasks.pop().unwrap();
+                    let p = t["player"].as_i64().unwrap();
+                    if self.bz_tops(Some(p)).iter().any(|&c| !self.s.cards[c as usize].seals.is_empty()) {
+                        return uns("seal_release");
+                    }
+                    None
+                }
                 "capture" => {
                     // 置換効果が起こすイベントを、適用待ちの束（直近の適用中の event タスク）に加える
                     let t = self.s.tasks.pop().unwrap();
@@ -464,7 +472,7 @@ impl Engine {
             return Ok(Ok(if self.alive(&me) { vec![me[0].as_i64().unwrap()] } else { vec![] }));
         }
         for k in obj.keys() {
-            if !["zone", "owner", "count", "from_top", "filter", "chooser", "look", "ref", "up_to", "other"].contains(&k.as_str()) {
+            if !["zone", "owner", "count", "from_top", "filter", "chooser", "look", "ref", "up_to", "other", "under_of"].contains(&k.as_str()) {
                 return uns(format!("selector key {}", k));
             }
         }
@@ -472,7 +480,14 @@ impl Engine {
         let filter: Option<Value> = sel.get("filter").cloned();
         let up_to = sel.get("up_to").and_then(|v| v.as_bool()).unwrap_or(false);
         let mut lst: Vec<i64>;
-        if let Some(name) = sel.get("ref").and_then(|v| v.as_str()) {
+        if let Some(u) = sel.get("under_of") {
+            // 「このクリーチャーの下にあるカード」（メテオバーン）
+            if u != &json!("self") {
+                return uns("under_of");
+            }
+            let me = env["self"].clone();
+            lst = if self.alive(&me) { self.s.cards[me[0].as_i64().unwrap() as usize].under.clone() } else { vec![] };
+        } else if let Some(name) = sel.get("ref").and_then(|v| v.as_str()) {
             if name == "self" || name == "self_moved" || name == "self_entered" || name == "crossed" || name == "subject" || name.starts_with("event.") {
                 return uns("selector ref");
             }
@@ -513,7 +528,7 @@ impl Engine {
             lst = keep;
         }
         let cnt = sel.get("count");
-        if ((sel.get("from_top").is_some() || sel.get("ref").is_some()) && cnt.is_none()) || cnt == Some(&json!("all")) {
+        if ((sel.get("from_top").is_some() || sel.get("ref").is_some() || sel.get("under_of").is_some()) && cnt.is_none()) || cnt == Some(&json!("all")) {
             return Ok(Ok(lst));
         }
         let n = match cnt {
@@ -666,9 +681,15 @@ impl Engine {
         self.s.steps_this_turn = 0;
         self.s.prev_counters = self.s.turn_counters.clone();
         self.s.turn_counters = Map::new();
-        // 継続的効果・遅延効果の期限切れ（plain の対戦では空）
-        if !self.s.continuous.is_empty() || !self.s.delayed.is_empty() {
-            return uns("continuous/delayed");
+        // 継続的効果・遅延効果の期限切れ（「次の自分のターンのはじめまで」）
+        if !self.s.delayed.is_empty() {
+            return uns("delayed");
+        }
+        {
+            let key = format!("until_turn_start:{}", a);
+            if self.s.continuous.iter().any(|c| c["duration"] == json!(key)) {
+                return uns("expire until_turn_start");
+            }
         }
         // サイレントスキルは能力を持つカードだけ。plain では候補なし
         let mut zs = self.bz_tops(Some(a));
@@ -787,6 +808,23 @@ impl Engine {
         let broken = self.s.turn_counters.get(&format!("broken:{}", p)).and_then(|v| v.as_i64()).unwrap_or(0);
         let stp_bonus = st && kws.iter().any(|k| k == "s_trigger_plus") && self.s.active != p && broken >= 2;
         // ササゲール（破壊してコスト軽減）: 候補なし → 空の sac と sac_done を残す（コストを払わない実行では聞かない）
+        if self.is_evo(cid, face) && !has(self.s.tasks.last().unwrap(), "evo") {
+            // 通常の進化: 進化元を選ぶ（超無限墓地進化は墓地から好きな数）
+            let srcs = self.evo_sources(cid, p, face);
+            let (cnt, any) = { let d = self.fdef(cid, face); (d.evolve_count, d.evolve_any) };
+            if (srcs.len() as i64) < cnt {
+                self.s.tasks.pop();
+                return Ok(None);
+            }
+            let opts: Vec<Value> = srcs.iter().map(|&c| self.card_option(c, None)).collect();
+            let (mn, mx) = if any { (1, srcs.len()) } else { (cnt as usize, cnt as usize) };
+            let ans = match self.ask(p, "choose_evo_source", opts, mn, mx) {
+                Ask::Decision(d) => return Ok(Some(d)),
+                Ask::Answer(x) => x,
+            };
+            let evo: Vec<Value> = ans.iter().map(|&i| self.refv(srcs[i])).collect();
+            self.s.tasks.last_mut().unwrap()["evo"] = json!(evo);
+        }
         if !free && !has(self.s.tasks.last().unwrap(), "sac_done") {
             let t = self.s.tasks.last_mut().unwrap();
             if !has(t, "sac") {
@@ -799,7 +837,9 @@ impl Engine {
             self.s.tasks.last_mut().unwrap()["cost_may_done"] = json!(true);
         }
         if !free && !has(self.s.tasks.last().unwrap(), "paid_done") {
-            let choices = self.mana_choices_f(cid, p, face, None, 32);
+            let n_evo = self.s.tasks.last().unwrap().get("evo").and_then(|v| v.as_array()).map_or(0, |a| a.len()) as i64;
+            let ecost = self.evo_cost(cid, face, n_evo);
+            let choices = self.mana_choices_f(cid, p, face, ecost, 32);
             if choices.is_empty() {
                 self.s.tasks.pop();
                 return Ok(None);
@@ -824,6 +864,7 @@ impl Engine {
         }
         let paid: Vec<i64> = self.s.tasks.last().unwrap().get("summon_paid")
             .and_then(|v| v.as_array()).map(|a| a.iter().filter_map(|x| x.as_i64()).collect()).unwrap_or_default();
+        let evo: Vec<Value> = self.s.tasks.last().unwrap().get("evo").and_then(|v| v.as_array()).cloned().unwrap_or_default();
         self.s.tasks.pop();
         // フォートE（Python 第168弾と同じ）: 召喚時にタップしたマナを種族のスナップショットつきで刻む
         let paid_snapshot: Vec<Value> = paid.iter()
@@ -855,6 +896,13 @@ impl Engine {
         let mut ev = json!({"ev": "move", "subject": r, "from": from_zone, "to": "bz", "reason": "summon", "controller": p, "unpaid": free});
         if sst_bonus {
             ev["sst"] = json!(true);
+        }
+        if !evo.is_empty() {
+            ev["stack_on"] = evo[0].clone();
+            ev["evolution"] = json!(true);   // 進化として重ねた印（evolve_base レコードは進化の時だけ出す）
+            if evo.len() > 1 {
+                ev["stack_more"] = json!(evo[1..].to_vec());
+            }
         }
         if stp_bonus {
             ev["stp"] = json!(true);
@@ -901,7 +949,35 @@ impl Engine {
         out
     }
 
+    /// 適正な進化元（801.1a）。evolve_zone（既定は自分のバトルゾーン、超無限墓地進化は墓地）のクリーチャーで evolve_from を満たすもの
+    fn evo_sources(&self, cid: i64, p: i64, face: Option<i64>) -> Vec<i64> {
+        let d = self.fdef(cid, face);
+        let ef = d.evolve_from.clone().unwrap_or(json!({}));
+        let pool = if d.evolve_zone == "bz" || d.evolve_zone.is_empty() { self.bz_tops(Some(p)) } else { self.zl(&d.evolve_zone, p).clone() };
+        pool.into_iter().filter(|&c| self.def(c).types.iter().any(|t| t == "creature") && self.filter_ok(c, &ef).unwrap_or(false)).collect()
+    }
+    /// 進化元の数による軽減後のコスト（「コストは0以下にはならない」= 最低1）
+    fn evo_cost(&self, cid: i64, face: Option<i64>, n: i64) -> Option<i64> {
+        let d = self.fdef(cid, face);
+        if d.cost_reduce_per_evo != 0 { Some((d.cost - n * d.cost_reduce_per_evo).max(1)) } else { None }
+    }
+    fn is_evo(&self, cid: i64, face: Option<i64>) -> bool {
+        self.fdef(cid, face).types.iter().any(|t| t == "evolution")
+    }
+
     fn can_play(&self, cid: i64, p: i64, face: Option<i64>) -> bool {
+        if self.is_evo(cid, face) {
+            if !self.permits(cid, "summon") || !self.permits(cid, "enter_bz") {
+                return false;
+            }
+            let d = self.fdef(cid, face);
+            let srcs = self.evo_sources(cid, p, face);
+            if (srcs.len() as i64) < d.evolve_count {
+                return false;
+            }
+            let n = if d.evolve_any { srcs.len() as i64 } else { d.evolve_count };
+            return !self.mana_choices_f(cid, p, face, self.evo_cost(cid, face, n), 1).is_empty();
+        }
         if !self.fdef(cid, face).types.iter().any(|t| t == "creature") {
             if !self.permits(cid, "cast") {
                 return false;
@@ -1101,9 +1177,7 @@ impl Engine {
             return Ok(None);
         }
         self.s.tasks.pop();
-        if !self.s.continuous.is_empty() || !self.s.delayed.is_empty() {
-            return uns("expire during_attack");
-        }
+        self.expire("during_attack")?;   // 510.2
         Ok(None)
     }
 
@@ -1188,6 +1262,78 @@ impl Engine {
         };
         let mut deferred = false;
         match op["op"].as_str().unwrap_or("") {
+            "modify" => {
+                // 継続的効果（パワーの修整・このターンの間）。対象は解決時に固定（110.2e）
+                if op.get("duration").is_some() || op.get("dynamic").is_some() {
+                    return uns("modify options");
+                }
+                self.s.seq += 1;
+                let cids = match self.select(&op["select"], &env)? {
+                    Ok(c) => c,
+                    Err(d) => {
+                        self.s.seq -= 1;
+                        return Ok(Some(d));
+                    }
+                };
+                let src = env.get("self").and_then(|v| v.as_array()).map(|a| a[0].clone()).unwrap_or(Value::Null);
+                let ce = json!({"id": self.s.seq, "mod": op["mod"], "duration": "end_of_turn", "controller": env["you"], "src": src,
+                    "affected": cids.iter().map(|&c| self.refv(c)).collect::<Vec<_>>()});
+                self.s.continuous.push(ce);
+                let sba = self.sba_power_tasks();
+                if !sba.is_empty() {
+                    self.defer(sba);   // パワー0以下になったら、この効果の続きより先に破壊する（703.4c）
+                    deferred = true;
+                }
+            }
+            "play_free" => {
+                // コストを支払わずに召喚する／唱える（112.3g）。ツインパクトは選択条件が呪文だけなら呪文面、他はクリーチャー面
+                let cids = match self.select(&op["select"], &env)? {
+                    Ok(c) => c,
+                    Err(d) => return Ok(Some(d)),
+                };
+                let want: Vec<String> = op["select"].get("filter").and_then(|f| f.get("types")).and_then(|v| v.as_array())
+                    .map(|a| a.iter().filter_map(|x| x.as_str().map(String::from)).collect()).unwrap_or_default();
+                let you = env["you"].as_i64().unwrap();
+                let mut ts = vec![];
+                for c in cids {
+                    let mut t = json!({"t": "play", "cid": c, "player": you, "free": true, "phase": "start", "gen": self.s.cards[c as usize].gen});
+                    let faces = &self.rules.cards[&self.s.cards[c as usize].defn].faces;
+                    if !faces.is_empty() {
+                        let mut f = 0;
+                        if want.iter().any(|x| x == "spell") && !want.iter().any(|x| x == "creature") {
+                            if let Some(i) = faces.iter().position(|fd| fd.types.iter().any(|x| x == "spell")) {
+                                f = i;
+                            }
+                        }
+                        t["face"] = json!(f);
+                    }
+                    ts.push(t);
+                }
+                if !ts.is_empty() {
+                    self.defer(ts);
+                    deferred = true;
+                }
+            }
+            "win" => {
+                let you = env["you"].as_i64().unwrap();
+                let w = match op.get("player").and_then(|v| v.as_str()).unwrap_or("you") { "you" => you, "opp" => 1 - you, _ => return uns("win player") };
+                self.s.result = Some(json!({"winner": w, "reason": "effect", "turn": self.s.turn}));
+                // Python は置換の instead に積んだ効果タスクと実行中のタスクが同じオブジェクト。対局がここで終わると
+                // 残ったタスクが digest に出るので、写しの pc も進めておく
+                if env.get("capture").is_some() {
+                    let ops = self.s.tasks.last().unwrap()["ops"].clone();
+                    for t in self.s.tasks.iter_mut().rev() {
+                        if t["t"] == json!("event") && t["applying"].as_bool().unwrap_or(false) {
+                            for e in t["instead"].as_array_mut().unwrap() {
+                                if e["ops"] == ops && e["env"] == env && e["pc"] == json!(pc) {
+                                    e["pc"] = json!(pc + 1);
+                                }
+                            }
+                            break;
+                        }
+                    }
+                }
+            }
             "draw" => {
                 let cnt = op.get("count").and_then(|v| v.as_i64()).unwrap_or(1);
                 let you = env["you"].as_i64().unwrap();
@@ -1263,11 +1409,26 @@ impl Engine {
                 if !["hand", "graveyard", "mana", "deck", "shield", "bz"].contains(&to) {
                     return uns(format!("move to {}", to));
                 }
-                let cids = match self.select(&op["select"], &env)? {
+                let mut cids = match self.select(&op["select"], &env)? {
                     Ok(c) => c,
                     Err(d) => return Ok(Some(d)),
                 };
                 let pos = op.get("position").and_then(|v| v.as_str()).unwrap_or("top");
+                if op.get("order").and_then(|v| v.as_str()) == Some("choose") && to == "deck" {
+                    let names: std::collections::BTreeSet<String> = cids.iter().map(|&c| self.s.cards[c as usize].defn.clone()).collect();
+                    if names.len() > 1 {
+                        let opts: Vec<Value> = cids.iter().map(|&c| self.card_option_look(c)).collect();
+                        let n = cids.len();
+                        let a = match self.ask(env["you"].as_i64().unwrap(), "order_cards", opts, n, n) {
+                            Ask::Decision(d) => return Ok(Some(d)),
+                            Ask::Answer(x) => x,
+                        };
+                        cids = a.iter().map(|&i| cids[i]).collect();
+                        if pos == "top" {
+                            cids.reverse();   // 1枚ずつ一番上に置かれるので、最後に置いたものが一番上になる
+                        }
+                    }
+                }
                 let tapped = op.get("tapped").and_then(|v| v.as_bool()).unwrap_or(false);
                 // 効果でシールドを手札に加える時は、S・トリガー等の使用宣言ができる（113.6。Python と同じく break タスクで）
                 let shield_out: Vec<i64> = if to == "hand" { cids.iter().copied().filter(|&c| self.s.cards[c as usize].zone == "shield").collect() } else { vec![] };
@@ -1334,11 +1495,16 @@ impl Engine {
                 };
                 let refs: Vec<Value> = cids.iter().map(|&c| self.refv(c)).collect();
                 let name = op["as"].as_str().unwrap_or("").to_string();
-                let t = self.s.tasks.last_mut().unwrap();
-                if !t["env"]["vars"].is_object() {
-                    t["env"]["vars"] = json!({});
+                // Python は子の効果と env の辞書を共有する。同じ env（値が等しいもの）を持つタスクすべてに書く
+                let old = self.s.tasks.last().unwrap()["env"].clone();
+                for t in self.s.tasks.iter_mut() {
+                    if t.get("env") == Some(&old) {
+                        if !t["env"]["vars"].is_object() {
+                            t["env"]["vars"] = json!({});
+                        }
+                        t["env"]["vars"][name.as_str()] = json!(refs.clone());
+                    }
                 }
-                t["env"]["vars"][name.as_str()] = json!(refs);
             }
             "shuffle" => {
                 let you = env["you"].as_i64().unwrap();
@@ -1488,16 +1654,33 @@ impl Engine {
     }
 
     /// chars の JSON（lki に載せる。Python 版 _chars_calc の、能力が自身への単純な常在型だけの札の結果）
+    /// パワー（印刷パワー＋継続的効果の修整）
+    fn power(&self, cid: i64) -> i64 {
+        let mut p = self.def(cid).power;
+        if !self.s.continuous.is_empty() {
+            let r = self.refv(cid);
+            for ce in &self.s.continuous {
+                if ce["affected"].as_array().map_or(false, |a| a.contains(&r)) {
+                    p += ce["mod"].get("power").and_then(|v| v.as_i64()).unwrap_or(0);
+                }
+            }
+        }
+        p
+    }
+
     fn chars_json(&self, cid: i64) -> Value {
         let d = self.def(cid);
+        let power = self.power(cid);
         let in_bz = self.s.cards[cid as usize].zone == "bz";
         let (allow, deny, bo): (Vec<String>, Vec<String>, Vec<i64>) =
-            if in_bz { (d.allow.clone(), d.deny.clone(), d.breaks.clone()) } else { (vec![], vec![], vec![]) };
+            if in_bz { (d.allow.clone(), d.deny.clone(), d.breaks.clone()) }
+            else if self.s.cards[cid as usize].zone == "shield" { (d.shield_allow.clone(), vec![], vec![]) }   // シールドゾーンで働く自身への許可
+            else { (vec![], vec![], vec![]) };
         let breaks = bo.iter().copied().max().unwrap_or(1).max(1);
         let mut kw = d.keywords.clone();
         kw.sort();
         kw.dedup();
-        json!({"power": d.power, "cost": d.cost, "civs": d.civs, "types": d.types, "races": d.races, "keywords": kw,
+        json!({"power": power, "cost": d.cost, "civs": d.civs, "types": d.types, "races": d.races, "keywords": kw,
             "name": d.name, "names": [d.name], "allow": allow, "deny": deny, "require": [], "breaks": breaks, "break_opts": bo,
             "breaks_add": 0, "pay_cost": d.cost, "sac_reduce": 0, "opt_reduce": null, "cost_may": [], "no_leave": [],
             "must_be_attacked": false, "must_be_attacked_first": false, "must_be_chosen": false, "must_attack_creature": false,
@@ -1514,7 +1697,7 @@ impl Engine {
     /// バトル（701.13）: plain はパワーだけで勝敗が決まる
     fn battle(&mut self, x: &Value, y: &Value) -> R<()> {
         let (xc, yc) = (x[0].as_i64().unwrap(), y[0].as_i64().unwrap());
-        let (px, py) = (self.def(xc).power, self.def(yc).power);
+        let (px, py) = (self.power(xc), self.power(yc));
         let mut losers: Vec<&Value> = vec![];
         if px <= py {
             losers.push(x);
@@ -1534,11 +1717,21 @@ impl Engine {
         for r in [x, y] {
             if !losers.contains(&r) {
                 let c = self.s.cards[r[0].as_i64().unwrap() as usize].controller;
-                evs.push(json!({"ev": "battle_win", "subject": r, "controller": c}));
+                evs.push(json!({"ev": "battle_win", "subject": r, "opponent": if r == x { y } else { x }, "controller": c}));
             }
         }
+        // 「バトルに負けた時」（Python #463）: 破壊の移動より前に拾い、同じ窓の終わりに解決する
+        let lose_evs: Vec<Value> = losers.iter().map(|r| {
+            let c = self.s.cards[r[0].as_i64().unwrap() as usize].controller;
+            json!({"ev": "battle_lose", "subject": r, "opponent": if *r == x { y } else { x }, "controller": c})
+        }).collect();
         let e = self.ev_task(evs);
-        let mut ts = self.window(vec![e]);
+        let mut inner = vec![];
+        if !lose_evs.is_empty() {
+            inner.push(self.ev_task(lose_evs));
+        }
+        inner.push(e);
+        let mut ts = self.window(inner);
         if !slay.is_empty() {
             ts.extend(self.window(vec![json!({"t": "slayer", "pairs": slay})]));
         }
@@ -1677,9 +1870,7 @@ impl Engine {
             self.push(vec![t]);
             return Ok(None);
         }
-        if !self.s.continuous.is_empty() || !self.s.delayed.is_empty() {
-            return uns("expire");
-        }
+        self.expire("end_of_turn")?;   // 511.2
         self.step_done();
         Ok(None)
     }
@@ -1807,6 +1998,17 @@ impl Engine {
         // 置換効果の決定（609.9a）: まずターン・プレイヤーが束の全イベントについて決め、次に非ターン・プレイヤー。決め終えたら同時に適用する。
         // G・リンクの離脱置換は plain では起きない
         let order = [self.s.active, 1 - self.s.active];
+        {
+            // Python の G・リンク離脱の走査が残す印（対局が途中で終わると digest に出る）
+            let t = self.s.tasks.last_mut().unwrap();
+            let n = t["evs"].as_array().unwrap().len();
+            if t.get("link_chosen").is_none() {
+                t["link_chosen"] = json!([]);
+            }
+            if n > 0 {
+                t["link_i"] = json!(n);
+            }
+        }
         loop {
             let (rp, i, n) = {
                 let t = self.s.tasks.last().unwrap();
@@ -1861,6 +2063,9 @@ impl Engine {
 
     /// 適用前のイベントを、置換の照合用レコードにする（Python 版 _record_for の move の部分）
     fn record_for(&self, ev: &Value) -> Option<Value> {
+        if ev["ev"] == json!("draw") {
+            return Some(json!({"ev": "draw", "player": ev["player"]}));
+        }
         if ev["ev"] != json!("move") || !self.alive(&ev["subject"]) {
             return None;
         }
@@ -1882,8 +2087,13 @@ impl Engine {
         if ev.get("unpaid").and_then(|v| v.as_bool()).unwrap_or(false) {
             rec["unpaid"] = json!(true);
         }
-        if c.zone == "bz" && c.top_of >= 0 {
-            return None;   // 下のカードだけが動く（plain では起きない）
+        if c.zone == "bz" && c.top_of >= 0 && c.seal_of < 0 {
+            // 下にあったカードが単独で動く: 宿主の移動直前の姿を載せる（from_under 照合用）
+            let h = c.top_of;
+            let hc = &self.s.cards[h as usize];
+            rec["host"] = self.refv(h);
+            rec["host_lki"] = json!({"defn": hc.defn, "face": hc.face, "controller": hc.controller, "zone": "bz", "tapped": hc.tapped,
+                "chars": self.chars_json(h), "ref": self.refv(h)});
         }
         Some(rec)
     }
@@ -1995,7 +2205,8 @@ impl Engine {
                     if to == "shield" {
                         self.hist_bump("shield_put", rc, 1);
                     }
-                    if frm == "shield" && to != "shield" {
+                    let has_host = rec.get("host").map_or(false, |v| !v.is_null());
+                    if frm == "shield" && to != "shield" && !has_host {
                         self.hist_bump("shield_left", ctrl, 1);
                     }
                     if to == "mana" {
@@ -2009,7 +2220,7 @@ impl Engine {
                             self.hist_bump("enter_unpaid", rc, 1);
                         }
                     }
-                    if frm == "bz" && to != "bz" {
+                    if frm == "bz" && to != "bz" && !has_host {   // 下にあったカードはクリーチャーとして離れた数に入れない
                         self.hist_bump("leave", ctrl, 1);
                         if to == "graveyard" && rec["reason"] == json!("destroy") {
                             self.hist_bump("destroyed", ctrl, 1);
@@ -2133,7 +2344,59 @@ impl Engine {
                 }
                 let ctl = if summon_hold { Some(ev["controller"].as_i64().unwrap()) } else { None };
                 let pos = ev.get("position").and_then(|v| v.as_str()).unwrap_or("top").to_string();
+                // このカード自身が他のカードの下にあった場合の宿主（移動直前の姿。from_under 照合用）
+                let host = {
+                    let c = &self.s.cards[cid as usize];
+                    if from == "bz" && c.top_of >= 0 && c.seal_of < 0 {
+                        let h = c.top_of;
+                        let hc = &self.s.cards[h as usize];
+                        Some((self.refv(h), json!({"defn": hc.defn, "face": hc.face, "controller": hc.controller, "zone": "bz",
+                            "tapped": hc.tapped, "chars": self.chars_json(h), "ref": self.refv(h)})))
+                    } else { None }
+                };
+                let unders: Vec<i64> = self.s.cards[cid as usize].under.clone();
+                let under_lkis: Vec<(i64, Value)> = if from == "bz" && to != "bz" {
+                    unders.iter().map(|&u| {
+                        let uc = &self.s.cards[u as usize];
+                        (u, json!({"defn": uc.defn, "face": uc.face, "controller": uc.controller, "zone": from, "tapped": uc.tapped,
+                            "chars": self.chars_json(u), "ref": self.refv(u), "face_up": uc.face_up}))
+                    }).collect()
+                } else { vec![] };
                 self.raw_move(cid, to, &pos, ctl);
+                for &u in &unders {   // クリーチャーとして離れたら下のカードも同じゾーンへ（109.2b）
+                    if self.s.cards[u as usize].zone == "bz" || self.s.cards[u as usize].top_of == cid {
+                        self.raw_move(u, to, "top", None);
+                    }
+                }
+                // 進化: 進化元（超無限墓地進化は墓地から）を重ねる
+                let mut evo_bases: Vec<i64> = vec![];
+                if let Some(so) = ev.get("stack_on").filter(|v| !v.is_null()) {
+                    if to == "bz" && self.alive(so) {
+                        let base = so[0].as_i64().unwrap();
+                        if self.s.cards[base as usize].zone != "bz" {
+                            self.raw_move(base, "bz", "top", None);
+                        }
+                        self.stack(cid, base, false);
+                        if ev.get("evolution").is_some() {
+                            evo_bases.push(base);
+                        }
+                        for x in ev.get("stack_more").and_then(|v| v.as_array()).cloned().unwrap_or_default() {
+                            if !self.alive(&x) {
+                                continue;
+                            }
+                            let xc = x[0].as_i64().unwrap();
+                            if self.s.cards[xc as usize].zone == "graveyard" {
+                                self.raw_move(xc, "bz", "top", None);
+                            }
+                            if self.s.cards[xc as usize].zone == "bz" {
+                                self.stack(cid, xc, true);
+                                if ev.get("evolution").is_some() {
+                                    evo_bases.push(xc);
+                                }
+                            }
+                        }
+                    }
+                }
                 if ev.get("tapped").and_then(|v| v.as_bool()).unwrap_or(false) {
                     self.s.cards[cid as usize].tapped = true;   // 「タップして置く」
                 }
@@ -2156,6 +2419,9 @@ impl Engine {
                 if ev.get("unpaid").and_then(|v| v.as_bool()).unwrap_or(false) {
                     out[0]["unpaid"] = json!(true);
                 }
+                if ev.get("stack_on").map_or(false, |v| !v.is_null()) {
+                    out[0]["stacked"] = json!(true);
+                }
                 for k in ["cause", "cause_defn", "cause_kind"] {
                     if let Some(v) = ev.get(k) {
                         if v.as_str().map_or(false, |x| !x.is_empty()) {
@@ -2170,14 +2436,48 @@ impl Engine {
                 }
                 if to == "bz" {
                     self.push_list(format!("entered:{}", after), cid);
+                    if self.def(cid).races.iter().any(|r| r.contains("コマンド")) {
+                        // コマンドが出た時、同じ文明の自身のカードから封印を1つ墓地に置く
+                        let civs = self.def(cid).civs.clone();
+                        self.s.tasks.push(json!({"t": "seal_release", "player": after, "civs": civs}));
+                    }
                 }
                 if reason == "summon" {
                     out.push(json!({"ev": "summon", "subject": self.refv(cid), "controller": after, "player": after,
                         "unpaid": ev.get("unpaid").and_then(|v| v.as_bool()).unwrap_or(false)}));
                 }
+                for b in evo_bases {   // 「進化元になる時」: 進化元を subject、出たクリーチャーを top とする合成レコード
+                    out.push(json!({"ev": "evolve_base", "subject": self.refv(b), "top": self.refv(cid), "controller": self.s.cards[b as usize].controller}));
+                }
+                if let Some((h, hl)) = host {
+                    out[0]["host"] = h;
+                    out[0]["host_lki"] = hl;
+                }
+                let lki0 = out[0]["lki"].clone();
+                for (u, ul) in under_lkis {
+                    // 一緒に離れた下のカードにも move レコード（宿主の移動直前の姿を host / host_lki に載せる）
+                    if self.s.cards[u as usize].zone != to {
+                        continue;
+                    }
+                    let mut r = json!({"ev": "move", "subject": self.refv(u), "lki": ul, "from": from, "to": to, "reason": reason,
+                        "controller": ul["controller"], "host": lki0["ref"], "host_lki": lki0});
+                    for k in ["cause", "cause_defn", "cause_kind"] {
+                        if let Some(v) = ev.get(k) {
+                            if v.as_str().map_or(false, |x| !x.is_empty()) {
+                                r[k] = v.clone();
+                            }
+                        }
+                    }
+                    if let Some(b) = ev.get("by") {
+                        if !b.is_null() {
+                            r["by"] = b.clone();
+                        }
+                    }
+                    out.push(r);
+                }
                 Ok(out)
             }
-            "cast" | "turn_start" | "turn_end" | "attack" | "block" | "battle_start" | "battle_win" | "battle_end" | "attack_end" | "break" => {
+            "cast" | "turn_start" | "turn_end" | "attack" | "block" | "battle_start" | "battle_win" | "battle_lose" | "battle_end" | "attack_end" | "break" => {
                 Ok(vec![ev.clone()])
             }
             other => uns(format!("event {}", other)),
@@ -2194,7 +2494,44 @@ impl Engine {
     }
 
     /// イベントを通さない移動（Python 版 _raw_move の、plain の対戦で通る部分）
+    /// 進化: base（とその下）を top の下に重ねる（801.1, 801.2）。more は2枚目以降の進化元
+    fn stack(&mut self, top: i64, base: i64, more: bool) {
+        let old = self.refv(base);
+        let bunder = self.s.cards[base as usize].under.clone();
+        let btapped = self.s.cards[base as usize].tapped;
+        let mut nu = if more { self.s.cards[top as usize].under.clone() } else { vec![] };
+        nu.push(base);
+        nu.extend(bunder);
+        for &u in &nu {
+            self.s.cards[u as usize].top_of = top;
+        }
+        self.s.cards[base as usize].under.clear();
+        let t = &mut self.s.cards[top as usize];
+        t.under = nu;
+        t.tapped = if more { t.tapped || btapped } else { btapped };
+        t.entered_turn = -1;
+        let new = self.refv(top);
+        for ce in self.s.continuous.iter_mut() {
+            if let Some(a) = ce["affected"].as_array_mut() {
+                if a.contains(&old) {
+                    a.push(new.clone());
+                }
+            }
+        }
+        for t_ in self.s.tasks.iter_mut() {   // 攻撃中のクリーチャーが進化しても攻撃は続く（801.2a）
+            if t_["t"] == json!("attack") && t_["attacker"] == old {
+                t_["attacker"] = new.clone();
+            }
+        }
+    }
+
     fn raw_move(&mut self, cid: i64, to: &str, position: &str, controller: Option<i64>) {
+        {
+            let tp = self.s.cards[cid as usize].top_of;
+            if tp >= 0 {   // 下のカードだけが動く時は、上のカードの under から外す（メテオバーン等）
+                self.s.cards[tp as usize].under.retain(|&x| x != cid);
+            }
+        }
         let (owner, from) = {
             let c = &self.s.cards[cid as usize];
             (c.owner as usize, c.zone.clone())
@@ -2278,7 +2615,43 @@ impl Engine {
             self.s.result = Some(json!({"winner": 1 - loser, "reason": "deck_out", "turn": self.s.turn}));
             return Ok(());
         }
-        // パワー0以下の破壊: plain のパワーは定義どおり（0 以下の定義は plain にしない）
+        let ts = self.sba_power_tasks();
+        self.push(ts);
+        Ok(())
+    }
+
+    /// パワー0以下のクリーチャーの破壊（703.4c）。破壊できずに残ったものは状態が動くまで繰り返さない（sba_held）
+    fn sba_power_tasks(&mut self) -> Vec<Value> {
+        if self.s.result.is_some() {
+            return vec![];
+        }
+        let dead: Vec<Vec<i64>> = self.bz_tops(None).into_iter()
+            .filter(|&c| self.def(c).types.iter().any(|t| t == "creature") && self.power(c) <= 0)
+            .map(|c| vec![c, self.s.cards[c as usize].gen]).collect();
+        let held: Vec<Vec<i64>> = self.s.sba_held.iter().filter(|r| dead.contains(r)).cloned().collect();
+        self.s.sba_held = held;
+        let dead: Vec<Vec<i64>> = dead.into_iter().filter(|r| !self.s.sba_held.contains(r)).collect();
+        if dead.is_empty() {
+            return vec![];
+        }
+        for r in &dead {
+            if !self.s.sba_held.contains(r) {
+                self.s.sba_held.push(r.clone());
+            }
+        }
+        vec![self.ev_task(dead.into_iter().map(|r| json!({"ev": "move", "subject": r, "to": "graveyard", "reason": "destroy", "sba": true})).collect())]
+    }
+
+    /// 期限の切れた継続的効果を消す。修整が切れてパワー0以下になったら、その場で破壊する
+    fn expire(&mut self, duration: &str) -> R<()> {
+        if !self.s.delayed.is_empty() {
+            return uns("expire delayed");
+        }
+        let n = self.s.continuous.len();
+        self.s.continuous.retain(|c| c["duration"] != json!(duration));
+        if self.s.continuous.len() != n {
+            self.sba()?;
+        }
         Ok(())
     }
 }
