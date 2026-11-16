@@ -307,6 +307,25 @@ class Engine(SelectorMixin, EventMixin, InterpreterMixin, TurnMixin, CombatMixin
                         if ab.get("keyword") != "dynamo" and (kind is None or ab["kind"] == kind) and ab["kind"] != "static":
                             k += 1
                             out.append((-k, ab))
+        if self.s.cards[cid].zone == "bz" and kind != "static":
+            k = 3000   # 常在型の mod.gain（サバイバー等「自分の他の〜も上の能力を得る」）: バトルゾーンの発生源から能力を与える
+            for src in self.s.zones["bz"][0]:
+                if self.s.cards[src].top_of >= 0 or not self._gives_abilities(src) or self.s.cards[src].seals:
+                    continue
+                env = None
+                for _, ab in self.abilities(src, "static"):
+                    gain = (ab.get("mod") or {}).get("gain")
+                    if not gain or ab.get("zone", "bz") != "bz":
+                        continue
+                    aff = ab.get("affects", {})
+                    if env is None:
+                        env = {"you": self.s.cards[src].controller, "self": self.s.ref(src)}
+                    hit = (src == cid) if aff == "self" else self._subject_match(aff, cid, env, None, base=True)
+                    if hit and ("if" not in ab or self._static_cond(ab["if"], env)):
+                        for g in gain:
+                            k += 1
+                            if kind is None or g["kind"] == kind:
+                                out.append((-k, g))
         if self.s.cards[cid].zone == "bz" and self.s.cards[cid].under:
             k = 5000   # 超魂X: 下に重なっているカードの choukon 印つき能力は、一番上のクリーチャーが得る
             for u in self.s.cards[cid].under:
@@ -406,6 +425,16 @@ class Engine(SelectorMixin, EventMixin, InterpreterMixin, TurnMixin, CombatMixin
             return self.eval_cond(cond, env)
         finally:
             self._in_static_cond -= 1
+
+    def _gives_abilities(self, cid: int) -> bool:
+        """この面に mod.gain を持つ常在型があるか（定義だけで決まるのでキャッシュする）。"""
+        c = self.s.cards[cid]
+        k = ("gain", c.defn, c.face)
+        r = self._xcache.get(k)
+        if r is None:
+            r = self._xcache[k] = any(ab["kind"] == "static" and (ab.get("mod") or {}).get("gain")
+                                      for ab in self.fdef(cid).abilities)
+        return r
 
     def _affects_others(self, cid: int) -> bool:
         """この面が他のカードに及ぶ mod 付きの常在型能力を持つか（定義だけで決まるのでキャッシュする）。"""

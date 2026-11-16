@@ -929,6 +929,9 @@ def _expand_ability(ab, macros, where):
     for k in ("effect", "instead"):
         if k in ab:
             ab[k] = expand_ops(ab[k], macros, where)
+    m = ab.get("mod")
+    if isinstance(m, dict) and m.get("gain"):     # 常在型が与える能力（サバイバー等）の中のマクロも展開する
+        ab["mod"] = dict(m, gain=[_expand_ability(a, macros, where) for a in m["gain"]])
     return ab
 
 
