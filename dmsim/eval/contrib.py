@@ -20,6 +20,31 @@ def remove_pair(deck: list[str], pair, fill: str | None = None) -> list[str]:
     return [fill if x in pair else x for x in deck]
 
 
+def _stats(d: list[float]) -> dict:
+    n = len(d)
+    if n == 0:
+        return {"n": 0, "diff": None, "sd": None, "ci95": None, "better": 0, "worse": 0, "tie": 0}
+    m = sum(d) / n
+    sd = math.sqrt(sum((x - m) ** 2 for x in d) / (n - 1)) if n > 1 else 0.0
+    h = 1.96 * sd / math.sqrt(n)
+    return {"n": n, "diff": round(m, 4), "sd": round(sd, 4), "ci95": (round(m - h, 4), round(m + h, 4)),
+            "better": sum(1 for x in d if x > 0), "worse": sum(1 for x in d if x < 0), "tie": sum(1 for x in d if x == 0)}
+
+
+def interaction(ab: dict, a: dict, b: dict, none: dict) -> dict:
+    """組の相乗分（2×2 の取り除き）。シードごとに (両方あり − Aだけ) − (Bだけ − 両方なし) を取り、平均と区間を出す。
+    = 両方あり −（Aだけ + Bだけ − 両方なし）。A・B それぞれ単独の寄与を引いた、2枚が組むことで得ている分。
+    片方の寄与は main_a（Aだけ − 両方なし）・main_b（Bだけ − 両方なし）として併記する。"""
+    seeds = sorted(set(ab) & set(a) & set(b) & set(none), key=str)
+    f = lambda x, s: float(x[s])   # noqa: E731
+    out = _stats([f(ab, s) - f(a, s) - f(b, s) + f(none, s) for s in seeds])
+    out["main_a"] = _stats([f(a, s) - f(none, s) for s in seeds])
+    out["main_b"] = _stats([f(b, s) - f(none, s) for s in seeds])
+    out["mean"] = {k: round(sum(f(x, s) for s in seeds) / len(seeds), 4) if seeds else None
+                   for k, x in (("ab", ab), ("a", a), ("b", b), ("none", none))}
+    return out
+
+
 def paired(with_vals: dict, without_vals: dict) -> dict:
     """シード -> 値 の2つの表から、共通のシードで差を取る。
     戻り値: n, mean_with, mean_without, diff（平均の差）, sd（対の差の標準偏差）, ci95（正規近似）,
