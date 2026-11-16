@@ -831,3 +831,22 @@ def cap_per_heavy(rules, bases: list, max_cost: int, per_heavy: int, drop: Count
         n[h] += 1
         out.append(b)
     return out
+
+
+def opp_boards(rules) -> list[tuple[str, list[str]]]:
+    """相手の場が要る組（opp_target）の試し打ちで相手の場に置く札。基準の相手（search.opponent.resistance）に実際に出る札だけ:
+    段階1は盾から出るブロッカーの S・トリガー1体、2a/2b はデッキの軽い（コスト3以下）クリーチャー2体。名前は見ない。"""
+    from ..search import opponent as O
+    out = []
+    _, d1 = O.resistance(1)
+    cre1 = sorted({i for i in d1 if i in rules.cards and i != O.RESIST_FILLER and "creature" in rules.cards[i].types})
+    if cre1:
+        out.append(("1", cre1[:1]))
+    for lv in ("2a", "2b"):
+        _, d = O.resistance(lv)
+        trig = set(d1)
+        body = sorted({i for i in d if i in rules.cards and i not in trig and "creature" in rules.cards[i].types
+                       and isinstance(rules.cards[i].cost, int) and rules.cards[i].cost <= 3}, key=lambda i: (rules.cards[i].cost, i))
+        if body:
+            out.append((lv, body[:2]))
+    return out

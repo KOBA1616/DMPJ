@@ -43,6 +43,7 @@ class Config:
     workers: int | None = None         # None は DMSIM_WORKERS
     controls: tuple = ("saga", "akashic")
     fast_heavy: bool = False           # 早く出せる重い札の三角（collect_fast_heavy）も集める
+    opp_boards: bool = True           # 相手の場が要る組は基準の相手に出る札を置いても試す（X.opp_boards）
     since: str | None = None           # 前回の出力フォルダ。札データの指紋が変わった札（新しく変換された札など）を含む組だけ試す（差分）
 
 
@@ -189,9 +190,22 @@ class Run:
         cfg = self.cfg
         self.log(f"試し打ち {len(pool)} 組（予算 {cfg.trial_budget}・{cfg.trial_seeds} シード・{cfg.trial_turns} ターン）")
 
+        boards = X.opp_boards(self.rules) if cfg.opp_boards else []
+
         def one(b):
-            r = X.trial(self.rules, b, T=4, seeds=range(1, cfg.trial_seeds + 1), budget=cfg.trial_budget, raw=self.raw, turns=cfg.trial_turns)
-            return {"base": _bdict(b), "ok": r["ok"], "laps": r["laps"], "layout": r["layout"], "reason": r["reason"]}
+            kw = dict(T=4, seeds=range(1, cfg.trial_seeds + 1), budget=cfg.trial_budget, raw=self.raw, turns=cfg.trial_turns)
+            r = X.trial(self.rules, b, **kw)
+            row = {"base": _bdict(b), "ok": r["ok"], "laps": r["laps"], "layout": r["layout"], "reason": r["reason"]}
+            if not r["ok"] and "opp_target" in X.static_flags(b) and boards:
+                # 相手の場の札を減らす組: 基準の相手に実際に出る札を置いて試す（置き方ごとの理由も残す）
+                row["opp_tries"] = {}
+                for lv, bz in boards:
+                    ro = X.trial(self.rules, b, opp_bz=bz, **kw)
+                    row["opp_tries"][lv] = ro["reason"] or "ok"
+                    if ro["ok"]:
+                        row.update(ok=True, laps=ro["laps"], layout=ro["layout"], reason=None, opp_bz=bz, opp_board=lv)
+                        break
+            return row
         # 長い実行が途中で止まっても続きから回せるよう、500 組ごとに途中結果を書く。
         part = self.out / "trial.part.json"
         rows = json.loads(part.read_text(encoding="utf-8"))["rows"] if part.exists() else []
@@ -205,12 +219,12 @@ class Run:
         from collections import Counter
         return {"rows": rows, "passed": sum(r["ok"] for r in rows), "reasons": dict(Counter(r["reason"] for r in rows if r["reason"]))}
 
-    def spec_of(self, b: X.Base, layout: str) -> "object":
+    def spec_of(self, b: X.Base, layout: str, opp_bz=()) -> "object":
         """入口局面の LoopSpec（ruler_control.run_one が読む形）。部品だけを置き、勝ち手段は part: win（入口の条件に入れない）。"""
         from ..base.loopspec import LoopSpec, Pred
         lo = next(x for x in X.layouts(self.rules, b, self.raw) if x["name"] == layout)
         deck = X.deck_of(self.rules, lo["parts"], self.raw)
-        sp = X.entry_spec(self.rules, deck, lo["parts"], 4, 0, lo["layout"], b.grave)
+        sp = X.entry_spec(self.rules, deck, lo["parts"], 4, 0, lo["layout"], b.grave, opp_bz)
         wins = X.win_cards(self.rules, self.raw)
         minimal = []
         for z in ("bz", "hand", "graveyard"):
@@ -233,11 +247,11 @@ class Run:
 
         def one(r):
             b = _base(r["base"])
-            ls = self.spec_of(b, r["layout"])
+            ls = self.spec_of(b, r["layout"], r.get("opp_bz") or ())
             gs = [run_one(self.rules, ls, s, max_turn=cfg.measure_turns, budget=cfg.measure_budget, opp_level=cfg.opp_level)
                   for s in range(1, cfg.measure_seeds + 1)]
             wt = [g["win_turn"] for g in gs if g["stage2"] and g["win_turn"] is not None]
-            return {"cards": b.cards, "names": b.names, "layout": r["layout"], "trial_laps": r["laps"],
+            return {"cards": b.cards, "names": b.names, "layout": r["layout"], "trial_laps": r["laps"], "opp_board": r.get("opp_board"),
                     "stage1": sum(g["stage1"] for g in gs), "stage2": sum(g["stage2"] for g in gs), "games": len(gs),
                     "best_turn": min(wt) if wt else None, "vias": sorted({str(g["via"]) for g in gs if g["via"]}),
                     "errors": sum(1 for g in gs if g["error"]), "entry_bound": S.static_bound(self.rules, b.cards)["turn"],

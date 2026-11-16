@@ -19,6 +19,12 @@ for r in rows:
     deck += [c for c in base if c in drop][: 40 - len(deck)]
     items.append(("+".join(r["names"]), extra, deck))
 N = int(sys.argv[1]) if len(sys.argv) > 1 else 12
+ONLY = sys.argv[4] if len(sys.argv) > 4 else None   # 前回の記録（saga_variants.yaml）で元のサガを上回った変形だけ測り直す
+if ONLY:
+    prev = yaml.safe_load(open(ONLY, encoding="utf-8"))
+    pb = prev["base"]
+    keep = {v["name"] for v in prev["variants"] if v["entry_rate"] > pb["entry_rate"] or v["entry_le4"] > pb["entry_le4"]}
+    items = [it for it in items if it[0] in keep or it[0].startswith("元のサガ")]
 import os
 out = json.load(open(OUT))["rows"] if os.path.exists(OUT) else []
 done_ = {o["name"] for o in out}
