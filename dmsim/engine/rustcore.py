@@ -174,7 +174,7 @@ def _simple_effect(ops, top=True) -> bool:
             continue   # このターンの間の「〜できない」（後から出たクリーチャーにも及ぶ）
         if k == "choose" and set(o) <= {"op", "select", "as"} and isinstance(o.get("as"), str) and _simple_selector(o.get("select")):
             continue   # 子の効果での束縛は、Rust が同じ env を持つタスクすべてに書く（Python の env 共有と同じ結果）
-        if k == "play_free" and set(o) <= {"op", "select", "as"} and isinstance(o.get("as", ""), str) and _simple_selector(o.get("select")) and o["select"].get("zone") == "hand":
+        if k == "play_free" and set(o) <= {"op", "select", "as"} and isinstance(o.get("as", ""), str) and _simple_selector(o.get("select")) and o["select"].get("zone") in ("hand", "graveyard"):
             continue
         if k == "modal" and set(o) <= {"op", "modes", "count"} and isinstance(o.get("count", 1), int) \
                 and isinstance(o.get("modes"), list) and 1 <= o.get("count", 1) <= len(o["modes"]) \
@@ -190,6 +190,13 @@ def _simple_effect(ops, top=True) -> bool:
             continue
         if k in ("tap", "untap") and set(o) <= {"op", "select"} and _simple_selector(o.get("select")):
             continue
+        if k == "flip_down" and set(o) <= {"op", "select"} and _simple_selector(o.get("select")) and o["select"].get("zone") in ("mana", "shield"):
+            continue   # 裏向きにする（マナは無色として払う）。イベントは作らない
+        if k == "modify" and set(o) <= {"op", "select", "mod", "duration"} and o.get("duration", "end_of_turn") == "end_of_turn" \
+                and o.get("select") == {"ref": "self"} and isinstance(o.get("mod"), dict) and set(o["mod"]) == {"power", "grant"} \
+                and isinstance(o["mod"]["power"], int) and not isinstance(o["mod"]["power"], bool) \
+                and isinstance(o["mod"]["grant"], list) and o["mod"]["grant"] and set(o["mod"]["grant"]) <= set(_GRANT_BREAKS):
+            continue   # このクリーチャーにこのターンの間パワーとブレイカーを与える（龍装者"JET"レミング）
         if k == "move" and "order" in o and not (o["order"] == "choose" and o.get("to") == "deck" and isinstance(o.get("select"), dict)
                                                   and set(o["select"]) == {"ref"}):
             return False   # 並べ替えは、選ばせない参照（変数の全部）を山札へ置く時だけ
@@ -198,6 +205,9 @@ def _simple_effect(ops, top=True) -> bool:
             continue
         return False
     return True
+
+
+_GRANT_BREAKS = {"double_breaker": 2, "triple_breaker": 3}   # 継続的効果で与えてよいキーワード（ブレイク数の常在型だけ）
 
 
 _OK_WHEN = ({"event": "move", "to": "bz", "subject": "self"}, {"event": "attack", "subject": "self"})
@@ -211,7 +221,11 @@ def _simple_when(w) -> bool:
     """Rust の when_match が Python の _match_when と同じ結果になる誘発条件（段階3-b）。"""
     if not isinstance(w, dict) or not set(w) <= {"event", "from", "to", "reason", "player", "subject"}:
         return False
-    if w.get("event") not in _OK_EVENTS or w.get("subject", "self") != "self" or w.get("player", "you") not in ("you", "opp"):
+    subj = w.get("subject", "self")
+    if subj != "self" and not (isinstance(subj, dict) and set(subj) == {"owner"} and subj["owner"] in ("you", "opp")
+                               and w.get("event") == "move" and w.get("from") in _OK_ZONES - {"bz"}):
+        return False   # subject はこのカードか、持ち主だけの指定（バトルゾーン以外から動いたカード。lki を使わない）
+    if w.get("event") not in _OK_EVENTS or w.get("player", "you") not in ("you", "opp"):
         return False
     for k in ("from", "to"):
         v = w.get(k)
