@@ -33,5 +33,6 @@ PC のワーカーとは別に、git を使えるクラウドのエージェン�
 ## 診断ジョブ（コンボの失敗局の分類）
 カード変換と同じく、クラウドのエージェントに回させられる（Actions は使わない、モデルも使わない）。
 - 積む: `python tools/local_worker.py enqueue routine --name diagnose --entry saga --deck data/decks/saga_user_v1.yaml --games 40 --target cloud`
-- 処理: 上の指示文と同じ `run --once --target cloud`。40局で数十分〜数時間かかる（1局30分を超えたら外して数える）。
-- 結果: `jobs/done/<id>.yaml` の text に diagnose_run の表（集計と原因別の局数）。Claude はこれだけを読んで判断する。
+- 積むと10局ずつのジョブに小分けされる（外のサービスの実行時間の上限で切れないように）。
+- 処理: 上の指示文と同じ `run --once --target cloud`。1ジョブ10局で十数分〜1時間程度（1局30分を超えたら外して数える）。
+- 結果: `jobs/done/<id>.yaml` の text に、その10局の表と `<!-- rows -->` 以下に行データ。全部そろったら行データを json に切り出し `python tools/diagnose_run.py saga --merge a.json b.json ...` で40局分の表にする。Claude は合算の表だけを読んで判断する。

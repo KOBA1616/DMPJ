@@ -94,11 +94,18 @@ def main(argv=None):
     ap.add_argument("--jobs", type=int, default=4)
     ap.add_argument("--timeout", type=int, default=1800)
     ap.add_argument("--out", default="diag.md")
-    ap.add_argument("--json")
+    ap.add_argument("--json", help="行データ（小分けの結果）を書く。--merge で合算できる")
+    ap.add_argument("--merge", nargs="+", help="対局は回さず、小分けで出た --json を合算して表だけ作る")
     a = ap.parse_args(argv)
     route = a.route or (f"{a.entry}_v3" if a.entry == "saga" else None)
     seeds = range(a.start, a.start + a.games)
     rows, dropped = [], {}
+    if a.merge:
+        for f in a.merge:
+            d = json.loads(Path(f).read_text(encoding="utf-8"))
+            rows += d["rows"]
+            dropped.update({int(k): v for k, v in d["dropped"].items()})
+        seeds = []
     with tempfile.TemporaryDirectory() as tmp, cf.ThreadPoolExecutor(a.jobs) as ex:
         for seed, row, err in ex.map(lambda s: run_seed(a.entry, a.deck, route, s, a.opp_level, a.timeout, tmp), seeds):
             if row is None:
@@ -128,7 +135,9 @@ def main(argv=None):
     L += ["", f"中核の札: {core}"]
     Path(a.out).write_text("\n".join(L) + "\n", encoding="utf-8")
     if a.json:
-        Path(a.json).write_text(json.dumps({"rows": rows, "dropped": dropped}, ensure_ascii=False), encoding="utf-8")
+        slim = [{**{k: v for k, v in r.items() if k != "my_keys"},
+                 "my_keys": {k: v for k, v in (r.get("my_keys") or {}).items() if k.startswith(("charge|", "main|play:"))}} for r in rows]
+        Path(a.json).write_text(json.dumps({"rows": slim, "dropped": dropped}, ensure_ascii=False), encoding="utf-8")
     print("\n".join(L))
 
 

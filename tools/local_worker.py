@@ -310,12 +310,14 @@ def run_routine(job: dict, git: Git, llm, cache: Path, daily_limit: int) -> dict
         if not re.fullmatch(r"\w+", entry) or (deck and not re.fullmatch(r"data/decks/[\w.-]+\.yaml", str(deck))):
             return {"status": "error", "error": "entry / deck が不正"}
         cmd = [sys.executable, "tools/diagnose_run.py", entry, "--games", str(int(job.get("games", 40))),
-               "--jobs", str(int(job.get("jobs", 4))), "--opp-level", str(int(job.get("opp_level", 1))), "--out", str(cache / "diag.md")]
+               "--jobs", str(int(job.get("jobs", 4))), "--start", str(int(job.get("start", 1))), "--json", str(cache / "diag.json"), "--opp-level", str(int(job.get("opp_level", 1))), "--out", str(cache / "diag.md")]
         if deck:
             cmd += ["--deck", str(deck)]
         cache.mkdir(parents=True, exist_ok=True)
         subprocess.run(cmd, cwd=ROOT, capture_output=True, text=True, encoding="utf-8", errors="replace")
         out = (cache / "diag.md").read_text(encoding="utf-8") if (cache / "diag.md").exists() else "diagnose_run の出力なし"
+        if (cache / "diag.json").exists():   # 小分けの結果を合算できるよう行データも残す（diagnose_run --merge）
+            out += "\n<!-- rows -->\n" + (cache / "diag.json").read_text(encoding="utf-8")
         job = {**job, "summarize": None}     # 集計済みの表なのでそのまま返す
     elif name == "review":
         base = str(job.get("base", "origin/main"))
@@ -588,6 +590,11 @@ def main(argv=None) -> int:
         elif a.type == "routine":
             job.update(name=a.name, summarize=a.summarize)
             job.update({k: v for k, v in (("entry", a.entry), ("deck", a.deck), ("games", a.games)) if v is not None})
+            if a.name == "diagnose":   # 1ジョブ10局に小分けして積む（外のサービスの実行時間の上限で切れないように）
+                total, step = a.games or 40, 10
+                for st in range(1, total + 1, step):
+                    print(enqueue(git, {**job, "start": st, "games": min(step, total - st + 1), **({"target": a.target} if a.target else {})}))
+                return 0
         else:
             job.update(limit=a.limit, workers=a.workers)
             if a.order:
