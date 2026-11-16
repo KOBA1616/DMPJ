@@ -6,6 +6,7 @@
 に残る）。deck_evolution の単独ギャップは 0 残り。
 """
 import copy
+import _conv_cache  # noqa: E402
 import json
 import subprocess
 from pathlib import Path
@@ -268,8 +269,7 @@ def test_build_forms_parse():
 
 def test_registered_forms():
     built = {c["id"]: c for c in build()["cards"]}
-    conv = {c["id"]: c for c in yaml.safe_load(
-        open(ROOT / "data/cards/converted.yaml"))["cards"]}
+    conv = {c["id"]: c for c in _conv_cache.all_cards(ROOT / "data/cards/converted.yaml")}
     for cid in REGISTERED:
         assert cid in conv, cid
         assert conv[cid] == built[cid], cid
@@ -283,8 +283,7 @@ def test_registered_forms():
 def test_bounced_forms_banked():
     rows = {json.loads(line)["id"]: json.loads(line)
             for line in open(ROOT / "data/cards/raw/rejects.jsonl") if line.strip()}
-    conv_ids = {c["id"] for c in yaml.safe_load(
-        open(ROOT / "data/cards/converted.yaml"))["cards"]}
+    conv_ids = {c["id"] for c in _conv_cache.all_cards(ROOT / "data/cards/converted.yaml")}
     for cid in BOUNCE:
         assert cid not in conv_ids, cid
         assert cid in rows, cid

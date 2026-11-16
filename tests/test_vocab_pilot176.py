@@ -44,9 +44,8 @@ IDS = ("T388", "T389", "T390", "T391", "T392", "T393")
 
 
 def _proto_card(cid):
-    with open(ROOT / "data" / "cards" / "proto.yaml") as f:
-        data = yaml.safe_load(f)
-    return next(c for c in data["cards"] if c["id"] == cid)
+    from tests._conv_cache import proto_card
+    return proto_card(cid)
 
 
 def test_proto_parse():

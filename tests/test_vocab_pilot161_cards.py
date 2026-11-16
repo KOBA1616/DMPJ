@@ -20,6 +20,7 @@ dm36-038 は rejects 行自体に名前・partial が無く（原文データ未
   dm25ex3-020（「自分がカードを実行した時」の統合トリガーが無い）
 """
 import copy
+import _conv_cache  # noqa: E402
 import json
 from pathlib import Path
 
@@ -135,7 +136,7 @@ def _deny_statics(card):
 
 
 def test_registered_forms():
-    data = yaml.safe_load(CONVERTED.read_text(encoding="utf-8"))
+    data = {"cards": _conv_cache.all_cards(CONVERTED)}
     conv = {c["id"]: c for c in data["cards"]}
     for cid in REGISTER:
         assert cid in conv, f"{cid} が converted に無い"

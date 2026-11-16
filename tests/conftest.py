@@ -5,7 +5,7 @@ from pathlib import Path
 import pytest
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
-os.environ["DMSIM_CHECK"] = "1"   # タスク・選択肢の形を毎回検査する
+os.environ.setdefault("DMSIM_CHECK", "1")   # タスク・選択肢の形を毎回検査する（全体スイープ時だけ DMSIM_CHECK=0 で外せる。対象テストでは常に有効）
 os.environ["DMSIM_SKIP_CONVERTED"] = "1"   # 確認前の変換結果（converted.yaml、約1,600枚）はテストの対象にしない（全カードを回すテストが遅くなる）
 
 from dmsim import load_rules  # noqa: E402

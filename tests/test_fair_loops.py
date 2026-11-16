@@ -25,6 +25,7 @@ def _choices(e):
 
 
 @pytest.mark.parametrize("name", ["saga", "akashic"])
+@pytest.mark.slow
 def test_recording_does_not_change_moves(rules, name):
     # 記録あり・なし・ロック判定ありで、同じ seed の手順と勝敗が一致する
     ls = L.load(name)

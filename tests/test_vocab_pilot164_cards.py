@@ -14,6 +14,7 @@ converted の登録形で検証する。範囲は deny の辞書形 {action: be_
 affects では指せない。逆向きの affects: crossed はギア側からホストを指す形）。
 """
 import copy
+import _conv_cache  # noqa: E402
 import json
 from pathlib import Path
 
@@ -142,7 +143,7 @@ def test_build_forms_parse():
 
 
 def test_registered_forms():
-    data = yaml.safe_load(CONVERTED.read_text(encoding="utf-8"))
+    data = {"cards": _conv_cache.all_cards(CONVERTED)}
     conv = {c["id"]: c for c in data["cards"]}
     for cid in REGISTER:
         assert cid in conv, f"{cid} が converted に無い"

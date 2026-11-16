@@ -258,6 +258,7 @@ def test_convert_pack_shares_one_call_and_falls_back_per_card(tmp_path):
     assert sorted(c["id"] for c in yaml.safe_load(out.read_text(encoding="utf-8"))["cards"]) == ["p1", "p2", "p3"]
 
 
+@pytest.mark.slow
 def test_agent_convert_next_and_submit(tmp_path, monkeypatch, capsys):
     """AI が API なしで変換する経路: next が依頼文を出し、submit が検査して合格分だけ登録する。"""
     import json as _json
@@ -310,6 +311,7 @@ def test_out_of_format_and_vocab_gap_cards_are_not_registered(tmp_path):
     assert got[0]["id"] == "v1" and got[0]["reason"] == "vocab" and got[0]["gaps"] == ["some_new_op"] and got[0]["partial"]["id"] == "v1"
 
 
+@pytest.mark.slow
 def test_survey_text_counts_forms():
     import survey_text
     rows = [{"id": "a", "name": "甲", "text": "ブロッカー(説明。)\n甲が出た時、カードを2枚引く。"},
@@ -320,6 +322,7 @@ def test_survey_text_counts_forms():
     assert "| 2 |" in survey_text.render(sv, 5, False)
 
 
+@pytest.mark.slow
 def test_status_numbers_are_current():
     """docs/STATUS.md の自動生成部がマーカーを持ち、スクリプトが読める。"""
     import gen_status
@@ -350,6 +353,7 @@ def test_opencode_allowlist_and_cost_guard(monkeypatch):
         llm.complete("S", [], "high", None)
 
 
+@pytest.mark.slow
 def test_auto_convert_limit_status_and_retry_only_on_vocab_change(tmp_path, monkeypatch):
     """定期変換: 件数上限・短い順・状態ファイル。語彙が変わらない限り rejects は再試行しない。"""
     import json
@@ -382,6 +386,7 @@ def test_auto_convert_limit_status_and_retry_only_on_vocab_change(tmp_path, monk
     assert seen[2:] == ["ta_a"]
 
 
+@pytest.mark.slow
 def test_auto_convert_default_order_is_card_id(tmp_path, monkeypatch):
     """既定はカードID順（弾ごとにまとまる）。短い順は --order short。"""
     import json
@@ -966,6 +971,7 @@ def test_auto_convert_newest_order(tmp_path, monkeypatch):
     assert [r["id"] for r in sorted(rows, key=ac.newest_key())] == ["dm26ex4-001", "dm26ex4-002", "dm01-001", "x"]
 
 
+@pytest.mark.slow
 def test_local_worker_routine_allowlist(tmp_path):
     """routine は決まった名前だけ。未知の名前・不正な base は実行せずエラーにする。"""
     import local_worker as lw
@@ -1143,6 +1149,7 @@ def test_reuse_same_text_copies_abilities_without_model():
     assert rc.reuse_same_text({**row, "id": "d1"}, [donor]) is None
 
 
+@pytest.mark.slow
 def test_run_rules_registers_rule_convertible_cards_without_model(tmp_path):
     """ルールだけで変換できる行（キーワードのみ・同一原文の写し・定型呪文）はモデルなしで登録し、残りには触らない。再実行しても増えない。"""
     import convert_cards as cc

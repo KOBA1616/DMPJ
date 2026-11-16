@@ -567,13 +567,13 @@ class Engine(SelectorMixin, EventMixin, InterpreterMixin, TurnMixin, CombatMixin
                     "opt_reduce": None, "cost_may": [], "no_leave": [], "must_be_attacked": False,
                     "must_be_attacked_first": False, "must_be_chosen": False, "must_attack_creature": False,
                     "must_attack_creature_first": False,
-                    "battle_indestructible": False, "win_all_battles": False, "crystal_soul": 0}
+                    "battle_indestructible": False, "win_all_battles": False, "crystal_soul": 0, "mana_number": 0}
         ch = {"power": d.power, "cost": d.cost, "civs": list(d.civs), "types": list(d.types),
               "races": list(d.races), "keywords": set(d.keywords), "name": d.name, "names": [d.name],
               "allow": [], "deny": [], "require": [], "breaks": 1, "break_opts": [], "breaks_add": 0, "pay_cost": d.cost, "sac_reduce": 0, "opt_reduce": None, "cost_may": [], "no_leave": [], "must_be_attacked": False, "must_be_attacked_first": False,
               "must_be_chosen": False, "must_attack_creature": False, "must_attack_creature_first": False,
               "battle_indestructible": False, "battle_indestructible_filters": [], "win_all_battles": False,
-              "indestructible": False, "crystal_soul": d.crystal_soul}
+              "indestructible": False, "crystal_soul": d.crystal_soul, "mana_number": 0}
         tkey = self._chars_template_key(cid, face, c, d)
         if tkey is not None:
             t = self._xcache.get(tkey)
@@ -749,6 +749,8 @@ class Engine(SelectorMixin, EventMixin, InterpreterMixin, TurnMixin, CombatMixin
                 ch["indestructible"] = True
             if m.get("crystal_soul"):   # 水晶ソウルの付与（第154弾）: 自前宣言と競合したら大きい方
                 ch["crystal_soul"] = max(ch["crystal_soul"], m["crystal_soul"])
+            if m.get("mana_number"):   # マナの数字の変更（第212弾）: 「Nにする」置換。重なったら大きい方を採る
+                ch["mana_number"] = max(ch["mana_number"], m["mana_number"])
             for cv in m.get("add_civs", []):   # 文明追加（第62弾）
                 if cv not in ch["civs"]:
                     ch["civs"].append(cv)

@@ -13,6 +13,7 @@
   バトルゾーン入りに限定した。
 """
 import json
+import _conv_cache  # noqa: E402
 from pathlib import Path
 
 import yaml
@@ -34,9 +35,7 @@ BOUNCED = {"dm26rp1-002": ["choose_redirect"],
 
 
 def _converted():
-    d = yaml.safe_load((ROOT / "data" / "cards" / "converted.yaml").read_text(encoding="utf-8"))
-    cards = d.get("cards") if isinstance(d, dict) else d
-    return {c["id"]: c for c in cards}
+    return {c["id"]: c for c in _conv_cache.all_cards(ROOT / "data/cards/converted.yaml")}
 
 
 def _rejects():

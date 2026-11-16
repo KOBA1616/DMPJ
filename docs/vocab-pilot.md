@@ -2034,3 +2034,42 @@ JクライムN は「攻撃誘発 → may［swap {out: {ref: self}, in: {zone: g
 - 形: trigger {when: {event: battle_end, subject: self}}。「ブロックした時」は相手のターン = 防御側として if {is_turn: opp} を添える。
 - proto T524（バトルの後に自壊。勝ちバトル/バトルなしの対照つき）/ T525（ブロック後にアンタップ）。tests/test_vocab_pilot211.py 4件＋test_vocab_pilot211_cards.py 1件。
 - 再変換はラウンド247で実施（登録6件の見込み。dmd02-004 の partial には「クリーチャーを攻撃できない」が落ちていたため deny [attack_creature] の static を足して登録する）。
+
+## 第212弾: mana_number_change（マナの数字の変更）（2026-11-16）
+支払い（_mana_choices）でのマナの数字を変える入口を3つ新設した。基本値は定義の mana（裏向きは水晶ソウルで置換）のまま変えていない。
+- 面フィールド mana_boost {filter?, value, optional?}: 出すカード自身の宣言で、この支払いでのみ効く。必須形は「このクリーチャーを召喚する時、〜のマナの数字は1のかわりに2になる」（dmx19-s42 型）、任意形は「好きな数を選び〜2にしてもよい」（dmx19-v01 型）。
+- 常在型の mana_boost {value | values, filter?, scope?, if?}: バトルゾーンの発生源から支払う側のすべての支払いに任意形で効く（dmx06-002 型）。scope: spell は呪文の支払いだけ（dmrp18-008 型）。if は発生源の条件（「各ターン、はじめて呪文を唱える時」は if {cmp: [{turn_count: {kind: cast, owner: you}}, "==", 0]} で受ける）。
+- mod mana_number（int >= 2）: affects {zone: mana, owner: you} の常在型が「自分のマナゾーンにあるカードのマナの数字をNにする」を置換する。chars の mana_number（重なったら大きい方）で読み、条件は通常の if（dm24bd5-014 のシビルカウント、dm26rp1-006 のタイプ数条件）。
+- あわせて式 distinct_type_count {selector} を追加（対象群のカードタイプの種類数。多重タイプはすべて数える。distinct_cost_count と同じ再入回避の作法）。
+- _mana_choices は値の選択肢ごとにマナカードを分けて数える（任意形がある時だけ分岐が増える。通常の支払いは従来どおり）。文明の判定は山（プール）単位のまま。
+- proto T526（必須形）/ T527（任意形）/ T528（常在型ブースト）/ T529（scope: spell）/ T530（mana_number＋タイプ数条件）/ T531（ゴッド見本）/ T532（ドラゴン見本）/ T533（高額呪文）/ T534（対照獣）/ T535（values [2, 3]）。tests/test_vocab_pilot212.py 8件。水晶ソウル（第154弾）・エンジン・スキーマ同期の回帰確認済み。Rust はこの環境では stamp 旧版のため Python のみで動作（CLAUDE.md の作法どおり結果は一致する）。
+- ついでに when の subject 指定へ zone を追加した（_subject_match: 「自分のマナゾーンのカードをタップした時」のように、イベントの主体のいるゾーンで絞れる。離れた時は lki のゾーンで見る）。proto T536（マナタップ墓地獣）で照合を確認。
+- ただし支払いのマナタップは現状イベント化されておらず（h_play 等が直接 tapped を書き換える）、「タップした時」は支払いでは誘発しない。イベントとして流れるタップ（起動コスト・効果）でのみ誘発する。支払いタップのイベント化は mana_tap_trigger として別途残る（dmx08-010 はこの不足で差し戻し。ブースト側は partial に保存済み）。
+- 再変換はラウンド248で実施（対象9件）。
+
+## 第213弾 suppress_entry_triggers（出た時能力の誘発抑制）
+
+「出て、その能力がトリガーする時、かわりにその能力はトリガーしない」を2つの入口で実装した。
+
+- move op の引数 `no_trigger: true`（opvocab と ops の宣言に同期追加）: その移動でバトルゾーンに出たカード自身の出た時能力は誘発しない。op_move が各イベントに印を載せ、適用レコード（_apply_one）と照合レコード（_record_for）の両方へ伝播させ、誘発収集で「発生源＝移動対象」の時だけ落とす。他のカードの観測誘発は通常どおり誘発する。重ね出し（stack_evo）の経路には載せていない（対象カードが無いため）。
+- 常在型の能力キー `suppress_triggers` {whose: opp, events: [enter / attack, ...], if?}: 相手のクリーチャーが出た（enter）／攻撃した（attack）出来事で誘発する相手側の能力すべてを誘発させない（出た本人の能力に限らない。カードの例示「例えば、相手は『このクリーチャーが出た時』で始まる能力を使えない」の読みどおり、同じ出来事で誘発する観測能力も対象）。誘発収集で、出来事の主体のコントローラと誘発のコントローラが一致する時だけ、相手のバトルゾーンの発生源を引く（定義集合はキャッシュ）。キー名は YAML の真値語 `on` を避けて `events` にした。
+- proto T537–T543、tests/test_vocab_pilot213.py 9件（no_trigger の本人抑制・対照・観測は誘発する、常在型の enter 抑制・対照・観測まで届く範囲・自分の側は抑えない、attack 抑制と enter 専用では止まらない対照）。
+- 教訓: 移動レコードは _record_for（置換照合用）と _apply_one（収集用）の2箇所で別々に組まれる。新フラグは両方へ伝播させないと収集側に届かない（初回は _record_for だけに入れて不発だった）。
+
+### ラウンド249（第213弾の再変換）
+
+reopen suppress_entry_triggers で4枚（残り2枚は理由なし行で直接 submit）。**新規登録5件**: dm23rp2x-018 冥逝邪夢（山札上3枚を墓地＋マナ枚数以下のコストのクリーチャーをすべて墓地からタップして出す。cost_le に count 式、no_trigger）、dm25ex3-rp3s09 「GG」-001（NEO進化 neo: true + evolve_from 文明3色。suppress は if {count: {under_of: self} >= 1} ＝進化している時だけ）、dm26ex1-026 ブラキオ龍樹（fushigi {cost: 13, civs: [nature], min: 1} + suppress enter）、dm26ex4-cho019 / dmart26-006 終末縫合王 ザ=キラー・キーナリー（EXライフ。出た時: choose → if exists → may バウンス + その cost_of 以下のクリーチャーを墓地から出す。suppress enter）。**差し戻し1件**: dm26ex4-013 鮫鰐竜 ACE-Agony / 覚醒の杯（ツインパクト）→新ギャップ **enter_rules_ignore**: マナからの自己召喚許可（static zone: mana, affects: self, allow summon_from_mana）・両者の墓地から好きな数出し（count: any + chooser: opp、no_trigger で誘発抑制は表現済み）・呪文面（3ドロー3捨て＋チャージャー）は partial に保存済み。残るは「出ることによって起こるルールもすべて無視する」範囲（フィールド一意性・リンク手順等）のみ。suppress_entry_triggers の行は消滅。converted 9,887 / rejects 2,455、重なり0・漏れ0。tests/test_vocab_pilot213_cards.py 3件通過（冥逝邪夢の実挙動＋ブラキオ龍樹の抑制を含む）。
+
+## 第214弾: revenge_chance（リベンジ・チャンス）のイディオム確認＋履歴の from 修飾（2026-11-17）
+
+リベンジ・チャンス（各ターンの終わりに条件を満たせば、手札からコストを支払わずに召喚してもよい）は既存語彙のイディオムで表せる。新規の能力語彙は無し。
+
+- 形: {kind: trigger, zone: hand, when: {event: turn_end}, if: 条件, effect: [may [play_free {select: {ref: self}}]]}。自己無料召喚はアタック・チャンス／ニンジャ・ストライク（第165弾）と同じ play_free {ref: self}。turn_end は両者のターンの終わりに発火し、条件は「相手のそのターン」で判定する。
+- 条件の書き分け: 相手の大物がいる = exists {zone: bz, owner: opp, filter: {any_of: [{cost_ge: N}, {power_ge: M}]}}。相手がそのターン出した数 = turn_count {kind: enter, owner: opp}。引いた数 = turn_count {kind: draw, owner: opp}（開始ドローも draw レコードで数える）。
+- 追加した語彙は履歴式の from 修飾だけ: {turn_count: {kind, owner?, from: <zone>}}。移動で数える kind（shield_put / mana_put / enter / discard）は通常カウンタと並べて hist:<kind>_from_<zone> にも集約し（events._hist_bump_from）、式は修飾つきキーを読む。「山札からシールドゾーンに新しいシールドを加えた」を、手札から加えた場合（シールド・プラス系）と区別するために必要だった。defs の turn_count 検証にも from を追加。
+- proto T544（exists 条件）/ T545（enter 数）/ T546（shield_put from: deck）/ T547（draw 数）/ T548（手札→シールド呪文。from 対照用）/ T549（山札→シールド呪文）/ T550（2ドロー呪文）/ T551（1コスト獣）。tests/test_vocab_pilot214.py 10件（条件成立・拒否・未成立、from の有無で shield 条件が分かれること、を含む）。
+- 再変換はラウンド250で実施（対象6件: 登録5件＋差し戻し1件の見込み。dm25ex4-t13 は条件が超次元ゾーンからの登場＝範囲外のため、revenge_chance_hyperdimensional へ精緻化して差し戻す）。
+
+### ラウンド250（第214弾の再変換）
+
+reopen revenge_chance で6枚。**新規登録5件**: dm24ex4-022 地雷冥土The World Is Mine（exists any_of 条件＋タップ時誘発: choose → destroy → if exists → may で cost_le {cost_of: tgt} の非進化を墓地から出す）、dm38-014 風来の用心棒クマっ太（turn_count enter 条件。CIP は chooser: opp で相手が自身のクリーチャーをマナゾーンへ。partial の text が切り詰められていたため reject 行の公式テキストを採用）、dmx12b-092 反射の大地カプリコン（turn_count shield_put from: deck 条件）、dmx18-020 ベニジシ・スパイダー（turn_count draw 条件。CIP は partial の既存能力を維持）、dmx19-s44 剛撃無双カンクロウ（exists any_of 条件。W・ソウルを種族に追加＝K・ソウルの前例どおり partial に欠けていた）。**差し戻し1件**: dm25ex4-t13 熱血龍 バトリベンジ → 新ギャップ **revenge_chance_hyperdimensional**（条件が超次元ゾーンからの登場＝範囲外。CIP の force_battle と battle_power +2000 は解けた条項として partial に保存）。revenge_chance の行は消滅。converted 9,892 / rejects 2,450、重なり0・漏れ0。tests/test_vocab_pilot214_cards.py 4件通過。
