@@ -1,0 +1,752 @@
+note: サガ変形（3枚組 hunt の物差しでループが回った67組）の入口到達を元のサガと同一シードで比較（2026-11-16）。デッキは basebuild_saga、変形は残り2枚を4枚ずつ ブラッディ・クロス/ザババン・ジョーカーズ と入れ替え。入口は登録簿のサガ（新しい定義）。通常開幕・相手は段階1・6ターンまで・seed 1〜20。各20局なので差は小さい（元 3/20 に対し最良 6/20、有意ではない）。足切りに使わず順位づけの値として残す。
+seeds: 20
+opp_level: 1
+max_turn: 6
+base:
+  name: 元のサガ（basebuild_saga）
+  extra: []
+  games: 20
+  entry_rate: 0.15
+  entry_le4: 2
+  entry_median: 4
+  entry_best: 3
+  stage2: 0
+  errors: 0
+variants:
+- name: 絶望神サガ+パラディソ・シエル+凶鬼57号 ゴーチン
+  extra:
+  - dmrp09-s04
+  - dmrp16-037
+  games: 20
+  entry_rate: 0.3
+  entry_le4: 4
+  entry_median: 4.0
+  entry_best: 3
+  stage2: 0
+  errors: 0
+- name: 絶望神サガ+魅神のG パロロ+解体人形ジェガル
+  extra:
+  - dm26rp1-010
+  - dm26rp1-064
+  games: 20
+  entry_rate: 0.3
+  entry_le4: 4
+  entry_median: 4.0
+  entry_best: 3
+  stage2: 0
+  errors: 0
+- name: 絶望神サガ+解体人形ジェガル+【問１】 テック__
+  extra:
+  - dm26rp1-064
+  - dmr22-043
+  games: 20
+  entry_rate: 0.25
+  entry_le4: 4
+  entry_median: 4
+  entry_best: 4
+  stage2: 0
+  errors: 0
+- name: 絶望神サガ+解体人形ジェガル+チューシャ・ジューシャ
+  extra:
+  - dm26rp1-064
+  - dmr13-091
+  games: 20
+  entry_rate: 0.25
+  entry_le4: 4
+  entry_median: 4
+  entry_best: 3
+  stage2: 0
+  errors: 0
+- name: 絶望神サガ+解体人形ジェガル+暗闇に潜む者バット・ドクター
+  extra:
+  - dm26rp1-064
+  - dmx10-052
+  games: 20
+  entry_rate: 0.25
+  entry_le4: 4
+  entry_median: 4
+  entry_best: 3
+  stage2: 0
+  errors: 0
+- name: 絶望神サガ+鎧亜の深淵パラドックス+解体人形ジェガル
+  extra:
+  - dm26-005
+  - dm26rp1-064
+  games: 20
+  entry_rate: 0.25
+  entry_le4: 4
+  entry_median: 4
+  entry_best: 4
+  stage2: 1
+  errors: 0
+- name: 絶望神サガ+凶鬼38号 キリー+暗闇に潜む者バット・ドクター
+  extra:
+  - dmrp04s-077
+  - dmx10-052
+  games: 20
+  entry_rate: 0.2
+  entry_le4: 4
+  entry_median: 4.0
+  entry_best: 3
+  stage2: 0
+  errors: 0
+- name: 絶望神サガ+解体人形ジェガル+凶鬼38号 キリー
+  extra:
+  - dm26rp1-064
+  - dmrp04s-077
+  games: 20
+  entry_rate: 0.3
+  entry_le4: 3
+  entry_median: 4.5
+  entry_best: 4
+  stage2: 1
+  errors: 0
+- name: パッション・マリアッチ+絶望神サガ+凶鬼34号 バッシュ
+  extra:
+  - dm12-043
+  - dmex06-064
+  games: 20
+  entry_rate: 0.25
+  entry_le4: 3
+  entry_median: 4
+  entry_best: 3
+  stage2: 0
+  errors: 0
+- name: 絶望神サガ+凶鬼38号 キリー+聖黒 アシュライ-２
+  extra:
+  - dmrp04s-077
+  - dmrp19-046
+  games: 20
+  entry_rate: 0.25
+  entry_le4: 3
+  entry_median: 4
+  entry_best: 4
+  stage2: 0
+  errors: 0
+- name: 絶望神サガ+解体人形ジェガル+聖黒 アシュライ-２
+  extra:
+  - dm26rp1-064
+  - dmrp19-046
+  games: 20
+  entry_rate: 0.25
+  entry_le4: 3
+  entry_median: 4
+  entry_best: 4
+  stage2: 1
+  errors: 0
+- name: 絶望神サガ+アクア忍者 ライヤ+凶鬼57号 ゴーチン
+  extra:
+  - dmr13-050
+  - dmrp16-037
+  games: 20
+  entry_rate: 0.2
+  entry_le4: 3
+  entry_median: 3.5
+  entry_best: 3
+  stage2: 0
+  errors: 0
+- name: 絶望神サガ+ワダゲコノミコト+凶鬼57号 ゴーチン
+  extra:
+  - dm26ex2-075
+  - dmrp16-037
+  games: 20
+  entry_rate: 0.2
+  entry_le4: 3
+  entry_median: 3.5
+  entry_best: 3
+  stage2: 0
+  errors: 0
+- name: 絶望神サガ+護聖秘宝イーグル・カーゴ+解体人形ジェガル
+  extra:
+  - dm26-041
+  - dm26rp1-064
+  games: 20
+  entry_rate: 0.2
+  entry_le4: 3
+  entry_median: 4.0
+  entry_best: 4
+  stage2: 2
+  errors: 0
+- name: 絶望神サガ+鎧亜の深淵パラドックス+凶鬼38号 キリー
+  extra:
+  - dm26-005
+  - dmrp04s-077
+  games: 20
+  entry_rate: 0.2
+  entry_le4: 3
+  entry_median: 4.0
+  entry_best: 4
+  stage2: 0
+  errors: 0
+- name: 絶望神サガ+深塊封魔ゲルネウス+凶鬼57号 ゴーチン
+  extra:
+  - dm27-033
+  - dmrp16-037
+  games: 20
+  entry_rate: 0.15
+  entry_le4: 3
+  entry_median: 3
+  entry_best: 3
+  stage2: 0
+  errors: 0
+- name: 絶望神サガ+貝獣 アリサ+凶鬼57号 ゴーチン
+  extra:
+  - dmrp03-070
+  - dmrp16-037
+  games: 20
+  entry_rate: 0.15
+  entry_le4: 3
+  entry_median: 3
+  entry_best: 3
+  stage2: 0
+  errors: 0
+- name: 絶望神サガ+黙示賢者ソルハバキ+解体人形ジェガル
+  extra:
+  - dm24ex2-082
+  - dm26rp1-064
+  games: 20
+  entry_rate: 0.25
+  entry_le4: 2
+  entry_median: 5
+  entry_best: 4
+  stage2: 0
+  errors: 0
+- name: 絶望神サガ+チューシャ・ジューシャ+凶鬼38号 キリー
+  extra:
+  - dmr13-091
+  - dmrp04s-077
+  games: 20
+  entry_rate: 0.2
+  entry_le4: 2
+  entry_median: 4.5
+  entry_best: 3
+  stage2: 0
+  errors: 0
+- name: 絶望神サガ+墓守の鐘ベルリン+【問１】 テック__
+  extra:
+  - dmex13-049
+  - dmr22-043
+  games: 20
+  entry_rate: 0.2
+  entry_le4: 2
+  entry_median: 4.5
+  entry_best: 4
+  stage2: 0
+  errors: 0
+- name: 絶望神サガ+封魔トリノマンサー+凶鬼38号 キリー
+  extra:
+  - dm32-093
+  - dmrp04s-077
+  games: 20
+  entry_rate: 0.2
+  entry_le4: 2
+  entry_median: 4.5
+  entry_best: 3
+  stage2: 0
+  errors: 0
+- name: 絶望神サガ+解体人形ジェガル+墓守の鐘ベルリン
+  extra:
+  - dm26rp1-064
+  - dmex13-049
+  games: 20
+  entry_rate: 0.2
+  entry_le4: 2
+  entry_median: 4.5
+  entry_best: 4
+  stage2: 1
+  errors: 0
+- name: エンペラー・マロル+絶望神サガ+堕魔 ドゥベル
+  extra:
+  - dm09-009
+  - dmrp08-022
+  games: 20
+  entry_rate: 0.15
+  entry_le4: 2
+  entry_median: 4
+  entry_best: 4
+  stage2: 0
+  errors: 0
+- name: エンペラー・マロル+絶望神サガ+戯具 ドゥコハン
+  extra:
+  - dm09-009
+  - dmex14-090
+  games: 20
+  entry_rate: 0.15
+  entry_le4: 2
+  entry_median: 4
+  entry_best: 4
+  stage2: 0
+  errors: 0
+- name: 絶望神サガ+【問１】 テック__+凶鬼38号 キリー
+  extra:
+  - dmr22-043
+  - dmrp04s-077
+  games: 20
+  entry_rate: 0.15
+  entry_le4: 2
+  entry_median: 4
+  entry_best: 4
+  stage2: 0
+  errors: 0
+- name: 絶望神サガ+凶鬼34号 バッシュ+パラディソ・シエル
+  extra:
+  - dmex06-064
+  - dmrp09-s04
+  games: 20
+  entry_rate: 0.15
+  entry_le4: 2
+  entry_median: 4
+  entry_best: 4
+  stage2: 0
+  errors: 0
+- name: 絶望神サガ+墓守の鐘ベルリン+チューシャ・ジューシャ
+  extra:
+  - dmex13-049
+  - dmr13-091
+  games: 20
+  entry_rate: 0.15
+  entry_le4: 2
+  entry_median: 4
+  entry_best: 4
+  stage2: 0
+  errors: 0
+- name: 絶望神サガ+墓守の鐘ベルリン+暗闇に潜む者バット・ドクター
+  extra:
+  - dmex13-049
+  - dmx10-052
+  games: 20
+  entry_rate: 0.15
+  entry_le4: 2
+  entry_median: 4
+  entry_best: 4
+  stage2: 0
+  errors: 0
+- name: 絶望神サガ+深塊封魔ゲルネウス+凶鬼34号 バッシュ
+  extra:
+  - dm27-033
+  - dmex06-064
+  games: 20
+  entry_rate: 0.15
+  entry_le4: 2
+  entry_median: 4
+  entry_best: 3
+  stage2: 0
+  errors: 0
+- name: 英霊貴族ムーンライト+絶望神サガ+凶鬼38号 キリー
+  extra:
+  - dm15-012
+  - dmrp04s-077
+  games: 20
+  entry_rate: 0.15
+  entry_le4: 2
+  entry_median: 4
+  entry_best: 4
+  stage2: 0
+  errors: 0
+- name: 英霊貴族ムーンライト+絶望神サガ+解体人形ジェガル
+  extra:
+  - dm15-012
+  - dm26rp1-064
+  games: 20
+  entry_rate: 0.15
+  entry_le4: 2
+  entry_median: 4
+  entry_best: 4
+  stage2: 0
+  errors: 0
+- name: エンペラー・マロル+絶望神サガ+不死身のフッシッシ
+  extra:
+  - dm09-009
+  - dmr13-027
+  games: 20
+  entry_rate: 0.1
+  entry_le4: 2
+  entry_median: 3.5
+  entry_best: 3
+  stage2: 0
+  errors: 0
+- name: エンペラー・マロル+絶望神サガ+堕魔 ドゥリケン
+  extra:
+  - dm09-009
+  - dmrp06-021
+  games: 20
+  entry_rate: 0.1
+  entry_le4: 2
+  entry_median: 3.5
+  entry_best: 3
+  stage2: 0
+  errors: 0
+- name: パッション・マリアッチ+絶望神サガ+凶鬼57号 ゴーチン
+  extra:
+  - dm12-043
+  - dmrp16-037
+  games: 20
+  entry_rate: 0.1
+  entry_le4: 2
+  entry_median: 3.5
+  entry_best: 3
+  stage2: 0
+  errors: 0
+- name: 絶望神サガ+ワダゲコノミコト+凶鬼34号 バッシュ
+  extra:
+  - dm26ex2-075
+  - dmex06-064
+  games: 20
+  entry_rate: 0.1
+  entry_le4: 2
+  entry_median: 3.5
+  entry_best: 3
+  stage2: 0
+  errors: 0
+- name: 絶望神サガ+凶鬼34号 バッシュ+アクア忍者 ライヤ
+  extra:
+  - dmex06-064
+  - dmr13-050
+  games: 20
+  entry_rate: 0.1
+  entry_le4: 2
+  entry_median: 4.0
+  entry_best: 4
+  stage2: 0
+  errors: 0
+- name: 絶望神サガ+奇石 エルバ+アクア忍者 ライヤ
+  extra:
+  - dm22rp2x-028
+  - dmr13-050
+  games: 20
+  entry_rate: 0.15
+  entry_le4: 1
+  entry_median: 5
+  entry_best: 4
+  stage2: 0
+  errors: 0
+- name: 絶望神サガ+奇石 エルバ+パラディソ・シエル
+  extra:
+  - dm22rp2x-028
+  - dmrp09-s04
+  games: 20
+  entry_rate: 0.15
+  entry_le4: 1
+  entry_median: 5
+  entry_best: 4
+  stage2: 0
+  errors: 0
+- name: 絶望神サガ+黙示賢者ソルハバキ+凶鬼38号 キリー
+  extra:
+  - dm24ex2-082
+  - dmrp04s-077
+  games: 20
+  entry_rate: 0.15
+  entry_le4: 1
+  entry_median: 5
+  entry_best: 4
+  stage2: 0
+  errors: 0
+- name: パッション・マリアッチ+絶望神サガ+勇聖 アールイ-２
+  extra:
+  - dm12-043
+  - dmrp18-054
+  games: 20
+  entry_rate: 0.1
+  entry_le4: 1
+  entry_median: 4.5
+  entry_best: 4
+  stage2: 0
+  errors: 0
+- name: パッション・マリアッチ+絶望神サガ+奇石 エルバ
+  extra:
+  - dm12-043
+  - dm22rp2x-028
+  games: 20
+  entry_rate: 0.1
+  entry_le4: 1
+  entry_median: 4.5
+  entry_best: 4
+  stage2: 1
+  errors: 0
+- name: 絶望神サガ+いも虫ライダー・ヒーハー+墓守の鐘ベルリン
+  extra:
+  - dmd05-009
+  - dmex13-049
+  games: 20
+  entry_rate: 0.1
+  entry_le4: 1
+  entry_median: 5.0
+  entry_best: 4
+  stage2: 1
+  errors: 0
+- name: 絶望神サガ+奇石 エルバ+深塊封魔ゲルネウス
+  extra:
+  - dm22rp2x-028
+  - dm27-033
+  games: 20
+  entry_rate: 0.1
+  entry_le4: 1
+  entry_median: 5.0
+  entry_best: 4
+  stage2: 1
+  errors: 0
+- name: 絶望神サガ+奇石 エルバ+貝獣 アリサ
+  extra:
+  - dm22rp2x-028
+  - dmrp03-070
+  games: 20
+  entry_rate: 0.1
+  entry_le4: 1
+  entry_median: 5.0
+  entry_best: 4
+  stage2: 1
+  errors: 0
+- name: 絶望神サガ+魅神のG パロロ+墓守の鐘ベルリン
+  extra:
+  - dm26rp1-010
+  - dmex13-049
+  games: 20
+  entry_rate: 0.1
+  entry_le4: 1
+  entry_median: 4.5
+  entry_best: 4
+  stage2: 0
+  errors: 0
+- name: 絶望神サガ+凶鬼34号 バッシュ+貝獣 アリサ
+  extra:
+  - dmex06-064
+  - dmrp03-070
+  games: 20
+  entry_rate: 0.05
+  entry_le4: 1
+  entry_median: 4
+  entry_best: 4
+  stage2: 0
+  errors: 0
+- name: 絶望神サガ+封魔トリノマンサー+墓守の鐘ベルリン
+  extra:
+  - dm32-093
+  - dmex13-049
+  games: 20
+  entry_rate: 0.05
+  entry_le4: 1
+  entry_median: 4
+  entry_best: 4
+  stage2: 0
+  errors: 0
+- name: 絶望神サガ+パラディソ・シエル+勇聖 アールイ-２
+  extra:
+  - dmrp09-s04
+  - dmrp18-054
+  games: 20
+  entry_rate: 0.2
+  entry_le4: 0
+  entry_median: 5.0
+  entry_best: 5
+  stage2: 0
+  errors: 0
+- name: エンペラー・マロル+絶望神サガ+凶鬼51号 ハーシル
+  extra:
+  - dm09-009
+  - dmsd12-011
+  games: 20
+  entry_rate: 0.1
+  entry_le4: 0
+  entry_median: 5.5
+  entry_best: 5
+  stage2: 0
+  errors: 0
+- name: 絶望神サガ+魔獣星樹ギガゲドー+墓守の鐘ベルリン
+  extra:
+  - dm22ex2-068
+  - dmex13-049
+  games: 20
+  entry_rate: 0.1
+  entry_le4: 0
+  entry_median: 6.0
+  entry_best: 6
+  stage2: 0
+  errors: 0
+- name: エンペラー・マロル+絶望神サガ+フメンダ＝マジェンダ
+  extra:
+  - dm09-009
+  - dm24rp4-066
+  games: 20
+  entry_rate: 0.05
+  entry_le4: 0
+  entry_median: 5
+  entry_best: 5
+  stage2: 0
+  errors: 0
+- name: 絶望神サガ+アクア・サバイテイク+勇聖 アールイ-２
+  extra:
+  - dmex14-085
+  - dmrp18-054
+  games: 20
+  entry_rate: 0.05
+  entry_le4: 0
+  entry_median: 5
+  entry_best: 5
+  stage2: 1
+  errors: 0
+- name: 絶望神サガ+アクア忍者 ライヤ+勇聖 アールイ-２
+  extra:
+  - dmr13-050
+  - dmrp18-054
+  games: 20
+  entry_rate: 0.05
+  entry_le4: 0
+  entry_median: 5
+  entry_best: 5
+  stage2: 0
+  errors: 0
+- name: 絶望神サガ+アクア隠密 アサシングリード+勇聖 アールイ-２
+  extra:
+  - dmd17-004
+  - dmrp18-054
+  games: 20
+  entry_rate: 0.05
+  entry_le4: 0
+  entry_median: 5
+  entry_best: 5
+  stage2: 1
+  errors: 0
+- name: 絶望神サガ+ワダゲコノミコト+勇聖 アールイ-２
+  extra:
+  - dm26ex2-075
+  - dmrp18-054
+  games: 20
+  entry_rate: 0.05
+  entry_le4: 0
+  entry_median: 5
+  entry_best: 5
+  stage2: 0
+  errors: 0
+- name: 絶望神サガ+奇石 エルバ+ワダゲコノミコト
+  extra:
+  - dm22rp2x-028
+  - dm26ex2-075
+  games: 20
+  entry_rate: 0.05
+  entry_le4: 0
+  entry_median: 6
+  entry_best: 6
+  stage2: 1
+  errors: 0
+- name: 絶望神サガ+改速 4-W+勇聖 アールイ-２
+  extra:
+  - dmr22-033
+  - dmrp18-054
+  games: 20
+  entry_rate: 0.05
+  entry_le4: 0
+  entry_median: 5
+  entry_best: 5
+  stage2: 1
+  errors: 0
+- name: 英霊貴族ムーンライト+絶望神サガ+墓守の鐘ベルリン
+  extra:
+  - dm15-012
+  - dmex13-049
+  games: 20
+  entry_rate: 0.05
+  entry_le4: 0
+  entry_median: 5
+  entry_best: 5
+  stage2: 1
+  errors: 0
+- name: アクア・エスコート+絶望神サガ+勇聖 アールイ-２
+  extra:
+  - dm20-042
+  - dmrp18-054
+  games: 20
+  entry_rate: 0.0
+  entry_le4: 0
+  entry_median: null
+  entry_best: null
+  stage2: 1
+  errors: 0
+- name: 絶望神サガ+アラゴト・ムスビ+勇聖 アールイ-２
+  extra:
+  - dmex08-060
+  - dmrp18-054
+  games: 20
+  entry_rate: 0.0
+  entry_le4: 0
+  entry_median: null
+  entry_best: null
+  stage2: 0
+  errors: 0
+- name: 絶望神サガ+クリスタル・パラディン+勇聖 アールイ-２
+  extra:
+  - dmc42-004
+  - dmrp18-054
+  games: 20
+  entry_rate: 0.0
+  entry_le4: 0
+  entry_median: null
+  entry_best: null
+  stage2: 1
+  errors: 0
+- name: 絶望神サガ+スネイクマン・ドラグーン+勇聖 アールイ-２
+  extra:
+  - dm36-095
+  - dmrp18-054
+  games: 20
+  entry_rate: 0.0
+  entry_le4: 0
+  entry_median: null
+  entry_best: null
+  stage2: 0
+  errors: 0
+- name: 絶望神サガ+墓守の鐘ベルリン+聖黒 アシュライ-２
+  extra:
+  - dmex13-049
+  - dmrp19-046
+  games: 20
+  entry_rate: 0.0
+  entry_le4: 0
+  entry_median: null
+  entry_best: null
+  stage2: 0
+  errors: 0
+- name: 絶望神サガ+深塊封魔ゲルネウス+勇聖 アールイ-２
+  extra:
+  - dm27-033
+  - dmrp18-054
+  games: 20
+  entry_rate: 0.0
+  entry_le4: 0
+  entry_median: null
+  entry_best: null
+  stage2: 0
+  errors: 0
+- name: 絶望神サガ+護聖秘宝イーグル・カーゴ+墓守の鐘ベルリン
+  extra:
+  - dm26-041
+  - dmex13-049
+  games: 20
+  entry_rate: 0.0
+  entry_le4: 0
+  entry_median: null
+  entry_best: null
+  stage2: 1
+  errors: 0
+- name: 絶望神サガ+貝獣 アリサ+勇聖 アールイ-２
+  extra:
+  - dmrp03-070
+  - dmrp18-054
+  games: 20
+  entry_rate: 0.0
+  entry_le4: 0
+  entry_median: null
+  entry_best: null
+  stage2: 0
+  errors: 0
+- name: 絶望神サガ+鎧亜の深淵パラドックス+墓守の鐘ベルリン
+  extra:
+  - dm26-005
+  - dmex13-049
+  games: 20
+  entry_rate: 0.0
+  entry_le4: 0
+  entry_median: null
+  entry_best: null
+  stage2: 1
+  errors: 0

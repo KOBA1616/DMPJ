@@ -776,7 +776,7 @@ def fast_heavy_pairs(rules, by_card, ids, *, min_cost: int = 5, max_cost: int = 
     return {"self": self_, "pairs": sorted(set(pairs))}
 
 
-def collect_fast_heavy(rules, by_card, *, max_cost: int = 4, max_turn: int = 6, log=None) -> tuple[list[Base], Counter]:
+def collect_fast_heavy(rules, by_card, *, max_cost: int = 4, max_turn: int = 6, per_heavy: int = 15, log=None) -> tuple[list[Base], Counter]:
     """(4) 早く出せる重い札を含む3枚の部品。重い札 H（印刷コスト max_cost+1 以上）が、自分の能力（G・ゼロ等）で早く出るか、
     組の中の安い札 E の効果で出される組だけを残す。種は安い種（cheap_seeds）と、早く出せる重い札・それを出す札。
     上限ターンは max_turn まで残す（5〜6ターンは捨てずに値つきで記録する方針）。読めない経路の組（turn None）も残す。"""
@@ -813,4 +813,21 @@ def collect_fast_heavy(rules, by_card, *, max_cost: int = 4, max_turn: int = 6, 
         lay, grave = layout_of(c, cs, rules)
         out.append(Base(cards=cs, names=[rules.cards[x].name for x in cs], gains=_gains(c), has_win=r is None,
                         unknown=getattr(c, "unknown", 0), turn=t, layout=lay, grave=grave))
-    return out, drop
+    return cap_per_heavy(rules, out, max_cost, per_heavy, drop), drop
+
+
+def cap_per_heavy(rules, bases: list, max_cost: int, per_heavy: int, drop: Counter | None = None) -> list:
+    """同じ重い札の組は per_heavy 組まで（勝ち手段を含む組、上限ターンが早い組を先に）。一部の札が数千組を占めるのを防ぐ（2026-11-16: 6万組中上位5枚で7千組）。"""
+    if not per_heavy:
+        return bases
+    key = lambda b: (not b.has_win, b.turn if b.turn is not None else 4.5, b.cards)   # noqa: E731  読めない経路（None）は4と5の間
+    n, out = Counter(), []
+    for b in sorted(bases, key=key):
+        h = next((x for x in b.cards if isinstance(rules.cards[x].cost, int) and rules.cards[x].cost > max_cost), None)
+        if n[h] >= per_heavy:
+            if drop is not None:
+                drop["per_heavy"] += 1
+            continue
+        n[h] += 1
+        out.append(b)
+    return out
