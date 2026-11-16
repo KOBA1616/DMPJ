@@ -30,6 +30,10 @@ pub struct CardDef {
     #[serde(default)]
     pub shield_allow: Vec<String>,
     #[serde(default)]
+    pub allow_x: Vec<serde_json::Value>,   // 辞書形の allow（無条件の禁止があって効かないもの。特性に並べるだけ）
+    #[serde(default)]
+    pub deny_if: Vec<(serde_json::Value, Vec<String>)>,   // 条件つきの自分への禁止（条件, 禁止する行動）
+    #[serde(default)]
     pub spell: Vec<serde_json::Value>,      // 呪文の効果（plain な呪文だけ。Python の CardDef.spell）
     #[serde(default)]
     pub zt: bool,                           // バトルゾーン以外で働く誘発型能力を持つ（Python の zone_trigger_defs）
