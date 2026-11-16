@@ -121,7 +121,8 @@ def run_batch(a, combos):
         def _hunt():
             from dmsim.discovery import hunt_pipeline as HP
             out = Path("runs/hunt") / (HP._git_head()[:10] or "local")
-            r = HP.run(load_rules(), out, HP.Config(workers=a.workers))
+            # 差分: 前回の実行から札データが変わった札（毎日の変換で増えた札など）を含む組だけ試す。前回が無ければ全組
+            r = HP.run(load_rules(), out, HP.Config(workers=a.workers, since=HP.latest_run(out.parent, exclude=out)))
             if r.get("stopped"):
                 raise RuntimeError(f"部品探索の自己診断で停止: {r['check']['controls']}")
         th0 = time.time()
