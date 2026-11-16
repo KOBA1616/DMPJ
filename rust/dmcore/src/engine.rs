@@ -19,6 +19,17 @@ fn uns<T>(what: impl Into<String>) -> R<T> {
     Err(EngErr::Unsupported(what.into()))
 }
 
+/// 常在型の条件の入れ子の深さ（&self から増減する。PyO3 の型は Sync が要るので原子変数）
+#[derive(Default)]
+pub struct SDepth(std::sync::atomic::AtomicU32);
+impl SDepth {
+    pub fn get(&self) -> u32 { self.0.load(std::sync::atomic::Ordering::Relaxed) }
+    pub fn set(&self, v: u32) { self.0.store(v, std::sync::atomic::Ordering::Relaxed) }
+}
+impl Clone for SDepth {
+    fn clone(&self) -> Self { SDepth(std::sync::atomic::AtomicU32::new(self.get())) }
+}
+
 #[derive(Clone)]
 pub struct Engine {
     pub s: GameState,
@@ -26,6 +37,8 @@ pub struct Engine {
     pub log: Vec<Value>,
     pub step_limit: i64,
     pub turn_limit: i64,
+    /// 常在型の条件を評価中の深さ（Python の _in_static_cond。2段目からはフィルタが印刷の特性を見る）
+    pub static_depth: SDepth,
 }
 
 enum Ask {
@@ -42,7 +55,7 @@ impl Engine {
                 None => return Err(EngErr::Illegal(format!("unknown card {}", c.defn))),
             }
         }
-        Ok(Engine { s, rules, log: vec![], step_limit: 20000, turn_limit: 80 })
+        Ok(Engine { s, rules, log: vec![], step_limit: 20000, turn_limit: 80, static_depth: SDepth::default() })
     }
 
     // ---- 基本の読み取り ----
@@ -77,6 +90,17 @@ impl Engine {
     fn permits(&self, cid: i64, action: &str) -> bool {
         self.permits_face(cid, action, None)
     }
+    /// 相手側のカード other に対して action できるか（Python の permits(cid, action, other)）。辞書形の禁止 {action, other} を見る
+    fn permits_vs(&self, cid: i64, action: &str, other: i64) -> bool {
+        if self.s.cards[cid as usize].zone == "bz" {
+            for e in &self.def(cid).deny_x {
+                if e["action"] == json!(action) && self.filter_ok(other, &e["other"]).unwrap_or(false) {
+                    return false;
+                }
+            }
+        }
+        self.permits(cid, action)
+    }
     /// 継続的効果が cid に及ぶか（Python の _ce_applies）。範囲固定は affected、dynamic は生成時にベイクした filter
     fn ce_applies(&self, ce: &Value, cid: i64) -> bool {
         if let Some(a) = ce["affected"].as_array() {
@@ -90,7 +114,11 @@ impl Engine {
         if f["owner"] != json!("any") && f["owner"].as_i64() != Some(c.controller) {
             return false;
         }
-        self.filter_ok(cid, &f["filter"]).unwrap_or(false)
+        // Python は base=True（印刷の特性）で照合する
+        self.static_depth.set(self.static_depth.get() + 2);
+        let ok = self.filter_ok(cid, &f["filter"]).unwrap_or(false);
+        self.static_depth.set(self.static_depth.get() - 2);
+        ok
     }
     /// 条件を満たしている「条件つきの自分への禁止」（バトルゾーンにある間）
     fn cond_deny(&self, cid: i64, face: Option<i64>) -> Vec<String> {
@@ -99,7 +127,10 @@ impl Engine {
             return vec![];
         }
         let env = json!({"you": self.s.cards[cid as usize].controller, "self": self.refv(cid), "vars": {}});
-        d.deny_if.iter().filter(|(c, _)| self.eval_cond(c, &env).unwrap_or(false)).flat_map(|(_, l)| l.clone()).collect()
+        self.static_depth.set(self.static_depth.get() + 1);
+        let out = d.deny_if.iter().filter(|(c, _)| self.eval_cond(c, &env).unwrap_or(false)).flat_map(|(_, l)| l.clone()).collect();
+        self.static_depth.set(self.static_depth.get() - 1);
+        out
     }
     /// 継続的効果の mod の allow / deny に action があるか
     fn ce_lists(&self, cid: i64, key: &str) -> Vec<String> {
@@ -438,6 +469,7 @@ impl Engine {
             }
         }
         if let Some(f) = sel.get("filter") {
+            let f = &self.bake_filter(f, env)?;
             let mut keep = vec![];
             for &c in &lst {
                 if self.filter_ok(c, f)? {
@@ -449,9 +481,30 @@ impl Engine {
         Ok(lst)
     }
 
+    /// フィルタの値が式（{cost_of: ...} など）なら解決時に数へ置き換える（Python の select と同じ前評価）
+    fn bake_filter(&self, f: &Value, env: &Value) -> R<Value> {
+        let o = match f.as_object() { Some(o) => o, None => return Ok(f.clone()) };
+        if !o.values().any(|v| v.is_object()) {
+            return Ok(f.clone());
+        }
+        let mut out = serde_json::Map::new();
+        for (k, v) in o {
+            out.insert(k.clone(), if v.is_object() { json!(self.eval_num(v, env)?) } else { v.clone() });
+        }
+        Ok(Value::Object(out))
+    }
+
     fn eval_num(&self, x: &Value, env: &Value) -> R<i64> {
         if let Some(n) = x.as_i64() {
             return Ok(n);
+        }
+        if let Some(v) = x.get("cost_of") {
+            // 参照カード（複数なら最大）のコスト。参照は変数名か {ref: 名前}、"self" は自分
+            let name = v.get("ref").and_then(|r| r.as_str()).or(v.as_str()).unwrap_or("");
+            let refs: Vec<Value> = if name == "self" { vec![env["self"].clone()] }
+                else if name.starts_with("event.") || name == "crossed" { return uns("cost_of ref"); }
+                else { env["vars"].get(name).and_then(|a| a.as_array()).cloned().unwrap_or_default() };
+            return Ok(refs.iter().filter_map(|r| r[0].as_i64()).map(|c| self.def(c).cost).max().unwrap_or(0));
         }
         if x.is_object() && x.as_object().unwrap().len() == 1 {
             if let Some(sel) = x.get("count") {
@@ -528,7 +581,10 @@ impl Engine {
             }
         }
         let look = sel.get("look").and_then(|v| v.as_bool()).unwrap_or(false);
-        let filter: Option<Value> = sel.get("filter").cloned();
+        let filter: Option<Value> = match sel.get("filter") {
+            Some(f) => Some(self.bake_filter(f, env)?),
+            None => None,
+        };
         let up_to = sel.get("up_to").and_then(|v| v.as_bool()).unwrap_or(false);
         let mut lst: Vec<i64>;
         if let Some(u) = sel.get("under_of") {
@@ -585,10 +641,14 @@ impl Engine {
             lst = keep;
         }
         let cnt = sel.get("count");
-        if ((sel.get("from_top").is_some() || sel.get("ref").is_some() || sel.get("under_of").is_some()) && cnt.is_none()) || cnt == Some(&json!("all")) {
+        // count: any = 「好きな枚数」（0枚から候補の全部まで）。count: all + up_to と同じ
+        let any_n = cnt == Some(&json!("any")) || (cnt == Some(&json!("all")) && up_to);
+        let up_to = up_to || any_n;
+        if ((sel.get("from_top").is_some() || sel.get("ref").is_some() || sel.get("under_of").is_some()) && cnt.is_none()) || (cnt == Some(&json!("all")) && !any_n) {
             return Ok(Ok(lst));
         }
         let n = match cnt {
+            _ if any_n => lst.len(),
             None => 1usize,
             Some(v) => match v.as_i64() {
                 Some(n) => n.max(0) as usize,
@@ -598,8 +658,9 @@ impl Engine {
         if n.min(lst.len()) == 0 {
             return Ok(Ok(vec![]));
         }
+        let random = sel.get("chooser") == Some(&json!("random"));   // 「見ないで選ぶ」: 効果の使用者が無作為に選ぶ
         let chooser = match sel.get("chooser").and_then(|v| v.as_str()).unwrap_or("you") {
-            "you" => you,
+            "you" | "random" => you,
             "opp" => 1 - you,
             _ => return uns("chooser"),
         };
@@ -613,6 +674,16 @@ impl Engine {
         let n = n.min(cands.len());
         if n == 0 {
             return Ok(Ok(vec![]));
+        }
+        if random {
+            let mut pool = cands.clone();
+            let mut picked = vec![];
+            for _ in 0..n.min(pool.len()) {
+                let j = self.s.rng_below(pool.len() as u64) as usize;
+                picked.push(pool.remove(j));
+            }
+            self.s.tasks.last_mut().unwrap()["os"]["chosen"] = json!(picked);
+            return Ok(Ok(picked));
         }
         let opts: Vec<Value> = cands.iter().map(|&c| if look { self.card_option_look(c) } else { self.card_option(c, None) }).collect();
         let a = match self.ask(chooser, "choose_cards", opts, if up_to { 0 } else { n }, n) {
@@ -631,6 +702,11 @@ impl Engine {
     }
 
     /// フィルタの照合（Python 版 filter_match の、plain の札で値が定義どおりになるキーだけ。他は Unsupported）
+    /// フィルタが見るパワー: 特性（継続的効果・条件つき修整込み）。常在型の条件の入れ子（2段目以降）では印刷のパワー
+    fn filter_power(&self, cid: i64) -> i64 {
+        if self.static_depth.get() > 1 { self.def(cid).power } else { self.power(cid) }
+    }
+
     fn filter_ok(&self, cid: i64, f: &Value) -> R<bool> {
         let d = self.def(cid);
         let c = &self.s.cards[cid as usize];
@@ -652,10 +728,11 @@ impl Engine {
                 "keyword" => d.keywords.iter().any(|x| Some(x.as_str()) == v.as_str()),
                 "cost_le" => d.cost <= v.as_i64().ok_or(EngErr::Unsupported("filter expr".into()))?,
                 "cost_ge" => d.cost >= v.as_i64().ok_or(EngErr::Unsupported("filter expr".into()))?,
-                "power_le" => d.power <= v.as_i64().ok_or(EngErr::Unsupported("filter expr".into()))?,
-                "power_ge" => d.power >= v.as_i64().ok_or(EngErr::Unsupported("filter expr".into()))?,
+                "power_le" => self.filter_power(cid) <= v.as_i64().ok_or(EngErr::Unsupported("filter expr".into()))?,
+                "power_ge" => self.filter_power(cid) >= v.as_i64().ok_or(EngErr::Unsupported("filter expr".into()))?,
                 "tapped" => c.tapped == v.as_bool().unwrap_or(false),
                 "multicolor" => (d.civs.len() > 1) == v.as_bool().unwrap_or(false),
+                "evolution" => self.def(cid).types.iter().any(|t| t == "evolution") == v.as_bool().unwrap_or(false),
                 "colorless" => d.civs.is_empty() == v.as_bool().unwrap_or(false),
                 "any_of" => {
                     let mut hit = false;
@@ -1064,7 +1141,7 @@ impl Engine {
                 opts.push(json!({"key": format!("attack:{}:player", dfn), "cid": c, "target": "player"}));
             }
             for tc in self.bz_tops(Some(1 - a)) {
-                if self.s.cards[tc as usize].tapped && self.permits(c, "attack_creature") && self.permits(tc, "be_attacked") {
+                if self.s.cards[tc as usize].tapped && self.permits(c, "attack_creature") && self.permits_vs(tc, "be_attacked", c) {
                     opts.push(json!({"key": format!("attack:{}:{}", dfn, self.s.cards[tc as usize].defn), "cid": c, "target": self.refv(tc)}));
                 }
             }
@@ -1151,7 +1228,7 @@ impl Engine {
             // 507 ブロッククリーチャー指定
             let attc = att[0].as_i64().unwrap();
             let blockers: Vec<i64> = self.bz_tops(Some(1 - a)).into_iter().filter(|&c| {
-                !self.s.cards[c as usize].tapped && self.permits(c, "block") && self.permits(attc, "be_blocked")
+                !self.s.cards[c as usize].tapped && self.permits(c, "block") && self.permits_vs(attc, "be_blocked", c)
                     && json!([c, self.s.cards[c as usize].gen]) != target
             }).collect();
             let guards: Vec<i64> = if target == json!("player") { vec![] } else {
@@ -1378,7 +1455,7 @@ impl Engine {
                     .map(|a| a.iter().filter_map(|x| x.as_str().map(String::from)).collect()).unwrap_or_default();
                 let you = env["you"].as_i64().unwrap();
                 let mut ts = vec![];
-                for c in cids {
+                for c in cids.clone() {
                     let mut t = json!({"t": "play", "cid": c, "player": you, "free": true, "phase": "start", "gen": self.s.cards[c as usize].gen});
                     let faces = &self.rules.cards[&self.s.cards[c as usize].defn].faces;
                     if !faces.is_empty() {
@@ -1391,6 +1468,9 @@ impl Engine {
                         t["face"] = json!(f);
                     }
                     ts.push(t);
+                }
+                if let Some(name) = op.get("as").and_then(|v| v.as_str()) {
+                    ts.push(json!({"t": "bind", "env": env, "name": name, "cids": cids, "zone": "bz"}));
                 }
                 if !ts.is_empty() {
                     self.defer(ts);
@@ -1848,6 +1928,17 @@ impl Engine {
     /// パワー（印刷パワー＋継続的効果の修整）
     fn power(&self, cid: i64) -> i64 {
         let mut p = self.def(cid).power;
+        if !self.def(cid).power_if.is_empty() && self.s.cards[cid as usize].zone == "bz" {
+            let env = json!({"you": self.s.cards[cid as usize].controller, "self": self.refv(cid), "vars": {}});
+            for (c, n) in &self.def(cid).power_if {
+                self.static_depth.set(self.static_depth.get() + 1);
+                let ok = self.eval_cond(c, &env).unwrap_or(false);
+                self.static_depth.set(self.static_depth.get() - 1);
+                if ok {
+                    p += n;
+                }
+            }
+        }
         if !self.s.continuous.is_empty() {
             for ce in &self.s.continuous {
                 if ce["mod"].get("power").is_some() && self.ce_applies(ce, cid) {
@@ -1873,6 +1964,8 @@ impl Engine {
             allow.extend(self.ce_lists(cid, "allow"));
             deny.extend(self.ce_lists(cid, "deny"));
         }
+        let deny: Vec<Value> = (if in_bz { d.deny_x.clone() } else { vec![] }).into_iter().chain(deny.iter().map(|x| json!(x))).collect();
+
         let breaks = bo.iter().copied().max().unwrap_or(1).max(1);
         let mut kw = d.keywords.clone();
         kw.sort();
