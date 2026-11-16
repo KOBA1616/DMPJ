@@ -449,6 +449,7 @@ impl Engine {
             }
         }
         if let Some(f) = sel.get("filter") {
+            let f = &self.bake_filter(f, env)?;
             let mut keep = vec![];
             for &c in &lst {
                 if self.filter_ok(c, f)? {
@@ -460,9 +461,30 @@ impl Engine {
         Ok(lst)
     }
 
+    /// フィルタの値が式（{cost_of: ...} など）なら解決時に数へ置き換える（Python の select と同じ前評価）
+    fn bake_filter(&self, f: &Value, env: &Value) -> R<Value> {
+        let o = match f.as_object() { Some(o) => o, None => return Ok(f.clone()) };
+        if !o.values().any(|v| v.is_object()) {
+            return Ok(f.clone());
+        }
+        let mut out = serde_json::Map::new();
+        for (k, v) in o {
+            out.insert(k.clone(), if v.is_object() { json!(self.eval_num(v, env)?) } else { v.clone() });
+        }
+        Ok(Value::Object(out))
+    }
+
     fn eval_num(&self, x: &Value, env: &Value) -> R<i64> {
         if let Some(n) = x.as_i64() {
             return Ok(n);
+        }
+        if let Some(v) = x.get("cost_of") {
+            // 参照カード（複数なら最大）のコスト。参照は変数名か {ref: 名前}、"self" は自分
+            let name = v.get("ref").and_then(|r| r.as_str()).or(v.as_str()).unwrap_or("");
+            let refs: Vec<Value> = if name == "self" { vec![env["self"].clone()] }
+                else if name.starts_with("event.") || name == "crossed" { return uns("cost_of ref"); }
+                else { env["vars"].get(name).and_then(|a| a.as_array()).cloned().unwrap_or_default() };
+            return Ok(refs.iter().filter_map(|r| r[0].as_i64()).map(|c| self.def(c).cost).max().unwrap_or(0));
         }
         if x.is_object() && x.as_object().unwrap().len() == 1 {
             if let Some(sel) = x.get("count") {
@@ -539,7 +561,10 @@ impl Engine {
             }
         }
         let look = sel.get("look").and_then(|v| v.as_bool()).unwrap_or(false);
-        let filter: Option<Value> = sel.get("filter").cloned();
+        let filter: Option<Value> = match sel.get("filter") {
+            Some(f) => Some(self.bake_filter(f, env)?),
+            None => None,
+        };
         let up_to = sel.get("up_to").and_then(|v| v.as_bool()).unwrap_or(false);
         let mut lst: Vec<i64>;
         if let Some(u) = sel.get("under_of") {
@@ -596,10 +621,14 @@ impl Engine {
             lst = keep;
         }
         let cnt = sel.get("count");
-        if ((sel.get("from_top").is_some() || sel.get("ref").is_some() || sel.get("under_of").is_some()) && cnt.is_none()) || cnt == Some(&json!("all")) {
+        // count: any = 「好きな枚数」（0枚から候補の全部まで）。count: all + up_to と同じ
+        let any_n = cnt == Some(&json!("any")) || (cnt == Some(&json!("all")) && up_to);
+        let up_to = up_to || any_n;
+        if ((sel.get("from_top").is_some() || sel.get("ref").is_some() || sel.get("under_of").is_some()) && cnt.is_none()) || (cnt == Some(&json!("all")) && !any_n) {
             return Ok(Ok(lst));
         }
         let n = match cnt {
+            _ if any_n => lst.len(),
             None => 1usize,
             Some(v) => match v.as_i64() {
                 Some(n) => n.max(0) as usize,
@@ -678,6 +707,7 @@ impl Engine {
                 "power_ge" => d.power >= v.as_i64().ok_or(EngErr::Unsupported("filter expr".into()))?,
                 "tapped" => c.tapped == v.as_bool().unwrap_or(false),
                 "multicolor" => (d.civs.len() > 1) == v.as_bool().unwrap_or(false),
+                "evolution" => self.def(cid).types.iter().any(|t| t == "evolution") == v.as_bool().unwrap_or(false),
                 "colorless" => d.civs.is_empty() == v.as_bool().unwrap_or(false),
                 "any_of" => {
                     let mut hit = false;
@@ -1400,7 +1430,7 @@ impl Engine {
                     .map(|a| a.iter().filter_map(|x| x.as_str().map(String::from)).collect()).unwrap_or_default();
                 let you = env["you"].as_i64().unwrap();
                 let mut ts = vec![];
-                for c in cids {
+                for c in cids.clone() {
                     let mut t = json!({"t": "play", "cid": c, "player": you, "free": true, "phase": "start", "gen": self.s.cards[c as usize].gen});
                     let faces = &self.rules.cards[&self.s.cards[c as usize].defn].faces;
                     if !faces.is_empty() {
@@ -1413,6 +1443,9 @@ impl Engine {
                         t["face"] = json!(f);
                     }
                     ts.push(t);
+                }
+                if let Some(name) = op.get("as").and_then(|v| v.as_str()) {
+                    ts.push(json!({"t": "bind", "env": env, "name": name, "cids": cids, "zone": "bz"}));
                 }
                 if !ts.is_empty() {
                     self.defer(ts);
