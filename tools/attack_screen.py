@@ -202,7 +202,11 @@ def cmd_wide(a):
     stage = Path(a.out).with_suffix(".screen.json")
     if a.resume and stage.exists():
         z = json.loads(stage.read_text(encoding="utf-8"))
-        return _confirm(a, rules, z["results"], z["hits"], z["decks"], z["ctrl_of"], z["uniq"], z["picked"], t0)
+        hits = list(z["hits"])
+        if a.near is not None:   # 境目に近い組も確かめる（どれかの値の区間の下端が -near より上）
+            hits += [k for k, r in z["results"].items() if k not in hits
+                     and any(x["ci95"] and x["ci95"][0] > -a.near and x["diff"] > 0 for x in r["contribution"].values())]
+        return _confirm(a, rules, z["results"], hits, z["decks"], z["ctrl_of"], z["uniq"], z["picked"], t0)
     ids = sorted(i for i, d in rules.cards.items() if not B._test(i) and isinstance(d.cost, int))
     missing = {i for i in ids if B.missing_effect(rules.cards[i])}
     ps = pairs(rules, ids, missing)
@@ -428,6 +432,7 @@ def main():
     ap.add_argument("--ref", type=opp_arg, default="2b", help="wide: 確認の時に併記する参考の相手")
     ap.add_argument("--resume", action="store_true", help="wide: 途中保存（<out>.screen.json）があれば、ふるいを飛ばして確認から")
     ap.add_argument("--pairs", default="", help="synergy: 組を明示（A+B をカンマ区切り）。省くと candidates.yaml の screened_attack")
+    ap.add_argument("--near", type=float, default=None, help="wide --resume: 区間の下端が -near より上の組も確認に入れる")
     ap.add_argument("--confirm", type=int, default=40, help="wide: 区間が0を超えた組を測り直す局数")
     a = ap.parse_args()
     {"control": cmd_control, "search": cmd_search, "known": cmd_known, "wide": cmd_wide, "synergy": cmd_synergy}[a.mode](a)
