@@ -117,6 +117,16 @@ def run_batch(a, combos):
         for cb in vg:
             timed(f"v_gate:{cb}", lambda cb=cb: selfheal.run_phase(f"v_gate:{cb}", lambda cb=cb: v_gate.main(["--combo", cb, "--targets", a.targets, "--seeds", str(max(6, VGATE_SEC // 100)), "--seconds", str(VGATE_SEC - 30),
                                                                          "--out", (a.out.replace(".jsonl", "") + "_vgate.jsonl") if a.out else "logs/v_gate.jsonl"]), a.health), VGATE_SEC)
+    if a.hunt:
+        def _hunt():
+            from dmsim.discovery import hunt_pipeline as HP
+            out = Path("runs/hunt") / (HP._git_head()[:10] or "local")
+            r = HP.run(load_rules(), out, HP.Config(workers=a.workers))
+            if r.get("stopped"):
+                raise RuntimeError(f"部品探索の自己診断で停止: {r['check']['controls']}")
+        th0 = time.time()
+        selfheal.run_phase("hunt", _hunt, a.health)
+        timing["hunt"] = {"sec": round(time.time() - th0)}
     if a.total_seconds:
         import json
         import datetime
@@ -155,6 +165,7 @@ def main(argv=None):
     ap.add_argument("--cold", action="store_true", help="実行層（仕込み済み開始）でなく通常の開幕で測る（到達層の確認用）")
     ap.add_argument("--tune-seconds", type=int, default=0, help="0以外なら、終了後に tools/auto_tune.py をこの秒数の予算で続けて回す（--targets 指定時）。既定は無効")
     ap.add_argument("--total-seconds", type=int, default=0, help="0以外なら日次の総枠（秒）。診断ループの後、残り時間を deck_fix(65%%)と tune(35%%)へ自動配分する（--deck-fix-budget/--tune-seconds は上書きされる）")
+    ap.add_argument("--hunt", action="store_true", help="部品探索（dmsim/discovery/hunt_pipeline.py）を最後に回す。同じ版なら前回の続きから。陽性対照が落ちたら失敗として記録")
     ap.add_argument("--health", default="data/autofix/health.yaml", help="段階ごとの成否の記録（自己修復。連続失敗は隔離される）")
     ap.add_argument("--issue-file", default="logs/autofix_issue.md", help="失敗した段階の要約（Issue 本文）の出力先。失敗が無ければ作らない")
     ap.add_argument("--out")

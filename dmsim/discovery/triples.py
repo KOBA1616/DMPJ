@@ -198,6 +198,14 @@ def deck_of(rules, cards: list[str], raw=None) -> list[str]:
     return B.base_deck(core, fill)
 
 
+def default_zone(rules, i) -> str:
+    """閉路から置き場所が読めない部品の既定: 呪文の面を持たないクリーチャーと常在能力だけの札（無償詠唱など）は場、それ以外は手札。"""
+    t = rules.cards[i].types
+    if F.free_cast(rules.cards[i]):
+        return "bz"
+    return "bz" if "creature" in t and "spell" not in t else "hand"
+
+
 def entry_spec(rules, deck, parts: list[str], T: int, seed: int, layout: dict | None = None, grave=(), opp_bz=()) -> dict:
     """入口: 部品を layout のゾーン（無ければクリーチャーは場、それ以外は手札）に1枚ずつ。閉路が墓地から拾うなら、
     条件に合う札を2枚まで墓地へ（部品以外を先に）。残りはデッキから配る（マナ T 枚、手札は計5枚、盾5枚）。"""
@@ -205,18 +213,26 @@ def entry_spec(rules, deck, parts: list[str], T: int, seed: int, layout: dict | 
     layout = layout or {}
     zones = {"bz": [], "hand": [], "graveyard": [], "mana": []}
     for i in parts:
-        z = layout.get(i) or ("bz" if "creature" in rules.cards[i].types else "hand")
+        z = layout.get(i) or default_zone(rules, i)
         zones[z if z in zones else "hand"].append(i)
     rest = list(deck)
     for i in parts:
         rest.remove(i)
     rng.shuffle(rest)
     for flt in list(grave)[:1]:
-        pref = [i for i in rest if i not in parts] + [i for i in rest if i in parts]   # 素材は部品以外を先に（部品のコピーは手札に残す）
+        from ..search.access import _fits
+
+        def fits(i):          # 条件（種族・コストまで）に合うか。読めない条件は種類だけで見る
+            try:
+                return _fits(rules, i, {"filter": flt})
+            except TypeError:
+                return F._admits(flt, rules.cards[i])
+        # 素材は条件に合う部品以外を先に、次に条件に合う部品のコピー（部品のコピーは手札に残したい。サガは種族で部品しか合わない）
+        pref = [i for i in rest if i not in parts and fits(i)] + [i for i in rest if i in parts and fits(i)]
         for i in pref:
             if len(zones["graveyard"]) >= 2:
                 break
-            if F._admits(flt, rules.cards[i]):
+            if True:
                 zones["graveyard"].append(i)
                 rest.remove(i)
     need = set()
@@ -389,7 +405,7 @@ def layouts(rules, base: Base, raw=None) -> list[dict]:
         # double: 閉路の置き方のまま、常在能力だけの部品（無償で唱えさせる等）は場、手札の部品は2枚ずつ
         # （同じ札の別のコピー同士で回収し合うループ。アカシック3＋訪れる魔の時刻2枚）。ツインパクトは閉路の置き方に従う。
     if True:
-        lay = dict(base.layout)
+        lay = {i: base.layout.get(i) or default_zone(rules, i) for i in base.cards}
         for i in base.cards:
             if F.free_cast(rules.cards[i]):
                 lay[i] = "bz"
@@ -671,3 +687,41 @@ def zero_extend(rules, by_card, base: Base, wins, k: int = 10) -> list[Base]:
         if len(out) >= k:
             break
     return out
+
+
+def cheap_seeds(rules, by_card, ids, max_cost: int = 4) -> list[str]:
+    """軸がコスト max_cost 以下の部品の種: その札が無償で使わせる・出す（peaky）か、自分の墓地・マナ・盾・場から手札・場へ
+    狙って札を動かす束を持つ（ゾーン間移動を補完し合う札）。名前は見ない。"""
+    cheap = [i for i in ids if isinstance(rules.cards[i].cost, int) and rules.cards[i].cost <= max_cost and by_card.get(rules.cards[i].id)]
+    pk = set(peaky(rules, cheap))
+
+    def mover(i):
+        return any(m.owner == "you" and not m.blind and F._zone(m.src) in ("graveyard", "mana", "shield", "bz") and m.dst in ("hand", "bz")
+                   for b in by_card[rules.cards[i].id] for m in b.moves)
+    return [i for i in cheap if i in pk or mover(i)]
+
+
+def collect_cheap(rules, by_card, *, max_cost: int = 4, max_turn: int = 4, log=None) -> tuple[list[Base], Counter]:
+    """(2) 軸がコスト max_cost 以下の札だけで閉じる3枚の部品（cheap_seeds どうしの三角）。速さの上限 max_turn 以内だけ残す
+    （3〜4ターンキルが目標なので、この段では上限ターンでふるう。指揮役の指示 2026-11-15）。"""
+    from ..eval import speed_bound as S
+    ids, _ = F.usable_ids(rules)
+    seeds = cheap_seeds(rules, by_card, ids, max_cost)
+    sets = triangle_sets(rules, by_card, ids, seeds, log=log)
+    if log:
+        log(f"(2) 安い三角 {len(sets)}（種 {len(seeds)}）")
+    out, drop = [], Counter()
+    for cs in sets:
+        t = S.static_bound(rules, cs)["turn"]
+        if t is None or t > max_turn:
+            drop["slow"] += 1
+            continue
+        r, cyc = F.judge_set(cs, by_card, rules)
+        if r not in (None, "no_win") or not cyc:
+            drop[r] += 1
+            continue
+        c = cyc[0]
+        lay, grave = layout_of(c, cs, rules)
+        out.append(Base(cards=cs, names=[rules.cards[x].name for x in cs], gains=_gains(c), has_win=r is None,
+                        unknown=getattr(c, "unknown", 0), turn=t, layout=lay, grave=grave))
+    return out, drop

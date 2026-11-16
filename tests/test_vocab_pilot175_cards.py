@@ -66,7 +66,7 @@ def test_round211_registered_parse():
     # dm15-009: unblockable は accel 静的の中だけ。素の keywords は無い。
     c9 = cards["dm15-009"]
     assert "unblockable" not in (c9.get("keywords") or [])
-    assert c9["abilities"][0] == {"kind": "static", "accel": True,
+    assert c9["abilities"][0] == {"kind": "static", "accel": True, "affects": "self",
                                   "mod": {"grant": ["unblockable"]}}
     rep = c9["abilities"][1]
     assert rep["kind"] == "replace" and rep["accel"] is True
