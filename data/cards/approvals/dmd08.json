@@ -6,7 +6,8 @@
 "text": "ok"
 },
 "def_hash": "e01c85530e458228",
-"status": "approved",
+"stale": "カード定義が見つからない",
+"status": "pending",
 "uses": [
 "core",
 "op:destroy",
@@ -35,7 +36,7 @@
 ],
 "verifier": 2,
 "verify": "43手・turn 30 まで正常に回った（result={'winner': 0, 'reason': 'deck_out', 'turn': 30}）",
-"vocab_ver": "dc0890c35c9c4d14"
+"vocab_ver": "c3a4077e5a222185"
 },
 "dmd08-022": {
 "by": "rule",

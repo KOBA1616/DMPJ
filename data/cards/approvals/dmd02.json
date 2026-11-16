@@ -23,8 +23,7 @@
 "text": "ok"
 },
 "def_hash": "e4c0df10932aea96",
-"stale": "目視照合で誤り: 「見ないで選ぶ」が無作為(chooser: random)になっていない",
-"status": "pending",
+"status": "approved",
 "uses": [
 "core",
 "kw:s_trigger",
@@ -92,8 +91,7 @@
 "text": "ok"
 },
 "def_hash": "32822997f38448f3",
-"stale": "目視照合で誤り: 「見ないで選ぶ」が無作為(chooser: random)になっていない",
-"status": "pending",
+"status": "approved",
 "uses": [
 "core",
 "op:discard"

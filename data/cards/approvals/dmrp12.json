@@ -23,8 +23,7 @@
 "text": "ok"
 },
 "def_hash": "8bb556495deb932a",
-"stale": "目視照合で誤り: 「コストは0以下にならない」の下限(cost_min: 1)が無い",
-"status": "pending",
+"status": "approved",
 "uses": [
 "core",
 "kw:double_breaker"
@@ -168,7 +167,8 @@
 "text": "ok"
 },
 "def_hash": "c1a16dc92e0d73b2",
-"status": "approved",
+"stale": "カード定義が見つからない",
+"status": "pending",
 "uses": [
 "core",
 "op:choose",

@@ -118,8 +118,7 @@
 "text": "ok"
 },
 "def_hash": "ccae7923dc502ace",
-"stale": "目視照合で誤り: 「見ないで選ぶ」が無作為(chooser: random)になっていない",
-"status": "pending",
+"status": "approved",
 "uses": [
 "core",
 "kw:s_trigger",

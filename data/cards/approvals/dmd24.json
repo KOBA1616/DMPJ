@@ -5,7 +5,7 @@
 "effect": "skip",
 "text": "fail"
 },
-"def_hash": "dd5968bf559f55b4",
+"def_hash": "5abaabbab8e616d4",
 "status": "pending",
 "uses": [
 "core",
@@ -17,7 +17,7 @@
 ],
 "verifier": 2,
 "verify_error": "原文に このクリーチャーは攻撃できない があるが cannot_attack が定義に無い",
-"vocab_ver": "5ecd4b135e30a405"
+"vocab_ver": "62160cb35172a945"
 },
 "dmd24-025": {
 "by": "check",
@@ -26,7 +26,8 @@
 "text": "ok"
 },
 "def_hash": "4c8576ce734a037c",
-"status": "approved",
+"stale": "カード定義が見つからない",
+"status": "pending",
 "uses": [
 "core",
 "op:destroy",

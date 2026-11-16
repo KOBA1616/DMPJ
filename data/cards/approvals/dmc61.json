@@ -268,8 +268,7 @@
 "text": "ok"
 },
 "def_hash": "67c68a17a986f3ba",
-"stale": "目視照合で誤り: 「見ないで選ぶ」が無作為(chooser: random)になっていない",
-"status": "pending",
+"status": "approved",
 "uses": [
 "core",
 "op:discard"
@@ -302,8 +301,7 @@
 "text": "ok"
 },
 "def_hash": "7594947a0b197310",
-"stale": "目視照合で誤り: 「見ないで選ぶ」が無作為(chooser: random)になっていない",
-"status": "pending",
+"status": "approved",
 "uses": [
 "core",
 "kw:s_trigger",
@@ -319,14 +317,15 @@
 "effect": "skip",
 "text": "ok"
 },
-"def_hash": "829b3fa3189a1a21",
+"def_hash": "4a673e89a456bf23",
 "status": "approved",
 "uses": [
-"core"
+"core",
+"op:modify"
 ],
 "verifier": 2,
 "verify": "43手・turn 30 まで正常に回った（result={'winner': 0, 'reason': 'deck_out', 'turn': 30}）",
-"vocab_ver": "080d8e7509b398eb"
+"vocab_ver": "d522869b10d7baa2"
 },
 "dmc61-080": {
 "by": "rule",
@@ -367,15 +366,16 @@
 "effect": "skip",
 "text": "ok"
 },
-"def_hash": "eceb3981d5b747c1",
+"def_hash": "825024e1c85402b1",
 "status": "approved",
 "uses": [
 "core",
-"kw:double_breaker"
+"kw:double_breaker",
+"op:modify"
 ],
 "verifier": 2,
 "verify": "43手・turn 30 まで正常に回った（result={'winner': 0, 'reason': 'deck_out', 'turn': 30}）",
-"vocab_ver": "76ace1d9e2ba7e59"
+"vocab_ver": "cda70dd35098c394"
 },
 "dmc61-085": {
 "by": "rule",
@@ -415,7 +415,8 @@
 "text": "ok"
 },
 "def_hash": "1f031f8ce3093425",
-"status": "approved",
+"stale": "カード定義が見つからない",
+"status": "pending",
 "uses": [
 "core",
 "op:choose",

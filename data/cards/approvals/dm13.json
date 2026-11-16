@@ -38,7 +38,8 @@
 "text": "ok"
 },
 "def_hash": "1c65677adb6bd89b",
-"status": "approved",
+"stale": "カード定義が見つからない",
+"status": "pending",
 "uses": [
 "core",
 "op:bounce"
@@ -54,7 +55,8 @@
 "text": "ok"
 },
 "def_hash": "7e5706c67e1629e5",
-"status": "approved",
+"stale": "カード定義が見つからない",
+"status": "pending",
 "uses": [
 "core",
 "kw:s_trigger",
@@ -70,14 +72,15 @@
 "effect": "skip",
 "text": "ok"
 },
-"def_hash": "7076f33781e004ad",
+"def_hash": "5cfce0670d8b0605",
 "status": "approved",
 "uses": [
-"core"
+"core",
+"op:modify"
 ],
 "verifier": 2,
 "verify": "43手・turn 30 まで正常に回った（result={'winner': 0, 'reason': 'deck_out', 'turn': 30}）",
-"vocab_ver": "080d8e7509b398eb"
+"vocab_ver": "d522869b10d7baa2"
 },
 "dm13-051": {
 "by": "rule",
@@ -103,16 +106,17 @@
 "effect": "skip",
 "text": "ok"
 },
-"def_hash": "dc692d2b23f0746a",
+"def_hash": "8808422149fb263f",
 "status": "approved",
 "uses": [
 "core",
 "kw:blocker",
-"kw:cannot_attack_player"
+"kw:cannot_attack_player",
+"op:modify"
 ],
 "verifier": 2,
 "verify": "43手・turn 30 まで正常に回った（result={'winner': 0, 'reason': 'deck_out', 'turn': 30}）",
-"vocab_ver": "e902490ce9931013"
+"vocab_ver": "d6e8d450f7d71461"
 },
 "dm13-054": {
 "by": "rule",

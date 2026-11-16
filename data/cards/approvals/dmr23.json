@@ -67,7 +67,8 @@
 "text": "ok"
 },
 "def_hash": "1277f381cc6213b9",
-"status": "approved",
+"stale": "カード定義が見つからない",
+"status": "pending",
 "uses": [
 "core",
 "op:delayed_trigger",
@@ -85,7 +86,8 @@
 "text": "ok"
 },
 "def_hash": "49656a9ab1e8d5a0",
-"status": "approved",
+"stale": "カード定義が見つからない",
+"status": "pending",
 "uses": [
 "core",
 "kw:s_trigger",
@@ -136,7 +138,8 @@
 "text": "ok"
 },
 "def_hash": "c42261e76e34feb2",
-"status": "approved",
+"stale": "カード定義が見つからない",
+"status": "pending",
 "uses": [
 "core",
 "kw:double_breaker",
@@ -153,7 +156,8 @@
 "text": "ok"
 },
 "def_hash": "b3eb937fb8a14a68",
-"status": "approved",
+"stale": "カード定義が見つからない",
+"status": "pending",
 "uses": [
 "core",
 "op:destroy",

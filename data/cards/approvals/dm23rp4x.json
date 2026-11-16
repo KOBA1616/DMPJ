@@ -204,8 +204,7 @@
 "text": "ok"
 },
 "def_hash": "142b0282d64a6ce7",
-"stale": "目視照合で誤り: 「見ないで選ぶ」が無作為(chooser: random)になっていない",
-"status": "pending",
+"status": "approved",
 "uses": [
 "core",
 "kw:s_trigger",
@@ -241,7 +240,8 @@
 "text": "ok"
 },
 "def_hash": "536fd70e1e4690de",
-"status": "approved",
+"stale": "カード定義が見つからない",
+"status": "pending",
 "uses": [
 "core",
 "kw:charger",
@@ -260,7 +260,8 @@
 "text": "ok"
 },
 "def_hash": "99626a62888822a9",
-"status": "approved",
+"stale": "カード定義が見つからない",
+"status": "pending",
 "uses": [
 "core",
 "kw:charger",

@@ -40,9 +40,12 @@
 },
 "dm23bd5-021": {
 "by": "rule",
-"checks": {},
+"checks": {
+"effect": "skip",
+"text": "ok"
+},
 "def_hash": "30dc2ac69df4add9",
-"status": "pending",
+"status": "approved",
 "uses": [
 "core",
 "kw:blocker",
@@ -52,7 +55,7 @@
 "op:play_free"
 ],
 "verifier": 2,
-"verify_error": "Traceback (most recent call last): |   File \"/home/claude/dmpj/dmsim/engine/verify.py\", line 42, in verify_card |     spec = sc.try_card(rules, card_id) |   File \"/home/claude/dmpj/dmsim/engine/scenario.py\", line 94, in try_card |     hit = next((probe.s.cards[c].defn for c in pool if probe.filter_match(c, f)), None) | TO",
+"verify": "26手・turn 11 まで正常に回った（result={'winner': 0, 'reason': 'direct_attack', 'turn': 11}）",
 "vocab_ver": "9ca2d466855d8443"
 },
 "dm23bd5-025": {
@@ -100,7 +103,8 @@
 "text": "ok"
 },
 "def_hash": "3181e61c4b17a0a0",
-"status": "approved",
+"stale": "カード定義が見つからない",
+"status": "pending",
 "uses": [
 "core",
 "kw:super_s_trigger",
@@ -117,7 +121,8 @@
 "text": "ok"
 },
 "def_hash": "c55856371cc53af0",
-"status": "approved",
+"stale": "カード定義が見つからない",
+"status": "pending",
 "uses": [
 "core",
 "op:choose",
@@ -192,7 +197,8 @@
 "text": "ok"
 },
 "def_hash": "13a927e0fdfb7d5b",
-"status": "approved",
+"stale": "カード定義が見つからない",
+"status": "pending",
 "uses": [
 "core",
 "kw:s_trigger",
@@ -229,7 +235,8 @@
 "text": "ok"
 },
 "def_hash": "4c3da2845a728a3f",
-"status": "approved",
+"stale": "カード定義が見つからない",
+"status": "pending",
 "uses": [
 "core",
 "op:choose",
@@ -247,7 +254,8 @@
 "text": "ok"
 },
 "def_hash": "c72db8761bccb7c3",
-"status": "approved",
+"stale": "カード定義が見つからない",
+"status": "pending",
 "uses": [
 "core",
 "op:mana_put",
@@ -281,7 +289,8 @@
 "text": "ok"
 },
 "def_hash": "a456e7d35491fa89",
-"status": "approved",
+"stale": "カード定義が見つからない",
+"status": "pending",
 "uses": [
 "core",
 "op:move"
@@ -297,7 +306,8 @@
 "text": "ok"
 },
 "def_hash": "6ff31128eb310068",
-"status": "approved",
+"stale": "カード定義が見つからない",
+"status": "pending",
 "uses": [
 "core",
 "op:choose",

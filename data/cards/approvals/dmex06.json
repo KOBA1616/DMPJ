@@ -1,9 +1,12 @@
 {
 "dmex06-014": {
 "by": "rule",
-"checks": {},
+"checks": {
+"effect": "skip",
+"text": "ok"
+},
 "def_hash": "68c404049ef8edf7",
-"status": "pending",
+"status": "approved",
 "uses": [
 "core",
 "kw:blocker",
@@ -13,7 +16,7 @@
 "op:play_free"
 ],
 "verifier": 2,
-"verify_error": "Traceback (most recent call last): |   File \"/home/claude/dmpj/dmsim/engine/verify.py\", line 42, in verify_card |     spec = sc.try_card(rules, card_id) |   File \"/home/claude/dmpj/dmsim/engine/scenario.py\", line 94, in try_card |     hit = next((probe.s.cards[c].defn for c in pool if probe.filter_match(c, f)), None) | TO",
+"verify": "26手・turn 11 まで正常に回った（result={'winner': 0, 'reason': 'direct_attack', 'turn': 11}）",
 "vocab_ver": "4b0546e1c21e1827"
 },
 "dmex06-043": {
@@ -36,7 +39,8 @@
 "text": "ok"
 },
 "def_hash": "27338a4288ba67a2",
-"status": "approved",
+"stale": "カード定義が見つからない",
+"status": "pending",
 "uses": [
 "core",
 "kw:s_trigger",
@@ -54,7 +58,8 @@
 "text": "ok"
 },
 "def_hash": "c3bd20fa4acc34db",
-"status": "approved",
+"stale": "カード定義が見つからない",
+"status": "pending",
 "uses": [
 "core",
 "op:mana_put",
@@ -67,7 +72,10 @@
 },
 "dmex06-075": {
 "by": "rule",
-"checks": {},
+"checks": {
+"effect": "skip",
+"text": "fail"
+},
 "def_hash": "270ee71a2f36fb1b",
 "status": "pending",
 "uses": [
@@ -78,7 +86,7 @@
 "op:tap"
 ],
 "verifier": 2,
-"verify_error": "Traceback (most recent call last): |   File \"/home/claude/dmpj/dmsim/engine/verify.py\", line 42, in verify_card |     spec = sc.try_card(rules, card_id) |   File \"/home/claude/dmpj/dmsim/engine/scenario.py\", line 94, in try_card |     hit = next((probe.s.cards[c].defn for c in pool if probe.filter_match(c, f)), None) | TO",
+"verify_error": "移動先 deck が原文に無い",
 "vocab_ver": "d338234236ce9551"
 },
 "dmex06-092": {
@@ -120,8 +128,7 @@
 "text": "ok"
 },
 "def_hash": "db96466cd7a09955",
-"stale": "目視照合で誤り: 「見ないで選ぶ」が無作為(chooser: random)になっていない",
-"status": "pending",
+"status": "approved",
 "uses": [
 "core",
 "op:discard",

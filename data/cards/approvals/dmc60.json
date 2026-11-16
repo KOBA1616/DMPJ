@@ -23,7 +23,8 @@
 "text": "ok"
 },
 "def_hash": "887e618039957d11",
-"status": "approved",
+"stale": "カード定義が見つからない",
+"status": "pending",
 "uses": [
 "core",
 "op:destroy",

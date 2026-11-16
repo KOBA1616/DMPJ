@@ -22,7 +22,8 @@
 "text": "ok"
 },
 "def_hash": "ca0c37975e0611a2",
-"status": "approved",
+"stale": "カード定義が見つからない",
+"status": "pending",
 "uses": [
 "core",
 "op:draw",

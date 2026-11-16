@@ -24,7 +24,8 @@
 "text": "ok"
 },
 "def_hash": "0cd809a7a6ffcff9",
-"status": "approved",
+"stale": "カード定義が見つからない",
+"status": "pending",
 "uses": [
 "core",
 "op:move"
@@ -40,7 +41,8 @@
 "text": "ok"
 },
 "def_hash": "4c4d8cbc1c77dcb9",
-"status": "approved",
+"stale": "カード定義が見つからない",
+"status": "pending",
 "uses": [
 "core",
 "kw:s_trigger",
@@ -57,7 +59,8 @@
 "text": "ok"
 },
 "def_hash": "50dde5aefeb2dd86",
-"status": "approved",
+"stale": "カード定義が見つからない",
+"status": "pending",
 "uses": [
 "core",
 "op:draw",

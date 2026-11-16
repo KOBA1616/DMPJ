@@ -23,7 +23,8 @@
 "text": "ok"
 },
 "def_hash": "48cfca66c24c3497",
-"status": "approved",
+"stale": "カード定義が見つからない",
+"status": "pending",
 "uses": [
 "core",
 "op:may",
@@ -60,7 +61,8 @@
 "text": "ok"
 },
 "def_hash": "94bb9f871d8251b8",
-"status": "approved",
+"stale": "カード定義が見つからない",
+"status": "pending",
 "uses": [
 "core",
 "op:discard",
@@ -78,7 +80,8 @@
 "text": "ok"
 },
 "def_hash": "ed3ec3af08f74025",
-"status": "approved",
+"stale": "カード定義が見つからない",
+"status": "pending",
 "uses": [
 "core",
 "op:move",
@@ -171,7 +174,8 @@
 "text": "ok"
 },
 "def_hash": "411c0959729e36d9",
-"status": "approved",
+"stale": "カード定義が見つからない",
+"status": "pending",
 "uses": [
 "core",
 "kw:s_trigger",
@@ -208,7 +212,8 @@
 "text": "ok"
 },
 "def_hash": "d9ac15f1b01261a7",
-"status": "approved",
+"stale": "カード定義が見つからない",
+"status": "pending",
 "uses": [
 "core",
 "kw:s_trigger",
@@ -297,7 +302,8 @@
 "text": "ok"
 },
 "def_hash": "240f15baca23b244",
-"status": "approved",
+"stale": "カード定義が見つからない",
+"status": "pending",
 "uses": [
 "core",
 "op:choose",
@@ -316,7 +322,8 @@
 "text": "ok"
 },
 "def_hash": "3cd152decae366de",
-"status": "approved",
+"stale": "カード定義が見つからない",
+"status": "pending",
 "uses": [
 "core",
 "kw:g_strike",
@@ -412,7 +419,8 @@
 "text": "ok"
 },
 "def_hash": "4a1b572bfa59c1ff",
-"status": "approved",
+"stale": "カード定義が見つからない",
+"status": "pending",
 "uses": [
 "core",
 "kw:s_trigger",

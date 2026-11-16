@@ -56,7 +56,8 @@
 "text": "ok"
 },
 "def_hash": "95e1a4f3f8085117",
-"status": "approved",
+"stale": "カード定義が見つからない",
+"status": "pending",
 "uses": [
 "core",
 "op:choose",

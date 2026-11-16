@@ -98,7 +98,8 @@
 "text": "ok"
 },
 "def_hash": "52efa4b7563734ce",
-"status": "approved",
+"stale": "カード定義が見つからない",
+"status": "pending",
 "uses": [
 "core",
 "op:mana_put",
@@ -117,7 +118,8 @@
 "text": "ok"
 },
 "def_hash": "e829d16e7b7c87c5",
-"status": "approved",
+"stale": "カード定義が見つからない",
+"status": "pending",
 "uses": [
 "core",
 "kw:s_trigger",
@@ -182,15 +184,16 @@
 "effect": "skip",
 "text": "ok"
 },
-"def_hash": "fc0150aeafd4751a",
+"def_hash": "e356f8c5034b161f",
 "status": "approved",
 "uses": [
 "core",
-"kw:s_trigger"
+"kw:s_trigger",
+"op:modify"
 ],
 "verifier": 2,
 "verify": "43手・turn 30 まで正常に回った（result={'winner': 0, 'reason': 'deck_out', 'turn': 30}）",
-"vocab_ver": "7639d687d0380f7c"
+"vocab_ver": "3bda2f8a6b70bf24"
 },
 "dmr01-070": {
 "by": "check",
@@ -199,7 +202,8 @@
 "text": "ok"
 },
 "def_hash": "104341911739c92b",
-"status": "approved",
+"stale": "カード定義が見つからない",
+"status": "pending",
 "uses": [
 "core",
 "kw:s_trigger",
@@ -264,7 +268,8 @@
 "text": "ok"
 },
 "def_hash": "0bcb44d58bfa7ca6",
-"status": "approved",
+"stale": "カード定義が見つからない",
+"status": "pending",
 "uses": [
 "core",
 "kw:s_trigger",
@@ -314,7 +319,8 @@
 "text": "ok"
 },
 "def_hash": "2ac7f958bdf85e92",
-"status": "approved",
+"stale": "カード定義が見つからない",
+"status": "pending",
 "uses": [
 "core",
 "op:destroy"
@@ -361,7 +367,8 @@
 "text": "ok"
 },
 "def_hash": "f75b414828f26ed2",
-"status": "approved",
+"stale": "カード定義が見つからない",
+"status": "pending",
 "uses": [
 "core",
 "op:destroy"
@@ -376,14 +383,15 @@
 "effect": "skip",
 "text": "ok"
 },
-"def_hash": "5c94c2d3918abcae",
+"def_hash": "a8613acfdf4af296",
 "status": "approved",
 "uses": [
-"core"
+"core",
+"op:modify"
 ],
 "verifier": 2,
 "verify": "43手・turn 30 まで正常に回った（result={'winner': 0, 'reason': 'deck_out', 'turn': 30}）",
-"vocab_ver": "080d8e7509b398eb"
+"vocab_ver": "d522869b10d7baa2"
 },
 "dmr01-107": {
 "by": "rule",

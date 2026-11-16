@@ -254,7 +254,8 @@
 "text": "ok"
 },
 "def_hash": "89e3f82972845ba9",
-"status": "approved",
+"stale": "カード定義が見つからない",
+"status": "pending",
 "uses": [
 "core",
 "op:choose",
@@ -289,7 +290,8 @@
 "text": "ok"
 },
 "def_hash": "b1f6a264743cd4d3",
-"status": "approved",
+"stale": "カード定義が見つからない",
+"status": "pending",
 "uses": [
 "core",
 "op:move"
@@ -381,8 +383,7 @@
 "text": "ok"
 },
 "def_hash": "c57ae1104bcbe87c",
-"stale": "目視照合で誤り: 「見ないで選ぶ」が無作為(chooser: random)になっていない",
-"status": "pending",
+"status": "approved",
 "uses": [
 "core",
 "kw:s_trigger",
@@ -531,7 +532,8 @@
 "text": "ok"
 },
 "def_hash": "a3da5995eeb39b72",
-"status": "approved",
+"stale": "カード定義が見つからない",
+"status": "pending",
 "uses": [
 "core",
 "kw:s_trigger",
@@ -548,7 +550,8 @@
 "text": "ok"
 },
 "def_hash": "b8087c448d5940e2",
-"status": "approved",
+"stale": "カード定義が見つからない",
+"status": "pending",
 "uses": [
 "core",
 "op:choose",

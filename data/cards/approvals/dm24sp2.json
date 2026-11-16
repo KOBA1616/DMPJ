@@ -21,7 +21,8 @@
 "text": "ok"
 },
 "def_hash": "0e79c479ad42875b",
-"status": "approved",
+"stale": "カード定義が見つからない",
+"status": "pending",
 "uses": [
 "core",
 "op:mana_put",

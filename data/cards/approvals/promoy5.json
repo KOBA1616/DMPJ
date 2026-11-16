@@ -19,15 +19,16 @@
 "effect": "skip",
 "text": "ok"
 },
-"def_hash": "ce5b98acaa9c9021",
+"def_hash": "6d40167a99409574",
 "status": "approved",
 "uses": [
 "core",
-"kw:speed_attacker"
+"kw:speed_attacker",
+"op:modify"
 ],
 "verifier": 2,
 "verify": "43手・turn 30 まで正常に回った（result={'winner': 0, 'reason': 'deck_out', 'turn': 30}）",
-"vocab_ver": "bd171928c7e1f484"
+"vocab_ver": "ebaa3759c32c0775"
 },
 "promoy5-059": {
 "by": "rule",
@@ -35,14 +36,15 @@
 "effect": "skip",
 "text": "ok"
 },
-"def_hash": "3ca9c99b535fadbf",
+"def_hash": "238cd347323528ce",
 "status": "approved",
 "uses": [
 "core",
-"kw:triple_breaker"
+"kw:triple_breaker",
+"op:modify"
 ],
 "verifier": 2,
 "verify": "43手・turn 30 まで正常に回った（result={'winner': 0, 'reason': 'deck_out', 'turn': 30}）",
-"vocab_ver": "91d9148ad6b9aa6f"
+"vocab_ver": "a7c486b1f05fb4e3"
 }
 }

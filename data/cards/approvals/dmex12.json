@@ -48,7 +48,10 @@
 },
 "dmex12-055": {
 "by": "rule",
-"checks": {},
+"checks": {
+"effect": "skip",
+"text": "fail"
+},
 "def_hash": "6cddf1f2a55bfa53",
 "status": "pending",
 "uses": [
@@ -59,7 +62,7 @@
 "op:tap"
 ],
 "verifier": 2,
-"verify_error": "Traceback (most recent call last): |   File \"/home/claude/dmpj/dmsim/engine/verify.py\", line 42, in verify_card |     spec = sc.try_card(rules, card_id) |   File \"/home/claude/dmpj/dmsim/engine/scenario.py\", line 94, in try_card |     hit = next((probe.s.cards[c].defn for c in pool if probe.filter_match(c, f)), None) | TO",
+"verify_error": "移動先 deck が原文に無い",
 "vocab_ver": "d338234236ce9551"
 },
 "dmex12-073": {
@@ -82,15 +85,18 @@
 },
 "dmex12-076": {
 "by": "rule",
-"checks": {},
+"checks": {
+"effect": "skip",
+"text": "ok"
+},
 "def_hash": "2153162feba4dcfe",
-"status": "pending",
+"status": "approved",
 "uses": [
 "core",
 "op:swap"
 ],
 "verifier": 2,
-"verify_error": "Traceback (most recent call last): |   File \"/home/claude/dmpj/dmsim/engine/verify.py\", line 42, in verify_card |     spec = sc.try_card(rules, card_id) |   File \"/home/claude/dmpj/dmsim/engine/scenario.py\", line 94, in try_card |     hit = next((probe.s.cards[c].defn for c in pool if probe.filter_match(c, f)), None) | TO",
+"verify": "26手・turn 11 まで正常に回った（result={'winner': 0, 'reason': 'direct_attack', 'turn': 11}）",
 "vocab_ver": "e1d1e668ed36954e"
 },
 "dmex12-077": {
@@ -168,7 +174,8 @@
 "text": "ok"
 },
 "def_hash": "e96314fb8c37195f",
-"status": "approved",
+"stale": "カード定義が見つからない",
+"status": "pending",
 "uses": [
 "core",
 "kw:s_trigger",

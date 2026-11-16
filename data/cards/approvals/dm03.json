@@ -70,7 +70,8 @@
 "text": "ok"
 },
 "def_hash": "368a0fa5daea53b8",
-"status": "approved",
+"stale": "カード定義が見つからない",
+"status": "pending",
 "uses": [
 "core",
 "kw:s_trigger",
@@ -95,7 +96,7 @@
 ],
 "verifier": 2,
 "verify": "43手・turn 30 まで正常に回った（result={'winner': 0, 'reason': 'deck_out', 'turn': 30}）",
-"vocab_ver": "0c22b260a36ac25d"
+"vocab_ver": "b3657b3478a848ab"
 },
 "dm03-014": {
 "by": "check",
@@ -104,7 +105,8 @@
 "text": "ok"
 },
 "def_hash": "ecdfcc9143624183",
-"status": "approved",
+"stale": "カード定義が見つからない",
+"status": "pending",
 "uses": [
 "core",
 "op:move"
@@ -136,7 +138,8 @@
 "text": "ok"
 },
 "def_hash": "f65133bfe1494799",
-"status": "approved",
+"stale": "カード定義が見つからない",
+"status": "pending",
 "uses": [
 "core",
 "op:mana_put"
@@ -170,7 +173,8 @@
 "text": "ok"
 },
 "def_hash": "b1427f78eb14399f",
-"status": "approved",
+"stale": "カード定義が見つからない",
+"status": "pending",
 "uses": [
 "core",
 "kw:s_trigger",
@@ -202,7 +206,8 @@
 "text": "ok"
 },
 "def_hash": "7ac9cc4730d3d5e2",
-"status": "approved",
+"stale": "カード定義が見つからない",
+"status": "pending",
 "uses": [
 "core",
 "op:destroy",
@@ -220,7 +225,8 @@
 "text": "ok"
 },
 "def_hash": "e77d76d6ef52a4cd",
-"status": "approved",
+"stale": "カード定義が見つからない",
+"status": "pending",
 "uses": [
 "core",
 "kw:s_trigger",
@@ -268,7 +274,8 @@
 "text": "ok"
 },
 "def_hash": "19645398075d84fb",
-"status": "approved",
+"stale": "カード定義が見つからない",
+"status": "pending",
 "uses": [
 "core",
 "kw:s_trigger",
@@ -286,14 +293,15 @@
 "effect": "skip",
 "text": "ok"
 },
-"def_hash": "4061eed372c9ca4a",
+"def_hash": "6758181a525bf97f",
 "status": "approved",
 "uses": [
-"core"
+"core",
+"op:modify"
 ],
 "verifier": 2,
 "verify": "43手・turn 30 まで正常に回った（result={'winner': 0, 'reason': 'deck_out', 'turn': 30}）",
-"vocab_ver": "080d8e7509b398eb"
+"vocab_ver": "d522869b10d7baa2"
 },
 "dm03-055": {
 "by": "check",
@@ -302,7 +310,8 @@
 "text": "ok"
 },
 "def_hash": "e9d389edd2f1b473",
-"status": "approved",
+"stale": "カード定義が見つからない",
+"status": "pending",
 "uses": [
 "core",
 "kw:s_trigger",

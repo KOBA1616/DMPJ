@@ -6,7 +6,8 @@
 "text": "ok"
 },
 "def_hash": "f4fd628d660ce253",
-"status": "approved",
+"stale": "カード定義が見つからない",
+"status": "pending",
 "uses": [
 "core",
 "kw:yobinion"
@@ -22,7 +23,8 @@
 "text": "ok"
 },
 "def_hash": "22bb72993f5d34f7",
-"status": "approved",
+"stale": "カード定義が見つからない",
+"status": "pending",
 "uses": [
 "core",
 "op:choose",
@@ -40,8 +42,7 @@
 "text": "ok"
 },
 "def_hash": "c234dcf107e14c77",
-"stale": "目視照合で誤り: 「コストは0以下にならない」の下限(cost_min: 1)が無い",
-"status": "pending",
+"status": "approved",
 "uses": [
 "core"
 ],

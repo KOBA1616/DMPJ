@@ -133,7 +133,8 @@
 "text": "ok"
 },
 "def_hash": "c6d32fac8513448f",
-"status": "approved",
+"stale": "カード定義が見つからない",
+"status": "pending",
 "uses": [
 "core",
 "kw:cyclone",
@@ -244,7 +245,8 @@
 "text": "ok"
 },
 "def_hash": "4e7062113249de6c",
-"status": "approved",
+"stale": "カード定義が見つからない",
+"status": "pending",
 "uses": [
 "core",
 "kw:cyclone",

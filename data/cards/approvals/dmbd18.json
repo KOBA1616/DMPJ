@@ -78,7 +78,8 @@
 "text": "ok"
 },
 "def_hash": "a930ae6a440c0297",
-"status": "approved",
+"stale": "カード定義が見つからない",
+"status": "pending",
 "uses": [
 "core",
 "kw:s_trigger",

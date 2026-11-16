@@ -58,15 +58,16 @@
 "effect": "skip",
 "text": "ok"
 },
-"def_hash": "d8ee0a76044ff4c6",
+"def_hash": "0b7af705b5c5a4c6",
 "status": "approved",
 "uses": [
 "core",
 "kw:triple_breaker",
+"op:modify",
 "op:move"
 ],
 "verifier": 2,
 "verify": "43手・turn 30 まで正常に回った（result={'winner': 0, 'reason': 'deck_out', 'turn': 30}）",
-"vocab_ver": "58a86ddee101517b"
+"vocab_ver": "0dd96eb1c61c1a88"
 }
 }

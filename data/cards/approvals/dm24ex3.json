@@ -6,7 +6,8 @@
 "text": "ok"
 },
 "def_hash": "613898226a780b31",
-"status": "approved",
+"stale": "カード定義が見つからない",
+"status": "pending",
 "uses": [
 "core",
 "kw:s_trigger",
@@ -28,7 +29,8 @@
 "text": "ok"
 },
 "def_hash": "08e17683a10ec513",
-"status": "approved",
+"stale": "カード定義が見つからない",
+"status": "pending",
 "uses": [
 "core",
 "kw:yobinion",
@@ -45,7 +47,8 @@
 "text": "ok"
 },
 "def_hash": "ceef75cf4ce8b3e3",
-"status": "approved",
+"stale": "カード定義が見つからない",
+"status": "pending",
 "uses": [
 "core",
 "kw:double_breaker",
@@ -102,7 +105,8 @@
 "text": "ok"
 },
 "def_hash": "84da788f074a3c75",
-"status": "approved",
+"stale": "カード定義が見つからない",
+"status": "pending",
 "uses": [
 "core",
 "kw:s_trigger",
@@ -242,7 +246,8 @@
 "text": "ok"
 },
 "def_hash": "45a7db60d0f5bbcc",
-"status": "approved",
+"stale": "カード定義が見つからない",
+"status": "pending",
 "uses": [
 "core",
 "kw:s_trigger",
@@ -306,9 +311,12 @@
 },
 "dm24ex3-td07": {
 "by": "rule",
-"checks": {},
+"checks": {
+"effect": "skip",
+"text": "ok"
+},
 "def_hash": "9abfc7f4a8eaf3d9",
-"status": "pending",
+"status": "approved",
 "uses": [
 "core",
 "kw:blocker",
@@ -318,7 +326,7 @@
 "op:play_free"
 ],
 "verifier": 2,
-"verify_error": "Traceback (most recent call last): |   File \"/home/claude/dmpj/dmsim/engine/verify.py\", line 42, in verify_card |     spec = sc.try_card(rules, card_id) |   File \"/home/claude/dmpj/dmsim/engine/scenario.py\", line 94, in try_card |     hit = next((probe.s.cards[c].defn for c in pool if probe.filter_match(c, f)), None) | TO",
+"verify": "26手・turn 11 まで正常に回った（result={'winner': 0, 'reason': 'direct_attack', 'turn': 11}）",
 "vocab_ver": "4b0546e1c21e1827"
 },
 "dm24ex3-tf09": {
@@ -328,7 +336,8 @@
 "text": "ok"
 },
 "def_hash": "5a69e1ba036fbcbf",
-"status": "approved",
+"stale": "カード定義が見つからない",
+"status": "pending",
 "uses": [
 "core",
 "kw:super_s_trigger",
@@ -345,7 +354,8 @@
 "text": "ok"
 },
 "def_hash": "bd7db4033e1c469c",
-"status": "approved",
+"stale": "カード定義が見つからない",
+"status": "pending",
 "uses": [
 "core",
 "kw:charger",
@@ -362,7 +372,8 @@
 "text": "ok"
 },
 "def_hash": "52e6e9b83c5943c4",
-"status": "approved",
+"stale": "カード定義が見つからない",
+"status": "pending",
 "uses": [
 "core",
 "op:modify",

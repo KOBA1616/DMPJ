@@ -23,7 +23,8 @@
 "text": "ok"
 },
 "def_hash": "5d59bd50d0afa2d5",
-"status": "approved",
+"stale": "カード定義が見つからない",
+"status": "pending",
 "uses": [
 "core",
 "kw:charger",

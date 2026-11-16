@@ -52,7 +52,8 @@
 "text": "ok"
 },
 "def_hash": "486c6e2eb5ab68b3",
-"status": "approved",
+"stale": "カード定義が見つからない",
+"status": "pending",
 "uses": [
 "core",
 "op:move"
@@ -68,7 +69,8 @@
 "text": "ok"
 },
 "def_hash": "5a8c23ee25245c80",
-"status": "approved",
+"stale": "カード定義が見つからない",
+"status": "pending",
 "uses": [
 "core",
 "op:destroy",

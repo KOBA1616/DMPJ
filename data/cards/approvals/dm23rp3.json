@@ -22,8 +22,7 @@
 "text": "ok"
 },
 "def_hash": "48a130868c8c390d",
-"stale": "目視照合で誤り: 「見ないで選ぶ」が無作為(chooser: random)になっていない",
-"status": "pending",
+"status": "approved",
 "uses": [
 "core",
 "kw:blocker",
@@ -53,9 +52,12 @@
 },
 "dm23rp3-042": {
 "by": "rule",
-"checks": {},
+"checks": {
+"effect": "skip",
+"text": "ok"
+},
 "def_hash": "7060467dfe89c743",
-"status": "pending",
+"status": "approved",
 "uses": [
 "core",
 "kw:double_breaker",
@@ -64,14 +66,17 @@
 "op:swap"
 ],
 "verifier": 2,
-"verify_error": "Traceback (most recent call last): |   File \"/home/claude/dmpj/dmsim/engine/verify.py\", line 42, in verify_card |     spec = sc.try_card(rules, card_id) |   File \"/home/claude/dmpj/dmsim/engine/scenario.py\", line 94, in try_card |     hit = next((probe.s.cards[c].defn for c in pool if probe.filter_match(c, f)), None) | TO",
+"verify": "23手・turn 7 まで正常に回った（result={'winner': 0, 'reason': 'direct_attack', 'turn': 7}）",
 "vocab_ver": "5e6b593f598f11bf"
 },
 "dm23rp3-044": {
 "by": "rule",
-"checks": {},
+"checks": {
+"effect": "skip",
+"text": "ok"
+},
 "def_hash": "ae261b494554886f",
-"status": "pending",
+"status": "approved",
 "uses": [
 "core",
 "kw:triple_breaker",
@@ -79,7 +84,7 @@
 "op:swap"
 ],
 "verifier": 2,
-"verify_error": "Traceback (most recent call last): |   File \"/home/claude/dmpj/dmsim/engine/verify.py\", line 42, in verify_card |     spec = sc.try_card(rules, card_id) |   File \"/home/claude/dmpj/dmsim/engine/scenario.py\", line 94, in try_card |     hit = next((probe.s.cards[c].defn for c in pool if probe.filter_match(c, f)), None) | TO",
+"verify": "16手・turn 7 まで正常に回った（result={'winner': 0, 'reason': 'direct_attack', 'turn': 7}）",
 "vocab_ver": "d5e9e72d275c3906"
 },
 "dm23rp3-045": {
@@ -189,15 +194,16 @@
 "effect": "skip",
 "text": "ok"
 },
-"def_hash": "1d2061cc0f257762",
+"def_hash": "3c3b3db714348636",
 "status": "approved",
 "uses": [
 "core",
-"kw:double_breaker"
+"kw:double_breaker",
+"op:modify"
 ],
 "verifier": 2,
 "verify": "43手・turn 30 まで正常に回った（result={'winner': 0, 'reason': 'deck_out', 'turn': 30}）",
-"vocab_ver": "76ace1d9e2ba7e59"
+"vocab_ver": "cda70dd35098c394"
 },
 "dm23rp3-064": {
 "by": "rule",
@@ -234,16 +240,19 @@
 },
 "dm23rp3-070": {
 "by": "rule",
-"checks": {},
+"checks": {
+"effect": "skip",
+"text": "ok"
+},
 "def_hash": "328adf7f25ce1f35",
-"status": "pending",
+"status": "approved",
 "uses": [
 "core",
 "kw:escape",
 "op:swap"
 ],
 "verifier": 2,
-"verify_error": "Traceback (most recent call last): |   File \"/home/claude/dmpj/dmsim/engine/verify.py\", line 42, in verify_card |     spec = sc.try_card(rules, card_id) |   File \"/home/claude/dmpj/dmsim/engine/scenario.py\", line 94, in try_card |     hit = next((probe.s.cards[c].defn for c in pool if probe.filter_match(c, f)), None) | TO",
+"verify": "43手・turn 30 まで正常に回った（result={'winner': 0, 'reason': 'deck_out', 'turn': 30}）",
 "vocab_ver": "a3a536501feee00e"
 },
 "dm23rp3-071": {

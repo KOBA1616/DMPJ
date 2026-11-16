@@ -43,7 +43,7 @@
 ],
 "verifier": 2,
 "verify": "43手・turn 30 まで正常に回った（result={'winner': 0, 'reason': 'deck_out', 'turn': 30}）",
-"vocab_ver": "c4b7cb07836f9dfa"
+"vocab_ver": "610787a10cf0e75c"
 },
 "dm09-026": {
 "by": "check",
@@ -52,7 +52,8 @@
 "text": "ok"
 },
 "def_hash": "669cf4817ad5c8f1",
-"status": "approved",
+"stale": "カード定義が見つからない",
+"status": "pending",
 "uses": [
 "core",
 "kw:s_trigger",
@@ -70,7 +71,8 @@
 "text": "ok"
 },
 "def_hash": "53f1fd5f484c0a58",
-"status": "approved",
+"stale": "カード定義が見つからない",
+"status": "pending",
 "uses": [
 "core",
 "op:move"
@@ -86,7 +88,8 @@
 "text": "ok"
 },
 "def_hash": "fac5bb60ab6f313f",
-"status": "approved",
+"stale": "カード定義が見つからない",
+"status": "pending",
 "uses": [
 "core",
 "kw:charger",
@@ -120,14 +123,15 @@
 "effect": "skip",
 "text": "ok"
 },
-"def_hash": "aee21bfe3142aaed",
+"def_hash": "f8cf3d13cd57e3c6",
 "status": "approved",
 "uses": [
 "core",
-"kw:s_trigger"
+"kw:s_trigger",
+"op:modify"
 ],
 "verifier": 2,
 "verify": "43手・turn 30 まで正常に回った（result={'winner': 0, 'reason': 'deck_out', 'turn': 30}）",
-"vocab_ver": "7639d687d0380f7c"
+"vocab_ver": "3bda2f8a6b70bf24"
 }
 }

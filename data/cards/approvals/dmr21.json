@@ -41,7 +41,8 @@
 "text": "ok"
 },
 "def_hash": "f03854446b9eb2a5",
-"status": "approved",
+"stale": "カード定義が見つからない",
+"status": "pending",
 "uses": [
 "core",
 "op:choose",
@@ -96,7 +97,8 @@
 "text": "ok"
 },
 "def_hash": "eb33ecf63d324afa",
-"status": "approved",
+"stale": "カード定義が見つからない",
+"status": "pending",
 "uses": [
 "core",
 "kw:s_trigger",
@@ -114,7 +116,8 @@
 "text": "ok"
 },
 "def_hash": "48f07a3585f91993",
-"status": "approved",
+"stale": "カード定義が見つからない",
+"status": "pending",
 "uses": [
 "core",
 "kw:charger",
@@ -210,7 +213,8 @@
 "text": "ok"
 },
 "def_hash": "81ebf050344b6e8c",
-"status": "approved",
+"stale": "カード定義が見つからない",
+"status": "pending",
 "uses": [
 "core",
 "kw:s_trigger",
@@ -227,8 +231,7 @@
 "text": "ok"
 },
 "def_hash": "777fcf7f87aa2794",
-"stale": "目視照合で誤り: 「見ないで選ぶ」が無作為(chooser: random)になっていない",
-"status": "pending",
+"status": "approved",
 "uses": [
 "core",
 "kw:s_trigger",
@@ -310,7 +313,8 @@
 "text": "ok"
 },
 "def_hash": "38ea78338b3ad045",
-"status": "approved",
+"stale": "カード定義が見つからない",
+"status": "pending",
 "uses": [
 "core",
 "kw:blocker",

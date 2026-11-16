@@ -6,7 +6,8 @@
 "text": "ok"
 },
 "def_hash": "4e82695390c8ef43",
-"status": "approved",
+"stale": "カード定義が見つからない",
+"status": "pending",
 "uses": [
 "core",
 "op:draw",
@@ -71,7 +72,8 @@
 "text": "ok"
 },
 "def_hash": "705741eedaaa60dd",
-"status": "approved",
+"stale": "カード定義が見つからない",
+"status": "pending",
 "uses": [
 "core",
 "op:bounce",
@@ -107,7 +109,8 @@
 "text": "ok"
 },
 "def_hash": "f29dbaf906aeb5c0",
-"status": "approved",
+"stale": "カード定義が見つからない",
+"status": "pending",
 "uses": [
 "core",
 "kw:double_breaker"

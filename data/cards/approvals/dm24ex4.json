@@ -84,7 +84,8 @@
 "text": "ok"
 },
 "def_hash": "b715b3d4b471cacf",
-"status": "approved",
+"stale": "カード定義が見つからない",
+"status": "pending",
 "uses": [
 "core",
 "kw:s_trigger",
@@ -196,7 +197,8 @@
 "text": "ok"
 },
 "def_hash": "5ba91493ea278336",
-"status": "approved",
+"stale": "カード定義が見つからない",
+"status": "pending",
 "uses": [
 "core",
 "kw:must_attack"
@@ -212,8 +214,7 @@
 "text": "ok"
 },
 "def_hash": "e0de469aa41d9b9d",
-"stale": "目視照合で誤り: 「コストは0以下にならない」の下限(cost_min: 1)が無い",
-"status": "pending",
+"status": "approved",
 "uses": [
 "core"
 ],
@@ -297,8 +298,7 @@
 "text": "ok"
 },
 "def_hash": "04589a259a4c90d2",
-"stale": "目視照合で誤り: 「コストは0以下にならない」の下限(cost_min: 1)が無い",
-"status": "pending",
+"status": "approved",
 "uses": [
 "core"
 ],

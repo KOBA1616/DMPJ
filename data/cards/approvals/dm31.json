@@ -131,7 +131,8 @@
 "text": "ok"
 },
 "def_hash": "d138c9674f1ee7f2",
-"status": "approved",
+"stale": "カード定義が見つからない",
+"status": "pending",
 "uses": [
 "core",
 "op:if",

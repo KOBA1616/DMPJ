@@ -22,7 +22,8 @@
 "text": "ok"
 },
 "def_hash": "619e3c5b171b1c6c",
-"status": "approved",
+"stale": "カード定義が見つからない",
+"status": "pending",
 "uses": [
 "core",
 "kw:charger",
@@ -57,7 +58,8 @@
 "text": "ok"
 },
 "def_hash": "d6fbcced3cfcf005",
-"status": "approved",
+"stale": "カード定義が見つからない",
+"status": "pending",
 "uses": [
 "core",
 "op:choose",

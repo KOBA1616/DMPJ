@@ -6,7 +6,8 @@
 "text": "ok"
 },
 "def_hash": "aedc11ec7a69ad0f",
-"status": "approved",
+"stale": "カード定義が見つからない",
+"status": "pending",
 "uses": [
 "core",
 "kw:super_s_trigger",
@@ -35,7 +36,7 @@
 ],
 "verifier": 2,
 "verify_error": "移動先 bz が原文に無い",
-"vocab_ver": "49f14d784113c551"
+"vocab_ver": "c3e2d5c30698ea88"
 },
 "dm22ex2-035": {
 "by": "rule",
@@ -60,7 +61,8 @@
 "text": "ok"
 },
 "def_hash": "b2b4fda99b97ab4a",
-"status": "approved",
+"stale": "カード定義が見つからない",
+"status": "pending",
 "uses": [
 "core",
 "op:choose",

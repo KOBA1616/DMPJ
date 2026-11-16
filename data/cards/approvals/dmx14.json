@@ -24,8 +24,7 @@
 "text": "ok"
 },
 "def_hash": "a79ba651477210f4",
-"stale": "目視照合で誤り: 「見ないで選ぶ」が無作為(chooser: random)になっていない",
-"status": "pending",
+"status": "approved",
 "uses": [
 "core",
 "kw:s_trigger",
@@ -42,7 +41,8 @@
 "text": "ok"
 },
 "def_hash": "74e94022b46663c9",
-"status": "approved",
+"stale": "カード定義が見つからない",
+"status": "pending",
 "uses": [
 "core",
 "op:choose",
@@ -75,7 +75,8 @@
 "text": "ok"
 },
 "def_hash": "85aab16b5d79ee1d",
-"status": "approved",
+"stale": "カード定義が見つからない",
+"status": "pending",
 "uses": [
 "core",
 "kw:s_trigger",

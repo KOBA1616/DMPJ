@@ -6,7 +6,8 @@
 "text": "ok"
 },
 "def_hash": "d0e5f9d67194e898",
-"status": "approved",
+"stale": "カード定義が見つからない",
+"status": "pending",
 "uses": [
 "core",
 "kw:super_s_trigger",
@@ -43,15 +44,16 @@
 "effect": "skip",
 "text": "ok"
 },
-"def_hash": "be4757c6934b30c3",
+"def_hash": "6ea1f907a0ebc315",
 "status": "approved",
 "uses": [
 "core",
 "kw:triple_breaker",
+"op:modify",
 "op:move"
 ],
 "verifier": 2,
 "verify": "43手・turn 30 まで正常に回った（result={'winner': 0, 'reason': 'deck_out', 'turn': 30}）",
-"vocab_ver": "58a86ddee101517b"
+"vocab_ver": "0dd96eb1c61c1a88"
 }
 }

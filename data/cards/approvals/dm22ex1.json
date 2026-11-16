@@ -18,7 +18,7 @@
 ],
 "verifier": 2,
 "verify_error": "原文に メテオバーン があるが meteor_burn が定義に無い; 移動先 bz が原文に無い",
-"vocab_ver": "6bf25f72455e6363"
+"vocab_ver": "dcd19311c7f4994a"
 },
 "dm22ex1-024": {
 "by": "rule",
@@ -84,7 +84,8 @@
 "text": "ok"
 },
 "def_hash": "04ff28135650672b",
-"status": "approved",
+"stale": "カード定義が見つからない",
+"status": "pending",
 "uses": [
 "core",
 "kw:s_trigger",
@@ -234,9 +235,12 @@
 },
 "dm22ex1-122": {
 "by": "rule",
-"checks": {},
+"checks": {
+"effect": "skip",
+"text": "ok"
+},
 "def_hash": "2feb81dd4a39c057",
-"status": "pending",
+"status": "approved",
 "uses": [
 "core",
 "kw:guardman",
@@ -246,7 +250,7 @@
 "op:play_free"
 ],
 "verifier": 2,
-"verify_error": "Traceback (most recent call last): |   File \"/home/claude/dmpj/dmsim/engine/verify.py\", line 42, in verify_card |     spec = sc.try_card(rules, card_id) |   File \"/home/claude/dmpj/dmsim/engine/scenario.py\", line 94, in try_card |     hit = next((probe.s.cards[c].defn for c in pool if probe.filter_match(c, f)), None) | TO",
+"verify": "26手・turn 11 まで正常に回った（result={'winner': 0, 'reason': 'direct_attack', 'turn': 11}）",
 "vocab_ver": "f5b48ccd79f5bbb0"
 },
 "dm22ex1-cho10": {
@@ -292,7 +296,8 @@
 "text": "ok"
 },
 "def_hash": "495d3893b85d9a01",
-"status": "approved",
+"stale": "カード定義が見つからない",
+"status": "pending",
 "uses": [
 "core",
 "op:choose",
@@ -311,7 +316,8 @@
 "text": "ok"
 },
 "def_hash": "26b1c20cceac6ff1",
-"status": "approved",
+"stale": "カード定義が見つからない",
+"status": "pending",
 "uses": [
 "core",
 "kw:s_trigger",
@@ -330,7 +336,8 @@
 "text": "ok"
 },
 "def_hash": "7e6dbf268e9bb033",
-"status": "approved",
+"stale": "カード定義が見つからない",
+"status": "pending",
 "uses": [
 "core",
 "op:mill"

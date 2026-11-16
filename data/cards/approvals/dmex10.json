@@ -23,7 +23,8 @@
 "text": "ok"
 },
 "def_hash": "5801e3d7d3cd4c34",
-"status": "approved",
+"stale": "カード定義が見つからない",
+"status": "pending",
 "uses": [
 "core",
 "kw:s_trigger",
@@ -49,7 +50,7 @@
 ],
 "verifier": 2,
 "verify": "43手・turn 30 まで正常に回った（result={'winner': 0, 'reason': 'deck_out', 'turn': 30}）",
-"vocab_ver": "add11733818ec716"
+"vocab_ver": "ceb41c9e2b126cae"
 },
 "dmex10-021": {
 "by": "rule",
@@ -75,7 +76,8 @@
 "text": "ok"
 },
 "def_hash": "9e2910d427640a71",
-"status": "approved",
+"stale": "カード定義が見つからない",
+"status": "pending",
 "uses": [
 "core",
 "op:modify",

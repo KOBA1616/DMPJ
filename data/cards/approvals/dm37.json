@@ -22,7 +22,8 @@
 "text": "ok"
 },
 "def_hash": "d909515267ac895d",
-"status": "approved",
+"stale": "カード定義が見つからない",
+"status": "pending",
 "uses": [
 "core",
 "kw:freeze",
@@ -70,7 +71,8 @@
 "text": "ok"
 },
 "def_hash": "6f6a1a5d27b6f661",
-"status": "approved",
+"stale": "カード定義が見つからない",
+"status": "pending",
 "uses": [
 "core",
 "kw:freeze"
@@ -102,7 +104,8 @@
 "text": "ok"
 },
 "def_hash": "546d087defb5f3dd",
-"status": "approved",
+"stale": "カード定義が見つからない",
+"status": "pending",
 "uses": [
 "core",
 "kw:freeze",

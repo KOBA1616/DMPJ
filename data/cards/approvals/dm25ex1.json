@@ -23,7 +23,8 @@
 "text": "ok"
 },
 "def_hash": "9700dcc898404ac4",
-"status": "approved",
+"stale": "カード定義が見つからない",
+"status": "pending",
 "uses": [
 "core",
 "op:bounce",
@@ -99,8 +100,7 @@
 "text": "ok"
 },
 "def_hash": "fd1a4989bfb085ee",
-"stale": "目視照合で誤り: 「コストは0以下にならない」の下限(cost_min: 1)が無い",
-"status": "pending",
+"status": "approved",
 "uses": [
 "core",
 "kw:blocker",
@@ -151,7 +151,8 @@
 "text": "ok"
 },
 "def_hash": "986f594bbd6e0eb4",
-"status": "approved",
+"stale": "カード定義が見つからない",
+"status": "pending",
 "uses": [
 "core",
 "op:choose",

@@ -6,7 +6,8 @@
 "text": "ok"
 },
 "def_hash": "7908e8ceca5a92a2",
-"status": "approved",
+"stale": "カード定義が見つからない",
+"status": "pending",
 "uses": [
 "core",
 "kw:s_back_water",
@@ -23,7 +24,8 @@
 "text": "ok"
 },
 "def_hash": "97336a86585103ce",
-"status": "approved",
+"stale": "カード定義が見つからない",
+"status": "pending",
 "uses": [
 "core",
 "kw:s_back_darkness",
@@ -40,7 +42,8 @@
 "text": "ok"
 },
 "def_hash": "16f094df8b17bf48",
-"status": "approved",
+"stale": "定義が変わった",
+"status": "pending",
 "uses": [
 "core"
 ],

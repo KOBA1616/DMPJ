@@ -22,16 +22,17 @@
 "effect": "skip",
 "text": "ok"
 },
-"def_hash": "cb87a220d6fa5c97",
+"def_hash": "89e10236f4c66151",
 "status": "approved",
 "uses": [
 "core",
 "kw:eternal_omega",
-"kw:world_breaker"
+"kw:world_breaker",
+"op:modify"
 ],
 "verifier": 2,
 "verify": "43手・turn 30 まで正常に回った（result={'winner': 0, 'reason': 'deck_out', 'turn': 30}）",
-"vocab_ver": "1304c82e925d2d1e"
+"vocab_ver": "764cdbbffb766cf0"
 },
 "dmx13-022": {
 "by": "check",
@@ -40,7 +41,8 @@
 "text": "ok"
 },
 "def_hash": "bdb84dc950154e9a",
-"status": "approved",
+"stale": "カード定義が見つからない",
+"status": "pending",
 "uses": [
 "core",
 "op:draw"

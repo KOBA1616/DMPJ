@@ -24,7 +24,8 @@
 "text": "ok"
 },
 "def_hash": "faa6b5ea0c82a297",
-"status": "approved",
+"stale": "カード定義が見つからない",
+"status": "pending",
 "uses": [
 "core",
 "kw:s_trigger",

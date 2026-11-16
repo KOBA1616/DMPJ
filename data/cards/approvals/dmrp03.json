@@ -6,7 +6,8 @@
 "text": "ok"
 },
 "def_hash": "d88369dd0fa32512",
-"status": "approved",
+"stale": "カード定義が見つからない",
+"status": "pending",
 "uses": [
 "core",
 "op:discard",
@@ -23,8 +24,7 @@
 "text": "ok"
 },
 "def_hash": "12cd434c1671e150",
-"stale": "目視照合で誤り: 「コストは0以下にならない」の下限(cost_min: 1)が無い",
-"status": "pending",
+"status": "approved",
 "uses": [
 "core"
 ],
@@ -39,7 +39,8 @@
 "text": "ok"
 },
 "def_hash": "967f4d633c915109",
-"status": "approved",
+"stale": "カード定義が見つからない",
+"status": "pending",
 "uses": [
 "core",
 "op:move"

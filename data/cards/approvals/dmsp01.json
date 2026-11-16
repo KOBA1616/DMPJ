@@ -72,7 +72,8 @@
 "text": "ok"
 },
 "def_hash": "f82e7860c5a9e383",
-"status": "approved",
+"stale": "カード定義が見つからない",
+"status": "pending",
 "uses": [
 "core",
 "kw:s_trigger",
@@ -106,8 +107,7 @@
 "text": "ok"
 },
 "def_hash": "91225614cfb277bf",
-"stale": "目視照合で誤り: 「コストは0以下にならない」の下限(cost_min: 1)が無い",
-"status": "pending",
+"status": "approved",
 "uses": [
 "core"
 ],

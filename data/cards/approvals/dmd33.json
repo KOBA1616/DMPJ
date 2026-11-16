@@ -19,7 +19,8 @@
 "text": "ok"
 },
 "def_hash": "9e7e405192d99d74",
-"status": "approved",
+"stale": "カード定義が見つからない",
+"status": "pending",
 "uses": [
 "core",
 "op:move"

@@ -6,8 +6,7 @@
 "text": "ok"
 },
 "def_hash": "be94a87330ed6127",
-"stale": "目視照合で誤り: 「コストは0以下にならない」の下限(cost_min: 1)が無い",
-"status": "pending",
+"status": "approved",
 "uses": [
 "core"
 ],

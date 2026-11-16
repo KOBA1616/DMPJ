@@ -94,7 +94,8 @@
 "text": "ok"
 },
 "def_hash": "7677cd2a6d9cc6df",
-"status": "approved",
+"stale": "カード定義が見つからない",
+"status": "pending",
 "uses": [
 "core",
 "kw:s_trigger",
@@ -111,8 +112,7 @@
 "text": "ok"
 },
 "def_hash": "12adcbf978727458",
-"stale": "目視照合で誤り: 「コストは0以下にならない」の下限(cost_min: 1)が無い",
-"status": "pending",
+"status": "approved",
 "uses": [
 "core",
 "kw:blocker",
@@ -130,7 +130,8 @@
 "text": "ok"
 },
 "def_hash": "bd894a4561fc3dfb",
-"status": "approved",
+"stale": "カード定義が見つからない",
+"status": "pending",
 "uses": [
 "core",
 "op:draw",
@@ -268,7 +269,8 @@
 "text": "ok"
 },
 "def_hash": "42c0752ca7d87327",
-"status": "approved",
+"stale": "カード定義が見つからない",
+"status": "pending",
 "uses": [
 "core",
 "op:choose",
@@ -286,7 +288,8 @@
 "text": "ok"
 },
 "def_hash": "0b56cea3a76236ed",
-"status": "approved",
+"stale": "カード定義が見つからない",
+"status": "pending",
 "uses": [
 "core",
 "kw:s_trigger",
@@ -305,7 +308,8 @@
 "text": "ok"
 },
 "def_hash": "e28578b4293a0500",
-"status": "approved",
+"stale": "カード定義が見つからない",
+"status": "pending",
 "uses": [
 "core",
 "op:choose",
@@ -358,7 +362,8 @@
 "text": "ok"
 },
 "def_hash": "8ca944dd6588290f",
-"status": "approved",
+"stale": "カード定義が見つからない",
+"status": "pending",
 "uses": [
 "core",
 "op:choose",
@@ -384,7 +389,7 @@
 ],
 "verifier": 2,
 "verify_error": "キーワード triple_breaker(T・ブレイカー) が原文に無い",
-"vocab_ver": "e9175d7168b943c3"
+"vocab_ver": "6bb9b124384d71cd"
 },
 "dm24ex2-chog04": {
 "by": "rule",

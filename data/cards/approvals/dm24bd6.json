@@ -15,7 +15,7 @@
 ],
 "verifier": 2,
 "verify_error": "キーワード double_breaker(W・ブレイカー) が原文に無い",
-"vocab_ver": "da7ceed3748535ba"
+"vocab_ver": "cde3883ff4f38161"
 },
 "dm24bd6-022": {
 "by": "rule",
@@ -60,7 +60,8 @@
 "text": "ok"
 },
 "def_hash": "7dceba0d32eeceb4",
-"status": "approved",
+"stale": "カード定義が見つからない",
+"status": "pending",
 "uses": [
 "core",
 "kw:s_trigger",
@@ -94,7 +95,8 @@
 "text": "ok"
 },
 "def_hash": "700d91a65ea5f2a2",
-"status": "approved",
+"stale": "カード定義が見つからない",
+"status": "pending",
 "uses": [
 "core",
 "kw:g_strike",

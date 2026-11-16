@@ -145,15 +145,16 @@
 "effect": "skip",
 "text": "ok"
 },
-"def_hash": "fb72188f34444a25",
+"def_hash": "775cdb5b7f79cdf7",
 "status": "approved",
 "uses": [
 "core",
-"kw:double_breaker"
+"kw:double_breaker",
+"op:modify"
 ],
 "verifier": 2,
 "verify": "43手・turn 30 まで正常に回った（result={'winner': 0, 'reason': 'deck_out', 'turn': 30}）",
-"vocab_ver": "76ace1d9e2ba7e59"
+"vocab_ver": "cda70dd35098c394"
 },
 "dmc27-055": {
 "by": "check",
@@ -162,7 +163,8 @@
 "text": "ok"
 },
 "def_hash": "f84d688e80a8be1d",
-"status": "approved",
+"stale": "カード定義が見つからない",
+"status": "pending",
 "uses": [
 "core",
 "op:mana_put"

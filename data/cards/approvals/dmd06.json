@@ -6,7 +6,8 @@
 "text": "ok"
 },
 "def_hash": "8c8a17f725f16090",
-"status": "approved",
+"stale": "カード定義が見つからない",
+"status": "pending",
 "uses": [
 "core",
 "op:bounce",

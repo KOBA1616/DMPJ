@@ -20,7 +20,8 @@
 "text": "ok"
 },
 "def_hash": "d8d702da71435a24",
-"status": "approved",
+"stale": "カード定義が見つからない",
+"status": "pending",
 "uses": [
 "core",
 "kw:s_trigger",

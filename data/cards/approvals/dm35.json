@@ -84,7 +84,8 @@
 "text": "ok"
 },
 "def_hash": "681d520a3a573db5",
-"status": "approved",
+"stale": "カード定義が見つからない",
+"status": "pending",
 "uses": [
 "core",
 "kw:evo_charger",

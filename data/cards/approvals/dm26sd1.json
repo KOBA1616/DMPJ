@@ -95,7 +95,8 @@
 "text": "ok"
 },
 "def_hash": "74719192c9f97558",
-"status": "approved",
+"stale": "カード定義が見つからない",
+"status": "pending",
 "uses": [
 "core",
 "kw:s_trigger",
@@ -112,7 +113,8 @@
 "text": "ok"
 },
 "def_hash": "b0c0ff61dfe21ec5",
-"status": "approved",
+"stale": "カード定義が見つからない",
+"status": "pending",
 "uses": [
 "core",
 "op:discard",
@@ -129,7 +131,8 @@
 "text": "ok"
 },
 "def_hash": "b9ac1b859b6741fe",
-"status": "approved",
+"stale": "カード定義が見つからない",
+"status": "pending",
 "uses": [
 "core",
 "op:choose",
@@ -146,7 +149,8 @@
 "text": "ok"
 },
 "def_hash": "1b162e536d75ee27",
-"status": "approved",
+"stale": "カード定義が見つからない",
+"status": "pending",
 "uses": [
 "core",
 "op:draw",
@@ -163,7 +167,8 @@
 "text": "ok"
 },
 "def_hash": "586b5190f70a8d3d",
-"status": "approved",
+"stale": "カード定義が見つからない",
+"status": "pending",
 "uses": [
 "core",
 "kw:s_trigger",
@@ -180,7 +185,8 @@
 "text": "ok"
 },
 "def_hash": "7d54aec680a80374",
-"status": "approved",
+"stale": "カード定義が見つからない",
+"status": "pending",
 "uses": [
 "core",
 "kw:s_trigger",
@@ -198,7 +204,8 @@
 "text": "ok"
 },
 "def_hash": "1d08e37b55f08b46",
-"status": "approved",
+"stale": "カード定義が見つからない",
+"status": "pending",
 "uses": [
 "core",
 "kw:s_trigger_plus",
@@ -268,8 +275,7 @@
 "text": "ok"
 },
 "def_hash": "b0ad9f0213360352",
-"stale": "目視照合で誤り: 「コストは0以下にならない」の下限(cost_min: 1)が無い",
-"status": "pending",
+"status": "approved",
 "uses": [
 "core"
 ],
@@ -437,7 +443,8 @@
 "text": "ok"
 },
 "def_hash": "00f2677292d0172c",
-"status": "approved",
+"stale": "カード定義が見つからない",
+"status": "pending",
 "uses": [
 "core",
 "op:draw",
@@ -474,7 +481,8 @@
 "text": "ok"
 },
 "def_hash": "a2343b642f3ed459",
-"status": "approved",
+"stale": "カード定義が見つからない",
+"status": "pending",
 "uses": [
 "core",
 "kw:s_trigger",
@@ -578,8 +586,7 @@
 "text": "ok"
 },
 "def_hash": "80d03cae02da39d8",
-"stale": "目視照合で誤り: 「コストは0以下にならない」の下限(cost_min: 1)が無い",
-"status": "pending",
+"status": "approved",
 "uses": [
 "core"
 ],
@@ -672,7 +679,8 @@
 "text": "ok"
 },
 "def_hash": "f3a58eb71d61d379",
-"status": "approved",
+"stale": "カード定義が見つからない",
+"status": "pending",
 "uses": [
 "core",
 "op:choose",

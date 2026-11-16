@@ -21,7 +21,8 @@
 "text": "ok"
 },
 "def_hash": "3d79f5a5235c3006",
-"status": "approved",
+"stale": "カード定義が見つからない",
+"status": "pending",
 "uses": [
 "core",
 "kw:s_trigger",
@@ -39,7 +40,8 @@
 "text": "ok"
 },
 "def_hash": "9251207d32f05b82",
-"status": "approved",
+"stale": "カード定義が見つからない",
+"status": "pending",
 "uses": [
 "core",
 "kw:s_trigger",
@@ -156,8 +158,7 @@
 "text": "ok"
 },
 "def_hash": "2cc7f557550d047c",
-"stale": "目視照合で誤り: 「コストは0以下にならない」の下限(cost_min: 1)が無い",
-"status": "pending",
+"status": "approved",
 "uses": [
 "core"
 ],
@@ -223,7 +224,8 @@
 "text": "ok"
 },
 "def_hash": "e2fe406e80b340c2",
-"status": "approved",
+"stale": "カード定義が見つからない",
+"status": "pending",
 "uses": [
 "core",
 "op:choose",
@@ -240,7 +242,8 @@
 "text": "ok"
 },
 "def_hash": "93163ca9b698b7bb",
-"status": "approved",
+"stale": "カード定義が見つからない",
+"status": "pending",
 "uses": [
 "core",
 "kw:s_trigger",
@@ -276,7 +279,8 @@
 "text": "ok"
 },
 "def_hash": "75c98185ee13b0ab",
-"status": "approved",
+"stale": "カード定義が見つからない",
+"status": "pending",
 "uses": [
 "core",
 "op:draw",
