@@ -29,3 +29,13 @@ PC のワーカーとは別に、git を使えるクラウドのエージェン�
 - クラウド専用: `python tools/local_worker.py enqueue convert --limit 100 --target cloud --order newest`
 - PC は古い順（`--order id`）、クラウドは新しい順にすると被らない。
 - 1回の呼び出しでまとめて変換する: ジョブに `pack: 5`（`auto_convert.py --pack 5`）。指示文を共有してトークンを減らす。検査に落ちた分は単独で直す。
+
+## 診断（コンボの失敗局の分類）を外のエージェントに回させる
+llm-jobs は使わない。既存の外のエージェントに、次の指示文をそのまま渡す（モデルは呼ばない。スクリプトを回すだけ）。
+```
+リポジトリ KOBA1616/DMPJ（非公開）を clone し、次を実行して、diag.md の中身をそのまま報告して。
+  pip install pyyaml
+  python tools/diagnose_run.py saga --deck data/decks/saga_user_v1.yaml --games 40 --jobs 4 --parts parts --out diag.md
+- 実行時間の上限で途中で切れたら、同じコマンドをもう一度実行する（parts に終わった局が残り、続きから回る）。
+- コードや設定は変えない。エラーが出たらそのまま報告する。
+```
