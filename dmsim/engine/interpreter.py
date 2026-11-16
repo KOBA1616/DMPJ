@@ -12,6 +12,8 @@ class InterpreterMixin:
 
     def _defer(self, t, children):
         """t の次の op を children が終わった後に回す。書かれた順に解決する（605.2c）。"""
+        if not children:
+            return   # 後に回すものが無い: h_effect がそのまま次の op へ進める（ここで pc を進めると次の op をとばしてしまう）
         t["pc"] += 1
         t["os"] = {}
         self._push(*children)
