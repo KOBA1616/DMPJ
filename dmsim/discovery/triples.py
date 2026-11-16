@@ -586,7 +586,7 @@ def peaky(rules, ids) -> list[str]:
     return out
 
 
-def triangle_sets(rules, by_card, ids, seeds: list[str], log=None) -> list[list[str]]:
+def triangle_sets(rules, by_card, ids, seeds: list[str], log=None, anchors: list[str] | None = None, need: dict | None = None) -> list[list[str]]:
     """a → b → c → a（3枚とも seeds の札）と束が狙って受け渡す（zone_graph.feeds == 2）3枚の組。2枚では閉じない3枚の閉路の候補。
     受け渡しは束の前提を見るだけの過大近似で、組ごとに judge_set（3枚の静的判定）を通す。"""
     from ..engine import zone_graph as Z
@@ -602,16 +602,18 @@ def triangle_sets(rules, by_card, ids, seeds: list[str], log=None) -> list[list[
         return succ_cache[x]
 
     out = set()
-    for n, a in enumerate(seeds):
+    first = anchors if anchors is not None else seeds    # anchors: 1枚目をこの札に限る（3枚のうち少なくとも1枚がこれ）
+    for n, a in enumerate(first):
         sa = succ(a)
         mine = by_card.get(rules.cards[a].id, [])
         pred = {y for _, y, b in allb if y != a and any(Z.feeds(b, m, rules) == 2 for m in mine)}
+        nd = (need or {}).get(a)     # need[a]: 残り2枚のどちらかがこの集合の札であること（重い札とそれを出す札）
         for b in sa:
             for c in succ(b) & pred:
-                if c != b:
+                if c != b and (nd is None or b in nd or c in nd):
                     out.add(tuple(sorted((a, b, c))))
         if log and n % 50 == 0:
-            log(f"  三角 {n}/{len(seeds)} 組 {len(out)} {time.time()-t0:.0f}s")
+            log(f"  三角 {n}/{len(first)} 組 {len(out)} {time.time()-t0:.0f}s")
     return [list(x) for x in sorted(out)]
 
 
@@ -725,3 +727,107 @@ def collect_cheap(rules, by_card, *, max_cost: int = 4, max_turn: int = 4, log=N
         out.append(Base(cards=cs, names=[rules.cards[x].name for x in cs], gains=_gains(c), has_win=r is None,
                         unknown=getattr(c, "unknown", 0), turn=t, layout=lay, grave=grave))
     return out, drop
+
+
+# ---- 早く出せる重い札（指揮役 2026-11-16）: 印刷コストではなく「実際に出せる早さ」で範囲を広げる ----
+SELF_FAST = ("free_if", "alt_cost", "mana_bakutan", "fushigi", "mugen_climb", "cost_reduce_per_evo", "tap_reduce")
+
+
+def _self_fast(d, max_cost: int) -> str | None:
+    """重い札 d が自分の能力で早く出る経路の名前（G・ゼロ、代替コスト、マナ爆誕、フシギバース、ムゲンクライム、軽減）。無ければ None。"""
+    from ..eval import speed_bound as S
+    for f in S._faces(d):
+        for k in SELF_FAST:
+            v = getattr(f, k, None)
+            if not v:
+                continue
+            if k == "mana_bakutan" and not (isinstance(v, int) and v <= max_cost):
+                continue
+            if k in ("alt_cost", "mugen_climb", "fushigi") and isinstance(v, dict) and isinstance(v.get("cost"), int) and v["cost"] > max_cost:
+                continue
+            return k
+    return None
+
+
+def fast_heavy_pairs(rules, by_card, ids, *, min_cost: int = 5, max_cost: int = 4) -> dict:
+    """{"self": {H: 経路}, "pairs": [(H, E, 経路)]}。H は印刷コスト min_cost 以上で束を持つ札。
+    self: H 自身の能力で max_cost 以下の負担で出せる。pairs: コスト max_cost 以下の札 E の効果（play_free、
+    手札・墓地・山札・マナ・盾から場への move）のフィルタが H を通す（cost_le などで H を弾かない）。名前は見ない。"""
+    from ..eval import speed_bound as S
+    cards = rules.cards
+    heavy = [i for i in ids if isinstance(cards[i].cost, int) and cards[i].cost >= min_cost and by_card.get(cards[i].id)]
+    cheap = [i for i in ids if isinstance(cards[i].cost, int) and cards[i].cost <= max_cost]
+    self_ = {h: r for h in heavy for r in [_self_fast(cards[h], max_cost)] if r}
+    pairs = []
+    for e in cheap:
+        for op in S._ops(cards[e]):
+            sel = op.get("select") or {}
+            if not (sel.get("zone") in S.PUT_FROM and sel.get("owner", "you") in ("you", "self")):
+                continue
+            if not (op.get("op") == "play_free" or (op.get("op") == "move" and op.get("to") == "bz")):
+                continue
+            flt = sel.get("filter") or {}
+            if not flt:
+                continue        # 無条件で何でも出す札は組が爆発する。フィルタを持つ札だけ（狙って重い札を出す）
+            route = f"{op.get('op')}:{sel.get('zone')}"
+            for h in heavy:
+                if h != e and S._admits(flt, cards[h]):
+                    pairs.append((h, e, route))
+    return {"self": self_, "pairs": sorted(set(pairs))}
+
+
+def collect_fast_heavy(rules, by_card, *, max_cost: int = 4, max_turn: int = 6, per_heavy: int = 15, log=None) -> tuple[list[Base], Counter]:
+    """(4) 早く出せる重い札を含む3枚の部品。重い札 H（印刷コスト max_cost+1 以上）が、自分の能力（G・ゼロ等）で早く出るか、
+    組の中の安い札 E の効果で出される組だけを残す。種は安い種（cheap_seeds）と、早く出せる重い札・それを出す札。
+    上限ターンは max_turn まで残す（5〜6ターンは捨てずに値つきで記録する方針）。読めない経路の組（turn None）も残す。"""
+    from ..eval import speed_bound as S
+    ids, _ = F.usable_ids(rules)
+    fp = fast_heavy_pairs(rules, by_card, ids, min_cost=max_cost + 1, max_cost=max_cost)
+    by_h: dict[str, set] = {}
+    for h, e, _r in fp["pairs"]:
+        by_h.setdefault(h, set()).add(e)
+    heavy = sorted(set(fp["self"]) | set(cheap_seeds(rules, by_card, sorted(by_h), max_cost=99)))
+    enab = sorted({e for es in by_h.values() for e in es})
+    # 残り2枚は安い種と出す札から選ぶ（重い札は1組に1枚。重い札どうしを組ませると束の過大近似で数百万組になる、2026-11-16 実測）
+    seeds = sorted(set(cheap_seeds(rules, by_card, ids, max_cost)) | set(enab))
+    need = {h: by_h.get(h, set()) for h in heavy if h not in fp["self"]}
+    sets = triangle_sets(rules, by_card, ids, seeds, log=log, anchors=heavy, need=need)
+    if log:
+        log(f"(4) 重い札の三角 {len(sets)}（重い種 {len(heavy)}・出す札 {len(enab)}・種 {len(seeds)}）")
+    out, drop = [], Counter()
+    for cs in sets:
+        fast = [h for h in cs if h in fp["self"] or by_h.get(h, set()) & set(cs)]
+        slow_heavy = [h for h in cs if isinstance(rules.cards[h].cost, int) and rules.cards[h].cost > max_cost and h not in fast]
+        if not fast or slow_heavy:
+            drop["heavy_not_fast"] += 1
+            continue
+        r, cyc = F.judge_set(cs, by_card, rules)     # 静的判定が安いので先に（1組 0.4ms）
+        if r not in (None, "no_win") or not cyc:
+            drop[r] += 1
+            continue
+        t = S.static_bound(rules, cs)["turn"]
+        if t is not None and t > max_turn:
+            drop["slow"] += 1
+            continue
+        c = cyc[0]
+        lay, grave = layout_of(c, cs, rules)
+        out.append(Base(cards=cs, names=[rules.cards[x].name for x in cs], gains=_gains(c), has_win=r is None,
+                        unknown=getattr(c, "unknown", 0), turn=t, layout=lay, grave=grave))
+    return cap_per_heavy(rules, out, max_cost, per_heavy, drop), drop
+
+
+def cap_per_heavy(rules, bases: list, max_cost: int, per_heavy: int, drop: Counter | None = None) -> list:
+    """同じ重い札の組は per_heavy 組まで（勝ち手段を含む組、上限ターンが早い組を先に）。一部の札が数千組を占めるのを防ぐ（2026-11-16: 6万組中上位5枚で7千組）。"""
+    if not per_heavy:
+        return bases
+    key = lambda b: (not b.has_win, b.turn if b.turn is not None else 4.5, b.cards)   # noqa: E731  読めない経路（None）は4と5の間
+    n, out = Counter(), []
+    for b in sorted(bases, key=key):
+        h = next((x for x in b.cards if isinstance(rules.cards[x].cost, int) and rules.cards[x].cost > max_cost), None)
+        if n[h] >= per_heavy:
+            if drop is not None:
+                drop["per_heavy"] += 1
+            continue
+        n[h] += 1
+        out.append(b)
+    return out
