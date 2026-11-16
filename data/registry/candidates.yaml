@@ -50,6 +50,7 @@ candidates:
       broken: {"diff": 0.05, "ci95": [-0.0705, 0.1705], "better": 2, "worse": 1}
       board: {"diff": 0.075, "ci95": [-0.1157, 0.2657], "better": 6, "worse": 3}
     win: opp_deck_out
+    speed: {measured_bound_best_turn: 5, note: "speed_bound.measured_bound（2026-11-15）。入口に届く最速は5T。遅い組として値つきで残す"}
     entry: data/loops/entry/akashic_v1.json   # 旧い入口（誤った定義、§23）。段2が直ったら新しい入口へ
     core:
       - {id: dm23ex2-009, name: 完全水中要塞 アカシック3, role: エンジン（呪文の無償詠唱）}
@@ -61,6 +62,7 @@ candidates:
     split: discovered
     types: [loop]
     win: opp_deck_out
+    speed: {measured_bound_best_turn: 5, note: "speed_bound.measured_bound（2026-11-15）。入口に届く最速は5T"}
     entry: data/loops/entry/akashic_hd2_v1.json   # 旧い入口（誤った定義、§23）。段2が直ったら新しい入口へ
     core:
       - {id: dm23ex2-009, name: 完全水中要塞 アカシック3, role: エンジン（呪文の無償詠唱）}

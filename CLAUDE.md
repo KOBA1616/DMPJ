@@ -11,3 +11,4 @@
   - 投入したスレッドが `send_later`（5〜6分後）で `jobs/done/<id>.yaml` を読む。まず先頭の `summary:` だけ見る。
   - `status: escalate` / `error` は Claude が代わりに処理するか、原因を直す。
   - `pr: <番号>` を付けると結果を PR コメントにも投稿するが、任意機能（PC に gh が要る）。koba に gh の設定は頼まない。
+- Rust エンジン（既定で有効、`DMSIM_RUST=0` で無効）: `dmsim/engine` のエンジンのファイルを変えたら、dmcore を作り直して `tests/test_rust_*.py` を通し、`python tools/rust_stamp.py` で記録し直す。記録が古い間は自動で Python だけで動く（Rust の無い環境で直した変更でも結果はずれない）。

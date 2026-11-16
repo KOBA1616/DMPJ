@@ -28,7 +28,7 @@ def _base_from(d):
 
 def main():
     ap = argparse.ArgumentParser()
-    ap.add_argument("cmd", choices=["collect", "collect3", "attach", "measure", "trial"])
+    ap.add_argument("cmd", choices=["collect", "collect3", "collect_cheap", "attach", "measure", "trial"])
     ap.add_argument("--out", required=True)
     ap.add_argument("--bases")
     ap.add_argument("--triples")
@@ -61,6 +61,11 @@ def main():
         out = {"bases": [{**b.__dict__, "gains": {f"{o}:{z}": v for (o, z), v in b.gains.items()}} for b in bases],
                "drop": dict(drop), "seconds": round(time.time() - t0)}
         log(f"(3) 部品 {len(bases)} 落ち {dict(drop)}")
+    elif a.cmd == "collect_cheap":
+        bases, drop = X.collect_cheap(rules, by, max_turn=a.max_turn if a.max_turn != 5 else 4, log=log)
+        out = {"bases": [{**b.__dict__, "gains": {f"{o}:{z}": v for (o, z), v in b.gains.items()}} for b in bases],
+               "drop": dict(drop), "seconds": round(time.time() - t0)}
+        log(f"(2) 部品 {len(bases)} 落ち {dict(drop)}")
     elif a.cmd == "attach":
         bases = [_base_from(d) for d in json.loads(Path(a.bases).read_text(encoding="utf-8"))["bases"]]
         tr = X.attach(rules, by, bases, per_base=a.per_base, log=log)
