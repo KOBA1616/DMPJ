@@ -8,6 +8,7 @@ dm25ex3-rp4s05「K」-9+9+9 の同型条項（need: must_be_attacked_first_only�
 同じ形で解けるが、enter_effects_ignored が残るため今回は対象外。
 """
 import yaml
+import _conv_cache  # noqa: E402
 from pathlib import Path
 
 from dmsim.cards.defs import load_tables, parse_card
@@ -19,7 +20,7 @@ TAUNT = {"kind": "static", "affects": "self", "mod": {"must_be_attacked": {"firs
 
 
 def test_m001_registered():
-    data = yaml.safe_load(CONVERTED.read_text(encoding="utf-8"))
+    data = {"cards": _conv_cache.all_cards(CONVERTED)}
     card = next(c for c in data["cards"] if c["id"] == "dm26sd1-m001")
     assert not (card.get("source") or {}).get("unsupported"), "unsupported が残る"
     assert TAUNT in (card.get("abilities") or []), "first_only 誘引の常在型が登録形と違う"

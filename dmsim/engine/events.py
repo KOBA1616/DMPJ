@@ -195,6 +195,8 @@ class EventMixin:
                 rec["by"] = ev["by"]
             if ev.get("stack_on"):   # 進化として重ねて出た（シンカパワーの照合用）
                 rec["stacked"] = True
+            if ev.get("no_trigger"):   # この移動で出たカード自身の出た時能力は誘発しない（第213弾）
+                rec["no_trigger"] = True
             if ev.get("alt"):        # 代替コストで実行された（「そうしたら」の照合用）
                 rec["alt"] = True
             if ev.get("vivid"):      # ビビッドローで実行された（第54弾。「ビビッドローを使って召喚した時」の照合用）
@@ -236,6 +238,13 @@ class EventMixin:
         self.s.turn_counters[k] = v
         return v
 
+    def _hist_bump_from(self, kind: str, frm: str | None, player: int, n: int = 1) -> None:
+        """from 修飾つき履歴カウンタ（第214弾。式 {turn_count: {kind, from: <zone>}} の読み先。
+        「山札からシールドゾーンに加えた」のように、移動元ゾーンで絞る条件のために
+        通常カウンタと並べて hist:<kind>_from_<zone>:<player> にも集約する。"""
+        if frm:
+            self._hist_bump(f"{kind}_from_{frm}", player, n)
+
     def _used_snapshot(self, cid: int) -> dict:
         """「使った」履歴に残す印刷特性のスナップショット（カードはその後ゾーンを移るため値で持つ）。"""
         d = self.fdef(cid)
@@ -258,15 +267,18 @@ class EventMixin:
                 frm, to = rec.get("from"), rec.get("to")
                 if to == "shield":
                     self._hist_bump("shield_put", rec["controller"])
+                    self._hist_bump_from("shield_put", frm, rec["controller"])
                 if frm == "shield" and to != "shield" and not rec.get("host"):
                     # 束の下のカードは host 付き（第169弾）。シールドの数は束で1つなので、
                     # 下のカードの分は数えない（トップのレコードで1回だけ数える）
                     self._hist_bump("shield_left", ctrl)
                 if to == "mana":
                     n = self._hist_bump("mana_put", rec["controller"])
+                    self._hist_bump_from("mana_put", frm, rec["controller"])
                     rec.setdefault("ord", {})["mana_put"] = n
                 if to == "bz":
                     n = self._hist_bump("enter", rec["controller"])
+                    self._hist_bump_from("enter", frm, rec["controller"])
                     rec.setdefault("ord", {})["enter"] = n
                     if rec.get("unpaid"):
                         self._hist_bump("enter_unpaid", rec["controller"])
@@ -280,6 +292,7 @@ class EventMixin:
                             self._hist_bump("destroyed", ctrl)
                 if to == "graveyard" and rec.get("reason") == "discard":
                     self._hist_bump("discard", ctrl)
+                    self._hist_bump_from("discard", frm, ctrl)
             elif ev == "summon":
                 n = self._hist_bump("summon", rec["controller"])
                 rec.setdefault("ord", {})["summon"] = n
@@ -501,6 +514,8 @@ class EventMixin:
                 out[0]["unpaid"] = True
             if ev.get("stack_on"):   # 進化として重ねて出た（「進化して出た時」の照合用。第150弾で収集レコードへの伝播を追加。シールドの束は shield_stack キーで別）
                 out[0]["stacked"] = True
+            if ev.get("no_trigger"):   # この移動で出たカード自身の出た時能力は誘発しない（第213弾）
+                out[0]["no_trigger"] = True
             if ev.get("cause"):
                 out[0]["cause"] = ev["cause"]
             if ev.get("cause_defn"):   # 効果帰属（基盤B1）: 収集レコードにも発生源の defn 名と種別を載せる
@@ -876,6 +891,10 @@ class EventMixin:
             linked = lki.get("exlife_of") if lki is not None else self.s.cards[cid].exlife_of
             if linked is None or not any(list(r) == list(linked) for r in refs if r):
                 return False
+        if "zone" in pat:   # subject のいるゾーン（第212弾追加: 「自分のマナゾーンのカードをタップした時」等）。離れた時は lki のゾーンで見る
+            z = lki["zone"] if lki else self.s.cards[cid].zone
+            if z != pat["zone"]:
+                return False
         ctrl = lki["controller"] if lki else self.s.cards[cid].controller
         if "owner" in pat and pat["owner"] != "any" and ctrl != self._rel(pat["owner"], env):
             return False
@@ -1045,6 +1064,41 @@ class EventMixin:
             r = self._xcache[k] = any(ab["kind"] == "trigger" for f in fs for ab in f.abilities)
         return r
 
+    def _static_suppressed(self, ctrl, rec):
+        """第213弾: 相手のバトルゾーンの常在型 suppress_triggers がこの誘発を抑えるか。
+        対象は「ctrl のクリーチャーが出た（move で bz へ）／攻撃した（attack）」出来事で
+        誘発する ctrl 側の能力すべて（出た本人の能力に限らない。カードの例示どおり）。"""
+        s = self.s
+        if rec["ev"] == "move" and rec.get("to") == "bz":
+            cls = "enter"
+        elif rec["ev"] == "attack":
+            cls = "attack"
+        else:
+            return False
+        subj = rec.get("subject")
+        if not subj or s.cards[subj[0]].controller != ctrl:
+            return False
+        st_defns = getattr(self, "_st_defns", None)
+        if st_defns is None:
+            st_defns = self._st_defns = {dn for dn, cd in self.rules.cards.items()
+                                         if any(ab.get("suppress_triggers") for f in (cd.faces or [cd])
+                                                for ab in f.abilities if ab.get("kind") == "static")}
+        if not st_defns:
+            return False
+        opp = 1 - ctrl
+        for src in self.bz_tops():
+            sc = s.cards[src]
+            if sc.controller != opp or sc.defn not in st_defns:
+                continue
+            for _, ab in self.abilities(src, "static"):
+                st = ab.get("suppress_triggers")
+                if not st or cls not in st["events"]:
+                    continue
+                if "if" in st and not self.eval_cond(st["if"], {"you": opp, "self": s.ref(src), "event": rec, "vars": {}}):
+                    continue
+                return True
+        return False
+
     def _collect_triggers(self, rec):
         """誘発チェック。離れた時の誘発で過去の状態を見るのは、その能力を持つカード自身だけ（603.5d）。"""
         s = self.s
@@ -1107,6 +1161,10 @@ class EventMixin:
                     sref = s.ref(self.link_rep(src))
                 if "if" in ab and not lsrc and not self.eval_cond(ab["if"], {"you": ctrl, "self": sref, "event": rec, "vars": {}}):
                     continue          # 誘発条件つき（「〜場合」）の能力は、誘発時にも条件を見る（603.4）。離れた時の誘発は解決時だけ
+                if rec.get("no_trigger") and lsrc is None and src == rec["subject"][0]:
+                    continue          # この移動で出たカード自身の能力は誘発しない（第213弾。move の no_trigger）
+                if self._static_suppressed(ctrl, rec):
+                    continue          # 相手の常在型 suppress_triggers に抑えられた（第213弾）
                 if ab.get("once_per_turn"):   # 「各ターンに一度」: このカード（オブジェクト）のこの能力は1ターンに1回だけ誘発する
                     key = f"once:{sref[0]}:{sref[1]}:{ab_face if ab_face is not None else ''}:{i}"
                     if s.turn_counters.get(key):

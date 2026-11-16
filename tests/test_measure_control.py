@@ -15,6 +15,10 @@ sys.path.insert(0, str(ROOT / "tools"))
 
 from dmsim.eval.reach import cards_ceiling, reach_prob  # noqa: E402
 
+# 測定器の陽性対照は実ゲームのシミュレーションで、fixture だけで10分を超える。
+# 通常の全体テストからは外し、-m "slow or not slow" で明示的に走らせる。
+pytestmark = pytest.mark.slow
+
 
 def test_reach_prob_matches_enumeration():
     deck = ["A", "A", "B", "X", "X", "X"]

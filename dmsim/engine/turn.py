@@ -453,7 +453,11 @@ class TurnMixin:
     def _mana_choices(self, cid, p, face=None, cost: int | None = None, limit: int = 32, civs=None) -> list[list[int]]:
         """支払いに使うマナの組（112.2a）。文明は1文明につき別々の1枚で満たし、マナの数値の合計がコストに一致。
         cost: 実行時に確定したコスト（進化元数の軽減など）。指定なければカード定義のコスト。
-        civs: 必要な文明の上書き（代替コスト用）。"""
+        civs: 必要な文明の上書き（代替コスト用）。
+
+        マナの数字（第212弾）: 基本値は定義の mana（裏向きは水晶ソウルで置換）。常在型の mod mana_number が
+        「Nにする」を置換し、出すカードの面 mana_boost（必須形）は置換、任意形とバトルゾーンの常在型
+        mana_boost は「その値でもよい」の選択肢を足す。任意形があるカードは値の組ごとに分けて数える。"""
         d = self.cdef(cid).face(face)
         eff = d.cost if cost is None else cost
         ch = self.chars(cid, face)
@@ -462,48 +466,105 @@ class TurnMixin:
             return [[]]
         cs = ch.get("crystal_soul", 0)   # 水晶ソウル（第154弾）: このカードの支払いでは裏向きマナの数字が cs になる（置換。文明は得ない）
         untapped = [c for c in self.zlist("mana", p) if c != cid and not self.s.cards[c].tapped]   # 実行するカード自身は支払いに使えない（第191弾: マナゾーンから出す時、自分をタップして払えてしまっていた）
-        if len(untapped) < len(d.civs) or sum(cs if (cs and self.s.cards[c].face_down) else self.cdef(c).mana for c in untapped) < eff:
+        # --- 第212弾: ブーストの発生源を集める ---
+        fb = getattr(d, "mana_boost", None)   # 出すカード自身の宣言（この支払いだけ）
+        mb_defns = getattr(self, "_mb_defns", None)
+        if mb_defns is None:
+            mb_defns = self._mb_defns = {dn for dn, cd in self.rules.cards.items()
+                                         if any(ab.get("mana_boost") for f in (cd.faces or [cd])
+                                                for ab in f.abilities if ab.get("kind") == "static")}
+        statics = []   # 支払う側のバトルゾーンにある常在型ブースト（任意形）
+        for src in self.s.zones["bz"][0]:
+            sc = self.s.cards[src]
+            if sc.controller != p or sc.top_of >= 0 or sc.defn not in mb_defns:
+                continue
+            for _, ab in self.abilities(src, "static"):
+                mb = ab.get("mana_boost")
+                if not mb:
+                    continue
+                if mb.get("scope") == "spell" and "spell" not in d.types:
+                    continue
+                if "if" in mb and not self.eval_cond(mb["if"], {"you": p, "self": self.s.ref(src)}):
+                    continue
+                statics.append(mb)
+
+        def values_of(c):
+            """この支払いでのマナカード c の（基本値, 任意で選べる追加の値）。"""
+            card = self.s.cards[c]
+            v = cs if (cs and card.face_down) else self.rules.cards[card.defn].mana
+            mn = self.chars_ro(c).get("mana_number", 0)
+            if mn:
+                v = mn
+            opts = set()
+            if fb is not None and (not fb.get("filter") or self.filter_match(c, fb["filter"])):
+                if fb.get("optional"):
+                    opts.add(fb["value"])
+                elif fb["value"] > v:
+                    v = fb["value"]
+            for mb in statics:
+                if not mb.get("filter") or self.filter_match(c, mb["filter"]):
+                    opts.update(mb.get("values") or [mb["value"]])
+            opts.discard(v)
+            return v, tuple(sorted(opts))
+
+        vals = {c: values_of(c) for c in untapped}
+        if len(untapped) < len(d.civs) or sum(max([v] + list(o)) for v, o in vals.values()) < eff:
             return []
-        groups: dict = {}
+        pools: list[dict] = []   # 同じ（定義・裏表・文明・値の組）のマナカードの山。値の選択肢ごとにクラスを分ける
+        pindex: dict = {}
         for c in untapped:   # 裏向きマナは無色として別グループに分ける（水晶武装）。文明は特性（chars）で見る: 「マナゾーンにあるカードをすべての文明として扱う」等が効く（第123弾）
             civkey = () if self.s.cards[c].face_down else tuple(sorted(self.chars_ro(c)["civs"]))
-            groups.setdefault((self.s.cards[c].defn, self.s.cards[c].face_down, civkey), []).append(c)
-        names = sorted(groups)
+            v, opts = vals[c]
+            key = (self.s.cards[c].defn, self.s.cards[c].face_down, civkey, v, opts)
+            pi = pindex.get(key)
+            if pi is None:
+                pi = pindex[key] = len(pools)
+                pools.append({"cards": [], "civset": set(civkey), "values": (v,) + opts})
+            pools[pi]["cards"].append(c)
         need = list(civs) if civs is not None else list(d.civs)
-        mana = [cs if (cs and n[1]) else self.rules.cards[n[0]].mana for n in names]   # n[1] はグループの face_down: 裏向きグループだけ水晶ソウル値に差し替える
+        classes = [(pi, v) for pi, pool in enumerate(pools) for v in pool["values"]]
         out: list[list[int]] = []
 
-        def civ_ok(cnt):
-            civsets = [set(n[2]) for n, k in zip(names, cnt) for _ in range(k)]
+        def civ_ok(used):
+            civsets = [pools[pi]["civset"] for pi, k in enumerate(used) for _ in range(k)]
             return any(all(need[j] in civsets[perm[j]] for j in range(len(need)))
                        for perm in itertools.permutations(range(len(civsets)), len(need)))
 
-        def dfs(i, cnt, total, zeros):
+        def build(used):
+            return [c for pi, k in enumerate(used) for c in pools[pi]["cards"][:k]]
+
+        def dfs(i, used, total, zeros):
             if len(out) >= limit:
                 return
-            if i == len(names):
-                if total == eff and civ_ok(cnt):
-                    out.append([c for n, k in zip(names, cnt) for c in groups[n][:k]])
+            if i == len(classes):
+                if total == eff and civ_ok(used):
+                    out.append(build(used))
                 return
-            cap = len(groups[names[i]])
-            for k in range(min(cap, (eff - total) // mana[i] if mana[i] else len(need) - zeros), -1, -1):
-                dfs(i + 1, cnt + [k], total + k * mana[i], zeros + (0 if mana[i] else k))
+            pi, val = classes[i]
+            room = len(pools[pi]["cards"]) - used[pi]
+            cap = min(room, len(need) - zeros) if val == 0 else min(room, (eff - total) // val)
+            for k in range(cap, -1, -1):
+                used[pi] += k
+                dfs(i + 1, used, total + k * val, zeros + (k if val == 0 else 0))
+                used[pi] -= k
 
-        def floor_dfs(i, cnt, left):
+        def floor_dfs(i, used, left):
             """112.2b: コストが文明の数を下回ったら文明の支払いを優先する（マナの数値の合計は問わない）。"""
             if len(out) >= limit:
                 return
-            if i == len(names):
-                if left == 0 and civ_ok(cnt):
-                    out.append([c for n, k in zip(names, cnt) for c in groups[n][:k]])
+            if i == len(pools):
+                if left == 0 and civ_ok(used):
+                    out.append(build(used))
                 return
-            for k in range(min(len(groups[names[i]]), left), -1, -1):
-                floor_dfs(i + 1, cnt + [k], left - k)
+            for k in range(min(len(pools[i]["cards"]), left), -1, -1):
+                used[i] += k
+                floor_dfs(i + 1, used, left - k)
+                used[i] -= k
 
         if eff < len(need):
-            floor_dfs(0, [], len(need))
+            floor_dfs(0, [0] * len(pools), len(need))
         else:
-            dfs(0, [], 0, 0)
+            dfs(0, [0] * len(pools), 0, 0)
         return out
 
     def play_task(self, cid, p, free, face=None, st=False) -> dict:

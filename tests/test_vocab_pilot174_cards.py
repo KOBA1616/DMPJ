@@ -8,6 +8,7 @@
   dm25ex3-rp4dm1（ddd_conditional_grant）、dm26rp2-dm001（final_revolution_game_used）
 """
 import json
+import _conv_cache  # noqa: E402
 from pathlib import Path
 
 import yaml
@@ -27,9 +28,7 @@ BOUNCED = {"dm24ex2-dm02": ["hyperdimensional_zone"],
 
 
 def _converted():
-    d = yaml.safe_load((ROOT / "data" / "cards" / "converted.yaml").read_text(encoding="utf-8"))
-    cards = d.get("cards") if isinstance(d, dict) else d
-    return {c["id"]: c for c in cards}
+    return {c["id"]: c for c in _conv_cache.all_cards(ROOT / "data/cards/converted.yaml")}
 
 
 def _rejects():

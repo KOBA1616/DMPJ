@@ -6,6 +6,7 @@
 （dmrp07-012 は cost_reduction_enters_tapped との複合で残る）。
 """
 import copy
+import _conv_cache  # noqa: E402
 import json
 from pathlib import Path
 
@@ -190,7 +191,7 @@ def test_build_forms_parse():
 
 
 def test_registered_forms():
-    conv = {c["id"]: c for c in yaml.safe_load(open(ROOT / "data/cards/converted.yaml"))["cards"]}
+    conv = {c["id"]: c for c in _conv_cache.all_cards(ROOT / "data/cards/converted.yaml")}
     for cid in TARGETS:
         assert cid in conv, cid
     # 形の要点だけ確認する（詳細な挙動は test_vocab_pilot171.py の proto で検証済み）

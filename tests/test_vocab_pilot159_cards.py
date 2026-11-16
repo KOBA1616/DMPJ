@@ -24,6 +24,7 @@ first_attack_of_turn を外したもの（submit が split のキーワード等
   攻撃側の通し番号で条件づけられないため、エンジン拡張が別途要る。
 """
 import copy
+import _conv_cache  # noqa: E402
 import json
 from pathlib import Path
 
@@ -162,7 +163,7 @@ def _added(cid):
 
 
 def test_all_targets_registered():
-    data = yaml.safe_load(CONVERTED.read_text(encoding="utf-8"))
+    data = {"cards": _conv_cache.all_cards(CONVERTED)}
     registered = {c["id"]: c for c in data["cards"] if c["id"] in CASES or c["id"] == "dmrp03-s06"}
     expect = set(CASES) | {"dmrp03-s06"}
     assert set(registered) == expect, f"converted に無い対象: {expect - set(registered)}"
@@ -183,7 +184,7 @@ def test_m001_registered_in_round196():
     """dm26sd1-m001 は第160弾（must_be_attacked の first_only 形）で解け、ラウンド196で登録された。"""
     rows = [json.loads(line) for line in open(REJECTS, encoding="utf-8")]
     assert all(r["id"] != "dm26sd1-m001" for r in rows), "m001 が rejects に残っている"
-    data = yaml.safe_load(CONVERTED.read_text(encoding="utf-8"))
+    data = {"cards": _conv_cache.all_cards(CONVERTED)}
     card = next(c for c in data["cards"] if c["id"] == "dm26sd1-m001")
     assert not (card.get("source") or {}).get("unsupported")
     for ab in M001_ADD:

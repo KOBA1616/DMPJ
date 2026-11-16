@@ -102,6 +102,28 @@ class SelectorMixin:
                 finally:
                     for c in added:
                         self._distinct_costing.discard(c)
+            if "distinct_type_count" in x:   # 対象カード群にあるカードタイプの種類数（多重タイプはすべて数える。第212弾）
+                # distinct_cost_count と同じ作法: 評価中のカードは印刷特性で見る（再入防止）
+                added = []
+                src = (env.get("self") or [None])[0]
+                if src is not None and src not in self._distinct_costing:
+                    self._distinct_costing.add(src)
+                    added.append(src)
+                try:
+                    types = set()
+                    for c in self.candidates(x["distinct_type_count"], env):
+                        if c in self._distinct_costing:
+                            types.update(self.fdef(c).types)
+                            continue
+                        self._distinct_costing.add(c)
+                        try:
+                            types.update(self.chars_ro(c)["types"])
+                        finally:
+                            self._distinct_costing.discard(c)
+                    return len(types)
+                finally:
+                    for c in added:
+                        self._distinct_costing.discard(c)
             if "total_cost" in x:   # 対象カード群のコストの合計（公開集合の保持。バンドC1 U39）
                 return sum(self.chars(c)["cost"] for c in self.candidates(x["total_cost"], env))
             if "total_power" in x:   # 対象カード群のパワーの合計（バンドC1 U39。U17 の「下のカードの合計パワー」でも使う）
@@ -168,7 +190,7 @@ class SelectorMixin:
         raise ValueError(f"bad expr {x}")
 
     # count_of が式として評価する単一キーの辞書（バンドB U18 の一般化: 履歴式も mod の count に書ける）
-    _EXPR_KEYS = {"count", "civ_count", "distinct_cost_count", "link_count", "seals", "seals_on",
+    _EXPR_KEYS = {"count", "civ_count", "distinct_cost_count", "distinct_type_count", "link_count", "seals", "seals_on",
                   "crossed_count",
                   "entered", "drew", "turn_count", "used_count", "prev_shield_added",
                   "var", "cost_of", "power_of", "name_of", "race", "races_of", "sum", "mul", "bundles", "declared",
@@ -213,7 +235,9 @@ class SelectorMixin:
                     lst = [c for c in lst if self.filter_match(c, f, env=env)]   # フィルタは問い合わせ時点の特性で照合する（バンドA の設計既定）
                 total += len(lst)
             return total
-        return sum(s.turn_counters.get(f"hist:{kind}:{p}", 0) for p in players)
+        frm = spec.get("from")   # 第214弾: 移動元ゾーンで絞る（hist:<kind>_from_<zone>）
+        key = f"hist:{kind}_from_{frm}" if frm else f"hist:{kind}"
+        return sum(s.turn_counters.get(f"{key}:{p}", 0) for p in players)
 
     @staticmethod
     def _snapshot_match(snap: dict, f: dict) -> bool:

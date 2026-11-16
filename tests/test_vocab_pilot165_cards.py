@@ -10,6 +10,7 @@ converted の登録形で検証する。
 ドローは partial に入れたので、残りは中止条項のみ）。
 """
 import copy
+import _conv_cache  # noqa: E402
 import json
 from pathlib import Path
 
@@ -155,7 +156,7 @@ def test_build_forms_parse():
 
 
 def test_registered_forms():
-    data = yaml.safe_load(CONVERTED.read_text(encoding="utf-8"))
+    data = {"cards": _conv_cache.all_cards(CONVERTED)}
     conv = {c["id"]: c for c in data["cards"]}
     for cid in REGISTER:
         assert cid in conv, f"{cid} が converted に無い"

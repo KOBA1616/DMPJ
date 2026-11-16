@@ -23,15 +23,22 @@ def _dump(cards: list[dict], header: str) -> str:
     return header + yaml.safe_dump({"cards": cards}, allow_unicode=True, sort_keys=False)
 
 
+_LOADER = getattr(yaml, "CSafeLoader", yaml.SafeLoader)
+
+
+def _load(text: str):
+    return yaml.load(text, Loader=_LOADER)
+
+
 def read(path: Path) -> list[dict]:
     path = Path(path)
     if path.is_dir():
         cards = []
         for f in sorted(path.glob("*.yaml")):
-            cards += (yaml.safe_load(f.read_text(encoding="utf-8")) or {}).get("cards") or []
+            cards += (_load(f.read_text(encoding="utf-8")) or {}).get("cards") or []
         return sorted(cards, key=lambda c: c["id"])
     if path.exists():
-        return (yaml.safe_load(path.read_text(encoding="utf-8")) or {}).get("cards") or []
+        return (_load(path.read_text(encoding="utf-8")) or {}).get("cards") or []
     return []
 
 

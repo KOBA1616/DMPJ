@@ -19,6 +19,7 @@ from_under_trigger を外したもの（submit が split のキーワード等�
   effect の select は {ref: event.subject}
 """
 import copy
+import _conv_cache  # noqa: E402
 from pathlib import Path
 
 import yaml
@@ -91,7 +92,7 @@ CASES = {
 
 
 def _registered():
-    data = yaml.safe_load(CONVERTED.read_text(encoding="utf-8"))
+    data = {"cards": _conv_cache.all_cards(CONVERTED)}
     return {c["id"]: c for c in data["cards"] if c["id"] in CASES}
 
 

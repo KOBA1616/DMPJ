@@ -4,6 +4,7 @@
 （dmex19-s5 → break_preparation。解けた節は partial に残す）。
 """
 import json
+import _conv_cache  # noqa: E402
 from pathlib import Path
 
 import pytest
@@ -29,12 +30,7 @@ BOUNCED = {"dmex19-s5": "break_preparation"}
 
 
 def _converted():
-    cards = {}
-    for doc in yaml.safe_load_all(open(ROOT / "data/cards/converted.yaml")):
-        if doc:
-            for c in doc["cards"]:
-                cards[c["id"]] = c
-    return cards
+    return {c["id"]: c for c in _conv_cache.all_cards(ROOT / "data/cards/converted.yaml")}
 
 
 def _rejects():

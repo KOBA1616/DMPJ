@@ -18,7 +18,7 @@ _GRANT = re.compile(r"[「『]([^」』]{2,12})[」』]を(?:与える|得る)")
 _FIXTURE = re.compile(r"T\d+")
 _STRUCT_FIELDS = ("free_if", "alt_cost", "mugen_climb", "vividraw", "fushigi", "galaxy_shield", "bazurenda", "o_drive", "s_back",
                   "evolve_from", "evolve_any", "cost_reduce_per_evo", "neo", "grave_evo", "star", "s_max", "hyper", "crystal_soul", "tap_reduce", "mana_bakutan",
-                  "recycle", "deck_evolution", "ace", "link_to", "declare", "evolve_zone", "evolve_count")
+                  "recycle", "deck_evolution", "ace", "link_to", "declare", "evolve_zone", "evolve_count", "mana_boost")
 # 効果を持たないカードの基本欄。変換データの最上位キーはこの集合か _STRUCT_FIELDS のどちらかに入っていること（tests/test_data_audit.py で検査）
 BASIC_FIELDS = ("id", "source", "mana", "name", "text", "cost", "types", "civs", "races", "power", "abilities", "keywords",
                 "spell", "sst_spell", "stp_spell", "odrive_spell", "faces", "resolve_to", "after_resolve")

@@ -2,6 +2,7 @@
 カードは converted.yaml の実データをそのまま使う（テスト用の複製は持たない）。
 総合ルール: 701.13（バトル）、400.7（同時の移動）、614（置換効果）。"""
 import sys
+import _conv_cache  # noqa: E402
 from pathlib import Path
 
 import pytest
@@ -19,7 +20,7 @@ TORNADO, AURA = "dm02-052", "dm01-040"   # 攻撃中パワー+N（count つき�
 
 @pytest.fixture(scope="module")
 def rr(tmp_path_factory):
-    allc = yaml.safe_load((DATA / "cards" / "converted.yaml").read_text(encoding="utf-8"))["cards"]
+    allc = _conv_cache.all_cards(DATA / "cards" / "converted.yaml")
     pick = [c for c in allc if c["id"] in (RENTIA, TENDO, MIHAIL, STEALTH, TORNADO, AURA)]
     assert len(pick) == 6
     f = tmp_path_factory.mktemp("q") / "q.yaml"
@@ -127,7 +128,7 @@ def test_stealth_patterns_for_each_civ():
 
 
 def test_registered_stealth_cards_equal_pattern_output():
-    cards = yaml.safe_load((DATA / "cards" / "converted.yaml").read_text(encoding="utf-8"))["cards"]
+    cards = _conv_cache.all_cards(DATA / "cards" / "converted.yaml")
     n = 0
     for c in cards:
         for _, ja in CIVS:
@@ -265,7 +266,7 @@ def test_power_attacker_pattern_is_static():
 
 
 def test_registered_power_attacker_cards_are_static():
-    cards = yaml.safe_load((DATA / "cards" / "converted.yaml").read_text(encoding="utf-8"))["cards"]
+    cards = _conv_cache.all_cards(DATA / "cards" / "converted.yaml")
     n = 0
     for c in cards:
         if "パワーアタッカー+" not in c.get("text", ""):

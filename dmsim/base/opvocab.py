@@ -14,7 +14,7 @@ ARG_TYPES = {'ability', 'any', 'bool', 'cond', 'duration', 'expr', 'filter', 'in
 OP_ARGS: dict[str, dict[str, str]] = {
     'uncross': {'select': 'selector'},
     'cross_free': {'gear': 'selector', 'to': 'selector'},
-    'move': {'select': 'selector', 'to': 'zone', 'reason': 'reason', 'position': 'position?', 'card_only': 'bool?', 'order': 'str?', 'tapped': 'bool?', 'face_up': 'bool?', 'face_down': 'bool?', 'seal': 'int?', 'stack_on': 'selector?', 'stack_evo': 'bool?', 'evo_source': 'selector?', 'strigger': 'str?', 'as': 'str?'},
+    'move': {'select': 'selector', 'to': 'zone', 'reason': 'reason', 'position': 'position?', 'card_only': 'bool?', 'order': 'str?', 'tapped': 'bool?', 'face_up': 'bool?', 'face_down': 'bool?', 'seal': 'int?', 'stack_on': 'selector?', 'stack_evo': 'bool?', 'evo_source': 'selector?', 'strigger': 'str?', 'as': 'str?', 'no_trigger': 'bool?'},
     'together': {'body': 'ops'},
     'draw': {'player': 'players?', 'count': 'expr?'},
     'tap': {'select': 'selector', 'no_untap_next': 'bool?'},

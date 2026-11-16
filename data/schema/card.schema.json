@@ -249,6 +249,22 @@
    "type": "integer",
    "minimum": 1
   },
+  "mana_boost": {
+   "type": "object",
+   "properties": {
+    "filter": {
+     "$ref": "#/$defs/filter"
+    },
+    "value": {
+     "type": "integer",
+     "minimum": 2
+    },
+    "optional": {
+     "type": "boolean"
+    }
+   },
+   "additionalProperties": false
+  },
   "mana_bakutan": {
    "type": "integer",
    "minimum": 0
@@ -531,6 +547,22 @@
     "crystal_soul": {
      "type": "integer",
      "minimum": 1
+    },
+    "mana_boost": {
+     "type": "object",
+     "properties": {
+      "filter": {
+       "$ref": "#/$defs/filter"
+      },
+      "value": {
+       "type": "integer",
+       "minimum": 2
+      },
+      "optional": {
+       "type": "boolean"
+      }
+     },
+     "additionalProperties": false
     },
     "mana_bakutan": {
      "type": "integer",
@@ -2272,6 +2304,9 @@
       "distinct_cost_count": {
        "$ref": "#/$defs/selector"
       },
+      "distinct_type_count": {
+       "$ref": "#/$defs/selector"
+      },
       "total_cost": {
        "$ref": "#/$defs/selector"
       },
@@ -2708,7 +2743,8 @@
            "shield_put",
            "summon",
            "tap",
-           "untap"
+           "untap",
+           "untap_creature"
           ]
          }
         },
@@ -2808,7 +2844,8 @@
            "shield_put",
            "summon",
            "tap",
-           "untap"
+           "untap",
+           "untap_creature"
           ]
          }
         },
@@ -3137,6 +3174,7 @@
     "add_civs": {},
     "battle_indestructible": {},
     "indestructible": {},
+    "mana_number": {},
     "must_attack_creature": {},
     "must_be_attacked": {},
     "must_be_chosen": {},
@@ -3167,6 +3205,7 @@
      "ignore",
      "ignore_ids",
      "indestructible",
+     "mana_number",
      "must_attack_creature",
      "must_be_attacked",
      "must_be_chosen",
@@ -3492,6 +3531,7 @@
     "dswitch": {},
     "fort_e": {},
     "keyword": {},
+    "mana_boost": {},
     "no_lose": {},
     "odrive": {},
     "redirect": {},

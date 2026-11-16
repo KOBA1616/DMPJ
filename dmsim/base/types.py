@@ -254,6 +254,7 @@ class CrossTask(TypedDict):
     target: Ref                          # クロス先のクリーチャー
     player: int
     free: NotRequired[bool]              # コストを支払わないクロス（第195弾。cross_free 許可）
+    answer: NotRequired[list[int]]
 
 
 class PlayTask(TypedDict):

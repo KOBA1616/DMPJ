@@ -21,9 +21,8 @@ def rr():
 
 
 def _proto_card():
-    with open(Path(__file__).parent.parent / "data/cards/proto.yaml") as f:
-        data = yaml.safe_load(f)
-    return next(c for c in data["cards"] if c["id"] == "T157")
+    from tests._conv_cache import proto_card
+    return proto_card("T157")
 
 
 def test_linked_god_proto_parses():

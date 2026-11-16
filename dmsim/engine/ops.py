@@ -46,7 +46,7 @@ def op_cross_free(eng, t, op, env):
 
 @op("move", select="selector", to="zone", reason="reason", position="position?", card_only="bool?",
     order="str?", tapped="bool?", face_up="bool?", face_down="bool?", seal="int?", stack_on="selector?",
-    stack_evo="bool?", evo_source="selector?", strigger="str?", **{"as": "str?"})
+    stack_evo="bool?", evo_source="selector?", strigger="str?", no_trigger="bool?", **{"as": "str?"})
 def op_move(eng, t, op, env):
     """ゾーン移動。as を付けると、移動した後のカード（新しいオブジェクト）を変数に入れる（「その〜」で使う）。
     card_only: カードとして動かす（109.2a）。進化クリーチャーの一番上だけが離れ、下は再構築される（801.4）。
@@ -160,6 +160,9 @@ def op_move(eng, t, op, env):
     if op.get("strigger"):
         for e in evs:
             e["strigger"] = op["strigger"]   # 手札に加わるカードへの S・トリガーの印（off=使えない／on=得る。バンドC2 U68）
+    if op.get("no_trigger"):
+        for e in evs:
+            e["no_trigger"] = True   # この移動でバトルゾーンに出たカード自身の出た時能力は誘発しない（第213弾）
     if target_ref is not None:
         for e in evs:
             e["shield_stack"] = target_ref   # シールドの束の上に重ねる（第148弾。イベントのキーは進化の stack_on と分ける: あちらは _record_for が stacked として照合する）
