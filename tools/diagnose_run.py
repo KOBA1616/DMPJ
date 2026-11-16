@@ -25,6 +25,12 @@ ROOT = Path(__file__).resolve().parents[1]
 
 def run_seed(entry, deck, route, seed, opp, timeout, tmp):
     out = Path(tmp) / f"s{seed}.json"
+    if out.exists():      # --parts で前回までに終わったシードは回し直さない（途中で切れても続きから）
+        d = json.loads(out.read_text())
+        rows = d.get("rows", [])
+        if rows:
+            rows[0]["_deck_list"] = d.get("deck_list", [])
+            return seed, rows[0], None
     cmd = [sys.executable, str(ROOT / "tools/route_macro_run.py"), entry, "--keep", "--games", "1",
            "--start", str(seed), "--opp-level", str(opp), "--out", str(out)]
     if deck:
@@ -43,6 +49,17 @@ def run_seed(entry, deck, route, seed, opp, timeout, tmp):
     if rows:
         rows[0]["_deck_list"] = d.get("deck_list", [])
     return seed, (rows[0] if rows else None), (None if rows else "error")
+
+
+class _Keep:
+    def __init__(self, d):
+        self.d = d
+
+    def __enter__(self):
+        return self.d
+
+    def __exit__(self, *a):
+        return False
 
 
 def card_counts(keys, prefix):
@@ -95,6 +112,7 @@ def main(argv=None):
     ap.add_argument("--timeout", type=int, default=1800)
     ap.add_argument("--out", default="diag.md")
     ap.add_argument("--json", help="行データ（小分けの結果）を書く。--merge で合算できる")
+    ap.add_argument("--parts", help="1局ごとの結果を置くフォルダ。指定すると残り、再実行で続きから回る（小分け）")
     ap.add_argument("--merge", nargs="+", help="対局は回さず、小分けで出た --json を合算して表だけ作る")
     a = ap.parse_args(argv)
     route = a.route or (f"{a.entry}_v3" if a.entry == "saga" else None)
@@ -106,7 +124,9 @@ def main(argv=None):
             rows += d["rows"]
             dropped.update({int(k): v for k, v in d["dropped"].items()})
         seeds = []
-    with tempfile.TemporaryDirectory() as tmp, cf.ThreadPoolExecutor(a.jobs) as ex:
+    if a.parts:
+        Path(a.parts).mkdir(parents=True, exist_ok=True)
+    with (tempfile.TemporaryDirectory() if not a.parts else _Keep(a.parts)) as tmp, cf.ThreadPoolExecutor(a.jobs) as ex:
         for seed, row, err in ex.map(lambda s: run_seed(a.entry, a.deck, route, s, a.opp_level, a.timeout, tmp), seeds):
             if row is None:
                 dropped[seed] = err
