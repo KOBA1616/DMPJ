@@ -36,6 +36,7 @@
 from __future__ import annotations
 
 import argparse
+import hashlib
 import itertools
 import json
 import re
@@ -181,6 +182,17 @@ def spec(deck_left, **p0):
     return {"p0": {**base, **p0}, "p1": {}, "deck_size": 40, "deck_left": [deck_left, 40], "seed": 1}
 
 
+def cfg_suffix(settings: dict) -> str:
+    """走行設定 dict の sha256 先頭8文字。記録ファイル名のサフィックスに使う。
+
+    設定が違う走行が同じ記録ファイル名を取り合って前の証拠を上書きする事故を
+    防ぐためのもの。同じ設定なら同じサフィックス（決定的な上書きは正しい）。
+    exhaustive_multiturn / exhaustive_crossturn からも使う共通実装。
+    """
+    return hashlib.sha256(
+        json.dumps(settings, sort_keys=True, ensure_ascii=False).encode("utf-8")).hexdigest()[:8]
+
+
 class JsonlLog:
     """全探索の証拠ログ（explog と同じ流儀: 1行目ヘッダ＋版、以降は1イベント1行）。
 
@@ -196,11 +208,12 @@ class JsonlLog:
         path.parent.mkdir(parents=True, exist_ok=True)
         self._f = path.open("w", encoding="utf-8")
         from dmsim.eval.explog import engine_version
+        self.settings = {"budget": "unlimited", "combo_cap": "unlimited",
+                         "pay_mana_cap": "removed", "stock_offsets": "all",
+                         "equivalence_kept": ["sig-dedup", "seen-tkey", "loop-certificate"]}
         self.write({"kind": "header", "tool": "exhaustive_proto", "schema": "exhaustive-proto-1",
                     "engine_version": engine_version("."),
-                    "settings": {"budget": "unlimited", "combo_cap": "unlimited",
-                                 "pay_mana_cap": "removed", "stock_offsets": "all",
-                                 "equivalence_kept": ["sig-dedup", "seen-tkey", "loop-certificate"]}})
+                    "settings": self.settings})
 
     def write(self, obj: dict):
         self._f.write(json.dumps(obj, ensure_ascii=False) + "\n")
@@ -237,7 +250,10 @@ def run_case(rules, name, spec_dict, log: JsonlLog | None = None, mode: str = "e
         from dmsim.engine.play import deck_lists, make_record
         rec_dir = Path("logs/exhaustive_records")
         rec_dir.mkdir(parents=True, exist_ok=True)
-        record_path = str(rec_dir / (re.sub(r"[^0-9A-Za-z]+", "_", name) + ".json"))
+        rec_settings = dict(log.settings) if log is not None else {}
+        rec_settings["mode"] = mode
+        record_path = str(rec_dir / (re.sub(r"[^0-9A-Za-z]+", "_", name)
+                                     + f"-{cfg_suffix(rec_settings)}.json"))
         Path(record_path).write_text(json.dumps(
             make_record(final, deck_lists(final), 1, scenario=spec_dict), ensure_ascii=False), encoding="utf-8")
     if log is not None:
@@ -316,7 +332,11 @@ def run_case_staged(rules, name, spec_dict, log: JsonlLog | None = None, order: 
         from dmsim.engine.play import deck_lists, make_record
         rec_dir = Path("logs/exhaustive_records")
         rec_dir.mkdir(parents=True, exist_ok=True)
-        record_path = str(rec_dir / (re.sub(r"[^0-9A-Za-z]+", "_", name) + ".json"))
+        rec_settings = dict(log.settings) if log is not None else {}
+        rec_settings["mode"] = "exhaustive-staged"
+        rec_settings["order"] = order
+        record_path = str(rec_dir / (re.sub(r"[^0-9A-Za-z]+", "_", name)
+                                     + f"-{cfg_suffix(rec_settings)}.json"))
         Path(record_path).write_text(json.dumps(
             make_record(final_eng, deck_lists(final_eng), 1, scenario=spec_dict), ensure_ascii=False), encoding="utf-8")
     if log is not None:

@@ -34,7 +34,7 @@ from dmsim import load_rules  # noqa: E402
 from dmsim.eval.measure import load_deck  # noqa: E402
 import dmsim.search.turn as turn  # noqa: E402
 import dmsim.search.game as game  # noqa: E402
-from exhaustive_proto import STAGES, _make_stage_search, stage_candidates  # noqa: E402
+from exhaustive_proto import STAGES, _make_stage_search, cfg_suffix, stage_candidates  # noqa: E402
 
 OPP_DECK = ["dm01-080"] * 40   # 無抵抗の相手（チャージのみ）
 
@@ -68,11 +68,13 @@ def main():
         f.flush()
 
     from dmsim.eval.explog import engine_version
+    settings = {"mode": "staged-exhaustive multiturn", "budget_per_turn": a.budget,
+                "opp": "passive (charge only)", "max_turn": a.max_turn,
+                "order": a.order, "stages": a.stages}
     w({"kind": "header", "tool": "exhaustive_multiturn", "schema": "exhaustive-proto-1",
-       "engine_version": engine_version("."),
-       "settings": {"mode": "staged-exhaustive multiturn", "budget_per_turn": a.budget,
-                    "opp": "passive (charge only)", "max_turn": a.max_turn,
-                    "order": a.order, "stages": a.stages}})
+       "engine_version": engine_version("."), "settings": settings})
+    # 記録ファイル名の設定サフィックス（設定が違う走行同士の上書き事故を防ぐ）
+    cfg_hash = cfg_suffix(settings)
 
     orig_candidates = turn.candidates
     try:
@@ -118,7 +120,8 @@ def main():
                 from dmsim.engine.play import deck_lists, make_record
                 rec_dir = Path("logs/exhaustive_records")
                 rec_dir.mkdir(parents=True, exist_ok=True)
-                record_path = str(rec_dir / (re.sub(r"[^0-9A-Za-z]+", "_", case) + ".json"))
+                record_path = str(rec_dir / (re.sub(r"[^0-9A-Za-z]+", "_", case)
+                                             + f"-{cfg_hash}.json"))
                 Path(record_path).write_text(json.dumps(
                     make_record(best[1], deck_lists(best[1]), seed,
                                 note=f"{verdict} deck={a.deck}"), ensure_ascii=False), encoding="utf-8")

@@ -1,0 +1,17 @@
+# 比較実験の定義サンプル（tools/exp_grid.py 用）。
+# beam 幅のスイープ（2 → 4 → 8、trim は ruler で固定）と、
+# beam 4 での trim 方式の比較（ruler / plan）を並べたもの。
+# パラメータスイープは「1つのパラメータだけが違う run の並び」として書く。
+runs:
+  - label: hidden_beam2_ruler
+    tool: exhaustive_crossturn
+    args: {setup: tests/saga_hidden_setup.yaml, seeds: "1,2", mode: beam, beam: 2, trim_order: ruler}
+  - label: hidden_beam4_ruler
+    tool: exhaustive_crossturn
+    args: {setup: tests/saga_hidden_setup.yaml, seeds: "1,2", mode: beam, beam: 4, trim_order: ruler}
+  - label: hidden_beam8_ruler
+    tool: exhaustive_crossturn
+    args: {setup: tests/saga_hidden_setup.yaml, seeds: "1,2", mode: beam, beam: 8, trim_order: ruler}
+  - label: hidden_beam4_plan_loop
+    tool: exhaustive_crossturn
+    args: {setup: tests/saga_hidden_setup.yaml, seeds: "1,2", mode: beam, beam: 4, trim_order: plan, stages_file: tools/saga_loop_stages.yaml}

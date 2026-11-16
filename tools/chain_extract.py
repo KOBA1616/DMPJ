@@ -10,7 +10,7 @@ docs/phase-chain-plan.md §4 の段1。入力は make_record 形式のキル記�
 - 終盤の段: キルターンの開始時に全記録で揃っていた部品＋墓地枚数の最小値
 
 使い方:
-  python tools/chain_extract.py --records 'logs/exhaustive_records/crossturn_*_frontier.json' \
+  python tools/chain_extract.py --records 'logs/exhaustive_records/crossturn_*_frontier*.json' \
       --out tools/saga_extracted_stages.yaml
 """
 from __future__ import annotations

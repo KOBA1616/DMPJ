@@ -41,7 +41,7 @@ from dmsim.search import turn  # noqa: E402
 from dmsim.search.turn import Detectors, TurnSearch, _is_burn, _is_engine  # noqa: E402
 from dmsim.plan.macro import MacroPlanner, load_stage_file, stage_fraction  # noqa: E402
 from dmsim.search.leaf_eval import WIN, Weights, evaluate  # noqa: E402
-from exhaustive_proto import STAGES, _make_stage_search, stage_candidates  # noqa: E402
+from exhaustive_proto import STAGES, _make_stage_search, cfg_suffix, stage_candidates  # noqa: E402
 from order_fn import ruler_key  # noqa: E402
 
 _W = Weights()
@@ -263,14 +263,16 @@ def main():
         f.flush()
 
     from dmsim.eval.explog import engine_version
+    settings = {"mode": a.mode, "beam": a.beam, "stage": a.stage, "order": a.order,
+                "trim_order": a.trim_order,
+                "stages_file": a.stages_file if a.trim_order == "plan" else None,
+                "budget_per_state": a.budget, "max_turn": a.max_turn,
+                "frontier_cap": FRONTIER_CAP, "leaf_cap": LEAF_CAP,
+                "opp": "passive (charge only)", "lock_judge": "off"}
     w({"kind": "header", "tool": "exhaustive_crossturn", "schema": "exhaustive-proto-1",
-       "engine_version": engine_version("."),
-       "settings": {"mode": a.mode, "beam": a.beam, "stage": a.stage, "order": a.order,
-                    "trim_order": a.trim_order,
-                    "stages_file": a.stages_file if a.trim_order == "plan" else None,
-                    "budget_per_state": a.budget, "max_turn": a.max_turn,
-                    "frontier_cap": FRONTIER_CAP, "leaf_cap": LEAF_CAP,
-                    "opp": "passive (charge only)", "lock_judge": "off"}})
+       "engine_version": engine_version("."), "settings": settings})
+    # 記録ファイル名の設定サフィックス（設定が違う走行同士の上書き事故を防ぐ）
+    cfg_hash = cfg_suffix(settings)
     rec_dir = Path("logs/exhaustive_records")
     rec_dir.mkdir(parents=True, exist_ok=True)
 
@@ -297,7 +299,7 @@ def main():
             rec = make_record(r["final"], deck_lists(r["final"]), seed,
                               note=f"crossturn {a.mode} kill from {a.setup}",
                               scenario=dict(setup0, seed=seed))
-            rec_name = f"crossturn_{name}_seed{seed}_{a.mode}.json"
+            rec_name = f"crossturn_{name}_seed{seed}_{a.mode}-{cfg_hash}.json"
             (rec_dir / rec_name).write_text(json.dumps(rec, ensure_ascii=False), encoding="utf-8")
         w({"kind": "case_result", "case": case, "verdict": r["verdict"],
            "kill_turn": r["kill_turn"], "kill_by": r["kill_by"], "nodes": r["nodes"],
