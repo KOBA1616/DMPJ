@@ -1,0 +1,32 @@
+# 実験用の段階目標の鎖（ループ実行フェーズ用）。tools/plan_leaf_diag.py と
+# exhaustive_crossturn.py --trim-order plan の測定専用に手で書いたもので、
+# data/eval/stages/ の生成チェーン（部品集めフェーズ）とは狙う局面が違う。
+# 段の考え方:
+#   1. ループ部品（サガ・シャコガイル）が墓地にそろう
+#   2. 次のドローで負けない山札を保ったまま、墓地が育つ
+#   3. ドラゲリオンを手札に持ち、墓地16枚で実行できる形になる
+stages:
+- name: grave:parts
+  target:
+    graveyard:
+      dm22ex2-021: 1
+      dmrp03-s03: 1
+- name: grave:build
+  target:
+    deck:
+      '*': 2
+    graveyard:
+      dm22ex2-021: 1
+      dmrp03-s03: 1
+      '*': 12
+- name: execute:ready
+  target:
+    deck:
+      '*': 2
+    hand:
+      dm22ex1-007: 1
+    graveyard:
+      dm22ex2-021: 1
+      dmrp03-s03: 1
+      '*': 16
+goal: {}

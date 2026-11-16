@@ -1,0 +1,317 @@
+{
+ "$schema": "https://json-schema.org/draft/2020-12/schema",
+ "description": "1行目=header、以降は case_start / stage_result / case_result を1イベント1行で書く。case_start だけあって case_result が無いケースは中断・未完了で、判定は unknown として読む。",
+ "oneOf": [
+  {
+   "additionalProperties": false,
+   "properties": {
+    "engine_version": {
+     "type": "string"
+    },
+    "kind": {
+     "const": "header"
+    },
+    "schema": {
+     "type": "string"
+    },
+    "settings": {
+     "additionalProperties": true,
+     "properties": {
+      "budget": {
+       "type": "string"
+      },
+      "combo_cap": {
+       "type": "string"
+      },
+      "equivalence_kept": {
+       "items": {
+        "type": "string"
+       },
+       "type": "array"
+      },
+      "pay_mana_cap": {
+       "type": "string"
+      },
+      "stock_offsets": {
+       "type": "string"
+      }
+     },
+     "required": [
+      "budget",
+      "combo_cap",
+      "pay_mana_cap",
+      "stock_offsets",
+      "equivalence_kept"
+     ],
+     "type": "object"
+    },
+    "tool": {
+     "type": "string"
+    }
+   },
+   "required": [
+    "kind",
+    "tool",
+    "schema",
+    "engine_version",
+    "settings"
+   ],
+   "title": "header",
+   "type": "object"
+  },
+  {
+   "additionalProperties": false,
+   "properties": {
+    "case": {
+     "type": "string"
+    },
+    "kind": {
+     "const": "case_start"
+    },
+    "mode": {
+     "enum": [
+      "baseline",
+      "exhaustive",
+      "exhaustive-staged"
+     ]
+    },
+    "scope": {
+     "additionalProperties": true,
+     "properties": {
+      "bz": {
+       "items": {
+        "type": "string"
+       },
+       "type": "array"
+      },
+      "deck_left": {
+       "items": {
+        "type": "integer"
+       },
+       "type": [
+        "array",
+        "null"
+       ]
+      },
+      "deck_size": {
+       "type": [
+        "integer",
+        "null"
+       ]
+      },
+      "graveyard": {
+       "items": {
+        "type": "string"
+       },
+       "type": "array"
+      },
+      "hand": {
+       "items": {
+        "type": "string"
+       },
+       "type": "array"
+      },
+      "mana": {
+       "items": {
+        "type": "string"
+       },
+       "type": "array"
+      },
+      "seed": {
+       "type": "integer"
+      },
+      "turns": {
+       "type": "integer"
+      }
+     },
+     "required": [
+      "hand",
+      "mana",
+      "graveyard",
+      "bz",
+      "deck_size",
+      "deck_left",
+      "seed",
+      "turns"
+     ],
+     "type": "object"
+    }
+   },
+   "required": [
+    "kind",
+    "case",
+    "mode",
+    "scope"
+   ],
+   "title": "case_start",
+   "type": "object"
+  },
+  {
+   "additionalProperties": false,
+   "properties": {
+    "candidates": {
+     "enum": [
+      "rank",
+      "canonical",
+      "value"
+     ]
+    },
+    "case": {
+     "type": "string"
+    },
+    "error": {
+     "type": [
+      "string",
+      "null"
+     ]
+    },
+    "kind": {
+     "const": "stage_result"
+    },
+    "nodes": {
+     "type": "integer"
+    },
+    "stage": {
+     "minimum": 1,
+     "type": "integer"
+    },
+    "stock_offsets": {
+     "description": "先頭4要素までを記録（完全な列は段の定義側で持つ）",
+     "items": {
+      "type": "integer"
+     },
+     "type": "array"
+    },
+    "verdict": {
+     "enum": [
+      "kill",
+      "no-kill",
+      "lost",
+      "error"
+     ]
+    },
+    "wall_seconds": {
+     "type": "number"
+    },
+    "kind_caps": {
+     "type": "object",
+     "description": "決定の種類別上限（single は常に無制限なので含まない）",
+     "properties": {
+      "multi": {
+       "type": "integer"
+      },
+      "evo": {
+       "type": "integer"
+      }
+     },
+     "required": [
+      "multi",
+      "evo"
+     ],
+     "additionalProperties": false
+    }
+   },
+   "required": [
+    "kind",
+    "case",
+    "stage",
+    "candidates",
+    "kind_caps",
+    "verdict",
+    "wall_seconds"
+   ],
+   "title": "stage_result",
+   "type": "object"
+  },
+  {
+   "additionalProperties": false,
+   "properties": {
+    "case": {
+     "type": "string"
+    },
+    "decisions": {
+     "type": [
+      "integer",
+      "null"
+     ]
+    },
+    "error": {
+     "type": [
+      "string",
+      "null"
+     ]
+    },
+    "kill_kind": {
+     "type": [
+      "string",
+      "null"
+     ]
+    },
+    "kill_turn": {
+     "type": [
+      "integer",
+      "null"
+     ]
+    },
+    "kind": {
+     "const": "case_result"
+    },
+    "loops_chosen": {
+     "items": {
+      "type": "object"
+     },
+     "type": "array"
+    },
+    "loops_tried": {
+     "type": "integer"
+    },
+    "mode": {
+     "enum": [
+      "baseline",
+      "exhaustive",
+      "exhaustive-staged"
+     ]
+    },
+    "nodes": {
+     "type": "integer"
+    },
+    "origin": {
+     "type": [
+      "string",
+      "null"
+     ]
+    },
+    "record": {
+     "description": "勝ち手順の再生可能な記録ファイルへの参照。ログ本体には手順を混ぜない",
+     "type": [
+      "string",
+      "null"
+     ]
+    },
+    "verdict": {
+     "enum": [
+      "kill",
+      "no-kill",
+      "lost",
+      "error"
+     ]
+    },
+    "wall_seconds": {
+     "type": "number"
+    }
+   },
+   "required": [
+    "kind",
+    "case",
+    "mode",
+    "verdict",
+    "nodes",
+    "wall_seconds"
+   ],
+   "title": "case_result",
+   "type": "object"
+  }
+ ],
+ "title": "全探索ログ logs/exhaustive_proto.jsonl（tools/exhaustive_proto、schema名 exhaustive-proto-1）",
+ "type": "object"
+}
