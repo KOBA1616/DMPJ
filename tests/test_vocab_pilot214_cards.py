@@ -28,7 +28,14 @@ def converted():
 
 @pytest.fixture(scope="module")
 def rules():
-    return load_rules()
+    # 実行時に環境変数を外して読む（conftest と他モジュールの setdefault が
+    # 収集後に DMSIM_SKIP_CONVERTED=1 を戻すため、import 時の pop だけでは全体実行で効かない）
+    old = os.environ.pop("DMSIM_SKIP_CONVERTED", None)
+    try:
+        return load_rules()
+    finally:
+        if old is not None:
+            os.environ["DMSIM_SKIP_CONVERTED"] = old
 
 
 def test_build_forms_parse(converted):
