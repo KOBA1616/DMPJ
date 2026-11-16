@@ -42,6 +42,8 @@ class Config:
     register: bool = True
     workers: int | None = None         # None は DMSIM_WORKERS
     controls: tuple = ("saga", "akashic")
+    fast_heavy: bool = False           # 早く出せる重い札の三角（collect_fast_heavy）も集める
+    since: str | None = None           # 前回の出力フォルダ。札データの指紋が変わった札（新しく変換された札など）を含む組だけ試す（差分）
 
 
 def _git_head() -> str:
@@ -101,13 +103,36 @@ class Run:
         zero = [b for b in bases + prev if "zero" in X.static_flags(b)]
         ext = [e for b in zero for e in X.zero_extend(self.rules, self.by, b, wins)]
         out = bases + ext
+        if self.cfg.fast_heavy:
+            fb, fdrop = X.collect_fast_heavy(self.rules, self.by, max_cost=self.cfg.max_cost, log=self.log)
+            out += fb
+            drop.update({f"fast_heavy:{k}": v for k, v in fdrop.items()})
         if self.cfg.cheap:
             cb, cdrop = X.collect_cheap(self.rules, self.by, max_cost=self.cfg.max_cost, max_turn=self.cfg.max_turn_cheap, log=self.log)
             out += cb
             drop.update({f"cheap:{k}": v for k, v in cdrop.items()})
         return {"bases": [_bdict(b) for b in out], "drop": dict(drop), "zero_extended": len(ext)}
 
+    def card_hashes(self) -> dict:
+        """札ごとのデータの指紋（生の YAML 辞書の sha1）。差分実行で「前回から変わった札」を知るのに使う。"""
+        import hashlib
+        return {i: hashlib.sha1(json.dumps(d, ensure_ascii=False, sort_keys=True, default=str).encode()).hexdigest()[:16]
+                for i, d in sorted(self.raw.items())}
+
+    def changed_cards(self) -> set | None:
+        """cfg.since の指紋と比べて変わった・増えた札。比べられなければ None（全組を試す）。"""
+        if not self.cfg.since:
+            return None
+        p = Path(self.cfg.since) / "card_hashes.json"
+        if not p.exists():
+            return None
+        old = json.loads(p.read_text(encoding="utf-8"))
+        return {i for i, h in self.card_hashes().items() if old.get(i) != h}
+
     def _pool(self) -> list[X.Base]:
+        ch = self.changed_cards()
+        if ch is not None:
+            self.log(f"差分: 前回（{self.cfg.since}）から変わった札 {len(ch)} 枚。その札を含む組だけ試す")
         seen, out = set(), []
         for st in ("collect2", "collect3"):
             if not self.done(st):
@@ -115,6 +140,8 @@ class Run:
             for d in self.load(st)["bases"]:
                 b = _base(d)
                 k = tuple(sorted(b.cards))
+                if ch is not None and not ch & set(b.cards):
+                    continue
                 if k in seen or "copy_chain" in X.static_flags(b):   # 山札から別のコピーを出し続けるだけの連鎖は後回し（印）
                     continue
                 seen.add(k)
@@ -266,6 +293,13 @@ class Run:
         return out
 
 
+def latest_run(root, exclude=None) -> str | None:
+    """root の下で card_hashes.json を持つ最新の出力フォルダ（exclude は除く）。日次の差分実行の基準を探す。"""
+    root = Path(root)
+    c = [p for p in root.glob("*/card_hashes.json") if exclude is None or p.parent.resolve() != Path(exclude).resolve()]
+    return str(max(c, key=lambda p: p.stat().st_mtime).parent) if c else None
+
+
 def run(rules, out_dir, cfg: Config | None = None, *, fresh: bool = False, log=print) -> dict:
     cfg = cfg or Config()
     R = Run(rules, out_dir, cfg, log)
@@ -275,6 +309,8 @@ def run(rules, out_dir, cfg: Config | None = None, *, fresh: bool = False, log=p
     meta = {"config": asdict(cfg), "git": _git_head(), "started": time.strftime("%Y-%m-%d %H:%M:%S")}
     if not (R.out / "run.json").exists():
         (R.out / "run.json").write_text(json.dumps(meta, ensure_ascii=False, indent=1), encoding="utf-8")
+    if not (R.out / "card_hashes.json").exists():   # 次の差分実行の基準
+        (R.out / "card_hashes.json").write_text(json.dumps(R.card_hashes(), ensure_ascii=False), encoding="utf-8")
     for st in cfg.stages:
         if R.done(st):
             R.log(f"{st}: 済み（再開）")

@@ -32,6 +32,10 @@ pub struct CardDef {
     #[serde(default)]
     pub allow_x: Vec<serde_json::Value>,   // 辞書形の allow（無条件の禁止があって効かないもの。特性に並べるだけ）
     #[serde(default)]
+    pub deny_x: Vec<serde_json::Value>,   // 相手側のカードで決まる禁止 {action, other}
+    #[serde(default)]
+    pub power_if: Vec<(serde_json::Value, i64)>,   // 条件つきのパワー修整（条件, 修整値）
+    #[serde(default)]
     pub deny_if: Vec<(serde_json::Value, Vec<String>)>,   // 条件つきの自分への禁止（条件, 禁止する行動）
     #[serde(default)]
     pub spell: Vec<serde_json::Value>,      // 呪文の効果（plain な呪文だけ。Python の CardDef.spell）

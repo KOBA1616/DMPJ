@@ -14,12 +14,33 @@ def _sig(path: Path):
     return tuple((str(f), f.stat().st_mtime_ns, f.stat().st_size) for f in files if f.exists())
 
 
-def find(path, cid):
-    """path の変換データから id が cid の札（深いコピー）。無ければ None。"""
+def _entry(path):
     key = str(path)
     sig = _sig(path)
     ent = _cache.get(key)
     if ent is None or ent[0] != sig:
-        ent = _cache[key] = (sig, {c["id"]: c for c in cardstore.read(path)} if sig else {})
-    c = ent[1].get(cid)
+        cards = cardstore.read(path) if sig else []
+        ent = _cache[key] = (sig, {c["id"]: c for c in cards}, cards)
+    return ent
+
+
+def find(path, cid):
+    """path の変換データから id が cid の札（深いコピー）。無ければ None。"""
+    c = _entry(path)[1].get(cid)
     return copy.deepcopy(c) if c is not None else None
+
+
+def all_cards(path):
+    """path の変換データ全件（深いコピーのリスト）。パースは1プロセス1回。"""
+    return copy.deepcopy(_entry(path)[2])
+
+
+PROTO = Path(__file__).parent.parent / "data" / "cards" / "proto.yaml"
+
+
+def proto_card(cid):
+    """proto.yaml から id が cid の札（深いコピー）。読み込みは1プロセス1回。
+
+    各 pilot テストが自前の _proto_card で proto.yaml を毎回 safe_load し直す
+    のを避けるための共有入口。"""
+    return find(str(PROTO), cid)

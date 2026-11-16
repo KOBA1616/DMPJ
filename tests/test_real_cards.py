@@ -1,6 +1,8 @@
 """実カード（data/cards/real.yaml）の動作確認。変換の妥当性を、カードごとの局面で確かめる。"""
 import random
 
+import pytest
+
 from conftest import answer, setup
 
 from dmsim import Engine
@@ -19,6 +21,7 @@ def bz(e, p, defn):
     return next(c for c in e.bz_tops(p) if e.s.cards[c].defn == defn)
 
 
+@pytest.mark.slow
 def test_real_pool_random_games(rules):
     """実カードだけのランダムなデッキで対戦しても例外が出ず、シード＋ログで再現できる。"""
     ids = [i for i in rules.cards if not i.startswith("T")]

@@ -33,9 +33,8 @@ def rules():
 
 
 def _proto_card(cid):
-    with open(Path(__file__).parent.parent / "data" / "cards" / "proto.yaml") as f:
-        data = yaml.safe_load(f)
-    return next(c for c in data["cards"] if c["id"] == cid)
+    from tests._conv_cache import proto_card
+    return proto_card(cid)
 
 
 def test_proto_parse():

@@ -25,6 +25,7 @@ RAW: dict = {}
 SAGA = {"dm22ex2-021": 4, "dmrp03-s03": 4}
 
 
+@pytest.mark.slow
 def test_candidates_are_mechanical(full_rules):
     cands = B.candidates(full_rules, SAGA, RAW)
     civs = B.core_civs(full_rules, SAGA)

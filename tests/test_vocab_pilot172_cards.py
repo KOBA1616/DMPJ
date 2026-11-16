@@ -7,6 +7,7 @@ declare＋呪文効果に `[xx04]` 形（cost 6＋civs 2枚）を足す。
 14件すべて新規登録（差し戻しなし）。recycle の単独ギャップは 0 残り。
 """
 import copy
+import _conv_cache  # noqa: E402
 import json
 import subprocess
 
@@ -117,7 +118,7 @@ def test_build_forms_parse():
 
 def test_registered_forms():
     built = {c["id"]: c for c in build()["cards"]}
-    conv = {c["id"]: c for c in yaml.safe_load(open(ROOT / "data/cards/converted.yaml"))["cards"]}
+    conv = {c["id"]: c for c in _conv_cache.all_cards(ROOT / "data/cards/converted.yaml")}
     for cid in TARGETS:
         assert cid in conv, cid
         assert conv[cid] == built[cid], cid

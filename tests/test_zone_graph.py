@@ -1,4 +1,6 @@
 """ゾーン変換グラフ（静的な解析）が、動的に検出したループと同じ差分を出すこと。"""
+import pytest
+
 from dmsim.engine import scenario as sc
 from dmsim.engine.loop import LoopDetector, verify
 from dmsim.engine.zone_graph import find_cycles
@@ -52,6 +54,7 @@ def test_dig_and_speed_metrics(rules):
 MORSE, MAGNUM, KUZUOTOKO = "dm16-027", "dm20-013", "dm04-028"
 
 
+@pytest.mark.slow
 def test_graph_finds_morse_magnum_kuzuotoko_cycle(rules):
     """G・ゼロ（free_if）と「出した時」（summon）の誘発も辿り、モールス＋マグナム＋屑男を循環として挙げる。"""
     trio = sorted([MORSE, MAGNUM, KUZUOTOKO])

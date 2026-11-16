@@ -31,6 +31,7 @@ def test_reroll_success_probability_is_hypergeometric():
     assert reroll_success_prob(s, deck_n=11, hits=2) == 1.0
 
 
+@pytest.mark.slow
 def test_shrink_saga_board_to_one_minimal_board(rules):
     """サガの盤面を縮約すると、どの1枚を外してもループが成立しない最小の盤面になる（決定的）。"""
     spec = yaml.safe_load(SAGA_SETUP.read_text(encoding="utf-8"))
@@ -75,6 +76,7 @@ def test_robust_shrink_does_not_let_a_creature_filler_hide_the_graveyard_require
     assert len(robust) > len(only_creature)
 
 
+@pytest.mark.slow
 def test_entrance_and_exit_are_separated(rules):
     """入口（ループが回る）にはドラゲリオンもコダマダンスも要らない。出口（勝利）に追加で要る。"""
     spec = yaml.safe_load(SAGA_SETUP.read_text(encoding="utf-8"))
@@ -116,6 +118,7 @@ def test_route_probability_matches_brute_force():
     assert LoopSpec.from_json(s.to_json()) == s
 
 
+@pytest.mark.slow
 def test_full_loopspec_separates_entrance_exit_and_route(rules):
     spec = yaml.safe_load(SAGA_SETUP.read_text(encoding="utf-8"))
     spec["p0"]["hand"] = [c for c in spec["p0"]["hand"] if c != "T001"]

@@ -6,6 +6,7 @@ dmrp06-s08 / dmrp08-008 / dmrp08-047 は残りの節が別語彙のため、解�
 partial に残して差し戻す（unsupported を差し替える）。
 """
 import json
+import _conv_cache  # noqa: E402
 from pathlib import Path
 
 import yaml
@@ -230,7 +231,7 @@ def test_build_forms_parse():
 
 
 def test_registered_forms():
-    conv = {c["id"]: c for c in yaml.safe_load(open(ROOT / "data/cards/converted.yaml"))["cards"]}
+    conv = {c["id"]: c for c in _conv_cache.all_cards(ROOT / "data/cards/converted.yaml")}
     for cid in TARGETS:
         if cid in BOUNCED:
             assert cid not in conv

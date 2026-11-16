@@ -8,6 +8,7 @@
 - dm15-004 の「攻撃の後」は attack_end 誘発＋turn_count {kind: attack_by, ref: self} == 1。
 """
 import json
+import _conv_cache  # noqa: E402
 from pathlib import Path
 
 import yaml
@@ -30,9 +31,7 @@ REMAINING_ACCEL = {"dm28-035": ["accel", "cross_free_while_linked"],
 
 
 def _converted():
-    d = yaml.safe_load((ROOT / "data" / "cards" / "converted.yaml").read_text(encoding="utf-8"))
-    cards = d.get("cards") if isinstance(d, dict) else d
-    return {c["id"]: c for c in cards}
+    return {c["id"]: c for c in _conv_cache.all_cards(ROOT / "data/cards/converted.yaml")}
 
 
 def _rejects():

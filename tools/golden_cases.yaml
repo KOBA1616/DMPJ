@@ -1,0 +1,78 @@
+# ゴールデンケース定義（tools/run_golden.py が読む）。
+#
+# 探索ツールを改修した後に、既知の判定が変わっていないかを1コマンドで
+# 確認するためのケース集。期待判定は docs/exhaustive-search-saga-report.md の
+# 実測に基づく。ケースを足すときは、実測で確定した判定だけを書くこと
+# （途中の段の no-kill は証明ではないので期待値にしない）。
+#
+# 各ケースのフィールド:
+#   id:      ケースの識別子
+#   desc:    何を確認するケースか
+#   argv:    実行するコマンド（python の後ろ。cwd はリポジトリルート）
+#   out:     ツールが出力する JSONL ログ（argv の --out と一致させる）
+#   match:   ログ内の case_result を特定する条件（case は完全一致、mode は任意。
+#            exhaustive_crossturn の case_result には mode が無いので、
+#            crossturn のケースでは case 名だけで特定する）
+#   expect:  verdict（必須）と kill_turn（任意。指定時のみ照合）
+#   timeout: このケースの制限時間（秒）
+#
+# verdict の正規化: multiturn は kill を "kill_3_4" のように記録するため、
+# ランナー側で kill* を全て "kill" に寄せてから照合する（run_golden.py 参照）。
+
+cases:
+  - id: proto-b-nokill-proof
+    desc: "ケースB（払い無し・山札8）: 段3まで完走して勝ちなし証明"
+    argv: ["tools/exhaustive_proto.py", "--cases", "B", "--order", "rank",
+           "--out", "logs/golden/proto_b.jsonl"]
+    out: "logs/golden/proto_b.jsonl"
+    match: {case: "exh B no-payoff deck8", mode: "exhaustive-staged"}
+    expect: {verdict: "no-kill"}
+    timeout: 300
+
+  - id: proto-c-nokill-proof
+    desc: "ケースC（saga_setup・ドラゲリオン無し）: 段3まで完走して勝ちなし証明"
+    argv: ["tools/exhaustive_proto.py", "--cases", "C", "--order", "rank",
+           "--out", "logs/golden/proto_c.jsonl"]
+    out: "logs/golden/proto_c.jsonl"
+    match: {case: "exh C saga_setup (no DRAG)", mode: "exhaustive-staged"}
+    expect: {verdict: "no-kill"}
+    timeout: 300
+
+  - id: proto-d-stage1-kill
+    desc: "ケースD（saga_setup + ドラゲリオン）: 段1でキル。順序は rank 必須（value では段1が終わらない）"
+    argv: ["tools/exhaustive_proto.py", "--cases", "D", "--order", "rank",
+           "--out", "logs/golden/proto_d.jsonl"]
+    out: "logs/golden/proto_d.jsonl"
+    match: {case: "exh D saga_setup + DRAG in hand", mode: "exhaustive-staged"}
+    expect: {verdict: "kill"}
+    timeout: 300
+
+  - id: crossturn-setup-frontier-nokill
+    desc: "saga_setup を frontier で2ターン横断: 勝ちなし証明（205ノード実測）"
+    argv: ["tools/exhaustive_crossturn.py", "--setup", "tests/saga_setup.yaml",
+           "--seeds", "1", "--mode", "frontier", "--max-turn", "2",
+           "--out", "logs/golden/crossturn_setup_frontier.jsonl"]
+    out: "logs/golden/crossturn_setup_frontier.jsonl"
+    match: {case: "saga_setup seed1 T2 frontier"}
+    expect: {verdict: "no-kill"}
+    timeout: 300
+
+  - id: crossturn-hidden-beam4-ruler-kill2
+    desc: "saga_hidden を beam4・順序関数 ruler で横断: 最速2ターンキルを保持できるか"
+    argv: ["tools/exhaustive_crossturn.py", "--setup", "tests/saga_hidden_setup.yaml",
+           "--seeds", "1", "--mode", "beam", "--beam", "4", "--trim-order", "ruler",
+           "--out", "logs/golden/crossturn_hidden_beam4_ruler.jsonl"]
+    out: "logs/golden/crossturn_hidden_beam4_ruler.jsonl"
+    match: {case: "saga_hidden_setup seed1 T3 beam4"}
+    expect: {verdict: "kill", kill_turn: 2}
+    timeout: 300
+
+  - id: multiturn-saga-seed6-stage2-kill4
+    desc: "本家 saga デッキ seed6 を段2で走行: 4ターンキル（段1では見つからなかったキル）"
+    argv: ["tools/exhaustive_multiturn.py", "--deck", "data/decks/saga.yaml",
+           "--seeds", "6", "--stages", "2", "--order", "rank", "--budget", "1000000",
+           "--out", "logs/golden/multiturn_saga_seed6_stage2.jsonl"]
+    out: "logs/golden/multiturn_saga_seed6_stage2.jsonl"
+    match: {case: "saga seed6 T4", mode: "exhaustive-staged-multiturn"}
+    expect: {verdict: "kill", kill_turn: 4}
+    timeout: 300

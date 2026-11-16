@@ -439542,3 +439542,1050 @@ cards:
   source:
     official: dm38-020
     review: pending
+- id: dm26rp1-006
+  name: 圧倒するレオパルズ・ホーン
+  types:
+  - creature
+  civs:
+  - nature
+  cost: 6
+  mana: 1
+  text: 'G・ゼロ：クリーチャーが７体以上あれば、このクリーチャーをコストを支払わずに召喚してもよい。
+
+    マッハファイター
+
+    パワード・ブレイカー（このクリーチャーは、そのパワー6000ごとにシールドをもう１つブレイクする）
+
+    自分のマナゾーンにあるカード１枚につき、このクリーチャーのパワーを+1000する。
+
+    自分のマナゾーンにカードタイプが４つ以上あれば、自分のマナゾーンにあるカードのマナの数字を２にする。（カードタイプ：クリーチャー、呪文、タマシード、G城、フィールドなど）'
+  source:
+    official: dm26rp1-006
+    review: pending
+    notes: 再変換ラウンド248。第212弾（mana_number_change）の再変換。G・ゼロは free_if、マッハファイターは partial
+      の登場時付与（コーパス先例どおり）、パワーはマナ枚数比例の mod、タイプ4種以上の条件で mod mana_number。
+  power: 0
+  races:
+  - ホーン・ビースト
+  keywords:
+  - powered_breaker
+  abilities:
+  - kind: trigger
+    when:
+      event: move
+      to: bz
+      subject: self
+    effect:
+    - op: modify
+      select:
+        ref: self
+      mod:
+        allow:
+        - action: attack_creature
+          other:
+            tapped: false
+      duration: end_of_turn
+  - kind: static
+    affects: self
+    mod:
+      power:
+        amount: 1000
+        count:
+          zone: mana
+          owner: you
+  - kind: static
+    affects:
+      zone: mana
+      owner: you
+    if:
+      cmp:
+      - distinct_type_count:
+          zone: mana
+          owner: you
+      - '>='
+      - 4
+    mod:
+      mana_number: 2
+  free_if:
+    cmp:
+    - count:
+        zone: bz
+        owner: any
+        filter:
+          types:
+          - creature
+    - '>='
+    - 7
+- id: dmrp18-008
+  name: 沸天混成 ジョバンセン・ガロウズ
+  types:
+  - creature
+  civs:
+  - light
+  - water
+  - fire
+  cost: 8
+  mana: 1
+  text: 'EXライフ（このクリーチャーを出す時、自分の山札の上から１枚目をシールド化する。このクリーチャーが離れる時、かわりにそのシールドを墓地に置く）
+
+    T・ブレイカー
+
+    パワーアタッカー+5000
+
+    このクリーチャーが出た時、自分の墓地の呪文をすべて手札に戻す。
+
+    自分のマナゾーンのカードをタップして呪文を唱える時、そのうちの好きな枚数のカードの、マナの数字を２にしてもよい。'
+  source:
+    official: dmrp18-008
+    review: pending
+    notes: '再変換ラウンド248。第212弾（mana_number_change）の再変換。パワーアタッカーはコーパス形式の power_when に直し、墓地の呪文全回収の
+      CIP と scope: spell の mana_boost を追加。'
+  power: 8000
+  races:
+  - ディスペクター
+  - フレイム・コマンド
+  - グレートメカオー
+  keywords:
+  - ex_life
+  - triple_breaker
+  abilities:
+  - kind: static
+    affects: self
+    mod:
+      power_when:
+        amount: 5000
+        when: attacking
+  - kind: trigger
+    when:
+      event: move
+      to: bz
+      subject: self
+    effect:
+    - op: move
+      select:
+        zone: graveyard
+        owner: you
+        filter:
+          types:
+          - spell
+        count: all
+      to: hand
+      reason: return
+  - kind: static
+    mana_boost:
+      value: 2
+      scope: spell
+- id: dmx06-002
+  name: 不知火横綱ニバイ・ニバーイ
+  types:
+  - creature
+  civs:
+  - fire
+  - nature
+  cost: 8
+  mana: 1
+  text: 'マナゾーンに置く時、このカードはタップして置く。
+
+    マナゾーンでカードをタップする時、そのうちの好きな枚数のカードのマナを２にしてもよい。
+
+    T・ブレイカー(このクリーチャーはシールドを３枚ブレイクする)'
+  source:
+    official: dmx06-002
+    review: pending
+    notes: '再変換ラウンド248。第212弾（mana_number_change）の再変換。常在型 mana_boost {value: 2}。マナゾーンに置く時のタップは多色の自動処理（405.1）。'
+  power: 12000
+  races:
+  - リキシ・コマンド
+  - エイリアン
+  keywords:
+  - triple_breaker
+  abilities:
+  - kind: static
+    mana_boost:
+      value: 2
+- id: dmx19-s42
+  name: 神誕の大地ヘラクレス
+  types:
+  - creature
+  civs:
+  - nature
+  cost: 12
+  mana: 1
+  text: このクリーチャーを召喚する時、自分のマナゾーンにあるゴッドのマナの数字は、１のかわりに２になる。このクリーチャーをバトルゾーンに出した時、好きな数のゴッドを、自分のマナゾーンから手札に戻す。自分のゴッドを召喚するコストを３まで少なくしてもよい。ただし、コストは１より少なくならない。T・ブレイカー
+  source:
+    official: dmx19-s42
+    review: pending
+    notes: 再変換ラウンド248。第212弾（mana_number_change）の再変換。面 mana_boost（ゴッド→2）、CIP でマナのゴッドを好きな数手札へ、ゴッド召喚の
+      cost_may 軽減。
+    aliases:
+    - dm34-s05
+  power: 12000
+  races:
+  - ガイア・コマンド
+  keywords:
+  - triple_breaker
+  mana_boost:
+    filter:
+      race_has: ゴッド
+    value: 2
+  abilities:
+  - kind: trigger
+    when:
+      event: move
+      to: bz
+      subject: self
+    effect:
+    - op: choose
+      select:
+        zone: mana
+        owner: you
+        filter:
+          race_has: ゴッド
+        count: all
+        up_to: true
+      as: g
+    - op: move
+      select:
+        ref: g
+        count: all
+      to: hand
+      reason: return
+  - kind: static
+    affects:
+      zone: hand
+      owner: you
+      filter:
+        race_has: ゴッド
+    mod:
+      cost_may:
+        amount: 3
+        once: true
+        min: 1
+- id: dmx19-v01
+  name: 偽りの王 ルードヴィヒ
+  types:
+  - creature
+  civs:
+  - fire
+  cost: 14
+  mana: 1
+  text: このクリーチャーを召喚する時、自分のマナゾーンにあるドラゴンを好きな数選び、そのマナの数字を１のかわりに２にしてもよい。スピードアタッカー（このクリーチャーは召喚酔いしない）このクリーチャーが攻撃する時、相手のパワー7000以下のクリーチャーを１体破壊する。T・ブレイカー
+  source:
+    official: dmx19-v01
+    review: pending
+    notes: 再変換ラウンド248。第212弾（mana_number_change）の再変換。面 mana_boost（ドラゴン→2、任意形）、スピードアタッカー、攻撃誘発のパワー7000以下破壊。
+    aliases:
+    - dmx11-008
+  power: 12000
+  races:
+  - キング・コマンド・ドラゴン
+  - アンノウン
+  keywords:
+  - triple_breaker
+  - speed_attacker
+  mana_boost:
+    filter:
+      race_has: ドラゴン
+    value: 2
+    optional: true
+  abilities:
+  - kind: trigger
+    when:
+      event: attack
+      subject: self
+    effect:
+    - op: destroy
+      select:
+        zone: bz
+        owner: opp
+        filter:
+          types:
+          - creature
+          power_le: 7000
+        count: 1
+- id: dm24bd5-014
+  name: 氷駆の妖精
+  types:
+  - creature
+  civs:
+  - nature
+  cost: 3
+  power: 4000
+  races:
+  - ジャイアント・スノーフェアリー
+  mana: 1
+  text: 'このクリーチャーが出た時、自分の山札の上から１枚目をタップしてマナゾーンに置く。
+
+    シビルカウント ５：自分の、自然のクリーチャーまたは自然のタマシードが合計５つ以上あれば、自分のマナゾーンにあるカードのマナの数字を２にする。'
+  abilities:
+  - kind: trigger
+    when:
+      event: move
+      to: bz
+      subject: self
+    effect:
+    - op: move
+      select:
+        zone: deck
+        owner: you
+        from_top: 1
+      to: mana
+      reason: put
+      tapped: true
+  - kind: static
+    affects:
+      zone: mana
+      owner: you
+    if:
+      cmp:
+      - count:
+          zone: bz
+          owner: you
+          filter:
+            any_of:
+            - civs:
+              - nature
+              types:
+              - creature
+            - civs:
+              - nature
+              types:
+              - tamaseed
+      - '>='
+      - 5
+    mod:
+      mana_number: 2
+  source:
+    official: dm24bd5-014
+    review: pending
+    notes: 再変換ラウンド248。第212弾（mana_number_change）の再変換。シビルカウント5は count の any_of 条件＋ mod
+      mana_number。
+    aliases:
+    - dm22rp2-7a
+    - dm22rp2-9b
+    - dm22rp2-s7
+    - dm22rp2x-7a
+    - dm22rp2x-9b
+    - dm22rp2x-s7
+    - dm22rp2x-s7x
+- id: dmsp02-006
+  name: 神帝ルナティック・ゴッド GS
+  types:
+  - creature
+  civs:
+  - water
+  - darkness
+  cost: 21
+  power: 21000
+  races:
+  - ゴッド
+  - オリジン
+  mana: 1
+  text: '{GS} G・ストライク（このクリーチャーを自分のシールドゾーンから手札に加える時、相手に見せ、相手のクリーチャーを１体選んでもよい。このターン、そのクリーチャーは攻撃できない）
+
+    このクリーチャーを召喚する時、自分のマナゾーンにあるゴッドのマナの数字は、１のかわりに３になる。
+
+    W・ブレイカー
+
+    このクリーチャーが出た時、相手のクリーチャーを３体まで選び、持ち主の手札に戻す。その後、カードを３枚引いてもよい。
+
+    このクリーチャーの攻撃の終わりに、このクリーチャーをアンタップする。'
+  abilities:
+  - kind: trigger
+    when:
+      event: move
+      to: bz
+      subject: self
+    effect:
+    - op: choose
+      select:
+        zone: bz
+        owner: opp
+        filter:
+          types:
+          - creature
+        count: 3
+        up_to: true
+      as: t
+    - op: move
+      select:
+        ref: t
+        count: all
+      to: hand
+      reason: return
+    - op: may
+      body:
+      - op: draw
+        count: 3
+  - kind: trigger
+    when:
+      event: attack_end
+      subject: self
+    effect:
+    - op: untap
+      select:
+        ref: self
+  source:
+    official: dmsp02-006
+    review: pending
+    notes: 再変換ラウンド248。第212弾（mana_number_change）の再変換。面 mana_boost（ゴッド→3）。CIP と攻撃終了時アンタップは
+      partial のまま。
+  keywords:
+  - g_strike
+  - double_breaker
+  mana_boost:
+    filter:
+      race_has: ゴッド
+    value: 3
+- id: dm23rp1-014
+  name: KING THE オルガンクルー
+  types:
+  - creature
+  civs:
+  - water
+  cost: 6
+  power: 4000
+  races:
+  - マジック・リヴァイアサン
+  keywords:
+  - blocker
+  mana: 1
+  text: 'ブロッカー（このクリーチャーをタップして、相手クリーチャーの攻撃先をこのクリーチャーに変更してもよい）
+
+    パワード・ブロッカー +6000（ブロック中、このクリーチャーのパワーを+6000する）
+
+    このクリーチャーが出た時、カードを２枚引く。
+
+    各ターン、はじめて自分のマナゾーンのカードをタップして呪文を唱える時、そのうちの好きな枚数のカードの、マナの数字を２にしてもよい。'
+  abilities:
+  - kind: trigger
+    when:
+      event: move
+      to: bz
+      subject: self
+    effect:
+    - op: draw
+      count: 2
+  - kind: static
+    affects: self
+    mod:
+      power_when:
+        amount: 6000
+        when: blocking
+  - kind: static
+    mana_boost:
+      value: 2
+      scope: spell
+      if:
+        cmp:
+        - turn_count:
+            kind: cast
+            owner: you
+        - ==
+        - 0
+  source:
+    official: dm23rp1-014
+    review: pending
+    notes: 再変換ラウンド248。第212弾（mana_number_change）の再変換。ブロッカー、パワード・ブロッカーは power_when、初回詠唱の制限は
+      turn_count cast の if で mana_boost に付けた。
+- id: dm23rp2x-018
+  name: 冥逝邪夢
+  types:
+  - spell
+  civs:
+  - darkness
+  cost: 9
+  races:
+  - アビスへの誘い
+  mana: 1
+  text: '自分の山札の上から３枚を墓地に置く。
+
+    自分のマナゾーンにあるカードの枚数以下のコストを持つクリーチャーをすべて、自分の墓地からタップして出す。それらのクリーチャーが出てそれらの能力がトリガーする時、かわりにそれらの能力はトリガーしない。'
+  source:
+    official: dm23rp2x-018
+    review: pending
+    notes: 再変換ラウンド249。第213弾 suppress_entry_triggers の再変換。山札上3枚を墓地に置き、マナ枚数以下のコストのクリーチャーをすべて墓地からタップして出す（no_trigger
+      で誘発を抑制）。
+    aliases:
+    - dm23rp2-018
+  spell:
+  - op: move
+    select:
+      zone: deck
+      owner: you
+      from_top: 3
+    to: graveyard
+    reason: put
+  - op: move
+    select:
+      zone: graveyard
+      owner: you
+      filter:
+        types:
+        - creature
+        cost_le:
+          count:
+            zone: mana
+            owner: you
+      count: all
+    to: bz
+    reason: put
+    tapped: true
+    no_trigger: true
+- id: dm25ex3-rp3s09
+  name: 「GG」-001
+  types:
+  - creature
+  civs:
+  - light
+  - fire
+  - nature
+  cost: 10
+  power: 18000
+  races:
+  - ガイアール・コマンド・ドラゴン
+  - ヒューマノイド爆
+  - テクノ・サムライ
+  mana: 1
+  text: 'D・D・D [lfn07]
+
+    NEO進化：光、火、または自然のクリーチャー１体の上に置いてもよい。
+
+    Q・ブレイカー
+
+    相手のクリーチャーが出るか攻撃することによってその能力がトリガーする時、これが進化クリーチャーなら、かわりにその能力はトリガーしない。'
+  neo: true
+  evolve_from:
+    civs:
+    - light
+    - fire
+    - nature
+  abilities:
+  - kind: declare
+    zone: hand
+    when:
+      event: attack
+      subject:
+        owner: you
+        filter:
+          types:
+          - creature
+    effect:
+    - op: may
+      body:
+      - op: play_self
+        cost: 7
+        civs:
+        - light
+        - fire
+        - nature
+  - kind: static
+    suppress_triggers:
+      whose: opp
+      events:
+      - enter
+      - attack
+      if:
+        cmp:
+        - count:
+            under_of: self
+        - '>='
+        - 1
+  source:
+    official: dm25ex3-rp3s09
+    review: pending
+    notes: '再変換ラウンド249。第213弾 suppress_entry_triggers の再変換。NEO進化（neo: true + evolve_from
+      文明）。抑制は進化クリーチャーである時（下にカードがある時）だけ効く。'
+    aliases:
+    - dm25ex3-rp3sec10
+    - dm25rp3-s09
+    - dm25rp3-sec10
+  keywords:
+  - quad_breaker
+- id: dm26ex1-026
+  name: ブラキオ龍樹
+  types:
+  - creature
+  civs:
+  - nature
+  cost: 11
+  power: 23000
+  races:
+  - ジャイアント・ドラゴン
+  - 不死樹王国
+  mana: 1
+  fushigi:
+    cost: 13
+    civs:
+    - nature
+    min: 1
+  text: 'Q・ブレイカー
+
+    相手のクリーチャーが出て、相手のクリーチャーの能力がトリガーする時、かわりにその能力はトリガーしない。（例えば、相手は「このクリーチャーが出た時」で始まる能力を使えない）
+
+    フシギバース [nn13]（自分のクリーチャーを１体タップしてマナゾーンに置き、[nn13]からそのクリーチャーのコストを引いた数のコストを支払って、このクリーチャーを自分の墓地から召喚してもよい。ただしコストは[nn01]より少なくならない）'
+  source:
+    official: dm26ex1-026
+    review: pending
+    notes: 再変換ラウンド249。第213弾 suppress_entry_triggers の再変換。フシギバースは fushigi 宣言。登場誘発の抑制は
+      suppress_triggers（enter）。
+    aliases:
+    - dm25ex3-td06
+    - dm26sd1-x002f
+    - dmrp14-s05
+    - dmrp22-tr6
+  keywords:
+  - quad_breaker
+  abilities:
+  - kind: static
+    suppress_triggers:
+      whose: opp
+      events:
+      - enter
+- id: dm26ex4-cho019
+  name: 終末縫合王 ザ=キラー・キーナリー
+  types:
+  - creature
+  civs:
+  - water
+  - darkness
+  - nature
+  cost: 10
+  power: 15000
+  races:
+  - ディスペクター
+  - ジュラシック・コマンド・ドラゴン
+  - ドラゴン・ゾンビ
+  keywords:
+  - ex_life
+  - triple_breaker
+  mana: 1
+  text: 'EXライフ
+
+    T・ブレイカー
+
+    このクリーチャーが出た時、相手のクリーチャーを１体選ぶ。その選んだクリーチャーを持ち主の手札に戻してもよい。その後、その選んだクリーチャー以下のコストのクリーチャーを１体、自分の墓地から出す。
+
+    相手のクリーチャーが出て、その能力がトリガーする時、かわりにその能力はトリガーしない。'
+  abilities:
+  - kind: trigger
+    when:
+      event: move
+      to: bz
+      subject: self
+    effect:
+    - op: choose
+      select:
+        zone: bz
+        owner: opp
+        filter:
+          types:
+          - creature
+        count: 1
+      as: tgt
+    - op: if
+      cond:
+        exists:
+          ref: tgt
+      then:
+      - op: may
+        body:
+        - op: move
+          select:
+            ref: tgt
+          to: hand
+          reason: return
+      - op: move
+        select:
+          zone: graveyard
+          owner: you
+          filter:
+            types:
+            - creature
+            cost_le:
+              cost_of: tgt
+          count: 1
+        to: bz
+        reason: put
+  - kind: static
+    suppress_triggers:
+      whose: opp
+      events:
+      - enter
+  source:
+    official: dm26ex4-cho019
+    review: pending
+    notes: '再変換ラウンド249。第213弾 suppress_entry_triggers の再変換。EXライフ。出た時: 相手獣1体を選んで手札に戻してもよく、その後そのコスト以下のクリーチャーを墓地から出す。相手の登場誘発は
+      suppress_triggers で抑制。'
+    aliases:
+    - dm23bd1-007
+    - dm23bd1-be006
+    - dm24rp1-sp2
+    - dm25sp2-004
+    - dm26sd1-a002f
+    - promoy23-092
+- id: dmart26-006
+  name: 終末縫合王 ザ=キラー・キーナリー
+  types:
+  - creature
+  civs:
+  - water
+  - darkness
+  - nature
+  cost: 10
+  power: 15000
+  races:
+  - ディスペクター
+  - ジュラシック・コマンド・ドラゴン
+  - ドラゴン・ゾンビ
+  keywords:
+  - ex_life
+  - triple_breaker
+  mana: 1
+  text: 'EXライフ
+
+    T・ブレイカー
+
+    このクリーチャーが出た時、相手のクリーチャーを１体選ぶ。その選んだクリーチャーを持ち主の手札に戻してもよい。その後、その選んだクリーチャー以下のコストを持つクリーチャーを１体、自分の墓地から出す。
+
+    相手のクリーチャーが出て、その能力がトリガーする時、かわりにその能力はトリガーしない。'
+  abilities:
+  - kind: trigger
+    when:
+      event: move
+      to: bz
+      subject: self
+    effect:
+    - op: choose
+      select:
+        zone: bz
+        owner: opp
+        filter:
+          types:
+          - creature
+        count: 1
+      as: tgt
+    - op: if
+      cond:
+        exists:
+          ref: tgt
+      then:
+      - op: may
+        body:
+        - op: move
+          select:
+            ref: tgt
+          to: hand
+          reason: return
+      - op: move
+        select:
+          zone: graveyard
+          owner: you
+          filter:
+            types:
+            - creature
+            cost_le:
+              cost_of: tgt
+          count: 1
+        to: bz
+        reason: put
+  - kind: static
+    suppress_triggers:
+      whose: opp
+      events:
+      - enter
+  source:
+    official: dmart26-006
+    review: pending
+    notes: '再変換ラウンド249。第213弾 suppress_entry_triggers の再変換。EXライフ。出た時: 相手獣1体を選んで手札に戻してもよく、その後そのコスト以下のクリーチャーを墓地から出す。相手の登場誘発は
+      suppress_triggers で抑制。'
+- id: dm24ex4-022
+  name: 地雷冥土The World Is Mine
+  types:
+  - creature
+  civs:
+  - darkness
+  - nature
+  cost: 6
+  power: 9000
+  races:
+  - デーモン・コマンド
+  - アウトレイジ
+  keywords:
+  - blocker
+  - double_breaker
+  mana: 1
+  text: 'リベンジ・チャンス：各ターンの終わりに、相手の、コスト９以上またはパワー15000以上のクリーチャーがあれば、このクリーチャーをコストを支払わずに召喚してもよい。
+
+    ブロッカー
+
+    W・ブレイカー
+
+    このクリーチャーがタップした時、相手のクリーチャーを１体選び、破壊する。その後、その選んだクリーチャー以下のコストの、進化ではないクリーチャーを１体、自分の墓地から出してもよい。'
+  abilities:
+  - kind: trigger
+    zone: hand
+    when:
+      event: turn_end
+    if:
+      exists:
+        zone: bz
+        owner: opp
+        filter:
+          types:
+          - creature
+          any_of:
+          - cost_ge: 9
+          - power_ge: 15000
+    effect:
+    - op: may
+      body:
+      - op: play_free
+        select:
+          ref: self
+  - kind: trigger
+    when:
+      event: tap
+      subject: self
+    effect:
+    - op: choose
+      select:
+        zone: bz
+        owner: opp
+        filter:
+          types:
+          - creature
+        count: 1
+      as: tgt
+    - op: destroy
+      select:
+        ref: tgt
+    - op: if
+      cond:
+        exists:
+          ref: tgt
+      then:
+      - op: may
+        body:
+        - op: move
+          select:
+            zone: graveyard
+            owner: you
+            filter:
+              types:
+              - creature
+              evolution: false
+              cost_le:
+                cost_of: tgt
+            count: 1
+          to: bz
+          reason: put
+  source:
+    official: dm24ex4-022
+    aliases:
+    - dm24ex4-chosec009
+    - dm24ex4-sec009
+    review: pending
+    notes: '再変換ラウンド250。第214弾リベンジ・チャンスのイディオム（zone: hand の turn_end 誘発＋play_free {ref:
+      self}）で変換。タップ時誘発は event: tap。'
+- id: dm38-014
+  name: 風来の用心棒クマっ太
+  types:
+  - creature
+  civs:
+  - nature
+  cost: 7
+  power: 5000
+  races:
+  - ドリームメイト
+  mana: 1
+  text: リベンジ・チャンス-各ターンの終わりに、相手がそのターン、クリーチャーを３体以上バトルゾーンに出していた場合、このクリーチャーをコストを支払わずに召喚してもよい。
+    このクリーチャーをバトルゾーンに出した時、相手はバトルゾーンにある自身のクリーチャーを１体選び、マナゾーンに置く。
+  abilities:
+  - kind: trigger
+    zone: hand
+    when:
+      event: turn_end
+    if:
+      cmp:
+      - turn_count:
+          kind: enter
+          owner: opp
+      - '>='
+      - 3
+    effect:
+    - op: may
+      body:
+      - op: play_free
+        select:
+          ref: self
+  - kind: trigger
+    when:
+      event: move
+      to: bz
+      subject: self
+    effect:
+    - op: mana_put
+      select:
+        zone: bz
+        owner: opp
+        filter:
+          types:
+          - creature
+        count: 1
+        chooser: opp
+  source:
+    official: dm38-014
+    review: pending
+    notes: '再変換ラウンド250。第214弾リベンジ・チャンスのイディオムで変換。条件は turn_count enter（相手）。CIP は相手が自身のクリーチャーを選んでマナゾーンに置く（chooser:
+      opp）。partial の text が切り詰められていたため reject 行の公式テキストを採用。'
+- id: dmx12b-092
+  name: 反射の大地カプリコン
+  types:
+  - creature
+  civs:
+  - nature
+  cost: 6
+  power: 6000
+  races:
+  - ガイア・コマンド
+  keywords:
+  - double_breaker
+  mana: 1
+  text: 'リベンジ・チャンス-各ターンの終わりに、相手がそのターン、山札からシールドゾーンに新しいシールドを加えていた場合、このクリーチャーをコストを支払わずに召喚してもよい。
+
+    W・ブレイカー（このクリーチャーはシールドを２枚ブレイクする）'
+  abilities:
+  - kind: trigger
+    zone: hand
+    when:
+      event: turn_end
+    if:
+      cmp:
+      - turn_count:
+          kind: shield_put
+          owner: opp
+          from: deck
+      - '>='
+      - 1
+    effect:
+    - op: may
+      body:
+      - op: play_free
+        select:
+          ref: self
+  source:
+    official: dmx12b-092
+    aliases:
+    - dm38-031
+    review: pending
+    notes: 再変換ラウンド250。第214弾リベンジ・チャンスのイディオム＋turn_count の from 修飾（山札から加えた場合のみ数える）で変換。
+- id: dmx18-020
+  name: ベニジシ・スパイダー
+  types:
+  - creature
+  civs:
+  - nature
+  cost: 5
+  power: 4000
+  races:
+  - ジャイアント・インセクト
+  mana: 1
+  text: 'リベンジ・チャンス-各ターンの終わりに、相手がそのターン、カードを３枚以上引いていた場合、このクリーチャーをコストを支払わずに召喚してもよい。
+
+    このクリーチャーをバトルゾーンに出した時、自分の山札の上から１枚目をマナゾーンに置く。'
+  abilities:
+  - kind: trigger
+    when:
+      event: move
+      to: bz
+      subject: self
+    effect:
+    - op: move
+      select:
+        zone: deck
+        owner: you
+        from_top: 1
+      to: mana
+      reason: put
+  - kind: trigger
+    zone: hand
+    when:
+      event: turn_end
+    if:
+      cmp:
+      - turn_count:
+          kind: draw
+          owner: opp
+      - '>='
+      - 3
+    effect:
+    - op: may
+      body:
+      - op: play_free
+        select:
+          ref: self
+  - kind: trigger
+    when:
+      event: move
+      subject: self
+      to: bz
+    effect:
+    - op: move
+      reason: put
+      select:
+        from_top: 1
+        owner: you
+        zone: deck
+      to: mana
+  source:
+    official: dmx18-020
+    aliases:
+    - dm38-053
+    review: pending
+    notes: 再変換ラウンド250。第214弾リベンジ・チャンスのイディオムで変換。条件は turn_count draw（相手）。CIP は partial
+      の既存能力を維持。
+- id: dmx19-s44
+  name: 剛撃無双カンクロウ
+  types:
+  - creature
+  civs:
+  - nature
+  cost: 9
+  power: 19000
+  races:
+  - アース・ドラゴン
+  - ジャイアント
+  - サムライ
+  - W・ソウル
+  keywords:
+  - quad_breaker
+  mana: 1
+  text: 【W・ソウル】リベンジ・チャンス-各ターンの終わりに、バトルゾーンに相手のコスト11以上またはパワー18000以上のクリーチャーがあれば、このクリーチャーをコストを支払わずに召喚してもよい。Q・ブレイカー（このクリーチャーはシールドを４枚ブレイクする）
+  abilities:
+  - kind: trigger
+    zone: hand
+    when:
+      event: turn_end
+    if:
+      exists:
+        zone: bz
+        owner: opp
+        filter:
+          types:
+          - creature
+          any_of:
+          - cost_ge: 11
+          - power_ge: 18000
+    effect:
+    - op: may
+      body:
+      - op: play_free
+        select:
+          ref: self
+  source:
+    official: dmx19-s44
+    aliases:
+    - dm38-s04
+    review: pending
+    notes: 再変換ラウンド250。第214弾リベンジ・チャンスのイディオムで変換。W・ソウルは種族として追加（K・ソウルの前例どおり、partial に欠けていた）。

@@ -7841,3 +7841,295 @@ cards:
         if: {is_turn: opp}
         effect:
           - {op: untap, select: {ref: self}}
+  - id: T526
+    name: 試験用数字便乗獣
+    types: [creature]
+    civs: [fire]
+    cost: 5
+    power: 5000
+    races: [テスト]
+    mana: 1
+    mana_boost: {filter: {races: [ゴッド]}, value: 2}
+    text: このクリーチャーを召喚する時、自分のマナゾーンにあるゴッドのマナの数字は、1のかわりに2になる。
+  - id: T527
+    name: 試験用数字任意獣
+    types: [creature]
+    civs: [water]
+    cost: 5
+    power: 5000
+    races: [テスト]
+    mana: 1
+    mana_boost: {filter: {races: [ドラゴン]}, value: 2, optional: true}
+    text: このクリーチャーを召喚する時、自分のマナゾーンにあるドラゴンを好きな数選び、そのマナの数字を1のかわりに2にしてもよい。
+  - id: T528
+    name: 試験用数字増幅獣
+    types: [creature]
+    civs: [nature]
+    cost: 4
+    power: 4000
+    races: [テスト]
+    mana: 1
+    text: マナゾーンでカードをタップする時、そのうちの好きな枚数のカードのマナを2にしてもよい。
+    abilities:
+      - kind: static
+        mana_boost: {value: 2}
+  - id: T529
+    name: 試験用呪文増幅獣
+    types: [creature]
+    civs: [light]
+    cost: 4
+    power: 4000
+    races: [テスト]
+    mana: 1
+    text: 自分のマナゾーンのカードをタップして呪文を唱える時、そのうちの好きな枚数のカードの、マナの数字を2にしてもよい。
+    abilities:
+      - kind: static
+        mana_boost: {value: 2, scope: spell}
+  - id: T530
+    name: 試験用数字置換獣
+    types: [creature]
+    civs: [nature]
+    cost: 4
+    power: 4000
+    races: [テスト]
+    mana: 1
+    text: 自分のマナゾーンにカードタイプが3つ以上あれば、自分のマナゾーンにあるカードのマナの数字を2にする。
+    abilities:
+      - kind: static
+        affects: {zone: mana, owner: you}
+        if: {cmp: [{distinct_type_count: {zone: mana, owner: you}}, ">=", 3]}
+        mod: {mana_number: 2}
+  - id: T531
+    name: 試験用ゴッド見本
+    types: [creature]
+    civs: [fire]
+    cost: 1
+    power: 1000
+    races: [ゴッド]
+    mana: 1
+    text: ゴッドの見本。
+  - id: T532
+    name: 試験用ドラゴン見本
+    types: [creature]
+    civs: [water]
+    cost: 1
+    power: 1000
+    races: [ドラゴン]
+    mana: 1
+    text: ドラゴンの見本。
+  - id: T533
+    name: 試験用高額呪文
+    types: [spell]
+    civs: [fire]
+    cost: 5
+    mana: 1
+    text: カードを1枚引く。
+    spell:
+      - {op: draw, count: 1}
+  - id: T534
+    name: 試験用高額獣
+    types: [creature]
+    civs: [fire]
+    cost: 5
+    power: 5000
+    races: [テスト]
+    mana: 1
+    text: ただの5コスト獣（対照用）。
+  - id: T535
+    name: 試験用数字増幅獣・改
+    types: [creature]
+    civs: [nature]
+    cost: 4
+    power: 4000
+    races: [テスト]
+    mana: 1
+    text: 自分のマナゾーンのカードをタップする時、そのうちの好きな枚数のカードの、マナの数字を2または3にしてもよい。
+    abilities:
+      - kind: static
+        mana_boost: {values: [2, 3]}
+  - id: T536
+    name: 試験用マナタップ墓地獣
+    types: [creature]
+    civs: [nature]
+    cost: 8
+    power: 8000
+    races: [テスト]
+    mana: 1
+    text: 自分のマナゾーンのカードをタップした時、そのカードを自分の墓地に置く。
+    abilities:
+      - kind: trigger
+        when: {event: tap, subject: {owner: you, zone: mana}}
+        effect:
+          - {op: move, select: {ref: subject}, to: graveyard, reason: put}
+  - id: T537
+    name: 出た時ドロー獣
+    types: [creature]
+    civs: [nature]
+    cost: 3
+    power: 2000
+    text: "このクリーチャーが出た時、カードを1枚引く。"
+    abilities:
+      - kind: trigger
+        when: {event: move, to: bz, subject: self}
+        effect:
+          - {op: draw, count: 1}
+  - id: T538
+    name: トリガーなし復活
+    types: [spell]
+    civs: [fire]
+    cost: 2
+    text: "自分の墓地からクリーチャーを1体出してもよい。そのクリーチャーが出た時にトリガーする能力はトリガーしない。"
+    spell:
+      - op: may
+        body:
+          - {op: move, select: {zone: graveyard, owner: you, filter: {types: [creature]}, count: 1}, to: bz, reason: put, no_trigger: true}
+  - id: T539
+    name: 通常復活
+    types: [spell]
+    civs: [nature]
+    cost: 2
+    text: "自分の墓地からクリーチャーを1体出してもよい。"
+    spell:
+      - op: may
+        body:
+          - {op: move, select: {zone: graveyard, owner: you, filter: {types: [creature]}, count: 1}, to: bz, reason: put}
+  - id: T540
+    name: 登場抑制獣
+    types: [creature]
+    civs: [water]
+    cost: 4
+    power: 3000
+    text: "相手のクリーチャーが出て、相手のクリーチャーの能力がトリガーする時、かわりにその能力はトリガーしない。"
+    abilities:
+      - kind: static
+        suppress_triggers: {whose: opp, events: [enter]}
+  - id: T541
+    name: 登場攻撃抑制獣
+    types: [creature]
+    civs: [darkness]
+    cost: 5
+    power: 4000
+    text: "相手のクリーチャーが出るか攻撃することによってその能力がトリガーする時、かわりにその能力はトリガーしない。"
+    abilities:
+      - kind: static
+        suppress_triggers: {whose: opp, events: [enter, attack]}
+  - id: T542
+    name: 攻撃時ドロー獣
+    types: [creature]
+    civs: [fire]
+    cost: 3
+    power: 3000
+    keywords: [speed_attacker]
+    text: "スピードアタッカー。このクリーチャーが攻撃する時、カードを1枚引く。"
+    abilities:
+      - kind: trigger
+        when: {event: attack, subject: self}
+        effect:
+          - {op: draw, count: 1}
+  - id: T543
+    name: 観測獣
+    types: [creature]
+    civs: [light]
+    cost: 3
+    power: 2000
+    text: "自分のクリーチャーが出た時、カードを1枚引く。"
+    abilities:
+      - kind: trigger
+        when: {event: move, to: bz, subject: {owner: you, filter: {types: [creature]}}}
+        effect:
+          - {op: draw, count: 1}
+  - id: T544
+    name: リベンジ見本・大物
+    types: [creature]
+    civs: [nature]
+    cost: 5
+    power: 4000
+    text: "リベンジ・チャンス：各ターンの終わりに、相手のコスト9以上のクリーチャーがあれば、このクリーチャーをコストを支払わずに召喚してもよい。"
+    abilities:
+      - kind: trigger
+        zone: hand
+        when: {event: turn_end}
+        if: {exists: {zone: bz, owner: opp, filter: {types: [creature], cost_ge: 9}}}
+        effect:
+          - op: may
+            body:
+              - {op: play_free, select: {ref: self}}
+  - id: T545
+    name: リベンジ見本・登場数
+    types: [creature]
+    civs: [fire]
+    cost: 4
+    power: 3000
+    text: "リベンジ・チャンス：各ターンの終わりに、相手がそのターン、クリーチャーを2体以上バトルゾーンに出していた場合、このクリーチャーをコストを支払わずに召喚してもよい。"
+    abilities:
+      - kind: trigger
+        zone: hand
+        when: {event: turn_end}
+        if: {cmp: [{turn_count: {kind: enter, owner: opp}}, ">=", 2]}
+        effect:
+          - op: may
+            body:
+              - {op: play_free, select: {ref: self}}
+  - id: T546
+    name: リベンジ見本・シールド
+    types: [creature]
+    civs: [water]
+    cost: 5
+    power: 3000
+    text: "リベンジ・チャンス：各ターンの終わりに、相手がそのターン、山札からシールドゾーンに新しいシールドを加えていた場合、このクリーチャーをコストを支払わずに召喚してもよい。"
+    abilities:
+      - kind: trigger
+        zone: hand
+        when: {event: turn_end}
+        if: {cmp: [{turn_count: {kind: shield_put, owner: opp, from: deck}}, ">=", 1]}
+        effect:
+          - op: may
+            body:
+              - {op: play_free, select: {ref: self}}
+  - id: T547
+    name: リベンジ見本・ドロー
+    types: [creature]
+    civs: [darkness]
+    cost: 4
+    power: 2000
+    text: "リベンジ・チャンス：各ターンの終わりに、相手がそのターン、カードを3枚以上引いていた場合、このクリーチャーをコストを支払わずに召喚してもよい。"
+    abilities:
+      - kind: trigger
+        zone: hand
+        when: {event: turn_end}
+        if: {cmp: [{turn_count: {kind: draw, owner: opp}}, ">=", 3]}
+        effect:
+          - op: may
+            body:
+              - {op: play_free, select: {ref: self}}
+  - id: T548
+    name: 手札シールド呪文
+    types: [spell]
+    civs: [light]
+    cost: 2
+    text: "自分の手札を1枚選び、自分のシールドゾーンに加える。"
+    spell:
+      - {op: move, select: {zone: hand, owner: you, count: 1}, to: shield, reason: put}
+  - id: T549
+    name: 山札シールド呪文
+    types: [spell]
+    civs: [light]
+    cost: 2
+    text: "自分の山札の上から1枚目をシールドゾーンに加える。"
+    spell:
+      - {op: move, select: {zone: deck, owner: you, from_top: 1}, to: shield, reason: put}
+  - id: T550
+    name: 2ドロー呪文
+    types: [spell]
+    civs: [water]
+    cost: 2
+    text: "カードを2枚引く。"
+    spell:
+      - {op: draw, count: 2}
+  - id: T551
+    name: 速獣見本
+    types: [creature]
+    civs: [fire]
+    cost: 1
+    power: 1000
+    text: "バニラ見本。"
