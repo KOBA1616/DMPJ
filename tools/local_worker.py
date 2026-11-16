@@ -305,6 +305,18 @@ def run_routine(job: dict, git: Git, llm, cache: Path, daily_limit: int) -> dict
     elif name == "status":
         r = subprocess.run([sys.executable, "tools/gen_status.py", "--check"], cwd=ROOT, capture_output=True, text=True, encoding="utf-8", errors="replace")
         out = ((r.stdout or "") + (r.stderr or "")) or "STATUS.md は最新"
+    elif name == "diagnose":     # tools/diagnose_run.py（回す・集計・失敗局の分類）。引数は形を確かめてから渡す
+        entry, deck = str(job.get("entry", "saga")), job.get("deck")
+        if not re.fullmatch(r"\w+", entry) or (deck and not re.fullmatch(r"data/decks/[\w.-]+\.yaml", str(deck))):
+            return {"status": "error", "error": "entry / deck が不正"}
+        cmd = [sys.executable, "tools/diagnose_run.py", entry, "--games", str(int(job.get("games", 40))),
+               "--jobs", str(int(job.get("jobs", 4))), "--opp-level", str(int(job.get("opp_level", 1))), "--out", str(cache / "diag.md")]
+        if deck:
+            cmd += ["--deck", str(deck)]
+        cache.mkdir(parents=True, exist_ok=True)
+        subprocess.run(cmd, cwd=ROOT, capture_output=True, text=True, encoding="utf-8", errors="replace")
+        out = (cache / "diag.md").read_text(encoding="utf-8") if (cache / "diag.md").exists() else "diagnose_run の出力なし"
+        job = {**job, "summarize": None}     # 集計済みの表なのでそのまま返す
     elif name == "review":
         base = str(job.get("base", "origin/main"))
         if not re.fullmatch(r"[\w./-]+", base) or base.startswith("-"):
@@ -319,7 +331,7 @@ def run_routine(job: dict, git: Git, llm, cache: Path, daily_limit: int) -> dict
             return {"status": "ok", "text": "差分なし（レビュー対象が空）。PR 付きで投入するか、base を指定する"}
         job = {**job, "summarize": "review-diff"}
     else:
-        return {"status": "error", "error": f"未知の routine {name!r}（gaps / tests / review / status）"}
+        return {"status": "error", "error": f"未知の routine {name!r}（gaps / tests / review / status / diagnose）"}
     out = lo.scrub(out)
     if job.get("summarize"):
         task = job["summarize"] if job["summarize"] in lo.TASKS else "summarize"
@@ -547,7 +559,10 @@ def main(argv=None) -> int:
     e.add_argument("--instruction")
     e.add_argument("--file", help="ask の入力ファイル（中身をジョブに埋め込む）")
     e.add_argument("--model")
-    e.add_argument("--name", help="routine の名前（gaps / tests / review / status）")
+    e.add_argument("--name", help="routine の名前（gaps / tests / review / status / diagnose）")
+    e.add_argument("--entry", help="diagnose の入口名（例 saga）")
+    e.add_argument("--deck", help="diagnose のデッキ（data/decks/*.yaml）")
+    e.add_argument("--games", type=int, help="diagnose の局数")
     e.add_argument("--summarize", action="store_true", help="routine の結果を無料モデルで要約する")
     e.add_argument("--pr", type=int, help="結果をこの PR にコメント投稿する（PC に gh が要る）。Claude は PR 購読で自動に受け取る")
     e.add_argument("--limit", type=int, default=100)
@@ -572,6 +587,7 @@ def main(argv=None) -> int:
                 job["instruction"] = a.instruction
         elif a.type == "routine":
             job.update(name=a.name, summarize=a.summarize)
+            job.update({k: v for k, v in (("entry", a.entry), ("deck", a.deck), ("games", a.games)) if v is not None})
         else:
             job.update(limit=a.limit, workers=a.workers)
             if a.order:

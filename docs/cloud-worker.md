@@ -29,3 +29,9 @@ PC のワーカーとは別に、git を使えるクラウドのエージェン�
 - クラウド専用: `python tools/local_worker.py enqueue convert --limit 100 --target cloud --order newest`
 - PC は古い順（`--order id`）、クラウドは新しい順にすると被らない。
 - 1回の呼び出しでまとめて変換する: ジョブに `pack: 5`（`auto_convert.py --pack 5`）。指示文を共有してトークンを減らす。検査に落ちた分は単独で直す。
+
+## 診断ジョブ（コンボの失敗局の分類）
+カード変換と同じく、クラウドのエージェントに回させられる（Actions は使わない、モデルも使わない）。
+- 積む: `python tools/local_worker.py enqueue routine --name diagnose --entry saga --deck data/decks/saga_user_v1.yaml --games 40 --target cloud`
+- 処理: 上の指示文と同じ `run --once --target cloud`。40局で数十分〜数時間かかる（1局30分を超えたら外して数える）。
+- 結果: `jobs/done/<id>.yaml` の text に diagnose_run の表（集計と原因別の局数）。Claude はこれだけを読んで判断する。
