@@ -19,6 +19,17 @@ fn uns<T>(what: impl Into<String>) -> R<T> {
     Err(EngErr::Unsupported(what.into()))
 }
 
+/// 常在型の条件の入れ子の深さ（&self から増減する。PyO3 の型は Sync が要るので原子変数）
+#[derive(Default)]
+pub struct SDepth(std::sync::atomic::AtomicU32);
+impl SDepth {
+    pub fn get(&self) -> u32 { self.0.load(std::sync::atomic::Ordering::Relaxed) }
+    pub fn set(&self, v: u32) { self.0.store(v, std::sync::atomic::Ordering::Relaxed) }
+}
+impl Clone for SDepth {
+    fn clone(&self) -> Self { SDepth(std::sync::atomic::AtomicU32::new(self.get())) }
+}
+
 #[derive(Clone)]
 pub struct Engine {
     pub s: GameState,
@@ -26,6 +37,8 @@ pub struct Engine {
     pub log: Vec<Value>,
     pub step_limit: i64,
     pub turn_limit: i64,
+    /// 常在型の条件を評価中の深さ（Python の _in_static_cond。2段目からはフィルタが印刷の特性を見る）
+    pub static_depth: SDepth,
 }
 
 enum Ask {
@@ -42,7 +55,7 @@ impl Engine {
                 None => return Err(EngErr::Illegal(format!("unknown card {}", c.defn))),
             }
         }
-        Ok(Engine { s, rules, log: vec![], step_limit: 20000, turn_limit: 80 })
+        Ok(Engine { s, rules, log: vec![], step_limit: 20000, turn_limit: 80, static_depth: SDepth::default() })
     }
 
     // ---- 基本の読み取り ----
@@ -101,7 +114,11 @@ impl Engine {
         if f["owner"] != json!("any") && f["owner"].as_i64() != Some(c.controller) {
             return false;
         }
-        self.filter_ok(cid, &f["filter"]).unwrap_or(false)
+        // Python は base=True（印刷の特性）で照合する
+        self.static_depth.set(self.static_depth.get() + 2);
+        let ok = self.filter_ok(cid, &f["filter"]).unwrap_or(false);
+        self.static_depth.set(self.static_depth.get() - 2);
+        ok
     }
     /// 条件を満たしている「条件つきの自分への禁止」（バトルゾーンにある間）
     fn cond_deny(&self, cid: i64, face: Option<i64>) -> Vec<String> {
@@ -110,7 +127,10 @@ impl Engine {
             return vec![];
         }
         let env = json!({"you": self.s.cards[cid as usize].controller, "self": self.refv(cid), "vars": {}});
-        d.deny_if.iter().filter(|(c, _)| self.eval_cond(c, &env).unwrap_or(false)).flat_map(|(_, l)| l.clone()).collect()
+        self.static_depth.set(self.static_depth.get() + 1);
+        let out = d.deny_if.iter().filter(|(c, _)| self.eval_cond(c, &env).unwrap_or(false)).flat_map(|(_, l)| l.clone()).collect();
+        self.static_depth.set(self.static_depth.get() - 1);
+        out
     }
     /// 継続的効果の mod の allow / deny に action があるか
     fn ce_lists(&self, cid: i64, key: &str) -> Vec<String> {
@@ -682,6 +702,11 @@ impl Engine {
     }
 
     /// フィルタの照合（Python 版 filter_match の、plain の札で値が定義どおりになるキーだけ。他は Unsupported）
+    /// フィルタが見るパワー: 特性（継続的効果・条件つき修整込み）。常在型の条件の入れ子（2段目以降）では印刷のパワー
+    fn filter_power(&self, cid: i64) -> i64 {
+        if self.static_depth.get() > 1 { self.def(cid).power } else { self.power(cid) }
+    }
+
     fn filter_ok(&self, cid: i64, f: &Value) -> R<bool> {
         let d = self.def(cid);
         let c = &self.s.cards[cid as usize];
@@ -703,8 +728,8 @@ impl Engine {
                 "keyword" => d.keywords.iter().any(|x| Some(x.as_str()) == v.as_str()),
                 "cost_le" => d.cost <= v.as_i64().ok_or(EngErr::Unsupported("filter expr".into()))?,
                 "cost_ge" => d.cost >= v.as_i64().ok_or(EngErr::Unsupported("filter expr".into()))?,
-                "power_le" => d.power <= v.as_i64().ok_or(EngErr::Unsupported("filter expr".into()))?,
-                "power_ge" => d.power >= v.as_i64().ok_or(EngErr::Unsupported("filter expr".into()))?,
+                "power_le" => self.filter_power(cid) <= v.as_i64().ok_or(EngErr::Unsupported("filter expr".into()))?,
+                "power_ge" => self.filter_power(cid) >= v.as_i64().ok_or(EngErr::Unsupported("filter expr".into()))?,
                 "tapped" => c.tapped == v.as_bool().unwrap_or(false),
                 "multicolor" => (d.civs.len() > 1) == v.as_bool().unwrap_or(false),
                 "evolution" => self.def(cid).types.iter().any(|t| t == "evolution") == v.as_bool().unwrap_or(false),
@@ -1906,7 +1931,10 @@ impl Engine {
         if !self.def(cid).power_if.is_empty() && self.s.cards[cid as usize].zone == "bz" {
             let env = json!({"you": self.s.cards[cid as usize].controller, "self": self.refv(cid), "vars": {}});
             for (c, n) in &self.def(cid).power_if {
-                if self.eval_cond(c, &env).unwrap_or(false) {
+                self.static_depth.set(self.static_depth.get() + 1);
+                let ok = self.eval_cond(c, &env).unwrap_or(false);
+                self.static_depth.set(self.static_depth.get() - 1);
+                if ok {
                     p += n;
                 }
             }
