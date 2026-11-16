@@ -44,7 +44,7 @@ _OK_KW = {"blocker", "cannot_attack_player", "cannot_attack", "double_breaker", 
 
 _FILTER_LISTS = ("types", "not_types", "civs", "not_civs", "races")
 _FILTER_INTS = ("cost_le", "cost_ge", "power_le", "power_ge")
-_FILTER_BOOLS = ("tapped", "multicolor", "colorless")
+_FILTER_BOOLS = ("tapped", "multicolor", "colorless", "evolution")
 
 
 def _simple_filter(f) -> bool:
@@ -56,6 +56,11 @@ def _simple_filter(f) -> bool:
             if not (isinstance(v, list) and all(isinstance(x, str) for x in v)) and not (k in ("civs", "not_civs") and isinstance(v, str)):
                 return False
         elif k in _FILTER_INTS:
+            if isinstance(v, dict) and set(v) == {"cost_of"} and k in ("cost_le", "cost_ge") \
+                    and (isinstance(v["cost_of"], str) or (isinstance(v["cost_of"], dict) and set(v["cost_of"]) == {"ref"})) \
+                    and (v["cost_of"] if isinstance(v["cost_of"], str) else v["cost_of"]["ref"]) not in ("crossed",) \
+                    and not str(v["cost_of"] if isinstance(v["cost_of"], str) else v["cost_of"]["ref"]).startswith("event."):
+                continue   # 参照カードのコスト（解決時に数へ置き換える）
             if not isinstance(v, int) or isinstance(v, bool):
                 return False
         elif k in _FILTER_BOOLS:
@@ -92,10 +97,14 @@ def _simple_selector(sel) -> bool:
             return False
     elif sel.get("zone") not in ("hand", "deck", "graveyard", "mana", "bz", "shield") or sel.get("owner", "you") not in ("you", "opp", "any"):
         return False
-    if sel.get("chooser", "you") not in ("you", "opp"):
+    if sel.get("chooser", "you") not in ("you", "opp", "random"):
+        return False
+    if sel.get("chooser") == "random" and (sel.get("up_to") or sel.get("look") or "total_cost_le" in sel):
         return False
     c = sel.get("count", 1)
-    if not (c == "all" or (isinstance(c, int) and not isinstance(c, bool))):
+    if not (c in ("all", "any") or (isinstance(c, int) and not isinstance(c, bool))):
+        return False
+    if c == "any" and (sel.get("up_to") or sel.get("chooser") == "random"):
         return False
     ft = sel.get("from_top", 0)
     if not (isinstance(ft, int) and not isinstance(ft, bool)):
@@ -165,7 +174,7 @@ def _simple_effect(ops, top=True) -> bool:
             continue   # このターンの間の「〜できない」（後から出たクリーチャーにも及ぶ）
         if k == "choose" and set(o) <= {"op", "select", "as"} and isinstance(o.get("as"), str) and _simple_selector(o.get("select")):
             continue   # 子の効果での束縛は、Rust が同じ env を持つタスクすべてに書く（Python の env 共有と同じ結果）
-        if k == "play_free" and set(o) <= {"op", "select"} and _simple_selector(o.get("select")) and o["select"].get("zone") == "hand":
+        if k == "play_free" and set(o) <= {"op", "select", "as"} and isinstance(o.get("as", ""), str) and _simple_selector(o.get("select")) and o["select"].get("zone") == "hand":
             continue
         if k == "modal" and set(o) <= {"op", "modes", "count"} and isinstance(o.get("count", 1), int) \
                 and isinstance(o.get("modes"), list) and 1 <= o.get("count", 1) <= len(o["modes"]) \
@@ -194,7 +203,7 @@ def _simple_effect(ops, top=True) -> bool:
 _OK_WHEN = ({"event": "move", "to": "bz", "subject": "self"}, {"event": "attack", "subject": "self"})
 
 
-_OK_EVENTS = {"move", "attack", "battle_win", "turn_start", "cast"}
+_OK_EVENTS = {"move", "attack", "battle_win", "turn_start", "turn_end", "cast"}
 _OK_ZONES = {"hand", "deck", "graveyard", "mana", "bz", "shield"}
 
 
@@ -233,6 +242,7 @@ def _self_mods(d):
     段階2-d: 単純な誘発（_simple_trigger）は許す（誘発の中身は Rust 側の effect インタプリタが動かす）。"""
     allow, deny, breaks, shield_allow = [], [], [], []
     allow_x = []
+    deny_x = []
     cond_seen = False
     for ab in d.abilities:
         if _simple_trigger(ab) or _simple_replace(ab):
@@ -244,10 +254,14 @@ def _self_mods(d):
         if ab["kind"] == "static" and isinstance(ab.get("affects"), dict) and set(ab.get("mod", {})) == {"gain"} and "if" not in ab:
             continue   # 他のカードに能力を与える常在型（ダーク・ティアラγ）。Python のエンジンは常在型の gain を扱わず効果が無いので、同じく何もしない
         if ab["kind"] == "static" and ab.get("affects") == "self" and "if" in ab and ab.get("zone", "bz") == "bz" \
-                and _simple_cond(ab["if"]) and set(ab.get("mod", {})) == {"deny"} \
+                and _simple_cond(ab["if"]) and set(ab.get("mod", {})) == {"deny"} and set(ab) <= {"kind", "affects", "if", "mod", "zone"} \
                 and all(isinstance(x, str) and x in _OK_DENY for x in ab["mod"]["deny"]):
             cond_seen = True   # 条件つきの自分への禁止（ギガゾウル）。Rust は deny_if として局面ごとに条件を見る
             continue
+        if ab["kind"] == "static" and ab.get("affects") == "self" and "if" in ab and ab.get("zone", "bz") == "bz" \
+                and _simple_cond(ab["if"]) and set(ab.get("mod", {})) == {"power"} and isinstance(ab["mod"]["power"], int) and set(ab) <= {"kind", "affects", "if", "mod", "zone"} \
+                and not isinstance(ab["mod"]["power"], bool):
+            continue   # 条件つきのパワー修整（ル・パーレ）。Rust は power_if として局面ごとに条件を見る
         if ab["kind"] != "static" or ab.get("affects") != "self" or "if" in ab or ab.get("zone", "bz") != "bz":
             return None
         if cond_seen:
@@ -262,13 +276,23 @@ def _self_mods(d):
                 allow_x.extend(v)
             elif k == "deny" and all(isinstance(x, str) and x in _OK_DENY for x in v):
                 deny += v
+            elif k == "deny" and all(isinstance(x, dict) and set(x) == {"action", "other"} and x["action"] in ("be_blocked", "be_attacked")
+                                     and _simple_filter(x["other"]) for x in v):
+                deny_x.extend(v)   # 相手側のカードで決まる禁止（パワー3000以下にブロックされない等）
             elif k == "breaks" and isinstance(v, int) and not isinstance(v, bool):
                 breaks.append(v)
             else:
                 return None
     if allow_x and allow:
-        return None   # 特性の allow の並び（文字列の後に辞書）を Python と揃えられる札だけ
+        return None
+    if deny_x and (deny or cond_seen):
+        return None   # 特性の deny の並び（辞書の後に文字列）を Python と揃えられる札だけ   # 特性の allow の並び（文字列の後に辞書）を Python と揃えられる札だけ
     return allow, deny, breaks, shield_allow
+
+
+def _self_deny_x(d) -> list:
+    return [x for ab in d.abilities if ab["kind"] == "static" and ab.get("affects") == "self" and "if" not in ab
+            for x in ab.get("mod", {}).get("deny", []) if isinstance(x, dict)]
 
 
 def _self_allow_x(d) -> list:
@@ -383,7 +407,15 @@ def rules_bundle(rules) -> dict:
                       for k, v in rules.zones.items()],
             "steps": list(rules.steps),
             "zt_zones": sorted({z for v in rules.zone_trigger_defs.values() for z in v}),
-            "cards": {i: _card_bundle(d, i in rules.zone_trigger_defs) for i, d in rules.cards.items()}}
+            "cards": _with_aliases(rules, {i: _card_bundle(d, i in rules.zone_trigger_defs) for i, d in rules.cards.items()})}
+
+
+def _with_aliases(rules, cards: dict) -> dict:
+    """旧 ID（再録・改名の別名）でも引けるようにする。Python の AliasDict と同じく、局面の defn が旧 ID のままでも動く。"""
+    for a, c in getattr(rules.cards, "aliases", {}).items():
+        if c in cards and a not in cards:
+            cards[a] = cards[c]
+    return cards
 
 
 def _card_bundle(d, zt=False, mana=None) -> dict:
@@ -395,8 +427,11 @@ def _card_bundle(d, zt=False, mana=None) -> dict:
            "resolve_to": d.resolve_to, "zt": zt,
            **dict(zip(("allow", "deny", "breaks", "shield_allow"), (_self_mods(d) or ([], [], [], [])))),
            "allow_x": _self_allow_x(d) if plain else [],
+           "deny_x": _self_deny_x(d) if plain else [],
            "deny_if": [[ab["if"], list(ab["mod"]["deny"])] for ab in d.abilities
-                       if plain and ab["kind"] == "static" and ab.get("affects") == "self" and "if" in ab]}
+                       if plain and ab["kind"] == "static" and ab.get("affects") == "self" and "if" in ab and "deny" in ab["mod"]],
+           "power_if": [[ab["if"], ab["mod"]["power"]] for ab in d.abilities
+                        if plain and ab["kind"] == "static" and ab.get("affects") == "self" and "if" in ab and "power" in ab["mod"]]}
     if plain and "evolution" in d.types:
         out.update(evolve_from={k: v for k, v in d.evolve_from.items() if k != "zone"}, evolve_zone=d.evolve_zone,
                    evolve_count=d.evolve_count, evolve_any=d.evolve_any, cost_reduce_per_evo=d.cost_reduce_per_evo)
