@@ -77,6 +77,17 @@ impl Engine {
     fn permits(&self, cid: i64, action: &str) -> bool {
         self.permits_face(cid, action, None)
     }
+    /// 相手側のカード other に対して action できるか（Python の permits(cid, action, other)）。辞書形の禁止 {action, other} を見る
+    fn permits_vs(&self, cid: i64, action: &str, other: i64) -> bool {
+        if self.s.cards[cid as usize].zone == "bz" {
+            for e in &self.def(cid).deny_x {
+                if e["action"] == json!(action) && self.filter_ok(other, &e["other"]).unwrap_or(false) {
+                    return false;
+                }
+            }
+        }
+        self.permits(cid, action)
+    }
     /// 継続的効果が cid に及ぶか（Python の _ce_applies）。範囲固定は affected、dynamic は生成時にベイクした filter
     fn ce_applies(&self, ce: &Value, cid: i64) -> bool {
         if let Some(a) = ce["affected"].as_array() {
@@ -598,8 +609,9 @@ impl Engine {
         if n.min(lst.len()) == 0 {
             return Ok(Ok(vec![]));
         }
+        let random = sel.get("chooser") == Some(&json!("random"));   // 「見ないで選ぶ」: 効果の使用者が無作為に選ぶ
         let chooser = match sel.get("chooser").and_then(|v| v.as_str()).unwrap_or("you") {
-            "you" => you,
+            "you" | "random" => you,
             "opp" => 1 - you,
             _ => return uns("chooser"),
         };
@@ -613,6 +625,16 @@ impl Engine {
         let n = n.min(cands.len());
         if n == 0 {
             return Ok(Ok(vec![]));
+        }
+        if random {
+            let mut pool = cands.clone();
+            let mut picked = vec![];
+            for _ in 0..n.min(pool.len()) {
+                let j = self.s.rng_below(pool.len() as u64) as usize;
+                picked.push(pool.remove(j));
+            }
+            self.s.tasks.last_mut().unwrap()["os"]["chosen"] = json!(picked);
+            return Ok(Ok(picked));
         }
         let opts: Vec<Value> = cands.iter().map(|&c| if look { self.card_option_look(c) } else { self.card_option(c, None) }).collect();
         let a = match self.ask(chooser, "choose_cards", opts, if up_to { 0 } else { n }, n) {
@@ -1064,7 +1086,7 @@ impl Engine {
                 opts.push(json!({"key": format!("attack:{}:player", dfn), "cid": c, "target": "player"}));
             }
             for tc in self.bz_tops(Some(1 - a)) {
-                if self.s.cards[tc as usize].tapped && self.permits(c, "attack_creature") && self.permits(tc, "be_attacked") {
+                if self.s.cards[tc as usize].tapped && self.permits(c, "attack_creature") && self.permits_vs(tc, "be_attacked", c) {
                     opts.push(json!({"key": format!("attack:{}:{}", dfn, self.s.cards[tc as usize].defn), "cid": c, "target": self.refv(tc)}));
                 }
             }
@@ -1151,7 +1173,7 @@ impl Engine {
             // 507 ブロッククリーチャー指定
             let attc = att[0].as_i64().unwrap();
             let blockers: Vec<i64> = self.bz_tops(Some(1 - a)).into_iter().filter(|&c| {
-                !self.s.cards[c as usize].tapped && self.permits(c, "block") && self.permits(attc, "be_blocked")
+                !self.s.cards[c as usize].tapped && self.permits(c, "block") && self.permits_vs(attc, "be_blocked", c)
                     && json!([c, self.s.cards[c as usize].gen]) != target
             }).collect();
             let guards: Vec<i64> = if target == json!("player") { vec![] } else {
@@ -1848,6 +1870,14 @@ impl Engine {
     /// パワー（印刷パワー＋継続的効果の修整）
     fn power(&self, cid: i64) -> i64 {
         let mut p = self.def(cid).power;
+        if !self.def(cid).power_if.is_empty() && self.s.cards[cid as usize].zone == "bz" {
+            let env = json!({"you": self.s.cards[cid as usize].controller, "self": self.refv(cid), "vars": {}});
+            for (c, n) in &self.def(cid).power_if {
+                if self.eval_cond(c, &env).unwrap_or(false) {
+                    p += n;
+                }
+            }
+        }
         if !self.s.continuous.is_empty() {
             for ce in &self.s.continuous {
                 if ce["mod"].get("power").is_some() && self.ce_applies(ce, cid) {
@@ -1873,6 +1903,8 @@ impl Engine {
             allow.extend(self.ce_lists(cid, "allow"));
             deny.extend(self.ce_lists(cid, "deny"));
         }
+        let deny: Vec<Value> = (if in_bz { d.deny_x.clone() } else { vec![] }).into_iter().chain(deny.iter().map(|x| json!(x))).collect();
+
         let breaks = bo.iter().copied().max().unwrap_or(1).max(1);
         let mut kw = d.keywords.clone();
         kw.sort();
