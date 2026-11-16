@@ -25,6 +25,9 @@ sys.path.insert(0, str(ROOT))
 sys.path.insert(0, str(ROOT / "tools"))
 
 
+DEFAULT_DECK = {"saga": "data/decks/saga_user_v1.yaml"}   # --deck を省いたときのデッキ（ユーザー指定のレシピ）
+
+
 def summarize(rows):
     n = len(rows)
 
@@ -66,6 +69,8 @@ def main(argv=None):
     from basebuild import core_of
     rules = load_rules()
     ls = L.load(a.entry)
+    if not a.deck and a.entry.split("_")[0] == "saga":
+        a.deck = DEFAULT_DECK["saga"]   # サガの測定の既定はユーザー指定のレシピ（2026-11-16）
     deck = yaml.safe_load(Path(a.deck).read_text(encoding="utf-8"))["deck"] if a.deck else L.deck_of(ls)
     if a.control:
         core = core_of(a.entry.split("_")[0])
