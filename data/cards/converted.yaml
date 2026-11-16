@@ -25095,6 +25095,7 @@ cards:
       deny:
       - attack_player
       - attack_creature
+    affects: self
   source:
     official: dm22ex2-061
     review: pending
@@ -25451,6 +25452,7 @@ cards:
           filter:
             types:
             - creature
+    affects: self
   source:
     official: dm22ex2-1a
     review: pending
@@ -26346,6 +26348,7 @@ cards:
             - creature
             tapped: false
       cost_min: 1
+    affects: self
   spell:
   - op: modal
     count: 2
@@ -27142,6 +27145,7 @@ cards:
         deny:
         - attack_player
         - attack_creature
+      affects: self
     - kind: trigger
       when:
         event: turn_end
@@ -31526,6 +31530,7 @@ cards:
     mod:
       grant:
       - blocker
+    affects: self
   source:
     official: dm23ex1-052
     review: pending
@@ -33160,6 +33165,7 @@ cards:
       power: 5000
       grant:
       - double_breaker
+    affects: self
   source:
     official: dm23ex3-t15
     review: pending
@@ -33464,6 +33470,7 @@ cards:
       is_turn: opp
     mod:
       power: 10000
+    affects: self
   source:
     official: dm23rp1-024
     review: pending
@@ -34607,6 +34614,7 @@ cards:
       deny:
       - attack_player
       - attack_creature
+    affects: self
   source:
     official: dm23rp2x-044
     review: pending
@@ -34716,6 +34724,7 @@ cards:
         battle_power:
           amount: 4000
           only: attacking
+      affects: self
   - name: 招火呪文「アーマアド」
     types:
     - spell
@@ -35773,6 +35782,7 @@ cards:
         count:
           zone: graveyard
           owner: you
+    affects: self
   - kind: trigger
     when:
       event: move
@@ -36094,6 +36104,7 @@ cards:
       is_turn: opp
     mod:
       power: 4000
+    affects: self
   source:
     official: dm23rp3-073
     review: pending
@@ -36512,6 +36523,7 @@ cards:
     mod:
       grant:
       - speed_attacker
+    affects: self
   source:
     official: dm23rp4x-041
     review: pending
@@ -37640,6 +37652,7 @@ cards:
             races:
             - ファイアー・バード
         only: attacking
+    affects: self
   source:
     official: dm23sd1-009
     review: pending
@@ -37945,6 +37958,7 @@ cards:
       deny:
       - be_blocked
       - be_attacked
+    affects: self
   source:
     official: dm23sd3-010
     review: pending
@@ -38330,6 +38344,7 @@ cards:
       - 1
     mod:
       power: 3000
+    affects: self
   source:
     official: dm24-024
     review: pending
@@ -38398,6 +38413,7 @@ cards:
       power: 4000
       grant:
       - double_breaker
+    affects: self
   source:
     official: dm24-027
     review: pending
@@ -38533,6 +38549,7 @@ cards:
       deny:
       - attack_player
       - attack_creature
+    affects: self
   source:
     official: dm24-040
     review: pending
@@ -39006,6 +39023,7 @@ cards:
     mod:
       deny:
       - attack_player
+    affects: self
   source:
     official: dm24-071
     review: pending
@@ -39574,6 +39592,7 @@ cards:
           filter:
             types:
             - creature
+    affects: self
   source:
     official: dm24-s10
     review: pending
@@ -41526,6 +41545,7 @@ cards:
     mod:
       deny:
       - be_chosen
+    affects: self
   source:
     official: dm24bd5-060
     review: pending
@@ -215642,6 +215662,7 @@ cards:
         count:
           zone: shield
           owner: you
+    affects: self
   - kind: trigger
     when:
       event: move
@@ -241930,6 +241951,7 @@ cards:
       power: 4000
       grant:
       - double_breaker
+    affects: self
   source:
     official: dmd20-003
     review: pending
@@ -242017,6 +242039,7 @@ cards:
       - メガ・コマンド・ドラゴン
       grant:
       - double_breaker
+    affects: self
   source:
     official: dmd27-009
     review: pending
@@ -242060,6 +242083,7 @@ cards:
     mod:
       battle_power:
         amount: 4000
+    affects: self
   - kind: trigger
     when:
       event: battle_win
@@ -242212,6 +242236,7 @@ cards:
       power: 6000
       grant:
       - double_breaker
+    affects: self
   source:
     official: dmex10-002
     review: pending
@@ -242269,6 +242294,7 @@ cards:
     mod:
       grant:
       - slayer
+    affects: self
   source:
     official: dmex10-039
     review: pending
@@ -242514,6 +242540,7 @@ cards:
     mod:
       battle_power:
         amount: 2000
+    affects: self
   - kind: trigger
     when:
       event: move
@@ -264225,6 +264252,7 @@ cards:
     mod:
       grant:
       - speed_attacker
+    affects: self
   source:
     official: dmsd15-013
     review: pending
@@ -325030,6 +325058,7 @@ cards:
       deny:
       - attack_player
       - attack_creature
+    affects: self
   civs:
   - fire
   cost: 2
@@ -382823,6 +382852,7 @@ cards:
       power: 2000
       grant:
       - double_breaker
+    affects: self
   - kind: partner
     effect:
     - op: modal
@@ -401755,6 +401785,7 @@ cards:
         when: attacking
       grant:
       - double_breaker
+    affects: self
 - id: dm28-032
   name: モエルグレンオー
   types:
@@ -401782,6 +401813,7 @@ cards:
       power: 11000
       grant:
       - double_breaker
+    affects: self
 - id: dm28-037
   name: パオルネイチャー
   types:
@@ -401809,6 +401841,7 @@ cards:
       power: 3000
       grant:
       - double_breaker
+    affects: self
 - id: dm28-046
   name: 蒼神龍ステルス・ビアス
   types:
@@ -401840,6 +401873,7 @@ cards:
     mod:
       grant:
       - unblockable
+    affects: self
 - id: dm28-075
   name: 烈空の使徒バグリス
   types:
@@ -401906,6 +401940,7 @@ cards:
     sforce: true
     mod:
       power: 4000
+    affects: self
 - id: dm28-096
   name: 隠れんぼの達人コンコーン
   types:
@@ -401934,6 +401969,7 @@ cards:
     mod:
       grant:
       - cannot_be_attacked
+    affects: self
 - id: dm29-036
   name: 天雷獣ピュアホワイト
   types:
@@ -402021,10 +402057,12 @@ cards:
     mod:
       grant:
       - blocker
+    affects: self
   - kind: static
     sforce: true
     mod:
       no_leave: true
+    affects: self
 - id: dmex03-004
   name: トランプ・だいとうりょう
   types:
@@ -402103,6 +402141,7 @@ cards:
       power: 5500
       grant:
       - double_breaker
+    affects: self
   source:
     official: dmc68-010
     review: pending
@@ -407062,6 +407101,7 @@ cards:
           filter:
             civs:
             - fire
+    affects: self
   - kind: trigger
     when:
       event: move
@@ -407692,6 +407732,7 @@ cards:
       power: 3000
       grant:
       - speed_attacker
+    affects: self
 - id: dm29-054
   name: 花風の浪士ムネミツ
   types:
@@ -407717,6 +407758,7 @@ cards:
     accel: true
     mod:
       power: 2000
+    affects: self
 - id: dmpcd02-a10
   name: アクア・コテガエシ
   types:
@@ -407974,6 +408016,7 @@ cards:
     mod:
       grant:
       - unblockable
+    affects: self
   - kind: replace
     accel: true
     optional: true
@@ -408087,6 +408130,7 @@ cards:
       power: 3000
       add_races:
       - エンジェル・コマンド
+    affects: self
 - id: dm15-041
   name: アクア・ムーンエッジ
   types:
@@ -408113,6 +408157,7 @@ cards:
       power: 3000
       add_races:
       - サイバー・ムーン
+    affects: self
 - id: dm15-045
   name: 悪魔怪人デスブラッド
   types:
@@ -408139,6 +408184,7 @@ cards:
       power: 3000
       add_races:
       - デーモン・コマンド
+    affects: self
 - id: dm15-049
   name: 武装兵ミステリアス
   types:
@@ -408165,6 +408211,7 @@ cards:
       power: 3000
       add_races:
       - ボルケーノ・ドラゴン
+    affects: self
 - id: dmpcd02-a04
   name: 大神秘ハルサ
   types:
@@ -408259,6 +408306,7 @@ cards:
       power: 3000
       add_races:
       - アース・ドラゴン
+    affects: self
 - id: dm16-018
   name: 戦技の化身
   types:
@@ -408354,6 +408402,7 @@ cards:
       power: 4000
       grant:
       - double_breaker
+    affects: self
 - id: dm15-004
   name: メタルカオス・ドラゴン
   types:

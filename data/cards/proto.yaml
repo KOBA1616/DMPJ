@@ -4059,6 +4059,7 @@ cards:
         effect:
           - {op: sforce_link}
       - kind: static
+        affects: self
         sforce: true
         mod: {grant: [blocker]}
   - id: T311
@@ -4075,6 +4076,7 @@ cards:
         effect:
           - {op: sforce_link}
       - kind: static
+        affects: self
         sforce: true
         mod: {power: 3000, grant: [double_breaker]}
   - id: T312
@@ -4111,9 +4113,11 @@ cards:
         effect:
           - {op: sforce_link}
       - kind: static
+        affects: self
         sforce: true
         mod: {grant: [blocker]}
       - kind: static
+        affects: self
         sforce: true
         mod: {no_leave: true}
 
@@ -5205,6 +5209,7 @@ cards:
     text: "アクセル（このクリーチャーにクロスギアがクロスされている時、このクリーチャーは次の能力を得る） / このクリーチャーのパワーは+3000され、「スピードアタッカー」を得る。（第175弾・dm28-097型）"
     abilities:
       - kind: static
+        affects: self
         accel: true
         mod: {power: 3000, grant: [speed_attacker]}
 
@@ -5219,6 +5224,7 @@ cards:
     text: "アクセル（このクリーチャーにクロスギアがクロスされている時、このクリーチャーは次の能力を得る） / このクリーチャーのパワーは+3000され、種族にエンジェル・コマンドを追加する。（第175弾・dm15-037型）"
     abilities:
       - kind: static
+        affects: self
         accel: true
         mod: {power: 3000, add_races: [エンジェル・コマンド]}
 
@@ -5269,6 +5275,7 @@ cards:
     text: "アクセル（このクリーチャーにクロスギアがクロスされている時、このクリーチャーは次の能力を得る） / このクリーチャーはブロックされない。 / このクリーチャーが破壊される時、かわりに、このクリーチャーにクロスしてあるクロスギアを１枚墓地に置いてもよい。（第175弾・dm15-009型）"
     abilities:
       - kind: static
+        affects: self
         accel: true
         mod: {grant: [unblockable]}
       - kind: replace
