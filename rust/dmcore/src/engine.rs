@@ -174,9 +174,35 @@ impl Engine {
     /// バトルゾーンにある間のブレイク数の候補（509.2c）。能力が無ければ [1]
     fn break_opts(&self, cid: i64) -> Vec<i64> {
         let mut v: Vec<i64> = self.def(cid).breaks.clone();
+        v.extend(self.granted_breaks(cid));
         v.sort();
         v.dedup();
         if v.is_empty() { vec![1] } else { v }
+    }
+    /// 継続的効果で与えられたキーワード（印刷のキーワードに無いもの、名前順）。Python の chars の granted
+    fn granted_kw(&self, cid: i64) -> Vec<String> {
+        let mut out: Vec<String> = vec![];
+        if self.s.continuous.is_empty() {
+            return out;
+        }
+        let d = self.def(cid);
+        for ce in &self.s.continuous {
+            if let Some(l) = ce["mod"].get("grant").and_then(|v| v.as_array()) {
+                if self.ce_applies(ce, cid) {
+                    out.extend(l.iter().filter_map(|x| x.as_str()).filter(|x| !d.keywords.iter().any(|k| k == x)).map(String::from));
+                }
+            }
+        }
+        out.sort();
+        out.dedup();
+        out
+    }
+    /// 与えられたブレイカーのブレイク数（バトルゾーンにある間だけ働く）
+    fn granted_breaks(&self, cid: i64) -> Vec<i64> {
+        if self.s.cards[cid as usize].zone != "bz" {
+            return vec![];
+        }
+        self.granted_kw(cid).iter().filter_map(|k| match k.as_str() { "double_breaker" => Some(2), "triple_breaker" => Some(3), _ => None }).collect()
     }
     fn bz_tops(&self, controller: Option<i64>) -> Vec<i64> {
         self.s.zones["bz"][0]
@@ -686,10 +712,21 @@ impl Engine {
             return Ok(Ok(picked));
         }
         let opts: Vec<Value> = cands.iter().map(|&c| if look { self.card_option_look(c) } else { self.card_option(c, None) }).collect();
-        let a = match self.ask(chooser, "choose_cards", opts, if up_to { 0 } else { n }, n) {
+        let mn = if up_to { 0 } else { n };
+        let mut a = match self.ask(chooser, "choose_cards", opts.clone(), mn, n) {
             Ask::Decision(d) => return Ok(Err(d)),
             Ask::Answer(a) => a,
         };
+        if a.iter().any(|&i| i >= cands.len()) {
+            // 公平探索で隠れた中身が決定の時と答えの時で違うと候補の数が変わる。Python と同じく範囲外の答えは捨て、足りなければ聞き直す
+            a.retain(|&i| i < cands.len());
+            if a.len() < mn {
+                a = match self.ask(chooser, "choose_cards", opts, mn, n) {
+                    Ask::Decision(d) => return Ok(Err(d)),
+                    Ask::Answer(a) => a,
+                };
+            }
+        }
         let chosen: Vec<i64> = a.iter().map(|&i| cands[i]).collect();
         self.s.tasks.last_mut().unwrap()["os"]["chosen"] = json!(chosen);
         for &c in &chosen {
@@ -1445,6 +1482,21 @@ impl Engine {
                     }
                 }
             }
+            "flip_down" => {
+                // 裏向きにする（水晶武装）。マナは無色として払い、シールドは表向きを戻す。イベントは作らない
+                let cids = match self.select(&op["select"], &env)? {
+                    Ok(c) => c,
+                    Err(d) => return Ok(Some(d)),
+                };
+                for c in cids {
+                    let k = &mut self.s.cards[c as usize];
+                    if k.zone == "mana" {
+                        k.face_down = true;
+                    } else if k.zone == "shield" {
+                        k.face_up = false;
+                    }
+                }
+            }
             "play_free" => {
                 // コストを支払わずに召喚する／唱える（112.3g）。ツインパクトは選択条件が呪文だけなら呪文面、他はクリーチャー面
                 let cids = match self.select(&op["select"], &env)? {
@@ -1474,8 +1526,14 @@ impl Engine {
                 }
                 if !ts.is_empty() {
                     self.defer(ts);
-                    deferred = true;
+                } else {
+                    // Python は空でも _defer する（pc+1）ので、h_effect の「_defer していなければ次へ」でさらに pc+1 され、次の op をとばす。
+                    // 基準の Python に合わせる（Python 側の不具合。直すなら両方同時に）
+                    let t = self.s.tasks.last_mut().unwrap();
+                    t["pc"] = json!(pc as i64 + 2);
+                    t["os"] = json!({});
                 }
+                deferred = true;
             }
             "end_turn" => {
                 // ターンの残りをとばす（今の効果の解決は最後まで行う）
@@ -1837,9 +1895,16 @@ impl Engine {
                 return false;
             }
         }
-        if w.get("subject").is_some() {
-            // subject: self だけ（Python の whitelist が保証する）
-            if rec.get("subject").map_or(true, |s| s[0].as_i64() != Some(src)) {
+        if let Some(sw) = w.get("subject") {
+            if let Some(ow) = sw.get("owner").and_then(|v| v.as_str()) {
+                // 持ち主だけの指定（バトルゾーン以外から動いたカード。Python の whitelist が保証する）: 今のコントローラーで見る
+                let want = if ow == "you" { ctrl } else { 1 - ctrl };
+                match rec.get("subject").and_then(|s| s[0].as_i64()) {
+                    Some(c) if self.s.cards[c as usize].controller == want => {}
+                    _ => return false,
+                }
+            } else if rec.get("subject").map_or(true, |s| s[0].as_i64() != Some(src)) {
+                // subject: self
                 return false;
             }
         }
@@ -1953,7 +2018,7 @@ impl Engine {
         let d = self.def(cid);
         let power = self.power(cid);
         let in_bz = self.s.cards[cid as usize].zone == "bz";
-        let (mut allow, mut deny, bo): (Vec<String>, Vec<String>, Vec<i64>) =
+        let (mut allow, mut deny, mut bo): (Vec<String>, Vec<String>, Vec<i64>) =
             if in_bz { (d.allow.clone(), d.deny.clone(), d.breaks.clone()) }
             else if self.s.cards[cid as usize].zone == "shield" { (d.shield_allow.clone(), vec![], vec![]) }   // シールドゾーンで働く自身への許可
             else { (vec![], vec![], vec![]) };
@@ -1966,8 +2031,13 @@ impl Engine {
         }
         let deny: Vec<Value> = (if in_bz { d.deny_x.clone() } else { vec![] }).into_iter().chain(deny.iter().map(|x| json!(x))).collect();
 
+        let gk = self.granted_kw(cid);
+        if in_bz {
+            bo.extend(self.granted_breaks(cid));
+        }
         let breaks = bo.iter().copied().max().unwrap_or(1).max(1);
         let mut kw = d.keywords.clone();
+        kw.extend(gk);
         kw.sort();
         kw.dedup();
         json!({"power": power, "cost": d.cost, "civs": d.civs, "types": d.types, "races": d.races, "keywords": kw,

@@ -42,6 +42,24 @@ def test_random_games_match(env, seed):
     assert a == b
 
 
+_NEW_BASE = ["dm26ex2-071", "dm23ex3-035", "dmrp10-053", "dm22rp2x-tf1", "dmbd17-009"]   # サガの基盤（2026-11-16 指定）
+
+
+@pytest.mark.parametrize("seed", range(12))
+def test_new_saga_base_match(env, seed):
+    """新しい基盤（レオポル・ディーネ公、アカダシ、"JET"レミング、ブルース2版）を入れたデッキの無作為対局が一致する。
+    裏向きマナ、手札から捨てた時の誘発、このターンの間のブレイカー付与、墓地からの召喚を含む。"""
+    import yaml
+    from dmsim.engine.core import Engine
+    r, _, opp = env
+    core = yaml.safe_load(open("data/decks/basebuild_saga_v3.yaml"))["deck"][:24]
+    deck = core + [c for c in _NEW_BASE[:3] for _ in range(4)] + [_NEW_BASE[3 + seed % 2]] * 4
+    assert rustcore.supports(r, Engine.new_game(r, [deck, opp], seed, seed % 2).s)
+    a = _play(Engine.new_game(r, [deck, opp], seed, seed % 2), seed)
+    b = _play(rustcore.RustEngine(r, Engine.new_game(r, [deck, opp], seed, seed % 2).s, []), seed)
+    assert a == b
+
+
 def test_clone_and_inject(env):
     """clone は独立した枝、s への代入（決定化の注入）は新しい起点になる。"""
     from dmsim.engine.core import Engine
