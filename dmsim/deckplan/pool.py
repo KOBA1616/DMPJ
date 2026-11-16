@@ -6,8 +6,9 @@ from __future__ import annotations
 from pathlib import Path
 
 import yaml
+from ..base.store import REPO
 
-ROOT = Path(__file__).resolve().parent.parent.parent
+ROOT = REPO
 ROLES = ("accel", "draw", "search", "prep")
 _MINE = ("you", "self", None)
 

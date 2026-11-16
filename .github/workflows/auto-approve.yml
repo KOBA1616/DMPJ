@@ -3,7 +3,7 @@
 name: auto-approve
 on:
   schedule:
-    - cron: "40 */2 * * *"          # 2時間ごと（変換系の実行枠 convert-cards と直列化する）
+    - cron: "40 */6 * * *"          # 6時間ごと（無料枠対策で2時間→6時間）（変換系の実行枠 convert-cards と直列化する）
   workflow_dispatch:
 permissions:
   contents: write

@@ -9,38 +9,8 @@
 """
 from __future__ import annotations
 
-from collections import Counter
-from ..engine_view import defn_of
-
-VISIBLE_ZONES = ("hand", "bz", "mana", "graveyard", "shield_bz")
-
-
-def zone_counts(eng, me: int, zone: str) -> Counter:
-    return Counter(defn_of(eng, c) for c in eng.zlist(zone, me))
-
-
-def count_matching(eng, me: int, zone: str, ids=()) -> int:
-    n = 0
-    for cid in eng.zlist(zone, me):
-        if (ids and defn_of(eng, cid) in ids) or (not ids and "creature" in eng.chars(cid)["types"]):
-            n += 1
-    return n
-
-
-def board_met(eng, me: int, board: dict) -> bool:
-    return all(not (Counter(need) - zone_counts(eng, me, z)) for z, need in board.items())
-
-
-def cards_met(eng, me: int, cards: dict) -> bool:
-    if not cards:
-        return False
-    have: Counter = Counter()
-    for z in VISIBLE_ZONES:
-        try:
-            have += zone_counts(eng, me, z)
-        except KeyError:
-            pass
-    return not (Counter(cards) - have)
+from ..engine.view import (VISIBLE_ZONES, board_met, cards_met, count_matching,  # noqa: F401  旧名の再公開（実体は engine_view）
+                           defn_of, zone_counts)
 
 
 def parts_to_cards(parts) -> dict:

@@ -38,26 +38,4 @@ def run_targets(targets: list[dict], combos: dict, make_measure, rule: Rule = Ru
     return out
 
 
-def default_board(combo: dict, min_weight: float = 1.5) -> dict:
-    """最小盤面Mを部品表から作る: 重みが min_weight 以上で ID 指定の部品を、ゾーンごとに全部そろえる。
-    一部の部品だけを見ると診断が甘くなる（盤面が揃った＝仕込み完了と誤判定する）ので、指定がなければ全部品で見る。"""
-    from ..search.leaf_parts import spec_from_combo
-    board: dict = {}
-    for p in spec_from_combo(combo).parts:
-        if p.ids and p.weight >= min_weight:
-            for i in p.ids:
-                board.setdefault(p.zone, {})[i] = max(board.get(p.zone, {}).get(i, 0), p.need)
-    return board
-
-
-def default_need(combo: dict, min_weight: float = 1.5) -> dict:
-    """cards 段階（部品が見える所にそろう）の必要カード。leaf_parts の重い部品（重み min_weight 以上・ID指定）の和集合。
-    それが無い時は core 部品すべて（厳しい。天門のように core が多いコンボは cards で止まりやすい）。"""
-    from ..search.leaf_parts import spec_from_combo
-    need: dict = {}
-    for p in spec_from_combo(combo).parts:
-        if p.ids and p.weight >= min_weight:
-            for i in p.ids:
-                need[i] = max(need.get(i, 0), p.need)
-    from ..search.leaf_parts import canon
-    return need or {canon(p["id"]): 1 for p in combo["parts"] if p.get("role") == "core" and p.get("id")}
+from ..search.leaf_parts import default_board, default_need  # noqa: E402,F401  旧名の再公開（実体は search.leaf_parts）

@@ -5,7 +5,7 @@
 name: auto-convert
 on:
   schedule:
-    - cron: "5,20,35,50 * * * *"   # 15分ごと（auto-syncの17分と重ならないようずらす）。同じ実行枠で直列化される
+    - cron: "5 */6 * * *"          # 15分ごと→6時間ごと（無料枠対策。完了時の自己再起動チェーンは従来どおり）
   workflow_dispatch:
   push:                            # PR #58 のマージ時に1回だけ起動する用。マージ後にこの push 節とマーカーファイルは削除してよい
     branches: [main]

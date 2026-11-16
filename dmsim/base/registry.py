@@ -1,0 +1,200 @@
+"""検証済みコンボの登録簿（S0、ロードマップ P2「登録簿」、設計 docs/registry-design.md）。
+
+- 入力: 候補 Candidate（中核の札・入口局面か手順・勝ち方・型・区分・測り方の設定）と、S4 の検証結果 Evidence。
+- 出力: query（大局観 S3・発見 S5 が読む照会）。holdout は for_tuning=True の照会に出さない。
+- 書き込み: record だけ。Evidence が候補と同じ指紋で、S4 の検証役（ISSUER）が出したものだけ受け付ける。
+  通ったものは entries、落ちたものは rejected に「どの検証で落ちたか」と一緒に残す（再挑戦の材料）。
+  record を呼んでよいのは dmsim/eval/verify.py だけ（tests/test_registry.py が確かめる）。
+- 新規性: novelty は登録済みと中核の札の集合を比べるだけの最小版（同じ／含む／含まれる／重なる）。仕組み（1周の差分）の比較はしない。
+
+他の層を import しない。
+"""
+from __future__ import annotations
+
+import hashlib
+import json
+from dataclasses import asdict, dataclass, field
+from pathlib import Path
+
+import yaml
+
+from . import store
+
+OPTIONAL_NONE = ("contrib",)   # 後から足した欄。None の時は to_dict・指紋に出さない
+TYPES = ("loop", "resource", "attack", "lock")        # 設計書 §11 の類型（重複可）
+SPLITS = ("tuning", "holdout", "discovered")         # discovered = システムが見つけた新規（調整に使ってよいかは tuning と同じ扱い）
+WINS = ("opp_deck_out", "effect", "lock", "beat")
+ISSUER = "dmsim.eval.verify"
+PATH = store.REPO / "data" / "registry" / "combos.yaml"
+
+
+class RegistryError(ValueError):
+    pass
+
+
+PARTS = ("loop", "win")   # 中核の分け方: ループ部品（入口・段1）と勝ち手段（段2）
+
+
+@dataclass
+class Candidate:
+    id: str
+    name: str
+    split: str
+    types: list[str]
+    core: list[dict]                          # [{id, name, role, part}]。role は自由記述。part は loop（ループ部品）/ win（勝ち手段、既定 loop）
+    win: str                                  # WINS のどれか
+    entry: str | None = None                  # 入口局面（data/loops/entry/*.json）。無ければ procedure だけ
+    procedure: list[str] = field(default_factory=list)
+    lock_mode: str = "passive"                # ロック型: passive（lock_probe）/ active（自分が毎ターン動く）
+    seeds: list[int] = field(default_factory=lambda: list(range(1, 9)))
+    max_turn: int = 2
+    budget: int | None = None                 # None は入口局面の既定
+    setup: str | None = None                  # 能動ロック: ロックが成立した局面（scenario の spec、JSON）。entry の代わり
+    policy: list[str] = field(default_factory=list)   # 能動ロック: 与えた自分の方針（lockcheck.prefer_policy の key の先頭、優先順）。手順の記述として残す
+    policy_avoid: list[str] = field(default_factory=list)   # 能動ロック: policy に合っても選ばない key の先頭（コンボの札をチャージしない等）
+    opp_levels: list[int] = field(default_factory=lambda: [0])   # 能動ロック: 測る相手の抵抗の段階（search.opponent.resistance）
+    route_stages: list | str | None = None    # 入口への経路の段。data/loops/route/ の名前かパス、または段のリスト（route_stages() で読む）
+    note: str = ""
+    # 組の寄与を値として測る設定（eval.verify._contrib、§29/§30）。{deck, opp_level, seeds, max_turn, values}。None は測らない。
+    # 足切りには使わず measured.values に記録する。None の時は指紋に含めない（既存の候補の指紋を変えない）
+    contrib: dict | None = None
+
+    def __post_init__(self):
+        if self.split not in SPLITS:
+            raise RegistryError(f"split は {SPLITS}: {self.split!r}")
+        bad = [t for t in self.types if t not in TYPES]
+        if not self.types or bad:
+            raise RegistryError(f"types は {TYPES} から1つ以上: {self.types!r}")
+        if self.win not in WINS:
+            raise RegistryError(f"win は {WINS}: {self.win!r}")
+        if self.lock_mode not in ("passive", "active"):
+            raise RegistryError(f"lock_mode: {self.lock_mode!r}")
+        if self.lock_mode == "active" and "lock" not in self.types:
+            raise RegistryError("lock_mode=active はロック型だけ")
+        bad = [c.get("part") for c in self.core if c.get("part", "loop") not in PARTS]
+        if bad:
+            raise RegistryError(f"core の part は {PARTS}: {bad!r}")
+
+    def core_ids(self, part: str | None = None) -> set[str]:
+        """part="loop" / "win" でループ部品・勝ち手段に絞る（docs/registry-design.md §10）。"""
+        return {c["id"] for c in self.core if c.get("id") and (part is None or c.get("part", "loop") == part)}
+
+    def to_dict(self) -> dict:
+        d = asdict(self)
+        for k in OPTIONAL_NONE:
+            if d.get(k) is None:
+                d.pop(k, None)
+        return d
+
+    def digest(self) -> str:
+        return hashlib.sha1(json.dumps(self.to_dict(), sort_keys=True, ensure_ascii=False).encode()).hexdigest()[:16]
+
+    @classmethod
+    def from_dict(cls, d: dict) -> "Candidate":
+        keys = cls.__dataclass_fields__
+        return cls(**{k: v for k, v in d.items() if k in keys})
+
+
+@dataclass
+class Evidence:
+    candidate_digest: str
+    passed: bool
+    checks: list[dict]                        # [{name, ok, detail}]。順に行い、最初に落ちた所で止める
+    measured: dict = field(default_factory=dict)   # 段1・段2の到達率、勝ち方の内訳、シードごとの行
+    version: dict = field(default_factory=dict)    # {fingerprint, commit, measured_at}
+    issuer: str = ""
+
+    def failed_at(self) -> str | None:
+        return next((c["name"] for c in self.checks if not c["ok"]), None)
+
+
+def load(path: Path = PATH) -> dict:
+    p = Path(path)
+    if not p.exists():
+        return {"entries": [], "rejected": []}
+    d = yaml.safe_load(p.read_text(encoding="utf-8")) or {}
+    return {"entries": d.get("entries") or [], "rejected": d.get("rejected") or []}
+
+
+def record(cand: Candidate, ev: Evidence, *, path: Path = PATH, purpose: str = "eval") -> dict:
+    """検証結果を登録簿に書く唯一の入口。通れば entries、落ちれば rejected（同じ id は置き換え）。"""
+    store.check(purpose, "holdout" if cand.split == "holdout" else "tuning")
+    if ev.issuer != ISSUER:
+        raise RegistryError(f"S4 の検証（{ISSUER}）を通っていない結果は書けない: issuer={ev.issuer!r}")
+    if ev.candidate_digest != cand.digest():
+        raise RegistryError("検証結果が別の候補（指紋が違う）のもの")
+    if ev.passed and ev.failed_at():
+        raise RegistryError("passed なのに落ちた検証がある")
+    row = {**cand.to_dict(), "digest": ev.candidate_digest, "checks": ev.checks, "measured": ev.measured, "version": ev.version}
+    if ev.measured.get("values"):
+        row["values"] = ev.measured["values"]   # 足切りしない値（リソース型の効率・組の寄与）。順位づけに使う
+    reg = load(path)
+    for k in ("entries", "rejected"):
+        reg[k] = [r for r in reg[k] if r["id"] != cand.id]
+    if ev.passed:
+        reg["entries"].append(row)
+    else:
+        reg["rejected"].append({**row, "failed_at": ev.failed_at()})
+    for k in ("entries", "rejected"):
+        reg[k].sort(key=lambda r: r["id"])
+    head = "# 検証済みコンボの登録簿（dmsim/base/registry.py）。手で書き換えない: tools/registry.py が dmsim/eval/verify.py を通して書く。\n"
+    store.write_text(path, head + yaml.safe_dump(reg, allow_unicode=True, sort_keys=False, width=200), purpose=purpose,
+                     split="holdout" if cand.split == "holdout" else None)
+    return row
+
+
+def query(*, types: str | list[str] | None = None, split: str | None = None, for_tuning: bool = False,
+          core_id: str | None = None, win: str | None = None, path: Path = PATH) -> list[dict]:
+    """登録済み（検証を通った）コンボの照会。for_tuning=True は holdout を除く（調整に使う経路はこれを使う）。"""
+    want = {types} if isinstance(types, str) else set(types or ())
+    out = []
+    for r in load(path)["entries"]:
+        if for_tuning and r["split"] == "holdout":
+            continue
+        if split and r["split"] != split:
+            continue
+        if want and not want & set(r["types"]):
+            continue
+        if core_id and core_id not in {c.get("id") for c in r["core"]}:
+            continue
+        if win and r["win"] != win:
+            continue
+        out.append(r)
+    return out
+
+
+def novelty(cand: Candidate, *, path: Path = PATH, include_holdout: bool = True) -> list[dict]:
+    """最小版の新規性: 登録済み（と落ちた候補）と中核の札の集合を比べる。空なら重なりなし。
+    relation: same（同じ中核）/ superset（候補が登録済みを含む）/ subset（候補が登録済みに含まれる＝部品が少ない別版の可能性）/ overlap。
+    仕組み（1周の差分・勝ち方）が同じかは見ない（設計 docs/registry-design.md §5 の次段）。"""
+    mine = cand.core_ids()
+    reg = load(path)
+    out = []
+    for status, rows in (("entry", reg["entries"]), ("rejected", reg["rejected"])):
+        for r in rows:
+            if r["id"] == cand.id or (not include_holdout and r["split"] == "holdout"):
+                continue
+            theirs = {c["id"] for c in r["core"] if c.get("id")}
+            common = mine & theirs
+            if not common:
+                continue
+            rel = "same" if mine == theirs else "superset" if mine > theirs else "subset" if mine < theirs else "overlap"
+            out.append({"id": r["id"], "status": status, "relation": rel, "common": sorted(common),
+                        "same_win": r["win"] == cand.win})
+    return out
+
+
+ROUTE_DIR = store.REPO / "data" / "loops" / "route"
+
+
+def route_stages(ref) -> list[dict] | None:
+    """候補・項目の route_stages を段の列にする。None はそのまま。文字列は data/loops/route/<名前>.yaml（またはそのパス）を読み、
+    その stages（各段は name・weight と、「ゾーン・札の条件・枚数」の組 all か入口の名前 entry）を返す。リストはそのまま返す。"""
+    if ref is None or isinstance(ref, list):
+        return ref
+    p = Path(ref)
+    if not p.suffix:
+        p = ROUTE_DIR / f"{ref}.yaml"
+    elif not p.is_absolute():
+        p = store.REPO / p
+    return list((yaml.safe_load(p.read_text(encoding="utf-8")) or {}).get("stages") or [])

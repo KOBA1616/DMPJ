@@ -5,14 +5,13 @@
 量の上限（ExpLogSpec）: セルごとの記録局数・1局の手数・1ファイルのバイト数。超えたら打ち切り、index.jsonl に truncated を残す。"""
 from __future__ import annotations
 
-import json
 import re
 from dataclasses import dataclass
 from pathlib import Path
 
 from ..engine.core import Engine
 from .explog import LogWriter
-from ..engine_view import digest_of, turn_of
+from ..engine.view import digest_of, turn_of
 
 
 @dataclass

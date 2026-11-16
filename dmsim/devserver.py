@@ -21,11 +21,11 @@ from pathlib import Path
 
 import yaml
 
-from . import scenario as sc
-from .defs import DATA, load_rules
+from dmsim.engine import scenario as sc
+from .cards.defs import DATA, load_rules
 from .engine import Engine, IllegalAnswer
-from .play import deck_lists, make_record, passive_policy, replay
-from .verify import verify_all
+from dmsim.engine.play import deck_lists, make_record, passive_policy, replay
+from dmsim.engine.verify import verify_all
 
 WEB = Path(__file__).resolve().parent / "web"
 REAL = DATA / "cards" / "real.yaml"
@@ -63,7 +63,7 @@ def _official_texts() -> dict[str, dict]:
 
 def card_list(rules) -> list[dict]:
     blocks = {}
-    from .cardfiles import card_files
+    from .cards.cardfiles import card_files
     for f in card_files():
         blocks.update({k: (f.name, v) for k, v in _card_blocks(f).items()})
     official = _official_texts()
@@ -82,7 +82,7 @@ def card_list(rules) -> list[dict]:
 def locate_card(card_id: str, root: Path | None = None) -> Path:
     """カード定義が書かれている YAML（real.yaml / converted.yaml など）を探す。"""
     root = root or DATA / "cards"
-    from .cardfiles import card_files
+    from .cards.cardfiles import card_files
     for f in card_files(root):
         if card_id in _card_blocks(f):
             return f
@@ -116,7 +116,7 @@ def set_review(card_id: str, status: str, note: str = "", path: Path | None = No
     doc = yaml.safe_load(new)      # 壊していないことを確かめてから書く
     path.write_text(new, encoding="utf-8")
     if record:
-        from . import approval
+        from .cards import approval
         raw = next(c for c in doc["cards"] if c["id"] == card_id)
         led = approval.load()
         led[card_id] = approval.entry(raw, status, "human", approval.vocab_versions(), **({"note": note} if note else {}))
@@ -355,12 +355,14 @@ class App:
         if rec is not None and body.get("cert"):
             rec = record_with_cert(self.rules, rec, int(body["at"]), cert_from_dict(body["cert"]), int(body.get("laps", 1)))
         elif rec is None:
-            from .solitaire import play_game
+            from .eval.lockcheck import lock_probe
+            from .search.game import play_game
             fp = int(body.get("first", 0))
             deck = list(body["deck"])
             opp = list(body.get("opp_deck") or ["T001"] * len(deck))
             res, eng = play_game(self.rules, deck, opp, int(body.get("seed", 1)), first_player=fp,
-                                 max_turn=int(body.get("turns", 4)), budget=int(body.get("budget", 200)))
+                                 max_turn=int(body.get("turns", 4)), budget=int(body.get("budget", 200)),
+                                 lock_judge=lock_probe)
             rec = make_record(eng, [deck, opp], int(body.get("seed", 1)), fp, note=json.dumps(asdict(res), ensure_ascii=False))
         pid = self.next_id
         self.next_id += 1

@@ -18,11 +18,13 @@ import time
 from dataclasses import dataclass, field
 from pathlib import Path
 
-from .. import scenario
-from . import bestfirst, replay, shrink
-from .bestfirst import Weights
-from .loopspec import LoopSpec, Pred
-from ..engine_view import result_of
+from dmsim.engine import scenario
+from dmsim.eval import replay, shrink
+from ..search import bestfirst
+from ..search.bestfirst import Weights
+from ..base.loopspec import LoopSpec, Pred
+from dmsim.engine.view import result_of
+from ..base import store
 
 MUT_ZONES = ("hand", "mana", "bz", "graveyard", "shield", "deck")
 
@@ -113,8 +115,7 @@ def save_win(rules, cfg: AutoConfig, spec: dict, result, name: str) -> tuple[str
                  "win_reason": won_by.get("reason"), "win_turn": won_by.get("turn"),
                  "search": {"kind": "beam", "width": cfg.width, "nodes": result.nodes}, "auto": True,
                  "note": "手順が通る盤面の下限(1-極小)。シャッフルに運が絡むと最小化はシード依存。win_rate は同じ手順が通るシードの割合"}
-    cfg.out_dir.mkdir(parents=True, exist_ok=True)
-    path.write_text(ls.to_json() + "\n")
+    store.write_text(path, ls.to_json() + "\n")
     return sig, path, info
 
 
@@ -248,8 +249,7 @@ def save_deck_win(rules, cfg: AutoConfig, deck: list[str], opp_deck: list[str], 
                           "win_turn": (result_of(result.engine) or {}).get("turn"), "auto": True, "mode": "deck", "class": cls, "win_reason": reason,
                           "search": {"kind": "beam", "width": cfg.width, "max_turn": cfg.max_turn, "seeds": cfg.eval_seeds},
                           "note": "通常の開幕(40枚・先手後手ランダム)から勝てたデッキ。cards は手順で使われたカード。win_rate は探索した全シードのうち勝てた割合"})
-    cfg.out_dir.mkdir(parents=True, exist_ok=True)
-    path.write_text(ls.to_json() + "\n")
+    store.write_text(path, ls.to_json() + "\n")
     return sig, path, info
 
 

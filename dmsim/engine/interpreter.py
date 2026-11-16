@@ -1,7 +1,7 @@
 """効果DSLのインタプリタ。op は ops.py で registry に登録する。"""
 from __future__ import annotations
 
-from ..types import BindTask, EffectTask, InvadeFixTask, PutStackedTask, PutUnderTask, SummonOnFixTask, SwapFixTask, SwapInTask
+from ..base.types import BindTask, EffectTask, InvadeFixTask, PutStackedTask, PutUnderTask, SummonOnFixTask, SwapFixTask, SwapInTask
 from .registry import OPS, task
 
 
@@ -12,6 +12,8 @@ class InterpreterMixin:
 
     def _defer(self, t, children):
         """t の次の op を children が終わった後に回す。書かれた順に解決する（605.2c）。"""
+        if not children:
+            return   # 後に回すものが無い: h_effect がそのまま次の op へ進める（ここで pc を進めると次の op をとばしてしまう）
         t["pc"] += 1
         t["os"] = {}
         self._push(*children)
@@ -91,15 +93,25 @@ def h_put_stacked(eng, t: PutStackedTask):
             ev["evolution"] = True
             t.pop("evo_v", None)
         else:
-            srcs = eng._evo_sources(cid, you)
-            if not srcs:
-                t["cids"] = t["cids"][1:]   # 進化元が無い: このカードは出さない（残りは続ける）
-                return None
-            ans, d = eng.ask(t, you, "choose_evo_source", [eng._card_option(x) for x in srcs], 1, 1)
-            if d:
-                return d
-            ev["stack_on"] = s.ref(srcs[ans[0]])
-            ev["evolution"] = True
+            if t.get("evo_source"):   # 重ね先を固定する（第173弾）: 適格性を照合し、不適格なら出さない
+                src = t["evo_source"]
+                ef = {k: v for k, v in (f.evolve_from or {}).items() if k != "zone"} or {}
+                if (not s.alive(src) or s.cards[src[0]].zone != "bz"
+                        or not eng.filter_match(src[0], ef)):
+                    t["cids"] = t["cids"][1:]   # 固定の進化元が適格でない: このカードは出さない（残りは続ける）
+                    return None
+                ev["stack_on"] = src
+                ev["evolution"] = True
+            else:
+                srcs = eng._evo_sources(cid, you)
+                if not srcs:
+                    t["cids"] = t["cids"][1:]   # 進化元が無い: このカードは出さない（残りは続ける）
+                    return None
+                ans, d = eng.ask(t, you, "choose_evo_source", [eng._card_option(x) for x in srcs], 1, 1)
+                if d:
+                    return d
+                ev["stack_on"] = s.ref(srcs[ans[0]])
+                ev["evolution"] = True
     eng._pop(t)
     rest = dict(t, cids=t["cids"][1:])
     rest.pop("answer", None)

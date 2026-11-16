@@ -1,6 +1,7 @@
 """セレクタ・式・条件の評価（効果DSLの「何を」「いくつ」「いつなら」）。"""
 from __future__ import annotations
 
+from .state import rng_below
 from .registry import read_only
 
 
@@ -15,17 +16,58 @@ def _civ_list(v) -> list:
 
 
 class SelectorMixin:
+    def crossed_gears(self, ref) -> list[int]:
+        """ref [cid, gen] にクロスされている、バトルゾーンのクロスギア（303.3）。
+        参照は gen まで完全一致で見る。宿主が離れた後の古い参照（LKI）にも当たる。"""
+        if not ref:
+            return []
+        want = list(ref)
+        return [cid for p in (0, 1) for cid in self.bz_tops(p)
+                if self.s.cards[cid].crossed is not None and list(self.s.cards[cid].crossed) == want]
+
+    def crossed_host(self, ref) -> int | None:
+        """ギアの参照 ref がクロスしているクリーチャーの cid。クロスしていなければ None。"""
+        if not ref:
+            return None
+        g = self.s.cards[ref[0]].crossed
+        return g[0] if g is not None and self.s.alive(g) else None
+
+    def _refs_of(self, v, env) -> list:
+        """crossed_to / host_of の参照指定（"self" / 変数名 / セレクタ）から参照の列を作る。"""
+        if isinstance(v, dict):
+            return [self.s.ref(c) for c in self.candidates(v, env)]
+        refs = [env.get("self")] if v == "self" else env.get("vars", {}).get(v, [])
+        # alive で落とさない: crossed_to / host_of は宿主が離れた後の LKI 参照で
+        # 引くのが用途（crossed_gears が gen 完全一致で照合する。第195弾:
+        # 破壊されたクリーチャーにクロスしてあったギアを拾うため）
+        return [r for r in refs if r]
+
     def _expr_refs(self, v, env):
         """cost_of / power_of の参照先を ref のリストにする。
         値は変数名（文字列）または {ref: 名前}。 "self" は自分自身を指す。
-        "event.<キー>" はイベントレコードの参照（event.opponent 等。バンドB U7 の基盤 expr-event-ref）。"""
+        "event.<キー>" はイベントレコードの参照（event.opponent 等。バンドB U7 の基盤 expr-event-ref）。
+        "crossed" はこのクロスギアをクロスしているクリーチャー（第170弾）。"""
         name = v.get("ref") if isinstance(v, dict) else v
         if name == "self":
             return [env["self"]] if env.get("self") else []
+        if name == "crossed":
+            if env.get("self"):
+                g = self.s.cards[env["self"][0]].crossed
+                return [g] if g else []
+            return []
         if isinstance(name, str) and name.startswith("event.") and env.get("event"):
             r = env["event"].get(name.split(".", 1)[1])
             return [r] if isinstance(r, list) else []
         return list(env.get("vars", {}).get(name, []))
+
+    def _chars_val(self, cid: int, key: str):
+        """参照先の特性1項目。評価中のカード（_chars_busy）は印刷特性で見る（再入防止。第145弾の
+        distinct_cost_count と同じ作法。affects フィルタの races_of: crossed 等が評価中の宿主を指す時に要る）"""
+        if cid in self._chars_busy:
+            d = self.fdef(cid)
+            return {"cost": d.cost, "power": d.power, "name": d.name, "races": list(d.races)}[key]
+        ch = self.chars_ro(cid)
+        return list(ch["races"]) if key == "races" else ch[key]
 
     def eval_expr(self, x, env):
         if isinstance(x, int):
@@ -71,6 +113,8 @@ class SelectorMixin:
                 return sum(len(self.s.cards[c].seals) for c in self.bz_tops(p))
             if "seals_on" in x:   # self に付いている封印の数
                 return len(self.s.cards[env["self"][0]].seals) if env.get("self") else 0
+            if "crossed_count" in x:   # そのカードにクロスされているギアの数（第170弾）。破壊された時の LKI 参照（古い gen）にも当たる
+                return sum(len(self.crossed_gears(r)) for r in self._expr_refs(x["crossed_count"], env))
             if "bundles" in x:   # シールドの束の数（束の中身のカードは数えない。113.2）。face_up: true は「表向きのカードを含む束」だけ、false は「表向きのカードを含まない束」だけを数える
                 spec = x["bundles"]
                 tops = self.zlist("shield", self._rel(spec.get("owner", "you"), env))
@@ -104,24 +148,30 @@ class SelectorMixin:
                 spec = x["prev_shield_added"]
                 return self.s.prev_counters.get(f"hist:shield_put:{self._rel(spec.get('owner', 'you'), env)}", 0)
             if "cost_of" in x:   # 参照カード（複数なら最大）のコスト
-                return max((self.chars_ro(c[0])["cost"] for c in self._expr_refs(x["cost_of"], env)), default=0)
+                return max((self._chars_val(c[0], "cost") for c in self._expr_refs(x["cost_of"], env)), default=0)
             if "power_of" in x:   # 参照カード（複数なら最大）の現在パワー（第116弾で追加。cost_of の対）
-                return max((self.chars_ro(c[0])["power"] for c in self._expr_refs(x["power_of"], env)), default=0)
+                return max((self._chars_val(c[0], "power") for c in self._expr_refs(x["power_of"], env)), default=0)
             if "name_of" in x:   # 参照カードのカード名（「そのクリーチャーと同じ名前の〜」フィルタ用、第140弾。複数なら先頭）
                 refs = self._expr_refs(x["name_of"], env)
-                return self.chars_ro(refs[0][0])["name"] if refs else ""
+                return self._chars_val(refs[0][0], "name") if refs else ""
             if "race" in x:   # choose_race で選んだ種族名
                 return [env.get("races", {})[x["race"]]]
-            if "races_of" in x:   # 変数に束縛したカードの種族（「種族をひとつ選ぶ」の代わりに、場のカード1体を選んでその種族とする）
-                return sorted({r for c in env.get("vars", {}).get(x["races_of"], []) for r in self.chars_ro(c[0])["races"]})
+            if "races_of" in x:   # 変数に束縛したカードの種族（「種族をひとつ選ぶ」の代わりに、場のカード1体を選んでその種族とする）。"self" / "crossed"（このギアをクロスしているクリーチャー。第170弾）も可
+                return sorted({r for c in self._expr_refs(x["races_of"], env) for r in self._chars_val(c[0], "races")})
             if "sum" in x:
                 return sum(self.eval_expr(v, env) for v in x["sum"])
+            if "mul" in x:
+                r = 1
+                for v in x["mul"]:
+                    r *= self.eval_expr(v, env)
+                return r
         raise ValueError(f"bad expr {x}")
 
     # count_of が式として評価する単一キーの辞書（バンドB U18 の一般化: 履歴式も mod の count に書ける）
     _EXPR_KEYS = {"count", "civ_count", "distinct_cost_count", "link_count", "seals", "seals_on",
+                  "crossed_count",
                   "entered", "drew", "turn_count", "used_count", "prev_shield_added",
-                  "var", "cost_of", "power_of", "name_of", "race", "races_of", "sum", "bundles", "declared",
+                  "var", "cost_of", "power_of", "name_of", "race", "races_of", "sum", "mul", "bundles", "declared",
                   "total_cost", "total_power"}
 
     # 従来から複合キー辞書（{distinct_cost_count: ..., base: 0} 等）でも式として読んでいたキー。
@@ -146,6 +196,8 @@ class SelectorMixin:
                        for r in self._expr_refs(spec.get("ref"), env))
         if kind == "broke_by_self":
             return s.turn_counters.get(f"hist:broke_by:{env['self'][0]}", 0) if env.get("self") else 0
+        if kind == "broke_by_self_attack":   # 第185弾: その攻撃中に self がブレイクした枚数（broke_count の攻撃番号区切り）
+            return s.turn_counters.get(f"broke_count:{env['self'][0]}:atk{s.turn_counters.get('current_attack', 0)}", 0) if env.get("self") else 0
         owner = spec.get("owner", "you")
         players = (0, 1) if owner == "any" else (self._rel(owner, env),)
         if kind == "attack":
@@ -158,7 +210,7 @@ class SelectorMixin:
                 if f:
                     if any(isinstance(v, dict) for v in f.values()):   # 式の値は問い合わせ時点の env で計算する
                         f = {k: self.eval_expr(v, env) if isinstance(v, dict) else v for k, v in f.items()}
-                    lst = [c for c in lst if self.filter_match(c, f)]   # フィルタは問い合わせ時点の特性で照合する（バンドA の設計既定）
+                    lst = [c for c in lst if self.filter_match(c, f, env=env)]   # フィルタは問い合わせ時点の特性で照合する（バンドA の設計既定）
                 total += len(lst)
             return total
         return sum(s.turn_counters.get(f"hist:{kind}:{p}", 0) for p in players)
@@ -220,8 +272,9 @@ class SelectorMixin:
             return paid == bool(c["ddd_paid"])
         raise ValueError(f"bad cond {c}")
 
-    def filter_match(self, cid: int, f: dict, lki: dict | None = None, base: bool = False) -> bool:
-        if base or self._in_static_cond > 1 or cid in self._distinct_costing:   # 常在型能力の範囲・入れ子の条件の判定中は特性計算を再帰させない（_distinct_costing は第145弾の数え中）
+    def filter_match(self, cid: int, f: dict, lki: dict | None = None, base: bool = False,
+                     env: dict | None = None) -> bool:
+        if base or self._in_static_cond > 1 or cid in self._distinct_costing or cid in self._chars_busy:   # 常在型能力の範囲・入れ子の条件の判定中は特性計算を再帰させない（_distinct_costing は第145弾の数え中。_chars_busy は第170弾: 自身の常在型の if が自身をフィルタで見る時）
             d = self.fdef(cid)
             ch = {"power": d.power, "cost": d.cost, "civs": d.civs, "types": d.types, "races": d.races,
                   "keywords": set(d.keywords), "name": d.name, "names": [d.name]}
@@ -235,7 +288,7 @@ class SelectorMixin:
                 return False
         elif is_sealed and lki is None and not base and not getattr(self, "_seal_ok", 0):
             return False   # 封印されているクリーチャーは無視される（封印を対象にする効果だけが sealed で指す）
-        if "any_of" in f and not any(self.filter_match(cid, sub, lki, base) for sub in f["any_of"]):
+        if "any_of" in f and not any(self.filter_match(cid, sub, lki, base, env) for sub in f["any_of"]):
             return False
         if "types" in f and not set(f["types"]) & set(ch["types"]):
             return False
@@ -277,12 +330,40 @@ class SelectorMixin:
                             ("power_le", "power", int.__le__), ("power_ge", "power", int.__ge__)):
             if k in f and not cmp(ch[key], f[k]):
                 return False
+        if "spell_cost_le" in f or "spell_cost_ge" in f:   # 呪文面（ツインパクトの呪文側）のコスト（第184弾）
+            d = self.cdef(cid)
+            sp = next((fc for fc in d.faces if "spell" in fc.types), None)
+            if sp is None:
+                return False
+            if "spell_cost_le" in f and not sp.cost <= f["spell_cost_le"]:
+                return False
+            if "spell_cost_ge" in f and not sp.cost >= f["spell_cost_ge"]:
+                return False
         if "multicolor" in f and (len(ch["civs"]) > 1) != f["multicolor"]:
             return False
         if "colorless" in f and (len(ch["civs"]) == 0) != f["colorless"]:
             return False
         if "tapped" in f and (lki["tapped"] if lki else c.tapped) != f["tapped"]:
             return False
+        if any(k in f for k in ("crossed", "crossed_ge", "crossed_le", "crossed_name")):   # クロス状態（第170弾）
+            # クリーチャー: そのカードにクロスされているギア。クロスギア自身: クロスされているか（crossed は自分がクロスされているか、枚数系は0）。
+            # lki（離れた後の姿）がある時は離れる前の参照で数える（破壊された時の「クロスされていたギアの数」）。
+            ref = lki["ref"] if lki else self.s.ref(cid)
+            gears = self.crossed_gears(ref)
+            if "cross_gear" in ch["types"]:
+                is_crossed = c.crossed is not None and self.s.alive(c.crossed)
+                n = 0
+            else:
+                is_crossed = bool(gears)
+                n = len(gears)
+            if "crossed" in f and is_crossed != bool(f["crossed"]):
+                return False
+            if "crossed_ge" in f and n < f["crossed_ge"]:
+                return False
+            if "crossed_le" in f and n > f["crossed_le"]:
+                return False
+            if "crossed_name" in f and f["crossed_name"] not in {nm for g in gears for nm in self.chars_ro(g)["names"]}:
+                return False
         if "face_down" in f and c.face_down != f["face_down"]:
             return False
         if "face_up" in f and bool(c.face_up) != bool(f["face_up"]):
@@ -291,10 +372,41 @@ class SelectorMixin:
             return False
         if "evolution" in f and ("evolution" in self.fdef(cid).types) != bool(f["evolution"]):
             return False   # 「進化ではないクリーチャー」等（進化はタイプで表す）
+        if "evo_source_of" in f:   # 「そのクリーチャーの進化元になれるカード」（第177弾・超魂レイド）。
+            # 対象は env の参照（"self" / 変数名）で指定する。env が無い文脈（常在型の条件・
+            # when の照合など）では解決できないので一致しない。判定は _evo_sources と同型:
+            # クリーチャーであること＋対象の evolve_from（zone を除く）のいずれかに合うこと。
+            if env is None:
+                return False
+            refs = self._refs_of(f["evo_source_of"], env)
+            if not refs:
+                return False
+            if "creature" not in ch["types"]:
+                if base or cid in self._chars_busy or self._in_static_cond > 1:
+                    return False
+                if not self.permits(cid, "evolve_base"):
+                    return False
+            ef = self.fdef(refs[0][0]).evolve_from
+            if ef is None:
+                return False
+            efs = ef if isinstance(ef, list) else [ef]
+            if not any(self.filter_match(cid, {k: v for k, v in sub.items() if k != "zone"},
+                                         lki, base, env) for sub in efs):
+                return False
         if "linked_god" in f:
             linked = self.link_side(cid) is not None and len(self.link_members(cid)) >= 2
             if linked != bool(f["linked_god"]):
                 return False   # 「リンクしているゴッド」: リンク位置を持ち、実際に2体以上でリンクしている
+        if "fortifying" in f:   # 「シールドを要塞化している城」（第178弾）: この城が今シールドを要塞化している
+            is_f = c.fortifies is not None and self.s.alive(c.fortifies) \
+                and self.s.cards[c.fortifies[0]].zone == "shield"
+            if is_f != bool(f["fortifying"]):
+                return False
+        if "fortified" in f:   # 「要塞化されたシールド」（第178弾）: どの城かに要塞化されている
+            forts = [x for x in self.bz_tops()
+                     if self.s.cards[x].fortifies is not None and list(self.s.cards[x].fortifies) == list(self.s.ref(cid))]
+            if bool(forts) != bool(f["fortified"]):
+                return False
         if "entered_this_turn" in f:
             if (c.entered_turn == self.s.turn) != bool(f["entered_this_turn"]):
                 return False   # 「このターン中に出た」: entered_turn はバトルゾーンに出たターン（それ以外は -1）
@@ -338,7 +450,7 @@ class SelectorMixin:
             f = sel.get("filter", {})
             if any(isinstance(v, dict) for v in f.values()):   # 式の値は解決時に計算する
                 f = {k: self.eval_expr(v, env) if isinstance(v, dict) else v for k, v in f.items()}
-            return [c for c in out if self.filter_match(c, f)]
+            return [c for c in out if self.filter_match(c, f, env=env)]
         if "bundle_of" in sel:   # 「シールドの束に含まれるカード」（第148弾）: 解決した束（トップ）ごとに [トップ]＋その下すべてを候補にする。覆われている表向きカードも数え・選択の対象になる（ユーザー決定 2026-11-08）
             v = sel["bundle_of"]
             if isinstance(v, dict):
@@ -356,12 +468,41 @@ class SelectorMixin:
             f = sel.get("filter", {})
             if any(isinstance(x, dict) for x in f.values()):   # 式の値は解決時に計算する
                 f = {k: self.eval_expr(x, env) if isinstance(x, dict) else x for k, x in f.items()}
-            return [c for c in out if self.filter_match(c, f)]
+            return [c for c in out if self.filter_match(c, f, env=env)]
         if "exlife_of" in sel:   # 「EXライフ」シールド: そのクリーチャーに紐付いた、今もシールドゾーンにあるカード
             refs = [env["self"]] if sel["exlife_of"] == "self" else env.get("vars", {}).get(sel["exlife_of"], [])
             refs = [r for r in refs if r and s.alive(r)]
             return [c for p in (0, 1) for c in self.zlist("shield", p)
                     if s.cards[c].exlife_of is not None and list(s.cards[c].exlife_of) in [list(r) for r in refs]]
+        if "castle_of" in sel:   # 「その城が要塞化しているシールド」（第178弾）: 城の fortifies が今もシールドゾーンにあるもの
+            refs = [env["self"]] if sel["castle_of"] == "self" else env.get("vars", {}).get(sel["castle_of"], [])
+            refs = [r for r in refs if r and s.alive(r)]
+            out = []
+            for r in refs:
+                f = s.cards[r[0]].fortifies
+                if f is not None and s.alive(f) and s.cards[f[0]].zone == "shield" and f[0] not in out:
+                    out.append(f[0])
+            return out
+        if "crossed_to" in sel:   # 「そのクリーチャーにクロスされているクロスギア」（第170弾）。値は "self" / 変数名 / セレクタ
+            out = []
+            for r in self._refs_of(sel["crossed_to"], env):
+                for g in self.crossed_gears(r):
+                    if g not in out:
+                        out.append(g)
+            f = sel.get("filter", {})
+            if any(isinstance(v, dict) for v in f.values()):   # 式の値は解決時に計算する
+                f = {k: self.eval_expr(v, env) if isinstance(v, dict) else v for k, v in f.items()}
+            return [c for c in out if self.filter_match(c, f, env=env)]
+        if "host_of" in sel:   # 「そのクロスギアをクロスしているクリーチャー」（第170弾）。値は "self" / 変数名 / セレクタ
+            out = []
+            for r in self._refs_of(sel["host_of"], env):
+                h = self.crossed_host(r)
+                if h is not None and h not in out:
+                    out.append(h)
+            f = sel.get("filter", {})
+            if any(isinstance(v, dict) for v in f.values()):   # 式の値は解決時に計算する
+                f = {k: self.eval_expr(v, env) if isinstance(v, dict) else v for k, v in f.items()}
+            return [c for c in out if self.filter_match(c, f, env=env)]
         if "ref" in sel:
             r = sel["ref"]
             if r == "self":
@@ -372,6 +513,8 @@ class SelectorMixin:
             elif r == "self_entered":   # 実行されてバトルゾーンに出たこのカード自身（B・A・D / J・O・E の終了時処理）
                 c = s.cards[env["self"][0]]
                 return [c.cid] if c.gen == env["self"][1] + 1 and c.zone == "bz" else []
+            elif r == "fuel":   # 第189弾: 召喚時の支払い行動（opt_reduce.do）で選んだカード
+                refs = [list(x) for x in s.cards[env["self"][0]].summon_fuel]
             elif r == "crossed":   # このクロスギアをクロスしているクリーチャー（303.3a）
                 g = s.cards[env["self"][0]].crossed
                 refs = [g] if g else []
@@ -383,7 +526,12 @@ class SelectorMixin:
             else:
                 refs = env.get("vars", {}).get(r, [])
             f = sel.get("filter")   # 「その中の水のカード」: 変数のカードをさらに絞る
-            return [x[0] for x in refs if s.alive(x) and (not f or self.filter_match(x[0], f))]
+            # zone を併記したら、そのゾーンにあるものだけ（第169弾。「そのカードが手札にあれば捨てる」
+            # のような、移動済みかどうかを区別する選択に使う。従来は zone が無視されていたが、
+            # ref＋zone の併記は実データに無く、素の読みどおりに絞る）
+            zs = self.zones_of(sel["zone"]) if "zone" in sel else None
+            return [x[0] for x in refs if s.alive(x) and (not f or self.filter_match(x[0], f, env=env))
+                    and (zs is None or s.cards[x[0]].zone in zs)]
         if "owner_of" in sel:   # 「持ち主の〜」「そのプレイヤーの〜」: 変数のカードの持ち主
             refs = env.get("vars", {}).get(sel["owner_of"], [])
             players = [p for p in (s.active, 1 - s.active) if p in {s.cards[r[0]].owner for r in refs}]
@@ -408,7 +556,7 @@ class SelectorMixin:
             for cid in lst:
                 if sel.get("other") and env.get("self") and cid == env["self"][0]:
                     continue
-                if self.filter_match(cid, f):
+                if self.filter_match(cid, f, env=env):
                     out.append(cid)
         if "exclude" in sel:   # 「〜以外の」参照除外（C1 U35）: ゾーン経路の候補（filter 適用後）から、exclude が指すカードをすべて引く。ref／under_of 等の特殊経路には適用しない
             ex = sel["exclude"]
@@ -416,6 +564,10 @@ class SelectorMixin:
             for sub in (ex if isinstance(ex, list) else [ex]):
                 excluded.update(self.candidates(sub, env))
             out = [c for c in out if c not in excluded]
+        if "extremal" in sel and out:   # 「パワーが一番小さい／大きいクリーチャー」（第162弾）: 候補の中で現在パワー（常在型の修整込み）が最小／最大のものだけに絞る。同点はすべて残し、どちらを選ぶかは chooser の選択に委ねる
+            pw = {c: self.chars_ro(c)["power"] for c in out}
+            edge = min(pw.values()) if sel["extremal"] == "min_power" else max(pw.values())
+            out = [c for c in out if pw[c] == edge]
         return out
 
     def _card_option(self, cid: int, look: bool = False, **extra) -> dict:
@@ -436,6 +588,7 @@ class SelectorMixin:
         any_n = sel.get("count") == "any" or (sel.get("count") == "all" and sel.get("up_to"))
         if ("ref" in sel and "count" not in sel) or ("under_of" in sel and "count" not in sel) \
                 or ("bundle_of" in sel and "count" not in sel) \
+                or ("crossed_to" in sel and "count" not in sel) or ("host_of" in sel and "count" not in sel) \
                 or ("from_top" in sel and "count" not in sel) or (sel.get("count", 1) == "all" and not any_n):
             return cands, None
         n = len(cands) if any_n else self.eval_expr(sel.get("count", 1), env)
@@ -443,15 +596,44 @@ class SelectorMixin:
         mn = 0 if sel.get("up_to") or any_n else mx
         if mx == 0:
             return [], None
-        chooser = self._rel(sel.get("chooser", "you"), env)
-        # 相手に選ばれないクリーチャーは候補から外す（be_chosen）。自分のカードを自分が選ぶ時は関係ない
+        # 第185弾: chooser: random（「見ないで選ぶ」）は決定を出さず、効果の使用者が
+        # 無作為に選ぶ（従来は _rel が KeyError になり、先行カードも実行時に壊れていた）。
+        # opponent は opp の同義語（dm06-005 の既存形）。be_chosen の照合は
+        # 効果の使用者（random 時は you）基準で行う。
+        ch = sel.get("chooser", "you")
+        chooser = env["you"] if ch == "random" else (1 - env["you"] if ch == "opponent"
+                                                      else self._rel(ch, env))
+        # 相手に選ばれないクリーチャーは候補から外す（be_chosen）。自分のカードを自分が選ぶ時は関係ない。
+        # 範囲つきの保護（deny の {action: be_chosen, other: <発生源フィルタ>}）は、選択の発生源
+        # （解決中のカード = env の self）を other として照合する（第164弾。それ以外は発生源なし）
+        src = env.get("self") or []
+        first = src[0] if src else None
+        src_cid = first[0] if isinstance(first, (list, tuple)) else first   # self は cid の列（参照 [cid, gen] の場合もある）
         cands = [c for c in cands if self.s.cards[c].zone != "bz" or self.s.cards[c].controller == chooser
-                 or self.permits(c, "be_chosen")]
+                 or self.permits(c, "be_chosen", other=src_cid)]
+        # 「可能ならこのクリーチャーを選ぶ」（第199弾）: 選ぶ側と別のコントローラーの候補の中に
+        # must_be_chosen を持つクリーチャーがいれば、そのコントローラーの他のクリーチャーは
+        # 候補から外す（このクリーチャー自体が候補にいない効果では制限しない）
+        must_by_ctrl: dict[int, set[int]] = {}
+        for c in cands:
+            card = self.s.cards[c]
+            if card.zone == "bz" and card.controller != chooser and self.chars_ro(c).get("must_be_chosen"):
+                must_by_ctrl.setdefault(card.controller, set()).add(c)
+        if must_by_ctrl:
+            cands = [c for c in cands
+                     if self.s.cards[c].zone != "bz"
+                     or self.s.cards[c].controller not in must_by_ctrl
+                     or c in must_by_ctrl[self.s.cards[c].controller]]
         if "distinct_from" in sel:   # 「自分のどのクリーチャーともコストが異なる」（第147弾・型1）: 参照集合のコストと重なる候補を外す。
             # 評価は選択開始時に1回だけ（＝出す前の場。選んだカードが出た後に場のコストが増えても残りの選択には影響しない）
             ref_costs = {self.chars_ro(c)["cost"] for c in self.candidates(sel["distinct_from"], env)}
             cands = [c for c in cands if self.chars_ro(c)["cost"] not in ref_costs]
         n = min(n, len(cands))
+        if sel.get("chooser") == "random":   # 第185弾: 「見ないで選ぶ」。決定を出さず無作為に n 枚選ぶ
+            pool = list(cands)
+            picked = [pool.pop(rng_below(self.s, len(pool))) for _ in range(min(n, len(pool)))]
+            t.setdefault("os", {})["chosen"] = picked
+            return picked, None
         if "total_cost_le" in sel or "total_cost_ge" in sel or "total_power_le" in sel or "total_power_ge" in sel \
                 or sel.get("distinct_costs"):   # 合計制限つきの「好きな数」選択: 1枚ずつ積み上げる。軸はコスト／パワー（第144弾で一般化）。distinct_costs は「コストが異なる」制約の述語として同じ分岐に乗る（第147弾・型2／型3）
             # 軸ごとの (特性キー, 上限, 下限)。パワーは chars の現在パワー（常在型の修整込み）を使う
@@ -516,6 +698,9 @@ class SelectorMixin:
                     os.setdefault("tc_answers", []).append(a)
                     if not a:
                         break
+                    if a[0] >= len(rest):   # 上と同じ（隠れた札の中身が変わって候補が減った）。今の候補で聞き直す
+                        os["tc_answers"].pop()
+                        continue
                     picked.append(rest[a[0]])
             chosen = picked
             t.setdefault("os", {})["chosen"] = chosen
@@ -528,9 +713,18 @@ class SelectorMixin:
         mn = 0 if sel.get("up_to") or any_n else mx
         if mx == 0:
             return [], None
-        a, d = self.ask(t, chooser, "choose_cards", [self._card_option(c, sel.get("look", False)) for c in cands], mn, mx)
+        opts = [self._card_option(c, sel.get("look", False)) for c in cands]
+        a, d = self.ask(t, chooser, "choose_cards", opts, mn, mx)
         if d:
             return None, d
+        if any(i >= len(cands) for i in a):
+            # 隠れた札（山札の上など）を条件で絞る候補は、公平探索で隠れた中身が決定の時と答えの時で違うと数が変わる。
+            # 範囲外の答えは捨て、足りなければ今の候補で聞き直す
+            a = [i for i in a if i < len(cands)]
+            if len(a) < mn:
+                a, d = self.ask(t, chooser, "choose_cards", opts, mn, mx)
+                if d:
+                    return None, d
         chosen = [cands[i] for i in a]
         t.setdefault("os", {})["chosen"] = chosen
         picked = [c for c in chosen if self.s.cards[c].zone == "bz" and self.s.cards[c].controller != chooser]

@@ -15,24 +15,43 @@ from pathlib import Path
 import yaml
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
-from dmsim import validity  # noqa: E402
-from dmsim.defs import load_rules  # noqa: E402
-from dmsim.scenario import build  # noqa: E402
-from dmsim.solitaire import play_game  # noqa: E402
+from dmsim.eval import validity  # noqa: E402
+from dmsim.cards.defs import load_rules  # noqa: E402
+from dmsim.engine.scenario import build  # noqa: E402
+from dmsim.search.game import play_game  # noqa: E402
 
 MANA5 = ["T001", "T003", "T004", "T005", "T008"]
 OPP_DECK, OPP_MANA = 30, 6
+
+
+def _opp_counts(eng) -> dict:
+    z = eng.s.zones
+    return {"deck": len(z["deck"][1]), "mana": len(z["mana"][1]), "shield": len(z["shield"][1])}
+
+
+_BASE: dict = {}
+
+
+def _deck_baseline(rules, seed, turns, budget) -> dict:
+    k = (seed, turns, budget)
+    if k not in _BASE:
+        _, eng = play_game(rules, ["T013"] * 40, ["T001"] * 40, seed, first_player=seed % 2, max_turn=turns, budget=budget)
+        _BASE[k] = _opp_counts(eng)
+    return _BASE[k]
 
 
 def trial(rules, cards, seed=1, turns=2, budget=60, deck_mode=True) -> dict:
     """既定は通常の開幕: 候補カードを各4枚＋ダミーで40枚、手札5・盾5、マナは自分で貯める。相手は40枚（マナチャージだけ）。
     deck_mode=False は従来の「手札に直接・マナ10枚」の甘い開始（強い札が何でも勝つので選別には使わない）。"""
     if deck_mode:
+        # 相手の山札・マナは相手自身のドローとチャージでも動く。候補を入れない基準局（ダミー40枚）を同じシードで回し、
+        # その差分だけを「候補の札が相手を動かした量」とする（以前は相手の自然な増減をそのまま数え、全組が同じ点に張り付いた）。
+        b = _deck_baseline(rules, seed, turns, budget)
         deck = ([c for c in cards for _ in range(4)] + ["T013"] * 40)[:40]
         res, eng = play_game(rules, deck, ["T001"] * 40, seed, first_player=seed % 2, max_turn=turns, budget=budget)
-        z = eng.s.zones
-        out = {"opp_deck": 30 - len(z["deck"][1]) if len(z["deck"][1]) <= 30 else 0, "opp_mana": len(z["mana"][1]),
-               "opp_shield": 5 - len(z["shield"][1]), "kill": res.kill_turn is not None}
+        o = _opp_counts(eng)
+        out = {"opp_deck": max(0, b["deck"] - o["deck"]), "opp_mana": max(0, b["mana"] - o["mana"]),
+               "opp_shield": max(0, b["shield"] - o["shield"]), "kill": res.kill_turn is not None}
         out["score"] = out["opp_deck"] + 2 * out["opp_mana"] + 3 * out["opp_shield"] + (20 if out["kill"] else 0)
         out["lock_score"] = out["opp_deck"] + 2 * out["opp_mana"]
         out["kill_turn"] = res.kill_turn
@@ -99,7 +118,7 @@ def singles(rules, top=40, key="score") -> list[dict]:
 
 def recovery_pool(rules) -> list[str]:
     """自分のゾーンから手札・場へ動かす札（回収・蘇生・踏み倒し）。相手を動かす札の相棒の候補。"""
-    from dmsim.zone_graph import bundles_of
+    from dmsim.engine.zone_graph import bundles_of
     out = set()
     for b in bundles_of(rules):
         for m in b.moves:

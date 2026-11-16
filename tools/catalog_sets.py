@@ -21,7 +21,7 @@ import urllib.request
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
-from dmsim.cardid import set_code  # noqa: E402
+from dmsim.base.cardid import set_code  # noqa: E402
 
 URL = "https://dm.takaratomy.co.jp/card/"
 UA = "dmpj-card-fetch/0.1 (personal use; 1 request per few seconds)"

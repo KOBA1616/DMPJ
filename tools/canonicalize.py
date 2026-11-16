@@ -14,9 +14,9 @@ import sys
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
-from dmsim import approval as ap  # noqa: E402
-from dmsim import cardstore, identity  # noqa: E402
-from dmsim.defs import DATA, load_tables  # noqa: E402
+from dmsim.cards import approval as ap  # noqa: E402
+from dmsim.cards import cardstore, identity  # noqa: E402
+from dmsim.cards.defs import DATA, load_tables  # noqa: E402
 
 HEADER = "# convert_cards.py の出力（review: pending）。確認後に real.yaml へ移す。\n"
 

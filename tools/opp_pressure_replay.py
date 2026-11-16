@@ -8,9 +8,9 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
-from dmsim.defs import load_rules  # noqa: E402
-from dmsim.discovery.bestfirst import priority  # noqa: E402
-from dmsim.discovery.reachsearch import reach_target  # noqa: E402
+from dmsim.cards.defs import load_rules  # noqa: E402
+from dmsim.search.bestfirst import priority  # noqa: E402
+from dmsim.search.reachsearch import reach_target  # noqa: E402
 from dmsim.engine.core import Engine  # noqa: E402
 from dmsim.eval.opp_pressure import make_term  # noqa: E402
 from dmsim.eval.vfeatures import v_priority  # noqa: E402
@@ -18,7 +18,21 @@ from dmsim.eval.vfeatures import v_priority  # noqa: E402
 DRILL, JOHANNI = "dm16-051", "dm36-015"
 
 
-def run(rules, seed, w, width, max_turn, mana_cards):
+def run_normal(rules, seed, w, width, max_turn, depth=300, copies=4):
+    """通常の開幕（40枚・手札5・盾5）から。仕込みなし。戻り値は相手の墓地の最大枚数（マナ破壊・山札破棄の量）。"""
+    deck = [DRILL] * copies + [JOHANNI] * copies + ["T013"] * (40 - 2 * copies)
+    e = Engine.new_game(rules, [deck, ["T001"] * 40], seed, first_player=0)
+    low = [0]
+    term = make_term(mana_w=w) if w else None
+
+    def prio(en, me, wt):
+        low[0] = max(low[0], len(en.zlist("graveyard", 1)))  # 開幕は相手マナ0なので「マナの最小」は使えない。破壊・破棄された枚数で測る
+        return v_priority(en, me, wt, priority, under_w=0, res_w=0, terms=[term] if term else ())
+    reach_target(e, {"graveyard": {"*": 99}}, 0, width=width, max_turn=max_turn, max_depth=depth, prio=prio)
+    return low[0]
+
+
+def run(rules, seed, w, width, max_turn, mana_cards, depth=80):
     e = Engine.new_game(rules, [[DRILL, JOHANNI] + mana_cards * 6 + ["T013"] * 30, ["T001"] * 40], seed, first_player=0)
     pick = lambda d: next(c for c in e.zlist("deck", 0) if e.s.cards[c].defn == d)
     e._raw_move(pick(DRILL), "hand", controller=0)
@@ -34,21 +48,28 @@ def run(rules, seed, w, width, max_turn, mana_cards):
     def prio(en, me, wt):
         low[0] = min(low[0], len(en.zlist("mana", 1)))
         return v_priority(en, me, wt, priority, under_w=0, res_w=0, terms=[term] if term else ())
-    reach_target(e, {"graveyard": {"*": 99}}, 0, width=width, max_turn=max_turn, prio=prio)
+    reach_target(e, {"graveyard": {"*": 99}}, 0, width=width, max_turn=max_turn, max_depth=depth, prio=prio)
     return low[0]
 
 
 def main(argv=None):
     ap = argparse.ArgumentParser()
-    ap.add_argument("--w", type=float, nargs="+", default=[0.0, 1.0, 3.0])
+    ap.add_argument("--w", type=float, nargs="+", default=[0.0, 3.0, 100.0])
     ap.add_argument("--width", type=int, default=100)
     ap.add_argument("--max-turn", type=int, default=6)
+    ap.add_argument("--depth", type=int, default=80)
     ap.add_argument("--seeds", type=int, default=3)
     ap.add_argument("--mana", nargs="+", default=["dm16-051", "T013"])
+    ap.add_argument("--normal", action="store_true", help="仕込みなしの通常開幕から測る")
     a = ap.parse_args(argv)
     rules = load_rules()
+    if a.normal:
+        for w in a.w:
+            res = [run_normal(rules, s, w, a.width, a.max_turn, a.depth) for s in range(1, a.seeds + 1)]
+            print(f"[通常開幕] mana_w={w}: 相手の墓地の最大枚数 {res}", flush=True)
+        return
     for w in a.w:
-        res = [run(rules, s, w, a.width, a.max_turn, a.mana) for s in range(1, a.seeds + 1)]
+        res = [run(rules, s, w, a.width, a.max_turn, a.mana, a.depth) for s in range(1, a.seeds + 1)]
         print(f"mana_w={w}: 探索中の相手マナ最小値 {res}", flush=True)
 
 

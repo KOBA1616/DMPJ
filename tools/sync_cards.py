@@ -20,7 +20,7 @@ sys.path.insert(0, str(ROOT))
 sys.path.insert(0, str(ROOT / "tools"))
 import catalog_sets as cs  # noqa: E402
 import fetch_cards as fc  # noqa: E402
-from dmsim.cardid import canonical_id  # noqa: E402
+from dmsim.base.cardid import canonical_id  # noqa: E402
 
 MAX_RETRIES = 3              # 1枚あたりの失敗がこの回数に達したら飛ばす（台帳の errors に残る）
 MAX_CONSECUTIVE_FAILS = 5

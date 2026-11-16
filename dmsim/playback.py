@@ -15,9 +15,10 @@ import math
 
 from .devserver import Session, _diff, _label, _snapshot
 from .engine import Engine
-from .loop import LoopCertificate, fast_forward
-from .play import replay
-from .solitaire import Detectors, lock_probe
+from dmsim.engine.loop import LoopCertificate, fast_forward
+from dmsim.engine.play import replay
+from .eval.lockcheck import lock_probe
+from .search.turn import Detectors
 
 ZONES = ("hand", "bz", "mana", "shield", "deck", "graveyard")
 
@@ -138,7 +139,8 @@ def _snapshot_one(eng: Engine, cid: int):
 
 
 def _kind(cert: LoopCertificate, me: int) -> str:
-    from .solitaire import _is_burn, _is_engine
+    from .search.turn import is_burn_loop as _is_burn
+    from .search.turn import is_engine_loop as _is_engine
     return "burn" if _is_burn(cert, me) else "engine" if _is_engine(cert, me) else "kill" if cert.win_by else "loop"
 
 
@@ -199,7 +201,7 @@ def main(argv=None):
     import argparse
     from pathlib import Path
 
-    from .defs import load_rules
+    from .cards.defs import load_rules
     ap = argparse.ArgumentParser(description="対戦記録の手順・ループ・勝ち筋を要約する（画面は dmsim.devserver の「再生」タブ）")
     ap.add_argument("record")
     a = ap.parse_args(argv)

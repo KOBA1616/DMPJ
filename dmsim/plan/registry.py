@@ -41,7 +41,7 @@ def register_role(name: str, *, progress: str, compare: str, test: str) -> RoleD
 
 # 初期の種類（実装は LoopSpec の取り込みのみ。他は枠だけ）
 register_kind("loop", "周期的に戻るループ（LoopSpec を吸収）。ロックは周期が相手のターンをまたぐループ")
-register_kind("combo_sequence", "コンボ手順（枠のみ）")
+register_kind("combo_sequence", "コンボ手順（combo_hunt の検証済みの組。dmsim/plan/combo_sequence.py が登録する。params[\"stages\"] を大局観が読む）")
 register_kind("lock", "ターンをまたぐロック（枠のみ）")
 register_kind("beat", "ビートダウン（枠のみ）")
 

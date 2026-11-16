@@ -16,11 +16,11 @@ import yaml
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 sys.path.insert(0, str(Path(__file__).resolve().parent))
-from dmsim.defs import load_rules  # noqa: E402
+from dmsim.cards.defs import load_rules  # noqa: E402
 from dmsim.discovery.cyclesetup import setup_from_cycle  # noqa: E402
-from dmsim.scenario import build  # noqa: E402
-from dmsim.solitaire import play_game  # noqa: E402
-from dmsim.zone_graph import TICKS, Cycle, bundles_of, feeds  # noqa: E402
+from dmsim.engine.scenario import build  # noqa: E402
+from dmsim.search.game import play_game  # noqa: E402
+from dmsim.engine.zone_graph import TICKS, Cycle, bundles_of, feeds  # noqa: E402
 
 
 def lap_ok(c: Cycle) -> bool:

@@ -12,9 +12,9 @@ from pathlib import Path
 import yaml
 
 from ..engine import Engine
-from ..eval.stage import count_matching
-from ..solitaire import Weights, evaluate
-from ..engine_view import result_of
+from .leaf_eval import Weights, evaluate
+from ..engine.view import count_matching, result_of
+from ..base.store import REPO
 
 
 @dataclass(frozen=True)
@@ -68,7 +68,7 @@ def make_value_fn(spec: PartsSpec, weights: Weights | None = None):
 # 絶望神サガ: キル手前(T3開始)の最小局面は、墓地にサガ+シャコガイル+クリーチャー1体、手札にサガ+ドラゲリオン、
 # 水・闇のマナ3（data/eval/saga_near_kill を縮めて確認: シャコガイルが墓地に無い/ドラゲリオンかサガが手札に無いと起動しない）。
 # coef=10: evaluate の打点項（場のクリーチャー1体で+40）に勝てる大きさが必要。1〜5 では saga_entry の T2 墓地サガ率が 4/40 のまま、10 で 12/40
-KNOWN_COMBOS = Path(__file__).resolve().parents[2] / "data" / "known_combos" / "combos.yaml"
+KNOWN_COMBOS = REPO / "data" / "known_combos" / "combos.yaml"
 # 既定の導出: core 部品（id あり）を手札・場に置くほど加点、墓地は少なめ、マナは0（チャージで潰さないよう手札優先）
 DEFAULT_ZONE_WEIGHTS = (("hand", 1.0), ("bz", 1.0), ("graveyard", 0.5))
 
@@ -85,7 +85,7 @@ def auto_finish(combo: dict) -> tuple[Bundle, ...]:
 
 # known_combos 側の収録IDとエンジン登録IDが違う同一カード。combos.yaml は触らず、部品表の導出でエンジン側のIDに読み替える
 # （読み替えないと、デッキに入っているカードが部品として数えられず、cards 段階が常に未達になる。例: アカシック3 が 0 枚扱い）
-ID_ALIAS = {"dm23ex2-cho005": "dm23ex2-009"}  # 完全水中要塞 アカシック3
+ID_ALIAS = {"dm23ex2-cho005": "dm23ex2-009"}  # 完全水中要塞 アカシック3（combos.yaml は 2026-11-13 に dm23ex2-009 へ直した。古い記録の読み替え用に残す）
 
 
 def canon(i: str) -> str:
@@ -153,3 +153,25 @@ def parts_id_for_decks(deck_paths, parts: str = "auto"):
         return None
     ids = (yaml.safe_load(Path(deck_paths[0]).read_text(encoding="utf-8")) or {}).get("combos") or []
     return ids[0] if len(ids) == 1 and ids[0] in load_specs() else None
+
+
+def default_board(combo: dict, min_weight: float = 1.5) -> dict:
+    """最小盤面Mを部品表から作る: 重みが min_weight 以上で ID 指定の部品を、ゾーンごとに全部そろえる。
+    一部の部品だけを見ると診断が甘くなる（盤面が揃った＝仕込み完了と誤判定する）ので、指定がなければ全部品で見る。"""
+    board: dict = {}
+    for p in spec_from_combo(combo).parts:
+        if p.ids and p.weight >= min_weight:
+            for i in p.ids:
+                board.setdefault(p.zone, {})[i] = max(board.get(p.zone, {}).get(i, 0), p.need)
+    return board
+
+
+def default_need(combo: dict, min_weight: float = 1.5) -> dict:
+    """cards 段階（部品が見える所にそろう）の必要カード。leaf_parts の重い部品（重み min_weight 以上・ID指定）の和集合。
+    それが無い時は core 部品すべて（厳しい。天門のように core が多いコンボは cards で止まりやすい）。"""
+    need: dict = {}
+    for p in spec_from_combo(combo).parts:
+        if p.ids and p.weight >= min_weight:
+            for i in p.ids:
+                need[i] = max(need.get(i, 0), p.need)
+    return need or {canon(p["id"]): 1 for p in combo["parts"] if p.get("role") == "core" and p.get("id")}

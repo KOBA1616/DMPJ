@@ -9,7 +9,7 @@ from typing import Callable
 
 from .infolevel import InfoLevel, get_runner
 from .stats import boot_ci, paired_diff
-from ..engine_view import shuffle_deck
+from ..engine.view import shuffle_deck
 
 
 @dataclass
@@ -85,7 +85,7 @@ def _progress_cell(results, cfg: EvalConfig) -> dict:
 def _start_kw(rules, cfg: EvalConfig, seed: int, fp: int) -> dict:
     if cfg.start_spec is None:
         return {}
-    from ..scenario import build
+    from ..engine.scenario import build
     start = build(rules, {**cfg.start_spec, "seed": seed}, first_player=fp)
     if cfg.start_spec.get("shuffle_deck"):            # 山札の並びをシードごとに変える（隠れ情報が効く局面用）
         import random

@@ -31,8 +31,8 @@ ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(ROOT))
 sys.path.insert(0, str(ROOT / "tools"))
 
-from dmsim import cardstore, identity, schema  # noqa: E402
-from dmsim.defs import DATA, DefError, dedupe_list, load_tables, parse_card  # noqa: E402
+from dmsim.cards import cardstore, identity, schema  # noqa: E402
+from dmsim.cards.defs import DATA, DefError, dedupe_list, load_tables, parse_card  # noqa: E402
 import rule_convert  # noqa: E402
 from llm_offload.providers import CallTimeout  # noqa: E402
 from llm_offload.providers import (  # noqa: E402,F401  無料モデル呼び出しは llm_offload に集約
@@ -70,6 +70,26 @@ INSTRUCTIONS = """\
 - 攻撃・ブロックの強制は static の mod.require（[attack] / [block]）。「毎ターン攻撃しなければならない」「相手のクリーチャーが攻撃する時、可能であればブロックする」はルールで変換済み。条件つきの強制（次のターンだけ等）は mod.require に条件が書けないので unsupported。
 - text には原文から括弧書きの注釈を除いたものを「 / 」区切りで書く。
 - 「コストを支払わずに召喚する／唱える」は op: play_free（召喚・唱えたことになり、「召喚した時」「唱えた時」が誘発する）。「バトルゾーンに出す／置く」（ヘブンズ・ゲート型、墓地・マナ・手札から出す、置換で出す）は召喚ではないので op: move, to: bz, reason: put（play_free や reason: summon は使わない。112.3g, 603.5a）。
+- 墓地から唱える: 「この呪文を自分の墓地から唱えてもよい。そうしたら、唱えた後、墓地のかわりに山札の下に置く」は面の `recycle: {cost: <この呪文のコスト>}`（墓地からコストを支払って唱え、解決後は山札の一番下）。「墓地の呪文を1枚、コストを支払わずに唱えてもよい。唱えた後、墓地に置くかわりに山札の一番下に置く」は may の中で `{op: play_free, select: {zone: graveyard, owner: you, filter: {types: [spell], ...}, count: 1}, resolve_to: deck, resolve_position: bottom}`（cast_from_graveyard の語彙を作らない）。
+- ツインパクトの原文で、両面の name が「A/B」と同じ文字列になっていても取得の欠けではない。面ごとの name は「/」の前後に分けて書く（data_incomplete にしない）。
+- 「このクリーチャーがバトルに負けた時」は `when: {event: battle_lose, subject: self}`、バトルの相手は `{ref: event.opponent}`（解決はバトルの破壊の後。701.13b）。
+- 「（そのカードの）出た時にトリガーする能力を１つ使う」「Jビッグ１する」は `{op: use_cip, select: <そのカード>}`（使うのは自分、self は選んだカード。use_cip を含む能力は候補から自動で除く。cip_reuse / j_big の語彙を作らない）。Jビッグ１は `select: {zone: bz, owner: you, other: true, count: 1, filter: {race_has: ジョーカーズ}}`。
+- 「手札進化：〜を１体自分の手札から選び、このクリーチャーをその上に重ねつつ出す」は `evolve_zone: hand` ＋ `evolve_from: <フィルタ>`（自分自身は進化元にならない。hand_evolution の語彙を作らない）。手札進化V/GV（複数体）は unsupported。
+- 「自分のマナゾーンまたは墓地から」のように複数ゾーンから選ぶ時は、セレクタの `zone: [mana, graveyard]`（ゾーンの配列。zone_mixed_selection の語彙を作らない）。
+- 「相手はカードをマナゾーンに置く時、タップして置く」「相手のカードはマナゾーンにタップして置かれる」はキーワード `opp_mana_tapped`（mana_enters_tapped_rule の語彙を作らない）。
+- 「〜の数以下のコスト」「マナゾーンにあるカードの枚数以下のコスト」はフィルタの `cost_le: {count: <セレクタ>}`（式を書ける。cost_le_count の語彙を作らない）。
+- 「相手の呪文またはクリーチャーの能力によって、このクリーチャーが自分の手札から捨てられる時、墓地に置くかわりに出してもよい」は `kind: replace, zone: hand, optional: true, when: {event: move, from: hand, to: graveyard, reason: discard, subject: self, by: opp}, instead: [{op: move, select: {ref: self, count: 1}, to: bz, reason: put}]`（「出す」なら optional を付けない。discard_by_opponent_effect_replacement の語彙を作らない）。
+- 宣言: 「数字を１つ選ぶ」は `{op: choose_number, as: n}`、「種族を１つ選ぶ」は `{op: choose_race, as: r}`、「文明をひとつ選ぶ」は `{op: choose_civ, as: c}`。参照はフィルタの `cost_le/cost_ge: {declared: n}`、`races: {declared: r}`、`civs` / `not_civs: {declared: c}`（choose_number / declare_race / choose_civilization_effect の語彙を作らない）。
+- 「このターン、自分が呪文を２枚以上唱えていれば」は `{cmp: [{turn_count: {kind: cast, owner: you}}, ">=", 2]}`（casts_this_turn_condition の語彙を作らない）。
+- 「B・A・D N」は `static affects: self, zone: hand, mod: {opt_reduce: {amount: N, then: destroy}}`（bad の語彙を作らない）。
+- このターンの出来事の回数は式 `{turn_count: {kind: <種類>, owner: you|opp|any}}`。種類は attack / block / broken / cast / destroyed / discard / draw / enter / enter_unpaid / leave / mana_put / shield_left / shield_put / summon / tap / untap（turn_history_* や *_this_turn_condition の語彙を作らない）。「このターン、N回目の〜をした時」は when の `ord: {kind: <種類>, eq: N}`、「各ターン、はじめて〜した時」は能力の `first_time: true`（nth_event_per_turn_trigger / first_entry_per_turn の語彙を作らない）。「カードの名前を１つ言う」は `{op: choose_name, as: x}` とフィルタ `name: {declared: x}`（declare_name / name_a_card の語彙を作らない）。
+- 「自分の他のクリーチャーが相手のクリーチャーとバトルする時、かわりにこのクリーチャーにバトルさせてもよい」は `kind: replace, optional: true, when: {event: battle, subject: {owner: you, filter: {types: [creature]}}}, instead: [{op: battle_substitute}]`（「かわりにこのクリーチャーをタップしてもよい。そうした場合このクリーチャーがバトルする」は `tap: true`）。
+- 「カードを〜の下に置く」は `{op: put_under, select: <置くカード>, onto: <重ね先>}`（put_under_other の語彙を作らない）。
+- 「相手は〜してもよい」は `{op: opp_may, body: [...]}`。「相手がそうしなければ」は直後に if で状態を見るか、body の結果を as で受けて分岐する（opponent_may_action の語彙を作らない）。
+- フィルタの「または」は `any_of: [<フィルタ>, ...]`（race_or_filter / filter_race_or_keyword の語彙を作らない）。文明の種類数は式 `{civ_count: <セレクタ>}`、手札の枚数は `{count: {zone: hand, owner: you}}`。「山札を見て〜を手札に加え、山札をシャッフル」は `move select: {zone: deck, owner: you, filter: ..., count: 1}` の後 `{op: shuffle}`（search_deck の語彙を作らない）。「〜が出るまで山札の上から表向きにする」は op `reveal_until`。
+- 「可能なら攻撃する」「可能であれば毎ターン攻撃する」は static `mod: {require: [attack]}`、「可能ならブロックする」は `require: [block]`（must_attack_each_turn などの語彙を作らない）。「〜の下にあるカード」はセレクタ `{under_of: <変数名か self>}`。
+- 「自分のシールドゾーンにある〈条件〉すべてに『S・トリガー』を与える」は `kind: static, affects: {zone: shield, owner: you, filter: {...}}, mod: {allow: [s_trigger]}`（grant_s_trigger_zone の語彙を作らない）。
+- 「NEO進化クリーチャーとして召喚するなら（する場合）、このクリーチャーの召喚コストをN少なくする」は面の `cost_reduce_per_evo: N`（NEO の進化元は1体なので、重ねた時だけN軽減。neo_summon_cost_reduction の語彙を作らない）。「タマシードから進化するなら」は進化元の種類で変わるので unsupported。
 - 近似・代用はしない。語彙で原文どおりに表せない効果は、似た別の語彙（op・mod・条件）で置き換えて書かない。その能力は abilities に書かず、source.unsupported に [{need: <足せばよい op・語彙の案（英語の識別子）>, text: <該当する原文>}] で書く。表せる他の能力は通常どおり変換する。
   「ほぼ同じ」「この場面では同じ結果」と思っても代用しない（例: 他のカードの効果の対象条件を書き換える置換を、無条件の置換や別の効果で書かない）。語彙の追加は人が行い、足りない語彙は unsupported の集計から決める。unsupported があるカードは登録されず（rejects に vocab として残る）、語彙が足りるようになってから変換し直す。
 - 表せない能力を黙って落とさない。落とした能力は必ず unsupported に残す。source.notes には、原文の曖昧さや確認してほしい点だけを日本語で具体的に書く（近似の言い訳には使わない）。
@@ -159,12 +179,46 @@ def extract(text: str) -> dict:
     return raw
 
 
+_SCHEMA_V = None
+
+
+def _schema_check(raw: dict) -> None:
+    """parse_card を通っても、data/schema の型に合わないカードを入口で止める（型とエンジンのずれを main に持ち込まない）。jsonschema が無ければ省略。"""
+    global _SCHEMA_V
+    try:
+        import jsonschema
+    except ImportError:
+        return
+    if _SCHEMA_V is None:
+        _SCHEMA_V = jsonschema.Draft202012Validator(json.loads((DATA / "schema" / "card.schema.json").read_text(encoding="utf-8")))
+    errs = [e.message[:200] for e in _SCHEMA_V.iter_errors(raw)][:2]
+    if errs:
+        raise DefError("スキーマ不一致: " + " / ".join(errs))
+
+
+def static_scope_errors(card: dict) -> list[str]:
+    """mod を持つ常在型に affects が無いと、エンジンは「場の全カード」に効かせる（affects の既定は {}）。
+    「このクリーチャーは攻撃できない」等の自己限定を書き漏らすと全体に効く誤りになる（dmd24-024 オリーブオイル、#471）。
+    対象は必ず明示させる: 自分だけなら affects: self、全体なら affects: {zone: bz, owner: any} のように書く。"""
+    out = []
+    for holder in [card, *(card.get("faces") or [])]:
+        for i, ab in enumerate(holder.get("abilities") or []):
+            if isinstance(ab, dict) and ab.get("kind") == "static" and "mod" in ab and "affects" not in ab:
+                out.append(f"{holder.get('name') or card.get('id')} の abilities[{i}] は mod のある常在型なのに affects が無い"
+                           "（自分だけなら affects: self、全体に効くなら affects に範囲を明示）")
+    return out
+
+
 def validate(raw: dict, row: dict, tables) -> dict:
     if raw.get("id") != row["id"]:
         raise DefError(f"id が {row['id']} になっていない: {raw.get('id')}")
     if raw.get("abilities"):
         raw["abilities"] = dedupe_list(raw["abilities"])    # 同じ能力が二重に入る変換（誘発が2回起きる）を、どの変換経路でも入口で除く
     parse_card(raw, tables)
+    _schema_check(raw)
+    scope = static_scope_errors(raw)
+    if scope:
+        raise DefError("; ".join(scope))
     src = raw.setdefault("source", {})
     src["official"] = row["id"]
     src["review"] = "pending"      # LLM の出力は必ず人の確認待ちにする
@@ -294,7 +348,7 @@ def load_rows(inputs: list[str]) -> list[dict]:
 
 def known_ids(out: Path) -> set[str]:
     ids: set[str] = set()
-    from dmsim.cardfiles import card_files
+    from dmsim.cards.cardfiles import card_files
     for f in card_files():
         ids |= {c["id"] for c in (yaml.safe_load(f.read_text(encoding="utf-8")) or {}).get("cards") or []}
     return ids
@@ -335,7 +389,7 @@ def classify(error: str) -> dict:
     return {"reason": "vocab_gap", "gaps": gaps} if gaps else {"reason": "other", "gaps": []}
 
 
-OUT_OF_FORMAT = ("サイキック", "GR", "ドラグハート", "超次元")      # オリジナルフォーマットでは使わない種類（実装しない）
+OUT_OF_FORMAT = ("サイキック", "GR", "ドラグハート", "超次元", "オーラ")      # オリジナルフォーマットでは使わない種類（実装しない）
 
 
 def vocab_reject(card: dict, row: dict) -> dict | None:

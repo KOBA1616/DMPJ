@@ -5,7 +5,7 @@ from __future__ import annotations
 import random
 
 from . import change as C
-from .evaluate import AcceptRule, Scorer, decide, record
+from dmsim.eval.deckeval import AcceptRule, Scorer, decide, record
 from .spec import DeckProposal, Resolver, check
 
 

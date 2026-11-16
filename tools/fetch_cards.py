@@ -30,7 +30,7 @@ from html.parser import HTMLParser
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
-from dmsim.cardid import cache_name, canonical_id, detail_url, pack_ids, resolve_id  # noqa: E402
+from dmsim.base.cardid import cache_name, canonical_id, detail_url, pack_ids, resolve_id  # noqa: E402
 
 URL = "https://dm.takaratomy.co.jp/card/detail/?id={id}"
 CACHE = Path(__file__).resolve().parent.parent / ".cache" / "official"

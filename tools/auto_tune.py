@@ -20,10 +20,10 @@ from dmsim.autofix import partdiscovery as PD  # noqa: E402
 from dmsim.autofix import partsgenome as PG  # noqa: E402
 from dmsim.autofix import valuelearn as VL  # noqa: E402
 from dmsim.autofix.tune import _score, evolve, tune  # noqa: E402
-from dmsim.defs import load_rules  # noqa: E402
+from dmsim.cards.defs import load_rules  # noqa: E402
 from dmsim.eval.progress import ProgressSpec  # noqa: E402
 from dmsim.search.leaf_parts import load_specs  # noqa: E402
-from dmsim.solitaire import load_deck  # noqa: E402
+from dmsim.eval.measure import load_deck  # noqa: E402
 
 
 def main(argv=None):
@@ -44,6 +44,7 @@ def main(argv=None):
     ap.add_argument("--learn-gens", type=int, default=2, help="経験ログからの価値の学習の採否に回す世代数（0で無効）")
     ap.add_argument("--value-data", default="data/autofix/value_data", help="自己対戦の経験ログ（追記）の置き場")
     ap.add_argument("--cold", action="store_true", help="実行層でなく通常の開幕で測る")
+    ap.add_argument("--history", default="data/autofix/tune_history.yaml", help="対象ごとの前回実行の記録。前回時間切れで回せなかった対象を次回の先頭にする")
     ap.add_argument("--out")
     a = ap.parse_args(argv)
     combos = {c["id"]: c for c in yaml.safe_load(Path("data/known_combos/combos.yaml").read_text(encoding="utf-8"))["combos"]}
@@ -54,13 +55,29 @@ def main(argv=None):
     pstore = (yaml.safe_load(Path(a.parts_store).read_text(encoding="utf-8")) or {}) if Path(a.parts_store).exists() else {}
     estore = (yaml.safe_load(Path(a.edits_store).read_text(encoding="utf-8")) or {}) if Path(a.edits_store).exists() else {}
     t0, rule = time.time(), Rule(turn=a.turns)
+    from dmsim.deckplan import budget as B
+    hist = B.load_history(a.history)
+    names = B.order_targets([t["combo"] for t in ts], hist)          # 前回時間切れ・未実行の対象が先頭、あとは前回実行の古い順
+    ts = sorted(ts, key=lambda t: names.index(t["combo"]))
+
+    deadline = t0 + a.seconds
+    timed_out = set()                                          # 段階の途中で枠切れになった対象（次回の先頭で続きから）
+
+    def hit(name, h):
+        if any(x.get("verdict") == "timeout" for x in h):
+            timed_out.add(name)
+
+    def mark(name, complete):
+        hist[name] = {"complete": complete and name not in timed_out, "last_run": time.time(), "runs": int(hist.get(name, {}).get("runs", 0)) + 1}
+        B.save_history(a.history, hist)
     for t in ts:
         c = combos.get(t["combo"])
         if c is None or c.get("split") == "holdout" or (only and t["combo"] not in only):
             continue
         if time.time() - t0 > a.seconds:
             print("時間切れ:", t["combo"], "以降は次回")
-            break
+            mark(t["combo"], False)
+            continue                                              # 残りの対象も未完として記録する（次回の先頭になる）
         deck = load_deck(t["deck"])
         opp = load_deck(t["opp_deck"]) if t.get("opp_deck") else ["T001"] * 40
         spec, origin = exec_tier.exec_spec(rules, t, deck, cold=a.cold)    # 既定は実行層（仕込み済み開始）。通常の開幕はキルまで届かず差が見えない
@@ -82,11 +99,14 @@ def main(argv=None):
             # 飽和（実行層で全局同点、または95%以上キル）: 探索側に改善余地が無い。残りの課題は到達層（デッキの引き込み）
             print(t["combo"], f"実行層が飽和（{origin}）: ノブ・評価式の調整は不要。課題は到達層（deck_fix）")
             if a.out:
-                from dmsim.deckplan.evaluate import record
+                from dmsim.eval.deckeval import record
                 record(a.out, {"combo": t["combo"], "verdict": "skip_saturated", "tier": "cold" if a.cold else "exec", "setup_origin": origin})
+            mark(t["combo"], True)
             continue
-        k, hist = tune(measure, k0, range(1, n + 1), range(1000, 1000 + n), rule, a.generations, a.lam, ledger=a.out)
-        acc = [h["verdict"] for h in hist].count("accept")
+        run_seed = int(hist.get(t["combo"], {}).get("runs", 0))          # 前回と同じ候補列を繰り返さない（時間切れの続きは別の乱数列から）
+        k, thist = tune(measure, k0, range(1, n + 1), range(1000, 1000 + n), rule, a.generations, a.lam, seed=run_seed, ledger=a.out, deadline=deadline)
+        hit(t["combo"], thist)
+        acc = [h["verdict"] for h in thist].count("accept")
         print(t["combo"], "採用", acc, "回", k.__dict__ if k != k0 else "（変更なし）", f"{time.time() - t0:.0f}s")
         if k != k0:
             store[t["combo"]] = dict(k.__dict__)
@@ -100,7 +120,8 @@ def main(argv=None):
                     return harness_measure(_c[0], _c[1], _c[2], list(seeds), _c[3], _c[4], PG.apply(PD.apply_edits(ps, cands, g), tuple(pstore.get(t["combo"]) or ())),
                                            max_turn=a.turns, workers=a.workers, prep_ids=_c[5], value_model=model0)(k)
                 g, ehist = evolve(measure_e, frozenset(), lambda x, r: PD.mutate_genes(x, r, len(cands)), lambda x: {"parts_edit": PD.to_store(cands, x)},
-                                  range(1, n + 1), range(1000, 1000 + n), rule, a.discover_gens, a.lam, seed=2, ledger=a.out)
+                                  range(1, n + 1), range(1000, 1000 + n), rule, a.discover_gens, a.lam, seed=2 + run_seed, ledger=a.out, deadline=deadline)
+                hit(t["combo"], ehist)
                 print(t["combo"], f"部品候補{len(cands)}件 採用", [h["verdict"] for h in ehist].count("accept"), "回", PD.to_store(cands, g) if g else "（変更なし）")
                 if g:
                     new = PD.to_store(cands, g)
@@ -122,7 +143,8 @@ def main(argv=None):
                 return harness_measure(_c[0], _c[1], _c[2], list(seeds), _c[3], _c[4], PG.apply(base_ps, g), max_turn=a.turns,
                                        workers=a.workers, prep_ids=_c[5], value_model=model0)(k)
             g, ghist = evolve(measure_g, g0, PG.mutate, lambda x: {"parts_mult": list(x)}, range(1, n + 1), range(1000, 1000 + n),
-                              rule, gp, a.lam, seed=1, ledger=a.out)
+                              rule, gp, a.lam, seed=1 + run_seed, ledger=a.out, deadline=deadline)
+            hit(t["combo"], ghist)
             print(t["combo"], "評価式の重み 採用", [h["verdict"] for h in ghist].count("accept"), "回", list(g) if g != g0 else "（変更なし）")
             if g != g0:
                 pstore[t["combo"]] = list(g)
@@ -142,7 +164,8 @@ def main(argv=None):
                                            value_model=(model1 if tag == "new" else model0))(replace(k, learned_mult=mult))
                 g0 = ("old", k.learned_mult)
                 g, lhist = evolve(measure_l, g0, lambda x, r: ("new", r.choice([m for m in VL.MULTS if m > 0])), lambda x: {"learned": list(x), "rows": model1["n"]},
-                                  range(1, n + 1), range(1000, 1000 + n), rule, a.learn_gens, a.lam, seed=3, ledger=a.out)
+                                  range(1, n + 1), range(1000, 1000 + n), rule, a.learn_gens, a.lam, seed=3 + run_seed, ledger=a.out, deadline=deadline)
+                hit(t["combo"], lhist)
                 print(t["combo"], f"価値の学習(行{model1['n']}) 採用", [h["verdict"] for h in lhist].count("accept"), "回", list(g) if g != g0 else "（変更なし）")
                 if g != g0:
                     VL.save_model(t["combo"], model1)
@@ -150,6 +173,7 @@ def main(argv=None):
                     k = replace(k, learned_mult=g[1])
                     store[t["combo"]] = dict(k.__dict__)
                     Path(a.store).write_text(yaml.safe_dump(store, allow_unicode=True), encoding="utf-8")
+        mark(t["combo"], True)
 
 
 if __name__ == "__main__":

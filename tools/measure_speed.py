@@ -4,11 +4,11 @@
 import argparse, sys, time
 from pathlib import Path
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
-from dmsim.defs import load_rules
-from dmsim.play import default_decks
+from dmsim.cards.defs import load_rules
+from dmsim.engine.play import default_decks
 from dmsim.engine import Engine
-from dmsim.solitaire import play_game
-from dmsim.engine_view import turn_of  # noqa: E402
+from dmsim.search.game import play_game
+from dmsim.engine.view import turn_of  # noqa: E402
 
 def t(f, n):
     s = time.perf_counter()

@@ -9,12 +9,15 @@ FairTurnSearch の決定化した局面の上で動くので、山札の真の�
 from __future__ import annotations
 
 from ..engine import Engine
-from ..solitaire import TurnSearch, Weights, charge_only_policy, evaluate
-from ..engine_view import active_of, result_of
+from .leaf_eval import Weights, evaluate
+from .turn import TurnSearch, charge_only_policy
+from ..engine.view import active_of, result_of
 
 
 def advance_to_own_turn(eng: Engine, me: int, opp_policy, limit: int = 400) -> bool:
     """相手のターンを相手役で進め、自分の次の決定まで進める。進められたら True（ゲーム終了・打ち切りは False）。"""
+    from . import defense
+    opp_policy = defense.wrap(opp_policy, me)
     for _ in range(limit):
         d = eng.advance()
         if d is None:

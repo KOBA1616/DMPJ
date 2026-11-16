@@ -1,11 +1,10 @@
-"""カード定義ファイルの場所。data/cards/*.yaml に加え、弾ごとに分けた data/cards/<種別>/<弾>.yaml も読む。"""
-from __future__ import annotations
+"""旧名の互換モジュール。定義元は dmsim.cards.cardfiles（P1 で S1 カードデータを cards/ へ集めた）。
 
-from pathlib import Path
+この名前は定義元と同じモジュールオブジェクトを指す（sys.modules を差し替え）ので、
+旧名に対する monkeypatch も定義元に効く。新しいコードは dmsim.cards.cardfiles を import すること。
+"""
+import sys
 
-from .defs import DATA
+from dmsim.cards import cardfiles as _m
 
-
-def card_files(root: Path | None = None) -> list[Path]:
-    root = root or DATA / "cards"
-    return sorted(root.glob("*.yaml")) + sorted(root.glob("*/*.yaml"))
+sys.modules[__name__] = _m

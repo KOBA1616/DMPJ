@@ -1,7 +1,7 @@
 """大局観（MacroPlanner）: 局面と段階目標の鎖から、いま狙う段と探索の動かし方を Plan として出す。
-Plan の形は dmsim.eval.vfeatures.Plan（V と共通）。自分側の見える情報だけを使う（公平探索）。
+Plan の形はここで定義（V と共通。dmsim.eval.vfeatures.Plan からも参照できる）。自分側の見える情報だけを使う（公平探索）。
 段階目標は reach_target の形 {ゾーン: {ID or "*": 枚数}}。段階は途中で崩れうる（手札の札を使う等）ので、
-満たしている最後の段の次を狙う（途中が崩れていても後ろの段が満たされていれば前進とみなす）。"""
+最初の未達の段を狙う。"""
 from __future__ import annotations
 
 from dataclasses import dataclass, field
@@ -9,12 +9,25 @@ from pathlib import Path
 
 import yaml
 
-from ..discovery.reachsearch import board_met, fraction
-from ..eval.vfeatures import Plan
+from ..search.reachsearch import board_met, fraction
 
 BASE_BUDGET = 150          # reach_target の幅の基準
 PLAN_VERSION = 1
-NEXT_W = 0.5               # 次の段の充足率を先読みで足す重み
+NEXT_W = 0.0               # 次の段の充足率を先読みで足す重み。0.5 だと今の段を終える前に次の段へ寄って天門で逆効果(2026-11-10)
+
+
+@dataclass
+class Plan:
+    """大局観などが出す計画（版つき・どの出し手でも同じ形）。stages は reach_target 形式の目標の列、idx は現在狙う段。"""
+    intent: str = ""
+    stages: list = field(default_factory=list)
+    idx: int = 0
+    version: int = 1
+    budget: int = 0     # 探索の幅などの目安（0 は指定なし）
+
+    @property
+    def current(self) -> dict | None:
+        return self.stages[self.idx] if 0 <= self.idx < len(self.stages) else None
 
 
 def load_stage_file(path) -> tuple[list[dict], dict]:
@@ -32,12 +45,12 @@ class MacroPlanner:
     base_budget: int = BASE_BUDGET
 
     def progress(self, eng, me: int = 0) -> int:
-        """満たされている最後の段の次の番号（全段達成で len(stages)）。"""
-        last = -1
+        """最初の未達の段の番号（全段達成で len(stages)）。後ろの段が先に満たされても、手前が未達なら手前を狙う。
+        以前の「満たされた最後の段の次」は、手前の段の盤面を崩すと番号が下がって減点になり、天門で段を進められなくなった(2026-11-10)。"""
         for i, tg in enumerate(self.stages):
-            if board_met(eng, me, tg):
-                last = i
-        return last + 1
+            if not board_met(eng, me, tg):
+                return i
+        return len(self.stages)
 
     def plan(self, eng, me: int = 0) -> Plan:
         n = len(self.stages)
@@ -62,3 +75,23 @@ def stage_fraction(eng, me: int, plan: Plan) -> float:
         return float(len(plan.stages))
     nxt = plan.stages[plan.idx + 1] if plan.idx + 1 < len(plan.stages) else None
     return plan.idx + fraction(eng, me, cur) + (NEXT_W * fraction(eng, me, nxt) if nxt else 0.0)
+
+
+class RunStd:
+    """基本スコアの標準偏差を探索中にオンラインで推定する（Welford）。計画項の大きさを基本スコアの散らばりに合わせる。"""
+
+    def __init__(self, floor: float = 1.0, warm: int = 30):
+        self.n, self.mean, self.m2, self.floor, self.warm = 0, 0.0, 0.0, floor, warm
+
+    def add(self, x: float) -> None:
+        self.n += 1
+        d = x - self.mean
+        self.mean += d / self.n
+        self.m2 += d * (x - self.mean)
+
+    @property
+    def std(self) -> float:
+        if self.n < self.warm:
+            return self.floor
+        return max(self.floor, (self.m2 / (self.n - 1)) ** 0.5)
+

@@ -12,6 +12,7 @@ from datetime import date
 from pathlib import Path
 
 import yaml
+from ..base import store
 
 QUARANTINE_AFTER = 3
 TB_LINES = 14
@@ -23,9 +24,7 @@ def load(path) -> dict:
 
 
 def save(path, h: dict) -> None:
-    p = Path(path)
-    p.parent.mkdir(parents=True, exist_ok=True)
-    p.write_text(yaml.safe_dump(h, allow_unicode=True, sort_keys=True), encoding="utf-8")
+    store.write_text(path, yaml.safe_dump(h, allow_unicode=True, sort_keys=True))
 
 
 def quarantined(h: dict, name: str) -> bool:

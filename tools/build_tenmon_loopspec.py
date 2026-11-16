@@ -4,17 +4,17 @@ from __future__ import annotations
 
 import contextlib
 import io
-import json
 import sys
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(ROOT))
 
-from dmsim import scenario  # noqa: E402
-from dmsim.discovery import bestfirst, replay, shrink  # noqa: E402
-from dmsim.discovery.loopspec import LoopSpec, Pred  # noqa: E402
-from dmsim.engine_view import defn_of, order_zone, zone_of  # noqa: E402
+from dmsim.engine import scenario  # noqa: E402
+from dmsim.search import bestfirst  # noqa: E402
+from dmsim.eval import replay, shrink  # noqa: E402
+from dmsim.base.loopspec import Pred  # noqa: E402
+from dmsim.engine.view import defn_of, order_zone, zone_of  # noqa: E402
 
 ns = {"STOP": 0, "__name__": "tenmon_walk"}
 with contextlib.redirect_stdout(io.StringIO()):

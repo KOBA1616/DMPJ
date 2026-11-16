@@ -1,7 +1,7 @@
 """初期型天門ループの手順を、方針つきで一手ずつ回して確かめるスクリプト（探索ではなく手動方針）。python tools/tenmon_walk.py"""
-import sys
-from dmsim import load_rules, scenario
-from dmsim.engine_view import defn_of, order_zone, pending_of, result_of, under_of, zone_of  # noqa: E402
+from dmsim import load_rules
+from dmsim.engine import scenario
+from dmsim.engine.view import defn_of, order_zone, pending_of, result_of, under_of, zone_of  # noqa: E402
 rules=load_rules()
 HG,EM,MI,FA,MK="dm16-007","dm23bd7-022","dmx19-s06","dm31-025","dmx24-017"
 OO,HC,TS,AL="dmd24-024","dmx11-082","dm23ex2-cho018","dmx12b-031"

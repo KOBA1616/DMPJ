@@ -5,14 +5,54 @@ from __future__ import annotations
 from .registry import op
 
 
+@op("uncross", select="selector")
+def op_uncross(eng, t, op, env):
+    """クロスを外す（第170弾）: 選んだクロスギアの crossed を外す。ギアはバトルゾーンに残る（303.5）。
+    「クリーチャーにクロスしてあるクロスギアをすべて、クリーチャーから外す」（dm17-012 型）。"""
+    cids, d = eng.select(t, op["select"], env)
+    if d:
+        return d
+    for cid in cids:
+        eng.s.cards[cid].crossed = None
+    return None
+
+@op("cross_free", gear="selector", to="selector")
+def op_cross_free(eng, t, op, env):
+    """コストを支払わずにクロスする（第195弾）: gear セレクタで選んだクロスギア
+    すべてを、to セレクタで選んだクリーチャー1体にクロスする。効果によるクロスで、
+    メインステップの通常クロス（cross_free 許可）とは別系統。支払いは無い。"""
+    # 参照系セレクタ（ref / crossed_to 等）は決定を出さないので candidates で引く
+    # （op_swap と同じ作法。select を2回呼ぶと os の chosen が衝突する）
+    ref_like = ("ref", "crossed_to", "host_of", "under_of", "bundle_of")
+    if any(k in op["gear"] for k in ref_like):
+        gears = eng.candidates(op["gear"], env)
+    else:
+        gears, d = eng.select(t, op["gear"], env)
+        if d:
+            return d
+    if any(k in op["to"] for k in ref_like):
+        targets = eng.candidates(op["to"], env)
+    else:
+        targets, d = eng.select(t, op["to"], env)
+        if d:
+            return d
+    if not gears or not targets:
+        return None
+    tg = eng.s.ref(targets[0])
+    for cid in gears:
+        eng.s.cards[cid].crossed = list(tg)
+    return None
+
+
 @op("move", select="selector", to="zone", reason="reason", position="position?", card_only="bool?",
     order="str?", tapped="bool?", face_up="bool?", face_down="bool?", seal="int?", stack_on="selector?",
-    stack_evo="bool?", strigger="str?", **{"as": "str?"})
+    stack_evo="bool?", evo_source="selector?", strigger="str?", **{"as": "str?"})
 def op_move(eng, t, op, env):
     """ゾーン移動。as を付けると、移動した後のカード（新しいオブジェクト）を変数に入れる（「その〜」で使う）。
     card_only: カードとして動かす（109.2a）。進化クリーチャーの一番上だけが離れ、下は再構築される（801.4）。
     order: choose なら、2枚以上を山札に置く時の並びをプレイヤーが決める（「好きな順序で」）。
     答えの先頭が、置いたカードの中で一番上になる。
+    order: shuffle なら、動かす集合だけをシャッフルしてから置く（「残りをシャッフルし、山札の下に置く」）。
     tapped: タップして置く（置かれた時点でタップ状態）。
     face_down: 裏向きのまま置く（マナゾーンのみ意味を持つ。水晶武装の裏向きマナになる）。
     strigger: off/on = 手札に加わるカードへの S・トリガーの印（off はその S・トリガーを使えない＝
@@ -21,6 +61,8 @@ def op_move(eng, t, op, env):
     （セレクタの owner は候補の絞り込み。相手のシールドに重ねる時は owner: opp と書く）。
     重ねる先のシールドが無い場合は置けないので、移動自体を行わない。"""
     target_ref = None
+    evo_source_ref = None
+    evo_source_done = False
     if "stack_on" in op:
         os_ = t.setdefault("os", {})
         if "move_cids" not in os_:
@@ -38,16 +80,43 @@ def op_move(eng, t, op, env):
                 target_ref = eng.s.ref(tgt[0])
             else:
                 cids = []   # 重ねる先のシールドが無い: 置けないので移動しない
+    elif op.get("stack_evo") and "evo_source" in op:
+        # 重ね先を固定する（第173弾）: 「このクリーチャーの上に置く」等。選択を2段に分け、
+        # 1段目の答えを残す（stack_on と同じ型）。重ね先が無ければ置けないので移動しない
+        os_ = t.setdefault("os", {})
+        if "move_cids" not in os_:
+            cids, d = eng.select(t, op["select"], env)
+            if d:
+                return d
+            os_["move_cids"] = list(cids)
+            os_.pop("chosen", None)
+        cids = os_["move_cids"]
+        if "evo_source_ref" not in os_:
+            srcs, d = eng.select(t, op["evo_source"], env)
+            if d:
+                return d
+            os_["evo_source_ref"] = eng.s.ref(srcs[0]) if srcs else None
+        evo_source_ref = os_["evo_source_ref"]
+        evo_source_done = True
     else:
         cids, d = eng.select(t, op["select"], env)
         if d:
             return d
+    if op.get("order") == "shuffle" and len(cids) > 1:
+        from .state import rng_below
+        for i in range(len(cids) - 1, 0, -1):   # ヨビニオンの残り処理と同じ Fisher-Yates
+            j = rng_below(eng.s, i + 1)
+            cids[i], cids[j] = cids[j], cids[i]
     if op.get("stack_evo"):
         # 重ね出し（put_evolution_stacking）: 選んだカードを1体ずつ順に出し、進化クリーチャーは
         # その都度選んだ進化元に重ねる（put_stacked タスクへ引き渡す）
         task = {"t": "put_stacked", "cids": list(cids), "all_cids": list(cids), "player": env["you"],
                 "env": env, "reason": op["reason"], "tapped": bool(op.get("tapped")),
                 "face_up": bool(op.get("face_up"))}
+        if op.get("evo_source"):   # 重ね先を固定する（第173弾）: 解決時に進化元の適格性も照合する
+            if not evo_source_done or evo_source_ref is None:
+                return None   # 重ね先が無い: 置けないので移動しない
+            task["evo_source"] = evo_source_ref
         if op.get("seal"):
             task["seal"] = op["seal"]
         if "as" in op:
@@ -350,14 +419,23 @@ def op_mark(eng, t, op, env):
     store[key] = store.get(key, 0) + 1
 
 
-@op("shuffle", player="player?")
+@op("shuffle", player="player?", player_from="str?")
 def op_shuffle(eng, t, op, env):
+    """player_from: その変数の最初のカードの持ち主の山札をシャッフルする（「その持ち主は山札をシャッフルする」）。"""
+    if "player_from" in op:
+        refs = env.get("vars", {}).get(op["player_from"], [])
+        if refs:
+            eng._shuffle(eng.s.cards[refs[0][0]].controller)
+        return
     eng._shuffle(eng._rel(op.get("player", "you"), env))
 
 
 @op("win", player="player?")
 def op_win(eng, t, op, env):
-    eng.s.result = {"winner": eng._rel(op.get("player", "you"), env), "reason": "effect", "turn": eng.s.turn}
+    winner = eng._rel(op.get("player", "you"), env)
+    if eng._lose_immune(1 - winner, "effect"):   # 第188弾: 「相手はゲームに勝てない」は勝利効果も防ぐ
+        return None
+    eng.s.result = {"winner": winner, "reason": "effect", "turn": eng.s.turn}
 
 
 @op("lose", player="player?")
@@ -366,6 +444,26 @@ def op_lose(eng, t, op, env):
     tasks = eng.game_lose(p, "effect")   # 敗北の置換（S-MAX進化など）を諮ってから確定する
     if tasks:
         eng._defer(t, tasks)
+
+
+@op("no_lose", player="players?", duration="duration?", once="bool?", deck_out_only="bool?")
+def op_no_lose(eng, t, op, env):
+    """敗北の防止（第188弾）: player は duration の間ゲームに負けない（＝相手はゲームに勝てない）。
+    once: 一度だけ（敗北を防いだら消費する。「このターン中に一度、自分がゲームに負ける時、かわりに負けない」）。
+    deck_out_only: 山札切れによる敗北だけを防ぐ（「自分の山札にカードがなくても、自分はゲームに負けない」）。
+    継続的効果として s.continuous に載せ、duration の期限切れ（end_of_turn / until_next_own_turn_start /
+    permanent）は既存の仕組みに任せる。mod は空で affected は空集合（特性には影響しない）。"""
+    s = eng.s
+    s.seq += 1
+    who = op.get("player", "you")
+    targets = (env["you"], 1 - env["you"]) if who == "each" else (eng._rel(who, env),)
+    for p in targets:
+        s.continuous.append({"id": s.seq, "mod": {}, "duration": eng._duration(op.get("duration", "end_of_turn"), env),
+                             "controller": env["you"], "src": env["self"][0] if env.get("self") else None,
+                             "affected": [],
+                             "no_lose": {"player": p, "once": bool(op.get("once", False)),
+                                         "deck_out_only": bool(op.get("deck_out_only", False))}})
+    return None
 
 
 @op("set_var", name="str", value="any?")
@@ -455,7 +553,7 @@ def op_mekurade(eng, t, op, env):
     f = dict(op.get("filter") or {})
     if "cost_le" in op:
         f["cost_le"] = op["cost_le"]
-    cands = [c for c in looked if s.cards[c].zone == "deck" and eng.filter_match(c, f)]
+    cands = [c for c in looked if s.cards[c].zone == "deck" and eng.filter_match(c, f, env=env)]
     if cands and "picked" not in os_:
         ans, d = eng.ask(t, p, "choose_cards", [eng._card_option(c, True) for c in cands], 0, 1)
         if d:
@@ -546,6 +644,47 @@ def op_shield_plus(eng, t, op, env):
     return None
 
 
+@op("sforce_link")
+def op_sforce_link(eng, t, op, env):
+    """シールド・フォース: 自分のシールドを1枚選んでもよい。選んだシールドに自分への
+    紐付け（sforce_of）を刻む。そのシールドがシールドゾーンにある間、自分の
+    sforce 印つき能力が機能する。選ばなければ何も起きない。"""
+    s = eng.s
+    p = env["you"]
+    shields = eng.zlist("shield", p)
+    if not shields:
+        return None
+    a, d = eng.ask(t, p, "choose_cards", [eng._card_option(c) for c in shields], 0, 1)
+    if d:
+        return d
+    if not a:
+        return None
+    me = list(env["self"])
+    for c in shields:
+        if s.cards[c].sforce_of is not None and list(s.cards[c].sforce_of) == me:
+            s.cards[c].sforce_of = None
+    s.cards[shields[a[0]]].sforce_of = me
+    return None
+
+
+@op("castle_link")
+def op_castle_link(eng, t, op, env):
+    """城（第178弾）: 自分のシールドを1枚選び、このカードを付けて要塞化する。
+    シールドがなければ何も起きない。選んだシールドへの参照（fortifies）を自分に刻む。
+    要塞化されたシールドがシールドゾーンを離れると、城は状況起因処理で墓地に置かれる。"""
+    s = eng.s
+    p = env["you"]
+    shields = eng.zlist("shield", p)
+    if not shields:
+        return None
+    a, d = eng.ask(t, p, "choose_cards", [eng._card_option(c) for c in shields], 1, 1)
+    if d:
+        return d
+    me = list(env["self"])
+    s.cards[me[0]].fortifies = list(s.ref(shields[a[0]]))
+    return None
+
+
 @op("opp_may", body="ops", label="str?")
 def op_opp_may(eng, t, op, env):
     """「相手は〜してもよい」: 相手が yes/no を選び、yes なら body を相手の視点で実行する。"""
@@ -564,7 +703,7 @@ def op_opp_may(eng, t, op, env):
 def op_yobinion(eng, t, op, env):
     """ヨビニオン: 自分の山札の上から、これ（発生源）よりコストが小さいクリーチャーが出るまで
     表向きにする。そのクリーチャーを出す。残りはシャッフルし、山札の下に置く。"""
-    from ..state import rng_below
+    from .state import rng_below
     s = eng.s
     p = env["you"]
     threshold = eng.chars_ro(env["self"][0])["cost"]
@@ -587,6 +726,56 @@ def op_yobinion(eng, t, op, env):
     if found is not None:
         eng._defer(t, [eng.ev_task({"ev": "move", "subject": s.ref(found), "to": "bz",
                                      "reason": "put", "controller": p}, env)])
+    return None
+
+
+@op("reveal_until", player="player?", player_from="str?", filter="filter", count="expr?",
+    limit="expr?", **{"as": "str", "rest_as": "str?"})
+def op_reveal_until(eng, t, op, env):
+    """「〜が出るまで表向きにする」: 対象プレイヤー（player。既定 you。player_from があれば、その変数の
+    最初のカードの持ち主 = 「その持ち主」）の山札を上から1枚ずつ公開し、filter に合うカードが
+    count 枚（既定1）出た時点で止める。合ったカード群を as に、出なかった公開カード群を
+    rest_as（既定 as + "_rest"）に束縛する。公開したカードは山札に残るので、行き先は後続の
+    op（move で出す／墓地に置く／山札の下に置く、shuffle で山札に戻す）が決める。
+    count が 0 以下のときは何も公開しない（「破壊した数と同じ数」が 0 の場合）。
+    limit（第181弾）: 公開する合計枚数の上限。limit 枚公開した時点で、合うカードが
+    count 枚に満たなくても止める。「山札の上から1枚目を表向きにし、それが多色なら手札に
+    加える」（ロスト・プリズム）は limit: 1, count: 1, filter: {multicolor: true} で書く。
+    limit が 0 以下のときも何も公開しない。"""
+    s = eng.s
+    vars_ = env.setdefault("vars", {})
+    rest_name = op.get("rest_as") or (op["as"] + "_rest")
+    if "player_from" in op:
+        refs = vars_.get(op["player_from"], [])
+        if not refs:
+            vars_[op["as"]], vars_[rest_name] = [], []
+            return None
+        p = s.cards[refs[0][0]].controller
+    else:
+        p = eng._rel(op.get("player", "you"), env)
+    want = eng.eval_expr(op["count"], env) if "count" in op else 1
+    if want <= 0:
+        vars_[op["as"]], vars_[rest_name] = [], []
+        return None
+    limit = eng.eval_expr(op["limit"], env) if "limit" in op else None
+    if limit is not None and limit <= 0:
+        vars_[op["as"]], vars_[rest_name] = [], []
+        return None
+    f = {k: (eng.eval_expr(v, env) if isinstance(v, dict) else v)
+         for k, v in (op.get("filter") or {}).items()}
+    hit, rest = [], []
+    for c in list(s.zones["deck"][p]):
+        if limit is not None and len(hit) + len(rest) >= limit:
+            break
+        eng.note_public("reveal", c)
+        if eng.filter_match(c, f, env=env):
+            hit.append(c)
+            if len(hit) >= want:
+                break
+        else:
+            rest.append(c)
+    vars_[op["as"]] = [s.ref(c) for c in hit]
+    vars_[rest_name] = [s.ref(c) for c in rest]
     return None
 
 
@@ -628,17 +817,30 @@ def op_gachinko(eng, t, op, env):
     return None
 
 
-@op("cast_face", face="expr")
+@op("cast_face", face="expr?", select="selector?")
 def op_cast_face(eng, t, op, env):
     """ツインパクトの呪文面を、カードをバトルゾーンに置いたまま唱える（スマッシュ・バースト）。
     唱えたことにはなる（cast イベント、コストは支払わない）が、カード自体は動かず、
-    解決後に墓地へも行かない。face: "spell" なら呪文面を探す（ラスト・バースト）。"""
+    解決後に墓地へも行かない。face: "spell" なら呪文面を探す（ラスト・バースト）。
+    第184弾: select を付けると選んだツインパクト・クリーチャーの呪文面を唱える
+    （「バトルゾーンにある自分のツインパクト・クリーチャー1体の呪文側を、バトルゾーンに
+    置いたままコストを支払わずに唱えてもよい」）。select が無い時は従来どおり自分自身。
+    face の既定は -1（呪文面を探す）。"""
     s = eng.s
-    if not s.alive(env["self"]):
-        return
-    cid = env["self"][0]
+    if "select" in op:
+        cids, d = eng.select(t, op["select"], env)
+        if d:
+            return d
+        if not cids:
+            return None
+        ref = s.ref(cids[0])
+    else:
+        if not s.alive(env["self"]):
+            return
+        ref = env["self"]
+    cid = ref[0]
     d = eng.cdef(cid)
-    fi = op["face"]
+    fi = op.get("face", -1)
     if fi == -1:   # 呪文面を探す（ラスト・バースト）
         fi = next((i for i, f in enumerate(d.faces) if f.spell), None)
         if fi is None:
@@ -716,6 +918,8 @@ def op_invade(eng, t, op, env):
     if not eng.permits(me, "enter_bz"):
         return None
     a = ontos[0]
+    if a == me:   # 第183弾: 自分自身の上には重ねられない（S級侵略の自己攻撃除外の受け皿）
+        return None
     eng._defer(t, [eng.ev_task({"ev": "move", "subject": eng.s.ref(me), "to": "bz", "reason": "put", "via": "invasion"}, env),
                    {"t": "invade_fix", "cid": me, "onto": eng.s.ref(a), "tapped": eng.s.cards[a].tapped}])
     return None
@@ -737,7 +941,7 @@ def op_summon_on(eng, t, op, env):
         zones = part.get("zones") or [part["zone"]]
         return [c for z in zones for c in eng.zlist(z, you)
                 if c != me and c not in picked and s.cards[c].top_of == -1
-                and eng.filter_match(c, part.get("filter", {}))]
+                and eng.filter_match(c, part.get("filter", {}), env=env)]
 
     os_ = t["os"]
     if "picked" not in os_:
@@ -875,6 +1079,20 @@ def op_use_partner(eng, t, op, env):
     return None
 
 
+@op("choose_player", **{"as": "str"})
+def op_choose_player(eng, t, op, env):
+    """プレイヤーを1人選んで変数に入れる（「プレイヤーを1人選ぶ。そのプレイヤーは〜」第192弾）。
+    選ぶのは効果の使用者。変数には相対指定 "you"/"opp" を入れ、player / owner / chooser の
+    {var: 名前} が _rel 経由で解決する。「選んでもよい」は may の body に入れて表す。"""
+    a, d = eng.ask(t, env["you"], "choose_player",
+                   [{"key": "you", "player": env["you"]},
+                    {"key": "opp", "player": 1 - env["you"]}], 1, 1)
+    if d:
+        return d
+    env.setdefault("vars", {})[op["as"]] = "you" if a[0] == 0 else "opp"
+    return None
+
+
 @op("choose", select="selector", reveal="bool?", **{"as": "str"})
 def op_choose(eng, t, op, env):
     """カードを選んで変数に入れるだけ（「〜を1体選ぶ。このターン、そのクリーチャーが〜」）。
@@ -981,9 +1199,10 @@ def op_put_under(eng, t, op, env):
     return None
 
 
-@op("battle_substitute")
+@op("battle_substitute", tap="bool?")
 def op_battle_substitute(eng, t, op, env):
-    """バトル相手の置換（when: {event: battle}）の印。実際の入れ替えは combat の _battle_substitute が行う。"""
+    """バトル相手の置換（when: {event: battle}）の印。実際の入れ替えは combat の _battle_substitute が行う。
+    tap: true なら、代わりにバトルするクリーチャーをタップする（スーパーガードマン。第186弾）。"""
     return None
 
 
@@ -1004,4 +1223,45 @@ def op_force_battle(eng, t, op, env):
             tasks.extend(eng._battle(eng.s.ref(x), eng.s.ref(y)))
     if tasks:
         eng._defer(t, tasks)
+    return None
+
+
+def _is_cip(ab: dict) -> bool:
+    w = ab.get("when") or {}
+    return ab.get("kind") == "trigger" and w.get("event") == "move" and w.get("to") == "bz" and w.get("subject") == "self"
+
+
+def _uses_cip(x) -> bool:
+    if isinstance(x, dict):
+        return x.get("op") == "use_cip" or any(_uses_cip(v) for v in x.values())
+    if isinstance(x, list):
+        return any(_uses_cip(v) for v in x)
+    return False
+
+
+@op("use_cip", select="selector", optional="bool?")
+def op_use_cip(eng, t, op, env):
+    """選んだカードの「出た時」にトリガーする能力（when: move to bz subject self）を1つ使う
+    （Jビッグ、マーダン=ロウ、Dr.富士山ッピングなど。どのゾーンのカードでもよい）。
+    使うのは効果の使用者で、効果の self は選んだカードに移る。トリガー条件の if は見ない
+    （能力を「使う」のでトリガーではない）。use_cip を含む能力は候補から除く（Jビッグ以外）。
+    optional: true = 使わないこともできる。候補が無ければ何もしない。"""
+    cids, d = eng.select(t, op["select"], env)
+    if d:
+        return d
+    you = env["you"]
+    cands = [(c, i, ab) for c in cids for i, ab in eng.abilities(c, "trigger")
+             if _is_cip(ab) and not _uses_cip(ab.get("effect"))]
+    if not cands:
+        return None
+    opts = [{"key": f"cip:{eng.s.cards[c].defn}:{i}", "cid": c, "ab": i} for c, i, _ in cands]
+    if op.get("optional"):
+        opts.append({"key": "none"})
+    a, d = eng.ask(t, you, "use_cip", opts)
+    if d:
+        return d
+    if a[0] >= len(cands):
+        return None
+    c, i, ab = cands[a[0]]
+    eng._defer(t, [eng._child(ab["effect"], dict(env, self=eng.s.ref(c), event=None, vars={}))])
     return None

@@ -2,9 +2,9 @@
 実行: PYTHONPATH=. python tools/loopcheck_typhoon_saga.py
 結果（2026-10-25）: マナ3枚のうち闇を出せる札が2枚あり、手札にサガ・ドラゲリオン（＋シャコガイルが墓地にあるか、イワシンとシャコガイルが両方手札にある。シャコガイルだけ手札でイワシンが墓地だと届かない）、
 墓地にサガがあれば1ターンで置換勝利まで届く。闇が1枚だと届かない。"""
-from dmsim import scenario as sc
-from dmsim.defs import load_rules
-from dmsim.solitaire import play_game
+from dmsim.engine import scenario as sc
+from dmsim.cards.defs import load_rules
+from dmsim.search.game import play_game
 
 r = load_rules()
 SAGA, SHAKO, DRAG, IWA = "dm22ex2-021", "dmrp03-s03", "dm22ex1-007", "dmrp03-036"

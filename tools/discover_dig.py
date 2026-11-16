@@ -4,10 +4,10 @@
 import random
 import sys
 
-from dmsim import scenario as sc
-from dmsim.defs import load_rules
-from dmsim.solitaire import TurnSearch
-from dmsim.engine_view import active_of, defn_of, result_of, turn_of, zone_of  # noqa: E402
+from dmsim.engine import scenario as sc
+from dmsim.cards.defs import load_rules
+from dmsim.play_api import InfoLevel, PlayConfig, search_turn
+from dmsim.engine.view import active_of, defn_of, result_of, turn_of, zone_of  # noqa: E402
 
 SAGA, SHAKO, DRAG, IWA = "dm22ex2-021", "dmrp03-s03", "dm22ex1-007", "dmrp03-036"
 IZA, KODAMA, ET = "dm22ex1-025", "dmex10-020", "dm26ex2-071"
@@ -76,7 +76,7 @@ def main():
         if len(zone_of(eng, "deck", ME)) > stop:
             continue
         reached += 1
-        out, _ = TurnSearch(ME, budget).run(eng)
+        out, _ = search_turn(eng, PlayConfig(me=ME, budget=budget), InfoLevel.CHEAT)
         r = result_of(out)
         if r and r.get("winner") == ME and r.get("turn") == t0:      # そのターンのうちの勝ちだけ数える
             wins += 1

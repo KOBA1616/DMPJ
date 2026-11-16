@@ -14,9 +14,9 @@ sys.path.insert(0, str(Path(__file__).resolve().parent))
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 import convert_cards as cc  # noqa: E402
 import rule_convert  # noqa: E402
-from dmsim import cardstore  # noqa: E402
-from dmsim.dataaudit import audit_rules  # noqa: E402
-from dmsim.defs import DATA, DefError, load_rules, load_tables  # noqa: E402
+from dmsim.cards import cardstore  # noqa: E402
+from dmsim.cards.dataaudit import audit_rules  # noqa: E402
+from dmsim.cards.defs import DATA, DefError, load_rules, load_tables  # noqa: E402
 
 
 def main(argv=None) -> int:

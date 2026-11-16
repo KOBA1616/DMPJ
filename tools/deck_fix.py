@@ -9,9 +9,12 @@ from pathlib import Path
 import yaml
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
-from dmsim.defs import load_rules  # noqa: E402
+from dmsim.cards.defs import load_rules  # noqa: E402
 from dmsim.deckplan.auto import add_candidates, support_for, two_stage, unused_names  # noqa: E402
-from dmsim.solitaire import load_deck  # noqa: E402
+from dmsim.eval.measure import load_deck  # noqa: E402
+
+
+DECK_BOTTLENECK_KILL = 0.5   # bottleneck=deck で推定キル率がこれ未満なら deck_fix の対象（2026-11-10: cards 段階の記録が無く毎日0件だった）
 
 
 def cards_stage_decks(path: str) -> set[str]:
@@ -24,13 +27,15 @@ def cards_stage_decks(path: str) -> set[str]:
             continue
         if e.get("stage") == "cards" and e.get("deck_hint"):
             out.add(e.get("combo", "*"))
+        elif e.get("bottleneck") == "deck" and e.get("est_kill") is not None and e["est_kill"] < DECK_BOTTLENECK_KILL:
+            out.add(e.get("combo", "*"))      # 実行層は仕込み済みで cards 段階にならない。到達層の推定キル率(素引き確率)が低いデッキも対象
     return out
 
 
 def auto_setup(rules, combo: str, root: Path = Path("data/loops")):
     """仕込み局面が無いデッキ用: LoopSpec(data/loops/<コンボ名>*.json)の勝ち手順から、最初のターン頭の局面を作る（山札はデッキ側で差し替わる）。無ければ None。"""
-    from dmsim.discovery import evalstarts
-    from dmsim.discovery.loopspec import LoopSpec
+    from dmsim.eval import evalstarts
+    from dmsim.base.loopspec import LoopSpec
     for f in sorted(root.glob(f"{combo}*.json")):
         try:
             ls = LoopSpec.from_json(f.read_text(encoding="utf-8"))
@@ -77,6 +82,7 @@ def main(argv=None):
     ap.add_argument("--cands", type=int, default=4, help="種類ごとの候補数")
     ap.add_argument("--coarse-budget", type=int, default=40, help="①粗比較の base_budget（通常は 200）")
     ap.add_argument("--coarse-seeds", type=int, default=None, help="①粗比較に使う局数（省略時は --seeds と同じ。時間上限に収めたいとき減らす）")
+    ap.add_argument("--coarse-n-det", type=int, default=2, help="①粗比較の決定化数（既定 2。8 のままだと重いデッキの1局が数十秒かかる）")
     ap.add_argument("--top-k", type=int, default=2, help="②通常予算で再比較する上位件数")
     ap.add_argument("--time-budget", type=int, default=0, help="全体の時間予算（秒）。指定すると対象ごとに候補数と粗比較の局数を自動配分し、締め切りで打ち切る（--cands/--coarse-seeds は上限）")
     ap.add_argument("--history", default="data/autofix/deckfix_times.yaml", help="--time-budget 用の所要時間の履歴（前回途中のデッキを優先する）")
@@ -101,7 +107,7 @@ def main(argv=None):
     start = time.time()
     for i, t in enumerate(ts):
         c = combos[t["combo"]]
-        cands, cs, deadline, cb, tk = a.cands, a.coarse_seeds, None, a.coarse_budget, a.top_k
+        cands, cs, deadline, cb, tk, resume = a.cands, a.coarse_seeds, None, a.coarse_budget, a.top_k, None
         deck = load_deck(t["deck"])
         opp = load_deck(t["opp_deck"]) if t.get("opp_deck") else ["T001"] * 40
         setup, origin = resolve_setup(rules, t, a.setup, deck)        # 仕込み済み開始局面（通常の開幕では4ターン以内キルに届かず差が見えないため）
@@ -110,17 +116,23 @@ def main(argv=None):
             slot = (a.time_budget - (time.time() - start)) / (len(ts) - i)
             if slot < B.MIN_SLOT_SEC:
                 print(t["combo"], "時間予算の残りが少ないので次回へ"); continue
-            pu = B.probe_unit(rules, deck, opp, setup, a.workers, a.coarse_budget)      # 1シードの実測で重いデッキを自動検出
+            pu = B.probe_unit(rules, deck, opp, setup, a.workers, a.coarse_budget, a.coarse_n_det)      # 1シードの実測で重いデッキを自動検出
             cands, cs, cb, tk = B.allocate(hist.get(t["combo"]), slot, a.cands, a.coarse_seeds or a.seeds, probe=pu,
                                            max_budget=a.coarse_budget, seeds=a.seeds, top_k=a.top_k)
+            h = hist.get(t["combo"]) or {}
+            resume = {"base": h.get("pending_base"), "items": h.get("pending") or []}
+            if resume["items"]:
+                fine_one = max(pu, B.unit_sec(h) or 0) * a.seeds * B.FINE_FACTOR      # 通常予算の1デッキ分。粗比較を省くので枠を全部再比較に使える
+                tk = max(1, min(a.top_k, int(slot * B.SAFETY / max(1.0, fine_one)) - 1))
+                print(t["combo"], f"前回の粗比較通過 {len(resume['items'])}件から再比較を再開 再比較{tk}件")
             print(t["combo"], f"枠{slot:.0f}秒 実測{pu:.1f}秒/候補/局 → 候補{cands}/種類 粗比較{cs}局 予算{cb} 再比較{tk}件")
             deadline = time.time() + slot * B.SAFETY * 0.5            # 粗比較の締め切りは枠の半分（残りは通常予算の再比較に残す）
         un = unused_names(rules, deck, opp, list(range(1, a.usage_seeds + 1))) if a.usage_seeds else []   # 抜く候補（usage 監査）
         r = two_stage(rules, deck, opp, c, list(range(1, a.seeds + 1)), a.out, turn=a.turns, setup=setup, workers=a.workers,
-                      unused=un, adds=add_candidates(c), support=support_for(rules, deck), n=cands, coarse_budget=cb, top_k=(tk if a.time_budget else a.top_k), coarse_seeds=cs, deadline=deadline)
+                      unused=un, adds=add_candidates(c), support=support_for(rules, deck), n=cands, coarse_budget=cb, top_k=(tk if a.time_budget else a.top_k), coarse_seeds=cs, deadline=deadline, coarse_n_det=a.coarse_n_det, resume=resume)
         print(t["combo"], r)
         if a.time_budget:
-            if tk < a.top_k and r.get("passed_coarse"):
+            if (tk < a.top_k and r.get("passed_coarse")) or r.get("pending"):
                 r = {**r, "complete": False}                  # 再比較を枠に入れられなかった（次回は先頭で回す）
             B.update(hist, t["combo"], r, cands, cs or a.seeds, time.time(), cb)
             B.save_history(a.history, hist)

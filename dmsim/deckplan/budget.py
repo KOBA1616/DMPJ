@@ -8,6 +8,7 @@ from __future__ import annotations
 from pathlib import Path
 
 import yaml
+from ..base import store
 
 DEFAULT_UNIT_SEC = 3.0     # 履歴が無いデッキの 1候補×1局あたりの所要秒（保守的な初期値）
 MIN_SLOT_SEC = 120         # これ未満の枠しか残っていなければそのデッキは次回へ回す
@@ -20,8 +21,7 @@ def load_history(path) -> dict:
 
 
 def save_history(path, hist: dict) -> None:
-    Path(path).parent.mkdir(parents=True, exist_ok=True)
-    Path(path).write_text(yaml.safe_dump(hist, allow_unicode=True, sort_keys=True), encoding="utf-8")
+    store.write_text(path, yaml.safe_dump(hist, allow_unicode=True, sort_keys=True))
 
 
 def order_targets(names: list[str], hist: dict) -> list[str]:
@@ -51,14 +51,11 @@ def probe_unit(rules, deck, opp, setup, workers: int = 1, budget: int = REF_BUDG
     重いデッキ（例 knight_dmc は1局が約30秒）を履歴なしでも先に見つけるための実測。"""
     import time
 
-    from ..eval import fair_runner
-    from ..eval.harness import EvalConfig, run_eval
-    from ..eval.infolevel import InfoLevel
-    from .evaluate import spec_with_deck
-    fair_runner.register(n_det, 0)
-    kw = {"start_spec": spec_with_deck(setup, deck)} if setup else {}
+    from ..eval.api import Candidate, EvalSettings, run_eval
+    from dmsim.eval.deckeval import spec_with_deck
+    cand = Candidate(deck=tuple(deck), start_spec=spec_with_deck(setup, deck) if setup else None)
     t = time.time()
-    run_eval(rules, EvalConfig(decks={"d": deck}, opp_deck=opp, seeds=[1], levels=(InfoLevel.FAIR,), max_turn=4, base_budget=budget, n_det=n_det, **kw))
+    run_eval(rules, cand, EvalSettings(opp_deck=tuple(opp), max_turn=4, base_budget=budget, n_det=n_det, register_fair=True), [1])
     return max(0.05, (time.time() - t) / max(1, workers) * REF_BUDGET / max(1, budget))
 
 
@@ -91,7 +88,8 @@ def allocate(h: dict | None, slot_sec: float, max_cands: int, max_cs: int, min_c
 def update(hist: dict, name: str, res: dict, cands: int, cs: int, now: float, coarse_budget: int = REF_BUDGET) -> None:
     """two_stage の結果で履歴を更新する。途中で終わった時は complete=False のままにして次回優先にする。"""
     hist[name] = {"sec": float(res.get("sec", 0.0)), "cands": int(res.get("evaluated", cands)) or cands, "coarse_seeds": cs,
-                  "complete": bool(res.get("complete", True)), "last_run": now, "coarse_budget": coarse_budget}
+                  "complete": bool(res.get("complete", True)), "last_run": now, "coarse_budget": coarse_budget,
+                  "pending_base": res.get("base"), "pending": res.get("pending", [])}
 
 
 TUNE_SHARE = 0.35        # 日次の残り時間のうち自動チューナーに回す割合（残りは deck_fix）

@@ -148,7 +148,7 @@ def affected_tests(changed: list[str], tests_dir: Path | None = None) -> list[st
     """変更ファイルに関係するテストファイルを返す。見当がつかない・全体に効く変更なら None（= 全部回す）。"""
     tests_dir = tests_dir or ROOT / "tests"
     all_tests = sorted(tests_dir.glob("test_*.py"))
-    core = {"dmsim/defs.py", "dmsim/state.py", "dmsim/engine/core.py", "dmsim/engine/events.py", "tests/conftest.py"}
+    core = {"dmsim/defs.py", "dmsim/cards/defs.py", "dmsim/state.py", "dmsim/engine/state.py", "dmsim/engine/core.py", "dmsim/engine/events.py", "tests/conftest.py"}
     hit: set[str] = set()
     for c in changed:
         if c in core or c.startswith("data/rules/"):

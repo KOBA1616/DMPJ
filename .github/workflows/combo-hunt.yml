@@ -3,7 +3,7 @@
 name: combo-hunt
 on:
   schedule:
-    - cron: "30 19 * * *"
+    - cron: "30 19 * * 1"   # 週1回（月曜）。無料枠対策で毎日から変更
   workflow_dispatch:
     inputs:
       top:
