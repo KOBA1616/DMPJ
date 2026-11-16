@@ -86,7 +86,7 @@ def test_maybe_rust_switch(env, monkeypatch):
     r, deck, opp = env
     monkeypatch.setenv("DMSIM_RUST", "1")
     assert isinstance(rustcore.maybe_rust(Engine.new_game(r, [deck, opp], 1, 0)), rustcore.RustEngine)
-    assert not isinstance(rustcore.maybe_rust(Engine.new_game(r, [["dm05-013"] * 40, opp], 1, 0)), rustcore.RustEngine)
+    assert not isinstance(rustcore.maybe_rust(Engine.new_game(r, [["dm04-008"] * 40, opp], 1, 0)), rustcore.RustEngine)
     monkeypatch.setenv("DMSIM_RUST", "0")
     assert not isinstance(rustcore.maybe_rust(Engine.new_game(r, [deck, opp], 1, 0)), rustcore.RustEngine)
 
@@ -123,3 +123,11 @@ def test_thin_readers_match_view(env, seed, monkeypatch):
         n += 1
         if n == 40:                                   # 注入の後に写しが捨てられること
             e.s = e._view().s.clone()
+
+
+def test_engine_stamp_is_current():
+    """Rust で一致を確かめた Python エンジンの版の記録（rust/dmcore/verified_engine.txt）が今のエンジンと同じ。
+    落ちたら: dmcore を作り直し、tests/test_rust_*.py を通してから python tools/rust_stamp.py で記録し直す。
+    記録が古い間は、対局・探索は Rust を使わない（rustcore.enabled が偽）。"""
+    from pathlib import Path
+    assert Path(rustcore.STAMP).read_text().split()[0] == rustcore.engine_hash()

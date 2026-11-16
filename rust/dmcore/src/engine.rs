@@ -92,6 +92,15 @@ impl Engine {
         }
         self.filter_ok(cid, &f["filter"]).unwrap_or(false)
     }
+    /// 条件を満たしている「条件つきの自分への禁止」（バトルゾーンにある間）
+    fn cond_deny(&self, cid: i64, face: Option<i64>) -> Vec<String> {
+        let d = self.fdef(cid, face);
+        if d.deny_if.is_empty() || self.s.cards[cid as usize].zone != "bz" {
+            return vec![];
+        }
+        let env = json!({"you": self.s.cards[cid as usize].controller, "self": self.refv(cid), "vars": {}});
+        d.deny_if.iter().filter(|(c, _)| self.eval_cond(c, &env).unwrap_or(false)).flat_map(|(_, l)| l.clone()).collect()
+    }
     /// 継続的効果の mod の allow / deny に action があるか
     fn ce_lists(&self, cid: i64, key: &str) -> Vec<String> {
         let mut out = vec![];
@@ -117,6 +126,9 @@ impl Engine {
         if self.s.cards[cid as usize].zone == "bz" {
             let d = self.fdef(cid, face);
             if d.deny.iter().any(|x| x == action) {
+                return false;
+            }
+            if self.cond_deny(cid, face).iter().any(|x| x == action) {
                 return false;
             }
             if d.allow.iter().any(|x| x == action) {
@@ -1854,6 +1866,9 @@ impl Engine {
             if in_bz { (d.allow.clone(), d.deny.clone(), d.breaks.clone()) }
             else if self.s.cards[cid as usize].zone == "shield" { (d.shield_allow.clone(), vec![], vec![]) }   // シールドゾーンで働く自身への許可
             else { (vec![], vec![], vec![]) };
+        if in_bz {
+            deny.extend(self.cond_deny(cid, None));
+        }
         if !self.s.continuous.is_empty() {
             allow.extend(self.ce_lists(cid, "allow"));
             deny.extend(self.ce_lists(cid, "deny"));
@@ -1863,7 +1878,7 @@ impl Engine {
         kw.sort();
         kw.dedup();
         json!({"power": power, "cost": d.cost, "civs": d.civs, "types": d.types, "races": d.races, "keywords": kw,
-            "name": d.name, "names": [d.name], "allow": allow, "deny": deny, "require": [], "breaks": breaks, "break_opts": bo,
+            "name": d.name, "names": [d.name], "allow": (if in_bz { d.allow_x.clone() } else { vec![] }).into_iter().chain(allow.iter().map(|x| json!(x))).collect::<Vec<_>>(), "deny": deny, "require": [], "breaks": breaks, "break_opts": bo,
             "breaks_add": 0, "pay_cost": d.cost, "sac_reduce": 0, "opt_reduce": null, "cost_may": [], "no_leave": [],
             "must_be_attacked": false, "must_be_attacked_first": false, "must_be_chosen": false, "must_attack_creature": false,
             "must_attack_creature_first": false, "battle_indestructible": false, "battle_indestructible_filters": [],
@@ -2460,7 +2475,15 @@ impl Engine {
                 }
                 "block" => { self.hist_bump("block", rec["controller"].as_i64().unwrap(), 1); }
                 "tap" => { self.hist_bump("tap", rec["controller"].as_i64().unwrap(), 1); }
-                "untap" => { self.hist_bump("untap", rec["controller"].as_i64().unwrap(), 1); }
+                "untap" => {
+                    // 状態が実際に変わったアンタップだけ。場のクリーチャーは untap_creature も数える（マナのアンタップを除く）
+                    let p = rec["controller"].as_i64().unwrap();
+                    self.hist_bump("untap", p, 1);
+                    let uc = rec["subject"][0].as_i64().unwrap();
+                    if self.alive(&rec["subject"]) && self.s.cards[uc as usize].zone == "bz" && self.def(uc).types.iter().any(|t| t == "creature") {
+                        self.hist_bump("untap_creature", p, 1);
+                    }
+                }
                 _ => {}
             }
         }
