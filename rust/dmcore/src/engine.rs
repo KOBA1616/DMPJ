@@ -1526,14 +1526,8 @@ impl Engine {
                 }
                 if !ts.is_empty() {
                     self.defer(ts);
-                } else {
-                    // Python は空でも _defer する（pc+1）ので、h_effect の「_defer していなければ次へ」でさらに pc+1 され、次の op をとばす。
-                    // 基準の Python に合わせる（Python 側の不具合。直すなら両方同時に）
-                    let t = self.s.tasks.last_mut().unwrap();
-                    t["pc"] = json!(pc as i64 + 2);
-                    t["os"] = json!({});
+                    deferred = true;
                 }
-                deferred = true;
             }
             "end_turn" => {
                 // ターンの残りをとばす（今の効果の解決は最後まで行う）

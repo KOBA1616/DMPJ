@@ -149,3 +149,16 @@ def test_engine_stamp_is_current():
     記録が古い間は、対局・探索は Rust を使わない（rustcore.enabled が偽）。"""
     from pathlib import Path
     assert Path(rustcore.STAMP).read_text().split()[0] == rustcore.engine_hash()
+
+
+def test_empty_play_free_match(env):
+    rules = env[0]
+    from dmsim.engine.core import Engine
+    deck = ["dmr22-003"] * 40   # ウノドス・トレス: 1〜3コストの play_free が3回続く（候補が空の回があっても後の回を処理する）
+    for seed in range(4):
+        a = Engine.new_game(rules, [deck, deck], seed, 0)
+        b = rustcore.RustEngine(rules, Engine.new_game(rules, [deck, deck], seed, 0).s, [])
+        for e in (a, b):
+            while (d := e.advance()) is not None:
+                e.answer(list(range(d["min"])) if d["min"] else [0] if d["max"] else [])
+        assert a.log == b.log and a.s.digest() == b.s.digest()
