@@ -31,6 +31,13 @@ sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 
 from dmsim import load_rules  # noqa: E402
+import os  # noqa: E402
+from dmsim.engine import state as _state_mod  # noqa: E402
+
+# copy-on-write（実験B）を既定で有効にする: 保持探索では局面の大量保持で
+# メモリが律速になるため（docs/cow-experiment.md）。DMSIM_COW=0 で無効化できる。
+if os.environ.get("DMSIM_COW") != "0":
+    _state_mod.COW = True
 from dmsim.eval.measure import load_deck  # noqa: E402
 import dmsim.search.turn as turn  # noqa: E402
 import dmsim.search.game as game  # noqa: E402

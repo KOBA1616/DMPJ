@@ -35,6 +35,13 @@ sys.path.insert(0, str(Path(__file__).resolve().parent))
 import yaml  # noqa: E402
 
 from dmsim import load_rules  # noqa: E402
+import os  # noqa: E402
+from dmsim.engine import state as _state_mod  # noqa: E402
+
+# copy-on-write（実験B）を既定で有効にする: 保持探索では局面の大量保持で
+# メモリが律速になるため（docs/cow-experiment.md）。DMSIM_COW=0 で無効化できる。
+if os.environ.get("DMSIM_COW") != "0":
+    _state_mod.COW = True
 from dmsim.engine import scenario as sc  # noqa: E402
 from dmsim.engine.loop import abstract, verify  # noqa: E402
 from dmsim.search import turn  # noqa: E402
@@ -58,10 +65,19 @@ def _trim_score(mode: str, eng) -> tuple:
 
 FRONTIER_CAP = 64        # frontier モードで保持する局面数の上限（超えたら capped）
 LEAF_CAP = 4000          # 1局面・1ターンあたりに集める葉の上限
+_TOTAL_BUDGET = 0        # ケース全体のノード総予算（0 = 無制限。main が設定する）
+_MEM_LIMIT_MB = 0        # 最大RSS の上限MB（0 = 無制限。main が設定する）
 
 
 class _CapReached(Exception):
     pass
+
+
+class _RunAborted(Exception):
+    """総予算またはメモリ上限で打ち切った（判定は unknown になる）。"""
+    def __init__(self, reason: str):
+        super().__init__(reason)
+        self.reason = reason
 
 
 class LeafCollector:
@@ -173,14 +189,15 @@ def advance_to_my_turn(eng, me: int = 0):
 
 
 def run_case(rules, setup: dict, *, max_turn: int, mode: str, beam: int,
-             stage: int, order: str, node_budget: int, trim_order: str = "value"):
+             stage: int, order: str, node_budget: int, trim_order: str = "value",
+             start_engine=None):
     st = next(s for s in STAGES if s["stage"] == stage)
     fn, _label = stage_candidates(order, stage)
     orig = turn.candidates
     turn.candidates = fn
     try:
         search_cls = _make_stage_search(st["stock_offsets"])
-        start = sc.build(rules, setup)
+        start = start_engine if start_engine is not None else sc.build(rules, setup)
         frontier = [start]
         total_nodes = 0
         capped = False
@@ -193,6 +210,12 @@ def run_case(rules, setup: dict, *, max_turn: int, mode: str, beam: int,
                 leaves, trunc, nodes = LeafCollector(ts).collect(st_eng, node_budget)
                 total_nodes += nodes
                 truncated_any = truncated_any or trunc
+                if _TOTAL_BUDGET and total_nodes > _TOTAL_BUDGET:
+                    raise _RunAborted("total_budget")
+                if _MEM_LIMIT_MB:
+                    import resource
+                    if resource.getrusage(resource.RUSAGE_SELF).ru_maxrss / 1024 > _MEM_LIMIT_MB:
+                        raise _RunAborted("memory")
                 for v, leaf, _loops in leaves:
                     r = leaf.s.result
                     if r is not None and r.get("winner") == 0:
@@ -227,8 +250,11 @@ def run_case(rules, setup: dict, *, max_turn: int, mode: str, beam: int,
 
 
 def main():
+    global FRONTIER_CAP, LEAF_CAP, _TOTAL_BUDGET, _MEM_LIMIT_MB
     ap = argparse.ArgumentParser()
     ap.add_argument("--setup", default="tests/saga_prep_setup.yaml")
+    ap.add_argument("--deck", default=None,
+                    help="指定するとシナリオではなくデッキ＋シードの対局開始（0ターン目）から始める")
     ap.add_argument("--seeds", default="1")
     ap.add_argument("--max-turn", type=int, default=3)
     ap.add_argument("--mode", choices=["frontier", "beam"], default="frontier")
@@ -240,8 +266,19 @@ def main():
     ap.add_argument("--stages-file", default="data/eval/stages/saga.generated.yaml",
                     help="trim-order=plan で使う段階目標の鎖（load_stage_file 形式）")
     ap.add_argument("--budget", type=int, default=200_000)
+    ap.add_argument("--frontier-cap", type=int, default=FRONTIER_CAP)
+    ap.add_argument("--leaf-cap", type=int, default=LEAF_CAP)
+    ap.add_argument("--total-budget", type=int, default=0,
+                    help="ケース全体のノード総予算（0 = 無制限。超えたら unknown で打ち切り）")
+    ap.add_argument("--mem-limit-mb", type=int, default=0,
+                    help="最大RSS の上限MB（0 = 無制限。超えたら unknown で打ち切り）")
     ap.add_argument("--out", default="logs/exhaustive_crossturn.jsonl")
     a = ap.parse_args()
+
+    FRONTIER_CAP = a.frontier_cap
+    LEAF_CAP = a.leaf_cap
+    _TOTAL_BUDGET = a.total_budget
+    _MEM_LIMIT_MB = a.mem_limit_mb
 
     rules = load_rules()
     print("rules loaded", flush=True)
@@ -250,9 +287,17 @@ def main():
         stages, _goal = load_stage_file(a.stages_file)
         _PLANNER = MacroPlanner(stages=stages)
         print(f"planner: {len(stages)} stages from {a.stages_file}", flush=True)
-    setup0 = yaml.safe_load(Path(a.setup).read_text(encoding="utf-8"))
+    deck_mode = a.deck is not None
+    deck = None
+    if deck_mode:
+        from dmsim.eval.measure import load_deck
+        deck = load_deck(a.deck)
+        setup0 = {}
+        name = Path(a.deck).stem
+    else:
+        setup0 = yaml.safe_load(Path(a.setup).read_text(encoding="utf-8"))
+        name = Path(a.setup).stem
     seeds = [int(s) for s in a.seeds.split(",") if s.strip()]
-    name = Path(a.setup).stem
 
     out = Path(a.out)
     out.parent.mkdir(parents=True, exist_ok=True)
@@ -268,6 +313,8 @@ def main():
                 "stages_file": a.stages_file if a.trim_order == "plan" else None,
                 "budget_per_state": a.budget, "max_turn": a.max_turn,
                 "frontier_cap": FRONTIER_CAP, "leaf_cap": LEAF_CAP,
+                "total_budget": _TOTAL_BUDGET, "mem_limit_mb": _MEM_LIMIT_MB,
+                "deck": a.deck,
                 "opp": "passive (charge only)", "lock_judge": "off"}
     w({"kind": "header", "tool": "exhaustive_crossturn", "schema": "exhaustive-proto-1",
        "engine_version": engine_version("."), "settings": settings})
@@ -281,13 +328,24 @@ def main():
         setup["seed"] = seed
         case = f"{name} seed{seed} T{a.max_turn} {a.mode}{a.beam if a.mode == 'beam' else ''}"
         w({"kind": "case_start", "case": case, "mode": f"crossturn-{a.mode}",
-           "scope": {"setup": a.setup, "seed": seed, "max_turn": a.max_turn,
+           "scope": {"setup": None if deck_mode else a.setup, "deck": a.deck,
+                     "seed": seed, "max_turn": a.max_turn,
                      "stage": a.stage, "order": a.order}})
         t0 = time.perf_counter()
         try:
+            start_engine = None
+            if deck_mode:
+                from dmsim.engine import Engine
+                start_engine = Engine.new_game(rules, [deck, ["dm01-080"] * 40], seed, 0)
             r = run_case(rules, setup, max_turn=a.max_turn, mode=a.mode, beam=a.beam,
                          stage=a.stage, order=a.order, node_budget=a.budget,
-                         trim_order=a.trim_order)
+                         trim_order=a.trim_order, start_engine=start_engine)
+        except _RunAborted as ab:
+            w({"kind": "case_result", "case": case, "verdict": "unknown",
+               "aborted": ab.reason,
+               "wall_seconds": round(time.perf_counter() - t0, 3)})
+            print(f"[{case}] UNKNOWN (aborted: {ab.reason})", flush=True)
+            continue
         except Exception as e:
             w({"kind": "case_result", "case": case, "verdict": "error",
                "error": f"{type(e).__name__}: {e}", "wall_seconds": round(time.perf_counter() - t0, 3)})
@@ -297,8 +355,8 @@ def main():
         if r["verdict"] == "kill" and r["final"] is not None:
             from dmsim.engine.play import deck_lists, make_record
             rec = make_record(r["final"], deck_lists(r["final"]), seed,
-                              note=f"crossturn {a.mode} kill from {a.setup}",
-                              scenario=dict(setup0, seed=seed))
+                              note=f"crossturn {a.mode} kill from {a.deck if deck_mode else a.setup}",
+                              **({} if deck_mode else {"scenario": dict(setup0, seed=seed)}))
             rec_name = f"crossturn_{name}_seed{seed}_{a.mode}-{cfg_hash}.json"
             (rec_dir / rec_name).write_text(json.dumps(rec, ensure_ascii=False), encoding="utf-8")
         w({"kind": "case_result", "case": case, "verdict": r["verdict"],
