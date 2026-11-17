@@ -76,7 +76,11 @@ def branch_playout(rules, deck, seed, policy_seed, max_decisions, branch_steps):
     leaks = []
     step = 0
     while step < max_decisions:
-        d = e.advance()
+        try:
+            d = e.advance()
+        except Exception:
+            leaks.append(step)
+            break
         if d is None or e.s.result:
             break
         before = e.s.digest()
