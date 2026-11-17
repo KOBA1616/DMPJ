@@ -37,7 +37,7 @@ def run_seed(entry, deck, route, seed, opp, timeout, tmp):
         cmd += ["--deck", deck]
     if route:
         cmd += ["--route", route]
-    env = dict(os.environ, PYTHONPATH=str(ROOT))
+    env = dict(os.environ, PYTHONPATH=str(ROOT) + os.pathsep + str(ROOT / "tools"), DMSIM_WHY="1")
     try:
         subprocess.run(cmd, cwd=ROOT, env=env, timeout=timeout, capture_output=True)
     except subprocess.TimeoutExpired:
@@ -70,23 +70,25 @@ def card_counts(keys, prefix):
     return c
 
 
-def classify(rows, core):
-    """入口あり・段2なしの局を、中核の札の扱いで分ける。1局は複数の原因に入りうる。"""
+WHY = {"a_not_reached": "届いていない（手札にも墓地にも来ない）", "b_cannot_pay": "届いたが払えない（出す手が合法手に無い: マナ・文明・進化元）",
+       "c_not_chosen": "払えたのに選ばない（探索）"}
+
+
+def classify(rows, core, names=None):
+    """入口あり・段2なしの局で、最後まで場に出なかった中核の札を理由（a/b/c）ごとに数える。1局は複数に入りうる。"""
+    names = names or {}
     causes = collections.defaultdict(list)
     for r in rows:
         if r.get("entry_turn") is None or r.get("stage2"):
             continue
-        k = r.get("my_keys") or {}
-        ch = card_counts(k, "charge|charge:")
-        pl = card_counts(k, "main|play:")
+        w = r.get("why") or {}
         hit = False
         for cid in core:
-            if ch[cid] and not pl[cid]:
-                causes[f"{cid} をマナに置き、手札から一度も出していない"].append(r["seed"]); hit = True
-            elif not pl[cid] and not ch[cid]:
-                causes[f"{cid} を手札から一度も出していない（効果で出た分は数えない）"].append(r["seed"]); hit = True
+            if cid in w:
+                x = w[cid]
+                causes[f"{names.get(cid, cid)}: {WHY[x['why']]}"].append(r["seed"]); hit = True
         if not hit:
-            causes["中核は全部出した（勝ち切れない理由は別）"].append(r["seed"])
+            causes["中核は全部場に出た（勝ち切れない理由は別）" if w else "理由の記録なし（DMSIM_WHY 無しで回した結果）"].append(r["seed"])
     return sorted(causes.items(), key=lambda x: -len(x[1]))
 
 
@@ -150,13 +152,19 @@ def main(argv=None):
          f"- 段2 {len(s2)} {s2}",
          f"- 3〜4Tキル {k34}、殴り勝ち {sum(1 for r in rows if r.get('beat'))}", "",
          "## 入口に届いて段2なしの局の分類（多い順、1局が複数に入りうる）", ""]
-    for c, ss in classify(rows, core):
+    try:
+        from dmsim import load_rules
+        R = load_rules()
+        names = {c: R.cards[c].name for c in core if c in R.cards}
+    except Exception:  # noqa: BLE001  名前が引けなくても表は出す
+        names = {}
+    for c, ss in classify(rows, core, names):
         L.append(f"- {len(ss)}局: {c} — seed {ss}")
     L += ["", f"中核の札: {core}"]
     Path(a.out).write_text("\n".join(L) + "\n", encoding="utf-8")
     if a.json:
         slim = [{**{k: v for k, v in r.items() if k != "my_keys"},
-                 "my_keys": {k: v for k, v in (r.get("my_keys") or {}).items() if k.startswith(("charge|", "main|play:"))}} for r in rows]
+                 "why": r.get("why"), "my_keys": {k: v for k, v in (r.get("my_keys") or {}).items() if k.startswith(("charge|", "main|play:"))}} for r in rows]
         Path(a.json).write_text(json.dumps({"rows": slim, "dropped": dropped}, ensure_ascii=False), encoding="utf-8")
     print("\n".join(L))
 
