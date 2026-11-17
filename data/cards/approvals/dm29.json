@@ -33,7 +33,7 @@
 ],
 "verifier": 2,
 "verify": "26手・turn 11 まで正常に回った（result={'winner': 0, 'reason': 'direct_attack', 'turn': 11}）",
-"vocab_ver": "9ca2d466855d8443"
+"vocab_ver": "04a873ac687ecd8e"
 },
 "dm29-020": {
 "by": "rule",
@@ -85,7 +85,7 @@
 ],
 "verifier": 2,
 "verify_error": "移動先 deck が原文に無い",
-"vocab_ver": "5b7b7a9b6b2613a0"
+"vocab_ver": "3d1860ce98ec2729"
 },
 "dm29-037": {
 "by": "rule",
@@ -104,7 +104,7 @@
 ],
 "verifier": 2,
 "verify_error": "移動先 deck が原文に無い",
-"vocab_ver": "5c23d6660a1478fa"
+"vocab_ver": "ae9c351f96336874"
 },
 "dm29-043": {
 "by": "check",

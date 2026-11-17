@@ -63,7 +63,7 @@
 ],
 "verifier": 2,
 "verify_error": "移動先 deck が原文に無い",
-"vocab_ver": "d338234236ce9551"
+"vocab_ver": "ef9306172e0fa263"
 },
 "dmex12-073": {
 "by": "rule",
@@ -268,7 +268,7 @@
 ],
 "verifier": 2,
 "verify": "43手・turn 30 まで正常に回った（result={'winner': 0, 'reason': 'deck_out', 'turn': 30}）",
-"vocab_ver": "58a86ddee101517b"
+"vocab_ver": "7ae288f466010daa"
 },
 "dmex12-110": {
 "by": "rule",
