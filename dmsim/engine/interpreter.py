@@ -136,7 +136,7 @@ def h_swap_in(eng, t):
 def h_swap_fix(eng, t):
     s = eng.s
     eng._pop(t)
-    c = s.cards[t["cid"]]
+    c = s.mut_card(t["cid"])
     if c.zone != "bz":
         return None
     c.tapped = t["tapped"]
@@ -165,7 +165,7 @@ def h_summon_on_fix(eng, t):
     通常の召喚として直す（召喚酔いする。タップ状態は op の指定どおり）。"""
     s = eng.s
     eng._pop(t)
-    c = s.cards[t["cid"]]
+    c = s.mut_card(t["cid"])
     if c.zone != "bz":
         return None
     c.tapped = t["tapped"]

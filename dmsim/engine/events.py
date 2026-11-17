@@ -341,7 +341,7 @@ class EventMixin:
             if not s.alive(ev["subject"]):
                 return []   # 想定外のゾーンへ移っていたら、それ以上処理しない（400.8）
             cid = ev["subject"][0]
-            c = s.cards[cid]
+            c = s.mut_card(cid)
             if ev["to"] == "bz" and c.zone != "hold" and not self.permits(cid, "enter_bz"):
                 return []   # 出せない（実行は h_play で先に確認している。効果で出す場合はここで止める）
             from_zone = ev.get("from") if c.zone == "hold" else c.zone
@@ -364,7 +364,7 @@ class EventMixin:
             was_face_up = c.face_up   # 移動前の表向き状態（手札に加わると face_up は消える。裁きの紋章の判定用。第169弾）
             sealed_from = None
             if c.seal_of >= 0:   # 封印そのものが動く: 対象から外し、記録に「どのカードの封印だったか」を残す
-                host = s.cards[c.seal_of]
+                host = s.mut_card(c.seal_of)
                 if cid in host.seals:
                     host.seals.remove(cid)
                 sealed_from = s.ref(c.seal_of)
@@ -443,7 +443,7 @@ class EventMixin:
                         tc.under = []
                 c.under = new_under
                 for u in new_under:
-                    s.cards[u].top_of = cid
+                    s.mut_card(u).top_of = cid
             if ev.get("face_down") and ev["to"] == "mana":   # 「裏向きのままマナゾーンに置く」（第128弾）: 置かれた時点で裏向き（別のイベントにしない）
                 c.face_down = True
             if ev["to"] == "bz" and "enters_tapped" in self.chars_ro(cid)["keywords"]:   # 「タップしてバトルゾーンに出る」
@@ -613,13 +613,13 @@ class EventMixin:
         if kind in ("tap", "untap"):
             if not s.alive(ev["subject"]):
                 return []
-            c = s.cards[ev["subject"][0]]
+            c = s.mut_card(ev["subject"][0])
             if c.tapped == (kind == "tap"):
                 return []   # 「になる」誘発は状態が変わった時だけ（603.2c）
             c.tapped = kind == "tap"
             if c.link:   # G・リンク: グループは1体なので、タップ状態は全員で共有する
                 for m in self.link_members(ev["subject"][0]):
-                    s.cards[m].tapped = c.tapped
+                    s.mut_card(m).tapped = c.tapped
             return [{"ev": kind, "subject": ev["subject"], "controller": c.controller}]
         if kind in ("attack", "block", "cast", "turn_start", "turn_end", "break", "battle_win", "battle_lose", "battle_start", "attack_end", "mugon_used", "link_established", "battle_end"):
             return [dict(ev)]
@@ -635,7 +635,7 @@ class EventMixin:
             return []
         top = deck[0]
         self._raw_move(top, "shield", "top")
-        s.cards[top].exlife_of = s.ref(cid)
+        s.mut_card(top).exlife_of = s.ref(cid)
         return [{"ev": "move", "subject": s.ref(top), "lki": None, "from": "deck", "to": "shield",
                  "reason": "put", "controller": p}]
 
@@ -644,15 +644,15 @@ class EventMixin:
         タップ状態と受けていた効果を引き継ぐ。進化クリーチャーは召喚酔いしない（801.3）。
         more は2枚目以降の進化元（801.1b）。タップ状態は1枚でもタップなら進化後もタップ（801.2b）。"""
         s = self.s
-        t, b = s.cards[top], s.cards[base]
+        t, b = s.mut_card(top), s.mut_card(base)
         old = s.ref(base)
         for p in (0, 1):   # 進化元の EXライフシールドは進化後のクリーチャーに引き継がれる（2026-04-10 裁定）
             for sh in s.zones["shield"][p]:
                 if s.cards[sh].exlife_of is not None and list(s.cards[sh].exlife_of) == old:
-                    s.cards[sh].exlife_of = s.ref(top)
+                    s.mut_card(sh).exlife_of = s.ref(top)
         t.under = (t.under if more else []) + [base] + b.under
         for u in t.under:
-            s.cards[u].top_of = top
+            s.mut_card(u).top_of = top
         b.under = []
         t.tapped = (t.tapped or b.tapped) if more else b.tapped
         t.entered_turn = -1
@@ -667,18 +667,18 @@ class EventMixin:
     def _rebuild(self, top: int):
         """再構築（801.4）。下のカードのうち、一番上の単独で存在できるカード（クリーチャー）を残す。"""
         s = self.s
-        c = s.cards[top]
+        c = s.mut_card(top)
         under = list(c.under)
         c.under = []
         while under and "creature" not in self.cdef(under[0]).types:
             self._raw_move(under.pop(0), "graveyard")
         if not under:
             return
-        nt = s.cards[under[0]]
+        nt = s.mut_card(under[0])
         nt.top_of = -1
         nt.under = under[1:]
         for u in nt.under:
-            s.cards[u].top_of = nt.cid
+            s.mut_card(u).top_of = nt.cid
         nt.tapped = c.tapped                                   # 801.4d
         # 801.4c: 新たに出るわけではないので、そのカード自身の出たターンをそのまま使う
         # （ターンのはじめから下にあったなら酔わず、このターンに出た進化元なら酔う）

@@ -759,7 +759,7 @@ def h_activate(eng, t):
     if d:
         return d
     for i in ans:
-        s.cards[untapped[i]].tapped = True
+        s.mut_card(untapped[i]).tapped = True
     eng._pop(t)
     eng._push(eng._child(ab["effect"], {"you": p, "self": s.ref(cid), "vars": {}}))
     return None
@@ -782,7 +782,7 @@ def st_attack(eng, t):                                  # 505
         eng._step_done(t)
     elif o["key"].startswith("activate:"):                  # 602 起動型能力: コストを払い、効果は待機状態になる
         if o.get("tap") is not None:
-            s.cards[o["tap"]].tapped = True
+            s.mut_card(o["tap"]).tapped = True
         if o.get("tap_mana"):   # 複合コスト（マナもタップする）は activate タスクで残りを払ってから効果へ
             eng._push({"t": "activate", "cid": o["cid"], "player": a, "ab": o["ab"]})
         else:
@@ -828,7 +828,7 @@ def h_cross(eng, t):
     if dd:
         return dd
     for c in opts[ans[0]]["cids"]:
-        s.cards[c].tapped = True
+        s.mut_card(c).tapped = True
     s.cards[g[0]].crossed = list(tg)
     eng._pop(t)
     return None
@@ -998,7 +998,7 @@ def h_play(eng, t):
         if dd:
             return dd
         for i in ans:
-            s.cards[pool[i]].tapped = True
+            s.mut_card(pool[i]).tapped = True
         t["climb_done"] = True
     ch0 = eng.chars(cid, face)
     flag = f"last_play_creature:{p}"
@@ -1051,7 +1051,7 @@ def h_play(eng, t):
             t["fuel_done"] = True
             if spec.get("tap"):   # 燃料としてタップする（コストの支払い。ゾーンは動かない）
                 for c in t["fuel"]:
-                    s.cards[c].tapped = True
+                    s.mut_card(c).tapped = True
             if spec.get("move_to") and (fuel or asked):
                 reason = {"graveyard": "discard", "hand": "return", "deck": "put"}.get(spec["move_to"], "put")
                 moves = [{"ev": "move", "subject": s.ref(c), "to": spec["move_to"], "reason": reason}
@@ -1107,7 +1107,7 @@ def h_play(eng, t):
         if dd:
             return dd
         for c in opts[ans[0]]["cids"] + t.get("tap", []):
-            s.cards[c].tapped = True
+            s.mut_card(c).tapped = True
         # フォートE（第168弾）: 召喚コストとしてタップしたマナを記録する。
         # t["tap"] はハイパーエナジーでタップしたバトルゾーンのクリーチャー（マナではない）なので含めない
         t["summon_paid"] = list(opts[ans[0]]["cids"])
@@ -1135,7 +1135,7 @@ def h_play(eng, t):
                 if dd:
                     return dd
                 for c in opts[ans[0]]["cids"]:
-                    s.cards[c].tapped = True
+                    s.mut_card(c).tapped = True
                 t.setdefault("summon_paid", []).extend(opts[ans[0]]["cids"])   # バズレンダの追加支払いも召喚のためのタップ
                 t["bz_paid_for"] = cnt
             t["bz_count"] = cnt + 1
@@ -1177,7 +1177,7 @@ def h_play(eng, t):
                         t["od_idx"], t["od_sub"] = idx, sub
                         return dd
                     for i in ans:
-                        s.cards[pool[i]].tapped = True
+                        s.mut_card(pool[i]).tapped = True
                     t.setdefault("summon_paid", []).extend(pool[i] for i in ans)   # O・ドライブの追加タップも召喚のためのタップ
                     tapped_civs.append(cv)
                     sub += 1
