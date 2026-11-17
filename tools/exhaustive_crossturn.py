@@ -36,6 +36,7 @@ import yaml  # noqa: E402
 
 from dmsim import load_rules  # noqa: E402
 import os  # noqa: E402
+import pickle  # noqa: E402
 from dmsim.engine import state as _state_mod  # noqa: E402
 
 # copy-on-write（実験B）を既定で有効にする: 保持探索では局面の大量保持で
@@ -286,6 +287,175 @@ def run_case(rules, setup: dict, *, max_turn: int, mode: str, beam: int,
         turn.candidates = orig
 
 
+def _store_put(store: Path, eng) -> str:
+    """局面を状態ストアへ書く（書き込み一度きり）。キーは fast_key。
+    fast_key が同じ局面は探索の重複統合でも同一視されるため、先勝ちでよい。"""
+    key = eng.s.fast_key()
+    p = store / f"{key}.pkl"
+    if not p.exists():
+        tmp = store / f".tmp-{key}"
+        with tmp.open("wb") as fh:
+            pickle.dump((eng.s, list(eng.log), eng.s.digest()), fh, protocol=4)
+        os.replace(tmp, p)
+    return key
+
+
+def _store_get(store: Path, rules, key: str):
+    """状態ストアから局面を復元する。digest が保存時と一致しなければ例外。"""
+    with (store / f"{key}.pkl").open("rb") as fh:
+        s, log, dg = pickle.load(fh)
+    from dmsim.engine import Engine
+    eng = Engine(rules, s)
+    eng.log = log
+    if eng.s.digest() != dg:
+        raise ValueError(f"状態ストアの digest 不一致: {key}")
+    return eng
+
+
+def run_case_disk(rules, setup: dict, *, max_turn: int, mode: str, beam: int,
+                  stage: int, order: str, node_budget: int, trim_order: str = "value",
+                  start_engine=None, progress=None, store: Path,
+                  manifest: dict | None, chunk_nodes: int = 0,
+                  settings_hash: str = "", engine_ver: str = ""):
+    """ディスク常駐版の run_case（docs/frontier-disk-design.md）。
+
+    保持局面の実体は状態ストアに置き、メモリにはキーとスコアだけを残す。
+    manifest が None なら新規、渡されればその続きから再開する。
+    チャンク（chunk_nodes）を使い切ると verdict="suspended" で戻る
+    （判定ではなく、目録を残しての中断）。"""
+    st = next(s for s in STAGES if s["stage"] == stage)
+    fn, _label = stage_candidates(order, stage)
+    orig = turn.candidates
+    turn.candidates = fn
+    try:
+        search_cls = _make_stage_search(st["stock_offsets"])
+        store.mkdir(parents=True, exist_ok=True)
+        if manifest is None:
+            start = start_engine if start_engine is not None else sc.build(rules, setup)
+            mf = {"version": 1, "settings_hash": settings_hash,
+                  "engine_version": engine_ver, "status": "running",
+                  "turn": 1, "next_index": 0,
+                  "frontier_keys": [_store_put(store, start)],
+                  "nxt": {}, "total_nodes": 0, "capped": False,
+                  "truncated": False, "frontier_sizes": []}
+        else:
+            mf = manifest
+        total_nodes = mf["total_nodes"]
+        capped = mf["capped"]
+        truncated_any = mf["truncated"]
+        frontier_sizes = mf["frontier_sizes"]
+        inv_nodes = 0
+
+        def save_mf():
+            mf["total_nodes"] = total_nodes
+            mf["capped"] = capped
+            mf["truncated"] = truncated_any
+            mf["frontier_sizes"] = frontier_sizes
+            tmp = store / ".manifest.tmp"
+            tmp.write_text(json.dumps(mf, ensure_ascii=False), encoding="utf-8")
+            os.replace(tmp, store / "manifest.json")
+
+        save_mf()
+        for t in range(mf["turn"], max_turn + 1):
+            frontier_keys = mf["frontier_keys"]
+            # 目録のスコアは JSON 経由でリストになるため、タプルに戻して比較を揃える
+            nxt: dict[str, tuple] = ({k: tuple(v) for k, v in mf["nxt"].items()}
+                                     if t == mf["turn"] else {})
+            start_i = mf["next_index"] if t == mf["turn"] else 0
+            for idx in range(start_i, len(frontier_keys)):
+                st_eng = _store_get(store, rules, frontier_keys[idx])
+                ts = search_cls(0, budget=node_budget)
+                kill_leaf: list = []
+
+                def handle_leaf(_v, leaf, _loops):
+                    if kill_leaf:
+                        return
+                    r = leaf.s.result
+                    if r is not None and r.get("winner") == 0:
+                        kill_leaf.append(leaf)
+                        return
+                    nxt_eng = advance_to_my_turn(leaf)
+                    if nxt_eng is not None:
+                        key = _store_put(store, nxt_eng)
+                        s = _trim_score(trim_order, nxt_eng)
+                        if key not in nxt or s > nxt[key]:
+                            nxt[key] = s
+
+                _l, trunc, nodes = LeafCollector(
+                    ts, on_leaf=handle_leaf).collect(st_eng, node_budget)
+                total_nodes += nodes
+                inv_nodes += nodes
+                truncated_any = truncated_any or trunc
+                if _TOTAL_BUDGET and total_nodes > _TOTAL_BUDGET:
+                    mf["status"] = "aborted"
+                    save_mf()
+                    raise _RunAborted("total_budget")
+                if _MEM_LIMIT_MB:
+                    import resource
+                    if resource.getrusage(resource.RUSAGE_SELF).ru_maxrss / 1024 > _MEM_LIMIT_MB:
+                        mf["status"] = "aborted"
+                        save_mf()
+                        raise _RunAborted("memory")
+                if progress is not None:
+                    import resource
+                    progress({"turn": t, "states_done": idx + 1,
+                              "states_total": len(frontier_keys), "nodes": total_nodes,
+                              "rss_mb": round(resource.getrusage(
+                                  resource.RUSAGE_SELF).ru_maxrss / 1024)})
+                if kill_leaf:
+                    mf["status"] = "completed"
+                    save_mf()
+                    leaf = kill_leaf[0]
+                    r = leaf.s.result
+                    return {"verdict": "kill", "kill_turn": t, "kill_by": r.get("reason"),
+                            "nodes": total_nodes, "frontier_sizes": frontier_sizes,
+                            "capped": capped, "truncated": truncated_any, "final": leaf}
+                mf["turn"] = t
+                mf["next_index"] = idx + 1
+                mf["nxt"] = nxt
+                save_mf()
+                if chunk_nodes and inv_nodes >= chunk_nodes:
+                    return {"verdict": "suspended", "kill_turn": None, "kill_by": None,
+                            "nodes": total_nodes, "frontier_sizes": frontier_sizes,
+                            "capped": capped, "truncated": truncated_any, "final": None}
+            frontier_sizes.append(len(nxt))
+            if not nxt:
+                mf["status"] = "completed"
+                save_mf()
+                verdict = "no-kill" if not (capped or truncated_any) else "unknown"
+                return {"verdict": verdict, "kill_turn": None, "kill_by": None,
+                        "nodes": total_nodes, "frontier_sizes": frontier_sizes,
+                        "capped": capped, "truncated": truncated_any, "final": None}
+            ordered = sorted(nxt.items(), key=lambda kv: kv[1], reverse=True)
+            keep = beam if mode == "beam" else FRONTIER_CAP
+            if len(ordered) > keep:
+                if mode == "frontier":
+                    capped = True
+                ordered = ordered[:keep]
+            new_keys = [k for k, _s in ordered]
+            keep_set = set(new_keys)
+            for p in store.glob("*.pkl"):
+                if p.stem not in keep_set:
+                    p.unlink()
+            mf["turn"] = t + 1
+            mf["next_index"] = 0
+            mf["frontier_keys"] = new_keys
+            mf["nxt"] = {}
+            save_mf()
+            if progress is not None:
+                progress({"turn_done": t, "frontier_next": len(new_keys),
+                          "nodes": total_nodes, "capped": capped,
+                          "truncated": truncated_any})
+        mf["status"] = "completed"
+        save_mf()
+        verdict = "no-kill" if not (capped or truncated_any) else "unknown"
+        return {"verdict": verdict, "kill_turn": None, "kill_by": None,
+                "nodes": total_nodes, "frontier_sizes": frontier_sizes,
+                "capped": capped, "truncated": truncated_any, "final": None}
+    finally:
+        turn.candidates = orig
+
+
 def main():
     global FRONTIER_CAP, LEAF_CAP, _TOTAL_BUDGET, _MEM_LIMIT_MB
     ap = argparse.ArgumentParser()
@@ -309,6 +479,12 @@ def main():
                     help="ケース全体のノード総予算（0 = 無制限。超えたら unknown で打ち切り）")
     ap.add_argument("--mem-limit-mb", type=int, default=0,
                     help="最大RSS の上限MB（0 = 無制限。超えたら unknown で打ち切り）")
+    ap.add_argument("--store-dir", default=None,
+                    help="指定するとディスク常駐モード（状態ストア＋目録で分割・再開可能）")
+    ap.add_argument("--resume", action="store_true",
+                    help="--store-dir の目録から再開する（設定ハッシュが違えば拒否。再開時は --out も同じファイルを指定すること）")
+    ap.add_argument("--chunk-nodes", type=int, default=0,
+                    help="この起動で処理するノード量の目安（0 = 最後まで。超えたら目録を残して中断）")
     ap.add_argument("--out", default="logs/exhaustive_crossturn.jsonl")
     a = ap.parse_args()
 
@@ -338,13 +514,14 @@ def main():
 
     out = Path(a.out)
     out.parent.mkdir(parents=True, exist_ok=True)
-    f = out.open("w", encoding="utf-8")
+    f = out.open("a" if a.resume else "w", encoding="utf-8")
 
     def w(obj):
         f.write(json.dumps(obj, ensure_ascii=False) + "\n")
         f.flush()
 
     from dmsim.eval.explog import engine_version
+    ever = engine_version(".")
     settings = {"mode": a.mode, "beam": a.beam, "stage": a.stage, "order": a.order,
                 "trim_order": a.trim_order,
                 "stages_file": a.stages_file if a.trim_order == "plan" else None,
@@ -353,8 +530,9 @@ def main():
                 "total_budget": _TOTAL_BUDGET, "mem_limit_mb": _MEM_LIMIT_MB,
                 "deck": a.deck,
                 "opp": "passive (charge only)", "lock_judge": "off"}
-    w({"kind": "header", "tool": "exhaustive_crossturn", "schema": "exhaustive-proto-1",
-       "engine_version": engine_version("."), "settings": settings})
+    if not a.resume:
+        w({"kind": "header", "tool": "exhaustive_crossturn", "schema": "exhaustive-proto-1",
+           "engine_version": ever, "settings": settings})
     # 記録ファイル名の設定サフィックス（設定が違う走行同士の上書き事故を防ぐ）
     cfg_hash = cfg_suffix(settings)
     rec_dir = Path("logs/exhaustive_records")
@@ -364,10 +542,45 @@ def main():
         setup = dict(setup0)
         setup["seed"] = seed
         case = f"{name} seed{seed} T{a.max_turn} {a.mode}{a.beam if a.mode == 'beam' else ''}"
-        w({"kind": "case_start", "case": case, "mode": f"crossturn-{a.mode}",
-           "scope": {"setup": None if deck_mode else a.setup, "deck": a.deck,
-                     "seed": seed, "max_turn": a.max_turn,
-                     "stage": a.stage, "order": a.order}})
+        store = None
+        manifest = None
+        if a.store_dir:
+            store = Path(a.store_dir) / f"{name}_seed{seed}-{cfg_hash}"
+            mf_path = store / "manifest.json"
+            if mf_path.exists():
+                if not a.resume:
+                    w({"kind": "case_start", "case": case, "mode": f"crossturn-{a.mode}",
+                       "scope": {"setup": None if deck_mode else a.setup, "deck": a.deck,
+                                 "seed": seed, "max_turn": a.max_turn,
+                                 "stage": a.stage, "order": a.order}})
+                    w({"kind": "case_result", "case": case, "verdict": "error",
+                       "error": f"store already exists (use --resume): {store}",
+                       "wall_seconds": 0})
+                    print(f"[{case}] ERROR store already exists: {store}", flush=True)
+                    continue
+                manifest = json.loads(mf_path.read_text(encoding="utf-8"))
+                if (manifest.get("settings_hash") != cfg_hash
+                        or manifest.get("engine_version") != ever):
+                    w({"kind": "case_result", "case": case, "verdict": "error",
+                       "error": "resume refused: settings/engine mismatch",
+                       "wall_seconds": 0})
+                    print(f"[{case}] ERROR resume refused (settings mismatch)", flush=True)
+                    continue
+                if manifest.get("status") in ("completed", "aborted"):
+                    print(f"[{case}] already {manifest['status']} in store; skipped",
+                          flush=True)
+                    continue
+        if manifest is None:
+            w({"kind": "case_start", "case": case, "mode": f"crossturn-{a.mode}",
+               "scope": {"setup": None if deck_mode else a.setup, "deck": a.deck,
+                         "seed": seed, "max_turn": a.max_turn,
+                         "stage": a.stage, "order": a.order}})
+        else:
+            w({"kind": "resumed", "case": case, "turn": manifest["turn"],
+               "next_index": manifest["next_index"], "nodes": manifest["total_nodes"]})
+            print(f"[{case}] resumed at turn {manifest['turn']} "
+                  f"index {manifest['next_index']} nodes {manifest['total_nodes']}",
+                  flush=True)
         t0 = time.perf_counter()
 
         def prog(info):
@@ -376,13 +589,22 @@ def main():
 
         try:
             start_engine = None
-            if deck_mode:
+            if deck_mode and manifest is None:
                 from dmsim.engine import Engine
                 start_engine = Engine.new_game(rules, [deck, ["dm01-080"] * 40], seed, 0)
-            r = run_case(rules, setup, max_turn=a.max_turn, mode=a.mode, beam=a.beam,
-                         stage=a.stage, order=a.order, node_budget=a.budget,
-                         trim_order=a.trim_order, start_engine=start_engine,
-                         progress=prog)
+            if store is not None:
+                r = run_case_disk(rules, setup, max_turn=a.max_turn, mode=a.mode,
+                                  beam=a.beam, stage=a.stage, order=a.order,
+                                  node_budget=a.budget, trim_order=a.trim_order,
+                                  start_engine=start_engine, progress=prog,
+                                  store=store, manifest=manifest,
+                                  chunk_nodes=a.chunk_nodes,
+                                  settings_hash=cfg_hash, engine_ver=ever)
+            else:
+                r = run_case(rules, setup, max_turn=a.max_turn, mode=a.mode, beam=a.beam,
+                             stage=a.stage, order=a.order, node_budget=a.budget,
+                             trim_order=a.trim_order, start_engine=start_engine,
+                             progress=prog)
         except _RunAborted as ab:
             w({"kind": "case_result", "case": case, "verdict": "unknown",
                "aborted": ab.reason,
@@ -393,6 +615,13 @@ def main():
             w({"kind": "case_result", "case": case, "verdict": "error",
                "error": f"{type(e).__name__}: {e}", "wall_seconds": round(time.perf_counter() - t0, 3)})
             print(f"[{case}] ERROR {e}", flush=True)
+            continue
+        if r["verdict"] == "suspended":
+            w({"kind": "suspended", "case": case, "nodes": r["nodes"],
+               "frontier_sizes": r["frontier_sizes"],
+               "wall_seconds": round(time.perf_counter() - t0, 3)})
+            print(f"[{case}] SUSPENDED nodes={r['nodes']} "
+                  f"(resume with --resume)", flush=True)
             continue
         rec_name = None
         if r["verdict"] == "kill" and r["final"] is not None:
