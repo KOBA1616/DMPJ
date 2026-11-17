@@ -92,45 +92,6 @@ def classify(rows, core, names=None):
     return sorted(causes.items(), key=lambda x: -len(x[1]))
 
 
-class _Keep:
-    def __init__(self, d):
-        self.d = d
-
-    def __enter__(self):
-        return self.d
-
-    def __exit__(self, *a):
-        return False
-
-
-def card_counts(keys, prefix):
-    c = collections.Counter()
-    for k, v in keys.items():
-        if k.startswith(prefix):
-            c[k[len(prefix):].split(":")[0]] += v
-    return c
-
-
-def classify(rows, core):
-    """入口あり・段2なしの局を、中核の札の扱いで分ける。1局は複数の原因に入りうる。"""
-    causes = collections.defaultdict(list)
-    for r in rows:
-        if r.get("entry_turn") is None or r.get("stage2"):
-            continue
-        k = r.get("my_keys") or {}
-        ch = card_counts(k, "charge|charge:")
-        pl = card_counts(k, "main|play:")
-        hit = False
-        for cid in core:
-            if ch[cid] and not pl[cid]:
-                causes[f"{cid} をマナに置き、手札から一度も出していない"].append(r["seed"]); hit = True
-            elif not pl[cid] and not ch[cid]:
-                causes[f"{cid} を手札から一度も出していない（効果で出た分は数えない）"].append(r["seed"]); hit = True
-        if not hit:
-            causes["中核は全部出した（勝ち切れない理由は別）"].append(r["seed"])
-    return sorted(causes.items(), key=lambda x: -len(x[1]))
-
-
 def core_cards(deck_list, route):
     cnt = collections.Counter(deck_list)
     txt = ""
