@@ -440589,3 +440589,865 @@ cards:
     - dm38-s04
     review: pending
     notes: 再変換ラウンド250。第214弾リベンジ・チャンスのイディオムで変換。W・ソウルは種族として追加（K・ソウルの前例どおり、partial に欠けていた）。
+- id: dm34-034
+  name: オリジナルネイチャー
+  types:
+  - creature
+  civs:
+  - nature
+  cost: 8
+  mana: 1
+  text: 'このクリーチャーを召喚する時、自分のマナゾーンにあるオリジンのマナの数字は、１のかわりに２になる。
+
+    W・ブレイカー(このクリーチャーはシールドを２枚ブレイクする)'
+  source:
+    official: dm34-034
+    review: pending
+    notes: 再変換ラウンド251。第215弾の再変換（面 mana_boost 必須形で「オリジンのマナの数字は1のかわりに2になる」を表現）。
+  power: 6000
+  races:
+  - エメラルド・モンスター
+  - オリジン
+  keywords:
+  - double_breaker
+  mana_boost:
+    filter:
+      races:
+      - オリジン
+    value: 2
+- id: dm34-037
+  name: ピュアオリジナル
+  types:
+  - creature
+  civs:
+  - light
+  cost: 4
+  mana: 1
+  text: 'ブロッカー
+
+    このクリーチャーは、相手プレイヤーを攻撃できない。
+
+    このクリーチャーを召喚する時、自分のマナゾーンにあるオリジンのマナの数字は、１のかわりに２になる。'
+  source:
+    official: dm34-037
+    review: pending
+    notes: 再変換ラウンド251。第215弾の再変換（面 mana_boost 必須形で「オリジンのマナの数字は1のかわりに2になる」を表現）。
+  power: 4000
+  races:
+  - シャイン・モンスター
+  - オリジン
+  keywords:
+  - blocker
+  - cannot_attack_player
+  mana_boost:
+    filter:
+      races:
+      - オリジン
+    value: 2
+- id: dm34-043
+  name: オリジナル・ブレイン
+  types:
+  - spell
+  civs:
+  - water
+  cost: 6
+  mana: 1
+  text: 'この呪文を唱える時、自分のマナゾーンにあるオリジンのマナの数字は、１のかわりに２になる。
+
+    自分の山札の上から４枚を見る。そのうちの２枚までを手札に加える。残りを好きな順序で自分の山札の一番下に戻す。'
+  source:
+    official: dm34-043
+    review: pending
+    notes: 再変換ラウンド251。第215弾の再変換（面 mana_boost 必須形で「オリジンのマナの数字は1のかわりに2になる」を表現）。
+  mana_boost:
+    filter:
+      races:
+      - オリジン
+    value: 2
+  spell:
+  - op: choose
+    select:
+      zone: deck
+      owner: you
+      from_top: 4
+      look: true
+      count: all
+    as: pile
+  - op: choose
+    select:
+      ref: pile
+      count: 2
+      up_to: true
+    as: take
+  - op: move
+    select:
+      ref: take
+      count: all
+    to: hand
+    reason: put
+  - op: move
+    select:
+      ref: pile
+      count: all
+    to: deck
+    reason: put
+- id: dm34-044
+  name: ヤミノオリジナル
+  types:
+  - creature
+  civs:
+  - darkness
+  cost: 6
+  mana: 1
+  text: 'このクリーチャーを召喚する時、自分のマナゾーンにあるオリジンのマナの数字は、１のかわりに２になる。
+
+    スレイヤー(このクリーチャーがバトルする時、バトルの後、相手クリーチャーを破壊する)'
+  source:
+    official: dm34-044
+    review: pending
+    notes: 再変換ラウンド251。第215弾の再変換（面 mana_boost 必須形で「オリジンのマナの数字は1のかわりに2になる」を表現）。
+  power: 4000
+  races:
+  - ダーク・モンスター
+  - オリジン
+  keywords:
+  - slayer
+  mana_boost:
+    filter:
+      races:
+      - オリジン
+    value: 2
+- id: dm34-048
+  name: オリジナルグレンオー
+  types:
+  - creature
+  civs:
+  - fire
+  cost: 6
+  mana: 1
+  text: 'このクリーチャーを召喚する時、自分のマナゾーンにあるオリジンのマナの数字は、１のかわりに２になる。
+
+    このクリーチャーをバトルゾーンに出した時、相手の「ブロッカー」を持つクリーチャーを１体破壊する。'
+  source:
+    official: dm34-048
+    review: pending
+    notes: 再変換ラウンド251。第215弾の再変換（面 mana_boost 必須形で「オリジンのマナの数字は1のかわりに2になる」を表現）。
+  power: 3000
+  races:
+  - フレイム・モンスター
+  - オリジン
+  mana_boost:
+    filter:
+      races:
+      - オリジン
+    value: 2
+  abilities:
+  - kind: trigger
+    when:
+      event: move
+      to: bz
+      subject: self
+    effect:
+    - op: destroy
+      select:
+        zone: bz
+        owner: opp
+        filter:
+          types:
+          - creature
+          keyword: blocker
+        count: 1
+- id: dm23rp4x-08a
+  name: シス＝魔＝シャル
+  types:
+  - creature
+  civs:
+  - darkness
+  - nature
+  cost: 7
+  power: 10000
+  races:
+  - アビスキマイラ
+  mana: 1
+  text: '革命チェンジ：コスト５以上のアビス
+
+    W・ブレイカー
+
+    このクリーチャーが出た時、自分の墓地にあるカードの枚数以下のコストを持つ他のクリーチャーをすべて、タップして持ち主のマナゾーンに置いてもよい。
+
+    終極宣言：自分のターンのはじめに、アビス・クリーチャーを３体まで、自分のマナゾーンまたは墓地から出してもよい。（「終極宣言」は、ゲーム中に一度だけ使える）'
+  source:
+    official: dm23rp4x-08a
+    review: pending
+    notes: 再変換ラウンド252。第216弾の再変換（終極宣言ゲート）。CIP はコスト上限＝自分の墓地枚数の式。宣言はマナ/墓地からアビスを3体まで。
+    aliases:
+    - dm23rp4-08a
+    - dm23rp4-10b
+    - dm23rp4-s08
+    - dm23rp4x-10b
+    - dm23rp4x-s08
+    - dm23rp4x-s08x
+  keywords:
+  - double_breaker
+  abilities:
+  - kind: declare
+    zone: hand
+    when:
+      event: attack
+      subject:
+        owner: you
+        filter:
+          cost_ge: 5
+          race_has: アビス
+    effect:
+    - op: swap
+      out:
+        ref: event.subject
+      in:
+        ref: self
+  - kind: trigger
+    when:
+      event: move
+      to: bz
+      subject: self
+    effect:
+    - op: may
+      body:
+      - op: move
+        select:
+          zone: bz
+          filter:
+            types:
+            - creature
+            cost_le:
+              count:
+                zone: graveyard
+                owner: you
+          other: true
+          count: all
+          owner: any
+        to: mana
+        reason: put
+        tapped: true
+  - kind: trigger
+    when:
+      event: turn_start
+      player: you
+    if:
+      not:
+        marked:
+          name: final_declaration
+          scope: game
+    effect:
+    - op: if
+      cond:
+        not:
+          marked:
+            name: final_declaration
+            scope: game
+      then:
+      - op: may
+        body:
+        - op: play_free
+          select:
+            zone:
+            - mana
+            - graveyard
+            owner: you
+            filter:
+              types:
+              - creature
+              race_has: アビス
+            count: 3
+            up_to: true
+          as: put
+        - op: if
+          cond:
+            exists:
+              ref: put
+          then:
+          - op: mark
+            name: final_declaration
+            scope: game
+- id: dm26rp1-tr003
+  name: 審判の精霊ラストジャッジ
+  types:
+  - creature
+  civs:
+  - light
+  - water
+  cost: 10
+  mana: 1
+  text: 'ブロッカー
+
+    T・ブレイカー
+
+    このクリーチャーが出た時、相手のクリーチャーを２体選び、タップする。次の相手のターンのはじめに、それらはアンタップしない。
+
+    終極宣言：自分のターンのはじめに、「ブロッカー」を持つクリーチャーを好きな数、自分の手札から出してもよい。この効果を使った後、自分の「ブロッカー」を持つクリーチャーが12体以上あれば、このターンの後に自分のターンを追加する。'
+  source:
+    official: dm26rp1-tr003
+    review: pending
+    notes: 再変換ラウンド252。第216弾の再変換（終極宣言ゲート）。CIP は2体タップ＋次の相手ターン開始時にアンタップしない。宣言はブロッカーを好きな数出し、12体以上なら追加ターン。
+    aliases:
+    - dm24ex4-012
+    - dm24ex4-chosec001
+    - dm24ex4-sec001
+  power: 15500
+  races:
+  - エンジェル・コマンド
+  keywords:
+  - blocker
+  - triple_breaker
+  abilities:
+  - kind: trigger
+    when:
+      event: move
+      to: bz
+      subject: self
+    effect:
+    - op: tap
+      select:
+        zone: bz
+        owner: opp
+        filter:
+          types:
+          - creature
+        count: 2
+      no_untap_next: true
+  - kind: trigger
+    when:
+      event: turn_start
+      player: you
+    if:
+      not:
+        marked:
+          name: final_declaration
+          scope: game
+    effect:
+    - op: if
+      cond:
+        not:
+          marked:
+            name: final_declaration
+            scope: game
+      then:
+      - op: may
+        body:
+        - op: play_free
+          select:
+            zone: hand
+            owner: you
+            filter:
+              types:
+              - creature
+              keyword: blocker
+            count: any
+          as: put
+        - op: if
+          cond:
+            any:
+            - exists:
+                ref: put
+            - cmp:
+              - count:
+                  zone: bz
+                  owner: you
+                  filter:
+                    types:
+                    - creature
+                    keyword: blocker
+              - '>='
+              - 12
+          then:
+          - op: mark
+            name: final_declaration
+            scope: game
+        - op: if
+          cond:
+            cmp:
+            - count:
+                zone: bz
+                owner: you
+                filter:
+                  types:
+                  - creature
+                  keyword: blocker
+            - '>='
+            - 12
+          then:
+          - op: extra_turn
+- id: dm23rp4x-01b
+  name: 富轟皇 ゴルギーニ・エン・ゲルス
+  types:
+  - creature
+  civs:
+  - light
+  - darkness
+  cost: 7
+  power: 11500
+  races:
+  - メカ・エンジェル・コマンド
+  mana: 1
+  text: '革命チェンジ：コスト５以上のメカ
+
+    W・ブレイカー
+
+    このターンにシールドが離れていなければ、このクリーチャーは離れない。
+
+    終極宣言：自分のターンのはじめに、次の中から４回選んでもよい。（同じものを選んでもよい。「終極宣言」は、ゲーム中に一度だけ使える）
+
+    ▶相手のクリーチャーを１体選び、破壊する。その後、カードを１枚引く。
+
+    ▶自分の山札の上から１枚目をシールド化する。その後、カードを１枚、自分の墓地から手札に戻す。'
+  source:
+    official: dm23rp4x-01b
+    review: pending
+    notes: 再変換ラウンド252。第216弾の再変換（終極宣言ゲート）。「離れない」はこのターン shield_left 履歴が0の間だけの常在型。宣言は2モードから4回選択。
+    aliases:
+    - dm23rp4-01b
+    - dm23rp4-01s
+    - dm23rp4-or1
+    - dm23rp4x-01s
+    - dm23rp4x-or01
+    - dm23rp4x-or1
+  keywords:
+  - double_breaker
+  abilities:
+  - kind: declare
+    zone: hand
+    when:
+      event: attack
+      subject:
+        owner: you
+        filter:
+          cost_ge: 5
+          race_has: メカ
+    effect:
+    - op: swap
+      out:
+        ref: event.subject
+      in:
+        ref: self
+  - kind: static
+    affects: self
+    if:
+      cmp:
+      - turn_count:
+          kind: shield_left
+          owner: you
+      - ==
+      - 0
+    mod:
+      no_leave: true
+  - kind: trigger
+    when:
+      event: turn_start
+      player: you
+    if:
+      not:
+        marked:
+          name: final_declaration
+          scope: game
+    effect:
+    - op: if
+      cond:
+        not:
+          marked:
+            name: final_declaration
+            scope: game
+      then:
+      - op: may
+        body:
+        - op: modal
+          count: 4
+          repeat: true
+          modes:
+          - - op: destroy
+              select:
+                zone: bz
+                owner: opp
+                filter:
+                  types:
+                  - creature
+                count: 1
+            - op: draw
+              count: 1
+          - - op: move
+              select:
+                zone: deck
+                owner: you
+                from_top: 1
+              to: shield
+              reason: put
+            - op: move
+              select:
+                zone: graveyard
+                owner: you
+                count: 1
+              to: hand
+              reason: return
+        - op: mark
+          name: final_declaration
+          scope: game
+- id: dm26sd1-q001
+  name: 超重竜 ゴルファンタジスタ
+  types:
+  - creature
+  civs:
+  - water
+  - nature
+  cost: 7
+  mana: 1
+  text: '革命チェンジ：コスト５以上のジャイアント
+
+    T・ブレイカー（このクリーチャーはシールドを３つブレイクする）
+
+    自分のジャイアントはブロックされない。
+
+    このクリーチャーが出た時、コスト６以下のジャイアント・クリーチャーを１体、自分のマナゾーンから出してもよい。
+
+    終極宣言：自分のターンのはじめに、自分の手札と同じ枚数のカードを引いてもよい。その後、自分のマナゾーンにあるカードと同じ枚数、自分の山札の上からマナゾーンに置いてもよい。（「終極宣言」は、ゲーム中に１度だけ使える）'
+  source:
+    official: dm26sd1-q001
+    review: pending
+    notes: 再変換ラウンド252。第216弾の再変換（終極宣言ゲート）。ジャイアントはブロックされない常在型、CIP はマナからコスト6以下のジャイアント。宣言は手札枚数ドロー＋マナ枚数ぶんマナ加速。
+    aliases:
+    - dm23rp4-07a
+    - dm23rp4-09b
+    - dm23rp4-s07
+    - dm23rp4x-07a
+    - dm23rp4x-09b
+    - dm23rp4x-s07
+    - dm23rp4x-s07x
+    - dm26sd1-q001star
+  power: 12000
+  races:
+  - ジャイアント・ドラゴン
+  keywords:
+  - triple_breaker
+  abilities:
+  - kind: declare
+    zone: hand
+    when:
+      event: attack
+      subject:
+        owner: you
+        filter:
+          cost_ge: 5
+          race_has: ジャイアント
+    effect:
+    - op: swap
+      out:
+        ref: event.subject
+      in:
+        ref: self
+  - kind: static
+    affects:
+      zone: bz
+      owner: you
+      filter:
+        types:
+        - creature
+        race_has: ジャイアント
+    mod:
+      grant:
+      - unblockable
+  - kind: trigger
+    when:
+      event: move
+      to: bz
+      subject: self
+    effect:
+    - op: may
+      body:
+      - op: play_free
+        select:
+          zone: mana
+          owner: you
+          filter:
+            types:
+            - creature
+            race_has: ジャイアント
+            cost_le: 6
+          count: 1
+  - kind: trigger
+    when:
+      event: turn_start
+      player: you
+    if:
+      not:
+        marked:
+          name: final_declaration
+          scope: game
+    effect:
+    - op: if
+      cond:
+        not:
+          marked:
+            name: final_declaration
+            scope: game
+      then:
+      - op: may
+        body:
+        - op: draw
+          count:
+            count:
+              zone: hand
+              owner: you
+        - op: mana_put
+          select:
+            zone: deck
+            owner: you
+            from_top:
+              count:
+                zone: mana
+                owner: you
+        - op: mark
+          name: final_declaration
+          scope: game
+- id: dm23rp4x-06a
+  name: 芸魔龍馬 バルバトチェス
+  types:
+  - creature
+  civs:
+  - water
+  - fire
+  cost: 7
+  power: 11000
+  races:
+  - マジック・ドラゴン
+  - ゲーム・コマンド
+  mana: 1
+  text: '革命チェンジ：コスト５以上のマジック
+
+    スピードアタッカー
+
+    W・ブレイカー
+
+    このクリーチャーが出た時、相手のパワー10000以下のクリーチャーを１体選び、破壊する。その後、カードを２枚引く。
+
+    終極宣言：自分のターンのはじめに、次の能力を使ってもよい。（「終極宣言」は、ゲーム中に一度だけ使える）
+
+    ▶このターン、自分のマジックを使うコストを４少なくする。ただし、コストは０以下にはならない。このターン、自分がマジックを使った時、カードを１枚引いてもよい。'
+  source:
+    official: dm23rp4x-06a
+    review: pending
+    notes: 再変換ラウンド252。第216弾の再変換（終極宣言ゲート）。CIP はパワー10000以下を破壊して2枚引く。宣言はこのターン手札のマジックを動的
+      modify で-4（下限0）＋唱えた時の遅延誘発。
+    aliases:
+    - dm23rp4-06a
+    - dm23rp4-08b
+    - dm23rp4-s06
+    - dm23rp4x-08b
+    - dm23rp4x-s06
+    - dm23rp4x-s06x
+  keywords:
+  - speed_attacker
+  - double_breaker
+  abilities:
+  - kind: declare
+    zone: hand
+    when:
+      event: attack
+      subject:
+        owner: you
+        filter:
+          cost_ge: 5
+          race_has: マジック
+    effect:
+    - op: swap
+      out:
+        ref: event.subject
+      in:
+        ref: self
+  - kind: trigger
+    when:
+      event: move
+      to: bz
+      subject: self
+    effect:
+    - op: destroy
+      select:
+        zone: bz
+        owner: opp
+        filter:
+          types:
+          - creature
+          power_le: 10000
+        count: 1
+    - op: draw
+      count: 2
+  - kind: trigger
+    when:
+      event: turn_start
+      player: you
+    if:
+      not:
+        marked:
+          name: final_declaration
+          scope: game
+    effect:
+    - op: if
+      cond:
+        not:
+          marked:
+            name: final_declaration
+            scope: game
+      then:
+      - op: may
+        body:
+        - op: modify
+          select:
+            zone: hand
+            owner: you
+            filter:
+              types:
+              - spell
+              race_has: マジック
+          mod:
+            cost: -4
+            cost_min: 0
+          duration: end_of_turn
+          dynamic: true
+        - op: delayed_trigger
+          when:
+            event: cast
+            subject:
+              owner: you
+              filter:
+                types:
+                - spell
+                race_has: マジック
+          effect:
+          - op: may
+            body:
+            - op: draw
+              count: 1
+          duration: end_of_turn
+        - op: mark
+          name: final_declaration
+          scope: game
+- id: dm26sd1-g003
+  name: ボルシャック・ヴォルジャアク
+  types:
+  - creature
+  civs:
+  - light
+  - fire
+  cost: 7
+  mana: 1
+  text: '革命チェンジ：コスト５以上のアーマード
+
+    スピードアタッカーW・ブレイカー
+
+    各ターンに１度、クリーチャーが出た時、自分の山札の上から１枚をシールド化してもよい。
+
+    このクリーチャーが破壊された時、名前に《ボルシャック》とあるコスト７以下のクリーチャーを１体、自分の手札から出してもよい。
+
+    終極宣言：自分のターンのはじめに、このクリーチャーは自分のシールドをすべてブレイクしてもよい。そうしたら、次の自分のターンのはじめまで、自分はゲームに負けない。（「終極宣言」は、ゲーム中に１度だけ使える）'
+  source:
+    official: dm26sd1-g003
+    review: pending
+    notes: 再変換ラウンド252。第216弾の再変換（終極宣言ゲート）。出た時（各ターン1度）シールド化、破壊時にボルシャック踏み倒し。宣言は自シールド全ブレイク＋次の自分のターン開始まで敗北しない。
+    aliases:
+    - dm23rp4-05a
+    - dm23rp4-07b
+    - dm23rp4-s05
+    - dm23rp4x-05a
+    - dm23rp4x-07b
+    - dm23rp4x-s05
+    - dm23rp4x-s05x
+    - dmart18-002
+  power: 11000
+  races:
+  - アーマード・ドラゴン
+  keywords:
+  - speed_attacker
+  - double_breaker
+  abilities:
+  - kind: declare
+    zone: hand
+    when:
+      event: attack
+      subject:
+        owner: you
+        filter:
+          cost_ge: 5
+          race_has: アーマード
+    effect:
+    - op: swap
+      out:
+        ref: event.subject
+      in:
+        ref: self
+  - kind: trigger
+    once_per_turn: true
+    when:
+      event: move
+      to: bz
+      subject:
+        filter:
+          types:
+          - creature
+    effect:
+    - op: may
+      body:
+      - op: move
+        select:
+          zone: deck
+          owner: you
+          from_top: 1
+        to: shield
+        reason: put
+  - kind: trigger
+    when:
+      event: move
+      from: bz
+      to: graveyard
+      reason: destroy
+      subject: self
+    effect:
+    - op: may
+      body:
+      - op: play_free
+        select:
+          zone: hand
+          owner: you
+          filter:
+            types:
+            - creature
+            name_has: ボルシャック
+            cost_le: 7
+          count: 1
+  - kind: trigger
+    when:
+      event: turn_start
+      player: you
+    if:
+      not:
+        marked:
+          name: final_declaration
+          scope: game
+    effect:
+    - op: if
+      cond:
+        not:
+          marked:
+            name: final_declaration
+            scope: game
+      then:
+      - op: may
+        body:
+        - op: move
+          select:
+            zone: shield
+            owner: you
+            count: all
+          to: hand
+          reason: break
+        - op: no_lose
+          duration: until_next_own_turn_start
+        - op: mark
+          name: final_declaration
+          scope: game
