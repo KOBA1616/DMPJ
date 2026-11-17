@@ -2039,7 +2039,7 @@ impl Engine {
             "breaks_add": 0, "pay_cost": d.cost, "sac_reduce": 0, "opt_reduce": null, "cost_may": [], "no_leave": [],
             "must_be_attacked": false, "must_be_attacked_first": false, "must_be_chosen": false, "must_attack_creature": false,
             "must_attack_creature_first": false, "battle_indestructible": false, "battle_indestructible_filters": [],
-            "win_all_battles": false, "indestructible": false, "crystal_soul": 0})
+            "win_all_battles": false, "indestructible": false, "crystal_soul": 0, "mana_number": 0})
     }
 
     fn game_lose(&mut self, loser: i64, reason: &str) {
@@ -2246,6 +2246,7 @@ impl Engine {
             return vec![];
         }
         let mut groups: BTreeMap<(String, bool, Vec<String>), Vec<i64>> = BTreeMap::new();
+        let mut order: Vec<(String, bool, Vec<String>)> = vec![];
         for &c in &untapped {
             let k = &self.s.cards[c as usize];
             let civkey: Vec<String> = if k.face_down {
@@ -2255,9 +2256,14 @@ impl Engine {
                 v.sort();
                 v
             };
-            groups.entry((k.defn.clone(), k.face_down, civkey)).or_default().push(c);
+            let key = (k.defn.clone(), k.face_down, civkey);
+            if !groups.contains_key(&key) {
+                order.push(key.clone());
+            }
+            groups.entry(key).or_default().push(c);
         }
-        let names: Vec<&(String, bool, Vec<String>)> = groups.keys().collect();
+        // 山はマナゾーンでの初出順（Python 版の pools と同じ。第212弾で並べ替えをやめた）
+        let names: Vec<&(String, bool, Vec<String>)> = order.iter().collect();
         let mana: Vec<i64> = names.iter().map(|n| self.rules.cards[&n.0].mana).collect();
         let mut out: Vec<Vec<i64>> = vec![];
 
@@ -2534,6 +2540,12 @@ impl Engine {
         Ok(())
     }
 
+    /// 移動元つきの履歴カウンタ（Python 版 _hist_bump_from。hist:<kind>_from_<zone>:<player>）
+    fn hist_bump_from(&mut self, kind: &str, frm: &str, player: i64) {
+        if !frm.is_empty() {
+            self.hist_bump(&format!("{}_from_{}", kind, frm), player, 1);
+        }
+    }
     fn hist_bump(&mut self, kind: &str, player: i64, n: i64) -> i64 {
         let k = format!("hist:{}:{}", kind, player);
         let v = self.s.turn_counters.get(&k).and_then(|v| v.as_i64()).unwrap_or(0) + n;
@@ -2558,6 +2570,7 @@ impl Engine {
                     let (frm, to) = (frm.as_str(), to.as_str());
                     if to == "shield" {
                         self.hist_bump("shield_put", rc, 1);
+                        self.hist_bump_from("shield_put", frm, rc);
                     }
                     let has_host = rec.get("host").map_or(false, |v| !v.is_null());
                     if frm == "shield" && to != "shield" && !has_host {
@@ -2565,10 +2578,12 @@ impl Engine {
                     }
                     if to == "mana" {
                         let n = self.hist_bump("mana_put", rc, 1);
+                        self.hist_bump_from("mana_put", frm, rc);
                         rec["ord"] = json!({"mana_put": n});
                     }
                     if to == "bz" {
                         let n = self.hist_bump("enter", rc, 1);
+                        self.hist_bump_from("enter", frm, rc);
                         rec["ord"] = json!({"enter": n});
                         if rec.get("unpaid").and_then(|v| v.as_bool()).unwrap_or(false) {
                             self.hist_bump("enter_unpaid", rc, 1);
@@ -2582,6 +2597,7 @@ impl Engine {
                     }
                     if to == "graveyard" && rec["reason"] == json!("discard") {
                         self.hist_bump("discard", ctrl, 1);
+                        self.hist_bump_from("discard", frm, ctrl);
                     }
                 }
                 "summon" => {

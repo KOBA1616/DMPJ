@@ -8133,3 +8133,74 @@ cards:
     cost: 1
     power: 1000
     text: "バニラ見本。"
+  - id: T552
+    name: 試験用オリジン見本
+    types: [creature]
+    civs: [nature]
+    cost: 1
+    power: 1000
+    races: [オリジン]
+    mana: 1
+    text: オリジンの見本。
+  - id: T553
+    name: 試験用オリジン倍数獣
+    types: [creature]
+    civs: [nature]
+    cost: 4
+    power: 4000
+    races: [テスト]
+    mana: 1
+    mana_boost: {filter: {races: [オリジン]}, value: 2}
+    text: このクリーチャーを召喚する時、自分のマナゾーンにあるオリジンのマナの数字は、1のかわりに2になる。
+  - id: T554
+    name: 試験用オリジン倍数呪文
+    types: [spell]
+    civs: [nature]
+    cost: 4
+    mana: 1
+    mana_boost: {filter: {races: [オリジン]}, value: 2}
+    text: この呪文を唱える時、自分のマナゾーンにあるオリジンのマナの数字は、1のかわりに2になる。カードを1枚引く。
+    spell:
+      - {op: draw, count: 1}
+  - id: T555
+    name: 試験用終極宣言獣・甲
+    types: [creature]
+    civs: [nature]
+    cost: 5
+    power: 5000
+    races: [テスト]
+    mana: 1
+    text: 終極宣言：自分のターンのはじめに、カードを2枚引いてもよい。（「終極宣言」は、ゲーム中に一度だけ使える）
+    abilities:
+      - kind: trigger
+        when: {event: turn_start, player: you}
+        if: {not: {marked: {name: final_declaration, scope: game}}}
+        effect:
+          - op: if
+            cond: {not: {marked: {name: final_declaration, scope: game}}}
+            then:
+              - op: may
+                body:
+                  - {op: draw, count: 2}
+                  - {op: mark, name: final_declaration, scope: game}
+  - id: T556
+    name: 試験用終極宣言獣・乙
+    types: [creature]
+    civs: [fire]
+    cost: 5
+    power: 5000
+    races: [テスト]
+    mana: 1
+    text: 終極宣言：自分のターンのはじめに、カードを2枚引いてもよい。（「終極宣言」は、ゲーム中に一度だけ使える）
+    abilities:
+      - kind: trigger
+        when: {event: turn_start, player: you}
+        if: {not: {marked: {name: final_declaration, scope: game}}}
+        effect:
+          - op: if
+            cond: {not: {marked: {name: final_declaration, scope: game}}}
+            then:
+              - op: may
+                body:
+                  - {op: draw, count: 2}
+                  - {op: mark, name: final_declaration, scope: game}

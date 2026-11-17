@@ -2073,3 +2073,41 @@ reopen suppress_entry_triggers で4枚（残り2枚は理由なし行で直接 s
 ### ラウンド250（第214弾の再変換）
 
 reopen revenge_chance で6枚。**新規登録5件**: dm24ex4-022 地雷冥土The World Is Mine（exists any_of 条件＋タップ時誘発: choose → destroy → if exists → may で cost_le {cost_of: tgt} の非進化を墓地から出す）、dm38-014 風来の用心棒クマっ太（turn_count enter 条件。CIP は chooser: opp で相手が自身のクリーチャーをマナゾーンへ。partial の text が切り詰められていたため reject 行の公式テキストを採用）、dmx12b-092 反射の大地カプリコン（turn_count shield_put from: deck 条件）、dmx18-020 ベニジシ・スパイダー（turn_count draw 条件。CIP は partial の既存能力を維持）、dmx19-s44 剛撃無双カンクロウ（exists any_of 条件。W・ソウルを種族に追加＝K・ソウルの前例どおり partial に欠けていた）。**差し戻し1件**: dm25ex4-t13 熱血龍 バトリベンジ → 新ギャップ **revenge_chance_hyperdimensional**（条件が超次元ゾーンからの登場＝範囲外。CIP の force_battle と battle_power +2000 は解けた条項として partial に保存）。revenge_chance の行は消滅。converted 9,892 / rejects 2,450、重なり0・漏れ0。tests/test_vocab_pilot214_cards.py 4件通過。
+
+## 第215弾: mana_count_doubled（マナの数字の倍加）のイディオム確認（2026-11-17）
+
+「このクリーチャーを召喚する時／この呪文を唱える時、自分のマナゾーンにあるオリジンのマナの数字は、1のかわりに2になる」（DM34 のオリジン一族）は、第212弾の面フィールド mana_boost の必須形でそのまま表せる。新規語彙は無し。
+
+- 形: 面フィールド mana_boost: {filter: {races: [オリジン]}, value: 2}。必須形はこの支払いでのみフィルタに合うマナの数字を置換する（第212弾の values_of）。出すカード自身の宣言なので、他のカードの支払いには漏れない。呪文形（「この呪文を唱える時」）も同じ面フィールドで効く（支払いは _mana_choices で共通）。
+- proto T552（オリジン見本）/ T553（倍数獣・クリーチャー形）/ T554（倍数呪文・呪文形）。tests/test_vocab_pilot215.py 6件（支払い組み合わせ: 2+2、混在 2+1+1、非オリジンでは不足、通常マナ4枚でも可／他カードへの非漏洩／呪文形の組み合わせ／実プレイでの召喚・唱える＋ドロー）。
+- 再変換はラウンド251で実施（対象5件: dm34-034 / 037 / 043 / 044 / 048。うち dm34-043 は partial に呪文本体が無く、dm34-048 は CIP が欠けているため、公式テキストから補って登録する）。
+
+### ラウンド251（第215弾の再変換）
+
+reopen mana_count_doubled で5枚。**新規登録5件**: dm34-034 オリジナルネイチャー / dm34-037 ピュアオリジナル / dm34-044 ヤミノオリジナル（いずれも partial に面 mana_boost {filter: {races: [オリジン]}, value: 2} を足すだけ）、dm34-043 オリジナル・ブレイン（呪文形。partial に呪文本体が無かったため公式テキストから構築: choose {from_top: 4, look: true} で pile に束ね、count: 2 + up_to で2枚まで手札へ、残りを山札の下へ＝dm22-043 のイディオム）、dm34-048 オリジナルグレンオー（partial に欠けていた CIP「相手の『ブロッカー』を持つクリーチャーを1体破壊」を filter {keyword: blocker} の destroy で追加）。dm34-043 / 048 は partial の text が切り詰められていたため reject 行の公式テキストを採用。mana_count_doubled の行は消滅。converted **9,897** / rejects **2,445**、正規 id の重なり0・漏れ0（エイリアス水準の既存重なり7件は従前どおりで本ラウンドとは無関係）。tests/test_vocab_pilot215_cards.py 4件通過。
+
+## 第216弾: final_declaration（終極宣言）のゲート＋game 印のプレイヤー別化（2026-11-17）
+
+公式Q&A（dm.takaratomy.co.jp/rule/qa/44220）: 「終極宣言」はプレイヤーごとにゲーム中一度だけ。どのカードの宣言を使っても、その後は同じプレイヤーの他の終極宣言も使えない。効果を何も使わなかった（使わないを選んだ）場合は消費されず、次の自分のターンのはじめに再びトリガーする。相手は独立に一度ずつ使える。
+
+- ゲートの形: trigger {when: {event: turn_start, player: you}, if: {not: {marked: {name: final_declaration, scope: game}}}, effect: [if {not marked} then [may [<効果>, {op: mark, name: final_declaration, scope: game}]]]}。内側の if は、複数の終極宣言が同じターン開始に同時トリガーした時の再確認（先に使った方で印が立ち、後の方は静かに解決する）。
+- 基盤変更: mark の scope: game はプレイヤーごとに印を分ける（_mark_key が game スコープの時だけ名前＋プレイヤー番号をキーにする）。使用履歴は各プレイヤーのもので、従来の「名前そのまま」のキーでは相手の使用で自分の分まで消費されてしまう。scope: game の印を使う登録カードはまだ無く、影響は tests/test_vocab_hist_counters.py の期待キー更新のみ。
+- 注意（発見した潜在問題・本弾では未修正）: when の subject: self は、subject を持たない tick レコード（turn_start / turn_end のレコードは {ev, player} のみ）とは決して一致しない（_match_when は subject 不在で不一致を返す）。{event: turn_start, subject: self} と書かれた登録済みカードが turn_start / turn_end 合わせて数十枚あり（dm21-s04 で実測: 誘発しない）、「自分のターンのはじめに」の正しい形は player: you。影響範囲が大きいので、専用の弾で全体テストとセットで直す。
+- proto T555 / T556（宣言: カードを2枚引く）。tests/test_vocab_pilot216.py 4件（使用で消費・使わないと再トリガー、2体での共有ゲート、プレイヤー独立性）。
+- 再変換はラウンド252で実施（対象7件: 各カードの宣言効果は個別に構築し、正確に表せないものは残余を精緻化して差し戻す）。
+
+### ラウンド252（第216弾の再変換）
+
+reopen final_declaration で7枚。**新規登録6件**:
+- dm23rp4x-08a シス＝魔＝シャル: CIP は「自分の墓地枚数以下のコストの他のクリーチャーをすべて、タップして持ち主のマナゾーンに置く」（select の owner: any が必要。既定は you で相手のクリーチャーが選ばれない）。宣言はマナ/墓地からアビスを3体まで。印は「実際に出した時」だけ立てる（exists {ref: put} で確認してから mark）。
+- dm26rp1-tr003 審判の精霊ラストジャッジ: CIP は tap + no_untap_next（次の相手のターンのはじめにアンタップしない）。宣言はブロッカーを好きな数出し、自分のブロッカーが12体以上なら追加ターン。印は「出した or 追加ターンが発生した時」だけ立てる。
+- dm23rp4x-01b 富轟皇 ゴルギーニ・エン・ゲルス: 「このターンにシールドが離れていなければ離れない」は turn_count {kind: shield_left, owner: you} == 0 の間の常在型 no_leave。宣言は modal {count: 4, repeat: true}（相手を破壊＋1ドロー／山札上をシールド化＋墓地から1枚回収）。
+- dm26sd1-q001 超重竜 ゴルファンタジスタ: 自分のジャイアントへの unblockable 付与常在型、CIP はマナからコスト6以下のジャイアントを出す。宣言は draw {count: 手札枚数の式} の後、mana_put {from_top: マナ枚数の式}（from_top は式で書ける）。
+- dm23rp4x-06a 芸魔龍馬 バルバトチェス: CIP はパワー10000以下を破壊して2枚引く。宣言は modify {dynamic: true} でこのターン手札のマジックを -4（cost_min: 0）＋ delayed_trigger {duration: end_of_turn} で「マジックを唱えた時、1枚引いてもよい」。
+- dm26sd1-g003 ボルシャック・ヴォルジャアク: 出た時（各ターン1度、誰のクリーチャーでも）山札上をシールド化、破壊された時に名前に《ボルシャック》とあるコスト7以下を手札から出す。宣言は自シールドをすべてブレイク（move reason: break）＋ no_lose {duration: until_next_own_turn_start}。
+
+**差し戻し1件**: dm23ex3-or2 アビスベル=覇統=ジャシン帝 → 新ギャップ **final_declaration_no_trigger_summon**（宣言の「出た時にトリガーする能力はトリガーしない無料召喚＋このターン、それらは相手プレイヤーを攻撃できる」が未表現）。解けた条項（相手のコスト10以上がいる間の「離れない」常在型、自分のシールドがブレイクされた時の破壊誘発）は partial に保存した。
+
+submit 時の注意: dm26rp1-tr003 に「play_free は召喚・唱えるの意味。原文に召喚・唱えるが無い」という警告が出たが登録は成立。コーパスでは「手札から出してもよい」に play_free 55件 / move（reason: put）45件と両形式があり、本ラウンドは play_free に統一した。
+
+converted **9,903** / rejects **2,439**、正規 id の重なり0・漏れ0、final_declaration の行は消滅。tests/test_vocab_pilot216_cards.py 9件通過。

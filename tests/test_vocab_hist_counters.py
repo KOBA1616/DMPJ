@@ -291,11 +291,14 @@ def test_game_scope_mark_survives_turns(rules):
     e.answer([keys.index("pass")])
     _run_ops(e, [{"op": "mark", "name": "game_once", "scope": "game"},
                  {"op": "mark", "name": "turn_mark"}])
-    assert e.s.game_counters.get("game_once") == 1 and e.s.turn_counters.get("turn_mark") == 1
+    # game スコープの印はプレイヤーごと（第216弾）: キーは game_once:0 で、相手からは見えない
+    assert e.s.game_counters.get("game_once:0") == 1 and e.s.turn_counters.get("turn_mark") == 1
     assert e.eval_cond({"marked": {"name": "game_once", "scope": "game"}}, env)
+    assert not e.eval_cond({"marked": {"name": "game_once", "scope": "game"}},
+                           {"you": 1, "self": None, "vars": {}})
     assert e.eval_cond({"marked": "turn_mark"}, env)
     _settle_to(e, "charge", player=1)   # ターンが変わる
     assert e.s.turn_counters.get("turn_mark", 0) == 0
-    assert e.s.game_counters.get("game_once") == 1
+    assert e.s.game_counters.get("game_once:0") == 1
     assert e.eval_cond({"marked": {"name": "game_once", "scope": "game"}}, env)
     assert not e.eval_cond({"marked": "turn_mark"}, env)

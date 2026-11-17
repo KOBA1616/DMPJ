@@ -23,7 +23,7 @@ stages:
     entry: saga   # 入口の述語も含める（含めないと入口を飛ばして点を取れ、入口到達が 14→6 に下がった、2026-11-14）
     all:
       - {zone: hand, match: {name: dm22ex1-007}, n: 1}
-      - {zone: hand, match: {name: dmex10-020}, n: 1}
+      - {zone: hand, late: [mana], match: {name: dmex10-020}, n: 1}   # チャージャーは唱えるとマナへ。入口がそろった後だけマナも数える（入口前にマナに置くと入口が 17→12 に減った、2026-11-17）
       - {zone: graveyard, match: {name: dm22ex1-025}, n: 1}
       - {zone: hand, match: {name: dm22ex2-021}, n: 1}
   - name: ドラゲリオンが場

@@ -903,9 +903,12 @@ class Engine(SelectorMixin, EventMixin, InterpreterMixin, TurnMixin, CombatMixin
     def _mark_key(self, name: str, scope: str, env: dict) -> str:
         """mark の印のキー合成（op mark と cond marked で共用。バンドB 基盤 mark-scope）。
         scope: turn（既定。turn_counters に名前そのまま）/ attack（その攻撃の中だけ。current_attack で修飾）/
-        game（game_counters に名前そのまま。ターン開始で消えない）。of_self の接尾辞は op_mark 側で付ける。"""
+        game（game_counters に名前＋プレイヤー番号。ターン開始で消えない。使用履歴はプレイヤーごとのもの
+        なので、相手の使用で自分の印が立つことはない。第216弾）。of_self の接尾辞は op_mark 側で付ける。"""
         if scope == "attack":
             return f"{name}:atk{self.s.turn_counters.get('current_attack', 0)}"
+        if scope == "game":
+            return f"{name}:{env['you']}"
         return name
 
     def ask(self, t: dict, player: int, kind: str, options: list[dict], mn: int = 1, mx: int = 1, prompt: str = ""):
