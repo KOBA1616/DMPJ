@@ -33,7 +33,7 @@ def converted():
 
 @pytest.fixture(scope="module")
 def rules():
-    return load_rules()
+    return _conv_cache.full_rules()
 
 
 def test_build_forms_parse(converted):

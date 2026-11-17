@@ -44,3 +44,16 @@ def proto_card(cid):
     各 pilot テストが自前の _proto_card で proto.yaml を毎回 safe_load し直す
     のを避けるための共有入口。"""
     return find(str(PROTO), cid)
+
+
+def full_rules():
+    """converted.yaml 込みの Rules。conftest と他モジュールの setdefault が収集後に
+    DMSIM_SKIP_CONVERTED=1 を戻すため、import 時の pop だけでは全体実行で効かない。読む間だけ外して戻す。"""
+    import os
+    from dmsim.cards.defs import load_rules
+    old = os.environ.pop("DMSIM_SKIP_CONVERTED", None)
+    try:
+        return load_rules()
+    finally:
+        if old is not None:
+            os.environ["DMSIM_SKIP_CONVERTED"] = old

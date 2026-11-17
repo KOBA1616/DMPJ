@@ -21,6 +21,7 @@ def main(argv=None):
     ap.add_argument("--workers", type=int, default=4)
     ap.add_argument("--per", type=int, default=6)
     ap.add_argument("--linked", type=int, default=8)
+    ap.add_argument("--slot", default=None, help="差し替える基盤の id（抜き取りの測定を省く）")
     ap.add_argument("--ckpt", default=None, help="途中結果の JSON（中断後に続きから）")
     ap.add_argument("--pick-only", action="store_true")
     ap.add_argument("--no-write", action="store_true")
@@ -36,7 +37,7 @@ def main(argv=None):
             print(c["id"], c["name"], c["why"])
         return 0
     r = A.run(rules, a.entry, a.deck, seeds=a.seeds, turn=a.turn, opp=a.opp, budget=a.budget, workers=a.workers,
-              per=a.per, linked=a.linked, ckpt=Path(a.ckpt) if a.ckpt else None, log=lambda *x: print(*x, flush=True))
+              per=a.per, linked=a.linked, ckpt=Path(a.ckpt) if a.ckpt else None, log=lambda *x: print(*x, flush=True), slot=a.slot)
     if not a.no_write:
         print("significant", A.record(r, note=f"段階{a.opp}・同一シード{a.seeds}局・入口{a.turn}T以内"))
     for c in r["candidates"]:

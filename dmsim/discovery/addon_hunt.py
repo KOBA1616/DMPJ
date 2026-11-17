@@ -104,7 +104,7 @@ def paired(base: list[dict], new: list[dict], turn: int) -> dict:
 
 
 def run(rules, entry: str, deck_file: str, *, seeds: int = 40, turn: int = 4, opp: int = 1, budget: int = 200,
-        workers: int = 4, per: int = 6, linked: int = 8, ckpt: Path | None = None, log=print) -> dict:
+        workers: int = 4, per: int = 6, linked: int = 8, ckpt: Path | None = None, log=print, slot: str | None = None) -> dict:
     from ..eval.api import measure_assembly
     deck = yaml.safe_load(Path(deck_file).read_text(encoding="utf-8"))["deck"]
     core = core_of(entry)
@@ -136,10 +136,10 @@ def run(rules, entry: str, deck_file: str, *, seeds: int = 40, turn: int = 4, op
     base = meas("base", deck)
     bases = [i for i in dict.fromkeys(deck) if i not in core]
     drop = {}
-    for i in bases:
+    for i in (bases if slot is None else []):   # slot を渡すと抜き取りの測定を省く
         v = next((f for f in fill if set(rules.cards[f].civs) & set(rules.cards[i].civs)), fill[0])
         drop[i] = paired(base, meas(f"drop:{i}", swap(deck, i, v)), turn)
-    slot = max(bases, key=lambda i: (drop[i]["mean"], i))
+    slot = slot or max(bases, key=lambda i: (drop[i]["mean"], i))
     res = []
     for c in pick(rules, deck, core, per=per, linked=linked):
         rows = meas(f"add:{c['id']}", swap(deck, slot, c["id"]))
@@ -147,7 +147,7 @@ def run(rules, entry: str, deck_file: str, *, seeds: int = 40, turn: int = 4, op
     res.sort(key=lambda x: (-x["diff"]["mean"], x["id"]))
     return {"entry": entry, "deck": deck_file, "turn": turn, "opp": opp, "seeds": seeds, "base": stats(base, turn),
             "slot": {"id": slot, "name": rules.cards[slot].name},
-            "drop": {i: dict(name=rules.cards[i].name, **drop[i]) for i in bases}, "candidates": res}
+            "drop": {i: dict(name=rules.cards[i].name, **drop[i]) for i in drop}, "candidates": res}
 
 
 def record(result: dict, path: Path = OUT, note: str = "") -> int:
