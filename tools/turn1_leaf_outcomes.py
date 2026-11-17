@@ -64,7 +64,7 @@ def main():
                 return
             nxt = advance_to_my_turn(leaf)
             if nxt is not None:
-                key = nxt.s.digest()
+                key = nxt.s.fast_key()
                 if key not in states or v > states[key][0]:
                     states[key] = (v, nxt)
         print(f"turn1 end states: {len(states)}", flush=True)
@@ -87,7 +87,7 @@ def main():
                             break
                         ne = advance_to_my_turn(leaf)
                         if ne is not None:
-                            k = ne.s.digest()
+                            k = ne.s.fast_key()
                             if k not in nxt or v2 > nxt[k][0]:
                                 nxt[k] = (v2, ne)
                     if kill_turn:

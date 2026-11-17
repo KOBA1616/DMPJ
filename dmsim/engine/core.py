@@ -56,6 +56,7 @@ class Engine(SelectorMixin, EventMixin, InterpreterMixin, TurnMixin, CombatMixin
         self.step_limit = step_limit
         self.turn_limit = turn_limit
         self.log: list[dict] = []
+        self._log_shared = False   # clone とログを共有中か（追記時にだけ複製する copy-on-write 用）
 
     @classmethod
     def new_game(cls, rules: Rules, decks: list[list[str]], seed: int, first_player: int = 0, **kw) -> "Engine":
@@ -85,7 +86,9 @@ class Engine(SelectorMixin, EventMixin, InterpreterMixin, TurnMixin, CombatMixin
     def clone(self) -> "Engine":
         e = Engine(self.rules, self.s.clone(), step_limit=self.step_limit, turn_limit=self.turn_limit,
                    check=self.check)
-        e.log = list(self.log)
+        e.log = self.log            # ログは共有し、追記する側だけが複製する（copy-on-write）
+        e._log_shared = True
+        self._log_shared = True
         return e
 
     def advance(self) -> dict | None:
@@ -123,6 +126,9 @@ class Engine(SelectorMixin, EventMixin, InterpreterMixin, TurnMixin, CombatMixin
             raise IllegalAnswer(f"bad choice {choice} for {d['kind']}")
         self.s.tasks[-1]["answer"] = choice
         self.s.waiting = None
+        if self._log_shared:        # 共有中のログは追記前に自分の複製へ切り替える
+            self.log = list(self.log)
+            self._log_shared = False
         self.log.append({"p": d["player"], "kind": d["kind"], "choice": choice,
                          "keys": [d["options"][i]["key"] for i in choice]})
 
