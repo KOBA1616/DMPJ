@@ -81,11 +81,19 @@ class _RunAborted(Exception):
 
 
 class LeafCollector:
-    """TurnSearch._search と同じ規則で、ターン終了の葉を全て集める。"""
+    """TurnSearch._search と同じ規則で、ターン終了の葉を全て集める。
 
-    def __init__(self, ts: TurnSearch):
+    on_leaf が渡された場合は葉を溜めず、見つけ次第その場で渡す（ストリーミング）。
+    葉を全部保持するとメモリが葉の数に比例して膨らみ、葉の多い局面では
+    保持局面の数より先にこちらが律速になる（2026-11-17 のパイロットで実証）。
+    LEAF_CAP はどちらの方式でも安全弁として効く（当たれば truncated）。
+    """
+
+    def __init__(self, ts: TurnSearch, on_leaf=None):
         self.ts = ts
+        self.on_leaf = on_leaf
         self.leaves: list[tuple[float, object, tuple]] = []
+        self.leaf_count = 0
         self.truncated = False
 
     def collect(self, eng, node_budget: int):
@@ -99,6 +107,7 @@ class LeafCollector:
         ts._macro_nodes = 0
         ts.stats = turn.TurnStats()
         self.leaves = []
+        self.leaf_count = 0
         self.truncated = False
         det = Detectors.new(eng, ts.me, ts.draw_discard)
         try:
@@ -108,8 +117,12 @@ class LeafCollector:
         return self.leaves, self.truncated, ts.stats.nodes
 
     def _add_leaf(self, value, eng, loops):
-        self.leaves.append((value, eng, loops))
-        if len(self.leaves) >= LEAF_CAP:
+        self.leaf_count += 1
+        if self.on_leaf is not None:
+            self.on_leaf(value, eng, loops)
+        else:
+            self.leaves.append((value, eng, loops))
+        if self.leaf_count >= LEAF_CAP:
             raise _CapReached
 
     def _rec(self, eng, det):
@@ -207,7 +220,27 @@ def run_case(rules, setup: dict, *, max_turn: int, mode: str, beam: int,
             nxt: dict[str, tuple[float, object]] = {}
             for _si, st_eng in enumerate(frontier):
                 ts = search_cls(0, budget=node_budget)
-                leaves, trunc, nodes = LeafCollector(ts).collect(st_eng, node_budget)
+                kill_leaf: list = []
+
+                def handle_leaf(_v, leaf, _loops):
+                    # 葉は溜めずその場で処理する（ストリーミング）。
+                    # キルが見つかっても展開は最後まで回す: ノード数を
+                    # 従来（全葉収集）方式と一致させ、途中打ち切りと区別するため。
+                    if kill_leaf:
+                        return
+                    r = leaf.s.result
+                    if r is not None and r.get("winner") == 0:
+                        kill_leaf.append(leaf)
+                        return
+                    nxt_eng = advance_to_my_turn(leaf)
+                    if nxt_eng is not None:
+                        key = nxt_eng.s.fast_key()  # 探索内部の重複統合は高速キー（記録照合は digest のまま）
+                        s = _trim_score(trim_order, nxt_eng)
+                        if key not in nxt or s > nxt[key][0]:
+                            nxt[key] = (s, nxt_eng)
+
+                _leaves, trunc, nodes = LeafCollector(
+                    ts, on_leaf=handle_leaf).collect(st_eng, node_budget)
                 total_nodes += nodes
                 truncated_any = truncated_any or trunc
                 if _TOTAL_BUDGET and total_nodes > _TOTAL_BUDGET:
@@ -222,18 +255,12 @@ def run_case(rules, setup: dict, *, max_turn: int, mode: str, beam: int,
                               "states_total": len(frontier), "nodes": total_nodes,
                               "rss_mb": round(resource.getrusage(
                                   resource.RUSAGE_SELF).ru_maxrss / 1024)})
-                for v, leaf, _loops in leaves:
+                if kill_leaf:
+                    leaf = kill_leaf[0]
                     r = leaf.s.result
-                    if r is not None and r.get("winner") == 0:
-                        return {"verdict": "kill", "kill_turn": t, "kill_by": r.get("reason"),
-                                "nodes": total_nodes, "frontier_sizes": frontier_sizes,
-                                "capped": capped, "truncated": truncated_any, "final": leaf}
-                    nxt_eng = advance_to_my_turn(leaf)
-                    if nxt_eng is not None:
-                        key = nxt_eng.s.fast_key()  # 探索内部の重複統合は高速キー（記録照合は digest のまま）
-                        s = _trim_score(trim_order, nxt_eng)
-                        if key not in nxt or s > nxt[key][0]:
-                            nxt[key] = (s, nxt_eng)
+                    return {"verdict": "kill", "kill_turn": t, "kill_by": r.get("reason"),
+                            "nodes": total_nodes, "frontier_sizes": frontier_sizes,
+                            "capped": capped, "truncated": truncated_any, "final": leaf}
             frontier_sizes.append(len(nxt))
             if not nxt:
                 verdict = "no-kill" if not (capped or truncated_any) else "unknown"
