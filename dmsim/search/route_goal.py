@@ -56,7 +56,10 @@ def load(name: str, drawout: bool | None = None) -> tuple[Stage, ...]:
     dw = drawout_on() if drawout is None else drawout
     out = []
     for s in y["stages"]:
-        preds = (_entry_preds(s["entry"]) if "entry" in s else ()) + tuple(s.get("all", ()))   # entry と all は併記できる（入口に加えて…の段）
+        ep = _entry_preds(s["entry"]) if "entry" in s else ()
+        # late: [ゾーン]: 入口の述語がそろってからだけ数えるゾーン（例: チャージャーは唱えるとマナへ。入口前にマナに置くのは数えない）
+        allp = tuple({**q, "_after": ep} if q.get("late") else q for q in s.get("all", ()))
+        preds = ep + allp   # entry と all は併記できる（入口に加えて…の段）
         if dw:
             preds = _with_drawout(preds)
         out.append(Stage(s["name"], float(s["weight"]), preds, "entry" in s, s.get("entry")))
@@ -90,6 +93,8 @@ def count(eng, p: dict, me: int = 0) -> int:
     rules = eng.rules
     owner = me if p.get("owner", 0) == 0 else 1 - me
     zones = (p["zone"],) if p.get("zone") else tuple(p.get("zones") or ())
+    if p.get("late") and all(holds(eng, q, me) for q in p.get("_after", ())):
+        zones = zones + tuple(p["late"])
     m = p.get("match", {})
     n = 0
     zn = getattr(eng, "zone_names", None)
