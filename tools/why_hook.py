@@ -62,6 +62,9 @@ def result():
         info = x.get("_why")
         if not info or x.get("p") != 0:
             continue
+        for k in x.get("keys", ()):          # 呪文は場に残らないので、唱えた（出す手を選んだ）ことも「使った」に数える
+            if isinstance(k, str) and k.startswith("play:"):
+                rec.setdefault(k.split(":")[1], {"reach": None, "opt": 0, "bz": False})["bz"] = True
         turn, loc, opt, nm, dk = info
         for cid, (h, g, m, bz) in loc.items():
             r = rec.setdefault(cid, {"reach": None, "opt": 0, "bz": False})
