@@ -80,8 +80,17 @@ def main(argv=None):
     from dmsim.search.route_goal import drawout_on
     opts = {"partial": True, "away": a.away, "keep_hand": a.keep, "ratchet": drawout_on()} if a.route else None
     rows = []
+    why = None
+    if os.environ.get("DMSIM_WHY") == "1":     # 診断用（tools/why_hook.py）。見るだけで結果は変えない
+        import why_hook as why
+        from collections import Counter
+        why.install([c for c, n in Counter(deck).items() if n >= 4])
     for s in range(a.start, a.start + a.games):
+        if why:
+            why.reset()
         r = measure_assembly(rules, a.entry, deck, [s], route=a.route, route_log=a.log, route_opts=opts, opp_level=a.opp_level)[0]
+        if why:
+            r["why"] = why.result()
         rows.append(r)
         print(json.dumps(r, ensure_ascii=False, default=str), flush=True)
     out = {"entry": a.entry, "deck": a.deck, "route": a.route, "keep": a.keep, "macro": a.macro, "control": a.control,

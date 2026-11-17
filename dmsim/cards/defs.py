@@ -27,13 +27,13 @@ EVENTS = {"move", "draw", "cast", "summon", "attack", "block", "break", "tap", "
           "use_s_trigger", "battle_end"}
 ABILITY_KINDS = {"trigger", "replace", "static", "declare", "activate", "silent", "state", "partner"}   # state: 状態を常に見て、満たされたら勝敗が決まる常在効果（if と effect: [win/lose]）。partner: [P]能力（単独では機能せず、キズナ等で「使う」ことで解決する）
 ABILITY_KEYS = {"kind", "when", "if", "effect", "instead", "optional", "affects", "mod", "zone", "keyword", "cost", "id",
-                "once_per_turn", "first_time", "sst", "stp", "odrive", "choukon", "bazurenda", "any_attacker", "continue", "dswitch", "sforce", "fort_e", "redirect", "accel", "no_lose"}
+                "once_per_turn", "first_time", "sst", "stp", "odrive", "choukon", "bazurenda", "any_attacker", "continue", "dswitch", "sforce", "fort_e", "redirect", "accel", "no_lose", "mana_boost", "suppress_triggers"}
 REASONS = {"put", "destroy", "return", "discard", "charge", "summon", "cast", "break",
            "draw", "battle", "sba", "resolve", "evolve", "seal"}
 LOSE_REASONS = {"direct_attack", "deck_out", "state", "effect"}   # 第188弾: 敗北イベントの reason（when の照合用。移動の reason とは別）
 VIAS = {"revolution_change", "generate", "d_d_d"}   # 出し方の印（「革命チェンジによって出た時」「D・D・Dによって出た時」など）
 DURATIONS_FIXED = {"end_of_turn", "during_attack", "permanent", "until_next_own_turn_start"}
-MOD_KEYS = {"power", "grant", "allow", "deny", "breaks", "breaks_add", "breaks_per_power", "battle_power", "power_when", "cost", "cost_min", "cost_may", "sac_reduce", "opt_reduce", "ignore", "ignore_ids", "gain", "require", "add_of", "add_races", "add_names", "no_leave", "must_be_attacked", "must_be_chosen", "must_attack_creature", "battle_indestructible", "win_all_battles", "add_civs", "indestructible", "double_power", "crystal_soul"}
+MOD_KEYS = {"power", "grant", "allow", "deny", "breaks", "breaks_add", "breaks_per_power", "battle_power", "power_when", "cost", "cost_min", "cost_may", "sac_reduce", "opt_reduce", "ignore", "ignore_ids", "gain", "require", "add_of", "add_races", "add_names", "no_leave", "must_be_attacked", "must_be_chosen", "must_attack_creature", "battle_indestructible", "win_all_battles", "add_civs", "indestructible", "double_power", "crystal_soul", "mana_number"}
 REQUIRES = {"attack", "block"}   # 強制（506.1b 攻撃しなければならない, 507.1b ブロックしなければならない）
 POSITIONS = {"top", "bottom"}
 PERMANENT_TYPES = {"tamaseed", "field", "cross_gear"}   # 手札から実行してバトルゾーンに出るクリーチャー以外のカード（315, 308, 303）
@@ -107,6 +107,7 @@ class Face:
     ace: bool = False                                     # ACEタマシード: 条件を満たす間だけクリーチャーとして扱う（第179弾）
     hyper: bool = False                                   # ハイパー化（他の自分のクリーチャー1体をタップしてハイパーモードを解放できる）
     crystal_soul: int = 0                                 # 水晶ソウルN: 召喚／唱える時に裏向きマナの数字が N になる（0＝持たない）
+    mana_boost: dict | None = None                        # マナブースト（第212弾）: このカードを出す支払いでのみ、条件に合うマナの数字を value にする {filter?, value, optional?}
     resolve_to: str = "graveyard"                         # 呪文の解決後の置き場所（チャージャー等）
     after_resolve: list[dict] = field(default_factory=list)
 
@@ -168,6 +169,7 @@ class CardDef:
     ace: bool = False                                     # ACEタマシード（第179弾）
     hyper: bool = False
     crystal_soul: int = 0                                 # 水晶ソウルN（面の宣言。0＝持たない）
+    mana_boost: dict | None = None                        # マナブースト（第212弾。面の宣言）
     resolve_to: str = "graveyard"
     after_resolve: list[dict] = field(default_factory=list)
     faces: list[Face] = field(default_factory=list)      # ツインパクト: [0]=クリーチャー側, [1]=呪文側
@@ -446,6 +448,8 @@ class Checker:
                 return self.selector(v, where)
             if k == "distinct_cost_count":   # 対象カード群にあるコストの種類数（同じコストは1つに数える。第145弾）
                 return self.selector(v, where)
+            if k == "distinct_type_count":   # 対象カード群にあるカードタイプの種類数（第212弾）
+                return self.selector(v, where)
             if k in ("total_cost", "total_power"):   # 対象カード群のコスト／パワーの合計（公開集合の保持。バンドC1 U39）
                 return self.selector(v, where)
             if k == "entered":   # このターンに出したクリーチャーの数 {owner, other?}
@@ -461,10 +465,11 @@ class Checker:
                         or ("face_up" in v and not isinstance(v["face_up"], bool)):
                     raise DefError(f"{where}: bundles needs {{owner: you/opp, face_up?: bool}}")
                 return
-            if k == "turn_count":   # このターンに〜した回数 {kind, owner?, other?, filter?, ref?}（履歴カウンタ基盤。バンドC1 U19）
-                if not isinstance(v, dict) or set(v) - {"kind", "owner", "other", "filter", "ref"} \
-                        or v.get("kind") not in TURN_COUNT_KINDS:
-                    raise DefError(f"{where}: turn_count needs {{kind: <history kind>, owner?: you/opp/any, other?: bool, filter?: <filter>, ref?: str}}")
+            if k == "turn_count":   # このターンに〜した回数 {kind, owner?, other?, filter?, ref?, from?}（履歴カウンタ基盤。バンドC1 U19。from は第214弾）
+                if not isinstance(v, dict) or set(v) - {"kind", "owner", "other", "filter", "ref", "from"} \
+                        or v.get("kind") not in TURN_COUNT_KINDS \
+                        or ("from" in v and not isinstance(v["from"], str)):
+                    raise DefError(f"{where}: turn_count needs {{kind: <history kind>, owner?: you/opp/any, other?: bool, filter?: <filter>, ref?: str, from?: <zone>}}")
                 kind = v["kind"]
                 if kind in ("attack_by", "attack_on"):
                     if set(v) - {"kind", "ref"} or not isinstance(v.get("ref"), (str, dict)):
@@ -730,6 +735,8 @@ class Checker:
             raise DefError(f"{where}: cost_min must be int")
         if "crystal_soul" in m and not (isinstance(m["crystal_soul"], int) and not isinstance(m["crystal_soul"], bool) and m["crystal_soul"] >= 1):
             raise DefError(f"{where}: crystal_soul must be an int >= 1")
+        if "mana_number" in m and not (isinstance(m["mana_number"], int) and not isinstance(m["mana_number"], bool) and m["mana_number"] >= 2):
+            raise DefError(f"{where}: mana_number must be an int >= 2")
         if "power_when" in m:   # 攻撃中／ブロック中のパワー修整: {amount: N, count: <selector>, when: attacking|blocking}。バトルをしていない間（プレイヤーを攻撃中など）も含む
             pw = m["power_when"]
             if not isinstance(pw, dict) or set(pw) - {"amount", "count", "when"} or not isinstance(pw.get("amount"), int) \
@@ -847,6 +854,32 @@ class Checker:
                     or not all(isinstance(r, str) for r in fe["races"]) \
                     or set(fe) - {"races", "as"} or ("as" in fe and not isinstance(fe["as"], str)):
                 raise DefError(f"{where}: fort_e needs {{races: [種族...], as?: 変数名}}")
+        if "mana_boost" in ab:   # マナブースト（第212弾）: 自分の支払い時にマナの数字を任意で置き換える常在型
+            if kind != "static":
+                raise DefError(f"{where}: mana_boost is only for static")
+            mb = ab["mana_boost"]
+            if not isinstance(mb, dict) or set(mb) - {"value", "values", "filter", "scope", "if"} \
+                    or ("value" in mb) == ("values" in mb) \
+                    or ("value" in mb and (not isinstance(mb["value"], int) or isinstance(mb["value"], bool) or mb["value"] < 2)) \
+                    or ("values" in mb and (not isinstance(mb["values"], list) or not mb["values"]
+                        or any(not isinstance(v, int) or isinstance(v, bool) or v < 2 for v in mb["values"]))) \
+                    or ("scope" in mb and mb["scope"] not in ("spell",)):
+                raise DefError(f"{where}: mana_boost needs {{value: int >= 2}} or {{values: [int >= 2, ...]}}, plus optional filter / scope / if")
+            if "filter" in mb:
+                self.filter(mb["filter"], where)
+            if "if" in mb:
+                self.cond(mb["if"], where)
+        if "suppress_triggers" in ab:   # 誘発抑制（第213弾）: 相手のクリーチャーが出た時／攻撃した時に誘発する相手の能力を誘発させない常在型
+            if kind != "static":
+                raise DefError(f"{where}: suppress_triggers is only for static")
+            st = ab["suppress_triggers"]
+            if not isinstance(st, dict) or set(st) - {"whose", "events", "if"} \
+                    or st.get("whose", "opp") != "opp" \
+                    or not isinstance(st.get("events"), list) or not st["events"] \
+                    or any(v not in ("enter", "attack") for v in st["events"]):
+                raise DefError(f"{where}: suppress_triggers needs {{whose: opp, events: [enter / attack, ...], if?}}")
+            if "if" in st:
+                self.cond(st["if"], where)
         if kind == "state":
             if "if" not in ab or not all(o.get("op") in ("win", "lose") for o in ab.get("effect", [])) or not ab.get("effect"):
                 raise DefError(f"{where}: state は if と effect（win / lose だけ）が要る")
@@ -1069,6 +1102,14 @@ def _load_face(raw, keywords, macros, chk: Checker, where) -> dict:
         cs = raw["crystal_soul"]
         if not isinstance(cs, int) or isinstance(cs, bool) or cs < 1:
             raise DefError(f"{where}: crystal_soul must be an int >= 1")
+    if "mana_boost" in raw:
+        mb = raw["mana_boost"]
+        if not isinstance(mb, dict) or set(mb) - {"filter", "value", "optional"} \
+                or not isinstance(mb.get("value"), int) or isinstance(mb.get("value"), bool) or mb.get("value", 0) < 2 \
+                or ("optional" in mb and not isinstance(mb["optional"], bool)):
+            raise DefError(f"{where}: mana_boost needs {{value: int >= 2, filter?, optional?}}")
+        if "filter" in mb:
+            chk.filter(mb["filter"], where)
     if raw.get("ace"):   # ACEタマシード（第179弾）: タマシードの面にだけ付く
         if "tamaseed" not in raw["types"]:
             raise DefError(f"{where}: ace needs tamaseed in types")
@@ -1081,7 +1122,7 @@ def _load_face(raw, keywords, macros, chk: Checker, where) -> dict:
                 evolve_count=(len(raw["evolve_from"]) if isinstance(raw.get("evolve_from"), list)
                               else int(raw.get("evolve_count", 1))),
                 cost_reduce_per_evo=int(raw.get("cost_reduce_per_evo", 0)),
-                free_if=raw.get("free_if"), galaxy_shield=raw.get("galaxy_shield"), bazurenda=raw.get("bazurenda"), neo=bool(raw.get("neo", False)), grave_evo=bool(raw.get("grave_evo", False)), star=bool(raw.get("star", False)), s_max=bool(raw.get("s_max", False)), ace=bool(raw.get("ace", False)), hyper=bool(raw.get("hyper", False)), crystal_soul=int(raw.get("crystal_soul", 0)), **{"tap_reduce": 0, "s_back": None, **props})
+                free_if=raw.get("free_if"), galaxy_shield=raw.get("galaxy_shield"), bazurenda=raw.get("bazurenda"), neo=bool(raw.get("neo", False)), grave_evo=bool(raw.get("grave_evo", False)), star=bool(raw.get("star", False)), s_max=bool(raw.get("s_max", False)), ace=bool(raw.get("ace", False)), hyper=bool(raw.get("hyper", False)), crystal_soul=int(raw.get("crystal_soul", 0)), mana_boost=raw.get("mana_boost"), **{"tap_reduce": 0, "s_back": None, **props})
 
 
 def load_tables():
@@ -1166,8 +1207,50 @@ def _dedupe_abilities(raw: dict) -> None:
         REPAIRED.setdefault("duplicate_ability", []).append(str(raw.get("id")))
 
 
+_RULES_CACHE: dict = {}
+
+
+def _rules_cache_key(card_files, only_approved):
+    sig = []
+    for f in card_files:
+        p = Path(f)
+        try:
+            st = p.stat()
+            sig.append((str(p), st.st_mtime_ns, st.st_size))
+        except OSError:
+            sig.append((str(p), -1, -1))
+    for name in ("zones.yaml", "keywords.yaml", "op_macros.yaml", "permissions.yaml", "turn.yaml"):
+        p = DATA / "rules" / name
+        try:
+            st = p.stat()
+            sig.append((name, st.st_mtime_ns, st.st_size))
+        except OSError:
+            sig.append((name, -1, -1))
+    return (tuple(sig), bool(only_approved))
+
+
 def load_rules(card_files: list[Path] | None = None, only_approved: bool | None = None) -> Rules:
-    """only_approved: 承認済みのカードだけ読む（converted.yaml の未確認分を除く）。省略時は環境変数 DMSIM_ONLY_APPROVED=1 に従う。"""
+    """only_approved: 承認済みのカードだけ読む（converted.yaml の未確認分を除く）。省略時は環境変数 DMSIM_ONLY_APPROVED=1 に従う。
+
+    プロセス内キャッシュ: 入力ファイル（カード定義と rules テーブル）の mtime/size が
+    同じなら、構築済みの Rules を deepcopy して返す（converted 込みの構築は約20秒、
+    deepcopy は約1秒。テストスイートの繰り返し読み込み対策）。only_approved の時は
+    承認台帳の変化を署名に含めないためキャッシュを使わない。"""
+    if only_approved is None:
+        only_approved = bool(os.environ.get("DMSIM_ONLY_APPROVED"))
+    if only_approved:
+        return _load_rules_impl(card_files, only_approved)
+    files = card_files or card_yaml_files()
+    key = _rules_cache_key(files, only_approved)
+    hit = _RULES_CACHE.get(key)
+    if hit is not None:
+        return copy.deepcopy(hit)
+    rules = _load_rules_impl(files, only_approved)
+    _RULES_CACHE[key] = copy.deepcopy(rules)
+    return rules
+
+
+def _load_rules_impl(card_files: list[Path] | None = None, only_approved: bool | None = None) -> Rules:
     tables = load_tables()
     if only_approved is None:
         only_approved = bool(os.environ.get("DMSIM_ONLY_APPROVED"))

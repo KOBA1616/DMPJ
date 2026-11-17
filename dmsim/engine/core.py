@@ -56,6 +56,7 @@ class Engine(SelectorMixin, EventMixin, InterpreterMixin, TurnMixin, CombatMixin
         self.step_limit = step_limit
         self.turn_limit = turn_limit
         self.log: list[dict] = []
+        self._log_shared = False   # clone とログを共有中か（追記時にだけ複製する copy-on-write 用）
 
     @classmethod
     def new_game(cls, rules: Rules, decks: list[list[str]], seed: int, first_player: int = 0, **kw) -> "Engine":
@@ -85,7 +86,9 @@ class Engine(SelectorMixin, EventMixin, InterpreterMixin, TurnMixin, CombatMixin
     def clone(self) -> "Engine":
         e = Engine(self.rules, self.s.clone(), step_limit=self.step_limit, turn_limit=self.turn_limit,
                    check=self.check)
-        e.log = list(self.log)
+        e.log = self.log            # ログは共有し、追記する側だけが複製する（copy-on-write）
+        e._log_shared = True
+        self._log_shared = True
         return e
 
     def advance(self) -> dict | None:
@@ -123,6 +126,9 @@ class Engine(SelectorMixin, EventMixin, InterpreterMixin, TurnMixin, CombatMixin
             raise IllegalAnswer(f"bad choice {choice} for {d['kind']}")
         self.s.tasks[-1]["answer"] = choice
         self.s.waiting = None
+        if self._log_shared:        # 共有中のログは追記前に自分の複製へ切り替える
+            self.log = list(self.log)
+            self._log_shared = False
         self.log.append({"p": d["player"], "kind": d["kind"], "choice": choice,
                          "keys": [d["options"][i]["key"] for i in choice]})
 
@@ -567,13 +573,13 @@ class Engine(SelectorMixin, EventMixin, InterpreterMixin, TurnMixin, CombatMixin
                     "opt_reduce": None, "cost_may": [], "no_leave": [], "must_be_attacked": False,
                     "must_be_attacked_first": False, "must_be_chosen": False, "must_attack_creature": False,
                     "must_attack_creature_first": False,
-                    "battle_indestructible": False, "win_all_battles": False, "crystal_soul": 0}
+                    "battle_indestructible": False, "win_all_battles": False, "crystal_soul": 0, "mana_number": 0}
         ch = {"power": d.power, "cost": d.cost, "civs": list(d.civs), "types": list(d.types),
               "races": list(d.races), "keywords": set(d.keywords), "name": d.name, "names": [d.name],
               "allow": [], "deny": [], "require": [], "breaks": 1, "break_opts": [], "breaks_add": 0, "pay_cost": d.cost, "sac_reduce": 0, "opt_reduce": None, "cost_may": [], "no_leave": [], "must_be_attacked": False, "must_be_attacked_first": False,
               "must_be_chosen": False, "must_attack_creature": False, "must_attack_creature_first": False,
               "battle_indestructible": False, "battle_indestructible_filters": [], "win_all_battles": False,
-              "indestructible": False, "crystal_soul": d.crystal_soul}
+              "indestructible": False, "crystal_soul": d.crystal_soul, "mana_number": 0}
         tkey = self._chars_template_key(cid, face, c, d)
         if tkey is not None:
             t = self._xcache.get(tkey)
@@ -749,6 +755,8 @@ class Engine(SelectorMixin, EventMixin, InterpreterMixin, TurnMixin, CombatMixin
                 ch["indestructible"] = True
             if m.get("crystal_soul"):   # 水晶ソウルの付与（第154弾）: 自前宣言と競合したら大きい方
                 ch["crystal_soul"] = max(ch["crystal_soul"], m["crystal_soul"])
+            if m.get("mana_number"):   # マナの数字の変更（第212弾）: 「Nにする」置換。重なったら大きい方を採る
+                ch["mana_number"] = max(ch["mana_number"], m["mana_number"])
             for cv in m.get("add_civs", []):   # 文明追加（第62弾）
                 if cv not in ch["civs"]:
                     ch["civs"].append(cv)
@@ -901,9 +909,12 @@ class Engine(SelectorMixin, EventMixin, InterpreterMixin, TurnMixin, CombatMixin
     def _mark_key(self, name: str, scope: str, env: dict) -> str:
         """mark の印のキー合成（op mark と cond marked で共用。バンドB 基盤 mark-scope）。
         scope: turn（既定。turn_counters に名前そのまま）/ attack（その攻撃の中だけ。current_attack で修飾）/
-        game（game_counters に名前そのまま。ターン開始で消えない）。of_self の接尾辞は op_mark 側で付ける。"""
+        game（game_counters に名前＋プレイヤー番号。ターン開始で消えない。使用履歴はプレイヤーごとのもの
+        なので、相手の使用で自分の印が立つことはない。第216弾）。of_self の接尾辞は op_mark 側で付ける。"""
         if scope == "attack":
             return f"{name}:atk{self.s.turn_counters.get('current_attack', 0)}"
+        if scope == "game":
+            return f"{name}:{env['you']}"
         return name
 
     def ask(self, t: dict, player: int, kind: str, options: list[dict], mn: int = 1, mx: int = 1, prompt: str = ""):

@@ -1,0 +1,49 @@
+# tools/chain_extract.py による抽出（docs/phase-chain-plan.md §4）。手で直さず、記録を増やして作り直す。
+stages:
+- name: extract:grave-parts
+  target:
+    graveyard:
+      dmrp03-036: 1
+      dmrp03-s03: 1
+- name: extract:build
+  target:
+    graveyard:
+      dmrp03-036: 1
+      dmrp03-s03: 1
+      '*': 12
+    deck:
+      '*': 2
+- name: extract:execute-ready
+  target:
+    graveyard:
+      dmrp03-036: 1
+      dmrp03-s03: 1
+      '*': 13
+    deck:
+      '*': 2
+goal: {}
+evidence:
+  records: 11
+  files:
+  - crossturn_saga_hidden_setup_seed1_frontier.json
+  - crossturn_saga_hidden_setup_seed2_frontier.json
+  - crossturn_saga_hidden_setup_seed3_frontier.json
+  - crossturn_saga_hidden_setup_seed4_frontier.json
+  - crossturn_saga_loop_first_setup_seed1_frontier.json
+  - crossturn_saga_prep_setup_seed1_frontier.json
+  - crossturn_saga_prep_setup_seed2_frontier.json
+  - crossturn_saga_prep_setup_seed3_frontier.json
+  - crossturn_saga_prep_setup_seed4_frontier.json
+  - crossturn_saga_prep_setup_seed5_frontier.json
+  - crossturn_saga_prep_setup_seed6_frontier.json
+  parts:
+  - dm22ex1-007
+  - dm22ex1-025
+  - dm22ex2-021
+  - dmd08-015
+  - dmex10-020
+  - dmrp03-036
+  - dmrp03-s03
+  grave_min_first_turn: 12
+  grave_min_kill_turn: 13
+  guard_deck_min: 2
