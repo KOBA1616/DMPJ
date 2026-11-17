@@ -114,9 +114,20 @@ def run(rules, entry: str, deck_file: str, *, seeds: int = 40, turn: int = 4, op
     done = json.loads(ckpt.read_text()) if ckpt and ckpt.exists() else {}
 
     def meas(key, d):
-        if key not in done:
-            rows = measure_assembly(rules, entry, d, sd, max_turn=turn, budget=budget, opp_level=opp, workers=workers)
-            done[key] = [{k: r[k] for k in ("seed", "entry_turn", "stage2", "kill", "win_turn")} for r in rows]
+        """workers 局ずつ測って途中を書く（環境の再起動で長い測定が切れても続きから）。"""
+        part = done.setdefault("_part", {}).get(key, []) if key not in done else None
+        if part is not None:
+            got = {r["seed"] for r in part}
+            todo = [x for x in sd if x not in got]
+            for i in range(0, len(todo), max(1, workers)):
+                rows = measure_assembly(rules, entry, d, todo[i:i + max(1, workers)], max_turn=turn, budget=budget,
+                                        opp_level=opp, workers=workers)
+                part += [{k: r[k] for k in ("seed", "entry_turn", "stage2", "kill", "win_turn")} for r in rows]
+                done["_part"][key] = part
+                if ckpt:
+                    ckpt.write_text(json.dumps(done))
+            done[key] = sorted(part, key=lambda r: r["seed"])
+            done["_part"].pop(key, None)
             if ckpt:
                 ckpt.write_text(json.dumps(done))
             log(key, stats(done[key], turn))
