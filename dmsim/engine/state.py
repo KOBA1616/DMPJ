@@ -8,7 +8,7 @@ from __future__ import annotations
 
 import hashlib
 import json
-from dataclasses import asdict, dataclass, field
+from dataclasses import asdict, dataclass, field, fields, is_dataclass
 
 MASK64 = (1 << 64) - 1
 
@@ -74,6 +74,38 @@ def _jcopy(v):
     if t is list:
         return [_jcopy(x) for x in v]
     return v
+
+
+def _enc_into(v, out: list):
+    """fast_key 用の位置符号化。辞書のキー名を位置で表し、JSON 化より安く
+    全フィールドを一意に符号化する（型タグ付き、辞書はキー順を正規化）。"""
+    t = type(v)
+    if t is dict:
+        out.append("{")
+        for k in sorted(v.keys(), key=repr):
+            _enc_into(k, out)
+            _enc_into(v[k], out)
+        out.append("}")
+    elif t is list or t is tuple:
+        out.append("[")
+        for x in v:
+            _enc_into(x, out)
+        out.append("]")
+    elif t is str:
+        out.append("s%d:%s;" % (len(v), v))
+    elif t is bool:
+        out.append("b1;" if v else "b0;")
+    elif t is int:
+        out.append("i%d;" % v)
+    elif v is None:
+        out.append("N;")
+    elif is_dataclass(v):
+        out.append("(")
+        for f in fields(v):
+            _enc_into(getattr(v, f.name), out)
+        out.append(")")
+    else:
+        out.append("r%s;" % (repr(v),))
 
 
 def _copy_card(c: "Card") -> "Card":
@@ -147,3 +179,11 @@ class GameState:
 
     def digest(self) -> str:
         return hashlib.blake2b(self.to_json().encode(), digest_size=16).hexdigest()
+
+    def fast_key(self) -> str:
+        """digest() と同じ全フィールドから作る探索専用の高速キー（位置符号化で
+        asdict＋JSON 化を避ける）。記録・再生の同一性には digest() を使い、
+        こちらは探索内部の重複統合専用。"""
+        out: list = []
+        _enc_into(self, out)
+        return hashlib.blake2b("".join(out).encode(), digest_size=16).hexdigest()

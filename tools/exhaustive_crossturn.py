@@ -201,7 +201,7 @@ def run_case(rules, setup: dict, *, max_turn: int, mode: str, beam: int,
                                 "capped": capped, "truncated": truncated_any, "final": leaf}
                     nxt_eng = advance_to_my_turn(leaf)
                     if nxt_eng is not None:
-                        key = nxt_eng.s.digest()
+                        key = nxt_eng.s.fast_key()  # 探索内部の重複統合は高速キー（記録照合は digest のまま）
                         s = _trim_score(trim_order, nxt_eng)
                         if key not in nxt or s > nxt[key][0]:
                             nxt[key] = (s, nxt_eng)
