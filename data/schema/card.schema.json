@@ -1369,6 +1369,9 @@
        },
        "as": {
         "type": "string"
+       },
+       "no_trigger": {
+        "type": "boolean"
        }
       },
       "required": [
@@ -3537,7 +3540,8 @@
     "redirect": {},
     "sforce": {},
     "sst": {},
-    "stp": {}
+    "stp": {},
+    "suppress_triggers": {}
    },
    "required": [
     "kind"

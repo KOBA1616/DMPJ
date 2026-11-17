@@ -1,0 +1,157 @@
+saga:
+  entry: saga
+  deck: data/decks/basebuild_saga_v3.yaml
+  turn: 4
+  opp: 1
+  seeds: 40
+  base:
+    games: 40
+    entry: 5
+    stage2: 0
+    kill_3_4: 0
+  slot:
+    id: dm22ex1-cho14
+    name: ザババン・ジョーカーズ
+  drop: {}
+  candidates:
+  - id: dm25ex3-044
+    name: 愛・爆・発
+    why: cheat:絶望神サガ
+    games: 40
+    entry: 6
+    stage2: 0
+    kill_3_4: 0
+    diff:
+      n: 40
+      mean: 0.025
+      lo: -0.061
+      hi: 0.111
+      up: 2
+      down: 1
+  - id: dm26ex2-043
+    name: プライマル・サーガ
+    why: cheat:絶望神サガ
+    games: 40
+    entry: 6
+    stage2: 0
+    kill_3_4: 0
+    diff:
+      n: 40
+      mean: 0.025
+      lo: -0.061
+      hi: 0.111
+      up: 2
+      down: 1
+  - id: dm26rp3-t009
+    name: ダムダム・ジョーカーズ
+    why: recover
+    games: 40
+    entry: 6
+    stage2: 0
+    kill_3_4: 0
+    diff:
+      n: 40
+      mean: 0.025
+      lo: -0.061
+      hi: 0.111
+      up: 2
+      down: 1
+  - id: dm22ex1-cho47
+    name: ブラッディ・クロス
+    why: prep
+    games: 40
+    entry: 5
+    stage2: 0
+    kill_3_4: 0
+    diff:
+      n: 40
+      mean: 0.0
+      lo: -0.099
+      hi: 0.099
+      up: 2
+      down: 2
+  - id: dmex04-074
+    name: 一番隊 ザエッサ
+    why: reduce:一なる部隊 イワシン
+    games: 40
+    entry: 5
+    stage2: 0
+    kill_3_4: 0
+    diff:
+      n: 40
+      mean: 0.0
+      lo: -0.07
+      hi: 0.07
+      up: 1
+      down: 1
+  - id: dmx17-033
+    name: ルナー・クロロ
+    why: trigger:超神星DOOM・ドラゲリオン
+    games: 40
+    entry: 5
+    stage2: 0
+    kill_3_4: 0
+    diff:
+      n: 40
+      mean: 0.0
+      lo: -0.07
+      hi: 0.07
+      up: 1
+      down: 1
+  - id: dm10-048
+    name: セイレーン・コンチェルト
+    why: accel
+    games: 40
+    entry: 4
+    stage2: 0
+    kill_3_4: 0
+    diff:
+      n: 40
+      mean: -0.025
+      lo: -0.074
+      hi: 0.024
+      up: 0
+      down: 1
+  - id: dm14-028
+    name: デモニック・プロテクター
+    why: draw
+    games: 40
+    entry: 4
+    stage2: 0
+    kill_3_4: 0
+    diff:
+      n: 40
+      mean: -0.025
+      lo: -0.111
+      hi: 0.061
+      up: 1
+      down: 2
+  - id: dmex19-060
+    name: 真海の覇王 ググッピー
+    why: reduce:一なる部隊 イワシン
+    games: 40
+    entry: 4
+    stage2: 0
+    kill_3_4: 0
+    diff:
+      n: 40
+      mean: -0.025
+      lo: -0.111
+      hi: 0.061
+      up: 1
+      down: 2
+  - id: dm26ex3-029
+    name: バイケンの海幻
+    why: cheat:絶望神サガ
+    games: 40
+    entry: 3
+    stage2: 0
+    kill_3_4: 0
+    diff:
+      n: 40
+      mean: -0.05
+      lo: -0.118
+      hi: 0.018
+      up: 0
+      down: 2
+  note: 段階1・同一シード40局・入口4T以内。差し替え先はザババン・ジョーカーズ（4枚）。Python 経路。
