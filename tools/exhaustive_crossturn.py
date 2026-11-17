@@ -190,7 +190,7 @@ def advance_to_my_turn(eng, me: int = 0):
 
 def run_case(rules, setup: dict, *, max_turn: int, mode: str, beam: int,
              stage: int, order: str, node_budget: int, trim_order: str = "value",
-             start_engine=None):
+             start_engine=None, progress=None):
     st = next(s for s in STAGES if s["stage"] == stage)
     fn, _label = stage_candidates(order, stage)
     orig = turn.candidates
@@ -205,7 +205,7 @@ def run_case(rules, setup: dict, *, max_turn: int, mode: str, beam: int,
         frontier_sizes = []
         for t in range(1, max_turn + 1):
             nxt: dict[str, tuple[float, object]] = {}
-            for st_eng in frontier:
+            for _si, st_eng in enumerate(frontier):
                 ts = search_cls(0, budget=node_budget)
                 leaves, trunc, nodes = LeafCollector(ts).collect(st_eng, node_budget)
                 total_nodes += nodes
@@ -216,6 +216,12 @@ def run_case(rules, setup: dict, *, max_turn: int, mode: str, beam: int,
                     import resource
                     if resource.getrusage(resource.RUSAGE_SELF).ru_maxrss / 1024 > _MEM_LIMIT_MB:
                         raise _RunAborted("memory")
+                if progress is not None:
+                    import resource
+                    progress({"turn": t, "states_done": _si + 1,
+                              "states_total": len(frontier), "nodes": total_nodes,
+                              "rss_mb": round(resource.getrusage(
+                                  resource.RUSAGE_SELF).ru_maxrss / 1024)})
                 for v, leaf, _loops in leaves:
                     r = leaf.s.result
                     if r is not None and r.get("winner") == 0:
@@ -241,6 +247,10 @@ def run_case(rules, setup: dict, *, max_turn: int, mode: str, beam: int,
                     capped = True
                 states = states[:keep]
             frontier = [e for _v, e in states]
+            if progress is not None:
+                progress({"turn_done": t, "frontier_next": len(frontier),
+                          "nodes": total_nodes, "capped": capped,
+                          "truncated": truncated_any})
         verdict = "no-kill" if not (capped or truncated_any) else "unknown"
         return {"verdict": verdict, "kill_turn": None, "kill_by": None,
                 "nodes": total_nodes, "frontier_sizes": frontier_sizes,
@@ -332,6 +342,11 @@ def main():
                      "seed": seed, "max_turn": a.max_turn,
                      "stage": a.stage, "order": a.order}})
         t0 = time.perf_counter()
+
+        def prog(info):
+            w({"kind": "progress", "case": case, **info})
+            print(f"[{case}] progress {info}", flush=True)
+
         try:
             start_engine = None
             if deck_mode:
@@ -339,7 +354,8 @@ def main():
                 start_engine = Engine.new_game(rules, [deck, ["dm01-080"] * 40], seed, 0)
             r = run_case(rules, setup, max_turn=a.max_turn, mode=a.mode, beam=a.beam,
                          stage=a.stage, order=a.order, node_budget=a.budget,
-                         trim_order=a.trim_order, start_engine=start_engine)
+                         trim_order=a.trim_order, start_engine=start_engine,
+                         progress=prog)
         except _RunAborted as ab:
             w({"kind": "case_result", "case": case, "verdict": "unknown",
                "aborted": ab.reason,
