@@ -32,7 +32,8 @@ def install(core_ids):
                 dark = sum(1 for c in mana if "darkness" in self.rules.cards[s.cards[c].defn].civs)
                 loc = {cid: [sum(1 for c in s.zones[z][0] if s.cards[c].defn == cid) for z in ZONES] for cid in _state["cards"]}
                 opt = [cid for cid in _state["cards"] if any(k.startswith("play:" + cid) for k in keys)]
-                info = (s.turn, loc, opt, len(mana), dark)
+                gc = sum(1 for c in s.zones["graveyard"][0] if self.rules.cards[s.cards[c].defn].is_creature)
+                info = (s.turn, loc, opt, len(mana), dark, gc)
             rv = orig(self, choice)
             if info and self.log:
                 self.log[-1]["_why"] = info
@@ -62,7 +63,7 @@ def result():
         info = x.get("_why")
         if not info or x.get("p") != 0:
             continue
-        turn, loc, opt, nm, dk = info
+        turn, loc, opt, nm, dk, gc = info
         for cid, (h, g, m, bz) in loc.items():
             r = rec.setdefault(cid, {"reach": None, "opt": 0, "bz": False})
             r["bz"] |= bool(bz)
@@ -70,10 +71,14 @@ def result():
                 r["reach"], r["mana_at_reach"] = turn, [nm, dk]
             r["opt"] += cid in opt
             r["last_mana"] = [nm, dk]
+            if h:
+                r["hand_turns"] = r.get("hand_turns", 0) + 1
+                r["in_hand_last"] = [turn, nm, dk, gc]
     out = {}
     for cid, r in rec.items():
         if r["bz"]:
             continue
         why = "a_not_reached" if r["reach"] is None else ("c_not_chosen" if r["opt"] else "b_cannot_pay")
-        out[cid] = {"why": why, "reach_turn": r["reach"], "mana_at_reach": r.get("mana_at_reach"), "last_mana": r.get("last_mana")}
+        out[cid] = {"why": why, "reach_turn": r["reach"], "mana_at_reach": r.get("mana_at_reach"), "last_mana": r.get("last_mana"),
+                   "in_hand_last": r.get("in_hand_last"), "where": "hand" if r.get("hand_turns") else "graveyard"}
     return out
