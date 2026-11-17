@@ -177,18 +177,18 @@ def h_summon_on_fix(eng, t):
 def h_put_under(eng, t):
     s = eng.s
     eng._pop(t)
-    c = s.cards[t["cid"]]
+    c = s.mut_card(t["cid"])
     if c.gen != t["gen"] or not s.alive(t["onto"]):
         return None
     top = t["onto"][0]
     if s.cards[top].zone == "shield":
         eng._raw_move(t["cid"], "shield", controller=s.cards[top].controller)
-        eng.zlist("shield", c.owner).remove(t["cid"])     # 束の下のカードはシールドの数に数えない（113.2）
+        eng.mut_zlist("shield", c.owner).remove(t["cid"])     # 束の下のカードはシールドの数に数えない（113.2）
     else:
         eng._raw_move(t["cid"], "bz", controller=s.cards[top].controller)
         c.entered_turn = -1
     c.top_of = top
     c.face_up = False if s.cards[top].zone == "shield" else c.face_up
-    s.cards[top].under.append(t["cid"])
+    s.mut_card(top).under.append(t["cid"])
     eng._sba()   # 山札の最後の1枚を重ねたら敗北（104.2b）
     return None
