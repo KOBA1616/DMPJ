@@ -20,12 +20,9 @@
 },
 "dm26rp1-040": {
 "by": "rule",
-"checks": {
-"effect": "skip",
-"text": "ok"
-},
+"checks": {},
 "def_hash": "e0bb434824b3cad4",
-"status": "approved",
+"status": "pending",
 "uses": [
 "core",
 "kw:s_trigger",
@@ -33,8 +30,8 @@
 "kw:speed_attacker"
 ],
 "verifier": 2,
-"verify": "43手・turn 30 まで正常に回った（result={'winner': 0, 'reason': 'deck_out', 'turn': 30}）",
-"vocab_ver": "0364ee17639fb883"
+"verify_error": "Traceback (most recent call last): |   File \"/home/runner/work/DMPJ/DMPJ/dmsim/engine/verify.py\", line 46, in verify_card |     d = eng.advance() |         ^^^^^^^^^^^^^ |   File \"/home/runner/work/DMPJ/DMPJ/dmsim/engine/core.py\", line 108, in advance |     d = TASKS[t[\"t\"]](self, t) |         ^^^^^^^^^^^^^^^^^^^^^^ | NameError: name 'bz_c' is not defined",
+"vocab_ver": "23766111cf7fa317"
 },
 "dm26rp1-046": {
 "by": "check",
@@ -121,12 +118,9 @@
 },
 "dm26rp1-055": {
 "by": "rule",
-"checks": {
-"effect": "ok",
-"text": "ok"
-},
+"checks": {},
 "def_hash": "b0c4bdb6339240c0",
-"status": "approved",
+"status": "pending",
 "uses": [
 "core",
 "kw:s_trigger",
@@ -134,17 +128,14 @@
 "op:tap"
 ],
 "verifier": 2,
-"verify": "43手・turn 30 まで正常に回った（result={'winner': 0, 'reason': 'deck_out', 'turn': 30}）",
-"vocab_ver": "1a75488a36f54e86"
+"verify_error": "Traceback (most recent call last): |   File \"/home/runner/work/DMPJ/DMPJ/dmsim/engine/verify.py\", line 46, in verify_card |     d = eng.advance() |         ^^^^^^^^^^^^^ |   File \"/home/runner/work/DMPJ/DMPJ/dmsim/engine/core.py\", line 108, in advance |     d = TASKS[t[\"t\"]](self, t) |         ^^^^^^^^^^^^^^^^^^^^^^ | NameError: name 'bz_c' is not defined",
+"vocab_ver": "63c2635aca802271"
 },
 "dm26rp1-061": {
 "by": "rule",
-"checks": {
-"effect": "ok",
-"text": "ok"
-},
+"checks": {},
 "def_hash": "058a89fd4da3ff92",
-"status": "approved",
+"status": "pending",
 "uses": [
 "core",
 "kw:s_trigger",
@@ -152,17 +143,14 @@
 "op:draw"
 ],
 "verifier": 2,
-"verify": "43手・turn 30 まで正常に回った（result={'winner': 0, 'reason': 'deck_out', 'turn': 30}）",
-"vocab_ver": "0b2b4fdf3be28c71"
+"verify_error": "Traceback (most recent call last): |   File \"/home/runner/work/DMPJ/DMPJ/dmsim/engine/verify.py\", line 46, in verify_card |     d = eng.advance() |         ^^^^^^^^^^^^^ |   File \"/home/runner/work/DMPJ/DMPJ/dmsim/engine/core.py\", line 108, in advance |     d = TASKS[t[\"t\"]](self, t) |         ^^^^^^^^^^^^^^^^^^^^^^ | NameError: name 'bz_c' is not defined",
+"vocab_ver": "317243e4a07f21cf"
 },
 "dm26rp1-065": {
 "by": "rule",
-"checks": {
-"effect": "ok",
-"text": "ok"
-},
+"checks": {},
 "def_hash": "17bb169f5ef7c98d",
-"status": "approved",
+"status": "pending",
 "uses": [
 "core",
 "kw:s_trigger",
@@ -170,8 +158,8 @@
 "op:draw"
 ],
 "verifier": 2,
-"verify": "43手・turn 30 まで正常に回った（result={'winner': 0, 'reason': 'deck_out', 'turn': 30}）",
-"vocab_ver": "680f9d8ea4a98d10"
+"verify_error": "Traceback (most recent call last): |   File \"/home/runner/work/DMPJ/DMPJ/dmsim/engine/verify.py\", line 46, in verify_card |     d = eng.advance() |         ^^^^^^^^^^^^^ |   File \"/home/runner/work/DMPJ/DMPJ/dmsim/engine/core.py\", line 108, in advance |     d = TASKS[t[\"t\"]](self, t) |         ^^^^^^^^^^^^^^^^^^^^^^ | NameError: name 'bz_c' is not defined",
+"vocab_ver": "630056034c9decc9"
 },
 "dm26rp1-073": {
 "by": "rule",
@@ -237,12 +225,9 @@
 },
 "dm26rp1-sec023": {
 "by": "rule",
-"checks": {
-"effect": "ok",
-"text": "ok"
-},
+"checks": {},
 "def_hash": "4479546022ddc4c1",
-"status": "approved",
+"status": "pending",
 "uses": [
 "core",
 "kw:s_trigger",
@@ -250,8 +235,8 @@
 "op:draw"
 ],
 "verifier": 2,
-"verify": "43手・turn 30 まで正常に回った（result={'winner': 0, 'reason': 'deck_out', 'turn': 30}）",
-"vocab_ver": "0b2b4fdf3be28c71"
+"verify_error": "Traceback (most recent call last): |   File \"/home/runner/work/DMPJ/DMPJ/dmsim/engine/verify.py\", line 46, in verify_card |     d = eng.advance() |         ^^^^^^^^^^^^^ |   File \"/home/runner/work/DMPJ/DMPJ/dmsim/engine/core.py\", line 108, in advance |     d = TASKS[t[\"t\"]](self, t) |         ^^^^^^^^^^^^^^^^^^^^^^ | NameError: name 'bz_c' is not defined",
+"vocab_ver": "317243e4a07f21cf"
 },
 "dm26rp1-t004": {
 "by": "rule",

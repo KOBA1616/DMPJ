@@ -1,0 +1,19 @@
+{
+"35-sec001": {
+"by": "rule",
+"checks": {},
+"def_hash": "a95da25b8871aca4",
+"status": "pending",
+"uses": [
+"core",
+"kw:world_breaker",
+"op:destroy",
+"op:may",
+"op:move",
+"op:shuffle"
+],
+"verifier": 2,
+"verify_error": "Traceback (most recent call last): |   File \"/home/runner/work/DMPJ/DMPJ/dmsim/engine/verify.py\", line 46, in verify_card |     d = eng.advance() |         ^^^^^^^^^^^^^ |   File \"/home/runner/work/DMPJ/DMPJ/dmsim/engine/core.py\", line 108, in advance |     d = TASKS[t[\"t\"]](self, t) |         ^^^^^^^^^^^^^^^^^^^^^^ | NameError: name 'bz_c' is not defined",
+"vocab_ver": "49dc828cdac6a590"
+}
+}

@@ -2,7 +2,7 @@
 "26-s001": {
 "by": "rule",
 "checks": {},
-"def_hash": "6a5ada1e032bc02d",
+"def_hash": "5d057683e0613b5d",
 "status": "pending",
 "uses": [
 "core",
@@ -10,13 +10,27 @@
 "op:destroy"
 ],
 "verifier": 2,
-"verify_error": "Traceback (most recent call last): |   File \"/home/claude/dmpj/dmsim/engine/verify.py\", line 42, in verify_card |     spec = sc.try_card(rules, card_id) |   File \"/home/claude/dmpj/dmsim/engine/scenario.py\", line 94, in try_card |     hit = next((probe.s.cards[c].defn for c in pool if probe.filter_match(c, f)), None) | TO",
-"vocab_ver": "84bf5830dba33598"
+"verify_error": "Traceback (most recent call last): |   File \"/home/runner/work/DMPJ/DMPJ/dmsim/engine/verify.py\", line 46, in verify_card |     d = eng.advance() |         ^^^^^^^^^^^^^ |   File \"/home/runner/work/DMPJ/DMPJ/dmsim/engine/core.py\", line 108, in advance |     d = TASKS[t[\"t\"]](self, t) |         ^^^^^^^^^^^^^^^^^^^^^^ | NameError: name 'bz_c' is not defined",
+"vocab_ver": "7baa3d3e79b21a25"
+},
+"26-s002": {
+"by": "rule",
+"checks": {},
+"def_hash": "e275106d351b7c36",
+"status": "pending",
+"uses": [
+"core",
+"kw:double_breaker",
+"kw:speed_attacker"
+],
+"verifier": 2,
+"verify_error": "Traceback (most recent call last): |   File \"/home/runner/work/DMPJ/DMPJ/dmsim/engine/verify.py\", line 46, in verify_card |     d = eng.advance() |         ^^^^^^^^^^^^^ |   File \"/home/runner/work/DMPJ/DMPJ/dmsim/engine/core.py\", line 108, in advance |     d = TASKS[t[\"t\"]](self, t) |         ^^^^^^^^^^^^^^^^^^^^^^ | NameError: name 'bz_c' is not defined",
+"vocab_ver": "456a71a8f6f029d9"
 },
 "26-s003": {
 "by": "rule",
 "checks": {},
-"def_hash": "f251dea028715c7e",
+"def_hash": "833a26b58f92f06d",
 "status": "pending",
 "uses": [
 "core",
@@ -24,7 +38,7 @@
 "op:move"
 ],
 "verifier": 2,
-"verify_error": "Traceback (most recent call last): |   File \"/home/claude/dmpj/dmsim/engine/verify.py\", line 42, in verify_card |     spec = sc.try_card(rules, card_id) |   File \"/home/claude/dmpj/dmsim/engine/scenario.py\", line 94, in try_card |     hit = next((probe.s.cards[c].defn for c in pool if probe.filter_match(c, f)), None) | TO",
-"vocab_ver": "1558855762771047"
+"verify_error": "Traceback (most recent call last): |   File \"/home/runner/work/DMPJ/DMPJ/dmsim/engine/verify.py\", line 46, in verify_card |     d = eng.advance() |         ^^^^^^^^^^^^^ |   File \"/home/runner/work/DMPJ/DMPJ/dmsim/engine/core.py\", line 108, in advance |     d = TASKS[t[\"t\"]](self, t) |         ^^^^^^^^^^^^^^^^^^^^^^ | NameError: name 'bz_c' is not defined",
+"vocab_ver": "b117c13b4773e3b3"
 }
 }

@@ -1,0 +1,17 @@
+{
+"dmpromoy22-p51": {
+"by": "rule",
+"checks": {},
+"def_hash": "e6273768046aef7d",
+"status": "pending",
+"uses": [
+"core",
+"op:discard",
+"op:draw",
+"op:modify"
+],
+"verifier": 2,
+"verify_error": "Traceback (most recent call last): |   File \"/home/runner/work/DMPJ/DMPJ/dmsim/engine/verify.py\", line 46, in verify_card |     d = eng.advance() |         ^^^^^^^^^^^^^ |   File \"/home/runner/work/DMPJ/DMPJ/dmsim/engine/core.py\", line 108, in advance |     d = TASKS[t[\"t\"]](self, t) |         ^^^^^^^^^^^^^^^^^^^^^^ | NameError: name 'bz_c' is not defined",
+"vocab_ver": "f9844b3907794bf1"
+}
+}
