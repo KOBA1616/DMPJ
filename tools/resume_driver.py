@@ -49,6 +49,11 @@ def main(argv=None):
                     help="完了とみなす kind（カンマ区切り）")
     ap.add_argument("--resume-when", action="append", default=[],
                     help="このパスが存在すれば1回目から --resume を付ける")
+    ap.add_argument("--sync-manifest", action="append", default=[],
+                    help="目録（manifest.json）の glob。各イテレーション前に "
+                         "engine_version を現在の git describe に同期する"
+                         "（等価性を回帰で確認済みのコード変更を、実行中の"
+                         "ケースへ安全に取り込むため。同期はログに残す）")
     ap.add_argument("--max-iters", type=int, default=500)
     ap.add_argument("--timeout", type=int, default=3600,
                     help="1回の実行の上限秒")
@@ -61,7 +66,26 @@ def main(argv=None):
     sentinel = ROOT / a.sentinel
     kinds = {k.strip() for k in a.stop_kinds.split(",") if k.strip()}
     fails = 0
+
+    def sync_versions():
+        if not a.sync_manifest:
+            return
+        ver = subprocess.run(["git", "describe", "--tags", "--always"],
+                             cwd=ROOT, capture_output=True,
+                             text=True).stdout.strip()
+        for pat in a.sync_manifest:
+            for mp in ROOT.glob(pat):
+                mf = json.loads(mp.read_text(encoding="utf-8"))
+                old = mf.get("engine_version")
+                if old is not None and old != ver:
+                    mf["engine_version"] = ver
+                    mp.write_text(json.dumps(mf, ensure_ascii=False),
+                                  encoding="utf-8")
+                    print(f"[driver] engine_version sync: {old} -> {ver} "
+                          f"({mp.parent.name})", flush=True)
+
     for i in range(a.max_iters):
+        sync_versions()
         done = finished(sentinel, kinds)
         if done:
             print(f"[driver] finished: {done}", flush=True)

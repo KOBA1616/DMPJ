@@ -38,6 +38,7 @@ import yaml  # noqa: E402
 
 from dmsim import load_rules  # noqa: E402
 from dmsim.engine import Engine  # noqa: E402
+from dmsim.engine import rustcore  # noqa: E402
 from dmsim.engine import scenario as sc  # noqa: E402
 from dmsim.eval.explog import engine_version  # noqa: E402
 from dmsim.eval.measure import load_deck  # noqa: E402
@@ -158,13 +159,14 @@ def run_labeling(rules, setup, *, deck_mode, deck, seed, max_turn, stage,
                             return
                         nxt_eng = advance_to_my_turn(leaf)
                         if nxt_eng is not None:
-                            ck = _store_put(store, nxt_eng)
+                            ck = _store_put(store, ct._as_python(nxt_eng))
                             if ck not in children_set:
                                 children_set.add(ck)
                                 children.append(ck)
 
                     _l, trunc, nodes = LeafCollector(
-                        ts, on_leaf=handle_leaf).collect(st_eng, node_budget)
+                        ts, on_leaf=handle_leaf).collect(
+                            rustcore.maybe_rust(st_eng), node_budget)
                     mf["total_nodes"] += nodes
                     mf["truncated"] = mf["truncated"] or trunc
                     with edges_path.open("a", encoding="utf-8") as fh:
