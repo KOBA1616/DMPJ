@@ -138,6 +138,7 @@ class GameState:
     windows: list[int] = field(default_factory=list)       # 開いている解決窓のスタック（バトル 701.13、効果中のS・トリガー 101.4g 等）
     continuous: list[dict] = field(default_factory=list)   # 継続的効果（タイムスタンプ順）
     delayed: list[dict] = field(default_factory=list)      # 遅延誘発型能力（603.6）
+    untap_caps: list[dict] = field(default_factory=list)   # 次のターン開始時のアンタップ上限（第227弾: {player, zone, count}。消費されるまで残る）
     step_mods: list[dict] = field(default_factory=list)    # ターン構造の変更（ステップを飛ばす・追加する）
     tasks: list[dict] = field(default_factory=list)        # 実行中の処理のスタック
     waiting: dict | None = None                            # 決定待ちの Decision（純データ）

@@ -15,6 +15,7 @@ actions:
   summon:                {default: true,  rule: "601",    ja: 召喚できる}
   summon_from_graveyard: {default: false, rule: "unverified", ja: 墓地から召喚できる（アビスラッシュ）}
   summon_from_mana:      {default: false, rule: "unverified", ja: マナゾーンから召喚できる}
+  cast_from_graveyard:   {default: false, rule: "unverified", ja: 墓地から唱えられる（許可型。第226弾）}
   cross_free:            {default: false, rule: "303.3b", ja: コストを支払わずにクロスできる}
   cast_free:             {default: false, rule: "601",    ja: コストを支払わずに唱えてもよい（呪文。アカシック3の常在型）}
   cast:                  {default: true,  rule: "601",    ja: 唱えられる}

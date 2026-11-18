@@ -76,6 +76,7 @@
      "cannot_untap",
      "center_g_link",
      "charger",
+     "crystal_charger",
      "cyclone",
      "double_breaker",
      "dynamo",
@@ -163,6 +164,7 @@
       "fortified": {},
       "fortifying": {},
       "fushigi": {},
+      "hyper": {},
       "keyword": {},
       "linked_god": {},
       "mugen_climb": {},
@@ -200,6 +202,38 @@
   },
   "free_if": {
    "$ref": "#/$defs/cond"
+  },
+  "evolve_civs": {
+   "type": "array",
+   "items": {
+    "enum": [
+     "darkness",
+     "fire",
+     "light",
+     "nature",
+     "water",
+     "zero"
+    ]
+   }
+  },
+  "evolve_zones": {
+   "type": "array",
+   "items": {
+    "type": "string"
+   }
+  },
+  "soul_shift": {
+   "type": "object",
+   "properties": {
+    "floor": {
+     "type": "integer",
+     "minimum": 0
+    }
+   },
+   "required": [
+    "floor"
+   ],
+   "additionalProperties": false
   },
   "galaxy_shield": {
    "type": "object",
@@ -298,6 +332,7 @@
   "evolve_any": {},
   "cost_reduce_per_evo": {},
   "resolve_to": {},
+  "resolve_face_down": {},
   "alt_cost": {},
   "s_back": {},
   "bazurenda": {},
@@ -309,6 +344,7 @@
   "sst_spell": {},
   "stp_spell": {},
   "recycle": {},
+  "grave_cast": {},
   "deck_evolution": {}
  },
  "required": [
@@ -375,6 +411,7 @@
        "cannot_untap",
        "center_g_link",
        "charger",
+       "crystal_charger",
        "cyclone",
        "double_breaker",
        "dynamo",
@@ -462,6 +499,7 @@
         "fortified": {},
         "fortifying": {},
         "fushigi": {},
+        "hyper": {},
         "keyword": {},
         "linked_god": {},
         "mugen_climb": {},
@@ -499,6 +537,38 @@
     },
     "free_if": {
      "$ref": "#/$defs/cond"
+    },
+    "evolve_civs": {
+     "type": "array",
+     "items": {
+      "enum": [
+       "darkness",
+       "fire",
+       "light",
+       "nature",
+       "water",
+       "zero"
+      ]
+     }
+    },
+    "evolve_zones": {
+     "type": "array",
+     "items": {
+      "type": "string"
+     }
+    },
+    "soul_shift": {
+     "type": "object",
+     "properties": {
+      "floor": {
+       "type": "integer",
+       "minimum": 0
+      }
+     },
+     "required": [
+      "floor"
+     ],
+     "additionalProperties": false
     },
     "galaxy_shield": {
      "type": "object",
@@ -599,6 +669,7 @@
     "evolve_any": {},
     "cost_reduce_per_evo": {},
     "resolve_to": {},
+    "resolve_face_down": {},
     "alt_cost": {},
     "s_back": {},
     "bazurenda": {},
@@ -610,6 +681,7 @@
     "sst_spell": {},
     "stp_spell": {},
     "recycle": {},
+    "grave_cast": {},
     "deck_evolution": {}
    },
    "required": [
@@ -1048,6 +1120,12 @@
        "stoppable": {
         "type": "boolean"
        },
+       "by": {
+        "type": "string"
+       },
+       "mine_as": {
+        "type": "string"
+       },
        "as": {
         "type": "string"
        }
@@ -1459,6 +1537,23 @@
       "required": [
        "op",
        "body"
+      ],
+      "additionalProperties": false
+     },
+     {
+      "type": "object",
+      "properties": {
+       "op": {
+        "const": "pay_or_lose"
+       },
+       "cost": {
+        "type": "integer"
+       },
+       "civs": {}
+      },
+      "required": [
+       "op",
+       "cost"
       ],
       "additionalProperties": false
      },
@@ -1918,6 +2013,48 @@
       "type": "object",
       "properties": {
        "op": {
+        "const": "untap_limit"
+       },
+       "player": {
+        "anyOf": [
+         {
+          "enum": [
+           "you",
+           "opp"
+          ]
+         },
+         {
+          "type": "object",
+          "properties": {
+           "var": {
+            "type": "string"
+           }
+          },
+          "required": [
+           "var"
+          ],
+          "additionalProperties": false
+         }
+        ]
+       },
+       "zone": {
+        "type": "string"
+       },
+       "count": {
+        "type": "integer"
+       }
+      },
+      "required": [
+       "op",
+       "zone",
+       "count"
+      ],
+      "additionalProperties": false
+     },
+     {
+      "type": "object",
+      "properties": {
+       "op": {
         "const": "use_cip"
        },
        "select": {
@@ -2084,6 +2221,7 @@
     "fortified": {},
     "fortifying": {},
     "fushigi": {},
+    "hyper": {},
     "keyword": {},
     "linked_god": {},
     "mugen_climb": {},
@@ -2314,6 +2452,9 @@
        "$ref": "#/$defs/selector"
       },
       "total_power": {
+       "$ref": "#/$defs/selector"
+      },
+      "max_power": {
        "$ref": "#/$defs/selector"
       },
       "entered": {
@@ -2603,6 +2744,7 @@
        "cannot_untap",
        "center_g_link",
        "charger",
+       "crystal_charger",
        "cyclone",
        "double_breaker",
        "dynamo",
@@ -2673,6 +2815,7 @@
          "block",
          "cast",
          "cast_free",
+         "cast_from_graveyard",
          "cross_free",
          "d_switch",
          "enter_bz",
@@ -2701,6 +2844,7 @@
            "block",
            "cast",
            "cast_free",
+           "cast_from_graveyard",
            "cross_free",
            "d_switch",
            "enter_bz",
@@ -2774,6 +2918,7 @@
          "block",
          "cast",
          "cast_free",
+         "cast_from_graveyard",
          "cross_free",
          "d_switch",
          "enter_bz",
@@ -2802,6 +2947,7 @@
            "block",
            "cast",
            "cast_free",
+           "cast_from_graveyard",
            "cross_free",
            "d_switch",
            "enter_bz",
@@ -3450,6 +3596,9 @@
     "vivid": {},
     "emblem": {
      "type": "boolean"
+    },
+    "turn_draw": {
+     "type": "boolean"
     }
    },
    "required": [
@@ -3541,7 +3690,8 @@
     "sforce": {},
     "sst": {},
     "stp": {},
-    "suppress_triggers": {}
+    "suppress_triggers": {},
+    "untap_limit": {}
    },
    "required": [
     "kind"

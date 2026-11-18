@@ -7,7 +7,7 @@ from __future__ import annotations
 
 import itertools
 
-from ..base.types import ActivateTask, CrossTask, HyperTask, PlayTask, TurnTask
+from ..base.types import ActivateTask, CrossTask, HyperTask, PlayTask, TurnTask, UntapLimitTask
 from .registry import STEPS, read_only, step, task
 
 
@@ -74,7 +74,8 @@ class TurnMixin:
                 # 下の cast_free 許可の分岐が重複を弾くので、キーは同じ :free でよい。
                 if f.free_if and self.eval_cond(f.free_if, {"you": p, "self": self.s.ref(cid), "vars": {}}) \
                         and ((f.is_creature() and self.permits(cid, "summon"))
-                             or ("spell" in f.types and self.permits(cid, "cast"))):
+                             or ("spell" in f.types and self.permits(cid, "cast"))
+                             or (f.is_permanent() and self.permits(cid, "generate"))):   # クロスギアの G・ゼロ（第224弾: クルト・アーム型。ジェネレートも無料になる）
                     opt = {"key": f"{o['key']}:free" if fi is None else f"{o['key']}:{fi}:free", "cid": cid,
                            "name": f.name, "free": True}   # G・ゼロ: コストを支払わずに召喚／唱える
                     if fi is not None:
@@ -212,6 +213,25 @@ class TurnMixin:
                     if fi is not None:
                         opt["face"] = fi
                     out.append(opt)
+        seen_g = set()   # 墓地から通常コストで唱える（第226弾）: 自身の grave_cast、または常在の許可（cast_from_graveyard）
+        for cid in self.zlist("graveyard", p):
+            dn = self.s.cards[cid].defn
+            if dn in seen_g or dn in seen_r:
+                continue
+            d = self.cdef(cid)
+            for fi, f in ([(None, d)] if not d.faces else list(enumerate(d.faces))):
+                if "spell" not in f.types or not self.permits(cid, "cast"):
+                    continue
+                grant = {} if f.grave_cast else self._grave_cast_grant(cid)
+                if grant is None:
+                    continue
+                if self._mana_choices(cid, p, fi, limit=1):
+                    seen_g.add(dn)
+                    opt = {"key": f"play:{dn}:grave" if fi is None else f"play:{dn}:{fi}:grave",
+                           "cid": cid, "name": f.name, "grave_cast": True, **grant}
+                    if fi is not None:
+                        opt["face"] = fi
+                    out.append(opt)
         seen_m = set()   # マナゾーンから召喚できるカードも選択肢に出す（通常コスト）
         for cid in self.zlist("mana", p):
             dn = self.s.cards[cid].defn
@@ -265,6 +285,49 @@ class TurnMixin:
                 if not self.s.turn_counters.get(f"summon_once:{e.get('src')}"):
                     limited = e.get("src")
         return {"once_src": limited} if limited is not None else None
+
+    def _grave_cast_grant(self, cid) -> dict | None:
+        """墓地から唱える許可の状態（第226弾。第37弾の墓地召喚版と同じ方式）。
+        無制限なら {}、回数制限つき（ターン1回・未使用）なら {"once_src": 発生源}、
+        許可が無い／使い切っていれば None。"""
+        limited = None
+        for e in self.chars_ro(cid)["allow"]:
+            if isinstance(e, str):
+                if e == "cast_from_graveyard":
+                    return {}
+            elif e.get("action") == "cast_from_graveyard":
+                if not e.get("once"):
+                    return {}
+                if not self.s.turn_counters.get(f"cast_once:{e.get('src')}"):
+                    limited = e.get("src")
+        return {"once_src": limited} if limited is not None else None
+
+    def _untap_caps(self, a) -> dict:
+        """プレイヤー a のこのターン開始時に効くアンタップ上限 {zone: count}（第227弾）。
+
+        相手のバトルゾーンの常在 untap_limit（能力の if を発生源側で評価）と、
+        効果で保留された s.untap_caps（ここで消費する）の最小値をゾーンごとに取る。"""
+        caps: dict[str, int] = {}
+        for c in self.bz_tops(1 - a):
+            for _, ab in self.abilities(c, "static"):
+                ul = ab.get("untap_limit")
+                if not ul:
+                    continue
+                if "if" in ab and not self.eval_cond(
+                        ab["if"], {"you": self.s.cards[c].controller,
+                                   "self": self.s.ref(c), "vars": {}}):
+                    continue
+                z = ul["zone"]
+                caps[z] = min(caps[z], ul["count"]) if z in caps else ul["count"]
+        keep = []
+        for e in self.s.untap_caps:
+            if e["player"] == a:
+                z = e["zone"]
+                caps[z] = min(caps[z], e["count"]) if z in caps else e["count"]
+            else:
+                keep.append(e)
+        self.s.untap_caps = keep
+        return caps
 
     def _mana_summon_grant(self, cid) -> dict | None:
         """マナゾーンから召喚する許可の状態（第50弾。第37弾の墓地版と同じ方式）。
@@ -357,8 +420,17 @@ class TurnMixin:
                 srcs = self._evo_sources(cid, p, face)
                 if len(srcs) < d.evolve_count:
                     return False
+            if d.evolve_civs:   # 文明条件（第218弾）: 候補全体の文明で揃えられなければ出せない
+                have = set()
+                for c in srcs:
+                    have |= set(self.chars_ro(c)["civs"])
+                if not set(d.evolve_civs) <= have:
+                    return False
             n = len(srcs) if d.evolve_any else d.evolve_count           # 最も安い組合せで払えるか（112.2b）
-            cost = max(1, d.cost - n * d.cost_reduce_per_evo) if d.cost_reduce_per_evo else None   # 「コストは0以下にはならない」= 最低1
+            if d.soul_shift:   # ソウルシフト∞（第218弾）: 全候補を重ねた時の最大軽減で判定
+                cost = max(d.soul_shift["floor"], d.cost - sum(self.chars_ro(c)["cost"] for c in srcs))
+            else:
+                cost = max(1, d.cost - n * d.cost_reduce_per_evo) if d.cost_reduce_per_evo else None   # 「コストは0以下にはならない」= 最低1
             return bool(self._mana_choices(cid, p, face, cost=self._opt_reduced(cid, face, d, self._sac_reduced(d, self._tap_reduced(d, p, cost, None), self._sac_pool(d, p))), limit=1))
         return bool(self._mana_choices(cid, p, face, cost=self._opt_reduced(cid, face, d, self._sac_reduced(d, self._tap_reduced(d, p, None, None), self._sac_pool(d, p))), limit=1))
 
@@ -432,8 +504,14 @@ class TurnMixin:
 
     def _evo_pool(self, cid, p, face=None) -> list[int]:
         f = self.cdef(cid).face(face)
-        z = f.evolve_zone
-        pool = self.bz_tops(p) if z == "bz" else [c for c in self.zlist(z, p) if c != cid]   # 手札進化: 自分自身は進化元にしない
+        if f.evolve_zones:   # 超無限進化Ω（第218弾）: 複数ゾーンから進化元を探す
+            pool = []
+            for z in f.evolve_zones:
+                pool += self.bz_tops(p) if z == "bz" else [c for c in self.zlist(z, p) if c != cid]
+            pool = list(dict.fromkeys(pool))
+        else:
+            z = f.evolve_zone
+            pool = self.bz_tops(p) if z == "bz" else [c for c in self.zlist(z, p) if c != cid]   # 手札進化: 自分自身は進化元にしない
         return [c for c in pool if ("creature" in self.chars_ro(c)["types"] or self.permits(c, "evolve_base"))]
 
     def _evo_v_ready(self, cid, p, face=None) -> bool:
@@ -450,10 +528,14 @@ class TurnMixin:
         return True
 
     @read_only
-    def _mana_choices(self, cid, p, face=None, cost: int | None = None, limit: int = 32, civs=None) -> list[list[int]]:
+    def _mana_choices(self, cid, p, face=None, cost: int | None = None, limit: int = 32, civs=None, raw_cost: bool = False, exclude=None) -> list[list[int]]:
         """支払いに使うマナの組（112.2a）。文明は1文明につき別々の1枚で満たし、マナの数値の合計がコストに一致。
         cost: 実行時に確定したコスト（進化元数の軽減など）。指定なければカード定義のコスト。
         civs: 必要な文明の上書き（代替コスト用）。
+        raw_cost（第217弾）: カードを出すための支払いではない（逆転撃の後払い等）時に使う。
+        コストの増減・水晶ソウル・出すカードの面ブースト・場の常在型ブーストは適用せず、
+        金額と文明をそのまま数える。マナの数字そのものを変える mod mana_number は通常どおり効く。
+        cid は支払いプールから外れるので、発生源はマナゾーンの外にある前提でアンカーに使う。
 
         マナの数字（第212弾）: 基本値は定義の mana（裏向きは水晶ソウルで置換）。常在型の mod mana_number が
         「Nにする」を置換し、出すカードの面 mana_boost（必須形）は置換、任意形とバトルゾーンの常在型
@@ -461,20 +543,21 @@ class TurnMixin:
         d = self.cdef(cid).face(face)
         eff = d.cost if cost is None else cost
         ch = self.chars(cid, face)
-        eff = max(0, eff + ch["pay_cost"] - d.cost)           # 継続的効果によるコストの増減（mod cost）
+        if not raw_cost:
+            eff = max(0, eff + ch["pay_cost"] - d.cost)           # 継続的効果によるコストの増減（mod cost）
         if eff == 0 and not (civs if civs is not None else d.civs):
             return [[]]
-        cs = ch.get("crystal_soul", 0)   # 水晶ソウル（第154弾）: このカードの支払いでは裏向きマナの数字が cs になる（置換。文明は得ない）
-        untapped = [c for c in self.zlist("mana", p) if c != cid and not self.s.cards[c].tapped]   # 実行するカード自身は支払いに使えない（第191弾: マナゾーンから出す時、自分をタップして払えてしまっていた）
+        cs = 0 if raw_cost else ch.get("crystal_soul", 0)   # 水晶ソウル（第154弾）: このカードの支払いでは裏向きマナの数字が cs になる（置換。文明は得ない）
+        untapped = [c for c in self.zlist("mana", p) if c != cid and c not in (exclude or ()) and not self.s.cards[c].tapped]   # 実行するカード自身は支払いに使えない（第191弾: マナゾーンから出す時、自分をタップして払えてしまっていた）。exclude は進化元に確定したマナ等（第218弾Ω）
         # --- 第212弾: ブーストの発生源を集める ---
-        fb = getattr(d, "mana_boost", None)   # 出すカード自身の宣言（この支払いだけ）
+        fb = None if raw_cost else getattr(d, "mana_boost", None)   # 出すカード自身の宣言（この支払いだけ）
         mb_defns = getattr(self, "_mb_defns", None)
         if mb_defns is None:
             mb_defns = self._mb_defns = {dn for dn, cd in self.rules.cards.items()
                                          if any(ab.get("mana_boost") for f in (cd.faces or [cd])
                                                 for ab in f.abilities if ab.get("kind") == "static")}
         statics = []   # 支払う側のバトルゾーンにある常在型ブースト（任意形）
-        for src in self.s.zones["bz"][0]:
+        for src in ([] if raw_cost else self.s.zones["bz"][0]):
             sc = self.s.cards[src]
             if sc.controller != p or sc.top_of >= 0 or sc.defn not in mb_defns:
                 continue
@@ -508,7 +591,7 @@ class TurnMixin:
             return v, tuple(sorted(opts))
 
         vals = {c: values_of(c) for c in untapped}
-        if len(untapped) < len(d.civs) or sum(max([v] + list(o)) for v, o in vals.values()) < eff:
+        if len(untapped) < len(civs if civs is not None else d.civs) or sum(max([v] + list(o)) for v, o in vals.values()) < eff:
             return []
         pools: list[dict] = []   # 同じ（定義・裏表・文明・値の組）のマナカードの山。値の選択肢ごとにクラスを分ける
         pindex: dict = {}
@@ -628,7 +711,13 @@ def st_start(eng, t):                                   # 501
     eng._step_done(t)
     # ターン起因処理（同時にアンタップ, 702.3a）→ サイレントスキルの解決（他のカードのアンタップの後, 501.1a）→「ターンのはじめに」の誘発（501.2）
     effects = [eng._child(ab["effect"], {"you": a, "self": s.ref(c), "vars": {}}) for c in skill for _, ab in eng.abilities(c, "silent")]
-    eng._push(*([eng.ev_task(untap)] if untap else []), *effects, eng.ev_task({"ev": "turn_start", "player": a}))
+    if any(z in caps and len(lst) > caps[z] for z, lst in (("bz", bz_c), ("mana", mana_c))):
+        # 上限が候補数より小さいゾーンがある: アンタップするカードの選択を専用タスクに委ねる
+        eng._push({"t": "untap_limit", "player": a, "caps": caps, "bz": bz_c, "mana": mana_c},
+                  *effects, eng.ev_task({"ev": "turn_start", "player": a}))
+    else:
+        untap = [{"ev": "untap", "subject": s.ref(c)} for c in bz_c + mana_c]
+        eng._push(*([eng.ev_task(untap)] if untap else []), *effects, eng.ev_task({"ev": "turn_start", "player": a}))
     if len(s.continuous) != n:
         eng._sba()           # 期限切れでパワー0以下になったものを先に破壊（703.1）
 
@@ -638,7 +727,7 @@ def st_draw(eng, t):                                    # 502
     s = eng.s
     eng._step_done(t)
     if not (s.turn == 1 and s.active == s.first_player):   # 500.6
-        eng._push(eng.ev_task({"ev": "draw", "player": s.active}))
+        eng._push(eng.ev_task({"ev": "draw", "player": s.active, "turn_draw": True}))
 
 
 @step("charge")
@@ -700,6 +789,8 @@ def st_main(eng, t):                                    # 504
             task["recycle"] = True
             task["cost_override"] = fd.recycle["cost"]
             task["cost_civs"] = fd.recycle.get("civs", fd.civs)
+        if o.get("grave_cast"):   # 墓地から通常コストで唱える（第226弾）: コストは通常どおり計算する
+            task["grave_cast"] = True
         if o.get("bakutan"):   # マナ爆誕（第191弾）: マナゾーンから固定コストで召喚する（支払い規約は recycle と同じ）
             fd = eng.cdef(o["cid"]).face(o.get("face"))
             task["bakutan"] = True
@@ -715,6 +806,35 @@ def st_main(eng, t):                                    # 504
         if o.get("neo") or o.get("grave_evo"):
             task["evo_mode"] = True
         eng._push(task)
+
+
+@task("untap_limit", UntapLimitTask)
+def h_untap_limit(eng, t):
+    """アンタップ制限（第227弾）: 上限のあるゾーンごとに、上限枚数ぶんのアンタップする
+    カードをそのプレイヤーに選ばせ、残りはタップしたままにする。選択はゾーン順に1回ずつ
+    諮問し、最後にアンタップのイベント束を積む。"""
+    s = eng.s
+    os_ = t.setdefault("os", {})
+    zones = [z for z in ("bz", "mana") if z in t["caps"] and len(t[z]) > t["caps"][z]]
+    stage = os_.get("stage", 0)
+    while stage < len(zones):
+        z = zones[stage]
+        cands = t[z]
+        ans, d = eng.ask(t, t["player"], "choose_cards",
+                         [eng._card_option(c) for c in cands], t["caps"][z], t["caps"][z])
+        if d:
+            return d
+        os_["chosen_" + z] = [cands[i] for i in ans]
+        stage += 1
+        os_["stage"] = stage
+    untap = []
+    for z, lst in (("bz", t["bz"]), ("mana", t["mana"])):
+        chosen = os_.get("chosen_" + z, lst)
+        untap += [{"ev": "untap", "subject": s.ref(c)} for c in lst if c in chosen]
+    eng._pop(t)
+    if untap:
+        eng._push(eng.ev_task(untap))
+    return None
 
 
 @task("hyper", HyperTask)
@@ -954,6 +1074,34 @@ def h_play(eng, t):
                 if len(chosen) == len(face_def.evolve_from):
                     t["evo"] = list(chosen)
                 return None
+        elif face_def.evolve_civs:   # 超無限進化の文明条件（第218弾）: 揃うまで1体ずつ選び、揃った後も追加してよい
+            srcs = eng._evo_sources(cid, p, face)
+            chosen = t.setdefault("evo_civs_sel", [])
+            covered = set()
+            for r in chosen:
+                covered |= set(eng.chars_ro(r[0])["civs"])
+            rest = [c for c in srcs if c not in {r[0] for r in chosen}]
+            ok = len(chosen) >= 1 and set(face_def.evolve_civs) <= covered
+            if ok and not rest:
+                t["evo"] = list(chosen)
+            elif ok:
+                ans, dd = eng.ask(t, p, "choose_evo_source", [eng._card_option(c) for c in rest], 0, 1)
+                if dd:
+                    return dd
+                if not ans:
+                    t["evo"] = list(chosen)
+                else:
+                    chosen.append(s.ref(rest[ans[0]]))
+                    return None
+            else:
+                if not rest:
+                    eng._pop(t)
+                    return None
+                ans, dd = eng.ask(t, p, "choose_evo_source", [eng._card_option(c) for c in rest], 1, 1)
+                if dd:
+                    return dd
+                chosen.append(s.ref(rest[ans[0]]))
+                return None
         else:   # 通常の進化: バトルゾーン（evolve_zone）の進化元を選ぶ
             srcs = eng._evo_sources(cid, p, face)
             if len(srcs) < d.evolve_count:
@@ -1089,7 +1237,10 @@ def h_play(eng, t):
         t["cost_may_done"] = True
     if not t["free"] and not t.get("paid_done"):
         n = len(t.get("evo", []))
-        cost = max(1, d.cost - n * d.cost_reduce_per_evo) if d.cost_reduce_per_evo else None   # 「コストは0以下にはならない」= 最低1
+        if d.soul_shift:   # ソウルシフト∞（第218弾）: 実際に重ねた進化元の合計コストぶん軽減
+            cost = max(d.soul_shift["floor"], d.cost - sum(eng.chars_ro(r[0])["cost"] for r in t.get("evo", [])))
+        else:
+            cost = max(1, d.cost - n * d.cost_reduce_per_evo) if d.cost_reduce_per_evo else None   # 「コストは0以下にはならない」= 最低1
         cost = eng._sac_reduced(d, eng._tap_reduced(d, p, cost, t.get("tap", [])), t.get("sac", []))
         if t.get("reduced"):
             o = ch0["opt_reduce"]
@@ -1098,7 +1249,8 @@ def h_play(eng, t):
             cost = max(t.get("cost_may_min", 0), (d.cost if cost is None else cost) - t["cost_may_total"])
         if t.get("cost_override") is not None:   # 代替コスト（キリフダッシュ等）は他の軽減より優先して総額を置き換える
             cost = t["cost_override"]
-        choices = eng._mana_choices(cid, p, face, cost=cost, civs=t.get("cost_civs"))
+        choices = eng._mana_choices(cid, p, face, cost=cost, civs=t.get("cost_civs"),
+                                    exclude={r[0] for r in t.get("evo", [])})   # 進化元に確定したカードは支払いに使えない（第218弾Ω: マナゾーンの進化元）
         if not choices:
             eng._pop(t)
             return None
@@ -1258,6 +1410,11 @@ def h_play(eng, t):
         if t.get("recycle"):   # リサイクル（第172弾）: 唱えた後は墓地に置くかわりに山札の一番下へ
             t["resolve_to"] = "deck"
             t["resolve_position"] = "bottom"
+        if t.get("grave_cast"):   # 墓地から唱えた呪文（第226弾）: 唱えた後は墓地に置くかわりに山札の一番下へ
+            t["resolve_to"] = "deck"
+            t["resolve_position"] = "bottom"
+            if t.get("once_src") is not None:   # 許可の回数制限（ターン1回）を使い切る
+                s.turn_counters[f"cast_once:{t['once_src']}"] = True
         env = {"you": p, "self": ref, "vars": {}}
         if t.get("st"):
             env["in_st"] = True
@@ -1273,7 +1430,8 @@ def h_play(eng, t):
             + (list(d.stp_spell) if s.cards[cid].stp else []) \
             + (list(d.odrive_spell) if s.cards[cid].odrive else [])
         reps = 1 + (s.cards[cid].bazurenda if d.bazurenda else 0)   # バズレンダ呪文は能力を1+追加回数使う
-        cev = {"ev": "cast", "player": p, "subject": ref, "unpaid": bool(t["free"])}
+        cev = {"ev": "cast", "player": p, "subject": ref, "unpaid": bool(t["free"]),
+               "from": from_zone}   # 唱えた元のゾーン（第226弾: 「手札から唱えた時」の照合用）
         if t.get("vivid"):
             cev["vivid"] = True
         if t.get("recycle"):
@@ -1283,7 +1441,8 @@ def h_play(eng, t):
         eng._push(eng.ev_task(cev),
                    *([eng._child(spell_ops, env)] * reps),
                    eng.ev_task({"ev": "move", "subject": ref, "from": from_zone, "to": t.get("resolve_to", "hand" if cyc else d.resolve_to),
-                                 "reason": "resolve", "position": t.get("resolve_position", "top")}),
+                                 "reason": "resolve", "position": t.get("resolve_position", "top"),
+                                 **({"face_down": True} if d.resolve_face_down else {})}),   # 水晶チャージャー（第228弾）: 裏向きで置く
                    *([eng._child(d.after_resolve, env)] if d.after_resolve else []))
     if t.get("reduced") and ch0["opt_reduce"].get("then"):   # 減らして実行したら、そのターンの終わりに処理する。実行の解決より後に積む＝先に処理する
         then = ch0["opt_reduce"]["then"]

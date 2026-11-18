@@ -8204,3 +8204,881 @@ cards:
                 body:
                   - {op: draw, count: 2}
                   - {op: mark, name: final_declaration, scope: game}
+  - id: T557
+    name: 試験用逆転撃・光
+    types: [spell]
+    civs: [light]
+    cost: 3
+    mana: 1
+    text: 逆転撃{ll03}：クリーチャーが自分を攻撃する時、その攻撃中にまだ「逆転撃」を使っていなければ、この呪文を自分の手札からコストを支払わずに唱えてもよい。そうしたら、次の自分のターンのはじめに{ll03}を支払う。支払えなければ、自分はゲームに負ける。カードを1枚引く。
+    abilities:
+      - kind: declare
+        zone: hand
+        when: {event: attack, subject: {owner: opp}, target: player}
+        if: {not: {marked: {name: reversal_strike, scope: attack}}}
+        effect:
+          - op: if
+            cond: {not: {marked: {name: reversal_strike, scope: attack}}}
+            then:
+              - {op: mark, name: reversal_strike, scope: attack}
+              - {op: play_free, select: {ref: self}}
+              - op: delayed_trigger
+                when: {event: turn_start, player: you}
+                duration: permanent
+                effect:
+                  - {op: pay_or_lose, cost: 3, civs: [light, light]}
+    spell:
+      - {op: draw, count: 1}
+  - id: T558
+    name: 試験用逆転撃・水
+    types: [spell]
+    civs: [water]
+    cost: 3
+    mana: 1
+    text: 逆転撃{ww02}：クリーチャーが自分を攻撃する時、その攻撃中にまだ「逆転撃」を使っていなければ、この呪文を自分の手札からコストを支払わずに唱えてもよい。そうしたら、次の自分のターンのはじめに{ww02}を支払う。支払えなければ、自分はゲームに負ける。カードを1枚引く。
+    abilities:
+      - kind: declare
+        zone: hand
+        when: {event: attack, subject: {owner: opp}, target: player}
+        if: {not: {marked: {name: reversal_strike, scope: attack}}}
+        effect:
+          - op: if
+            cond: {not: {marked: {name: reversal_strike, scope: attack}}}
+            then:
+              - {op: mark, name: reversal_strike, scope: attack}
+              - {op: play_free, select: {ref: self}}
+              - op: delayed_trigger
+                when: {event: turn_start, player: you}
+                duration: permanent
+                effect:
+                  - {op: pay_or_lose, cost: 2, civs: [water, water]}
+    spell:
+      - {op: draw, count: 1}
+
+  # ---- 語彙パイロット第218弾: 超無限進化（文明条件・Ω・ソウルシフト∞） ----
+  - id: T559
+    name: 試験用超無限進化獣
+    types: [creature, evolution]
+    civs: [fire]
+    cost: 8
+    power: 8000
+    races: [テスト・ドラゴン]
+    mana: 1
+    text: 超無限進化：自分のテスト・ドラゴン1体以上の上に置く。
+    evolve_from: {races: [テスト・ドラゴン]}
+    evolve_any: true
+  - id: T560
+    name: 試験用超無限進化・文明
+    types: [creature, evolution]
+    civs: [light]
+    cost: 7
+    power: 7000
+    races: [テスト・ドラゴン]
+    mana: 1
+    text: 超無限進化：自分のクリーチャーを1体以上、光、水、火がすべて揃うように選んで、その上に置く。
+    evolve_from: {types: [creature]}
+    evolve_any: true
+    evolve_civs: [light, water, fire]
+  - id: T561
+    name: 試験用超無限進化Ω
+    types: [creature, evolution]
+    civs: [darkness]
+    cost: 6
+    power: 6000
+    races: [テスト・ドラゴン]
+    mana: 1
+    text: 超無限進化・Ω：自分の墓地、マナゾーン、バトルゾーンからクリーチャーを1体以上選んで、その上に置く。
+    evolve_from: {types: [creature]}
+    evolve_any: true
+    evolve_zones: [graveyard, mana, bz]
+  - id: T562
+    name: 試験用ソウルシフト∞
+    types: [creature, evolution]
+    civs: []
+    cost: 10
+    power: 9000
+    races: [テスト・ドラゴン]
+    mana: 1
+    text: 超無限進化：自分のテスト・ドラゴン1体以上の上に置く。∞ソウルシフト（このクリーチャーを召喚する時、このクリーチャーのコストを、その進化元クリーチャーのコストの合計分少なくする。ただし、コストは0以下にはならない）
+    evolve_from: {races: [テスト・ドラゴン]}
+    evolve_any: true
+    soul_shift: {floor: 0}
+  - id: T563
+    name: 試験用ターン頭ドロー獣
+    types: [creature]
+    civs: [nature]
+    cost: 3
+    power: 3000
+    races: [テスト]
+    mana: 1
+    text: 自分のターンのはじめにカードを1枚引くとき、もう1枚余分に引いてもよい。（第219弾プロト）
+    abilities:
+      - kind: trigger
+        when: {event: draw, player: you, turn_draw: true}
+        effect:
+          - op: may
+            body:
+              - {op: draw, count: 1}
+  - id: T564
+    name: 試験用初ドロー獣
+    types: [creature]
+    civs: [water]
+    cost: 3
+    power: 2000
+    races: [テスト]
+    mana: 1
+    text: 自分のターンに1枚目のカードを引く時、もう1枚余分に引いてもよい。（第219弾プロト）
+    abilities:
+      - kind: trigger
+        when: {event: draw, player: you, ord: {kind: draw, eq: 1}}
+        if: {is_turn: you}
+        effect:
+          - op: may
+            body:
+              - {op: draw, count: 1}
+  - id: T565
+    name: 試験用最大パワードロー獣
+    types: [creature]
+    civs: [fire]
+    cost: 4
+    power: 4000
+    races: [テスト]
+    mana: 1
+    text: 自分のターンのはじめにカードを1枚引く時、バトルゾーンにある自分の一番パワーの大きいクリーチャーが相手のどのクリーチャーよりも大きければ、もう1枚余分に引いてもよい。（第219弾プロト）
+    abilities:
+      - kind: trigger
+        when: {event: draw, player: you, turn_draw: true}
+        if: {cmp: [{max_power: {zone: bz, owner: you, filter: {types: [creature]}}}, ">", {max_power: {zone: bz, owner: opp, filter: {types: [creature]}}}]}
+        effect:
+          - op: may
+            body:
+              - {op: draw, count: 1}
+  - id: T566
+    name: 試験用欲張りドロー獣
+    types: [creature]
+    civs: [darkness]
+    cost: 5
+    power: 5000
+    races: [テスト]
+    mana: 1
+    text: ターンのはじめにカードを引く時、2枚まで余分に引く。自分のターンの終わりに、バトルゾーンにある自分のクリーチャーを2体タップする。（第219弾プロト）
+    abilities:
+      - kind: trigger
+        when: {event: draw, player: you, turn_draw: true}
+        effect:
+          - {op: choose_number, min: 0, max: 2, as: n}
+          - {op: draw, count: {declared: n}}
+      - kind: trigger
+        when: {event: turn_end, player: you}
+        effect:
+          - op: tap
+            select: {zone: bz, owner: you, filter: {types: [creature]}, count: 2}
+  - id: T567
+    name: 試験用ドロー呪文
+    types: [spell]
+    civs: [water]
+    cost: 2
+    mana: 1
+    text: カードを2枚引く。（第219弾プロト）
+    spell:
+      - {op: draw, count: 2}
+  - id: T568
+    name: 試験用全員ドロー呪文
+    types: [spell]
+    civs: [light]
+    cost: 2
+    mana: 1
+    text: 各プレイヤーはカードを1枚引く。（第219弾プロト）
+    spell:
+      - {op: draw, player: each, count: 1}
+  - id: T569
+    name: 試験用ハイパー突撃獣
+    types: [creature]
+    civs: [fire]
+    cost: 3
+    power: 3000
+    races: [テスト]
+    mana: 1
+    hyper: true
+    text: ハイパー化：自分の他のクリーチャーを1体タップする。（第220弾プロト）
+  - id: T570
+    name: 試験用ハイパーチャンス呪文
+    types: [spell]
+    civs: [water]
+    cost: 2
+    mana: 1
+    text: アタック・チャンス：ハイパーモード状態のクリーチャー（自分のハイパーモードを解放しているクリーチャーが攻撃する時、この呪文をコストを支払わずに唱えてもよい）カードを1枚引く。（第220弾プロト）
+    abilities:
+      - kind: declare
+        zone: hand
+        when: {event: attack, subject: {owner: you, filter: {types: [creature], hyper: true}}}
+        effect:
+          - op: may
+            body:
+              - {op: play_free, select: {ref: self}}
+    spell:
+      - {op: draw, count: 1}
+  - id: T571
+    name: 試験用ハイパー救援獣
+    types: [creature]
+    civs: [darkness]
+    cost: 4
+    power: 4000
+    races: [テスト]
+    mana: 1
+    text: 自分のハイパーモード状態のクリーチャーが攻撃する時、このクリーチャーを自分の墓地から出してもよい。（第220弾プロト）
+    abilities:
+      - kind: trigger
+        zone: graveyard
+        when: {event: attack, subject: {owner: you, filter: {types: [creature], hyper: true}}}
+        effect:
+          - op: may
+            body:
+              - {op: play_free, select: {ref: self}}
+  - id: T572
+    name: 試験用バイオ・T（手札比例）
+    types: [creature]
+    civs: [water]
+    cost: 4
+    power: 1000
+    races: [テスト]
+    mana: 1
+    text: バイオ・T：自分のテストが攻撃して、バトルが始まった時、このカードを自分の手札から捨ててもよい。そうした場合、そのターンの終わりまで、攻撃している自分のクリーチャーのパワーは自分の手札１枚につき+1000される。（第221弾プロト・dm23-011型）
+    abilities:
+      - kind: trigger
+        zone: hand
+        when: {event: battle_start, subject: {owner: you, filter: {races: [テスト]}}}
+        effect:
+          - op: may
+            body:
+              - {op: discard, select: {ref: self}}
+              - op: modify
+                select: {ref: event.subject}
+                mod:
+                  power: {amount: 1000, count: {zone: hand, owner: you}}
+  - id: T573
+    name: 試験用バイオ・T（パワー＋終了時アンタップ）
+    types: [creature]
+    civs: [light]
+    cost: 3
+    power: 2500
+    races: [テスト]
+    mana: 1
+    text: バイオ・T：自分のテストが攻撃して、バトルが始まった時、このカードを自分の手札から捨ててもよい。そうした場合、そのターンの終わりまで、攻撃している自分のクリーチャーのパワーは+1500され、ターンの終わりにアンタップされる。（第221弾プロト・dm23-039型）
+    abilities:
+      - kind: trigger
+        zone: hand
+        when: {event: battle_start, subject: {owner: you, filter: {races: [テスト]}}}
+        effect:
+          - op: may
+            body:
+              - {op: discard, select: {ref: self}}
+              - op: modify
+                select: {ref: event.subject}
+                mod: {power: 1500}
+              - {op: choose, as: t, select: {ref: event.subject}}
+              - op: delayed_trigger
+                when: {event: turn_end}
+                effect:
+                  - {op: untap, select: {ref: t}}
+  - id: T574
+    name: 試験用バイオ・T（両バウンス）
+    types: [creature]
+    civs: [water]
+    cost: 4
+    power: 3000
+    races: [テスト]
+    mana: 1
+    text: バイオ・T：自分のテストが攻撃して、バトルが始まった時、このカードを自分の手札から捨ててもよい。そうした場合、そのテストおよびバトルしている相手クリーチャーを、それぞれ持ち主の手札に戻す。（第221弾プロト・dm23-040型）
+    abilities:
+      - kind: trigger
+        zone: hand
+        when: {event: battle_start, subject: {owner: you, filter: {races: [テスト]}}}
+        effect:
+          - op: may
+            body:
+              - {op: discard, select: {ref: self}}
+              - {op: bounce, select: {ref: event.subject}}
+              - {op: bounce, select: {ref: event.opponent}}
+  - id: T575
+    name: 試験用バイオ・T（スレイヤー付与）
+    types: [creature]
+    civs: [darkness]
+    cost: 3
+    power: 1000
+    races: [テスト]
+    mana: 1
+    text: バイオ・T：自分のテストが攻撃して、バトルが始まった時、このカードを自分の手札から捨ててもよい。そうした場合、そのターンの終わりまで、攻撃している自分のクリーチャーは「スレイヤー」を得る。（第221弾プロト・dm23-046型）
+    abilities:
+      - kind: trigger
+        zone: hand
+        when: {event: battle_start, subject: {owner: you, filter: {races: [テスト]}}}
+        effect:
+          - op: may
+            body:
+              - {op: discard, select: {ref: self}}
+              - op: modify
+                select: {ref: event.subject}
+                mod: {grant: [slayer]}
+  - id: T576
+    name: 試験用バイオ・T（パワーアタッカー付与）
+    types: [creature]
+    civs: [fire]
+    cost: 6
+    power: 4000
+    races: [テスト]
+    mana: 1
+    text: バイオ・T：自分のテストが攻撃して、バトルが始まった時、このカードを自分の手札から捨ててもよい。そうした場合、そのターンの終わりまで、攻撃している自分のクリーチャーは「パワーアタッカー+4000」を得る。（第221弾プロト・dm23-049型）
+    abilities:
+      - kind: trigger
+        zone: hand
+        when: {event: battle_start, subject: {owner: you, filter: {races: [テスト]}}}
+        effect:
+          - op: may
+            body:
+              - {op: discard, select: {ref: self}}
+              - op: modify
+                select: {ref: event.subject}
+                mod: {power_when: {amount: 4000, when: attacking}}
+  - id: T577
+    name: 試験用バイオ・T（パワー固定）
+    types: [creature]
+    civs: [nature]
+    cost: 3
+    power: 2000
+    races: [テスト]
+    mana: 1
+    text: バイオ・T：自分のテストが攻撃して、バトルが始まった時、このカードを自分の手札から捨ててもよい。そうした場合、そのターンの終わりまで、攻撃している自分のクリーチャーのパワーは+2000される。（第221弾プロト・dm23-054型）
+    abilities:
+      - kind: trigger
+        zone: hand
+        when: {event: battle_start, subject: {owner: you, filter: {races: [テスト]}}}
+        effect:
+          - op: may
+            body:
+              - {op: discard, select: {ref: self}}
+              - op: modify
+                select: {ref: event.subject}
+                mod: {power: 2000}
+  - id: T578
+    name: 試験用別種族の攻撃役
+    types: [creature]
+    civs: [fire]
+    cost: 2
+    power: 2000
+    races: [別種]
+    mana: 1
+    text: このクリーチャーは、タップされていないクリーチャーを攻撃できる。（第221弾プロト。バイオ・Tの種族フィルタの否定対照用）
+    abilities:
+      - kind: static
+        affects: self
+        mod:
+          allow:
+            - action: attack_creature
+              other: {tapped: false}
+  - id: T579
+    name: 試験用マッハ攻撃役
+    types: [creature]
+    civs: [fire]
+    cost: 2
+    power: 2000
+    races: [テスト]
+    mana: 1
+    text: このクリーチャーは、タップされていないクリーチャーを攻撃できる。（第221弾プロト。バイオ・T試験の攻撃役）
+    abilities:
+      - kind: static
+        affects: self
+        mod:
+          allow:
+            - action: attack_creature
+              other: {tapped: false}
+  - id: T580
+    name: 試験用決闘（テスト公開）
+    types: [spell]
+    civs: [light, water]
+    cost: 6
+    mana: 1
+    races: [テスト・ワード]
+    keywords: [s_trigger]
+    text: S・トリガー（カードを１枚引く）。このカードを自分の手札からマナゾーンに置いた時、自分の手札にあるテスト・カードを１枚、表向きにしてもよい。そうしたら、このカードをアンタップする。（第222弾プロト・dm26ex2-030型）
+    spell:
+      - {op: draw, count: 1}
+    abilities:
+      - kind: trigger
+        zone: hand
+        when: {event: move, from: hand, to: mana, subject: self}
+        effect:
+          - op: may
+            body:
+              - op: choose
+                select: {zone: hand, owner: you, filter: {races: [テスト]}}
+                reveal: true
+                as: r
+              - op: if
+                cond: {exists: {ref: r}}
+                then:
+                  - op: untap
+                    select: {ref: self_moved}
+  - id: T581
+    name: 試験用決闘（別種公開）
+    types: [spell]
+    civs: [light, water]
+    cost: 6
+    mana: 1
+    races: [別種・ワード]
+    keywords: [s_trigger]
+    text: S・トリガー（カードを１枚引く）。このカードを自分の手札からマナゾーンに置いた時、自分の手札にある別種・カードを１枚、表向きにしてもよい。そうしたら、このカードをアンタップする。（第222弾プロト・dm26ex2-031型。種族フィルタ違い）
+    spell:
+      - {op: draw, count: 1}
+    abilities:
+      - kind: trigger
+        zone: hand
+        when: {event: move, from: hand, to: mana, subject: self}
+        effect:
+          - op: may
+            body:
+              - op: choose
+                select: {zone: hand, owner: you, filter: {races: [別種]}}
+                reveal: true
+                as: r
+              - op: if
+                cond: {exists: {ref: r}}
+                then:
+                  - op: untap
+                    select: {ref: self_moved}
+  - id: T582
+    name: 試験用マナタップ置き役
+    types: [creature]
+    civs: [darkness]
+    cost: 3
+    power: 1000
+    races: [ゴースト]
+    keywords: [opp_mana_tapped]
+    mana: 1
+    text: 相手はカードをマナゾーンに置く時、タップして置く。（第222弾プロト。dmex10-008型。チャージした決闘がタップで置かれる対照用）
+  - id: T583
+    name: テスト・パワージャッジ甲
+    types: [creature]
+    civs: [fire]
+    cost: 3
+    power: 3000
+    races: [テスト]
+    mana: 1
+    text: "このクリーチャーが出た時、相手とパワー・ガチンコ・ジャッジする。自分が勝ったら、カードを1枚引く。（第223弾プロト。dm26rp2-030型の基本形）"
+    abilities:
+      - kind: trigger
+        when: {event: move, to: bz, subject: self}
+        effect:
+          - {op: gachinko, by: power, times: 1, as: wins}
+          - op: if
+            cond: {cmp: [{var: wins}, ">=", 1]}
+            then:
+              - {op: draw, count: 1}
+  - id: T584
+    name: テスト・パワージャッジ乙
+    types: [creature]
+    civs: [water]
+    cost: 4
+    power: 2000
+    races: [テスト]
+    mana: 1
+    text: "このクリーチャーが出た時、相手とパワー・ガチンコ・ジャッジしてもよい。自分が勝ったら、こうして自分が表向きにしたカードを山札の下に置くかわりにコストを支払わずに召喚してもよい。（第223弾プロト。dm26rp2-004型の mine_as 保留形）"
+    abilities:
+      - kind: trigger
+        when: {event: move, to: bz, subject: self}
+        effect:
+          - op: may
+            body:
+              - {op: gachinko, by: power, times: 1, mine_as: mine, as: wins}
+              - op: if
+                cond: {cmp: [{var: wins}, ">=", 1]}
+                then:
+                  - op: may
+                    body:
+                      - {op: move, select: {ref: mine}, to: bz, reason: summon, as: put}
+              - op: if
+                cond: {not: {exists: {ref: put}}}
+                then:
+                  - op: if
+                    cond: {exists: {ref: mine}}
+                    then:
+                      - {op: move, select: {ref: mine}, to: deck, reason: put, position: bottom}
+  - id: T585
+    name: テスト・パワージャッジ丙
+    types: [creature]
+    civs: [darkness]
+    cost: 5
+    power: 4000
+    races: [テスト]
+    keywords: [speed_attacker]
+    mana: 1
+    text: "このクリーチャーの攻撃の終わりに、自分が負けるか中止するまで、相手とパワー・ガチンコ・ジャッジする。その後、こうして自分が勝った回数、カードを1枚引く。（第223弾プロト。dm26rp2-009型の until_lose＋stoppable＋repeat 形）"
+    abilities:
+      - kind: trigger
+        when: {event: attack_end, subject: self}
+        effect:
+          - {op: gachinko, by: power, until_lose: true, stoppable: true, as: wins}
+          - op: repeat
+            times: {var: wins}
+            body:
+              - {op: draw, count: 1}
+
+  - id: T586
+    name: 試験用銀河槍
+    types: [cross_gear]
+    civs: [fire]
+    cost: 5
+    mana: 1
+    text: "これをクロスしたクリーチャーのパワーを+9000し、「パワード・ブレイカー」を与える。これをクロスしたクリーチャーが攻撃する時、それよりパワーが小さい相手のクリーチャーを1体破壊する。その後、相手のシールドを1つブレイクする。（第224弾・dmex16-041型）"
+    abilities:
+      - kind: static
+        affects: crossed
+        mod: {power: 9000, grant: [powered_breaker]}
+      - kind: trigger
+        when: {event: attack, subject: crossed}
+        effect:
+          - {op: destroy, select: {zone: bz, owner: opp, filter: {power_le: {sum: [{power_of: "crossed"}, -1]}}, count: 1}}
+          - {op: break, player: opp, count: 1}
+
+  - id: T587
+    name: 試験用軽鎧
+    types: [cross_gear]
+    civs: [light]
+    cost: 1
+    mana: 1
+    free_if: {exists: {zone: bz, owner: you, filter: {types: [creature]}}}
+    text: "G・ゼロ：バトルゾーンに自分のクリーチャーがあれば、このクロスギアをコストを支払わずにジェネレートしてもよい。これをクロスしたクリーチャーのパワーを+500する。（第224弾・dmex17-107型）"
+    abilities:
+      - kind: static
+        affects: crossed
+        mod: {power: 500}
+
+  - id: T588
+    name: 試験用龍魂
+    types: [cross_gear]
+    civs: [fire]
+    cost: 4
+    mana: 1
+    text: "これをクロスしたクリーチャーのパワーは+2000され、シールドをさらにもう1つブレイクする。これをクロスしたクリーチャーが攻撃する時、相手のマナゾーンからカードを2枚まで選び、持ち主の墓地に置く。（第224弾・dmex17-cho07型）"
+    abilities:
+      - kind: static
+        affects: crossed
+        mod: {power: 2000, breaks_add: 1}
+      - kind: trigger
+        when: {event: attack, subject: crossed}
+        effect:
+          - {op: move, select: {zone: mana, owner: opp, count: 2, up_to: true}, to: graveyard, reason: put}
+
+  - id: T589
+    name: 試験用至宝
+    types: [cross_gear]
+    civs: [light, darkness]
+    cost: 2
+    mana: 1
+    text: "これをクロスしたクリーチャーのパワーを+4000し、「ブロッカー」を与える。これをクロスしたクリーチャーが攻撃する時、相手の手札を見ないで1枚選び、捨てさせる。（第224弾・dmex17-w15型）"
+    abilities:
+      - kind: static
+        affects: crossed
+        mod: {power: 4000, grant: [blocker]}
+      - kind: trigger
+        when: {event: attack, subject: crossed}
+        effect:
+          - {op: discard, select: {zone: hand, owner: opp, chooser: random, count: 1}}
+
+  - id: T590
+    name: 試験用助太刀
+    types: [cross_gear]
+    civs: [nature]
+    cost: 2
+    mana: 1
+    text: "これをクロスしたクリーチャーが攻撃する時、カードを1枚引いてもよい。（第224弾・dmpcd02-a11型）"
+    abilities:
+      - kind: trigger
+        when: {event: attack, subject: crossed}
+        effect:
+          - {op: may, body: [{op: draw, count: 1}]}
+
+  - id: T591
+    name: 試験用覇翼
+    types: [cross_gear]
+    civs: [nature]
+    cost: 2
+    mana: 1
+    text: "これをクロスしたクリーチャーが攻撃する時、自分の山札の上から1枚目をマナゾーンに置いてもよい。（第224弾・dmpcd02-a13型）"
+    abilities:
+      - kind: trigger
+        when: {event: attack, subject: crossed}
+        effect:
+          - {op: may, body: [{op: mana_put, select: {zone: deck, owner: you, from_top: 1, count: 1}}]}
+
+  - id: T592
+    name: 試験用センゴク鎧
+    types: [cross_gear]
+    civs: [fire]
+    cost: 3
+    mana: 1
+    text: "このカードがクロスされていない時、自分のドラゴンの召喚コストを1少なくしてもよい。ただしコストは0以下にならない。これをクロスしたクリーチャーは、パワーを+2000され、シールドをさらにひとつブレイクする。このカードをコストを支払わずに、名前に《武者》とある自分のクリーチャーにクロスしてもよい。（第225弾・dmx21-013型）"
+    abilities:
+      - kind: static
+        affects: {zone: hand, owner: you, filter: {races: [ドラゴン]}}
+        mod: {cost_may: {amount: 1, min: 1}}
+        if: {not: {exists: {ref: self, filter: {crossed: true}}}}
+      - kind: static
+        affects: crossed
+        mod: {power: 2000, breaks_add: 1}
+      - kind: static
+        affects: self
+        mod: {allow: [{action: cross_free, other: {name_has: 武者}}]}
+
+  - id: T593
+    name: 試験用オンセン剣
+    types: [cross_gear]
+    civs: [water, fire]
+    cost: 4
+    mana: 1
+    text: "フリー・クロス。このクロスギアをバトルゾーンに出した時、バトルゾーンにあるクロスギアを1枚選び、持ち主の墓地に置く。このクロスギアをクロスしたクリーチャーが相手のシールドをブレイクした時、相手のパワー3000以下のクリーチャーを1体破壊する。その後、カードを1枚引いてもよい。（第225弾・dmx12b-025型）"
+    abilities:
+      - kind: static
+        affects: self
+        mod: {allow: [{action: cross_free}]}
+      - kind: trigger
+        when: {event: move, to: bz, subject: self}
+        effect:
+          - {op: destroy, select: {zone: bz, owner: any, filter: {types: [cross_gear]}, count: 1}}
+      - kind: trigger
+        when: {event: break, subject: crossed}
+        effect:
+          - {op: destroy, select: {zone: bz, owner: opp, filter: {power_le: 3000}, count: 1}}
+          - {op: may, body: [{op: draw, count: 1}]}
+
+  - id: T594
+    name: 試験用偉大なる大地
+    types: [spell]
+    civs: [fire, nature]
+    cost: 8
+    mana: 1
+    text: "バトルゾーンにある自分のクリーチャーを1体、マナゾーンに置いてもよい。そうしたら、名前に《ボルベルグ》とあるクリーチャーを1体と進化ではないクロスギアを1枚、自分のマナゾーンからバトルゾーンに出す。（第225弾・dmx21-046型）"
+    spell:
+      - {op: may, body: [
+          {op: move, select: {zone: bz, owner: you, filter: {types: [creature]}, count: 1}, to: mana, reason: put, as: put},
+          {op: if, cond: {exists: {ref: put}}, then: [
+            {op: move, select: {zone: mana, owner: you, filter: {types: [creature], name_has: ボルベルグ}, count: 1}, to: bz, reason: put},
+            {op: move, select: {zone: mana, owner: you, filter: {types: [cross_gear], evolution: false}, count: 1}, to: bz, reason: put}]}]}
+
+  - id: T595
+    name: 試験用ビクトリー魂
+    types: [cross_gear]
+    civs: [fire]
+    cost: 5
+    mana: 1
+    text: "これをクロスしたクリーチャーのパワーを+3000する。これをクロスしたクリーチャーが攻撃する時、自分の山札の上から2枚をマナゾーンに置く。その後、カードを1枚、自分のマナゾーンから手札に戻す。（第225弾・dmx21-047型）"
+    abilities:
+      - kind: static
+        affects: crossed
+        mod: {power: 3000}
+      - kind: trigger
+        when: {event: attack, subject: crossed}
+        effect:
+          - {op: mana_put, select: {zone: deck, owner: you, from_top: 2, count: 2}}
+          - {op: move, select: {zone: mana, owner: you, count: 1}, to: hand, reason: return}
+
+  - id: T596
+    name: 試験用武者ドラゴン
+    types: [creature]
+    civs: [fire]
+    cost: 3
+    power: 3000
+    races: [サムライ]
+    mana: 1
+    text: "名前に《武者》とある試験用クリーチャー。（第225弾）"
+    abilities: []
+
+  - id: T597
+    name: 試験用ボルベルグ・ドラゴン
+    types: [creature]
+    civs: [nature]
+    cost: 5
+    power: 5000
+    races: [アーマード・ドラゴン]
+    mana: 1
+    text: "名前に《ボルベルグ》とある試験用クリーチャー。（第225弾）"
+    abilities: []
+
+  - id: T598
+    name: 試験用大ドラゴン
+    types: [creature]
+    civs: [water]
+    cost: 5
+    power: 5000
+    races: [ドラゴン]
+    mana: 1
+    text: "コスト5の試験用ドラゴン。（第225弾）"
+    abilities: []
+
+  - id: T599
+    name: 試験用反魂の決断
+    types: [spell]
+    civs: [darkness]
+    cost: 3
+    mana: 1
+    grave_cast: true
+    text: "この呪文を自分の墓地から唱えてもよい。そうしたら、唱えた後、墓地のかわりに山札の下に置く。カードを1枚引く。（第226弾・dm26ex2-mc004型）"
+    spell:
+      - {op: draw, count: 1}
+
+  - id: T600
+    name: 試験用渦中の隠者
+    types: [creature]
+    civs: [water]
+    cost: 4
+    power: 3000
+    mana: 1
+    text: "自分のターンに一度、呪文を1枚、自分の墓地から唱えてもよい。唱えた後、墓地に置くかわりに山札の一番下に置く。自分が呪文を唱えた時、カードを1枚引いてもよい。（第226弾・dmrp03-004型）"
+    abilities:
+      - kind: static
+        affects: {zone: graveyard, owner: you, filter: {types: [spell]}}
+        mod: {allow: [{action: cast_from_graveyard, once: true}]}
+      - kind: trigger
+        when: {event: cast, subject: {owner: you, filter: {types: [spell]}}}
+        effect:
+          - {op: may, body: [{op: draw, count: 1}]}
+
+  - id: T601
+    name: 試験用龍装艦
+    types: [creature]
+    civs: [water]
+    cost: 6
+    power: 4000
+    mana: 1
+    keywords: [blocker]
+    text: "ブロッカー。呪文を自分の手札から唱えた時、その呪文を、墓地からコストを支払わずに唱えてもよい。（第226弾・dmex18-s06型）"
+    abilities:
+      - kind: trigger
+        when: {event: cast, from: hand, subject: {owner: you, filter: {types: [spell]}}}
+        effect:
+          - {op: may, body: [{op: play_free, select: {ref: subject}}]}
+  - id: T602
+    name: テスト停滞の信者
+    types: [creature]
+    civs: [light]
+    cost: 5
+    power: 2000
+    races: [イニシエート]
+    keywords: [blocker, cannot_attack_player]
+    abilities:
+     - {kind: static, untap_limit: {zone: bz, count: 1}}
+    text: "ブロッカー。このクリーチャーは、相手プレイヤーを攻撃できない。相手は、自身のターンのはじめに、バトルゾーンにある自身のクリーチャーを1体しかアンタップできない。"
+  - id: T603
+    name: テスト無月の門番
+    types: [creature]
+    civs: [darkness]
+    cost: 7
+    power: 6000
+    races: [デーモン・コマンド]
+    keywords: [double_breaker]
+    abilities:
+     - {kind: static, untap_limit: {zone: mana, count: 3}}
+    text: "相手のターンのはじめに、相手は自身のマナゾーンのカードを3枚までしかアンタップできない。W・ブレイカー"
+  - id: T604
+    name: テスト革命の龍王
+    types: [creature, evolution]
+    civs: [light]
+    cost: 6
+    power: 7000
+    races: [エンジェル・コマンド・ドラゴン]
+    keywords: [double_breaker]
+    evolve_from: {civs: [light]}
+    abilities:
+     - {kind: static, untap_limit: {zone: bz, count: 1}, if: {cmp: [{count: {zone: shield, owner: you}}, "<=", 2]}}
+    text: "進化―自分の光のクリーチャー1体の上に置く。W・ブレイカー 革命2―自分のシールドが2つ以下なら、相手のターンのはじめに、相手は自身のクリーチャーを1体しかアンタップできない。"
+  - id: T605
+    name: テスト超躍の絆
+    types: [spell]
+    civs: [nature]
+    cost: 3
+    spell:
+     - {op: untap_limit, player: opp, zone: mana, count: 2}
+    text: "次の相手のターンのはじめに、相手は自身のマナゾーンにあるカードを2枚までしかアンタップできない。"
+  - id: T606
+    name: テスト無量大龍
+    types: [creature]
+    civs: [water, darkness]
+    cost: 13
+    power: 13000
+    races: [ムートピア]
+    keywords: [triple_breaker]
+    abilities:
+     - {kind: static, untap_limit: {zone: bz, count: 1}}
+    text: "T・ブレイカー 相手は、自身のターンのはじめに、クリーチャーを1体しかアンタップできない。"
+  - id: T607
+    name: テスト水晶チャージャー
+    types: [spell]
+    civs: [water]
+    cost: 2
+    keywords: [crystal_charger]
+    spell:
+     - {op: draw, count: 1}
+    text: "カードを1枚引く。水晶チャージャー（この呪文を唱えた後、墓地に置くかわりに、裏向きにしてマナゾーンに置く）"
+  - id: T608
+    name: テスト通常チャージャー
+    types: [spell]
+    civs: [water]
+    cost: 2
+    keywords: [charger]
+    spell:
+     - {op: draw, count: 1}
+    text: "カードを1枚引く。チャージャー（この呪文を唱えた後、墓地に置くかわりに自分のマナゾーンに置く）"
+  - id: T610
+    name: テストバイオKドリーム
+    types: [creature]
+    civs: [nature]
+    cost: 2
+    power: 1000
+    races: [ドリームメイト]
+    abilities:
+     - {kind: trigger, zone: hand, when: {event: attack_unblocked, subject: {owner: you, filter: {races: [ドリームメイト]}}, target: player}, effect: [{op: may, body: [{op: discard, select: {ref: self}}, {op: choose_number, min: 0, max: 2, as: n}, {op: draw, count: {declared: n}}]}]}
+    text: "バイオ・K-自分のドリームメイトが相手プレイヤーを攻撃してブロックされなかった時、このカードを自分の手札から捨ててもよい。そうした場合、カードを2枚まで引いてもよい。"
+  - id: T611
+    name: テストバイオKデビル
+    types: [creature]
+    civs: [darkness]
+    cost: 3
+    power: 2000
+    races: [グランド・デビル]
+    abilities:
+     - {kind: trigger, zone: hand, when: {event: attack_unblocked, subject: {owner: you, filter: {races: [グランド・デビル]}}, target: player}, effect: [{op: may, body: [{op: discard, select: {ref: self}}, {op: modify, select: {ref: event.subject}, mod: {grant: [double_breaker]}, duration: end_of_turn}]}]}
+    text: "バイオ・K-自分のグランド・デビルが相手プレイヤーを攻撃してブロックされなかった時、このカードを自分の手札から捨ててもよい。そうした場合、そのターンの終わりまで、攻撃している自分のクリーチャーは「W・ブレイカー」を得る。"
+  - id: T612
+    name: テストバイオKドレイク
+    types: [creature]
+    civs: [fire]
+    cost: 4
+    power: 3000
+    races: [ティラノ・ドレイク]
+    abilities:
+     - {kind: trigger, zone: hand, when: {event: attack_unblocked, subject: {owner: you, filter: {races: [ティラノ・ドレイク]}}, target: player}, effect: [{op: may, body: [{op: discard, select: {ref: self}}, {op: choose, select: {zone: deck, owner: you, look: true, count: all}, as: pile}, {op: choose, select: {ref: pile, filter: {name: {name_of: event.subject}, types: [creature]}, count: 1}, as: found, reveal: true}, {op: if, cond: {exists: {ref: found}}, then: [{op: move, select: {ref: found}, to: hand, reason: put}]}, {op: move, select: {ref: pile, count: all}, to: deck, reason: put}, {op: shuffle, player: you}]}]}
+    text: "バイオ・K-自分のティラノ・ドレイクが相手プレイヤーを攻撃してブロックされなかった時、このカードを自分の手札から捨ててもよい。そうした場合、自分の山札を見る。その中から、攻撃している自分のクリーチャーと同じ名前のクリーチャーを1体選び、相手に見せてから手札に加える。その後、山札をシャッフルする。"
+  - id: T613
+    name: テストドリームメイト兵
+    types: [creature]
+    civs: [nature]
+    cost: 2
+    power: 2000
+    races: [ドリームメイト]
+    text: "テスト用のドリームメイト。"
+  - id: T614
+    name: テストグランドデビル兵
+    types: [creature]
+    civs: [darkness]
+    cost: 3
+    power: 3000
+    races: [グランド・デビル]
+    text: "テスト用のグランド・デビル。"
+  - id: T615
+    name: テストドリームメイト兵
+    types: [creature]
+    civs: [fire]
+    cost: 3
+    power: 3000
+    races: [ティラノ・ドレイク]
+    text: "テスト用のティラノ・ドレイク。同名カード（T613とは別IDで同名）。"
