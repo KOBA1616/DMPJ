@@ -13,7 +13,7 @@ def op_uncross(eng, t, op, env):
     if d:
         return d
     for cid in cids:
-        eng.s.cards[cid].crossed = None
+        eng.s.mut_card(cid).crossed = None
     return None
 
 @op("cross_free", gear="selector", to="selector")
@@ -40,7 +40,7 @@ def op_cross_free(eng, t, op, env):
         return None
     tg = eng.s.ref(targets[0])
     for cid in gears:
-        eng.s.cards[cid].crossed = list(tg)
+        eng.s.mut_card(cid).crossed = list(tg)
     return None
 
 
@@ -219,7 +219,7 @@ def op_tap(eng, t, op, env, kind="tap"):
         return d
     if kind == "tap" and op.get("no_untap_next"):
         for c in cids:
-            eng.s.cards[c].no_untap_next = True
+            eng.s.mut_card(c).no_untap_next = True
     if cids:
         eng._defer(t, [eng.ev_task([{"ev": kind, "subject": eng.s.ref(c)} for c in cids], env)])
     return None
@@ -243,7 +243,7 @@ def op_hyper_release(eng, t, op, env):
         return d
     for c in cids:
         if eng.fdef(c).hyper:
-            eng.s.cards[c].hyper = True
+            eng.s.mut_card(c).hyper = True
     return None
 
 
@@ -255,7 +255,7 @@ def op_flip_down(eng, t, op, env):
     if d:
         return d
     for c in cids:
-        card = eng.s.cards[c]
+        card = eng.s.mut_card(c)
         if card.zone == "mana":
             card.face_down = True
         elif card.zone == "shield":
@@ -273,7 +273,7 @@ def op_flip_up(eng, t, op, env):
     if d:
         return d
     for c in cids:
-        card = eng.s.cards[c]
+        card = eng.s.mut_card(c)
         if card.zone == "shield":
             if not card.face_up:
                 card.face_up = True
@@ -291,7 +291,7 @@ def op_dswitch(eng, t, op, env):
     能力の出し分け（使用済み・deny: [d_switch] の間は能力自体が出ない）は abilities() 側で行う。"""
     cid = env["self"][0]
     if eng.s.alive(env["self"]):
-        eng.s.cards[cid].dswitched = True
+        eng.s.mut_card(cid).dswitched = True
     return None
 
 
@@ -674,11 +674,11 @@ def op_shield_plus(eng, t, op, env):
     target = shields[a[0]]
     tucked = deck[0]
     eng._raw_move(tucked, "shield")
-    lst = s.zones["shield"][p if not eng.zshared("shield") else 0]
+    lst = eng.mut_zlist("shield", p)
     if tucked in lst:
         lst.remove(tucked)   # 束の下のカードはゾーンの並びに入らない（113.2）
-    s.cards[target].under.append(tucked)
-    s.cards[tucked].top_of = target
+    s.mut_card(target).under.append(tucked)
+    s.mut_card(tucked).top_of = target
     return None
 
 
@@ -700,8 +700,8 @@ def op_sforce_link(eng, t, op, env):
     me = list(env["self"])
     for c in shields:
         if s.cards[c].sforce_of is not None and list(s.cards[c].sforce_of) == me:
-            s.cards[c].sforce_of = None
-    s.cards[shields[a[0]]].sforce_of = me
+            s.mut_card(c).sforce_of = None
+    s.mut_card(shields[a[0]]).sforce_of = me
     return None
 
 
@@ -719,7 +719,7 @@ def op_castle_link(eng, t, op, env):
     if d:
         return d
     me = list(env["self"])
-    s.cards[me[0]].fortifies = list(s.ref(shields[a[0]]))
+    s.mut_card(me[0]).fortifies = list(s.ref(shields[a[0]]))
     return None
 
 
@@ -1043,7 +1043,7 @@ def op_attach_seal(eng, t, op, env):
     s = eng.s
     n = op.get("count", 1)
     for cid in cids:
-        c = s.cards[cid]
+        c = s.mut_card(cid)
         if c.zone != "bz" or c.top_of >= 0:
             continue
         deck = s.zones["deck"][c.controller]
@@ -1052,7 +1052,7 @@ def op_attach_seal(eng, t, op, env):
                 break
             top = deck[0]
             eng._raw_move(top, "bz")
-            sc = s.cards[top]
+            sc = s.mut_card(top)
             sc.top_of = cid
             sc.seal_of = cid
             c.seals.append(top)
@@ -1172,9 +1172,9 @@ def op_strigger(eng, t, op, env):
         raise ValueError(f"strigger mode must be on/off: {op['mode']}")
     for c in cids:
         if op["mode"] == "off":
-            eng.s.cards[c].strigger_off = True
+            eng.s.mut_card(c).strigger_off = True
         else:
-            eng.s.cards[c].strigger_on = True
+            eng.s.mut_card(c).strigger_on = True
     return None
 
 

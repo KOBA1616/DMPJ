@@ -8,9 +8,16 @@ from __future__ import annotations
 
 import hashlib
 import json
+import os
 from dataclasses import asdict, dataclass, field, fields, is_dataclass
 
 MASK64 = (1 << 64) - 1
+
+# 実験B（copy-on-write）: 有効時は clone() がカードとゾーンを共有し、
+# 書き込みは mut_card / mut_zone 経由で初回だけ実体コピーを作る。
+# 共有の管理情報は dataclass のフィールド外（インスタンス __dict__ の
+# _cow_cards / _cow_zones）に置くので、digest には影響しない。
+COW = os.environ.get("DMSIM_COW") == "1"
 
 
 def rng_next(state: "GameState") -> int:
@@ -162,15 +169,63 @@ class GameState:
     def zone(self, name: str, player: int, shared: bool) -> list[int]:
         return self.zones[name][0 if shared else player]
 
+    # ---- copy-on-write（実験B） ----
+    def mut_card(self, cid: int) -> "Card":
+        """書き込み用にカードを返す。clone で共有されたカードは、最初の
+        書き込みの前にこの状態専用の複製へ差し替える。読み取りは
+        cards[cid] を直接使うこと。"""
+        c = self.cards[cid]
+        if not COW:
+            return c
+        owned = self.__dict__.get("_cow_cards")
+        if owned is None or cid in owned:
+            return c
+        n = _copy_card(c)
+        self.cards[cid] = n
+        owned.add(cid)
+        return n
+
+    def mut_zone(self, name: str, player: int, shared: bool = False) -> list[int]:
+        """書き込み用にゾーンのリストを返す（mut_card のゾーン版）。
+        戻り値への append / remove / 代入などの変更が前提のときに使う。"""
+        p = 0 if shared else player
+        z = self.zones[name][p]
+        if not COW:
+            return z
+        owned = self.__dict__.get("_cow_zones")
+        if owned is None or (name, p) in owned:
+            return z
+        nz = list(z)
+        self.zones[name][p] = nz
+        owned.add((name, p))
+        return nz
+
     def clone(self) -> "GameState":
         """deepcopy の代わり。state は純データ（int/str/bool/None と list/dict）だけなので手書きで複製する。"""
         new = GameState.__new__(GameState)
         d = new.__dict__
+        if COW:
+            for k, v in self.__dict__.items():
+                if k == "cards":
+                    d[k] = list(v)
+                elif k == "zones":
+                    d[k] = {n: list(per) for n, per in v.items()}
+                elif k in ("_cow_cards", "_cow_zones"):
+                    continue
+                else:
+                    d[k] = _jcopy(v)
+            d["_cow_cards"] = set()
+            d["_cow_zones"] = set()
+            self.__dict__["_cow_cards"] = set()
+            self.__dict__["_cow_zones"] = set()
+            return new
         for k, v in self.__dict__.items():
             if k == "cards":
                 d[k] = [_copy_card(c) for c in v]
             elif k == "zones":
                 d[k] = {n: [list(z) for z in per] for n, per in v.items()}
+            elif k in ("_cow_cards", "_cow_zones"):
+                continue
             else:
                 d[k] = _jcopy(v)
         return new

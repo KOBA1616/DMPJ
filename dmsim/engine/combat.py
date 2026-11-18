@@ -177,7 +177,7 @@ class CombatMixin:
                 o = opts[a[0]]
                 new = s.ref(o["cid"])
                 if o["tap"]:
-                    s.cards[o["cid"]].tapped = True
+                    s.mut_card(o["cid"]).tapped = True
                 if k == 0:
                     att = new
                 else:
@@ -366,7 +366,7 @@ def h_attack(eng, t):
                     return d
                 if ans[0] < len(opts):
                     o = opts[ans[0]]
-                    s.cards[o["payer"]].tapped = False   # コスト: アンタップする（タップのコストと同じくイベントは出さない）
+                    s.mut_card(o["payer"]).tapped = False   # コスト: アンタップする（タップのコストと同じくイベントは出さない）
                     t["target"] = o["target"]
                     return None   # もう一度諮る（別のクリーチャーの変更も使える）
             t["redirect_done"] = True

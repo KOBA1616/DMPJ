@@ -687,7 +687,7 @@ def st_start(eng, t):                                   # 501
     s = eng.s
     for c in eng.zlist("bz", s.active):                 # ハイパーモードは次の自分のターンのはじめまで（文字通り。bz は共有ゾーンなので、そのターンのプレイヤーがコントロールするカードだけを戻す。相手ターンに解放されても自分のターンのはじめに戻る）
         if s.cards[c].controller == s.active:
-            s.cards[c].hyper = False
+            s.mut_card(c).hyper = False
     a = s.active
     s.steps_this_turn = 0
     s.prev_counters = dict(s.turn_counters)   # 前のターンの履歴を退避する（{prev_shield_added} の読み先。バンドB U18）
@@ -704,12 +704,10 @@ def st_start(eng, t):                                   # 501
         skill = [cands[i] for i in ans]
     frozen = [c for c in eng.bz_tops(a) + eng.zlist("mana", a) if s.cards[c].no_untap_next]
     for c in frozen:                       # フリーズ等: 印を消費してこの回のアンタップをしない
-        s.cards[c].no_untap_next = False
-    bz_c = [c for c in eng.bz_tops(a)
-            if s.cards[c].tapped and eng.permits(c, "untap_at_start") and c not in skill and c not in frozen]
-    mana_c = [c for c in eng.zlist("mana", a)
-              if s.cards[c].tapped and eng.permits(c, "untap_at_start") and c not in skill and c not in frozen]
-    caps = eng._untap_caps(a)   # アンタップ制限（第227弾）: サイレントスキルの諮問を過ぎてから消費する
+        s.mut_card(c).no_untap_next = False
+    untap = [{"ev": "untap", "subject": s.ref(c)}
+             for c in eng.bz_tops(a) + eng.zlist("mana", a)
+             if s.cards[c].tapped and eng.permits(c, "untap_at_start") and c not in skill and c not in frozen]
     eng._step_done(t)
     # ターン起因処理（同時にアンタップ, 702.3a）→ サイレントスキルの解決（他のカードのアンタップの後, 501.1a）→「ターンのはじめに」の誘発（501.2）
     effects = [eng._child(ab["effect"], {"you": a, "self": s.ref(c), "vars": {}}) for c in skill for _, ab in eng.abilities(c, "silent")]
@@ -758,7 +756,7 @@ def st_main(eng, t):                                    # 504
     if o["key"] == "pass":
         eng._step_done(t)
     elif o.get("reveal"):   # ビビッドロー: 表向きにする（ステップは終わらない）
-        eng.s.cards[o["cid"]].vivid = True
+        eng.s.mut_card(o["cid"]).vivid = True
     elif o.get("hyper_act"):
         eng._push({"t": "hyper", "cid": o["cid"], "player": a})
     elif o["key"].startswith("cross:"):
@@ -844,7 +842,7 @@ def h_hyper(eng, t):
     """ハイパーモードの解放: 自分の他のクリーチャーを1体タップし、このクリーチャーをハイパーモードにする。"""
     s = eng.s
     cid, p = t["cid"], t["player"]
-    c = s.cards[cid]
+    c = s.mut_card(cid)
     if c.zone != "bz" or eng.is_hyper(cid):
         eng._pop(t)
         return None
@@ -881,7 +879,7 @@ def h_activate(eng, t):
     if d:
         return d
     for i in ans:
-        s.cards[untapped[i]].tapped = True
+        s.mut_card(untapped[i]).tapped = True
     eng._pop(t)
     eng._push(eng._child(ab["effect"], {"you": p, "self": s.ref(cid), "vars": {}}))
     return None
@@ -904,7 +902,7 @@ def st_attack(eng, t):                                  # 505
         eng._step_done(t)
     elif o["key"].startswith("activate:"):                  # 602 起動型能力: コストを払い、効果は待機状態になる
         if o.get("tap") is not None:
-            s.cards[o["tap"]].tapped = True
+            s.mut_card(o["tap"]).tapped = True
         if o.get("tap_mana"):   # 複合コスト（マナもタップする）は activate タスクで残りを払ってから効果へ
             eng._push({"t": "activate", "cid": o["cid"], "player": a, "ab": o["ab"]})
         else:
@@ -938,7 +936,7 @@ def h_cross(eng, t):
         eng._pop(t)
         return None
     if t.get("free"):   # cross_free 許可によるクロス（第195弾）: 支払いは無い
-        s.cards[g[0]].crossed = list(tg)
+        s.mut_card(g[0]).crossed = list(tg)
         eng._pop(t)
         return None
     choices = eng._mana_choices(g[0], p)
@@ -950,8 +948,8 @@ def h_cross(eng, t):
     if dd:
         return dd
     for c in opts[ans[0]]["cids"]:
-        s.cards[c].tapped = True
-    s.cards[g[0]].crossed = list(tg)
+        s.mut_card(c).tapped = True
+    s.mut_card(g[0]).crossed = list(tg)
     eng._pop(t)
     return None
 
@@ -1148,7 +1146,7 @@ def h_play(eng, t):
         if dd:
             return dd
         for i in ans:
-            s.cards[pool[i]].tapped = True
+            s.mut_card(pool[i]).tapped = True
         t["climb_done"] = True
     ch0 = eng.chars(cid, face)
     flag = f"last_play_creature:{p}"
@@ -1201,7 +1199,7 @@ def h_play(eng, t):
             t["fuel_done"] = True
             if spec.get("tap"):   # 燃料としてタップする（コストの支払い。ゾーンは動かない）
                 for c in t["fuel"]:
-                    s.cards[c].tapped = True
+                    s.mut_card(c).tapped = True
             if spec.get("move_to") and (fuel or asked):
                 reason = {"graveyard": "discard", "hand": "return", "deck": "put"}.get(spec["move_to"], "put")
                 moves = [{"ev": "move", "subject": s.ref(c), "to": spec["move_to"], "reason": reason}
@@ -1261,7 +1259,7 @@ def h_play(eng, t):
         if dd:
             return dd
         for c in opts[ans[0]]["cids"] + t.get("tap", []):
-            s.cards[c].tapped = True
+            s.mut_card(c).tapped = True
         # フォートE（第168弾）: 召喚コストとしてタップしたマナを記録する。
         # t["tap"] はハイパーエナジーでタップしたバトルゾーンのクリーチャー（マナではない）なので含めない
         t["summon_paid"] = list(opts[ans[0]]["cids"])
@@ -1289,7 +1287,7 @@ def h_play(eng, t):
                 if dd:
                     return dd
                 for c in opts[ans[0]]["cids"]:
-                    s.cards[c].tapped = True
+                    s.mut_card(c).tapped = True
                 t.setdefault("summon_paid", []).extend(opts[ans[0]]["cids"])   # バズレンダの追加支払いも召喚のためのタップ
                 t["bz_paid_for"] = cnt
             t["bz_count"] = cnt + 1
@@ -1331,7 +1329,7 @@ def h_play(eng, t):
                         t["od_idx"], t["od_sub"] = idx, sub
                         return dd
                     for i in ans:
-                        s.cards[pool[i]].tapped = True
+                        s.mut_card(pool[i]).tapped = True
                     t.setdefault("summon_paid", []).extend(pool[i] for i in ans)   # O・ドライブの追加タップも召喚のためのタップ
                     tapped_civs.append(cv)
                     sub += 1
@@ -1345,25 +1343,25 @@ def h_play(eng, t):
     from_zone = s.cards[cid].zone
     eng._to_hold(cid)
     if sst_bonus:
-        s.cards[cid].sst = True
+        s.mut_card(cid).sst = True
     if stp_bonus:
-        s.cards[cid].stp = True
+        s.mut_card(cid).stp = True
     if t.get("odrive"):
-        s.cards[cid].odrive = True
-        s.cards[cid].odrive_civs = list(t.get("odrive_civs", []))
+        s.mut_card(cid).odrive = True
+        s.mut_card(cid).odrive_civs = list(t.get("odrive_civs", []))
     # フォートE（第168弾）: 召喚時にタップしたマナを種族のスナップショットつきで刻む
     paid_snapshot = [{"ref": s.ref(c), "races": list(eng.chars_ro(c)["races"])}
                      for c in t.get("summon_paid", [])]
     if paid_snapshot:
-        s.cards[cid].summon_tapped = [dict(e, ref=list(e["ref"])) for e in paid_snapshot]
+        s.mut_card(cid).summon_tapped = [dict(e, ref=list(e["ref"])) for e in paid_snapshot]
     # 第189弾: 召喚時の支払い行動で選んだカードを刻む（出た時の誘発が ref: fuel で参照する）
     fuel_snapshot = [list(s.ref(c)) for c in t.get("fuel", [])]
     if fuel_snapshot:
-        s.cards[cid].summon_fuel = [list(r) for r in fuel_snapshot]
+        s.mut_card(cid).summon_fuel = [list(r) for r in fuel_snapshot]
     if d.bazurenda:
-        s.cards[cid].bazurenda = t.get("bz_count", 0)
+        s.mut_card(cid).bazurenda = t.get("bz_count", 0)
     if face is not None:
-        s.cards[cid].face = face
+        s.mut_card(cid).face = face
     ref = s.ref(cid)
     if t.get("to_shield") or d.is_castle():   # ギャラクシールド / G城: 代替コストを払って、または通常の実行で表向きにシールド化する（召喚ではない）
         eng._push(eng.ev_task({"ev": "move", "subject": ref, "from": from_zone, "to": "shield", "reason": "put",

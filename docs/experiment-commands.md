@@ -60,6 +60,13 @@ python3 tools/exhaustive_crossturn.py --setup tests/saga_hidden_setup.yaml \
 python3 tools/exhaustive_crossturn.py --setup tests/saga_hidden_setup.yaml \
     --seeds 1,2,3,4 --mode beam --beam 4 --trim-order plan \
     --stages-file tools/saga_loop_stages.yaml
+
+# ディスク常駐＋分割実行（局面の実体をディスクに置き、ノード単位で中断・再開）
+python3 tools/exhaustive_crossturn.py --deck data/decks/saga_doom_e.yaml \
+    --seeds 24 --max-turn 4 --store-dir logs/ct_store --chunk-nodes 200000
+python3 tools/exhaustive_crossturn.py --deck data/decks/saga_doom_e.yaml \
+    --seeds 24 --max-turn 4 --store-dir logs/ct_store \
+    --chunk-nodes 200000 --resume   # 続きから
 ```
 
 ### 比較用ベースライン（greedy_scenario_baseline）
