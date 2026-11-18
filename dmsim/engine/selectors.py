@@ -128,6 +128,8 @@ class SelectorMixin:
                 return sum(self.chars(c)["cost"] for c in self.candidates(x["total_cost"], env))
             if "total_power" in x:   # 対象カード群のパワーの合計（バンドC1 U39。U17 の「下のカードの合計パワー」でも使う）
                 return sum(self.chars(c)["power"] for c in self.candidates(x["total_power"], env))
+            if "max_power" in x:   # 対象カード群の最大パワー（対象が無ければ0。第219弾）
+                return max((self.chars(c)["power"] for c in self.candidates(x["max_power"], env)), default=0)
             if "link_count" in x:   # このカードがリンクしているカードの枚数（リンクしていなければ1）
                 return len(self.link_members(env["self"][0])) if env.get("self") else 0
             if "seals" in x:   # そのプレイヤーの封印の総数（自分のカードに付いている封印を全部数える）
@@ -194,7 +196,7 @@ class SelectorMixin:
                   "crossed_count",
                   "entered", "drew", "turn_count", "used_count", "prev_shield_added",
                   "var", "cost_of", "power_of", "name_of", "race", "races_of", "sum", "mul", "bundles", "declared",
-                  "total_cost", "total_power"}
+                  "total_cost", "total_power", "max_power"}
 
     # 従来から複合キー辞書（{distinct_cost_count: ..., base: 0} 等）でも式として読んでいたキー。
     # 単一キー制限をかけると variety breaker の mod が壊れるため、これらは従来どおりキー有無で判定する
@@ -365,7 +367,9 @@ class SelectorMixin:
                 return False
         if "multicolor" in f and (len(ch["civs"]) > 1) != f["multicolor"]:
             return False
-        if "colorless" in f and (len(ch["civs"]) == 0) != f["colorless"]:
+        if "colorless" in f and (len(ch["civs"]) == 0 or list(ch["civs"]) == ["zero"]) != f["colorless"]:
+            return False
+        if "hyper" in f and self.is_hyper(cid) != f["hyper"]:   # ハイパーモード状態か（第220弾）
             return False
         if "tapped" in f and (lki["tapped"] if lki else c.tapped) != f["tapped"]:
             return False
@@ -550,6 +554,8 @@ class SelectorMixin:
             else:
                 refs = env.get("vars", {}).get(r, [])
             f = sel.get("filter")   # 「その中の水のカード」: 変数のカードをさらに絞る
+            if f and any(isinstance(v, dict) for v in f.values()):   # 式の値は解決時に計算する（第229弾: 他の分岐と揃える）
+                f = {k: self.eval_expr(v, env) if isinstance(v, dict) else v for k, v in f.items()}
             # zone を併記したら、そのゾーンにあるものだけ（第169弾。「そのカードが手札にあれば捨てる」
             # のような、移動済みかどうかを区別する選択に使う。従来は zone が無視されていたが、
             # ref＋zone の併記は実データに無く、素の読みどおりに絞る）

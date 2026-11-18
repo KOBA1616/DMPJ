@@ -163,6 +163,10 @@ class Engine(SelectorMixin, EventMixin, InterpreterMixin, TurnMixin, CombatMixin
     def zlist(self, z: str, p: int) -> list[int]:
         return self.s.zones[z][0 if self.zshared(z) else p]
 
+    def mut_zlist(self, z: str, p: int) -> list[int]:
+        """書き込み用（COW 時は初回だけ実体化する）。"""
+        return self.s.mut_zone(z, p, self.zshared(z))
+
     def is_hyper(self, cid: int) -> bool:
         """ハイパーモードか（ハイパー化、または Zラッシュで解放された旗）。"""
         return self.s.cards[cid].hyper
@@ -205,14 +209,14 @@ class Engine(SelectorMixin, EventMixin, InterpreterMixin, TurnMixin, CombatMixin
 
     def unlink(self, cid: int):
         """1枚のリンクを外す。残りが1枚だけになれば、その1枚のリンクも解消する。"""
-        c = self.s.cards[cid]
+        c = self.s.mut_card(cid)
         gid = c.link
         c.link = 0
         if gid:
             rest = [m for m in self.s.zones["bz"][0] if self.s.cards[m].link == gid]
             if len(rest) <= 1:
                 for m in rest:
-                    self.s.cards[m].link = 0
+                    self.s.mut_card(m).link = 0
 
     # ---- 特性・許可 ----
     def _ignored(self) -> dict[int, set[str]]:
@@ -959,7 +963,7 @@ class Engine(SelectorMixin, EventMixin, InterpreterMixin, TurnMixin, CombatMixin
 
     def _shuffle(self, p: int):
         self.note_public("shuffle", player=p, zone="deck")
-        deck = self.s.zones["deck"][p]
+        deck = self.s.mut_zone("deck", p)
         for i in range(len(deck) - 1, 0, -1):
             j = rng_below(self.s, i + 1)
             deck[i], deck[j] = deck[j], deck[i]
@@ -967,12 +971,12 @@ class Engine(SelectorMixin, EventMixin, InterpreterMixin, TurnMixin, CombatMixin
     def _raw_move(self, cid: int, to: str, position: str = "top", controller: int | None = None):
         """イベントを通さない移動（ゲーム準備用と、イベント適用の内部処理）。"""
         s = self.s
-        c = s.cards[cid]
+        c = s.mut_card(cid)
         frm = c.zone
         if c.zone == "hold":
             s.hold.remove(cid)
         else:
-            lst = self.zlist(c.zone, c.controller if self.zshared(c.zone) else c.owner)
+            lst = self.mut_zlist(c.zone, c.controller if self.zshared(c.zone) else c.owner)
             if cid in lst:      # シールドの束の下のカードはゾーンの並びに入っていない（113.2）
                 lst.remove(cid)
             if not (to == "deck" and c.zone == "deck"):   # 山札の中での並べ替え（見たカードを下に置く等）は山札から離れない
@@ -994,7 +998,7 @@ class Engine(SelectorMixin, EventMixin, InterpreterMixin, TurnMixin, CombatMixin
             if self.cdef(cid).faces:
                 c.face = 0          # ツインパクトはクリーチャー側としてバトルゾーンにある（810.4）
         if c.top_of >= 0:   # 下のカードだけが動く時は、上のカードの under から外す（メテオバーン等で下だけが離れる場合）
-            t = s.cards[c.top_of]
+            t = s.mut_card(c.top_of)
             if cid in t.under:
                 t.under.remove(cid)
         c.under, c.top_of = [], -1
@@ -1015,7 +1019,7 @@ class Engine(SelectorMixin, EventMixin, InterpreterMixin, TurnMixin, CombatMixin
         c.bazurenda = 0                             # バズレンダの追加支払い回数も消える
         c.vivid = False                             # ビビッドローの表向きも消える（引いたターンの記録 drawn_turn は残す）
         c.dswitched = False                         # Dスイッチの使用済みも消える（新しいオブジェクトとして出直したら再び使える。第151弾）
-        dest = self.zlist(to, c.controller if self.zshared(to) else c.owner)
+        dest = self.mut_zlist(to, c.controller if self.zshared(to) else c.owner)
         if position == "top" and self.rules.zones[to]["ordered"]:
             dest.insert(0, cid)
         else:
@@ -1023,8 +1027,8 @@ class Engine(SelectorMixin, EventMixin, InterpreterMixin, TurnMixin, CombatMixin
 
     def _to_hold(self, cid: int):
         """保留状態にする（409, 601.1b）。gen は変えない（まだ移動していない）。"""
-        c = self.s.cards[cid]
-        self.zlist(c.zone, c.owner).remove(cid)
+        c = self.s.mut_card(cid)
+        self.mut_zlist(c.zone, c.owner).remove(cid)
         self._note_deck(c)
         c.zone = "hold"
         self.s.hold.append(cid)

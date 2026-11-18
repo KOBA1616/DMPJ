@@ -13,7 +13,7 @@ def op_uncross(eng, t, op, env):
     if d:
         return d
     for cid in cids:
-        eng.s.cards[cid].crossed = None
+        eng.s.mut_card(cid).crossed = None
     return None
 
 @op("cross_free", gear="selector", to="selector")
@@ -40,7 +40,7 @@ def op_cross_free(eng, t, op, env):
         return None
     tg = eng.s.ref(targets[0])
     for cid in gears:
-        eng.s.cards[cid].crossed = list(tg)
+        eng.s.mut_card(cid).crossed = list(tg)
     return None
 
 
@@ -219,7 +219,7 @@ def op_tap(eng, t, op, env, kind="tap"):
         return d
     if kind == "tap" and op.get("no_untap_next"):
         for c in cids:
-            eng.s.cards[c].no_untap_next = True
+            eng.s.mut_card(c).no_untap_next = True
     if cids:
         eng._defer(t, [eng.ev_task([{"ev": kind, "subject": eng.s.ref(c)} for c in cids], env)])
     return None
@@ -243,7 +243,7 @@ def op_hyper_release(eng, t, op, env):
         return d
     for c in cids:
         if eng.fdef(c).hyper:
-            eng.s.cards[c].hyper = True
+            eng.s.mut_card(c).hyper = True
     return None
 
 
@@ -255,7 +255,7 @@ def op_flip_down(eng, t, op, env):
     if d:
         return d
     for c in cids:
-        card = eng.s.cards[c]
+        card = eng.s.mut_card(c)
         if card.zone == "mana":
             card.face_down = True
         elif card.zone == "shield":
@@ -273,7 +273,7 @@ def op_flip_up(eng, t, op, env):
     if d:
         return d
     for c in cids:
-        card = eng.s.cards[c]
+        card = eng.s.mut_card(c)
         if card.zone == "shield":
             if not card.face_up:
                 card.face_up = True
@@ -291,7 +291,7 @@ def op_dswitch(eng, t, op, env):
     能力の出し分け（使用済み・deny: [d_switch] の間は能力自体が出ない）は abilities() 側で行う。"""
     cid = env["self"][0]
     if eng.s.alive(env["self"]):
-        eng.s.cards[cid].dswitched = True
+        eng.s.mut_card(cid).dswitched = True
     return None
 
 
@@ -449,6 +449,31 @@ def op_lose(eng, t, op, env):
         eng._defer(t, tasks)
 
 
+@op("pay_or_lose", cost="int", civs="any?")
+def op_pay_or_lose(eng, t, op, env):
+    """指定コストを自分のマナで支払う。支払えなければゲームに負ける（第217弾: 逆転撃の後払い）。
+    支払いはカードを出す行為ではないので _mana_choices は raw_cost で数える
+    （コスト増減・ブーストなし。マナの数字そのものを変える置換だけが効く）。
+    払える場合は支払いは任意ではない（組の選択だけがプレイヤーの決定）。
+    発生源（env の self）は支払いプールから外れるため、マナゾーンの外にある前提。"""
+    s = eng.s
+    p = env["you"]
+    anchor = env["self"][0] if env.get("self") else next(iter(s.cards))
+    choices = eng._mana_choices(anchor, p, None, cost=op["cost"], civs=op.get("civs"), raw_cost=True)
+    if not choices:
+        tasks = eng.game_lose(p, "effect")   # 敗北の置換を諮ってから確定する（op lose と同じ口）
+        if tasks:
+            eng._defer(t, tasks)
+        return None
+    opts = [{"key": "mana:" + ",".join(sorted(s.cards[c].defn for c in ch)), "cids": ch} for ch in choices]
+    ans, dd = eng.ask(t, p, "pay_mana", opts)
+    if dd:
+        return dd
+    for c in opts[ans[0]]["cids"]:
+        s.cards[c].tapped = True
+    return None
+
+
 @op("no_lose", player="players?", duration="duration?", once="bool?", deck_out_only="bool?")
 def op_no_lose(eng, t, op, env):
     """敗北の防止（第188弾）: player は duration の間ゲームに負けない（＝相手はゲームに勝てない）。
@@ -466,6 +491,16 @@ def op_no_lose(eng, t, op, env):
                              "affected": [],
                              "no_lose": {"player": p, "once": bool(op.get("once", False)),
                                          "deck_out_only": bool(op.get("deck_out_only", False))}})
+    return None
+
+
+@op("untap_limit", player="player?", zone="str", count="int")
+def op_untap_limit(eng, t, op, env):
+    """アンタップ制限（第227弾）: player の次のターン開始時に、そのゾーンのカードは
+    count 枚までしかアンタップできない。保留として s.untap_caps に積み、そのプレイヤーの
+    st_start で消費する（常在型の同名キーと最小値を取る）。"""
+    p = eng._rel(op.get("player", "opp"), env)
+    eng.s.untap_caps.append({"player": p, "zone": op["zone"], "count": op["count"]})
     return None
 
 
@@ -639,11 +674,11 @@ def op_shield_plus(eng, t, op, env):
     target = shields[a[0]]
     tucked = deck[0]
     eng._raw_move(tucked, "shield")
-    lst = s.zones["shield"][p if not eng.zshared("shield") else 0]
+    lst = eng.mut_zlist("shield", p)
     if tucked in lst:
         lst.remove(tucked)   # 束の下のカードはゾーンの並びに入らない（113.2）
-    s.cards[target].under.append(tucked)
-    s.cards[tucked].top_of = target
+    s.mut_card(target).under.append(tucked)
+    s.mut_card(tucked).top_of = target
     return None
 
 
@@ -665,8 +700,8 @@ def op_sforce_link(eng, t, op, env):
     me = list(env["self"])
     for c in shields:
         if s.cards[c].sforce_of is not None and list(s.cards[c].sforce_of) == me:
-            s.cards[c].sforce_of = None
-    s.cards[shields[a[0]]].sforce_of = me
+            s.mut_card(c).sforce_of = None
+    s.mut_card(shields[a[0]]).sforce_of = me
     return None
 
 
@@ -684,7 +719,7 @@ def op_castle_link(eng, t, op, env):
     if d:
         return d
     me = list(env["self"])
-    s.cards[me[0]].fortifies = list(s.ref(shields[a[0]]))
+    s.mut_card(me[0]).fortifies = list(s.ref(shields[a[0]]))
     return None
 
 
@@ -782,17 +817,23 @@ def op_reveal_until(eng, t, op, env):
     return None
 
 
-@op("gachinko", times="expr?", until_lose="bool?", stoppable="bool?", **{"as": "str?"})
+@op("gachinko", times="expr?", until_lose="bool?", stoppable="bool?", by="str?", mine_as="str?", **{"as": "str?"})
 def op_gachinko(eng, t, op, env):
     """ガチンコ・ジャッジ: 各プレイヤーは自身の山札の上から1枚を見せ、それを一番下に置く。
     そのカードのコストが相手以上であれば自分の勝ち。times 回（式可）繰り返すか、
     until_lose（自分が負けるまで）/ stoppable（自分が中止するまで）の組み合わせ。
-    勝った回数を env の変数（既定 wins）に書き、後続の op が {var: wins} で参照する。"""
+    勝った回数を env の変数（既定 wins）に書き、後続の op が {var: wins} で参照する。
+    第223弾: by: "power" でパワー比較になる（パワー・ガチンコ・ジャッジ。
+    パワーがないカードは 0 として扱う）。mine_as を付けると、自分の見せた
+    カードを一番下に置かずにその参照を変数へ残す（「下に置くかわりに〜」
+    の代替先を後続 op が決めるため。複数回繰り返す場合は最後の1枚だけが
+    残り、それ以前の分は通常どおり一番下へ置く）。"""
     s = eng.s
     me, opp = env["you"], 1 - env["you"]
     os_ = t.setdefault("os", {})
-    st = os_.setdefault("gj", {"done": 0, "wins": 0, "stopped": False})
+    st = os_.setdefault("gj", {"done": 0, "wins": 0, "stopped": False, "held": None})
     times = eng.eval_expr(op["times"], env) if "times" in op else None
+    key = "power" if op.get("by") == "power" else "cost"
     while not st["stopped"] and (times is None or st["done"] < times):
         if op.get("stoppable") and st.get("stop_for") != st["done"]:
             ans, d = eng.ask(t, me, "yes_no", [{"key": "yes"}, {"key": "no"}], prompt="ガチンコ・ジャッジを続ける")
@@ -802,14 +843,20 @@ def op_gachinko(eng, t, op, env):
             if ans[0] == 1:
                 st["stopped"] = True
                 break
+        if st["held"] is not None:   # 前の回に見せて保留した自分のカードは通常どおり下へ
+            eng._raw_move(st["held"], "deck", "bottom")
+            st["held"] = None
         mine, theirs = s.zones["deck"][me], s.zones["deck"][opp]
         if not mine or not theirs:
             break
         a, b = mine[0], theirs[0]
         eng.note_public("reveal", a)
         eng.note_public("reveal", b)
-        win = eng.chars_ro(a)["cost"] >= eng.chars_ro(b)["cost"]
-        eng._raw_move(a, "deck", "bottom")
+        win = (eng.chars_ro(a)[key] or 0) >= (eng.chars_ro(b)[key] or 0)
+        if "mine_as" in op:
+            st["held"] = a
+        else:
+            eng._raw_move(a, "deck", "bottom")
         eng._raw_move(b, "deck", "bottom")
         st["done"] += 1
         if win:
@@ -817,6 +864,8 @@ def op_gachinko(eng, t, op, env):
         elif op.get("until_lose"):
             break
     env.setdefault("vars", {})[op.get("as", "wins")] = st["wins"]
+    if "mine_as" in op:
+        env.setdefault("vars", {})[op["mine_as"]] = [s.ref(st["held"])] if st["held"] is not None else []
     return None
 
 
@@ -852,7 +901,8 @@ def op_cast_face(eng, t, op, env):
         return
     f = d.faces[fi]
     ref = s.ref(cid)
-    tasks = [eng.ev_task({"ev": "cast", "player": env["you"], "subject": ref, "unpaid": True}),
+    tasks = [eng.ev_task({"ev": "cast", "player": env["you"], "subject": ref, "unpaid": True,
+                          "from": s.cards[cid].zone}),   # 唱えた元のゾーン（第226弾）
              eng._child(f.spell, {"you": env["you"], "self": ref, "vars": dict(env.get("vars", {}))})]
     if f.after_resolve:
         tasks.append(eng._child(f.after_resolve, {"you": env["you"], "self": ref, "vars": dict(env.get("vars", {}))}))
@@ -993,7 +1043,7 @@ def op_attach_seal(eng, t, op, env):
     s = eng.s
     n = op.get("count", 1)
     for cid in cids:
-        c = s.cards[cid]
+        c = s.mut_card(cid)
         if c.zone != "bz" or c.top_of >= 0:
             continue
         deck = s.zones["deck"][c.controller]
@@ -1002,7 +1052,7 @@ def op_attach_seal(eng, t, op, env):
                 break
             top = deck[0]
             eng._raw_move(top, "bz")
-            sc = s.cards[top]
+            sc = s.mut_card(top)
             sc.top_of = cid
             sc.seal_of = cid
             c.seals.append(top)
@@ -1122,9 +1172,9 @@ def op_strigger(eng, t, op, env):
         raise ValueError(f"strigger mode must be on/off: {op['mode']}")
     for c in cids:
         if op["mode"] == "off":
-            eng.s.cards[c].strigger_off = True
+            eng.s.mut_card(c).strigger_off = True
         else:
-            eng.s.cards[c].strigger_on = True
+            eng.s.mut_card(c).strigger_on = True
     return None
 
 
