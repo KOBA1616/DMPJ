@@ -341,7 +341,7 @@ class EventMixin:
             if not s.alive(ev["subject"]):
                 return []   # 想定外のゾーンへ移っていたら、それ以上処理しない（400.8）
             cid = ev["subject"][0]
-            c = s.cards[cid]
+            c = s.mut_card(cid)
             if ev["to"] == "bz" and c.zone != "hold" and not self.permits(cid, "enter_bz"):
                 return []   # 出せない（実行は h_play で先に確認している。効果で出す場合はここで止める）
             from_zone = ev.get("from") if c.zone == "hold" else c.zone
@@ -364,7 +364,7 @@ class EventMixin:
             was_face_up = c.face_up   # 移動前の表向き状態（手札に加わると face_up は消える。裁きの紋章の判定用。第169弾）
             sealed_from = None
             if c.seal_of >= 0:   # 封印そのものが動く: 対象から外し、記録に「どのカードの封印だったか」を残す
-                host = s.cards[c.seal_of]
+                host = s.mut_card(c.seal_of)
                 if cid in host.seals:
                     host.seals.remove(cid)
                 sealed_from = s.ref(c.seal_of)
@@ -429,7 +429,7 @@ class EventMixin:
                 # 旧トップの face_up はそのまま残る（覆われても表向きのまま。数え・選択は bundle_of 経由）
                 for u in stack_unders:
                     self._raw_move(u, "shield")
-                    self.zlist("shield", s.cards[u].owner).remove(u)   # 束の下のカードはシールドの数に数えない（113.2）
+                    self.mut_zlist("shield", s.cards[u].owner).remove(u)   # 束の下のカードはシールドの数に数えない（113.2）
                 new_under = list(stack_unders)
                 tgt = ev["shield_stack"]
                 if s.alive(tgt):
@@ -438,12 +438,12 @@ class EventMixin:
                         top = s.cards[top].top_of
                     tc = s.cards[top]
                     if top != cid and tc.zone == "shield" and tc.owner == c.owner:
-                        self.zlist("shield", tc.owner).remove(top)
+                        self.mut_zlist("shield", tc.owner).remove(top)
                         new_under += [top] + list(tc.under)
                         tc.under = []
                 c.under = new_under
                 for u in new_under:
-                    s.cards[u].top_of = cid
+                    s.mut_card(u).top_of = cid
             if ev.get("face_down") and ev["to"] == "mana":   # 「裏向きのままマナゾーンに置く」（第128弾）: 置かれた時点で裏向き（別のイベントにしない）
                 c.face_down = True
             if ev["to"] == "bz" and "enters_tapped" in self.chars_ro(cid)["keywords"]:   # 「タップしてバトルゾーンに出る」
@@ -459,7 +459,7 @@ class EventMixin:
                 for p in (0, 1):
                     for x in self.bz_tops(p):
                         if "z_rush" in self.fdef(x).keywords:
-                            s.cards[x].hyper = True
+                            s.mut_card(x).hyper = True
             new = s.ref(cid)
             if ev["to"] == "bz" and (self.link_side(cid) is not None or self.link_spec(cid)):   # ゴッドが出たらリンク手順を行う
                 self._push({"t": "g_link", "cid": cid, "player": c.controller, "step": "start"})
@@ -527,9 +527,9 @@ class EventMixin:
                 # S・トリガーの印（バンドC2 U68）: 手札に加わったカード（束の下のカードも含む）に印を付ける
                 for u in [cid] + [u for u in unders if s.cards[u].zone == "hand"]:
                     if ev["strigger"] == "off":
-                        s.cards[u].strigger_off = True
+                        s.mut_card(u).strigger_off = True
                     else:
-                        s.cards[u].strigger_on = True
+                        s.mut_card(u).strigger_on = True
             if ev.get("face_up") or (from_zone == "shield" and was_face_up):
                 # 表向きで置かれたか（ギャラクシールド）。シールドを表向きで離れた時もレコードに
                 # 載せる（G城の「表向きで離れた時」誘発用。第176弾。when の face_up 照合はレコードを見る）
@@ -555,14 +555,14 @@ class EventMixin:
                 s.turn_counters.setdefault(f"entered:{c.controller}", []).append(cid)
             if ev["to"] == "bz" and ev.get("seal"):
                 # 封印を付けた状態で出す（メモッタ等）: 誘発の収集より前に付くので、出た時能力は無視される
-                host = s.cards[new[0]]
+                host = s.mut_card(new[0])
                 deck = s.zones["deck"][host.controller]
                 for _ in range(int(ev["seal"])):
                     if not deck:
                         break
                     top = deck[0]
                     self._raw_move(top, "bz")
-                    sc = s.cards[top]
+                    sc = s.mut_card(top)
                     sc.top_of = new[0]
                     sc.seal_of = new[0]
                     host.seals.append(top)
@@ -605,7 +605,7 @@ class EventMixin:
                 return []   # 山札が無ければ何もしない。「引いた時」も誘発しない（114.6a）
             cid = deck[0]
             self._raw_move(cid, "hand")
-            s.cards[cid].drawn_turn = s.turn   # ビビッドロー: このターンにドローした記録
+            s.mut_card(cid).drawn_turn = s.turn   # ビビッドロー: このターンにドローした記録
             s.turn_counters[f"drew:{p}"] = s.turn_counters.get(f"drew:{p}", 0) + 1   # このターン引いた枚数（第142弾）
             return [{"ev": "draw", "player": p, "subject": s.ref(cid)},
                     {"ev": "move", "subject": s.ref(cid), "lki": None, "from": "deck", "to": "hand",
@@ -613,13 +613,13 @@ class EventMixin:
         if kind in ("tap", "untap"):
             if not s.alive(ev["subject"]):
                 return []
-            c = s.cards[ev["subject"][0]]
+            c = s.mut_card(ev["subject"][0])
             if c.tapped == (kind == "tap"):
                 return []   # 「になる」誘発は状態が変わった時だけ（603.2c）
             c.tapped = kind == "tap"
             if c.link:   # G・リンク: グループは1体なので、タップ状態は全員で共有する
                 for m in self.link_members(ev["subject"][0]):
-                    s.cards[m].tapped = c.tapped
+                    s.mut_card(m).tapped = c.tapped
             return [{"ev": kind, "subject": ev["subject"], "controller": c.controller}]
         if kind in ("attack", "block", "cast", "turn_start", "turn_end", "break", "battle_win", "battle_lose", "battle_start", "attack_end", "mugon_used", "link_established", "battle_end"):
             return [dict(ev)]
@@ -635,7 +635,7 @@ class EventMixin:
             return []
         top = deck[0]
         self._raw_move(top, "shield", "top")
-        s.cards[top].exlife_of = s.ref(cid)
+        s.mut_card(top).exlife_of = s.ref(cid)
         return [{"ev": "move", "subject": s.ref(top), "lki": None, "from": "deck", "to": "shield",
                  "reason": "put", "controller": p}]
 
@@ -644,15 +644,15 @@ class EventMixin:
         タップ状態と受けていた効果を引き継ぐ。進化クリーチャーは召喚酔いしない（801.3）。
         more は2枚目以降の進化元（801.1b）。タップ状態は1枚でもタップなら進化後もタップ（801.2b）。"""
         s = self.s
-        t, b = s.cards[top], s.cards[base]
+        t, b = s.mut_card(top), s.mut_card(base)
         old = s.ref(base)
         for p in (0, 1):   # 進化元の EXライフシールドは進化後のクリーチャーに引き継がれる（2026-04-10 裁定）
             for sh in s.zones["shield"][p]:
                 if s.cards[sh].exlife_of is not None and list(s.cards[sh].exlife_of) == old:
-                    s.cards[sh].exlife_of = s.ref(top)
+                    s.mut_card(sh).exlife_of = s.ref(top)
         t.under = (t.under if more else []) + [base] + b.under
         for u in t.under:
-            s.cards[u].top_of = top
+            s.mut_card(u).top_of = top
         b.under = []
         t.tapped = (t.tapped or b.tapped) if more else b.tapped
         t.entered_turn = -1
@@ -667,18 +667,18 @@ class EventMixin:
     def _rebuild(self, top: int):
         """再構築（801.4）。下のカードのうち、一番上の単独で存在できるカード（クリーチャー）を残す。"""
         s = self.s
-        c = s.cards[top]
+        c = s.mut_card(top)
         under = list(c.under)
         c.under = []
         while under and "creature" not in self.cdef(under[0]).types:
             self._raw_move(under.pop(0), "graveyard")
         if not under:
             return
-        nt = s.cards[under[0]]
+        nt = s.mut_card(under[0])
         nt.top_of = -1
         nt.under = under[1:]
         for u in nt.under:
-            s.cards[u].top_of = nt.cid
+            s.mut_card(u).top_of = nt.cid
         nt.tapped = c.tapped                                   # 801.4d
         # 801.4c: 新たに出るわけではないので、そのカード自身の出たターンをそのまま使う
         # （ターンのはじめから下にあったなら酔わず、このターンに出た進化元なら酔う）
@@ -1314,8 +1314,8 @@ def h_g_link(eng, t):
             if not gid:
                 s.seq += 1
                 gid = s.seq
-                s.cards[tgt].link = gid
-            s.cards[cid].link = gid
+                s.mut_card(tgt).link = gid
+            s.mut_card(cid).link = gid
             members = eng.link_members(cid)
             eng._push(eng.ev_task([{"ev": "link_established", "subject": s.ref(m),
                                     "controller": s.cards[m].controller} for m in members]))
@@ -1361,8 +1361,8 @@ def h_g_link(eng, t):
         if not gid:
             s.seq += 1
             gid = s.seq
-            s.cards[tgt].link = gid
-        s.cards[cid].link = gid
+            s.mut_card(tgt).link = gid
+        s.mut_card(cid).link = gid
         members = eng.link_members(cid)
     else:
         members = None
