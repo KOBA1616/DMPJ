@@ -39,6 +39,7 @@ class Option(TypedDict, total=False):
     reveal: NotRequired[bool]            # ビビッドロー（表向きにする選択肢）
     fushigi: NotRequired[bool]           # フシギバース（墓地から召喚する選択肢）
     recycle: NotRequired[bool]           # リサイクル（墓地から代替コストで唱える選択肢。第172弾）
+    grave_cast: NotRequired[bool]        # 墓地から通常コストで唱える選択肢（第226弾）
     bakutan: NotRequired[bool]           # マナ爆誕（マナゾーンから固定コストで召喚する選択肢。第191弾）
 
 
@@ -180,6 +181,16 @@ class HyperTask(TypedDict):
     answer: NotRequired[list[int]]
 
 
+class UntapLimitTask(TypedDict):
+    t: Literal["untap_limit"]
+    player: int
+    caps: dict          # {"bz": int, "mana": int}（上限があるゾーンだけ）
+    bz: list[int]       # アンタップ候補（bz のクリーチャー）
+    mana: list[int]     # アンタップ候補（マナゾーン）
+    os: NotRequired[dict]
+    answer: NotRequired[list[int]]
+
+
 class ActivateTask(TypedDict):
     t: Literal["activate"]
     cid: int
@@ -220,6 +231,7 @@ class AttackTask(TypedDict):
     blocked: NotRequired[bool]
     ano: NotRequired[int]                # このターン何回目の攻撃か（キリフダッシュの「その攻撃中に」判定）
     end_fired: NotRequired[bool]         # attack_end イベントを発火済みか
+    through_fired: NotRequired[bool]     # attack_unblocked イベントを発火済みか（第229弾）
     decl: NotRequired[int]               # 使用宣言の段階（506.3b〜）
     subbed: NotRequired[list[int]]       # 身代わりバトルの置換を済ませた側（0=攻撃側, 1=攻撃先）
     redirect_done: NotRequired[bool]     # 攻撃先変更（第171弾）の諮問を済ませたか
@@ -297,6 +309,7 @@ class PlayTask(TypedDict):
     via: NotRequired[str]                # 出し方の印（第149弾: play_self の via。イベント・条件への伝播用）
     alt_step: NotRequired[int]           # 代替コスト（行動形式）で済んだ段階
     evo_v: NotRequired[list]             # 進化V: フィルタごとに選んだ進化元
+    evo_civs_sel: NotRequired[list]      # 超無限進化の文明条件: 選択途中の進化元（第218弾）
     fushigi: NotRequired[bool]           # フシギバースとして実行する
     fushigi_done: NotRequired[bool]      # フシギバース: 進化元代わりのクリーチャーをマナに置いた
     alt_done: NotRequired[bool]          # 代替コスト（行動形式）の支払いが終わった
@@ -313,6 +326,7 @@ class PlayTask(TypedDict):
     climb: NotRequired[bool]             # ムゲンクライムとして実行する
     climb_done: NotRequired[bool]        # ムゲンクライム: クリーチャーのタップが済んだ
     recycle: NotRequired[bool]           # リサイクルとして実行する（第172弾: 解決後は山札の一番下へ）
+    grave_cast: NotRequired[bool]        # 墓地から唱えた（第226弾: 解決後は山札の一番下へ）
     bakutan: NotRequired[bool]           # マナ爆誕として実行する（第191弾: マナゾーンから固定コストで召喚）
     resolve_to: NotRequired[str]         # 解決後の置き場所（play_free の resolve_to）
     resolve_position: NotRequired[str]   # resolve_to が山札のときの top / bottom

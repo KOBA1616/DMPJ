@@ -213,7 +213,10 @@ class EventMixin:
                                    "ref": href}
             return rec
         if ev["ev"] == "draw":
-            return {"ev": "draw", "player": ev["player"]}
+            rec = {"ev": "draw", "player": ev["player"]}
+            if ev.get("turn_draw"):
+                rec["turn_draw"] = True   # ターンのはじめのドローそのもの（第219弾）
+            return rec
         return None
 
     def apply_batch(self, evs: list[dict]):
@@ -488,12 +491,11 @@ class EventMixin:
                 for x in ev.get("stack_more", []):   # 進化元の残り（801.1b。超無限墓地進化やバトルゾーンの複数の進化元）
                     if not s.alive(x):
                         continue
-                    if s.cards[x[0]].zone == "graveyard":
+                    if s.cards[x[0]].zone != "bz":   # 墓地・マナ等から選んだ進化元も場へ移す（第218弾Ω）
                         self._raw_move(x[0], "bz")
-                    if s.cards[x[0]].zone == "bz":
-                        self._stack(cid, x[0], more=True)
-                        if ev.get("evolution"):
-                            evo_bases.append(x[0])
+                    self._stack(cid, x[0], more=True)
+                    if ev.get("evolution"):
+                        evo_bases.append(x[0])
             out = [{"ev": "move", "subject": new, "lki": lki, "from": from_zone, "to": ev["to"],
                     "reason": ev["reason"], "controller": c.controller}]
             if sealed_from is not None:
@@ -607,7 +609,10 @@ class EventMixin:
             self._raw_move(cid, "hand")
             s.cards[cid].drawn_turn = s.turn   # ビビッドロー: このターンにドローした記録
             s.turn_counters[f"drew:{p}"] = s.turn_counters.get(f"drew:{p}", 0) + 1   # このターン引いた枚数（第142弾）
-            return [{"ev": "draw", "player": p, "subject": s.ref(cid)},
+            drec = {"ev": "draw", "player": p, "subject": s.ref(cid)}
+            if ev.get("turn_draw"):
+                drec["turn_draw"] = True   # ターンのはじめのドローそのもの（第219弾）
+            return [drec,
                     {"ev": "move", "subject": s.ref(cid), "lki": None, "from": "deck", "to": "hand",
                      "reason": "draw", "controller": p}]
         if kind in ("tap", "untap"):
@@ -621,7 +626,7 @@ class EventMixin:
                 for m in self.link_members(ev["subject"][0]):
                     s.cards[m].tapped = c.tapped
             return [{"ev": kind, "subject": ev["subject"], "controller": c.controller}]
-        if kind in ("attack", "block", "cast", "turn_start", "turn_end", "break", "battle_win", "battle_lose", "battle_start", "attack_end", "mugon_used", "link_established", "battle_end"):
+        if kind in ("attack", "block", "cast", "turn_start", "turn_end", "break", "battle_win", "battle_lose", "battle_start", "attack_end", "attack_unblocked", "mugon_used", "link_established", "battle_end"):
             return [dict(ev)]
         raise ValueError(kind)
 
@@ -966,6 +971,8 @@ class EventMixin:
         if "broke" in when and bool(rec.get("broke")) != when["broke"]:   # 攻撃の終わりに、その攻撃でシールドをブレイクしたか（キリフダッシュ）
             return False
         if "blocked" in when and bool(rec.get("blocked")) != when["blocked"]:   # その攻撃がブロックされたか（attack_end レコードのみが持つ。「ブロックされなかった時」用）
+            return False
+        if "turn_draw" in when and bool(rec.get("turn_draw")) != when["turn_draw"]:   # ターンのはじめのドローそのものか（draw レコードのみが持つ。第219弾）
             return False
         if "face_up" in when and bool(rec.get("face_up")) != when["face_up"]:   # 表向きで置かれたか（ギャラクシールド）
             return False

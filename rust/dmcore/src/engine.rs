@@ -770,7 +770,8 @@ impl Engine {
                 "tapped" => c.tapped == v.as_bool().unwrap_or(false),
                 "multicolor" => (d.civs.len() > 1) == v.as_bool().unwrap_or(false),
                 "evolution" => self.def(cid).types.iter().any(|t| t == "evolution") == v.as_bool().unwrap_or(false),
-                "colorless" => d.civs.is_empty() == v.as_bool().unwrap_or(false),
+                "colorless" => (d.civs.is_empty() || (d.civs.len() == 1 && d.civs[0] == "zero")) == v.as_bool().unwrap_or(false),
+                "hyper" => c.hyper == v.as_bool().unwrap_or(false),
                 "any_of" => {
                     let mut hit = false;
                     for sub in v.as_array().unwrap() {
@@ -893,7 +894,7 @@ impl Engine {
     fn st_draw(&mut self) -> R<Option<Value>> {
         self.step_done();
         if !(self.s.turn == 1 && self.s.active == self.s.first_player) {
-            let t = self.ev_task(vec![json!({"ev": "draw", "player": self.s.active})]);
+            let t = self.ev_task(vec![json!({"ev": "draw", "player": self.s.active, "turn_draw": true})]);
             self.push(vec![t]);
         }
         Ok(None)
@@ -2424,7 +2425,11 @@ impl Engine {
     /// 適用前のイベントを、置換の照合用レコードにする（Python 版 _record_for の move の部分）
     fn record_for(&self, ev: &Value) -> Option<Value> {
         if ev["ev"] == json!("draw") {
-            return Some(json!({"ev": "draw", "player": ev["player"]}));
+            let mut rec = json!({"ev": "draw", "player": ev["player"]});
+            if ev.get("turn_draw").and_then(|v| v.as_bool()).unwrap_or(false) {
+                rec["turn_draw"] = json!(true);
+            }
+            return Some(rec);
         }
         if ev["ev"] != json!("move") || !self.alive(&ev["subject"]) {
             return None;
@@ -2679,8 +2684,12 @@ impl Engine {
                 let n = self.s.turn_counters.get(&k).and_then(|v| v.as_i64()).unwrap_or(0) + 1;
                 self.s.turn_counters.insert(k, json!(n));
                 let r = self.refv(cid);
+                let mut drec = json!({"ev": "draw", "player": p, "subject": r});
+                if ev.get("turn_draw").and_then(|v| v.as_bool()).unwrap_or(false) {
+                    drec["turn_draw"] = json!(true);
+                }
                 Ok(vec![
-                    json!({"ev": "draw", "player": p, "subject": r}),
+                    drec,
                     json!({"ev": "move", "subject": r, "lki": null, "from": "deck", "to": "hand", "reason": "draw", "controller": p}),
                 ])
             }

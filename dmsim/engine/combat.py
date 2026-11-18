@@ -412,6 +412,13 @@ def h_attack(eng, t):
                       {"t": "battle_run", "att": att, "tgt": tgt})
         return None
     if ph == 4:                                               # 509 ダイレクトアタック
+        if t["target"] == "player" and not t.get("blocked") and not t.get("through_fired"):
+            # ブロックされなかった時（第229弾バイオ・K）: ブレイクの前に発火する
+            # （W・ブレイカーの付与などがこの攻撃のブレイクに間に合うタイミング）
+            t["through_fired"] = True
+            eng._push(eng.ev_task({"ev": "attack_unblocked", "subject": att, "target": "player",
+                                   "controller": a}))
+            return None
         if t["target"] == "player" and eng.zlist("shield", 1 - a):
             # 509.2c 複数のブレイカー能力を持つなら、どの能力を使うかを選ぶ（どれも使わずに1つだけは選べない）
             counts = sorted(set(eng.chars_ro(att[0])["break_opts"])) or [1]
