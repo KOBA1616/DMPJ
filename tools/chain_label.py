@@ -67,36 +67,46 @@ class _Aborted(Exception):
 
 def compute_labels(store: Path, dropped: dict, max_turn: int) -> dict:
     """edges.jsonl から dist と exact を後方伝播で計算する。
-    最終ターンの局面は自分の展開だけで決まる（子は範囲外として扱い、
-    exact は自分の打ち切りの有無だけで決める）。
-    exact は局面単位: 自分の子が保持上限で落ちておらず（dropped は
-    ターン→落としたキーの対応）、子が全て exact で、自分が打ち切られて
-    いなければ exact。同じターンの他の局面の子が落ちても影響しない。"""
+
+    exact は「dist の上限と下限が一致する」こととして定義する:
+    - 上限 ub: 実際に見つかった最速のキルまでのターン数（無ければ ∞）。
+    - 下限 lb: 打ち切りや保持上限で落とした先に隠れ得る最速キルの下限。
+      キルが見つかった局面は lb=ub=1（1 未満にはならない）で、自分の
+      展開が打ち切られていても exact。打ち切られたのにキルが無い局面は
+      lb=1（キルが隠れているかもしれない）。落とされた子は lb=1 として
+      親の下限を引く。
+    旧定義（子が全て exact でないと親も inexact）は過剰に保守的で、
+    キル発見済みの打ち切り局面の祖先が全て inexact になっていた
+    （seed31 パイロットで実測: 全ターンの展開が完走し全子が決着して
+    いても開始局面が inexact と表示された）。"""
     edges = {}
     for line in (store / "edges.jsonl").read_text(encoding="utf-8").splitlines():
         e = json.loads(line)
         edges[e["key"]] = e
-    dropped_sets = {t: set(ks) for t, ks in (dropped or {}).items()}
-    dist: dict[str, int | None] = {}
-    exact: dict[str, bool] = {}
+    ub: dict[str, int | None] = {}
+    lb: dict[str, int | None] = {}
+    INF = None
     for key in sorted(edges, key=lambda k: -edges[k]["turn"]):
         e = edges[key]
-        if e["turn"] >= max_turn:
-            dist[key] = 1 if e["kill"] else None
-            exact[key] = not e["trunc"]
-            continue
-        child_d = [dist.get(c) for c in e["children"]]
         if e["kill"]:
-            d = 1
+            ub[key] = lb[key] = 1
+            continue
+        if e["turn"] >= max_turn:
+            ub[key] = INF
+            lb[key] = 1 if e["trunc"] else INF
+            continue
+        child_ub = [ub.get(c, INF) for c in e["children"]]
+        finite = [x for x in child_ub if x is not None]
+        ub[key] = 1 + min(finite) if finite else INF
+        if e["trunc"]:
+            lb[key] = 1
         else:
-            finite = [x for x in child_d if x is not None]
-            d = 1 + min(finite) if finite else None
-        dist[key] = d
-        dropped_here = dropped_sets.get(str(e["turn"]), set())
-        kids_dropped = any(c in dropped_here for c in e["children"])
-        kids_exact = all(exact.get(c, False) for c in e["children"])
-        exact[key] = not e["trunc"] and kids_exact and not kids_dropped
-    return {k: {"turn": edges[k]["turn"], "dist": dist[k], "exact": exact[k]}
+            # edges に無い子（保持上限で落とされた）は lb=1 として数える
+            child_lb = [lb[c] if c in lb else 1 for c in e["children"]]
+            finite_lb = [x for x in child_lb if x is not None]
+            lb[key] = 1 + min(finite_lb) if finite_lb else INF
+    return {k: {"turn": edges[k]["turn"], "dist": ub[k],
+                "exact": ub[k] == lb[k]}
             for k in edges}
 
 
