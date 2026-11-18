@@ -268,7 +268,11 @@ def run_case(rules, setup: dict, *, max_turn: int, mode: str, beam: int,
                 return {"verdict": verdict, "kill_turn": None, "kill_by": None,
                         "nodes": total_nodes, "frontier_sizes": frontier_sizes,
                         "capped": capped, "truncated": truncated_any, "final": None}
-            states = sorted(nxt.values(), key=lambda x: x[0], reverse=True)
+            # 保持選択は順序非依存に（計画書 §3.7）: キー昇順に整列して
+            # からスコア降順の安定ソートを重ね、同点はキーで決める。
+            ranked = sorted(nxt.items(), key=lambda kv: kv[0])
+            ranked.sort(key=lambda kv: kv[1][0], reverse=True)
+            states = [se for _k, se in ranked]
             keep = beam if mode == "beam" else FRONTIER_CAP
             if len(states) > keep:
                 if mode == "frontier":
@@ -426,7 +430,10 @@ def run_case_disk(rules, setup: dict, *, max_turn: int, mode: str, beam: int,
                 return {"verdict": verdict, "kill_turn": None, "kill_by": None,
                         "nodes": total_nodes, "frontier_sizes": frontier_sizes,
                         "capped": capped, "truncated": truncated_any, "final": None}
-            ordered = sorted(nxt.items(), key=lambda kv: kv[1], reverse=True)
+            # 保持選択は順序非依存に（計画書 §3.7）: キー昇順→スコア
+            # 降順の安定ソートで、同点はキーで決める。
+            ordered = sorted(nxt.items(), key=lambda kv: kv[0])
+            ordered.sort(key=lambda kv: kv[1], reverse=True)
             keep = beam if mode == "beam" else FRONTIER_CAP
             if len(ordered) > keep:
                 if mode == "frontier":
