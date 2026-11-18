@@ -53,15 +53,20 @@ from exhaustive_proto import STAGES, _make_stage_search, cfg_suffix, stage_candi
 from order_fn import ruler_key  # noqa: E402
 
 _W = Weights()
-_PLANNER: MacroPlanner | None = None
+_PLANNERS: list[MacroPlanner] = []
 
 
 def _trim_score(mode: str, eng) -> tuple:
     """ターン境界で保持する局面の順序スコア（次ターン開始局面で測る）。
-    plan: 大局観の Plan の充足率（stage_fraction）を主軸にし、同点は順序関数 v2 で解く。"""
+    plan: 大局観の Plan の充足率（stage_fraction）を主軸にし、同点は順序関数 v2 で解く。
+    鎖が複数ある場合は鎖の選択（大局観の責務）として、各鎖での充足率の
+    最大値を採る（局面に最も合うルートで評価する楽観選択。保持は
+    優先付けであって除外ではないので、楽観側に倒す）。最大値は鎖の
+    並び順に依存しないため、保持選択の順序非依存も保たれる。"""
     if mode == "plan":
-        plan = _PLANNER.plan(eng, 0)
-        return (stage_fraction(eng, 0, plan),) + ruler_key(eng, 0)
+        frac = max(stage_fraction(eng, 0, p.plan(eng, 0))
+                   for p in _PLANNERS)
+        return (frac,) + ruler_key(eng, 0)
     return ruler_key(eng, 0) if mode == "ruler" else (evaluate(eng, 0, _W),)
 
 FRONTIER_CAP = 64        # frontier モードで保持する局面数の上限（超えたら capped）
@@ -478,7 +483,8 @@ def main():
     ap.add_argument("--trim-order", default="value", choices=["value", "ruler", "plan"],
                     help="ターン境界で保持する局面の順序（value=V、ruler=順序関数、plan=大局観の段の充足率）")
     ap.add_argument("--stages-file", default="data/eval/stages/saga.generated.yaml",
-                    help="trim-order=plan で使う段階目標の鎖（load_stage_file 形式）")
+                    help="trim-order=plan で使う段階目標の鎖（load_stage_file 形式）。"
+                         "カンマ区切りで複数渡すと鎖の選択（充足率の最大値）が有効になる")
     ap.add_argument("--budget", type=int, default=200_000)
     ap.add_argument("--frontier-cap", type=int, default=FRONTIER_CAP)
     ap.add_argument("--leaf-cap", type=int, default=LEAF_CAP)
@@ -503,10 +509,15 @@ def main():
     rules = load_rules()
     print("rules loaded", flush=True)
     if a.trim_order == "plan":
-        global _PLANNER
-        stages, _goal = load_stage_file(a.stages_file)
-        _PLANNER = MacroPlanner(stages=stages)
-        print(f"planner: {len(stages)} stages from {a.stages_file}", flush=True)
+        global _PLANNERS
+        _PLANNERS = []
+        for f in a.stages_file.split(","):
+            f = f.strip()
+            if not f:
+                continue
+            stages, _goal = load_stage_file(f)
+            _PLANNERS.append(MacroPlanner(stages=stages))
+            print(f"planner: {len(stages)} stages from {f}", flush=True)
     deck_mode = a.deck is not None
     deck = None
     if deck_mode:
