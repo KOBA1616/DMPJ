@@ -43,6 +43,7 @@ from dmsim.engine import state as _state_mod  # noqa: E402
 # メモリが律速になるため（docs/cow-experiment.md）。DMSIM_COW=0 で無効化できる。
 if os.environ.get("DMSIM_COW") != "0":
     _state_mod.COW = True
+from dmsim.engine import rustcore  # noqa: E402
 from dmsim.engine import scenario as sc  # noqa: E402
 from dmsim.engine.loop import abstract, verify  # noqa: E402
 from dmsim.search import turn  # noqa: E402
@@ -68,6 +69,14 @@ def _trim_score(mode: str, eng) -> tuple:
                    for p in _PLANNERS)
         return (frac,) + ruler_key(eng, 0)
     return ruler_key(eng, 0) if mode == "ruler" else (evaluate(eng, 0, _W),)
+
+
+def _as_python(eng):
+    """RustEngine なら、その時点の状態を写した Python の Engine に変換する。
+    葉を保持・保存・記録に回す前に使い、下流は従来どおり Python の
+    Engine だけを見る（展開の入口で maybe_rust に包み、出口で戻す）。"""
+    v = getattr(eng, "_view", None)
+    return v() if v is not None else eng
 
 FRONTIER_CAP = 64        # frontier モードで保持する局面数の上限（超えたら capped）
 LEAF_CAP = 4000          # 1局面・1ターンあたりに集める葉の上限
@@ -236,17 +245,19 @@ def run_case(rules, setup: dict, *, max_turn: int, mode: str, beam: int,
                         return
                     r = leaf.s.result
                     if r is not None and r.get("winner") == 0:
-                        kill_leaf.append(leaf)
+                        kill_leaf.append(_as_python(leaf))
                         return
                     nxt_eng = advance_to_my_turn(leaf)
                     if nxt_eng is not None:
+                        nxt_eng = _as_python(nxt_eng)
                         key = nxt_eng.s.fast_key()  # 探索内部の重複統合は高速キー（記録照合は digest のまま）
                         s = _trim_score(trim_order, nxt_eng)
                         if key not in nxt or s > nxt[key][0]:
                             nxt[key] = (s, nxt_eng)
 
                 _leaves, trunc, nodes = LeafCollector(
-                    ts, on_leaf=handle_leaf).collect(st_eng, node_budget)
+                    ts, on_leaf=handle_leaf).collect(
+                        rustcore.maybe_rust(st_eng), node_budget)
                 total_nodes += nodes
                 truncated_any = truncated_any or trunc
                 if _TOTAL_BUDGET and total_nodes > _TOTAL_BUDGET:
@@ -381,17 +392,19 @@ def run_case_disk(rules, setup: dict, *, max_turn: int, mode: str, beam: int,
                         return
                     r = leaf.s.result
                     if r is not None and r.get("winner") == 0:
-                        kill_leaf.append(leaf)
+                        kill_leaf.append(_as_python(leaf))
                         return
                     nxt_eng = advance_to_my_turn(leaf)
                     if nxt_eng is not None:
+                        nxt_eng = _as_python(nxt_eng)
                         key = _store_put(store, nxt_eng)
                         s = _trim_score(trim_order, nxt_eng)
                         if key not in nxt or s > nxt[key]:
                             nxt[key] = s
 
                 _l, trunc, nodes = LeafCollector(
-                    ts, on_leaf=handle_leaf).collect(st_eng, node_budget)
+                    ts, on_leaf=handle_leaf).collect(
+                        rustcore.maybe_rust(st_eng), node_budget)
                 total_nodes += nodes
                 inv_nodes += nodes
                 truncated_any = truncated_any or trunc
