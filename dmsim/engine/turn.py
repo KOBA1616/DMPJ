@@ -705,9 +705,11 @@ def st_start(eng, t):                                   # 501
     frozen = [c for c in eng.bz_tops(a) + eng.zlist("mana", a) if s.cards[c].no_untap_next]
     for c in frozen:                       # フリーズ等: 印を消費してこの回のアンタップをしない
         s.mut_card(c).no_untap_next = False
-    untap = [{"ev": "untap", "subject": s.ref(c)}
-             for c in eng.bz_tops(a) + eng.zlist("mana", a)
-             if s.cards[c].tapped and eng.permits(c, "untap_at_start") and c not in skill and c not in frozen]
+    bz_c = [c for c in eng.bz_tops(a)
+            if s.cards[c].tapped and eng.permits(c, "untap_at_start") and c not in skill and c not in frozen]
+    mana_c = [c for c in eng.zlist("mana", a)
+              if s.cards[c].tapped and eng.permits(c, "untap_at_start") and c not in skill and c not in frozen]
+    caps = eng._untap_caps(a)   # アンタップ制限（第227弾）: サイレントスキルの諮問を過ぎてから消費する
     eng._step_done(t)
     # ターン起因処理（同時にアンタップ, 702.3a）→ サイレントスキルの解決（他のカードのアンタップの後, 501.1a）→「ターンのはじめに」の誘発（501.2）
     effects = [eng._child(ab["effect"], {"you": a, "self": s.ref(c), "vars": {}}) for c in skill for _, ab in eng.abilities(c, "silent")]
