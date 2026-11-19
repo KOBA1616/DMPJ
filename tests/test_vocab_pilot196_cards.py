@@ -3,7 +3,9 @@
 ラウンド232で eternal_kappa 単独5件を新規登録した。全件、登録形に
 エターナル・Κの置換（kind: replace、行き先なし、optional、裏向きマナ
 枚数の if、instead は flip_up）が含まれる。dm24bd6-001 のみ
-once_per_turn＋2枚版。残件は多重ギャップ8件のみ。
+once_per_turn＋2枚版。残件だった多重ギャップ8件はラウンド318で処理し
+（3件登録・5件は Κ 節をキーワードとして partial に保存して差し戻し）、
+ファミリーは解消した。
 """
 import copy
 import json
@@ -42,7 +44,8 @@ def test_registered_forms():
         assert reps[0].get("optional") is True, cid
 
 
-def test_family_leftovers_are_multi_gap_only():
+def test_family_cleared():
+    # ラウンド318で残件8件を処理し、eternal_kappa を gaps に持つ行は無い
     rows = [json.loads(l) for l in open(REJECTS, encoding="utf-8")]
     left = [r for r in rows if "eternal_kappa" in (r.get("gaps") or [])]
-    assert left and all(len(r.get("gaps") or []) > 1 for r in left)
+    assert left == []

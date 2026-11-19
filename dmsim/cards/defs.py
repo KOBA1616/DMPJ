@@ -39,7 +39,7 @@ POSITIONS = {"top", "bottom"}
 PERMANENT_TYPES = {"tamaseed", "field", "cross_gear"}   # 手札から実行してバトルゾーンに出るクリーチャー以外のカード（315, 308, 303）
 CARD_TYPES = {"creature", "spell", "evolution", "d2_field", "dream_creature", "g_castle", "exile_creature"} | PERMANENT_TYPES   # d2_field: D2フィールドの型印（特殊タイプ D2。types には field と併記する。第151弾）。dream_creature: ドリーム・クリーチャーの型印（第174弾）。g_castle: G城の型印（第176弾）。exile_creature: エグザイル・クリーチャーの型印（第266弾。types には creature と併記する）
 CIVS = {"light", "water", "darkness", "fire", "nature", "zero"}
-SELECTOR_KEYS = {"zone", "owner", "owner_of", "filter", "count", "up_to", "from_top", "chooser", "ref", "other",
+SELECTOR_KEYS = {"zone", "owner", "owner_of", "filter", "count", "up_to", "from_top", "from_bottom", "chooser", "ref", "other",
                  "under_of", "bundle_of", "look", "exlife_of", "castle_of", "total_cost_le", "total_cost_ge", "total_power_le", "total_power_ge",
                  "distinct_costs", "distinct_from", "distinct_names", "exclude", "extremal",
                  "crossed_to", "host_of"}   # crossed_to: 「そのクリーチャーにクロスされているギア」。host_of: 「そのギアをクロスしているクリーチャー」（第170弾）。castle_of: 「その城が要塞化しているシールド」（第178弾）
@@ -535,7 +535,7 @@ class Checker:
                 if not isinstance(v, str):
                     raise DefError(f"{where}: declared needs a name")
                 return
-            if k in ("var", "cost_of", "power_of", "name_of", "races_of", "race"):   # name_of は従来 filter 経由で未検証だった分（T169）。他と同じく受理する
+            if k in ("var", "cost_of", "power_of", "name_of", "races_of", "civs_of", "race"):   # name_of は従来 filter 経由で未検証だった分（T169）。他と同じく受理する。civs_of は第288弾
                 return
             if k == "link_count":   # リンクしているカードの枚数（値は self 固定で無視される）
                 return
@@ -863,6 +863,8 @@ class Checker:
             for v in vals:
                 if v not in allowed:
                     raise DefError(f"{where}: unknown not_reason '{v}'")
+        if "position" in w and w["position"] not in POSITIONS:   # 置かれた位置（山札の上か下か。第290弾: 「山札の一番下に置かれた時」）
+            raise DefError(f"{where}: unknown position '{w['position']}'")
         tg = w.get("target")
         if tg is not None and tg not in ("player", "creature", "self") and not isinstance(tg, dict):
             raise DefError(f"{where}: bad target '{tg}'")
@@ -876,10 +878,13 @@ class Checker:
             raise DefError(f"{where}: bad by '{w['by']}'")
         if "opp_hand" in w and w["opp_hand"] not in ("rock", "scissors", "paper"):   # ジャンケンで相手が出した手（第271弾）
             raise DefError(f"{where}: opp_hand must be rock/scissors/paper")
-        if "cause" in w:   # そのイベントを起こした効果の帰属 {by?: you/opp, kind?: spell/ability, defn?: 発生源の defn, name_has?: 発生源の名前の一部（第246弾）}（効果帰属レコード基盤B1。バンドC2 U108）
+        if "cause" in w:   # そのイベントを起こした効果の帰属 {by?: you/opp, kind?: spell/ability かそのリスト（第290弾: 「呪文の効果またはクリーチャーの能力によって」）, defn?: 発生源の defn, name_has?: 発生源の名前の一部（第246弾）}（効果帰属レコード基盤B1。バンドC2 U108）
             cw = w["cause"]
+            kinds = cw.get("kind", "spell") if isinstance(cw, dict) else None
+            kind_ok = kinds in ("spell", "ability") or (isinstance(kinds, list) and bool(kinds)
+                                                        and all(k in ("spell", "ability") for k in kinds))
             if not isinstance(cw, dict) or not cw or set(cw) - {"by", "kind", "defn", "name_has"} \
-                    or cw.get("by", "you") not in ("you", "opp") or cw.get("kind", "spell") not in ("spell", "ability") \
+                    or cw.get("by", "you") not in ("you", "opp") or not kind_ok \
                     or ("defn" in cw and not (isinstance(cw["defn"], str)
                         or (isinstance(cw["defn"], list) and cw["defn"] and all(isinstance(x, str) for x in cw["defn"])))) \
                     or ("name_has" in cw and not isinstance(cw["name_has"], str)):

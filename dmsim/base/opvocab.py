@@ -45,7 +45,7 @@ OP_ARGS: dict[str, dict[str, str]] = {
     'extra_turn': {'player': 'player?'},
     'step_mod': {'player': 'player', 'step': 'step', 'mode': 'str', 'turns': 'int?'},
     'delayed_trigger': {'when': 'any', 'effect': 'ops', 'duration': 'duration?', 'once': 'bool?'},
-    'play_free': {'select': 'selector', 'resolve_to': 'zone?', 'resolve_position': 'position?', 'face': 'str?', 'as': 'str?'},
+    'play_free': {'select': 'selector', 'resolve_to': 'zone?', 'resolve_position': 'position?', 'face': 'str?', 'as': 'str?', 'player': 'player?'},
     'mekurade': {'filter': 'filter?', 'cost_le': 'int?', 'look': 'int?'},
     'janken': {'win': 'ops?', 'lose': 'ops?'},
     'move_under_to_event': {},

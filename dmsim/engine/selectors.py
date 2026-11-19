@@ -76,9 +76,9 @@ class SelectorMixin:
         distinct_cost_count と同じ作法。affects フィルタの races_of: crossed 等が評価中の宿主を指す時に要る）"""
         if cid in self._chars_busy:
             d = self.fdef(cid)
-            return {"cost": d.cost, "power": d.power, "name": d.name, "races": list(d.races)}[key]
+            return {"cost": d.cost, "power": d.power, "name": d.name, "races": list(d.races), "civs": list(d.civs)}[key]
         ch = self.chars_ro(cid)
-        return list(ch["races"]) if key == "races" else ch[key]
+        return list(ch["races"]) if key == "races" else list(ch["civs"]) if key == "civs" else ch[key]
 
     def eval_expr(self, x, env):
         if isinstance(x, int):
@@ -193,6 +193,8 @@ class SelectorMixin:
                 return [env.get("races", {})[x["race"]]]
             if "races_of" in x:   # 変数に束縛したカードの種族（「種族をひとつ選ぶ」の代わりに、場のカード1体を選んでその種族とする）。"self" / "crossed"（このギアをクロスしているクリーチャー。第170弾）も可
                 return sorted({r for c in self._expr_refs(x["races_of"], env) for r in self._chars_val(c[0], "races")})
+            if "civs_of" in x:   # 参照カードの文明（「そのカードと同じ文明の〜」フィルタ用、races_of の対。第288弾）。複数なら和集合
+                return sorted({cv for c in self._expr_refs(x["civs_of"], env) for cv in self._chars_val(c[0], "civs")})
             if "sum" in x:
                 return sum(self.eval_expr(v, env) for v in x["sum"])
             if "mul" in x:
@@ -206,7 +208,7 @@ class SelectorMixin:
     _EXPR_KEYS = {"count", "civ_count", "distinct_cost_count", "distinct_type_count", "link_count", "seals", "seals_on",
                   "crossed_count",
                   "entered", "drew", "turn_count", "used_count", "prev_shield_added",
-                  "var", "cost_of", "power_of", "name_of", "race", "races_of", "sum", "mul", "bundles", "declared",
+                  "var", "cost_of", "power_of", "name_of", "race", "races_of", "civs_of", "sum", "mul", "bundles", "declared",
                   "total_cost", "total_power", "max_power"}
 
     # 従来から複合キー辞書（{distinct_cost_count: ..., base: 0} 等）でも式として読んでいたキー。
@@ -603,9 +605,15 @@ class SelectorMixin:
                 part = self.bz_tops(p) if z == "bz" else self.zlist(z, p)
                 if "from_top" in sel and len(zs) > 1 and z == "deck":      # 複数ゾーン指定の from_top は山札だけに効く（手札または山札の上1枚）
                     part = part[: self.eval_expr(sel["from_top"], env)]
+                if "from_bottom" in sel and len(zs) > 1 and z == "deck":   # from_bottom も山札だけに効く（第287弾）
+                    n = self.eval_expr(sel["from_bottom"], env)
+                    part = part[max(0, len(part) - n):]
                 lst += part
             if "from_top" in sel and len(zs) == 1:
                 lst = lst[: self.eval_expr(sel["from_top"], env)]
+            if "from_bottom" in sel and len(zs) == 1:   # 山札の一番下から N 枚（第287弾。山札リストは上が先頭）
+                n = self.eval_expr(sel["from_bottom"], env)
+                lst = lst[max(0, len(lst) - n):]
             f = sel.get("filter", {})
             if any(isinstance(v, dict) for v in f.values()):   # 式の値は解決時に計算する
                 f = {k: self.eval_expr(v, env) if isinstance(v, dict) else v for k, v in f.items()}
@@ -645,7 +653,8 @@ class SelectorMixin:
         if ("ref" in sel and "count" not in sel) or ("under_of" in sel and "count" not in sel) \
                 or ("bundle_of" in sel and "count" not in sel) \
                 or ("crossed_to" in sel and "count" not in sel) or ("host_of" in sel and "count" not in sel) \
-                or ("from_top" in sel and "count" not in sel) or (sel.get("count", 1) == "all" and not any_n):
+                or ("from_top" in sel and "count" not in sel) or ("from_bottom" in sel and "count" not in sel) \
+                or (sel.get("count", 1) == "all" and not any_n):
             return cands, None
         n = len(cands) if any_n else self.eval_expr(sel.get("count", 1), env)
         mx = min(n, len(cands))

@@ -11377,3 +11377,764 @@ cards:
         if: {cmp: [{count: {zone: mana, owner: you, filter: {face_down: true}}}, ">=", 3]}
         instead:
           - {op: flip_up, select: {zone: mana, owner: you, filter: {face_down: true}, count: 3}}
+
+  # ---- 語彙パイロット第284弾（2026-11-19）: once_per_turn_replacement ----
+  - id: T806
+    name: 試験用シールド化守護獣
+    types: [creature]
+    civs: [light]
+    cost: 5
+    power: 5000
+    races: [テスト]
+    mana: 1
+    text: "自分のクリーチャーまたはタマシードが破壊される時、墓地に置くかわりにシールド化してもよい。この能力は各ターン1度しか使えない。（第284弾・dm22rp2x-001 の置換そのもの）"
+    abilities:
+      - kind: replace
+        optional: true
+        once_per_turn: true
+        when: {event: move, from: bz, to: graveyard, reason: destroy, subject: {owner: you, filter: {types: [creature, tamaseed]}}}
+        instead:
+          - {op: move, select: {ref: event.subject}, to: shield, reason: charge}
+  - id: T807
+    name: 試験用マナ還りタマシード
+    types: [tamaseed]
+    civs: [darkness, nature]
+    cost: 2
+    races: [テスト]
+    mana: 1
+    text: "自分のクリーチャーが離れる時、かわりにタップしてマナゾーンに置いてもよい。この能力は、各ターン1度しか使えない。（第284弾・dm22rp2x-050 の置換そのもの）"
+    abilities:
+      - kind: replace
+        optional: true
+        once_per_turn: true
+        when: {event: move, from: bz, subject: {owner: you, filter: {types: [creature]}}}
+        instead:
+          - {op: move, select: {ref: event.subject}, to: mana, reason: put, tapped: true}
+  - id: T808
+    name: 試験用身代わりドラゴン
+    types: [creature]
+    civs: [fire]
+    cost: 6
+    power: 6000
+    races: [アーマード・ドラゴン]
+    mana: 1
+    text: "各ターンに一度、自分のアーマード・ドラゴンが破壊される時、かわりにファイアー・バードを1枚、自分の手札から出してもよい。（第284弾・dm23sd1-002 の置換そのもの）"
+    abilities:
+      - kind: replace
+        optional: true
+        once_per_turn: true
+        when: {event: move, from: bz, to: graveyard, reason: destroy, subject: {owner: you, filter: {race_has: アーマード・ドラゴン}}}
+        if: {exists: {zone: hand, owner: you, filter: {race_has: ファイアー・バード}}}
+        instead:
+          - {op: play_free, select: {zone: hand, owner: you, filter: {race_has: ファイアー・バード}, count: 1}}
+  - id: T809
+    name: 試験用ターン頭タップ獣
+    types: [creature]
+    civs: [light]
+    cost: 4
+    power: 4000
+    races: [テスト]
+    mana: 1
+    text: "相手のターンのはじめに、自分のシールドが相手よりも多ければ、相手のクリーチャーを2体選んでタップする。（第284弾・dm22rp2x-001 の第2能力そのもの）"
+    abilities:
+      - kind: trigger
+        when: {event: turn_start, player: opp}
+        if: {cmp: [{count: {zone: shield, owner: you}}, ">", {count: {zone: shield, owner: opp}}]}
+        effect:
+          - {op: tap, select: {zone: bz, owner: opp, filter: {types: [creature]}, count: 2}}
+  - id: T810
+    name: 試験用ファイアー・バード
+    types: [creature]
+    civs: [fire]
+    cost: 3
+    power: 3000
+    races: [ファイアー・バード]
+    mana: 1
+    text: "（第284弾・身代わり役のバニラ）"
+  - id: T811
+    name: 試験用タマシード
+    types: [tamaseed]
+    civs: [nature]
+    cost: 2
+    races: [テスト]
+    mana: 1
+    text: "（第284弾・保護対象役のバニラタマシード）"
+  - id: T812
+    name: 試験用タマシード破壊呪文
+    types: [spell]
+    civs: [darkness]
+    cost: 3
+    text: 相手のタマシードを1つ選び、破壊する。（第284弾・タマシード対象の破壊役）
+    spell:
+      - op: destroy
+        select: {zone: bz, owner: opp, filter: {types: [tamaseed]}, count: 1}
+  - id: T813
+    name: 試験用対手番ウォッチャー
+    types: [creature]
+    civs: [fire]
+    cost: 4
+    power: 4000
+    races: [テスト]
+    mana: 1
+    text: "相手がコストを支払わずにクリーチャーをバトルゾーンに出した時、そのクリーチャーを破壊する。（第285弾・dmex10-006形）"
+    abilities:
+      - kind: trigger
+        when: {event: move, to: bz, subject: {owner: opp, filter: {types: [creature]}}, unpaid: true}
+        effect:
+          - {op: destroy, select: {ref: event.subject}}
+  - id: T814
+    name: 試験用全員ウォッチャー
+    types: [creature]
+    civs: [fire]
+    cost: 4
+    power: 3000
+    races: [テスト]
+    mana: 1
+    text: "いずれかのプレイヤーがコストを支払わずにクリーチャーをバトルゾーンに出した時、そのクリーチャーを破壊する。（第285弾・dmsp01-033／dmex12-064形）"
+    abilities:
+      - kind: trigger
+        when: {event: move, to: bz, subject: {filter: {types: [creature]}}, unpaid: true}
+        effect:
+          - {op: destroy, select: {ref: event.subject}}
+  - id: T815
+    name: 試験用無料召喚呪文
+    types: [spell]
+    civs: [water]
+    cost: 2
+    mana: 1
+    text: "自分の手札からクリーチャーを1体、コストを支払わずに出してもよい。（第285弾・効果で出す役）"
+    spell:
+      - op: may
+        body:
+          - op: play_free
+            select: {zone: hand, owner: you, filter: {types: [creature]}, count: 1}
+  - id: T816
+    name: 試験用バニラ獣
+    types: [creature]
+    civs: [nature]
+    cost: 3
+    power: 3000
+    races: [テスト]
+    mana: 1
+    text: "（第285弾・出される役のバニラ）"
+  - id: T817
+    name: 試験用ゼロ獣
+    types: [creature]
+    civs: [nature]
+    cost: 0
+    power: 1000
+    races: [テスト]
+    mana: 1
+    text: "（第285弾・コスト0でも通常召喚は「支払った」扱いになることの確認役）"
+  - id: T818
+    name: 試験用Gゼロ獣
+    types: [creature]
+    civs: [fire]
+    cost: 5
+    power: 5000
+    races: [テスト]
+    mana: 1
+    free_if: {exists: {zone: bz, owner: you, filter: {types: [creature]}}}
+    text: "G・ゼロ：自分のクリーチャーがバトルゾーンにあれば、このクリーチャーをコストを支払わずに召喚してもよい。（第285弾・無料プレイ役）"
+  - id: T819
+    name: 試験用タマシード召喚呪文
+    types: [spell]
+    civs: [nature]
+    cost: 2
+    mana: 1
+    text: "自分の手札からタマシードを1つ、コストを支払わずに出してもよい。（第285弾・クリーチャー限定フィルタの対照役）"
+    spell:
+      - op: may
+        body:
+          - op: play_free
+            select: {zone: hand, owner: you, filter: {types: [tamaseed]}, count: 1}
+  - id: T820
+    name: 試験用武装誘引獣
+    types: [creature]
+    civs: [water]
+    cost: 2
+    power: 1000
+    races: [テスト]
+    mana: 1
+    text: "マナ武装 ３-相手が自分のクリーチャーを選ぶ時、自分のマナゾーンに水のカードが３枚以上あれば、相手はこのクリーチャー以外選べない。（ただし、自分の他のクリーチャーを攻撃またはブロックしてもよい）（第286弾・形A）"
+    abilities:
+      - kind: static
+        affects: self
+        if: {cmp: [{count: {zone: mana, owner: you, filter: {civs: [water]}}}, ">=", 3]}
+        mod: {must_be_chosen: true}
+  - id: T821
+    name: 試験用登場誘引獣
+    types: [creature]
+    civs: [nature]
+    cost: 4
+    power: 3000
+    races: [テスト]
+    mana: 1
+    text: "このクリーチャーがバトルゾーンに出た時、そのターン、相手が自分のクリーチャーを選ぶ時、相手は可能ならこのクリーチャーを選ぶ。（第286弾・形B）"
+    abilities:
+      - kind: trigger
+        when: {event: move, to: bz, subject: self}
+        effect:
+          - op: modify
+            select: {ref: self}
+            mod: {must_be_chosen: true}
+            duration: end_of_turn
+
+  - id: T822
+    name: 試験用底引き獣
+    types: [creature]
+    civs: [nature]
+    cost: 3
+    power: 2000
+    races: [テスト]
+    mana: 1
+    text: "このクリーチャーがバトルゾーンに出た時、自分の山札の一番下のカードを手札に加える。（第287弾・形A）"
+    abilities:
+      - kind: trigger
+        when: {event: move, to: bz, subject: self}
+        effect:
+          - op: move
+            select: {zone: deck, owner: you, from_bottom: 1}
+            to: hand
+            reason: draw
+
+  - id: T823
+    name: 試験用底掘り獣
+    types: [creature]
+    civs: [fire]
+    cost: 4
+    power: 3000
+    races: [テスト]
+    mana: 1
+    text: "このクリーチャーが出た時、シールドが１つもないプレイヤーがいれば、自分の山札の下から１枚を墓地に置く。それがコスト５以下のクリーチャーなら、出してもよい。（第287弾・形B）"
+    abilities:
+      - kind: trigger
+        when: {event: move, to: bz, subject: self}
+        if: {any: [{cmp: [{count: {zone: shield, owner: you}}, "==", 0]}, {cmp: [{count: {zone: shield, owner: opp}}, "==", 0]}]}
+        effect:
+          - op: move
+            select: {zone: deck, owner: you, from_bottom: 1}
+            to: graveyard
+            reason: put
+            as: bot
+          - op: if
+            cond: {exists: {ref: bot, filter: {types: [creature], cost_le: 5}}}
+            then:
+              - op: may
+                body:
+                  - op: play_free
+                    select: {ref: bot}
+
+  - id: T824
+    name: 試験用底公開獣
+    types: [creature]
+    civs: [fire]
+    cost: 7
+    power: 7000
+    races: [ジョーカーズ]
+    mana: 1
+    text: "このクリーチャーが攻撃する時、自分の山札の下から３枚を表向きにする。その中からコスト８以下のジョーカーズ・クリーチャーを１体、出してもよい。残りを好きな順序で山札の上に置く。（第287弾・形C）"
+    abilities:
+      - kind: trigger
+        when: {event: attack, subject: self}
+        effect:
+          - op: choose
+            select: {zone: deck, owner: you, from_bottom: 3, look: true, count: all}
+            as: pile
+            reveal: true
+          - op: play_free
+            select: {ref: pile, filter: {types: [creature], races: [ジョーカーズ], cost_le: 8}, count: 1, up_to: true}
+          - op: move
+            select: {ref: pile, count: all}
+            to: deck
+            position: top
+            order: choose
+            reason: put
+
+  - id: T825
+    name: 試験用底渡し獣
+    types: [creature]
+    civs: [water]
+    cost: 5
+    power: 4000
+    races: [テスト]
+    mana: 1
+    text: "このクリーチャーがバトルゾーンを離れた時、相手は自分自身の山札の一番下のカードを表向きにする。それが進化ではないクリーチャーであれば、相手はそれをバトルゾーンに出してもよい。（第287弾・形D）"
+    abilities:
+      - kind: trigger
+        when: {event: move, from: bz, subject: self}
+        effect:
+          - op: choose
+            select: {zone: deck, owner: opp, from_bottom: 1, look: true, count: all}
+            as: pile
+            reveal: true
+          - op: play_free
+            select: {ref: pile, filter: {types: [creature], evolution: false}, count: 1, up_to: true, chooser: opp}
+            player: opp
+
+  - id: T826
+    name: 試験用縫合王
+    types: [creature]
+    civs: [darkness, fire]
+    cost: 5
+    power: 6000
+    races: [デモニオ, 鬼札王国]
+    mana: 1
+    text: "相手のターン中に自分がゲームに負ける時、自分のマナゾーンに闇と火文明があれば、かわりに自分の手札にあるこのカードを表向きにし、山札の下に置いてもよい。\nスピードアタッカー\nW・ブレイカー\n鬼エンド：このクリーチャーが出た時、シールドが１つもないプレイヤーがいれば、自分の山札の下から１枚を墓地に置く。それがコスト５以下のクリーチャーなら、出してもよい。（第287弾・形E）"
+    keywords: [speed_attacker, double_breaker]
+    abilities:
+      - kind: replace
+        zone: hand
+        optional: true
+        when: {event: lose}
+        if: {all: [{is_turn: opp}, {exists: {zone: mana, owner: you, filter: {civs: [darkness]}}}, {exists: {zone: mana, owner: you, filter: {civs: [fire]}}}]}
+        instead:
+          - op: move
+            select: {ref: self}
+            to: deck
+            position: bottom
+            face_up: true
+            reason: put
+      - kind: trigger
+        when: {event: move, to: bz, subject: self}
+        if: {any: [{cmp: [{count: {zone: shield, owner: you}}, "==", 0]}, {cmp: [{count: {zone: shield, owner: opp}}, "==", 0]}]}
+        effect:
+          - op: move
+            select: {zone: deck, owner: you, from_bottom: 1}
+            to: graveyard
+            reason: put
+            as: bot
+          - op: if
+            cond: {exists: {ref: bot, filter: {types: [creature], cost_le: 5}}}
+            then:
+              - op: may
+                body:
+                  - op: play_free
+                    select: {ref: bot}
+
+  - id: T827
+    name: 試験用若芽獣
+    types: [creature]
+    civs: [nature]
+    cost: 2
+    power: 2000
+    races: [テスト]
+    mana: 1
+    text: ""
+
+  - id: T828
+    name: 試験用大髪獣
+    types: [creature]
+    civs: [nature]
+    cost: 6
+    power: 5000
+    races: [ジョーカーズ]
+    mana: 1
+    text: ""
+
+  - id: T829
+    name: 試験用文明螺旋
+    types: [spell]
+    civs: [darkness]
+    cost: 5
+    mana: 1
+    text: "相手は自分自身の手札を1枚選んで捨てる。そのカードの文明と同じ文明のカードが自分のマナゾーンに1枚でもあれば、相手は自分自身のマナゾーンからカードを1枚選び、墓地に置く。（第288弾・形A）"
+    spell:
+      - op: move
+        select: {zone: hand, owner: opp, chooser: opp, count: 1}
+        to: graveyard
+        reason: discard
+        as: dropped
+      - op: if
+        cond: {exists: {zone: mana, owner: you, filter: {civs: {civs_of: dropped}}}}
+        then:
+          - op: move
+            select: {zone: mana, owner: opp, chooser: opp, count: 1}
+            to: graveyard
+            reason: put
+
+  - id: T830
+    name: 試験用文明煙
+    types: [spell]
+    civs: [darkness]
+    cost: 5
+    mana: 1
+    text: "相手のタップされていないクリーチャーを1体破壊する。そのクリーチャーの文明と同じ文明のカードが自分のマナゾーンに1枚でもあれば、カードを1枚引いてもよい。（第288弾・形B）"
+    spell:
+      - op: move
+        select: {zone: bz, owner: opp, filter: {types: [creature], tapped: false}, count: 1}
+        to: graveyard
+        reason: destroy
+        as: victim
+      - op: if
+        cond: {exists: {zone: mana, owner: you, filter: {civs: {civs_of: victim}}}}
+        then:
+          - op: may
+            body:
+              - op: draw
+                count: 1
+
+  - id: T831
+    name: 試験用便乗王子
+    types: [creature]
+    civs: [water]
+    cost: 6
+    power: 6000
+    races: [テスト]
+    mana: 1
+    keywords: [double_breaker]
+    text: "W・ブレイカー。自分の他のクリーチャーを召喚した時、そのクリーチャーを破壊してもよい。そうしたら、自分の山札の上から1枚目を表向きにする。それが、破壊したクリーチャーと同じ文明を持つクリーチャーなら、バトルゾーンに出す。そうでなければ、自分の手札に加える。（第288弾・形C）"
+    abilities:
+      - kind: trigger
+        when: {event: move, to: bz, reason: summon, subject: {owner: you, other: true, filter: {types: [creature]}}}
+        effect:
+          - op: may
+            body:
+              - op: move
+                select: {ref: event.subject}
+                to: graveyard
+                reason: destroy
+                as: sac
+              - op: if
+                cond: {exists: {ref: sac, zone: graveyard}}
+                then:
+                  - op: choose
+                    select: {zone: deck, owner: you, from_top: 1}
+                    reveal: true
+                    as: top
+                  - op: if
+                    cond: {exists: {ref: top, filter: {types: [creature], civs: {civs_of: sac}}}}
+                    then:
+                      - op: move
+                        select: {ref: top}
+                        to: bz
+                        reason: put
+                    else:
+                      - op: move
+                        select: {ref: top}
+                        to: hand
+                        reason: draw
+
+  - id: T832
+    name: 試験用墓地回収獣
+    types: [creature]
+    civs: [water, darkness, nature]
+    cost: 8
+    power: 11000
+    races: [テスト]
+    mana: 1
+    keywords: [double_breaker]
+    text: "W・ブレイカー。このクリーチャーが攻撃する時、自分の墓地のカードをシャッフルし、山札の一番下に置く。（第289弾・形A）"
+    abilities:
+      - kind: trigger
+        when: {event: attack, subject: self}
+        effect:
+          - op: move
+            select: {zone: graveyard, owner: you, count: all}
+            to: deck
+            reason: put
+            position: bottom
+            order: shuffle
+
+  - id: T833
+    name: 試験用墓地封じ獣
+    types: [creature]
+    civs: [light]
+    cost: 3
+    power: 3500
+    races: [テスト]
+    mana: 1
+    text: "このクリーチャーがバトルゾーンに出た時、相手は自身の墓地をシャッフルし、山札の一番下に置く。自分のターンの終わりに、このクリーチャーがタップしていたら、カードを1枚引いてもよい。（第289弾・形B）"
+    abilities:
+      - kind: trigger
+        when: {event: move, to: bz, subject: self}
+        effect:
+          - op: move
+            select: {zone: graveyard, owner: opp, count: all}
+            to: deck
+            reason: put
+            position: bottom
+            order: shuffle
+      - kind: trigger
+        when: {event: turn_end, player: you}
+        effect:
+          - op: if
+            cond: {exists: {ref: self, zone: bz, filter: {tapped: true}}}
+            then:
+              - op: may
+                body:
+                  - op: draw
+                    count: 1
+
+  - id: T834
+    name: 試験用ゼロ・エッグ
+    types: [creature]
+    civs: [darkness]
+    cost: 6
+    power: 3000
+    races: [テスト]
+    mana: 1
+    keywords: [cannot_attack]
+    text: "このクリーチャーをバトルゾーンに出した時、自分の墓地のカードをすべて山札に加えてシャッフルする。このクリーチャーは攻撃することができない。（第289弾・形C）"
+    abilities:
+      - kind: trigger
+        when: {event: move, to: bz, subject: self}
+        effect:
+          - op: move
+            select: {zone: graveyard, owner: you, count: all}
+            to: deck
+            reason: put
+          - op: shuffle
+
+  - id: T835
+    name: 試験用帰還獣
+    types: [creature]
+    civs: [nature]
+    cost: 4
+    power: 4000
+    races: [テスト]
+    mana: 1
+    text: "このクリーチャーが、どこからでも自分の墓地に置かれた時、墓地をシャッフルし、自分の山札の一番下に置く。（第289弾・形D）"
+    abilities:
+      - kind: trigger
+        when: {event: move, to: graveyard, subject: self}
+        effect:
+          - op: move
+            select: {zone: graveyard, owner: you, count: all}
+            to: deck
+            reason: put
+            position: bottom
+            order: shuffle
+
+  - id: T836
+    name: 試験用底覗き獣
+    types: [creature]
+    civs: [darkness]
+    cost: 6
+    power: 3000
+    races: [テスト]
+    mana: 1
+    keywords: [cannot_attack]
+    text: "自分のターンのはじめに、自分の山札の一番下のカードを墓地に置く。そのカードが進化ではない無色クリーチャーであれば、このクリーチャーを破壊してもよい。そうした場合、その無色クリーチャーをコストを支払わずに召喚する。このクリーチャーは攻撃することができない。（第289弾・形E）"
+    abilities:
+      - kind: trigger
+        when: {event: turn_start, player: you}
+        effect:
+          - op: move
+            select: {zone: deck, owner: you, from_bottom: 1}
+            to: graveyard
+            reason: put
+            as: bottom
+          - op: if
+            cond: {exists: {ref: bottom, zone: graveyard, filter: {types: [creature], colorless: true, evolution: false}}}
+            then:
+              - op: may
+                body:
+                  - op: move
+                    select: {ref: self}
+                    to: graveyard
+                    reason: destroy
+                    as: fallen
+                  - op: if
+                    cond: {exists: {ref: fallen, zone: graveyard}}
+                    then:
+                      - op: play_free
+                        select: {ref: bottom}
+
+  # ---- 語彙パイロット第290弾（2026-11-19）: win_prevention ----
+  - id: T837
+    name: 試験用多数守護獣
+    types: [creature]
+    civs: [light]
+    cost: 8
+    power: 10500
+    races: [テスト]
+    mana: 1
+    text: "バトルゾーンにある自分のクリーチャーの数が相手より多ければ、自分はゲームに負けず、相手はゲームに勝てない。（第290弾・形A。dmrp06-001 の敗北防止節そのもの）"
+    abilities:
+      - kind: static
+        if: {cmp: [{count: {zone: bz, owner: you, filter: {types: [creature]}}}, ">", {count: {zone: bz, owner: opp, filter: {types: [creature]}}}]}
+        no_lose: true
+
+  - id: T838
+    name: 試験用横臥守護獣
+    types: [creature]
+    civs: [fire]
+    cost: 7
+    power: 9000
+    races: [テスト]
+    mana: 1
+    text: "このクリーチャーがタップされている間、自分はゲームに負けず、相手は勝てない。（第290弾・形B。dmx11-001 の敗北防止節そのもの）"
+    abilities:
+      - kind: static
+        if: {exists: {ref: self, filter: {tapped: true}}}
+        no_lose: true
+
+  - id: T839
+    name: 試験用完全防御呪文
+    types: [spell]
+    civs: [fire]
+    cost: 3
+    mana: 1
+    text: "カードを１枚引く。相手が、クリーチャーによる攻撃以外の方法でゲームに勝つ時、かわりに自分の手札にあるこのカードを捨ててもよい。（第290弾・形C。dmr20-038 の勝利置換節そのもの）"
+    spell:
+      - {op: draw, count: 1}
+    abilities:
+      - kind: replace
+        zone: hand
+        optional: true
+        when: {event: lose, reason: [deck_out, state, effect]}
+        instead:
+          - {op: move, select: {ref: self}, to: graveyard, reason: discard}
+
+  - id: T840
+    name: 試験用底置き観測獣
+    types: [creature]
+    civs: [light]
+    cost: 5
+    power: 5000
+    races: [テスト]
+    mana: 1
+    text: "相手の呪文の効果またはクリーチャーの能力によって、自分のカードが山札の一番下に置かれた時、カードを１枚引いてもよい。（第290弾・形D。dmrp06-001 の第2節そのもの）"
+    abilities:
+      - kind: trigger
+        when: {event: move, to: deck, position: bottom, subject: {owner: you}, cause: {by: opp, kind: [spell, ability]}}
+        effect:
+          - op: may
+            body:
+              - {op: draw, count: 1}
+
+  - id: T841
+    name: 試験用底戻し呪文
+    types: [spell]
+    civs: [water]
+    cost: 4
+    mana: 1
+    text: "相手のクリーチャーを１体選び、持ち主の山札の一番下に置く。（第290弾・形Dの駆動役: 相手の呪文による一番下置き）"
+    spell:
+      - {op: move, select: {zone: bz, owner: opp, filter: {types: [creature]}, count: 1}, to: deck, position: bottom, reason: return}
+
+  - id: T842
+    name: 試験用上戻し呪文
+    types: [spell]
+    civs: [water]
+    cost: 4
+    mana: 1
+    text: "相手のクリーチャーを１体選び、持ち主の山札の上に置く。（第290弾・形Dの対照役: 一番下ではない）"
+    spell:
+      - {op: move, select: {zone: bz, owner: opp, filter: {types: [creature]}, count: 1}, to: deck, position: top, reason: return}
+
+  - id: T843
+    name: 試験用底戻し獣
+    types: [creature]
+    civs: [water]
+    cost: 5
+    power: 5000
+    races: [テスト]
+    mana: 1
+    text: "このクリーチャーが出た時、相手のクリーチャーを１体選び、持ち主の山札の一番下に置く。（第290弾・形Dの駆動役: 相手のクリーチャーの能力による一番下置き）"
+    abilities:
+      - kind: trigger
+        when: {event: move, to: bz, subject: self}
+        effect:
+          - {op: move, select: {zone: bz, owner: opp, filter: {types: [creature]}, count: 1}, to: deck, position: bottom, reason: return}
+
+  - id: T844
+    name: 試験用自底戻し呪文
+    types: [spell]
+    civs: [darkness]
+    cost: 4
+    mana: 1
+    text: "自分のクリーチャーを１体選び、自分の山札の一番下に置く。（第290弾・形Dの対照役: 自分の呪文による一番下置き）"
+    spell:
+      - {op: move, select: {zone: bz, owner: you, filter: {types: [creature]}, count: 1}, to: deck, position: bottom, reason: return}
+
+  - id: T845
+    name: 試験用敗北呪文
+    types: [spell]
+    civs: [darkness]
+    cost: 1
+    mana: 1
+    text: "自分はゲームに負ける。（第290弾・形A/形Cの駆動役: 効果による敗北）"
+    spell:
+      - {op: lose, player: you}
+
+  - id: T846
+    name: 試験用勝利時解放呪文
+    types: [spell]
+    civs: [fire]
+    cost: 3
+    mana: 1
+    text: "自分のクリーチャーを１体選ぶ。このターン、そのクリーチャーがバトルに勝った時、アンタップする。（第290弾・形E。dmr20-038 の第1節そのもの）"
+    spell:
+      - op: choose
+        select: {zone: bz, owner: you, filter: {types: [creature]}, count: 1}
+        as: pick
+      - op: delayed_trigger
+        when: {event: battle_win, subject: {ref: pick}}
+        duration: end_of_turn
+        effect:
+          - {op: untap, select: {ref: pick}}
+
+  - id: T847
+    name: 試験用EXライフ・マナ凍結
+    types: [creature]
+    civs: [fire]
+    cost: 5
+    power: 5000
+    races: [テスト]
+    mana: 1
+    text: "EXライフ / スピードアタッカー / 相手のターン中、このクリーチャーの「EXライフ」シールドが自分のシールドゾーンを離れた時、相手のマナゾーンのカードをすべてタップする。次の相手のターンのはじめに、それらのカードはアンタップしない。（第291弾・形A。dm23bd1-005 の追跡節そのもの）"
+    keywords: [ex_life, speed_attacker]
+    abilities:
+      - kind: trigger
+        when: {event: move, from: shield, subject: {exlife_of: self}}
+        if: {is_turn: opp}
+        effect:
+          - op: tap
+            select: {zone: mana, owner: opp, count: all}
+            no_untap_next: true
+
+  - id: T848
+    name: 試験用EXライフ・単体凍結
+    types: [creature]
+    civs: [light]
+    cost: 5
+    power: 5000
+    races: [テスト]
+    mana: 1
+    text: "EXライフ / このクリーチャーの「EXライフ」シールドが自分のシールドゾーンを離れた時、相手のクリーチャーを1体選び、タップする。次の相手のターンのはじめに、そのクリーチャーはアンタップしない。（第291弾・形B。dm23ex2-024 の追跡節そのもの）"
+    keywords: [ex_life]
+    abilities:
+      - kind: trigger
+        when: {event: move, from: shield, subject: {exlife_of: self}}
+        effect:
+          - op: tap
+            select: {zone: bz, owner: opp, filter: {types: [creature]}, count: 1}
+            no_untap_next: true
+
+  - id: T849
+    name: 試験用EXライフ・離脱拒否
+    types: [creature]
+    civs: [fire]
+    cost: 5
+    power: 5000
+    races: [テスト]
+    mana: 1
+    text: "EXライフ / このクリーチャーの「EXライフ」シールドが自分のシールドゾーンを離れた時、そのターン、このクリーチャーはバトルゾーンを離れない。（第291弾・形C。dmrp17-s06 の追跡節そのもの）"
+    keywords: [ex_life]
+    abilities:
+      - kind: trigger
+        when: {event: move, from: shield, subject: {exlife_of: self}}
+        effect:
+          - {op: modify, select: {ref: self}, mod: {no_leave: true}, duration: end_of_turn}
+
+  - id: T850
+    name: 試験用シールドブレイク呪文
+    types: [spell]
+    civs: [darkness]
+    cost: 1
+    mana: 1
+    text: "相手のシールドを1つブレイクする。（第291弾の駆動役: 攻撃を介さないシールド離脱）"
+    spell:
+      - {op: break, player: opp, count: 1}
