@@ -43,6 +43,28 @@ class TurnMixin:
         if len(self.s.continuous) != n:
             self._sba()
 
+    def _expire_turn_end(self):
+        """第276弾: until_turn_end:{player}:{created} の期限切れ。「次の自分の／相手の
+        ターンの終わりまで」は、そのプレイヤーの、生成ターンより後のターンの終了時に
+        切れる（生成がそのプレイヤーのターン中なら次のそのプレイヤーのターン、相手の
+        ターン中なら直後のそのプレイヤーのターン。追加ターンもそのプレイヤーの
+        ターンとして数える）。_expire と同じく、呼んだ側はこの後に自分のタスクを
+        積まないこと。"""
+        s = self.s
+
+        def live(e):
+            d = e.get("duration") or ""
+            if d.startswith("until_turn_end:"):
+                _, p, c = d.split(":")
+                return not (int(p) == s.active and s.turn > int(c))
+            return True
+
+        n = len(s.continuous)
+        s.continuous = [c for c in s.continuous if live(c)]
+        s.delayed = [d for d in s.delayed if live(d)]
+        if len(s.continuous) != n:
+            self._sba()
+
     def _distinct_hand_options(self, p, verb):
         """同じカード名の手札は区別しない（対称な選択肢の正規化）。"""
         seen, out = set(), []
@@ -502,8 +524,13 @@ class TurnMixin:
                 if sum(self.chars_ro(c)["cost"] for c in srcs) < d.evolve_total_cost_ge:
                     return False
             n = len(srcs) if d.evolve_any else d.evolve_count           # 最も安い組合せで払えるか（112.2b）
-            if d.soul_shift:   # ソウルシフト∞（第218弾）: 全候補を重ねた時の最大軽減で判定
-                cost = max(d.soul_shift["floor"], d.cost - sum(self.chars_ro(c)["cost"] for c in srcs))
+            if d.soul_shift:   # ソウルシフト（第218弾∞／第274弾クラシック）: 実際に重ねる進化元の合計で判定
+                if d.evolve_any:   # ∞: 候補全体を重ねられるので、その合計が最大軽減
+                    red = sum(self.chars_ro(c)["cost"] for c in srcs)
+                else:   # クラシック: 重ねる数（通常1体）ぶんを大きい順に見積もる。全候補の合計で見積もると単体進化で払えない額を提示してしまう
+                    n_evo = len(d.evolve_from) if isinstance(d.evolve_from, list) else d.evolve_count
+                    red = sum(sorted((self.chars_ro(c)["cost"] for c in srcs), reverse=True)[:max(1, n_evo)])
+                cost = max(d.soul_shift["floor"], d.cost - red)
             else:
                 cost = max(1, d.cost - n * d.cost_reduce_per_evo) if d.cost_reduce_per_evo else None   # 「コストは0以下にはならない」= 最低1
             return bool(self._mana_choices(cid, p, face, cost=self._opt_reduced(cid, face, d, self._evo_base_reduced(cid, face, d, self._sac_reduced(d, self._tap_reduced(d, p, cost, None), self._sac_pool(d, p)), p)), limit=1))
@@ -594,10 +621,24 @@ class TurnMixin:
     def _evo_match(self, c, ef) -> bool:
         """進化元フィルタへの一致。第232弾: 種族指定のあるフィルタには、evolve_base_any の
         許可を持つ進化元も一致する（「どんな種族の進化クリーチャーを置いてもよい」）。
-        文明など種族以外の指定は許可では肩代わりしない。"""
+        文明など種族以外の指定は許可では肩代わりしない。
+        第273弾: 種族指定が race_has 形（{civs, race_has} の複合を含む）や any_of の枝に
+        ある場合も肩代わりする。種族指定を取り除いた残りは通常どおり照合する。"""
         if self.filter_match(c, ef):
             return True
-        return "races" in ef and self.permits(c, "evolve_base_any")
+        return self.permits(c, "evolve_base_any") and self._evo_race_waived(c, ef)
+
+    def _evo_race_waived(self, c, ef) -> bool:
+        """第273弾: ef の種族指定（races / race_has）を取り除いて c が一致するか。
+        any_of は枝ごとに判定し、枝の外にあるキーも各枝へ合わせて見る。"""
+        if "any_of" in ef:
+            rest = {k: v for k, v in ef.items() if k != "any_of"}
+            return any(isinstance(b, dict) and self._evo_race_waived(c, {**rest, **b})
+                       for b in ef["any_of"])
+        if "races" not in ef and "race_has" not in ef:
+            return False
+        rest = {k: v for k, v in ef.items() if k not in ("races", "race_has")}
+        return self.filter_match(c, rest)
 
     @read_only
     def _evo_sources(self, cid, p, face=None) -> list[int]:
@@ -811,6 +852,7 @@ def h_turn(eng, t):
         s.skip_rest = False
         t["i"] = len(t["steps"])
         eng._expire("end_of_turn")
+        eng._expire_turn_end()
         return None          # 状況起因処理と待機中の効果を、このターンのうちに済ませる
     if t["i"] < len(t["steps"]):
         name = t["steps"][t["i"]]
@@ -1078,6 +1120,7 @@ def st_end(eng, t):                                     # 511
         eng._push(eng.ev_task({"ev": "turn_end", "player": eng.s.active}))
         return None
     eng._expire("end_of_turn")                          # 511.2
+    eng._expire_turn_end()                              # 第276弾: 次の自分の／相手のターンの終わりまで
     eng._step_done(t)
 
 

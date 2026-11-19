@@ -379,6 +379,27 @@ def _bake_refs(obj, eng, env):
     return obj
 
 
+def _bake_only(mod, eng, env):
+    """allow/deny 項目の only {var: 名前} を、生成時点の束縛参照の列へ固定する（第275弾）。
+    _bake_refs の {var:} は「束縛した枚数」を返す数式なので、参照そのものが要る only は
+    ベイクの前にここで焼く（焼いた後は int の列なので _bake_refs は素通しする）。"""
+    if not isinstance(mod, dict):
+        return mod
+    mod = dict(mod)
+    for k in ("allow", "deny"):
+        entries = mod.get(k)
+        if not isinstance(entries, list):
+            continue
+        out = []
+        for e in entries:
+            if isinstance(e, dict) and isinstance(e.get("only"), dict) and set(e["only"]) == {"var"}:
+                e = dict(e)
+                e["only"] = [list(r) for r in env.get("vars", {}).get(e["only"]["var"], [])]
+            out.append(e)
+        mod[k] = out
+    return mod
+
+
 @op("modify", select="selector", mod="mod", duration="duration?", dynamic="bool?")
 def op_modify(eng, t, op, env):
     """継続的効果を生成する。既定では解決時の範囲に固定（110.2e）。
@@ -386,6 +407,8 @@ def op_modify(eng, t, op, env):
     s = eng.s
     s.seq += 1
     mod = op["mod"]
+    # only {var:...} は参照そのものを焼く（第275弾）。{var:} の数式ベイクより先に行う
+    mod = _bake_only(mod, eng, env)
     # {declared:...} / {var:...} は生成時にベイクする（基盤B4。add_races は下の専用処理、gain は能力そのものなので対象外）
     mod = {k: (v if k in ("add_races", "gain") else _bake_refs(v, eng, env)) for k, v in mod.items()}
     if any(isinstance(r, dict) for r in mod.get("add_races", [])):

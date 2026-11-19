@@ -42,7 +42,7 @@ class CombatMixin:
             creature_opts = []
             for tc in self.bz_tops(1 - a):
                 # 505.2 既定ではタップ状態のクリーチャーだけ。「タップされていないクリーチャーを攻撃できる」(マッハファイター等)は allow で広げる
-                if (self.s.cards[tc].tapped or any(e.get("other", {}).get("tapped") is False and self.filter_match(tc, e["other"]) for e in allow)) \
+                if (self.s.cards[tc].tapped or any(e.get("other", {}).get("tapped") is False and self.filter_match(tc, e["other"]) and self._only_ok(e, tc) for e in allow)) \
                         and self.permits(cid, "attack_creature", tc) and self.permits(tc, "be_attacked", cid):
                     creature_opts.append({"key": f"attack:{dfn}:{self.s.cards[tc].defn}", "cid": cid,
                                           "target": self.s.ref(tc)})
