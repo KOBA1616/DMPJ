@@ -281,18 +281,14 @@ def test_registered_forms():
 
 
 def test_bounced_forms_banked():
+    # 第173弾で差し戻した2枚は第250弾（G・リンク一般化）＋ラウンド284で登録済み。
+    # 登録形の検証は test_vocab_pilot250_cards.py が担う。
     rows = {json.loads(line)["id"]: json.loads(line)
             for line in open(ROOT / "data/cards/raw/rejects.jsonl") if line.strip()}
     conv_ids = {c["id"] for c in _conv_cache.all_cards(ROOT / "data/cards/converted.yaml")}
     for cid in BOUNCE:
-        assert cid not in conv_ids, cid
-        assert cid in rows, cid
-        assert rows[cid]["gaps"] == ["g_link"], cid
-        assert rows[cid]["partial"]["deck_evolution"], cid
-        assert rows[cid]["partial"]["source"]["unsupported"][0]["need"] == "g_link", cid
-    assert rows["dmc58-003"]["partial"]["deck_evolution"] == {"count": 3, "rest_to": "graveyard"}
-    assert rows["dmex17-037"]["partial"]["deck_evolution"] == {
-        "count": 1, "blind": True, "shuffle_first": True}
+        assert cid in conv_ids, cid
+        assert cid not in rows, cid
 
 
 def test_round209_not_in_rejects():

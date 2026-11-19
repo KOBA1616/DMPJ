@@ -70,6 +70,10 @@ keywords:
     ja: S・トリガー・プラス（このカードをシールドゾーンから手札に加える時、コストを支払わずにすぐ使ってもよい。それが相手のターンで、そのターン中に自分のシールドが2つ以上ブレイクされていれば、このカードに記された追加能力を得る）
     abilities:
       - {kind: static, zone: shield, affects: self, mod: {allow: [s_trigger]}}
+  s_trigger_x:
+    ja: S・トリガーX（このクロスギアをシールドゾーンから手札に加える時、コストを支払わずにすぐジェネレートし、自分のクリーチャー１体にクロスしてもよい）
+    abilities:
+      - {kind: static, zone: shield, affects: self, mod: {allow: [s_trigger]}}
   shield_go:
     ja: シールド・ゴー（このクリーチャーが破壊された時、表向きにシールド化する。このクリーチャーが表向きで、シールドゾーンを離れる時、かわりに自分の墓地に置く）
     abilities:
@@ -95,6 +99,17 @@ keywords:
     ja: T・ブレイカー
     abilities:
       - {kind: static, affects: self, mod: {breaks: 3}}
+  g_breaker:            # 第252弾: 相手のシールドをすべてブレイクし、その攻撃の後、自分のシールドをすべてブレイクする。処理は combat の攻撃フェイズ4（break_opts に "all" を追加し、相手ブレイクの後に自分のブレイクを積む）
+    ja: G・ブレイカー
+    aliases: [G(ギャラクシー)・ブレイカー]
+    abilities: []
+  infinite_breaker:     # 第272弾: ∞ブレイカー（相手のシールドを好きな数ブレイクする）。combat の攻撃フェイズ4でブレイク数の選択肢を 0..残シールド数にする。abilities は印だけ（g_breaker と同型）
+    ja: ∞ブレイカー
+    abilities: []
+  infinite_power_attacker:   # 第272弾: ∞パワーアタッカー（攻撃中、このクリーチャーのパワーは無限大になる）。power_when attacking で攻撃中の特性パワーを 1<<30 にする
+    ja: ∞パワーアタッカー
+    abilities:
+      - {kind: static, affects: self, mod: {power_when: {amount: 1073741824, when: attacking}}}
   cannot_attack_player:
     ja: このクリーチャーは相手プレイヤーを攻撃できない
     abilities:
@@ -193,6 +208,17 @@ keywords:
   # 公式総合ルール Ver.1.53 には定義がない（701.33b の例で名前が出るだけ）。公式カード・裁定による。
   ex_life:
     ja: EXライフ
+    abilities:
+      - kind: replace
+        when: {event: move, from: bz, subject: self}
+        if: {exists: {exlife_of: self}}
+        instead:
+          - {op: move, select: {exlife_of: self, count: 1}, to: graveyard, reason: put}
+
+  # エクストラEXライフ（第237弾）: シールド化して紐付ける枚数が2枚。紐付けは events の
+  # フックがキーワード名を見て2回行う。離れる時の置換は ex_life と同じ（中から1枚を墓地へ）
+  extra_ex_life:
+    ja: エクストラEXライフ
     abilities:
       - kind: replace
         when: {event: move, from: bz, subject: self}

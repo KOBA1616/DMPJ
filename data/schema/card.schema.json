@@ -31,6 +31,7 @@
      "d2_field",
      "dream_creature",
      "evolution",
+     "exile_creature",
      "field",
      "g_castle",
      "spell",
@@ -85,12 +86,16 @@
      "eternal_omega",
      "evo_charger",
      "ex_life",
+     "extra_ex_life",
      "freeze",
+     "g_breaker",
      "g_neo",
      "g_strike",
      "guardman",
      "hunting",
      "hyper_energy",
+     "infinite_breaker",
+     "infinite_power_attacker",
      "kizuna",
      "kizuna_plus",
      "last_burst",
@@ -112,6 +117,7 @@
      "s_back_water",
      "s_trigger",
      "s_trigger_plus",
+     "s_trigger_x",
      "shield_go",
      "shield_saver",
      "shinka_rise",
@@ -159,6 +165,7 @@
       "entered_this_turn": {},
       "evo_source_of": {},
       "evolution": {},
+      "exlife": {},
       "face_down": {},
       "face_up": {},
       "fortified": {},
@@ -176,6 +183,7 @@
       "not_name": {},
       "not_race_has": {},
       "not_types": {},
+      "partner": {},
       "power_ge": {},
       "power_le": {},
       "race_has": {},
@@ -186,6 +194,7 @@
       "tapped": {},
       "twinpact": {},
       "types": {},
+      "ultimate_evolution": {},
       "vanilla": {},
       "vividraw": {},
       "zone": {}
@@ -299,6 +308,35 @@
    },
    "additionalProperties": false
   },
+  "launcher": {
+   "type": "object",
+   "properties": {
+    "filter": {
+     "$ref": "#/$defs/filter"
+    }
+   },
+   "additionalProperties": false
+  },
+  "evo_base_reduce": {
+   "type": "object",
+   "properties": {
+    "filter": {
+     "$ref": "#/$defs/filter"
+    },
+    "amount": {
+     "type": "integer"
+    },
+    "min": {
+     "type": "integer",
+     "minimum": 0
+    }
+   },
+   "additionalProperties": false
+  },
+  "evolve_total_cost_ge": {
+   "type": "integer",
+   "minimum": 1
+  },
   "mana_bakutan": {
    "type": "integer",
    "minimum": 0
@@ -336,6 +374,7 @@
   "alt_cost": {},
   "s_back": {},
   "bazurenda": {},
+  "tap_entry": {},
   "fushigi": {},
   "vividraw": {},
   "mugen_climb": {},
@@ -345,6 +384,7 @@
   "stp_spell": {},
   "recycle": {},
   "grave_cast": {},
+  "rinne": {},
   "deck_evolution": {}
  },
  "required": [
@@ -366,6 +406,7 @@
        "d2_field",
        "dream_creature",
        "evolution",
+       "exile_creature",
        "field",
        "g_castle",
        "spell",
@@ -420,12 +461,16 @@
        "eternal_omega",
        "evo_charger",
        "ex_life",
+       "extra_ex_life",
        "freeze",
+       "g_breaker",
        "g_neo",
        "g_strike",
        "guardman",
        "hunting",
        "hyper_energy",
+       "infinite_breaker",
+       "infinite_power_attacker",
        "kizuna",
        "kizuna_plus",
        "last_burst",
@@ -447,6 +492,7 @@
        "s_back_water",
        "s_trigger",
        "s_trigger_plus",
+       "s_trigger_x",
        "shield_go",
        "shield_saver",
        "shinka_rise",
@@ -494,6 +540,7 @@
         "entered_this_turn": {},
         "evo_source_of": {},
         "evolution": {},
+        "exlife": {},
         "face_down": {},
         "face_up": {},
         "fortified": {},
@@ -511,6 +558,7 @@
         "not_name": {},
         "not_race_has": {},
         "not_types": {},
+        "partner": {},
         "power_ge": {},
         "power_le": {},
         "race_has": {},
@@ -521,6 +569,7 @@
         "tapped": {},
         "twinpact": {},
         "types": {},
+        "ultimate_evolution": {},
         "vanilla": {},
         "vividraw": {},
         "zone": {}
@@ -634,6 +683,35 @@
      },
      "additionalProperties": false
     },
+    "launcher": {
+     "type": "object",
+     "properties": {
+      "filter": {
+       "$ref": "#/$defs/filter"
+      }
+     },
+     "additionalProperties": false
+    },
+    "evo_base_reduce": {
+     "type": "object",
+     "properties": {
+      "filter": {
+       "$ref": "#/$defs/filter"
+      },
+      "amount": {
+       "type": "integer"
+      },
+      "min": {
+       "type": "integer",
+       "minimum": 0
+      }
+     },
+     "additionalProperties": false
+    },
+    "evolve_total_cost_ge": {
+     "type": "integer",
+     "minimum": 1
+    },
     "mana_bakutan": {
      "type": "integer",
      "minimum": 0
@@ -673,6 +751,7 @@
     "alt_cost": {},
     "s_back": {},
     "bazurenda": {},
+    "tap_entry": {},
     "fushigi": {},
     "vividraw": {},
     "mugen_climb": {},
@@ -682,6 +761,7 @@
     "stp_spell": {},
     "recycle": {},
     "grave_cast": {},
+    "rinne": {},
     "deck_evolution": {}
    },
    "required": [
@@ -696,6 +776,50 @@
    "type": "array",
    "items": {
     "anyOf": [
+     {
+      "type": "object",
+      "properties": {
+       "op": {
+        "const": "action_limit"
+       },
+       "player": {
+        "anyOf": [
+         {
+          "enum": [
+           "you",
+           "opp"
+          ]
+         },
+         {
+          "type": "object",
+          "properties": {
+           "var": {
+            "type": "string"
+           }
+          },
+          "required": [
+           "var"
+          ],
+          "additionalProperties": false
+         }
+        ]
+       },
+       "attack": {
+        "type": "integer"
+       },
+       "block": {
+        "type": "integer"
+       },
+       "until": {
+        "type": "string"
+       }
+      },
+      "required": [
+       "op",
+       "until"
+      ],
+      "additionalProperties": false
+     },
      {
       "type": "object",
       "properties": {
@@ -763,6 +887,18 @@
        },
        "st_first": {
         "type": "boolean"
+       }
+      },
+      "required": [
+       "op"
+      ],
+      "additionalProperties": false
+     },
+     {
+      "type": "object",
+      "properties": {
+       "op": {
+        "const": "cancel_attack"
        }
       },
       "required": [
@@ -1109,6 +1245,25 @@
       "type": "object",
       "properties": {
        "op": {
+        "const": "gacha"
+       },
+       "kind": {
+        "type": "string"
+       },
+       "times": {
+        "$ref": "#/$defs/expr"
+       }
+      },
+      "required": [
+       "op",
+       "kind"
+      ],
+      "additionalProperties": false
+     },
+     {
+      "type": "object",
+      "properties": {
+       "op": {
         "const": "gachinko"
        },
        "times": {
@@ -1199,9 +1354,6 @@
         "$ref": "#/$defs/ops"
        },
        "lose": {
-        "$ref": "#/$defs/ops"
-       },
-       "draw": {
         "$ref": "#/$defs/ops"
        }
       },
@@ -1666,11 +1818,16 @@
        },
        "body": {
         "$ref": "#/$defs/ops"
+       },
+       "over": {
+        "type": "string"
+       },
+       "as": {
+        "type": "string"
        }
       },
       "required": [
        "op",
-       "times",
        "body"
       ],
       "additionalProperties": false
@@ -1726,6 +1883,22 @@
        "op",
        "filter",
        "as"
+      ],
+      "additionalProperties": false
+     },
+     {
+      "type": "object",
+      "properties": {
+       "op": {
+        "const": "rush"
+       },
+       "select": {
+        "$ref": "#/$defs/selector"
+       }
+      },
+      "required": [
+       "op",
+       "select"
       ],
       "additionalProperties": false
      },
@@ -2074,6 +2247,25 @@
       "type": "object",
       "properties": {
        "op": {
+        "const": "use_entry_abilities"
+       },
+       "select": {
+        "$ref": "#/$defs/selector"
+       },
+       "count": {
+        "type": "integer"
+       }
+      },
+      "required": [
+       "op",
+       "select"
+      ],
+      "additionalProperties": false
+     },
+     {
+      "type": "object",
+      "properties": {
+       "op": {
         "const": "use_partner"
        },
        "of": {
@@ -2084,6 +2276,21 @@
        },
        "pending": {
         "type": "boolean"
+       },
+       "any_number": {
+        "type": "boolean"
+       }
+      },
+      "required": [
+       "op"
+      ],
+      "additionalProperties": false
+     },
+     {
+      "type": "object",
+      "properties": {
+       "op": {
+        "const": "use_triggered_ability"
        }
       },
       "required": [
@@ -2216,6 +2423,7 @@
     "entered_this_turn": {},
     "evo_source_of": {},
     "evolution": {},
+    "exlife": {},
     "face_down": {},
     "face_up": {},
     "fortified": {},
@@ -2233,6 +2441,7 @@
     "not_name": {},
     "not_race_has": {},
     "not_types": {},
+    "partner": {},
     "power_ge": {},
     "power_le": {},
     "race_has": {},
@@ -2243,6 +2452,7 @@
     "tapped": {},
     "twinpact": {},
     "types": {},
+    "ultimate_evolution": {},
     "vanilla": {},
     "vividraw": {}
    },
@@ -2399,6 +2609,9 @@
     },
     "distinct_from": {
      "$ref": "#/$defs/selector"
+    },
+    "distinct_names": {
+     "type": "boolean"
     },
     "extremal": {
      "enum": [
@@ -2695,6 +2908,9 @@
     },
     "power_ge": {
      "type": "integer"
+    },
+    "extra_turn": {
+     "type": "boolean"
     }
    },
    "additionalProperties": false
@@ -2731,6 +2947,9 @@
       }
      ]
     },
+    "power_set": {
+     "type": "integer"
+    },
     "grant": {
      "type": "array",
      "items": {
@@ -2753,12 +2972,16 @@
        "eternal_omega",
        "evo_charger",
        "ex_life",
+       "extra_ex_life",
        "freeze",
+       "g_breaker",
        "g_neo",
        "g_strike",
        "guardman",
        "hunting",
        "hyper_energy",
+       "infinite_breaker",
+       "infinite_power_attacker",
        "kizuna",
        "kizuna_plus",
        "last_burst",
@@ -2780,6 +3003,7 @@
        "s_back_water",
        "s_trigger",
        "s_trigger_plus",
+       "s_trigger_x",
        "shield_go",
        "shield_saver",
        "shinka_rise",
@@ -2820,6 +3044,7 @@
          "d_switch",
          "enter_bz",
          "evolve_base",
+         "evolve_base_any",
          "generate",
          "guardman",
          "s_trigger",
@@ -2849,6 +3074,7 @@
            "d_switch",
            "enter_bz",
            "evolve_base",
+           "evolve_base_any",
            "generate",
            "guardman",
            "s_trigger",
@@ -2923,6 +3149,7 @@
          "d_switch",
          "enter_bz",
          "evolve_base",
+         "evolve_base_any",
          "generate",
          "guardman",
          "s_trigger",
@@ -2952,6 +3179,7 @@
            "d_switch",
            "enter_bz",
            "evolve_base",
+           "evolve_base_any",
            "generate",
            "guardman",
            "s_trigger",
@@ -3198,6 +3426,47 @@
       }
      ]
     },
+    "evo_reduce": {
+     "type": "object",
+     "properties": {
+      "amount": {
+       "type": "integer"
+      },
+      "min": {
+       "type": "integer",
+       "minimum": 0
+      }
+     },
+     "required": [
+      "amount"
+     ],
+     "additionalProperties": false
+    },
+    "cross_reduce": {
+     "type": "object",
+     "properties": {
+      "amount": {
+       "type": "integer"
+      },
+      "min": {
+       "type": "integer",
+       "minimum": 0
+      },
+      "host": {
+       "$ref": "#/$defs/filter"
+      },
+      "gear": {
+       "$ref": "#/$defs/filter"
+      },
+      "may": {
+       "type": "boolean"
+      }
+     },
+     "required": [
+      "amount"
+     ],
+     "additionalProperties": false
+    },
     "cost_may": {
      "type": "object",
      "properties": {
@@ -3314,6 +3583,34 @@
       "type": "string"
      }
     },
+    "trigger_double": {
+     "type": "object",
+     "properties": {
+      "when": {
+       "$ref": "#/$defs/when"
+      },
+      "source": {},
+      "source_subject": {
+       "type": "boolean"
+      },
+      "may": {
+       "type": "boolean"
+      },
+      "once_per_turn": {
+       "type": "boolean"
+      },
+      "first_per_turn": {
+       "type": "boolean"
+      },
+      "cost": {
+       "$ref": "#/$defs/ops"
+      }
+     },
+     "required": [
+      "when"
+     ],
+     "additionalProperties": false
+    },
     "gain": {
      "type": "array",
      "items": {
@@ -3328,6 +3625,7 @@
     "must_be_attacked": {},
     "must_be_chosen": {},
     "no_leave": {},
+    "player_rush": {},
     "win_all_battles": {}
    },
    "additionalProperties": false,
@@ -3346,9 +3644,11 @@
      "cost",
      "cost_may",
      "cost_min",
+     "cross_reduce",
      "crystal_soul",
      "deny",
      "double_power",
+     "evo_reduce",
      "gain",
      "grant",
      "ignore",
@@ -3360,10 +3660,13 @@
      "must_be_chosen",
      "no_leave",
      "opt_reduce",
+     "player_rush",
      "power",
+     "power_set",
      "power_when",
      "require",
      "sac_reduce",
+     "trigger_double",
      "win_all_battles"
     ]
    }
@@ -3375,6 +3678,7 @@
      "enum": [
       "attack",
       "attack_end",
+      "attack_unblocked",
       "battle",
       "battle_end",
       "battle_lose",
@@ -3382,16 +3686,19 @@
       "battle_win",
       "block",
       "break",
+      "break_before",
       "cast",
       "choose",
       "draw",
       "evolve_base",
+      "janken",
       "link_established",
       "lose",
       "move",
       "mugon_used",
       "summon",
       "tap",
+      "trigger",
       "turn_end",
       "turn_start",
       "untap",
@@ -3515,6 +3822,57 @@
       }
      ]
     },
+    "not_reason": {
+     "anyOf": [
+      {
+       "enum": [
+        "battle",
+        "break",
+        "cast",
+        "charge",
+        "deck_out",
+        "destroy",
+        "direct_attack",
+        "discard",
+        "draw",
+        "effect",
+        "evolve",
+        "put",
+        "resolve",
+        "return",
+        "sba",
+        "seal",
+        "state",
+        "summon"
+       ]
+      },
+      {
+       "type": "array",
+       "items": {
+        "enum": [
+         "battle",
+         "break",
+         "cast",
+         "charge",
+         "deck_out",
+         "destroy",
+         "direct_attack",
+         "discard",
+         "draw",
+         "effect",
+         "evolve",
+         "put",
+         "resolve",
+         "return",
+         "sba",
+         "seal",
+         "state",
+         "summon"
+        ]
+       }
+      }
+     ]
+    },
     "player": {
      "enum": [
       "you",
@@ -3541,6 +3899,23 @@
         "spell",
         "ability"
        ]
+      },
+      "defn": {
+       "anyOf": [
+        {
+         "type": "string"
+        },
+        {
+         "type": "array",
+         "items": {
+          "type": "string"
+         },
+         "minItems": 1
+        }
+       ]
+      },
+      "name_has": {
+       "type": "string"
       }
      },
      "additionalProperties": false
@@ -3582,7 +3957,8 @@
      "enum": [
       "d_d_d",
       "generate",
-      "revolution_change"
+      "revolution_change",
+      "rinne"
      ]
     },
     "subject": {},
@@ -3599,6 +3975,13 @@
     },
     "turn_draw": {
      "type": "boolean"
+    },
+    "opp_hand": {
+     "enum": [
+      "rock",
+      "scissors",
+      "paper"
+     ]
     }
    },
    "required": [
@@ -3679,13 +4062,17 @@
     "accel": {},
     "any_attacker": {},
     "bazurenda": {},
+    "cast_limit": {},
     "choukon": {},
     "dswitch": {},
     "fort_e": {},
+    "group": {},
     "keyword": {},
+    "mana_all_civs": {},
     "mana_boost": {},
     "no_lose": {},
     "odrive": {},
+    "protect_hand": {},
     "redirect": {},
     "sforce": {},
     "sst": {},

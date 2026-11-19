@@ -19,7 +19,7 @@ REGISTERED = [
 ]
 
 BOUNCED = {
-    "dmrp12-078": ["attack_cancel"],
+    # dmrp12-078 は第251弾（cancel_attack）＋ラウンド285で登録済みのため除外
     "dmsd13-007": ["gr_summon"],
     "dmrp11-040": ["attack_count_limit_next_turn"],
 }

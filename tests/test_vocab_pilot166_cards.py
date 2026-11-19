@@ -27,9 +27,9 @@ LINK = {"kind": "trigger", "when": {"event": "move", "subject": "self", "to": "b
 TARGETS = ["28-sec001", "dm26rp1-s001", "dm28-026", "dm28-031", "dm28-032", "dm28-037",
            "dm28-046", "dm28-049", "dm28-075", "dm28-091", "dm28-096", "dm29-036",
            "dm31-s01", "dmbd18-se06", "dmex03-004", "dmc68-010"]
-BOUNCED = {"dm26rp1-s001": "shield_hand_shieldize_trigger",
-           "dm28-049": "draw_replacement_double"}
+BOUNCED = {"dm26rp1-s001": "shield_hand_shieldize_trigger"}
 # dm31-s01 はラウンド212で登録済み（g_castle 解決）のため BOUNCED から除外。
+# dm28-049 はラウンド277で登録済み（draw_replacement_double 解決）のため BOUNCED から除外。
 NOTES = "再変換ラウンド202。第166弾 shield_force の再変換。"
 
 

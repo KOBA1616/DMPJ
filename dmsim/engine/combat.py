@@ -24,12 +24,15 @@ class CombatMixin:
         return c.entered_turn != self.s.turn or self.permits(cid, "attack_summoning_sick")   # 506.1a
 
     def _attack_options(self, a):
+        lim = self._action_limit(a, "attack")   # 攻撃回数の制限（第254弾）
+        if lim is not None and self.s.turn_counters.get(f"atk_decl:{a}", 0) >= lim:
+            return []
         out = []
         for cid in self.bz_tops(a):
             dfn = self.s.cards[cid].defn
             if not self._can_attack(cid):
                 # アビスラッシュで出たターンだけ、召喚酔いでもプレイヤーへの攻撃はできる（クリーチャーは不可）
-                if self.s.turn_counters.get(f"rush:{cid}") == self.s.turn and not self.s.cards[cid].tapped \
+                if (self.s.turn_counters.get(f"rush:{cid}") == self.s.turn or self.chars_ro(cid).get("player_rush")) and not self.s.cards[cid].tapped \
                         and "creature" in self.chars_ro(cid)["types"] and self.permits(cid, "attack_player"):
                     out.append({"key": f"attack:{dfn}:player", "cid": cid, "target": "player"})
                 continue
@@ -177,7 +180,7 @@ class CombatMixin:
                 o = opts[a[0]]
                 new = s.ref(o["cid"])
                 if o["tap"]:
-                    s.mut_card(o["cid"]).tapped = True
+                    s.cards[o["cid"]].tapped = True
                 if k == 0:
                     att = new
                 else:
@@ -193,7 +196,10 @@ class CombatMixin:
         cid = ref[0]
         env = {"you": self.s.cards[cid].controller, "self": ref}
         total = 0
-        for _, ab in self.abilities(cid, "static"):
+        # 得た常在型（第244弾）: affects 無し／self／{ref: self} は持ち主自身の能力として扱う
+        statics = [(ab, False) for _, ab in self.abilities(cid, "static")] + \
+                  [(gab, True) for gab in self._gained_statics(cid)]
+        for ab, gained in statics:
             bp = ab.get("mod", {}).get("battle_power")
             if bp and "if" in ab and not self._static_cond(ab["if"], env):
                 continue
@@ -201,7 +207,9 @@ class CombatMixin:
                 continue
             if bp and "opponent_filter" in bp and (opponent is None or not self.filter_match(opponent[0], bp["opponent_filter"])):
                 continue
-            if bp and ab.get("affects") == "self" and ab.get("zone", "bz") == self.s.cards[cid].zone:
+            ga = ab.get("affects")
+            is_self = (ga is None or ga == "self" or ga == {"ref": "self"}) if gained else ga == "self"
+            if bp and is_self and ab.get("zone", "bz") == self.s.cards[cid].zone:
                 total += bp["amount"] * (self.count_of(bp["count"], env) if "count" in bp else 1)
         return total
 
@@ -276,6 +284,8 @@ class CombatMixin:
                             continue
                         if "if" in ab and not self.eval_cond(ab["if"], env):
                             continue
+                        if ab.get("group") and s.turn_counters.get(f"declgrp:{ab['group']}:{player}") == s.turn_counters.get("current_attack"):
+                            continue   # この攻撃ではもう同じグループの宣言を使った（第262弾）
                         o = {"key": f"declare:{d.id}:{i}", "cid": cid, "ab": i}
                         if fi is not None:
                             o["face"] = fi
@@ -305,10 +315,24 @@ def h_declare(eng, t):
     ans, d = eng.ask(t, t["player"], f"declare_{t['window']}", opts, 0, len(opts))
     if d:
         return d
+    seen_groups = set()   # 第262弾: 同じ group の宣言は1回の宣言窓でも1つまで（残りは宣言しなかったことにする）
+    kept = []
+    for i in ans:
+        o = opts[i]
+        grp = eng.cdef(o["cid"]).face(o.get("face")).abilities[o["ab"]].get("group")
+        if grp:
+            if grp in seen_groups:
+                continue
+            seen_groups.add(grp)
+        kept.append(i)
+    ans = kept
     eng._pop(t)
     win = s.windows[-1] if s.windows else 0
     for i in ans:
         o = opts[i]
+        fd = eng.cdef(o["cid"]).face(o.get("face"))
+        if fd.abilities[o["ab"]].get("group"):
+            s.turn_counters[f"declgrp:{fd.abilities[o['ab']]['group']}:{t['player']}"] = s.turn_counters.get("current_attack")   # 第262弾: この攻撃では同じグループを再宣言できない
         s.seq += 1
         p = {"pid": s.seq, "kind": "normal", "win": win, "controller": t["player"], "src": s.ref(o["cid"]),
              "defn": s.cards[o["cid"]].defn, "ab": o["ab"],
@@ -336,8 +360,19 @@ def h_attack(eng, t):
         eng._pop(t)
         eng._expire("during_attack")
         return None
+    if t.get("cancelled"):                                    # 攻撃の中止（第251弾）: バトルもブレイクもしない
+        if not t.get("end_fired") and not s.result:
+            t["end_fired"] = True
+            broke = s.turn_counters.get(f"broke_in:{att[0]}") == t.get("ano")
+            eng._push(eng.ev_task({"ev": "attack_end", "subject": att, "target": t["target"],
+                                   "controller": a, "broke": broke, "blocked": bool(t.get("blocked"))}))
+            return None
+        eng._pop(t)
+        eng._expire("during_attack")
+        return None
     if ph == 0:                                               # 506 攻撃クリーチャー指定
         t["phase"] = 1
+        s.turn_counters[f"atk_decl:{a}"] = s.turn_counters.get(f"atk_decl:{a}", 0) + 1   # 攻撃回数の制限用（第254弾）
         s.turn_counters["attack_no"] = s.turn_counters.get("attack_no", 0) + 1
         t["ano"] = s.turn_counters["attack_no"]
         s.turn_counters["current_attack"] = t["ano"]
@@ -366,7 +401,7 @@ def h_attack(eng, t):
                     return d
                 if ans[0] < len(opts):
                     o = opts[ans[0]]
-                    s.mut_card(o["payer"]).tapped = False   # コスト: アンタップする（タップのコストと同じくイベントは出さない）
+                    s.cards[o["payer"]].tapped = False   # コスト: アンタップする（タップのコストと同じくイベントは出さない）
                     t["target"] = o["target"]
                     return None   # もう一度諮る（別のクリーチャーの変更も使える）
             t["redirect_done"] = True
@@ -377,6 +412,9 @@ def h_attack(eng, t):
         guards = [] if t["target"] == "player" else [          # 507.1a ガードマン: 攻撃されている自分の他のクリーチャーがいる時だけ
             c for c in eng.bz_tops(1 - a) if not s.cards[c].tapped and [c, s.cards[c].gen] != t["target"]
             and eng.permits(c, "guardman", att[0])]
+        blim = eng._action_limit(1 - a, "block")   # ブロック回数の制限（第254弾）
+        if blim is not None and s.turn_counters.get(f"blk_decl:{1 - a}", 0) >= blim:
+            blockers, guards = [], []
         forced = [c for c in blockers if "block" in eng.chars_ro(c)["require"]]   # 507.1b ブロックを強制されたクリーチャーは必ず選ぶ
         opts = [eng._card_option(c) for c in blockers] + \
                [eng._card_option(c, key=f"guard:{s.cards[c].defn}") for c in guards] + ([] if forced else [{"key": "no_block"}])
@@ -396,6 +434,7 @@ def h_attack(eng, t):
                     eng._push(eng.ev_task({"ev": "tap", "subject": s.ref(c)}))
                 return None
             t["blocked"] = True
+            s.turn_counters[f"blk_decl:{1 - a}"] = s.turn_counters.get(f"blk_decl:{1 - a}", 0) + 1   # ブロック回数の制限用（第254弾）
             rec = {"ev": "block", "subject": t["target"], "attacker": att, "controller": 1 - a}
             eng._push(eng.ev_task(rec), _decl(eng, a, "block", rec), _decl(eng, 1 - a, "block", rec))
             for c in to_tap:
@@ -422,16 +461,28 @@ def h_attack(eng, t):
         if t["target"] == "player" and eng.zlist("shield", 1 - a):
             # 509.2c 複数のブレイカー能力を持つなら、どの能力を使うかを選ぶ（どれも使わずに1つだけは選べない）
             counts = sorted(set(eng.chars_ro(att[0])["break_opts"])) or [1]
+            if "g_breaker" in eng.chars_ro(att[0])["keywords"]:
+                counts = counts + ["all"]   # G・ブレイカー（第252弾）: すべてブレイクする能力も選択肢に加える
+            if "infinite_breaker" in eng.chars_ro(att[0])["keywords"]:
+                # ∞ブレイカー（第272弾）: 好きな数ブレイクする。0〜残シールド数のすべてを選択肢にする
+                counts = list(range(0, len(eng.zlist("shield", 1 - a)) + 1))
             opts = [{"key": f"breaks:{n}"} for n in counts]
             ans, d = eng.ask(t, a, "choose_breaker", opts)
             if d:
                 return d
             n = counts[ans[0]]
+            if n == "all":
+                t["g_break"] = True
+                n = len(eng.zlist("shield", 1 - a))
         t["phase"] = 5
         if t["target"] == "player":
             shields = eng.zlist("shield", 1 - a)
             if shields:
                 if n > 0:   # ヌル・ブレイカー（0ブレイク）ではブレイク自体が起こらない（第129弾）
+                    if t.get("g_break"):
+                        # G・ブレイカー: その攻撃の後、自分のシールドもすべてブレイクする。
+                        # 先に積んだタスクが後に実行されるので、自分のブレイクを先に積む
+                        eng._push({"t": "break", "victim": a, "by": a, "count": 1 << 30, "phase": 0, "in_effect": False, "breaker": att})
                     eng._push({"t": "break", "victim": 1 - a, "by": a, "count": n, "phase": 0, "in_effect": False, "breaker": att})
             else:
                 eng._push(*eng.game_lose(1 - a, "direct_attack"))   # 509.1 / 703.4a（敗北の置換を諮ってから確定する）
@@ -523,9 +574,15 @@ def h_break(eng, t):
                 sback.append((sopts[i]["cid"], sopts[i]["shield"]))
     eng._pop(t)
     chosen = [c for c in t["chosen"] if s.cards[c].zone == "shield"]   # 宣言の間に別のゾーンへ移っていたら加えない
-    seq = [eng.ev_task([{"ev": "move", "subject": s.ref(c), "to": "hand", "reason": t.get("reason", "break"),
+    seq = []
+    if t.get("fire_break", True) and t.get("breaker") and s.alive(t["breaker"]) and chosen:
+        # 「各ブレイクの前に」（第239弾）: ブレイクするクリーチャー自身の誘発を、シールド1枚につき
+        # 1回ずつ、ブレイクの移動より先に起こす。置換でブレイク自体が無くなった場合は phase 1 で戻っている
+        seq.append(eng.ev_task([{"ev": "break_before", "subject": t["breaker"], "player": victim,
+                                 "controller": t["by"], "shield": s.ref(c)} for c in chosen]))   # shield: 割られるシールドそのもの（第248弾: ブレイク差し替え系が event.shield で参照する）
+    seq.append(eng.ev_task([{"ev": "move", "subject": s.ref(c), "to": "hand", "reason": t.get("reason", "break"),
                          **({"strigger": t["strigger"]} if t.get("strigger") else {})}
-                         for c in chosen])]
+                         for c in chosen]))
     if sback:       # 手札に加わったカードを捨てる → そうした場合だけ、コストを支払わずに実行する
         seq.append({"t": "sback", "pairs": [[h, x] for h, x in sback], "player": victim})
     seq.append({"t": "enqueue_st", "cids": declared, "player": victim, "strigger": True})

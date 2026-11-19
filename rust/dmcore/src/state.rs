@@ -34,6 +34,7 @@ pub struct Card {
     pub seals: Vec<i64>,
     pub sforce_of: Option<Value>,
     pub sst: bool,
+    pub stack_bases: Vec<i64>,
     pub stp: bool,
     pub strigger_off: bool,
     pub strigger_on: bool,
@@ -52,7 +53,7 @@ impl Card {
             bazurenda: 0, cid, controller: owner, crossed: None, defn: defn.to_string(), drawn_turn: -1, dswitched: false,
             entered_seq: 0, entered_turn: -1, exlife_of: None, face: -1, face_down: false, face_up: false,
             fortifies: None, gen: 0, hyper: false, link: 0, no_untap_next: false, odrive: false, odrive_civs: vec![],
-            owner, seal_of: -1, seals: vec![], sforce_of: None, sst: false, stp: false, strigger_off: false, strigger_on: false, summon_fuel: vec![], summon_tapped: vec![], tapped: false, top_of: -1,
+            owner, seal_of: -1, seals: vec![], sforce_of: None, sst: false, stack_bases: vec![], stp: false, strigger_off: false, strigger_on: false, summon_fuel: vec![], summon_tapped: vec![], tapped: false, top_of: -1,
             under: vec![], vivid: false, zone: "deck".to_string(),
         }
     }
@@ -60,6 +61,7 @@ impl Card {
 
 #[derive(Clone, Debug, Serialize, Deserialize, PartialEq)]
 pub struct GameState {
+    pub action_limits: Vec<Value>,
     pub active: i64,
     pub cards: Vec<Card>,
     pub continuous: Vec<Value>,
@@ -67,6 +69,7 @@ pub struct GameState {
     pub declares: Map<String, Value>,
     pub delayed: Vec<Value>,
     pub ev_seq: i64,
+    pub extra_turn: bool,
     pub extra_turns: Vec<i64>,
     pub first_player: i64,
     pub game_counters: Map<String, Value>,
@@ -86,6 +89,7 @@ pub struct GameState {
     pub trace: Option<Vec<Value>>,
     pub turn: i64,
     pub turn_counters: Map<String, Value>,
+    pub untap_caps: Vec<Value>,
     pub waiting: Option<Value>,
     pub windows: Vec<i64>,
     pub zones: BTreeMap<String, Vec<Vec<i64>>>,

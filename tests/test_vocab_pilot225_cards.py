@@ -81,8 +81,10 @@ def test_all_registered_and_bounced():
         assert cid in e.rules.cards, cid
     rows = [json.loads(l) for l in open("data/cards/raw/rejects.jsonl")]
     gaps = {r["id"]: r.get("gaps") for r in rows}
-    assert gaps.get("dmx21-045") == ["strigger_x"]
-    assert gaps.get("promoy4-002") == ["cross_cost_reduction"]
+    # dmx21-045 はラウンド281で登録済み（strigger_x は第247弾のイディオムで解決）のため rejects には無い
+    assert "dmx21-045" not in gaps
+    # promoy4-002 はラウンド276で登録済み（cross_cost_reduction 解決）のため rejects には無い
+    assert "promoy4-002" not in gaps
 
 
 def test_047_host_plus_and_mana_cycle():
