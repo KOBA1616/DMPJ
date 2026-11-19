@@ -55,16 +55,50 @@ from order_fn import ruler_key  # noqa: E402
 
 _W = Weights()
 _PLANNERS: list[MacroPlanner] = []
+# ペース設計 B（docs/phase-chain-plan.md §6(a) の「局面に応じて鎖を選ぶ」の
+# ターン軸）: 鎖が2本（序盤・終盤）ある場合の選び方。
+#   max   = 従来の楽観選択（下記 docstring 参照）
+#   hard  = 保持先ターンで固定切替（比較測定用）
+#   prior = 状態応答の再選択＋ターン番号の弱い事前分布（基本形）
+# 実ゲームでは相手の行動で盤面が変わり、固定スケジュールは壊れるため、
+# 実際の選択は各ターン境界で現在の局面の進捗から選びなおすのが前提。
+# ターン番号は目安（事前分布）に留め、進捗が後退した局面は後のターンでも
+# 序盤の鎖で評価され直す（後退を許す）。
+_PLAN_PAIR: tuple[MacroPlanner, MacroPlanner] | None = None
+_PLAN_SELECT = "max"
+_PLAN_SWITCH_TURN = 3
+_PLAN_PRIOR_EPS = 0.02    # prior で事前分布が動かせる幅（正規化進捗の近接同点のみ）
 
 
-def _trim_score(mode: str, eng) -> tuple:
+def _trim_score(mode: str, eng, turn: int | None = None) -> tuple:
     """ターン境界で保持する局面の順序スコア（次ターン開始局面で測る）。
     plan: 大局観の Plan の充足率（stage_fraction）を主軸にし、同点は順序関数 v2 で解く。
     鎖が複数ある場合は鎖の選択（大局観の責務）として、各鎖での充足率の
     最大値を採る（局面に最も合うルートで評価する楽観選択。保持は
     優先付けであって除外ではないので、楽観側に倒す）。最大値は鎖の
-    並び順に依存しないため、保持選択の順序非依存も保たれる。"""
+    並び順に依存しないため、保持選択の順序非依存も保たれる。
+    turn は保持先のターン番号（その局面が次に迎えるターン）。鎖が2本の
+    場合の選び方は _PLAN_SELECT に従う（上記コメント参照）。"""
     if mode == "plan":
+        if _PLAN_PAIR is not None and _PLAN_SELECT == "hard":
+            if turn is None:
+                frac = max(stage_fraction(eng, 0, p.plan(eng, 0))
+                           for p in _PLAN_PAIR)
+            else:
+                p = (_PLAN_PAIR[1] if turn >= _PLAN_SWITCH_TURN
+                     else _PLAN_PAIR[0])
+                frac = stage_fraction(eng, 0, p.plan(eng, 0))
+            return (frac,) + ruler_key(eng, 0)
+        if _PLAN_PAIR is not None and _PLAN_SELECT == "prior":
+            early, late = _PLAN_PAIR
+            fe = (stage_fraction(eng, 0, early.plan(eng, 0))
+                  / max(1, len(early.stages)))
+            fl = (stage_fraction(eng, 0, late.plan(eng, 0))
+                  / max(1, len(late.stages)))
+            prior = (fl if (turn is not None and turn >= _PLAN_SWITCH_TURN)
+                     else fe)
+            return (max(fe, fl) + _PLAN_PRIOR_EPS * prior,) \
+                + ruler_key(eng, 0)
         frac = max(stage_fraction(eng, 0, p.plan(eng, 0))
                    for p in _PLANNERS)
         return (frac,) + ruler_key(eng, 0)
@@ -392,7 +426,7 @@ def run_case(rules, setup: dict, *, max_turn: int, mode: str, beam: int,
                     if nxt_eng is not None:
                         nxt_eng = _as_python(nxt_eng)
                         key = nxt_eng.s.fast_key()  # 探索内部の重複統合は高速キー（記録照合は digest のまま）
-                        s = _trim_score(trim_order, nxt_eng)
+                        s = _trim_score(trim_order, nxt_eng, turn=t + 1)
                         if key not in nxt or s > nxt[key][0]:
                             nxt[key] = (s, nxt_eng)
 
@@ -539,7 +573,7 @@ def run_case_disk(rules, setup: dict, *, max_turn: int, mode: str, beam: int,
                     if nxt_eng is not None:
                         nxt_eng = _as_python(nxt_eng)
                         key = _store_put(store, nxt_eng)
-                        s = _trim_score(trim_order, nxt_eng)
+                        s = _trim_score(trim_order, nxt_eng, turn=t + 1)
                         if key not in nxt or s > nxt[key]:
                             nxt[key] = s
 
@@ -639,6 +673,14 @@ def main():
     ap.add_argument("--stages-file", default="data/eval/stages/saga.generated.yaml",
                     help="trim-order=plan で使う段階目標の鎖（load_stage_file 形式）。"
                          "カンマ区切りで複数渡すと鎖の選択（充足率の最大値）が有効になる")
+    ap.add_argument("--plan-select", default="max",
+                    choices=["max", "hard", "prior"],
+                    help="trim-order=plan で鎖が2本のときの選び方。max=従来の楽観選択。"
+                         "hard=保持先ターンで固定切替（比較用）。"
+                         "prior=状態応答の再選択＋ターン番号の弱い事前分布（基本形）。"
+                         "hard/prior では --stages-file に序盤・終盤の2鎖をこの順で渡す")
+    ap.add_argument("--plan-switch-turn", type=int, default=3,
+                    help="hard/prior で終盤の鎖へ切り替える（優先し始める）保持先ターン")
     ap.add_argument("--budget", type=int, default=200_000)
     ap.add_argument("--frontier-cap", type=int, default=FRONTIER_CAP)
     ap.add_argument("--leaf-cap", type=int, default=LEAF_CAP)
@@ -663,7 +705,7 @@ def main():
     rules = load_rules()
     print("rules loaded", flush=True)
     if a.trim_order == "plan":
-        global _PLANNERS
+        global _PLANNERS, _PLAN_PAIR, _PLAN_SELECT, _PLAN_SWITCH_TURN
         _PLANNERS = []
         for f in a.stages_file.split(","):
             f = f.strip()
@@ -672,6 +714,18 @@ def main():
             stages, _goal = load_stage_file(f)
             _PLANNERS.append(MacroPlanner(stages=stages))
             print(f"planner: {len(stages)} stages from {f}", flush=True)
+        _PLAN_SELECT = a.plan_select
+        _PLAN_SWITCH_TURN = a.plan_switch_turn
+        _PLAN_PAIR = None
+        if a.plan_select in ("hard", "prior"):
+            if len(_PLANNERS) != 2:
+                print(f"ERROR: --plan-select {a.plan_select} には "
+                      "--stages-file に序盤・終盤の2鎖が必要です", flush=True)
+                sys.exit(2)
+            _PLAN_PAIR = (_PLANNERS[0], _PLANNERS[1])
+            print(f"plan-select={a.plan_select} switch_turn="
+                  f"{a.plan_switch_turn} (early={a.stages_file.split(',')[0].strip()}, "
+                  f"late={a.stages_file.split(',')[1].strip()})", flush=True)
     deck_mode = a.deck is not None
     deck = None
     if deck_mode:
@@ -697,6 +751,8 @@ def main():
     settings = {"mode": a.mode, "beam": a.beam, "stage": a.stage, "order": a.order,
                 "trim_order": a.trim_order,
                 "stages_file": a.stages_file if a.trim_order == "plan" else None,
+                "plan_select": a.plan_select if (a.trim_order == "plan" and a.plan_select != "max") else None,
+                "plan_switch_turn": a.plan_switch_turn if (a.trim_order == "plan" and a.plan_select != "max") else None,
                 "budget_per_state": a.budget, "max_turn": a.max_turn,
                 "frontier_cap": FRONTIER_CAP, "leaf_cap": LEAF_CAP,
                 "total_budget": _TOTAL_BUDGET, "mem_limit_mb": _MEM_LIMIT_MB,

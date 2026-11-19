@@ -59,6 +59,13 @@ def main():
     ap.add_argument("--max-turn", type=int, default=3)
     ap.add_argument("--stage", type=int, default=2)
     ap.add_argument("--beam", type=int, default=4)
+    ap.add_argument("--plan-select", default="max",
+                    choices=["max", "hard", "prior"],
+                    help="crossturn の plan trim の鎖の選び方（max=従来の楽観選択、"
+                         "hard=ターン固定切替、prior=状態応答＋弱い事前分布）。"
+                         "hard/prior では --stages-file に序盤・終盤の2鎖を渡す")
+    ap.add_argument("--plan-switch-turn", type=int, default=3,
+                    help="hard/prior で終盤の鎖へ切り替える（優先し始める）保持先ターン")
     ap.add_argument("--budget", type=int, default=200_000)
     ap.add_argument("--leaf-cap", type=int, default=200_000)
     ap.add_argument("--timeout", type=int, default=3600)
@@ -94,6 +101,8 @@ def main():
          "--seeds", ",".join(str(s) for s in usable),
          "--mode", "beam", "--beam", str(a.beam),
          "--trim-order", "plan", "--stages-file", a.stages_file,
+         "--plan-select", a.plan_select,
+         "--plan-switch-turn", str(a.plan_switch_turn),
          "--max-turn", str(a.max_turn), "--stage", str(a.stage),
          "--budget", str(a.budget), "--leaf-cap", str(a.leaf_cap),
          "--out", out_path],
@@ -130,7 +139,9 @@ def main():
               f"nodes={nodes} (frontier {fn}) -> "
               f"{'PASS' if passed else 'FAIL'}", flush=True)
     print(f"[gate-deck] RESULT: {'PASS' if ok else 'FAIL'} "
-          f"({a.stages_file})", flush=True)
+          f"({a.stages_file}, plan_select={a.plan_select}"
+          f"{'' if a.plan_select == 'max' else f', switch_turn={a.plan_switch_turn}'})",
+          flush=True)
     return 0 if ok else 1
 
 
