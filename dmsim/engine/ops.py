@@ -367,16 +367,37 @@ def _bake_refs(obj, eng, env):
     """生成時ベイク（バンドC2 基盤B4）: {declared: 名前} と {var: 名前} の式を、生成時点の値へ
     リテラルに固定する。宣言・変数は解決の後段（特性計算や dynamic の範囲照合）では env から
     読めないため、継続的効果へ持ち込む時はここで固定する。
-    参照カードの特性式 {cost_of / power_of / name_of / races_of: 名前} も同じ理由で焼く
+    参照カードの特性式 {cost_of / power_of / name_of / races_of / civs_of: 名前} も同じ理由で焼く
     （第263弾: dynamic の範囲フィルタに「表向きにしたカードのコスト以下」を書くため）。
     {count: ...} 等の集合式そのものは焼かない（中に入れ子になった参照特性式だけ焼く）。"""
     if isinstance(obj, dict):
-        if len(obj) == 1 and next(iter(obj)) in ("declared", "var", "cost_of", "power_of", "name_of", "races_of"):
+        if len(obj) == 1 and next(iter(obj)) in ("declared", "var", "cost_of", "power_of", "name_of", "races_of", "civs_of"):
             return eng.eval_expr(obj, env)
         return {k: _bake_refs(v, eng, env) for k, v in obj.items()}
     if isinstance(obj, list):
         return [_bake_refs(v, eng, env) for v in obj]
     return obj
+
+
+def _bake_only(mod, eng, env):
+    """allow/deny 項目の only {var: 名前} を、生成時点の束縛参照の列へ固定する（第275弾）。
+    _bake_refs の {var:} は「束縛した枚数」を返す数式なので、参照そのものが要る only は
+    ベイクの前にここで焼く（焼いた後は int の列なので _bake_refs は素通しする）。"""
+    if not isinstance(mod, dict):
+        return mod
+    mod = dict(mod)
+    for k in ("allow", "deny"):
+        entries = mod.get(k)
+        if not isinstance(entries, list):
+            continue
+        out = []
+        for e in entries:
+            if isinstance(e, dict) and isinstance(e.get("only"), dict) and set(e["only"]) == {"var"}:
+                e = dict(e)
+                e["only"] = [list(r) for r in env.get("vars", {}).get(e["only"]["var"], [])]
+            out.append(e)
+        mod[k] = out
+    return mod
 
 
 @op("modify", select="selector", mod="mod", duration="duration?", dynamic="bool?")
@@ -386,6 +407,8 @@ def op_modify(eng, t, op, env):
     s = eng.s
     s.seq += 1
     mod = op["mod"]
+    # only {var:...} は参照そのものを焼く（第275弾）。{var:} の数式ベイクより先に行う
+    mod = _bake_only(mod, eng, env)
     # {declared:...} / {var:...} は生成時にベイクする（基盤B4。add_races は下の専用処理、gain は能力そのものなので対象外）
     mod = {k: (v if k in ("add_races", "gain") else _bake_refs(v, eng, env)) for k, v in mod.items()}
     if any(isinstance(r, dict) for r in mod.get("add_races", [])):
@@ -600,17 +623,20 @@ def _free_face(eng, cid, want):
     return 0
 
 
-@op("play_free", select="selector", resolve_to="zone?", resolve_position="position?", face="str?", **{"as": "str?"})
+@op("play_free", select="selector", resolve_to="zone?", resolve_position="position?", face="str?", player="player?", **{"as": "str?"})
 def op_play_free(eng, t, op, env):
     """コストを支払わずに召喚する／唱える（112.3g: 召喚・詠唱したことになる）。ツインパクトはクリーチャー側。
-    resolve_to: 唱えた呪文を解決後に墓地ではなくそのゾーンに置く（「唱えた後、墓地に置くかわりに手札に加える」）。"""
+    resolve_to: 唱えた呪文を解決後に墓地ではなくそのゾーンに置く（「唱えた後、墓地に置くかわりに手札に加える」）。
+    player: 実行するプレイヤー（既定は効果の使用者）。「相手はそれをバトルゾーンに出してもよい」の
+    ように相手自身が出す形では player: opp とし、選択も select の chooser: opp で相手に委ねる（第287弾）。"""
     cids, d = eng.select(t, op["select"], env)
     if d:
         return d
     want = (op["select"].get("filter") or {}).get("types") if isinstance(op["select"], dict) else None
     if op.get("face") in ("spell", "creature"):   # ツインパクトの面を明示（ラスト・バーストの「呪文側」）
         want = [op["face"]]
-    tasks = [eng.play_task(c, env["you"], True, _free_face(eng, c, want)) for c in cids]
+    who = eng._rel(op.get("player", "you"), env)
+    tasks = [eng.play_task(c, who, True, _free_face(eng, c, want)) for c in cids]
     if "resolve_to" in op:
         for x in tasks:
             x["resolve_to"] = op["resolve_to"]

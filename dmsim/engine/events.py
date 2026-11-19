@@ -185,7 +185,8 @@ class EventMixin:
                 return None
             c = s.cards[ev["subject"][0]]
             rec = {"ev": "move", "subject": ev["subject"], "from": ev.get("from") if c.zone == "hold" else c.zone,
-                   "to": ev["to"], "reason": ev["reason"], "controller": c.controller}
+                   "to": ev["to"], "reason": ev["reason"], "controller": c.controller,
+                   "position": ev.get("position", "top")}   # 置かれた位置（「山札の一番下に置かれた時」の照合用。第290弾。収集レコード側と対）
             if ev.get("cause"):
                 rec["cause"] = ev["cause"]
             if ev.get("cause_defn"):   # 効果帰属（基盤B1）: 発生源の defn 名と種別（呪文／能力）
@@ -533,6 +534,8 @@ class EventMixin:
                 out[0]["unpaid"] = True
             elif ev["to"] == "bz" and ev.get("reason") != "summon" and from_zone != "bz":
                 out[0]["unpaid"] = True   # 第257弾: 効果で出されたカードはマナをタップせずに出ている
+            if ev.get("position"):   # 置かれた位置（「山札の一番下に置かれた時」の照合用。第290弾。_record_for と対）
+                out[0]["position"] = ev["position"]
             if ev.get("stack_on"):   # 進化として重ねて出た（「進化して出た時」の照合用。第150弾で収集レコードへの伝播を追加。シールドの束は shield_stack キーで別）
                 out[0]["stacked"] = True
             if ev.get("no_trigger"):   # この移動で出たカード自身の出た時能力は誘発しない（第213弾）
@@ -788,15 +791,22 @@ class EventMixin:
         return False
 
     def _lose_candidates(self, loser: int, reason: str | None = None) -> list[tuple[int, int, dict]]:
-        """敗北を置換できる能力（when: {event: lose} の kind: replace）を持つ、敗北する側のバトルゾーンのカード。
+        """敗北を置換できる能力（when: {event: lose} の kind: replace）を持つ、敗北する側のカード。
+        発生源はバトルゾーンのカードと、手札にあるカードのうち zone: hand を宣言した置換
+        （第287弾。《一王二命三眼槍》の「手札にあるこのカードを〜山札の下に置いてもよい」。
+        バトルゾーン外の発生源は、そのゾーンを宣言した置換だけという _replacement と同じ規則）。
         when.reason があれば敗北の reason（direct_attack / deck_out / state / effect）と照合する（第188弾）。"""
         s = self.s
         out = []
         rec = {"ev": "lose", "controller": loser, "reason": reason}
-        for c in self.bz_tops(loser):
+        srcs = [(c, False) for c in self.bz_tops(loser)]
+        srcs += [(c, True) for c in s.zones["hand"][loser]]
+        for c, need_zone in srcs:
             for i, ab in self.abilities(c, "replace"):
                 if ab.get("when", {}).get("event") != "lose":
                     continue
+                if need_zone and ab.get("zone") != "hand":
+                    continue   # 手札の発生源は zone: hand を宣言した置換だけ
                 wr = ab.get("when", {}).get("reason")
                 if wr is not None and reason is not None and reason not in (wr if isinstance(wr, list) else [wr]):
                     continue
@@ -1046,6 +1056,8 @@ class EventMixin:
             return False
         if "emblem" in when and bool(rec.get("emblem")) != when["emblem"]:   # 裁きの紋章だったか（第169弾）
             return False
+        if "position" in when and rec.get("position") != when["position"]:   # 置かれた位置（山札の上か下か。第290弾）
+            return False
         if "vivid" in when and bool(rec.get("vivid")) != when["vivid"]:   # ビビッドローで実行されたか（第54弾）
             return False
         if "stacked" in when and bool(rec.get("stacked")) != when["stacked"]:   # 進化として重ねて出たか（第150弾で照合を有効化。第28弾の未実装分）
@@ -1062,8 +1074,10 @@ class EventMixin:
             cw = when["cause"]
             if "by" in cw and rec.get("by") != self._rel(cw["by"], env):
                 return False
-            if "kind" in cw and rec.get("cause_kind") != cw["kind"]:
-                return False
+            if "kind" in cw:   # kind はリストも可（「呪文の効果またはクリーチャーの能力によって」。第290弾。defn のリスト形と対）
+                kv = cw["kind"]
+                if rec.get("cause_kind") not in (kv if isinstance(kv, list) else [kv]):
+                    return False
             if "defn" in cw:   # 発生源カードそのもの（第246弾: 《特定カード》の能力で破壊される時）
                 dv = cw["defn"]
                 if rec.get("cause_defn") not in (dv if isinstance(dv, list) else [dv]):

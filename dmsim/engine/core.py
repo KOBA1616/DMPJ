@@ -254,21 +254,34 @@ class Engine(SelectorMixin, EventMixin, InterpreterMixin, TurnMixin, CombatMixin
 
     def _power_when(self, pw: dict, ref, env_self) -> int:
         """攻撃中／ブロック中だけのパワー修整（mod power_when）。攻撃クリーチャーに指定されてから攻撃の終わりまで、
-        ブロッククリーチャーはブロックの宣言からその攻撃の終わりまでが対象（バトルをしていない間も含む）。"""
+        ブロッククリーチャーはブロックの宣言からその攻撃の終わりまでが対象（バトルをしていない間も含む）。
+        not_attacking（第280弾）は attacking の否定: 進行中の攻撃の攻撃クリーチャーでない間ずっと付く
+        （ブロック中・攻撃されている間・どの攻撃も無い間を含む）。"""
+        hit = False
         for t in self.s.tasks:
             if t["t"] != "attack":
                 continue
+            if pw["when"] == "not_attacking":
+                if t["attacker"] == ref:
+                    return 0   # 自分が攻撃クリーチャーである間は付かない
+                hit = True
+                continue
             if (t["attacker"] if pw["when"] == "attacking" else t["target"] if t.get("blocked") else None) == ref:
-                if "count" not in pw:
-                    return pw["amount"]
-                if self._pw_busy:   # 数える対象の特性を調べる途中で、またこの修整を計算しない（無限再帰を避ける。数え方にパワーの条件があれば修整前の値で見る）
-                    return 0
-                self._pw_busy = True
-                try:
-                    return pw["amount"] * self.count_of(pw["count"], env_self)
-                finally:
-                    self._pw_busy = False
-        return 0
+                hit = True
+                break
+        if pw["when"] == "not_attacking":
+            hit = True   # 攻撃タスクが無い、または自分が攻撃クリーチャーでない攻撃しか無い
+        if not hit:
+            return 0
+        if "count" not in pw:
+            return pw["amount"]
+        if self._pw_busy:   # 数える対象の特性を調べる途中で、またこの修整を計算しない（無限再帰を避ける。数え方にパワーの条件があれば修整前の値で見る）
+            return 0
+        self._pw_busy = True
+        try:
+            return pw["amount"] * self.count_of(pw["count"], env_self)
+        finally:
+            self._pw_busy = False
 
     def _ce_applies(self, ce, cid, ref) -> bool:
         if ce["affected"] is not None:
@@ -1003,7 +1016,7 @@ class Engine(SelectorMixin, EventMixin, InterpreterMixin, TurnMixin, CombatMixin
                 if isinstance(e, str):
                     if e == action:
                         return True
-                elif e["action"] == action and (other is None or self.filter_match(other, self._other_filter(e.get("other", {}), cid))):
+                elif e["action"] == action and (other is None or self.filter_match(other, self._other_filter(e.get("other", {}), cid))) and self._only_ok(e, other):
                     if "max_per_turn" in e:   # 第182弾（実行制限・回数型）: そのターンに count 種の出来事を
                         # max_per_turn 回以上していれば禁止。count 省略時は action 名を履歴 kind とする
                         kind = e.get("count", e["action"])
@@ -1018,6 +1031,19 @@ class Engine(SelectorMixin, EventMixin, InterpreterMixin, TurnMixin, CombatMixin
             return True
         return self.rules.actions[action]["default"]
 
+    def _only_ok(self, e, other) -> bool:
+        """allow/deny 項目の only（第275弾・attack_specific_target）: 「選んだそのクリーチャー
+        だけを攻撃できる」のように、許可・禁止を特定のカードだけに絞る。値の {var: 名前} は
+        継続的効果の生成時に _bake_refs で参照の列へベイクされる。only が無い項目は常に対象を
+        問わない。未ベイク（辞書のまま）・対象なし・対象が列に無ければ、その項目は当たらない。"""
+        if not isinstance(e, dict) or "only" not in e:
+            return True
+        only = e["only"]
+        if other is None or not isinstance(only, list):
+            return False
+        ref = list(self.s.ref(other))
+        return any(isinstance(r, (list, tuple)) and list(r) == ref for r in only)
+
     def _other_filter(self, f: dict, cid: int) -> dict:
         """allow/deny の other フィルタ: 値が式なら許可側のカード（self）を基準に評価する（第126弾。candidates と同じ前評価）。"""
         if not any(isinstance(v, dict) for v in f.values()):
@@ -1028,6 +1054,10 @@ class Engine(SelectorMixin, EventMixin, InterpreterMixin, TurnMixin, CombatMixin
     def _duration(self, dur: str, env: dict) -> str:
         if dur == "until_next_own_turn_start":
             return f"until_turn_start:{env['you']}"
+        if dur == "until_next_own_turn_end":   # 第276弾: 次の自分のターンの終わりまで
+            return f"until_turn_end:{env['you']}:{self.s.turn}"
+        if dur == "until_next_opp_turn_end":   # 第276弾: 次の相手のターンの終わりまで
+            return f"until_turn_end:{1 - env['you']}:{self.s.turn}"
         return dur
 
     def _mark_key(self, name: str, scope: str, env: dict) -> str:
