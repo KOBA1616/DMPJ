@@ -292,6 +292,15 @@ keywords:
         if: {exists: {zone: shield, owner: you}}
         instead:
           - {op: move, select: {zone: shield, owner: you, count: 1}, to: hand, reason: return, strigger: "off"}
+  true_escape:        # このクリーチャーが離れる時、かわりに自分のシールドを2つ手札に加えてもよい（S・トリガーは使えない）（第277弾）
+    ja: 真・エスケープ
+    abilities:
+      - kind: replace
+        optional: true
+        when: {event: move, from: bz, subject: self}
+        if: {cmp: [{count: {zone: shield, owner: you}}, ">=", 2]}
+        instead:
+          - {op: move, select: {zone: shield, owner: you, count: 2}, to: hand, reason: return, strigger: "off"}
   eternal_omega:      # このクリーチャーがバトルゾーンを離れる時、かわりに手札に戻す（強制の置換）
     ja: エターナル・Ω
     abilities:
@@ -299,6 +308,15 @@ keywords:
         when: {event: move, from: bz, subject: self}
         instead:
           - {op: move, select: {ref: self}, to: hand, reason: return}
+  eternal_kappa:      # このクリーチャーが離れる時、かわりに自分のマナゾーンにある裏向きのカードを3枚、表向きにしてもよい（第283弾）
+    ja: エターナル・Κ
+    abilities:
+      - kind: replace
+        optional: true
+        when: {event: move, from: bz, subject: self}
+        if: {cmp: [{count: {zone: mana, owner: you, filter: {face_down: true}}}, ">=", 3]}
+        instead:
+          - {op: flip_up, select: {zone: mana, owner: you, filter: {face_down: true}, count: 3}}
   last_burst:         # このクリーチャーが破壊された時、このカードの呪文側をコストを支払わずに唱えてもよい
     ja: ラスト・バースト
     abilities:

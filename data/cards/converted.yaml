@@ -227628,26 +227628,16 @@ cards:
           cost_le: 7
         count: 1
   mana: 1
-  text: 'S・トリガー
+  text: '精霊龍 ライトマスターズ: W・ブレイカー
 
-    ブロッカー
-
-    このクリーチャーは攻撃できない。
-
-    このクリーチャーが出た時、相手のクリーチャーを１体選ぶ。このターン、そのクリーチャーのパワーを－∞ する。（パワー０以下のクリーチャーは破壊される）'
+    このクリーチャーが出た時、エレメントを３つまで選び、シールド化する。 ／ 龍素解析: 自分の手札をすべて山札に加えてシャッフルし、カードを４枚引く。その後、コスト７以下の、進化ではないコマンド・ドラゴン・クリーチャーを１体、自分の手札から出してもよい。'
   source:
     official: dm26ex4-054
     review: pending
     notes: 'ツインパクト。呪文側の「進化ではない」は evolution: false で表した（dmr13-021 龍素解析と同文・同型）。エレメントのシールド化は
-      bz から shield への move（reason: charge はシールド追加の先例どおり）'
-    aliases:
-    - dm26ex3-sec016
-    - dm26ex3-sec016cho
-    - promoy25-107
-  keywords:
-  - s_trigger
-  - blocker
-  - cannot_attack
+      bz から shield への move（reason: charge はシールド追加の先例どおり） 【ラウンド307で修復】旧登録で dm26ex3-054（帝王坂∞＜…………！＞）の
+      text・keywords・aliases が混入していたため、公式データに基づき自身の text に差し替え、keywords と aliases を除去した（aliases
+      は dm26ex3-054 側に登録）。'
 - id: dm26rp3-014
   name: ノヴァルチャ・ハレイズ
   types:
@@ -455861,3 +455851,2409 @@ cards:
     notes: 第271弾で再変換（ラウンド306）。rejects の partial（勝ち分岐）に第271弾のチョキ誘発（T757 と同型）を追加して完成させた。
     aliases:
     - dm29-035hc
+- id: dm26ex3-079
+  name: 帝王坂∞
+  types:
+  - creature
+  civs:
+  - water
+  - darkness
+  cost: 8
+  mana: 1
+  text: 'ブロッカー
+
+    W・ブレイカー
+
+    このクリーチャーが出た時、相手は自身の手札を５枚選び、捨てる。
+
+    このクリーチャーが攻撃する時、相手のクリーチャーを１体選ぶ。このターン、そのクリーチャーのパワーを－∞する。（パワー０以下のクリーチャーは破壊される）'
+  source:
+    official: dm26ex3-079
+    review: pending
+    notes: '再変換ラウンド307。第272弾の再変換。出た時の「相手は自身の手札を5枚選び捨てる」は chooser: opp の discard、攻撃時のパワー－∞は
+      power_set: -1073741824（プロト T760 と同型）で表した。 submit がテキスト由来の CIP discard を重複登録したため、同一誘発を1件除去した（ラウンド307）。'
+    aliases:
+    - dm25sp2-012
+    - dm25sp2-td2
+    - promoy24-060
+  power: 8888
+  races:
+  - ∞ドラゴン
+  keywords:
+  - blocker
+  - double_breaker
+  abilities:
+  - kind: trigger
+    when:
+      event: move
+      to: bz
+      subject: self
+    effect:
+    - op: discard
+      select:
+        zone: hand
+        owner: opp
+        chooser: opp
+        count: 5
+  - kind: trigger
+    when:
+      event: attack
+      subject: self
+    effect:
+    - op: modify
+      select:
+        zone:
+        - bz
+        owner: opp
+        filter:
+          types:
+          - creature
+        count: 1
+      mod:
+        power_set: -1073741824
+      duration: end_of_turn
+- id: dmr10-015
+  name: 無限の銃刃 ダン・クローリー
+  types:
+  - creature
+  civs:
+  - fire
+  cost: 13
+  mana: 1
+  text: ∞ ブレイカー
+  source:
+    official: dmr10-015
+    review: pending
+    notes: 再変換ラウンド307。第272弾の再変換。∞ブレイカーはキーワード infinite_breaker で表した。
+    aliases:
+    - dmr10-015m
+  power: 35000
+  races:
+  - アウトレイジMAX
+  keywords:
+  - infinite_breaker
+- id: dm26ex3-054
+  name: 帝王坂∞＜…………！＞
+  types:
+  - creature
+  civs:
+  - darkness
+  cost: 8
+  power: 1073741824
+  mana: 1
+  text: 'S・トリガー
+
+    ブロッカー
+
+    このクリーチャーは攻撃できない。
+
+    このクリーチャーが出た時、相手のクリーチャーを１体選ぶ。このターン、そのクリーチャーのパワーを－∞ する。（パワー０以下のクリーチャーは破壊される）'
+  source:
+    official: dm26ex3-054
+    review: pending
+    notes: '再変換ラウンド307。第272弾の再変換。出た時のパワー－∞は power_set: -1073741824（プロト T760 と同型）で表した。aliases
+      は旧登録 dm26ex4-054 側の混入を修復コミットで除去済み。 印刷パワーが∞のため、登録時に欠落していた power を 1073741824（1<<30）として補った（ラウンド307）。'
+    aliases:
+    - dm26ex3-sec016
+    - dm26ex3-sec016cho
+    - promoy25-107
+  races:
+  - ∞ドラゴン
+  - アオハル組
+  keywords:
+  - s_trigger
+  - blocker
+  - cannot_attack
+  abilities:
+  - kind: trigger
+    when:
+      event: move
+      to: bz
+      subject: self
+    effect:
+    - op: modify
+      select:
+        zone:
+        - bz
+        owner: opp
+        filter:
+          types:
+          - creature
+        count: 1
+      mod:
+        power_set: -1073741824
+      duration: end_of_turn
+- id: dmex08-216
+  name: アルティメット無法伝説
+  types:
+  - spell
+  civs:
+  - fire
+  cost: 13
+  free_if:
+    cmp:
+    - count:
+        zone: bz
+        owner: you
+        filter:
+          races:
+          - アウトレイジ
+    - '>='
+    - 9
+  mana: 1
+  text: 'G・ゼロ：バトルゾーンに自分のアウトレイジが９体以上あれば、この呪文をコストを支払わずに唱えてもよい。
+
+    このターン、バトルゾーンにある自分のクリーチャー１体は、「∞ パワーアタッカー」「∞ ブレイカー」「このクリーチャーがバトルに勝った時、このクリーチャーをアンタップする」を得る。（「∞
+    パワーアタッカー」「∞ ブレイカー」を持つクリーチャーは攻撃中無限のパワーを得、相手のシールドを好きな数ブレイクできる）'
+  spell:
+  - op: modify
+    select:
+      zone: bz
+      owner: you
+      filter:
+        types:
+        - creature
+      count: 1
+    mod:
+      grant:
+      - infinite_power_attacker
+      - infinite_breaker
+      gain:
+      - kind: trigger
+        when:
+          event: battle_win
+          subject: self
+        effect:
+        - op: untap
+          select:
+            ref: self
+            count: 1
+    duration: end_of_turn
+  source:
+    official: dmex08-216
+    review: pending
+    notes: 再変換ラウンド307。第272弾の再変換。∞パワーアタッカーと∞ブレイカーの付与は mod grant（プロト T761 と同型）で表し、バトル勝利時アンタップの
+      gain と同一 modify にまとめた。G・ゼロは free_if のまま。
+    aliases:
+    - dmr11-014
+- id: dmsp02-009
+  name: 武闘将軍 カツキング GS
+  types:
+  - creature
+  civs:
+  - fire
+  cost: 8
+  power: 11000
+  races:
+  - アウトレイジMAX
+  mana: 1
+  text: '{GS} G・ストライク（このクリーチャーを自分のシールドゾーンから手札に加える時、相手に見せ、相手のクリーチャーを１体選んでもよい。このターン、そのクリーチャーは攻撃できない）
+
+    スピードアタッカー
+
+    ∞パワーアタッカー（攻撃中、このクリーチャーのパワーは無限大になる）
+
+    W・ブレイカー
+
+    このクリーチャーは、アンタップしているクリーチャーを攻撃できる。
+
+    このクリーチャーがバトルに勝った時、シールドを１つブレイクする。'
+  abilities:
+  - kind: static
+    affects: self
+    mod:
+      allow:
+      - action: attack_creature
+        other:
+          tapped: false
+  - kind: trigger
+    when:
+      event: battle_win
+      subject: self
+    effect:
+    - op: break
+      player: opp
+      count: 1
+  source:
+    official: dmsp02-009
+    review: pending
+    notes: 再変換ラウンド307。第272弾の再変換。∞パワーアタッカーはキーワード infinite_power_attacker で表した。
+  keywords:
+  - g_strike
+  - speed_attacker
+  - infinite_power_attacker
+  - double_breaker
+- id: dmex08-137
+  name: 無頼剣兵ドラグイノセント
+  types:
+  - creature
+  civs:
+  - fire
+  - nature
+  cost: 6
+  mana: 1
+  text: 'このクリーチャーの上に、どの種族の進化クリーチャーを置いてもよい。
+
+    このクリーチャーが破壊された時、ドラゴンを１体、自分の手札からバトルゾーンに出してもよい。'
+  source:
+    official: dmex08-137
+    review: pending
+    notes: '再変換ラウンド308。第273弾の再変換。「どの種族の進化クリーチャーを置いてもよい」は mod allow: [evolve_base_any]
+      で表し、破壊時にドラゴンを手札から出す効果も併せて表した。'
+    aliases:
+    - dm27-017
+    - dmc55-047
+  power: 2000
+  races:
+  - ドラゴノイド
+  - ビーストフォーク
+  abilities:
+  - kind: static
+    affects: self
+    mod:
+      allow:
+      - evolve_base_any
+  - kind: trigger
+    when:
+      event: move
+      from: bz
+      to: graveyard
+      reason: destroy
+      subject: self
+    effect:
+    - op: may
+      body:
+      - op: play_free
+        select:
+          zone: hand
+          owner: you
+          filter:
+            types:
+            - creature
+            race_has: ドラゴン
+          count: 1
+- id: dmex16-014
+  name: 未来王龍 モモキング
+  types:
+  - creature
+  civs:
+  - fire
+  - nature
+  cost: 5
+  mana: 1
+  text: 'スピードアタッカー
+
+    W・ブレイカー
+
+    このクリーチャーの上に、どの種族の進化クリーチャーを置いてもよい。
+
+    このクリーチャーから進化する進化クリーチャーの召喚コストを１少なくする。ただし、コストは０以下にはならない。'
+  source:
+    official: dmex16-014
+    review: pending
+    notes: '再変換ラウンド308。第273弾の再変換。「どの種族の進化クリーチャーを置いてもよい」は mod allow: [evolve_base_any]、このクリーチャーから進化するコスト-1
+      は mod evo_reduce で表した。'
+    aliases:
+    - dmsp02-012
+  power: 6000
+  races:
+  - ヒーロー・ドラゴン
+  - ジョーカーズ
+  - レクスターズ
+  keywords:
+  - speed_attacker
+  - double_breaker
+  abilities:
+  - kind: static
+    affects: self
+    mod:
+      allow:
+      - evolve_base_any
+  - kind: static
+    affects: self
+    mod:
+      evo_reduce:
+        amount: 1
+- id: dmx21-062
+  name: 無垢の宝剣
+  types:
+  - creature
+  civs:
+  - nature
+  cost: 4
+  mana: 1
+  text: 好きな種族の進化クリーチャーを、このクリーチャーの上に置いてもよい。
+  source:
+    official: dmx21-062
+    review: pending
+    notes: '再変換ラウンド308。第273弾の再変換。「好きな種族の進化クリーチャーを置いてもよい」は mod allow: [evolve_base_any]
+      で表した。'
+    aliases:
+    - dm06-069
+    - dmc27-034
+  power: 1000
+  races:
+  - ビーストフォーク
+  abilities:
+  - kind: static
+    affects: self
+    mod:
+      allow:
+      - evolve_base_any
+- id: dmx22a-041
+  name: コマンダー・イノセント
+  types:
+  - creature
+  civs:
+  - water
+  cost: 4
+  mana: 1
+  text: ブロッカー（このクリーチャーをタップして、相手クリーチャーの攻撃先をこのクリーチャーに変更してもよい）このクリーチャーは攻撃できない。このクリーチャーの上に、どの種族の進化クリーチャーを置いてもよい。
+  source:
+    official: dmx22a-041
+    review: pending
+    notes: '再変換ラウンド308。第273弾の再変換。「どの種族の進化クリーチャーを置いてもよい」は mod allow: [evolve_base_any]
+      で表した。'
+    aliases:
+    - dm32-082
+  power: 3000
+  races:
+  - キカイヒーロー
+  keywords:
+  - blocker
+  - cannot_attack
+  abilities:
+  - kind: static
+    affects: self
+    mod:
+      allow:
+      - evolve_base_any
+- id: dmx10-035
+  name: 白騎士の聖霊王ウルファス
+  types:
+  - creature
+  - evolution
+  civs:
+  - light
+  cost: 11
+  mana: 1
+  text: 'ブロッカー
+
+    進化-自分の「ブロッカー」を持つクリーチャー１体の上に置く。
+
+    ソウルシフト(このクリーチャーを召喚する時、このクリーチャーの進化元クリーチャーを選ぶ。このクリーチャーのコストは、その選んだクリーチャーのコストだけ少なくなる。ただし、このクリーチャーのコストは１より少なくならない)
+
+    自分のターンの終わりに、このクリーチャーをアンタップする。
+
+    W・ブレイカー(このクリーチャーはシールドを２枚ブレイクする)'
+  source:
+    official: dmx10-035
+    review: pending
+    notes: '再変換ラウンド309。第274弾の再変換。ソウルシフトは面フィールド soul_shift {floor: 1} で表した'
+    aliases:
+    - dm32-071
+    - dm32-071hc
+  power: 11000
+  races:
+  - エンジェル・コマンド
+  evolve_from:
+    types:
+    - creature
+    keyword: blocker
+  keywords:
+  - blocker
+  - double_breaker
+  abilities:
+  - kind: trigger
+    when:
+      event: turn_end
+      player: you
+    effect:
+    - op: untap
+      select:
+        ref: self
+  soul_shift:
+    floor: 1
+- id: dmx11-050
+  name: 真実の大神秘 星飯
+  types:
+  - creature
+  - evolution
+  civs:
+  - nature
+  cost: 10
+  mana: 1
+  text: '進化-自分のジャイアント１体の上に置く。
+
+    ソウルシフト(このクリーチャーを召喚する時、このクリーチャーの進化元クリーチャーを選ぶ。このクリーチャーのコストは、その選んだクリーチャーのコストだけ少なくなる。ただし、このクリーチャーのコストは１より少なくならない)
+
+    このクリーチャーは、このクリーチャーよりパワーの小さいクリーチャーにブロックされない。
+
+    W・ブレイカー'
+  source:
+    official: dmx11-050
+    review: pending
+    notes: '再変換ラウンド309。第274弾の再変換。ソウルシフトは面フィールド soul_shift {floor: 1} で表した。「このクリーチャーよりパワーの小さいクリーチャーにブロックされない」は
+      deny be_blocked の other フィルタ power_le: {sum: [{power_of: self}, -1]} で表した（partial
+      に欠けていたため原文から補った）'
+  power: 11000
+  races:
+  - ジャイアント
+  - アンノウン
+  evolve_from:
+    races:
+    - ジャイアント
+  keywords:
+  - double_breaker
+  soul_shift:
+    floor: 1
+  abilities:
+  - kind: static
+    affects: self
+    mod:
+      deny:
+      - action: be_blocked
+        other:
+          power_le:
+            sum:
+            - power_of: self
+            - -1
+- id: dmx12b-056
+  name: 宇宙巨匠ゼノン・ダヴィンチ
+  types:
+  - creature
+  - evolution
+  civs:
+  - nature
+  cost: 11
+  mana: 1
+  text: '進化-自分のジャイアント、ドリームメイト、オリジンいずれか１体の上に置く。
+
+    ソウルシフト（このクリーチャーを召喚する時、このクリーチャーの進化元クリーチャーを選ぶ。このクリーチャーのコストは、その選んだクリーチャーのコストだけ少なくなる。ただし、このクリーチャーのコストは１より少なくならない）
+
+    自分の進化クリーチャーが破壊された時、自分の進化ではないジャイアント、ドリームメイト、またはオリジンのいずれか１体をマナゾーンからバトルゾーンに出してもよい。
+
+    W・ブレイカー（このクリーチャーはシールドを２枚ブレイクする）'
+  source:
+    official: dmx12b-056
+    review: pending
+    notes: '再変換ラウンド309。第274弾の再変換。ソウルシフトは面フィールド soul_shift {floor: 1} で表した。partial
+      の evolve_from {types: [creature]} は原文「ジャイアント、ドリームメイト、オリジンいずれか」とずれるため any_of
+      の種族枝に修正した。partial に欠けていた破壊時誘発（自分の進化クリーチャーが破壊された時、進化ではないジャイアント/ドリームメイト/オリジンをマナゾーンから出してもよい）を原文から補った'
+    aliases:
+    - dm32-009
+  power: 9000
+  races:
+  - ジャイアント
+  - ドリームメイト
+  - オリジン
+  evolve_from:
+    any_of:
+    - races:
+      - ジャイアント
+    - races:
+      - ドリームメイト
+    - races:
+      - オリジン
+  keywords:
+  - double_breaker
+  soul_shift:
+    floor: 1
+  abilities:
+  - kind: trigger
+    when:
+      event: move
+      from: bz
+      to: graveyard
+      reason: destroy
+      subject:
+        owner: you
+        filter:
+          types:
+          - evolution
+    effect:
+    - op: play_free
+      select:
+        zone: mana
+        owner: you
+        filter:
+          types:
+          - creature
+          evolution: false
+          any_of:
+          - races:
+            - ジャイアント
+          - races:
+            - ドリームメイト
+          - races:
+            - オリジン
+        count: 1
+        up_to: true
+- id: dmx22a-013
+  name: 超電磁マクスウェル Z
+  types:
+  - creature
+  - evolution
+  civs:
+  - water
+  cost: 8
+  mana: 1
+  text: 進化-自分のサイバー１体の上に置く。ソウルシフト（このクリーチャーを召喚する時、このクリーチャーの進化元クリーチャーを選ぶ。このクリーチャーのコストは、その選んだクリーチャーのコストだけ少なくなる。ただし、このクリーチャーのコストは０以下にならない）W・ブレイカー（このクリーチャーはシールドを２つブレイクする）各プレイヤーは、自身の墓地にある呪文と同じ文明を持つ呪文を唱えられない。
+  source:
+    official: dmx22a-013
+    review: pending
+    notes: '再変換ラウンド309。第274弾の再変換。ソウルシフトは面フィールド soul_shift {floor: 0} で表した。partial
+      に欠けていた W・ブレイカーと「各プレイヤーは自身の墓地にある呪文と同じ文明を持つ呪文を唱えられない」を原文から補った。呪文ロックは文明ごとに、唱える側の墓地に同文明の呪文がある間だけ
+      deny cast がかかる常在型（自分側・相手側の計10枚）で表した'
+    aliases:
+    - dm32-017
+    - dmx10-020
+  power: 8000
+  races:
+  - サイバー・コマンド
+  evolve_from:
+    types:
+    - creature
+    race_has: サイバー
+  soul_shift:
+    floor: 0
+  keywords:
+  - double_breaker
+  abilities:
+  - kind: static
+    affects:
+      owner: you
+      zone: hand
+      filter:
+        types:
+        - spell
+        civs:
+        - light
+    if:
+      exists:
+        zone:
+        - graveyard
+        owner: you
+        filter:
+          types:
+          - spell
+          civs:
+          - light
+    mod:
+      deny:
+      - cast
+  - kind: static
+    affects:
+      owner: you
+      zone: hand
+      filter:
+        types:
+        - spell
+        civs:
+        - water
+    if:
+      exists:
+        zone:
+        - graveyard
+        owner: you
+        filter:
+          types:
+          - spell
+          civs:
+          - water
+    mod:
+      deny:
+      - cast
+  - kind: static
+    affects:
+      owner: you
+      zone: hand
+      filter:
+        types:
+        - spell
+        civs:
+        - darkness
+    if:
+      exists:
+        zone:
+        - graveyard
+        owner: you
+        filter:
+          types:
+          - spell
+          civs:
+          - darkness
+    mod:
+      deny:
+      - cast
+  - kind: static
+    affects:
+      owner: you
+      zone: hand
+      filter:
+        types:
+        - spell
+        civs:
+        - fire
+    if:
+      exists:
+        zone:
+        - graveyard
+        owner: you
+        filter:
+          types:
+          - spell
+          civs:
+          - fire
+    mod:
+      deny:
+      - cast
+  - kind: static
+    affects:
+      owner: you
+      zone: hand
+      filter:
+        types:
+        - spell
+        civs:
+        - nature
+    if:
+      exists:
+        zone:
+        - graveyard
+        owner: you
+        filter:
+          types:
+          - spell
+          civs:
+          - nature
+    mod:
+      deny:
+      - cast
+  - kind: static
+    affects:
+      owner: opp
+      zone: hand
+      filter:
+        types:
+        - spell
+        civs:
+        - light
+    if:
+      exists:
+        zone:
+        - graveyard
+        owner: opp
+        filter:
+          types:
+          - spell
+          civs:
+          - light
+    mod:
+      deny:
+      - cast
+  - kind: static
+    affects:
+      owner: opp
+      zone: hand
+      filter:
+        types:
+        - spell
+        civs:
+        - water
+    if:
+      exists:
+        zone:
+        - graveyard
+        owner: opp
+        filter:
+          types:
+          - spell
+          civs:
+          - water
+    mod:
+      deny:
+      - cast
+  - kind: static
+    affects:
+      owner: opp
+      zone: hand
+      filter:
+        types:
+        - spell
+        civs:
+        - darkness
+    if:
+      exists:
+        zone:
+        - graveyard
+        owner: opp
+        filter:
+          types:
+          - spell
+          civs:
+          - darkness
+    mod:
+      deny:
+      - cast
+  - kind: static
+    affects:
+      owner: opp
+      zone: hand
+      filter:
+        types:
+        - spell
+        civs:
+        - fire
+    if:
+      exists:
+        zone:
+        - graveyard
+        owner: opp
+        filter:
+          types:
+          - spell
+          civs:
+          - fire
+    mod:
+      deny:
+      - cast
+  - kind: static
+    affects:
+      owner: opp
+      zone: hand
+      filter:
+        types:
+        - spell
+        civs:
+        - nature
+    if:
+      exists:
+        zone:
+        - graveyard
+        owner: opp
+        filter:
+          types:
+          - spell
+          civs:
+          - nature
+    mod:
+      deny:
+      - cast
+- id: dmr09-102
+  name: 戦場のロックンロール
+  types:
+  - spell
+  civs:
+  - fire
+  cost: 2
+  mana: 1
+  text: バトルゾーンにある相手のタップされていないクリーチャーを１体選ぶ。このターン、バトルゾーンにある自分のクリーチャーはすべて、そのクリーチャーを攻撃できる。
+  source:
+    official: dmr09-102
+    review: pending
+    notes: '再変換ラウンド310。第275弾の再変換。呪文面。選んだ相手のアンタップクリーチャーへの攻撃許可を allow 項目の only {var:
+      tgt} で表した'
+  spell:
+  - &id293
+    op: choose
+    select:
+      zone: bz
+      owner: opp
+      filter:
+        types:
+        - creature
+        tapped: false
+      count: 1
+    as: tgt
+  - op: modify
+    select:
+      zone: bz
+      owner: you
+      filter:
+        types:
+        - creature
+      count: all
+    mod: &id294
+      allow:
+      - action: attack_creature
+        other:
+          tapped: false
+        only:
+          var: tgt
+    duration: end_of_turn
+- id: dmr14-050
+  name: 爆旗持ち ラガブーリン
+  types:
+  - creature
+  civs:
+  - fire
+  cost: 2
+  mana: 1
+  text: このクリーチャーをバトルゾーンに出した時、バトルゾーンにある相手のタップされていないクリーチャーを１体選ぶ。そのターン、バトルゾーンにある自分のクリーチャーはすべて、そのクリーチャーを攻撃できる。
+  source:
+    official: dmr14-050
+    review: pending
+    notes: '再変換ラウンド310。第275弾の再変換。CIP形。選んだ相手のアンタップクリーチャーへの攻撃許可を allow 項目の only {var:
+      tgt} で表した'
+  power: 1000
+  races:
+  - ヒューマノイド爆
+  abilities:
+  - kind: trigger
+    when:
+      event: move
+      to: bz
+      subject: self
+    effect:
+    - *id293
+    - op: modify
+      select:
+        zone: bz
+        owner: you
+        filter:
+          types:
+          - creature
+        count: all
+      mod: *id294
+      duration: end_of_turn
+- id: dmrp06-080
+  name: ポリスワン
+  types:
+  - creature
+  civs:
+  - fire
+  cost: 4
+  mana: 1
+  text: このクリーチャーがバトルゾーンに出た時、相手のアンタップしているクリーチャーを１体選ぶ。そのターン、自分の他のクリーチャーはそのクリーチャーを攻撃できる。
+  source:
+    official: dmrp06-080
+    review: pending
+    notes: '再変換ラウンド310。第275弾の再変換。CIP形。付与先は自分の他のクリーチャー（modify の select に exclude {ref:
+      self}）'
+  power: 3000
+  races:
+  - ジョーカーズ
+  abilities:
+  - kind: trigger
+    when:
+      event: move
+      to: bz
+      subject: self
+    effect:
+    - *id293
+    - op: modify
+      select:
+        zone: bz
+        owner: you
+        filter:
+          types:
+          - creature
+        count: all
+        exclude:
+          ref: self
+      mod: *id294
+      duration: end_of_turn
+- id: dmex18-s11
+  name: 地龍神バラフィオル
+  types:
+  - creature
+  civs:
+  - nature
+  cost: 10
+  mana: 1
+  text: 'マッハファイター
+
+    Q・ブレイカー
+
+    自分のドラゴンが相手プレイヤーを攻撃する時、自分の山札の上から３枚を表向きにする。その中からドラゴンを１体出してもよい。その後、残りを好きな順序で山札の下に置く。
+
+    このクリーチャーが破壊された時、次の自分のターンの終わりまで、自分のクリーチャーすべてに「ワールド・ブレイカー」を与える。'
+  source:
+    official: dmex18-s11
+    review: pending
+    notes: 再変換ラウンド311。第276弾の再変換。partial の abilities はマッハファイター展開形のみだったため、攻撃誘発と破壊時誘発を公式全文から組んだ。破壊時誘発の付与期間は
+      until_next_own_turn_end（第276弾）。
+  power: 22000
+  races:
+  - ファイブ・オリジン・ドラゴン
+  keywords:
+  - quad_breaker
+  abilities:
+  - kind: trigger
+    when:
+      event: move
+      to: bz
+      subject: self
+    effect:
+    - op: modify
+      select:
+        ref: self
+      mod:
+        allow:
+        - action: attack_creature
+          other:
+            tapped: false
+      duration: end_of_turn
+  - kind: trigger
+    when:
+      event: attack
+      target: player
+      subject:
+        owner: you
+        filter:
+          types:
+          - creature
+          race_has: ドラゴン
+    effect:
+    - op: choose
+      select:
+        zone: deck
+        owner: you
+        from_top: 3
+        look: true
+        count: all
+      reveal: true
+      as: pile
+    - op: may
+      body:
+      - op: play_free
+        select:
+          ref: pile
+          filter:
+            types:
+            - creature
+            race_has: ドラゴン
+          count: 1
+    - op: move
+      select:
+        ref: pile
+        count: all
+      to: deck
+      position: bottom
+      order: choose
+      reason: put
+  - kind: trigger
+    when:
+      event: move
+      from: bz
+      to: graveyard
+      reason: destroy
+      subject: self
+    effect:
+    - op: modify
+      select:
+        zone: bz
+        owner: you
+        filter:
+          types:
+          - creature
+        count: all
+      mod:
+        grant:
+        - world_breaker
+      duration: until_next_own_turn_end
+- id: dmr05-078
+  name: ビックリ・ガード
+  types:
+  - spell
+  civs:
+  - light
+  cost: 1
+  mana: 1
+  text: 'S・トリガー(この呪文をシールドゾーンから手札に加える時、コストを支払わずにすぐ唱えてもよい)
+
+    次の自分のターンのはじめまで、バトルゾーンにある自分のクリーチャーはすべて「ブロッカー」を得る。'
+  source:
+    official: dmr05-078
+    review: pending
+    notes: 再変換ラウンド311。第276弾の再変換。呪文面は partial が空だったため、ブロッカー付与を until_next_own_turn_start
+      で組んだ（第276弾で検証済みの形）。
+  keywords:
+  - s_trigger
+  spell:
+  - op: modify
+    select:
+      zone: bz
+      owner: you
+      filter:
+        types:
+        - creature
+      count: all
+    mod:
+      grant:
+      - blocker
+    duration: until_next_own_turn_start
+- id: dmr22-006
+  name: ジャッジメント・タイム
+  types:
+  - spell
+  civs:
+  - light
+  - water
+  cost: 5
+  mana: 1
+  text: マナゾーンに置く時、このカードはタップして置く。次の相手のターンの終わりまで、相手のクリーチャーは攻撃もブロックもできず、アンタップしない。光のコスト４以下の呪文を１枚、コストを支払わずに自分の手札から唱えてもよい。この呪文を唱えた後、自分の墓地に置くかわりに山札の一番下に置く。
+  source:
+    official: dmr22-006
+    review: pending
+    notes: '再変換ラウンド311。第276弾の再変換。partial は abilities 空・text 切り詰めだったため公式全文から組んだ。ロックは
+      deny [attack_player, attack_creature, block, untap_at_start] を until_next_opp_turn_end（第276弾）。光のコスト4以下の呪文の無償詠唱は
+      may+play_free。唱えた後の山札下行きは zone: hold の自己置換（reason: resolve）。マナゾーンに置く時タップして置くは多色カードの一般則のため面項目なし。'
+  spell:
+  - op: modify
+    select:
+      zone: bz
+      owner: opp
+      filter:
+        types:
+        - creature
+      count: all
+    mod:
+      deny:
+      - attack_player
+      - attack_creature
+      - block
+      - untap_at_start
+    duration: until_next_opp_turn_end
+  - op: may
+    body:
+    - op: play_free
+      select:
+        zone: hand
+        owner: you
+        filter:
+          types:
+          - spell
+          civs:
+          - light
+          cost_le: 4
+        count: 1
+  abilities:
+  - kind: replace
+    zone: hold
+    when:
+      event: move
+      to: graveyard
+      reason: resolve
+      subject: self
+    instead:
+    - op: move
+      select:
+        ref: self
+      to: deck
+      position: bottom
+      reason: return
+- id: dmrp19-032
+  name: †正義†と「正義」
+  types:
+  - spell
+  civs:
+  - light
+  cost: 6
+  mana: 1
+  text: 'シンパシー：クリーチャー（この呪文を唱えるコストは、バトルゾーンにある自分のクリーチャー１体につき１少なくなる。ただしコストは０以下にはならない）
+
+    次の相手のターン中、自分のクリーチャーは離れない。'
+  spell:
+  - op: delayed_trigger
+    when:
+      event: turn_start
+      player: opp
+    duration: permanent
+    effect:
+    - op: modify
+      select:
+        zone: bz
+        owner: you
+        filter:
+          types:
+          - creature
+        count: all
+      mod:
+        no_leave: true
+      duration: end_of_turn
+  source:
+    official: dmrp19-032
+    review: pending
+    notes: 再変換ラウンド311。第276弾の再変換。partial のシンパシー常在型は完全なためそのまま。呪文面は「次の相手のターン中のみ」の delayed_trigger
+      イディオム（第276弾）。
+  abilities:
+  - kind: static
+    zone: hand
+    affects: self
+    mod:
+      cost:
+        amount: -1
+        count:
+          zone: bz
+          owner: you
+          filter:
+            types:
+            - creature
+- id: dm23rp2x-010
+  name: アウルーリー-T8
+  types:
+  - creature
+  civs:
+  - light
+  cost: 5
+  power: 6000
+  races:
+  - メカ・デル・ディネロ
+  mana: 1
+  text: 'ブロッカー（このクリーチャーをタップして、相手クリーチャーの攻撃先をこのクリーチャーに変更してもよい）
+
+    W・ブレイカー（このクリーチャーはシールドを２つブレイクする）
+
+    真・エスケープ（このクリーチャーが離れる時、かわりに自分のシールドを２つ手札に加えてもよい。ただし、その「S・トリガー」は使えない）
+
+    自分のシールドがなければ、このクリーチャーは離れない。'
+  source:
+    official: dm23rp2x-010
+    review: pending
+    notes: 再変換ラウンド312。第277弾の再変換。partial はキーワードのみだったため、真・エスケープをキーワードに追加し、「自分のシールドがなければ、このクリーチャーは離れない」を
+      no_leave 常在型で組んだ（プロト T786 と同形）。
+    aliases:
+    - dm23rp2-010
+    - promoy22-019
+  keywords:
+  - blocker
+  - double_breaker
+  - true_escape
+  abilities:
+  - kind: static
+    affects: self
+    if:
+      not:
+        exists:
+          zone: shield
+          owner: you
+    mod:
+      no_leave: true
+- id: dm24bd5-004
+  name: 聖霊妖精オーデマリー
+  types:
+  - creature
+  civs:
+  - light
+  cost: 5
+  power: 6000
+  races:
+  - スノーフェアリー
+  - エンジェル・コマンド
+  mana: 1
+  text: 'W・ブレイカー
+
+    このクリーチャーが出た時または攻撃する時、自分の山札の上から２枚を見る。そのうちの１枚をシールド化し、もう１枚を手札に加える。
+
+    自分のシールドゾーンにあるスノーフェアリーすべてに「S・トリガー」を与える。
+
+    真・エスケープ（このクリーチャーが離れる時、かわりに自分のシールドを２つ手札に加えてもよい。ただし、その「S・トリガー」は使えない）'
+  source:
+    official: dm24bd5-004
+    review: pending
+    notes: 再変換ラウンド312。第277弾の再変換。partial は abilities 空だったため、出た時・攻撃する時の誘発（上から2枚を見て1枚をシールド化・残りを手札）と、シールドゾーンのスノーフェアリーすべてへの
+      S・トリガー付与を公式全文から組んだ。真・エスケープはキーワード。
+    aliases:
+    - promoy24-037
+  keywords:
+  - double_breaker
+  - true_escape
+  abilities:
+  - kind: trigger
+    when:
+      event: move
+      to: bz
+      subject: self
+    effect:
+    - op: choose
+      select:
+        zone: deck
+        owner: you
+        from_top: 2
+        look: true
+        count: all
+      as: pile
+    - op: move
+      select:
+        ref: pile
+        count: 1
+      to: shield
+      reason: put
+    - op: move
+      select:
+        ref: pile
+        count: all
+      to: hand
+      reason: draw
+  - kind: trigger
+    when:
+      event: attack
+      subject: self
+    effect:
+    - op: choose
+      select:
+        zone: deck
+        owner: you
+        from_top: 2
+        look: true
+        count: all
+      as: pile
+    - op: move
+      select:
+        ref: pile
+        count: 1
+      to: shield
+      reason: put
+    - op: move
+      select:
+        ref: pile
+        count: all
+      to: hand
+      reason: draw
+  - kind: static
+    affects:
+      zone: shield
+      owner: you
+      filter:
+        race_has: スノーフェアリー
+    mod:
+      grant:
+      - s_trigger
+- id: dm24rp1-011
+  name: 獲銀月 ミール
+  types:
+  - creature
+  civs:
+  - light
+  cost: 4
+  mana: 1
+  text: 'ブロッカー
+
+    自分のシールドが離れた時、相手のクリーチャーを１体選び、タップする。
+
+    ハイパー化：自分の他のクリーチャーを１体タップする。（自分のメインステップ中に、ハイパーモードを解放できる。ハイパーモードは次の自分のターンのはじめまで続く）'
+  power: 5000
+  races:
+  - イニシエート
+  - 超化獣
+  keywords:
+  - blocker
+  hyper: true
+  abilities:
+  - kind: static
+    affects: self
+    mod:
+      power: 2500
+    if:
+      hyper: true
+  - kind: trigger
+    when:
+      event: move
+      from: shield
+      subject:
+        owner: you
+    effect:
+    - op: tap
+      select:
+        zone: bz
+        owner: opp
+        count: 1
+        filter:
+          types:
+          - creature
+  - kind: static
+    affects: self
+    mod:
+      grant:
+      - double_breaker
+    if:
+      hyper: true
+  - kind: static
+    affects: self
+    if:
+      hyper: true
+    mod:
+      gain:
+      - kind: replace
+        optional: true
+        when:
+          event: move
+          from: bz
+          subject: self
+        if:
+          cmp:
+          - count:
+              zone: shield
+              owner: you
+          - '>='
+          - 2
+        instead:
+        - op: move
+          select:
+            zone: shield
+            owner: you
+            count: 2
+          to: hand
+          reason: return
+          strigger: 'off'
+  source:
+    official: dm24rp1-011
+    review: pending
+    notes: '再変換ラウンド312。第277弾の再変換。partial のハイパー静的は完全なためそのまま。真・エスケープはハイパー時のみのため、mod
+      grant では置換が届かないので、キーワード本体を mod.gain で {hyper: true} ゲートした常在型を1つ追加した。'
+    aliases:
+    - dm24rp1-sec13
+- id: dm23ex3-t13
+  name: 黒神龍オンバシ・ラオーン
+  types:
+  - creature
+  civs:
+  - darkness
+  cost: 4
+  power: 4000
+  races:
+  - ドラゴン・ゾンビ
+  - アンノイズ
+  mana: 1
+  text: '自分のアンノウン・クリーチャーの召喚コストを１、ゼニス・クリーチャーの召喚コストを２少なくする。ただし、コストは０以下にはならない。
+
+    自分の、アンノウンとゼニス両方を種族に持つクリーチャーが出た時、このクリーチャーを破壊する。'
+  source:
+    official: dm23ex3-t13
+    review: pending
+    notes: 再変換ラウンド313。第278弾の再変換。partial の常在型は壊れていたため、コスト軽減2件（アンノウン -1 / ゼニス -2、フィルタは
+      races の OR 形で足り、両種族持ちは両方の軽減を受ける）と、アンノウンとゼニス両方を種族に持つ自分のクリーチャーが出た時に自分を破壊する誘発（subject
+      に races_all）を公式全文から組み直した。コストの下限0はエンジン既定（cost_min 既定0）。
+    aliases:
+    - dmr05-055
+    - dmr05-055m
+    - dmx13-023
+  abilities:
+  - kind: static
+    affects:
+      owner: you
+      zone: hand
+      filter:
+        types:
+        - creature
+        races:
+        - アンノウン
+    mod:
+      cost: -1
+  - kind: static
+    affects:
+      owner: you
+      zone: hand
+      filter:
+        types:
+        - creature
+        races:
+        - ゼニス
+    mod:
+      cost: -2
+  - kind: trigger
+    when:
+      event: move
+      to: bz
+      subject:
+        owner: you
+        filter:
+          types:
+          - creature
+          races_all:
+          - アンノウン
+          - ゼニス
+    effect:
+    - op: destroy
+      select:
+        ref: self
+- id: dm23ex3-t01
+  name: 極頂秘伝ゼニス・シンフォニー
+  types:
+  - spell
+  civs:
+  - zero
+  cost: 9
+  mana: 1
+  text: アタック・チャンス：アンノウン（自分のアンノウンが攻撃する時、この呪文をコストを支払わずに唱えてもよい） / 自分の、アンノウンとゼニス両方を種族に持つクリーチャーを１体、コストを支払わずに自分の手札から召喚してもよい。そのターンの終わりに、そのクリーチャーを手札に戻す。
+  abilities:
+  - kind: declare
+    zone: hand
+    when:
+      event: attack
+      subject:
+        owner: you
+        filter:
+          races:
+          - アンノウン
+    effect:
+    - op: may
+      body:
+      - op: play_free
+        select:
+          ref: self
+  spell:
+  - op: play_free
+    select:
+      zone: hand
+      owner: you
+      filter:
+        types:
+        - creature
+        races_all:
+        - アンノウン
+        - ゼニス
+      count: 1
+      up_to: true
+    as: summoned
+  - op: delayed_trigger
+    when:
+      event: turn_end
+    effect:
+    - op: move
+      select:
+        ref: summoned
+      to: hand
+      reason: return
+  source:
+    official: dm23ex3-t01
+    review: pending
+    notes: '再変換ラウンド313。第278弾の再変換。declare（アタック・チャンス）は partial のまま、呪文面に play_free（filter
+      に races_all、「てもよい」のため select に up_to: true）＋ delayed_trigger（turn_end にそのクリーチャーを手札へ戻す）を載せた。'
+    aliases:
+    - dmbd06-012
+- id: dm24bd6-023
+  faces:
+  - name: 「武」の頂 マキシマム・ザ・マックス
+    types:
+    - creature
+    civs:
+    - zero
+    cost: 10
+    power: 12000
+    races:
+    - アンノウン
+    - ゼニス
+    keywords:
+    - world_breaker
+    - eternal_omega
+    abilities:
+    - kind: static
+      affects: self
+      mod:
+        power_when:
+          amount: 12000
+          when: attacking
+  - name: 極頂秘伝ゼニス・シンフォニー
+    types:
+    - spell
+    civs:
+    - zero
+    cost: 9
+    abilities:
+    - kind: declare
+      zone: hand
+      when:
+        event: attack
+        subject:
+          owner: you
+          filter:
+            races:
+            - アンノウン
+      effect:
+      - op: may
+        body:
+        - op: play_free
+          select:
+            ref: self
+    spell:
+    - op: play_free
+      select:
+        zone: hand
+        owner: you
+        filter:
+          types:
+          - creature
+          races_all:
+          - アンノウン
+          - ゼニス
+        count: 1
+        up_to: true
+      as: summoned
+    - op: delayed_trigger
+      when:
+        event: turn_end
+      effect:
+      - op: move
+        select:
+          ref: summoned
+        to: hand
+        reason: return
+  mana: 1
+  text: 「武」の頂 マキシマム・ザ・マックス：パワーアタッカー+12000（攻撃中、このクリーチャーのパワーを+12000する） / ワールド・ブレイカー
+    / エターナル・Ω（このクリーチャーが離れる時、かわりに手札に戻す） ／ 極頂秘伝ゼニス・シンフォニー：アタック・チャンス：アンノウン（自分のアンノウンが攻撃する時、この呪文をコストを支払わずに唱えてもよい）
+    / 自分の、アンノウンとゼニス両方を種族に持つクリーチャーを１体、コストを支払わずに自分の手札から召喚してもよい。そのターンの終わりに、そのクリーチャーを手札に戻す。
+  source:
+    official: dm24bd6-023
+    review: pending
+    notes: 再変換ラウンド313。第278弾の再変換。ツインパクト。クリーチャー面は partial のまま、呪文面に dm23ex3-t01 と同じ形（play_free
+      の races_all ＋ delayed_trigger）を載せた。
+    aliases:
+    - dm22ex1-043
+- id: dm25ex3-054
+  name: ～破壊と殺戮の連鎖～
+  types:
+  - creature
+  civs:
+  - light
+  - water
+  - darkness
+  cost: 3
+  power: 3000
+  races:
+  - デーモン・コマンド
+  - パラサイトワーム
+  - スチーム・ナイト
+  mana: 1
+  neo: true
+  evolve_from:
+    civs:
+    - light
+    - water
+    - darkness
+  alt_cost:
+    cost: 2
+    civs: []
+    if:
+      all:
+      - exists:
+          zone: mana
+          owner: you
+          filter:
+            civs:
+            - light
+      - exists:
+          zone: mana
+          owner: you
+          filter:
+            civs:
+            - water
+      - exists:
+          zone: mana
+          owner: you
+          filter:
+            civs:
+            - darkness
+  abilities:
+  - effect:
+    - op: move
+      reason: put
+      select:
+        from_top: 1
+        owner: you
+        zone: deck
+      to: shield
+    kind: trigger
+    when:
+      event: move
+      subject: self
+      to: bz
+  text: '自分のマナゾーンに光、水、闇の各文明があれば、このクリーチャーを[cc02]支払って召喚してもよい。
+
+    NEO進化：光、水、または闇のクリーチャー１体の上に置いてもよい。（カードが下にあれば、これをNEO進化クリーチャーとして扱う）
+
+    このクリーチャーが出た時、自分の山札の上から１枚をシールド化する。'
+  source:
+    official: dm25ex3-054
+    review: pending
+    aliases:
+    - dm25rp4-049
+    notes: '再変換ラウンド314。第279弾の再変換。partial の alt_cost を本弾の形（cost: 2, civs: [], if: 自分のマナゾーンに光・水・闇の各文明が
+      exists）に差し替えた。partial の civs: [zero, zero] は誤記（[cc02] の正表現は civs: []）。他の条項は
+      partial のまま。'
+- id: dm25ex3-057
+  name: 大集合！アカネ&アサギ&コハク
+  types:
+  - creature
+  civs:
+  - light
+  - water
+  - nature
+  cost: 3
+  power: 3000
+  races:
+  - ジャイアント・スノーフェアリー
+  mana: 1
+  neo: true
+  evolve_from:
+    civs:
+    - light
+    - water
+    - nature
+  alt_cost:
+    cost: 2
+    civs: []
+    if:
+      all:
+      - exists:
+          zone: mana
+          owner: you
+          filter:
+            civs:
+            - light
+      - exists:
+          zone: mana
+          owner: you
+          filter:
+            civs:
+            - water
+      - exists:
+          zone: mana
+          owner: you
+          filter:
+            civs:
+            - nature
+  abilities:
+  - effect:
+    - as: pile
+      op: choose
+      select:
+        count: all
+        from_top: 2
+        look: true
+        owner: you
+        zone: deck
+    - as: c
+      op: choose
+      select:
+        count: 1
+        ref: pile
+    - modes:
+      - - op: move
+          reason: put
+          select:
+            count: all
+            ref: c
+          to: hand
+      - - op: mana_put
+          select:
+            count: all
+            ref: c
+      op: modal
+    - op: move
+      position: bottom
+      reason: put
+      select:
+        count: all
+        ref: pile
+      to: deck
+    kind: trigger
+    when:
+      event: move
+      subject: self
+      to: bz
+  text: '自分のマナゾーンに光、水、自然の各文明があれば、このクリーチャーを[cc02]支払って召喚してもよい。
+
+    NEO進化：光、水、または自然のクリーチャー１体の上に置いてもよい。（カードが下にあれば、これをNEO進化クリーチャーとして扱う）
+
+    このクリーチャーが出た時、自分の山札の上から２枚を見る。その中から１枚を手札に加えるかマナゾーンに置き、残りの１枚を山札の下に置く。'
+  source:
+    official: dm25ex3-057
+    review: pending
+    aliases:
+    - dm25rp4-050
+    - promoy25-120
+    notes: '再変換ラウンド314。第279弾の再変換。partial の alt_cost を本弾の形（cost: 2, civs: [], if: 自分のマナゾーンに光・水・自然の各文明が
+      exists）に差し替えた。partial の civs: [zero, zero] は誤記（[cc02] の正表現は civs: []）。他の条項は
+      partial のまま。'
+- id: dm25ex3-062
+  name: 哀蛇の虚 シンロッチ
+  types:
+  - creature
+  civs:
+  - darkness
+  - fire
+  - nature
+  cost: 3
+  power: 3000
+  races:
+  - デーモン・コマンド
+  mana: 1
+  neo: true
+  evolve_from:
+    civs:
+    - darkness
+    - fire
+    - nature
+  alt_cost:
+    cost: 2
+    civs: []
+    if:
+      all:
+      - exists:
+          zone: mana
+          owner: you
+          filter:
+            civs:
+            - darkness
+      - exists:
+          zone: mana
+          owner: you
+          filter:
+            civs:
+            - fire
+      - exists:
+          zone: mana
+          owner: you
+          filter:
+            civs:
+            - nature
+  abilities:
+  - effect:
+    - as: pile
+      op: choose
+      select:
+        count: all
+        from_top: 2
+        owner: you
+        zone: deck
+      reveal: true
+    - as: hit
+      op: choose
+      select:
+        count: 1
+        filter:
+          types:
+          - creature
+        ref: pile
+    - body:
+      - op: move
+        reason: put
+        select:
+          count: all
+          ref: hit
+        to: hand
+      op: may
+    - op: move
+      reason: put
+      select:
+        count: all
+        ref: pile
+      to: graveyard
+    kind: trigger
+    when:
+      event: attack
+      subject: self
+  text: '自分のマナゾーンに闇、火、自然の各文明があれば、このクリーチャーを[cc02]支払って召喚してもよい。
+
+    NEO進化：闇、火、または自然のクリーチャー１体の上に置いてもよい。（カードが下にあれば、これをNEO進化クリーチャーとして扱う）
+
+    このクリーチャーが攻撃する時、自分の山札の上から２枚を表向きにする。その中からクリーチャーを１体手札に加えてもよい。残りを墓地に置く。'
+  source:
+    official: dm25ex3-062
+    review: pending
+    aliases:
+    - dm25rp4-053
+    notes: '再変換ラウンド314。第279弾の再変換。partial の alt_cost を本弾の形（cost: 2, civs: [], if: 自分のマナゾーンに闇・火・自然の各文明が
+      exists）に差し替えた。partial の civs: [zero, zero] は誤記（[cc02] の正表現は civs: []）。加えて攻撃時誘発の
+      choose は原文「上から2枚を表向きにする」に合わせ reveal: true とし look を外した（dm23rp1-071 先例形）。他の条項は
+      partial のまま。'
+- id: dm25ex3-060
+  name: トレース＝トレーシー
+  types:
+  - creature
+  civs:
+  - water
+  - darkness
+  - fire
+  cost: 3
+  power: 3000
+  races:
+  - アビスロイヤル
+  mana: 1
+  neo: true
+  evolve_from:
+    civs:
+    - water
+    - darkness
+    - fire
+  alt_cost:
+    cost: 2
+    civs: []
+    if:
+      all:
+      - exists:
+          zone: mana
+          owner: you
+          filter:
+            civs:
+            - water
+      - exists:
+          zone: mana
+          owner: you
+          filter:
+            civs:
+            - darkness
+      - exists:
+          zone: mana
+          owner: you
+          filter:
+            civs:
+            - fire
+  abilities:
+  - effect:
+    - count: 1
+      op: mill
+      owner: you
+    - body:
+      - op: move
+        reason: return
+        select:
+          count: 1
+          filter:
+            types:
+            - creature
+            - tamaseed
+          owner: you
+          zone: graveyard
+        to: hand
+      op: may
+    kind: trigger
+    when:
+      event: move
+      subject: self
+      to: bz
+  text: '自分のマナゾーンに水、闇、火の各文明があれば、このクリーチャーを[cc02]支払って召喚してもよい。
+
+    NEO進化：水、闇、または火のクリーチャー１体の上に置いてもよい。（カードが下にあれば、これをNEO進化クリーチャーとして扱う）
+
+    このクリーチャーが出た時、自分の山札の上から１枚を墓地に置く。その後、クリーチャーまたはタマシードを１つ、自分の墓地から手札に戻してもよい。'
+  source:
+    official: dm25ex3-060
+    review: pending
+    aliases:
+    - dm25rp4-052
+    notes: '再変換ラウンド314。第279弾の再変換。partial の alt_cost を本弾の形（cost: 2, civs: [], if: 自分のマナゾーンに水・闇・火の各文明が
+      exists）に差し替えた。partial の civs: [zero, zero] は誤記（[cc02] の正表現は civs: []）。他の条項は
+      partial のまま。'
+- id: dm06-032
+  name: ピーカプ・リザード
+  types:
+  - creature
+  civs:
+  - fire
+  cost: 5
+  power: 3000
+  races:
+  - デューンゲッコー
+  mana: 1
+  text: 'パワーアタッカー +3000(攻撃中、このクリーチャーのパワーは+3000される)
+
+    このクリーチャーの攻撃がブロックされた場合、バトルは行われない。ただし、両クリーチャーはタップしたままである。'
+  source:
+    official: dm06-032
+    review: pending
+    notes: '再変換ラウンド315。第280弾の再変換。partial に block 誘発 {when: {event: block, attacker:
+      self}, effect: [{op: cancel_attack}]}（第280弾の強制形イディオム）を追加した。submit がテキスト由来の power_when
+      常在型を加え、partial のパワーアタッカー誘発と二重適用になるため、誘発側を除去し常在型に一本化した。'
+  abilities:
+  - kind: static
+    affects: self
+    mod:
+      power_when:
+        amount: 3000
+        when: attacking
+  - kind: trigger
+    when:
+      event: block
+      attacker: self
+    effect:
+    - op: cancel_attack
+- id: dm06-101
+  name: 無謀鉄人チョイヤ
+  types:
+  - creature
+  civs:
+  - fire
+  cost: 2
+  power: 1000
+  races:
+  - ヒューマノイド
+  mana: 1
+  text: 'パワーアタッカー +1000(攻撃中、このクリーチャーのパワーは+1000される)
+
+    このクリーチャーの攻撃がブロックされた場合、バトルは行われない。ただし、両クリーチャーはタップしたままである。'
+  source:
+    official: dm06-101
+    review: pending
+    notes: '再変換ラウンド315。第280弾の再変換。partial に block 誘発 {when: {event: block, attacker:
+      self}, effect: [{op: cancel_attack}]}（第280弾の強制形イディオム）を追加した。submit がテキスト由来の power_when
+      常在型を加え、partial のパワーアタッカー誘発と二重適用になるため、誘発側を除去し常在型に一本化した。'
+  abilities:
+  - kind: static
+    affects: self
+    mod:
+      power_when:
+        amount: 1000
+        when: attacking
+  - kind: trigger
+    when:
+      event: block
+      attacker: self
+    effect:
+    - op: cancel_attack
+- id: dm19-s02
+  name: 護法の精霊アムシオン
+  types:
+  - creature
+  civs:
+  - light
+  cost: 6
+  power: 5500
+  races:
+  - エンジェル・コマンド
+  mana: 1
+  text: バトルゾーンにある自分の、タップされているクリーチャーのパワーは、攻撃していない時、+7000される。自分のクリーチャーがブロックされた時、その攻撃を中止してもよい。そうした場合、バトルは行われない。ただし、両クリーチャーはタップしたままである。
+  source:
+    official: dm19-s02
+    review: pending
+    notes: '再変換ラウンド315。第280弾の再変換。partial は abilities を持たないため、常在型 {affects: {zone:
+      bz, owner: you, filter: {tapped: true}}, mod: {power_when: {amount: 7000, when:
+      not_attacking}}} と block 誘発 {when: {event: block, attacker: {owner: you}}, effect:
+      [may [cancel_attack]]}（第280弾の任意・第三者形イディオム）を公式全文から構築して追加した。'
+  abilities:
+  - kind: static
+    affects:
+      zone: bz
+      owner: you
+      filter:
+        tapped: true
+    mod:
+      power_when:
+        amount: 7000
+        when: not_attacking
+  - kind: trigger
+    when:
+      event: block
+      attacker:
+        owner: you
+    effect:
+    - op: may
+      body:
+      - op: cancel_attack
+- id: dm23ex3-tf03
+  name: 「終焉」の頂 オーエン・ザ・ロード
+  types:
+  - creature
+  civs:
+  - light
+  cost: 11
+  power: 11500
+  races:
+  - デーモン・コマンド
+  - アンノウン
+  - ゼニス
+  mana: 1
+  text: 'ブロッカー
+
+    W・ブレイカー
+
+    このクリーチャーが召喚によって出た時、自分の墓地のカードをすべて山札に加えてシャッフルする。その後、自分の山札の上から３枚をシールド化してもよい。
+
+    自分のクリーチャーが離れる時、かわりに自分のシールドを２つ、手札に戻してもよい。ただし、その「S・トリガー」は使えない。'
+  source:
+    official: dm23ex3-tf03
+    review: pending
+    notes: '再変換ラウンド316。第281弾の再変換。partial に欠けていた出た時能力（召喚によって出た時: 墓地のカードをすべて山札に加えてシャッフルし、その後上から3枚をシールド化してもよい）を公式全文から構築し、基本形の置換（自分のクリーチャーが離れる時、シールド2つを手札に戻してもよい）を追加した。'
+    aliases:
+    - dmbd06-001
+  keywords:
+  - blocker
+  - double_breaker
+  abilities:
+  - kind: trigger
+    when:
+      event: move
+      to: bz
+      subject: self
+      reason: summon
+    effect:
+    - op: move
+      select:
+        zone: graveyard
+        owner: you
+        count: all
+      to: deck
+      reason: return
+    - op: shuffle
+      player: you
+    - op: may
+      body:
+      - op: move
+        select:
+          zone: deck
+          owner: you
+          from_top: 3
+        to: shield
+        reason: charge
+  - kind: replace
+    optional: true
+    when:
+      event: move
+      from: bz
+      subject:
+        owner: you
+        filter:
+          types:
+          - creature
+    if:
+      cmp:
+      - count:
+          zone: shield
+          owner: you
+      - '>='
+      - 2
+    instead:
+    - op: move
+      select:
+        zone: shield
+        owner: you
+        count: 2
+      to: hand
+      reason: return
+      strigger: 'off'
+- id: dm24ex4-042
+  name: 星姫械 エルナドンナ
+  types:
+  - creature
+  civs:
+  - light
+  cost: 2
+  power: 2500
+  races:
+  - メカ・デル・ステラ
+  keywords:
+  - blocker
+  mana: 1
+  text: 'ブロッカー
+
+    各ターンに一度、自分の他のクリーチャーが離れる時、かわりに自分のシールドを１つ手札に加えてもよい。ただし、その「S・トリガー」は使えない。'
+  abilities:
+  - kind: replace
+    optional: true
+    once_per_turn: true
+    when:
+      event: move
+      from: bz
+      subject:
+        owner: you
+        other: true
+        filter:
+          types:
+          - creature
+    if:
+      cmp:
+      - count:
+          zone: shield
+          owner: you
+      - '>='
+      - 1
+    instead:
+    - op: move
+      select:
+        zone: shield
+        owner: you
+        count: 1
+      to: hand
+      reason: return
+      strigger: 'off'
+  source:
+    official: dm24ex4-042
+    review: pending
+    aliases:
+    - dm23rp4-012
+    - dm23rp4x-012
+    - dm24ex4-pr002
+    notes: 再変換ラウンド316。第281弾の再変換。abilities 空の partial に他者・各ターン一度形の置換（各ターンに一度、自分の他のクリーチャーが離れる時、シールド1つを手札に加えてもよい）を追加した。
+- id: dmx23-025
+  name: 若き日の族長 ヘンザ
+  types:
+  - creature
+  civs:
+  - light
+  - nature
+  cost: 8
+  power: 11500
+  races:
+  - ジュラシック・コマンド・ドラゴン
+  - 革命軍
+  - ダママ団
+  mana: 1
+  abilities:
+  - kind: declare
+    zone: hand
+    when:
+      event: attack
+      subject:
+        owner: you
+        filter:
+          civs:
+          - light
+          - nature
+          cost_ge: 5
+          race_has: ドラゴン
+    effect:
+    - op: swap
+      out:
+        ref: event.subject
+      in:
+        ref: self
+  - kind: replace
+    optional: true
+    when:
+      event: move
+      from: bz
+      subject:
+        owner: you
+        filter:
+          types:
+          - creature
+    if:
+      cmp:
+      - count:
+          zone: shield
+          owner: you
+      - '>='
+      - 2
+    instead:
+    - op: move
+      select:
+        zone: shield
+        owner: you
+        count: 2
+      to: hand
+      reason: return
+      strigger: 'off'
+  keywords:
+  - double_breaker
+  text: マナゾーンに置く時、このカードはタップして置く。革命チェンジ：光または自然のコスト５以上のドラゴン（自分の光または自然のコスト５以上のドラゴンが攻撃する時、そのクリーチャーと手札にあるこのクリーチャーを入れ替えてもよい）W・ブレイカー自分のクリーチャーがバトルゾーンを離れる時、かわりに自分のシールドを２つ手札に戻してもよい。ただし、その「S・トリガー」は使えない。
+  source:
+    official: dmx23-025
+    review: pending
+    notes: 再変換ラウンド316。第281弾の再変換。partial の革命チェンジ（declare＋swap）に基本形の置換（自分のクリーチャーがバトルゾーンを離れる時、シールド2つを手札に戻してもよい）を追加した。
+- id: dm26rp3-001
+  name: ヒトリダチ ケントナーク
+  types:
+  - creature
+  civs:
+  - light
+  cost: 4
+  power: 4500
+  races:
+  - ジョーカーズ
+  mana: 1
+  text: 'ブロッカー
+
+    このクリーチャーが出た時、次の中から１回選ぶ。
+
+    ▶自分の山札の上から１枚をシールド化する。
+
+    ▶Jビッグ１する。（自分の他のジョーカーズの、Jビッグ１以外の、出た時にトリガーする能力を１つ使う）
+
+    各ターンに１度、自分のジョーカーズが離れる時、かわりに自分のシールドを１つ手札に加えてもよい。その「S・トリガー」は使えない。'
+  source:
+    official: dm26rp3-001
+    review: pending
+    notes: 再変換ラウンド316。第281弾の関連行（once_per_turn_leave_replacement_shield_to_hand）として併せて再変換。partial
+      に欠けていた出た時のモード能力（上から1枚をシールド化／Jビッグ1＝use_cip）を公式全文から構築し、各ターンに1度形の置換（自分のジョーカーズが離れる時、シールド1つを手札に加えてもよい）を追加した。
+  keywords:
+  - blocker
+  abilities:
+  - kind: trigger
+    when:
+      event: move
+      to: bz
+      subject: self
+    effect:
+    - op: modal
+      modes:
+      - - op: move
+          select:
+            zone: deck
+            owner: you
+            from_top: 1
+          to: shield
+          reason: charge
+      - - op: use_cip
+          select:
+            zone: bz
+            owner: you
+            other: true
+            count: 1
+            filter:
+              race_has: ジョーカーズ
+  - kind: replace
+    optional: true
+    once_per_turn: true
+    when:
+      event: move
+      from: bz
+      subject:
+        owner: you
+        filter:
+          race_has: ジョーカーズ
+    if:
+      cmp:
+      - count:
+          zone: shield
+          owner: you
+      - '>='
+      - 1
+    instead:
+    - op: move
+      select:
+        zone: shield
+        owner: you
+        count: 1
+      to: hand
+      reason: return
+      strigger: 'off'
+- id: dm24ex3-rp1s10
+  name: 巨進の超人
+  types:
+  - creature
+  civs:
+  - nature
+  cost: 4
+  power: 5000
+  races:
+  - ジャイアント
+  keywords:
+  - g_strike
+  mana: 1
+  text: '{GS} G・ストライク
+
+    このクリーチャーが出た時、自分の山札の上から１枚目をタップしてマナゾーンに置く。その後、カードを１枚、自分のマナゾーンから手札に戻してもよい。
+
+    各ターンに一度、自分の他のクリーチャーが召喚によって出た時、それと同じ名前のクリーチャーを１体、自分のマナゾーンから出してもよい。'
+  abilities:
+  - kind: trigger
+    when:
+      event: move
+      to: bz
+      subject: self
+    effect:
+    - op: move
+      select:
+        zone: deck
+        owner: you
+        from_top: 1
+      to: mana
+      reason: put
+      tapped: true
+    - op: may
+      body:
+      - op: move
+        select:
+          zone: mana
+          owner: you
+          count: 1
+        to: hand
+        reason: return
+  - kind: trigger
+    once_per_turn: true
+    when:
+      event: move
+      to: bz
+      reason: summon
+      subject:
+        owner: you
+        other: true
+        filter:
+          types:
+          - creature
+    effect:
+    - op: may
+      body:
+      - op: play_free
+        select:
+          zone: mana
+          owner: you
+          filter:
+            name:
+              name_of: event.subject
+            types:
+            - creature
+          count: 1
+  source:
+    official: dm24ex3-rp1s10
+    review: pending
+    aliases:
+    - dm24ex3-rp1tr08
+    - dm24rp1-s10
+    - dm24rp1-tr08
+    notes: 再変換ラウンド317。第282弾の再変換。partial の出た時能力（G・ストライク含む）はそのまま、召喚形の誘発（各ターンに一度、自分の他のクリーチャーが召喚によって出た時、それと同じ名前のクリーチャーを自分のマナゾーンから出してもよい）を第282弾で確立した形で追加した。
+- id: dmrp02-006
+  name: サイバー・GG・ハルク
+  types:
+  - creature
+  civs:
+  - water
+  cost: 7
+  power: 8000
+  races:
+  - サイバー・コマンド
+  mana: 1
+  text: ブロッカーW・ブレイカー自分の他の水のクリーチャーがバトルゾーンに出た時、カードを１枚引く。このクリーチャーまたは自分の他の水のクリーチャーが破壊された時、それと同じ名前のクリーチャーを１体、自分の手札からバトルゾーンに出してもよい。
+  keywords:
+  - blocker
+  - double_breaker
+  abilities:
+  - kind: trigger
+    when:
+      event: move
+      to: bz
+      subject:
+        owner: you
+        other: true
+        filter:
+          civs:
+          - water
+          types:
+          - creature
+    effect:
+    - op: draw
+      count: 1
+  - kind: trigger
+    when:
+      event: move
+      from: bz
+      to: graveyard
+      reason: destroy
+      subject:
+        owner: you
+        filter:
+          civs:
+          - water
+          types:
+          - creature
+    effect:
+    - op: may
+      body:
+      - op: play_free
+        select:
+          zone: hand
+          owner: you
+          filter:
+            name:
+              name_of: event.subject
+            types:
+            - creature
+          count: 1
+  source:
+    official: dmrp02-006
+    review: pending
+    notes: '再変換ラウンド317。第282弾の再変換。reject 行に partial が無いため、公式データ（水・コスト7・パワー8000・サイバー・コマンド）から全形を構築した:
+      自分の他の水のクリーチャーが出た時に1枚引く誘発と、破壊形の誘発（このクリーチャーまたは自分の他の水のクリーチャーが破壊された時、それと同じ名前のクリーチャーを自分の手札から出してもよい）を第282弾で確立した形で書いた。'

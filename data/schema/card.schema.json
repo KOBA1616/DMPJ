@@ -83,6 +83,7 @@
      "dynamo",
      "enters_tapped",
      "escape",
+     "eternal_kappa",
      "eternal_omega",
      "evo_charger",
      "ex_life",
@@ -129,6 +130,7 @@
      "summon_from_mana",
      "super_s_trigger",
      "triple_breaker",
+     "true_escape",
      "turbo_rush",
      "unblockable",
      "wave_striker",
@@ -188,6 +190,7 @@
       "power_le": {},
       "race_has": {},
       "races": {},
+      "races_all": {},
       "sealed": {},
       "spell_cost_ge": {},
       "spell_cost_le": {},
@@ -458,6 +461,7 @@
        "dynamo",
        "enters_tapped",
        "escape",
+       "eternal_kappa",
        "eternal_omega",
        "evo_charger",
        "ex_life",
@@ -504,6 +508,7 @@
        "summon_from_mana",
        "super_s_trigger",
        "triple_breaker",
+       "true_escape",
        "turbo_rush",
        "unblockable",
        "wave_striker",
@@ -563,6 +568,7 @@
         "power_le": {},
         "race_has": {},
         "races": {},
+        "races_all": {},
         "sealed": {},
         "spell_cost_ge": {},
         "spell_cost_le": {},
@@ -1080,6 +1086,8 @@
          "during_attack",
          "end_of_turn",
          "permanent",
+         "until_next_opp_turn_end",
+         "until_next_own_turn_end",
          "until_next_own_turn_start"
         ]
        },
@@ -1507,6 +1515,8 @@
          "during_attack",
          "end_of_turn",
          "permanent",
+         "until_next_opp_turn_end",
+         "until_next_own_turn_end",
          "until_next_own_turn_start"
         ]
        },
@@ -1658,6 +1668,8 @@
          "during_attack",
          "end_of_turn",
          "permanent",
+         "until_next_opp_turn_end",
+         "until_next_own_turn_end",
          "until_next_own_turn_start"
         ]
        },
@@ -2446,6 +2458,7 @@
     "power_le": {},
     "race_has": {},
     "races": {},
+    "races_all": {},
     "sealed": {},
     "spell_cost_ge": {},
     "spell_cost_le": {},
@@ -2969,6 +2982,7 @@
        "dynamo",
        "enters_tapped",
        "escape",
+       "eternal_kappa",
        "eternal_omega",
        "evo_charger",
        "ex_life",
@@ -3015,6 +3029,7 @@
        "summon_from_mana",
        "super_s_trigger",
        "triple_breaker",
+       "true_escape",
        "turbo_rush",
        "unblockable",
        "wave_striker",
@@ -3376,7 +3391,8 @@
       "when": {
        "enum": [
         "attacking",
-        "blocking"
+        "blocking",
+        "not_attacking"
        ]
       }
      },

@@ -10776,3 +10776,604 @@ cards:
     races: [テスト]
     text: "試験用の巨大パワー（第272弾）"
     keywords: [blocker]
+
+  # ---- 語彙パイロット第273弾（2026-11-19）: evolution_base_any の race_has / any_of 形 ----
+  - id: T764
+    name: テスト剣兵イノセント
+    types: [creature]
+    civs: [fire, nature]
+    cost: 6
+    power: 2000
+    races: [ドラゴノイド, ビーストフォーク]
+    abilities:
+     - {kind: static, affects: self, mod: {allow: [evolve_base_any]}}
+     - kind: trigger
+       when: {event: move, from: bz, to: graveyard, reason: destroy, subject: self}
+       effect:
+        - {op: may, body: [{op: play_free, select: {zone: hand, owner: you, filter: {types: [creature], race_has: ドラゴン}, count: 1}}]}
+    text: "このクリーチャーの上に、どの種族の進化クリーチャーを置いてもよい。このクリーチャーが破壊された時、ドラゴンを1体、自分の手札からバトルゾーンに出してもよい。（第273弾、無頼剣兵ドラグイノセント型）"
+  - id: T765
+    name: テスト未来王龍
+    types: [creature]
+    civs: [fire, nature]
+    cost: 5
+    power: 6000
+    races: [ヒーロー・ドラゴン, ジョーカーズ]
+    keywords: [speed_attacker, double_breaker]
+    abilities:
+     - {kind: static, affects: self, mod: {allow: [evolve_base_any]}}
+     - {kind: static, affects: self, mod: {evo_reduce: {amount: 1}}}
+    text: "このクリーチャーの上に、どの種族の進化クリーチャーを置いてもよい。このクリーチャーから進化する進化クリーチャーの召喚コストを1少なくする。ただし、コストは0以下にはならない。（第273弾、未来王龍 モモキング型）"
+  - id: T766
+    name: テスト無垢の宝剣
+    types: [creature]
+    civs: [nature]
+    cost: 4
+    power: 1000
+    races: [ビーストフォーク]
+    abilities:
+     - {kind: static, affects: self, mod: {allow: [evolve_base_any]}}
+    text: "好きな種族の進化クリーチャーを、このクリーチャーの上に置いてもよい。（第273弾、無垢の宝剣型）"
+  - id: T767
+    name: テスト文明ドラゴン進化
+    types: [creature, evolution]
+    civs: [fire]
+    cost: 5
+    power: 6000
+    races: [アーマード・ドラゴン]
+    evolve_from: {civs: [fire], race_has: ドラゴン}
+    text: "進化: 自分の火のドラゴン1体の上に置く。（第273弾）"
+  - id: T768
+    name: テスト二分進化
+    types: [creature, evolution]
+    civs: [nature]
+    cost: 4
+    power: 5000
+    races: [テスト進化]
+    evolve_from: {any_of: [{race_has: ドラゴン}, {civs: [water]}]}
+    text: "進化: 自分のドラゴンまたは水のクリーチャー1体の上に置く。（第273弾）"
+  - id: T769
+    name: テスト幼竜
+    types: [creature]
+    civs: [fire]
+    cost: 3
+    power: 3000
+    races: [アーマード・ドラゴン]
+    text: "テスト用のドラゴン。（第273弾）"
+  - id: T770
+    name: 試験用ソウルシフト獣
+    types: [creature, evolution]
+    civs: [nature]
+    cost: 7
+    power: 7000
+    races: [テスト]
+    mana: 1
+    text: "進化：自分のテスト1体の上に置く。ソウルシフト（このクリーチャーを召喚する時、このクリーチャーの進化元クリーチャーを選ぶ。このクリーチャーのコストは、その選んだクリーチャーのコストだけ少なくなる。ただし、このクリーチャーのコストは1より少なくならない）（第274弾）"
+    evolve_from: {races: [テスト]}
+    soul_shift: {floor: 1}
+  - id: T771
+    name: 試験用ソウルシフト零獣
+    types: [creature, evolution]
+    civs: [water]
+    cost: 5
+    power: 5000
+    races: [テスト]
+    mana: 1
+    text: "進化：自分のテスト1体の上に置く。ソウルシフト（このクリーチャーを召喚する時、このクリーチャーの進化元クリーチャーを選ぶ。このクリーチャーのコストは、その選んだクリーチャーのコストだけ少なくなる。ただし、このクリーチャーのコストは0以下にならない）（第274弾）"
+    evolve_from: {races: [テスト]}
+    soul_shift: {floor: 0}
+  - id: T772
+    name: 試験用進化元・大
+    types: [creature]
+    civs: [nature]
+    cost: 5
+    power: 5000
+    races: [テスト]
+    mana: 1
+    text: "テスト用の進化元（コスト5）。（第274弾）"
+  - id: T773
+    name: 試験用進化元・小
+    types: [creature]
+    civs: [nature]
+    cost: 3
+    power: 3000
+    races: [テスト]
+    mana: 1
+    text: "テスト用の進化元（コスト3）。（第274弾）"
+  - id: T774
+    name: 試験用進化元・特大
+    types: [creature]
+    civs: [nature]
+    cost: 9
+    power: 9000
+    races: [テスト]
+    mana: 1
+    text: "テスト用の進化元（コスト9）。（第274弾）"
+  - id: T775
+    name: 試験用ソウルシフト無色獣
+    types: [creature, evolution]
+    civs: []
+    cost: 5
+    power: 5000
+    races: [テスト]
+    mana: 1
+    text: "進化：自分のテスト1体の上に置く。ソウルシフト（このクリーチャーを召喚する時、このクリーチャーの進化元クリーチャーを選ぶ。このクリーチャーのコストは、その選んだクリーチャーのコストだけ少なくなる。ただし、このクリーチャーのコストは0以下にならない）（第274弾）"
+    evolve_from: {races: [テスト]}
+    soul_shift: {floor: 0}
+
+  - id: T776
+    name: 試験用ロックンロール
+    types: [spell]
+    civs: [fire]
+    cost: 2
+    mana: 1
+    text: "バトルゾーンにある相手のタップされていないクリーチャーを1体選ぶ。このターン、バトルゾーンにある自分のクリーチャーはすべて、そのクリーチャーを攻撃できる。（第275弾）"
+    spell:
+      - op: choose
+        select: {zone: bz, owner: opp, filter: {types: [creature], tapped: false}, count: 1}
+        as: tgt
+      - op: modify
+        select: {zone: bz, owner: you, filter: {types: [creature]}, count: all}
+        mod: {allow: [{action: attack_creature, other: {tapped: false}, only: {var: tgt}}]}
+        duration: end_of_turn
+  - id: T777
+    name: 試験用旗持ち獣
+    types: [creature]
+    civs: [fire]
+    cost: 2
+    power: 1000
+    races: [テスト]
+    mana: 1
+    text: "このクリーチャーをバトルゾーンに出した時、バトルゾーンにある相手のタップされていないクリーチャーを1体選ぶ。そのターン、バトルゾーンにある自分のクリーチャーはすべて、そのクリーチャーを攻撃できる。（第275弾）"
+    abilities:
+      - kind: trigger
+        when: {event: move, to: bz, subject: self}
+        effect:
+          - op: choose
+            select: {zone: bz, owner: opp, filter: {types: [creature], tapped: false}, count: 1}
+            as: tgt
+          - op: modify
+            select: {zone: bz, owner: you, filter: {types: [creature]}, count: all}
+            mod: {allow: [{action: attack_creature, other: {tapped: false}, only: {var: tgt}}]}
+            duration: end_of_turn
+  - id: T778
+    name: 試験用ポリス獣
+    types: [creature]
+    civs: [fire]
+    cost: 4
+    power: 3000
+    races: [テスト]
+    mana: 1
+    text: "このクリーチャーがバトルゾーンに出た時、相手のアンタップしているクリーチャーを1体選ぶ。そのターン、自分の他のクリーチャーはそのクリーチャーを攻撃できる。（第275弾）"
+    abilities:
+      - kind: trigger
+        when: {event: move, to: bz, subject: self}
+        effect:
+          - op: choose
+            select: {zone: bz, owner: opp, filter: {types: [creature], tapped: false}, count: 1}
+            as: tgt
+          - op: modify
+            select: {zone: bz, owner: you, filter: {types: [creature]}, count: all, exclude: {ref: self}}
+            mod: {allow: [{action: attack_creature, other: {tapped: false}, only: {var: tgt}}]}
+            duration: end_of_turn
+  - id: T779
+    name: 試験用強襲獣
+    types: [creature]
+    civs: [fire]
+    cost: 4
+    power: 5000
+    races: [テスト]
+    mana: 1
+    text: "テスト用の強襲獣（パワー5000）。（第275弾）"
+  - id: T780
+    name: 試験用次ターン末ガード
+    types: [spell]
+    civs: [light]
+    cost: 1
+    mana: 1
+    text: "次の自分のターンの終わりまで、バトルゾーンにある自分のクリーチャーはすべて「ブロッカー」を得る。（第276弾）"
+    spell:
+      - op: modify
+        select: {zone: bz, owner: you, filter: {types: [creature]}, count: all}
+        mod: {grant: [blocker]}
+        duration: until_next_own_turn_end
+  - id: T781
+    name: 試験用ジャッジメント
+    types: [spell]
+    civs: [light]
+    cost: 3
+    mana: 1
+    text: "次の相手のターンの終わりまで、相手のクリーチャーは攻撃もブロックもできず、アンタップしない。（第276弾）"
+    spell:
+      - op: modify
+        select: {zone: bz, owner: opp, filter: {types: [creature]}, count: all}
+        mod: {deny: [attack_player, attack_creature, block, untap_at_start]}
+        duration: until_next_opp_turn_end
+  - id: T782
+    name: 試験用ビックリガード
+    types: [spell]
+    civs: [light]
+    cost: 1
+    mana: 1
+    text: "次の自分のターンのはじめまで、バトルゾーンにある自分のクリーチャーはすべて「ブロッカー」を得る。（第276弾）"
+    spell:
+      - op: modify
+        select: {zone: bz, owner: you, filter: {types: [creature]}, count: all}
+        mod: {grant: [blocker]}
+        duration: until_next_own_turn_start
+  - id: T783
+    name: 試験用正義の盾
+    types: [spell]
+    civs: [light]
+    cost: 2
+    mana: 1
+    text: "次の相手のターン中、自分のクリーチャーは離れない。（第276弾）"
+    spell:
+      - op: delayed_trigger
+        when: {event: turn_start, player: opp}
+        duration: permanent
+        effect:
+          - op: modify
+            select: {zone: bz, owner: you, filter: {types: [creature]}, count: all}
+            mod: {no_leave: true}
+            duration: end_of_turn
+  - id: T784
+    name: 試験用破壊時付与獣
+    types: [creature]
+    civs: [nature]
+    cost: 3
+    power: 3000
+    races: [テスト]
+    mana: 1
+    text: "このクリーチャーが破壊された時、次の自分のターンの終わりまで、自分のクリーチャーすべてに「W・ブレイカー」を与える。（第276弾）"
+    abilities:
+      - kind: trigger
+        when: {event: move, from: bz, to: graveyard, reason: destroy, subject: self}
+        effect:
+          - op: modify
+            select: {zone: bz, owner: you, filter: {types: [creature]}, count: all}
+            mod: {grant: [double_breaker]}
+            duration: until_next_own_turn_end
+  - id: T785
+    name: 試験用真エスケープ獣
+    types: [creature]
+    civs: [light]
+    cost: 5
+    power: 2000
+    races: [テスト]
+    mana: 1
+    text: "真・エスケープ（このクリーチャーが離れる時、かわりに自分のシールドを２つ手札に加えてもよい。ただし、その「S・トリガー」は使えない）（第277弾）"
+    keywords: [true_escape]
+  - id: T786
+    name: 試験用真エスケープ守護獣
+    types: [creature]
+    civs: [light]
+    cost: 5
+    power: 6000
+    races: [テスト]
+    mana: 1
+    text: "ブロッカー／W・ブレイカー／真・エスケープ（このクリーチャーが離れる時、かわりに自分のシールドを２つ手札に加えてもよい。ただし、その「S・トリガー」は使えない）／自分のシールドがなければ、このクリーチャーは離れない。（第277弾）"
+    keywords: [blocker, double_breaker, true_escape]
+    abilities:
+      - kind: static
+        affects: self
+        if: {not: {exists: {zone: shield, owner: you}}}
+        mod: {no_leave: true}
+  - id: T787
+    name: 試験用両種族獣
+    types: [creature]
+    civs: [zero]
+    cost: 3
+    power: 3000
+    races: [アンノウン, ゼニス]
+    mana: 1
+    text: "アンノウンとゼニス両方を種族に持つ試験用クリーチャー。（第278弾）"
+  - id: T788
+    name: 試験用アンノウン獣
+    types: [creature]
+    civs: [zero]
+    cost: 3
+    power: 3000
+    races: [アンノウン]
+    mana: 1
+    text: "アンノウンだけを種族に持つ試験用クリーチャー。（第278弾）"
+  - id: T789
+    name: 試験用ゼニス獣
+    types: [creature]
+    civs: [zero]
+    cost: 3
+    power: 3000
+    races: [ゼニス]
+    mana: 1
+    text: "ゼニスだけを種族に持つ試験用クリーチャー。（第278弾）"
+  - id: T790
+    name: 試験用両種族監視獣
+    types: [creature]
+    civs: [nature]
+    cost: 4
+    power: 2000
+    races: [テスト]
+    mana: 1
+    text: "自分の、アンノウンとゼニス両方を種族に持つクリーチャーが出た時、自分の山札の上から1枚目をマナゾーンに置く。（第278弾）"
+    abilities:
+      - kind: trigger
+        when: {event: move, to: bz, subject: {owner: you, filter: {types: [creature], races_all: [アンノウン, ゼニス]}}}
+        effect:
+          - {op: mana_put, select: {zone: deck, owner: you, from_top: 1}}
+  - id: T791
+    name: 試験用両種族召喚呪文
+    types: [spell]
+    civs: [zero]
+    cost: 3
+    mana: 1
+    text: "自分の、アンノウンとゼニス両方を種族に持つクリーチャーを1体、コストを支払わずに自分の手札から召喚してもよい。そのターンの終わりに、そのクリーチャーを手札に戻す。（第278弾）"
+    spell:
+      - op: play_free
+        select: {zone: hand, owner: you, filter: {types: [creature], races_all: [アンノウン, ゼニス]}, count: 1}
+        as: summoned
+      - op: delayed_trigger
+        when: {event: turn_end}
+        effect:
+          - op: move
+            select: {ref: summoned}
+            to: hand
+            reason: return
+  - id: T792
+    name: 試験用三文明NEO獣
+    types: [creature]
+    civs: [light, water, darkness]
+    cost: 3
+    power: 3000
+    races: [テスト]
+    mana: 1
+    neo: true
+    evolve_from: {civs: [light, water, darkness]}
+    alt_cost:
+      cost: 2
+      civs: []
+      if:
+        all:
+          - exists: {zone: mana, owner: you, filter: {civs: [light]}}
+          - exists: {zone: mana, owner: you, filter: {civs: [water]}}
+          - exists: {zone: mana, owner: you, filter: {civs: [darkness]}}
+    text: "自分のマナゾーンに光、水、闇の各文明があれば、このクリーチャーを2支払って召喚してもよい。NEO進化：光、水、または闇のクリーチャー1体の上に置いてもよい。（第279弾）"
+
+  # ---- 語彙パイロット第280弾: battle_does_not_occur_when_blocked（ブロックされたらバトルは行われない） ----
+  - id: T793
+    name: 試験用鉄人チョイヤ型
+    types: [creature]
+    civs: [fire]
+    cost: 2
+    power: 1000
+    races: [テスト]
+    mana: 1
+    text: "パワーアタッカー +1000（攻撃中、このクリーチャーのパワーは+1000される）このクリーチャーの攻撃がブロックされた場合、バトルは行われない。ただし、両クリーチャーはタップしたままである。（第280弾・dm06-101 の形）"
+    abilities:
+      - kind: trigger
+        when: {event: attack, subject: self}
+        effect:
+          - op: modify
+            select: {ref: self}
+            mod: {power: 1000}
+            duration: end_of_turn
+      - kind: trigger
+        when: {event: block, attacker: self}
+        effect:
+          - {op: cancel_attack}
+  - id: T794
+    name: 試験用リザード型
+    types: [creature]
+    civs: [fire]
+    cost: 5
+    power: 3000
+    races: [テスト]
+    mana: 1
+    text: "パワーアタッカー +3000（攻撃中、このクリーチャーのパワーは+3000される）このクリーチャーの攻撃がブロックされた場合、バトルは行われない。ただし、両クリーチャーはタップしたままである。（第280弾・dm06-032 の形）"
+    abilities:
+      - kind: trigger
+        when: {event: attack, subject: self}
+        effect:
+          - op: modify
+            select: {ref: self}
+            mod: {power: 3000}
+            duration: end_of_turn
+      - kind: trigger
+        when: {event: block, attacker: self}
+        effect:
+          - {op: cancel_attack}
+  - id: T795
+    name: 試験用護法精霊型
+    types: [creature]
+    civs: [light]
+    cost: 6
+    power: 5500
+    races: [テスト]
+    mana: 1
+    text: "バトルゾーンにある自分の、タップされているクリーチャーのパワーは、攻撃していない時、+7000される。自分のクリーチャーがブロックされた時、その攻撃を中止してもよい。そうした場合、バトルは行われない。ただし、両クリーチャーはタップしたままである。（第280弾・dm19-s02 の形）"
+    abilities:
+      - kind: static
+        affects: {zone: bz, owner: you, filter: {tapped: true}}
+        mod: {power_when: {amount: 7000, when: not_attacking}}
+      - kind: trigger
+        when: {event: block, attacker: {owner: you}}
+        effect:
+          - op: may
+            body:
+              - {op: cancel_attack}
+  - id: T796
+    name: 試験用離脱庇護獣
+    types: [creature]
+    civs: [light]
+    cost: 8
+    power: 8000
+    races: [テスト]
+    mana: 1
+    text: "自分のクリーチャーが離れる時、かわりに自分のシールドを2つ、手札に戻してもよい。ただし、その「S・トリガー」は使えない。（第281弾・dm23ex3-tf03／dmx23-025 の形）"
+    abilities:
+      - kind: replace
+        optional: true
+        when: {event: move, from: bz, subject: {owner: you, filter: {types: [creature]}}}
+        if: {cmp: [{count: {zone: shield, owner: you}}, ">=", 2]}
+        instead:
+          - {op: move, select: {zone: shield, owner: you, count: 2}, to: hand, reason: return, strigger: "off"}
+  - id: T797
+    name: 試験用単盾庇護獣
+    types: [creature]
+    civs: [light]
+    cost: 2
+    power: 2500
+    races: [テスト]
+    mana: 1
+    text: "ブロッカー／各ターンに一度、自分の他のクリーチャーが離れる時、かわりに自分のシールドを1つ手札に加えてもよい。ただし、その「S・トリガー」は使えない。（第281弾・dm24ex4-042 の形）"
+    keywords: [blocker]
+    abilities:
+      - kind: replace
+        optional: true
+        once_per_turn: true
+        when: {event: move, from: bz, subject: {owner: you, other: true, filter: {types: [creature]}}}
+        if: {cmp: [{count: {zone: shield, owner: you}}, ">=", 1]}
+        instead:
+          - {op: move, select: {zone: shield, owner: you, count: 1}, to: hand, reason: return, strigger: "off"}
+
+  # ---- 語彙パイロット第282弾: filter_same_name_as_event_card（イベントのカードと同じ名前のフィルタ） ----
+  - id: T798
+    name: 試験用詠唱監視獣
+    types: [creature]
+    civs: [darkness]
+    cost: 7
+    power: 6000
+    races: [ナイト, テスト]
+    mana: 1
+    text: "W・ブレイカー／自分の手札または墓地から光、水、闇の呪文を唱えた時、バトルゾーンに自分のナイトが他に1枚でもあれば、自分の山札を見る。その中から、唱えた呪文と同じ名前の呪文を1枚選び、コストを支払わずに唱えてもよい。その後、山札をシャッフルする。（第282弾・c48-sec001 の形）"
+    keywords: [double_breaker]
+    abilities:
+      - kind: trigger
+        when:
+          event: cast
+          player: you
+          from: [hand, graveyard]
+          subject:
+            filter: {types: [spell], civs: [light, water, darkness]}
+        if:
+          exists: {zone: bz, owner: you, other: true, filter: {race_has: ナイト}}
+        effect:
+          - {op: choose, select: {zone: deck, owner: you, look: true, count: all}, as: pile}
+          - {op: choose, select: {ref: pile, filter: {name: {name_of: event.subject}, types: [spell]}, count: 1}, as: found}
+          - op: if
+            cond: {exists: {ref: found}}
+            then:
+              - op: may
+                body:
+                  - {op: play_free, select: {ref: found}}
+          - {op: move, select: {ref: pile, count: all}, to: deck, reason: put}
+          - {op: shuffle, player: you}
+  - id: T799
+    name: 試験用ナイト獣
+    types: [creature]
+    civs: [light]
+    cost: 2
+    power: 2000
+    races: [ナイト, テスト]
+    mana: 1
+    text: "試験用のナイト。（第282弾・c48-sec001 の「自分のナイトが他に1枚でもあれば」の相手役）"
+    abilities: []
+  - id: T800
+    name: 試験用同名呪文
+    types: [spell]
+    civs: [water]
+    cost: 2
+    mana: 1
+    grave_cast: true
+    text: "カードを1枚引く。この呪文を自分の墓地から唱えてもよい。そうしたら、唱えた後、墓地のかわりに山札の下に置く。（第282弾・同名検索の対象呪文）"
+    spell:
+      - {op: draw, count: 1}
+  - id: T801
+    name: 試験用召喚監視獣
+    types: [creature]
+    civs: [nature]
+    cost: 4
+    power: 5000
+    races: [テスト]
+    mana: 1
+    text: "各ターンに一度、自分の他のクリーチャーが召喚によって出た時、それと同じ名前のクリーチャーを1体、自分のマナゾーンから出してもよい。（第282弾・dm24ex3-rp1s10 の形）"
+    abilities:
+      - kind: trigger
+        once_per_turn: true
+        when:
+          event: move
+          to: bz
+          reason: summon
+          subject: {owner: you, other: true, filter: {types: [creature]}}
+        effect:
+          - op: may
+            body:
+              - {op: play_free, select: {zone: mana, owner: you, filter: {name: {name_of: event.subject}, types: [creature]}, count: 1}}
+  - id: T802
+    name: 試験用双子獣
+    types: [creature]
+    civs: [nature]
+    cost: 3
+    power: 3000
+    races: [テスト]
+    mana: 1
+    text: "試験用の双子獣。（第282弾・同名で召喚／マナから出す対象）"
+    abilities: []
+  - id: T803
+    name: 試験用破壊監視獣
+    types: [creature]
+    civs: [water]
+    cost: 7
+    power: 8000
+    races: [テスト]
+    mana: 1
+    text: "ブロッカー／W・ブレイカー／自分の他の水のクリーチャーがバトルゾーンに出た時、カードを1枚引く。このクリーチャーまたは自分の他の水のクリーチャーが破壊された時、それと同じ名前のクリーチャーを1体、自分の手札からバトルゾーンに出してもよい。（第282弾・dmrp02-006 の形）"
+    keywords: [blocker, double_breaker]
+    abilities:
+      - kind: trigger
+        when:
+          event: move
+          to: bz
+          subject: {owner: you, other: true, filter: {civs: [water], types: [creature]}}
+        effect:
+          - {op: draw, count: 1}
+      - kind: trigger
+        when:
+          event: move
+          from: bz
+          to: graveyard
+          reason: destroy
+          subject: {owner: you, filter: {civs: [water], types: [creature]}}
+        effect:
+          - op: may
+            body:
+              - {op: play_free, select: {zone: hand, owner: you, filter: {name: {name_of: event.subject}, types: [creature]}, count: 1}}
+
+  # ---- 語彙パイロット第283弾（2026-11-19）: eternal_kappa ----
+  - id: T804
+    name: 試験用エターナル獣
+    types: [creature]
+    civs: [light]
+    cost: 5
+    power: 5000
+    races: [テスト]
+    mana: 1
+    text: "エターナル・Κ（このクリーチャーが離れる時、かわりに自分のマナゾーンにある裏向きのカードを３枚、表向きにしてもよい）（第283弾・基本形そのもの）"
+    keywords: [eternal_kappa]
+    abilities: []
+  - id: T805
+    name: 試験用クリスターナル獣
+    types: [creature]
+    civs: []
+    cost: 8
+    power: 8000
+    races: [テスト]
+    mana: 1
+    text: "クリスターナル・Κ（このクリーチャーが離れる時、または自分がゲームに負ける時、かわりに自分のマナゾーンにある裏向きのカードを３枚、表向きにしてもよい）（第283弾・dm23ex3-or1 の形）"
+    keywords: [eternal_kappa]
+    abilities:
+      - kind: replace
+        optional: true
+        when: {event: lose}
+        if: {cmp: [{count: {zone: mana, owner: you, filter: {face_down: true}}}, ">=", 3]}
+        instead:
+          - {op: flip_up, select: {zone: mana, owner: you, filter: {face_down: true}, count: 3}}

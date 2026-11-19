@@ -32,7 +32,7 @@ REASONS = {"put", "destroy", "return", "discard", "charge", "summon", "cast", "b
            "draw", "battle", "sba", "resolve", "evolve", "seal"}
 LOSE_REASONS = {"direct_attack", "deck_out", "state", "effect"}   # 第188弾: 敗北イベントの reason（when の照合用。移動の reason とは別）
 VIAS = {"revolution_change", "generate", "d_d_d", "rinne"}   # 出し方の印（「革命チェンジによって出た時」「D・D・Dによって出た時」「輪廻∞で唱えた時」など）
-DURATIONS_FIXED = {"end_of_turn", "during_attack", "permanent", "until_next_own_turn_start"}
+DURATIONS_FIXED = {"end_of_turn", "during_attack", "permanent", "until_next_own_turn_start", "until_next_own_turn_end", "until_next_opp_turn_end"}
 MOD_KEYS = {"power", "power_set", "grant", "allow", "deny", "breaks", "breaks_add", "breaks_per_power", "battle_power", "power_when", "cost", "cost_min", "cost_may", "sac_reduce", "opt_reduce", "ignore", "ignore_ids", "gain", "require", "add_of", "add_races", "add_names", "no_leave", "must_be_attacked", "must_be_chosen", "must_attack_creature", "battle_indestructible", "win_all_battles", "add_civs", "indestructible", "double_power", "crystal_soul", "mana_number", "evo_reduce", "cross_reduce", "player_rush", "trigger_double"}
 REQUIRES = {"attack", "block"}   # 強制（506.1b 攻撃しなければならない, 507.1b ブロックしなければならない）
 POSITIONS = {"top", "bottom"}
@@ -43,7 +43,7 @@ SELECTOR_KEYS = {"zone", "owner", "owner_of", "filter", "count", "up_to", "from_
                  "under_of", "bundle_of", "look", "exlife_of", "castle_of", "total_cost_le", "total_cost_ge", "total_power_le", "total_power_ge",
                  "distinct_costs", "distinct_from", "distinct_names", "exclude", "extremal",
                  "crossed_to", "host_of"}   # crossed_to: 「そのクリーチャーにクロスされているギア」。host_of: 「そのギアをクロスしているクリーチャー」（第170弾）。castle_of: 「その城が要塞化しているシールド」（第178弾）
-FILTER_KEYS = {"any_of", "types", "not_types", "civs", "civs_all", "not_civs", "races", "race_has", "not_race_has", "name", "name_has", "not_name",
+FILTER_KEYS = {"any_of", "types", "not_types", "civs", "civs_all", "not_civs", "races", "races_all", "race_has", "not_race_has", "name", "name_has", "not_name",
                "cost_le", "cost_ge", "power_le", "power_ge", "tapped", "keyword", "multicolor", "colorless", "hyper", "face_down", "face_up", "neo", "vanilla", "sealed", "evolution", "ultimate_evolution", "mugen_climb", "partner", "twinpact", "vividraw", "fushigi", "linked_god", "entered_this_turn",
                "spell_cost_le", "spell_cost_ge",   # 呪文面（ツインパクトの呪文側）のコスト（第184弾）
                "crossed", "crossed_ge", "crossed_le", "crossed_name", "evo_source_of", "fortifying", "fortified", "exlife"}   # クロス状態（第170弾）: crossed はギアがクロスされているか、crossed_ge/le はその枚数、crossed_name はその名前のギアがクロスされているか。evo_source_of（第177弾）: そのクリーチャーの進化元になれるカード（値は "self" / 変数名）。fortifying（第178弾）: シールドを要塞化している城。fortified（第178弾）: 要塞化されたシールド。exlife（第237弾）: EXライフで紐付いたシールドか
@@ -795,8 +795,11 @@ class Checker:
                         raise DefError(f"{where}: allow/deny entry 'max_per_turn' must be an int >= 1")
                     if "count" in e and e["count"] not in TURN_COUNT_KINDS:
                         raise DefError(f"{where}: allow/deny entry 'count' must be a history kind")
-                    if set(e) - {"action", "other", "once", "max_per_turn", "count"}:
-                        raise DefError(f"{where}: allow/deny entry has unknown keys {sorted(set(e) - {'action', 'other', 'once', 'max_per_turn', 'count'})}")
+                    if "only" in e and not (isinstance(e["only"], dict) and set(e["only"]) == {"var"}
+                                            and isinstance(e["only"]["var"], str)):
+                        raise DefError(f"{where}: allow/deny entry 'only' must be {{var: <name>}} (第275弾: 特定のカードだけへの許可・禁止。継続的効果の生成時にベイクされる)")
+                    if set(e) - {"action", "other", "once", "max_per_turn", "count", "only"}:
+                        raise DefError(f"{where}: allow/deny entry has unknown keys {sorted(set(e) - {'action', 'other', 'once', 'max_per_turn', 'count', 'only'})}")
         if "cost" in m:   # 支払うコストの増減: 整数、または {amount: N, count: <selector>}（1体につきN。amount が負なら軽減）
             cm = m["cost"]
             if isinstance(cm, dict):
@@ -812,11 +815,11 @@ class Checker:
             raise DefError(f"{where}: crystal_soul must be an int >= 1")
         if "mana_number" in m and not (isinstance(m["mana_number"], int) and not isinstance(m["mana_number"], bool) and m["mana_number"] >= 0):
             raise DefError(f"{where}: mana_number must be an int >= 0")
-        if "power_when" in m:   # 攻撃中／ブロック中のパワー修整: {amount: N, count: <selector>, when: attacking|blocking}。バトルをしていない間（プレイヤーを攻撃中など）も含む
+        if "power_when" in m:   # 攻撃中／ブロック中のパワー修整: {amount: N, count: <selector>, when: attacking|blocking|not_attacking}。バトルをしていない間（プレイヤーを攻撃中など）も含む。not_attacking は「攻撃していない時」（第280弾）
             pw = m["power_when"]
             if not isinstance(pw, dict) or set(pw) - {"amount", "count", "when"} or not isinstance(pw.get("amount"), int) \
-                    or pw.get("when") not in ("attacking", "blocking"):
-                raise DefError(f"{where}: power_when needs amount (int), when: attacking|blocking and optional count (selector)")
+                    or pw.get("when") not in ("attacking", "blocking", "not_attacking"):
+                raise DefError(f"{where}: power_when needs amount (int), when: attacking|blocking|not_attacking and optional count (selector)")
             if "count" in pw:
                 self.count_spec(pw["count"], where)
         if "battle_power" in m:   # バトル中だけのパワー修整: {amount: N, count: <selector>, only: attacking}（ハンティング。バトル中だけ。「攻撃中」「ブロック中」は power_when）

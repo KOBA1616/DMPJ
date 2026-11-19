@@ -361,6 +361,8 @@ class SelectorMixin:
             return False
         if "races" in f and not set(f["races"]) & set(ch["races"]):
             return False
+        if "races_all" in f and not set([f["races_all"]] if isinstance(f["races_all"], str) else f["races_all"]) <= set(ch["races"]):
+            return False
         if "name" in f and f["name"] not in names:   # 追加の名前（add_names）にも当たる
             return False
         if "not_name" in f and f["not_name"] in names:
