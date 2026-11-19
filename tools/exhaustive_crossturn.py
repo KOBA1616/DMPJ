@@ -88,6 +88,13 @@ class _CapReached(Exception):
     pass
 
 
+class GuideMismatch(Exception):
+    """局面内チェックポイントのガイド（探索済み経路）と実際の探索が
+    食い違った場合に LeafCollector が投げる。探索は決定的なので本来は
+    起きないが、起きた場合は呼び出し側がチェックポイントを捨てて
+    その局面を最初から展開し直すことで等価性を保つ。"""
+
+
 class _RunAborted(Exception):
     """総予算またはメモリ上限で打ち切った（判定は unknown になる）。"""
     def __init__(self, reason: str):
@@ -102,6 +109,14 @@ class LeafCollector:
     葉を全部保持するとメモリが葉の数に比例して膨らみ、葉の多い局面では
     保持局面の数より先にこちらが律速になる（2026-11-17 のパイロットで実証）。
     LEAF_CAP はどちらの方式でも安全弁として効く（当たれば truncated）。
+
+    局面内チェックポイント: track_path を True にすると分岐経路を保持し、
+    checkpoint_state() で「最後に処理した葉の直後」の探索状態を取り出せる。
+    collect(resume=...) はその状態から同じ局面を再開する（経路を再生して
+    チェックポイントの葉まで降り、その葉は処理済みとして飛ばし、カウンタ
+    類を当時の値に戻してから通常の探索を続ける）。探索は決定的なので、
+    再開後の葉列・ノード数・truncated は中断なしの場合と完全一致する。
+    ガイドと実際の探索が食い違えば GuideMismatch を投げる。
     """
 
     def __init__(self, ts: TurnSearch, on_leaf=None):
@@ -110,8 +125,30 @@ class LeafCollector:
         self.leaves: list[tuple[float, object, tuple]] = []
         self.leaf_count = 0
         self.truncated = False
+        # 局面内チェックポイント用（chain_label が使う）。track_path を
+        # True にすると探索中の分岐経路を self._path に保持する。
+        self.track_path = False
+        self._path: list = []
+        self._guide_done = True
+        self._skip_leaf = False
+        self._rsv = None
+        self._last_leaf_key = None
 
-    def collect(self, eng, node_budget: int):
+    def checkpoint_state(self):
+        """現在の探索位置（最後に処理した葉の直後）を保存用 dict で返す。
+
+        collect(resume=...) に渡すと、同じ局面をその位置から再開できる。
+        seen は探索全体で効く統合済み集合なので、そのまま保存する
+        （tkey は blake2b 由来でプロセス間でも一致する）。
+        """
+        ts = self.ts
+        return {"path": list(self._path), "seen": ts.seen,
+                "left": ts.left, "nodes": ts.stats.nodes,
+                "la_left": ts._la_left, "macro_nodes": ts._macro_nodes,
+                "leaf_count": self.leaf_count, "truncated": self.truncated,
+                "leaf_key": self._last_leaf_key}
+
+    def collect(self, eng, node_budget: int, resume=None):
         ts = self.ts
         ts.left = node_budget
         ts._la_left = turn.ROLLOUT_TOTAL
@@ -124,14 +161,53 @@ class LeafCollector:
         self.leaves = []
         self.leaf_count = 0
         self.truncated = False
+        self._path = []
+        self._skip_leaf = False
+        self._rsv = None
+        self._last_leaf_key = None
+        self._guide_done = True
+        guide = None
+        if resume is not None:
+            if resume["leaf_count"] >= LEAF_CAP:
+                # チェックポイント時点で葉上限に到達済み。中断なしなら
+                # _CapReached で打ち切られており、ノード数もその時点の値。
+                return [], True, resume["nodes"]
+            ts.seen = set(resume["seen"])
+            ts.stats.nodes = resume["nodes"]
+            self.leaf_count = resume["leaf_count"]
+            self.truncated = resume["truncated"]
+            self._rsv = {"left": resume["left"],
+                         "la_left": resume["la_left"],
+                         "macro_nodes": resume["macro_nodes"],
+                         "leaf_key": resume.get("leaf_key")}
+            guide = [tuple(s) for s in resume["path"]]
+            self._guide_done = False
         det = Detectors.new(eng, ts.me, ts.draw_discard)
         try:
-            self._rec(eng.clone(), det)
+            self._rec(eng.clone(), det, guide)
         except _CapReached:
             self.truncated = True
+        if resume is not None and not self._guide_done:
+            raise GuideMismatch("チェックポイントの葉に到達しませんでした")
         return self.leaves, self.truncated, ts.stats.nodes
 
     def _add_leaf(self, value, eng, loops):
+        if self._skip_leaf:
+            # 再生中のチェックポイント済みの葉: 同一の葉であることを
+            # 照合してから、数えず・渡さず、カウンタ類をチェック
+            # ポイント時点の値に戻して通常探索へ復帰する。
+            if (self._rsv["leaf_key"] is not None
+                    and eng.s.fast_key() != self._rsv["leaf_key"]):
+                raise GuideMismatch("チェックポイントの葉と一致しません")
+            self._skip_leaf = False
+            self._guide_done = True
+            ts = self.ts
+            ts.left = self._rsv["left"]
+            ts._la_left = self._rsv["la_left"]
+            ts._macro_nodes = self._rsv["macro_nodes"]
+            return
+        if self.track_path:
+            self._last_leaf_key = eng.s.fast_key()
         self.leaf_count += 1
         if self.on_leaf is not None:
             self.on_leaf(value, eng, loops)
@@ -140,8 +216,65 @@ class LeafCollector:
         if self.leaf_count >= LEAF_CAP:
             raise _CapReached
 
-    def _rec(self, eng, det):
+    # ガイド再生のフェーズ順（stock → macro → cand の順に探索される）
+    _PHASE = {"stock": 0, "macro": 1, "cand": 2}
+
+    def _branch(self, kind, i, gr, child, det2, count=False):
+        """子局面へ1分岐降りる。
+
+        通常時は従来どおり（count=True なら予算を1消費して）降りる。
+        ガイド再生中（チェックポイントからの再開）は、ガイドの分岐より
+        前の分岐を数えずに飛ばし、ガイドの分岐では数えずにカウンタ類を
+        子の入口時点の値へ合わせて降りる。ガイドより後の分岐は、
+        ガイドの葉を飛ばした後（_guide_done）に通常どおり処理される。
+        """
         ts = self.ts
+        if not self._guide_done:
+            if gr is None:
+                raise GuideMismatch("ガイド外のフレームに到達しました")
+            step = gr[0] if gr else None
+            if step is None:
+                raise GuideMismatch("葉フレームから子分岐が出ました")
+            if self._PHASE[step[0]] < self._PHASE[kind]:
+                raise GuideMismatch(
+                    f"ガイドの分岐 {step[0]} がフェーズ {kind} より前です")
+            if self._PHASE[step[0]] > self._PHASE[kind]:
+                return  # このフェーズは丸ごとチェックポイント以前
+            if i < step[1]:
+                return  # 探索済みの分岐: 数えず・降りない
+            if i > step[1]:
+                raise GuideMismatch("ガイドの分岐を過ぎました")
+            # ガイドの分岐: 数えず、カウンタを子の入口値に合わせて降りる
+            ts.left = step[2]
+            ts._la_left = step[3]
+            ts._macro_nodes = step[4]
+            self._descend(kind, i, child, det2, gr[1:])
+            return
+        if count:
+            ts.left -= 1
+            ts.stats.nodes += 1
+        self._descend(kind, i, child, det2, None)
+
+    def _descend(self, kind, i, child, det2, child_gr):
+        if self.track_path:
+            ts = self.ts
+            self._path.append((kind, i, ts.left, ts._la_left,
+                               ts._macro_nodes))
+            try:
+                self._rec(child, det2, child_gr)
+            finally:
+                self._path.pop()
+        else:
+            self._rec(child, det2, child_gr)
+
+    def _rec(self, eng, det, gr=None):
+        # gr: ガイド再生中のフレームでは「このフレームより下の残りガイド」
+        # （空リストならこのフレーム自体がチェックポイントの葉）。
+        # 通常フレームでは None。
+        ts = self.ts
+        guide_frame = gr is not None
+        if guide_frame and not gr:
+            self._skip_leaf = True
         d = ts._settle(eng)
         if d is None:
             self._add_leaf(ts._eval(eng), eng, ())
@@ -167,37 +300,45 @@ class LeafCollector:
         elif cert is not None and verify(eng, cert, times=1).verified < 1:
             cert = None
         elif cert is not None:
-            got = False
-            for ff, lp in ts._stocks(eng, cert):
-                got = True
-                self._rec(ff, Detectors.new(ff, ts.me, ts.draw_discard))
-            if got:
+            stocks = ts._stocks(eng, cert)
+            if stocks:
+                if (guide_frame and not self._guide_done
+                        and not (gr and gr[0][0] == "stock")):
+                    raise GuideMismatch(
+                        "stock 分岐がガイドと一致しません")
+                for i, (ff, lp) in enumerate(stocks):
+                    self._branch("stock", i, gr, ff,
+                                 Detectors.new(ff, ts.me, ts.draw_discard))
                 return
             if _is_engine(cert, ts.me) and not _is_burn(cert, ts.me):
                 self._add_leaf(ts._eval(eng), eng, ())   # 資源ループはストックし切った局面を葉として残す
                 return
             cert = None
-        if tkey in ts.seen:
+        if guide_frame and not gr and self._skip_leaf:
+            raise GuideMismatch("葉フレームで葉が出ませんでした")
+        if tkey in ts.seen and not guide_frame:
             return
         ts.seen.add(tkey)
-        for child, lp in ts._macro_children(eng, d):
-            ts.left -= 1
-            ts.stats.nodes += 1
-            self._rec(child, det.fork())
+        for i, (child, lp) in enumerate(ts._macro_children(eng, d)):
+            self._branch("macro", i, gr, child, det.fork(), count=True)
         cands = turn.candidates(eng, d, ts.w, ts.combo_cap)
         if ts.w.lookahead and len(cands) > 1:
             cands = ts._lookahead_order(eng, cands)
         if ts._rf and len(cands) > 1:
             cands = ts._repeat_order(eng, d, cands)
-        for choice in cands:
-            if ts.left <= 0:
+        for i, choice in enumerate(cands):
+            # ガイドの分岐以前では予算切れチェックをしない（当時は
+            # 通過していたことが確定しているため）。それ以外は従来どおり。
+            guided = (not self._guide_done and gr
+                      and gr[0][0] == "cand" and i <= gr[0][1])
+            if not guided and ts.left <= 0:
                 self.truncated = True
                 break
-            ts.left -= 1
-            ts.stats.nodes += 1
             child = eng.clone()
             child.answer(choice)
-            self._rec(child, det.fork())
+            self._branch("cand", i, gr, child, det.fork(), count=True)
+        if guide_frame and not self._guide_done:
+            raise GuideMismatch("ガイドの分岐が見つかりませんでした")
 
 
 def advance_to_my_turn(eng, me: int = 0):

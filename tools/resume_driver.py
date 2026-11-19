@@ -70,7 +70,8 @@ def main(argv=None):
     def sync_versions():
         if not a.sync_manifest:
             return
-        ver = subprocess.run(["git", "describe", "--tags", "--always"],
+        ver = subprocess.run(["git", "describe", "--tags", "--always",
+                              "--dirty"],
                              cwd=ROOT, capture_output=True,
                              text=True).stdout.strip()
         for pat in a.sync_manifest:

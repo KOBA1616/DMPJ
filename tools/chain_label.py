@@ -27,6 +27,8 @@ from __future__ import annotations
 import argparse
 import hashlib
 import json
+import os
+import pickle
 import sys
 import time
 from pathlib import Path
@@ -46,7 +48,7 @@ from dmsim.search import turn  # noqa: E402
 
 import exhaustive_crossturn as ct  # noqa: E402
 from exhaustive_crossturn import (  # noqa: E402
-    LeafCollector, _store_get, _store_put, advance_to_my_turn)
+    GuideMismatch, LeafCollector, _store_get, _store_put, advance_to_my_turn)
 from exhaustive_proto import STAGES, _make_stage_search, stage_candidates  # noqa: E402
 
 
@@ -113,7 +115,8 @@ def compute_labels(store: Path, dropped: dict, max_turn: int) -> dict:
 def run_labeling(rules, setup, *, deck_mode, deck, seed, max_turn, stage,
                  order, node_budget, frontier_cap, store: Path,
                  manifest, chunk_nodes, total_budget, mem_limit_mb,
-                 settings_hash, engine_ver, progress=None):
+                 settings_hash, engine_ver, progress=None,
+                 checkpoint_nodes: int = 0):
     st = next(s for s in STAGES if s["stage"] == stage)
     fn, _label = stage_candidates(order, stage)
     orig = turn.candidates
@@ -142,10 +145,46 @@ def run_labeling(rules, setup, *, deck_mode, deck, seed, max_turn, stage,
             tmp = store / "manifest.json.tmp"
             tmp.write_text(json.dumps(mf, ensure_ascii=False),
                            encoding="utf-8")
-            import os
             os.replace(tmp, store / "manifest.json")
 
+        # 局面内チェックポイント: 1局面の展開途中でも、処理済みの葉までの
+        # 探索状態（LeafCollector.checkpoint_state）と収集済みの
+        # children/kill をファイルに保存し、プロセスが死んでもその局面を
+        # 途中から再開できるようにする。manifest の形式は変えない。
+        ckpt_path = store / "state_ckpt.pkl"
+        ckpt_tmp = store / "state_ckpt.pkl.tmp"
+
+        def save_ckpt(obj):
+            with ckpt_tmp.open("wb") as fh:
+                pickle.dump(obj, fh, protocol=4)
+            os.replace(ckpt_tmp, ckpt_path)
+
+        def drop_ckpt():
+            for p in (ckpt_path, ckpt_tmp):
+                try:
+                    p.unlink()
+                except FileNotFoundError:
+                    pass
+
+        def load_ckpt(turn_, idx_, key_):
+            if not checkpoint_nodes or not ckpt_path.exists():
+                return None
+            try:
+                with ckpt_path.open("rb") as fh:
+                    ck = pickle.load(fh)
+            except Exception:
+                drop_ckpt()
+                return None
+            if (ck.get("turn"), ck.get("idx"), ck.get("key"),
+                    ck.get("settings_hash")) != (turn_, idx_, key_,
+                                                  settings_hash):
+                drop_ckpt()   # 別の局面の残骸
+                return None
+            return ck
+
         save_mf()
+        if manifest is None:
+            drop_ckpt()
         inv_start = mf["total_nodes"]
         try:
             while mf["turn"] <= max_turn:
@@ -160,22 +199,64 @@ def run_labeling(rules, setup, *, deck_mode, deck, seed, max_turn, stage,
                     kill: list = []
                     children: list[str] = []
                     children_set: set[str] = set()
+                    ck = load_ckpt(t, idx, key)
+                    resume = None
+                    if ck is not None:
+                        resume = ck["collector"]
+                        children = list(ck["children"])
+                        children_set = set(children)
+                        if ck["kill"]:
+                            kill.append(True)
+                        print(f"[turn {t} idx {idx}] 局面内チェックポイント"
+                              f"から再開: leaves={resume['leaf_count']} "
+                              f"nodes={resume['nodes']}", flush=True)
+                    last_ckpt = [resume["nodes"] if resume else 0]
 
                     def handle_leaf(_v, leaf, _loops):
                         r = leaf.s.result
                         if r is not None:
                             if r.get("winner") == 0:
                                 kill.append(True)
-                            return
-                        nxt_eng = advance_to_my_turn(leaf)
-                        if nxt_eng is not None:
-                            ck = _store_put(store, ct._as_python(nxt_eng))
-                            if ck not in children_set:
-                                children_set.add(ck)
-                                children.append(ck)
+                        else:
+                            nxt_eng = advance_to_my_turn(leaf)
+                            if nxt_eng is not None:
+                                ckey = _store_put(
+                                    store, ct._as_python(nxt_eng))
+                                if ckey not in children_set:
+                                    children_set.add(ckey)
+                                    children.append(ckey)
+                        if (checkpoint_nodes and collector._guide_done
+                                and ts.stats.nodes - last_ckpt[0]
+                                >= checkpoint_nodes):
+                            save_ckpt({
+                                "turn": t, "idx": idx, "key": key,
+                                "settings_hash": settings_hash,
+                                "children": list(children),
+                                "kill": bool(kill),
+                                "collector": collector.checkpoint_state()})
+                            last_ckpt[0] = ts.stats.nodes
 
-                    _l, trunc, nodes = LeafCollector(
-                        ts, on_leaf=handle_leaf).collect(
+                    collector = LeafCollector(ts, on_leaf=handle_leaf)
+                    collector.track_path = checkpoint_nodes > 0
+                    try:
+                        _l, trunc, nodes = collector.collect(
+                            rustcore.maybe_rust(st_eng), node_budget,
+                            resume=resume)
+                    except GuideMismatch:
+                        # ガイドが実際の探索と食い違った（本来は起きない）:
+                        # チェックポイントを捨て、この局面だけ最初から
+                        # 展開し直す。探索は決定的なので等価性は保たれる。
+                        print(f"[turn {t} idx {idx}] チェックポイントの"
+                              "ガイド不一致: 最初から展開し直します",
+                              flush=True)
+                        drop_ckpt()
+                        kill.clear()
+                        children.clear()
+                        children_set.clear()
+                        collector = LeafCollector(ts, on_leaf=handle_leaf)
+                        collector.track_path = checkpoint_nodes > 0
+                        last_ckpt[0] = 0
+                        _l, trunc, nodes = collector.collect(
                             rustcore.maybe_rust(st_eng), node_budget)
                     mf["total_nodes"] += nodes
                     mf["truncated"] = mf["truncated"] or trunc
@@ -190,6 +271,7 @@ def run_labeling(rules, setup, *, deck_mode, deck, seed, max_turn, stage,
                     mf["nxt_keys"] = nxt_keys
                     mf["next_index"] = idx + 1
                     save_mf()
+                    drop_ckpt()
                     if progress is not None:
                         progress({"turn": t, "states_done": idx + 1,
                                   "states_total": len(frontier_keys),
@@ -272,6 +354,9 @@ def main(argv=None):
     ap.add_argument("--store-dir", required=True)
     ap.add_argument("--resume", action="store_true")
     ap.add_argument("--chunk-nodes", type=int, default=0)
+    ap.add_argument("--checkpoint-nodes", type=int, default=25_000,
+                    help="局面内チェックポイントの間隔（ノード数、0で無効）。"
+                         "設定ハッシュには含めない（結果に影響しないため）")
     ap.add_argument("--out", default="logs/chain_label.jsonl")
     a = ap.parse_args(argv)
 
@@ -330,7 +415,8 @@ def main(argv=None):
                 store=case_store, manifest=manifest,
                 chunk_nodes=a.chunk_nodes, total_budget=a.total_budget,
                 mem_limit_mb=a.mem_limit_mb, settings_hash=cfg_hash,
-                engine_ver=ever, progress=progress)
+                engine_ver=ever, progress=progress,
+                checkpoint_nodes=a.checkpoint_nodes)
             if res["status"] == "suspended":
                 w({"kind": "suspended", "case": case,
                    "nodes": res["nodes"], "wall_seconds": time.time() - t0})
