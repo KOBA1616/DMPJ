@@ -327,7 +327,7 @@
 ],
 "verifier": 2,
 "verify": "26手・turn 11 まで正常に回った（result={'winner': 0, 'reason': 'direct_attack', 'turn': 11}）",
-"vocab_ver": "a0e116a29835d30c"
+"vocab_ver": "2b9bba83cebb7c82"
 },
 "dm24ex3-tf04": {
 "by": "rule",
