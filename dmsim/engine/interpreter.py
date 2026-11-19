@@ -71,6 +71,14 @@ def h_put_stacked(eng, t: PutStackedTask):
     if "seal" in t:
         ev["seal"] = t["seal"]
     f = eng.fdef(cid)
+    if "evolution" not in f.types and t.get("evo_source"):
+        # 非進化の重ね置き（第249弾: 「このクリーチャーの上に置く」ケンゲキオージャ型）。
+        # 固定の重ね先に stack_on で重ねる（進化印は付けない: 進化元レコードやシンカパワーの対象にしない）
+        src = t["evo_source"]
+        if not s.alive(src) or s.cards[src[0]].zone != "bz":
+            t["cids"] = t["cids"][1:]   # 重ね先が無い: このカードは出さない（残りは続ける）
+            return None
+        ev["stack_on"] = src
     if "evolution" in f.types:
         if isinstance(f.evolve_from, list):   # 進化V: フィルタごとに1体ずつ選ぶ（h_play と同型）
             chosen = t.setdefault("evo_v", [])
@@ -136,7 +144,7 @@ def h_swap_in(eng, t):
 def h_swap_fix(eng, t):
     s = eng.s
     eng._pop(t)
-    c = s.mut_card(t["cid"])
+    c = s.cards[t["cid"]]
     if c.zone != "bz":
         return None
     c.tapped = t["tapped"]
@@ -165,7 +173,7 @@ def h_summon_on_fix(eng, t):
     通常の召喚として直す（召喚酔いする。タップ状態は op の指定どおり）。"""
     s = eng.s
     eng._pop(t)
-    c = s.mut_card(t["cid"])
+    c = s.cards[t["cid"]]
     if c.zone != "bz":
         return None
     c.tapped = t["tapped"]
@@ -177,18 +185,18 @@ def h_summon_on_fix(eng, t):
 def h_put_under(eng, t):
     s = eng.s
     eng._pop(t)
-    c = s.mut_card(t["cid"])
+    c = s.cards[t["cid"]]
     if c.gen != t["gen"] or not s.alive(t["onto"]):
         return None
     top = t["onto"][0]
     if s.cards[top].zone == "shield":
         eng._raw_move(t["cid"], "shield", controller=s.cards[top].controller)
-        eng.mut_zlist("shield", c.owner).remove(t["cid"])     # 束の下のカードはシールドの数に数えない（113.2）
+        eng.zlist("shield", c.owner).remove(t["cid"])     # 束の下のカードはシールドの数に数えない（113.2）
     else:
         eng._raw_move(t["cid"], "bz", controller=s.cards[top].controller)
         c.entered_turn = -1
     c.top_of = top
     c.face_up = False if s.cards[top].zone == "shield" else c.face_up
-    s.mut_card(top).under.append(t["cid"])
+    s.cards[top].under.append(t["cid"])
     eng._sba()   # 山札の最後の1枚を重ねたら敗北（104.2b）
     return None

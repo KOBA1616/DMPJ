@@ -15,6 +15,17 @@ def _civ_list(v) -> list:
     return []
 
 
+def _requires_evolution(ef: dict) -> bool:
+    """進化元フィルタが進化クリーチャーを要求するか（究極進化の述語。第265弾）。
+    types に evolution を含む場合に真。any_of は全分岐が要求する場合に真。"""
+    if "evolution" in (ef.get("types") or []):
+        return True
+    subs = ef.get("any_of")
+    if subs:
+        return bool(subs) and all(_requires_evolution(s) for s in subs)
+    return False
+
+
 class SelectorMixin:
     def crossed_gears(self, ref) -> list[int]:
         """ref [cid, gen] にクロスされている、バトルゾーンのクロスギア（303.3）。
@@ -271,6 +282,8 @@ class SelectorMixin:
         if "power_ge" in c:   # このカード自身のパワーが N 以上か（常在型の条件用）。特性計算の再入で無限再帰しないよう、印刷パワー＋他の常在修整で見る（_threshold_power）
             return bool(env.get("self")) and self.s.alive(env["self"]) \
                 and self._threshold_power(env["self"][0]) >= c["power_ge"]
+        if "extra_turn" in c:   # このターンが追加ターンか（第263弾。h_turn が extra_turns からの開始時に立てる）
+            return bool(self.s.extra_turn) == bool(c["extra_turn"])
         if "marked" in c:   # mark した印があるか（「そのターンに他のファイナル革命を使っていなければ」）。
             # 辞書形 {name, scope} はスコープつき（バンドB 基盤 mark-scope）: scope: game は game_counters を読み、ターン開始で消えない
             v = c["marked"]
@@ -371,6 +384,8 @@ class SelectorMixin:
             return False
         if "hyper" in f and self.is_hyper(cid) != f["hyper"]:   # ハイパーモード状態か（第220弾）
             return False
+        if "exlife" in f and (c.exlife_of is not None) != f["exlife"]:   # EXライフで紐付いたシールドか（第237弾）
+            return False
         if "tapped" in f and (lki["tapped"] if lki else c.tapped) != f["tapped"]:
             return False
         if any(k in f for k in ("crossed", "crossed_ge", "crossed_le", "crossed_name")):   # クロス状態（第170弾）
@@ -400,6 +415,11 @@ class SelectorMixin:
             return False
         if "evolution" in f and ("evolution" in self.fdef(cid).types) != bool(f["evolution"]):
             return False   # 「進化ではないクリーチャー」等（進化はタイプで表す）
+        if "ultimate_evolution" in f:   # 「究極進化クリーチャー」（第265弾）: 自身の evolve_from が進化クリーチャーを要求する
+            ef = self.fdef(cid).evolve_from
+            efs = ef if isinstance(ef, list) else ([ef] if ef else [])
+            if any(_requires_evolution(sub) for sub in efs) != bool(f["ultimate_evolution"]):
+                return False
         if "evo_source_of" in f:   # 「そのクリーチャーの進化元になれるカード」（第177弾・超魂レイド）。
             # 対象は env の参照（"self" / 変数名）で指定する。env が無い文脈（常在型の条件・
             # when の照合など）では解決できないので一致しない。判定は _evo_sources と同型:
@@ -440,6 +460,10 @@ class SelectorMixin:
                 return False   # 「このターン中に出た」: entered_turn はバトルゾーンに出たターン（それ以外は -1）
         if "mugen_climb" in f and (self.fdef(cid).mugen_climb is not None) != bool(f["mugen_climb"]):
             return False   # 「『ムゲンクライム』能力を持つカード」
+        if "partner" in f:   # [P]能力を持つカード（キズナのパートナー。第260弾で追加）
+            has_p = any(ab.get("kind") == "partner" for ab in self.fdef(cid).abilities)
+            if has_p != bool(f["partner"]):
+                return False
         if "vanilla" in f:   # 「カードに能力が書かれていない」: 能力もキーワードも無く、進化・NEO 等の書かれた仕組みも持たない
             d = self.fdef(cid)
             is_v = not d.abilities and not d.keywords and "evolution" not in d.types \
@@ -665,7 +689,7 @@ class SelectorMixin:
             t.setdefault("os", {})["chosen"] = picked
             return picked, None
         if "total_cost_le" in sel or "total_cost_ge" in sel or "total_power_le" in sel or "total_power_ge" in sel \
-                or sel.get("distinct_costs"):   # 合計制限つきの「好きな数」選択: 1枚ずつ積み上げる。軸はコスト／パワー（第144弾で一般化）。distinct_costs は「コストが異なる」制約の述語として同じ分岐に乗る（第147弾・型2／型3）
+                or sel.get("distinct_costs") or sel.get("distinct_names"):   # 合計制限つきの「好きな数」選択: 1枚ずつ積み上げる。軸はコスト／パワー（第144弾で一般化）。distinct_costs は「コストが異なる」制約の述語として同じ分岐に乗る（第147弾・型2／型3）。distinct_names は「名前が異なる」制約の同型（第263弾）
             # 軸ごとの (特性キー, 上限, 下限)。パワーは chars の現在パワー（常在型の修整込み）を使う
             limits = []
             if "total_cost_le" in sel or "total_cost_ge" in sel:
@@ -681,10 +705,13 @@ class SelectorMixin:
                 return {k: sum(self.chars_ro(x)[k] for x in picked) for k, _, _ in limits}
 
             distinct = bool(sel.get("distinct_costs"))
+            distinct_names = bool(sel.get("distinct_names"))
 
             def _fits(picked, c, totals=None):
                 if distinct and self.chars_ro(c)["cost"] in {self.chars_ro(x)["cost"] for x in picked}:
                     return False   # 「コストが異なる」: 既に選んだカードと同じコストは選べない（ハイパーエナジー支払いの used 述語と同じ形）
+                if distinct_names and self.chars_ro(c)["name"] in {self.chars_ro(x)["name"] for x in picked}:
+                    return False   # 「名前が異なる」: 既に選んだカードと同じ名前は選べない（第263弾。龍マナ武装の Jack-Pot）
                 totals = totals if totals is not None else _totals(picked)
                 return all(le is None or totals[k] + self.chars_ro(c)[k] <= le for k, le, _ in limits)
 

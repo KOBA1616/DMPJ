@@ -23,30 +23,30 @@ def core_ops() -> dict[str, dict[str, str]]:
     return OP_ARGS
 
 EVENTS = {"move", "draw", "cast", "summon", "attack", "block", "break", "tap", "untap",
-          "turn_start", "turn_end", "battle_win", "battle_lose", "choose", "battle", "battle_start", "attack_end", "attack_unblocked", "lose", "mugon_used", "evolve_base", "link_established",
-          "use_s_trigger", "battle_end"}
+          "turn_start", "turn_end", "battle_win", "battle_lose", "choose", "battle", "battle_start", "attack_end", "attack_unblocked", "break_before", "lose", "mugon_used", "evolve_base", "link_established",
+          "use_s_trigger", "battle_end", "trigger", "janken"}   # trigger（第270弾）: 自身の出た時能力が誘発したこと。janken（第271弾）: ジャンケン1投の公開（両者の手・勝者）。あいこも1投として発表する
 ABILITY_KINDS = {"trigger", "replace", "static", "declare", "activate", "silent", "state", "partner"}   # state: 状態を常に見て、満たされたら勝敗が決まる常在効果（if と effect: [win/lose]）。partner: [P]能力（単独では機能せず、キズナ等で「使う」ことで解決する）
 ABILITY_KEYS = {"kind", "when", "if", "effect", "instead", "optional", "affects", "mod", "zone", "keyword", "cost", "id",
-                "once_per_turn", "first_time", "sst", "stp", "odrive", "choukon", "bazurenda", "any_attacker", "continue", "dswitch", "sforce", "fort_e", "redirect", "accel", "no_lose", "mana_boost", "suppress_triggers", "untap_limit"}
+                "once_per_turn", "first_time", "sst", "stp", "odrive", "choukon", "bazurenda", "any_attacker", "continue", "dswitch", "sforce", "fort_e", "redirect", "accel", "no_lose", "mana_boost", "suppress_triggers", "untap_limit", "protect_hand", "mana_all_civs", "cast_limit", "group"}
 REASONS = {"put", "destroy", "return", "discard", "charge", "summon", "cast", "break",
            "draw", "battle", "sba", "resolve", "evolve", "seal"}
 LOSE_REASONS = {"direct_attack", "deck_out", "state", "effect"}   # 第188弾: 敗北イベントの reason（when の照合用。移動の reason とは別）
-VIAS = {"revolution_change", "generate", "d_d_d"}   # 出し方の印（「革命チェンジによって出た時」「D・D・Dによって出た時」など）
+VIAS = {"revolution_change", "generate", "d_d_d", "rinne"}   # 出し方の印（「革命チェンジによって出た時」「D・D・Dによって出た時」「輪廻∞で唱えた時」など）
 DURATIONS_FIXED = {"end_of_turn", "during_attack", "permanent", "until_next_own_turn_start"}
-MOD_KEYS = {"power", "grant", "allow", "deny", "breaks", "breaks_add", "breaks_per_power", "battle_power", "power_when", "cost", "cost_min", "cost_may", "sac_reduce", "opt_reduce", "ignore", "ignore_ids", "gain", "require", "add_of", "add_races", "add_names", "no_leave", "must_be_attacked", "must_be_chosen", "must_attack_creature", "battle_indestructible", "win_all_battles", "add_civs", "indestructible", "double_power", "crystal_soul", "mana_number"}
+MOD_KEYS = {"power", "power_set", "grant", "allow", "deny", "breaks", "breaks_add", "breaks_per_power", "battle_power", "power_when", "cost", "cost_min", "cost_may", "sac_reduce", "opt_reduce", "ignore", "ignore_ids", "gain", "require", "add_of", "add_races", "add_names", "no_leave", "must_be_attacked", "must_be_chosen", "must_attack_creature", "battle_indestructible", "win_all_battles", "add_civs", "indestructible", "double_power", "crystal_soul", "mana_number", "evo_reduce", "cross_reduce", "player_rush", "trigger_double"}
 REQUIRES = {"attack", "block"}   # 強制（506.1b 攻撃しなければならない, 507.1b ブロックしなければならない）
 POSITIONS = {"top", "bottom"}
 PERMANENT_TYPES = {"tamaseed", "field", "cross_gear"}   # 手札から実行してバトルゾーンに出るクリーチャー以外のカード（315, 308, 303）
-CARD_TYPES = {"creature", "spell", "evolution", "d2_field", "dream_creature", "g_castle"} | PERMANENT_TYPES   # d2_field: D2フィールドの型印（特殊タイプ D2。types には field と併記する。第151弾）。dream_creature: ドリーム・クリーチャーの型印（第174弾）。g_castle: G城の型印（第176弾）
+CARD_TYPES = {"creature", "spell", "evolution", "d2_field", "dream_creature", "g_castle", "exile_creature"} | PERMANENT_TYPES   # d2_field: D2フィールドの型印（特殊タイプ D2。types には field と併記する。第151弾）。dream_creature: ドリーム・クリーチャーの型印（第174弾）。g_castle: G城の型印（第176弾）。exile_creature: エグザイル・クリーチャーの型印（第266弾。types には creature と併記する）
 CIVS = {"light", "water", "darkness", "fire", "nature", "zero"}
 SELECTOR_KEYS = {"zone", "owner", "owner_of", "filter", "count", "up_to", "from_top", "chooser", "ref", "other",
                  "under_of", "bundle_of", "look", "exlife_of", "castle_of", "total_cost_le", "total_cost_ge", "total_power_le", "total_power_ge",
-                 "distinct_costs", "distinct_from", "exclude", "extremal",
+                 "distinct_costs", "distinct_from", "distinct_names", "exclude", "extremal",
                  "crossed_to", "host_of"}   # crossed_to: 「そのクリーチャーにクロスされているギア」。host_of: 「そのギアをクロスしているクリーチャー」（第170弾）。castle_of: 「その城が要塞化しているシールド」（第178弾）
 FILTER_KEYS = {"any_of", "types", "not_types", "civs", "civs_all", "not_civs", "races", "race_has", "not_race_has", "name", "name_has", "not_name",
-               "cost_le", "cost_ge", "power_le", "power_ge", "tapped", "keyword", "multicolor", "colorless", "hyper", "face_down", "face_up", "neo", "vanilla", "sealed", "evolution", "mugen_climb", "twinpact", "vividraw", "fushigi", "linked_god", "entered_this_turn",
+               "cost_le", "cost_ge", "power_le", "power_ge", "tapped", "keyword", "multicolor", "colorless", "hyper", "face_down", "face_up", "neo", "vanilla", "sealed", "evolution", "ultimate_evolution", "mugen_climb", "partner", "twinpact", "vividraw", "fushigi", "linked_god", "entered_this_turn",
                "spell_cost_le", "spell_cost_ge",   # 呪文面（ツインパクトの呪文側）のコスト（第184弾）
-               "crossed", "crossed_ge", "crossed_le", "crossed_name", "evo_source_of", "fortifying", "fortified"}   # クロス状態（第170弾）: crossed はギアがクロスされているか、crossed_ge/le はその枚数、crossed_name はその名前のギアがクロスされているか。evo_source_of（第177弾）: そのクリーチャーの進化元になれるカード（値は "self" / 変数名）。fortifying（第178弾）: シールドを要塞化している城。fortified（第178弾）: 要塞化されたシールド
+               "crossed", "crossed_ge", "crossed_le", "crossed_name", "evo_source_of", "fortifying", "fortified", "exlife"}   # クロス状態（第170弾）: crossed はギアがクロスされているか、crossed_ge/le はその枚数、crossed_name はその名前のギアがクロスされているか。evo_source_of（第177弾）: そのクリーチャーの進化元になれるカード（値は "self" / 変数名）。fortifying（第178弾）: シールドを要塞化している城。fortified（第178弾）: 要塞化されたシールド。exlife（第237弾）: EXライフで紐付いたシールドか
 FILTER_EXPR_KEYS = {"cost_le", "cost_ge", "power_le", "power_ge", "races", "civs", "not_civs", "name", "crossed_ge", "crossed_le", "spell_cost_le", "spell_cost_ge"}   # 値に式を書ける（解決時に計算）。civs / not_civs / name は宣言プリミティブ（{declared:}）の受け口（バンドB U3／バンドC2 U97）
 # 履歴カウンタ（式 {turn_count: ...}）の kind 列挙（バンドC1 U19＋統一で追加した分）。
 # owner に any を許すのは destroyed と attack だけ（他は you/opp）
@@ -88,6 +88,7 @@ class Face:
     fushigi: dict | None = None                           # フシギバース: {cost, civs, min} 自分のクリーチャー1体をタップしてマナに置き、差額を払って墓地から召喚
     recycle: dict | None = None                           # リサイクル: {cost, civs?} 墓地から代替コストで唱え、解決後は山札の一番下へ（第172弾）
     grave_cast: bool = False                              # 墓地から通常コストで唱えられる（解決後は山札の一番下へ。第226弾）
+    rinne: bool = False                                     # 輪廻∞（第267弾）: 呪文側をバトルゾーンに置いたまま通常コストで唱えられる
     mana_bakutan: int | None = None                       # マナ爆誕: 自分のマナゾーンから固定コストで召喚できる（第191弾。0 は支払わずに召喚）
     link_to: list | None = None                           # G・リンク（名前指定・4方向。第197弾）: [{name, pos}]。pos は相手から見た自分の位置
     deck_evolution: dict | None = None                    # デッキ進化: {count?, rest_to?, blind?, shuffle_first?} 山札の上からめくって重ねて出す（第173弾）
@@ -104,6 +105,7 @@ class Face:
     free_if: dict | None = None                           # 条件を満たす間はコストを支払わずに召喚できる（G・ゼロ）
     galaxy_shield: dict | None = None                     # ギャラクシールド: {cost, civs} 代替コストで表向きにシールド化する
     bazurenda: dict | None = None                         # バズレンダ: {cost, civs} 支払い時に追加でこのコストを好きな回数払える
+    tap_entry: bool = False                               # タップして出してもよい（第259弾）: 召喚時にタップ状態で出すか選べる
     neo: bool = False                                     # NEO進化: 通常召喚も、evolve_from の上に重ねることもできる
     grave_evo: bool = False                               # 墓地進化: 通常召喚も、自分の墓地のクリーチャーの上に重ねて出すこともできる（evolve_zone: graveyard と併用）
     star: bool = False                                    # スター進化: 離れる時は一番上のカードだけが離れ、下は残る
@@ -112,6 +114,9 @@ class Face:
     hyper: bool = False                                   # ハイパー化（他の自分のクリーチャー1体をタップしてハイパーモードを解放できる）
     crystal_soul: int = 0                                 # 水晶ソウルN: 召喚／唱える時に裏向きマナの数字が N になる（0＝持たない）
     mana_boost: dict | None = None                        # マナブースト（第212弾）: このカードを出す支払いでのみ、条件に合うマナの数字を value にする {filter?, value, optional?}
+    launcher: dict | None = None                          # ランチャーE（第233弾）: 唱える時に自分の条件クリーチャーを好きな数タップし、変数 launcher に渡す {filter}
+    evo_base_reduce: dict | None = None                   # 進化元依存の軽減（第234弾）: 選んだ進化元が filter に合えば amount 軽減 {filter, amount, min?}
+    evolve_total_cost_ge: int | None = None               # 超無限進化のコスト合計条件（第236弾）: 選んだ進化元の合計コストがこの値以上になるまで選ぶ
     resolve_to: str = "graveyard"                         # 呪文の解決後の置き場所（チャージャー等）
     resolve_face_down: bool = False                       # 解決後の置き場所に裏向きで置く（水晶チャージャー。第228弾）
     after_resolve: list[dict] = field(default_factory=list)
@@ -155,6 +160,7 @@ class CardDef:
     fushigi: dict | None = None                         # フシギバース: {cost, civs, min}
     recycle: dict | None = None                         # リサイクル: {cost, civs?}（第172弾）
     grave_cast: bool = False                            # 墓地から通常コストで唱えられる（第226弾）
+    rinne: bool = False                                   # 輪廻∞（第267弾）: 呪文側をバトルゾーンに置いたまま通常コストで唱えられる
     mana_bakutan: int | None = None                     # マナ爆誕: 固定コスト（第191弾）
     link_to: list | None = None                         # G・リンク（名前指定・4方向。第197弾）: [{name, pos}]
     deck_evolution: dict | None = None                  # デッキ進化: {count?, rest_to?, blind?, shuffle_first?}（第173弾）
@@ -171,6 +177,7 @@ class CardDef:
     free_if: dict | None = None
     galaxy_shield: dict | None = None
     bazurenda: dict | None = None                         # バズレンダ: {cost, civs}
+    tap_entry: bool = False                               # タップして出してもよい（第259弾）
     neo: bool = False
     grave_evo: bool = False
     star: bool = False
@@ -179,6 +186,9 @@ class CardDef:
     hyper: bool = False
     crystal_soul: int = 0                                 # 水晶ソウルN（面の宣言。0＝持たない）
     mana_boost: dict | None = None                        # マナブースト（第212弾。面の宣言）
+    launcher: dict | None = None                          # ランチャーE（第233弾。面の宣言）
+    evo_base_reduce: dict | None = None                   # 進化元依存の軽減（第234弾。面の宣言）
+    evolve_total_cost_ge: int | None = None               # 超無限進化のコスト合計条件（第236弾。面の宣言）
     resolve_to: str = "graveyard"
     resolve_face_down: bool = False                       # 水晶チャージャー（第228弾。面の宣言）
     after_resolve: list[dict] = field(default_factory=list)
@@ -323,6 +333,10 @@ class Checker:
                 # 出し方の印（第149弾）: 値は when の via と同じ VIAS のものだけ
                 if op["via"] not in VIAS:
                     raise DefError(f"{where}: play_self.via unknown via '{op['via']}'")
+            if name == "gacha":
+                # ガチャの種類（第268弾）: 今はドギラゴン・ガチャのみ
+                if op["kind"] not in ("dogiragon",):
+                    raise DefError(f"{where}: gacha.kind unknown kind '{op['kind']}'")
 
     def value(self, ty, v, where):
         if ty == "filter":
@@ -394,6 +408,8 @@ class Checker:
                 self.expr(sel[k], where)
         if "distinct_costs" in sel and sel["distinct_costs"] is not True:
             raise DefError(f"{where}: distinct_costs must be true")
+        if "distinct_names" in sel and sel["distinct_names"] is not True:
+            raise DefError(f"{where}: distinct_names must be true")
         if "distinct_from" in sel:
             self.selector(sel["distinct_from"], where)   # 参照集合は通常のセレクタとして再帰検証する
         if "exclude" in sel:
@@ -409,13 +425,13 @@ class Checker:
                 raise DefError(f"{where}: extremal must be min_power or max_power")
             if any(k in sel for k in ("ref", "under_of", "bundle_of", "exlife_of", "castle_of", "crossed_to", "host_of")):
                 raise DefError(f"{where}: extremal needs a zone selector")
-        if "distinct_costs" in sel or "distinct_from" in sel:
-            # 「コストが異なる」制約は選択にだけ付く。count: all 単独は「選んだことにならない」ため不可
+        if "distinct_costs" in sel or "distinct_from" in sel or "distinct_names" in sel:
+            # 「コストが異なる」／「名前が異なる」制約は選択にだけ付く。count: all 単独は「選んだことにならない」ため不可
             # （count: all + up_to: true は any 相当の選択になるので許す）
             if "count" not in sel:
-                raise DefError(f"{where}: distinct_costs/distinct_from needs count")
+                raise DefError(f"{where}: distinct_costs/distinct_from/distinct_names needs count")
             if sel.get("count") == "all" and not sel.get("up_to"):
-                raise DefError(f"{where}: distinct_costs/distinct_from with count: all needs up_to: true")
+                raise DefError(f"{where}: distinct_costs/distinct_from/distinct_names with count: all needs up_to: true")
         self.filter(sel.get("filter", {}), where)
 
     def filter(self, f, where):
@@ -434,6 +450,8 @@ class Checker:
             raise DefError(f"{where}: unknown keyword '{f['keyword']}'")
         if "crossed" in f and not isinstance(f["crossed"], bool):
             raise DefError(f"{where}: crossed must be a bool")
+        if "ultimate_evolution" in f and not isinstance(f["ultimate_evolution"], bool):
+            raise DefError(f"{where}: ultimate_evolution must be a bool")
         if "crossed_name" in f and not isinstance(f["crossed_name"], str):
             raise DefError(f"{where}: crossed_name must be a card name")
         if "evo_source_of" in f and not isinstance(f["evo_source_of"], str):
@@ -594,6 +612,10 @@ class Checker:
             if not isinstance(v, int) or isinstance(v, bool):
                 raise DefError(f"{where}: power_ge must be an int")
             return
+        if k == "extra_turn":   # このターンが追加ターンか（第263弾。龍マナ武装の「これが追加ターンでなければ」）
+            if not isinstance(v, bool):
+                raise DefError(f"{where}: extra_turn must be a bool")
+            return
         raise DefError(f"{where}: unknown cond '{k}'")
 
     def count_spec(self, v, where):
@@ -616,6 +638,8 @@ class Checker:
                 raise DefError(f"{where}: power needs amount (int) and optional count")
             if "count" in pm:
                 self.count_spec(pm["count"], where)
+        if "power_set" in m and not isinstance(m["power_set"], int):   # 第272弾: パワー置換は整数
+            raise DefError(f"{where}: power_set must be an integer")
         if "add_races" in m:
             if not isinstance(m["add_races"], list) or not all(isinstance(x, (str, dict)) for x in m["add_races"]):
                 raise DefError(f"{where}: add_races must be a list of race names or expressions")
@@ -647,6 +671,19 @@ class Checker:
                     self.count_spec(ba["count"], where)
             elif not isinstance(ba, int) or isinstance(ba, bool):
                 raise DefError(f"{where}: breaks_add must be an int or {{amount, count}}")
+        if "evo_reduce" in m:   # 進化元からの軽減の付与（第234弾）: このカードから進化するクリーチャーのコストを減らす
+            er = m["evo_reduce"]
+            if not isinstance(er, dict) or set(er) - {"amount", "min"} or not isinstance(er.get("amount"), int) \
+                    or ("min" in er and not isinstance(er["min"], int)):
+                raise DefError(f"{where}: evo_reduce must be {{amount: int, min?: int}}")
+        if "cross_reduce" in m:   # クロスのコスト軽減（第241弾）: ギア側・ホスト側どちらの常在型からもよい
+            cr = m["cross_reduce"]
+            if not isinstance(cr, dict) or set(cr) - {"amount", "min", "host", "gear", "may"} or not isinstance(cr.get("amount"), int) \
+                    or ("min" in cr and not isinstance(cr["min"], int)) or ("may" in cr and not isinstance(cr["may"], bool)):
+                raise DefError(f"{where}: cross_reduce must be {{amount: int, min?: int, host?: filter, gear?: filter, may?: bool}}")
+            for fk in ("host", "gear"):
+                if fk in cr:
+                    self.filter(cr[fk], where + ".cross_reduce." + fk)
         if "cost_may" in m:
             cm = m["cost_may"]
             if not isinstance(cm, dict) or set(cm) - {"amount", "once", "min", "must"} or not isinstance(cm.get("amount"), int) \
@@ -655,13 +692,39 @@ class Checker:
                 raise DefError(f"{where}: cost_may must be {{amount: int, once?: bool, min?: int, must?: bool}}")
         if "no_leave" in m:
             nl = m["no_leave"]
-            if nl is not True and not (isinstance(nl, dict) and set(nl) <= {"except_destroy", "by_opp", "except_battle"}
+            if nl is not True and not (isinstance(nl, dict) and set(nl) <= {"except_destroy", "by_opp", "except_battle", "by_opp_spell"}
                                        and all(isinstance(v, bool) for v in nl.values())):
-                raise DefError(f"{where}: no_leave must be true or {{except_destroy?: bool, by_opp?: bool, except_battle?: bool}}")
+                raise DefError(f"{where}: no_leave must be true or {{except_destroy?: bool, by_opp?: bool, except_battle?: bool, by_opp_spell?: bool}}")
         if "must_be_attacked" in m:
             mba = m["must_be_attacked"]
             if mba is not True and not (isinstance(mba, dict) and set(mba) == {"first_only"} and mba["first_only"] is True):
                 raise DefError(f"{where}: must_be_attacked must be true or {{first_only: true}}")
+        if "player_rush" in m:   # 出たターンにプレイヤーだけは攻撃できる（第261弾）
+            if m["player_rush"] is not True:
+                raise DefError(f"{where}: player_rush must be true")
+        if "trigger_double" in m:   # 誘発の2度トリガー（第264弾）: この常在型がある間、条件に合う誘発型能力は2度トリガーする
+            td = m["trigger_double"]
+            if not isinstance(td, dict) or set(td) - {"when", "source", "source_subject", "may", "once_per_turn",
+                                                      "first_per_turn", "cost"} or "when" not in td:
+                raise DefError(f"{where}: trigger_double needs {{when: <when>, source?: <subject>, source_subject?: bool, may?: bool, once_per_turn?: bool, first_per_turn?: bool, cost?: <ops>}}")
+            self.when(td["when"], where + ".trigger_double.when")
+            if "source" in td:   # 能力の発生源カードへの条件（"self" か、subject と同じ形。owner / filter / other だけ認める）
+                src = td["source"]
+                if src == "self":
+                    pass
+                elif not isinstance(src, dict) or set(src) - {"owner", "filter", "other"} \
+                        or src.get("owner", "any") not in ("you", "opp", "any") \
+                        or ("other" in src and not isinstance(src["other"], bool)):
+                    raise DefError(f"{where}: trigger_double.source must be 'self' or {{owner?: you/opp/any, filter?: <filter>, other?: bool}}")
+                elif "filter" in src:
+                    self.filter(src["filter"], where + ".trigger_double.source.filter")
+            for bk in ("source_subject", "may", "once_per_turn", "first_per_turn"):
+                if bk in td and not isinstance(td[bk], bool):
+                    raise DefError(f"{where}: trigger_double.{bk} must be a bool")
+            if "cost" in td:
+                if not td.get("may"):
+                    raise DefError(f"{where}: trigger_double.cost needs may (コストは任意の2度トリガーの決定時に支払う)")
+                self.ops(td["cost"], where + ".trigger_double.cost")
         if "must_be_chosen" in m:   # 「相手が選ぶ時、可能ならこのクリーチャーを選ぶ」（第199弾）: 選択先の強制
             if m["must_be_chosen"] is not True:
                 raise DefError(f"{where}: must_be_chosen must be true")
@@ -747,8 +810,8 @@ class Checker:
             raise DefError(f"{where}: cost_min must be int")
         if "crystal_soul" in m and not (isinstance(m["crystal_soul"], int) and not isinstance(m["crystal_soul"], bool) and m["crystal_soul"] >= 1):
             raise DefError(f"{where}: crystal_soul must be an int >= 1")
-        if "mana_number" in m and not (isinstance(m["mana_number"], int) and not isinstance(m["mana_number"], bool) and m["mana_number"] >= 2):
-            raise DefError(f"{where}: mana_number must be an int >= 2")
+        if "mana_number" in m and not (isinstance(m["mana_number"], int) and not isinstance(m["mana_number"], bool) and m["mana_number"] >= 0):
+            raise DefError(f"{where}: mana_number must be an int >= 0")
         if "power_when" in m:   # 攻撃中／ブロック中のパワー修整: {amount: N, count: <selector>, when: attacking|blocking}。バトルをしていない間（プレイヤーを攻撃中など）も含む
             pw = m["power_when"]
             if not isinstance(pw, dict) or set(pw) - {"amount", "count", "when"} or not isinstance(pw.get("amount"), int) \
@@ -791,6 +854,12 @@ class Checker:
             for v in vals:
                 if v not in allowed:
                     raise DefError(f"{where}: unknown reason '{v}'")
+        if "not_reason" in w:   # 理由の否定（第256弾）: 「召喚以外の方法で出た時」など
+            vals = w["not_reason"] if isinstance(w["not_reason"], list) else [w["not_reason"]]
+            allowed = REASONS | LOSE_REASONS if ev == "lose" else REASONS
+            for v in vals:
+                if v not in allowed:
+                    raise DefError(f"{where}: unknown not_reason '{v}'")
         tg = w.get("target")
         if tg is not None and tg not in ("player", "creature", "self") and not isinstance(tg, dict):
             raise DefError(f"{where}: bad target '{tg}'")
@@ -802,11 +871,16 @@ class Checker:
             raise DefError(f"{where}: unknown via '{w['via']}'")
         if "by" in w and w["by"] not in ("you", "opp"):
             raise DefError(f"{where}: bad by '{w['by']}'")
-        if "cause" in w:   # そのイベントを起こした効果の帰属 {by?: you/opp, kind?: spell/ability}（効果帰属レコード基盤B1。バンドC2 U108）
+        if "opp_hand" in w and w["opp_hand"] not in ("rock", "scissors", "paper"):   # ジャンケンで相手が出した手（第271弾）
+            raise DefError(f"{where}: opp_hand must be rock/scissors/paper")
+        if "cause" in w:   # そのイベントを起こした効果の帰属 {by?: you/opp, kind?: spell/ability, defn?: 発生源の defn, name_has?: 発生源の名前の一部（第246弾）}（効果帰属レコード基盤B1。バンドC2 U108）
             cw = w["cause"]
-            if not isinstance(cw, dict) or not cw or set(cw) - {"by", "kind"} \
-                    or cw.get("by", "you") not in ("you", "opp") or cw.get("kind", "spell") not in ("spell", "ability"):
-                raise DefError(f"{where}: cause needs {{by?: you/opp, kind?: spell/ability}}")
+            if not isinstance(cw, dict) or not cw or set(cw) - {"by", "kind", "defn", "name_has"} \
+                    or cw.get("by", "you") not in ("you", "opp") or cw.get("kind", "spell") not in ("spell", "ability") \
+                    or ("defn" in cw and not (isinstance(cw["defn"], str)
+                        or (isinstance(cw["defn"], list) and cw["defn"] and all(isinstance(x, str) for x in cw["defn"])))) \
+                    or ("name_has" in cw and not isinstance(cw["name_has"], str)):
+                raise DefError(f"{where}: cause needs {{by?: you/opp, kind?: spell/ability, defn?: str|[str], name_has?: str}}")
         if "blocked" in w and not isinstance(w["blocked"], bool):
             raise DefError(f"{where}: blocked must be bool")
         if "emblem" in w and not isinstance(w["emblem"], bool):   # 裁きの紋章だったか（第169弾）
@@ -894,6 +968,28 @@ class Checker:
                 raise DefError(f"{where}: suppress_triggers needs {{whose: opp, events: [enter / attack, ...], if?}}")
             if "if" in st:
                 self.cond(st["if"], where)
+        if "protect_hand" in ab:   # 手札破棄の保護（第253弾）: 相手の呪文またはクリーチャーの能力によって、自分の手札は捨てられない常在型
+            if kind != "static" or ab["protect_hand"] is not True:
+                raise DefError(f"{where}: protect_hand is only for static and must be true")
+        if "mana_all_civs" in ab:   # マナの全文明扱い（第260弾）: 支払い時にマナカードをすべての文明を持つかのようにタップできる常在型
+            if kind != "static":
+                raise DefError(f"{where}: mana_all_civs is only for static")
+            mac = ab["mana_all_civs"]
+            if not isinstance(mac, dict) or set(mac) - {"for"}:
+                raise DefError(f"{where}: mana_all_civs needs {{for?: filter}}")
+            if "for" in mac:
+                self.filter(mac["for"], where)
+        if "group" in ab:   # 宣言のグループ（第262弾）: 同じ group の宣言は、1回の攻撃につきプレイヤーごとに1回まで（ニンジャ・チェンジの「この攻撃中に自分がニンジャ能力を使っていなければ」）
+            if kind != "declare" or not isinstance(ab["group"], str) or not ab["group"]:
+                raise DefError(f"{where}: group is only for declare and must be a non-empty str")
+        if "cast_limit" in ab:   # 呪文を唱える回数の制限（第261弾）: この常在型がある間、相手は各ターン count 回までしか呪文を唱えられない
+            if kind != "static":
+                raise DefError(f"{where}: cast_limit is only for static")
+            cl = ab["cast_limit"]
+            if not isinstance(cl, dict) or set(cl) - {"count"} \
+                    or not isinstance(cl.get("count"), int) or isinstance(cl.get("count"), bool) \
+                    or cl["count"] < 0:
+                raise DefError(f"{where}: cast_limit needs {{count: int}}")
         if "untap_limit" in ab:   # アンタップ制限（第227弾）: 相手のターン開始時に、そのゾーンのアンタップを count 枚までに制限する常在型
             if kind != "static":
                 raise DefError(f"{where}: untap_limit is only for static")
@@ -1113,17 +1209,39 @@ def _load_face(raw, keywords, macros, chk: Checker, where) -> dict:
     if "grave_cast" in raw:   # 墓地から通常コストで唱える（第226弾）: 真偽値のみ
         if not isinstance(raw["grave_cast"], bool):
             raise DefError(f"{where}: grave_cast must be a bool")
+    if "rinne" in raw:   # 輪廻∞（第267弾）: 真偽値のみ。ツインパクトのクリーチャー側に付ける
+        if not isinstance(raw["rinne"], bool):
+            raise DefError(f"{where}: rinne must be a bool")
     if "mana_bakutan" in raw:   # マナ爆誕（第191弾）: 自分のマナゾーンから固定コストで召喚する代替コスト（0 も可）
         mb = raw["mana_bakutan"]
         if not isinstance(mb, int) or isinstance(mb, bool) or mb < 0:
             raise DefError(f"{where}: mana_bakutan must be an int >= 0")
+    if "launcher" in raw:   # ランチャーE（第233弾）: 唱える時に自分の条件クリーチャーを好きな数タップする
+        lc = raw["launcher"]
+        if not isinstance(lc, dict) or set(lc) - {"filter"}:
+            raise DefError(f"{where}: launcher must be {{filter}}")
+        if "filter" in lc:
+            filter(lc["filter"], where)
+    if "evo_base_reduce" in raw:   # 進化元依存の軽減（第234弾）: 選んだ進化元が条件に合えば召喚コストを減らす
+        eb = raw["evo_base_reduce"]
+        if not isinstance(eb, dict) or set(eb) - {"filter", "amount", "min"} \
+                or not isinstance(eb.get("amount"), int) or ("min" in eb and not isinstance(eb["min"], int)):
+            raise DefError(f"{where}: evo_base_reduce must be {{filter?, amount: int, min?: int}}")
+        if "filter" in eb:
+            filter(eb["filter"], where)
+    if "evolve_total_cost_ge" in raw:   # 超無限進化のコスト合計条件（第236弾）
+        if not isinstance(raw["evolve_total_cost_ge"], int) or raw["evolve_total_cost_ge"] < 1:
+            raise DefError(f"{where}: evolve_total_cost_ge must be a positive int")
     if "link_to" in raw:   # G・リンク（名前指定・4方向。第197弾）: 「《A》の右横、《B》の上側」の形
+        # 第250弾: {side: left|center|right} エントリも可（「中央/右 G・リンクを持つゴッド」の指定）
         lt = raw["link_to"]
         if not isinstance(lt, list) or not lt or any(
-                not isinstance(e, dict) or set(e) - {"name", "pos"}
-                or not isinstance(e.get("name"), str)
-                or e.get("pos") not in ("right", "left", "up", "down") for e in lt):
-            raise DefError(f"{where}: link_to needs [{{name: str, pos: right|left|up|down}}]")
+                not isinstance(e, dict) or set(e) - {"name", "pos", "side"}
+                or ("name" in e and (not isinstance(e.get("name"), str)
+                                     or e.get("pos") not in ("right", "left", "up", "down")))
+                or ("name" not in e and e.get("side") not in ("left", "center", "right"))
+                or ("side" in e and "name" in e) for e in lt):
+            raise DefError(f"{where}: link_to needs [{{name: str, pos: right|left|up|down}} | {{side: left|center|right}}]")
     de = None
     if "deck_evolution" in raw:   # デッキ進化（第173弾）: 山札の上から count 枚めくり、進化元にできる
         # クリーチャーがいれば重ねて出す。いなければ手札に戻る（支払い前にめくる。801.1a の進化元
@@ -1159,14 +1277,14 @@ def _load_face(raw, keywords, macros, chk: Checker, where) -> dict:
             raise DefError(f"{where}: ace must be true")
     return dict(name=raw["name"], types=raw["types"], civs=raw["civs"], cost=raw["cost"],
                 power=raw.get("power", 0), races=split_races(raw.get("races", [])), keywords=names,
-                abilities=abilities, spell=spell, sst_spell=sst_spell, stp_spell=stp_spell, odrive_spell=odrive_spell, o_drive=raw.get("o_drive"), mugen_climb=raw.get("mugen_climb"), alt_cost=raw.get("alt_cost"), vividraw=raw.get("vividraw"), fushigi=raw.get("fushigi"), recycle=raw.get("recycle"), grave_cast=bool(raw.get("grave_cast")), mana_bakutan=raw.get("mana_bakutan"), link_to=raw.get("link_to"), deck_evolution=de, evolve_from=raw.get("evolve_from"),
+                abilities=abilities, spell=spell, sst_spell=sst_spell, stp_spell=stp_spell, odrive_spell=odrive_spell, o_drive=raw.get("o_drive"), mugen_climb=raw.get("mugen_climb"), alt_cost=raw.get("alt_cost"), vividraw=raw.get("vividraw"), fushigi=raw.get("fushigi"), recycle=raw.get("recycle"), grave_cast=bool(raw.get("grave_cast")), rinne=bool(raw.get("rinne")), mana_bakutan=raw.get("mana_bakutan"), link_to=raw.get("link_to"), deck_evolution=de, evolve_from=raw.get("evolve_from"),
                 evolve_zone=zone, evolve_any=bool(raw.get("evolve_any", False)),
                 evolve_count=(len(raw["evolve_from"]) if isinstance(raw.get("evolve_from"), list)
                               else int(raw.get("evolve_count", 1))),
                 evolve_civs=tuple(raw.get("evolve_civs") or ()), evolve_zones=tuple(raw.get("evolve_zones") or ()),
                 soul_shift=raw.get("soul_shift"),
                 cost_reduce_per_evo=int(raw.get("cost_reduce_per_evo", 0)),
-                free_if=raw.get("free_if"), galaxy_shield=raw.get("galaxy_shield"), bazurenda=raw.get("bazurenda"), neo=bool(raw.get("neo", False)), grave_evo=bool(raw.get("grave_evo", False)), star=bool(raw.get("star", False)), s_max=bool(raw.get("s_max", False)), ace=bool(raw.get("ace", False)), hyper=bool(raw.get("hyper", False)), crystal_soul=int(raw.get("crystal_soul", 0)), mana_boost=raw.get("mana_boost"), **{"tap_reduce": 0, "s_back": None, **props})
+                free_if=raw.get("free_if"), galaxy_shield=raw.get("galaxy_shield"), bazurenda=raw.get("bazurenda"), tap_entry=bool(raw.get("tap_entry", False)), neo=bool(raw.get("neo", False)), grave_evo=bool(raw.get("grave_evo", False)), star=bool(raw.get("star", False)), s_max=bool(raw.get("s_max", False)), ace=bool(raw.get("ace", False)), hyper=bool(raw.get("hyper", False)), crystal_soul=int(raw.get("crystal_soul", 0)), mana_boost=raw.get("mana_boost"), launcher=raw.get("launcher"), evo_base_reduce=raw.get("evo_base_reduce"), evolve_total_cost_ge=raw.get("evolve_total_cost_ge"), **{"tap_reduce": 0, "s_back": None, **props})
 
 
 def load_tables():

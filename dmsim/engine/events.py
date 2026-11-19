@@ -1,7 +1,7 @@
 """イベント・パイプライン（置換→同時適用→状況起因処理→誘発）と待機・解決窓。"""
 from __future__ import annotations
 
-from ..base.types import CaptureTask, CloseWinTask, BattleRunTask, EnqueueStTask, EventTask, GLinkTask, LoseReplaceTask, OpenWinTask, ResolvePendingTask, SbackTask, SealReleaseTask, SmaxReduceTask
+from ..base.types import CaptureTask, CloseWinTask, BattleRunTask, DoubleAskTask, EnqueueStTask, EventTask, GLinkTask, LoseReplaceTask, OpenWinTask, ResolvePendingTask, SbackTask, SealReleaseTask, SmaxReduceTask
 from .registry import task
 
 
@@ -203,6 +203,8 @@ class EventMixin:
                 rec["vivid"] = True
             if ev.get("unpaid"):     # コストを支払わずに出た（「コストを支払わずに召喚した時」等の照合用）
                 rec["unpaid"] = True
+            elif ev["to"] == "bz" and ev.get("reason") != "summon" and rec["from"] != "bz":
+                rec["unpaid"] = True   # 第257弾: 効果で出されたカードはマナをタップせずに出ている（「マナゾーンのカードをタップせずに出た時」の照合用）
             if c.zone == "bz" and c.top_of >= 0 and c.seal_of < 0:
                 # 下にあったカードが単独で動く: 宿主（上にいたカード）の移動直前の姿を載せる（from_under 照合用）
                 h = s.cards[c.top_of]
@@ -217,6 +219,14 @@ class EventMixin:
             if ev.get("turn_draw"):
                 rec["turn_draw"] = True   # ターンのはじめのドローそのもの（第219弾）
             return rec
+        if ev["ev"] == "battle_start":
+            # バトル開始の置換（第271弾）: 置換の照合用にイベントをそのまま返す
+            # （_apply_one の単純イベントと同じ扱い）。これまで _record_for は
+            # move/draw しか作らず、battle_start の replace は _replacement で
+            # 常に None になって一度も諮問されなかった。converted には
+            # battle_start の replace は無く（trigger のみ32件）、既存カードへの
+            # 影響は無い。break は _break_candidates の別経路があるため含めない。
+            return dict(ev)
         return None
 
     def apply_batch(self, evs: list[dict]):
@@ -351,6 +361,10 @@ class EventMixin:
             if from_zone == "bz" and ev["to"] == "graveyard" and ev.get("reason") == "destroy" \
                     and self.chars(cid).get("indestructible"):
                 return []   # 「破壊されない」（第127弾）: 置換を経た最終的な破壊に対して判定し、破壊自体が起こらない
+            if from_zone == "hand" and ev["to"] == "graveyard" and ev.get("reason") == "discard" \
+                    and ev.get("by") is not None and ev["by"] != c.controller \
+                    and self._hand_protected(c.controller, ev):
+                return []   # 「相手の呪文やクリーチャーの能力によって、自分の手札は捨てられない」（第253弾）
             if from_zone == "bz" and ev["to"] != "bz":
                 # 「バトルゾーンを離れない」（第49弾）: 置換を経た最終的な移動に対して判定し、該当すれば移動自体が起こらない
                 for nl in self.chars_ro(cid)["no_leave"]:
@@ -360,6 +374,9 @@ class EventMixin:
                         continue   # 「バトルに負けた時以外は離れない」型: バトルの敗北による破壊だけは通す（combat が battle 印を付ける）
                     if nl.get("by_opp") and not (ev.get("by") is not None and ev["by"] != c.controller):
                         continue   # 「相手の効果では離れない」型: by の無い移動（状況起因・バトル）と自分の効果は通す
+                    if nl.get("by_opp_spell") and not (ev.get("by") is not None and ev["by"] != c.controller
+                                                       and ev.get("cause_kind") == "spell"):
+                        continue   # 「相手の呪文の効果では離れない」型（第230弾）: 相手が解決した呪文による移動だけを止める
                     return []
             lki = {"defn": c.defn, "face": c.face, "controller": c.controller, "zone": from_zone,
                    "tapped": c.tapped, "chars": self.chars(cid), "ref": list(ev["subject"]),
@@ -514,6 +531,8 @@ class EventMixin:
                 out[0]["vivid"] = True
             if ev.get("unpaid"):     # コストを支払わずに出た（when: {unpaid: true} の照合用。summon レコードには従来から載せていたが、move レコード側に無く move 誘発がすべて不発だった）
                 out[0]["unpaid"] = True
+            elif ev["to"] == "bz" and ev.get("reason") != "summon" and from_zone != "bz":
+                out[0]["unpaid"] = True   # 第257弾: 効果で出されたカードはマナをタップせずに出ている
             if ev.get("stack_on"):   # 進化として重ねて出た（「進化して出た時」の照合用。第150弾で収集レコードへの伝播を追加。シールドの束は shield_stack キーで別）
                 out[0]["stacked"] = True
             if ev.get("no_trigger"):   # この移動で出たカード自身の出た時能力は誘発しない（第213弾）
@@ -544,6 +563,11 @@ class EventMixin:
             if under_snap is not None:
                 out[0]["under"] = under_snap   # 離れる時に下にあったクリーチャー（解決時に {ref: event.under} で指せる。leave_under_untap）
             if ev["to"] == "bz" and "ex_life" in self.chars_ro(cid)["keywords"]:
+                out += self._exlife_shield(cid)
+            if ev["to"] == "bz" and "extra_ex_life" in self.chars_ro(cid)["keywords"]:
+                # エクストラEXライフ（第237弾）: 紐付けるシールドは2枚。置換能力の側は
+                # ex_life と同じ形で、その中から1枚を選んで墓地に置く
+                out += self._exlife_shield(cid)
                 out += self._exlife_shield(cid)
             if ev["reason"] == "summon":
                 srec = {"ev": "summon", "subject": new, "controller": c.controller, "player": c.controller,
@@ -626,7 +650,7 @@ class EventMixin:
                 for m in self.link_members(ev["subject"][0]):
                     s.mut_card(m).tapped = c.tapped
             return [{"ev": kind, "subject": ev["subject"], "controller": c.controller}]
-        if kind in ("attack", "block", "cast", "turn_start", "turn_end", "break", "battle_win", "battle_lose", "battle_start", "attack_end", "attack_unblocked", "mugon_used", "link_established", "battle_end"):
+        if kind in ("attack", "block", "cast", "turn_start", "turn_end", "break", "battle_win", "battle_lose", "battle_start", "attack_end", "attack_unblocked", "break_before", "mugon_used", "link_established", "battle_end", "janken"):
             return [dict(ev)]
         raise ValueError(kind)
 
@@ -656,6 +680,11 @@ class EventMixin:
                 if s.cards[sh].exlife_of is not None and list(s.cards[sh].exlife_of) == old:
                     s.mut_card(sh).exlife_of = s.ref(top)
         t.under = (t.under if more else []) + [base] + b.under
+        if more:   # 第231弾: 直接の進化元を順に記録（star 離脱時のセグメント分離用）
+            if base not in t.stack_bases:
+                t.stack_bases.append(base)
+        else:
+            t.stack_bases = [base]
         for u in t.under:
             s.mut_card(u).top_of = top
         b.under = []
@@ -675,6 +704,36 @@ class EventMixin:
         c = s.mut_card(top)
         under = list(c.under)
         c.under = []
+        bases = [b for b in c.stack_bases if b in under]
+        if len(bases) >= 2:   # 第231弾: 進化V 等の複数進化元は、進化元ごとに別々のクリーチャーとして残す
+            segs: list[list[int]] = []
+            cur = None
+            for u in under:
+                if u in bases:
+                    cur = [u]
+                    segs.append(cur)
+                elif cur is None:
+                    self._raw_move(u, "graveyard")   # どの進化元にも属さない下のカード
+                else:
+                    cur.append(u)
+            old = s.ref(top)
+            for seg in segs:
+                while seg and "creature" not in self.cdef(seg[0]).types:
+                    self._raw_move(seg.pop(0), "graveyard")
+                if not seg:
+                    continue
+                nt = s.cards[seg[0]]
+                nt.top_of = -1
+                nt.under = seg[1:]
+                for u in nt.under:
+                    s.cards[u].top_of = nt.cid
+                nt.tapped = c.tapped                                   # 801.4d
+                new = s.ref(nt.cid)
+                for ce in s.continuous:
+                    if ce["affected"] is not None and old in ce["affected"]:
+                        ce["affected"].append(new)
+            c.stack_bases = []
+            return
         while under and "creature" not in self.cdef(under[0]).types:
             self._raw_move(under.pop(0), "graveyard")
         if not under:
@@ -825,6 +884,8 @@ class EventMixin:
                 return False
         elif not isinstance(pw, (int, float)) or pw < 0:
             return False
+        if "power_set" in m:   # 第272弾: パワー置換は下げることがある（－∞）
+            return False
         if "power_when" in m:
             return False
         for kw in m.get("grant", []):
@@ -935,6 +996,13 @@ class EventMixin:
                         return False
                 elif rec.get(k) != wv:
                     return False
+        if "not_reason" in when:   # 理由の否定（第256弾）: 「召喚以外の方法で出た時」
+            nv = when["not_reason"]
+            if isinstance(nv, list):
+                if rec.get("reason") in nv:
+                    return False
+            elif rec.get("reason") == nv:
+                return False
         if rec.get("ev") == "move" and rec.get("from") == "bz" and rec.get("to") == "bz" \
                 and "from" in when and "to" not in when:
             # 第183弾: バトルゾーン内の移動（S級侵略で既に場にいるカードを重ねる等）は
@@ -984,6 +1052,10 @@ class EventMixin:
             return False
         if "player" in when and rec.get("player") != self._rel(when["player"], env):
             return False
+        if "opp_hand" in when:   # ジャンケンで相手が出した手（第271弾）: 相手＝この能力のコントローラーの対戦相手
+            hands = rec.get("hands")
+            if not hands or hands[1 - env["you"]] != when["opp_hand"]:
+                return False
         if "by" in when and rec.get("by") != self._rel(when["by"], env):   # そのイベントを起こした効果の解決者（「相手の効果によって〜」）
             return False
         if "cause" in when:   # そのイベントを起こした効果の帰属（基盤B1）: by は発生源コントローラーから見た相対指定、kind は呪文／能力。発生源のない移動（状況起因・コスト）は cause_kind が無く一致しない
@@ -992,6 +1064,16 @@ class EventMixin:
                 return False
             if "kind" in cw and rec.get("cause_kind") != cw["kind"]:
                 return False
+            if "defn" in cw:   # 発生源カードそのもの（第246弾: 《特定カード》の能力で破壊される時）
+                dv = cw["defn"]
+                if rec.get("cause_defn") not in (dv if isinstance(dv, list) else [dv]):
+                    return False
+            if "name_has" in cw:   # 発生源カードの名前の一部（第246弾: 名前に《武者》とあるカードの効果で）。面の名前も見る
+                dn = rec.get("cause_defn")
+                d = self.rules.cards.get(dn) if dn else None
+                names = [] if d is None else [d.name] + [f.name for f in (d.faces or [])]
+                if not any(cw["name_has"] in nm for nm in names):
+                    return False
         if "sealed_from" in when:   # 封印が離れた時: どのカードに付いていた封印か（「このカードの封印がすべてなくなった時」用）
             if rec.get("sealed_from") is None or not self._ref_match(when["sealed_from"], rec["sealed_from"], env):
                 return False
@@ -1071,6 +1153,19 @@ class EventMixin:
             r = self._xcache[k] = any(ab["kind"] == "trigger" for f in fs for ab in f.abilities)
         return r
 
+    def _hand_protected(self, p, ev) -> bool:
+        """手札破棄の保護（第253弾）: p のバトルゾーンに protect_hand の常在型があり、
+        この破棄の起因が相手の呪文またはクリーチャーの能力なら True。"""
+        if ev.get("cause_kind") != "spell":
+            cd = ev.get("cause_defn")
+            if not cd or "creature" not in (self.rules.cards[cd].types or []):
+                return False   # 呪文でもクリーチャーの能力でもない起因（ギアやタマシードの能力など）は守らない
+        for src in self.bz_tops(p):
+            for _, ab in self.abilities(src, "static"):
+                if ab.get("protect_hand"):
+                    return True
+        return False
+
     def _static_suppressed(self, ctrl, rec):
         """第213弾: 相手のバトルゾーンの常在型 suppress_triggers がこの誘発を抑えるか。
         対象は「ctrl のクリーチャーが出た（move で bz へ）／攻撃した（attack）」出来事で
@@ -1146,6 +1241,13 @@ class EventMixin:
         win = s.windows[-1] if s.windows else 0
         # 定義に誘発型能力が無く、継続的効果で能力を得る道（gain・ダイナモ）も無い発生源は、能力の列挙を省く（結果は同じ空）
         gainable = any(ce["mod"].get("gain") or ce.get("add_from") for ce in s.continuous)
+        if not gainable:   # 常在型の mod.gain（第240弾）で誘発を得る道があるか（定義レベルの走査）
+            for c in list(s.zones["bz"][0]) + [x for p in (0, 1) for x in s.zones["shield"][p]]:
+                d = self.rules.cards[s.cards[c].defn]
+                if any(ab.get("kind") == "static" and "gain" in (ab.get("mod") or {})
+                       for dd in [d] + list(d.faces or []) for ab in dd.abilities):
+                    gainable = True
+                    break
         for src, lsrc, host_only in sources:
             if not lsrc and not gainable and not self._has_trigger_def(s.cards[src].defn, s.cards[src].face):
                 continue
@@ -1199,6 +1301,21 @@ class EventMixin:
                 if i < 0:          # 継続的効果で得た能力は、能力そのものを持たせる
                     p["inline"] = ab
                 s.pending.append(p)
+                self._apply_trigger_doubling(p, rec, src, lsrc, win)
+                w = ab.get("when") or {}
+                if (lsrc is None and not host_only and w.get("event") == "move" and w.get("to") == "bz"
+                        and w.get("subject") in (None, "self") and rec.get("subject")
+                        and src == rec["subject"][0]):
+                    # 第270弾: 自身の出た時能力が誘発したことを trigger イベントとして発表する
+                    # （「その能力がトリガーした時、自分もその能力を使う」用。魔誕の斬将オルゲイト）。
+                    # 観測型（subject が他カード）の誘発や、trigger イベント自体を見る能力は
+                    # ここを通らないので再帰しない。2度トリガーの複製分は発表しない（1能力1回）。
+                    trig = {"ev": "trigger", "subject": sref, "controller": ctrl,
+                            "player": ctrl, "defn": defn, "ab": i, "ability": ab,
+                            "from": rec.get("from"), "to": "bz", "reason": rec.get("reason")}
+                    if ab_face is not None:
+                        trig["face"] = ab_face
+                    self._collect_triggers(trig)
         for dl in list(s.delayed):   # 遅延誘発型能力（603.6）
             if self._match_when(dl["when"], rec, dl["env"]):
                 s.seq += 1
@@ -1208,6 +1325,77 @@ class EventMixin:
                                   "delayed": dl["id"]})
                 if dl["once"]:
                     s.delayed.remove(dl)
+
+    def _trigger_doublers(self, rec):
+        """誘発の2度トリガー（第264弾）: 今有効な trigger_double の一覧。
+        [(コントローラー, 発生源の参照, defn, 能力添字, 仕様, env, 印の素)] を返す。
+        常在型（バトルゾーンのカード自身）と継続的効果（modify で付与されたもの）の両方を見る。
+        常在型の if はここで見る（_static_suppressed と同じ eval_cond）。
+        affects が self でない常在型と、dynamic（範囲指定）の継続的効果はこの弾では扱わない。"""
+        s = self.s
+        out = []
+        for d in self.bz_tops():
+            for i, ab in self.abilities(d, "static"):
+                td = (ab.get("mod") or {}).get("trigger_double")
+                if not td:
+                    continue
+                if ab.get("affects") not in (None, "self"):
+                    continue
+                env = {"you": s.cards[d].controller, "self": s.ref(d), "event": rec, "vars": {}}
+                if "if" in ab and not self.eval_cond(ab["if"], env):
+                    continue
+                out.append((s.cards[d].controller, s.ref(d), s.cards[d].defn, i, td, env,
+                            f"tdbl:{d}:{s.cards[d].gen}:{i}"))
+        for ce in s.continuous:
+            td = (ce.get("mod") or {}).get("trigger_double")
+            if not td or not ce.get("affected"):
+                continue
+            for ref in ce["affected"]:
+                if not s.alive(ref):
+                    continue
+                env = {"you": ce["controller"], "self": list(ref), "event": rec, "vars": {}}
+                out.append((ce["controller"], list(ref), s.cards[ref[0]].defn, -1, td, env,
+                            f"tdbl:ce:{ce['id']}"))
+        return out
+
+    def _apply_trigger_doubling(self, p, rec, src, lsrc, win):
+        """収集した誘発 p に対し、有効な trigger_double があれば2度トリガーにする。
+        強制はその場で pending を複製する（2つ目の解決は vars を分け、同じ能力の独立した
+        解決にする。bazurenda の複数解決と同型）。任意（may）は決定用の pending
+        （double_ask）を同じ窓に積む。収集中は決定を尋ねられないためで、対象が先に
+        解決されていたら尋ねない。遅延誘発（delayed）は対象外。
+        複数の2度トリガーが同じ誘発に合う時は、それぞれが1回ずつ追加する（N+1回。重ね掛けの
+        乗算は裁定待ちのためこの弾では扱わない。パイロット記録参照）。"""
+        s = self.s
+        for ctrl, dref, defn, ab_idx, td, env, key_base in self._trigger_doublers(rec):
+            if not self._match_when(td["when"], rec, env):
+                continue
+            if "source" in td and not self._subject_match(td["source"], src, env, lsrc):
+                continue
+            if td.get("source_subject") and list(s.ref(src)) != list(rec.get("subject") or []):
+                continue
+            if td.get("first_per_turn"):
+                fkey = f"{key_base}:first"
+                if s.turn_counters.get(fkey):
+                    continue
+                s.turn_counters[fkey] = 1   # 「はじめて」は最初の一致で枠を使い切る（断ってもそのターンはもう来ない）
+            once_key = f"{key_base}:once" if td.get("once_per_turn") else None
+            if once_key and s.turn_counters.get(once_key):
+                continue
+            if not td.get("may"):
+                if once_key:
+                    s.turn_counters[once_key] = 1
+                s.seq += 1
+                dup = dict(p)
+                dup["pid"] = s.seq
+                dup["env"] = dict(p["env"], vars=dict(p["env"].get("vars", {})))
+                s.pending.append(dup)
+                continue
+            s.seq += 1
+            s.pending.append({"pid": s.seq, "kind": "double_ask", "win": win, "controller": ctrl,
+                              "src": dref, "defn": defn, "ab": ab_idx, "env": env,
+                              "target": p["pid"], "td": td, "once_key": once_key,
+                              "cost": td.get("cost")})
 
     def _window(self, *inner, only_st=False):
         """inner を実行し、その間に誘発した効果をその場で解決するタスク列。"""
@@ -1355,6 +1543,33 @@ def h_g_link(eng, t):
         if side != 1 and 1 not in sides and not ((side == 0 and 2 in sides) or (side == 2 and 0 in sides)):
             continue   # 左は中央か右、右は中央か左のゴッドの隣にリンクする
         targets.append(c)
+    if spec:
+        # 位置キーワードと名前指定の併記（第250弾: 邪神M・ロマノフ型）: 位置の条件に加え、
+        # 指定（名前または「中央/右 G・リンク」等の位置キーワード）に合うゴッドがいる
+        # グループだけをリンク先にする。名前指定は位置キーワードを持たないゴッド単体も
+        # 指せるので、その場合は位置の占有だけを見て候補に加える（OMG 型）
+        names = {e["name"] for e in spec if "name" in e}
+        side_ids = {"left": 0, "center": 1, "right": 2}
+        want_sides = {side_ids[e["side"]] for e in spec if "side" in e}
+
+        def _spec_ok(c):
+            ms = eng.link_members(c)
+            return (any(eng.fdef(m).name in names for m in ms)
+                    or any(eng.link_side(m) in want_sides for m in ms))
+
+        targets = [c for c in targets if _spec_ok(c)]
+        have = set(targets)
+        for c in eng.bz_tops(p):
+            if c == cid or c in have:
+                continue
+            ms = eng.link_members(c)
+            if not any(eng.fdef(m).name in names for m in ms):
+                continue
+            if any(eng.fdef(m).name == eng.fdef(cid).name for m in ms):
+                continue   # 同名は1グループに1枚まで（第197弾と同型）
+            if side in {eng.link_side(m) for m in ms}:
+                continue   # 自分の位置は埋まっている
+            targets.append(c)
     if not targets:
         eng._pop(t)
         return None
@@ -1460,9 +1675,33 @@ def h_resolve_pending(eng, t):
     pid = opts[a[0]]["pid"]
     p = next(x for x in s.pending if x["pid"] == pid)
     s.pending.remove(p)
+    if p["kind"] == "double_ask":   # 任意の2度トリガー（第264弾）: 決定は専用タスクへ回す
+        # （この場で尋ねると、再入時に order_pending の ask が回答を誤消費するため）
+        eng._push({"t": "double_ask", "target": p["target"], "controller": p["controller"],
+                   "src": p.get("src"), "once_key": p.get("once_key"),
+                   "cost": p.get("cost"), "env": p["env"]})
+        return None
     if p["kind"] == "strigger":
         if s.alive(p["src"]):
-            eng._push(eng.play_task(p["src"][0], player, True, p.get("face"), st=True))
+            tasks = [eng.play_task(p["src"][0], player, True, p.get("face"), st=True)]
+            if "s_trigger_x" in eng.cdef(p["src"][0]).keywords:
+                # 第269弾 S・トリガーX: ジェネレートの後、自分のクリーチャー1体に
+                # コストを支払わずにクロスしてもよい（may）。生成後の姿は self_entered
+                # で指す（生成で gen が1増える）。生成されなかった時や自分の
+                # クリーチャーがいない時は尋ねない（if の exists 2条件）。
+                env = {"you": player, "self": p["src"],
+                       "event": {"ev": "use_s_trigger", "player": player,
+                                 "subject": p["src"], "controller": player},
+                       "vars": {}}
+                tasks.append(eng._child([{"op": "if",
+                    "cond": {"all": [{"exists": {"ref": "self_entered"}},
+                                     {"exists": {"zone": ["bz"], "owner": "you",
+                                                 "filter": {"types": ["creature"]}}}]},
+                    "then": [{"op": "may", "label": "S・トリガーX：クロスする",
+                              "body": [{"op": "cross_free", "gear": {"ref": "self_entered"},
+                                        "to": {"zone": ["bz"], "owner": "you",
+                                               "filter": {"types": ["creature"]}}}]}]}], env))
+            eng._push(*tasks)
     else:
         ab = eng.pending_ability(p)
         env = p["env"]
@@ -1477,6 +1716,36 @@ def h_resolve_pending(eng, t):
         if ab.get("bazurenda") and p.get("src") and s.alive(p["src"]):
             n += s.cards[p["src"][0]].bazurenda   # バズレンダ: [OL]能力を1回+追加で支払った回数使う
         eng._push(*[eng._child(ab["effect"], env) for _ in range(n)])
+    return None
+
+
+@task("double_ask", DoubleAskTask)
+def h_double_ask(eng, t):
+    """任意の2度トリガーの決定（第264弾）。対象がまだ待機していれば「２度トリガーするか」を
+    尋ね、「はい」なら対象の pending を複製し、コストがあれば解決する（複製した誘発の解決より
+    先に走る）。対象が先に解決されていたり回数を使い切っていたりしたら何もしない。"""
+    s = eng.s
+    tgt = next((x for x in s.pending if x["pid"] == t["target"]), None)
+    if tgt is None or (t.get("once_key") and s.turn_counters.get(t["once_key"])):
+        eng._pop(t)
+        return None
+    name = eng.fdef(t["src"][0]).name if t.get("src") and s.alive(t["src"]) else ""
+    a, d = eng.ask(t, t["controller"], "choose_double_trigger",
+                   [{"key": "yes"}, {"key": "no"}],
+                   prompt=f"{name}：２度トリガーする" if name else "２度トリガーする")
+    if d:
+        return d
+    eng._pop(t)
+    if a[0] == 0:
+        if t.get("once_key"):
+            s.turn_counters[t["once_key"]] = 1
+        s.seq += 1
+        dup = dict(tgt)
+        dup["pid"] = s.seq
+        dup["env"] = dict(tgt["env"], vars=dict(tgt["env"].get("vars", {})))
+        s.pending.append(dup)
+        if t.get("cost"):   # コストは決定の後に解決する（タップ等。複製した誘発の解決より先に走る）
+            eng._push(eng._child(t["cost"], t["env"]))
     return None
 
 
