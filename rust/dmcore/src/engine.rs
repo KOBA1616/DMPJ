@@ -585,6 +585,7 @@ impl Engine {
                 };
                 Ok(self.s.active == p)
             }
+            "extra_turn" => Ok(self.s.extra_turn == v.as_bool().unwrap_or(false)),   // 第263弾
             _ => uns(format!("cond {}", k)),
         }
     }
@@ -772,6 +773,7 @@ impl Engine {
                 "evolution" => self.def(cid).types.iter().any(|t| t == "evolution") == v.as_bool().unwrap_or(false),
                 "colorless" => (d.civs.is_empty() || (d.civs.len() == 1 && d.civs[0] == "zero")) == v.as_bool().unwrap_or(false),
                 "hyper" => c.hyper == v.as_bool().unwrap_or(false),
+                "exlife" => c.exlife_of.is_some() == v.as_bool().unwrap_or(false),
                 "any_of" => {
                     let mut hit = false;
                     for sub in v.as_array().unwrap() {
@@ -829,7 +831,9 @@ impl Engine {
         if !self.s.hold.is_empty() {
             return uns("hold");
         }
-        self.s.active = if !self.s.extra_turns.is_empty() { self.s.extra_turns.remove(0) } else { 1 - self.s.active };
+        let was_extra = !self.s.extra_turns.is_empty();
+        self.s.active = if was_extra { self.s.extra_turns.remove(0) } else { 1 - self.s.active };
+        self.s.extra_turn = was_extra;   // 第263弾: このターンが追加ターンか（cond {extra_turn} の読み先）
         self.s.turn += 1;
         if self.s.turn > self.turn_limit {
             self.s.result = Some(json!({"winner": null, "reason": "turn_limit", "turn": self.s.turn}));
@@ -2037,7 +2041,7 @@ impl Engine {
         kw.dedup();
         json!({"power": power, "cost": d.cost, "civs": d.civs, "types": d.types, "races": d.races, "keywords": kw,
             "name": d.name, "names": [d.name], "allow": (if in_bz { d.allow_x.clone() } else { vec![] }).into_iter().chain(allow.iter().map(|x| json!(x))).collect::<Vec<_>>(), "deny": deny, "require": [], "breaks": breaks, "break_opts": bo,
-            "breaks_add": 0, "pay_cost": d.cost, "sac_reduce": 0, "opt_reduce": null, "cost_may": [], "no_leave": [],
+            "breaks_add": 0, "pay_cost": d.cost, "sac_reduce": 0, "opt_reduce": null, "cost_may": [], "no_leave": [], "cross_reduce": [],
             "must_be_attacked": false, "must_be_attacked_first": false, "must_be_chosen": false, "must_attack_creature": false,
             "must_attack_creature_first": false, "battle_indestructible": false, "battle_indestructible_filters": [],
             "win_all_battles": false, "indestructible": false, "crystal_soul": 0, "mana_number": 0})

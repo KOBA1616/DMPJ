@@ -40,6 +40,7 @@ class Option(TypedDict, total=False):
     fushigi: NotRequired[bool]           # フシギバース（墓地から召喚する選択肢）
     recycle: NotRequired[bool]           # リサイクル（墓地から代替コストで唱える選択肢。第172弾）
     grave_cast: NotRequired[bool]        # 墓地から通常コストで唱える選択肢（第226弾）
+    rinne: NotRequired[bool]             # 輪廻∞: 呪文側をバトルゾーンに置いたまま唱える選択肢（第267弾）
     bakutan: NotRequired[bool]           # マナ爆誕（マナゾーンから固定コストで召喚する選択肢。第191弾）
 
 
@@ -94,6 +95,8 @@ class EventRecord(TypedDict, total=False):
     attacker: Ref
     count: int
     stack_on: Ref
+    hands: list[str]                     # ジャンケン（第271弾）: プレイヤー順の手 ["rock"/"scissors"/"paper"]
+    winner: int | None                   # ジャンケンの勝者（あいこは None）
 
 
 # ---- 効果の環境 ----
@@ -110,7 +113,7 @@ class Env(TypedDict, total=False):
 # ---- 待機・継続的効果 ----
 class Pending(TypedDict):
     pid: int
-    kind: Literal["normal", "strigger", "delayed"]
+    kind: Literal["normal", "strigger", "delayed", "double_ask"]
     win: int
     controller: int
     src: Ref | None
@@ -121,6 +124,10 @@ class Pending(TypedDict):
     delayed: NotRequired[int]            # 遅延誘発型能力の id
     effect: NotRequired[list[dict]]      # 遅延誘発型能力の効果
     inline: NotRequired[dict]            # 継続的効果で得た能力（mod.gain）
+    target: NotRequired[int]             # double_ask（第264弾）: 2度トリガーさせる対象の pending pid
+    td: NotRequired[dict]                # double_ask: 適用する trigger_double の仕様
+    once_key: NotRequired[str]           # double_ask: 適用時に立てる once_per_turn の印（無ければ None）
+    cost: NotRequired[list[dict]]        # double_ask: 適用時に解決するコスト ops
 
 
 class Continuous(TypedDict):
@@ -229,6 +236,8 @@ class AttackTask(TypedDict):
     phase: int
     cp: bool
     blocked: NotRequired[bool]
+    cancelled: NotRequired[bool]         # 攻撃の中止（第251弾）: バトルもブレイクも行わず攻撃を終わる
+    g_break: NotRequired[bool]           # G・ブレイカーを使った（第252弾）: 相手ブレイクの後に自分のシールドもすべてブレイクする
     ano: NotRequired[int]                # このターン何回目の攻撃か（キリフダッシュの「その攻撃中に」判定）
     end_fired: NotRequired[bool]         # attack_end イベントを発火済みか
     through_fired: NotRequired[bool]     # attack_unblocked イベントを発火済みか（第229弾）
@@ -282,6 +291,8 @@ class PlayTask(TypedDict):
     tap_done: NotRequired[bool]
     sac: NotRequired[list[int]]          # ササゲールで破壊するクリーチャー
     sac_done: NotRequired[bool]
+    launcher: NotRequired[list]          # ランチャーEでタップしたクリーチャーの参照（第233弾）
+    launcher_done: NotRequired[bool]
     reduced: NotRequired[bool]           # B・A・D / J・O・E: コストを減らして実行する
     reduce_done: NotRequired[bool]
     fuel: NotRequired[list[int]]         # 支払い時の行動（opt_reduce.do）で選んだカード
@@ -310,6 +321,7 @@ class PlayTask(TypedDict):
     alt_step: NotRequired[int]           # 代替コスト（行動形式）で済んだ段階
     evo_v: NotRequired[list]             # 進化V: フィルタごとに選んだ進化元
     evo_civs_sel: NotRequired[list]      # 超無限進化の文明条件: 選択途中の進化元（第218弾）
+    evo_cost_sel: NotRequired[list]      # 超無限進化のコスト合計条件: 選択途中の進化元（第236弾）
     fushigi: NotRequired[bool]           # フシギバースとして実行する
     fushigi_done: NotRequired[bool]      # フシギバース: 進化元代わりのクリーチャーをマナに置いた
     alt_done: NotRequired[bool]          # 代替コスト（行動形式）の支払いが終わった
@@ -327,6 +339,7 @@ class PlayTask(TypedDict):
     climb_done: NotRequired[bool]        # ムゲンクライム: クリーチャーのタップが済んだ
     recycle: NotRequired[bool]           # リサイクルとして実行する（第172弾: 解決後は山札の一番下へ）
     grave_cast: NotRequired[bool]        # 墓地から唱えた（第226弾: 解決後は山札の一番下へ）
+    rinne: NotRequired[bool]             # 輪廻∞で唱えた（第267弾: カードはバトルゾーンに残る）
     bakutan: NotRequired[bool]           # マナ爆誕として実行する（第191弾: マナゾーンから固定コストで召喚）
     resolve_to: NotRequired[str]         # 解決後の置き場所（play_free の resolve_to）
     resolve_position: NotRequired[str]   # resolve_to が山札のときの top / bottom
@@ -390,6 +403,46 @@ class SmaxReduceTask(TypedDict):
     """S-MAX進化の2体制限（状況起因）: 残す1体を選び、残りをすべて手札に戻す。"""
     t: Literal["smax_reduce"]
     player: int
+    answer: NotRequired[list[int]]
+
+
+class DoubleAskTask(TypedDict):
+    """任意の2度トリガー（第264弾）: 対象の誘発がまだ待機していれば「２度トリガーするか」を尋ねる。"""
+    t: Literal["double_ask"]
+    target: int
+    controller: int
+    src: Ref | None
+    once_key: str | None
+    cost: list[dict] | None
+    env: Env
+    answer: NotRequired[list[int]]
+
+
+class GachaTask(TypedDict):
+    """ドギラゴン・ガチャ（第268弾）: 残り回数ぶん 1d6 を振り、出目ごとの効果を子タスクで解決する。
+    spin は解決中の出目（子タスクが終わるまで残し、次の呼び出しで消してから次を振る）。"""
+    t: Literal["gacha"]
+    kind: str
+    remaining: int
+    controller: int
+    env: Env
+    spin: NotRequired[int]
+    answer: NotRequired[list[int]]
+
+
+class JankenTask(TypedDict):
+    """ジャンケン（第271弾）: 両プレイヤーがグー/チョキ/パーを同時に選び、あいこなら
+    勝敗が決まるまで繰り返す。各投は janken イベントとして発表する（手の誘発用）。
+    mine / opp は今の投で選んだ手（次の呼び出しで使う）。done は勝敗分岐の子タスクを
+    積んだ印（子タスクが終わって戻ってきたら自分を pop する）。"""
+    t: Literal["janken"]
+    controller: int
+    env: Env
+    win: list[dict]
+    lose: list[dict]
+    mine: NotRequired[str]
+    opp: NotRequired[str]
+    done: NotRequired[bool]
     answer: NotRequired[list[int]]
 
 

@@ -1909,6 +1909,14 @@ EXライフ本体（出す時のシールド化・離脱置換）は実装済み
 - テスト作成の注意: (1) 攻撃先の制限は「攻撃できるタップ状態のクリーチャー」がいる時だけ効く（いなければプレイヤー攻撃が残る）。検証では自分のクリーチャーに先に攻撃させてタップしておく。(2) 選択肢が1つだけの決定はエンジンが自動確定する（強制攻撃で対象がプレイヤーのみになると攻撃決定自体が出ない）。(3) シナリオは相手のターンから始まる周回があり、捕捉は「唱えた後」に限る。(4) 唱えた呪文自身も自分の墓地に入る。
 - 待機6件（単独5＋複合1）。再変換はラウンド230で実施（登録見込み5件＋差し戻し1件 dmr10-016）。
 
+### ラウンド297（第171弾/第194弾＋第251弾/第259弾/第164弾）
+
+must_attack_creature_if_able の残り6件を再変換。新規4件（dm22rp1-023、dm24ex3-rp1010、dm24ex3-rp3s09、dmex12-046）、差し戻し2件。converted 10,075 / rejects 2,262、重複0・漏れ0。
+- dm24ex3-rp1010 のハイパー面の破壊時誘発は if: {hyper: true}＋first_time（各ターンに一度）で、墓地から出すのは move to bz reason: put（「出す」は召喚ではない。play_free は召喚扱いのため使わない）。「それよりコストが小さい」は cost_le に {sum: [{cost_of: event.subject}, -1]}（第149弾の cost_of: event.subject の先例＋dmrp16-014 の -1 式）。
+- dm24ex3-rp3s09 の「相手プレイヤーを攻撃する時」は when: {event: attack, target: player}。dmex12-046 の攻撃中止は may の mana_put（as: placed）後に if {exists: {ref: placed, filter: {races: [ドリームメイト]}}} then [cancel_attack]（dmd03-005 の形）。Dスイッチ2件は turn_start（player: opp）＋may の先頭に dswitch op。
+- 差し戻し: dmrp16-s07 → 新ギャップ must_attack_creature_first_attack_of_turn。「各ターン、相手がはじめてクリーチャーで攻撃する時」は主語が相手プレイヤーでターンの最初の攻撃だけを指すため、攻撃側クリーチャー単位の初回だけを制限する must_attack_creature: {first_only: true} では正確に表せない（出た時能力とアバレチェーン＝first_time 誘発＋indestructible 付与は partial に保存）。dmr22-025 → 新ギャップ mana_tap_placement（「マナゾーンに置く時、タップして置く」。abilities() はマナゾーンのカードを拾わないため誘発型では書けない。パワー常在型＋呪文からの選ばれ防止＋Dスイッチは partial に保存）。
+- tests/test_vocab_pilot194_cards.py にラウンド297分を追加（登録形＋差し戻し2件＋dm24ex3-rp3s09 の攻撃誘発の挙動テスト）。6 passed。
+
 ## 第195弾: cross_free（コストを支払わずにクロスする）（2026-11-12）
 対象は cross_free_permission 単独9件＋cross_free_op 単独5件。
 - 許可（permission）: 新アクション `cross_free`（data/rules/permissions.yaml、default false）。`_cross_options` は支払い可否に加えて、ギア側 permits(gear, cross_free, creature) またはクリーチャー側 permits(creature, cross_free, gear) が通れば無料の選択肢 `cross:<ギア>:<クリーチャー>:free` を併記する（h_cross は free の時、支払いを飛ばして crossed を付ける。CrossTask に free を追加）。カード形は static の mod allow [cross_free] で、発生源は4形: クリーチャー自身（affects: self)、ギア自身（affects: self＋other フィルタ。other は進化なら {evolution: true}、リンクしているゴッドと併記なら any_of、名前は name_has、種族は race_has)、ギアから宿主へ（affects: crossed。宿主の特性に allow が載る）、全体付与（affects で自分のギア全体へ。dmex17-051)。
@@ -2409,3 +2417,603 @@ proto T599（自己 grave_cast 呪文）/ T600（許可型クリーチャー＋�
 - reopen 5件 → **新規登録5件**（dm23-005 / 028 / 037 / dm23-s01 / dmx11-076）、差し戻しなし。converted **9,972** / rejects **2,369**、重なり0・漏れ0、bio_k 単独は消滅。
 - partial は基礎欄のみで、条項は第229弾イディオムで構築（同名サーチ／W・ブレイカー付与／光の呪文2枚回収／パワー合計3000以下の破壊／2枚まで引く）。
 - tests/test_vocab_pilot229_cards.py 3件通過（028 の付与→2枚ブレイク、005 の同名サーチを実カードで検証）。
+
+## 第230弾 leave_protection_vs_opponent_spells（相手の呪文では離れない）
+
+「相手の呪文の効果でバトルゾーンを離れる時、かわりにとどまる」は mod `no_leave` の適用範囲の問題。移動イベントには効果帰属（発生源の解決者 `by` と種別 `cause_kind`: spell/ability）が既に記録されている（基盤B1）。
+
+- no_leave の辞書に新キー **by_opp_spell** を追加: _apply_one の判定で「by が相手プレイヤー、かつ cause_kind が spell」の移動だけを止める。自分の呪文・相手の能力・バトルや状況起因（帰属なし）は通す。defs の検証キーにも追加。
+- 形: 自分だけ = static {affects: self, mod: {no_leave: {by_opp_spell: true}}}。味方全体・他だけ = affects {zone: bz, owner: you, filter / other: true} の通常形。
+- プロト T617–T619、tests/test_vocab_pilot230.py。
+
+### ラウンド266 leave_protection_vs_opponent_spells 再変換（2026-11-18）
+
+- reopen 5件 → **新規登録5件**（promoy6-003 / dm22rp1-004 / dmr03-010 / dmx22a-029 / dm33-012）、差し戻しなし。converted **9,977** / rejects **2,364**、重なり0・漏れ0、同単独は消滅。
+- 形は4通り: 自分だけ（dmx22a-029）、他の闇（promoy6-003、ブロッカー付与は partial 既存）、他のクリーチャー全般（dmr03-010）、アビス全般（dm22rp1-004、攻撃時ランダム3枚捨ては partial 既存）、名前に《死神》（dm33-012）。
+- tests/test_vocab_pilot230_cards.py 3件通過。
+
+## 第231弾 evolution_v_two_bases（進化V: 進化元2体）
+
+進化V 自体は既存（evolve_from をリストで書くとフィルタごとに1体ずつ選ぶ。選択済みの進化元は候補から外れる）。残っていたのは2点。
+
+- 同一プールから2体（「いずれか2体」）: 同じフィルタを2回書く形で表現できることをプロトで検証した（新規語彙なし）。
+- 太陽王ソウル・フェニックス型の離脱ルール（「一番上のカードだけが離れ、下の2枚は別々のクリーチャーとなる」）: star: true の再構築は従来、下のカードを1体のクリーチャーに連結していた。直接の進化元を Card.stack_bases に記録し（_stack で追加、ゾーン移動で消去）、再構築時に進化元が2つ以上あればセグメントごとに独立したクリーチャーとして残すよう _rebuild を拡張した。
+- プロト T622–T625、tests/test_vocab_pilot231.py。
+
+### ラウンド267 evolution_v_two_bases 再変換（2026-11-18）
+
+- reopen 4件 → **新規登録4件**（dm22-024 / dm22-027 / dm12-005 / dm12-s03）、差し戻しなし。converted **9,981** / rejects **2,360**、重なり0・漏れ0、同単独は消滅。
+- dm22-024 / 027 は同一プールフィルタ×2（024 の破壊→手札置換、027 の出た時破壊は partial 既存）。dm12-005 は異種フィルタ×2＋star: true。dm12-s03 は異種フィルタ×2＋離脱時に全クリーチャー破壊のトリガー。
+- tests/test_vocab_pilot231_cards.py 2件通過（フェニックスの2進化元での進化を実カードで検証。分離再構築の挙動は第231弾プロトで検証済み）。
+
+## 第232弾 evolution_base_any_race（どんな種族の進化も置ける進化元）
+
+「どんな種族の進化クリーチャーを、このクリーチャーの上に置いてもよい」は進化元側の許可。新アクション **evolve_base_any**（permissions.yaml、default: false）を追加し、進化元候補の照合を集約した `_evo_match` で「フィルタに種族指定があり、進化元がこの許可を持つ」場合も一致とする。文明など種族以外の指定は許可で肩代わりしない。
+
+- 照合の差し替え箇所: _evo_sources（単独・リスト両形）、_evo_v_ready、h_play の進化V選択。NEO・墓地進化・超無限の候補も _evo_sources 経由で効く。山札進化（めくったカードが進化元）には場の常在型は及ばないので対象外。
+- 形: 本人 = static {affects: self, mod: {allow: [evolve_base_any]}}。クロスギア形 = {affects: crossed, mod: {allow: [evolve_base_any]}}。メタモーフ形 = 同じ static に if（マナ枚数）を付ける。
+- プロト T626–T629、tests/test_vocab_pilot232.py。
+
+### ラウンド268 evolution_base_any_race 再変換（2026-11-18）
+
+- reopen 4件 → **新規登録4件**（dm22-019 / dm23-034 / dm14-037 / dm32-110）、差し戻しなし。converted **9,985** / rejects **2,356**、重なり0・漏れ0、同単独は消滅。
+- 形は3通り: 自己許可（イノス/ビャッコ）、メタモーフ＝マナ7枚以上の if つき自己許可（式神イノセント）、クロス先への許可（メガ・イノセントソード。パワー+3000 は partial 既存）。
+- tests/test_vocab_pilot232_cards.py 3件通過。
+
+## 第233弾 launcher_e（ランチャーE）
+
+「この呪文を唱える時、自分の（種族）のタップされていないクリーチャーを好きな数タップする。その数／合計パワーで効果が変わる」を面項目で表す。
+
+- 面項目 **launcher: {filter}**（defs Face/CardDef＋検証＋schema）。h_play にムゲンクライムと同じ段階ステップを追加: 支払いの前に候補（自分のタップされていない場のトップで filter 一致）を提示し、選んだ数をタップして参照リストを PlayTask.launcher に記録。コスト軽減ではないので無料詠唱（S・トリガー）でも使える。
+- 呪文の効果 env の vars に **launcher** として渡す。条項の形: 枚数 = repeat {times: {var: launcher}} や choose の count: {var: launcher}。合計パワー = {total_power: {ref: launcher}}。
+- プロト T630–T632、tests/test_vocab_pilot233.py 4件。
+- 追加の小拡張: op **repeat** に `over: <変数名>, as: <名前>` を追加（変数のカード1枚ずつに body を適用し、要素を as の変数へ束ねる）。ドラグハリケーン・エナジーの「タップしたドラゴン1体につき、それと同じ名前のクリーチャーを出す」に必要。opvocab と @op の同期＋スキーマ再生成。
+
+### ラウンド269 launcher_e 再変換（2026-11-18）
+
+- reopen 5件 → **新規登録5件**（dm20-014 / 023 / 032 / 055、dm24ex3-rp2tr07）、差し戻しなし。converted **9,990** / rejects **2,351**、重なり0・漏れ0、同単独は消滅。
+- 条項の形: タップ数×ブレイク（repeat times）、タップ数までの呪文サーチ、合計パワー以下の破壊、タップ数×マナ加速（mana_put の repeat）、タップしたドラゴンと同名を出す（repeat over/as）。
+- tests/test_vocab_pilot233_cards.py 3件通過。
+
+## 第234弾 tamaseed_evolution_cost_reduction（進化元で変わる召喚コスト）
+
+「タマシードから進化するならコストを2少なくする」は、支払い額が選んだ進化元に依存する形。2つの置き場所で表す。
+
+- 出す側の宣言 = 面項目 **evo_base_reduce: {filter, amount, min?}**。進化元が filter に合えば軽減。
+- 進化元側の付与 = mod **evo_reduce: {amount, min}**（chars に evo_reduce / evo_reduce_min として集約）。「このタマシードから進化するクリーチャーのコストを少なくする」。
+- 適用は turn.py の `_evo_base_reduced` に集約: _can_play_face の進化分岐（見積り: 候補全体から必要数ぶん）と h_play の支払い段階（実際に選んだ進化元で確定）の両方から使う。
+- プロト T633–T636、tests/test_vocab_pilot234.py。
+
+### ラウンド270 tamaseed_evolution_cost_reduction 再変換（2026-11-18）
+
+- reopen 5件 → **新規登録4件＋別刷り畳み込み1件**（dmrp21-10b / dmrp22-001 / dmsd20-006 / dmrp22-069、promoy21-005 は原文コーパスに無いIDで dmsd20-006 の aliases へ自動で畳まれた）。converted **9,994** / rejects **2,346**、重なり0・漏れ0（aliases 込みで確認）、同単独は消滅。
+- dmsd20-006 の攻撃モーダルは partial に無く原文から構築（相手のコスト4以下のクリーチャー/タマシードをシールド化／自分の山札上1枚をシールド化してもよい）。dmrp22-069 は付与形（mod evo_reduce）。
+- 監査の教訓: dataaudit は converted に現れたフィールドしか検出しない。第233弾 launcher の同期漏れはラウンド269 の登録で初めて表面化した（あわせて修正済み）。
+- tests/test_vocab_pilot234_cards.py 3件通過（付与の chars 値、モーダルのシールド化を含む）。
+
+## 第235弾 kizuna_comp（キズナコンプ）
+
+「このクリーチャーが攻撃する時、好きな数の自分のクリーチャーの[P]能力を使う」を、攻撃トリガー＋専用 op で表す。
+
+- [P]能力は既存の能力種 **partner**（{kind: partner, effect: [...]}）に置く。単独では解決しない。
+- 既存 op **use_partner**（第153弾キズナ用、1件だけ使う形）に引数 **any_number: true** を追加: 1件使うたびに次を聞き（0件で終えてよい）、使った能力（cid, gen, 能力index）はこの解決中は候補から外れる。効果は「そのクリーチャー自身の効果」として子で解決される。
+- キズナコンプ自体は攻撃トリガー {when: {event: attack, subject: self}, effect: [{op: use_partner, any_number: true}]} と書く。
+- プロト T637–T638、tests/test_vocab_pilot235.py。
+
+### ラウンド271 kizuna_comp 再変換（2026-11-18）
+
+- reopen 5件 → **新規登録5件**（dmrp04s-s05 / 007 / 001 / s03 / s09）、差し戻しなし。converted **9,999** / rejects **2,341**、重なり0・漏れ0、同単独は消滅。
+- [P] の形: 自分自身の破壊、味方1体への「最初の攻撃の終わりにアンタップ」（delayed_trigger の subject: {ref}＋turn_count attack_by）、次の自分のターン開始まで破壊されない（modify indestructible）、いずれかの墓地からコスト7以下の呪文を無料で（解決後は持ち主の山札の下）、山札上2枚から自然のパワー12000以上の非進化を出す（残りは手札）。
+- dmrp04s-s05 の W・ブレイカーは partial の keywords に無く、原文から補った。
+- tests/test_vocab_pilot235_cards.py 2件通過（自分の[P]と味方の[P]を続けて使う確認を含む）。
+
+## 第236弾 infinite_evolution / super_infinite_evolution（超無限進化）
+
+「1体以上の上に置く」は既存の evolve_any（通常進化の分岐で1〜全数を一度に選ぶ）で足りていた。残りは dm26ex4 系の「コストの合計が20以上になるように」だけ。
+
+- 面項目 **evolve_total_cost_ge: N**。h_play に文明条件（第218弾）と同型の段階分岐を追加: 合計が届くまで1体ずつ必須で選び、届いた後は追加も可（0件で確定）。_can_play_face は候補全体の合計コストで可否を判定。
+- 出た時の「◯枚以上のカードの上に進化していれば」は {count: {under_of: self}} で数える。
+- あわせて前提修正: mod **mana_number は 0 への置換**も表せるようにした（ワルドバロムの「マナの数字を0にする」）。未設定の番兵を 0 から None に変更（core の chars 既定値と集約、turn の values_of、defs の検証は >= 0 に緩和）。Rust 側は mana_number の集約自体を持たないため対象外（該当する試合は従来どおり Python に落ちる）。
+- プロト T640–T642、tests/test_vocab_pilot236.py 4件。
+
+### ラウンド272 超無限進化 再変換（2026-11-18）
+
+- 直接 submit（reopen せず、空テキストの dm26ex1-011 を残す）→ **新規登録4件**（dm24ex3-or5 ワルドバロム、dm34-001、dm34-006、dm34-030）＋**差し戻し3件**（dm25ex2-030 → dragheart へ再分類、dm26ex4-012 → extra_ex_life、dmc58-004 → g_link_positional。解決済みの節は partial に保存）。converted **10,003** / rejects **2,337**、重なり0・漏れ0。
+- dmartkiwami01-002 は dm24ex3-or5 の aliases に畳み込み（rejects 行は別刷り stale として残存。既存7件と同種）。dm26ex4-sec009 は原文コーパス外IDのため単独処理できず、旧ラベルのまま残存（012 が将来登録される時に畳まれる）。
+- ワルドバロムの出た時: 下の枚数条件（under_of の count）で全捨て／相手マナ数字0（第236弾の mana_number 0 置換）。攻撃時は choose_civ → その文明の相手エレメント全破壊。
+- dm34 系のメテオバーンは「下を1枚墓地へ置く→そうした場合」の may＋exists 形。006 は shield_plus の repeat（コスト回数）、030 は3モード（相手が自分のマナから選んで墓地／クロスギア／要塞化の城）。
+- tests/test_vocab_pilot236_cards.py 2件通過（3体重ね→全捨てを含む）。
+
+## 第237弾 extra_ex_life（エクストラEXライフ）
+
+EXライフとの差は「紐付けるシールドが2枚」だけ。置換能力の形（紐付いたシールドの中から1枚を墓地に置く）はそのまま使える。
+
+- キーワード **extra_ex_life** を keywords.yaml に追加（置換能力は ex_life と同一）。
+- events の入場フック: extra_ex_life を持つクリーチャーが出たら _exlife_shield を2回行う（山札が尽きたら尽きた分だけ）。
+- あわせて新フィルタ **exlife**（EXライフで紐付いたシールドか）を追加（defs FILTER_KEYS＋selectors＋Rust＋スキーマ再生成）。「自分のEXライフシールドすべてにS・トリガーを与える」= static {affects: {zone: shield, owner: you, filter: {exlife: true}}, mod: {grant: [s_trigger]}}。
+- プロト T643–T644、tests/test_vocab_pilot237.py 2件。
+
+### ラウンド273 エクストラEXライフ再変換（2026-11-18）
+
+- reopen 5件 → **新規登録3件**（dm26ex4-012、dm26ex4-019、dm26rp3-s007）。別刷り3件（dm26ex4-sec009／sec020、dm26rp3-sec008）は原文コーパス外IDのため、正規カードの aliases に畳み込み（sec020/sec008 は登録後に converted.yaml へ直接追記）。converted **10,006** / rejects **2,332**、重なり0・漏れ0、extra_ex_life 解消。
+- dm26ex4-012 は第272で保存した節（手札誘発・合計20の超無限進化・呪文禁止・破壊誘発）にキーワードを足すだけ。dm26rp3-s007 は節を新規構築: EXライフシールドへの S・トリガー付与（フィルタ exlife）、タップ誘発でブレイク、ターン終了時にアンタップ＋任意ドロー。
+- tests/test_vocab_pilot237_cards.py 2件通過（s007 の2枚紐付け＋S・トリガー付与を含む）。
+- 注意: reopen 済みの rejects は第237弾のコミットに混入して確定済み（行データは e19d4ac 時点の rejects から復元して構築）。
+
+## 第238弾 static no_lose（常在型の敗北防止イディオム）
+
+第188弾で入った常在型 no_lose（{kind: static, no_lose: true | {deck_out_only: true}, if: 条件}）の適用範囲を確認するイディオムパイロット。エンジン変更なし。
+
+- 「相手のターン中、自分は負けない」= {kind: static, if: {is_turn: opp}, no_lose: true}（既存の dmex08-256 は is_turn: you 形）。
+- 「タップしていれば負けない」= if に {exists: {ref: self, filter: {tapped: true}}}（ref セレクタは filter を適用する）。
+- 「山札切れで負けない（残りのゲーム中）」の呪文形は op no_lose {deck_out_only: true, duration: permanent}。
+- プロト T645–T647、tests/test_vocab_pilot238.py。
+
+### ラウンド274 lose_protection 再変換（2026-11-18）
+
+- reopen 5件 → **新規登録3件**（dm25bd1-001、dm25bd2-003、dm24ex3-rp3tr1）＋**差し戻し2件**（dm24ex3-tf01 勝敗の無効化、dm25-003 勝利の置換 — 静的形の対象外として lose_protection のまま残す）。converted **10,009** / rejects **2,329**、重なり0・漏れ0。
+- dm25bd1-001: 墓地の火カード数でパワー+3000、全捨て→3ドロー＋捨てたボルシャック1枚ごとの任意破壊（repeat over/as）、相手ターン中 no_lose、破壊置換は optional replace（マナのボルシャック3枚を墓地へ）。
+- dm24ex3-rp3tr1 はツインパクト: 呪文面 = op no_lose {deck_out_only, duration: permanent}＋5ドロー＋山札が空なら追加ターン。行の text がクリーチャー面だけだったため by_product の faces から構築。
+- tests/test_vocab_pilot238_cards.py 3件通過。
+
+## 第239弾 break_before（各ブレイクの前に）
+
+新イベント **break_before**: ブレイクタスクが選ばれたシールドを割る直前に、シールド1枚につき1回、subject = ブレイクするクリーチャーで発火する（defs EVENTS、events のレコード通過リスト、combat のブレイクタスク末尾で移動より前に積む。置換でブレイクが無くなった場合は発火しない）。
+
+- 形は trigger {when: {event: break_before, subject: self}, effect: [...]}。複数ブレイクでは枚数分だけ誘発する。
+- 進化時の付与（シンカパワー）は delayed_trigger {when: {event: break_before, subject: {ref: self}}, duration: end_of_turn} の形を取る。
+- プロト T648–T649、tests/test_vocab_pilot239.py。
+
+## 第240弾 static_gain（常在型 mod gain の展開）
+
+潜在バグの修正: mod **gain** は継続的効果（modify op 由来の s.continuous）からしか展開されず、**常在型能力の mod.gain は丸ごと無効**だった（converted 37枚が使用。誘発・置換の付与が死んでいた。ラウンド275の登録形テストでセイバーが発火しないことから発見）。
+
+- core.abilities(): バトルゾーン／シールドの発生源の常在型で、このカードに適用される（chars 計算と同じ _subject_match＋if 判定）ものの mod.gain を、負の添字で能力列に加える。自分自身への affects: self 付与も対象。
+- events の誘発収集の省略判定（gainable）にも常在型 gain の存在を含めた。
+- 得た常在型能力（gain の中身が static のもの）自体の mod 適用は chars 計算側の別課題として残す。
+- プロト T650–T651、tests/test_vocab_pilot240.py。
+
+### ラウンド275 break_pre_trigger 再変換（2026-11-18）
+
+- reopen 5件 → **新規登録5件**、差し戻し0件。converted **10,014** / rejects **2,324**、重なり0・漏れ0、break_pre_trigger 解消。
+- dm26sd1-o003 は常在型に affects: self が欠けていた partial を直して再提出。dmrp22-019 のシンカパワーは delayed_trigger {when: break_before, subject: {ref: self}, once: false, duration: end_of_turn} で実装（重複した変換由来スタティックは除去）。
+- 第240弾の検証で dm23rp1-1b のセイバー付与（静的 gain）が実際に働くことを登録形で確認（テストにはセイバーの持ち主としてファイアー・バード T624 が必要）。
+- tests/test_vocab_pilot239_cards.py 3件通過。第240弾の全体テストで test_rust_schema_sync の同期漏れ2件（stack_bases／untap_caps の Rust 側欠落、第227・231弾由来）を発見し state.rs に追加して解消。全チャンク通過（失敗はその2件のみで修正済み）。
+
+## 第241弾 cross_reduce（クロスのコスト軽減）
+
+新 mod **cross_reduce** {amount, min?, host?: filter, gear?: filter, may?: bool}。chars にリストで集約し、クロスの支払い時に turn の _cross_costs が「ギア側の項目（host で対象を判定）＋ホスト側の項目（gear でギアを判定）」を集める。may の項目は「最大N少なくしてもよい」= 0..amount の任意軽減として、達成可能な実コストの候補すべてを _mana_choices に渡して組を統合する。下限は min の最大値。
+
+- ギア側の自己軽減（「このカードをサムライにクロスする時、最大2少なく」）= ギア自身の static {affects: self, mod: {cross_reduce: {amount: 2, min: 1, host: {races: [サムライ]}}}}。
+- ホスト側（「このクリーチャーにクロスする時1少なく」）= ホストの static {affects: self, mod: {cross_reduce: {amount: 1, min: 1}}}。
+- 全体（「自分のクロスギアをクロスする時1少なく」）= {affects: {zone: bz, owner: you, filter: {types: [cross_gear]}}, mod: {cross_reduce: ...}}。ジェネレート（手札から出す）側の軽減は既存の mod cost（hand ゾーンへの affects）で表す。
+- プロト T652–T656、tests/test_vocab_pilot241.py。
+
+### ラウンド276 cross_cost_reduction 再変換（2026-11-18）
+
+- reopen 3件＋直接提出2件 → **新規登録4件**（dm15-016、dm17-021、promoy4-002、dmc45-009）＋**差し戻し1件**（dmc45-008: クロス軽減は partial に残し、残ギャップは trigger_when_destroyed_by_named_card_effect のみ）。converted **10,018** / rejects **2,320**、重なり0・漏れ0。
+- dm15-016 は2面で表現: ジェネレート側 = {affects: {zone: hand, filter: {types: [cross_gear]}}, mod: {cost: -1, cost_min: 1}}、クロス側 = {affects: {zone: bz, filter: {types: [cross_gear]}}, mod: {cross_reduce}}。
+- dmc45-009 の「そのクリーチャーよりパワーが小さい」は power_le {sum: [{power_of: crossed}, -1]} で表現でき、dynamic_power_comparison_filter も同時に解消。ホスト破壊の対象は crossed_to（ギア側）ではなく **host_of: self**（第170弾の selector は crossed_to = そのクリーチャーにクロスされているギア、host_of = そのギアのホスト）。
+- tests/test_vocab_pilot241_cards.py 3件＋データ監査通過。
+
+## 第242弾 draw_replacement_double（ドロー置換の倍化）
+
+イディオム: ドロー置換は既存の {kind: replace, optional: true, when: {event: draw, player: you}, instead: [...]} で表せる（コーパスに7件、うち draw 2 形は dmx17-013 等）。ドローは1枚ごとのイベントなので、「その2倍引く」は各イベントの instead で draw 2 にすれば多枚ドローでも自然に倍化する。
+
+- 単純形: instead: [{op: draw, count: 2}]。
+- シールド・フォース形（dm28-049）: replace に sforce: true を付け、instead: [draw 2, 手札1枚を山札の一番下へ]（引いた2枚につき1枚）。
+- プロト T657–T658、tests/test_vocab_pilot242.py。
+
+### ラウンド277 draw_replacement_double 再変換（2026-11-18）
+
+- reopen 2件 → **新規登録2件**、差し戻し0件。converted **10,020** / rejects **2,318**、重なり0・漏れ0、draw_replacement_double 解消。
+- dm26rp1-034 は replace {optional: true, when: {event: draw, player: you}, instead: [draw 2]} を追加。dm28-049 は sforce: true 付きで instead に「手札1枚を山札の一番下へ」を加えた形。
+- tests/test_vocab_pilot242_cards.py 2件＋データ監査通過。
+
+## 第243弾 rush op（そのターン限りプレイヤーを攻撃できる）
+
+新 op **rush** {select}: 対象に turn_counters の rush:<cid> フラグを立てる。combat の _attack_options はこの印がある出たターンのクリーチャーにプレイヤーへの攻撃だけを許可する（アビスラッシュの付随処理と同じ印。ただし山札送り等の付随処理は付けない）。
+
+終極宣言の無トリガー召喚（dm23ex3-or2）は既存語彙の組み合わせで表せる: 終極宣言ゲート（第216弾イディオム）＋ choose {zone: [graveyard, mana], count: any} ＋ move {to: bz, reason: summon, no_trigger: true}（第213弾）＋ rush。
+
+注意: rush は move より先に書く。move の後に {ref: summoned} を引くと世代が進んだ参照になり候補が空になる（rush フラグは cid 単位なので移動前に立ててよい）。
+
+- プロト T659–T660、tests/test_vocab_pilot243.py。
+
+### ラウンド278 final_declaration_no_trigger_summon 再変換（2026-11-18）
+
+- reopen 1件 → **新規登録1件**（dm23ex3-or2）。converted **10,021** / rejects **2,317**、重なり0・漏れ0、final_declaration_no_trigger_summon 解消。
+- 宣言は第216弾ゲート＋ choose {zone: [graveyard, mana], filter: {race_has: アビス}, count: any} ＋ rush（move より先）＋ move {reason: summon, no_trigger: true} ＋ mark の並び。
+- tests/test_vocab_pilot243_cards.py 1件＋データ監査通過。
+
+## 第244弾 gained statics の mod 適用（第240弾の残件）
+
+第240弾で abilities() は常在型 mod.gain を展開するようになったが、得た常在型能力自身の mod は chars に反映されなかった（バトルパワー付与などが死んでいた。コーパスで9枚）。_chars_calc_body に、付与元（自身の self 常在型／バトルゾーンの発生源／シールドの発生源／継続的効果）ごとに、第240弾と同じ適用判定で gain を集める処理を追加。対象は持ち主自身に働く形（affects 無し／"self"／{ref: self}）に限る（コーパスの得る常在型はすべてこの形）。
+
+- プロト T661–T662、tests/test_vocab_pilot244.py。
+
+## 第245弾 dm26ex2-046 再評価（誤タグ行）
+
+rejects で mana_placement_reveal と誤タグされていた dm26ex2-046（断罪のロスト・サイン）の実テキストは、マナ配置条項を持たない S・トリガー呪文だった。実ブロッカーは「見た4枚から召喚した個体への、次の自ターン開始時の遅延バウンス」だが、delayed_trigger は登録時に env の vars を保存し（ops.py）、play_free の as: が召喚後の個体を束縛する（bind タスク）ため、登録済み前例 dm23rp4x-026 と同じく {ref: 変数} で正確に表せる。残りは既存イディオムの組合せ: shuffle → choose {from_top: 4, look} → may [play_free] → modify grant blocker（end_of_turn）→ move {position: bottom, order: choose}。
+
+- プロト T663–T664、tests/test_vocab_pilot245.py。
+
+### ラウンド279（第245弾）
+
+dm26ex2-046（断罪のロスト・サイン）を直接 submit で登録（reopen は使わず、誤タグ行をそのまま解消）。新規1件、バウンスなし。converted 10,022 / rejects 2,316、重複0・漏れ0。mana_placement_reveal の残存行は消滅（ファミリー完全解消）。
+
+## 第246弾 when の cause に defn（発生源カード）
+
+「《特定カード》の能力で破壊される時」を表すため、when の cause 仕様に defn（文字列またはリスト）を追加した。レコードは基盤B1で cause_defn を既に持ち、照合は events._match_when の cause ブロックで行う。defs の検証とスキーマも同期。dmc45-008 の置換は、ギアの常在型（affects: crossed）が mod.gain で置換能力をホストへ与える形: 置換の when は subject: self + cause: {defn: dmc45-009}、追加条件（もう一方のギアもクロスされている）は if {exists: {ref: self, filter: {crossed_name: 雷刃 ブシドー・スピリット}}}、instead: [] でとどまる（登録済み前例と同じ形）。同じ cause 仕様に name_has（発生源の名前の一部）も追加: dm23ex1-020 の「名前に《武者》とあるカードの効果によって相手のクリーチャーが破壊された時」は cause: {by: you, name_has: 武者} で表せる（照合は本体名＋各面の名前）。
+
+- プロト T665–T666（T655 サムライがホスト）、tests/test_vocab_pilot246.py。
+
+### ラウンド280（第246弾）
+
+reopen trigger_when_destroyed_by_named_card_effect で外れた2枚を登録: dmc45-008（風刃 カミカゼ・スピリット、cause.defn の置換を追加）と dm23ex1-020（ボルシャック・大和・ドラゴン「開眼」、cause.name_has の誘発＋攻撃中パワー静的を構築）。新規2件、バウンスなし。converted 10,024 / rejects 2,314、重複0・漏れ0。trigger_when_destroyed_by_named_card_effect ファミリー解消。
+
+## 第247弾 S・トリガーX（イディオム）
+
+S・トリガーX は「シールドゾーンから手札に加える時」の誘発として表せる: {kind: trigger, zone: hand, when: {event: move, from: shield, to: hand, subject: self}, effect: [may [play_free {ref: self, as: gen}, cross_free {gear: {ref: gen}, to: 自分のクリーチャー1体}]]}。play_free がジェネレート（第224弾で permanents 対応）、cross_free op（第195弾）が効果によるクロス。生成後の個体は play_free の as: で束縛してから参照する（移動前の世代は gen-strict で引けない）。
+
+- プロト T670、tests/test_vocab_pilot247.py。
+
+### ラウンド281（第247弾）
+
+dmx21-045（アクテリオン・フォース）を登録。新規1件、バウンスなし。別刷り dm15-s05 は aliases に畳まれ、その reject 行もツールが除去（残存なし）。converted 10,025 / rejects 2,313、重複0・漏れ0。strigger_x ファミリー解消。
+
+## 第248弾 shield_break_intercept_cast（ブレイク置換の割り込み型、第146弾の形）
+
+「ブレイクする時、そのシールドの中の呪文をすべて無料で唱え、その後ブレイクする」は、第146弾のブレイク置換の割り込み型で表せる: {kind: replace, when: {event: break, subject: self}, continue: true, instead: [play_free {select: {ref: event.shield, filter: {types: [spell]}, count: "all"}}]}。諮問はシールドが動く前に行われるため event.shield は生きており、唱えた呪文は通常解決で持ち主の墓地へ行く。continue: true なのでシールドは chosen に残り、ブレイクが続く（ゾーンに残っていないカードは最終 move で自然に外れる）。
+
+ついでに第239弾の break_before レコードへ shield: 割られるシールドの参照を追加した（break レコードと揃える。_record_for は dict(ev) で通す）。なお break_before の誘発から event.shield を引く形は、解決時点ですでにシールドが手札へ移っており世代が合わないため使えない — 差し替え型は置換で表すのが正道。
+
+- プロト T671–T672、tests/test_vocab_pilot248.py。
+
+### ラウンド282（第248弾）
+
+dmr04-003（無限王ハカイ・デストロイヤー）を登録。新規1件、バウンスなし。converted 10,026 / rejects 2,312、重複0・漏れ0。shield_break_intercept_cast ファミリー解消。
+
+## 第249弾 stack_creature_from_deck（move の stack_evo + evo_source、第173弾の形）
+
+「山札から見たクリーチャーをこのクリーチャーの上に置く」は、move op の stack_evo: true + evo_source: {ref: self}（第173弾「このクリーチャーの上に置く」）が受け皿になるが、h_put_stacked は進化クリーチャーしか重ねなかった（partial のノートどおり）。第249弾で、固定の evo_source がある非進化カードも stack_on で重ねる分岐を追加（進化印は付けないので、進化元レコードやシンカパワーの対象にはならない）。見る7枚は choose {from_top: 7, look} のイディオム、残りは山札へ戻してから shuffle。
+
+- プロト T673–T674、tests/test_vocab_pilot249.py。
+
+### ラウンド283（第249弾）
+
+dmex18-023（ゴウケンオー ～秘剣轟誕～）を登録。新規1件、バウンスなし。converted 10,027 / rejects 2,311、重複0・漏れ0。stack_creature_from_deck ファミリー解消。
+
+## 第250弾 g_link_positional / g_link（名前指定と位置キーワードの併記、トライ・G・リンク）
+
+第197弾の名前指定リンクは位置キーワードを持たないゴッド専用だった（side is None の分岐）。邪神M・ロマノフは左 G・リンク（位置キーワード）を持ちながら「《R》または《C》の左横」と名前も指定する。第250弾で h_g_link のキーワード分岐にも link_to の名前制限を効かせた（位置条件を満たすグループのうち、指定名のゴッドがいるグループだけがリンク先になる）。邪神R・ロマノフのトライ・G・リンクは位置キーワードを持たないので、第197弾の名前指定分岐のまま link_to [{M, right}, {C, left}] で表せる（「その間」は M と C がリンク済みのグループへ加わる形で自然に実現する）。
+
+同じ再変換で外れた極限邪神M・ロマノフ（左G・リンクOMG）は指定が「《R》《C》、または『中央/右 G・リンク』を持つゴッド」と混成なので、link_to に {side: left|center|right} エントリを追加した（検証も拡張）。キーワード分岐の名前制限は「名前または side が合うゴッドのいるグループ」に一般化し、位置キーワードを持たない名前指定ゴッド単体へのリンクも、自分の位置が空いていれば候補に加える。
+
+- プロト T675–T678、tests/test_vocab_pilot250.py。
+
+### ラウンド284（第250弾）
+
+dmc58-003（邪神M・ロマノフ）・dmc58-004（邪神R・ロマノフ）・dmex17-037（極限邪神M・ロマノフ）を登録。新規3件、バウンスなし。converted 10,030 / rejects 2,308、重複0・漏れ0。g_link / g_link_positional ファミリー解消。なお reopen は g_link の部分集合だった dmex17-037 も外したため、同ラウンドで一緒に登録して漏れを防いだ。
+
+## 第251弾 attack_cancel（攻撃の中止 op）
+
+「攻撃を中止する」は新しい op **cancel_attack** で表す: タスクスタック上の attack タスクに cancelled 印を付け、h_attack は再開時にバトルもブレイクも行わず attack_end を出して攻撃を終わらせる（AttackTask に cancelled を追加）。攻撃宣言時の誘発（相手の攻撃時・自分の攻撃時）の解決窓で使う。捨てる/破壊する等のコストは may + as: paid + if {exists: {ref: paid}} の既存イディオム、しなかった場合の分岐は if {not: {exists: {ref: var}}} で書ける。
+
+- プロト T680–T682、tests/test_vocab_pilot251.py。
+
+### ラウンド285（第251弾）
+
+dmd03-005（特攻の菊）・dmsd01-010（バッテン親父）・dm26ex4-010（切札混成 光隼 蒼斬丸）・dmrp12-078（パイパーパイプー）を登録。dm26ex4-sec007 は dm26ex4-010 の aliases に自動で畳まれた。新規4件＋alias畳み込み1件、バウンスなし。converted 10,034 / rejects 2,303、重複0・漏れ0。attack_cancel ファミリー解消。
+
+## 第252弾 g_breaker（G・ブレイカー）
+
+キーワード **g_breaker** を新設（keywords.yaml に登録。能力の実体は combat が持つ）。攻撃フェイズ4のブレイカー選択（509.2c）に "all" の選択肢を加え、選ばれたら相手のシールドをすべてブレイクし、その後（相手側のブレイク処理が終わってから）自分のシールドもすべてブレイクする break タスクを積む。付与形は mod grant [g_breaker] + duration: during_attack で表せる。なお dm23rp1-t4（孫条項）と dm26sd1-n008（発声条項）は現実世界の行為を条件にするジョーク条項が残るため、G・ブレイカー自体は解消しても別ギャップで差し戻す。
+
+- プロト T683–T684、tests/test_vocab_pilot252.py。
+
+### ラウンド286（第252弾）
+
+dmx17-014（THE FINALカイザー）・dmc64-008（超銀河剣 THE FINAL）を登録。新規2件。dm23rp1-t4（じーさん）は G・ブレイカー＋シールド化20枚を保存して win_replacement_grandchild で、dm26sd1-n008 は G・ブレイカーを保存して declare_speech で、それぞれ差し戻し（どちらも現実世界の行為・関係を条件にする条項）。converted 10,036 / rejects 2,301、重複0・漏れ0。g_breaker ファミリー解消。
+
+## 第253弾 protect_hand（相手の効果では手札を捨てられない）
+
+常在型キー **protect_hand: true** を新設。そのクリーチャーがバトルゾーンにある間、そのプレイヤーの手札は、相手の呪文またはクリーチャーの能力による破棄（手札→墓地、reason: discard、起因印 by が相手で cause_kind が spell、または起因カードがクリーチャー）を受けない。events の移動適用ガードで判定する（no_leave や破壊耐性と同じ層）。自分の効果による破棄、ギア／タマシード等の能力による破棄は対象外。
+
+- プロト T685–T688、tests/test_vocab_pilot253.py。
+
+### ラウンド287（第253弾）
+
+hand_discard_protection の4件すべてを登録。新規4件（dm24ex3-051、dm23rp2x-029、dmbd04-003、dmrp08-003）。dmbd04-003 のコスト比較条項は count 式（相手のマナ枚数）で表現。converted 10,040 / rejects 2,297、重複0・漏れ0。ファミリー解消。
+
+## 第254弾 action_limit（攻撃/ブロック回数の制限）
+
+新規 op **action_limit** {player, attack?, block?, until}。保留は GameState.action_limits（Rust state.rs にも同名フィールドを追加）。until は caster_next_turn_start（唱えた側の次のターンのはじめまで。st_start で失効）と opp_next_turn（次の相手のターン中だけ）。判定は Engine._action_limit。攻撃は combat の _attack_options で、そのターンに宣言した攻撃回数（turn_counters atk_decl:<p>、攻撃フェイズ0で加算）が上限に達したら選択肢を出さない。ブロックはブロック指定の諮問で、上限到達時はブロッカー候補を空にする（blk_decl:<p> は実際にブロックした時に加算。ガードマンは数えない）。
+
+- プロト T689–T690、tests/test_vocab_pilot254.py。
+
+### ラウンド288（第254弾）
+
+attack_limit の3件を登録。新規3件（dm24rp3-061、dmrp16-015、dmrp22-014）。dm24ex4-066 は誤タグではなく、呪文側が attack_limit・クリーチャー側が別条項のツインパクトだった。呪文側を解決して保存し、non_summon_entry_trigger（召喚以外の方法で出た時）で差し戻し。converted 10,043 / rejects 2,294、重複0・漏れ0。
+
+## 第255弾 breaks_scaling（数で変わるブレイク数）はイディオム
+
+3形とも既存の breaks_add {amount, count} で足りる。(1) 常在の数え上げ: breaks_add {amount: 1, count: {zone: bz, owner: you, other: true, filter: …}}（クロトラ／アウトランダー。後者は shield ゾーンの {keyword: shield_go, face_up: true} 数え上げ）。(2) 束縛した集合の大きさ: 攻撃誘発で破壊した集合を as で束縛し、modify で power {amount: 3000, count: {ref: killed}} と breaks_add {amount: 1, count: {ref: killed}} を end_of_turn 付与（サードニクス）。残る dm24ex3-tf02 は「表向きにした束のうち無色だけを数える count」と「上か下かの配置選択」が要るため、ギャップを精密化して差し戻す。
+
+- プロト T691、tests/test_vocab_pilot255.py。
+
+### ラウンド289（第255弾）
+
+breaks_scaling の3件を登録。新規3件（promoy10-007、dmr12-013、dm25-s03）。dm24ex3-tf02 は revealed_pile_breaks_and_placement に精密化して差し戻し（アタック・チャンス宣言は保存）。converted 10,046 / rejects 2,291、重複0・漏れ0。
+
+## 第256弾 not_reason（when の理由否定）
+
+when に **not_reason**（文字列またはリスト）を追加。「召喚以外の方法で出た時」= {event: move, to: bz, not_reason: summon, subject: …} と書ける。defs の検証、events の _match_when、スキーマの when プロパティに反映。
+
+- プロト T692–T693、tests/test_vocab_pilot256.py。
+
+### ラウンド290（第256弾）
+
+dm24ex4-066（伝達妖精セージ / コンタクト・メッセージ）を登録。新規1件。converted 10,047 / rejects 2,290、重複0・漏れ0。non_summon_entry_trigger 解消。
+
+## 第257弾 unpaid の拡張（マナをタップせずに出た時）
+
+move レコードの unpaid 印を拡張する: バトルゾーン以外から召喚以外の理由でバトルゾーンへ移る移動（効果で「出された」カード）は、マナをタップせずに出ているので unpaid とする。events の両レコード構築（_record_for と _apply_one）に同じ規則を入れた。これで既存イディオム {event: move, to: bz, unpaid: true, subject: …} が、無料召喚と効果出場の両方に効くようになる。既存の「コストを支払わずに出た時」系カード（move 照合のもの）も、公式どおり効果出場で誘発するようになる。
+
+- プロト T694–T695、tests/test_vocab_pilot257.py。
+
+### ラウンド291（第257弾）
+
+entry_without_mana_tap の4件を登録。新規4件（dm26ex4-083、dm26ex4-070、dm26rp1-std001、dm26sd1-s011）。converted 10,051 / rejects 2,286、重複0・漏れ0。
+
+## 第258弾 alt_cost の混合形（cost + do）
+
+alt_cost は {cost, civs} 形と {do: [...]} 形を併記できるが、従来は do の完了時点で free 扱いになり、併記した cost が課金されなかった。h_play の代替コスト処理で、cost を併記した場合は free にせず、行動ステップの後に cost_override で通常どおり支払うよう修正した。「{df04}を支払い、自分のシールドを1つ墓地に置いて唱えてもよい」（鬼火と魍魎の決断）がこの形。
+
+- プロト T696、tests/test_vocab_pilot258.py。
+
+### ラウンド292（第258弾）
+
+cast_time_alternative_cost の3件を登録。新規3件（dm24ex3-rp3s11、dm24ex3-tf20、dm24ex4-060）。dm25ex2-080 は支払い先が超次元ゾーン（範囲外）のため hyperdimensional_alt_cost に精密化して差し戻し。converted 10,054 / rejects 2,283、重複0・漏れ0。
+
+## 第259弾 tap_entry（タップして出してもよい）
+
+面の項目 **tap_entry: true** を追加。h_play の支払いフェーズ（再開可能な地点）で「タップして出すか」を尋ね、選べば召喚の move イベントに tapped を載せてタップ状態で出す。通常召喚・無料召喚・S・トリガーなど、h_play を通る全ての召喚で効く。
+
+- プロト T697、tests/test_vocab_pilot259.py。
+
+### ラウンド293（第259弾）
+
+tap_entry_option の4件を登録。新規4件（dm26rp1-005、dm26rp2-044、dm26rp2-075、dmrp22-043）。dmrp22-043 の partial にあった deny be_attacked は誤読として、dm24rp2-047 の前例どおりプレイヤーへの攻撃 deny に修正した。converted 10,058 / rejects 2,279、重複0・漏れ0。
+
+## 第260弾 mana_all_civs（すべての文明を持つかのようにタップする）
+
+常在キー **mana_all_civs: {for?: 出すカードへのフィルター}** を追加。発生源がバトルゾーンにあれば自分のマナすべてに、マナゾーンのカード自身にあればそのカードだけに効く。_mana_choices の文明キー計算でのみ有効化するので、マナ武装の数え上げなど支払い以外の文明判定には漏れない。「してもよい」は選択肢が増える形で自然に表れる。
+
+- プロト T698–T700、tests/test_vocab_pilot260.py。
+
+### ラウンド294（第260弾）
+
+mana_civilization_tap の4件を登録。新規4件（dm26ex4-081、dm24bd6-042、dm24rp2-074、dm26rp3-012）。パートナー指定のためにフィルターキー partner: true（[P]能力を持つカード）を追加した。「攻撃できない」はキーワード cannot_attack で表す。converted 10,062 / rejects 2,275、重複0・漏れ0。
+
+## 第261弾 CIP能力の使用・呪文回数制限・出場ラッシュ
+
+3つの小さい語彙をまとめて追加する。(1) op **use_entry_abilities** {select, count?}: 対象カードの「出た時」誘発（move→bz、subject self）の効果を、使う側の能力として解決する。self は使う側のまま、event.subject も使う側に差し替える。count があればその数だけ（多い時は使う側が選ぶ）。(2) 常在キー **cast_limit: {count}**: 相手のバトルゾーンにある間、その相手は各ターン count 回までしか呪文を唱えられない。唱えた数は turn_counters の casts:<player> で数え、_play_options の末尾で呪文の選択肢を落とす。(3) mod **player_rush: true**: 出たターンでもプレイヤーだけは攻撃できる（combat の rush 判定に chars 側の条件を追加）。
+
+- プロト T701–T705、tests/test_vocab_pilot261.py。
+
+### ラウンド295（第261弾）
+
+CIP能力の使用系を再変換。新規4件（dmrp08-010、dm25ex3-rp3007、promoy17-sp4d01、dm26ex4-cho005＝ジョギラゴン＆ジョニー。dm26sd1-n001 は原文コーパス外の ID のため、同一カードの cho005 を正規形として登録し、n001 は alias に収めた。n001 の rejects 行は alias 側の残行として残る）。dm25ex2-004 は攻撃先を自分が選ぶ条項が未対応のため、新ギャップ attack_target_choice で差し戻し（残りは保存）。converted 10,066 / rejects 2,271、正規重複0・漏れ0。
+
+## 第262弾 declare group（この攻撃中に1回まで）
+
+宣言型能力に任意キー **group: <名前>** を追加。同じ group の宣言は、1回の攻撃につきプレイヤーごとに1回までしか宣言できない（ニンジャ・チェンジの「この攻撃中に自分が『ニンジャ』能力を使っていなければ」）。_declarable が現在の攻撃番号（turn_counters の current_attack）と使用済み印を照合し、h_declare が宣言時に印を立てる。ニンジャ・チェンジ自体は既存の declare 窓（攻撃宣言時は防御側にも、ブロック時は両者に開く）と op swap の組み合わせで表す。
+
+- プロト T706–T707、tests/test_vocab_pilot262.py。
+
+### ラウンド296（第262弾）
+
+ninja_change の5件を登録。新規5件（dm23sd2-001、dm25ex1-014、dm25ex1-034、dm25ex1-mc009、dm26sd1-s001）、差し戻しなし。converted 10,071 / rejects 2,266、重複0・漏れ0。
+
+## 第263弾 dragon_mana_buso（龍マナ武装）
+
+「龍マナ武装 N」は、自分のマナゾーンにあるドラゴン・クリーチャーが N 体以上ある時に能力が働く条件。既存の式 `{cmp: [{count: {zone: mana, owner: you, filter: {types: [creature], race_has: ドラゴン}}}, ">=", N]}` で表す（忍者のマナ7枚条件と同型）。`if` にも `op: if` の cond にも静的の `if` にも書ける。シールドゾーンの常在型（`zone: shield` + `grant: [s_trigger]`）も同じ `if` で動き、ブレイク時の宣言は移動前（まだシールドゾーン）の特性で判定されるため付与が効く。
+
+本弾で足した小さい語彙は3つ。(1) cond **extra_turn**（bool）: このターンが追加ターンか。「これが追加ターンでなければ」は `{extra_turn: false}`。GameState に `extra_turn` を追加し、h_turn が extra_turns からの開始時に立てる。Rust 側も state.rs＋setup.rs＋engine.rs の遷移＋eval_cond を同期（dmcore のビルドはこの環境に無いため stamp は更新しない。前弾と同じ扱い）。(2) セレクタ **distinct_names: true**: 「名前が異なる」選択。distinct_costs と同じ積み上げ分岐に乗り、既に選んだ名前を候補から外す（異なる名前の Jack-Pot を好きな数出す用）。検証は distinct_costs と同型（count 併記必須、count: all 単独は不可）。(3) 生成時ベイクの拡張: `_bake_refs` が `{cost_of / power_of / name_of / races_of}` も生成時の値に焼く。dynamic な modify の範囲フィルタに「表向きにしたカード以下のコスト」を書けるようになる（`{cost_le: {cost_of: shown}}` はベイク前だと特性計算時に dict 比較で落ちる）。
+
+- プロト T708–T716、tests/test_vocab_pilot263.py（12件）。
+
+### ラウンド298（第263弾）
+
+dragon_mana_buso の6件をすべて新規登録、差し戻しなし。新規6件（dm26ex3-016、dm26ex3-021、dm26ex3-034、dm26ex3-037、dm26ex3-046、dm26ex3-073）。converted 10,081 / rejects 2,256、重複0・漏れ0。tests/test_vocab_pilot263_cards.py（4件）＋tests/test_vocab_pilot263.py（12件）が通る。dm26ex3-037 の partial の text は「龍マナ武装７」しかなかったため全文を raw 行から補完。「マッハファイター」は keywords.yaml に無いため dm26ex3-037 のドラゴン付与は展開形の allow（attack_creature・tapped: false）を speed_attacker 付与と併記。dm26ex3-034 の「合計5枚置いてもよい。そうしたら追加」は effect 内 if（Jack-Pot 合計5枚以上の存在確認。select の count は不足時に切り詰められるためガード必須）＋may［move 5枚＋extra_turn］。proto テストと cards テストは同一 pytest 呼び出しで混ぜないこと（conftest の DMSIM_SKIP_CONVERTED 復活で load_rules キャッシュが汚染される。第261弾の教訓どおり別プロセスで実行）。
+
+## 第264弾 trigger_doubling（誘発の2度トリガー）
+
+常在 mod **trigger_double** を追加。誘発の収集時（`_collect_triggers`）に、条件に合う誘発型能力へ適用する。
+
+```yaml
+mod:
+  trigger_double:
+    when: <when-spec>            # 必須: 誘発の原因イベントへの照合（when と同じ言語）
+    source: <subject-pattern>    # 任意: 能力の発生源カードへの条件（"self" か {owner?, filter?, other?}）
+    source_subject: true         # 任意: 能力の発生源が原因イベントの subject と同一であること
+    may: true                    # 任意: 任意（決定を尋ねる）。省略時は強制
+    once_per_turn: true          # 任意: 各ターン1回まで
+    first_per_turn: true         # 任意: 各ターンはじめての一致だけ
+    cost: [<ops>]                # 任意: 適用時に解決するコスト ops（may が必須）
+```
+
+- 強制は収集時に pending をその場で複製する（2度目の解決は vars を分ける。bazurenda の複数解決と同型）。
+- 任意（may）は同じ窓に `double_ask` の pending を積み、専用タスク `h_double_ask`（`DoubleAskTask`）で決定を尋ねる。「はい」なら対象を複製し、コストがあれば解決する（複製した誘発の解決より先に走る）。対象が先に解決されていたら尋ねない。`once_per_turn` は「はい」で消費し（断っても回数は残る）、`first_per_turn` は最初の一致で枠を使い切る（断ってもそのターンはもう来ない）。
+- 常在型（バトルゾーンのカード自身の static。`if` は収集時に eval_cond で見る）と継続的効果（modify で付与されたもの。`affected` の各カードが発生源）の両方を見る。`affects` が self でない常在型と dynamic の継続的効果はこの弾では扱わない。
+- 対象は通常の誘発（kind normal）のみ。遅延誘発（delayed）と declare 経由の pending は対象外。
+- **再入の教訓**: 任意の決定を `h_resolve_pending` の中で直接尋ねてはいけない。再入時に先頭の `order_pending` の ask が回答を誤消費し、double_ask が消えて複製も印も失われる（本弾で実測）。決定は専用タスクへ分離すること。タスクは `base/types.py` に TypedDict を足し、`@task` で登録する（check_shape が厳密なため）。
+- 複数の2度トリガーが同じ誘発に合う時は、それぞれが1回ずつ追加する（N+1回）。重ね掛けの乗算（2^N）は裁定待ちのためこの弾では扱わない。
+- Rust: 新しい GameState フィールドは無い（state.rs の変更なし）。Rust 側の `collect_triggers` は部分実装で、2度トリガーのミラーは未実装。dmcore のビルドはこの環境に無いため stamp は更新しない（第263弾と同じ扱い。stamp は HEAD 時点ですでに stale）。Rust は `double_ask` pending を uns("pending kind") で弾くため、2度トリガーがある対局では Python にフォールバックする。
+- 関連ギャップ `cip_trigger_double`（dm25ex3-010、dm26ex3-053）は別ギャップとして残す。dm25ex3-010 の「出た時誘発の2度トリガー」はこの語彙で表せる見込み（ラウンド側で判断）。dm26ex3-053 の Dスイッチ（ゲーム中で1度上下逆さまにする）は別語彙が要る。
+
+- プロト T717–T728、tests/test_vocab_pilot264.py（15件）。
+
+### ラウンド299（第264弾）
+
+trigger_doubling の6件のうち5件を新規登録、1件を差し戻し。新規5件（dmrp04s-004、dmrp21-013、dmrp22-040、dmex03-s02、dm24ex3-rp2s07）。差し戻し dmrp12-008 → opt_reduce_then_entry_destroy（離脱型の2度トリガー＋W・ブレイカーは解決して partial に保存。残余は「コストを２少なくしてもよい。そうしたら、このターン、出た時、自分のクリーチャーを１体破壊する」条項：opt_reduce.then はターン終了時の destroy / deck_bottom_draw のみで、出た時の破壊は表せず、軽減したかどうかの条件も無い）。converted 10,086 / rejects 2,251、重複0・漏れ0。tests/test_vocab_pilot264_cards.py（3件）が通る。見守り実行がタイムアウトで中断したため、カードテスト・本節・コミットは後続の実行で仕上げた。
+
+## 第265弾 ultimate_evolution_max（究極進化MAX）
+
+共通文言: 「究極進化MAX：自分の究極進化クリーチャー１体の上に置く。」対象は dm26ex1-020 / dm26ex1-039 / dm26sd1-y004 / dm35-002（単独ギャップ）＋ 35-sec001（selector_filter_or も併せ持つ）。
+
+- 公式裁定の確認: 「究極進化クリーチャー」とは究極進化の能力を持つクリーチャー、すなわち自身の進化条件（`evolve_from`）が進化クリーチャーを要求するカードである。バトルゾーンへの出方は問わない（効果で直接出た究極進化クリーチャーも究極進化クリーチャーであり、MAX の進化元になれる）。よって **def レベルの判定 (a)** を採用し、進化で出た履歴を見る (b) は採らない。第30弾で究極進化自体は `evolve_from: {types: [evolution]}` で既存表現可とされているので、その述語形としてフィルタキーを足すのが最小の語彙である。
+- 新語彙: フィルタキー **`ultimate_evolution: true|false`**。対象カードの `fdef(cid).evolve_from`（単一フィルタまたは進化Vのリスト）のいずれかが「進化クリーチャーを要求する」場合に真。要求するとは `types` に `evolution` を含むこと。`any_of` は全分岐が要求する場合に要求とみなす。進化Vで片方の分岐だけが究極進化を要求する札は実在しないので、分岐の扱いは `any`（いずれかの分岐が要求すれば究極進化クリーチャー）とした。
+- 用法: `evolve_from: {ultimate_evolution: true}`（NEX 4枚の進化条件）。`_evo_sources` → `_evo_match` → `filter_match` の経路でそのまま働くので、進化まわりの本体変更は不要。一般の select フィルタとしても使える（「自分の究極進化クリーチャーを1体破壊する」等）。`false` 形は「究極進化クリーチャーではない」。
+- 注意: 従来の partial にあった `evolve_from: {types: [evolution]}` は近似である（進化クリーチャー全般に広げすぎ。35-sec001 の partial の notes に明記あり）。ラウンド300で `{ultimate_evolution: true}` に正す。dm26ex1-020 / dm26ex1-039 の partial の `evolve_from: {types: [creature]}` も同様に正す。
+- dm26sd1-y004 の「このクリーチャーを自分のマナゾーンから召喚してもよい」はキーワード `summon_from_mana`（第28弾）で既存表現可。攻撃時能力（山札の上から3枚までマナへ＋マナからクリーチャーを好きな数出す＋出た時の効果・ルール無視）はラウンド300で既存語彙（`no_trigger` 等）で組む。
+- Rust: 新しい GameState フィールドは無い（state.rs の変更なし）。Rust 側の `filter_ok` は未知のフィルタキーを `Unsupported` で返すため、究極進化MAXのカードがある対局では Python にフォールバックする（第264弾と同じ扱い）。dmcore のビルドはこの環境に無いため stamp は更新しない（第263/264弾と同じ扱い）。Rust 側の `Def` は `evolve_from` を `Value` で持っているので、将来のミラーは可能。
+
+- プロト T729–T733、tests/test_vocab_pilot265.py（9件）。
+
+### ラウンド300（第265弾）
+
+ultimate_evolution_max の4件を新規登録、差し戻しなし。新規4件（dm26ex1-020 ロマノフカイザー・NEX：出た時・相手2体破壊＋マナ2枚墓地／離れた時・山札サーチ any_of、dm26ex1-039 ギャラクシー・デスティニー：攻撃時・山札からクリーチャー2体まで出す、dm26sd1-y004 ギュンター・ペガサス：マナ召喚＋攻撃時・山札上3枚までマナ＋マナから好きな数出す no_trigger、dm35-002 ギャラクシー・オペレーションθ：攻撃時・山札から呪文1枚を無料唱え／離れた時・墓地の呪文すべて手札）。partial の evolve_from 近似は {ultimate_evolution: true} に正した。35-sec001 は dm26ex1-020 の同名別版として aliases に折り畳まれ、rejects には alias-level stale 行として残る。converted 10,090 / rejects 2,247、重複0・漏れ0。tests/test_vocab_pilot265_cards.py（9件）が通る。
+
+## 第266弾 exile_doron_go（ウルトラ・ドロン・ゴー）
+
+共通文言: 「ウルトラ・ドロン・ゴー：このクリーチャーが離れた時、名前に《X》とあるエグザイル・クリーチャーを１体、自分の手札から出してもよい。自分の他の、名前に《X》とあるエグザイル・クリーチャーは出せない。」対象は dm22ex1-021 / dm22ex1-080 / dm22ex1-090 / dm22ex1-cho22（単独ギャップ）。
+
+- 新語彙: 型印 **`exile_creature`**（defs の CARD_TYPES。第174弾の dream_creature と同型）。types には通常 `["creature", "exile_creature"]` と書く。フィルタ `{types: [exile_creature]}` は selectors の汎用の集合照合でそのまま働くため、エンジン変更なし。schema は再生成で追随（差分は型の列挙×2）。Rust 側の変更なし（types は文字列リストで、filter_ok は汎用の文字列照合）。
+- **発見（今回の本質）**: 従来、converted.yaml には `types: [exile_creature]` をフィルタに書いたカードが10箇所あったが、どのカードの types にもその印が無く、照合は常に偽だった（死んだフィルタ）。エグザイルは種族では識別できない（エグザイルの種族はアウトレイジMAX / アウトレイジOMG / オラクリオン / オラクルの4種だが、非エグザイルのアウトレイジMAXは169枚ある）。今回、変換済みのエグザイル・クリーチャー28枚の types に印を付け、その10箇所が初めて生きる。
+- ウルトラ・ドロン・ゴーの型（ドロン・ゴーとの差は誘発条件だけ）:
+  - 誘発 `{event: move, from: bz, subject: self}`（行き先を問わない「離れた時」。dm22ex1-055 の「離れた時」と同型）。効果は may [move {select: {zone: hand, owner: you, filter: {types: [exile_creature], name_has?: X}}, count: 1, to: bz, reason: put}]。名前に制限が無い札（dm22ex1-090 / cho22）は name_has を省く。
+  - 出場制限は常在型5つ（hand / graveyard / mana / deck / shield の各ゾーン。dmd11-005 のドロン・ゴーと同型）で、filter は `{types: [exile_creature], name_has: X}`、mod は `{deny: [enter_bz]}`。
+- **移行（同じコミットで実施）**: 既存の27枚の制限の常在型135箇所と、ドロン・ゴー誘発の select 25箇所（+ any_of 形2箇所）のフィルタを、従来の近似 `{name_has, races: [アウトレイジMAX]}` から精密な `{name_has, types: [exile_creature]}`（any_of 形は各分岐を同様に）に正した。近似は両方向に誤っていた：非エグザイルの「熱血武闘 カツキング」「極大左神 マックス」「武闘親父 カツドン」等（種族アウトレイジMAXで名前に武闘／神を含む）を誤って制限・対象にし、種族がアウトレイジMAXでないエグザイル（dmr12-v02 はアウトレイジOMGのみ）を見逃していた。real.yaml / real_akashic.yaml にはエグザイル・クリーチャーは無い（アウトレイジMAXの2件は非エグザイル）ので、そちらの移行は不要。
+- **チーム・エグザイルの無視能力**（dm22ex1-cho22「このクリーチャーが自分の手札またはバトルゾーンにある時、自分のエグザイル・クリーチャーの持つ、エグザイル・クリーチャーを出せないようにする能力を無視する」）は、制限側の常在型の `if` で表す: `{not: {exists: {zone: [hand, bz], owner: you, filter: {name_has: チーム・エグザイル}}}}`。常在型はバトルゾーンの発生源からしか働かず、手札にある時の無視を cho22 自身の能力では表せないため。mod.ignore は対象カードの常在型をすべて無視してしまうので使えない（deny 以外の常在型まで消える）。「チーム・エグザイル」を名前に含むカードは原文コーパスに cho22 だけ。既存の135箇所すべてにこの `if` を付けた（cho22 の無視はすべてのエグザイルの制限能力に及ぶため）。cho22 自身の def には無視の能力は書かない（名前が鍵）。将来、同能力を持つ別名のカードが増えたら、すべての制限の `if` の filter を見直す必要がある。
+- **教訓**: 同一の dict オブジェクトを複数箇所の `if` に使い回すと、cardstore.write（safe_dump）が共有オブジェクトにアンカーを打ち、以降のアンカー番号がずれて差分が膨らむ。移行スクリプトでは箇所ごとに deepcopy する（初回はこの罠で差分が 1083行になり、やり直した）。types リストも共有オブジェクトの場合があるので、新しいリストに置き換えること。cardstore の load→write ラウンドトリップは無変更時にバイト同一であることを事前に確認した。
+- **テスト上の注意**: 選択肢が1枚だけの決定は ask が自動回答するため、誘発の出し先の選択は決定として現れない（破壊テストでは choose_cards が出ない）。候補が複数ある時だけ決定が出る。制限が働いている時の誘発の move は、選択自体が出ずに permits で止まる（T735 は手札に残る）。dmr11-008（天空美麗 ミケラ・ジェンヌ）は制限を持たないエグザイル（誘発のみ）。
+
+- プロト T734–T739、tests/test_vocab_pilot266.py（10件）。
+
+### ラウンド301（第266弾）
+
+exile_doron_go の4件すべてを新規登録、差し戻しなし。新規4件（dm22ex1-021、dm22ex1-080、dm22ex1-090、dm22ex1-cho22）。dm22ex1-021 の CIP は destroy count:any + as:k で破壊数を保持し、draw count:{count:{ref:k}} で同数ドロー、その後手札からエグザイルを1体出す（dm25ex2-cho030 / dm22rp2x-tf6 型）。dm22ex1-080 はツインパクト（呪文面は相手が選んで破壊 chooser: opp、dm21-028 型）。dm22ex1-cho22 のコスト∞は partial の慣例どおり 999。dmx22b-014 は dm22ex1-cho22 の aliases に折り畳まれた。converted 10,094 / rejects 2,243、重複0・漏れ0。tests/test_vocab_pilot266_cards.py（14件）が通る。
+
+- **CIP の罠**: dm22ex1-021 の CIP で手札の《神》エグザイル（T735）は出せない。自身の出場制限が場に出た瞬間から働くため、破壊→ドローまでは進むが、put は permits で止まる。テスト test_021_cip_cannot_put_restricted で確認。
+- **テストの罠**: dm22ex1-021 は無色コスト11のため、火マナでは play 選択肢が出ない（文明「zero」をマナの文明集合に要求する）。無色の T423 を11枚マナに置く。ウルトラ誘発の出し先は 021 では名前に《神》とあるものだけなので、T739 では不発になる（T735 を使う）。
+
+## 第267弾 rinne（輪廻∞）
+
+共通文言: 「輪廻∞：このカードの呪文側を、バトルゾーンに置いたまま唱えてもよい（コストは支払う）。そうした時、自分の《天地命動 バラギアラ》１体につき、自分の山札の上から１枚をマナゾーンに置く。」対象は dm26rp3-s011 / dmex08-258 / dmrp08-mh05 / dmrp21-tr2（＋sec012 は s011 の別印刷）。
+
+- 新語彙: 面項目 **`rinne: true`**（ツインパクトのクリーチャー側に付ける。第226弾の grave_cast と同型）。defs の Face / CardDef、schema.py の面項目、dataaudit の _STRUCT_FIELDS、base/types.py の Option / PlayTask に追加。schema 再生成の差分は `rinne: {}` 2箇所＋via 列挙への `rinne` 1行。Rust 側の変更なし（第226弾と同じく定義項目のみ）。
+- `via` に **`rinne`** を追加（defs.VIAS）。cast イベントには `from: bz` と `via: rinne` が載る。
+- エンジン（turn.py のみ）: _play_options にバトルゾーン分岐を追加し、rinne 持ちの呪文側を通常コストで唱える選択肢 `play:<defn>:1:rinne` を出す（墓地からの grave_cast 分岐と同型）。h_play は rinne の時だけ (a) bz のガードを素通りし、(b) 保留へ移さず、(c) 面を変えず、(d) 呪文解決後の墓地への移動を省く。コスト支払い・casts カウンタ・S・トリガー等の処理は通常の呪文分岐をそのまま使う。
+- マナ・チャージは誘発のイディオムで表す: `{kind: trigger, when: {event: cast, via: rinne, subject: self}, effect: [repeat {times: {count: {zone: bz, owner: you, filter: {name_has: <名>}}}} [move {select: {zone: deck, owner: you, from_top: 1}, to: mana, reason: put}]]}`。手札からの通常詠唱や cast_face（スマッシュ・バースト。via 無し）では誘発しない。誘発は cast イベントの待機窓で解決するため、呪文の解決の後にチャージされる（第226弾の再唱イディオムと同じ順序）。
+- **チャージの罠**: move の select は `{zone: deck, count: 1}` では山札の任意の1枚を選ぶ決定が出てしまう。「上から1枚」は `{zone: deck, owner: you, from_top: 1}`（count 無し。dm18-136 型）。
+- 呪文側の型（すべて既存語彙の組み合わせ）:
+  - 輪廻虹災: choose {from_top: 5, look: true, count: all, reveal: true} で表向きにし、文明ごとに if {exists: {ref: pile, zone: deck, filter: {civs: [X], cost_le: 9}}} → may [play_free]（dm24bd1-007 の「各文明１枚ずつは文明ごとに分解」と同型）。残りは move {ref: pile, zone: deck, count: all, to: deck, position: bottom, order: choose}。
+  - 輪廻暴炎: destroy {total_power_le: 3000}（第144弾）＋このターンの grant。
+  - 天上天下輪廻独尊: modify {power: 8000, grant: [world_breaker], dynamic: true, duration: end_of_turn} ＋ modify {must_attack_creature: true, dynamic: true, duration: until_next_own_turn_start}（第194弾。must_attack は付けない＝攻撃自体は強制しない）。
+  - 輪廻暴冥: 既存語彙のみ（-4000 は modify、墓地からは move）。
+- CIP「召喚によって出た時、自分のマナゾーンにあるカードをすべてアンタップする」は trigger {event: move, to: bz, subject: self, reason: summon} → untap {zone: mana, owner: you, count: all}（dm26ex3-dcr012 型に reason: summon を追加）。
+
+- プロト T740–T742、tests/test_vocab_pilot267.py（8件）。
+
+### ラウンド302（第267弾）
+
+rinne の3件すべてを新規登録、差し戻しなし。新規3件（dm26rp3-s011、dmex08-258、dmrp08-mh05）。dm26rp3-sec012 は dm26rp3-s011 の同名別印刷として aliases に折り畳まれた（canonical dedup のため submit の対象外。dm26ex4-sec022 と同型）。dmrp08-mh04 は dmex08-258 の同名別印刷として aliases に折り畳まれた。呪文面はすべて第267弾の設計どおり：輪廻虹災は T740 型、輪廻暴炎は modify grant [speed_attacker]（dm20-030 型）＋destroy total_power_le: 3000、天上天下輪廻独尊は modify {power: 8000, grant: [world_breaker], dynamic: true, duration: end_of_turn}＋modify {must_attack_creature: true, dynamic: true, duration: until_next_own_turn_start}。converted 10,097 / rejects 2,239、重複0・漏れ0。tests/test_vocab_pilot267_cards.py（6件）＋tests/test_vocab_pilot267.py（8件）が通る。data audit 8件、file schemas＋Rust schema sync も通過。
+
+- **schema 取りこぼし**: 第267弾の schema 再生成で via 列挙への `rinne` 追加が漏れており、ラウンド302の最初の submit が「スキーマ不一致: 'rinne' is not one of [...]」で失敗した。`python -m dmsim.cards.schema` は標準出力に吐くだけでファイルを書かないため、再生成時はリダイレクトで data/schema/card.schema.json を上書きすること。差分は via enum への `"rinne"` 1行のみ。新しい via を足す時は schema 再生成の差分に enum 側も含まれるか確認する。
+- **テストの罠**: ツインパクトのクリーチャー面の play キーは `play:<defn>:0`。`play:<defn>` だけでは選択肢に一致せず、カードが出ないままゲームが終わる。
+- dmrp21-tr2（輪廻暴冥）はギャップ名が `rinne_infinity` のため今回の対象外。次回以降の対象。
+
+## 第268弾 dogiragon_gacha（ドギラゴン・ガチャ）
+
+共通文言: 「ドギラゴン・ガチャをN度回す。回すたびに、その能力を使う。」対象は dmd34-001 / dmd34-003 / dmd34-004 / dmd34-008（単独ギャップ）。
+
+- **ガチャは実物フィギュア依存だが実装可能**: ドギラゴン・ガチャは DMD-34 のガチャフィギュアの出目で決まるが、出目→能力の対応表は公式に定まっており（Duel Masters Wiki「Gacha Figure」）、フィギュアは乱数発生器にすぎない。out_of_game（実世界依存で棚上げ）とは違い、シミュレータの決定的乱数で正確に置き換えられる。公式が「公式大会ではガチャ能力を使えない」としているのはフィギュアの使用可否の話で、対応表そのものは定義済み。
+- 出目表（1d6）: 1 ブースト＝山札の上から1枚をマナへ / 2 リプレニッシュ＝1枚引く / 3 ブレイク＝自分のクリーチャー1体がこのターンさらに1枚ブレイク / 4 デストロイ＝相手のコスト7以下のクリーチャー1体を破壊 / 5 ファイト＝自分のクリーチャー1体と相手のクリーチャー1体をバトル / 6 ストライク＝自分のマナから進化ではないクリーチャー1体を出す。
+- 新語彙: op **`gacha`** `{op: gacha, kind: dogiragon, times: N}`（既定1回）。宣言は `dmsim/base/opvocab.py` の OP_ARGS に追加し、engine 側の `@op` と型が食い違うと登録時にエラーになる。kind の値検証は defs.py の Checker.ops に追加（play_self.via と同型。未知の kind は submit 前に DefError）。
+- エンジン（ops.py）: op_gacha は専用タスク `gacha` を `_defer` で積む（`_push` だと h_effect が pc を進めず同じ op を繰り返す罠）。タスク handler h_gacha が1回分ずつ `rng_below(s, 6) + 1` を振り、出目を s.pub に kind: "gacha"（result・name・player・viewers [0, 1]）で公開記録してから、その出目の効果を子タスク（effect）で解決する。子タスクが終わると handler が再び頂点に来るので `spin` を消して次を振る。後の出目は前の効果の解決後に振るため、公開記録が未来の出目を漏らさない。
+- 6つの効果はすべて既存語彙: Boost は move `{zone: deck, owner: you, from_top: 1}` → mana（dm18-136 型。count 無しで決定が出ない）/ Replenish は draw / Break は modify `{breaks_add: 1, duration: end_of_turn}`（dmr22-s03 型。`chars_ro(cid)["breaks_add"]` で観測できる）/ Destroy は move `{filter: {types: [creature], cost_le: 7}}` → graveyard, reason: destroy / Fight は choose ×2（変数 gacha_a/gacha_b）→ force_battle `{ref: ...}` / Strike は move `{zone: mana, filter: {types: [creature], not_types: [evolution]}}` → bz（dm23bd7-043 型）。選ぶものが無い出目は決定を出さず何も起きない。
+- Rust: 新しい GameState フィールドは無い（state.rs の変更なし）。gacha op は Rust 未移植のため、ガチャを含む対局は Python にフォールバックする（第264弾と同じ扱い）。dmcore のビルドはこの環境に無いため stamp は更新しない。s.pub は Rust 側で `Vec<Value>` のため result/name の追加キーは素通りし、infoset は cid の無い記録を無視する。
+- **テストの罠**: 単面クリーチャーの play キーは `play:<defn>`（面番号なし）。`play:<defn>:0` はツインパクト専用で、単面では選択肢に一致せず出ないままゲームが終わる（デッキ切れで敗北）。`zlist("bz", p)` は共有ゾーンで両軍分を含むため、バトルゾーンの枚数比較は `bz_tops(controller)` で絞ること（第261弾の教訓と同じ）。
+
+- プロト T743–T745、tests/test_vocab_pilot268.py（4件）。seed 1..48 のスイープで6出目すべてが出て、各出目の局面変化が署名どおりになることを確認（Boost/Replenish は山札−1、Break は breaks_add 1、Destroy/Fight は墓地行き、Strike はマナ−1・場＋1）。
+
+### ラウンド303（第268弾）
+
+dogiragon_gacha の4件すべてを新規登録、差し戻しなし。新規4件（dmd34-001、dmd34-003、dmd34-004、dmd34-008）。dmd34-001 は革命チェンジ（ルール側で declare＋swap に分解。火/自然のドラゴン＝filter {civs: [fire, nature], race_has: "ドラゴン"}、dm23rp3-042 型）＋W・ブレイカー（double_breaker）＋CIP ガチャ3度。dmd34-003 はスピードアタッカー＋CIP ガチャ1度、dmd34-004 は S・トリガー呪文（spell キーでガチャ2度）、dmd34-008 は CIP ガチャ1度。タップイン（マナゾーンに置く時タップして置く）は多色カードの一般則（core.py: 多色カードはマナにタップして置かれる）で処理されるため面項目なし。converted 10,101 / rejects 2,235、重複0・漏れ0。dogiragon_gacha ギャップは残り0件でファミリー解消。tests/test_vocab_pilot268_cards.py（7件）＋tests/test_vocab_pilot268.py（4件）が通る。data audit 8件も通過。
+
+- **テストの罠**: declare / attack の決定キーは `declare:<defn>:1` / `attack:<defn>:player` のように接尾辞が付く。完全一致で探すと見つからず、宣言を逃してデッキ切れで敗北する。`startswith("declare:<defn>")` / `startswith("attack:<defn>")` で探すこと（第262弾の `declare:T706` 検索と同型）。
+
+## 第269弾 s_trigger_x（S・トリガーX）
+
+共通文言: 「S・トリガーX（このクロスギアをシールドゾーンから手札に加える時、コストを支払わずにすぐジェネレートし、自分のクリーチャー１体にクロスしてもよい）」対象は dm23ex1-066 / dm29-034 / dm15-023 / dm15-026 / dm15-029 / dm15-032（6枚）。うち4枚は単独ギャップ、残り2枚の cross_free_op は第195弾の op cross_free で表せる（cross_free op 自体は既存語彙で、9枚の cross_free_op ギャップはすべて他ギャップとの複合）。
+
+- 新語彙: キーワード **`s_trigger_x`**（data/rules/keywords.yaml）。通常の S・トリガーと同じくシールドゾーンからの常在型 `{allow: [s_trigger]}` を与えるので、ブレイク時の declare_strigger の選択肢に出る。宣言して解決すると、通常の S・トリガーと同じく play_task（free）でジェネレートされる。
+- エンジン（events.py の h_resolve_pending の strigger 分岐のみ）: 解決する S・トリガーの発生源が s_trigger_x を持つ時、play_task の後に効果の子タスクを1つ積む。子タスクは `if`（`self_entered` が存在し、自分のバトルゾーンにクリーチャーがいる）→ `may` → `cross_free {gear: {ref: self_entered}, to: {zone: [bz], owner: you, filter: {types: [creature]}}}`。生成後の姿は self_entered で指す（生成で gen が1増えるため、宣言時の古い ref では candidates が空になる）。生成されなかった時や自分のクリーチャーがいない時は尋ねない。
+- Rust: 新しい GameState フィールドは無い。s_trigger_x は _OK_KW に無いため、S・トリガーX を持つカードを含む対局は Python にフォールバックする（第268弾のガチャと同じ扱い）。
+- **schema 取りこぼし**: キーワード追加時は `python -m dmsim.cards.schema` の再生成が要る（第267弾の via 漏れと同型）。初回は漏れてラウンド304の validate が「's_trigger_x' is not one of [...]」で失敗した。再生成の差分は `"s_trigger_x"` 3行のみ。
+- **テストの罠**: S・トリガーXで出たギアの「出た時」誘発は、クロスの子タスクの後に checkpoint の resolve_pending（win 0）で解決される。単一の待機誘発は order_pending が自動回答されるため決定としては現れず、次に現れるのは誘発の効果の選択（T747 のタップ先）である。クロス先の選択は候補1枚なら自動回答されるため、ドライバの choose_cards で現れるのはタップ先だけ。タップ先は T002（アンタップ）を選ぶこと。タップ済みの攻撃者 T001 を選ぶと無意味なタップになり、テストがデッキ切れで終わる。
+
+- プロト T746–T747、tests/test_vocab_pilot269.py（5件）。
+
+### ラウンド304（第269弾）
+
+s_trigger_x の6件すべてを新規登録、差し戻しなし。新規6件（dm23ex1-066、dm29-034、dm15-023、dm15-026、dm15-029、dm15-032）。dm23ex1-066 は出た時／クロス先の攻撃時の2誘発（tap no_untap_next）。dm29-034 は出た時の無償クロス（may＋cross_free）＋攻撃時のシールド・プラス。dm15-023 はブロッカー付与＋クロス先の破壊時に付け替え（when move from bz to graveyard reason destroy subject crossed。lki 照合で発火）。dm15-026 は常在型 affects crossed（power 5000＋blocker＋cannot_attack）。dm15-029 は動的パワー（power {amount: 1000, count: {zone: bz, owner: any, filter: {tapped: true}}}）。dm15-032 は攻撃時誘発 destroy total_power_le 3000 count any。promoy4-014 は dm15-032 の同名別印刷として aliases に折り畳まれた。converted 10,107 / rejects 2,229、重複0・漏れ0。s_trigger_x ギャップは残り0件でファミリー解消。cross_free_op は残り7件（他ギャップとの複合）。tests/test_vocab_pilot269_cards.py（8件）＋tests/test_vocab_pilot269.py（5件）が通る。data audit 8件、file schemas＋Rust schema sync、test_rules.py（40件）も通過。
+
+- **テストの罠**: クリーチャーはタップ状態のものしか攻撃できない。dm15-023 の付け替えテストでは、ホストを攻撃する前に p1 のターンでホスト自身に攻撃させてタップさせる必要がある。choose_cards は所有者で区別する: 自分のクリーチャー＝クロス先（T001 がいればそれ、なければ付け替え先の T002）、相手のクリーチャー＝タップ先／破壊先（T002 がいればそれ）。T002 優先の一律ルールにすると、S・トリガーXのクロス先選択で T002 を選んでしまい、ホストが T001 にならない。
+
+## 第270弾 ability_copy（他者の誘発能力の使用）
+
+共通文言: 「相手のターンに相手のクリーチャーが出て、その能力がトリガーした時、自分もその能力を使ってもよい」（魔誕の斬将オルゲイト dm26sd1-a005）。ジョギラゴン＆ジョニー dm26sd1-n001 の「捨てたカードの出た時能力を１つ使う」は第261弾の use_entry_abilities で既に表せており、n001 は dm26ex4-cho005 として登録済み（rejects 行は alias 側の残行）。
+
+- 新語彙は2つ。(1) イベント **`trigger`**（defs.EVENTS に追加）: 自身の出た時能力が誘発したこと。events.py の _collect_triggers が、通常の待機誘発を積んだ直後に発表する。発表の条件は厳密に「自身の」出た時能力: ability の when が {event: move, to: bz, subject: self または無し} かつ発生源 src が移動レコードの subject と同じカード（lki 経路・host_only は除外）。観測型（subject が他カード）の誘発や、trigger イベント自体を見る能力は発表しないので再帰しない。2度トリガーの複製分は発表しない（1能力1回）。レコードは {ev: trigger, subject: 発生源の ref, controller/player, defn, ab: 能力添字, ability: 能力そのもの, face?, from/to/reason: 元の移動}。発表は同じ _collect_triggers の再帰呼び出しで行うため、遅延誘発の when 照合や once_per_turn / first_time の扱いも通常の誘発と同じ。待機順序は元の誘発（＋2度トリガー複製）の後になる。
+- (2) op **`use_triggered_ability`**（引数なし。base/opvocab.py に `{}` で宣言）: env.event の trigger レコードが指す能力の effect を、使う側の能力として解決する。効果の self は使う側のまま、event.subject も使う側に差し替える（第261弾の use_entry_abilities と同型）。コピーされる能力の `if` は使う側の env で再判定する。trigger イベントの外で呼ばれた時や ability が無ければ何もしない。
+- オルゲイトの形: `{kind: trigger, when: {event: trigger, subject: {owner: opp, filter: {types: [creature]}}}, if: {is_turn: opp}, effect: [may [use_triggered_ability]]}`。「相手のクリーチャーが出て」は発表条件（自身の出た時能力）が、「相手のターンに」は `if: {is_turn: opp}` が担う。複数ある出た時能力は能力ごとに trigger イベントが発表され、それぞれ別にコピーできる。
+- Rust: _simple_when の _OK_EVENTS に "trigger" は無いため、この能力を持つカードを含む対局は Python にフォールバックする（第268弾のガチャと同じ扱い）。新しい GameState フィールドは無い（state.rs の変更なし）。
+- **schema 取りこぼし（再発注意）**: 新しいイベント名・op は `python -m dmsim.cards.schema` の再生成が要る（第267弾の via 漏れ・第269弾のキーワード漏れと同型）。再生成は標準出力を `data/schema/card.schema.json` へリダイレクトで上書きすること。今回の差分は op `use_triggered_ability` 1件＋イベント enum への `"trigger"` 1行。
+- **テストの罠**: コピーしたドローの直後に p1 のターン開始ドローが入るため、停止条件の手札枚数は「コピー1＋ターンドロー1」で数えること（p1 手札は 2 になる）。断った場合はターンドローのみの 1。攻撃ステップは攻撃可能なクリーチャーがいないと決定自体が出ない（第254弾の教訓）ため、「攻撃ステップに到達した」判定は seen_kinds に "attack" が出たことで見る。s.step は1決定遅れるので使わない。
+
+- プロト T748–T752、tests/test_vocab_pilot270.py（8件）。
+
+### ラウンド305（第270弾）
+
+ability_copy の2件を処理: 新規1件（dm26sd1-a005 魔誕の斬将オルゲイト）＋ stale 除去1件（dm26sd1-n001）。a005 はハイパーエナジー（キーワードのみ）＋ブロッカー＋ジャストダイバー（dm22rp1-056 型の deny be_chosen/be_attacked until_next_own_turn_start）＋出た時の may バウンス＋相手ターンの相手 CIP のコピー（trigger イベント＋may＋use_triggered_ability。T749 型）。dm26sd1-n001 は原文コーパス外の ID のため raw 行が無く、ラウンド295で dm26ex4-cho005 として登録済み（aliases に n001 を含む）。reopen ability_copy で外れた2行のうち n001 は submit 対象外とし、cho005 の aliases に収まっていることを build_round305.py で照合して stale 除去とした（漏れではない）。converted 10,108 / rejects 2,227、重複0・漏れ0。ability_copy ギャップは残り0件でファミリー解消。tests/test_vocab_pilot270_cards.py（4件）＋tests/test_vocab_pilot270.py（8件）が通る。data audit 8件も通過。
+
+- **テストの罠**: カード適用テストは conftest を import しないこと（DMSIM_SKIP_CONVERTED=1 が復活して登録形カードが読めなくなる）。第267–269弾の型どおり `os.environ.pop("DMSIM_SKIP_CONVERTED", None)` を dmsim import より前に置き、`_conv_cache`＋`dmsim.scenario.build` で直接組む。プロトテストとは別プロセスで実行する。
+
+### ラウンド306（第271弾）
+
+janken_opponent_hand の9件を処理: 新規登録7件＋stale 除去2件、差し戻し0件。対象の特定は rejects 行の text が空のため by_product の原文から行った（data/cards/raw/by_product/28・29・ex08・x22b.jsonl）。
+
+- 新規7件: dm28-056 JK人形ボッコグー（activate tap: self＋勝ちで相手クリーチャーのパワー-3000＋パーで相手ハンデス）、dm28-060 JK野朗チョッキー（battle_start の trigger 2つ＋勝ちでパワー+5000＋グーで相手マナ→墓地）、dm29-035 JK兜 パッパラ・ベンケイ（partial の勝ち分岐にチョキ誘発を追加して完成）、dmex08-041 ＪＫパーネイチャー（dm28-103 の再録と同一能力）、dmex08-171 ＪＫヤミノグーデリアン（出た時ジャンケン＋勝ちで墓地からコスト5以下を出す＋パーで墓地からコスト4以下を手札へ）、dmex08-172 ＪＫ軍曹チョキパン（dm29-031 の再録と同一能力）、dmx22b-106 S・マネーキ（T755 と同一の battle_start 置換2つ＋グーで1ドロー）。
+- stale 除去2件: dm28-103 と dm29-031 は同名の古い版で、canonical_rows の同名規則により原文行から外れている（submit は「原文に無いID」で弾く）。dmex08-041／dmex08-172 の aliases に既に収まっていることを照合して rejects から除去した（漏れではない）。dm28-103hc も dmex08-041 の aliases に収まる。
+- reopen janken_opponent_hand は reason: vocab の dm29-035 の1行だけを外した（残り8行は reason が無く reopen 対象外。submit が登録時に rejects から外す）。
+- converted 10,108 → 10,115 / rejects 2,227 → 2,218、重複0・漏れ0。janken_opponent_hand ギャップは残り0件でファミリー解消。tests/test_vocab_pilot271_cards.py（12件）＋tests/test_vocab_pilot271.py・test_data_audit・test_rules.py（計60件）が通る。
+
+- **テストの罠（2件）**: (1) マナにはカードと同文明が最低1枚要る。火のカードに自然マナだけでは play 選択肢が出ない（T001×2 で dmex08-172 が出せなかった）。火は T011、闇は T008 を使うこと。(2) ターン終了まで残る modify（パワー+5000、-3000）は、バトル／起動型の効果解決直後にターンが終わると観測窓が無い。勝敗や破壊などの永続する結果で証明し、数値自体は登録形テストで検証すること（dm28-060 は相打ちにならないこと、dm28-056 は対象がパワー0以下で破壊されることで証明）。(3) 手の誘発は相手がその手を出した時にしか起きない。グー誘発のテストでは相手にグーを出させること（あいこになる組み合わせに注意）。
+
+## 第271弾 janken_opponent_hand（相手とジャンケン＋相手の出した手への誘発）
+
+共通文言: 「相手とジャンケンで勝敗を決める」＋「相手がジャンケンで「グー／チョキ／パー」を出した時」。対象は janken_opponent_hand ギャップの9件（ただし rejects 行の text が空のため、対象カードの特定はラウンド306で行う）。
+
+- DM のジャンケンは「勝敗が決まるまでやって一回」で、あいこは勝敗が決まるまでやり直す（デュエル・マスターズ Wiki「ジャンケン」）。あいこの投で相手がその手を出しても誘発し、勝敗が決まってから溜まった分をまとめて解決する。そのため手の条項は分岐ではなく、ジャンケン1投ごとに発表される janken イベントを見る誘発型能力（when: {event: janken, opp_hand: rock|scissors|paper}）で表す。勝った側の効果が先に解決され、その後で溜まった手の誘発が解決される（603.3）。
+- 新語彙: op **`janken`** の専用タスク化（第31弾の op 内二段 ask は不発だった: 1人目の答えが返った時点で h_effect が pc を進めて os を消し、相手の手を尋ねる前に終わって分岐が一度も走らない。第31弾のテストはターンのドローと区別できず見逃していた。既存の4枚のジャンケン能力はこの修正で初めて動くようになる）。op_janken は `_defer` で `janken` タスクを積む（`_push` だと h_effect が pc を進めず同じ op を繰り返す罠。第268弾のガチャと同型）。h_janken が両者の手を choose_one で尋ね、1投ごとに s.pub に kind: "janken"（hands: プレイヤー順の手、winner: 勝者・あいこは None、turn 付き）で公開記録してから ev_task でイベントを発表する。勝敗が決まれば勝敗分岐の子タスクを積み、あいこならその投のイベントだけ発表して、もう一度手を尋ねる。
+- イベント **`janken`**（defs.EVENTS に追加。_apply_one の単純イベント allowlist にも追加）。when の **`opp_hand`**（rock/scissors/paper。相手＝この能力のコントローラーの対戦相手が出した手。events.py の _match_when で rec.hands[1 - env["you"]] と照合。defs.py の Checker と schema.py の when プロパティで enum 検証）。
+- `draw` 分岐の削除: あいこに「あいこという判定」は無いので draw 分岐は死に語彙。opvocab.py の janken から `draw` を外し、書くと検証で弾かれる（DefError）。既存の4枚は draw を使っていない。
+- **エンジンバグ修正（第271弾で発見）**: `_record_for`（events.py）は move/draw のレコードしか作らず、それ以外は None を返していたため、`_replacement` は battle_start の replace を一度も諮問していなかった（バトルが普通に起きて両方破壊され、ジャンケンが発火しない）。修正: `_record_for` が battle_start には `dict(ev)` を返す（_apply_one の単純イベントと同じ扱い）。break は `_break_candidates` の別経路があるため含めない（入れると二重諮問になる）。lose/battle の replace も別経路の inline 参照があるため含めない。converted には battle_start の replace は無く（trigger のみ32件）、既存カードへの影響は無い。
+- Rust: 新しい GameState フィールドは無い（state.rs の変更なし）。Rust は event "janken"・when の opp_hand・op janken を知らないため、この能力を持つカードを含む対局は Python にフォールバックする（_simple_when が janken/opp_hand を False とする。第268弾のガチャと同型）。
+- **schema 取りこぼし（再発注意）**: 新しいイベント名・op は `python -m dmsim.cards.schema` の再生成が要る（第267弾の via 漏れ・第269弾のキーワード漏れと同型）。再生成は標準出力を `data/schema/card.schema.json` へリダイレクトで上書きすること。今回の差分は op janken からの `draw` 削除＋イベント enum への `"janken"` 1行＋when の `opp_hand` enum。
+- **テストの罠**: (1) バトルの後始末は決定を挟まず進むため、停止はターン2のチャージで初めて観測される。e.s.turn でのターン1証明はできない — ジャンケンの公開記録の `turn` フィールドで見ること（test_janken_battle_replace_attacker_wins）。(2) クリーチャーはタップ状態のものしか攻撃できない。守備側のクリーチャーをフィクスチャでタップしても、攻撃側のターン開始時のアンタップ（st_start はアクティブ・プレイヤーの bz をアンタップする）で戻される。攻撃する側のターンのチャージ決定時にタップし直すこと（第230弾の遅延タップ。今回はチャージ決定時にタップするので、攻撃ステップの選択肢は最初からタップ済みで作られる）。(3) 攻撃決定の罠（第230弾の仕組みの解明）: `eng.ask` は答えをターンタスクに蓄え、次の `advance()` で st_attack が再実行されて選択肢を再計算してから答えのインデックスを消費する。決定の提示と消費の間に状態が変わると、古い選択肢のインデックスが新しい選択肢の別項目を指す（第230弾は「pass」のインデックス1が、タップ後に挿入された攻撃先選択肢を指すことで成立していた）。インデックス依存のテストは避け、キーで選ぶこと。(4) ギアは `play:<defn>` でジェネレートし、その後のメインで `cross:<gear>:<host>` の選択肢が出る。`generate:<defn>` というキーは出ない。
+- プロト T753–T757、tests/test_vocab_pilot271.py（12件）。回帰: クロスギア第224/225/241/252弾、バトル／攻撃第229/230/238/251/254/259/262/264弾、test_data_audit、test_rules.py — 149件通過。
+
+## 第272弾 infinite_power / infinite_breaker（無限のパワー／ブレイク）
+
+共通文言: 「∞ パワーアタッカー（攻撃中、このクリーチャーのパワーは無限大になる）」「∞ブレイカー（相手のシールドを好きな数ブレイクする）」「このターン、そのクリーチャーのパワーを－∞する」。対象は infinite_power 5件・infinite_breaker 5件（重なり dmex08-216）の9枚。無限大は 1<<30 の整数で表す（G・ブレイカーの break count 1<<30 と同型）。
+
+- 新語彙は3つ。(1) キーワード **`infinite_breaker`**（abilities: [] の印だけ。g_breaker と同型）: combat の攻撃フェイズ4で、キーワードを持つ攻撃クリーチャーのブレイク数選択肢を 0..残シールド数にする。G・ブレイカー（"all"＋自壊）とは別物。ワールド・ブレイカー（breaks: 99＝全ブレイク強制）とも別物で、こちらは好きな数を選べる。(2) キーワード **`infinite_power_attacker`**: 常在型 mod `power_when: {amount: 1073741824, when: attacking}`（パワーアタッカー+N の power_when と同型。攻撃中の特性パワーが∞になり、バトル比較だけでなく攻撃中のパワー参照にも効く）。(3) mod **`power_set`**: 「パワーをXにする」置換。chars 計算の最後に置換値の最小を適用し、加算・ダイナモ・リンク統合のすべてを上書きする。defs.MOD_KEYS＋schema.py の mod プロパティ＋Checker.mod の整数検証を追加し、`python3 -m dmsim.cards.schema` で card.schema.json を再生成した。
+- 「バトル中、パワーを∞にする」（dm26rp2-s011 の条項）は新語彙なしで mod `battle_power: {amount: 1073741824}`（only 無し＝攻守両方）で表せる。ただし同カードは trigger_when_opponent_plays_without_paying ギャップも持つ複合のため、ラウンド307ではそちらに差し戻し、バトル条項は partial に残す。
+- **エンジンバグ修正（第272弾で発見）**: `_mod_nonneg`（events.py）が power_set を知らず「パワーを下げない」と判定していたため、パワー－∞の継続的効果がある盤面で SBA の高速経路が「パワー>0」と誤って断定し、破壊を省いてしまっていた（DMSIM_CHECK=1 の assert で発覚。本番でも同じ誤りになる）。修正: power_set を含む mod は False を返す。
+- Rust: 新しい GameState フィールドは無い（state.rs の変更なし）。Rust は infinite_breaker / infinite_power_attacker を _OK_KW に持たず、power_set の modify も _simple_effect が弾くため、この能力を持つカードを含む対局は Python にフォールバックする（ガチャ・trigger と同型）。
+- **テストの罠**: (1) ブレイク解決と次のターンのドローは同じ advance で観測される。ブレイク後の手札枚数は「ブレイク数＋ターンドロー1」で数えること（第270弾のコピー＋ターンドローと同型）。(2) T760 のようにキーワード（ブロッカー）と誘発を併せ持つプロトでは abilities[0] がキーワード展開の常在型になる。能力の特定は kind で絞ること。(3) choose_breaker の既定回答（最大値）は第271弾ドライバの流用では max を選ぶ。特定の数を選ぶテストは breaker 台本を渡すこと。
+- プロト T758–T763、tests/test_vocab_pilot272.py（9件）。回帰: G・ブレイカー第252弾、バトル／攻撃第229/230/238/251/254/259/262/264弾、ジャンケン第271弾、test_data_audit、test_rules.py、test_file_schemas.py、test_rust_schema_sync、test_rustcore — 116件通過（13 skipped）。登録形カードテスト（第252/271弾）15件も別プロセスで通過。

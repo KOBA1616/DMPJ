@@ -2,7 +2,8 @@
 引数の型は defs.py の検証と schema.py の JSON Schema 生成に使われる。"""
 from __future__ import annotations
 
-from .registry import op
+from ..base.types import GachaTask, JankenTask
+from .registry import op, task
 
 
 @op("uncross", select="selector")
@@ -336,8 +337,17 @@ def op_if(eng, t, op, env):
     eng._defer(t, [eng._child(branch, env)])
 
 
-@op("repeat", times="expr", body="ops")
+@op("repeat", times="expr?", body="ops", over="str?", **{"as": "str?"})
 def op_repeat(eng, t, op, env):
+    if "over" in op:   # 第233弾: 変数のカード1枚ずつに body を適用する（要素は as の変数に束ねる）
+        refs = env.get("vars", {}).get(op["over"], [])
+        name = op.get("as", "it")
+        kids = []
+        for r in refs:
+            e2 = {**env, "vars": {**env.get("vars", {}), name: [list(r)]}}
+            kids.append(eng._child(op["body"], e2))
+        eng._defer(t, kids)
+        return
     n = eng.eval_expr(op["times"], env)
     eng._defer(t, [eng._child(op["body"], env) for _ in range(n)])
 
@@ -356,9 +366,12 @@ def op_break(eng, t, op, env):
 def _bake_refs(obj, eng, env):
     """生成時ベイク（バンドC2 基盤B4）: {declared: 名前} と {var: 名前} の式を、生成時点の値へ
     リテラルに固定する。宣言・変数は解決の後段（特性計算や dynamic の範囲照合）では env から
-    読めないため、継続的効果へ持ち込む時はここで固定する。"""
+    読めないため、継続的効果へ持ち込む時はここで固定する。
+    参照カードの特性式 {cost_of / power_of / name_of / races_of: 名前} も同じ理由で焼く
+    （第263弾: dynamic の範囲フィルタに「表向きにしたカードのコスト以下」を書くため）。
+    {count: ...} 等の集合式そのものは焼かない（中に入れ子になった参照特性式だけ焼く）。"""
     if isinstance(obj, dict):
-        if len(obj) == 1 and next(iter(obj)) in ("declared", "var"):
+        if len(obj) == 1 and next(iter(obj)) in ("declared", "var", "cost_of", "power_of", "name_of", "races_of"):
             return eng.eval_expr(obj, env)
         return {k: _bake_refs(v, eng, env) for k, v in obj.items()}
     if isinstance(obj, list):
@@ -403,6 +416,27 @@ def op_modify(eng, t, op, env):
     sba = eng._sba_tasks()
     if sba:   # パワー0以下になったら、この効果の続きより先に破壊する（703.4c, 111.2d）
         eng._defer(t, sba)
+    return None
+
+
+@op("rush", select="selector")
+def op_rush(eng, t, op, env):
+    """このターン、対象のクリーチャーは召喚酔いでもプレイヤーを攻撃できる（第243弾）。
+    combat の _attack_options が読む rush:<cid> フラグを立てる。アビスラッシュの
+    付随処理と同じ印だが、ターン終了時の山札送り等の付随処理は付けない。"""
+    for cid in eng.candidates(op["select"], env):
+        eng.s.turn_counters[f"rush:{cid}"] = eng.s.turn
+    return None
+
+
+@op("cancel_attack")
+def op_cancel_attack(eng, t, op, env):
+    """進行中の攻撃を中止する（第251弾）。タスクスタック上の attack タスクに印を付け、
+    h_attack が再開時にバトルもブレイクも行わず攻撃を終わらせる。攻撃が無ければ何もしない。"""
+    for task in reversed(eng.s.tasks):
+        if task.get("t") == "attack":
+            task["cancelled"] = True
+            break
     return None
 
 
@@ -491,6 +525,18 @@ def op_no_lose(eng, t, op, env):
                              "affected": [],
                              "no_lose": {"player": p, "once": bool(op.get("once", False)),
                                          "deck_out_only": bool(op.get("deck_out_only", False))}})
+    return None
+
+
+@op("action_limit", player="player?", attack="int?", block="int?", until="str")
+def op_action_limit(eng, t, op, env):
+    """攻撃/ブロック回数の制限（第254弾）: player は各ターン、クリーチャーで attack 回までしか
+    攻撃できず、block 回までしかブロックできない。保留として s.action_limits に積み、
+    期限（until: caster_next_turn_start = 唱えた側の次のターンのはじめまで /
+    opp_next_turn = 次の相手のターン中だけ）は st_start で落とす。"""
+    p = eng._rel(op.get("player", "opp"), env)
+    eng.s.action_limits.append({"player": p, "attack": op.get("attack"), "block": op.get("block"),
+                                "caster": env["you"], "created": eng.s.turn, "until": op["until"]})
     return None
 
 
@@ -612,29 +658,65 @@ def op_mekurade(eng, t, op, env):
     return None
 
 
-@op("janken", win="ops?", lose="ops?", draw="ops?")
+_JANKEN_HANDS = ("rock", "scissors", "paper")   # 0=グー, 1=チョキ, 2=パー
+_JANKEN_OPTS = [{"key": "rock", "name": "グー"}, {"key": "scissors", "name": "チョキ"},
+                {"key": "paper", "name": "パー"}]
+_JANKEN_BEATS = {("rock", "scissors"), ("scissors", "paper"), ("paper", "rock")}
+
+
+@op("janken", win="ops?", lose="ops?")
 def op_janken(eng, t, op, env):
-    """ジャンケン: 両プレイヤーが グー/チョキ/パー を選び、勝敗で分岐する。"""
-    if "jk" not in t["os"]:
-        a, d = eng.ask(t, env["you"], "choose_one",
-                       [{"key": "rock", "name": "グー"}, {"key": "scissors", "name": "チョキ"}, {"key": "paper", "name": "パー"}])
+    """ジャンケン: 両プレイヤーが グー/チョキ/パー を選ぶ。勝敗で分岐する。
+    第271弾で専用タスク化した。第31弾の op 内二段 ask は、1人目の答えが返った時点で
+    h_effect が pc を進めて os を消してしまい、相手の手を尋ねる前に終わって分岐が
+    一度も走らない不発だった（第31弾のテストはターンのドローと区別できず見逃していた）。
+    DM のジャンケンは「勝敗が決まるまでやって一回」で、あいこは勝敗が決まるまで
+    やり直す。あいこの投も含め各投の手は公開情報で、janken イベントとして発表する
+    ので「相手がジャンケンで「X」を出した時」の誘発（when: {event: janken, opp_hand: X}）
+    が投ごとに誘発する。勝敗の分岐は勝った側の効果が先に解決され、その後で溜まった
+    手の誘発が解決される（誘発は能力解決中は待機する、603.3）。"""
+    eng._defer(t, [{"t": "janken", "controller": env["you"], "env": env,
+                    "win": op.get("win") or [], "lose": op.get("lose") or []}])
+    return None
+
+
+@task("janken", JankenTask)
+def h_janken(eng, t):
+    """ジャンケンの1回分（第271弾）: 両者の手を尋ね、決まれば勝敗分岐の子タスクを積む。
+    あいこならその投のイベントだけ発表して、もう一度手を尋ねる。"""
+    s = eng.s
+    if t.get("done"):
+        eng._pop(t)
+        return None
+    me = t["controller"]
+    if "mine" not in t:
+        a, d = eng.ask(t, me, "choose_one", _JANKEN_OPTS)
         if d:
             return d
-        t["os"]["jk"] = a[0]
+        t["mine"] = _JANKEN_HANDS[a[0]]
+    if "opp" not in t:
+        a, d = eng.ask(t, 1 - me, "choose_one", _JANKEN_OPTS)
+        if d:
+            return d
+        t["opp"] = _JANKEN_HANDS[a[0]]
+    mine, opp = t.pop("mine"), t.pop("opp")
+    hands = ["", ""]
+    hands[me], hands[1 - me] = mine, opp
+    winner = None if mine == opp else (me if (mine, opp) in _JANKEN_BEATS else 1 - me)
+    rec = {"ev": "janken", "controller": me, "hands": hands, "winner": winner}
+    if t["env"].get("self"):
+        rec["subject"] = t["env"]["self"]
+    s.pub.append({"n": len(s.pub), "turn": s.turn, "kind": "janken",
+                  "viewers": [0, 1], "player": me, "hands": list(hands), "winner": winner})
+    tasks = [eng.ev_task(rec)]
+    if winner is None:
+        eng._push(*tasks)   # あいこ: この投のイベントだけ発表して、もう一度手を尋ねる
         return None
-    a, d = eng.ask(t, 1 - env["you"], "choose_one",
-                   [{"key": "rock", "name": "グー"}, {"key": "scissors", "name": "チョキ"}, {"key": "paper", "name": "パー"}])
-    if d:
-        return d
-    me, op_hand = t["os"].pop("jk"), a[0]   # 0=グー, 1=チョキ, 2=パー
-    if me == op_hand:
-        branch = op.get("draw")
-    elif (me - op_hand) % 3 == 2:   # グー>チョキ, チョキ>パー, パー>グー
-        branch = op.get("win")
-    else:
-        branch = op.get("lose")
+    branch = t["win"] if winner == me else t["lose"]
     if branch:
-        eng._defer(t, [eng._child(branch, env)])
+        tasks.append(eng._child(branch, t["env"]))
+    t["done"] = True
+    eng._push(*tasks)
     return None
 
 
@@ -869,6 +951,86 @@ def op_gachinko(eng, t, op, env):
     return None
 
 
+_GACHA_KINDS = ("dogiragon",)   # ガチャの種類（今はドギラゴン・ガチャのみ。ドキンダム・ガチャは別表）
+_GACHA_NAMES = {1: "boost", 2: "replenish", 3: "break", 4: "destroy", 5: "fight", 6: "strike"}
+
+
+def _gacha_spin_ops(roll: int) -> list[dict]:
+    """ドギラゴン・ガチャ 1 回分の効果（出目 → op 列）。出目は 1..6。
+    1 ブースト: 山札の上から1枚をマナゾーンに置く / 2 リプレニッシュ: カードを1枚引く /
+    3 ブレイク: 自分のクリーチャー1体がこのターンの終わりまでシールドをさらに1枚ブレイクする /
+    4 デストロイ: 相手のコスト7以下のクリーチャー1体を破壊する /
+    5 ファイト: 自分のクリーチャー1体と相手のクリーチャー1体をバトルさせる /
+    6 ストライク: 自分のマナゾーンから進化ではないクリーチャー1体をバトルゾーンに出す。
+    選ぶものが無い出目は、そのまま何も起きない（選べない選択は決定を出さない）。"""
+    if roll == 1:
+        return [{"op": "move",
+                 "select": {"zone": "deck", "owner": "you", "from_top": 1},
+                 "to": "mana", "reason": "put"}]
+    if roll == 2:
+        return [{"op": "draw", "count": 1}]
+    if roll == 3:
+        return [{"op": "modify",
+                 "select": {"zone": "bz", "owner": "you",
+                            "filter": {"types": ["creature"]}, "count": 1},
+                 "mod": {"breaks_add": 1}, "duration": "end_of_turn"}]
+    if roll == 4:
+        return [{"op": "move",
+                 "select": {"zone": "bz", "owner": "opp",
+                            "filter": {"types": ["creature"], "cost_le": 7}, "count": 1},
+                 "to": "graveyard", "reason": "destroy"}]
+    if roll == 5:
+        return [{"op": "choose",
+                 "select": {"zone": "bz", "owner": "you",
+                            "filter": {"types": ["creature"]}, "count": 1},
+                 "as": "gacha_a"},
+                {"op": "choose",
+                 "select": {"zone": "bz", "owner": "opp",
+                            "filter": {"types": ["creature"]}, "count": 1},
+                 "as": "gacha_b"},
+                {"op": "force_battle", "a": {"ref": "gacha_a"}, "b": {"ref": "gacha_b"}}]
+    return [{"op": "move",
+             "select": {"zone": "mana", "owner": "you",
+                        "filter": {"types": ["creature"], "not_types": ["evolution"]},
+                        "count": 1},
+             "to": "bz", "reason": "put"}]
+
+
+@op("gacha", kind="str", times="expr?")
+def op_gacha(eng, t, op, env):
+    """ドギラゴン・ガチャ（第268弾）: 1d6 を times 回（既定1）振り、回すたびにその出目の能力を使う。
+    出目はガチャフィギュアの結果と同じく両プレイヤーに見える公開情報で、s.pub に kind: "gacha" で記録する。
+    1回分の振りと効果の解決は専用タスク gacha が1回ずつ行う（後の出目は前の効果の解決が終わってから振る）。
+    kind はガチャの種類（今は dogiragon のみ）。"""
+    if op["kind"] not in _GACHA_KINDS:
+        raise ValueError(f"unknown gacha kind '{op['kind']}'")
+    n = eng.eval_expr(op.get("times", 1), env)
+    eng._defer(t, [{"t": "gacha", "kind": op["kind"], "remaining": max(n, 0),
+                    "controller": env["you"], "env": env}])
+    return None
+
+
+@task("gacha", GachaTask)
+def h_gacha(eng, t):
+    """ドギラゴン・ガチャの1回分: 出目を振って公開記録し、その効果を子タスクで解決してから次を振る。
+    （第268弾。_defer した子タスクが終わるとこのタスクが再び頂点に来るので、spin を消して次へ進む）"""
+    from .state import rng_below
+    s = eng.s
+    if "spin" in t:
+        del t["spin"]   # 前の出目の効果の子タスクが終わった
+    if t["remaining"] <= 0:
+        eng._pop(t)
+        return None
+    roll = rng_below(s, 6) + 1
+    t["spin"] = roll
+    t["remaining"] -= 1
+    s.pub.append({"n": len(s.pub), "turn": s.turn, "kind": "gacha",
+                  "viewers": [0, 1], "player": t["controller"],
+                  "result": roll, "name": _GACHA_NAMES[roll]})
+    eng._push(eng._child(_gacha_spin_ops(roll), t["env"]))
+    return None
+
+
 @op("cast_face", face="expr?", select="selector?")
 def op_cast_face(eng, t, op, env):
     """ツインパクトの呪文面を、カードをバトルゾーンに置いたまま唱える（スマッシュ・バースト）。
@@ -1088,7 +1250,7 @@ def op_end_turn(eng, t, op, env):
     eng.s.skip_rest = True
 
 
-@op("use_partner", of="str?", exclude_self="bool?", pending="bool?")
+@op("use_partner", of="str?", exclude_self="bool?", pending="bool?", any_number="bool?")
 def op_use_partner(eng, t, op, env):
     """キズナ: 自分のクリーチャー1体の[P]能力（kind: partner）を選んで使う。
     効果の self は [P] を持つクリーチャーに移る。[P] を持つクリーチャーがいなければ何もしない。
@@ -1096,10 +1258,13 @@ def op_use_partner(eng, t, op, env):
     （どちらもキズナプラス用。第153弾）。引数なしは従来どおり全候補から1つ選ぶ（キズナ）。
     pending: true = 選んだ[P]をその場で解決せず、待機中の効果として登録する。
     キズナプラスの2つの[P]は支払いの時点でそれぞれ確定した待機効果になり、解決順は使う側が
-    好きな順番で選べる（603.3a／605.1）。発生源が解決前に離れても不発にならない（110.5a）。"""
+    好きな順番で選べる（603.3a／605.1）。発生源が解決前に離れても不発にならない（110.5a）。
+    any_number: true = キズナコンプ（第235弾）。好きな数だけ使う: 1件使うたびに次を聞き、
+    使った能力（cid, gen, 能力index）はこの解決中は候補から外れる。0件で終えてよい。"""
     s = eng.s
     you = env["you"]
     self_cid = env["self"][0] if env.get("self") else None
+    used = {tuple(u) for u in t.get("os", {}).get("up_used", [])} if op.get("any_number") else set()
     cands = []
     for c in eng.bz_tops(you):
         if op.get("of") == "self" and c != self_cid:
@@ -1107,14 +1272,28 @@ def op_use_partner(eng, t, op, env):
         if op.get("exclude_self") and c == self_cid:
             continue
         for i, ab in eng.abilities(c, "partner"):
+            if (c, s.cards[c].gen, i) in used:
+                continue
             cands.append((c, i, ab))
     if not cands:
         return None
     opts = [{"key": f"partner:{eng.s.cards[c].defn}:{i}", "cid": c, "ab": i} for c, i, _ in cands]
-    a, d = eng.ask(t, you, "use_partner", opts)
+    if op.get("any_number"):
+        a, d = eng.ask(t, you, "use_partner", opts, 0, 1)
+    else:
+        a, d = eng.ask(t, you, "use_partner", opts)
     if d:
         return d
+    if not a:
+        return None
     c, i, ab = cands[a[0]]
+    if op.get("any_number"):
+        st = t.setdefault("os", {})
+        st.setdefault("up_used", []).append([c, s.cards[c].gen, i])
+        again = {"t": "effect", "ops": [op], "pc": 0, "env": env,
+                 "os": {"up_used": [list(u) for u in st["up_used"]]}}
+        eng._defer(t, [eng._child(ab["effect"], dict(env, self=eng.s.ref(c))), again])
+        return None
     if op.get("pending"):
         ref = s.ref(c)
         s.seq += 1
@@ -1129,6 +1308,62 @@ def op_use_partner(eng, t, op, env):
         s.pending.append(p)
         return None
     eng._defer(t, [eng._child(ab["effect"], dict(env, self=eng.s.ref(c)))])
+    return None
+
+
+@op("use_entry_abilities", select="selector", count="int?")
+def op_use_entry_abilities(eng, t, op, env):
+    """対象カードの「このクリーチャーが出た時」で始まる能力を、使う側の能力として使う（第261弾）。
+    効果の self は使う側のクリーチャーのまま（対象は能力の提供だけ）。count があればその数だけ
+    （候補が多い時は使う側が選ぶ）。なければすべてを印刷順に使う。"""
+    s = eng.s
+    you = env["you"]
+    cands = []   # (対象 cid, 能力 index, ability)
+    for c in eng.candidates(op["select"], env):
+        fd = eng.cdef(c).face(s.cards[c].face)
+        for i, ab in enumerate(fd.abilities):
+            if ab.get("kind") != "trigger":
+                continue
+            w = ab.get("when") or {}
+            if w.get("event") == "move" and w.get("to") == "bz" and w.get("subject") in (None, "self"):
+                cands.append((c, i, ab))
+    if not cands:
+        return None
+    count = op.get("count")
+    chosen = cands
+    if count is not None and len(cands) > count:
+        opts = [{"key": f"cip:{s.cards[c].defn}:{i}", "cid": c, "ab": i} for c, i, _ in cands]
+        a, d = eng.ask(t, you, "use_entry", opts, count, count)
+        if d:
+            return d
+        chosen = [cands[j] for j in a]
+    child_env = dict(env, event={**(env.get("event") or {}), "subject": env.get("self")})
+    children = []
+    for c, i, ab in chosen:
+        if "if" in ab and not eng.eval_cond(ab["if"], child_env):
+            continue
+        children.append(eng._child(ab["effect"], child_env))
+    if children:
+        eng._defer(t, children)
+    return None
+
+
+@op("use_triggered_ability")
+def op_use_triggered_ability(eng, t, op, env):
+    """トリガーした能力を、使う側の能力として使う（第270弾）。
+    env.event は trigger レコード（subject=誘発したカード、ability=誘発した能力そのもの）。
+    効果の self は使う側のまま、event.subject も使う側に差し替える（第261弾の
+    use_entry_abilities と同型）。trigger イベントの外（通常の効果）で呼ばれた時は
+    何もしない。"""
+    s = eng.s
+    ev = env.get("event") or {}
+    ab = ev.get("ability")
+    if not isinstance(ab, dict) or not ab.get("effect"):
+        return None
+    child_env = dict(env, event={**(env.get("event") or {}), "subject": env.get("self")})
+    if "if" in ab and not eng.eval_cond(ab["if"], child_env):
+        return None
+    eng._defer(t, [eng._child(ab["effect"], child_env)])
     return None
 
 

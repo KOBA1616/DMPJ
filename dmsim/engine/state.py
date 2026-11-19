@@ -47,6 +47,7 @@ class Card:
     face_down: bool = False                            # マナゾーンで裏向き（水晶武装）。マナとしては無色扱い
     entered_turn: int = -1
     under: list[int] = field(default_factory=list)  # 下に重なっているカード（進化元など。設計判断②）
+    stack_bases: list[int] = field(default_factory=list)  # 直接の進化元（重ねた順。第231弾: star 離脱時のセグメント分離に使う）。ゾーン移動で消える
     top_of: int = -1                                  # 自分が下に重なっている場合、その一番上の cid
     seals: list[int] = field(default_factory=list)  # 封印: このカードの上に裏向きで重なっているカード（付けた順）
     seal_of: int = -1                                 # 自分が封印として重なっている場合、その対象の cid
@@ -139,12 +140,14 @@ class GameState:
     continuous: list[dict] = field(default_factory=list)   # 継続的効果（タイムスタンプ順）
     delayed: list[dict] = field(default_factory=list)      # 遅延誘発型能力（603.6）
     untap_caps: list[dict] = field(default_factory=list)   # 次のターン開始時のアンタップ上限（第227弾: {player, zone, count}。消費されるまで残る）
+    action_limits: list[dict] = field(default_factory=list)   # 攻撃/ブロック回数の制限（第254弾: {player, attack, block, caster, created, until}。期限は st_start で落とす）
     step_mods: list[dict] = field(default_factory=list)    # ターン構造の変更（ステップを飛ばす・追加する）
     tasks: list[dict] = field(default_factory=list)        # 実行中の処理のスタック
     waiting: dict | None = None                            # 決定待ちの Decision（純データ）
     result: dict | None = None
     seq: int = 0                                            # タイムスタンプ／待機順の採番
     extra_turns: list[int] = field(default_factory=list)
+    extra_turn: bool = False                                # このターンが追加ターンか（第263弾。h_turn が extra_turns からの開始時に立てる）
     turn_counters: dict = field(default_factory=dict)       # 「このターン N 回目」系
     prev_counters: dict = field(default_factory=dict)       # 前のターンの turn_counters の退避（st_start で消す直前にコピー。「前のターンに〜」の読み口）
     game_counters: dict = field(default_factory=dict)       # ゲーム単位の履歴（ターン開始で消えない。mark の scope: game の置き場所）
