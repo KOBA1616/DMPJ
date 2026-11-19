@@ -1,7 +1,9 @@
 """語彙パイロット第186弾のカード側テスト（登録形）: ラウンド222の結果。
 
 - 登録7件: converted.yaml にあり、スーパーガードマンの置換能力を持つ。
-- 差し戻し3件: rejects に洗練した gap で残り、解けた節が partial にある。
+- 差し戻し2件: rejects に洗練した gap で残り、解けた節が partial にある
+  （dm26ex3-088 は当初 choose_restriction で差し戻されたが、
+  第286弾のラウンド321で登録済み。登録形は test_vocab_pilot286_cards.py が固定する）。
 """
 import json
 from pathlib import Path
@@ -18,7 +20,6 @@ REGISTERED = [
     "dm26rp3-s009", "dm26rp3-sec010", "dm26rp2-s008",
 ]
 BOUNCED = {
-    "dm26ex3-088": ["choose_restriction"],
     "dm26rp2-027": ["ignore_cannot_attack_abilities"],
     "dm26rp3-010": ["cip_reuse", "play_limit"],
 }
@@ -114,9 +115,6 @@ def test_bounced_with_refined_gaps():
         assert _has_guardman(partial), cid
         needs = [u["need"] for u in partial["source"]["unsupported"]]
         assert needs == gaps, (cid, needs)
-    # dm26ex3-088: 破壊時シールド化の置換が partial に残る。
-    assert any(a["kind"] == "replace" and a.get("when", {}).get("to") == "graveyard"
-               for a in rej["dm26ex3-088"]["partial"]["abilities"])
     # dm26rp2-027: ガードマンへの付与が partial に残る。
     assert any(a["kind"] == "static"
                and (a.get("mod") or {}).get("grant") == ["speed_attacker", "powered_breaker"]

@@ -1754,6 +1754,28 @@
        },
        "as": {
         "type": "string"
+       },
+       "player": {
+        "anyOf": [
+         {
+          "enum": [
+           "you",
+           "opp"
+          ]
+         },
+         {
+          "type": "object",
+          "properties": {
+           "var": {
+            "type": "string"
+           }
+          },
+          "required": [
+           "var"
+          ],
+          "additionalProperties": false
+         }
+        ]
        }
       },
       "required": [
@@ -2746,6 +2768,9 @@
        "type": "string"
       },
       "races_of": {
+       "type": "string"
+      },
+      "civs_of": {
        "type": "string"
       },
       "race": {
@@ -3901,6 +3926,12 @@
       "opp"
      ]
     },
+    "position": {
+     "enum": [
+      "bottom",
+      "top"
+     ]
+    },
     "cause": {
      "type": "object",
      "properties": {
@@ -3911,9 +3942,23 @@
        ]
       },
       "kind": {
-       "enum": [
-        "spell",
-        "ability"
+       "anyOf": [
+        {
+         "enum": [
+          "spell",
+          "ability"
+         ]
+        },
+        {
+         "type": "array",
+         "items": {
+          "enum": [
+           "spell",
+           "ability"
+          ]
+         },
+         "minItems": 1
+        }
        ]
       },
       "defn": {

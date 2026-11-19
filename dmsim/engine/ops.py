@@ -367,11 +367,11 @@ def _bake_refs(obj, eng, env):
     """生成時ベイク（バンドC2 基盤B4）: {declared: 名前} と {var: 名前} の式を、生成時点の値へ
     リテラルに固定する。宣言・変数は解決の後段（特性計算や dynamic の範囲照合）では env から
     読めないため、継続的効果へ持ち込む時はここで固定する。
-    参照カードの特性式 {cost_of / power_of / name_of / races_of: 名前} も同じ理由で焼く
+    参照カードの特性式 {cost_of / power_of / name_of / races_of / civs_of: 名前} も同じ理由で焼く
     （第263弾: dynamic の範囲フィルタに「表向きにしたカードのコスト以下」を書くため）。
     {count: ...} 等の集合式そのものは焼かない（中に入れ子になった参照特性式だけ焼く）。"""
     if isinstance(obj, dict):
-        if len(obj) == 1 and next(iter(obj)) in ("declared", "var", "cost_of", "power_of", "name_of", "races_of"):
+        if len(obj) == 1 and next(iter(obj)) in ("declared", "var", "cost_of", "power_of", "name_of", "races_of", "civs_of"):
             return eng.eval_expr(obj, env)
         return {k: _bake_refs(v, eng, env) for k, v in obj.items()}
     if isinstance(obj, list):
@@ -623,17 +623,20 @@ def _free_face(eng, cid, want):
     return 0
 
 
-@op("play_free", select="selector", resolve_to="zone?", resolve_position="position?", face="str?", **{"as": "str?"})
+@op("play_free", select="selector", resolve_to="zone?", resolve_position="position?", face="str?", player="player?", **{"as": "str?"})
 def op_play_free(eng, t, op, env):
     """コストを支払わずに召喚する／唱える（112.3g: 召喚・詠唱したことになる）。ツインパクトはクリーチャー側。
-    resolve_to: 唱えた呪文を解決後に墓地ではなくそのゾーンに置く（「唱えた後、墓地に置くかわりに手札に加える」）。"""
+    resolve_to: 唱えた呪文を解決後に墓地ではなくそのゾーンに置く（「唱えた後、墓地に置くかわりに手札に加える」）。
+    player: 実行するプレイヤー（既定は効果の使用者）。「相手はそれをバトルゾーンに出してもよい」の
+    ように相手自身が出す形では player: opp とし、選択も select の chooser: opp で相手に委ねる（第287弾）。"""
     cids, d = eng.select(t, op["select"], env)
     if d:
         return d
     want = (op["select"].get("filter") or {}).get("types") if isinstance(op["select"], dict) else None
     if op.get("face") in ("spell", "creature"):   # ツインパクトの面を明示（ラスト・バーストの「呪文側」）
         want = [op["face"]]
-    tasks = [eng.play_task(c, env["you"], True, _free_face(eng, c, want)) for c in cids]
+    who = eng._rel(op.get("player", "you"), env)
+    tasks = [eng.play_task(c, who, True, _free_face(eng, c, want)) for c in cids]
     if "resolve_to" in op:
         for x in tasks:
             x["resolve_to"] = op["resolve_to"]
