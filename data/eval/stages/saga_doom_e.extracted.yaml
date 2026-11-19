@@ -1,0 +1,16 @@
+# tools/chain_extract2.py による自動生成（材料: logs/chain_label_doom_e_s31/saga_doom_e_seed31-9b166794, logs/chain_label_doom_e_s51/saga_doom_e_seed51-9b166794、設定 9b166794、exact 局面 120 件、quantile=0.0 features=all neg_ratio=0.9）。手で直さず、材料と引数を直して作り直す。
+stages:
+- name: dist<=3
+  target:
+    hand:
+      dm22ex2-021: 1
+- name: dist<=1
+  target:
+    bz:
+      '*': 1
+    graveyard:
+      '*': 2
+    hand:
+      dm22ex2-021: 1
+    mana:
+      '*': 2
