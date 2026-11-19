@@ -43,97 +43,118 @@
 },
 "dmx20-029": {
 "by": "rule",
-"checks": {},
+"checks": {
+"effect": "ok",
+"text": "ok"
+},
 "def_hash": "c2fde1c173f07587",
-"status": "pending",
+"status": "approved",
 "uses": [
 "core",
 "kw:s_trigger",
 "op:destroy"
 ],
 "verifier": 2,
-"verify_error": "Traceback (most recent call last): |   File \"/home/runner/work/DMPJ/DMPJ/dmsim/engine/verify.py\", line 46, in verify_card |     d = eng.advance() |         ^^^^^^^^^^^^^ |   File \"/home/runner/work/DMPJ/DMPJ/dmsim/engine/core.py\", line 108, in advance |     d = TASKS[t[\"t\"]](self, t) |         ^^^^^^^^^^^^^^^^^^^^^^ | NameError: name 'bz_c' is not defined",
-"vocab_ver": "6bf3691151bacf9e"
+"verify": "43手・turn 30 まで正常に回った（result={'winner': 0, 'reason': 'deck_out', 'turn': 30}）",
+"vocab_ver": "98acd6ec1437ad81"
 },
 "dmx20-046": {
 "by": "rule",
-"checks": {},
+"checks": {
+"effect": "skip",
+"text": "ok"
+},
 "def_hash": "c1806444cb75f6aa",
-"status": "pending",
+"status": "approved",
 "uses": [
 "core",
 "kw:s_trigger",
 "op:discard"
 ],
 "verifier": 2,
-"verify_error": "Traceback (most recent call last): |   File \"/home/runner/work/DMPJ/DMPJ/dmsim/engine/verify.py\", line 46, in verify_card |     d = eng.advance() |         ^^^^^^^^^^^^^ |   File \"/home/runner/work/DMPJ/DMPJ/dmsim/engine/core.py\", line 108, in advance |     d = TASKS[t[\"t\"]](self, t) |         ^^^^^^^^^^^^^^^^^^^^^^ | NameError: name 'bz_c' is not defined",
-"vocab_ver": "d3801f4358531f1f"
+"verify": "43手・turn 30 まで正常に回った（result={'winner': 0, 'reason': 'deck_out', 'turn': 30}）",
+"vocab_ver": "237a147d1bf7697a"
 },
 "dmx20-054": {
 "by": "rule",
-"checks": {},
+"checks": {
+"effect": "skip",
+"text": "ok"
+},
 "def_hash": "7823a1ee11e4e93d",
-"status": "pending",
+"status": "approved",
 "uses": [
 "core",
 "kw:s_trigger",
 "kw:unblockable"
 ],
 "verifier": 2,
-"verify_error": "Traceback (most recent call last): |   File \"/home/runner/work/DMPJ/DMPJ/dmsim/engine/verify.py\", line 46, in verify_card |     d = eng.advance() |         ^^^^^^^^^^^^^ |   File \"/home/runner/work/DMPJ/DMPJ/dmsim/engine/core.py\", line 108, in advance |     d = TASKS[t[\"t\"]](self, t) |         ^^^^^^^^^^^^^^^^^^^^^^ | NameError: name 'bz_c' is not defined",
-"vocab_ver": "7e80cb5f0fe57ac7"
+"verify": "43手・turn 30 まで正常に回った（result={'winner': 0, 'reason': 'deck_out', 'turn': 30}）",
+"vocab_ver": "2183fc8295b23b29"
 },
 "dmx20-055": {
 "by": "rule",
-"checks": {},
+"checks": {
+"effect": "skip",
+"text": "ok"
+},
 "def_hash": "40f0ba39aefa57d9",
-"status": "pending",
+"status": "approved",
 "uses": [
 "core",
 "op:draw",
 "op:may"
 ],
 "verifier": 2,
-"verify_error": "Traceback (most recent call last): |   File \"/home/runner/work/DMPJ/DMPJ/dmsim/engine/verify.py\", line 46, in verify_card |     d = eng.advance() |         ^^^^^^^^^^^^^ |   File \"/home/runner/work/DMPJ/DMPJ/dmsim/engine/core.py\", line 108, in advance |     d = TASKS[t[\"t\"]](self, t) |         ^^^^^^^^^^^^^^^^^^^^^^ | NameError: name 'bz_c' is not defined",
-"vocab_ver": "6dca9860616e566b"
+"verify": "43手・turn 30 まで正常に回った（result={'winner': 0, 'reason': 'deck_out', 'turn': 30}）",
+"vocab_ver": "5add14a2deb287de"
 },
 "dmx20-063": {
 "by": "rule",
-"checks": {},
+"checks": {
+"effect": "skip",
+"text": "ok"
+},
 "def_hash": "e8e88e9029274bc2",
-"status": "pending",
+"status": "approved",
 "uses": [
 "core",
 "kw:cannot_be_attacked"
 ],
 "verifier": 2,
-"verify_error": "Traceback (most recent call last): |   File \"/home/runner/work/DMPJ/DMPJ/dmsim/engine/verify.py\", line 46, in verify_card |     d = eng.advance() |         ^^^^^^^^^^^^^ |   File \"/home/runner/work/DMPJ/DMPJ/dmsim/engine/core.py\", line 108, in advance |     d = TASKS[t[\"t\"]](self, t) |         ^^^^^^^^^^^^^^^^^^^^^^ | NameError: name 'bz_c' is not defined",
-"vocab_ver": "566a548d18c2effa"
+"verify": "43手・turn 30 まで正常に回った（result={'winner': 0, 'reason': 'deck_out', 'turn': 30}）",
+"vocab_ver": "2a0f2f398583e7b8"
 },
 "dmx20-065": {
 "by": "rule",
-"checks": {},
+"checks": {
+"effect": "skip",
+"text": "ok"
+},
 "def_hash": "32236c8ee715b3fb",
-"status": "pending",
+"status": "approved",
 "uses": [
 "core",
 "kw:s_trigger"
 ],
 "verifier": 2,
-"verify_error": "Traceback (most recent call last): |   File \"/home/runner/work/DMPJ/DMPJ/dmsim/engine/verify.py\", line 46, in verify_card |     d = eng.advance() |         ^^^^^^^^^^^^^ |   File \"/home/runner/work/DMPJ/DMPJ/dmsim/engine/core.py\", line 108, in advance |     d = TASKS[t[\"t\"]](self, t) |         ^^^^^^^^^^^^^^^^^^^^^^ | NameError: name 'bz_c' is not defined",
-"vocab_ver": "2d9908fd6bd14a55"
+"verify": "43手・turn 30 まで正常に回った（result={'winner': 0, 'reason': 'deck_out', 'turn': 30}）",
+"vocab_ver": "1d2fe6374207d0a6"
 },
 "dmx20-066": {
 "by": "rule",
-"checks": {},
+"checks": {
+"effect": "skip",
+"text": "ok"
+},
 "def_hash": "a0ed11be4fb21396",
-"status": "pending",
+"status": "approved",
 "uses": [
 "core",
 "op:move"
 ],
 "verifier": 2,
-"verify_error": "Traceback (most recent call last): |   File \"/home/runner/work/DMPJ/DMPJ/dmsim/engine/verify.py\", line 46, in verify_card |     d = eng.advance() |         ^^^^^^^^^^^^^ |   File \"/home/runner/work/DMPJ/DMPJ/dmsim/engine/core.py\", line 108, in advance |     d = TASKS[t[\"t\"]](self, t) |         ^^^^^^^^^^^^^^^^^^^^^^ | NameError: name 'bz_c' is not defined",
-"vocab_ver": "93d07a211f1ab02f"
+"verify": "43手・turn 30 まで正常に回った（result={'winner': 0, 'reason': 'deck_out', 'turn': 30}）",
+"vocab_ver": "5ef954723c3cc636"
 }
 }

@@ -1,7 +1,10 @@
 {
 "dm24bd6-018": {
 "by": "rule",
-"checks": {},
+"checks": {
+"effect": "skip",
+"text": "fail"
+},
 "def_hash": "ce06b5c2272b85de",
 "status": "pending",
 "uses": [
@@ -11,8 +14,8 @@
 "op:move"
 ],
 "verifier": 2,
-"verify_error": "Traceback (most recent call last): |   File \"/home/runner/work/DMPJ/DMPJ/dmsim/engine/verify.py\", line 46, in verify_card |     d = eng.advance() |         ^^^^^^^^^^^^^ |   File \"/home/runner/work/DMPJ/DMPJ/dmsim/engine/core.py\", line 108, in advance |     d = TASKS[t[\"t\"]](self, t) |         ^^^^^^^^^^^^^^^^^^^^^^ | NameError: name 'bz_c' is not defined",
-"vocab_ver": "44bd72ae6283cc0b"
+"verify_error": "キーワード double_breaker(W・ブレイカー) が原文に無い",
+"vocab_ver": "30e6fba676de2e8b"
 },
 "dm24bd6-022": {
 "by": "rule",

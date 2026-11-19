@@ -19,7 +19,10 @@
 },
 "dm22ex2-021": {
 "by": "rule",
-"checks": {},
+"checks": {
+"effect": "skip",
+"text": "fail"
+},
 "def_hash": "2aebbe608447f3d6",
 "status": "pending",
 "uses": [
@@ -32,8 +35,8 @@
 "op:move"
 ],
 "verifier": 2,
-"verify_error": "Traceback (most recent call last): |   File \"/home/runner/work/DMPJ/DMPJ/dmsim/engine/verify.py\", line 46, in verify_card |     d = eng.advance() |         ^^^^^^^^^^^^^ |   File \"/home/runner/work/DMPJ/DMPJ/dmsim/engine/core.py\", line 108, in advance |     d = TASKS[t[\"t\"]](self, t) |         ^^^^^^^^^^^^^^^^^^^^^^ | NameError: name 'bz_c' is not defined",
-"vocab_ver": "a38c7446c4ce162c"
+"verify_error": "移動先 bz が原文に無い",
+"vocab_ver": "440c28285d20e69c"
 },
 "dm22ex2-035": {
 "by": "rule",

@@ -1,7 +1,10 @@
 {
 "31-sec001": {
 "by": "rule",
-"checks": {},
+"checks": {
+"effect": "skip",
+"text": "fail"
+},
 "def_hash": "3f68a84cddd06980",
 "status": "pending",
 "uses": [
@@ -15,7 +18,7 @@
 "op:untap"
 ],
 "verifier": 2,
-"verify_error": "Traceback (most recent call last): |   File \"/home/runner/work/DMPJ/DMPJ/dmsim/engine/verify.py\", line 46, in verify_card |     d = eng.advance() |         ^^^^^^^^^^^^^ |   File \"/home/runner/work/DMPJ/DMPJ/dmsim/engine/core.py\", line 108, in advance |     d = TASKS[t[\"t\"]](self, t) |         ^^^^^^^^^^^^^^^^^^^^^^ | NameError: name 'bz_c' is not defined",
-"vocab_ver": "d87d103311067e84"
+"verify_error": "原文に メテオバーン があるが meteor_burn が定義に無い",
+"vocab_ver": "0a498fbbbf34eb14"
 }
 }
