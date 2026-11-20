@@ -14104,3 +14104,33 @@ cards:
         when: {event: block, attacker: self}
         effect:
           - {op: break, player: opp, count: 2}
+  - id: T984
+    name: 試験用シルバスターズ型（形A）
+    types: [creature]
+    civs: [water]
+    cost: 3
+    mana: 1
+    power: 1000
+    races: [テスト]
+    keywords: [dynamo]
+    text: "ダイナモ。このクリーチャーが相手プレイヤーを攻撃してブロックされなかった時、カードを1枚引いてもよい。（第321弾: trigger_when_unblocked 形A。dm19-050 型）"
+    abilities:
+      - kind: trigger
+        when: {event: attack_end, subject: self, target: player, blocked: false}
+        effect:
+          - {op: may, body: [{op: draw, count: 1}]}
+  - id: T985
+    name: 試験用チャロック型（形B）
+    types: [creature]
+    civs: [nature]
+    cost: 3
+    mana: 1
+    power: 2000
+    races: [テスト]
+    keywords: [dynamo]
+    text: "ダイナモ。このクリーチャーが相手プレイヤーを攻撃してブロックされなかった時、自分の山札の上から1枚目を自分のマナゾーンに置いてもよい。（第321弾: trigger_when_unblocked 形B。dm19-069 型）"
+    abilities:
+      - kind: trigger
+        when: {event: attack_end, subject: self, target: player, blocked: false}
+        effect:
+          - {op: may, body: [{op: move, select: {zone: deck, owner: you, from_top: 1}, to: mana, reason: put}]}

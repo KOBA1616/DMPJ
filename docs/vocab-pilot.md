@@ -4622,3 +4622,27 @@ tr2 の全条項は第267弾の確立形で書ける:
 ### ラウンド355（第320弾の再変換）
 
 **新規登録2件**（dm26ex2-068 ワダウザノミコト＝形B〔trigger {event: block, subject: self} → move {ref: self} ＋ move {ref: event.attacker} を持ち主の手札へ〕＋離脱条項〔choose {from_top: 4, look: true, count: all} as pile → 1枚を手札 → repeat＋choose＋modal で残りを山札の上か下へ〕 / dm26rp1-074 ノーガルディ・ネギオ＆ガルダンディ・ナスオ＝形A〔trigger {event: block, attacker: self} → break {player: opp, count: 2}〕。いずれも partial ＋第320弾の確立形、unsupported 除去。登録形は確立形と完全一致で abilities は 068 が2件・074 が1件ちょうど、068 の keywords は [s_trigger, blocker] のまま、連結混入なし）・**alias 畳み込み0件**（identity の canon_id 実測で2件とも自 ID、aliases_for は空）・**stale クリーンアップ0件**・**差し戻し0件**。dm26rp1-074 の text は partial が「このクリーチャーがブロックされた時」だけに切れていたため reject 行の公式全文に差し替えた（dm26ex2-068 の text は partial のまま全文）。対象2行は gaps = [trigger_when_blocked] のため reopen で外してから submit（reopen の出力は対象2件ちょうど）。提出前照合: 対象 id は real.yaml / real_akashic.yaml / real_vocab.yaml / real_zone.yaml / converted.yaml のいずれにも無し（proto.yaml のヒットは T982/T983 の本文内参照のみ）。converted 10,262→**10,264** / rejects 2,055→**2,053**、重なり0・漏れ0。trigger_when_blocked はファミリーがこの2件だけだったため完全解消。pilot320 cards を登録形に書換、round355 cards を新設（登録カード自身の実挙動: 074 ブロックされるとバトルの前に2ブレイクし相打ち・別のクリーチャーがブロックされても誘発しない／068 ブロックで両方手札へ＋離脱の連鎖・破壊されても離脱だけ発火）。テスト15 passed（round355 cards 5＋pilot320 cards 登録形 2＋data_audit 8）＋第320弾本体7 passed（別 invocation）。回答は answers/round355.yaml に保存。次の番号: パイロット321 / ラウンド356 / プロト T984。
+
+## 第321弾 「相手プレイヤーを攻撃してブロックされなかった時」（trigger_when_unblocked）— ドリフト（attack_end の blocked: false 照合）
+
+センサス（rejects 2,053件を取り直し）: pure 1,906件 / multi 131件 / 空 gaps 18件（全て第312〜315弾の監査で別ブロッカー確認済み）。pure の大半は範囲外（gr_summon 147、aura 108＝未承認、hyperdimensional_zone 112、dragheart 45、psychic_filter 46、hyperdimensional_summon 42、out_of_game 23、duelist_link 20、outside_game 12＝2026-11-06 ユーザー指示で対象外化済み、pandora_shift 4）か評価済み DEEP/重い/延期（第318〜320弾の記録参照）。フィールド系と does_not_untap（2件）は第316・318弾の評価どおり却下、flying / delayed_return / draw_up_to / look_reorder は第319・320弾で却下済み。範囲内・未評価で最小の **trigger_when_unblocked（純粋2件、multi-gap 行にも現れない）** を選定した。
+
+対象は dm19-050 大鉄漢シルバスターズ / dm19-069 食いしん坊チャロック。両行とも partial は骨格（abilities 無し）で、未解決は「このクリーチャーが相手プレイヤーを攻撃してブロックされなかった時」の1節のみ。partial の notes は「ダイナモ能力の仕組みを表す語彙が無い」としているが、ダイナモは第76弾で keywords.yaml 定義済み（keywords: [dynamo]）。
+
+**結論: ドリフト（追加語彙なし）。** 「ブロックされなかった時」は attack_end レコードの blocked: false 照合で書ける（第175弾 T385 / 第219弾で確立）。登録先例は同じダイナモの dm20-016 風使いのシャイアンで、when は {event: attack_end, subject: self, target: player, blocked: false} そのもの:
+
+- **形A（dm19-050）**: trigger {when 上記} → may [draw {count: 1}]。
+- **形B（dm19-069）**: trigger {when 上記} → may [move {select: {zone: deck, owner: you, from_top: 1}, to: mana, reason: put}]。
+
+- プロト T984（形A）/ T985（形B）。次の空きは **T986**。
+- tests/test_vocab_pilot321.py: **6 passed** — parse＋確立形一致（keywords [dynamo] を含む）、形A（ブロックされずに攻撃→攻撃の終わりに1枚引く／辞退できる／ブロックされると引かない判別）、形B（ブロックされずに攻撃→山札の上1枚がマナへ・山札-1／ブロックされると置かない判別）。
+- tests/test_vocab_pilot321_cards.py: **2 passed** — 対象2行の残留（gaps・unsupported ともに当該ギャップのみ・未登録・ファミリーはこの2件だけ）、提出形（partial の素性＋keywords [dynamo]＋確立形）の parse と対応プロトとの abilities 完全一致。
+- 収支: converted **10,264（不変）** / rejects **2,053（不変）**。変更は proto.yaml（T984〜T985 純追加）・テスト2件・docs のみ。エンジン・defs・スキーマ変更なし。
+
+### ラウンド356側の注意
+
+- 対象は dm19-050 / dm19-069 の2件。提出形は tests/test_vocab_pilot321_cards.py の FORMS 相当: partial ＋ keywords [dynamo] ＋ abilities（各1件）、unsupported 除去。text は partial の全文を使うが、ダイナモ説明と本条項の区切りが空白になっている箇所は reject 行の公式全文どおり改行に直すこと。
+- 対象2行とも gaps = [trigger_when_unblocked] のため reopen で外れる見込み（ファミリーはこの2件だけなので出力は2件のはずだが、必ず数えること）。
+- 正本判定は提出前に行うこと。両行とも partial に aliases 記録は無く、id は real.yaml / real_akashic.yaml / real_vocab.yaml / real_zone.yaml / proto.yaml / converted.yaml のいずれにも無いことを確認済み（2026-11-20）。
+- 登録後は abilities が各1件ちょうどで FORM と完全一致すること、keywords が [dynamo] であることを本文と照合すること。
+- 次の番号: パイロット322 / ラウンド357 / プロト T986。
