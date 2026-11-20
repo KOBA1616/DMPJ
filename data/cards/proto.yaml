@@ -14162,3 +14162,45 @@ cards:
       - {op: set_var, name: hand_n, value: {count: {zone: hand, owner: you}}}
       - {op: draw, count: {var: hand_n}}
       - {op: discard, select: {zone: hand, owner: you, count: {var: hand_n}}}
+  - id: T988
+    name: 試験用ケロディ二郎型
+    types: [creature]
+    civs: [water]
+    cost: 4
+    mana: 1
+    power: 2000
+    races: [テスト]
+    text: "このクリーチャーが相手プレイヤーを攻撃してブロックされなかった時、バトルゾーンにあるクリーチャーを１体選び、持ち主の手札に戻してもよい。（第323弾: unblocked_condition。dmx04-011 型）"
+    abilities:
+      - kind: trigger
+        when: {event: attack_end, subject: self, target: player, blocked: false}
+        effect:
+          - op: may
+            body:
+              - op: move
+                select: {zone: bz, owner: any, filter: {types: [creature]}, count: 1}
+                to: hand
+                reason: return
+  - id: T989
+    name: 試験用誕生の祈型
+    types: [creature]
+    civs: [nature]
+    cost: 3
+    mana: 1
+    power: 2000
+    races: [テスト]
+    text: "このクリーチャーが相手プレイヤーを攻撃してブロックされなかった時、自分の山札を見る。その中からクリーチャーを１体選び、相手に見せてから自分の手札に加えてもよい。その後、山札をシャッフルする。（第323弾: unblocked_condition。dmx09-049 型）"
+    abilities:
+      - kind: trigger
+        when: {event: attack_end, subject: self, target: player, blocked: false}
+        effect:
+          - op: may
+            body:
+              - op: choose
+                select: {zone: deck, owner: you, look: true, filter: {types: [creature]}, count: 1}
+                as: t
+              - op: move
+                select: {ref: t, count: all}
+                to: hand
+                reason: draw
+              - op: shuffle
