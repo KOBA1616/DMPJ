@@ -237,6 +237,12 @@ class SelectorMixin:
             return s.turn_counters.get(f"broke_count:{env['self'][0]}:atk{s.turn_counters.get('current_attack', 0)}", 0) if env.get("self") else 0
         owner = spec.get("owner", "you")
         players = (0, 1) if owner == "any" else (self._rel(owner, env),)
+        if kind == "dynamo_tap":   # 第322弾: このターンに「ダイナモ」能力を使うためにタップしたダイナモの体数（op_modify の add_of 適用で記録した cid リスト。重複なし）
+            total = 0
+            for p in players:
+                lst = s.turn_counters.get(f"dynamo_tap:{p}", [])
+                total += len(lst) if isinstance(lst, list) else lst
+            return total
         if kind == "attack":
             total = 0
             for p in players:

@@ -14134,3 +14134,31 @@ cards:
         when: {event: attack_end, subject: self, target: player, blocked: false}
         effect:
           - {op: may, body: [{op: move, select: {zone: deck, owner: you, from_top: 1}, to: mana, reason: put}]}
+
+  - id: T986
+    name: 試験用センジュオー型
+    types: [creature]
+    civs: [water]
+    cost: 5
+    mana: 1
+    power: 3000
+    races: [テスト]
+    keywords: [dynamo, unblockable]
+    text: "ダイナモ。このクリーチャーはブロックされない。このクリーチャーが相手プレイヤーを攻撃してブロックされなかった時、このターンに「ダイナモ」能力を使うためにタップした自分のダイナモ１体につき１枚、シールドを余分にブレイクする。（第322弾: trigger_when_unblocked_and_extra_breaks_per_dynamo_tap。dm19-003 型）"
+    abilities:
+      - kind: trigger
+        when: {event: attack_end, subject: self, target: player, blocked: false}
+        effect:
+          - {op: break, player: opp, count: {turn_count: {kind: dynamo_tap, owner: you}}}
+  - id: T987
+    name: 試験用センジュ・チューン型
+    types: [spell]
+    civs: [water]
+    cost: 4
+    mana: 1
+    keywords: [s_trigger]
+    text: "S・トリガー。自分の手札の数と同じ枚数のカードを引き、その後、こうして引いた枚数と同じ数、手札を捨てる。（第322弾: dm23ex2-045 の呪文面型）"
+    spell:
+      - {op: set_var, name: hand_n, value: {count: {zone: hand, owner: you}}}
+      - {op: draw, count: {var: hand_n}}
+      - {op: discard, select: {zone: hand, owner: you, count: {var: hand_n}}}

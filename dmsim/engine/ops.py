@@ -435,6 +435,15 @@ def op_modify(eng, t, op, env):
         ce["affected"] = [s.ref(c) for c in cids]
     if mod.get("double_power"):      # 「パワーを2倍にする」: 生成時点のパワーを対象ごとに控え、加算として適用する（第141弾。範囲固定の効果のみ）
         ce["double_power"] = {r[0]: eng.chars_ro(r[0])["power"] for r in ce.get("affected") or []}
+    if "add_of" in op["mod"]:   # 第322弾: ダイナモの使用を記録する。add_of はダイナモのキーワード能力だけが使う（keywords.yaml の2経路とも op_modify 経由）。
+        # タップはコスト／トリガー効果として先に済んでおり、ここ（パワーと能力の付与）が使用の完了点。同じクリーチャーの2回目の使用は数えない
+        # （「タップした自分のダイナモ１体につき」＝体数）。記録はターン開始で消える turn_counters（entered: と同じリスト型）。
+        src = env.get("self")
+        if src:
+            key = f"dynamo_tap:{env['you']}"
+            lst = s.turn_counters.setdefault(key, [])
+            if src[0] not in lst:
+                lst.append(src[0])
     s.continuous.append(ce)
     sba = eng._sba_tasks()
     if sba:   # パワー0以下になったら、この効果の続きより先に破壊する（703.4c, 111.2d）
@@ -575,7 +584,13 @@ def op_untap_limit(eng, t, op, env):
 
 @op("set_var", name="str", value="any?")
 def op_set_var(eng, t, op, env):
-    env.setdefault("vars", {})[op["name"]] = op.get("value", [])
+    # 第322弾: 値が式（{count: ...} 等）の時はここで評価する。従来は辞書のまま束縛され、{var:} の読みが len(辞書)＝1 になっていた
+    # （プローブで確認: 手札3枚で set_var した {count: {zone: hand}} が draw 1枚になっていた。dmx12b-044 / dmrp09-020 等の既存6件も同じ誤り）。
+    # リスト・数値・真偽値・文字列はそのまま束縛する（mill の as: で束縛したカード列など）。
+    v = op.get("value", [])
+    if isinstance(v, dict) and len(v) == 1 and next(iter(v)) in eng._EXPR_KEYS:
+        v = eng.eval_expr(v, env)
+    env.setdefault("vars", {})[op["name"]] = v
 
 
 @op("extra_turn", player="player?")

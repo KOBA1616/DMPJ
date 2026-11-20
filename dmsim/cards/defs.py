@@ -52,7 +52,7 @@ FILTER_EXPR_KEYS = {"cost_le", "cost_ge", "power_le", "power_ge", "races", "civs
 # owner に any を許すのは destroyed と attack だけ（他は you/opp）
 TURN_COUNT_KINDS = {"shield_put", "shield_left", "mana_put", "cast", "summon", "attack", "destroyed",
                     "broke_by_self", "broke_by_self_attack", "draw", "broken", "enter", "discard", "leave", "tap", "untap", "untap_creature",
-                    "block", "enter_unpaid", "attack_by", "attack_on"}
+                    "block", "enter_unpaid", "attack_by", "attack_on", "dynamo_tap"}   # dynamo_tap: 第322弾。このターンに「ダイナモ」能力を使うためにタップした自分のダイナモの体数（op_modify の add_of 適用で記録。重複は数えない）
 TURN_COUNT_ANY_KINDS = {"destroyed", "attack"}
 ORD_KINDS = {"mana_put", "enter", "cast", "summon", "draw", "attack", "attack_by"}   # when の {ord: ...} で照合できる kind
 
