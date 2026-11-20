@@ -4646,3 +4646,7 @@ tr2 の全条項は第267弾の確立形で書ける:
 - 正本判定は提出前に行うこと。両行とも partial に aliases 記録は無く、id は real.yaml / real_akashic.yaml / real_vocab.yaml / real_zone.yaml / proto.yaml / converted.yaml のいずれにも無いことを確認済み（2026-11-20）。
 - 登録後は abilities が各1件ちょうどで FORM と完全一致すること、keywords が [dynamo] であることを本文と照合すること。
 - 次の番号: パイロット322 / ラウンド357 / プロト T986。
+
+### ラウンド356（第321弾の再変換）
+
+**新規登録2件**（dm19-050 大鉄漢シルバスターズ＝形A〔trigger {event: attack_end, subject: self, target: player, blocked: false} → may [draw 1]〕 / dm19-069 食いしん坊チャロック＝形B〔同じ when → may [move {zone: deck, from_top: 1} to mana, reason: put]〕。いずれも partial ＋ keywords [dynamo] ＋第321弾の確立形、unsupported 除去。登録形は確立形と完全一致で abilities は各1件ちょうど、keywords は両件とも [dynamo]、連結混入なし）・**alias 畳み込み0件**（両行とも partial に aliases 記録は無く、提出前に id が real.yaml / real_akashic.yaml / real_vocab.yaml / real_zone.yaml / proto.yaml / converted.yaml のいずれにも無いことを確認済み）・**stale クリーンアップ0件**・**差し戻し0件**。text は partial の全文で、ダイナモ説明と本条項の区切りが空白だった箇所は reject 行の公式全文どおり改行に直した。対象2行は gaps = [trigger_when_unblocked] のため reopen で外してから submit（reopen の出力は対象2件ちょうど）。converted 10,264→**10,266** / rejects 2,053→**2,051**、重なり0・漏れ0。trigger_when_unblocked はファミリーがこの2件だけだったため完全解消。pilot321 cards を登録形に書換、round356 cards を新設（登録カード自身の実挙動: 050 ブロックされずに攻撃すると1枚引く・ブロックされると引かない／069 ブロックされずに攻撃すると山札の上1枚がマナへ・ブロックされると置かない）。テスト21 passed（round356 cards 5＋pilot321 cards 登録形 2＋pilot321 本体 6＋data_audit 8）。回答は answers/round356.yaml に保存。次の番号: パイロット322 / ラウンド357 / プロト T986。
