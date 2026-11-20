@@ -4723,3 +4723,7 @@ proto T990（dm24ex2-024 型）/ T991（dm26ex4-cho021 型。呪文部分は同�
 注意（既存の扱い）: 「マナゾーンに置く時、このカードはタップして置く」はデータモデルに無く、text のみで再現する。converted.yaml に同じ文言の登録カードが359枚あり、いずれも対応する ability / keyword / フィールドが無い（dm10-037 / dm10-041 等）。エンジンもマナ配置時のタップは相手の opp_mana_tapped キーワード持ちにだけ行う。よって dmr21-007 の提出形にもこの節のモデルは含めない。
 
 proto T992（dmr21-007 型）/ T993（dm23rp1-004 型）。テスト6件通過（pilot325 本体 4: 形の一致、形A＝相手の単体ブレイカーは0枚・マウリエル自身は3枚、形B＝タップした相手クリーチャーはパワー-5000・攻撃する相手クリーチャーは1枚少なくブレイク・対照では1枚割る、＋pilot325 cards 提出前 2）。次の番号: パイロット326 / ラウンド361 / プロト T994。
+
+### ラウンド360（第325弾の再変換）
+
+**新規登録2件**（dmr21-007 九極の精霊 マウリエル＝{kind: static, affects: {owner: opp, filter: {types: [creature]}}, mod: {breaks_add: -1}}、keywords [blocker, triple_breaker] / dm23rp1-004 終納 カボード＝ロウ＝{kind: static, affects: {owner: opp, filter: {types: [creature], tapped: true}}, mod: {power: -5000, breaks_add: -1}}＋アビスの常在型 {owner: you, other: true, filter: {race_has: アビス}} {power: 5000, grant: [powered_breaker]}、keywords [triple_breaker, abyss_rush]。両行とも partial＋by_product で原文照合済み。登録形は確立形と完全一致で連結混入なし）・**alias 畳み込み0件**・**stale クリーンアップ0件**・**差し戻し0件**。対象2行は gaps = [breaks_reduction] のため reopen で外してから submit（reopen は2件とも外れた）。converted 10,271→**10,273** / rejects 2,045→**2,043**、重なり0・漏れ0。breaks_reduction はファミリーがこの2件だけだったため完全解消。pilot325 cards を登録形に書換、round360 cards を新設（登録カード自身の実挙動: 007 相手の単体ブレイカーは0枚・自身は3枚／004 タップした相手クリーチャーはパワー-5000・攻撃する相手クリーチャーは1枚少なくブレイク・対照では1枚割る）。テスト18 passed（round360 cards 4＋pilot325 cards 登録形 2＋pilot325 本体 4＋data_audit 8）。回答は answers/round360.yaml に保存。次の番号: パイロット326 / ラウンド361 / プロト T994。

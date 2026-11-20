@@ -466175,3 +466175,82 @@ cards:
       duration: during_attack
     duration: end_of_turn
     once: false
+- id: dmr21-007
+  name: 九極の精霊 マウリエル
+  types:
+  - creature
+  civs:
+  - light
+  - water
+  cost: 9
+  power: 12500
+  races:
+  - エンジェル・コマンド
+  - 革命軍
+  - 侵略者
+  mana: 1
+  keywords:
+  - blocker
+  - triple_breaker
+  text: マナゾーンに置く時、このカードはタップして置く。 ブロッカーT・ブレイカー相手のクリーチャーはすべて、シールドをひとつ少なくブレイクする。
+  source:
+    official: dmr21-007
+    review: pending
+    notes: '再変換ラウンド360。第325弾の再変換（breaks_reduction を常在型の breaks_add: -1 で表現。原文と厳密に一致。「マナゾーンに置く時、このカードはタップして置く」はデータモデルに無く
+      text のみで再現する既存の扱い）'
+  abilities:
+  - kind: static
+    affects:
+      owner: opp
+      filter:
+        types:
+        - creature
+    mod:
+      breaks_add: -1
+- id: dm23rp1-004
+  name: 終納 カボード＝ロウ
+  types:
+  - creature
+  civs:
+  - darkness
+  cost: 8
+  power: 12000
+  races:
+  - アビスロイヤル
+  mana: 1
+  keywords:
+  - triple_breaker
+  - abyss_rush
+  text: 'アビスラッシュ：このクリーチャーを自分の墓地から召喚してもよい。そうしたら、このターン、このクリーチャーはプレイヤーを攻撃でき、ターンの終わりに山札の下に置かれる。
+
+    T・ブレイカー
+
+    相手のタップしているクリーチャーはすべて、パワーを-5000され、シールドを１つ少なくブレイクする。（パワー０以下のクリーチャーは破壊される）
+
+    自分の他のアビスすべてのパワーは+5000され、「パワード・ブレイカー」を得る。'
+  source:
+    official: dm23rp1-004
+    review: pending
+    notes: '再変換ラウンド360。第325弾の再変換（breaks_reduction をタップ条件の常在型の power: -5000＋breaks_add:
+      -1 で表現。原文と厳密に一致）'
+  abilities:
+  - kind: static
+    affects:
+      owner: opp
+      filter:
+        types:
+        - creature
+        tapped: true
+    mod:
+      power: -5000
+      breaks_add: -1
+  - kind: static
+    affects:
+      owner: you
+      other: true
+      filter:
+        race_has: アビス
+    mod:
+      power: 5000
+      grant:
+      - powered_breaker
