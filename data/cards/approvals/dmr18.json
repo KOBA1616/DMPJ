@@ -15,7 +15,7 @@
 ],
 "verifier": 2,
 "verify": "43手・turn 30 まで正常に回った（result={'winner': 0, 'reason': 'deck_out', 'turn': 30}）",
-"vocab_ver": "106dfccc53d56062"
+"vocab_ver": "f25dbdb3e99897e8"
 },
 "dmr18-023": {
 "by": "check",
@@ -69,7 +69,7 @@
 ],
 "verifier": 2,
 "verify": "43手・turn 30 まで正常に回った（result={'winner': 0, 'reason': 'deck_out', 'turn': 30}）",
-"vocab_ver": "1d2fe6374207d0a6"
+"vocab_ver": "23436d40a0a12bd9"
 },
 "dmr18-047": {
 "by": "rule",
@@ -86,7 +86,7 @@
 ],
 "verifier": 2,
 "verify": "43手・turn 30 まで正常に回った（result={'winner': 0, 'reason': 'deck_out', 'turn': 30}）",
-"vocab_ver": "06e3cd3fa1f61531"
+"vocab_ver": "b2b8813796592cba"
 },
 "dmr18-048": {
 "by": "rule",
@@ -104,7 +104,7 @@
 ],
 "verifier": 2,
 "verify": "43手・turn 30 まで正常に回った（result={'winner': 0, 'reason': 'deck_out', 'turn': 30}）",
-"vocab_ver": "1aedb483693392f4"
+"vocab_ver": "cadfffcde3b79ace"
 },
 "dmr18-052": {
 "by": "rule",
@@ -121,7 +121,7 @@
 ],
 "verifier": 2,
 "verify": "43手・turn 30 まで正常に回った（result={'winner': 0, 'reason': 'deck_out', 'turn': 30}）",
-"vocab_ver": "e5e0f1114da1d0f6"
+"vocab_ver": "b51c056d3569f47d"
 },
 "dmr18-053": {
 "by": "rule",
@@ -136,7 +136,7 @@
 ],
 "verifier": 2,
 "verify": "43手・turn 30 まで正常に回った（result={'winner': 0, 'reason': 'deck_out', 'turn': 30}）",
-"vocab_ver": "8a6fb621e0e783a6"
+"vocab_ver": "2909142a9812abea"
 },
 "dmr18-055": {
 "by": "rule",
@@ -152,7 +152,7 @@
 ],
 "verifier": 2,
 "verify": "43手・turn 30 まで正常に回った（result={'winner': 0, 'reason': 'deck_out', 'turn': 30}）",
-"vocab_ver": "c8606a496cac3921"
+"vocab_ver": "b34d5e17130a278f"
 },
 "dmr18-064": {
 "by": "rule",
@@ -168,7 +168,7 @@
 ],
 "verifier": 2,
 "verify": "43手・turn 30 まで正常に回った（result={'winner': 0, 'reason': 'deck_out', 'turn': 30}）",
-"vocab_ver": "3db9072694b7b5e6"
+"vocab_ver": "11246d71328ef3a6"
 },
 "dmr18-066": {
 "by": "check",
@@ -203,7 +203,7 @@
 ],
 "verifier": 2,
 "verify": "43手・turn 30 まで正常に回った（result={'winner': 0, 'reason': 'deck_out', 'turn': 30}）",
-"vocab_ver": "dd00bb41a65f52d6"
+"vocab_ver": "81a5b22cb5c9e541"
 },
 "dmr18-l01": {
 "by": "rule",

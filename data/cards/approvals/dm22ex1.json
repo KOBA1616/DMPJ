@@ -18,7 +18,7 @@
 ],
 "verifier": 2,
 "verify_error": "原文に メテオバーン があるが meteor_burn が定義に無い; 移動先 bz が原文に無い",
-"vocab_ver": "22c826840ec40255"
+"vocab_ver": "345f66e3a5e52c4d"
 },
 "dm22ex1-024": {
 "by": "rule",
@@ -247,7 +247,7 @@
 ],
 "verifier": 2,
 "verify": "43手・turn 30 まで正常に回った（result={'winner': 0, 'reason': 'deck_out', 'turn': 30}）",
-"vocab_ver": "137570f7d4e911ec"
+"vocab_ver": "6e7fa0e3bf6628e1"
 },
 "dm22ex1-122": {
 "by": "rule",
@@ -267,7 +267,7 @@
 ],
 "verifier": 2,
 "verify": "26手・turn 11 まで正常に回った（result={'winner': 0, 'reason': 'direct_attack', 'turn': 11}）",
-"vocab_ver": "b23d5b1434d1babe"
+"vocab_ver": "275f906460406619"
 },
 "dm22ex1-cho10": {
 "by": "rule",
@@ -377,6 +377,6 @@
 ],
 "verifier": 2,
 "verify": "43手・turn 30 まで正常に回った（result={'winner': 0, 'reason': 'deck_out', 'turn': 30}）",
-"vocab_ver": "5e3b55f2e8381b94"
+"vocab_ver": "0bcf1082f5798107"
 }
 }

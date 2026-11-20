@@ -15,7 +15,7 @@
 ],
 "verifier": 2,
 "verify": "43手・turn 30 まで正常に回った（result={'winner': 0, 'reason': 'deck_out', 'turn': 30}）",
-"vocab_ver": "0d1eed9540c2bd90"
+"vocab_ver": "d31ac6c87fa3813e"
 },
 "dmrp15-036": {
 "by": "check",
@@ -70,7 +70,7 @@
 ],
 "verifier": 2,
 "verify": "43手・turn 30 まで正常に回った（result={'winner': 0, 'reason': 'deck_out', 'turn': 30}）",
-"vocab_ver": "00738d75d0505a65"
+"vocab_ver": "a8cbd6b86918ccde"
 },
 "dmrp15-063": {
 "by": "rule",
@@ -85,7 +85,7 @@
 ],
 "verifier": 2,
 "verify": "43手・turn 30 まで正常に回った（result={'winner': 0, 'reason': 'deck_out', 'turn': 30}）",
-"vocab_ver": "8a6fb621e0e783a6"
+"vocab_ver": "2909142a9812abea"
 },
 "dmrp15-064": {
 "by": "rule",
@@ -103,7 +103,7 @@
 ],
 "verifier": 2,
 "verify": "43手・turn 30 まで正常に回った（result={'winner': 0, 'reason': 'deck_out', 'turn': 30}）",
-"vocab_ver": "19fac4cc16502f5a"
+"vocab_ver": "56084c42d43c50d5"
 },
 "dmrp15-072": {
 "by": "rule",
@@ -121,7 +121,7 @@
 ],
 "verifier": 2,
 "verify": "43手・turn 30 まで正常に回った（result={'winner': 0, 'reason': 'deck_out', 'turn': 30}）",
-"vocab_ver": "efea1c4b5aa9744e"
+"vocab_ver": "f0b16b7a6ad1cc74"
 },
 "dmrp15-074": {
 "by": "check",
@@ -174,7 +174,7 @@
 ],
 "verifier": 2,
 "verify": "43手・turn 30 まで正常に回った（result={'winner': 0, 'reason': 'deck_out', 'turn': 30}）",
-"vocab_ver": "3b50967199a49383"
+"vocab_ver": "37d5ede5c3ea4578"
 },
 "dmrp15-080": {
 "by": "rule",
@@ -190,7 +190,7 @@
 ],
 "verifier": 2,
 "verify": "43手・turn 30 まで正常に回った（result={'winner': 0, 'reason': 'deck_out', 'turn': 30}）",
-"vocab_ver": "d2987528f556384d"
+"vocab_ver": "1540b8c0aefac5aa"
 },
 "dmrp15-085": {
 "by": "check",
@@ -226,7 +226,7 @@
 ],
 "verifier": 2,
 "verify": "43手・turn 30 まで正常に回った（result={'winner': 0, 'reason': 'deck_out', 'turn': 30}）",
-"vocab_ver": "ce5ea1f14c82cf63"
+"vocab_ver": "94e4c339caa72579"
 },
 "dmrp15-087": {
 "by": "rule",
@@ -241,6 +241,6 @@
 ],
 "verifier": 2,
 "verify": "43手・turn 30 まで正常に回った（result={'winner': 0, 'reason': 'deck_out', 'turn': 30}）",
-"vocab_ver": "8a6fb621e0e783a6"
+"vocab_ver": "2909142a9812abea"
 }
 }

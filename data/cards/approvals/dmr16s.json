@@ -84,7 +84,7 @@
 ],
 "verifier": 2,
 "verify": "43手・turn 30 まで正常に回った（result={'winner': 0, 'reason': 'deck_out', 'turn': 30}）",
-"vocab_ver": "740547cb64ec3526"
+"vocab_ver": "27eeb2d081d07729"
 },
 "dmr16s-020": {
 "by": "check",
@@ -121,7 +121,7 @@
 ],
 "verifier": 2,
 "verify": "43手・turn 30 まで正常に回った（result={'winner': 0, 'reason': 'deck_out', 'turn': 30}）",
-"vocab_ver": "aacaf9114d095b0e"
+"vocab_ver": "af00de5d6fa5da0a"
 },
 "dmr16s-022": {
 "by": "rule",
@@ -198,7 +198,7 @@
 ],
 "verifier": 2,
 "verify": "43手・turn 30 まで正常に回った（result={'winner': 0, 'reason': 'deck_out', 'turn': 30}）",
-"vocab_ver": "8a6fb621e0e783a6"
+"vocab_ver": "2909142a9812abea"
 },
 "dmr16s-038": {
 "by": "rule",
@@ -215,7 +215,7 @@
 ],
 "verifier": 2,
 "verify": "43手・turn 30 まで正常に回った（result={'winner': 0, 'reason': 'deck_out', 'turn': 30}）",
-"vocab_ver": "cf8dd225d468449a"
+"vocab_ver": "6aa812c842ed57e9"
 },
 "dmr16s-039": {
 "by": "rule",
@@ -232,7 +232,7 @@
 ],
 "verifier": 2,
 "verify": "43手・turn 30 まで正常に回った（result={'winner': 0, 'reason': 'deck_out', 'turn': 30}）",
-"vocab_ver": "de1bec2f0e4e44f6"
+"vocab_ver": "8f721a2ba510d035"
 },
 "dmr16s-041": {
 "by": "check",
@@ -344,7 +344,7 @@
 ],
 "verifier": 2,
 "verify": "43手・turn 30 まで正常に回った（result={'winner': 0, 'reason': 'deck_out', 'turn': 30}）",
-"vocab_ver": "1f20ad5aac1c12d7"
+"vocab_ver": "23ab2e40787ad440"
 },
 "dmr16s-046d": {
 "by": "rule",
@@ -361,7 +361,7 @@
 ],
 "verifier": 2,
 "verify": "43手・turn 30 まで正常に回った（result={'winner': 0, 'reason': 'deck_out', 'turn': 30}）",
-"vocab_ver": "1f20ad5aac1c12d7"
+"vocab_ver": "23ab2e40787ad440"
 },
 "dmr16s-050": {
 "by": "rule",
@@ -377,7 +377,7 @@
 ],
 "verifier": 2,
 "verify": "43手・turn 30 まで正常に回った（result={'winner': 0, 'reason': 'deck_out', 'turn': 30}）",
-"vocab_ver": "5ef954723c3cc636"
+"vocab_ver": "486ac5e20b6453ac"
 },
 "dmr16s-052": {
 "by": "rule",
@@ -392,7 +392,7 @@
 ],
 "verifier": 2,
 "verify": "43手・turn 30 まで正常に回った（result={'winner': 0, 'reason': 'deck_out', 'turn': 30}）",
-"vocab_ver": "8a6fb621e0e783a6"
+"vocab_ver": "2909142a9812abea"
 },
 "dmr16s-053": {
 "by": "check",
