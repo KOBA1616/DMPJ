@@ -50,7 +50,7 @@ INSTRUCTIONS = """\
 - known_keywords があるときは、それらのキーワードはルールで処理済み（text から除いてある）。keywords に入れ直さず、残りの text だけを変換する。
 - 「〜できない」は static の mod.deny、「〜できる」は mod.allow。「〜してもよい」は op: may。
 - 進化は types に evolution を含め evolve_from に進化元の条件を書く。ツインパクトは faces に2面を書く。
-- カードの種類: クリーチャーは creature、呪文は spell、タマシードは tamaseed、フィールドは field、クロスギアは cross_gear（実行するとバトルゾーンに出る）。D2フィールドは ["field", "d2_field"] と併記する（D2だけを指すフィルタは {types: [d2_field]}。一意性はルール側の処理）。「タマシード/クリーチャー」は両方を types に書く。サイキック・GR・超次元・ドラグハートはオリジナルフォーマットでは使わないので変換しない（取り込み側で飛ばす）。他の種類（オーラ・城 など）は未対応なので、近似せず source.unsupported に書く。
+- カードの種類: クリーチャーは creature、呪文は spell、タマシードは tamaseed、フィールドは field、クロスギアは cross_gear（実行するとバトルゾーンに出る）。D2フィールドは ["field", "d2_field"] と併記する（D2だけを指すフィルタは {types: [d2_field]}。一意性はルール側の処理）。ドラゴニック・フィールドは ["field", "dragonic_field"] と併記する（ドラゴニック・フィールドだけを指すフィルタは {types: [dragonic_field]}）。「タマシード/クリーチャー」は両方を types に書く。サイキック・GR・超次元・ドラグハートはオリジナルフォーマットでは使わないので変換しない（取り込み側で飛ばす）。他の種類（オーラ・城 など）は未対応なので、近似せず source.unsupported に書く。
 - 革命チェンジ・ニンジャ・ストライク等の宣言は kind: declare（既存カードの例に倣う）。
 - 「このクリーチャーで攻撃する代わりに、タップして次の能力を使ってもよい」（タップ能力）は kind: activate、cost: {tap: self}、effect に続く効果文の ops（攻撃ができない間は使えない。召喚酔い含む）。「バトルゾーンにある自分の光のクリーチャーをタップし、攻撃する代わりに次の能力を使ってもよい」は cost: {tap: {civs: [light]}}（条件に合う自分のクリーチャー1体をタップ）。
 - クロスギアは types: [cross_gear]。「クロスギア:このカードをバトルゾーンに置く。…コストをもう一度支払う。…バトルゾーンに残る。」の定型文はエンジンの規則（303）で処理済みなので abilities に書かない（text には残す）。「これをクロスしたクリーチャー」は、常在型が `kind: static, affects: crossed, mod: {...}`（パワー修整・キーワード付与）、誘発型が `when: {…, subject: crossed}`、効果の対象が `select: {ref: crossed}`。
@@ -81,7 +81,7 @@ INSTRUCTIONS = """\
 - 「相手の呪文またはクリーチャーの能力によって、このクリーチャーが自分の手札から捨てられる時、墓地に置くかわりに出してもよい」は `kind: replace, zone: hand, optional: true, when: {event: move, from: hand, to: graveyard, reason: discard, subject: self, by: opp}, instead: [{op: move, select: {ref: self, count: 1}, to: bz, reason: put}]`（「出す」なら optional を付けない。discard_by_opponent_effect_replacement の語彙を作らない）。
 - 宣言: 「数字を１つ選ぶ」は `{op: choose_number, as: n}`、「種族を１つ選ぶ」は `{op: choose_race, as: r}`、「文明をひとつ選ぶ」は `{op: choose_civ, as: c}`。参照はフィルタの `cost_le/cost_ge: {declared: n}`、`races: {declared: r}`、`civs` / `not_civs: {declared: c}`（choose_number / declare_race / choose_civilization_effect の語彙を作らない）。
 - 「このターン、自分が呪文を２枚以上唱えていれば」は `{cmp: [{turn_count: {kind: cast, owner: you}}, ">=", 2]}`（casts_this_turn_condition の語彙を作らない）。
-- 「B・A・D N」は `static affects: self, zone: hand, mod: {opt_reduce: {amount: N, then: destroy}}`（bad の語彙を作らない）。
+- 「B・A・D N」は `static affects: self, zone: hand, mod: {opt_reduce: {amount: N, then: destroy}}`（bad の語彙を作らない）。「コストをN少なくしてもよい。そうしたら、このターン、このクリーチャーがバトルゾーンに出た時、自分のクリーチャーを1体破壊する」は `then: entry_destroy`（第310弾）。
 - このターンの出来事の回数は式 `{turn_count: {kind: <種類>, owner: you|opp|any}}`。種類は attack / block / broken / cast / destroyed / discard / draw / enter / enter_unpaid / leave / mana_put / shield_left / shield_put / summon / tap / untap（turn_history_* や *_this_turn_condition の語彙を作らない）。「このターン、N回目の〜をした時」は when の `ord: {kind: <種類>, eq: N}`、「各ターン、はじめて〜した時」は能力の `first_time: true`（nth_event_per_turn_trigger / first_entry_per_turn の語彙を作らない）。「カードの名前を１つ言う」は `{op: choose_name, as: x}` とフィルタ `name: {declared: x}`（declare_name / name_a_card の語彙を作らない）。
 - 「自分の他のクリーチャーが相手のクリーチャーとバトルする時、かわりにこのクリーチャーにバトルさせてもよい」は `kind: replace, optional: true, when: {event: battle, subject: {owner: you, filter: {types: [creature]}}}, instead: [{op: battle_substitute}]`（「かわりにこのクリーチャーをタップしてもよい。そうした場合このクリーチャーがバトルする」は `tap: true`）。
 - 「カードを〜の下に置く」は `{op: put_under, select: <置くカード>, onto: <重ね先>}`（put_under_other の語彙を作らない）。

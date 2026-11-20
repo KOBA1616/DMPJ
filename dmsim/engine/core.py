@@ -674,7 +674,7 @@ class Engine(SelectorMixin, EventMixin, InterpreterMixin, TurnMixin, CombatMixin
             # （パワーは印刷どおり返し、パワー0の状況起因処理で破壊されないようにする）
             return {"power": d.power, "cost": d.cost, "civs": list(d.civs), "types": [], "races": [],
                     "keywords": set(), "name": d.name, "names": [d.name], "allow": [], "deny": [], "require": [],
-                    "breaks": 0, "break_opts": [], "breaks_add": 0, "pay_cost": d.cost, "sac_reduce": 0,
+                    "breaks": 0, "break_opts": [], "breaks_add": 0, "pay_cost": d.cost, "sac_reduce": 0, "sac_gated": [],
                     "evo_reduce": 0, "evo_reduce_min": 0,
                     "opt_reduce": None, "cost_may": [], "no_leave": [], "cross_reduce": [], "must_be_attacked": False,
                     "must_be_attacked_first": False, "must_be_chosen": False, "must_attack_creature": False,
@@ -682,7 +682,7 @@ class Engine(SelectorMixin, EventMixin, InterpreterMixin, TurnMixin, CombatMixin
                     "battle_indestructible": False, "win_all_battles": False, "crystal_soul": 0, "mana_number": None}
         ch = {"power": d.power, "cost": d.cost, "civs": list(d.civs), "types": list(d.types),
               "races": list(d.races), "keywords": set(d.keywords), "name": d.name, "names": [d.name],
-              "allow": [], "deny": [], "require": [], "breaks": 1, "break_opts": [], "breaks_add": 0, "pay_cost": d.cost, "sac_reduce": 0, "evo_reduce": 0, "evo_reduce_min": 0, "opt_reduce": None, "cost_may": [], "no_leave": [], "cross_reduce": [], "must_be_attacked": False, "must_be_attacked_first": False,
+              "allow": [], "deny": [], "require": [], "breaks": 1, "break_opts": [], "breaks_add": 0, "pay_cost": d.cost, "sac_reduce": 0, "sac_gated": [], "evo_reduce": 0, "evo_reduce_min": 0, "opt_reduce": None, "cost_may": [], "no_leave": [], "cross_reduce": [], "must_be_attacked": False, "must_be_attacked_first": False,
               "must_be_chosen": False, "must_attack_creature": False, "must_attack_creature_first": False, "player_rush": False,
               "battle_indestructible": False, "battle_indestructible_filters": [], "win_all_battles": False,
               "indestructible": False, "crystal_soul": d.crystal_soul, "mana_number": None}
@@ -955,7 +955,13 @@ class Engine(SelectorMixin, EventMixin, InterpreterMixin, TurnMixin, CombatMixin
                 else:
                     ch["pay_cost"] += cm
             cost_min = max(cost_min, m.get("cost_min", 0))
-            ch["sac_reduce"] += m.get("sac_reduce", 0)
+            sr = m.get("sac_reduce", 0)
+            if isinstance(sr, dict):   # dict 形: 合計には amount を入れる。{amount, for}（第292弾）の内訳だけ sac_gated へ。{amount, cost_min}（dmex01-042 の既存形）はゲート無しとして合計にだけ入る
+                ch["sac_reduce"] += sr["amount"]
+                if "for" in sr:
+                    ch["sac_gated"].append([sr["amount"], sr["for"]])
+            else:
+                ch["sac_reduce"] += sr
             if "evo_reduce" in m:   # 第234弾: このカードから進化するクリーチャーへの軽減付与
                 ch["evo_reduce"] += m["evo_reduce"]["amount"]
                 ch["evo_reduce_min"] = max(ch["evo_reduce_min"], m["evo_reduce"].get("min", 0))
@@ -998,6 +1004,7 @@ class Engine(SelectorMixin, EventMixin, InterpreterMixin, TurnMixin, CombatMixin
                     ch["breaks_add"] = max(ch["breaks_add"], p["breaks_add"])   # リンク統合でも伝播させる（breaks と同じく max。メンバー側の break_opts は各メンバーの計算で加算済み）
                     ch["crystal_soul"] = max(ch["crystal_soul"], p["crystal_soul"])
                     ch["sac_reduce"] += p["sac_reduce"]
+                    ch["sac_gated"] += p["sac_gated"]
         if power_sets:   # 第272弾: パワー置換は加算・ダイナモ・リンク統合のすべてを上書きする
             ch["power"] = min(power_sets)
         ch["keywords"] = sorted(ch["keywords"])   # 状態（LKI）に入るので JSON にできる形で返す

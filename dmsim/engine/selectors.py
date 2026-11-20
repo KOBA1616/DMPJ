@@ -477,6 +477,8 @@ class SelectorMixin:
                 return False
         if "keyword" in f and f["keyword"] not in ch["keywords"]:
             return False
+        if "not_keyword" in f and f["not_keyword"] in ch["keywords"]:
+            return False   # 「『ブロッカー』以外のクリーチャー」等、キーワードを持たない側（第316弾）。判定は keyword と同じく付与分を含む特性値で見る
         return True
 
     def zones_of(self, z) -> list[str]:
@@ -574,6 +576,9 @@ class SelectorMixin:
             elif r == "crossed":   # このクロスギアをクロスしているクリーチャー（303.3a）
                 g = s.cards[env["self"][0]].crossed
                 refs = [g] if g else []
+            elif r == "event.was_under":   # 離れる時に下にあったカードすべて（第294弾）: レコードの was_under（参照の列）そのものが対象。以後の filter / zone 併記で「墓地から」等に絞れる
+                v = (env.get("event") or {}).get("was_under")
+                refs = [list(x) for x in v] if isinstance(v, list) else []
             elif r in ("event.target", "event.attacker", "event.opponent", "event.shield", "event.top", "event.under"):   # 攻撃された（攻撃先の）クリーチャー / ブロックされた（攻撃）クリーチャー / バトルの相手 / ブレイクされるシールド（第146弾）/ 進化で上に乗ったクリーチャー（第150弾）/ 離れる時に下にあったクリーチャー（leave_under_untap）
                 v = env["event"].get(r.split(".")[1])
                 refs = [v] if isinstance(v, list) else []

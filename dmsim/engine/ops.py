@@ -767,26 +767,94 @@ def op_move_under_to_event(eng, t, op, env):
     return None
 
 
-@op("shield_plus")
-def op_shield_plus(eng, t, op, env):
-    """シールド・プラス: 自分の山札の上から1枚を、自分のシールド1つの下に置く（束は1つと数える）。"""
-    s = eng.s
-    p = env["you"]
-    shields = eng.zlist("shield", p)
-    deck = s.zones["deck"][p]
-    if not shields or not deck:
+@op("move_to_event", select="selector")
+def op_move_to_event(eng, t, op, env):
+    """置換されたイベントの行き先へ、選んだカードをそのまま移動する（第301弾）。
+    条件つき置換（「山札の上を見せて／置いて、それが〜であればかわりにとどまる」）で
+    条件が外れた側のために、instead の中から元の移動を再適用する手段。
+    行き先・理由・位置と効果帰属（by / cause）はイベントレコードから引き継ぎ、
+    no_replace の印を付けて再置換されないようにする（move_under_to_event と対:
+    あちらは発生源の下のカード専用、こちらは select で選んだカード用）。"""
+    ev = env.get("event") or {}
+    to = ev.get("to")
+    if not to or to == "bz":
         return None
-    a, d = eng.ask(t, p, "choose_cards", [eng._card_option(c) for c in shields], 1, 1)
+    cids, d = eng.select(t, op["select"], env)
     if d:
         return d
-    target = shields[a[0]]
-    tucked = deck[0]
+    if not cids:
+        return None
+    evs = []
+    for cid in cids:
+        e = {"ev": "move", "subject": eng.s.ref(cid), "to": to,
+             "reason": ev.get("reason", "put")}
+        if ev.get("position"):
+            e["position"] = ev["position"]
+        for k in ("by", "cause", "cause_defn", "cause_kind"):
+            if ev.get(k) is not None:
+                e[k] = ev[k]
+        evs.append(e)
+    eng._defer(t, [eng.ev_task(evs, {"no_replace": True})])
+    return None
+
+
+def _shield_plus_tuck(eng, p, target):
+    """山札の上1枚を target のシールドの束の下に差す（束は1つと数える）。"""
+    s = eng.s
+    tucked = s.zones["deck"][p][0]
     eng._raw_move(tucked, "shield")
     lst = eng.mut_zlist("shield", p)
     if tucked in lst:
         lst.remove(tucked)   # 束の下のカードはゾーンの並びに入らない（113.2）
     s.mut_card(target).under.append(tucked)
     s.mut_card(tucked).top_of = target
+
+
+@op("shield_plus", each="bool?", count="int?")
+def op_shield_plus(eng, t, op, env):
+    """シールド・プラス: 自分の山札の上から1枚を、自分のシールド1つの下に置く（束は1つと数える）。
+    each（スーパー・シールド・プラス、第295弾）: 自分の各シールドの下に1枚ずつ置く。
+    1枚ずつ置く先のシールドを選びながら進め、山札が足りなければ置ける分だけ置く。
+    count（ウルトラシールド・プラス、第295弾）: 選んだ1つのシールドの下に最大 count 枚まで
+    置く。2枚目以降は1枚ずつ続けるかどうかを諮問する（「N枚まで」の枚数選択と等価）。
+    複数回の諮問にまたがるため、進行は t の os に持つ（gachinko と同じ作法）。"""
+    s = eng.s
+    p = env["you"]
+    if not eng.zlist("shield", p) or not s.zones["deck"][p]:
+        return None
+    os_ = t.setdefault("os", {})
+    if op.get("each"):
+        done = os_.setdefault("sp_done", [])
+        while s.zones["deck"][p]:
+            rest = [c for c in eng.zlist("shield", p) if c not in done]
+            if not rest:
+                return None
+            a, d = eng.ask(t, p, "choose_cards", [eng._card_option(c) for c in rest], 1, 1)
+            if d:
+                return d
+            target = rest[a[0]]
+            _shield_plus_tuck(eng, p, target)
+            done.append(target)
+        return None
+    st = os_.setdefault("sp", {})
+    if "target" not in st:
+        shields = eng.zlist("shield", p)
+        a, d = eng.ask(t, p, "choose_cards", [eng._card_option(c) for c in shields], 1, 1)
+        if d:
+            return d
+        st["target"] = shields[a[0]]
+        st["n"] = 0
+    limit = int(op.get("count") or 1)
+    while st["n"] < limit and s.zones["deck"][p]:
+        if st["n"]:
+            a, d = eng.ask(t, p, "yes_no", [{"key": "yes"}, {"key": "no"}],
+                           prompt="シールドの下にもう1枚置く")
+            if d:
+                return d
+            if a[0] != 0:
+                break
+        _shield_plus_tuck(eng, p, st["target"])
+        st["n"] += 1
     return None
 
 

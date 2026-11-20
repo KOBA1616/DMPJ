@@ -214,6 +214,12 @@ class EventMixin:
                 rec["host_lki"] = {"defn": h.defn, "face": h.face, "controller": h.controller,
                                    "zone": "bz", "tapped": h.tapped, "chars": self.chars(c.top_of),
                                    "ref": href}
+            if c.under and ((rec["from"] == "bz" and ev["to"] != "bz")
+                            or (rec["from"] == "shield" and ev["to"] not in ("bz", "shield"))) \
+                    and not (ev.get("card_only")
+                             or self.fdef(ev["subject"][0], c.face if c.face >= 0 else None).star):
+                # 一緒に離れる下のカードすべて（移動直前の姿。収集レコード側の was_under と対。第294弾）
+                rec["was_under"] = [s.ref(u) for u in c.under]
             return rec
         if ev["ev"] == "draw":
             rec = {"ev": "draw", "player": ev["player"]}
@@ -565,6 +571,10 @@ class EventMixin:
                 out[0]["emblem"] = True
             if under_snap is not None:
                 out[0]["under"] = under_snap   # 離れる時に下にあったクリーチャー（解決時に {ref: event.under} で指せる。leave_under_untap）
+            if under_lkis:
+                wu = [s.ref(u) for u, _ in under_lkis if s.cards[u].zone == ev["to"]]
+                if wu:
+                    out[0]["was_under"] = wu   # 一緒に離れた下のカードすべて（移動後の姿。「下にあったカード」を {ref: event.was_under} で指す。第294弾。_record_for と対）
             if ev["to"] == "bz" and "ex_life" in self.chars_ro(cid)["keywords"]:
                 out += self._exlife_shield(cid)
             if ev["to"] == "bz" and "extra_ex_life" in self.chars_ro(cid)["keywords"]:
@@ -682,6 +692,11 @@ class EventMixin:
             for sh in s.zones["shield"][p]:
                 if s.cards[sh].exlife_of is not None and list(s.cards[sh].exlife_of) == old:
                     s.mut_card(sh).exlife_of = s.ref(top)
+        if "cross_gear" in self.cdef(top).types and "cross_gear" in self.cdef(base).types:
+            # 第304弾: 進化クロスギア: クロス先は束のトップだけが持つ。進化元が
+            # クロスしていたら、進化後のギアがそのままクロスした状態になる
+            t.crossed = b.crossed
+            b.crossed = None
         t.under = (t.under if more else []) + [base] + b.under
         if more:   # 第231弾: 直接の進化元を順に記録（star 離脱時のセグメント分離用）
             if base not in t.stack_bases:
@@ -702,7 +717,8 @@ class EventMixin:
                 t_["attacker"] = new
 
     def _rebuild(self, top: int):
-        """再構築（801.4）。下のカードのうち、一番上の単独で存在できるカード（クリーチャー）を残す。"""
+        """再構築（801.4）。下のカードのうち、一番上の単独で存在できるカード
+        （クリーチャー。第304弾以降はクロスギアも）を残す。"""
         s = self.s
         c = s.mut_card(top)
         under = list(c.under)
@@ -737,7 +753,9 @@ class EventMixin:
                         ce["affected"].append(new)
             c.stack_bases = []
             return
-        while under and "creature" not in self.cdef(under[0]).types:
+        while under and "creature" not in self.cdef(under[0]).types \
+                and "cross_gear" not in self.cdef(under[0]).types:
+            # 第304弾: クロスギアも単独で存在できる（進化クロスギアの束の再構築）
             self._raw_move(under.pop(0), "graveyard")
         if not under:
             return
@@ -747,6 +765,8 @@ class EventMixin:
         for u in nt.under:
             s.mut_card(u).top_of = nt.cid
         nt.tapped = c.tapped                                   # 801.4d
+        if "cross_gear" in self.cdef(nt.cid).types:
+            nt.crossed = c.crossed   # 第304弾: トップだけ離れた時、下のギアがクロスしたまま場に残る
         # 801.4c: 新たに出るわけではないので、そのカード自身の出たターンをそのまま使う
         # （ターンのはじめから下にあったなら酔わず、このターンに出た進化元なら酔う）
         old, new = s.ref(top), s.ref(nt.cid)
@@ -963,10 +983,14 @@ class EventMixin:
                 return False
         if "exlife_of" in pat:   # 「EXライフ」シールド（第190弾）: subject のカードが移動前に紐付けていたクリーチャー
             v = pat["exlife_of"]
-            refs = [env["self"]] if v == "self" else env.get("vars", {}).get(v, [])
             linked = lki.get("exlife_of") if lki is not None else self.s.cards[cid].exlife_of
-            if linked is None or not any(list(r) == list(linked) for r in refs if r):
-                return False
+            if v == "any":   # 「自分のEXライフシールド（どのクリーチャーのものでも）が離れた時」（第307弾）: 紐付けの有無だけを見る
+                if linked is None:
+                    return False
+            else:
+                refs = [env["self"]] if v == "self" else env.get("vars", {}).get(v, [])
+                if linked is None or not any(list(r) == list(linked) for r in refs if r):
+                    return False
         if "zone" in pat:   # subject のいるゾーン（第212弾追加: 「自分のマナゾーンのカードをタップした時」等）。離れた時は lki のゾーンで見る
             z = lki["zone"] if lki else self.s.cards[cid].zone
             if z != pat["zone"]:
@@ -1244,11 +1268,16 @@ class EventMixin:
             # lki の zone（shield）と一致しないので二重発火しない
             sources.append((rec["subject"][0], lki, False))
         host_lki = rec.get("host_lki")
-        if host_lki and host_lki["zone"] == "bz" and rec.get("host"):
+        if host_lki and host_lki["zone"] == "bz" and rec.get("host") \
+                and not any(src == rec["host"][0] and not ho
+                            for src, _, ho in sources):
             # 下にあったカードの移動では、宿主（上にいたカード）も離れた側として発生源に加える
             # （from_under 機構: 「カードがこのクリーチャーの下を離れた時」）。宿主自身の移動は
             # 宿主自身のレコードで通常どおり収集されるため、ここでは when に from_under を書いた
-            # 能力だけを見る（host_only）: 宿主の通常の観測誘発が下のカードの枚数だけ重複しない
+            # 能力だけを見る（host_only）: 宿主の通常の観測誘発が下のカードの枚数だけ重複しない。
+            # ただし宿主がまだバトルゾーンにトップとして残っている場合（下のカードだけが
+            # 単独で動いた時）は、通常の発生源（bz_tops）に既に含まれており、ここで加えると
+            # from_under 誘発が二重に収集されるため加えない（第299弾で実測・修正）
             sources.append((rec["host"][0], host_lki, True))
         if rec["ev"] == "evolve_base":   # 進化元になる時（第150弾）: 重ねられた側は bz_tops から外れているので、進化元自身を発生源に加える
             sources.append((rec["subject"][0], None, False))
