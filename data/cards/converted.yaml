@@ -466014,3 +466014,89 @@ cards:
     official: dm23ex2-045
     review: pending
     notes: 再変換ラウンド357。第322弾の再変換（ツインパクト。クリーチャー面は dm19-003 と同形、呪文面は set_var の式評価で手札枚数を引いて同数捨てる。原文と厳密に一致）
+- id: dmx04-011
+  name: ケロディ二郎
+  types:
+  - creature
+  civs:
+  - water
+  cost: 4
+  power: 2000
+  races:
+  - ゲル・フィッシュ
+  - ハンター
+  mana: 1
+  text: このクリーチャーが相手プレイヤーを攻撃してブロックされなかった時、バトルゾーンにあるクリーチャーを１体選び、持ち主の手札に戻してもよい。
+  source:
+    official: dmx04-011
+    review: pending
+    notes: '再変換ラウンド358。第323弾の再変換（unblocked_condition は第321弾の確立形 attack_end の blocked:
+      false そのもの。原文と厳密に一致）'
+  abilities:
+  - kind: trigger
+    when:
+      event: attack_end
+      subject: self
+      target: player
+      blocked: false
+    effect:
+    - op: may
+      body:
+      - op: move
+        select:
+          zone: bz
+          owner: any
+          filter:
+            types:
+            - creature
+          count: 1
+        to: hand
+        reason: return
+- id: dmx09-049
+  name: 誕生の祈
+  types:
+  - creature
+  civs:
+  - nature
+  cost: 3
+  power: 2000
+  races:
+  - ビーストフォーク
+  mana: 1
+  text: このクリーチャーが相手プレイヤーを攻撃してブロックされなかった時、自分の山札を見る。その中からクリーチャーを１体選び、相手に見せてから自分の手札に加えてもよい。その後、山札をシャッフルする。
+  source:
+    official: dmx09-049
+    review: pending
+    notes: '再変換ラウンド358。第323弾の再変換（unblocked_condition は第321弾の確立形 attack_end の blocked:
+      false そのもの。原文と厳密に一致）'
+    aliases:
+    - dm09-054
+    - dmc34-053
+    - dmc39-031
+  abilities:
+  - kind: trigger
+    when:
+      event: attack_end
+      subject: self
+      target: player
+      blocked: false
+    effect:
+    - op: may
+      body:
+      - op: choose
+        select:
+          zone: deck
+          owner: you
+          look: true
+          filter:
+            types:
+            - creature
+          count: 1
+        as: t
+      - op: move
+        select:
+          ref: t
+          count: all
+        to: hand
+        reason: draw
+      - op: shuffle
