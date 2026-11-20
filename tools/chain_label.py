@@ -116,7 +116,7 @@ def run_labeling(rules, setup, *, deck_mode, deck, seed, max_turn, stage,
                  order, node_budget, frontier_cap, store: Path,
                  manifest, chunk_nodes, total_budget, mem_limit_mb,
                  settings_hash, engine_ver, progress=None,
-                 checkpoint_nodes: int = 0):
+                 checkpoint_nodes: int = 0, start_engine=None):
     st = next(s for s in STAGES if s["stage"] == stage)
     fn, _label = stage_candidates(order, stage)
     orig = turn.candidates
@@ -126,7 +126,9 @@ def run_labeling(rules, setup, *, deck_mode, deck, seed, max_turn, stage,
         store.mkdir(parents=True, exist_ok=True)
         edges_path = store / "edges.jsonl"
         if manifest is None:
-            if deck_mode:
+            if start_engine is not None:
+                start = start_engine
+            elif deck_mode:
                 start = Engine.new_game(rules, [deck, ["dm01-080"] * 40],
                                         seed, 0)
             else:
@@ -341,6 +343,11 @@ def main(argv=None):
     ap = argparse.ArgumentParser()
     ap.add_argument("--setup", default=None)
     ap.add_argument("--deck", default=None)
+    ap.add_argument("--start-store", default=None,
+                    help="凍結局面の状態ストアのパス（--start-key と併用）。"
+                         "指定時は deck／setup の代わりにその局面から開始する")
+    ap.add_argument("--start-key", default=None,
+                    help="開始局面の fast_key（--start-store 内のキー）")
     ap.add_argument("--seeds", default="1")
     ap.add_argument("--max-turn", type=int, default=3)
     ap.add_argument("--stage", type=int, default=1)
@@ -363,15 +370,30 @@ def main(argv=None):
     ct.LEAF_CAP = a.leaf_cap
     rules = load_rules()
     ever = engine_version(".")
+    start_mode = a.start_key is not None
+    if start_mode and not a.start_store:
+        ap.error("--start-key には --start-store が必要です")
     deck_mode = a.deck is not None
     deck = load_deck(a.deck) if deck_mode else None
-    setup0 = ({} if deck_mode else
+    setup0 = ({} if (deck_mode or start_mode) else
               yaml.safe_load(Path(a.setup).read_text(encoding="utf-8")))
-    name = Path(a.deck).stem if deck_mode else Path(a.setup).stem
+    if deck_mode:
+        name = Path(a.deck).stem
+    elif a.setup:
+        name = Path(a.setup).stem
+    else:
+        name = "frozen"
     settings = {"deck": a.deck, "setup": None if deck_mode else a.setup,
                 "max_turn": a.max_turn, "stage": a.stage, "order": a.order,
                 "budget": a.budget, "frontier_cap": a.frontier_cap,
                 "leaf_cap": a.leaf_cap}
+    if start_mode:
+        # 開始局面が違えば別ケースとして扱う（設定ハッシュに含める）。
+        # start mode でない既存ランのハッシュは変えない。
+        settings["start_store"] = a.start_store
+        settings["start_key"] = a.start_key
+    start_engine = (_store_get(Path(a.start_store), rules, a.start_key)
+                    if start_mode else None)
     cfg_hash = hashlib.sha256(
         json.dumps(settings, sort_keys=True).encode()).hexdigest()[:8]
     out_path = Path(a.out)
@@ -416,7 +438,8 @@ def main(argv=None):
                 chunk_nodes=a.chunk_nodes, total_budget=a.total_budget,
                 mem_limit_mb=a.mem_limit_mb, settings_hash=cfg_hash,
                 engine_ver=ever, progress=progress,
-                checkpoint_nodes=a.checkpoint_nodes)
+                checkpoint_nodes=a.checkpoint_nodes,
+                start_engine=start_engine)
             if res["status"] == "suspended":
                 w({"kind": "suspended", "case": case,
                    "nodes": res["nodes"], "wall_seconds": time.time() - t0})
