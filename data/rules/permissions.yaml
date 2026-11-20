@@ -26,3 +26,4 @@ actions:
   d_switch:              {default: true,  rule: "308.3", ja: Dスイッチを使える（D2フィールド。第151弾）}
   evolve_base:           {default: false, rule: "315 シンカライズ", ja: "クリーチャーでなくても進化元にできる（シンカライズ。タマシードがクリーチャーであるかのように）"}
   evolve_base_any:       {default: false, rule: "801.1a", ja: "どんな種族の進化クリーチャーの進化元にもなれる（イノセント形。第232弾）"}
+  evolve_civ_any:        {default: false, rule: "801.1a", ja: "どんな文明の進化クロスギアの進化元にもなれる（レオパルド形。第304弾）"}

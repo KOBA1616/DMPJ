@@ -75,6 +75,20 @@ class TurnMixin:
                 out.append({"key": f"{verb}:{dfn}", "cid": cid, "name": self.cdef(cid).name})
         return out
 
+    def _alt_step_cands(self, st, p, cid):
+        """代替コストの do ステップの候補（第292弾で owner を honor するよう修正）。
+
+        ステップは {zone, owner?, filter?, count, ...} の選択仕様で、owner は
+        支払うプレイヤー基準（省略時は "you"＝支払う側）。bz は共有ゾーンの
+        ため、従来は相手のカードまで候補に入り、相手のカードを破壊して
+        代替コストを支払えてしまっていた（owner キーはデータに書かれて
+        いたが、エンジンが読んでいなかった）。"""
+        owner = st.get("owner", "you")
+        op = p if owner == "you" else 1 - p
+        return [c for c in self.zlist(st["zone"], p)
+                if c != cid and self.s.cards[c].controller == op
+                and self.filter_match(c, st.get("filter", {}))]
+
     def _play_options(self, p) -> list[dict]:
         """メインステップで実行できるカード。ツインパクトは面ごとに別の選択肢（810.3）。"""
         out = []
@@ -130,11 +144,16 @@ class TurnMixin:
                 if ac:
                     if "if" in ac and not self.eval_cond(ac["if"], {"you": p, "self": self.s.ref(cid), "vars": {}}):
                         continue
-                    ok = bool(self._mana_choices(cid, p, fi, cost=ac["cost"], limit=1, civs=ac.get("civs"))) if "cost" in ac else \
-                        all(sum(1 for c in self.zlist(st["zone"], p)
-                                if c != cid and self.filter_match(c, st.get("filter", {}))
-                                and (not st.get("tap") or not self.s.cards[c].tapped)) >= st["count"]
-                            for st in ac["do"])
+                    # 第292弾: 混合形（cost＋do）では金額側と行動側の両方が
+                    # 支払える時だけ提示する（従来は cost があれば do 側を
+                    # 見ておらず、生贄不足でも提示され実行時に潰れていた）
+                    ok = True
+                    if "cost" in ac:
+                        ok = bool(self._mana_choices(cid, p, fi, cost=ac["cost"], limit=1, civs=ac.get("civs")))
+                    if ok and "do" in ac:
+                        ok = all(sum(1 for c in self._alt_step_cands(st, p, cid)
+                                     if not st.get("tap") or not self.s.cards[c].tapped) >= st["count"]
+                                 for st in ac["do"])
                     if ok:
                         opt = {"key": f"{o['key']}:alt" if fi is None else f"{o['key']}:{fi}:alt",
                                "cid": cid, "name": f.name, "alt": True}
@@ -501,11 +520,16 @@ class TurnMixin:
             return False
         if "evolution" in d.types and not d.s_max:   # S-MAX進化は進化元を必要としない（通常召喚として扱う）
             if d.deck_evolution:   # デッキ進化（第173弾）: 山札が空でなければ、めくりの結果にかかわらず召喚を試みられる
-                if not self.zlist("deck", p):
+                if d.deck_evolution.get("stack_all"):   # デッキ進化GV（第293弾）: 上から count 枚すべてを重ねるので、山札が count 枚未満では出せない
+                    if len(self.zlist("deck", p)) < d.deck_evolution.get("count", 1):
+                        return False
+                    n = d.deck_evolution.get("count", 1)
+                elif not self.zlist("deck", p):
                     return False
-                n = 1
+                else:
+                    n = 1
                 cost = max(1, d.cost - n * d.cost_reduce_per_evo) if d.cost_reduce_per_evo else None   # 「コストは0以下にはならない」= 最低1
-                return bool(self._mana_choices(cid, p, face, cost=self._opt_reduced(cid, face, d, self._sac_reduced(d, self._tap_reduced(d, p, cost, None), self._sac_pool(d, p))), limit=1))
+                return bool(self._mana_choices(cid, p, face, cost=self._opt_reduced(cid, face, d, self._sac_reduced(d, self._tap_reduced(d, p, cost, None), self._sac_pool(d, p, cid), cid)), limit=1))
             if isinstance(d.evolve_from, list):   # 進化V: フィルタごとに進化元が要る
                 if not self._evo_v_ready(cid, p, face):
                     return False
@@ -523,7 +547,7 @@ class TurnMixin:
             if d.evolve_total_cost_ge:   # コスト合計条件（第236弾）: 候補全体の合計が届かなければ出せない
                 if sum(self.chars_ro(c)["cost"] for c in srcs) < d.evolve_total_cost_ge:
                     return False
-            n = len(srcs) if d.evolve_any else d.evolve_count           # 最も安い組合せで払えるか（112.2b）
+            n = (min(len(srcs), d.evolve_max) if d.evolve_max else len(srcs)) if d.evolve_any else d.evolve_count           # 最も安い組合せで払えるか（112.2b）
             if d.soul_shift:   # ソウルシフト（第218弾∞／第274弾クラシック）: 実際に重ねる進化元の合計で判定
                 if d.evolve_any:   # ∞: 候補全体を重ねられるので、その合計が最大軽減
                     red = sum(self.chars_ro(c)["cost"] for c in srcs)
@@ -533,8 +557,8 @@ class TurnMixin:
                 cost = max(d.soul_shift["floor"], d.cost - red)
             else:
                 cost = max(1, d.cost - n * d.cost_reduce_per_evo) if d.cost_reduce_per_evo else None   # 「コストは0以下にはならない」= 最低1
-            return bool(self._mana_choices(cid, p, face, cost=self._opt_reduced(cid, face, d, self._evo_base_reduced(cid, face, d, self._sac_reduced(d, self._tap_reduced(d, p, cost, None), self._sac_pool(d, p)), p)), limit=1))
-        return bool(self._mana_choices(cid, p, face, cost=self._opt_reduced(cid, face, d, self._sac_reduced(d, self._tap_reduced(d, p, None, None), self._sac_pool(d, p))), limit=1))
+            return bool(self._mana_choices(cid, p, face, cost=self._opt_reduced(cid, face, d, self._evo_base_reduced(cid, face, d, self._sac_reduced(d, self._tap_reduced(d, p, cost, None), self._sac_pool(d, p, cid), cid), p)), limit=1))
+        return bool(self._mana_choices(cid, p, face, cost=self._opt_reduced(cid, face, d, self._sac_reduced(d, self._tap_reduced(d, p, None, None), self._sac_pool(d, p, cid), cid)), limit=1))
 
     def _opt_reduced(self, cid, face, d, cost):
         """任意の軽減（opt_reduce / cost_may）をすべて使った場合の最安コスト（実行可能かの判定用）。"""
@@ -570,16 +594,36 @@ class TurnMixin:
             out.append(e)
         return out
 
-    def _sac_pool(self, d, p) -> list[int]:
-        """ササゲール: ディスペクターを召喚する時、破壊してコストを減らせる自分のクリーチャー。"""
-        if not any("ディスペクター" in r for r in d.races):
-            return []
-        return [c for c in self.bz_tops(p) if self.chars_ro(c)["sac_reduce"] > 0]
+    def _sac_applicable(self, c, d, cid) -> int:
+        """生贄 c が召喚先の面 d に対して与える軽減量。
 
-    def _sac_reduced(self, d, cost, sacs):
+        int 形（ササゲール、第201弾）はディスペクター召喚専用。dict 形
+        {amount, for}（第292弾）は、召喚先の印刷特性が for フィルタに合う
+        時だけ効く（for は召喚先の印刷特性に対して照合する。手札のカードの
+        種族等は印刷どおりのため）。chars の sac_reduce は両形の合計で、
+        dict 形の内訳は sac_gated に [amount, for] で入る。"""
+        ch = self.chars_ro(c)
+        gated = sum(a for a, _ in ch["sac_gated"])
+        amt = 0
+        if any("ディスペクター" in r for r in d.races):
+            amt += ch["sac_reduce"] - gated   # int 形ぶん（従来のササゲール）
+        if cid is not None and ch["sac_gated"]:
+            printed = {"power": d.power, "cost": d.cost, "civs": d.civs, "types": d.types,
+                       "races": d.races, "keywords": set(d.keywords), "name": d.name,
+                       "names": [d.name]}
+            for a, f in ch["sac_gated"]:
+                if self.filter_match(cid, f, lki={"chars": printed}):
+                    amt += a
+        return amt
+
+    def _sac_pool(self, d, p, cid=None) -> list[int]:
+        """破壊してコストを減らせる自分のクリーチャー（ササゲール＋第292弾の対象フィルタ形）。"""
+        return [c for c in self.bz_tops(p) if self._sac_applicable(c, d, cid) > 0]
+
+    def _sac_reduced(self, d, cost, sacs, cid=None):
         if not sacs:
             return cost
-        return max(0, (d.cost if cost is None else cost) - sum(self.chars_ro(c)["sac_reduce"] for c in sacs))
+        return max(0, (d.cost if cost is None else cost) - sum(self._sac_applicable(c, d, cid) for c in sacs))
 
     def _tap_pool(self, p) -> list[int]:
         return [c for c in self.bz_tops(p) if "creature" in self.chars_ro(c)["types"] and not self.s.cards[c].tapped]
@@ -610,7 +654,7 @@ class TurnMixin:
         reds = sorted((self.chars_ro(c)["evo_reduce"] for c in srcs), reverse=True)
         mins = [self.chars_ro(c)["evo_reduce_min"] for c in srcs if self.chars_ro(c)["evo_reduce"]]
         if chosen is None:
-            n = len(srcs) if d.evolve_any else max(1, d.evolve_count)
+            n = (min(len(srcs), d.evolve_max) if d.evolve_max else len(srcs)) if d.evolve_any else max(1, d.evolve_count)
             reds = reds[:n]
         red = sum(reds)
         if red:
@@ -623,10 +667,14 @@ class TurnMixin:
         許可を持つ進化元も一致する（「どんな種族の進化クリーチャーを置いてもよい」）。
         文明など種族以外の指定は許可では肩代わりしない。
         第273弾: 種族指定が race_has 形（{civs, race_has} の複合を含む）や any_of の枝に
-        ある場合も肩代わりする。種族指定を取り除いた残りは通常どおり照合する。"""
+        ある場合も肩代わりする。種族指定を取り除いた残りは通常どおり照合する。
+        第304弾: 文明指定のあるフィルタには、evolve_civ_any の許可を持つ進化元も
+        一致する（対の形。種族など文明以外の指定は肩代わりしない）。"""
         if self.filter_match(c, ef):
             return True
-        return self.permits(c, "evolve_base_any") and self._evo_race_waived(c, ef)
+        if self.permits(c, "evolve_base_any") and self._evo_race_waived(c, ef):
+            return True
+        return self.permits(c, "evolve_civ_any") and self._evo_civ_waived(c, ef)
 
     def _evo_race_waived(self, c, ef) -> bool:
         """第273弾: ef の種族指定（races / race_has）を取り除いて c が一致するか。
@@ -640,37 +688,87 @@ class TurnMixin:
         rest = {k: v for k, v in ef.items() if k not in ("races", "race_has")}
         return self.filter_match(c, rest)
 
+    def _evo_civ_waived(self, c, ef) -> bool:
+        """第304弾: ef の文明指定（civs / civs_all）を取り除いて c が一致するか。
+        _evo_race_waived と対の形（レオパルド・グローリーソードの
+        「このクロスギアに、好きな文明の進化クロスギアを置いてもよい」）。
+        any_of は枝ごとに判定し、枝の外にあるキーも各枝へ合わせて見る。"""
+        if "any_of" in ef:
+            rest = {k: v for k, v in ef.items() if k != "any_of"}
+            return any(isinstance(b, dict) and self._evo_civ_waived(c, {**rest, **b})
+                       for b in ef["any_of"])
+        if "civs" not in ef and "civs_all" not in ef:
+            return False
+        rest = {k: v for k, v in ef.items() if k not in ("civs", "civs_all")}
+        return self.filter_match(c, rest)
+
     @read_only
     def _evo_sources(self, cid, p, face=None) -> list[int]:
         """適正な進化元（801.1a）。evolve_zone（既定は自分のバトルゾーン）のクリーチャーで
         evolve_from を満たすもの（超無限墓地進化は自分の墓地から選ぶ）。"""
         f = self.cdef(cid).face(face)
         if isinstance(f.evolve_from, list):   # 進化V: どのフィルタか1つでも満たせば候補（選択は h_play がフィルタごとに進める）
-            pool = self._evo_pool(cid, p, face)
-            return [c for c in pool if any(self._evo_match(c, {k: v for k, v in ef.items() if k != "zone"})
-                                            for ef in f.evolve_from)]
+            out = []
+            for ef in f.evolve_from:
+                pool = self._evo_filter_pool(cid, p, face, ef)
+                for c in pool:
+                    if c not in out and self._evo_match(c, {k: v for k, v in ef.items() if k != "zone"}):
+                        out.append(c)
+            return out
         ef = {k: v for k, v in (f.evolve_from or {}).items() if k != "zone"} or {}
         pool = self._evo_pool(cid, p, face)
         return [c for c in pool if self._evo_match(c, ef)]
 
+    def _evo_for_gear(self, cid, face=None) -> bool:
+        """第304弾: 進化する面がクロスギアか（進化クロスギア）。進化元は
+        クリーチャーではなくクロスギアでなければならない。"""
+        return "cross_gear" in self.cdef(cid).face(face).types
+
+    def _evo_pool_zone(self, p, zone, exclude=None, for_gear=False) -> list[int]:
+        """1ゾーンぶんの進化元プール（クリーチャーとして存在できるカードだけ）。
+        シールドは束の下のカードを選べないので束のトップだけ（第293弾）。
+        シールド進化の進化元は「カード」であってクリーチャーに限らないため、
+        シールドだけはクリーチャー絞り込みをせず evolve_from フィルタに委ねる。
+        第304弾: for_gear（進化クロスギア）の時はクロスギアだけが進化元になる
+        （クリーチャーはギアの進化元にならない。クロス済みでなくてもよい）。"""
+        if zone == "bz":
+            pool = self.bz_tops(p)
+        elif zone == "shield":
+            out = [c for c in self.zlist("shield", p) if self.s.cards[c].top_of < 0 and c != exclude]
+            if for_gear:
+                out = [c for c in out if "cross_gear" in self.chars_ro(c)["types"]]
+            return out
+        else:
+            pool = [c for c in self.zlist(zone, p) if c != exclude]   # 手札進化: 自分自身は進化元にしない
+        if for_gear:
+            return [c for c in pool if "cross_gear" in self.chars_ro(c)["types"]]
+        return [c for c in pool if ("creature" in self.chars_ro(c)["types"] or self.permits(c, "evolve_base"))]
+
     def _evo_pool(self, cid, p, face=None) -> list[int]:
         f = self.cdef(cid).face(face)
+        fg = self._evo_for_gear(cid, face)
         if f.evolve_zones:   # 超無限進化Ω（第218弾）: 複数ゾーンから進化元を探す
             pool = []
             for z in f.evolve_zones:
-                pool += self.bz_tops(p) if z == "bz" else [c for c in self.zlist(z, p) if c != cid]
-            pool = list(dict.fromkeys(pool))
-        else:
-            z = f.evolve_zone
-            pool = self.bz_tops(p) if z == "bz" else [c for c in self.zlist(z, p) if c != cid]   # 手札進化: 自分自身は進化元にしない
-        return [c for c in pool if ("creature" in self.chars_ro(c)["types"] or self.permits(c, "evolve_base"))]
+                pool += self._evo_pool_zone(p, z, exclude=cid, for_gear=fg)
+            return list(dict.fromkeys(pool))
+        return self._evo_pool_zone(p, f.evolve_zone, exclude=cid, for_gear=fg)
+
+    def _evo_filter_pool(self, cid, p, face, ef) -> list[int]:
+        """進化V のフィルタ1件ぶんのプール。第293弾: フィルタに zone があれば
+        そのゾーンだけから探す（進化GV・Ω: 墓地・マナ・バトルゾーンから1体ずつ）。
+        無ければ面の evolve_zone / evolve_zones のプール全体。"""
+        z = ef.get("zone")
+        if z:
+            return self._evo_pool_zone(p, z, exclude=cid, for_gear=self._evo_for_gear(cid, face))
+        return self._evo_pool(cid, p, face)
 
     def _evo_v_ready(self, cid, p, face=None) -> bool:
         """進化V: フィルタごとに別々の進化元が確保できるか（貪欲に照合）。"""
         f = self.cdef(cid).face(face)
-        pool = self._evo_pool(cid, p, face)
         used = set()
         for ef in f.evolve_from:
+            pool = self._evo_filter_pool(cid, p, face, ef)
             ef = {k: v for k, v in ef.items() if k != "zone"}
             hit = next((c for c in pool if c not in used and self._evo_match(c, ef)), None)
             if hit is None:
@@ -696,7 +794,10 @@ class TurnMixin:
         ch = self.chars(cid, face)
         if not raw_cost:
             eff = max(0, eff + ch["pay_cost"] - d.cost)           # 継続的効果によるコストの増減（mod cost）
-        if eff == 0 and not (civs if civs is not None else d.civs):
+        if eff == 0:
+            # 実効コスト0なら支払い自体が無い（第292弾: 従来は文明なしの時だけ）。
+            # 文明条件は「タップするマナ」への条件なので、タップしない以上は課されない
+            # （ササゲール／セリヴィエットの「0以下にはならない」は0での召喚を許す読み）。
             return [[]]
         cs = 0 if raw_cost else ch.get("crystal_soul", 0)   # 水晶ソウル（第154弾）: このカードの支払いでは裏向きマナの数字が cs になる（置換。文明は得ない）
         untapped = [c for c in self.zlist("mana", p) if c != cid and c not in (exclude or ()) and not self.s.cards[c].tapped]   # 実行するカード自身は支払いに使えない（第191弾: マナゾーンから出す時、自分をタップして払えてしまっていた）。exclude は進化元に確定したマナ等（第218弾Ω）
@@ -1204,7 +1305,7 @@ def h_play(eng, t):
         step_i = t.get("alt_step", 0)
         if step_i < len(ac["do"]):
             st = ac["do"][step_i]
-            cands = [c for c in eng.zlist(st["zone"], p) if c != cid and eng.filter_match(c, st.get("filter", {}))]
+            cands = eng._alt_step_cands(st, p, cid)   # 第292弾: owner を honor（共有 bz で相手のカードを払えない）
             if len(cands) < st["count"]:
                 eng._pop(t)
                 return None
@@ -1232,7 +1333,12 @@ def h_play(eng, t):
             if de.get("shuffle_first"):
                 eng._shuffle(p)
             revealed = list(eng.zlist("deck", p)[: de.get("count", 1)])
-            if de.get("blind"):   # OMGデッキ進化: 裏向きのまま、種類を問わず一番上に重ねる
+            if de.get("stack_all"):   # デッキ進化GV（第293弾）: 上から count 枚を裏向きのまま全部重ねる（選択も公開もなし）
+                if len(revealed) < de.get("count", 1):
+                    eng._pop(t)
+                    return None
+                t["evo"] = [s.ref(c) for c in revealed]
+            elif de.get("blind"):   # OMGデッキ進化: 裏向きのまま、種類を問わず一番上に重ねる
                 if not revealed:
                     eng._pop(t)
                     return None
@@ -1264,9 +1370,10 @@ def h_play(eng, t):
         elif isinstance(face_def.evolve_from, list):   # 進化V: フィルタごとに1体ずつ選ぶ
             chosen = t.setdefault("evo_v", [])
             if len(chosen) < len(face_def.evolve_from):
-                ef = {k: v for k, v in face_def.evolve_from[len(chosen)].items() if k != "zone"}
+                ef_raw = face_def.evolve_from[len(chosen)]
+                ef = {k: v for k, v in ef_raw.items() if k != "zone"}
                 used = {r[0] for r in chosen}
-                cands = [c for c in eng._evo_pool(cid, p, face) if c not in used and eng._evo_match(c, ef)]
+                cands = [c for c in eng._evo_filter_pool(cid, p, face, ef_raw) if c not in used and eng._evo_match(c, ef)]
                 if not cands:
                     eng._pop(t)
                     return None
@@ -1337,7 +1444,10 @@ def h_play(eng, t):
                 eng._pop(t)
                 return None
             opts = [eng._card_option(c) for c in srcs]
-            mn, mx = (1, len(srcs)) if d.evolve_any else (d.evolve_count, d.evolve_count)
+            if d.evolve_any:
+                mn, mx = 1, min(len(srcs), d.evolve_max) if d.evolve_max else len(srcs)   # 「N体まで」形は evolve_max が上限（第293弾）
+            else:
+                mn, mx = d.evolve_count, d.evolve_count
             ans, dd = eng.ask(t, p, "choose_evo_source", opts, mn, mx)
             if dd:
                 return dd
@@ -1356,7 +1466,7 @@ def h_play(eng, t):
         t["tap_done"] = True
     if not t["free"] and not t.get("sac_done"):                      # ササゲール: 破壊するクリーチャーを任意に選ぶ
         chosen = t.setdefault("sac", [])
-        cands = [c for c in eng._sac_pool(d, p) if c not in chosen]
+        cands = [c for c in eng._sac_pool(d, p, cid) if c not in chosen]
         if cands:
             ans, dd = eng.ask(t, p, "choose_cards", [eng._card_option(c) for c in cands], 0, 1)
             if dd:
@@ -1482,7 +1592,7 @@ def h_play(eng, t):
             cost = max(d.soul_shift["floor"], d.cost - sum(eng.chars_ro(r[0])["cost"] for r in t.get("evo", [])))
         else:
             cost = max(1, d.cost - n * d.cost_reduce_per_evo) if d.cost_reduce_per_evo else None   # 「コストは0以下にはならない」= 最低1
-        cost = eng._sac_reduced(d, eng._tap_reduced(d, p, cost, t.get("tap", [])), t.get("sac", []))
+        cost = eng._sac_reduced(d, eng._tap_reduced(d, p, cost, t.get("tap", [])), t.get("sac", []), cid)
         cost = eng._evo_base_reduced(cid, face, d, cost, p, chosen=[r[0] for r in t.get("evo", [])])   # 第234弾: 進化元依存の軽減
         if t.get("reduced"):
             o = ch0["opt_reduce"]
@@ -1657,6 +1767,11 @@ def h_play(eng, t):
             ev["summon_fuel"] = [list(r) for r in fuel_snapshot]
         if d.bazurenda:
             ev["bazurenda"] = t.get("bz_count", 0)
+        if t.get("evo"):   # 進化クロスギア（第304弾）: クリーチャー形と同じく進化元の上に重ねる
+            ev["stack_on"] = t["evo"][0]
+            ev["evolution"] = True   # 進化として重ねた印（クリーチャー形と同じ）
+            if len(t["evo"]) > 1:
+                ev["stack_more"] = t["evo"][1:]
         eng._push(eng.ev_task(ev))
     else:   # 呪文: 唱えた → 書かれた順に解決 → 最終段階として墓地へ（605.2f）
         if t.get("recycle"):   # リサイクル（第172弾）: 唱えた後は墓地に置くかわりに山札の一番下へ
@@ -1705,11 +1820,18 @@ def h_play(eng, t):
         eng._push(*tasks)
     if t.get("reduced") and ch0["opt_reduce"].get("then"):   # 減らして実行したら、そのターンの終わりに処理する。実行の解決より後に積む＝先に処理する
         then = ch0["opt_reduce"]["then"]
-        end = [{"op": "move", "select": {"ref": "self_entered"}, "to": "graveyard", "reason": "destroy"}] if then == "destroy" else \
-              [{"op": "move", "select": {"ref": "self_entered"}, "to": "deck", "reason": "put", "position": "bottom"},
-               {"op": "draw", "count": 1}]
-        eng._push(eng._child([{"op": "delayed_trigger", "when": {"event": "turn_end"}, "effect": end}],
-                             {"you": p, "self": ref, "vars": {}}))
+        if then == "entry_destroy":   # 第310弾: 減らして実行したら、このターン、このクリーチャーがバトルゾーンに出た時に自分のクリーチャーを1体破壊する。遅延誘発の登録は移動イベントより先に処理される（後に積んだ子タスクが先に動く）ため、出た時の照合に間に合う
+            eng._push(eng._child([{"op": "delayed_trigger", "when": {"event": "move", "to": "bz", "subject": "self"},
+                                   "effect": [{"op": "move", "select": {"zone": "bz", "owner": "you",
+                                                                        "filter": {"types": ["creature"]}, "count": 1},
+                                               "to": "graveyard", "reason": "destroy"}]}],
+                                 {"you": p, "self": ref, "vars": {}}))
+        else:
+            end = [{"op": "move", "select": {"ref": "self_entered"}, "to": "graveyard", "reason": "destroy"}] if then == "destroy" else \
+                  [{"op": "move", "select": {"ref": "self_entered"}, "to": "deck", "reason": "put", "position": "bottom"},
+                   {"op": "draw", "count": 1}]
+            eng._push(eng._child([{"op": "delayed_trigger", "when": {"event": "turn_end"}, "effect": end}],
+                                 {"you": p, "self": ref, "vars": {}}))
     if t.get("once_src") is not None and from_zone in ("graveyard", "mana"):   # 回数制限つき許可（ターン1回）を使った
         s.turn_counters[f"summon_once:{t['once_src']}"] = True
     if t.get("rush") and from_zone == "graveyard" and d.is_creature() and "abyss_rush" in d.keywords:   # アビスラッシュの付随処理（素の墓地召喚には付けない）
