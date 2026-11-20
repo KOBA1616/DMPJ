@@ -3473,3 +3473,1148 @@ choose_restriction 純粋4件をすべて新規登録、差し戻し0件。conve
 - submit 後の照合（第313/315弾の教訓）: 3件とも登録形の abilities・キーワード・text が公式全文と完全一致し、partial 連結残り・テキスト由来の追加は無し。alias 級 stale は従来の10件のまま（本ラウンド無関係）。
 - テスト: tests/test_vocab_pilot291_cards.py を登録形に書き換え — `5 passed in 33.91s`（登録形の完全一致＋実挙動4件: 005＝出た時でパワー3000以下だけ破壊・4000は残る／形Aでブレイク時に相手の全マナがタップ＋凍結し持続・失効、024＝形Bで破壊置換経路のタップ＋凍結、s06＝形Cで置換後に no_leave が立ち2度目の破壊を阻止）。tests/test_data_audit.py＋第291弾本体 — `16 passed in 69.22s`。旧テストに対象 ID の bounce 断言は無し。
 - 回答下書き: ~/workspace/DMPJ-work/answers/round326.yaml（reject 行の partial から決定的に構築）。
+
+## 第292弾 破壊して払う代替コスト（alternative_cost_destroy / optional_cost_reduction_with_sacrifice）
+
+「自分のカードを破壊して払う」支払いクラスタ。alternative_cost_destroy 純粋3件（dm24ex1-003 ジェニー&ガ:ナテハ / dm26rp3-011 黎悪銃と邪煉哀の決断 / dm26rp3-sec015 同シークレット印刷）＋ optional_cost_reduction_with_sacrifice 純粋3件（dm22rp2x-038 ソー＝ゾー / dm23rp2x-004 ラーテ:ガ:フヨーキ / dm22rp2x-015 セリヴィエット＝エリー）、計6件。支払いの形そのものは既存だった（alt_cost {do} は第29弾、混合形 {cost, civs, do} は第258弾、mod sac_reduce は第201弾）が、実挙動を測ると3点の欠落があり、本弾で直した。在範の純粋ファミリーはどれも3〜4件まで痩せており、本クラスタが単独パイロットで正確に表せる最大の塊だった。
+
+- **欠落1（alt_cost do ステップの owner）**: do ステップは selector 形だが、提示判定・候補計算・実行のいずれも step の owner を読んでいなかった。bz は共有ゾーンのため、相手のカードまで候補に入り、自分の生贄が無くても相手の獣を壊して代替コストを払えてしまった（プローブで確認: 自分の場が空でも :alt が提示され、相手の獣が支払い候補に出た）。候補計算を `_alt_step_cands` に統一し、owner（省略時 you）を honor する。あわせて defs 検証に「do ステップの owner は you/opp のみ」を追加（従来は未検証で、意味を持つようになったため）。
+- **欠落2（混合形の提示判定）**: {cost, do} 混合形の提示判定は cost 側だけを見ており、do 側が払えない時も :alt が提示され、選ぶと実行時に潰れていた。提示判定で cost 側と do 側の両方を要求するよう修正。
+- **形A（dm22rp2x-038、T851）**: alt_cost {cost: 1, do: [{zone: bz, owner: you, filter: {types: [creature, tamaseed]}, count: 1, to: graveyard, reason: destroy}]}（印刷5から-4）。獣でもタマシードでもよい。
+- **形B（dm23rp2x-004、T852）**: alt_cost {cost: 6, do: [{zone: bz, owner: you, filter: {types: [creature]}, count: 2, to: graveyard, reason: destroy}]}（印刷9から-3）。
+- **形C（dm24ex1-003、T853）**: alt_cost {cost: 2, civs: [darkness, darkness], do: [{zone: bz, owner: you, filter: {race_has: デスパペット}, count: 3, to: graveyard, reason: destroy}]}（[dd02] にする形。プロトでは種族をドールで代用）。
+- **形D（dm26rp3-011 / sec015、T854）**: alt_cost {cost: 5, civs: [light, darkness, nature], do: [{zone: bz, owner: you, count: 2, to: graveyard, reason: destroy}]}（フィルタなし＝自分のエレメントなら何でもよい。[ldn05]）。
+- **欠落3（sac_reduce の対象ゲート）→ dict 形 {amount, for}**: sac_reduce はディスペクター専用だった（_sac_pool の種族ゲート）。dm22rp2x-015「自分のアビスを召喚する時、コストを2少なくしてもよい。そうしたら、このクリーチャーを破壊する。ただし、そのアビスのコストは0以下にはならない」はササゲールと同文型で対象だけが違う。dict 形 {amount: 2, for: {race_has: アビス}} を追加: chars に内訳リスト **sac_gated**（[amount, for]）を持ち、適用判定では召喚先の**印刷特性**（printed chars: power/cost/civs/types/races/keywords/name）に for を照合する。int 形の意味は不変（ディスペクター専用）。見積もり（_can_play_face）・諮問（h_play）・最終計算の3経路すべてが同じ _sac_applicable を通る。
+- **支払い0の修正（_mana_choices）**: 実効コスト0で [[]]（支払いなし）を返す早期分岐が「文明なし」の時だけだったため、文明を持つカードを0まで軽減すると、文明を満たすマナの組が存在せず払えなかった。コスト0なら支払い自体が無い（文明条件はタップするマナへの条件）として一律 [[]] を返すよう統一した。ササゲール／セリヴィエットの「0以下にはならない」は0での召喚を許す読みで、形Eの床テスト（コスト3を2体で軽減しマナ0枚で召喚）がこれに依存する。
+- **既存 dict 形の発見（検証・スキーマの2系統化）**: 登録済みの dmex01-042 逆襲の支配者 ニュー・ディアボロス が sac_reduce {amount: 5, cost_min: 4}（自己受益・下限つき）を使っており、本弾の検証追加で一瞬 parse 不能になった（test_data_audit が検出）。dict 形は {amount, for} と {amount, cost_min} の2系統として defs 検証とスキーマ（anyOf）の両方で受理し、集計は amount を合計に入れ、sac_gated には {amount, for} だけを入れる。なお {amount, cost_min} の実行時挙動（自分の獣を好きな数破壊する諮問・下限4）は従来から sac 経路に接続されておらず、本弾では触らない（別件の潜在ギャップとして記録のみ）。
+- **Rust**: 新規 GameState フィールドなし（state.rs 変更なし）。chars に sac_gated を追加したため rust/dmcore/src/engine.rs の chars 既定 JSON に "sac_gated": [] を同期。スキーマ再生成済み（差分は sac_reduce の anyOf のみ）。
+- プロト T851（形A）/ T852（形B）/ T853（形C）/ T854（形D、本体は2ドローの代用）/ T855・T856（役カード: タマシード生贄・ドール生贄）/ T857（形E: dict 形の生贄）/ T858（形Eの召喚先アビス）/ T859（対象外の召喚先）/ T860（床を見る召喚先）。tests/test_vocab_pilot292.py（16件: parse＋形の一致、検証拒否3形、形A＝自分の獣/タマシードで支払い・候補は自分だけ・生贄なしでは提示されない・通常召喚では生贄が残る、形B＝2体破壊で6払い・1体では提示されない、形C＝自分のドール3つ＋[dd02]・2つでは提示されない、形D＝エレメント2つ＋[ldn05]で本体解決・1つでは提示されない、形E＝一致時のみ提示され-2・辞退で全額・対象外は見積もりにも入らない・2体で床0）＋ tests/test_vocab_pilot292_cards.py（2件: 対象6件の未登録・ギャップ純粋確認、提出形 parse）。回帰: 第29・56・57・167・172・177・201・209・258弾＋test_cost＋test_data_audit＋test_rust_schema_sync **71 passed / 2 failed**（失敗は test_data_audit の2件で、上記 {amount, cost_min} 既存形との検証衝突。2系統化の修正後に test_data_audit＋第292弾一式で **26 passed**、test_rules＋test_cost＋第29・201・209・258弾＋test_rust_schema_sync で **65 passed**）。
+- ラウンド327側の注意: 対象6行すべてが本弾で解放される。**dm22rp2x-038 / dm23rp2x-004** は partial に alt_cost（形A/形B）を足すだけ（004 の abilities は完全、keywords は partial のまま）。**dm24ex1-003** は partial の CIP 誘発（相手の手札を2枚見ないで選び捨てさせる）が同一内容で2重に入っているため、畳んでから形Cを足すこと。**dm22rp2x-015** は abilities を持たない partial に CIP（{op: may, body: [自分の手札を1枚捨てる, 相手が自身の手札を1枚選んで捨てる（select の chooser: opp）]}）＋形Eの静的を構築する。**dm26rp3-011 / sec015** は partial の text が「自分のエレメントを２つ破壊し、支払って唱えてもよい」で切れており本体も無いため、公式全文（[ldn05] を含む。cards テストの OFFICIAL_011 と同一で両印刷で同文）に差し替え、形D＋モーダル本体（次の中から2回選ぶ・同じものを選んでもよい = {op: modal, count: 2, repeat: true}）を構築すること。モーダルのモード2（コスト9以下の進化でない獣を手札から出し、ターンの終わりに破壊する）は play_free {as: entered} ＋ delayed_trigger {when: {event: turn_end}, effect: [destroy {ref: entered}]} の先例形（ニンジャ・ストライク）で parse は通るが、辞退時（up_to で0体選んだ時）の entered 空束縛の挙動はラウンドで実挙動を確認すること。sec015 は 011 のシークレット印刷 — canon は identity で確認し、011 が canonical なら sec015 は alias に畳まれる想定。提出前の id・alias 照合（real.yaml / real_akashic.yaml / real_vocab.yaml / real_zone.yaml / proto.yaml / converted）と、submit 後の登録形（abilities・キーワード・text）の公式全文照合はいつもどおり行うこと。
+
+## ラウンド327 破壊して払う代替コスト 再変換
+
+第292弾（alternative_cost_destroy / optional_cost_reduction_with_sacrifice）の再変換。対象は純粋6件で、**新規登録5件・alias 畳み込み1件・差し戻し0件**。converted 10,184 → **10,189** / rejects 2,146 → **2,140**、canonical overlap 0・漏れ0。両ギャップとも残り0件でファミリー解消。
+
+- **dm22rp2x-038 ソー＝ゾー**: reopen で外し、partial に形Aの alt_cost（自分の獣/タマシード1つを破壊して cost 1）を足して登録。keywords・text は partial のまま。
+- **dm23rp2x-004 ラーテ:ガ:フヨーキ**: partial に形Bの alt_cost（自分の獣2体を破壊して cost 6）を足して登録。abilities（W・メクレイド8＋スレイヤー付与）は partial のまま完全。
+- **dm22rp2x-015 セリヴィエット＝エリー**: abilities を持たない partial に CIP（自分の手札を1枚捨ててもよい。そうしたら、相手は自身の手札を1枚選んで捨てる。相手の選択は chooser: opp）＋形Eの静的（sac_reduce {amount: 2, for: アビス}）を構築して登録。text は partial のまま（文の連結形。第324弾の先例どおり）。
+- **dm24ex1-003 ジェニー&ガ:ナテハ**: partial の重複 CIP を畳み、形Cの alt_cost（自分のデスパペット3つを破壊して [dd02]）を足して登録。**submit 後の照合で merge_split 由来の二重登録を検出**: split が本文から起こした CIP（「見ないで選び」= chooser: random 付き）が partial 由来（chooser 無し）と非同一 dict のため重複排除されず、登録形は CIP が2件になっていた。本文に合う chooser: random 形（変換済み128件の先例どおり）だけを残し、もう一方を converted.yaml から外科的に除去した（cardstore.write で再書出しし、差分は新規5件のみに収まることを git diff で確認）。
+- **dm26rp3-011 黎悪銃と邪煉哀の決断**: partial の text が切れ本体も無かったため、公式全文（[ldn05] を含む）に差し替え、形Dの alt_cost（自分のエレメント2つを破壊して [ldn05]）＋モーダル本体（2回選択・同選択可）を構築して登録。**モード3の修正**: 「エレメントを２つまで選び、破壊する」は無資格のため両プレイヤーのエレメントが対象（dm23-031 等の先例で owner: any）。第292弾の提出形は owner 省略（= you のみ）で、提出前の実挙動プローブで相手のエレメントが候補に出ないことを検出し、owner: any に修正した。**モード2の辞退時検証（ラウンド必須）**: up_to で0体選んだ場合、entered 空束縛の delayed_trigger がターン終わりに発火しても潰れず、何も破壊されないことを実挙動で確認（2回とも辞退・1体出してターン終わりに破壊・モード1・モード3・代替コスト経路の5シナリオ）。
+- **dm26rp3-sec015**: 011 のシークレット印刷（同一本文）。canon は identity で dm26rp3-011 と確認したため提出せず、011 の登録時に validate の aliases_for で alias として畳まれた（reopen で外した reject 行は戻らず、漏れなし）。
+- 提出前照合: 対象 id・alias とも real.yaml / real_akashic.yaml / real_vocab.yaml / real_zone.yaml / proto.yaml / converted.yaml に重複なし。reopen は対象6行のみ（巻き込みなし）。submit は一括1回で全5件 ✓（lint 警告なし）。
+- テスト: tests/test_vocab_pilot292_cards.py を登録形に書き換え — `11 passed in 44.02s`（登録形の完全一致＋実挙動10件: 038＝形Aで自軍だけ破壊し1マナ支払い、004＝形Bで2体破壊し6マナ、015＝CIP（相手自身が選ぶ捨て札）＋形Eでアビス召喚-2、003＝CIP は1回だけ（相手の墓地2枚）＋形Cでデスパペット3つ破壊し [dd02]、011＝モード2辞退×2の安全性／出した獣のターン終わり破壊／モード3で相手＋自分のエレメント破壊／代替コストで2つ破壊し5マナ）。tests/test_vocab_round327_cards.py — `1 passed in 14.73s`。tests/test_data_audit.py — `8 passed in 86.02s`。旧テストに対象 ID の bounce 断言は無し（第292弾 cards 以外に対象 ID の参照なし）。
+- 回答: ~/workspace/DMPJ-work/answers/round327.yaml（reject 行の partial＋第292弾 cards テストの定数から決定的に構築。モード3 の owner: any 修正を含む）。
+
+## 第293弾 進化元のゾーン拡張（graveyard/mana/hand/shield evolution V・GV、進化GV・Ω、デッキ進化GV、超無限の各形）
+
+進化元をバトルゾーン以外から取る進化のクラスタ、純粋26件。内訳: 墓地進化V 3件（dm22ex2-003 / dm26ex2-027 / dm38-027）、マナ進化V 3件（dm28-s01 / dm28-s05 / dmc55-021）、手札進化V 1件（dm34-002）、墓地進化GV 3件（dm25ex1-044 / dm26ex2-mc005 / dmc66-008）、マナ進化GV 3件（dm23bd4-017 / dm28-s09 / dmc63-009）、手札進化GV 1件（dm25ex1-023）、シールド進化GV 1件（dm25ex1-016）、デッキ進化GV 3件（dm22ex2-4a / dm25ex1-010 / dmartkiwami03-005）、進化GV・Ω 2件（dm23ex3-tr07 / dm26ex2-mc009）、超無限進化・Ω 2件（dm24bd5-012 / dm23ex3-tr02）、超無限墓地進化 2件（dm26ex2-pr003 / dmr20-s04）、超無限進化 2件（dm26ex4-sec009 / dm26ex1-011）。土台の機構（evolve_zone / evolve_count / evolve_any / evolve_zones、非bz進化元の _raw_move→_stack、支払い時の進化元除外）は第95・173・218・231弾で入っており、墓地進化GV・マナ進化（単体）には登録済み先例もある。本弾の実質は (1) 未検証だった形の実挙動固定、(2) フィルタ別ゾーン（形C）とデッキ進化GV（形D）の新規実装、(3) 「N体まで」形の evolve_max（形B'）とシールド進化の進化元範囲の是正。なお第292弾が記録した sac_reduce {amount, cost_min} の未接続は本弾では扱わない（ブロックされている reject 行が無く、登録済み dmex01-042 の挙動修正だけの単独ステージ向き）。
+
+- **形A（進化V＋ゾーン）**: evolve_from リスト形＋evolve_zone: graveyard/mana/hand。h_play の V 分岐・_evo_v_ready・_can_play_face はすべて _evo_pool 経由でゾーン対応済みだったことを T861（墓地）/ T862（マナ）/ T863（手札）で実挙動固定した。マナ進化V は進化元に選んだマナが支払いから除外される（第218弾Ωの除外機構）こともあわせて確認。
+- **形B（進化GV＋ゾーン）**: evolve_count: 3＋evolve_zone: mana（T864）/ hand（T865）/ shield（T866）。graveyard は登録済み先例（dmpcd03-b02 / dmx11-043）があるため再検証のみ。**シールドのプール是正**: _evo_pool をゾーン単位の `_evo_pool_zone` に分解し、シールドは (a) 束の下のカードを選べないよう top_of < 0 のトップだけ、(b) 進化元が「カード」全般（dm25ex1-016 の原文）なので 801.1a のクリーチャー絞り込みをせず evolve_from フィルタに委ねる（呪文シールドも重ねられる。T881 で固定）。クリーチャー指定のシールド進化はフィルタ {types: [creature]} で従来どおり絞れる（T866）。
+- **形B'（「N体まで」形）→ 新フィールド evolve_max**: dm28-s09 は「自然のクリーチャーを３体まで」で、evolve_any（1体以上無制限）とも evolve_count（ちょうどN）とも違う。面フィールド **evolve_max: int**（evolve_any 必須。defs 検証・Face/Card 両 dataclass・parse 配線・schema.py の面項目・dataaudit _STRUCT_FIELDS に登録し、スキーマ再生成＝差分は evolve_max ×2）を追加。選択の上限は h_play 通常分岐の mx、見積もりは _can_play_face と _evo_base_reduced の n を min(len, evolve_max) で頭打ちにする。T880 で「候補9体でも max 3・2体だけ重ねてもよい」を固定。GameState フィールドではないため Rust state.rs の変更なし（test_rust_schema_sync は通過）。
+- **形C（進化GV・Ω）→ フィルタ別ゾーン**: 「墓地、マナゾーン、バトルゾーンから1体ずつ」は evolve_zones（どのゾーンからでも1体以上）では表せない。evolve_from の各フィルタに書ける `zone` キーは、従来 defs 検証とスキーマ（FILTER_KEYS | {"zone"}）で受容されながら実行側では剥がして捨てていた（＝書いても無意味だった）。本弾で honor する: `_evo_filter_pool`（フィルタに zone があればそのゾーンだけのプール、無ければ面のプール全体）を新設し、_evo_sources のリスト形・_evo_v_ready・h_play の V 分岐が使う。defs 検証に zone 値の検査も追加（従来は無検査で剥がしていた）。T867 で各ゾーンから1体ずつの重ねと、「墓地に元が無ければ bz に3体いても出せない」ゾーン強制を固定。
+- **形D（デッキ進化GV）→ deck_evolution {stack_all: true}**: 「山札の上から3枚の上に重ねる（裏向きのまま見ないで）」は第173弾の deck_evolution（めくって1体選ぶ形）では表せない。キー **stack_all** を追加（defs 検証に bool 検査）。h_play のデッキ分岐で、公開も選択もせず上から count 枚すべてを t["evo"] にする（上の1枚が直下）。_can_play_face は山札が count 枚未満では出せないようゲート（通常のデッキ進化は「空でなければ試みられる」とは別扱い）。T868 で「トップ3が順序どおり下に入る・choose 系の decision が出ない・山札2枚では出せない」を固定。
+- **形E（超無限の各形はドリフト）**: 超無限進化・Ω＝evolve_zones＋evolve_any（T869: マナだけの元でも、墓地の元でも出せる）、超無限墓地進化＝evolve_zone: graveyard＋evolve_any（T870: 2体選択）、超無限進化（コスト合計）＝evolve_total_cost_ge＋{any_of: [race_has コマンド, race_has ドラゴン], not_types: [evolution]}（T871: 進化クリーチャーは元になれない）はいずれも既存語彙で足りることを実挙動で固定した。新規語彙なし。
+- **発見した既存の競合（本弾の範囲外・未修正）**: tests/test_vocab_pilot274.py::test_floor_zero_colored_pays_civ_count が HEAD（da2c22b）時点で落ちる。第292弾の _mana_choices 変更（実効コスト0なら文明持ちでも支払いなし [[]]）が、第274弾の固定した 112.2b 解釈（有色カードは0まで軽減しても文明数ぶんタップする）と正面から競合しており、第292弾の回帰バッチに第274弾が含まれていなかったため顕在化しなかった。本弾の変更とは無関係（stash で HEAD に戻して再現確認済み）。どちらの読みを採るかは単独ステージで判断すること。
+- プロト T861（形A 墓地V）/ T862（形A マナV）/ T863（形A 手札V）/ T864（形B マナGV）/ T865（形B 手札GV）/ T866（形B シールドGV・クリーチャー指定）/ T867（形C GV・Ω）/ T868（形D デッキGV）/ T869（形E ∞Ω）/ T870（形E ∞墓地）/ T871（形E コスト合計）/ T880（形B' マナGV まで形）/ T881（形B シールド・カード全般）＋役カード T872–T879（闇/光/水/ドラゴン/火の進化元、コスト5ドラゴン/コマンド、進化ドラゴン）。tests/test_vocab_pilot293.py（19件: parse＋形の一致、検証拒否（未知ゾーン・stack_all 非bool・未知キー・evolve_max 単独/evolve_max 0）、形A×3、形B×3＋シールド不足の否定、形B'（上限3・2体可）、シールド全般（呪文シールドを重ねる）、形C（各ゾーン1体・ゾーン強制の否定＋対照）、形D（トップ3・選択なし・枚数不足の否定＋対照）、形E×4）＋ tests/test_vocab_pilot293_cards.py（2件: 対象26件の未登録・ギャップ純粋確認、partial＋本弾の面フィールドの提出形 parse）。回帰: 第95・173・218・231・232・234・236・249・274・293弾＋test_rules＋test_rust_schema_sync = **109 passed / 1 failed**（失敗は上記の既存競合 test_vocab_pilot274 の1件のみで、本弾の変更前から落ちることを確認済み）。
+- **監査修正（コミット後に判明・追随修正）**: T881 の `evolve_from: {}`（シールド進化・カード全般）が dataaudit の evo_no_source に新規違反として検出された（test_no_new_data_violations が落ちる）。`{}` は「進化元フィルタなし＝カード全般」の明示宣言なので、dataaudit の同規則を「辞書形の evolve_from は空でも進化元ありと数える（リスト形は非空のみ）」に修正。修正後 test_data_audit **8 passed**。ラウンド328 で dm25ex1-016 を同形で登録する際もこの修正が前提になる。
+- ラウンド328側の注意: 対象26行すべてが本弾で解放される見込みだが、**多くの partial は骨格のみ**（types に evolution が無い、abilities が無い、text が切れている等）で、ラウンドは公式全文から不足分を構築すること。行ごとの注意: **dm25ex1-010 / 016 / 023 / 044** の第1行「自分のマナゾーンにあるカードとエレメントが合計5つ以上、種族にXまたはフェニックスを持っていれば [文明コスト] 支払って召喚してもよい」は代替召喚コスト節で、partial に無いため公式文から構築する（表現できない場合はその節を新ギャップに差し戻す）。**dm28-s09** は partial の text が「マナ進化GV」だけに切れ power も 0 の仮置き: 公式全文（下に重ねたカードの合計パワーを持つ＋パワー帯でブレイカーが増える常在型つき）から全構築する。**dm26ex4-sec009** は partial に「自分のコマンドまたはドラゴンが出た時、手札から出してもよい」誘発とエクストラEXライフのキーワードが欠けている。**dm26ex1-011** は partial の無い note 行: 公式データ（26ex1）から全構築し、メガメテオバーン10「そうしたら、自分はゲームに勝つ」が別ギャップになるかラウンドで判定する。**dmartkiwami03-005** は dm25ex1-010 の再刷り: canon は identity で確認し、canon でない側は alias に畳む。alias は partial の source.aliases（dm26ex2-mc005 → dm23rp3-tr06 / dmpcd03-b01、dmc66-008 → dm34-s03、dm23bd4-017 → dm34-005 ほか5件）を提出前に id・alias とも照合すること。提出形の進化面は cards テストの FORMS が正本。
+
+## ラウンド328 進化元のゾーン拡張 再変換
+
+第293弾（graveyard/mana/hand/shield evolution V・GV、進化GV・Ω、デッキ進化GV、超無限の各形）の再変換。対象は純粋26件で、**新規登録18件・alias 畳み込み1件・stale 解消2件・差し戻し5件**。converted 10,189 → **10,207** / rejects 2,140 → **2,119**、canonical overlap 0・漏れ0。第293弾の12ギャップは rejects に残り0件でファミリー解消。
+
+- **愛銀河の代替コスト（dm25ex1-044 / 023 / 016 / 010）**: partial に無い第1行の代替召喚コスト節は、dm25ex1-050 の登録先例形（alt_cost {cost, civs: [同文明×2], if: マナゾーンのカード＋バトルゾーンのエレメントで対象種族またはフェニックスが合計5以上}）で4件とも表現でき、全件登録。[dd02] 闇（シノビ）/ [ww03] 水（サイバー）/ [ll04] 光（エンジェル・コマンド）/ [ff03] 火（ファイアー・バード）。
+- **dm26ex1-011 無限銀河ジ・エンド・オブ・ユニバース**: partial の無い note 行を公式データ（26ex1）から全構築。メガメテオバーン10の「そうしたら、自分はゲームに勝つ」は dmr13-s01 の登録先例形（may＋move 10枚＋count==10 で win）で表現でき、別ギャップにせず登録。実挙動で勝利まで確認。identity alias 3件（dm23rp1-tr3 / dmex01-022 / dmex08-283）を併記。
+- **dmartkiwami03-005**: dm25ex1-010 の再刷り（canon は identity で dm25ex1-010）。提出せず、010 の登録時に alias として畳まれた。
+- **stale 解消2件**: **dmc66-008** は canon dmpcd03-b02（大邪眼B・ロマノフ）が変換済みで本文・コスト・パワー一致のため、dmc66-008 と dm34-s03 を dmpcd03-b02 の source.aliases に外科的に追加し reject 行だけ除去。**dm26ex4-sec009** は canon dm26ex4-012 の alias に既存だったため reject 行の除去のみ（012 の登録形が手札誘発＋唱えられない常在を持つことも併せて確認）。
+- **submit で差し戻し2件**: **dm28-s01 → super_shield_plus**（既存ギャップ）: マナ進化Vの面は形Aで解けたが、スーパー・シールド・プラス（全シールドの下に1枚ずつ）は shield_plus op が1つのシールド対象でしかなく表現できない。面＋W・ブレイカーを partial に銀行。**dm26ex2-pr003 → per_evolution_base_cost_reduction**（新規ギャップ）: 「進化元クリーチャー1体につき1少なくする」は evo_base_reduce が一律形（マッチしたら amount を1回だけ引く）のみで、体数比例が無い。超無限墓地進化の面＋メテオバーンを銀行。
+- **提出後に登録を取り消して差し戻し3件**（いずれも実挙動・コード照合で検出。解けた節は partial に銀行し、reject 行は submit の差し戻し行と同じ形で再構成した）:
+  - **dm24bd5-012 → was_under_cards_return**（既存ギャップ、dm25rp2-033 と同じ欠落機構）: 離脱誘発 {when: move from bz, subject: self} の effect で under_of: self を引く形は、離脱時点で対象カードの under が解体され（_raw_move が c.under を消す）gen も進む（_under_base の alive 判定で落ちる）ため、解決時に必ず空になる。「下にあったカード」を指す selector が無い。
+  - **dm26ex2-mc009 → exlife_shield_left_any**（新規ギャップ）: 「自分の『EXライフ』シールドが離れた時」は所有者＋exlife の subject フィルタで書いたが、_match_when は from: shield のレコードに LKI を渡さず（from: bz か subject に exlife_of キーがある時だけ）、filter の exlife は離脱後の実カード（exlife_of は移動で消える）しか見ないため一致しない。exlife_of は特定クリーチャーへの紐付け照合のみで「自分のEXライフシールド全般」は書けない。進化GV・Ω面＋エクストラEXライフ＋G・ストライク付与は銀行。
+  - **dm28-s09 → static_if_own_current_power**（新規ギャップ）: ブレイカー帯（6000/12000/18000）の常在条件に power_of: self を使ったが、常在条件の評価は再帰防止のため印刷特性で行われ（_static_cond／_chars_busy）、印刷パワー0しか読めないため永遠に付与されない。「パワーは下のカードの合計」常在自体は動作する（実挙動で 6000 を確認）。合計への読み替えは外部のパワー修正で乖離するため採らない。進化面（evolve_max: 3）＋合計パワー常在は銀行。
+- **登録形の修正2件**（実挙動テストで検出）: **dm28-s05** のターン開始誘発は subject: self では turn_start レコード（subject を持たない）に一致しないため、登録先例74件の player: you 形に修正（自分のターン開始でのみ相手が自軍の場/マナから1枚選んで墓地に置くことを実挙動で確認）。**dm22ex2-003** の攻撃者コスト参照は attack レコードに attacker キーが無いため cost_of: event.subject に修正（自分のドラゴンの攻撃で、攻撃者よりコストが1小さい闇クリーチャーを墓地から出すことを実挙動で確認。ドラゴンでない自軍の攻撃では誘発しない対照つき）。
+- **マージ由来混入の除去1件**: dm34-002 の keywords に merge_split が meteor_burn（離脱置換キーワード）を足していた。本文のメテオバーンは攻撃中止形で別能力のため除去し [double_breaker] のみにした。
+- **発見した既存の問題（本ラウンドの範囲外・未修正）**: dm21-s04 のターン開始誘発も {event: turn_start, subject: self} 形で、turn_start レコードに subject が無いため一致せず死んでいる（本ラウンドで dm28-s05 を直す際に判明）。同形の登録済みカードが他にもある可能性があり、棚卸しは単独ステージ向き。
+- 提出前照合: 対象 id・alias とも real.yaml / real_akashic.yaml / real_vocab.yaml / real_zone.yaml / proto.yaml / converted.yaml に重複なし（stale 2件と dm22ex2-007＝pr003 の alias が real.yaml の ID である件は無害と確認）。reopen は対象25行のみ（dm26ex1-011 は reason 無しのため残り、直接 submit で除去）。submit は一括1回で21件 ✓・差し戻し2件（lint 警告3件は play_free の助言で、「出す」は召喚意味論のため登録形が正）。
+- テスト: tests/test_vocab_round328_cards.py＋tests/test_data_audit.py — **14 passed in 83.96s**（内訳: round328 = 帰属・登録形＋実挙動5件［011 メガメテオバーン10で勝利、s05 ターン開始の自分ターン限定、003 ドラゴン攻撃で墓地から召喚／非ドラゴンの対照］、data_audit = 8件）。差し戻し5件は銀行 partial の形を帰属テストで固定。
+- 回答: ~/workspace/DMPJ-work/answers/round328.yaml（reject 行の partial＋第293弾 FORMS＋公式全文から決定的に構築。提出後の取消3件・修正2件・混入除去1件を含む最終状態は converted.yaml / rejects.jsonl と本節が正）。
+- 次の番号: パイロット294 / ラウンド329 / プロト T882。
+
+## 第294弾 「下にあったカード」（was_under_cards_return）
+
+ギャップ名 was_under_cards_return の純粋4件（dm25rp2-033 ～時空の工兵～ / dmex12-004 デュエにゃん皇帝 / dmex12-037 超轟速 レッド・エンド / dm24bd5-012 氷結龍 ダイヤモンド・クレバス）。共通条項は「破壊された時／離れた時、下にあったカードを墓地から手札に戻す・出す／手札に加える」で、不足は1点だけ: クリーチャーが下のカードを連れて離れた後、その「下にあったカード」を指す語彙が無い。離脱時点で束は解体され生成も進むため under_of: self は解決時に必ず空になる（ラウンド328で dm24bd5-012 がこの理由で差し戻された）。本弾はレコード側に LKI として下のカードの列を持たせる。
+
+- **新レコード項目 was_under**（dmsim/engine/events.py）: 一緒に離れる下のカードすべての参照列。収集レコード（_apply_one）は移動後の参照で、under_lkis のうち実際に行き先へ動いた分だけを載せる。照合用レコード（_record_for）は移動直前の参照で対にする（両ビルダに載せるのが基盤の作法）。載せる条件は under_lkis の収集条件と同一: （bz から bz 以外へ）または（シールドから bz・シールド以外へ）。card_only／スター進化の再構築で下が場に残る場合は載せない（_record_for 側も card_only と star を見て除外する）。シールドの束が一緒に動く場合も同じ項目で指せる。
+- **新 ref 参照 event.was_under**（dmsim/engine/selectors.py の ref 経路）: レコードの was_under（参照の列）そのものを対象にする。既存の event.under（leave_under_untap の単体形）と対の複数形。ref 経路の既存作法で filter と zone の併記が効くため、「墓地から」「種族で絞る」がそのまま書ける。alive（生成一致）で落とすため、解決前に別の移動をした下カードは自動で外れる。Rust の _simple_selector は event. 参照を一律に対象外にしているため、この形を使う対局は自動で Python にフォールバックする（eternal_kappa 等と同じ）。新規の GameState フィールド・op・面フィールドは無し（state.rs・スキーマ再生成は不要。ref は自由文字列で defs/schema とも無変更）。
+- 形A（dm25rp2-033）: 破壊トリガー＋ move {select: {ref: event.was_under, zone: graveyard}, to: hand, reason: return}。「すべて」は ref セレクタの count 省略（全件・選択なし）で表す。墓地にあっただけのカードは was_under に含まれないため戻らない。
+- 形B（dmex12-004）: 破壊トリガー＋ play_free {select: {ref: event.was_under, zone: graveyard, filter: {race_has: ファンキー・ナイトメア}}}。下にあったが種族が合わないカード、下に無かった同種族の墓地カードはどちらも出ない。
+- 形C（dmex12-037）: 破壊トリガー＋ may {play_free {select: {ref: event.was_under, zone: graveyard, count: 1}}}。辞退すれば何も出ない。
+- 形D（dm24bd5-012）: 離脱トリガー {event: move, from: bz, subject: self}（行き先・理由を問わない）＋ move {select: {ref: event.was_under, zone: [graveyard, mana, deck, shield]}, to: hand, reason: return}。一緒に手札へ離れた分は元々手札にいるため select の zone から hand を外して二重移動しない（バウンスで本体と下が全て手札に残ることを実挙動で固定）。本体がマナへ置かれた場合は下だけが手札に加わる。
+- プロト T882（形A。dm25rp2-033 のターン終了の下置きも partial の形のまま併せ持つ）/ T883（形B。攻撃の終わりの下置きも併せ持つ）/ T884（形C）/ T885（形D）＋役カード T886（ファンキー・ナイトメアの下カード）/ T887（形D の対照: 下を持たない通常クリーチャーでは何も起きない）/ T888・T889（形D のバウンス／マナ送りドライバ呪文）。tests/test_vocab_pilot294.py（12件: parse＋形の一致、event 無し文脈では空、_record_for の was_under 搭載／card_only・bz 行きでは不搭載、形A×2［破壊で回収・下置き実経由で2枚とも回収］、形B［攻撃→下置き→破壊で下のファンキーだけ出撃］、形C×2［1枚選んで出す／辞退］、形D×3［破壊／バウンス／マナ送り］、対照）＋ tests/test_vocab_pilot294_cards.py（2件: 対象4件の未登録・純粋確認、partial＋本弾条項の提出形 parse）。
+- ラウンド329側の注意: 対象4行すべてが本弾で解放される見込み。提出形は cards テストの ADDITIONS が正本（partial にトリガーを1つ足し、unsupported から was_under_cards_return を外すだけ。他の節は partial のまま）。alias は提出前に id・alias とも照合すること（033 → dm25rp2-sec19、004 → dmex08-121 / dmr19-005、037 → dmex08-217 / promoy14-045、012 → dm23rp1-tr7 / dm24ex1-006 / dmex12-s15）。dm24bd5-012 はラウンド328で一度登録→取消された行で、partial の notes に経緯がある（進化面とパワー常在は銀行済み）。submit は partial の abilities と回答を連結するため、登録後に abilities の件数・内容を本文と照合すること。
+
+## ラウンド329 「下にあったカード」再変換
+
+第294弾（was_under）の再変換。対象は was_under_cards_return 純粋4件で、全件登録（差し戻し0件）。
+
+- **新規登録4件**: dm25rp2-033 ～時空の工兵～（形A: 破壊された時、下にあったカードをすべて墓地から手札に戻す）/ dmex12-004 デュエにゃん皇帝（形B: 破壊された時、下にあったファンキー・ナイトメアをすべて墓地から出す）/ dmex12-037 超轟速 レッド・エンド（形C: 破壊された時、下にあったカードのうち1枚を墓地から出してもよい）/ dm24bd5-012 氷結龍 ダイヤモンド・クレバス（形D: 離れた時、下にあったカードをすべて手札に加える。ラウンド328で同ギャップに差し戻された行で、銀行済みの進化面＋パワー常在に形Dトリガーを足して登録）。
+- 提出形は第294弾 cards テストの ADDITIONS が正本どおり（partial にトリガーを1つ足し、unsupported から was_under_cards_return を外すだけ。他の節は partial のまま、公式全文からの追加構築なし）。partial の text は4件とも公式全文と一致していた。
+- alias 畳み込みは無し（alias は各カードの source.aliases として登録時に併記: 033 → dm25rp2-sec19、004 → dmex08-121 / dmr19-005、037 → dmex08-217 / promoy14-045、012 → dm23rp1-tr7 / dm24ex1-006 / dmex12-s15。alias id 自体の reject 行は無かった）。
+- 提出前照合: 対象 id・alias とも real.yaml / real_akashic.yaml / real_vocab.yaml / real_zone.yaml / proto.yaml / converted.yaml に重複なし。reopen は対象4行のみ除去。submit は一括1回で4件 ✓（lint 警告2件は dmex12-004 / dmex12-037 の play_free への助言で、「出す」は召喚意味論のため登録形が正。第328弾の submit でも同じ助言が出て登録形を正とした先例あり）。
+- 登録後の照合: 4件とも abilities の件数・内容とキーワードを本文と照合し、マージ由来の混入・重複は無し（033 = ターン終了の下置き＋形A、004 = 侵略 declare＋攻撃終了の下置き＋形B、037 = 侵略 declare＋形C、012 = パワー常在＋形D）。
+- テストブックキーピング: tests/test_vocab_pilot294_cards.py を登録形に書き換え。tests/test_vocab_round328_cards.py の dm24bd5-012 の差し戻し断言（BOUNCED と銀行 partial の検証）を登録済みに合わせて更新。**既存の stale（本ラウンド起因ではない）: tests/test_vocab_pilot293_cards.py はラウンド328時点で既に落ちていた**（対象26件の未登録を断言するパイロット段階テストで、ラウンド328の登録後に書き換えられていない。HEAD 2ac920c でも再現）。
+- テスト: tests/test_vocab_round329_cards.py＋tests/test_data_audit.py — **13 passed in 81.88s**（round329 = 帰属＋実挙動4件［形A 回収と墓地のみカードの対照、形B 下のファンキーだけ出撃、形C 1枚選んで出す、形D 破壊で下が全て手札］、data_audit = 8件）。tests/test_vocab_pilot294_cards.py（登録形）— **2 passed in 11.93s**。tests/test_vocab_round328_cards.py（更新後）— **6 passed in 31.52s**。
+- ラウンド直後: converted 10,207 → **10,211** / rejects 2,119 → **2,115**、canonical overlap 0・漏れ0。was_under_cards_return は rejects に残り0件でファミリー解消。
+- 回答: ~/workspace/DMPJ-work/answers/round329.yaml（reject 行の partial＋第294弾 ADDITIONS から決定的に構築）。
+- 次の番号: パイロット295 / ラウンド330 / プロト T890。
+
+## 第295弾 スーパー／ウルトラ・シールド・プラス（super_shield_plus）
+
+ギャップ名 super_shield_plus の純粋3件（dmex06-010 奇跡の精霊ネオ・ミルザム / dmx19-s06 奇跡の精霊ミルザム / dm28-s01 超神龍ラディオ・ヤエサル。dm28-s01 は第293弾のマナ進化Vがラウンド328で解けた後にこの節だけで差し戻された行）。共通条項は「バトルゾーンに出た時、自分の山札の上から裏向きのまま、自分のシールドの下に置いてもよい」で、既存 op **shield_plus**（第31弾）は「1枚を、選んだシールド1つの下に」固定のため、(A) 各シールドの下に1枚ずつ（スーパー・シールド・プラス）と (B) 1つのシールドの下に最大5枚まで（ウルトラシールド・プラス）が表せなかった。本弾は op の引数拡張だけで、新規 op・面フィールド・GameState フィールドはなし（state.rs 変更なし。op 引数のためスキーマ再生成＝差分は shield_plus の each/count のみ）。
+
+- **shield_plus 引数 each: true（形A）**: 自分の各シールドの下に1枚ずつ置く。1枚ずつ、置く先のシールドを選びながら進める（束ごとに差すカードが違うため、置く順序＝シールドの選択は実手続きどおり諮問する）。山札がシールドの数より少なければ、置ける分だけ置いて終わる。dmex06-010 の原文は「上から1枚目を各シールドの下に」の旧表記だが、スーパー・シールド・プラスの定義（dm28-s01 の「1枚ずつ」表記が明示）として形Aで統一する。
+- **shield_plus 引数 count: N（形B）**: 選んだ1つのシールドの下に最大 N 枚まで。2枚目以降は1枚ずつ「もう1枚置くか」を諮問し、断られたら止める。置くカードは裏向きのままで途中に得られる情報は無いため、「N枚まで」の一括枚数選択と等価。山札が尽きたら諮問なしで止まる。
+- **再入可能性**: op は回答のたびに頭から再実行されるため、複数回の諮問にまたがる進行（形Aの済みシールド列 sp_done、形Bの対象と枚数 sp）はタスクの os に持つ（gachinko と同じ作法）。差し込み処理は既存コードから切り出した **_shield_plus_tuck** に共通化し、素形（引数なし）の挙動は従来と同一（対象シールドを1つ選び1枚差す。対象は os 経由になったが再開時の決定性は同じ）。
+- プロト T890（形A: CIP may shield_plus {each: true}）/ T891（形B: CIP may shield_plus {count: 3}。実カードは5）。tests/test_vocab_pilot295.py（8件: parse＋形一致（T890/T891/T099 素形）、引数検証拒否（未知引数・each 非bool・count 非int）、形A 全シールド／山札不足（山札2枚で2束だけ）／辞退、形B 上限まで／1枚で停止／山札不足）＋ tests/test_vocab_pilot295_cards.py（2件: 対象3件の未登録・ギャップ純粋確認、partial＋本弾条項の提出形 parse。dm28-s01 は銀行済みの進化面が効くことも確認）。
+- **ブックキーピング修正（本弾に同梱）**: tests/test_vocab_pilot293_cards.py を登録形に書き換え（ラウンド328/329の結果: 登録19件の進化面照合、alias 3件［dmc66-008 → dmpcd03-b02、dmartkiwami03-005 → dm25ex1-010、dm26ex4-sec009 → dm26ex4-012］、差し戻し4件の精緻化ギャップ照合）。書き換え後 **3 passed**。
+- テスト結果: 第295弾本体 **8 passed**、cards **2 passed**、第293弾 cards（登録形）**3 passed**、test_data_audit **8 passed**。回帰バッチ（第295・31・293・294弾本体＋test_rules＋test_rust_schema_sync）= **86 passed / 1 failed**、cards バッチ（第295・293・31弾 cards）= **10 passed**。唯一の失敗 tests/test_vocab_pilot31.py::test_janken_win_draws は HEAD 1fe4a4e でも再現する既存失敗（stash で切り分け確認済み。本弾無関係。既知の pilot274 競合 test_floor_zero_colored_pays_civ_count には触れていない）。
+- ラウンド330側の注意: 対象3行すべてが本弾で解放される見込み。提出形は cards テストの ADDITIONS が正本で、各行とも partial に CIP 誘発を1つ足し、unsupported から super_shield_plus を外すだけ（dmex06-010 / dmx19-s06 の partial には能力が無く条項は丸ごと追加、dm28-s01 は進化面＋W・ブレイカー銀行済み）。alias は提出前に照合: dmx19-s06 → dm29-s01 / dmc50-008 / dmc66-004 / promoy14-011（partial の source.aliases）。submit は partial の abilities と回答を連結するため、登録後に abilities の件数・内容とキーワードをテキストと照合すること。
+
+## ラウンド330 スーパー／ウルトラ・シールド・プラス再変換
+
+第295弾（shield_plus の each / count 引数）の再変換。対象は super_shield_plus 純粋3件。
+
+- **新規登録2件**: dmex06-010（形A: CIP may shield_plus {each: true}）/ dm28-s01（形A。同形の CIP を追加し、銀行済みだったマナ進化Vの面＋W・ブレイカーと合わせて登録。ラウンド328で本節だけで差し戻された行）。
+- **stale 解消1件**: dmx19-s06（形B）は提出前照合で **real.yaml に手変換済み**と判明（ウルトラシールド・プラスを modal＋put_under で表現、koba 確認 2026-10-28 の注記つき）。converted へ二重登録せず（ラウンド200の Fiona 教訓）、reject 行の除去のみ。alias（dm29-s01 / dmc50-008 / dmc66-004 / promoy14-011 → canon dmx19-s06）は real.yaml 側の扱いに残る。
+- **差し戻し0件**。reopen は対象3行のみ除去（巻き込みなし）。登録後の本文照合: 2件とも abilities は CIP 誘発1件のみで、キーワード・マージ由来の混入・重複なし（dmex06-010 = blocker / double_breaker、dm28-s01 = double_breaker＋進化面 mana / [{civs: [light]}×2]）。
+- converted **10,211 → 10,213** / rejects **2,115 → 2,112**、canonical overlap 0・漏れ 0（対象3件は converted ∪ real.yaml で全て所在確認）。super_shield_plus は rejects に残り0件でファミリー解消。
+- ブックキーピング: tests/test_vocab_pilot293_cards.py の dm28-s01 を STILL_REJECTED から登録形（FORMS 形A）へ移動（登録 19→20件、差し戻し 4→3件）。tests/test_vocab_pilot295_cards.py は登録形に書き換え（登録2件の形照合＋dmx19-s06 の real 所在＋ファミリー解消）。新規に tests/test_vocab_round330_cards.py（帰属＋実挙動2件: dmex06-010 の各シールド1枚ずつ、dm28-s01 のマナ進化V＋各シールド1枚ずつ）。
+- 次の番号: パイロット296 / ラウンド331 / プロト T892。
+
+## 第296弾 「S・トリガーは使えない」（shield_trigger_restriction / s_trigger_disable）
+
+ギャップ名 shield_trigger_restriction の純粋3件（dmx18-003 極武者カイザー「斬鬼」 / dmx21-064 / dmx22b-023 エメラル）と s_trigger_disable の純粋3件（dmr13-003 理英雄 デカルトQ / dmrp01-s03 赤攻銀 アサラーム / dm26rp2-066 禁術のラクシャ カレイル）、計6件。共通条項は「手札に加えた（加わる）シールドカードの S・トリガーは使えない」。不足は2形に分かれ、どちらも既存語彙で足りることを実挙動で固定した（ギャップ名と語彙名のドリフト）。新規 op・面フィールド・GameState フィールドはなし（state.rs 変更なし、スキーマ再生成なし）。
+
+- **形A（そのカード形、5件）**: move の引数 **strigger: "off"**（バンドC2 U68 で導入された「S・トリガーの印」。escape キーワードの instead 形が keywords.yaml にあり、実挙動は第281弾 test_796 で固定済み）。効果の shield→hand 移動は op_move が break タスク（phase 1・fire_break: False）へ回し、宣言諮問で t["strigger"] == "off" がその束の宣言肢を消す。本弾は対象行の形（CIP 誘発・攻撃誘発の素の move）で再検証した。dm26rp2-066 は partial の CIP move に strigger: "off" を足すだけ。dmx18-003 は may で加え、加えた場合（move の as: 束縛＋ if {exists: {ref}} ゲート）だけ相手のパワー6000以下を破壊する形。dmx22b-023 / dmr13-003 は「手札1枚を新しいシールドとして置いてもよい。そうしたら、自分のシールドをひとつ手札に戻す」ゲート形（シールド化 move の as: 束縛でゲートし、戻す move に strigger: "off"）。dmx21-064 は同じゲート形のターン終わり誘発。
+- **形B（常在形、1件・dmrp01-s03）**: {kind: static, affects: {zone: shield, owner: you, filter: {not_civs: [light]}}, mod: {deny: [s_trigger]}}。変換済み dm24ex1-001（affects の zone: shield で S・トリガーを与える）の鏡像。permits は deny → allow → 既定の順（101.2「できない」は「できる」に勝つ）でキーワード s_trigger の allow を打ち消し、宣言諮問（combat phase 1 の _permits_face）はブレイク経路・効果経路の両方が見るため、両経路で効くことを固定した。
+- プロト T892（形A: CIP move＋strigger: "off"）/ T893（形Aの対照: 指定なし）/ T894（形B）。シールド役は既存 T279（闇・S・トリガー持ち）/ T207（光・同）。tests/test_vocab_pilot296.py（10件: parse＋形一致、検証拒否2形［未知 action・未知 filter キー］、形A CIP で宣言なし＋印の確認／対照で宣言あり、形B ブレイクで闇は不可／発生源なし対照で可／光は可／相手のシールドは不干渉／効果経路でも不可）＋ tests/test_vocab_pilot296_cards.py（2件: 対象6件の未登録・ギャップ純粋確認［converted・real とも無し］、partial＋本弾条項の提出形 parse。dmx18-003 の destroy はマクロ展開形で照合）。回帰: 第296・281・189・269弾＋test_rules＋test_rust_schema_sync = **82 passed**、test_data_audit = **8 passed**。既知の既存失敗2件（pilot274 競合、pilot31 janken）には触れていない。
+- **範囲外の注意**: 印 strigger_on（付与）と形B の deny が重なった場合、combat phase 1 の elif 分岐は印側を優先して宣言肢を復活させうる（permits の deny と印の優劣が未分離）。対象6件にこの重なりは無く、本弾では触らない。
+- ラウンド331側の注意: 対象6行すべてが本弾で解放される見込み。提出形は cards テストの ADDITIONS が正本（dm26rp2-066 は move への strigger: "off" 追加のみ）。他の5件は partial が骨格のみなので公式全文から不足分を構築すること: dmx18-003 のパワーアタッカー節は partial で攻撃誘発＋modify の形になっているが、公式の「攻撃中 +2000」と一致するか全文で照合すること。dmx21-064 は partial の name が "No Data"・text が断片のみ（ターンのはじめのドロー節を含む全文が要る）。dmr13-003 はブロッカーとマナ武装7のドロー節が別に要る。dmrp01-s03 の CIP（自分のシールドを数える。それと同じ枚数を山札の上からシールド化）は selector の count が式を受けるため count: {count: {zone: shield, owner: you}} で表せる見込みだが、数えるのは置く前のシールド数であることを実挙動で確認すること。alias は提出前に照合: dmx18-003 → dmx11-002、dmx22b-023 → dm03-042 / dmc37-025 / dmc56-033 / dmc66-036 / dmx21-069（partial の source.aliases）。submit は partial の abilities と回答を連結するため、登録後に abilities の件数・内容とキーワードをテキストと照合すること。
+- 次の番号: パイロット297 / ラウンド331 / プロト T895。
+
+## ラウンド331 「S・トリガーは使えない」再変換
+
+第296弾（strigger: "off" / 形B deny）の再変換。対象は shield_trigger_restriction 純粋3件＋s_trigger_disable 純粋3件の計6件で、新規登録4件・差し戻し1件・stale 解消1件（差し戻し・stale はいずれも対象行側の事情で、語彙の不足ではない）。
+
+- **新規登録4件**: dm26rp2-066 禁術のラクシャ カレイル（partial の CIP move に strigger: "off" を追加しただけ）/ dmx18-003 極武者カイザー「斬鬼」（パワーアタッカー+2000 は rule_convert.split 由来の power_when 常在形が正本で、partial の攻撃誘発＋modify 形は採用しなかった。回答の abilities は第296弾 ADDITION の攻撃誘発のみで、split が静的を前置する）/ dmr13-003 理英雄 デカルトQ（マナ武装7 CIP は dmr13-083 先例の if 形＋dm21-040 先例の repeat×may-draw で「5枚まで引いてもよい」。ブロッカーは split が拾わないため回答の keywords で明示。もう1つの CIP はゲート形）/ dmrp01-s03 赤攻銀 アサラーム（CIP シールド化＋形B 常在）。
+- **dmrp01-s03 の count 実挙動確認（必須項目）**: CIP の select count = {count: {zone: shield, owner: you}} は置く前のシールド数で評価されることを登録形テストで固定した（開始 n0 枚 → CIP 後に 2×n0 枚、山札は n0 枚減）。
+- **差し戻し1件: dmx21-064 → data_incomplete（新規の不足ではない）**: 公式データ自体がカード名・種族を欠く行（name: No Data / race: ???、原文データの取得欠落）。S・トリガー節は第296弾で表現可能になったため、ターン開始ドロー節＋ターン終わりゲート形まで全構築した提出形を partial に銀行し、残る不足を data_incomplete として差し戻した。データが直れば銀行済みの形で即登録できる。
+- **stale 解消1件: dmx22b-023（エメラル）**: 提出前照合で正本が **dm26ex4-cho049**（identity の canon）で変換済みと判明し、dmx22b-023 自体は submit の原文コーパスに無いため登録せず reject 行の除去のみ。あわせて登録済みエメラルの同条項の欠落を外科的に修繕した: 正本 cho049 の戻す move には strigger: "off" が無く、旧 notes の「エンジン側の扱いに委ねる」は誤りで、**修繕前は手札に加えたシールドの S・トリガー宣言諮問が実際に出ていた**（実挙動プローブで確認。印を付けると消える）。cho049 に印を付与し、dmx22b-023 を source.aliases に追加、notes を訂正。同じ欠落があった別変換エントリ **dm03-042**（同じカードの旧変換。notes 自身が「制限は扱っていない」と明記）にも同じ印付与＋notes 訂正をした（プローブで同様に確認）。なお converted にエメラルの変換エントリが dm03-042 と dm26ex4-cho049 の2つある重複自体は既存のデータ債務で、本ラウンドでは触っていない（relocation/監査ステージの課題）。
+- 提出前照合: 対象 id・alias とも real.yaml / real_akashic.yaml / real_vocab.yaml / real_zone.yaml / proto.yaml / converted.yaml に重複なし（dmx18-003 の alias dmx11-002 は登録時に自動付与）。canon 照合は5件が自 id、dmx22b-023 のみ上記のとおり。reopen は対象6行のみ除去（巻き込みなし）。submit は一括1回で4件 ✓＋dmx21-064 が data_incomplete で銀行差し戻し。
+- 登録後の照合: 4件とも abilities の件数・内容とキーワードを本文と照合し、マージ由来の混入・重複は無し（dmx18-003 に partial の旧 modify 形は残っていない）。
+- テストブックキーピング: tests/test_vocab_pilot296_cards.py を登録形に書き換え。登録4件の source.unsupported は空リスト（converted 既存の209件と同じ形）として残るため、帰属テストの断言は「unsupported が空」に合わせた。
+- テスト: tests/test_vocab_round331_cards.py＋tests/test_vocab_pilot296_cards.py — **10 passed in 47.23s**（round331 = 帰属＋実挙動6件［066 CIP で宣言なし＋印、s03 count CIP（置く前評価）、s03 形B deny、18-003 攻撃形、13-003 ゲート形、修繕した cho049／dm03-042 で宣言なし］、pilot296 cards 登録形 = 3件）。tests/test_data_audit.py — **8 passed in 63.44s**。
+- ラウンド直後: converted 10,213 → **10,217** / rejects 2,112 → **2,107**、canonical overlap 0・漏れ0。shield_trigger_restriction / s_trigger_disable は rejects に残り0件でファミリー解消。
+- 回答: ~/workspace/DMPJ-work/answers/round331.yaml（reject 行の partial＋第296弾 ADDITIONS から決定的に構築。dmx21-064 のみ全文構築）。
+- 次の番号: パイロット297 / ラウンド332 / プロト T895。
+
+## 第297弾 「ブレイクしたシールドは墓地に置く」（break_replacement_graveyard / break_to_graveyard / shield_break_to_graveyard）
+
+3つのギャップ名に分かれた同一条項「このクリーチャーがシールドをブレイクする時、相手はそのシールドを手札に加えるかわりに墓地に置く」の純粋6件（break_replacement_graveyard: dm25ex2-018 / dmr04-018 / dm26ex4-002、break_to_graveyard: dm26sd1-g005 / dmex17-w06、shield_break_to_graveyard: dm24bd6-037）。不足は無く、ギャップ名と語彙名のドリフトだった（新規 op・面フィールド・GameState フィールドなし＝ state.rs 変更なし、スキーマ再生成なし）。
+
+- **機構は既存**: ブレイクの置換諮問 `_break_consult`（第146弾）が、割るシールド1枚ずつ chosen 確定後・S・トリガー宣言の前に置換を諮り、レコード {ev: break, subject: ブレイクしたクリーチャー, shield: そのシールド, player: victim} で照合する。登録済み先例が6件以上ある形: {kind: replace, when: {event: break, subject: self}, instead: [{op: move, select: {ref: event.shield, count: 1}, to: graveyard, reason: put}]}（dm24ex2-chog06 / dm24ex2-014 / dm25ex2-014 / dmrp18-s07 / dm24ex2-dm04 / dmex15-a027。条件つき変形は promoy8-002 の if 形）。置換されたシールドは「ブレイクされた」ことにならない（QA 33466 の設計判断、第146弾）: chosen から外れ、break_before も S・トリガー宣言も S・バックも起こらず、ブレイク枚数にも数えない。任意でない置換は諮問の決定自体が出ない（候補1件・辞退肢なし）。束の下のカードは instead の move が上のカードだけを指すが、エンジンの束移動の作法で上のカードと一緒に墓地へ動くことを実挙動で確認した（先例6件と同一挙動。T895 の束テストで固定）。
+- **形A（無条件、4件: dm25ex2-018 / dm26ex4-002 / dm26sd1-g005 / dmex17-w06）**: 先例形そのまま。T895 で W・ブレイカーの2枚割り（S・トリガー持ち T279＋T207）が2枚とも墓地に置かれ、宣言も諮問決定も出ないことを固定。対照 T896（置換なし）は手札＋宣言あり。
+- **形B（相手の手札0枚、dmr04-018）**: 形A ＋ if {cmp: [{count: {zone: hand, owner: opp}}, "==", 0]}。if は _break_candidates が諮問時点（割る前）で評価する。T897 で手札0枚→墓地／手札1枚→手札＋宣言ありを固定。
+- **形C（水晶武装4、dm24bd6-037）**: 形A ＋ if {cmp: [{count: {zone: mana, owner: you, filter: {face_down: true}}}, ">=", 4]}。count＋face_down フィルタの形は第283弾 eternal_kappa の if ゲートと同形。T898 で裏向き4枚→墓地／3枚→手札＋宣言ありを固定。
+- プロト T895（形A）/ T896（形Aの対照）/ T897（形B）/ T898（形C）。tests/test_vocab_pilot297.py（10件: parse＋形一致、検証拒否2形［instead の未知 op・if の count セレクタ未知キー］、形A 2枚割り／対照／束の下のカードの追随、形B 両方向、形C 両方向）＋ tests/test_vocab_pilot297_cards.py（2件: 対象6件の未登録・ギャップ純粋確認、partial＋本弾条項の提出形 parse）。回帰: 第297・146・238・248・281・283・290・296弾＋test_rule_break_replace＋test_rules＋test_rust_schema_sync = **126 passed**、test_data_audit = **8 passed**。既知の既存失敗2件（pilot274 競合、pilot31 janken）には触れていない。
+- ラウンド332側の注意: 対象6行すべてが本弾で解放される見込み。提出形は cards テストの FORM_A / FORM_B / FORM_C が正本で、各行とも partial に置換能力を1つ足し、unsupported から当該ギャップを外すだけ（dm26ex4-002 を除く）。行ごとの注意: **dm26ex4-002 は partial の無い行** — 公式全文から全構築すること（コスト軽減［相手のエレメントの文明1つにつき2］、T・ブレイカー、CIP の無色でないクリーチャー全シールド化＋自分の無色クリーチャー1体につき相手の手札1枚をシールド化、エターナル・Ω。Ω のキーワード有無は提出前に keywords.yaml と変換済み先例で確認を）。**dm26sd1-g005** の partial のパワーアタッカーは攻撃誘発＋modify 形だが、ラウンド331の先例では split 由来の power_when 常在形が正本 — 全文照合してから提出を。alias は提出前に id・alias とも照合: g005 → 20件（dm22ex1-cho09 / dm24ex2-033 / dmex15-a042 ほか）、w06 → dmd24-009 / dmex04-003、018 → dm25ex2-chog10、037 → dm23ex3-022。submit は partial の abilities と回答を連結するため、登録後に abilities の件数・内容とキーワードをテキストと照合すること。なお **dm26ex4-sec005 / dm26ex4-025** は同じ条項を break_replacement_by_breaker の名で持ち、残りギャップ enter_bz_summon_only が別にあるため本弾では解放されないが、条項の形は同じなので、ラウンドで reopen 対象に含める場合は解けた条項として partial に銀行できる（任意）。
+- 次の番号: パイロット298 / ラウンド332 / プロト T899。
+
+## ラウンド332 「ブレイクしたシールドは墓地に置く」再変換
+
+第297弾（ブレイク置換の先例形）の再変換。対象は break_replacement_graveyard 純粋3件＋break_to_graveyard 純粋2件＋shield_break_to_graveyard 純粋1件の計6件で、全件が新規登録（差し戻し0件）。
+
+- **新規登録6件**: dm25ex2-018 ネオ・ボルメテウス・ホワイト・ドラゴン（形A。alias dm25ex2-chog10 は登録時に自動付与）/ dmr04-018 混沌の覇者ディス・ガジラ（形B。スペース・チャージと power_when 常在は partial のまま）/ dm26sd1-g005 ボルメテウス・サファイア・ドラゴン（形A。パワーアタッカー+3000 は split 由来の power_when 常在形が正本で、partial の攻撃誘発＋modify 形は回答に含めなかった。alias 20件は登録時に自動付与）/ dmex17-w06 ボルメテウス・レッド・ドラグーン（形A。alias dmd24-009 / dmex04-003）/ dm24bd6-037 偽りの名 ルカニド（形C。alias dm23ex3-022）/ dm26ex4-002 「誣」の頂 ウェディング・イノセンス（形A。partial の無い行のため公式全文から全構築）。
+- **dm26ex4-002 の全構築**: エターナル・Ω はキーワード **eternal_omega** が keywords.yaml に既存（split も導出）。召喚コスト軽減「相手のエレメントの文明1つにつき2」は **civ_count 式** {cost: {amount: -2, count: {civ_count: {zone: bz, owner: opp}}}}。下限のただし書きは原文に無く、最大軽減10＜コスト13のため cost_min 不要。CIP は「召喚によって出た時」= when {event: move, to: bz, reason: summon, subject: self}。全体シールド化は filter {types: [creature], colorless: false}＋count: "all"＋move to shield / reason: charge（dmd10-007 の同形フィルタ先例）。手札シールド化は自分の無色クリーチャー数ぶんの repeat {times: {count: {zone: bz, owner: you, filter: {types: [creature], colorless: true}}}}、本体は相手が選ぶ move {select: {zone: hand, owner: opp, chooser: opp, count: 1}, to: shield, reason: charge}。文明はゼロ＝無色として civs: []（他の「頂」ゼニス変換と同表記）。
+- **登録後の実挙動確認で3件の外科的修正（dm26ex4-002）**: (1) コスト軽減の常在型は **zone: hand が必須** — 自常在型は ability の zone（既定 bz）とカードの現在ゾーンが一致する時だけ効くため、zone 無しでは手札で不発だった（pay_cost 13 のまま）。dm24ex3-rp2s08 の登録形（zone 無し）も同じ理由で手札では不発のままであることを実測で確認した（既存データの潜在的な不発として記録。修繕は別ステージの課題）。実働先例は dm21-020 / dm22rp2x-008 の zone: hand 形で、本カードも同形に差し替えた（pay_cost 13→9 を実測）。(2) 全体シールド化のフィルタは当初 not_civs: [zero] としたが、civs: [] 表記のこのカード自身が「無色ではない」に一致してしまい、自分自身がシールド化されかけてエターナル・Ω で手札に戻る実挙動を確認した。両表記（[] / [zero]）に効く **colorless: false** に差し替えた。(3) 全体シールド化の select には **owner: any** が必要だった（select の owner 既定は you で、当初は自分のクリーチャーしか対象にならなかった。dm22-006 / dm23rp4x-045 等の全体形先例）。
+- **dm26ex4-002 の実挙動確認（登録形テストで固定）**: 相手のエレメントが火・水の2文明なら軽減後コスト9（9マナで召喚でき、8マナでは main の選択肢に play が出ない）。CIP で自他の無色でないクリーチャー（自分の T001・相手の T034 / T010）がすべてシールド化され、自分の無色クリーチャー（このカード自身）1体につき相手の手札1枚がシールド化される。
+- **reopen の範囲外の巻き込み回避**: shield_break_to_graveyard で reopen すると promoy11-011（独走状態！鬼無双・カイザー「真剣」）も巻き込まれるため、このギャップは reopen せず dm24bd6-037 は直接 submit で登録した（submit が reject 行を除去）。reopen（break_replacement_graveyard / break_to_graveyard）は対象4行のみ除去。dm26ex4-002 は reason の無い行のため reopen 対象外で、こちらも submit が除去。
+- **promoy11-011 は未処理（記録のみ）**: その shield_break_to_graveyard は「攻撃時にガチンコ・ジャッジに勝ったら、このターンだけ」という条件つき付与形で、本弾の常在置換とは別機構。ギャップ名は誤ラベルのまま残る（残り1件）。将来のガチンコ条件つき付与の弾で精緻化すること。
+- **任意の銀行行は見送り**: dm26ex4-sec005 は submit の原文コーパス（load_rows の canon）に無い印刷で提出自体ができない。dm26ex4-025 は canon だが「相手がこのクリーチャーを選んだ時」の節の表現検証が別途必要なため、本ラウンドでは銀行しなかった（両行とも従来どおり rejects に残る）。
+- 提出前照合: 対象 id・alias とも real.yaml / real_akashic.yaml / real_vocab.yaml / real_zone.yaml / proto.yaml / converted.yaml に重複なし。canon 照合は6件とも自 id（load_rows に在ることを確認）。提出前に merge_split＋validate を模擬実行し6件とも検査通過・vocab_reject なしを確認してから submit 1回。
+- 登録後の照合: 6件とも abilities の件数・内容とキーワードを本文と照合し、マージ由来の混入・重複は無し（dm26sd1-g005 に partial の旧 modify 形は残っていない）。
+- テストブックキーピング: tests/test_vocab_pilot297_cards.py を登録形に書き換え。
+- テスト: tests/test_vocab_round332_cards.py＋tests/test_vocab_pilot297_cards.py（登録形）— **7 passed in 32.45s**（round332 = 帰属＋実挙動4件［w06 形A、dmr04-018 形B の両方向、dm26ex4-002 の CIP＋コスト、8マナでは出せない］、pilot297 cards 登録形 = 2件）。tests/test_data_audit.py — **8 passed in 64.66s**。
+- ラウンド直後: converted 10,217 → **10,223** / rejects 2,107 → **2,101**、canonical overlap 0・漏れ0。break_replacement_graveyard / break_to_graveyard は rejects に残り0件で解消。shield_break_to_graveyard は promoy11-011 のみ残存（上記）。
+- 回答: ~/workspace/DMPJ-work/answers/round332.yaml（reject 行の partial＋第297弾 FORM_A / FORM_B / FORM_C から決定的に構築。dm26ex4-002 のみ全文構築）。
+- 次の番号: パイロット298 / ラウンド333 / プロト T899。
+
+## 第298弾 same_name_cast（同名呪文を表向きにし、シャッフルしてから唱える）
+
+ギャップ名 same_name_cast の純粋2件は同一カード 邪眼皇アレクサンドルIII世の2印刷（dm26ex4-cho010 最新版・canon / c48-sec001 旧印刷）。在範の純粋ファミリーは最大でも3件規模まで痩せ、その多くは評価済み DEEP／延期のため、本弾は「rejects 2件＋converted の是正3件」が動く本ファミリーを選んだ。旧印刷の本文形（選んで唱え、その後シャッフル）は第282弾の詠唱形イディオムで解決済み・partial に銀行済みで、本弾の対象は最新版形の手順差だけ: 「唱えた呪文と同じ名前の呪文を1枚表向きにし、山札をシャッフルしてからその呪文をコストを支払わずに唱えてもよい」。不足は無く、ギャップ名と語彙名のドリフトだった（新規 op・面フィールド・GameState フィールドなし＝ state.rs 変更なし、スキーマ再生成なし）。
+
+- **最新版形イディオム**: 誘発 {when: {event: cast, player: you, from: [hand, graveyard], subject: {filter: {types: [spell], civs: [light, water, darkness]}}}, if: {exists: {zone: bz, owner: you, other: true, filter: {race_has: ナイト}}}, effect: [choose {zone: deck, owner: you, look: true, count: all} as: pile → choose {ref: pile, filter: {name: {name_of: event.subject}, types: [spell]}, count: 1} as: found（choose の **reveal: true** つき）→ if {exists: {ref: found}} then [shuffle {player: you} → may [play_free {ref: found}]]]}。第282弾形との差は3点: (1) 「表向きにする」は choose の reveal: true（バンドC1 U39。束縛したカードを全プレイヤーに公開し、s.pub に reveal 記録が残る）。(2) シャッフルは詠唱より前で、見つけた場合の if の中にある（旧印刷形は末尾の無条件シャッフル。最新版は「表向きにし、シャッフルしてから…唱えてもよい」の連鎖のため、見つからなければシャッフルも起きない形に置いた）。(3) pile の戻し move は不要（choose はカードを動かさず ref を束縛するだけ。旧印刷形の move {ref: pile → deck} は見た束を戻す手続きで、最新版形では公開→シャッフルの連鎖に吸収される）。
+- **シャッフルを挟んでも ref は生きる**: shuffle は山札リストの並べ替えのみでカードの生成を進めないため、found の ref (cid, gen) は不変で、後続の play_free {ref: found} がそのまま効く。T899 で公開記録の順序（山札の同名呪文の reveal < shuffle）と、シャッフル後に無償詠唱が解決すること（墓地の同名呪文2枚）を実挙動で固定。辞退した場合でも公開とシャッフルは諮問より前に済んでいること、同名呪文が山札に無い場合は公開・シャッフル・諮問のいずれも起きないこと、他のナイトが無い場合は誘発自体が起きないことも併せて固定した。
+- Rust: when の subject が dict 形／from リスト／name_of 式フィルタ／play_free を含むため _simple_trigger の対象外（第282弾と同形）で、この能力を持つカードを含む対局は Python にフォールバックする。
+- プロト T899（他のナイト役 T799・同名呪文 T800 は第282弾のものを流用）。tests/test_vocab_pilot298.py（8件: parse＋形一致、select への reveal 誤置の検証拒否、非 rust-simple、手札から詠唱［公開＜シャッフル＜詠唱］／墓地から詠唱／辞退［公開・シャッフル済みで山札に残る］／同名なし［公開・シャッフルなし］／他のナイトなし［不発］）＋ tests/test_vocab_pilot298_cards.py（4件: 対象2件の未登録・ギャップ純粋確認、cho010 提出形 parse、c48 の銀行形の不変確認、別印刷3件の誘発欠落の固定）。回帰: 第282・297弾本体＋test_rules = 63 passed、第282・297弾 cards＋test_data_audit＋test_rust_schema_sync = 18 passed。既知の既存失敗2件（pilot274 のコスト0競合、pilot31 の janken）には触れていない。
+- ラウンド333側の注意: **dm26ex4-cho010** は partial に abilities が無いため、本弾の誘発を1つ足し、unsupported から same_name_cast を外すだけ（提出形は cards テストの CHO010_FORM が正本）。登録時に **c48-sec001** が alias として畳み込まれるか（aliases_for に含まれるか）を提出前後に確認すること。併せて既存の欠落の是正: 別印刷 **29-sec001 / dm29-s03 / dmc48-001** は converted の独立エントリとして本誘発を欠いた形（キーワード double_breaker のみ）で登録済み — 各エントリの本文が旧印刷形（選んで唱え、その後シャッフル）か最新版形かを確認し、対応する形（旧印刷形 = 第282弾の CAST_FORM / 最新版形 = 本弾の CHO010_FORM）を足すこと。submit は partial の abilities と回答を連結するため、登録後に abilities の件数・内容とキーワードをテキストと照合すること。
+- 次の番号: パイロット299 / ラウンド333 / プロト T900。
+
+## ラウンド333 same_name_cast 再変換
+
+第298弾（最新版形イディオム）の再変換。対象は same_name_cast 純粋2件＋converted の是正3件。
+
+- **新規登録1件**: dm26ex4-cho010 邪眼皇アレクサンドルIII世（最新版・canon）。partial に abilities が無いため第298弾の誘発（cards テストの CHO010_FORM）を1つ足し、unsupported から same_name_cast を外して登録。登録形は abilities == [CHO010_FORM]・keywords == [double_breaker] で、submit の連結（merge_split）由来の混入・重複は無し（提出後に本文と照合済み）。
+- **alias 畳み込み1件**: c48-sec001（旧印刷）は submit の原文コーパス（canonical_rows）に無い印刷で直接は提出できない。reopen same_name_cast で対象2行のみ除去し、cho010 の登録時に validate の aliases_for が source.aliases = [29-sec001, c48-sec001, dm29-s03, dmc48-001] を自動付与した。c48-sec001 は converted の独立エントリではなく alias として引け、reject 行も残らないことを提出後に確認した。
+- **converted 是正3件（件数不変）**: 29-sec001 / dm29-s03 / dmc48-001 は独立エントリとして本誘発を欠いた形（キーワード double_breaker のみ）で登録されていた既存の欠落。3件とも登録本文は旧印刷形（「唱えた呪文と同じ名前の呪文を1枚選び、コストを支払わずに唱えてもよい。その後、山札をシャッフルする」）だったため、各エントリに第282弾の詠唱形 CAST_FORM を abilities として追加し、source.notes に是正の記録を追記した。なお3件は cho010 の aliases にも名を連ねるが、独立エントリとして引く場合はエントリ側が優先される（AliasDict の仕様）ため実害は無く、data_audit も通過した。
+- **差し戻し0件**。提出前照合: 対象 id・alias とも real.yaml / real_akashic.yaml / real_vocab.yaml / real_zone.yaml / proto.yaml（プロト本文中の参照のみ）/ converted に重複なし。canon は identity で cho010 本人と確認。
+- **実挙動（登録形テストで固定）**: cho010（最新版形）は手札から水の呪文 T800 を唱えると山札の同名呪文が表向きにされ（reveal 記録）、シャッフルされてから無償で唱えられる（公開記録の順序 reveal < shuffle、墓地の T800 が2枚）。是正した dm29-s03（旧印刷形）は同名呪文を選んで無償で唱えた後にシャッフルが起き、表向きにする手順が無いため reveal 記録は出ない。
+- テストブックキーピング: tests/test_vocab_pilot298_cards.py を登録形に書き換え。tests/test_vocab_pilot282_cards.py の c48 テストは差し戻し固定から alias 畳み込み固定（test_c48_folded_into_cho010_round333）に更新し、docstring にラウンド333の後日談を追記した。
+- テスト: tests/test_vocab_round333_cards.py（帰属＋実挙動2件）＋tests/test_vocab_pilot298_cards.py（登録形4件）＋tests/test_vocab_pilot282_cards.py（5件）＋tests/test_data_audit.py（8件）— **20 passed in 88.08s**。
+- ラウンド直後: converted 10,223 → **10,224** / rejects 2,107 → **2,099**、canonical overlap 0・漏れ0。same_name_cast は rejects に残り0件で解消。
+- 回答: ~/workspace/DMPJ-work/answers/round333.yaml（reject 行の partial＋第298弾 CHO010_FORM から決定的に構築）。
+- 次の番号: パイロット299 / ラウンド334 / プロト T900。
+
+## 第299弾 under_card_removed（自分の進化クリーチャーの下にあるカードが墓地に置かれた時）
+
+ギャップ名 under_card_removed の純粋3件は、いずれも DM-34 の同一能力「自分の他のクリーチャーが破壊された時、または自分の進化クリーチャーの下にあるカードが墓地に置かれた時、＜効果＞」を持つ監視者クリーチャー（dm34-014 呪言人形ワヤ / dm34-022 神星の守護者アルト・コロニス / dm34-032 惑星の勇者ドリッピー）。在範の純粋ファミリーは最大でも3件規模まで痩せ、その多くは評価済み DEEP／延期のため本ファミリーを選んだ。不足は from_under 機構（第3段）の監視者形が未検証だったことだけで、新規 op・面フィールド・GameState フィールドは無い（ドリフト）。ただし検証の過程で既存エンジンの二重収集を1件見つけて修正した（下記）。converted 10,224 / rejects 2,099 は不変（パイロットのみ、ラウンド334は未実施）。
+
+- **誘発対の形（3件共通）**: 破壊側 = {kind: trigger, when: {event: move, from: bz, to: graveyard, reason: destroy, subject: {owner: you, other: true, filter: {types: [creature]}}, from_under: false}, effect: ＜効果＞}。from_under: false は、進化クリーチャーごと破壊された時に下のカードのレコード（host つき・reason も destroy）まで「自分のクリーチャーが破壊された」に数えて重ねて発火させないための切り分け（dmsd06-012 の第3段先例と同型。下のカードは特性を持たないカードとして墓地に置かれるのであって、クリーチャーが破壊されるのではない）。下カード側 = {kind: trigger, when: {event: move, from: bz, to: graveyard, from_under: {owner: you, filter: {types: [evolution]}}}, effect: ＜効果＞}。こちらは理由を問わない（破壊でも効果の put でも「墓地に置かれた時」）。
+- **監視者形の実挙動固定**: from_under の変換済み先例は subject: self（下にあったカード自身、第3段・ラウンド194）と from_under: self（宿主自身）だけで、第三のクリーチャーが場から {owner, filter} で監視する形は未検証だった。T900（誘発対＋数え用ミル効果）で固定: 自分の他のクリーチャーの破壊で1回／スタックごと破壊で破壊側1回＋下カード側は下1枚につき1回（下2枚なら計3回。レコード単位の発火は第3段の作法どおり）／下カードの単独移動（reason: put）では下カード側だけ1回／相手のスタック・監視者自身の破壊では発火しない。
+- **エンジン修正（宿主の二重収集）**: 宿主がまだバトルゾーンにトップとして残っている時に下のカードが単独で動くと、宿主の from_under 誘発が通常の発生源（bz_tops）と host_only の lki 発生源の両方から収集され、二重に発火していた（T903 の from_under: self で実測: 効果が2回解決）。events._collect_triggers で、宿主が既に通常の発生源に含まれる場合は host 発生源を加えないよう修正した。宿主ごと離れた場合は従来どおり host_only から1回だけ発火する（両形をテストで固定）。収集ロジックのみの変更で state.rs・スキーマには触れていない（from_under を含む照合は元々 Python 経路）。
+- **効果形（3件とも既存イディオム）**: dm34-014 = modify {select: {zone: bz, owner: opp, count: 1}, mod: {power: -1000}, duration: end_of_turn}。dm34-032 = may [choose_number {as: n} → choose {zone: deck, count: 1, reveal: true} as: top → if {cmp: [{cost_of: {ref: top}}, "==", {declared: n}]} then move {select: {zone: bz, owner: opp, filter: {power_le: 5000}, count: 1}, to: graveyard, reason: destroy}]（第210弾の宣言プリミティブ。数字の範囲は先例どおり既定の 0〜10）。dm34-022 = choose {zone: deck, owner: you, from_top: 1, count: 1} as: top（上を見る）→ if {exists: {ref: top, filter: {types: [spell]}}} → may [choose {ref: top, count: 1, reveal: true} as: hit → move {select: {ref: hit}, to: hand, reason: draw}]（dmx16-030 の「見て、呪文なら唱えてもよい」形の手札版）。
+- **既存問題の発見（本弾では直さない）**: dm34-022 の形の先例として引いた dmr08-008 の登録形 choose {count: 0, up_to: true} は不発形だった。selectors.select は count で mx（選択上限）を決めるため count: 0 では候補があっても常に空に束縛される（candidates が2件ある状態で select が決定なしに [] を返すことを実測）。同形の select は converted に **334箇所**あり、文脈はいずれも「1体／1枚選んでもよい」（正しい形は count: 1, up_to: true 相当。docs 内の既存注記にも「正しくは count: 2, up_to: true」とある）。エンジン側で count: 0 + up_to: true を解釈するかデータ側を移行するかは、全334箇所の文面照合が要るため、本弾では扱わず専用の棚卸し＋修繕ステージとして切り出す（dm24ex3-rp2s08 の zone: hand 欠落と同じ「変換済みデータの不発」類型）。
+- プロト T900–T906（T900 監視者・ミル形 / T901 素の進化獣 / T902 下カード単独送りの駆動つき進化獣 / T903 宿主自身の監視者 / T904・T905・T906 は対象3件の実形）。tests/test_vocab_pilot299.py 17件（parse＋検証3件、誘発対の実挙動6件、宿主 self の実挙動2件、実形3カードの実挙動6件）＋ tests/test_vocab_pilot299_cards.py 2件（対象3件の未登録・ギャップ純粋確認、partial＋提出形の parse）。回帰: from_under 本体＋第173・294・297弾＋test_rules＋rust 系 = 113 passed / 293 skipped（rust は未構築環境のため skip で Python フォールバック）、from_under cards＋pilot299 cards＋test_data_audit = 11 passed。既知の既存失敗2件（pilot274 のコスト0競合、pilot31 の janken）には触れていない。dm24ex3-rp2s08 の修繕は本ファミリー外のため未実施（従来どおり別ステージ課題）。
+- ラウンド334側の注意: 対象3件とも単独 gap の純粋行で、reopen under_card_removed で3行だけが外れる見込み（reopen の出力行数を必ず数えること）。3件とも partial に abilities が無いため、本弾の誘発対を足し、unsupported から under_card_removed を外すだけ（提出形は cards テストの FORMS が正本）。登録後に abilities・keywords が本文と一致するか照合すること（submit の連結／merge_split の混入確認）。
+- 次の番号: パイロット300 / ラウンド334 / プロト T907。
+
+## ラウンド334 under_card_removed 再変換
+
+第299弾（from_under 監視者形の誘発対）の再変換。対象は under_card_removed 純粋3件。
+
+- **新規登録3件**: dm34-014 呪言人形ワヤ / dm34-022 神星の守護者アルト・コロニス / dm34-032 惑星の勇者ドリッピー。3件とも partial に abilities が無いため第299弾の誘発対＋効果（cards テストの FORMS が正本）を足し、unsupported から under_card_removed を外して登録。partial の text は断片（対象条項のみ）だったため、回答の text は reject 行の公式全文に戻した。登録形は3件とも abilities == FORMS・keywords なしで、submit の連結（merge_split）由来の混入・重複は無し（提出後に本文と照合済み）。
+- **dm34-022 の形**: 効果は choose {from_top: 1, count: 1}（第299弾で実挙動固定した正本）。dmr08-008 の登録形 choose {count: 0, up_to: true} は select の mx=0 で常に空になる不発形のため使っていない（converted に同形が334箇所ある棚卸し＋修繕は別ステージ課題のまま）。
+- **alias 畳み込み・stale 解消・差し戻しは0件**。3件とも identity で自 canon・alias なしを確認。提出前照合: 対象 id は real.yaml / real_akashic.yaml / real_vocab.yaml / real_zone.yaml / proto.yaml / converted のいずれにも無し。reopen under_card_removed は対象3行のみ除去（巻き込みなし）。
+- **実挙動（登録形テストで固定）**: dm34-014 は自分の他のクリーチャーの破壊を監視して相手クリーチャー1体のパワーを 3000→2000 にした。dm34-032 は数字宣言と山札の上のコストが一致して相手のパワー5000以下を破壊し、上のカードが表向きにされた（reveal 記録）。dm34-022 は山札の上の呪文 T003 を相手に見せて（reveal 記録）手札に加えた。
+- テストブックキーピング: tests/test_vocab_pilot299_cards.py を登録形に書き換え。
+- テスト: tests/test_vocab_round334_cards.py（帰属＋実挙動3件）＋tests/test_vocab_pilot299_cards.py（登録形1件）＋tests/test_data_audit.py（8件）— **13 passed in 85.01s**。
+- ラウンド直後: converted 10,224 → **10,227** / rejects 2,099 → **2,096**、canonical overlap 0・漏れ0。under_card_removed は rejects に残り0件で解消。
+- 回答: ~/workspace/DMPJ-work/answers/round334.yaml（reject 行の partial＋第299弾 FORMS から決定的に構築）。
+- 次の番号: パイロット300 / ラウンド335 / プロト T907。
+
+## 修繕ステージ: choose {count: 0, up_to: true} の棚卸しと修繕
+
+第299弾の発見（converted dmr08-008 の登録形 choose {count: 0, up_to: true} が不発 — selectors.select は count を選択上限として扱うため、up_to: true でも常に対象0件で束縛し、決定自体が発生しない）を受け、パイロット番号を消費しない独立の修繕ステージとして棚卸しと一括修繕を実施した。
+
+### 棚卸し（パースベースで厳密に数えた）
+
+- data/cards/converted.yaml: 論理出現 **335件 / 314カード**、物理 dict は **334件**（dmr03-012 の2つの誘発が YAML アンカーで同一 dict を共有し、論理2件が物理1行に載る — 第299弾の「334箇所」は物理数と一致）。
+- data/cards/proto.yaml / real.yaml / real_vocab.yaml / real_zone.yaml: **各0件**（編集対象外、計数のみ）。
+- 隣接パターン（本節では対象外）: up_to を伴わない op 引数レベルの count: 0 が13件。**【訂正】本節の初出では「mill 系12件／break 系1件、select ではないので不発問題とは無関係」としたが、これは誤り。** op 定義を直接確認したところ内訳は mill 系11件／break 系2件（dmx11-023 は mill ではなく break）で、どちらも同じ不発形だった（mill はマクロ展開で from_top: $count になるため 0 では何も動かず、break は op_break が count を評価してブレイクタスクに渡すため 0 では何もブレイクしない）。追補の修繕ステージで対応した（次節）。
+
+### 分類（全335件を所有カードのテキスト＋能力形と照合）
+
+- **移行 326件**: 条文に選択肢性（「選んでもよい」）または「最大1件まで選ぶ」読みがあるもの。正形 count: 1, up_to: true へ移行（up_to は保持し辞退可能性を保存）。
+- **除外 9件**（count: 0, up_to: true のまま据え置き。将来の修繕候補として正形を記録）:
+  1. dmex02-066 卍月の流星群 — テキストは強制の1体破壊。正形は count: 1 **without** up_to（up_to を残すと誤って辞退可能になる）。
+  2. dmex10-016 シバカゲ斎 — 山札上5枚をまとめて墓地へ（束縛集合そのものを移動する全か無か形）。
+  3. dmex10-018 白骨の守護者ホネンビー — 山札上3枚、同上。
+  4. dmex11-037 トツゲキ戦車 バクゲットー — 手札すべてを捨てる、全か無か形。
+  5. dmr12-045 戦慄の取引 ビッグ・パルサー — 束縛は count >= 0 の常に真のゲートにのみ使われる不活性形。本当の選択は may + count: "all" 側にあり、現状でも動作する。移行すると無意味な決定が増えるだけなので据え置き。
+  6. dmr13-017 龍素記号Bs ボラパール（2ヒット中の第1ヒット） — 強制の条件付き束縛（見せることも、呪文なら手札に加えることも強制で選択肢性なし）。正形は count: 1 without up_to。第2ヒット（バウンス側「選んでもよい」）は移行した。
+  7. dmr15-022 龍秘陣 ヘブン・アンセム — repeat 本体内の強制の上1枚束縛。条文に選択肢性なし。正形は count: 1 without up_to。
+  8. dmr17-093 侵略者 タネタロウ — 山札上2枚をマナへ、全か無か形。
+  9. dmr18-005 破線の悪魔龍 キルビリー — 墓地すべてを山札へ＋シャッフル、全か無か形。
+- 検証中の再分類: dmex03-012 は純粋なゲート形（束縛集合は count>=1 判定にのみ使用、破壊本体は count: "all"、条文は「てもよい」）のため移行側に確定。
+
+### 移行の実施
+
+- yaml.compose のマーク（行番号）に基づく行精密編集で、対象 select の count スカラ行だけを 0 → 1 に書き換え。**326論理件 / 325物理行**（dmr03-012 の共有アンカーが1行で2論理件）。git diff は 325 insertions / 325 deletions で、全変更行が count: 0 → count: 1 のみ。ヘッダーコメント保持、未対象カードはバイト不変。per-card の source.notes には記録しない（本節が記録）。
+- 移行後のパース棚卸し: 残存 {count: 0, up_to: true} は除外9件のみ（カード・パスとも一致、dmr13-017 は abilities[0] 側のみ残存）。converted 総数 10,227 は不変。
+
+### 挙動証明（tests/test_repair_count0_upto.py、5件）
+
+- 移行前（git stash で移行を退避して実測）: 棚卸しテスト失敗（335件残存）、代表3件の挙動テストすべて失敗 — dmex09-002 シンカイサーチャー（探索の選択がターン1内に解決しない）、dmr05-s06（墓地からの回収が提示されない）、dmr08-008 ラプソディ（攻撃時束縛が空で shieldize しない）。辞退テストは移行前は空転合格。
+- 移行後: **5 passed** — 探索の選択が提示され選んだ T001 が手札へ（ターン1内）、辞退（0件選択）も可能、墓地回収が提示される、ラプソディの束縛が効いてシールドが5→6。
+- テスト作成時の落とし穴（記録）: (1) deck_exact は filler と同名の spec カードを剥がす — 山札 spec を filler 異名で埋めないと1枚山札になり探索後に deck_out で負ける。(2) choose_cards の option key はゾーン名で重複する — 対象は key ではなく options の位置で指す。(3) 「いつかドローで来る」ケースと区別するため探索テストは解決ターンを1に区切った。
+
+### 回帰
+
+- tests/test_data_audit.py ＋ pilot299/round334/round333/pilot298/round332/pilot297 の cards テスト群: **26 passed / 1 failed**。失敗は tests/test_vocab_round333_cards.py::test_round333_disposition で、ラウンド333時点のスナップショット（rejects 2,099 / converted 10,224）を主張する陳腐化したブックキーピング — **クリーンな HEAD 3404ab1 でも再現する既存失敗**で本修繕とは無関係（ラウンド334で未更新）。別途ブックキーピング是正が必要。
+- tests/test_rules.py ＋ tests/test_vocab_pilot299.py: **57 passed**。
+
+### 収支
+
+- converted **10,227（不変）** / rejects **2,096（無編集）**。新規登録・差し戻し・alias 畳み込みはなし（データ修繕のみ）。
+- 次の番号は不変: パイロット300 / ラウンド335 / プロト T907。
+
+## 修繕ステージ（追補）: op 引数レベルの count: 0 の修繕
+
+前節の棚卸しで「対象外」とした op 引数レベルの count: 0（13件）について、op 定義を直接確認した結果、select 形と同じ不発形であることが判明したため、追補の修繕ステージとして対応した。前節の「mill 系12件／break 系1件・無関係」という記述は誤りであり、前節側に訂正を入れた（正しくは mill 11件／break 2件）。
+
+### 棚卸しと不発の仕組み
+
+- mill {count: 0} ×11: dmr16g-008 / dmr16g-008d / dmr17-075（then 内）/ dmr19-066 / dmr21-089 / dmr23-003 / dmrp04m-s05（能力2件）/ dmrp21-035 / dmx10-009 / dmx10-030。mill マクロ（data/rules/op_macros.yaml）は `{op: move, select: {zone: deck, owner: $owner, from_top: $count}, to: graveyard, reason: put}` に展開されるため、count: 0 では山札の上から0枚しか動かない。
+- break {count: 0, player: you} ×2: dmx05-s03 / dmx11-023。op_break（dmsim/engine/ops.py）は count を評価してブレイクタスクに渡すため、0 では何もブレイクしない。
+
+### mill 11件の修繕（本文の N へ、周囲の構造は不変）
+
+各カードの本文「自分の山札の上からN枚を墓地に置いてもよい」の N を適用した（yaml.compose の行マークに基づく行精密編集、変更は count 行のみ11行、ヘッダーコメント保持）:
+
+- dmr16g-008 アクア呪文師 スペルビー: 3（mill で3枚 → ゲートが開き呪文を墓地から手札へ）
+- dmr16g-008d アクア呪文師 スペルビー: 3（同上）
+- dmr17-075 暗黒鎧 ゴルドバット: 1（マナ武装3の then 内。「上から1枚目」）
+- dmr19-066 不死 デッド: 4
+- dmr21-089 【問１】 テック: 1（「上から1枚目」。後続のドロー may は不変）
+- dmr23-003 魔天斬 ドゥームズ: 6
+- dmrp04m-s05 ハインリヒ・ダーマルク: 1（出た時・攻撃する時の両能力。「上から1枚目」→ ゲートが開き闇コスト4以下を墓地から出す）
+- dmrp21-035 ジョルジュくん: 2
+- dmx10-009 絶叫の影ガナル・スクリーム: 4（→ ゲートが開きクリーチャーを墓地から手札へ）
+- dmx10-030 死神明王ガブリエル・XENOM: 3（→ ゲートが開き破壊＋コマンド回収）
+
+「置いてもよい」の任意性の表現は周囲の既存構造（as 束縛＋if ゲート等）をそのまま保存した。素の mill（may で包まない形）は本文が「置いてもよい」のカードでも変換済み先例に多数ある（count>0 の mill 242件中 may 外は186件）ため、本ステージでは値のみを是正した。
+
+### break 2件は除外（op 自体が誤り。正形を記録して別ステージへ）
+
+dmx05-s03 ザビメテウス・武者・BLACK / dmx11-023 偽りの星夜 コングラチュレーションは count の値の問題ではないため、本ステージでは count: 0 のまま残置した:
+
+- 本文は「自分のシールドをひとつ、（自分の）墓地に置いてもよい。そうした場合、〜」。しかしブレイクタスク（combat.h_break）は割ったシールドを**手札**へ送り、S・トリガー宣言とブレイクイベントを伴う。count を 1 にしても墓地には行かず、本文と一致しない。
+- 現行形はさらに壊れている: 支払い（シールドの移動）が起きないのに後続の破壊が無条件で発火する。修繕前の実測（dmx11-023）: 出した時に choose_shields が提示されるが選べるのは0枚で、シールドは5→5のまま、相手のクリーチャー2体（T001 / T004）が両方とも自動で選ばれて破壊された。
+- 正形は実績のあるイディオム（dmex01-026 / dmd08-019 / dmx11-022 / dmbd22-021 等と同形）: `{op: choose, as: sh, select: {zone: shield, owner: you, count: 1, up_to: true}}` → `{op: if, cond: {cmp: [{count: {ref: sh}}, ">=", 1]}, then: [{op: move, select: {ref: sh}, to: graveyard, reason: put}, <後続効果>]}`。値の修繕ではなく構造の再変換になるため、本ステージからは切り出して記録のみとする。
+
+### 挙動証明（tests/test_repair_opcount0.py、5件）
+
+- 修繕前（使い捨てプローブで実測）: dmr19-066 は出しても山札15→15・墓地0枚（mill 0枚）。dmx11-023 は上記のとおり無償破壊が発火。
+- 修繕後: **5 passed** — 棚卸し（mill 全件が本文の N、残存 count: 0 は除外した break 2件のみ、件数不変）＋実挙動4件（dmr19-066: 上から4枚が墓地へ／dmr16g-008: 3枚 mill でゲートが開き呪文 T003 が手札へ／dmr17-075: then 内 mill 1枚でクリーチャー回収／dmrp04m-s05: mill 1枚でゲートが開き T008 を墓地から出す）。
+
+### ついでに直したブックキーピング
+
+- tests/test_vocab_round333_cards.py::test_round333_disposition がラウンド333時点のスナップショット（rejects 2,099 / converted 10,224）を主張してラウンド334以降クリーンな HEAD でも失敗していたため、現行件数（rejects 2,096 / converted 10,227）に更新した（ラウンド334の disposition テストと同形式）。
+
+### 回帰
+
+- tests/test_repair_opcount0.py: **5 passed**。
+- tests/test_repair_count0_upto.py ＋ tests/test_data_audit.py ＋ tests/test_vocab_round333_cards.py ＋ tests/test_rules.py: **56 passed**（round333 disposition の既存失敗は解消）。
+
+### 収支
+
+- converted **10,227（不変）** / rejects **2,096（無編集）**。変更は converted.yaml の count 行11行＋テスト＋docs のみ。プロトは不使用。
+- 次の番号は不変: パイロット300 / ラウンド335 / プロト T907。
+- 残件: break 2件（dmx05-s03 / dmx11-023）のイディオムへの再変換（上記に正形を記録済み）。→ 追補2で解消（次節）。
+
+## 修繕ステージ（追補2）: 「自分のシールドを墓地に置く」条項の再変換
+
+前節の残件（break 2件のイディオム再変換）を、パイロット番号を消費しない独立の修繕ステージとして実施した。あわせてセンサスで同種の誤用を洗い出し、対象は4件になった。
+
+### センサス（op break {player: you} 全件照合）
+
+op break は converted 全体で115件、うち player: you は32件。各カードの本文を照合した結果:
+
+- **本物のブレイク28件は無変更**: 本文はいずれも「自分のシールドを（〜つ／好きな数／すべて）ブレイクする（してもよい）」で、ブレイク＝手札＋S・トリガー宣言が正しい（dm22ex2-1a、dm23ex2-chog004、dm24ex1-002 / 037、dmrp22-016（「そのS・トリガーを使ってもよい」明記）等）。dmr12-010 は text フィールドが「G・リンク」のみで条項を照合できないため無変更とした。
+- **誤用は4件**: いずれも本文は「シールドを墓地に置く」であり、break（割ったシールドを手札へ送る）では一致しない。当初対象の任意コスト2件に加え、必須形2件が同じ誤用だった。
+
+### 是正した4件
+
+- **dmx05-s03 ザビメテウス・武者・BLACK**（任意コスト）: 攻撃誘発の effect を choose＋if＋move のイディオム（dmex01-026 と同形）へ組み替え。when（自分のエイリアンの攻撃）は不変。後続はパワー6000以下1体破壊。
+- **dmx11-023 偽りの星夜 コングラチュレーション**（任意コスト）: CIP を同イディオム（dmd08-019 と同形）へ。後続は相手が自身のクリーチャー2体を選んで破壊（chooser: opp、count: 2）。
+- **dmsd07-008 セツナノ裁徒**（必須）: 離脱誘発の break {count: 1} を move {select: {zone: shield, owner: you, count: 1}, to: graveyard, reason: put} へ。
+- **dmx11-007 ボルカニック・アロー**（必須）: 呪文の第2ステップの break {count: 1} を同じ move 形へ（第1ステップの破壊は不変）。
+
+各カードの source.notes に是正記録を追記。変更は converted.yaml の4カードの能力ブロック＋notes のみ（73 insertions / 31 deletions）、ヘッダーコメント保持。
+
+### 挙動証明（tests/test_repair_break_selfshield.py、7件）
+
+修繕前（使い捨てプローブで実測）: dmx11-023 / dmx05-s03 はシールド5→5のまま後続の破壊が無条件で発火。dmx11-007 / dmsd07-008 はシールドが墓地ではなく**手札**へ行った。
+
+修繕後: **7 passed** — 棚卸し（4件に break op が残らない、イディオム形の固定、player: you の break 残存は本物の28件のみ、件数不変）＋実挙動6件:
+- dmx11-023: 払ったシールドの cid が墓地にあること、手札に行かないこと、相手2体が破壊されること、S・トリガー宣言もブレイクイベントも発生しないこと。辞退（0枚選択）では破壊が発火しないこと。
+- dmx05-s03: 攻撃時に払えば墓地へ行き T004 が破壊されること。辞退では破壊が発火せず自分のシールドも不変なこと。
+- dmx11-007 / dmsd07-008: 選んだシールドが墓地へ行き、手札へ行かないこと。
+
+### ブックキーピング
+
+- tests/test_repair_opcount0.py の「break 2件は count: 0 のまま残置」という固定を、本ステージの是正済み状態（break op は残らず、mill / break の count: 0 は converted に1件も残らない）に更新した。
+
+### 回帰
+
+- tests/test_repair_break_selfshield.py: **7 passed**。
+- tests/test_repair_opcount0.py ＋ tests/test_repair_count0_upto.py ＋ tests/test_data_audit.py ＋ tests/test_rules.py: **58 passed**。
+
+### 収支
+
+- converted **10,227（不変）** / rejects **2,096（無編集）**。変更は converted.yaml の4カード＋テスト2ファイル＋docs のみ。プロトは不使用。
+- 次の番号は不変: パイロット300 / ラウンド335 / プロト T907。
+- 残件: なし（count: 0 系の不発形は converted から一掃された）。
+
+## 第300弾 skip_turn_remainder（ターンの残りをとばす）
+
+センサス（2026-11-20、rejects 2,096件を再集計）: 純粋ファミリーは最大でも4件止まりで、その4件組（victory_icon_filter 等）はすべて評価済み（延期・異種混合）。単一ギャップ行のうち未評価の候補を走査し、**skip_turn_remainder** を選定した。純粋3件、rejects 全体でもこのギャップを含む行は3件のみ（多重ギャップ行に現れない）。
+
+### 対象（3件）
+
+- **dm26ex4-031 / dm26ex4-sec012 切札混成 ゴッド・タイム**（同名・同コスト7・パワー12000・水/火・キーワード [ex_life, speed_attacker, triple_breaker] の2印刷。partial に能力なし。本文の差は EXライフ注釈文の有無のみ）: CIP「出た時、相手のパワー5000以下のクリーチャーをすべて破壊する」＋「このクリーチャーの「EXライフ」シールドが離れた時、ターンの残りをとばしてもよい」。
+- **dmr21-021 時の宮殿 ベルファーレ**（コスト6・パワー6000・光/水。partial に革命チェンジの declare 能力あり）: 「このクリーチャーが破壊された時、または、自分のシールドがブレイクされた時にこのクリーチャーがタップしていれば、そのターンの残りをとばす」。
+
+### 結論: ギャップ名ドリフト（新規語彙・エンジン変更なし）
+
+「ターンの残りをとばす」は既存の **op end_turn** そのもの（第203弾・プロト T510 で実証済み。converted に14件の使用例）。エンジン側は `s.skip_rest = True` を立て、残りのステップをすべて飛ばして次のプレイヤーのターンへ移る。**「ターンの終わりに」誘発は発火しない**（公式FAQ qa/39060: ターンをとばした場合、「ターンの終わりに」能力は誘発しない。解決中の効果以外の待機中効果も無効化される）— エンジンの挙動と一致する。戦闘中（combat.py）でも skip_rest が検査される。
+
+### 3つの形
+
+- **形A（ゴッド・タイム、任意）**: `{kind: trigger, when: {event: move, from: shield, subject: {exlife_of: self}}, effect: [{op: may, body: [{op: end_turn}]}]}`。EXライフシールド離脱の誘発は第291弾の共通形。**任意化は効果先頭の {op: may, body: [...]} で書く**（プロト T010/T026 の先例）。誘発能力への `may: true` キーは無効（defs の ABILITY_KEYS に無い。`optional` は replace 種専用）— 初稿で踏んで修正した。
+- **形B（ベルファーレ第1節、必須・条件なし）**: `{kind: trigger, when: {event: move, from: bz, to: graveyard, reason: destroy, subject: self}, effect: [{op: end_turn}]}`。
+- **形C（ベルファーレ第2節、必須）**: `{kind: trigger, when: {event: break, player: you}, if: {exists: {ref: self, filter: {tapped: true}}}, effect: [{op: end_turn}]}`。タップ条件の if イディオムは第290弾 dm25bd2-003 の形。
+
+### 解釈判断（ラウンド335で再確認すること）
+
+ベルファーレの「タップしていれば」の条件は**第2節（シールドブレイク時）にのみ付く**と解した。根拠: 条件は第2のタイミング句に読点なしで直結しており（「ブレイクされた時にこのクリーチャーがタップしていれば」）、両節共通の条件なら通常は選択肢全体の後に置かれる。公式FAQでの裏取りは未了（DM wiki の汎用ページでは確認できず）— ラウンドで再確認する。実務上も、革命チェンジでタップ状態で出る本カードの防御的用法は第2節側が本命。
+
+### ラウンド335への申し送り
+
+- ゴッド・タイム: canon 側（dm26ex4-031）を登録し、sec012 は alias に畳む想定。partial に能力が無いため提出形は [CIP（dm23bd1-005 の destroy マクロ形、power_le 5000）, 形A] ＋ partial のキーワード3件で構成する。
+- ベルファーレ: 提出形は partial（革命チェンジ declare）＋形B＋形C。本文1行目「マナゾーンに置く時、このカードはタップして置く」は dm10-037 の先例では追加フィールドなし（スプリット側の扱い）— ラウンドで確認。
+
+### プロト（T907–T909）
+
+- T907 試験用EXライフ時跳獣（水・コスト5・パワー5000・ex_life・形A）
+- T908 試験用破壊時跳獣（水・コスト4・パワー3000・形B）
+- T909 試験用盾破時跳獣（光・コスト4・パワー3000・形C）
+
+### テスト
+
+- tests/test_vocab_pilot300.py: **9 passed** — parse、形A（ブレイク yes で跳ぶ / no で継続＝相手2体目も攻撃する判別 / 普通のシールドでは不発 / 破壊呪文→EXライフ置換経由でも yes で唱えた側のターンが終わる）、形B（破壊で跳ぶ / 他のクリーチャーの破壊では不発）、形C（タップ中ブレイクで跳ぶ / アンタップ中ブレイクでは跳ばず次ターンに進む判別）。
+  - テスト作成中の教訓: (1) ブレイク対象の選択フックは**毎回**選ぶこと（2回目のブレイクが無制御だと EXライフシールドを割り直して誤判定する）。(2) 破壊対象が1件だけの select は決定を出さず自動確定する（eng.ask の mn==mx==候補数）。(3) 攻撃決定は min 1 で、「攻撃しない」は空回答でなく `pass` キー。
+- tests/test_vocab_pilot300_cards.py: **3 passed** — 対象3件が純粋行・未登録・ファミリーがこの3行のみ、2印刷の同一性（注釈差のみ）、提出形の parse（CIP は parse 後に destroy マクロが move へ展開される形で照合）。
+
+### 回帰
+
+- 実挙動バッチ: test_vocab_pilot300 ＋ 第291弾 ＋ 第297弾 ＋ 第203弾: **31 passed**。
+- カード側バッチ: test_vocab_pilot300_cards ＋ test_data_audit ＋ test_rules: **51 passed**。
+- 既知の事前失敗2件（第274弾 test_floor_zero_colored_pays_civ_count、第31弾 test_janken_win_draws）は本弾の範囲外として未追跡。
+
+### 収支
+
+- converted **10,227（不変）** / rejects **2,096（不変）**。変更は proto.yaml（T907–T909）＋テスト2ファイル＋docs のみ。エンジン・スキーマ・データ監査への変更なし。
+- 次: ラウンド335（skip_turn_remainder の再変換）/ パイロット301 / プロト T910。
+
+### ラウンド335（skip_turn_remainder の再変換）
+
+- **新規登録2件**: dm26ex4-031 切札混成 ゴッド・タイム（canon。partial のキーワード3件＋CIP（dm23bd1-005 の destroy マクロ形）＋形A で登録。提出後の登録形は abilities == [CIP, 形A]・keywords == [ex_life, speed_attacker, triple_breaker] で、submit の連結／merge_split 由来の混入なしを本文と照合済み）、dmr21-021 時の宮殿 ベルファーレ（partial の革命チェンジ declare ＋形B＋形C。登録形は [declare, 形B, 形C]・keywords == [double_breaker] で混入なし）。
+- **alias 畳み込み1件**: dm26ex4-sec012 は reopen で行を外し、dm26ex4-031 の登録時に validate の aliases_for が source.aliases に自動付与。提出後に「独立エントリではない／031 の aliases に在る／rejects に残らない」の3点を実測確認。
+- **差し戻し・stale 解消は0件**。converted **10,227 → 10,229** / rejects **2,096 → 2,093**、canonical overlap 0・漏れ 0。skip_turn_remainder は rejects に残り0件で解消。
+- **再確認 (a) タップ条件の範囲**: 公式FAQ（dm.takaratomy.co.jp/rule/qa/）と DM wiki を検索したが、本カード個別の裁定は見つからなかった（汎用「ターンの残りをとばす」ページが引く公式Q&A qa/39060・qa/31817 はいずれも本件に触れない）。したがって第300弾の文法判断（条件「このクリーチャーがタップしていれば」は読点なしで第2のタイミング句に直結するため第2節にのみ付く）を**解釈として採用**し、ベルファーレの source.notes にも明記した。
+- **再確認 (b) 1行目「マナゾーンに置く時、このカードはタップして置く」**: dm10-037 アクア・リバイバーの converted 登録形は同一文を持ち、フィールド・能力のいずれでも表していない（本文のみ）ことを実測で確認。先例は正確に一致するため、ベルファーレも追加フィールドなしで扱った。
+- テスト: tests/test_vocab_round335_cards.py（disposition＋登録形の実挙動4件: 形A 破壊置換経路で yes→跳ぶ、形B アンタップで破壊されても必須で跳ぶ、形C タップ中ブレイクで跳ぶ／アンタップでは跳ばない判別）＋ tests/test_vocab_pilot300_cards.py を登録形に書換（3件）＋ tests/test_data_audit.py 8件 = **16 passed**。プロト側の回帰として tests/test_vocab_pilot300.py **9 passed**（別プロセス）。
+- 回答は answers/round335.yaml に保存。次: パイロット301 / ラウンド336 / プロト T910。
+
+## 第301弾 reveal_stay（山札の上を見て／置いて、合えばとどまる）
+
+センサス（2026-11-20、rejects 2,093件を再集計）: 純粋3件以上の未評価ファミリーは残っておらず、純粋3件は reveal_stay / wd_field 系（場ゾーン新設級）/ cost_may_per_count＋up_to_cost_reduction（任意コスト軽減クラスタ）/ gachinko_break_count（ドリフト濃厚）等が並ぶ。3件の partial がそろって「置換の instead 内で条件を見て元の移動を再適用する手段が無い」と同一の不足を書いている **reveal_stay** を選定した（純粋3件、多重ギャップ行には現れない。第4の出現 dmrp22-005 は誤ラベル — 後述）。
+
+### 対象（3件）
+
+- **dmr05-v03 黄金世代 鬼丸「爆」**（火・コスト13・パワー13000・進化・[triple_breaker]。partial は能力なしのスケルトン）: 第1節「破壊される時、山札の上から1枚目をすべてのプレイヤーに見せる。それがヒューマノイドであれば、墓地に置かれるかわりにバトルゾーンにとどまる」＋第2節「破壊された時、このクリーチャーの下にあったクリーチャーをすべて、墓地からバトルゾーンに出してもよい」。
+- **dmx15-006 夢幻界廊 ヴァリアント**（火・コスト7・パワー7000・アウトレイジ・[double_breaker]。partial は能力なし）: 「バトルゾーンを離れる時、自分の山札の上から1枚目を墓地に置いてもよい。そのカードがアウトレイジであれば、離れるかわりにとどまる」。
+- **dmx16-006 インフィニティ・ドラゴン**（火・コスト7・パワー7000・アーマード・ドラゴン・[double_breaker]。partial は能力なし、source.aliases に4印刷）: 「自分のドラゴンがバトルゾーンを離れる時、自分の山札の1枚目を墓地に置く。そのカードがドラゴンまたはファイアー・バードであれば、そのドラゴンは離れずにとどまる」。
+
+### 結論: 新規 op **move_to_event** を追加（エンジン変更あり）
+
+不足は partial の注記のとおり1点だけ: 置換された元の移動を、条件を見て instead 内から再適用する手段。先例は G・NEO の離脱置換用 op **move_under_to_event**（第184弾: イベントレコードの to / reason / position を引き継いで下のカードを移す）。本弾はその一般化として、select で選んだカードをイベントの行き先へ移す **move_to_event** {select} を追加した（ops.py + opvocab.py + スキーマ再生成、差分は新 op の16行のみ）。再適用した移動は ev_task の no_replace 環境で起こすため再置換されず、行き先・理由・位置に加えて効果帰属（by / cause / cause_defn / cause_kind）もレコードから引き継ぐ。イベントが無い文脈・行き先が bz の場合は何もしない。
+
+### 設計上の要点: instead 内では「choose 束縛 → 判定 → 移動発行」の順
+
+初稿の形B/C は「move で墓地に置いて as 束縛し、if で見る」形だったが、実測で条件が常に不成立になった。理由: instead 内の移動は capture され（609.9 の同時適用）、束の適用は instead 全体の解決後。move の as 束縛は h_bind が移動先ゾーンで照合するため適用前に走ると空になり、移動したカードの ref も gen が増えて失効する。したがって確立形は **choose で先に束縛し（choose は選択時点で束縛する）、ref が生きている間に判定し、最後に移動を発行する**。なお converted の MAX 系敗北置換（dm23-008 / dm23-017）が使う「山札→山札の move で見る」形は、移動元と移動先が同じゾーンのため束縛が成立する同問題の回避形で、本弾の調査で壊れていないことを確認した（本弾の形とは別系統）。
+
+### 3つの形
+
+- **形A（dmr05-v03、破壊のみ・公開形）**: `{kind: replace, when: {event: move, from: bz, to: graveyard, reason: destroy, subject: self}, instead: [{op: choose, select: {zone: deck, owner: you, from_top: 1, count: 1}, reveal: true, as: top}, {op: if, cond: {not: {exists: {ref: top, filter: {race_has: ヒューマノイド}}}}, then: [{op: move_to_event, select: {ref: event.subject}}]}]}`。合えば元の破壊は置換されたまま＝とどまり、外れれば破壊を再適用する（公開はどちらの場合も行われる）。第2節は第294弾の既存形 `{kind: trigger, when: {…destroy, subject: self}, effect: [{op: may, body: [{op: play_free, select: {ref: event.was_under, zone: graveyard}}]}]}` で、再適用された破壊レコードから通常どおり誘発する（とどまった場合は誘発しない）。
+- **形B（dmx15-006、離脱全般・任意）**: 置換 when は行き先・理由を絞らない `{event: move, from: bz, subject: self}`。instead は `[{op: may, body: [{op: choose, select: {zone: deck, owner: you, from_top: 1, count: 1}, as: picked}]}, {op: if, cond: {exists: {ref: picked}}, then: [{op: move, select: {ref: picked}, to: graveyard, reason: put}]}, {op: if, cond: {not: {exists: {ref: picked, filter: {race_has: アウトレイジ}}}}, then: [{op: move_to_event, select: {ref: event.subject}}]}]`。may は中身を見ない盲目の任意選択（「置いてもよい」の忠実な形）で、置かない選択でも離れる。再適用先はイベント依存（バウンスなら手札、破壊なら墓地）。
+- **形C（dmx16-006、監視者形）**: 置換 when は `{event: move, from: bz, subject: {owner: you, filter: {types: [creature], race_has: ドラゴン}}}`（other: true は付けない — 監視者自身もドラゴンなので対象に含む）。instead は `[{op: choose, select: {zone: deck, owner: you, from_top: 1, count: 1}, as: seen}, {op: move, select: {ref: seen}, to: graveyard, reason: put}, {op: if, cond: {not: {any: [{exists: {ref: seen, filter: {race_has: ドラゴン}}}, {exists: {ref: seen, filter: {race_has: ファイアー・バード}}}]}}, then: [{op: move_to_event, select: {ref: event.subject}}]}]`。ミルは必須。相手のドラゴン・ドラゴンでない味方の離脱は監視しない。
+
+### プロト（T910–T916）
+
+- T910 試験用公開滞留進化獣（火・コスト6・パワー7000・進化・形A＋第2節）
+- T911 試験用任意滞留獣（火・コスト7・パワー7000・形B）
+- T912 試験用竜見守獣（火・コスト7・パワー7000・形C）
+- T913–T916 ダミー（アーマード・ドラゴン／ヒューマノイド／アウトレイジ／ファイアー・バード）
+
+### テスト
+
+- tests/test_vocab_pilot301.py: **13 passed** — parse＋形の一致、move_to_event の登録（OP_ARGS＋スキーマ）、形A（合致で残留＋スタック無事＋公開記録＋第2節不発／不一致で破壊＋公開記録＋第2節で下のカードが復帰）、形B（合致でバウンス回避／不一致で手札へ／置かない選択でも手札へ・山札不変）、形C（ドラゴン落としで残留／ファイアー・バードで残留／不一致で破壊・ミル必須／監視者自身も残留／相手のドラゴンは無監視・ミルなし／非ドラゴンは無監視・ミルなし）。
+- tests/test_vocab_pilot301_cards.py: **2 passed** — 対象3件が純粋行・未登録、reveal_stay の出現は対象3件＋誤ラベル dmrp22-005 のみ、提出形（partial＋確立形、unsupported 除去）の parse。
+
+### 回帰
+
+- 実挙動バッチ: 第299弾＋第297弾＋第283弾（eternal_kappa）＋第300弾＋第33弾（G・NEO）＋ test_rules ＋ test_data_audit ＋ test_rust_schema_sync: **101 passed**。
+- カード側バッチ: 第299弾 cards ＋ 第283弾 cards: **9 passed**。
+- 既知の事前失敗2件（第274弾 test_floor_zero_colored_pays_civ_count、第31弾 test_janken_win_draws）は本弾の範囲外として未追跡。
+- Rust: ops.py の変更でスタンプは stale になるが、この VM では Rust コア未ビルドのため認可済みの Python フォールバック（結果不変）。
+
+### 収支
+
+- converted **10,229（不変）** / rejects **2,093（不変）**。変更は dmsim/engine/ops.py（move_to_event 追加）＋ dmsim/base/opvocab.py ＋ data/schema/card.schema.json（再生成、新 op のみ）＋ proto.yaml（T910–T916）＋テスト2ファイル＋docs。
+
+### ラウンド336側の注意
+
+- 対象3件は tests/test_vocab_pilot301_cards.py の FORMS の形で提出する。dmr05-v03 の partial は能力なしのスケルトンなので、第1節（形A）と第2節（event.was_under 形）の両方を足すこと。
+- dmx16-006 の partial の source.aliases に4印刷（dm22-015 / dmc36-017 / dmc49-019 / dmx09-018）がある — 畳み込みの扱いはラウンド側で実測確認すること。
+- **dmrp22-005 の reveal_stay は誤ラベルとして行を残す**（unsupported の実体は「山札の上をこのターンの終わりまで表向きにする」条項＋ play_from_deck_top。ラベル訂正は記録のみ、promoy11-011 の先例どおり行自体には触らない）。本セクションと MEMORY 側の記録で足りる。
+- promoy11-011（gachinko 勝ち条件付き・ターン限定の付与形）は本弾の対象外のまま。
+
+### ラウンド336 reveal_stay 再変換（第301弾）
+
+- **新規登録3件**: dmr05-v03 黄金世代 鬼丸「爆」（形A＋第2節。partial は能力なしのスケルトンだったため両節を追加。登録形は abilities == [形A, 第2節]、keywords == [triple_breaker] で、submit の連結／merge_split 由来の混入なしを本文と照合済み。submit の助言 lint「play_free/reason: summon」は第294弾の確立形（event.was_under＋play_free）を踏襲して不採用）/ dmx15-006 夢幻界廊 ヴァリアント（形B、abilities == [形B]、keywords == [double_breaker]）/ dmx16-006 インフィニティ・ドラゴン（形C、abilities == [形C]、keywords == [double_breaker]）。
+- **alias 畳み込み1件（4印刷）**: dm22-015 / dmc36-017 / dmc49-019 / dmx09-018 は全て canon = dmx16-006（identity で実測）で、dmx16-006 の source.aliases に畳み込まれた。4件とも独立エントリではなく、reject 行も元々無し（提出前照合で real.yaml / real_akashic.yaml / real_vocab.yaml / real_zone.yaml / proto.yaml / converted のいずれにも無いことを確認）。
+- **差し戻し・stale 解消 0件**。dmrp22-005 は誤ラベルのまま行を残置（reveal_stay の残存はこの1行のみ。実体は別条項＋play_from_deck_top）。
+- **収支: converted 10,229 → 10,232 / rejects 2,093 → 2,090、canonical overlap 0・漏れ 0**。reveal_stay は対象3件で解消。
+- テスト: tests/test_vocab_round336_cards.py（disposition＋登録形の実挙動6件: 形A 合致で滞留／不一致で破壊＋第2節で下のカードが復帰、形B 合致でバウンス回避／不一致で手札へ再適用、形C ドラゴン落としで滞留／不一致で破壊・ミル必須）＋ tests/test_vocab_pilot301_cards.py を登録形に書換（2件）＋ tests/test_data_audit.py（8件）= **17 passed**。
+- 回答は ~/workspace/DMPJ-work/answers/round336.yaml に保存。次の番号: パイロット302 / ラウンド337 / プロト T917。
+
+## 第302弾 gachinko_break_count（勝ち数でブレイク）はイディオム（ドリフト）
+
+センサス（rejects 2,090件を再集計）: 純粋ファミリーの最大は範囲外（gr_summon 147、aura 108 = 未承認、hyperdimensional_zone 105、dragheart 45、psychic_filter 45、hyperdimensional_summon 41、out_of_game 23、duelist_link 20、outside_game 12、pandora_shift 4）が占め、在範の純粋3件組も大半が評価済み DEEP／延期（victory_icon_filter、dokindam_gacha、cost_sum_of_revealed、copy_abilities、ignore_abilities、all_civs_treatment 等）。未評価で均一な **gachinko_break_count 純粋3件**（多重ギャップ行への出現なし）を選定: dm26rp2-tr009 / dmex12-009（同名カード R.S.F.K. の2印刷）と dmr05-v02（鬼無双 カイザー「勝」）。3件の partial がそろって「ブレイク数を勝ち数（変数）で増やす表現が無い」という同一の不足を明記していた（ラウンド169の判断）。
+
+結論はギャップ名ドリフト — 新規 op・フィールド・スキーマ変更なし。不足は読みの取り違えと既存イディオムの未適用で、対象は次の2形に分かれる:
+
+- **形A（カイザー「勝」型 = その攻撃自体のブレイク数への加算）**: 本文は「勝つたび…シールドを**さらに**1枚ブレイクし」。partial が既に持つ gachinko {until_lose: true, stoppable: true, as: wins} + repeat {times: {var: wins}} の body に、**modify {breaks_add: 1}（duration: end_of_turn）を1ステップ足すだけ**（本文の順序どおりパワー+6000 の後、ブロッカー破壊の前）。breaks_add の modify 形はドギラゴン・ガチャの出目3（ops.py の _gacha_spin_ops: 「このターンの終わりまでシールドをさらに1枚ブレイクする」）で確立済みで、第255弾の breaks_add {amount, count} 集約（break_opts の各値へ加算）に乗る。
+- **形B（R.S.F.K.型 = 誘発の効果としてブレイク）**: 本文は「その後、こうして自分が勝った回数、このクリーチャーは相手のシールドを1つブレイクする」で「さらに」が無い。形は attack 誘発 **[gachinko {until_lose: true, stoppable: true, as: wins}, break {player: opp, count: {var: wins}}]**。op break の count は expr で、{var: wins} の後続参照は dmr05-v02 の partial 自身（repeat）と tr009 の呪文面（if {var: wins}）が使っている確立形。読みの裏取りは公式QA: qa/42524（「効果で相手のシールドを5つブレイクする際、それらは同時にブレイクしますか？」— 効果ブレイクとして同時処理が前提）、2023.5.17 の一連のQA（終納 カボード＝ロウで R.S.F.K. が破壊された後／革命チェンジで入れ替わった後でも、能力のブレイク数が問われる = 攻撃自身のブレイクではなく能力の効果として成立する前提。qa/42846 ほか）。ラウンド169の「ブレイク数を変数で増やす」読みは形Aへの誤読だった。
+
+実挙動で固定した判別: 形Bはブロックより前に割れる（ブロッカーで受けても効果の勝ち数ぶんは割れたまま）。形Aは誘発中1枚も割らず、攻撃のブレイク（choose_shields は1件だけ）に勝ち数が加算される。
+
+- プロト T917（形B）・T918（形A。speed_attacker は検証用の便宜で実カードには無い旨を text に明記）。次の空きは T919。
+- tests/test_vocab_pilot302.py: **7 passed** — parse、形B（2勝→誘発中に2枚＋攻撃で1枚／ブロックされても効果1枚は割れる判別／即負けで count 0 の決定のみ・割れない／1勝1敗で1枚）、形A（2勝→パワー19000・ブロッカー2体破壊・攻撃ブレイク4枚／即負けで通常 W・ブレイカー2枚・パワー不変）。
+- tests/test_vocab_pilot302_cards.py: **2 passed** — 対象3件の純粋行・未登録、gachinko_break_count の出現は対象3件のみ、提出形（dmex12-009 = partial＋形B、tr009 = クリーチャー面に形B、dmr05-v02 = partial の repeat body へ BREAKS_STEP 挿入で FORM_A_TRIGGER と完全一致）の parse。
+
+### 回帰
+
+- 実挙動バッチ: 第223弾（ガチンコ基盤）＋第255弾（breaks_scaling）＋第301弾＋第297弾（ブレイク諮問）＋ test_rules: **72 passed**。
+- カード側バッチ: 第302弾（7＋2）＋第301弾 cards＋第223弾 cards＋ test_data_audit: **27 passed**。
+- 既知の事前失敗2件（第274弾 test_floor_zero_colored_pays_civ_count、第31弾 test_janken_win_draws）は本弾の範囲外として未追跡。エンジン変更なしのため Rust スタンプ・スキーマは不変。
+
+### 収支
+
+- converted **10,232（不変）** / rejects **2,090（不変）**。変更は proto.yaml（T917–T918）＋テスト2ファイル＋ docs のみ。
+
+### ラウンド337側の注意
+
+- 対象3件は tests/test_vocab_pilot302_cards.py の FORMS（FORM_B / FORM_A_TRIGGER）の形で提出する。dmr05-v02 は partial の repeat body に BREAKS_STEP を1つ挿入するだけ（提出形は FORM_A_TRIGGER と完全一致が正本）。dm26rp2-tr009 はツインパクトで、形Bはクリーチャー面に足す（呪文面は partial のまま）。dmex12-009 は abilities に形Bを足す。
+- alias は partial の source.aliases に既存（dmex12-009: dmr08-004 / dmx22b-079、dm26rp2-tr009: dm22bd3-008 / dm22ex1-030 / dmart19-004）— 畳み込みの扱いはラウンド側で実測確認すること。
+- 形Bの効果ブレイクで割れたシールドの S・トリガーは op break の確立挙動（効果の処理が終わってから解決、101.4d）に従う。ブレイクの帰属（breaker）は break タスクの env self = このクリーチャー。
+- dm24ex3-rp2s08 の zone: hand 欠落の修繕債務は、本弾のファミリーがコスト軽減形でないため手つかず（従来どおり別ステージ扱い）。
+
+### ラウンド337 gachinko_break_count 再変換（第302弾）
+
+- **新規登録3件**: dm26rp2-tr009 R.S.F.K. / オールイン・チャージャー（ツインパクト。クリーチャー面に形Bを追加、呪文面は partial のまま。登録形は faces[0].abilities == [形B]、keywords == [speed_attacker] で、submit の連結／merge_split 由来の混入なしを本文と照合済み）/ dmex12-009 R.S.F.K.（形B、abilities == [形B]、keywords == [speed_attacker]）/ dmr05-v02 鬼無双 カイザー「勝」（形A。partial の repeat body に BREAKS_STEP を挿入し、登録形は FORM_A_TRIGGER と完全一致、keywords == [double_breaker]）。
+- **identity の確認**: tr009 と dmex12-009 は同名カードの2印刷だが、identity の canon_id は各自自身（ツインパクトと通常版は別々の正本エントリ）だったため、畳み込みではなく**両方を独立に登録**した。
+- **alias 畳み込み0件・stale 解消0件・converted 是正0件・差し戻し0件**。alias は partial の source.aliases のまま登録（tr009: dm22bd3-008 / dm22ex1-030 / dmart19-004、dmex12-009: dmr08-004 / dmx22b-079）。5件とも独立エントリではなく reject 行も元々無い（提出前照合で real.yaml / real_akashic.yaml / real_vocab.yaml / real_zone.yaml / proto.yaml / converted のいずれにも無いことを確認。proto.yaml 内の言及は第302弾プロト T917/T918 の本文のみ）。
+- **converted 側センサス（ラウンド169の誤読の有無）**: 登録前の converted で gachinko と breaks_add を併せ持つカードは **0件**（gachinko を含む56件は全て breaks_add なし、breaks_add を含む18件は全て gachinko なし）。ラウンド169の「効果ブレイクを攻撃のブレイク数への加算と読む」誤読は converted に登録されていなかったため、是正対象なし。登録後に併せ持ちになるのは形Aの本物 dmr05-v02（本文に「さらに」あり）だけであることを round337 cards テストで固定。
+- **収支: converted 10,232 → 10,235 / rejects 2,090 → 2,087、canonical overlap 0・漏れ 0**。gachinko_break_count は rejects に残り0件で解消。
+- テスト: tests/test_vocab_round337_cards.py（disposition＋登録形の実挙動5件: 形B 2勝で効果2枚→攻撃1枚／ブロックされても効果1枚は割れる判別／ツインパクト面で1勝、形A 2勝で攻撃ブレイク4枚・パワー+12000・ブロッカー2体破壊／即負けで通常 W・ブレイカー）＋ tests/test_vocab_pilot302_cards.py を登録形に書換（2件）＋ tests/test_data_audit.py（8件）= **16 passed**。
+- 回答は ~/workspace/DMPJ-work/answers/round337.yaml に保存。次の番号: パイロット303 / ラウンド338 / プロト T919。
+
+## 第303弾 dragonic_field（ドラゴニック・フィールド）— 型印の追加、能力は既存語彙
+
+センサス（rejects 2,087件を再集計）: 純粋ファミリーの最大は範囲外（gr_summon 147、aura 108 = 未承認、hyperdimensional_zone 105、dragheart 45、psychic_filter 45、hyperdimensional_summon 41、out_of_game 23、duelist_link 20、outside_game 12、pandora_shift 4）が占め、在範の純粋ファミリーは全て4件以下で大半が評価済み DEEP／延期（victory_icon_filter、dokindam_gacha、cost_sum_of_revealed、climax_dorongo、shield_manipulation、spell_replay、summon_lock、opponent_chooses_deck_position、dynamic_name_reference_filter、must_attack_next_turn、doron_go、cancel_attack、per_card_tap_or_untap、evolution_base_from_graveyard、untap_restriction、joe、break_limit、next_spell_cost_reduction、negate_cannot_attack、copy_abilities、ignore_abilities、all_civs_treatment、trigger_when_opponent_plays_free 等）。wd_field 系は第301弾センサスで「場ゾーン新設級」と評価済み。任意コスト軽減クラスタは _mana_choices のルール対立（第274弾 vs 第292弾）が未解決のため支払いフロー手術を避けた。未評価で均一な **dragonic_field 純粋3件**を選定: dm26ex3-067 / dmex12-011（同名カード 龍世界 〜龍の降臨する地〜 の2印刷）と dmex15-b027（切札の里）。3件とも partial は骨格のみで、unsupported は型名「ドラゴニック・フィールド」そのものだけ、本文は reject 行の text にのみある。historic_field 系（初手手札誘発が本体の別機構）は本弾に含めない。
+
+鍵となる発見: フィールドというカードタイプ自体は既存である（D2フィールドが第25／151弾から動作し、converted の dm23ex2-056 ヒストリック・フィールドは types [field] で登録済み）。不足はサブタイプ名に対応する語彙だけだった。先例は型印 d2_field（第151弾）、dream_creature（第174弾）、exile_creature（第266弾）で、いずれも types に基本タイプと併記する形。converted 内に「ドラゴニック」を参照するフィルタは現状0件で、型印はタイプ行の忠実度と将来のフィルタのためのものである。
+
+追加した語彙（最小）:
+
+- **型印 `dragonic_field`** を defs の CARD_TYPES に追加。types は [field, dragonic_field] と併記する。
+- 変換指示（tools/convert_cards.py）に併記を明記（「ドラゴニック・フィールドは ["field", "dragonic_field"] と併記する。ドラゴニック・フィールドだけを指すフィルタは {types: [dragonic_field]}」）。
+- スキーマ再生成: 差分は型 enum の2箇所への "dragonic_field" 追加のみ。
+- 新規 op・新規フィールド・エンジン変更はなし。能力は次の2形とも既存語彙で足りる:
+  - **形A（龍世界）**: フィールドの turn_start 誘発（player: you。tick レコードに subject は無い＝第328弾の作法）。[move {zone: deck, owner: you, from_top: 1} → graveyard + as: milled（mill マクロは as を転送しないため明示形）、if {exists: {ref: milled, filter: {race_has: ドラゴン, not_types: [evolution]}}} → [may [move {ref: self} → graveyard, reason: destroy, as: gone]、if {exists: {ref: gone}} → [play_free {ref: milled}]]]。払えた場合だけ出すゲートは dmx18-003 の確立形。dmex12-011 の本文は「このドラゴニック・フィールドを墓地に置いてもよい」だが、バトルゾーンのカードを墓地に置くことは破壊である（701.6）ため 067 の「破壊してもよい」と同一形。
+  - **形B（切札の里）**: 常在型2つ。(1) affects {owner: you, zone: hand, filter: {types: [creature], name_has: ボルシャック}} + mod cost_may {amount: 2, min: 1}（dm23ex2-097 等の先例形。ただし b027 の本文にターン制限は無いため once は付けない。「コストは0以下にはならない」= min: 1）。(2) affects {owner: you, zone: bz, 同フィルタ} + mod grant [speed_attacker]。
+
+実挙動で固定した点: 形Aは 承諾（フィールド破壊＋ドラゴン着地＋墓地に残らない）／辞退（両方そのまま）／非ドラゴン（選択自体が出ない）／進化ドラゴン（not_types で除外、選択なし）／相手ターン不発火。形Bは 文明が一様なマナでは支払いが自動タップになり pay_mana 決定が出ない作法のため、軽減の提示（choose_cards の reduce / normal）と着地後のタップ数で観測した（reduce 3 / normal 5 / コスト2子竜の床 1 / フィールド無し 5・提示なし / 名前がボルシャックでない獣は素払い2・提示なし）。スピードアタッカー付与は、setup で bz に置いたクリーチャーは召喚酔いの対象にならない作法のため、手札から実行したそのターンに攻撃できるかで判別した。
+
+- プロト T919（形A）・T920（形B）・T921（アーマード・ドラゴン）・T922（進化ドラゴン）・T923（ボルシャック獣、コスト5）・T924（ボルシャック子竜、コスト2 = 床の確認用）。次の空きは T925。
+- tests/test_vocab_pilot303.py: **15 passed** — parse＋未知タイプの拒否、型印フィルタの帰結（T919 は dragonic_field／field 両方に一致、通常フィールド T069 は field のみ）、形A 5件、形B（chars の cost_may、支払い4件、スピードアタッカー2件）。
+- tests/test_vocab_pilot303_cards.py: **2 passed** — 対象3件の純粋行・未登録、提出形（partial ＋ types 併記 ＋ text を reject 行から復元 ＋ 形A／形B）の parse。
+
+### 回帰
+
+- バッチ1: 第303弾（15＋2）＋ test_data_audit ＋ 第302弾（7＋2）＋ 第301弾 ＋ test_rules: **87 passed**。
+- バッチ2: test_rust_schema_sync ＋ 第151弾（型印の先例）: **16 passed**。test_file_schemas ＋ 第151弾 cards: **7 passed, 1 skipped**（jsonschema 未導入によるスキップ）。
+- 既知の事前失敗2件（第274弾 test_floor_zero_colored_pays_civ_count、第31弾 test_janken_win_draws）は本弾の範囲外として未追跡。_mana_choices には触れていない。
+
+### 収支
+
+- converted **10,235（不変）** / rejects **2,087（不変）**。変更は defs.py（型印）＋ tools/convert_cards.py（変換指示）＋ data/schema/card.schema.json（再生成）＋ proto.yaml（T919–T924）＋テスト2ファイル＋ docs のみ。
+
+### ラウンド338側の注意
+
+- 対象3件は tests/test_vocab_pilot303_cards.py の FORM_A / FORM_B の形で提出する。types は [field, dragonic_field] に差し替え、partial の text（型名のみ）を reject 行の text で置き換えること。
+- 正本判定: dm26ex3-067 の partial は aliases 5件（dm23bd4-034 / dm24rp1-td2 / dm25sp2-010 / dmex16-002 / dmrp22-tr10）を持ち、dmex12-011 はその中に含まれず aliases も無い別行。第337弾の R.S.F.K. と同様に独立正本か、067 への畳み込みかはラウンド側で identity を実データ照合すること。
+- dmex15-b027 の cost_may には once を付けない（先例 dm23ex2-097 等は本文にターン制限がある形で、b027 には無い）。
+- dm24ex3-rp2s08 の zone: hand 欠落の修繕債務は手つかず。形Bの cost_may はフィールドが手札の獣へ与える軽減（affects の zone: hand）であり、rp2s08 の「自身の軽減常在型が手札で発火しない」問題とは別機構のため、本弾のファミリーには含めなかった。
+
+### ラウンド338 dragonic_field 再変換（第303弾）
+
+- **新規登録2件**: dm26ex3-067（龍世界 〜龍の降臨する地〜、形A）/ dmex15-b027（切札の里、形B）。**alias 畳み込み1件**: dmex12-011。差し戻し・stale 解消・converted 是正は0件。
+- 正本判定（identity 実データ照合）: canon_id(dmex12-011) = dm26ex3-067 で、aliases_for（067 の名前）= [dm23bd4-034, dm24rp1-td2, dm25sp2-010, **dmex12-011**, dmex16-002, dmrp22-tr10] にも含まれるため、dmex12-011 は独立登録せず 067 の alias に畳み込んだ（第337弾の R.S.F.K. とは逆の結論で、根拠は canon_id の実測）。dmex15-b027 は canon_id が自身・aliases 無しで独立正本。
+- reopen dragonic_field で対象3件だけが外れた（rejects 2,087→2,084）。submit 前照合: 対象 id と alias 8件すべて converted / real.yaml / real_akashic.yaml / real_vocab.yaml / real_zone.yaml / proto.yaml の実エントリに無し（proto のヒットは第303弾プロト T919/T920 の text 内参照のみ）。alias 5件には元々 reject 行が無く、行があったのは dmex12-011 だけ。
+- 提出形は partial（骨格）＋ types [field, dragonic_field] ＋ text を reject 行の正式本文で復元 ＋ FORM_A / FORM_B。submit 後の登録形は abilities が提出形と完全一致し keywords の追加も無し（連結・merge_split 混入なし）。submit の助言 lint（067 の play_free/reason: summon に対し本文は「出す」）は第303弾の確立形（play_free の着地は 112.3g で召喚として数える）のため形を変えていない。
+- converted **10,235→10,237** / rejects **2,087→2,084**、canonical 重なり0・漏れ0（対象3件は converted id 2件＋alias 1件に解決）。dragonic_field 解消。なお converted の alias 全体では alias∩rejects の stale が9件残るが、いずれも本ラウンド対象外の既存分。
+- テスト: tests/test_vocab_round338_cards.py（disposition＋登録形の実挙動4件: 形A 承諾／辞退、形B 軽減支払い3／床1）＋ tests/test_vocab_pilot303_cards.py を登録形に書換（2件）＋ test_data_audit（8件）: **15 passed**。
+- 回答は ~/workspace/DMPJ-work/answers/round338.yaml に保存。次の番号: パイロット304 / ラウンド339 / プロト T925。
+
+## 第304弾 evolution_cross_gear（進化クロスギア）— 進化元プールのギア対応＋新許可 evolve_civ_any
+
+センサス（rejects 2,084件を再集計）: evolution_cross_gear は純粋3件（dmc42-017 ツナミ・カタストロフィー / dmc45-017 龍刃 ヤマト・スピリット / dm17-s05 グランドクロス・カタストロフィー）＋第2ギャップ付き3件（dmc42-001 = evolution_base_any_race〔第232弾で実装済み〕、dmc66-034 = dynamic_name_reference_filter、dm17-004 = same_name_sweep、dm17-s04 = reveal_and_cast_free）。共通条項は「進化-自分のXクロスギア１枚の上に置く」で、3件の partial は能力側がほぼ完成形、unsupported は進化クロスギアそのものだけ。本弾は見守り側の設計メモ（pilot297-evolution-cross-gear-design.md、2026-11-20 02:45 の見守り実行で作成）の実装であり、対象は純粋3件＋dmc42-001（両ギャップとも本弾で揃う）。
+
+詰まりは4点で、いずれも最小変更で解消した:
+
+1. **進化元プールがクリーチャー限定**（turn.py `_evo_pool_zone` の bz 分岐は creature か evolve_base 許可のみ）。進化する面が cross_gear の時（`_evo_for_gear`）はプールをクロスギアのトップだけに替える `for_gear` を `_evo_pool` / `_evo_filter_pool` からスレッドした。クリーチャーは文明・種族が合ってもギアの進化元にならない。ベースはクロス済みでなくてよい（本文に条件なし）。ギア進化は既定ゾーン（自分のバトルゾーン）しか使わないが、shield 分岐にも同じ絞り込みを入れた。
+2. **h_play の permanent 分岐が進化重ねを扱っていなかった**。クリーチャー形と同じく `stack_on` / `evolution` / `stack_more` を move イベントに載せる（`_apply_one` の重ね処理と `_stack` は元々タイプ不問）。進化元の選択（`_evo_sources` 経由）と `_can_play_face` の evolution 分岐も元々タイプ不問で、そのまま動く。
+3. **_stack の crossed 引き継ぎ**（events.py）: crossed（クロス先）は束のトップだけが持つ。top・base ともに cross_gear の時、進化元がクロスしていたら進化後のギアへ引き継ぎ、元のギアからは外す。そうしないと進化後のギアが未クロス扱いになり、affects: crossed の常在型が壊れる（実挙動: クロス済み水ギア +1000 → 進化ギア +2000 に切り替わることを固定）。
+4. **_rebuild のギア対応**（events.py）: トップだけが card_only で離れる時、下のカードはクリーチャーしか残らなかった（ギアは墓地に落ちていた）。クロスギアも単独で存在できるので残し、新トップがクロスギアなら crossed を引き継ぐ（下のギアがクロスしたまま場に残る）。
+
+新許可 **`evolve_civ_any`**（data/rules/permissions.yaml、dmc42-001 条項b「このクロスギアに、好きな文明の進化クロスギアを置いてもよい」）: `_evo_match` に `_evo_race_waived` と対の `_evo_civ_waived`（civs / civs_all を除いて照合、any_of の枝ごと）を追加。種族など文明以外の指定は肩代わりしない（実挙動: レオパルド〔自然〕に civs 形は重なるが races 形は重ならないことを固定）。allow 検証は permissions.yaml の actions に無いと弾かれるため登録必須。スキーマ再生成の差分は allow/deny enum への "evolve_civ_any" 追加4箇所のみ（設計メモの「差分0」見込みは外れた: allow の enum は permissions 由来だった）。
+
+既存イディオムで足りる条項（新規コードなし）:
+
+- dmc42-001 条項(a): static {affects: crossed, mod: {allow: [evolve_base_any]}}（先例 dm32-110、ラウンド268。第232弾の許可）。
+- dmc42-001 条項(b): static {affects: self, mod: {allow: [evolve_civ_any]}}（先例 dm22-019 の自己許可形）。
+- dmc45-017 クルー・ブレイカー: static {affects: crossed, mod: {breaks: {count: {zone: bz, owner: you, other: true, filter: {race_has: サムライ, types: [creature]}}}}}（第130弾の breaks {count} = base 1 + 数。converted のジョーカーズ形と同型。other: true で宿主自身を除く）。
+- 3件とも多色で「マナゾーンに置く時、タップして置く」は 405.1 の一般則（core の _raw_move で処理済み）。
+
+- プロト T925（civs形、dmc42-017型）・T926（races形＋クルー・ブレイカー、dmc45-017型）・T927（許可形、dmc42-001型）・T928（水ギア＝進化元）・T929（サムライ・ギア＝進化元）・T930（サムライ獣）・T931（card_only 回収呪文＝再構築の検証用）。次の空きは T932。
+- tests/test_vocab_pilot304.py: **10 passed** — parse＋許可登録＋未知許可の拒否、プールのゲート（civs形4件: クリーチャー不可／文明不一致／相手のギア不可／水ギア可、races形3件）、重ねてからクロス（束の形＋パワー4000）、crossed 引き継ぎ（+1000→+2000、元のギアは crossed=None）、_rebuild（トップだけ手札へ、下のギアがクロスしたまま残り +1000 が再び及ぶ）、クルー・ブレイカー（他のサムライ獣2体で breaks 3、0体で 1）、レオパルド許可（evolve_civ_any の既定 false と付与、クロス先への evolve_base_any 付与、civ_any の実挙動＋種族は肩代わりしない）。
+- tests/test_vocab_pilot304_cards.py: **2 passed** — 対象4件の rejects 行（純粋3件＋dmc42-001 の2ギャップ）・未登録、確立形（partial ＋ types/evolve_from 差し替え ＋ クルー常在型の追加 ＋ dmc42-001 の常在型2つ）の parse。
+
+### 回帰
+
+- 第293弾＋第232弾＋第273弾＋第22弾＋第224弾: **41 passed**（進化元プール・種族肩代わり・クロスギアの近傍）。
+- 第303弾（15＋2）＋ test_data_audit ＋ test_rust_schema_sync: **28 passed**。
+- test_rules: **40 passed**。
+- 既知の事前失敗2件（第274弾 test_floor_zero_colored_pays_civ_count、第31弾 test_janken_win_draws）は本弾の範囲外として未追跡。_mana_choices には触れていない。エンジン変更は turn.py / events.py のみで新規 op・面フィールド・GameState フィールドは無い（Rust は本環境で未ビルド＝ Python フォールバック。test_rust_schema_sync は通過）。
+
+### 収支
+
+- converted **10,237（不変）** / rejects **2,084（不変）**。変更は turn.py・events.py・permissions.yaml・card.schema.json（再生成）・proto.yaml（T925–T931）・テスト2ファイル・docs のみ。
+
+### ラウンド339側の注意
+
+- 対象は純粋3件＋dmc42-001 の計4件。提出形は tests/test_vocab_pilot304_cards.py の確立形（partial ＋ types [cross_gear, evolution] ＋ evolve_from。dmc45-017 はクルー・ブレイカー常在型を追加、dmc42-001 は types 据え置きで常在型2つ）。
+- text は reject 行の正式本文へ復元すること（partial の text は「マナゾーンに置く時」行が欠けている。ラウンド325の先例）。
+- alias: dmc42-017 は dm17-003、dmc42-001 は promoy4-024（partial の source.aliases）。submit 前に正本判定と real 系照合を行うこと。
+- dmc42-001 の条項(a)は「クロスしたクリーチャーに」進化クリーチャーを置く許可で、置く側の進化クリーチャーのフィルタ照合（_evo_match の種族肩代わり）で効く。条項(b)の evolve_civ_any はギア自身に付く。
+
+### ラウンド339 evolution_cross_gear 再変換（第304弾）
+
+- 新規登録 **4件**: dmc42-017 ツナミ・カタストロフィー（civs形）/ dmc45-017 龍刃 ヤマト・スピリット（races形＋クルー・ブレイカー常在型を追加）/ dm17-s05 グランドクロス・カタストロフィー（civs形）/ dmc42-001 レオパルド・グローリーソード（types 据え置き、常在型2つ。第2ギャップ evolution_base_any_race は第232弾で実装済みのため本ラウンドで両ギャップ解消）。
+- alias 畳み込み・stale 解消・converted 是正・差し戻しは **0件**。alias は登録カードの source.aliases に記録されただけ（dm17-003 → dmc42-017、promoy4-024 → dmc42-001。どちらも reject 行は元々無かった）。
+- 正本判定（identity 実データ照合）: 対象4件はいずれも canon_id が自身＝独立正本。canon_id(dm17-003) = dmc42-017、canon_id(promoy4-024) = dmc42-001 で partial の source.aliases と一致。submit 前照合: 対象 id と alias 計6件すべて converted / real.yaml / real_akashic.yaml / real_vocab.yaml / real_zone.yaml / proto.yaml に無し。reopen（evolution_cross_gear + evolution_base_any_race）は対象4件だけを除外（他ギャップ併記の dmc66-034 / dm17-004 / dm17-s04 は残留）。
+- 登録形は確立形と完全一致（types / evolve_from / abilities / keywords / text を提出形と突き合わせ、連結・merge_split 由来の混入なし）。text は reject 行の正式本文へ復元（partial は「マナゾーンに置く時」行が欠落していた）。
+- converted **10,237 → 10,241** / rejects **2,084 → 2,080**、canonical 重なり0・漏れ0。evolution_cross_gear の純粋行は解消（ギャップ名自体は他ギャップ併記の3行に残る）。alias∩rejects の既存 stale 9件は本ラウンド対象外で不変。
+- テスト: 登録形バッチ（test_vocab_round339_cards 5件＝disposition＋登録形の実挙動4件〔civs形の進化＋クロスでパワー4000、クルー・ブレイカー breaks 3、レオパルド許可2つ、条項(b) civ_any で自然ギアに水/闇ギアが重なる〕＋ test_vocab_pilot304_cards 登録形書換 2件 ＋ test_data_audit 8件）**15 passed**。第304弾本体（プロト）は別 invocation で **10 passed**（プロト系と登録形 cards テストは同一 invocation に混ぜない作法どおり）。
+- 回答は ~/workspace/DMPJ-work/answers/round339.yaml に保存。次の番号: パイロット305 / ラウンド340 / プロト T932。
+
+## 第305弾 soul_shift（ギャップ名ドリフト: 第274弾 soulshift と同一機構の別表記）
+
+ギャップ名 soul_shift の純粋2件（dm26rp2-001 極まる九極 Q.9 / dmex18-005 ケンゲキオージャ ～究極火焔～）。機構は第218弾の面フィールド **soul_shift {floor}**（ソウルシフト∞）＋第274弾のクラシック単体進化への適用で実装済みだが、第274弾の対象はギャップ名 **soulshift**（アンダースコア無し）の4件で、本2件は表記の違う soul_shift で残っていた。同型のドリフト（第283–302弾の各弾と同系）。**新規語彙・エンジン変更なし**。両件とも floor は「０以下にならない」→ {floor: 0}。
+
+- **dm26rp2-001 形（プロト T932）**: partial は骨格のみ（types に evolution が無く、evolve_from・abilities も無い）。提出形は公式全文から構築: types [creature, evolution] ＋ evolve_from {civs: [light], types: [creature]} ＋ soul_shift {floor: 0} ＋ 離脱誘発。離脱誘発「その下にコスト９のクリーチャーがあれば」は第294弾の **event.was_under** を exists ゲート（filter {types: [creature], cost_le: 9, cost_ge: 9}。コスト一致の専用キーは無いため le/ge の併用）で読み、「上から９枚を見て、光のコスト９を１体出してもよい。残りをシャッフルして山札の下に置く」は dmex18-s11 の登録先例（choose {from_top, look: true, count: all} as: pile → may [play_free {ref: pile}] → move {ref: pile, to: deck, position: bottom}）の order を **shuffle** に替えた形（order: shuffle 自体は第289弾で move の集合シャッフルとして実証済み。ref: pile との組み合わせは本弾で実挙動固定）。実挙動で固定: コスト9の下では見て出る（残りは下へ）、コスト5の下では門が閉じて何も起きない。
+- **dmex18-005 形（プロト T935）**: partial に evolve_from {name_has: ゴウケンオー} はあるが abilities が無い。勝利誘発「相手の呪文またはバトルゾーンにある相手のクリーチャーの能力によって、このクリーチャーが離れる時、自分はゲームに勝つ」は第290弾で固定した **cause {by: opp, kind: [spell, ability]}** の形（defs の cause 検証コメントが同フレーズをこの形と明記）＋ {op: win}。実挙動で固定: 相手の呪文（T056）・相手のクリーチャーの能力（T937 の CIP 破壊）で離れると勝利、自分の呪文（T938）では勝利しない。
+- **ソウルシフト本体の固定**: 文明フィルタ進化（T932: 元コスト9で実効0＝場に出る／元コスト5で4を支払う）、名前フィルタ進化（T935: 元コスト5で7を支払う）、名前不一致では提示されない。**コスト0まで軽減された有色カードの支払い枚数は断言していない**（112.2b を巡る第274弾 vs 第292弾の未解決競合に触れないため。実効0のケースは「場に出ること＋束」だけを見る）。
+- プロト T932（dm26rp2-001 形）/ T933（光・コスト9獣。進化元・下・山札からの出し先を兼ねる）/ T934（光・コスト5獣）/ T935（dmex18-005 形）/ T936（ゴウケン名のコスト5獣）/ T937（CIP 破壊獣＝能力除去の駆動）/ T938（自軍破壊呪文＝対照）。次の空きは **T939**。
+- tests/test_vocab_pilot305.py（**10 passed**: parse＋形の一致、ソウルシフト実支払い×3、名前不一致の不提示、離脱誘発の発火／門の対照、勝利誘発の呪文／能力／自分の呪文の対照）＋ tests/test_vocab_pilot305_cards.py（**3 passed**: 対象2件の純粋・未登録確認、提出形 parse、dmc64-024/025 の残留確認）。回帰: 第218・274・294・290弾＋test_rust_schema_sync **48 passed / 1 failed**（失敗は既知の既存競合 tests/test_vocab_pilot274.py::test_floor_zero_colored_pays_civ_count のみ。本弾はエンジン無変更で無関係）＋ test_data_audit＋test_rules **48 passed**。
+- テスト中の発見: build の deck spec は逆順に置かれる（spec の末尾が山札の一番上。第259–263弾の教訓の再確認）。離脱誘発の検証では、進化元と山札の同名カードを cid で区別しないと done 述語が即成立してしまう。
+- **ラウンド340側の注意**: 対象は純粋2件。提出形は cards テストの _form_001 / _form_005 が正本（partial からの差分は上記のみ。text は reject 行の正式本文へ差し替え）。dm26rp2-001 の partial には abilities が一切無いため、登録後に abilities の連結混入が無いか本文と照合すること。dmex18-005 の aliases は dm35-004 / dmc64-013（partial の source.aliases）。提出前に canon を identity で確認し、id・alias を real.yaml / real_akashic.yaml / real_vocab.yaml / real_zone.yaml / proto.yaml / converted.yaml と照合すること。dmc64-024 / dmc64-025（soul_shift + evolve_from_deck_onto_self）は本弾の対象外で残る。converted / rejects は本弾で不変（10,241 / 2,080）。
+
+### ラウンド340 soul_shift 再変換（第305弾）
+
+- 新規登録 **2件**: dm26rp2-001 極まる九極 Q.9（partial は骨格のため公式全文から構築: types [creature, evolution] ＋ evolve_from {civs: [light], types: [creature]} ＋ soul_shift {floor: 0} ＋ 離脱誘発）/ dmex18-005 ケンゲキオージャ ～究極火焔～（partial ＋ soul_shift {floor: 0} ＋ 勝利誘発）。
+- alias 畳み込み **1件**: dm35-004 / dmc64-013 → dmex18-005（登録カードの source.aliases に記録。どちらも reject 行は元々無かった）。stale 解消・converted 是正・差し戻しは **0件**。
+- 正本判定（identity 実データ照合）: 対象2件はいずれも canon_id が自身＝独立正本。canon_id(dm35-004) = canon_id(dmc64-013) = dmex18-005 で、aliases_for（ケンゲキオージャ）= [dm35-004, dmc64-013] とも一致。submit 前照合: 対象 id と alias 計4件すべて converted / real.yaml / real_akashic.yaml / real_vocab.yaml / real_zone.yaml に無し（proto.yaml のヒットは第305弾プロト T932/T935 の text 内参照のみ）。reopen（soul_shift）は対象2件だけを除外（多ギャップの dmc64-024 / dmc64-025 は残留）。
+- 登録形は確立形と完全一致（types / evolve_from / soul_shift / abilities / keywords / text を提出形と突き合わせ、連結・merge_split 由来の混入なし。dm26rp2-001 の abilities は離脱誘発1件のみで、骨格 partial からの混入なし）。text は reject 行の正式本文。
+- converted **10,241 → 10,243** / rejects **2,080 → 2,078**、canonical 重なり0・漏れ0。soul_shift の純粋行は解消（ギャップ名自体は evolve_from_deck_onto_self 併記の dmc64-024 / dmc64-025 に残る）。
+- テスト: 登録形バッチ（test_vocab_round340_cards 5件＝disposition＋登録形の実挙動4件〔ソウルシフト部分軽減で4枚支払い、離脱誘発で上9枚から光のコスト9を出す、勝利誘発が相手の呪文で発火・自分の呪文では不発〕＋ test_vocab_pilot305_cards 登録形書換 2件 ＋ test_data_audit 8件）**15 passed**。第305弾本体（プロト）は別 invocation で **10 passed**。テスト中の注意: build の deck_exact は filler と同じ defn の deck spec を取り除くため、round340 cards の filler は deck spec と重ならない T001 にした（T002 を filler にすると山札が空になり deck_out で敗北する）。
+- 回答は ~/workspace/DMPJ-work/answers/round340.yaml に保存。次の番号: パイロット306 / ラウンド341 / プロト T939。
+
+## 第306弾 same_name_sweep（同名一掃）— ギャップ名ドリフト（battle_win ＋ name_of: event.opponent ＋ 複数ゾーン一括移動）
+
+対象は dm17-004 エクスプロード・カタストロフィー 1件のみ（第2ギャップ evolution_cross_gear は第304弾で実装済み）。残る条項は「これをクロスしたクリーチャーがバトルに勝った時、相手の手札を見る。相手は自分自身の手札、マナゾーン、墓地、バトルゾーンから、このバトルで負けたクリーチャーと同じ名前の自分自身のカードをすべて山札の一番下に置く」。結論: **新規語彙・エンジン変更なしのドリフト**。部品はすべて既存で足りる:
+
+- **誘発点**: battle_win 記録は {subject: 勝者, opponent: 敗者, controller} を持つ（combat.py `_battle`）。ギア側の誘発は subject: crossed の照合（events.py `_subject_match`、第223弾〜の cross_gear_effect イディオム）で宿主の勝利に紐付く。
+- **敗者の名前**: フィルタ {name: {name_of: event.opponent}}。name_of の `event.<キー>` 解決は基盤 expr-event-ref（selectors.py `_expr_refs` が event.opponent を明示対応）で、第140弾・第282弾は event.subject 版の確立形。
+- **手札を見る**: choose {select: {zone: hand, owner: opp, count: all}, as: seen} の束縛だけする look 形（converted dm36-083 ミルルンの先例。一掃は名前で自動なので look 自体に機械的帰結はない）。
+- **一掃**: move {select: {zone: [hand, mana, graveyard, bz], owner: opp, filter: {name: {name_of: event.opponent}}, count: all}, to: deck, position: bottom, reason: put}。複数ゾーン選択・count: all・position: bottom はいずれも確立形。敗者自身も（墓地経由で）一緒に山札の下へ行く — 本文が墓地を対象に含むため正しい。相手が置く形だが全数移動で選択の余地はなく、効果側の move で等価。
+
+- 提出形（プロト T939 で固定）: partial ＋ types [cross_gear, evolution] ＋ evolve_from {civs: [darkness, fire]} ＋ 一掃誘発。partial の静的型（crossed への attack_creature allow {tapped: false}）はそのまま。text は partial の形（欠落行なし）。
+- プロト T939（dm17-004 型）/ T940（闇ギア＝進化元）/ T941（火獣＝宿主）/ T942（同名獣＝敗者役とコピー）/ T943（別名獣＝対照）/ T944（強獣＝負けケース用）。次の空きは **T945**。
+- tests/test_vocab_pilot306.py（**5 passed**: parse＋形の一致、進化元プールのゲート〔クリーチャー不可／文明不一致／相手のギア不可／闇ギア可〕、勝利時の一掃〔4ゾーンから同名4枚＝手札1・マナ1・墓地1・敗者自身が相手の山札の末尾4枚へ、別名は残留、タップされていないクリーチャーへの攻撃はギアの常在型で可能〕、敗北時は一掃なし、プレイヤー攻撃時は一掃なし）＋ tests/test_vocab_pilot306_cards.py（**2 passed**: 対象行の残留・未登録確認、確立形の parse）。回帰: 第304・282・290弾＋test_rules **81 passed**、test_data_audit **8 passed**。エンジン無変更のため既知の事前失敗2件（第274弾・第31弾）は無関係。converted / rejects は本弾で不変（10,243 / 2,078）。
+
+### ラウンド341側の注意
+
+- 対象は dm17-004 の1件。提出形は tests/test_vocab_pilot306_cards.py の確立形が正本（partial ＋ types/evolve_from 差し替え ＋ 一掃誘発の追加）。text は reject 行の正式本文へ差し替えること（partial の text は「 / 」区切り形）。
+- dm17-004 に alias は記録されていないが、submit 前に identity の正本判定と id の real.yaml / real_akashic.yaml / real_vocab.yaml / real_zone.yaml / proto.yaml / converted.yaml 照合を行うこと（作法どおり）。
+- reopen（evolution_cross_gear + same_name_sweep）は dm17-004 だけを除外するはず（evolution_cross_gear 併記の dm17-s04 は reveal_and_cast_free、dmc66-034 は dynamic_name_reference_filter が残るため外れない）。混ざっていたら submit せず報告すること。
+- 登録後は abilities が [静的型, 一掃誘発] の2件ちょうどであることを本文と照合すること（連結・merge_split 混入の確認）。
+
+### ラウンド341（第306弾の再変換）
+
+- 新規登録 **1件**: dm17-004 エクスプロード・カタストロフィー。alias 畳み込み0件・stale クリーンアップ0件・差し戻し0件。
+- 正本判定は identity 実測: canon_id(dm17-004) = dm17-004 自身＝独立正本、aliases_for は空。submit 前照合で id は converted / real.yaml / real_akashic.yaml / real_vocab.yaml / real_zone.yaml に無し（proto.yaml のヒットは第306弾プロト T939 の text 内参照のみ）。reopen（evolution_cross_gear + same_name_sweep）は dm17-004 だけを除外した。
+- 提出形は第306弾の確立形そのもの（partial ＋ types [cross_gear, evolution] ＋ evolve_from {civs: [darkness, fire]} ＋ 一掃誘発、text は reject 行の正式本文へ復元）。登録形は types / evolve_from / abilities / text すべて提出形と完全一致で、abilities は [静的型, 一掃誘発] の2件ちょうど（連結・merge_split 混入なし）。
+- 実挙動を登録カード自身で固定: 闇ギア（T940）の上に進化→火獣（T941）にクロス→タップされていない T942 を攻撃して勝利し、相手の同名カード4枚（手札1・マナ1・墓地1＋敗者自身）が山札の末尾4枚へ。敗北時は一掃なし。
+- converted **10,243 → 10,244** / rejects **2,078 → 2,077**、canonical 重なり0・漏れ0。same_name_sweep 解消。evolution_cross_gear のギャップ名自体は併記2行（dmc66-034 / dm17-s04）に残留。pilot306 cards を登録形に書換。
+- テスト **13 passed**（round341 cards 3＋pilot306 cards 登録形 2＋data_audit 8）＋第306弾本体 **5 passed**（別 invocation。プロト系と登録形 cards は同一 invocation に混ぜない）。
+
+## 第307弾 exlife_shield_left_any（EXライフシールド全般の離脱）— when.subject の exlife_of に "any" を追加
+
+対象は dm26ex2-mc009 不敬合成王 ロマティックダム・アルキング 1件のみ（純粋）。ラウンド328で一旦提出・登録されたが、「自分の『EXライフ』シールドが離れた時、このクリーチャーの下にあるカードを1枚、墓地に置く。それが進化ではないクリーチャーなら、自分の墓地から出す」の subject 形が無く、登録を取り消して差し戻された経緯がある（partial の notes に記録）。詰まりの内訳:
+
+- 第190弾の when.subject {exlife_of: self} は「移動したシールドが特定クリーチャー（self か変数）に紐付いていたか」の照合のみで、「どのクリーチャーのものでもよい」は書けない。
+- filter の {exlife: true} は selectors.filter_match が実カードの exlife_of を読むが、紐付けはゾーン移動で外れる（core._raw_move）ため、離脱後の subject 照合では常に false になる（第237弾の filter は場にあるシールドの選択用）。
+- 一方で移動記録の LKI スナップショットは移動前の exlife_of を保持しており（events.py のレコード構築）、subject 照合は from: shield の記録でも LKI を読む（「exlife_of」が subject にある時）。不足は「紐付け先を問わない」値だけだった。
+
+追加した語彙（最小）:
+
+- **when.subject の exlife_of に値 "any"**（owner: "any" と同じ流儀）: 移動したカードが移動前にいずれかのクリーチャーに紐付いていたこと（LKI の exlife_of が None でないこと）だけを照合する。実装は events.py `_subject_match` の分岐追加のみ。when.subject はスキーマ無制約・defs 検証も subject 内部を見ないため、スキーマ再生成・defs 変更は不要（test_rust_schema_sync 通過で確認）。subject の owner: you と併記して「自分のEXライフシールド全般」になる。
+
+確立形（残りの条項はすべて partial に完成済み）:
+
+- 誘発: {kind: trigger, when: {event: move, from: shield, subject: {owner: you, exlife_of: any}}, effect: [move {select: {under_of: self, count: 1}, to: graveyard, reason: put, as: buried}, if {exists: {ref: buried, filter: {types: [creature], not_types: [evolution]}}} then [play_free {select: {ref: buried}}]]}。下のカードを墓地に置く形はメテオバーンの先例（move {under_of: self} ＋ as ＋ exists ゲート）。
+- 進化GV・Ω = evolve_from の3ゾーン指定（graveyard / mana / bz、第293弾で per-filter zone が効く形）。エクストラEXライフ = キーワード extra_ex_life、ワールド・ブレイカー = キーワード world_breaker。シールドゾーンのディスペクターすべてに G・ストライク = static {affects: {zone: shield, owner: you, filter: {race_has: ディスペクター}}, mod: {grant: [g_strike]}}（いずれも partial のまま）。
+
+- プロト T945（dm26ex2-mc009 型: 進化＋EXライフ＋監視誘発）/ T946（進化元＝進化でない下のカード役）/ T947（進化クリーチャーの下敷き役）。次の空きは **T948**。
+- tests/test_vocab_pilot307.py（**7 passed**: parse＋形の一致、他の自軍獣のEXライフシールドが割れる→下のカードが墓地経由で場に戻る、監視者自身のシールドでも発火、普通のシールドでは不発、相手のシールドでは不発〔owner: you〕、下が進化クリーチャーなら墓地に留まる、下にカードが無ければ空振りで安全）＋ tests/test_vocab_pilot307_cards.py（**3 passed**: 対象行の残留・未登録確認、確立形＝partial＋誘発の parse）。回帰: 第291・237・290・294弾＋test_data_audit＋test_rust_schema_sync **51 passed**、test_rules＋第291・237弾 cards **47 passed**。_mana_choices 不触、範囲外不触。converted / rejects は本弾で不変（10,244 / 2,077）。
+
+### ラウンド342側の注意
+
+- 対象は dm26ex2-mc009 の1件。提出形は partial そのものに上記の誘発を abilities へ追加し、source.unsupported から exlife_shield_left_any を外した形（cards テストの TRIGGER が正本）。text は reject 行の正式本文と partial の text を照合すること。
+- alias は dm22ex2-8a / dm22ex2-8b / dm22ex2-s15（partial の source.aliases）。submit 前に identity で正本判定し、id・alias を real.yaml / real_akashic.yaml / real_vocab.yaml / real_zone.yaml / proto.yaml / converted.yaml と照合すること。
+- reopen（exlife_shield_left_any）は dm26ex2-mc009 だけを除外するはず。登録後は abilities が [G・ストライク常在型, 誘発] の2件ちょうど（parse 時は world_breaker キーワード展開の常在型も加わる）であることを本文と照合すること。
+
+### ラウンド342（第307弾の再変換）
+
+- 新規登録 **1件**: dm26ex2-mc009 不敬合成王 ロマティックダム・アルキング。alias 畳み込み0件（alias 3件は登録カードの source.aliases への記録のみで、いずれも reject 行は元々無し）・stale クリーンアップ0件・差し戻し0件。
+- 正本判定は identity 実測: canon_id(dm26ex2-mc009) = dm26ex2-mc009 自身＝独立正本、canon_id は alias 3件（dm22ex2-8a / dm22ex2-8b / dm22ex2-s15）とも dm26ex2-mc009 で aliases_for と一致。submit 前照合で対象 id と alias 計4件すべて converted / real.yaml / real_akashic.yaml / real_vocab.yaml / real_zone.yaml に無し（proto.yaml のヒットは第307弾プロト T945 の text 内参照のみ）。reopen（exlife_shield_left_any）は dm26ex2-mc009 だけを除外した。
+- 提出形は第307弾の確立形そのもの（partial ＋ 誘発 {event: move, from: shield, subject: {owner: you, exlife_of: any}}、unsupported から exlife_shield_left_any を除去、text は reject 行の正式本文＝partial の text と同一を確認）。登録形は abilities / keywords / evolve_from / text すべて提出形と完全一致で、abilities は [G・ストライク常在型, 誘発] の2件ちょうど（連結・merge_split 混入なし）。ラウンド328で提出後に登録を取り消した条項がこれで解けた。
+- 実挙動を登録カード自身で固定: 進化GV・Ωで墓地・マナ・バトルゾーンの T946 を1体ずつ重ねて出し、相手の T850 で自身のEXライフシールドを割ると誘発が発火し、下のカード1枚が墓地経由で場に戻る（残りの下は2枚）。EXライフでない普通のシールドでは発火しない。
+- converted **10,244 → 10,245** / rejects **2,077 → 2,076**、canonical 重なり0・漏れ0。exlife_shield_left_any 解消（alias∩rejects の既存 stale 9件は本ラウンド対象外で残留）。pilot307 cards を登録形に書換。
+- テスト **13 passed**（round342 cards 3＋pilot307 cards 登録形 2＋data_audit 8）＋第307弾本体 **7 passed**（別 invocation。プロト系と登録形 cards は同一 invocation に混ぜない）。
+- 回答は ~/workspace/DMPJ-work/answers/round342.yaml に保存。次の番号: パイロット308 / ラウンド343 / プロト T948。
+
+## 第308弾 evolve_from_deck_onto_self（山札から自分の上に置く）— ギャップ名ドリフト（第173弾 deck_evolution の全山札検索形）
+
+センサス（rejects 2,076件を再集計）: 候補を評価し、相方 soul_shift が第305弾でドリフト確認済みの2件（dmc64-024 ゴウケンオー～剣々轟々～ / dmc64-025 ケンゴウグレンオー～天地鳴動～、いずれも gaps = [soul_shift, evolve_from_deck_onto_self]、partial は空）を選定。win_replacement_grandchild / declare_speech は現実依存のジョーク条項で対象外（第307弾で確認）。trigger_when_opponent_plays_free は第285弾で各行に別ブロッカーありと評価済み。per_evolution_base_cost_reduction は evo_base_reduce の一律形のみが詰まりだが、対象が単独行で支払い近傍のため本弾では見送り。
+
+残りの条項はすべて既存語彙で書けた（新規語彙・エンジン変更なし）:
+
+- 「自分の山札を見る。その中から名前に《X》とあるクリーチャーを1体選び、このクリーチャーの上に置いてもよい。その後、山札をシャッフルする」= {op: may, body: [choose {zone: deck, owner: you, look: true, filter: {name_has: X, types: [creature]}, count: 1} as p, move {select: {ref: p, count: all}, to: bz, reason: put, stack_evo: true, evo_source: {ref: self}}]} ＋ {op: shuffle}。第173弾 deck_evolution の形で、同製品 DMC64 の登録済み dmc64-036 / dmc64-042 が全山札検索形の先例（そちらは本文が「カードを1枚」のため types フィルタなし。本2件は「クリーチャーを1体」なので types: [creature] を付ける）。重ね先の適格性は解決時に照合される（ops の stack_evo 分岐）。なお第173弾の記録どおり、converted の dmc64-020 / dmc64-031 は同じ「上に置く」を put_under で書いた既存の誤変換（本弾の対象外、直さず記録のみ）。
+- 「このクリーチャーで攻撃するかわりに、タップして次の能力を使ってもよい」= {kind: activate, cost: {tap: self}}（多数の先例。起動は attack 決定で activate:<defn>:* として提示される）。
+- 全体破壊は destroy {count: all}: 024 は filter {types: [creature], keyword: blocker}、025 は filter {types: [creature], power_le: 2000}。効果の順序は本文どおり破壊が先。
+- 進化元は evolve_from {name_has: ...}（dmc64-036 の先例。024 = ケンゴウグレンオー、025 = ワンケングレンオー）。重ねられる側も名前の連鎖が整合する（024 の上に乗るケンゲキオージャ dmex18-005 の evolve_from は name_has ゴウケンオー で 024 の名前に一致、025 の上に乗るゴウケンオー勢の evolve_from は name_has ケンゴウグレンオー で 025 の名前に一致）。
+- ソウルシフトは soul_shift {floor: 1}: 024 は裸のキーワードで、標準定義は「1より少なくならない」（同セット 025 のリマインダが明記）。025 はリマインダ明記で floor: 1（第274弾・ラウンド309の先例どおり。第305弾の2件は「0以下にならない」明記だったため floor: 0 であり、本2件とは異なる）。
+
+プロト T948（024形）・T949（025形）・T950（ケンゴウグレンオー進化元）・T951（ワンケングレンオー進化元）・T952（ケンゲキオージャ役）・T953（ゴウケンオー進化役）・T954（ブロッカー役）・T955（パワー2000役）。次の空きは T956。
+
+- tests/test_vocab_pilot308.py: **8 passed** — parse（soul_shift floor 1・キーワード・activate 形）、ソウルシフト実支払い（024形: 17−5＝12枚、025形: 10−5＝5枚）、名前不一致では提示されない、起動能力024形（ブロッカーだけ破壊＋山札から重ね＋タップ確認）/ 辞退（破壊のみ・重ねなし）/ 山札に該当なし（破壊のみ・空振り安全）、起動能力025形（パワー2000以下だけ破壊＋重ね）。
+- tests/test_vocab_pilot308_cards.py: **2 passed** — 対象2件の rejects 行（2ギャップ・partial 空）・未登録・ファミリーがこの2件だけ、確立形 FORM_024 / FORM_025 の parse（destroy マクロは parse 時に move（reason: destroy）へ展開される点も固定）。
+- 回帰: data_audit＋第305・173・249弾＋test_rules＋test_rust_schema_sync **76 passed**。既知の事前失敗2件（第274弾 test_floor_zero_colored_pays_civ_count、第31弾 test_janken_win_draws）は本弾の範囲外として未追跡。_mana_choices には触れていない。エンジン変更なし。
+
+収支: converted **10,245（不変）** / rejects **2,076（不変）**。変更は proto.yaml（T948–T955 純追加）・テスト2件・docs のみ。
+
+### ラウンド343側の注意
+
+- 対象は dmc64-024 / dmc64-025 の2件。提出形は tests/test_vocab_pilot308_cards.py の FORM_024 / FORM_025 が正本（partial は空なので公式データから構築済み。text は reject 行の正式本文と同一であることを cards テストで固定済み）。
+- reopen は soul_shift + evolve_from_deck_onto_self で、この2件だけが外れるはず。
+- submit 前に identity で正本判定を行い、id・alias を real.yaml / real_akashic.yaml / real_vocab.yaml / real_zone.yaml / proto.yaml / converted.yaml と照合すること（dmc64-013 は dmex18-005 の alias であって本2件とは無関係）。
+- 登録後は abilities が [起動能力] の1件ちょうど（024 は keywords [triple_breaker]、025 は [double_breaker]）であることを本文と照合すること。
+### ラウンド343（第308弾の再変換）
+
+- 新規登録 **2件**: dmc64-024 ゴウケンオー～剣々轟々～ / dmc64-025 ケンゴウグレンオー～天地鳴動～。alias 畳み込み0件（alias は登録カードの source.aliases への記録のみで、いずれも reject 行は元々無し）・stale クリーンアップ0件・差し戻し0件。
+- 正本判定は identity 実測: canon_id は対象2件とも自身＝独立正本。alias は dmc64-024 ← dm34-015、dmc64-025 ← dm33-016（いずれも canon_id が対象に一致し aliases_for とも一致）。submit 前照合で対象 id と alias 計4件すべて converted / real.yaml / real_akashic.yaml / real_vocab.yaml / real_zone.yaml に無し（proto.yaml のヒットは第308弾プロト T948 / T949 の text 内参照のみ）。対象行は reason を持たないため reopen（soul_shift + evolve_from_deck_onto_self）は0件を外し（第323弾 dmr21-002 の先例どおり）、submit が登録時に reject 行を直接外した。
+- 提出形は第308弾の確立形 FORM_024 / FORM_025 そのもの（partial は空のため公式データから構築、text は reject 行の正式本文と同一を提出前に照合）。登録形は name / types / civs / cost / power / mana / races / text / evolve_from / soul_shift / keywords / abilities すべて提出形と完全一致で、abilities は [起動能力] の1件ちょうど（連結・merge_split 混入なし）。ソウルシフトは両件とも soul_shift {floor: 1}（024 は裸のキーワード＝標準定義、025 はリマインダ明記。第305弾の floor: 0 の2件とは本文が異なる）。
+- 実挙動を登録カード自身で固定: 024 はソウルシフトで 17−5＝12 枚を支払って T950 の上に進化（支払いマナ12枚タップを確認）、起動で相手のブロッカー T954 だけを破壊し山札の T952 を上に重ねる（小型 T955 は残留、起動コストでタップ）。025 の起動はパワー2000以下の T955 だけを破壊し山札の T953 を上に重ねる（パワー3000の T954 は残留）。
+- converted **10,245 → 10,247** / rejects **2,076 → 2,074**、canonical 重なり0・漏れ0。evolve_from_deck_onto_self 解消、soul_shift も解消（残留は本2件だけだった）。pilot308 cards を登録形に書換。
+- テスト **14 passed**（round343 cards 4＋pilot308 cards 登録形 2＋data_audit 8）＋第308弾本体 **8 passed**（別 invocation。プロト系と登録形 cards は同一 invocation に混ぜない）。
+- 回答は ~/workspace/DMPJ-work/answers/round343.yaml に保存。次の番号: パイロット309 / ラウンド344 / プロト T956。
+
+## 第309弾 rinne_infinity（輪廻暴冥）— ギャップ名ドリフト
+
+センサス（rejects 2,074件を再集計）: 候補を順に評価した。reveal_and_cast_free（dm17-s04）は evolution_cross_gear が第304弾で解けた最後の併記行だが、残る条項は第267弾の輪廻虹災形（choose look pile → 文明ごと if/may/play_free → 残りを下へ）がほぼ同型で、本弾の対象はその前に立つ純粋1件の **rinne_infinity（dmrp21-tr2 天地命動 バラギアラ / 輪廻暴冥）** とした。rinne_infinity は第267弾で「ギャップ名が違うため対象外。次回以降の対象」と明記されていた行で、共通文言は第267弾の3件と同一（「輪廻∞：このカードの呪文側を、バトルゾーンに置いたまま唱えてもよい。そうした時、自分の《天地命動 バラギアラ》１体につき、自分の山札の上から１枚をマナゾーンに置く」）。機構は面項目 `rinne: true`＋ cast `via: rinne` 誘発イディオムで実装済みのため、本弾は **ドリフト（新規語彙・エンジン変更なし）**。
+
+tr2 の全条項は第267弾の確立形で書ける:
+
+- クリーチャー面（自然コスト9・パワー17000・マスター・ハザード/グランセクト）: rinne: true ＋ CIP {event: move, to: bz, subject: self, reason: summon} → untap {zone: mana, owner: you, count: all} ＋ {event: cast, via: rinne, subject: self} → repeat {times: {count: {zone: bz, owner: you, filter: {name_has: 天地命動 バラギアラ}}}} [move {select: {zone: deck, owner: you, from_top: 1}, to: mana, reason: put}] ＋ triple_breaker（登録済み dm26rp3-s011 と同型）。
+- 呪文面（輪廻暴冥、闇コスト6、S・トリガー）: choose {zone: bz, owner: opp, filter: {types: [creature]}, count: 1} as x → modify {ref: x, power: -4000, duration: end_of_turn} ＋ move {select: {zone: graveyard, owner: you, filter: {types: [creature], cost_le: 5}, count: 1}, to: bz, reason: put}（第267弾の設計どおり「-4000 は modify、墓地からは move」。墓地→bz の reason: put は converted 先例どおり）。
+
+プロト T956（tr2 型。クリーチャー面は T742 と同型、呪文面が暴冥形）。次の空きは **T957**。
+
+- tests/test_vocab_pilot309.py: **5 passed** — parse（rinne・誘発2件・暴冥 spell の [choose, modify, move] 形と cost_le 5 フィルタ）、rinne 詠唱（-4000 で相手 T004 が破壊され相手墓地へ、墓地の T001 が出て コスト9の T741 は残留、カードは場に面0のまま残り墓地へ行かない、支払い6枚タップ＋チャージ1枚、casts カウンタ1）、バラギアラ2体でチャージ2枚、手札から普通に唱えた場合はチャージなし・唱えた後は墓地へ、CIP でマナ全アンタップ。
+- tests/test_vocab_pilot309_cards.py: **2 passed** — 対象行の残留（gaps [rinne_infinity] 純粋1件・partial の faces がプレースホルダであること）・未登録（id・alias とも converted に無い）、確立形 FORM の parse（faces の rinne / キーワード / spell 形）。
+- 回帰: 第267弾本体 **8 passed** ＋ test_data_audit **8 passed**（309 cards と同一 invocation で計18 passed）、第267弾 cards（登録済み rinne 3件）**6 passed**。既知の事前失敗2件（第274弾・第31弾）は範囲外として未追跡。_mana_choices には触れていない。エンジン変更なし。
+
+収支: converted **10,247（不変）** / rejects **2,074（不変）**。変更は proto.yaml（T956 純追加）・テスト2件・docs のみ。
+
+### ラウンド344側の注意
+
+- 対象は dmrp21-tr2 の1件。提出形は tests/test_vocab_pilot309_cards.py の FORM が正本。
+- **partial の faces はプレースホルダ（名前 x / y・火コスト1）で実データではない**。提出形は公式データ（data/cards/raw/by_product/rp21.jsonl）から構築すること。reject 行の text はクリーチャー面分しか無いので、両面テキストは公式から復元する（dm26rp3-s011 の登録形が体裁の先例: 面ごとに text、トップレベルは「 ／ 」連結）。
+- alias は dmrp08-mh03（partial の source.aliases、reject 行は無い）。submit 前に identity で正本判定し、id・alias を real.yaml / real_akashic.yaml / real_vocab.yaml / real_zone.yaml / proto.yaml / converted.yaml と照合すること。mh03 の公式テキストはチャージ条件が「バトルゾーンにある自分の《天地命動 バラギアラ》１体につき」と明記する版だが、数え方は bz カウント {name_has} で同一。
+- 登録後は faces[0].abilities が [CIP, チャージ誘発] の2件ちょうど、faces[1].spell が [choose, modify, move] の3件ちょうどであることを本文と照合すること。
+
+### ラウンド344（第309弾の再変換）
+
+- 新規登録 **1件**: dmrp21-tr2 天地命動 バラギアラ / 輪廻暴冥。alias 畳み込み0件（alias dmrp08-mh03 は登録カードの source.aliases への記録のみ、reject 行は元々無し）・stale クリーンアップ0件・差し戻し0件。
+- 正本判定は identity 実測: canon_id(dmrp21-tr2) は自身＝独立正本、canon_id(dmrp08-mh03) も dmrp21-tr2。submit 前照合で対象 id と alias 計2件すべて converted / real.yaml / real_akashic.yaml / real_vocab.yaml / real_zone.yaml に無し（proto.yaml のヒットは第309弾プロト T956 の text 内参照のみ）。reopen（rinne_infinity）は対象1件だけを外した。
+- 提出形は第309弾の確立形 FORM そのもの。partial の faces はプレースホルダ（名前 x / y・火コスト1）だったため、faces と両面 text は公式データ（by_product/rp21）から構築し、トップレベル text は dm26rp3-s011 の体裁（面ごとに text、「 ／ 」連結）。登録形は name / mana / faces / text すべて提出形と完全一致で、faces[0].abilities は [CIP, チャージ誘発] の2件ちょうど、faces[1].spell は [choose, modify, move] の3件ちょうど（連結・merge_split 混入なし）。
+- 実挙動を登録カード自身で固定: 輪廻∞で暴冥を唱えると -4000 で相手 T004 が破壊され、墓地のコスト5以下の T001 が出て（コスト9の T741 は残留）、カードは場に面0のまま残り、支払い6枚タップ＋チャージ1枚（マナ7枚）。召喚時は CIP で支払った9枚がすべてアンタップする。
+- converted **10,247 → 10,248** / rejects **2,074 → 2,073**、canonical 重なり0・漏れ0。rinne_infinity 解消。pilot309 cards を登録形に書換。
+- テスト **13 passed**（round344 cards 3＋pilot309 cards 登録形 2＋data_audit 8）。第309弾本体はプロト系のため別 invocation（パイロット時に 5 passed 済み）。
+- 回答は ~/workspace/DMPJ-work/answers/round344.yaml に保存。次の番号: パイロット310 / ラウンド345 / プロト T957。
+
+## 第310弾 opt_reduce_then_entry_destroy — opt_reduce.then の第3形 entry_destroy
+
+センサス（rejects 2,073件を再集計）: 候補を順に評価した。reveal_and_cast_free（dm17-s04）は第267弾の輪廻虹災形とほぼ同型で別途ドリフト候補として残る。attack_target_choice（dm25ex2-004）は攻撃宣言の対象選択を相手側へ移すエンジン手術で重い。per_evolution_base_cost_reduction（dm26ex2-pr003）は支払いフローの軽減計算に触れるため _mana_choices 対立（第274弾 vs 第292弾）回避の観点から見送り。static_if_own_current_power（dm28-s09）は常在条件の印刷特性評価そのものが詰まりで重い。revealed_pile_breaks_and_placement（dm24ex3-tf02）は「上か下のどちらかへの配置選択」が別途必要。本弾の対象は純粋1件の **opt_reduce_then_entry_destroy（dmrp12-008 帝神龍装 ティーゾリス）**。第264弾で離脱型 trigger_double と W・ブレイカーは解けて partial に保存済みで、残余は「コストを2少なくしてもよい。そうしたら、このターン、このクリーチャーがバトルゾーンに出た時、自分のクリーチャーを1体破壊する」のみ。
+
+詰まりは opt_reduce.then がターン終了時の2形（destroy / deck_bottom_draw）しか無く、「軽減した」ことを条件に出た時の処理を書けないこと。追加した語彙は最小の1点:
+
+- **opt_reduce.then の第3形 `entry_destroy`**（defs 検証・schema.py の enum・スキーマ再生成。差分は enum への追加のみ）。h_play の then 処理で、ターン終了時ではなく {event: move, to: bz, subject: self} の遅延誘発を積む。遅延誘発の登録（子タスク）は後に積んだタスクが先に動くため召喚の移動イベントより先に処理され、出た時の照合に間に合う（実挙動で固定）。持続は delayed_trigger の既定 end_of_turn、once も既定どおり（同一ターン内の再入場は新しいオブジェクトとして扱い再誘発しない）。効果は「自分のクリーチャーを1体破壊する」= {op: move, select: {zone: bz, owner: you, filter: {types: [creature]}, count: 1}, to: graveyard, reason: destroy}。出た本人も対象に含む（本文に除外指定なし）。軽減を選ばなければ（t["reduced"] が立たなければ）登録自体されない。
+- tools/convert_cards.py の変換指示に entry_destroy の形を追記。
+- エンジン変更は turn.py の then 分岐のみ。新規 op・面フィールド・GameState フィールドは無い（Rust は本環境で未ビルド＝Python フォールバック。test_rust_schema_sync は通過）。
+
+プロト T957（ティーゾリス型: 闇コスト6・パワー7000・W・ブレイカー・opt_reduce {amount: 2, then: entry_destroy}）。次の空きは **T958**。
+
+- tests/test_vocab_pilot310.py: **4 passed** — parse＋then の未知値が DefError で弾かれること、軽減して出して他の自軍獣（T001）を破壊（支払い4枚タップ確認・ターン終了時に再破壊しないこと）、軽減して本人だけなら本人を破壊（候補1件は自動決定）、軽減しなければ破壊なし（全額6枚支払い）。
+- tests/test_vocab_pilot310_cards.py: **2 passed** — 対象行の残留（gaps [opt_reduce_then_entry_destroy] 純粋1件・converted 10,248 / rejects 2,073・未登録・重なり0）、確立形 FORM（partial ＋ opt_reduce 常在型）の parse。
+- 回帰: test_data_audit＋test_rust_schema_sync（310 cards と同一 invocation で計13 passed）、第6弾＋第189弾＋第13弾＋test_cost **25 passed**、第264弾＋第6弾 cards＋第189弾 cards **20 passed**。既知の事前失敗2件（第274弾・第31弾）は範囲外として未追跡。_mana_choices には触れていない。
+
+収支: converted **10,248（不変）** / rejects **2,073（不変）**。変更は defs.py・schema.py・card.schema.json（再生成）・turn.py・convert_cards.py・proto.yaml（T957 純追加）・テスト2件・docs。
+
+### ラウンド345側の注意
+
+- 対象は dmrp12-008 の1件。提出形は tests/test_vocab_pilot310_cards.py の FORM が正本（partial ＋ {kind: static, affects: self, zone: hand, mod: {opt_reduce: {amount: 2, then: entry_destroy}}}、unsupported から opt_reduce_then_entry_destroy を外す）。text は reject 行の正式本文と同一であることを提出前に照合済み（cards テストで固定）。
+- partial に aliases の記録は無いが、submit 前に identity で正本判定し、id・alias を real.yaml / real_akashic.yaml / real_vocab.yaml / real_zone.yaml / proto.yaml / converted.yaml と照合すること。
+- 登録後は abilities が [trigger_double 常在型, opt_reduce 常在型] の2件ちょうどであることを本文と照合すること（連結・merge_split 混入の確認）。
+- reopen は opt_reduce_then_entry_destroy で対象1件だけが外れるはず。違う行が混ざったら submit せず報告すること。
+
+### ラウンド345（opt_reduce_then_entry_destroy 再変換）
+
+- 新規登録 **1件**: dmrp12-008 帝神龍装 ティーゾリス。alias 畳み込み0件・stale クリーンアップ0件・差し戻し0件。
+- 正本判定は identity 実測: canon_id(dmrp12-008) = dmrp12-008 自身＝独立正本、aliases_for は空（alias なし）。submit 前照合: 対象 id は converted / real.yaml / real_akashic.yaml / real_vocab.yaml / real_zone.yaml に無し（proto.yaml のヒットは第310弾プロト T957 の text 内参照のみ）。reopen（opt_reduce_then_entry_destroy）は対象1件だけを除外。
+- 登録形は確立形 FORM と完全一致（partial〔第264弾で trigger_double と W・ブレイカーを解決済み〕＋ opt_reduce 常在型、unsupported 除去、text は reject 行の正式本文）。abilities は [trigger_double 常在型, opt_reduce 常在型] の2件ちょうどで連結・merge_split 混入なし。
+- converted **10,248 → 10,249** / rejects **2,073 → 2,072**、canonical 重なり0・漏れ0、opt_reduce_then_entry_destroy 解消。
+- テスト **13 passed**（round345 cards 3件＝disposition＋登録形の実挙動2件〔軽減→他獣破壊＋支払い4枚／通常召喚→破壊なし＋全額6枚〕、pilot310 cards 登録形書換 2件、data_audit 8件）＋第310弾本体 **4 passed**（別 invocation）。
+- 回答は answers/round345.yaml に保存。次の番号: パイロット311 / ラウンド346 / プロト T958。
+
+## 第311弾 reveal_and_cast_free（表向きにして好きなだけ唱える）— ドリフト
+
+センサス（rejects 2,072件を再集計）: reveal_and_cast_free は dm17-s04 ネオウェーブ・カタストロフィー 1件のみ（gaps = [evolution_cross_gear, reveal_and_cast_free]）。evolution_cross_gear は第304弾で実装済みで、本件が同ギャップの最後の併記行（残る dmc66-034 は相方 dynamic_name_reference_filter が評価済みで重い）。第310弾で「第267弾の輪廻虹災形とほぼ同型のドリフト候補」と評価されていた。dm24ex3-tf02（revealed_pile_breaks_and_placement）は「無色カード1枚につきブレイク付与」の数え上げと「上か下どちらかへの配置選択」が別機構で、本弾では選ばなかった。
+
+結論: **ドリフト**（新規語彙・エンジン変更なし）。partial に完成済みのブロッカー常在型 {affects: crossed, mod: {grant: [blocker]}} と、第304弾の civs 形（types [cross_gear, evolution] ＋ evolve_from {civs: [light, water]}）に、攻撃誘発を既存部品で繋ぐ:
+
+- 誘発点 = {kind: trigger, when: {event: attack, subject: crossed}}（cross_gear_effect イディオムのギア側攻撃誘発）
+- 表向き = {op: choose, select: {zone: deck, owner: you, from_top: 3, look: true, count: all}, reveal: true, as: pile}（第267弾 輪廻虹災 T740 形）
+- 「S・トリガー付き呪文を好きなだけ選び」 = {op: choose, select: {ref: pile, filter: {types: [spell], keyword: s_trigger}, count: all, up_to: true}, as: casts}。count: all ＋ up_to: true は selectors の any_n 形（0〜全部の任意選択）。keyword フィルタは定義の keywords を見るため、S・トリガー呪文だけが候補になる（束の中の通常呪文・クリーチャーは提示されないことを実挙動で固定）
+- 「コストを支払わずに唱えてもよい」 = {op: repeat, over: casts, as: it, body: [{op: play_free, select: {ref: it}}]}（第233弾の repeat over。選んだ順に1枚ずつ唱える）
+- 「唱えなかったカードを一番下に好きな順番で戻す」 = {op: move, select: {ref: pile, zone: deck, count: all}, to: deck, position: bottom, order: choose, reason: put}（T740 形。唱えたカードは山札を離れているので、zone: deck の照合で残りだけが戻る）
+
+- プロト T958（dm17-s04 型）・T959（光ギア＝進化元）・T960（S・トリガー光呪文）・T961（S・トリガー水呪文。両方とも効果はマナ全アンタップ＝決定なし・山札に触れない形にして束の検証を純化）・T962（S・トリガーを持たない対照呪文）。次の空きは **T963**。
+- tests/test_vocab_pilot311.py: **8 passed** — parse（types / evolve_from / 誘発の when）、進化元プール（クリーチャー不可・文明不一致ギア不可・光ギア可）、両方唱える（墓地に2枚・残り1枚が山札の一番下・reveal 記録3件・効果でマナ全アンタップ・宿主に blocker 付与）、1枚だけ唱えて残りを指定順（order の最後が一番下）、0枚（3枚とも指定順で下へ）、束に ST 呪文なし（choose_cards 自体が出ない）、クロスしていない攻撃では不発、クロス先でないクリーチャーの攻撃では不発。
+- tests/test_vocab_pilot311_cards.py: **2 passed** — 対象行の残留（gaps 2件・converted 10,249 / rejects 2,072・未登録・重なり0、evolution_cross_gear は併記2行のみ）、確立形 FORM の parse。
+- 回帰: 第304弾＋第267弾＋第306弾＋第233弾 **27 passed**、test_data_audit＋test_rust_schema_sync **11 passed**。既知の事前失敗2件（第274弾・第31弾）は範囲外。_mana_choices には触れていない。エンジン変更なし（Rust 手順不要）。
+
+テスト中の発見: (1) クロスはギアのコストをもう一度支払うため、進化（5マナ）＋クロス（5マナ）には10マナ必要で、1回目の支払いコンボの選び方で同ターンのクロス可否が決まる（ドライバは1回目を水寄りに払い光を残す）。(2) 呪文効果がドローだと、唱えた呪文が束の残りを引いてしまい「唱えなかったカード」の検証が濁る（実挙動としては正しい: 引かれたカードは山札に残っていないので下へは戻らない）。
+
+収支: converted **10,249（不変）** / rejects **2,072（不変）**。変更は proto.yaml（T958–T962 純追加）・テスト2件・docs のみ。
+
+### ラウンド346側の注意
+
+- 対象は dm17-s04 の1件。提出形は tests/test_vocab_pilot311_cards.py の FORM が正本（partial ＋ types [cross_gear, evolution] ＋ evolve_from {civs: [light, water]} ＋ 攻撃誘発、unsupported から両ギャップを外す）。text は reject 行の正式本文（\n 区切り）。
+- partial に aliases の記録は無いが、submit 前に identity で正本判定し、id・alias を real.yaml / real_akashic.yaml / real_vocab.yaml / real_zone.yaml / proto.yaml / converted.yaml と照合すること。
+- 登録後は abilities が [ブロッカー常在型, 攻撃誘発] の2件ちょうどであることを本文と照合すること（連結・merge_split 混入の確認）。
+- reopen は evolution_cross_gear + reveal_and_cast_free で対象1件だけが外れるはず（dmc66-034 は相方 dynamic_name_reference_filter が残るため外れない）。違う行が混ざったら submit せず報告すること。
+- 本件の登録で evolution_cross_gear の併記は dmc66-034 の1行だけが残る。
+
+### ラウンド346（reveal_and_cast_free 再変換）
+
+- 新規登録 **1件**: dm17-s04 ネオウェーブ・カタストロフィー。alias 畳み込み0件・stale クリーンアップ0件・差し戻し0件。
+- 正本判定は identity 実測: canon_id(dm17-s04) = dm17-s04 自身＝独立正本、aliases_for は空（alias なし）。submit 前照合: 対象 id は converted / real.yaml / real_akashic.yaml / real_vocab.yaml / real_zone.yaml に無し（proto.yaml のヒットは第311弾プロト T958 の text 内参照のみ）。reopen（evolution_cross_gear + reveal_and_cast_free）は対象1件だけを除外（dmc66-034 は残留）。
+- 登録形は確立形 FORM と完全一致（partial のブロッカー常在型 ＋ types [cross_gear, evolution] ＋ evolve_from {civs: [light, water]} ＋ 攻撃誘発、unsupported 除去、text は reject 行の正式本文）。abilities は [ブロッカー常在型, 攻撃誘発] の2件ちょうどで連結・merge_split 混入なし。
+- converted **10,249 → 10,250** / rejects **2,072 → 2,071**、canonical 重なり0・漏れ0、reveal_and_cast_free 解消。evolution_cross_gear の併記は dmc66-034 の1行だけが残る。
+- テスト **14 passed**（round346 cards 4件＝disposition＋登録形の実挙動3件〔両方唱える／1枚＋順序指定／未クロスで不発〕、pilot311 cards 登録形書換 2件、data_audit 8件）＋第311弾本体 **8 passed**（別 invocation）。
+- 回答は answers/round346.yaml に保存。次の番号: パイロット312 / ラウンド347 / プロト T963。
+
+## 第312弾 ex_life_shield_leave_trigger（「EXライフ」シールドが離れた時にも選ぶモーダル）— ドリフト
+
+センサス（rejects 2,071件を再集計）: 純粋ファミリーの大半は範囲外（gr_summon 147、aura 108、hyperdimensional_zone 105、dragheart 45、psychic_filter 45、hyperdimensional_summon 41、out_of_game 23、duelist_link 20、outside_game 12、pandora_shift 4）か評価済み DEEP/重い。在範の単独・小グループはほぼ評価済みのため、行の `gaps` が空で `partial.source.unsupported` にだけギャップ名が残る NEO 期の行（25件）を精査し、本件を選定した。dm24ex3-tf02（revealed_pile_breaks_and_placement）は第311弾の評価どおり別機構、dm26rp2-s011（deck_faceup_power）は山札内表向き状態が保持されない点が依然ブロッカー。
+
+対象は dm26ex4-003 / dm26ex4-sec004 切札接続 ドールバロム 2件（同一カードの2刷）。partial は NEO進化・EXライフ・T・ブレイカーと CIP 誘発＋モーダル3択まで完成済みで、欠けているのは「このクリーチャーが出た時**または**このクリーチャーの『EXライフ』シールドが離れた時」の後半だけだった。
+
+結論: **ドリフト**（新規語彙・エンジン変更なし）。離脱誘発は第190弾で実装され第291弾で登録先例のある {event: move, from: shield, subject: {exlife_of: self}}。確立形は partial の CIP 誘発に、その effect（モーダル）を共有する離脱誘発を1件追加するだけ:
+
+- mode 0「相手は自身の手札を表向きにし、その中から闇ではないカードをすべて捨てる」 = {op: discard, select: {chooser: opp, count: all, filter: {not_civs: [darkness]}, owner: opp, zone: hand}}（partial の形のまま。全対象が捨てられるため公開情報は墓地で確定し、闇カードは伏せたまま残ることを実挙動で固定）
+- mode 1「闇ではないクリーチャーをすべて破壊する」 = {op: destroy, select: {count: all, filter: {not_civs: [darkness], types: [creature]}, owner: any, zone: bz}}（自軍の闇でない獣も巻き込む。本文どおり）
+- mode 2「相手のマナゾーンにある闇ではないカードはすべて、次の自分のターンのはじめまでアンタップしない」 = {op: modify, select: {count: all, filter: {not_civs: [darkness]}, owner: opp, zone: mana}, mod: {deny: [untap_at_start]}, duration: until_next_own_turn_start}。duration は core._duration が until_turn_start:{you} に解決する既存意味論: 自分のターンに発火すれば相手の次のターン開始のアンタップを止める。相手のターンに発火した場合は相手の次のアンタップが自分の次のターン開始より後になるため、文面どおり制限はそこで切れる（実挙動の固定は CIP 経路で行った）
+
+- プロト T963（dm26ex4-003 型: EXライフ＋CIPモーダル＋離脱モーダル。進化側は partial の parse で担保）。次の空きは **T964**。
+- tests/test_vocab_pilot312.py: **6 passed** — parse（2誘発の when・効果の同一性・モーダル3択のマクロ展開と modify の mod/duration）、CIP mode 1（自他とも闇でない獣が全滅・闇は残る）、CIP mode 2（相手の自然マナだけ次のターン開始で起きない・闇マナは起きる）、ブレイク経路 mode 0（相手の自然手札だけ捨てられ闇は残る）、普通のシールドのブレイクでは不発、破壊置換経路 mode 1（置換でシールドが墓地へ・本体は残り・相手の自然獣が破壊）。
+- tests/test_vocab_pilot312_cards.py: **2 passed** — 対象2行の残留（gaps 空・unsupported は当該ギャップのみ・未登録・converted 10,250 / rejects 2,071・重なり0、2刷の partial は id/name 以外同一）、確立形 FORM（partial ＋ 離脱誘発追加）の parse。
+- 回帰: 第291弾＋第190弾＋第307弾＋test_data_audit＋test_rust_schema_sync＋test_rules **75 passed**、第291・307弾 cards **7 passed**。既知の事前失敗2件（第274弾・第31弾）は範囲外。_mana_choices には触れていない。エンジン変更なし（Rust 手順不要）。
+
+テスト中の発見: T056（相手の獣を1体破壊する呪文）は、相手のクリーチャーが1体だけの局面では対象選択の決定自体が出ず自動で定まる（ask の一意自動決定）。ドライバで対象選択を待つと永久に来ないため、局面側で候補を1体に絞るか、決定が出ない前提で書くこと。
+
+収支: converted **10,250（不変）** / rejects **2,071（不変）**。変更は proto.yaml（T963 純追加）・テスト2件・docs のみ。
+
+### ラウンド347側の注意
+
+- 対象は dm26ex4-003 / dm26ex4-sec004 の2件。提出形は tests/test_vocab_pilot312_cards.py の確立形（partial ＋ 離脱誘発の追加、unsupported 除去）。text は reject 行の正式本文と同一（partial の text は正式本文そのもの）。
+- 対象行は `gaps` が空のため reopen では外れない（第323弾・第343弾の先例どおり直接 submit で登録する）。
+- 2件は同一カードの2刷: submit 前に identity で正本判定し（sec004 は secret 刷りで canon が dm26ex4-003 の見込み）、id・alias を real.yaml / real_akashic.yaml / real_vocab.yaml / real_zone.yaml / proto.yaml / converted.yaml と照合すること。
+- 登録後は abilities が [CIP誘発, 離脱誘発] の2件ちょうどで、両誘発の effect が同一モーダルであることを本文と照合すること（連結・merge_split 混入の確認）。
+
+### ラウンド347（ex_life_shield_leave_trigger 再変換）
+
+- 新規登録 **1件**: dm26ex4-003 切札接続 ドールバロム。alias 畳み込み **1件**: dm26ex4-sec004 → dm26ex4-003。stale クリーンアップ **1件**（sec004 の reject 行、後述）。差し戻し0件。
+- 正本判定は identity 実測: canon_id(dm26ex4-sec004) = dm26ex4-003、aliases_for（切札接続 ドールバロム, dm26ex4-003） = [dm26ex4-sec004]。submit 前照合: 対象 id と alias 計2件すべて converted / real.yaml / real_akashic.yaml / real_vocab.yaml / real_zone.yaml に無し（proto.yaml のヒットは第312弾プロト T963 の text 内参照のみ）。対象行は gaps が空のため reopen では外れず直接 submit（第323・343弾の先例）。
+- 登録形は確立形と完全一致（partial の CIP 誘発＋モーダル3択に第2誘発 {event: move, from: shield, subject: {exlife_of: self}} を追加し unsupported 除去、source.aliases に sec004 を記録、text は reject 行の正式本文）。abilities は [CIP誘発, 離脱誘発] の2件ちょうどで両 effect は同一モーダル、連結・merge_split 混入なし。
+- **sec004 の reject 行の扱い**: submit は 003 の行だけを外し、sec004 の行は残った（alias 宣言だけでは行が外れないケース）。登録により sec004 は 003 の alias として完全にカバーされるため、第328・330・331弾の stale クリーンアップと同型に行だけを除去した。alias 側の残留は無し。
+- converted **10,250 → 10,251** / rejects **2,071 → 2,069**、canonical 重なり0・漏れ0、ex_life_shield_leave_trigger 解消。
+- テスト **14 passed**（round347 cards 4件＝disposition＋登録形の実挙動3件〔CIP mode 1 全体破壊／ブレイク経路 mode 0 捨て札／普通のシールドでは不発〕、pilot312 cards 登録形書換 2件、data_audit 8件）＋第312弾本体 **6 passed**（別 invocation）。
+- 回答は answers/round347.yaml に保存。次の番号: パイロット313 / ラウンド348 / プロト T964。
+
+## 第313弾 cost_le_count（「マナの枚数よりコストが小さい」）— ドリフト
+
+センサス（rejects 2,069件を再集計）: 純粋ファミリーの大半は範囲外（gr_summon 147、aura 108、hyperdimensional_zone 105、dragheart 45、psychic_filter 45、hyperdimensional_summon 41、out_of_game 23、duelist_link 20、outside_game 12、pandora_shift 4）か評価済み DEEP/重い/延期。第312弾の監査（`gaps` 空・unsupported にだけギャップ名が残る NEO 期の行）を継続し、残り21行を1件ずつ公式本文＋partial で評価した。内訳: 範囲外1件（dmex17-032 超次元ドラグハート装備）、現実依存の主観条項1件（dmex08-153 subjective_kawaii_mechanic「一番可愛い」は正確に表せない）、残りは各行に別のブロッカー（must_attack_creature 条件付き攻撃対象制限、become_evolution_base_trigger「上に進化された時」イベント未確認、attack_trigger_alt_summon 攻撃ウィンドウの召喚許可、j_big＋neo_summon_cost_reduction 支払いフロー隣接、gachinko_judge の追加ターン付与、choukon_raid 自身の evolve_from を参照する動的フィルタ、break_bonus 攻撃中ブレイク枚数参照、battle_destroy_replacement_to_mana バトル起因の置換、free_summon_condition_bounce 条件付き無料召喚＋全体バウンス、cast_opponent_graveyard_spell_resolve_bottom＋attack_end_restack_self の複合、kizuna_plus の能力コピー隣接 等）。正確に表せる行として本件 cost_le_count（3行）を選定。併せて同監査から stack_from_deck_search（dmex18-045、第308弾の activate 形と完全一致）と under_dragons_return_on_destroy（dmex12-s19、第294弾 form B＋event.was_under）がドリフト候補として残る（次弾以降の候補、本弾では扱わない）。
+
+対象は dm26rp3-std010 BARUGA-雷座87 の3刷（dm26rp3-std010 / dm26rp3-stdchosec010 / dm26rp3-stdsec010、partial は id/name 以外完全同一）。partial は NEO進化・W・ブレイカー・CIP「山札の上から2枚をタップしてマナゾーンに置く」まで完成済みで、欠けているのはメテオバーンの後半「自分のマナゾーンにあるカードの枚数よりコストが小さいクリーチャーを1体、自分のマナゾーンから出す」だけだった。
+
+結論: **ドリフト**（新規語彙・エンジン変更なし）。ギャップ名 cost_le_count は第117弾 cost_lt_count の別名ドリフト:
+
+- 「Xの枚数よりコストが小さい」= filter の cost_le に {sum: [{count: ...}, -1]}（第117弾の確立形。「より小さい」は枚数−1 以下）。マナ枚数で数える形も登録済み先例あり（dm26ex3-082 蒼龍の大地：cost_le: {sum: [{count: {zone: mana, owner: you}}, -1]}。選択時点＝出す前のマナ枚数で数える読みも同先例で固定済み。本件も選択時点で数えるため、燃やした下カードはマナ枚数に影響しない）。
+- 攻撃時メテオバーン「このクリーチャーの下にあるカードを1枚墓地に置いてもよい。そうしたら～」= dm19-007 の確立イディオム {kind: trigger, when: {event: attack, subject: self}, effect: [may [move {under_of: self, count: 1} → graveyard, reason: put, as: paid, if {exists: {ref: paid}} → 続き]]}。下が無い場合は move が何も束縛せず if で止まる（実挙動で固定）。
+- マナから出す = move {select: {zone: mana, owner: you, filter: {types: [creature], cost_le: ...}, count: 1}, to: bz, reason: put}（dm26ex3-082 と同形。play_free はマナ源の登録先例なし。本文に進化除外の指定はないため not_types は付けない）。
+
+- プロト T964（std010 型: NEO進化＋CIP＋メテオバーン）。次の空きは **T965**。
+- tests/test_vocab_pilot313.py: **6 passed** — parse（neo・evolve_from・2誘発）、CIP（山札上2枚がタップしてマナへ、マナ5→7）、メテオバーン本筋（マナ7枚時にコスト7の T142・コスト9の T095 は候補に出ず、コスト2だけが候補。燃やした進化元は墓地へ、選んだ1体が場へ、マナ7→6）、辞退（下が残り何も出ない）、下なし素出し（出す選択自体が出ない）、対象なし（マナの獣が全てコスト7以上＋CIP分は呪文 → 燃やすだけ）。
+- tests/test_vocab_pilot313_cards.py: **3 passed** — 対象3行の残留（gaps 空・unsupported は当該ギャップのみ・未登録・3刷の partial は id/name 以外同一）、確立形 FORM（partial ＋ メテオバーン誘発）の parse と cost_le 式の形。
+- 回帰: 第307・312弾＋data_audit＋rust_schema_sync＋test_rules **64 passed**、第117・305・311弾 **20 passed**。既知の事前失敗2件（第274弾・第31弾）は範囲外。_mana_choices には触れていない。エンジン変更なし（Rust 手順不要）。
+
+テスト中の発見: setup() の山札 spec は内部順序が spec の並びと一致しない（CIP で取る2枚は spec 内の位置から予測できない）。山札上カードの素性を固定したい場合は spec を単一 defn で揃えること。NEO進化のプレイキーは play:<defn>:neo（接尾辞なしは素出しになる）。
+
+収支: converted **10,251（不変）** / rejects **2,069（不変）**。変更は proto.yaml（T964 純追加）・テスト2件・docs のみ。
+
+### ラウンド348側の注意
+
+- 対象は dm26rp3-std010 / dm26rp3-stdchosec010 / dm26rp3-stdsec010 の3件。提出形は tests/test_vocab_pilot313_cards.py の FORM（partial ＋ メテオバーン誘発、unsupported 除去）。
+- 対象行は `gaps` が空のため reopen では外れない（第323・343・347弾の先例どおり直接 submit）。
+- 3件は同一カードの3刷（うち2件は secret 系）: submit 前に identity で正本判定し、id・alias を real.yaml / real_akashic.yaml / real_vocab.yaml / real_zone.yaml / proto.yaml / converted.yaml と照合すること。partial の name は「BARUGA-雷座87(DM26RP3 STD10/)」の表記ゆれを含むため、登録名は公式データ側で確認すること。
+- 登録後は abilities が [CIP誘発, メテオバーン誘発] の2件ちょうどであることを本文と照合すること（連結・merge_split 混入の確認）。
+
+### ラウンド348（cost_le_count 再変換）
+
+- 新規登録 **1件**: dm26rp3-std010 BARUGA-雷座87(DM26RP3 STD10/)。alias 畳み込み **4件**: dm26rp3-stdchosec010 / dm26rp3-stdsec010 / dm25ex3-023 / dm25rp2-021 → dm26rp3-std010。stale クリーンアップ **2件**（stdchosec010 / stdsec010 の reject 行、後述）。差し戻し0件。
+- 正本判定は identity 実測: canon_id は3刷とも dm26rp3-std010、aliases_for（BARUGA-雷座87, dm26rp3-std010） = [dm25ex3-023, dm25rp2-021, dm26rp3-stdchosec010, dm26rp3-stdsec010]。submit 前照合: 対象 id と alias 計5件すべて converted / real.yaml / real_akashic.yaml / real_vocab.yaml / real_zone.yaml に無し（proto.yaml のヒットは第313弾プロト T964 の text 内参照のみ）。登録名は公式データ（by_product/26rp3.jsonl）の表記「BARUGA-雷座87(DM26RP3 STD10/)」で partial の表記と一致。対象行は gaps が空のため reopen では外れず直接 submit（第323・343・347弾の先例）。
+- 登録形は確立形と完全一致（partial ＋ メテオバーン誘発、unsupported 除去、source.aliases に4件を記録）。abilities は [CIP誘発, メテオバーン誘発] の2件ちょうど、keywords は [double_breaker]、連結・merge_split 混入なし（回答との全項目一致を実測）。
+- **stdchosec010 / stdsec010 の reject 行の扱い**: submit は std010 の行だけを外し、2刷の行は残った（第347弾 sec004 と同型）。登録により両者は std010 の alias として完全にカバーされるため、stale クリーンアップとして行だけを除去した。dm25ex3-023 / dm25rp2-021 は reject 行自体が無く alias 記録のみ。
+- converted **10,251 → 10,252** / rejects **2,069 → 2,066**、canonical 重なり0・漏れ0。cost_le_count は対象3行から解消（ギャップ名は多重ギャップ行 dm25ex3-rp1s02 にのみ残る: neo_summon_cost_reduction を併せ持ち、その cost_le_count は「手札の枚数以下のコストを持つカードなら実行してもよい」という別用法で、本ラウンドの対象外）。
+- テスト **14 passed**（round348 cards 4件＝disposition＋登録形の実挙動3件〔CIP で山札上2枚がタップしてマナへ／メテオバーン本筋＝マナ7枚時にコスト7・9は候補に出ず燃やした進化元は墓地・選んだ1体が場へ・マナ7→6／辞退で下が残る〕、pilot313 cards 登録形書換 2件、data_audit 8件）＋第313弾本体 **6 passed**（別 invocation）。
+- 回答は answers/round348.yaml に保存。次の番号: パイロット314 / ラウンド349 / プロト T965。
+
+## 第314弾 stack_from_deck_search（山札を見て自分の上に置く）— ドリフト（第308弾の activate 形）
+
+センサス（rejects 2,066件）: 第313弾の監査で記録されたドリフト候補2件を公式本文＋partial で検証した。under_dragons_return_on_destroy（dmex12-s19 燃える侵略 レッドギラゴン）も第294弾 form B ＋ filter {race_has: ドラゴン, not_types: [evolution]}（not_types は既存フィルタキー）で書ける見込みだが、本弾は第308弾の形と完全一致する **stack_from_deck_search（dmex18-045 ワンケングレンオー ～弧月躍動～、純粋1件）** を選定した（s19 は次弾以降の候補として残る）。対象行は gaps 空・unsupported にだけギャップ名が残る監査行（第312・313弾の監査の継続）。
+
+未解決条項は起動能力1節のみで、残り（NEO進化 evolve_from {any_of: [{civs: [nature]}, {name_has: ケングレンオー}], types: [creature]}、出た時「山札の上から1枚目をマナゾーンに置く」誘発）は partial で完成済み:
+
+- 「このクリーチャーで攻撃するかわりに、タップして次の能力を使ってもよい」= {kind: activate, cost: {tap: self}}（第308弾ほか多数の先例。起動は attack 決定で activate:<defn>:* として提示される）。
+- 「自分の山札を見る。その中から、名前に《ケンゴウグレンオー》とあるクリーチャーを1体、このクリーチャーの上に置いてもよい。その後、山札をシャッフルする」= may [choose {zone: deck, owner: you, look: true, filter: {name_has: ケンゴウグレンオー, types: [creature]}, count: 1} as p → move {select: {ref: p, count: all}, to: bz, reason: put, stack_evo: true, evo_source: {ref: self}}] ＋ {op: shuffle}（第173弾 deck_evolution の全山札検索形、第308弾で実挙動固定済み。本件は第308弾の2件にあった全体破壊の節が無いだけで、may＋shuffle の構造は同一）。
+- 探索名は《ケンゴウグレンオー》であって進化元の《ケングレンオー》ではない。本カードの名《ワンケングレンオー》は、上に乗る dmc64-025 ケンゴウグレンオーの evolve_from {name_has: ワンケングレンオー} と一致する（第308弾 024/025 と同じ名前の連鎖）。重ね先の適格性は解決時に照合される（ops の stack_evo 分岐）。
+
+新規語彙・エンジン変更なし（_mana_choices 未接触、Rust 手順不要）。
+
+- プロト T965（dmex18-045 型: NEO進化＋CIP＋起動能力。探索対象には既存の T949 試験用ケンゴウグレンオー・鳴動を再利用し、名前に《ケングレンオー》を含むが《ケンゴウグレンオー》を含まない T951 を対照として混ぜた）。次の空きは **T966**。
+- tests/test_vocab_pilot314.py: **5 passed** — parse（neo・evolve_from any_of・[誘発, 起動] の並び・起動の形が確立形と完全一致）、CIP（手札から出して山札上1枚がマナへ。山札 spec は単一 defn で揃え、枚数は相対で固定）、起動本筋（候補は T949 の2枚だけで T951 は提示されない／選んだ1枚が上に重なり、もう1枚は山札に残る／起動コストでタップ）、辞退（重ならず山札不変・コストは支払う）、対象なし（山札に該当なしで空振り安全）。
+- tests/test_vocab_pilot314_cards.py: **3 passed** — 対象行の残留（gaps 空・unsupported は当該ギャップのみ・未登録・ファミリーはこの1件だけ）、提出形 FORM（partial ＋ 起動能力）が partial の完成済み節と一致し text は公式全文と一致、FORM の parse と起動の形。
+- 回帰: 第308・173・249・305弾＋data_audit＋test_rules＋rust_schema_sync **84 passed**。既知の事前失敗2件（第274弾・第31弾）は範囲外。
+
+テスト中の発見: choose の候補が1枚だけだと選択は自動決定され choose_cards 決定として現れない（候補の内訳を固定したい場合は同 defn を2枚入れる）。choose_cards の選択肢は defn キーを持たず cid を持つ（defn は e.s.cards[cid].defn で引く）。公式 text は行頭の「t」だけ半角で「次のｔ能力」は全角（転記時に混同しやすい）。
+
+収支: converted **10,252（不変）** / rejects **2,066（不変）**。変更は proto.yaml（T965 純追加）・テスト2件・docs のみ。
+
+### ラウンド349側の注意
+
+- 対象は dmex18-045 の1件。提出形は tests/test_vocab_pilot314_cards.py の FORM（partial ＋ 起動能力、unsupported 除去）。partial の他の節は完成済みで、公式全文からの追加構築は不要。
+- 対象行は `gaps` が空のため reopen では外れない（第323・343・347・348弾の先例どおり直接 submit）。
+- submit 前に identity で正本判定を行い、id・alias を real.yaml / real_akashic.yaml / real_vocab.yaml / real_zone.yaml / proto.yaml / converted.yaml と照合すること。
+- 登録後は abilities が [CIP誘発, 起動能力] の2件ちょうどであることを本文と照合すること（連結・merge_split 混入の確認）。keywords は無し（本文にキーワード能力なし）。
+
+### ラウンド349（第314弾の再変換）
+
+**新規登録1件**（dmex18-045 ワンケングレンオー ～弧月躍動～＝partial の CIP 誘発＋第314弾の起動能力〔第308弾の activate 確立形＋第173弾 deck_evolution の全山札検索形〕、unsupported 除去。登録形は確立形と完全一致で abilities は [CIP誘発, 起動能力] の2件ちょうど、keywords 無し、連結・merge_split 混入なし）・**alias 畳み込み0件**（identity 実測で canon_id は自id、aliases_for は空）・**stale クリーンアップ0件**・**差し戻し0件**。対象行は gaps が空のため直接 submit。提出前照合: 対象 id は real.yaml / real_akashic.yaml / real_vocab.yaml / real_zone.yaml / converted.yaml のいずれにも無し（proto.yaml のヒットはプロトカードの text 内参照のみ）。converted 10,252→**10,253** / rejects 2,066→**2,065**、重なり0・漏れ0。stack_from_deck_search はファミリー単独行のため完全解消。pilot314 cards を登録形に書換、round349 cards を新設（登録カード自身の実挙動: CIP で山札上1枚がマナへ／起動本筋＝候補は T949 の2枚だけで T951 は提示されず、選んだ1枚が上に重なる・もう1枚は山札に残る・起動コストでタップ／辞退で重ならずコストだけ払う）。テスト14 passed（round349 cards 4＋pilot314 cards 登録形 2＋data_audit 8）＋第314弾本体5 passed（別 invocation）。
+
+## 第315弾 under_dragons_return_on_destroy（「下にあった進化ではないドラゴンをすべて出す」）— ドリフト（第294弾 form B）
+
+対象は dmex12-s19 燃える侵略 レッドギラゴン の純粋1件。gaps 空・unsupported にだけギャップ名が残る監査行（第312〜314弾の監査の継続、第314弾で表現可能と評価された候補）。partial の他節（NEO進化、侵略＝面フィールド declare〔登録済み dm26ex1-019 等と同形〕、W・ブレイカー、攻撃の終わりに山札の上から1枚目を表向きにして下に重ねる）は完成済みで、不足は最終節「このクリーチャーが破壊された時、その下に重ねてあった進化ではないドラゴンをすべてバトルゾーンに出す」のみ。
+
+- **確立形（追加語彙なし）**: 第294弾 form B（登録済み dmex12-004 デュエにゃん皇帝と同形）の filter を替えるだけ: 破壊トリガー {when: {event: move, from: bz, to: graveyard, reason: destroy, subject: self}, effect: [{op: play_free, select: {ref: event.was_under, zone: graveyard, filter: {race_has: ドラゴン, not_types: [evolution]}}}]}。「進化ではないドラゴン」= race_has: ドラゴン（種族文字列への部分一致。第294弾の put_under filter でも使われた既存キー not_types: [evolution] で進化を除外）。エンジン変更なし（_mana_choices 未接触、スキーマ再生成なし）。
+- プロト T966（dmex12-s19 型: NEO進化＋攻撃の終わりの下置き＋本弾の破壊誘発）＋役カード T967（非進化ドラゴン）/ T968（進化ドラゴン）/ T969（非ドラゴン）。tests/test_vocab_pilot315.py（4件: parse＋形の一致、本筋＝下の3種のうち非進化ドラゴンだけが出て進化ドラゴン・非ドラゴンは墓地に残り、下に無かった同種ドラゴンは出ない、実条項連鎖＝NEO進化元の上に乗り攻撃の終わりに山札の上（ドラゴン）を重ねて破壊されると下のドラゴン2枚とも出る、対照＝下が非ドラゴンだけなら何も出ない）＋ tests/test_vocab_pilot315_cards.py（2件: 対象行の残留・ファミリー単独・提出形 parse［parse 展開後はキーワード由来 static が先頭に付く］）。
+- **テスト中の注意**: 下カードは束の一部として bz ゾーンに居るため zone 属性では出入りを判定できない（zone は最初から bz）。done 条件は本体の墓地行きで取り、出たことは top_of < 0（独立したクリーチャー化）で確認する。
+- テスト結果: 第315弾本体 **4 passed**、cards **2 passed**、回帰（第294・308・313・314弾本体＋test_data_audit＋test_rules＋test_rust_schema_sync）**82 passed**、cards 回帰（第294・314弾 cards＋round349 cards）**8 passed**。既知の事前失敗2件（第274弾の _mana_choices 競合、第31弾 janken）には触れていない。converted 10,253 / rejects 2,065 は不変。
+- ラウンド350側の注意: 対象行は gaps が空のため reopen では外れない → 直接 submit（第323・343・347・348・349弾の先例）。提出形は tests/test_vocab_pilot315_cards.py の FORM（partial ＋ 破壊誘発、unsupported 除去）で、登録後は raw の abilities が [攻撃の終わり誘発, 破壊誘発] の2件ちょうどであることを本文と照合すること（keywords は double_breaker のまま）。submit 前に identity で正本判定し、id・alias を real.yaml / real_akashic.yaml / real_vocab.yaml / real_zone.yaml / proto.yaml / converted.yaml と照合すること。
+- 次の番号: パイロット316 / ラウンド350 / プロト T970。
+
+### ラウンド350（第315弾の再変換）
+
+**新規登録1件**（dmex12-s19 燃える侵略 レッドギラゴン＝partial の完成済み節〔NEO進化・侵略 declare・攻撃の終わり誘発〕＋第315弾の破壊誘発〔第294弾 form B の filter を {race_has: ドラゴン, not_types: [evolution]} に替えたもの〕、unsupported 除去。登録形は確立形と完全一致で raw の abilities は [攻撃の終わり誘発, 破壊誘発] の2件ちょうど、keywords は double_breaker のまま、連結・merge_split 混入なし）・**alias 畳み込み0件**（identity 実測で canon_id は自id、aliases_for は空）・**stale クリーンアップ0件**・**差し戻し0件**。対象行は gaps が空のため直接 submit。提出前照合: 対象 id は real.yaml / real_akashic.yaml / real_vocab.yaml / real_zone.yaml / converted.yaml のいずれにも無し（proto.yaml のヒットは第315弾プロト T966 の text 内参照のみ）。submit の lint は助言のみ（play_free の reason: summon への注意喚起。第294弾 form B＝登録済み dmex12-004 と同形のため確立形どおり）。converted 10,253→**10,254** / rejects 2,065→**2,064**、重なり0・漏れ0。under_dragons_return_on_destroy はファミリー単独行のため完全解消。pilot315 cards を登録形に書換、round350 cards を新設（登録カード自身の実挙動: 破壊で下の非進化ドラゴンだけが出る／攻撃の終わりに山札の上を重ねて破壊されると下のドラゴン2枚とも出る／下が非ドラゴンだけなら何も出ない）。テスト14 passed（round350 cards 4＋pilot315 cards 登録形 2＋data_audit 8）＋第315弾本体4 passed（別 invocation）。テスト中の発見: scenario.build の山札は spec の末尾が上（リスト index 0 が上）で、圧縮山札は破壊解決後のターン進行で deck_out しうるため、条項連鎖テストでは下に余分なカードを敷いて防いだ。回答は answers/round350.yaml に保存。次の番号: パイロット316 / ラウンド351 / プロト T970。
+
+## 第316弾 filter_not_keyword（「『ブロッカー』以外のクリーチャー」）— 最小語彙追加（フィルタキー not_keyword）
+
+センサス先行（rejects 2,064件を取り直し）: 第312〜315弾の空 gaps 監査ラインは表現可能なファミリーを使い切った（空 gaps 行は残り18件、全て監査で別ブロッカー確認済み）。pure ファミリーの上位は範囲外が占める（gr_summon 147 / aura 108＝未承認 / hyperdimensional_zone 105 / dragheart 45 / psychic_filter 45 / hyperdimensional_summon 41 / out_of_game 23 / duelist_link 20 / outside_game 12 / pandora_shift 4）。範囲内・未評価で最小だった **filter_not_keyword（純粋2件: dm06-016 / dm18-022、ともにジャスティス・バインドの同名2刷。multi-gap 行には現れない）** を選定した。両行の partial の notes 自身が「フィルタにキーワードの否定が無いため絞れない（not_keyword 相当が無い）」と明記しており、ギャップの実体はフィルタキーの欠落そのもの。
+
+検討して見送った候補: フィールド系（wd_field 3 / historic_field 3 / dg_field 2 / dm_field 2 / forbidden_field 2）は型マーカーではなく各カード固有の機構（WD＝裏面側への反転、ヒストリック＝最初のターンに手札公開で無償で出す等）で均一な小語彙にならない。does_not_untap（2件）は自他2形が混在し他節も重い。all_civilizations_condition（3件: dm26sd1-b005 / b013 / dm27-050）はマナ全文明条件のイディオム検証が未了（b005 はエレメント全域＋モーダル全使用で別格）— 次弾以降の候補として残す。
+
+- **追加語彙（最小）**: フィルタキー **not_keyword**。defs FILTER_KEYS に追加し、selectors.filter_match に既存 keyword の鏡像（not_keyword が特性値 keywords に含まれれば不一致）を1分岐追加。schema は FILTER_KEYS から生成されるため再生成し、差分は not_keyword の3行のみ（filter 本体・evolve_from・もう1箇所の filter 参照）。dataaudit は defs の FILTER_KEYS を参照するため追加作業なし。Rust 手順: フィルタキーはデータ側の語彙で、第278弾 races_all と同型（エンジンの状態フィールド追加なし。test_rust_schema_sync passed）。
+- **判定の意味論**: 特性値の keywords は静的付与分を含む（core の grant 反映）ため、「ブロッカー」を付与されたクリーチャーも「ブロッカー以外」から外れる。既存 keyword フィルタと同じ見方で、ルール上も付与されたブロッカーはブロッカーとして扱うのが正しい。本体テストで実挙動固定（付与獣 T971 の下のバニラはタップせず、付与対象外の T971 本体はタップする）。
+- **確立形**: 呪文面 [{op: tap, select: {zone: bz, owner: any, filter: {types: [creature], not_keyword: blocker}, count: all}}]。dm18-022 の partial には tap 形が完成済みで filter に not_keyword: blocker を足すだけ。dm06-016 の partial は spell 本体を持たない骨組みのため、提出形は dm18-022 と同じ spell を補って構築する（本文は各行の公式テキストのまま。表記差: dm06-016 は旧表記「S(シールド)・トリガー」、dm18-022 は「S・トリガー」）。
+- プロト T970（ジャスティス・バインド型: 光4コスト呪文・S・トリガー）＋ T971（役カード: 自分の他のクリーチャーにブロッカーを付与する静的。other: true で自身を含まない）。対照には既存 T001（バニラ）/ T004（印刷ブロッカー）を使用。次の空きは **T972**。
+- tests/test_vocab_pilot316.py: **4 passed** — parse（T970 の spell が確立形と一致・keywords [s_trigger]、T971 の grant 形）、未知フィルタキーが今も DefError で弾かれること、本筋（自他両方のバニラをタップし印刷ブロッカーは自他ともタップしない）、付与ブロッカー（付与されたバニラはタップせず、付与対象外の本体と相手バニラはタップする）。
+- tests/test_vocab_pilot316_cards.py: **2 passed** — 対象2行の残留（gaps・unsupported ともに当該ギャップのみ・未登録・ファミリーはこの2件だけ）、提出形2種（dm18-022＝partial の tap 形＋not_keyword が確立形と一致、dm06-016＝spell を補った形）の parse と spell の形。
+- 回帰: 本体群（第278・287・288・311・315弾＋test_rules）**93 passed**、cards/audit 群（test_data_audit＋test_rust_schema_sync＋第315・278弾 cards）**20 passed**。既知の事前失敗2件（第274弾・第31弾）は範囲外で未接触。selectors.py に触れたが _mana_choices は未接触。
+- 収支: converted **10,254（不変）** / rejects **2,064（不変）**。変更は defs.py・selectors.py・card.schema.json・proto.yaml（T970/T971 純追加）・テスト2件・docs のみ。
+
+### ラウンド351側の注意
+
+- 対象は dm06-016 / dm18-022 の2件。提出形は tests/test_vocab_pilot316_cards.py の FORM 相当（_form(tid)）: dm18-022 は partial の spell の filter に not_keyword: blocker を追加、dm06-016 は dm18-022 と同じ spell を補う。どちらも unsupported を外す。
+- 対象2行は gaps = [filter_not_keyword] を持つため reopen で外れる見込みだが、reopen は gaps ⊆ の全行を外すため、出力行を数えて対象2件だけであることを確認すること（混入時は直接 submit へ切り替える）。
+- 正本判定は identity の実データで submit 前に行うこと。dm18-022 の partial の source.aliases には既に dm06-016 が記録されているが、それだけで正本を決めない。id・alias を real.yaml / real_akashic.yaml / real_vocab.yaml / real_zone.yaml / proto.yaml / converted.yaml と照合すること。
+- 登録後は spell が [tap 1件] ちょうどで filter が {types: [creature], not_keyword: blocker} であることを本文と照合すること（連結・merge_split 混入の確認）。keywords は [s_trigger] のまま。
+- 次の番号: パイロット317 / ラウンド352 / プロト T972。
+
+### ラウンド351（第316弾の再変換）
+
+**新規登録1件**（dm18-022 ジャスティス・バインド＝partial の完成済み tap 形の filter に第316弾の not_keyword: blocker を追加、unsupported 除去。登録形は確立形と完全一致で spell は [tap 1件] ちょうど、filter は {types: [creature], not_keyword: blocker}、keywords は [s_trigger] のまま、連結・merge_split 混入なし）・**alias 畳み込み1件**（dm06-016 → dm18-022、identity 実測で canon_id は dm18-022 が正本。dm18-022 の partial の aliases 記録だけで決めたのではない。dm06-016 の提出形は同じ spell を補って構築したが、正本側の登録に畳み込まれた）・**stale クリーンアップ0件**・**差し戻し0件**。対象2行は gaps = [filter_not_keyword] のため reopen で外してから submit（rejects の差分は対象2行のみ）。提出前照合: 対象 id・alias は real.yaml / real_akashic.yaml / real_vocab.yaml / real_zone.yaml / converted.yaml のいずれにも無し（proto.yaml のヒットは第316弾プロト T970 の text 内参照のみ）。converted 10,254→**10,255** / rejects 2,064→**2,062**、重なり0・漏れ0。filter_not_keyword はファミリーがこの2行だけだったため完全解消。pilot316 cards を登録形に書換、round351 cards を新設（登録カード自身の実挙動: 自他両方のバニラをタップし印刷ブロッカーは自他ともタップしない／T971 の静的で付与されたブロッカーはタップせず、付与対象外の T971 本体と相手バニラはタップする）。テスト13 passed（round351 cards 3＋pilot316 cards 登録形 2＋data_audit 8）＋第316弾本体4 passed（別 invocation）。回答は answers/round351.yaml に保存。次の番号: パイロット317 / ラウンド352 / プロト T972。
+
+## 第317弾 all_civilizations_condition（「すべての文明が揃っていれば」）— ドリフト（追加語彙なし）
+
+対象は純粋3件: dm26sd1-b013 フェアリー・ミラクル / dm27-050 ゴレン・キャノン / dm26sd1-b005 魔誕と光喜と楽識と炎怒と哀樹の決断。第316弾で「マナ全文明条件のイディオム検証が未了」として残された候補。3行とも partial は骨格（unsupported のみ）で spell 本体が無い。
+
+- **条件の確立イディオム（マナ版）**: 登録済み **dmx16-064 奇跡の面 ボアロジー**（フェアリー・ミラクルと同文の CIP「置く。その後、揃っていれば、さらに1枚」）が既にこの形で登録されていた: `{op: if, cond: {all: [cmp: [{count: {zone: mana, owner: you, filter: {civs: [文明]}}}, ">=", 1] ×5文明]}, then: [...]}`。「すべての文明」は5文明（光・水・闇・火・自然）で、多色カードは各文明を満たす（filter civs の通常の意味論）。もう1件の登録先例 dmex15-b030（G・ゼロの同条件）もある。本弾はこの条件を新規に作らず、既存イディオムの適用範囲として固定した。
+- **形A（dm26sd1-b013 フェアリー・ミラクル）**: spell = [mana_put {from_top: 1}, if（マナ全文明）→ mana_put {from_top: 1}]。条件は1枚目を置いた**後**に判定する（本文の順序どおり。本体テストで「1枚目で揃って2枚目が置ける／揃わなければ置けない」を両方向で固定）。山札の上から置く形は from_top: 1（converted 内120件の多数形。dmx16-064 の count: 1 形は隠れ選択になる旧形で、指す先は同じ）。
+- **形B（dm27-050 ゴレン・キャノン）**: spell = [destroy {zone: bz, owner: opp, filter: {types: [creature], power_le: 3000}, count: 1}, if（マナ全文明）→ 同じ destroy]。
+- **形C（dm26sd1-b005）**: 条件は「自分の**エレメント**にすべての文明」であってマナゾーンではない。**総合ルール403.1**（エレメントに影響を及ぼす・参照する効果は、テキストに他のゾーンの記載がない限りバトルゾーンのエレメントのみを参照する）により zone: **bz** で数える。裏付け: (1) 本カードは5文明コスト [光水闇火自然] のため、通常の唱え方では支払いに5文明すべてのマナをタップしなければならず、マナ読みでは置換条項が常時成立して無意味になる（設計上ありえない）。(2) dmwiki のカードページの条件達成例は魔法陣サイクル（タマシード）・《天災 デドダム》＋《龍風混成 ザーディクリカ》・《虹速 ザ・ヴェルデ》・《超越男》・《愛の無限オーケストラ》自身などバトルゾーンのカードのみで、同ページは「このカードがマナゾーンにある」話をフェアリー・ミラクル側の条件として別に書いている。(3) 第145弾のバラバラエティ [bz, mana] はコストという特性値の参照（カードタイプ特性の参照はバトルゾーン以外でも有効という同ルールの另一面）で、本弾の存在条件とは別件として触らない。本体テストに判別テストを置いた: マナに全文明が揃い場が揃わない局面では置換の may は提示されず通常の2回選択になる。
+- **形Cの本体**: `{op: if, cond: 全文明（bz）, then: [{op: may, body: [modal {count: 5, modes}], else: [modal {count: 2, repeat: true, modes}]}], else: [modal {count: 2, repeat: true, modes}]}`。modal {count: 5}（モード5種・repeat なし）は全選択が自動決定され書かれた順に解決する（公式どおり「上から順に解決」）。モードは既存先例の合成: シールド化＝move {select: {zone: deck, owner: you, from_top: 1}, to: shield, reason: charge}（dm22ex2-068）、2ドロー、見ないで捨てさせる＝discard {chooser: random}（dm24ex1-003）、相手のエレメント破壊＝destroy {select: {zone: bz, owner: opp, filter: {cost_le: 6}, count: 1}}（dm26rp3-011 モード3の destroy エレメント形。破壊はバトルゾーンのみ＝403.1）、マナ置き＋may でマナから手札回収（move {zone: mana → to: hand, reason: return} の先例形）。
+- プロト T972（形A）/ T973（形B）/ T974（形C）。次の空きは **T975**。
+- tests/test_vocab_pilot317.py: **8 passed** — parse（3形ともプロトと確立形の完全一致。期待形は parse のマクロ展開形で記述）、形A（1枚目で揃う→2枚目／揃わない→1枚のみ）、形B（全文明→2体破壊・パワー4000は対象外／不揃い→1体）、形C（場全文明＋全使用を選択→5モードが順に解決: シールド5→6・2ドロー＋回収で手札3・相手手札−1・相手の獣破壊・マナ5→+1→−1。yes_no は全使用と回収の2回／**判別**: マナ全文明でも場不揃いなら may は出ず通常2回選択／場全文明でも全使用を断れば通常2回選択）。
+- tests/test_vocab_pilot317_cards.py: **2 passed** — 対象3行の残留（gaps・unsupported ともに当該ギャップのみ・未登録・ファミリーはこの3件だけ）、提出形3種（partial の骨格＋構築 spell）の parse とプロト形との一致。
+- 回帰: 本体群（第145・279・316弾＋test_rules＋test_rust_schema_sync）**63 passed**、cards/audit 群（第316弾 cards＋第292弾 cards＋round327 cards＋test_data_audit）**22 passed**。エンジン・defs・スキーマ変更なし（_mana_choices 未接触）。既知の事前失敗2件（第274弾・第31弾）は範囲外で未接触。
+- 収支: converted **10,255（不変）** / rejects **2,062（不変）**。変更は proto.yaml（T972〜T974 純追加）・テスト2件・docs のみ。
+
+### ラウンド352側の注意
+
+- 対象は dm26sd1-b013 / dm27-050 / dm26sd1-b005 の3件。提出形は tests/test_vocab_pilot317_cards.py の FORM 相当（_form(tid)）: partial の骨格に構築した spell を足し、unsupported を外し、text は各行の公式全文に差し替える（partial の text は切れている）。形A/B の spell は2ステップ、形C は if 1件ちょうどであることを登録後に本文と照合すること（連結・merge_split 混入の確認）。
+- 対象3行は gaps = [all_civilizations_condition] を持つため reopen で外れる見込みだが、reopen は gaps ⊆ の全行を外すため、出力行を数えて対象3件だけであることを確認すること（混入時は直接 submit へ切り替える）。
+- 正本判定は identity の実データで submit 前に行うこと。b005 の partial の source.aliases には dm24ex3-rp4011 / dm24ex3-rp4sec15 / dm24rp4-011 / dm24rp4-sec15 の記録があるが、それだけで正本を決めない。b013 の alias は17件（dm24bd4-015 / dm27-053 / dm27-053cc / dmart03-003 / dmbd01-015 / dmex06-095 / dmex08-099 / dmrp18-a13 / dmrp18-b13 / dmx01-039 / dmx14-080 / dmx16-070 / dmx22b-078 / dmx26-026 / promoy17-056 / promoy23-070 / promoy23-073）。id・alias を real.yaml / real_akashic.yaml / real_vocab.yaml / real_zone.yaml / proto.yaml / converted.yaml と照合すること。なお b005 の公式全文は dm24rp4-011 と同一（「（同じものを選んでもよい）」の括弧の有無など印刷差は各行の原文どおりにする）。
+- 次の番号: パイロット318 / ラウンド353 / プロト T975。
+
+### ラウンド352（第317弾の再変換）
+
+**新規登録3件**（dm26sd1-b013 フェアリー・ミラクル＝形A〔mana_put の後に if。条件は1枚目を置いた後に判定〕 / dm27-050 ゴレン・キャノン＝形B〔destroy の後に if＋destroy〕 / dm26sd1-b005 魔誕と光喜と楽識と炎怒と哀樹の決断＝形C〔条件は zone: bz（403.1）、if → may [modal 全5モード] else [modal 2回・同選択可]〕。いずれも partial の骨格＋構築 spell、unsupported 除去、text は公式全文。登録形は確立形と全項目一致で、形A/B の spell は2ステップ・形C は if 1件ちょうど、keywords なし、連結・merge_split 混入なし）・**alias 畳み込み0件**（b013 の17件・b005 の4件は登録エントリの source.aliases への記録のみで、alias 側の reject 行は元々無し。dm27-050 は alias 無し）・**stale クリーンアップ0件**・**差し戻し0件**。対象3行は gaps = [all_civilizations_condition] のため reopen で外してから submit（reopen の出力は対象3件ちょうど）。正本判定: identity の canon_id 実測で3件とも自 ID（b005 の partial の aliases 記録だけで決めたのではない）。提出前照合: 対象 id と全 alias（計24件）は real.yaml / real_akashic.yaml / real_vocab.yaml / real_zone.yaml / proto.yaml / converted.yaml のいずれにも無し、同名カードの converted 登録も無し。converted 10,255→**10,258** / rejects 2,062→**2,059**、重なり0・漏れ0。all_civilizations_condition はファミリーがこの3件だけだったため完全解消。pilot317 cards を登録形に書換、round352 cards を新設（登録カード自身の実挙動: 形A 両方向／形B 両方向＋パワー4000対象外／形C 全モード順次解決・マナ全文明でも場不揃いなら置換なしの判別・辞退時の fallback）。テスト18 passed（round352 cards 8＋pilot317 cards 登録形 2＋data_audit 8）＋第317弾本体8 passed（別 invocation）。回答は answers/round352.yaml に保存。次の番号: パイロット318 / ラウンド353 / プロト T975。
+
+## 第318弾 「ただし、その『S・トリガー』は使えない」（shield_to_hand_strigger_deny）— ドリフト（第296弾 形A の印）
+
+センサス（rejects 2,059件を再集計）: 空 gaps 行18件は全て第312〜315弾の監査で別ブロッカー確認済み。純粋ファミリーの大半は範囲外（gr_summon 147、aura 108＝未承認、hyperdimensional_zone 105、dragheart 45、psychic_filter 45、hyperdimensional_summon 41、out_of_game 23、duelist_link 20、outside_game 12、pandora_shift 4）か評価済み DEEP/重い/延期（ignore_abilities、copy_abilities、attack_target_choice、mana_tap_trigger、enter_rules_ignore、all_civs_treatment、dynamic_name_reference_filter、deck_faceup_power、static_if_own_current_power、per_evolution_base_cost_reduction、revealed_pile_breaks_and_placement、break_limit、per_card_tap_or_untap、next_spell_cost_reduction、opponent_chooses_deck_position、dokindam_gacha、victory_icon_filter、cost_sum_of_revealed、climax_dorongo、shield_manipulation、spell_replay、summon_lock、cancel_attack、must_attack_next_turn、untap_restriction、power_comparison、conditional_resummon、negate_cannot_attack、doron_go、joe、majibomber、evolution_base_from_graveyard、exclude_ref 等）。フィールド系（wd_field 3 / historic_field 3 / dg_field 2 / dm_field 2 / forbidden_field 2 / t2_field 1 / fairy_field 1 / mugon_field 1）は第316弾の評価どおり各カード固有の機構で均一な小語彙にならず、does_not_untap（2件）も自他2形混在＋他節が重いため、再検討しても見込みが立たない。範囲内・未評価で最小の **shield_to_hand_strigger_deny（純粋2件）** を選定した。
+
+対象は dm24ex3-or1 超天使 ゴルドラン・ゴルギーニ / dmrp22-031 エメラルの海幻。両行とも partial は完成済みで、未解決は「効果で自分のシールドを手札に加える時、その『S・トリガー』は使えない」の1節のみ。第296弾（shield_trigger_restriction / s_trigger_disable）とはギャップ名が違うため対象外だった同条項で、機構は第296弾 形A の move 引数 **strigger: "off"**（S・トリガーの印）そのもの — 追加語彙なしのドリフト。本弾は対象2行の形で再検証した:
+
+- **形A1（dmrp22-031）**: シールド化（hand→shield、reason: charge）の直後に、改めて選んだシールドを手札へ戻す（reason: put）連続形。戻す move は as 束縛のゲート形（第296弾 dmx22b-023 / 変換済み dm03-042・dm26ex4-cho049）ではなく素の zone 選択で、may/if のゲートも無い。この戻す move に印を足すだけ。
+- **形A2（dm24ex3-or1）**: 攻撃誘発の後段: 自分のシールドが10以上あれば、選んだシールド束を flip_up し、bundle_of＋filter で分割する（クリーチャーはすべて場へ、残りは手札へ）。印は ref＋bundle_of＋filter 経由の分割 move でも効くことを固定した。印は手札へ加える move のみに付け、クリーチャーを場に出す move には付けない。
+
+- プロト T975（形A1）/ T976（形A1の対照: 印なし）/ T977（形A2）/ T978（形A2の対照: 印なし）。シールド役は既存 T960（光・S・トリガー呪文）と T001。次の空きは **T979**。
+- tests/test_vocab_pilot318.py: **6 passed** — parse＋確立形一致、形A1（進化で重ねてシールド化→T960 を戻すと宣言なし＋印が付きシールド枚数は不変／対照では宣言あり）、形A2（攻撃誘発で束を分割し T001 は場・T960 は手札で宣言なし＋印／対照では宣言あり）。
+- tests/test_vocab_pilot318_cards.py: **2 passed** — 対象2行の残留（gaps・unsupported ともに当該ギャップのみ・未登録・ファミリーはこの2件だけ）、提出形（partial の手札 move への印追加のみ）の parse と対応プロトとの abilities 完全一致。
+- 回帰: 第296・281弾本体＋test_rules＋test_rust_schema_sync **66 passed**、test_data_audit＋第296弾 cards **11 passed**。エンジン・defs・スキーマ変更なし（_mana_choices 未接触）。既知の事前失敗2件（第274弾・第31弾）は範囲外で未接触。
+- 収支: converted **10,258（不変）** / rejects **2,059（不変）**。変更は proto.yaml（T975〜T978 純追加）・テスト2件・docs のみ。
+
+### ラウンド353側の注意
+
+- 対象は dm24ex3-or1 / dmrp22-031 の2件。提出形は tests/test_vocab_pilot318_cards.py の _form 相当: partial の手札へ加える move に strigger: "off" を足し、unsupported を外したもの（他の条項は partial の完成形のまま）。登録後は abilities の件数・内容を本文と照合すること（両件とも abilities は2件ちょうどのはず）。
+- 対象2行とも gaps = [shield_to_hand_strigger_deny] のため reopen で外れる見込み（ファミリーはこの2件だけなので出力は2件のはずだが、必ず数えること）。
+- dmrp22-031 の partial の text は「シンカライズ」だけに切れているため、提出時は公式全文（シンカライズ説明＋CIP ドロー＋シンカパワー全文）に差し替えること。dm24ex3-or1 の partial の text は全文。
+- 正本判定は identity の実データで submit 前に行うこと。dm24ex3-or1 の partial の source.aliases には dm24ex3-rp3or1 / dm24ex3-rp3sec01 / dm24rp3-or01 / dm24rp3-sec001 の4件の記録があるが、それだけで正本を決めない。id・alias を real.yaml / real_akashic.yaml / real_vocab.yaml / real_zone.yaml / proto.yaml / converted.yaml と照合すること。
+- 次の番号: パイロット319 / ラウンド354 / プロト T979。
+
+### ラウンド353（第318弾の再変換）
+
+**新規登録2件**（dm24ex3-or1 超天使 ゴルドラン・ゴルギーニ＝形A2〔攻撃誘発の束分割で残りを手札に加える move にのみ strigger: "off" の印。クリーチャーを場に出す move には付けない〕 / dmrp22-031 エメラルの海幻＝形A1〔シンカパワーの戻し move {zone: shield, count: 1} → hand に印〕。いずれも partial の完成形＋印追加、unsupported 除去。dmrp22-031 の text は partial が「シンカライズ」だけに切れていたため公式全文に差し替え。登録形は確立形と全項目一致で abilities は両件とも2件ちょうど、連結・merge_split 混入なし）・**alias 畳み込み1件分**（dm24ex3-or1 の alias 4件＝dm24ex3-rp3or1 / dm24ex3-rp3sec01 / dm24rp3-or01 / dm24rp3-sec001 を登録エントリの source.aliases に畳み込み。独立エントリにも reject 行にも無い。dmrp22-031 は alias 無し）・**stale クリーンアップ0件**・**差し戻し0件**。対象2行は gaps = [shield_to_hand_strigger_deny] のため reopen で外してから submit（reopen の出力は対象2件ちょうど）。正本判定: identity の canon_id 実測で2件とも自 ID、dm24ex3-or1 の aliases_for は4件で partial の記録と一致（記録だけで決めたのではない）。提出前照合: 対象 id・alias は real.yaml / real_akashic.yaml / real_vocab.yaml / real_zone.yaml / converted.yaml のいずれにも無し（proto.yaml のヒットは第318弾プロト T975 / T977 の text 内参照のみ）。converted 10,258→**10,260** / rejects 2,059→**2,057**、重なり0・漏れ0。shield_to_hand_strigger_deny はファミリーがこの2件だけだったため完全解消。pilot318 cards を登録形に書換、round353 cards を新設（登録カード自身の実挙動: 形A1＝シンカパワーで手札に加えた T960 は宣言されず印が付きシールド枚数は不変／形A2＝攻撃誘発の束分割で T001 は場へ・T960 は手札へ、宣言なし＋印）。テスト13 passed（round353 cards 3＋pilot318 cards 登録形 2＋data_audit 8）＋第318弾本体6 passed（別 invocation）。回答は answers/round353.yaml に保存。次の番号: パイロット319 / ラウンド354 / プロト T979。
+
+## 第319弾 「攻撃の後、このクリーチャーを破壊する」（destroy_self_after_attacking）— ドリフト（第315弾の delayed 形）
+
+センサス（rejects 2,057件を取り直し）: pure 1,908件 / multi 131件 / 空 gaps 18件（全て第312〜315弾の監査で別ブロッカー確認済み）。pure の大半は範囲外（gr_summon 147、aura 108＝未承認、hyperdimensional_zone 105、dragheart 45、psychic_filter 45、hyperdimensional_summon 41、out_of_game 23、duelist_link 20、outside_game 12、pandora_shift 4）か評価済み DEEP/重い/延期（第318弾の記録参照）。フィールド系と does_not_untap（2件）は第316・318弾の評価どおり再検討しても均一な小語彙の見込みが立たず却下。範囲内・未評価で最小の **destroy_self_after_attacking（純粋2件）** を選定した。
+
+対象は dm22rp1-038 レター＝ジェンゲガー / dm22rp2x-061 ディッシュ＝ウィッシュ。両行とも partial は骨格（キーワードのみ、abilities 無し）で、未解決は自壊条項のみ。機構は第315弾 dmex12-s19 の登録形そのもの — 追加語彙なしのドリフト:
+
+- **形A（dm22rp1-038）**: 攻撃誘発 {event: attack, subject: self} → delayed_trigger {when: {event: attack_end, subject: self}, duration: during_attack, effect: [destroy {ref: self}]}。
+- **形B（dm22rp2x-061）**: 形A ＋ ブロック誘発 {event: block, subject: self} → delayed_trigger {when: {event: attack_end, **target: self**}, duration: during_attack, effect: [destroy {ref: self}]}。attack_end レコードの target は攻撃対象（ブロックしたクリーチャー）で、target: self の照合は dm13-040（バイバイ・アメーバ）の登録先例がある。遅延誘発は _collect_triggers の delayed 走査で通常誘発と同じ _match_when を使うため target 照合もそのまま効く。
+
+- **発見（変換済み側の死に形）**: 同じ条項の変換済み9件（dm26-055 / dmex12-094 / dmrp05-074 / dmex14-075 / dmpcd01-r14 / dmpcd03-b11 / dmr06-043 / dmrp08-077 / dmsd06-015）が使う旧近似形 delayed_trigger {when: {event: turn_end}, duration: during_attack} は**発火しない**。during_attack の遅延誘発・継続的効果は攻撃タスク完了時（combat の 510.2 の _expire("during_attack")）に除去され、turn_end まで残らない。dmex12-094 の notes 自身が「専用イベントが無いためターンの終わりで近似した」と認める形で、attack_end イベント追加後に置き換わっていない。dmex12-094 で実挙動プローブ済み（攻撃→2ターン進めても場に残る）。本弾の対照プロト T981 でも固定した。**変換済み9件の修繕は本弾の範囲外**（第299弾の count: 0 発見と同じく別修繕ステージ送り。修繕形は本弾の形A/B への when 差し替え）。
+- プロト T979（形A）/ T980（形B）/ T981（旧近似形の対照）。次の空きは **T982**。
+- tests/test_vocab_pilot319.py: **7 passed** — parse＋確立形一致（parse 時に destroy マクロが move に展開されるため展開形で比較）、形A（攻撃→攻撃終了時に破壊され次のターン冒頭で既に墓地／攻撃しなければ残る）、形B（攻撃し相手ブロッカーとのバトルに勝っても自壊／ブロックしバトルに勝っても自壊）、対照（旧近似形は攻撃しても発火せず残り続ける）。
+- tests/test_vocab_pilot319_cards.py: **2 passed** — 対象2行の残留（gaps・unsupported ともに当該ギャップのみ・未登録・ファミリーはこの2件だけ）、提出形（partial の骨格＋確立形の誘発）の parse と対応プロトとの abilities 完全一致。
+- 回帰: 第315・310・290・318弾本体＋test_rules＋test_rust_schema_sync＋test_data_audit **83 passed**。エンジン・defs・スキーマ変更なし（_mana_choices 未接触）。既知の事前失敗2件（第274弾・第31弾）は範囲外で未接触。
+- 収支: converted **10,260（不変）** / rejects **2,057（不変）**。変更は proto.yaml（T979〜T981 純追加）・テスト2件・docs のみ。
+
+### ラウンド354側の注意
+
+- 対象は dm22rp1-038 / dm22rp2x-061 の2件。提出形は tests/test_vocab_pilot319_cards.py の FORMS 相当: partial の骨格に形A（061 は形B のブロック誘発も）を足し、unsupported を外したもの。**旧近似形（when: turn_end）は絶対に使わないこと**（発火しない）。
+- dm22rp1-038 の残りの条項「自分のターンの終わりに、自分の山札の上から１枚目を墓地に置く。それがアビスなら、カードを１枚引く」は本弾の対象外で、ラウンドで構築・検証すること。見込み: turn_end 誘発 {player: you} ＋ mill を as で束縛し、置いたカードの race を判定する形は変換済みに先例がある（「2枚ともアビスなら」を ref: milled の race 枚数で判定した登録例）。正確に表せなければ 038 だけ精緻化したギャップ名で差し戻し、061 のみ登録してよい。dm22rp2x-061 の他の条項はキーワード（s_trigger / blocker）のみ。
+- 対象2行とも gaps = [destroy_self_after_attacking] のため reopen で外れる見込み（ファミリーはこの2件だけなので出力は2件のはずだが、必ず数えること）。
+- 正本判定は identity の実データで submit 前に行うこと。partial の aliases 記録（038: promoy21-052、061: dm22rp2-061 / dm22rp2-20a / dm22rp2x-20a / promoy21-069）だけで決めず、id・alias を real.yaml / real_akashic.yaml / real_vocab.yaml / real_zone.yaml / proto.yaml / converted.yaml と照合すること。登録後は abilities・キーワードをテキストと照合すること（submit は partial の abilities と回答を連結する。第313弾の教訓）。
+- 次の番号: パイロット320 / ラウンド354 / プロト T982。
+
+### ラウンド354（第319弾の再変換）
+
+**新規登録2件**（dm22rp1-038 レター＝ジェンゲガー＝形A〔攻撃誘発→delayed_trigger {attack_end, subject: self}〕＋本ラウンドで構築したターン終了条項 / dm22rp2x-061 ディッシュ＝ウィッシュ＝形B〔形A＋ブロック誘発→delayed_trigger {attack_end, target: self}〕。いずれも partial の骨格＋確立形、unsupported 除去。登録形は確立形と完全一致で abilities は2件ちょうど、keywords は 038 が [blocker]・061 が [s_trigger, blocker] のまま、連結混入なし）・**alias 畳み込み0件**（038 の promoy21-052、061 の4件は登録エントリの source.aliases への記録のみで、alias 側の reject 行は元々無し）・**stale クリーンアップ0件**・**差し戻し0件**。038 の残りの条項「自分のターンの終わりに、自分の山札の上から1枚目を墓地に置く。それがアビスなら、カードを1枚引く」はラウンドで構築: turn_end 誘発 {player: you} ＋ move {from_top: 1, count: all, as: milled} で墓地に置き、if {cmp: [{count: {ref: milled, filter: {race_has: アビス}}}, ==, 1]} で draw 1（判定は dm23rp2x-037 の「2枚ともアビスなら」の登録先例と同形）。提出前に提出形を一時 defn として注入し、全アビス山札（手札+1・山札-2・墓地1枚）／全非アビス山札（山札-1のみ）の両方向で実挙動を検証済み。対象2行は gaps = [destroy_self_after_attacking] のため reopen で外してから submit（reopen の出力は対象2件ちょうど）。正本判定: identity の canon_id 実測で2件とも自 ID、aliases_for も partial の記録と一致。提出前照合: 対象 id と全 alias は real.yaml / real_akashic.yaml / real_vocab.yaml / real_zone.yaml / converted.yaml のいずれにも無し（proto.yaml のヒットは T979/T980 の本文内参照のみ）。converted 10,260→**10,262** / rejects 2,057→**2,055**、重なり0・漏れ0。destroy_self_after_attacking はファミリーがこの2件だけだったため完全解消。pilot319 cards を登録形に書換、round354 cards を新設（登録カード自身の実挙動: 038 攻撃で自壊／061 攻撃で自壊／061 ブロックでバトル勝利後も自壊／038 ターン終了条項の両方向）。テスト16 passed（round354 cards 6＋pilot319 cards 登録形 2＋data_audit 8）＋第319弾本体7 passed（別 invocation）。なお登録形バッチの初回実行で test_data_audit の top-level-field 検査が1件失敗したが、同バッチ再実行と単独実行の両方で合格し再現しない（変換データ側の変更なし）。回答は answers/round354.yaml に保存。次の番号: パイロット320 / ラウンド355 / プロト T982。変換済み9件の旧近似形（when: turn_end ＋ during_attack）の修繕ステージが別途残る。
+
+## 修繕ステージ: delayed_trigger {when: turn_end, duration: during_attack} 死に形の是正
+
+第319弾の発見（変換済み9件の旧近似形は発火しない）を受け、パイロット番号を消費しない独立の修繕ステージとして棚卸しと是正を実施した。**実測センサス（yaml.compose で converted 全件走査）: 当該パターンは17箇所・16カード**あり、第319弾の「9件」は内訳が不正確だった（訂正する）。9件のうち dm26-055 は duration が end_of_turn の別形（後述）で、残り8件に未報告の8カード（dmr05-073 / dmr16s-003 / dmr17-004 / dmrp01-009 / dmrp01-075 / dmrp03-043 / dmrp04s-055 / dmsd05-005）が加わる。during_attack の遅延誘発は攻撃タスク完了時（combat の 510.2 の _expire）で除去され turn_end まで残らないため、17箇所すべて発火しない。
+
+- **形A（攻撃誘発 → delayed {attack_end, subject: self}、第319弾）に是正した12件**: dmex12-094 / dmrp05-074 / dmex14-075 / dmpcd01-r14 / dmr16s-003 / dmr17-004 / dmrp01-009 / dmrp01-075 / dmrp04s-055 / dmsd05-005 / dmsd06-015 / dm26-055。効果側（破壊・マナ置き・アンタップ・任意タップ＋アンタップ・任意捨て＋ドロー）は現行のまま。dmr16s-003 の「そうした場合」の連動、dmr17-004 のコスト判定の近似は従来どおり残る（各カードの notes に明記）。
+- **形B（ブロック誘発 → delayed {attack_end, target: self}）に是正した2件**: dmr05-073（バトルの後にアンタップ）/ dmr06-043（バトルの後に破壊）。
+- **両形の1件**: dmrp08-077（攻撃側＝形A、ブロック側＝形B。delayed 2箇所とも是正）。
+- **監視形の1件**: dmrp03-043（自分の他のクリーチャーの攻撃で誘発し、その攻撃の終わりに自身を破壊）。delayed の when は素の {attack_end}（対象の攻撃は外側の誘発が束縛する。dmrp03-015・dmrp02-073 の登録先例と同形）。
+- **dmpcd01-r14 は追加是正**: 本文が「相手プレイヤーを攻撃する時」のため、攻撃誘発の when に target: player を追加した（{attack, subject: self, target: player} は登録先例あり）。従来形はクリーチャーへの攻撃でも（発火すれば）破壊する過剰形だった。
+- **dmpcd03-b11 は形が違う**: 本文は「バトルする時、バトルの後」で、このクリーチャーは攻撃できない。旧形は攻撃誘発で代表させていたため二重に発火不能だった。第211弾の battle_end 誘発 {when: {event: battle_end, subject: self}} → destroy self に置き換えた（delayed_trigger 自体を除去）。
+- **dm26-055 は同系の別形**: delayed {when: turn_end, duration: end_of_turn} は発火はするがターンの終わりで、「その攻撃の後」とタイミングがずれていた。形A（when attack_end / subject self、duration during_attack）に是正した。
+- **類似パターンの棚卸し（是正対象外）**: dm25sp1-004 も attack 誘発 → delayed {turn_end, end_of_turn} で「攻撃の終わりに」をターンの終わりで近似する同系の別形だが、本ステージの対象範囲（第319弾の報告分＋実測の during_attack 群）には含めず、別ステージ送りとして記録する。他の {turn_end, end_of_turn} 群10件は本文がいずれも「このターンの終わりに」で正しい形のため無変更。delayed {when: break / battle_win, duration: during_attack} 群（34箇所）は攻撃中に起きるイベントを待つ正しい形のため無変更。delayed {when: turn_end} 全体は214箇所あり、大半は duration 無し（＝通常のターン終了時遅延）で正常。
+- **編集方法**: yaml.compose の行マークで対象ノードを特定し、該当 ability ブロックと各カードの notes だけを差し替える外科的編集（diff は対象17カード分のみ、ヘッダーコメント保持）。notes は旧形の説明を修繕内容に書き換えた（dmr16s-003 / dmr17-004 は残る近似の注記を併記）。
+- **実挙動証明**: tests/test_repair_delayed_attack_end.py（11件）を新設。修繕前は11件すべて失敗（形A破壊・マナ置き・アンタップ／形B破壊・アンタップ／両形／監視形／battle_end／dm26-055 のタイミング／dmpcd01-r14 の限定、の各代表サンプルで不発・遅延を実測）。タイミング判別には同一攻撃ステップ内の2体目の攻撃決定で止めるチェックポイントを使った（このエンジンのターン構造は攻撃後に同一ターンへ戻るメイン決定が無いため）。修繕後は **11 passed**。
+- **回帰**: 第319・315・211弾本体＋test_rules＋test_rust_schema_sync **58 passed**（別 invocation）。data_audit＋第319弾 cards＋ラウンド354 cards＋第211弾 cards＋旧修繕テスト群は 33 passed / 3 failed。3 failed はいずれも旧修繕テスト（test_repair_count0_upto / test_repair_opcount0 / test_repair_break_selfshield）の disposition が当時の件数（rejects 2,096）を固定している stale な簿記で、本ステージ前（HEAD 5fc6f30）でも同一に失敗することを stash で確認済みの既存問題（本ステージは件数を動かしていない）。
+- **収支: converted 10,262 / rejects 2,055（不変）**。変更は converted.yaml（対象17カードの ability ブロック＋notes）・テスト1件・docs のみ。次の番号: パイロット320 / ラウンド355 / プロト T982。
+
+## 第320弾 「ブロックした時／ブロックされた時」（trigger_when_blocked）— ドリフト（block レコードの subject / attacker 照合）
+
+センサス（rejects 2,055件を取り直し）: pure 1,906件 / multi 131件 / 空 gaps 18件（全て第312〜315弾の監査で別ブロッカー確認済み）。pure の大半は範囲外（gr_summon 147、aura 108＝未承認、hyperdimensional_zone 105、dragheart 45、psychic_filter 45、hyperdimensional_summon 41、out_of_game 23、duelist_link 20、outside_game 12、pandora_shift 4）か評価済み DEEP・重い・延期。範囲内・未評価の候補を精査して却下した: negate_effects / effect_negation（各3件。「攻撃できない効果・能力はすべて無効」は negate_cannot_attack 系の無効化機構が要り均一な小語彙にならない）、opponent_choice_branch（3件とも相手の選択の構造が相異なる）、shield_grant（3件とも付与の発生源・持続が相異なる）、cost_matching_selection（3件。コスト参照フィルタに加え件数連動・相手側一括処理が混ざり均一でない）、per_civilization_selection（3件。文明別 distinct 選択の機構が要る）、flying（2件。攻撃／ブロック制限のエンジン作業＋他節が重い）、delayed_return（2件とも他節が重い）、draw_up_to（2件。ヨミの G・リンク、H・アルカディアスのハイパー化が併記）、look_reorder（dmrp06-071 の partial の実ブロッカーは self_return でギャップ名とずれる。dmc55-071 単独では均一なファミリーにならない）。フィールド系と does_not_untap（2件）は第316・318弾の評価どおり再検討しても均一な小語彙の見込みが立たず却下。範囲内・未評価で最小の **trigger_when_blocked（純粋2件、multi-gap 行にも現れない）** を選定した。
+
+**結論: ドリフト（追加語彙なし）。** block レコードは combat が {ev: block, subject: ブロッカーの ref, attacker: 攻撃クリーチャーの ref, controller: 防御側} で発行し、events._match_when は subject / attacker の両キーを既に扱う（attacker 節のコメントに「self なら『このクリーチャーがブロックされた時』」と明記）。selector の event.attacker 参照も既存（selectors の event.<キー> 群）。
+
+- **形A（dm26rp1-074 ノーガルディ・ネギオ＆ガルダンディ・ナスオ、「ブロックされた時」）**: trigger {when: {event: block, attacker: self}, effect: [{op: break, player: opp, count: 2}]}。when の形は第280弾（dm06-101 / dm06-032 の cancel_attack 形、プロト T793 / T794）の登録先例そのもの。ブレイクはブロック宣言時（バトルの前）に解決し、バトル自体は通常どおり行われることを実挙動で固定した（3000 同士の相打ち＋シールド5→3）。
+- **形B（dm26ex2-068 ワダウザノミコト、「ブロックした時」）**: trigger {when: {event: block, subject: self}, effect: [move {select: {ref: self}, to: hand, reason: return}, move {select: {ref: event.attacker}, to: hand, reason: return}]}。subject＝ブロッカーは dm20-045 の登録先例（その source.notes に「block イベントの subject はブロッカー自身」と明記）。両者とも持ち主の手札に戻る。
+- **形Bの併記条項（離脱時）も既存部品で構成できた**: 「離れた時、自分の山札の上から4枚を見る。その中から1枚を手札に加え、残りを好きな順序で山札の上か下に置く」= trigger {when: {event: move, from: bz, subject: self}, effect: [choose {select: {zone: deck, owner: you, from_top: 4, look: true, count: all}, as: pile}（第311弾形）→ choose {select: {ref: pile, count: 1}, as: pick} → move {select: {ref: pick, count: all}, to: hand, reason: draw} → repeat {times: {count: {ref: pile, zone: deck}}, body: [choose {select: {ref: pile, zone: deck, count: 1}, as: c}, modal [move {ref: c} to deck position: top / position: bottom]]]}。1枚ごとの上／下配置は dm24ex1-054 の登録形（repeat ＋ choose ＋ modal）の山札内版。置いたカードは gen 切れで以降の choose {ref: pile} から落ちる（第287弾の残り処理と同じ原理）。ブロックで自ら手札に戻った場合も離脱条項が連鎖すること、攻撃してブロックされバトルで破壊された場合は第1誘発が発火せず離脱条項だけが発火することを実挙動で固定した。
+
+両行とも partial は骨格（abilities 無し）。dm26rp1-074 の partial の text は「このクリーチャーがブロックされた時」だけに切れている（reject 行の text が公式全文）。
+
+- プロト: T982（形B、dm26ex2-068 型）/ T983（形A、dm26rp1-074 型）。次の空きは T984。
+- テスト: 本体 **7 passed**（parse＋FORM とプロトの abilities 完全一致／形A: ブロックされるとバトルの前に2ブレイクし相打ちになる・別のクリーチャーがブロックされても誘発しない／形B: ブロックで両方手札へ＋離脱の連鎖（束[1]を手札、束[0]を下、束[2]・束[3]を上。解決後の最初の決定は自ターン開始ドローを済ませた後になるため一番上の束[3] はドローで手札へ）・破壊されても離脱だけ発火し残り全て下へ・別のクリーチャーがブロックしても誘発しない）＋ cards **2 passed**（対象2行の残留・ファミリー単独・提出形が partial の素性を保ち parse とプロト一致）。回帰 **101 passed**（第320・319・280・311・287弾本体＋test_rules＋rust_schema_sync＋data_audit）。既知の事前失敗2件（第274弾・第31弾）は未接触。
+- テスト中の発見: (1) ブレイクするシールドの選択は攻撃側の choose_shields 決定として現れる。(2) 残り1枚の choose は自動決定され決定として現れないため、modal の対応づけは「未消費の最後の1件」で行う必要がある（第287・314弾の教訓の再確認）。(3) ブロックで戻った側の離脱解決後、相手ターン内の pass のみの決定は自動で読み飛ばされ、次の観測点は自ターン開始ドローの後になる。
+- 収支: converted **10,262（不変）** / rejects **2,055（不変）**。変更は proto.yaml（T982・T983 純追加）・テスト2件・docs のみ。
+
+### ラウンド355側の注意
+
+- 対象は dm26ex2-068 / dm26rp1-074 の2件。提出形は tests/test_vocab_pilot320_cards.py の _form 相当: partial ＋ abilities（068 は [ブロック誘発, 離脱誘発] の2件、074 は [ブロックされ誘発] の1件）、unsupported 除去。**dm26rp1-074 は text を reject 行の公式全文に差し替えること**（partial の text は切れている）。dm26ex2-068 の text は partial のままで全文。
+- 対象2行とも gaps = [trigger_when_blocked] のため reopen で外れる見込み（ファミリーはこの2件だけなので出力は2件のはずだが、必ず数えること）。
+- 正本判定は identity の実データで submit 前に行い、id・alias を real.yaml / real_akashic.yaml / real_vocab.yaml / real_zone.yaml / proto.yaml / converted.yaml と照合すること（両行とも partial に aliases 記録は無い）。
+- 登録後は abilities が 068 は2件・074 は1件ちょうどで FORM と完全一致することを本文と照合すること（submit の連結・merge_split 混入の確認。068 の keywords は [s_trigger, blocker] のまま）。
+- 次の番号: パイロット321 / ラウンド355 / プロト T984。
+
+### ラウンド355（第320弾の再変換）
+
+**新規登録2件**（dm26ex2-068 ワダウザノミコト＝形B〔trigger {event: block, subject: self} → move {ref: self} ＋ move {ref: event.attacker} を持ち主の手札へ〕＋離脱条項〔choose {from_top: 4, look: true, count: all} as pile → 1枚を手札 → repeat＋choose＋modal で残りを山札の上か下へ〕 / dm26rp1-074 ノーガルディ・ネギオ＆ガルダンディ・ナスオ＝形A〔trigger {event: block, attacker: self} → break {player: opp, count: 2}〕。いずれも partial ＋第320弾の確立形、unsupported 除去。登録形は確立形と完全一致で abilities は 068 が2件・074 が1件ちょうど、068 の keywords は [s_trigger, blocker] のまま、連結混入なし）・**alias 畳み込み0件**（identity の canon_id 実測で2件とも自 ID、aliases_for は空）・**stale クリーンアップ0件**・**差し戻し0件**。dm26rp1-074 の text は partial が「このクリーチャーがブロックされた時」だけに切れていたため reject 行の公式全文に差し替えた（dm26ex2-068 の text は partial のまま全文）。対象2行は gaps = [trigger_when_blocked] のため reopen で外してから submit（reopen の出力は対象2件ちょうど）。提出前照合: 対象 id は real.yaml / real_akashic.yaml / real_vocab.yaml / real_zone.yaml / converted.yaml のいずれにも無し（proto.yaml のヒットは T982/T983 の本文内参照のみ）。converted 10,262→**10,264** / rejects 2,055→**2,053**、重なり0・漏れ0。trigger_when_blocked はファミリーがこの2件だけだったため完全解消。pilot320 cards を登録形に書換、round355 cards を新設（登録カード自身の実挙動: 074 ブロックされるとバトルの前に2ブレイクし相打ち・別のクリーチャーがブロックされても誘発しない／068 ブロックで両方手札へ＋離脱の連鎖・破壊されても離脱だけ発火）。テスト15 passed（round355 cards 5＋pilot320 cards 登録形 2＋data_audit 8）＋第320弾本体7 passed（別 invocation）。回答は answers/round355.yaml に保存。次の番号: パイロット321 / ラウンド356 / プロト T984。

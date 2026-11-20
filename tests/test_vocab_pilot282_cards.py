@@ -18,6 +18,9 @@
   same_name_cast に精緻化して差し戻し、登録は最新版側の変換時に
   alias として畳み込む。別印刷 29-sec001 / dm29-s03 / dmc48-001 は
   converted に本誘発を欠いた形で登録済み（既存の欠落）。
+  → ラウンド333で cho010 を新規登録し、c48-sec001 は alias として
+  畳み込まれ、別印刷3件は CAST_FORM を足して是正された
+  （test_c48_folded_into_cho010_round333 が現在の状態を固定する）。
 converted 10,154 / rejects 2,179、重複0・漏れ0。
 filter_same_name_as_event_card は残り0件で解消。
 
@@ -296,27 +299,25 @@ def test_registered_forms():
         assert c["abilities"] == ABILITIES[cid], cid
 
 
-def test_c48_bounced_to_canonical_gap():
-    """c48-sec001 は converted に無く（id でも alias でもない）、
-    rejects に gaps [same_name_cast] で残る。解けた詠唱形は partial の
-    abilities に格納され、最新版 dm26ex4-cho010 も同じギャップで
-    rejects に残る。filter_same_name_as_event_card の行は残り0件。"""
+def test_c48_folded_into_cho010_round333():
+    """c48-sec001 はラウンド333で dm26ex4-cho010 の登録時に alias
+    として畳み込まれた（独立エントリではなく、reject 行も残らない）。
+    same_name_cast / filter_same_name_as_event_card の行は残り0件。
+    （ラウンド317時点では gaps [same_name_cast] で差し戻され、解けた
+    詠唱形は partial の abilities に銀行されていた。）"""
     try:
         _converted("c48-sec001")
-        raise AssertionError("c48-sec001 が converted に登録されている")
+        raise AssertionError("c48-sec001 が独立エントリとして登録されている")
     except KeyError:
         pass
-    row = _reject("c48-sec001")
-    assert row["gaps"] == ["same_name_cast"]
-    assert row["partial"]["abilities"] == [CAST_FORM]
-    needs = [u["need"] for u in row["partial"]["source"].get("unsupported") or []]
-    assert needs == ["same_name_cast"]
-    assert row["partial"]["keywords"] == ["double_breaker"]
-    cho = _reject("dm26ex4-cho010")
-    assert cho["gaps"] == ["same_name_cast"]
+    cho = _converted("dm26ex4-cho010")
+    aliases = (cho.get("source") or {}).get("aliases") or []
+    assert "c48-sec001" in aliases
     for line in open(REJECTS, encoding="utf-8"):
         if line.strip():
             r = json.loads(line)
+            assert r["id"] not in ("c48-sec001", "dm26ex4-cho010"), r["id"]
+            assert "same_name_cast" not in (r.get("gaps") or []), r["id"]
             assert "filter_same_name_as_event_card" not in (r.get("gaps") or []), r["id"]
 
 

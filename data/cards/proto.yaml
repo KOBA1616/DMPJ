@@ -12138,3 +12138,1969 @@ cards:
     text: "相手のシールドを1つブレイクする。（第291弾の駆動役: 攻撃を介さないシールド離脱）"
     spell:
       - {op: break, player: opp, count: 1}
+
+  - id: T851
+    name: 試験用破壊代替コスト獣A
+    types: [creature]
+    civs: [darkness]
+    cost: 5
+    power: 6000
+    races: [テスト]
+    mana: 1
+    text: "ブロッカー / W・ブレイカー / このクリーチャーを召喚する時、自分の、クリーチャー1体またはタマシードを1枚、破壊してもよい。そうしたら、このクリーチャーの召喚コストを4少なくする。（第292弾・形A。dm22rp2x-038 の代替コスト節そのもの）"
+    keywords: [blocker, double_breaker]
+    alt_cost:
+      cost: 1
+      do:
+        - {zone: bz, owner: you, filter: {types: [creature, tamaseed]}, count: 1, to: graveyard, reason: destroy}
+
+  - id: T852
+    name: 試験用破壊代替コスト獣B
+    types: [creature]
+    civs: [darkness]
+    cost: 9
+    power: 11000
+    races: [テスト]
+    mana: 1
+    text: "W・ブレイカー / このクリーチャーを召喚する時、自分のクリーチャーを2体破壊してもよい。そうしたら、このクリーチャーの召喚コストを3少なくする。（第292弾・形B。dm23rp2x-004 の代替コスト節そのもの）"
+    keywords: [double_breaker]
+    alt_cost:
+      cost: 6
+      do:
+        - {zone: bz, owner: you, filter: {types: [creature]}, count: 2, to: graveyard, reason: destroy}
+
+  - id: T853
+    name: 試験用破壊代替コスト獣C
+    types: [creature]
+    civs: [darkness]
+    cost: 8
+    power: 8000
+    races: [ドール]
+    mana: 1
+    text: "W・ブレイカー / このクリーチャーを召喚する時、自分のドールを3つ破壊してもよい。そうしたら、このクリーチャーの召喚コストを[dd02]にする。（第292弾・形C。dm24ex1-003 の代替コスト節そのもの。ドールはデスパペット役）"
+    keywords: [double_breaker]
+    alt_cost:
+      cost: 2
+      civs: [darkness, darkness]
+      do:
+        - {zone: bz, owner: you, filter: {race_has: ドール}, count: 3, to: graveyard, reason: destroy}
+
+  - id: T854
+    name: 試験用破壊代替コスト呪文
+    types: [spell]
+    civs: [light, darkness, nature]
+    cost: 9
+    mana: 1
+    text: "自分のエレメントを2つ破壊し、[ldn05]支払ってこの呪文を唱えてもよい。カードを2枚引く。（第292弾・形D。dm26rp3-011 の代替コスト節そのもの。本体は検証用の単純形）"
+    alt_cost:
+      cost: 5
+      civs: [light, darkness, nature]
+      do:
+        - {zone: bz, owner: you, count: 2, to: graveyard, reason: destroy}
+    spell:
+      - {op: draw, count: 2}
+
+  - id: T855
+    name: 試験用タマシード役
+    types: [tamaseed]
+    civs: [nature]
+    cost: 2
+    races: [テスト]
+    mana: 1
+    text: "（第292弾の役カード: 破壊代替コストの生贄役タマシード）"
+
+  - id: T856
+    name: 試験用ドール役
+    types: [creature]
+    civs: [darkness]
+    cost: 2
+    power: 2000
+    races: [ドール]
+    mana: 1
+    text: "（第292弾の役カード: 破壊代替コストの生贄役ドール）"
+
+  - id: T857
+    name: 試験用対象フィルタ付き生贄
+    types: [creature]
+    civs: [darkness]
+    cost: 3
+    power: 2000
+    races: [アビスロイヤル]
+    mana: 1
+    text: "自分のアビスを召喚する時、コストを2少なくしてもよい。そうしたら、このクリーチャーを破壊する。ただし、そのアビスのコストは0以下にはならない。（第292弾・形E。dm22rp2x-015 の生贄軽減節そのもの。アビスはテストアビスで代用）"
+    abilities:
+      - kind: static
+        affects: self
+        mod: {sac_reduce: {amount: 2, for: {race_has: アビス}}}
+
+  - id: T858
+    name: 試験用アビス役コスト5
+    types: [creature]
+    civs: [darkness]
+    cost: 5
+    power: 5000
+    races: [テストアビス]
+    mana: 1
+    text: "（第292弾の役カード: 生贄軽減の召喚先アビス）"
+
+  - id: T859
+    name: 試験用非アビス役コスト5
+    types: [creature]
+    civs: [fire]
+    cost: 5
+    power: 5000
+    races: [テスト]
+    mana: 1
+    text: "（第292弾の役カード: 生贄軽減の対象外の召喚先）"
+
+  - id: T860
+    name: 試験用アビス役コスト3
+    types: [creature]
+    civs: [darkness]
+    cost: 3
+    power: 3000
+    races: [テストアビス]
+    mana: 1
+    text: "（第292弾の役カード: 生贄軽減の床（0）を見る召喚先アビス）"
+
+  - id: T861
+    name: 試験用墓地進化V
+    types: [creature, evolution]
+    civs: [darkness]
+    cost: 5
+    power: 6000
+    races: [テスト]
+    mana: 1
+    evolve_zone: graveyard
+    evolve_from: [{civs: [darkness]}, {civs: [darkness]}]
+    keywords: [double_breaker]
+    text: "墓地進化V：闇のクリーチャーを2体自分の墓地から選び、このクリーチャーをその上に重ねつつ出す。（第293弾・形A。dm22ex2-003 型）"
+
+  - id: T862
+    name: 試験用マナ進化V
+    types: [creature, evolution]
+    civs: [light]
+    cost: 5
+    power: 6000
+    races: [テスト]
+    mana: 1
+    evolve_zone: mana
+    evolve_from: [{civs: [light]}, {civs: [light]}]
+    keywords: [double_breaker]
+    text: "マナ進化V：光のクリーチャーを2体自分のマナゾーンから選び、このクリーチャーをその上に重ねつつ出す。（第293弾・形A。dm28-s01 型）"
+
+  - id: T863
+    name: 試験用手札進化V
+    types: [creature, evolution]
+    civs: [water]
+    cost: 5
+    power: 6000
+    races: [テスト]
+    mana: 1
+    evolve_zone: hand
+    evolve_from: [{civs: [water]}, {civs: [water]}]
+    keywords: [double_breaker]
+    text: "手札進化V：水のクリーチャーを2体自分の手札から選び、このクリーチャーをその上に重ねつつ出す。（第293弾・形A。dm34-002 型）"
+
+  - id: T864
+    name: 試験用マナ進化GV
+    types: [creature, evolution]
+    civs: [nature]
+    cost: 6
+    power: 9000
+    races: [テスト]
+    mana: 1
+    evolve_zone: mana
+    evolve_count: 3
+    evolve_from: {race_has: ドラゴン}
+    keywords: [triple_breaker]
+    text: "マナ進化GV：ドラゴンを3体自分のマナゾーンから選び、このクリーチャーをその上に重ねつつ出す。（第293弾・形B。dm23bd4-017 型）"
+
+  - id: T865
+    name: 試験用手札進化GV
+    types: [creature, evolution]
+    civs: [fire]
+    cost: 6
+    power: 9000
+    races: [テスト]
+    mana: 1
+    evolve_zone: hand
+    evolve_count: 3
+    evolve_from: {types: [creature]}
+    keywords: [triple_breaker]
+    text: "手札進化GV：クリーチャーを3体自分の手札から選び、このクリーチャーをその上に重ねつつ出す。（第293弾・形B。dm25ex1-023 型）"
+
+  - id: T866
+    name: 試験用シールド進化GV
+    types: [creature, evolution]
+    civs: [light]
+    cost: 6
+    power: 9000
+    races: [テスト]
+    mana: 1
+    evolve_zone: shield
+    evolve_count: 3
+    evolve_from: {types: [creature]}
+    keywords: [triple_breaker]
+    text: "シールド進化GV：カードを3枚自分のシールドゾーンから選び、このクリーチャーをその上に重ねつつ出す。（第293弾・形B。dm25ex1-016 型）"
+
+  - id: T867
+    name: 試験用進化GVオメガ
+    types: [creature, evolution]
+    civs: [darkness]
+    cost: 6
+    power: 9000
+    races: [テスト]
+    mana: 1
+    evolve_from: [{zone: graveyard, types: [creature]}, {zone: mana, types: [creature]}, {zone: bz, types: [creature]}]
+    keywords: [triple_breaker]
+    text: "進化GV・Ω：墓地、マナゾーン、バトルゾーンから自分のクリーチャーを1体ずつ選び、このクリーチャーをその上に重ねつつ出す。（第293弾・形C。dm23ex3-tr07 型）"
+
+  - id: T868
+    name: 試験用デッキ進化GV
+    types: [creature, evolution]
+    civs: [fire]
+    cost: 6
+    power: 9000
+    races: [テスト]
+    mana: 1
+    deck_evolution: {count: 3, blind: true, stack_all: true}
+    evolve_from: {types: [creature]}
+    keywords: [triple_breaker]
+    text: "デッキ進化GV：このクリーチャーを、自分の山札の上から3枚の上に重ねつつ出す。（山札のカードは、裏向きのまま、見ないで下に重ねる）（第293弾・形D。dm22ex2-4a 型）"
+
+  - id: T869
+    name: 試験用超無限進化オメガ
+    types: [creature, evolution]
+    civs: [nature]
+    cost: 6
+    power: 9000
+    races: [テスト]
+    mana: 1
+    evolve_any: true
+    evolve_zones: [graveyard, mana, bz]
+    evolve_from: {types: [creature]}
+    keywords: [triple_breaker]
+    text: "超無限進化・Ω：スノーフェアリー・クリーチャーを1体以上、自分の墓地、マナゾーンまたはバトルゾーンから選び、このクリーチャーをその上に重ねつつ出す。（第293弾・形E。dm24bd5-012 型。フィルタはクリーチャー全般で代用）"
+
+  - id: T870
+    name: 試験用超無限墓地進化
+    types: [creature, evolution]
+    civs: [darkness]
+    cost: 6
+    power: 9000
+    races: [テスト]
+    mana: 1
+    evolve_any: true
+    evolve_zone: graveyard
+    evolve_from: {civs: [darkness]}
+    keywords: [triple_breaker]
+    text: "超無限墓地進化：闇のクリーチャーを1体以上自分の墓地から選び、このクリーチャーをその上に重ねつつ出す。（第293弾・形E。dmr20-s04 型）"
+
+  - id: T871
+    name: 試験用超無限進化コスト合計
+    types: [creature, evolution]
+    civs: [fire]
+    cost: 7
+    power: 11000
+    races: [テスト]
+    mana: 1
+    evolve_total_cost_ge: 10
+    evolve_from: {any_of: [{race_has: コマンド}, {race_has: ドラゴン}], not_types: [evolution]}
+    keywords: [triple_breaker]
+    text: "超無限進化：コストの合計が10以上になるように、進化ではない、コマンドまたはドラゴンいずれかのクリーチャー1体以上の上に置く。（第293弾・形E。dm26ex4-sec009 型。合計は20から10に読み替え）"
+
+  - id: T872
+    name: 試験用闇役
+    types: [creature]
+    civs: [darkness]
+    cost: 2
+    power: 2000
+    races: [テスト]
+    mana: 1
+    text: "（第293弾の役カード: 闇の進化元）"
+
+  - id: T873
+    name: 試験用光役
+    types: [creature]
+    civs: [light]
+    cost: 2
+    power: 2000
+    races: [テスト]
+    mana: 1
+    text: "（第293弾の役カード: 光の進化元）"
+
+  - id: T874
+    name: 試験用水役
+    types: [creature]
+    civs: [water]
+    cost: 2
+    power: 2000
+    races: [テスト]
+    mana: 1
+    text: "（第293弾の役カード: 水の進化元）"
+
+  - id: T875
+    name: 試験用ドラゴン役
+    types: [creature]
+    civs: [nature]
+    cost: 3
+    power: 3000
+    races: [アース・ドラゴン]
+    mana: 1
+    text: "（第293弾の役カード: ドラゴンの進化元）"
+
+  - id: T876
+    name: 試験用火役
+    types: [creature]
+    civs: [fire]
+    cost: 2
+    power: 2000
+    races: [テスト]
+    mana: 1
+    text: "（第293弾の役カード: 火の進化元）"
+
+  - id: T877
+    name: 試験用ドラゴン役コスト5
+    types: [creature]
+    civs: [fire]
+    cost: 5
+    power: 5000
+    races: [アーマード・ドラゴン]
+    mana: 1
+    text: "（第293弾の役カード: コスト合計形の進化元）"
+
+  - id: T878
+    name: 試験用コマンド役コスト5
+    types: [creature]
+    civs: [light]
+    cost: 5
+    power: 5000
+    races: [エンジェル・コマンド]
+    mana: 1
+    text: "（第293弾の役カード: コスト合計形の進化元）"
+
+  - id: T879
+    name: 試験用進化ドラゴン役コスト5
+    types: [creature, evolution]
+    civs: [fire]
+    cost: 5
+    power: 5000
+    races: [アーマード・ドラゴン]
+    mana: 1
+    evolve_from: {civs: [fire]}
+    text: "（第293弾の役カード: 進化クリーチャーはコスト合計形の進化元になれない）"
+
+  - id: T880
+    name: 試験用マナ進化GVまで形
+    types: [creature, evolution]
+    civs: [nature]
+    cost: 6
+    power: 9000
+    races: [テスト]
+    mana: 1
+    evolve_zone: mana
+    evolve_any: true
+    evolve_max: 3
+    evolve_from: {civs: [nature]}
+    keywords: [triple_breaker]
+    text: "マナ進化GV：自然のクリーチャーを3体まで自分のマナゾーンから選び、このクリーチャーをその上に重ねつつ出す。（第293弾・形B'。dm28-s09 型）"
+
+  - id: T881
+    name: 試験用シールド進化カード全般
+    types: [creature, evolution]
+    civs: [light]
+    cost: 5
+    power: 7000
+    races: [テスト]
+    mana: 1
+    evolve_zone: shield
+    evolve_count: 2
+    evolve_from: {}
+    keywords: [double_breaker]
+    text: "シールド進化：カードを2枚自分のシールドゾーンから選び、このクリーチャーをその上に重ねつつ出す。（第293弾・形B''。dm25ex1-016 型。進化元はクリーチャーに限らない）"
+
+  # ---- 語彙パイロット第294弾: was_under_cards_return（下にあったカード） ----
+  - id: T882
+    name: 試験用下カード回収進化
+    types: [creature, evolution]
+    civs: [water]
+    cost: 3
+    power: 3000
+    races: [テスト]
+    mana: 1
+    evolve_from: {types: [creature]}
+    abilities:
+      - kind: trigger
+        when: {event: turn_end, player: you}
+        effect:
+          - op: may
+            body:
+              - {op: put_under, select: {zone: deck, owner: you, from_top: 1}, onto: {ref: self}}
+      - kind: trigger
+        when: {event: move, from: bz, to: graveyard, reason: destroy, subject: self}
+        effect:
+          - {op: move, select: {ref: event.was_under, zone: graveyard}, to: hand, reason: return}
+    text: "自分のターンの終わりに、自分の山札の上から1枚を表向きにしてこのクリーチャーの下に置いてもよい。このクリーチャーが破壊された時、下にあったカードをすべて墓地から手札に戻す。（第294弾・形A。dm25rp2-033 型）"
+
+  - id: T883
+    name: 試験用下カード出撃進化
+    types: [creature, evolution]
+    civs: [darkness]
+    cost: 5
+    power: 6000
+    races: [ファンキー・ナイトメア, テスト]
+    mana: 1
+    evolve_from: {types: [creature]}
+    keywords: [double_breaker]
+    abilities:
+      - kind: trigger
+        when: {event: attack_end, subject: self}
+        effect:
+          - {op: put_under, select: {zone: graveyard, owner: you, filter: {race_has: ファンキー・ナイトメア, not_types: [evolution], cost_le: 6, types: [creature]}, count: 1}, onto: {ref: self}}
+      - kind: trigger
+        when: {event: move, from: bz, to: graveyard, reason: destroy, subject: self}
+        effect:
+          - {op: play_free, select: {ref: event.was_under, zone: graveyard, filter: {race_has: ファンキー・ナイトメア}}}
+    text: "進化：自分のクリーチャー1体の上に置く。W・ブレイカー。このクリーチャーの攻撃の終わりに、コスト6以下の進化ではないファンキー・ナイトメアを1体、自分の墓地からこのクリーチャーの下に置く。このクリーチャーが破壊された時、このクリーチャーの下にあったファンキー・ナイトメアをすべて、自分の墓地からバトルゾーンに出す。（第294弾・形B。dmex12-004 型）"
+
+  - id: T884
+    name: 試験用下カード単体出撃進化
+    types: [creature, evolution]
+    civs: [fire]
+    cost: 5
+    power: 6000
+    races: [テスト]
+    mana: 1
+    evolve_from: {civs: [fire], types: [creature]}
+    keywords: [double_breaker]
+    abilities:
+      - kind: trigger
+        when: {event: move, from: bz, to: graveyard, reason: destroy, subject: self}
+        effect:
+          - op: may
+            body:
+              - {op: play_free, select: {ref: event.was_under, zone: graveyard, count: 1}}
+    text: "進化：自分の火のクリーチャー1体の上に置く。W・ブレイカー。このクリーチャーが破壊された時、その下に重ねてあったカードのうち1枚を、墓地からバトルゾーンに出してもよい。（第294弾・形C。dmex12-037 型）"
+
+  - id: T885
+    name: 試験用離脱時下カード回収進化
+    types: [creature, evolution]
+    civs: [nature]
+    cost: 4
+    power: 3000
+    races: [テスト]
+    mana: 1
+    evolve_from: {types: [creature]}
+    abilities:
+      - kind: trigger
+        when: {event: move, from: bz, subject: self}
+        effect:
+          - {op: move, select: {ref: event.was_under, zone: [graveyard, mana, deck, shield]}, to: hand, reason: return}
+    text: "このクリーチャーが離れた時、下にあったカードをすべて手札に加える。（第294弾・形D。dm24bd5-012 型。手札へ一緒に離れた分は select の zone から外して二重移動しない）"
+
+  - id: T886
+    name: 試験用ファンキー・ナイトメア
+    types: [creature]
+    civs: [darkness]
+    cost: 3
+    power: 2000
+    races: [ファンキー・ナイトメア]
+    mana: 1
+    text: "（第294弾の役カード: 形B の下カード）"
+
+  - id: T887
+    name: 試験用離脱時下カード回収（非進化）
+    types: [creature]
+    civs: [nature]
+    cost: 2
+    power: 2000
+    races: [テスト]
+    mana: 1
+    abilities:
+      - kind: trigger
+        when: {event: move, from: bz, subject: self}
+        effect:
+          - {op: move, select: {ref: event.was_under, zone: [graveyard, mana, deck, shield]}, to: hand, reason: return}
+    text: "このクリーチャーが離れた時、下にあったカードをすべて手札に加える。（第294弾・対照用: 下にカードを持たない通常クリーチャーでは何も起きない）"
+
+  - id: T888
+    name: 試験用バウンス呪文
+    types: [spell]
+    civs: [water]
+    cost: 2
+    mana: 1
+    spell:
+      - {op: move, select: {zone: bz, owner: opp, filter: {types: [creature]}, count: 1}, to: hand, reason: return}
+    text: "相手のクリーチャーを1体選び、手札に戻す。（第294弾の役カード: 形D の手札離脱ドライバ）"
+
+  - id: T889
+    name: 試験用マナ送り呪文
+    types: [spell]
+    civs: [nature]
+    cost: 2
+    mana: 1
+    spell:
+      - {op: move, select: {zone: bz, owner: opp, filter: {types: [creature]}, count: 1}, to: mana, reason: put}
+    text: "相手のクリーチャーを1体選び、マナゾーンに置く。（第294弾の役カード: 形D のマナ離脱ドライバ）"
+
+  - id: T890
+    name: 試験用スーパーシールドプラス獣
+    civs: [light]
+    cost: 4
+    power: 4000
+    types: [creature]
+    mana: 1
+    abilities:
+      - kind: trigger
+        when: {event: move, to: bz, subject: self}
+        effect:
+          - {op: may, body: [{op: shield_plus, each: true}]}
+    text: "スーパー・シールド・プラス：このクリーチャーが出た時、自分の山札の上から1枚ずつ裏向きのまま、自分の各シールドの下に置いてもよい。（第295弾・形A）"
+
+  - id: T891
+    name: 試験用ウルトラシールドプラス獣
+    civs: [light]
+    cost: 4
+    power: 4000
+    types: [creature]
+    mana: 1
+    abilities:
+      - kind: trigger
+        when: {event: move, to: bz, subject: self}
+        effect:
+          - {op: may, body: [{op: shield_plus, count: 3}]}
+    text: "ウルトラシールド・プラス：このクリーチャーが出た時、自分の山札の上から3枚まで、裏向きのまま、自分のシールドいずれかひとつの下に置いてもよい。（第295弾・形B。実カード dmx19-s06 は5枚まで）"
+
+  - id: T892
+    name: 試験用トリガー封じ獣
+    civs: [light]
+    cost: 4
+    power: 4000
+    types: [creature]
+    mana: 1
+    abilities:
+      - kind: trigger
+        when: {event: move, to: bz, subject: self}
+        effect:
+          - {op: move, select: {zone: shield, owner: you, count: 1}, to: hand, reason: return, strigger: "off"}
+    text: "このクリーチャーが出た時、自分のシールドを1つ手札に加える。その「S・トリガー」は使えない。（第296弾・形A）"
+
+  - id: T893
+    name: 試験用トリガー対照獣
+    civs: [light]
+    cost: 4
+    power: 4000
+    types: [creature]
+    mana: 1
+    abilities:
+      - kind: trigger
+        when: {event: move, to: bz, subject: self}
+        effect:
+          - {op: move, select: {zone: shield, owner: you, count: 1}, to: hand, reason: return}
+    text: "このクリーチャーが出た時、自分のシールドを1つ手札に加える。（第296弾・形Aの対照: strigger 指定なし）"
+
+  - id: T894
+    name: 試験用トリガー封じ常在獣
+    civs: [darkness]
+    cost: 4
+    power: 4000
+    types: [creature]
+    mana: 1
+    abilities:
+      - kind: static
+        affects: {zone: shield, owner: you, filter: {not_civs: [light]}}
+        mod: {deny: [s_trigger]}
+    text: "自分の光ではないカードの「S・トリガー」は使えない。（第296弾・形B）"
+
+  - id: T895
+    name: 試験用ブレイク墓地送り獣
+    civs: [fire]
+    cost: 5
+    power: 5000
+    types: [creature]
+    mana: 1
+    keywords: [speed_attacker, double_breaker]
+    abilities:
+      - kind: replace
+        when: {event: break, subject: self}
+        instead:
+          - {op: move, select: {ref: event.shield, count: 1}, to: graveyard, reason: put}
+    text: "このクリーチャーがシールドをブレイクする時、相手はそのシールドを手札に加えるかわりに墓地に置く。（第297弾・形A）"
+
+  - id: T896
+    name: 試験用ブレイク対照獣
+    civs: [fire]
+    cost: 5
+    power: 5000
+    types: [creature]
+    mana: 1
+    keywords: [speed_attacker, double_breaker]
+    text: "置換を持たない対照獣。割ったシールドは通常どおり相手の手札に加わる。（第297弾・形Aの対照）"
+
+  - id: T897
+    name: 試験用ブレイク条件獣
+    civs: [fire]
+    cost: 5
+    power: 5000
+    types: [creature]
+    mana: 1
+    keywords: [speed_attacker, double_breaker]
+    abilities:
+      - kind: replace
+        when: {event: break, subject: self}
+        if: {cmp: [{count: {zone: hand, owner: opp}}, "==", 0]}
+        instead:
+          - {op: move, select: {ref: event.shield, count: 1}, to: graveyard, reason: put}
+    text: "このクリーチャーがシールドをブレイクする時、相手の手札が1枚もなければ、相手はそのシールドを手札に加えるかわりに墓地に置く。（第297弾・形B: dmr04-018 型）"
+
+  - id: T898
+    name: 試験用ブレイク水晶武装獣
+    civs: [fire]
+    cost: 5
+    power: 5000
+    types: [creature]
+    mana: 1
+    keywords: [speed_attacker, double_breaker]
+    abilities:
+      - kind: replace
+        when: {event: break, subject: self}
+        if: {cmp: [{count: {zone: mana, owner: you, filter: {face_down: true}}}, ">=", 4]}
+        instead:
+          - {op: move, select: {ref: event.shield, count: 1}, to: graveyard, reason: put}
+    text: "水晶武装4: このクリーチャーがシールドをブレイクする時、自分のマナゾーンに裏向きのカードが4枚以上あれば、相手はそのシールドを手札に加えるかわりに墓地に置く。（第297弾・形C: dm24bd6-037 型）"
+  - id: T899
+    name: 試験用詠唱監視獣・改
+    types: [creature]
+    civs: [darkness]
+    cost: 7
+    power: 6000
+    races: [ナイト, テスト]
+    mana: 1
+    text: "W・ブレイカー／自分の手札または墓地から光、水、または闇の呪文を唱えた時、自分の他のナイトがあれば、自分の山札を見る。その中から、唱えた呪文と同じ名前の呪文を1枚表向きにし、山札をシャッフルしてからその呪文をコストを支払わずに唱えてもよい。（第298弾・dm26ex4-cho010 の形）"
+    keywords: [double_breaker]
+    abilities:
+      - kind: trigger
+        when:
+          event: cast
+          player: you
+          from: [hand, graveyard]
+          subject:
+            filter: {types: [spell], civs: [light, water, darkness]}
+        if:
+          exists: {zone: bz, owner: you, other: true, filter: {race_has: ナイト}}
+        effect:
+          - {op: choose, select: {zone: deck, owner: you, look: true, count: all}, as: pile}
+          - {op: choose, select: {ref: pile, filter: {name: {name_of: event.subject}, types: [spell]}, count: 1}, as: found, reveal: true}
+          - op: if
+            cond: {exists: {ref: found}}
+            then:
+              - {op: shuffle, player: you}
+              - op: may
+                body:
+                  - {op: play_free, select: {ref: found}}
+
+  - id: T900
+    name: 試験用下カード監視獣
+    types: [creature]
+    civs: [darkness]
+    cost: 3
+    power: 1000
+    races: [デスパペット, テスト]
+    mana: 1
+    text: "自分の他のクリーチャーが破壊された時、または自分の進化クリーチャーの下にあるカードが墓地に置かれた時、自分の山札の上から1枚を墓地に置く。（第299弾・under_card_removed の誘発対。効果は発火回数の数え用）"
+    abilities:
+      - kind: trigger
+        when: {event: move, from: bz, to: graveyard, reason: destroy, subject: {owner: you, other: true, filter: {types: [creature]}}, from_under: false}
+        effect:
+          - {op: move, select: {zone: deck, owner: you, count: 1}, to: graveyard, reason: put}
+      - kind: trigger
+        when: {event: move, from: bz, to: graveyard, from_under: {owner: you, filter: {types: [evolution]}}}
+        effect:
+          - {op: move, select: {zone: deck, owner: you, count: 1}, to: graveyard, reason: put}
+
+  - id: T901
+    name: 試験用進化獣・素
+    types: [creature, evolution]
+    civs: [nature]
+    cost: 4
+    power: 5000
+    races: [テスト]
+    mana: 1
+    text: "進化—自分の自然のクリーチャー1体の上に置く。（第299弾・監視対象の進化クリーチャー）"
+    evolve_from: {civs: [nature]}
+
+  - id: T902
+    name: 試験用進化獣・単独送り
+    types: [creature, evolution]
+    civs: [nature]
+    cost: 4
+    power: 5000
+    races: [テスト]
+    mana: 1
+    text: "進化—自分の自然のクリーチャー1体の上に置く。このクリーチャーが攻撃する時、このクリーチャーの下にあるカードを1枚墓地に置く。（第299弾・下カード単独移動の駆動用）"
+    evolve_from: {civs: [nature]}
+    abilities:
+      - kind: trigger
+        when: {event: attack, subject: self}
+        effect:
+          - {op: move, select: {under_of: self, count: 1}, to: graveyard, reason: put}
+
+  - id: T903
+    name: 試験用進化監視獣
+    types: [creature, evolution]
+    civs: [nature]
+    cost: 4
+    power: 5000
+    races: [テスト]
+    mana: 1
+    text: "進化—自分の自然のクリーチャー1体の上に置く。このクリーチャーが攻撃する時、このクリーチャーの下にあるカードを1枚墓地に置く。自分のこのクリーチャーの下にあるカードが墓地に置かれた時、自分の山札の上から1枚を墓地に置く。（第299弾・宿主自身の from_under: self 監視。駆動は攻撃誘発）"
+    evolve_from: {civs: [nature]}
+    abilities:
+      - kind: trigger
+        when: {event: attack, subject: self}
+        effect:
+          - {op: move, select: {under_of: self, count: 1}, to: graveyard, reason: put}
+      - kind: trigger
+        when: {event: move, from: bz, to: graveyard, from_under: self}
+        effect:
+          - {op: move, select: {zone: deck, owner: you, count: 1}, to: graveyard, reason: put}
+
+  - id: T904
+    name: 試験用弱体監視獣
+    types: [creature]
+    civs: [darkness]
+    cost: 3
+    power: 1000
+    races: [デスパペット, テスト]
+    mana: 1
+    text: "自分の他のクリーチャーが破壊された時、または自分の進化クリーチャーの下にあるカードが墓地に置かれた時、バトルゾーンにある相手のクリーチャーを1体選ぶ。そのターン、そのクリーチャーのパワーは-1000される。（第299弾・dm34-014 の実形）"
+    abilities:
+      - kind: trigger
+        when: {event: move, from: bz, to: graveyard, reason: destroy, subject: {owner: you, other: true, filter: {types: [creature]}}, from_under: false}
+        effect:
+          - {op: modify, select: {zone: bz, owner: opp, count: 1}, mod: {power: -1000}, duration: end_of_turn}
+      - kind: trigger
+        when: {event: move, from: bz, to: graveyard, from_under: {owner: you, filter: {types: [evolution]}}}
+        effect:
+          - {op: modify, select: {zone: bz, owner: opp, count: 1}, mod: {power: -1000}, duration: end_of_turn}
+
+  - id: T905
+    name: 試験用数字監視獣
+    types: [creature]
+    civs: [fire]
+    cost: 3
+    power: 1000
+    races: [マシン・イーター, テスト]
+    mana: 1
+    text: "自分の他のクリーチャーが破壊された時、または自分の進化クリーチャーの下にあるカードが墓地に置かれた時、好きな数字をひとつ選んでもよい。そうした場合、自分の山札の上から1枚目を表向きにする。そのカードのコストが選んだ数字と同じであれば、相手のパワー5000以下のクリーチャーを1体破壊する。（第299弾・dm34-032 の実形）"
+    abilities:
+      - kind: trigger
+        when: {event: move, from: bz, to: graveyard, reason: destroy, subject: {owner: you, other: true, filter: {types: [creature]}}, from_under: false}
+        effect:
+          - op: may
+            body:
+              - {op: choose_number, as: n}
+              - {op: choose, select: {zone: deck, owner: you, count: 1}, as: top, reveal: true}
+              - op: if
+                cond: {cmp: [{cost_of: {ref: top}}, "==", {declared: n}]}
+                then:
+                  - {op: move, select: {zone: bz, owner: opp, filter: {power_le: 5000}, count: 1}, to: graveyard, reason: destroy}
+      - kind: trigger
+        when: {event: move, from: bz, to: graveyard, from_under: {owner: you, filter: {types: [evolution]}}}
+        effect:
+          - op: may
+            body:
+              - {op: choose_number, as: n}
+              - {op: choose, select: {zone: deck, owner: you, count: 1}, as: top, reveal: true}
+              - op: if
+                cond: {cmp: [{cost_of: {ref: top}}, "==", {declared: n}]}
+                then:
+                  - {op: move, select: {zone: bz, owner: opp, filter: {power_le: 5000}, count: 1}, to: graveyard, reason: destroy}
+
+  - id: T906
+    name: 試験用探索監視獣
+    types: [creature]
+    civs: [light]
+    cost: 4
+    power: 3000
+    races: [ガーディアン, テスト]
+    mana: 1
+    text: "自分の他のクリーチャーが破壊された時、または自分の進化クリーチャーの下にあるカードが墓地に置かれた時、自分の山札の上から1枚目を見る。そのカードが呪文であれば、相手に見せてから自分の手札に加えてもよい。（第299弾・dm34-022 の実形）"
+    abilities:
+      - kind: trigger
+        when: {event: move, from: bz, to: graveyard, reason: destroy, subject: {owner: you, other: true, filter: {types: [creature]}}, from_under: false}
+        effect:
+          - {op: choose, select: {zone: deck, owner: you, from_top: 1, count: 1}, as: top}
+          - op: if
+            cond: {exists: {ref: top, filter: {types: [spell]}}}
+            then:
+              - op: may
+                body:
+                  - {op: choose, select: {ref: top, count: 1}, as: hit, reveal: true}
+                  - {op: move, select: {ref: hit}, to: hand, reason: draw}
+      - kind: trigger
+        when: {event: move, from: bz, to: graveyard, from_under: {owner: you, filter: {types: [evolution]}}}
+        effect:
+          - {op: choose, select: {zone: deck, owner: you, from_top: 1, count: 1}, as: top}
+          - op: if
+            cond: {exists: {ref: top, filter: {types: [spell]}}}
+            then:
+              - op: may
+                body:
+                  - {op: choose, select: {ref: top, count: 1}, as: hit, reveal: true}
+                  - {op: move, select: {ref: hit}, to: hand, reason: draw}
+  - id: T907
+    name: 試験用EXライフ時跳獣
+    types: [creature]
+    civs: [water]
+    cost: 5
+    power: 5000
+    races: [テスト]
+    mana: 1
+    text: "EXライフ / このクリーチャーの「EXライフ」シールドが離れた時、ターンの残りをとばしてもよい。（第300弾・形A。dm26ex4-031 の時跳節そのもの）"
+    keywords: [ex_life]
+    abilities:
+      - kind: trigger
+        when: {event: move, from: shield, subject: {exlife_of: self}}
+        effect: [{op: may, body: [{op: end_turn}]}]
+  - id: T908
+    name: 試験用破壊時跳獣
+    types: [creature]
+    civs: [water]
+    cost: 4
+    power: 3000
+    races: [テスト]
+    mana: 1
+    text: "このクリーチャーが破壊された時、ターンの残りをとばす。（第300弾・形B。dmr21-021 の第1節）"
+    abilities:
+      - kind: trigger
+        when: {event: move, from: bz, to: graveyard, reason: destroy, subject: self}
+        effect: [{op: end_turn}]
+  - id: T909
+    name: 試験用盾破時跳獣
+    types: [creature]
+    civs: [light]
+    cost: 4
+    power: 3000
+    races: [テスト]
+    mana: 1
+    text: "自分のシールドがブレイクされた時、このクリーチャーがタップしていれば、ターンの残りをとばす。（第300弾・形C。dmr21-021 の第2節）"
+    abilities:
+      - kind: trigger
+        when: {event: break, player: you}
+        if: {exists: {ref: self, filter: {tapped: true}}}
+        effect: [{op: end_turn}]
+
+  # ---- 語彙パイロット第301弾（2026-11-20）: reveal_stay（山札の上を見て／置いて、合えばとどまる） ----
+  - id: T910
+    name: 試験用公開滞留進化獣
+    types: [creature, evolution]
+    civs: [fire]
+    cost: 6
+    power: 7000
+    races: [ヒューマノイド, テスト]
+    mana: 1
+    evolve_from: {races: [ヒューマノイド]}
+    text: "このクリーチャーが破壊される時、自分の山札の上から１枚目をすべてのプレイヤーに見せる。それがヒューマノイドであれば、このクリーチャーは墓地に置かれるかわりにバトルゾーンにとどまる。このクリーチャーが破壊された時、このクリーチャーの下にあったクリーチャーをすべて、墓地からバトルゾーンに出してもよい。（第301弾・形A。dmr05-v03 鬼丸「爆」）"
+    abilities:
+      - kind: replace
+        when: {event: move, from: bz, to: graveyard, reason: destroy, subject: self}
+        instead:
+          - {op: choose, select: {zone: deck, owner: you, from_top: 1, count: 1}, reveal: true, as: top}
+          - op: if
+            cond: {not: {exists: {ref: top, filter: {race_has: ヒューマノイド}}}}
+            then: [{op: move_to_event, select: {ref: event.subject}}]
+      - kind: trigger
+        when: {event: move, from: bz, to: graveyard, reason: destroy, subject: self}
+        effect: [{op: may, body: [{op: play_free, select: {ref: event.was_under, zone: graveyard}}]}]
+  - id: T911
+    name: 試験用任意滞留獣
+    types: [creature]
+    civs: [fire]
+    cost: 7
+    power: 7000
+    races: [アウトレイジ, テスト]
+    mana: 1
+    text: "このクリーチャーがバトルゾーンを離れる時、自分の山札の上から１枚目を墓地に置いてもよい。そのカードがアウトレイジであれば、このクリーチャーはバトルゾーンを離れるかわりにとどまる。（第301弾・形B。dmx15-006 ヴァリアント）"
+    abilities:
+      - kind: replace
+        when: {event: move, from: bz, subject: self}
+        instead:
+          - op: may
+            body: [{op: choose, select: {zone: deck, owner: you, from_top: 1, count: 1}, as: picked}]
+          - op: if
+            cond: {exists: {ref: picked}}
+            then: [{op: move, select: {ref: picked}, to: graveyard, reason: put}]
+          - op: if
+            cond: {not: {exists: {ref: picked, filter: {race_has: アウトレイジ}}}}
+            then: [{op: move_to_event, select: {ref: event.subject}}]
+  - id: T912
+    name: 試験用竜見守獣
+    types: [creature]
+    civs: [fire]
+    cost: 7
+    power: 7000
+    races: [アーマード・ドラゴン, テスト]
+    mana: 1
+    text: "自分のドラゴンがバトルゾーンを離れる時、自分の山札の１枚目を墓地に置く。そのカードがドラゴンまたはファイアー・バードであれば、自分のドラゴンはバトルゾーンを離れずにとどまる。（第301弾・形C。dmx16-006 インフィニティ・ドラゴン）"
+    abilities:
+      - kind: replace
+        when: {event: move, from: bz, subject: {owner: you, filter: {types: [creature], race_has: ドラゴン}}}
+        instead:
+          - {op: choose, select: {zone: deck, owner: you, from_top: 1, count: 1}, as: seen}
+          - {op: move, select: {ref: seen}, to: graveyard, reason: put}
+          - op: if
+            cond: {not: {any: [{exists: {ref: seen, filter: {race_has: ドラゴン}}}, {exists: {ref: seen, filter: {race_has: ファイアー・バード}}}]}}
+            then: [{op: move_to_event, select: {ref: event.subject}}]
+  - id: T913
+    name: 試験用竜ダミー
+    types: [creature]
+    civs: [fire]
+    cost: 5
+    power: 5000
+    races: [アーマード・ドラゴン]
+    mana: 1
+    text: ""
+  - id: T914
+    name: 試験用人形ダミー
+    types: [creature]
+    civs: [fire]
+    cost: 2
+    power: 2000
+    races: [ヒューマノイド]
+    mana: 1
+    text: ""
+  - id: T915
+    name: 試験用逆賊ダミー
+    types: [creature]
+    civs: [fire]
+    cost: 2
+    power: 2000
+    races: [アウトレイジ]
+    mana: 1
+    text: ""
+  - id: T916
+    name: 試験用火鳥ダミー
+    types: [creature]
+    civs: [fire]
+    cost: 2
+    power: 2000
+    races: [ファイアー・バード]
+    mana: 1
+    text: ""
+  - id: T917
+    name: 試験用ガチンコブレイカー
+    types: [creature]
+    civs: [fire]
+    cost: 7
+    power: 5000
+    races: [レッド・コマンド・ドラゴン, テスト]
+    keywords: [speed_attacker]
+    mana: 1
+    text: "このクリーチャーが攻撃する時、自分が負けるか中止するまで、相手とガチンコ・ジャッジする。その後、こうして自分が勝った回数、このクリーチャーは相手のシールドを1つブレイクする。（第302弾・形B。dmex12-009 R.S.F.K.型）"
+    abilities:
+      - kind: trigger
+        when: {event: attack, subject: self}
+        effect:
+          - {op: gachinko, until_lose: true, stoppable: true, as: wins}
+          - {op: break, player: opp, count: {var: wins}}
+  - id: T918
+    name: 試験用ガチンコ増幅獣
+    types: [creature]
+    civs: [fire]
+    cost: 7
+    power: 7000
+    races: [レッド・コマンド・ドラゴン, テスト]
+    keywords: [double_breaker, speed_attacker]
+    mana: 1
+    text: "このクリーチャーが攻撃する時、自分が負けるか中止するまで、相手とガチンコ・ジャッジする。こうして自分が勝つたび、そのターン、このクリーチャーのパワーは+6000され、シールドをさらに1枚ブレイクし、相手は自身の「ブロッカー」を持つクリーチャーを1体選んで破壊する。（第302弾・形A。dmr05-v02 鬼無双 カイザー「勝」型。speed_attacker は検証用の便宜で実カードには無い）"
+    abilities:
+      - kind: trigger
+        when: {event: attack, subject: self}
+        effect:
+          - {op: gachinko, until_lose: true, stoppable: true, as: wins}
+          - op: repeat
+            times: {var: wins}
+            body:
+              - {op: modify, select: {ref: self}, mod: {power: 6000}, duration: end_of_turn}
+              - {op: modify, select: {ref: self}, mod: {breaks_add: 1}, duration: end_of_turn}
+              - {op: destroy, select: {zone: bz, owner: opp, count: 1, chooser: opp, filter: {types: [creature], keyword: blocker}}}
+  - id: T919
+    name: 試験用ドラゴニック・フィールド（降臨）
+    types: [field, dragonic_field]
+    civs: [fire]
+    cost: 3
+    mana: 1
+    text: "ドラゴニック・フィールド。自分のターンのはじめに、自分の山札の上から1枚を墓地に置く。それが進化ではないドラゴンなら、このフィールドを破壊してもよい。そうしたら、そのドラゴンを出す。（第303弾・形A。dm26ex3-067 龍世界型）"
+    abilities:
+      - kind: trigger
+        when: {event: turn_start, player: you}
+        effect:
+          - {op: move, select: {zone: deck, owner: you, from_top: 1}, to: graveyard, reason: put, as: milled}
+          - op: if
+            cond: {exists: {ref: milled, filter: {race_has: ドラゴン, not_types: [evolution]}}}
+            then:
+              - {op: may, body: [{op: move, select: {ref: self}, to: graveyard, reason: destroy, as: gone}]}
+              - op: if
+                cond: {exists: {ref: gone}}
+                then:
+                  - {op: play_free, select: {ref: milled}}
+  - id: T920
+    name: 試験用ドラゴニック・フィールド（里）
+    types: [field, dragonic_field]
+    civs: [fire]
+    cost: 4
+    mana: 1
+    text: "ドラゴニック・フィールド。名前に《ボルシャック》とある自分のクリーチャーの召喚コストを2少なくしてもよい。ただし、コストは0以下にはならない。名前に《ボルシャック》とある自分のクリーチャーすべてに「スピードアタッカー」を与える。（第303弾・形B。dmex15-b027 切札の里型）"
+    abilities:
+      - kind: static
+        affects: {owner: you, zone: hand, filter: {types: [creature], name_has: ボルシャック}}
+        mod: {cost_may: {amount: 2, min: 1}}
+      - kind: static
+        affects: {owner: you, zone: bz, filter: {types: [creature], name_has: ボルシャック}}
+        mod: {grant: [speed_attacker]}
+  - id: T921
+    name: 試験用アーマード・ドラゴン
+    types: [creature]
+    civs: [fire]
+    cost: 5
+    power: 5000
+    races: [アーマード・ドラゴン]
+    mana: 1
+    text: ""
+  - id: T922
+    name: 試験用進化ドラゴン
+    types: [creature, evolution]
+    civs: [fire]
+    cost: 6
+    power: 6000
+    races: [アーマード・ドラゴン]
+    mana: 1
+    evolve_from: [{types: [creature]}]
+    text: ""
+  - id: T923
+    name: 試験用ボルシャック・ドラゴン
+    types: [creature]
+    civs: [fire]
+    cost: 5
+    power: 5000
+    races: [アーマード・ドラゴン]
+    mana: 1
+    text: ""
+  - id: T924
+    name: 試験用ボルシャック・子竜
+    types: [creature]
+    civs: [fire]
+    cost: 2
+    power: 2000
+    races: [アーマード・ドラゴン]
+    mana: 1
+    text: ""
+
+  # ---- 語彙パイロット第304弾: 進化クロスギア ----
+  - id: T925
+    name: 試験用ツナミ・ギア
+    types: [cross_gear, evolution]
+    civs: [water, darkness]
+    cost: 4
+    mana: 1
+    evolve_from: {civs: [water, darkness]}
+    text: "進化-自分の水または闇のクロスギア１枚の上に置く。これをクロスしたクリーチャーのパワーは+2000される。（第304弾・civs形。dmc42-017 ツナミ・カタストロフィー型）"
+    abilities:
+      - kind: static
+        affects: crossed
+        mod: {power: 2000}
+  - id: T926
+    name: 試験用ヤマト・ギア
+    types: [cross_gear, evolution]
+    civs: [fire, nature]
+    cost: 3
+    races: [サムライ]
+    mana: 1
+    evolve_from: {races: [サムライ]}
+    text: "進化-自分のサムライ・クロスギア１枚の上に置く。これをクロスしたクリーチャーは「クルー・ブレイカー：サムライ・クリーチャー」を得る。（第304弾・races形。dmc45-017 龍刃 ヤマト・スピリット型）"
+    abilities:
+      - kind: static
+        affects: crossed
+        mod:
+          breaks:
+            count: {zone: bz, owner: you, other: true, filter: {race_has: サムライ, types: [creature]}}
+  - id: T927
+    name: 試験用レオパルド・ギア
+    types: [cross_gear]
+    civs: [nature]
+    cost: 2
+    mana: 1
+    text: "これをクロスしたクリーチャーに、好きな種族の進化クリーチャーを置いてもよい。このクロスギアに、好きな文明の進化クロスギアを置いてもよい。（第304弾・許可形。dmc42-001 レオパルド・グローリーソード型）"
+    abilities:
+      - kind: static
+        affects: crossed
+        mod: {allow: [evolve_base_any]}
+      - kind: static
+        affects: self
+        mod: {allow: [evolve_civ_any]}
+  - id: T928
+    name: 試験用水ギア
+    types: [cross_gear]
+    civs: [water]
+    cost: 2
+    mana: 1
+    text: "これをクロスしたクリーチャーのパワーは+1000される。（第304弾・進化元用）"
+    abilities:
+      - kind: static
+        affects: crossed
+        mod: {power: 1000}
+  - id: T929
+    name: 試験用サムライ・ギア
+    types: [cross_gear]
+    civs: [fire]
+    cost: 2
+    races: [サムライ]
+    mana: 1
+    text: "これをクロスしたクリーチャーのパワーは+1000される。（第304弾・進化元用）"
+    abilities:
+      - kind: static
+        affects: crossed
+        mod: {power: 1000}
+  - id: T930
+    name: 試験用サムライ獣
+    types: [creature]
+    civs: [fire]
+    cost: 3
+    power: 3000
+    races: [サムライ]
+    mana: 1
+    text: ""
+  - id: T931
+    name: 試験用トップ回収呪文
+    types: [spell]
+    civs: [water]
+    cost: 1
+    mana: 1
+    text: "自分のクロスギアを１枚、手札に戻す。（第304弾・card_only でトップだけ離す再構築の検証用）"
+    spell:
+      - {op: move, select: {zone: bz, owner: you, filter: {types: [cross_gear]}, count: 1}, to: hand, reason: return, card_only: true}
+
+  # ---- 語彙パイロット第305弾（2026-11-20）: soul_shift（ギャップ名ドリフト: 第274弾 soulshift と同一機構） ----
+  - id: T932
+    name: 試験用ソウルシフト光獣
+    types: [creature, evolution]
+    civs: [light]
+    cost: 9
+    power: 9000
+    races: [エンジェル・コマンド]
+    mana: 1
+    text: "進化：光のクリーチャー。ソウルシフト（このクリーチャーの召喚コストを進化元のコストの数だけ少なくする。ただしコストは０以下にならない）このクリーチャーが離れた時、その下にコスト９のクリーチャーがあれば、自分の山札の上から９枚を見る。その中から光のコスト９のクリーチャーを１体出してもよい。残りをシャッフルして山札の下に置く。（第305弾・dm26rp2-001 形）"
+    evolve_from: {civs: [light], types: [creature]}
+    soul_shift: {floor: 0}
+    abilities:
+      - kind: trigger
+        when: {event: move, from: bz, subject: self}
+        if: {exists: {ref: event.was_under, filter: {types: [creature], cost_le: 9, cost_ge: 9}}}
+        effect:
+          - {op: choose, select: {zone: deck, owner: you, from_top: 9, look: true, count: all}, reveal: true, as: pile}
+          - {op: may, body: [{op: play_free, select: {ref: pile, filter: {types: [creature], civs: [light], cost_le: 9, cost_ge: 9}, count: 1}}]}
+          - {op: move, select: {ref: pile, count: all}, to: deck, position: bottom, order: shuffle, reason: put}
+  - id: T933
+    name: 試験用光獣・玖
+    types: [creature]
+    civs: [light]
+    cost: 9
+    power: 9000
+    races: [エンジェル・コマンド]
+    mana: 1
+    text: ""
+  - id: T934
+    name: 試験用光獣・伍
+    types: [creature]
+    civs: [light]
+    cost: 5
+    power: 5000
+    races: [エンジェル・コマンド]
+    mana: 1
+    text: ""
+  - id: T935
+    name: 試験用ソウルシフト火獣
+    types: [creature, evolution]
+    civs: [fire]
+    cost: 12
+    power: 12000
+    races: [フレイム・モンスター]
+    mana: 1
+    text: "進化：名前に《ゴウケン》とあるクリーチャー。ソウルシフト（このクリーチャーを召喚する時、このクリーチャーの進化元クリーチャーを選ぶ。このクリーチャーのコストは、その選んだクリーチャーのコストだけ少なくなる。ただし、コストは０以下にはならない）相手の呪文またはバトルゾーンにある相手のクリーチャーの能力によって、このクリーチャーが離れる時、自分はゲームに勝つ。（第305弾・dmex18-005 形）"
+    evolve_from: {name_has: ゴウケン}
+    soul_shift: {floor: 0}
+    abilities:
+      - kind: trigger
+        when: {event: move, from: bz, subject: self, cause: {by: opp, kind: [spell, ability]}}
+        effect: [{op: win}]
+  - id: T936
+    name: 試験用ゴウケン獣
+    types: [creature]
+    civs: [fire]
+    cost: 5
+    power: 5000
+    races: [フレイム・モンスター]
+    mana: 1
+    text: ""
+  - id: T937
+    name: 試験用破壊能力獣
+    types: [creature]
+    civs: [darkness]
+    cost: 4
+    power: 4000
+    mana: 1
+    text: "このクリーチャーが出た時、相手のクリーチャーを１体選び、破壊する。（第305弾・能力による除去の駆動用）"
+    abilities:
+      - kind: trigger
+        when: {event: move, to: bz, subject: self}
+        effect: [{op: destroy, select: {zone: bz, owner: opp, filter: {types: [creature]}, count: 1}}]
+  - id: T938
+    name: 試験用自壊呪文
+    types: [spell]
+    civs: [darkness]
+    cost: 3
+    mana: 1
+    text: "自分のクリーチャーを１体選び、破壊する。（第305弾・自分の呪文による離脱の対照用）"
+    spell:
+      - {op: destroy, select: {zone: bz, owner: you, filter: {types: [creature]}, count: 1}}
+  - id: T939
+    name: 試験用エクスプロード・ギア
+    types: [cross_gear, evolution]
+    civs: [darkness, fire]
+    cost: 3
+    mana: 1
+    evolve_from: {civs: [darkness, fire]}
+    text: "進化-自分の闇または火のクロスギア１枚の上に置く。これをクロスしたクリーチャーは、タップされていないクリーチャーを攻撃できる。これをクロスしたクリーチャーがバトルに勝った時、相手の手札を見る。相手は自分自身の手札、マナゾーン、墓地、バトルゾーンから、このバトルで負けたクリーチャーと同じ名前の自分自身のカードをすべて山札の一番下に置く。（第306弾。dm17-004 エクスプロード・カタストロフィー型）"
+    abilities:
+      - kind: static
+        affects: crossed
+        mod: {allow: [{action: attack_creature, other: {tapped: false}}]}
+      - kind: trigger
+        when: {event: battle_win, subject: crossed}
+        effect:
+          - {op: choose, select: {zone: hand, owner: opp, count: all}, as: seen}
+          - {op: move, select: {zone: [hand, mana, graveyard, bz], owner: opp, filter: {name: {name_of: event.opponent}}, count: all}, to: deck, position: bottom, reason: put}
+  - id: T940
+    name: 試験用闇ギア
+    types: [cross_gear]
+    civs: [darkness]
+    cost: 2
+    mana: 1
+    text: "（第306弾・進化元用。能力なし）"
+  - id: T941
+    name: 試験用火獣
+    types: [creature]
+    civs: [fire]
+    cost: 3
+    power: 3000
+    mana: 1
+    text: ""
+  - id: T942
+    name: 試験用同名獣
+    types: [creature]
+    civs: [nature]
+    cost: 2
+    power: 1000
+    mana: 1
+    text: ""
+  - id: T943
+    name: 試験用別名獣
+    types: [creature]
+    civs: [nature]
+    cost: 2
+    power: 1000
+    mana: 1
+    text: ""
+  - id: T944
+    name: 試験用強獣
+    types: [creature]
+    civs: [nature]
+    cost: 4
+    power: 5000
+    mana: 1
+    text: ""
+  - id: T945
+    name: 試験用EXライフ監視者
+    types: [creature, evolution]
+    civs: [light]
+    cost: 6
+    power: 9000
+    races: [テスト]
+    mana: 1
+    text: "進化-クリーチャー1体の上に置く。EXライフ。自分の「EXライフ」シールドが離れた時、このクリーチャーの下にあるカードを1枚、墓地に置く。それが進化ではないクリーチャーなら、自分の墓地から出す。（第307弾。dm26ex2-mc009 の追跡節そのもの）"
+    keywords: [ex_life]
+    evolve_from: {types: [creature]}
+    abilities:
+      - kind: trigger
+        when: {event: move, from: shield, subject: {owner: you, exlife_of: any}}
+        effect:
+          - {op: move, select: {under_of: self, count: 1}, to: graveyard, reason: put, as: buried}
+          - op: if
+            cond: {exists: {ref: buried, filter: {types: [creature], not_types: [evolution]}}}
+            then:
+              - {op: play_free, select: {ref: buried}}
+  - id: T946
+    name: 試験用監視者の進化元
+    types: [creature]
+    civs: [nature]
+    cost: 3
+    power: 3000
+    mana: 1
+    text: ""
+  - id: T947
+    name: 試験用進化獣・下敷き用
+    types: [creature, evolution]
+    civs: [fire]
+    cost: 5
+    power: 5000
+    mana: 1
+    text: "進化-クリーチャー1体の上に置く。（第307弾。下に置かれる進化クリーチャー役）"
+    evolve_from: {types: [creature]}
+  - id: T948
+    name: 試験用ゴウケンオー・轟々
+    types: [creature, evolution]
+    civs: [fire]
+    cost: 17
+    power: 16000
+    races: [フレイム・モンスター]
+    mana: 1
+    text: "進化-名前に《ケンゴウグレンオー》とあるクリーチャー１体の上に置く。ソウルシフト。このクリーチャーで攻撃するかわりに、タップして次の能力を使ってもよい。相手の「ブロッカー」を持つクリーチャーをすべて破壊する。自分の山札を見る。その中から名前に《ケンゲキオージャ》とあるクリーチャーを１体選び、このクリーチャーの上に置いてもよい。その後、山札をシャッフルする。T・ブレイカー（第308弾。dmc64-024 形）"
+    evolve_from: {name_has: ケンゴウグレンオー}
+    soul_shift: {floor: 1}
+    keywords: [triple_breaker]
+    abilities:
+      - kind: activate
+        cost: {tap: self}
+        effect:
+          - {op: destroy, select: {zone: bz, owner: opp, filter: {types: [creature], keyword: blocker}, count: all}}
+          - op: may
+            body:
+              - {op: choose, select: {zone: deck, owner: you, look: true, filter: {name_has: ケンゲキオージャ, types: [creature]}, count: 1}, as: p}
+              - {op: move, select: {ref: p, count: all}, to: bz, reason: put, stack_evo: true, evo_source: {ref: self}}
+          - {op: shuffle}
+  - id: T949
+    name: 試験用ケンゴウグレンオー・鳴動
+    types: [creature, evolution]
+    civs: [fire]
+    cost: 10
+    power: 11000
+    races: [フレイム・モンスター]
+    mana: 1
+    text: "進化-自分の、名前に《ワンケングレンオー》とあるクリーチャー１体の上に置く。ソウルシフト（ただしコストは１より少なくならない）。このクリーチャーで攻撃するかわりに、タップして次の能力を使ってもよい。相手のパワー2000以下のクリーチャーをすべて破壊する。自分の山札を見る。その中から名前に《ゴウケンオー》とあるクリーチャーを１体選び、このクリーチャーの上に置いてもよい。その後、山札をシャッフルする。W・ブレイカー（第308弾。dmc64-025 形）"
+    evolve_from: {name_has: ワンケングレンオー}
+    soul_shift: {floor: 1}
+    keywords: [double_breaker]
+    abilities:
+      - kind: activate
+        cost: {tap: self}
+        effect:
+          - {op: destroy, select: {zone: bz, owner: opp, filter: {types: [creature], power_le: 2000}, count: all}}
+          - op: may
+            body:
+              - {op: choose, select: {zone: deck, owner: you, look: true, filter: {name_has: ゴウケンオー, types: [creature]}, count: 1}, as: p}
+              - {op: move, select: {ref: p, count: all}, to: bz, reason: put, stack_evo: true, evo_source: {ref: self}}
+          - {op: shuffle}
+  - id: T950
+    name: 試験用ケンゴウグレンオー獣
+    types: [creature]
+    civs: [fire]
+    cost: 5
+    power: 5000
+    mana: 1
+    text: "（第308弾。T948 の進化元役）"
+  - id: T951
+    name: 試験用ワンケングレンオー獣
+    types: [creature]
+    civs: [fire]
+    cost: 5
+    power: 5000
+    mana: 1
+    text: "（第308弾。T949 の進化元役）"
+  - id: T952
+    name: 試験用ケンゲキオージャ獣
+    types: [creature, evolution]
+    civs: [fire]
+    cost: 8
+    power: 8000
+    races: [フレイム・モンスター]
+    mana: 1
+    text: "進化-名前に《ゴウケンオー》とあるクリーチャー１体の上に置く。（第308弾。T948 の上に山札から重ねられる役）"
+    evolve_from: {name_has: ゴウケンオー}
+  - id: T953
+    name: 試験用ゴウケンオー進化獣
+    types: [creature, evolution]
+    civs: [fire]
+    cost: 9
+    power: 9000
+    races: [フレイム・モンスター]
+    mana: 1
+    text: "進化-名前に《ケンゴウグレンオー》とあるクリーチャー１体の上に置く。（第308弾。T949 の上に山札から重ねられる役）"
+    evolve_from: {name_has: ケンゴウグレンオー}
+  - id: T954
+    name: 試験用ブロッカー獣
+    types: [creature]
+    civs: [light]
+    cost: 3
+    power: 3000
+    mana: 1
+    text: "ブロッカー（第308弾。破壊対象役）"
+    keywords: [blocker]
+  - id: T955
+    name: 試験用小型獣
+    types: [creature]
+    civs: [nature]
+    cost: 2
+    power: 2000
+    mana: 1
+    text: "（第308弾。パワー2000以下の破壊対象役）"
+  - id: T956
+    name: 試験バラギアラ / 試験輪廻暴冥
+    mana: 1
+    text: "召喚によって出た時、自分のマナゾーンにあるカードをすべてアンタップする。輪廻∞：このカードの呪文側を、バトルゾーンに置いたまま唱えてもよい（コストは支払う）。そうした時、自分の《試験バラギアラ》１体につき、自分の山札の上から１枚をマナゾーンに置く。 / S・トリガー。相手のクリーチャーを１体選ぶ。このターン、そのクリーチャーのパワーを－4000する。コスト５以下のクリーチャーを１体、自分の墓地からバトルゾーンに出す。（第309弾。dmrp21-tr2 型）"
+    faces:
+      - name: 試験バラギアラ
+        types: [creature]
+        civs: [nature]
+        cost: 9
+        power: 17000
+        races: [テスト]
+        keywords: [triple_breaker]
+        rinne: true
+        abilities:
+          - kind: trigger
+            when: {event: move, to: bz, subject: self, reason: summon}
+            effect:
+              - {op: untap, select: {zone: mana, owner: you, count: all}}
+          - kind: trigger
+            when: {event: cast, via: rinne, subject: self}
+            effect:
+              - op: repeat
+                times: {count: {zone: bz, owner: you, filter: {name_has: 試験バラギアラ}}}
+                body:
+                  - {op: move, select: {zone: deck, owner: you, from_top: 1}, to: mana, reason: put}
+      - name: 試験輪廻暴冥
+        types: [spell]
+        civs: [darkness]
+        cost: 6
+        keywords: [s_trigger]
+        spell:
+          - {op: choose, select: {zone: bz, owner: opp, filter: {types: [creature]}, count: 1}, as: x}
+          - {op: modify, select: {ref: x}, mod: {power: -4000}, duration: end_of_turn}
+          - {op: move, select: {zone: graveyard, owner: you, filter: {types: [creature], cost_le: 5}, count: 1}, to: bz, reason: put}
+  - id: T957
+    name: 試験ティーゾリス
+    types: [creature]
+    civs: [darkness]
+    cost: 6
+    power: 7000
+    races: [テスト]
+    mana: 1
+    keywords: [double_breaker]
+    abilities:
+      - kind: static
+        affects: self
+        zone: hand
+        mod: {opt_reduce: {amount: 2, then: entry_destroy}}
+    text: "このクリーチャーの召喚コストを２少なくしてもよい。そうしたら、このターン、このクリーチャーがバトルゾーンに出た時、自分のクリーチャーを１体破壊する。W・ブレイカー（第310弾。dmrp12-008 型）"
+  - id: T958
+    name: 試験ネオウェーブ
+    types: [cross_gear, evolution]
+    civs: [light, water]
+    cost: 5
+    mana: 1
+    evolve_from: {civs: [light, water]}
+    abilities:
+      - kind: static
+        affects: crossed
+        mod: {grant: [blocker]}
+      - kind: trigger
+        when: {event: attack, subject: crossed}
+        effect:
+          - {op: choose, select: {zone: deck, owner: you, from_top: 3, look: true, count: all}, reveal: true, as: pile}
+          - {op: choose, select: {ref: pile, filter: {types: [spell], keyword: s_trigger}, count: all, up_to: true}, as: casts}
+          - {op: repeat, over: casts, as: it, body: [{op: play_free, select: {ref: it}}]}
+          - {op: move, select: {ref: pile, zone: deck, count: all}, to: deck, position: bottom, order: choose, reason: put}
+    text: "このクロスギアはマナゾーンにタップして置かれる。進化-自分の光または水のクロスギア１枚の上に置く。これをクロスしたクリーチャーは「ブロッカー」を得る。これをクロスしたクリーチャーが攻撃する時、自分の山札の上から３枚を表向きにする。その中から、「S・トリガー」付き呪文を好きなだけ選び、コストを支払わずに唱えてもよい。その後、唱えなかったカードを自分の山札の一番下に好きな順番で戻す。（第311弾。dm17-s04 型）"
+  - id: T959
+    name: 試験光ギア
+    types: [cross_gear]
+    civs: [light]
+    cost: 2
+    mana: 1
+    text: "進化元になる光のクロスギア（第311弾）"
+  - id: T960
+    name: 試験S・トリガー光呪文
+    types: [spell]
+    civs: [light]
+    cost: 2
+    keywords: [s_trigger]
+    spell:
+      - {op: untap, select: {zone: mana, owner: you, count: all}}
+    text: "S・トリガー。自分のマナゾーンにあるカードをすべてアンタップする。（第311弾）"
+  - id: T961
+    name: 試験S・トリガー水呪文
+    types: [spell]
+    civs: [water]
+    cost: 3
+    keywords: [s_trigger]
+    spell:
+      - {op: untap, select: {zone: mana, owner: you, count: all}}
+    text: "S・トリガー。自分のマナゾーンにあるカードをすべてアンタップする。（第311弾）"
+  - id: T962
+    name: 試験通常火呪文
+    types: [spell]
+    civs: [fire]
+    cost: 2
+    spell:
+      - {op: draw, player: you, count: 1}
+    text: "カードを1枚引く。S・トリガーを持たない対照呪文（第311弾）"
+  - id: T963
+    name: 試験用EXライフ・モーダル獣
+    types: [creature]
+    civs: [darkness]
+    cost: 5
+    mana: 1
+    power: 5000
+    races: [テスト]
+    keywords: [ex_life]
+    text: "EXライフ / このクリーチャーが出た時またはこのクリーチャーの「EXライフ」シールドが離れた時、次の中から1回選ぶ。▶相手は自身の手札を表向きにし、その中から闇ではないカードをすべて捨てる。▶闇ではないクリーチャーをすべて破壊する。▶相手のマナゾーンにある闇ではないカードはすべて、次の自分のターンのはじめまでアンタップしない。（第312弾・dm26ex4-003 型）"
+    abilities:
+      - kind: trigger
+        when: {event: move, to: bz, subject: self}
+        effect:
+          - op: modal
+            modes:
+              - - {op: discard, select: {chooser: opp, count: all, filter: {not_civs: [darkness]}, owner: opp, zone: hand}}
+              - - {op: destroy, select: {count: all, filter: {not_civs: [darkness], types: [creature]}, owner: any, zone: bz}}
+              - - {op: modify, select: {count: all, filter: {not_civs: [darkness]}, owner: opp, zone: mana}, mod: {deny: [untap_at_start]}, duration: until_next_own_turn_start}
+      - kind: trigger
+        when: {event: move, from: shield, subject: {exlife_of: self}}
+        effect:
+          - op: modal
+            modes:
+              - - {op: discard, select: {chooser: opp, count: all, filter: {not_civs: [darkness]}, owner: opp, zone: hand}}
+              - - {op: destroy, select: {count: all, filter: {not_civs: [darkness], types: [creature]}, owner: any, zone: bz}}
+              - - {op: modify, select: {count: all, filter: {not_civs: [darkness]}, owner: opp, zone: mana}, mod: {deny: [untap_at_start]}, duration: until_next_own_turn_start}
+  - id: T964
+    name: 試験用雷座獣
+    types: [creature]
+    civs: [nature]
+    cost: 5
+    power: 6000
+    races: [アーマード・ドラゴン, テクノ・サムライ]
+    mana: 1
+    neo: true
+    evolve_from: {civs: [light, fire, nature], types: [creature]}
+    keywords: [double_breaker]
+    text: "NEO進化：光、火、または自然のクリーチャー1体の上に置いてもよい。W・ブレイカー。このクリーチャーが出た時、自分の山札の上から2枚をタップしてマナゾーンに置く。メテオバーン：このクリーチャーが攻撃する時、このクリーチャーの下にあるカードを1枚墓地に置いてもよい。そうしたら、自分のマナゾーンにあるカードの枚数よりコストが小さいクリーチャーを1体、自分のマナゾーンから出す。（第313弾・dm26rp3-std010 型）"
+    abilities:
+      - kind: trigger
+        when: {event: move, to: bz, subject: self}
+        effect:
+          - {op: move, select: {zone: deck, owner: you, from_top: 2}, to: mana, reason: put, tapped: true}
+      - kind: trigger
+        when: {event: attack, subject: self}
+        effect:
+          - op: may
+            body:
+              - {op: move, select: {under_of: self, count: 1}, to: graveyard, reason: put, as: paid}
+              - op: if
+                cond: {exists: {ref: paid}}
+                then:
+                  - {op: move, select: {zone: mana, owner: you, filter: {types: [creature], cost_le: {sum: [{count: {zone: mana, owner: you}}, -1]}}, count: 1}, to: bz, reason: put}
+  - id: T965
+    name: 試験用ワンケングレンオー・弧月
+    types: [creature]
+    civs: [nature]
+    cost: 5
+    power: 5000
+    races: [フレイム・モンスター, エメラルド・モンスター]
+    mana: 1
+    neo: true
+    evolve_from: {any_of: [{civs: [nature]}, {name_has: ケングレンオー}], types: [creature]}
+    text: "NEO進化：自然のクリーチャーまたは名前に《ケングレンオー》とあるクリーチャー1体の上に置いてもよい。このクリーチャーが出た時、自分の山札の上から1枚目をマナゾーンに置く。このクリーチャーで攻撃するかわりに、タップして次の能力を使ってもよい。自分の山札を見る。その中から、名前に《ケンゴウグレンオー》とあるクリーチャーを1体、このクリーチャーの上に置いてもよい。その後、山札をシャッフルする。（第314弾・dmex18-045 型）"
+    abilities:
+      - kind: trigger
+        when: {event: move, to: bz, subject: self}
+        effect:
+          - {op: move, select: {zone: deck, owner: you, from_top: 1}, to: mana, reason: put}
+      - kind: activate
+        cost: {tap: self}
+        effect:
+          - op: may
+            body:
+              - {op: choose, select: {zone: deck, owner: you, look: true, filter: {name_has: ケンゴウグレンオー, types: [creature]}, count: 1}, as: p}
+              - {op: move, select: {ref: p, count: all}, to: bz, reason: put, stack_evo: true, evo_source: {ref: self}}
+          - {op: shuffle}
+
+  - id: T966
+    name: 試験用燃える侵略ドラゴン
+    types: [creature]
+    civs: [light, darkness, fire]
+    cost: 6
+    power: 9000
+    races: [メガ・コマンド・ドラゴン, 侵略者]
+    mana: 1
+    neo: true
+    evolve_from: {races: [ドラゴン], types: [creature]}
+    keywords: [double_breaker]
+    abilities:
+      - kind: trigger
+        when: {event: attack_end, subject: self}
+        effect:
+          - op: may
+            body:
+              - {op: put_under, select: {zone: deck, owner: you, from_top: 1}, onto: {ref: self}}
+      - kind: trigger
+        when: {event: move, from: bz, to: graveyard, reason: destroy, subject: self}
+        effect:
+          - {op: play_free, select: {ref: event.was_under, zone: graveyard, filter: {race_has: ドラゴン, not_types: [evolution]}}}
+    text: "NEO進化：自分のドラゴン1体の上に置いてもよい。W・ブレイカー。このクリーチャーの攻撃の終わりに、自分の山札の上から1枚目を表向きにして、このクリーチャーの下に重ねてもよい。このクリーチャーが破壊された時、その下に重ねてあった進化ではないドラゴンをすべてバトルゾーンに出す。（第315弾・dmex12-s19 型。第294弾 form B＋filter {race_has: ドラゴン, not_types: [evolution]}）"
+
+  - id: T967
+    name: 試験用非進化ドラゴン
+    types: [creature]
+    civs: [fire]
+    cost: 5
+    power: 5000
+    races: [アーマード・ドラゴン]
+    mana: 1
+    text: "（第315弾の役カード: 下にあった非進化ドラゴン。出る）"
+
+  - id: T968
+    name: 試験用進化ドラゴン
+    types: [creature, evolution]
+    civs: [fire]
+    cost: 7
+    power: 7000
+    races: [ワールド・ドラゴン]
+    mana: 1
+    evolve_from: {types: [creature]}
+    text: "（第315弾の役カード: 下にあった進化ドラゴン。進化のため出ない）"
+
+  - id: T969
+    name: 試験用非ドラゴン獣
+    types: [creature]
+    civs: [nature]
+    cost: 3
+    power: 3000
+    races: [ビーストフォーク]
+    mana: 1
+    text: "（第315弾の役カード: 下にあった非ドラゴン。出ない）"
+
+  - id: T970
+    name: 試験用ジャスティス・バインド
+    types: [spell]
+    civs: [light]
+    cost: 4
+    mana: 1
+    keywords: [s_trigger]
+    spell:
+      - {op: tap, select: {zone: bz, owner: any, filter: {types: [creature], not_keyword: blocker}, count: all}}
+    text: "S・トリガー\nバトルゾーンにある、「ブロッカー」以外のクリーチャーをすべてタップする。（第316弾: filter_not_keyword の検証用。dm06-016 / dm18-022 ジャスティス・バインド型）"
+
+  - id: T971
+    name: 試験用ブロッカー付与獣
+    types: [creature]
+    civs: [light]
+    cost: 3
+    power: 3000
+    mana: 1
+    abilities:
+      - {kind: static, affects: {zone: bz, owner: you, other: true, filter: {types: [creature]}}, mod: {grant: [blocker]}}
+    text: "自分の他のクリーチャーは「ブロッカー」を得る。（第316弾の役カード: 付与されたブロッカーも not_keyword で除外されることの確認用。本体は other: true で自身を含まない）"
+
+  - id: T972
+    name: 試験用フェアリー・ミラクル
+    types: [spell]
+    civs: [nature]
+    cost: 3
+    mana: 1
+    spell:
+      - {op: mana_put, select: {zone: deck, owner: you, from_top: 1}}
+      - op: if
+        cond:
+          all:
+            - {cmp: [{count: {zone: mana, owner: you, filter: {civs: [light]}}}, ">=", 1]}
+            - {cmp: [{count: {zone: mana, owner: you, filter: {civs: [water]}}}, ">=", 1]}
+            - {cmp: [{count: {zone: mana, owner: you, filter: {civs: [darkness]}}}, ">=", 1]}
+            - {cmp: [{count: {zone: mana, owner: you, filter: {civs: [fire]}}}, ">=", 1]}
+            - {cmp: [{count: {zone: mana, owner: you, filter: {civs: [nature]}}}, ">=", 1]}
+        then:
+          - {op: mana_put, select: {zone: deck, owner: you, from_top: 1}}
+    text: "自分の山札の上から1枚をマナゾーンに置く。自分のマナゾーンにすべての文明が揃っていれば、自分の山札の上からもう1枚、マナゾーンに置く。（第317弾: all_civilizations_condition 形A。dm26sd1-b013 フェアリー・ミラクル型。条件は1枚目を置いた後に判定する。登録済み dmx16-064 の if＋count イディオムと同形）"
+
+  - id: T973
+    name: 試験用ゴレン・キャノン
+    types: [spell]
+    civs: [fire]
+    cost: 5
+    mana: 1
+    spell:
+      - {op: destroy, select: {zone: bz, owner: opp, filter: {types: [creature], power_le: 3000}, count: 1}}
+      - op: if
+        cond:
+          all:
+            - {cmp: [{count: {zone: mana, owner: you, filter: {civs: [light]}}}, ">=", 1]}
+            - {cmp: [{count: {zone: mana, owner: you, filter: {civs: [water]}}}, ">=", 1]}
+            - {cmp: [{count: {zone: mana, owner: you, filter: {civs: [darkness]}}}, ">=", 1]}
+            - {cmp: [{count: {zone: mana, owner: you, filter: {civs: [fire]}}}, ">=", 1]}
+            - {cmp: [{count: {zone: mana, owner: you, filter: {civs: [nature]}}}, ">=", 1]}
+        then:
+          - {op: destroy, select: {zone: bz, owner: opp, filter: {types: [creature], power_le: 3000}, count: 1}}
+    text: "相手のパワー3000以下のクリーチャーを1体破壊する。自分のマナゾーンにすべての文明が揃っていれば、相手のパワー3000以下のクリーチャーをもう1体、破壊する。（第317弾: all_civilizations_condition 形B。dm27-050 ゴレン・キャノン型）"
+
+  - id: T974
+    name: 試験用五文明の決断
+    types: [spell]
+    civs: [light, water, darkness, fire, nature]
+    cost: 5
+    mana: 1
+    spell:
+      - op: if
+        cond:
+          all:
+            - {cmp: [{count: {zone: bz, owner: you, filter: {civs: [light]}}}, ">=", 1]}
+            - {cmp: [{count: {zone: bz, owner: you, filter: {civs: [water]}}}, ">=", 1]}
+            - {cmp: [{count: {zone: bz, owner: you, filter: {civs: [darkness]}}}, ">=", 1]}
+            - {cmp: [{count: {zone: bz, owner: you, filter: {civs: [fire]}}}, ">=", 1]}
+            - {cmp: [{count: {zone: bz, owner: you, filter: {civs: [nature]}}}, ">=", 1]}
+        then:
+          - op: may
+            body:
+              - op: modal
+                count: 5
+                modes:
+                  - [{op: move, select: {zone: deck, owner: you, from_top: 1}, to: shield, reason: charge}]
+                  - [{op: draw, count: 2}]
+                  - [{op: discard, select: {zone: hand, owner: opp, count: 1, chooser: random}}]
+                  - [{op: destroy, select: {zone: bz, owner: opp, filter: {cost_le: 6}, count: 1}}]
+                  - [{op: mana_put, select: {zone: deck, owner: you, from_top: 1}}, {op: may, body: [{op: move, select: {zone: mana, owner: you, count: 1}, to: hand, reason: return}]}]
+            else:
+              - op: modal
+                count: 2
+                repeat: true
+                modes:
+                  - [{op: move, select: {zone: deck, owner: you, from_top: 1}, to: shield, reason: charge}]
+                  - [{op: draw, count: 2}]
+                  - [{op: discard, select: {zone: hand, owner: opp, count: 1, chooser: random}}]
+                  - [{op: destroy, select: {zone: bz, owner: opp, filter: {cost_le: 6}, count: 1}}]
+                  - [{op: mana_put, select: {zone: deck, owner: you, from_top: 1}}, {op: may, body: [{op: move, select: {zone: mana, owner: you, count: 1}, to: hand, reason: return}]}]
+        else:
+          - op: modal
+            count: 2
+            repeat: true
+            modes:
+              - [{op: move, select: {zone: deck, owner: you, from_top: 1}, to: shield, reason: charge}]
+              - [{op: draw, count: 2}]
+              - [{op: discard, select: {zone: hand, owner: opp, count: 1, chooser: random}}]
+              - [{op: destroy, select: {zone: bz, owner: opp, filter: {cost_le: 6}, count: 1}}]
+              - [{op: mana_put, select: {zone: deck, owner: you, from_top: 1}}, {op: may, body: [{op: move, select: {zone: mana, owner: you, count: 1}, to: hand, reason: return}]}]
+    text: "次の中から2回選ぶ。同じものを選んでもよい。自分のエレメントにすべての文明が揃っていれば、かわりにすべてを1回ずつ使ってもよい。▶自分の山札の上から1枚をシールド化する。▶カードを2枚引く。▶相手の手札を1枚見ないで選び、捨てさせる。▶相手のコスト6以下のエレメントを1つ選び、破壊する。▶自分の山札の上から1枚目をマナゾーンに置く。その後、カードを1枚、自分のマナゾーンから手札に戻してもよい。（第317弾: all_civilizations_condition 形C。dm26sd1-b005 魔誕と光喜と楽識と炎怒と哀樹の決断型。条件の「自分のエレメント」は総合ルール403.1によりバトルゾーンのエレメントのみを参照する。マナ全文明では成立しない）"
+  - id: T975
+    name: 試験用エメラルの海幻
+    types: [tamaseed]
+    civs: [water]
+    cost: 3
+    mana: 1
+    races: [サイバーロード]
+    keywords: [shinka_rise]
+    text: "シンカライズ：このタマシードがクリーチャーであるかのように、この上に進化クリーチャーを置いてもよい。このタマシードが出た時、カードを１枚引く。シンカパワー：このタマシードが進化する時、自分の手札を１枚シールド化し、その後、自分のシールドを１つ選んで手札に加える。ただし、その「S・トリガー」は使えない。（第318弾: shield_to_hand_strigger_deny 形A1。dmrp22-031 エメラルの海幻型。戻す move に strigger off の印）"
+    abilities:
+      - kind: trigger
+        when: {event: move, to: bz, subject: self}
+        effect: [{op: draw, count: 1}]
+      - kind: trigger
+        when: {event: evolve_base, subject: self}
+        effect:
+          - {op: move, select: {zone: hand, owner: you, count: 1}, to: shield, reason: charge}
+          - {op: move, select: {zone: shield, owner: you, count: 1}, to: hand, reason: put, strigger: "off"}
+  - id: T976
+    name: 試験用エメラルの海幻（対照）
+    types: [tamaseed]
+    civs: [water]
+    cost: 3
+    mana: 1
+    races: [サイバーロード]
+    keywords: [shinka_rise]
+    text: "シンカライズ。このタマシードが出た時、カードを１枚引く。シンカパワー：このタマシードが進化する時、自分の手札を１枚シールド化し、その後、自分のシールドを１つ選んで手札に加える。（第318弾: 形A1の対照。戻す move に印なし）"
+    abilities:
+      - kind: trigger
+        when: {event: move, to: bz, subject: self}
+        effect: [{op: draw, count: 1}]
+      - kind: trigger
+        when: {event: evolve_base, subject: self}
+        effect:
+          - {op: move, select: {zone: hand, owner: you, count: 1}, to: shield, reason: charge}
+          - {op: move, select: {zone: shield, owner: you, count: 1}, to: hand, reason: put}
+  - id: T977
+    name: 試験用ゴルドラン・ゴルギーニ
+    types: [creature]
+    civs: [light]
+    cost: 10
+    mana: 1
+    power: 14000
+    races: [メカ・エンジェル・コマンド]
+    keywords: [hyper_energy, blocker, triple_breaker]
+    text: "ブロッカー　T・ブレイカー。このクリーチャーが出た時、次の自分のターンのはじめまで、このクリーチャーは離れない。自分のクリーチャーが攻撃する時、自分の山札の上から１枚目をシールド化してもよい。その後、自分のシールドが10以上あれば、自分のシールドを好きな数選び、表向きにする。その中からクリーチャーをすべて出し、残りを手札に加える。ただし、その「S・トリガー」は使えない。（第318弾: shield_to_hand_strigger_deny 形A2。dm24ex3-or1 超天使 ゴルドラン・ゴルギーニ型。残りを手札に加える move に strigger off の印）"
+    abilities:
+      - kind: trigger
+        when: {event: move, to: bz, subject: self}
+        effect: [{op: modify, select: {ref: self}, mod: {no_leave: true}, duration: until_next_own_turn_start}]
+      - kind: trigger
+        when: {event: attack, subject: {owner: you, filter: {types: [creature]}}}
+        effect:
+          - op: may
+            body: [{op: move, select: {zone: deck, owner: you, from_top: 1, count: 1}, to: shield, reason: charge}]
+          - op: if
+            cond: {cmp: [{count: {zone: shield, owner: you}}, ">=", 10]}
+            then:
+              - {op: choose, select: {zone: shield, owner: you, count: any}, as: shs}
+              - {op: flip_up, select: {bundle_of: shs, count: all}}
+              - {op: choose, select: {bundle_of: shs, count: all}, as: fc}
+              - {op: move, select: {ref: fc, filter: {types: [creature]}, count: all}, to: bz, reason: put}
+              - {op: move, select: {ref: fc, filter: {not_types: [creature]}, count: all}, to: hand, reason: put, strigger: "off"}
+  - id: T978
+    name: 試験用ゴルドラン・ゴルギーニ（対照）
+    types: [creature]
+    civs: [light]
+    cost: 10
+    mana: 1
+    power: 14000
+    races: [メカ・エンジェル・コマンド]
+    keywords: [hyper_energy, blocker, triple_breaker]
+    text: "ブロッカー　T・ブレイカー。自分のクリーチャーが攻撃する時、自分の山札の上から１枚目をシールド化してもよい。その後、自分のシールドが10以上あれば、自分のシールドを好きな数選び、表向きにする。その中からクリーチャーをすべて出し、残りを手札に加える。（第318弾: 形A2の対照。手札に加える move に印なし）"
+    abilities:
+      - kind: trigger
+        when: {event: move, to: bz, subject: self}
+        effect: [{op: modify, select: {ref: self}, mod: {no_leave: true}, duration: until_next_own_turn_start}]
+      - kind: trigger
+        when: {event: attack, subject: {owner: you, filter: {types: [creature]}}}
+        effect:
+          - op: may
+            body: [{op: move, select: {zone: deck, owner: you, from_top: 1, count: 1}, to: shield, reason: charge}]
+          - op: if
+            cond: {cmp: [{count: {zone: shield, owner: you}}, ">=", 10]}
+            then:
+              - {op: choose, select: {zone: shield, owner: you, count: any}, as: shs}
+              - {op: flip_up, select: {bundle_of: shs, count: all}}
+              - {op: choose, select: {bundle_of: shs, count: all}, as: fc}
+              - {op: move, select: {ref: fc, filter: {types: [creature]}, count: all}, to: bz, reason: put}
+              - {op: move, select: {ref: fc, filter: {not_types: [creature]}, count: all}, to: hand, reason: put}
+  - id: T979
+    name: 試験用ジェンゲガー型（形A）
+    types: [creature]
+    civs: [darkness]
+    cost: 3
+    mana: 1
+    power: 2000
+    races: [アビスロイヤル]
+    keywords: [blocker]
+    text: "ブロッカー。このクリーチャーが攻撃する時、攻撃の後、このクリーチャーを破壊する。（第319弾: destroy_self_after_attacking 形A。dm22rp1-038 型）"
+    abilities:
+      - kind: trigger
+        when: {event: attack, subject: self}
+        effect:
+          - op: delayed_trigger
+            when: {event: attack_end, subject: self}
+            duration: during_attack
+            effect:
+              - {op: destroy, select: {ref: self}}
+  - id: T980
+    name: 試験用ディッシュ型（形B）
+    types: [creature]
+    civs: [darkness]
+    cost: 2
+    mana: 1
+    power: 5000
+    races: [アビスロイヤル]
+    keywords: [s_trigger, blocker]
+    text: "S・トリガー　ブロッカー。このクリーチャーが攻撃する時またはブロックした時、その攻撃の後、このクリーチャーを破壊する。（第319弾: destroy_self_after_attacking 形B。dm22rp2x-061 型）"
+    abilities:
+      - kind: trigger
+        when: {event: attack, subject: self}
+        effect:
+          - op: delayed_trigger
+            when: {event: attack_end, subject: self}
+            duration: during_attack
+            effect:
+              - {op: destroy, select: {ref: self}}
+      - kind: trigger
+        when: {event: block, subject: self}
+        effect:
+          - op: delayed_trigger
+            when: {event: attack_end, target: self}
+            duration: during_attack
+            effect:
+              - {op: destroy, select: {ref: self}}
+  - id: T981
+    name: 試験用旧近似形（対照）
+    types: [creature]
+    civs: [darkness]
+    cost: 3
+    mana: 1
+    power: 2000
+    races: [アビスロイヤル]
+    keywords: [blocker]
+    text: "ブロッカー。このクリーチャーが攻撃する時、攻撃の後、このクリーチャーを破壊する。（第319弾: 対照。変換済み9件が使う旧近似形＝delayed の when: turn_end ＋ duration: during_attack。攻撃終了時の _expire で消えるため発火しない）"
+    abilities:
+      - kind: trigger
+        when: {event: attack, subject: self}
+        effect:
+          - op: delayed_trigger
+            when: {event: turn_end}
+            duration: during_attack
+            effect:
+              - {op: destroy, select: {ref: self}}
+  - id: T982
+    name: 試験用ワダウザ型（形B）
+    types: [creature]
+    civs: [light, water]
+    cost: 4
+    mana: 1
+    power: 1000
+    races: [テスト]
+    keywords: [s_trigger, blocker]
+    text: "S・トリガー　ブロッカー。このクリーチャーがブロックした時、このクリーチャーと攻撃しているクリーチャーを持ち主の手札に戻す。このクリーチャーが離れた時、自分の山札の上から4枚を見る。その中から1枚を手札に加え、残りを好きな順序で山札の上か下に置く。（第320弾: trigger_when_blocked 形B。dm26ex2-068 型）"
+    abilities:
+      - kind: trigger
+        when: {event: block, subject: self}
+        effect:
+          - {op: move, select: {ref: self}, to: hand, reason: return}
+          - {op: move, select: {ref: event.attacker}, to: hand, reason: return}
+      - kind: trigger
+        when: {event: move, from: bz, subject: self}
+        effect:
+          - op: choose
+            select: {zone: deck, owner: you, from_top: 4, look: true, count: all}
+            as: pile
+          - op: choose
+            select: {ref: pile, count: 1}
+            as: pick
+          - {op: move, select: {ref: pick, count: all}, to: hand, reason: draw}
+          - op: repeat
+            times: {count: {ref: pile, zone: deck}}
+            body:
+              - op: choose
+                select: {ref: pile, zone: deck, count: 1}
+                as: c
+              - op: modal
+                modes:
+                  - - {op: move, select: {ref: c, count: all}, to: deck, position: top, reason: put}
+                  - - {op: move, select: {ref: c, count: all}, to: deck, position: bottom, reason: put}
+  - id: T983
+    name: 試験用ノーガルディ型（形A）
+    types: [creature]
+    civs: [nature]
+    cost: 2
+    mana: 1
+    power: 3000
+    races: [テスト]
+    text: "このクリーチャーがブロックされた時、このクリーチャーは相手のシールドを2つブレイクする。（第320弾: trigger_when_blocked 形A。dm26rp1-074 型）"
+    abilities:
+      - kind: trigger
+        when: {event: block, attacker: self}
+        effect:
+          - {op: break, player: opp, count: 2}

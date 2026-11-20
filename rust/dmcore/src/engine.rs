@@ -2041,7 +2041,7 @@ impl Engine {
         kw.dedup();
         json!({"power": power, "cost": d.cost, "civs": d.civs, "types": d.types, "races": d.races, "keywords": kw,
             "name": d.name, "names": [d.name], "allow": (if in_bz { d.allow_x.clone() } else { vec![] }).into_iter().chain(allow.iter().map(|x| json!(x))).collect::<Vec<_>>(), "deny": deny, "require": [], "breaks": breaks, "break_opts": bo,
-            "breaks_add": 0, "pay_cost": d.cost, "sac_reduce": 0, "opt_reduce": null, "cost_may": [], "no_leave": [], "cross_reduce": [],
+            "breaks_add": 0, "pay_cost": d.cost, "sac_reduce": 0, "sac_gated": [], "opt_reduce": null, "cost_may": [], "no_leave": [], "cross_reduce": [],
             "must_be_attacked": false, "must_be_attacked_first": false, "must_be_chosen": false, "must_attack_creature": false,
             "must_attack_creature_first": false, "battle_indestructible": false, "battle_indestructible_filters": [],
             "win_all_battles": false, "indestructible": false, "crystal_soul": 0, "mana_number": 0})

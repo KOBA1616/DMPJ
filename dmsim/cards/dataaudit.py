@@ -20,7 +20,7 @@ _STRUCT_FIELDS = ("free_if", "alt_cost", "mugen_climb", "vividraw", "fushigi", "
                   "evolve_from", "evolve_any", "cost_reduce_per_evo", "neo", "grave_evo", "star", "s_max", "hyper", "crystal_soul", "tap_reduce", "mana_bakutan",
                   "recycle", "deck_evolution", "ace", "link_to", "declare", "evolve_zone", "evolve_count", "mana_boost",
                   "evolve_civs", "evolve_zones", "soul_shift", "grave_cast", "rinne", "resolve_face_down",
-                  "evo_base_reduce", "launcher", "evolve_total_cost_ge")
+                  "evo_base_reduce", "launcher", "evolve_total_cost_ge", "evolve_max")
 # 効果を持たないカードの基本欄。変換データの最上位キーはこの集合か _STRUCT_FIELDS のどちらかに入っていること（tests/test_data_audit.py で検査）
 BASIC_FIELDS = ("id", "source", "mana", "name", "text", "cost", "types", "civs", "races", "power", "abilities", "keywords",
                 "spell", "sst_spell", "stp_spell", "odrive_spell", "faces", "resolve_to", "resolve_face_down", "after_resolve")
@@ -49,7 +49,11 @@ def audit_card(rules, cd) -> list[str]:
         out.append("text_but_no_effect")
     if _EVO.search(text) and "evolution" not in types and not (cd.neo or cd.grave_evo or cd.s_max):
         out.append("evo_text_no_type")
-    if "evolution" in types and not (cd.evolve_from or cd.evolve_any or cd.neo or cd.grave_evo or cd.s_max):
+    # evolve_from: {} は「カード全般」の明示宣言（シールド進化。第293弾）なので、辞書形は空でも進化元ありと数える
+    has_source = cd.evolve_any or cd.neo or cd.grave_evo or cd.s_max \
+        or isinstance(cd.evolve_from, dict) \
+        or (isinstance(cd.evolve_from, list) and len(cd.evolve_from) > 0)
+    if "evolution" in types and not has_source:
         out.append("evo_no_source")
     # 行頭のキーワード語が keywords に無い（本文の「ブロッカーを得る」等の付与とは区別する）
     ja2id = {v.get("ja"): k for k, v in rules.keywords.items() if v.get("ja")}

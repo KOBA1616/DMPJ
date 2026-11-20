@@ -29,6 +29,7 @@
      "creature",
      "cross_gear",
      "d2_field",
+     "dragonic_field",
      "dream_creature",
      "evolution",
      "exile_creature",
@@ -182,6 +183,7 @@
       "name_has": {},
       "neo": {},
       "not_civs": {},
+      "not_keyword": {},
       "not_name": {},
       "not_race_has": {},
       "not_types": {},
@@ -371,6 +373,7 @@
   "evolve_count": {},
   "evolve_zone": {},
   "evolve_any": {},
+  "evolve_max": {},
   "cost_reduce_per_evo": {},
   "resolve_to": {},
   "resolve_face_down": {},
@@ -407,6 +410,7 @@
        "creature",
        "cross_gear",
        "d2_field",
+       "dragonic_field",
        "dream_creature",
        "evolution",
        "exile_creature",
@@ -560,6 +564,7 @@
         "name_has": {},
         "neo": {},
         "not_civs": {},
+        "not_keyword": {},
         "not_name": {},
         "not_race_has": {},
         "not_types": {},
@@ -751,6 +756,7 @@
     "evolve_count": {},
     "evolve_zone": {},
     "evolve_any": {},
+    "evolve_max": {},
     "cost_reduce_per_evo": {},
     "resolve_to": {},
     "resolve_face_down": {},
@@ -1626,6 +1632,22 @@
       "type": "object",
       "properties": {
        "op": {
+        "const": "move_to_event"
+       },
+       "select": {
+        "$ref": "#/$defs/selector"
+       }
+      },
+      "required": [
+       "op",
+       "select"
+      ],
+      "additionalProperties": false
+     },
+     {
+      "type": "object",
+      "properties": {
+       "op": {
         "const": "move_under_to_event"
        }
       },
@@ -1970,6 +1992,12 @@
       "properties": {
        "op": {
         "const": "shield_plus"
+       },
+       "each": {
+        "type": "boolean"
+       },
+       "count": {
+        "type": "integer"
        }
       },
       "required": [
@@ -2472,6 +2500,7 @@
     "name_has": {},
     "neo": {},
     "not_civs": {},
+    "not_keyword": {},
     "not_name": {},
     "not_race_has": {},
     "not_types": {},
@@ -3085,6 +3114,7 @@
          "enter_bz",
          "evolve_base",
          "evolve_base_any",
+         "evolve_civ_any",
          "generate",
          "guardman",
          "s_trigger",
@@ -3115,6 +3145,7 @@
            "enter_bz",
            "evolve_base",
            "evolve_base_any",
+           "evolve_civ_any",
            "generate",
            "guardman",
            "s_trigger",
@@ -3190,6 +3221,7 @@
          "enter_bz",
          "evolve_base",
          "evolve_base_any",
+         "evolve_civ_any",
          "generate",
          "guardman",
          "s_trigger",
@@ -3220,6 +3252,7 @@
            "enter_bz",
            "evolve_base",
            "evolve_base_any",
+           "evolve_civ_any",
            "generate",
            "guardman",
            "s_trigger",
@@ -3463,7 +3496,36 @@
        "type": "integer"
       },
       {
-       "type": "object"
+       "type": "object",
+       "properties": {
+        "amount": {
+         "type": "integer"
+        },
+        "for": {
+         "$ref": "#/$defs/filter"
+        }
+       },
+       "required": [
+        "amount",
+        "for"
+       ],
+       "additionalProperties": false
+      },
+      {
+       "type": "object",
+       "properties": {
+        "amount": {
+         "type": "integer"
+        },
+        "cost_min": {
+         "type": "integer"
+        }
+       },
+       "required": [
+        "amount",
+        "cost_min"
+       ],
+       "additionalProperties": false
       }
      ]
     },
@@ -3539,7 +3601,8 @@
       "then": {
        "enum": [
         "destroy",
-        "deck_bottom_draw"
+        "deck_bottom_draw",
+        "entry_destroy"
        ]
       },
       "floor": {

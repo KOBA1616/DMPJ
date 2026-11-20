@@ -37,14 +37,14 @@ MOD_KEYS = {"power", "power_set", "grant", "allow", "deny", "breaks", "breaks_ad
 REQUIRES = {"attack", "block"}   # 強制（506.1b 攻撃しなければならない, 507.1b ブロックしなければならない）
 POSITIONS = {"top", "bottom"}
 PERMANENT_TYPES = {"tamaseed", "field", "cross_gear"}   # 手札から実行してバトルゾーンに出るクリーチャー以外のカード（315, 308, 303）
-CARD_TYPES = {"creature", "spell", "evolution", "d2_field", "dream_creature", "g_castle", "exile_creature"} | PERMANENT_TYPES   # d2_field: D2フィールドの型印（特殊タイプ D2。types には field と併記する。第151弾）。dream_creature: ドリーム・クリーチャーの型印（第174弾）。g_castle: G城の型印（第176弾）。exile_creature: エグザイル・クリーチャーの型印（第266弾。types には creature と併記する）
+CARD_TYPES = {"creature", "spell", "evolution", "d2_field", "dream_creature", "g_castle", "exile_creature", "dragonic_field"} | PERMANENT_TYPES   # d2_field: D2フィールドの型印（特殊タイプ D2。types には field と併記する。第151弾）。dream_creature: ドリーム・クリーチャーの型印（第174弾）。g_castle: G城の型印（第176弾）。exile_creature: エグザイル・クリーチャーの型印（第266弾。types には creature と併記する）。dragonic_field: ドラゴニック・フィールドの型印（第303弾。types には field と併記する）
 CIVS = {"light", "water", "darkness", "fire", "nature", "zero"}
 SELECTOR_KEYS = {"zone", "owner", "owner_of", "filter", "count", "up_to", "from_top", "from_bottom", "chooser", "ref", "other",
                  "under_of", "bundle_of", "look", "exlife_of", "castle_of", "total_cost_le", "total_cost_ge", "total_power_le", "total_power_ge",
                  "distinct_costs", "distinct_from", "distinct_names", "exclude", "extremal",
                  "crossed_to", "host_of"}   # crossed_to: 「そのクリーチャーにクロスされているギア」。host_of: 「そのギアをクロスしているクリーチャー」（第170弾）。castle_of: 「その城が要塞化しているシールド」（第178弾）
 FILTER_KEYS = {"any_of", "types", "not_types", "civs", "civs_all", "not_civs", "races", "races_all", "race_has", "not_race_has", "name", "name_has", "not_name",
-               "cost_le", "cost_ge", "power_le", "power_ge", "tapped", "keyword", "multicolor", "colorless", "hyper", "face_down", "face_up", "neo", "vanilla", "sealed", "evolution", "ultimate_evolution", "mugen_climb", "partner", "twinpact", "vividraw", "fushigi", "linked_god", "entered_this_turn",
+               "cost_le", "cost_ge", "power_le", "power_ge", "tapped", "keyword", "not_keyword", "multicolor", "colorless", "hyper", "face_down", "face_up", "neo", "vanilla", "sealed", "evolution", "ultimate_evolution", "mugen_climb", "partner", "twinpact", "vividraw", "fushigi", "linked_god", "entered_this_turn",
                "spell_cost_le", "spell_cost_ge",   # 呪文面（ツインパクトの呪文側）のコスト（第184弾）
                "crossed", "crossed_ge", "crossed_le", "crossed_name", "evo_source_of", "fortifying", "fortified", "exlife"}   # クロス状態（第170弾）: crossed はギアがクロスされているか、crossed_ge/le はその枚数、crossed_name はその名前のギアがクロスされているか。evo_source_of（第177弾）: そのクリーチャーの進化元になれるカード（値は "self" / 変数名）。fortifying（第178弾）: シールドを要塞化している城。fortified（第178弾）: 要塞化されたシールド。exlife（第237弾）: EXライフで紐付いたシールドか
 FILTER_EXPR_KEYS = {"cost_le", "cost_ge", "power_le", "power_ge", "races", "civs", "not_civs", "name", "crossed_ge", "crossed_le", "spell_cost_le", "spell_cost_ge"}   # 値に式を書ける（解決時に計算）。civs / not_civs / name は宣言プリミティブ（{declared:}）の受け口（バンドB U3／バンドC2 U97）
@@ -91,11 +91,12 @@ class Face:
     rinne: bool = False                                     # 輪廻∞（第267弾）: 呪文側をバトルゾーンに置いたまま通常コストで唱えられる
     mana_bakutan: int | None = None                       # マナ爆誕: 自分のマナゾーンから固定コストで召喚できる（第191弾。0 は支払わずに召喚）
     link_to: list | None = None                           # G・リンク（名前指定・4方向。第197弾）: [{name, pos}]。pos は相手から見た自分の位置
-    deck_evolution: dict | None = None                    # デッキ進化: {count?, rest_to?, blind?, shuffle_first?} 山札の上からめくって重ねて出す（第173弾）
+    deck_evolution: dict | None = None                    # デッキ進化: {count?, rest_to?, blind?, shuffle_first?, stack_all?} 山札の上からめくって重ねて出す（第173弾。stack_all はデッキ進化GV: 上から count 枚を全部重ねる。第293弾）
     evolve_from: dict | None = None                       # 進化元の条件（801.1a）。filter 形式
     evolve_zone: str = "bz"                               # 進化元を探すゾーン（超無限墓地進化は graveyard）
     evolve_any: bool = False                              # 進化元を1体以上選べる（超無限墓地進化）
     evolve_count: int = 1                                 # 進化元をちょうどこの数だけ重ねる（進化GV は3体）
+    evolve_max: int | None = None                         # evolve_any の上限（「3体まで」形マナ進化GV。第293弾）
     evolve_civs: tuple = ()                               # 超無限進化の文明条件: 選んだ進化元の集合がこの文明を全て含むこと（第218弾）
     evolve_zones: tuple = ()                              # 超無限進化Ω: 進化元を探すゾーンの集合（evolve_zone の代わり。第218弾）
     soul_shift: dict | None = None                        # ソウルシフト∞: {floor} 進化元の合計コストぶん軽減し、floor 未満にはならない（第218弾）
@@ -163,11 +164,12 @@ class CardDef:
     rinne: bool = False                                   # 輪廻∞（第267弾）: 呪文側をバトルゾーンに置いたまま通常コストで唱えられる
     mana_bakutan: int | None = None                     # マナ爆誕: 固定コスト（第191弾）
     link_to: list | None = None                         # G・リンク（名前指定・4方向。第197弾）: [{name, pos}]
-    deck_evolution: dict | None = None                  # デッキ進化: {count?, rest_to?, blind?, shuffle_first?}（第173弾）
+    deck_evolution: dict | None = None                  # デッキ進化: {count?, rest_to?, blind?, shuffle_first?, stack_all?}（第173弾／第293弾）
     evolve_from: dict | None = None
     evolve_zone: str = "bz"
     evolve_any: bool = False
     evolve_count: int = 1
+    evolve_max: int | None = None
     evolve_civs: tuple = ()
     evolve_zones: tuple = ()
     soul_shift: dict | None = None
@@ -690,6 +692,17 @@ class Checker:
                     or ("once" in cm and not isinstance(cm["once"], bool)) or ("min" in cm and not isinstance(cm["min"], int)) \
                     or ("must" in cm and not isinstance(cm["must"], bool)):
                 raise DefError(f"{where}: cost_may must be {{amount: int, once?: bool, min?: int, must?: bool}}")
+        if "sac_reduce" in m:   # ササゲール系の生贄軽減（第201弾は int 形＝ディスペクター専用。dict 形は2系統: {amount, cost_min}＝自己受益・下限つき（dmex01-042 の既存形）と {amount, for}＝対象フィルタつき（第292弾））
+            sr = m["sac_reduce"]
+            if isinstance(sr, dict):
+                if not isinstance(sr.get("amount"), int) or isinstance(sr.get("amount"), bool):
+                    raise DefError(f"{where}: sac_reduce dict needs amount: int")
+                if set(sr) == {"amount", "for"}:
+                    self.filter(sr["for"], where + ".sac_reduce.for")
+                elif not (set(sr) == {"amount", "cost_min"} and isinstance(sr.get("cost_min"), int)):
+                    raise DefError(f"{where}: sac_reduce dict must be {{amount: int, for: filter}} or {{amount: int, cost_min: int}}")
+            elif not isinstance(sr, int) or isinstance(sr, bool):
+                raise DefError(f"{where}: sac_reduce must be an int or a dict {{amount, for}} / {{amount, cost_min}}")
         if "no_leave" in m:
             nl = m["no_leave"]
             if nl is not True and not (isinstance(nl, dict) and set(nl) <= {"except_destroy", "by_opp", "except_battle", "by_opp_spell"}
@@ -755,8 +768,8 @@ class Checker:
                 raise DefError(f"{where}: opt_reduce needs amount (int)")
             if set(o) - {"amount", "then", "floor", "per", "do"}:
                 raise DefError(f"{where}: opt_reduce has unknown keys {sorted(set(o) - {'amount', 'then', 'floor', 'per', 'do'})}")
-            if "then" in o and o["then"] not in ("destroy", "deck_bottom_draw"):
-                raise DefError(f"{where}: opt_reduce.then must be destroy / deck_bottom_draw")
+            if "then" in o and o["then"] not in ("destroy", "deck_bottom_draw", "entry_destroy"):
+                raise DefError(f"{where}: opt_reduce.then must be destroy / deck_bottom_draw / entry_destroy")
             if "do" in o:
                 do = o["do"]
                 if not isinstance(do, dict) or set(do) - {"select", "selects", "move_to", "shuffle", "min", "max", "tap", "strigger_off"}:
@@ -1154,6 +1167,8 @@ def _load_face(raw, keywords, macros, chk: Checker, where) -> dict:
             raise DefError(f"{where}: evolution creature needs evolve_from")
         ef = raw.get("evolve_from") or {}
         for f in (ef if isinstance(ef, list) else [ef]):   # 進化V: フィルタのリスト（1つずつ重ねる）
+            if "zone" in f and f["zone"] not in chk.zones:   # 第293弾: リスト形の zone はその進化元を探すゾーン（進化GV・Ω）
+                raise DefError(f"{where}: unknown evolve_from zone '{f['zone']}'")
             chk.filter({k: v for k, v in f.items() if k != "zone"}, where)
     zone = raw.get("evolve_zone", "bz")
     if zone not in chk.zones:
@@ -1167,6 +1182,11 @@ def _load_face(raw, keywords, macros, chk: Checker, where) -> dict:
     for z in raw.get("evolve_zones") or []:
         if z not in chk.zones:
             raise DefError(f"{where}: unknown evolve_zones '{z}'")
+    if "evolve_max" in raw:   # 「N体まで」形（第293弾）: evolve_any の上限
+        if not isinstance(raw["evolve_max"], int) or isinstance(raw["evolve_max"], bool) or raw["evolve_max"] < 1:
+            raise DefError(f"{where}: evolve_max must be a positive int")
+        if not raw.get("evolve_any"):
+            raise DefError(f"{where}: evolve_max needs evolve_any")
     ss = raw.get("soul_shift")
     if ss is not None:
         if not isinstance(ss, dict) or set(ss) - {"floor"} or not isinstance(ss.get("floor"), int) or ss["floor"] < 0:
@@ -1199,6 +1219,8 @@ def _load_face(raw, keywords, macros, chk: Checker, where) -> dict:
                 raise DefError(f"{where}: alt_cost do step needs {{zone, count: int, to, reason}} or {{zone, count: int, tap: true}}")
             if "filter" in step:
                 chk.filter(step["filter"], where)
+            if step.get("owner", "you") not in ("you", "opp"):
+                raise DefError(f"{where}: alt_cost do step owner は you/opp のみ（第292弾で owner を honor するようになった）")
         if "if" in ac:
             chk.cond(ac["if"], where + ": alt_cost.if")
     if "vividraw" in raw:
@@ -1259,13 +1281,14 @@ def _load_face(raw, keywords, macros, chk: Checker, where) -> dict:
         de = raw["deck_evolution"]
         if de is True:
             de = {"count": 1}
-        if not isinstance(de, dict) or set(de) - {"count", "rest_to", "blind", "shuffle_first"} \
+        if not isinstance(de, dict) or set(de) - {"count", "rest_to", "blind", "shuffle_first", "stack_all"} \
                 or not isinstance(de.get("count", 1), int) or isinstance(de.get("count", 1), bool) \
                 or de.get("count", 1) < 1 \
                 or ("rest_to" in de and de["rest_to"] not in chk.zones) \
                 or not isinstance(de.get("blind", False), bool) \
-                or not isinstance(de.get("shuffle_first", False), bool):
-            raise DefError(f"{where}: deck_evolution needs {{count?: int >= 1, rest_to?: zone, blind?: bool, shuffle_first?: bool}}")
+                or not isinstance(de.get("shuffle_first", False), bool) \
+                or not isinstance(de.get("stack_all", False), bool):
+            raise DefError(f"{where}: deck_evolution needs {{count?: int >= 1, rest_to?: zone, blind?: bool, shuffle_first?: bool, stack_all?: bool}}")
     if "crystal_soul" in raw:
         cs = raw["crystal_soul"]
         if not isinstance(cs, int) or isinstance(cs, bool) or cs < 1:
@@ -1289,6 +1312,7 @@ def _load_face(raw, keywords, macros, chk: Checker, where) -> dict:
                 evolve_zone=zone, evolve_any=bool(raw.get("evolve_any", False)),
                 evolve_count=(len(raw["evolve_from"]) if isinstance(raw.get("evolve_from"), list)
                               else int(raw.get("evolve_count", 1))),
+                evolve_max=(int(raw["evolve_max"]) if raw.get("evolve_max") is not None else None),
                 evolve_civs=tuple(raw.get("evolve_civs") or ()), evolve_zones=tuple(raw.get("evolve_zones") or ()),
                 soul_shift=raw.get("soul_shift"),
                 cost_reduce_per_evo=int(raw.get("cost_reduce_per_evo", 0)),
