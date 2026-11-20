@@ -3179,6 +3179,7 @@
            "destroyed",
            "discard",
            "draw",
+           "dynamo_tap",
            "enter",
            "enter_unpaid",
            "leave",
@@ -3286,6 +3287,7 @@
            "destroyed",
            "discard",
            "draw",
+           "dynamo_tap",
            "enter",
            "enter_unpaid",
            "leave",
@@ -3376,6 +3378,18 @@
        },
        "required": [
         "amount"
+       ],
+       "additionalProperties": false
+      },
+      {
+       "type": "object",
+       "properties": {
+        "var": {
+         "type": "string"
+        }
+       },
+       "required": [
+        "var"
        ],
        "additionalProperties": false
       }

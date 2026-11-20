@@ -14204,3 +14204,63 @@ cards:
                 to: hand
                 reason: draw
               - op: shuffle
+  - id: T990
+    name: 試験用ジョジョジョ・マキシマム型
+    types: [spell]
+    civs: []
+    cost: 9
+    mana: 1
+    free_if:
+      cmp:
+        - count: {zone: [bz, mana], owner: you, filter: {race_has: ジョーカーズ}}
+        - '>='
+        - 11
+    text: "G・ゼロ：バトルゾーンまたはマナゾーンに自分のジョーカーズが合計11枚以上あれば、この呪文をコストを支払わずに唱えてもよい。\n自分のクリーチャーを数える。このターン、自分のクリーチャー１体はその数のシールドを追加でブレイクし、そのクリーチャーの攻撃中、相手は呪文を唱えられない。（第324弾: breaks_equal_creature_count。dm24ex2-024 型）"
+    spell:
+      - {op: set_var, name: n, value: {count: {zone: bz, owner: you, filter: {types: [creature]}}}}
+      - op: choose
+        select: {zone: bz, owner: you, filter: {types: [creature]}, count: 1}
+        as: chosen
+      - op: modify
+        select: {ref: chosen}
+        mod: {breaks_add: {var: n}}
+        duration: end_of_turn
+      - op: delayed_trigger
+        when: {event: attack, subject: {ref: chosen}}
+        effect:
+          - op: modify
+            select: {zone: hand, owner: opp, filter: {types: [spell]}}
+            mod: {deny: [cast]}
+            duration: during_attack
+        duration: end_of_turn
+        once: false
+  - id: T991
+    name: 試験用ジョジョジョ・マキシマム型（超再録）
+    types: [spell]
+    civs: []
+    cost: 9
+    mana: 1
+    free_if:
+      cmp:
+        - count: {zone: [bz, mana], owner: you, filter: {race_has: ジョーカーズ}}
+        - '>='
+        - 11
+    text: "G・ゼロ：自分の、ジョーカーズとマナゾーンにあるジョーカーズ・カードが合計11以上なら、この呪文をコストを支払わずに唱えてもよい。\n自分のクリーチャーを数える。このターン、自分のクリーチャー１体はその数のシールドを追加でブレイクし、そのクリーチャーの攻撃中、相手は呪文を唱えられない。（第324弾: breaks_equal_creature_count。dm26ex4-cho021 型）"
+    spell:
+      - {op: set_var, name: n, value: {count: {zone: bz, owner: you, filter: {types: [creature]}}}}
+      - op: choose
+        select: {zone: bz, owner: you, filter: {types: [creature]}, count: 1}
+        as: chosen
+      - op: modify
+        select: {ref: chosen}
+        mod: {breaks_add: {var: n}}
+        duration: end_of_turn
+      - op: delayed_trigger
+        when: {event: attack, subject: {ref: chosen}}
+        effect:
+          - op: modify
+            select: {zone: hand, owner: opp, filter: {types: [spell]}}
+            mod: {deny: [cast]}
+            duration: during_attack
+        duration: end_of_turn
+        once: false

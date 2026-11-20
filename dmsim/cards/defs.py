@@ -667,9 +667,11 @@ class Checker:
         if "breaks_add" in m:
             ba = m["breaks_add"]
             if isinstance(ba, dict):   # {amount, count}（第170弾）: 「〜1枚につき、さらに1枚ブレイクする」
-                if set(ba) - {"amount", "count"} or not isinstance(ba.get("amount"), int):
+                if _is_var_ref(ba):   # {var: 名前}（第324弾）: set_var で数えた値を生成時に焼く（op_modify の _bake_refs）
+                    pass
+                elif set(ba) - {"amount", "count"} or not isinstance(ba.get("amount"), int):
                     raise DefError(f"{where}: breaks_add dict needs amount (int) and optional count")
-                if "count" in ba:
+                elif "count" in ba:
                     self.count_spec(ba["count"], where)
             elif not isinstance(ba, int) or isinstance(ba, bool):
                 raise DefError(f"{where}: breaks_add must be an int or {{amount, count}}")
