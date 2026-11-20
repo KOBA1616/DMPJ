@@ -14264,3 +14264,34 @@ cards:
             duration: during_attack
         duration: end_of_turn
         once: false
+  - id: T992
+    name: 試験用マウリエル型
+    types: [creature]
+    civs: [light, water]
+    cost: 9
+    power: 12500
+    races: [エンジェル・コマンド, 革命軍, 侵略者]
+    mana: 1
+    keywords: [blocker, triple_breaker]
+    text: "マナゾーンに置く時、このカードはタップして置く。 ブロッカーT・ブレイカー相手のクリーチャーはすべて、シールドをひとつ少なくブレイクする。（第325弾: breaks_reduction。dmr21-007 型。マナに置く時のタップはデータモデルに無く、text のみで再現する既存の扱い）"
+    abilities:
+      - kind: static
+        affects: {owner: opp, filter: {types: [creature]}}
+        mod: {breaks_add: -1}
+  - id: T993
+    name: 試験用カボード＝ロウ型
+    types: [creature]
+    civs: [darkness]
+    cost: 8
+    power: 12000
+    races: [アビスロイヤル]
+    mana: 1
+    keywords: [triple_breaker, abyss_rush]
+    text: "アビスラッシュ：このクリーチャーを自分の墓地から召喚してもよい。そうしたら、このターン、このクリーチャーはプレイヤーを攻撃でき、ターンの終わりに山札の下に置かれる。\nT・ブレイカー\n相手のタップしているクリーチャーはすべて、パワーを-5000され、シールドを１つ少なくブレイクする。（パワー０以下のクリーチャーは破壊される）\n自分の他のアビスすべてのパワーは+5000され、「パワード・ブレイカー」を得る。（第325弾: breaks_reduction。dm23rp1-004 型）"
+    abilities:
+      - kind: static
+        affects: {owner: opp, filter: {types: [creature], tapped: true}}
+        mod: {power: -5000, breaks_add: -1}
+      - kind: static
+        affects: {owner: you, other: true, filter: {race_has: アビス}}
+        mod: {power: 5000, grant: [powered_breaker]}
