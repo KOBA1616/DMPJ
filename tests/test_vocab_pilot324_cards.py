@@ -1,38 +1,33 @@
-"""語彙パイロット第324弾の対象カード検証（提出前）。
+"""語彙パイロット第324弾の対象カード検証（登録形）。
 
 breaks_equal_creature_count は dm24ex2-024 / dm26ex4-cho021
-（同名カード ジョジョジョ・マキシマムの2印刷）の純粋2件のみ
-（multi-gap 行にも現れない）。dm24ex2-024 の partial は骨格あり
-（unsupported は breaks_equal_creature_count だけ）。
-dm26ex4-cho021 は partial 空。by_product で原文照合済み。
+（同名カード ジョジョジョ・マキシマムの2印刷）の純粋2件だった。
+dm24ex2-024 は旧印刷で canon_id は dm26ex4-cho021（identity 実測）。
+aliases_for（ジョジョジョ・マキシマム, dm26ex4-cho021）は
+[dm24ex2-024, dmex19-002, dmrp04m-001]。submit の原文コーパス
+（canonical_rows）は正本だけを通すため、dm24ex2-024 は直接は
+提出できない。reopen breaks_equal_creature_count で dm24ex2-024
+の行は外れ済み（alias 畳み込み1件）。dm26ex4-cho021 を1件だけ
+提出し、validate の aliases_for が source.aliases に自動付与した
+（第292弾の c48-sec001 / 第293弾の dm26ex4-sec012 と同じ扱い）。
 
-第324弾の結論はエンジン拡張（スキーマのみ）。3つの既存の形の組み合わせ
-だが、breaks_add の辞書形に {var: 名前} を許可するスキーマ拡張
-（dmsim/cards/defs.py Checker.mod）が必要だった。実行時は op_modify
-の _bake_refs が生成時に数値へ焼くため core.py の変更は不要。
-{amount, count} 形（第170弾）は攻撃時に数え直すため使えない
-（解決時の数を固定するため）。
-- G・ゼロ: free_if {cmp: [{count: {zone: [bz, mana], owner: you,
-  filter: {race_has: ジョーカーズ}}}, '>=', 11]}
-- 数えて付与: [set_var n {count: {zone: bz, owner: you,
-  filter: {types: [creature]}}}; choose {zone: bz, owner: you,
-  filter: {types: [creature]}, count: 1} as chosen;
-  modify {ref: chosen} {breaks_add: {var: n}} end_of_turn]
-- 攻撃中の呪文封じ: delayed_trigger {event: attack,
-  subject: {ref: chosen}} → [modify {zone: hand, owner: opp,
-  filter: {types: [spell]}} {deny: [cast]} during_attack]
-  duration end_of_turn, once: false
+第324弾の結論はエンジン拡張（スキーマのみ）。breaks_add の辞書形に
+{var: 名前} を許可するスキーマ拡張（dmsim/cards/defs.py Checker.mod
+と dmsim/cards/schema.py。card.schema.json は `python -m
+dmsim.cards.schema` で再生成。提出時の _schema_check は
+card.schema.json を読むため、defs.py だけでは足りず提出で弾かれた）。
+実行時は op_modify の _bake_refs が生成時に数値へ焼くため core.py
+の変更は不要。
 
-ラウンド359で登録する。両カードとも無色・コスト9・マナ1の呪文。
-dm24ex2-024 の G・ゼロ文言は「バトルゾーンまたはマナゾーンに
-自分のジョーカーズが合計11枚以上あれば」、dm26ex4-cho021 は
-「自分の、ジョーカーズとマナゾーンにあるジョーカーズ・カードが
-合計11以上なら」（by_product の原文のまま。効果は同一）。
-両 id とも real.yaml / real_akashic.yaml / real_vocab.yaml /
-real_zone.yaml / proto.yaml / converted.yaml のいずれにも無く、
-対象 id 自体に aliases 記録も無いことを提出前に確認済み
-（dm24ex2-024 の partial には aliases [dmex19-002, dmrp04m-001]
-が付いている。同名再録として submit 時に記録される見込み）。
+登録形（dm26ex4-cho021）: 無色・コスト9・マナ1の呪文。
+free_if {cmp: [{count: {zone: [bz, mana], owner: you,
+filter: {race_has: ジョーカーズ}}}, '>=', 11]} +
+[set_var n {count: {zone: bz, owner: you, filter: {types: [creature]}}};
+choose {zone: bz, owner: you, filter: {types: [creature]}, count: 1}
+as chosen; modify {ref: chosen} {breaks_add: {var: n}} end_of_turn;
+delayed_trigger {event: attack, subject: {ref: chosen}} ->
+[modify {zone: hand, owner: opp, filter: {types: [spell]}}
+{deny: [cast]} during_attack] end_of_turn, once: false]。
 
 注意: conftest を import すると DMSIM_SKIP_CONVERTED が復活するので
 _conv_cache を直接使う（第319弾以降の作法）。
@@ -54,7 +49,6 @@ CONVERTED = cardstore.converted_path(DATA)
 REJECTS = ROOT / "data" / "cards" / "raw" / "rejects.jsonl"
 TABLES = load_tables()
 
-TARGETS = ("dm24ex2-024", "dm26ex4-cho021")
 GAP = "breaks_equal_creature_count"
 
 FREE_IF = {
@@ -92,21 +86,32 @@ def _rows():
     return out
 
 
-def test_targets_not_yet_registered():
+def test_targets_registered():
     rows = _rows()
-    assert len(rows) == 2047
+    assert len(rows) == 2045
     conv = _conv_cache.all_cards(CONVERTED)
     ids = {c["id"] for c in conv}
-    assert len(ids) == 10270
+    assert len(ids) == 10271
     assert not (ids & set(rows))          # canonical 重なり0
-    for tid in TARGETS:
-        # 漏れ0の前提: 正本は未登録で reject 行に残っている
-        assert tid not in ids and tid in rows, tid
-        assert (rows[tid].get("gaps") or []) == [GAP], tid
-    # breaks_equal_creature_count はこの2件だけ（multi-gap 行にも現れない）
+    # 正本 dm26ex4-cho021 が登録され、旧印刷 dm24ex2-024 は独立
+    # エントリではなく source.aliases に畳み込まれた
+    assert "dm26ex4-cho021" in ids and "dm26ex4-cho021" not in rows
+    assert "dm24ex2-024" not in ids and "dm24ex2-024" not in rows
+    c = _conv_cache.find(CONVERTED, "dm26ex4-cho021")
+    assert c is not None
+    assert c["name"] == "ジョジョジョ・マキシマム"
+    assert c["free_if"] == FREE_IF
+    assert c["spell"] == SPELL
+    assert (c.get("source") or {}).get("aliases") == [
+        "dm24ex2-024", "dmex19-002", "dmrp04m-001"]
+    assert not (c.get("source") or {}).get("unsupported")
+    d = parse_card(c, TABLES)
+    assert d.free_if is not None
+    assert len(d.spell) == 4
+    # breaks_equal_creature_count は残り0件でファミリー解消
     left = {rid for rid, r in rows.items()
             if GAP in (r.get("gaps") or [])}
-    assert left == set(TARGETS), left
+    assert left == set(), left
 
 
 def test_proto_forms_match():

@@ -466100,3 +466100,78 @@ cards:
         to: hand
         reason: draw
       - op: shuffle
+- id: dm26ex4-cho021
+  name: ジョジョジョ・マキシマム
+  types:
+  - spell
+  civs: []
+  cost: 9
+  mana: 1
+  text: 'G・ゼロ：自分の、ジョーカーズとマナゾーンにあるジョーカーズ・カードが合計11以上なら、この呪文をコストを支払わずに唱えてもよい。
+
+    自分のクリーチャーを数える。このターン、自分のクリーチャー１体はその数のシールドを追加でブレイクし、そのクリーチャーの攻撃中、相手は呪文を唱えられない。'
+  free_if:
+    cmp:
+    - count:
+        zone:
+        - bz
+        - mana
+        owner: you
+        filter:
+          race_has: ジョーカーズ
+    - '>='
+    - 11
+  source:
+    official: dm26ex4-cho021
+    review: pending
+    notes: 再変換ラウンド359。第324弾の再変換（breaks_equal_creature_count を free_if の G・ゼロ＋set_var
+      で数えた breaks_add {var:} 付与＋delayed_trigger による攻撃中の呪文封じで表現。原文と厳密に一致）
+    aliases:
+    - dm24ex2-024
+    - dmex19-002
+    - dmrp04m-001
+  spell:
+  - op: set_var
+    name: n
+    value:
+      count:
+        zone: bz
+        owner: you
+        filter:
+          types:
+          - creature
+  - op: choose
+    select:
+      zone: bz
+      owner: you
+      filter:
+        types:
+        - creature
+      count: 1
+    as: chosen
+  - op: modify
+    select:
+      ref: chosen
+    mod:
+      breaks_add:
+        var: n
+    duration: end_of_turn
+  - op: delayed_trigger
+    when:
+      event: attack
+      subject:
+        ref: chosen
+    effect:
+    - op: modify
+      select:
+        zone: hand
+        owner: opp
+        filter:
+          types:
+          - spell
+      mod:
+        deny:
+        - cast
+      duration: during_attack
+    duration: end_of_turn
+    once: false
