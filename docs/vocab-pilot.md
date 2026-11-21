@@ -4886,3 +4886,9 @@ proto T1010（dm24rp4-045 型）/ T1011（dmrp11-zs01 型）/ T1012（駆動用�
 教訓: 手札が空だと main の決定自体が出ないため、駆動は charge で区切ること（_drive_to の目標に main を使うとデッキ切れでゲームが終わる）。攻撃の決定は「まだ攻撃していない」ガードが要る（同じターンに2回攻撃してしまう）。
 
 次の候補メモ: play_from_deck_top（dm22rp2x-002 / dm26sd1-j009 / dmrp22-005）、broken_shields_no_s_trigger（重い）、after_attack_destroy（ラウンド245で差し戻し済み、重い）。
+
+### ラウンド368（第333弾の再変換）
+
+**新規登録2件**（dm24rp4-045 ブルーアイズ・ドラゴンフライ＝power mod の amount に {power_of: {ref: self}} を書いた確立形そのまま。dmrp11-zs01 零＝choose の as 束縛＋吸い上げ＋power_set: 0＋ターン終わりの手札破棄＋零龍がいる間のコスト軽減）・**alias 畳み込み0件**・**差し戻し0件**（submit 時の警告なし）。converted 10,284→**10,286** / rejects 2,030→**2,028**、重なり0・漏れ0。power_transfer は残り0件でファミリー解消。
+
+pilot333 cards を登録形に書換、round368 cards を新設（登録カード自身の実挙動: コスト6以上のクリーチャーが出た時のパワー加算 14000→次ターン 13000、攻撃時の吸い上げ 8000 と選んだ側の破壊、ターン終わりの手札破棄、零龍がいる間のコスト軽減）。テスト20 passed（round368 cards 3＋pilot333 cards 登録形 2＋pilot333 本体 7＋data_audit 8）。回帰はパイロット・ルール系（第170弾を含む）160 passed / 0 failed（power mod の amount 拡張の影響なし）、round357〜367 の disposition は件数固定の stale なだけの既知パターンで 11 failed。回答は answers/round368.yaml に保存。次の番号: パイロット334 / ラウンド369 / プロト T1013。

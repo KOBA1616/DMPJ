@@ -466995,3 +466995,126 @@ cards:
       の battle フラグ、ターン終わりの帰還は choose の as 束縛＋delayed_trigger で表した（第332弾）'
     aliases:
     - dm22rp2-026
+- id: dm24rp4-045
+  name: ブルーアイズ・ドラゴンフライ
+  types:
+  - creature
+  civs:
+  - nature
+  cost: 2
+  power: 1000
+  races:
+  - ジャイアント・インセクト
+  mana: 1
+  keywords:
+  - powered_breaker
+  text: 'パワード・ブレイカー（このクリーチャーは、そのパワー6000ごとにシールドをさらに１つブレイクする）
+
+    自分のコスト６以上のクリーチャーが出た時、次の自分のターンのはじめまで、そのクリーチャーのパワーをこのクリーチャーのパワーに加える。'
+  abilities:
+  - kind: trigger
+    when:
+      event: move
+      to: bz
+      subject:
+        owner: you
+        filter:
+          types:
+          - creature
+          cost_ge: 6
+    effect:
+    - op: modify
+      select:
+        ref: event.subject
+      mod:
+        power:
+          amount:
+            power_of:
+              ref: self
+      duration: until_next_own_turn_start
+  source:
+    official: dm24rp4-045
+    review: pending
+    notes: 'パワーの移転は power mod の amount に {power_of: {ref: self}} を書いた（第333弾）'
+- id: dmrp11-zs01
+  name: 零
+  types:
+  - creature
+  civs:
+  - darkness
+  cost: 5
+  power: 5000
+  races:
+  - ドラゴンズ・ゼロ
+  mana: 1
+  keywords:
+  - powered_breaker
+  text: 'パワード・ブレイカー
+
+    このクリーチャーが攻撃する時、相手のクリーチャーを１体選ぶ。そのターン、そのパワーをこのクリーチャーに追加し、選んだクリーチャーのパワーを０にする。
+
+    自分のターンの終わりに、相手は自身の手札を１枚選んで捨てる。
+
+    バトルゾーンに自分の零龍があれば、自分の闇のカードのコストを１少なくしてもよい。ただし、コストは０以下にはならない。'
+  abilities:
+  - kind: trigger
+    when:
+      event: attack
+      subject: self
+    effect:
+    - op: choose
+      select:
+        zone: bz
+        owner: opp
+        filter:
+          types:
+          - creature
+        count: 1
+      as: victim
+    - op: modify
+      select:
+        ref: self
+      mod:
+        power:
+          amount:
+            power_of:
+              ref: victim
+      duration: end_of_turn
+    - op: modify
+      select:
+        ref: victim
+      mod:
+        power_set: 0
+      duration: end_of_turn
+  - kind: trigger
+    when:
+      event: turn_end
+    if:
+      is_turn: you
+    effect:
+    - op: discard
+      select:
+        zone: hand
+        owner: opp
+        chooser: opp
+        count: 1
+  - kind: static
+    affects:
+      zone: hand
+      owner: you
+      filter:
+        civs:
+        - darkness
+    if:
+      exists:
+        zone: bz
+        owner: you
+        filter:
+          race_has: 零龍
+    mod:
+      cost: -1
+      cost_min: 0
+  source:
+    official: dmrp11-zs01
+    review: pending
+    notes: 'パワーの移転は power mod の amount に {power_of: {ref: victim}} を書いた（第333弾）。「自分の零龍」は種族参照。'
