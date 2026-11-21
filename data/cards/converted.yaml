@@ -466351,3 +466351,84 @@ cards:
           player: opp
           count: 1
     duration: end_of_turn
+- id: dm26ex4-cho025
+  name: 瞬閃と疾駆と双撃の決断
+  types:
+  - spell
+  civs:
+  - fire
+  cost: 3
+  mana: 1
+  text: '次の中から２回選ぶ。同じものを選んでもよい。
+
+    ▶コスト３以下のクリーチャーを１体、自分の手札から出す。
+
+    ▶このターン、自分のクリーチャー１体に「スピードアタッカー」を与える。
+
+    ▶自分のクリーチャーを１体選ぶ。このターン、そのクリーチャーの最初の攻撃の終わりに、そのクリーチャーをアンタップする。'
+  source:
+    official: dm26ex4-cho025
+    review: pending
+    notes: '再変換ラウンド362。第327弾の再変換（first_attack_end を modal（count: 2, repeat: true）＋once
+      既定の遅延誘発で表現。原文と厳密に一致。dm26sd1-i004 は alias 畳み込み）'
+    aliases:
+    - dm22bd2-014
+    - dm23rp2-tr08
+    - dm23rp2x-tr08
+    - dm23rp4-sp2
+    - dm23rp4x-sp2
+    - dm23sd3-002
+    - dm26sd1-i004
+    - dmart04-003
+    - dmex19-012
+    - dmrp11-007
+  spell:
+  - op: modal
+    count: 2
+    repeat: true
+    modes:
+    - - op: play_free
+        select:
+          zone: hand
+          owner: you
+          filter:
+            types:
+            - creature
+            cost_le: 3
+          count: 1
+    - - op: choose
+        select:
+          zone: bz
+          owner: you
+          filter:
+            types:
+            - creature
+          count: 1
+        as: c
+      - op: modify
+        select:
+          ref: c
+          count: all
+        mod:
+          grant:
+          - speed_attacker
+        duration: end_of_turn
+    - - op: choose
+        select:
+          zone: bz
+          owner: you
+          filter:
+            types:
+            - creature
+          count: 1
+        as: chosen
+      - op: delayed_trigger
+        when:
+          event: attack_end
+          subject:
+            ref: chosen
+        effect:
+        - op: untap
+          select:
+            ref: chosen
+        duration: end_of_turn

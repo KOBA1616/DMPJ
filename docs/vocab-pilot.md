@@ -4763,3 +4763,7 @@ proto T994（dm39-035 型）/ T995（dmc34-030 型）。テスト6件通過（pi
 注: first_attack_end は multi-gap 行 dmex15-b019 滅亡の光（gaps [filter_not_race, first_attack_end]）にも現れる。「このターン、ゴッド、フェニックス、またはクリエイターそれぞれの最初の攻撃の終わりに、そのクリーチャーをアンタップする」は「それぞれ」（各クリーチャーごと）のため、単一の once 遅延誘発では書けず、once_per_turn 付きの付与型誘発（各クリーチャーに「最初の攻撃の終わりにアンタップする」を与える）が要る見込み。filter_not_race は not_race_has（第81弾。リスト形式も対応）で書ける見込み。第328弾の候補とする。今回は純粋2件のみを対象とする。
 
 proto T996（dm26ex4-cho025 型）。テスト5件通過（pilot327 本体 3: 形の一致、モード3＝最初の攻撃の終わりにアンタップ・2回目の攻撃の終わりにはアンタップされない、モード2＝召喚酔い中のクリーチャーが同じターンに攻撃できる、＋pilot327 cards 提出前 2）。次の番号: パイロット328 / ラウンド363 / プロト T997。
+
+### ラウンド362（第327弾の再変換）
+
+**新規登録1件**（dm26ex4-cho025 瞬閃と疾駆と双撃の決断＝modal（count: 2, repeat: true）。モード3は once 既定の遅延誘発 {event: attack_end, subject: {ref: chosen}} → untap。登録形は確立形と完全一致で連結混入なし。名前は汚染なしの「瞬閃と疾駆と双撃の決断」で登録）・**alias 畳み込み1件**（dm26sd1-i004。submit 時に aliases 10件を自動記録。うち rejects 行の畳み込みは dm26sd1-i004 の1件。alias id はカードとしては登録されない）・**stale クリーンアップ0件**・**差し戻し0件**。対象2行は gaps = [first_attack_end] のため reopen で外してから submit（reopen は2件とも外れた。multi-gap の dmex15-b019 は reopen の対象外で rejects に残る）。converted 10,275→**10,276** / rejects 2,041→**2,039**、重なり0・漏れ0。純粋 first_attack_end は残り0件でファミリー解消（multi-gap の dmex15-b019 は第328弾の候補）。pilot327 cards を登録形に書換、round362 cards を新設（登録カード自身の実挙動: モード3＝最初の攻撃の終わりにアンタップ・2回目の攻撃の終わりにはアンタップされない／モード2＝召喚酔い中のクリーチャーが同じターンに攻撃できる）。テスト16 passed（round362 cards 3＋pilot327 cards 登録形 2＋pilot327 本体 3＋data_audit 8）。回答は answers/round362.yaml に保存。次の番号: パイロット328 / ラウンド363 / プロト T997。
