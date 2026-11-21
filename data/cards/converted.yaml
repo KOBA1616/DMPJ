@@ -466254,3 +466254,100 @@ cards:
       power: 5000
       grant:
       - powered_breaker
+- id: dm39-035
+  name: カンクロウ・ブラスター
+  types:
+  - spell
+  civs:
+  - nature
+  cost: 6
+  mana: 1
+  text: 'このターン、バトルゾーンにある自分のクリーチャーすべてのパワーは+4000され、シールドをさらに１枚ブレイクする。
+
+    このターン、自分のクリーチャーが相手を攻撃しブロックされた時、相手のシールドを１枚ブレイクする。
+
+    呪文の効果によって、このターン、相手がバトルゾーンにあるクリーチャーを選ぶ時、自分のクリーチャーを選ぶことはできない。'
+  source:
+    official: dm39-035
+    review: pending
+    notes: '再変換ラウンド361。第326弾の再変換（blocked_break を block イベントの遅延誘発で表現。原文と厳密に一致。attack_end
+      {blocked: true} ではない。ブロック宣言で攻撃先はブロッカーの参照に書き換わるため target: player は一致しない）'
+  spell:
+  - op: modify
+    select:
+      zone: bz
+      owner: you
+      filter:
+        types:
+        - creature
+      count: all
+    mod:
+      power: 4000
+      breaks_add: 1
+    duration: end_of_turn
+  - op: delayed_trigger
+    when:
+      event: block
+      attacker:
+        owner: you
+        filter:
+          types:
+          - creature
+    effect:
+    - op: break
+      player: opp
+      count: 1
+    duration: end_of_turn
+    once: false
+  - op: modify
+    select:
+      zone: bz
+      owner: you
+      filter:
+        types:
+        - creature
+      count: all
+    mod:
+      deny:
+      - action: be_chosen
+        other:
+          types:
+          - spell
+    duration: end_of_turn
+- id: dmc34-030
+  name: 獣達の挽歌
+  types:
+  - spell
+  civs:
+  - nature
+  cost: 4
+  mana: 1
+  text: このターンの終わりまで、バトルゾーンにある自分のクリーチャーすべてのパワーは+4000され、「このクリーチャーが相手プレイヤーを攻撃してブロックされた時、相手のシールドを１枚ブレイクする」を得る。
+  source:
+    official: dmc34-030
+    review: pending
+    notes: '再変換ラウンド361。第326弾の再変換（blocked_break を modify による gain [trigger {event:
+      block, attacker: self}] で表現。原文と厳密に一致）'
+    aliases:
+    - dm13-025
+  spell:
+  - op: modify
+    select:
+      zone: bz
+      owner: you
+      filter:
+        types:
+        - creature
+      count: all
+    mod:
+      power: 4000
+      gain:
+      - kind: trigger
+        when:
+          event: block
+          attacker: self
+        effect:
+        - op: break
+          player: opp
+          count: 1
+    duration: end_of_turn

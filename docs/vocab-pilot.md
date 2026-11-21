@@ -4743,3 +4743,7 @@ proto T992（dmr21-007 型）/ T993（dm23rp1-004 型）。テスト6件通過�
 教訓（2つ）: (1) op_modify の select は count の既定が1なので、「自分のクリーチャーすべて」には count: all が要る（spell の modify に90件の先例。dm22-023 は gain 付きの同形）。count を忘れると choose_cards の決定が出て1体だけに効く。(2) 自然の呪文を唱えるには自然のマナが1枚要る。T030 は光/水のため唱えられず、main の決定自体が出ない。テストのマナには自然の T001 を使う。
 
 proto T994（dm39-035 型）/ T995（dmc34-030 型）。テスト6件通過（pilot326 本体 4: 形の一致、形B＝付与された誘発でブロックされた攻撃の終わりに1枚割る・ブロックされなかった攻撃では余分に割らない、形A＝2回目のブロックでも割る、形A＝相手の呪文に選ばれない・クリーチャーの効果からの選択は妨げない、＋pilot326 cards 提出前 2）。次の番号: パイロット327 / ラウンド362 / プロト T996。
+
+### ラウンド361（第326弾の再変換）
+
+**新規登録2件**（dm39-035 カンクロウ・ブラスター＝3つの継続的効果: modify {power: 4000, breaks_add: 1}／遅延誘発 block {attacker: own} → break 1／modify deny be_chosen by spells / dmc34-030 獣達の挽歌＝modify {power: 4000, gain: [trigger {event: block, attacker: self} → break 1]}。両行とも partial＋by_product で原文照合済み。登録形は確立形と完全一致で連結混入なし）・**alias 畳み込み1件**（dmc34-030 の submit 時に aliases [dm13-025] を自動記録）・**stale クリーンアップ0件**・**差し戻し0件**。対象2行は gaps = [blocked_break] のため reopen で外してから submit（reopen は2件とも外れた）。converted 10,273→**10,275** / rejects 2,043→**2,041**、重なり0・漏れ0。blocked_break はファミリーがこの2件だけだったため完全解消。pilot326 cards を登録形に書換、round361 cards を新設（登録カード自身の実挙動: 030 付与された誘発でブロックされた攻撃で1枚割る・ブロックされなかった攻撃では余分に割らない／035 2回目のブロックでも割る・相手の呪文に選ばれない・クリーチャーの効果からの選択は妨げない）。テスト18 passed（round361 cards 4＋pilot326 cards 登録形 2＋pilot326 本体 4＋data_audit 8）。回答は answers/round361.yaml に保存。次の番号: パイロット327 / ラウンド362 / プロト T996。

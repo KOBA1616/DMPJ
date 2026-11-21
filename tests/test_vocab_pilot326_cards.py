@@ -1,11 +1,13 @@
-"""語彙パイロット第326弾の対象カード検証（提出前）。
+"""語彙パイロット第326弾の対象カード検証（登録形）。
 
-blocked_break は dm39-035 / dmc34-030 の純粋2件のみ
+blocked_break は dm39-035 / dmc34-030 の純粋2件だった
 （multi-gap 行にも現れない）。両行とも partial あり
 （unsupported の断片だけ）。by_product で原文照合済み。
+両 id とも正本。dmc34-030 は submit 時に aliases [dm13-025]
+を自動記録（alias 畳み込み1件）。
 
 第326弾の結論はドリフト（追加語彙なし）。核は block イベントの
-確立形（converted.yaml に129件の先例）:
+確立形:
 - 形A（dm39-035）: 呪文が3つの継続的効果を作る。
   (1) modify {zone: bz, owner: you, filter: {types: [creature]},
   count: all} {power: 4000, breaks_add: 1} end_of_turn
@@ -20,18 +22,6 @@ blocked_break は dm39-035 / dmc34-030 の純粋2件のみ
   count: all} {power: 4000, gain: [{kind: trigger,
   when: {event: block, attacker: self},
   effect: [{op: break, player: opp, count: 1}]}]} end_of_turn
-
-注意: attack_end {blocked: true} ではない。ブロックが宣言されると
-攻撃先はブロッカーの参照に書き換わるため、attack_end レコードの
-target はブロッカー参照になり、target: player はブロックされた
-攻撃に決して一致しない（実測で確認）。op_modify の select は
-count の既定が1なので「自分のクリーチャーすべて」には
-count: all が要る。
-
-ラウンド361で登録する。両 id とも real.yaml / real_akashic.yaml /
-real_vocab.yaml / real_zone.yaml / proto.yaml / converted.yaml の
-いずれにも無く、対象 id 自体に aliases 記録も無いことを提出前に
-確認済み（dmc34-030 の aliases [dm13-025] は submit 時に自動記録）。
 
 注意: conftest を import すると DMSIM_SKIP_CONVERTED が復活するので
 _conv_cache を直接使う（第319弾以降の作法）。
@@ -53,7 +43,6 @@ CONVERTED = cardstore.converted_path(DATA)
 REJECTS = ROOT / "data" / "cards" / "raw" / "rejects.jsonl"
 TABLES = load_tables()
 
-TARGETS = ("dm39-035", "dmc34-030")
 GAP = "blocked_break"
 
 TRIGGER = {"kind": "trigger",
@@ -98,21 +87,32 @@ def _rows():
     return out
 
 
-def test_targets_not_yet_registered():
+def test_targets_registered():
     rows = _rows()
-    assert len(rows) == 2043
+    assert len(rows) == 2041
     conv = _conv_cache.all_cards(CONVERTED)
     ids = {c["id"] for c in conv}
-    assert len(ids) == 10273
+    assert len(ids) == 10275
     assert not (ids & set(rows))          # canonical 重なり0
-    for tid in TARGETS:
-        # 漏れ0の前提: 正本は未登録で reject 行に残っている
-        assert tid not in ids and tid in rows, tid
-        assert (rows[tid].get("gaps") or []) == [GAP], tid
-    # blocked_break はこの2件だけ（multi-gap 行にも現れない）
+    for tid in ("dm39-035", "dmc34-030"):
+        assert tid in ids and tid not in rows, tid
+        c = _conv_cache.find(CONVERTED, tid)
+        assert c is not None
+        assert not (c.get("source") or {}).get("unsupported")
+    c035 = _conv_cache.find(CONVERTED, "dm39-035")
+    assert c035["spell"] == FORM_A
+    assert not (c035.get("source") or {}).get("aliases")
+    d = parse_card(c035, TABLES)
+    assert len(d.spell) == 3
+    c030 = _conv_cache.find(CONVERTED, "dmc34-030")
+    assert c030["spell"] == FORM_B
+    assert (c030.get("source") or {}).get("aliases") == ["dm13-025"]
+    d = parse_card(c030, TABLES)
+    assert len(d.spell) == 1
+    # blocked_break は残り0件でファミリー解消
     left = {rid for rid, r in rows.items()
             if GAP in (r.get("gaps") or [])}
-    assert left == set(TARGETS), left
+    assert left == set(), left
 
 
 def test_proto_forms_match():
