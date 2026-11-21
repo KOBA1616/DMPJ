@@ -196,6 +196,8 @@ class EventMixin:
                 rec["by"] = ev["by"]
             if ev.get("stack_on"):   # 進化として重ねて出た（シンカパワーの照合用）
                 rec["stacked"] = True
+            if ev.get("battle"):   # バトルで負けて破壊された（第332弾。収集レコードと対）
+                rec["battle"] = True
             if ev.get("no_trigger"):   # この移動で出たカード自身の出た時能力は誘発しない（第213弾）
                 rec["no_trigger"] = True
             if ev.get("alt"):        # 代替コストで実行された（「そうしたら」の照合用）
@@ -542,6 +544,8 @@ class EventMixin:
                 out[0]["unpaid"] = True   # 第257弾: 効果で出されたカードはマナをタップせずに出ている
             if ev.get("position"):   # 置かれた位置（「山札の一番下に置かれた時」の照合用。第290弾。_record_for と対）
                 out[0]["position"] = ev["position"]
+            if ev.get("battle"):   # バトルで負けて破壊された（「バトル中に破壊された時」の照合用。第332弾。_record_for と対）
+                out[0]["battle"] = True
             if ev.get("stack_on"):   # 進化として重ねて出た（「進化して出た時」の照合用。第150弾で収集レコードへの伝播を追加。シールドの束は shield_stack キーで別）
                 out[0]["stacked"] = True
             if ev.get("no_trigger"):   # この移動で出たカード自身の出た時能力は誘発しない（第213弾）
@@ -1073,6 +1077,8 @@ class EventMixin:
         if "broke" in when and bool(rec.get("broke")) != when["broke"]:   # 攻撃の終わりに、その攻撃でシールドをブレイクしたか（キリフダッシュ）
             return False
         if "blocked" in when and bool(rec.get("blocked")) != when["blocked"]:   # その攻撃がブロックされたか（attack_end レコードのみが持つ。「ブロックされなかった時」用）
+            return False
+        if "battle" in when and bool(rec.get("battle")) != when["battle"]:   # バトルで負けて破壊された移動か（combat の敗者 move レコードのみが持つ。「バトル中に破壊された時」用。第332弾）
             return False
         if "turn_draw" in when and bool(rec.get("turn_draw")) != when["turn_draw"]:   # ターンのはじめのドローそのものか（draw レコードのみが持つ。第219弾）
             return False

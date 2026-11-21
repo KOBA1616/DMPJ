@@ -4110,6 +4110,9 @@
     "face_up": {},
     "broke": {},
     "blocked": {},
+    "battle": {
+     "type": "boolean"
+    },
     "vivid": {},
     "emblem": {
      "type": "boolean"

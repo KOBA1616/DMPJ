@@ -14603,3 +14603,35 @@ cards:
       official: proto
       review: pending
       notes: "語彙パイロット第331弾の駆動用（追加された名前で選べるかを確かめる名指し破壊）。"
+
+  - id: T1008
+    name: 試験用理・アイニー
+    types: [creature]
+    civs: [fire]
+    cost: 2
+    power: 3000
+    races: [アーマード・ファイアー・バード]
+    mana: 1
+    text: "バトル中、このクリーチャーが破壊された時、相手のシールドを１つブレイクしてもよい。"
+    abilities:
+    - {kind: trigger, when: {event: move, from: bz, to: graveyard, reason: destroy, battle: true, subject: self}, effect: [{op: may, body: [{op: break, player: opp, count: 1}]}]}
+    source:
+      official: proto
+      review: pending
+      notes: "語彙パイロット第332弾の対象（dm24rp4-070 型）。when の battle フラグは本弾で照合可能にした（combat の敗者 move レコードが持つ）。"
+
+  - id: T1009
+    name: 試験用真価と代価のチェスト
+    types: [tamaseed]
+    civs: [light, darkness]
+    cost: 3
+    mana: 1
+    text: "シビルカウント ３：自分の光のクリーチャーまたは光のタマシードが合計３つ以上あれば、自分のクリーチャーすべてに「ブロッカー」を与える。\nシビルカウント ３：自分の闇のクリーチャーまたは闇のタマシードが合計３つ以上あれば、自分のクリーチャーすべてに「スレイヤー」を与える。\n自分のクリーチャーがバトル中に破壊された時、そのターンの終わりに、そのクリーチャーを墓地から出す。"
+    abilities:
+    - {kind: static, affects: {zone: bz, owner: you, filter: {types: [creature]}}, if: {cmp: [{count: {zone: bz, owner: you, filter: {civs: [light], types: [creature, tamaseed]}}}, ">=", 3]}, mod: {grant: [blocker]}}
+    - {kind: static, affects: {zone: bz, owner: you, filter: {types: [creature]}}, if: {cmp: [{count: {zone: bz, owner: you, filter: {civs: [darkness], types: [creature, tamaseed]}}}, ">=", 3]}, mod: {grant: [slayer]}}
+    - {kind: trigger, when: {event: move, from: bz, to: graveyard, reason: destroy, battle: true, subject: {owner: you, filter: {types: [creature]}}}, effect: [{op: choose, select: {ref: event.subject}, as: dead}, {op: delayed_trigger, when: {event: turn_end}, effect: [{op: move, select: {ref: dead}, to: bz, reason: summon}]}]}
+    source:
+      official: proto
+      review: pending
+      notes: "語彙パイロット第332弾の対象（dm22rp2x-026 型）。シビルカウントは partial の確立形。破壊されたクリーチャーは choose の as で束縛し、遅延誘発の effect が vars 経由で参照する（ニンジャ・ストライクの先例）。"

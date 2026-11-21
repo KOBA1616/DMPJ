@@ -910,6 +910,8 @@ class Checker:
                 raise DefError(f"{where}: cause needs {{by?: you/opp, kind?: spell/ability, defn?: str|[str], name_has?: str}}")
         if "blocked" in w and not isinstance(w["blocked"], bool):
             raise DefError(f"{where}: blocked must be bool")
+        if "battle" in w and not isinstance(w["battle"], bool):   # バトルで負けて破壊された移動か（第332弾）
+            raise DefError(f"{where}: battle must be bool")
         if "emblem" in w and not isinstance(w["emblem"], bool):   # 裁きの紋章だったか（第169弾）
             raise DefError(f"{where}: emblem must be bool")
         if "turn_draw" in w and not isinstance(w["turn_draw"], bool):   # ターンのはじめのドローそのものか（第219弾）

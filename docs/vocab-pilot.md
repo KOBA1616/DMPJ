@@ -4852,3 +4852,15 @@ proto T1005（dm23ex1-039 型。G・ゼロ＋攻撃時誘発＋add_names）/ T10
 **新規登録2件**（dm23ex1-039 ボルメテウス・剣誠・ドラゴン＝G・ゼロは free_if、攻撃時誘発と add_names の常在型。dm28-008 竜装 ムシャ・レジェンド＝partial の形に add_names を足したもの。いずれも登録形は確立形と完全一致で連結混入なし）・**alias 畳み込み0件**（dm23ex1-039 の aliases 4件は partial 由来で rejects 行ではない）・**差し戻し0件**。converted 10,280→**10,282** / rejects 2,034→**2,032**、重なり0・漏れ0。name_addition の行は multi の dmx15-002（g_link_360 と複合。名も無き神人類）だけが残る。
 
 pilot331 cards を登録形に書換、round366 cards を新設（登録カード自身の実挙動: 本人の chars の names と G・ゼロの無料召喚、クロスギアの名前・種族・パワーの付与と攻撃時誘発のシールド犠牲→破壊）。テスト20 passed（round366 cards 3＋pilot331 cards 登録形 2＋pilot331 本体 7＋data_audit 8）。回帰はパイロット・ルール系（第170弾のクロスギア系を含む）146 passed / 0 failed、round357〜365 の disposition は件数固定の stale なだけの既知パターンで 9 failed。回答は answers/round366.yaml に保存。次の番号: パイロット332 / ラウンド367 / プロト T1008。
+
+## 第332弾 destroyed_during_battle_trigger（pure 2件）
+
+対象: dm24rp4-070 ライラ・理・アイニー（「バトル中、このクリーチャーが破壊された時、相手のシールドを１つブレイクしてもよい」）と dm22rp2x-026 真価と代価のチェスト（「自分のクリーチャーがバトル中に破壊された時、そのターンの終わりに、そのクリーチャーを墓地から出す」。シビルカウント2件は partial で表現済み）。
+
+結論は**小さなエンジン拡張**: バトルの敗者の move イベントはもともと battle: True の印を持っていた（combat.py が敗者の移動に刻む。no_leave の except_battle 判定が既に使っていた）が、誘発収集レコードへの伝播が無く、when でも照合できなかった。本弾で5点を変更: (1) events.py _apply_one の収集レコードへ battle を伝播、(2) _record_for（置換照合側）へも伝播（他のフラグと同じく対にする）、(3) when 照合に battle フラグを追加（blocked 等の bool フラグと同じ形）、(4) defs.py Checker.when に bool 検証、(5) schema.py の when プロパティに追加し card.schema.json を再生成。
+
+確立形: 本人は {kind: trigger, when: {event: move, from: bz, to: graveyard, reason: destroy, battle: true, subject: self}, effect: [may [break {player: opp, count: 1}]]}（効果ブレイクは op_break の確立形）。見る側（タマシード）は subject を {owner: you, filter: {types: [creature]}} にし、破壊されたクリーチャーを choose {select: {ref: event.subject}, as: dead} で束縛して、delayed_trigger {when: {event: turn_end}} の effect が move {select: {ref: dead}, to: bz, reason: summon} で戻す。delayed の env は event を保持しないため vars 経由が必須（ニンジャ・ストライクの as 束縛＋遅延 effect の {ref: 変数名} の先例、ターン終わりの帰還自体は dmex14-090 の先例）。
+
+proto T1008（dm24rp4-070 型）/ T1009（dm22rp2x-026 型）。テスト7件（実挙動5件）: バトルで負けて破壊されると相手のシールドを1つブレイクする、呪文で破壊されても誘発しない、バトルで破壊された自分のクリーチャーがターン終わりに墓地から戻る（破壊と帰還が同じ前進チェーンで起き墓地の状態が決定点で観測できないため、攻撃したクリーチャーがタップしたまま残るはずのところアンタップで場にあることで区別した）、呪文で破壊されたクリーチャーは戻らない、シビルカウントの付与（光3つでブロッカー、闇1つではスレイヤー無し）。battle の不正形（文字列）は DefError。
+
+次の候補メモ: power_transfer（dm24rp4-045 / dmrp11-zs01）、play_from_deck_top（dm22rp2x-002 / dm26sd1-j009）、broken_shields_no_s_trigger（重い）、after_attack_destroy（ラウンド245で差し戻し済み、重い）。
