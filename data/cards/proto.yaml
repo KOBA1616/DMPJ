@@ -14295,3 +14295,43 @@ cards:
       - kind: static
         affects: {owner: you, other: true, filter: {race_has: アビス}}
         mod: {power: 5000, grant: [powered_breaker]}
+  - id: T994
+    name: 試験用カンクロウ・ブラスター型
+    types: [spell]
+    civs: [nature]
+    cost: 6
+    mana: 1
+    text: "このターン、バトルゾーンにある自分のクリーチャーすべてのパワーは+4000され、シールドをさらに１枚ブレイクする。\nこのターン、自分のクリーチャーが相手を攻撃しブロックされた時、相手のシールドを１枚ブレイクする。\n呪文の効果によって、このターン、相手がバトルゾーンにあるクリーチャーを選ぶ時、自分のクリーチャーを選ぶことはできない。（第326弾: blocked_break。dm39-035 型）"
+    spell:
+      - op: modify
+        select: {zone: bz, owner: you, filter: {types: [creature]}, count: all}
+        mod: {power: 4000, breaks_add: 1}
+        duration: end_of_turn
+      - op: delayed_trigger
+        when: {event: block, attacker: {owner: you, filter: {types: [creature]}}}
+        effect:
+          - {op: break, player: opp, count: 1}
+        duration: end_of_turn
+        once: false
+      - op: modify
+        select: {zone: bz, owner: you, filter: {types: [creature]}, count: all}
+        mod: {deny: [{action: be_chosen, other: {types: [spell]}}]}
+        duration: end_of_turn
+  - id: T995
+    name: 試験用獣達の挽歌型
+    types: [spell]
+    civs: [nature]
+    cost: 4
+    mana: 1
+    text: "このターンの終わりまで、バトルゾーンにある自分のクリーチャーすべてのパワーは+4000され、「このクリーチャーが相手プレイヤーを攻撃してブロックされた時、相手のシールドを１枚ブレイクする」を得る。（第326弾: blocked_break。dmc34-030 型）"
+    spell:
+      - op: modify
+        select: {zone: bz, owner: you, filter: {types: [creature]}, count: all}
+        mod:
+          power: 4000
+          gain:
+            - kind: trigger
+              when: {event: block, attacker: self}
+              effect:
+                - {op: break, player: opp, count: 1}
+        duration: end_of_turn
