@@ -87,7 +87,7 @@ RETURN_TRIGGER = {
          "as": "dead"},
         {"op": "delayed_trigger", "when": {"event": "turn_end"},
          "effect": [{"op": "move", "select": {"ref": "dead"},
-                     "to": "bz", "reason": "summon"}]}]}
+                     "to": "bz", "reason": "put"}]}]}
 
 
 @pytest.fixture(scope="module")

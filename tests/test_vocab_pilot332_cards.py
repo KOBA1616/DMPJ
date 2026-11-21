@@ -1,10 +1,12 @@
-"""語彙パイロット第332弾の対象カード検証（proto 形）。
+"""語彙パイロット第332弾の対象カード検証（登録形）。
 
-対象は pure な destroyed_during_battle_trigger 2件:
+対象は pure な destroyed_during_battle_trigger 2件で、
+ラウンド367で登録済み:
 - dm24rp4-070 ライラ・理・アイニー（partial はキーワードのみ。
-  本弾で trigger を構成）
+  本弾で trigger を構成。aliases 無し）
 - dm22rp2x-026 真価と代価のチェスト（partial はシビルカウント
-  2件を持ち、帰還の誘発だけが欠けていた）
+  2件を持ち、帰還の誘発だけが欠けていた。submit 時に
+  aliases [dm22rp2-026] が自動記録されたが rejects 行ではない）
 
 結論は小さなエンジン拡張（when の battle フラグ。第332弾の
 本体テスト参照）: バトルの敗者の move レコードが持つ
@@ -18,7 +20,11 @@ Checker.when＋schema の5点で照合可能にした。
 - dm22rp2x-026: subject を {owner: you, filter} にし、
   choose {select: {ref: event.subject}, as: dead} で束縛して
   delayed_trigger {when: turn_end} の effect が
-  move {select: {ref: dead}, to: bz, reason: summon} で戻す。
+  move {select: {ref: dead}, to: bz, reason: put} で戻す
+  （reason は submit のバリデータ警告に従い put。「出す」は
+  召喚ではない。第329弾と同じ修正）。
+
+destroyed_during_battle_trigger は残り0件でファミリー解消。
 
 注意: conftest を import すると DMSIM_SKIP_CONVERTED が復活するので
 _conv_cache を直接使う（第319弾以降の作法）。
@@ -80,35 +86,44 @@ RETURN_TRIGGER = {
          "as": "dead"},
         {"op": "delayed_trigger", "when": {"event": "turn_end"},
          "effect": [{"op": "move", "select": {"ref": "dead"},
-                     "to": "bz", "reason": "summon"}]}]}
+                     "to": "bz", "reason": "put"}]}]}
 
 FORM_026 = [CIVIL_LIGHT, CIVIL_DARK, RETURN_TRIGGER]
 
 
-def _partial(cid):
+def _rows():
+    out = {}
     for line in open(REJECTS, encoding="utf-8"):
         if line.strip():
             r = json.loads(line)
-            if r["id"] == cid:
-                return r.get("partial")
-    return None
+            out[r["id"]] = r
+    return out
 
 
-def test_targets_still_in_rejects():
+def test_targets_registered():
+    rows = _rows()
+    assert len(rows) == 2030
     conv = _conv_cache.all_cards(CONVERTED)
     ids = {c["id"] for c in conv}
-    for t in ("dm24rp4-070", "dm22rp2x-026"):
-        assert t not in ids
-        assert _partial(t) is not None, t
-
-
-def test_partial_forms():
-    p = _partial("dm24rp4-070")
-    assert p["name"] == "ライラ・理・アイニー"
-    assert not p.get("abilities")
-    # dm22rp2x-026 の partial はシビルカウント2件が完成している
-    p = _partial("dm22rp2x-026")
-    assert p["abilities"] == FORM_026[:2]
+    assert len(ids) == 10284
+    assert not (ids & set(rows))          # canonical 重なり0
+    c = _conv_cache.find(CONVERTED, "dm24rp4-070")
+    assert c is not None
+    assert c["abilities"] == FORM_070
+    assert not (c.get("source") or {}).get("unsupported")
+    assert not (c.get("source") or {}).get("aliases")
+    d = parse_card(c, TABLES)
+    assert len(d.abilities) >= 1
+    c = _conv_cache.find(CONVERTED, "dm22rp2x-026")
+    assert c is not None
+    assert c["abilities"] == FORM_026
+    assert not (c.get("source") or {}).get("unsupported")
+    assert (c.get("source") or {}).get("aliases") == ["dm22rp2-026"]
+    d = parse_card(c, TABLES)
+    assert len(d.abilities) >= 3
+    left = {rid for rid, r in rows.items()
+            if "destroyed_during_battle_trigger" in (r.get("gaps") or [])}
+    assert left == set(), left
 
 
 def test_proto_forms_match():

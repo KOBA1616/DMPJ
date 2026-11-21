@@ -14630,7 +14630,7 @@ cards:
     abilities:
     - {kind: static, affects: {zone: bz, owner: you, filter: {types: [creature]}}, if: {cmp: [{count: {zone: bz, owner: you, filter: {civs: [light], types: [creature, tamaseed]}}}, ">=", 3]}, mod: {grant: [blocker]}}
     - {kind: static, affects: {zone: bz, owner: you, filter: {types: [creature]}}, if: {cmp: [{count: {zone: bz, owner: you, filter: {civs: [darkness], types: [creature, tamaseed]}}}, ">=", 3]}, mod: {grant: [slayer]}}
-    - {kind: trigger, when: {event: move, from: bz, to: graveyard, reason: destroy, battle: true, subject: {owner: you, filter: {types: [creature]}}}, effect: [{op: choose, select: {ref: event.subject}, as: dead}, {op: delayed_trigger, when: {event: turn_end}, effect: [{op: move, select: {ref: dead}, to: bz, reason: summon}]}]}
+    - {kind: trigger, when: {event: move, from: bz, to: graveyard, reason: destroy, battle: true, subject: {owner: you, filter: {types: [creature]}}}, effect: [{op: choose, select: {ref: event.subject}, as: dead}, {op: delayed_trigger, when: {event: turn_end}, effect: [{op: move, select: {ref: dead}, to: bz, reason: put}]}]}
     source:
       official: proto
       review: pending

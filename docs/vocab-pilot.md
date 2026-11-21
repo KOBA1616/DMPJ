@@ -4864,3 +4864,11 @@ pilot331 cards を登録形に書換、round366 cards を新設（登録カー�
 proto T1008（dm24rp4-070 型）/ T1009（dm22rp2x-026 型）。テスト7件（実挙動5件）: バトルで負けて破壊されると相手のシールドを1つブレイクする、呪文で破壊されても誘発しない、バトルで破壊された自分のクリーチャーがターン終わりに墓地から戻る（破壊と帰還が同じ前進チェーンで起き墓地の状態が決定点で観測できないため、攻撃したクリーチャーがタップしたまま残るはずのところアンタップで場にあることで区別した）、呪文で破壊されたクリーチャーは戻らない、シビルカウントの付与（光3つでブロッカー、闇1つではスレイヤー無し）。battle の不正形（文字列）は DefError。
 
 次の候補メモ: power_transfer（dm24rp4-045 / dmrp11-zs01）、play_from_deck_top（dm22rp2x-002 / dm26sd1-j009）、broken_shields_no_s_trigger（重い）、after_attack_destroy（ラウンド245で差し戻し済み、重い）。
+
+### ラウンド367（第332弾の再変換）
+
+**新規登録2件**（dm24rp4-070 ライラ・理・アイニー＝when の battle フラグ＋may break の確立形そのまま。dm22rp2x-026 真価と代価のチェスト＝partial のシビルカウント2件＋帰還の誘発）・**alias 畳み込み0件**（dm22rp2x-026 の aliases [dm22rp2-026] は submit 時の自動記録で rejects 行ではない）・**差し戻し0件**。converted 10,282→**10,284** / rejects 2,032→**2,030**、重なり0・漏れ0。destroyed_during_battle_trigger は残り0件でファミリー解消。
+
+dm22rp2x-026 は submit のバリデータ警告で1件修正: ターン終わりの帰還は「出す」であり召喚ではないため、move の reason を summon から put に変更した（proto・回答・converted の3か所を一致。第329弾と同じ修正。dmex14-090 は reason: summon で登録されているが、バリデータの現行基準では put が正）。教訓: converted.yaml の末尾に submit されたカードは次の「- id: 」が無いため、ブロック範囲の特定でファイル末尾までを範囲に含めること。
+
+pilot332 cards を登録形に書換、round367 cards を新設（登録カード自身の実挙動: バトル破壊→シールドブレイク／バトル破壊→ターン終わりに帰還）。テスト20 passed（round367 cards 3＋pilot332 cards 登録形 2＋pilot332 本体 7＋data_audit 8）。回帰はパイロット・ルール系（第170弾を含む）153 passed / 0 failed（events.py のレコード伝播追加の影響なし）、round357〜366 の disposition は件数固定の stale なだけの既知パターンで 10 failed。回答は answers/round367.yaml に保存。次の番号: パイロット333 / ラウンド368 / プロト T1010。
