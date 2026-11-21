@@ -14364,3 +14364,29 @@ cards:
               effect:
                 - {op: untap, select: {ref: chosen}}
               duration: end_of_turn
+  - id: T997
+    name: 試験用滅亡の光型
+    types: [spell]
+    civs: [darkness, fire]
+    cost: 9
+    mana: 1
+    text: "アタック・チャンス：クリエイター（自分のクリエイターが攻撃する時、この呪文をコストを支払わずに唱えてもよい）\nゴッド、フェニックス、クリエイター以外のクリーチャーをすべて破壊する。\nこのターン、ゴッド、フェニックス、またはクリエイターそれぞれの最初の攻撃の終わりに、そのクリーチャーをアンタップする。（第328弾: filter_not_race＋first_attack_end 各クリーチャー。dmex15-b019 型）"
+    abilities:
+      - kind: declare
+        zone: hand
+        when: {event: attack, subject: {owner: you, filter: {race_has: クリエイター}}}
+        effect:
+          - {op: play_free, select: {ref: self}}
+    spell:
+      - op: destroy
+        select: {zone: bz, owner: any, filter: {types: [creature], not_race_has: [ゴッド, フェニックス, クリエイター]}, count: all}
+      - op: modify
+        select: {zone: bz, owner: any, filter: {any_of: [{race_has: ゴッド}, {race_has: フェニックス}, {race_has: クリエイター}]}, count: all}
+        mod:
+          gain:
+            - kind: trigger
+              when: {event: attack_end, subject: self}
+              effect:
+                - {op: untap, select: {ref: self}}
+              once_per_turn: true
+        duration: end_of_turn
