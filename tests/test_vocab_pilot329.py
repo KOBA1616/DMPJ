@@ -15,7 +15,7 @@
 {event: move, to: shield, subject: {owner: you}} の確立形
 （dm24ex3-004 等44件。dm24ex3-004 は同文の「置かれた時」条項を
 持つ）。墓地で機能する誘発は zone: graveyard（217件）。墓地から
-の自己登場は may＋play_free {ref: self}。「タップして出る」は
+の自己登場は may＋move {ref: self} to: bz reason: put。「タップして出る」は
 キーワード enters_tapped、「自分のターンのはじめにアンタップ
 しない」は static {deny: [untap_at_start]}（dmrp18-025）。
 タップ＋アンタップしないは tap op の no_untap_next（dmr11-038）。
@@ -43,8 +43,9 @@ GY_TRIGGER = {"kind": "trigger", "zone": "graveyard",
               "when": {"event": "move", "to": "shield",
                        "subject": {"owner": "you"}},
               "effect": [{"op": "may",
-                          "body": [{"op": "play_free",
-                                    "select": {"ref": "self"}}]}]}
+                          "body": [{"op": "move",
+                                    "select": {"ref": "self"},
+                                    "to": "bz", "reason": "put"}]}]}
 
 NO_UNTAP = {"kind": "static", "affects": "self",
             "mod": {"deny": ["untap_at_start"]}}

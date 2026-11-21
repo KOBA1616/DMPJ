@@ -466499,3 +466499,134 @@ cards:
             ref: self
         once_per_turn: true
     duration: end_of_turn
+- id: dm26ex4-cho047
+  name: DARK MEMORY CONTAINER
+  types:
+  - creature
+  civs:
+  - light
+  - water
+  - darkness
+  cost: 5
+  mana: 1
+  power: 5500
+  races:
+  - スチーム・ナイト
+  text: 'ブロッカー
+
+    このクリーチャーが出た時、カードを２枚引く。
+
+    カードが自分のシールドゾーンに置かれた時、このクリーチャーを自分の墓地から出してもよい。'
+  source:
+    official: dm26ex4-cho047
+    review: pending
+    notes: '再変換ラウンド364。第329弾の再変換（shield_placement_trigger を {event: move, to: shield,
+      subject: {owner: you}} の確立形で、墓地の誘発は zone: graveyard＋may＋move {ref: self} to: bz reason: put。原文と厳密に一致）'
+    aliases:
+    - dm25ex3-055
+    - dm25rp2-048
+    - promoy25-051
+  keywords:
+  - blocker
+  abilities:
+  - kind: trigger
+    when:
+      event: move
+      to: bz
+      subject: self
+    effect:
+    - op: draw
+      count: 2
+  - kind: trigger
+    zone: graveyard
+    when:
+      event: move
+      to: shield
+      subject:
+        owner: you
+    effect:
+    - op: may
+      body:
+      - op: move
+        select:
+          ref: self
+        to: bz
+        reason: put
+- id: dm26rp1-tr002
+  name: 楯教の求道者 ザゼ・ゼーン
+  types:
+  - creature
+  civs:
+  - light
+  cost: 2
+  mana: 1
+  power: 8000
+  races:
+  - メカサンダー
+  text: 'ブロッカー
+
+    W・ブレイカー
+
+    このクリーチャーはタップして出て、自分のターンのはじめにアンタップしない。
+
+    カードが自分のシールドゾーンに置かれた時、このクリーチャーをアンタップし、その後、次の中から１回選ぶ。
+
+    ▶カードを１枚引く。
+
+    ▶相手のクリーチャーを１体選び、タップする。次の相手のターンのはじめに、そのクリーチャーはアンタップしない。
+
+    ▶次の自分のターンのはじめまで、このクリーチャーは離れない。'
+  source:
+    official: dm26rp1-tr002
+    review: pending
+    notes: '再変換ラウンド364。第329弾の再変換（shield_placement_trigger を {event: move, to: shield,
+      subject: {owner: you}} の確立形で。タップして出るは enters_tapped、アンタップしないは static deny untap_at_start、タップ＋アンタップしないは
+      tap の no_untap_next、離れないは no_leave を until_next_own_turn_start まで。原文と厳密に一致）'
+    aliases:
+    - dm24ex3-rp3s02
+    - dm24ex3-rp3sec03
+    - dm24rp3-s02
+    - dm24rp3-sec003
+  keywords:
+  - blocker
+  - double_breaker
+  - enters_tapped
+  abilities:
+  - kind: static
+    affects: self
+    mod:
+      deny:
+      - untap_at_start
+  - kind: trigger
+    when:
+      event: move
+      to: shield
+      subject:
+        owner: you
+    effect:
+    - op: untap
+      select:
+        ref: self
+    - op: modal
+      count: 1
+      modes:
+      - - op: draw
+          count: 1
+      - - op: choose
+          select:
+            zone: bz
+            owner: opp
+            filter:
+              types:
+              - creature
+          as: chosen
+        - op: tap
+          select:
+            ref: chosen
+          no_untap_next: true
+      - - op: modify
+          select:
+            ref: self
+          mod:
+            no_leave: true
+          duration: until_next_own_turn_start

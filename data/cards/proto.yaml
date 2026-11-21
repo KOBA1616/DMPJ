@@ -921,7 +921,7 @@ cards:
         effect:
           - op: may
             body:
-              - {op: play_free, select: {ref: self}}
+              - {op: move, select: {ref: self}, to: bz, reason: put}
     spell:
       - {op: draw, count: 1}
   - id: T067
@@ -4946,7 +4946,7 @@ cards:
         zone: hand
         when: {event: attack, subject: {owner: you, filter: {civs: [light], power_ge: 4000}}}
         effect:
-          - {op: play_free, select: {ref: self}}
+          - {op: move, select: {ref: self}, to: bz, reason: put}
     spell:
       - op: move
         select: {zone: deck, owner: you, from_top: 1}
@@ -8053,7 +8053,7 @@ cards:
         effect:
           - op: may
             body:
-              - {op: play_free, select: {ref: self}}
+              - {op: move, select: {ref: self}, to: bz, reason: put}
   - id: T545
     name: リベンジ見本・登場数
     types: [creature]
@@ -8069,7 +8069,7 @@ cards:
         effect:
           - op: may
             body:
-              - {op: play_free, select: {ref: self}}
+              - {op: move, select: {ref: self}, to: bz, reason: put}
   - id: T546
     name: リベンジ見本・シールド
     types: [creature]
@@ -8085,7 +8085,7 @@ cards:
         effect:
           - op: may
             body:
-              - {op: play_free, select: {ref: self}}
+              - {op: move, select: {ref: self}, to: bz, reason: put}
   - id: T547
     name: リベンジ見本・ドロー
     types: [creature]
@@ -8101,7 +8101,7 @@ cards:
         effect:
           - op: may
             body:
-              - {op: play_free, select: {ref: self}}
+              - {op: move, select: {ref: self}, to: bz, reason: put}
   - id: T548
     name: 手札シールド呪文
     types: [spell]
@@ -8221,7 +8221,7 @@ cards:
             cond: {not: {marked: {name: reversal_strike, scope: attack}}}
             then:
               - {op: mark, name: reversal_strike, scope: attack}
-              - {op: play_free, select: {ref: self}}
+              - {op: move, select: {ref: self}, to: bz, reason: put}
               - op: delayed_trigger
                 when: {event: turn_start, player: you}
                 duration: permanent
@@ -8246,7 +8246,7 @@ cards:
             cond: {not: {marked: {name: reversal_strike, scope: attack}}}
             then:
               - {op: mark, name: reversal_strike, scope: attack}
-              - {op: play_free, select: {ref: self}}
+              - {op: move, select: {ref: self}, to: bz, reason: put}
               - op: delayed_trigger
                 when: {event: turn_start, player: you}
                 duration: permanent
@@ -8415,7 +8415,7 @@ cards:
         effect:
           - op: may
             body:
-              - {op: play_free, select: {ref: self}}
+              - {op: move, select: {ref: self}, to: bz, reason: put}
     spell:
       - {op: draw, count: 1}
   - id: T571
@@ -8434,7 +8434,7 @@ cards:
         effect:
           - op: may
             body:
-              - {op: play_free, select: {ref: self}}
+              - {op: move, select: {ref: self}, to: bz, reason: put}
   - id: T572
     name: 試験用バイオ・T（手札比例）
     types: [creature]
@@ -14412,11 +14412,11 @@ cards:
       effect:
       - op: may
         body:
-        - {op: play_free, select: {ref: self}}
+        - {op: move, select: {ref: self}, to: bz, reason: put}
     source:
       official: proto
       review: pending
-      notes: "語彙パイロット第329弾 shield_placement_trigger の検証用（dmex15-b019 ではなく dm26ex4-cho047 型）。シールド配置の誘発は {event: move, to: shield, subject: {owner: you}} の確立形（dm24ex3-004 等44件）。墓地で機能する誘発は zone: graveyard（217件）。墓地からの自己登場は may＋play_free {ref: self}。"
+      notes: "語彙パイロット第329弾 shield_placement_trigger の検証用（dmex15-b019 ではなく dm26ex4-cho047 型）。シールド配置の誘発は {event: move, to: shield, subject: {owner: you}} の確立形（dm24ex3-004 等44件）。墓地で機能する誘発は zone: graveyard（217件）。墓地からの自己登場は may＋move {ref: self} to: bz reason: put（「出す」は召喚ではないため play_free ではなく move/put。submit のバリデータ警告で確認）。"
 
   - id: T999
     name: 試験用求道者

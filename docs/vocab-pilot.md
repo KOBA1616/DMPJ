@@ -4800,3 +4800,11 @@ proto T997（dmex15-b019 型）。テスト5件通過（pilot328 本体 3: 形�
 教訓: proto.yaml のリストは2スペースインデント形式（`  - id:`）。追記はその形式に合わせること（0カラムで追記すると YAML が壊れる）。光のクリーチャーを出すには光のマナが要る（第328弾の多色の教訓と同じ）。
 
 proto T998（dm26ex4-cho047 型）・T999（dm26rp1-tr002 型）・T1000（駆動用のシールド追加呪文。move to: shield reason: charge は dm22ex2-068 の確立形）。テスト7件通過（pilot329 本体 5: 形の一致、墓地の誘発＝may で出て CIP で2枚引く／no なら残る、タップして出て自分のターンのはじめにもアンタップしない（相手のターンを挟んで確認）、シールド配置でアンタップ＋モード0でドロー、モード1で相手をタップ、＋pilot329 cards 提出前 2）。次の番号: パイロット330 / ラウンド365 / プロト T1001。
+
+### ラウンド364（第329弾の再変換）
+
+**新規登録2件**（dm26ex4-cho047 DARK MEMORY CONTAINER＝CIP draw 2＋墓地の誘発（zone: graveyard＋move to: shield＋may で move/put）／dm26rp1-tr002 楯教の求道者 ザゼ・ゼーン＝enters_tapped＋static deny untap_at_start＋シールド配置の誘発でアンタップ＋modal。いずれも登録形は確立形と完全一致で連結混入なし）・**alias 畳み込み0件**（submit 時に cho047 へ aliases 3件 [dm25ex3-055, dm25rp2-048, promoy25-051]、tr002 へ aliases 4件 [dm24ex3-rp3s02, dm24ex3-rp3sec03, dm24rp3-s02, dm24rp3-sec003] が自動記録されたが、いずれも rejects 行ではない）・**stale クリーンアップ0件**・**差し戻し0件**。converted 10,277→**10,279** / rejects 2,038→**2,036**、重なり0・漏れ0。shield_placement_trigger は残り0件でファミリー解消。
+
+提出時のバリデータ警告で cho047 の形を修正: 「このクリーチャーを自分の墓地から出してもよい」の自己登場は、当初 may＋play_free {ref: self} としたが、play_free は召喚・唱えるの意味で、原文の「出す」は move to: bz reason: put が正しい（バリデータの指摘どおり）。proto・回答・converted の3か所を同形に揃えた。教訓: 置換は対象ブロックに限定すること（全体置換で proto T997 の declare（アタック・チャンスの play_free が正しい形）まで巻き込んだため、ブロック限定で復旧した）。
+
+pilot329 cards を登録形に書換、round364 cards を新設（登録カード自身の実挙動: 墓地の cho047 がシールド配置で出て CIP で2枚引く／tr002 がシールド配置でアンタップしモード0で1枚引く）。テスト18 passed（round364 cards 3＋pilot329 cards 登録形 2＋pilot329 本体 5＋data_audit 8）。回帰 138 passed / 8 failed（round357〜363 の件数固定テストの stale なだけの既知パターン7件＋pilot328 本体の proto 形不一致1件＝上記の巻き込みで、復旧後に再確認済み）。回答は answers/round364.yaml に保存。次の番号: パイロット330 / ラウンド365 / プロト T1001。

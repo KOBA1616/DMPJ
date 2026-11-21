@@ -1,27 +1,26 @@
-"""語彙パイロット第329弾の対象カード検証（提出前）。
+"""語彙パイロット第329弾の対象カード検証（登録形）。
 
 対象は pure な shield_placement_trigger 2件:
 - dm26ex4-cho047 DARK MEMORY CONTAINER（partial あり: CIP の
-  draw 2 は変換済み。canon_id は自身、aliases 無し）
+  draw 2 は変換済み。canon_id は自身、登録時に aliases 3件
+  [dm25ex3-055, dm25rp2-048, promoy25-051] が自動記録された）
 - dm26rp1-tr002 楯教の求道者 ザゼ・ゼーン（partial はキーワード
-  のみ。canon_id は自身で、登録時に aliases 4件
+  のみ。canon_id は自身、登録時に aliases 4件
   [dm24ex3-rp3s02, dm24ex3-rp3sec03, dm24rp3-s02, dm24rp3-sec003]
-  が自動記録される見込み）
+  が自動記録された）
 
 第329弾の結論はドリフト（追加語彙なし）。シールド配置の誘発は
 {event: move, to: shield, subject: {owner: you}} の確立形
 （dm24ex3-004 等44件）。墓地で機能する誘発は zone: graveyard
-（217件）。墓地からの自己登場は may＋play_free {ref: self}。
-「タップして出る」はキーワード enters_tapped、「自分のターン
-のはじめにアンタップしない」は static {deny: [untap_at_start]}
-（dmrp18-025）。タップ＋アンタップしないは tap op の
-no_untap_next（dmr11-038）。「離れない」は mod {no_leave: true}
-（第143弾）を duration: until_next_own_turn_start で。
-
-ラウンド364で登録する。正本は real.yaml / real_akashic.yaml /
-real_vocab.yaml / real_zone.yaml / proto.yaml / converted.yaml の
-いずれにも無く、対象 id 自体に aliases 記録も無いことを提出前に
-確認済み。
+（217件）。墓地からの自己登場は may＋move {ref: self} to: bz
+reason: put（「出す」は召喚ではないため play_free ではなく
+move/put。submit のバリデータ警告で確認し、登録後に converted
+側も同形へ修正済み）。「タップして出る」はキーワード
+enters_tapped、「自分のターンのはじめにアンタップしない」は
+static {deny: [untap_at_start]}（dmrp18-025）。タップ＋アンタップ
+しないは tap op の no_untap_next（dmr11-038）。「離れない」は
+mod {no_leave: true}（第143弾）を duration:
+until_next_own_turn_start で。
 
 注意: conftest を import すると DMSIM_SKIP_CONVERTED が復活するので
 _conv_cache を直接使う（第319弾以降の作法）。
@@ -53,8 +52,9 @@ GY_TRIGGER = {"kind": "trigger", "zone": "graveyard",
               "when": {"event": "move", "to": "shield",
                        "subject": {"owner": "you"}},
               "effect": [{"op": "may",
-                          "body": [{"op": "play_free",
-                                    "select": {"ref": "self"}}]}]}
+                          "body": [{"op": "move",
+                                    "select": {"ref": "self"},
+                                    "to": "bz", "reason": "put"}]}]}
 
 FORM_047 = [CIP, GY_TRIGGER]
 
@@ -92,20 +92,38 @@ def _rows():
     return out
 
 
-def test_targets_not_yet_registered():
+def test_targets_registered():
     rows = _rows()
-    assert len(rows) == 2038
+    assert len(rows) == 2036
     conv = _conv_cache.all_cards(CONVERTED)
     ids = {c["id"] for c in conv}
-    assert len(ids) == 10277
+    assert len(ids) == 10279
     assert not (ids & set(rows))          # canonical 重なり0
-    # 漏れ0の前提: 正本は未登録で reject 行に残っている
-    assert not (TARGETS & ids) and TARGETS <= set(rows)
-    for t in TARGETS:
-        assert rows[t].get("gaps") == ["shield_placement_trigger"]
+    assert TARGETS <= ids and not (TARGETS & set(rows))
+    c = _conv_cache.find(CONVERTED, "dm26ex4-cho047")
+    assert c is not None
+    assert c["abilities"] == FORM_047
+    assert c["keywords"] == ["blocker"]
+    assert not (c.get("source") or {}).get("unsupported")
+    assert (c.get("source") or {}).get("aliases") == [
+        "dm25ex3-055", "dm25rp2-048", "promoy25-051"]
+    d = parse_card(c, TABLES)
+    assert len(d.abilities) == 3
+    c = _conv_cache.find(CONVERTED, "dm26rp1-tr002")
+    assert c is not None
+    assert c["abilities"] == FORM_TR002
+    assert c["keywords"] == ["blocker", "double_breaker",
+                             "enters_tapped"]
+    assert not (c.get("source") or {}).get("unsupported")
+    assert (c.get("source") or {}).get("aliases") == [
+        "dm24ex3-rp3s02", "dm24ex3-rp3sec03", "dm24rp3-s02",
+        "dm24rp3-sec003"]
+    d = parse_card(c, TABLES)
+    assert len(d.abilities) >= 3
+    # shield_placement_trigger は残り0件でファミリー解消
     left = {rid for rid, r in rows.items()
             if "shield_placement_trigger" in (r.get("gaps") or [])}
-    assert left == TARGETS, left
+    assert left == set(), left
 
 
 def test_proto_forms_match():
