@@ -1,4 +1,4 @@
-"""語彙パイロット第328弾の対象カード検証（提出前）。
+"""語彙パイロット第328弾の対象カード検証（登録形）。
 
 dmex15-b019 滅亡の光は multi-gap 2件（filter_not_race＋
 first_attack_end）の1行だけ。partial あり（アタック・チャンスは
@@ -17,11 +17,6 @@ canon_id は dmex15-b019 で aliases 無し。
   effect: [{op: untap, select: {ref: self}}], once_per_turn: true}]},
   duration: end_of_turn]
 （アタック・チャンスは partial どおり declare＋play_free）
-
-ラウンド363で登録する。正本は real.yaml / real_akashic.yaml /
-real_vocab.yaml / real_zone.yaml / proto.yaml / converted.yaml の
-いずれにも無く、対象 id 自体に aliases 記録も無いことを提出前に
-確認済み。
 
 注意: conftest を import すると DMSIM_SKIP_CONVERTED が復活するので
 _conv_cache を直接使う（第319弾以降の作法）。
@@ -83,22 +78,27 @@ def _rows():
     return out
 
 
-def test_target_not_yet_registered():
+def test_target_registered():
     rows = _rows()
-    assert len(rows) == 2039
+    assert len(rows) == 2038
     conv = _conv_cache.all_cards(CONVERTED)
     ids = {c["id"] for c in conv}
-    assert len(ids) == 10276
+    assert len(ids) == 10277
     assert not (ids & set(rows))          # canonical 重なり0
-    # 漏れ0の前提: 正本は未登録で reject 行に残っている
-    assert TARGET not in ids and TARGET in rows
-    assert rows[TARGET].get("gaps") == ["filter_not_race",
-                                        "first_attack_end"]
-    # この2つの gap を持つ行は dmex15-b019 だけ
+    assert TARGET in ids and TARGET not in rows
+    c = _conv_cache.find(CONVERTED, TARGET)
+    assert c is not None
+    assert c["abilities"] == [DECLARE]
+    assert c["spell"] == FORM
+    assert not (c.get("source") or {}).get("unsupported")
+    assert not (c.get("source") or {}).get("aliases")
+    d = parse_card(c, TABLES)
+    assert len(d.spell) == 2
+    # filter_not_race / first_attack_end は残り0件で両ファミリー解消
     left = {rid for rid, r in rows.items()
             if "filter_not_race" in (r.get("gaps") or [])
             or "first_attack_end" in (r.get("gaps") or [])}
-    assert left == {TARGET}, left
+    assert left == set(), left
 
 
 def test_proto_forms_match():

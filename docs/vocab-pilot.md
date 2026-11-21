@@ -4782,3 +4782,7 @@ proto T996（dm26ex4-cho025 型）。テスト5件通過（pilot327 本体 3: �
 教訓: 多色カードを唱えるには各文明のマナが1枚ずつ要る。火だけのマナでは闇/火の呪文は唱えられず、main の決定自体が出ない。テストのマナには火5＋闇4を使う。
 
 proto T997（dmex15-b019 型）。テスト5件通過（pilot328 本体 3: 形の一致、filter_not_race＝ゴッド以外は両プレイヤーとも破壊・ゴッドは残って付与された誘発を持つ、first_attack_end 各クリーチャー＝最初の攻撃の終わりにアンタップ・2回目にはアンタップされない、＋pilot328 cards 提出前 2）。次の番号: パイロット329 / ラウンド364 / プロト T998。
+
+### ラウンド363（第328弾の再変換）
+
+**新規登録1件**（dmex15-b019 滅亡の光＝アタック・チャンス（declare＋play_free）＋destroy {not_race_has: [ゴッド, フェニックス, クリエイター]}＋modify による once_per_turn 付き付与型誘発。登録形は確立形と完全一致で連結混入なし）・**alias 畳み込み0件**・**stale クリーンアップ0件**・**差し戻し0件**。対象1行は gaps = [filter_not_race, first_attack_end] のため reopen filter_not_race first_attack_end で外してから submit（reopen は1件だけ外れた。両 gap を指定しないと multi-gap 行は外れない）。converted 10,276→**10,277** / rejects 2,039→**2,038**、重なり0・漏れ0。filter_not_race / first_attack_end は残り0件で両ファミリー解消。pilot328 cards を登録形に書換、round363 cards を新設（登録カード自身の実挙動: ゴッド以外は両プレイヤーとも破壊・ゴッドは残って付与された誘発を持つ／最初の攻撃の終わりにアンタップ・2回目にはアンタップされない）。テスト16 passed（round363 cards 3＋pilot328 cards 登録形 2＋pilot328 本体 3＋data_audit 8）。回答は answers/round363.yaml に保存。次の番号: パイロット329 / ラウンド364 / プロト T998。
