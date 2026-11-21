@@ -398,14 +398,21 @@ def _amount_count_ok(v) -> bool:
         and ("count" not in v or _simple_cands(v["count"]))
 
 
+_STATIC_GRANT_OK = {"blocker", "speed_attacker", "slayer", "guardman", "unblockable", "cannot_attack",
+                    "cannot_attack_player", "cannot_be_attacked", "cannot_block", "cannot_untap",
+                    "double_breaker", "triple_breaker", "quad_breaker", "world_breaker", "powered_breaker",
+                    "null_breaker", "s_trigger", "s_trigger_plus", "super_s_trigger", "must_attack",
+                    "hunting", "enters_tapped"}
+
+
 def _static_entry_ok(e, is_allow: bool) -> bool:
     """常在型 mod の allow / deny の項目。文字列か、{action, other} / {action} / {action, once} の辞書だけ。
     墓地・マナからの召喚の許可は Rust に出す選択肢の生成が無いので、増分Aの CE mod と同じく許可側だけ除く。"""
     if isinstance(e, str):
-        return not (is_allow and e in ("summon_from_graveyard", "summon_from_mana"))
+        return not (is_allow and e in ("summon_from_graveyard", "summon_from_mana", "evolve_base"))
     if not isinstance(e, dict) or not set(e) <= {"action", "other", "once"} or not isinstance(e.get("action"), str):
         return False
-    if is_allow and e["action"] in ("summon_from_graveyard", "summon_from_mana"):
+    if is_allow and e["action"] in ("summon_from_graveyard", "summon_from_mana", "evolve_base"):
         return False
     return "other" not in e or _simple_filter_x(e["other"])
 
@@ -433,7 +440,10 @@ def _static_mod_ok(mod) -> bool:
             if not (isinstance(v, int) and not isinstance(v, bool)):
                 return False
         elif k == "grant":
-            if not (isinstance(v, list) and all(isinstance(x, str) for x in v)):
+            # 与えたキーワードの効果が特性の畳み込み（常在型・ブレイク数・タップして出る）だけで完結するものだけ。
+            # escape / shield_saver / cyclone / mega_last_burst / g_strike や墓地・マナ召喚のキーワードは
+            # 特性の外の仕組み（置換・選択肢の生成）を Python が動かすので除く
+            if not (isinstance(v, list) and all(isinstance(x, str) and x in _STATIC_GRANT_OK for x in v)):
                 return False
         elif k == "cost":
             if not (isinstance(v, int) and not isinstance(v, bool)) and not _amount_count_ok(v):
