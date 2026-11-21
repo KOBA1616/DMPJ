@@ -777,6 +777,54 @@ impl Engine {
     }
 
     /// 数えるだけのセレクタ（Python の candidates）。選ばせない。ref 変数／ゾーン(owner you,opp・from_top 整数・filter・other)だけ。
+    /// セレクタの zone 指定（名前／リスト／"any"）をゾーン名の列にする（Python の zones_of と同じ）
+    fn zones_of_sel(&self, sel: &Value) -> R<Vec<String>> {
+        match sel.get("zone") {
+            Some(Value::String(z)) if z == "any" => Ok(self.rules.zones.iter().map(|(n, _)| n.clone()).collect()),
+            Some(Value::String(z)) => Ok(vec![z.clone()]),
+            Some(Value::Array(a)) => {
+                let mut out = vec![];
+                for z in a {
+                    match z.as_str() {
+                        Some(s) => out.push(s.to_string()),
+                        None => return uns("zone list shape"),
+                    }
+                }
+                Ok(out)
+            }
+            _ => uns("zone shape"),
+        }
+    }
+
+    /// from_top の値（整数か式）を評価する
+    fn from_top_n(&self, sel: &Value, env: &Value) -> R<Option<usize>> {
+        match sel.get("from_top") {
+            None => Ok(None),
+            Some(v) => Ok(Some(self.eval_num(v, env)?.max(0) as usize)),
+        }
+    }
+
+    /// 1プレイヤー分のゾーン候補: ゾーンをリスト順に連結する。from_top は複数ゾーンでは
+    /// デッキの部分にだけ、単一ゾーンでは連結後に効く（Python の candidates と同じ）
+    fn zone_part(&self, zones: &[String], p: i64, from_top: Option<usize>) -> Vec<i64> {
+        let mut lst = vec![];
+        for z in zones {
+            let mut part = if z == "bz" { self.bz_tops(Some(p)) } else { self.zl(z, p).clone() };
+            if let Some(n) = from_top {
+                if zones.len() > 1 && z == "deck" {
+                    part.truncate(n);
+                }
+            }
+            lst.extend(part);
+        }
+        if let Some(n) = from_top {
+            if zones.len() == 1 {
+                lst.truncate(n);
+            }
+        }
+        lst
+    }
+
     fn candidates_ro(&self, sel: &Value, env: &Value) -> R<Vec<i64>> {
         let obj = match sel.as_object() {
             Some(o) => o,
@@ -806,20 +854,16 @@ impl Engine {
                 "any" => vec![self.s.active, 1 - self.s.active],
                 _ => return uns("cands owner"),
             };
-            let zone = sel["zone"].as_str().unwrap_or("");
-            if !["hand", "deck", "graveyard", "mana", "bz", "shield"].contains(&zone) {
-                return uns(format!("cands zone {}", zone));
+            let zones = self.zones_of_sel(sel)?;
+            for z in &zones {
+                if !["hand", "deck", "graveyard", "mana", "bz", "shield"].contains(&z.as_str()) {
+                    return uns(format!("cands zone {}", z));
+                }
             }
+            let ft = self.from_top_n(sel, env)?;
             lst = vec![];
             for p in players {
-                let mut part = if zone == "bz" { self.bz_tops(Some(p)) } else { self.zl(zone, p).clone() };
-                if let Some(n) = sel.get("from_top") {
-                    match n.as_i64() {
-                        Some(n) => part.truncate(n.max(0) as usize),
-                        None => return uns("from_top expr"),
-                    }
-                }
-                lst.extend(part);
+                lst.extend(self.zone_part(&zones, p, ft));
             }
             if sel.get("other").and_then(|v| v.as_bool()).unwrap_or(false) {
                 if let Some(me) = env.get("self").and_then(|v| v.as_array()) {
@@ -841,17 +885,74 @@ impl Engine {
         Ok(lst)
     }
 
-    /// フィルタの値が式（{cost_of: ...} など）なら解決時に数へ置き換える（Python の select と同じ前評価）
+    /// フィルタの値が式（{cost_of: ...} など）なら解決時に値へ置き換える（Python の filter_match の前評価と同じ。
+    /// any_of の中身にも再帰する）。name の {name_of: ...} は名前の文字列に、{race: ...} は種族1件のリストに、
+    /// {declared: ...} は宣言値そのものになる。それ以外は数に評価する
     fn bake_filter(&self, f: &Value, env: &Value) -> R<Value> {
         let o = match f.as_object() { Some(o) => o, None => return Ok(f.clone()) };
-        if !o.values().any(|v| v.is_object()) {
+        if !o.values().any(|v| v.is_object() || v.is_array()) {
             return Ok(f.clone());
         }
         let mut out = serde_json::Map::new();
         for (k, v) in o {
-            out.insert(k.clone(), if v.is_object() { json!(self.eval_num(v, env)?) } else { v.clone() });
+            let nv = if k == "any_of" && v.is_array() {
+                let mut subs = vec![];
+                for sub in v.as_array().unwrap() {
+                    subs.push(self.bake_filter(sub, env)?);
+                }
+                json!(subs)
+            } else if v.is_object() {
+                if k == "name" {
+                    if let Some(r) = v.get("name_of") {
+                        let refs = self.expr_refs(r, env)?;
+                        match refs.first().and_then(|r| r[0].as_i64()) {
+                            Some(c) => json!(self.def(c).name),
+                            None => json!("\u{0}"),   // 参照が無い時はどの名前にも一致しない
+                        }
+                    } else {
+                        json!(self.eval_num(v, env)?)
+                    }
+                } else if v.get("race").is_some() && v.as_object().map_or(false, |m| m.len() == 1) {
+                    json!([v["race"].as_str().unwrap_or("")])
+                } else if v.get("declared").is_some() && v.as_object().map_or(false, |m| m.len() == 1) {
+                    let key = v["declared"].as_str().unwrap_or("");
+                    match self.s.declares.get(key) {
+                        Some(dv) => dv.clone(),
+                        None => return uns("declared missing"),
+                    }
+                } else {
+                    json!(self.eval_num(v, env)?)
+                }
+            } else {
+                v.clone()
+            };
+            out.insert(k.clone(), nv);
         }
         Ok(Value::Object(out))
+    }
+
+    /// 式の参照（{cost_of: X} の X など）をカード参照の列にする。X は変数名か {ref: 名前}。
+    /// 変数が優先し、次に self / subject / event.* を見る（Python の _chars_refs と同じ）。crossed は未対応
+    fn expr_refs(&self, v: &Value, env: &Value) -> R<Vec<Value>> {
+        let name = v.get("ref").and_then(|r| r.as_str()).or(v.as_str()).unwrap_or("");
+        if let Some(a) = env["vars"].get(name).and_then(|a| a.as_array()) {
+            return Ok(a.clone());
+        }
+        if name == "self" {
+            return Ok(vec![env["self"].clone()]);
+        }
+        if name == "subject" || name == "event.subject" {
+            let s = &env["event"]["subject"];
+            return Ok(if s.is_array() { vec![s.clone()] } else { vec![] });
+        }
+        if let Some(key) = name.strip_prefix("event.") {
+            let s = &env["event"][key];
+            return Ok(if s.is_array() { vec![s.clone()] } else { vec![] });
+        }
+        if name == "crossed" {
+            return uns("expr crossed ref");
+        }
+        Ok(vec![])
     }
 
     fn eval_num(&self, x: &Value, env: &Value) -> R<i64> {
@@ -859,12 +960,57 @@ impl Engine {
             return Ok(n);
         }
         if let Some(v) = x.get("cost_of") {
-            // 参照カード（複数なら最大）のコスト。参照は変数名か {ref: 名前}、"self" は自分
-            let name = v.get("ref").and_then(|r| r.as_str()).or(v.as_str()).unwrap_or("");
-            let refs: Vec<Value> = if name == "self" { vec![env["self"].clone()] }
-                else if name.starts_with("event.") || name == "crossed" { return uns("cost_of ref"); }
-                else { env["vars"].get(name).and_then(|a| a.as_array()).cloned().unwrap_or_default() };
+            // 参照カード（複数なら最大）の印刷コスト（Python の _chars_val は特性コストだが、
+            // plain の範囲では印刷コストと一致する箇所でのみゲートが通す）
+            let refs = self.expr_refs(v, env)?;
             return Ok(refs.iter().filter_map(|r| r[0].as_i64()).map(|c| self.def(c).cost).max().unwrap_or(0));
+        }
+        if let Some(v) = x.get("power_of") {
+            // 参照カード（複数なら最大）の現在パワー。参照が無い時は 0（Python の max(default=0) と同じ）
+            let refs = self.expr_refs(v, env)?;
+            let mut best: Option<i64> = None;
+            for r in &refs {
+                if let Some(c) = r[0].as_i64() {
+                    let p = self.chars(c, None).power;
+                    best = Some(best.map_or(p, |b: i64| b.max(p)));
+                }
+            }
+            return Ok(best.unwrap_or(0));
+        }
+        if let Some(l) = x.get("sum").and_then(|v| v.as_array()) {
+            let mut t = 0i64;
+            for e in l {
+                t += self.eval_num(e, env)?;
+            }
+            return Ok(t);
+        }
+        if let Some(l) = x.get("mul").and_then(|v| v.as_array()) {
+            let mut t = 1i64;
+            for e in l {
+                t *= self.eval_num(e, env)?;
+            }
+            return Ok(t);
+        }
+        if let Some(k) = x.get("declared").and_then(|v| v.as_str()) {
+            // 未宣言は 0（Python の declares.get(name, 0) と同じ）
+            return Ok(self.s.declares.get(k).and_then(|v| v.as_i64()).unwrap_or(0));
+        }
+        if let Some(l) = x.get("civ_count").and_then(|v| v.as_array()) {
+            // 自分のバトルゾーンのクリーチャーが持つ、指定された文明の種類数（Python の eval_expr と同じ）
+            let you = env["you"].as_i64().unwrap_or(0);
+            let want: Vec<&str> = l.iter().filter_map(|v| v.as_str()).collect();
+            let mut seen: Vec<&str> = vec![];
+            for c in self.bz_tops(Some(you)) {
+                let d = self.def(c);
+                if d.types.iter().any(|t| t == "creature") {
+                    for civ in &d.civs {
+                        if want.contains(&civ.as_str()) && !seen.contains(&civ.as_str()) {
+                            seen.push(civ.as_str());
+                        }
+                    }
+                }
+            }
+            return Ok(seen.len() as i64);
         }
         if x.is_object() && x.as_object().unwrap().len() == 1 {
             if let Some(sel) = x.get("count") {
@@ -936,7 +1082,9 @@ impl Engine {
             return Ok(Ok(if self.alive(&me) { vec![me[0].as_i64().unwrap()] } else { vec![] }));
         }
         for k in obj.keys() {
-            if !["zone", "owner", "count", "from_top", "filter", "chooser", "look", "ref", "up_to", "other", "under_of"].contains(&k.as_str()) {
+            if !["zone", "owner", "count", "from_top", "filter", "chooser", "look", "ref", "up_to", "other", "under_of",
+                 "exlife_of", "owner_of", "exclude", "extremal", "distinct_from",
+                 "total_cost_le", "total_cost_ge", "total_power_le", "total_power_ge", "distinct_costs"].contains(&k.as_str()) {
                 return uns(format!("selector key {}", k));
             }
         }
@@ -947,42 +1095,109 @@ impl Engine {
         };
         let up_to = sel.get("up_to").and_then(|v| v.as_bool()).unwrap_or(false);
         let mut lst: Vec<i64>;
+        let mut zone_path = false;   // exclude / extremal が効くのはゾーン経路だけ（Python の candidates と同じ）
+        let mut skip_filter = false; // self_moved / self_entered / exlife_of は candidates が即返しで filter が効かない
         if let Some(u) = sel.get("under_of") {
-            // 「このクリーチャーの下にあるカード」（メテオバーン）
-            if u != &json!("self") {
-                return uns("under_of");
-            }
-            let me = env["self"].clone();
-            lst = if self.alive(&me) { self.s.cards[me[0].as_i64().unwrap() as usize].under.clone() } else { vec![] };
-        } else if let Some(name) = sel.get("ref").and_then(|v| v.as_str()) {
-            if name == "self" || name == "self_moved" || name == "self_entered" || name == "crossed" || name == "subject" || name.starts_with("event.") {
-                return uns("selector ref");
-            }
-            let refs: Vec<Value> = env["vars"].get(name).and_then(|v| v.as_array()).cloned().unwrap_or_default();
-            lst = refs.iter().filter(|r| self.alive(r)).map(|r| r[0].as_i64().unwrap()).collect();
-        } else {
-            // owner any: ターン・プレイヤーから順に両者（114.2a）
-            let players: Vec<i64> = match sel.get("owner").and_then(|v| v.as_str()).unwrap_or("you") {
-                "you" => vec![you],
-                "opp" => vec![1 - you],
-                "any" => vec![self.s.active, 1 - self.s.active],
-                _ => return uns("selector owner"),
+            // 「このクリーチャーの下にあるカード」（メテオバーン等）。基底は self か束変数（Python の _under_base と同じ）
+            let base: Option<i64> = if u.as_str() == Some("self") {
+                env["self"].as_array().and_then(|a| a[0].as_i64())
+            } else if let Some(name) = u.as_str() {
+                env["vars"].get(name).and_then(|v| v.as_array()).and_then(|a| a.first()).and_then(|r| r[0].as_i64())
+            } else {
+                return uns("under_of shape");
             };
-            let zone = sel["zone"].as_str().unwrap_or("");
-            if !["hand", "deck", "graveyard", "mana", "bz", "shield"].contains(&zone) {
-                return uns(format!("selector zone {}", zone));
+            lst = match base {
+                Some(b) if b >= 0 && (b as usize) < self.s.cards.len() => self.s.cards[b as usize].under.clone(),
+                _ => vec![],
+            };
+        } else if let Some(name) = sel.get("ref").and_then(|v| v.as_str()) {
+            // 参照経路: self / subject / event.* / self_moved / self_entered / crossed / 変数。
+            // filter と zone（現在ゾーンでの絞り込み）が併記できる
+            if name == "self_moved" || name == "self_entered" {
+                skip_filter = true;
+                let me = env["self"].clone();
+                let cid = me[0].as_i64().unwrap_or(-1);
+                let self_gen = me[1].as_i64().unwrap_or(-1);
+                lst = match self.s.cards.get(cid as usize) {
+                    Some(c) if c.gen == self_gen + 1 && (if name == "self_moved" { c.zone != "bz" } else { c.zone == "bz" }) => vec![cid],
+                    _ => vec![],
+                };
+            } else {
+                let refs: Vec<Value> = match name {
+                    "self" => vec![env["self"].clone()],
+                    "subject" => {
+                        let s = &env["event"]["subject"];
+                        if s.is_array() { vec![s.clone()] } else { vec![] }
+                    }
+                    _ if name.starts_with("event.") => {
+                        let s = &env["event"][&name[6..]];
+                        if s.is_array() { vec![s.clone()] } else { vec![] }
+                    }
+                    "crossed" => {
+                        let me = env["self"].clone();
+                        match self.s.cards.get(me[0].as_i64().unwrap_or(-1) as usize).and_then(|c| c.crossed.clone()) {
+                            Some(g) => vec![g],
+                            None => vec![],
+                        }
+                    }
+                    _ => env["vars"].get(name).and_then(|v| v.as_array()).cloned().unwrap_or_default(),
+                };
+                lst = refs.iter().filter(|r| self.alive(r)).map(|r| r[0].as_i64().unwrap()).collect();
+                if sel.get("zone").is_some() {
+                    let zones = self.zones_of_sel(sel)?;
+                    lst.retain(|&c| zones.iter().any(|z| z == &self.s.cards[c as usize].zone));
+                }
             }
+        } else if let Some(x) = sel.get("exlife_of") {
+            // EXライフの紐付きシールド: 参照に紐付いたままシールドにあるカードを両プレイヤー分（プレイヤー順）
+            skip_filter = true;
+            let refs = self.expr_refs(x, env)?;
+            lst = vec![];
+            for p in [0i64, 1] {
+                for &c in &self.zl("shield", p).clone() {
+                    if let Some(eo) = &self.s.cards[c as usize].exlife_of {
+                        if refs.iter().any(|r| r == eo) {
+                            lst.push(c);
+                        }
+                    }
+                }
+            }
+        } else {
+            zone_path = true;
+            let players: Vec<i64> = if let Some(vname) = sel.get("owner_of").and_then(|v| v.as_str()) {
+                // そのカードの持ち主たち（ターンプレイヤーから順。Python の candidates と同じ）
+                let refs = env["vars"].get(vname).and_then(|v| v.as_array()).cloned().unwrap_or_default();
+                let mut owners: Vec<i64> = vec![];
+                for r in &refs {
+                    if let Some(c) = r[0].as_i64() {
+                        let o = self.s.cards[c as usize].owner;
+                        if !owners.contains(&o) {
+                            owners.push(o);
+                        }
+                    }
+                }
+                let a = self.s.active;
+                owners.sort_by_key(|&o| o != a);
+                owners
+            } else {
+                // owner any: ターン・プレイヤーから順に両者（114.2a）
+                match sel.get("owner").and_then(|v| v.as_str()).unwrap_or("you") {
+                    "you" => vec![you],
+                    "opp" => vec![1 - you],
+                    "any" => vec![self.s.active, 1 - self.s.active],
+                    _ => return uns("selector owner"),
+                }
+            };
+            let zones = self.zones_of_sel(sel)?;
+            for z in &zones {
+                if !["hand", "deck", "graveyard", "mana", "bz", "shield"].contains(&z.as_str()) {
+                    return uns(format!("selector zone {}", z));
+                }
+            }
+            let ft = self.from_top_n(sel, env)?;
             lst = vec![];
             for p in players {
-                let mut part = if zone == "bz" { self.bz_tops(Some(p)) } else { self.zl(zone, p).clone() };
-                if let Some(n) = sel.get("from_top") {
-                    let n = match n.as_i64() {
-                        Some(n) => n.max(0) as usize,
-                        None => return uns("from_top expr"),
-                    };
-                    part.truncate(n);
-                }
-                lst.extend(part);
+                lst.extend(self.zone_part(&zones, p, ft));
             }
             if sel.get("other").and_then(|v| v.as_bool()).unwrap_or(false) {
                 if let Some(me) = env.get("self").and_then(|v| v.as_array()) {
@@ -992,13 +1207,48 @@ impl Engine {
             }
         }
         if let Some(f) = &filter {
-            let mut keep = vec![];
-            for &c in &lst {
-                if self.filter_ok(c, f)? {
-                    keep.push(c);
+            if !skip_filter {
+                let mut keep = vec![];
+                for &c in &lst {
+                    if self.filter_ok(c, f)? {
+                        keep.push(c);
+                    }
+                }
+                lst = keep;
+            }
+        }
+        if zone_path {
+            if let Some(ex) = sel.get("exclude") {
+                // ゾーン経路の候補から除外セレクタの候補を引く（Python の candidates と同じ）
+                let subs: Vec<&Value> = match ex {
+                    Value::Array(a) => a.iter().collect(),
+                    other => vec![other],
+                };
+                let mut banned: Vec<i64> = vec![];
+                for sub in subs {
+                    for c in self.candidates_ro(sub, env)? {
+                        if !banned.contains(&c) {
+                            banned.push(c);
+                        }
+                    }
+                }
+                lst.retain(|c| !banned.contains(c));
+            }
+            if let Some(ex) = sel.get("extremal").and_then(|v| v.as_str()) {
+                // 現在パワーの最小／最大に同点全残し（Python の candidates と同じ）
+                if !lst.is_empty() {
+                    let mut best: Option<i64> = None;
+                    for &c in &lst {
+                        let p = self.chars(c, None).power;
+                        best = Some(match best {
+                            None => p,
+                            Some(b) => if ex == "min_power" { b.min(p) } else { b.max(p) },
+                        });
+                    }
+                    let b = best.unwrap();
+                    lst.retain(|&c| self.chars(c, None).power == b);
                 }
             }
-            lst = keep;
         }
         let cnt = sel.get("count");
         // count: any = 「好きな枚数」（0枚から候補の全部まで）。count: all + up_to と同じ
@@ -1021,16 +1271,29 @@ impl Engine {
         let random = sel.get("chooser") == Some(&json!("random"));   // 「見ないで選ぶ」: 効果の使用者が無作為に選ぶ
         let chooser = match sel.get("chooser").and_then(|v| v.as_str()).unwrap_or("you") {
             "you" | "random" => you,
-            "opp" => 1 - you,
+            "opp" | "opponent" => 1 - you,   // opponent は opp の同義語
             _ => return uns("chooser"),
         };
-        let cands: Vec<i64> = lst
+        let mut cands: Vec<i64> = lst
             .into_iter()
             .filter(|&c| {
                 let k = &self.s.cards[c as usize];
                 k.zone != "bz" || k.controller == chooser || self.permits(c, "be_chosen")
             })
             .collect();
+        if let Some(df) = sel.get("distinct_from") {
+            // 「自分のどのクリーチャーともコストが異なる」: 参照集合のコストと重なる候補を外す。
+            // 評価は選択開始時に1回だけ（Python の select と同じ位置）
+            let refs = self.candidates_ro(df, env)?;
+            let mut costs: Vec<i64> = vec![];
+            for c in refs {
+                let p = self.chars(c, None).pay_cost;
+                if !costs.contains(&p) {
+                    costs.push(p);
+                }
+            }
+            cands.retain(|&c| !costs.contains(&self.chars(c, None).pay_cost));
+        }
         let n = n.min(cands.len());
         if n == 0 {
             return Ok(Ok(vec![]));
@@ -1044,6 +1307,12 @@ impl Engine {
             }
             self.s.tasks.last_mut().unwrap()["os"]["chosen"] = json!(picked);
             return Ok(Ok(picked));
+        }
+        if sel.get("total_cost_le").is_some() || sel.get("total_cost_ge").is_some()
+            || sel.get("total_power_le").is_some() || sel.get("total_power_ge").is_some()
+            || sel.get("distinct_costs").and_then(|v| v.as_bool()).unwrap_or(false) {
+            // 合計制限つきの「好きな数」選択（1枚ずつ積み上げる。Python の select の同分岐と同じ）
+            return self.select_total(sel, env, &cands, n, any_n, cnt.is_some(), up_to, chooser, look);
         }
         let opts: Vec<Value> = cands.iter().map(|&c| if look { self.card_option_look(c) } else { self.card_option(c, None) }).collect();
         let mn = if up_to { 0 } else { n };
@@ -1067,6 +1336,140 @@ impl Engine {
             let k = &self.s.cards[c as usize];
             if k.zone == "bz" && k.controller != chooser {
                 self.s.ev_seq += 1;   // 「相手がこのクリーチャーを選んだ時」の収集（plain には該当する誘発が無いので通し番号だけ進む）
+            }
+        }
+        Ok(Ok(chosen))
+    }
+
+    /// 合計制限の軸の値（コストは特性の支払いコスト、パワーは現在パワー。Python の chars_ro と同じ）
+    fn total_val(&self, key: &str, c: i64) -> i64 {
+        if key == "cost" { self.chars(c, None).pay_cost } else { self.chars(c, None).power }
+    }
+
+    fn totals_of(&self, limits: &[(&str, Option<i64>, Option<i64>)], picked: &[i64]) -> Vec<i64> {
+        limits.iter().map(|(k, _, _)| picked.iter().map(|&c| self.total_val(k, c)).sum()).collect()
+    }
+
+    /// 合計制限に収まるか（上限のみを見る。下限は can_stop 側。distinct_costs はコストの重なりを禁じる）
+    fn total_fits(&self, limits: &[(&str, Option<i64>, Option<i64>)], distinct: bool, picked: &[i64], c: i64, totals: &[i64]) -> bool {
+        if distinct {
+            let cc = self.total_val("cost", c);
+            if picked.iter().any(|&x| self.total_val("cost", x) == cc) {
+                return false;
+            }
+        }
+        limits.iter().zip(totals.iter()).all(|((k, le, _), t)| le.map_or(true, |le| t + self.total_val(k, c) <= le))
+    }
+
+    /// 合計制限つき選択（total_cost_le/ge・total_power_le/ge・distinct_costs）: 1枚ずつ積み上げる。
+    /// 済んだ段の答えは os の tc_answers から再生する（Python の select の同分岐と同じ）
+    fn select_total(&mut self, sel: &Value, env: &Value, cands: &[i64], n: usize, any_n: bool,
+                    cnt_present: bool, up_to: bool, chooser: i64, look: bool) -> R<Result<Vec<i64>, Value>> {
+        let mut limits: Vec<(&str, Option<i64>, Option<i64>)> = vec![];
+        if sel.get("total_cost_le").is_some() || sel.get("total_cost_ge").is_some() {
+            limits.push(("cost",
+                         match sel.get("total_cost_le") { Some(v) => Some(self.eval_num(v, env)?), None => None },
+                         match sel.get("total_cost_ge") { Some(v) => Some(self.eval_num(v, env)?), None => None }));
+        }
+        if sel.get("total_power_le").is_some() || sel.get("total_power_ge").is_some() {
+            limits.push(("power",
+                         match sel.get("total_power_le") { Some(v) => Some(self.eval_num(v, env)?), None => None },
+                         match sel.get("total_power_ge") { Some(v) => Some(self.eval_num(v, env)?), None => None }));
+        }
+        let distinct = sel.get("distinct_costs").and_then(|v| v.as_bool()).unwrap_or(false);
+        // 「N体まで」と併記された場合の枚数上限。count が無い「好きな数」は上限なし
+        let cap: Option<usize> = if cnt_present && !any_n && sel.get("count") != Some(&json!("all")) { Some(n) } else { None };
+        // 型3（全コスト網羅）: distinct_costs かつ count が固定なら、必要数に達するまで止められない
+        let need: Option<usize> = if distinct && !any_n && !up_to && cnt_present { Some(n) } else { None };
+        let mut picked: Vec<i64> = vec![];
+        let answers: Vec<Value> = self.s.tasks.last().unwrap()["os"].get("tc_answers")
+            .and_then(|v| v.as_array()).cloned().unwrap_or_default();
+        let mut replayed = true;   // Python の for-else: break しなければ while へ進む
+        for ans in &answers {
+            if cap.map_or(false, |cp| picked.len() >= cp) {
+                replayed = false;
+                break;
+            }
+            let totals = self.totals_of(&limits, &picked);
+            let rest: Vec<i64> = cands.iter().copied().filter(|c| !picked.contains(c))
+                .filter(|&c| self.total_fits(&limits, distinct, &picked, c, &totals)).collect();
+            let a = match ans.as_array() {
+                Some(a) => a,
+                None => {
+                    replayed = false;
+                    break;
+                }
+            };
+            if a.is_empty() {
+                replayed = false;
+                break;
+            }
+            let idx = a[0].as_i64().unwrap_or(-1);
+            if idx < 0 || idx as usize >= rest.len() {
+                return uns("tc answer out of range");   // Python はここで IndexError（壊れた再生）になる箇所
+            }
+            picked.push(rest[idx as usize]);
+        }
+        if replayed {
+            loop {
+                if cap.map_or(false, |cp| picked.len() >= cp) {
+                    break;
+                }
+                let totals = self.totals_of(&limits, &picked);
+                let rest: Vec<i64> = cands.iter().copied().filter(|c| !picked.contains(c))
+                    .filter(|&c| self.total_fits(&limits, distinct, &picked, c, &totals)).collect();
+                let mut can_stop = limits.iter().zip(totals.iter())
+                    .all(|((_, _, ge), t)| ge.map_or(true, |ge| *t >= ge));
+                if !can_stop && limits.iter().zip(totals.iter()).any(|((k, _, ge), t)| {
+                    ge.map_or(false, |ge| *t < ge && *t + rest.iter().map(|&c| self.total_val(k, c)).sum::<i64>() < ge)
+                }) {
+                    can_stop = true;   // どう選んでも下限に届かない時は打ち切る
+                }
+                if let Some(nd) = need {
+                    if picked.len() < nd {
+                        // 全コスト網羅: 残りのコストの種類数で届くかどうかを見る（ge の同型）
+                        let mut dcosts: Vec<i64> = vec![];
+                        for &c in &rest {
+                            let v = self.total_val("cost", c);
+                            if !dcosts.contains(&v) {
+                                dcosts.push(v);
+                            }
+                        }
+                        can_stop = picked.len() + dcosts.len() < nd;
+                    }
+                }
+                if rest.is_empty() {
+                    break;
+                }
+                let opts: Vec<Value> = rest.iter().map(|&c| if look { self.card_option_look(c) } else { self.card_option(c, None) }).collect();
+                let a = match self.ask(chooser, "choose_cards", opts, if can_stop { 0 } else { 1 }, 1) {
+                    Ask::Decision(d) => return Ok(Err(d)),
+                    Ask::Answer(a) => a,
+                };
+                {
+                    let t = self.s.tasks.last_mut().unwrap();
+                    if !t["os"]["tc_answers"].is_array() {
+                        t["os"]["tc_answers"] = json!([]);
+                    }
+                    t["os"]["tc_answers"].as_array_mut().unwrap().push(json!(a));
+                }
+                if a.is_empty() {
+                    break;
+                }
+                if a[0] >= rest.len() {
+                    // 隠れた札の中身が変わって候補が減った。今の候補で聞き直す
+                    self.s.tasks.last_mut().unwrap()["os"]["tc_answers"].as_array_mut().unwrap().pop();
+                    continue;
+                }
+                picked.push(rest[a[0]]);
+            }
+        }
+        let chosen = picked;
+        self.s.tasks.last_mut().unwrap()["os"]["chosen"] = json!(chosen);
+        for &c in &chosen {
+            let k = &self.s.cards[c as usize];
+            if k.zone == "bz" && k.controller != chooser {
+                self.s.ev_seq += 1;   // 「相手がこのクリーチャーを選んだ時」の収集（通常の選択と同じ）
             }
         }
         Ok(Ok(chosen))
@@ -2030,6 +2433,13 @@ impl Engine {
                     Ok(c) => c,
                     Err(d) => return Ok(Some(d)),
                 };
+                if op.get("order").and_then(|v| v.as_str()) == Some("shuffle") && cids.len() > 1 {
+                    // 選んだカードの順を無作為に入れ替える（Python の op_move と同じ Fisher-Yates）
+                    for i in (1..cids.len()).rev() {
+                        let j = self.s.rng_below((i + 1) as u64) as usize;
+                        cids.swap(i, j);
+                    }
+                }
                 let pos = op.get("position").and_then(|v| v.as_str()).unwrap_or("top");
                 if op.get("order").and_then(|v| v.as_str()) == Some("choose") && to == "deck" {
                     let names: std::collections::BTreeSet<String> = cids.iter().map(|&c| self.s.cards[c as usize].defn.clone()).collect();
@@ -2058,10 +2468,17 @@ impl Engine {
                 }
                 owners.sort_by_key(|&o| (o != self.s.active, o));
                 let in_st = env.get("in_st").and_then(|v| v.as_bool()).unwrap_or(false);
+                let face_up = op.get("face_up").and_then(|v| v.as_bool()).unwrap_or(false);
+                let face_down = op.get("face_down").and_then(|v| v.as_bool()).unwrap_or(false);
+                let strigger = op.get("strigger").and_then(|v| v.as_str());
                 let out_tasks: Vec<Value> = owners.iter().map(|&o| {
                     let cs: Vec<i64> = shield_out.iter().copied().filter(|&c| self.s.cards[c as usize].controller == o).collect();
-                    json!({"t": "break", "victim": o, "by": env["you"], "count": cs.len(), "phase": 1, "chosen": cs,
-                           "in_effect": in_st, "reason": op["reason"], "fire_break": false})
+                    let mut t = json!({"t": "break", "victim": o, "by": env["you"], "count": cs.len(), "phase": 1, "chosen": cs,
+                           "in_effect": in_st, "reason": op["reason"], "fire_break": false});
+                    if let Some(st) = strigger {
+                        t["strigger"] = json!(st);   // この移動で手札に加わるカードの S・トリガー印（宣言時に見る）
+                    }
+                    t
                 }).collect();
                 let evs: Vec<Value> = cids
                     .iter()
@@ -2070,6 +2487,15 @@ impl Engine {
                         let mut e = json!({"ev": "move", "subject": self.refv(c), "to": to, "reason": op["reason"], "position": pos});
                         if tapped {
                             e["tapped"] = json!(true);
+                        }
+                        if face_up {
+                            e["face_up"] = json!(true);
+                        }
+                        if face_down {
+                            e["face_down"] = json!(true);
+                        }
+                        if let Some(st) = strigger {
+                            e["strigger"] = json!(st);
                         }
                         e
                     })
@@ -2815,17 +3241,32 @@ impl Engine {
             }
             let ch: Vec<i64> = self.s.tasks.last().unwrap()["chosen"].as_array().unwrap().iter().map(|v| v.as_i64().unwrap()).collect();
             let victim_p = victim;
+            let task_st = self.s.tasks.last().unwrap().get("strigger").and_then(|v| v.as_str()).map(|s| s.to_string());
             let mut opts: Vec<Value> = vec![];
+            // シールドの束は、重なったカードのどれも宣言できる（113.2。Python の h_break と同じ）
+            let mut pool: Vec<i64> = vec![];
             for &c in &ch {
-                let k = &self.s.cards[c as usize];
-                if k.strigger_off || k.strigger_on {
-                    return uns("strigger mark");
-                }
+                pool.push(c);
+                pool.extend(self.s.cards[c as usize].under.iter().copied());
+            }
+            for c in pool {
+                let (off, on, defn) = {
+                    let k = &self.s.cards[c as usize];
+                    (k.strigger_off, k.strigger_on, k.defn.clone())
+                };
                 for fi in self.face_list(c) {
-                    if self.permits_face(c, "s_trigger", fi) {
+                    let mut ok = self.permits_face(c, "s_trigger", fi);
+                    if task_st.as_deref() == Some("off") || off {
+                        ok = false;   // S・トリガーの印（使用不可）: この移動で手札に加わるカード／印つきのカードは宣言できない
+                    } else if task_st.as_deref() == Some("on") || on {
+                        // S・トリガーの印（付与）: 実行可能な種別の面なら宣言できる
+                        let fd = self.fdef(c, fi);
+                        ok = ok || fd.types.iter().any(|t| t == "creature") || fd.types.iter().any(|t| t == "spell");
+                    }
+                    if ok {
                         match fi {
-                            None => opts.push(json!({"key": format!("strigger:{}", k.defn), "cid": c})),
-                            Some(f) => opts.push(json!({"key": format!("strigger:{}:{}", k.defn, f), "cid": c, "face": f})),
+                            None => opts.push(json!({"key": format!("strigger:{}", defn), "cid": c})),
+                            Some(f) => opts.push(json!({"key": format!("strigger:{}:{}", defn, f), "cid": c, "face": f})),
                         }
                     }
                 }
@@ -2854,7 +3295,14 @@ impl Engine {
         let tk = self.s.tasks.pop().unwrap();
         let chosen: Vec<i64> = tk["chosen"].as_array().unwrap().iter().map(|v| v.as_i64().unwrap()).filter(|&c| self.s.cards[c as usize].zone == "shield").collect();
         let reason = tk.get("reason").and_then(|v| v.as_str()).unwrap_or("break").to_string();
-        let mut seq = vec![self.ev_task(chosen.iter().map(|&c| json!({"ev": "move", "subject": self.refv(c), "to": "hand", "reason": reason})).collect())];
+        let task_st = tk.get("strigger").and_then(|v| v.as_str()).map(|s| s.to_string());
+        let mut seq = vec![self.ev_task(chosen.iter().map(|&c| {
+            let mut e = json!({"ev": "move", "subject": self.refv(c), "to": "hand", "reason": reason});
+            if let Some(st) = &task_st {
+                e["strigger"] = json!(st);   // 印は移動の適用時に手札のカードへ付く（Python の h_break と同じ）
+            }
+            e
+        }).collect())];
         seq.push(json!({"t": "enqueue_st", "cids": tk["declared"], "player": victim, "strigger": true}));
         let fire = tk.get("fire_break").and_then(|v| v.as_bool()).unwrap_or(true);
         if fire && !chosen.is_empty() {
@@ -3390,15 +3838,13 @@ impl Engine {
                 };
                 let chars_before = self.chars_json(cid);
                 let defn_before = self.s.cards[cid as usize].defn.clone();
-                let summon_hold = to == "bz" && czone == "hold" && reason == "summon";
-                let resolve_hold = czone == "hold" && ((to == "graveyard" || to == "mana" || to == "shield") && reason == "resolve" || to == "shield" && reason == "put");   // 唱え終えた呪文（スローリー・チェーンは自身をシールドへ）
-                if czone == "hold" && !summon_hold && !resolve_hold {
-                    return uns(format!("move {}→{}", from, to));
-                }
+                // hold（召喚・唱えの途中）からの移動も、置換（instead）で行き先が変わる場合を含めて
+                // Python の _apply_one と同じく通常の移動として適用する（旧ガードは subject 参照の
+                // 置換を塞いでいた。行き先はイベントの指定どおり）
                 if to == "bz" && czone != "hold" && !self.permits(cid, "enter_bz") {
                     return Ok(vec![]);   // 出せない（効果で出す場合はここで止まる）
                 }
-                let ctl = if summon_hold { Some(ev["controller"].as_i64().unwrap()) } else { None };
+                let ctl = if to == "bz" && czone == "hold" && reason == "summon" { Some(ev["controller"].as_i64().unwrap()) } else { None };
                 let pos = ev.get("position").and_then(|v| v.as_str()).unwrap_or("top").to_string();
                 // このカード自身が他のカードの下にあった場合の宿主（移動直前の姿。from_under 照合用）
                 let host = {
@@ -3468,6 +3914,30 @@ impl Engine {
                 }
                 if ev.get("face_up").and_then(|v| v.as_bool()).unwrap_or(false) && to == "shield" {
                     self.s.cards[cid as usize].face_up = true;   // 表向きでシールドに置く（Python の _apply_one と同じ）
+                    self.note_public("face_up", cid);
+                }
+                if ev.get("face_down").and_then(|v| v.as_bool()).unwrap_or(false) && to == "mana" {
+                    self.s.cards[cid as usize].face_down = true;   // 裏向きでマナに置く（Python の _apply_one と同じ）
+                }
+                if to == "hand" {
+                    if let Some(st) = ev.get("strigger").and_then(|v| v.as_str()) {
+                        if st == "off" || st == "on" {
+                            // S・トリガーの印（バンドC2 U68）: 手札に加わったカード（束の下のカードも含む）に付ける
+                            let mut targets = vec![cid];
+                            for &u in &unders {
+                                if self.s.cards[u as usize].zone == "hand" {
+                                    targets.push(u);
+                                }
+                            }
+                            for u in targets {
+                                if st == "off" {
+                                    self.s.cards[u as usize].strigger_off = true;
+                                } else {
+                                    self.s.cards[u as usize].strigger_on = true;
+                                }
+                            }
+                        }
+                    }
                 }
                 if let Some(st) = ev.get("summon_tapped").and_then(|v| v.as_array()) {
                     if !st.is_empty() {
@@ -3602,6 +4072,25 @@ impl Engine {
         }
     }
 
+    /// 公開イベントを s.pub に追記する（Python の note_public と同じ。cid つきの形だけ）
+    fn note_public(&mut self, kind: &str, cid: i64) {
+        let (gen, defn, owner, zone) = {
+            let c = &self.s.cards[cid as usize];
+            (c.gen, c.defn.clone(), c.owner, c.zone.clone())
+        };
+        let idx = match self.s.zones.get(&zone) {
+            Some(z) => {
+                let lst = if self.shared(&zone) { &z[0] } else { &z[owner as usize] };
+                lst.iter().position(|&x| x == cid).map_or(-1, |i| i as i64)
+            }
+            None => -1,
+        };
+        let n = self.s.r#pub.len() as i64;
+        let turn = self.s.turn;
+        self.s.r#pub.push(json!({"n": n, "turn": turn, "kind": kind, "viewers": [0, 1], "cid": cid, "gen": gen,
+                                 "defn": defn, "owner": owner, "zone": zone, "idx": idx}));
+    }
+
     fn raw_move(&mut self, cid: i64, to: &str, position: &str, controller: Option<i64>) {
         {
             let tp = self.s.cards[cid as usize].top_of;
@@ -3638,6 +4127,10 @@ impl Engine {
             c.gen += 1;
             if to != "mana" {
                 c.face_down = false;
+            }
+            if to != "hand" && (from == "hand" || from == "hold") {
+                c.strigger_off = false;   // S・トリガーの印は手札にある間だけ有効（手札を離れたら消える。Python の core と同じ）
+                c.strigger_on = false;
             }
             c.zone = to.to_string();
             c.tapped = to == "mana" && multi;

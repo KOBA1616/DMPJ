@@ -275,6 +275,130 @@ def test_trigger_shapes_match(real_env, seed):
     assert res["divergence"] is None and res["ok"] is True
 
 
+@pytest.mark.parametrize("seed", range(1, 21))
+def test_move_selector_shapes_match(real_env, seed):
+    """増分D: move の selector 拡張（参照の特殊名・ゾーンのリスト・除外／極値・合計制限つき選択・
+    フィルタの式の値・order の一般化・face_up/face_down・owner_of 等）を持つ札を多く入れたデッキで、
+    選択の決定（合計制限の1枚ずつ積み上げと tc_answers の再生を含む）まで含めて1局が一致する。"""
+    import random
+    r, b = real_env
+    pool = _portable(r)
+
+    def has_shape(i):
+        out = []
+
+        def w(ops):
+            for o in ops or []:
+                if isinstance(o, dict):
+                    out.append(o)
+                    for k in ("body", "then", "else"):
+                        if isinstance(o.get(k), list):
+                            w(o[k])
+                    if isinstance(o.get("modes"), list):
+                        for m in o["modes"]:
+                            if isinstance(m, list):
+                                w(m)
+        d = r.cards[i]
+        for f in (d.faces or [d]):
+            w(getattr(f, "spell", None))
+            for a in f.abilities or []:
+                if a["kind"] in ("trigger", "replace"):
+                    w(a.get("effect") or a.get("instead") or [])
+        for o in out:
+            if o.get("op") == "move" and ("face_up" in o or "face_down" in o):
+                return True
+            if o.get("op") == "move" and o.get("order") in ("choose", "shuffle") \
+                    and not (isinstance(o.get("select"), dict) and set(o["select"]) == {"ref"}):
+                return True
+            s = o.get("select")
+            if not isinstance(s, dict):
+                continue
+            if any(k in s for k in ("owner_of", "exclude", "extremal", "distinct_from", "distinct_costs",
+                                    "total_cost_le", "total_cost_ge", "total_power_le", "total_power_ge")):
+                return True
+            if s.get("ref") in ("subject", "self_moved", "self_entered") or str(s.get("ref", "")).startswith("event."):
+                return True
+            if s.get("ref") == "self" and set(s) != {"ref"}:
+                return True
+            if isinstance(s.get("zone"), list) or isinstance(s.get("from_top"), dict):
+                return True
+            if s.get("chooser") == "opponent":
+                return True
+            if "under_of" in s and (s.get("under_of") != "self" or "filter" in s):
+                return True
+            if any(isinstance(v, dict) for v in (s.get("filter") or {}).values()):
+                return True
+        return False
+    sel = [i for i in pool if has_shape(i)]
+    assert len(sel) >= 40
+    rnd = random.Random(seed)
+
+    def deck():
+        return [rnd.choice(sel) if rnd.random() < 0.6 else rnd.choice(pool) for _ in range(40)]
+    spec = {"kind": "new_game", "decks": [deck(), deck()], "seed": seed, "first_player": seed % 2}
+    res = lockstep(Session.open(r, spec), rustcore.RustSession.open(r, spec, b), f"random:{seed}")
+    assert res["divergence"] is None and res["ok"] is True
+
+
+@pytest.mark.parametrize("seed", range(1, 11))
+def test_total_select_cards_match(real_env, seed):
+    """増分D: 合計制限つき選択（total_cost_le 等と distinct_costs）を持つ札を多く入れたデッキで、
+    1枚ずつ積み上げる選択と下限到達時の打ち切りまで含めて1局が一致する。"""
+    import random
+    r, b = real_env
+    pool = _portable(r)
+
+    def has_total(i):
+        out = []
+
+        def w(ops):
+            for o in ops or []:
+                if isinstance(o, dict):
+                    out.append(o)
+                    for k in ("body", "then", "else"):
+                        if isinstance(o.get(k), list):
+                            w(o[k])
+        d = r.cards[i]
+        if d.spell:
+            w(d.spell)
+        for a in d.abilities:
+            if a["kind"] in ("trigger", "replace"):
+                w(a.get("effect") or a.get("instead") or [])
+        return any(isinstance(o.get("select"), dict) and any(
+            k in o["select"] for k in ("total_cost_le", "total_cost_ge", "total_power_le", "total_power_ge",
+                                       "distinct_costs", "distinct_from")) for o in out)
+    sel = [i for i in pool if has_total(i)]
+    assert len(sel) >= 10
+    rnd = random.Random(seed)
+
+    def deck():
+        return [rnd.choice(sel) if rnd.random() < 0.6 else rnd.choice(pool) for _ in range(40)]
+    spec = {"kind": "new_game", "decks": [deck(), deck()], "seed": seed, "first_player": seed % 2}
+    res = lockstep(Session.open(r, spec), rustcore.RustSession.open(r, spec, b), f"random:{seed}")
+    assert res["divergence"] is None and res["ok"] is True
+
+
+def test_owner_of_spell_matches(real_env):
+    """増分D: owner_of（束変数のカードの持ち主を対象にする）を含む呪文 dm23ex2-cho018 の照合。
+    対象クリーチャーの持ち主の手札から、コスト式（{sum: [{cost_of}, -1]}）で絞った
+    play_free まで通す構成。複数局のうち少なくとも1回はこの呪文が唱えられること。"""
+    r, b = real_env
+    spell = "dm23ex2-cho018"
+    assert rustcore._is_plain(r.cards[spell])
+    vanilla = [i for i, d in r.cards.items()
+               if d.types == ["creature"] and not d.abilities and d.cost <= 3 and rustcore._is_plain(d)][:8]
+    assert len(vanilla) >= 4
+    deck = [spell] * 20 + [vanilla[i % len(vanilla)] for i in range(20)]
+    played_any = False
+    for seed in range(1, 7):
+        spec = {"kind": "new_game", "decks": [deck, deck], "seed": seed, "first_player": seed % 2}
+        a, bb = Session.open(r, spec), rustcore.RustSession.open(r, spec, b)
+        res = lockstep(a, bb, f"random:{seed}")
+        assert res["divergence"] is None and res["ok"] is True
+        played_any = played_any or any(o.get("keys") and o["keys"][0] == f"play:{spell}" for o in a.eng.log)
+    assert played_any
+
+
 @pytest.mark.parametrize("seed", [1, 2, 3])
 def test_first_time_trigger_matches(real_env, seed):
     """増分C: first_time（各ターン、はじめて〜した時）の記録と抑制が踏まれる構成での照合。

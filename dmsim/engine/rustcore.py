@@ -47,12 +47,45 @@ _FILTER_INTS = ("cost_le", "cost_ge", "power_le", "power_ge")
 _FILTER_BOOLS = ("tapped", "multicolor", "colorless", "evolution")
 
 
-def _simple_filter(f) -> bool:
-    """Rust の filter_ok が Python の filter_match と同じ結果になるキー（値が式でないもの）だけ。"""
+def _num_refspec(v) -> bool:
+    """式の参照指定（変数名か {ref: 名前}、self / subject も可）。crossed と event.* は除く。"""
+    name = v if isinstance(v, str) else (v.get("ref") if isinstance(v, dict) and set(v) == {"ref"} else None)
+    return isinstance(name, str) and name != "crossed" and not name.startswith("event.")
+
+
+def _simple_num_expr(x) -> bool:
+    """Rust の eval_num が評価できる数式: 整数、{count: 単純セレクタ}、{sum/mul: [式...]}、
+    {cost_of/power_of: 参照}、{declared: 名前}、{civ_count: [文明...]}。"""
+    if isinstance(x, int) and not isinstance(x, bool):
+        return True
+    if not isinstance(x, dict) or len(x) != 1:
+        return False
+    k, v = next(iter(x.items()))
+    if k == "count":
+        return _simple_cands(v)
+    if k in ("sum", "mul"):
+        return isinstance(v, list) and all(_simple_num_expr(e) for e in v)
+    if k in ("cost_of", "power_of"):
+        return _num_refspec(v)
+    if k == "declared":
+        return isinstance(v, str)
+    if k == "civ_count":
+        return isinstance(v, list) and all(isinstance(c, str) for c in v)
+    return False
+
+
+def _simple_filter(f, exprs=False) -> bool:
+    """Rust の filter_ok が Python の filter_match と同じ結果になるキーだけ。
+    exprs=True の時だけ、解決時に値へ置き換える式の値（bake_filter が効くセレクタ経路用）も通す。"""
     if not isinstance(f, dict):
         return False
     for k, v in f.items():
         if k in _FILTER_LISTS:
+            if isinstance(v, dict):
+                if exprs and k == "races" and ((set(v) == {"race"} and isinstance(v["race"], str))
+                                               or (set(v) == {"declared"} and isinstance(v["declared"], str))):
+                    continue   # 解決時に種族のリストへ置き換える
+                return False
             if not (isinstance(v, list) and all(isinstance(x, str) for x in v)) and not (k in ("civs", "not_civs") and isinstance(v, str)):
                 return False
         elif k in _FILTER_INTS:
@@ -60,7 +93,11 @@ def _simple_filter(f) -> bool:
                     and (isinstance(v["cost_of"], str) or (isinstance(v["cost_of"], dict) and set(v["cost_of"]) == {"ref"})) \
                     and (v["cost_of"] if isinstance(v["cost_of"], str) else v["cost_of"]["ref"]) not in ("crossed",) \
                     and not str(v["cost_of"] if isinstance(v["cost_of"], str) else v["cost_of"]["ref"]).startswith("event."):
-                continue   # 参照カードのコスト（解決時に数へ置き換える）
+                continue   # 参照カードのコスト（解決時に数へ置き換える。従来から全経路で許可）
+            if isinstance(v, dict):
+                if exprs and _simple_num_expr(v):
+                    continue   # 解決時に数へ置き換える（セレクタ経路だけ）
+                return False
             if not isinstance(v, int) or isinstance(v, bool):
                 return False
         elif k in _FILTER_BOOLS:
@@ -70,6 +107,10 @@ def _simple_filter(f) -> bool:
             if not isinstance(v, str):
                 return False
         elif k in ("name", "name_has", "not_name"):
+            if isinstance(v, dict):
+                if exprs and set(v) == {"name_of"} and _num_refspec(v["name_of"]):
+                    continue   # 解決時に参照カードの名前へ置き換える
+                return False
             if not isinstance(v, str):
                 return False
         elif k == "not_race_has":
@@ -79,46 +120,92 @@ def _simple_filter(f) -> bool:
             if not isinstance(v, bool):
                 return False
         elif k == "any_of":
-            if not (isinstance(v, list) and all(_simple_filter(x) for x in v)):
+            if not (isinstance(v, list) and all(_simple_filter(x, exprs) for x in v)):
                 return False
         else:
             return False
     return True
 
 
+def _zone_names_ok(z) -> bool:
+    """zone 指定（名前か名前のリスト）が Rust の select / candidates_ro の扱えるゾーンだけか。"""
+    names = ("hand", "deck", "graveyard", "mana", "bz", "shield")
+    if isinstance(z, str):
+        return z in names
+    return isinstance(z, list) and len(z) > 0 and all(x in names for x in z)
+
+
 def _simple_selector(sel) -> bool:
-    """段階2-d: Rust の select が扱えるセレクタ（自身／ゾーン・持ち主・枚数・上から・選ぶ人・types 絞り込み）。"""
+    """段階2-d＋増分D: Rust の select が扱えるセレクタ（参照／ゾーン・持ち主・枚数・上から・選ぶ人・絞り込み、
+    EXライフ紐付き・下のカード・除外・極値・別集合と異なるコスト・合計制限つき選択）。"""
     if not isinstance(sel, dict):
         return False
     if sel == {"ref": "self"}:
         return True
-    if "under_of" in sel:   # メテオバーン: 自分の下のカード
-        return sel["under_of"] == "self" and set(sel) <= {"under_of", "count"} and isinstance(sel.get("count", 1), int) \
-            and not isinstance(sel.get("count", 1), bool)
-    if not set(sel) <= {"zone", "owner", "count", "from_top", "filter", "chooser", "look", "ref", "up_to", "other"}:
+    if "under_of" in sel:   # 自分／束変数の下のカード（メテオバーン等）
+        if not (isinstance(sel["under_of"], str) and set(sel) <= {"under_of", "count", "filter", "up_to"}):
+            return False
+        c = sel.get("count", 1)
+        if not (c in ("all", "any") or (isinstance(c, int) and not isinstance(c, bool))):
+            return False
+        up = sel.get("up_to", False)
+        if not isinstance(up, bool) or (up and c == "all") or (up and "count" not in sel):
+            return False
+        return _simple_filter(sel.get("filter", {}), exprs=True)
+    # exlife_of（EXライフの紐付きシールド）は Rust の select に実装済みだが、その形を持つ札は
+    # 全て ex_life / g_strike 等の別の未実装要素で plain にならず lockstep で検証できないため、
+    # ゲートはまだ開けない（検証できる増分で開ける）。
+    if not set(sel) <= {"zone", "owner", "count", "from_top", "filter", "chooser", "look", "ref", "up_to", "other",
+                        "owner_of", "exclude", "extremal", "distinct_from",
+                        "total_cost_le", "total_cost_ge", "total_power_le", "total_power_ge", "distinct_costs"}:
         return False
     if "look" in sel and not isinstance(sel["look"], bool):
         return False
-    if "ref" in sel:   # 変数（choose の as）を指す形。特殊な参照名は未対応
+    if "ref" in sel:   # self / subject / event.* / self_moved / self_entered / 変数（choose の as）
         r = sel["ref"]
-        if not isinstance(r, str) or r in ("self", "self_moved", "self_entered", "crossed", "subject") or r.startswith("event.") \
-                or {"zone", "owner", "from_top"} & set(sel):
+        if not isinstance(r, str) or r == "crossed" or (r.startswith("event.") and r not in
+                ("event.subject", "event.target", "event.attacker", "event.opponent", "event.shield", "event.top", "event.under")):
             return False
-    elif sel.get("zone") not in ("hand", "deck", "graveyard", "mana", "bz", "shield") or sel.get("owner", "you") not in ("you", "opp", "any"):
+        if r in ("self_moved", "self_entered"):
+            # candidates が即返しする形: filter / zone / owner / from_top は効かないので併記を禁じる
+            if not set(sel) <= {"ref", "count", "up_to", "chooser", "look"}:
+                return False
+        else:
+            if "owner" in sel or "from_top" in sel or "owner_of" in sel or "exclude" in sel or "extremal" in sel or "distinct_from" in sel:
+                return False
+            if "zone" in sel and not _zone_names_ok(sel["zone"]):
+                return False
+    elif "owner_of" in sel:   # 束変数のカードの持ち主たち（ターンプレイヤーから順）
+        if not isinstance(sel["owner_of"], str) or "owner" in sel or not _zone_names_ok(sel.get("zone")):
+            return False
+    elif not _zone_names_ok(sel.get("zone")) or sel.get("owner", "you") not in ("you", "opp", "any"):
         return False
-    if sel.get("chooser", "you") not in ("you", "opp", "random"):
+    if "exclude" in sel:   # ゾーン経路の候補から引く除外セレクタ（数えるだけの形だけ）
+        subs = sel["exclude"] if isinstance(sel["exclude"], list) else [sel["exclude"]]
+        if not subs or not all(isinstance(s, dict) and _simple_cands(s) for s in subs):
+            return False
+    if "extremal" in sel and sel["extremal"] not in ("min_power", "max_power"):
         return False
-    if sel.get("chooser") == "random" and (sel.get("up_to") or sel.get("look") or "total_cost_le" in sel):
+    if "distinct_from" in sel and not _simple_cands(sel["distinct_from"]):
         return False
+    for tk in ("total_cost_le", "total_cost_ge", "total_power_le", "total_power_ge"):
+        if tk in sel and not _simple_num_expr(sel[tk]):
+            return False
+    if "distinct_costs" in sel and sel["distinct_costs"] is not True:
+        return False
+    if sel.get("chooser", "you") not in ("you", "opp", "opponent", "random"):
+        return False
+    if sel.get("chooser") == "random" and any(tk in sel for tk in
+            ("total_cost_le", "total_cost_ge", "total_power_le", "total_power_ge", "distinct_costs")):
+        return False   # ランダム選択では合計制限は Python でも無視されるが、混同を避けて通さない
     c = sel.get("count", 1)
     if not (c in ("all", "any") or (isinstance(c, int) and not isinstance(c, bool))):
         return False
     if c == "any" and (sel.get("up_to") or sel.get("chooser") == "random"):
         return False
-    ft = sel.get("from_top", 0)
-    if not (isinstance(ft, int) and not isinstance(ft, bool)):
+    if "from_top" in sel and not _simple_num_expr(sel["from_top"]):
         return False
-    if not _simple_filter(sel.get("filter", {})):
+    if not _simple_filter(sel.get("filter", {}), exprs=True):
         return False
     up = sel.get("up_to", False)
     if not isinstance(up, bool) or (up and c == "all") or (up and "count" not in sel):
@@ -134,9 +221,9 @@ def _simple_cands(sel) -> bool:
         return False
     if "ref" in sel:
         return isinstance(sel["ref"], str) and not sel["ref"].startswith("event.") and sel["ref"] not in ("self_moved", "self_entered", "crossed", "subject") \
-            and set(sel) <= {"ref", "filter"} and ("filter" not in sel or _simple_filter(sel["filter"]))
-    return sel.get("zone") in ("hand", "deck", "graveyard", "mana", "bz", "shield") and sel.get("owner", "you") in ("you", "opp", "any") \
-        and isinstance(sel.get("from_top", 0), int) and ("filter" not in sel or _simple_filter(sel["filter"])) and isinstance(sel.get("other", False), bool)
+            and set(sel) <= {"ref", "filter"} and ("filter" not in sel or _simple_filter(sel["filter"], exprs=True))
+    return _zone_names_ok(sel.get("zone")) and sel.get("owner", "you") in ("you", "opp", "any") \
+        and isinstance(sel.get("from_top", 0), int) and ("filter" not in sel or _simple_filter(sel["filter"], exprs=True)) and isinstance(sel.get("other", False), bool)
 
 
 def _simple_expr(x) -> bool:
@@ -199,10 +286,13 @@ def _simple_effect(ops, top=True) -> bool:
             continue
         if k == "flip_down" and set(o) <= {"op", "select"} and _simple_selector(o.get("select")) and o["select"].get("zone") in ("mana", "shield"):
             continue   # 裏向きにする（マナは無色として払う）。イベントは作らない
-        if k == "move" and "order" in o and not (o["order"] == "choose" and o.get("to") == "deck" and isinstance(o.get("select"), dict)
-                                                  and set(o["select"]) == {"ref"}):
-            return False   # 並べ替えは、選ばせない参照（変数の全部）を山札へ置く時だけ
-        if k == "move" and set(o) <= {"op", "select", "to", "reason", "position", "tapped", "order", "as"} and isinstance(o.get("tapped", False), bool) and o.get("to") in ("hand", "graveyard", "mana", "deck", "shield", "bz") \
+        if k == "move" and "order" in o and o["order"] not in ("choose", "shuffle"):
+            return False   # 並べ替え（choose: 山札へ置く時の順序指定）と無作為化（shuffle）は Rust の op_move が写せている
+        # strigger（S・トリガーの印）は Rust に実装済みだが、その形を持つ札は全て escape 等の
+        # 別の未実装要素で plain にならず lockstep で検証できないため、ゲートはまだ開けない。
+        if k == "move" and set(o) <= {"op", "select", "to", "reason", "position", "tapped", "order", "as", "face_up", "face_down"} and isinstance(o.get("tapped", False), bool) \
+                and isinstance(o.get("face_up", False), bool) and isinstance(o.get("face_down", False), bool) \
+                and o.get("to") in ("hand", "graveyard", "mana", "deck", "shield", "bz") \
                 and isinstance(o.get("reason"), str) and o.get("position", "top") in ("top", "bottom") and _simple_selector(o.get("select")) and isinstance(o.get("as", ""), str):
             continue
         return False
