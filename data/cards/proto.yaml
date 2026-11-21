@@ -14335,3 +14335,32 @@ cards:
               effect:
                 - {op: break, player: opp, count: 1}
         duration: end_of_turn
+  - id: T996
+    name: 試験用瞬閃と疾駆と双撃の決断型
+    types: [spell]
+    civs: [fire]
+    cost: 3
+    mana: 1
+    text: "次の中から２回選ぶ。同じものを選んでもよい。\n▶コスト３以下のクリーチャーを１体、自分の手札から出す。\n▶このターン、自分のクリーチャー１体に「スピードアタッカー」を与える。\n▶自分のクリーチャーを１体選ぶ。このターン、そのクリーチャーの最初の攻撃の終わりに、そのクリーチャーをアンタップする。（第327弾: first_attack_end。dm26ex4-cho025 型）"
+    spell:
+      - op: modal
+        count: 2
+        repeat: true
+        modes:
+          - - op: play_free
+              select: {zone: hand, owner: you, filter: {types: [creature], cost_le: 3}, count: 1}
+          - - op: choose
+              select: {zone: bz, owner: you, filter: {types: [creature]}, count: 1}
+              as: c
+            - op: modify
+              select: {ref: c, count: all}
+              mod: {grant: [speed_attacker]}
+              duration: end_of_turn
+          - - op: choose
+              select: {zone: bz, owner: you, filter: {types: [creature]}, count: 1}
+              as: chosen
+            - op: delayed_trigger
+              when: {event: attack_end, subject: {ref: chosen}}
+              effect:
+                - {op: untap, select: {ref: chosen}}
+              duration: end_of_turn
