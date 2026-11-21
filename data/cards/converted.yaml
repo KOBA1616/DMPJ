@@ -64743,28 +64743,25 @@ cards:
         amount: 2
         then: destroy
   - kind: static
-    affects:
-      ref: self
+    affects: self
     mod:
       battle_power:
         amount: 5000
   - kind: trigger
-    zone: graveyard
     when:
       event: move
+      from: bz
       to: graveyard
+      reason: destroy
       subject: self
     if:
-      exists:
-        ref: self
-        filter:
-          tapped: true
+      subject_tapped: true
     effect:
     - op: extra_turn
   source:
     official: dm26rp3-tr005
     review: pending
-    notes: バトル中のパワーは static の battle_power mod で表した。タップ状態は墓地に置かれた直前の状態として exists で判定した
+    notes: バトル中のパワーは static の battle_power mod で表した。タップ状態は墓地に置かれた直前の状態として exists で判定した（ラウンド365で修正。exists 形は墓地でアンタップに戻った姿を読むため誘発せず、battle_power の affects の ref self も self と扱われず効かなかった。いずれも第330弾の形（affects は self／when は move from bz reason destroy かつ if は subject_tapped）に差し替え、実挙動で確認済み）
   keywords:
   - speed_attacker
   - double_breaker
@@ -466521,7 +466518,8 @@ cards:
     official: dm26ex4-cho047
     review: pending
     notes: '再変換ラウンド364。第329弾の再変換（shield_placement_trigger を {event: move, to: shield,
-      subject: {owner: you}} の確立形で、墓地の誘発は zone: graveyard＋may＋move {ref: self} to: bz reason: put。原文と厳密に一致）'
+      subject: {owner: you}} の確立形で、墓地の誘発は zone: graveyard＋may＋move {ref: self} to:
+      bz reason: put。原文と厳密に一致）'
     aliases:
     - dm25ex3-055
     - dm25rp2-048
@@ -466630,3 +466628,117 @@ cards:
           mod:
             no_leave: true
           duration: until_next_own_turn_start
+- id: dmr18-s04
+  name: 超復讐 ギャロウィン
+  types:
+  - creature
+  - evolution
+  civs:
+  - darkness
+  cost: 6
+  mana: 1
+  power: 8000
+  races:
+  - デーモン・コマンド
+  - 侵略者
+  evolve_from:
+    civs:
+    - darkness
+    types:
+    - creature
+  text: 進化―自分の闇のクリーチャー１体の上に置く。侵略―闇のコマンドW・ブレイカーこのクリーチャーまたは自分の他のクリーチャーが破壊された時、このクリーチャーがタップしていたら、相手のクリーチャーを１体破壊し、《超復讐
+    ギャロウィン》以外の闇のクリーチャーを１体自分の墓地から手札に戻す。
+  source:
+    official: dmr18-s04
+    review: pending
+    notes: 再変換ラウンド365。第330弾の再変換（destroyed_while_tapped のうち自身が破壊された場合を新条件 subject_tapped
+      で追加。他のクリーチャーが破壊された場合は partial どおり exists のタップ条件。原文と厳密に一致）
+  keywords:
+  - double_breaker
+  abilities:
+  - kind: declare
+    zone: hand
+    when:
+      event: attack
+      subject:
+        owner: you
+        filter:
+          civs:
+          - darkness
+          race_has: コマンド
+    effect:
+    - op: may
+      body:
+      - op: invade
+        onto:
+          ref: event.subject
+  - kind: trigger
+    when:
+      event: move
+      from: bz
+      to: graveyard
+      reason: destroy
+      subject:
+        owner: you
+        other: true
+        filter:
+          types:
+          - creature
+    if:
+      exists:
+        ref: self
+        filter:
+          tapped: true
+    effect:
+    - op: destroy
+      select:
+        zone: bz
+        owner: opp
+        filter:
+          types:
+          - creature
+        count: 1
+    - op: move
+      select:
+        zone: graveyard
+        owner: you
+        filter:
+          civs:
+          - darkness
+          types:
+          - creature
+          not_name: 超復讐 ギャロウィン
+        count: 1
+      to: hand
+      reason: return
+  - kind: trigger
+    when:
+      event: move
+      from: bz
+      to: graveyard
+      reason: destroy
+      subject: self
+    if:
+      subject_tapped: true
+    effect:
+    - op: destroy
+      select:
+        zone: bz
+        owner: opp
+        filter:
+          types:
+          - creature
+        count: 1
+    - op: move
+      select:
+        zone: graveyard
+        owner: you
+        filter:
+          civs:
+          - darkness
+          types:
+          - creature
+          not_name: 超復讐 ギャロウィン
+        count: 1
+      to: hand
+      reason: return

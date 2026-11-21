@@ -4826,3 +4826,11 @@ pilot329 cards を登録形に書換、round364 cards を新設（登録カー�
 教訓: セットアップ時に置いたカードのタップ指定は、最初のターン開始のアンタップで消える。タップ状態で破壊する検証は、main の決定時点でタップを指定すること（第329弾の tr002 は deny untap_at_start があったため消えなかった）。追加ターンの検証は extra_turns の残量ではなく「次の charge が自分の追加ターンか」で見ること（追加ターンは開始時に extra_turns から取り出される）。ブロッカーでないクリーチャーではブロック検証はできない（T142 はブロッカーではない）。
 
 proto T1001（dm26ex1-021 型）・T1002（dmr18-s04 型）・T1003（駆動用の破壊呪文）・T1004（駆動用のパワー13000ブロッカー）。テスト9件通過（pilot330 本体 7: 形の一致、タップ状態で破壊→追加ターン／アンタップ状態→追加ターンなし、バトル中のパワー+5000 で格上に勝つ、自身がタップ状態で破壊→破壊＋回収／アンタップ状態→無誘発、他のクリーチャーが破壊され自身がタップ→誘発、＋pilot330 cards 提出前 2）。次の番号: パイロット331 / ラウンド366 / プロト T1005。
+
+### ラウンド365（第330弾の再変換）
+
+**新規登録1件**（dmr18-s04 超復讐 ギャロウィン＝partial の declare＋他者破壊時の誘発に、自身が破壊された場合の誘発（if subject_tapped）を同効果で追加。登録形は確立形と完全一致で連結混入なし）・**stale クリーンアップ1件**（dm26ex1-021 の rejects 行）・**登録済みカードの修正1件**（dm26rp3-tr005）・**alias 畳み込み0件**・**差し戻し0件**。converted 10,279→**10,280** / rejects 2,036→**2,034**、重なり0・漏れ0。destroyed_while_tapped は残り0件でファミリー解消。
+
+dm26ex1-021 の行は非正本だった: identity.canon_id は dm26rp3-tr005 で、submit は load_rows が正本に畳み込むため「取得済みの原文に無いID」で弾いた。正本は既に登録済みだったが、実挙動を検証すると2条項とも不発だった。(1) 破壊時誘発は zone: graveyard＋if exists {ref: self, filter: {tapped: true}} で、墓地に置かれたカードはアンタップに戻る（実測: 破壊直前の tapped=True が墓地では False、pending 0件）ため決して誘発しない。(2) battle_power の常在型は affects: {ref: self} で、_battle_bonus が非 gain の常在型では self と扱わず（実測: パワー13000のブロッカーに 9000 のまま敗北）、+5000 が効いていなかった。いずれも第330弾の形（affects: self／trigger {when: {event: move, from: bz, to: graveyard, reason: destroy, subject: self}, if: {subject_tapped: true}}）に差し替え、登録カード自身で実挙動を確認した（タップ状態で破壊→追加ターン／バトルで格上に勝利）。教訓: rejects 行の id が正本とは限らない（submit 前に canon_id を確認すること）。登録済みでも形が正しいとは限らない（疑わしい形は実挙動で確かめること）。converted.yaml の notes は無引用スカラーのため、ASCII の「: 」や波括弧を含む文章を書くと YAML が壊れる（全角記号で逃がすこと）。
+
+pilot330 cards を登録形に書換、round365 cards を新設（登録カード自身の実挙動: 正本の追加ターン／正本のバトルパワー／dmr18-s04 の自身破壊時の破壊＋回収）。テスト21 passed（round365 cards 4＋pilot330 cards 登録形 2＋pilot330 本体 7＋data_audit 8）。回帰はパイロット・ルール系 122 passed / 0 failed（エンジン拡張の影響なし）、round357〜364 の disposition は件数固定の stale なだけの既知パターンで 8 failed。回答は answers/round365.yaml に保存。次の番号: パイロット331 / ラウンド366 / プロト T1005。

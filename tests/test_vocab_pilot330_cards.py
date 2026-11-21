@@ -1,24 +1,26 @@
-"""語彙パイロット第330弾の対象カード検証（提出前）。
+"""語彙パイロット第330弾の対象カード検証（登録形）。
 
 対象は pure な destroyed_while_tapped 2件（いずれも partial あり）:
-- dm26ex1-021 勝利龍装 クラッシュ"覇道"（partial は B・A・D の
-  static のみ。canon_id は自身、登録時に aliases 7件が自動記録
-  される見込み）
-- dmr18-s04 超復讐 ギャロウィン（partial は侵略の declare と
-  「自分の他のクリーチャーが破壊された時」の誘発まで変換済み。
-  不足は自身が破壊された場合だけ。canon_id は自身、aliases 無し）
+- dm26ex1-021 勝利龍装 クラッシュ"覇道": rejects 行の id は
+  非正本で、正本は dm26rp3-tr005（identity.canon_id）。正本は
+  既に登録済みだったが、2条項が壊れていた（下記）。行は stale
+  クリーンアップとして reopen で除去済み。
+- dmr18-s04 超復讐 ギャロウィン: ラウンド365で新規登録。
+  canon_id は自身、aliases 無し。
+
+正本 dm26rp3-tr005 の登録形は当初、破壊時誘発が
+zone: graveyard＋if exists {ref: self, filter: {tapped: true}}
+（墓地に置かれたカードはアンタップに戻るため決して誘発しない）、
+battle_power の常在型が affects: {ref: self}（_battle_bonus が
+self と扱わず効かない）で、いずれも実挙動で不発を確認した。
+ラウンド365で第330弾の形（affects: self／when move from bz
+reason destroy＋if subject_tapped）に修正し、実挙動で確認済み。
+登録形の能力順は [B・A・D static, battle_power static, 誘発]。
 
 第330弾の結論はエンジン拡張（条件キー subject_tapped の追加）:
 {subject_tapped: bool} は env["event"]["lki"]["tapped"]（移動
 直前のタップ状態）を読む。defs.py Checker.cond＋schema.py＋
 card.schema.json 再生成＋selectors.py eval_cond の4点セット。
-他の条項は既存形（extra_turn op／battle_power mod／exists の
-タップ条件）。
-
-ラウンド365で登録する。正本は real.yaml / real_akashic.yaml /
-real_vocab.yaml / real_zone.yaml / proto.yaml / converted.yaml の
-いずれにも無く、対象 id 自体に aliases 記録も無いことを提出前に
-確認済み。
 
 注意: conftest を import すると DMSIM_SKIP_CONVERTED が復活するので
 _conv_cache を直接使う（第319弾以降の作法）。
@@ -40,8 +42,6 @@ CONVERTED = cardstore.converted_path(DATA)
 REJECTS = ROOT / "data" / "cards" / "raw" / "rejects.jsonl"
 TABLES = load_tables()
 
-TARGETS = {"dm26ex1-021", "dmr18-s04"}
-
 BAD = {"kind": "static", "affects": "self", "zone": "hand",
        "mod": {"opt_reduce": {"amount": 2, "then": "destroy"}}}
 
@@ -55,7 +55,8 @@ DESTROYED_TAPPED = {
 BATTLE_POWER = {"kind": "static", "affects": "self",
                 "mod": {"battle_power": {"amount": 5000}}}
 
-FORM_021 = [BAD, DESTROYED_TAPPED, BATTLE_POWER]
+FORM_021_PROTO = [BAD, DESTROYED_TAPPED, BATTLE_POWER]
+FORM_021_CANON = [BAD, BATTLE_POWER, DESTROYED_TAPPED]
 
 DECLARE = {"kind": "declare", "zone": "hand",
            "when": {"event": "attack",
@@ -106,29 +107,45 @@ def _rows():
     return out
 
 
-def test_targets_not_yet_registered():
+def test_targets_registered():
     rows = _rows()
-    assert len(rows) == 2036
+    assert len(rows) == 2034
     conv = _conv_cache.all_cards(CONVERTED)
     ids = {c["id"] for c in conv}
-    assert len(ids) == 10279
+    assert len(ids) == 10280
     assert not (ids & set(rows))          # canonical 重なり0
-    # 漏れ0の前提: 正本は未登録で reject 行に残っている
-    assert not (TARGETS & ids) and TARGETS <= set(rows)
-    for t in TARGETS:
-        assert rows[t].get("gaps") == ["destroyed_while_tapped"]
+    # dm26ex1-021 の行は stale として除去済み（登録もされない）
+    assert "dm26ex1-021" not in ids and "dm26ex1-021" not in rows
+    # 正本 dm26rp3-tr005 は第330弾の形に修正された登録形
+    c = _conv_cache.find(CONVERTED, "dm26rp3-tr005")
+    assert c is not None
+    assert c["abilities"] == FORM_021_CANON
+    assert c["keywords"] == ["speed_attacker", "double_breaker"]
+    assert not (c.get("source") or {}).get("unsupported")
+    d = parse_card(c, TABLES)
+    assert len(d.abilities) >= 3
+    # dmr18-s04 は新規登録
+    assert "dmr18-s04" in ids and "dmr18-s04" not in rows
+    c = _conv_cache.find(CONVERTED, "dmr18-s04")
+    assert c is not None
+    assert c["abilities"] == FORM_S04
+    assert c["keywords"] == ["double_breaker"]
+    assert not (c.get("source") or {}).get("unsupported")
+    assert not (c.get("source") or {}).get("aliases")
+    d = parse_card(c, TABLES)
+    assert len(d.abilities) >= 3
+    # destroyed_while_tapped は残り0件でファミリー解消
     left = {rid for rid, r in rows.items()
             if "destroyed_while_tapped" in (r.get("gaps") or [])}
-    assert left == TARGETS, left
+    assert left == set(), left
 
 
 def test_proto_forms_match():
     c = proto_card("T1001")
-    assert c["abilities"] == FORM_021
+    assert c["abilities"] == FORM_021_PROTO
     d = parse_card(c, TABLES)
     assert len(d.abilities) >= 3
     c = proto_card("T1002")
-    # proto 側は not_name が proto 名（試験用ギャロウィン）になる
     assert c["abilities"][0] == DECLARE
     assert c["abilities"][1]["when"] == OTHER_TRIGGER["when"]
     assert c["abilities"][1]["if"] == OTHER_TRIGGER["if"]
