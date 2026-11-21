@@ -168,6 +168,9 @@ def make_candidates(order_name: str, stage: int):
         eff = kind_caps.get(_classify(d), 10 ** 9)   # single は表に無い = 無制限
         return _ordered_combos(eng, d, w, order_name, eff)
 
+    # Rust 側の展開ループ（増分E）が同じ候補生成を写せるよう、素性を属性で持つ
+    # （振る舞いは変えない。exhaustive_crossturn の委譲ゲートが読む）。
+    cands._rust_cand = {"mode": "stage", "order": order_name, "stage": stage}
     return cands
 
 

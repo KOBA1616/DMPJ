@@ -1858,7 +1858,7 @@ impl Engine {
         Ok(None)
     }
 
-    fn play_options(&self, p: i64) -> Vec<Value> {
+    pub(crate) fn play_options(&self, p: i64) -> Vec<Value> {
         let mut out = vec![];
         for o in self.distinct_hand_options(p, "play") {
             let cid = o["cid"].as_i64().unwrap();

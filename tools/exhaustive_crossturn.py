@@ -54,6 +54,9 @@ from exhaustive_proto import STAGES, _make_stage_search, cfg_suffix, stage_candi
 from order_fn import ruler_key  # noqa: E402
 
 _W = Weights()
+# 候補生成の既定関数（run_case 等が turn.candidates を差し替える前の姿）。
+# Rust 展開への委譲ゲートが「いま入っている候補生成を Rust が写せるか」の判定に使う。
+_DEFAULT_CANDIDATES = turn.candidates
 _PLANNERS: list[MacroPlanner] = []
 # ペース設計 B（docs/phase-chain-plan.md §6(a) の「局面に応じて鎖を選ぶ」の
 # ターン軸）: 鎖が2本（序盤・終盤）ある場合の選び方。
@@ -120,6 +123,95 @@ _MEM_LIMIT_MB = 0        # 最大RSS の上限MB（0 = 無制限。main が設�
 
 class _CapReached(Exception):
     pass
+
+
+def _rust_expand_params(coll: "LeafCollector", eng, node_budget: int):
+    """Rust 側の展開ループ（dmcore の expand_turn、増分E）への委譲可否と、
+    可能ならパラメータ dict を返す。不可なら None。
+
+    段階1の範囲は「ループ検出なし・チェックポイントなし」の走査だけなので、
+    委譲は環境変数 DMSIM_RUST_EXPAND=1 の明示オプトイン時のみ。検出器が要る
+    本番のラベル付け・探索では使わない（段階2で検出器を写してから広げる）。
+    ゲート: 再開・経路保持なし、マクロ空、value_fn / time_limit なし、相手役は
+    既定（charge_only）、lookahead なし、KEEP_HAND / DRAWOUT_ORDER なし、
+    候補生成は既定か段方式（_rust_cand 属性つき）だけ、対象は RustEngine 本体。"""
+    if os.environ.get("DMSIM_RUST_EXPAND") != "1":
+        return None
+    ts = coll.ts
+    if coll.track_path or ts.collect is not None or ts.value_fn is not None \
+            or ts.time_limit is not None:
+        return None
+    if ts.opp_policy is not turn.charge_only_policy:
+        return None
+    if ts.w.lookahead or turn.KEEP_HAND is not None or turn.DRAWOUT_ORDER():
+        return None
+    from dmsim.search import macro as _macro_mod
+    ms = ts.macros if ts.macros is not None else _macro_mod.active()
+    if ms:
+        return None
+    if not isinstance(eng, rustcore.RustEngine) or eng._c is None \
+            or eng._fb is not None or not rustcore.enabled():
+        return None
+    fn = turn.candidates
+    if fn is _DEFAULT_CANDIDATES:
+        cand = {"mode": "default"}
+    else:
+        cand = getattr(fn, "_rust_cand", None)
+        if cand is None:
+            return None
+    w = ts.w
+    return {"me": ts.me, "budget": node_budget, "leaf_cap": LEAF_CAP,
+            "combo_cap": ts.combo_cap,
+            "weights": {"shield": w.shield, "threat": w.threat, "mana": w.mana,
+                        "hand": w.hand, "board": w.board, "opp_deck": w.opp_deck,
+                        "deck_danger": w.deck_danger, "max_mana": w.max_mana,
+                        "deck_keep": w.deck_keep, "goal_card": w.goal_card,
+                        "goal_dist": w.goal_dist},
+            "repeat_first": bool(turn.REPEAT_FIRST if ts.repeat_first is None
+                                 else ts.repeat_first),
+            "charge_keep_free": bool(turn.CHARGE_KEEP_FREE),
+            "cand": cand,
+            "root_log": len(eng.log) - eng._base_n,
+            "zones_counter": {z: bool(zd["counter"])
+                              for z, zd in eng.rules.zones.items()}}
+
+
+def _rust_expand_collect(coll: "LeafCollector", eng, node_budget: int):
+    """LeafCollector.collect の Rust 委譲。成功したら collect の戻り値を返し、
+    委譲できない／失敗したら None を返して呼び出し側が Python ループに倒す。
+    葉は dmcore の Engine と (value, log, digest) のメタ情報で受け取り、
+    従来と同じ RustEngine に戻してから _add_leaf と同じ経路
+    （leaf_count・on_leaf・葉リスト）で流す。"""
+    params = _rust_expand_params(coll, eng, node_budget)
+    if params is None:
+        return None
+    got = rustcore.expand_turn(eng, params)
+    if got is None:
+        return None
+    out, cores = got
+    ts = coll.ts
+    rules = eng.rules
+    prefix = list(eng.log[:eng._base_n])
+    for lf, core in zip(out["leaves"], cores):
+        state = rustcore.state_from_json(core.to_json())
+        log = prefix + lf["log"]
+        try:
+            leng = rustcore.RustEngine(rules, state, log, eng.step_limit,
+                                       eng.turn_limit, _core=core)
+        except Exception:
+            from dmsim.engine import Engine as _PyEngine
+            leng = _PyEngine(rules, state, step_limit=eng.step_limit,
+                             turn_limit=eng.turn_limit)
+            leng.log = log
+        coll.leaf_count += 1
+        if coll.on_leaf is not None:
+            coll.on_leaf(lf["value"], leng, ())
+        else:
+            coll.leaves.append((lf["value"], leng, ()))
+    coll.truncated = bool(out["truncated"])
+    ts.left = out["left"]
+    ts.stats.nodes = out["nodes"]
+    return coll.leaves, coll.truncated, ts.stats.nodes
 
 
 class GuideMismatch(Exception):
@@ -216,6 +308,10 @@ class LeafCollector:
                          "leaf_key": resume.get("leaf_key")}
             guide = [tuple(s) for s in resume["path"]]
             self._guide_done = False
+        if resume is None:
+            got = _rust_expand_collect(self, eng, node_budget)
+            if got is not None:
+                return got
         det = Detectors.new(eng, ts.me, ts.draw_discard)
         try:
             self._rec(eng.clone(), det, guide)

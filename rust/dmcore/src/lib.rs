@@ -2,6 +2,7 @@
 //! Python からは clone / digest / to_json / from_json と、準備（new_game）だけを呼ぶ。
 mod engine;
 mod rules;
+mod search;
 mod setup;
 mod state;
 
@@ -138,6 +139,32 @@ impl PyEngine {
     }
     fn log(&self) -> String {
         serde_json::Value::Array(self.e.log.clone()).to_string()
+    }
+    /// 増分E・段階1: ターン内展開ループ（search::expand_turn）。params_json は
+    /// dmsim.engine.rustcore.expand_turn が組み立てる。戻り値は (メタ情報 JSON, 葉の Engine 列)。
+    /// 走査は大きなスタックのスレッドで回す（Python の再帰と同じ深さの DFS を Rust の再帰で写すため）。
+    fn expand_turn(&self, params_json: &str) -> PyResult<(String, Vec<PyEngine>)> {
+        let e = self.e.clone();
+        let pj = params_json.to_string();
+        let h = std::thread::Builder::new()
+            .stack_size(512 * 1024 * 1024)
+            .spawn(move || search::expand_turn(&e, &pj))
+            .map_err(|e| PyValueError::new_err(e.to_string()))?;
+        match h.join() {
+            Ok(r) => r
+                .map(|(meta, engines)| {
+                    (meta, engines.into_iter().map(|e| PyEngine { e }).collect())
+                })
+                .map_err(conv),
+            Err(_) => Err(PyValueError::new_err("expand_turn panicked")),
+        }
+    }
+    /// 照合用: engine.loop.abstract(eng, "in_turn") の骨格ハッシュ。
+    /// zones_counter_json は {ゾーン名: counter か} の JSON。
+    fn abstract_hash(&self, zones_counter_json: &str) -> PyResult<String> {
+        let zc: std::collections::HashMap<String, bool> =
+            serde_json::from_str(zones_counter_json).map_err(|e| PyValueError::new_err(e.to_string()))?;
+        Ok(search::abstract_hash_of(&self.e, &zc))
     }
 }
 

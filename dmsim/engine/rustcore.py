@@ -973,6 +973,23 @@ def maybe_rust(eng):
         return eng
 
 
+def expand_turn(reng, params: dict):
+    """増分E・段階1: RustEngine のコアでターン内展開ループ（dmcore の expand_turn）を回す。
+
+    params は exhaustive_crossturn 側が組み立てる（予算・葉上限・重み・候補生成の
+    記述・ゾーンの counter 表など）。戻り値は (メタ情報 dict, 葉の dmcore.Engine の列)。
+    メタ情報は {leaves: [{value, log, digest}], truncated, nodes, left, leaf_count} で、
+    葉の列はメタ情報の leaves と同じ順。dmcore が古い・未対応の語彙に当たった等の
+    場合は None を返し、呼び出し側が Python ループに倒す（maybe_rust と同じ作法）。"""
+    if not isinstance(reng, RustEngine) or reng._c is None:
+        return None
+    try:
+        meta, cores = reng._c.expand_turn(json.dumps(params))
+    except Exception:
+        return None
+    return json.loads(meta), cores
+
+
 class _LazyState:
     """RustEngine.s の軽い代役: よく読む小さな値（active / turn / first_player / step / result）は Rust から直接読み、
     それ以外に触れた時だけ状態全体を Python の GameState に変換する。result への代入は Rust に書く。"""
