@@ -640,8 +640,13 @@ class Checker:
             raise DefError(f"{where}: double_power must be true")
         if "power" in m and isinstance(m["power"], dict):
             pm = m["power"]
-            if set(pm) - {"amount", "count"} or not isinstance(pm.get("amount"), int):
-                raise DefError(f"{where}: power needs amount (int) and optional count")
+            amt = pm.get("amount")
+            amt_ok = isinstance(amt, int) or _is_var_ref(amt) \
+                or (isinstance(amt, dict) and set(amt) == {"power_of"})
+            if set(pm) - {"amount", "count"} or not amt_ok:
+                raise DefError(f"{where}: power needs amount (int, {{var: name}}, or {{power_of: ref}}) and optional count")
+            if isinstance(amt, dict) and "power_of" in amt:
+                self.expr(amt, where)   # パワー移転（第333弾）: op_modify の生成時ベイクでリテラルに固定する。常在型に直接書くと chars が整数を前提とするため使えない
             if "count" in pm:
                 self.count_spec(pm["count"], where)
         if "power_set" in m and not isinstance(m["power_set"], int):   # 第272弾: パワー置換は整数

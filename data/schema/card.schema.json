@@ -2997,7 +2997,21 @@
        "type": "object",
        "properties": {
         "amount": {
-         "type": "integer"
+         "anyOf": [
+          {
+           "type": "integer"
+          },
+          {
+           "type": "object",
+           "properties": {
+            "power_of": {},
+            "var": {
+             "type": "string"
+            }
+           },
+           "additionalProperties": false
+          }
+         ]
         },
         "count": {
          "anyOf": [

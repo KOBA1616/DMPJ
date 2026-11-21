@@ -14635,3 +14635,53 @@ cards:
       official: proto
       review: pending
       notes: "語彙パイロット第332弾の対象（dm22rp2x-026 型）。シビルカウントは partial の確立形。破壊されたクリーチャーは choose の as で束縛し、遅延誘発の effect が vars 経由で参照する（ニンジャ・ストライクの先例）。"
+
+  - id: T1010
+    name: 試験用ブルーアイズ・ドラゴンフライ
+    types: [creature]
+    civs: [nature]
+    cost: 2
+    power: 1000
+    races: [ジャイアント・インセクト]
+    mana: 1
+    text: "パワード・ブレイカー\n自分のコスト６以上のクリーチャーが出た時、次の自分のターンのはじめまで、そのクリーチャーのパワーをこのクリーチャーのパワーに加える。"
+    abilities:
+    - {kind: trigger, when: {event: move, to: bz, subject: {owner: you, filter: {types: [creature], cost_ge: 6}}}, effect: [{op: modify, select: {ref: event.subject}, mod: {power: {amount: {power_of: {ref: self}}}}, duration: until_next_own_turn_start}]}
+    keywords: [powered_breaker]
+    source:
+      official: proto
+      review: pending
+      notes: "語彙パイロット第333弾の対象（dm24rp4-045 型）。power mod の amount に {power_of: {ref: self}} を許可する拡張（op_modify の生成時ベイクで固定）。"
+
+  - id: T1011
+    name: 試験用零
+    types: [creature]
+    civs: [darkness]
+    cost: 5
+    power: 5000
+    races: [ドラゴンズ・ゼロ]
+    mana: 1
+    text: "パワード・ブレイカー\nこのクリーチャーが攻撃する時、相手のクリーチャーを１体選ぶ。そのターン、そのパワーをこのクリーチャーに追加し、選んだクリーチャーのパワーを０にする。\n自分のターンの終わりに、相手は自身の手札を１枚選んで捨てる。\nバトルゾーンに自分の零龍があれば、自分の闇のカードのコストを１少なくしてもよい。ただし、コストは０以下にはならない。"
+    abilities:
+    - {kind: trigger, when: {event: attack, subject: self}, effect: [{op: choose, select: {zone: bz, owner: opp, filter: {types: [creature]}, count: 1}, as: victim}, {op: modify, select: {ref: self}, mod: {power: {amount: {power_of: {ref: victim}}}}, duration: end_of_turn}, {op: modify, select: {ref: victim}, mod: {power_set: 0}, duration: end_of_turn}]}
+    - {kind: trigger, when: {event: turn_end}, if: {is_turn: you}, effect: [{op: discard, select: {zone: hand, owner: opp, chooser: opp, count: 1}}]}
+    - {kind: static, affects: {zone: hand, owner: you, filter: {civs: [darkness]}}, if: {exists: {zone: bz, owner: you, filter: {race_has: 零龍}}}, mod: {cost: -1, cost_min: 0}}
+    keywords: [powered_breaker]
+    source:
+      official: proto
+      review: pending
+      notes: "語彙パイロット第333弾の対象（dmrp11-zs01 型）。「自分の零龍」は種族参照（《》が無いため）。by_product に種族・名前に零龍を持つカードは無く、駆動用に T1012 を用意した。"
+
+  - id: T1012
+    name: 試験用零龍
+    types: [creature]
+    civs: [darkness]
+    cost: 2
+    power: 2000
+    races: [零龍]
+    mana: 1
+    text: "試験用零龍（第333弾の駆動用）。"
+    source:
+      official: proto
+      review: pending
+      notes: "語彙パイロット第333弾の駆動用（種族 零龍 を持つクリーチャー。by_product には種族・名前に零龍を持つカードが無い）。"

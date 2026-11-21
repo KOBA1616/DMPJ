@@ -4872,3 +4872,17 @@ proto T1008（dm24rp4-070 型）/ T1009（dm22rp2x-026 型）。テスト7件（
 dm22rp2x-026 は submit のバリデータ警告で1件修正: ターン終わりの帰還は「出す」であり召喚ではないため、move の reason を summon から put に変更した（proto・回答・converted の3か所を一致。第329弾と同じ修正。dmex14-090 は reason: summon で登録されているが、バリデータの現行基準では put が正）。教訓: converted.yaml の末尾に submit されたカードは次の「- id: 」が無いため、ブロック範囲の特定でファイル末尾までを範囲に含めること。
 
 pilot332 cards を登録形に書換、round367 cards を新設（登録カード自身の実挙動: バトル破壊→シールドブレイク／バトル破壊→ターン終わりに帰還）。テスト20 passed（round367 cards 3＋pilot332 cards 登録形 2＋pilot332 本体 7＋data_audit 8）。回帰はパイロット・ルール系（第170弾を含む）153 passed / 0 failed（events.py のレコード伝播追加の影響なし）、round357〜366 の disposition は件数固定の stale なだけの既知パターンで 10 failed。回答は answers/round367.yaml に保存。次の番号: パイロット333 / ラウンド368 / プロト T1010。
+
+## 第333弾 power_transfer（pure 2件）
+
+対象: dm24rp4-045 ブルーアイズ・ドラゴンフライ（「自分のコスト６以上のクリーチャーが出た時、次の自分のターンのはじめまで、そのクリーチャーのパワーをこのクリーチャーのパワーに加える」）と dmrp11-zs01 零（「このクリーチャーが攻撃する時、相手のクリーチャーを１体選ぶ。そのターン、そのパワーをこのクリーチャーに追加し、選んだクリーチャーのパワーを０にする」＋自分のターン終わりの相手の手札破棄＋零龍がいる間の闇のコスト軽減）。
+
+結論は**エンジン拡張（power mod の amount に式を許可）**: power mod の辞書形 {amount, count} は amount が整数のみだった。本弾で amount に {power_of: {ref: 名前}}（と {var: 名前}）を許可した（第324弾の breaks_add {var:} と同じ発想）。op_modify の _bake_refs が生成時にリテラルへ固定するため chars は従来どおり整数だけを見る。常在型に直接書くと chars が整数を前提とするため使えない（生成時ベイク専用。defs.py に注記）。変更は defs.py Checker.mod＋schema.py＋card.schema.json 再生成の3点。
+
+確立形: ドラゴンフライは trigger {when: {event: move, to: bz, subject: {owner: you, filter: {types: [creature], cost_ge: 6}}}, effect: [modify {select: {ref: event.subject}, mod: {power: {amount: {power_of: {ref: self}}}}, duration: until_next_own_turn_start}]}。零は攻撃時 trigger で choose {as: victim} し、modify self {power: {amount: {power_of: {ref: victim}}}}（end_of_turn の既定）→ modify victim {power_set: 0}。順序が大事（先に吸い上げてから 0 にする）。ターン終わりの手札破棄は discard {chooser: opp} の確立形。コスト軽減は static {affects: {zone: hand, owner: you, filter: {civs: [darkness]}}, if: {exists: {race_has: 零龍}}, mod: {cost: -1, cost_min: 0}}（「自分の零龍」は《》が無いため種族参照。by_product に種族・名前に零龍を持つカードは無く、駆動用に T1012 を用意した）。
+
+proto T1010（dm24rp4-045 型）/ T1011（dmrp11-zs01 型）/ T1012（駆動用・種族 零龍）。テスト7件（実挙動5件）: コスト6以上のクリーチャーが出るとそのパワーに自分のパワーを加え、次の自分のターンのはじめまで維持する（13000＋1000＝14000）、コスト6未満では誘発しない、攻撃時に相手クリーチャーのパワーを吸い上げ選んだ側を 0 にする（パワー0は状況起因処理で破壊される）、自分のターン終わりに相手は手札を1枚捨てる（引く1枚と相殺されるため T001 の枚数で確認）、零龍がいる間だけ闇のカードのコストが1減る（コスト1のカードは0になる）。power の amount の不正形（文字列・小数・未知キー・{var: 5}）は DefError。
+
+教訓: 手札が空だと main の決定自体が出ないため、駆動は charge で区切ること（_drive_to の目標に main を使うとデッキ切れでゲームが終わる）。攻撃の決定は「まだ攻撃していない」ガードが要る（同じターンに2回攻撃してしまう）。
+
+次の候補メモ: play_from_deck_top（dm22rp2x-002 / dm26sd1-j009 / dmrp22-005）、broken_shields_no_s_trigger（重い）、after_attack_destroy（ラウンド245で差し戻し済み、重い）。
