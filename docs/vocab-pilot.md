@@ -4786,3 +4786,17 @@ proto T997（dmex15-b019 型）。テスト5件通過（pilot328 本体 3: 形�
 ### ラウンド363（第328弾の再変換）
 
 **新規登録1件**（dmex15-b019 滅亡の光＝アタック・チャンス（declare＋play_free）＋destroy {not_race_has: [ゴッド, フェニックス, クリエイター]}＋modify による once_per_turn 付き付与型誘発。登録形は確立形と完全一致で連結混入なし）・**alias 畳み込み0件**・**stale クリーンアップ0件**・**差し戻し0件**。対象1行は gaps = [filter_not_race, first_attack_end] のため reopen filter_not_race first_attack_end で外してから submit（reopen は1件だけ外れた。両 gap を指定しないと multi-gap 行は外れない）。converted 10,276→**10,277** / rejects 2,039→**2,038**、重なり0・漏れ0。filter_not_race / first_attack_end は残り0件で両ファミリー解消。pilot328 cards を登録形に書換、round363 cards を新設（登録カード自身の実挙動: ゴッド以外は両プレイヤーとも破壊・ゴッドは残って付与された誘発を持つ／最初の攻撃の終わりにアンタップ・2回目にはアンタップされない）。テスト16 passed（round363 cards 3＋pilot328 cards 登録形 2＋pilot328 本体 3＋data_audit 8）。回答は answers/round363.yaml に保存。次の番号: パイロット329 / ラウンド364 / プロト T998。
+
+## 第329弾 shield_placement_trigger — ドリフト（move to: shield の確立形＋zone: graveyard）
+
+センサス（rejects 2,038件）: pure 1,890件 / multi 130件 / 空 gaps 18件（数え方は第328弾と同じ）。pure の大半は範囲外か評価済み DEEP/重い/延期（第318〜328弾の記録参照）。2件組のうち範囲内・未評価で最小の **shield_placement_trigger（dm26ex4-cho047 / dm26rp1-tr002）** を選定した。他の候補は第328弾の記録どおり（broken_shields_no_s_trigger、after_attack_destroy、destroyed_during_battle_trigger、destroyed_while_tapped、power_transfer、name_addition、play_from_deck_top）。
+
+対象はいずれも partial あり。dm26ex4-cho047 は CIP の draw 2 が変換済み、dm26rp1-tr002 はキーワードのみ。原文は partial の text で照合（dm26rp1-tr002 の canon_id は自身で、登録時に aliases 4件が自動記録される見込み）。
+
+結論: ドリフト（追加語彙なし）。シールド配置の誘発は {event: move, to: shield, subject: {owner: you}} の確立形そのもの（dm24ex3-004 等44件。dm24ex3-004 は同文の「カードが自分のシールドゾーンに置かれた時」条項を持つ）。
+- dm26ex4-cho047: [trigger {when: {event: move, to: bz, subject: self}, effect: [draw 2]}（partial どおり）, trigger {zone: graveyard, when: {event: move, to: shield, subject: {owner: you}}, effect: [may [play_free {ref: self}]]}]（墓地で機能する誘発は zone: graveyard（217件）。墓地からの自己登場は may＋play_free {ref: self}）
+- dm26rp1-tr002: キーワードに enters_tapped を追加（「タップして出て」）。[static {affects: self, mod: {deny: [untap_at_start]}}（「自分のターンのはじめにアンタップしない」。dmrp18-025）, trigger {when: {event: move, to: shield, subject: {owner: you}}, effect: [untap {ref: self}, modal {count: 1, modes: [[draw 1], [choose {zone: bz, owner: opp, filter: {types: [creature]}}, as: chosen → tap {ref: chosen, no_untap_next: true}], [modify {select: {ref: self}, mod: {no_leave: true}, duration: until_next_own_turn_start}]}]}]（タップ＋次の相手のターンのはじめにアンタップしないは tap op の no_untap_next（dmr11-038）。「離れない」は第143弾の no_leave を until_next_own_turn_start まで）
+
+教訓: proto.yaml のリストは2スペースインデント形式（`  - id:`）。追記はその形式に合わせること（0カラムで追記すると YAML が壊れる）。光のクリーチャーを出すには光のマナが要る（第328弾の多色の教訓と同じ）。
+
+proto T998（dm26ex4-cho047 型）・T999（dm26rp1-tr002 型）・T1000（駆動用のシールド追加呪文。move to: shield reason: charge は dm22ex2-068 の確立形）。テスト7件通過（pilot329 本体 5: 形の一致、墓地の誘発＝may で出て CIP で2枚引く／no なら残る、タップして出て自分のターンのはじめにもアンタップしない（相手のターンを挟んで確認）、シールド配置でアンタップ＋モード0でドロー、モード1で相手をタップ、＋pilot329 cards 提出前 2）。次の番号: パイロット330 / ラウンド365 / プロト T1001。

@@ -14390,3 +14390,74 @@ cards:
                 - {op: untap, select: {ref: self}}
               once_per_turn: true
         duration: end_of_turn
+
+  - id: T998
+    name: 試験用メモリ・コンテナ
+    types: [creature]
+    civs: [light, water, darkness]
+    cost: 5
+    power: 5500
+    races: [スチーム・ナイト, テスト]
+    mana: 1
+    text: "ブロッカー\nこのクリーチャーが出た時、カードを２枚引く。\nカードが自分のシールドゾーンに置かれた時、このクリーチャーを自分の墓地から出してもよい。"
+    keywords: [blocker]
+    abilities:
+    - kind: trigger
+      when: {event: move, to: bz, subject: self}
+      effect:
+      - {op: draw, count: 2}
+    - kind: trigger
+      zone: graveyard
+      when: {event: move, to: shield, subject: {owner: you}}
+      effect:
+      - op: may
+        body:
+        - {op: play_free, select: {ref: self}}
+    source:
+      official: proto
+      review: pending
+      notes: "語彙パイロット第329弾 shield_placement_trigger の検証用（dmex15-b019 ではなく dm26ex4-cho047 型）。シールド配置の誘発は {event: move, to: shield, subject: {owner: you}} の確立形（dm24ex3-004 等44件）。墓地で機能する誘発は zone: graveyard（217件）。墓地からの自己登場は may＋play_free {ref: self}。"
+
+  - id: T999
+    name: 試験用求道者
+    types: [creature]
+    civs: [light]
+    cost: 2
+    power: 8000
+    races: [メカサンダー, テスト]
+    mana: 1
+    text: "ブロッカー\nW・ブレイカー\nこのクリーチャーはタップして出て、自分のターンのはじめにアンタップしない。\nカードが自分のシールドゾーンに置かれた時、このクリーチャーをアンタップし、その後、次の中から１回選ぶ。\n▶カードを１枚引く。\n▶相手のクリーチャーを１体選び、タップする。次の相手のターンのはじめに、そのクリーチャーはアンタップしない。\n▶次の自分のターンのはじめまで、このクリーチャーは離れない。"
+    keywords: [blocker, double_breaker, enters_tapped]
+    abilities:
+    - kind: static
+      affects: self
+      mod: {deny: [untap_at_start]}
+    - kind: trigger
+      when: {event: move, to: shield, subject: {owner: you}}
+      effect:
+      - {op: untap, select: {ref: self}}
+      - op: modal
+        count: 1
+        modes:
+        - - {op: draw, count: 1}
+        - - {op: choose, select: {zone: bz, owner: opp, filter: {types: [creature]}}, as: chosen}
+          - {op: tap, select: {ref: chosen}, no_untap_next: true}
+        - - {op: modify, select: {ref: self}, mod: {no_leave: true}, duration: until_next_own_turn_start}
+    source:
+      official: proto
+      review: pending
+      notes: "語彙パイロット第329弾 shield_placement_trigger の検証用（dm26rp1-tr002 型）。「タップして出る」はキーワード enters_tapped、「自分のターンのはじめにアンタップしない」は static {deny: [untap_at_start]}（dmrp18-025）。シールド配置の誘発でアンタップ＋modal（ドロー／タップ＋no_untap_next（tap op のキー、dmr11-038）／no_leave を until_next_own_turn_start まで）。"
+
+  - id: T1000
+    name: 試験用シールド追加
+    types: [spell]
+    civs: [nature]
+    cost: 1
+    mana: 1
+    text: "自分の山札の上から1枚目をシールド化する。"
+    spell:
+    - {op: move, select: {zone: deck, owner: you, from_top: 1}, to: shield, reason: charge}
+    source:
+      official: proto
+      review: pending
+      notes: "語彙パイロット第329弾の駆動用（シールド配置の move イベントを起こすための試験呪文。move to: shield reason: charge は dm22ex2-068 の確立形）。"
