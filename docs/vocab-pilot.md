@@ -4834,3 +4834,15 @@ proto T1001（dm26ex1-021 型）・T1002（dmr18-s04 型）・T1003（駆動用�
 dm26ex1-021 の行は非正本だった: identity.canon_id は dm26rp3-tr005 で、submit は load_rows が正本に畳み込むため「取得済みの原文に無いID」で弾いた。正本は既に登録済みだったが、実挙動を検証すると2条項とも不発だった。(1) 破壊時誘発は zone: graveyard＋if exists {ref: self, filter: {tapped: true}} で、墓地に置かれたカードはアンタップに戻る（実測: 破壊直前の tapped=True が墓地では False、pending 0件）ため決して誘発しない。(2) battle_power の常在型は affects: {ref: self} で、_battle_bonus が非 gain の常在型では self と扱わず（実測: パワー13000のブロッカーに 9000 のまま敗北）、+5000 が効いていなかった。いずれも第330弾の形（affects: self／trigger {when: {event: move, from: bz, to: graveyard, reason: destroy, subject: self}, if: {subject_tapped: true}}）に差し替え、登録カード自身で実挙動を確認した（タップ状態で破壊→追加ターン／バトルで格上に勝利）。教訓: rejects 行の id が正本とは限らない（submit 前に canon_id を確認すること）。登録済みでも形が正しいとは限らない（疑わしい形は実挙動で確かめること）。converted.yaml の notes は無引用スカラーのため、ASCII の「: 」や波括弧を含む文章を書くと YAML が壊れる（全角記号で逃がすこと）。
 
 pilot330 cards を登録形に書換、round365 cards を新設（登録カード自身の実挙動: 正本の追加ターン／正本のバトルパワー／dmr18-s04 の自身破壊時の破壊＋回収）。テスト21 passed（round365 cards 4＋pilot330 cards 登録形 2＋pilot330 本体 7＋data_audit 8）。回帰はパイロット・ルール系 122 passed / 0 failed（エンジン拡張の影響なし）、round357〜364 の disposition は件数固定の stale なだけの既知パターンで 8 failed。回答は answers/round365.yaml に保存。次の番号: パイロット331 / ラウンド366 / プロト T1005。
+
+## 第331弾 name_addition（pure 2件）
+
+対象: dm23ex1-039 ボルメテウス・剣誠・ドラゴン（「バトルゾーンにある間、このクリーチャーは名前に《ボルメテウス・武者・ドラゴン》を追加する」）と dm28-008 竜装 ムシャ・レジェンド（クロスギア。「これをクロスしたクリーチャーは…名前に《ボルメテウス・武者・ドラゴン》を追加する」。partial は power＋add_races を持ち add_names だけが欠けていた）。
+
+結論は**ドリフト（文書化）**: mod の add_names はエンジン実装済みだった（バンドC2 U97。core.py の chars 集約が主名を変えず名前の集合 names に足し、filter の name は追加の名前にも当たる。defs.py Checker.cond ではなく Checker.mod が検証し、schema にも載っている）が、converted.yaml の使用例が0件だったため2件とも rejects に残っていた。本弾で確立形として固定する: 本人は {kind: static, affects: self, mod: {add_names: [名前]}}、クロスギアは affects: crossed の mod に add_names を足す（power / add_races と同居できる）。
+
+dm23ex1-039 の残りの条項も既存語彙で足りる。G・ゼロは top-level の free_if（dm23ex1-075 等の確立形）で、条件は {all: [{cmp: [{count: {zone: bz, owner: you, filter: {race_has: サムライ}}}, ">=", 5]}, {not: {exists: {zone: bz, owner: you, filter: {name: 自身の名前}}}}]}（dm23sd2-010 の all＋cmp＋exists の先例）。攻撃時誘発は may＋destroy {power_le: 6000} の確立形。
+
+proto T1005（dm23ex1-039 型。G・ゼロ＋攻撃時誘発＋add_names）/ T1006（dm28-008 型）/ T1007（駆動用: 追加された名前で名指し破壊する呪文）。テスト7件（実挙動5件）: chars の names に追加の名前が入ること（本人・クロス先の双方）、名指し破壊が追加の名前でのみ当たること（同居の別名クリーチャーには当たらない）、クロスギアの power＋2000 と種族追加の同居、G・ゼロの3条件（5体で無料／同名がいれば不可／4体では不可）、攻撃時誘発の破壊。add_names の不正形（空リスト・文字列・数値）は DefError。
+
+次の候補メモ: destroyed_during_battle_trigger（dm24rp4-070 / dm22rp2x-026。バトルによる破壊を move イベントで区別する語彙が要る見込み＝エンジン拡張候補）、power_transfer（dm24rp4-045 / dmrp11-zs01）、play_from_deck_top（dm22rp2x-002 / dm26sd1-j009）、broken_shields_no_s_trigger（重い）、after_attack_destroy（ラウンド245で差し戻し済み、重い）。

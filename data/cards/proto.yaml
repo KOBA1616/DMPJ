@@ -14554,3 +14554,52 @@ cards:
       official: proto
       review: pending
       notes: "語彙パイロット第330弾の駆動用（パワー13000のブロッカー。バトル中のパワー修整の検証用）。"
+
+  - id: T1005
+    name: 試験用ボルメテウス・剣誠・ドラゴン
+    types: [creature]
+    civs: [fire]
+    cost: 8
+    power: 8000
+    races: [アーマード・ドラゴン, サムライ]
+    mana: 1
+    free_if: {all: [{cmp: [{count: {zone: bz, owner: you, filter: {race_has: サムライ}}}, ">=", 5]}, {not: {exists: {zone: bz, owner: you, filter: {name: 試験用ボルメテウス・剣誠・ドラゴン}}}}]}
+    text: "G・ゼロ：自分のサムライが５枚以上あり、自分の《試験用ボルメテウス・剣誠・ドラゴン》がなければ、このクリーチャーをコストを支払わずに召喚してもよい。\nW・ブレイカー\nこのクリーチャーが攻撃する時、相手のパワー6000以下のクリーチャーを１体選び、破壊してもよい。\nバトルゾーンにある間、このクリーチャーは名前に《試験用ボルメテウス・武者・ドラゴン》を追加する。"
+    abilities:
+    - {kind: trigger, when: {event: attack, subject: self}, effect: [{op: may, body: [{op: destroy, select: {zone: bz, owner: opp, filter: {types: [creature], power_le: 6000}, count: 1}}]}]}
+    - {kind: static, affects: self, mod: {add_names: [試験用ボルメテウス・武者・ドラゴン]}}
+    keywords: [double_breaker]
+    source:
+      official: proto
+      review: pending
+      notes: "語彙パイロット第331弾の対象（dm23ex1-039 型）。add_names はエンジン実装済み（バンドC2 U97）だが converted の使用例が無かった。"
+
+  - id: T1006
+    name: 試験用ムシャ・レジェンド
+    types: [cross_gear]
+    civs: [fire]
+    cost: 3
+    races: [サムライ]
+    mana: 1
+    text: "クロスギア\nこれをクロスしたクリーチャーは、種族にアーマード・ドラゴンとサムライを追加し、パワーが+2000され、名前に《試験用ボルメテウス・武者・ドラゴン》を追加する。\nこれをクロスしたクリーチャーが攻撃する時、自分のシールドを１枚墓地に置いてもよい。そうした場合、相手のパワー6000以下のクリーチャーを１体破壊する。"
+    abilities:
+    - {kind: static, affects: crossed, mod: {power: 2000, add_races: [アーマード・ドラゴン, サムライ], add_names: [試験用ボルメテウス・武者・ドラゴン]}}
+    - {kind: trigger, when: {event: attack, subject: crossed}, effect: [{op: may, body: [{op: move, select: {zone: shield, owner: you, count: 1}, to: graveyard, reason: put, as: paid}, {op: if, cond: {exists: {ref: paid}}, then: [{op: destroy, select: {zone: bz, owner: opp, filter: {types: [creature], power_le: 6000}, count: 1}}]}]}]}
+    source:
+      official: proto
+      review: pending
+      notes: "語彙パイロット第331弾の対象（dm28-008 型）。partial の確立形に add_names を足したもの。"
+
+  - id: T1007
+    name: 試験用名指し破壊
+    types: [spell]
+    civs: [fire]
+    cost: 2
+    mana: 1
+    text: "《試験用ボルメテウス・武者・ドラゴン》を１体破壊する。"
+    spell:
+    - {op: destroy, select: {zone: bz, owner: opp, filter: {name: 試験用ボルメテウス・武者・ドラゴン}, count: 1}}
+    source:
+      official: proto
+      review: pending
+      notes: "語彙パイロット第331弾の駆動用（追加された名前で選べるかを確かめる名指し破壊）。"
