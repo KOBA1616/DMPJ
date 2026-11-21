@@ -2970,6 +2970,9 @@
     "vivid_paid": {},
     "alt_paid": {},
     "ddd_paid": {},
+    "subject_tapped": {
+     "type": "boolean"
+    },
     "hyper": {
      "type": "boolean"
     },

@@ -95,7 +95,7 @@ def _build() -> dict:
                 "exists": ref("selector"), "cmp": {"type": "array", "minItems": 3, "maxItems": 3},
                 "not": ref("cond"), "all": {"type": "array", "items": ref("cond")},
                 "any": {"type": "array", "items": ref("cond")}, "is_turn": {"enum": ["you", "opp"]},
-                "marked": {"anyOf": [{"type": "string"}, {"type": "object", "properties": {"name": {"type": "string"}, "scope": {"enum": ["turn", "attack", "game"]}}, "required": ["name"], "additionalProperties": False}]}, "self_marked": {"type": "string"}, "face_up": {"type": "boolean"}, "vivid_paid": {}, "alt_paid": {}, "ddd_paid": {}, "hyper": {"type": "boolean"}, "power_ge": {"type": "integer"}, "extra_turn": {"type": "boolean"}},
+                "marked": {"anyOf": [{"type": "string"}, {"type": "object", "properties": {"name": {"type": "string"}, "scope": {"enum": ["turn", "attack", "game"]}}, "required": ["name"], "additionalProperties": False}]}, "self_marked": {"type": "string"}, "face_up": {"type": "boolean"}, "vivid_paid": {}, "alt_paid": {}, "ddd_paid": {}, "subject_tapped": {"type": "boolean"}, "hyper": {"type": "boolean"}, "power_ge": {"type": "integer"}, "extra_turn": {"type": "boolean"}},
                 "additionalProperties": False},
             "mod": {"type": "object", "properties": {
                 "power": {"anyOf": [{"type": "integer"}, {"type": "object", "properties": {"amount": {"type": "integer"}, "count": {"anyOf": [ref("selector"), ref("expr")]}}, "required": ["amount"], "additionalProperties": False}]}, "power_set": {"type": "integer"}, "grant": {"type": "array", "items": {"enum": sorted(keywords)}},

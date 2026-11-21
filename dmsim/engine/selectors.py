@@ -317,6 +317,9 @@ class SelectorMixin:
         if "ddd_paid" in c:   # D・D・D で実行した（第149弾。「この呪文を『D・D・D』で唱えたなら」）
             paid = bool(env.get("ddd_paid")) or (env.get("event") or {}).get("via") == "d_d_d"
             return paid == bool(c["ddd_paid"])
+        if "subject_tapped" in c:   # イベントの対象が移動直前にタップしていたか（第330弾。「破壊された時、これがタップされていれば」: 対象自身の lki を読む）
+            lki = (env.get("event") or {}).get("lki") or {}
+            return bool(lki.get("tapped")) == bool(c["subject_tapped"])
         raise ValueError(f"bad cond {c}")
 
     def filter_match(self, cid: int, f: dict, lki: dict | None = None, base: bool = False,

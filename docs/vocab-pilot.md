@@ -4808,3 +4808,21 @@ proto T998（dm26ex4-cho047 型）・T999（dm26rp1-tr002 型）・T1000（駆�
 提出時のバリデータ警告で cho047 の形を修正: 「このクリーチャーを自分の墓地から出してもよい」の自己登場は、当初 may＋play_free {ref: self} としたが、play_free は召喚・唱えるの意味で、原文の「出す」は move to: bz reason: put が正しい（バリデータの指摘どおり）。proto・回答・converted の3か所を同形に揃えた。教訓: 置換は対象ブロックに限定すること（全体置換で proto T997 の declare（アタック・チャンスの play_free が正しい形）まで巻き込んだため、ブロック限定で復旧した）。
 
 pilot329 cards を登録形に書換、round364 cards を新設（登録カード自身の実挙動: 墓地の cho047 がシールド配置で出て CIP で2枚引く／tr002 がシールド配置でアンタップしモード0で1枚引く）。テスト18 passed（round364 cards 3＋pilot329 cards 登録形 2＋pilot329 本体 5＋data_audit 8）。回帰 138 passed / 8 failed（round357〜363 の件数固定テストの stale なだけの既知パターン7件＋pilot328 本体の proto 形不一致1件＝上記の巻き込みで、復旧後に再確認済み）。回答は answers/round364.yaml に保存。次の番号: パイロット330 / ラウンド365 / プロト T1001。
+
+## 第330弾 destroyed_while_tapped — エンジン拡張（条件キー subject_tapped）
+
+センサス（rejects 2,036件）: pure 1,890件 / multi 130件 / 空 gaps 18件（数え方は第328弾と同じ）。2件組のうち範囲内・未評価で最小の **destroyed_while_tapped（dm26ex1-021 / dmr18-s04）** を選定した。他の候補は第328弾の記録どおり（broken_shields_no_s_trigger、after_attack_destroy、destroyed_during_battle_trigger、power_transfer、name_addition、play_from_deck_top）。
+
+対象はいずれも partial あり。dm26ex1-021 は B・A・D の static のみ変換済み、dmr18-s04 は侵略の declare と「自分の他のクリーチャーが破壊された時」の誘発（if: exists {ref: self, filter: {tapped: true}}）まで変換済みで、不足は「自身が破壊された時、直前のタップ状態を見る」分だけ。原文は partial の text で照合。
+
+不足の正体: 破壊されたカード自身のタップ状態は、移動後にカードを見ても分からない（墓地ではアンタップ扱い）。ただし移動イベントの収集レコードには対象の lki（移動直前の姿）が `tapped` を含んで載る（events.py の lki スナップショット。filter_match の tapped 判定が lki を読む作法もある）。不足していたのは、その lki を読む**条件キー**だけ。
+
+結論: エンジン拡張（条件キー subject_tapped の追加。4点セット）。
+- selectors.py eval_cond: {subject_tapped: bool} は env["event"]["lki"]["tapped"] を読む（alt_paid / vivid_paid が event の旗を読むのと同じ作法。lki が無いイベントでは False）
+- defs.py Checker.cond に同キーを追加、schema.py の cond プロパティに "subject_tapped": {"type": "boolean"} を追加、data/schema/card.schema.json を再生成
+- dm26ex1-021: [static {affects: self, zone: hand, mod: {opt_reduce: {amount: 2, then: destroy}}}（partial どおり）, trigger {when: {event: move, from: bz, to: graveyard, reason: destroy, subject: self}, if: {subject_tapped: true}, effect: [{op: extra_turn}]}, static {affects: self, mod: {battle_power: {amount: 5000}}}]（追加ターンは op extra_turn、バトル中のパワー修整は mod battle_power {amount}）
+- dmr18-s04: partial の2能力に加え、自身が破壊された場合の誘発を同効果で追加: [trigger {when: {event: move, from: bz, to: graveyard, reason: destroy, subject: self}, if: {subject_tapped: true}, effect: [destroy {zone: bz, owner: opp, count: 1}, move {zone: graveyard, owner: you, filter: {civs: [darkness], types: [creature], not_name: 超復讐 ギャロウィン}, count: 1} to: hand reason: return]}]
+
+教訓: セットアップ時に置いたカードのタップ指定は、最初のターン開始のアンタップで消える。タップ状態で破壊する検証は、main の決定時点でタップを指定すること（第329弾の tr002 は deny untap_at_start があったため消えなかった）。追加ターンの検証は extra_turns の残量ではなく「次の charge が自分の追加ターンか」で見ること（追加ターンは開始時に extra_turns から取り出される）。ブロッカーでないクリーチャーではブロック検証はできない（T142 はブロッカーではない）。
+
+proto T1001（dm26ex1-021 型）・T1002（dmr18-s04 型）・T1003（駆動用の破壊呪文）・T1004（駆動用のパワー13000ブロッカー）。テスト9件通過（pilot330 本体 7: 形の一致、タップ状態で破壊→追加ターン／アンタップ状態→追加ターンなし、バトル中のパワー+5000 で格上に勝つ、自身がタップ状態で破壊→破壊＋回収／アンタップ状態→無誘発、他のクリーチャーが破壊され自身がタップ→誘発、＋pilot330 cards 提出前 2）。次の番号: パイロット331 / ラウンド366 / プロト T1005。

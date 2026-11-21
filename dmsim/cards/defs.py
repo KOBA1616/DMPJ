@@ -610,6 +610,10 @@ class Checker:
             if not isinstance(v, bool):
                 raise DefError(f"{where}: ddd_paid must be bool")
             return
+        if k == "subject_tapped":   # イベントの対象が移動直前にタップしていたか（第330弾）
+            if not isinstance(v, bool):
+                raise DefError(f"{where}: subject_tapped must be bool")
+            return
         if k == "power_ge":
             if not isinstance(v, int) or isinstance(v, bool):
                 raise DefError(f"{where}: power_ge must be an int")

@@ -14461,3 +14461,96 @@ cards:
       official: proto
       review: pending
       notes: "語彙パイロット第329弾の駆動用（シールド配置の move イベントを起こすための試験呪文。move to: shield reason: charge は dm22ex2-068 の確立形）。"
+
+  - id: T1001
+    name: 試験用クラッシュ覇道
+    types: [creature]
+    civs: [fire]
+    cost: 10
+    power: 9000
+    races: [ドラゴンギルド, ビートジョッキー, テスト]
+    mana: 1
+    text: "B・A・D ２（このクリーチャーの召喚コストを２少なくしてもよい。そうしたら、このターンの終わりにこのクリーチャーを破壊する）\nスピードアタッカー\nW・ブレイカー\nこのクリーチャーが破壊された時、これがタップされていれば、このターンの後に自分のターンを追加する。\nバトル中、このクリーチャーのパワーを+5000する。"
+    keywords: [speed_attacker, double_breaker]
+    abilities:
+    - kind: static
+      affects: self
+      zone: hand
+      mod: {opt_reduce: {amount: 2, then: destroy}}
+    - kind: trigger
+      when: {event: move, from: bz, to: graveyard, reason: destroy, subject: self}
+      if: {subject_tapped: true}
+      effect:
+      - {op: extra_turn}
+    - kind: static
+      affects: self
+      mod: {battle_power: {amount: 5000}}
+    source:
+      official: proto
+      review: pending
+      notes: "語彙パイロット第330弾 destroyed_while_tapped の検証用（dm26ex1-021 型）。新条件 subject_tapped（イベント対象の移動直前のタップ状態を lki で読む）の検証が主目的。追加ターンは op extra_turn、バトル中のパワー修整は mod battle_power {amount}。"
+
+  - id: T1002
+    name: 試験用ギャロウィン
+    types: [creature, evolution]
+    civs: [darkness]
+    cost: 6
+    power: 8000
+    races: [デーモン・コマンド, 侵略者, テスト]
+    mana: 1
+    evolve_from: {civs: [darkness], types: [creature]}
+    text: "進化―自分の闇のクリーチャー１体の上に置く。侵略―闇のコマンドW・ブレイカーこのクリーチャーまたは自分の他のクリーチャーが破壊された時、このクリーチャーがタップしていたら、相手のクリーチャーを１体破壊し、《試験用ギャロウィン》以外の闇のクリーチャーを１体自分の墓地から手札に戻す。"
+    keywords: [double_breaker]
+    abilities:
+    - kind: declare
+      zone: hand
+      when: {event: attack, subject: {owner: you, filter: {civs: [darkness], race_has: コマンド}}}
+      effect:
+      - op: may
+        body:
+        - {op: invade, onto: {ref: event.subject}}
+    - kind: trigger
+      when: {event: move, from: bz, to: graveyard, reason: destroy, subject: {owner: you, other: true, filter: {types: [creature]}}}
+      if: {exists: {ref: self, filter: {tapped: true}}}
+      effect:
+      - {op: destroy, select: {zone: bz, owner: opp, filter: {types: [creature]}, count: 1}}
+      - {op: move, select: {zone: graveyard, owner: you, filter: {civs: [darkness], types: [creature], not_name: 試験用ギャロウィン}, count: 1}, to: hand, reason: return}
+    - kind: trigger
+      when: {event: move, from: bz, to: graveyard, reason: destroy, subject: self}
+      if: {subject_tapped: true}
+      effect:
+      - {op: destroy, select: {zone: bz, owner: opp, filter: {types: [creature]}, count: 1}}
+      - {op: move, select: {zone: graveyard, owner: you, filter: {civs: [darkness], types: [creature], not_name: 試験用ギャロウィン}, count: 1}, to: hand, reason: return}
+    source:
+      official: proto
+      review: pending
+      notes: "語彙パイロット第330弾 destroyed_while_tapped の検証用（dmr18-s04 型）。自分の他のクリーチャーが破壊された場合は既存の exists {ref: self, filter: {tapped: true}}（partial の形）、このクリーチャー自身が破壊された場合は新条件 subject_tapped（lki の tapped を読む）で、同じ効果の誘発を2つに分けて書く。"
+
+  - id: T1003
+    name: 試験用破壊
+    types: [spell]
+    civs: [darkness]
+    cost: 1
+    mana: 1
+    text: "自分のクリーチャーを１体破壊する。"
+    spell:
+    - {op: destroy, select: {zone: bz, owner: you, filter: {types: [creature]}, count: 1}}
+    source:
+      official: proto
+      review: pending
+      notes: "語彙パイロット第330弾の駆動用（自分のクリーチャーを選んで破壊する試験呪文）。"
+
+  - id: T1004
+    name: 試験用巨壁
+    types: [creature]
+    civs: [light]
+    cost: 7
+    power: 13000
+    races: [テスト]
+    mana: 1
+    text: "ブロッカー"
+    keywords: [blocker]
+    source:
+      official: proto
+      review: pending
+      notes: "語彙パイロット第330弾の駆動用（パワー13000のブロッカー。バトル中のパワー修整の検証用）。"
