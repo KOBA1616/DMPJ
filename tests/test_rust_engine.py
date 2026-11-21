@@ -247,6 +247,51 @@ def test_modify_cards_match(real_env, seed):
     assert res["divergence"] is None and res["ok"] is True
 
 
+@pytest.mark.parametrize("seed", range(1, 21))
+def test_trigger_shapes_match(real_env, seed):
+    """増分C: trigger の subject=dict（フィルタ指定）と追加キー first_time / once_per_turn / optional を
+    持つ札を多く入れたデッキで、誘発の収集・回数制限まで含めて1局が一致する。"""
+    import random
+    r, b = real_env
+    pool = _portable(r)
+
+    def has_shape(i):
+        for a in r.cards[i].abilities:
+            if a["kind"] != "trigger":
+                continue
+            if isinstance((a.get("when") or {}).get("subject"), dict):
+                return True
+            if a.get("first_time") or a.get("once_per_turn") or a.get("optional"):
+                return True
+        return False
+    sel = [i for i in pool if has_shape(i)]
+    assert len(sel) >= 40
+    rnd = random.Random(seed)
+
+    def deck():
+        return [rnd.choice(sel) if rnd.random() < 0.6 else rnd.choice(pool) for _ in range(40)]
+    spec = {"kind": "new_game", "decks": [deck(), deck()], "seed": seed, "first_player": seed % 2}
+    res = lockstep(Session.open(r, spec), rustcore.RustSession.open(r, spec, b), f"random:{seed}")
+    assert res["divergence"] is None and res["ok"] is True
+
+
+@pytest.mark.parametrize("seed", [1, 2, 3])
+def test_first_time_trigger_matches(real_env, seed):
+    """増分C: first_time（各ターン、はじめて〜した時）の記録と抑制が踏まれる構成での照合。
+    dmrp16-095 は自分のクリーチャーの召喚をはじめての時だけ見る監視役で、監視役20枚＋安いバニラの
+    デッキでは同一ターン2体目以降の召喚で抑制が実際に起きる（計装で発火17回・抑制7回を確認済み）。"""
+    r, b = real_env
+    watcher = "dmrp16-095"
+    assert rustcore._is_plain(r.cards[watcher])
+    vanilla = [i for i, d in r.cards.items()
+               if d.types == ["creature"] and not d.abilities and d.cost <= 2 and rustcore._is_plain(d)][:8]
+    assert len(vanilla) >= 4
+    deck = [watcher] * 20 + [vanilla[i % len(vanilla)] for i in range(20)]
+    spec = {"kind": "new_game", "decks": [deck, deck], "seed": seed, "first_player": seed % 2}
+    res = lockstep(Session.open(r, spec), rustcore.RustSession.open(r, spec, b), f"random:{seed}")
+    assert res["divergence"] is None and res["ok"] is True
+
+
 @pytest.mark.parametrize("seed", [1, 2, 3])
 def test_if_cards_match(real_env, seed):
     """段階2-d 第6弾: if（exists / cmp / not / all / any）を含む札を多く入れたデッキで1局が一致する。"""

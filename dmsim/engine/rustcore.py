@@ -270,30 +270,112 @@ def _simple_dyn_zone(z) -> bool:
 _OK_WHEN = ({"event": "move", "to": "bz", "subject": "self"}, {"event": "attack", "subject": "self"})
 
 
-_OK_EVENTS = {"move", "attack", "battle_win", "turn_start", "turn_end", "cast"}
+_OK_EVENTS = {"move", "attack", "battle_win", "turn_start", "turn_end", "cast",
+              "tap", "untap", "block", "battle_start", "battle_lose", "battle_end",
+              "attack_end", "break", "summon", "draw", "evolve_base"}
 _OK_ZONES = {"hand", "deck", "graveyard", "mana", "bz", "shield"}
+
+# 増分C: when のキー全般（Python の _match_when が見るキーから cause を除く。
+# cause はコーパスに実例が無いので見送り。emblem / vivid は真偽の比較だけなので含める）
+_OK_WHEN_KEYS = {"event", "from", "to", "reason", "via", "player", "subject", "target",
+                 "shield", "attacker", "opponent", "ord", "unpaid", "broke", "blocked",
+                 "face_up", "emblem", "vivid", "stacked", "by", "sealed_from", "from_under"}
+_BOOL_WHEN_KEYS = ("unpaid", "broke", "blocked", "face_up", "emblem", "vivid", "stacked")
+
+
+def _simple_filter_trig(f) -> bool:
+    """増分C: 誘発の subject フィルタ。Rust の filter_match_trig が Python の filter_match
+    （誘発の文脈: base=False、lki ありうる）と一致するキーだけ。_simple_filter のキーに
+    civs_all / sealed を加え、式の値（辞書の値）は照合時の評価が要るので除く
+    （any_of の中身は再帰で見る）。"""
+    if not isinstance(f, dict):
+        return False
+    for k, v in f.items():
+        if k == "any_of":
+            if not (isinstance(v, list) and all(_simple_filter_trig(x) for x in v)):
+                return False
+        elif isinstance(v, dict):
+            return False
+        elif k == "civs_all":
+            if not (isinstance(v, list) and all(isinstance(x, str) for x in v)) and not isinstance(v, str):
+                return False
+        elif k == "sealed":
+            if not isinstance(v, bool):
+                return False
+        elif not _simple_filter({k: v}):
+            return False
+    return True
+
+
+def _simple_subject(pat) -> bool:
+    """増分C: when の subject（および target 等の参照指定）の形。Rust の subject_match_trig が
+    Python の _subject_match（誘発の文脈）と一致するものだけ: "self" か、owner / other /
+    zone / filter だけの辞書。refs / castle_of / castle_only / exlife_of は除く。"""
+    if pat == "self":
+        return True
+    if not isinstance(pat, dict) or not set(pat) <= {"owner", "other", "filter", "zone"}:
+        return False
+    if "owner" in pat and pat["owner"] not in ("you", "opp", "any"):
+        return False
+    if "other" in pat and not isinstance(pat["other"], bool):
+        return False
+    if "zone" in pat and pat["zone"] not in _OK_ZONES:
+        return False
+    if "filter" in pat and not _simple_filter_trig(pat["filter"]):
+        return False
+    return True
 
 
 def _simple_when(w) -> bool:
-    """Rust の when_match が Python の _match_when と同じ結果になる誘発条件（段階3-b）。"""
-    if not isinstance(w, dict) or not set(w) <= {"event", "from", "to", "reason", "player", "subject"}:
+    """Rust の when_match が Python の _match_when と同じ結果になる誘発条件（段階3-b＋増分C）。"""
+    if not isinstance(w, dict) or not set(w) <= _OK_WHEN_KEYS:
         return False
-    subj = w.get("subject", "self")
-    if subj != "self" and not (isinstance(subj, dict) and set(subj) == {"owner"} and subj["owner"] in ("you", "opp")
-                               and w.get("event") == "move" and w.get("from") in _OK_ZONES - {"bz"}):
-        return False   # subject はこのカードか、持ち主だけの指定（バトルゾーン以外から動いたカード。lki を使わない）
-    if w.get("event") not in _OK_EVENTS or w.get("player", "you") not in ("you", "opp"):
+    if w.get("event") not in _OK_EVENTS:
+        return False
+    if w.get("player", "you") not in ("you", "opp") or w.get("by", "you") not in ("you", "opp"):
         return False
     for k in ("from", "to"):
         v = w.get(k)
-        if v is not None and not (v in _OK_ZONES or (isinstance(v, list) and all(x in _OK_ZONES for x in v))):
+        if v is not None and not (isinstance(v, str) and v in _OK_ZONES
+                                  or isinstance(v, list) and all(isinstance(x, str) and x in _OK_ZONES for x in v)):
             return False
-    return "reason" not in w or isinstance(w["reason"], (str, list))
+    for k in ("reason", "via"):
+        if k in w and not isinstance(w[k], (str, list)):
+            return False
+    if "subject" in w and not _simple_subject(w["subject"]):
+        return False
+    for k in ("target", "attacker", "opponent", "shield", "sealed_from"):
+        if k in w:
+            v = w[k]
+            if v in ("player", "creature"):
+                if k != "target":
+                    return False   # player/creature の振り分けは target だけの形（他では Python も一致しない）
+            elif not _simple_subject(v):
+                return False
+    if "ord" in w:
+        o = w["ord"]
+        if not (isinstance(o, dict) and set(o) <= {"kind", "eq", "ge", "gt", "le", "lt"}
+                and isinstance(o.get("kind"), str)
+                and all(isinstance(o[kk], int) and not isinstance(o[kk], bool) for kk in o if kk != "kind")):
+            return False
+    for k in _BOOL_WHEN_KEYS:
+        if k in w and not isinstance(w[k], bool):
+            return False
+    if "from_under" in w:
+        fu = w["from_under"]
+        if not (isinstance(fu, bool) or fu == "self" or _simple_subject(fu)):
+            return False
+    return True
 
 
 def _simple_trigger(ab) -> bool:
-    """段階3-b: 単純な誘発条件（_simple_when）で、条件 if も単純、効果が単純（_simple_effect）なもの。バトルゾーンか墓地で働く。"""
-    return ab["kind"] == "trigger" and set(ab) <= {"kind", "when", "effect", "if", "zone"} and _simple_when(ab["when"]) \
+    """段階3-b＋増分C: 単純な誘発条件（_simple_when）で、条件 if も単純、効果が単純（_simple_effect）なもの。
+    バトルゾーンか墓地で働く。追加キー first_time / once_per_turn は Rust の collect_triggers が
+    Python と同じく turn_counters で数え、optional は誘発では Python が読まない（置換だけ）ので素通し。"""
+    return ab["kind"] == "trigger" and set(ab) <= {"kind", "when", "effect", "if", "zone",
+                                                   "first_time", "optional", "once_per_turn"} \
+        and all(k not in ab or isinstance(ab[k], bool) for k in ("first_time", "optional", "once_per_turn")) \
+        and _simple_when(ab["when"]) \
         and ab.get("zone", "bz") in ("bz", "graveyard") and ("if" not in ab or _simple_cond(ab["if"])) \
         and _simple_effect(ab["effect"])
 

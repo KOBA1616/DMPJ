@@ -2157,18 +2157,19 @@ impl Engine {
         self.push(children);
     }
 
-    /// 誘発チェック（Python 版 _collect_triggers の、バトルゾーンの「出た時」「攻撃する時」だけを扱う版）
+    /// 誘発チェック（Python 版 _collect_triggers の写し）
     fn collect_triggers(&mut self, rec: &mut Value) {
         self.s.ev_seq += 1;
         rec["_eid"] = json!(self.s.ev_seq);
         let win = self.s.windows.last().copied().unwrap_or(0);
-        // 発生源（Python 版 _collect_triggers と同じ並び）: バトルゾーン → 他のゾーンで働く誘発の札 → 離れたカード自身（LKI）
-        let mut sources: Vec<(i64, Option<Value>)> = self.bz_tops(None).into_iter().map(|c| (c, None)).collect();
+        // 発生源（Python 版 _collect_triggers と同じ並び）: バトルゾーン → 他のゾーンで働く誘発の札
+        // → 離れたカード自身（LKI）→ 宿主（from_under 専用）→ 進化元自身。3つ目は host_only か
+        let mut sources: Vec<(i64, Option<Value>, bool)> = self.bz_tops(None).into_iter().map(|c| (c, None, false)).collect();
         for z in self.rules.zt_zones.clone() {
             for p in 0..2i64 {
                 for &c in self.zl(&z, p).clone().iter() {
                     if self.def(c).zt {
-                        sources.push((c, None));
+                        sources.push((c, None, false));
                     }
                 }
             }
@@ -2178,12 +2179,25 @@ impl Engine {
             let subj = rec["subject"][0].as_i64().unwrap();
             let lz = l["zone"].as_str().unwrap_or("");
             if lz == "bz" && rec.get("to").and_then(|v| v.as_str()) != Some("bz") {
-                sources.push((subj, Some(l.clone())));
+                sources.push((subj, Some(l.clone()), false));
             } else if lz != "bz" && self.s.cards[subj as usize].zone != lz {
-                sources.push((subj, Some(l.clone())));
+                sources.push((subj, Some(l.clone()), false));
             }
         }
-        for (src, lsrc) in sources {
+        let host_lki = rec.get("host_lki").cloned().filter(|v| !v.is_null());
+        if let (Some(hl), Some(host)) = (&host_lki, rec.get("host")) {
+            if hl["zone"].as_str() == Some("bz") {
+                if let Some(h) = host[0].as_i64() {
+                    sources.push((h, Some(hl.clone()), true));
+                }
+            }
+        }
+        if rec["ev"] == json!("evolve_base") {
+            if let Some(sb) = rec["subject"][0].as_i64() {
+                sources.push((sb, None, false));
+            }
+        }
+        for (src, lsrc, host_only) in sources {
             let (defn, zone, ctrl, sref, face) = match &lsrc {
                 Some(l) => (l["defn"].as_str().unwrap().to_string(), l["zone"].as_str().unwrap().to_string(),
                             l["controller"].as_i64().unwrap(), l["ref"].clone(), l["face"].as_i64().unwrap_or(-1)),
@@ -2207,7 +2221,10 @@ impl Engine {
                 if ab["kind"] != json!("trigger") || ab.get("zone").and_then(|v| v.as_str()).unwrap_or("bz") != zone {
                     continue;
                 }
-                if !self.when_match(&ab["when"], rec, src, ctrl) {
+                if host_only && ab["when"].get("from_under").is_none() {
+                    continue;   // 宿主の lki 発生源は from_under 誘発専用
+                }
+                if !self.when_match(&ab["when"], rec, &sref, ctrl) {
                     continue;
                 }
                 let env = json!({"you": ctrl, "self": sref, "event": rec.clone(), "vars": {}});
@@ -2218,6 +2235,27 @@ impl Engine {
                             continue;
                         }
                     }
+                }
+                let face_s = ab_face.map(|f| f.to_string()).unwrap_or_default();
+                if ab.get("once_per_turn").and_then(|v| v.as_bool()).unwrap_or(false) {
+                    // 「各ターンに一度」: このカード（オブジェクト）のこの能力は1ターンに1回だけ誘発する
+                    let key = format!("once:{}:{}:{}:{}", sref[0].as_i64().unwrap_or(-1), sref[1].as_i64().unwrap_or(-1), face_s, i);
+                    if self.s.turn_counters.get(&key).map_or(false, |v| !v.is_null() && v.as_bool() != Some(false) && v.as_i64() != Some(0)) {
+                        continue;
+                    }
+                    self.s.turn_counters.insert(key, json!(1));
+                }
+                if ab.get("first_time").and_then(|v| v.as_bool()).unwrap_or(false) {
+                    // 「各ターン、はじめて〜した時」: その出来事がこのターン最初に起きた時だけ誘発する
+                    // （同名カード・同能力で共有し、最初の出来事では全コピーが誘発する）
+                    let key = format!("first:{}:{}:{}:{}", ctrl, defn, face_s, i);
+                    let eid = rec["_eid"].as_i64().unwrap_or(0);
+                    if let Some(seen) = self.s.turn_counters.get(&key) {
+                        if seen.as_i64() != Some(eid) {
+                            continue;
+                        }
+                    }
+                    self.s.turn_counters.insert(key, json!(eid));
                 }
                 self.s.seq += 1;
                 let mut p = json!({"pid": self.s.seq, "kind": "normal", "win": win, "controller": ctrl, "src": sref, "defn": defn, "ab": i,
@@ -2230,12 +2268,13 @@ impl Engine {
         }
     }
 
-    /// 誘発条件の照合（Python 版 _match_when の、event / from / to / reason / player / subject: self の部分）
-    fn when_match(&self, w: &Value, rec: &Value, src: i64, ctrl: i64) -> bool {
+    /// 誘発条件の照合（Python 版 _match_when の写し）。sref は発生源の参照（env["self"]）、
+    /// ctrl は発生源のコントローラー（env["you"]）
+    fn when_match(&self, w: &Value, rec: &Value, sref: &Value, ctrl: i64) -> bool {
         if w["event"] != rec["ev"] {
             return false;
         }
-        for k in ["from", "to", "reason"] {
+        for k in ["from", "to", "reason", "via"] {
             if let Some(wv) = w.get(k) {
                 match wv.as_array() {
                     Some(l) => {
@@ -2253,7 +2292,76 @@ impl Engine {
         }
         if rec["ev"] == json!("move") && rec.get("from") == Some(&json!("bz")) && rec.get("to") == Some(&json!("bz"))
             && w.get("from").is_some() && w.get("to").is_none() {
-            return false;
+            return false;   // バトルゾーン内の移動は「離れた時」ではない（第183弾）
+        }
+        if let Some(tw) = w.get("target") {
+            // 攻撃先: player（シールドも含む）か creature か、self や {owner, filter} のクリーチャーか
+            let tg = rec.get("target");
+            if tw.as_str() == Some("player") || tw.as_str() == Some("creature") {
+                let is_player = tg.map_or(false, |t| t.as_str() == Some("player"));
+                if is_player != (tw.as_str() == Some("player")) {
+                    return false;
+                }
+            } else if tg.map_or(true, |t| t.is_null() || t.as_str() == Some("player"))
+                || !self.ref_match(tw, tg.unwrap(), sref, ctrl) {
+                return false;
+            }
+        }
+        for k in ["shield", "attacker", "opponent", "sealed_from"] {
+            if let Some(pat) = w.get(k) {
+                match rec.get(k) {
+                    Some(x) if !x.is_null() => {
+                        if !self.ref_match(pat, x, sref, ctrl) {
+                            return false;
+                        }
+                    }
+                    _ => return false,
+                }
+            }
+        }
+        if let Some(spec) = w.get("ord") {
+            // その出来事のこのターンでの通し番号（履歴基盤が rec に刻む）
+            let kind = spec.get("kind").and_then(|k| k.as_str());
+            let v = match kind {
+                Some(k) => rec.get("ord").and_then(|o| o.get(k)).and_then(|x| x.as_i64()),
+                None => None,
+            };
+            let v = match v {
+                Some(v) => v,
+                None => return false,
+            };
+            if let Some(x) = spec.get("eq").and_then(|x| x.as_i64()) {
+                if v != x {
+                    return false;
+                }
+            }
+            if let Some(x) = spec.get("ge").and_then(|x| x.as_i64()) {
+                if v < x {
+                    return false;
+                }
+            }
+            if let Some(x) = spec.get("gt").and_then(|x| x.as_i64()) {
+                if v <= x {
+                    return false;
+                }
+            }
+            if let Some(x) = spec.get("le").and_then(|x| x.as_i64()) {
+                if v > x {
+                    return false;
+                }
+            }
+            if let Some(x) = spec.get("lt").and_then(|x| x.as_i64()) {
+                if v >= x {
+                    return false;
+                }
+            }
+        }
+        for k in ["unpaid", "broke", "blocked", "face_up", "emblem", "vivid", "stacked"] {
+            if let Some(wv) = w.get(k) {
+                if rec.get(k).and_then(|v| v.as_bool()).unwrap_or(false) != wv.as_bool().unwrap_or(false) {
+                    return false;
+                }
+            }
         }
         if let Some(pl) = w.get("player").and_then(|v| v.as_str()) {
             let want = if pl == "you" { ctrl } else { 1 - ctrl };
@@ -2261,16 +2369,181 @@ impl Engine {
                 return false;
             }
         }
-        if let Some(sw) = w.get("subject") {
-            if let Some(ow) = sw.get("owner").and_then(|v| v.as_str()) {
-                // 持ち主だけの指定（バトルゾーン以外から動いたカード。Python の whitelist が保証する）: 今のコントローラーで見る
-                let want = if ow == "you" { ctrl } else { 1 - ctrl };
-                match rec.get("subject").and_then(|s| s[0].as_i64()) {
-                    Some(c) if self.s.cards[c as usize].controller == want => {}
-                    _ => return false,
+        if let Some(by) = w.get("by").and_then(|v| v.as_str()) {
+            // そのイベントを起こした効果の解決者（「相手の効果によって〜」）
+            let want = if by == "you" { ctrl } else { 1 - ctrl };
+            if rec.get("by").and_then(|v| v.as_i64()) != Some(want) {
+                return false;
+            }
+        }
+        if let Some(fu) = w.get("from_under") {
+            // 移動直前に他のカードの下にあったか: true=下にあった / false=下になかった /
+            // self=発生源自身の下にあった / {owner, filter}=宿主への条件（宿主の lki に当てる）
+            let host = rec.get("host").filter(|v| !v.is_null());
+            if fu.as_bool() == Some(false) {
+                if host.is_some() {
+                    return false;
                 }
-            } else if rec.get("subject").map_or(true, |s| s[0].as_i64() != Some(src)) {
-                // subject: self
+            } else if host.is_none() {
+                return false;
+            } else if fu.as_bool() == Some(true) {
+                // そのまま通す
+            } else if fu.as_str() == Some("self") {
+                if !self.ref_match(&json!("self"), host.unwrap(), sref, ctrl) {
+                    return false;
+                }
+            } else if fu.is_object() {
+                let hl = rec.get("host_lki").filter(|v| !v.is_null());
+                if !self.subject_match_trig(fu, host.unwrap()[0].as_i64().unwrap_or(-1), sref, ctrl, hl) {
+                    return false;
+                }
+            } else {
+                return false;
+            }
+        }
+        if let Some(sw) = w.get("subject") {
+            let subj = match rec.get("subject") {
+                Some(s) if !s.is_null() => s,
+                _ => return false,
+            };
+            if sw.as_str() == Some("self") {
+                return sref[0].as_i64() == subj[0].as_i64();
+            }
+            // 離れた時の姿（lki）で見るのは、バトルゾーンから動いた時（と exlife_of の照合）だけ
+            let lki = if rec.get("from").and_then(|v| v.as_str()) == Some("bz")
+                || (sw.is_object() && sw.get("exlife_of").is_some()) {
+                rec.get("lki").filter(|v| !v.is_null())
+            } else {
+                None
+            };
+            return self.subject_match_trig(sw, subj[0].as_i64().unwrap_or(-1), sref, ctrl, lki);
+        }
+        true
+    }
+
+    /// イベントに出てくるクリーチャー（攻撃先・攻撃クリーチャー等）の参照への照合（Python 版 _ref_match）
+    fn ref_match(&self, pat: &Value, refv: &Value, sref: &Value, ctrl: i64) -> bool {
+        if pat.as_str() == Some("self") {
+            return refv[0].as_i64() == sref[0].as_i64();
+        }
+        match refv[0].as_i64() {
+            Some(cid) => self.subject_match_trig(pat, cid, sref, ctrl, None),
+            None => false,
+        }
+    }
+
+    /// Python 版 _subject_match（誘発の文脈: base=False、lki を見る形）。pat は "self" か辞書
+    /// （ゲートが refs / castle_of / castle_only / exlife_of を除いている）
+    fn subject_match_trig(&self, pat: &Value, cid: i64, sref: &Value, you: i64, lki: Option<&Value>) -> bool {
+        if cid < 0 {
+            return false;
+        }
+        if let Some(s) = pat.as_str() {
+            return s == "self" && sref[0].as_i64() == Some(cid);
+        }
+        let obj = match pat.as_object() {
+            Some(o) => o,
+            None => return false,
+        };
+        let c = &self.s.cards[cid as usize];
+        if let Some(z) = obj.get("zone") {
+            // subject のいるゾーン。離れた時は lki のゾーンで見る
+            let cz = if let Some(l) = lki { l["zone"].as_str().unwrap_or("") } else { c.zone.as_str() };
+            if z.as_str() != Some(cz) {
+                return false;
+            }
+        }
+        let cctrl = if let Some(l) = lki { l["controller"].as_i64().unwrap_or(-1) } else { c.controller };
+        if let Some(o) = obj.get("owner") {
+            let os = o.as_str().unwrap_or("");
+            if os != "any" {
+                let want = if os == "you" { you } else if os == "opp" { 1 - you } else { -1 };
+                if cctrl != want {
+                    return false;
+                }
+            }
+        }
+        if obj.get("other").and_then(|v| v.as_bool()).unwrap_or(false) && sref[0].as_i64() == Some(cid) {
+            return false;
+        }
+        let f = obj.get("filter").cloned().unwrap_or(json!({}));
+        self.filter_match_trig(cid, &f, lki)
+    }
+
+    /// Python 版 filter_match（誘発の subject 照合の文脈）。特性の見え方は、lki があれば lki の chars、
+    /// 常在型の条件の入れ子・特性計算中は印刷、それ以外は現在の特性
+    /// （plain の範囲では cost / civs / types / races / names は印刷どおりで、パワーとキーワードだけが特性で動く）
+    fn filter_match_trig(&self, cid: i64, f: &Value, lki: Option<&Value>) -> bool {
+        let c = &self.s.cards[cid as usize];
+        let is_sealed = c.zone == "bz" && !c.seals.is_empty();
+        if let Some(sv) = f.get("sealed") {
+            if is_sealed != sv.as_bool().unwrap_or(false) {
+                return false;
+            }
+        } else if is_sealed && lki.is_none() {
+            return false;   // 封印されているクリーチャーは無視される（封印を対象にする効果だけが sealed で指す）
+        }
+        let d = self.def(cid);
+        let sl = |v: &Value| -> Vec<String> {
+            match v {
+                Value::String(x) => vec![x.clone()],
+                Value::Array(a) => a.iter().filter_map(|x| x.as_str().map(|y| y.to_string())).collect(),
+                _ => vec![],
+            }
+        };
+        let str_list = |v: &Value| -> Vec<String> {
+            v.as_array().map(|a| a.iter().filter_map(|x| x.as_str().map(|y| y.to_string())).collect()).unwrap_or_default()
+        };
+        // 特性のビュー: (power, cost, civs, types, races, keywords, names)
+        let (power, cost, civs, types, races, keywords, names): (i64, i64, Vec<String>, Vec<String>, Vec<String>, Vec<String>, Vec<String>) =
+            if let Some(l) = lki {
+                let ch = &l["chars"];
+                let names = {
+                    let ns = str_list(&ch["names"]);
+                    if ns.is_empty() { vec![ch["name"].as_str().unwrap_or("").to_string()] } else { ns }
+                };
+                (ch["power"].as_i64().unwrap_or(0), ch["cost"].as_i64().unwrap_or(0),
+                 str_list(&ch["civs"]), str_list(&ch["types"]), str_list(&ch["races"]), str_list(&ch["keywords"]), names)
+            } else if self.static_depth.get() > 1 || self.chars_busy.contains(cid) {
+                (d.power, d.cost, d.civs.clone(), d.types.clone(), d.races.clone(), d.keywords.clone(), vec![d.name.clone()])
+            } else {
+                let ch = self.chars(cid, None);
+                (ch.power, d.cost, d.civs.clone(),
+                 if ch.sealed { vec![] } else { d.types.clone() },
+                 if ch.sealed { vec![] } else { d.races.clone() },
+                 ch.keywords.clone(), vec![d.name.clone()])
+            };
+        for (k, v) in f.as_object().unwrap() {
+            let ok = match k.as_str() {
+                "sealed" => continue,
+                "any_of" => v.as_array().map_or(false, |subs| subs.iter().any(|sub| self.filter_match_trig(cid, sub, lki))),
+                "types" => sl(v).iter().any(|t| types.contains(t)),
+                "not_types" => !sl(v).iter().any(|t| types.contains(t)),
+                "race_has" => races.iter().any(|r| r.contains(v.as_str().unwrap_or("\u{0}"))),
+                "not_race_has" => !races.iter().any(|r| sl(v).iter().any(|p| r.contains(p))),
+                "name_has" => names.iter().any(|nm| nm.contains(v.as_str().unwrap_or("\u{0}"))),
+                "twinpact" => !self.rules.cards[&c.defn].faces.is_empty() == v.as_bool().unwrap_or(false),
+                "civs" => sl(v).iter().any(|t| civs.contains(t)),
+                "civs_all" => sl(v).iter().all(|t| civs.contains(t)),
+                "not_civs" => !sl(v).iter().any(|t| civs.contains(t)),
+                "races" => sl(v).iter().any(|t| races.contains(t)),
+                "name" => names.iter().any(|nm| Some(nm.as_str()) == v.as_str()),
+                "not_name" => !names.iter().any(|nm| Some(nm.as_str()) == v.as_str()),
+                "cost_le" => v.as_i64().map_or(false, |x| cost <= x),
+                "cost_ge" => v.as_i64().map_or(false, |x| cost >= x),
+                "power_le" => v.as_i64().map_or(false, |x| power <= x),
+                "power_ge" => v.as_i64().map_or(false, |x| power >= x),
+                "multicolor" => (civs.len() > 1) == v.as_bool().unwrap_or(false),
+                "colorless" => civs.is_empty() == v.as_bool().unwrap_or(false),
+                "tapped" => (if let Some(l) = lki { l["tapped"].as_bool().unwrap_or(false) } else { c.tapped }) == v.as_bool().unwrap_or(false),
+                "face_down" => c.face_down == v.as_bool().unwrap_or(false),
+                "face_up" => c.face_up == v.as_bool().unwrap_or(false),
+                "evolution" => d.types.iter().any(|t| t == "evolution") == v.as_bool().unwrap_or(false),
+                "entered_this_turn" => (c.entered_turn == self.s.turn) == v.as_bool().unwrap_or(false),
+                "keyword" => keywords.iter().any(|x| Some(x.as_str()) == v.as_str()),
+                _ => true,   // Python の filter_match は知らないキーを無視する（ゲートがキーを制限している）
+            };
+            if !ok {
                 return false;
             }
         }
@@ -2844,6 +3117,14 @@ impl Engine {
         if ev.get("unpaid").and_then(|v| v.as_bool()).unwrap_or(false) {
             rec["unpaid"] = json!(true);
         }
+        if ev.get("stack_on").map_or(false, |v| !v.is_null()) {
+            rec["stacked"] = json!(true);   // 進化として重なった移動（Python の _record_for と同じ）
+        }
+        if let Some(v) = ev.get("via") {
+            if !v.is_null() {
+                rec["via"] = v.clone();
+            }
+        }
         if c.zone == "bz" && c.top_of >= 0 && c.seal_of < 0 {
             // 下にあったカードが単独で動く: 宿主の移動直前の姿を載せる（from_under 照合用）
             let h = c.top_of;
@@ -2887,7 +3168,7 @@ impl Engine {
                 if zone != "bz" && ab.get("zone").and_then(|v| v.as_str()) != Some(zone.as_str()) {
                     continue;
                 }
-                if !self.when_match(&ab["when"], &rec, src, ctrl) {
+                if !self.when_match(&ab["when"], &rec, &self.refv(src), ctrl) {
                     continue;
                 }
                 if let Some(cond) = ab.get("if") {
@@ -3129,6 +3410,7 @@ impl Engine {
                             "tapped": hc.tapped, "chars": self.chars_json(h), "ref": self.refv(h)})))
                     } else { None }
                 };
+                let was_face_up = self.s.cards[cid as usize].face_up;   // 移動前の表向き状態（紋章・face_up 照合用）
                 let unders: Vec<i64> = self.s.cards[cid as usize].under.clone();
                 let under_lkis: Vec<(i64, Value)> = if from == "bz" && to != "bz" {
                     unders.iter().map(|&u| {
@@ -3184,6 +3466,9 @@ impl Engine {
                 if ev.get("stp").and_then(|v| v.as_bool()).unwrap_or(false) {
                     self.s.cards[cid as usize].stp = true;
                 }
+                if ev.get("face_up").and_then(|v| v.as_bool()).unwrap_or(false) && to == "shield" {
+                    self.s.cards[cid as usize].face_up = true;   // 表向きでシールドに置く（Python の _apply_one と同じ）
+                }
                 if let Some(st) = ev.get("summon_tapped").and_then(|v| v.as_array()) {
                     if !st.is_empty() {
                         self.s.cards[cid as usize].summon_tapped = st.iter()
@@ -3197,8 +3482,19 @@ impl Engine {
                 if ev.get("unpaid").and_then(|v| v.as_bool()).unwrap_or(false) {
                     out[0]["unpaid"] = json!(true);
                 }
+                if ev.get("face_up").and_then(|v| v.as_bool()).unwrap_or(false) || (from == "shield" && was_face_up) {
+                    out[0]["face_up"] = json!(true);   // 表向きで置かれた／表向きのシールドが離れた（Python の _apply_one と同じ）
+                }
+                if from == "shield" && was_face_up && !unders.is_empty() {
+                    out[0]["emblem"] = json!(true);   // 裁きの紋章: シールドの上に表向きに置かれていたカード
+                }
                 if ev.get("stack_on").map_or(false, |v| !v.is_null()) {
                     out[0]["stacked"] = json!(true);
+                }
+                if let Some(v) = ev.get("via") {
+                    if !v.is_null() {
+                        out[0]["via"] = v.clone();   // 「革命チェンジで出た」等の経緯（Python の _apply_one と同じ伝播）
+                    }
                 }
                 for k in ["cause", "cause_defn", "cause_kind"] {
                     if let Some(v) = ev.get(k) {
@@ -3239,6 +3535,9 @@ impl Engine {
                     }
                     let mut r = json!({"ev": "move", "subject": self.refv(u), "lki": ul, "from": from, "to": to, "reason": reason,
                         "controller": ul["controller"], "host": lki0["ref"], "host_lki": lki0});
+                    if from == "shield" && ul["face_up"].as_bool().unwrap_or(false) {
+                        r["emblem"] = json!(true);   // 束の下にいた表向きのカードも裁きの紋章
+                    }
                     for k in ["cause", "cause_defn", "cause_kind"] {
                         if let Some(v) = ev.get(k) {
                             if v.as_str().map_or(false, |x| !x.is_empty()) {
