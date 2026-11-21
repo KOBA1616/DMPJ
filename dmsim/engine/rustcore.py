@@ -69,6 +69,15 @@ def _simple_filter(f) -> bool:
         elif k in ("race_has", "keyword"):
             if not isinstance(v, str):
                 return False
+        elif k in ("name", "name_has", "not_name"):
+            if not isinstance(v, str):
+                return False
+        elif k == "not_race_has":
+            if not (isinstance(v, str) or (isinstance(v, list) and all(isinstance(x, str) for x in v))):
+                return False
+        elif k in ("entered_this_turn", "face_up", "face_down", "twinpact"):
+            if not isinstance(v, bool):
+                return False
         elif k == "any_of":
             if not (isinstance(v, list) and all(_simple_filter(x) for x in v)):
                 return False
@@ -352,6 +361,137 @@ def _self_mods(d):
     return allow, deny, breaks, shield_allow
 
 
+def _simple_filter_x(f) -> bool:
+    """常在型の範囲指定（affects の filter、allow/deny の other、battle_power の opponent_filter）に使うフィルタ。
+    _simple_filter に加えて、値が式（辞書）でないこと（any_of の中身は再帰で見る）。
+    Python の _subject_match は式の値を照合時に評価するが、特性計算の文脈では Rust 側で同じ評価ができないため除く。"""
+    if not _simple_filter(f):
+        return False
+    for k, v in f.items():
+        if k == "any_of":
+            if not all(_simple_filter_x(x) for x in v):
+                return False
+        elif isinstance(v, dict):
+            return False
+    return True
+
+
+def _simple_affects(aff) -> bool:
+    """Rust の subject_match が Python の _subject_match（特性計算から base=True で呼ばれる形）と
+    同じ結果になる affects 辞書。zone / owner / other / filter だけを見て、count / name / name_has / ref は
+    Python 側でも照合に使われない（filter の中身としてではなく）ので値は何でもよい。"""
+    if not set(aff) <= {"zone", "owner", "other", "filter", "count", "name", "name_has", "ref"}:
+        return False
+    if "zone" in aff and not isinstance(aff["zone"], str):
+        return False
+    if "owner" in aff and aff["owner"] not in ("you", "opp", "any"):
+        return False
+    if "filter" in aff and not _simple_filter_x(aff["filter"]):
+        return False
+    return True
+
+
+def _amount_count_ok(v) -> bool:
+    """mod の {amount, count} 形（power / cost）: amount は整数、count は数えるだけのセレクタ（式は除く）。"""
+    return isinstance(v, dict) and set(v) <= {"amount", "count"} \
+        and isinstance(v.get("amount"), int) and not isinstance(v.get("amount"), bool) \
+        and ("count" not in v or _simple_cands(v["count"]))
+
+
+def _static_entry_ok(e, is_allow: bool) -> bool:
+    """常在型 mod の allow / deny の項目。文字列か、{action, other} / {action} / {action, once} の辞書だけ。
+    墓地・マナからの召喚の許可は Rust に出す選択肢の生成が無いので、増分Aの CE mod と同じく許可側だけ除く。"""
+    if isinstance(e, str):
+        return not (is_allow and e in ("summon_from_graveyard", "summon_from_mana"))
+    if not isinstance(e, dict) or not set(e) <= {"action", "other", "once"} or not isinstance(e.get("action"), str):
+        return False
+    if is_allow and e["action"] in ("summon_from_graveyard", "summon_from_mana"):
+        return False
+    return "other" not in e or _simple_filter_x(e["other"])
+
+
+def _static_mod_ok(mod) -> bool:
+    """増分B: Rust の特性計算（chars）が Python の _chars_calc_body と同じ畳み込みになる mod だけ。
+    対象外のキー（cost_may / opt_reduce / sac_reduce / add_races / add_civs / no_leave / must_* /
+    battle_indestructible / indestructible / crystal_soul / mana_number / ignore* 等）は従来どおり落とす。"""
+    if not isinstance(mod, dict) or not mod:
+        return False
+    for k, v in mod.items():
+        if k == "power":
+            if not (isinstance(v, int) and not isinstance(v, bool)) and not _amount_count_ok(v):
+                return False
+        elif k == "power_when":
+            if not (isinstance(v, dict) and set(v) <= {"amount", "when", "count"}
+                    and isinstance(v.get("amount"), int) and not isinstance(v.get("amount"), bool)
+                    and v.get("when") in ("attacking", "blocking")
+                    and ("count" not in v or _simple_cands(v["count"]))):
+                return False
+        elif k in ("allow", "deny"):
+            if not (isinstance(v, list) and all(_static_entry_ok(e, k == "allow") for e in v)):
+                return False
+        elif k in ("breaks", "breaks_add", "breaks_per_power", "cost_min"):
+            if not (isinstance(v, int) and not isinstance(v, bool)):
+                return False
+        elif k == "grant":
+            if not (isinstance(v, list) and all(isinstance(x, str) for x in v)):
+                return False
+        elif k == "cost":
+            if not (isinstance(v, int) and not isinstance(v, bool)) and not _amount_count_ok(v):
+                return False
+        elif k == "require":
+            if not (isinstance(v, list) and all(isinstance(x, str) for x in v)):
+                return False
+        elif k == "gain":
+            # 常在型の gain は Python の特性計算が畳み込まず効果が無い（Rust も読まない）。
+            # 中身（得る能力）は実行されないので形は見ない。ただし if 条件は Python が評価するので検証は要る
+            if not isinstance(v, list):
+                return False
+        elif k == "win_all_battles":
+            if v is not True:
+                return False
+        elif k == "battle_power":
+            if not (isinstance(v, dict) and set(v) <= {"amount", "count", "only", "opponent_filter"}
+                    and isinstance(v.get("amount"), int) and not isinstance(v.get("amount"), bool)
+                    and ("count" not in v or _simple_cands(v["count"]))
+                    and ("only" not in v or isinstance(v["only"], str))
+                    and ("opponent_filter" not in v or _simple_filter_x(v["opponent_filter"]))):
+                return False
+        else:
+            return False
+    return True
+
+
+def _static_ok(ab) -> bool:
+    """増分B: Rust が特性計算で写せる常在型能力か。追加キー（sst / sforce / choukon 等のゲートつき）は
+    abilities() の絞り込みを Rust が持たないため除く（現行 plain の札には無いことを確認済み）。"""
+    if not set(ab) <= {"kind", "affects", "mod", "zone", "if", "keyword"}:
+        return False
+    if "zone" in ab and not isinstance(ab["zone"], str):
+        return False
+    mod = ab.get("mod")
+    if "if" in ab and not _simple_cond(ab["if"]):
+        return False
+    aff = ab.get("affects", {})
+    if aff != "self" and not (isinstance(aff, dict) and _simple_affects(aff)):
+        return False
+    if mod is None:
+        return True   # mod の無い常在型は特性に影響しない
+    return _static_mod_ok(mod)
+
+
+def _statics_ok(d) -> bool:
+    """増分B の plain 判定（常在型の部分）: 誘発・置換が単純か、常在型が _static_ok な札だけ。
+    従来の _self_mods（自分自身への許可・禁止・ブレイク数だけ）と違い、affects 辞書の常在型・
+    self の power / power_when・コスト修整・require・全バトル勝利・バトル中パワーまで含む。
+    特性の並びは Rust が abil から能力順に畳むので、従来のような並びの制約（条件つきは後ろ等）は要らない。"""
+    for ab in d.abilities:
+        if _simple_trigger(ab) or _simple_replace(ab):
+            continue
+        if ab["kind"] != "static" or not _static_ok(ab):
+            return False
+    return True
+
+
 def _self_deny_x(d) -> list:
     return [x for ab in d.abilities if ab["kind"] == "static" and ab.get("affects") == "self" and "if" not in ab
             for x in ab.get("mod", {}).get("deny", []) if isinstance(x, dict)]
@@ -432,7 +572,7 @@ def _is_plain_evo(d) -> bool:
         return False
     if d.evolve_zone not in ("bz", "graveyard") or ef.get("zone", d.evolve_zone) != d.evolve_zone:
         return False
-    if not set(d.keywords) <= _OK_KW or _self_mods(d) is None:
+    if not set(d.keywords) <= _OK_KW or not _statics_ok(d):
         return False
     skip = {"id", "name", "types", "civs", "cost", "power", "mana", "races", "text", "abilities", "keywords", "source",
             "evolve_from", "evolve_zone", "evolve_count", "evolve_any", "cost_reduce_per_evo"}
@@ -446,12 +586,14 @@ def _is_plain_evo(d) -> bool:
 
 
 def _is_plain_creature(d) -> bool:
-    """Rust が動かせる札（段階2-c）: 常在型は自分自身への単純な許可・禁止・ブレイク数だけ（誘発・置換・起動・特別な出し方は無い）のクリーチャー。"""
+    """Rust が動かせる札: 常在型は _statics_ok の範囲（自分自身への許可・禁止・ブレイク数に加え、増分Bで
+    affects 辞書の常在型・self の power / power_when・コスト修整・require・全バトル勝利・バトル中パワーまで）。
+    誘発・置換は単純なものだけ（起動・特別な出し方は無い）のクリーチャー。"""
     import dataclasses
     from ..cards.defs import CardDef
     if d.types != ["creature"] or d.power <= 0:
         return False
-    if not set(d.keywords) <= _OK_KW or _self_mods(d) is None:
+    if not set(d.keywords) <= _OK_KW or not _statics_ok(d):
         return False
     skip = {"id", "name", "types", "civs", "cost", "power", "mana", "races", "text", "abilities", "keywords", "source"}
     for f in dataclasses.fields(type(d)):
@@ -490,10 +632,10 @@ def _card_bundle(d, zt=False, mana=None) -> dict:
            **dict(zip(("allow", "deny", "breaks", "shield_allow"), (_self_mods(d) or ([], [], [], [])))),
            "allow_x": _self_allow_x(d) if plain else [],
            "deny_x": _self_deny_x(d) if plain else [],
-           "deny_if": [[ab["if"], list(ab["mod"]["deny"])] for ab in d.abilities
-                       if plain and ab["kind"] == "static" and ab.get("affects") == "self" and "if" in ab and "deny" in ab["mod"]],
-           "power_if": [[ab["if"], ab["mod"]["power"]] for ab in d.abilities
-                        if plain and ab["kind"] == "static" and ab.get("affects") == "self" and "if" in ab and "power" in ab["mod"]]}
+           "deny_if": [[ab["if"], list(ab.get("mod", {})["deny"])] for ab in d.abilities
+                       if plain and ab["kind"] == "static" and ab.get("affects") == "self" and "if" in ab and "deny" in ab.get("mod", {})],
+           "power_if": [[ab["if"], ab.get("mod", {})["power"]] for ab in d.abilities
+                        if plain and ab["kind"] == "static" and ab.get("affects") == "self" and "if" in ab and "power" in ab.get("mod", {})]}
     if plain and "evolution" in d.types:
         out.update(evolve_from={k: v for k, v in d.evolve_from.items() if k != "zone"}, evolve_zone=d.evolve_zone,
                    evolve_count=d.evolve_count, evolve_any=d.evolve_any, cost_reduce_per_evo=d.cost_reduce_per_evo)

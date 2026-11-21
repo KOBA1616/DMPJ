@@ -177,6 +177,38 @@ def test_filter_put_cards_match(real_env, seed):
 
 
 @pytest.mark.parametrize("seed", range(1, 21))
+def test_static_cards_match(real_env, seed):
+    """増分B: affects 辞書の常在型（フィルタ常在効果）と self の power / power_when・コスト修整・
+    require を持つ札を多く入れたデッキで、特性の畳み込み（パワー・支払いコスト・許可／禁止・
+    ブレイク数・強制攻撃／ブロック・バトル中修整）まで含めて1局が一致する。"""
+    import random
+    r, b = real_env
+    pool = _portable(r)
+
+    def has_b(d):
+        for a in d.abilities:
+            if a["kind"] != "static":
+                continue
+            m = a.get("mod", {})
+            if isinstance(a.get("affects"), dict):
+                return True
+            if "power_when" in m or isinstance(m.get("power"), dict):
+                return True
+            if "cost" in m or "require" in m or "battle_power" in m or "win_all_battles" in m:
+                return True
+        return False
+    sel = [i for i in pool if has_b(r.cards[i])]
+    assert len(sel) >= 40
+    rnd = random.Random(seed)
+
+    def deck():
+        return [rnd.choice(sel) if rnd.random() < 0.6 else rnd.choice(pool) for _ in range(40)]
+    spec = {"kind": "new_game", "decks": [deck(), deck()], "seed": seed, "first_player": seed % 2}
+    res = lockstep(Session.open(r, spec), rustcore.RustSession.open(r, spec, b), f"random:{seed}")
+    assert res["divergence"] is None and res["ok"] is True
+
+
+@pytest.mark.parametrize("seed", range(1, 21))
 def test_modify_cards_match(real_env, seed):
     """増分A: duration つき modify（一時修整。deny / allow / power / grant、対象固定と dynamic）を持つ札を
     多く入れたデッキで、継続的効果の生成・特性への畳み込み・期限切れまで含めて1局が一致する。"""
