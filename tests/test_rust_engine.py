@@ -176,6 +176,45 @@ def test_filter_put_cards_match(real_env, seed):
     assert res["divergence"] is None and res["ok"] is True
 
 
+@pytest.mark.parametrize("seed", range(1, 21))
+def test_modify_cards_match(real_env, seed):
+    """増分A: duration つき modify（一時修整。deny / allow / power / grant、対象固定と dynamic）を持つ札を
+    多く入れたデッキで、継続的効果の生成・特性への畳み込み・期限切れまで含めて1局が一致する。"""
+    import random
+    r, b = real_env
+    pool = _portable(r)
+
+    def has_modify(i):
+        out = []
+
+        def w(ops):
+            for o in ops:
+                out.append(o)
+                for k in ("body", "then", "else"):
+                    if isinstance(o.get(k), list):
+                        w(o[k])
+                if isinstance(o.get("modes"), list):
+                    for m in o["modes"]:
+                        if isinstance(m, list):
+                            w(m)
+        d = r.cards[i]
+        if d.spell:
+            w(d.spell)
+        for a in d.abilities:
+            if a["kind"] in ("trigger", "replace"):
+                w(a.get("effect") or a.get("instead") or [])
+        return any(o["op"] == "modify" for o in out)
+    sel = [i for i in pool if has_modify(i)]
+    assert len(sel) >= 40
+    rnd = random.Random(seed)
+
+    def deck():
+        return [rnd.choice(sel) if rnd.random() < 0.6 else rnd.choice(pool) for _ in range(40)]
+    spec = {"kind": "new_game", "decks": [deck(), deck()], "seed": seed, "first_player": seed % 2}
+    res = lockstep(Session.open(r, spec), rustcore.RustSession.open(r, spec, b), f"random:{seed}")
+    assert res["divergence"] is None and res["ok"] is True
+
+
 @pytest.mark.parametrize("seed", [1, 2, 3])
 def test_if_cards_match(real_env, seed):
     """段階2-d 第6弾: if（exists / cmp / not / all / any）を含む札を多く入れたデッキで1局が一致する。"""

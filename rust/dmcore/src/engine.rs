@@ -92,14 +92,7 @@ impl Engine {
     }
     /// 相手側のカード other に対して action できるか（Python の permits(cid, action, other)）。辞書形の禁止 {action, other} を見る
     fn permits_vs(&self, cid: i64, action: &str, other: i64) -> bool {
-        if self.s.cards[cid as usize].zone == "bz" {
-            for e in &self.def(cid).deny_x {
-                if e["action"] == json!(action) && self.filter_ok(other, &e["other"]).unwrap_or(false) {
-                    return false;
-                }
-            }
-        }
-        self.permits(cid, action)
+        self.permits_o(cid, action, None, Some(other))
     }
     /// 継続的効果が cid に及ぶか（Python の _ce_applies）。範囲固定は affected、dynamic は生成時にベイクした filter
     fn ce_applies(&self, ce: &Value, cid: i64) -> bool {
@@ -108,7 +101,14 @@ impl Engine {
         }
         let f = &ce["filter"];
         let c = &self.s.cards[cid as usize];
-        if f["zone"].as_str() != Some(c.zone.as_str()) {
+        // Python の zones_of: "any" は全ゾーン、配列はそのどれか
+        let fz = &f["zone"];
+        let zone_ok = match fz.as_str() {
+            Some("any") => true,
+            Some(z) => z == c.zone,
+            None => fz.as_array().map_or(false, |a| a.iter().any(|z| z.as_str() == Some(c.zone.as_str()))),
+        };
+        if !zone_ok {
             return false;
         }
         if f["owner"] != json!("any") && f["owner"].as_i64() != Some(c.controller) {
@@ -132,26 +132,107 @@ impl Engine {
         self.static_depth.set(self.static_depth.get() - 1);
         out
     }
-    /// 継続的効果の mod の allow / deny に action があるか
-    fn ce_lists(&self, cid: i64, key: &str) -> Vec<String> {
+    /// 継続的効果の mod の項目（文字列・辞書の両方）を、効果の並び順のまま並べる（Python の chars の allow / deny の並び）
+    fn ce_entries(&self, cid: i64, key: &str) -> Vec<Value> {
         let mut out = vec![];
         for ce in &self.s.continuous {
             if let Some(l) = ce["mod"].get(key).and_then(|v| v.as_array()) {
                 if self.ce_applies(ce, cid) {
-                    out.extend(l.iter().filter_map(|x| x.as_str().map(String::from)));
+                    out.extend(l.iter().cloned());
                 }
             }
         }
         out
     }
+    /// Python の permits の hit を継続的効果の項目だけに適用する: 文字列は行動名一致、
+    /// 辞書 {action, other} は other が無い時は一致、ある時は other フィルタ（許可側を基準に式を前評価）で決める
+    fn ce_hit(&self, cid: i64, key: &str, action: &str, other: Option<i64>) -> bool {
+        for e in self.ce_entries(cid, key) {
+            if let Some(s) = e.as_str() {
+                if s == action {
+                    return true;
+                }
+            } else if e.get("action").and_then(|v| v.as_str()) == Some(action) {
+                match other {
+                    None => return true,
+                    Some(o) => {
+                        let f = e.get("other").cloned().unwrap_or(json!({}));
+                        let env = json!({"you": self.s.cards[cid as usize].controller, "self": self.refv(cid), "vars": {}});
+                        let baked = self.bake_filter(&f, &env).unwrap_or(f);
+                        if self.filter_ok(o, &baked).unwrap_or(false) {
+                            return true;
+                        }
+                    }
+                }
+            }
+        }
+        false
+    }
+    /// キーワードの常在型（自分自身への許可・禁止。Python の rules.keywords の static の写し）
+    fn kw_static(kw: &str) -> (&'static [&'static str], &'static [&'static str]) {
+        match kw {
+            "blocker" => (&["block"], &[]),
+            "speed_attacker" => (&["attack_summoning_sick"], &[]),
+            "slayer" => (&["slayer"], &[]),
+            "guardman" => (&["guardman"], &[]),
+            "unblockable" => (&[], &["be_blocked"]),
+            "cannot_attack" => (&[], &["attack_player", "attack_creature"]),
+            "cannot_block" => (&[], &["block"]),
+            _ => (&[], &[]),
+        }
+    }
+    /// 継続的効果で与えられたキーワードの常在型が action に触れるか（Python の chars の granted の畳み込み。
+    /// 畳み込みはキーワード能力の zone とカードの zone が一致する時だけ: 通常はバトルゾーン、S・トリガーはシールドゾーン）
+    fn granted_hit(&self, cid: i64, key: &str, action: &str) -> bool {
+        let zone = self.s.cards[cid as usize].zone.as_str();
+        if zone == "shield" {
+            return key == "allow" && action == "s_trigger" && self.granted_kw(cid).iter().any(|k| k == "s_trigger");
+        }
+        if zone != "bz" {
+            return false;
+        }
+        self.granted_kw(cid).iter().any(|kw| {
+            let (allow, deny) = Self::kw_static(kw);
+            (if key == "allow" { allow } else { deny }).iter().any(|x| *x == action)
+        })
+    }
+    /// 与えられたキーワードの常在型の allow / deny（特性の並び用。granted_hit と同じ畳み込み）
+    fn granted_lists(&self, cid: i64, key: &str) -> Vec<String> {
+        let zone = self.s.cards[cid as usize].zone.as_str();
+        if zone == "shield" {
+            if key == "allow" && self.granted_kw(cid).iter().any(|k| k == "s_trigger") {
+                return vec!["s_trigger".to_string()];
+            }
+            return vec![];
+        }
+        if zone != "bz" {
+            return vec![];
+        }
+        let mut out = vec![];
+        for kw in self.granted_kw(cid) {
+            let (allow, deny) = Self::kw_static(&kw);
+            out.extend((if key == "allow" { allow } else { deny }).iter().map(|s| s.to_string()));
+        }
+        out
+    }
     fn permits_face(&self, cid: i64, action: &str, face: Option<i64>) -> bool {
-        if face.is_none() && !self.s.continuous.is_empty() && self.ce_lists(cid, "deny").iter().any(|x| x == action) {
-            return false;   // 101.2:「できない」は「できる」に勝つ
+        self.permits_o(cid, action, face, None)
+    }
+    /// Python の permits(cid, action, other, face) の写し。禁止（継続的効果・与えられたキーワード・
+    /// 自分への常在型・辞書形の禁止）を全て見てから許可を見る（101.2）
+    fn permits_o(&self, cid: i64, action: &str, face: Option<i64>, other: Option<i64>) -> bool {
+        if face.is_none() && !self.s.continuous.is_empty() {
+            if self.ce_hit(cid, "deny", action, other) || self.granted_hit(cid, "deny", action) {
+                return false;   // 101.2:「できない」は「できる」に勝つ
+            }
         }
         if self.s.cards[cid as usize].zone == "shield" {
             // シールドゾーンで働く自身への許可（S・トリガー）
             if self.fdef(cid, face).shield_allow.iter().any(|x| x == action) {
                 return true;
+            }
+            if face.is_none() && self.granted_hit(cid, "allow", action) {
+                return true;   // 継続的効果で与えられた S・トリガー
             }
         }
         if self.s.cards[cid as usize].zone == "bz" {
@@ -162,12 +243,24 @@ impl Engine {
             if self.cond_deny(cid, face).iter().any(|x| x == action) {
                 return false;
             }
+            if face.is_none() {
+                if let Some(o) = other {
+                    // 相手側のカードで決まる辞書形の禁止（パワー3000以下にブロックされない等）
+                    for e in &d.deny_x {
+                        if e["action"] == json!(action) && self.filter_ok(o, &e["other"]).unwrap_or(false) {
+                            return false;
+                        }
+                    }
+                }
+            }
             if d.allow.iter().any(|x| x == action) {
                 return true;
             }
         }
-        if face.is_none() && !self.s.continuous.is_empty() && self.ce_lists(cid, "allow").iter().any(|x| x == action) {
-            return true;
+        if face.is_none() && !self.s.continuous.is_empty() {
+            if self.ce_hit(cid, "allow", action, other) || self.granted_hit(cid, "allow", action) {
+                return true;
+            }
         }
         *self.rules.actions.get(action).unwrap_or(&false)
     }
@@ -197,12 +290,20 @@ impl Engine {
         out.dedup();
         out
     }
-    /// 与えられたブレイカーのブレイク数（バトルゾーンにある間だけ働く）
+    /// 与えられたブレイカーのブレイク数（バトルゾーンにある間だけ働く）。
+    /// パワード・ブレイカーは最終パワー 6000 ごとに 1 つ多く（Python の chars の breaks_per_power）
     fn granted_breaks(&self, cid: i64) -> Vec<i64> {
         if self.s.cards[cid as usize].zone != "bz" {
             return vec![];
         }
-        self.granted_kw(cid).iter().filter_map(|k| match k.as_str() { "double_breaker" => Some(2), "triple_breaker" => Some(3), _ => None }).collect()
+        let gk = self.granted_kw(cid);
+        let mut v: Vec<i64> = gk.iter().filter_map(|k| match k.as_str() {
+            "double_breaker" => Some(2), "triple_breaker" => Some(3), "world_breaker" => Some(99), "quad_breaker" => Some(4), _ => None
+        }).collect();
+        if gk.iter().any(|k| k == "powered_breaker") {
+            v.push(1 + self.power(cid).max(0) / 6000);
+        }
+        v
     }
     fn bz_tops(&self, controller: Option<i64>) -> Vec<i64> {
         self.s.zones["bz"][0]
@@ -1178,7 +1279,13 @@ impl Engine {
                 opts.push(json!({"key": format!("attack:{}:player", dfn), "cid": c, "target": "player"}));
             }
             for tc in self.bz_tops(Some(1 - a)) {
-                if self.s.cards[tc as usize].tapped && self.permits(c, "attack_creature") && self.permits_vs(tc, "be_attacked", c) {
+                // 505.2 既定はタップ状態だけ。allow 辞書 {attack_creature, other:{tapped:false,…}} が
+                // 対象に一致すればタップされていないクリーチャーも攻撃できる（combat.py と同じ直接参照）
+                let widened = !self.s.cards[tc as usize].tapped && self.allow_entries(c).iter().any(|e| {
+                    e.get("action").and_then(|x| x.as_str()) == Some("attack_creature")
+                        && e.get("other").map(|o| o.get("tapped") == Some(&json!(false)) && self.filter_ok(tc, o).unwrap_or(false)).unwrap_or(false)
+                });
+                if (self.s.cards[tc as usize].tapped || widened) && self.permits_o(c, "attack_creature", None, Some(tc)) && self.permits_vs(tc, "be_attacked", c) {
                     opts.push(json!({"key": format!("attack:{}:{}", dfn, self.s.cards[tc as usize].defn), "cid": c, "target": self.refv(tc)}));
                 }
             }
@@ -1265,12 +1372,12 @@ impl Engine {
             // 507 ブロッククリーチャー指定
             let attc = att[0].as_i64().unwrap();
             let blockers: Vec<i64> = self.bz_tops(Some(1 - a)).into_iter().filter(|&c| {
-                !self.s.cards[c as usize].tapped && self.permits(c, "block") && self.permits_vs(attc, "be_blocked", c)
+                !self.s.cards[c as usize].tapped && self.permits_o(c, "block", None, Some(attc)) && self.permits_vs(attc, "be_blocked", c)
                     && json!([c, self.s.cards[c as usize].gen]) != target
             }).collect();
             let guards: Vec<i64> = if target == json!("player") { vec![] } else {
                 self.bz_tops(Some(1 - a)).into_iter().filter(|&c| {
-                    !self.s.cards[c as usize].tapped && json!([c, self.s.cards[c as usize].gen]) != target && self.permits(c, "guardman")
+                    !self.s.cards[c as usize].tapped && json!([c, self.s.cards[c as usize].gen]) != target && self.permits_o(c, "guardman", None, Some(attc))
                 }).collect()
             };
             let mut opts: Vec<Value> = blockers.iter().map(|&c| self.card_option(c, None)).collect();
@@ -1444,6 +1551,10 @@ impl Engine {
                 // 継続的効果（パワーの修整・このターンの間）。対象は解決時に固定（110.2e）
                 if op.get("duration").map_or(false, |d| d != "end_of_turn") {
                     return uns("modify duration");
+                }
+                if let Some(cnt) = op["mod"].get("power").and_then(|pw| pw.get("count")) {
+                    // {amount, count} の count は特性計算のたびに数え直す。数えられない形はここで Unsupported にする
+                    self.candidates_ro(cnt, &env)?;
                 }
                 if op.get("dynamic").and_then(|v| v.as_bool()).unwrap_or(false) {
                     // 後から入ったカードにも及ぶ範囲指定。範囲は生成時に持ち主を固定してベイクする
@@ -2000,30 +2111,65 @@ impl Engine {
         }
         if !self.s.continuous.is_empty() {
             for ce in &self.s.continuous {
-                if ce["mod"].get("power").is_some() && self.ce_applies(ce, cid) {
-                    p += ce["mod"].get("power").and_then(|v| v.as_i64()).unwrap_or(0);
+                if let Some(pw) = ce["mod"].get("power") {
+                    if !self.ce_applies(ce, cid) {
+                        continue;
+                    }
+                    if let Some(n) = pw.as_i64() {
+                        p += n;
+                    } else if pw.is_object() {
+                        // {amount, count}: 「〜1つにつき +N」。count は特性を見るカード自身の env で数える（Python の _chars_calc と同じ）
+                        let amount = pw.get("amount").and_then(|v| v.as_i64()).unwrap_or(0);
+                        let mult = match pw.get("count") {
+                            None => 1,
+                            Some(cnt) => {
+                                let env = json!({"you": self.s.cards[cid as usize].controller, "self": self.refv(cid), "vars": {}});
+                                self.candidates_ro(cnt, &env).map(|v| v.len() as i64).unwrap_or(0)
+                            }
+                        };
+                        p += amount * mult;
+                    }
                 }
             }
         }
         p
     }
 
+    /// chars の allow リストそのもの（Python の chars["allow"] と同じ並び）。
+    /// 攻撃対象の拡大（combat.py の allow 辞書の直接参照）でも使う
+    fn allow_entries(&self, cid: i64) -> Vec<Value> {
+        let d = self.def(cid);
+        let in_bz = self.s.cards[cid as usize].zone == "bz";
+        let base: Vec<Value> = if in_bz {
+            d.allow_x.clone().into_iter().chain(d.allow.iter().map(|x| json!(x))).collect()
+        } else if self.s.cards[cid as usize].zone == "shield" {
+            d.shield_allow.iter().map(|x| json!(x)).collect()
+        } else { vec![] };
+        let mut v = base;
+        if !self.s.continuous.is_empty() {
+            v.extend(self.ce_entries(cid, "allow"));
+            v.extend(self.granted_lists(cid, "allow").iter().map(|x| json!(x)));
+        }
+        v
+    }
+
     fn chars_json(&self, cid: i64) -> Value {
         let d = self.def(cid);
         let power = self.power(cid);
         let in_bz = self.s.cards[cid as usize].zone == "bz";
-        let (mut allow, mut deny, mut bo): (Vec<String>, Vec<String>, Vec<i64>) =
-            if in_bz { (d.allow.clone(), d.deny.clone(), d.breaks.clone()) }
-            else if self.s.cards[cid as usize].zone == "shield" { (d.shield_allow.clone(), vec![], vec![]) }   // シールドゾーンで働く自身への許可
-            else { (vec![], vec![], vec![]) };
+        let (mut deny, mut bo): (Vec<String>, Vec<i64>) =
+            if in_bz { (d.deny.clone(), d.breaks.clone()) }
+            else { (vec![], vec![]) };
         if in_bz {
             deny.extend(self.cond_deny(cid, None));
         }
+        // allow / deny の並びは Python の chars と同じ: 自分への常在型 → 継続的効果（辞書形の項目もそのまま）→ 与えられたキーワードの常在型
+        let allow_v: Vec<Value> = self.allow_entries(cid);
+        let mut deny_v: Vec<Value> = (if in_bz { d.deny_x.clone() } else { vec![] }).into_iter().chain(deny.iter().map(|x| json!(x))).collect();
         if !self.s.continuous.is_empty() {
-            allow.extend(self.ce_lists(cid, "allow"));
-            deny.extend(self.ce_lists(cid, "deny"));
+            deny_v.extend(self.ce_entries(cid, "deny"));
+            deny_v.extend(self.granted_lists(cid, "deny").iter().map(|x| json!(x)));
         }
-        let deny: Vec<Value> = (if in_bz { d.deny_x.clone() } else { vec![] }).into_iter().chain(deny.iter().map(|x| json!(x))).collect();
 
         let gk = self.granted_kw(cid);
         if in_bz {
@@ -2035,7 +2181,7 @@ impl Engine {
         kw.sort();
         kw.dedup();
         json!({"power": power, "cost": d.cost, "civs": d.civs, "types": d.types, "races": d.races, "keywords": kw,
-            "name": d.name, "names": [d.name], "allow": (if in_bz { d.allow_x.clone() } else { vec![] }).into_iter().chain(allow.iter().map(|x| json!(x))).collect::<Vec<_>>(), "deny": deny, "require": [], "breaks": breaks, "break_opts": bo,
+            "name": d.name, "names": [d.name], "allow": allow_v, "deny": deny_v, "require": [], "breaks": breaks, "break_opts": bo,
             "breaks_add": 0, "pay_cost": d.cost, "sac_reduce": 0, "opt_reduce": null, "cost_may": [], "no_leave": [],
             "must_be_attacked": false, "must_be_attacked_first": false, "must_be_chosen": false, "must_attack_creature": false,
             "must_attack_creature_first": false, "battle_indestructible": false, "battle_indestructible_filters": [],

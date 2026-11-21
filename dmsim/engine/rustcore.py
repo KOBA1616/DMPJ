@@ -161,17 +161,15 @@ def _simple_effect(ops, top=True) -> bool:
             continue
         if k == "shuffle" and set(o) <= {"op", "player"} and o.get("player", "you") in ("you", "opp"):
             continue
-        if k == "modify" and set(o) <= {"op", "select", "mod"} and isinstance(o.get("mod"), dict) and set(o["mod"]) == {"power"} \
-                and isinstance(o["mod"]["power"], int) and not isinstance(o["mod"]["power"], bool) and isinstance(o.get("select"), dict) \
-                and set(o["select"]) == {"ref"} and isinstance(o["select"]["ref"], str) and o["select"]["ref"] not in ("self",):
-            continue   # このターンの間のパワー修整（変数で指した対象）
         if k == "modify" and o.get("dynamic") is True and set(o) <= {"op", "select", "mod", "dynamic", "duration"} \
-                and o.get("duration", "end_of_turn") == "end_of_turn" and isinstance(o.get("mod"), dict) and set(o["mod"]) == {"deny"} \
-                and isinstance(o["mod"]["deny"], list) and all(isinstance(x, str) for x in o["mod"]["deny"]) \
-                and isinstance(o.get("select"), dict) and set(o["select"]) <= {"zone", "owner", "filter", "count"} \
-                and o["select"].get("zone", "bz") == "bz" and o["select"].get("owner", "you") in ("you", "opp", "any") \
-                and o["select"].get("count", "all") == "all" and _simple_filter(o["select"].get("filter", {})):
-            continue   # このターンの間の「〜できない」（後から出たクリーチャーにも及ぶ）
+                and o.get("duration", "end_of_turn") == "end_of_turn" and _simple_mod(o.get("mod")) \
+                and isinstance(o.get("select"), dict) and set(o["select"]) <= {"zone", "owner", "filter", "count", "ref"} \
+                and _simple_dyn_zone(o["select"].get("zone", "bz")) and o["select"].get("owner", "you") in ("you", "opp", "any") \
+                and _simple_filter(o["select"].get("filter", {})):
+            continue   # このターンの間の一時修整（後から入ったカードにも及ぶ範囲指定。範囲は生成時に持ち主を固定してベイクする）
+        if k == "modify" and set(o) <= {"op", "select", "mod", "duration"} and o.get("duration", "end_of_turn") == "end_of_turn" \
+                and _simple_mod(o.get("mod")) and _simple_selector(o.get("select")):
+            continue   # このターンの間の一時修整（対象は解決時に固定。110.2e）
         if k == "choose" and set(o) <= {"op", "select", "as"} and isinstance(o.get("as"), str) and _simple_selector(o.get("select")):
             continue   # 子の効果での束縛は、Rust が同じ env を持つタスクすべてに書く（Python の env 共有と同じ結果）
         if k == "play_free" and set(o) <= {"op", "select", "as"} and isinstance(o.get("as", ""), str) and _simple_selector(o.get("select")) and o["select"].get("zone") in ("hand", "graveyard"):
@@ -192,11 +190,6 @@ def _simple_effect(ops, top=True) -> bool:
             continue
         if k == "flip_down" and set(o) <= {"op", "select"} and _simple_selector(o.get("select")) and o["select"].get("zone") in ("mana", "shield"):
             continue   # 裏向きにする（マナは無色として払う）。イベントは作らない
-        if k == "modify" and set(o) <= {"op", "select", "mod", "duration"} and o.get("duration", "end_of_turn") == "end_of_turn" \
-                and o.get("select") == {"ref": "self"} and isinstance(o.get("mod"), dict) and set(o["mod"]) == {"power", "grant"} \
-                and isinstance(o["mod"]["power"], int) and not isinstance(o["mod"]["power"], bool) \
-                and isinstance(o["mod"]["grant"], list) and o["mod"]["grant"] and set(o["mod"]["grant"]) <= set(_GRANT_BREAKS):
-            continue   # このクリーチャーにこのターンの間パワーとブレイカーを与える（龍装者"JET"レミング）
         if k == "move" and "order" in o and not (o["order"] == "choose" and o.get("to") == "deck" and isinstance(o.get("select"), dict)
                                                   and set(o["select"]) == {"ref"}):
             return False   # 並べ替えは、選ばせない参照（変数の全部）を山札へ置く時だけ
@@ -207,7 +200,62 @@ def _simple_effect(ops, top=True) -> bool:
     return True
 
 
-_GRANT_BREAKS = {"double_breaker": 2, "triple_breaker": 3}   # 継続的効果で与えてよいキーワード（ブレイク数の常在型だけ）
+_GRANT_OK = {"blocker", "speed_attacker", "slayer", "guardman", "unblockable", "cannot_attack", "cannot_block",
+             "double_breaker", "triple_breaker", "world_breaker", "quad_breaker", "powered_breaker", "s_trigger"}
+# 継続的効果で与えてよいキーワード（常在型が許可・禁止・ブレイク数だけで、Rust の kw_static / granted_breaks が写せているもの）
+
+
+def _simple_mod(mod) -> bool:
+    """Rust の継続的効果が扱える一時修整の mod（deny / allow / power / grant だけ、値は単純な形だけ）。
+    deny / allow の辞書形は {action, other} だけ（once や max_per_turn つきは特性の並びと使用記録が要るので除く）。"""
+    if not isinstance(mod, dict) or not mod or not set(mod) <= {"deny", "allow", "power", "grant"}:
+        return False
+    if "power" in mod:
+        pw = mod["power"]
+        if isinstance(pw, bool):
+            return False
+        if isinstance(pw, dict):
+            if not set(pw) <= {"amount", "count"} or not isinstance(pw.get("amount"), int) or isinstance(pw.get("amount"), bool):
+                return False
+            if "count" in pw and not _simple_power_count(pw["count"]):
+                return False
+        elif not isinstance(pw, int):
+            return False
+    for key in ("deny", "allow"):
+        if key in mod:
+            if not isinstance(mod[key], list):
+                return False
+            for e in mod[key]:
+                act = e if isinstance(e, str) else (e.get("action") if isinstance(e, dict) else None)
+                # summon_from_mana の許可はマナゾーンからの play 選択肢（msum）を生むが、Rust には
+                # その選択肢生成が無いので対象外（deny 側は plain の範囲に許可源が無いため無害）
+                if key == "allow" and act == "summon_from_mana":
+                    return False
+                if isinstance(e, str):
+                    continue
+                if not (isinstance(e, dict) and set(e) == {"action", "other"} and isinstance(e.get("action"), str)
+                        and _simple_filter(e.get("other", {}))):
+                    return False
+    if "grant" in mod:
+        if not isinstance(mod["grant"], list) or not all(isinstance(x, str) and x in _GRANT_OK for x in mod["grant"]):
+            return False
+    return True
+
+
+def _simple_power_count(sel) -> bool:
+    """mod の power の {amount, count} の count: Rust の candidates_ro が数えられるセレクタで、
+    フィルタの値に式が無いものだけ（特性計算の途中では env に変数が無いため、式の値は両エンジンで意味が揃わない）。"""
+    if not _simple_cands(sel):
+        return False
+    f = sel.get("filter", {}) if isinstance(sel, dict) else {}
+    return all(not isinstance(v, dict) for v in f.values())
+
+
+def _simple_dyn_zone(z) -> bool:
+    """dynamic な継続的効果の範囲の zone（Python の zones_of が扱う形: 名前 / 名前の配列 / "any"）。"""
+    if isinstance(z, list):
+        return all(isinstance(x, str) and x in _OK_ZONES for x in z)
+    return z == "any" or z in _OK_ZONES
 
 
 _OK_WHEN = ({"event": "move", "to": "bz", "subject": "self"}, {"event": "attack", "subject": "self"})
