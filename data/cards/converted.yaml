@@ -64761,7 +64761,9 @@ cards:
   source:
     official: dm26rp3-tr005
     review: pending
-    notes: バトル中のパワーは static の battle_power mod で表した。タップ状態は墓地に置かれた直前の状態として exists で判定した（ラウンド365で修正。exists 形は墓地でアンタップに戻った姿を読むため誘発せず、battle_power の affects の ref self も self と扱われず効かなかった。いずれも第330弾の形（affects は self／when は move from bz reason destroy かつ if は subject_tapped）に差し替え、実挙動で確認済み）
+    notes: バトル中のパワーは static の battle_power mod で表した。タップ状態は墓地に置かれた直前の状態として exists で判定した（ラウンド365で修正。exists
+      形は墓地でアンタップに戻った姿を読むため誘発せず、battle_power の affects の ref self も self と扱われず効かなかった。いずれも第330弾の形（affects
+      は self／when は move from bz reason destroy かつ if は subject_tapped）に差し替え、実挙動で確認済み）
   keywords:
   - speed_attacker
   - double_breaker
@@ -466742,3 +466744,129 @@ cards:
         count: 1
       to: hand
       reason: return
+- id: dm23ex1-039
+  name: ボルメテウス・剣誠・ドラゴン
+  types:
+  - creature
+  civs:
+  - fire
+  cost: 8
+  power: 8000
+  races:
+  - アーマード・ドラゴン
+  - サムライ
+  mana: 1
+  free_if:
+    all:
+    - cmp:
+      - count:
+          zone: bz
+          owner: you
+          filter:
+            race_has: サムライ
+      - '>='
+      - 5
+    - not:
+        exists:
+          zone: bz
+          owner: you
+          filter:
+            name: ボルメテウス・剣誠・ドラゴン
+  text: 'G・ゼロ：自分のサムライが５枚以上あり、自分の《ボルメテウス・剣誠・ドラゴン》がなければ、このクリーチャーをコストを支払わずに召喚してもよい。
+
+    W・ブレイカー（このクリーチャーはシールドを２つブレイクする）
+
+    このクリーチャーが攻撃する時、相手のパワー6000以下のクリーチャーを１体選び、破壊してもよい。
+
+    バトルゾーンにある間、このクリーチャーは名前に《ボルメテウス・武者・ドラゴン》を追加する。'
+  abilities:
+  - kind: trigger
+    when:
+      event: attack
+      subject: self
+    effect:
+    - op: may
+      body:
+      - op: destroy
+        select:
+          zone: bz
+          owner: opp
+          filter:
+            types:
+            - creature
+            power_le: 6000
+          count: 1
+  - kind: static
+    affects: self
+    mod:
+      add_names:
+      - ボルメテウス・武者・ドラゴン
+  source:
+    official: dm23ex1-039
+    review: pending
+    notes: G・ゼロは free_if、名前の追加は static の add_names で表した（第331弾）
+    aliases:
+    - dmc45-006
+    - dmc55-006
+    - dmc59-001
+    - dmpcd02-a02
+  keywords:
+  - double_breaker
+- id: dm28-008
+  name: 竜装 ムシャ・レジェンド
+  types:
+  - cross_gear
+  civs:
+  - fire
+  cost: 3
+  races:
+  - サムライ
+  mana: 1
+  text: 'クロスギア
+
+    これをクロスしたクリーチャーは、種族にアーマード・ドラゴンとサムライを追加し、パワーが+2000され、名前に《ボルメテウス・武者・ドラゴン》を追加する。
+
+    これをクロスしたクリーチャーが攻撃する時、自分のシールドを１枚墓地に置いてもよい。そうした場合、相手のパワー6000以下のクリーチャーを１体破壊する。'
+  abilities:
+  - kind: static
+    affects: crossed
+    mod:
+      power: 2000
+      add_races:
+      - アーマード・ドラゴン
+      - サムライ
+      add_names:
+      - ボルメテウス・武者・ドラゴン
+  - kind: trigger
+    when:
+      event: attack
+      subject: crossed
+    effect:
+    - op: may
+      body:
+      - op: move
+        select:
+          zone: shield
+          owner: you
+          count: 1
+        to: graveyard
+        reason: put
+        as: paid
+      - op: if
+        cond:
+          exists:
+            ref: paid
+        then:
+        - op: destroy
+          select:
+            zone: bz
+            owner: opp
+            filter:
+              types:
+              - creature
+              power_le: 6000
+            count: 1
+  source:
+    official: dm28-008
+    review: pending
+    notes: 種族追加とパワー修整、攻撃時誘発は partial の形。名前の追加は add_names で表した（第331弾）

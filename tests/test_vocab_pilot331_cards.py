@@ -1,12 +1,13 @@
-"""語彙パイロット第331弾の対象カード検証（proto 形）。
+"""語彙パイロット第331弾の対象カード検証（登録形）。
 
-対象は pure な name_addition 2件（いずれも partial あり）:
-- dm23ex1-039 ボルメテウス・剣誠・ドラゴン
-- dm28-008 竜装 ムシャ・レジェンド
+対象は pure な name_addition 2件（いずれも partial あり）で、
+ラウンド366で登録済み:
+- dm23ex1-039 ボルメテウス・剣誠・ドラゴン（aliases 4件は
+  partial 由来のまま source.aliases に記録）
+- dm28-008 竜装 ムシャ・レジェンド（aliases 無し）
 
 結論はドリフト（文書化）: mod の add_names はエンジン実装済み
-（バンドC2 U97）だが converted の使用例が0件だった。本弾で
-固定する確立形:
+（バンドC2 U97）だが converted の使用例が0件だった。確立形:
 - 本人: {kind: static, affects: self, mod: {add_names: [名前]}}
 - クロスギア: affects: crossed の mod に add_names を足す
   （dm28-008 の partial が持つ power / add_races と同居）
@@ -14,6 +15,9 @@
 dm23ex1-039 の残り: G・ゼロは top-level free_if（dm23ex1-075
 等。all＋cmp(count race_has サムライ >=5)＋not exists(name 自身)）、
 攻撃時誘発は may＋destroy power_le 6000 の確立形。
+
+name_addition の行は multi の dmx15-002（g_link_360 と複合）
+だけが残る。
 
 注意: conftest を import すると DMSIM_SKIP_CONVERTED が復活するので
 _conv_cache を直接使う（第319弾以降の作法）。
@@ -80,34 +84,43 @@ GEAR_TRIGGER = {
 FORM_008 = [GEAR_STATIC, GEAR_TRIGGER]
 
 
-def _partial(cid):
+def _rows():
+    out = {}
     for line in open(REJECTS, encoding="utf-8"):
         if line.strip():
             r = json.loads(line)
-            if r["id"] == cid:
-                return r.get("partial")
-    return None
+            out[r["id"]] = r
+    return out
 
 
-def test_targets_still_in_rejects():
+def test_targets_registered():
+    rows = _rows()
+    assert len(rows) == 2032
     conv = _conv_cache.all_cards(CONVERTED)
     ids = {c["id"] for c in conv}
-    for t in ("dm23ex1-039", "dm28-008"):
-        assert t not in ids
-        assert _partial(t) is not None, t
-
-
-def test_partial_forms():
-    # dm23ex1-039 の partial はキーワードのみ（能力は本弾で構成）
-    p = _partial("dm23ex1-039")
-    assert p["keywords"] == ["double_breaker"]
-    assert p["name"] == OWN
-    # dm28-008 の partial は add_names を除き完成している
-    p = _partial("dm28-008")
-    assert p["abilities"][1] == GEAR_TRIGGER
-    mod = dict(p["abilities"][0]["mod"])
-    assert mod == {"power": 2000,
-                   "add_races": ["アーマード・ドラゴン", "サムライ"]}
+    assert len(ids) == 10282
+    assert not (ids & set(rows))          # canonical 重なり0
+    c = _conv_cache.find(CONVERTED, "dm23ex1-039")
+    assert c is not None
+    assert c["free_if"] == FREE_IF
+    assert c["abilities"] == FORM_039
+    assert c["keywords"] == ["double_breaker"]
+    assert (c.get("source") or {}).get("aliases") == \
+        ["dmc45-006", "dmc55-006", "dmc59-001", "dmpcd02-a02"]
+    assert not (c.get("source") or {}).get("unsupported")
+    d = parse_card(c, TABLES)
+    assert len(d.abilities) >= 2
+    c = _conv_cache.find(CONVERTED, "dm28-008")
+    assert c is not None
+    assert c["abilities"] == FORM_008
+    assert not (c.get("source") or {}).get("unsupported")
+    assert not (c.get("source") or {}).get("aliases")
+    d = parse_card(c, TABLES)
+    assert len(d.abilities) >= 2
+    # name_addition は multi の dmx15-002（g_link_360 複合）だけ残る
+    left = {rid for rid, r in rows.items()
+            if "name_addition" in (r.get("gaps") or [])}
+    assert left == {"dmx15-002"}, left
 
 
 def test_proto_forms_match():

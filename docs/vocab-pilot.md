@@ -4846,3 +4846,9 @@ dm23ex1-039 の残りの条項も既存語彙で足りる。G・ゼロは top-le
 proto T1005（dm23ex1-039 型。G・ゼロ＋攻撃時誘発＋add_names）/ T1006（dm28-008 型）/ T1007（駆動用: 追加された名前で名指し破壊する呪文）。テスト7件（実挙動5件）: chars の names に追加の名前が入ること（本人・クロス先の双方）、名指し破壊が追加の名前でのみ当たること（同居の別名クリーチャーには当たらない）、クロスギアの power＋2000 と種族追加の同居、G・ゼロの3条件（5体で無料／同名がいれば不可／4体では不可）、攻撃時誘発の破壊。add_names の不正形（空リスト・文字列・数値）は DefError。
 
 次の候補メモ: destroyed_during_battle_trigger（dm24rp4-070 / dm22rp2x-026。バトルによる破壊を move イベントで区別する語彙が要る見込み＝エンジン拡張候補）、power_transfer（dm24rp4-045 / dmrp11-zs01）、play_from_deck_top（dm22rp2x-002 / dm26sd1-j009）、broken_shields_no_s_trigger（重い）、after_attack_destroy（ラウンド245で差し戻し済み、重い）。
+
+### ラウンド366（第331弾の再変換）
+
+**新規登録2件**（dm23ex1-039 ボルメテウス・剣誠・ドラゴン＝G・ゼロは free_if、攻撃時誘発と add_names の常在型。dm28-008 竜装 ムシャ・レジェンド＝partial の形に add_names を足したもの。いずれも登録形は確立形と完全一致で連結混入なし）・**alias 畳み込み0件**（dm23ex1-039 の aliases 4件は partial 由来で rejects 行ではない）・**差し戻し0件**。converted 10,280→**10,282** / rejects 2,034→**2,032**、重なり0・漏れ0。name_addition の行は multi の dmx15-002（g_link_360 と複合。名も無き神人類）だけが残る。
+
+pilot331 cards を登録形に書換、round366 cards を新設（登録カード自身の実挙動: 本人の chars の names と G・ゼロの無料召喚、クロスギアの名前・種族・パワーの付与と攻撃時誘発のシールド犠牲→破壊）。テスト20 passed（round366 cards 3＋pilot331 cards 登録形 2＋pilot331 本体 7＋data_audit 8）。回帰はパイロット・ルール系（第170弾のクロスギア系を含む）146 passed / 0 failed、round357〜365 の disposition は件数固定の stale なだけの既知パターンで 9 failed。回答は answers/round366.yaml に保存。次の番号: パイロット332 / ラウンド367 / プロト T1008。
