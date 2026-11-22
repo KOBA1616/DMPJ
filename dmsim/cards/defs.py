@@ -349,8 +349,9 @@ class Checker:
             raise DefError(f"{where}: unknown reason '{v}'")
         if ty == "player" and v not in ("you", "opp") and not _is_var_ref(v):
             raise DefError(f"{where}: player must be you/opp or {{var: name}}, got '{v}'")
-        if ty == "players" and v not in ("you", "opp", "each") and not _is_var_ref(v):
-            raise DefError(f"{where}: players must be you/opp/each or {{var: name}}, got '{v}'")
+        if ty == "players" and v not in ("you", "opp", "each") and not _is_var_ref(v) \
+                and not (isinstance(v, dict) and set(v) == {"owner_of"} and isinstance(v.get("owner_of"), str)):
+            raise DefError(f"{where}: players must be you/opp/each, {{var: name}}, or {{owner_of: name}}, got '{v}'")
         if ty == "position" and v not in POSITIONS:
             raise DefError(f"{where}: unknown position '{v}'")
         if ty == "step" and v not in self.steps:

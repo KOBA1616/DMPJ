@@ -24,7 +24,7 @@ def _build() -> dict:
     arg = {
         "selector": ref("selector"), "zone": {"enum": sorted(zones)}, "reason": {"enum": sorted(REASONS)},
         "expr": ref("expr"), "cond": ref("cond"), "ops": ref("ops"), "oplists": {"type": "array", "minItems": 2, "items": ref("ops")}, "player": {"anyOf": [{"enum": ["you", "opp"]}, VAR_REF]},
-        "players": {"anyOf": [{"enum": ["you", "opp", "each"]}, VAR_REF]}, "mod": ref("mod"), "duration": {"enum": sorted(DURATIONS_FIXED)}, "position": {"enum": sorted(POSITIONS)},
+        "players": {"anyOf": [{"enum": ["you", "opp", "each"]}, VAR_REF, {"type": "object", "properties": {"owner_of": {"type": "string"}}, "required": ["owner_of"], "additionalProperties": False}]}, "mod": ref("mod"), "duration": {"enum": sorted(DURATIONS_FIXED)}, "position": {"enum": sorted(POSITIONS)},
         "step": {"enum": steps}, "str": {"type": "string"}, "int": {"type": "integer"},
         "bool": {"type": "boolean"}, "any": {}, "ability": ref("ability"), "filter": ref("filter"),
     }

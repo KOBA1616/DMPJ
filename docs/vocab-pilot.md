@@ -4961,3 +4961,14 @@ proto T1021（スベルニル型）/ T1022（ルドルフ型）/ T1023（ジュ�
 **新規登録3件**（dm25rp1-018 至高の邪騎 スベルニル＝evolves_from＋stack_evo の確立形そのまま。dm25rp2-sp3 魔光神官ルドルフ・アルカディア＝may 切削＋同形。dm25ex1-069 神滅翔天ポッポ・ジュヴィラ＝grave_evo 宣言）・**alias 畳み込み0件**（submit 時に 018 へ aliases 2件・sp3 へ 5件・069 へ 3件が自動記録されたが rejects 行ではない）・**差し戻し0件**（submit 時の警告なし）。converted 10,294→**10,297** / rejects 2,020→**2,017**、重なり0・漏れ0。evolution_base_from_graveyard の行は残っていない（ファミリー解消）。
 
 pilot337 cards を登録形に書換、round372 cards を新設（登録カード自身の実挙動: スベルニルが墓地の NEO を上に重ねる、ジュヴィラは :gevo で墓地のクリーチャーの上に重なって出る）。テスト17 passed（round372 cards 3＋pilot337 cards 登録形 2＋pilot337 本体 4＋data_audit 8）。回帰はパイロット・ルール系（第170・173・177弾を含む）208 passed / 0 failed、round357〜371 の disposition は件数固定の stale なだけの既知パターンで 15 failed。回答は answers/round372.yaml に保存。次の番号: パイロット338 / ラウンド373 / プロト T1024。
+
+### 語彙パイロット第338弾: opponent_chooses_deck_position（エンジン拡張: modal の player）
+
+対象は pure 4件: dm22rp1-034 氷結呪文「フリズン」（相手のクリーチャー／タマシードを1つ選ぶ。相手はそれを山札の上または下に置く）、dm23rp1-035 Uta-Awase選手宣誓のスピーチ（エレメントを1つ選ぶ。その持ち主は、それを山札の上または下に置く）、dm25rp4-036 ツインヘッドの海幻（出た時、相手のエレメントを1つ選ぶ。相手はそれを山札の上か下に置く。その後、このタマシードを自分のNEO／進化クリーチャーの下に置いてもよい）、dmrp16-s02 頻波羅 ビリヤ棒ド（攻撃する時、手札を2枚まで捨てる。捨てた1枚につき相手のクリーチャーを1体選び、相手はそれを自身の山札の上または下に置く）。
+
+- 置く位置の選択肢自体は既存の確立形: modal の各モードに move {to: deck, reason: put, position: top/bottom}。足りなかったのは「選ぶのが効果の使用者ではない」点で、modal に player を追加した（ops.py の @op と op_modal、base/opvocab.py の語彙、defs.py の players 検証、schema.py の players 型、card.schema.json 再生成の5点）。player は "opp" のほか {owner_of: 変数名}（束縛したカードの持ち主）を取れる。スピーチは対象が両プレイヤーのエレメントなので owner_of が要る。
+- ビリヤ棒ドの「捨てた枚数だけ」は、discard の move に as: d で束縛し、if {exists: {ref: d}} でゲートした repeat 2。海幻の下に置く処理は put_under（onto）の確立形。
+
+実測: フリズン型では modal の決定が相手（player 1）に渡り、上／下のどちらも相手の山札の正しい位置に入る。スピーチ型では自分のエレメントを選ぶと決定が自分に、相手のエレメントでは相手に渡る。ビリヤ棒ド型は手札2枚を捨てると対象が2体になり、毎回相手が置く位置を決める。
+
+proto T1024（フリズン型）/ T1025（スピーチ型）/ T1026（海幻型）/ T1027（ビリヤ棒ド型）。テスト13 passed（pilot 本体7＋実カード parse 3＋rust_schema_sync 3）。次の番号: パイロット339 / ラウンド374 / プロト T1028。

@@ -1136,6 +1136,18 @@
            "var"
           ],
           "additionalProperties": false
+         },
+         {
+          "type": "object",
+          "properties": {
+           "owner_of": {
+            "type": "string"
+           }
+          },
+          "required": [
+           "owner_of"
+          ],
+          "additionalProperties": false
          }
         ]
        },
@@ -1498,6 +1510,41 @@
        },
        "repeat": {
         "type": "boolean"
+       },
+       "player": {
+        "anyOf": [
+         {
+          "enum": [
+           "you",
+           "opp",
+           "each"
+          ]
+         },
+         {
+          "type": "object",
+          "properties": {
+           "var": {
+            "type": "string"
+           }
+          },
+          "required": [
+           "var"
+          ],
+          "additionalProperties": false
+         },
+         {
+          "type": "object",
+          "properties": {
+           "owner_of": {
+            "type": "string"
+           }
+          },
+          "required": [
+           "owner_of"
+          ],
+          "additionalProperties": false
+         }
+        ]
        }
       },
       "required": [
@@ -1682,6 +1729,18 @@
           },
           "required": [
            "var"
+          ],
+          "additionalProperties": false
+         },
+         {
+          "type": "object",
+          "properties": {
+           "owner_of": {
+            "type": "string"
+           }
+          },
+          "required": [
+           "owner_of"
           ],
           "additionalProperties": false
          }

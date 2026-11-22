@@ -309,22 +309,33 @@ def op_may(eng, t, op, env):
     return None
 
 
-@op("modal", modes="oplists", count="int?", repeat="bool?")
+@op("modal", modes="oplists", count="int?", repeat="bool?", player="players?")
 def op_modal(eng, t, op, env):
     """「次のうちいずれか1つを選ぶ」「次の中から2回選ぶ（同じものを選んでもよい）」。選ぶのは効果の使用者。
-    repeat なしは count 個の異なるモードを選び、書かれた順に解決する。repeat ありは1つずつ count 回選び、選んだ順に解決する。"""
+    repeat なしは count 個の異なるモードを選び、書かれた順に解決する。repeat ありは1つずつ count 回選び、選んだ順に解決する。
+    player（第338弾）: 選ぶプレイヤーを変える。「相手はそれを山札の上または下に置く」のように
+    持ち主が選ぶ形では player: {owner_of: 変数名}（束縛したカードの持ち主）、相手固定なら "opp"。"""
+    who = env["you"]
+    if "player" in op:
+        pl = op["player"]
+        if isinstance(pl, dict) and "owner_of" in pl:
+            refs = env.get("vars", {}).get(pl["owner_of"], [])
+            if refs:
+                who = eng.s.cards[refs[0][0]].controller
+        else:
+            who = eng._rel(pl, env)
     n = op.get("count", 1)
     opts = [{"key": f"mode:{i}"} for i in range(len(op["modes"]))]
     picked = t["os"].setdefault("picked", [])
     if op.get("repeat"):
         while len(picked) < n:
-            a, d = eng.ask(t, env["you"], "choose_mode", opts)
+            a, d = eng.ask(t, who, "choose_mode", opts)
             if d:
                 return d
             picked.append(a[0])
         order = picked
     else:
-        a, d = eng.ask(t, env["you"], "choose_mode", opts, n, n)
+        a, d = eng.ask(t, who, "choose_mode", opts, n, n)
         if d:
             return d
         order = sorted(a)
