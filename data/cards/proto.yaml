@@ -15015,3 +15015,38 @@ cards:
       official: proto
       review: pending
       notes: "語彙パイロット第340弾の対象（dm24bd6-006 型）。「各ターン、はじめて」は、そのターンに相手クリーチャーがまだ1体も出ていない（entered_this_turn の count が0）間だけ付与する常在型で表す。"
+
+  - id: T1032
+    name: 試験用終斗
+    types: [creature]
+    civs: [light, darkness, fire]
+    cost: 9
+    power: 23000
+    races: [アンノウン・セレス]
+    mana: 1
+    text: "Q・ブレイカー\nこのクリーチャーが出た時、各プレイヤーは自身のクリーチャーを１体ずつ選ぶ。こうして選ばれなかったクリーチャーをすべて破壊する。\n水晶武装４：自分のマナゾーンに裏向きのカードが４枚以上あれば、自分のクリーチャーすべてに「ブロッカー」と「スピードアタッカー」と「スレイヤー」を与える。"
+    abilities:
+    - {kind: static, affects: {zone: bz, owner: you, filter: {types: [creature]}}, if: {cmp: [{count: {zone: mana, owner: you, filter: {face_down: true}}}, ">=", 4]}, mod: {grant: [blocker, speed_attacker, slayer]}}
+    - {kind: trigger, when: {event: move, to: bz, subject: self}, effect: [{op: choose, select: {zone: bz, owner: you, filter: {types: [creature]}, count: 1}, as: keep_you}, {op: choose, select: {zone: bz, owner: opp, filter: {types: [creature]}, count: 1, chooser: opp}, as: keep_opp}, {op: destroy, select: {zone: bz, owner: any, filter: {types: [creature]}, count: all, exclude: [{ref: keep_you}, {ref: keep_opp}]}}]}
+    keywords: [quad_breaker]
+    source:
+      official: proto
+      review: pending
+      notes: "語彙パイロット第341弾の対象（dm24bd6-003 型）。各プレイヤーの選択は choose の chooser で委ね、残りは select の exclude で選ばれた側を除く。"
+
+  - id: T1033
+    name: 試験用ディスペクター
+    types: [creature]
+    civs: [light, darkness, nature]
+    cost: 10
+    power: 14000
+    races: [ディスペクター, ドラゴン・ゾンビ, ダークロード, ナイト]
+    mana: 1
+    text: "EXライフ\nブロッカー\nT・ブレイカー\nこのクリーチャーが出た時、各プレイヤーは自身のクリーチャーを１体選び、残りの自身のクリーチャーをすべて持ち主のマナゾーンに置く。"
+    abilities:
+    - {kind: trigger, when: {event: move, to: bz, subject: self}, effect: [{op: choose, select: {zone: bz, owner: you, filter: {types: [creature]}, count: 1}, as: keep_you}, {op: choose, select: {zone: bz, owner: opp, filter: {types: [creature]}, count: 1, chooser: opp}, as: keep_opp}, {op: move, select: {zone: bz, owner: any, filter: {types: [creature]}, count: all, exclude: [{ref: keep_you}, {ref: keep_opp}]}, to: mana, reason: put}]}
+    keywords: [ex_life, blocker, triple_breaker]
+    source:
+      official: proto
+      review: pending
+      notes: "語彙パイロット第341弾の対象（dm23bd5-001 型の出た時条項のみ。他の条項は partial に既存）。残りは破壊ではなく持ち主のマナゾーンに置く。"

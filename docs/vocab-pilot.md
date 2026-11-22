@@ -5013,3 +5013,13 @@ proto T1030（エルフェウス型）/ T1031（修羅丸型）。テスト9 pas
 **新規登録2件**（dmc52-007 聖霊王エルフェウス＝partial が落とした進化元を dm33-s01 と同形式で補完、常在型を追加。dm24bd6-006 偽りの希望 修羅丸「終斗」＝first_time 誘発を追加）・**alias 畳み込み0件**（submit 時に 007 へ aliases [dm14-001] が自動記録されたが rejects 行ではない）・**差し戻し0件**。converted 10,303→**10,305** / rejects 2,011→**2,009**、重なり0・漏れ0。enters_tapped_opponent の行は残っていない（ファミリー解消）。submit 直後の abilities 重複チェック済み（重複なし。第374弾の教訓）。
 
 pilot340 cards を登録形に書換、round375 cards を新設（登録カード自身の実挙動: エルフェウスで相手がタップして出る、修羅丸は各ターン1体目だけ）。テスト16 passed（round375 cards 3＋pilot340 cards 登録形 2＋pilot340 本体 3＋data_audit 8）。回帰はパイロット・ルール系 221 passed / 0 failed、round357〜374 の disposition は件数固定の stale なだけの既知パターンで 18 failed。回答は answers/round375.yaml に保存。次の番号: パイロット341 / ラウンド376 / プロト T1032。
+
+### 語彙パイロット第341弾: each_player_keeps_one_creature（ドリフト）
+
+対象は pure 2件: dm24bd6-003（出た時、各プレイヤーは自身のクリーチャーを１体ずつ選ぶ。選ばれなかったクリーチャーをすべて破壊する）、dm23bd5-001（出た時、各プレイヤーは自身のクリーチャーを１体選び、残りをすべて持ち主のマナゾーンに置く）。両方とも partial は他の条項を持ち、出た時だけが欠けていた。
+
+- 各プレイヤーの選択は choose の2回で表す。自分の分は通常の choose、相手の分は select の chooser: opp で相手に委ねる（dm23bd5-001 自身の partial のシールド選択と同型。実測でも相手の選択の決定は相手プレイヤーに出る）。
+- 「選ばれなかったすべて」は select の exclude（参照除外、C1 U35 で既存）で、束縛した keep_you / keep_opp を除く。003 は destroy、001 は move {to: mana, reason: put}（マナゾーンはカードごとに持ち主へ向かう）。
+- 実測: 相手が0体の時は choose が自動で読み飛ばされ（候補なし）、exclude の未束縛参照も空として処理され、効果は正常に解決する。相手が1体だけの時は choose が一意省略で自動確定する（第335弾の ask の一意省略）。
+
+proto T1032（003型、水晶武装の常在型を含む）/ T1033（001型の出た時条項のみ）。テスト10 passed（pilot 本体4＋実カード parse 3＋rust_schema_sync 3）。次の番号: パイロット342 / ラウンド377 / プロト T1034。
