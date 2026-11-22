@@ -4972,3 +4972,9 @@ pilot337 cards を登録形に書換、round372 cards を新設（登録カー�
 実測: フリズン型では modal の決定が相手（player 1）に渡り、上／下のどちらも相手の山札の正しい位置に入る。スピーチ型では自分のエレメントを選ぶと決定が自分に、相手のエレメントでは相手に渡る。ビリヤ棒ド型は手札2枚を捨てると対象が2体になり、毎回相手が置く位置を決める。
 
 proto T1024（フリズン型）/ T1025（スピーチ型）/ T1026（海幻型）/ T1027（ビリヤ棒ド型）。テスト13 passed（pilot 本体7＋実カード parse 3＋rust_schema_sync 3）。次の番号: パイロット339 / ラウンド374 / プロト T1028。
+
+### ラウンド373（第338弾の再変換）
+
+**新規登録4件**（dm22rp1-034 氷結呪文「フリズン」＝シビルカウント常在型は partial のまま、呪文本体は modal の player: opp。dm23rp1-035 Uta-Awase選手宣誓のスピーチ＝stp_spell は partial のまま、本体は player: {owner_of: el}。dm25rp4-036 ツインヘッドの海幻＝超魂X常在型は partial のまま、出た時の誘発を追加。dmrp16-s02 頻波羅 ビリヤ棒ド＝ムゲンクライムと出た時の誘発は partial のまま、攻撃時の誘発を追加）・**alias 畳み込み0件**・**差し戻し0件**（submit 時の警告なし）。converted 10,297→**10,301** / rejects 2,017→**2,013**、重なり0・漏れ0。opponent_chooses_deck_position の行は残っていない（ファミリー解消）。
+
+pilot338 cards を登録形に書換、round373 cards を新設（登録カード自身の実挙動: フリズンで modal の決定が相手に渡り下に置かれる、ビリヤ棒ドは捨てた2枚で対象2体）。テスト20 passed（round373 cards 3＋pilot338 cards 登録形 2＋pilot338 本体 7＋data_audit 8）。回帰はパイロット・ルール系 215 passed / 0 failed、round357〜372 の disposition は件数固定の stale なだけの既知パターンで 16 failed。回答は answers/round373.yaml に保存。次の番号: パイロット339 / ラウンド374 / プロト T1028。

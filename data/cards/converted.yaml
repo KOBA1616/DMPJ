@@ -467637,3 +467637,313 @@ cards:
     - dmex08-120
     - dmex16-060
     - dmx21-027
+- id: dm22rp1-034
+  name: 氷結呪文「フリズン」
+  types:
+  - spell
+  civs:
+  - water
+  cost: 4
+  mana: 1
+  text: 'シビルカウント２：この呪文が自分のシールドゾーンにあり、自分の水のクリーチャーまたは水のタマシードが合計２つ以上あれば、この呪文に「S・トリガー」を与える。
+
+
+    相手のクリーチャー１体またはタマシードを１枚選ぶ。相手はそれを山札の上または下に置く。'
+  abilities:
+  - kind: static
+    zone: shield
+    affects: self
+    if:
+      cmp:
+      - count:
+          zone: bz
+          owner: you
+          filter:
+            civs:
+            - water
+            types:
+            - creature
+            - tamaseed
+      - '>='
+      - 2
+    mod:
+      allow:
+      - s_trigger
+  spell:
+  - op: choose
+    select:
+      zone: bz
+      owner: opp
+      filter:
+        types:
+        - creature
+        - tamaseed
+      count: 1
+    as: target
+  - op: modal
+    player: opp
+    modes:
+    - - op: move
+        select:
+          ref: target
+          count: all
+        to: deck
+        reason: put
+        position: top
+    - - op: move
+        select:
+          ref: target
+          count: all
+        to: deck
+        reason: put
+        position: bottom
+  source:
+    official: dm22rp1-034
+    review: pending
+    notes: 'シビルカウントの常在型は partial の形のまま。「相手はそれを山札の上または下に置く」は modal の player: opp で相手に選ばせる形にした（第338弾）。'
+- id: dm23rp1-035
+  name: Uta-Awase選手宣誓のスピーチ
+  types:
+  - spell
+  civs:
+  - water
+  cost: 4
+  mana: 1
+  keywords:
+  - s_trigger_plus
+  text: '{STP} S・トリガー・プラス（この呪文を自分のシールドゾーンから手札に加える時、コストを支払わずにすぐ唱えてもよい。それが相手のターンで、そのターン中に自分のシールドが２つ以上ブレイクされていれば、この呪文に{x+}能力を与える）
+
+    エレメントを１つ選ぶ。その持ち主は、それを山札の上または下に置く。
+
+    {x+}相手のクリーチャーを２体選ぶ。次の自分のターンのはじめまで、それらのクリーチャーは攻撃もブロックもできない。'
+  spell:
+  - op: choose
+    select:
+      zone: bz
+      owner: any
+      count: 1
+    as: el
+  - op: modal
+    player:
+      owner_of: el
+    modes:
+    - - op: move
+        select:
+          ref: el
+          count: all
+        to: deck
+        reason: put
+        position: top
+    - - op: move
+        select:
+          ref: el
+          count: all
+        to: deck
+        reason: put
+        position: bottom
+  stp_spell:
+  - op: modify
+    select:
+      zone: bz
+      owner: opp
+      filter:
+        types:
+        - creature
+      count: 2
+    mod:
+      deny:
+      - attack_player
+      - attack_creature
+      - block
+    duration: until_next_own_turn_start
+  source:
+    official: dm23rp1-035
+    review: pending
+    notes: '追加能力（stp_spell）は partial の形のまま。本体の「持ち主は、それを山札の上または下に置く」は modal の player:
+      {owner_of: el} で持ち主に選ばせる形にした（第338弾）。'
+- id: dm25rp4-036
+  name: ツインヘッドの海幻
+  types:
+  - tamaseed
+  civs:
+  - water
+  cost: 4
+  mana: 1
+  races:
+  - ゲル・フィッシュ
+  - サバイバー
+  - フュージョナー
+  keywords:
+  - shinka_rise
+  - powered_breaker
+  text: 'シンカライズ（このタマシードがクリーチャーであるかのように、この上に進化クリーチャーを置いてもよい）
+
+    このタマシードが出た時、相手のエレメントを１つ選ぶ。相手はそれを山札の上か下に置く。その後、このタマシードを自分のNEOクリーチャーまたは進化クリーチャー１体の下に置いてもよい。
+
+    超魂X（これがクリーチャーの下にあれば、そのクリーチャーにも以下の能力を与える）
+
+    パワード・ブレイカー（このクリーチャーは、そのパワー6000ごとにシールドをさらに１つブレイクする）
+
+    このクリーチャーのパワーを+3000する。'
+  abilities:
+  - kind: static
+    choukon: true
+    affects: self
+    mod:
+      grant:
+      - powered_breaker
+  - kind: static
+    choukon: true
+    affects: self
+    mod:
+      power: 3000
+  - kind: trigger
+    when:
+      event: move
+      to: bz
+      subject: self
+    effect:
+    - op: choose
+      select:
+        zone: bz
+        owner: opp
+        count: 1
+      as: el
+    - op: modal
+      player: opp
+      modes:
+      - - op: move
+          select:
+            ref: el
+            count: all
+          to: deck
+          reason: put
+          position: top
+      - - op: move
+          select:
+            ref: el
+            count: all
+          to: deck
+          reason: put
+          position: bottom
+    - op: may
+      body:
+      - op: choose
+        select:
+          zone: bz
+          owner: you
+          filter:
+            types:
+            - creature
+            any_of:
+            - neo: true
+            - evolution: true
+          count: 1
+        as: host
+      - op: put_under
+        select:
+          ref: self
+          count: all
+        onto:
+          ref: host
+  source:
+    official: dm25rp4-036
+    review: pending
+    notes: '超魂Xの常在型は partial の形のまま。出た時の「相手はそれを山札の上か下に置く」は modal の player: opp、下に置く処理は
+      put_under で表した（第338弾）。'
+- id: dmrp16-s02
+  name: 頻波羅 ビリヤ棒ド
+  types:
+  - creature
+  civs:
+  - water
+  cost: 7
+  power: 9000
+  races:
+  - サイバー・コマンド
+  - チーム零
+  mana: 1
+  keywords:
+  - double_breaker
+  - unblockable
+  mugen_climb:
+    tap: 3
+    cost: 3
+    civs:
+    - water
+  text: 'ムゲンクライム ３（自分のクリーチャーを３体タップし、 [ww03]支払って、このクリーチャーを自分の手札または墓地から召喚してもよい）
+
+    W・ブレイカー
+
+    このクリーチャーはブロックされない。
+
+    このクリーチャーがバトルゾーンに出た時、カードを２枚まで引く。
+
+    このクリーチャーが攻撃する時、自分の手札を２枚まで捨てる。このようにして捨てた手札１枚につき、相手のクリーチャーを１体選び、相手はそれを自身の山札の上または下に置く。'
+  abilities:
+  - kind: trigger
+    when:
+      event: move
+      to: bz
+      subject: self
+    effect:
+    - op: repeat
+      times: 2
+      body:
+      - op: may
+        body:
+        - op: draw
+          count: 1
+  - kind: trigger
+    when:
+      event: attack
+      subject: self
+    effect:
+    - op: repeat
+      times: 2
+      body:
+      - op: move
+        select:
+          zone: hand
+          owner: you
+          count: 1
+          up_to: true
+        to: graveyard
+        reason: discard
+        as: d
+      - op: if
+        cond:
+          exists:
+            ref: d
+        then:
+        - op: choose
+          select:
+            zone: bz
+            owner: opp
+            filter:
+              types:
+              - creature
+            count: 1
+          as: el
+        - op: modal
+          player: opp
+          modes:
+          - - op: move
+              select:
+                ref: el
+                count: all
+              to: deck
+              reason: put
+              position: top
+          - - op: move
+              select:
+                ref: el
+                count: all
+              to: deck
+              reason: put
+              position: bottom
+  source:
+    official: dmrp16-s02
+    review: pending
+    notes: 'ムゲンクライムと出た時の誘発は partial の形のまま。攻撃時の「捨てた枚数だけ選ぶ」は discard の move の as 束縛＋exists
+      ゲート、「相手はそれを自身の山札の上または下に置く」は modal の player: opp で表した（第338弾）。'
