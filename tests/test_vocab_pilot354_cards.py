@@ -1,10 +1,11 @@
 """語彙パイロット第354弾の対象カード（実カード parse）。
 
-対象は pure な forced_attack_target 2件すべて
-（未登録、rejects 残存）:
+対象は pure な forced_attack_target 2件すべてで、
+ラウンド389で登録:
 - dm16-s03（進化クリーチャー）
 - dm10-s07 不落の超人
-（いずれも partial は能力を持たず、全体を組む）
+（いずれも partial は能力を持たず全体を組んだ。
+登録形は意図した形と完全一致）
 
 注意: conftest を import すると DMSIM_SKIP_CONVERTED が復活するので
 _conv_cache を直接使う（第319弾以降の作法）。
@@ -56,20 +57,28 @@ def _cand(tid, base):
     return c
 
 
-def test_targets_still_in_rejects():
+def test_targets_registered():
     rows = _rows()
-    conv_ids = {c["id"] for c in all_cards(CONVERTED)}
-    for t in ("dm16-s03", "dm10-s07"):
-        assert t in rows and t not in conv_ids
-        assert rows[t].get("gaps") == ["forced_attack_target"]
-
-
-def test_partial_forms():
-    rows = _rows()
+    assert len(rows) == 1978
+    conv = all_cards(CONVERTED)
+    ids = {c["id"] for c in conv}
+    assert len(ids) == 10334
+    assert not (ids & set(rows))          # canonical 重なり0
     for tid, form in (("dm16-s03", FORM_S03), ("dm10-s07", FORM_S07)):
-        p = rows[tid]["partial"]
-        assert not p.get("abilities")
-        d = parse_card(_cand(tid, {**p, "abilities": form}), TABLES)
+        c = next(x for x in conv if x["id"] == tid)
+        assert c["abilities"] == form
+        assert not (c.get("source") or {}).get("unsupported")
+        parse_card(c, TABLES)
+    left = {rid for rid, r in rows.items()
+            if "forced_attack_target" in (r.get("gaps") or [])}
+    assert left == set(), left            # ファミリー解消
+
+
+def test_registered_parse():
+    conv = all_cards(CONVERTED)
+    for tid in ("dm16-s03", "dm10-s07"):
+        c = next(x for x in conv if x["id"] == tid)
+        d = parse_card(c, TABLES)
         assert len(d.abilities) >= 1
 
 

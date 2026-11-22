@@ -469761,3 +469761,73 @@ cards:
         filter:
           race_has: マジック
         cost_le: 5
+- id: dm16-s03
+  name: 超神龍アバス・ノナリス
+  types:
+  - creature
+  - evolution
+  civs:
+  - darkness
+  cost: 7
+  power: 8000
+  races:
+  - ドラゴン・ゾンビ
+  mana: 1
+  evolve_from:
+    races:
+    - ドラゴン・ゾンビ
+  text: '進化-自分のドラゴン・ゾンビ１体の上に置く。
+
+    相手のクリーチャーは、可能であればこのクリーチャーを攻撃する。
+
+    W・ブレイカー(このクリーチャーはシールドを２枚ブレイクする)'
+  source:
+    official: dm16-s03
+    review: pending
+    notes: 誘引は mod の must_be_attacked（第354弾）。
+  keywords:
+  - double_breaker
+  abilities:
+  - kind: static
+    affects: self
+    mod:
+      must_be_attacked: true
+- id: dm10-s07
+  name: 不落の超人
+  types:
+  - creature
+  civs:
+  - nature
+  cost: 8
+  power: 12000
+  races:
+  - ジャイアント
+  mana: 1
+  text: 'W・ブレイカー(このクリーチャーはシールドを２枚ブレイクする)
+
+    相手のターン中、このクリーチャーがタップされていて、そのターンにまだ攻撃を受けていない場合、相手のクリーチャーは可能ならこのクリーチャーを攻撃する。'
+  source:
+    official: dm10-s07
+    review: pending
+    notes: '条件つき誘引は is_turn: opp＋exists の ref＋filter {tapped: true}＋turn_count attack_on
+      == 0（第354弾）。'
+  keywords:
+  - double_breaker
+  abilities:
+  - kind: static
+    affects: self
+    if:
+      all:
+      - is_turn: opp
+      - exists:
+          ref: self
+          filter:
+            tapped: true
+      - cmp:
+        - turn_count:
+            kind: attack_on
+            ref: self
+        - ==
+        - 0
+    mod:
+      must_be_attacked: true

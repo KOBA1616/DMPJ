@@ -5244,3 +5244,9 @@ pilot353 cards を登録形に書換、round388 cards を新設（登録カー�
 - dm10-s07 の条件節は3つの既存部品で表す: {is_turn: opp}、「タップしている」は exists の ref セレクタに filter {tapped: true} を重ねた形、「そのターンにまだ攻撃を受けていない」は turn_count の attack_on（クリーチャー単位）== 0。
 
 proto T1063（s07型）/ T1064（s03型）/ T1065（進化元フィクスチャ）。テスト9 passed（pilot 本体3＋実カード parse 3＋rust_schema_sync 3）。次の番号: パイロット355 / ラウンド390 / プロト T1066。
+
+### ラウンド389（第354弾の再変換）
+
+**新規登録2件**（dm16-s03 超神龍アバス・ノナリス / dm10-s07 不落の超人。登録形は意図した形と完全一致）・**差し戻し0件**。converted 10,332→**10,334** / rejects 1,980→**1,978**、重なり0・漏れ0。forced_attack_target のファミリーは解消。
+
+pilot354 cards を登録形に書換、round389 cards を新設（登録カード自身の実挙動: 両カードの誘引）。テスト17 passed（round389 cards 3＋pilot354 cards 登録形 3＋pilot354 本体 3＋data_audit 8）。回帰はパイロット・ルール系 281 passed / 0 failed、round357〜388 の disposition は件数固定の stale なだけの既知パターンで 32 failed。回答は answers/round389.yaml に保存。次の番号: パイロット355 / ラウンド390 / プロト T1066。
