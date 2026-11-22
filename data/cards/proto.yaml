@@ -15194,3 +15194,38 @@ cards:
       official: proto
       review: pending
       notes: "語彙パイロット第345弾の対象（dm24ex1-058 型）。「出た時または唱えた時」は誘発を2つに分ける。相手の選択は choose の chooser: opp。"
+
+  - id: T1042
+    name: 試験用フェルナンド
+    types: [creature]
+    civs: [darkness]
+    cost: 11
+    power: 11000
+    races: [デーモン・コマンド, ナイト]
+    mana: 1
+    text: "このクリーチャーの召喚コストを、自分の墓地にある呪文１枚につき１少なくしてもよい。ただし、コストは１より少なくならない。\nこのクリーチャーが攻撃する時、バトルゾーンにある相手のクリーチャーを１体選ぶ。そのクリーチャーのパワーは、そのターン中、自分の墓地にある呪文１枚につき-1000される。\nW・ブレイカー"
+    abilities:
+    - {kind: static, zone: hand, affects: self, mod: {cost: {amount: -1, count: {zone: graveyard, owner: you, filter: {types: [spell]}}}, cost_min: 1}}
+    - {kind: trigger, when: {event: attack, subject: self}, effect: [{op: modify, select: {zone: bz, owner: opp, filter: {types: [creature]}, count: 1}, mod: {power: {amount: -1000, count: {zone: graveyard, owner: you, filter: {types: [spell]}}}}, duration: end_of_turn}]}
+    keywords: [double_breaker]
+    source:
+      official: proto
+      review: pending
+      notes: "語彙パイロット第346弾の対象（dmc68-002 型）。コスト軽減は mod の cost {amount, count}＋cost_min（dm21-020 の確立形）。"
+
+  - id: T1043
+    name: 試験用エクスペリオン
+    types: [creature]
+    civs: [water]
+    cost: 6
+    power: 6000
+    races: [クリスタル・コマンド・ドラゴン]
+    mana: 1
+    text: "バトルゾーンにある自分のリキッド・ピープル１体につき、自分の水の呪文を唱えるコストを１少なくしてもよい。ただし、コストは１より少なくならない。W・ブレイカー"
+    abilities:
+    - {kind: static, affects: {zone: hand, owner: you, filter: {types: [spell], civs: [water]}}, mod: {cost: {amount: -1, count: {zone: bz, owner: you, filter: {race_has: リキッド・ピープル}}}, cost_min: 1}}
+    keywords: [double_breaker]
+    source:
+      official: proto
+      review: pending
+      notes: "語彙パイロット第346弾の対象（dmx16-057 型）。場の発生源から手札の呪文へ効く形は dm24ex1-016 と同型。"
