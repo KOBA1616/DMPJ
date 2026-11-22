@@ -5056,3 +5056,9 @@ pilot342 cards を登録形に書換、round377 cards を新設（登録カー�
 - 実測: 相手の1体目だけがタップして出て、2体目はタップせず、次のターンでは再び1体目がタップして出る（第340弾と同じドライバで確認）。
 
 proto T1036（モモキング型、カード全体）。テスト8 passed（pilot 本体2＋実カード parse 3＋rust_schema_sync 3）。次の番号: パイロット344 / ラウンド379 / プロト T1037。
+
+### ラウンド378（第343弾の再変換）
+
+**新規登録1件**（dm26ex4-cho001 アルカディアス・モモキング。登録形は意図した形と完全一致）・**stale クリーンアップ1件**（dm26sd1-o002f は非正本で、正本 cho001 の aliases として解消。submit は「取得済みの原文に無いID」で弾いた。第365弾と同型）・**差し戻し0件**。converted 10,309→**10,310** / rejects 2,005→**2,003**、重なり0・漏れ0。first_entry_tapped_per_turn の行は残っていない（ファミリー解消）。
+
+pilot343 cards を登録形に書換、round378 cards を新設（登録カード自身の実挙動: 各ターン1体目だけタップして出る）。テスト14 passed（round378 cards 2＋pilot343 cards 登録形 2＋pilot343 本体 2＋data_audit 8）。回帰はパイロット・ルール系 232 passed / 0 failed、round357〜377 の disposition は件数固定の stale なだけの既知パターンで 21 failed。回答は answers/round378.yaml に保存。次の番号: パイロット344 / ラウンド379 / プロト T1037。

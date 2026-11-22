@@ -468467,3 +468467,84 @@ cards:
     - dm23rp2x-06x
   keywords:
   - double_breaker
+- id: dm26ex4-cho001
+  name: アルカディアス・モモキング
+  types:
+  - creature
+  - evolution
+  civs:
+  - light
+  - fire
+  cost: 6
+  power: 12500
+  races:
+  - ジョーカーズ・ドラゴン
+  - エンジェル・コマンド
+  - レクスターズ
+  mana: 1
+  star: true
+  evolve_from:
+    any_of:
+    - race_has: レクスターズ
+    - civs:
+      - light
+    - civs:
+      - fire
+  text: 'スター進化：レクスターズ、光、または火の、クリーチャー１体の上に置く。
+
+    T・ブレイカー
+
+    自分の他のレクスターズすべてのパワーを+2000する。
+
+    相手は光ではない呪文を唱えられない。
+
+    各ターンはじめて出る相手のクリーチャーは、タップして出る。'
+  abilities:
+  - kind: static
+    affects:
+      zone: bz
+      owner: you
+      other: true
+      filter:
+        race_has: レクスターズ
+    mod:
+      power: 2000
+  - kind: static
+    affects:
+      zone: hand
+      owner: opp
+      filter:
+        types:
+        - spell
+        not_civs:
+        - light
+    mod:
+      deny:
+      - cast
+  - kind: trigger
+    first_time: true
+    when:
+      event: move
+      to: bz
+      subject:
+        owner: opp
+        filter:
+          types:
+          - creature
+    effect:
+    - op: tap
+      select:
+        ref: event.subject
+  source:
+    official: dm26ex4-cho001
+    review: pending
+    notes: 2つの常在型は partial のまま。「各ターンはじめて出る相手のクリーチャーは、タップして出る」は first_time 誘発（出来事の通し番号で数える）で表した（第340弾で確立、第343弾）。
+    aliases:
+    - dm24bd3-003
+    - dm25ex3-sp2
+    - dm26sd1-o002f
+    - dmex19-m3
+    - dmrp18-b01
+    - dmrp18-km1
+  keywords:
+  - triple_breaker
