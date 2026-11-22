@@ -533,6 +533,43 @@ def test_mana_add_civs_matches(real_env, seed):
     assert any(o.get("keys") and o["keys"][0] == f"play:{card}" for o in a.eng.log)
 
 
+@pytest.mark.parametrize("seed", range(1, 21))
+def test_g_strike_cards_match(real_env, seed):
+    """増分F・カテゴリ6: G・ストライク（zone=hand の誘発: シールドから手札に加わった時、相手の
+    クリーチャー1体はこのターン攻撃できない）を持つ札を多く入れたデッキで、手札からの誘発収集・
+    待機・解決（may → choose → modify）まで含めて1局が一致する。"""
+    import random
+    r, b = real_env
+    pool = _portable(r)
+    sel = [i for i in pool if "g_strike" in r.cards[i].keywords]
+    assert len(sel) >= 40
+    rnd = random.Random(seed)
+
+    def deck():
+        return [rnd.choice(sel) if rnd.random() < 0.6 else rnd.choice(pool) for _ in range(40)]
+    spec = {"kind": "new_game", "decks": [deck(), deck()], "seed": seed, "first_player": seed % 2}
+    res = lockstep(Session.open(r, spec), rustcore.RustSession.open(r, spec, b), f"random:{seed}")
+    assert res["divergence"] is None and res["ok"] is True
+
+
+@pytest.mark.parametrize("seed", [1, 2, 3])
+def test_g_strike_fires_matches(real_env, seed):
+    """増分F・カテゴリ6: dm25rp3-056（G・ストライク）をシールドに含むデッキで、ブレイクされて
+    手札に加わるたびに誘発が立ち、may の yes_no 決定が実際に現れる局が一致すること。"""
+    r, b = real_env
+    card = "dm25rp3-056"
+    assert rustcore._is_plain(r.cards[card]) and "g_strike" in r.cards[card].keywords
+    vanilla = [i for i, d in r.cards.items()
+               if d.types == ["creature"] and not d.abilities and d.cost <= 2 and rustcore._is_plain(d)][:8]
+    assert len(vanilla) >= 4
+    deck = [card] * 20 + [vanilla[i % len(vanilla)] for i in range(20)]
+    spec = {"kind": "new_game", "decks": [deck, deck], "seed": seed, "first_player": seed % 2}
+    a, bb = Session.open(r, spec), rustcore.RustSession.open(r, spec, b)
+    res = lockstep(a, bb, f"random:{seed}")
+    assert res["divergence"] is None and res["ok"] is True
+    assert any(o.get("kind") == "yes_no" for o in a.eng.log)
+
+
 @pytest.mark.parametrize("seed", [1, 2, 3])
 def test_trigger_keyword_matches(real_env, seed):
     """増分F・カテゴリ1: keyword 印つき誘発（キーワード辞書から展開された能力）の照合。

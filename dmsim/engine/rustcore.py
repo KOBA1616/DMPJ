@@ -42,7 +42,10 @@ _OK_KW = {"blocker", "cannot_attack_player", "cannot_attack", "double_breaker", 
           "s_trigger", "s_trigger_plus", "super_s_trigger",
           # 増分F: mana_boost_cip はキーワード辞書の展開（出た時に山札の上をマナへ）だけで、
           # エンジン本体が名前を参照しない（data/rules/keywords.yaml の定義のみ）
-          "mana_boost_cip"}
+          "mana_boost_cip",
+          # 増分F・カテゴリ6: g_strike は zone=hand の誘発への展開だけ（下の _simple_trigger の
+          # 形状限定で通す）。キーワード自体の常在型は無い
+          "g_strike"}
 
 
 _FILTER_LISTS = ("types", "not_types", "civs", "not_civs", "races")
@@ -479,12 +482,20 @@ def _simple_trigger(ab) -> bool:
     Python と同じく turn_counters で数え、optional は誘発では Python が読まない（置換だけ）ので素通し。
     増分F: keyword 印（キーワード辞書から展開された能力の出自）は Python の誘発収集でも
     Rust の collect_triggers でも読まれない素通しの印なので、文字列なら通す。"""
+    zone = ab.get("zone", "bz")
+    if zone == "hand":
+        # 増分F・カテゴリ6: 手札で働く誘発は G・ストライクの形状（シールドから手札に加わった時、
+        # 自分自身が対象）だけ。収集は zone_trigger の走査（Rust の collect_triggers が写す）で拾われる
+        w = ab.get("when") or {}
+        if not (w.get("event") == "move" and w.get("from") == "shield" and w.get("to") == "hand"
+                and w.get("subject") == "self"):
+            return False
     return ab["kind"] == "trigger" and set(ab) <= {"kind", "when", "effect", "if", "zone",
                                                    "first_time", "optional", "once_per_turn", "keyword"} \
         and ("keyword" not in ab or isinstance(ab["keyword"], str)) \
         and all(k not in ab or isinstance(ab[k], bool) for k in ("first_time", "optional", "once_per_turn")) \
         and _simple_when(ab["when"]) \
-        and ab.get("zone", "bz") in ("bz", "graveyard") and ("if" not in ab or _simple_cond(ab["if"])) \
+        and zone in ("bz", "graveyard", "hand") and ("if" not in ab or _simple_cond(ab["if"])) \
         and _simple_effect(ab["effect"])
 
 
