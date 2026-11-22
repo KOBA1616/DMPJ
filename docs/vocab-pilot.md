@@ -5029,3 +5029,13 @@ proto T1032（003型、水晶武装の常在型を含む）/ T1033（001型の�
 **新規登録2件**（dm24bd6-003 偽りのコード シャーロック＝partial の水晶武装常在型＋出た時の破壊。dm23bd5-001 煉獄大帝 キング・ロマノフ＝partial の2能力＋出た時のマナ送り）・**alias 畳み込み0件**・**差し戻し0件**。converted 10,305→**10,307** / rejects 2,009→**2,007**、重なり0・漏れ0。each_player_keeps_one_creature の行は残っていない（ファミリー解消）。submit 直後の abilities 重複チェック済み（重複なし。第374弾の教訓）。
 
 pilot341 cards を登録形に書換、round376 cards を新設（登録カード自身の実挙動: 003 は選ばれなかった側を破壊、001 は持ち主のマナへ。001 の require: attack で相手が攻撃を強いられる点はドライバ側で no_block を選んで固定）。テスト17 passed（round376 cards 3＋pilot341 cards 登録形 2＋pilot341 本体 4＋data_audit 8）。回帰はパイロット・ルール系 225 passed / 0 failed、round357〜375 の disposition は件数固定の stale なだけの既知パターンで 19 failed。回答は answers/round376.yaml に保存。次の番号: パイロット342 / ラウンド377 / プロト T1034。
+
+### 語彙パイロット第342弾: battle_power_grant（エンジン拡張）
+
+対象は pure 2件: dmr11-016 破戒のインガ シャンツァイ（バトル中、自分のオラクルとゴッドのパワーは+3000される）、dm23rp2x-006 ボルシャック・ノブリス・ドラゴン（自分のアーマードすべては、バトル中パワーを+3000する）。
+
+- 拡張: _battle_bonus はこれまで戦闘するカード自身の常在型（affects: self）しか見ておらず、affects 辞書形で他へ付与する battle_power は一切効いていなかった。dm21-031 激竜凰ドランベルク（自分のティラノ・ドレイクは攻撃中+4000）で実測すると、3000同士のバトルが引き分けになり付与が不発だった。chars の集約と同じく、バトルゾーン／シールドゾーンの発生源から affects が合う常在型を集めるようにした（発生源の if は発生源の env で見る。only: attacking / opponent_filter / count の扱いは本人の常在型と同じ）。{ref: self} 形も _subject_match で本人だけに合う。
+- 副次効果: 既登録の同型は15件（{owner: you, filter} の全体付与11件＋{ref: self} 4件）あり、全てがこの拡張で実働化する。dm21-031 の実挙動をテストで固定した。
+- 006 の partial のコスト軽減の常在型は、条件「自分の火のエレメントが３つ以上あれば」が race_has に化けた壊れた形だったため、原文どおり {zone: hand, affects: self, if: {cmp: [{count: {zone: bz, owner: you, filter: {civs: [fire]}}}, ">=", 3]}, mod: {cost: -3}} に直して使う（dm26rp3-tr008 と同型）。
+
+proto T1034（016型）/ T1035（006型）。テスト11 passed（pilot 本体5＋実カード parse 3＋rust_schema_sync 3）。次の番号: パイロット343 / ラウンド378 / プロト T1036。

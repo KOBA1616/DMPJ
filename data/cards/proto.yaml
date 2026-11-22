@@ -15050,3 +15050,37 @@ cards:
       official: proto
       review: pending
       notes: "語彙パイロット第341弾の対象（dm23bd5-001 型の出た時条項のみ。他の条項は partial に既存）。残りは破壊ではなく持ち主のマナゾーンに置く。"
+
+  - id: T1034
+    name: 試験用インガ
+    types: [creature]
+    civs: [light, darkness]
+    cost: 8
+    power: 6500
+    races: [オラクル, デーモン・コマンド, エンジェル・コマンド]
+    mana: 1
+    text: "バトル中、自分のオラクルとゴッドのパワーは+3000される。W・ブレイカー"
+    abilities:
+    - {kind: static, affects: {owner: you, filter: {any_of: [{race_has: オラクル}, {race_has: ゴッド}]}}, mod: {battle_power: {amount: 3000}}}
+    keywords: [double_breaker]
+    source:
+      official: proto
+      review: pending
+      notes: "語彙パイロット第342弾の対象（dmr11-016 型）。バトル中だけの全体付与は mod battle_power を affects 辞書形で持つ常在型で表す（第342弾で _battle_bonus が集約するよう拡張）。"
+
+  - id: T1035
+    name: 試験用ノブリス
+    types: [creature]
+    civs: [fire]
+    cost: 9
+    power: 10000
+    races: [アーマード・ドラゴン]
+    mana: 1
+    text: "W・ブレイカー\n自分のアーマードすべては、バトル中パワーを+3000する。"
+    abilities:
+    - {kind: static, affects: {owner: you, filter: {race_has: アーマード}}, mod: {battle_power: {amount: 3000}}}
+    keywords: [double_breaker]
+    source:
+      official: proto
+      review: pending
+      notes: "語彙パイロット第342弾の対象（dm23rp2x-006 型）。付与は自分自身（アーマード・ドラゴン）にも及ぶ。"
