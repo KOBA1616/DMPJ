@@ -5079,3 +5079,15 @@ proto T1037（053型）/ T1038（002型）。テスト10 passed（pilot 本体4�
 **新規登録2件**（dmrp21-053 頂上演者 スケプティック / dm22rp1-002 ラクリマ・クロウラー。登録形は意図した形と完全一致。002 の partial の二重のジャストダイバー誘発は validate の dedupe で1つに畳まれた）・**差し戻し0件**。converted 10,310→**10,312** / rejects 2,003→**2,001**、重なり0・漏れ0。used_this_turn_condition の pure 行は解消（multi の dmrp14-s08 は lose_prevention のため残る）。
 
 pilot344 cards を登録形に書換、round379 cards を新設（登録カード自身の実挙動: 唱える前後でのスケプティックの攻撃可否、コスト5呪文を唱えたターン終わりのクロウラー出現）。テスト17 passed（round379 cards 3＋pilot344 cards 登録形 2＋pilot344 本体 4＋data_audit 8）。回帰はパイロット・ルール系 236 passed / 0 failed、round357〜378 の disposition は件数固定の stale なだけの既知パターンで 22 failed。回答は answers/round379.yaml に保存。次の番号: パイロット345 / ラウンド380 / プロト T1039。
+
+### 語彙パイロット第345弾: trigger_when_opponent_plays_free（ドリフト）
+
+対象は pure 3件: dm23rp3-025 運明！ベリアvs.キャディ / dm24bd5-008 魔力妖精バーベナ / dm24ex1-058 冥土人形ロッカ・マグナム。いずれも partial は能力を持たず、条項は既存の仕組みの組み合わせで足す。エンジン変更なし。
+
+- 「コストを支払わずに出た時」「マナゾーンのカードをタップせずに出た時」は when の unpaid: true（第257弾で move レコードに載る。効果で出されたカードはマナをタップせずに出ている）＋ subject {owner: opp}。相手のターン中は if {is_turn: opp}。
+- 025: 相手ターン中のパワー+10000 は static {affects: self, if: {is_turn: opp}, mod: {power: 10000}}。マナ加速は may＋move {select: {zone: deck, owner: you, from_top: 1}, to: mana, reason: put}。
+- 008: draw の後、may で choose {select: {zone: hand, owner: you, filter: {types: [creature], cost_le: {cost_of: event.subject}}}, as: put_card}＋move {ref: put_card} to: bz reason: put（「そのエレメント以下のコスト」は filter の式値で解決時に計算する）。
+- 058: 「出た時または相手が呪文を唱えた時」は誘発を2つに分ける（unpaid の move 誘発＋cast 誘発）。効果は共通で、相手の選択は choose の chooser: opp（第341弾の形）＋destroy {ref: victim}。
+- 実挙動の「支払わずに出る」側は登録済み dm22rp1-002 ラクリマ・クロウラー（第344弾）で作る: 相手がコスト5呪文を唱えたターン終わりに出る動きで3カードとも誘発を確認。通常召喚（支払って出す）では誘発しないことも確認。教訓: 候補1体だけの choose は ask の一意省略で自動決定され決定自体が出ない（第335弾と同型）。相手に選ばせる検証は候補2体で組むこと。
+
+proto T1039（025型）/ T1040（008型）/ T1041（058型）。テスト11 passed（pilot 本体5＋実カード parse 3＋rust_schema_sync 3）。次の番号: パイロット346 / ラウンド381 / プロト T1042。
