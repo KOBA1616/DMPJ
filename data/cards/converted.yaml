@@ -468675,3 +468675,154 @@ cards:
     review: pending
     notes: 'partial はジャストダイバー誘発が二重に入っていたため1つに畳んだ。ターン終わりの手札誘発は zone: hand＋used_count（コスト5以上の呪文またはタマシードを使った履歴）の
       if で表し、「出す」は move reason: put（第344弾）。'
+- id: dm23rp3-025
+  name: 運明！ベリアvs.キャディ
+  types:
+  - creature
+  civs:
+  - nature
+  cost: 2
+  power: 2000
+  races:
+  - ジャイアント・インセクト
+  - アビスロイヤル
+  mana: 1
+  text: 'ガードマン（このクリーチャーをタップして、相手クリーチャーの攻撃先を、自分の他のクリーチャーからこのクリーチャーに変更してもよい）
+
+    相手のターン中、このクリーチャーのパワーを+10000する。
+
+    相手のエレメントがコストを支払わずに出た時、自分の山札の上から１枚目をマナゾーンに置いてもよい。'
+  source:
+    official: dm23rp3-025
+    review: pending
+    notes: '相手ターン中のパワー+10000 は常在型（if {is_turn: opp}）。「コストを支払わずに出た時」は when の unpaid:
+      true で判定し、山札の上1枚をマナゾーンに置く（第345弾）。'
+  keywords:
+  - guardman
+  abilities:
+  - kind: static
+    affects: self
+    if:
+      is_turn: opp
+    mod:
+      power: 10000
+  - kind: trigger
+    when:
+      event: move
+      to: bz
+      subject:
+        owner: opp
+      unpaid: true
+    if:
+      is_turn: opp
+    effect:
+    - op: may
+      body:
+      - op: move
+        select:
+          zone: deck
+          owner: you
+          from_top: 1
+        to: mana
+        reason: put
+- id: dm24bd5-008
+  name: 魔力妖精バーベナ / 「これは…失われし記憶」
+  types:
+  - creature
+  civs:
+  - light
+  cost: 2
+  power: 2000
+  races:
+  - スノーフェアリー
+  - オラクル
+  mana: 1
+  text: 相手のターン中に、相手のマナゾーンにあるカードをタップせずに相手のエレメントが出た時、自分はカードを１枚引く。その後、そのエレメント以下のコストのクリーチャーを１体、自分の手札から出してもよい。
+  source:
+    official: dm24bd5-008
+    review: pending
+    notes: '「タップせずに出た時」は when の unpaid: true で判定。ドローの後、そのエレメント以下のコストのクリーチャーを手札から出してもよい（コスト上限は
+      filter の cost_le に {cost_of: event.subject} を置き解決時に計算。第345弾）。'
+  abilities:
+  - kind: trigger
+    when:
+      event: move
+      to: bz
+      subject:
+        owner: opp
+      unpaid: true
+    if:
+      is_turn: opp
+    effect:
+    - op: draw
+      count: 1
+    - op: may
+      body:
+      - op: choose
+        select:
+          zone: hand
+          owner: you
+          filter:
+            types:
+            - creature
+            cost_le:
+              cost_of: event.subject
+        as: put_card
+      - op: move
+        select:
+          ref: put_card
+        to: bz
+        reason: put
+- id: dm24ex1-058
+  name: 冥土人形ロッカ・マグナム
+  types:
+  - creature
+  civs:
+  - darkness
+  cost: 2
+  mana: 1
+  text: '{GS} G・ストライク（このクリーチャーを自分のシールドゾーンから手札に加える時、表向きにし、相手のクリーチャーを１体選んでもよい。このターン、そのクリーチャーは攻撃できない）
+
+    相手のターン中に、相手のマナゾーンのカードをタップせずに、相手のエレメントが出た時または相手が呪文を唱えた時、相手は自身のエレメントを１つ選び、破壊する。'
+  source:
+    official: dm24ex1-058
+    review: pending
+    notes: '「出た時または相手が呪文を唱えた時」は誘発を2つに分けた（unpaid の move 誘発＋cast 誘発）。相手は自身のエレメントを1つ選び破壊する（choose
+      の chooser: opp。第345弾）。'
+  power: 2000
+  races:
+  - デスパペット
+  keywords:
+  - g_strike
+  abilities:
+  - kind: trigger
+    when:
+      event: move
+      to: bz
+      subject:
+        owner: opp
+      unpaid: true
+    if:
+      is_turn: opp
+    effect: &id310
+    - op: choose
+      select:
+        zone: bz
+        owner: opp
+        count: 1
+        chooser: opp
+      as: victim
+    - op: destroy
+      select:
+        ref: victim
+  - kind: trigger
+    when:
+      event: cast
+      subject:
+        owner: opp
+        filter:
+          types:
+          - spell
+    if:
+      is_turn: opp
+    effect: *id310

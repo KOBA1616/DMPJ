@@ -1,10 +1,14 @@
 """語彙パイロット第345弾の対象カード（実カード parse）。
 
-対象は pure な trigger_when_opponent_plays_free 3件（未登録、
-rejects 残存、いずれも partial は能力を持たない）:
+対象は pure な trigger_when_opponent_plays_free 3件で、
+ラウンド380で登録:
 - dm23rp3-025 運明！ベリアvs.キャディ
 - dm24bd5-008 魔力妖精バーベナ
 - dm24ex1-058 冥土人形ロッカ・マグナム
+（登録形は意図した形と完全一致）
+
+trigger_when_opponent_plays_free の行は残っていない
+（ファミリー解消）。
 
 注意: conftest を import すると DMSIM_SKIP_CONVERTED が復活するので
 _conv_cache を直接使う（第319弾以降の作法）。
@@ -15,9 +19,10 @@ from pathlib import Path
 
 os.environ.pop("DMSIM_SKIP_CONVERTED", None)
 
-from dmsim.cards.defs import DATA, load_tables, parse_card  # noqa: E402
-from tests._conv_cache import all_cards, proto_card  # noqa: E402
 from dmsim.cards import cardstore  # noqa: E402
+from tests import _conv_cache  # noqa: E402
+from dmsim.cards.defs import DATA, load_tables, parse_card  # noqa: E402
+from tests._conv_cache import proto_card  # noqa: E402
 
 TABLES = load_tables()
 ROOT = Path(__file__).parent.parent
@@ -74,7 +79,8 @@ TRIG_058B = {
 FORM_025 = [STATIC_025, TRIG_025]
 FORM_008 = [TRIG_008]
 FORM_058 = [TRIG_058A, TRIG_058B]
-TARGETS = ("dm23rp3-025", "dm24bd5-008", "dm24ex1-058")
+FORMS = {"dm23rp3-025": FORM_025, "dm24bd5-008": FORM_008,
+         "dm24ex1-058": FORM_058}
 
 
 def _rows():
@@ -86,30 +92,21 @@ def _rows():
     return out
 
 
-def _cand(tid, base):
-    c = dict(base)
-    c.pop("source", None)
-    c.pop("gaps", None)
-    return c
-
-
-def test_targets_still_in_rejects():
+def test_targets_registered():
     rows = _rows()
-    conv_ids = {c["id"] for c in all_cards(CONVERTED)}
-    for t in TARGETS:
-        assert t in rows and t not in conv_ids
-        assert rows[t].get("gaps") == ["trigger_when_opponent_plays_free"]
-
-
-def test_partial_forms():
-    rows = _rows()
-    for tid, form in (("dm23rp3-025", FORM_025),
-                      ("dm24bd5-008", FORM_008),
-                      ("dm24ex1-058", FORM_058)):
-        p = rows[tid]["partial"]
-        assert not p.get("abilities")
-        d = parse_card(_cand(tid, {**p, "abilities": form}), TABLES)
-        assert len(d.abilities) >= 1
+    assert len(rows) == 1998
+    conv = _conv_cache.all_cards(CONVERTED)
+    ids = {c["id"] for c in conv}
+    assert len(ids) == 10315
+    assert not (ids & set(rows))          # canonical 重なり0
+    for tid, form in FORMS.items():
+        c = _conv_cache.find(CONVERTED, tid)
+        assert c is not None and c["abilities"] == form
+        assert not (c.get("source") or {}).get("unsupported")
+        parse_card(c, TABLES)
+    left = {rid for rid, r in rows.items()
+            if "trigger_when_opponent_plays_free" in (r.get("gaps") or [])}
+    assert left == set(), left            # ファミリー解消
 
 
 def test_proto_forms_match():
