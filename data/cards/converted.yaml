@@ -468355,3 +468355,115 @@ cards:
         - ref: keep_opp
       to: mana
       reason: put
+- id: dmr11-016
+  name: 破戒のインガ シャンツァイ
+  types:
+  - creature
+  civs:
+  - light
+  - darkness
+  cost: 8
+  power: 6500
+  races:
+  - オラクル
+  - デーモン・コマンド
+  - エンジェル・コマンド
+  mana: 1
+  text: マナゾーンに置く時、このカードはタップして置く。このクリーチャーを召喚する時、自分の手札から好きな枚数のゴッドを相手に見せる。このようにして見せたゴッド１体につき、このクリーチャーの召喚コストを１少なくする。ただしコストは２より少なくならない。バトル中、自分のオラクルとゴッドのパワーは+3000される。W・ブレイカー（このクリーチャーはシールドを２枚ブレイクする）
+  abilities:
+  - kind: static
+    affects: self
+    zone: hand
+    mod:
+      opt_reduce:
+        amount: 1
+        per: true
+        floor: 2
+        do:
+          select:
+            zone: hand
+            owner: you
+            filter:
+              race_has: ゴッド
+  - kind: static
+    affects:
+      owner: you
+      filter:
+        any_of:
+        - race_has: オラクル
+        - race_has: ゴッド
+    mod:
+      battle_power:
+        amount: 3000
+  source:
+    official: dmr11-016
+    review: pending
+    notes: コスト軽減の常在型は partial のまま。「バトル中、自分のオラクルとゴッドのパワーは+3000される」は affects 辞書形の battle_power
+      付与で表した（第342弾で _battle_bonus が集約するよう拡張され実働する）。「マナゾーンに置く時、このカードはタップして置く」は原文のみ（既存の登録例と同じ）。
+  keywords:
+  - double_breaker
+- id: dm23rp2x-006
+  name: ボルシャック・ノブリス・ドラゴン
+  types:
+  - creature
+  civs:
+  - fire
+  cost: 9
+  power: 10000
+  races:
+  - アーマード・ドラゴン
+  mana: 1
+  text: '自分の火のエレメントが３つ以上あれば、このクリーチャーの召喚コストを３少なくする。
+
+    W・ブレイカー
+
+    このクリーチャーが召喚によって出た時、アーマード・W・メクレイド８する。（アーマード・W・メクレイド８：自分の山札の上から６枚を見る。その中から、コスト８以下のアーマードを２枚まで、コストを支払わずに使う。残りを好きな順序で山札の下に置く）
+
+    自分のアーマードすべては、バトル中パワーを+3000する。'
+  abilities:
+  - kind: static
+    zone: hand
+    affects: self
+    if:
+      cmp:
+      - count:
+          zone: bz
+          owner: you
+          filter:
+            civs:
+            - fire
+      - '>='
+      - 3
+    mod:
+      cost: -3
+  - kind: trigger
+    when:
+      event: summon
+      subject: self
+    effect:
+    - op: mekurade
+      filter:
+        race_has: アーマード
+      cost_le: 8
+    - op: mekurade
+      filter:
+        race_has: アーマード
+      cost_le: 8
+  - kind: static
+    affects:
+      owner: you
+      filter:
+        race_has: アーマード
+    mod:
+      battle_power:
+        amount: 3000
+  source:
+    official: dm23rp2x-006
+    review: pending
+    notes: メクレイド誘発は partial のまま。コスト軽減の常在型は partial の形が壊れていた（条件が race_has に化けていた）ため原文どおりに直した。「自分のアーマードすべては、バトル中パワーを+3000する」は
+      affects 辞書形の battle_power 付与で表した（第342弾で _battle_bonus が集約するよう拡張され実働する）。
+    aliases:
+    - dm23rp2-006
+    - dm23rp2x-06x
+  keywords:
+  - double_breaker

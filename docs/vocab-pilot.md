@@ -5039,3 +5039,11 @@ pilot341 cards を登録形に書換、round376 cards を新設（登録カー�
 - 006 の partial のコスト軽減の常在型は、条件「自分の火のエレメントが３つ以上あれば」が race_has に化けた壊れた形だったため、原文どおり {zone: hand, affects: self, if: {cmp: [{count: {zone: bz, owner: you, filter: {civs: [fire]}}}, ">=", 3]}, mod: {cost: -3}} に直して使う（dm26rp3-tr008 と同型）。
 
 proto T1034（016型）/ T1035（006型）。テスト11 passed（pilot 本体5＋実カード parse 3＋rust_schema_sync 3）。次の番号: パイロット343 / ラウンド378 / プロト T1036。
+
+### ラウンド377（第342弾の再変換）
+
+**新規登録2件**（dmr11-016 破戒のインガ シャンツァイ＝partial の opt_reduce＋付与。dm23rp2x-006 ボルシャック・ノブリス・ドラゴン＝コスト軽減の化け形を原文どおりに修正＋メクレイド誘発＋付与）・**alias 畳み込み0件**（submit 時に 006 へ aliases [dm23rp2-006, dm23rp2x-06x] が自動記録されたが rejects 行ではない）・**差し戻し0件**。converted 10,307→**10,309** / rejects 2,007→**2,005**、重なり0・漏れ0。battle_power_grant の行は残っていない（ファミリー解消）。
+
+submit の事故と修正（第374弾と同型）: 006 はルール変換側に化け形のコスト常在型が残っており、submit が先頭に足したため意図した形と完全一致せず dedupe されず4能力で登録された。化け形側を除去して意図した3能力に直し、converted.yaml の git 差分が新規2件の追加のみ（既存行の削除ゼロ）であることを確認した。教訓の追加: partial の能力を「直して」回答に含める場合、submit の先頭追加で直す前の形も残るため、submit 直後の abilities 照合は件数だけでなく全能力の形を見ること。なお同じ化け形＋修正形の二重登録は既登録の dm26rp2-008 にも見られる（以前のラウンドで登録済み。そのまま記録のみ）。
+
+pilot342 cards を登録形に書換、round377 cards を新設（登録カード自身の実挙動: 016 の付与でゴッドが勝ち、006 の付与でアーマードが勝つ）。テスト18 passed（round377 cards 3＋pilot342 cards 登録形 2＋pilot342 本体 5＋data_audit 8）。回帰はパイロット・ルール系 230 passed / 0 failed、round357〜376 の disposition は件数固定の stale なだけの既知パターンで 20 failed。回答は answers/round377.yaml に保存。次の番号: パイロット343 / ラウンド378 / プロト T1036。
