@@ -468929,3 +468929,88 @@ cards:
           filter:
             race_has: リキッド・ピープル
       cost_min: 1
+- id: dmbd02-014
+  name: 西南の超人
+  types:
+  - creature
+  civs:
+  - nature
+  cost: 4
+  power: 3000
+  races:
+  - ジャイアント
+  - サムライ
+  mana: 1
+  text: 自分のジャイアントの召喚コストを最大２、少なくしてもよい。ただし、コストは０以下にならない。セイバー：ジャイアント（自分のジャイアントが破壊される時、このクリーチャーをかわりに破壊してもよい）
+  abilities:
+  - kind: static
+    affects:
+      zone: hand
+      owner: you
+      filter:
+        races:
+        - ジャイアント
+    mod:
+      cost: -2
+  - kind: replace
+    optional: true
+    when:
+      event: move
+      to: graveyard
+      reason: destroy
+      subject:
+        owner: you
+        filter:
+          races:
+          - ジャイアント
+        other: true
+    instead:
+    - op: destroy
+      select:
+        ref: self
+        count: 1
+  source:
+    official: dmbd02-014
+    review: pending
+    notes: 'ジャイアントの召喚コストを最大2少なくする常在型は mod {cost: -2}（下限0はエンジン既定、第347弾）。セイバー身代わりは partial
+      のまま。'
+    aliases:
+    - dm31-034
+    - dm31-034hc
+    - dmc59-008
+    - dmx09-041
+    - dmx24-031
+- id: dm39-018
+  name: 大地幻獣ガガマル
+  types:
+  - creature
+  civs:
+  - nature
+  cost: 7
+  power: 7000
+  races:
+  - ガイア・コマンド
+  - ドリームメイト
+  mana: 1
+  keywords:
+  - double_breaker
+  text: 'マナゾーンにある自分の、「マナ爆誕」を持つクリーチャーを召喚するコストを最大２少なくしてもよい。ただし、コストは１より少なくならない。
+
+    W・ブレイカー(このクリーチャーはシールドを２枚ブレイクする)'
+  source:
+    official: dm39-018
+    review: pending
+    notes: 'マナゾーンのマナ爆誕クリーチャーの召喚コストを最大2少なくする常在型は affects {zone: mana, filter: {keyword:
+      summon_from_mana}}＋mod {cost: -2, cost_min: 1}（第347弾）。'
+  abilities:
+  - kind: static
+    affects:
+      zone: mana
+      owner: you
+      filter:
+        types:
+        - creature
+        keyword: summon_from_mana
+    mod:
+      cost: -2
+      cost_min: 1

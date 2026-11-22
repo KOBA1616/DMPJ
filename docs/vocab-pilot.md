@@ -5127,3 +5127,11 @@ pilot346 cards を登録形に書換、round381 cards を新設（登録カー�
 - dm23rp4x-tf03 は対象外: partial が完全に空（名前・原文・能力なし）で登録の基礎がないため rejects に残す。
 
 proto T1044（014型、カード全体）/ T1045（018型）。テスト12 passed（pilot 本体6＋実カード parse 3＋rust_schema_sync 3）。次の番号: パイロット348 / ラウンド383 / プロト T1046。
+
+### ラウンド382（第347弾の再変換）
+
+**新規登録2件**（dmbd02-014 西南の超人 / dm39-018 大地幻獣ガガマル。登録形は意図した形と完全一致）・**差し戻し0件**。converted 10,317→**10,319** / rejects 1,996→**1,994**、重なり0・漏れ0。
+
+dm23rp4x-tf03 は対象外（partial が完全に空）。reopen で一旦外れたその行は原文どおり復帰させ、HEAD とバイト単位で一致することを確認した。up_to_cost_reduction の行はこの1件だけ残る。
+
+pilot347 cards を登録形に書換、round382 cards を新設（登録カード自身の実挙動: ジャイアント軽減とマナ爆誕軽減＋pay_cost）。テスト19 passed（round382 cards 3＋pilot347 cards 登録形 2＋pilot347 本体 6＋data_audit 8）。回帰はパイロット・ルール系 253 passed / 0 failed、round357〜381 の disposition は件数固定の stale なだけの既知パターンで 25 failed。回答は answers/round382.yaml に保存。次の番号: パイロット348 / ラウンド383 / プロト T1046。
