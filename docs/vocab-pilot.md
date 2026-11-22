@@ -4989,3 +4989,11 @@ pilot338 cards を登録形に書換、round373 cards を新設（登録カー�
 副次的な発見（要判断・未修正）: partial が持っていた {event: turn_start, subject: self} は決して誘発しない。turn_start のイベントレコードには subject が無く、実働形は dm22-012 の {event: turn_start}＋if: {is_turn: you/opp}（第339弾で実測確認し、スコーピオはこの形に直して登録する）。登録済みカードにも同形が約22件ある（grep 概算。dm21-s04 キラ・ゼクス・ドラグーンで実挙動の不発を確認）。一括修正するかは判断待ちとして記録する。
 
 proto T1028（グーゴル型）/ T1029（スコーピオ型）。テスト9 passed（pilot 本体3＋実カード parse 3＋rust_schema_sync 3）。次の番号: パイロット340 / ラウンド375 / プロト T1030。
+
+### ラウンド374（第339弾の再変換）
+
+**新規登録2件**（dmrp21-5a グーゴル ＜XENOM.Star＞＝スター進化と攻撃時誘発は partial のまま、常在型と opp_mana_tapped を追加。dm23ex3-006 偽りの名 スコーピオ＝ターン開始の誘発を実働形 {event: turn_start}＋if {is_turn: you} に修正、水晶武装4の常在型2つを追加）・**alias 畳み込み0件**（submit 時に 5a へ aliases 2件が自動記録されたが rejects 行ではない）・**差し戻し0件**。converted 10,301→**10,303** / rejects 2,013→**2,011**、重なり0・漏れ0。opponent_cards_enter_tapped の行は残っていない（ファミリー解消）。
+
+登録時の事故と修正: dmrp21-5a の攻撃時誘発が二重に登録された。submit はルール変換済みの能力（part[2]）を回答の先頭に足して完全一致だけで dedupe するため、ルール側が「見ないで選び」を読んで chooser: random を補った誘発と、回答側の無印の誘発が別物として両方残った。登録後に converted.yaml から無印の重複側を除去し、登録カード自身の実挙動（攻撃で相手の手札がちょうど1枚減る）で固定した。教訓: partial に discard 等の誘発がある場合、ルール変換が chooser: random を補うことがあるので、submit 直後に abilities の重複を必ず確認すること。
+
+pilot339 cards を登録形に書換、round374 cards を新設（登録カード自身の実挙動3件）。テスト17 passed（round374 cards 4＋pilot339 cards 登録形 2＋pilot339 本体 3＋data_audit 8）。回帰はパイロット・ルール系 218 passed / 0 failed、round357〜373 の disposition は件数固定の stale なだけの既知パターンで 17 failed。回答は answers/round374.yaml に保存（登録形に合わせて chooser: random を反映済み）。次の番号: パイロット340 / ラウンド375 / プロト T1030。

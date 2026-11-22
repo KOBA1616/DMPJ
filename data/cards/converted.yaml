@@ -467947,3 +467947,140 @@ cards:
     review: pending
     notes: 'ムゲンクライムと出た時の誘発は partial の形のまま。攻撃時の「捨てた枚数だけ選ぶ」は discard の move の as 束縛＋exists
       ゲート、「相手はそれを自身の山札の上または下に置く」は modal の player: opp で表した（第338弾）。'
+- id: dmrp21-5a
+  name: グーゴル ＜XENOM.Star＞
+  types:
+  - creature
+  - evolution
+  civs:
+  - darkness
+  cost: 6
+  power: 9000
+  races:
+  - ゼロ・ドラゴン
+  - デーモン・コマンド
+  - レクスターズ
+  mana: 1
+  star: true
+  evolve_from:
+    any_of:
+    - race_has: レクスターズ
+    - civs:
+      - darkness
+  keywords:
+  - double_breaker
+  - opp_mana_tapped
+  text: 'スター進化：レクスターズまたは闇のクリーチャー１体の上に置く。
+
+    W・ブレイカー
+
+    相手のカードはマナゾーンとバトルゾーンにタップして置かれる。
+
+    このクリーチャーが攻撃する時、相手の手札を１枚見ないで選び、捨てさせる。'
+  abilities:
+  - kind: trigger
+    when:
+      event: attack
+      subject: self
+    effect:
+    - op: discard
+      select:
+        zone: hand
+        owner: opp
+        count: 1
+        chooser: random
+  - kind: static
+    affects:
+      zone: bz
+      owner: opp
+    mod:
+      grant:
+      - enters_tapped
+  source:
+    official: dmrp21-5a
+    review: pending
+    notes: 'スター進化と攻撃時誘発は partial の形のまま。「相手のカードはマナゾーンとバトルゾーンにタップして置かれる」は、バトルゾーン側を static
+      の grant: [enters_tapped]、マナゾーン側をキーワード opp_mana_tapped で表した（第339弾）。'
+    aliases:
+    - dmrp21-7b
+    - dmrp21-s5
+- id: dm23ex3-006
+  name: 偽りの名 スコーピオ
+  types:
+  - creature
+  civs:
+  - darkness
+  cost: 6
+  power: 7000
+  races:
+  - ドラゴン・ゾンビ
+  - アンノウン
+  mana: 1
+  keywords:
+  - summon_from_graveyard
+  - blocker
+  - double_breaker
+  text: 'このクリーチャーを自分の墓地から召喚してもよい。
+
+    ブロッカー
+
+    W・ブレイカー
+
+    このクリーチャーが出た時、または自分のターンのはじめに、自分のマナゾーンにあるカードを１枚、裏向きにしてもよい。
+
+    水晶武装４：自分のマナゾーンに裏向きのカードが４枚以上あれば、相手のカードはマナゾーンとバトルゾーンにタップして置かれる。'
+  abilities:
+  - kind: trigger
+    when:
+      event: move
+      to: bz
+      subject: self
+    effect:
+    - op: may
+      body:
+      - op: flip_down
+        select:
+          zone: mana
+          owner: you
+          count: 1
+  - kind: trigger
+    when:
+      event: turn_start
+    if:
+      is_turn: you
+    effect:
+    - op: may
+      body:
+      - op: flip_down
+        select:
+          zone: mana
+          owner: you
+          count: 1
+  - kind: static
+    affects:
+      zone: bz
+      owner: opp
+    if: &id309
+      cmp:
+      - count:
+          zone: mana
+          owner: you
+          filter:
+            face_down: true
+      - '>='
+      - 4
+    mod:
+      grant:
+      - enters_tapped
+  - kind: static
+    affects: self
+    if: *id309
+    mod:
+      grant:
+      - opp_mana_tapped
+  source:
+    official: dm23ex3-006
+    review: pending
+    notes: '出た時の裏向き化は partial の形のまま。ターン開始の誘発は partial の {subject: self} 形では決して誘発しないため、実働形
+      {event: turn_start}＋if {is_turn: you} に直した。水晶武装4は face_down マナの count 条件で、バトルゾーン側は
+      grant: [enters_tapped]、マナゾーン側は自分への grant: [opp_mana_tapped] で表した（第339弾）。'
