@@ -3424,6 +3424,10 @@
       }
      ]
     },
+    "breaks_max": {
+     "type": "integer",
+     "minimum": 0
+    },
     "breaks_per_power": {
      "type": "integer"
     },
@@ -3787,6 +3791,7 @@
      "battle_power",
      "breaks",
      "breaks_add",
+     "breaks_max",
      "breaks_per_power",
      "cost",
      "cost_may",

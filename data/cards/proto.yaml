@@ -14769,3 +14769,51 @@ cards:
       official: proto
       review: pending
       notes: "語彙パイロット第335弾の対象（dm25-002 型）。攻撃時の任意＋modal、対象は evolution: false で絞る。「マナゾーンに置く時タップして置く」は既存の扱いに従い原文のみ。"
+
+  - id: T1018
+    name: 試験用光神龍
+    types: [creature]
+    civs: [light]
+    cost: 5
+    power: 5000
+    races: [アポロニア・ドラゴン]
+    mana: 1
+    text: "ブロッカー\nこのクリーチャーは、相手プレイヤーを攻撃できない。\n相手のクリーチャーは、攻撃１回につきシールドを１枚しかブレイクできない。"
+    abilities:
+    - {kind: static, affects: {owner: opp, filter: {types: [creature]}}, mod: {breaks_max: 1}}
+    keywords: [blocker, cannot_attack_player]
+    source:
+      official: proto
+      review: pending
+      notes: "語彙パイロット第336弾の対象（dm29-001 型）。ブレイク数の上限は新 mod breaks_max（エンジン拡張）で表す。"
+
+  - id: T1019
+    name: 試験用インパクト・アブソーバー
+    types: [cross_gear]
+    civs: [light]
+    cost: 5
+    mana: 1
+    text: "クロスギア:このカードをバトルゾーンに置く。クリーチャーにクロスするには、このカードのコストをもう一度支払う。そのクリーチャーがバトルゾーンを離れても、このカードはバトルゾーンに残る。 / これをクロスしたクリーチャーが破壊される時、墓地に置くかわりに裏向きにして自分のシールドに加える。 / このカードがどのクリーチャーにもクロスされていない時、クリーチャーは攻撃１回につきシールドを１枚しかブレイクできない。"
+    abilities:
+    - {kind: replace, when: {event: move, from: bz, to: graveyard, reason: destroy, subject: crossed}, instead: [{op: move, select: {ref: crossed}, to: shield, reason: put}]}
+    - {kind: static, affects: {owner: any, filter: {types: [creature]}}, if: {not: {exists: {ref: self, filter: {crossed: true}}}}, mod: {breaks_max: 1}}
+    source:
+      official: proto
+      review: pending
+      notes: "語彙パイロット第336弾の対象（dm16-008 型）。「クロスされていない時」は exists {ref: self, filter: {crossed: true}} の否定で見る。対象は両プレイヤーのクリーチャー（owner: any）。"
+
+  - id: T1020
+    name: 試験用ローズ・キャッスル
+    types: [g_castle]
+    civs: [darkness]
+    cost: 3
+    mana: 1
+    text: "（G城は実行したら、表向きでシールド化される。このカードが表向きで自分のシールドゾーンを離れる時、かわりに墓地に置く）\n自分のクリーチャーがバトルする時、そのバトルの終わりまで、バトルしている相手クリーチャーのパワーを－4000する。（パワー０以下のクリーチャーは破壊される）\n相手のクリーチャーは、１度につき最大１つしかシールドをブレイクできない。"
+    abilities:
+    - {kind: trigger, zone: shield, if: {face_up: true}, when: {event: battle_start, subject: {owner: you, filter: {types: [creature]}}}, effect: [{op: modify, select: {ref: event.opponent}, mod: {power: -4000}, duration: during_attack}]}
+    - {kind: trigger, zone: shield, if: {face_up: true}, when: {event: battle_start, opponent: {owner: you, filter: {types: [creature]}}}, effect: [{op: modify, select: {ref: event.subject}, mod: {power: -4000}, duration: during_attack}]}
+    - {kind: static, zone: shield, if: {face_up: true}, affects: {owner: opp, filter: {types: [creature]}}, mod: {breaks_max: 1}}
+    source:
+      official: proto
+      review: pending
+      notes: "語彙パイロット第336弾の対象（dm26rp1-039 型）。シールドゾーンから働く常在型（zone: shield＋face_up）は G城の確立形で、そこに breaks_max を足す。"

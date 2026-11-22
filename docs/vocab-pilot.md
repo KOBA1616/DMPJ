@@ -4928,3 +4928,13 @@ proto T1015（ウル型）/ T1016（ゴットハルト型）/ T1017（ゲオル�
 **新規登録3件**（dm25bd2-015 清浄の精霊ウル＝choose＋modal の確立形そのまま。dm24rp2-051 粛清者ゴットハルト＝repeat＋choose（up_to）＋modal。dm25-002 超鎧亜キングダム・ゲオルグ＝既存の evolve_from＋may＋choose（evolution: false）＋modal）・**alias 畳み込み0件**（submit 時に dm25bd2-015 へ aliases 3件が自動記録されたが rejects 行ではない）・**差し戻し0件**（submit 時の警告なし）。converted 10,288→**10,291** / rejects 2,026→**2,023**、重なり0・漏れ0。per_card_tap_or_untap の行は残っていない（ファミリー解消）。
 
 pilot335 cards を登録形に書換、round370 cards を新設（登録カード自身の実挙動: ウルで相手をタップ、ゴットハルトで2体を別々にアンタップ／タップ、ゲオルグは攻撃時に進化でないクリーチャーをタップ）。テスト20 passed（round370 cards 4＋pilot335 cards 登録形 2＋pilot335 本体 6＋data_audit 8）。回帰はパイロット・ルール系（第170弾を含む）174 passed / 0 failed、round357〜369 の disposition は件数固定の stale なだけの既知パターンで 13 failed。回答は answers/round370.yaml に保存。次の番号: パイロット336 / ラウンド371 / プロト T1018。
+
+### 語彙パイロット第336弾: break_limit（エンジン拡張: mod breaks_max）
+
+対象は pure 3件: dm29-001 光神龍ラル・アブゾーバー（相手のクリーチャーは攻撃1回につきシールドを1枚しかブレイクできない）、dm16-008 インパクト・アブソーバー（どのクリーチャーにもクロスされていない時、クリーチャーは攻撃1回につき1枚しかブレイクできない。両プレイヤー対象）、dm26rp1-039 我竜塔最高層 ローズ・キャッスル（表向きのシールドゾーンから、相手のクリーチャーは最大1つしかブレイクできない）。
+
+新 mod `breaks_max`（int >= 0）: chars の集約で、breaks の max 合成と breaks_add の適用の後に、breaks と break_opts の各値を上限で切り取る（複数あれば最小を採る）。defs.py Checker.mod＋schema.py＋card.schema.json 再生成＋core.py の集約、の4点。発生源は通常の常在型でよい: ラルは bz の常在型 {affects: {owner: opp, filter: {types: [creature]}}}、城は G城の確立形 {zone: shield, if: {face_up: true}} の常在型、ギアは {affects: {owner: any, ...}, if: {not: {exists: {ref: self, filter: {crossed: true}}}}}（「クロスされていない時」は exists の否定で見る。filter の crossed はギア自身に対して「クロスされているか」を返す）。
+
+実測: トリプル・ブレイカーの breaks は、ラルが相手の場にあると1（自分のクリーチャーは対象外で3のまま）、城が表向きだと1（裏向きでは3）、ギア未クロスだと両プレイヤーとも1で、クロスすると3に戻る。実挙動でも攻撃時の choose_shields が (1, 1) になり、実際に1枚だけ割れる（対照は (3, 3) で3枚）。
+
+proto T1018（ラル型）/ T1019（ギア型）/ T1020（城型）。テスト13 passed（pilot 本体8＋実カード parse 3＋rust_schema_sync 2）。次の番号: パイロット337 / ラウンド372 / プロト T1021。

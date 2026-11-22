@@ -33,7 +33,7 @@ REASONS = {"put", "destroy", "return", "discard", "charge", "summon", "cast", "b
 LOSE_REASONS = {"direct_attack", "deck_out", "state", "effect"}   # 第188弾: 敗北イベントの reason（when の照合用。移動の reason とは別）
 VIAS = {"revolution_change", "generate", "d_d_d", "rinne"}   # 出し方の印（「革命チェンジによって出た時」「D・D・Dによって出た時」「輪廻∞で唱えた時」など）
 DURATIONS_FIXED = {"end_of_turn", "during_attack", "permanent", "until_next_own_turn_start", "until_next_own_turn_end", "until_next_opp_turn_end"}
-MOD_KEYS = {"power", "power_set", "grant", "allow", "deny", "breaks", "breaks_add", "breaks_per_power", "battle_power", "power_when", "cost", "cost_min", "cost_may", "sac_reduce", "opt_reduce", "ignore", "ignore_ids", "gain", "require", "add_of", "add_races", "add_names", "no_leave", "must_be_attacked", "must_be_chosen", "must_attack_creature", "battle_indestructible", "win_all_battles", "add_civs", "indestructible", "double_power", "crystal_soul", "mana_number", "evo_reduce", "cross_reduce", "player_rush", "trigger_double"}
+MOD_KEYS = {"power", "power_set", "grant", "allow", "deny", "breaks", "breaks_add", "breaks_max", "breaks_per_power", "battle_power", "power_when", "cost", "cost_min", "cost_may", "sac_reduce", "opt_reduce", "ignore", "ignore_ids", "gain", "require", "add_of", "add_races", "add_names", "no_leave", "must_be_attacked", "must_be_chosen", "must_attack_creature", "battle_indestructible", "win_all_battles", "add_civs", "indestructible", "double_power", "crystal_soul", "mana_number", "evo_reduce", "cross_reduce", "player_rush", "trigger_double"}
 REQUIRES = {"attack", "block"}   # 強制（506.1b 攻撃しなければならない, 507.1b ブロックしなければならない）
 POSITIONS = {"top", "bottom"}
 PERMANENT_TYPES = {"tamaseed", "field", "cross_gear"}   # 手札から実行してバトルゾーンに出るクリーチャー以外のカード（315, 308, 303）
@@ -684,6 +684,9 @@ class Checker:
                     self.count_spec(ba["count"], where)
             elif not isinstance(ba, int) or isinstance(ba, bool):
                 raise DefError(f"{where}: breaks_add must be an int or {{amount, count}}")
+        if "breaks_max" in m:   # ブレイク数の上限（第336弾）: 「攻撃1回につきシールドをN枚しかブレイクできない」
+            if not isinstance(m["breaks_max"], int) or isinstance(m["breaks_max"], bool) or m["breaks_max"] < 0:
+                raise DefError(f"{where}: breaks_max must be an int >= 0")
         if "evo_reduce" in m:   # 進化元からの軽減の付与（第234弾）: このカードから進化するクリーチャーのコストを減らす
             er = m["evo_reduce"]
             if not isinstance(er, dict) or set(er) - {"amount", "min"} or not isinstance(er.get("amount"), int) \
