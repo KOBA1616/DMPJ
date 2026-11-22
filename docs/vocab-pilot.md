@@ -5196,3 +5196,9 @@ pilot350 cards を登録形に書換、round385 cards を新設（登録カー�
 - ドラゴン・ブロッカーはキーワード blocker（無制限の許可になる）ではなく、block の許可（既定 false）を other フィルタつき allow 項目で与える形: {kind: static, affects: self, mod: {allow: [{action: block, other: {race_has: ドラゴン}}]}}（permits は other を攻撃側に当てて評価する）。
 
 proto T1056（006型）/ T1057（021型）。テスト9 passed（pilot 本体3＋実カード parse 3＋rust_schema_sync 3）。次の番号: パイロット352 / ラウンド387 / プロト T1058。
+
+### ラウンド386（第351弾の再変換）
+
+**新規登録2件**（dm08-006 光器サーシャ / dm16-021 光器スヴェータ。登録形は意図した形と完全一致）・**差し戻し0件**。converted 10,326→**10,328** / rejects 1,986→**1,984**、重なり0・漏れ0。battle_power_against_specific_race のファミリーは解消。
+
+pilot351 cards を登録形に書換、round386 cards を新設（登録カード自身の実挙動: ドラゴン・ブロッカーの制限と種族条件つきバトルパワー）。テスト17 passed（round386 cards 3＋pilot351 cards 登録形 3＋pilot351 本体 3＋data_audit 8）。回帰はパイロット・ルール系 272 passed / 0 failed、round357〜385 の disposition は件数固定の stale なだけの既知パターンで 29 failed。回答は answers/round386.yaml に保存。次の番号: パイロット352 / ラウンド387 / プロト T1058。

@@ -469510,3 +469510,74 @@ cards:
               ref: self
               count: 1
       duration: until_next_own_turn_start
+- id: dm08-006
+  name: 光器サーシャ
+  types:
+  - creature
+  civs:
+  - light
+  cost: 8
+  power: 9500
+  races:
+  - メカ・デル・ソル
+  mana: 1
+  text: 'ドラゴン・ブロッカー(相手のドラゴンが攻撃するとき、このクリーチャーをタップして、その攻撃を阻止してよい。 その後、そのドラゴンとバトルする)
+
+    ドラゴンとバトルするとき、このクリーチャーのパワーは+6000される。
+
+    W(ダブル)・ブレイカー'
+  source:
+    official: dm08-006
+    review: pending
+    notes: ドラゴン・ブロッカーは block 許可を other フィルタつき allow で与える形（第351弾）。バトル中のパワー増は battle_power
+      の opponent_filter。
+  keywords:
+  - double_breaker
+  abilities:
+  - kind: static
+    affects: self
+    mod:
+      allow:
+      - action: block
+        other:
+          race_has: ドラゴン
+  - kind: static
+    affects: self
+    mod:
+      battle_power:
+        amount: 6000
+        opponent_filter:
+          race_has: ドラゴン
+- id: dm16-021
+  name: 光器スヴェータ
+  types:
+  - creature
+  civs:
+  - light
+  cost: 4
+  power: 4000
+  races:
+  - メカ・デル・ソル
+  mana: 1
+  text: 'ブロッカー(相手クリーチャーが攻撃する時、このクリーチャーをタップして、その攻撃を阻止してもよい。その後、その相手クリーチャーとバトルする)
+
+    このクリーチャーは、相手プレイヤーを攻撃できない。
+
+    デーモン・コマンドまたは種族にドラゴンとあるクリーチャーとバトルする時、このクリーチャーのパワーは+4000される。'
+  source:
+    official: dm16-021
+    review: pending
+    notes: バトル中のパワー増は battle_power の opponent_filter（any_of でデーモン・コマンドまたはドラゴン、第351弾）。
+  keywords:
+  - blocker
+  - cannot_attack_player
+  abilities:
+  - kind: static
+    affects: self
+    mod:
+      battle_power:
+        amount: 4000
+        opponent_filter:
+          any_of:
+          - race_has: デーモン・コマンド
+          - race_has: ドラゴン
