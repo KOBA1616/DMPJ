@@ -532,8 +532,16 @@ def _simple_replace(ab) -> bool:
     if ab["kind"] == "replace" and isinstance(w, dict) and w.get("event") == "draw":   # 引く時の置換（シャコガイル）
         return set(ab) <= {"kind", "when", "instead", "if"} and set(w) <= {"event", "player"} and w.get("player", "you") in ("you", "opp") \
             and ("if" not in ab or _simple_cond(ab["if"])) and _simple_effect(ab["instead"], False)
-    return ab["kind"] == "replace" and set(ab) <= {"kind", "when", "instead", "if"} and _simple_when(ab["when"]) \
+    return ab["kind"] == "replace" and set(ab) <= {"kind", "when", "instead", "if", "optional", "once_per_turn", "zone", "keyword"} \
+        and all(k not in ab or isinstance(ab[k], bool) for k in ("optional", "once_per_turn")) \
+        and ("keyword" not in ab or isinstance(ab["keyword"], str)) \
+        and ("zone" not in ab or isinstance(ab["zone"], str)) \
+        and _simple_when(ab["when"]) \
         and ab["when"].get("event") in ("move", "draw") and ("if" not in ab or _simple_cond(ab["if"])) and _simple_effect(ab["instead"], False)
+    # 増分F-5: optional（候補が全て任意の時だけ decline が付く。Rust の replacement が写す）/
+    # once_per_turn（選ばれた時に印を付ける）/ zone（発生源のゾーン宣言。走査規則は両エンジン共通）/
+    # keyword（キーワード辞書の展開印で、置換の収集では読まれない）を許可。break / lose / battle の
+    # 置換は別の機構（_break_candidates / lose_replace）が Rust 未移植のため event で除外したまま
 
 
 def _self_mods(d):

@@ -80,7 +80,8 @@ enum Ask {
 /// 特性の計算結果（Python の chars の、plain の範囲で要る部分だけ）
 struct Chars {
     power: i64,
-    pay_cost: i64,
+    cost: i64,      // 特性のコスト（コスト修整は含まない。Python の chars["cost"]。「コストN以下」の参照はこちら）
+    pay_cost: i64,  // 支払うコスト（コスト修整込み。Python の chars["pay_cost"]）
     allow: Vec<Value>,
     deny: Vec<Value>,
     require: Vec<String>,
@@ -337,7 +338,7 @@ impl Engine {
         let d = self.fdef(cid, face);
         if face.is_none() && zone == "bz" && !self.s.cards[cid as usize].seals.is_empty() {
             // 封印されているクリーチャーは無視される（Python の _chars_calc の早期リターン）
-            return Chars { power: d.power, pay_cost: d.cost, allow: vec![], deny: vec![], require: vec![],
+            return Chars { power: d.power, cost: d.cost, pay_cost: d.cost, allow: vec![], deny: vec![], require: vec![],
                            break_opts: vec![], breaks: 0, breaks_add: 0, keywords: vec![],
                            civs: d.civs.clone(), races: vec![], must_be_attacked: false,
                            battle_indestructible: false, win_all_battles: false, sealed: true };
@@ -408,7 +409,7 @@ impl Engine {
             }
         }
         // 畳み込み（Python の _chars_calc_body の本体ループと同じ順）
-        let mut ch = Chars { power: d.power, pay_cost: d.cost, allow: vec![], deny: vec![], require: vec![],
+        let mut ch = Chars { power: d.power, cost: d.cost, pay_cost: d.cost, allow: vec![], deny: vec![], require: vec![],
                              break_opts: vec![], breaks: 1, breaks_add: 0, keywords: d.keywords.clone(),
                              civs: d.civs.clone(), races: d.races.clone(), must_be_attacked: false,
                              battle_indestructible: false, win_all_battles: false, sealed: false };
@@ -737,6 +738,7 @@ impl Engine {
                 other => return uns(format!("task {}", other)),
             };
             if let Some(d) = d {
+                self.sync_instead_all();
                 self.s.waiting = Some(d.clone());
                 return Ok(Some(d));
             }
@@ -745,7 +747,44 @@ impl Engine {
                 self.s.result = Some(json!({"winner": null, "reason": "step_limit", "turn": self.s.turn}));
             }
         }
+        self.sync_instead_all();
         Ok(None)
+    }
+
+    /// 置換の instead 効果タスクは Python ではイベントタスクの instead リストと同一オブジェクトで、
+    /// pc / os / env の変化がそのまま digest に出る。Rust では写しなので、観測点（決定の返却・対局終了・
+    /// 効果タスクの完了）で実行中タスクの内容を写しへ同期する。写しの特定は ops と env の不変部
+    /// （you / self / event）の一致 + pc が実行中以下、で行う（同一イベントの同一置換が複数あっても
+    /// 実行は直列なので、pc の単調性で自分の写しに当たる）
+    fn sync_one_instead(&mut self, task: &Value) {
+        for ei in (0..self.s.tasks.len()).rev() {
+            let t = &self.s.tasks[ei];
+            if t["t"] != json!("event") || !t["applying"].as_bool().unwrap_or(false) {
+                continue;
+            }
+            if let Some(list) = self.s.tasks[ei]["instead"].as_array_mut() {
+                for x in list.iter_mut() {
+                    if x["ops"] == task["ops"]
+                        && x["env"].get("you") == task["env"].get("you")
+                        && x["env"].get("self") == task["env"].get("self")
+                        && x["env"].get("event") == task["env"].get("event")
+                        && x["pc"].as_i64().unwrap_or(0) <= task["pc"].as_i64().unwrap_or(0) {
+                        *x = task.clone();
+                        return;
+                    }
+                }
+            }
+        }
+    }
+
+    fn sync_instead_all(&mut self) {
+        let caps: Vec<Value> = self.s.tasks.iter()
+            .filter(|t| t["t"] == json!("effect")
+                && t["env"].get("capture").and_then(|v| v.as_bool()).unwrap_or(false))
+            .cloned().collect();
+        for task in caps {
+            self.sync_one_instead(&task);
+        }
     }
 
     pub fn answer(&mut self, choice: Vec<i64>) -> R<()> {
@@ -1340,12 +1379,12 @@ impl Engine {
             let refs = self.candidates_ro(df, env)?;
             let mut costs: Vec<i64> = vec![];
             for c in refs {
-                let p = self.chars(c, None).pay_cost;
+                let p = self.chars(c, None).cost;
                 if !costs.contains(&p) {
                     costs.push(p);
                 }
             }
-            cands.retain(|&c| !costs.contains(&self.chars(c, None).pay_cost));
+            cands.retain(|&c| !costs.contains(&self.chars(c, None).cost));
         }
         let n = n.min(cands.len());
         if n == 0 {
@@ -1396,7 +1435,7 @@ impl Engine {
 
     /// 合計制限の軸の値（コストは特性の支払いコスト、パワーは現在パワー。Python の chars_ro と同じ）
     fn total_val(&self, key: &str, c: i64) -> i64 {
-        if key == "cost" { self.chars(c, None).pay_cost } else { self.chars(c, None).power }
+        if key == "cost" { self.chars(c, None).cost } else { self.chars(c, None).power }
     }
 
     fn totals_of(&self, limits: &[(&str, Option<i64>, Option<i64>)], picked: &[i64]) -> Vec<i64> {
@@ -2364,6 +2403,10 @@ impl Engine {
             (t["pc"].as_i64().unwrap() as usize, t["ops"].as_array().unwrap().len())
         };
         if pc >= n || self.s.result.is_some() {
+            let t = self.s.tasks.last().unwrap().clone();
+            if t["env"].get("capture").and_then(|v| v.as_bool()).unwrap_or(false) {
+                self.sync_one_instead(&t);   // 置換の instead タスクの最終状態を写しへ残す
+            }
             self.s.tasks.pop();
             return Ok(None);
         }
@@ -3865,19 +3908,38 @@ impl Engine {
                         continue;
                     }
                 }
+                if ab.get("once_per_turn").and_then(|v| v.as_bool()).unwrap_or(false) {
+                    // 「各ターンに一度」の置換: 印は選ばれた時に付ける（Python の _replacement と同じ）
+                    let r = self.refv(src);
+                    let key = format!("once:replace:{}:{}:{}", r[0].as_i64().unwrap_or(-1), r[1].as_i64().unwrap_or(-1), i);
+                    if self.s.turn_counters.get(&key).map_or(false, |v| !v.is_null() && v.as_bool() != Some(false) && v.as_i64() != Some(0)) {
+                        continue;
+                    }
+                }
                 cands.push((src, i, ab.clone()));
             }
         }
         if cands.is_empty() {
             return Ok(Ok(None));
         }
-        let opts: Vec<Value> = cands.iter()
+        let mut opts: Vec<Value> = cands.iter()
             .map(|(s_, i, _)| json!({"key": format!("replace:{}:{}", self.s.cards[*s_ as usize].defn, i), "cid": s_, "ab": i})).collect();
+        if cands.iter().all(|(_, _, ab)| ab.get("optional").and_then(|v| v.as_bool()).unwrap_or(false)) {
+            opts.push(json!({"key": "decline"}));   // 候補が全て任意の時だけ「置換しない」を選べる
+        }
         let ans = match self.ask(p, "choose_replacement", opts.clone(), 1, 1) {
             Ask::Decision(d) => return Ok(Err(d)),
             Ask::Answer(x) => x,
         };
-        let (src, _, ab) = &cands[ans[0]];
+        if opts[ans[0]]["key"] == json!("decline") {
+            return Ok(Ok(None));
+        }
+        let (src, idx, ab) = &cands[ans[0]];
+        if ab.get("once_per_turn").and_then(|v| v.as_bool()).unwrap_or(false) {
+            let r = self.refv(*src);
+            let key = format!("once:replace:{}:{}:{}", r[0].as_i64().unwrap_or(-1), r[1].as_i64().unwrap_or(-1), idx);
+            self.s.turn_counters.insert(key, json!(1));
+        }
         let env = json!({"you": self.s.cards[*src as usize].controller, "self": self.refv(*src), "event": rec,
             "vars": {}, "no_replace": true, "capture": true});
         Ok(Ok(Some(json!({"t": "effect", "ops": ab["instead"], "pc": 0, "env": env, "os": {}}))))

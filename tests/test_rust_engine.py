@@ -610,6 +610,47 @@ def test_revolution_change_fires_matches(real_env, seed):
     assert any(o.get("kind") == "declare_attack" for o in a.eng.log)
 
 
+@pytest.mark.parametrize("seed", range(1, 21))
+def test_replace_cards_match(real_env, seed):
+    """増分F・カテゴリ5: 置換効果の追加キー（optional / once_per_turn / zone / keyword）を持つ札を
+    多く入れたデッキで、置換候補の走査・choose_replacement の諮問（decline を含む）・代わりの
+    効果の捕捉（capture）まで含めて1局が一致する。"""
+    import random
+    r, b = real_env
+    pool = _portable(r)
+    sel = [i for i in pool if any(a["kind"] == "replace" and
+                                  (a.get("optional") or a.get("once_per_turn") or "zone" in a or "keyword" in a)
+                                  for a in r.cards[i].abilities)]
+    assert len(sel) >= 40
+    rnd = random.Random(seed)
+
+    def deck():
+        return [rnd.choice(sel) if rnd.random() < 0.6 else rnd.choice(pool) for _ in range(40)]
+    spec = {"kind": "new_game", "decks": [deck(), deck()], "seed": seed, "first_player": seed % 2}
+    res = lockstep(Session.open(r, spec), rustcore.RustSession.open(r, spec, b), f"random:{seed}")
+    assert res["divergence"] is None and res["ok"] is True
+
+
+@pytest.mark.parametrize("seed", [1, 2, 3])
+def test_replace_optional_fires_matches(real_env, seed):
+    """増分F・カテゴリ5: dm02-044《ギガスタンド》（自分のクリーチャーが破壊される時、手札があれば
+    任意で置換できる）。バトルで破壊が起きるたびに choose_replacement の諮問（decline つき）が
+    現れる局が digest まで一致すること。"""
+    r, b = real_env
+    card = "dm02-044"
+    assert rustcore._is_plain(r.cards[card])
+    assert any(a["kind"] == "replace" and a.get("optional") for a in r.cards[card].abilities)
+    vanilla = [i for i, d in r.cards.items()
+               if d.types == ["creature"] and not d.abilities and d.cost <= 3 and rustcore._is_plain(d)][:8]
+    assert len(vanilla) >= 4
+    deck = [card] * 20 + [vanilla[i % len(vanilla)] for i in range(20)]
+    spec = {"kind": "new_game", "decks": [deck, deck], "seed": seed, "first_player": seed % 2}
+    a, bb = Session.open(r, spec), rustcore.RustSession.open(r, spec, b)
+    res = lockstep(a, bb, f"random:{seed}")
+    assert res["divergence"] is None and res["ok"] is True
+    assert any(o.get("kind") == "choose_replacement" for o in a.eng.log)
+
+
 @pytest.mark.parametrize("seed", [1, 2, 3])
 def test_trigger_keyword_matches(real_env, seed):
     """増分F・カテゴリ1: keyword 印つき誘発（キーワード辞書から展開された能力）の照合。
