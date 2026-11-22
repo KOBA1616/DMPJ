@@ -15105,3 +15105,39 @@ cards:
       official: proto
       review: pending
       notes: "語彙パイロット第343弾の対象（dm26ex4-cho001 / dm26sd1-o002f 型）。「各ターンはじめて出る相手のクリーチャーは、タップして出る」は第340弾で確立した first_time 誘発の形。"
+
+  - id: T1037
+    name: 試験用スケプティック
+    types: [creature]
+    civs: [water]
+    cost: 4
+    power: 6000
+    races: [ファイアー・バード, レクスターズ]
+    mana: 1
+    text: "ブロッカー\nW・ブレイカー\nこのターン、自分がタマシードを使うか呪文を唱えていなければ、このクリーチャーは攻撃できない。"
+    abilities:
+    - {kind: static, affects: self, if: {cmp: [{used_count: {owner: you, filter: {types: [spell, tamaseed]}}}, "==", 0]}, mod: {deny: [attack_player, attack_creature]}}
+    keywords: [blocker, double_breaker]
+    source:
+      official: proto
+      review: pending
+      notes: "語彙パイロット第344弾の対象（dmrp21-053 型）。「使っていなければ」は used_count（唱えた呪文＋via: generate で実行したカードの履歴）で数える。"
+
+  - id: T1038
+    name: 試験用クロウラー
+    types: [creature]
+    civs: [water]
+    cost: 6
+    power: 5000
+    races: [マジック・アースイーター]
+    mana: 1
+    text: "各ターンの終わりに、自分がそのターン中、コスト５以上の呪文またはコスト５以上のタマシードを使っていたら、このクリーチャーを手札から出してもよい。\nブロッカー\nジャストダイバー\nシビルカウント３：このクリーチャーが攻撃する時、自分の水のクリーチャーまたは水のタマシードが合計３つ以上あれば、カードを２枚引いてもよい。"
+    abilities:
+    - {kind: trigger, when: {event: move, to: bz, subject: self}, effect: [{op: modify, select: {ref: self}, mod: {deny: [be_chosen, be_attacked]}, duration: until_next_own_turn_start}]}
+    - {kind: trigger, when: {event: attack, subject: self}, if: {cmp: [{count: {zone: bz, owner: you, filter: {civs: [water], types: [creature, tamaseed]}}}, ">=", 3]}, effect: [{op: may, body: [{op: draw, count: 2}]}]}
+    - {kind: trigger, zone: hand, when: {event: turn_end}, if: {cmp: [{used_count: {owner: you, filter: {types: [spell, tamaseed], cost_ge: 5}}}, ">=", 1]}, effect: [{op: may, body: [{op: move, select: {ref: self}, to: bz, reason: put}]}]}
+    keywords: [blocker]
+    source:
+      official: proto
+      review: pending
+      notes: "語彙パイロット第344弾の対象（dm22rp1-002 型）。ターン終わりの手札誘発は zone: hand＋used_count の if。「出す」は move reason: put。"

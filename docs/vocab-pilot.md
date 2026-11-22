@@ -5062,3 +5062,14 @@ proto T1036（モモキング型、カード全体）。テスト8 passed（pilo
 **新規登録1件**（dm26ex4-cho001 アルカディアス・モモキング。登録形は意図した形と完全一致）・**stale クリーンアップ1件**（dm26sd1-o002f は非正本で、正本 cho001 の aliases として解消。submit は「取得済みの原文に無いID」で弾いた。第365弾と同型）・**差し戻し0件**。converted 10,309→**10,310** / rejects 2,005→**2,003**、重なり0・漏れ0。first_entry_tapped_per_turn の行は残っていない（ファミリー解消）。
 
 pilot343 cards を登録形に書換、round378 cards を新設（登録カード自身の実挙動: 各ターン1体目だけタップして出る）。テスト14 passed（round378 cards 2＋pilot343 cards 登録形 2＋pilot343 本体 2＋data_audit 8）。回帰はパイロット・ルール系 232 passed / 0 failed、round357〜377 の disposition は件数固定の stale なだけの既知パターンで 21 failed。回答は answers/round378.yaml に保存。次の番号: パイロット344 / ラウンド379 / プロト T1037。
+
+### 語彙パイロット第344弾: used_this_turn_condition（ドリフト）
+
+対象は pure 2件: dmrp21-053 頂上演者 スケプティック（このターン、自分がタマシードを使うか呪文を唱えていなければ、このクリーチャーは攻撃できない）/ dm22rp1-002 ラクリマ・クロウラー（各ターンの終わりに、自分がそのターン中、コスト５以上の呪文またはコスト５以上のタマシードを使っていたら、このクリーチャーを手札から出してもよい）。
+
+- 「使った」は既存の used_count 式（唱えた呪文＋via: generate で実行したタマシード等の履歴。印刷特性のスナップショット {cost, types, civs} で照合する。バンドC1 U19）で数える。053 は filter {types: [spell, tamaseed]} で 0 の間だけ効く常在型、002 は filter {types: [spell, tamaseed], cost_ge: 5} が 1 以上の時の手札誘発（zone: hand＋{event: turn_end}。dm26ex4-004 の先例形）。
+- 「攻撃できない」は許可語彙の attack_player / attack_creature の両 deny（mod の deny に 'attack' という行為名は無い）。
+- 002 の「出す」は move {ref: self} to: bz reason: put（召喚ではない。第329弾の作法）。partial のジャストダイバー誘発は二重に入っている（登録時は1つに畳む）。
+- 実測: 053 は唱える前は攻撃候補に出ず、唱えた後は出る。002 はコスト5呪文を唱えたターン終わりにだけ「出してもよい」が出て場に出る。
+
+proto T1037（053型）/ T1038（002型）。テスト10 passed（pilot 本体4＋実カード parse 3＋rust_schema_sync 3）。次の番号: パイロット345 / ラウンド380 / プロト T1039。
