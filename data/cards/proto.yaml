@@ -15545,3 +15545,52 @@ cards:
       official: proto
       review: pending
       notes: "語彙パイロット第353弾の検証用フィクスチャ（メクレイドで使えるマジック）。"
+
+  - id: T1063
+    name: 試験用不落の超人
+    types: [creature]
+    civs: [nature]
+    cost: 8
+    power: 12000
+    races: [ジャイアント]
+    mana: 1
+    text: "W・ブレイカー(このクリーチャーはシールドを２枚ブレイクする)\n相手のターン中、このクリーチャーがタップされていて、そのターンにまだ攻撃を受けていない場合、相手のクリーチャーは可能ならこのクリーチャーを攻撃する。"
+    abilities:
+    - {kind: static, affects: self, if: {all: [{is_turn: opp}, {exists: {ref: self, filter: {tapped: true}}}, {cmp: [{turn_count: {kind: attack_on, ref: self}}, "==", 0]}]}, mod: {must_be_attacked: true}}
+    keywords: [double_breaker]
+    source:
+      official: proto
+      review: pending
+      notes: "語彙パイロット第354弾の対象（dm10-s07 型）。タップ状態の条件は exists の ref セレクタに filter を重ねて表す。"
+
+  - id: T1064
+    name: 試験用誘引ゾンビ
+    types: [creature, evolution]
+    civs: [darkness]
+    cost: 7
+    power: 8000
+    races: [ドラゴン・ゾンビ]
+    mana: 1
+    evolve_from: {races: [ドラゴン・ゾンビ]}
+    text: "進化-自分のドラゴン・ゾンビ１体の上に置く。\n相手のクリーチャーは、可能であればこのクリーチャーを攻撃する。\nW・ブレイカー(このクリーチャーはシールドを２枚ブレイクする)"
+    abilities:
+    - {kind: static, affects: self, mod: {must_be_attacked: true}}
+    keywords: [double_breaker]
+    source:
+      official: proto
+      review: pending
+      notes: "語彙パイロット第354弾の対象（dm16-s03 型）。誘引は mod の must_be_attacked（第51弾で実装済み）。"
+
+  - id: T1065
+    name: 試験用ドラゴン・ゾンビ
+    types: [creature]
+    civs: [darkness]
+    cost: 3
+    power: 3000
+    races: [ドラゴン・ゾンビ]
+    mana: 1
+    text: "（試験用フィクスチャ: 進化元）"
+    source:
+      official: proto
+      review: pending
+      notes: "語彙パイロット第354弾の検証用フィクスチャ（ドラゴン・ゾンビの進化元）。"

@@ -5235,3 +5235,12 @@ proto T1060（020型）/ T1061（033型）/ T1062（検証用マジック）。�
 **新規登録2件**（dm22rp2x-020 チッタ・ペロルの冠 / dm23rp2x-033 ゼンツー。登録形は意図した形と完全一致）・**差し戻し0件**。converted 10,330→**10,332** / rejects 1,982→**1,980**、重なり0・漏れ0。trigger_when_opponent_plays_without_paying の pure は解消し、この gap は multi の dm26rp2-s011 にだけ残る。020 へ aliases 2件・033 へ1件の自動記録は rejects 行ではない。
 
 pilot353 cards を登録形に書換、round388 cards を新設（登録カード自身の実挙動: タマシードの反応とメクレイド）。テスト17 passed（round388 cards 3＋pilot353 cards 登録形 3＋pilot353 本体 3＋data_audit 8）。回帰はパイロット・ルール系 278 passed / 0 failed、round357〜387 の disposition は件数固定の stale なだけの既知パターンで 31 failed。回答は answers/round388.yaml に保存。次の番号: パイロット354 / ラウンド389 / プロト T1063。
+
+### 語彙パイロット第354弾: forced_attack_target（ドリフト）
+
+対象は pure 2件すべて: dm16-s03 / dm10-s07 不落の超人。
+
+- 「相手のクリーチャーは、可能であればこのクリーチャーを攻撃する」は mod の must_be_attacked（第51弾で実装済み。攻撃先の候補はタップした誘引持ちに限られる。攻撃できるのはタップ状態のクリーチャーだけという原則のため、条件の無い形でも原文どおりに働く）。
+- dm10-s07 の条件節は3つの既存部品で表す: {is_turn: opp}、「タップしている」は exists の ref セレクタに filter {tapped: true} を重ねた形、「そのターンにまだ攻撃を受けていない」は turn_count の attack_on（クリーチャー単位）== 0。
+
+proto T1063（s07型）/ T1064（s03型）/ T1065（進化元フィクスチャ）。テスト9 passed（pilot 本体3＋実カード parse 3＋rust_schema_sync 3）。次の番号: パイロット355 / ラウンド390 / プロト T1066。
