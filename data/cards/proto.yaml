@@ -15229,3 +15229,37 @@ cards:
       official: proto
       review: pending
       notes: "語彙パイロット第346弾の対象（dmx16-057 型）。場の発生源から手札の呪文へ効く形は dm24ex1-016 と同型。"
+
+  - id: T1044
+    name: 試験用西南の超人
+    types: [creature]
+    civs: [nature]
+    cost: 4
+    power: 3000
+    races: [ジャイアント, サムライ]
+    mana: 1
+    text: "自分のジャイアントの召喚コストを最大２、少なくしてもよい。ただし、コストは０以下にならない。セイバー：ジャイアント（自分のジャイアントが破壊される時、このクリーチャーをかわりに破壊してもよい）"
+    abilities:
+    - {kind: static, affects: {zone: hand, owner: you, filter: {races: [ジャイアント]}}, mod: {cost: -2}}
+    - {kind: replace, optional: true, when: {event: move, to: graveyard, reason: destroy, subject: {owner: you, filter: {races: [ジャイアント]}, other: true}}, instead: [{op: destroy, select: {ref: self, count: 1}}]}
+    source:
+      official: proto
+      review: pending
+      notes: "語彙パイロット第347弾の対象（dmbd02-014 型）。「最大2少なく」は固定の cost: -2（下限0はエンジン既定）として扱う。"
+
+  - id: T1045
+    name: 試験用ガガマル
+    types: [creature]
+    civs: [nature]
+    cost: 7
+    power: 7000
+    races: [ガイア・コマンド, ドリームメイト]
+    mana: 1
+    text: "マナゾーンにある自分の、「マナ爆誕」を持つクリーチャーを召喚するコストを最大２少なくしてもよい。ただし、コストは１より少なくならない。\nW・ブレイカー"
+    abilities:
+    - {kind: static, affects: {zone: mana, owner: you, filter: {types: [creature], keyword: summon_from_mana}}, mod: {cost: -2, cost_min: 1}}
+    keywords: [double_breaker]
+    source:
+      official: proto
+      review: pending
+      notes: "語彙パイロット第347弾の対象（dm39-018 型）。マナ爆誕は filter の keyword: summon_from_mana で絞る。"

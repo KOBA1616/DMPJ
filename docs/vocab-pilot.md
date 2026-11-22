@@ -5116,3 +5116,14 @@ proto T1042（002型、カード全体）/ T1043（057型）。テスト12 passe
 dmex17-031 は対象外（原文にデュアル・ザンジバルとナイト・マジックの条項があるため）。reopen で一旦外れたその行は原文どおり復帰させ、HEAD とバイト単位で一致することを確認した。cost_may_per_count の行はこの1件だけ残る。
 
 pilot346 cards を登録形に書換、round381 cards を新設（登録カード自身の実挙動: コスト軽減と下限、呪文軽減）。テスト19 passed（round381 cards 3＋pilot346 cards 登録形 2＋pilot346 本体 6＋data_audit 8）。回帰はパイロット・ルール系 247 passed / 0 failed、round357〜380 の disposition は件数固定の stale なだけの既知パターンで 24 failed。回答は answers/round381.yaml に保存。次の番号: パイロット347 / ラウンド382 / プロト T1044。
+
+### 語彙パイロット第347弾: up_to_cost_reduction（ドリフト）
+
+対象は pure 3件のうち2件: dmbd02-014 西南の超人（自分のジャイアントの召喚コストを最大2少なくしてもよい、ただし0以下にならない）/ dm39-018 大地幻獣ガガマル（マナゾーンにある自分のマナ爆誕クリーチャーを召喚するコストを最大2少なくしてもよい、ただし1より少なくならない）。エンジン変更なし。
+
+- 「最大N少なく」は固定の mod {cost: -N} として扱う（軽減量の任意選択はコスト常在型では扱わない既存の作法、第346弾と同じ）。下限は cost_min で、0 はエンジン既定（core.py の pay_cost は max(cost_min, …) で cost_min の既定は0）のため 014 では省略、018 では cost_min: 1 を明示。
+- 014 の形: {affects: {zone: hand, owner: you, filter: {races: [ジャイアント]}}, mod: {cost: -2}}。018 の形: {affects: {zone: mana, owner: you, filter: {types: [creature], keyword: summon_from_mana}}, mod: {cost: -2, cost_min: 1}}（マナ爆誕は filter の keyword で絞る）。
+- 実測: ジャイアント（コスト7）がマナ5で召喚可・マナ4では不可、非ジャイアントは軽減なし。マナ召喚は選択肢キー play:<id>:msum で出て、T086（コスト2）が1で召喚でき、T730（コスト5）の pay_cost は発生源ありで3・なしで5。教訓: T730 は究極進化MAX で進化元が要るため、通常のマナ召喚テストの fixture には使えない。
+- dm23rp4x-tf03 は対象外: partial が完全に空（名前・原文・能力なし）で登録の基礎がないため rejects に残す。
+
+proto T1044（014型、カード全体）/ T1045（018型）。テスト12 passed（pilot 本体6＋実カード parse 3＋rust_schema_sync 3）。次の番号: パイロット348 / ラウンド383 / プロト T1046。
