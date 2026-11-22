@@ -39,7 +39,10 @@ _OK_ALLOW = {"block", "attack_summoning_sick", "slayer", "guardman"}
 _OK_DENY = {"attack_player", "attack_creature", "be_blocked", "be_attacked"}
 _OK_KW = {"blocker", "cannot_attack_player", "cannot_attack", "double_breaker", "speed_attacker", "slayer", "unblockable",
           "triple_breaker", "cannot_be_attacked", "guardman", "world_breaker", "quad_breaker", "null_breaker",
-          "s_trigger", "s_trigger_plus", "super_s_trigger"}
+          "s_trigger", "s_trigger_plus", "super_s_trigger",
+          # 増分F: mana_boost_cip はキーワード辞書の展開（出た時に山札の上をマナへ）だけで、
+          # エンジン本体が名前を参照しない（data/rules/keywords.yaml の定義のみ）
+          "mana_boost_cip"}
 
 
 _FILTER_LISTS = ("types", "not_types", "civs", "not_civs", "races")
@@ -461,9 +464,12 @@ def _simple_when(w) -> bool:
 def _simple_trigger(ab) -> bool:
     """段階3-b＋増分C: 単純な誘発条件（_simple_when）で、条件 if も単純、効果が単純（_simple_effect）なもの。
     バトルゾーンか墓地で働く。追加キー first_time / once_per_turn は Rust の collect_triggers が
-    Python と同じく turn_counters で数え、optional は誘発では Python が読まない（置換だけ）ので素通し。"""
+    Python と同じく turn_counters で数え、optional は誘発では Python が読まない（置換だけ）ので素通し。
+    増分F: keyword 印（キーワード辞書から展開された能力の出自）は Python の誘発収集でも
+    Rust の collect_triggers でも読まれない素通しの印なので、文字列なら通す。"""
     return ab["kind"] == "trigger" and set(ab) <= {"kind", "when", "effect", "if", "zone",
-                                                   "first_time", "optional", "once_per_turn"} \
+                                                   "first_time", "optional", "once_per_turn", "keyword"} \
+        and ("keyword" not in ab or isinstance(ab["keyword"], str)) \
         and all(k not in ab or isinstance(ab[k], bool) for k in ("first_time", "optional", "once_per_turn")) \
         and _simple_when(ab["when"]) \
         and ab.get("zone", "bz") in ("bz", "graveyard") and ("if" not in ab or _simple_cond(ab["if"])) \

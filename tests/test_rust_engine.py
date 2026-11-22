@@ -433,6 +433,27 @@ def test_if_cards_match(real_env, seed):
     assert res["divergence"] is None and res["ok"] is True
 
 
+@pytest.mark.parametrize("seed", [1, 2, 3])
+def test_trigger_keyword_matches(real_env, seed):
+    """増分F・カテゴリ1: keyword 印つき誘発（キーワード辞書から展開された能力）の照合。
+    dm01-106《青銅の鎧》は mana_boost_cip の展開（出た時、山札の上1枚をマナへ）だけで、
+    印は Python の誘発収集でも Rust の collect_triggers でも読まれない。
+    20枚＋安いバニラのデッキで召喚のたびに誘発が解決され、マナゾーンの digest まで一致すること。"""
+    r, b = real_env
+    card = "dm01-106"
+    assert rustcore._is_plain(r.cards[card])
+    assert any(a.get("keyword") == "mana_boost_cip" for a in r.cards[card].abilities)
+    vanilla = [i for i, d in r.cards.items()
+               if d.types == ["creature"] and not d.abilities and d.cost <= 2 and rustcore._is_plain(d)][:8]
+    assert len(vanilla) >= 4
+    deck = [card] * 20 + [vanilla[i % len(vanilla)] for i in range(20)]
+    spec = {"kind": "new_game", "decks": [deck, deck], "seed": seed, "first_player": seed % 2}
+    a, bb = Session.open(r, spec), rustcore.RustSession.open(r, spec, b)
+    res = lockstep(a, bb, f"random:{seed}")
+    assert res["divergence"] is None and res["ok"] is True
+    assert any(o.get("keys") and o["keys"][0] == f"play:{card}" for o in a.eng.log)
+
+
 @pytest.mark.parametrize("seed", range(1, 61))
 def test_spell_decks_match(real_env, seed):
     """段階3-a: 単純な呪文（引く・選ぶ・移動・タップ・if・may と S・トリガー）を半分入れた実カードのデッキで、
