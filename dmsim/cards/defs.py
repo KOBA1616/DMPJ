@@ -46,7 +46,7 @@ SELECTOR_KEYS = {"zone", "owner", "owner_of", "filter", "count", "up_to", "from_
 FILTER_KEYS = {"any_of", "types", "not_types", "civs", "civs_all", "not_civs", "races", "races_all", "race_has", "not_race_has", "name", "name_has", "not_name",
                "cost_le", "cost_ge", "power_le", "power_ge", "tapped", "keyword", "not_keyword", "multicolor", "colorless", "hyper", "face_down", "face_up", "neo", "vanilla", "sealed", "evolution", "ultimate_evolution", "mugen_climb", "partner", "twinpact", "vividraw", "fushigi", "linked_god", "entered_this_turn",
                "spell_cost_le", "spell_cost_ge",   # 呪文面（ツインパクトの呪文側）のコスト（第184弾）
-               "crossed", "crossed_ge", "crossed_le", "crossed_name", "evo_source_of", "fortifying", "fortified", "exlife"}   # クロス状態（第170弾）: crossed はギアがクロスされているか、crossed_ge/le はその枚数、crossed_name はその名前のギアがクロスされているか。evo_source_of（第177弾）: そのクリーチャーの進化元になれるカード（値は "self" / 変数名）。fortifying（第178弾）: シールドを要塞化している城。fortified（第178弾）: 要塞化されたシールド。exlife（第237弾）: EXライフで紐付いたシールドか
+               "crossed", "crossed_ge", "crossed_le", "crossed_name", "evo_source_of", "evolves_from", "fortifying", "fortified", "exlife"}   # クロス状態（第170弾）: crossed はギアがクロスされているか、crossed_ge/le はその枚数、crossed_name はその名前のギアがクロスされているか。evo_source_of（第177弾）: そのクリーチャーの進化元になれるカード（値は "self" / 変数名）。evolves_from（第337弾）: その参照カードから進化できるカード（evo_source_of の鏡像。値は "self" / 変数名）。fortifying（第178弾）: シールドを要塞化している城。fortified（第178弾）: 要塞化されたシールド。exlife（第237弾）: EXライフで紐付いたシールドか
 FILTER_EXPR_KEYS = {"cost_le", "cost_ge", "power_le", "power_ge", "races", "civs", "not_civs", "name", "crossed_ge", "crossed_le", "spell_cost_le", "spell_cost_ge"}   # 値に式を書ける（解決時に計算）。civs / not_civs / name は宣言プリミティブ（{declared:}）の受け口（バンドB U3／バンドC2 U97）
 # 履歴カウンタ（式 {turn_count: ...}）の kind 列挙（バンドC1 U19＋統一で追加した分）。
 # owner に any を許すのは destroyed と attack だけ（他は you/opp）
@@ -458,6 +458,8 @@ class Checker:
             raise DefError(f"{where}: crossed_name must be a card name")
         if "evo_source_of" in f and not isinstance(f["evo_source_of"], str):
             raise DefError(f"{where}: evo_source_of must be 'self' or a variable name")
+        if "evolves_from" in f and not isinstance(f["evolves_from"], str):
+            raise DefError(f"{where}: evolves_from must be 'self' or a variable name")
         for k in FILTER_EXPR_KEYS & set(f):
             if k in ("races", "civs", "not_civs") and isinstance(f[k], list):
                 continue   # リテラル（種族・文明のリスト）は上の照合で検証済み

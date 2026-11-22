@@ -4944,3 +4944,14 @@ proto T1018（ラル型）/ T1019（ギア型）/ T1020（城型）。テスト1
 **新規登録3件**（dm29-001 光神龍ラル・アブゾーバー＝breaks_max の常在型そのまま。dm16-008 インパクト・アブソーバー＝既存の置換能力＋未クロス時の常在型。dm26rp1-039 我竜塔最高層 ローズ・キャッスル＝既存の誘発2つ＋シールドゾーンの常在型）・**alias 畳み込み0件**・**差し戻し0件**（submit 時の警告なし）。converted 10,291→**10,294** / rejects 2,023→**2,020**、重なり0・漏れ0。break_limit の行は残っていない（ファミリー解消）。
 
 pilot336 cards を登録形に書換、round371 cards を新設（登録カード自身の実挙動: ラルで攻撃のブレイクが1枚に、ギアは未クロス／クロスで上限が切替、城は表向きの時だけ上限1）。テスト20 passed（round371 cards 3＋pilot336 cards 登録形 2＋pilot336 本体 7＋data_audit 8）。回帰はパイロット・ルール系（第170弾を含む）181 passed / 0 failed、round357〜370 の disposition は件数固定の stale なだけの既知パターンで 14 failed。回答は answers/round371.yaml に保存。次の番号: パイロット337 / ラウンド372 / プロト T1021。
+
+### 語彙パイロット第337弾: evolution_base_from_graveyard（エンジン拡張: フィルタ evolves_from）
+
+対象は pure 3件: dm25rp1-018 至高の邪騎 スベルニル（出た時、このクリーチャーから進化できるコスト5以下の NEO／進化クリーチャーを1体、自分の墓地からこのクリーチャーの上に置いてもよい）、dm25rp2-sp3 魔光神官ルドルフ・アルカディア（出た時、山札の上から4枚を墓地に置いてもよい。その後、このクリーチャーから進化できるコスト8以下のクリーチャーを1体、自分の墓地からこのクリーチャーの上に置いてもよい）、dm25ex1-069 神滅翔天ポッポ・ジュヴィラ（自分の墓地にあるクリーチャーの上に重ねつつ出してもよい）。
+
+- 069 はドリフト: 第36弾の墓地進化（grave_evo: true＋evolve_zone: graveyard＋evolve_from）がそのまま使える。進化元に文明の制限は無いので evolve_from は {types: [creature]}。
+- 018／sp3 は新フィルタ `evolves_from`（値は "self" / 変数名）: evo_source_of（第177弾）の鏡像で、候補自身の evolve_from のいずれかに参照カードが合うものを拾う。defs.py の FILTER_KEYS＋検証、selectors.py の filter_match、schema.py（FILTER_KEYS から生成され card.schema.json に3箇所追加）の3点。重ね出し自体は第173弾の確立形: choose で束縛し、move {select: {ref: p, count: all}, to: bz, reason: put, stack_evo: true, evo_source: {ref: self}}。sp3 の切削は from_top の確立形。
+
+実測: スベルニルの choose の候補は、墓地の T057（NEO・闇から進化）と T087（進化・クリーチャーから進化）だけに絞られ（自然から進化する T017 と進化でない T001 は出ない）、選んだカードが自分の上に重なって出る。ルドルフは切削4枚の後に T394（闇から進化できる NEO）が候補に出て重なる。ジュヴィラ型はメインの選択肢に通常召喚と :gevo の両方が出て、:gevo では墓地のクリーチャーが下に付いて出る。
+
+proto T1021（スベルニル型）/ T1022（ルドルフ型）/ T1023（ジュヴィラ型）。テスト10 passed（pilot 本体4＋実カード parse 3＋rust_schema_sync 3）。次の番号: パイロット338 / ラウンド373 / プロト T1024。

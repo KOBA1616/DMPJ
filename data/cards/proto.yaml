@@ -14817,3 +14817,54 @@ cards:
       official: proto
       review: pending
       notes: "語彙パイロット第336弾の対象（dm26rp1-039 型）。シールドゾーンから働く常在型（zone: shield＋face_up）は G城の確立形で、そこに breaks_max を足す。"
+
+  - id: T1021
+    name: 試験用至高の邪騎
+    types: [creature]
+    civs: [darkness]
+    cost: 4
+    power: 4000
+    races: [アビスロイヤル]
+    mana: 1
+    text: "{GS} G・ストライク（このカードを自分のシールドゾーンから手札に加える時、表向きにし、相手のクリーチャーを１体選んでもよい。このターン、そのクリーチャーは攻撃できない）\nこのクリーチャーが出た時、このクリーチャーから進化できるコスト５以下の、NEOクリーチャーまたは進化クリーチャーを１体、自分の墓地からこのクリーチャーの上に置いてもよい。"
+    abilities:
+    - {kind: trigger, when: {event: move, to: bz, subject: self}, effect: [{op: may, body: [{op: choose, select: {zone: graveyard, owner: you, filter: {types: [creature], cost_le: 5, any_of: [{neo: true}, {evolution: true}], evolves_from: self}, count: 1}, as: p}, {op: move, select: {ref: p, count: all}, to: bz, reason: put, stack_evo: true, evo_source: {ref: self}}]}]}
+    keywords: [g_strike]
+    source:
+      official: proto
+      review: pending
+      notes: "語彙パイロット第337弾の対象（dm25rp1-018 型）。「このクリーチャーから進化できる」は新フィルタ evolves_from（エンジン拡張、evo_source_of の鏡像）で絞り、重ね出しは第173弾の stack_evo＋evo_source の確立形。"
+
+  - id: T1022
+    name: 試験用魔光神官
+    types: [creature]
+    civs: [light, darkness]
+    cost: 5
+    power: 6000
+    races: [エンジェル・コマンド, ダークロード, ナイト]
+    mana: 1
+    text: "{GS} G・ストライク\nブロッカー\nW・ブレイカー\nこのクリーチャーが出た時、自分の山札の上から４枚を墓地に置いてもよい。その後、このクリーチャーから進化できるコスト８以下のクリーチャーを１体、自分の墓地からこのクリーチャーの上に置いてもよい。"
+    abilities:
+    - {kind: trigger, when: {event: move, to: bz, subject: self}, effect: [{op: may, body: [{op: move, select: {zone: deck, owner: you, from_top: 4}, to: graveyard, reason: put}]}, {op: may, body: [{op: choose, select: {zone: graveyard, owner: you, filter: {types: [creature], cost_le: 8, evolves_from: self}, count: 1}, as: p}, {op: move, select: {ref: p, count: all}, to: bz, reason: put, stack_evo: true, evo_source: {ref: self}}]}]}
+    keywords: [g_strike, blocker, double_breaker]
+    source:
+      official: proto
+      review: pending
+      notes: "語彙パイロット第337弾の対象（dm25rp2-sp3 型）。山札の上から4枚は from_top の確立形。"
+
+  - id: T1023
+    name: 試験用神滅翔天
+    types: [creature]
+    civs: [darkness, fire]
+    cost: 4
+    power: 4000
+    races: [ファイアー・バード, ドラゴン・ゾンビ]
+    mana: 1
+    grave_evo: true
+    evolve_zone: graveyard
+    evolve_from: {types: [creature]}
+    text: "自分の墓地にあるクリーチャーの上に重ねつつ出してもよい"
+    source:
+      official: proto
+      review: pending
+      notes: "語彙パイロット第337弾の対象（dm25ex1-069 型）。墓地進化は第36弾の grave_evo 宣言そのまま（ドリフト）。進化元に文明の制限は無い。"

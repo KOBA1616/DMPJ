@@ -454,6 +454,20 @@ class SelectorMixin:
             if not any(self.filter_match(cid, {k: v for k, v in sub.items() if k != "zone"},
                                          lki, base, env) for sub in efs):
                 return False
+        if "evolves_from" in f:   # 「そのクリーチャーから進化できるカード」（第337弾）。evo_source_of の鏡像:
+            # 候補自身の evolve_from（zone を除く）のいずれかに参照カードが合うこと
+            if env is None:
+                return False
+            refs = self._refs_of(f["evolves_from"], env)
+            if not refs:
+                return False
+            ef = self.fdef(cid).evolve_from
+            if ef is None:
+                return False
+            efs = ef if isinstance(ef, list) else [ef]
+            if not any(self.filter_match(refs[0][0], {k: v for k, v in sub.items() if k != "zone"},
+                                         None, base, env) for sub in efs):
+                return False
         if "linked_god" in f:
             linked = self.link_side(cid) is not None and len(self.link_members(cid)) >= 2
             if linked != bool(f["linked_god"]):
