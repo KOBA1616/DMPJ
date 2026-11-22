@@ -256,6 +256,17 @@ class SelectorMixin:
                     lst = [c for c in lst if self.filter_match(c, f, env=env)]   # フィルタは問い合わせ時点の特性で照合する（バンドA の設計既定）
                 total += len(lst)
             return total
+        if kind == "enter_unpaid":   # 第348弾: cid リスト＋filter 対応（attack と同じ方式）
+            total = 0
+            for p in players:
+                lst = list(s.turn_counters.get(f"enter_unpaid:{p}", []))
+                f = spec.get("filter")
+                if f:
+                    if any(isinstance(v, dict) for v in f.values()):
+                        f = {k: self.eval_expr(v, env) if isinstance(v, dict) else v for k, v in f.items()}
+                    lst = [c for c in lst if self.filter_match(c, f, env=env)]
+                total += len(lst)
+            return total
         frm = spec.get("from")   # 第214弾: 移動元ゾーンで絞る（hist:<kind>_from_<zone>）
         key = f"hist:{kind}_from_{frm}" if frm else f"hist:{kind}"
         return sum(s.turn_counters.get(f"{key}:{p}", 0) for p in players)

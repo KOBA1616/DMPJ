@@ -15263,3 +15263,65 @@ cards:
       official: proto
       review: pending
       notes: "語彙パイロット第347弾の対象（dm39-018 型）。マナ爆誕は filter の keyword: summon_from_mana で絞る。"
+
+  - id: T1046
+    name: 試験用ブラックアウト
+    types: [creature]
+    civs: [darkness]
+    cost: 6
+    power: 7000
+    races: [ソニック・コマンド, 侵略者ZERO]
+    mana: 1
+    text: "W・ブレイカー\n侵略ZERO：相手のターンの終わりに、そのターン相手のクリーチャーがコストを支払わずに出ていたら、このクリーチャーを自分の手札から出してもよい。\nこのクリーチャーが攻撃する時、自分のD２フィールドがあれば、相手のパワーが一番大きいクリーチャーを１体破壊する。"
+    abilities:
+    - {kind: trigger, zone: hand, when: {event: turn_end}, if: {all: [{is_turn: opp}, {cmp: [{turn_count: {kind: enter_unpaid, owner: opp, filter: {types: [creature]}}}, ">=", 1]}]}, effect: [{op: may, body: [{op: move, select: {ref: self}, to: bz, reason: put}]}]}
+    - {kind: trigger, when: {event: attack, subject: self}, if: {exists: {zone: bz, owner: you, filter: {types: [d2_field]}}}, effect: [{op: destroy, select: {zone: bz, owner: opp, filter: {types: [creature]}, extremal: max_power, count: 1}}]}
+    keywords: [double_breaker]
+    source:
+      official: proto
+      review: pending
+      notes: "語彙パイロット第348弾の対象（dmbd21-018 型）。侵略ZERO は手札の turn_end 誘発＋turn_count enter_unpaid。「パワーが一番大きい」は select の extremal: max_power。"
+
+  - id: T1047
+    name: 試験用デッドリー・ハイウェイ
+    types: [field, d2_field]
+    civs: [darkness]
+    cost: 4
+    mana: 1
+    text: "侵略ZERO：相手のターンの終わりに、そのターン相手がコストを支払わずにクリーチャーをバトルゾーンに出していたら、このD２フィールドを自分の手札からバトルゾーンに出してもよい。（他のD２フィールドがバトルゾーンに出た時、このD２フィールドを自分の墓地に置く） / Dスイッチ：自分のターンのはじめに、このD２フィールドをゲーム中で一度上下逆さまにしてもよい。そうしたら、相手のタップしているクリーチャーを１体破壊する。"
+    abilities:
+    - {kind: trigger, zone: hand, when: {event: turn_end}, if: {all: [{is_turn: opp}, {cmp: [{turn_count: {kind: enter_unpaid, owner: opp, filter: {types: [creature]}}}, ">=", 1]}]}, effect: [{op: may, body: [{op: move, select: {ref: self}, to: bz, reason: put}]}]}
+    - {kind: trigger, dswitch: true, when: {event: turn_start, player: you}, effect: [{op: may, body: [{op: dswitch}, {op: destroy, select: {zone: bz, owner: opp, filter: {types: [creature], tapped: true}, count: 1}}]}]}
+    source:
+      official: proto
+      review: pending
+      notes: "語彙パイロット第348弾の対象（dmd35-011 型）。Dスイッチ誘発は partial のまま。"
+
+  - id: T1048
+    name: 試験用ドキンダムーン
+    types: [field, d2_field]
+    civs: [darkness]
+    cost: 6
+    mana: 1
+    text: "侵略ZERO：相手のターンの終わりに、そのターン相手がコストを支払わずにクリーチャーをバトルゾーンに出していたら、このD２フィールドを自分の手札からバトルゾーンに出してもよい。 / このD２フィールドがバトルゾーンに出た時、自分の山札の上から２枚を墓地に置く。 / （他のD２フィールドがバトルゾーンに出た時、このD２フィールドを自分の墓地に置く） / Dスイッチ：自分のターンのはじめに、このD２フィールドをゲーム中で一度上下逆さまにしてもよい。そうしたら、自分の墓地からソニック・コマンドを１体出してもよい。"
+    abilities:
+    - {kind: trigger, zone: hand, when: {event: turn_end}, if: {all: [{is_turn: opp}, {cmp: [{turn_count: {kind: enter_unpaid, owner: opp, filter: {types: [creature]}}}, ">=", 1]}]}, effect: [{op: may, body: [{op: move, select: {ref: self}, to: bz, reason: put}]}]}
+    - {kind: trigger, when: {event: move, to: bz, subject: self}, effect: [{op: mill, owner: you, count: 2}]}
+    - {kind: trigger, dswitch: true, when: {event: turn_start, player: you}, effect: [{op: may, body: [{op: dswitch}, {op: move, select: {zone: graveyard, owner: you, filter: {race_has: ソニック・コマンド}, count: 1}, to: bz, reason: put}]}]}
+    source:
+      official: proto
+      review: pending
+      notes: "語彙パイロット第348弾の対象（promoy15-035 型）。CIP と Dスイッチ誘発は partial のまま。"
+
+  - id: T1049
+    name: 試験用無償登場
+    types: [spell]
+    civs: [nature]
+    cost: 1
+    mana: 1
+    text: "自分の手札からクリーチャーを１体出してもよい。"
+    spell: [{op: may, body: [{op: move, select: {zone: hand, owner: you, filter: {types: [creature]}, count: 1}, to: bz, reason: put}]}]
+    source:
+      official: proto
+      review: pending
+      notes: "語彙パイロット第348弾の検証用 fixture: ターン中にコストを支払わずにクリーチャーを出す手段（侵略ZERO の条件確認用）。"

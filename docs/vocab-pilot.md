@@ -5135,3 +5135,14 @@ proto T1044（014型、カード全体）/ T1045（018型）。テスト12 passe
 dm23rp4x-tf03 は対象外（partial が完全に空）。reopen で一旦外れたその行は原文どおり復帰させ、HEAD とバイト単位で一致することを確認した。up_to_cost_reduction の行はこの1件だけ残る。
 
 pilot347 cards を登録形に書換、round382 cards を新設（登録カード自身の実挙動: ジャイアント軽減とマナ爆誕軽減＋pay_cost）。テスト19 passed（round382 cards 3＋pilot347 cards 登録形 2＋pilot347 本体 6＋data_audit 8）。回帰はパイロット・ルール系 253 passed / 0 failed、round357〜381 の disposition は件数固定の stale なだけの既知パターンで 25 failed。回答は answers/round382.yaml に保存。次の番号: パイロット348 / ラウンド383 / プロト T1046。
+
+### 語彙パイロット第348弾: invasion_zero（エンジン拡張＋ドリフト）
+
+対象は pure 3件すべて: dmbd21-018 ZEROの侵略 ブラックアウト / dmd35-011 ZEROの暴走 デッドリー・ハイウェイ / promoy15-035 禁断の月 ドキンダムーン。
+
+- 侵略ZERO の形: 手札の turn_end 誘発 {kind: trigger, zone: hand, when: {event: turn_end}, if: {all: [{is_turn: opp}, {cmp: [{turn_count: {kind: enter_unpaid, owner: opp, filter: {types: [creature]}}}, ">=", 1]}]}, effect: [may [move {ref: self} to: bz reason: put]]}。
+- エンジン拡張（3点）: turn_count の kind: enter_unpaid は従来は整数カウンタ（hist:enter_unpaid）だけで種類で絞れなかった。events.py が無償登場の cid リスト（enter_unpaid:<player>）も残し、selectors._turn_count に attack と同じ filter 方式の分岐を足し、defs.py の検証で enter_unpaid の filter を許可した。整数カウンタは従来どおり併存するので既存の利用に影響しない。
+- dmbd21-018 の攻撃時誘発は {exists: {zone: bz, owner: you, filter: {types: [d2_field]}}}＋ destroy の select に extremal: max_power（「パワーが一番大きい」）。
+- 教訓: 誘発の if は収集時に評価される（events.py:1322、ルール603.4）ため、ターン終わりの誘発は同じターン終わりに解決される別の誘発の結果を見られない。検証用の無償登場はターン中に起こす必要があり、fixture 呪文 T1049（手札からクリーチャーを出す）を追加した。
+
+proto T1046（018型）/ T1047（011型）/ T1048（035型）＋検証 fixture T1049。テスト12 passed（pilot 本体6＋実カード parse 3＋rust_schema_sync 3）。次の番号: パイロット349 / ラウンド384 / プロト T1050。

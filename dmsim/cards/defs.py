@@ -522,8 +522,8 @@ class Checker:
                     if "other" in v and (kind != "attack" or not isinstance(v["other"], bool)):
                         raise DefError(f"{where}: turn_count other is only for kind: attack, as a bool")
                     if "filter" in v:
-                        if kind != "attack":
-                            raise DefError(f"{where}: turn_count filter is only for kind: attack")
+                        if kind not in ("attack", "enter_unpaid"):
+                            raise DefError(f"{where}: turn_count filter is only for kind: attack / enter_unpaid")
                         self.filter(v["filter"], where)
                 return
             if k == "used_count":   # 「使った」履歴の特性つき数え {owner?, filter?}（バンドC1 U19）

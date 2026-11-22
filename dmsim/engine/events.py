@@ -304,6 +304,8 @@ class EventMixin:
                     rec.setdefault("ord", {})["enter"] = n
                     if rec.get("unpaid"):
                         self._hist_bump("enter_unpaid", rec["controller"])
+                        # 第348弾: 種類で絞れるよう cid リストも残す（turn_count の filter 用）
+                        tc.setdefault(f"enter_unpaid:{rec['controller']}", []).append(rec["subject"][0])
                     if rec.get("via") == "generate":   # 実行したタマシード／フィールド／クロスギアは「使った」履歴
                         tc.setdefault(f"hist:used:{rec['controller']}", []).append(
                             self._used_snapshot(rec["subject"][0]))
