@@ -1,14 +1,17 @@
-//! 探索側のターン内展開ループ（Rust 化 増分E・段階1）。
+//! 探索側のターン内展開ループ（Rust 化 増分E・段階1＋段階2）。
 //!
 //! Python の tools/exhaustive_crossturn.LeafCollector の収集走査（TurnSearch._search と
 //! 同じ規則でターン終了の葉を全て集める処理）を写したもの。葉は Engine そのものと
 //! (評価, 手順ログ, digest) のメタ情報で Python に返す。
 //!
-//! 段階1の範囲外（呼び出し側のゲートで委譲対象から外れる）:
-//! - ループ検出（Detectors / 証明書 / ストック）→ 段階2
+//! 段階2でループ検出（Detectors / 証明書 / verify / fast_forward / ストック）を写した。
+//! params.detectors=false の場合は段階1の意味論（検出器スタブ = observe は常に None）。
+//! 検出された証明書はメタ情報の certs に cert_to_dict 形（検出順）で返す。
+//!
+//! 範囲外（呼び出し側のゲートで委譲対象から外れる）:
 //! - 局面内チェックポイント（経路ガイド再生）→ 段階3
 //! - 登録簿マクロ（macro.active() が空でない場合）、value_fn、lookahead、
-//!   KEEP_HAND、DRAWOUT_ORDER、既定以外の相手役
+//!   KEEP_HAND、DRAWOUT_ORDER、既定以外の相手役、ループ発見モード（ts.collect）
 //! 意味論は Python と一致させることが目的で、食い違いがあれば常にこちらを直す。
 
 use crate::engine::{Engine, EngErr, R};
@@ -154,7 +157,14 @@ fn blake2b16_hex(data: &str) -> String {
 
 /// abstract(eng, "in_turn") の (ハッシュ, カウンタ)。材料は skel_raw（Python の
 /// _abstract_raw が読むのと同じ欄）から取るので、結果は Python と一致する。
+/// hand_keys を渡すと、手札はその名前の札だけを骨格に入れ、残りは枚数だけの
+/// カウンタにする（Python の abstract の hand_keys 分岐と同じ）。
 pub fn abstract_of(eng: &Engine, zones_counter: &HashMap<String, bool>) -> (String, BTreeMap<String, i64>) {
+    abstract_hk(eng, zones_counter, None)
+}
+
+pub fn abstract_hk(eng: &Engine, zones_counter: &HashMap<String, bool>,
+                   hand_keys: Option<&HashSet<String>>) -> (String, BTreeMap<String, i64>) {
     let r = eng.skel_raw();
     let mut skel = Map::new();
     skel.insert("active".into(), r["active"].clone());
@@ -186,6 +196,9 @@ pub fn abstract_of(eng: &Engine, zones_counter: &HashMap<String, bool>) -> (Stri
     let w = &r["waiting"];
     if w.is_null() {
         skel.insert("waiting".into(), Value::Null);
+    } else if hand_keys.is_some() {
+        // hand_keys がある場合は選択肢のキーを骨格に入れない（Python と同じ）
+        skel.insert("waiting".into(), json!([w["kind"], w["player"]]));
     } else {
         let keys = py_sorted(
             w["options"]
@@ -218,6 +231,16 @@ pub fn abstract_of(eng: &Engine, zones_counter: &HashMap<String, bool>) -> (Stri
             let names = pair[p].as_array().unwrap();
             if counter {
                 counters.insert(format!("{z}:{p}"), names.len() as i64);
+            } else if z == "hand" && hand_keys.is_some() {
+                let hk = hand_keys.unwrap();
+                let kept: Vec<Value> = names
+                    .iter()
+                    .filter(|n| hk.contains(n.as_str().unwrap_or("")))
+                    .cloned()
+                    .collect();
+                let rest = names.len() - kept.len();
+                skel.insert(format!("{z}:{p}"), Value::Array(py_sorted(kept)));
+                counters.insert(format!("{z}:{p}"), rest as i64);
             } else {
                 skel.insert(format!("{z}:{p}"), Value::Array(py_sorted(names.clone())));
             }
@@ -314,6 +337,12 @@ pub struct Params {
     pub cand: Cand,
     pub root_log: usize,
     pub zones_counter: HashMap<String, bool>,
+    // 段階2（ループ検出）。detectors=false は段階1の意味論（検出器スタブ）。
+    pub detectors: bool,
+    pub draw_discard: bool,
+    pub burn_stock: bool,
+    pub stock_offsets: Vec<i64>,
+    pub stock_cap: i64,
 }
 
 fn bad(msg: String) -> EngErr {
@@ -355,6 +384,10 @@ impl Params {
                 zones_counter.insert(k.clone(), x.as_bool().unwrap_or(false));
             }
         }
+        let stock_offsets: Vec<i64> = g(&v, "stock_offsets")
+            .as_array()
+            .map(|a| a.iter().map(|x| x.as_i64().unwrap_or(0)).collect())
+            .unwrap_or_else(|| vec![0, 1]);
         Ok(Params {
             me: fi(&v, "me", 0),
             budget: fi(&v, "budget", 0),
@@ -366,6 +399,11 @@ impl Params {
             cand,
             root_log: fi(&v, "root_log", 0) as usize,
             zones_counter,
+            detectors: g(&v, "detectors").as_bool().unwrap_or(false),
+            draw_discard: g(&v, "draw_discard").as_bool().unwrap_or(true),
+            burn_stock: g(&v, "burn_stock").as_bool().unwrap_or(true),
+            stock_offsets,
+            stock_cap: fi(&v, "stock_cap", 8),
         })
     }
 }
@@ -794,6 +832,572 @@ fn rollout(eng: &mut Engine, p: &Params) -> R<()> {
     Ok(())
 }
 
+// ---------- ループ検出（engine.loop / search.turn.Detectors の写し、増分E・段階2） ----------
+
+pub const WILD_HAND: &str = "hand:*";
+
+/// LoopCertificate の写し。Python 消費側へは to_dict（playback.cert_to_dict と
+/// 同じ形）で返す。verified / notes は検出時点では 0 / 空なので dict 側もそうなる。
+#[derive(Clone)]
+pub struct Cert {
+    pub start_skeleton: String,
+    pub actions: Vec<Vec<String>>,
+    pub deciders: Vec<i64>,
+    pub delta: BTreeMap<String, i64>,
+    pub limit: f64,
+    pub period: String,
+    pub win_by: Option<String>,
+    pub needed: Option<i64>,
+    pub hand_keys: Option<HashSet<String>>,
+    pub wild: bool,
+}
+
+impl Cert {
+    /// playback.cert_to_dict と同じ形（limit の inf は None、hand_keys は整列済み）。
+    pub fn to_dict(&self) -> Value {
+        let limit = if self.limit.is_infinite() {
+            Value::Null
+        } else {
+            json!(self.limit as i64)
+        };
+        let hk: Value = match &self.hand_keys {
+            Some(s) => {
+                let mut v: Vec<&String> = s.iter().collect();
+                v.sort();
+                json!(v)
+            }
+            None => Value::Null,
+        };
+        json!({
+            "start_skeleton": self.start_skeleton,
+            "actions": self.actions,
+            "deciders": self.deciders,
+            "delta": self.delta,
+            "limit": limit,
+            "period": self.period,
+            "win_by": self.win_by,
+            "needed": self.needed,
+            "verified": 0,
+            "notes": [],
+            "hand_keys": hk,
+        })
+    }
+}
+
+/// engine.loop.analyze の写し。
+fn analyze(delta: &BTreeMap<String, i64>, counters: &BTreeMap<String, i64>, me: i64) -> (f64, Option<String>, Option<i64>) {
+    let opp = 1 - me;
+    let mut limit = f64::INFINITY;
+    let suffix = format!(":{me}");
+    for (k, &d) in delta {
+        if d < 0 && k.ends_with(&suffix) {
+            let reserve: i64 = if k.starts_with("deck:") { 1 } else { 0 };
+            let v = (counters[k] - reserve).div_euclid(-d) as f64;
+            if v < limit {
+                limit = v;
+            }
+        }
+    }
+    let mut win_by: Option<String> = None;
+    let mut needed: Option<i64> = None;
+    let d_deck = delta.get(&format!("deck:{opp}")).copied().unwrap_or(0);
+    if d_deck < 0 {
+        let c = counters[&format!("deck:{opp}")];
+        let n = -((-c).div_euclid(-d_deck));
+        needed = Some(n);
+        if (n as f64) <= limit {
+            win_by = Some("opp_deck_out".to_string());
+        }
+    }
+    let d_sh = delta.get(&format!("shield:{opp}")).copied().unwrap_or(0);
+    if win_by.is_none() && d_sh < 0 {
+        let c = counters[&format!("shield:{opp}")];
+        let n = -((-c).div_euclid(-d_sh));
+        if (n as f64) <= limit {
+            win_by = Some("shield_zero".to_string());
+            needed = Some(n);
+        }
+    }
+    (limit, win_by, needed)
+}
+
+/// engine.loop.is_engine の写し（検出器の受け付け判定用。turn 側の同名関数とは別）。
+fn loop_is_engine(delta: &BTreeMap<String, i64>, me: i64) -> bool {
+    let suffix = format!(":{me}");
+    let mut any_pos = false;
+    let mut all_nonneg = true;
+    for (k, &v) in delta {
+        if k.ends_with(&suffix) && !k.starts_with("deck:") {
+            if v > 0 && (k.starts_with("hand:") || k.starts_with("mana_untapped:")) {
+                any_pos = true;
+            }
+            if v < 0 {
+                all_nonneg = false;
+            }
+        }
+    }
+    any_pos && all_nonneg
+}
+
+/// engine.loop.is_burn の写し。
+fn loop_is_burn(delta: &BTreeMap<String, i64>, me: i64) -> bool {
+    let suffix = format!(":{me}");
+    let deck_key = format!("deck:{me}");
+    delta.get(&deck_key).copied().unwrap_or(0) < 0
+        && !loop_is_engine(delta, me)
+        && delta
+            .iter()
+            .all(|(k, &v)| k.ends_with(&suffix) && (v >= 0 || *k == deck_key))
+}
+
+/// search.turn.is_burn_loop の写し。
+fn turn_is_burn(cert: &Cert, me: i64) -> bool {
+    cert.win_by.is_none() && loop_is_burn(&cert.delta, me)
+}
+
+/// search.turn.is_engine_loop の写し。
+fn turn_is_engine(cert: &Cert, me: i64) -> bool {
+    let suffix = format!(":{}", 1 - me);
+    cert.win_by.is_none()
+        && !cert.delta.iter().any(|(k, &v)| v < 0 && k.ends_with(&suffix))
+}
+
+/// engine.loop.wild_keys の写し。
+fn wild_keys(keys: &[String], hand_keys: &HashSet<String>) -> Vec<String> {
+    keys.iter()
+        .map(|k| {
+            let parts: Vec<&str> = k.split(':').collect();
+            if parts.len() >= 3 && parts[0] == "hand" && !hand_keys.contains(parts[1]) {
+                WILD_HAND.to_string()
+            } else {
+                k.clone()
+            }
+        })
+        .collect()
+}
+
+/// engine.loop.LoopDetector の写し（period は Detectors の使う "in_turn" 固定）。
+#[derive(Clone)]
+struct LoopDetector {
+    me: i64,
+    hand_keys: Option<HashSet<String>>,
+    engine_loops: bool,
+    report_all: bool,
+    burn_loops: bool,
+    wild: bool, // 実効値（Python の __init__ で hand_keys がある場合だけ有効化される）
+    seen: HashMap<String, (BTreeMap<String, i64>, usize)>,
+}
+
+impl LoopDetector {
+    fn new(me: i64, hand_keys: Option<HashSet<String>>, engine_loops: bool,
+           report_all: bool, burn_loops: bool, wild: bool) -> Self {
+        let wild = wild && hand_keys.is_some();
+        LoopDetector {
+            me,
+            hand_keys,
+            engine_loops,
+            report_all,
+            burn_loops,
+            wild,
+            seen: HashMap::new(),
+        }
+    }
+
+    fn observe(&mut self, eng: &Engine, zc: &HashMap<String, bool>) -> Option<Cert> {
+        let (h, ctr) = abstract_hk(eng, zc, self.hand_keys.as_ref());
+        let now = eng.log.len();
+        if let Some((old, at)) = self.seen.get(&h).cloned() {
+            let delta: BTreeMap<String, i64> = ctr
+                .iter()
+                .filter(|(k, &v)| old.get(*k) != Some(&v))
+                .map(|(k, &v)| (k.clone(), v - old[k]))
+                .collect();
+            if !delta.is_empty() && now > at {
+                let (limit, win_by, needed) = analyze(&delta, &ctr, self.me);
+                let opp_suffix = format!(":{}", 1 - self.me);
+                let hurts_opp = delta.iter().any(|(k, &v)| v < 0 && k.ends_with(&opp_suffix));
+                if hurts_opp
+                    || win_by.is_some()
+                    || (self.engine_loops && loop_is_engine(&delta, self.me))
+                    || self.report_all
+                    || (self.burn_loops && loop_is_burn(&delta, self.me))
+                {
+                    let acts = &eng.log[at..now];
+                    let mut keys: Vec<Vec<String>> = acts
+                        .iter()
+                        .map(|a| {
+                            a["keys"]
+                                .as_array()
+                                .map(|arr| {
+                                    arr.iter()
+                                        .map(|v| v.as_str().unwrap_or("").to_string())
+                                        .collect()
+                                })
+                                .unwrap_or_default()
+                        })
+                        .collect();
+                    let mut wild = false;
+                    if self.wild {
+                        let hk = self.hand_keys.as_ref().unwrap();
+                        keys = keys.iter().map(|k| wild_keys(k, hk)).collect();
+                        wild = keys.iter().any(|k| k.iter().any(|x| x == WILD_HAND));
+                    }
+                    let deciders: Vec<i64> = acts
+                        .iter()
+                        .map(|a| a["p"].as_i64().unwrap_or(0))
+                        .collect();
+                    return Some(Cert {
+                        start_skeleton: h,
+                        actions: keys,
+                        deciders,
+                        delta,
+                        limit,
+                        period: "in_turn".to_string(),
+                        win_by,
+                        needed,
+                        hand_keys: self.hand_keys.clone(),
+                        wild,
+                    });
+                }
+            }
+        }
+        self.seen.insert(h, (ctr, now));
+        None
+    }
+}
+
+/// search.turn.Detectors の写し（厳密・手札ぼかし・burn 受け付けの3検出器）。
+#[derive(Clone)]
+struct Detectors {
+    dets: Vec<LoopDetector>,
+}
+
+impl Detectors {
+    fn new(eng: &Engine, me: i64, draw_discard: bool) -> Detectors {
+        let hk: HashSet<String> = eng.zone_names("hand", me, false).into_iter().collect();
+        Detectors {
+            dets: vec![
+                LoopDetector::new(me, None, false, false, false, false),
+                LoopDetector::new(me, Some(hk), true, false, draw_discard, draw_discard),
+                LoopDetector::new(me, None, false, false, true, false),
+            ],
+        }
+    }
+
+    fn empty() -> Detectors {
+        Detectors { dets: vec![] }
+    }
+
+    fn fork(&self) -> Detectors {
+        self.clone()
+    }
+
+    /// 全検出器を回して（副作用は全てに効く）最初の証明書を返す（Python と同じ）。
+    fn observe(&mut self, eng: &Engine, zc: &HashMap<String, bool>) -> Option<Cert> {
+        let mut found: Option<Cert> = None;
+        for d in &mut self.dets {
+            let c = d.observe(eng, zc);
+            if found.is_none() {
+                found = c;
+            }
+        }
+        found
+    }
+}
+
+// ---------- 証明書の再生（engine.loop の verify / fast_forward の写し） ----------
+
+fn replay_equiv() -> bool {
+    static V: std::sync::OnceLock<bool> = std::sync::OnceLock::new();
+    *V.get_or_init(|| std::env::var("DMSIM_REPLAY_EQUIV").map(|s| s != "0").unwrap_or(true))
+}
+
+fn illegal<T>(msg: impl Into<String>) -> R<T> {
+    Err(EngErr::Illegal(msg.into()))
+}
+
+/// Engine.answer_by_keys の写し（待機中の決定を意味キーで答える）。
+fn answer_by_keys(eng: &mut Engine, keys: &[String]) -> R<()> {
+    let w = match &eng.s.waiting {
+        Some(w) => w.clone(),
+        None => return illegal("no decision pending"),
+    };
+    let opts: Vec<String> = w["options"]
+        .as_array()
+        .map(|a| {
+            a.iter()
+                .map(|o| o["key"].as_str().unwrap_or("").to_string())
+                .collect()
+        })
+        .unwrap_or_default();
+    let mut choice: Vec<i64> = vec![];
+    let mut used: HashSet<usize> = HashSet::new();
+    for k in keys {
+        let mut hit: Option<usize> = None;
+        for (i, ok) in opts.iter().enumerate() {
+            if ok == k && !used.contains(&i) {
+                hit = Some(i);
+                break;
+            }
+        }
+        match hit {
+            Some(i) => {
+                choice.push(i as i64);
+                used.insert(i);
+            }
+            None => return illegal(format!("key {k} not available in {opts:?}")),
+        }
+    }
+    eng.answer(choice)
+}
+
+/// engine.loop.replay_keys の写し。d は直前の advance で得た決定（= 待機中の決定）。
+fn replay_keys(eng: &mut Engine, keys: &[String], hand_keys: &Option<HashSet<String>>, d: &Value) -> R<()> {
+    if !keys.iter().any(|k| k == WILD_HAND) {
+        return answer_by_keys(eng, keys);
+    }
+    let empty = HashSet::new();
+    let hk = hand_keys.as_ref().unwrap_or(&empty);
+    let opts = d["options"].as_array().cloned().unwrap_or_default();
+    let player = d["player"].as_i64().unwrap_or(0);
+    let hand = eng.zone_ids("hand", player);
+    let order: HashMap<i64, i64> = hand.iter().enumerate().map(|(i, &c)| (c, i as i64)).collect();
+    let mut sorted_keys: Vec<&String> = keys.iter().collect();
+    sorted_keys.sort_by_key(|k| *k == WILD_HAND); // 安定ソート: 具体キーを先に（Python と同じ）
+    let mut choice: Vec<i64> = vec![];
+    let mut used: HashSet<usize> = HashSet::new();
+    for k in sorted_keys {
+        let hit: Option<usize> = if k == WILD_HAND {
+            let mut cand: Vec<usize> = (0..opts.len())
+                .filter(|&i| {
+                    if used.contains(&i) {
+                        return false;
+                    }
+                    let key = opts[i]["key"].as_str().unwrap_or("");
+                    if !key.starts_with("hand:") {
+                        return false;
+                    }
+                    let name = key.split(':').nth(1).unwrap_or("");
+                    !hk.contains(name)
+                })
+                .collect();
+            cand.sort_by_key(|&i| {
+                let ord = opts[i]
+                    .get("cid")
+                    .and_then(|v| v.as_i64())
+                    .and_then(|c| order.get(&c).copied())
+                    .unwrap_or(-1);
+                -ord
+            });
+            cand.first().copied()
+        } else {
+            (0..opts.len()).find(|&i| !used.contains(&i) && opts[i]["key"].as_str() == Some(k.as_str()))
+        };
+        match hit {
+            Some(i) => {
+                choice.push(i as i64);
+                used.insert(i);
+            }
+            None => {
+                return illegal(format!(
+                    "key {k} not available in {:?}",
+                    opts.iter().map(|o| o["key"].as_str().unwrap_or("")).collect::<Vec<_>>()
+                ))
+            }
+        }
+    }
+    choice.sort();
+    eng.answer(choice)
+}
+
+/// engine.loop._equiv_keys の写し。
+fn equiv_keys(d: &Value, keys: &[String]) -> Option<Vec<String>> {
+    let opts: HashSet<&str> = d["options"]
+        .as_array()
+        .map(|a| a.iter().map(|o| o["key"].as_str().unwrap_or("")).collect())
+        .unwrap_or_default();
+    let mut out: Vec<String> = vec![];
+    for k in keys {
+        if opts.contains(k.as_str()) {
+            out.push(k.clone());
+        } else if k.starts_with("play:") && !k.ends_with(":free") && opts.contains(format!("{k}:free").as_str()) {
+            out.push(format!("{k}:free"));
+        } else if k.starts_with("mana:")
+            && d["kind"].as_str() == Some("pay_mana")
+            && d["options"].as_array().map(|a| !a.is_empty()).unwrap_or(false)
+        {
+            out.push(d["options"][0]["key"].as_str().unwrap_or("").to_string());
+        } else {
+            return None;
+        }
+    }
+    Some(out)
+}
+
+/// engine.loop._replay_lap の写し。(終了したか, 同一視したか) を返す。
+fn replay_lap(e: &mut Engine, cert: &Cert) -> R<(bool, bool)> {
+    let mut subst = false;
+    let mut i = 0;
+    while i < cert.actions.len() {
+        let keys = &cert.actions[i];
+        let d = e.advance()?;
+        let Some(d) = d else {
+            return Ok((true, subst));
+        };
+        if replay_equiv()
+            && !keys.is_empty()
+            && d["kind"].as_str() != Some("pay_mana")
+            && keys.iter().all(|k| k.starts_with("mana:"))
+        {
+            subst = true;
+            i += 1;
+            continue;
+        }
+        match replay_keys(e, keys, &cert.hand_keys, &d) {
+            Ok(()) => {}
+            Err(EngErr::Illegal(_)) => {
+                let alt = if replay_equiv() && !keys.iter().any(|k| k == WILD_HAND) {
+                    equiv_keys(&d, keys)
+                } else {
+                    None
+                };
+                match alt {
+                    Some(alt) => {
+                        answer_by_keys(e, &alt)?;
+                        subst = true;
+                    }
+                    None => return illegal("replay_keys failed"),
+                }
+            }
+            Err(e2) => return Err(e2),
+        }
+        i += 1;
+    }
+    Ok((false, subst))
+}
+
+/// engine.loop._delta_ok の写し。
+fn delta_ok(delta: &BTreeMap<String, i64>, cert: &Cert, subst: bool) -> bool {
+    if *delta == cert.delta {
+        return true;
+    }
+    if !subst {
+        return false;
+    }
+    let keys: HashSet<&String> = delta.keys().chain(cert.delta.keys()).collect();
+    for k in keys {
+        let a = delta.get(k).copied().unwrap_or(0);
+        let b = cert.delta.get(k).copied().unwrap_or(0);
+        if a == b {
+            continue;
+        }
+        if k.starts_with("mana_untapped:") && a > b {
+            continue;
+        }
+        return false;
+    }
+    true
+}
+
+fn ctr_diff(c1: &BTreeMap<String, i64>, c0: &BTreeMap<String, i64>) -> BTreeMap<String, i64> {
+    c1.iter()
+        .filter(|(k, &v)| c0.get(*k) != Some(&v))
+        .map(|(k, &v)| (k.clone(), v - c0[k]))
+        .collect()
+}
+
+/// engine.loop.verify の写し。戻り値は確認できた周回数（Python の cert.verified の増分）。
+fn verify(eng: &Engine, cert: &Cert, times: i64, zc: &HashMap<String, bool>) -> R<i64> {
+    let mut e = eng.clone();
+    let mut verified: i64 = 0;
+    for _ in 0..times {
+        let (_h0, c0) = abstract_hk(&e, zc, cert.hand_keys.as_ref());
+        match replay_lap(&mut e, cert) {
+            Err(EngErr::Illegal(_)) => return Ok(verified),
+            Err(e2) => return Err(e2),
+            Ok((true, _)) => return Ok(verified),
+            Ok((false, subst)) => {
+                e.advance()?;
+                let (h1, c1) = abstract_hk(&e, zc, cert.hand_keys.as_ref());
+                let delta = ctr_diff(&c1, &c0);
+                if h1 != cert.start_skeleton || !delta_ok(&delta, cert, subst) {
+                    return Ok(verified);
+                }
+                verified += 1;
+            }
+        }
+    }
+    Ok(verified)
+}
+
+/// engine.loop.fast_forward の写し。
+fn fast_forward(eng: &mut Engine, cert: &Cert, n: i64, zc: &HashMap<String, bool>) -> R<()> {
+    for _ in 0..n {
+        let (_h0, c0) = abstract_hk(eng, zc, cert.hand_keys.as_ref());
+        let (ended, subst) = replay_lap(eng, cert)?;
+        if ended {
+            return Ok(());
+        }
+        if cert.wild || subst {
+            eng.advance()?;
+            let (h1, c1) = abstract_hk(eng, zc, cert.hand_keys.as_ref());
+            if h1 != cert.start_skeleton || !delta_ok(&ctr_diff(&c1, &c0), cert, subst) {
+                return illegal("fast_forward diverged from certificate");
+            }
+        }
+    }
+    eng.advance()?;
+    Ok(())
+}
+
+/// TurnSearch._stocks の写し（記録 lp は作らず、ストック先の局面だけを返す。
+/// lp は LeafCollector の葉に乗らないため等価性には影響しない）。
+fn stocks(p: &Params, eng: &Engine, cert: &Cert) -> R<Vec<Engine>> {
+    let engine_f = turn_is_engine(cert, p.me);
+    let burn_f = turn_is_burn(cert, p.me);
+    let mut n: i64 = if burn_f {
+        if cert.limit.is_finite() {
+            cert.limit as i64
+        } else {
+            0
+        }
+    } else if cert.win_by.is_some() {
+        cert.needed.unwrap_or(0)
+    } else if engine_f {
+        cert.limit.min(p.stock_cap as f64) as i64
+    } else if cert.limit.is_finite() {
+        cert.limit as i64
+    } else {
+        0
+    };
+    let d_deck = cert.delta.get(&format!("deck:{}", p.me)).copied().unwrap_or(0);
+    if engine_f && !burn_f && d_deck < 0 {
+        let deck_len = eng.zone_ids("deck", p.me).len() as i64;
+        n = n.min((deck_len - p.w.deck_keep).div_euclid(-d_deck));
+    }
+    if n <= 0 || verify(eng, cert, 1, &p.zones_counter)? < 1 {
+        return Ok(vec![]);
+    }
+    let offsets: &[i64] = if burn_f || (engine_f && cert.win_by.is_none()) {
+        &p.stock_offsets
+    } else {
+        &[0]
+    };
+    let mut out = vec![];
+    for &k in offsets {
+        let m = n - k;
+        if m <= 0 {
+            continue;
+        }
+        let mut ff = eng.clone();
+        if fast_forward(&mut ff, cert, m, &p.zones_counter).is_err() {
+            continue;
+        }
+        out.push(ff);
+    }
+    Ok(out)
+}
+
 // ---------- 展開ループ（LeafCollector._rec / collect の写し） ----------
 
 enum Flow {
@@ -815,6 +1419,7 @@ struct Ctx {
     leaf_count: i64,
     truncated: bool,
     leaves: Vec<LeafOut>,
+    certs: Vec<Value>, // Detectors.observe が返した証明書（cert_to_dict 形、観測順）
 }
 
 impl Ctx {
@@ -834,7 +1439,7 @@ impl Ctx {
         Flow::Ok
     }
 
-    fn rec(&mut self, mut eng: Engine) -> R<Flow> {
+    fn rec(&mut self, mut eng: Engine, det: Detectors) -> R<Flow> {
         let d = settle(&mut eng, self.p.me)?;
         let Some(d) = d else {
             return Ok(self.push_leaf(eng));
@@ -845,6 +1450,42 @@ impl Ctx {
             return Ok(self.push_leaf(eng));
         }
         let tk = tkey(&eng, &self.p.zones_counter);
+        if self.p.detectors {
+            // LeafCollector._rec の証明書処理（collect モードはゲートで除外済み）。
+            // observe の副作用（seen の更新）はこの経路の det に残り、子へは fork して渡す。
+            let mut det = det;
+            let cert = det.observe(&eng, &self.p.zones_counter);
+            if let Some(cert) = cert {
+                self.certs.push(cert.to_dict());
+                let burn = turn_is_burn(&cert, self.p.me);
+                if burn && !self.p.burn_stock {
+                    // cert = None として通常展開へ
+                } else if verify(&eng, &cert, 1, &self.p.zones_counter)? < 1 {
+                    // 骨格が戻っただけで繰り返せない。cert = None として通常展開へ
+                } else {
+                    let stocks = stocks(&self.p, &eng, &cert)?;
+                    if !stocks.is_empty() {
+                        for ff in stocks {
+                            let det2 = Detectors::new(&ff, self.p.me, self.p.draw_discard);
+                            if let Flow::Stop = self.rec(ff, det2)? {
+                                return Ok(Flow::Stop);
+                            }
+                        }
+                        return Ok(Flow::Ok);
+                    }
+                    if turn_is_engine(&cert, self.p.me) && !burn {
+                        // 資源ループはストックし切った局面を葉として残す
+                        return Ok(self.push_leaf(eng));
+                    }
+                    // cert = None として通常展開へ
+                }
+            }
+            return self.expand_children(eng, d, tk, det);
+        }
+        self.expand_children(eng, d, tk, det)
+    }
+
+    fn expand_children(&mut self, eng: Engine, d: Value, tk: String, det: Detectors) -> R<Flow> {
         if self.seen.contains(&tk) {
             return Ok(Flow::Ok);
         }
@@ -863,7 +1504,7 @@ impl Ctx {
             self.nodes += 1;
             let mut child = eng.clone();
             child.answer(choice)?;
-            if let Flow::Stop = self.rec(child)? {
+            if let Flow::Stop = self.rec(child, det.fork())? {
                 return Ok(Flow::Stop);
             }
         }
@@ -878,6 +1519,11 @@ impl Ctx {
 /// 葉は Engine そのもの（規則は Arc 共有）で返す。log はメタ情報側に含める。
 pub fn expand_turn(root: &Engine, params_json: &str) -> R<(String, Vec<Engine>)> {
     let p = Params::parse(params_json)?;
+    let det = if p.detectors {
+        Detectors::new(root, p.me, p.draw_discard)
+    } else {
+        Detectors::empty()
+    };
     let mut ctx = Ctx {
         left: p.budget,
         p,
@@ -886,8 +1532,9 @@ pub fn expand_turn(root: &Engine, params_json: &str) -> R<(String, Vec<Engine>)>
         leaf_count: 0,
         truncated: false,
         leaves: vec![],
+        certs: vec![],
     };
-    ctx.rec(root.clone())?;
+    ctx.rec(root.clone(), det)?;
     let leaves: Vec<Value> = ctx
         .leaves
         .iter()
@@ -901,6 +1548,7 @@ pub fn expand_turn(root: &Engine, params_json: &str) -> R<(String, Vec<Engine>)>
             "nodes": ctx.nodes,
             "left": ctx.left,
             "leaf_count": ctx.leaf_count,
+            "certs": ctx.certs,
         })
         .to_string(),
         engines,

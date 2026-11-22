@@ -129,12 +129,15 @@ def _rust_expand_params(coll: "LeafCollector", eng, node_budget: int):
     """Rust 側の展開ループ（dmcore の expand_turn、増分E）への委譲可否と、
     可能ならパラメータ dict を返す。不可なら None。
 
-    段階1の範囲は「ループ検出なし・チェックポイントなし」の走査だけなので、
-    委譲は環境変数 DMSIM_RUST_EXPAND=1 の明示オプトイン時のみ。検出器が要る
-    本番のラベル付け・探索では使わない（段階2で検出器を写してから広げる）。
+    段階2でループ検出（Detectors / 証明書 / ストック）まで写したので、検出器を
+    使う走査も委譲できる。委譲は環境変数 DMSIM_RUST_EXPAND=1 の明示オプトイン時のみ。
+    検出器の扱い: このモジュールの Detectors が本物（turn.Detectors）の場合は
+    Rust 側でも検出器を有効にし、別クラスに差し替わっている場合は段階1の
+    スタブ（observe は常に None）として扱う（差し替えは検証用スタブだけを想定）。
     ゲート: 再開・経路保持なし、マクロ空、value_fn / time_limit なし、相手役は
     既定（charge_only）、lookahead なし、KEEP_HAND / DRAWOUT_ORDER なし、
-    候補生成は既定か段方式（_rust_cand 属性つき）だけ、対象は RustEngine 本体。"""
+    候補生成は既定か段方式（_rust_cand 属性つき）だけ、対象は RustEngine 本体。
+    ループ発見モード（ts.collect）は証明書の返し方が違うので対象外のまま。"""
     if os.environ.get("DMSIM_RUST_EXPAND") != "1":
         return None
     ts = coll.ts
@@ -172,6 +175,12 @@ def _rust_expand_params(coll: "LeafCollector", eng, node_budget: int):
             "charge_keep_free": bool(turn.CHARGE_KEEP_FREE),
             "cand": cand,
             "root_log": len(eng.log) - eng._base_n,
+            "detectors": Detectors is turn.Detectors,
+            "draw_discard": bool(turn.DRAW_DISCARD if ts.draw_discard is None
+                                 else ts.draw_discard),
+            "burn_stock": bool(ts.burn_stock),
+            "stock_offsets": [int(k) for k in ts.stock_offsets],
+            "stock_cap": int(w.stock_cap),
             "zones_counter": {z: bool(zd["counter"])
                               for z, zd in eng.rules.zones.items()}}
 
