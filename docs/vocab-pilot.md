@@ -5169,3 +5169,13 @@ proto T1050（083型）/ T1051（036型）/ T1052（085型）＋検証 fixture T
 **新規登録3件**（promoy11-083 鬼丸「Ｅｎｄ」 / promoy12-036 激流剣砲 カツ∞キング / promoy12-085 漢のキズナ カツブードン。登録形は意図した形と完全一致）・**差し戻し0件**。converted 10,322→**10,325** / rejects 1,991→**1,988**、重なり0・漏れ0。summon_lock は dmx25-s07 にだけ残る（原文断片のみのため対象外。reopen で外れたその行は原文どおり復帰し HEAD とバイト一致を確認）。
 
 pilot349 cards を登録形に書換、round384 cards を新設（登録カード自身の実挙動: ゼニス召喚ロックと剣砲ロック＋CIP）。テスト20 passed（round384 cards 3＋pilot349 cards 登録形 3＋pilot349 本体 6＋data_audit 8）。回帰はパイロット・ルール系 265 passed / 0 failed、round357〜383 の disposition は件数固定の stale なだけの既知パターンで 27 failed。作業途中で VM 再起動があり pytest を再インストールした（通算5回目）。回答は answers/round384.yaml に保存。次の番号: パイロット350 / ラウンド385 / プロト T1054。
+
+### 語彙パイロット第350弾: must_attack_next_turn（ドリフト）
+
+対象は pure 3件のうち2件: dm05-014 ファントム・ベール / dmrp22-021 ドラヴィ圧鬼の巻。dm23ex3-tr09 は対象外（バトル代替「かわりにこのクリーチャーがバトルする」の機構が無く全体を組めない）。
+
+- 攻撃強制は mod の require: [attack]（turn.py が chars の require を見て攻撃を強制する、ルール506.1b。dm10-053 の常在形が先例）。must_attack_creature は「攻撃する時、可能ならクリーチャーを攻撃する」という対象制限であり、強制とは別物。
+- 期間つきの付与は op_modify＋duration の確立形（第276弾の deny ロックと同型）: 呪文は {op: modify, select: {zone: bz, owner: opp, filter: {types: [creature]}, count: all}, mod: {require: [attack]}, duration: until_next_opp_turn_end}、タマシードの CIP は duration: until_next_own_turn_start。解決時に場にいるクリーチャーだけが対象になるのは第276弾と同じ作法。
+- 実挙動で固定: 相手の攻撃判断に pass が無くなり全員が攻撃する（タップ＋シールド減少で確認）。対照実験（呪文なし）では全員アンタップのまま。タマシードは次の自分のターン開始時点で require が消えていることも確認。
+
+proto T1054（014型・呪文）/ T1055（021型）。テスト10 passed（pilot 本体4＋実カード parse 3＋rust_schema_sync 3）。次の番号: パイロット351 / ラウンド386 / プロト T1056。

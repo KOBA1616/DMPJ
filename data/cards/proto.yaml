@@ -15401,3 +15401,33 @@ cards:
       official: proto
       review: pending
       notes: "語彙パイロット第349弾の検証用 fixture: 剣砲ロックの対象。"
+
+  - id: T1054
+    name: 試験用ファントム・ベール
+    types: [spell]
+    civs: [darkness]
+    cost: 1
+    mana: 1
+    text: "相手の次のターンに、相手の攻撃できるクリーチャーはすべて、攻撃しなければならない。"
+    spell: [{op: modify, select: {zone: bz, owner: opp, filter: {types: [creature]}, count: all}, mod: {require: [attack]}, duration: until_next_opp_turn_end}]
+    source:
+      official: proto
+      review: pending
+      notes: "語彙パイロット第350弾の対象（dm05-014 型）。攻撃強制は mod の require: [attack] を duration つき modify で付与する（第276弾の deny ロックと同型）。"
+
+  - id: T1055
+    name: 試験用ドラヴィ圧鬼の巻
+    types: [tamaseed]
+    civs: [fire]
+    cost: 2
+    races: [デモニオ, 鬼レクスターズ]
+    mana: 1
+    text: "S・トリガー（このタマシードをシールドゾーンから手札に加える時、コストを支払わずにすぐ使ってもよい）\nシンカライズ：このタマシードがクリーチャーであるかのように、この上に進化クリーチャーを置いてもよい。\nこのタマシードが出た時、次の自分のターンのはじめまで、相手のクリーチャーは可能なら攻撃する。\nシンカパワー：このタマシードが進化する時、次の自分のターンのはじめまで、この進化したクリーチャーが各ターンはじめてバトルに勝った時、アンタップする。"
+    abilities:
+    - {kind: trigger, when: {event: move, to: bz, subject: self}, effect: [{op: modify, select: {zone: bz, owner: opp, filter: {types: [creature]}, count: all}, mod: {require: [attack]}, duration: until_next_own_turn_start}]}
+    - {kind: trigger, when: {event: evolve_base, subject: self}, effect: [{op: modify, select: {ref: event.top}, mod: {gain: [{kind: trigger, first_time: true, when: {event: battle_win, subject: self}, effect: [{op: untap, select: {ref: self, count: 1}}]}]}, duration: until_next_own_turn_start}]}
+    keywords: [s_trigger, shinka_rise]
+    source:
+      official: proto
+      review: pending
+      notes: "語彙パイロット第350弾の対象（dmrp22-021 型）。CIP の攻撃強制は require: [attack] の duration つき modify。シンカパワーは partial のまま。"
