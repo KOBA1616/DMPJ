@@ -4906,3 +4906,9 @@ proto T1013（dm22rp2x-002 型）/ T1014（dm26sd1-j009 型）。テスト8件�
 教訓: scenario.build の山札は spec の各ゾーンのカード＋filler だけ（指定しないカードは山札に無い）。setup のマナは原則アンタップだが、T030 はタップで始まる（理由は未調査。T009 等の水マナを使うこと）。プレイの選択肢は回答した直後には解決していないため、解決後の状態は次の決定まで進めてから見ること。山札の一番上は zlist("deck", p)[0]。
 
 次の候補メモ: broken_shields_no_s_trigger（重い）、after_attack_destroy（ラウンド245で差し戻し済み、重い）。
+
+### ラウンド369（第334弾の再変換）
+
+**新規登録2件**（dm22rp2x-002 アカシック・ヴィジョン＝allow {cast_from_deck_top, generate_from_deck_top} の確立形そのまま。dm26sd1-j009 斬龍電融 オロチリュウセイ＝既存のスピードアタッカー付与 static＋allow {summon_from_deck_top, once: true}）・**alias 畳み込み0件**（submit 時に 002 へ aliases 2件・j009 へ 3件が自動記録されたが rejects 行ではない）・**差し戻し0件**（submit 時の警告なし）。converted 10,286→**10,288** / rejects 2,028→**2,026**、重なり0・漏れ0。play_from_deck_top は multi の dmrp22-005（reveal_stay 複合）だけが残る。
+
+pilot334 cards を登録形に書換、round369 cards を新設（登録カード自身の実挙動: 山札の上の呪文を唱える、山札の上のクリーチャーを召喚する＝1体まで・次のターンにはまた出せる）。テスト21 passed（round369 cards 3＋pilot334 cards 登録形 2＋pilot334 本体 8＋data_audit 8）。回帰はパイロット・ルール系（第170弾を含む）168 passed / 0 failed（山札の上からのプレイ拡張の影響なし）、round357〜368 の disposition は件数固定の stale なだけの既知パターンで 12 failed。回答は answers/round369.yaml に保存。次の番号: パイロット335 / ラウンド370 / プロト T1015。

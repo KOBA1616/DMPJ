@@ -467118,3 +467118,92 @@ cards:
     official: dmrp11-zs01
     review: pending
     notes: 'パワーの移転は power mod の amount に {power_of: {ref: victim}} を書いた（第333弾）。「自分の零龍」は種族参照。'
+- id: dm22rp2x-002
+  name: アカシック・ヴィジョン
+  types:
+  - tamaseed
+  civs:
+  - water
+  cost: 4
+  mana: 1
+  text: 自分のターン中、自分の山札の上から１枚目をいつでも見てもよい。自分のターン中、呪文またはタマシードを自分の山札の上から使ってもよい。
+  abilities:
+  - kind: static
+    affects:
+      zone: deck
+      owner: you
+      filter:
+        types:
+        - spell
+        - tamaseed
+    if:
+      is_turn: you
+    mod:
+      allow:
+      - action: cast_from_deck_top
+      - action: generate_from_deck_top
+  source:
+    official: dm22rp2x-002
+    review: pending
+    notes: 山札の上からの使用は allow {cast_from_deck_top, generate_from_deck_top} で表した（第334弾）。「いつでも見てもよい」は原文のみ。
+    aliases:
+    - dm22rp2-002
+    - dm22rp2x-002x
+- id: dm26sd1-j009
+  name: 斬龍電融 オロチリュウセイ
+  types:
+  - creature
+  civs:
+  - water
+  - fire
+  - nature
+  cost: 8
+  power: 17000
+  races:
+  - ディスペクター
+  - サイバーロード
+  - レッド・コマンド・ドラゴン
+  mana: 1
+  keywords:
+  - ex_life
+  - triple_breaker
+  text: 'EXライフ（このクリーチャーを出す時、自分の山札の上から１枚をシールド化する。このクリーチャーが離れる時、かわりにそのシールドを墓地に置く）
+
+    T・ブレイカー（このクリーチャーはシールドを３つブレイクする）
+
+    自分のクリーチャーすべてに「スピードアタッカー」を与える。
+
+    自分のターン中、自分の山札の上から１枚をいつでも見てもよい。
+
+    自分のターン中、クリーチャーを１体、自分の山札の上から召喚してもよい。（コストは支払う）'
+  abilities:
+  - kind: static
+    affects:
+      owner: you
+      filter:
+        types:
+        - creature
+    mod:
+      grant:
+      - speed_attacker
+  - kind: static
+    affects:
+      zone: deck
+      owner: you
+      filter:
+        types:
+        - creature
+    if:
+      is_turn: you
+    mod:
+      allow:
+      - action: summon_from_deck_top
+        once: true
+  source:
+    official: dm26sd1-j009
+    review: pending
+    notes: '山札の上からの召喚は allow {summon_from_deck_top, once: true} で表した（第334弾）。「いつでも見てもよい」は原文のみ。'
+    aliases:
+    - dm23bd6-017
+    - dm25sp2-005
+    - dmrp17-s11
