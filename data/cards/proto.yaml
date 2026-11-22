@@ -15431,3 +15431,38 @@ cards:
       official: proto
       review: pending
       notes: "語彙パイロット第350弾の対象（dmrp22-021 型）。CIP の攻撃強制は require: [attack] の duration つき modify。シンカパワーは partial のまま。"
+
+  - id: T1056
+    name: 試験用サーシャ
+    types: [creature]
+    civs: [light]
+    cost: 8
+    power: 9500
+    races: [メカ・デル・ソル]
+    mana: 1
+    text: "ドラゴン・ブロッカー(相手のドラゴンが攻撃するとき、このクリーチャーをタップして、その攻撃を阻止してよい。 その後、そのドラゴンとバトルする)\nドラゴンとバトルするとき、このクリーチャーのパワーは+6000される。\nW(ダブル)・ブレイカー"
+    abilities:
+    - {kind: static, affects: self, mod: {allow: [{action: block, other: {race_has: ドラゴン}}]}}
+    - {kind: static, affects: self, mod: {battle_power: {amount: 6000, opponent_filter: {race_has: ドラゴン}}}}
+    keywords: [double_breaker]
+    source:
+      official: proto
+      review: pending
+      notes: "語彙パイロット第351弾の対象（dm08-006 型）。ドラゴン・ブロッカーは block の許可を other フィルタつき allow で与える（キーワード blocker は無制限になるため使わない）。"
+
+  - id: T1057
+    name: 試験用スヴェータ
+    types: [creature]
+    civs: [light]
+    cost: 4
+    power: 4000
+    races: [メカ・デル・ソル]
+    mana: 1
+    text: "ブロッカー(相手クリーチャーが攻撃する時、このクリーチャーをタップして、その攻撃を阻止してもよい。その後、その相手クリーチャーとバトルする)\nこのクリーチャーは、相手プレイヤーを攻撃できない。\nデーモン・コマンドまたは種族にドラゴンとあるクリーチャーとバトルする時、このクリーチャーのパワーは+4000される。"
+    abilities:
+    - {kind: static, affects: self, mod: {battle_power: {amount: 4000, opponent_filter: {any_of: [{race_has: デーモン・コマンド}, {race_has: ドラゴン}]}}}}
+    keywords: [blocker, cannot_attack_player]
+    source:
+      official: proto
+      review: pending
+      notes: "語彙パイロット第351弾の対象（dm16-021 型）。バトル相手の種族条件は battle_power の opponent_filter（any_of で複数種族）。"

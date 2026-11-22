@@ -5187,3 +5187,12 @@ proto T1054（014型・呪文）/ T1055（021型）。テスト10 passed（pilot
 なお呪文側の duration は、canonical dm18-036 の先例（dm29-044）が until_next_own_turn_start を使っていたため、proto T1054 も同値に合わせて第350弾の記録を訂正した（効果は相手の次のターン全体に及ぶ点で等価）。
 
 pilot350 cards を登録形に書換、round385 cards を新設（登録カード自身の実挙動: タマシードと canonical 呪文の攻撃強制）。テスト17 passed（round385 cards 3＋pilot350 cards 登録形 2＋pilot350 本体 4＋data_audit 8）。回帰はパイロット・ルール系 269 passed / 0 failed、round357〜384 の disposition は件数固定の stale なだけの既知パターンで 28 failed。回答は answers/round385.yaml に保存。次の番号: パイロット351 / ラウンド386 / プロト T1056。
+
+### 語彙パイロット第351弾: battle_power_against_specific_race（ドリフト）
+
+対象は pure 2件すべて: dm08-006 光器サーシャ / dm16-021 光器スヴェータ。
+
+- 「Xとバトルする時、パワーは+N」は battle_power: {amount, opponent_filter} の確立形（第349弾のゼニス条項と同型）。複数種族は opponent_filter の any_of で束ねる（デーモン・コマンドまたはドラゴン）。
+- ドラゴン・ブロッカーはキーワード blocker（無制限の許可になる）ではなく、block の許可（既定 false）を other フィルタつき allow 項目で与える形: {kind: static, affects: self, mod: {allow: [{action: block, other: {race_has: ドラゴン}}]}}（permits は other を攻撃側に当てて評価する）。
+
+proto T1056（006型）/ T1057（021型）。テスト9 passed（pilot 本体3＋実カード parse 3＋rust_schema_sync 3）。次の番号: パイロット352 / ラウンド387 / プロト T1058。
