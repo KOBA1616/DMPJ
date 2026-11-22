@@ -4997,3 +4997,13 @@ proto T1028（グーゴル型）/ T1029（スコーピオ型）。テスト9 pas
 登録時の事故と修正: dmrp21-5a の攻撃時誘発が二重に登録された。submit はルール変換済みの能力（part[2]）を回答の先頭に足して完全一致だけで dedupe するため、ルール側が「見ないで選び」を読んで chooser: random を補った誘発と、回答側の無印の誘発が別物として両方残った。登録後に converted.yaml から無印の重複側を除去し、登録カード自身の実挙動（攻撃で相手の手札がちょうど1枚減る）で固定した。教訓: partial に discard 等の誘発がある場合、ルール変換が chooser: random を補うことがあるので、submit 直後に abilities の重複を必ず確認すること。
 
 pilot339 cards を登録形に書換、round374 cards を新設（登録カード自身の実挙動3件）。テスト17 passed（round374 cards 4＋pilot339 cards 登録形 2＋pilot339 本体 3＋data_audit 8）。回帰はパイロット・ルール系 218 passed / 0 failed、round357〜373 の disposition は件数固定の stale なだけの既知パターンで 17 failed。回答は answers/round374.yaml に保存（登録形に合わせて chooser: random を反映済み）。次の番号: パイロット340 / ラウンド375 / プロト T1030。
+
+### 語彙パイロット第340弾: enters_tapped_opponent（ドリフト）
+
+対象は pure 2件: dmc52-007 聖霊王エルフェウス（相手クリーチャーはタップされた状態でバトルゾーンに出る）、dm24bd6-006 偽りの希望 修羅丸「終斗」（各ターン、はじめて相手のクリーチャーが出る時、そのクリーチャーはタップして出る）。
+
+- エルフェウスは第339弾で確立した static {affects: {zone: bz, owner: opp, filter: {types: [creature]}}, mod: {grant: [enters_tapped]}} の形。なお partial は進化元を落としていたため、旧形式の登録例 dm33-s01 と同じく types は [creature] のまま evolve_from {race_has: エンジェル・コマンド} を補った。
+- 修羅丸の「各ターン、はじめて」は first_time 誘発で表す: {kind: trigger, first_time: true, when: {event: move, to: bz, subject: {owner: opp, filter: {types: [creature]}}}, effect: [tap {select: {ref: event.subject}}]}。first_time は出来事の通し番号で数えるため、出て離れた後の2体目を数え違えない。当初検討した常在型の count ゲート（entered_this_turn の count == 0）は、出るカード自身が chars 評価の時点で既に entered_this_turn に数えられて常に閉じてしまうため使えない（実測で確認。count <= 1 に緩めると「出て離れた後の2体目」を誤ってタップする）。
+- 実測: 修羅丸型では相手の1体目だけがタップして出て、2体目はタップせず、次のターンでは再び1体目がタップして出る。
+
+proto T1030（エルフェウス型）/ T1031（修羅丸型）。テスト9 passed（pilot 本体3＋実カード parse 3＋rust_schema_sync 3）。次の番号: パイロット341 / ラウンド376 / プロト T1032。

@@ -14980,3 +14980,38 @@ cards:
       official: proto
       review: pending
       notes: "語彙パイロット第339弾の対象（dm23ex3-006 型）。水晶武装4のゲートは両方の常在型に同じ if（裏向きマナ4枚以上）を付ける。マナ側は自分への grant で opp_mana_tapped を条件付きで持たせる。"
+
+  - id: T1030
+    name: 試験用エルフェウス
+    types: [creature]
+    civs: [light]
+    cost: 5
+    power: 9500
+    races: [エンジェル・コマンド]
+    mana: 1
+    evolve_from: {race_has: エンジェル・コマンド}
+    text: "進化-自分のエンジェル・コマンド１体の上に置く。\n相手クリーチャーはタップされた状態でバトルゾーンに出る。\nW・ブレイカー(このクリーチャーはシールドを２枚ブレイクする)"
+    abilities:
+    - {kind: static, affects: {zone: bz, owner: opp, filter: {types: [creature]}}, mod: {grant: [enters_tapped]}}
+    keywords: [double_breaker]
+    source:
+      official: proto
+      review: pending
+      notes: "語彙パイロット第340弾の対象（dmc52-007 型）。相手クリーチャーへの enters_tapped 付与は第339弾で確立した static grant の形。"
+
+  - id: T1031
+    name: 試験用シュラマル
+    types: [creature]
+    civs: [light, darkness]
+    cost: 6
+    power: 6500
+    races: [アンノウン・セレス]
+    mana: 1
+    text: "ブロッカー\nスレイヤー\nW・ブレイカー\n各ターン、はじめて相手のクリーチャーが出る時、そのクリーチャーはタップして出る。"
+    abilities:
+    - {kind: trigger, first_time: true, when: {event: move, to: bz, subject: {owner: opp, filter: {types: [creature]}}}, effect: [{op: tap, select: {ref: event.subject}}]}
+    keywords: [blocker, slayer, double_breaker]
+    source:
+      official: proto
+      review: pending
+      notes: "語彙パイロット第340弾の対象（dm24bd6-006 型）。「各ターン、はじめて」は、そのターンに相手クリーチャーがまだ1体も出ていない（entered_this_turn の count が0）間だけ付与する常在型で表す。"
