@@ -1,6 +1,6 @@
 """語彙パイロット第349弾の対象カード（実カード parse）。
 
-対象は pure な summon_lock 4件のうち3件（未登録、rejects 残存）:
+対象は pure な summon_lock 4件のうち3件で、ラウンド384で登録:
 - promoy11-083 鬼丸「Ｅｎｄ」
 - promoy12-036 激流剣砲 カツ∞キング
 - promoy12-085 漢のキズナ カツブードン
@@ -8,6 +8,7 @@
 
 dmx25-s07 は対象外（partial の原文が断片のみで登録の基礎が
 ないため rejects に残る）。
+（登録形は意図した形と完全一致）
 
 注意: conftest を import すると DMSIM_SKIP_CONVERTED が復活するので
 _conv_cache を直接使う（第319弾以降の作法）。
@@ -107,22 +108,30 @@ def _cand(tid, base):
     return c
 
 
-def test_targets_still_in_rejects():
+def test_targets_registered():
     rows = _rows()
-    conv_ids = {c["id"] for c in all_cards(CONVERTED)}
-    for t in ("promoy11-083", "promoy12-036", "promoy12-085"):
-        assert t in rows and t not in conv_ids
-        assert rows[t].get("gaps") == ["summon_lock"]
-
-
-def test_partial_forms():
-    rows = _rows()
+    assert len(rows) == 1988
+    conv = all_cards(CONVERTED)
+    ids = {c["id"] for c in conv}
+    assert len(ids) == 10325
+    assert not (ids & set(rows))          # canonical 重なり0
     for tid, form in (("promoy11-083", FORM_083),
                       ("promoy12-036", FORM_036),
                       ("promoy12-085", FORM_085)):
-        p = rows[tid]["partial"]
-        assert not p.get("abilities")
-        d = parse_card(_cand(tid, {**p, "abilities": form}), TABLES)
+        c = next(x for x in conv if x["id"] == tid)
+        assert c["abilities"] == form
+        assert not (c.get("source") or {}).get("unsupported")
+        parse_card(c, TABLES)
+    left = {rid for rid, r in rows.items()
+            if "summon_lock" in (r.get("gaps") or [])}
+    assert left == {"dmx25-s07"}, left    # 断片のみの1件だけ残る
+
+
+def test_registered_parse():
+    conv = all_cards(CONVERTED)
+    for tid in ("promoy11-083", "promoy12-036", "promoy12-085"):
+        c = next(x for x in conv if x["id"] == tid)
+        d = parse_card(c, TABLES)
         assert len(d.abilities) >= 2
 
 

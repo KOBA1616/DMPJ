@@ -5163,3 +5163,9 @@ pilot348 cards を登録形に書換、round383 cards を新設（登録カー�
 - 検証上の注意: ゼニスはゼロ文明で、支払いにはゼロ文明のマナが要る（fixture T789 をマナに置く）。
 
 proto T1050（083型）/ T1051（036型）/ T1052（085型）＋検証 fixture T1053（剣砲エグザイル）。テスト12 passed（pilot 本体6＋実カード parse 3＋rust_schema_sync 3）。次の番号: パイロット350 / ラウンド385 / プロト T1054。
+
+### ラウンド384（第349弾の再変換）
+
+**新規登録3件**（promoy11-083 鬼丸「Ｅｎｄ」 / promoy12-036 激流剣砲 カツ∞キング / promoy12-085 漢のキズナ カツブードン。登録形は意図した形と完全一致）・**差し戻し0件**。converted 10,322→**10,325** / rejects 1,991→**1,988**、重なり0・漏れ0。summon_lock は dmx25-s07 にだけ残る（原文断片のみのため対象外。reopen で外れたその行は原文どおり復帰し HEAD とバイト一致を確認）。
+
+pilot349 cards を登録形に書換、round384 cards を新設（登録カード自身の実挙動: ゼニス召喚ロックと剣砲ロック＋CIP）。テスト20 passed（round384 cards 3＋pilot349 cards 登録形 3＋pilot349 本体 6＋data_audit 8）。回帰はパイロット・ルール系 265 passed / 0 failed、round357〜383 の disposition は件数固定の stale なだけの既知パターンで 27 failed。作業途中で VM 再起動があり pytest を再インストールした（通算5回目）。回答は answers/round384.yaml に保存。次の番号: パイロット350 / ラウンド385 / プロト T1054。

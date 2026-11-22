@@ -469173,3 +469173,274 @@ cards:
     review: pending
     notes: 侵略ZERO は手札の turn_end 誘発＋turn_count enter_unpaid（第348弾）。CIP と Dスイッチ誘発は partial
       のまま。
+- id: promoy11-083
+  name: 堂々終劇 鬼丸「Ｅｎｄ」
+  types:
+  - creature
+  civs:
+  - fire
+  cost: 7
+  mana: 1
+  text: W・ブレイカー（このクリーチャーはシールドを２枚ブレイクする）誰もゼニスを召喚できない。ゼニスとバトル中、このクリーチャーのパワーは+11000される。
+  source:
+    official: promoy11-083
+    review: pending
+    notes: 誰もゼニスを召喚できないは summon の deny（第349弾）。ゼニスとのバトル中のパワー増は battle_power の opponent_filter。
+  power: 7000
+  races:
+  - ヒューマノイド
+  - ハンター
+  - エイリアン
+  keywords:
+  - double_breaker
+  abilities:
+  - kind: static
+    affects:
+      zone: hand
+      owner: any
+      filter:
+        types:
+        - creature
+        race_has: ゼニス
+    mod:
+      deny:
+      - summon
+  - kind: static
+    affects: self
+    mod:
+      battle_power:
+        amount: 11000
+        opponent_filter:
+          race_has: ゼニス
+- id: promoy12-036
+  name: 激流剣砲 カツ∞キング
+  types:
+  - creature
+  civs:
+  - water
+  - fire
+  cost: 9
+  mana: 1
+  text: 'マナゾーンに置く時、このカードはタップして置く。
+
+    このクリーチャーをバトルゾーンに出した時、相手の「ブロッカー」を持つクリーチャーを無限の数破壊する。その後、カードを１枚引いてもよい。
+
+    T・ブレイカー（このクリーチャーはシールドを３枚ブレイクする）
+
+    自分の他の、名前に《剣砲》とあるエグザイル・クリーチャーをバトルゾーンに出すことはできない。'
+  source:
+    official: promoy12-036
+    review: pending
+    notes: 自分の他の剣砲エグザイルを出せないは enter_bz の deny を5ゾーン並べる確立形（第349弾）。CIP はブロッカー全破壊＋任意ドロー。
+    aliases:
+    - promoy12-066
+  power: 12000
+  races:
+  - アウトレイジMAX
+  keywords:
+  - triple_breaker
+  abilities:
+  - kind: trigger
+    when:
+      event: move
+      to: bz
+      subject: self
+    effect:
+    - op: destroy
+      select:
+        zone: bz
+        owner: opp
+        filter:
+          types:
+          - creature
+          keyword: blocker
+        count: all
+    - op: may
+      body:
+      - op: draw
+        count: 1
+  - kind: static
+    affects:
+      zone: hand
+      owner: you
+      filter:
+        types:
+        - exile_creature
+        name_has: 剣砲
+    mod:
+      deny:
+      - enter_bz
+  - kind: static
+    affects:
+      zone: graveyard
+      owner: you
+      filter:
+        types:
+        - exile_creature
+        name_has: 剣砲
+    mod:
+      deny:
+      - enter_bz
+  - kind: static
+    affects:
+      zone: mana
+      owner: you
+      filter:
+        types:
+        - exile_creature
+        name_has: 剣砲
+    mod:
+      deny:
+      - enter_bz
+  - kind: static
+    affects:
+      zone: deck
+      owner: you
+      filter:
+        types:
+        - exile_creature
+        name_has: 剣砲
+    mod:
+      deny:
+      - enter_bz
+  - kind: static
+    affects:
+      zone: shield
+      owner: you
+      filter:
+        types:
+        - exile_creature
+        name_has: 剣砲
+    mod:
+      deny:
+      - enter_bz
+- id: promoy12-085
+  name: 漢のキズナ カツブードン
+  types:
+  - creature
+  civs:
+  - darkness
+  - fire
+  cost: 6
+  mana: 1
+  text: 'マナゾーンに置く時、このカードはタップして置く。
+
+    このクリーチャーをバトルゾーンに出した時、自分の他のクリーチャーを１体破壊してもよい。そうした場合、自分の山札を見る。その中からエグザイル・クリーチャーを１体選び、相手に見せてから自分の手札に加えてもよい。このようにして山札を見た場合、シャッフルする。
+
+    W・ブレイカー
+
+    自分の他の、名前に《漢のキズナ カツブードン》とあるエグザイル・クリーチャーをバトルゾーンに出すことはできない。'
+  source:
+    official: promoy12-085
+    review: pending
+    notes: 自分の他の同名エグザイルを出せないは enter_bz の deny 5ゾーン（第349弾）。CIP の「そうした場合」は move の as
+      移動後束縛で判定。
+  power: 6000
+  races:
+  - アウトレイジMAX
+  keywords:
+  - double_breaker
+  abilities:
+  - kind: trigger
+    when:
+      event: move
+      to: bz
+      subject: self
+    effect:
+    - op: may
+      body:
+      - op: move
+        select:
+          zone: bz
+          owner: you
+          filter:
+            types:
+            - creature
+          count: 1
+          exclude:
+          - ref: self
+        to: graveyard
+        reason: destroy
+        as: dead
+    - op: if
+      cond:
+        cmp:
+        - count:
+            ref: dead
+        - '>='
+        - 1
+      then:
+      - op: choose
+        select:
+          zone: deck
+          owner: you
+          look: true
+          filter:
+            types:
+            - exile_creature
+          count: 1
+        as: found
+      - op: may
+        body:
+        - op: move
+          select:
+            ref: found
+            count: all
+          to: hand
+          reason: draw
+      - op: shuffle
+  - kind: static
+    affects:
+      zone: hand
+      owner: you
+      filter:
+        types:
+        - exile_creature
+        name_has: 漢のキズナ カツブードン
+    mod:
+      deny:
+      - enter_bz
+  - kind: static
+    affects:
+      zone: graveyard
+      owner: you
+      filter:
+        types:
+        - exile_creature
+        name_has: 漢のキズナ カツブードン
+    mod:
+      deny:
+      - enter_bz
+  - kind: static
+    affects:
+      zone: mana
+      owner: you
+      filter:
+        types:
+        - exile_creature
+        name_has: 漢のキズナ カツブードン
+    mod:
+      deny:
+      - enter_bz
+  - kind: static
+    affects:
+      zone: deck
+      owner: you
+      filter:
+        types:
+        - exile_creature
+        name_has: 漢のキズナ カツブードン
+    mod:
+      deny:
+      - enter_bz
+  - kind: static
+    affects:
+      zone: shield
+      owner: you
+      filter:
+        types:
+        - exile_creature
+        name_has: 漢のキズナ カツブードン
+    mod:
+      deny:
+      - enter_bz
