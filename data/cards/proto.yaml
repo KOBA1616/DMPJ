@@ -14940,3 +14940,43 @@ cards:
       official: proto
       review: pending
       notes: "語彙パイロット第338弾の対象（dmrp16-s02 型）。捨てた枚数だけ繰り返すため、discard の move に as で束縛し exists でゲートする。"
+
+  - id: T1028
+    name: 試験用グーゴル
+    types: [creature, evolution]
+    civs: [darkness]
+    cost: 6
+    power: 9000
+    races: [ゼロ・ドラゴン, デーモン・コマンド, レクスターズ]
+    mana: 1
+    star: true
+    evolve_from: {any_of: [{race_has: レクスターズ}, {civs: [darkness]}]}
+    text: "スター進化：レクスターズまたは闇のクリーチャー１体の上に置く。\nW・ブレイカー\n相手のカードはマナゾーンとバトルゾーンにタップして置かれる。\nこのクリーチャーが攻撃する時、相手の手札を１枚見ないで選び、捨てさせる。"
+    abilities:
+    - {kind: trigger, when: {event: attack, subject: self}, effect: [{op: discard, select: {zone: hand, owner: opp, count: 1}}]}
+    - {kind: static, affects: {zone: bz, owner: opp}, mod: {grant: [enters_tapped]}}
+    keywords: [double_breaker, opp_mana_tapped]
+    source:
+      official: proto
+      review: pending
+      notes: "語彙パイロット第339弾の対象（dmrp21-5a 型）。バトルゾーン側は static の grant: [enters_tapped]（dmex19-m20 と同型）、マナゾーン側はキーワード opp_mana_tapped。"
+
+  - id: T1029
+    name: 試験用スコーピオ
+    types: [creature]
+    civs: [darkness]
+    cost: 6
+    power: 7000
+    races: [ドラゴン・ゾンビ, アンノウン]
+    mana: 1
+    text: "このクリーチャーを自分の墓地から召喚してもよい。\nブロッカー\nW・ブレイカー\nこのクリーチャーが出た時、または自分のターンのはじめに、自分のマナゾーンにあるカードを１枚、裏向きにしてもよい。\n水晶武装４：自分のマナゾーンに裏向きのカードが４枚以上あれば、相手のカードはマナゾーンとバトルゾーンにタップして置かれる。"
+    abilities:
+    - {kind: trigger, when: {event: move, to: bz, subject: self}, effect: [{op: may, body: [{op: flip_down, select: {zone: mana, owner: you, count: 1}}]}]}
+    - {kind: trigger, when: {event: turn_start}, if: {is_turn: you}, effect: [{op: may, body: [{op: flip_down, select: {zone: mana, owner: you, count: 1}}]}]}
+    - {kind: static, affects: {zone: bz, owner: opp}, if: {cmp: [{count: {zone: mana, owner: you, filter: {face_down: true}}}, ">=", 4]}, mod: {grant: [enters_tapped]}}
+    - {kind: static, affects: self, if: {cmp: [{count: {zone: mana, owner: you, filter: {face_down: true}}}, ">=", 4]}, mod: {grant: [opp_mana_tapped]}}
+    keywords: [summon_from_graveyard, blocker, double_breaker]
+    source:
+      official: proto
+      review: pending
+      notes: "語彙パイロット第339弾の対象（dm23ex3-006 型）。水晶武装4のゲートは両方の常在型に同じ if（裏向きマナ4枚以上）を付ける。マナ側は自分への grant で opp_mana_tapped を条件付きで持たせる。"
