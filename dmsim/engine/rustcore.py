@@ -230,7 +230,18 @@ def _simple_cands(sel) -> bool:
 
 
 def _simple_expr(x) -> bool:
-    return (isinstance(x, int) and not isinstance(x, bool)) or (isinstance(x, dict) and set(x) == {"count"} and _simple_cands(x["count"]))
+    # 増分F・カテゴリ3: {sum/mul: [式...]} の再帰も通す（Rust の eval_num が sum/mul/count を写す。
+    # 「両方のシールドの合計が6以下」型の条件）。cost_of / power_of / declared / civ_count は
+    # 特性計算の文脈で env が揃わないため引き続き対象外
+    if isinstance(x, int) and not isinstance(x, bool):
+        return True
+    if isinstance(x, dict) and len(x) == 1:
+        k, v = next(iter(x.items()))
+        if k == "count":
+            return _simple_cands(v)
+        if k in ("sum", "mul"):
+            return isinstance(v, list) and all(_simple_expr(e) for e in v)
+    return False
 
 
 def _simple_cond(c) -> bool:
@@ -598,8 +609,10 @@ def _static_entry_ok(e, is_allow: bool) -> bool:
 
 def _static_mod_ok(mod) -> bool:
     """増分B: Rust の特性計算（chars）が Python の _chars_calc_body と同じ畳み込みになる mod だけ。
-    対象外のキー（cost_may / opt_reduce / sac_reduce / add_races / add_civs / no_leave / must_* /
-    battle_indestructible / indestructible / crystal_soul / mana_number / ignore* 等）は従来どおり落とす。"""
+    対象外のキー（cost_may / opt_reduce / sac_reduce / no_leave / must_be_attacked の辞書形 /
+    battle_indestructible の辞書形 / indestructible / crystal_soul / mana_number / ignore* 等）は
+    従来どおり落とす。増分F・カテゴリ3: add_races / add_civs（文字列の列）と
+    must_be_attacked / battle_indestructible（真値形）は chars が畳めるので通す。"""
     if not isinstance(mod, dict) or not mod:
         return False
     for k, v in mod.items():
@@ -637,6 +650,12 @@ def _static_mod_ok(mod) -> bool:
                 return False
         elif k == "win_all_battles":
             if v is not True:
+                return False
+        elif k in ("add_races", "add_civs"):
+            if not (isinstance(v, list) and all(isinstance(x, str) for x in v)):
+                return False
+        elif k in ("must_be_attacked", "battle_indestructible"):
+            if v is not True:   # 辞書形（初回攻撃だけ／相手フィルタつき）は対象外
                 return False
         elif k == "battle_power":
             if not (isinstance(v, dict) and set(v) <= {"amount", "count", "only", "opponent_filter"}

@@ -88,6 +88,10 @@ struct Chars {
     breaks: i64,
     breaks_add: i64,
     keywords: Vec<String>,
+    civs: Vec<String>,
+    races: Vec<String>,
+    must_be_attacked: bool,
+    battle_indestructible: bool,
     win_all_battles: bool,
     sealed: bool,
 }
@@ -335,7 +339,8 @@ impl Engine {
             // 封印されているクリーチャーは無視される（Python の _chars_calc の早期リターン）
             return Chars { power: d.power, pay_cost: d.cost, allow: vec![], deny: vec![], require: vec![],
                            break_opts: vec![], breaks: 0, breaks_add: 0, keywords: vec![],
-                           win_all_battles: false, sealed: true };
+                           civs: d.civs.clone(), races: vec![], must_be_attacked: false,
+                           battle_indestructible: false, win_all_battles: false, sealed: true };
         }
         let env_self = json!({"you": controller, "self": self.refv(cid), "vars": {}});
         // (発生源, mod) の列: 自分への常在型 → バトルゾーンの常在型 → シールドゾーンの常在型
@@ -405,7 +410,8 @@ impl Engine {
         // 畳み込み（Python の _chars_calc_body の本体ループと同じ順）
         let mut ch = Chars { power: d.power, pay_cost: d.cost, allow: vec![], deny: vec![], require: vec![],
                              break_opts: vec![], breaks: 1, breaks_add: 0, keywords: d.keywords.clone(),
-                             win_all_battles: false, sealed: false };
+                             civs: d.civs.clone(), races: d.races.clone(), must_be_attacked: false,
+                             battle_indestructible: false, win_all_battles: false, sealed: false };
         let mut cost_min = 0i64;
         for (src, m) in &mods {
             match m.get("power") {
@@ -449,6 +455,27 @@ impl Engine {
             }
             if m.get("win_all_battles").and_then(|v| v.as_bool()).unwrap_or(false) {
                 ch.win_all_battles = true;
+            }
+            // 文明・種族の追加（Python の _chars_calc_body と同じく、無ければ末尾に足す。mod の反復順）
+            if let Some(l) = m.get("add_civs").and_then(|v| v.as_array()) {
+                for cv in l.iter().filter_map(|x| x.as_str()) {
+                    if !ch.civs.iter().any(|x| x == cv) {
+                        ch.civs.push(cv.to_string());
+                    }
+                }
+            }
+            if let Some(l) = m.get("add_races").and_then(|v| v.as_array()) {
+                for r in l.iter().filter_map(|x| x.as_str()) {
+                    if !ch.races.iter().any(|x| x == r) {
+                        ch.races.push(r.to_string());
+                    }
+                }
+            }
+            if m.get("must_be_attacked").and_then(|v| v.as_bool()).unwrap_or(false) {
+                ch.must_be_attacked = true;
+            }
+            if m.get("battle_indestructible").and_then(|v| v.as_bool()).unwrap_or(false) {
+                ch.battle_indestructible = true;
             }
             if let Some(n) = m.get("breaks_add").and_then(|v| v.as_i64()) {
                 ch.breaks_add += n;
@@ -1491,15 +1518,24 @@ impl Engine {
                 _ => vec![],
             }
         };
+        // 文明・種族の見え方: 常在型の条件の入れ子・特性計算中は印刷、それ以外は現在の特性
+        // （Python の filter_match の base 切り替えと同じ。keyword 分岐と同じ条件）
+        let (civs_v, races_v): (Vec<String>, Vec<String>) =
+            if self.static_depth.get() > 1 || self.chars_busy.contains(cid) {
+                (d.civs.clone(), d.races.clone())
+            } else {
+                let ch = self.chars(cid, None);
+                (ch.civs, ch.races)
+            };
         for (k, v) in f.as_object().unwrap() {
             let ok = match k.as_str() {
                 "types" => sl(v).iter().any(|t| d.types.contains(t)),
                 "not_types" => !sl(v).iter().any(|t| d.types.contains(t)),
-                "civs" => sl(v).iter().any(|t| d.civs.contains(t)),
-                "not_civs" => !sl(v).iter().any(|t| d.civs.contains(t)),
-                "races" => sl(v).iter().any(|t| d.races.contains(t)),
-                "race_has" => d.races.iter().any(|r| r.contains(v.as_str().unwrap_or("\u{0}"))),
-                "not_race_has" => !d.races.iter().any(|r| sl(v).iter().any(|p| r.contains(p))),
+                "civs" => sl(v).iter().any(|t| civs_v.contains(t)),
+                "not_civs" => !sl(v).iter().any(|t| civs_v.contains(t)),
+                "races" => sl(v).iter().any(|t| races_v.contains(t)),
+                "race_has" => races_v.iter().any(|r| r.contains(v.as_str().unwrap_or("\u{0}"))),
+                "not_race_has" => !races_v.iter().any(|r| sl(v).iter().any(|p| r.contains(p))),
                 "name" => d.name == v.as_str().unwrap_or("\u{0}"),
                 "not_name" => d.name != v.as_str().unwrap_or("\u{0}"),
                 "name_has" => d.name.contains(v.as_str().unwrap_or("\u{0}")),
@@ -1520,9 +1556,9 @@ impl Engine {
                 "power_le" => self.filter_power(cid) <= v.as_i64().ok_or(EngErr::Unsupported("filter expr".into()))?,
                 "power_ge" => self.filter_power(cid) >= v.as_i64().ok_or(EngErr::Unsupported("filter expr".into()))?,
                 "tapped" => c.tapped == v.as_bool().unwrap_or(false),
-                "multicolor" => (d.civs.len() > 1) == v.as_bool().unwrap_or(false),
+                "multicolor" => (civs_v.len() > 1) == v.as_bool().unwrap_or(false),
                 "evolution" => self.def(cid).types.iter().any(|t| t == "evolution") == v.as_bool().unwrap_or(false),
-                "colorless" => d.civs.is_empty() == v.as_bool().unwrap_or(false),
+                "colorless" => civs_v.is_empty() == v.as_bool().unwrap_or(false),
                 "any_of" => {
                     let mut hit = false;
                     for sub in v.as_array().unwrap() {
@@ -1928,9 +1964,7 @@ impl Engine {
                 continue;
             }
             let dfn = k.defn.clone();
-            if self.permits(c, "attack_player") {
-                opts.push(json!({"key": format!("attack:{}:player", dfn), "cid": c, "target": "player"}));
-            }
+            let mut creature_opts: Vec<Value> = vec![];
             for tc in self.bz_tops(Some(1 - a)) {
                 // 505.2 既定はタップ状態だけ。allow 辞書 {attack_creature, other:{tapped:false,…}} が
                 // 対象に一致すればタップされていないクリーチャーも攻撃できる（combat.py と同じ直接参照）
@@ -1939,8 +1973,21 @@ impl Engine {
                         && e.get("other").map(|o| o.get("tapped") == Some(&json!(false)) && self.filter_ok(tc, o).unwrap_or(false)).unwrap_or(false)
                 });
                 if (self.s.cards[tc as usize].tapped || widened) && self.permits_o(c, "attack_creature", None, Some(tc)) && self.permits_vs(tc, "be_attacked", c) {
-                    opts.push(json!({"key": format!("attack:{}:{}", dfn, self.s.cards[tc as usize].defn), "cid": c, "target": self.refv(tc)}));
+                    creature_opts.push(json!({"key": format!("attack:{}:{}", dfn, self.s.cards[tc as usize].defn), "cid": c, "target": self.refv(tc)}));
                 }
+            }
+            // 「可能ならこのクリーチャーを攻撃する」: 合法な攻撃先になる誘引持ちがいれば攻撃先はそれらに限る
+            // （Python の _attack_options と同じ。誘引がある時はプレイヤーへの攻撃は出ない）
+            let taunts: Vec<Value> = creature_opts.iter()
+                .filter(|o| self.chars(o["target"][0].as_i64().unwrap(), None).must_be_attacked)
+                .cloned().collect();
+            if !taunts.is_empty() {
+                opts.extend(taunts);
+            } else {
+                if self.permits(c, "attack_player") {
+                    opts.push(json!({"key": format!("attack:{}:player", dfn), "cid": c, "target": "player"}));
+                }
+                opts.extend(creature_opts);
             }
             if opts.len() > before && self.chars(c, None).require.iter().any(|r| r == "attack") {
                 forced = true;
@@ -2902,7 +2949,7 @@ impl Engine {
 
     /// Python 版 filter_match（誘発の subject 照合の文脈）。特性の見え方は、lki があれば lki の chars、
     /// 常在型の条件の入れ子・特性計算中は印刷、それ以外は現在の特性
-    /// （plain の範囲では cost / civs / types / races / names は印刷どおりで、パワーとキーワードだけが特性で動く）
+    /// （plain の範囲では cost / types / names は印刷どおりで、パワー・キーワード・文明・種族が特性で動く）
     fn filter_match_trig(&self, cid: i64, f: &Value, lki: Option<&Value>) -> bool {
         let c = &self.s.cards[cid as usize];
         let is_sealed = c.zone == "bz" && !c.seals.is_empty();
@@ -2938,9 +2985,9 @@ impl Engine {
                 (d.power, d.cost, d.civs.clone(), d.types.clone(), d.races.clone(), d.keywords.clone(), vec![d.name.clone()])
             } else {
                 let ch = self.chars(cid, None);
-                (ch.power, d.cost, d.civs.clone(),
+                (ch.power, d.cost, ch.civs.clone(),
                  if ch.sealed { vec![] } else { d.types.clone() },
-                 if ch.sealed { vec![] } else { d.races.clone() },
+                 if ch.sealed { vec![] } else { ch.races.clone() },
                  ch.keywords.clone(), vec![d.name.clone()])
             };
         for (k, v) in f.as_object().unwrap() {
@@ -3073,13 +3120,13 @@ impl Engine {
     fn chars_json(&self, cid: i64) -> Value {
         let d = self.def(cid);
         let ch = self.chars(cid, None);
-        let mut out = json!({"power": ch.power, "cost": d.cost, "civs": d.civs,
-            "types": if ch.sealed { json!([]) } else { json!(d.types) }, "races": if ch.sealed { json!([]) } else { json!(d.races) },
+        let mut out = json!({"power": ch.power, "cost": d.cost, "civs": ch.civs,
+            "types": if ch.sealed { json!([]) } else { json!(d.types) }, "races": if ch.sealed { json!([]) } else { json!(ch.races) },
             "keywords": ch.keywords, "name": d.name, "names": [d.name], "allow": ch.allow, "deny": ch.deny, "require": ch.require,
             "breaks": ch.breaks, "break_opts": ch.break_opts, "breaks_add": ch.breaks_add, "pay_cost": ch.pay_cost,
             "sac_reduce": 0, "opt_reduce": null, "cost_may": [], "no_leave": [],
-            "must_be_attacked": false, "must_be_attacked_first": false, "must_be_chosen": false, "must_attack_creature": false,
-            "must_attack_creature_first": false, "battle_indestructible": false, "win_all_battles": ch.win_all_battles,
+            "must_be_attacked": ch.must_be_attacked, "must_be_attacked_first": false, "must_be_chosen": false, "must_attack_creature": false,
+            "must_attack_creature_first": false, "battle_indestructible": ch.battle_indestructible, "win_all_battles": ch.win_all_battles,
             "crystal_soul": 0, "mana_number": 0});
         if !ch.sealed {
             out["battle_indestructible_filters"] = json!([]);
@@ -3143,21 +3190,26 @@ impl Engine {
         let px = self.power(xc) + self.battle_bonus(x, true, y);
         let py = self.power(yc) + self.battle_bonus(y, false, x);
         let (xw, yw) = (self.chars(xc, None).win_all_battles, self.chars(yc, None).win_all_battles);
-        let mut losers: Vec<&Value> = vec![];
+        let mut losers_by_power: Vec<&Value> = vec![];
         if xw && yw {
             // 両方とも全てのバトルに勝つ: 負けは無い
         } else if xw {
-            losers.push(y);
+            losers_by_power.push(y);
         } else if yw {
-            losers.push(x);
+            losers_by_power.push(x);
         } else {
             if px <= py {
-                losers.push(x);
+                losers_by_power.push(x);
             }
             if py <= px {
-                losers.push(y);
+                losers_by_power.push(y);
             }
         }
+        // バトル中破壊されないクリーチャーは破壊されない（勝敗判定はパワーどおり。
+        // 「バトルに負けた時」は破壊されない場合も負けとして losers_by_power 側で拾う。Python の _battle と同じ）
+        let losers: Vec<&Value> = losers_by_power.iter().copied()
+            .filter(|r| !self.chars(r[0].as_i64().unwrap(), None).battle_indestructible)
+            .collect();
         let slay: Vec<Value> = losers
             .iter()
             .filter(|r| self.permits(r[0].as_i64().unwrap(), "slayer"))
@@ -3168,13 +3220,14 @@ impl Engine {
             .map(|r| json!({"ev": "move", "subject": r, "to": "graveyard", "reason": "destroy", "battle": true}))
             .collect();
         for r in [x, y] {
-            if !losers.contains(&r) {
+            if !losers_by_power.contains(&r) {
                 let c = self.s.cards[r[0].as_i64().unwrap() as usize].controller;
                 evs.push(json!({"ev": "battle_win", "subject": r, "opponent": if r == x { y } else { x }, "controller": c}));
             }
         }
-        // 「バトルに負けた時」（Python #463）: 破壊の移動より前に拾い、同じ窓の終わりに解決する
-        let lose_evs: Vec<Value> = losers.iter().map(|r| {
+        // 「バトルに負けた時」（Python #463）: 破壊の移動より前に拾い、同じ窓の終わりに解決する。
+        // パワーで負けた側（破壊されない場合も負けは負け）なので losers_by_power から作る
+        let lose_evs: Vec<Value> = losers_by_power.iter().map(|r| {
             let c = self.s.cards[r[0].as_i64().unwrap() as usize].controller;
             json!({"ev": "battle_lose", "subject": r, "opponent": if *r == x { y } else { x }, "controller": c})
         }).collect();
@@ -3374,7 +3427,9 @@ impl Engine {
             let civkey: Vec<String> = if k.face_down {
                 vec![]
             } else {
-                let mut v = self.def(c).civs.clone();
+                // 文明は特性で見る（Python の _mana_choices と同じ。「マナゾーンにあるカードを
+                // すべての文明として扱う」等の add_civs が支払いに効く）
+                let mut v = self.chars(c, None).civs;
                 v.sort();
                 v
             };

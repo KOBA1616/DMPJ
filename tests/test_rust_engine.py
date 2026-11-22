@@ -473,6 +473,66 @@ def test_modify_until_next_turn_matches(real_env, seed):
     assert res["divergence"] is None and res["ok"] is True
 
 
+@pytest.mark.parametrize("seed", range(1, 21))
+def test_static_remainder_matches(real_env, seed):
+    """増分F・カテゴリ3: 常在型の残り（add_races / add_civs / must_be_attacked / battle_indestructible）と
+    sum/mul を含む条件を持つ札を多く入れたデッキで、特性の畳み込み（文明・種族の追加、誘引による
+    攻撃先の制限、バトル中破壊されないこと、マナの文明の見え方）まで含めて1局が一致する。"""
+    import random
+    r, b = real_env
+    pool = _portable(r)
+
+    def has_sum(c):
+        if isinstance(c, dict):
+            for k, v in c.items():
+                if k == "cmp" and isinstance(v, list) and len(v) == 3 and \
+                        any(isinstance(e, dict) and ("sum" in e or "mul" in e) for e in (v[0], v[2])):
+                    return True
+                if has_sum(v):
+                    return True
+        elif isinstance(c, list):
+            return any(has_sum(x) for x in c)
+        return False
+
+    def has_f3(d):
+        for a in d.abilities:
+            if a["kind"] == "static" and any(k in (a.get("mod") or {})
+                                             for k in ("add_races", "add_civs", "must_be_attacked", "battle_indestructible")):
+                return True
+            if "if" in a and has_sum(a["if"]):
+                return True
+        return any(o.get("op") == "if" and has_sum(o.get("cond")) for o in (d.spell or []))
+    sel = [i for i in pool if has_f3(r.cards[i])]
+    assert len(sel) >= 40
+    rnd = random.Random(seed)
+
+    def deck():
+        return [rnd.choice(sel) if rnd.random() < 0.6 else rnd.choice(pool) for _ in range(40)]
+    spec = {"kind": "new_game", "decks": [deck(), deck()], "seed": seed, "first_player": seed % 2}
+    res = lockstep(Session.open(r, spec), rustcore.RustSession.open(r, spec, b), f"random:{seed}")
+    assert res["divergence"] is None and res["ok"] is True
+
+
+@pytest.mark.parametrize("seed", [1, 2, 3])
+def test_mana_add_civs_matches(real_env, seed):
+    """増分F・カテゴリ3: dm24-106《聖火妖精パルック》（自分のマナゾーンの自然カードに光・火文明を
+    追加する常在型）。自然マナだけでは払えない光クリーチャーの支払い可否と支払いの組が、
+    マナカードの文明を特性で見る両エンジンで一致すること。"""
+    r, b = real_env
+    card = "dm24-106"
+    assert rustcore._is_plain(r.cards[card])
+    light = [i for i, d in r.cards.items()
+             if d.types == ["creature"] and not d.abilities and d.civs == ["light"] and d.cost <= 3
+             and rustcore._is_plain(d)][:8]
+    assert len(light) >= 4
+    deck = [card] * 24 + [light[i % len(light)] for i in range(16)]
+    spec = {"kind": "new_game", "decks": [deck, deck], "seed": seed, "first_player": seed % 2}
+    a, bb = Session.open(r, spec), rustcore.RustSession.open(r, spec, b)
+    res = lockstep(a, bb, f"random:{seed}")
+    assert res["divergence"] is None and res["ok"] is True
+    assert any(o.get("keys") and o["keys"][0] == f"play:{card}" for o in a.eng.log)
+
+
 @pytest.mark.parametrize("seed", [1, 2, 3])
 def test_trigger_keyword_matches(real_env, seed):
     """増分F・カテゴリ1: keyword 印つき誘発（キーワード辞書から展開された能力）の照合。
