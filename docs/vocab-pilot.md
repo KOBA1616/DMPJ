@@ -5073,3 +5073,9 @@ pilot343 cards を登録形に書換、round378 cards を新設（登録カー�
 - 実測: 053 は唱える前は攻撃候補に出ず、唱えた後は出る。002 はコスト5呪文を唱えたターン終わりにだけ「出してもよい」が出て場に出る。
 
 proto T1037（053型）/ T1038（002型）。テスト10 passed（pilot 本体4＋実カード parse 3＋rust_schema_sync 3）。次の番号: パイロット345 / ラウンド380 / プロト T1039。
+
+### ラウンド379（第344弾の再変換）
+
+**新規登録2件**（dmrp21-053 頂上演者 スケプティック / dm22rp1-002 ラクリマ・クロウラー。登録形は意図した形と完全一致。002 の partial の二重のジャストダイバー誘発は validate の dedupe で1つに畳まれた）・**差し戻し0件**。converted 10,310→**10,312** / rejects 2,003→**2,001**、重なり0・漏れ0。used_this_turn_condition の pure 行は解消（multi の dmrp14-s08 は lose_prevention のため残る）。
+
+pilot344 cards を登録形に書換、round379 cards を新設（登録カード自身の実挙動: 唱える前後でのスケプティックの攻撃可否、コスト5呪文を唱えたターン終わりのクロウラー出現）。テスト17 passed（round379 cards 3＋pilot344 cards 登録形 2＋pilot344 本体 4＋data_audit 8）。回帰はパイロット・ルール系 236 passed / 0 failed、round357〜378 の disposition は件数固定の stale なだけの既知パターンで 22 failed。回答は answers/round379.yaml に保存。次の番号: パイロット345 / ラウンド380 / プロト T1039。

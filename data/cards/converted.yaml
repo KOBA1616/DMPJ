@@ -468548,3 +468548,130 @@ cards:
     - dmrp18-km1
   keywords:
   - triple_breaker
+- id: dmrp21-053
+  name: 頂上演者 スケプティック
+  types:
+  - creature
+  civs:
+  - water
+  cost: 4
+  mana: 1
+  text: 'ブロッカー（このクリーチャーをタップして、相手クリーチャーの攻撃先をこのクリーチャーに変更してもよい）
+
+    W・ブレイカー（このクリーチャーはシールドを２つブレイクする）
+
+    このターン、自分がタマシードを使うか呪文を唱えていなければ、このクリーチャーは攻撃できない。'
+  source:
+    official: dmrp21-053
+    review: pending
+    notes: '「このターン、自分がタマシードを使うか呪文を唱えていなければ攻撃できない」は used_count（唱えた呪文＋via: generate
+      で実行したカードの履歴）が0の間だけ attack_player / attack_creature を deny する常在型で表した（第344弾）。'
+  power: 6000
+  races:
+  - ファイアー・バード
+  - レクスターズ
+  keywords:
+  - blocker
+  - double_breaker
+  abilities:
+  - kind: static
+    affects: self
+    if:
+      cmp:
+      - used_count:
+          owner: you
+          filter:
+            types:
+            - spell
+            - tamaseed
+      - ==
+      - 0
+    mod:
+      deny:
+      - attack_player
+      - attack_creature
+- id: dm22rp1-002
+  name: ラクリマ・クロウラー
+  types:
+  - creature
+  civs:
+  - water
+  cost: 6
+  power: 5000
+  races:
+  - マジック・アースイーター
+  keywords:
+  - blocker
+  mana: 1
+  text: '各ターンの終わりに、自分がそのターン中、コスト５以上の呪文またはコスト５以上のタマシードを使っていたら、このクリーチャーを手札から出してもよい。
+
+    ブロッカー
+
+    ジャストダイバー
+
+    シビルカウント３：このクリーチャーが攻撃する時、自分の水のクリーチャーまたは水のタマシードが合計３つ以上あれば、カードを２枚引いてもよい。'
+  abilities:
+  - kind: trigger
+    when:
+      event: move
+      to: bz
+      subject: self
+    effect:
+    - op: modify
+      select:
+        ref: self
+      mod:
+        deny:
+        - be_chosen
+        - be_attacked
+      duration: until_next_own_turn_start
+  - kind: trigger
+    when:
+      event: attack
+      subject: self
+    if:
+      cmp:
+      - count:
+          zone: bz
+          owner: you
+          filter:
+            civs:
+            - water
+            types:
+            - creature
+            - tamaseed
+      - '>='
+      - 3
+    effect:
+    - op: may
+      body:
+      - op: draw
+        count: 2
+  - kind: trigger
+    zone: hand
+    when:
+      event: turn_end
+    if:
+      cmp:
+      - used_count:
+          owner: you
+          filter:
+            types:
+            - spell
+            - tamaseed
+            cost_ge: 5
+      - '>='
+      - 1
+    effect:
+    - op: may
+      body:
+      - op: move
+        select:
+          ref: self
+        to: bz
+        reason: put
+  source:
+    official: dm22rp1-002
+    review: pending
+    notes: 'partial はジャストダイバー誘発が二重に入っていたため1つに畳んだ。ターン終わりの手札誘発は zone: hand＋used_count（コスト5以上の呪文またはタマシードを使った履歴）の
+      if で表し、「出す」は move reason: put（第344弾）。'
