@@ -469444,3 +469444,69 @@ cards:
     mod:
       deny:
       - enter_bz
+- id: dmrp22-021
+  name: ドラヴィ圧鬼の巻
+  types:
+  - tamaseed
+  civs:
+  - fire
+  cost: 2
+  mana: 1
+  text: 'S・トリガー（このタマシードをシールドゾーンから手札に加える時、コストを支払わずにすぐ使ってもよい）
+
+    シンカライズ：このタマシードがクリーチャーであるかのように、この上に進化クリーチャーを置いてもよい。
+
+    このタマシードが出た時、次の自分のターンのはじめまで、相手のクリーチャーは可能なら攻撃する。
+
+    シンカパワー：このタマシードが進化する時、次の自分のターンのはじめまで、この進化したクリーチャーが各ターンはじめてバトルに勝った時、アンタップする。'
+  source:
+    official: dmrp22-021
+    review: pending
+    notes: 'CIP の攻撃強制は require: [attack] を until_next_own_turn_start の modify で付与（第350弾）。シンカパワー誘発は
+      partial のまま。'
+  races:
+  - デモニオ
+  - 鬼レクスターズ
+  keywords:
+  - s_trigger
+  - shinka_rise
+  abilities:
+  - kind: trigger
+    when:
+      event: move
+      to: bz
+      subject: self
+    effect:
+    - op: modify
+      select:
+        zone: bz
+        owner: opp
+        filter:
+          types:
+          - creature
+        count: all
+      mod:
+        require:
+        - attack
+      duration: until_next_own_turn_start
+  - kind: trigger
+    when:
+      event: evolve_base
+      subject: self
+    effect:
+    - op: modify
+      select:
+        ref: event.top
+      mod:
+        gain:
+        - kind: trigger
+          first_time: true
+          when:
+            event: battle_win
+            subject: self
+          effect:
+          - op: untap
+            select:
+              ref: self
+              count: 1
+      duration: until_next_own_turn_start

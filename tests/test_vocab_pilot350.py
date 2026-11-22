@@ -35,7 +35,7 @@ MOD_014 = {"op": "modify",
            "select": {"zone": "bz", "owner": "opp",
                       "filter": {"types": ["creature"]}, "count": "all"},
            "mod": {"require": ["attack"]},
-           "duration": "until_next_opp_turn_end"}
+           "duration": "until_next_own_turn_start"}
 CIP_021 = {"kind": "trigger",
            "when": {"event": "move", "to": "bz", "subject": "self"},
            "effect": [{"op": "modify",

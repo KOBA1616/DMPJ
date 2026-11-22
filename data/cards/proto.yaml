@@ -15409,7 +15409,7 @@ cards:
     cost: 1
     mana: 1
     text: "相手の次のターンに、相手の攻撃できるクリーチャーはすべて、攻撃しなければならない。"
-    spell: [{op: modify, select: {zone: bz, owner: opp, filter: {types: [creature]}, count: all}, mod: {require: [attack]}, duration: until_next_opp_turn_end}]
+    spell: [{op: modify, select: {zone: bz, owner: opp, filter: {types: [creature]}, count: all}, mod: {require: [attack]}, duration: until_next_own_turn_start}]
     source:
       official: proto
       review: pending
