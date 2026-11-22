@@ -1,12 +1,14 @@
 """語彙パイロット第341弾の対象カード（実カード parse）。
 
-対象は pure な each_player_keeps_one_creature 2件（未登録、
-rejects 残存）:
-- dm24bd6-003（partial は水晶武装の常在型を持ち、出た時だけが
-  欠けていた）
-- dm23bd5-001（partial はシールドが離れた時の first_time 誘発と
-  「可能なら攻撃する」の require 常在型を持ち、出た時だけが
-  欠けていた）
+対象は pure な each_player_keeps_one_creature 2件で、
+ラウンド376で登録済み:
+- dm24bd6-003 偽りのコード シャーロック（partial の水晶武装
+  常在型＋出た時の破壊）
+- dm23bd5-001 煉獄大帝 キング・ロマノフ（partial の2能力＋
+  出た時のマナ送り）
+
+each_player_keeps_one_creature の行は残っていない
+（ファミリー解消）。
 
 注意: conftest を import すると DMSIM_SKIP_CONVERTED が復活するので
 _conv_cache を直接使う（第319弾以降の作法）。
@@ -17,9 +19,10 @@ from pathlib import Path
 
 os.environ.pop("DMSIM_SKIP_CONVERTED", None)
 
-from dmsim.cards.defs import DATA, load_tables, parse_card  # noqa: E402
-from tests._conv_cache import all_cards, proto_card  # noqa: E402
 from dmsim.cards import cardstore  # noqa: E402
+from tests import _conv_cache  # noqa: E402
+from dmsim.cards.defs import DATA, load_tables, parse_card  # noqa: E402
+from tests._conv_cache import proto_card  # noqa: E402
 
 TABLES = load_tables()
 ROOT = Path(__file__).parent.parent
@@ -72,7 +75,6 @@ CIP_MANA = [{
 }]
 
 FORM_003 = [CRYSTAL_STATIC] + CIP_DESTROY
-FORM_001 = CIP_MANA  # + partial の既存2能力（下で個別に確認）
 
 
 def _rows():
@@ -84,34 +86,28 @@ def _rows():
     return out
 
 
-def _cand(tid, base):
-    c = dict(base)
-    c.pop("source", None)
-    c.pop("gaps", None)
-    return c
-
-
-def test_targets_still_in_rejects():
+def test_targets_registered():
     rows = _rows()
-    conv_ids = {c["id"] for c in all_cards(CONVERTED)}
-    for t in ("dm24bd6-003", "dm23bd5-001"):
-        assert t in rows and t not in conv_ids
-        assert rows[t].get("gaps") == ["each_player_keeps_one_creature"]
-
-
-def test_partial_forms():
-    rows = _rows()
-    p = rows["dm24bd6-003"]["partial"]
-    assert p["abilities"] == [CRYSTAL_STATIC]     # 水晶武装は既存
-    cand = _cand("dm24bd6-003", {**p, "abilities": FORM_003})
-    d = parse_card(cand, TABLES)
+    assert len(rows) == 2007
+    conv = _conv_cache.all_cards(CONVERTED)
+    ids = {c["id"] for c in conv}
+    assert len(ids) == 10307
+    assert not (ids & set(rows))          # canonical 重なり0
+    c = _conv_cache.find(CONVERTED, "dm24bd6-003")
+    assert c is not None and c["abilities"] == FORM_003
+    assert not (c.get("source") or {}).get("unsupported")
+    d = parse_card(c, TABLES)
     assert len(d.abilities) >= 2
-    p = rows["dm23bd5-001"]["partial"]
-    assert len(p["abilities"]) == 2               # 誘発＋require は既存
-    cand = _cand("dm23bd5-001",
-                 {**p, "abilities": p["abilities"] + CIP_MANA})
-    d = parse_card(cand, TABLES)
+    c = _conv_cache.find(CONVERTED, "dm23bd5-001")
+    assert c is not None
+    assert c["abilities"][-1:] == CIP_MANA
+    assert len(c["abilities"]) == 3
+    assert not (c.get("source") or {}).get("unsupported")
+    d = parse_card(c, TABLES)
     assert len(d.abilities) >= 3
+    left = {rid for rid, r in rows.items()
+            if "each_player_keeps_one_creature" in (r.get("gaps") or [])}
+    assert left == set(), left            # ファミリー解消
 
 
 def test_proto_forms_match():

@@ -5023,3 +5023,9 @@ pilot340 cards を登録形に書換、round375 cards を新設（登録カー�
 - 実測: 相手が0体の時は choose が自動で読み飛ばされ（候補なし）、exclude の未束縛参照も空として処理され、効果は正常に解決する。相手が1体だけの時は choose が一意省略で自動確定する（第335弾の ask の一意省略）。
 
 proto T1032（003型、水晶武装の常在型を含む）/ T1033（001型の出た時条項のみ）。テスト10 passed（pilot 本体4＋実カード parse 3＋rust_schema_sync 3）。次の番号: パイロット342 / ラウンド377 / プロト T1034。
+
+### ラウンド376（第341弾の再変換）
+
+**新規登録2件**（dm24bd6-003 偽りのコード シャーロック＝partial の水晶武装常在型＋出た時の破壊。dm23bd5-001 煉獄大帝 キング・ロマノフ＝partial の2能力＋出た時のマナ送り）・**alias 畳み込み0件**・**差し戻し0件**。converted 10,305→**10,307** / rejects 2,009→**2,007**、重なり0・漏れ0。each_player_keeps_one_creature の行は残っていない（ファミリー解消）。submit 直後の abilities 重複チェック済み（重複なし。第374弾の教訓）。
+
+pilot341 cards を登録形に書換、round376 cards を新設（登録カード自身の実挙動: 003 は選ばれなかった側を破壊、001 は持ち主のマナへ。001 の require: attack で相手が攻撃を強いられる点はドライバ側で no_block を選んで固定）。テスト17 passed（round376 cards 3＋pilot341 cards 登録形 2＋pilot341 本体 4＋data_audit 8）。回帰はパイロット・ルール系 225 passed / 0 failed、round357〜375 の disposition は件数固定の stale なだけの既知パターンで 19 failed。回答は answers/round376.yaml に保存。次の番号: パイロット342 / ラウンド377 / プロト T1034。

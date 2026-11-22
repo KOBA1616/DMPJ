@@ -468165,3 +468165,193 @@ cards:
     review: pending
     notes: キーワードは partial のまま。「各ターン、はじめて相手のクリーチャーが出る時、そのクリーチャーはタップして出る」は first_time
       誘発（出来事の通し番号で数える）で表した。常在型の count ゲートは出るカード自身が評価時点で数えられ常に閉じるため使えない（第340弾）。
+- id: dm24bd6-003
+  name: 偽りのコード シャーロック
+  types:
+  - creature
+  civs:
+  - light
+  - darkness
+  - fire
+  cost: 9
+  power: 23000
+  races:
+  - アンノウン・セレス
+  mana: 1
+  text: 'Q・ブレイカー
+
+    このクリーチャーが出た時、各プレイヤーは自身のクリーチャーを１体ずつ選ぶ。こうして選ばれなかったクリーチャーをすべて破壊する。
+
+    水晶武装４：自分のマナゾーンに裏向きのカードが４枚以上あれば、自分のクリーチャーすべてに「ブロッカー」と「スピードアタッカー」と「スレイヤー」を与える。'
+  source:
+    official: dm24bd6-003
+    review: pending
+    notes: '水晶武装の常在型は partial のまま。「各プレイヤーは自身のクリーチャーを１体ずつ選び、選ばれなかったクリーチャーをすべて破壊する」は
+      choose の chooser: opp による委譲と select の exclude（参照除外）で表した（第341弾）。'
+  keywords:
+  - quad_breaker
+  abilities:
+  - kind: static
+    affects:
+      zone: bz
+      owner: you
+      filter:
+        types:
+        - creature
+    if:
+      cmp:
+      - count:
+          zone: mana
+          owner: you
+          filter:
+            face_down: true
+      - '>='
+      - 4
+    mod:
+      grant:
+      - blocker
+      - speed_attacker
+      - slayer
+  - kind: trigger
+    when:
+      event: move
+      to: bz
+      subject: self
+    effect:
+    - op: choose
+      select:
+        zone: bz
+        owner: you
+        filter:
+          types:
+          - creature
+        count: 1
+      as: keep_you
+    - op: choose
+      select:
+        zone: bz
+        owner: opp
+        filter:
+          types:
+          - creature
+        count: 1
+        chooser: opp
+      as: keep_opp
+    - op: destroy
+      select:
+        zone: bz
+        owner: any
+        filter:
+          types:
+          - creature
+        count: all
+        exclude:
+        - ref: keep_you
+        - ref: keep_opp
+- id: dm23bd5-001
+  name: 煉獄大帝 キング・ロマノフ
+  types:
+  - creature
+  civs:
+  - light
+  - darkness
+  - nature
+  cost: 10
+  power: 14000
+  races:
+  - ディスペクター
+  - ドラゴン・ゾンビ
+  - ダークロード
+  - ナイト
+  mana: 1
+  text: 'EXライフ
+
+    ブロッカー
+
+    T・ブレイカー
+
+    このクリーチャーが出た時、各プレイヤーは自身のクリーチャーを１体選び、残りの自身のクリーチャーをすべて持ち主のマナゾーンに置く。
+
+    各ターン、はじめて自分のシールドがシールドゾーンを離れた時、各相手は、それぞれ自身のシールドを１つ選ぶ。これにより選ばれたシールドをすべてブレイクしてもよい。
+
+    相手のクリーチャーは可能なら攻撃する。'
+  source:
+    official: dm23bd5-001
+    review: pending
+    notes: 'シールドが離れた時の first_time 誘発と「可能なら攻撃する」の require 常在型は partial のまま。「各プレイヤーは自身のクリーチャーを１体選び、残りをすべて持ち主のマナゾーンに置く」は
+      choose の chooser: opp による委譲と select の exclude（参照除外）で表した（第341弾）。'
+  keywords:
+  - ex_life
+  - blocker
+  - triple_breaker
+  abilities:
+  - kind: trigger
+    first_time: true
+    when:
+      event: move
+      from: shield
+      subject:
+        owner: you
+    effect:
+    - op: choose
+      select:
+        zone: shield
+        owner: opp
+        chooser: opp
+        count: 1
+      as: sh
+    - op: may
+      body:
+      - op: move
+        select:
+          ref: sh
+        to: hand
+        reason: break
+  - kind: static
+    affects:
+      zone: bz
+      owner: opp
+      filter:
+        types:
+        - creature
+    mod:
+      require:
+      - attack
+  - kind: trigger
+    when:
+      event: move
+      to: bz
+      subject: self
+    effect:
+    - op: choose
+      select:
+        zone: bz
+        owner: you
+        filter:
+          types:
+          - creature
+        count: 1
+      as: keep_you
+    - op: choose
+      select:
+        zone: bz
+        owner: opp
+        filter:
+          types:
+          - creature
+        count: 1
+        chooser: opp
+      as: keep_opp
+    - op: move
+      select:
+        zone: bz
+        owner: any
+        filter:
+          types:
+          - creature
+        count: all
+        exclude:
+        - ref: keep_you
+        - ref: keep_opp
+      to: mana
+      reason: put
