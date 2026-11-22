@@ -1,17 +1,17 @@
 """語彙パイロット第335弾の対象カード（実カード parse）。
 
-対象は pure な per_card_tap_or_untap 3件:
+対象は pure な per_card_tap_or_untap 3件で、ラウンド370で登録済み:
 - dm25bd2-015 清浄の精霊ウル（partial はキーワードのみ。
-  本弾で CIP modal を構成。aliases [dmd32-007, dmex11-015,
-  dmpcd01-t10] は partial の source 由来）
+  本弾で choose＋modal を構成。submit 時に aliases
+  [dmd32-007, dmex11-015, dmpcd01-t10] が自動記録されたが
+  rejects 行ではない）
 - dm24rp2-051 粛清者ゴットハルト（partial はキーワードのみ。
-  本弾で CIP repeat＋choose＋modal を構成）
+  本弾で repeat＋choose＋modal を構成）
 - dm25-002 超鎧亜キングダム・ゲオルグ（partial は
   evolve_from {multicolor: true} とキーワードを持ち、攻撃時
-  誘発だけが欠けていた。本弾で may＋modal を構成）
+  誘発だけが欠けていた。本弾で may＋choose＋modal を構成）
 
-いずれも本弾の時点では rejects に残っており、登録は
-ラウンド370で行う。
+per_card_tap_or_untap の行は残っていない（ファミリー解消）。
 
 注意: conftest を import すると DMSIM_SKIP_CONVERTED が復活するので
 _conv_cache を直接使う（第319弾以降の作法）。
@@ -72,40 +72,46 @@ FORM_002 = [{
 }]
 
 
-def _partial(cid):
+def _rows():
+    out = {}
     for line in open(REJECTS, encoding="utf-8"):
         if line.strip():
             r = json.loads(line)
-            if r["id"] == cid:
-                return r.get("partial")
-    return None
+            out[r["id"]] = r
+    return out
 
 
-def test_targets_still_in_rejects():
+def test_targets_registered():
+    rows = _rows()
+    assert len(rows) == 2023
     conv = _conv_cache.all_cards(CONVERTED)
     ids = {c["id"] for c in conv}
-    for t in ("dm25bd2-015", "dm24rp2-051", "dm25-002"):
-        assert t not in ids
-        assert _partial(t) is not None, t
-
-
-def test_partial_forms():
-    p = _partial("dm25bd2-015")
-    assert p["name"] == "清浄の精霊ウル"
-    assert not p.get("abilities")
-    assert p["keywords"] == ["s_trigger", "blocker",
-                             "cannot_attack_player"]
-    assert (p.get("source") or {}).get("aliases") == [
+    assert len(ids) == 10291
+    assert not (ids & set(rows))          # canonical 重なり0
+    c = _conv_cache.find(CONVERTED, "dm25bd2-015")
+    assert c is not None
+    assert c["abilities"] == FORM_015
+    assert not (c.get("source") or {}).get("unsupported")
+    assert (c.get("source") or {}).get("aliases") == [
         "dmd32-007", "dmex11-015", "dmpcd01-t10"]
-    p = _partial("dm24rp2-051")
-    assert p["name"] == "粛清者ゴットハルト"
-    assert not p.get("abilities")
-    assert p["keywords"] == ["s_trigger"]
-    p = _partial("dm25-002")
-    assert p["name"] == "超鎧亜キングダム・ゲオルグ"
-    assert not p.get("abilities")
-    assert p["evolve_from"] == {"multicolor": True}
-    assert p["keywords"] == ["double_breaker"]
+    d = parse_card(c, TABLES)
+    assert len(d.abilities) >= 1
+    c = _conv_cache.find(CONVERTED, "dm24rp2-051")
+    assert c is not None
+    assert c["abilities"] == FORM_051
+    assert not (c.get("source") or {}).get("unsupported")
+    d = parse_card(c, TABLES)
+    assert len(d.abilities) >= 1
+    c = _conv_cache.find(CONVERTED, "dm25-002")
+    assert c is not None
+    assert c["abilities"] == FORM_002
+    assert c["evolve_from"] == {"multicolor": True}
+    assert not (c.get("source") or {}).get("unsupported")
+    d = parse_card(c, TABLES)
+    assert len(d.abilities) >= 1
+    left = {rid for rid, r in rows.items()
+            if "per_card_tap_or_untap" in (r.get("gaps") or [])}
+    assert left == set(), left            # ファミリー解消
 
 
 def test_proto_forms_match():

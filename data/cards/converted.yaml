@@ -467207,3 +467207,146 @@ cards:
     - dm23bd6-017
     - dm25sp2-005
     - dmrp17-s11
+- id: dm25bd2-015
+  name: 清浄の精霊ウル
+  types:
+  - creature
+  civs:
+  - light
+  cost: 6
+  power: 4000
+  races:
+  - エンジェル・コマンド
+  mana: 1
+  keywords:
+  - s_trigger
+  - blocker
+  - cannot_attack_player
+  text: 'S・トリガー（このカードをシールドゾーンから手札に加える時、コストを支払わずにすぐ実行してもよい）
+
+    ブロッカー（このクリーチャーをタップして、相手クリーチャーの攻撃先をこのクリーチャーに変更してもよい）
+
+    このクリーチャーは、相手プレイヤーを攻撃できない。
+
+    このクリーチャーが出た時、クリーチャーを１体選び、タップまたはアンタップする。'
+  abilities:
+  - kind: trigger
+    when:
+      event: move
+      to: bz
+      subject: self
+    effect:
+    - op: choose
+      select:
+        zone: bz
+        owner: any
+        filter:
+          types:
+          - creature
+        count: 1
+      as: target
+    - &id307
+      op: modal
+      modes:
+      - - op: tap
+          select:
+            ref: target
+      - - op: untap
+          select:
+            ref: target
+  source:
+    official: dm25bd2-015
+    review: pending
+    notes: '対象ごとのタップ/アンタップは choose（owner: any）＋modal で表した（第335弾、dm26rp3-055 の確立形）。'
+    aliases:
+    - dmd32-007
+    - dmex11-015
+    - dmpcd01-t10
+- id: dm24rp2-051
+  name: 粛清者ゴットハルト
+  types:
+  - creature
+  civs:
+  - light
+  cost: 4
+  power: 1000
+  races:
+  - ソルトルーパー
+  mana: 1
+  keywords:
+  - s_trigger
+  text: 'S・トリガー（このクリーチャーをシールドゾーンから手札に加える時、コストを支払わずにすぐ召喚してもよい）
+
+    このクリーチャーが出た時、クリーチャーを２体まで選び、それぞれタップまたはアンタップする。'
+  abilities:
+  - kind: trigger
+    when:
+      event: move
+      to: bz
+      subject: self
+    effect:
+    - op: repeat
+      times: 2
+      body:
+      - op: choose
+        select:
+          zone: bz
+          owner: any
+          filter:
+            types:
+            - creature
+          count: 1
+          up_to: true
+        as: target
+      - *id307
+  source:
+    official: dm24rp2-051
+    review: pending
+    notes: 2体までそれぞれは repeat＋choose（up_to）＋modal で表した（第335弾）。
+- id: dm25-002
+  name: 超鎧亜キングダム・ゲオルグ
+  types:
+  - creature
+  civs:
+  - light
+  - water
+  - darkness
+  cost: 6
+  power: 9000
+  races:
+  - ロスト・クルセイダー
+  mana: 1
+  evolve_from:
+    multicolor: true
+  keywords:
+  - double_breaker
+  text: 'マナゾーンに置く時、このカードはタップして置く。
+
+    進化-自分の多色クリーチャー１体の上に置く。
+
+    このクリーチャーが攻撃する時、バトルゾーンにある進化ではないクリーチャー１体をタップまたはアンタップしてもよい。(まず何を攻撃するか選んでから、タップまたはアンタップするクリーチャーを選ぶ)
+
+    W・ブレイカー'
+  abilities:
+  - kind: trigger
+    when:
+      event: attack
+      subject: self
+    effect:
+    - op: may
+      body:
+      - op: choose
+        select:
+          zone: bz
+          owner: any
+          filter:
+            types:
+            - creature
+            evolution: false
+          count: 1
+        as: target
+      - *id307
+  source:
+    official: dm25-002
+    review: pending
+    notes: '攻撃時のタップ/アンタップは may＋choose（evolution: false）＋modal で表した（第335弾）。「マナゾーンに置く時タップして置く」は既存の扱いに従い原文のみ。'
