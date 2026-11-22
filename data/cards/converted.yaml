@@ -468826,3 +468826,106 @@ cards:
     if:
       is_turn: opp
     effect: *id310
+- id: dmc68-002
+  name: 魔光帝フェルナンドVII世
+  types:
+  - creature
+  civs:
+  - darkness
+  cost: 11
+  power: 11000
+  races:
+  - デーモン・コマンド
+  - ナイト
+  mana: 1
+  text: 'このクリーチャーの召喚コストを、自分の墓地にある呪文１枚につき１少なくしてもよい。ただし、コストは１より少なくならない。
+
+    このクリーチャーが攻撃する時、バトルゾーンにある相手のクリーチャーを１体選ぶ。そのクリーチャーのパワーは、そのターン中、自分の墓地にある呪文１枚につき-1000される。(パワー０以下のクリーチャーは破壊される)
+
+    W・ブレイカー(このクリーチャーはシールドを２枚ブレイクする)'
+  abilities:
+  - kind: static
+    zone: hand
+    affects: self
+    mod:
+      cost:
+        amount: -1
+        count:
+          zone: graveyard
+          owner: you
+          filter:
+            types:
+            - spell
+      cost_min: 1
+  - kind: trigger
+    when:
+      event: attack
+      subject: self
+    effect:
+    - op: modify
+      select:
+        zone: bz
+        owner: opp
+        filter:
+          types:
+          - creature
+        count: 1
+      mod:
+        power:
+          amount: -1000
+          count:
+            zone: graveyard
+            owner: you
+            filter:
+              types:
+              - spell
+      duration: end_of_turn
+  keywords:
+  - double_breaker
+  source:
+    official: dmc68-002
+    review: pending
+    notes: '召喚コストの軽減は mod の cost {amount: -1, count: 墓地の呪文}＋cost_min: 1（第346弾、dm21-020
+      の確立形）。攻撃時誘発は partial のまま。'
+    aliases:
+    - dm28-005
+    - dmc55-030
+    - dmc58-010
+- id: dmx16-057
+  name: 龍素記号Lp エクスペリオン
+  types:
+  - creature
+  civs:
+  - water
+  cost: 6
+  power: 6000
+  races:
+  - クリスタル・コマンド・ドラゴン
+  mana: 1
+  text: バトルゾーンにある自分のリキッド・ピープル１体につき、自分の水の呪文を唱えるコストを１少なくしてもよい。ただし、コストは１より少なくならない。W・ブレイカー（このクリーチャーはシールドを２枚ブレイクする）
+  source:
+    official: dmx16-057
+    review: pending
+    notes: '自分のリキッド・ピープル1体につき自分の水の呪文のコストを1少なくする常在型は mod の cost {amount: -1, count:
+      場のリキッド・ピープル}＋cost_min: 1（第346弾、dm24ex1-016 の確立形）。'
+  keywords:
+  - double_breaker
+  abilities:
+  - kind: static
+    affects:
+      zone: hand
+      owner: you
+      filter:
+        types:
+        - spell
+        civs:
+        - water
+    mod:
+      cost:
+        amount: -1
+        count:
+          zone: bz
+          owner: you
+          filter:
+            race_has: リキッド・ピープル
+      cost_min: 1
