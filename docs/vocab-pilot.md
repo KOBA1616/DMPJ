@@ -5218,3 +5218,14 @@ proto T1058（033型）/ T1059（007型）。テスト9 passed（pilot 本体3�
 **新規登録2件**（dm31-033 爆獣パンダ・ブーリン / dmbd16-007 聖霊龍騎セイント・ボルシャック。登録内容は意図した能力の集合と一致。dmbd16-007 は submit の prepend で partial 由来の power_when が先頭に来たため順序のみ意図と異なる）・**差し戻し0件**。converted 10,328→**10,330** / rejects 1,984→**1,982**、重なり0・漏れ0。optional_cost_reduction_per_count のファミリーは解消。dmbd16-007 へ aliases 2件の自動記録は rejects 行ではない。
 
 pilot352 cards を登録形に書換、round387 cards を新設（登録カード自身の実挙動: 両カードの軽減での支払い可否）。テスト17 passed（round387 cards 3＋pilot352 cards 登録形 3＋pilot352 本体 3＋data_audit 8）。回帰はパイロット・ルール系 275 passed / 0 failed、round357〜386 の disposition は件数固定の stale なだけの既知パターンで 30 failed。回答は answers/round387.yaml に保存。次の番号: パイロット353 / ラウンド388 / プロト T1060。
+
+### 語彙パイロット第353弾: trigger_when_opponent_plays_without_paying（ドリフト）
+
+対象は pure 2件すべて: dm22rp2x-020 チッタ・ペロルの冠 / dm23rp2x-033 ゼンツー。
+
+- 「支払わずに出た」は第345弾の when の unpaid: true（020 は subject フィルタ types: [creature, tamaseed]＋if {is_turn: opp}、033 はフィルタ無し）。
+- 「各ターンに一度」は trigger の once_per_turn: true。
+- マジック・メクレイド5は既存 op {op: mekurade, filter: {race_has: マジック}, cost_le: 5}（dm25ex1-078 のサイバー・メクレイド5と同型）。
+- 「このタマシードを破壊してもよい。そうしたら、引いて、出してもよい」は全体を1つの may に包む形（破壊が任意、ドローは必須、出してよいだけ任意）。
+
+proto T1060（020型）/ T1061（033型）/ T1062（検証用マジック）。テスト9 passed（pilot 本体3＋実カード parse 3＋rust_schema_sync 3）。次の番号: パイロット354 / ラウンド389 / プロト T1063。

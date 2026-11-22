@@ -15501,3 +15501,47 @@ cards:
       official: proto
       review: pending
       notes: "語彙パイロット第352弾の対象（dmbd16-007 型）。数える対象が2種族の和集合の場合は count セレクタの filter に any_of を使う。"
+
+  - id: T1060
+    name: 試験用ペロルの冠
+    types: [tamaseed]
+    civs: [fire]
+    cost: 2
+    mana: 1
+    text: "相手のターン中、相手のクリーチャーまたはタマシードがコストを支払わずに出た時、このタマシードを破壊してもよい。そうしたら、カードを１枚引き、火のコスト５以下のクリーチャーを１体、自分の手札から出してもよい。"
+    abilities:
+    - {kind: trigger, when: {event: move, to: bz, subject: {owner: opp, filter: {types: [creature, tamaseed]}}, unpaid: true}, if: {is_turn: opp}, effect: [{op: may, body: [{op: destroy, select: {ref: self}}, {op: draw, count: 1}, {op: may, body: [{op: choose, select: {zone: hand, owner: you, filter: {types: [creature], civs: [fire], cost_le: 5}, count: 1}, as: pc}, {op: move, select: {ref: pc}, to: bz, reason: put}]}]}]}
+    source:
+      official: proto
+      review: pending
+      notes: "語彙パイロット第353弾の対象（dm22rp2x-020 型）。「破壊してもよい。そうしたら〜」は全体を1つの may に包む形。"
+
+  - id: T1061
+    name: 試験用ゼンツー
+    types: [creature]
+    civs: [water]
+    cost: 3
+    power: 3000
+    races: [マジック・サイバーロード]
+    mana: 1
+    text: "各ターンに一度、相手がコストを支払わずにエレメントを出した時、マジック・メクレイド５してもよい。（マジック・メクレイド５：自分の山札の上から３枚を見る。その中から、コスト５以下のマジックを１枚、コストを支払わずに使ってもよい。残りを好きな順序で山札の下に置く）"
+    abilities:
+    - {kind: trigger, once_per_turn: true, when: {event: move, to: bz, subject: {owner: opp}, unpaid: true}, effect: [{op: may, body: [{op: mekurade, filter: {race_has: マジック}, cost_le: 5}]}]}
+    source:
+      official: proto
+      review: pending
+      notes: "語彙パイロット第353弾の対象（dm23rp2x-033 型）。メクレイドは既存 op（filter は race_has）。"
+
+  - id: T1062
+    name: 試験用マジック・ワーム
+    types: [creature]
+    civs: [water]
+    cost: 3
+    power: 2000
+    races: [マジック・サイバーロード]
+    mana: 1
+    text: "（試験用フィクスチャ: マジック・メクレイドの対象）"
+    source:
+      official: proto
+      review: pending
+      notes: "語彙パイロット第353弾の検証用フィクスチャ（メクレイドで使えるマジック）。"
