@@ -4892,3 +4892,17 @@ proto T1010（dm24rp4-045 型）/ T1011（dmrp11-zs01 型）/ T1012（駆動用�
 **新規登録2件**（dm24rp4-045 ブルーアイズ・ドラゴンフライ＝power mod の amount に {power_of: {ref: self}} を書いた確立形そのまま。dmrp11-zs01 零＝choose の as 束縛＋吸い上げ＋power_set: 0＋ターン終わりの手札破棄＋零龍がいる間のコスト軽減）・**alias 畳み込み0件**・**差し戻し0件**（submit 時の警告なし）。converted 10,284→**10,286** / rejects 2,030→**2,028**、重なり0・漏れ0。power_transfer は残り0件でファミリー解消。
 
 pilot333 cards を登録形に書換、round368 cards を新設（登録カード自身の実挙動: コスト6以上のクリーチャーが出た時のパワー加算 14000→次ターン 13000、攻撃時の吸い上げ 8000 と選んだ側の破壊、ターン終わりの手札破棄、零龍がいる間のコスト軽減）。テスト20 passed（round368 cards 3＋pilot333 cards 登録形 2＋pilot333 本体 7＋data_audit 8）。回帰はパイロット・ルール系（第170弾を含む）160 passed / 0 failed（power mod の amount 拡張の影響なし）、round357〜367 の disposition は件数固定の stale なだけの既知パターンで 11 failed。回答は answers/round368.yaml に保存。次の番号: パイロット334 / ラウンド369 / プロト T1013。
+
+## 第334弾 play_from_deck_top（pure 2件）
+
+対象: dm22rp2x-002 アカシック・ヴィジョン（「自分のターン中、呪文またはタマシードを自分の山札の上から使ってもよい」）と dm26sd1-j009 斬龍電融 オロチリュウセイ（「自分のターン中、クリーチャーを１体、自分の山札の上から召喚してもよい。（コストは支払う）」。スピードアタッカー付与は partial で表現済み）。dmrp22-005 は multi（reveal_stay＋play_from_deck_top）のため本弾の対象外（reveal_stay が解けてから扱う）。
+
+結論は**エンジン拡張（山札の上からのプレイ）**: _play_options は手札・マナ・墓地からの選択肢しか出さなかった。本弾で (1) permissions.yaml に summon/cast/generate_from_deck_top を追加（default: false。第226弾の墓地版と同じ許可型）、(2) turn.py _play_options に山札の一番上だけを見るブロックを追加（_deck_top_grant で許可を確認し、_can_play_face で支払いを確認して play:{id}:dtop を出す。once 付きは once_src を渡す）、(3) h_play は from_zone を汎用に読むため変更は要らず、summon_once の消費条件に "deck" を加えただけ（cast/generate の once は消費する側の印が無いため今回は使わない）、(4) base/types.py の Option に dtop フィールドを追加（TypedDict は未知キーを弾くため）。
+
+確立形: static {affects: {zone: deck, owner: you, filter: {types: [...]}}, if: {is_turn: you}, mod: {allow: [...]}}。allow は山札全体に付くが、選択肢に出るのは一番上だけなので from_top の指定は要らない。「クリーチャーを１体」は once: true で読む（ターン1回）。「いつでも見てもよい」は既存12枚と同じく原文のみ（エンジンに山札の可視性の語彙は無い）。
+
+proto T1013（dm22rp2x-002 型）/ T1014（dm26sd1-j009 型）。テスト8件（実挙動6件）: 山札の上の呪文を唱えられる（唱えた後は墓地へ）、山札の上のタマシードを出せる、2枚目も同じターンに使える（once 無し）、一番上以外は出ない、許可が無ければ出ない、山札の上のクリーチャーを召喚できる（1体まで。次のターンにはまた出せる）、山札の上の呪文はオロチでは出せない。未知の allow アクションは DefError。
+
+教訓: scenario.build の山札は spec の各ゾーンのカード＋filler だけ（指定しないカードは山札に無い）。setup のマナは原則アンタップだが、T030 はタップで始まる（理由は未調査。T009 等の水マナを使うこと）。プレイの選択肢は回答した直後には解決していないため、解決後の状態は次の決定まで進めてから見ること。山札の一番上は zlist("deck", p)[0]。
+
+次の候補メモ: broken_shields_no_s_trigger（重い）、after_attack_destroy（ラウンド245で差し戻し済み、重い）。

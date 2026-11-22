@@ -14685,3 +14685,35 @@ cards:
       official: proto
       review: pending
       notes: "語彙パイロット第333弾の駆動用（種族 零龍 を持つクリーチャー。by_product には種族・名前に零龍を持つカードが無い）。"
+
+  - id: T1013
+    name: 試験用アカシック・ヴィジョン
+    types: [tamaseed]
+    civs: [water]
+    cost: 4
+    mana: 1
+    text: "自分のターン中、自分の山札の上から１枚目をいつでも見てもよい。自分のターン中、呪文またはタマシードを自分の山札の上から使ってもよい。"
+    abilities:
+    - {kind: static, affects: {zone: deck, owner: you, filter: {types: [spell, tamaseed]}}, if: {is_turn: you}, mod: {allow: [{action: cast_from_deck_top}, {action: generate_from_deck_top}]}}
+    source:
+      official: proto
+      review: pending
+      notes: "語彙パイロット第334弾の対象（dm22rp2x-002 型）。「いつでも見てもよい」は既存12枚と同じく原文のみ（エンジンに可視性の語彙は無い）。"
+
+  - id: T1014
+    name: 試験用斬龍電融 オロチリュウセイ
+    types: [creature]
+    civs: [water, fire, nature]
+    cost: 8
+    power: 17000
+    races: [ディスペクター, サイバーロード, レッド・コマンド・ドラゴン]
+    mana: 1
+    text: "EXライフ（このクリーチャーを出す時、自分の山札の上から１枚をシールド化する。このクリーチャーが離れる時、かわりにそのシールドを墓地に置く）\nT・ブレイカー（このクリーチャーはシールドを３つブレイクする）\n自分のクリーチャーすべてに「スピードアタッカー」を与える。\n自分のターン中、自分の山札の上から１枚をいつでも見てもよい。\n自分のターン中、クリーチャーを１体、自分の山札の上から召喚してもよい。（コストは支払う）"
+    abilities:
+    - {kind: static, affects: {owner: you, filter: {types: [creature]}}, mod: {grant: [speed_attacker]}}
+    - {kind: static, affects: {zone: deck, owner: you, filter: {types: [creature]}}, if: {is_turn: you}, mod: {allow: [{action: summon_from_deck_top, once: true}]}}
+    keywords: [ex_life, triple_breaker]
+    source:
+      official: proto
+      review: pending
+      notes: "語彙パイロット第334弾の対象（dm26sd1-j009 型）。「クリーチャーを１体」は once: true で読む（ターン1回）。「いつでも見てもよい」は原文のみ。"
