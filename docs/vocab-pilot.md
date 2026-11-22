@@ -5152,3 +5152,14 @@ proto T1046（018型）/ T1047（011型）/ T1048（035型）＋検証 fixture T
 **新規登録3件**（dmbd21-018 ZEROの侵略 ブラックアウト / dmd35-011 ZEROの暴走 デッドリー・ハイウェイ / promoy15-035 禁断の月 ドキンダムーン。登録形は意図した形と完全一致）・**差し戻し0件**。converted 10,319→**10,322** / rejects 1,994→**1,991**、重なり0・漏れ0。invasion_zero の pure は解消（multi の dm24ex3-tf13 にだけ残る）。
 
 pilot348 cards を登録形に書換、round383 cards を新設（登録カード自身の実挙動: 侵略ZERO の登場2件）。テスト19 passed（round383 cards 3＋pilot348 cards 登録形 2＋pilot348 本体 6＋data_audit 8）。回帰はパイロット・ルール系 259 passed / 0 failed、round357〜382 の disposition は件数固定の stale なだけの既知パターンで 26 failed。回答は answers/round383.yaml に保存。次の番号: パイロット349 / ラウンド384 / プロト T1050。
+
+### 語彙パイロット第349弾: summon_lock（ドリフト）
+
+対象は pure 4件のうち3件: promoy11-083 鬼丸「Ｅｎｄ」 / promoy12-036 激流剣砲 カツ∞キング / promoy12-085 漢のキズナ カツブードン。dmx25-s07 は対象外（partial の原文が断片のみで登録の基礎がない）。
+
+- 「誰もゼニスを召喚できない」は許可 summon の deny: {kind: static, affects: {zone: hand, owner: any, filter: {types: [creature], race_has: ゼニス}}, mod: {deny: [summon]}}（34-sec001 等の確立形）。「ゼニスとバトル中パワー+11000」は battle_power: {amount: 11000, opponent_filter: {race_has: ゼニス}}。
+- 「自分の他の、名前に《X》とあるエグザイル・クリーチャーをバトルゾーンに出すことはできない」は許可 enter_bz の deny をゾーン別に5つ並べる確立形（dmd11-001 等）: affects {zone: hand/graveyard/mana/deck/shield, owner: you, filter: {types: [exile_creature], name_has: X}}。affects の zone は対象カードの現在ゾーンと一致する必要がある（core の集約は aff.zone == 対象ゾーンの時のみ拾い、zone 無しは bz 扱い）ため、ゾーン列挙が必須。
+- promoy12-036 の CIP は destroy {filter: {keyword: blocker}, count: all}＋may draw。promoy12-085 の CIP は「破壊してもよい。そうした場合〜」を move（reason: destroy, as: dead）の移動後束縛＋{count: {ref: dead}} の if で組む。教訓: choose で束縛した参照は対象がゾーン移動すると gen が変わって解決できなくなるため、「そうした場合」の判定は移動 op 自身の as 束縛で数える（dm26ex1-019 の paid と同型）。山札探索は choose {zone: deck, look: true}＋move＋shuffle の確立形。
+- 検証上の注意: ゼニスはゼロ文明で、支払いにはゼロ文明のマナが要る（fixture T789 をマナに置く）。
+
+proto T1050（083型）/ T1051（036型）/ T1052（085型）＋検証 fixture T1053（剣砲エグザイル）。テスト12 passed（pilot 本体6＋実カード parse 3＋rust_schema_sync 3）。次の番号: パイロット350 / ラウンド385 / プロト T1054。

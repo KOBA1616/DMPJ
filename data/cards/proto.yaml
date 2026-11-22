@@ -15325,3 +15325,79 @@ cards:
       official: proto
       review: pending
       notes: "語彙パイロット第348弾の検証用 fixture: ターン中にコストを支払わずにクリーチャーを出す手段（侵略ZERO の条件確認用）。"
+
+  - id: T1050
+    name: 試験用鬼丸「Ｅｎｄ」
+    types: [creature]
+    civs: [fire]
+    cost: 7
+    power: 7000
+    races: [ヒューマノイド, ハンター, エイリアン]
+    mana: 1
+    text: "W・ブレイカー（このクリーチャーはシールドを２枚ブレイクする）誰もゼニスを召喚できない。ゼニスとバトル中、このクリーチャーのパワーは+11000される。"
+    abilities:
+    - {kind: static, affects: {zone: hand, owner: any, filter: {types: [creature], race_has: ゼニス}}, mod: {deny: [summon]}}
+    - {kind: static, affects: self, mod: {battle_power: {amount: 11000, opponent_filter: {race_has: ゼニス}}}}
+    keywords: [double_breaker]
+    source:
+      official: proto
+      review: pending
+      notes: "語彙パイロット第349弾の対象（promoy11-083 型）。召喚禁止は許可 summon の deny、バトル中のパワー増は battle_power の opponent_filter。"
+
+  - id: T1051
+    name: 試験用カツ∞キング
+    types: [creature]
+    civs: [water, fire]
+    cost: 9
+    power: 12000
+    races: [アウトレイジMAX]
+    mana: 1
+    text: "マナゾーンに置く時、このカードはタップして置く。\nこのクリーチャーをバトルゾーンに出した時、相手の「ブロッカー」を持つクリーチャーを無限の数破壊する。その後、カードを１枚引いてもよい。\nT・ブレイカー（このクリーチャーはシールドを３枚ブレイクする）\n自分の他の、名前に《剣砲》とあるエグザイル・クリーチャーをバトルゾーンに出すことはできない。"
+    abilities:
+    - {kind: trigger, when: {event: move, to: bz, subject: self}, effect: [{op: destroy, select: {zone: bz, owner: opp, filter: {types: [creature], keyword: blocker}, count: all}}, {op: may, body: [{op: draw, count: 1}]}]}
+    - {kind: static, affects: {zone: hand, owner: you, filter: {types: [exile_creature], name_has: 剣砲}}, mod: {deny: [enter_bz]}}
+    - {kind: static, affects: {zone: graveyard, owner: you, filter: {types: [exile_creature], name_has: 剣砲}}, mod: {deny: [enter_bz]}}
+    - {kind: static, affects: {zone: mana, owner: you, filter: {types: [exile_creature], name_has: 剣砲}}, mod: {deny: [enter_bz]}}
+    - {kind: static, affects: {zone: deck, owner: you, filter: {types: [exile_creature], name_has: 剣砲}}, mod: {deny: [enter_bz]}}
+    - {kind: static, affects: {zone: shield, owner: you, filter: {types: [exile_creature], name_has: 剣砲}}, mod: {deny: [enter_bz]}}
+    keywords: [triple_breaker]
+    source:
+      official: proto
+      review: pending
+      notes: "語彙パイロット第349弾の対象（promoy12-036 型）。「出すことはできない」は許可 enter_bz の deny（召喚・効果・革命チェンジすべてを止める）。"
+
+  - id: T1052
+    name: 試験用カツブードン
+    types: [creature]
+    civs: [darkness, fire]
+    cost: 6
+    power: 6000
+    races: [アウトレイジMAX]
+    mana: 1
+    text: "マナゾーンに置く時、このカードはタップして置く。\nこのクリーチャーをバトルゾーンに出した時、自分の他のクリーチャーを１体破壊してもよい。そうした場合、自分の山札を見る。その中からエグザイル・クリーチャーを１体選び、相手に見せてから自分の手札に加えてもよい。このようにして山札を見た場合、シャッフルする。\nW・ブレイカー\n自分の他の、名前に《漢のキズナ カツブードン》とあるエグザイル・クリーチャーをバトルゾーンに出すことはできない。"
+    abilities:
+    - {kind: trigger, when: {event: move, to: bz, subject: self}, effect: [{op: may, body: [{op: move, select: {zone: bz, owner: you, filter: {types: [creature]}, count: 1, exclude: [{ref: self}]}, to: graveyard, reason: destroy, as: dead}]}, {op: if, cond: {cmp: [{count: {ref: dead}}, ">=", 1]}, then: [{op: choose, select: {zone: deck, owner: you, look: true, filter: {types: [exile_creature]}, count: 1}, as: found}, {op: may, body: [{op: move, select: {ref: found, count: all}, to: hand, reason: draw}]}, {op: shuffle}]}]}
+    - {kind: static, affects: {zone: hand, owner: you, filter: {types: [exile_creature], name_has: 漢のキズナ カツブードン}}, mod: {deny: [enter_bz]}}
+    - {kind: static, affects: {zone: graveyard, owner: you, filter: {types: [exile_creature], name_has: 漢のキズナ カツブードン}}, mod: {deny: [enter_bz]}}
+    - {kind: static, affects: {zone: mana, owner: you, filter: {types: [exile_creature], name_has: 漢のキズナ カツブードン}}, mod: {deny: [enter_bz]}}
+    - {kind: static, affects: {zone: deck, owner: you, filter: {types: [exile_creature], name_has: 漢のキズナ カツブードン}}, mod: {deny: [enter_bz]}}
+    - {kind: static, affects: {zone: shield, owner: you, filter: {types: [exile_creature], name_has: 漢のキズナ カツブードン}}, mod: {deny: [enter_bz]}}
+    keywords: [double_breaker]
+    source:
+      official: proto
+      review: pending
+      notes: "語彙パイロット第349弾の対象（promoy12-085 型）。山札探索は choose {zone: deck, look: true}＋move＋shuffle の確立形。"
+
+  - id: T1053
+    name: 試験用剣砲カツ
+    types: [creature, exile_creature]
+    civs: [nature]
+    cost: 3
+    power: 3000
+    races: [アウトレイジMAX]
+    mana: 1
+    text: "試験用のエグザイル・クリーチャー（名前に《剣砲》を含む）。"
+    source:
+      official: proto
+      review: pending
+      notes: "語彙パイロット第349弾の検証用 fixture: 剣砲ロックの対象。"
