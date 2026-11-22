@@ -5146,3 +5146,9 @@ pilot347 cards を登録形に書換、round382 cards を新設（登録カー�
 - 教訓: 誘発の if は収集時に評価される（events.py:1322、ルール603.4）ため、ターン終わりの誘発は同じターン終わりに解決される別の誘発の結果を見られない。検証用の無償登場はターン中に起こす必要があり、fixture 呪文 T1049（手札からクリーチャーを出す）を追加した。
 
 proto T1046（018型）/ T1047（011型）/ T1048（035型）＋検証 fixture T1049。テスト12 passed（pilot 本体6＋実カード parse 3＋rust_schema_sync 3）。次の番号: パイロット349 / ラウンド384 / プロト T1050。
+
+### ラウンド383（第348弾の再変換）
+
+**新規登録3件**（dmbd21-018 ZEROの侵略 ブラックアウト / dmd35-011 ZEROの暴走 デッドリー・ハイウェイ / promoy15-035 禁断の月 ドキンダムーン。登録形は意図した形と完全一致）・**差し戻し0件**。converted 10,319→**10,322** / rejects 1,994→**1,991**、重なり0・漏れ0。invasion_zero の pure は解消（multi の dm24ex3-tf13 にだけ残る）。
+
+pilot348 cards を登録形に書換、round383 cards を新設（登録カード自身の実挙動: 侵略ZERO の登場2件）。テスト19 passed（round383 cards 3＋pilot348 cards 登録形 2＋pilot348 本体 6＋data_audit 8）。回帰はパイロット・ルール系 259 passed / 0 failed、round357〜382 の disposition は件数固定の stale なだけの既知パターンで 26 failed。回答は answers/round383.yaml に保存。次の番号: パイロット349 / ラウンド384 / プロト T1050。

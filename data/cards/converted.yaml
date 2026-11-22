@@ -469014,3 +469014,162 @@ cards:
     mod:
       cost: -2
       cost_min: 1
+- id: dmbd21-018
+  name: ZEROの侵略 ブラックアウト
+  types:
+  - creature
+  civs:
+  - darkness
+  cost: 6
+  mana: 1
+  text: 'W・ブレイカー
+
+    侵略ZERO：相手のターンの終わりに、そのターン相手のクリーチャーがコストを支払わずに出ていたら、このクリーチャーを自分の手札から出してもよい。
+
+    このクリーチャーが攻撃する時、自分のD２フィールドがあれば、相手のパワーが一番大きいクリーチャーを１体破壊する。'
+  source:
+    official: dmbd21-018
+    review: pending
+    notes: '侵略ZERO は手札の turn_end 誘発＋turn_count enter_unpaid（第348弾で filter 対応を拡張）。攻撃時誘発は
+      D2フィールドの exists 条件＋extremal: max_power の破壊。'
+    aliases:
+    - dmr22-l02
+    - dmrp11-g04
+  power: 7000
+  races:
+  - ソニック・コマンド
+  - 侵略者ZERO
+  keywords:
+  - double_breaker
+  abilities:
+  - &id311
+    kind: trigger
+    zone: hand
+    when:
+      event: turn_end
+    if:
+      all:
+      - is_turn: opp
+      - cmp:
+        - turn_count:
+            kind: enter_unpaid
+            owner: opp
+            filter:
+              types:
+              - creature
+        - '>='
+        - 1
+    effect:
+    - op: may
+      body:
+      - op: move
+        select:
+          ref: self
+        to: bz
+        reason: put
+  - kind: trigger
+    when:
+      event: attack
+      subject: self
+    if:
+      exists:
+        zone: bz
+        owner: you
+        filter:
+          types:
+          - d2_field
+    effect:
+    - op: destroy
+      select:
+        zone: bz
+        owner: opp
+        filter:
+          types:
+          - creature
+        extremal: max_power
+        count: 1
+- id: dmd35-011
+  name: ZEROの暴走 デッドリー・ハイウェイ
+  types:
+  - field
+  - d2_field
+  civs:
+  - darkness
+  cost: 4
+  mana: 1
+  text: 侵略ZERO：相手のターンの終わりに、そのターン相手がコストを支払わずにクリーチャーをバトルゾーンに出していたら、このD２フィールドを自分の手札からバトルゾーンに出してもよい。（他のD２フィールドがバトルゾーンに出た時、このD２フィールドを自分の墓地に置く）
+    / Dスイッチ：自分のターンのはじめに、このD２フィールドをゲーム中で一度上下逆さまにしてもよい。そうしたら、相手のタップしているクリーチャーを１体破壊する。
+  abilities:
+  - *id311
+  - kind: trigger
+    dswitch: true
+    when:
+      event: turn_start
+      player: you
+    effect:
+    - op: may
+      body:
+      - op: dswitch
+      - op: destroy
+        select:
+          zone: bz
+          owner: opp
+          filter:
+            types:
+            - creature
+            tapped: true
+          count: 1
+  source:
+    official: dmd35-011
+    review: pending
+    aliases:
+    - dmr22-035
+    - promoy15-036
+    notes: 侵略ZERO は手札の turn_end 誘発＋turn_count enter_unpaid（第348弾）。Dスイッチ誘発は partial
+      のまま。
+- id: promoy15-035
+  name: 禁断の月 ドキンダムーン
+  types:
+  - field
+  - d2_field
+  civs:
+  - darkness
+  cost: 6
+  mana: 1
+  text: 侵略ZERO：相手のターンの終わりに、そのターン相手がコストを支払わずにクリーチャーをバトルゾーンに出していたら、このD２フィールドを自分の手札からバトルゾーンに出してもよい。
+    / このD２フィールドがバトルゾーンに出た時、自分の山札の上から２枚を墓地に置く。 / （他のD２フィールドがバトルゾーンに出た時、このD２フィールドを自分の墓地に置く）
+    / Dスイッチ：自分のターンのはじめに、このD２フィールドをゲーム中で一度上下逆さまにしてもよい。そうしたら、ソニック・コマンドを１体、自分の墓地からバトルゾーンに出す。
+  abilities:
+  - *id311
+  - kind: trigger
+    when:
+      event: move
+      to: bz
+      subject: self
+    effect:
+    - op: mill
+      owner: you
+      count: 2
+  - kind: trigger
+    dswitch: true
+    when:
+      event: turn_start
+      player: you
+    effect:
+    - op: may
+      body:
+      - op: dswitch
+      - op: move
+        select:
+          zone: graveyard
+          owner: you
+          filter:
+            race_has: ソニック・コマンド
+          count: 1
+        to: bz
+        reason: put
+  source:
+    official: promoy15-035
+    review: pending
+    notes: 侵略ZERO は手札の turn_end 誘発＋turn_count enter_unpaid（第348弾）。CIP と Dスイッチ誘発は partial
+      のまま。
