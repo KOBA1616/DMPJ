@@ -1,15 +1,17 @@
 """語彙パイロット第337弾の対象カード（実カード parse）。
 
-対象は pure な evolution_base_from_graveyard 3件（未登録、
-rejects 残存）:
-- dm25rp1-018 至高の邪騎 スベルニル（partial はキーワードのみ。
-  本弾で choose＋move {stack_evo} を構成。partial の source に
-  aliases [dm25rp1-sec17, promoy24-020]）
-- dm25rp2-sp3 魔光神官ルドルフ・アルカディア（partial は
-  キーワードのみ。本弾で may 切削＋choose＋move を構成。
-  aliases 5件）
-- dm25ex1-069 神滅翔天ポッポ・ジュヴィラ（partial は能力なし。
-  本弾で grave_evo 宣言を構成。aliases 3件）
+対象は pure な evolution_base_from_graveyard 3件で、
+ラウンド372で登録済み:
+- dm25rp1-018 至高の邪騎 スベルニル（submit 時に aliases
+  [dm25rp1-sec17, promoy24-020] が自動記録されたが
+  rejects 行ではない）
+- dm25rp2-sp3 魔光神官ルドルフ・アルカディア（aliases 5件、
+  同上）
+- dm25ex1-069 神滅翔天ポッポ・ジュヴィラ（aliases 3件、
+  同上。grave_evo 宣言で登録）
+
+evolution_base_from_graveyard の行は残っていない
+（ファミリー解消）。
 
 注意: conftest を import すると DMSIM_SKIP_CONVERTED が復活するので
 _conv_cache を直接使う（第319弾以降の作法）。
@@ -20,9 +22,10 @@ from pathlib import Path
 
 os.environ.pop("DMSIM_SKIP_CONVERTED", None)
 
-from dmsim.cards.defs import DATA, load_tables, parse_card  # noqa: E402
-from tests._conv_cache import all_cards, proto_card  # noqa: E402
 from dmsim.cards import cardstore  # noqa: E402
+from tests import _conv_cache  # noqa: E402
+from dmsim.cards.defs import DATA, load_tables, parse_card  # noqa: E402
+from tests._conv_cache import proto_card  # noqa: E402
 
 TABLES = load_tables()
 ROOT = Path(__file__).parent.parent
@@ -76,40 +79,41 @@ def _rows():
     return out
 
 
-def _cand(tid, base):
-    c = dict(base)
-    c.pop("source", None)
-    c.pop("gaps", None)
-    return c
-
-
-def test_targets_still_in_rejects():
+def test_targets_registered():
     rows = _rows()
-    conv_ids = {c["id"] for c in all_cards(CONVERTED)}
-    for t in ("dm25rp1-018", "dm25rp2-sp3", "dm25ex1-069"):
-        assert t in rows and t not in conv_ids
-        assert rows[t].get("gaps") == ["evolution_base_from_graveyard"]
-
-
-def test_partial_forms():
-    rows = _rows()
-    p = rows["dm25rp1-018"]["partial"]
-    cand = _cand("dm25rp1-018", {**p, "abilities": FORM_018})
-    assert cand["keywords"] == ["g_strike"]
-    d = parse_card(cand, TABLES)
+    assert len(rows) == 2017
+    conv = _conv_cache.all_cards(CONVERTED)
+    ids = {c["id"] for c in conv}
+    assert len(ids) == 10297
+    assert not (ids & set(rows))          # canonical 重なり0
+    c = _conv_cache.find(CONVERTED, "dm25rp1-018")
+    assert c is not None and c["abilities"] == FORM_018
+    assert not (c.get("source") or {}).get("unsupported")
+    assert (c.get("source") or {}).get("aliases") == [
+        "dm25rp1-sec17", "promoy24-020"]
+    d = parse_card(c, TABLES)
     assert len(d.abilities) >= 1
-    p = rows["dm25rp2-sp3"]["partial"]
-    cand = _cand("dm25rp2-sp3", {**p, "abilities": FORM_SP3})
-    assert cand["keywords"] == ["g_strike", "blocker", "double_breaker"]
-    d = parse_card(cand, TABLES)
+    c = _conv_cache.find(CONVERTED, "dm25rp2-sp3")
+    assert c is not None and c["abilities"] == FORM_SP3
+    assert not (c.get("source") or {}).get("unsupported")
+    assert (c.get("source") or {}).get("aliases") == [
+        "dm22ex2-3a", "dm22ex2-3b", "dm22ex2-s05", "dm24ex2-012",
+        "dmart13-004"]
+    d = parse_card(c, TABLES)
     assert len(d.abilities) >= 1
-    p = rows["dm25ex1-069"]["partial"]
-    cand = _cand("dm25ex1-069", {**p, "grave_evo": True,
-                                 "evolve_zone": "graveyard",
-                                 "evolve_from": {"types": ["creature"]}})
-    d = parse_card(cand, TABLES)
+    c = _conv_cache.find(CONVERTED, "dm25ex1-069")
+    assert c is not None
+    assert c.get("grave_evo") is True
+    assert c.get("evolve_zone") == "graveyard"
+    assert c.get("evolve_from") == {"types": ["creature"]}
+    assert not (c.get("source") or {}).get("unsupported")
+    assert (c.get("source") or {}).get("aliases") == [
+        "dmex08-120", "dmex16-060", "dmx21-027"]
+    d = parse_card(c, TABLES)
     assert d.grave_evo is True
-    assert d.evolve_from == {"types": ["creature"]}
+    left = {rid for rid, r in rows.items()
+            if "evolution_base_from_graveyard" in (r.get("gaps") or [])}
+    assert left == set(), left            # ファミリー解消
 
 
 def test_proto_forms_match():

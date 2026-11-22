@@ -467489,3 +467489,151 @@ cards:
     official: dm26rp1-039
     review: pending
     notes: 再変換ラウンド212。第176弾 g_castle の再変換。ブレイク上限はシールドゾーンの常在型に breaks_max を足して表した（第336弾）。
+- id: dm25rp1-018
+  name: 至高の邪騎 スベルニル
+  types:
+  - creature
+  civs:
+  - darkness
+  cost: 4
+  power: 4000
+  races:
+  - アビスロイヤル
+  mana: 1
+  keywords:
+  - g_strike
+  text: '{GS} G・ストライク（このカードを自分のシールドゾーンから手札に加える時、表向きにし、相手のクリーチャーを１体選んでもよい。このターン、そのクリーチャーは攻撃できない）
+
+    このクリーチャーが出た時、このクリーチャーから進化できるコスト５以下の、NEOクリーチャーまたは進化クリーチャーを１体、自分の墓地からこのクリーチャーの上に置いてもよい。'
+  abilities:
+  - kind: trigger
+    when:
+      event: move
+      to: bz
+      subject: self
+    effect:
+    - op: may
+      body:
+      - op: choose
+        select:
+          zone: graveyard
+          owner: you
+          filter:
+            types:
+            - creature
+            cost_le: 5
+            any_of:
+            - neo: true
+            - evolution: true
+            evolves_from: self
+          count: 1
+        as: p
+      - &id308
+        op: move
+        select:
+          ref: p
+          count: all
+        to: bz
+        reason: put
+        stack_evo: true
+        evo_source:
+          ref: self
+  source:
+    official: dm25rp1-018
+    review: pending
+    notes: 墓地から上に置く処理は新フィルタ evolves_from＋stack_evo の確立形で表した（第337弾）。
+    aliases:
+    - dm25rp1-sec17
+    - promoy24-020
+- id: dm25rp2-sp3
+  name: 魔光神官ルドルフ・アルカディア
+  types:
+  - creature
+  civs:
+  - light
+  - darkness
+  cost: 5
+  power: 6000
+  races:
+  - エンジェル・コマンド
+  - ダークロード
+  - ナイト
+  mana: 1
+  keywords:
+  - g_strike
+  - blocker
+  - double_breaker
+  text: '{GS} G・ストライク
+
+    ブロッカー
+
+    W・ブレイカー
+
+    このクリーチャーが出た時、自分の山札の上から４枚を墓地に置いてもよい。その後、このクリーチャーから進化できるコスト８以下のクリーチャーを１体、自分の墓地からこのクリーチャーの上に置いてもよい。'
+  abilities:
+  - kind: trigger
+    when:
+      event: move
+      to: bz
+      subject: self
+    effect:
+    - op: may
+      body:
+      - op: move
+        select:
+          zone: deck
+          owner: you
+          from_top: 4
+        to: graveyard
+        reason: put
+    - op: may
+      body:
+      - op: choose
+        select:
+          zone: graveyard
+          owner: you
+          filter:
+            types:
+            - creature
+            cost_le: 8
+            evolves_from: self
+          count: 1
+        as: p
+      - *id308
+  source:
+    official: dm25rp2-sp3
+    review: pending
+    notes: 墓地から上に置く処理は新フィルタ evolves_from＋stack_evo の確立形で表した（第337弾）。
+    aliases:
+    - dm22ex2-3a
+    - dm22ex2-3b
+    - dm22ex2-s05
+    - dm24ex2-012
+    - dmart13-004
+- id: dm25ex1-069
+  name: 神滅翔天ポッポ・ジュヴィラ
+  types:
+  - creature
+  civs:
+  - darkness
+  - fire
+  cost: 4
+  power: 4000
+  races:
+  - ファイアー・バード
+  - ドラゴン・ゾンビ
+  mana: 1
+  grave_evo: true
+  evolve_zone: graveyard
+  evolve_from:
+    types:
+    - creature
+  text: 自分の墓地にあるクリーチャーの上に重ねつつ出してもよい
+  source:
+    official: dm25ex1-069
+    review: pending
+    notes: 墓地進化は grave_evo 宣言で表した（第337弾）。進化元に文明の制限は無い。
+    aliases:
+    - dmex08-120
+    - dmex16-060
+    - dmx21-027
