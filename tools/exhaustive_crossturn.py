@@ -269,6 +269,206 @@ def _rust_expand_collect(coll: "LeafCollector", eng, node_budget: int, resume=No
     return coll.leaves, coll.truncated, ts.stats.nodes
 
 
+class _CrossturnFallback(Exception):
+    """Rust セッション経路で続行できなくなった（ケース全体を Python 経路で
+    やり直す合図。探索は決定的なので結果は同一になる）。"""
+
+
+_GOAL_WIN_DEFNS: dict[int, frozenset] = {}
+
+
+def _goal_win_defns(rules) -> frozenset:
+    """goal_distance（leaf_eval）が数える「常在の勝利条件」を持つ定義の集合。
+
+    Rust の evaluate は gc=gd=0 固定のため、trim_order=value のセッションは
+    この集合の札が対局のカードプールに無い場合だけ使える（プールに無ければ
+    goal_distance は常時 (0, 0) で Python 経路と一致する）。"""
+    key = id(rules)
+    got = _GOAL_WIN_DEFNS.get(key)
+    if got is None:
+        out = set()
+        for d in rules.cards.values():
+            for f in [d] + list(d.faces):
+                for ab in f.abilities:
+                    if ab.get("kind") == "state" and any(
+                            isinstance(o, dict) and o.get("op") == "win"
+                            and o.get("player", "you") == "you"
+                            for o in ab.get("effect", [])):
+                        out.add(d.id)
+        got = frozenset(out)
+        _GOAL_WIN_DEFNS[key] = got
+    return got
+
+
+def _rust_crossturn_open(start, ts, trim_order: str):
+    """run_case の Rust セッション（増分G）のゲート。開ける場合は開始局面の
+    RustEngine を返し、開けなければ None（従来経路に倒す）。
+
+    条件は展開委譲（_rust_expand_params）と同じものに加え、開始局面が
+    RustEngine に包めることと、value trim での goal_distance の扱い
+    （_goal_win_defns 参照）。委譲は環境変数 DMSIM_RUST_CROSSTURN=1 の
+    明示オプトイン時のみ。"""
+    if os.environ.get("DMSIM_RUST_CROSSTURN") != "1":
+        return None
+    if ts.collect is not None or ts.value_fn is not None \
+            or ts.time_limit is not None:
+        return None
+    if ts.opp_policy is not turn.charge_only_policy:
+        return None
+    if ts.w.lookahead or turn.KEEP_HAND is not None or turn.DRAWOUT_ORDER():
+        return None
+    from dmsim.search import macro as _macro_mod
+    ms = ts.macros if ts.macros is not None else _macro_mod.active()
+    if ms:
+        return None
+    fn = turn.candidates
+    if fn is not _DEFAULT_CANDIDATES and getattr(fn, "_rust_cand", None) is None:
+        return None
+    if not rustcore.enabled():
+        return None
+    reng = rustcore.maybe_rust(start)
+    if not isinstance(reng, rustcore.RustEngine) or reng._c is None \
+            or reng._fb is not None:
+        return None
+    if trim_order == "value":
+        bad = _goal_win_defns(reng.rules)
+        if any(c.defn in bad for c in reng._base.cards):
+            return None
+    return reng
+
+
+def _rust_crossturn_params(ts, rules, node_budget: int) -> dict:
+    """セッションの expand_next へ渡すパラメータ（_rust_expand_params と
+    同じ形。root_log は局面ごとに Rust 側が core の log 長で差し替える）。"""
+    fn = turn.candidates
+    cand = {"mode": "default"} if fn is _DEFAULT_CANDIDATES \
+        else getattr(fn, "_rust_cand")
+    w = ts.w
+    return {"me": ts.me, "budget": node_budget, "leaf_cap": LEAF_CAP,
+            "combo_cap": ts.combo_cap,
+            "weights": {"shield": w.shield, "threat": w.threat, "mana": w.mana,
+                        "hand": w.hand, "board": w.board, "opp_deck": w.opp_deck,
+                        "deck_danger": w.deck_danger, "max_mana": w.max_mana,
+                        "deck_keep": w.deck_keep, "goal_card": w.goal_card,
+                        "goal_dist": w.goal_dist},
+            "repeat_first": bool(turn.REPEAT_FIRST if ts.repeat_first is None
+                                 else ts.repeat_first),
+            "charge_keep_free": bool(turn.CHARGE_KEEP_FREE),
+            "cand": cand,
+            "root_log": 0,
+            "detectors": Detectors is turn.Detectors,
+            "draw_discard": bool(turn.DRAW_DISCARD if ts.draw_discard is None
+                                 else ts.draw_discard),
+            "burn_stock": bool(ts.burn_stock),
+            "stock_offsets": [int(k) for k in ts.stock_offsets],
+            "stock_cap": int(w.stock_cap),
+            "zones_counter": {z: bool(zd["counter"])
+                              for z, zd in rules.zones.items()},
+            "track_path": False}
+
+
+def _trim_spec(trim_order: str, turn_no: int) -> dict:
+    """Rust 側 trim スコアの仕様（_trim_score の引数一式）。"""
+    if trim_order == "plan":
+        spec = {"kind": "plan", "select": _PLAN_SELECT,
+                "switch_turn": _PLAN_SWITCH_TURN, "turn": turn_no,
+                "planners": [list(p.stages) for p in _PLANNERS]}
+        if _PLAN_PAIR is not None:
+            spec["pair"] = [list(_PLAN_PAIR[0].stages),
+                            list(_PLAN_PAIR[1].stages)]
+        return spec
+    if trim_order == "ruler":
+        return {"kind": "ruler"}
+    w = _W
+    return {"kind": "value",
+            "weights": {"shield": w.shield, "threat": w.threat, "mana": w.mana,
+                        "hand": w.hand, "board": w.board, "opp_deck": w.opp_deck,
+                        "deck_danger": w.deck_danger, "max_mana": w.max_mana,
+                        "deck_keep": w.deck_keep, "goal_card": w.goal_card,
+                        "goal_dist": w.goal_dist}}
+
+
+def _crossturn_kill_engine(rules, start_reng, prefix, core):
+    """セッションが返したキル葉の dmcore Engine から、従来経路の
+    kill_leaf と同じ形（_as_python した Engine）を作る。log は
+    開始局面の接頭辞 + core の log（_rust_expand_collect の葉 log と同じ規則）。"""
+    state = rustcore.state_from_json(core.to_json())
+    log = prefix + json.loads(core.log())
+    leng = rustcore.RustEngine(rules, state, log, start_reng.step_limit,
+                               start_reng.turn_limit, _core=core)
+    return _as_python(leng)
+
+
+def _run_case_rust(rules, start_reng, search_cls, *, max_turn: int, mode: str,
+                   beam: int, node_budget: int, trim_order: str, progress=None):
+    """run_case の Rust セッション駆動（意味論は run_case と同一）。
+
+    ターン境界処理はセッション（Rust）側で完結し、ここでは総予算・
+    メモリ上限の確認と progress 通知だけを行う。セッション側でエラーが
+    出たら _CrossturnFallback を送出し、呼び出し側がケース全体を
+    Python 経路でやり直す。"""
+    ts = search_cls(0, budget=node_budget)
+    params = json.dumps(_rust_crossturn_params(ts, rules, node_budget))
+    sess = rustcore.dmcore.CrossturnSession.open(start_reng._c)
+    prefix = list(start_reng.log[:start_reng._base_n])
+    total_nodes = 0
+    capped = False
+    truncated_any = False
+    frontier_sizes = []
+    for t in range(1, max_turn + 1):
+        trim_j = json.dumps(_trim_spec(trim_order, t + 1))
+        n_states = sess.frontier_len()
+        for si in range(n_states):
+            try:
+                meta_s, kill_core = sess.expand_next(params, trim_j)
+            except Exception as e:
+                raise _CrossturnFallback(f"{type(e).__name__}: {e}") from e
+            meta = json.loads(meta_s)
+            total_nodes += meta["nodes"]
+            truncated_any = truncated_any or meta["truncated"]
+            if _TOTAL_BUDGET and total_nodes > _TOTAL_BUDGET:
+                raise _RunAborted("total_budget")
+            if _MEM_LIMIT_MB:
+                import resource
+                if resource.getrusage(resource.RUSAGE_SELF).ru_maxrss / 1024 > _MEM_LIMIT_MB:
+                    raise _RunAborted("memory")
+            if progress is not None:
+                import resource
+                progress({"turn": t, "states_done": si + 1,
+                          "states_total": n_states, "nodes": total_nodes,
+                          "rss_mb": round(resource.getrusage(
+                              resource.RUSAGE_SELF).ru_maxrss / 1024)})
+            if kill_core is not None:
+                leaf = _crossturn_kill_engine(rules, start_reng, prefix,
+                                              kill_core)
+                r = leaf.s.result
+                return {"verdict": "kill", "kill_turn": t,
+                        "kill_by": r.get("reason"), "nodes": total_nodes,
+                        "frontier_sizes": frontier_sizes, "capped": capped,
+                        "truncated": truncated_any, "final": leaf}
+        keep = beam if mode == "beam" else FRONTIER_CAP
+        try:
+            nxt_len, kept = sess.finish_turn(keep)
+        except Exception as e:
+            raise _CrossturnFallback(f"{type(e).__name__}: {e}") from e
+        frontier_sizes.append(nxt_len)
+        if nxt_len == 0:
+            verdict = "no-kill" if not (capped or truncated_any) else "unknown"
+            return {"verdict": verdict, "kill_turn": None, "kill_by": None,
+                    "nodes": total_nodes, "frontier_sizes": frontier_sizes,
+                    "capped": capped, "truncated": truncated_any, "final": None}
+        if nxt_len > keep and mode == "frontier":
+            capped = True
+        if progress is not None:
+            progress({"turn_done": t, "frontier_next": kept,
+                      "nodes": total_nodes, "capped": capped,
+                      "truncated": truncated_any})
+    verdict = "no-kill" if not (capped or truncated_any) else "unknown"
+    return {"verdict": verdict, "kill_turn": None, "kill_by": None,
+            "nodes": total_nodes, "frontier_sizes": frontier_sizes,
+            "capped": capped, "truncated": truncated_any, "final": None}
+
+
 class GuideMismatch(Exception):
     """局面内チェックポイントのガイド（探索済み経路）と実際の探索が
     食い違った場合に LeafCollector が投げる。探索は決定的なので本来は
@@ -551,6 +751,16 @@ def run_case(rules, setup: dict, *, max_turn: int, mode: str, beam: int,
     try:
         search_cls = _make_stage_search(st["stock_offsets"])
         start = start_engine if start_engine is not None else sc.build(rules, setup)
+        reng = _rust_crossturn_open(start, search_cls(0, budget=node_budget),
+                                    trim_order)
+        if reng is not None:
+            try:
+                return _run_case_rust(rules, reng, search_cls,
+                                      max_turn=max_turn, mode=mode, beam=beam,
+                                      node_budget=node_budget,
+                                      trim_order=trim_order, progress=progress)
+            except _CrossturnFallback:
+                pass
         frontier = [start]
         total_nodes = 0
         capped = False

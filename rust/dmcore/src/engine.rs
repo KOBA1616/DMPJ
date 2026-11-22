@@ -117,6 +117,10 @@ impl Engine {
     fn zl(&self, z: &str, p: i64) -> &Vec<i64> {
         &self.s.zones[z][if self.shared(z) { 0 } else { p as usize }]
     }
+    /// 探索側（search.rs の trim スコア）が Python の zlist と同じ並びを読むための窓口。
+    pub(crate) fn zone_list(&self, z: &str, p: i64) -> &Vec<i64> {
+        self.zl(z, p)
+    }
     /// 今使っている面の定義（Python の fdef(cid)。ツインパクトはバトルゾーン・保留中は面、他のゾーンでは両面を合わせた定義）
     fn def(&self, cid: i64) -> &crate::rules::CardDef {
         let c = &self.s.cards[cid as usize];

@@ -167,6 +167,11 @@ impl PyEngine {
             Err(_) => Err(PyValueError::new_err("expand_turn panicked")),
         }
     }
+    /// 増分G の照合用: trim スコア（search::trim_score）をこの Engine の状態で計算する。
+    fn trim_score(&self, trim_json: &str) -> PyResult<Vec<f64>> {
+        let spec = search::TrimSpec::parse(trim_json).map_err(conv)?;
+        Ok(search::trim_score(&self.e, &spec))
+    }
     /// 照合用: engine.loop.abstract(eng, "in_turn") の骨格ハッシュ。
     /// zones_counter_json は {ゾーン名: counter か} の JSON。
     fn abstract_hash(&self, zones_counter_json: &str) -> PyResult<String> {
@@ -176,10 +181,73 @@ impl PyEngine {
     }
 }
 
+/// 増分G: crossturn 統合のセッション。保持局面と当ターンの候補を Rust 側に
+/// 持ち、ターン境界処理（葉の振り分け・保持選択）まで Rust で完結させる。
+/// 駆動（総予算・メモリ・progress の確認）は Python 側に残る。
+#[pyclass(name = "CrossturnSession")]
+struct PyCrossturn {
+    // 展開のたびにセッション全体を clone すると候補集合のぶんメモリが倍化し
+    // 速度も落ちるため、take して別スレッドへ渡し、終わったら戻す形にする。
+    // パニック／エラーの場合はセッションを破棄する（Python 側はケース全体を
+    // 従来経路でやり直すので意味論は保たれる）。
+    s: Option<search::Crossturn>,
+}
+
+fn session_gone() -> PyErr {
+    PyValueError::new_err("crossturn session is closed (rust panic/error)")
+}
+
+#[pymethods]
+impl PyCrossturn {
+    /// 開始局面の Engine（dmcore.Engine）からセッションを開く。
+    #[staticmethod]
+    fn open(core: PyEngine) -> PyResult<PyCrossturn> {
+        Ok(PyCrossturn {
+            s: Some(search::Crossturn::new(core.e)),
+        })
+    }
+    fn frontier_len(&self) -> PyResult<usize> {
+        Ok(self.s.as_ref().ok_or_else(session_gone)?.frontier_len())
+    }
+    /// frontier の次の1局面を展開する。params_json は expand_turn と同じ
+    /// パラメータ、trim_json は trim スコアの仕様。戻り値は
+    /// (メタ情報 JSON, キル葉の Engine or None)。走査は大きなスタックの
+    /// スレッドで回す（expand_turn と同じ理由）。
+    fn expand_next(&mut self, params_json: &str, trim_json: &str) -> PyResult<(String, Option<PyEngine>)> {
+        let mut sess = self.s.take().ok_or_else(session_gone)?;
+        let pj = params_json.to_string();
+        let tj = trim_json.to_string();
+        let h = std::thread::Builder::new()
+            .stack_size(512 * 1024 * 1024)
+            .spawn(move || {
+                let r = std::panic::catch_unwind(std::panic::AssertUnwindSafe(|| {
+                    sess.expand_next(&pj, &tj)
+                }));
+                (sess, r)
+            })
+            .map_err(|e| PyValueError::new_err(e.to_string()))?;
+        match h.join() {
+            Ok((sess2, Ok(Ok((meta, kill))))) => {
+                self.s = Some(sess2);
+                Ok((meta, kill.map(|e| PyEngine { e })))
+            }
+            Ok((_sess2, Ok(Err(e)))) => Err(conv(e)),
+            Ok((_sess2, Err(_))) => Err(PyValueError::new_err("crossturn expand_next panicked")),
+            Err(_) => Err(PyValueError::new_err("crossturn expand_next thread failed")),
+        }
+    }
+    /// ターン境界の保持選択。戻り値は (trim 前の候補件数, 保持件数)。
+    fn finish_turn(&mut self, keep: i64) -> PyResult<(usize, usize)> {
+        let s = self.s.as_mut().ok_or_else(session_gone)?;
+        Ok(s.finish_turn(keep))
+    }
+}
+
 #[pymodule]
 fn dmcore(m: &Bound<'_, PyModule>) -> PyResult<()> {
     m.add_class::<PyState>()?;
     m.add_class::<PyEngine>()?;
+    m.add_class::<PyCrossturn>()?;
     m.add("Unsupported", m.py().get_type::<Unsupported>())?;
     Ok(())
 }

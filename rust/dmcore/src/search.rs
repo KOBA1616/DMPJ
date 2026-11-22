@@ -411,26 +411,36 @@ fn bad(msg: String) -> EngErr {
     EngErr::Illegal(msg)
 }
 
+/// "weights" キーを持つ JSON オブジェクトから Weights を読む（leaf_eval.Weights の既定値つき）。
+pub fn weights_of(v: &Value) -> Weights {
+    let wv = v.get("weights").cloned().unwrap_or(Value::Null);
+    let ff = |k: &str, d: f64| wv.get(k).and_then(|x| x.as_f64()).unwrap_or(d);
+    let fi = |k: &str, d: i64| {
+        wv.get(k)
+            .and_then(|x| x.as_i64().or_else(|| x.as_f64().map(|f| f as i64)))
+            .unwrap_or(d)
+    };
+    Weights {
+        shield: ff("shield", 100.0),
+        threat: ff("threat", 40.0),
+        mana: ff("mana", 10.0),
+        hand: ff("hand", 4.0),
+        board: ff("board", 2.0),
+        opp_deck: ff("opp_deck", 3.0),
+        deck_danger: ff("deck_danger", 60.0),
+        max_mana: fi("max_mana", 8),
+        deck_keep: fi("deck_keep", 8),
+        goal_card: ff("goal_card", 200.0),
+        goal_dist: ff("goal_dist", 40.0),
+    }
+}
+
 impl Params {
     pub fn parse(js: &str) -> R<Params> {
         let v: Value = serde_json::from_str(js).map_err(|e| bad(format!("expand params: {e}")))?;
         let g = |o: &Value, k: &str| o.get(k).cloned().unwrap_or(Value::Null);
         let fi = |o: &Value, k: &str, d: i64| g(o, k).as_i64().or_else(|| g(o, k).as_f64().map(|x| x as i64)).unwrap_or(d);
-        let ff = |o: &Value, k: &str, d: f64| g(o, k).as_f64().unwrap_or(d);
-        let wv = g(&v, "weights");
-        let w = Weights {
-            shield: ff(&wv, "shield", 100.0),
-            threat: ff(&wv, "threat", 40.0),
-            mana: ff(&wv, "mana", 10.0),
-            hand: ff(&wv, "hand", 4.0),
-            board: ff(&wv, "board", 2.0),
-            opp_deck: ff(&wv, "opp_deck", 3.0),
-            deck_danger: ff(&wv, "deck_danger", 60.0),
-            max_mana: fi(&wv, "max_mana", 8),
-            deck_keep: fi(&wv, "deck_keep", 8),
-            goal_card: ff(&wv, "goal_card", 200.0),
-            goal_dist: ff(&wv, "goal_dist", 40.0),
-        };
+        let w = weights_of(&v);
         let cv = g(&v, "cand");
         let cand = if g(&cv, "mode").as_str() == Some("stage") {
             Cand::Stage {
@@ -1513,7 +1523,7 @@ struct Rsv {
     leaf_key: Option<String>,
 }
 
-struct Ctx {
+struct Ctx<'a> {
     p: Params,
     seen: HashSet<String>,
     left: i64,
@@ -1530,9 +1540,15 @@ struct Ctx {
     la_left: i64,
     macro_nodes: i64,
     seen_since_leaf: Vec<Value>, // 前回の葉以降に追加された tkey の JSON 成分
+    // 増分G: 葉を溜めずに1枚ずつ渡す受け口（crossturn セッション用）。
+    // sink があるとき leaves には積まない。leaf_meta は value / digest /
+    // ckpt の計算が要るかどうか（セッションは葉メタを使わないので計算を
+    // 省く。track_path のときは ckpt が要るので常に true になる）。
+    sink: Option<&'a mut (dyn FnMut(LeafOut) -> R<Flow> + 'a)>,
+    leaf_meta: bool,
 }
 
-impl Ctx {
+impl<'a> Ctx<'a> {
     fn push_leaf(&mut self, eng: Engine) -> R<Flow> {
         // スキップ経路（Python の _add_leaf の _skip_leaf 分岐）。
         // _skip_leaf は空ガイドのフレーム（チェックポイントの葉のフレーム）に
@@ -1557,29 +1573,39 @@ impl Ctx {
                 None => return Err(guide_mismatch("チェックポイントの葉の照合先がありません")),
             }
         }
-        let value = evaluate(&eng, self.p.me, &self.p.w);
-        let digest = eng.s.digest();
-        let ckpt = if self.p.track_path {
-            let leaf_key = eng.s.fast_key();
-            let seen_new: Vec<Value> = std::mem::take(&mut self.seen_since_leaf);
-            Some(json!({
-                "path": self.path.iter().map(|s| s.to_json()).collect::<Vec<_>>(),
-                "nodes": self.nodes,
-                "left": self.left,
-                "la_left": self.la_left,
-                "macro_nodes": self.macro_nodes,
-                "leaf_key": leaf_key,
-                "seen_new": seen_new,
-            }))
+        let (value, digest, ckpt) = if self.leaf_meta {
+            let value = evaluate(&eng, self.p.me, &self.p.w);
+            let digest = eng.s.digest();
+            let ckpt = if self.p.track_path {
+                let leaf_key = eng.s.fast_key();
+                let seen_new: Vec<Value> = std::mem::take(&mut self.seen_since_leaf);
+                Some(json!({
+                    "path": self.path.iter().map(|s| s.to_json()).collect::<Vec<_>>(),
+                    "nodes": self.nodes,
+                    "left": self.left,
+                    "la_left": self.la_left,
+                    "macro_nodes": self.macro_nodes,
+                    "leaf_key": leaf_key,
+                    "seen_new": seen_new,
+                }))
+            } else {
+                None
+            };
+            (value, digest, ckpt)
         } else {
-            None
+            (0.0, String::new(), None)
         };
-        self.leaves.push(LeafOut {
+        let leaf = LeafOut {
             value,
             engine: eng,
             digest,
             ckpt,
-        });
+        };
+        if let Some(sink) = &mut self.sink {
+            sink(leaf)?;
+        } else {
+            self.leaves.push(leaf);
+        }
         self.leaf_count += 1;
         if self.leaf_count >= self.p.leaf_cap {
             self.truncated = true;
@@ -1778,15 +1804,31 @@ impl Ctx {
     }
 }
 
-/// expand_turn の本体。root は変更しない（複製して走査する）。
-/// 戻り値は (メタ情報の JSON 文字列, 葉の Engine の列)。メタ情報:
-/// {leaves: [{value, log, digest, ckpt?}], truncated, nodes, left, leaf_count}
-/// ckpt は track_path のときだけ各葉につく（path・nodes・left・la_left・
-/// macro_nodes・leaf_key・seen_new）。葉を状態 JSON で返すと、受け側が葉ごとに
-/// 規則バンドルを読み直して割に合わないため、葉は Engine そのもの（規則は
-/// Arc 共有）で返す。log はメタ情報側に含める。
-pub fn expand_turn(root: &Engine, params_json: &str) -> R<(String, Vec<Engine>)> {
-    let p = Params::parse(params_json)?;
+/// expand_turn の走査結果（葉 Engine 列と統計）。crossturn 統合（増分G）は
+/// この形のまま葉を受け取り、ターン境界処理まで Rust 側で続ける。
+pub struct ExpandOut {
+    pub leaves: Vec<LeafOut>,
+    pub truncated: bool,
+    pub nodes: i64,
+    pub left: i64,
+    pub leaf_count: i64,
+    pub certs: Vec<Value>,
+}
+
+/// 走査の本体。root は変更しない（複製して走査する）。
+pub fn run_expand(root: &Engine, p: Params) -> R<ExpandOut> {
+    run_expand_with(root, p, None)
+}
+
+/// 走査の本体（葉の受け口つき）。sink を渡すと葉を Vec に溜めず1枚ずつ
+/// sink へ渡す（crossturn セッション用: 葉はその場で振り分けて捨てるため、
+/// 葉の全保持が要らない。葉メタ value / digest / ckpt は sink 経路では
+/// 計算しない。ただし track_path のときは ckpt が要るので計算する）。
+pub fn run_expand_with<'a>(
+    root: &Engine,
+    p: Params,
+    sink: Option<&'a mut (dyn FnMut(LeafOut) -> R<Flow> + 'a)>,
+) -> R<ExpandOut> {
     let det = if p.detectors {
         Detectors::new(root, p.me, p.draw_discard)
     } else {
@@ -1812,6 +1854,7 @@ pub fn expand_turn(root: &Engine, params_json: &str) -> R<(String, Vec<Engine>)>
             ),
             None => (p.budget, 0, 0, false, HashSet::new(), 3000, 0),
         };
+    let leaf_meta = sink.is_none() || p.track_path;
     let mut ctx = Ctx {
         left: r_left,
         nodes: r_nodes,
@@ -1828,13 +1871,34 @@ pub fn expand_turn(root: &Engine, params_json: &str) -> R<(String, Vec<Engine>)>
         seen_since_leaf: vec![],
         leaves: vec![],
         certs: vec![],
+        sink,
+        leaf_meta,
     };
     let guide_ref = guide.as_deref();
     ctx.rec(root.clone(), det, guide_ref)?;
     if ctx.p.resume.is_some() && !ctx.guide_done {
         return Err(guide_mismatch("チェックポイントの葉に到達しませんでした"));
     }
-    let leaves: Vec<Value> = ctx
+    Ok(ExpandOut {
+        leaves: ctx.leaves,
+        truncated: ctx.truncated,
+        nodes: ctx.nodes,
+        left: ctx.left,
+        leaf_count: ctx.leaf_count,
+        certs: ctx.certs,
+    })
+}
+
+/// expand_turn の Python 向け入口。戻り値は (メタ情報の JSON 文字列, 葉の Engine の列)。
+/// メタ情報: {leaves: [{value, log, digest, ckpt?}], truncated, nodes, left, leaf_count, certs}
+/// ckpt は track_path のときだけ各葉につく（path・nodes・left・la_left・
+/// macro_nodes・leaf_key・seen_new）。葉を状態 JSON で返すと、受け側が葉ごとに
+/// 規則バンドルを読み直して割に合わないため、葉は Engine そのもの（規則は
+/// Arc 共有）で返す。log はメタ情報側に含める。
+pub fn expand_turn(root: &Engine, params_json: &str) -> R<(String, Vec<Engine>)> {
+    let p = Params::parse(params_json)?;
+    let out = run_expand(root, p)?;
+    let leaves: Vec<Value> = out
         .leaves
         .iter()
         .map(|l| {
@@ -1845,20 +1909,342 @@ pub fn expand_turn(root: &Engine, params_json: &str) -> R<(String, Vec<Engine>)>
             m
         })
         .collect();
-    let engines: Vec<Engine> = ctx.leaves.into_iter().map(|l| l.engine).collect();
+    let engines: Vec<Engine> = out.leaves.into_iter().map(|l| l.engine).collect();
     Ok((
         json!({
             "leaves": leaves,
-            "truncated": ctx.truncated,
-            "nodes": ctx.nodes,
-            "left": ctx.left,
-            "leaf_count": ctx.leaf_count,
-            "certs": ctx.certs,
+            "truncated": out.truncated,
+            "nodes": out.nodes,
+            "left": out.left,
+            "leaf_count": out.leaf_count,
+            "certs": out.certs,
         })
         .to_string(),
         engines,
     ))
 }
+// ---------- crossturn 統合（増分G）: ターン境界処理の写し ----------
+//
+// tools/exhaustive_crossturn.run_case のターン境界（葉の振り分け・
+// advance_to_my_turn・重複統合・trim スコア・保持選択）を Rust 側で完結させ、
+// 保持局面を Engine のままターン境界を越えて持つ。意味論は Python と一致
+// させることが目的で、食い違いがあれば常にこちらを直す。
+
+/// trim スコアの仕様（Python の _trim_score の引数一式）。
+/// planners は鎖ごとの段階目標の列（{ゾーン: {ID or "*": 枚数}} の列）。
+/// pair は hard / prior 用の（序盤, 終盤）の2鎖。
+#[derive(Clone)]
+pub struct TrimSpec {
+    pub kind: String, // "value" | "ruler" | "plan"
+    pub w: Weights,
+    pub planners: Vec<Vec<Map<String, Value>>>,
+    pub pair: Option<[Vec<Map<String, Value>>; 2]>,
+    pub select: String, // "max" | "hard" | "prior"
+    pub switch_turn: i64,
+    pub turn: i64, // 保持先のターン番号（_trim_score の turn 引数）
+}
+
+fn stages_of(v: &Value) -> Vec<Map<String, Value>> {
+    v.as_array()
+        .map(|a| {
+            a.iter()
+                .map(|s| s.as_object().cloned().unwrap_or_default())
+                .collect()
+        })
+        .unwrap_or_default()
+}
+
+impl TrimSpec {
+    pub fn parse(js: &str) -> R<TrimSpec> {
+        let v: Value = serde_json::from_str(js).map_err(|e| bad(format!("trim spec: {e}")))?;
+        let planners: Vec<Vec<Map<String, Value>>> = v
+            .get("planners")
+            .and_then(|p| p.as_array())
+            .map(|a| a.iter().map(stages_of).collect())
+            .unwrap_or_default();
+        let pair = v.get("pair").and_then(|p| p.as_array()).and_then(|a| {
+            if a.len() == 2 {
+                Some([stages_of(&a[0]), stages_of(&a[1])])
+            } else {
+                None
+            }
+        });
+        if v.get("kind").and_then(|k| k.as_str()) == Some("plan")
+            && pair.is_none()
+            && planners.is_empty()
+        {
+            return Err(bad("trim spec: plan には planners が必要です".to_string()));
+        }
+        Ok(TrimSpec {
+            kind: v
+                .get("kind")
+                .and_then(|k| k.as_str())
+                .unwrap_or("value")
+                .to_string(),
+            w: weights_of(&v),
+            planners,
+            pair,
+            select: v
+                .get("select")
+                .and_then(|k| k.as_str())
+                .unwrap_or("max")
+                .to_string(),
+            switch_turn: v.get("switch_turn").and_then(|k| k.as_i64()).unwrap_or(3),
+            turn: v.get("turn").and_then(|k| k.as_i64()).unwrap_or(0),
+        })
+    }
+}
+
+/// order_fn.features / ruler_key の写し（生の zones リスト長のみ）。
+fn ruler_key(eng: &Engine, me: i64) -> Vec<f64> {
+    let opp = 1 - me;
+    let n = |z: &str, p: i64| -> i64 {
+        eng.s
+            .zones
+            .get(z)
+            .and_then(|zs| zs.get(p as usize))
+            .map(|l| l.len() as i64)
+            .unwrap_or(0)
+    };
+    let own_deck = n("deck", me);
+    vec![
+        if own_deck >= 2 { 1.0 } else { 0.0 },
+        (n("graveyard", me) - own_deck) as f64,
+        (-n("shield", opp)) as f64,
+        (-n("deck", opp)) as f64,
+        (n("bz", me) + n("mana", me)) as f64,
+        n("hand", me) as f64,
+    ]
+}
+
+/// reachsearch._have の写し。
+fn have(eng: &Engine, me: i64, z: &str, id: &str) -> i64 {
+    if z == "shield_under" {
+        return eng
+            .zone_list("shield", me)
+            .iter()
+            .map(|&c| eng.s.cards[c as usize].under.len() as i64)
+            .sum();
+    }
+    let lst = eng.zone_list(z, me);
+    if id == "*" {
+        lst.len() as i64
+    } else {
+        lst.iter()
+            .filter(|&&c| eng.s.cards[c as usize].defn == id)
+            .count() as i64
+    }
+}
+
+/// reachsearch.fraction の写し。
+fn fraction_of(eng: &Engine, me: i64, target: &Map<String, Value>) -> f64 {
+    let mut need = 0i64;
+    let mut have_sum = 0i64;
+    for (z, want) in target {
+        if let Some(want) = want.as_object() {
+            for (id, n) in want {
+                let n = n.as_i64().unwrap_or(0);
+                need += n;
+                have_sum += have(eng, me, z, id).min(n);
+            }
+        }
+    }
+    if need == 0 {
+        1.0
+    } else {
+        have_sum as f64 / need as f64
+    }
+}
+
+/// reachsearch.board_met の写し。
+fn board_met(eng: &Engine, me: i64, target: &Map<String, Value>) -> bool {
+    target.iter().all(|(z, want)| {
+        want.as_object().map_or(true, |want| {
+            want.iter()
+                .all(|(id, n)| have(eng, me, z, id) >= n.as_i64().unwrap_or(0))
+        })
+    })
+}
+
+/// MacroPlanner.plan（progress）＋ stage_fraction の写し。NEXT_W = 0 なので
+/// 現在の段の充足率だけを見る。全段達成なら段数そのもの。
+fn stage_fraction_of(eng: &Engine, me: i64, stages: &[Map<String, Value>]) -> f64 {
+    for (i, tg) in stages.iter().enumerate() {
+        if !board_met(eng, me, tg) {
+            return i as f64 + fraction_of(eng, me, tg);
+        }
+    }
+    stages.len() as f64
+}
+
+/// exhaustive_crossturn._trim_score の写し。スコアは要素が全て f64 の列で表す
+/// （各要素位置の型は局面によらず一定で、整数要素は小さいため f64 で正確）。
+pub fn trim_score(eng: &Engine, spec: &TrimSpec) -> Vec<f64> {
+    match spec.kind.as_str() {
+        "ruler" => ruler_key(eng, 0),
+        "plan" => {
+            let frac = match (spec.select.as_str(), &spec.pair) {
+                ("hard", Some(pair)) => {
+                    let p = if spec.turn >= spec.switch_turn { &pair[1] } else { &pair[0] };
+                    stage_fraction_of(eng, 0, p)
+                }
+                ("prior", Some(pair)) => {
+                    let fe = stage_fraction_of(eng, 0, &pair[0])
+                        / (pair[0].len().max(1)) as f64;
+                    let fl = stage_fraction_of(eng, 0, &pair[1])
+                        / (pair[1].len().max(1)) as f64;
+                    let prior = if spec.turn >= spec.switch_turn { fl } else { fe };
+                    fe.max(fl) + 0.02 * prior
+                }
+                _ => spec
+                    .planners
+                    .iter()
+                    .map(|p| stage_fraction_of(eng, 0, p))
+                    .fold(f64::NEG_INFINITY, f64::max),
+            };
+            let mut s = vec![frac];
+            s.extend(ruler_key(eng, 0));
+            s
+        }
+        _ => vec![evaluate(eng, 0, &spec.w)],
+    }
+}
+
+/// exhaustive_crossturn.advance_to_my_turn の写し。ターン終了局面から、
+/// 相手ターン（チャージのみ）を挟んで自分の次の決定点まで進める。
+/// 対局が終わっていたら（または決定に辿り着けなければ）false。
+fn advance_to_my_turn(eng: &mut Engine, me: i64) -> R<bool> {
+    for _ in 0..10000 {
+        if eng.s.result.is_some() {
+            return Ok(false);
+        }
+        let d = eng.advance()?;
+        let Some(d) = d else {
+            return Ok(false);
+        };
+        if eng.s.active == me && d["player"].as_i64() == Some(me) {
+            return Ok(true);
+        }
+        let ans = opp_policy(&d);
+        eng.answer(ans)?;
+    }
+    Ok(false)
+}
+
+/// スコア列の辞書式比較（Python のタプル比較）。
+fn score_cmp(a: &[f64], b: &[f64]) -> Ordering {
+    for (x, y) in a.iter().zip(b.iter()) {
+        match x.partial_cmp(y) {
+            Some(Ordering::Equal) | None => continue,
+            Some(o) => return o,
+        }
+    }
+    a.len().cmp(&b.len())
+}
+
+/// crossturn のセッション状態。保持局面と当ターンの候補を Engine のまま持つ。
+#[derive(Clone)]
+pub struct Crossturn {
+    frontier: Vec<Engine>,
+    nxt: HashMap<String, (Vec<f64>, Engine)>,
+    next_index: usize,
+    kill: Option<Engine>,
+}
+
+impl Crossturn {
+    pub fn new(start: Engine) -> Crossturn {
+        Crossturn {
+            frontier: vec![start],
+            nxt: HashMap::new(),
+            next_index: 0,
+            kill: None,
+        }
+    }
+
+    pub fn frontier_len(&self) -> usize {
+        self.frontier.len()
+    }
+
+    /// frontier の次の1局面を展開し、葉を振り分ける（run_case の
+    /// handle_leaf と同じ規則: キル葉は最初の1つだけ記録し、それ以降の
+    /// 葉は無視する。キルでない葉は advance_to_my_turn してから
+    /// fast_key で重複統合し、スコアが厳密に大きい時だけ差し替える）。
+    /// 戻り値は (メタ情報 JSON, キル葉の Engine)。メタ情報は
+    /// {nodes, truncated, kill}。
+    pub fn expand_next(&mut self, params_json: &str, trim_json: &str) -> R<(String, Option<Engine>)> {
+        let mut p = Params::parse(params_json)?;
+        let spec = TrimSpec::parse(trim_json)?;
+        if self.next_index >= self.frontier.len() {
+            return Err(bad("crossturn: frontier を展開し尽くしています".to_string()));
+        }
+        let root = self.frontier[self.next_index].clone();
+        // この局面の決定は core の log の現在位置から始まる（Python 経路の
+        // ts._root_log = len(eng.log) - eng._base_n と同じ意味）。
+        p.root_log = root.log.len();
+        // 葉は溜めずに1枚ずつ振り分ける（葉の全保持は葉上限まで Engine を
+        // 抱えることになり、葉の多い局面でメモリが膨らむため）。
+        let nxt = &mut self.nxt;
+        let kill_slot = &mut self.kill;
+        let mut sink = |leaf: LeafOut| -> R<Flow> {
+            if kill_slot.is_some() {
+                return Ok(Flow::Ok);
+            }
+            let mut eng = leaf.engine;
+            let is_kill = eng
+                .s
+                .result
+                .as_ref()
+                .map_or(false, |r| r["winner"].as_i64() == Some(0));
+            if is_kill {
+                *kill_slot = Some(eng);
+                return Ok(Flow::Ok);
+            }
+            if advance_to_my_turn(&mut eng, 0)? {
+                let key = eng.s.fast_key();
+                let s = trim_score(&eng, &spec);
+                let better = match nxt.get(&key) {
+                    Some((cur, _)) => score_cmp(&s, cur) == Ordering::Greater,
+                    None => true,
+                };
+                if better {
+                    nxt.insert(key, (s, eng));
+                }
+            }
+            Ok(Flow::Ok)
+        };
+        let out = run_expand_with(&root, p, Some(&mut sink))?;
+        self.next_index += 1;
+        let kill = self.kill.clone();
+        Ok((
+            json!({
+                "nodes": out.nodes,
+                "truncated": out.truncated,
+                "kill": kill.is_some(),
+            })
+            .to_string(),
+            kill,
+        ))
+    }
+
+    /// ターン境界の保持選択（run_case と同じ: キー昇順に整列してから
+    /// スコア降順の安定ソートを重ね、上位 keep 件を次ターンの保持にする）。
+    /// 戻り値は (trim 前の候補件数, 保持件数)。
+    pub fn finish_turn(&mut self, keep: i64) -> (usize, usize) {
+        let nxt_len = self.nxt.len();
+        let mut items: Vec<(String, Vec<f64>, Engine)> = std::mem::take(&mut self.nxt)
+            .into_iter()
+            .map(|(k, (s, e))| (k, s, e))
+            .collect();
+        items.sort_by(|a, b| a.0.cmp(&b.0));
+        items.sort_by(|a, b| score_cmp(&b.1, &a.1));
+        items.truncate(keep.max(0) as usize);
+        let kept = items.len();
+        self.frontier = items.into_iter().map(|(_, _, e)| e).collect();
+        self.next_index = 0;
+        (nxt_len, kept)
+    }
+}
+
 /// テスト・照合用: abstract(eng, "in_turn") のハッシュだけを返す。
 pub fn abstract_hash_of(eng: &Engine, zones_counter: &HashMap<String, bool>) -> String {
     abstract_of(eng, zones_counter).0
