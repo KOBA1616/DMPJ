@@ -83,7 +83,7 @@ def test_fallback_to_python(env, monkeypatch):
     """Rust が扱えない札を含む局（扱えると偽って開く）は、当たった所から Python で続き、結果は Python と同じ。"""
     from dmsim.engine.core import Engine
     r, deck, opp = env
-    bad = "dm04-008"   # 次の自分のターンのはじめまで続く modify（Rust は解決時に Unsupported。他は扱える語彙だけ）
+    bad = "dmex13-064"   # 攻撃中だけの modify（duration=during_attack。Rust は解決時に Unsupported。他は扱える語彙だけ）
     assert not rustcore._is_plain(r.cards[bad])
     deck2 = [bad] * 16 + deck[16:]
     orig = rustcore._is_plain
@@ -104,7 +104,7 @@ def test_maybe_rust_switch(env, monkeypatch):
     r, deck, opp = env
     monkeypatch.setenv("DMSIM_RUST", "1")
     assert isinstance(rustcore.maybe_rust(Engine.new_game(r, [deck, opp], 1, 0)), rustcore.RustEngine)
-    assert not isinstance(rustcore.maybe_rust(Engine.new_game(r, [["dm04-008"] * 40, opp], 1, 0)), rustcore.RustEngine)
+    assert not isinstance(rustcore.maybe_rust(Engine.new_game(r, [["dmex13-064"] * 40, opp], 1, 0)), rustcore.RustEngine)
     monkeypatch.setenv("DMSIM_RUST", "0")
     assert not isinstance(rustcore.maybe_rust(Engine.new_game(r, [deck, opp], 1, 0)), rustcore.RustEngine)
 

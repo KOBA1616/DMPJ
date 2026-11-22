@@ -1614,10 +1614,10 @@ impl Engine {
             return uns("delayed");
         }
         {
+            // 「次の自分のターンのはじめまで」の継続的効果はここで消える（Python の st_start と同じ。
+            // delayed 側は上の delayed ガードで Unsupported のまま）
             let key = format!("until_turn_start:{}", a);
-            if self.s.continuous.iter().any(|c| c["duration"] == json!(key)) {
-                return uns("expire until_turn_start");
-            }
+            self.s.continuous.retain(|c| c["duration"] != json!(key));
         }
         // サイレントスキルは能力を持つカードだけ。plain では候補なし
         let mut zs = self.bz_tops(Some(a));
@@ -2213,9 +2213,13 @@ impl Engine {
         match op["op"].as_str().unwrap_or("") {
             "modify" => {
                 // 継続的効果（パワーの修整・このターンの間）。対象は解決時に固定（110.2e）
-                if op.get("duration").map_or(false, |d| d != "end_of_turn") {
-                    return uns("modify duration");
-                }
+                // until_next_own_turn_start は生成時に持ち主を固定した until_turn_start:{you} へ
+                // 変換する（Python の _duration と同じ）。期限切れは st_start が処理する
+                let duration = match op.get("duration").and_then(|d| d.as_str()).unwrap_or("end_of_turn") {
+                    "end_of_turn" => json!("end_of_turn"),
+                    "until_next_own_turn_start" => json!(format!("until_turn_start:{}", env["you"].as_i64().unwrap())),
+                    _ => return uns("modify duration"),
+                };
                 if let Some(cnt) = op["mod"].get("power").and_then(|pw| pw.get("count")) {
                     // {amount, count} の count は特性計算のたびに数え直す。数えられない形はここで Unsupported にする
                     self.candidates_ro(cnt, &env)?;
@@ -2228,7 +2232,7 @@ impl Engine {
                         "you" => json!(you), "opp" => json!(1 - you), "any" => json!("any"), _ => return uns("dynamic owner") };
                     self.s.seq += 1;
                     let src = env.get("self").and_then(|v| v.as_array()).map(|a| a[0].clone()).unwrap_or(Value::Null);
-                    let ce = json!({"id": self.s.seq, "mod": op["mod"], "duration": "end_of_turn", "controller": env["you"], "src": src,
+                    let ce = json!({"id": self.s.seq, "mod": op["mod"], "duration": duration, "controller": env["you"], "src": src,
                         "affected": Value::Null, "filter": {"zone": sel.get("zone").cloned().unwrap_or(json!("bz")), "owner": owner,
                         "filter": sel.get("filter").cloned().unwrap_or(json!({}))}});
                     self.s.continuous.push(ce);
@@ -2247,7 +2251,7 @@ impl Engine {
                         }
                     };
                     let src = env.get("self").and_then(|v| v.as_array()).map(|a| a[0].clone()).unwrap_or(Value::Null);
-                    let ce = json!({"id": self.s.seq, "mod": op["mod"], "duration": "end_of_turn", "controller": env["you"], "src": src,
+                    let ce = json!({"id": self.s.seq, "mod": op["mod"], "duration": duration, "controller": env["you"], "src": src,
                         "affected": cids.iter().map(|&c| self.refv(c)).collect::<Vec<_>>()});
                     self.s.continuous.push(ce);
                     let sba = self.sba_power_tasks();

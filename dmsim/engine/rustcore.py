@@ -261,14 +261,15 @@ def _simple_effect(ops, top=True) -> bool:
         if k == "shuffle" and set(o) <= {"op", "player"} and o.get("player", "you") in ("you", "opp"):
             continue
         if k == "modify" and o.get("dynamic") is True and set(o) <= {"op", "select", "mod", "dynamic", "duration"} \
-                and o.get("duration", "end_of_turn") == "end_of_turn" and _simple_mod(o.get("mod")) \
+                and o.get("duration", "end_of_turn") in ("end_of_turn", "until_next_own_turn_start") and _simple_mod(o.get("mod")) \
                 and isinstance(o.get("select"), dict) and set(o["select"]) <= {"zone", "owner", "filter", "count", "ref"} \
                 and _simple_dyn_zone(o["select"].get("zone", "bz")) and o["select"].get("owner", "you") in ("you", "opp", "any") \
                 and _simple_filter(o["select"].get("filter", {})):
             continue   # このターンの間の一時修整（後から入ったカードにも及ぶ範囲指定。範囲は生成時に持ち主を固定してベイクする）
-        if k == "modify" and set(o) <= {"op", "select", "mod", "duration"} and o.get("duration", "end_of_turn") == "end_of_turn" \
+        if k == "modify" and set(o) <= {"op", "select", "mod", "duration"} and o.get("duration", "end_of_turn") in ("end_of_turn", "until_next_own_turn_start") \
                 and _simple_mod(o.get("mod")) and _simple_selector(o.get("select")):
-            continue   # このターンの間の一時修整（対象は解決時に固定。110.2e）
+            continue   # 一時修整（対象は解決時に固定。110.2e）。until_next_own_turn_start は生成時に
+            # until_turn_start:{you} へ変換され、次の自分のターン開始時に消える（Rust の st_start が写す）
         if k == "choose" and set(o) <= {"op", "select", "as"} and isinstance(o.get("as"), str) and _simple_selector(o.get("select")):
             continue   # 子の効果での束縛は、Rust が同じ env を持つタスクすべてに書く（Python の env 共有と同じ結果）
         if k == "play_free" and set(o) <= {"op", "select", "as"} and isinstance(o.get("as", ""), str) and _simple_selector(o.get("select")) and o["select"].get("zone") in ("hand", "graveyard"):
