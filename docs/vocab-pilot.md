@@ -4912,3 +4912,13 @@ proto T1013（dm22rp2x-002 型）/ T1014（dm26sd1-j009 型）。テスト8件�
 **新規登録2件**（dm22rp2x-002 アカシック・ヴィジョン＝allow {cast_from_deck_top, generate_from_deck_top} の確立形そのまま。dm26sd1-j009 斬龍電融 オロチリュウセイ＝既存のスピードアタッカー付与 static＋allow {summon_from_deck_top, once: true}）・**alias 畳み込み0件**（submit 時に 002 へ aliases 2件・j009 へ 3件が自動記録されたが rejects 行ではない）・**差し戻し0件**（submit 時の警告なし）。converted 10,286→**10,288** / rejects 2,028→**2,026**、重なり0・漏れ0。play_from_deck_top は multi の dmrp22-005（reveal_stay 複合）だけが残る。
 
 pilot334 cards を登録形に書換、round369 cards を新設（登録カード自身の実挙動: 山札の上の呪文を唱える、山札の上のクリーチャーを召喚する＝1体まで・次のターンにはまた出せる）。テスト21 passed（round369 cards 3＋pilot334 cards 登録形 2＋pilot334 本体 8＋data_audit 8）。回帰はパイロット・ルール系（第170弾を含む）168 passed / 0 failed（山札の上からのプレイ拡張の影響なし）、round357〜368 の disposition は件数固定の stale なだけの既知パターンで 12 failed。回答は answers/round369.yaml に保存。次の番号: パイロット335 / ラウンド370 / プロト T1015。
+
+### 語彙パイロット第335弾: per_card_tap_or_untap（ドリフト）
+
+対象は pure 3件: dm25bd2-015 清浄の精霊ウル（出た時、クリーチャーを1体選びタップまたはアンタップする）、dm24rp2-051 粛清者ゴットハルト（出た時、クリーチャーを2体まで選び、それぞれタップまたはアンタップする）、dm25-002 超鎧亜キングダム・ゲオルグ（攻撃する時、進化ではないクリーチャー1体をタップまたはアンタップしてもよい）。
+
+確立形は dm26rp3-055（ヒトリダチ モンキッド）の形: まず choose {select: {zone: bz, owner: any, filter: {types: [creature]}, count: 1}, as: target} で対象を束縛し、続けて modal {modes: [[tap {select: {ref: target}}], [untap {select: {ref: target}}]]} でタップ／アンタップを選ぶ。ゴットハルトはこの choose＋modal を repeat {times: 2} の body に置き、choose に up_to: true を付ける（dm26sd1-g007 の repeat 構造）。ゲオルグは may で包み、choose の filter に evolution: false を足す。「マナゾーンに置く時タップして置く」は既存の扱いに従い原文のみ。
+
+実測で分かった注意点: (1) select の owner 既定は "you"。modal のモード内に tap {select: ...} を直接書く旧形（dmbd03-004 / dmex11-032 / dmex14-082 の登録形）は相手のクリーチャーを対象にできず、自分の候補が1体だけだと ask の一意省略（min==max==候補数）で決定自体が出ず自動で自分をタップする。dm26sd1-g007 の choose も owner 指定が無く同じ制限を持つ。これらの登録カードは潜在的に自軍のみが対象になっており、本弾の対象外のため修正はしていない（判断は後回し、記録のみ）。(2) ask の一意省略は choose でも起きる: 適格な候補が1体だけだと choose の決定は出ず自動で束縛される（テストでは候補を2体用意して決定を出す）。(3) 相手のクリーチャーをタップした効果は相手のターン開始のアンタップで消えるため、検証は自分のターンのうちに行う（攻撃フェイズの決定で止めて確認）。(4) セットアップ配置のクリーチャーは1ターン目から攻撃できる。
+
+proto T1015（ウル型）/ T1016（ゴットハルト型）/ T1017（ゲオルグ型）。テスト9 passed（pilot 本体6＋実カード parse 3）。次の番号: パイロット336 / ラウンド371 / プロト T1018。

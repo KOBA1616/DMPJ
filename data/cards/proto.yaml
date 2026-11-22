@@ -14717,3 +14717,55 @@ cards:
       official: proto
       review: pending
       notes: "語彙パイロット第334弾の対象（dm26sd1-j009 型）。「クリーチャーを１体」は once: true で読む（ターン1回）。「いつでも見てもよい」は原文のみ。"
+
+  - id: T1015
+    name: 試験用清浄の精霊
+    types: [creature]
+    civs: [light]
+    cost: 6
+    power: 4000
+    races: [エンジェル・コマンド]
+    mana: 1
+    text: "S・トリガー（このカードをシールドゾーンから手札に加える時、コストを支払わずにすぐ実行してもよい）\nブロッカー（このクリーチャーをタップして、相手クリーチャーの攻撃先をこのクリーチャーに変更してもよい）\nこのクリーチャーは、相手プレイヤーを攻撃できない。\nこのクリーチャーが出た時、クリーチャーを１体選び、タップまたはアンタップする。"
+    abilities:
+    - {kind: trigger, when: {event: move, to: bz, subject: self}, effect: [{op: choose, select: {zone: bz, owner: any, filter: {types: [creature]}, count: 1}, as: target}, {op: modal, modes: [[{op: tap, select: {ref: target}}], [{op: untap, select: {ref: target}}]]}]}
+    keywords: [s_trigger, blocker, cannot_attack_player]
+    source:
+      official: proto
+      review: pending
+      notes: "語彙パイロット第335弾の対象（dm25bd2-015 型）。1体選びタップまたはアンタップは choose（owner: any）で束縛してから modal で tap/untap する形（dm26rp3-055 の確立形）。modal のモード内に select を直接書く旧形（dmbd03-004 等）は owner 既定が you のため相手を対象にできず、候補が1体だと決定自体が出ない（実測で確認。旧形の登録カードは潜在的に自軍のみが対象）"
+
+  - id: T1016
+    name: 試験用粛清者
+    types: [creature]
+    civs: [light]
+    cost: 4
+    power: 1000
+    races: [ソルトルーパー]
+    mana: 1
+    text: "S・トリガー（このクリーチャーをシールドゾーンから手札に加える時、コストを支払わずにすぐ召喚してもよい）\nこのクリーチャーが出た時、クリーチャーを２体まで選び、それぞれタップまたはアンタップする。"
+    abilities:
+    - {kind: trigger, when: {event: move, to: bz, subject: self}, effect: [{op: repeat, times: 2, body: [{op: choose, select: {zone: bz, owner: any, filter: {types: [creature]}, count: 1, up_to: true}, as: target}, {op: modal, modes: [[{op: tap, select: {ref: target}}], [{op: untap, select: {ref: target}}]]}]}]}
+    keywords: [s_trigger]
+    source:
+      official: proto
+      review: pending
+      notes: "語彙パイロット第335弾の対象（dm24rp2-051 型）。2体までそれぞれは repeat＋choose＋modal の形（dm26sd1-g007 の構造に、dm26rp3-055 の owner: any と束縛形を合わせたもの。g007 の choose は owner 指定が無く自軍のみが対象になる潜在的な制限がある）"
+
+  - id: T1017
+    name: 試験用キングダム・ゲオルグ
+    types: [creature]
+    civs: [light, water, darkness]
+    cost: 6
+    power: 9000
+    races: [ロスト・クルセイダー]
+    mana: 1
+    evolve_from: {multicolor: true}
+    text: "マナゾーンに置く時、このカードはタップして置く。\n進化-自分の多色クリーチャー１体の上に置く。\nこのクリーチャーが攻撃する時、バトルゾーンにある進化ではないクリーチャー１体をタップまたはアンタップしてもよい。(まず何を攻撃するか選んでから、タップまたはアンタップするクリーチャーを選ぶ)\nW・ブレイカー"
+    abilities:
+    - {kind: trigger, when: {event: attack, subject: self}, effect: [{op: may, body: [{op: choose, select: {zone: bz, owner: any, filter: {types: [creature], evolution: false}, count: 1}, as: target}, {op: modal, modes: [[{op: tap, select: {ref: target}}], [{op: untap, select: {ref: target}}]]}]}]}
+    keywords: [double_breaker]
+    source:
+      official: proto
+      review: pending
+      notes: "語彙パイロット第335弾の対象（dm25-002 型）。攻撃時の任意＋modal、対象は evolution: false で絞る。「マナゾーンに置く時タップして置く」は既存の扱いに従い原文のみ。"
