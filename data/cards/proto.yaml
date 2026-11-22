@@ -15084,3 +15084,24 @@ cards:
       official: proto
       review: pending
       notes: "語彙パイロット第342弾の対象（dm23rp2x-006 型）。付与は自分自身（アーマード・ドラゴン）にも及ぶ。"
+
+  - id: T1036
+    name: アルカディアス・モモキング（試験用）
+    types: [creature, evolution]
+    civs: [light, fire]
+    cost: 6
+    power: 12500
+    races: [ジョーカーズ・ドラゴン, エンジェル・コマンド, レクスターズ]
+    mana: 1
+    star: true
+    evolve_from: {any_of: [{race_has: レクスターズ}, {civs: [light]}, {civs: [fire]}]}
+    text: "スター進化：レクスターズ、光、または火の、クリーチャー１体の上に置く。\nT・ブレイカー\n自分の他のレクスターズすべてのパワーを+2000する。\n相手は光ではない呪文を唱えられない。\n各ターンはじめて出る相手のクリーチャーは、タップして出る。"
+    abilities:
+    - {kind: static, affects: {zone: bz, owner: you, other: true, filter: {race_has: レクスターズ}}, mod: {power: 2000}}
+    - {kind: static, affects: {zone: hand, owner: opp, filter: {types: [spell], not_civs: [light]}}, mod: {deny: [cast]}}
+    - {kind: trigger, first_time: true, when: {event: move, to: bz, subject: {owner: opp, filter: {types: [creature]}}}, effect: [{op: tap, select: {ref: event.subject}}]}
+    keywords: [triple_breaker]
+    source:
+      official: proto
+      review: pending
+      notes: "語彙パイロット第343弾の対象（dm26ex4-cho001 / dm26sd1-o002f 型）。「各ターンはじめて出る相手のクリーチャーは、タップして出る」は第340弾で確立した first_time 誘発の形。"

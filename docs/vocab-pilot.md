@@ -5047,3 +5047,12 @@ proto T1034（016型）/ T1035（006型）。テスト11 passed（pilot 本体5�
 submit の事故と修正（第374弾と同型）: 006 はルール変換側に化け形のコスト常在型が残っており、submit が先頭に足したため意図した形と完全一致せず dedupe されず4能力で登録された。化け形側を除去して意図した3能力に直し、converted.yaml の git 差分が新規2件の追加のみ（既存行の削除ゼロ）であることを確認した。教訓の追加: partial の能力を「直して」回答に含める場合、submit の先頭追加で直す前の形も残るため、submit 直後の abilities 照合は件数だけでなく全能力の形を見ること。なお同じ化け形＋修正形の二重登録は既登録の dm26rp2-008 にも見られる（以前のラウンドで登録済み。そのまま記録のみ）。
 
 pilot342 cards を登録形に書換、round377 cards を新設（登録カード自身の実挙動: 016 の付与でゴッドが勝ち、006 の付与でアーマードが勝つ）。テスト18 passed（round377 cards 3＋pilot342 cards 登録形 2＋pilot342 本体 5＋data_audit 8）。回帰はパイロット・ルール系 230 passed / 0 failed、round357〜376 の disposition は件数固定の stale なだけの既知パターンで 20 failed。回答は answers/round377.yaml に保存。次の番号: パイロット343 / ラウンド378 / プロト T1036。
+
+### 語彙パイロット第343弾: first_entry_tapped_per_turn（ドリフト）
+
+対象は pure 2件（同名カードの2刷）: dm26ex4-cho001 / dm26sd1-o002f アルカディアス・モモキング（各ターンはじめて出る相手のクリーチャーは、タップして出る）。partial は2つの常在型（自分の他のレクスターズすべてのパワーを+2000する／相手は光ではない呪文を唱えられない）を持ち、この条項だけが欠けていた。
+
+- 形は第340弾（修羅丸「終斗」）で確立した first_time 誘発そのまま: {kind: trigger, first_time: true, when: {event: move, to: bz, subject: {owner: opp, filter: {types: [creature]}}}, effect: [tap {select: {ref: event.subject}}]}。エンジン変更なし。
+- 実測: 相手の1体目だけがタップして出て、2体目はタップせず、次のターンでは再び1体目がタップして出る（第340弾と同じドライバで確認）。
+
+proto T1036（モモキング型、カード全体）。テスト8 passed（pilot 本体2＋実カード parse 3＋rust_schema_sync 3）。次の番号: パイロット344 / ラウンド379 / プロト T1037。
