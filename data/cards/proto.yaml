@@ -15466,3 +15466,38 @@ cards:
       official: proto
       review: pending
       notes: "語彙パイロット第351弾の対象（dm16-021 型）。バトル相手の種族条件は battle_power の opponent_filter（any_of で複数種族）。"
+
+  - id: T1058
+    name: 試験用パンダ・ブーリン
+    types: [creature]
+    civs: [nature]
+    cost: 9
+    power: 6000
+    races: [ドリームメイト, ナイト]
+    mana: 1
+    text: "このクリーチャーの召喚コストを、自分のマナゾーンにある呪文１枚につき、１少なくしてもよい。ただし、コストは１より少なくならない。\nW・ブレイカー(このクリーチャーはシールドを２枚ブレイクする)"
+    abilities:
+    - {kind: static, zone: hand, affects: self, mod: {cost: {amount: -1, count: {zone: mana, owner: you, filter: {types: [spell]}}}, cost_min: 1}}
+    keywords: [double_breaker]
+    source:
+      official: proto
+      review: pending
+      notes: "語彙パイロット第352弾の対象（dm31-033 型）。第346弾の cost_may_per_count と同じ確立形。"
+
+  - id: T1059
+    name: 試験用セイント・ボルシャック
+    types: [creature]
+    civs: [light, fire]
+    cost: 9
+    power: 9000
+    races: [エンジェル・コマンド, アーマード・ドラゴン]
+    mana: 1
+    text: "このクリーチャーの召喚コストを、自分の墓地にあるエンジェル・コマンドまたはアーマード・ドラゴン１体につき１少なくしてもよい。ただし、コストは１以下にはならない。\nスピードアタッカー\nパワーアタッカー+4000\nW・ブレイカー"
+    abilities:
+    - {kind: static, zone: hand, affects: self, mod: {cost: {amount: -1, count: {zone: graveyard, owner: you, filter: {any_of: [{races: [エンジェル・コマンド]}, {races: [アーマード・ドラゴン]}]}}}, cost_min: 1}}
+    - {kind: static, affects: self, mod: {power_when: {amount: 4000, when: attacking}}}
+    keywords: [speed_attacker, double_breaker]
+    source:
+      official: proto
+      review: pending
+      notes: "語彙パイロット第352弾の対象（dmbd16-007 型）。数える対象が2種族の和集合の場合は count セレクタの filter に any_of を使う。"

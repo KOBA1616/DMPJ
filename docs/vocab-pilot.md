@@ -5202,3 +5202,13 @@ proto T1056（006型）/ T1057（021型）。テスト9 passed（pilot 本体3�
 **新規登録2件**（dm08-006 光器サーシャ / dm16-021 光器スヴェータ。登録形は意図した形と完全一致）・**差し戻し0件**。converted 10,326→**10,328** / rejects 1,986→**1,984**、重なり0・漏れ0。battle_power_against_specific_race のファミリーは解消。
 
 pilot351 cards を登録形に書換、round386 cards を新設（登録カード自身の実挙動: ドラゴン・ブロッカーの制限と種族条件つきバトルパワー）。テスト17 passed（round386 cards 3＋pilot351 cards 登録形 3＋pilot351 本体 3＋data_audit 8）。回帰はパイロット・ルール系 272 passed / 0 failed、round357〜385 の disposition は件数固定の stale なだけの既知パターンで 29 failed。回答は answers/round386.yaml に保存。次の番号: パイロット352 / ラウンド387 / プロト T1058。
+
+### 語彙パイロット第352弾: optional_cost_reduction_per_count（ドリフト）
+
+対象は pure 2件すべて: dm31-033 爆獣パンダ・ブーリン / dmbd16-007 聖霊龍騎セイント・ボルシャック。
+
+- 形は第346弾（cost_may_per_count）で確立した mod {cost: {amount: -1, count: <selector>}, cost_min: 1} そのもの（gap ラベルが違うだけで機構は同一）。「少なくしてもよい」の任意性はコスト常在型の自動適用の作法に倣う。
+- 本弾の追加点: 数える対象が2種族の和集合（エンジェル・コマンドまたはアーマード・ドラゴン）の場合は count セレクタの filter に any_of を使う。
+- テスト上の注意: 行動が一切無いターンでは main 判断自体が出ない（charge が次のターンへ直行する）。「出せない」ことの検証は p0 の2回目の charge 到達で判定する。
+
+proto T1058（033型）/ T1059（007型）。テスト9 passed（pilot 本体3＋実カード parse 3＋rust_schema_sync 3）。次の番号: パイロット353 / ラウンド388 / プロト T1060。
