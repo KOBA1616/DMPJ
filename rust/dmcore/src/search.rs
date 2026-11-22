@@ -8,8 +8,12 @@
 //! params.detectors=false の場合は段階1の意味論（検出器スタブ = observe は常に None）。
 //! 検出された証明書はメタ情報の certs に cert_to_dict 形（検出順）で返す。
 //!
+//! 段階3で局面内チェックポイント（経路ガイド再生）を写した。params.track_path=true
+//! のとき葉メタに経路・カウンタ・seen の差分を載せ、params.resume があるとき
+//! ガイドを再生してチェックポイントの葉まで飛ばす。食い違いは
+//! GuideMismatch: ... の Illegal エラーにし、呼び出し側は Python ループに倒す。
+//!
 //! 範囲外（呼び出し側のゲートで委譲対象から外れる）:
-//! - 局面内チェックポイント（経路ガイド再生）→ 段階3
 //! - 登録簿マクロ（macro.active() が空でない場合）、value_fn、lookahead、
 //!   KEEP_HAND、DRAWOUT_ORDER、既定以外の相手役、ループ発見モード（ts.collect）
 //! 意味論は Python と一致させることが目的で、食い違いがあれば常にこちらを直す。
@@ -269,10 +273,10 @@ pub fn abstract_hk(eng: &Engine, zones_counter: &HashMap<String, bool>,
     (h, counters)
 }
 
-/// TurnSearch の tkey（骨格ハッシュ＋カウンタ＋残りマナ＋ゾーン枚数）。
-/// 集合のキーとして使う文字列にする（プロセス内でのみ使うので形は任意だが、
-/// ハッシュ部は Python の abstract と一致させる）。
-fn tkey(eng: &Engine, zones_counter: &HashMap<String, bool>) -> String {
+/// TurnSearch の tkey の成分 (文字列キー, JSON 成分 [h, ctr_pairs, mana_pairs, sizes])。
+/// 文字列キーは py_dumps(成分, false) で、Python の tkey と同じ値になる。
+/// JSON 成分はチェックポイントの seen 差分の受け渡しに使う。
+fn tkey_parts(eng: &Engine, zones_counter: &HashMap<String, bool>) -> (String, Value) {
     let (h, ctr) = abstract_of(eng, zones_counter);
     let r = eng.skel_raw();
     let mut mana: Vec<(String, bool)> = r["mana"]
@@ -299,8 +303,12 @@ fn tkey(eng: &Engine, zones_counter: &HashMap<String, bool>) -> String {
     }
     let ctr_pairs: Vec<Value> = ctr.iter().map(|(k, v)| json!([k, v])).collect();
     let mana_pairs: Vec<Value> = mana.iter().map(|(d, t)| json!([d, t])).collect();
-    py_dumps(&json!([h, ctr_pairs, mana_pairs, sizes]), false)
+    let parts = json!([h, ctr_pairs, mana_pairs, sizes]);
+    let key = py_dumps(&parts, false);
+    (key, parts)
 }
+
+
 
 // ---------- パラメータ ----------
 
@@ -325,6 +333,57 @@ pub enum Cand {
     Stage { order: String, stage: i64 },
 }
 
+/// チェックポイントの分岐ステップ (kind, i, left, la_left, macro_nodes)。
+/// kind は "stock" / "macro" / "cand"。Python の LeafCollector._path の要素と同じ形。
+#[derive(Clone, Debug)]
+pub struct Step {
+    pub kind: String,
+    pub i: i64,
+    pub left: i64,
+    pub la_left: i64,
+    pub macro_nodes: i64,
+}
+
+impl Step {
+    fn from_json(v: &Value) -> Option<Step> {
+        let a = v.as_array()?;
+        if a.len() != 5 {
+            return None;
+        }
+        Some(Step {
+            kind: a[0].as_str()?.to_string(),
+            i: a[1].as_i64()?,
+            left: a[2].as_i64()?,
+            la_left: a[3].as_i64()?,
+            macro_nodes: a[4].as_i64()?,
+        })
+    }
+
+    fn to_json(&self) -> Value {
+        json!([self.kind, self.i, self.left, self.la_left, self.macro_nodes])
+    }
+}
+
+/// チェックポイント再開の入力（Python の checkpoint_state() の復元形）。
+/// seen は tkey の JSON 成分 [h, ctr_pairs, mana_pairs, sizes] の列で、
+/// tkey 文字列は py_dumps(成分, false) で復元する。
+#[derive(Clone)]
+pub struct Resume {
+    pub guide: Vec<Step>,
+    pub seen: Vec<String>,
+    pub nodes: i64,
+    pub leaf_count: i64,
+    pub truncated: bool,
+    pub left: i64,
+    pub la_left: i64,
+    pub macro_nodes: i64,
+    pub leaf_key: Option<String>,
+}
+
+fn guide_mismatch(msg: impl Into<String>) -> EngErr {
+    EngErr::Illegal(format!("GuideMismatch: {}", msg.into()))
+}
+
 #[derive(Clone)]
 pub struct Params {
     pub me: i64,
@@ -343,6 +402,9 @@ pub struct Params {
     pub burn_stock: bool,
     pub stock_offsets: Vec<i64>,
     pub stock_cap: i64,
+    // 段階3（局面内チェックポイント）。
+    pub track_path: bool,
+    pub resume: Option<Resume>,
 }
 
 fn bad(msg: String) -> EngErr {
@@ -388,6 +450,32 @@ impl Params {
             .as_array()
             .map(|a| a.iter().map(|x| x.as_i64().unwrap_or(0)).collect())
             .unwrap_or_else(|| vec![0, 1]);
+        let track_path = g(&v, "track_path").as_bool().unwrap_or(false);
+        let resume = match g(&v, "resume") {
+            Value::Object(_) => {
+                let rv = g(&v, "resume");
+                let guide: Vec<Step> = rv["guide"]
+                    .as_array()
+                    .map(|a| a.iter().filter_map(Step::from_json).collect())
+                    .unwrap_or_default();
+                let seen: Vec<String> = rv["seen"]
+                    .as_array()
+                    .map(|a| a.iter().map(|tk| py_dumps(tk, false)).collect())
+                    .unwrap_or_default();
+                Some(Resume {
+                    guide,
+                    seen,
+                    nodes: fi(&rv, "nodes", 0),
+                    leaf_count: fi(&rv, "leaf_count", 0),
+                    truncated: g(&rv, "truncated").as_bool().unwrap_or(false),
+                    left: fi(&rv, "left", 0),
+                    la_left: fi(&rv, "la_left", 3000),
+                    macro_nodes: fi(&rv, "macro_nodes", 0),
+                    leaf_key: rv["leaf_key"].as_str().map(|s| s.to_string()),
+                })
+            }
+            _ => None,
+        };
         Ok(Params {
             me: fi(&v, "me", 0),
             budget: fi(&v, "budget", 0),
@@ -404,6 +492,8 @@ impl Params {
             burn_stock: g(&v, "burn_stock").as_bool().unwrap_or(true),
             stock_offsets,
             stock_cap: fi(&v, "stock_cap", 8),
+            track_path,
+            resume,
         })
     }
 }
@@ -1409,6 +1499,18 @@ struct LeafOut {
     value: f64,
     engine: Engine,
     digest: String,
+    /// track_path 時の葉メタ（path・nodes・left・la_left・macro_nodes・
+    /// leaf_key・seen_new）。Python の checkpoint_state() の材料。
+    /// track_path でない場合は None。
+    ckpt: Option<Value>,
+}
+
+/// _rsv の復元値（Python の LeafCollector._rsv と同じ）。
+struct Rsv {
+    left: i64,
+    la_left: i64,
+    macro_nodes: i64,
+    leaf_key: Option<String>,
 }
 
 struct Ctx {
@@ -1420,40 +1522,94 @@ struct Ctx {
     truncated: bool,
     leaves: Vec<LeafOut>,
     certs: Vec<Value>, // Detectors.observe が返した証明書（cert_to_dict 形、観測順）
+    // 段階3（チェックポイント）
+    guide_done: bool,
+    skip_leaf: bool,
+    rsv: Option<Rsv>,
+    path: Vec<Step>,
+    la_left: i64,
+    macro_nodes: i64,
+    seen_since_leaf: Vec<Value>, // 前回の葉以降に追加された tkey の JSON 成分
 }
 
 impl Ctx {
-    fn push_leaf(&mut self, eng: Engine) -> Flow {
+    fn push_leaf(&mut self, eng: Engine) -> R<Flow> {
+        // スキップ経路（Python の _add_leaf の _skip_leaf 分岐）。
+        // _skip_leaf は空ガイドのフレーム（チェックポイントの葉のフレーム）に
+        // 入ったときにだけ立つ。葉の fast_key を照合してから数えず・渡さず、
+        // カウンタ類をチェックポイント時点の値に戻して通常探索へ復帰する。
+        if self.skip_leaf {
+            let fk = eng.s.fast_key();
+            match &self.rsv {
+                Some(rsv) => {
+                    if let Some(lk) = &rsv.leaf_key {
+                        if fk != *lk {
+                            return Err(guide_mismatch("チェックポイントの葉と一致しません"));
+                        }
+                    }
+                    self.left = rsv.left;
+                    self.la_left = rsv.la_left;
+                    self.macro_nodes = rsv.macro_nodes;
+                    self.guide_done = true;
+                    self.skip_leaf = false;
+                    return Ok(Flow::Ok);
+                }
+                None => return Err(guide_mismatch("チェックポイントの葉の照合先がありません")),
+            }
+        }
         let value = evaluate(&eng, self.p.me, &self.p.w);
         let digest = eng.s.digest();
+        let ckpt = if self.p.track_path {
+            let leaf_key = eng.s.fast_key();
+            let seen_new: Vec<Value> = std::mem::take(&mut self.seen_since_leaf);
+            Some(json!({
+                "path": self.path.iter().map(|s| s.to_json()).collect::<Vec<_>>(),
+                "nodes": self.nodes,
+                "left": self.left,
+                "la_left": self.la_left,
+                "macro_nodes": self.macro_nodes,
+                "leaf_key": leaf_key,
+                "seen_new": seen_new,
+            }))
+        } else {
+            None
+        };
         self.leaves.push(LeafOut {
             value,
             engine: eng,
             digest,
+            ckpt,
         });
         self.leaf_count += 1;
         if self.leaf_count >= self.p.leaf_cap {
             self.truncated = true;
-            return Flow::Stop;
+            return Ok(Flow::Stop);
         }
-        Flow::Ok
+        Ok(Flow::Ok)
     }
 
-    fn rec(&mut self, mut eng: Engine, det: Detectors) -> R<Flow> {
+    fn rec(&mut self, mut eng: Engine, det: Detectors, guide: Option<&[Step]>) -> R<Flow> {
+        // guide: このフレームより下の残りガイド（空リストならこのフレーム自体が
+        // チェックポイントの葉）。None なら通常フレーム。
+        if let Some(gr) = guide {
+            if gr.is_empty() {
+                self.skip_leaf = true;
+            }
+        }
         let d = settle(&mut eng, self.p.me)?;
         let Some(d) = d else {
-            return Ok(self.push_leaf(eng));
+            return self.push_leaf(eng);
         };
         if self.left <= 0 {
             self.truncated = true;
             rollout(&mut eng, &self.p)?;
-            return Ok(self.push_leaf(eng));
+            return self.push_leaf(eng);
         }
-        let tk = tkey(&eng, &self.p.zones_counter);
+        let (tk, tk_parts) = tkey_parts(&eng, &self.p.zones_counter);
+        let mut det = det;
         if self.p.detectors {
             // LeafCollector._rec の証明書処理（collect モードはゲートで除外済み）。
             // observe の副作用（seen の更新）はこの経路の det に残り、子へは fork して渡す。
-            let mut det = det;
             let cert = det.observe(&eng, &self.p.zones_counter);
             if let Some(cert) = cert {
                 self.certs.push(cert.to_dict());
@@ -1461,13 +1617,19 @@ impl Ctx {
                 if burn && !self.p.burn_stock {
                     // cert = None として通常展開へ
                 } else if verify(&eng, &cert, 1, &self.p.zones_counter)? < 1 {
-                    // 骨格が戻っただけで繰り返せない。cert = None として通常展開へ
+                    // cert = None として通常展開へ
                 } else {
                     let stocks = stocks(&self.p, &eng, &cert)?;
                     if !stocks.is_empty() {
-                        for ff in stocks {
+                        if guide.is_some()
+                            && !self.guide_done
+                            && !guide.map_or(false, |gr| !gr.is_empty() && gr[0].kind == "stock")
+                        {
+                            return Err(guide_mismatch("stock 分岐がガイドと一致しません"));
+                        }
+                        for (i, ff) in stocks.into_iter().enumerate() {
                             let det2 = Detectors::new(&ff, self.p.me, self.p.draw_discard);
-                            if let Flow::Stop = self.rec(ff, det2)? {
+                            if let Flow::Stop = self.branch("stock", i, guide, ff, det2, false)? {
                                 return Ok(Flow::Stop);
                             }
                         }
@@ -1475,48 +1637,154 @@ impl Ctx {
                     }
                     if turn_is_engine(&cert, self.p.me) && !burn {
                         // 資源ループはストックし切った局面を葉として残す
-                        return Ok(self.push_leaf(eng));
+                        return self.push_leaf(eng);
                     }
                     // cert = None として通常展開へ
                 }
             }
-            return self.expand_children(eng, d, tk, det);
         }
-        self.expand_children(eng, d, tk, det)
+        if guide.is_some() && guide.map_or(false, |gr| gr.is_empty()) && self.skip_leaf {
+            return Err(guide_mismatch("葉フレームで葉が出ませんでした"));
+        }
+        self.expand_children(eng, d, tk, tk_parts, det, guide)
     }
 
-    fn expand_children(&mut self, eng: Engine, d: Value, tk: String, det: Detectors) -> R<Flow> {
-        if self.seen.contains(&tk) {
+    fn expand_children(
+        &mut self,
+        eng: Engine,
+        d: Value,
+        tk: String,
+        tk_parts: Value,
+        det: Detectors,
+        guide: Option<&[Step]>,
+    ) -> R<Flow> {
+        let guide_frame = guide.is_some();
+        if self.seen.contains(&tk) && !guide_frame {
             return Ok(Flow::Ok);
         }
         self.seen.insert(tk);
+        if self.p.track_path {
+            self.seen_since_leaf.push(tk_parts);
+        }
         // 登録簿マクロの子はゲートで「マクロが空」の場合だけ委譲されるので、ここでは何もしない
         let mut cands = candidates(&eng, &d, &self.p, false);
         if self.p.repeat_first && cands.len() > 1 {
             cands = repeat_order(&eng, &d, cands, self.p.root_log);
         }
-        for choice in cands {
-            if self.left <= 0 {
+        for (i, choice) in cands.into_iter().enumerate() {
+            // ガイドの分岐以前では予算切れチェックをしない（当時は
+            // 通過していたことが確定しているため）。それ以外は従来どおり。
+            let guided = !self.guide_done
+                && guide.map_or(false, |gr| {
+                    !gr.is_empty() && gr[0].kind == "cand" && (i as i64) <= gr[0].i
+                });
+            if !guided && self.left <= 0 {
                 self.truncated = true;
                 break;
             }
-            self.left -= 1;
-            self.nodes += 1;
             let mut child = eng.clone();
             child.answer(choice)?;
-            if let Flow::Stop = self.rec(child, det.fork())? {
+            if let Flow::Stop = self.branch("cand", i, guide, child, det.fork(), true)? {
                 return Ok(Flow::Stop);
             }
         }
+        if guide_frame && !self.guide_done {
+            return Err(guide_mismatch("ガイドの分岐が見つかりませんでした"));
+        }
         Ok(Flow::Ok)
+    }
+
+    /// Python の _branch の写し。ガイド再生中はガイドの分岐より前を
+    /// 数えずに飛ばし、ガイドの分岐ではカウンタを子の入口値に合わせて
+    /// 数えずに降りる。ガイド完了後は通常どおり（count なら予算を1消費）。
+    fn branch(
+        &mut self,
+        kind: &str,
+        i: usize,
+        guide: Option<&[Step]>,
+        child: Engine,
+        det: Detectors,
+        count: bool,
+    ) -> R<Flow> {
+        if self.guide_done {
+            if count {
+                self.left -= 1;
+                self.nodes += 1;
+            }
+            return self.descend(kind, i, child, det, None);
+        }
+        let Some(gr) = guide else {
+            return Err(guide_mismatch("ガイド外のフレームに到達しました"));
+        };
+        if gr.is_empty() {
+            return Err(guide_mismatch("葉フレームから子分岐が出ました"));
+        }
+        let step = &gr[0];
+        let phase = |k: &str| match k {
+            "stock" => 0,
+            "macro" => 1,
+            "cand" => 2,
+            _ => 3,
+        };
+        if phase(&step.kind) < phase(kind) {
+            return Err(guide_mismatch(format!(
+                "ガイドの分岐 {} がフェーズ {} より前です",
+                step.kind, kind
+            )));
+        }
+        if phase(&step.kind) > phase(kind) {
+            return Ok(Flow::Ok); // このフェーズは丸ごとチェックポイント以前
+        }
+        if (i as i64) < step.i {
+            return Ok(Flow::Ok); // 探索済みの分岐: 数えず・降りない
+        }
+        if (i as i64) > step.i {
+            return Err(guide_mismatch("ガイドの分岐を過ぎました"));
+        }
+        // ガイドの分岐: 数えず、カウンタを子の入口値に合わせて降りる
+        self.left = step.left;
+        self.la_left = step.la_left;
+        self.macro_nodes = step.macro_nodes;
+        self.descend(kind, i, child, det, Some(&gr[1..]))
+    }
+
+    /// Python の _descend の写し。track_path のとき分岐ステップを
+    /// _path に積み（カウンタは降りる時点の値）、復帰時に外す。
+    fn descend(
+        &mut self,
+        kind: &str,
+        i: usize,
+        child: Engine,
+        det: Detectors,
+        child_guide: Option<&[Step]>,
+    ) -> R<Flow> {
+        let pushed = if self.p.track_path {
+            self.path.push(Step {
+                kind: kind.to_string(),
+                i: i as i64,
+                left: self.left,
+                la_left: self.la_left,
+                macro_nodes: self.macro_nodes,
+            });
+            true
+        } else {
+            false
+        };
+        let r = self.rec(child, det, child_guide);
+        if pushed {
+            self.path.pop();
+        }
+        r
     }
 }
 
 /// expand_turn の本体。root は変更しない（複製して走査する）。
 /// 戻り値は (メタ情報の JSON 文字列, 葉の Engine の列)。メタ情報:
-/// {leaves: [{value, log, digest}], truncated, nodes, left, leaf_count}
-/// 葉を状態 JSON で返すと、受け側が葉ごとに規則バンドルを読み直して割に合わないため、
-/// 葉は Engine そのもの（規則は Arc 共有）で返す。log はメタ情報側に含める。
+/// {leaves: [{value, log, digest, ckpt?}], truncated, nodes, left, leaf_count}
+/// ckpt は track_path のときだけ各葉につく（path・nodes・left・la_left・
+/// macro_nodes・leaf_key・seen_new）。葉を状態 JSON で返すと、受け側が葉ごとに
+/// 規則バンドルを読み直して割に合わないため、葉は Engine そのもの（規則は
+/// Arc 共有）で返す。log はメタ情報側に含める。
 pub fn expand_turn(root: &Engine, params_json: &str) -> R<(String, Vec<Engine>)> {
     let p = Params::parse(params_json)?;
     let det = if p.detectors {
@@ -1524,21 +1792,58 @@ pub fn expand_turn(root: &Engine, params_json: &str) -> R<(String, Vec<Engine>)>
     } else {
         Detectors::empty()
     };
+    let guide: Option<Vec<Step>> = p.resume.as_ref().map(|r| r.guide.clone());
+    let rsv: Option<Rsv> = p.resume.as_ref().map(|r| Rsv {
+        left: r.left,
+        la_left: r.la_left,
+        macro_nodes: r.macro_nodes,
+        leaf_key: r.leaf_key.clone(),
+    });
+    let (r_left, r_nodes, r_leaf_count, r_truncated, r_seen, r_la_left, r_macro_nodes) =
+        match &p.resume {
+            Some(r) => (
+                r.left,
+                r.nodes,
+                r.leaf_count,
+                r.truncated,
+                r.seen.iter().cloned().collect::<HashSet<String>>(),
+                r.la_left,
+                r.macro_nodes,
+            ),
+            None => (p.budget, 0, 0, false, HashSet::new(), 3000, 0),
+        };
     let mut ctx = Ctx {
-        left: p.budget,
+        left: r_left,
+        nodes: r_nodes,
+        leaf_count: r_leaf_count,
+        truncated: r_truncated,
+        seen: r_seen,
+        la_left: r_la_left,
+        macro_nodes: r_macro_nodes,
         p,
-        seen: HashSet::new(),
-        nodes: 0,
-        leaf_count: 0,
-        truncated: false,
+        guide_done: guide.is_none(),
+        skip_leaf: false,
+        rsv,
+        path: vec![],
+        seen_since_leaf: vec![],
         leaves: vec![],
         certs: vec![],
     };
-    ctx.rec(root.clone(), det)?;
+    let guide_ref = guide.as_deref();
+    ctx.rec(root.clone(), det, guide_ref)?;
+    if ctx.p.resume.is_some() && !ctx.guide_done {
+        return Err(guide_mismatch("チェックポイントの葉に到達しませんでした"));
+    }
     let leaves: Vec<Value> = ctx
         .leaves
         .iter()
-        .map(|l| json!({"value": l.value, "log": l.engine.log, "digest": l.digest}))
+        .map(|l| {
+            let mut m = json!({"value": l.value, "log": l.engine.log, "digest": l.digest});
+            if let Some(c) = &l.ckpt {
+                m["ckpt"] = c.clone();
+            }
+            m
+        })
         .collect();
     let engines: Vec<Engine> = ctx.leaves.into_iter().map(|l| l.engine).collect();
     Ok((
@@ -1554,7 +1859,6 @@ pub fn expand_turn(root: &Engine, params_json: &str) -> R<(String, Vec<Engine>)>
         engines,
     ))
 }
-
 /// テスト・照合用: abstract(eng, "in_turn") のハッシュだけを返す。
 pub fn abstract_hash_of(eng: &Engine, zones_counter: &HashMap<String, bool>) -> String {
     abstract_of(eng, zones_counter).0

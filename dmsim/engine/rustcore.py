@@ -978,11 +978,14 @@ def expand_turn(reng, params: dict):
 
     params は exhaustive_crossturn 側が組み立てる（予算・葉上限・重み・候補生成の
     記述・ゾーンの counter 表など）。戻り値は (メタ情報 dict, 葉の dmcore.Engine の列)。
-    メタ情報は {leaves: [{value, log, digest}], truncated, nodes, left, leaf_count,
+    メタ情報は {leaves: [{value, log, digest, ckpt?}], truncated, nodes, left, leaf_count,
     certs} で、葉の列はメタ情報の leaves と同じ順。certs は段階2のループ検出が
-    返した証明書（playback.cert_to_dict と同じ形、検出順）の列。dmcore が古い・
-    未対応の語彙に当たった等の場合は None を返し、呼び出し側が Python ループに
-    倒す（maybe_rust と同じ作法）。"""
+    返した証明書（playback.cert_to_dict と同じ形、検出順）の列。ckpt は段階3の
+    局面内チェックポイント用で track_path のときだけ各葉につく（path・nodes・
+    left・la_left・macro_nodes・leaf_key・seen_new）。params.resume があるときは
+    ガイドを再生してチェックポイントの葉まで飛ばす。dmcore が古い・未対応の
+    語彙に当たった場合やガイドが食い違った場合（GuideMismatch）は None を返し、
+    呼び出し側が Python ループに倒す（maybe_rust と同じ作法）。"""
     if not isinstance(reng, RustEngine) or reng._c is None:
         return None
     try:

@@ -1,4 +1,4 @@
-"""Rust のターン内展開ループ（dmcore の expand_turn、増分E・段階1＋段階2）の照合。
+"""Rust のターン内展開ループ（dmcore の expand_turn、増分E・段階1〜段階3）の照合。
 
 段階1の範囲は「ループ検出なし・チェックポイントなし」の LeafCollector 走査。
 Python ループ側も検出器をスタブに差し替えて同じ意味論に揃え、ノード数・
@@ -8,7 +8,11 @@ truncated・葉 digest の多重集合・葉の評価の多重集合が完全一
 
 段階2は実検出器（turn.Detectors）つきで、検出された証明書の列
 （cert_to_dict 形）まで完全一致することを見る。
+
+段階3は局面内チェックポイント（経路ガイド再生）つきで、fast_key の一致・
+チェックポイント時点の状態・中断→再開の葉列・GuideMismatch の一致を見る。
 """
+import copy
 import json
 import os
 import sys
@@ -299,3 +303,161 @@ def test_expand_gate_detector_flag_stub(no_detectors, rules, monkeypatch):
     monkeypatch.setenv("DMSIM_RUST_EXPAND", "1")
     p = ct._rust_expand_params(ct.LeafCollector(ts), eng, 100)
     assert p is not None and p["detectors"] is False
+
+
+# ---- 段階3: 局面内チェックポイント（経路ガイド再生）の照合 -------------------
+
+
+def _prep_setup(seed=1):
+    setup = yaml.safe_load(
+        (Path(__file__).parent / "saga_prep_setup.yaml").read_text(encoding="utf-8"))
+    setup["seed"] = seed
+    return setup
+
+
+def _stage2_rank_ts(budget):
+    from exhaustive_proto import STAGES, _make_stage_search
+    st = next(s for s in STAGES if s["stage"] == 2)
+    return _make_stage_search(st["stock_offsets"])(0, budget=budget)
+
+
+def _collect_ckpt(ct, rules, setup, ts, budget, use_rust, monkeypatch,
+                  ckpt_at=None, resume=None):
+    """track_path=True で collect し、ckpt_at の葉番号で checkpoint_state() を
+    取る。戻り値は (nodes, truncated, 葉, leaf_count, checkpoint, guide_done)。"""
+    if use_rust:
+        monkeypatch.setenv("DMSIM_RUST_EXPAND", "1")
+    else:
+        monkeypatch.delenv("DMSIM_RUST_EXPAND", raising=False)
+    got = []
+    ckpt = None
+    coll = ct.LeafCollector(ts, on_leaf=None)
+    coll.track_path = True
+
+    def on_leaf(v, leaf, loops):
+        nonlocal ckpt
+        got.append((v, leaf.s.digest()))
+        # leaf_count は on_leaf 時点でこの葉を含んで加算済み
+        if ckpt_at is not None and coll.leaf_count == ckpt_at:
+            ckpt = copy.deepcopy(coll.checkpoint_state())
+
+    coll.on_leaf = on_leaf
+    eng = rustcore.maybe_rust(sc.build(rules, setup))
+    assert isinstance(eng, rustcore.RustEngine)
+    _l, trunc, nodes = coll.collect(eng, budget, resume=resume)
+    return nodes, trunc, got, coll.leaf_count, ckpt, coll._guide_done
+
+
+def _assert_ckpt_equal(a, b):
+    assert a is not None and b is not None, "チェックポイントが取れていない"
+    for k in ("left", "nodes", "la_left", "macro_nodes", "leaf_count",
+              "truncated", "leaf_key"):
+        assert a[k] == b[k], f"checkpoint {k}: py={a[k]} rust={b[k]}"
+    assert [tuple(s) for s in a["path"]] == [tuple(s) for s in b["path"]], \
+        "checkpoint path"
+    assert set(a["seen"]) == set(b["seen"]), "checkpoint seen"
+
+
+def test_fast_key_matches(rules):
+    """Python の GameState.fast_key と Rust の fast_key が同じ局面で一致する。
+    決定を進めながら照合する（チェックポイントの葉照合の土台）。"""
+    from dmsim.search.leaf_eval import Weights
+    from dmsim.search.turn import candidates, charge_only_policy
+    checked = 0
+    for seed in (1, 2, 3):
+        eng = rustcore.maybe_rust(sc.build(rules, _hidden_setup(seed)))
+        assert isinstance(eng, rustcore.RustEngine)
+        e = eng
+        for _ in range(100):
+            py_fk = e._view().s.fast_key()
+            rs_fk = e._c.fast_key()
+            assert py_fk == rs_fk, \
+                f"fast_key mismatch seed={seed}: py={py_fk} rs={rs_fk}"
+            checked += 1
+            d = e.advance()
+            if d is None:
+                break
+            if d["player"] == 0:
+                e.answer(candidates(e, d, Weights(), cap=6)[0])
+            else:
+                e.answer(charge_only_policy(e, d))
+    assert checked >= 20, f"照合した局面が少なすぎる: {checked}"
+
+
+def test_expand_checkpoint_resume_matches(real_detectors, rules, monkeypatch):
+    """チェックポイント（中断→再開）が Python 経路と Rust 経路で完全一致する。
+    一気通貫の葉列・チェックポイント時点の状態・再開後の葉列・総ノード数。"""
+    from exhaustive_proto import stage_candidates
+    ct = real_detectors
+    fn, _label = stage_candidates("rank", 2)
+    monkeypatch.setattr(turn, "candidates", fn)
+    setup = _prep_setup(1)
+    budget = 2000
+    # (a) 一気通貫（葉50でチェックポイントを取る）
+    a = _collect_ckpt(ct, rules, setup, _stage2_rank_ts(budget), budget,
+                      False, monkeypatch, ckpt_at=50)
+    b = _collect_ckpt(ct, rules, setup, _stage2_rank_ts(budget), budget,
+                      True, monkeypatch, ckpt_at=50)
+    assert a[0] == b[0] and a[1] == b[1] and a[2] == b[2], \
+        f"一気通貫の葉列・ノード数: py={a[0]}/{a[1]}/{len(a[2])} rust={b[0]}/{b[1]}/{len(b[2])}"
+    _assert_ckpt_equal(a[4], b[4])
+    tail = a[2][50:]
+    # (b) 両方のチェックポイントから両経路で再開する
+    for ckpt in (a[4], b[4]):
+        for use_rust in (False, True):
+            r = _collect_ckpt(ct, rules, setup, _stage2_rank_ts(budget), budget,
+                              use_rust, monkeypatch, resume=ckpt)
+            assert r[2] == tail, "再開後の葉列が一気通貫の続きと一致しない"
+            assert r[0] == a[0] and r[1] == a[1], \
+                f"再開後の総ノード数・truncated: {r[0]}/{r[1]} vs {a[0]}/{a[1]}"
+            assert r[5] is True, "ガイドが消費されていない"
+
+
+def test_expand_checkpoint_guide_mismatch_matches(real_detectors, rules, monkeypatch):
+    """壊したガイドでは両経路とも GuideMismatch で失敗する。
+    Rust の expand_turn 直接呼び出しでも None になる。"""
+    from exhaustive_proto import stage_candidates
+    ct = real_detectors
+    fn, _label = stage_candidates("rank", 2)
+    monkeypatch.setattr(turn, "candidates", fn)
+    setup = _prep_setup(1)
+    budget = 2000
+    _n, _t, _l, _c, ckpt, _g = _collect_ckpt(
+        ct, rules, setup, _stage2_rank_ts(budget), budget, False, monkeypatch,
+        ckpt_at=50)
+    assert ckpt is not None
+
+    def corrupt(kind):
+        c = copy.deepcopy(ckpt)
+        if kind == "index":
+            k, i, l, la, mn = c["path"][0]
+            c["path"][0] = (k, i + 1, l, la, mn)
+        elif kind == "truncated":
+            c["path"] = c["path"][:-1]
+        elif kind == "leaf_key":
+            c["leaf_key"] = "0" * 32
+        elif kind == "kind":
+            k, i, l, la, mn = c["path"][0]
+            c["path"][0] = ("stock" if k != "stock" else "cand", i, l, la, mn)
+        return c
+
+    for kind in ("index", "truncated", "leaf_key", "kind"):
+        bad = corrupt(kind)
+        for use_rust in (False, True):
+            if use_rust:
+                monkeypatch.setenv("DMSIM_RUST_EXPAND", "1")
+            else:
+                monkeypatch.delenv("DMSIM_RUST_EXPAND", raising=False)
+            eng = rustcore.maybe_rust(sc.build(rules, setup))
+            coll = ct.LeafCollector(_stage2_rank_ts(budget), on_leaf=None)
+            coll.track_path = True
+            with pytest.raises(ct.GuideMismatch):
+                coll.collect(eng, budget, resume=bad)
+        # Rust の expand_turn 直接呼び出しでも None（ガイド不一致で委譲を諦める）
+        monkeypatch.setenv("DMSIM_RUST_EXPAND", "1")
+        eng = rustcore.maybe_rust(sc.build(rules, setup))
+        coll = ct.LeafCollector(_stage2_rank_ts(budget), on_leaf=None)
+        coll.track_path = True
+        params = ct._rust_expand_params(coll, eng, budget, resume=bad)
+        assert params is not None and "resume" in params
+        assert rustcore.expand_turn(eng, params) is None, kind

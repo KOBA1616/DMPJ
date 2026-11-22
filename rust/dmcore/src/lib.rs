@@ -33,6 +33,10 @@ impl PyState {
     fn digest(&self) -> String {
         self.s.digest()
     }
+    /// Python の GameState.fast_key と同じ値（位置符号化）。
+    fn fast_key(&self) -> String {
+        self.s.fast_key()
+    }
     fn to_json(&self) -> String {
         self.s.to_json()
     }
@@ -99,6 +103,10 @@ impl PyEngine {
     }
     fn digest(&self) -> String {
         self.e.s.digest()
+    }
+    /// Python の GameState.fast_key と同じ値（位置符号化）。
+    fn fast_key(&self) -> String {
+        self.e.s.fast_key()
     }
     fn to_json(&self) -> String {
         self.e.s.to_json()

@@ -125,7 +125,23 @@ class _CapReached(Exception):
     pass
 
 
-def _rust_expand_params(coll: "LeafCollector", eng, node_budget: int):
+def _tkey_to_json(tkey):
+    """TurnSearch の tkey（(h, ctr, mana_left, sizes) のタプル）を
+    Rust へ渡す JSON 形 [h, [[k, v], ...], [[defn, tapped], ...], [n, ...]] にする。
+    Rust 側は py_dumps(成分, false) で tkey 文字列に復元する。"""
+    h, ctr, mana, sizes = tkey
+    return [h, [[k, v] for k, v in ctr],
+            [[d, t] for d, t in mana], list(sizes)]
+
+
+def _tkey_from_json(j):
+    """_tkey_to_json の逆変換（Rust の seen_new を Python の tkey に戻す）。"""
+    h, ctr, mana, sizes = j
+    return (h, tuple((k, v) for k, v in ctr),
+            tuple((d, t) for d, t in mana), tuple(sizes))
+
+
+def _rust_expand_params(coll: "LeafCollector", eng, node_budget: int, resume=None):
     """Rust 側の展開ループ（dmcore の expand_turn、増分E）への委譲可否と、
     可能ならパラメータ dict を返す。不可なら None。
 
@@ -134,14 +150,15 @@ def _rust_expand_params(coll: "LeafCollector", eng, node_budget: int):
     検出器の扱い: このモジュールの Detectors が本物（turn.Detectors）の場合は
     Rust 側でも検出器を有効にし、別クラスに差し替わっている場合は段階1の
     スタブ（observe は常に None）として扱う（差し替えは検証用スタブだけを想定）。
-    ゲート: 再開・経路保持なし、マクロ空、value_fn / time_limit なし、相手役は
+    段階3で局面内チェックポイント（track_path・resume）も委譲できる。
+    ゲート: マクロ空、value_fn / time_limit なし、相手役は
     既定（charge_only）、lookahead なし、KEEP_HAND / DRAWOUT_ORDER なし、
     候補生成は既定か段方式（_rust_cand 属性つき）だけ、対象は RustEngine 本体。
     ループ発見モード（ts.collect）は証明書の返し方が違うので対象外のまま。"""
     if os.environ.get("DMSIM_RUST_EXPAND") != "1":
         return None
     ts = coll.ts
-    if coll.track_path or ts.collect is not None or ts.value_fn is not None \
+    if ts.collect is not None or ts.value_fn is not None \
             or ts.time_limit is not None:
         return None
     if ts.opp_policy is not turn.charge_only_policy:
@@ -163,35 +180,52 @@ def _rust_expand_params(coll: "LeafCollector", eng, node_budget: int):
         if cand is None:
             return None
     w = ts.w
-    return {"me": ts.me, "budget": node_budget, "leaf_cap": LEAF_CAP,
-            "combo_cap": ts.combo_cap,
-            "weights": {"shield": w.shield, "threat": w.threat, "mana": w.mana,
-                        "hand": w.hand, "board": w.board, "opp_deck": w.opp_deck,
-                        "deck_danger": w.deck_danger, "max_mana": w.max_mana,
-                        "deck_keep": w.deck_keep, "goal_card": w.goal_card,
-                        "goal_dist": w.goal_dist},
-            "repeat_first": bool(turn.REPEAT_FIRST if ts.repeat_first is None
-                                 else ts.repeat_first),
-            "charge_keep_free": bool(turn.CHARGE_KEEP_FREE),
-            "cand": cand,
-            "root_log": len(eng.log) - eng._base_n,
-            "detectors": Detectors is turn.Detectors,
-            "draw_discard": bool(turn.DRAW_DISCARD if ts.draw_discard is None
-                                 else ts.draw_discard),
-            "burn_stock": bool(ts.burn_stock),
-            "stock_offsets": [int(k) for k in ts.stock_offsets],
-            "stock_cap": int(w.stock_cap),
-            "zones_counter": {z: bool(zd["counter"])
-                              for z, zd in eng.rules.zones.items()}}
+    params = {"me": ts.me, "budget": node_budget, "leaf_cap": LEAF_CAP,
+              "combo_cap": ts.combo_cap,
+              "weights": {"shield": w.shield, "threat": w.threat, "mana": w.mana,
+                          "hand": w.hand, "board": w.board, "opp_deck": w.opp_deck,
+                          "deck_danger": w.deck_danger, "max_mana": w.max_mana,
+                          "deck_keep": w.deck_keep, "goal_card": w.goal_card,
+                          "goal_dist": w.goal_dist},
+              "repeat_first": bool(turn.REPEAT_FIRST if ts.repeat_first is None
+                                   else ts.repeat_first),
+              "charge_keep_free": bool(turn.CHARGE_KEEP_FREE),
+              "cand": cand,
+              "root_log": len(eng.log) - eng._base_n,
+              "detectors": Detectors is turn.Detectors,
+              "draw_discard": bool(turn.DRAW_DISCARD if ts.draw_discard is None
+                                   else ts.draw_discard),
+              "burn_stock": bool(ts.burn_stock),
+              "stock_offsets": [int(k) for k in ts.stock_offsets],
+              "stock_cap": int(w.stock_cap),
+              "zones_counter": {z: bool(zd["counter"])
+                                for z, zd in eng.rules.zones.items()},
+              "track_path": bool(coll.track_path)}
+    if resume is not None:
+        params["resume"] = {
+            "guide": [[k, i, l, la, mn] for (k, i, l, la, mn) in resume["path"]],
+            "seen": [_tkey_to_json(t) for t in resume["seen"]],
+            "nodes": resume["nodes"],
+            "leaf_count": resume["leaf_count"],
+            "truncated": resume["truncated"],
+            "left": resume["left"],
+            "la_left": resume["la_left"],
+            "macro_nodes": resume["macro_nodes"],
+            "leaf_key": resume.get("leaf_key")}
+    return params
 
 
-def _rust_expand_collect(coll: "LeafCollector", eng, node_budget: int):
+def _rust_expand_collect(coll: "LeafCollector", eng, node_budget: int, resume=None):
     """LeafCollector.collect の Rust 委譲。成功したら collect の戻り値を返し、
     委譲できない／失敗したら None を返して呼び出し側が Python ループに倒す。
     葉は dmcore の Engine と (value, log, digest) のメタ情報で受け取り、
     従来と同じ RustEngine に戻してから _add_leaf と同じ経路
-    （leaf_count・on_leaf・葉リスト）で流す。"""
-    params = _rust_expand_params(coll, eng, node_budget)
+    （leaf_count・on_leaf・葉リスト）で流す。
+    track_path のとき葉メタ（ckpt）から checkpoint_state() の材料
+    （_path・seen・nodes・left・la_left・macro_nodes・_last_leaf_key）を
+    葉を流す前に更新するので、on_leaf 内の checkpoint_state() は
+    Python ループと同じ値を返す。"""
+    params = _rust_expand_params(coll, eng, node_budget, resume=resume)
     if params is None:
         return None
     got = rustcore.expand_turn(eng, params)
@@ -212,6 +246,15 @@ def _rust_expand_collect(coll: "LeafCollector", eng, node_budget: int):
             leng = _PyEngine(rules, state, step_limit=eng.step_limit,
                              turn_limit=eng.turn_limit)
             leng.log = log
+        ck = lf.get("ckpt")
+        if ck is not None:
+            coll._path = [tuple(s) for s in ck["path"]]
+            ts.seen |= {_tkey_from_json(t) for t in ck["seen_new"]}
+            ts.stats.nodes = ck["nodes"]
+            ts.left = ck["left"]
+            ts._la_left = ck["la_left"]
+            ts._macro_nodes = ck["macro_nodes"]
+            coll._last_leaf_key = ck["leaf_key"]
         coll.leaf_count += 1
         if coll.on_leaf is not None:
             coll.on_leaf(lf["value"], leng, ())
@@ -220,6 +263,9 @@ def _rust_expand_collect(coll: "LeafCollector", eng, node_budget: int):
     coll.truncated = bool(out["truncated"])
     ts.left = out["left"]
     ts.stats.nodes = out["nodes"]
+    coll._path = []
+    if resume is not None:
+        coll._guide_done = True
     return coll.leaves, coll.truncated, ts.stats.nodes
 
 
@@ -317,10 +363,9 @@ class LeafCollector:
                          "leaf_key": resume.get("leaf_key")}
             guide = [tuple(s) for s in resume["path"]]
             self._guide_done = False
-        if resume is None:
-            got = _rust_expand_collect(self, eng, node_budget)
-            if got is not None:
-                return got
+        got = _rust_expand_collect(self, eng, node_budget, resume=resume)
+        if got is not None:
+            return got
         det = Detectors.new(eng, ts.me, ts.draw_discard)
         try:
             self._rec(eng.clone(), det, guide)
