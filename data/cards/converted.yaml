@@ -467350,3 +467350,142 @@ cards:
     official: dm25-002
     review: pending
     notes: '攻撃時のタップ/アンタップは may＋choose（evolution: false）＋modal で表した（第335弾）。「マナゾーンに置く時タップして置く」は既存の扱いに従い原文のみ。'
+- id: dm29-001
+  name: 光神龍ラル・アブゾーバー
+  types:
+  - creature
+  civs:
+  - light
+  cost: 5
+  power: 5000
+  races:
+  - アポロニア・ドラゴン
+  mana: 1
+  keywords:
+  - blocker
+  - cannot_attack_player
+  text: 'ブロッカー
+
+    このクリーチャーは、相手プレイヤーを攻撃できない。
+
+    相手のクリーチャーは、攻撃１回につきシールドを１枚しかブレイクできない。'
+  abilities:
+  - kind: static
+    affects:
+      owner: opp
+      filter:
+        types:
+        - creature
+    mod:
+      breaks_max: 1
+  source:
+    official: dm29-001
+    review: pending
+    notes: ブレイク数の上限は新 mod breaks_max で表した（第336弾）。
+- id: dm16-008
+  name: インパクト・アブソーバー
+  types:
+  - cross_gear
+  civs:
+  - light
+  cost: 5
+  mana: 1
+  text: クロスギア:このカードをバトルゾーンに置く。クリーチャーにクロスするには、このカードのコストをもう一度支払う。そのクリーチャーがバトルゾーンを離れても、このカードはバトルゾーンに残る。
+    / これをクロスしたクリーチャーが破壊される時、墓地に置くかわりに裏向きにして自分のシールドに加える。 / このカードがどのクリーチャーにもクロスされていない時、クリーチャーは攻撃１回につきシールドを１枚しかブレイクできない。
+  abilities:
+  - kind: replace
+    when:
+      event: move
+      from: bz
+      to: graveyard
+      reason: destroy
+      subject: crossed
+    instead:
+    - op: move
+      select:
+        ref: crossed
+      to: shield
+      reason: put
+  - kind: static
+    affects:
+      owner: any
+      filter:
+        types:
+        - creature
+    if:
+      not:
+        exists:
+          ref: self
+          filter:
+            crossed: true
+    mod:
+      breaks_max: 1
+  source:
+    official: dm16-008
+    review: pending
+    notes: 未クロス時のブレイク上限は breaks_max＋exists（crossed）の否定で表した（第336弾）。
+- id: dm26rp1-039
+  name: 我竜塔最高層 ローズ・キャッスル
+  types:
+  - g_castle
+  civs:
+  - darkness
+  cost: 3
+  mana: 1
+  text: '（G城は実行したら、表向きでシールド化される。このカードが表向きで自分のシールドゾーンを離れる時、かわりに墓地に置く）
+
+    自分のクリーチャーがバトルする時、そのバトルの終わりまで、バトルしている相手クリーチャーのパワーを－4000する。（パワー０以下のクリーチャーは破壊される）
+
+    相手のクリーチャーは、１度につき最大１つしかシールドをブレイクできない。'
+  abilities:
+  - kind: trigger
+    zone: shield
+    if:
+      face_up: true
+    when:
+      event: battle_start
+      subject:
+        owner: you
+        filter:
+          types:
+          - creature
+    effect:
+    - op: modify
+      select:
+        ref: event.opponent
+      mod:
+        power: -4000
+      duration: during_attack
+  - kind: trigger
+    zone: shield
+    if:
+      face_up: true
+    when:
+      event: battle_start
+      opponent:
+        owner: you
+        filter:
+          types:
+          - creature
+    effect:
+    - op: modify
+      select:
+        ref: event.subject
+      mod:
+        power: -4000
+      duration: during_attack
+  - kind: static
+    zone: shield
+    if:
+      face_up: true
+    affects:
+      owner: opp
+      filter:
+        types:
+        - creature
+    mod:
+      breaks_max: 1
+  source:
+    official: dm26rp1-039
+    review: pending
+    notes: 再変換ラウンド212。第176弾 g_castle の再変換。ブレイク上限はシールドゾーンの常在型に breaks_max を足して表した（第336弾）。
