@@ -468084,3 +468084,84 @@ cards:
     notes: '出た時の裏向き化は partial の形のまま。ターン開始の誘発は partial の {subject: self} 形では決して誘発しないため、実働形
       {event: turn_start}＋if {is_turn: you} に直した。水晶武装4は face_down マナの count 条件で、バトルゾーン側は
       grant: [enters_tapped]、マナゾーン側は自分への grant: [opp_mana_tapped] で表した（第339弾）。'
+- id: dmc52-007
+  name: 聖霊王エルフェウス
+  types:
+  - creature
+  civs:
+  - light
+  cost: 5
+  power: 9500
+  races:
+  - エンジェル・コマンド
+  mana: 1
+  evolve_from:
+    race_has: エンジェル・コマンド
+  keywords:
+  - double_breaker
+  text: '進化-自分のエンジェル・コマンド１体の上に置く。
+
+    相手クリーチャーはタップされた状態でバトルゾーンに出る。
+
+    W・ブレイカー(このクリーチャーはシールドを２枚ブレイクする)'
+  abilities:
+  - kind: static
+    affects:
+      zone: bz
+      owner: opp
+      filter:
+        types:
+        - creature
+    mod:
+      grant:
+      - enters_tapped
+  source:
+    official: dmc52-007
+    review: pending
+    notes: '進化元は partial が落としていたため、旧形式の登録例 dm33-s01 と同じく evolve_from {race_has: エンジェル・コマンド}
+      を補った。「相手クリーチャーはタップされた状態で出る」は static の grant: [enters_tapped] で表した（第340弾）。'
+    aliases:
+    - dm14-001
+- id: dm24bd6-006
+  name: 偽りの希望 修羅丸「終斗」
+  types:
+  - creature
+  civs:
+  - light
+  - darkness
+  cost: 6
+  power: 6500
+  races:
+  - アンノウン・セレス
+  mana: 1
+  keywords:
+  - blocker
+  - slayer
+  - double_breaker
+  text: 'ブロッカー
+
+    スレイヤー
+
+    W・ブレイカー
+
+    各ターン、はじめて相手のクリーチャーが出る時、そのクリーチャーはタップして出る。'
+  abilities:
+  - kind: trigger
+    first_time: true
+    when:
+      event: move
+      to: bz
+      subject:
+        owner: opp
+        filter:
+          types:
+          - creature
+    effect:
+    - op: tap
+      select:
+        ref: event.subject
+  source:
+    official: dm24bd6-006
+    review: pending
+    notes: キーワードは partial のまま。「各ターン、はじめて相手のクリーチャーが出る時、そのクリーチャーはタップして出る」は first_time
+      誘発（出来事の通し番号で数える）で表した。常在型の count ゲートは出るカード自身が評価時点で数えられ常に閉じるため使えない（第340弾）。

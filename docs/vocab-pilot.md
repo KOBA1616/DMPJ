@@ -5007,3 +5007,9 @@ pilot339 cards を登録形に書換、round374 cards を新設（登録カー�
 - 実測: 修羅丸型では相手の1体目だけがタップして出て、2体目はタップせず、次のターンでは再び1体目がタップして出る。
 
 proto T1030（エルフェウス型）/ T1031（修羅丸型）。テスト9 passed（pilot 本体3＋実カード parse 3＋rust_schema_sync 3）。次の番号: パイロット341 / ラウンド376 / プロト T1032。
+
+### ラウンド375（第340弾の再変換）
+
+**新規登録2件**（dmc52-007 聖霊王エルフェウス＝partial が落とした進化元を dm33-s01 と同形式で補完、常在型を追加。dm24bd6-006 偽りの希望 修羅丸「終斗」＝first_time 誘発を追加）・**alias 畳み込み0件**（submit 時に 007 へ aliases [dm14-001] が自動記録されたが rejects 行ではない）・**差し戻し0件**。converted 10,303→**10,305** / rejects 2,011→**2,009**、重なり0・漏れ0。enters_tapped_opponent の行は残っていない（ファミリー解消）。submit 直後の abilities 重複チェック済み（重複なし。第374弾の教訓）。
+
+pilot340 cards を登録形に書換、round375 cards を新設（登録カード自身の実挙動: エルフェウスで相手がタップして出る、修羅丸は各ターン1体目だけ）。テスト16 passed（round375 cards 3＋pilot340 cards 登録形 2＋pilot340 本体 3＋data_audit 8）。回帰はパイロット・ルール系 221 passed / 0 failed、round357〜374 の disposition は件数固定の stale なだけの既知パターンで 18 failed。回答は answers/round375.yaml に保存。次の番号: パイロット341 / ラウンド376 / プロト T1032。
