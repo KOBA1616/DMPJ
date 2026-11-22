@@ -469581,3 +469581,92 @@ cards:
           any_of:
           - race_has: デーモン・コマンド
           - race_has: ドラゴン
+- id: dm31-033
+  name: 爆獣パンダ・ブーリン
+  types:
+  - creature
+  civs:
+  - nature
+  cost: 9
+  power: 6000
+  races:
+  - ドリームメイト
+  - ナイト
+  mana: 1
+  keywords:
+  - double_breaker
+  text: 'このクリーチャーの召喚コストを、自分のマナゾーンにある呪文１枚につき、１少なくしてもよい。ただし、コストは１より少なくならない。
+
+    W・ブレイカー(このクリーチャーはシールドを２枚ブレイクする)'
+  source:
+    official: dm31-033
+    review: pending
+    notes: 'コスト軽減は cost {amount: -1, count} + cost_min: 1 の確立形（第352弾）。数える対象は自分のマナゾーンの呪文。'
+  abilities:
+  - kind: static
+    zone: hand
+    affects: self
+    mod:
+      cost:
+        amount: -1
+        count:
+          zone: mana
+          owner: you
+          filter:
+            types:
+            - spell
+      cost_min: 1
+- id: dmbd16-007
+  name: 聖霊龍騎セイント・ボルシャック
+  types:
+  - creature
+  civs:
+  - light
+  - fire
+  cost: 9
+  power: 9000
+  races:
+  - エンジェル・コマンド
+  - アーマード・ドラゴン
+  mana: 1
+  keywords:
+  - speed_attacker
+  - double_breaker
+  text: 'このクリーチャーの召喚コストを、自分の墓地にあるエンジェル・コマンドまたはアーマード・ドラゴン１体につき１少なくしてもよい。ただし、コストは１以下にはならない。
+
+    スピードアタッカー
+
+    パワーアタッカー+4000
+
+    W・ブレイカー'
+  source:
+    official: dmbd16-007
+    review: pending
+    notes: 'コスト軽減は cost {amount: -1, count} + cost_min: 1 の確立形（第352弾）。数える対象は自分の墓地の2種族で
+      filter は any_of。'
+    aliases:
+    - dmc43-003
+    - dmx22a-007
+  abilities:
+  - kind: static
+    affects: self
+    mod:
+      power_when:
+        amount: 4000
+        when: attacking
+  - kind: static
+    zone: hand
+    affects: self
+    mod:
+      cost:
+        amount: -1
+        count:
+          zone: graveyard
+          owner: you
+          filter:
+            any_of:
+            - races:
+              - エンジェル・コマンド
+            - races:
+              - アーマード・ドラゴン
+      cost_min: 1

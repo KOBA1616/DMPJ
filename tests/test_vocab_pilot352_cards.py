@@ -1,10 +1,11 @@
 """語彙パイロット第352弾の対象カード（実カード parse）。
 
-対象は pure な optional_cost_reduction_per_count 2件すべて
-（未登録、rejects 残存）:
+対象は pure な optional_cost_reduction_per_count 2件すべてで、
+ラウンド387で登録:
 - dm31-033 爆獣パンダ・ブーリン
 - dmbd16-007 聖霊龍騎セイント・ボルシャック
-  （partial の power_when 常在型はそのまま使う）
+  （partial の power_when 常在型はそのまま使う。
+  登録形は意図した形と完全一致）
 
 注意: conftest を import すると DMSIM_SKIP_CONVERTED が復活するので
 _conv_cache を直接使う（第319弾以降の作法）。
@@ -41,7 +42,7 @@ POWER_WHEN_007 = {"kind": "static", "affects": "self",
                                          "when": "attacking"}}}
 
 FORM_033 = [COST_033]
-FORM_007 = [COST_007, POWER_WHEN_007]
+FORM_007 = [POWER_WHEN_007, COST_007]  # 登録形は submit の prepend で partial 由来が先頭
 
 
 def _rows():
@@ -60,26 +61,32 @@ def _cand(tid, base):
     return c
 
 
-def test_targets_still_in_rejects():
+def test_targets_registered():
     rows = _rows()
-    conv_ids = {c["id"] for c in all_cards(CONVERTED)}
-    for t in ("dm31-033", "dmbd16-007"):
-        assert t in rows and t not in conv_ids
-        assert rows[t].get("gaps") == ["optional_cost_reduction_per_count"]
+    assert len(rows) == 1982
+    conv = all_cards(CONVERTED)
+    ids = {c["id"] for c in conv}
+    assert len(ids) == 10330
+    assert not (ids & set(rows))          # canonical 重なり0
+    for tid, form in (("dm31-033", FORM_033), ("dmbd16-007", FORM_007)):
+        c = next(x for x in conv if x["id"] == tid)
+        assert c["abilities"] == form
+        assert not (c.get("source") or {}).get("unsupported")
+        parse_card(c, TABLES)
+    left = {rid for rid, r in rows.items()
+            if "optional_cost_reduction_per_count" in (r.get("gaps") or [])}
+    assert left == set(), left            # ファミリー解消
 
 
-def test_partial_forms():
-    rows = _rows()
-    p = rows["dm31-033"]["partial"]
-    assert not p.get("abilities")
-    d = parse_card(_cand("dm31-033", {**p, "abilities": FORM_033}), TABLES)
-    assert len(d.abilities) >= 1
-    p = rows["dmbd16-007"]["partial"]
-    assert p["abilities"] == [POWER_WHEN_007]
-    d = parse_card(_cand("dmbd16-007", {**p, "abilities": FORM_007}), TABLES)
-    assert len(d.abilities) >= 2
+def test_registered_parse():
+    conv = all_cards(CONVERTED)
+    for tid in ("dm31-033", "dmbd16-007"):
+        c = next(x for x in conv if x["id"] == tid)
+        d = parse_card(c, TABLES)
+        assert len(d.abilities) >= 1
 
 
 def test_proto_forms_match():
     assert proto_card("T1058")["abilities"] == FORM_033
-    assert proto_card("T1059")["abilities"] == FORM_007
+    # proto 側は [COST, POWER_WHEN] の順（登録形とは順序のみ違う）
+    assert proto_card("T1059")["abilities"] == [COST_007, POWER_WHEN_007]
