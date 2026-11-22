@@ -570,6 +570,46 @@ def test_g_strike_fires_matches(real_env, seed):
     assert any(o.get("kind") == "yes_no" for o in a.eng.log)
 
 
+@pytest.mark.parametrize("seed", range(1, 21))
+def test_declare_cards_match(real_env, seed):
+    """増分F・カテゴリ4: 使用宣言（declare: 革命チェンジの swap、侵略の play_free、遅延誘発の登録）を
+    持つ札を多く入れたデッキで、宣言候補の走査・宣言の諮問・待機と解決、入れ替えの後半処理
+    （swap_in / swap_fix）と遅延誘発の収集・期限切れまで含めて1局が一致する。"""
+    import random
+    r, b = real_env
+    pool = _portable(r)
+    sel = [i for i in pool if any(a["kind"] == "declare" for a in r.cards[i].abilities)]
+    assert len(sel) >= 40
+    rnd = random.Random(seed)
+
+    def deck():
+        return [rnd.choice(sel) if rnd.random() < 0.6 else rnd.choice(pool) for _ in range(40)]
+    spec = {"kind": "new_game", "decks": [deck(), deck()], "seed": seed, "first_player": seed % 2}
+    res = lockstep(Session.open(r, spec), rustcore.RustSession.open(r, spec, b), f"random:{seed}")
+    assert res["divergence"] is None and res["ok"] is True
+
+
+@pytest.mark.parametrize("seed", [1, 2, 3])
+def test_revolution_change_fires_matches(real_env, seed):
+    """増分F・カテゴリ4: dmex12-076（革命チェンジ: 自分の光/水クリーチャーが攻撃する時、手札の
+    このカードと入れ替える）。安い光/水バニラが攻撃するたびに宣言の諮問（declare_attack）が
+    現れ、選べば swap で攻撃クリーチャーが差し替わる局が digest まで一致すること。"""
+    r, b = real_env
+    card = "dmex12-076"
+    assert rustcore._is_plain(r.cards[card])
+    assert any(a["kind"] == "declare" for a in r.cards[card].abilities)
+    vanilla = [i for i, d in r.cards.items()
+               if d.types == ["creature"] and not d.abilities and d.cost <= 2
+               and set(d.civs) <= {"light", "water"} and rustcore._is_plain(d)][:8]
+    assert len(vanilla) >= 4
+    deck = [card] * 20 + [vanilla[i % len(vanilla)] for i in range(20)]
+    spec = {"kind": "new_game", "decks": [deck, deck], "seed": seed, "first_player": seed % 2}
+    a, bb = Session.open(r, spec), rustcore.RustSession.open(r, spec, b)
+    res = lockstep(a, bb, f"random:{seed}")
+    assert res["divergence"] is None and res["ok"] is True
+    assert any(o.get("kind") == "declare_attack" for o in a.eng.log)
+
+
 @pytest.mark.parametrize("seed", [1, 2, 3])
 def test_trigger_keyword_matches(real_env, seed):
     """増分F・カテゴリ1: keyword 印つき誘発（キーワード辞書から展開された能力）の照合。

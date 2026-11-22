@@ -607,9 +607,35 @@ impl Engine {
                 "turn" => self.h_turn()?,
                 "event" => self.h_event()?,
                 "play" => self.h_play()?,
-                "declare" => {
-                    // 使用宣言できる能力（declare）は能力を持つカードだけ。plain では候補なし
-                    self.s.tasks.pop();
+                "declare" => self.h_declare()?,
+                "swap_in" => {
+                    // 入れ替えの後半（701.26b）: out が正常に離れた時だけ in をバトルゾーンへ
+                    let t = self.s.tasks.pop().unwrap();
+                    let oc = t["out"][0].as_i64().unwrap_or(-1);
+                    if (oc as usize) < self.s.cards.len() && self.s.cards[oc as usize].zone != "bz"
+                        && self.s.cards[oc as usize].gen == t["out_gen_next"].as_i64().unwrap_or(-2)
+                        && self.alive(&t["in"]) {
+                        let cid = t["in"][0].as_i64().unwrap();
+                        let ev = self.ev_task_env(vec![json!({"ev": "move", "subject": t["in"].clone(), "to": "bz",
+                            "reason": "put", "via": "revolution_change"})], &t["env"]);
+                        let sf = json!({"t": "swap_fix", "cid": cid, "out": t["out"].clone(), "tapped": t["tapped"]});
+                        self.push(vec![ev, sf]);
+                    }
+                    None
+                }
+                "swap_fix" => {
+                    // 入ったクリーチャーは出たクリーチャーのタップ状態と攻撃中の状態を引き継ぐ（701.26a）
+                    let t = self.s.tasks.pop().unwrap();
+                    let cid = t["cid"].as_i64().unwrap_or(-1);
+                    if (cid as usize) < self.s.cards.len() && self.s.cards[cid as usize].zone == "bz" {
+                        self.s.cards[cid as usize].tapped = t["tapped"].as_bool().unwrap_or(false);
+                        let new_ref = self.refv(cid);
+                        for task in self.s.tasks.iter_mut() {
+                            if task["t"] == json!("attack") && task["attacker"] == t["out"] {
+                                task["attacker"] = new_ref.clone();
+                            }
+                        }
+                    }
                     None
                 }
                 "attack" => self.h_attack()?,
@@ -1645,15 +1671,11 @@ impl Engine {
         self.s.steps_this_turn = 0;
         self.s.prev_counters = self.s.turn_counters.clone();
         self.s.turn_counters = Map::new();
-        // 継続的効果・遅延効果の期限切れ（「次の自分のターンのはじめまで」）
-        if !self.s.delayed.is_empty() {
-            return uns("delayed");
-        }
+        // 継続的効果・遅延効果の期限切れ（「次の自分のターンのはじめまで」、Python の st_start と同じ）
         {
-            // 「次の自分のターンのはじめまで」の継続的効果はここで消える（Python の st_start と同じ。
-            // delayed 側は上の delayed ガードで Unsupported のまま）
             let key = format!("until_turn_start:{}", a);
             self.s.continuous.retain(|c| c["duration"] != json!(key));
+            self.s.delayed.retain(|d| d["duration"] != json!(key));
         }
         // サイレントスキルは能力を持つカードだけ。plain では候補なし
         let mut zs = self.bz_tops(Some(a));
@@ -2025,6 +2047,92 @@ impl Engine {
         json!({"t": "declare", "player": player, "window": window, "ctx": rec})
     }
 
+    /// 使用宣言できる能力（Python の _declarable）: 手札・マナ・墓地・バトルゾーンの順に走査し、
+    /// when がイベント記録に合い if を満たす declare 能力を候補にする
+    fn declarable(&self, player: i64, rec: &Value) -> Vec<Value> {
+        let mut out: Vec<Value> = vec![];
+        let subj_cid: i64 = rec.get("subject").and_then(|s| s.as_array()).and_then(|a| a[0].as_i64()).unwrap_or(-1);
+        for z in ["hand", "mana", "graveyard", "bz"] {
+            for cid in self.zl(z, player).clone() {
+                if z == "bz" {
+                    let c = &self.s.cards[cid as usize];
+                    if c.controller != player || c.top_of >= 0 {
+                        continue;
+                    }
+                    if subj_cid >= 0 && cid == subj_cid {
+                        continue;   // 攻撃中のクリーチャー自身は自分の上に重ねられない
+                    }
+                }
+                let defn = self.s.cards[cid as usize].defn.clone();
+                let d = &self.rules.cards[&defn];
+                let face_abs: Vec<(Option<i64>, &Vec<Value>)> = if d.faces.is_empty() {
+                    vec![(None, &d.abil)]
+                } else {
+                    d.faces.iter().enumerate().map(|(fi, f)| (Some(fi as i64), &f.abil)).collect()
+                };
+                for (fi, abil) in face_abs {
+                    for (i, ab) in abil.iter().enumerate() {
+                        if ab["kind"] != json!("declare") {
+                            continue;
+                        }
+                        if ab.get("zone").and_then(|v| v.as_str()).unwrap_or("hand") != z {
+                            continue;
+                        }
+                        let sref = self.refv(cid);
+                        if !self.when_match(&ab["when"], rec, &sref, player) {
+                            continue;
+                        }
+                        if let Some(cond) = ab.get("if") {
+                            let env = json!({"you": player, "self": sref, "event": rec, "vars": {}});
+                            if !self.eval_cond(cond, &env).unwrap_or(false) {
+                                continue;
+                            }
+                        }
+                        let mut o = json!({"key": format!("declare:{}:{}", defn, i), "cid": cid, "ab": i});
+                        if let Some(f) = fi {
+                            o["face"] = json!(f);
+                        }
+                        if !out.iter().any(|x: &Value| x["key"] == o["key"]) {
+                            out.push(o);
+                        }
+                    }
+                }
+            }
+        }
+        out
+    }
+
+    /// 宣言した能力だけを誘発させて待機させる（603.2f。Python の h_declare）
+    fn h_declare(&mut self) -> R<Option<Value>> {
+        let t = self.s.tasks.last().unwrap().clone();
+        let player = t["player"].as_i64().unwrap();
+        let opts = self.declarable(player, &t["ctx"]);
+        if opts.is_empty() {
+            self.s.tasks.pop();
+            return Ok(None);
+        }
+        let kind = format!("declare_{}", t["window"].as_str().unwrap_or(""));
+        let ans = match self.ask(player, &kind, opts.clone(), 0, opts.len()) {
+            Ask::Decision(d) => return Ok(Some(d)),
+            Ask::Answer(x) => x,
+        };
+        self.s.tasks.pop();
+        let win = self.s.windows.last().copied().unwrap_or(0);
+        for i in ans {
+            let o = &opts[i as usize];
+            let cid = o["cid"].as_i64().unwrap();
+            self.s.seq += 1;
+            let mut p = json!({"pid": self.s.seq, "kind": "normal", "win": win, "controller": player,
+                "src": self.refv(cid), "defn": self.s.cards[cid as usize].defn, "ab": o["ab"],
+                "env": {"you": player, "self": self.refv(cid), "event": t["ctx"], "vars": {}}});
+            if let Some(f) = o.get("face") {
+                p["face"] = f.clone();
+            }
+            self.s.pending.push(p);
+        }
+        Ok(None)
+    }
+
     fn tset(&mut self, k: &str, v: Value) {
         self.s.tasks.last_mut().unwrap()[k] = v;
     }
@@ -2184,7 +2292,7 @@ impl Engine {
             (t["win"].clone(), t["only_st"].as_bool().unwrap_or(false))
         };
         let here: Vec<Value> = self.s.pending.iter().filter(|p| p["win"] == win).cloned().collect();
-        if here.iter().any(|p| p["kind"] != json!("normal") && p["kind"] != json!("strigger")) {
+        if here.iter().any(|p| p["kind"] != json!("normal") && p["kind"] != json!("strigger") && p["kind"] != json!("delayed")) {
             return uns("pending kind");
         }
         let active = self.s.active;
@@ -2224,6 +2332,13 @@ impl Engine {
                 }
                 self.push(vec![t]);
             }
+            return Ok(None);
+        }
+        if p["kind"] == json!("delayed") {
+            // 遅延誘発は能力でなく登録された効果そのものを解決する（if チェックなし、Python の pending_ability）
+            let eff = p["effect"].clone();
+            let env = p["env"].clone();
+            self.push(vec![json!({"t": "effect", "ops": eff, "pc": 0, "env": env, "os": {}})]);
             return Ok(None);
         }
         let defn = p["defn"].as_str().unwrap().to_string();
@@ -2616,6 +2731,53 @@ impl Engine {
                     self.s.zones.get_mut("deck").unwrap()[p as usize].swap(i, j);
                 }
             }
+            "swap" => {
+                // 入れ替える（701.26）: out をバトルゾーンから out_to（既定は手札）へ戻し、in を代わりに入れる。
+                // in がバトルゾーンに入れない時は入れ替え自体が起きない（701.26 / permits）
+                let outs = match self.select(&op["out"], &env)? {
+                    Ok(c) => c,
+                    Err(d) => return Ok(Some(d)),
+                };
+                let ins = if op["in"].get("ref").is_some() {
+                    self.candidates_ro(&op["in"], &env)?
+                } else {
+                    match self.select(&op["in"], &env)? {
+                        Ok(c) => c,
+                        Err(d) => return Ok(Some(d)),
+                    }
+                };
+                if !outs.is_empty() && !ins.is_empty() && self.permits(ins[0], "enter_bz") {
+                    let (o, i) = (outs[0], ins[0]);
+                    let oref = self.refv(o);
+                    let ev = self.ev_task_env(vec![json!({"ev": "move", "subject": oref, "to": op.get("out_to").and_then(|v| v.as_str()).unwrap_or("hand"), "reason": "return"})], &env);
+                    let si = json!({"t": "swap_in", "out": oref, "out_gen_next": self.s.cards[o as usize].gen + 1,
+                        "in": self.refv(i), "tapped": self.s.cards[o as usize].tapped, "env": env});
+                    self.defer(vec![ev, si]);
+                    deferred = true;
+                }
+            }
+            "delayed_trigger" => {
+                // 遅延誘発型能力の登録（603.6）: when の subject の参照は登録時に実体へ解決する
+                self.s.seq += 1;
+                let mut when = op["when"].clone();
+                if let Some(subj) = when.get("subject").and_then(|v| v.as_object()) {
+                    if subj.contains_key("ref") {
+                        let refs = self.candidates_ro(&when["subject"], &env)?;
+                        let r: Vec<Value> = refs.iter().map(|&c| self.refv(c)).collect();
+                        when["subject"] = json!({"refs": r});
+                    }
+                }
+                let duration = match op.get("duration").and_then(|d| d.as_str()).unwrap_or("end_of_turn") {
+                    "until_next_own_turn_start" => json!(format!("until_turn_start:{}", env["you"].as_i64().unwrap_or(0))),
+                    other => json!(other),
+                };
+                self.s.delayed.push(json!({"id": self.s.seq, "controller": env["you"], "when": when,
+                    "effect": op["effect"],
+                    "env": {"you": env["you"], "self": env.get("self").cloned().unwrap_or(Value::Null),
+                        "vars": env.get("vars").cloned().unwrap_or_else(|| json!({}))},
+                    "duration": duration,
+                    "once": op.get("once").and_then(|v| v.as_bool()).unwrap_or(true)}));
+            }
             other => return uns(format!("op {}", other)),
         }
         if !deferred {
@@ -2741,6 +2903,25 @@ impl Engine {
                     p["face"] = json!(f);
                 }
                 self.s.pending.push(p);
+            }
+        }
+        // 遅延誘発型能力（603.6）: 通常の誘発の後に見る（Python の _collect_triggers と同じ）
+        for dl in self.s.delayed.clone() {
+            let dlenv = dl["env"].clone();
+            let ctrl = dlenv["you"].as_i64().unwrap_or(0);
+            let sref = dlenv.get("self").cloned().unwrap_or(Value::Null);
+            if self.when_match(&dl["when"], rec, &sref, ctrl) {
+                self.s.seq += 1;
+                let mut env = dlenv.clone();
+                env["event"] = rec.clone();
+                env["vars"] = dlenv.get("vars").cloned().unwrap_or_else(|| json!({}));
+                self.s.pending.push(json!({"pid": self.s.seq, "kind": "delayed", "win": win,
+                    "controller": dl["controller"], "src": Value::Null, "defn": "", "ab": -1,
+                    "env": env, "effect": dl["effect"], "delayed": dl["id"]}));
+                if dl["once"].as_bool().unwrap_or(true) {
+                    let id = dl["id"].clone();
+                    self.s.delayed.retain(|x| x["id"] != id);
+                }
             }
         }
     }
@@ -4273,11 +4454,9 @@ impl Engine {
 
     /// 期限の切れた継続的効果を消す。修整が切れてパワー0以下になったら、その場で破壊する
     fn expire(&mut self, duration: &str) -> R<()> {
-        if !self.s.delayed.is_empty() {
-            return uns("expire delayed");
-        }
         let n = self.s.continuous.len();
         self.s.continuous.retain(|c| c["duration"] != json!(duration));
+        self.s.delayed.retain(|d| d["duration"] != json!(duration));
         if self.s.continuous.len() != n {
             self.sba()?;
         }

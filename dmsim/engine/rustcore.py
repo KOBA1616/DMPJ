@@ -286,8 +286,16 @@ def _simple_effect(ops, top=True) -> bool:
             # until_turn_start:{you} へ変換され、次の自分のターン開始時に消える（Rust の st_start が写す）
         if k == "choose" and set(o) <= {"op", "select", "as"} and isinstance(o.get("as"), str) and _simple_selector(o.get("select")):
             continue   # 子の効果での束縛は、Rust が同じ env を持つタスクすべてに書く（Python の env 共有と同じ結果）
-        if k == "play_free" and set(o) <= {"op", "select", "as"} and isinstance(o.get("as", ""), str) and _simple_selector(o.get("select")) and o["select"].get("zone") in ("hand", "graveyard"):
-            continue
+        if k == "play_free" and set(o) <= {"op", "select", "as"} and isinstance(o.get("as", ""), str) and _simple_selector(o.get("select")) \
+                and (o["select"].get("zone") in ("hand", "graveyard") or o["select"] == {"ref": "self"}):
+            continue   # {ref: self} は使用宣言（侵略等）で宣言したカード自身を出す形
+        if k == "swap" and set(o) <= {"op", "out", "in", "out_to"} and o.get("out_to", "hand") == "hand" \
+                and _swap_sel_ok(o.get("out"), True) and _swap_sel_ok(o.get("in"), False):
+            continue   # 入れ替え（701.26、革命チェンジ等）。out は攻撃クリーチャー等の参照、in は宣言したカード自身かゾーン選択
+        if k == "delayed_trigger" and set(o) <= {"op", "when", "effect", "duration", "once"} and _simple_when(o["when"]) \
+                and o.get("duration", "end_of_turn") in ("end_of_turn", "during_attack", "permanent", "until_next_own_turn_start") \
+                and isinstance(o.get("once", True), bool) and _simple_effect(o["effect"], False):
+            continue   # 遅延誘発の登録（603.6）。期限切れは Rust の expire / st_start が継続的効果と同じ経路で処理する
         if k == "modal" and set(o) <= {"op", "modes", "count"} and isinstance(o.get("count", 1), int) \
                 and isinstance(o.get("modes"), list) and 1 <= o.get("count", 1) <= len(o["modes"]) \
                 and all(isinstance(m, list) and _simple_effect(m, False) for m in o["modes"]):
@@ -499,6 +507,25 @@ def _simple_trigger(ab) -> bool:
         and _simple_effect(ab["effect"])
 
 
+def _swap_sel_ok(sel, event_subject: bool) -> bool:
+    """swap の対象セレクタ: out は {ref: event.subject}（革命チェンジの攻撃クリーチャー）か単純セレクタ、
+    in は {ref: self}（宣言したカード自身）か単純セレクタ。"""
+    if not isinstance(sel, dict):
+        return False
+    if set(sel) == {"ref"}:
+        return sel["ref"] == "self" or (event_subject and sel["ref"] == "event.subject")
+    return _simple_selector(sel)
+
+
+def _simple_declare(ab) -> bool:
+    """使用宣言（declare、増分F-4）: when が単純で効果が _simple_effect の範囲（swap / delayed_trigger /
+    play_free の {ref: self} を含む）。ゾーンは Python の _declarable の走査範囲（手札・マナ・墓地・BZ）。"""
+    return ab["kind"] == "declare" and set(ab) <= {"kind", "when", "effect", "if", "zone"} \
+        and ab.get("zone", "hand") in ("hand", "mana", "graveyard", "bz") \
+        and _simple_when(ab["when"]) and ("if" not in ab or _simple_cond(ab["if"])) \
+        and _simple_effect(ab["effect"])
+
+
 def _simple_replace(ab) -> bool:
     """段階3-d: 移動の置換（「〜する時、かわりに」）。発生源はバトルゾーン（Rust の replacement が Python の _replacement と同じ候補を出す範囲）。"""
     w = ab.get("when")
@@ -517,7 +544,7 @@ def _self_mods(d):
     deny_x = []
     cond_seen = False
     for ab in d.abilities:
-        if _simple_trigger(ab) or _simple_replace(ab):
+        if _simple_trigger(ab) or _simple_replace(ab) or _simple_declare(ab):
             continue
         if ab["kind"] == "static" and ab.get("zone") == "shield" and ab.get("affects") == "self" and "if" not in ab \
                 and ab.get("mod") == {"allow": ["s_trigger"]}:
@@ -704,7 +731,7 @@ def _statics_ok(d) -> bool:
     self の power / power_when・コスト修整・require・全バトル勝利・バトル中パワーまで含む。
     特性の並びは Rust が abil から能力順に畳むので、従来のような並びの制約（条件つきは後ろ等）は要らない。"""
     for ab in d.abilities:
-        if _simple_trigger(ab) or _simple_replace(ab):
+        if _simple_trigger(ab) or _simple_replace(ab) or _simple_declare(ab):
             continue
         if ab["kind"] != "static" or not _static_ok(ab):
             return False
