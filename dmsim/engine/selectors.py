@@ -237,6 +237,12 @@ class SelectorMixin:
             return s.turn_counters.get(f"broke_count:{env['self'][0]}:atk{s.turn_counters.get('current_attack', 0)}", 0) if env.get("self") else 0
         owner = spec.get("owner", "you")
         players = (0, 1) if owner == "any" else (self._rel(owner, env),)
+        if kind == "dynamo_tap":   # 第322弾: このターンに「ダイナモ」能力を使うためにタップしたダイナモの体数（op_modify の add_of 適用で記録した cid リスト。重複なし）
+            total = 0
+            for p in players:
+                lst = s.turn_counters.get(f"dynamo_tap:{p}", [])
+                total += len(lst) if isinstance(lst, list) else lst
+            return total
         if kind == "attack":
             total = 0
             for p in players:
@@ -248,6 +254,17 @@ class SelectorMixin:
                     if any(isinstance(v, dict) for v in f.values()):   # 式の値は問い合わせ時点の env で計算する
                         f = {k: self.eval_expr(v, env) if isinstance(v, dict) else v for k, v in f.items()}
                     lst = [c for c in lst if self.filter_match(c, f, env=env)]   # フィルタは問い合わせ時点の特性で照合する（バンドA の設計既定）
+                total += len(lst)
+            return total
+        if kind == "enter_unpaid":   # 第348弾: cid リスト＋filter 対応（attack と同じ方式）
+            total = 0
+            for p in players:
+                lst = list(s.turn_counters.get(f"enter_unpaid:{p}", []))
+                f = spec.get("filter")
+                if f:
+                    if any(isinstance(v, dict) for v in f.values()):
+                        f = {k: self.eval_expr(v, env) if isinstance(v, dict) else v for k, v in f.items()}
+                    lst = [c for c in lst if self.filter_match(c, f, env=env)]
                 total += len(lst)
             return total
         frm = spec.get("from")   # 第214弾: 移動元ゾーンで絞る（hist:<kind>_from_<zone>）
@@ -311,6 +328,9 @@ class SelectorMixin:
         if "ddd_paid" in c:   # D・D・D で実行した（第149弾。「この呪文を『D・D・D』で唱えたなら」）
             paid = bool(env.get("ddd_paid")) or (env.get("event") or {}).get("via") == "d_d_d"
             return paid == bool(c["ddd_paid"])
+        if "subject_tapped" in c:   # イベントの対象が移動直前にタップしていたか（第330弾。「破壊された時、これがタップされていれば」: 対象自身の lki を読む）
+            lki = (env.get("event") or {}).get("lki") or {}
+            return bool(lki.get("tapped")) == bool(c["subject_tapped"])
         raise ValueError(f"bad cond {c}")
 
     def filter_match(self, cid: int, f: dict, lki: dict | None = None, base: bool = False,
@@ -444,6 +464,20 @@ class SelectorMixin:
             efs = ef if isinstance(ef, list) else [ef]
             if not any(self.filter_match(cid, {k: v for k, v in sub.items() if k != "zone"},
                                          lki, base, env) for sub in efs):
+                return False
+        if "evolves_from" in f:   # 「そのクリーチャーから進化できるカード」（第337弾）。evo_source_of の鏡像:
+            # 候補自身の evolve_from（zone を除く）のいずれかに参照カードが合うこと
+            if env is None:
+                return False
+            refs = self._refs_of(f["evolves_from"], env)
+            if not refs:
+                return False
+            ef = self.fdef(cid).evolve_from
+            if ef is None:
+                return False
+            efs = ef if isinstance(ef, list) else [ef]
+            if not any(self.filter_match(refs[0][0], {k: v for k, v in sub.items() if k != "zone"},
+                                         None, base, env) for sub in efs):
                 return False
         if "linked_god" in f:
             linked = self.link_side(cid) is not None and len(self.link_members(cid)) >= 2

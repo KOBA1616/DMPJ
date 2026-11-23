@@ -24,7 +24,7 @@ OP_ARGS: dict[str, dict[str, str]] = {
     'flip_up': {'select': 'selector'},
     'dswitch': {},
     'may': {'body': 'ops', 'label': 'str?', 'player': 'str?', 'else': 'ops?'},
-    'modal': {'modes': 'oplists', 'count': 'int?', 'repeat': 'bool?'},
+    'modal': {'modes': 'oplists', 'count': 'int?', 'repeat': 'bool?', 'player': 'players?'},
     'if': {'cond': 'cond', 'then': 'ops?', 'else': 'ops?'},
     'repeat': {'times': 'expr?', 'body': 'ops', 'over': 'str?', 'as': 'str?'},
     'break': {'player': 'player?', 'count': 'expr?', 'st_first': 'bool?'},
