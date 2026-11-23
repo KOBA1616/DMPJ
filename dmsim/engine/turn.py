@@ -814,6 +814,65 @@ class TurnMixin:
             used.add(hit)
         return True
 
+    def _board_sig(self):
+        """盤面の指紋（Phase 8 のキャッシュ鍵）。ゾーンの顔ぶれ・bz カードの状態・
+        継続的効果の顔ぶれ・ターン/手番が変われば変わる。"""
+        s = self.s
+        zones = tuple(tuple(s.zones[z][p]) for z in ("bz", "mana", "graveyard", "hand", "shield", "deck")
+                      for p in (0, 1))
+        bz = tuple((c.defn, c.face, c.tapped, c.controller, c.top_of, len(c.under), bool(c.seals))
+                   for c in (s.cards[i] for i in s.zones["bz"][0] + s.zones["bz"][1]))
+        cont = tuple((ce.get("id"), bool((ce.get("mod") or {}).get("gain") or ce.get("add_from")))
+                     for ce in s.continuous)
+        return (zones, bz, cont, s.turn, s.active)
+
+    def _mana_boost_sources(self, p):
+        """_mana_choices の下準備（第212弾・第260弾）: 支払う側の bz にある常在型
+        mana_boost（scope 適用前）と mana_all_civs の bz 発生源を集める。
+        出すカードには依存しない（scope は呼び出し側で適用）ため盤面指紋で
+        キャッシュし、check モードでは毎回フレッシュ計算と照合する。"""
+        key = ("mb_src", p, self._board_sig())
+        hit = self._xcache.get(key)
+        if hit is not None and not self.check:
+            return hit
+        mb_defns = getattr(self, "_mb_defns", None)
+        if mb_defns is None:
+            mb_defns = self._mb_defns = {dn for dn, cd in self.rules.cards.items()
+                                         if any(ab.get("mana_boost") for f in (cd.faces or [cd])
+                                                for ab in f.abilities if ab.get("kind") == "static")}
+        statics = []
+        for src in self.s.zones["bz"][0]:
+            sc = self.s.cards[src]
+            if sc.controller != p or sc.top_of >= 0 or sc.defn not in mb_defns:
+                continue
+            for _, ab in self.abilities(src, "static"):
+                mb = ab.get("mana_boost")
+                if not mb:
+                    continue
+                if "if" in mb and not self.eval_cond(mb["if"], {"you": p, "self": self.s.ref(src)}):
+                    continue
+                statics.append(mb)
+        mac_defns = getattr(self, "_mac_defns", None)
+        if mac_defns is None:
+            mac_defns = self._mac_defns = {dn for dn, cd in self.rules.cards.items()
+                                           if any(ab.get("mana_all_civs") for f in (cd.faces or [cd])
+                                                  for ab in f.abilities if ab.get("kind") == "static")}
+        mac_bz = []
+        for src in self.s.zones["bz"][0]:
+            sc = self.s.cards[src]
+            if sc.controller != p or sc.top_of >= 0 or sc.defn not in mac_defns:
+                continue
+            for _, ab in self.abilities(src, "static"):
+                if ab.get("mana_all_civs") is not None:
+                    mac_bz.append((src, ab["mana_all_civs"]))
+        out = (statics, mac_bz)
+        if hit is not None:
+            assert hit == out, "mb_src cache stale"
+        if len(self._xcache) > 8192:
+            self._xcache.clear()
+        self._xcache[key] = out
+        return out
+
     @read_only
     def _mana_choices(self, cid, p, face=None, cost: int | None = None, limit: int = 32, civs=None, raw_cost: bool = False, exclude=None) -> list[list[int]]:
         """支払いに使うマナの組（112.2a）。文明は1文明につき別々の1枚で満たし、マナの数値の合計がコストに一致。
@@ -841,31 +900,26 @@ class TurnMixin:
         untapped = [c for c in self.zlist("mana", p) if c != cid and c not in (exclude or ()) and not self.s.cards[c].tapped]   # 実行するカード自身は支払いに使えない（第191弾: マナゾーンから出す時、自分をタップして払えてしまっていた）。exclude は進化元に確定したマナ等（第218弾Ω）
         # --- 第212弾: ブーストの発生源を集める ---
         fb = None if raw_cost else getattr(d, "mana_boost", None)   # 出すカード自身の宣言（この支払いだけ）
-        mb_defns = getattr(self, "_mb_defns", None)
-        if mb_defns is None:
-            mb_defns = self._mb_defns = {dn for dn, cd in self.rules.cards.items()
-                                         if any(ab.get("mana_boost") for f in (cd.faces or [cd])
-                                                for ab in f.abilities if ab.get("kind") == "static")}
-        statics = []   # 支払う側のバトルゾーンにある常在型ブースト（任意形）
-        for src in ([] if raw_cost else self.s.zones["bz"][0]):
-            sc = self.s.cards[src]
-            if sc.controller != p or sc.top_of >= 0 or sc.defn not in mb_defns:
-                continue
-            for _, ab in self.abilities(src, "static"):
-                mb = ab.get("mana_boost")
-                if not mb:
-                    continue
-                if mb.get("scope") == "spell" and "spell" not in d.types:
-                    continue
-                if "if" in mb and not self.eval_cond(mb["if"], {"you": p, "self": self.s.ref(src)}):
-                    continue
-                statics.append(mb)
+        if raw_cost:
+            statics, mac_bz = [], []
+        else:
+            raw_statics, mac_bz = self._mana_boost_sources(p)   # Phase 8: 盤面指紋でキャッシュ
+            statics = [mb for mb in raw_statics   # scope は出すカードで決まるのでここで適用
+                       if not (mb.get("scope") == "spell" and "spell" not in d.types)]
+
+        _chro: dict = {}   # Phase 8: この呼び出しの中では特性は変わらないので chars_ro を使い回す
+
+        def chro(c):
+            ch = _chro.get(c)
+            if ch is None:
+                ch = _chro[c] = self.chars_ro(c)
+            return ch
 
         def values_of(c):
             """この支払いでのマナカード c の（基本値, 任意で選べる追加の値）。"""
             card = self.s.cards[c]
             v = cs if (cs and card.face_down) else self.rules.cards[card.defn].mana
-            mn = self.chars_ro(c).get("mana_number")
+            mn = chro(c).get("mana_number")
             if mn is not None:
                 v = mn
             opts = set()
@@ -881,20 +935,9 @@ class TurnMixin:
             return v, tuple(sorted(opts))
 
         # --- 第260弾: マナの全文明扱い（「すべての文明を持つかのようにタップしてもよい」）---
-        mac_grants = []   # (発生源 cid, mana_all_civs 辞書)。バトルゾーンの発生源は全マナに、マナ自身の発生源はそのカードだけに効く
+        mac_grants = list(mac_bz)   # (発生源 cid, mana_all_civs 辞書)。バトルゾーンの発生源は全マナに、マナ自身の発生源はそのカードだけに効く
         if not raw_cost:
-            mac_defns = getattr(self, "_mac_defns", None)
-            if mac_defns is None:
-                mac_defns = self._mac_defns = {dn for dn, cd in self.rules.cards.items()
-                                                if any(ab.get("mana_all_civs") for f in (cd.faces or [cd])
-                                                       for ab in f.abilities if ab.get("kind") == "static")}
-            for src in self.s.zones["bz"][0]:
-                sc = self.s.cards[src]
-                if sc.controller != p or sc.top_of >= 0 or sc.defn not in mac_defns:
-                    continue
-                for _, ab in self.abilities(src, "static"):
-                    if ab.get("mana_all_civs") is not None:
-                        mac_grants.append((src, ab["mana_all_civs"]))
+            mac_defns = self._mac_defns   # _mana_boost_sources が用意済み
             for c in untapped:
                 if self.s.cards[c].defn not in mac_defns:
                     continue
@@ -919,7 +962,7 @@ class TurnMixin:
         pools: list[dict] = []   # 同じ（定義・裏表・文明・値の組）のマナカードの山。値の選択肢ごとにクラスを分ける
         pindex: dict = {}
         for c in untapped:   # 裏向きマナは無色として別グループに分ける（水晶武装）。文明は特性（chars）で見る: 「マナゾーンにあるカードをすべての文明として扱う」等が効く（第123弾）
-            civkey = () if self.s.cards[c].face_down else tuple(sorted(self.chars_ro(c)["civs"]))
+            civkey = () if self.s.cards[c].face_down else tuple(sorted(chro(c)["civs"]))
             if civkey and all_civs_for(c):   # 第260弾: 支払い時だけ全文明として扱う（任意形は選択肢が増えるだけなので常に有効化してよい）
                 civkey = ("darkness", "fire", "light", "nature", "water")
             v, opts = vals[c]

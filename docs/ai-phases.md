@@ -262,3 +262,14 @@ docs/speedup-proposals.md の優先順位を実行した。
 - **Colab の実地確認**: Muse のブラウザで Colab が開けること、GitHub から
   ノートブックを開く導線があることを確認。実行には Google サインイン
   （利用者本人）が必須。詳細は docs/speedup-proposals.md §4。
+
+## Phase 8: エンジン本体の改善案1・2（指紋キャッシュ＋自己照合）
+
+docs/speedup-proposals.md §3.6 に詳細。要点:
+- 誘発側: _gainable の走査を盤面指紋でキャッシュ、_static_suppressed を
+  収集内で使い回し。
+- 支払い側: _mana_choices の下準備（mana_boost / mana_all_civs の発生源
+  収集）を盤面指紋でキャッシュ。
+- 正しさは DMSIM_CHECK=1 の自己照合（複数デッキ）と Rust lockstep 回帰で担保。
+- 効果はサガミラーでは誤差の範囲（対象の走査自体は消えた）。残る重さは
+  列挙とイベント処理そのものであることが分かった。

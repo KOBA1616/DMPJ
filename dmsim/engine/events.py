@@ -1247,6 +1247,31 @@ class EventMixin:
                 return True
         return False
 
+    def _gainable(self) -> bool:
+        """継続的効果や常在型の mod.gain（第240弾）で誘発型能力を得る道があるか。
+        依存するのは「継続的効果の gain/add_from の有無」と「bz・シールドにある
+        カードの定義の集合」だけなので、その指紋でキャッシュする（Phase 8）。
+        check モードでは毎回フレッシュ計算と照合する（chars テンプレートと同じ作法）。"""
+        s = self.s
+        key = ("gainable", tuple(s.zones["bz"][0]), tuple(s.zones["shield"][0]),
+               tuple(s.zones["shield"][1]),
+               tuple(bool(ce["mod"].get("gain") or ce.get("add_from")) for ce in s.continuous))
+        hit = self._xcache.get(key)
+        if hit is not None and not self.check:
+            return hit
+        gainable = any(ce["mod"].get("gain") or ce.get("add_from") for ce in s.continuous)
+        if not gainable:   # 常在型の mod.gain で誘発を得る道があるか（定義レベルの走査）
+            for c in list(s.zones["bz"][0]) + [x for p in (0, 1) for x in s.zones["shield"][p]]:
+                d = self.rules.cards[s.cards[c].defn]
+                if any(ab.get("kind") == "static" and "gain" in (ab.get("mod") or {})
+                       for dd in [d] + list(d.faces or []) for ab in dd.abilities):
+                    gainable = True
+                    break
+        if hit is not None:
+            assert hit == gainable, "gainable cache stale"
+        self._xcache[key] = gainable
+        return gainable
+
     def _collect_triggers(self, rec):
         """誘発チェック。離れた時の誘発で過去の状態を見るのは、その能力を持つカード自身だけ（603.5d）。"""
         s = self.s
@@ -1291,14 +1316,8 @@ class EventMixin:
             sources.append((rec["subject"][0], None, False))
         win = s.windows[-1] if s.windows else 0
         # 定義に誘発型能力が無く、継続的効果で能力を得る道（gain・ダイナモ）も無い発生源は、能力の列挙を省く（結果は同じ空）
-        gainable = any(ce["mod"].get("gain") or ce.get("add_from") for ce in s.continuous)
-        if not gainable:   # 常在型の mod.gain（第240弾）で誘発を得る道があるか（定義レベルの走査）
-            for c in list(s.zones["bz"][0]) + [x for p in (0, 1) for x in s.zones["shield"][p]]:
-                d = self.rules.cards[s.cards[c].defn]
-                if any(ab.get("kind") == "static" and "gain" in (ab.get("mod") or {})
-                       for dd in [d] + list(d.faces or []) for ab in dd.abilities):
-                    gainable = True
-                    break
+        gainable = self._gainable()
+        supp_cache: dict = {}   # _static_suppressed は (ctrl, rec) と盤面だけで決まるので、この収集の中では使い回す（Phase 8）
         for src, lsrc, host_only in sources:
             if not lsrc and not gainable and not self._has_trigger_def(s.cards[src].defn, s.cards[src].face):
                 continue
@@ -1323,7 +1342,9 @@ class EventMixin:
                     continue          # 誘発条件つき（「〜場合」）の能力は、誘発時にも条件を見る（603.4）。離れた時の誘発は解決時だけ
                 if rec.get("no_trigger") and lsrc is None and src == rec["subject"][0]:
                     continue          # この移動で出たカード自身の能力は誘発しない（第213弾。move の no_trigger）
-                if self._static_suppressed(ctrl, rec):
+                if ctrl not in supp_cache:
+                    supp_cache[ctrl] = self._static_suppressed(ctrl, rec)
+                if supp_cache[ctrl]:
                     continue          # 相手の常在型 suppress_triggers に抑えられた（第213弾）
                 if ab.get("once_per_turn"):   # 「各ターンに一度」: このカード（オブジェクト）のこの能力は1ターンに1回だけ誘発する
                     key = f"once:{sref[0]}:{sref[1]}:{ab_face if ab_face is not None else ''}:{i}"
