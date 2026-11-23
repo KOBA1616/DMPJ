@@ -159,3 +159,22 @@ python tools/bench_2p.py --games 20 --engine auto     → 8.01 games/s, 810 deci
   実際に方策を改善する」ことの確認であって強さの主張ではない。次の課題:
   greedy／leaf_eval 等の既存方策との対戦評価、Phase 3 バッチAPIを使った
   収集の高速化（現状の収集は駆動方式）、注意機構への置換、相手デッキ推定。
+
+## Phase 5: 強い基準（greedy）との評価
+
+- selfplay.evaluate に相手方策の指定（random / greedy / charge_only）を追加。
+  greedy は dmsim/search/turn.py の greedy_policy（leaf_eval の手作り重みで
+  最善手を選ぶ既存の貪欲方策）で、ランダムより遥かに強い基準。
+- 参考ラン（2026-11-24、サガミラー、40 iter × 8局＝320局・約2.8万決定、122秒）:
+
+```
+[eval before] vs random: 0.50（10W/10L） / vs greedy: 0.20（4W/16L）
+[eval after]  vs random: 1.00（20W/0L）  / vs greedy: 0.55（11W/9L）   ※各20局
+```
+
+- 学習前は greedy に大きく負けていたモデルが、320局の自己対戦だけで
+  greedy をわずかに上回った。評価は各20局と小さいため誤差は大きいが、
+  「手作り評価関数に自己対戦が追いつき始める」段階には達した。
+- 次の課題: 評価局数を増やした再現確認、収集の高速化（駆動方式が律速）、
+  注意機構への置換、相手デッキ推定、torch 導入（この環境ではダウンロード
+  失敗のため未導入。導入できれば学習基盤を移す）。

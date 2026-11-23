@@ -76,3 +76,11 @@ def test_model_save_load(rules, tmp_path):
     m2 = Model.load(path)
     for k in model.p:
         assert np.allclose(model.p[k], m2.p[k])
+
+
+def test_evaluate_vs_greedy(rules, deck):
+    vocab = Vocab(rules)
+    model = Model(len(vocab), seed=4)
+    r = evaluate(rules, vocab, model, deck, deck, games=2, seed=78, opponent="greedy")
+    assert r["opponent"] == "greedy"
+    assert r["wins"] + r["losses"] + r["draws"] == 2
