@@ -841,6 +841,7 @@ class Engine(SelectorMixin, EventMixin, InterpreterMixin, TurnMixin, CombatMixin
                 if ce.get("src") is not None:
                     src_of[id(ce["mod"])] = ce["src"]
         power_sets = []   # 「パワーをXにする」置換（第272弾）: 加算のすべてを上書きするため最後に適用する
+        breaks_cap = None   # ブレイク数の上限（第336弾）: 適用される上限のうち最小のもの
         for m in mods:
             pw = m.get("power", 0)
             if isinstance(pw, dict):   # {amount, count}: 「〜ひとつにつき +N」
@@ -905,6 +906,8 @@ class Engine(SelectorMixin, EventMixin, InterpreterMixin, TurnMixin, CombatMixin
                     ch["breaks_add"] += ba["amount"] * self.count_of(ba["count"], env_self)
                 else:
                     ch["breaks_add"] += ba
+            if "breaks_max" in m:   # ブレイク数の上限（第336弾）: 「攻撃1回につきシールドをN枚しかブレイクできない」。集約の最後に適用する
+                breaks_cap = m["breaks_max"] if breaks_cap is None else min(breaks_cap, m["breaks_max"])
             if "breaks" in m:   # ブレイカー能力ごとのブレイク数（509.2b）。使う能力は攻撃時に選ぶ（509.2c）
                 b = m["breaks"]
                 if isinstance(b, dict):   # dict 形式はすべて「base + 値」（base は既定1、第145弾）: {count} は base+数（クルー・ブレイカー、第130弾）、
@@ -979,6 +982,9 @@ class Engine(SelectorMixin, EventMixin, InterpreterMixin, TurnMixin, CombatMixin
                 ch["break_opts"] = [ch["breaks"]]
             ch["break_opts"] = [max(0, v + ch["breaks_add"]) for v in ch["break_opts"]]
             ch["breaks"] = max(ch["break_opts"])
+        if breaks_cap is not None:   # ブレイク数の上限（第336弾）: max 合成と breaks_add の後に、使う能力の値すべてを上限で切り取る
+            ch["break_opts"] = [min(v, breaks_cap) for v in ch["break_opts"]]
+            ch["breaks"] = min(ch["breaks"], breaks_cap)
         if c.link and c.zone == "bz" and not self._link_merging:   # G・リンク: グループ全員の特性を統合する
             members = [m for m in self.link_members(cid) if m != cid]
             if members:

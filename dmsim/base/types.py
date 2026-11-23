@@ -42,6 +42,7 @@ class Option(TypedDict, total=False):
     grave_cast: NotRequired[bool]        # 墓地から通常コストで唱える選択肢（第226弾）
     rinne: NotRequired[bool]             # 輪廻∞: 呪文側をバトルゾーンに置いたまま唱える選択肢（第267弾）
     bakutan: NotRequired[bool]           # マナ爆誕（マナゾーンから固定コストで召喚する選択肢。第191弾）
+    dtop: NotRequired[bool]              # 山札の上から使う選択肢（第334弾）
 
 
 class Decision(TypedDict):

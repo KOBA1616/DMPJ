@@ -168,6 +168,7 @@
       "entered_this_turn": {},
       "evo_source_of": {},
       "evolution": {},
+      "evolves_from": {},
       "exlife": {},
       "face_down": {},
       "face_up": {},
@@ -549,6 +550,7 @@
         "entered_this_turn": {},
         "evo_source_of": {},
         "evolution": {},
+        "evolves_from": {},
         "exlife": {},
         "face_down": {},
         "face_up": {},
@@ -1134,6 +1136,18 @@
            "var"
           ],
           "additionalProperties": false
+         },
+         {
+          "type": "object",
+          "properties": {
+           "owner_of": {
+            "type": "string"
+           }
+          },
+          "required": [
+           "owner_of"
+          ],
+          "additionalProperties": false
          }
         ]
        },
@@ -1496,6 +1510,41 @@
        },
        "repeat": {
         "type": "boolean"
+       },
+       "player": {
+        "anyOf": [
+         {
+          "enum": [
+           "you",
+           "opp",
+           "each"
+          ]
+         },
+         {
+          "type": "object",
+          "properties": {
+           "var": {
+            "type": "string"
+           }
+          },
+          "required": [
+           "var"
+          ],
+          "additionalProperties": false
+         },
+         {
+          "type": "object",
+          "properties": {
+           "owner_of": {
+            "type": "string"
+           }
+          },
+          "required": [
+           "owner_of"
+          ],
+          "additionalProperties": false
+         }
+        ]
        }
       },
       "required": [
@@ -1680,6 +1729,18 @@
           },
           "required": [
            "var"
+          ],
+          "additionalProperties": false
+         },
+         {
+          "type": "object",
+          "properties": {
+           "owner_of": {
+            "type": "string"
+           }
+          },
+          "required": [
+           "owner_of"
           ],
           "additionalProperties": false
          }
@@ -2485,6 +2546,7 @@
     "entered_this_turn": {},
     "evo_source_of": {},
     "evolution": {},
+    "evolves_from": {},
     "exlife": {},
     "face_down": {},
     "face_up": {},
@@ -2970,6 +3032,9 @@
     "vivid_paid": {},
     "alt_paid": {},
     "ddd_paid": {},
+    "subject_tapped": {
+     "type": "boolean"
+    },
     "hyper": {
      "type": "boolean"
     },
@@ -2994,7 +3059,21 @@
        "type": "object",
        "properties": {
         "amount": {
-         "type": "integer"
+         "anyOf": [
+          {
+           "type": "integer"
+          },
+          {
+           "type": "object",
+           "properties": {
+            "power_of": {},
+            "var": {
+             "type": "string"
+            }
+           },
+           "additionalProperties": false
+          }
+         ]
         },
         "count": {
          "anyOf": [
@@ -3108,6 +3187,7 @@
          "block",
          "cast",
          "cast_free",
+         "cast_from_deck_top",
          "cast_from_graveyard",
          "cross_free",
          "d_switch",
@@ -3116,10 +3196,12 @@
          "evolve_base_any",
          "evolve_civ_any",
          "generate",
+         "generate_from_deck_top",
          "guardman",
          "s_trigger",
          "slayer",
          "summon",
+         "summon_from_deck_top",
          "summon_from_graveyard",
          "summon_from_mana",
          "untap_at_start"
@@ -3139,6 +3221,7 @@
            "block",
            "cast",
            "cast_free",
+           "cast_from_deck_top",
            "cast_from_graveyard",
            "cross_free",
            "d_switch",
@@ -3147,10 +3230,12 @@
            "evolve_base_any",
            "evolve_civ_any",
            "generate",
+           "generate_from_deck_top",
            "guardman",
            "s_trigger",
            "slayer",
            "summon",
+           "summon_from_deck_top",
            "summon_from_graveyard",
            "summon_from_mana",
            "untap_at_start"
@@ -3179,6 +3264,7 @@
            "destroyed",
            "discard",
            "draw",
+           "dynamo_tap",
            "enter",
            "enter_unpaid",
            "leave",
@@ -3215,6 +3301,7 @@
          "block",
          "cast",
          "cast_free",
+         "cast_from_deck_top",
          "cast_from_graveyard",
          "cross_free",
          "d_switch",
@@ -3223,10 +3310,12 @@
          "evolve_base_any",
          "evolve_civ_any",
          "generate",
+         "generate_from_deck_top",
          "guardman",
          "s_trigger",
          "slayer",
          "summon",
+         "summon_from_deck_top",
          "summon_from_graveyard",
          "summon_from_mana",
          "untap_at_start"
@@ -3246,6 +3335,7 @@
            "block",
            "cast",
            "cast_free",
+           "cast_from_deck_top",
            "cast_from_graveyard",
            "cross_free",
            "d_switch",
@@ -3254,10 +3344,12 @@
            "evolve_base_any",
            "evolve_civ_any",
            "generate",
+           "generate_from_deck_top",
            "guardman",
            "s_trigger",
            "slayer",
            "summon",
+           "summon_from_deck_top",
            "summon_from_graveyard",
            "summon_from_mana",
            "untap_at_start"
@@ -3286,6 +3378,7 @@
            "destroyed",
            "discard",
            "draw",
+           "dynamo_tap",
            "enter",
            "enter_unpaid",
            "leave",
@@ -3378,8 +3471,24 @@
         "amount"
        ],
        "additionalProperties": false
+      },
+      {
+       "type": "object",
+       "properties": {
+        "var": {
+         "type": "string"
+        }
+       },
+       "required": [
+        "var"
+       ],
+       "additionalProperties": false
       }
      ]
+    },
+    "breaks_max": {
+     "type": "integer",
+     "minimum": 0
     },
     "breaks_per_power": {
      "type": "integer"
@@ -3744,6 +3853,7 @@
      "battle_power",
      "breaks",
      "breaks_add",
+     "breaks_max",
      "breaks_per_power",
      "cost",
      "cost_may",
@@ -4093,6 +4203,9 @@
     "face_up": {},
     "broke": {},
     "blocked": {},
+    "battle": {
+     "type": "boolean"
+    },
     "vivid": {},
     "emblem": {
      "type": "boolean"

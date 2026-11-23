@@ -325,6 +325,26 @@ class TurnMixin:
                     if fi is not None:
                         opt["face"] = fi
                     out.append(opt)
+        seen_d = set()   # 山札の上から使う（第334弾）: 常在の許可（summon/cast/generate_from_deck_top）。一番上の1枚だけが対象
+        for cid in self.zlist("deck", p)[:1]:
+            dn = self.s.cards[cid].defn
+            if dn in seen_d:
+                continue
+            d = self.cdef(cid)
+            for fi, f in ([(None, d)] if not d.faces else list(enumerate(d.faces))):
+                action = "summon" if f.is_creature() else "generate" if f.is_permanent() or f.is_castle() else "cast"
+                grant = self._deck_top_grant(cid, f"{action}_from_deck_top")
+                if grant is None:
+                    continue
+                if self._can_play_face(cid, p, fi):
+                    seen_d.add(dn)
+                    opt = {"key": f"play:{dn}:dtop" if fi is None else f"play:{dn}:{fi}:dtop",
+                           "cid": cid, "name": f.name, "dtop": True}
+                    if grant.get("once_src") is not None:
+                        opt["once_src"] = grant["once_src"]
+                    if fi is not None:
+                        opt["face"] = fi
+                    out.append(opt)
         lim = self._cast_limit(p)   # 第261弾: 呪文を唱える回数の制限に達していたら呪文の選択肢を出さない
         if lim is not None and self.s.turn_counters.get(f"casts:{p}", 0) >= lim:
             out = [o for o in out if "spell" not in self.cdef(o["cid"]).face(o.get("face")).types]
@@ -358,6 +378,24 @@ class TurnMixin:
                 if not e.get("once"):
                     return {}
                 if not self.s.turn_counters.get(f"cast_once:{e.get('src')}"):
+                    limited = e.get("src")
+        return {"once_src": limited} if limited is not None else None
+
+    def _deck_top_grant(self, cid, action) -> dict | None:
+        """山札の上から使う許可の状態（第334弾。第226弾の墓地版と同じ方式）。
+        無制限なら {}、回数制限つき（ターン1回・未使用）なら {"once_src": 発生源}、
+        許可が無い／使い切っていれば None。action は summon/cast/generate_from_deck_top。
+        generate の once は消費する側の印が無いため、現状は summon/cast のみ使う。"""
+        limited = None
+        kind = action.split("_")[0]   # summon / cast / generate
+        for e in self.chars_ro(cid)["allow"]:
+            if isinstance(e, str):
+                if e == action:
+                    return {}
+            elif e.get("action") == action:
+                if not e.get("once"):
+                    return {}
+                if not self.s.turn_counters.get(f"{kind}_once:{e.get('src')}"):
                     limited = e.get("src")
         return {"once_src": limited} if limited is not None else None
 
@@ -1832,7 +1870,7 @@ def h_play(eng, t):
                    {"op": "draw", "count": 1}]
             eng._push(eng._child([{"op": "delayed_trigger", "when": {"event": "turn_end"}, "effect": end}],
                                  {"you": p, "self": ref, "vars": {}}))
-    if t.get("once_src") is not None and from_zone in ("graveyard", "mana"):   # 回数制限つき許可（ターン1回）を使った
+    if t.get("once_src") is not None and from_zone in ("graveyard", "mana", "deck"):   # 回数制限つき許可（ターン1回）を使った（第334弾: 山札の上からも消費する）
         s.turn_counters[f"summon_once:{t['once_src']}"] = True
     if t.get("rush") and from_zone == "graveyard" and d.is_creature() and "abyss_rush" in d.keywords:   # アビスラッシュの付随処理（素の墓地召喚には付けない）
         s.turn_counters[f"rush:{cid}"] = s.turn      # このターン、召喚酔いでもプレイヤーを攻撃できる

@@ -363,6 +363,10 @@ space_charge（単独42件）: スペース・チャージは、文明ごとの�
 
 - ジャンケン系は変換対象にしない。`op: janken` の win/lose 分岐は既存語彙にあるが、相手の出した手（グー/チョキ/パー）の参照、連勝数カウント、ジャンケン結果の置換などは語彙がなく、実装コストに見合わないため対象外とする。該当 gap: janken_opponent_hand（8件）、janken_streak_count（1件）、janken_win_hand_event（1件）、janken_loss_replace（1件）、battle_outcome_replace（1件、ジャンケン由来）
 
+## 対象外（2026-11-06 ユーザー指示）
+
+- outside_game 系は変換対象にしない。音読など実世界の行為に依存する内容のため。該当 gap: outside_game（12件、全て dmex08）
+
 ## 次の候補
 
 - 進化系: NEO進化（251件、二択の出し方＋重なっている時の性質変化）、スター進化（153件、離れる時は一番上だけ）
@@ -4618,3 +4622,631 @@ tr2 の全条項は第267弾の確立形で書ける:
 ### ラウンド355（第320弾の再変換）
 
 **新規登録2件**（dm26ex2-068 ワダウザノミコト＝形B〔trigger {event: block, subject: self} → move {ref: self} ＋ move {ref: event.attacker} を持ち主の手札へ〕＋離脱条項〔choose {from_top: 4, look: true, count: all} as pile → 1枚を手札 → repeat＋choose＋modal で残りを山札の上か下へ〕 / dm26rp1-074 ノーガルディ・ネギオ＆ガルダンディ・ナスオ＝形A〔trigger {event: block, attacker: self} → break {player: opp, count: 2}〕。いずれも partial ＋第320弾の確立形、unsupported 除去。登録形は確立形と完全一致で abilities は 068 が2件・074 が1件ちょうど、068 の keywords は [s_trigger, blocker] のまま、連結混入なし）・**alias 畳み込み0件**（identity の canon_id 実測で2件とも自 ID、aliases_for は空）・**stale クリーンアップ0件**・**差し戻し0件**。dm26rp1-074 の text は partial が「このクリーチャーがブロックされた時」だけに切れていたため reject 行の公式全文に差し替えた（dm26ex2-068 の text は partial のまま全文）。対象2行は gaps = [trigger_when_blocked] のため reopen で外してから submit（reopen の出力は対象2件ちょうど）。提出前照合: 対象 id は real.yaml / real_akashic.yaml / real_vocab.yaml / real_zone.yaml / converted.yaml のいずれにも無し（proto.yaml のヒットは T982/T983 の本文内参照のみ）。converted 10,262→**10,264** / rejects 2,055→**2,053**、重なり0・漏れ0。trigger_when_blocked はファミリーがこの2件だけだったため完全解消。pilot320 cards を登録形に書換、round355 cards を新設（登録カード自身の実挙動: 074 ブロックされるとバトルの前に2ブレイクし相打ち・別のクリーチャーがブロックされても誘発しない／068 ブロックで両方手札へ＋離脱の連鎖・破壊されても離脱だけ発火）。テスト15 passed（round355 cards 5＋pilot320 cards 登録形 2＋data_audit 8）＋第320弾本体7 passed（別 invocation）。回答は answers/round355.yaml に保存。次の番号: パイロット321 / ラウンド356 / プロト T984。
+
+## 第321弾 「相手プレイヤーを攻撃してブロックされなかった時」（trigger_when_unblocked）— ドリフト（attack_end の blocked: false 照合）
+
+センサス（rejects 2,053件を取り直し）: pure 1,904件 / multi 131件 / 空 gaps 18件（全て第312〜315弾の監査で別ブロッカー確認済み）。pure の大半は範囲外（gr_summon 147、aura 108＝未承認、hyperdimensional_zone 105、dragheart 45、psychic_filter 45、hyperdimensional_summon 41、out_of_game 23、duelist_link 20、outside_game 12＝2026-11-06 ユーザー指示で対象外化済み、pandora_shift 4）か評価済み DEEP/重い/延期（第318〜320弾の記録参照）。（訂正 2026-11-20: 当初「pure 1,906件 / hyperdimensional_zone 112 / psychic_filter 46 / hyperdimensional_summon 42」と書いたのは第320弾時点の数え方の写し間違いで、合計が 2,055件になり 2,053件と合わなかった。正しくは pure 1,904件。数え方は全行を pure/multi/空に分け、out_of_scope 行も gaps に従って数える。）フィールド系と does_not_untap（2件）は第316・318弾の評価どおり却下、flying / delayed_return / draw_up_to / look_reorder は第319・320弾で却下済み。範囲内・未評価で最小の **trigger_when_unblocked（純粋2件、multi-gap 行にも現れない）** を選定した。
+
+対象は dm19-050 大鉄漢シルバスターズ / dm19-069 食いしん坊チャロック。両行とも partial は骨格（abilities 無し）で、未解決は「このクリーチャーが相手プレイヤーを攻撃してブロックされなかった時」の1節のみ。partial の notes は「ダイナモ能力の仕組みを表す語彙が無い」としているが、ダイナモは第76弾で keywords.yaml 定義済み（keywords: [dynamo]）。
+
+**結論: ドリフト（追加語彙なし）。** 「ブロックされなかった時」は attack_end レコードの blocked: false 照合で書ける（第175弾 T385 / 第219弾で確立）。登録先例は同じダイナモの dm20-016 風使いのシャイアンで、when は {event: attack_end, subject: self, target: player, blocked: false} そのもの:
+
+- **形A（dm19-050）**: trigger {when 上記} → may [draw {count: 1}]。
+- **形B（dm19-069）**: trigger {when 上記} → may [move {select: {zone: deck, owner: you, from_top: 1}, to: mana, reason: put}]。
+
+- プロト T984（形A）/ T985（形B）。次の空きは **T986**。
+- tests/test_vocab_pilot321.py: **6 passed** — parse＋確立形一致（keywords [dynamo] を含む）、形A（ブロックされずに攻撃→攻撃の終わりに1枚引く／辞退できる／ブロックされると引かない判別）、形B（ブロックされずに攻撃→山札の上1枚がマナへ・山札-1／ブロックされると置かない判別）。
+- tests/test_vocab_pilot321_cards.py: **2 passed** — 対象2行の残留（gaps・unsupported ともに当該ギャップのみ・未登録・ファミリーはこの2件だけ）、提出形（partial の素性＋keywords [dynamo]＋確立形）の parse と対応プロトとの abilities 完全一致。
+- 収支: converted **10,264（不変）** / rejects **2,053（不変）**。変更は proto.yaml（T984〜T985 純追加）・テスト2件・docs のみ。エンジン・defs・スキーマ変更なし。
+
+### ラウンド356側の注意
+
+- 対象は dm19-050 / dm19-069 の2件。提出形は tests/test_vocab_pilot321_cards.py の FORMS 相当: partial ＋ keywords [dynamo] ＋ abilities（各1件）、unsupported 除去。text は partial の全文を使うが、ダイナモ説明と本条項の区切りが空白になっている箇所は reject 行の公式全文どおり改行に直すこと。
+- 対象2行とも gaps = [trigger_when_unblocked] のため reopen で外れる見込み（ファミリーはこの2件だけなので出力は2件のはずだが、必ず数えること）。
+- 正本判定は提出前に行うこと。両行とも partial に aliases 記録は無く、id は real.yaml / real_akashic.yaml / real_vocab.yaml / real_zone.yaml / proto.yaml / converted.yaml のいずれにも無いことを確認済み（2026-11-20）。
+- 登録後は abilities が各1件ちょうどで FORM と完全一致すること、keywords が [dynamo] であることを本文と照合すること。
+- 次の番号: パイロット322 / ラウンド357 / プロト T986。
+
+### ラウンド356（第321弾の再変換）
+
+**新規登録2件**（dm19-050 大鉄漢シルバスターズ＝形A〔trigger {event: attack_end, subject: self, target: player, blocked: false} → may [draw 1]〕 / dm19-069 食いしん坊チャロック＝形B〔同じ when → may [move {zone: deck, from_top: 1} to mana, reason: put]〕。いずれも partial ＋ keywords [dynamo] ＋第321弾の確立形、unsupported 除去。登録形は確立形と完全一致で abilities は各1件ちょうど、keywords は両件とも [dynamo]、連結混入なし）・**alias 畳み込み0件**（両行とも partial に aliases 記録は無く、提出前に id が real.yaml / real_akashic.yaml / real_vocab.yaml / real_zone.yaml / proto.yaml / converted.yaml のいずれにも無いことを確認済み）・**stale クリーンアップ0件**・**差し戻し0件**。text は partial の全文で、ダイナモ説明と本条項の区切りが空白だった箇所は reject 行の公式全文どおり改行に直した。対象2行は gaps = [trigger_when_unblocked] のため reopen で外してから submit（reopen の出力は対象2件ちょうど）。converted 10,264→**10,266** / rejects 2,053→**2,051**、重なり0・漏れ0。trigger_when_unblocked はファミリーがこの2件だけだったため完全解消。pilot321 cards を登録形に書換、round356 cards を新設（登録カード自身の実挙動: 050 ブロックされずに攻撃すると1枚引く・ブロックされると引かない／069 ブロックされずに攻撃すると山札の上1枚がマナへ・ブロックされると置かない）。テスト21 passed（round356 cards 5＋pilot321 cards 登録形 2＋pilot321 本体 6＋data_audit 8）。回答は answers/round356.yaml に保存。次の番号: パイロット322 / ラウンド357 / プロト T986。
+
+## 第322弾 「攻撃してブロックされなかった時、このターンにダイナモを使うためにタップした自分のダイナモ１体につき１枚、シールドを余分にブレイクする」（trigger_when_unblocked_and_extra_breaks_per_dynamo_tap）— エンジン拡張（新 turn_count kind dynamo_tap）
+
+センサス（rejects 2,051件を取り直し）: pure 1,902件 / multi 131件 / 空 gaps 18件（全て第312〜315弾の監査で別ブロッカー確認済み。数え方は全行を pure/multi/空に分け、out_of_scope 行も gaps に従って数える。第321弾の記録は当初 pure 1,906件と写し間違えていたため訂正済み）。pure の大半は範囲外（gr_summon 147、aura 108＝未承認、hyperdimensional_zone 105、dragheart 45、psychic_filter 45、hyperdimensional_summon 41、out_of_game 23、duelist_link 20、outside_game 12＝2026-11-06 ユーザー指示で対象外化済み、pandora_shift 4）か評価済み DEEP/重い/延期（第318〜321弾の記録参照）。delayed_return / draw_up_to / look_reorder / flying / does_not_untap は新しい証拠がない限り再提案しない（第320・321弾で却下済み）。範囲内・未評価で最小の **trigger_when_unblocked_and_extra_breaks_per_dynamo_tap（純粋2件、multi-gap 行にも現れない）** を選定した。
+
+対象2枚:
+- dm19-003 電脳鉄人センジュオー（水・5・3000・グレートメカオー/ダイナモ）: partial あり（骨格。abilities 無し）。未解決は「攻撃してブロックされなかった時、このターンに「ダイナモ」能力を使うためにタップした自分のダイナモ１体につき１枚、シールドを余分にブレイクする」の1節のみ。partial の注記「ダイナモの語彙が無い」は stale（dynamo は第76弾で定義済み）。
+- dm23ex2-045: rejects 行は partial 空・name None・text はクリーチャー面のみ。by_product（23ex2.jsonl）で原文照合済み: ツインパクトで、クリーチャー面は dm19-003 と同名・同能力（「１つ、シールドを追加でブレイクする」と読む）、呪文面 センジュ・チューンは S・トリガーで「自分の手札の数と同じ枚数のカードを引き、その後、こうして引いた枚数と同じ数、手札を捨てる」。submit は by_product 行（faces 付き）を正本として読むため、faces 形式で提出する。なお rule_convert.split は faces 付き行には None を返すため、merge_split による text の上書きは起きない（rejects 行だけで split するとクリーチャー面だけが返るが、submit の正本は by_product 行）。
+
+第321弾の when {event: attack_end, subject: self, target: player, blocked: false} の直接拡張。追加ブレイクの数は「このターンにダイナモを使うためにタップした自分のダイナモの体数」で、既存の履歴カウンタでは表せない（hist:tap は攻撃・ブロック等のあらゆるタップを数える）。エンジン拡張: 新しい turn_count kind `dynamo_tap`（defs.py の TURN_COUNT_KINDS に追加）。op_modify が add_of（ダイナモだけが使う mod。keywords.yaml の activate 経路と battle_start トリガー経路の両方とも op_modify 経由）を適用した時、発生源の cid を turn_counters["dynamo_tap:<player>"] に記録する（重複は数えない。タップはコスト／トリガー効果として先に済み、付与が使用の完了点）。_turn_count でリストの体数を返す。形: trigger {event: attack_end, subject: self, target: player, blocked: false} → [{op: break, player: opp, count: {turn_count: {kind: dynamo_tap, owner: you}}}]（通常の1ブレイクは攻撃中に済んでおり、ここで余分に N 枚割る。N=0 でも余分のブレイク決定（choose_shields min 0）が出るが何も割らない）。注意: プレイヤーへの攻撃ではバトルが発生しないため、ダイナモの battle_start トリガーはセンジュオー自身の攻撃では誘発しない。ダイナモの使用は「攻撃できる時」の activate か、他のクリーチャーのバトル開始時に起きる。
+
+副次的なエンジン修正（呪文面のため）: op_set_var は値が式（{count: ...} 等）の時は評価して束縛する。従来は辞書のまま束縛され {var:} の読みが len(辞書)＝1 になっていた（プローブで確認: 手札3枚で set_var した {count: {zone: hand}} が draw 1枚になっていた。dmx12b-044 / dmrp09-020 / dmx07-020 等の既存6件も同じ誤りで、この修正で正しい枚数になる）。リスト・数値・真偽値は従来どおり。呪文面の形: [set_var hand_n {count: {zone: hand, owner: you}}, draw {var: hand_n}, discard {zone: hand, owner: you, count: {var: hand_n}}]（discard は parse 時に move（to: graveyard, reason: discard）へ展開。「引いた枚数」＝唱えた時点の手札枚数と同数）。
+
+既知の不具合（第322弾の変更とは無関係。変更前のエンジンでも再現する。判断は後回し）: 同じバトル開始時にダイナモ2体がダイナモを使うと、chars キャッシュの stale 表明（`chars cache stale: cid=0`）で落ちる。T984/T985/R069 のみの再現（T004 を攻撃し、2つの yes_no に両方 yes）で確認済み。ダイナモデッキでは起きうる組み合わせのため、別途のエンジン課題として記録する。試験ではドナー1体だけの形で固定した。
+
+proto T986（dm19-003 型。keywords [dynamo, unblockable]）/ T987（センジュ・チューン型。keywords [s_trigger]）。テスト9件通過（pilot322 本体 7＋pilot322 cards 提出前 2）。次の番号: パイロット323 / ラウンド358 / プロト T988。
+
+### ラウンド357（第322弾の再変換）
+
+**新規登録2件**（dm19-003 電脳鉄人センジュオー＝trigger {event: attack_end, subject: self, target: player, blocked: false} → [{op: break, player: opp, count: {turn_count: {kind: dynamo_tap, owner: you}}}] / dm23ex2-045 ツインパクト＝クリーチャー面は dm19-003 と同形、呪文面 センジュ・チューンは [set_var hand_n {count: {zone: hand, owner: you}}, draw {var: hand_n}, discard {var: hand_n}]。dm19-003 は partial ＋ keywords [dynamo, unblockable] ＋確立形、unsupported 除去。dm23ex2-045 は faces 形式（top text は convert_twin の形「面名: 面文 ／ 面名: 面文」、top レベルに keywords/abilities は無し）。登録形は確立形と完全一致で連結混入なし）・**alias 畳み込み0件**（両 id とも提出前に real.yaml / real_akashic.yaml / real_vocab.yaml / real_zone.yaml / proto.yaml / converted.yaml のいずれにも無く、aliases 記録も無し）・**stale クリーンアップ0件**・**差し戻し0件**。対象2行は gaps = [trigger_when_unblocked_and_extra_breaks_per_dynamo_tap] のため reopen で外してから submit（reopen は dm19-003 の1件だけが外れた。dm23ex2-045 の rejects 行には reason が無く reopen の条件に合わなかったためで、submit で rejects から外れた）。converted 10,266→**10,268** / rejects 2,051→**2,049**、重なり0・漏れ0。trigger_when_unblocked_and_extra_breaks_per_dynamo_tap はファミリーがこの2件だけだったため完全解消。pilot322 cards を登録形に書換、round357 cards を新設（登録カード自身の実挙動: 003 ダイナモ未使用なら1枚・dm19-050 の activate で1体使うと2枚／045 クリーチャー面も同じく2枚／045 呪文面は手札2枚の時に2枚引いて2枚捨てる。ツインパクトの呪文面は main 決定で play:dm23ex2-045:1（face 1）で唱える）。テスト22 passed（round357 cards 5＋pilot322 cards 登録形 2＋pilot322 本体 7＋data_audit 8）。回答は answers/round357.yaml に保存。次の番号: パイロット323 / ラウンド358 / プロト T988。
+
+### 語彙パイロット第323弾（unblocked_condition、ドリフト）
+
+センサス（rejects 2,049件を取り直し）: pure 1,900件 / multi 131件 / 空 gaps 18件（全て第312〜315弾の監査で別ブロッカー確認済み。数え方は全行を pure/multi/空に分け、out_of_scope 行も gaps に従って数える）。pure の大半は範囲外（gr_summon 147、aura 108＝未承認、hyperdimensional_zone 105、dragheart 45、psychic_filter 45、hyperdimensional_summon 41、out_of_game 23、duelist_link 20、outside_game 12＝2026-11-06 ユーザー指示で対象外化済み、pandora_shift 4）か評価済み DEEP/重い/延期（第318〜322弾の記録参照）。4件組はすべて評価済み（victory_icon_filter、dokindam_gacha、cost_sum_of_revealed、climax_dorongo、shield_manipulation、spell_replay、summon_lock、opponent_chooses_deck_position、dynamic_name_reference_filter）。3件組も大半が評価済み DEEP／延期。delayed_return / draw_up_to / look_reorder / flying / does_not_untap は新しい証拠がない限り再提案しない（第320・321弾で却下済み）。範囲内・未評価で最小の純粋2件組を走査し、after_battle_trigger（2件の構造が不均一・partial 空）、attack_limit_once_per_turn（静的制限と時限呪文面で不均一）、cip_trigger_double（トリガー二重化はエンジン作業が重い）、s_trigger_suppression（抑制の条件が2件で異なる）、enters_tapped_optional（partial 空・他節が重い）、from_hand_trigger（2件の構造が不均一）を却下し、**unblocked_condition（純粋2件、multi-gap 行にも現れない）**を選定した。別途ドリフト候補として記録: breaks_equal_creature_count（dm24ex2-024 / dm26ex4-cho021、同名呪文の2印刷。「自分のクリーチャー１体はその数のシールドを追加でブレイクする」は breaks 付与の count 式で書ける見込み。「そのクリーチャーの攻撃中、相手は呪文を唱えられない」は partial に unsupported が無く既存語彙で表せる扱い）。
+
+対象は dmx04-011 ケロディ二郎（水・コスト4・パワー2000・ゲル・フィッシュ/ハンター・マナ1）/ dmx09-049 誕生の祈（自然・コスト3・パワー2000・ビーストフォーク・マナ1）。両行とも partial は空で、by_product（x04.jsonl / x09.jsonl）で原文照合済み。両カードとも単一能力のクリーチャーで、全文が「このクリーチャーが相手プレイヤーを攻撃してブロックされなかった時」の1節だけ。
+
+結論: ドリフト（追加語彙なし）。「ブロックされなかった時」は第321弾で確立した attack_end {subject: self, target: player, blocked: false} そのもので、ギャップ名の違いだけが残っていた。効果側も既存の形。形A（dmx04-011）: trigger {event: attack_end, subject: self, target: player, blocked: false} → may [move {zone: bz, owner: any, filter: {types: [creature]}, count: 1} to hand, reason: return]（手札に戻すは既存の return 形）。形B（dmx09-049）: 同じ when → may [choose {zone: deck, owner: you, look: true, filter: {types: [creature]}, count: 1} as t; move {ref: t, count: all} to hand, reason: draw; shuffle]（山札を見てクリーチャーを手札に加えるはアポロニア・ドラゴンの先例と同形。look: true が相手に見せる部分を担う）。
+
+proto T988（dmx04-011 型）/ T989（dmx09-049 型）。テスト9件通過（pilot323 本体 7: 形A＝ブロックされなければ相手クリーチャーを手札に戻す・辞退可・ブロック時は発火しない、形B＝ブロックされなければ山札からクリーチャーを手札に加える・辞退可・ブロック時は発火しない、＋pilot323 cards 提出前 2）。次の番号: パイロット324 / ラウンド359 / プロト T990。
+
+### ラウンド358（第323弾の再変換）
+
+**新規登録2件**（dmx04-011 ケロディ二郎＝trigger {event: attack_end, subject: self, target: player, blocked: false} → may [move {zone: bz, owner: any, filter: {types: [creature]}, count: 1} to hand, reason: return] / dmx09-049 誕生の祈＝同じ when → may [choose {zone: deck, owner: you, look: true, filter: {types: [creature]}, count: 1} as t; move {ref: t, count: all} to hand, reason: draw; shuffle]。dmx04-011 は水・コスト4・パワー2000・ゲル・フィッシュ/ハンター・マナ1、dmx09-049 は自然・コスト3・パワー2000・ビーストフォーク・マナ1。両行とも partial は空で、by_product で原文照合済み。登録形は確立形と完全一致で連結混入なし）・**alias 畳み込み0件**・**stale クリーンアップ0件**・**差し戻し0件**。対象2行は gaps = [unblocked_condition] のため reopen で外してから submit（reopen は2件とも外れた）。converted 10,268→**10,270** / rejects 2,049→**2,047**、重なり0・漏れ0。unblocked_condition はファミリーがこの2件だけだったため完全解消。pilot323 cards を登録形に書換、round358 cards を新設（登録カード自身の実挙動: 011 ブロックされなければ相手クリーチャーを手札に戻す・ブロック時は発火しない／049 ブロックされなければ山札からクリーチャーを手札に加える・ブロック時は発火しない）。テスト22 passed（round358 cards 5＋pilot323 cards 登録形 2＋pilot323 本体 7＋data_audit 8）。回答は answers/round358.yaml に保存。次の番号: パイロット324 / ラウンド359 / プロト T990。
+
+**提出形の修正（owner: any）**: 形Aの当初形は select に owner が無く、実挙動プローブで相手のクリーチャーが候補に出ず自分のクリーチャー（攻撃者自身）だけが手札に戻ることを検出した。select の owner 既定は you のため、両プレイヤーが対象の時は owner: any が要る（第292弾と同じ罠。T081 のバウンス先例と同形）。proto・テスト・docs を owner: any に修正してから提出した。**訂正**: 第323弾の記録で「両 id とも aliases 記録も無いことを提出前に確認済み」と書いたのは、対象 id 自体に aliases が無いことの確認で、同名再録の存在までは見ていなかった。dmx09-049 は submit 時に同名再録3件（dm09-054 / dmc34-053 / dmc39-031、いずれも「誕生の祈」）が source.aliases に記録された。この3件は converted.yaml にも rejects.jsonl にも無く、rejects 行の畳み込みではない。
+
+## 第324弾 「自分のクリーチャー１体はその数（自分のクリーチャーの数）のシールドを追加でブレイクする」（breaks_equal_creature_count）— エンジン拡張（スキーマのみ）
+
+センサス（rejects 2,047件を取り直し）: pure 1,898件 / multi 131件 / 空 gaps 18件（全て第312〜315弾の監査で別ブロッカー確認済み。数え方は全行を pure/multi/空に分け、out_of_scope 行も gaps に従って数える）。pure の大半は範囲外（gr_summon 147、aura 108＝未承認、hyperdimensional_zone 105、dragheart 45、psychic_filter 45、hyperdimensional_summon 41、out_of_game 23、duelist_link 20、outside_game 12＝2026-11-06 ユーザー指示で対象外化済み、pandora_shift 4）か評価済み DEEP/重い/延期（第318〜323弾の記録参照）。delayed_return / draw_up_to / look_reorder / flying / does_not_untap は新しい証拠がない限り再提案しない（第320・321弾で却下済み）。第323弾の記録でドリフト候補として残した **breaks_equal_creature_count（純粋2件、multi-gap 行にも現れない）** を選定した。
+
+対象は dm24ex2-024 / dm26ex4-cho021（同名カード ジョジョジョ・マキシマムの2印刷）。dm24ex2-024 の partial は骨格あり（unsupported は breaks_equal_creature_count だけ）。dm26ex4-cho021 は partial 空。by_product で原文照合済み。両カードとも無色・コスト9・マナ1の呪文。
+- dm24ex2-024: 「G・ゼロ：バトルゾーンまたはマナゾーンに自分のジョーカーズが合計11枚以上あれば、この呪文をコストを支払わずに唱えてもよい。自分のクリーチャーを数える。このターン、自分のクリーチャー１体はその数のシールドを追加でブレイクし、そのクリーチャーの攻撃中、相手は呪文を唱えられない。」
+- dm26ex4-cho021: G・ゼロの文言が「自分の、ジョーカーズとマナゾーンにあるジョーカーズ・カードが合計11以上なら」と異なる（by_product の原文のまま。効果は同一）。
+
+結論: エンジン拡張（スキーマのみ）。3つの既存の形の組み合わせだが、1点だけスキーマの拡張が必要だった。
+- G・ゼロ: free_if {cmp: [{count: {zone: [bz, mana], owner: you, filter: {race_has: ジョーカーズ}}}, '>=', 11]}（free_if の cmp＋count 形は既存。zone の配列は zones_of が受ける）。
+- 数えて付与: [set_var n {count: {zone: bz, owner: you, filter: {types: [creature]}}}; choose {zone: bz, owner: you, filter: {types: [creature]}, count: 1} as chosen; modify {ref: chosen} {breaks_add: {var: n}} end_of_turn]。breaks_add の辞書形に {var: 名前} を許可するスキーマ拡張（dmsim/cards/defs.py Checker.mod と dmsim/cards/schema.py の breaks_add 項目。card.schema.json は `python -m dmsim.cards.schema` で再生成。提出時の _schema_check は card.schema.json を読むため、defs.py だけでは足りず提出で弾かれた。実行時は op_modify の _bake_refs が生成時に数値へ焼くため core.py の変更は不要。{amount, count} 形（第170弾）は攻撃時に数え直すためここでは使えない（解決時の数を固定するため）。なお {var:} の読みが1になる latent bug は第322弾で修正済み。
+- 攻撃中の呪文封じ: delayed_trigger {event: attack, subject: {ref: chosen}} → [modify {zone: hand, owner: opp, filter: {types: [spell]}} {deny: [cast]} during_attack] duration end_of_turn, once: false（遅延誘発は subject: {ref: 変数名} で「その〜」を指せる。deny cast の during_attack 形は dmex13-064 の先例。once: false は「そのクリーチャーの攻撃中」が攻撃のたびに適用されるため）。
+
+proto T990（dm24ex2-024 型）/ T991（dm26ex4-cho021 型。呪文部分は同一で G・ゼロの文言だけが違う）。テスト8件通過（pilot324 本体 6: 形の一致、G・ゼロ＝11枚で無料・10枚で非無料、呪文＝自分のクリーチャー3体で選んだ1体が4枚割る、選んだ攻撃中は相手の呪文唱え不可・攻撃後は可、選ばれなかった攻撃では封じなし、＋pilot324 cards 提出前 2）。次の番号: パイロット325 / ラウンド360 / プロト T992。
+
+### ラウンド359（第324弾の再変換）
+
+**新規登録1件**（dm26ex4-cho021 ジョジョジョ・マキシマム＝free_if {cmp: [{count: {zone: [bz, mana], owner: you, filter: {race_has: ジョーカーズ}}}, '>=', 11]} ＋ [set_var n {count: {zone: bz, owner: you, filter: {types: [creature]}}}; choose {zone: bz, owner: you, filter: {types: [creature]}, count: 1} as chosen; modify {ref: chosen} {breaks_add: {var: n}} end_of_turn; delayed_trigger {event: attack, subject: {ref: chosen}} → [modify {zone: hand, owner: opp, filter: {types: [spell]}} {deny: [cast]} during_attack] end_of_turn, once: false]。無色・コスト9・マナ1の呪文。by_product で原文照合済み（G・ゼロの文言は「自分の、ジョーカーズとマナゾーンにあるジョーカーズ・カードが合計11以上なら」。登録形は確立形と完全一致で連結混入なし）・**alias 畳み込み1件**（dm24ex2-024＝旧印刷。identity 実測で canon_id は dm26ex4-cho021。reopen で行を外し、cho021 の登録時に validate の aliases_for が source.aliases = [dm24ex2-024, dmex19-002, dmrp04m-001] を自動付与した。dm24ex2-024 は converted の独立エントリではなく alias として引け、reject 行も残らないことを提出後に確認済み）・**stale クリーンアップ0件**・**差し戻し0件**。対象2行は gaps = [breaks_equal_creature_count] のため reopen で外してから submit（reopen は dm24ex2-024 の1件だけが外れた。dm26ex4-cho021 の rejects 行には reason が無く reopen の条件に合わなかったためで、submit で rejects から外れた）。converted 10,270→**10,271** / rejects 2,047→**2,045**、重なり0・漏れ0。breaks_equal_creature_count はファミリーがこの2行だけだったため完全解消。pilot324 cards を登録形に書換、round359 cards を新設（登録カード自身の実挙動: ジョーカーズ11枚で無料・自分のクリーチャー3体で選んだ1体が4枚割る・選んだ攻撃中は相手の呪文唱え不可で攻撃後は可）。テスト20 passed（round359 cards 4＋pilot324 cards 登録形 2＋pilot324 本体 6＋data_audit 8）。回答は answers/round359.yaml に保存。次の番号: パイロット325 / ラウンド360 / プロト T992。
+
+**提出時のスキーマ不一致（第324弾の追記）**: breaks_add {var: n} は defs.py の Checker を通ったが、submit の _schema_check は data/schema/card.schema.json を読むため「スキーマ不一致」で弾かれた。dmsim/cards/schema.py の breaks_add 項目に {var: string} の第3選択肢を追加し、`python -m dmsim.cards.schema > data/schema/card.schema.json` で再生成してから再提出した（両ファイルとも第324弾のコミットに含めた）。**教訓**: スキーマ拡張は defs.py と schema.py の両方＋card.schema.json の再生成までが1セット（defs.py だけでは提出で弾かれる）。**pytest の再発**: VM 再起動で pytest が消えたため `pip install --break-system-packages 'pytest>=8'` で復旧（2026-11-21 再発・復旧済み）。
+
+## 第325弾 「シールドをひとつ少なくブレイクする」（breaks_reduction）— ドリフト（breaks_add: -1 の常在型）
+
+センサス（rejects 2,045件を取り直し）: pure 1,896件 / multi 131件 / 空 gaps 18件（全て第312〜315弾の監査で別ブロッカー確認済み。数え方は全行を pure/multi/空に分け、out_of_scope 行も gaps に従って数える）。pure の大半は範囲外（gr_summon 147、aura 108＝未承認、hyperdimensional_zone 105、dragheart 45、psychic_filter 45、hyperdimensional_summon 41、out_of_game 23、duelist_link 20、outside_game 12＝2026-11-06 ユーザー指示で対象外化済み、pandora_shift 4）か評価済み DEEP/重い/延期（第318〜324弾の記録参照）。delayed_return / draw_up_to / look_reorder / flying / does_not_untap は新しい証拠がない限り再提案しない（第320・321弾で却下済み）。4件組はすべて評価済み。2件組のうち、after_battle_trigger / attack_limit_once_per_turn / cip_trigger_double / s_trigger_suppression / enters_tapped_optional / from_hand_trigger は第323弾で却下済み。範囲内・未評価で最小の **breaks_reduction（純粋2件、multi-gap 行にも現れない）** を選定した。別途、候補として記録: blocked_break（dm39-035 / dmc34-030。「攻撃してブロックされた時、相手のシールドを１枚ブレイクする」は attack_end {blocked: true} の形で書ける見込み。ただし dm39-035 は呪文によるターン中の遅延誘発で、when の subject に「自分のクリーチャー」の照合が要るか要検討）、broken_shields_no_s_trigger（ブレイクしたシールドの S・トリガー抑止。ブレイク処理側の対応が要りそうで重い）、after_attack_destroy（我我我ガイアール・ブランドの2印刷。「可能なら攻撃し、その攻撃の後で破壊する」は第319弾の destroy_self_after_attacking と要比較）、first_attack_end（瞬閃と疾駆と双撃の決断の2印刷。モード呪文の「最初の攻撃の終わりにアンタップ」は first-attack 条件付きの遅延誘発）。
+
+対象は dmr21-007 九極の精霊 マウリエル（光/水・コスト9・パワー12500・エンジェル・コマンド/革命軍/侵略者・マナ1）/ dm23rp1-004 終納 カボード＝ロウ（闇・コスト8・パワー12000・アビスロイヤル・マナ1）。両行とも partial あり。by_product で原文照合済み。
+- dmr21-007: 「マナゾーンに置く時、このカードはタップして置く。 ブロッカーT・ブレイカー相手のクリーチャーはすべて、シールドをひとつ少なくブレイクする。」partial は骨格のみ（text は「ひとつ少なくブレイクする」だけ）。
+- dm23rp1-004: アビスラッシュ＋T・ブレイカー＋「相手のタップしているクリーチャーはすべて、パワーを-5000され、シールドを１つ少なくブレイクする。（パワー０以下のクリーチャーは破壊される）」＋「自分の他のアビスすべてのパワーは+5000され、「パワード・ブレイカー」を得る」。partial は keywords [triple_breaker, abyss_rush]＋アビスの常在型まであり、unsupported はタップ条件の常在型ごと1件。注記に「breaks は最大値で集約される」とあるが、それは breaks（絶対値）の話で、breaks_add（相対値）は別経路。
+
+結論: ドリフト（追加語彙なし）。breaks_add は負値を取れ、max 合成の後に既定1を含む使う能力の値すべてへ加算され、0 未満にはならない（core.py:976-981。:901 の注記も「N枚少なくブレイクする」を明示している）。形は常在型の mod に breaks_add: -1 を置くだけ。
+- 形A（dmr21-007）: {kind: static, affects: {owner: opp, filter: {types: [creature]}}, mod: {breaks_add: -1}}（keywords [blocker, triple_breaker]）
+- 形B（dm23rp1-004）: {kind: static, affects: {owner: opp, filter: {types: [creature], tapped: true}}, mod: {power: -5000, breaks_add: -1}}（tapped は FILTER_KEYS にある既存のフィルタ。アビスの常在型は partial どおり既存形。アビスラッシュは keywords abyss_rush で converted.yaml に先例あり。攻撃するクリーチャーは攻撃の宣言でタップされるため、攻撃中は tapped: true の対象になる。そのため形Bのブレイク減少は、相手のクリーチャーの攻撃すべてに及ぶ）
+
+注意（既存の扱い）: 「マナゾーンに置く時、このカードはタップして置く」はデータモデルに無く、text のみで再現する。converted.yaml に同じ文言の登録カードが359枚あり、いずれも対応する ability / keyword / フィールドが無い（dm10-037 / dm10-041 等）。エンジンもマナ配置時のタップは相手の opp_mana_tapped キーワード持ちにだけ行う。よって dmr21-007 の提出形にもこの節のモデルは含めない。
+
+proto T992（dmr21-007 型）/ T993（dm23rp1-004 型）。テスト6件通過（pilot325 本体 4: 形の一致、形A＝相手の単体ブレイカーは0枚・マウリエル自身は3枚、形B＝タップした相手クリーチャーはパワー-5000・攻撃する相手クリーチャーは1枚少なくブレイク・対照では1枚割る、＋pilot325 cards 提出前 2）。次の番号: パイロット326 / ラウンド361 / プロト T994。
+
+### ラウンド360（第325弾の再変換）
+
+**新規登録2件**（dmr21-007 九極の精霊 マウリエル＝{kind: static, affects: {owner: opp, filter: {types: [creature]}}, mod: {breaks_add: -1}}、keywords [blocker, triple_breaker] / dm23rp1-004 終納 カボード＝ロウ＝{kind: static, affects: {owner: opp, filter: {types: [creature], tapped: true}}, mod: {power: -5000, breaks_add: -1}}＋アビスの常在型 {owner: you, other: true, filter: {race_has: アビス}} {power: 5000, grant: [powered_breaker]}、keywords [triple_breaker, abyss_rush]。両行とも partial＋by_product で原文照合済み。登録形は確立形と完全一致で連結混入なし）・**alias 畳み込み0件**・**stale クリーンアップ0件**・**差し戻し0件**。対象2行は gaps = [breaks_reduction] のため reopen で外してから submit（reopen は2件とも外れた）。converted 10,271→**10,273** / rejects 2,045→**2,043**、重なり0・漏れ0。breaks_reduction はファミリーがこの2件だけだったため完全解消。pilot325 cards を登録形に書換、round360 cards を新設（登録カード自身の実挙動: 007 相手の単体ブレイカーは0枚・自身は3枚／004 タップした相手クリーチャーはパワー-5000・攻撃する相手クリーチャーは1枚少なくブレイク・対照では1枚割る）。テスト18 passed（round360 cards 4＋pilot325 cards 登録形 2＋pilot325 本体 4＋data_audit 8）。回答は answers/round360.yaml に保存。次の番号: パイロット326 / ラウンド361 / プロト T994。
+
+## 第326弾 「攻撃してブロックされた時、相手のシールドを１枚ブレイクする」（blocked_break）— ドリフト（block イベントの確立形）
+
+センサス（rejects 2,043件を取り直し）: pure 1,894件 / multi 131件 / 空 gaps 18件（全て第312〜315弾の監査で別ブロッカー確認済み。数え方は全行を pure/multi/空に分け、out_of_scope 行も gaps に従って数える）。pure の大半は範囲外（gr_summon 147、aura 108＝未承認、hyperdimensional_zone 105、dragheart 45、psychic_filter 45、hyperdimensional_summon 41、out_of_game 23、duelist_link 20、outside_game 12＝2026-11-06 ユーザー指示で対象外化済み、pandora_shift 4）か評価済み DEEP/重い/延期（第318〜325弾の記録参照）。delayed_return / draw_up_to / look_reorder / flying / does_not_untap は新しい証拠がない限り再提案しない（第320・321弾で却下済み）。4件組はすべて評価済み。2件組のうち、after_battle_trigger / attack_limit_once_per_turn / cip_trigger_double / s_trigger_suppression / enters_tapped_optional / from_hand_trigger は第323弾で却下済み。第325弾の記録にある候補のうち、範囲内・未評価で最小の **blocked_break（純粋2件、multi-gap 行にも現れない）** を選定した。別途、候補として記録: broken_shields_no_s_trigger（dm14-s09 / dm19-065。「このクリーチャーがブレイクしたシールドの S・トリガーは使えない」はブレイク処理側の対応が要りそうで重い）、after_attack_destroy（dm25ex3-sp1 / dmart10-002 は同一カード我我我ガイアール・ブランドの2印刷。ラウンド245で差し戻し済み。残るは条件つき追加軽減と「可能なら攻撃し、その攻撃の後で破壊する」後続で重い）、first_attack_end（dm26ex4-cho025 / dm26sd1-i004 は同一カード瞬閃と疾駆と双撃の決断の2印刷。モード呪文の「最初の攻撃の終わりにアンタップする」は once: true（既定）の遅延誘発で書ける見込みだが、モード選択の形ごと作る必要があり今回は見送り）。
+
+対象は dm39-035 カンクロウ・ブラスター（自然・コスト6・マナ1の呪文）/ dmc34-030 獣達の挽歌（自然・コスト4・マナ1の呪文）。両行とも partial あり（unsupported の断片だけ）。by_product で原文照合済み。
+- dm39-035: 「このターン、自分のクリーチャーすべてのパワーは+4000され、シールドをさらに１枚ブレイクする。／このターン、自分のクリーチャーが相手を攻撃しブロックされた時、相手のシールドを１枚ブレイクする。／呪文の効果によって、このターン、相手がバトルゾーンにあるクリーチャーを選ぶ時、自分のクリーチャーを選ぶことはできない。」
+- dmc34-030: 「このターンの終わりまで、自分のクリーチャーすべてのパワーは+4000され、「このクリーチャーが相手プレイヤーを攻撃してブロックされた時、相手のシールドを１枚ブレイクする」を得る。」
+
+結論: ドリフト（追加語彙なし）。核は block イベントの確立形（converted.yaml に129件の先例。ニンジャ・ストライク等）で、attack_end {blocked: true} ではない。理由: ブロックが宣言されると攻撃先はブロッカーの参照に書き換わる（combat.py:434）ため、attack_end レコードの target はブロッカー参照になり、target: player はブロックされた攻撃に決して一致しない（実測で確認。subject は攻撃クリーチャーのまま、blocked: true は立つ）。block イベントのレコードは {ev: block, subject: ブロッカー参照, attacker: 攻撃クリーチャー参照, controller: 防御側} で、when の attacker キーで攻撃クリーチャーを照合する。ブレイクはブロック宣言の直後（バトルの前）に起きるが、これが実ルールのタイミングでもある。break op は第322弾の先例。2つの形は核を共有し、届け方だけが違う。
+- 形A（dm39-035）: 呪文が3つの継続的効果を作る。(1) modify {zone: bz, owner: you, filter: {types: [creature]}, count: all} {power: 4000, breaks_add: 1} end_of_turn。(2) delayed_trigger {event: block, attacker: {owner: you, filter: {types: [creature]}}} → [{op: break, player: opp, count: 1}] end_of_turn, once: false（attacker の {owner, filter} 形は _ref_match / _subject_match が受ける。once: false は「このターン」のブロックすべてに及ぶため）。(3) modify {zone: bz, owner: you, filter: {types: [creature]}, count: all} {deny: [{action: be_chosen, other: {types: [spell]}}]} end_of_turn（範囲つきの選ばれない保護は第164弾の先例。dm25ex3-009 / dm26ex3-050 と同形）。
+- 形B（dmc34-030）: 呪文が1つの継続的効果を作る。modify {zone: bz, owner: you, filter: {types: [creature]}, count: all} {power: 4000, gain: [{kind: trigger, when: {event: block, attacker: self}, effect: [{op: break, player: opp, count: 1}]}]} end_of_turn（gain による誘発能力の付与は converted.yaml に21件の先例。dmd26-002 と同形。付与された能力は abilities() で負の添字で返り、誘発時は pending に inline で持たせるため正常に発火する）。
+
+教訓（2つ）: (1) op_modify の select は count の既定が1なので、「自分のクリーチャーすべて」には count: all が要る（spell の modify に90件の先例。dm22-023 は gain 付きの同形）。count を忘れると choose_cards の決定が出て1体だけに効く。(2) 自然の呪文を唱えるには自然のマナが1枚要る。T030 は光/水のため唱えられず、main の決定自体が出ない。テストのマナには自然の T001 を使う。
+
+proto T994（dm39-035 型）/ T995（dmc34-030 型）。テスト6件通過（pilot326 本体 4: 形の一致、形B＝付与された誘発でブロックされた攻撃の終わりに1枚割る・ブロックされなかった攻撃では余分に割らない、形A＝2回目のブロックでも割る、形A＝相手の呪文に選ばれない・クリーチャーの効果からの選択は妨げない、＋pilot326 cards 提出前 2）。次の番号: パイロット327 / ラウンド362 / プロト T996。
+
+### ラウンド361（第326弾の再変換）
+
+**新規登録2件**（dm39-035 カンクロウ・ブラスター＝3つの継続的効果: modify {power: 4000, breaks_add: 1}／遅延誘発 block {attacker: own} → break 1／modify deny be_chosen by spells / dmc34-030 獣達の挽歌＝modify {power: 4000, gain: [trigger {event: block, attacker: self} → break 1]}。両行とも partial＋by_product で原文照合済み。登録形は確立形と完全一致で連結混入なし）・**alias 畳み込み1件**（dmc34-030 の submit 時に aliases [dm13-025] を自動記録）・**stale クリーンアップ0件**・**差し戻し0件**。対象2行は gaps = [blocked_break] のため reopen で外してから submit（reopen は2件とも外れた）。converted 10,273→**10,275** / rejects 2,043→**2,041**、重なり0・漏れ0。blocked_break はファミリーがこの2件だけだったため完全解消。pilot326 cards を登録形に書換、round361 cards を新設（登録カード自身の実挙動: 030 付与された誘発でブロックされた攻撃で1枚割る・ブロックされなかった攻撃では余分に割らない／035 2回目のブロックでも割る・相手の呪文に選ばれない・クリーチャーの効果からの選択は妨げない）。テスト18 passed（round361 cards 4＋pilot326 cards 登録形 2＋pilot326 本体 4＋data_audit 8）。回答は answers/round361.yaml に保存。次の番号: パイロット327 / ラウンド362 / プロト T996。
+
+## 第327弾 「そのクリーチャーの最初の攻撃の終わりに、そのクリーチャーをアンタップする」（first_attack_end）— ドリフト（modal＋once 既定の遅延誘発）
+
+センサス（rejects 2,041件を取り直し）: pure 1,892件 / multi 131件 / 空 gaps 18件（全て第312〜315弾の監査で別ブロッカー確認済み。数え方は全行を pure/multi/空に分け、out_of_scope 行も gaps に従って数える）。pure の大半は範囲外（gr_summon 147、aura 108＝未承認、hyperdimensional_zone 105、dragheart 45、psychic_filter 45、hyperdimensional_summon 41、out_of_game 23、duelist_link 20、outside_game 12＝2026-11-06 ユーザー指示で対象外化済み、pandora_shift 4）か評価済み DEEP/重い/延期（第318〜326弾の記録参照）。delayed_return / draw_up_to / look_reorder / flying / does_not_untap は新しい証拠がない限り再提案しない（第320・321弾で却下済み）。4件組はすべて評価済み。2件組のうち、after_battle_trigger / attack_limit_once_per_turn / cip_trigger_double / s_trigger_suppression / enters_tapped_optional / from_hand_trigger は第323弾で却下済み。第326弾の記録にある候補のうち、範囲内・未評価で最小の **first_attack_end（純粋2件＋multi-gap 1件）** を選定した。別途、候補として記録: broken_shields_no_s_trigger（dm14-s09 / dm19-065。「このクリーチャーがブレイクしたシールドの S・トリガーは使えない」はブレイク処理側の対応が要りそうで重い）、after_attack_destroy（dm25ex3-sp1 / dmart10-002 は同一カード我我我ガイアール・ブランドの2印刷。ラウンド245で差し戻し済み。残るは条件つき追加軽減と「可能なら攻撃し、その攻撃の後で破壊する」後続で重い）、shield_placement_trigger（dm26ex4-cho047 / dm26rp1-tr002。「カードが自分のシールドゾーンに置かれた時」の誘発。move to: shield の照合と、tr002 のモード選択＋「タップして出て、自分のターンのはじめにアンタップしない」の扱いが要検討）、destroyed_during_battle_trigger（dm24rp4-070 / dm22rp2x-026。「バトル中に破壊された時」は during_battle の条件が要りそうでエンジン拡張の見込み）、destroyed_while_tapped（dm26ex1-021 / dmr18-s04。「破壊された時、これがタップされていれば」の条件照合が要検討）、power_transfer（dm24rp4-045 / dmrp11-zs01。「そのパワーをこのクリーチャーに追加する」は他カードのパワーを読む式が要りそうでエンジン拡張の見込み）、name_addition（dm23ex1-039 / dm28-008。「名前に《ボルメテウス・武者・ドラゴン》を追加する」。add_names の mod は無く、add_races の鏡像のエンジン拡張の見込み）、play_from_deck_top（dm22rp2x-002 / dm26sd1-j009。「山札の上から使ってもよい／召喚してもよい」は allow の zone: deck 形が要検討）。
+
+対象は dm26ex4-cho025 / dm26sd1-i004 の瞬閃と疾駆と双撃の決断（火・コスト3・マナ1の呪文、同一カードの2印刷。canon_id は dm26ex4-cho025）。両行とも partial あり（unsupported の断片だけ）。by_product で原文照合済み（正本は cho025 の文面。sd1-i004 の文面はモード2に「（「スピードアタッカー」を持つクリーチャーは召喚酔いしない）」の注釈が付くが、注釈はデータモデルに無いため正本の文面で登録する）。
+「次の中から２回選ぶ。同じものを選んでもよい。／▶コスト３以下のクリーチャーを１体、自分の手札から出す。／▶このターン、自分のクリーチャー１体に「スピードアタッカー」を与える。／▶自分のクリーチャーを１体選ぶ。このターン、そのクリーチャーの最初の攻撃の終わりに、そのクリーチャーをアンタップする。」
+
+結論: ドリフト（追加語彙なし）。modal op が「次の中から２回選ぶ（同じものを選んでもよい）」をそのまま表す（count: 2, repeat: true。12件の repeat-modal の先例。dm23rp1-008 等）。3つのモードはいずれも既存形。
+- モード1: [play_free {zone: hand, owner: you, filter: {types: [creature], cost_le: 3}, count: 1}]
+- モード2: [choose {zone: bz, owner: you, filter: {types: [creature]}, count: 1} as: c, modify {ref: c, count: all} {grant: [speed_attacker]} end_of_turn]（dm22rp2x-008 と同形）
+- モード3（first_attack_end）: [choose {zone: bz, owner: you, filter: {types: [creature]}, count: 1} as: chosen, delayed_trigger {event: attack_end, subject: {ref: chosen}} → [{op: untap, select: {ref: chosen}}] end_of_turn]（once は既定の true。遅延誘発は最初の attack_end で発火して消えるため、「最初の攻撃の終わり」そのものになる。攻撃先やブロックの有無は問わない）
+
+注: first_attack_end は multi-gap 行 dmex15-b019 滅亡の光（gaps [filter_not_race, first_attack_end]）にも現れる。「このターン、ゴッド、フェニックス、またはクリエイターそれぞれの最初の攻撃の終わりに、そのクリーチャーをアンタップする」は「それぞれ」（各クリーチャーごと）のため、単一の once 遅延誘発では書けず、once_per_turn 付きの付与型誘発（各クリーチャーに「最初の攻撃の終わりにアンタップする」を与える）が要る見込み。filter_not_race は not_race_has（第81弾。リスト形式も対応）で書ける見込み。第328弾の候補とする。今回は純粋2件のみを対象とする。
+
+proto T996（dm26ex4-cho025 型）。テスト5件通過（pilot327 本体 3: 形の一致、モード3＝最初の攻撃の終わりにアンタップ・2回目の攻撃の終わりにはアンタップされない、モード2＝召喚酔い中のクリーチャーが同じターンに攻撃できる、＋pilot327 cards 提出前 2）。次の番号: パイロット328 / ラウンド363 / プロト T997。
+
+### ラウンド362（第327弾の再変換）
+
+**新規登録1件**（dm26ex4-cho025 瞬閃と疾駆と双撃の決断＝modal（count: 2, repeat: true）。モード3は once 既定の遅延誘発 {event: attack_end, subject: {ref: chosen}} → untap。登録形は確立形と完全一致で連結混入なし。名前は汚染なしの「瞬閃と疾駆と双撃の決断」で登録）・**alias 畳み込み1件**（dm26sd1-i004。submit 時に aliases 10件を自動記録。うち rejects 行の畳み込みは dm26sd1-i004 の1件。alias id はカードとしては登録されない）・**stale クリーンアップ0件**・**差し戻し0件**。対象2行は gaps = [first_attack_end] のため reopen で外してから submit（reopen は2件とも外れた。multi-gap の dmex15-b019 は reopen の対象外で rejects に残る）。converted 10,275→**10,276** / rejects 2,041→**2,039**、重なり0・漏れ0。純粋 first_attack_end は残り0件でファミリー解消（multi-gap の dmex15-b019 は第328弾の候補）。pilot327 cards を登録形に書換、round362 cards を新設（登録カード自身の実挙動: モード3＝最初の攻撃の終わりにアンタップ・2回目の攻撃の終わりにはアンタップされない／モード2＝召喚酔い中のクリーチャーが同じターンに攻撃できる）。テスト16 passed（round362 cards 3＋pilot327 cards 登録形 2＋pilot327 本体 3＋data_audit 8）。回答は answers/round362.yaml に保存。次の番号: パイロット328 / ラウンド363 / プロト T997。
+
+## 第328弾 滅亡の光（filter_not_race＋first_attack_end 各クリーチャー）— ドリフト（not_race_has＋once_per_turn 付き付与型誘発）
+
+センサス（rejects 2,039件を取り直し）: pure 1,890件 / multi 131件 / 空 gaps 18件（全て第312〜315弾の監査で別ブロッカー確認済み。数え方は全行を pure/multi/空に分け、out_of_scope 行も gaps に従って数える）。pure の大半は範囲外（gr_summon 147、aura 108＝未承認、hyperdimensional_zone 105、dragheart 45、psychic_filter 45、hyperdimensional_summon 41、out_of_game 23、duelist_link 20、outside_game 12＝2026-11-06 ユーザー指示で対象外化済み、pandora_shift 4）か評価済み DEEP/重い/延期（第318〜327弾の記録参照）。delayed_return / draw_up_to / look_reorder / flying / does_not_untap は新しい証拠がない限り再提案しない（第320・321弾で却下済み）。4件組はすべて評価済み。2件組のうち、after_battle_trigger / attack_limit_once_per_turn / cip_trigger_double / s_trigger_suppression / enters_tapped_optional / from_hand_trigger は第323弾で却下済み。第327弾の記録にある候補のうち、範囲内・未評価で最小の **dmex15-b019 滅亡の光（multi-gap 2件。filter_not_race＋first_attack_end）** を選定した。別途、候補として記録: broken_shields_no_s_trigger（dm14-s09 / dm19-065。ブレイク処理側の対応が要りそうで重い）、after_attack_destroy（dm25ex3-sp1 / dmart10-002 は同一カード我我我ガイアール・ブランドの2印刷。ラウンド245で差し戻し済み。残るは条件つき追加軽減と「可能なら攻撃し、その攻撃の後で破壊する」後続で重い）、shield_placement_trigger（dm26ex4-cho047 / dm26rp1-tr002。「カードが自分のシールドゾーンに置かれた時」の誘発。move to: shield の照合と、tr002 のモード選択＋「タップして出て、自分のターンのはじめにアンタップしない」の扱いが要検討）、destroyed_during_battle_trigger（dm24rp4-070 / dm22rp2x-026。「バトル中に破壊された時」は during_battle の条件が要りそうでエンジン拡張の見込み）、destroyed_while_tapped（dm26ex1-021 / dmr18-s04。「破壊された時、これがタップされていれば」の条件照合が要検討）、power_transfer（dm24rp4-045 / dmrp11-zs01。「そのパワーをこのクリーチャーに追加する」は他カードのパワーを読む式が要りそうでエンジン拡張の見込み）、name_addition（dm23ex1-039 / dm28-008。「名前に《ボルメテウス・武者・ドラゴン》を追加する」。add_names の mod は無く、add_races の鏡像のエンジン拡張の見込み）、play_from_deck_top（dm22rp2x-002 / dm26sd1-j009。「山札の上から使ってもよい／召喚してもよい」は allow の zone: deck 形が要検討）。
+
+対象は dmex15-b019 滅亡の光（闇/火・コスト9・マナ1の呪文）。partial あり（アタック・チャンスは declare＋play_free で変換済み）。by_product で原文照合済み。canon_id は dmex15-b019 で aliases 無し。
+「アタック・チャンス：クリエイター（自分のクリエイターが攻撃する時、この呪文をコストを支払わずに唱えてもよい）／ゴッド、フェニックス、クリエイター以外のクリーチャーをすべて破壊する。／このターン、ゴッド、フェニックス、またはクリエイターそれぞれの最初の攻撃の終わりに、そのクリーチャーをアンタップする。」
+
+結論: ドリフト（追加語彙なし）。2つの条項はいずれも既存形。
+- filter_not_race: [destroy {zone: bz, owner: any, filter: {types: [creature], not_race_has: [ゴッド, フェニックス, クリエイター]}, count: all}]（not_race_has は第81弾。リスト形式も対応。destroy の zone select＋count: all は dm38-013 の先例。「すべて」は両プレイヤーのため owner: any）
+- first_attack_end 各クリーチャー: [modify {zone: bz, owner: any, filter: {any_of: [{race_has: ゴッド}, {race_has: フェニックス}, {race_has: クリエイター}]}, count: all}, mod: {gain: [{kind: trigger, when: {event: attack_end, subject: self}, effect: [{op: untap, select: {ref: self}}], once_per_turn: true}]}, duration: end_of_turn]（「それぞれ」（各クリーチャーごと）のため、単一の once 遅延誘発（第327弾）では書けない。各クリーチャーに「最初の攻撃の終わりにアンタップする」を与え、once_per_turn（48件の先例）で各体1回に制限する。race_has は単一文字列のため、3種族は any_of（第138弾）で並べる。untap {ref: self} は134件の先例。owner: any は条文に「自分の」が無いため両プレイヤー。アタック・チャンスは partial どおり declare＋play_free）
+
+教訓: 多色カードを唱えるには各文明のマナが1枚ずつ要る。火だけのマナでは闇/火の呪文は唱えられず、main の決定自体が出ない。テストのマナには火5＋闇4を使う。
+
+proto T997（dmex15-b019 型）。テスト5件通過（pilot328 本体 3: 形の一致、filter_not_race＝ゴッド以外は両プレイヤーとも破壊・ゴッドは残って付与された誘発を持つ、first_attack_end 各クリーチャー＝最初の攻撃の終わりにアンタップ・2回目にはアンタップされない、＋pilot328 cards 提出前 2）。次の番号: パイロット329 / ラウンド364 / プロト T998。
+
+### ラウンド363（第328弾の再変換）
+
+**新規登録1件**（dmex15-b019 滅亡の光＝アタック・チャンス（declare＋play_free）＋destroy {not_race_has: [ゴッド, フェニックス, クリエイター]}＋modify による once_per_turn 付き付与型誘発。登録形は確立形と完全一致で連結混入なし）・**alias 畳み込み0件**・**stale クリーンアップ0件**・**差し戻し0件**。対象1行は gaps = [filter_not_race, first_attack_end] のため reopen filter_not_race first_attack_end で外してから submit（reopen は1件だけ外れた。両 gap を指定しないと multi-gap 行は外れない）。converted 10,276→**10,277** / rejects 2,039→**2,038**、重なり0・漏れ0。filter_not_race / first_attack_end は残り0件で両ファミリー解消。pilot328 cards を登録形に書換、round363 cards を新設（登録カード自身の実挙動: ゴッド以外は両プレイヤーとも破壊・ゴッドは残って付与された誘発を持つ／最初の攻撃の終わりにアンタップ・2回目にはアンタップされない）。テスト16 passed（round363 cards 3＋pilot328 cards 登録形 2＋pilot328 本体 3＋data_audit 8）。回答は answers/round363.yaml に保存。次の番号: パイロット329 / ラウンド364 / プロト T998。
+
+## 第329弾 shield_placement_trigger — ドリフト（move to: shield の確立形＋zone: graveyard）
+
+センサス（rejects 2,038件）: pure 1,890件 / multi 130件 / 空 gaps 18件（数え方は第328弾と同じ）。pure の大半は範囲外か評価済み DEEP/重い/延期（第318〜328弾の記録参照）。2件組のうち範囲内・未評価で最小の **shield_placement_trigger（dm26ex4-cho047 / dm26rp1-tr002）** を選定した。他の候補は第328弾の記録どおり（broken_shields_no_s_trigger、after_attack_destroy、destroyed_during_battle_trigger、destroyed_while_tapped、power_transfer、name_addition、play_from_deck_top）。
+
+対象はいずれも partial あり。dm26ex4-cho047 は CIP の draw 2 が変換済み、dm26rp1-tr002 はキーワードのみ。原文は partial の text で照合（dm26rp1-tr002 の canon_id は自身で、登録時に aliases 4件が自動記録される見込み）。
+
+結論: ドリフト（追加語彙なし）。シールド配置の誘発は {event: move, to: shield, subject: {owner: you}} の確立形そのもの（dm24ex3-004 等44件。dm24ex3-004 は同文の「カードが自分のシールドゾーンに置かれた時」条項を持つ）。
+- dm26ex4-cho047: [trigger {when: {event: move, to: bz, subject: self}, effect: [draw 2]}（partial どおり）, trigger {zone: graveyard, when: {event: move, to: shield, subject: {owner: you}}, effect: [may [play_free {ref: self}]]}]（墓地で機能する誘発は zone: graveyard（217件）。墓地からの自己登場は may＋play_free {ref: self}）
+- dm26rp1-tr002: キーワードに enters_tapped を追加（「タップして出て」）。[static {affects: self, mod: {deny: [untap_at_start]}}（「自分のターンのはじめにアンタップしない」。dmrp18-025）, trigger {when: {event: move, to: shield, subject: {owner: you}}, effect: [untap {ref: self}, modal {count: 1, modes: [[draw 1], [choose {zone: bz, owner: opp, filter: {types: [creature]}}, as: chosen → tap {ref: chosen, no_untap_next: true}], [modify {select: {ref: self}, mod: {no_leave: true}, duration: until_next_own_turn_start}]}]}]（タップ＋次の相手のターンのはじめにアンタップしないは tap op の no_untap_next（dmr11-038）。「離れない」は第143弾の no_leave を until_next_own_turn_start まで）
+
+教訓: proto.yaml のリストは2スペースインデント形式（`  - id:`）。追記はその形式に合わせること（0カラムで追記すると YAML が壊れる）。光のクリーチャーを出すには光のマナが要る（第328弾の多色の教訓と同じ）。
+
+proto T998（dm26ex4-cho047 型）・T999（dm26rp1-tr002 型）・T1000（駆動用のシールド追加呪文。move to: shield reason: charge は dm22ex2-068 の確立形）。テスト7件通過（pilot329 本体 5: 形の一致、墓地の誘発＝may で出て CIP で2枚引く／no なら残る、タップして出て自分のターンのはじめにもアンタップしない（相手のターンを挟んで確認）、シールド配置でアンタップ＋モード0でドロー、モード1で相手をタップ、＋pilot329 cards 提出前 2）。次の番号: パイロット330 / ラウンド365 / プロト T1001。
+
+### ラウンド364（第329弾の再変換）
+
+**新規登録2件**（dm26ex4-cho047 DARK MEMORY CONTAINER＝CIP draw 2＋墓地の誘発（zone: graveyard＋move to: shield＋may で move/put）／dm26rp1-tr002 楯教の求道者 ザゼ・ゼーン＝enters_tapped＋static deny untap_at_start＋シールド配置の誘発でアンタップ＋modal。いずれも登録形は確立形と完全一致で連結混入なし）・**alias 畳み込み0件**（submit 時に cho047 へ aliases 3件 [dm25ex3-055, dm25rp2-048, promoy25-051]、tr002 へ aliases 4件 [dm24ex3-rp3s02, dm24ex3-rp3sec03, dm24rp3-s02, dm24rp3-sec003] が自動記録されたが、いずれも rejects 行ではない）・**stale クリーンアップ0件**・**差し戻し0件**。converted 10,277→**10,279** / rejects 2,038→**2,036**、重なり0・漏れ0。shield_placement_trigger は残り0件でファミリー解消。
+
+提出時のバリデータ警告で cho047 の形を修正: 「このクリーチャーを自分の墓地から出してもよい」の自己登場は、当初 may＋play_free {ref: self} としたが、play_free は召喚・唱えるの意味で、原文の「出す」は move to: bz reason: put が正しい（バリデータの指摘どおり）。proto・回答・converted の3か所を同形に揃えた。教訓: 置換は対象ブロックに限定すること（全体置換で proto T997 の declare（アタック・チャンスの play_free が正しい形）まで巻き込んだため、ブロック限定で復旧した）。
+
+pilot329 cards を登録形に書換、round364 cards を新設（登録カード自身の実挙動: 墓地の cho047 がシールド配置で出て CIP で2枚引く／tr002 がシールド配置でアンタップしモード0で1枚引く）。テスト18 passed（round364 cards 3＋pilot329 cards 登録形 2＋pilot329 本体 5＋data_audit 8）。回帰 138 passed / 8 failed（round357〜363 の件数固定テストの stale なだけの既知パターン7件＋pilot328 本体の proto 形不一致1件＝上記の巻き込みで、復旧後に再確認済み）。回答は answers/round364.yaml に保存。次の番号: パイロット330 / ラウンド365 / プロト T1001。
+
+## 第330弾 destroyed_while_tapped — エンジン拡張（条件キー subject_tapped）
+
+センサス（rejects 2,036件）: pure 1,890件 / multi 130件 / 空 gaps 18件（数え方は第328弾と同じ）。2件組のうち範囲内・未評価で最小の **destroyed_while_tapped（dm26ex1-021 / dmr18-s04）** を選定した。他の候補は第328弾の記録どおり（broken_shields_no_s_trigger、after_attack_destroy、destroyed_during_battle_trigger、power_transfer、name_addition、play_from_deck_top）。
+
+対象はいずれも partial あり。dm26ex1-021 は B・A・D の static のみ変換済み、dmr18-s04 は侵略の declare と「自分の他のクリーチャーが破壊された時」の誘発（if: exists {ref: self, filter: {tapped: true}}）まで変換済みで、不足は「自身が破壊された時、直前のタップ状態を見る」分だけ。原文は partial の text で照合。
+
+不足の正体: 破壊されたカード自身のタップ状態は、移動後にカードを見ても分からない（墓地ではアンタップ扱い）。ただし移動イベントの収集レコードには対象の lki（移動直前の姿）が `tapped` を含んで載る（events.py の lki スナップショット。filter_match の tapped 判定が lki を読む作法もある）。不足していたのは、その lki を読む**条件キー**だけ。
+
+結論: エンジン拡張（条件キー subject_tapped の追加。4点セット）。
+- selectors.py eval_cond: {subject_tapped: bool} は env["event"]["lki"]["tapped"] を読む（alt_paid / vivid_paid が event の旗を読むのと同じ作法。lki が無いイベントでは False）
+- defs.py Checker.cond に同キーを追加、schema.py の cond プロパティに "subject_tapped": {"type": "boolean"} を追加、data/schema/card.schema.json を再生成
+- dm26ex1-021: [static {affects: self, zone: hand, mod: {opt_reduce: {amount: 2, then: destroy}}}（partial どおり）, trigger {when: {event: move, from: bz, to: graveyard, reason: destroy, subject: self}, if: {subject_tapped: true}, effect: [{op: extra_turn}]}, static {affects: self, mod: {battle_power: {amount: 5000}}}]（追加ターンは op extra_turn、バトル中のパワー修整は mod battle_power {amount}）
+- dmr18-s04: partial の2能力に加え、自身が破壊された場合の誘発を同効果で追加: [trigger {when: {event: move, from: bz, to: graveyard, reason: destroy, subject: self}, if: {subject_tapped: true}, effect: [destroy {zone: bz, owner: opp, count: 1}, move {zone: graveyard, owner: you, filter: {civs: [darkness], types: [creature], not_name: 超復讐 ギャロウィン}, count: 1} to: hand reason: return]}]
+
+教訓: セットアップ時に置いたカードのタップ指定は、最初のターン開始のアンタップで消える。タップ状態で破壊する検証は、main の決定時点でタップを指定すること（第329弾の tr002 は deny untap_at_start があったため消えなかった）。追加ターンの検証は extra_turns の残量ではなく「次の charge が自分の追加ターンか」で見ること（追加ターンは開始時に extra_turns から取り出される）。ブロッカーでないクリーチャーではブロック検証はできない（T142 はブロッカーではない）。
+
+proto T1001（dm26ex1-021 型）・T1002（dmr18-s04 型）・T1003（駆動用の破壊呪文）・T1004（駆動用のパワー13000ブロッカー）。テスト9件通過（pilot330 本体 7: 形の一致、タップ状態で破壊→追加ターン／アンタップ状態→追加ターンなし、バトル中のパワー+5000 で格上に勝つ、自身がタップ状態で破壊→破壊＋回収／アンタップ状態→無誘発、他のクリーチャーが破壊され自身がタップ→誘発、＋pilot330 cards 提出前 2）。次の番号: パイロット331 / ラウンド366 / プロト T1005。
+
+### ラウンド365（第330弾の再変換）
+
+**新規登録1件**（dmr18-s04 超復讐 ギャロウィン＝partial の declare＋他者破壊時の誘発に、自身が破壊された場合の誘発（if subject_tapped）を同効果で追加。登録形は確立形と完全一致で連結混入なし）・**stale クリーンアップ1件**（dm26ex1-021 の rejects 行）・**登録済みカードの修正1件**（dm26rp3-tr005）・**alias 畳み込み0件**・**差し戻し0件**。converted 10,279→**10,280** / rejects 2,036→**2,034**、重なり0・漏れ0。destroyed_while_tapped は残り0件でファミリー解消。
+
+dm26ex1-021 の行は非正本だった: identity.canon_id は dm26rp3-tr005 で、submit は load_rows が正本に畳み込むため「取得済みの原文に無いID」で弾いた。正本は既に登録済みだったが、実挙動を検証すると2条項とも不発だった。(1) 破壊時誘発は zone: graveyard＋if exists {ref: self, filter: {tapped: true}} で、墓地に置かれたカードはアンタップに戻る（実測: 破壊直前の tapped=True が墓地では False、pending 0件）ため決して誘発しない。(2) battle_power の常在型は affects: {ref: self} で、_battle_bonus が非 gain の常在型では self と扱わず（実測: パワー13000のブロッカーに 9000 のまま敗北）、+5000 が効いていなかった。いずれも第330弾の形（affects: self／trigger {when: {event: move, from: bz, to: graveyard, reason: destroy, subject: self}, if: {subject_tapped: true}}）に差し替え、登録カード自身で実挙動を確認した（タップ状態で破壊→追加ターン／バトルで格上に勝利）。教訓: rejects 行の id が正本とは限らない（submit 前に canon_id を確認すること）。登録済みでも形が正しいとは限らない（疑わしい形は実挙動で確かめること）。converted.yaml の notes は無引用スカラーのため、ASCII の「: 」や波括弧を含む文章を書くと YAML が壊れる（全角記号で逃がすこと）。
+
+pilot330 cards を登録形に書換、round365 cards を新設（登録カード自身の実挙動: 正本の追加ターン／正本のバトルパワー／dmr18-s04 の自身破壊時の破壊＋回収）。テスト21 passed（round365 cards 4＋pilot330 cards 登録形 2＋pilot330 本体 7＋data_audit 8）。回帰はパイロット・ルール系 122 passed / 0 failed（エンジン拡張の影響なし）、round357〜364 の disposition は件数固定の stale なだけの既知パターンで 8 failed。回答は answers/round365.yaml に保存。次の番号: パイロット331 / ラウンド366 / プロト T1005。
+
+## 第331弾 name_addition（pure 2件）
+
+対象: dm23ex1-039 ボルメテウス・剣誠・ドラゴン（「バトルゾーンにある間、このクリーチャーは名前に《ボルメテウス・武者・ドラゴン》を追加する」）と dm28-008 竜装 ムシャ・レジェンド（クロスギア。「これをクロスしたクリーチャーは…名前に《ボルメテウス・武者・ドラゴン》を追加する」。partial は power＋add_races を持ち add_names だけが欠けていた）。
+
+結論は**ドリフト（文書化）**: mod の add_names はエンジン実装済みだった（バンドC2 U97。core.py の chars 集約が主名を変えず名前の集合 names に足し、filter の name は追加の名前にも当たる。defs.py Checker.cond ではなく Checker.mod が検証し、schema にも載っている）が、converted.yaml の使用例が0件だったため2件とも rejects に残っていた。本弾で確立形として固定する: 本人は {kind: static, affects: self, mod: {add_names: [名前]}}、クロスギアは affects: crossed の mod に add_names を足す（power / add_races と同居できる）。
+
+dm23ex1-039 の残りの条項も既存語彙で足りる。G・ゼロは top-level の free_if（dm23ex1-075 等の確立形）で、条件は {all: [{cmp: [{count: {zone: bz, owner: you, filter: {race_has: サムライ}}}, ">=", 5]}, {not: {exists: {zone: bz, owner: you, filter: {name: 自身の名前}}}}]}（dm23sd2-010 の all＋cmp＋exists の先例）。攻撃時誘発は may＋destroy {power_le: 6000} の確立形。
+
+proto T1005（dm23ex1-039 型。G・ゼロ＋攻撃時誘発＋add_names）/ T1006（dm28-008 型）/ T1007（駆動用: 追加された名前で名指し破壊する呪文）。テスト7件（実挙動5件）: chars の names に追加の名前が入ること（本人・クロス先の双方）、名指し破壊が追加の名前でのみ当たること（同居の別名クリーチャーには当たらない）、クロスギアの power＋2000 と種族追加の同居、G・ゼロの3条件（5体で無料／同名がいれば不可／4体では不可）、攻撃時誘発の破壊。add_names の不正形（空リスト・文字列・数値）は DefError。
+
+次の候補メモ: destroyed_during_battle_trigger（dm24rp4-070 / dm22rp2x-026。バトルによる破壊を move イベントで区別する語彙が要る見込み＝エンジン拡張候補）、power_transfer（dm24rp4-045 / dmrp11-zs01）、play_from_deck_top（dm22rp2x-002 / dm26sd1-j009）、broken_shields_no_s_trigger（重い）、after_attack_destroy（ラウンド245で差し戻し済み、重い）。
+
+### ラウンド366（第331弾の再変換）
+
+**新規登録2件**（dm23ex1-039 ボルメテウス・剣誠・ドラゴン＝G・ゼロは free_if、攻撃時誘発と add_names の常在型。dm28-008 竜装 ムシャ・レジェンド＝partial の形に add_names を足したもの。いずれも登録形は確立形と完全一致で連結混入なし）・**alias 畳み込み0件**（dm23ex1-039 の aliases 4件は partial 由来で rejects 行ではない）・**差し戻し0件**。converted 10,280→**10,282** / rejects 2,034→**2,032**、重なり0・漏れ0。name_addition の行は multi の dmx15-002（g_link_360 と複合。名も無き神人類）だけが残る。
+
+pilot331 cards を登録形に書換、round366 cards を新設（登録カード自身の実挙動: 本人の chars の names と G・ゼロの無料召喚、クロスギアの名前・種族・パワーの付与と攻撃時誘発のシールド犠牲→破壊）。テスト20 passed（round366 cards 3＋pilot331 cards 登録形 2＋pilot331 本体 7＋data_audit 8）。回帰はパイロット・ルール系（第170弾のクロスギア系を含む）146 passed / 0 failed、round357〜365 の disposition は件数固定の stale なだけの既知パターンで 9 failed。回答は answers/round366.yaml に保存。次の番号: パイロット332 / ラウンド367 / プロト T1008。
+
+## 第332弾 destroyed_during_battle_trigger（pure 2件）
+
+対象: dm24rp4-070 ライラ・理・アイニー（「バトル中、このクリーチャーが破壊された時、相手のシールドを１つブレイクしてもよい」）と dm22rp2x-026 真価と代価のチェスト（「自分のクリーチャーがバトル中に破壊された時、そのターンの終わりに、そのクリーチャーを墓地から出す」。シビルカウント2件は partial で表現済み）。
+
+結論は**小さなエンジン拡張**: バトルの敗者の move イベントはもともと battle: True の印を持っていた（combat.py が敗者の移動に刻む。no_leave の except_battle 判定が既に使っていた）が、誘発収集レコードへの伝播が無く、when でも照合できなかった。本弾で5点を変更: (1) events.py _apply_one の収集レコードへ battle を伝播、(2) _record_for（置換照合側）へも伝播（他のフラグと同じく対にする）、(3) when 照合に battle フラグを追加（blocked 等の bool フラグと同じ形）、(4) defs.py Checker.when に bool 検証、(5) schema.py の when プロパティに追加し card.schema.json を再生成。
+
+確立形: 本人は {kind: trigger, when: {event: move, from: bz, to: graveyard, reason: destroy, battle: true, subject: self}, effect: [may [break {player: opp, count: 1}]]}（効果ブレイクは op_break の確立形）。見る側（タマシード）は subject を {owner: you, filter: {types: [creature]}} にし、破壊されたクリーチャーを choose {select: {ref: event.subject}, as: dead} で束縛して、delayed_trigger {when: {event: turn_end}} の effect が move {select: {ref: dead}, to: bz, reason: summon} で戻す。delayed の env は event を保持しないため vars 経由が必須（ニンジャ・ストライクの as 束縛＋遅延 effect の {ref: 変数名} の先例、ターン終わりの帰還自体は dmex14-090 の先例）。
+
+proto T1008（dm24rp4-070 型）/ T1009（dm22rp2x-026 型）。テスト7件（実挙動5件）: バトルで負けて破壊されると相手のシールドを1つブレイクする、呪文で破壊されても誘発しない、バトルで破壊された自分のクリーチャーがターン終わりに墓地から戻る（破壊と帰還が同じ前進チェーンで起き墓地の状態が決定点で観測できないため、攻撃したクリーチャーがタップしたまま残るはずのところアンタップで場にあることで区別した）、呪文で破壊されたクリーチャーは戻らない、シビルカウントの付与（光3つでブロッカー、闇1つではスレイヤー無し）。battle の不正形（文字列）は DefError。
+
+次の候補メモ: power_transfer（dm24rp4-045 / dmrp11-zs01）、play_from_deck_top（dm22rp2x-002 / dm26sd1-j009）、broken_shields_no_s_trigger（重い）、after_attack_destroy（ラウンド245で差し戻し済み、重い）。
+
+### ラウンド367（第332弾の再変換）
+
+**新規登録2件**（dm24rp4-070 ライラ・理・アイニー＝when の battle フラグ＋may break の確立形そのまま。dm22rp2x-026 真価と代価のチェスト＝partial のシビルカウント2件＋帰還の誘発）・**alias 畳み込み0件**（dm22rp2x-026 の aliases [dm22rp2-026] は submit 時の自動記録で rejects 行ではない）・**差し戻し0件**。converted 10,282→**10,284** / rejects 2,032→**2,030**、重なり0・漏れ0。destroyed_during_battle_trigger は残り0件でファミリー解消。
+
+dm22rp2x-026 は submit のバリデータ警告で1件修正: ターン終わりの帰還は「出す」であり召喚ではないため、move の reason を summon から put に変更した（proto・回答・converted の3か所を一致。第329弾と同じ修正。dmex14-090 は reason: summon で登録されているが、バリデータの現行基準では put が正）。教訓: converted.yaml の末尾に submit されたカードは次の「- id: 」が無いため、ブロック範囲の特定でファイル末尾までを範囲に含めること。
+
+pilot332 cards を登録形に書換、round367 cards を新設（登録カード自身の実挙動: バトル破壊→シールドブレイク／バトル破壊→ターン終わりに帰還）。テスト20 passed（round367 cards 3＋pilot332 cards 登録形 2＋pilot332 本体 7＋data_audit 8）。回帰はパイロット・ルール系（第170弾を含む）153 passed / 0 failed（events.py のレコード伝播追加の影響なし）、round357〜366 の disposition は件数固定の stale なだけの既知パターンで 10 failed。回答は answers/round367.yaml に保存。次の番号: パイロット333 / ラウンド368 / プロト T1010。
+
+## 第333弾 power_transfer（pure 2件）
+
+対象: dm24rp4-045 ブルーアイズ・ドラゴンフライ（「自分のコスト６以上のクリーチャーが出た時、次の自分のターンのはじめまで、そのクリーチャーのパワーをこのクリーチャーのパワーに加える」）と dmrp11-zs01 零（「このクリーチャーが攻撃する時、相手のクリーチャーを１体選ぶ。そのターン、そのパワーをこのクリーチャーに追加し、選んだクリーチャーのパワーを０にする」＋自分のターン終わりの相手の手札破棄＋零龍がいる間の闇のコスト軽減）。
+
+結論は**エンジン拡張（power mod の amount に式を許可）**: power mod の辞書形 {amount, count} は amount が整数のみだった。本弾で amount に {power_of: {ref: 名前}}（と {var: 名前}）を許可した（第324弾の breaks_add {var:} と同じ発想）。op_modify の _bake_refs が生成時にリテラルへ固定するため chars は従来どおり整数だけを見る。常在型に直接書くと chars が整数を前提とするため使えない（生成時ベイク専用。defs.py に注記）。変更は defs.py Checker.mod＋schema.py＋card.schema.json 再生成の3点。
+
+確立形: ドラゴンフライは trigger {when: {event: move, to: bz, subject: {owner: you, filter: {types: [creature], cost_ge: 6}}}, effect: [modify {select: {ref: event.subject}, mod: {power: {amount: {power_of: {ref: self}}}}, duration: until_next_own_turn_start}]}。零は攻撃時 trigger で choose {as: victim} し、modify self {power: {amount: {power_of: {ref: victim}}}}（end_of_turn の既定）→ modify victim {power_set: 0}。順序が大事（先に吸い上げてから 0 にする）。ターン終わりの手札破棄は discard {chooser: opp} の確立形。コスト軽減は static {affects: {zone: hand, owner: you, filter: {civs: [darkness]}}, if: {exists: {race_has: 零龍}}, mod: {cost: -1, cost_min: 0}}（「自分の零龍」は《》が無いため種族参照。by_product に種族・名前に零龍を持つカードは無く、駆動用に T1012 を用意した）。
+
+proto T1010（dm24rp4-045 型）/ T1011（dmrp11-zs01 型）/ T1012（駆動用・種族 零龍）。テスト7件（実挙動5件）: コスト6以上のクリーチャーが出るとそのパワーに自分のパワーを加え、次の自分のターンのはじめまで維持する（13000＋1000＝14000）、コスト6未満では誘発しない、攻撃時に相手クリーチャーのパワーを吸い上げ選んだ側を 0 にする（パワー0は状況起因処理で破壊される）、自分のターン終わりに相手は手札を1枚捨てる（引く1枚と相殺されるため T001 の枚数で確認）、零龍がいる間だけ闇のカードのコストが1減る（コスト1のカードは0になる）。power の amount の不正形（文字列・小数・未知キー・{var: 5}）は DefError。
+
+教訓: 手札が空だと main の決定自体が出ないため、駆動は charge で区切ること（_drive_to の目標に main を使うとデッキ切れでゲームが終わる）。攻撃の決定は「まだ攻撃していない」ガードが要る（同じターンに2回攻撃してしまう）。
+
+次の候補メモ: play_from_deck_top（dm22rp2x-002 / dm26sd1-j009 / dmrp22-005）、broken_shields_no_s_trigger（重い）、after_attack_destroy（ラウンド245で差し戻し済み、重い）。
+
+### ラウンド368（第333弾の再変換）
+
+**新規登録2件**（dm24rp4-045 ブルーアイズ・ドラゴンフライ＝power mod の amount に {power_of: {ref: self}} を書いた確立形そのまま。dmrp11-zs01 零＝choose の as 束縛＋吸い上げ＋power_set: 0＋ターン終わりの手札破棄＋零龍がいる間のコスト軽減）・**alias 畳み込み0件**・**差し戻し0件**（submit 時の警告なし）。converted 10,284→**10,286** / rejects 2,030→**2,028**、重なり0・漏れ0。power_transfer は残り0件でファミリー解消。
+
+pilot333 cards を登録形に書換、round368 cards を新設（登録カード自身の実挙動: コスト6以上のクリーチャーが出た時のパワー加算 14000→次ターン 13000、攻撃時の吸い上げ 8000 と選んだ側の破壊、ターン終わりの手札破棄、零龍がいる間のコスト軽減）。テスト20 passed（round368 cards 3＋pilot333 cards 登録形 2＋pilot333 本体 7＋data_audit 8）。回帰はパイロット・ルール系（第170弾を含む）160 passed / 0 failed（power mod の amount 拡張の影響なし）、round357〜367 の disposition は件数固定の stale なだけの既知パターンで 11 failed。回答は answers/round368.yaml に保存。次の番号: パイロット334 / ラウンド369 / プロト T1013。
+
+## 第334弾 play_from_deck_top（pure 2件）
+
+対象: dm22rp2x-002 アカシック・ヴィジョン（「自分のターン中、呪文またはタマシードを自分の山札の上から使ってもよい」）と dm26sd1-j009 斬龍電融 オロチリュウセイ（「自分のターン中、クリーチャーを１体、自分の山札の上から召喚してもよい。（コストは支払う）」。スピードアタッカー付与は partial で表現済み）。dmrp22-005 は multi（reveal_stay＋play_from_deck_top）のため本弾の対象外（reveal_stay が解けてから扱う）。
+
+結論は**エンジン拡張（山札の上からのプレイ）**: _play_options は手札・マナ・墓地からの選択肢しか出さなかった。本弾で (1) permissions.yaml に summon/cast/generate_from_deck_top を追加（default: false。第226弾の墓地版と同じ許可型）、(2) turn.py _play_options に山札の一番上だけを見るブロックを追加（_deck_top_grant で許可を確認し、_can_play_face で支払いを確認して play:{id}:dtop を出す。once 付きは once_src を渡す）、(3) h_play は from_zone を汎用に読むため変更は要らず、summon_once の消費条件に "deck" を加えただけ（cast/generate の once は消費する側の印が無いため今回は使わない）、(4) base/types.py の Option に dtop フィールドを追加（TypedDict は未知キーを弾くため）。
+
+確立形: static {affects: {zone: deck, owner: you, filter: {types: [...]}}, if: {is_turn: you}, mod: {allow: [...]}}。allow は山札全体に付くが、選択肢に出るのは一番上だけなので from_top の指定は要らない。「クリーチャーを１体」は once: true で読む（ターン1回）。「いつでも見てもよい」は既存12枚と同じく原文のみ（エンジンに山札の可視性の語彙は無い）。
+
+proto T1013（dm22rp2x-002 型）/ T1014（dm26sd1-j009 型）。テスト8件（実挙動6件）: 山札の上の呪文を唱えられる（唱えた後は墓地へ）、山札の上のタマシードを出せる、2枚目も同じターンに使える（once 無し）、一番上以外は出ない、許可が無ければ出ない、山札の上のクリーチャーを召喚できる（1体まで。次のターンにはまた出せる）、山札の上の呪文はオロチでは出せない。未知の allow アクションは DefError。
+
+教訓: scenario.build の山札は spec の各ゾーンのカード＋filler だけ（指定しないカードは山札に無い）。setup のマナは原則アンタップだが、T030 はタップで始まる（理由は未調査。T009 等の水マナを使うこと）。プレイの選択肢は回答した直後には解決していないため、解決後の状態は次の決定まで進めてから見ること。山札の一番上は zlist("deck", p)[0]。
+
+次の候補メモ: broken_shields_no_s_trigger（重い）、after_attack_destroy（ラウンド245で差し戻し済み、重い）。
+
+### ラウンド369（第334弾の再変換）
+
+**新規登録2件**（dm22rp2x-002 アカシック・ヴィジョン＝allow {cast_from_deck_top, generate_from_deck_top} の確立形そのまま。dm26sd1-j009 斬龍電融 オロチリュウセイ＝既存のスピードアタッカー付与 static＋allow {summon_from_deck_top, once: true}）・**alias 畳み込み0件**（submit 時に 002 へ aliases 2件・j009 へ 3件が自動記録されたが rejects 行ではない）・**差し戻し0件**（submit 時の警告なし）。converted 10,286→**10,288** / rejects 2,028→**2,026**、重なり0・漏れ0。play_from_deck_top は multi の dmrp22-005（reveal_stay 複合）だけが残る。
+
+pilot334 cards を登録形に書換、round369 cards を新設（登録カード自身の実挙動: 山札の上の呪文を唱える、山札の上のクリーチャーを召喚する＝1体まで・次のターンにはまた出せる）。テスト21 passed（round369 cards 3＋pilot334 cards 登録形 2＋pilot334 本体 8＋data_audit 8）。回帰はパイロット・ルール系（第170弾を含む）168 passed / 0 failed（山札の上からのプレイ拡張の影響なし）、round357〜368 の disposition は件数固定の stale なだけの既知パターンで 12 failed。回答は answers/round369.yaml に保存。次の番号: パイロット335 / ラウンド370 / プロト T1015。
+
+### 語彙パイロット第335弾: per_card_tap_or_untap（ドリフト）
+
+対象は pure 3件: dm25bd2-015 清浄の精霊ウル（出た時、クリーチャーを1体選びタップまたはアンタップする）、dm24rp2-051 粛清者ゴットハルト（出た時、クリーチャーを2体まで選び、それぞれタップまたはアンタップする）、dm25-002 超鎧亜キングダム・ゲオルグ（攻撃する時、進化ではないクリーチャー1体をタップまたはアンタップしてもよい）。
+
+確立形は dm26rp3-055（ヒトリダチ モンキッド）の形: まず choose {select: {zone: bz, owner: any, filter: {types: [creature]}, count: 1}, as: target} で対象を束縛し、続けて modal {modes: [[tap {select: {ref: target}}], [untap {select: {ref: target}}]]} でタップ／アンタップを選ぶ。ゴットハルトはこの choose＋modal を repeat {times: 2} の body に置き、choose に up_to: true を付ける（dm26sd1-g007 の repeat 構造）。ゲオルグは may で包み、choose の filter に evolution: false を足す。「マナゾーンに置く時タップして置く」は既存の扱いに従い原文のみ。
+
+実測で分かった注意点: (1) select の owner 既定は "you"。modal のモード内に tap {select: ...} を直接書く旧形（dmbd03-004 / dmex11-032 / dmex14-082 の登録形）は相手のクリーチャーを対象にできず、自分の候補が1体だけだと ask の一意省略（min==max==候補数）で決定自体が出ず自動で自分をタップする。dm26sd1-g007 の choose も owner 指定が無く同じ制限を持つ。これらの登録カードは潜在的に自軍のみが対象になっており、本弾の対象外のため修正はしていない（判断は後回し、記録のみ）。(2) ask の一意省略は choose でも起きる: 適格な候補が1体だけだと choose の決定は出ず自動で束縛される（テストでは候補を2体用意して決定を出す）。(3) 相手のクリーチャーをタップした効果は相手のターン開始のアンタップで消えるため、検証は自分のターンのうちに行う（攻撃フェイズの決定で止めて確認）。(4) セットアップ配置のクリーチャーは1ターン目から攻撃できる。
+
+proto T1015（ウル型）/ T1016（ゴットハルト型）/ T1017（ゲオルグ型）。テスト9 passed（pilot 本体6＋実カード parse 3）。次の番号: パイロット336 / ラウンド371 / プロト T1018。
+
+### ラウンド370（第335弾の再変換）
+
+**新規登録3件**（dm25bd2-015 清浄の精霊ウル＝choose＋modal の確立形そのまま。dm24rp2-051 粛清者ゴットハルト＝repeat＋choose（up_to）＋modal。dm25-002 超鎧亜キングダム・ゲオルグ＝既存の evolve_from＋may＋choose（evolution: false）＋modal）・**alias 畳み込み0件**（submit 時に dm25bd2-015 へ aliases 3件が自動記録されたが rejects 行ではない）・**差し戻し0件**（submit 時の警告なし）。converted 10,288→**10,291** / rejects 2,026→**2,023**、重なり0・漏れ0。per_card_tap_or_untap の行は残っていない（ファミリー解消）。
+
+pilot335 cards を登録形に書換、round370 cards を新設（登録カード自身の実挙動: ウルで相手をタップ、ゴットハルトで2体を別々にアンタップ／タップ、ゲオルグは攻撃時に進化でないクリーチャーをタップ）。テスト20 passed（round370 cards 4＋pilot335 cards 登録形 2＋pilot335 本体 6＋data_audit 8）。回帰はパイロット・ルール系（第170弾を含む）174 passed / 0 failed、round357〜369 の disposition は件数固定の stale なだけの既知パターンで 13 failed。回答は answers/round370.yaml に保存。次の番号: パイロット336 / ラウンド371 / プロト T1018。
+
+### 語彙パイロット第336弾: break_limit（エンジン拡張: mod breaks_max）
+
+対象は pure 3件: dm29-001 光神龍ラル・アブゾーバー（相手のクリーチャーは攻撃1回につきシールドを1枚しかブレイクできない）、dm16-008 インパクト・アブソーバー（どのクリーチャーにもクロスされていない時、クリーチャーは攻撃1回につき1枚しかブレイクできない。両プレイヤー対象）、dm26rp1-039 我竜塔最高層 ローズ・キャッスル（表向きのシールドゾーンから、相手のクリーチャーは最大1つしかブレイクできない）。
+
+新 mod `breaks_max`（int >= 0）: chars の集約で、breaks の max 合成と breaks_add の適用の後に、breaks と break_opts の各値を上限で切り取る（複数あれば最小を採る）。defs.py Checker.mod＋schema.py＋card.schema.json 再生成＋core.py の集約、の4点。発生源は通常の常在型でよい: ラルは bz の常在型 {affects: {owner: opp, filter: {types: [creature]}}}、城は G城の確立形 {zone: shield, if: {face_up: true}} の常在型、ギアは {affects: {owner: any, ...}, if: {not: {exists: {ref: self, filter: {crossed: true}}}}}（「クロスされていない時」は exists の否定で見る。filter の crossed はギア自身に対して「クロスされているか」を返す）。
+
+実測: トリプル・ブレイカーの breaks は、ラルが相手の場にあると1（自分のクリーチャーは対象外で3のまま）、城が表向きだと1（裏向きでは3）、ギア未クロスだと両プレイヤーとも1で、クロスすると3に戻る。実挙動でも攻撃時の choose_shields が (1, 1) になり、実際に1枚だけ割れる（対照は (3, 3) で3枚）。
+
+proto T1018（ラル型）/ T1019（ギア型）/ T1020（城型）。テスト13 passed（pilot 本体8＋実カード parse 3＋rust_schema_sync 2）。次の番号: パイロット337 / ラウンド372 / プロト T1021。
+
+### ラウンド371（第336弾の再変換）
+
+**新規登録3件**（dm29-001 光神龍ラル・アブゾーバー＝breaks_max の常在型そのまま。dm16-008 インパクト・アブソーバー＝既存の置換能力＋未クロス時の常在型。dm26rp1-039 我竜塔最高層 ローズ・キャッスル＝既存の誘発2つ＋シールドゾーンの常在型）・**alias 畳み込み0件**・**差し戻し0件**（submit 時の警告なし）。converted 10,291→**10,294** / rejects 2,023→**2,020**、重なり0・漏れ0。break_limit の行は残っていない（ファミリー解消）。
+
+pilot336 cards を登録形に書換、round371 cards を新設（登録カード自身の実挙動: ラルで攻撃のブレイクが1枚に、ギアは未クロス／クロスで上限が切替、城は表向きの時だけ上限1）。テスト20 passed（round371 cards 3＋pilot336 cards 登録形 2＋pilot336 本体 7＋data_audit 8）。回帰はパイロット・ルール系（第170弾を含む）181 passed / 0 failed、round357〜370 の disposition は件数固定の stale なだけの既知パターンで 14 failed。回答は answers/round371.yaml に保存。次の番号: パイロット337 / ラウンド372 / プロト T1021。
+
+### 語彙パイロット第337弾: evolution_base_from_graveyard（エンジン拡張: フィルタ evolves_from）
+
+対象は pure 3件: dm25rp1-018 至高の邪騎 スベルニル（出た時、このクリーチャーから進化できるコスト5以下の NEO／進化クリーチャーを1体、自分の墓地からこのクリーチャーの上に置いてもよい）、dm25rp2-sp3 魔光神官ルドルフ・アルカディア（出た時、山札の上から4枚を墓地に置いてもよい。その後、このクリーチャーから進化できるコスト8以下のクリーチャーを1体、自分の墓地からこのクリーチャーの上に置いてもよい）、dm25ex1-069 神滅翔天ポッポ・ジュヴィラ（自分の墓地にあるクリーチャーの上に重ねつつ出してもよい）。
+
+- 069 はドリフト: 第36弾の墓地進化（grave_evo: true＋evolve_zone: graveyard＋evolve_from）がそのまま使える。進化元に文明の制限は無いので evolve_from は {types: [creature]}。
+- 018／sp3 は新フィルタ `evolves_from`（値は "self" / 変数名）: evo_source_of（第177弾）の鏡像で、候補自身の evolve_from のいずれかに参照カードが合うものを拾う。defs.py の FILTER_KEYS＋検証、selectors.py の filter_match、schema.py（FILTER_KEYS から生成され card.schema.json に3箇所追加）の3点。重ね出し自体は第173弾の確立形: choose で束縛し、move {select: {ref: p, count: all}, to: bz, reason: put, stack_evo: true, evo_source: {ref: self}}。sp3 の切削は from_top の確立形。
+
+実測: スベルニルの choose の候補は、墓地の T057（NEO・闇から進化）と T087（進化・クリーチャーから進化）だけに絞られ（自然から進化する T017 と進化でない T001 は出ない）、選んだカードが自分の上に重なって出る。ルドルフは切削4枚の後に T394（闇から進化できる NEO）が候補に出て重なる。ジュヴィラ型はメインの選択肢に通常召喚と :gevo の両方が出て、:gevo では墓地のクリーチャーが下に付いて出る。
+
+proto T1021（スベルニル型）/ T1022（ルドルフ型）/ T1023（ジュヴィラ型）。テスト10 passed（pilot 本体4＋実カード parse 3＋rust_schema_sync 3）。次の番号: パイロット338 / ラウンド373 / プロト T1024。
+
+### ラウンド372（第337弾の再変換）
+
+**新規登録3件**（dm25rp1-018 至高の邪騎 スベルニル＝evolves_from＋stack_evo の確立形そのまま。dm25rp2-sp3 魔光神官ルドルフ・アルカディア＝may 切削＋同形。dm25ex1-069 神滅翔天ポッポ・ジュヴィラ＝grave_evo 宣言）・**alias 畳み込み0件**（submit 時に 018 へ aliases 2件・sp3 へ 5件・069 へ 3件が自動記録されたが rejects 行ではない）・**差し戻し0件**（submit 時の警告なし）。converted 10,294→**10,297** / rejects 2,020→**2,017**、重なり0・漏れ0。evolution_base_from_graveyard の行は残っていない（ファミリー解消）。
+
+pilot337 cards を登録形に書換、round372 cards を新設（登録カード自身の実挙動: スベルニルが墓地の NEO を上に重ねる、ジュヴィラは :gevo で墓地のクリーチャーの上に重なって出る）。テスト17 passed（round372 cards 3＋pilot337 cards 登録形 2＋pilot337 本体 4＋data_audit 8）。回帰はパイロット・ルール系（第170・173・177弾を含む）208 passed / 0 failed、round357〜371 の disposition は件数固定の stale なだけの既知パターンで 15 failed。回答は answers/round372.yaml に保存。次の番号: パイロット338 / ラウンド373 / プロト T1024。
+
+### 語彙パイロット第338弾: opponent_chooses_deck_position（エンジン拡張: modal の player）
+
+対象は pure 4件: dm22rp1-034 氷結呪文「フリズン」（相手のクリーチャー／タマシードを1つ選ぶ。相手はそれを山札の上または下に置く）、dm23rp1-035 Uta-Awase選手宣誓のスピーチ（エレメントを1つ選ぶ。その持ち主は、それを山札の上または下に置く）、dm25rp4-036 ツインヘッドの海幻（出た時、相手のエレメントを1つ選ぶ。相手はそれを山札の上か下に置く。その後、このタマシードを自分のNEO／進化クリーチャーの下に置いてもよい）、dmrp16-s02 頻波羅 ビリヤ棒ド（攻撃する時、手札を2枚まで捨てる。捨てた1枚につき相手のクリーチャーを1体選び、相手はそれを自身の山札の上または下に置く）。
+
+- 置く位置の選択肢自体は既存の確立形: modal の各モードに move {to: deck, reason: put, position: top/bottom}。足りなかったのは「選ぶのが効果の使用者ではない」点で、modal に player を追加した（ops.py の @op と op_modal、base/opvocab.py の語彙、defs.py の players 検証、schema.py の players 型、card.schema.json 再生成の5点）。player は "opp" のほか {owner_of: 変数名}（束縛したカードの持ち主）を取れる。スピーチは対象が両プレイヤーのエレメントなので owner_of が要る。
+- ビリヤ棒ドの「捨てた枚数だけ」は、discard の move に as: d で束縛し、if {exists: {ref: d}} でゲートした repeat 2。海幻の下に置く処理は put_under（onto）の確立形。
+
+実測: フリズン型では modal の決定が相手（player 1）に渡り、上／下のどちらも相手の山札の正しい位置に入る。スピーチ型では自分のエレメントを選ぶと決定が自分に、相手のエレメントでは相手に渡る。ビリヤ棒ド型は手札2枚を捨てると対象が2体になり、毎回相手が置く位置を決める。
+
+proto T1024（フリズン型）/ T1025（スピーチ型）/ T1026（海幻型）/ T1027（ビリヤ棒ド型）。テスト13 passed（pilot 本体7＋実カード parse 3＋rust_schema_sync 3）。次の番号: パイロット339 / ラウンド374 / プロト T1028。
+
+### ラウンド373（第338弾の再変換）
+
+**新規登録4件**（dm22rp1-034 氷結呪文「フリズン」＝シビルカウント常在型は partial のまま、呪文本体は modal の player: opp。dm23rp1-035 Uta-Awase選手宣誓のスピーチ＝stp_spell は partial のまま、本体は player: {owner_of: el}。dm25rp4-036 ツインヘッドの海幻＝超魂X常在型は partial のまま、出た時の誘発を追加。dmrp16-s02 頻波羅 ビリヤ棒ド＝ムゲンクライムと出た時の誘発は partial のまま、攻撃時の誘発を追加）・**alias 畳み込み0件**・**差し戻し0件**（submit 時の警告なし）。converted 10,297→**10,301** / rejects 2,017→**2,013**、重なり0・漏れ0。opponent_chooses_deck_position の行は残っていない（ファミリー解消）。
+
+pilot338 cards を登録形に書換、round373 cards を新設（登録カード自身の実挙動: フリズンで modal の決定が相手に渡り下に置かれる、ビリヤ棒ドは捨てた2枚で対象2体）。テスト20 passed（round373 cards 3＋pilot338 cards 登録形 2＋pilot338 本体 7＋data_audit 8）。回帰はパイロット・ルール系 215 passed / 0 failed、round357〜372 の disposition は件数固定の stale なだけの既知パターンで 16 failed。回答は answers/round373.yaml に保存。次の番号: パイロット339 / ラウンド374 / プロト T1028。
+
+### 語彙パイロット第339弾: opponent_cards_enter_tapped（ドリフト）
+
+対象は pure 2件: dmrp21-5a グーゴル ＜XENOM.Star＞（相手のカードはマナゾーンとバトルゾーンにタップして置かれる）、dm23ex3-006 偽りの名 スコーピオ（水晶武装4：自分のマナゾーンに裏向きのカードが4枚以上あれば、相手のカードはマナゾーンとバトルゾーンにタップして置かれる）。
+
+- どちらも既存機構の組み合わせで表せる。バトルゾーン側は static {affects: {zone: bz, owner: opp}, mod: {grant: [enters_tapped]}}（dmex19-m20「非道」の鬼 ゴウケン齋と同型）。マナゾーン側はキーワード opp_mana_tapped（events が「相手の bz トップの chars にあれば置く時点でタップ」を処理済み）。無条件のグーゴルはキーワードを直接持ち、条件付きのスコーピオは static {affects: self, if: 水晶武装4の条件, mod: {grant: [opp_mana_tapped]}} で自分に条件付きで持たせる。水晶武装4の条件は {cmp: [{count: {zone: mana, owner: you, filter: {face_down: true}}}, ">=", 4]}。
+- 実測: グーゴル型では相手のチャージしたカードも召喚したクリーチャーもタップして置かれる。スコーピオ型では裏向き3枚の間はどちらもタップせず、ターン開始の裏向き化（実フロー）で4枚目を裏向きにした後はどちらもタップして置かれる。
+
+副次的な発見（要判断・未修正）: partial が持っていた {event: turn_start, subject: self} は決して誘発しない。turn_start のイベントレコードには subject が無く、実働形は dm22-012 の {event: turn_start}＋if: {is_turn: you/opp}（第339弾で実測確認し、スコーピオはこの形に直して登録する）。登録済みカードにも同形が約22件ある（grep 概算。dm21-s04 キラ・ゼクス・ドラグーンで実挙動の不発を確認）。一括修正するかは判断待ちとして記録する。
+
+proto T1028（グーゴル型）/ T1029（スコーピオ型）。テスト9 passed（pilot 本体3＋実カード parse 3＋rust_schema_sync 3）。次の番号: パイロット340 / ラウンド375 / プロト T1030。
+
+### ラウンド374（第339弾の再変換）
+
+**新規登録2件**（dmrp21-5a グーゴル ＜XENOM.Star＞＝スター進化と攻撃時誘発は partial のまま、常在型と opp_mana_tapped を追加。dm23ex3-006 偽りの名 スコーピオ＝ターン開始の誘発を実働形 {event: turn_start}＋if {is_turn: you} に修正、水晶武装4の常在型2つを追加）・**alias 畳み込み0件**（submit 時に 5a へ aliases 2件が自動記録されたが rejects 行ではない）・**差し戻し0件**。converted 10,301→**10,303** / rejects 2,013→**2,011**、重なり0・漏れ0。opponent_cards_enter_tapped の行は残っていない（ファミリー解消）。
+
+登録時の事故と修正: dmrp21-5a の攻撃時誘発が二重に登録された。submit はルール変換済みの能力（part[2]）を回答の先頭に足して完全一致だけで dedupe するため、ルール側が「見ないで選び」を読んで chooser: random を補った誘発と、回答側の無印の誘発が別物として両方残った。登録後に converted.yaml から無印の重複側を除去し、登録カード自身の実挙動（攻撃で相手の手札がちょうど1枚減る）で固定した。教訓: partial に discard 等の誘発がある場合、ルール変換が chooser: random を補うことがあるので、submit 直後に abilities の重複を必ず確認すること。
+
+pilot339 cards を登録形に書換、round374 cards を新設（登録カード自身の実挙動3件）。テスト17 passed（round374 cards 4＋pilot339 cards 登録形 2＋pilot339 本体 3＋data_audit 8）。回帰はパイロット・ルール系 218 passed / 0 failed、round357〜373 の disposition は件数固定の stale なだけの既知パターンで 17 failed。回答は answers/round374.yaml に保存（登録形に合わせて chooser: random を反映済み）。次の番号: パイロット340 / ラウンド375 / プロト T1030。
+
+### 語彙パイロット第340弾: enters_tapped_opponent（ドリフト）
+
+対象は pure 2件: dmc52-007 聖霊王エルフェウス（相手クリーチャーはタップされた状態でバトルゾーンに出る）、dm24bd6-006 偽りの希望 修羅丸「終斗」（各ターン、はじめて相手のクリーチャーが出る時、そのクリーチャーはタップして出る）。
+
+- エルフェウスは第339弾で確立した static {affects: {zone: bz, owner: opp, filter: {types: [creature]}}, mod: {grant: [enters_tapped]}} の形。なお partial は進化元を落としていたため、旧形式の登録例 dm33-s01 と同じく types は [creature] のまま evolve_from {race_has: エンジェル・コマンド} を補った。
+- 修羅丸の「各ターン、はじめて」は first_time 誘発で表す: {kind: trigger, first_time: true, when: {event: move, to: bz, subject: {owner: opp, filter: {types: [creature]}}}, effect: [tap {select: {ref: event.subject}}]}。first_time は出来事の通し番号で数えるため、出て離れた後の2体目を数え違えない。当初検討した常在型の count ゲート（entered_this_turn の count == 0）は、出るカード自身が chars 評価の時点で既に entered_this_turn に数えられて常に閉じてしまうため使えない（実測で確認。count <= 1 に緩めると「出て離れた後の2体目」を誤ってタップする）。
+- 実測: 修羅丸型では相手の1体目だけがタップして出て、2体目はタップせず、次のターンでは再び1体目がタップして出る。
+
+proto T1030（エルフェウス型）/ T1031（修羅丸型）。テスト9 passed（pilot 本体3＋実カード parse 3＋rust_schema_sync 3）。次の番号: パイロット341 / ラウンド376 / プロト T1032。
+
+### ラウンド375（第340弾の再変換）
+
+**新規登録2件**（dmc52-007 聖霊王エルフェウス＝partial が落とした進化元を dm33-s01 と同形式で補完、常在型を追加。dm24bd6-006 偽りの希望 修羅丸「終斗」＝first_time 誘発を追加）・**alias 畳み込み0件**（submit 時に 007 へ aliases [dm14-001] が自動記録されたが rejects 行ではない）・**差し戻し0件**。converted 10,303→**10,305** / rejects 2,011→**2,009**、重なり0・漏れ0。enters_tapped_opponent の行は残っていない（ファミリー解消）。submit 直後の abilities 重複チェック済み（重複なし。第374弾の教訓）。
+
+pilot340 cards を登録形に書換、round375 cards を新設（登録カード自身の実挙動: エルフェウスで相手がタップして出る、修羅丸は各ターン1体目だけ）。テスト16 passed（round375 cards 3＋pilot340 cards 登録形 2＋pilot340 本体 3＋data_audit 8）。回帰はパイロット・ルール系 221 passed / 0 failed、round357〜374 の disposition は件数固定の stale なだけの既知パターンで 18 failed。回答は answers/round375.yaml に保存。次の番号: パイロット341 / ラウンド376 / プロト T1032。
+
+### 語彙パイロット第341弾: each_player_keeps_one_creature（ドリフト）
+
+対象は pure 2件: dm24bd6-003（出た時、各プレイヤーは自身のクリーチャーを１体ずつ選ぶ。選ばれなかったクリーチャーをすべて破壊する）、dm23bd5-001（出た時、各プレイヤーは自身のクリーチャーを１体選び、残りをすべて持ち主のマナゾーンに置く）。両方とも partial は他の条項を持ち、出た時だけが欠けていた。
+
+- 各プレイヤーの選択は choose の2回で表す。自分の分は通常の choose、相手の分は select の chooser: opp で相手に委ねる（dm23bd5-001 自身の partial のシールド選択と同型。実測でも相手の選択の決定は相手プレイヤーに出る）。
+- 「選ばれなかったすべて」は select の exclude（参照除外、C1 U35 で既存）で、束縛した keep_you / keep_opp を除く。003 は destroy、001 は move {to: mana, reason: put}（マナゾーンはカードごとに持ち主へ向かう）。
+- 実測: 相手が0体の時は choose が自動で読み飛ばされ（候補なし）、exclude の未束縛参照も空として処理され、効果は正常に解決する。相手が1体だけの時は choose が一意省略で自動確定する（第335弾の ask の一意省略）。
+
+proto T1032（003型、水晶武装の常在型を含む）/ T1033（001型の出た時条項のみ）。テスト10 passed（pilot 本体4＋実カード parse 3＋rust_schema_sync 3）。次の番号: パイロット342 / ラウンド377 / プロト T1034。
+
+### ラウンド376（第341弾の再変換）
+
+**新規登録2件**（dm24bd6-003 偽りのコード シャーロック＝partial の水晶武装常在型＋出た時の破壊。dm23bd5-001 煉獄大帝 キング・ロマノフ＝partial の2能力＋出た時のマナ送り）・**alias 畳み込み0件**・**差し戻し0件**。converted 10,305→**10,307** / rejects 2,009→**2,007**、重なり0・漏れ0。each_player_keeps_one_creature の行は残っていない（ファミリー解消）。submit 直後の abilities 重複チェック済み（重複なし。第374弾の教訓）。
+
+pilot341 cards を登録形に書換、round376 cards を新設（登録カード自身の実挙動: 003 は選ばれなかった側を破壊、001 は持ち主のマナへ。001 の require: attack で相手が攻撃を強いられる点はドライバ側で no_block を選んで固定）。テスト17 passed（round376 cards 3＋pilot341 cards 登録形 2＋pilot341 本体 4＋data_audit 8）。回帰はパイロット・ルール系 225 passed / 0 failed、round357〜375 の disposition は件数固定の stale なだけの既知パターンで 19 failed。回答は answers/round376.yaml に保存。次の番号: パイロット342 / ラウンド377 / プロト T1034。
+
+### 語彙パイロット第342弾: battle_power_grant（エンジン拡張）
+
+対象は pure 2件: dmr11-016 破戒のインガ シャンツァイ（バトル中、自分のオラクルとゴッドのパワーは+3000される）、dm23rp2x-006 ボルシャック・ノブリス・ドラゴン（自分のアーマードすべては、バトル中パワーを+3000する）。
+
+- 拡張: _battle_bonus はこれまで戦闘するカード自身の常在型（affects: self）しか見ておらず、affects 辞書形で他へ付与する battle_power は一切効いていなかった。dm21-031 激竜凰ドランベルク（自分のティラノ・ドレイクは攻撃中+4000）で実測すると、3000同士のバトルが引き分けになり付与が不発だった。chars の集約と同じく、バトルゾーン／シールドゾーンの発生源から affects が合う常在型を集めるようにした（発生源の if は発生源の env で見る。only: attacking / opponent_filter / count の扱いは本人の常在型と同じ）。{ref: self} 形も _subject_match で本人だけに合う。
+- 副次効果: 既登録の同型は15件（{owner: you, filter} の全体付与11件＋{ref: self} 4件）あり、全てがこの拡張で実働化する。dm21-031 の実挙動をテストで固定した。
+- 006 の partial のコスト軽減の常在型は、条件「自分の火のエレメントが３つ以上あれば」が race_has に化けた壊れた形だったため、原文どおり {zone: hand, affects: self, if: {cmp: [{count: {zone: bz, owner: you, filter: {civs: [fire]}}}, ">=", 3]}, mod: {cost: -3}} に直して使う（dm26rp3-tr008 と同型）。
+
+proto T1034（016型）/ T1035（006型）。テスト11 passed（pilot 本体5＋実カード parse 3＋rust_schema_sync 3）。次の番号: パイロット343 / ラウンド378 / プロト T1036。
+
+### ラウンド377（第342弾の再変換）
+
+**新規登録2件**（dmr11-016 破戒のインガ シャンツァイ＝partial の opt_reduce＋付与。dm23rp2x-006 ボルシャック・ノブリス・ドラゴン＝コスト軽減の化け形を原文どおりに修正＋メクレイド誘発＋付与）・**alias 畳み込み0件**（submit 時に 006 へ aliases [dm23rp2-006, dm23rp2x-06x] が自動記録されたが rejects 行ではない）・**差し戻し0件**。converted 10,307→**10,309** / rejects 2,007→**2,005**、重なり0・漏れ0。battle_power_grant の行は残っていない（ファミリー解消）。
+
+submit の事故と修正（第374弾と同型）: 006 はルール変換側に化け形のコスト常在型が残っており、submit が先頭に足したため意図した形と完全一致せず dedupe されず4能力で登録された。化け形側を除去して意図した3能力に直し、converted.yaml の git 差分が新規2件の追加のみ（既存行の削除ゼロ）であることを確認した。教訓の追加: partial の能力を「直して」回答に含める場合、submit の先頭追加で直す前の形も残るため、submit 直後の abilities 照合は件数だけでなく全能力の形を見ること。なお同じ化け形＋修正形の二重登録は既登録の dm26rp2-008 にも見られる（以前のラウンドで登録済み。そのまま記録のみ）。
+
+pilot342 cards を登録形に書換、round377 cards を新設（登録カード自身の実挙動: 016 の付与でゴッドが勝ち、006 の付与でアーマードが勝つ）。テスト18 passed（round377 cards 3＋pilot342 cards 登録形 2＋pilot342 本体 5＋data_audit 8）。回帰はパイロット・ルール系 230 passed / 0 failed、round357〜376 の disposition は件数固定の stale なだけの既知パターンで 20 failed。回答は answers/round377.yaml に保存。次の番号: パイロット343 / ラウンド378 / プロト T1036。
+
+### 語彙パイロット第343弾: first_entry_tapped_per_turn（ドリフト）
+
+対象は pure 2件（同名カードの2刷）: dm26ex4-cho001 / dm26sd1-o002f アルカディアス・モモキング（各ターンはじめて出る相手のクリーチャーは、タップして出る）。partial は2つの常在型（自分の他のレクスターズすべてのパワーを+2000する／相手は光ではない呪文を唱えられない）を持ち、この条項だけが欠けていた。
+
+- 形は第340弾（修羅丸「終斗」）で確立した first_time 誘発そのまま: {kind: trigger, first_time: true, when: {event: move, to: bz, subject: {owner: opp, filter: {types: [creature]}}}, effect: [tap {select: {ref: event.subject}}]}。エンジン変更なし。
+- 実測: 相手の1体目だけがタップして出て、2体目はタップせず、次のターンでは再び1体目がタップして出る（第340弾と同じドライバで確認）。
+
+proto T1036（モモキング型、カード全体）。テスト8 passed（pilot 本体2＋実カード parse 3＋rust_schema_sync 3）。次の番号: パイロット344 / ラウンド379 / プロト T1037。
+
+### ラウンド378（第343弾の再変換）
+
+**新規登録1件**（dm26ex4-cho001 アルカディアス・モモキング。登録形は意図した形と完全一致）・**stale クリーンアップ1件**（dm26sd1-o002f は非正本で、正本 cho001 の aliases として解消。submit は「取得済みの原文に無いID」で弾いた。第365弾と同型）・**差し戻し0件**。converted 10,309→**10,310** / rejects 2,005→**2,003**、重なり0・漏れ0。first_entry_tapped_per_turn の行は残っていない（ファミリー解消）。
+
+pilot343 cards を登録形に書換、round378 cards を新設（登録カード自身の実挙動: 各ターン1体目だけタップして出る）。テスト14 passed（round378 cards 2＋pilot343 cards 登録形 2＋pilot343 本体 2＋data_audit 8）。回帰はパイロット・ルール系 232 passed / 0 failed、round357〜377 の disposition は件数固定の stale なだけの既知パターンで 21 failed。回答は answers/round378.yaml に保存。次の番号: パイロット344 / ラウンド379 / プロト T1037。
+
+### 語彙パイロット第344弾: used_this_turn_condition（ドリフト）
+
+対象は pure 2件: dmrp21-053 頂上演者 スケプティック（このターン、自分がタマシードを使うか呪文を唱えていなければ、このクリーチャーは攻撃できない）/ dm22rp1-002 ラクリマ・クロウラー（各ターンの終わりに、自分がそのターン中、コスト５以上の呪文またはコスト５以上のタマシードを使っていたら、このクリーチャーを手札から出してもよい）。
+
+- 「使った」は既存の used_count 式（唱えた呪文＋via: generate で実行したタマシード等の履歴。印刷特性のスナップショット {cost, types, civs} で照合する。バンドC1 U19）で数える。053 は filter {types: [spell, tamaseed]} で 0 の間だけ効く常在型、002 は filter {types: [spell, tamaseed], cost_ge: 5} が 1 以上の時の手札誘発（zone: hand＋{event: turn_end}。dm26ex4-004 の先例形）。
+- 「攻撃できない」は許可語彙の attack_player / attack_creature の両 deny（mod の deny に 'attack' という行為名は無い）。
+- 002 の「出す」は move {ref: self} to: bz reason: put（召喚ではない。第329弾の作法）。partial のジャストダイバー誘発は二重に入っている（登録時は1つに畳む）。
+- 実測: 053 は唱える前は攻撃候補に出ず、唱えた後は出る。002 はコスト5呪文を唱えたターン終わりにだけ「出してもよい」が出て場に出る。
+
+proto T1037（053型）/ T1038（002型）。テスト10 passed（pilot 本体4＋実カード parse 3＋rust_schema_sync 3）。次の番号: パイロット345 / ラウンド380 / プロト T1039。
+
+### ラウンド379（第344弾の再変換）
+
+**新規登録2件**（dmrp21-053 頂上演者 スケプティック / dm22rp1-002 ラクリマ・クロウラー。登録形は意図した形と完全一致。002 の partial の二重のジャストダイバー誘発は validate の dedupe で1つに畳まれた）・**差し戻し0件**。converted 10,310→**10,312** / rejects 2,003→**2,001**、重なり0・漏れ0。used_this_turn_condition の pure 行は解消（multi の dmrp14-s08 は lose_prevention のため残る）。
+
+pilot344 cards を登録形に書換、round379 cards を新設（登録カード自身の実挙動: 唱える前後でのスケプティックの攻撃可否、コスト5呪文を唱えたターン終わりのクロウラー出現）。テスト17 passed（round379 cards 3＋pilot344 cards 登録形 2＋pilot344 本体 4＋data_audit 8）。回帰はパイロット・ルール系 236 passed / 0 failed、round357〜378 の disposition は件数固定の stale なだけの既知パターンで 22 failed。回答は answers/round379.yaml に保存。次の番号: パイロット345 / ラウンド380 / プロト T1039。
+
+### 語彙パイロット第345弾: trigger_when_opponent_plays_free（ドリフト）
+
+対象は pure 3件: dm23rp3-025 運明！ベリアvs.キャディ / dm24bd5-008 魔力妖精バーベナ / dm24ex1-058 冥土人形ロッカ・マグナム。いずれも partial は能力を持たず、条項は既存の仕組みの組み合わせで足す。エンジン変更なし。
+
+- 「コストを支払わずに出た時」「マナゾーンのカードをタップせずに出た時」は when の unpaid: true（第257弾で move レコードに載る。効果で出されたカードはマナをタップせずに出ている）＋ subject {owner: opp}。相手のターン中は if {is_turn: opp}。
+- 025: 相手ターン中のパワー+10000 は static {affects: self, if: {is_turn: opp}, mod: {power: 10000}}。マナ加速は may＋move {select: {zone: deck, owner: you, from_top: 1}, to: mana, reason: put}。
+- 008: draw の後、may で choose {select: {zone: hand, owner: you, filter: {types: [creature], cost_le: {cost_of: event.subject}}}, as: put_card}＋move {ref: put_card} to: bz reason: put（「そのエレメント以下のコスト」は filter の式値で解決時に計算する）。
+- 058: 「出た時または相手が呪文を唱えた時」は誘発を2つに分ける（unpaid の move 誘発＋cast 誘発）。効果は共通で、相手の選択は choose の chooser: opp（第341弾の形）＋destroy {ref: victim}。
+- 実挙動の「支払わずに出る」側は登録済み dm22rp1-002 ラクリマ・クロウラー（第344弾）で作る: 相手がコスト5呪文を唱えたターン終わりに出る動きで3カードとも誘発を確認。通常召喚（支払って出す）では誘発しないことも確認。教訓: 候補1体だけの choose は ask の一意省略で自動決定され決定自体が出ない（第335弾と同型）。相手に選ばせる検証は候補2体で組むこと。
+
+proto T1039（025型）/ T1040（008型）/ T1041（058型）。テスト11 passed（pilot 本体5＋実カード parse 3＋rust_schema_sync 3）。次の番号: パイロット346 / ラウンド381 / プロト T1042。
+
+### ラウンド380（第345弾の再変換）
+
+**新規登録3件**（dm23rp3-025 運明！ベリアvs.キャディ / dm24bd5-008 魔力妖精バーベナ / dm24ex1-058 冥土人形ロッカ・マグナム。登録形は意図した形と完全一致）・**差し戻し0件**。converted 10,312→**10,315** / rejects 2,001→**1,998**、重なり0・漏れ0。trigger_when_opponent_plays_free の行は残っていない（ファミリー解消）。
+
+pilot345 cards を登録形に書換、round380 cards を新設（登録カード自身の実挙動3件）。テスト19 passed（round380 cards 4＋pilot345 cards 登録形 2＋pilot345 本体 5＋data_audit 8）。回帰はパイロット・ルール系 241 passed / 0 failed、round357〜379 の disposition は件数固定の stale なだけの既知パターンで 23 failed。回答は answers/round380.yaml に保存。次の番号: パイロット346 / ラウンド381 / プロト T1042。
+
+### 語彙パイロット第346弾: cost_may_per_count（ドリフト）
+
+対象は pure 3件のうち2件: dmc68-002 魔光帝フェルナンドVII世（自分の墓地の呪文1枚につき召喚コスト-1、ただし1より少なくならない）/ dmx16-057 龍素記号Lp エクスペリオン（自分のリキッド・ピープル1体につき、自分の水の呪文のコスト-1、ただし1より少なくならない）。エンジン変更なし。
+
+- 形は確立形: mod {cost: {amount: -1, count: <selector>}, cost_min: N}。002 は手札の自身に効く形 {kind: static, zone: hand, affects: self}（dm21-020 と同型）、057 は場の発生源から手札の呪文へ効く形 {affects: {zone: hand, owner: you, filter: {types: [spell], civs: [water]}}}（dm24ex1-016 と同型）。
+- 「少なくしてもよい」の任意性は、コスト常在型では自動適用として扱う既存の作法に倣った。
+- dmex17-031 は対象外: 原文には flagged gap の他にデュアル・ザンジバルとナイト・マジックの条項があり、コスト条項だけでは登録できないため rejects に残す（gap 抽出が最初の未対応条項しか拾っていないケース）。
+- 実測: 墓地の呪文3枚でコスト11→8（マナ8で召喚可、マナ7では不可）、呪文12枚でも下限1で止まる。リキッド・ピープル2体で水の呪文が -2（いない場合は軽減なし）。
+
+proto T1042（002型、カード全体）/ T1043（057型）。テスト12 passed（pilot 本体6＋実カード parse 3＋rust_schema_sync 3）。次の番号: パイロット347 / ラウンド382 / プロト T1044。
+
+### ラウンド381（第346弾の再変換）
+
+**新規登録2件**（dmc68-002 魔光帝フェルナンドVII世 / dmx16-057 龍素記号Lp エクスペリオン。登録形は意図した形と完全一致）・**差し戻し0件**。converted 10,315→**10,317** / rejects 1,998→**1,996**、重なり0・漏れ0。
+
+dmex17-031 は対象外（原文にデュアル・ザンジバルとナイト・マジックの条項があるため）。reopen で一旦外れたその行は原文どおり復帰させ、HEAD とバイト単位で一致することを確認した。cost_may_per_count の行はこの1件だけ残る。
+
+pilot346 cards を登録形に書換、round381 cards を新設（登録カード自身の実挙動: コスト軽減と下限、呪文軽減）。テスト19 passed（round381 cards 3＋pilot346 cards 登録形 2＋pilot346 本体 6＋data_audit 8）。回帰はパイロット・ルール系 247 passed / 0 failed、round357〜380 の disposition は件数固定の stale なだけの既知パターンで 24 failed。回答は answers/round381.yaml に保存。次の番号: パイロット347 / ラウンド382 / プロト T1044。
+
+### 語彙パイロット第347弾: up_to_cost_reduction（ドリフト）
+
+対象は pure 3件のうち2件: dmbd02-014 西南の超人（自分のジャイアントの召喚コストを最大2少なくしてもよい、ただし0以下にならない）/ dm39-018 大地幻獣ガガマル（マナゾーンにある自分のマナ爆誕クリーチャーを召喚するコストを最大2少なくしてもよい、ただし1より少なくならない）。エンジン変更なし。
+
+- 「最大N少なく」は固定の mod {cost: -N} として扱う（軽減量の任意選択はコスト常在型では扱わない既存の作法、第346弾と同じ）。下限は cost_min で、0 はエンジン既定（core.py の pay_cost は max(cost_min, …) で cost_min の既定は0）のため 014 では省略、018 では cost_min: 1 を明示。
+- 014 の形: {affects: {zone: hand, owner: you, filter: {races: [ジャイアント]}}, mod: {cost: -2}}。018 の形: {affects: {zone: mana, owner: you, filter: {types: [creature], keyword: summon_from_mana}}, mod: {cost: -2, cost_min: 1}}（マナ爆誕は filter の keyword で絞る）。
+- 実測: ジャイアント（コスト7）がマナ5で召喚可・マナ4では不可、非ジャイアントは軽減なし。マナ召喚は選択肢キー play:<id>:msum で出て、T086（コスト2）が1で召喚でき、T730（コスト5）の pay_cost は発生源ありで3・なしで5。教訓: T730 は究極進化MAX で進化元が要るため、通常のマナ召喚テストの fixture には使えない。
+- dm23rp4x-tf03 は対象外: partial が完全に空（名前・原文・能力なし）で登録の基礎がないため rejects に残す。
+
+proto T1044（014型、カード全体）/ T1045（018型）。テスト12 passed（pilot 本体6＋実カード parse 3＋rust_schema_sync 3）。次の番号: パイロット348 / ラウンド383 / プロト T1046。
+
+### ラウンド382（第347弾の再変換）
+
+**新規登録2件**（dmbd02-014 西南の超人 / dm39-018 大地幻獣ガガマル。登録形は意図した形と完全一致）・**差し戻し0件**。converted 10,317→**10,319** / rejects 1,996→**1,994**、重なり0・漏れ0。
+
+dm23rp4x-tf03 は対象外（partial が完全に空）。reopen で一旦外れたその行は原文どおり復帰させ、HEAD とバイト単位で一致することを確認した。up_to_cost_reduction の行はこの1件だけ残る。
+
+pilot347 cards を登録形に書換、round382 cards を新設（登録カード自身の実挙動: ジャイアント軽減とマナ爆誕軽減＋pay_cost）。テスト19 passed（round382 cards 3＋pilot347 cards 登録形 2＋pilot347 本体 6＋data_audit 8）。回帰はパイロット・ルール系 253 passed / 0 failed、round357〜381 の disposition は件数固定の stale なだけの既知パターンで 25 failed。回答は answers/round382.yaml に保存。次の番号: パイロット348 / ラウンド383 / プロト T1046。
+
+### 語彙パイロット第348弾: invasion_zero（エンジン拡張＋ドリフト）
+
+対象は pure 3件すべて: dmbd21-018 ZEROの侵略 ブラックアウト / dmd35-011 ZEROの暴走 デッドリー・ハイウェイ / promoy15-035 禁断の月 ドキンダムーン。
+
+- 侵略ZERO の形: 手札の turn_end 誘発 {kind: trigger, zone: hand, when: {event: turn_end}, if: {all: [{is_turn: opp}, {cmp: [{turn_count: {kind: enter_unpaid, owner: opp, filter: {types: [creature]}}}, ">=", 1]}]}, effect: [may [move {ref: self} to: bz reason: put]]}。
+- エンジン拡張（3点）: turn_count の kind: enter_unpaid は従来は整数カウンタ（hist:enter_unpaid）だけで種類で絞れなかった。events.py が無償登場の cid リスト（enter_unpaid:<player>）も残し、selectors._turn_count に attack と同じ filter 方式の分岐を足し、defs.py の検証で enter_unpaid の filter を許可した。整数カウンタは従来どおり併存するので既存の利用に影響しない。
+- dmbd21-018 の攻撃時誘発は {exists: {zone: bz, owner: you, filter: {types: [d2_field]}}}＋ destroy の select に extremal: max_power（「パワーが一番大きい」）。
+- 教訓: 誘発の if は収集時に評価される（events.py:1322、ルール603.4）ため、ターン終わりの誘発は同じターン終わりに解決される別の誘発の結果を見られない。検証用の無償登場はターン中に起こす必要があり、fixture 呪文 T1049（手札からクリーチャーを出す）を追加した。
+
+proto T1046（018型）/ T1047（011型）/ T1048（035型）＋検証 fixture T1049。テスト12 passed（pilot 本体6＋実カード parse 3＋rust_schema_sync 3）。次の番号: パイロット349 / ラウンド384 / プロト T1050。
+
+### ラウンド383（第348弾の再変換）
+
+**新規登録3件**（dmbd21-018 ZEROの侵略 ブラックアウト / dmd35-011 ZEROの暴走 デッドリー・ハイウェイ / promoy15-035 禁断の月 ドキンダムーン。登録形は意図した形と完全一致）・**差し戻し0件**。converted 10,319→**10,322** / rejects 1,994→**1,991**、重なり0・漏れ0。invasion_zero の pure は解消（multi の dm24ex3-tf13 にだけ残る）。
+
+pilot348 cards を登録形に書換、round383 cards を新設（登録カード自身の実挙動: 侵略ZERO の登場2件）。テスト19 passed（round383 cards 3＋pilot348 cards 登録形 2＋pilot348 本体 6＋data_audit 8）。回帰はパイロット・ルール系 259 passed / 0 failed、round357〜382 の disposition は件数固定の stale なだけの既知パターンで 26 failed。回答は answers/round383.yaml に保存。次の番号: パイロット349 / ラウンド384 / プロト T1050。
+
+### 語彙パイロット第349弾: summon_lock（ドリフト）
+
+対象は pure 4件のうち3件: promoy11-083 鬼丸「Ｅｎｄ」 / promoy12-036 激流剣砲 カツ∞キング / promoy12-085 漢のキズナ カツブードン。dmx25-s07 は対象外（partial の原文が断片のみで登録の基礎がない）。
+
+- 「誰もゼニスを召喚できない」は許可 summon の deny: {kind: static, affects: {zone: hand, owner: any, filter: {types: [creature], race_has: ゼニス}}, mod: {deny: [summon]}}（34-sec001 等の確立形）。「ゼニスとバトル中パワー+11000」は battle_power: {amount: 11000, opponent_filter: {race_has: ゼニス}}。
+- 「自分の他の、名前に《X》とあるエグザイル・クリーチャーをバトルゾーンに出すことはできない」は許可 enter_bz の deny をゾーン別に5つ並べる確立形（dmd11-001 等）: affects {zone: hand/graveyard/mana/deck/shield, owner: you, filter: {types: [exile_creature], name_has: X}}。affects の zone は対象カードの現在ゾーンと一致する必要がある（core の集約は aff.zone == 対象ゾーンの時のみ拾い、zone 無しは bz 扱い）ため、ゾーン列挙が必須。
+- promoy12-036 の CIP は destroy {filter: {keyword: blocker}, count: all}＋may draw。promoy12-085 の CIP は「破壊してもよい。そうした場合〜」を move（reason: destroy, as: dead）の移動後束縛＋{count: {ref: dead}} の if で組む。教訓: choose で束縛した参照は対象がゾーン移動すると gen が変わって解決できなくなるため、「そうした場合」の判定は移動 op 自身の as 束縛で数える（dm26ex1-019 の paid と同型）。山札探索は choose {zone: deck, look: true}＋move＋shuffle の確立形。
+- 検証上の注意: ゼニスはゼロ文明で、支払いにはゼロ文明のマナが要る（fixture T789 をマナに置く）。
+
+proto T1050（083型）/ T1051（036型）/ T1052（085型）＋検証 fixture T1053（剣砲エグザイル）。テスト12 passed（pilot 本体6＋実カード parse 3＋rust_schema_sync 3）。次の番号: パイロット350 / ラウンド385 / プロト T1054。
+
+### ラウンド384（第349弾の再変換）
+
+**新規登録3件**（promoy11-083 鬼丸「Ｅｎｄ」 / promoy12-036 激流剣砲 カツ∞キング / promoy12-085 漢のキズナ カツブードン。登録形は意図した形と完全一致）・**差し戻し0件**。converted 10,322→**10,325** / rejects 1,991→**1,988**、重なり0・漏れ0。summon_lock は dmx25-s07 にだけ残る（原文断片のみのため対象外。reopen で外れたその行は原文どおり復帰し HEAD とバイト一致を確認）。
+
+pilot349 cards を登録形に書換、round384 cards を新設（登録カード自身の実挙動: ゼニス召喚ロックと剣砲ロック＋CIP）。テスト20 passed（round384 cards 3＋pilot349 cards 登録形 3＋pilot349 本体 6＋data_audit 8）。回帰はパイロット・ルール系 265 passed / 0 failed、round357〜383 の disposition は件数固定の stale なだけの既知パターンで 27 failed。作業途中で VM 再起動があり pytest を再インストールした（通算5回目）。回答は answers/round384.yaml に保存。次の番号: パイロット350 / ラウンド385 / プロト T1054。
+
+### 語彙パイロット第350弾: must_attack_next_turn（ドリフト）
+
+対象は pure 3件のうち2件: dm05-014 ファントム・ベール / dmrp22-021 ドラヴィ圧鬼の巻。dm23ex3-tr09 は対象外（バトル代替「かわりにこのクリーチャーがバトルする」の機構が無く全体を組めない）。
+
+- 攻撃強制は mod の require: [attack]（turn.py が chars の require を見て攻撃を強制する、ルール506.1b。dm10-053 の常在形が先例）。must_attack_creature は「攻撃する時、可能ならクリーチャーを攻撃する」という対象制限であり、強制とは別物。
+- 期間つきの付与は op_modify＋duration の確立形（第276弾の deny ロックと同型）: 呪文・タマシード CIP ともに {op: modify, select: {zone: bz, owner: opp, filter: {types: [creature]}, count: all}, mod: {require: [attack]}, duration: until_next_own_turn_start}（呪文の duration は dm29-044 先例に合わせた）。解決時に場にいるクリーチャーだけが対象になるのは第276弾と同じ作法。
+- 実挙動で固定: 相手の攻撃判断に pass が無くなり全員が攻撃する（タップ＋シールド減少で確認）。対照実験（呪文なし）では全員アンタップのまま。タマシードは次の自分のターン開始時点で require が消えていることも確認。
+
+proto T1054（014型・呪文）/ T1055（021型）。テスト10 passed（pilot 本体4＋実カード parse 3＋rust_schema_sync 3）。次の番号: パイロット351 / ラウンド386 / プロト T1056。
+
+### ラウンド385（第350弾の再変換）
+
+**新規登録1件**（dmrp22-021 ドラヴィ圧鬼の巻。登録形は意図した形と完全一致）・**stale 掃除1件**（dm05-014 ファントム・ベール: canonical の dm18-036 が同じ require 形で登録済みで aliases に dm05-014 を含んでいたため、rejects 行の除去が正しい解決。submit は「取得済みの原文に無いID」で弾かれた）・**差し戻し0件**。converted 10,325→**10,326** / rejects 1,988→**1,986**、重なり0・漏れ0。must_attack_next_turn は dm23ex3-tr09 にだけ残る（バトル代替の機構が無いため対象外。reopen で外れたその行は原文どおり復帰し HEAD とバイト一致を確認）。
+
+なお呪文側の duration は、canonical dm18-036 の先例（dm29-044）が until_next_own_turn_start を使っていたため、proto T1054 も同値に合わせて第350弾の記録を訂正した（効果は相手の次のターン全体に及ぶ点で等価）。
+
+pilot350 cards を登録形に書換、round385 cards を新設（登録カード自身の実挙動: タマシードと canonical 呪文の攻撃強制）。テスト17 passed（round385 cards 3＋pilot350 cards 登録形 2＋pilot350 本体 4＋data_audit 8）。回帰はパイロット・ルール系 269 passed / 0 failed、round357〜384 の disposition は件数固定の stale なだけの既知パターンで 28 failed。回答は answers/round385.yaml に保存。次の番号: パイロット351 / ラウンド386 / プロト T1056。
+
+### 語彙パイロット第351弾: battle_power_against_specific_race（ドリフト）
+
+対象は pure 2件すべて: dm08-006 光器サーシャ / dm16-021 光器スヴェータ。
+
+- 「Xとバトルする時、パワーは+N」は battle_power: {amount, opponent_filter} の確立形（第349弾のゼニス条項と同型）。複数種族は opponent_filter の any_of で束ねる（デーモン・コマンドまたはドラゴン）。
+- ドラゴン・ブロッカーはキーワード blocker（無制限の許可になる）ではなく、block の許可（既定 false）を other フィルタつき allow 項目で与える形: {kind: static, affects: self, mod: {allow: [{action: block, other: {race_has: ドラゴン}}]}}（permits は other を攻撃側に当てて評価する）。
+
+proto T1056（006型）/ T1057（021型）。テスト9 passed（pilot 本体3＋実カード parse 3＋rust_schema_sync 3）。次の番号: パイロット352 / ラウンド387 / プロト T1058。
+
+### ラウンド386（第351弾の再変換）
+
+**新規登録2件**（dm08-006 光器サーシャ / dm16-021 光器スヴェータ。登録形は意図した形と完全一致）・**差し戻し0件**。converted 10,326→**10,328** / rejects 1,986→**1,984**、重なり0・漏れ0。battle_power_against_specific_race のファミリーは解消。
+
+pilot351 cards を登録形に書換、round386 cards を新設（登録カード自身の実挙動: ドラゴン・ブロッカーの制限と種族条件つきバトルパワー）。テスト17 passed（round386 cards 3＋pilot351 cards 登録形 3＋pilot351 本体 3＋data_audit 8）。回帰はパイロット・ルール系 272 passed / 0 failed、round357〜385 の disposition は件数固定の stale なだけの既知パターンで 29 failed。回答は answers/round386.yaml に保存。次の番号: パイロット352 / ラウンド387 / プロト T1058。
+
+### 語彙パイロット第352弾: optional_cost_reduction_per_count（ドリフト）
+
+対象は pure 2件すべて: dm31-033 爆獣パンダ・ブーリン / dmbd16-007 聖霊龍騎セイント・ボルシャック。
+
+- 形は第346弾（cost_may_per_count）で確立した mod {cost: {amount: -1, count: <selector>}, cost_min: 1} そのもの（gap ラベルが違うだけで機構は同一）。「少なくしてもよい」の任意性はコスト常在型の自動適用の作法に倣う。
+- 本弾の追加点: 数える対象が2種族の和集合（エンジェル・コマンドまたはアーマード・ドラゴン）の場合は count セレクタの filter に any_of を使う。
+- テスト上の注意: 行動が一切無いターンでは main 判断自体が出ない（charge が次のターンへ直行する）。「出せない」ことの検証は p0 の2回目の charge 到達で判定する。
+
+proto T1058（033型）/ T1059（007型）。テスト9 passed（pilot 本体3＋実カード parse 3＋rust_schema_sync 3）。次の番号: パイロット353 / ラウンド388 / プロト T1060。
+
+### ラウンド387（第352弾の再変換）
+
+**新規登録2件**（dm31-033 爆獣パンダ・ブーリン / dmbd16-007 聖霊龍騎セイント・ボルシャック。登録内容は意図した能力の集合と一致。dmbd16-007 は submit の prepend で partial 由来の power_when が先頭に来たため順序のみ意図と異なる）・**差し戻し0件**。converted 10,328→**10,330** / rejects 1,984→**1,982**、重なり0・漏れ0。optional_cost_reduction_per_count のファミリーは解消。dmbd16-007 へ aliases 2件の自動記録は rejects 行ではない。
+
+pilot352 cards を登録形に書換、round387 cards を新設（登録カード自身の実挙動: 両カードの軽減での支払い可否）。テスト17 passed（round387 cards 3＋pilot352 cards 登録形 3＋pilot352 本体 3＋data_audit 8）。回帰はパイロット・ルール系 275 passed / 0 failed、round357〜386 の disposition は件数固定の stale なだけの既知パターンで 30 failed。回答は answers/round387.yaml に保存。次の番号: パイロット353 / ラウンド388 / プロト T1060。
+
+### 語彙パイロット第353弾: trigger_when_opponent_plays_without_paying（ドリフト）
+
+対象は pure 2件すべて: dm22rp2x-020 チッタ・ペロルの冠 / dm23rp2x-033 ゼンツー。
+
+- 「支払わずに出た」は第345弾の when の unpaid: true（020 は subject フィルタ types: [creature, tamaseed]＋if {is_turn: opp}、033 はフィルタ無し）。
+- 「各ターンに一度」は trigger の once_per_turn: true。
+- マジック・メクレイド5は既存 op {op: mekurade, filter: {race_has: マジック}, cost_le: 5}（dm25ex1-078 のサイバー・メクレイド5と同型）。
+- 「このタマシードを破壊してもよい。そうしたら、引いて、出してもよい」は全体を1つの may に包む形（破壊が任意、ドローは必須、出してよいだけ任意）。
+
+proto T1060（020型）/ T1061（033型）/ T1062（検証用マジック）。テスト9 passed（pilot 本体3＋実カード parse 3＋rust_schema_sync 3）。次の番号: パイロット354 / ラウンド389 / プロト T1063。
+
+### ラウンド388（第353弾の再変換）
+
+**新規登録2件**（dm22rp2x-020 チッタ・ペロルの冠 / dm23rp2x-033 ゼンツー。登録形は意図した形と完全一致）・**差し戻し0件**。converted 10,330→**10,332** / rejects 1,982→**1,980**、重なり0・漏れ0。trigger_when_opponent_plays_without_paying の pure は解消し、この gap は multi の dm26rp2-s011 にだけ残る。020 へ aliases 2件・033 へ1件の自動記録は rejects 行ではない。
+
+pilot353 cards を登録形に書換、round388 cards を新設（登録カード自身の実挙動: タマシードの反応とメクレイド）。テスト17 passed（round388 cards 3＋pilot353 cards 登録形 3＋pilot353 本体 3＋data_audit 8）。回帰はパイロット・ルール系 278 passed / 0 failed、round357〜387 の disposition は件数固定の stale なだけの既知パターンで 31 failed。回答は answers/round388.yaml に保存。次の番号: パイロット354 / ラウンド389 / プロト T1063。
+
+### 語彙パイロット第354弾: forced_attack_target（ドリフト）
+
+対象は pure 2件すべて: dm16-s03 / dm10-s07 不落の超人。
+
+- 「相手のクリーチャーは、可能であればこのクリーチャーを攻撃する」は mod の must_be_attacked（第51弾で実装済み。攻撃先の候補はタップした誘引持ちに限られる。攻撃できるのはタップ状態のクリーチャーだけという原則のため、条件の無い形でも原文どおりに働く）。
+- dm10-s07 の条件節は3つの既存部品で表す: {is_turn: opp}、「タップしている」は exists の ref セレクタに filter {tapped: true} を重ねた形、「そのターンにまだ攻撃を受けていない」は turn_count の attack_on（クリーチャー単位）== 0。
+
+proto T1063（s07型）/ T1064（s03型）/ T1065（進化元フィクスチャ）。テスト9 passed（pilot 本体3＋実カード parse 3＋rust_schema_sync 3）。次の番号: パイロット355 / ラウンド390 / プロト T1066。
+
+### ラウンド389（第354弾の再変換）
+
+**新規登録2件**（dm16-s03 超神龍アバス・ノナリス / dm10-s07 不落の超人。登録形は意図した形と完全一致）・**差し戻し0件**。converted 10,332→**10,334** / rejects 1,980→**1,978**、重なり0・漏れ0。forced_attack_target のファミリーは解消。
+
+pilot354 cards を登録形に書換、round389 cards を新設（登録カード自身の実挙動: 両カードの誘引）。テスト17 passed（round389 cards 3＋pilot354 cards 登録形 3＋pilot354 本体 3＋data_audit 8）。回帰はパイロット・ルール系 281 passed / 0 failed、round357〜388 の disposition は件数固定の stale なだけの既知パターンで 32 failed。回答は answers/round389.yaml に保存。次の番号: パイロット355 / ラウンド390 / プロト T1066。

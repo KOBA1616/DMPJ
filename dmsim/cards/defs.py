@@ -33,7 +33,7 @@ REASONS = {"put", "destroy", "return", "discard", "charge", "summon", "cast", "b
 LOSE_REASONS = {"direct_attack", "deck_out", "state", "effect"}   # 第188弾: 敗北イベントの reason（when の照合用。移動の reason とは別）
 VIAS = {"revolution_change", "generate", "d_d_d", "rinne"}   # 出し方の印（「革命チェンジによって出た時」「D・D・Dによって出た時」「輪廻∞で唱えた時」など）
 DURATIONS_FIXED = {"end_of_turn", "during_attack", "permanent", "until_next_own_turn_start", "until_next_own_turn_end", "until_next_opp_turn_end"}
-MOD_KEYS = {"power", "power_set", "grant", "allow", "deny", "breaks", "breaks_add", "breaks_per_power", "battle_power", "power_when", "cost", "cost_min", "cost_may", "sac_reduce", "opt_reduce", "ignore", "ignore_ids", "gain", "require", "add_of", "add_races", "add_names", "no_leave", "must_be_attacked", "must_be_chosen", "must_attack_creature", "battle_indestructible", "win_all_battles", "add_civs", "indestructible", "double_power", "crystal_soul", "mana_number", "evo_reduce", "cross_reduce", "player_rush", "trigger_double"}
+MOD_KEYS = {"power", "power_set", "grant", "allow", "deny", "breaks", "breaks_add", "breaks_max", "breaks_per_power", "battle_power", "power_when", "cost", "cost_min", "cost_may", "sac_reduce", "opt_reduce", "ignore", "ignore_ids", "gain", "require", "add_of", "add_races", "add_names", "no_leave", "must_be_attacked", "must_be_chosen", "must_attack_creature", "battle_indestructible", "win_all_battles", "add_civs", "indestructible", "double_power", "crystal_soul", "mana_number", "evo_reduce", "cross_reduce", "player_rush", "trigger_double"}
 REQUIRES = {"attack", "block"}   # 強制（506.1b 攻撃しなければならない, 507.1b ブロックしなければならない）
 POSITIONS = {"top", "bottom"}
 PERMANENT_TYPES = {"tamaseed", "field", "cross_gear"}   # 手札から実行してバトルゾーンに出るクリーチャー以外のカード（315, 308, 303）
@@ -46,13 +46,13 @@ SELECTOR_KEYS = {"zone", "owner", "owner_of", "filter", "count", "up_to", "from_
 FILTER_KEYS = {"any_of", "types", "not_types", "civs", "civs_all", "not_civs", "races", "races_all", "race_has", "not_race_has", "name", "name_has", "not_name",
                "cost_le", "cost_ge", "power_le", "power_ge", "tapped", "keyword", "not_keyword", "multicolor", "colorless", "hyper", "face_down", "face_up", "neo", "vanilla", "sealed", "evolution", "ultimate_evolution", "mugen_climb", "partner", "twinpact", "vividraw", "fushigi", "linked_god", "entered_this_turn",
                "spell_cost_le", "spell_cost_ge",   # 呪文面（ツインパクトの呪文側）のコスト（第184弾）
-               "crossed", "crossed_ge", "crossed_le", "crossed_name", "evo_source_of", "fortifying", "fortified", "exlife"}   # クロス状態（第170弾）: crossed はギアがクロスされているか、crossed_ge/le はその枚数、crossed_name はその名前のギアがクロスされているか。evo_source_of（第177弾）: そのクリーチャーの進化元になれるカード（値は "self" / 変数名）。fortifying（第178弾）: シールドを要塞化している城。fortified（第178弾）: 要塞化されたシールド。exlife（第237弾）: EXライフで紐付いたシールドか
+               "crossed", "crossed_ge", "crossed_le", "crossed_name", "evo_source_of", "evolves_from", "fortifying", "fortified", "exlife"}   # クロス状態（第170弾）: crossed はギアがクロスされているか、crossed_ge/le はその枚数、crossed_name はその名前のギアがクロスされているか。evo_source_of（第177弾）: そのクリーチャーの進化元になれるカード（値は "self" / 変数名）。evolves_from（第337弾）: その参照カードから進化できるカード（evo_source_of の鏡像。値は "self" / 変数名）。fortifying（第178弾）: シールドを要塞化している城。fortified（第178弾）: 要塞化されたシールド。exlife（第237弾）: EXライフで紐付いたシールドか
 FILTER_EXPR_KEYS = {"cost_le", "cost_ge", "power_le", "power_ge", "races", "civs", "not_civs", "name", "crossed_ge", "crossed_le", "spell_cost_le", "spell_cost_ge"}   # 値に式を書ける（解決時に計算）。civs / not_civs / name は宣言プリミティブ（{declared:}）の受け口（バンドB U3／バンドC2 U97）
 # 履歴カウンタ（式 {turn_count: ...}）の kind 列挙（バンドC1 U19＋統一で追加した分）。
 # owner に any を許すのは destroyed と attack だけ（他は you/opp）
 TURN_COUNT_KINDS = {"shield_put", "shield_left", "mana_put", "cast", "summon", "attack", "destroyed",
                     "broke_by_self", "broke_by_self_attack", "draw", "broken", "enter", "discard", "leave", "tap", "untap", "untap_creature",
-                    "block", "enter_unpaid", "attack_by", "attack_on"}
+                    "block", "enter_unpaid", "attack_by", "attack_on", "dynamo_tap"}   # dynamo_tap: 第322弾。このターンに「ダイナモ」能力を使うためにタップした自分のダイナモの体数（op_modify の add_of 適用で記録。重複は数えない）
 TURN_COUNT_ANY_KINDS = {"destroyed", "attack"}
 ORD_KINDS = {"mana_put", "enter", "cast", "summon", "draw", "attack", "attack_by"}   # when の {ord: ...} で照合できる kind
 
@@ -349,8 +349,9 @@ class Checker:
             raise DefError(f"{where}: unknown reason '{v}'")
         if ty == "player" and v not in ("you", "opp") and not _is_var_ref(v):
             raise DefError(f"{where}: player must be you/opp or {{var: name}}, got '{v}'")
-        if ty == "players" and v not in ("you", "opp", "each") and not _is_var_ref(v):
-            raise DefError(f"{where}: players must be you/opp/each or {{var: name}}, got '{v}'")
+        if ty == "players" and v not in ("you", "opp", "each") and not _is_var_ref(v) \
+                and not (isinstance(v, dict) and set(v) == {"owner_of"} and isinstance(v.get("owner_of"), str)):
+            raise DefError(f"{where}: players must be you/opp/each, {{var: name}}, or {{owner_of: name}}, got '{v}'")
         if ty == "position" and v not in POSITIONS:
             raise DefError(f"{where}: unknown position '{v}'")
         if ty == "step" and v not in self.steps:
@@ -458,6 +459,8 @@ class Checker:
             raise DefError(f"{where}: crossed_name must be a card name")
         if "evo_source_of" in f and not isinstance(f["evo_source_of"], str):
             raise DefError(f"{where}: evo_source_of must be 'self' or a variable name")
+        if "evolves_from" in f and not isinstance(f["evolves_from"], str):
+            raise DefError(f"{where}: evolves_from must be 'self' or a variable name")
         for k in FILTER_EXPR_KEYS & set(f):
             if k in ("races", "civs", "not_civs") and isinstance(f[k], list):
                 continue   # リテラル（種族・文明のリスト）は上の照合で検証済み
@@ -519,8 +522,8 @@ class Checker:
                     if "other" in v and (kind != "attack" or not isinstance(v["other"], bool)):
                         raise DefError(f"{where}: turn_count other is only for kind: attack, as a bool")
                     if "filter" in v:
-                        if kind != "attack":
-                            raise DefError(f"{where}: turn_count filter is only for kind: attack")
+                        if kind not in ("attack", "enter_unpaid"):
+                            raise DefError(f"{where}: turn_count filter is only for kind: attack / enter_unpaid")
                         self.filter(v["filter"], where)
                 return
             if k == "used_count":   # 「使った」履歴の特性つき数え {owner?, filter?}（バンドC1 U19）
@@ -610,6 +613,10 @@ class Checker:
             if not isinstance(v, bool):
                 raise DefError(f"{where}: ddd_paid must be bool")
             return
+        if k == "subject_tapped":   # イベントの対象が移動直前にタップしていたか（第330弾）
+            if not isinstance(v, bool):
+                raise DefError(f"{where}: subject_tapped must be bool")
+            return
         if k == "power_ge":
             if not isinstance(v, int) or isinstance(v, bool):
                 raise DefError(f"{where}: power_ge must be an int")
@@ -636,8 +643,13 @@ class Checker:
             raise DefError(f"{where}: double_power must be true")
         if "power" in m and isinstance(m["power"], dict):
             pm = m["power"]
-            if set(pm) - {"amount", "count"} or not isinstance(pm.get("amount"), int):
-                raise DefError(f"{where}: power needs amount (int) and optional count")
+            amt = pm.get("amount")
+            amt_ok = isinstance(amt, int) or _is_var_ref(amt) \
+                or (isinstance(amt, dict) and set(amt) == {"power_of"})
+            if set(pm) - {"amount", "count"} or not amt_ok:
+                raise DefError(f"{where}: power needs amount (int, {{var: name}}, or {{power_of: ref}}) and optional count")
+            if isinstance(amt, dict) and "power_of" in amt:
+                self.expr(amt, where)   # パワー移転（第333弾）: op_modify の生成時ベイクでリテラルに固定する。常在型に直接書くと chars が整数を前提とするため使えない
             if "count" in pm:
                 self.count_spec(pm["count"], where)
         if "power_set" in m and not isinstance(m["power_set"], int):   # 第272弾: パワー置換は整数
@@ -667,12 +679,17 @@ class Checker:
         if "breaks_add" in m:
             ba = m["breaks_add"]
             if isinstance(ba, dict):   # {amount, count}（第170弾）: 「〜1枚につき、さらに1枚ブレイクする」
-                if set(ba) - {"amount", "count"} or not isinstance(ba.get("amount"), int):
+                if _is_var_ref(ba):   # {var: 名前}（第324弾）: set_var で数えた値を生成時に焼く（op_modify の _bake_refs）
+                    pass
+                elif set(ba) - {"amount", "count"} or not isinstance(ba.get("amount"), int):
                     raise DefError(f"{where}: breaks_add dict needs amount (int) and optional count")
-                if "count" in ba:
+                elif "count" in ba:
                     self.count_spec(ba["count"], where)
             elif not isinstance(ba, int) or isinstance(ba, bool):
                 raise DefError(f"{where}: breaks_add must be an int or {{amount, count}}")
+        if "breaks_max" in m:   # ブレイク数の上限（第336弾）: 「攻撃1回につきシールドをN枚しかブレイクできない」
+            if not isinstance(m["breaks_max"], int) or isinstance(m["breaks_max"], bool) or m["breaks_max"] < 0:
+                raise DefError(f"{where}: breaks_max must be an int >= 0")
         if "evo_reduce" in m:   # 進化元からの軽減の付与（第234弾）: このカードから進化するクリーチャーのコストを減らす
             er = m["evo_reduce"]
             if not isinstance(er, dict) or set(er) - {"amount", "min"} or not isinstance(er.get("amount"), int) \
@@ -904,6 +921,8 @@ class Checker:
                 raise DefError(f"{where}: cause needs {{by?: you/opp, kind?: spell/ability, defn?: str|[str], name_has?: str}}")
         if "blocked" in w and not isinstance(w["blocked"], bool):
             raise DefError(f"{where}: blocked must be bool")
+        if "battle" in w and not isinstance(w["battle"], bool):   # バトルで負けて破壊された移動か（第332弾）
+            raise DefError(f"{where}: battle must be bool")
         if "emblem" in w and not isinstance(w["emblem"], bool):   # 裁きの紋章だったか（第169弾）
             raise DefError(f"{where}: emblem must be bool")
         if "turn_draw" in w and not isinstance(w["turn_draw"], bool):   # ターンのはじめのドローそのものか（第219弾）

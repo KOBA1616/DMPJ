@@ -211,6 +211,39 @@ class CombatMixin:
             is_self = (ga is None or ga == "self" or ga == {"ref": "self"}) if gained else ga == "self"
             if bp and is_self and ab.get("zone", "bz") == self.s.cards[cid].zone:
                 total += bp["amount"] * (self.count_of(bp["count"], env) if "count" in bp else 1)
+        # 他のカードからの付与（第342弾）: chars の集約と同じく、バトルゾーンと
+        # シールドゾーンの発生源から affects が合う常在型の battle_power を集める。
+        # これまで _battle_bonus は本人の常在型しか見ておらず、affects 辞書形の
+        # 付与（例: dm21-031 の「自分のティラノ・ドレイクはバトル中+4000」）は
+        # 一切効いていなかった。{ref: self} 形も _subject_match で本人だけに合う。
+        cards = self.s.cards
+        grant_srcs = [(src, ab) for src in self.s.zones["bz"][0]
+                      if cards[src].top_of < 0 and self._affects_others(src)
+                      for _, ab in self.abilities(src, "static")
+                      if ab.get("zone", "bz") == "bz"]
+        grant_srcs += [(src, ab) for p in (0, 1) for src in self.s.zones["shield"][p]
+                       if self._affects_others(src)
+                       for _, ab in self.abilities(src, "static")
+                       if ab.get("zone") == "shield"]
+        for src, ab in grant_srcs:
+            bp = (ab.get("mod") or {}).get("battle_power")
+            if not bp:
+                continue
+            aff = ab.get("affects", {})
+            if not isinstance(aff, dict) or aff == "self":
+                continue
+            if (aff.get("zone", "bz") if isinstance(aff, dict) else "bz") != cards[cid].zone:
+                continue
+            env_src = {"you": cards[src].controller, "self": self.s.ref(src)}
+            if "if" in ab and not self._static_cond(ab["if"], env_src):
+                continue
+            if not self._subject_match(aff, cid, env_src, None, base=True):
+                continue
+            if bp.get("only") == "attacking" and not attacking:
+                continue
+            if "opponent_filter" in bp and (opponent is None or not self.filter_match(opponent[0], bp["opponent_filter"])):
+                continue
+            total += bp["amount"] * (self.count_of(bp["count"], env_src) if "count" in bp else 1)
         return total
 
     def _battle_indestructible(self, ref, opponent) -> bool:

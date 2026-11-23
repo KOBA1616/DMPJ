@@ -921,7 +921,7 @@ cards:
         effect:
           - op: may
             body:
-              - {op: play_free, select: {ref: self}}
+              - {op: move, select: {ref: self}, to: bz, reason: put}
     spell:
       - {op: draw, count: 1}
   - id: T067
@@ -4946,7 +4946,7 @@ cards:
         zone: hand
         when: {event: attack, subject: {owner: you, filter: {civs: [light], power_ge: 4000}}}
         effect:
-          - {op: play_free, select: {ref: self}}
+          - {op: move, select: {ref: self}, to: bz, reason: put}
     spell:
       - op: move
         select: {zone: deck, owner: you, from_top: 1}
@@ -8053,7 +8053,7 @@ cards:
         effect:
           - op: may
             body:
-              - {op: play_free, select: {ref: self}}
+              - {op: move, select: {ref: self}, to: bz, reason: put}
   - id: T545
     name: リベンジ見本・登場数
     types: [creature]
@@ -8069,7 +8069,7 @@ cards:
         effect:
           - op: may
             body:
-              - {op: play_free, select: {ref: self}}
+              - {op: move, select: {ref: self}, to: bz, reason: put}
   - id: T546
     name: リベンジ見本・シールド
     types: [creature]
@@ -8085,7 +8085,7 @@ cards:
         effect:
           - op: may
             body:
-              - {op: play_free, select: {ref: self}}
+              - {op: move, select: {ref: self}, to: bz, reason: put}
   - id: T547
     name: リベンジ見本・ドロー
     types: [creature]
@@ -8101,7 +8101,7 @@ cards:
         effect:
           - op: may
             body:
-              - {op: play_free, select: {ref: self}}
+              - {op: move, select: {ref: self}, to: bz, reason: put}
   - id: T548
     name: 手札シールド呪文
     types: [spell]
@@ -8221,7 +8221,7 @@ cards:
             cond: {not: {marked: {name: reversal_strike, scope: attack}}}
             then:
               - {op: mark, name: reversal_strike, scope: attack}
-              - {op: play_free, select: {ref: self}}
+              - {op: move, select: {ref: self}, to: bz, reason: put}
               - op: delayed_trigger
                 when: {event: turn_start, player: you}
                 duration: permanent
@@ -8246,7 +8246,7 @@ cards:
             cond: {not: {marked: {name: reversal_strike, scope: attack}}}
             then:
               - {op: mark, name: reversal_strike, scope: attack}
-              - {op: play_free, select: {ref: self}}
+              - {op: move, select: {ref: self}, to: bz, reason: put}
               - op: delayed_trigger
                 when: {event: turn_start, player: you}
                 duration: permanent
@@ -8415,7 +8415,7 @@ cards:
         effect:
           - op: may
             body:
-              - {op: play_free, select: {ref: self}}
+              - {op: move, select: {ref: self}, to: bz, reason: put}
     spell:
       - {op: draw, count: 1}
   - id: T571
@@ -8434,7 +8434,7 @@ cards:
         effect:
           - op: may
             body:
-              - {op: play_free, select: {ref: self}}
+              - {op: move, select: {ref: self}, to: bz, reason: put}
   - id: T572
     name: 試験用バイオ・T（手札比例）
     types: [creature]
@@ -14104,3 +14104,1493 @@ cards:
         when: {event: block, attacker: self}
         effect:
           - {op: break, player: opp, count: 2}
+  - id: T984
+    name: 試験用シルバスターズ型（形A）
+    types: [creature]
+    civs: [water]
+    cost: 3
+    mana: 1
+    power: 1000
+    races: [テスト]
+    keywords: [dynamo]
+    text: "ダイナモ。このクリーチャーが相手プレイヤーを攻撃してブロックされなかった時、カードを1枚引いてもよい。（第321弾: trigger_when_unblocked 形A。dm19-050 型）"
+    abilities:
+      - kind: trigger
+        when: {event: attack_end, subject: self, target: player, blocked: false}
+        effect:
+          - {op: may, body: [{op: draw, count: 1}]}
+  - id: T985
+    name: 試験用チャロック型（形B）
+    types: [creature]
+    civs: [nature]
+    cost: 3
+    mana: 1
+    power: 2000
+    races: [テスト]
+    keywords: [dynamo]
+    text: "ダイナモ。このクリーチャーが相手プレイヤーを攻撃してブロックされなかった時、自分の山札の上から1枚目を自分のマナゾーンに置いてもよい。（第321弾: trigger_when_unblocked 形B。dm19-069 型）"
+    abilities:
+      - kind: trigger
+        when: {event: attack_end, subject: self, target: player, blocked: false}
+        effect:
+          - {op: may, body: [{op: move, select: {zone: deck, owner: you, from_top: 1}, to: mana, reason: put}]}
+
+  - id: T986
+    name: 試験用センジュオー型
+    types: [creature]
+    civs: [water]
+    cost: 5
+    mana: 1
+    power: 3000
+    races: [テスト]
+    keywords: [dynamo, unblockable]
+    text: "ダイナモ。このクリーチャーはブロックされない。このクリーチャーが相手プレイヤーを攻撃してブロックされなかった時、このターンに「ダイナモ」能力を使うためにタップした自分のダイナモ１体につき１枚、シールドを余分にブレイクする。（第322弾: trigger_when_unblocked_and_extra_breaks_per_dynamo_tap。dm19-003 型）"
+    abilities:
+      - kind: trigger
+        when: {event: attack_end, subject: self, target: player, blocked: false}
+        effect:
+          - {op: break, player: opp, count: {turn_count: {kind: dynamo_tap, owner: you}}}
+  - id: T987
+    name: 試験用センジュ・チューン型
+    types: [spell]
+    civs: [water]
+    cost: 4
+    mana: 1
+    keywords: [s_trigger]
+    text: "S・トリガー。自分の手札の数と同じ枚数のカードを引き、その後、こうして引いた枚数と同じ数、手札を捨てる。（第322弾: dm23ex2-045 の呪文面型）"
+    spell:
+      - {op: set_var, name: hand_n, value: {count: {zone: hand, owner: you}}}
+      - {op: draw, count: {var: hand_n}}
+      - {op: discard, select: {zone: hand, owner: you, count: {var: hand_n}}}
+  - id: T988
+    name: 試験用ケロディ二郎型
+    types: [creature]
+    civs: [water]
+    cost: 4
+    mana: 1
+    power: 2000
+    races: [テスト]
+    text: "このクリーチャーが相手プレイヤーを攻撃してブロックされなかった時、バトルゾーンにあるクリーチャーを１体選び、持ち主の手札に戻してもよい。（第323弾: unblocked_condition。dmx04-011 型）"
+    abilities:
+      - kind: trigger
+        when: {event: attack_end, subject: self, target: player, blocked: false}
+        effect:
+          - op: may
+            body:
+              - op: move
+                select: {zone: bz, owner: any, filter: {types: [creature]}, count: 1}
+                to: hand
+                reason: return
+  - id: T989
+    name: 試験用誕生の祈型
+    types: [creature]
+    civs: [nature]
+    cost: 3
+    mana: 1
+    power: 2000
+    races: [テスト]
+    text: "このクリーチャーが相手プレイヤーを攻撃してブロックされなかった時、自分の山札を見る。その中からクリーチャーを１体選び、相手に見せてから自分の手札に加えてもよい。その後、山札をシャッフルする。（第323弾: unblocked_condition。dmx09-049 型）"
+    abilities:
+      - kind: trigger
+        when: {event: attack_end, subject: self, target: player, blocked: false}
+        effect:
+          - op: may
+            body:
+              - op: choose
+                select: {zone: deck, owner: you, look: true, filter: {types: [creature]}, count: 1}
+                as: t
+              - op: move
+                select: {ref: t, count: all}
+                to: hand
+                reason: draw
+              - op: shuffle
+  - id: T990
+    name: 試験用ジョジョジョ・マキシマム型
+    types: [spell]
+    civs: []
+    cost: 9
+    mana: 1
+    free_if:
+      cmp:
+        - count: {zone: [bz, mana], owner: you, filter: {race_has: ジョーカーズ}}
+        - '>='
+        - 11
+    text: "G・ゼロ：バトルゾーンまたはマナゾーンに自分のジョーカーズが合計11枚以上あれば、この呪文をコストを支払わずに唱えてもよい。\n自分のクリーチャーを数える。このターン、自分のクリーチャー１体はその数のシールドを追加でブレイクし、そのクリーチャーの攻撃中、相手は呪文を唱えられない。（第324弾: breaks_equal_creature_count。dm24ex2-024 型）"
+    spell:
+      - {op: set_var, name: n, value: {count: {zone: bz, owner: you, filter: {types: [creature]}}}}
+      - op: choose
+        select: {zone: bz, owner: you, filter: {types: [creature]}, count: 1}
+        as: chosen
+      - op: modify
+        select: {ref: chosen}
+        mod: {breaks_add: {var: n}}
+        duration: end_of_turn
+      - op: delayed_trigger
+        when: {event: attack, subject: {ref: chosen}}
+        effect:
+          - op: modify
+            select: {zone: hand, owner: opp, filter: {types: [spell]}}
+            mod: {deny: [cast]}
+            duration: during_attack
+        duration: end_of_turn
+        once: false
+  - id: T991
+    name: 試験用ジョジョジョ・マキシマム型（超再録）
+    types: [spell]
+    civs: []
+    cost: 9
+    mana: 1
+    free_if:
+      cmp:
+        - count: {zone: [bz, mana], owner: you, filter: {race_has: ジョーカーズ}}
+        - '>='
+        - 11
+    text: "G・ゼロ：自分の、ジョーカーズとマナゾーンにあるジョーカーズ・カードが合計11以上なら、この呪文をコストを支払わずに唱えてもよい。\n自分のクリーチャーを数える。このターン、自分のクリーチャー１体はその数のシールドを追加でブレイクし、そのクリーチャーの攻撃中、相手は呪文を唱えられない。（第324弾: breaks_equal_creature_count。dm26ex4-cho021 型）"
+    spell:
+      - {op: set_var, name: n, value: {count: {zone: bz, owner: you, filter: {types: [creature]}}}}
+      - op: choose
+        select: {zone: bz, owner: you, filter: {types: [creature]}, count: 1}
+        as: chosen
+      - op: modify
+        select: {ref: chosen}
+        mod: {breaks_add: {var: n}}
+        duration: end_of_turn
+      - op: delayed_trigger
+        when: {event: attack, subject: {ref: chosen}}
+        effect:
+          - op: modify
+            select: {zone: hand, owner: opp, filter: {types: [spell]}}
+            mod: {deny: [cast]}
+            duration: during_attack
+        duration: end_of_turn
+        once: false
+  - id: T992
+    name: 試験用マウリエル型
+    types: [creature]
+    civs: [light, water]
+    cost: 9
+    power: 12500
+    races: [エンジェル・コマンド, 革命軍, 侵略者]
+    mana: 1
+    keywords: [blocker, triple_breaker]
+    text: "マナゾーンに置く時、このカードはタップして置く。 ブロッカーT・ブレイカー相手のクリーチャーはすべて、シールドをひとつ少なくブレイクする。（第325弾: breaks_reduction。dmr21-007 型。マナに置く時のタップはデータモデルに無く、text のみで再現する既存の扱い）"
+    abilities:
+      - kind: static
+        affects: {owner: opp, filter: {types: [creature]}}
+        mod: {breaks_add: -1}
+  - id: T993
+    name: 試験用カボード＝ロウ型
+    types: [creature]
+    civs: [darkness]
+    cost: 8
+    power: 12000
+    races: [アビスロイヤル]
+    mana: 1
+    keywords: [triple_breaker, abyss_rush]
+    text: "アビスラッシュ：このクリーチャーを自分の墓地から召喚してもよい。そうしたら、このターン、このクリーチャーはプレイヤーを攻撃でき、ターンの終わりに山札の下に置かれる。\nT・ブレイカー\n相手のタップしているクリーチャーはすべて、パワーを-5000され、シールドを１つ少なくブレイクする。（パワー０以下のクリーチャーは破壊される）\n自分の他のアビスすべてのパワーは+5000され、「パワード・ブレイカー」を得る。（第325弾: breaks_reduction。dm23rp1-004 型）"
+    abilities:
+      - kind: static
+        affects: {owner: opp, filter: {types: [creature], tapped: true}}
+        mod: {power: -5000, breaks_add: -1}
+      - kind: static
+        affects: {owner: you, other: true, filter: {race_has: アビス}}
+        mod: {power: 5000, grant: [powered_breaker]}
+  - id: T994
+    name: 試験用カンクロウ・ブラスター型
+    types: [spell]
+    civs: [nature]
+    cost: 6
+    mana: 1
+    text: "このターン、バトルゾーンにある自分のクリーチャーすべてのパワーは+4000され、シールドをさらに１枚ブレイクする。\nこのターン、自分のクリーチャーが相手を攻撃しブロックされた時、相手のシールドを１枚ブレイクする。\n呪文の効果によって、このターン、相手がバトルゾーンにあるクリーチャーを選ぶ時、自分のクリーチャーを選ぶことはできない。（第326弾: blocked_break。dm39-035 型）"
+    spell:
+      - op: modify
+        select: {zone: bz, owner: you, filter: {types: [creature]}, count: all}
+        mod: {power: 4000, breaks_add: 1}
+        duration: end_of_turn
+      - op: delayed_trigger
+        when: {event: block, attacker: {owner: you, filter: {types: [creature]}}}
+        effect:
+          - {op: break, player: opp, count: 1}
+        duration: end_of_turn
+        once: false
+      - op: modify
+        select: {zone: bz, owner: you, filter: {types: [creature]}, count: all}
+        mod: {deny: [{action: be_chosen, other: {types: [spell]}}]}
+        duration: end_of_turn
+  - id: T995
+    name: 試験用獣達の挽歌型
+    types: [spell]
+    civs: [nature]
+    cost: 4
+    mana: 1
+    text: "このターンの終わりまで、バトルゾーンにある自分のクリーチャーすべてのパワーは+4000され、「このクリーチャーが相手プレイヤーを攻撃してブロックされた時、相手のシールドを１枚ブレイクする」を得る。（第326弾: blocked_break。dmc34-030 型）"
+    spell:
+      - op: modify
+        select: {zone: bz, owner: you, filter: {types: [creature]}, count: all}
+        mod:
+          power: 4000
+          gain:
+            - kind: trigger
+              when: {event: block, attacker: self}
+              effect:
+                - {op: break, player: opp, count: 1}
+        duration: end_of_turn
+  - id: T996
+    name: 試験用瞬閃と疾駆と双撃の決断型
+    types: [spell]
+    civs: [fire]
+    cost: 3
+    mana: 1
+    text: "次の中から２回選ぶ。同じものを選んでもよい。\n▶コスト３以下のクリーチャーを１体、自分の手札から出す。\n▶このターン、自分のクリーチャー１体に「スピードアタッカー」を与える。\n▶自分のクリーチャーを１体選ぶ。このターン、そのクリーチャーの最初の攻撃の終わりに、そのクリーチャーをアンタップする。（第327弾: first_attack_end。dm26ex4-cho025 型）"
+    spell:
+      - op: modal
+        count: 2
+        repeat: true
+        modes:
+          - - op: play_free
+              select: {zone: hand, owner: you, filter: {types: [creature], cost_le: 3}, count: 1}
+          - - op: choose
+              select: {zone: bz, owner: you, filter: {types: [creature]}, count: 1}
+              as: c
+            - op: modify
+              select: {ref: c, count: all}
+              mod: {grant: [speed_attacker]}
+              duration: end_of_turn
+          - - op: choose
+              select: {zone: bz, owner: you, filter: {types: [creature]}, count: 1}
+              as: chosen
+            - op: delayed_trigger
+              when: {event: attack_end, subject: {ref: chosen}}
+              effect:
+                - {op: untap, select: {ref: chosen}}
+              duration: end_of_turn
+  - id: T997
+    name: 試験用滅亡の光型
+    types: [spell]
+    civs: [darkness, fire]
+    cost: 9
+    mana: 1
+    text: "アタック・チャンス：クリエイター（自分のクリエイターが攻撃する時、この呪文をコストを支払わずに唱えてもよい）\nゴッド、フェニックス、クリエイター以外のクリーチャーをすべて破壊する。\nこのターン、ゴッド、フェニックス、またはクリエイターそれぞれの最初の攻撃の終わりに、そのクリーチャーをアンタップする。（第328弾: filter_not_race＋first_attack_end 各クリーチャー。dmex15-b019 型）"
+    abilities:
+      - kind: declare
+        zone: hand
+        when: {event: attack, subject: {owner: you, filter: {race_has: クリエイター}}}
+        effect:
+          - {op: play_free, select: {ref: self}}
+    spell:
+      - op: destroy
+        select: {zone: bz, owner: any, filter: {types: [creature], not_race_has: [ゴッド, フェニックス, クリエイター]}, count: all}
+      - op: modify
+        select: {zone: bz, owner: any, filter: {any_of: [{race_has: ゴッド}, {race_has: フェニックス}, {race_has: クリエイター}]}, count: all}
+        mod:
+          gain:
+            - kind: trigger
+              when: {event: attack_end, subject: self}
+              effect:
+                - {op: untap, select: {ref: self}}
+              once_per_turn: true
+        duration: end_of_turn
+
+  - id: T998
+    name: 試験用メモリ・コンテナ
+    types: [creature]
+    civs: [light, water, darkness]
+    cost: 5
+    power: 5500
+    races: [スチーム・ナイト, テスト]
+    mana: 1
+    text: "ブロッカー\nこのクリーチャーが出た時、カードを２枚引く。\nカードが自分のシールドゾーンに置かれた時、このクリーチャーを自分の墓地から出してもよい。"
+    keywords: [blocker]
+    abilities:
+    - kind: trigger
+      when: {event: move, to: bz, subject: self}
+      effect:
+      - {op: draw, count: 2}
+    - kind: trigger
+      zone: graveyard
+      when: {event: move, to: shield, subject: {owner: you}}
+      effect:
+      - op: may
+        body:
+        - {op: move, select: {ref: self}, to: bz, reason: put}
+    source:
+      official: proto
+      review: pending
+      notes: "語彙パイロット第329弾 shield_placement_trigger の検証用（dmex15-b019 ではなく dm26ex4-cho047 型）。シールド配置の誘発は {event: move, to: shield, subject: {owner: you}} の確立形（dm24ex3-004 等44件）。墓地で機能する誘発は zone: graveyard（217件）。墓地からの自己登場は may＋move {ref: self} to: bz reason: put（「出す」は召喚ではないため play_free ではなく move/put。submit のバリデータ警告で確認）。"
+
+  - id: T999
+    name: 試験用求道者
+    types: [creature]
+    civs: [light]
+    cost: 2
+    power: 8000
+    races: [メカサンダー, テスト]
+    mana: 1
+    text: "ブロッカー\nW・ブレイカー\nこのクリーチャーはタップして出て、自分のターンのはじめにアンタップしない。\nカードが自分のシールドゾーンに置かれた時、このクリーチャーをアンタップし、その後、次の中から１回選ぶ。\n▶カードを１枚引く。\n▶相手のクリーチャーを１体選び、タップする。次の相手のターンのはじめに、そのクリーチャーはアンタップしない。\n▶次の自分のターンのはじめまで、このクリーチャーは離れない。"
+    keywords: [blocker, double_breaker, enters_tapped]
+    abilities:
+    - kind: static
+      affects: self
+      mod: {deny: [untap_at_start]}
+    - kind: trigger
+      when: {event: move, to: shield, subject: {owner: you}}
+      effect:
+      - {op: untap, select: {ref: self}}
+      - op: modal
+        count: 1
+        modes:
+        - - {op: draw, count: 1}
+        - - {op: choose, select: {zone: bz, owner: opp, filter: {types: [creature]}}, as: chosen}
+          - {op: tap, select: {ref: chosen}, no_untap_next: true}
+        - - {op: modify, select: {ref: self}, mod: {no_leave: true}, duration: until_next_own_turn_start}
+    source:
+      official: proto
+      review: pending
+      notes: "語彙パイロット第329弾 shield_placement_trigger の検証用（dm26rp1-tr002 型）。「タップして出る」はキーワード enters_tapped、「自分のターンのはじめにアンタップしない」は static {deny: [untap_at_start]}（dmrp18-025）。シールド配置の誘発でアンタップ＋modal（ドロー／タップ＋no_untap_next（tap op のキー、dmr11-038）／no_leave を until_next_own_turn_start まで）。"
+
+  - id: T1000
+    name: 試験用シールド追加
+    types: [spell]
+    civs: [nature]
+    cost: 1
+    mana: 1
+    text: "自分の山札の上から1枚目をシールド化する。"
+    spell:
+    - {op: move, select: {zone: deck, owner: you, from_top: 1}, to: shield, reason: charge}
+    source:
+      official: proto
+      review: pending
+      notes: "語彙パイロット第329弾の駆動用（シールド配置の move イベントを起こすための試験呪文。move to: shield reason: charge は dm22ex2-068 の確立形）。"
+
+  - id: T1001
+    name: 試験用クラッシュ覇道
+    types: [creature]
+    civs: [fire]
+    cost: 10
+    power: 9000
+    races: [ドラゴンギルド, ビートジョッキー, テスト]
+    mana: 1
+    text: "B・A・D ２（このクリーチャーの召喚コストを２少なくしてもよい。そうしたら、このターンの終わりにこのクリーチャーを破壊する）\nスピードアタッカー\nW・ブレイカー\nこのクリーチャーが破壊された時、これがタップされていれば、このターンの後に自分のターンを追加する。\nバトル中、このクリーチャーのパワーを+5000する。"
+    keywords: [speed_attacker, double_breaker]
+    abilities:
+    - kind: static
+      affects: self
+      zone: hand
+      mod: {opt_reduce: {amount: 2, then: destroy}}
+    - kind: trigger
+      when: {event: move, from: bz, to: graveyard, reason: destroy, subject: self}
+      if: {subject_tapped: true}
+      effect:
+      - {op: extra_turn}
+    - kind: static
+      affects: self
+      mod: {battle_power: {amount: 5000}}
+    source:
+      official: proto
+      review: pending
+      notes: "語彙パイロット第330弾 destroyed_while_tapped の検証用（dm26ex1-021 型）。新条件 subject_tapped（イベント対象の移動直前のタップ状態を lki で読む）の検証が主目的。追加ターンは op extra_turn、バトル中のパワー修整は mod battle_power {amount}。"
+
+  - id: T1002
+    name: 試験用ギャロウィン
+    types: [creature, evolution]
+    civs: [darkness]
+    cost: 6
+    power: 8000
+    races: [デーモン・コマンド, 侵略者, テスト]
+    mana: 1
+    evolve_from: {civs: [darkness], types: [creature]}
+    text: "進化―自分の闇のクリーチャー１体の上に置く。侵略―闇のコマンドW・ブレイカーこのクリーチャーまたは自分の他のクリーチャーが破壊された時、このクリーチャーがタップしていたら、相手のクリーチャーを１体破壊し、《試験用ギャロウィン》以外の闇のクリーチャーを１体自分の墓地から手札に戻す。"
+    keywords: [double_breaker]
+    abilities:
+    - kind: declare
+      zone: hand
+      when: {event: attack, subject: {owner: you, filter: {civs: [darkness], race_has: コマンド}}}
+      effect:
+      - op: may
+        body:
+        - {op: invade, onto: {ref: event.subject}}
+    - kind: trigger
+      when: {event: move, from: bz, to: graveyard, reason: destroy, subject: {owner: you, other: true, filter: {types: [creature]}}}
+      if: {exists: {ref: self, filter: {tapped: true}}}
+      effect:
+      - {op: destroy, select: {zone: bz, owner: opp, filter: {types: [creature]}, count: 1}}
+      - {op: move, select: {zone: graveyard, owner: you, filter: {civs: [darkness], types: [creature], not_name: 試験用ギャロウィン}, count: 1}, to: hand, reason: return}
+    - kind: trigger
+      when: {event: move, from: bz, to: graveyard, reason: destroy, subject: self}
+      if: {subject_tapped: true}
+      effect:
+      - {op: destroy, select: {zone: bz, owner: opp, filter: {types: [creature]}, count: 1}}
+      - {op: move, select: {zone: graveyard, owner: you, filter: {civs: [darkness], types: [creature], not_name: 試験用ギャロウィン}, count: 1}, to: hand, reason: return}
+    source:
+      official: proto
+      review: pending
+      notes: "語彙パイロット第330弾 destroyed_while_tapped の検証用（dmr18-s04 型）。自分の他のクリーチャーが破壊された場合は既存の exists {ref: self, filter: {tapped: true}}（partial の形）、このクリーチャー自身が破壊された場合は新条件 subject_tapped（lki の tapped を読む）で、同じ効果の誘発を2つに分けて書く。"
+
+  - id: T1003
+    name: 試験用破壊
+    types: [spell]
+    civs: [darkness]
+    cost: 1
+    mana: 1
+    text: "自分のクリーチャーを１体破壊する。"
+    spell:
+    - {op: destroy, select: {zone: bz, owner: you, filter: {types: [creature]}, count: 1}}
+    source:
+      official: proto
+      review: pending
+      notes: "語彙パイロット第330弾の駆動用（自分のクリーチャーを選んで破壊する試験呪文）。"
+
+  - id: T1004
+    name: 試験用巨壁
+    types: [creature]
+    civs: [light]
+    cost: 7
+    power: 13000
+    races: [テスト]
+    mana: 1
+    text: "ブロッカー"
+    keywords: [blocker]
+    source:
+      official: proto
+      review: pending
+      notes: "語彙パイロット第330弾の駆動用（パワー13000のブロッカー。バトル中のパワー修整の検証用）。"
+
+  - id: T1005
+    name: 試験用ボルメテウス・剣誠・ドラゴン
+    types: [creature]
+    civs: [fire]
+    cost: 8
+    power: 8000
+    races: [アーマード・ドラゴン, サムライ]
+    mana: 1
+    free_if: {all: [{cmp: [{count: {zone: bz, owner: you, filter: {race_has: サムライ}}}, ">=", 5]}, {not: {exists: {zone: bz, owner: you, filter: {name: 試験用ボルメテウス・剣誠・ドラゴン}}}}]}
+    text: "G・ゼロ：自分のサムライが５枚以上あり、自分の《試験用ボルメテウス・剣誠・ドラゴン》がなければ、このクリーチャーをコストを支払わずに召喚してもよい。\nW・ブレイカー\nこのクリーチャーが攻撃する時、相手のパワー6000以下のクリーチャーを１体選び、破壊してもよい。\nバトルゾーンにある間、このクリーチャーは名前に《試験用ボルメテウス・武者・ドラゴン》を追加する。"
+    abilities:
+    - {kind: trigger, when: {event: attack, subject: self}, effect: [{op: may, body: [{op: destroy, select: {zone: bz, owner: opp, filter: {types: [creature], power_le: 6000}, count: 1}}]}]}
+    - {kind: static, affects: self, mod: {add_names: [試験用ボルメテウス・武者・ドラゴン]}}
+    keywords: [double_breaker]
+    source:
+      official: proto
+      review: pending
+      notes: "語彙パイロット第331弾の対象（dm23ex1-039 型）。add_names はエンジン実装済み（バンドC2 U97）だが converted の使用例が無かった。"
+
+  - id: T1006
+    name: 試験用ムシャ・レジェンド
+    types: [cross_gear]
+    civs: [fire]
+    cost: 3
+    races: [サムライ]
+    mana: 1
+    text: "クロスギア\nこれをクロスしたクリーチャーは、種族にアーマード・ドラゴンとサムライを追加し、パワーが+2000され、名前に《試験用ボルメテウス・武者・ドラゴン》を追加する。\nこれをクロスしたクリーチャーが攻撃する時、自分のシールドを１枚墓地に置いてもよい。そうした場合、相手のパワー6000以下のクリーチャーを１体破壊する。"
+    abilities:
+    - {kind: static, affects: crossed, mod: {power: 2000, add_races: [アーマード・ドラゴン, サムライ], add_names: [試験用ボルメテウス・武者・ドラゴン]}}
+    - {kind: trigger, when: {event: attack, subject: crossed}, effect: [{op: may, body: [{op: move, select: {zone: shield, owner: you, count: 1}, to: graveyard, reason: put, as: paid}, {op: if, cond: {exists: {ref: paid}}, then: [{op: destroy, select: {zone: bz, owner: opp, filter: {types: [creature], power_le: 6000}, count: 1}}]}]}]}
+    source:
+      official: proto
+      review: pending
+      notes: "語彙パイロット第331弾の対象（dm28-008 型）。partial の確立形に add_names を足したもの。"
+
+  - id: T1007
+    name: 試験用名指し破壊
+    types: [spell]
+    civs: [fire]
+    cost: 2
+    mana: 1
+    text: "《試験用ボルメテウス・武者・ドラゴン》を１体破壊する。"
+    spell:
+    - {op: destroy, select: {zone: bz, owner: opp, filter: {name: 試験用ボルメテウス・武者・ドラゴン}, count: 1}}
+    source:
+      official: proto
+      review: pending
+      notes: "語彙パイロット第331弾の駆動用（追加された名前で選べるかを確かめる名指し破壊）。"
+
+  - id: T1008
+    name: 試験用理・アイニー
+    types: [creature]
+    civs: [fire]
+    cost: 2
+    power: 3000
+    races: [アーマード・ファイアー・バード]
+    mana: 1
+    text: "バトル中、このクリーチャーが破壊された時、相手のシールドを１つブレイクしてもよい。"
+    abilities:
+    - {kind: trigger, when: {event: move, from: bz, to: graveyard, reason: destroy, battle: true, subject: self}, effect: [{op: may, body: [{op: break, player: opp, count: 1}]}]}
+    source:
+      official: proto
+      review: pending
+      notes: "語彙パイロット第332弾の対象（dm24rp4-070 型）。when の battle フラグは本弾で照合可能にした（combat の敗者 move レコードが持つ）。"
+
+  - id: T1009
+    name: 試験用真価と代価のチェスト
+    types: [tamaseed]
+    civs: [light, darkness]
+    cost: 3
+    mana: 1
+    text: "シビルカウント ３：自分の光のクリーチャーまたは光のタマシードが合計３つ以上あれば、自分のクリーチャーすべてに「ブロッカー」を与える。\nシビルカウント ３：自分の闇のクリーチャーまたは闇のタマシードが合計３つ以上あれば、自分のクリーチャーすべてに「スレイヤー」を与える。\n自分のクリーチャーがバトル中に破壊された時、そのターンの終わりに、そのクリーチャーを墓地から出す。"
+    abilities:
+    - {kind: static, affects: {zone: bz, owner: you, filter: {types: [creature]}}, if: {cmp: [{count: {zone: bz, owner: you, filter: {civs: [light], types: [creature, tamaseed]}}}, ">=", 3]}, mod: {grant: [blocker]}}
+    - {kind: static, affects: {zone: bz, owner: you, filter: {types: [creature]}}, if: {cmp: [{count: {zone: bz, owner: you, filter: {civs: [darkness], types: [creature, tamaseed]}}}, ">=", 3]}, mod: {grant: [slayer]}}
+    - {kind: trigger, when: {event: move, from: bz, to: graveyard, reason: destroy, battle: true, subject: {owner: you, filter: {types: [creature]}}}, effect: [{op: choose, select: {ref: event.subject}, as: dead}, {op: delayed_trigger, when: {event: turn_end}, effect: [{op: move, select: {ref: dead}, to: bz, reason: put}]}]}
+    source:
+      official: proto
+      review: pending
+      notes: "語彙パイロット第332弾の対象（dm22rp2x-026 型）。シビルカウントは partial の確立形。破壊されたクリーチャーは choose の as で束縛し、遅延誘発の effect が vars 経由で参照する（ニンジャ・ストライクの先例）。"
+
+  - id: T1010
+    name: 試験用ブルーアイズ・ドラゴンフライ
+    types: [creature]
+    civs: [nature]
+    cost: 2
+    power: 1000
+    races: [ジャイアント・インセクト]
+    mana: 1
+    text: "パワード・ブレイカー\n自分のコスト６以上のクリーチャーが出た時、次の自分のターンのはじめまで、そのクリーチャーのパワーをこのクリーチャーのパワーに加える。"
+    abilities:
+    - {kind: trigger, when: {event: move, to: bz, subject: {owner: you, filter: {types: [creature], cost_ge: 6}}}, effect: [{op: modify, select: {ref: event.subject}, mod: {power: {amount: {power_of: {ref: self}}}}, duration: until_next_own_turn_start}]}
+    keywords: [powered_breaker]
+    source:
+      official: proto
+      review: pending
+      notes: "語彙パイロット第333弾の対象（dm24rp4-045 型）。power mod の amount に {power_of: {ref: self}} を許可する拡張（op_modify の生成時ベイクで固定）。"
+
+  - id: T1011
+    name: 試験用零
+    types: [creature]
+    civs: [darkness]
+    cost: 5
+    power: 5000
+    races: [ドラゴンズ・ゼロ]
+    mana: 1
+    text: "パワード・ブレイカー\nこのクリーチャーが攻撃する時、相手のクリーチャーを１体選ぶ。そのターン、そのパワーをこのクリーチャーに追加し、選んだクリーチャーのパワーを０にする。\n自分のターンの終わりに、相手は自身の手札を１枚選んで捨てる。\nバトルゾーンに自分の零龍があれば、自分の闇のカードのコストを１少なくしてもよい。ただし、コストは０以下にはならない。"
+    abilities:
+    - {kind: trigger, when: {event: attack, subject: self}, effect: [{op: choose, select: {zone: bz, owner: opp, filter: {types: [creature]}, count: 1}, as: victim}, {op: modify, select: {ref: self}, mod: {power: {amount: {power_of: {ref: victim}}}}, duration: end_of_turn}, {op: modify, select: {ref: victim}, mod: {power_set: 0}, duration: end_of_turn}]}
+    - {kind: trigger, when: {event: turn_end}, if: {is_turn: you}, effect: [{op: discard, select: {zone: hand, owner: opp, chooser: opp, count: 1}}]}
+    - {kind: static, affects: {zone: hand, owner: you, filter: {civs: [darkness]}}, if: {exists: {zone: bz, owner: you, filter: {race_has: 零龍}}}, mod: {cost: -1, cost_min: 0}}
+    keywords: [powered_breaker]
+    source:
+      official: proto
+      review: pending
+      notes: "語彙パイロット第333弾の対象（dmrp11-zs01 型）。「自分の零龍」は種族参照（《》が無いため）。by_product に種族・名前に零龍を持つカードは無く、駆動用に T1012 を用意した。"
+
+  - id: T1012
+    name: 試験用零龍
+    types: [creature]
+    civs: [darkness]
+    cost: 2
+    power: 2000
+    races: [零龍]
+    mana: 1
+    text: "試験用零龍（第333弾の駆動用）。"
+    source:
+      official: proto
+      review: pending
+      notes: "語彙パイロット第333弾の駆動用（種族 零龍 を持つクリーチャー。by_product には種族・名前に零龍を持つカードが無い）。"
+
+  - id: T1013
+    name: 試験用アカシック・ヴィジョン
+    types: [tamaseed]
+    civs: [water]
+    cost: 4
+    mana: 1
+    text: "自分のターン中、自分の山札の上から１枚目をいつでも見てもよい。自分のターン中、呪文またはタマシードを自分の山札の上から使ってもよい。"
+    abilities:
+    - {kind: static, affects: {zone: deck, owner: you, filter: {types: [spell, tamaseed]}}, if: {is_turn: you}, mod: {allow: [{action: cast_from_deck_top}, {action: generate_from_deck_top}]}}
+    source:
+      official: proto
+      review: pending
+      notes: "語彙パイロット第334弾の対象（dm22rp2x-002 型）。「いつでも見てもよい」は既存12枚と同じく原文のみ（エンジンに可視性の語彙は無い）。"
+
+  - id: T1014
+    name: 試験用斬龍電融 オロチリュウセイ
+    types: [creature]
+    civs: [water, fire, nature]
+    cost: 8
+    power: 17000
+    races: [ディスペクター, サイバーロード, レッド・コマンド・ドラゴン]
+    mana: 1
+    text: "EXライフ（このクリーチャーを出す時、自分の山札の上から１枚をシールド化する。このクリーチャーが離れる時、かわりにそのシールドを墓地に置く）\nT・ブレイカー（このクリーチャーはシールドを３つブレイクする）\n自分のクリーチャーすべてに「スピードアタッカー」を与える。\n自分のターン中、自分の山札の上から１枚をいつでも見てもよい。\n自分のターン中、クリーチャーを１体、自分の山札の上から召喚してもよい。（コストは支払う）"
+    abilities:
+    - {kind: static, affects: {owner: you, filter: {types: [creature]}}, mod: {grant: [speed_attacker]}}
+    - {kind: static, affects: {zone: deck, owner: you, filter: {types: [creature]}}, if: {is_turn: you}, mod: {allow: [{action: summon_from_deck_top, once: true}]}}
+    keywords: [ex_life, triple_breaker]
+    source:
+      official: proto
+      review: pending
+      notes: "語彙パイロット第334弾の対象（dm26sd1-j009 型）。「クリーチャーを１体」は once: true で読む（ターン1回）。「いつでも見てもよい」は原文のみ。"
+
+  - id: T1015
+    name: 試験用清浄の精霊
+    types: [creature]
+    civs: [light]
+    cost: 6
+    power: 4000
+    races: [エンジェル・コマンド]
+    mana: 1
+    text: "S・トリガー（このカードをシールドゾーンから手札に加える時、コストを支払わずにすぐ実行してもよい）\nブロッカー（このクリーチャーをタップして、相手クリーチャーの攻撃先をこのクリーチャーに変更してもよい）\nこのクリーチャーは、相手プレイヤーを攻撃できない。\nこのクリーチャーが出た時、クリーチャーを１体選び、タップまたはアンタップする。"
+    abilities:
+    - {kind: trigger, when: {event: move, to: bz, subject: self}, effect: [{op: choose, select: {zone: bz, owner: any, filter: {types: [creature]}, count: 1}, as: target}, {op: modal, modes: [[{op: tap, select: {ref: target}}], [{op: untap, select: {ref: target}}]]}]}
+    keywords: [s_trigger, blocker, cannot_attack_player]
+    source:
+      official: proto
+      review: pending
+      notes: "語彙パイロット第335弾の対象（dm25bd2-015 型）。1体選びタップまたはアンタップは choose（owner: any）で束縛してから modal で tap/untap する形（dm26rp3-055 の確立形）。modal のモード内に select を直接書く旧形（dmbd03-004 等）は owner 既定が you のため相手を対象にできず、候補が1体だと決定自体が出ない（実測で確認。旧形の登録カードは潜在的に自軍のみが対象）"
+
+  - id: T1016
+    name: 試験用粛清者
+    types: [creature]
+    civs: [light]
+    cost: 4
+    power: 1000
+    races: [ソルトルーパー]
+    mana: 1
+    text: "S・トリガー（このクリーチャーをシールドゾーンから手札に加える時、コストを支払わずにすぐ召喚してもよい）\nこのクリーチャーが出た時、クリーチャーを２体まで選び、それぞれタップまたはアンタップする。"
+    abilities:
+    - {kind: trigger, when: {event: move, to: bz, subject: self}, effect: [{op: repeat, times: 2, body: [{op: choose, select: {zone: bz, owner: any, filter: {types: [creature]}, count: 1, up_to: true}, as: target}, {op: modal, modes: [[{op: tap, select: {ref: target}}], [{op: untap, select: {ref: target}}]]}]}]}
+    keywords: [s_trigger]
+    source:
+      official: proto
+      review: pending
+      notes: "語彙パイロット第335弾の対象（dm24rp2-051 型）。2体までそれぞれは repeat＋choose＋modal の形（dm26sd1-g007 の構造に、dm26rp3-055 の owner: any と束縛形を合わせたもの。g007 の choose は owner 指定が無く自軍のみが対象になる潜在的な制限がある）"
+
+  - id: T1017
+    name: 試験用キングダム・ゲオルグ
+    types: [creature]
+    civs: [light, water, darkness]
+    cost: 6
+    power: 9000
+    races: [ロスト・クルセイダー]
+    mana: 1
+    evolve_from: {multicolor: true}
+    text: "マナゾーンに置く時、このカードはタップして置く。\n進化-自分の多色クリーチャー１体の上に置く。\nこのクリーチャーが攻撃する時、バトルゾーンにある進化ではないクリーチャー１体をタップまたはアンタップしてもよい。(まず何を攻撃するか選んでから、タップまたはアンタップするクリーチャーを選ぶ)\nW・ブレイカー"
+    abilities:
+    - {kind: trigger, when: {event: attack, subject: self}, effect: [{op: may, body: [{op: choose, select: {zone: bz, owner: any, filter: {types: [creature], evolution: false}, count: 1}, as: target}, {op: modal, modes: [[{op: tap, select: {ref: target}}], [{op: untap, select: {ref: target}}]]}]}]}
+    keywords: [double_breaker]
+    source:
+      official: proto
+      review: pending
+      notes: "語彙パイロット第335弾の対象（dm25-002 型）。攻撃時の任意＋modal、対象は evolution: false で絞る。「マナゾーンに置く時タップして置く」は既存の扱いに従い原文のみ。"
+
+  - id: T1018
+    name: 試験用光神龍
+    types: [creature]
+    civs: [light]
+    cost: 5
+    power: 5000
+    races: [アポロニア・ドラゴン]
+    mana: 1
+    text: "ブロッカー\nこのクリーチャーは、相手プレイヤーを攻撃できない。\n相手のクリーチャーは、攻撃１回につきシールドを１枚しかブレイクできない。"
+    abilities:
+    - {kind: static, affects: {owner: opp, filter: {types: [creature]}}, mod: {breaks_max: 1}}
+    keywords: [blocker, cannot_attack_player]
+    source:
+      official: proto
+      review: pending
+      notes: "語彙パイロット第336弾の対象（dm29-001 型）。ブレイク数の上限は新 mod breaks_max（エンジン拡張）で表す。"
+
+  - id: T1019
+    name: 試験用インパクト・アブソーバー
+    types: [cross_gear]
+    civs: [light]
+    cost: 5
+    mana: 1
+    text: "クロスギア:このカードをバトルゾーンに置く。クリーチャーにクロスするには、このカードのコストをもう一度支払う。そのクリーチャーがバトルゾーンを離れても、このカードはバトルゾーンに残る。 / これをクロスしたクリーチャーが破壊される時、墓地に置くかわりに裏向きにして自分のシールドに加える。 / このカードがどのクリーチャーにもクロスされていない時、クリーチャーは攻撃１回につきシールドを１枚しかブレイクできない。"
+    abilities:
+    - {kind: replace, when: {event: move, from: bz, to: graveyard, reason: destroy, subject: crossed}, instead: [{op: move, select: {ref: crossed}, to: shield, reason: put}]}
+    - {kind: static, affects: {owner: any, filter: {types: [creature]}}, if: {not: {exists: {ref: self, filter: {crossed: true}}}}, mod: {breaks_max: 1}}
+    source:
+      official: proto
+      review: pending
+      notes: "語彙パイロット第336弾の対象（dm16-008 型）。「クロスされていない時」は exists {ref: self, filter: {crossed: true}} の否定で見る。対象は両プレイヤーのクリーチャー（owner: any）。"
+
+  - id: T1020
+    name: 試験用ローズ・キャッスル
+    types: [g_castle]
+    civs: [darkness]
+    cost: 3
+    mana: 1
+    text: "（G城は実行したら、表向きでシールド化される。このカードが表向きで自分のシールドゾーンを離れる時、かわりに墓地に置く）\n自分のクリーチャーがバトルする時、そのバトルの終わりまで、バトルしている相手クリーチャーのパワーを－4000する。（パワー０以下のクリーチャーは破壊される）\n相手のクリーチャーは、１度につき最大１つしかシールドをブレイクできない。"
+    abilities:
+    - {kind: trigger, zone: shield, if: {face_up: true}, when: {event: battle_start, subject: {owner: you, filter: {types: [creature]}}}, effect: [{op: modify, select: {ref: event.opponent}, mod: {power: -4000}, duration: during_attack}]}
+    - {kind: trigger, zone: shield, if: {face_up: true}, when: {event: battle_start, opponent: {owner: you, filter: {types: [creature]}}}, effect: [{op: modify, select: {ref: event.subject}, mod: {power: -4000}, duration: during_attack}]}
+    - {kind: static, zone: shield, if: {face_up: true}, affects: {owner: opp, filter: {types: [creature]}}, mod: {breaks_max: 1}}
+    source:
+      official: proto
+      review: pending
+      notes: "語彙パイロット第336弾の対象（dm26rp1-039 型）。シールドゾーンから働く常在型（zone: shield＋face_up）は G城の確立形で、そこに breaks_max を足す。"
+
+  - id: T1021
+    name: 試験用至高の邪騎
+    types: [creature]
+    civs: [darkness]
+    cost: 4
+    power: 4000
+    races: [アビスロイヤル]
+    mana: 1
+    text: "{GS} G・ストライク（このカードを自分のシールドゾーンから手札に加える時、表向きにし、相手のクリーチャーを１体選んでもよい。このターン、そのクリーチャーは攻撃できない）\nこのクリーチャーが出た時、このクリーチャーから進化できるコスト５以下の、NEOクリーチャーまたは進化クリーチャーを１体、自分の墓地からこのクリーチャーの上に置いてもよい。"
+    abilities:
+    - {kind: trigger, when: {event: move, to: bz, subject: self}, effect: [{op: may, body: [{op: choose, select: {zone: graveyard, owner: you, filter: {types: [creature], cost_le: 5, any_of: [{neo: true}, {evolution: true}], evolves_from: self}, count: 1}, as: p}, {op: move, select: {ref: p, count: all}, to: bz, reason: put, stack_evo: true, evo_source: {ref: self}}]}]}
+    keywords: [g_strike]
+    source:
+      official: proto
+      review: pending
+      notes: "語彙パイロット第337弾の対象（dm25rp1-018 型）。「このクリーチャーから進化できる」は新フィルタ evolves_from（エンジン拡張、evo_source_of の鏡像）で絞り、重ね出しは第173弾の stack_evo＋evo_source の確立形。"
+
+  - id: T1022
+    name: 試験用魔光神官
+    types: [creature]
+    civs: [light, darkness]
+    cost: 5
+    power: 6000
+    races: [エンジェル・コマンド, ダークロード, ナイト]
+    mana: 1
+    text: "{GS} G・ストライク\nブロッカー\nW・ブレイカー\nこのクリーチャーが出た時、自分の山札の上から４枚を墓地に置いてもよい。その後、このクリーチャーから進化できるコスト８以下のクリーチャーを１体、自分の墓地からこのクリーチャーの上に置いてもよい。"
+    abilities:
+    - {kind: trigger, when: {event: move, to: bz, subject: self}, effect: [{op: may, body: [{op: move, select: {zone: deck, owner: you, from_top: 4}, to: graveyard, reason: put}]}, {op: may, body: [{op: choose, select: {zone: graveyard, owner: you, filter: {types: [creature], cost_le: 8, evolves_from: self}, count: 1}, as: p}, {op: move, select: {ref: p, count: all}, to: bz, reason: put, stack_evo: true, evo_source: {ref: self}}]}]}
+    keywords: [g_strike, blocker, double_breaker]
+    source:
+      official: proto
+      review: pending
+      notes: "語彙パイロット第337弾の対象（dm25rp2-sp3 型）。山札の上から4枚は from_top の確立形。"
+
+  - id: T1023
+    name: 試験用神滅翔天
+    types: [creature]
+    civs: [darkness, fire]
+    cost: 4
+    power: 4000
+    races: [ファイアー・バード, ドラゴン・ゾンビ]
+    mana: 1
+    grave_evo: true
+    evolve_zone: graveyard
+    evolve_from: {types: [creature]}
+    text: "自分の墓地にあるクリーチャーの上に重ねつつ出してもよい"
+    source:
+      official: proto
+      review: pending
+      notes: "語彙パイロット第337弾の対象（dm25ex1-069 型）。墓地進化は第36弾の grave_evo 宣言そのまま（ドリフト）。進化元に文明の制限は無い。"
+
+  - id: T1024
+    name: 試験用フリズン
+    types: [spell]
+    civs: [water]
+    cost: 4
+    mana: 1
+    text: "シビルカウント２：この呪文が自分のシールドゾーンにあり、自分の水のクリーチャーまたは水のタマシードが合計２つ以上あれば、この呪文に「S・トリガー」を与える。\n\n相手のクリーチャー１体またはタマシードを１枚選ぶ。相手はそれを山札の上または下に置く。"
+    abilities:
+    - {kind: static, zone: shield, affects: self, if: {cmp: [{count: {zone: bz, owner: you, filter: {civs: [water], types: [creature, tamaseed]}}}, ">=", 2]}, mod: {allow: [s_trigger]}}
+    spell:
+    - {op: choose, select: {zone: bz, owner: opp, filter: {types: [creature, tamaseed]}, count: 1}, as: target}
+    - {op: modal, player: opp, modes: [[{op: move, select: {ref: target, count: all}, to: deck, reason: put, position: top}], [{op: move, select: {ref: target, count: all}, to: deck, reason: put, position: bottom}]]}
+    source:
+      official: proto
+      review: pending
+      notes: "語彙パイロット第338弾の対象（dm22rp1-034 型）。「相手はそれを山札の上または下に置く」は modal の player 拡張（第338弾）で相手に選ばせる。"
+
+  - id: T1025
+    name: 試験用選手宣誓のスピーチ
+    types: [spell]
+    civs: [water]
+    cost: 4
+    mana: 1
+    text: "{STP} S・トリガー・プラス（この呪文を自分のシールドゾーンから手札に加える時、コストを支払わずにすぐ唱えてもよい。それが相手のターンで、そのターン中に自分のシールドが２つ以上ブレイクされていれば、この呪文に{x+}能力を与える）\nエレメントを１つ選ぶ。その持ち主は、それを山札の上または下に置く。\n{x+}相手のクリーチャーを２体選ぶ。次の自分のターンのはじめまで、それらのクリーチャーは攻撃もブロックもできない。"
+    spell:
+    - {op: choose, select: {zone: bz, owner: any, count: 1}, as: el}
+    - {op: modal, player: {owner_of: el}, modes: [[{op: move, select: {ref: el, count: all}, to: deck, reason: put, position: top}], [{op: move, select: {ref: el, count: all}, to: deck, reason: put, position: bottom}]]}
+    stp_spell:
+    - {op: modify, select: {zone: bz, owner: opp, filter: {types: [creature]}, count: 2}, mod: {deny: [attack_player, attack_creature, block]}, duration: until_next_own_turn_start}
+    keywords: [s_trigger_plus]
+    source:
+      official: proto
+      review: pending
+      notes: "語彙パイロット第338弾の対象（dm23rp1-035 型）。対象は両プレイヤーのエレメントなので、選ぶのは持ち主（player: {owner_of: el}）。"
+
+  - id: T1026
+    name: 試験用ツインヘッドの海幻
+    types: [tamaseed]
+    civs: [water]
+    cost: 4
+    mana: 1
+    races: [ゲル・フィッシュ, サバイバー, フュージョナー]
+    text: "シンカライズ（このタマシードがクリーチャーであるかのように、この上に進化クリーチャーを置いてもよい）\nこのタマシードが出た時、相手のエレメントを１つ選ぶ。相手はそれを山札の上か下に置く。その後、このタマシードを自分のNEOクリーチャーまたは進化クリーチャー１体の下に置いてもよい。\n超魂X（これがクリーチャーの下にあれば、そのクリーチャーにも以下の能力を与える）\nパワード・ブレイカー（このクリーチャーは、そのパワー6000ごとにシールドをさらに１つブレイクする）\nこのクリーチャーのパワーを+3000する。"
+    abilities:
+    - {kind: static, choukon: true, affects: self, mod: {grant: [powered_breaker]}}
+    - {kind: static, choukon: true, affects: self, mod: {power: 3000}}
+    - {kind: trigger, when: {event: move, to: bz, subject: self}, effect: [{op: choose, select: {zone: bz, owner: opp, count: 1}, as: el}, {op: modal, player: opp, modes: [[{op: move, select: {ref: el, count: all}, to: deck, reason: put, position: top}], [{op: move, select: {ref: el, count: all}, to: deck, reason: put, position: bottom}]]}, {op: may, body: [{op: choose, select: {zone: bz, owner: you, filter: {types: [creature], any_of: [{neo: true}, {evolution: true}]}, count: 1}, as: host}, {op: put_under, select: {ref: self, count: all}, onto: {ref: host}}]}]}
+    keywords: [shinka_rise, powered_breaker]
+    source:
+      official: proto
+      review: pending
+      notes: "語彙パイロット第338弾の対象（dm25rp4-036 型）。下に置く処理は put_under（onto）の確立形。"
+
+  - id: T1027
+    name: 試験用ビリヤ棒ド
+    types: [creature]
+    civs: [water]
+    cost: 7
+    power: 9000
+    races: [サイバー・コマンド, チーム零]
+    mana: 1
+    mugen_climb: {tap: 3, cost: 3, civs: [water]}
+    text: "ムゲンクライム ３（自分のクリーチャーを３体タップし、 [ww03]支払って、このクリーチャーを自分の手札または墓地から召喚してもよい）\nW・ブレイカー\nこのクリーチャーはブロックされない。\nこのクリーチャーがバトルゾーンに出た時、カードを２枚まで引く。\nこのクリーチャーが攻撃する時、自分の手札を２枚まで捨てる。このようにして捨てた手札１枚につき、相手のクリーチャーを１体選び、相手はそれを自身の山札の上または下に置く。"
+    abilities:
+    - {kind: trigger, when: {event: move, to: bz, subject: self}, effect: [{op: repeat, times: 2, body: [{op: may, body: [{op: draw, count: 1}]}]}]}
+    - {kind: trigger, when: {event: attack, subject: self}, effect: [{op: repeat, times: 2, body: [{op: move, select: {zone: hand, owner: you, count: 1, up_to: true}, to: graveyard, reason: discard, as: d}, {op: if, cond: {exists: {ref: d}}, then: [{op: choose, select: {zone: bz, owner: opp, filter: {types: [creature]}, count: 1}, as: el}, {op: modal, player: opp, modes: [[{op: move, select: {ref: el, count: all}, to: deck, reason: put, position: top}], [{op: move, select: {ref: el, count: all}, to: deck, reason: put, position: bottom}]]}]}]}]}
+    keywords: [double_breaker, unblockable]
+    source:
+      official: proto
+      review: pending
+      notes: "語彙パイロット第338弾の対象（dmrp16-s02 型）。捨てた枚数だけ繰り返すため、discard の move に as で束縛し exists でゲートする。"
+
+  - id: T1028
+    name: 試験用グーゴル
+    types: [creature, evolution]
+    civs: [darkness]
+    cost: 6
+    power: 9000
+    races: [ゼロ・ドラゴン, デーモン・コマンド, レクスターズ]
+    mana: 1
+    star: true
+    evolve_from: {any_of: [{race_has: レクスターズ}, {civs: [darkness]}]}
+    text: "スター進化：レクスターズまたは闇のクリーチャー１体の上に置く。\nW・ブレイカー\n相手のカードはマナゾーンとバトルゾーンにタップして置かれる。\nこのクリーチャーが攻撃する時、相手の手札を１枚見ないで選び、捨てさせる。"
+    abilities:
+    - {kind: trigger, when: {event: attack, subject: self}, effect: [{op: discard, select: {zone: hand, owner: opp, count: 1}}]}
+    - {kind: static, affects: {zone: bz, owner: opp}, mod: {grant: [enters_tapped]}}
+    keywords: [double_breaker, opp_mana_tapped]
+    source:
+      official: proto
+      review: pending
+      notes: "語彙パイロット第339弾の対象（dmrp21-5a 型）。バトルゾーン側は static の grant: [enters_tapped]（dmex19-m20 と同型）、マナゾーン側はキーワード opp_mana_tapped。"
+
+  - id: T1029
+    name: 試験用スコーピオ
+    types: [creature]
+    civs: [darkness]
+    cost: 6
+    power: 7000
+    races: [ドラゴン・ゾンビ, アンノウン]
+    mana: 1
+    text: "このクリーチャーを自分の墓地から召喚してもよい。\nブロッカー\nW・ブレイカー\nこのクリーチャーが出た時、または自分のターンのはじめに、自分のマナゾーンにあるカードを１枚、裏向きにしてもよい。\n水晶武装４：自分のマナゾーンに裏向きのカードが４枚以上あれば、相手のカードはマナゾーンとバトルゾーンにタップして置かれる。"
+    abilities:
+    - {kind: trigger, when: {event: move, to: bz, subject: self}, effect: [{op: may, body: [{op: flip_down, select: {zone: mana, owner: you, count: 1}}]}]}
+    - {kind: trigger, when: {event: turn_start}, if: {is_turn: you}, effect: [{op: may, body: [{op: flip_down, select: {zone: mana, owner: you, count: 1}}]}]}
+    - {kind: static, affects: {zone: bz, owner: opp}, if: {cmp: [{count: {zone: mana, owner: you, filter: {face_down: true}}}, ">=", 4]}, mod: {grant: [enters_tapped]}}
+    - {kind: static, affects: self, if: {cmp: [{count: {zone: mana, owner: you, filter: {face_down: true}}}, ">=", 4]}, mod: {grant: [opp_mana_tapped]}}
+    keywords: [summon_from_graveyard, blocker, double_breaker]
+    source:
+      official: proto
+      review: pending
+      notes: "語彙パイロット第339弾の対象（dm23ex3-006 型）。水晶武装4のゲートは両方の常在型に同じ if（裏向きマナ4枚以上）を付ける。マナ側は自分への grant で opp_mana_tapped を条件付きで持たせる。"
+
+  - id: T1030
+    name: 試験用エルフェウス
+    types: [creature]
+    civs: [light]
+    cost: 5
+    power: 9500
+    races: [エンジェル・コマンド]
+    mana: 1
+    evolve_from: {race_has: エンジェル・コマンド}
+    text: "進化-自分のエンジェル・コマンド１体の上に置く。\n相手クリーチャーはタップされた状態でバトルゾーンに出る。\nW・ブレイカー(このクリーチャーはシールドを２枚ブレイクする)"
+    abilities:
+    - {kind: static, affects: {zone: bz, owner: opp, filter: {types: [creature]}}, mod: {grant: [enters_tapped]}}
+    keywords: [double_breaker]
+    source:
+      official: proto
+      review: pending
+      notes: "語彙パイロット第340弾の対象（dmc52-007 型）。相手クリーチャーへの enters_tapped 付与は第339弾で確立した static grant の形。"
+
+  - id: T1031
+    name: 試験用シュラマル
+    types: [creature]
+    civs: [light, darkness]
+    cost: 6
+    power: 6500
+    races: [アンノウン・セレス]
+    mana: 1
+    text: "ブロッカー\nスレイヤー\nW・ブレイカー\n各ターン、はじめて相手のクリーチャーが出る時、そのクリーチャーはタップして出る。"
+    abilities:
+    - {kind: trigger, first_time: true, when: {event: move, to: bz, subject: {owner: opp, filter: {types: [creature]}}}, effect: [{op: tap, select: {ref: event.subject}}]}
+    keywords: [blocker, slayer, double_breaker]
+    source:
+      official: proto
+      review: pending
+      notes: "語彙パイロット第340弾の対象（dm24bd6-006 型）。「各ターン、はじめて」は、そのターンに相手クリーチャーがまだ1体も出ていない（entered_this_turn の count が0）間だけ付与する常在型で表す。"
+
+  - id: T1032
+    name: 試験用終斗
+    types: [creature]
+    civs: [light, darkness, fire]
+    cost: 9
+    power: 23000
+    races: [アンノウン・セレス]
+    mana: 1
+    text: "Q・ブレイカー\nこのクリーチャーが出た時、各プレイヤーは自身のクリーチャーを１体ずつ選ぶ。こうして選ばれなかったクリーチャーをすべて破壊する。\n水晶武装４：自分のマナゾーンに裏向きのカードが４枚以上あれば、自分のクリーチャーすべてに「ブロッカー」と「スピードアタッカー」と「スレイヤー」を与える。"
+    abilities:
+    - {kind: static, affects: {zone: bz, owner: you, filter: {types: [creature]}}, if: {cmp: [{count: {zone: mana, owner: you, filter: {face_down: true}}}, ">=", 4]}, mod: {grant: [blocker, speed_attacker, slayer]}}
+    - {kind: trigger, when: {event: move, to: bz, subject: self}, effect: [{op: choose, select: {zone: bz, owner: you, filter: {types: [creature]}, count: 1}, as: keep_you}, {op: choose, select: {zone: bz, owner: opp, filter: {types: [creature]}, count: 1, chooser: opp}, as: keep_opp}, {op: destroy, select: {zone: bz, owner: any, filter: {types: [creature]}, count: all, exclude: [{ref: keep_you}, {ref: keep_opp}]}}]}
+    keywords: [quad_breaker]
+    source:
+      official: proto
+      review: pending
+      notes: "語彙パイロット第341弾の対象（dm24bd6-003 型）。各プレイヤーの選択は choose の chooser で委ね、残りは select の exclude で選ばれた側を除く。"
+
+  - id: T1033
+    name: 試験用ディスペクター
+    types: [creature]
+    civs: [light, darkness, nature]
+    cost: 10
+    power: 14000
+    races: [ディスペクター, ドラゴン・ゾンビ, ダークロード, ナイト]
+    mana: 1
+    text: "EXライフ\nブロッカー\nT・ブレイカー\nこのクリーチャーが出た時、各プレイヤーは自身のクリーチャーを１体選び、残りの自身のクリーチャーをすべて持ち主のマナゾーンに置く。"
+    abilities:
+    - {kind: trigger, when: {event: move, to: bz, subject: self}, effect: [{op: choose, select: {zone: bz, owner: you, filter: {types: [creature]}, count: 1}, as: keep_you}, {op: choose, select: {zone: bz, owner: opp, filter: {types: [creature]}, count: 1, chooser: opp}, as: keep_opp}, {op: move, select: {zone: bz, owner: any, filter: {types: [creature]}, count: all, exclude: [{ref: keep_you}, {ref: keep_opp}]}, to: mana, reason: put}]}
+    keywords: [ex_life, blocker, triple_breaker]
+    source:
+      official: proto
+      review: pending
+      notes: "語彙パイロット第341弾の対象（dm23bd5-001 型の出た時条項のみ。他の条項は partial に既存）。残りは破壊ではなく持ち主のマナゾーンに置く。"
+
+  - id: T1034
+    name: 試験用インガ
+    types: [creature]
+    civs: [light, darkness]
+    cost: 8
+    power: 6500
+    races: [オラクル, デーモン・コマンド, エンジェル・コマンド]
+    mana: 1
+    text: "バトル中、自分のオラクルとゴッドのパワーは+3000される。W・ブレイカー"
+    abilities:
+    - {kind: static, affects: {owner: you, filter: {any_of: [{race_has: オラクル}, {race_has: ゴッド}]}}, mod: {battle_power: {amount: 3000}}}
+    keywords: [double_breaker]
+    source:
+      official: proto
+      review: pending
+      notes: "語彙パイロット第342弾の対象（dmr11-016 型）。バトル中だけの全体付与は mod battle_power を affects 辞書形で持つ常在型で表す（第342弾で _battle_bonus が集約するよう拡張）。"
+
+  - id: T1035
+    name: 試験用ノブリス
+    types: [creature]
+    civs: [fire]
+    cost: 9
+    power: 10000
+    races: [アーマード・ドラゴン]
+    mana: 1
+    text: "W・ブレイカー\n自分のアーマードすべては、バトル中パワーを+3000する。"
+    abilities:
+    - {kind: static, affects: {owner: you, filter: {race_has: アーマード}}, mod: {battle_power: {amount: 3000}}}
+    keywords: [double_breaker]
+    source:
+      official: proto
+      review: pending
+      notes: "語彙パイロット第342弾の対象（dm23rp2x-006 型）。付与は自分自身（アーマード・ドラゴン）にも及ぶ。"
+
+  - id: T1036
+    name: アルカディアス・モモキング（試験用）
+    types: [creature, evolution]
+    civs: [light, fire]
+    cost: 6
+    power: 12500
+    races: [ジョーカーズ・ドラゴン, エンジェル・コマンド, レクスターズ]
+    mana: 1
+    star: true
+    evolve_from: {any_of: [{race_has: レクスターズ}, {civs: [light]}, {civs: [fire]}]}
+    text: "スター進化：レクスターズ、光、または火の、クリーチャー１体の上に置く。\nT・ブレイカー\n自分の他のレクスターズすべてのパワーを+2000する。\n相手は光ではない呪文を唱えられない。\n各ターンはじめて出る相手のクリーチャーは、タップして出る。"
+    abilities:
+    - {kind: static, affects: {zone: bz, owner: you, other: true, filter: {race_has: レクスターズ}}, mod: {power: 2000}}
+    - {kind: static, affects: {zone: hand, owner: opp, filter: {types: [spell], not_civs: [light]}}, mod: {deny: [cast]}}
+    - {kind: trigger, first_time: true, when: {event: move, to: bz, subject: {owner: opp, filter: {types: [creature]}}}, effect: [{op: tap, select: {ref: event.subject}}]}
+    keywords: [triple_breaker]
+    source:
+      official: proto
+      review: pending
+      notes: "語彙パイロット第343弾の対象（dm26ex4-cho001 / dm26sd1-o002f 型）。「各ターンはじめて出る相手のクリーチャーは、タップして出る」は第340弾で確立した first_time 誘発の形。"
+
+  - id: T1037
+    name: 試験用スケプティック
+    types: [creature]
+    civs: [water]
+    cost: 4
+    power: 6000
+    races: [ファイアー・バード, レクスターズ]
+    mana: 1
+    text: "ブロッカー\nW・ブレイカー\nこのターン、自分がタマシードを使うか呪文を唱えていなければ、このクリーチャーは攻撃できない。"
+    abilities:
+    - {kind: static, affects: self, if: {cmp: [{used_count: {owner: you, filter: {types: [spell, tamaseed]}}}, "==", 0]}, mod: {deny: [attack_player, attack_creature]}}
+    keywords: [blocker, double_breaker]
+    source:
+      official: proto
+      review: pending
+      notes: "語彙パイロット第344弾の対象（dmrp21-053 型）。「使っていなければ」は used_count（唱えた呪文＋via: generate で実行したカードの履歴）で数える。"
+
+  - id: T1038
+    name: 試験用クロウラー
+    types: [creature]
+    civs: [water]
+    cost: 6
+    power: 5000
+    races: [マジック・アースイーター]
+    mana: 1
+    text: "各ターンの終わりに、自分がそのターン中、コスト５以上の呪文またはコスト５以上のタマシードを使っていたら、このクリーチャーを手札から出してもよい。\nブロッカー\nジャストダイバー\nシビルカウント３：このクリーチャーが攻撃する時、自分の水のクリーチャーまたは水のタマシードが合計３つ以上あれば、カードを２枚引いてもよい。"
+    abilities:
+    - {kind: trigger, when: {event: move, to: bz, subject: self}, effect: [{op: modify, select: {ref: self}, mod: {deny: [be_chosen, be_attacked]}, duration: until_next_own_turn_start}]}
+    - {kind: trigger, when: {event: attack, subject: self}, if: {cmp: [{count: {zone: bz, owner: you, filter: {civs: [water], types: [creature, tamaseed]}}}, ">=", 3]}, effect: [{op: may, body: [{op: draw, count: 2}]}]}
+    - {kind: trigger, zone: hand, when: {event: turn_end}, if: {cmp: [{used_count: {owner: you, filter: {types: [spell, tamaseed], cost_ge: 5}}}, ">=", 1]}, effect: [{op: may, body: [{op: move, select: {ref: self}, to: bz, reason: put}]}]}
+    keywords: [blocker]
+    source:
+      official: proto
+      review: pending
+      notes: "語彙パイロット第344弾の対象（dm22rp1-002 型）。ターン終わりの手札誘発は zone: hand＋used_count の if。「出す」は move reason: put。"
+
+  - id: T1039
+    name: 試験用ベリアキャディ
+    types: [creature]
+    civs: [nature]
+    cost: 2
+    power: 2000
+    races: [ジャイアント・インセクト, アビスロイヤル]
+    mana: 1
+    text: "ガードマン\n相手のターン中、このクリーチャーのパワーを+10000する。\n相手のエレメントがコストを支払わずに出た時、自分の山札の上から１枚目をマナゾーンに置いてもよい。"
+    abilities:
+    - {kind: static, affects: self, if: {is_turn: opp}, mod: {power: 10000}}
+    - {kind: trigger, when: {event: move, to: bz, subject: {owner: opp}, unpaid: true}, if: {is_turn: opp}, effect: [{op: may, body: [{op: move, select: {zone: deck, owner: you, from_top: 1}, to: mana, reason: put}]}]}
+    keywords: [guardman]
+    source:
+      official: proto
+      review: pending
+      notes: "語彙パイロット第345弾の対象（dm23rp3-025 型）。「コストを支払わずに出た時」は when の unpaid: true（第257弾で move レコードに載るようになった）。"
+
+  - id: T1040
+    name: 試験用バーベナ
+    types: [creature]
+    civs: [light]
+    cost: 2
+    power: 2000
+    races: [スノーフェアリー, オラクル]
+    mana: 1
+    text: "相手のターン中に、相手のマナゾーンにあるカードをタップせずに相手のエレメントが出た時、自分はカードを１枚引く。その後、そのエレメント以下のコストのクリーチャーを１体、自分の手札から出してもよい。"
+    abilities:
+    - {kind: trigger, when: {event: move, to: bz, subject: {owner: opp}, unpaid: true}, if: {is_turn: opp}, effect: [{op: draw, count: 1}, {op: may, body: [{op: choose, select: {zone: hand, owner: you, filter: {types: [creature], cost_le: {cost_of: event.subject}}}, as: put_card}, {op: move, select: {ref: put_card}, to: bz, reason: put}]}]}
+    keywords: []
+    source:
+      official: proto
+      review: pending
+      notes: "語彙パイロット第345弾の対象（dm24bd5-008 型）。「そのエレメント以下のコスト」は filter の cost_le に {cost_of: event.subject} を置く（式の値は解決時に計算する）。"
+
+  - id: T1041
+    name: 試験用ロッカマグナム
+    types: [creature]
+    civs: [darkness]
+    cost: 2
+    power: 2000
+    races: [デスパペット]
+    mana: 1
+    text: "G・ストライク\n相手のターン中に、相手のマナゾーンのカードをタップせずに、相手のエレメントが出た時または相手が呪文を唱えた時、相手は自身のエレメントを１つ選び、破壊する。"
+    abilities:
+    - {kind: trigger, when: {event: move, to: bz, subject: {owner: opp}, unpaid: true}, if: {is_turn: opp}, effect: [{op: choose, select: {zone: bz, owner: opp, count: 1, chooser: opp}, as: victim}, {op: destroy, select: {ref: victim}}]}
+    - {kind: trigger, when: {event: cast, subject: {owner: opp, filter: {types: [spell]}}}, if: {is_turn: opp}, effect: [{op: choose, select: {zone: bz, owner: opp, count: 1, chooser: opp}, as: victim}, {op: destroy, select: {ref: victim}}]}
+    keywords: [g_strike]
+    source:
+      official: proto
+      review: pending
+      notes: "語彙パイロット第345弾の対象（dm24ex1-058 型）。「出た時または唱えた時」は誘発を2つに分ける。相手の選択は choose の chooser: opp。"
+
+  - id: T1042
+    name: 試験用フェルナンド
+    types: [creature]
+    civs: [darkness]
+    cost: 11
+    power: 11000
+    races: [デーモン・コマンド, ナイト]
+    mana: 1
+    text: "このクリーチャーの召喚コストを、自分の墓地にある呪文１枚につき１少なくしてもよい。ただし、コストは１より少なくならない。\nこのクリーチャーが攻撃する時、バトルゾーンにある相手のクリーチャーを１体選ぶ。そのクリーチャーのパワーは、そのターン中、自分の墓地にある呪文１枚につき-1000される。\nW・ブレイカー"
+    abilities:
+    - {kind: static, zone: hand, affects: self, mod: {cost: {amount: -1, count: {zone: graveyard, owner: you, filter: {types: [spell]}}}, cost_min: 1}}
+    - {kind: trigger, when: {event: attack, subject: self}, effect: [{op: modify, select: {zone: bz, owner: opp, filter: {types: [creature]}, count: 1}, mod: {power: {amount: -1000, count: {zone: graveyard, owner: you, filter: {types: [spell]}}}}, duration: end_of_turn}]}
+    keywords: [double_breaker]
+    source:
+      official: proto
+      review: pending
+      notes: "語彙パイロット第346弾の対象（dmc68-002 型）。コスト軽減は mod の cost {amount, count}＋cost_min（dm21-020 の確立形）。"
+
+  - id: T1043
+    name: 試験用エクスペリオン
+    types: [creature]
+    civs: [water]
+    cost: 6
+    power: 6000
+    races: [クリスタル・コマンド・ドラゴン]
+    mana: 1
+    text: "バトルゾーンにある自分のリキッド・ピープル１体につき、自分の水の呪文を唱えるコストを１少なくしてもよい。ただし、コストは１より少なくならない。W・ブレイカー"
+    abilities:
+    - {kind: static, affects: {zone: hand, owner: you, filter: {types: [spell], civs: [water]}}, mod: {cost: {amount: -1, count: {zone: bz, owner: you, filter: {race_has: リキッド・ピープル}}}, cost_min: 1}}
+    keywords: [double_breaker]
+    source:
+      official: proto
+      review: pending
+      notes: "語彙パイロット第346弾の対象（dmx16-057 型）。場の発生源から手札の呪文へ効く形は dm24ex1-016 と同型。"
+
+  - id: T1044
+    name: 試験用西南の超人
+    types: [creature]
+    civs: [nature]
+    cost: 4
+    power: 3000
+    races: [ジャイアント, サムライ]
+    mana: 1
+    text: "自分のジャイアントの召喚コストを最大２、少なくしてもよい。ただし、コストは０以下にならない。セイバー：ジャイアント（自分のジャイアントが破壊される時、このクリーチャーをかわりに破壊してもよい）"
+    abilities:
+    - {kind: static, affects: {zone: hand, owner: you, filter: {races: [ジャイアント]}}, mod: {cost: -2}}
+    - {kind: replace, optional: true, when: {event: move, to: graveyard, reason: destroy, subject: {owner: you, filter: {races: [ジャイアント]}, other: true}}, instead: [{op: destroy, select: {ref: self, count: 1}}]}
+    source:
+      official: proto
+      review: pending
+      notes: "語彙パイロット第347弾の対象（dmbd02-014 型）。「最大2少なく」は固定の cost: -2（下限0はエンジン既定）として扱う。"
+
+  - id: T1045
+    name: 試験用ガガマル
+    types: [creature]
+    civs: [nature]
+    cost: 7
+    power: 7000
+    races: [ガイア・コマンド, ドリームメイト]
+    mana: 1
+    text: "マナゾーンにある自分の、「マナ爆誕」を持つクリーチャーを召喚するコストを最大２少なくしてもよい。ただし、コストは１より少なくならない。\nW・ブレイカー"
+    abilities:
+    - {kind: static, affects: {zone: mana, owner: you, filter: {types: [creature], keyword: summon_from_mana}}, mod: {cost: -2, cost_min: 1}}
+    keywords: [double_breaker]
+    source:
+      official: proto
+      review: pending
+      notes: "語彙パイロット第347弾の対象（dm39-018 型）。マナ爆誕は filter の keyword: summon_from_mana で絞る。"
+
+  - id: T1046
+    name: 試験用ブラックアウト
+    types: [creature]
+    civs: [darkness]
+    cost: 6
+    power: 7000
+    races: [ソニック・コマンド, 侵略者ZERO]
+    mana: 1
+    text: "W・ブレイカー\n侵略ZERO：相手のターンの終わりに、そのターン相手のクリーチャーがコストを支払わずに出ていたら、このクリーチャーを自分の手札から出してもよい。\nこのクリーチャーが攻撃する時、自分のD２フィールドがあれば、相手のパワーが一番大きいクリーチャーを１体破壊する。"
+    abilities:
+    - {kind: trigger, zone: hand, when: {event: turn_end}, if: {all: [{is_turn: opp}, {cmp: [{turn_count: {kind: enter_unpaid, owner: opp, filter: {types: [creature]}}}, ">=", 1]}]}, effect: [{op: may, body: [{op: move, select: {ref: self}, to: bz, reason: put}]}]}
+    - {kind: trigger, when: {event: attack, subject: self}, if: {exists: {zone: bz, owner: you, filter: {types: [d2_field]}}}, effect: [{op: destroy, select: {zone: bz, owner: opp, filter: {types: [creature]}, extremal: max_power, count: 1}}]}
+    keywords: [double_breaker]
+    source:
+      official: proto
+      review: pending
+      notes: "語彙パイロット第348弾の対象（dmbd21-018 型）。侵略ZERO は手札の turn_end 誘発＋turn_count enter_unpaid。「パワーが一番大きい」は select の extremal: max_power。"
+
+  - id: T1047
+    name: 試験用デッドリー・ハイウェイ
+    types: [field, d2_field]
+    civs: [darkness]
+    cost: 4
+    mana: 1
+    text: "侵略ZERO：相手のターンの終わりに、そのターン相手がコストを支払わずにクリーチャーをバトルゾーンに出していたら、このD２フィールドを自分の手札からバトルゾーンに出してもよい。（他のD２フィールドがバトルゾーンに出た時、このD２フィールドを自分の墓地に置く） / Dスイッチ：自分のターンのはじめに、このD２フィールドをゲーム中で一度上下逆さまにしてもよい。そうしたら、相手のタップしているクリーチャーを１体破壊する。"
+    abilities:
+    - {kind: trigger, zone: hand, when: {event: turn_end}, if: {all: [{is_turn: opp}, {cmp: [{turn_count: {kind: enter_unpaid, owner: opp, filter: {types: [creature]}}}, ">=", 1]}]}, effect: [{op: may, body: [{op: move, select: {ref: self}, to: bz, reason: put}]}]}
+    - {kind: trigger, dswitch: true, when: {event: turn_start, player: you}, effect: [{op: may, body: [{op: dswitch}, {op: destroy, select: {zone: bz, owner: opp, filter: {types: [creature], tapped: true}, count: 1}}]}]}
+    source:
+      official: proto
+      review: pending
+      notes: "語彙パイロット第348弾の対象（dmd35-011 型）。Dスイッチ誘発は partial のまま。"
+
+  - id: T1048
+    name: 試験用ドキンダムーン
+    types: [field, d2_field]
+    civs: [darkness]
+    cost: 6
+    mana: 1
+    text: "侵略ZERO：相手のターンの終わりに、そのターン相手がコストを支払わずにクリーチャーをバトルゾーンに出していたら、このD２フィールドを自分の手札からバトルゾーンに出してもよい。 / このD２フィールドがバトルゾーンに出た時、自分の山札の上から２枚を墓地に置く。 / （他のD２フィールドがバトルゾーンに出た時、このD２フィールドを自分の墓地に置く） / Dスイッチ：自分のターンのはじめに、このD２フィールドをゲーム中で一度上下逆さまにしてもよい。そうしたら、自分の墓地からソニック・コマンドを１体出してもよい。"
+    abilities:
+    - {kind: trigger, zone: hand, when: {event: turn_end}, if: {all: [{is_turn: opp}, {cmp: [{turn_count: {kind: enter_unpaid, owner: opp, filter: {types: [creature]}}}, ">=", 1]}]}, effect: [{op: may, body: [{op: move, select: {ref: self}, to: bz, reason: put}]}]}
+    - {kind: trigger, when: {event: move, to: bz, subject: self}, effect: [{op: mill, owner: you, count: 2}]}
+    - {kind: trigger, dswitch: true, when: {event: turn_start, player: you}, effect: [{op: may, body: [{op: dswitch}, {op: move, select: {zone: graveyard, owner: you, filter: {race_has: ソニック・コマンド}, count: 1}, to: bz, reason: put}]}]}
+    source:
+      official: proto
+      review: pending
+      notes: "語彙パイロット第348弾の対象（promoy15-035 型）。CIP と Dスイッチ誘発は partial のまま。"
+
+  - id: T1049
+    name: 試験用無償登場
+    types: [spell]
+    civs: [nature]
+    cost: 1
+    mana: 1
+    text: "自分の手札からクリーチャーを１体出してもよい。"
+    spell: [{op: may, body: [{op: move, select: {zone: hand, owner: you, filter: {types: [creature]}, count: 1}, to: bz, reason: put}]}]
+    source:
+      official: proto
+      review: pending
+      notes: "語彙パイロット第348弾の検証用 fixture: ターン中にコストを支払わずにクリーチャーを出す手段（侵略ZERO の条件確認用）。"
+
+  - id: T1050
+    name: 試験用鬼丸「Ｅｎｄ」
+    types: [creature]
+    civs: [fire]
+    cost: 7
+    power: 7000
+    races: [ヒューマノイド, ハンター, エイリアン]
+    mana: 1
+    text: "W・ブレイカー（このクリーチャーはシールドを２枚ブレイクする）誰もゼニスを召喚できない。ゼニスとバトル中、このクリーチャーのパワーは+11000される。"
+    abilities:
+    - {kind: static, affects: {zone: hand, owner: any, filter: {types: [creature], race_has: ゼニス}}, mod: {deny: [summon]}}
+    - {kind: static, affects: self, mod: {battle_power: {amount: 11000, opponent_filter: {race_has: ゼニス}}}}
+    keywords: [double_breaker]
+    source:
+      official: proto
+      review: pending
+      notes: "語彙パイロット第349弾の対象（promoy11-083 型）。召喚禁止は許可 summon の deny、バトル中のパワー増は battle_power の opponent_filter。"
+
+  - id: T1051
+    name: 試験用カツ∞キング
+    types: [creature]
+    civs: [water, fire]
+    cost: 9
+    power: 12000
+    races: [アウトレイジMAX]
+    mana: 1
+    text: "マナゾーンに置く時、このカードはタップして置く。\nこのクリーチャーをバトルゾーンに出した時、相手の「ブロッカー」を持つクリーチャーを無限の数破壊する。その後、カードを１枚引いてもよい。\nT・ブレイカー（このクリーチャーはシールドを３枚ブレイクする）\n自分の他の、名前に《剣砲》とあるエグザイル・クリーチャーをバトルゾーンに出すことはできない。"
+    abilities:
+    - {kind: trigger, when: {event: move, to: bz, subject: self}, effect: [{op: destroy, select: {zone: bz, owner: opp, filter: {types: [creature], keyword: blocker}, count: all}}, {op: may, body: [{op: draw, count: 1}]}]}
+    - {kind: static, affects: {zone: hand, owner: you, filter: {types: [exile_creature], name_has: 剣砲}}, mod: {deny: [enter_bz]}}
+    - {kind: static, affects: {zone: graveyard, owner: you, filter: {types: [exile_creature], name_has: 剣砲}}, mod: {deny: [enter_bz]}}
+    - {kind: static, affects: {zone: mana, owner: you, filter: {types: [exile_creature], name_has: 剣砲}}, mod: {deny: [enter_bz]}}
+    - {kind: static, affects: {zone: deck, owner: you, filter: {types: [exile_creature], name_has: 剣砲}}, mod: {deny: [enter_bz]}}
+    - {kind: static, affects: {zone: shield, owner: you, filter: {types: [exile_creature], name_has: 剣砲}}, mod: {deny: [enter_bz]}}
+    keywords: [triple_breaker]
+    source:
+      official: proto
+      review: pending
+      notes: "語彙パイロット第349弾の対象（promoy12-036 型）。「出すことはできない」は許可 enter_bz の deny（召喚・効果・革命チェンジすべてを止める）。"
+
+  - id: T1052
+    name: 試験用カツブードン
+    types: [creature]
+    civs: [darkness, fire]
+    cost: 6
+    power: 6000
+    races: [アウトレイジMAX]
+    mana: 1
+    text: "マナゾーンに置く時、このカードはタップして置く。\nこのクリーチャーをバトルゾーンに出した時、自分の他のクリーチャーを１体破壊してもよい。そうした場合、自分の山札を見る。その中からエグザイル・クリーチャーを１体選び、相手に見せてから自分の手札に加えてもよい。このようにして山札を見た場合、シャッフルする。\nW・ブレイカー\n自分の他の、名前に《漢のキズナ カツブードン》とあるエグザイル・クリーチャーをバトルゾーンに出すことはできない。"
+    abilities:
+    - {kind: trigger, when: {event: move, to: bz, subject: self}, effect: [{op: may, body: [{op: move, select: {zone: bz, owner: you, filter: {types: [creature]}, count: 1, exclude: [{ref: self}]}, to: graveyard, reason: destroy, as: dead}]}, {op: if, cond: {cmp: [{count: {ref: dead}}, ">=", 1]}, then: [{op: choose, select: {zone: deck, owner: you, look: true, filter: {types: [exile_creature]}, count: 1}, as: found}, {op: may, body: [{op: move, select: {ref: found, count: all}, to: hand, reason: draw}]}, {op: shuffle}]}]}
+    - {kind: static, affects: {zone: hand, owner: you, filter: {types: [exile_creature], name_has: 漢のキズナ カツブードン}}, mod: {deny: [enter_bz]}}
+    - {kind: static, affects: {zone: graveyard, owner: you, filter: {types: [exile_creature], name_has: 漢のキズナ カツブードン}}, mod: {deny: [enter_bz]}}
+    - {kind: static, affects: {zone: mana, owner: you, filter: {types: [exile_creature], name_has: 漢のキズナ カツブードン}}, mod: {deny: [enter_bz]}}
+    - {kind: static, affects: {zone: deck, owner: you, filter: {types: [exile_creature], name_has: 漢のキズナ カツブードン}}, mod: {deny: [enter_bz]}}
+    - {kind: static, affects: {zone: shield, owner: you, filter: {types: [exile_creature], name_has: 漢のキズナ カツブードン}}, mod: {deny: [enter_bz]}}
+    keywords: [double_breaker]
+    source:
+      official: proto
+      review: pending
+      notes: "語彙パイロット第349弾の対象（promoy12-085 型）。山札探索は choose {zone: deck, look: true}＋move＋shuffle の確立形。"
+
+  - id: T1053
+    name: 試験用剣砲カツ
+    types: [creature, exile_creature]
+    civs: [nature]
+    cost: 3
+    power: 3000
+    races: [アウトレイジMAX]
+    mana: 1
+    text: "試験用のエグザイル・クリーチャー（名前に《剣砲》を含む）。"
+    source:
+      official: proto
+      review: pending
+      notes: "語彙パイロット第349弾の検証用 fixture: 剣砲ロックの対象。"
+
+  - id: T1054
+    name: 試験用ファントム・ベール
+    types: [spell]
+    civs: [darkness]
+    cost: 1
+    mana: 1
+    text: "相手の次のターンに、相手の攻撃できるクリーチャーはすべて、攻撃しなければならない。"
+    spell: [{op: modify, select: {zone: bz, owner: opp, filter: {types: [creature]}, count: all}, mod: {require: [attack]}, duration: until_next_own_turn_start}]
+    source:
+      official: proto
+      review: pending
+      notes: "語彙パイロット第350弾の対象（dm05-014 型）。攻撃強制は mod の require: [attack] を duration つき modify で付与する（第276弾の deny ロックと同型）。"
+
+  - id: T1055
+    name: 試験用ドラヴィ圧鬼の巻
+    types: [tamaseed]
+    civs: [fire]
+    cost: 2
+    races: [デモニオ, 鬼レクスターズ]
+    mana: 1
+    text: "S・トリガー（このタマシードをシールドゾーンから手札に加える時、コストを支払わずにすぐ使ってもよい）\nシンカライズ：このタマシードがクリーチャーであるかのように、この上に進化クリーチャーを置いてもよい。\nこのタマシードが出た時、次の自分のターンのはじめまで、相手のクリーチャーは可能なら攻撃する。\nシンカパワー：このタマシードが進化する時、次の自分のターンのはじめまで、この進化したクリーチャーが各ターンはじめてバトルに勝った時、アンタップする。"
+    abilities:
+    - {kind: trigger, when: {event: move, to: bz, subject: self}, effect: [{op: modify, select: {zone: bz, owner: opp, filter: {types: [creature]}, count: all}, mod: {require: [attack]}, duration: until_next_own_turn_start}]}
+    - {kind: trigger, when: {event: evolve_base, subject: self}, effect: [{op: modify, select: {ref: event.top}, mod: {gain: [{kind: trigger, first_time: true, when: {event: battle_win, subject: self}, effect: [{op: untap, select: {ref: self, count: 1}}]}]}, duration: until_next_own_turn_start}]}
+    keywords: [s_trigger, shinka_rise]
+    source:
+      official: proto
+      review: pending
+      notes: "語彙パイロット第350弾の対象（dmrp22-021 型）。CIP の攻撃強制は require: [attack] の duration つき modify。シンカパワーは partial のまま。"
+
+  - id: T1056
+    name: 試験用サーシャ
+    types: [creature]
+    civs: [light]
+    cost: 8
+    power: 9500
+    races: [メカ・デル・ソル]
+    mana: 1
+    text: "ドラゴン・ブロッカー(相手のドラゴンが攻撃するとき、このクリーチャーをタップして、その攻撃を阻止してよい。 その後、そのドラゴンとバトルする)\nドラゴンとバトルするとき、このクリーチャーのパワーは+6000される。\nW(ダブル)・ブレイカー"
+    abilities:
+    - {kind: static, affects: self, mod: {allow: [{action: block, other: {race_has: ドラゴン}}]}}
+    - {kind: static, affects: self, mod: {battle_power: {amount: 6000, opponent_filter: {race_has: ドラゴン}}}}
+    keywords: [double_breaker]
+    source:
+      official: proto
+      review: pending
+      notes: "語彙パイロット第351弾の対象（dm08-006 型）。ドラゴン・ブロッカーは block の許可を other フィルタつき allow で与える（キーワード blocker は無制限になるため使わない）。"
+
+  - id: T1057
+    name: 試験用スヴェータ
+    types: [creature]
+    civs: [light]
+    cost: 4
+    power: 4000
+    races: [メカ・デル・ソル]
+    mana: 1
+    text: "ブロッカー(相手クリーチャーが攻撃する時、このクリーチャーをタップして、その攻撃を阻止してもよい。その後、その相手クリーチャーとバトルする)\nこのクリーチャーは、相手プレイヤーを攻撃できない。\nデーモン・コマンドまたは種族にドラゴンとあるクリーチャーとバトルする時、このクリーチャーのパワーは+4000される。"
+    abilities:
+    - {kind: static, affects: self, mod: {battle_power: {amount: 4000, opponent_filter: {any_of: [{race_has: デーモン・コマンド}, {race_has: ドラゴン}]}}}}
+    keywords: [blocker, cannot_attack_player]
+    source:
+      official: proto
+      review: pending
+      notes: "語彙パイロット第351弾の対象（dm16-021 型）。バトル相手の種族条件は battle_power の opponent_filter（any_of で複数種族）。"
+
+  - id: T1058
+    name: 試験用パンダ・ブーリン
+    types: [creature]
+    civs: [nature]
+    cost: 9
+    power: 6000
+    races: [ドリームメイト, ナイト]
+    mana: 1
+    text: "このクリーチャーの召喚コストを、自分のマナゾーンにある呪文１枚につき、１少なくしてもよい。ただし、コストは１より少なくならない。\nW・ブレイカー(このクリーチャーはシールドを２枚ブレイクする)"
+    abilities:
+    - {kind: static, zone: hand, affects: self, mod: {cost: {amount: -1, count: {zone: mana, owner: you, filter: {types: [spell]}}}, cost_min: 1}}
+    keywords: [double_breaker]
+    source:
+      official: proto
+      review: pending
+      notes: "語彙パイロット第352弾の対象（dm31-033 型）。第346弾の cost_may_per_count と同じ確立形。"
+
+  - id: T1059
+    name: 試験用セイント・ボルシャック
+    types: [creature]
+    civs: [light, fire]
+    cost: 9
+    power: 9000
+    races: [エンジェル・コマンド, アーマード・ドラゴン]
+    mana: 1
+    text: "このクリーチャーの召喚コストを、自分の墓地にあるエンジェル・コマンドまたはアーマード・ドラゴン１体につき１少なくしてもよい。ただし、コストは１以下にはならない。\nスピードアタッカー\nパワーアタッカー+4000\nW・ブレイカー"
+    abilities:
+    - {kind: static, zone: hand, affects: self, mod: {cost: {amount: -1, count: {zone: graveyard, owner: you, filter: {any_of: [{races: [エンジェル・コマンド]}, {races: [アーマード・ドラゴン]}]}}}, cost_min: 1}}
+    - {kind: static, affects: self, mod: {power_when: {amount: 4000, when: attacking}}}
+    keywords: [speed_attacker, double_breaker]
+    source:
+      official: proto
+      review: pending
+      notes: "語彙パイロット第352弾の対象（dmbd16-007 型）。数える対象が2種族の和集合の場合は count セレクタの filter に any_of を使う。"
+
+  - id: T1060
+    name: 試験用ペロルの冠
+    types: [tamaseed]
+    civs: [fire]
+    cost: 2
+    mana: 1
+    text: "相手のターン中、相手のクリーチャーまたはタマシードがコストを支払わずに出た時、このタマシードを破壊してもよい。そうしたら、カードを１枚引き、火のコスト５以下のクリーチャーを１体、自分の手札から出してもよい。"
+    abilities:
+    - {kind: trigger, when: {event: move, to: bz, subject: {owner: opp, filter: {types: [creature, tamaseed]}}, unpaid: true}, if: {is_turn: opp}, effect: [{op: may, body: [{op: destroy, select: {ref: self}}, {op: draw, count: 1}, {op: may, body: [{op: choose, select: {zone: hand, owner: you, filter: {types: [creature], civs: [fire], cost_le: 5}, count: 1}, as: pc}, {op: move, select: {ref: pc}, to: bz, reason: put}]}]}]}
+    source:
+      official: proto
+      review: pending
+      notes: "語彙パイロット第353弾の対象（dm22rp2x-020 型）。「破壊してもよい。そうしたら〜」は全体を1つの may に包む形。"
+
+  - id: T1061
+    name: 試験用ゼンツー
+    types: [creature]
+    civs: [water]
+    cost: 3
+    power: 3000
+    races: [マジック・サイバーロード]
+    mana: 1
+    text: "各ターンに一度、相手がコストを支払わずにエレメントを出した時、マジック・メクレイド５してもよい。（マジック・メクレイド５：自分の山札の上から３枚を見る。その中から、コスト５以下のマジックを１枚、コストを支払わずに使ってもよい。残りを好きな順序で山札の下に置く）"
+    abilities:
+    - {kind: trigger, once_per_turn: true, when: {event: move, to: bz, subject: {owner: opp}, unpaid: true}, effect: [{op: may, body: [{op: mekurade, filter: {race_has: マジック}, cost_le: 5}]}]}
+    source:
+      official: proto
+      review: pending
+      notes: "語彙パイロット第353弾の対象（dm23rp2x-033 型）。メクレイドは既存 op（filter は race_has）。"
+
+  - id: T1062
+    name: 試験用マジック・ワーム
+    types: [creature]
+    civs: [water]
+    cost: 3
+    power: 2000
+    races: [マジック・サイバーロード]
+    mana: 1
+    text: "（試験用フィクスチャ: マジック・メクレイドの対象）"
+    source:
+      official: proto
+      review: pending
+      notes: "語彙パイロット第353弾の検証用フィクスチャ（メクレイドで使えるマジック）。"
+
+  - id: T1063
+    name: 試験用不落の超人
+    types: [creature]
+    civs: [nature]
+    cost: 8
+    power: 12000
+    races: [ジャイアント]
+    mana: 1
+    text: "W・ブレイカー(このクリーチャーはシールドを２枚ブレイクする)\n相手のターン中、このクリーチャーがタップされていて、そのターンにまだ攻撃を受けていない場合、相手のクリーチャーは可能ならこのクリーチャーを攻撃する。"
+    abilities:
+    - {kind: static, affects: self, if: {all: [{is_turn: opp}, {exists: {ref: self, filter: {tapped: true}}}, {cmp: [{turn_count: {kind: attack_on, ref: self}}, "==", 0]}]}, mod: {must_be_attacked: true}}
+    keywords: [double_breaker]
+    source:
+      official: proto
+      review: pending
+      notes: "語彙パイロット第354弾の対象（dm10-s07 型）。タップ状態の条件は exists の ref セレクタに filter を重ねて表す。"
+
+  - id: T1064
+    name: 試験用誘引ゾンビ
+    types: [creature, evolution]
+    civs: [darkness]
+    cost: 7
+    power: 8000
+    races: [ドラゴン・ゾンビ]
+    mana: 1
+    evolve_from: {races: [ドラゴン・ゾンビ]}
+    text: "進化-自分のドラゴン・ゾンビ１体の上に置く。\n相手のクリーチャーは、可能であればこのクリーチャーを攻撃する。\nW・ブレイカー(このクリーチャーはシールドを２枚ブレイクする)"
+    abilities:
+    - {kind: static, affects: self, mod: {must_be_attacked: true}}
+    keywords: [double_breaker]
+    source:
+      official: proto
+      review: pending
+      notes: "語彙パイロット第354弾の対象（dm16-s03 型）。誘引は mod の must_be_attacked（第51弾で実装済み）。"
+
+  - id: T1065
+    name: 試験用ドラゴン・ゾンビ
+    types: [creature]
+    civs: [darkness]
+    cost: 3
+    power: 3000
+    races: [ドラゴン・ゾンビ]
+    mana: 1
+    text: "（試験用フィクスチャ: 進化元）"
+    source:
+      official: proto
+      review: pending
+      notes: "語彙パイロット第354弾の検証用フィクスチャ（ドラゴン・ゾンビの進化元）。"
