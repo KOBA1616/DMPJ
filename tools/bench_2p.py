@@ -95,14 +95,62 @@ def run_bench(rules, deck_a: list[str], deck_b: list[str], games: int,
     }
 
 
+def run_bench_batch(rules, deck_a: list[str], deck_b: list[str], games: int,
+                    seed: int = 1) -> dict:
+    """Phase 3: Rust 内部の一括実行（dmcore.run_batch、組み込みランダム方策）。
+    方策の乱数は Rust 側 RNG のため、勝敗の内訳は駆動方式（auto/python）と一致しない。"""
+    from dmsim.engine import rustcore
+
+    states = [rustcore.new_game(rules, [deck_a, deck_b], seed + g, g % 2)
+              for g in range(games)]
+    t0 = time.perf_counter()
+    results = rustcore.run_batch(rules, states, policy="random", seed=seed)
+    dt = time.perf_counter() - t0
+
+    wins = {0: 0, 1: 0}
+    first_wins = 0
+    decisions = 0
+    turns = 0
+    errors: list[str] = []
+    done = 0
+    for g, r in enumerate(results):
+        if "error" in r:
+            errors.append(f"game {g}: {r['error']}")
+            continue
+        done += 1
+        decisions += r["decisions"]
+        turns += r["turn"] or 0
+        w = r["winner"]
+        if w in wins:
+            wins[w] += 1
+            if w == g % 2:
+                first_wins += 1
+    return {
+        "games_done": done,
+        "games_requested": games,
+        "seconds": dt,
+        "games_per_sec": done / dt if dt > 0 else 0.0,
+        "decisions": decisions,
+        "decisions_per_sec": decisions / dt if dt > 0 else 0.0,
+        "decisions_per_game": decisions / done if done else 0.0,
+        "avg_turns": turns / done if done else 0.0,
+        "wins": wins,
+        "first_player_win_rate": first_wins / done if done else 0.0,
+        "rust_wrapped": done,
+        "rust_kept_rate": 1.0 if done else None,
+        "errors": errors,
+    }
+
+
 def main(argv=None):
     ap = argparse.ArgumentParser(description="2人対戦ベンチ（既定: サガミラー、両者ランダム）")
     ap.add_argument("--games", type=int, default=20)
     ap.add_argument("--deck", default="data/decks/saga.yaml", help="両者が使うデッキ（ミラー）")
     ap.add_argument("--deck-b", default=None, help="相手側だけ別デッキにする場合")
     ap.add_argument("--seed", type=int, default=1)
-    ap.add_argument("--engine", choices=["auto", "python"], default="auto",
-                    help="auto: Rust が扱える局は Rust で進める / python: Rust に包まない")
+    ap.add_argument("--engine", choices=["auto", "python", "batch"], default="auto",
+                    help="auto: Rust が扱える局は Rust で進める / python: Rust に包まない / "
+                         "batch: Rust 内部で一括実行（組み込みランダム方策）")
     a = ap.parse_args(argv)
 
     t = time.perf_counter()
@@ -111,7 +159,10 @@ def main(argv=None):
 
     deck_a = load_deck(a.deck)
     deck_b = load_deck(a.deck_b) if a.deck_b else deck_a
-    r = run_bench(rules, deck_a, deck_b, a.games, seed=a.seed, engine=a.engine)
+    if a.engine == "batch":
+        r = run_bench_batch(rules, deck_a, deck_b, a.games, seed=a.seed)
+    else:
+        r = run_bench(rules, deck_a, deck_b, a.games, seed=a.seed, engine=a.engine)
 
     print(f"rules loaded in {load_sec:.2f}s (not counted below)")
     print(f"engine={a.engine} decks={len(deck_a)}v{len(deck_b)} "
@@ -120,7 +171,7 @@ def main(argv=None):
           f"{r['decisions_per_game']:.0f} decisions/game, avg {r['avg_turns']:.1f} turns")
     print(f"  wins P0={r['wins'][0]} P1={r['wins'][1]}, "
           f"first player win rate={r['first_player_win_rate']:.2f}")
-    if a.engine == "auto":
+    if a.engine in ("auto", "batch"):
         print(f"  rust: wrapped {r['rust_wrapped']} games, kept to the end "
               f"{(r['rust_kept_rate'] or 0) * 100:.0f}%")
     for e in r["errors"]:

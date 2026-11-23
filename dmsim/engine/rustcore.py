@@ -602,6 +602,17 @@ def _fresh_build() -> bool:
     return _FRESH
 
 
+def run_batch(rules, states, policy: str = "random", seed: int = 1) -> list[dict]:
+    """複数局を Rust 内部で一括実行する（Phase 3）。states は初期 GameState の並び。
+    policy: "random"（一様乱択）| "first"（最小数を先頭から）。戻りは局ごとの
+    {winner, turn, decisions} または {error} のリスト。決定ごとの Python 往復が無い。"""
+    if dmcore is None:
+        raise RuntimeError("dmcore が無い")
+    states_json = json.dumps([s.to_json() for s in states])
+    out = dmcore.run_batch(_bundle_json(rules), states_json, policy, seed)
+    return json.loads(out)
+
+
 def supports(rules, state) -> bool:
     """この局の札がすべて Rust で動くか（_is_plain）。未対応の札が1枚でもあれば False。"""
     cards = rules.cards
