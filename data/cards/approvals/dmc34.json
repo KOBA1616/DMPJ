@@ -13,7 +13,7 @@
 ],
 "verifier": 2,
 "verify": "43手・turn 30 まで正常に回った（result={'winner': 0, 'reason': 'deck_out', 'turn': 30}）",
-"vocab_ver": "6523778a95ee2caa"
+"vocab_ver": "62cfaea10e3fe15a"
 },
 "dmc34-018": {
 "by": "rule",
@@ -45,7 +45,7 @@
 ],
 "verifier": 2,
 "verify": "43手・turn 30 まで正常に回った（result={'winner': 0, 'reason': 'deck_out', 'turn': 30}）",
-"vocab_ver": "815a3264d312c19f"
+"vocab_ver": "543141c124a807d8"
 },
 "dmc34-022": {
 "by": "rule",
@@ -62,7 +62,7 @@
 ],
 "verifier": 2,
 "verify": "43手・turn 30 まで正常に回った（result={'winner': 0, 'reason': 'deck_out', 'turn': 30}）",
-"vocab_ver": "b2b8813796592cba"
+"vocab_ver": "02e34efc4ee312ee"
 },
 "dmc34-035": {
 "by": "rule",
@@ -77,7 +77,7 @@
 ],
 "verifier": 2,
 "verify": "43手・turn 30 まで正常に回った（result={'winner': 0, 'reason': 'deck_out', 'turn': 30}）",
-"vocab_ver": "2909142a9812abea"
+"vocab_ver": "7a328acb9dff8dee"
 },
 "dmc34-039": {
 "by": "rule",
@@ -92,7 +92,7 @@
 ],
 "verifier": 2,
 "verify": "43手・turn 30 まで正常に回った（result={'winner': 0, 'reason': 'deck_out', 'turn': 30}）",
-"vocab_ver": "2909142a9812abea"
+"vocab_ver": "7a328acb9dff8dee"
 },
 "dmc34-042": {
 "by": "check",
@@ -125,7 +125,7 @@
 ],
 "verifier": 2,
 "verify": "43手・turn 30 まで正常に回った（result={'winner': 0, 'reason': 'deck_out', 'turn': 30}）",
-"vocab_ver": "52cefa81790fc73f"
+"vocab_ver": "f07f7aaa07e5e317"
 },
 "dmc34-049": {
 "by": "rule",
@@ -141,7 +141,7 @@
 ],
 "verifier": 2,
 "verify": "43手・turn 30 まで正常に回った（result={'winner': 0, 'reason': 'deck_out', 'turn': 30}）",
-"vocab_ver": "11246d71328ef3a6"
+"vocab_ver": "4f413a7027c4a74d"
 },
 "dmc34-050": {
 "by": "rule",
@@ -158,7 +158,7 @@
 ],
 "verifier": 2,
 "verify": "43手・turn 30 まで正常に回った（result={'winner': 0, 'reason': 'deck_out', 'turn': 30}）",
-"vocab_ver": "63b9bf6f9c310de3"
+"vocab_ver": "2b8494101b153af0"
 },
 "dmc34-054": {
 "by": "rule",
@@ -173,6 +173,6 @@
 ],
 "verifier": 2,
 "verify": "43手・turn 30 まで正常に回った（result={'winner': 0, 'reason': 'deck_out', 'turn': 30}）",
-"vocab_ver": "2909142a9812abea"
+"vocab_ver": "7a328acb9dff8dee"
 }
 }

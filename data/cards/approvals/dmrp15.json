@@ -15,7 +15,7 @@
 ],
 "verifier": 2,
 "verify": "43手・turn 30 まで正常に回った（result={'winner': 0, 'reason': 'deck_out', 'turn': 30}）",
-"vocab_ver": "d31ac6c87fa3813e"
+"vocab_ver": "a5712974fa95db3b"
 },
 "dmrp15-036": {
 "by": "check",
@@ -70,7 +70,7 @@
 ],
 "verifier": 2,
 "verify": "43手・turn 30 まで正常に回った（result={'winner': 0, 'reason': 'deck_out', 'turn': 30}）",
-"vocab_ver": "a8cbd6b86918ccde"
+"vocab_ver": "9898ed27b24cf7bd"
 },
 "dmrp15-063": {
 "by": "rule",
@@ -85,7 +85,7 @@
 ],
 "verifier": 2,
 "verify": "43手・turn 30 まで正常に回った（result={'winner': 0, 'reason': 'deck_out', 'turn': 30}）",
-"vocab_ver": "2909142a9812abea"
+"vocab_ver": "7a328acb9dff8dee"
 },
 "dmrp15-064": {
 "by": "rule",
@@ -103,7 +103,7 @@
 ],
 "verifier": 2,
 "verify": "43手・turn 30 まで正常に回った（result={'winner': 0, 'reason': 'deck_out', 'turn': 30}）",
-"vocab_ver": "56084c42d43c50d5"
+"vocab_ver": "41432ee5cb9a050a"
 },
 "dmrp15-072": {
 "by": "rule",
@@ -121,7 +121,7 @@
 ],
 "verifier": 2,
 "verify": "43手・turn 30 まで正常に回った（result={'winner': 0, 'reason': 'deck_out', 'turn': 30}）",
-"vocab_ver": "f0b16b7a6ad1cc74"
+"vocab_ver": "28fe040d160957a7"
 },
 "dmrp15-074": {
 "by": "check",
@@ -174,7 +174,7 @@
 ],
 "verifier": 2,
 "verify": "43手・turn 30 まで正常に回った（result={'winner': 0, 'reason': 'deck_out', 'turn': 30}）",
-"vocab_ver": "37d5ede5c3ea4578"
+"vocab_ver": "0550df964ef03895"
 },
 "dmrp15-080": {
 "by": "rule",
@@ -190,7 +190,7 @@
 ],
 "verifier": 2,
 "verify": "43手・turn 30 まで正常に回った（result={'winner': 0, 'reason': 'deck_out', 'turn': 30}）",
-"vocab_ver": "1540b8c0aefac5aa"
+"vocab_ver": "42ee2e68e1b486f2"
 },
 "dmrp15-085": {
 "by": "check",
@@ -226,7 +226,7 @@
 ],
 "verifier": 2,
 "verify": "43手・turn 30 まで正常に回った（result={'winner': 0, 'reason': 'deck_out', 'turn': 30}）",
-"vocab_ver": "94e4c339caa72579"
+"vocab_ver": "e57e2f06bbf27d7d"
 },
 "dmrp15-087": {
 "by": "rule",
@@ -241,6 +241,6 @@
 ],
 "verifier": 2,
 "verify": "43手・turn 30 まで正常に回った（result={'winner': 0, 'reason': 'deck_out', 'turn': 30}）",
-"vocab_ver": "2909142a9812abea"
+"vocab_ver": "7a328acb9dff8dee"
 }
 }

@@ -15,7 +15,7 @@
 ],
 "verifier": 2,
 "verify_error": "graveyard への移動が起きなかった",
-"vocab_ver": "cb82996241a08895"
+"vocab_ver": "a85983dbcbd558d8"
 },
 "dm20-011": {
 "by": "rule",
@@ -131,7 +131,7 @@
 ],
 "verifier": 2,
 "verify": "43手・turn 30 まで正常に回った（result={'winner': 0, 'reason': 'deck_out', 'turn': 30}）",
-"vocab_ver": "3f89151a804120ed"
+"vocab_ver": "2f16c7e056cf641d"
 },
 "dm20-042": {
 "by": "rule",
@@ -163,7 +163,7 @@
 ],
 "verifier": 2,
 "verify": "43手・turn 30 まで正常に回った（result={'winner': 0, 'reason': 'deck_out', 'turn': 30}）",
-"vocab_ver": "e01e4d22fa6b3d2a"
+"vocab_ver": "1ca5a78430c7b5c9"
 },
 "dm20-044": {
 "by": "rule",
@@ -179,7 +179,7 @@
 ],
 "verifier": 2,
 "verify": "43手・turn 30 まで正常に回った（result={'winner': 0, 'reason': 'deck_out', 'turn': 30}）",
-"vocab_ver": "23436d40a0a12bd9"
+"vocab_ver": "b941ee680409f8ca"
 },
 "dm20-046": {
 "by": "rule",
