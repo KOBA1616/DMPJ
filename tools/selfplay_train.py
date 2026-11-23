@@ -28,6 +28,10 @@ def main(argv=None):
     ap.add_argument("--eval-games", type=int, default=20)
     ap.add_argument("--opponents", default="random,greedy",
                     help="評価相手（カンマ区切り: random / greedy / charge_only）")
+    ap.add_argument("--workers", type=int, default=1,
+                    help="収集の並列ワーカー数（2以上でマルチプロセス収集）")
+    ap.add_argument("--model", choices=["pool", "attn"], default="pool",
+                    help="pool: ゾーン別プーリング / attn: 注意機構つき")
     ap.add_argument("--seed", type=int, default=0)
     ap.add_argument("--lr", type=float, default=3e-3)
     ap.add_argument("--out", default="workspace_ai/model.npz")
@@ -36,7 +40,11 @@ def main(argv=None):
     rules = load_rules()
     deck = load_deck(a.deck)
     vocab = Vocab(rules)
-    model = Model(len(vocab), seed=a.seed)
+    if a.model == "attn":
+        from dmsim.ai.model_attn import AttnModel
+        model = AttnModel(len(vocab), seed=a.seed)
+    else:
+        model = Model(len(vocab), seed=a.seed)
     print(f"vocab={len(vocab)} params={sum(v.size for v in model.p.values())}")
 
     opponents = [s.strip() for s in a.opponents.split(",") if s.strip()]
@@ -49,7 +57,7 @@ def main(argv=None):
               f"({before[opp]['wins']}W/{before[opp]['losses']}L/{before[opp]['draws']}D)")
 
     train_iters(rules, vocab, model, deck, deck, a.iters, a.games_per_iter,
-                seed=a.seed, lr=a.lr)
+                seed=a.seed, lr=a.lr, workers=a.workers)
 
     for opp in opponents:
         after[opp] = evaluate(rules, vocab, model, deck, deck, a.eval_games,

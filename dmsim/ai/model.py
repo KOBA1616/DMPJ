@@ -2,6 +2,7 @@
 
 構成（ポケカABC上位の共通形を本システム向けに最小化したもの）:
 - カード埋め込み（定義ごと）＋トークン数値特徴 → ゾーン別プーリング → 局面ベクトル
+  （トランク。注意機構版は model_attn.AttnModel がトランクだけ差し替える）
 - 方策ヘッド: 選択肢ごとにスコア（局面ベクトル＋選択肢特徴）。選択は
   Plackett-Luce 型の逐次サンプリング（重みなし抽出）で、単一選択・複数選択・
   順序付け（order_cards）の全決定形を1つの分布で扱う。同値合法手は同じ特徴を
@@ -48,8 +49,8 @@ class Model:
         self._adam_v = {k: np.zeros_like(v) for k, v in self.p.items()}
         self._adam_t = 0
 
-    # ---- forward ----
-    def forward(self, st: dict, op: dict):
+    # ---- トランク（局面ベクトルまで）。AttnModel が差し替える ----
+    def _trunk(self, st: dict):
         p = self.p
         emb_tok = p["emb"][st["tok_defn"]]                       # [T, D]
         x = np.concatenate([emb_tok, st["tok_num"]], axis=1)     # [T, D+TOK]
@@ -61,6 +62,34 @@ class Model:
                 zone_vecs[z] = h[m].mean(axis=0)
         ctx_in = np.concatenate([zone_vecs.reshape(-1), st["glob"]])
         ctx = _tanh(ctx_in @ p["Wc"].T + p["bc"])                # [H_CTX]
+        return ctx, (x, h, ctx_in, ctx)
+
+    def _trunk_backward(self, grads, st: dict, tcache, dctx):
+        x, h, ctx_in, ctx = tcache
+        p = self.p
+        dctx_in = (dctx * (1 - ctx ** 2)) @ p["Wc"]
+        grads["Wc"] += (dctx * (1 - ctx ** 2))[:, None] * ctx_in[None, :]
+        grads["bc"] += dctx * (1 - ctx ** 2)
+        dzone = dctx_in[:len(ZONES) * H_TOK].reshape(len(ZONES), H_TOK)
+        dh = np.zeros_like(h)
+        for z in range(len(ZONES)):
+            m = st["tok_zone"] == z
+            if m.any():
+                dh[m] += dzone[z] / m.sum()
+        self._token_backward(grads, st, x, h, dh)
+
+    def _token_backward(self, grads, st: dict, x, h, dh):
+        """h = tanh(x @ W1.T + b1) の逆伝播（dh は h への勾配）。"""
+        p = self.p
+        dhp = dh * (1 - h ** 2)
+        dx = dhp @ p["W1"]
+        grads["W1"] += dhp.T @ x
+        grads["b1"] += dhp.sum(axis=0)
+        np.add.at(grads["emb"], st["tok_defn"], dx[:, :D_EMB])
+
+    # ---- ヘッド（局面ベクトル→スコア/価値/個数） ----
+    def _heads(self, ctx, op: dict):
+        p = self.p
         hv = _tanh(ctx @ p["Wv1"].T + p["bv1"])
         value = float(hv @ p["wv2"][0] + p["bv2"][0])
         count_logits = ctx @ p["Wk"].T + p["bk"]                 # [MAXK+1]
@@ -70,8 +99,36 @@ class Model:
         ], axis=1)
         ho = _tanh(ox @ p["Wo1"].T + p["bo1"])
         scores = ho @ p["wo2"][0] + p["bo2"][0]                  # [O]
-        cache = (x, h, zone_vecs, ctx_in, ctx, hv, ox, ho)
-        return scores, value, count_logits, cache
+        return scores, value, count_logits, (hv, ox, ho)
+
+    def _heads_backward(self, grads, op: dict, ctx, hcache, dscores, dcount, dvalue):
+        hv, ox, ho = hcache
+        p = self.p
+        dho = dscores[:, None] * p["wo2"][0][None, :] * (1 - ho ** 2)
+        grads["wo2"][0] += (dscores[:, None] * ho).sum(axis=0)
+        grads["bo2"][0] += dscores.sum()
+        dox = dho @ p["Wo1"]
+        grads["Wo1"] += dho.T @ ox
+        grads["bo1"] += dho.sum(axis=0)
+        dctx = dox[:, :H_CTX].sum(axis=0)
+        demb_opt = dox[:, H_CTX:H_CTX + D_EMB]
+        np.add.at(grads["emb"], op["opt_defn"], demb_opt)
+        dhv = dvalue * p["wv2"][0] * (1 - hv ** 2)
+        grads["wv2"][0] += dvalue * hv
+        grads["bv2"][0] += dvalue
+        dctx += dhv @ p["Wv1"]
+        grads["Wv1"] += dhv[:, None] * ctx[None, :]
+        grads["bv1"] += dhv
+        dctx += dcount @ p["Wk"]
+        grads["Wk"] += dcount[:, None] * ctx[None, :]
+        grads["bk"] += dcount
+        return dctx
+
+    # ---- forward ----
+    def forward(self, st: dict, op: dict):
+        ctx, tcache = self._trunk(st)
+        scores, value, count_logits, hcache = self._heads(ctx, op)
+        return scores, value, count_logits, (tcache, hcache, ctx)
 
     # ---- 行動のサンプリングと log 確率 ----
     @staticmethod
@@ -140,8 +197,7 @@ class Model:
         for item in batch:
             st, op, choice, ret = item["st"], item["op"], item["choice"], item["ret"]
             scores, value, count_logits, cache = self.forward(st, op)
-            x, h, zone_vecs, ctx_in, ctx, hv, ox, ho = cache
-            p = self.p
+            tcache, hcache, ctx = cache
             adv = ret - value
             # スコアへの勾配: PL logp の勾配 × (-adv)
             dscores = np.zeros_like(scores)
@@ -175,42 +231,8 @@ class Model:
             dvalue = 2.0 * value_coef * (value - ret)
             total += -logp * adv + value_coef * (value - ret) ** 2
 
-            # ---- 逆伝播 ----
-            # 選択肢スコア経路
-            dho = dscores[:, None] * p["wo2"][0][None, :] * (1 - ho ** 2)
-            grads["wo2"][0] += (dscores[:, None] * ho).sum(axis=0)
-            grads["bo2"][0] += dscores.sum()
-            dox = dho @ p["Wo1"]
-            grads["Wo1"] += dho.T @ ox
-            grads["bo1"] += dho.sum(axis=0)
-            dctx = dox[:, :H_CTX].sum(axis=0)
-            demb_opt = dox[:, H_CTX:H_CTX + D_EMB]
-            np.add.at(grads["emb"], op["opt_defn"], demb_opt)
-            # 価値経路
-            dhv = dvalue * p["wv2"][0] * (1 - hv ** 2)
-            grads["wv2"][0] += dvalue * hv
-            grads["bv2"][0] += dvalue
-            dctx += dhv @ p["Wv1"]
-            grads["Wv1"] += dhv[:, None] * ctx[None, :]
-            grads["bv1"] += dhv
-            # 個数ヘッド経路
-            dctx += dcount @ p["Wk"]
-            grads["Wk"] += dcount[:, None] * ctx[None, :]
-            grads["bk"] += dcount
-            # 局面ベクトル経路
-            dctx_in = (dctx * (1 - ctx ** 2)) @ p["Wc"]
-            grads["Wc"] += (dctx * (1 - ctx ** 2))[:, None] * ctx_in[None, :]
-            grads["bc"] += dctx * (1 - ctx ** 2)
-            dzone = dctx_in[:len(ZONES) * H_TOK].reshape(len(ZONES), H_TOK)
-            dh = np.zeros_like(h)
-            for z in range(len(ZONES)):
-                m = st["tok_zone"] == z
-                if m.any():
-                    dh[m] += dzone[z] / m.sum()
-            dx = (dh * (1 - h ** 2)) @ p["W1"]
-            grads["W1"] += (dh * (1 - h ** 2)).T @ x
-            grads["b1"] += (dh * (1 - h ** 2)).sum(axis=0)
-            np.add.at(grads["emb"], st["tok_defn"], dx[:, :D_EMB])
+            dctx = self._heads_backward(grads, op, ctx, hcache, dscores, dcount, dvalue)
+            self._trunk_backward(grads, st, tcache, dctx)
         n = max(1, len(batch))
         for k in grads:
             grads[k] /= n

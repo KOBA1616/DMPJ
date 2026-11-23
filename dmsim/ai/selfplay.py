@@ -68,6 +68,51 @@ def opponent_policy(name: str, seed: int):
     raise ValueError(f"unknown opponent {name}")
 
 
+def collect_games_parallel(rules, vocab: Vocab, model: Model, deck_a, deck_b,
+                           games: int, seed: int = 0, workers: int = 2):
+    """collect_games のマルチプロセス版。fork で rules/vocab を引き継ぎ、
+    モデルのパラメータだけを各ワーカーへ渡す。結果（batch, winners）は直列版と同形。"""
+    import multiprocessing as mp
+
+    per = [games // workers + (1 if i < games % workers else 0) for i in range(workers)]
+    jobs = []
+    done = 0
+    for i, n in enumerate(per):
+        if n:
+            jobs.append((None, None, dict(model.p), deck_a, deck_b, n, seed + i * 1000))
+            done += n
+    ctx = mp.get_context("fork")
+    # fork した子ではモジュールグローバル経由で rules/vocab を渡す（pickle を避ける）
+    global _PAR_RULES, _PAR_VOCAB
+    _PAR_RULES, _PAR_VOCAB = rules, vocab
+    try:
+        with ctx.Pool(workers) as pool:
+            results = pool.map(_collect_chunk_global, jobs)
+    finally:
+        _PAR_RULES = _PAR_VOCAB = None
+    batch, winners = [], []
+    for b, w in results:
+        batch.extend(b)
+        winners.extend(w)
+    return batch, winners
+
+
+_PAR_RULES = None
+_PAR_VOCAB = None
+
+
+def _collect_chunk_global(job):
+    _, _, params, deck_a, deck_b, games, seed = job
+    if "attn_q" in params:
+        from .model_attn import AttnModel
+        model = AttnModel(len(_PAR_VOCAB))
+    else:
+        model = Model(len(_PAR_VOCAB))
+    for k, v in params.items():
+        model.p[k] = v
+    return collect_games(_PAR_RULES, _PAR_VOCAB, model, deck_a, deck_b, games, seed=seed)
+
+
 def evaluate(rules, vocab: Vocab, model: Model, deck_a, deck_b,
              games: int, seed: int = 1000, opponent: str = "random") -> dict:
     """モデル（greedy 選択）対 指定方策の勝率。両座席を半分ずつ。"""
@@ -95,11 +140,16 @@ def evaluate(rules, vocab: Vocab, model: Model, deck_a, deck_b,
 
 def train_iters(rules, vocab: Vocab, model: Model, deck_a, deck_b,
                 iters: int, games_per_iter: int, seed: int = 0,
-                lr: float = 3e-3, log=print) -> list[dict]:
+                lr: float = 3e-3, log=print, workers: int = 1) -> list[dict]:
     hist = []
     for it in range(iters):
-        batch, winners = collect_games(rules, vocab, model, deck_a, deck_b,
-                                       games_per_iter, seed=seed + it)
+        if workers > 1:
+            batch, winners = collect_games_parallel(
+                rules, vocab, model, deck_a, deck_b, games_per_iter,
+                seed=seed + it, workers=workers)
+        else:
+            batch, winners = collect_games(rules, vocab, model, deck_a, deck_b,
+                                           games_per_iter, seed=seed + it)
         loss, grads = model.loss_and_grads(batch)
         model.step(grads, lr=lr)
         wr = np.mean([1.0 if w == 0 else 0.0 for w in winners]) if winners else 0.0

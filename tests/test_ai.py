@@ -84,3 +84,19 @@ def test_evaluate_vs_greedy(rules, deck):
     r = evaluate(rules, vocab, model, deck, deck, games=2, seed=78, opponent="greedy")
     assert r["opponent"] == "greedy"
     assert r["wins"] + r["losses"] + r["draws"] == 2
+
+
+def test_attn_model_train_step(rules, deck):
+    from dmsim.ai.model_attn import AttnModel
+    from dmsim.ai.selfplay import collect_games_parallel
+    vocab = Vocab(rules)
+    model = AttnModel(len(vocab), seed=6)
+    batch, winners = collect_games(rules, vocab, model, deck, deck, games=1, seed=9)
+    loss, grads = model.loss_and_grads(batch[:16])
+    assert np.isfinite(loss)
+    assert "attn_q" in grads and np.isfinite(grads["attn_q"]).all()
+    model.step(grads)
+    # 並列収集（attn のパラメータ引き継ぎ）
+    b2, w2 = collect_games_parallel(rules, vocab, model, deck, deck, games=2,
+                                    seed=3, workers=2)
+    assert len(w2) == 2 and len(b2) > 50
