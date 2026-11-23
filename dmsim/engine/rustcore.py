@@ -467,7 +467,7 @@ class RustSession:
         if spec.get("kind", "new_game") != "new_game":
             raise dmcore.Unsupported("scenario")
         st = new_game(rules, spec["decks"], spec.get("seed", 1), spec.get("first_player", 0))
-        return cls(dmcore.Engine.open(st.to_json(), json.dumps(bundle or rules_bundle(rules))))
+        return cls(_open_core(st.to_json(), json.dumps(bundle) if bundle is not None else _bundle_json(rules)))
 
     def decision(self):
         t = self.eng.advance()
@@ -522,6 +522,22 @@ def _bundle_json(rules) -> str:
     if b is None or b[0] is not rules:
         b = _BUNDLES[k] = (rules, json.dumps(rules_bundle(rules)))
     return b[1]
+
+
+_TEMPLATES: dict = {}
+
+
+def _open_core(state_json: str, bundle_json: str):
+    """dmcore.Engine を開く。ルール一式（11MB 級の JSON）のパースが局ごとの支配的コストなので、
+    同じバンドルではテンプレートを1つだけ開いて with_state（状態だけ差し替え・ルールは共有）で使い回す。"""
+    import hashlib
+    k = hashlib.sha1(bundle_json.encode()).hexdigest()
+    t = _TEMPLATES.get(k)
+    if t is None:
+        c = dmcore.Engine.open(state_json, bundle_json)
+        _TEMPLATES[k] = c
+        return c
+    return t.with_state(state_json)
 
 
 def enabled() -> bool:
@@ -642,7 +658,7 @@ class RustEngine:
         self._py = None                                 # 読み取り用の Python Engine（状態が動いたら作り直す）
         self._raw = None                                # skel_raw の写し（状態が動いたら捨てる）
         self._fb = None                                 # Python に戻した後の Engine（__init__ の最初で None にしておく: log が読む）
-        self._c = _core if _core is not None else dmcore.Engine.open(state.to_json(), _bundle_json(rules))
+        self._c = _core if _core is not None else _open_core(state.to_json(), _bundle_json(rules))
 
     @property
     def log(self):

@@ -228,10 +228,44 @@ impl Engine {
     }
 
     // ---- 進行 ----
+    /// Python では instead の子タスクはイベントタスクの instead リストと同一オブジェクト（参照共有）で、
+    /// 解決中の状態変化がリスト側にも見える。Rust では値コピーなので、決定を返す前にスタック上の実物で同期する。
+    fn sync_instead(&mut self) {
+        let n = self.s.tasks.len();
+        for j in 0..n {
+            let (applying, m) = {
+                let t = &self.s.tasks[j];
+                if t["t"] != json!("event") {
+                    continue;
+                }
+                (t["applying"].as_bool().unwrap_or(false), t["instead"].as_array().map_or(0, |a| a.len()))
+            };
+            if !applying || m == 0 {
+                continue;
+            }
+            for x in 0..m {
+                let slot = j + 1 + x;
+                if slot >= self.s.tasks.len() {
+                    break;
+                }
+                let (ops, selfref) = {
+                    let e = &self.s.tasks[j]["instead"][x];
+                    (e["ops"].clone(), e["env"]["self"].clone())
+                };
+                let cand = self.s.tasks[slot].clone();
+                if cand["t"] == json!("effect") && cand["ops"] == ops && cand["env"]["self"] == selfref {
+                    self.s.tasks[j]["instead"][x] = cand;
+                }
+            }
+        }
+    }
+
     pub fn advance(&mut self) -> R<Option<Value>> {
         while self.s.result.is_none() {
-            if let Some(w) = &self.s.waiting {
-                return Ok(Some(w.clone()));
+            if self.s.waiting.is_some() {
+                let w = self.s.waiting.clone();
+                self.sync_instead();
+                return Ok(w);
             }
             if self.s.tasks.is_empty() {
                 return Err(EngErr::Illegal("task stack empty".into()));
@@ -351,6 +385,7 @@ impl Engine {
             };
             if let Some(d) = d {
                 self.s.waiting = Some(d.clone());
+                self.sync_instead();
                 return Ok(Some(d));
             }
             self.s.steps_this_turn += 1;
@@ -358,6 +393,7 @@ impl Engine {
                 self.s.result = Some(json!({"winner": null, "reason": "step_limit", "turn": self.s.turn}));
             }
         }
+        self.sync_instead();
         Ok(None)
     }
 
@@ -1101,7 +1137,10 @@ impl Engine {
                 env["in_st"] = json!(true);
             }
             let ops = json!(self.def(cid).spell.clone());
-            let cev = self.ev_task(vec![json!({"ev": "cast", "player": p, "subject": r, "unpaid": free})]);
+            let kc = format!("casts:{}", p);
+            let nc = self.s.turn_counters.get(&kc).and_then(|v| v.as_i64()).unwrap_or(0) + 1;
+            self.s.turn_counters.insert(kc, json!(nc));   // 第261弾: このターン唱えた呪文の数（Python と同じ）
+            let cev = self.ev_task(vec![json!({"ev": "cast", "player": p, "subject": r, "unpaid": free, "from": from_zone})]);   // from は第226弾
             let mv = self.ev_task(vec![json!({"ev": "move", "subject": r, "from": from_zone, "to": self.def(cid).resolve_to.clone(), "reason": "resolve", "position": "top"})]);
             self.push(vec![cev, json!({"t": "effect", "ops": ops, "pc": 0, "env": env, "os": {}}), mv]);
             return Ok(None);
@@ -1236,6 +1275,9 @@ impl Engine {
         }
         if ph == 0 {
             self.tset("phase", json!(1));
+            let kd = format!("atk_decl:{}", a);
+            let nd = self.s.turn_counters.get(&kd).and_then(|v| v.as_i64()).unwrap_or(0) + 1;
+            self.s.turn_counters.insert(kd, json!(nd));   // 攻撃回数の制限用（第254弾。Python combat.py と同じ）
             let n = self.s.turn_counters.get("attack_no").and_then(|v| v.as_i64()).unwrap_or(0) + 1;
             self.s.turn_counters.insert("attack_no".into(), json!(n));
             self.tset("ano", json!(n));
@@ -1302,6 +1344,9 @@ impl Engine {
                     return Ok(None);
                 }
                 self.tset("blocked", json!(true));
+                let kb = format!("blk_decl:{}", 1 - a);
+                let nb = self.s.turn_counters.get(&kb).and_then(|v| v.as_i64()).unwrap_or(0) + 1;
+                self.s.turn_counters.insert(kb, json!(nb));   // ブロック回数の制限用（第254弾。Python と同じ）
                 let rec = json!({"ev": "block", "subject": r, "attacker": att, "controller": 1 - a});
                 let e = self.ev_task(vec![rec.clone()]);
                 self.push(vec![e, Self::decl(a, "block", &rec), Self::decl(1 - a, "block", &rec)]);
@@ -1327,6 +1372,15 @@ impl Engine {
             return Ok(None);
         }
         if ph == 4 {
+            // ブロックされなかった時（第229弾。Python combat.py と同じ）: ブレイクの前に attack_unblocked を発火する
+            let blocked = self.s.tasks.last().unwrap().get("blocked").and_then(|v| v.as_bool()).unwrap_or(false);
+            let through = self.s.tasks.last().unwrap().get("through_fired").and_then(|v| v.as_bool()).unwrap_or(false);
+            if target == json!("player") && !blocked && !through {
+                self.tset("through_fired", json!(true));
+                let e = self.ev_task(vec![json!({"ev": "attack_unblocked", "subject": att, "target": "player", "controller": a})]);
+                self.push(vec![e]);
+                return Ok(None);
+            }
             // 509 ダイレクトアタック: 複数のブレイカー能力ならどれを使うか選ぶ
             let mut n = 1;
             if target == json!("player") && !self.zl("shield", 1 - a).is_empty() {
@@ -1414,7 +1468,9 @@ impl Engine {
             return Ok(None);
         }
         let defn = p["defn"].as_str().unwrap().to_string();
-        let ab = {
+        let ab = if let Some(inl) = p.get("inline") {
+            inl.clone()   // 継続的効果で得た能力は pending 自身が持っている（Python と同じ）
+        } else {
             let d = &self.rules.cards[&defn];
             let fd = match p.get("face").and_then(|v| v.as_i64()) { Some(f) if !d.faces.is_empty() => &d.faces[f as usize], _ => d };
             fd.abil[p["ab"].as_i64().unwrap() as usize].clone()
@@ -1826,17 +1882,24 @@ impl Engine {
                 }
             };
             // Python の _trigger_abs: 面が決まっていればその面、面未定のツインパクトは各面の能力を面つきで
-            let abs: Vec<(usize, Value, Option<i64>)> = {
+            let mut abs: Vec<(i64, Value, Option<i64>, bool)> = {
                 let d = &self.rules.cards[&defn];
                 if d.faces.is_empty() {
-                    d.abil.iter().cloned().enumerate().map(|(i, a)| (i, a, None)).collect()
+                    d.abil.iter().cloned().enumerate().map(|(i, a)| (i as i64, a, None, false)).collect()
                 } else if face >= 0 {
-                    d.faces[face as usize].abil.iter().cloned().enumerate().map(|(i, a)| (i, a, Some(face))).collect()
+                    d.faces[face as usize].abil.iter().cloned().enumerate().map(|(i, a)| (i as i64, a, Some(face), false)).collect()
                 } else {
-                    d.faces.iter().enumerate().flat_map(|(fi, f)| f.abil.iter().cloned().enumerate().map(move |(i, a)| (i, a, Some(fi as i64)))).collect()
+                    d.faces.iter().enumerate().flat_map(|(fi, f)| f.abil.iter().cloned().enumerate().map(move |(i, a)| (i as i64, a, Some(fi as i64), false))).collect()
                 }
             };
-            for (i, ab, ab_face) in abs {
+            if lsrc.is_none() && zone == "bz" {
+                // mod.gain で得た誘発型能力（Python の abilities() と同じ負の添字。inline で持たせる）
+                let gface = if self.rules.cards[&defn].faces.is_empty() { None } else if face >= 0 { Some(face) } else { None };
+                for (ni, gab) in self.granted_triggers(src, ctrl, &sref) {
+                    abs.push((ni, gab, gface, true));
+                }
+            }
+            for (i, ab, ab_face, inline) in abs {
                 if ab["kind"] != json!("trigger") || ab.get("zone").and_then(|v| v.as_str()).unwrap_or("bz") != zone {
                     continue;
                 }
@@ -1858,9 +1921,168 @@ impl Engine {
                 if let Some(f) = ab_face {
                     p["face"] = json!(f);
                 }
+                if inline {
+                    p["inline"] = ab.clone();   // 継続的効果で得た能力は能力そのものを持たせる（Python と同じ）
+                }
                 self.s.pending.push(p);
+                // 第270弾（Python と同じ）: 自身の出た時能力が誘発したことを trigger イベントとして発表する
+                let w = &ab["when"];
+                let subj_ok = w.get("subject").map_or(true, |v| v.is_null() || v == &json!("self"));
+                if lsrc.is_none() && w["event"] == json!("move") && w["to"] == json!("bz") && subj_ok
+                    && rec.get("subject").map_or(false, |v| !v.is_null())
+                    && src == rec["subject"][0].as_i64().unwrap_or(-1) {
+                    let mut trig = json!({"ev": "trigger", "subject": sref, "controller": ctrl,
+                        "player": ctrl, "defn": defn, "ab": i, "ability": ab,
+                        "from": rec.get("from").cloned().unwrap_or(Value::Null), "to": "bz",
+                        "reason": rec.get("reason").cloned().unwrap_or(Value::Null)});
+                    if let Some(f) = ab_face {
+                        trig["face"] = json!(f);
+                    }
+                    self.collect_triggers(&mut trig);
+                }
             }
         }
+    }
+
+    /// affects セレクタが対象カードに当たるか（Python の _subject_match、base=印刷特性）
+    fn subject_match(&self, aff: &Value, cid: i64, you: i64, selfref: &Value) -> bool {
+        if aff.get("other").and_then(|v| v.as_bool()).unwrap_or(false)
+            && selfref.get(0).and_then(|v| v.as_i64()) == Some(cid) {
+            return false;   // other: 発生源自身は対象外（Python と同じ）
+        }
+        let c = &self.s.cards[cid as usize];
+        let zone = aff.get("zone").and_then(|v| v.as_str()).unwrap_or("bz");
+        if c.zone != zone {
+            return false;
+        }
+        match aff.get("owner").and_then(|v| v.as_str()).unwrap_or("you") {
+            "you" => if c.controller != you { return false; },
+            "opp" => if c.controller == you { return false; },
+            _ => {}
+        }
+        if let Some(f) = aff.get("filter") {
+            let env = json!({"you": you, "self": selfref, "vars": {}});
+            match self.bake_filter(f, &env) {
+                Ok(bf) => match self.filter_ok(cid, &bf) { Ok(true) => {}, _ => return false },
+                Err(_) => return false,
+            }
+        }
+        true
+    }
+
+    /// mod.gain で得た誘発型能力の一覧（Python の abilities(cid, "trigger") の負の添字つき部分と同じ並び・番号）
+    fn granted_triggers(&self, cid: i64, ctrl: i64, sref: &Value) -> Vec<(i64, Value)> {
+        let mut out: Vec<(i64, Value)> = vec![];
+        let mut k: i64 = 0;
+        // 継続的効果（期間つき）の gain と add_from（ダイナモ）
+        let cont = self.s.continuous.clone();
+        for ce in &cont {
+            if let Some(gain) = ce["mod"].get("gain").and_then(|v| v.as_array()) {
+                for ab in gain {
+                    k += 1;
+                    if ab["kind"] == json!("trigger") && self.ce_applies(ce, cid) {
+                        out.push((-k, ab.clone()));
+                    }
+                }
+            }
+            if let Some(src) = ce.get("add_from") {
+                if !src.is_null() && src[0].as_i64().unwrap_or(cid) != cid && self.alive(src) && self.ce_applies(ce, cid) {
+                    let sd = self.def(src[0].as_i64().unwrap()).abil.clone();
+                    for ab in &sd {
+                        if ab.get("keyword").and_then(|v| v.as_str()) != Some("dynamo") && ab["kind"] == json!("trigger") {
+                            k += 1;
+                            out.push((-k, ab.clone()));
+                        }
+                    }
+                }
+            }
+        }
+        // 自分自身への常在型の gain（第240弾）
+        let mydef = self.def(cid).abil.clone();
+        let env_self = json!({"you": ctrl, "self": sref, "vars": {}});
+        for ab in &mydef {
+            if ab["kind"] == json!("static") && ab.get("affects").and_then(|v| v.as_str()) == Some("self") {
+                if let Some(gain) = ab["mod"].get("gain").and_then(|v| v.as_array()) {
+                    let ok = match ab.get("if") { None => true, Some(c) => self.eval_cond(c, &env_self).unwrap_or(false) };
+                    if ok {
+                        for gab in gain {
+                            if gab["kind"] == json!("trigger") {
+                                k += 1;
+                                out.push((-k, gab.clone()));
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        // バトルゾーンの発生源からの gain
+        let bzs: Vec<i64> = self.s.zones["bz"][0].clone();
+        for gsrc in bzs {
+            if self.s.cards[gsrc as usize].top_of >= 0 {
+                continue;
+            }
+            let gd = self.def(gsrc).abil.clone();
+            let gctrl = self.s.cards[gsrc as usize].controller;
+            let gref = self.refv(gsrc);
+            for ab in &gd {
+                if ab["kind"] != json!("static") || ab.get("zone").and_then(|v| v.as_str()).unwrap_or("bz") != "bz" {
+                    continue;
+                }
+                let gain = match ab["mod"].get("gain").and_then(|v| v.as_array()) { Some(g) => g, None => continue };
+                let aff = &ab["affects"];
+                if aff.as_str() == Some("self") || !aff.is_object() {
+                    continue;
+                }
+                if aff.get("zone").and_then(|v| v.as_str()).unwrap_or("bz") != "bz" {
+                    continue;
+                }
+                let env = json!({"you": gctrl, "self": gref, "vars": {}});
+                let ok = self.subject_match(aff, cid, gctrl, &gref)
+                    && match ab.get("if") { None => true, Some(c) => self.eval_cond(c, &env).unwrap_or(false) };
+                if ok {
+                    for gab in gain {
+                        if gab["kind"] == json!("trigger") {
+                            k += 1;
+                            out.push((-k, gab.clone()));
+                        }
+                    }
+                }
+            }
+        }
+        // シールドゾーンの発生源からの gain（zone: shield の常在型だけ）
+        for p in 0..2usize {
+            let shs: Vec<i64> = self.s.zones["shield"][p].clone();
+            for gsrc in shs {
+                let gd = self.def(gsrc).abil.clone();
+                let gctrl = self.s.cards[gsrc as usize].controller;
+                let gref = self.refv(gsrc);
+                for ab in &gd {
+                    if ab["kind"] != json!("static") || ab.get("zone").and_then(|v| v.as_str()) != Some("shield") {
+                        continue;
+                    }
+                    let gain = match ab["mod"].get("gain").and_then(|v| v.as_array()) { Some(g) => g, None => continue };
+                    let aff = &ab["affects"];
+                    if aff.as_str() == Some("self") || !aff.is_object() {
+                        continue;
+                    }
+                    if aff.get("zone").and_then(|v| v.as_str()).unwrap_or("bz") != "bz" {
+                        continue;
+                    }
+                    let env = json!({"you": gctrl, "self": gref, "vars": {}});
+                    let ok = self.subject_match(aff, cid, gctrl, &gref)
+                        && match ab.get("if") { None => true, Some(c) => self.eval_cond(c, &env).unwrap_or(false) };
+                    if ok {
+                        for gab in gain {
+                            if gab["kind"] == json!("trigger") {
+                                k += 1;
+                                out.push((-k, gab.clone()));
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        out
     }
 
     /// 誘発条件の照合（Python 版 _match_when の、event / from / to / reason / player / subject: self の部分）
@@ -2044,7 +2266,8 @@ impl Engine {
             "breaks_add": 0, "pay_cost": d.cost, "sac_reduce": 0, "sac_gated": [], "opt_reduce": null, "cost_may": [], "no_leave": [], "cross_reduce": [],
             "must_be_attacked": false, "must_be_attacked_first": false, "must_be_chosen": false, "must_attack_creature": false,
             "must_attack_creature_first": false, "battle_indestructible": false, "battle_indestructible_filters": [],
-            "win_all_battles": false, "indestructible": false, "crystal_soul": 0, "mana_number": 0})
+            "win_all_battles": false, "indestructible": false, "crystal_soul": 0, "mana_number": null,
+            "evo_reduce": 0, "evo_reduce_min": 0, "player_rush": false})
     }
 
     fn game_lose(&mut self, loser: i64, reason: &str) {
@@ -2190,7 +2413,15 @@ impl Engine {
         let tk = self.s.tasks.pop().unwrap();
         let chosen: Vec<i64> = tk["chosen"].as_array().unwrap().iter().map(|v| v.as_i64().unwrap()).filter(|&c| self.s.cards[c as usize].zone == "shield").collect();
         let reason = tk.get("reason").and_then(|v| v.as_str()).unwrap_or("break").to_string();
-        let mut seq = vec![self.ev_task(chosen.iter().map(|&c| json!({"ev": "move", "subject": self.refv(c), "to": "hand", "reason": reason})).collect())];
+        let fire0 = tk.get("fire_break").and_then(|v| v.as_bool()).unwrap_or(true);
+        let br0 = tk.get("breaker").cloned().unwrap_or(Value::Null);
+        let mut seq: Vec<Value> = vec![];
+        if fire0 && !br0.is_null() && self.alive(&br0) && !chosen.is_empty() {
+            // 「各ブレイクの前に」（第239弾。Python と同じ）: シールド1枚につき1レコード、移動より先に起こす
+            seq.push(self.ev_task(chosen.iter().map(|&c| json!({"ev": "break_before", "subject": br0, "player": victim,
+                "controller": tk["by"], "shield": self.refv(c)})).collect()));
+        }
+        seq.push(self.ev_task(chosen.iter().map(|&c| json!({"ev": "move", "subject": self.refv(c), "to": "hand", "reason": reason})).collect()));
         seq.push(json!({"t": "enqueue_st", "cids": tk["declared"], "player": victim, "strigger": true}));
         let fire = tk.get("fire_break").and_then(|v| v.as_bool()).unwrap_or(true);
         if fire && !chosen.is_empty() {
@@ -2441,7 +2672,8 @@ impl Engine {
         let cid = ev["subject"][0].as_i64().unwrap();
         let c = &self.s.cards[cid as usize];
         let from = if c.zone == "hold" { ev.get("from").cloned().unwrap_or(Value::Null) } else { json!(c.zone) };
-        let mut rec = json!({"ev": "move", "subject": ev["subject"], "from": from, "to": ev["to"], "reason": ev["reason"], "controller": c.controller});
+        let mut rec = json!({"ev": "move", "subject": ev["subject"], "from": from, "to": ev["to"], "reason": ev["reason"], "controller": c.controller,
+            "position": ev.get("position").cloned().unwrap_or_else(|| json!("top"))});   // 第290弾（Python と同じ）: 常に載る
         for k in ["cause", "cause_defn"] {
             if ev.get(k).map_or(false, |v| v.as_str().map_or(false, |x| !x.is_empty())) {
                 rec[k] = ev[k].clone();
@@ -2453,8 +2685,32 @@ impl Engine {
         if let Some(b) = ev.get("by") {
             rec["by"] = b.clone();
         }
+        if ev.get("stack_on").map_or(false, |v| !v.is_null()) {
+            rec["stacked"] = json!(true);
+        }
+        if ev.get("battle").and_then(|v| v.as_bool()).unwrap_or(false) {
+            rec["battle"] = json!(true);   // 第332弾（Python と同じ）
+        }
+        if ev.get("no_trigger").and_then(|v| v.as_bool()).unwrap_or(false) {
+            rec["no_trigger"] = json!(true);
+        }
+        if ev.get("alt").and_then(|v| v.as_bool()).unwrap_or(false) {
+            rec["alt"] = json!(true);
+        }
+        if ev.get("vivid").and_then(|v| v.as_bool()).unwrap_or(false) {
+            rec["vivid"] = json!(true);
+        }
         if ev.get("unpaid").and_then(|v| v.as_bool()).unwrap_or(false) {
             rec["unpaid"] = json!(true);
+        } else if ev["to"] == json!("bz") && ev["reason"].as_str() != Some("summon") && rec["from"].as_str() != Some("bz") {
+            rec["unpaid"] = json!(true);   // 第257弾（Python と同じ）
+        }
+        if !c.under.is_empty()
+            && ((rec["from"].as_str() == Some("bz") && ev["to"].as_str() != Some("bz"))
+                || (rec["from"].as_str() == Some("shield") && !["bz", "shield"].contains(&ev["to"].as_str().unwrap_or(""))))
+            && !ev.get("card_only").and_then(|v| v.as_bool()).unwrap_or(false) {
+            // 一緒に離れる下のカードすべて（第294弾。Python と同じ。plain では star 進化は無い）
+            rec["was_under"] = Value::Array(c.under.iter().map(|&u| self.refv(u)).collect());
         }
         if c.zone == "bz" && c.top_of >= 0 && c.seal_of < 0 {
             // 下にあったカードが単独で動く: 宿主の移動直前の姿を載せる（from_under 照合用）
@@ -2596,6 +2852,17 @@ impl Engine {
                         rec["ord"] = json!({"enter": n});
                         if rec.get("unpaid").and_then(|v| v.as_bool()).unwrap_or(false) {
                             self.hist_bump("enter_unpaid", rc, 1);
+                            // 第348弾（Python と同じ）: 種類で絞れるよう cid リストも残す
+                            self.push_list(format!("enter_unpaid:{}", rc), rec["subject"][0].as_i64().unwrap());
+                        }
+                        if rec.get("via").and_then(|v| v.as_str()) == Some("generate") {
+                            // 実行したタマシード等は「使った」履歴（Python と同じ）
+                            let c = rec["subject"][0].as_i64().unwrap();
+                            let d = self.def(c);
+                            let snap = json!({"cost": d.cost, "types": d.types, "civs": d.civs});
+                            let k = format!("hist:used:{}", rc);
+                            let e = self.s.turn_counters.entry(k).or_insert(json!([]));
+                            e.as_array_mut().unwrap().push(snap);
                         }
                     }
                     if frm == "bz" && to != "bz" && !has_host {   // 下にあったカードはクリーチャーとして離れた数に入れない
@@ -2809,6 +3076,31 @@ impl Engine {
                     "reason": reason, "controller": after})];
                 if ev.get("unpaid").and_then(|v| v.as_bool()).unwrap_or(false) {
                     out[0]["unpaid"] = json!(true);
+                } else if to == "bz" && reason != "summon" && from != "bz" {
+                    out[0]["unpaid"] = json!(true);   // 第257弾（Python と同じ）: 効果で出されたカードは支払わずに出ている
+                }
+                if let Some(pv) = ev.get("position") {
+                    out[0]["position"] = pv.clone();   // 第290弾（Python と同じ）: 置かれた位置
+                }
+                if ev.get("battle").and_then(|v| v.as_bool()).unwrap_or(false) {
+                    out[0]["battle"] = json!(true);   // 第332弾（Python と同じ）: バトルで負けて破壊された
+                }
+                if ev.get("alt").and_then(|v| v.as_bool()).unwrap_or(false) {
+                    out[0]["alt"] = json!(true);   // Python と同じ
+                }
+                if ev.get("vivid").and_then(|v| v.as_bool()).unwrap_or(false) {
+                    out[0]["vivid"] = json!(true);   // Python と同じ
+                }
+                if ev.get("no_trigger").and_then(|v| v.as_bool()).unwrap_or(false) {
+                    out[0]["no_trigger"] = json!(true);   // 第213弾（Python と同じ）
+                }
+                {
+                    // 第294弾（Python と同じ）: 一緒に離れた下のカードすべて（移動後の姿）
+                    let wu: Vec<Value> = unders.iter().filter(|&&u| self.s.cards[u as usize].zone == to)
+                        .map(|&u| self.refv(u)).collect();
+                    if !wu.is_empty() {
+                        out[0]["was_under"] = Value::Array(wu);
+                    }
                 }
                 if ev.get("stack_on").map_or(false, |v| !v.is_null()) {
                     out[0]["stacked"] = json!(true);
@@ -2868,7 +3160,7 @@ impl Engine {
                 }
                 Ok(out)
             }
-            "cast" | "turn_start" | "turn_end" | "attack" | "block" | "battle_start" | "battle_win" | "battle_lose" | "battle_end" | "attack_end" | "break" => {
+            "cast" | "turn_start" | "turn_end" | "attack" | "block" | "battle_start" | "battle_win" | "battle_lose" | "battle_end" | "attack_end" | "break" | "attack_unblocked" | "break_before" => {
                 Ok(vec![ev.clone()])
             }
             other => uns(format!("event {}", other)),
@@ -2888,6 +3180,22 @@ impl Engine {
     /// 進化: base（とその下）を top の下に重ねる（801.1, 801.2）。more は2枚目以降の進化元
     fn stack(&mut self, top: i64, base: i64, more: bool) {
         let old = self.refv(base);
+        let new0 = self.refv(top);
+        // 進化元の EXライフシールドは進化後のクリーチャーに引き継がれる（Python と同じ）
+        for p in 0..2usize {
+            for si in 0..self.s.zones["shield"][p].len() {
+                let sh = self.s.zones["shield"][p][si];
+                if self.s.cards[sh as usize].exlife_of.as_ref() == Some(&old) {
+                    self.s.cards[sh as usize].exlife_of = Some(new0.clone());
+                }
+            }
+        }
+        // 第304弾（Python と同じ）: 進化クロスギア: クロス先は束のトップだけが持つ
+        if self.def(top).types.iter().any(|t| t == "cross_gear") && self.def(base).types.iter().any(|t| t == "cross_gear") {
+            let bc = self.s.cards[base as usize].crossed.clone();
+            self.s.cards[top as usize].crossed = bc;
+            self.s.cards[base as usize].crossed = None;
+        }
         let bunder = self.s.cards[base as usize].under.clone();
         let btapped = self.s.cards[base as usize].tapped;
         let mut nu = if more { self.s.cards[top as usize].under.clone() } else { vec![] };
@@ -2899,6 +3207,13 @@ impl Engine {
         self.s.cards[base as usize].under.clear();
         let t = &mut self.s.cards[top as usize];
         t.under = nu;
+        if more {   // 第231弾（Python と同じ）: 直接の進化元を順に記録
+            if !t.stack_bases.contains(&base) {
+                t.stack_bases.push(base);
+            }
+        } else {
+            t.stack_bases = vec![base];
+        }
         t.tapped = if more { t.tapped || btapped } else { btapped };
         t.entered_turn = -1;
         let new = self.refv(top);
@@ -2969,6 +3284,11 @@ impl Engine {
             c.fortifies = None;
             c.no_untap_next = false;
             c.hyper = false;
+            if to != "hand" && (from == "hand" || from == "hold") {
+                c.strigger_off = false;   // S・トリガーの印は手札にある間だけ有効（Python と同じ）
+                c.strigger_on = false;
+            }
+            c.stack_bases.clear();   // 第231弾（Python と同じ）: 直接の進化元の記録も消える
             c.sst = false;
             c.stp = false;
             c.odrive = false;

@@ -7,7 +7,7 @@
 | Phase | 内容 | 状態 |
 |---|---|---|
 | 1 | 2p対戦ベンチ新設（サガミラー、局/秒・決定/秒・Rust適用率） | 完了（本PR） |
-| 2 | Rust追随と最適化（下記「Phase 2 の初手」の不一致解消が先。その後 chars の版番号キャッシュ、PyO3 の JSON 文字列境界の削減、clone の copy-on-write） | 未着手 |
+| 2 | Rust追随と最適化（digest不一致の解消、ルールバンドルの再パース削減） | 完了（本PR） |
 | 3 | バッチ並行API（Rust内部で複数局を一括実行） | 未着手 |
 | 4 | 方策エンコーダ（DSL→共通特徴トークン）＋小型Transformer＋価値ヘッド＋自己対戦RL。通常デッキの追加もここ | 未着手 |
 
@@ -44,3 +44,57 @@ python tools/bench_2p.py --games 20 --engine python
   条件判定（turn_count 系）に効く欄を含むため、放置すると他のデッキで実挙動もずれ得る。
   このため verified_engine.txt のスタンプは更新していない（Rust は自動で無効のまま）。
   解消して test_rust_*.py が通ったらスタンプし直し、--engine auto でベンチを取り直す。
+
+## Phase 2: Rust追随と最適化
+
+### digest不一致の解消（Rust側が Python の第231〜352弾相当に未追随だった分）
+
+tests/test_rust_connect.py（27件）・test_rust_engine.py（293件）・
+test_rust_schema_sync.py（3件）が全て通るようになった。verified_engine.txt を
+再スタンプし、Rust は有効化されている。追随した内容:
+
+- 戦闘・呪文の記録系カウンタ: atk_decl / blk_decl（第254弾）、casts（第261弾）、
+  enter_unpaid / hist:used（第348弾ほか）、cast レコードの from（第226弾）
+- attack_unblocked イベント（第229弾）と break_before レコード（第239弾）
+- trigger レコードの再帰収集（第270弾。ev_seq の進みを一致させた）
+- stack_bases の記録（第231弾）とゾーン移動時の消去、EXライフシールドと
+  進化クロスギア（第304弾）の進化時引き継ぎ
+- chars の欠けキー（evo_reduce / evo_reduce_min / player_rush）と mana_number の既定 null
+- move レコードの対（照合用 _record_for / 収集用）の整備: battle（第332弾）、
+  position の常時付与（第290弾）、unpaid の導出（第257弾）、was_under（第294弾）、
+  alt / vivid / no_trigger の伝播
+- mod.gain で得た能力の収集（第240弾）: 継続的効果・常在型からの付与を
+  負の添字＋inline pending で Python と同形に実装（サバイバー等）。
+  affects の `other: true`（発生源自身は対象外）も照合する
+- instead（置換）子タスクの状態同期: Python では instead リストとスタック上の
+  子タスクが同一オブジェクトで、解決中の pc 等がリスト側にも見える。Rust は
+  値コピーなので、決定を返す前にスタック上の実物でリスト側を同期する
+- ゲート側の陳腐化も判明: rustcore._self_mods は「常在型の gain は Python も
+  扱わない」前提で gain 常在型を plain としていたが、Python は第240弾で対応済み
+  だった（上記の収集実装で前提どおりの挙動に一致させた）
+
+### 最適化: ルールバンドルの再パース削減（JSON境界）
+
+- dmcore.Engine.open はルール一式（11.3MB の JSON）を毎局パースしていて
+  実測135ms/局。ベンチ（--engine auto）の支配的コストだった。
+- rustcore._open_core: 同じバンドルではテンプレートを1つだけ開き、以降は
+  with_state（状態だけ差し替え、ルールは Arc 共有）で開く。RustEngine /
+  RustSession の両方が使う。
+- chars の版番号キャッシュと clone の copy-on-write は、今回の実測では
+  ボトルネックがバンドル再パースだったため見送り（Phase 3 のバッチAPIで
+  まとめて効かせる）。
+
+### 実測（2026-11-24、このVM: 共有1.5CPU、サガミラー20局・ランダム方策）
+
+```
+python tools/bench_2p.py --games 20 --engine python   → 5.46 games/s, 552 decisions/s
+python tools/bench_2p.py --games 20 --engine auto     → 8.01 games/s, 810 decisions/s
+```
+
+- バンドル再パース削減の前は auto が 3.79 games/s で Python より遅かった
+  （135ms/局のパースが支配的）。削減後は Python 比 1.47 倍。
+- 決定/秒で見ると Python 552 に対し Rust 810。残りの差は決定ごとの JSON
+  受け渡しで、Phase 3 のバッチAPIでまとめて解消する想定。
+
+- 勝敗は Python / Rust で同一（P0=9 P1=11、先攻勝率0.35）。Rust適用率は
+  20局全て wrapped され最後まで維持（フォールバックなし）。
