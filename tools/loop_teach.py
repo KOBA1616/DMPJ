@@ -44,6 +44,7 @@ POSITIONS = {
     "saga_prep": ("tests/saga_prep_setup.yaml", [0, 1], [2, 3, 4]),
     "saga_hidden": ("tests/saga_hidden_setup.yaml", [0, 1], [2, 3]),
     "saga_first": ("tests/saga_loop_first_setup.yaml", [0], [0]),
+    "saga_M": ("tools/eval_specs/saga_min_loop.yaml", [0, 1], [0, 1]),
     "akashic_t5": ("tools/eval_specs/akashic_t5_assembled.yaml", [0, 1], [0, 1]),
     "akashic_min": ("tools/eval_specs/akashic_loop_min.yaml", [0, 1], [0, 1]),
     "akashic_no_orzekia": ("tools/eval_specs/akashic_no_orzekia.yaml", [], [0]),
