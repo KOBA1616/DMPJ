@@ -54,10 +54,23 @@ def collect_games(rules, vocab: Vocab, model: Model, deck_a, deck_b,
     return batch, winners
 
 
-def evaluate(rules, vocab: Vocab, model: Model, deck_a, deck_b,
-             games: int, seed: int = 1000) -> dict:
-    """モデル（greedy）対ランダム方策の勝率。両座席を半分ずつ。"""
+def opponent_policy(name: str, seed: int):
+    """評価相手の方策。random（無作為）/ greedy（leaf_eval の重みで貪欲）/ charge_only。"""
     import random as _random
+    if name == "random":
+        return random_policy(_random.Random(seed))
+    if name == "greedy":
+        from ..search.turn import greedy_policy
+        return greedy_policy()
+    if name == "charge_only":
+        from ..search.turn import charge_only_policy
+        return charge_only_policy
+    raise ValueError(f"unknown opponent {name}")
+
+
+def evaluate(rules, vocab: Vocab, model: Model, deck_a, deck_b,
+             games: int, seed: int = 1000, opponent: str = "random") -> dict:
+    """モデル（greedy 選択）対 指定方策の勝率。両座席を半分ずつ。"""
     wins = losses = draws = 0
     for g in range(games):
         first = g % 2
@@ -65,7 +78,7 @@ def evaluate(rules, vocab: Vocab, model: Model, deck_a, deck_b,
         eng = Engine.new_game(rules, [deck_a, deck_b], seed * 100003 + g, first)
         eng = rustcore.maybe_rust(eng)
         mp = model_policy(model, vocab, np.random.default_rng(seed + g), greedy=True)
-        rp = random_policy(_random.Random(seed * 7 + g))
+        rp = opponent_policy(opponent, seed * 7 + g)
         pols = [mp, rp] if model_seat == 0 else [rp, mp]
         result = run(eng, pols)
         w = result["winner"] if result else None
@@ -77,7 +90,7 @@ def evaluate(rules, vocab: Vocab, model: Model, deck_a, deck_b,
             losses += 1
     n = wins + losses
     return {"games": games, "wins": wins, "losses": losses, "draws": draws,
-            "win_rate": wins / n if n else 0.0}
+            "win_rate": wins / n if n else 0.0, "opponent": opponent}
 
 
 def train_iters(rules, vocab: Vocab, model: Model, deck_a, deck_b,
