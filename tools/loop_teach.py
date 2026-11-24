@@ -36,7 +36,8 @@ from dmsim.search.turn import charge_only_policy  # noqa: E402
 from tools.bench_2p import load_deck  # noqa: E402
 
 OUT = Path("/home/hatch/workspace/phase20")
-PROD = "/home/hatch/workspace/phase14/model_colab_torch.npz"
+# 土台は新レシピで 3,200 局学習した Colab モデル（Phase 21）
+PROD = "/home/hatch/workspace/phase21/model_colab_newdeck.npz"
 
 # 局面名 -> (spec パス, 教材を作る seed, 評価 seed)
 POSITIONS = {
@@ -67,24 +68,34 @@ def cmd_demos(args) -> int:
     rules = load_rules()
     vocab = Vocab(rules)
     all_demo: dict[str, list] = {}
+    merged = OUT / "loop_demos.pkl"
+    if merged.exists():
+        with open(merged, "rb") as f:
+            all_demo = pickle.load(f)
     for name, (_p, seeds, _e) in POSITIONS.items():
         if not seeds:
+            continue
+        if args.positions and name not in args.positions:
             continue
         items: list = []
         for sd in seeds:
             try:
                 got = record_game_demo(rules, vocab,
                                        build_start(rules, name, sd),
-                                       budget=600)
+                                       budget=args.budget)
                 items += got
                 print(f"{name} seed {sd}: {len(got)} 決定"
                       f"（{time.time() - t0:.0f}s）", flush=True)
             except Exception as ex:  # 教師が勝てなかった局面は教材にしない
                 print(f"{name} seed {sd}: 教師が勝てず除外（{ex}）", flush=True)
-        all_demo[name] = items
+        if items:
+            all_demo[name] = items
+            # 局面ごとに即保存する（長時間の記録が途中で落ちても残る）
+            with open(merged, "wb") as f:
+                pickle.dump(all_demo, f)
+            print(f"{name}: 保存済み（累計 "
+                  f"{sum(len(v) for v in all_demo.values())} 決定）", flush=True)
     total = sum(len(v) for v in all_demo.values())
-    with open(OUT / "loop_demos.pkl", "wb") as f:
-        pickle.dump(all_demo, f)
     print(f"教材合計 {total} 決定: "
           + ", ".join(f"{k}={len(v)}" for k, v in all_demo.items()))
     return 0
@@ -131,6 +142,41 @@ def play_from(start_eng, model, vocab, seed: int):
     return res.get("winner") == 0, looped, res.get("reason"), res.get("turn")
 
 
+def play_vs_search(start_eng, model, vocab, seed: int, budget: int = 400):
+    """相手（P1）が探索プレイヤーの条件で局面から指す。
+
+    P0 の自分のターンはモデルが1手ずつ指す。P1 のターンは TurnSearch が
+    通しで指し、その間の P0 の反応は TurnSearch 内の相手方策（貪欲）が
+    担う（Phase 19 の直接対決と同じ方式）。"""
+    from dmsim.ai.demo import greedy_policy
+    from dmsim.search.turn import TurnSearch
+    eng = start_eng.clone()
+    det = LoopDetector(me=0, report_all=True)
+    pol = model_policy(model, vocab, np.random.default_rng(seed))
+    greedy = greedy_policy()
+    looped = False
+    for _ in range(200):
+        if eng.s.result is not None:
+            break
+        if eng.s.active == 1:
+            ts = TurnSearch(1, budget, opp_policy=greedy)
+            eng, _st = ts.run(eng)
+        else:
+            d = eng.advance()
+            if d is None:
+                break
+            if d["player"] == 0:
+                eng.answer(pol(eng, d))
+                if det.observe(eng) is not None:
+                    looped = True
+            else:
+                eng.answer(greedy(eng, d))
+    res = eng.s.result
+    if not res:
+        return False, looped, "no_result"
+    return res.get("winner") == 0, looped, res.get("reason")
+
+
 def first_decision_agreement(rules, vocab, model, name: str, seed: int):
     """局面の最初の決定で、モデルの貪欲な選択が教師と一致するか。"""
     eng = build_start(rules, name, seed)
@@ -175,6 +221,23 @@ def cmd_eval(args) -> int:
                   f"ループキル {kills / n:.2f}、停滞 {stalls / n:.2f}、"
                   f"平均終了ターン {turns / n:.1f}（{n} 試行、"
                   f"{time.time() - t0:.0f}s）", flush=True)
+    print("--- 探索プレイヤー相手（準備局面のみ） ---", flush=True)
+    for name in ("saga_prep", "saga_hidden"):
+        _p, _d, eval_seeds = POSITIONS[name]
+        for mname in ("base", "taught"):
+            m = models[mname]
+            wins = kills = n = 0
+            for sd in eval_seeds[:2]:
+                start = build_start(rules, name, sd)
+                for t in range(3):
+                    w, looped, _r = play_vs_search(
+                        start, m, vocab, 7000 + sd * 100 + t)
+                    n += 1
+                    wins += w
+                    kills += w and looped
+            print(f"{name} / {mname} vs 探索: 勝率 {wins / n:.2f}、"
+                  f"ループキル {kills / n:.2f}（{n} 試行、"
+                  f"{time.time() - t0:.0f}s）", flush=True)
     print("--- 最初の決定の教師一致率 ---", flush=True)
     for name, (_p, _d, eval_seeds) in POSITIONS.items():
         sd = eval_seeds[0]
@@ -190,7 +253,9 @@ def cmd_eval(args) -> int:
 def main() -> int:
     ap = argparse.ArgumentParser()
     sub = ap.add_subparsers(dest="cmd", required=True)
-    sub.add_parser("demos")
+    dm = sub.add_parser("demos")
+    dm.add_argument("--positions", nargs="*", default=None)
+    dm.add_argument("--budget", type=int, default=600)
     tr = sub.add_parser("train")
     tr.add_argument("--iters", type=int, default=20)
     tr.add_argument("--games-per-iter", type=int, default=8)
