@@ -223,7 +223,8 @@ def _simple_when(w) -> bool:
         return False
     subj = w.get("subject", "self")
     if subj != "self" and not (isinstance(subj, dict) and set(subj) == {"owner"} and subj["owner"] in ("you", "opp")
-                               and w.get("event") == "move" and w.get("from") in _OK_ZONES - {"bz"}):
+                               and w.get("event") == "move" and isinstance(w.get("from"), str)
+                               and w.get("from") in _OK_ZONES - {"bz"}):
         return False   # subject はこのカードか、持ち主だけの指定（バトルゾーン以外から動いたカード。lki を使わない）
     if w.get("event") not in _OK_EVENTS or w.get("player", "you") not in ("you", "opp"):
         return False
