@@ -19,9 +19,34 @@ import numpy as np
 from ..engine.play import run
 from ..search.leaf_eval import Weights, evaluate
 from ..search.turn import TurnSearch, charge_only_policy, greedy_policy
-from .encode import encode_options, encode_state
+from .encode import OPT_NUM, encode_options, encode_state
 
 _W = Weights()
+_DUMMY_OP = {"opt_defn": np.zeros(1, np.int32),
+             "opt_num": np.zeros((1, OPT_NUM), np.float32),
+             "min": 0, "max": 1, "kind": "pass"}
+
+
+def state_value(model, st: dict) -> float:
+    """局面だけから価値ヘッドの値を読む（価値は選択肢に依存しない）。"""
+    v = model.forward(st, _DUMMY_OP)[1]
+    return float(v.item()) if hasattr(v, "item") else float(v)
+
+
+def policy_order_fn(model, vocab, cap: int | None = None):
+    """TurnSearch の order_fn: 候補手を学習方策の log 確率が高い順に並べる。
+    cap を与えると上位 cap 個に絞る（枝刈り）。絞らない形が既定で、
+    並べ替えだけなら探索の完全性は保たれる。"""
+    pl_logp = model._pl_logp
+
+    def order(eng, d, cands):
+        st = encode_state(eng, d["player"], vocab)
+        op = encode_options(eng, d, vocab)
+        scores = model.forward(st, op)[0]
+        scored = sorted(cands, key=lambda c: -pl_logp(scores, list(c)))
+        return scored[:cap] if cap else scored
+
+    return order
 
 
 def model_policy(model, vocab, rng, greedy: bool = False):

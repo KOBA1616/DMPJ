@@ -24,6 +24,7 @@ os.environ.setdefault("DMSIM_RUST", "0")
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 import yaml  # noqa: E402
 
+from dmsim.ai.demo import state_value  # noqa: E402
 from dmsim.ai.encode import Vocab, encode_state  # noqa: E402
 from dmsim.ai.model import Model  # noqa: E402
 from dmsim.ai.selfplay import train_iters  # noqa: E402
@@ -44,7 +45,8 @@ def collect_positions(rules, deck_a, deck_b, games: int, seed: int):
     out = []
     for g in range(games):
         first = g % 2
-        eng = Engine.new_game(rules, deck_a, deck_b, rng, first_player=first)
+        eng = Engine.new_game(rules, [deck_a, deck_b], seed * 100003 + g,
+                              first_player=first)
         snaps = []
         for step in range(400):
             d = eng.advance()
@@ -97,7 +99,7 @@ def main() -> int:
         return evaluate(eng, me, W) - evaluate(eng, 1 - me, W)
 
     def s_value(eng, me):
-        return float(model.value(encode_state(eng, me, vocab)))
+        return state_value(model, encode_state(eng, me, vocab))
 
     def s_blend(eng, me):
         # 桁を揃える: leaf は数百点スケール、価値は -1..1
@@ -111,10 +113,8 @@ def main() -> int:
     spec = yaml.safe_load(
         Path("tests/saga_loop_first_setup.yaml").read_text(encoding="utf-8"))
     for name, vfn in [("手作り評価", None),
-                      ("価値ヘッド", lambda e, me: float(
-                          model.value(encode_state(e, me, vocab))) * 300.0),
-                      ("混合", lambda e, me: float(
-                          model.value(encode_state(e, me, vocab))) * 300.0
+                      ("価値ヘッド", lambda e, me: state_value(model, encode_state(e, me, vocab)) * 300.0),
+                      ("混合", lambda e, me: state_value(model, encode_state(e, me, vocab)) * 300.0
                        + evaluate(e, me, W))]:
         eng = sc.build(rules, spec)
         ts = TurnSearch(0, 1500, value_fn=vfn)
